@@ -1,76 +1,189 @@
-From: "Christiaan den Besten" <chris@scorpion.nl>
-Subject: Re: [PATCH] sata_promise: Port enumeration order - SATA 150 TX4, SATA 300 TX4
-Date: Sat, 25 Feb 2006 11:52:21 +0100
-Message-ID: <011f01c639f9$8dc86bc0$3d64880a@speedy>
-References: <43FFAE3D.7010002@physics.harvard.edu> <44000036.7070403@eyal.emu.id.au>
-Reply-To: "Christiaan den Besten" <chris@scorpion.nl>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 3/6] scsi tgt: add partial mappings support to
+ bio_map_user
+Date: Sat, 25 Feb 2006 20:20:16 +0900
+Message-ID: <20060225202016E.fujita.tomonori@lab.ntt.co.jp>
+References: <1140119620.20193.51.camel@max>
+	<20060216195917.GY4203@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=original
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Eyal Lebedinsky <eyal@eyal.emu.id.au>, Milan Kupcevic <milan@physics.harvard.edu>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, trivial@rustcorp.com.au, torvalds@osdl.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:50417 "EHLO
+	tama5.ecl.ntt.co.jp") by vger.kernel.org with ESMTP
+	id S1030219AbWBYLUf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 25 Feb 2006 06:20:35 -0500
+In-Reply-To: <20060216195917.GY4203@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: axboe@suse.de
+Cc: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi !
+I cc'ed lkml for ide people.
 
-We have several of these boards in use [SATA 300 TX4] (bought over time .. not in one batch). All of them have the ordering as 
-described below. So another vote for "Please fix!" :)
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH 3/6] scsi tgt: add partial mappings support to bio_map_user
+Date: Thu, 16 Feb 2006 20:59:17 +0100
 
-bye,
-Chris
-
------ Original Message ----- 
-From: "Eyal Lebedinsky" <eyal@eyal.emu.id.au>
-To: "Milan Kupcevic" <milan@physics.harvard.edu>
-Cc: "Jeff Garzik" <jgarzik@pobox.com>; <linux-ide@vger.kernel.org>; <linux-scsi@vger.kernel.org>; <linux-kernel@vger.kernel.org>; 
-<trivial@rustcorp.com.au>; <torvalds@osdl.org>
-Sent: Saturday, February 25, 2006 7:59 AM
-Subject: Re: [PATCH] sata_promise: Port enumeration order - SATA 150 TX4, SATA 300 TX4
-
-
-> Milan Kupcevic wrote:
->> From: Milan Kupcevic <milan@physics.harvard.edu>
->>
->> Fix Promise SATAII 150 TX4 (PDC40518) and Promise SATA 300 TX4
->> (PDC40718-GP) wrong port enumeration order that makes it (nearly)
->> impossible to deal with boot problems using two or more drives.
->>
->> Signed-off-by: Milan Kupcevic <milan@physics.harvard.edu>
->> ---
->>
->> The current kernel driver assumes:
->>
->> port 1 - scsi3
->> port 2 - scsi1
->> port 3 - scsi0
->> port 4 - scsi2
->
-> I totally agree with the fact that the Linux driver gets the ports wrong
-> when compared to the BIOS, Windows and surely contradicts the port
-> numbers printed on the board. I doubt we all got samples on the one
-> bad batch...
->
-> It *is* a real problem and if the solution is correct then I support it.
->
-> Maybe we need a quick feedback from current users: do you guys find
-> that the ports are detected as they are labelled (white silk screen)
-> on the board or do they show up out of order (as listed above by
-> Milan)?
->
-> -- 
-> Eyal Lebedinsky (eyal@eyal.emu.id.au) <http://samba.org/eyal/>
-> attach .zip as .dat
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
->
->
+> On Thu, Feb 16 2006, Mike Christie wrote:
+> > Subject: [PATCH] block layer: add partial mappings support to bio_map_user
+> > 
+> > For target mode we could end up with the case where we get very large
+> > request from the initiator. The request could be so large that we
+> > cannot transfer all the data in one operation. For example the
+> > HBA's segment or max_sector limits might limit us to a 1 MB transfer.
+> > To send a 5 MB command then we need to transfer the command chunk by chunk.
+> > 
+> > To do this, tgt core will map in as much data as possible into a bio,
+> > send this off, then when that transfer is completed we send off another
+> > request/bio. To be able to pack as much data into a bio as possible
+> > we need bio_map_user to support partially mapped bios. The attached patch
+> > just adds a new argument to the those functions and if set will not
+> > return a failure if the bio is partially mapped.
 > 
+> Drop the partial flag and just always allow it, fixing up the few
+> in-kernel users we have.
 
+Could you take a look at this patch?
+
+
+- bio_map_user_iov always allows partial mappings.
+
+- The two users (blk_rq_map_user and blk_rq_map_user_iov) will fails
+if the bio is partially mapped.
+
+- Added a length argument to blk_rq_map_user_iov in order to avoid
+including sg.h in ll_rw_blk.c for struct sg_iovec.
+
+
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+
+---
+
+ block/ll_rw_blk.c      |   29 ++++++++++++++++++-----------
+ block/scsi_ioctl.c     |    3 ++-
+ fs/bio.c               |   14 +-------------
+ include/linux/blkdev.h |    3 ++-
+ 4 files changed, 23 insertions(+), 26 deletions(-)
+
+cd71b46a9cf86022631c1fed9123b01e07f337a3
+diff --git a/block/ll_rw_blk.c b/block/ll_rw_blk.c
+index 03d9c82..6849859 100644
+--- a/block/ll_rw_blk.c
++++ b/block/ll_rw_blk.c
+@@ -2291,19 +2291,20 @@ int blk_rq_map_user(request_queue_t *q, 
+ 	else
+ 		bio = bio_copy_user(q, uaddr, len, reading);
+ 
+-	if (!IS_ERR(bio)) {
+-		rq->bio = rq->biotail = bio;
+-		blk_rq_bio_prep(q, rq, bio);
++	if (IS_ERR(bio))
++		return PTR_ERR(bio);
+ 
+-		rq->buffer = rq->data = NULL;
+-		rq->data_len = len;
+-		return 0;
++	if (bio->bi_size != len) {
++		bio_endio(bio, bio->bi_size, 0);
++		bio_unmap_user(bio);
++		return -EINVAL;
+ 	}
+ 
+-	/*
+-	 * bio is the err-ptr
+-	 */
+-	return PTR_ERR(bio);
++	rq->bio = rq->biotail = bio;
++	blk_rq_bio_prep(q, rq, bio);
++	rq->buffer = rq->data = NULL;
++	rq->data_len = len;
++	return 0;
+ }
+ 
+ EXPORT_SYMBOL(blk_rq_map_user);
+@@ -2329,7 +2330,7 @@ EXPORT_SYMBOL(blk_rq_map_user);
+  *    unmapping.
+  */
+ int blk_rq_map_user_iov(request_queue_t *q, struct request *rq,
+-			struct sg_iovec *iov, int iov_count)
++			struct sg_iovec *iov, int iov_count, unsigned int len)
+ {
+ 	struct bio *bio;
+ 
+@@ -2343,6 +2344,12 @@ int blk_rq_map_user_iov(request_queue_t 
+ 	if (IS_ERR(bio))
+ 		return PTR_ERR(bio);
+ 
++	if (bio->bi_size != len) {
++		bio_endio(bio, bio->bi_size, 0);
++		bio_unmap_user(bio);
++		return -EINVAL;
++	}
++
+ 	rq->bio = rq->biotail = bio;
+ 	blk_rq_bio_prep(q, rq, bio);
+ 	rq->buffer = rq->data = NULL;
+diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+index 24f7af9..ef9900d 100644
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -274,7 +274,8 @@ static int sg_io(struct file *file, requ
+ 			goto out;
+ 		}
+ 
+-		ret = blk_rq_map_user_iov(q, rq, iov, hdr->iovec_count);
++		ret = blk_rq_map_user_iov(q, rq, iov, hdr->iovec_count,
++					  hdr->dxfer_len);
+ 		kfree(iov);
+ 	} else if (hdr->dxfer_len)
+ 		ret = blk_rq_map_user(q, rq, hdr->dxferp, hdr->dxfer_len);
+diff --git a/fs/bio.c b/fs/bio.c
+index 1f3bb50..f75c2f4 100644
+--- a/fs/bio.c
++++ b/fs/bio.c
+@@ -750,7 +750,6 @@ struct bio *bio_map_user_iov(request_que
+ 			     int write_to_vm)
+ {
+ 	struct bio *bio;
+-	int len = 0, i;
+ 
+ 	bio = __bio_map_user_iov(q, bdev, iov, iov_count, write_to_vm);
+ 
+@@ -765,18 +764,7 @@ struct bio *bio_map_user_iov(request_que
+ 	 */
+ 	bio_get(bio);
+ 
+-	for (i = 0; i < iov_count; i++)
+-		len += iov[i].iov_len;
+-
+-	if (bio->bi_size == len)
+-		return bio;
+-
+-	/*
+-	 * don't support partial mappings
+-	 */
+-	bio_endio(bio, bio->bi_size, 0);
+-	bio_unmap_user(bio);
+-	return ERR_PTR(-EINVAL);
++	return bio;
+ }
+ 
+ static void __bio_unmap_user(struct bio *bio)
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 860e7a4..619ef1d 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -611,7 +611,8 @@ extern void blk_queue_activity_fn(reques
+ extern int blk_rq_map_user(request_queue_t *, struct request *, void __user *, unsigned int);
+ extern int blk_rq_unmap_user(struct bio *, unsigned int);
+ extern int blk_rq_map_kern(request_queue_t *, struct request *, void *, unsigned int, gfp_t);
+-extern int blk_rq_map_user_iov(request_queue_t *, struct request *, struct sg_iovec *, int);
++extern int blk_rq_map_user_iov(request_queue_t *, struct request *,
++			       struct sg_iovec *, int, unsigned int);
+ extern int blk_execute_rq(request_queue_t *, struct gendisk *,
+ 			  struct request *, int);
+ extern void blk_execute_rq_nowait(request_queue_t *, struct gendisk *,
+-- 
+1.1.3
