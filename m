@@ -1,40 +1,75 @@
-From: Ingo Flaschberger <if@xip.at>
-Subject: Compaq Fiber Channel Array RM4000 / Scsi middle ware driver
-Date: Sat, 25 Feb 2006 00:55:50 +0100 (CET)
-Message-ID: <Pine.GSO.4.64.0602250050410.27649@filebunker.xip.at>
+From: Milan Kupcevic <milan@physics.harvard.edu>
+Subject: [PATCH] sata_promise: Port enumeration order - SATA 150 TX4, SATA
+ 300 TX4
+Date: Fri, 24 Feb 2006 20:09:17 -0500
+Message-ID: <43FFAE3D.7010002@physics.harvard.edu>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns1.xip.at ([193.239.188.99]:61366 "EHLO chile.gbit.at")
-	by vger.kernel.org with ESMTP id S964806AbWBXXzx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Feb 2006 18:55:53 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, trivial@rustcorp.com.au, torvalds@osdl.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Hello,
+From: Milan Kupcevic <milan@physics.harvard.edu>
 
-I would like to implement the "black magic" from the cpqfc driver for the 
-RM4x00 arrays into a seperate module for the 2.6 series kernel.
+Fix Promise SATAII 150 TX4 (PDC40518) and Promise SATA 300 TX4 
+(PDC40718-GP) wrong port enumeration order that makes it (nearly) 
+impossible to deal with boot problems using two or more drives.
 
-As far as I know, there should be written a middleware because of the raid 
-disk type and the lun numbers.
+Signed-off-by: Milan Kupcevic <milan@physics.harvard.edu>
+---
 
-Because thats my first kernel project and I'm not shure how and where into 
-the scsi framework this should be implemented, I as for some 
-guide/hints/whatever; and yes, I'm able to code and understand C.
+The current kernel driver assumes:
 
-Kind regards,
- 	ingo flaschberger
+port 1 - scsi3
+port 2 - scsi1
+port 3 - scsi0
+port 4 - scsi2
 
-geschaeftsleitung
-crossip communications gmbH
-------------------------------------------------------------------_------------
-sebastian kneipp gasse 1          _____ _____ ____   _____ _____ (_)____
-a-1020 wien                      / ___// ___// __ \ / ___// ___// // __ \
-fix: +43-1-726 15 22-217        / /__ / /   / /_/ /(__  )(__  )/ // /_/ /
-fax: +43-1-726 15 22-111        \___//_/    \____//____//____//_// .___/
-mob: +43-699-105 86 719                                 _______ / /
-www.xip.at                      communications gmbh    /______//_/
--------------------------------------------------------------------------------
+Having 4 hard drives connected to the controller grub recognizes the 
+port 1 connected drive as "(hd0)" but kernel recognizes the port 3 
+connected drive as scsi0:0:0:0 (/dev/sda). There is no clean way to make 
+it boot correctly.
+
+ sata_promise.c |   16 ++++++++++------
+ 1 files changed, 10 insertions(+), 6 deletions(-)
+
+diff -uprN ./drivers/scsi/sata_promise.c 
+../linux/drivers/scsi/sata_promise.c
+--- ./drivers/scsi/sata_promise.c       2006-02-17 17:23:45.000000000 -0500
++++ ../linux/drivers/scsi/sata_promise.c        2006-02-24 
+19:35:16.000000000 -0500
+@@ -707,14 +707,18 @@ static int pdc_ata_init_one (struct pci_
+ 
+        /* notice 4-port boards */
+        switch (board_idx) {
+-       case board_20319:
++       case board_20319: /* tx4  */
+                        probe_ent->n_ports = 4;
+ 
+-               pdc_ata_setup_port(&probe_ent->port[2], base + 0x300);
+-               pdc_ata_setup_port(&probe_ent->port[3], base + 0x380);
+-
+-               probe_ent->port[2].scr_addr = base + 0x600;
+-               probe_ent->port[3].scr_addr = base + 0x700;
++               pdc_ata_setup_port(&probe_ent->port[0], base + 0x380);
++               pdc_ata_setup_port(&probe_ent->port[1], base + 0x280);
++               pdc_ata_setup_port(&probe_ent->port[2], base + 0x200);
++               pdc_ata_setup_port(&probe_ent->port[3], base + 0x300);
++
++               probe_ent->port[0].scr_addr = base + 0x700;
++               probe_ent->port[1].scr_addr = base + 0x500;
++               probe_ent->port[2].scr_addr = base + 0x400;
++               probe_ent->port[3].scr_addr = base + 0x600;
+                break;
+        case board_2037x:
+                probe_ent->n_ports = 2;
+
+-- 
+Milan Kupcevic
+System Administrator
+Harvard University
+Department of Physics
+
