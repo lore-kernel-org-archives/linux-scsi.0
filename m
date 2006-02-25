@@ -1,31 +1,38 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+From: Al Viro <viro@ftp.linux.org.uk>
 Subject: Re: [stable] [PATCH 1/2] sd: fix memory corruption by sd_read_cache_type
-Date: Sun, 26 Feb 2006 00:07:55 +0100
-Message-ID: <4400E34B.1000400@s5r6.in-berlin.de>
-References: <tkrat.014f03dc41356221@s5r6.in-berlin.de> <20060225021009.GV3883@sorel.sous-sol.org>
+Date: Sat, 25 Feb 2006 23:22:01 +0000
+Message-ID: <20060225232201.GK27946@ftp.linux.org.uk>
+References: <tkrat.014f03dc41356221@s5r6.in-berlin.de> <20060225021009.GV3883@sorel.sous-sol.org> <4400E34B.1000400@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:58295 "EHLO
-	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
-	id S1750710AbWBYXKO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 25 Feb 2006 18:10:14 -0500
-In-Reply-To: <20060225021009.GV3883@sorel.sous-sol.org>
+Received: from zeniv.linux.org.uk ([195.92.253.2]:63715 "EHLO
+	ZenIV.linux.org.uk") by vger.kernel.org with ESMTP id S1750721AbWBYXWJ
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 25 Feb 2006 18:22:09 -0500
+Content-Disposition: inline
+In-Reply-To: <4400E34B.1000400@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chris Wright <chrisw@sous-sol.org>
-Cc: stable@kernel.org, Linus Torvalds <torvalds@osdl.org>, Jody McIntyre <scjody@modernduck.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Al Viro <viro@ftp.linux.org.uk>
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: Chris Wright <chrisw@sous-sol.org>, stable@kernel.org, Linus Torvalds <torvalds@osdl.org>, Jody McIntyre <scjody@modernduck.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Chris Wright wrote:
-> * Stefan Richter (stefanr@s5r6.in-berlin.de) wrote:
->>sd: fix memory corruption by sd_read_cache_type
+On Sun, Feb 26, 2006 at 12:07:55AM +0100, Stefan Richter wrote:
+> Chris Wright wrote:
+> >* Stefan Richter (stefanr@s5r6.in-berlin.de) wrote:
+> >>sd: fix memory corruption by sd_read_cache_type
+> >
+> >Looks like these still aren't upstream.  Can you please resend to -stable
+> >once they've been picked up by Linus?
 > 
-> Looks like these still aren't upstream.  Can you please resend to -stable
-> once they've been picked up by Linus?
+> Yes, I will do so.
 
-Yes, I will do so.
--- 
-Stefan Richter
--=====-=-==- --=- ==-=-
-http://arcgraph.de/sr/
+Speaking of sbp2 problems...  Why the _hell_ are we blacklisting on
+firmware revision alone?  Especially with entries like "all firmware
+with 2.<whatever> as version is broken"...
+
+Case in point: Initio bridge, firmware revision 2.21.  Couldn't care
+less about long INQUIRY, doesn't need skip_ms_page_8, *DOES* need
+correctly detected cache type.
+
+What kind of chipsets do affected devices really have?
