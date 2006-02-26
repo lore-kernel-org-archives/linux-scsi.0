@@ -1,33 +1,59 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [stable] [PATCH 1/2] sd: fix memory corruption by	sd_read_cache_type
-Date: Sun, 26 Feb 2006 17:21:29 +0100
-Message-ID: <4401D589.6080204@s5r6.in-berlin.de>
-References: <tkrat.014f03dc41356221@s5r6.in-berlin.de>	 <20060225021009.GV3883@sorel.sous-sol.org>	 <4400E34B.1000400@s5r6.in-berlin.de>	 <Pine.LNX.4.64.0602251600480.22647@g5.osdl.org>	 <1140930888.3279.4.camel@mulgrave.il.steeleye.com>	 <20060226053138.GM27946@ftp.linux.org.uk> <1140964451.3337.5.camel@mulgrave.il.steeleye.com>
+From: Konstantin Khomoutov <flatworm@users.sourceforge.net>
+Subject: What happened to ncr53c8xx module in 2.6? (troubles with sym53c8xx in its place)
+Date: Sun, 26 Feb 2006 20:04:11 +0300
+Message-ID: <20060226170411.GA300@proxysrv.domain007.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:38889 "EHLO
-	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
-	id S1751335AbWBZQXK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 26 Feb 2006 11:23:10 -0500
-In-Reply-To: <1140964451.3337.5.camel@mulgrave.il.steeleye.com>
+Received: from mailhub.007spb.ru ([212.113.108.55]:7103 "EHLO
+	mailhub.007spb.ru") by vger.kernel.org with ESMTP id S1751259AbWBZREO
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 26 Feb 2006 12:04:14 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Al Viro <viro@ftp.linux.org.uk>, Linus Torvalds <torvalds@osdl.org>, Chris Wright <chrisw@sous-sol.org>, stable@kernel.org, Jody McIntyre <scjody@modernduck.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: tvarek@proxysrv.domain007.com
 
-James Bottomley wrote:
-...
-> how about this for the actual patch (for 2.6.16) ... I put two
-> more tidy ups into it ...
-...
-> +#define SD_BUF_SIZE		512
+I had have to upgrade from 2.4.30 to 2.6.15.4 and I've noticed that
+there's no more ncr53c8xx kernel module (actually, the code seems to be
+there but now it's just a part of 2 drivers for a couple of MCA-bus cards).
 
-Thanks.
-Believe it or not, I was actually about to follow up with something like 
-this. :-)
--- 
-Stefan Richter
--=====-=-==- --=- ==-=-
-http://arcgraph.de/sr/
+The problem is that I have some pretty old SCSI scanner (HP ScanJet 4p)
+that was distributed with its own ISA SCSI card (NCR53c400 based, BTW,
+but with that card and its driver I had no luck at all, while under
+Win98 that card works OK).
+Some time ago I've managed to put this scanner to work being attached to
+one that same old PCI card based on Symbios Logic 53c810 rev1 chip.
+The only driver that was able to control this card (with some parameters
+tweakery, though) was ncr53c8xx.
+
+As I can see, sym53c8xx had superseded ncr53c8xx in 2.6, right?
+But sym53c8xx gives me this when I try to insert it while the attached
+scanner is ON:
+
+PCI: Found IRQ 9 for device 0000:02:09.0
+sym0: <810> rev 0x1 at pci 0000:02:09.0 irq 9
+sym0: No NVRAM, ID 7, Fast-10, SE, parity checking
+CACHE TEST FAILED: timeout.
+sym0: CACHE INCORRECTLY CONFIGURED.
+sym0: giving up ...
+
+The exactly same results I seen when I tried this driver under a 2.4
+kernel.
+
+I've googled that this dumb scanner doesn't report parity and that
+disappoints the sym53c8xx driver, but I failed to find an appropriate
+option to turn parity checking off. Furthermore, I've also googled some
+info that sym53c8xx just doesn't support 53c810 chips at all.
+
+I've also patched my kernel config to just compile ncr53c8xx as a
+module, but with no luck (of course).
+
+As you probably can see I'm unsure what to do next.
+Can you please give me some advice on it (change to a different driver,
+tweak ncr53c8xx somehow to make it a module, pass sym53c8xx some
+parameters to make it work, whatewer...)?
+
+Thanks in advance!
+
