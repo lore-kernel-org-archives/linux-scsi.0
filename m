@@ -1,31 +1,47 @@
-From: Al Viro <viro@ftp.linux.org.uk>
-Subject: Re: [stable] [PATCH 1/2] sd: fix memory corruption by sd_read_cache_type
-Date: Sun, 26 Feb 2006 14:57:51 +0000
-Message-ID: <20060226145751.GR27946@ftp.linux.org.uk>
-References: <tkrat.014f03dc41356221@s5r6.in-berlin.de> <20060225021009.GV3883@sorel.sous-sol.org> <4400E34B.1000400@s5r6.in-berlin.de> <Pine.LNX.4.64.0602251600480.22647@g5.osdl.org> <1140930888.3279.4.camel@mulgrave.il.steeleye.com> <20060226053138.GM27946@ftp.linux.org.uk> <1140964451.3337.5.camel@mulgrave.il.steeleye.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: aic79xx
+Date: Sun, 26 Feb 2006 09:51:47 -0600
+Message-ID: <1140969107.3692.2.camel@mulgrave.il.steeleye.com>
+References: <200602221618.58553.srattai@zmnh.uni-hamburg.de>
+	 <1140628452.3227.25.camel@mulgrave.il.steeleye.com>
+	 <200602221839.09470.srattai@zmnh.uni-hamburg.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:43686 "EHLO
-	ZenIV.linux.org.uk") by vger.kernel.org with ESMTP id S1751152AbWBZO6D
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 26 Feb 2006 09:58:03 -0500
-Content-Disposition: inline
-In-Reply-To: <1140964451.3337.5.camel@mulgrave.il.steeleye.com>
+Received: from stat9.steeleye.com ([209.192.50.41]:62950 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1751237AbWBZPv4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 26 Feb 2006 10:51:56 -0500
+In-Reply-To: <200602221839.09470.srattai@zmnh.uni-hamburg.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Linus Torvalds <torvalds@osdl.org>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Chris Wright <chrisw@sous-sol.org>, stable@kernel.org, Jody McIntyre <scjody@modernduck.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Stephan Rattai <srattai@zmnh.uni-hamburg.de>
+Cc: linux-scsi@vger.kernel.org
 
-On Sun, Feb 26, 2006 at 08:34:10AM -0600, James Bottomley wrote:
-> Well, OK, I agree allowing us to request data longer than the actual
-> buffer is a problem.  However, I don't exactly see how this actually
-> causes corruption, since even the initio bridge only sends 12 bytes of
-> data, so we should stop with a data underrun at that point (however big
-> the buffer is)
+On Wed, 2006-02-22 at 18:39 +0100, Stephan Rattai wrote:
+> cat /sys/class/spi_transport/target1\:0\:1/min_period
+> 6.25
+> 
+> 2.6.16-rc3 ? Whatever causes this behaviour must have been introduced in 
+> 2.6.14. The cat above is taken from 2.6.15.4. The output from 2.6.14 is the 
+> same (as is the output from /proc/scsi/aic79xx/1), 2.6.16-rc4 dito. 2.6.13 
+> was working as expected.
 
-scsi_mode_sense() does memset(buffer, 0, len).  You don't need corrupting
-data to come from device - 10Kb of zeroes into 512-byte kmalloc'ed buffer
-will do the job just fine...
- 
-ACKed in that form.
+OK, I'm afraid this is a bit more serious than I thought.  Apparently
+the aic7xxx code that pulls the settings out of the seeprom didn't get
+ported over to the aic79xx driver.
+
+Temporarily, to achive what you want, you can just do
+
+echo 12.5 > /sys/class/spi_transport/target1\:0\:1/min_period
+echo 1 > /sys/class/spi_transport/target1\:0\:1/revalidate
+
+and that should bring the speed down to U160.
+
+I'll see what it will take to get the seeprom functions ported, but they
+probably won't make 2.6.16.
+
+James
+
+
