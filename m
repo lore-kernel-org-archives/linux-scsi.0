@@ -1,36 +1,70 @@
-From: Al Viro <viro@ftp.linux.org.uk>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
 Subject: Re: [stable] [PATCH 1/2] sd: fix memory corruption by sd_read_cache_type
-Date: Sun, 26 Feb 2006 08:22:06 +0000
-Message-ID: <20060226082206.GN27946@ftp.linux.org.uk>
-References: <tkrat.014f03dc41356221@s5r6.in-berlin.de> <20060225021009.GV3883@sorel.sous-sol.org> <4400E34B.1000400@s5r6.in-berlin.de> <20060225232201.GK27946@ftp.linux.org.uk> <4401629C.8070803@s5r6.in-berlin.de>
+Date: Sun, 26 Feb 2006 09:29:29 +0100
+Message-ID: <440166E9.8050608@s5r6.in-berlin.de>
+References: <tkrat.014f03dc41356221@s5r6.in-berlin.de> <20060225021009.GV3883@sorel.sous-sol.org> <4400E34B.1000400@s5r6.in-berlin.de> <Pine.LNX.4.64.0602251600480.22647@g5.osdl.org> <1140930888.3279.4.camel@mulgrave.il.steeleye.com> <20060226053138.GM27946@ftp.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:60579 "EHLO
-	ZenIV.linux.org.uk") by vger.kernel.org with ESMTP id S1751262AbWBZIWW
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 26 Feb 2006 03:22:22 -0500
-Content-Disposition: inline
-In-Reply-To: <4401629C.8070803@s5r6.in-berlin.de>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:713 "EHLO
+	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
+	id S1751268AbWBZIbN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 26 Feb 2006 03:31:13 -0500
+In-Reply-To: <20060226053138.GM27946@ftp.linux.org.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: Chris Wright <chrisw@sous-sol.org>, stable@kernel.org, Linus Torvalds <torvalds@osdl.org>, Jody McIntyre <scjody@modernduck.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Al Viro <viro@ftp.linux.org.uk>, Linus Torvalds <torvalds@osdl.org>, Chris Wright <chrisw@sous-sol.org>, stable@kernel.org, Jody McIntyre <scjody@modernduck.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Andrew Morton <akpm@osdl.org>
 
-On Sun, Feb 26, 2006 at 09:11:08AM +0100, Stefan Richter wrote:
-> Al Viro wrote:
-> >Speaking of sbp2 problems...  Why the _hell_ are we blacklisting on
-> >firmware revision alone?  Especially with entries like "all firmware
-> >with 2.<whatever> as version is broken"...
+Al Viro wrote:
+> On Sat, Feb 25, 2006 at 11:14:48PM -0600, James Bottomley wrote:
+...
+>>The problem is that it's a change
+>>to sd and a change to scsi_lib in a fairly critical routine.  While I'm
+>>reasonably certain the change is safe, I'd prefer to make sure by
+>>incubating in -mm for a while.
+>>
+>>The title, by the way, is misleading; it's not a memory corruption in sd
+>>at all really.  It's the initio bridge which produces a totally
+>>standards non conformant return to a mode sense which produces the
+>>problem.  And so, it's only the single initio bridge which is currently
+>>affected; hence the caution.
 > 
-> The firmware_revision CSR key value has so far been a good method to 
-> guesstimate the bridge chip. I don't know a better one.
+> No.  It's sd.c assuming that mode page header is sane, without any
+> checks.  And yes, it does give memory corruption if it's not.
+> 
+> Initio-related part is in scsi_lib.c (and in recovery part of sd.c
+> changes).  That one is about how we can handle gracefully a broken
+> device that gives no header at all.
+> 
+> Checks for ->block_descriptors_length are just making sure we won't try
+> to do any access past the end of buffer, no matter what crap we got from
+> device.
 
-Umm...  What about ->vendor_name_kv (plus firmware_revision, obviously)?
- 
-> I posted an improved blacklisting patch a few days ago. Among other 
-> small cleanups, I removed skip_ms_page_8 from the Initio blacklist entry.
-> http://marc.theaimsgroup.com/?l=linux1394-devel&m=114065678722190
+That's why I split Al's patch. Part 1/2 prevents sd from using values 
+from buggy firmwares to overwrite memory where sd has no business to 
+write at. As Al explained, the culprit is sd which feeds a too big len 
+to scsi_mode_sense()'s memset(buffer, 0, len). Patch 2/2 adds an Initio 
+specific workaround. (The 2nd part is not necessarily material for 
+-stable, although it assures correct cache handling for Initio based 
+SBP-2 HDDs.)
 
-FWIW, that puppy appears to live just fine without forcing 36byte
-inquiry here...
+Please merge the sd fix ASAP (part 1/2). Users _are_ seeing memory 
+corruption or panic in interrupt context without this patch. Fully 
+reproducable, probably with all Initio SBP-2 bridges which exist; and 
+these are actually popular chips for 1394a S400 as well as 1394b S800 
+products, both noname and branded products.
+
+The 2nd part could perhaps go through -mm. If you wish I resend it to 
+Andrew. Al, what do you think? I believe this patch to be safe for 
+non-broken devices though.
+
+BTW I missed a small whitespace mishap in pt 2/2 which is why I should 
+repost it anyway:
+-+		} else if(use_10_for_ms) {
+++		} else if (use_10_for_ms) {
+-- 
+Stefan Richter
+-=====-=-==- --=- ==-=-
+http://arcgraph.de/sr/
