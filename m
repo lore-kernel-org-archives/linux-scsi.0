@@ -1,33 +1,69 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] Export spi_populate_* functions
-Date: Mon, 27 Feb 2006 07:51:27 -0700
-Message-ID: <20060227145127.GD27759@parisc-linux.org>
-References: <20060227141826.GB27759@parisc-linux.org> <1141050699.2992.113.camel@laptopd505.fenrus.org> <1141051662.3228.1.camel@mulgrave.il.steeleye.com>
+From: Michael Reed <mdr@sgi.com>
+Subject: [PATCH 1/1] mpt fusion: DMPT_DEBUG_FC conditional code doesn't compile
+Date: Mon, 27 Feb 2006 10:00:51 -0600
+Message-ID: <44032233.30407@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------090208020606020309060205"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:28868 "EHLO
-	palinux.hppa") by vger.kernel.org with ESMTP id S1751403AbWB0Ov2
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Feb 2006 09:51:28 -0500
-Content-Disposition: inline
-In-Reply-To: <1141051662.3228.1.camel@mulgrave.il.steeleye.com>
+Received: from omx2-ext.sgi.com ([192.48.171.19]:21680 "EHLO omx2.sgi.com")
+	by vger.kernel.org with ESMTP id S1751478AbWB0QA5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 27 Feb 2006 11:00:57 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Arjan van de Ven <arjan@infradead.org>, linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, "Moore, Eric Dean" <Eric.Moore@lsil.com>
 
-On Mon, Feb 27, 2006 at 08:47:42AM -0600, James Bottomley wrote:
-> On Mon, 2006-02-27 at 15:31 +0100, Arjan van de Ven wrote:
-> > since this is new and very much linux specific code, shouldn't these be
-> > _GPL exports?
-> 
-> Actually, try this commit:
-> 
-> http://www.kernel.org/git/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commit;h=e855d0f4b3d4c421d4de5f30582e3aa579184adb
-> 
-> It's been there since I put the patch in ... otherwise none of my
-> modules would build ...
+This is a multi-part message in MIME format.
+--------------090208020606020309060205
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-How  strange; when I looked  on  gitweb an hour  ago,  it  wasn't
-there,  yet  now it  is.  
+mptfc.c doesn't compile when DMPT_DEBUG_FC is defined.
+
+Signed-off-by: Michael Reed <mdr@sgi.com>
+---
+
+--------------090208020606020309060205
+Content-Type: text/x-patch;
+ name="1a-mptfc-debug-fix.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="1a-mptfc-debug-fix.patch"
+
+diff -ru a/drivers/message/fusion/mptfc.c b/drivers/message/fusion/mptfc.c
+--- a/drivers/message/fusion/mptfc.c	2006-02-27 09:47:07.000000000 -0600
++++ b/drivers/message/fusion/mptfc.c	2006-02-27 09:51:01.000000000 -0600
+@@ -432,7 +432,7 @@
+ 				"mptfc_reg_dev.%d: %x, %llx / %llx, tid %d, "
+ 				"rport tid %d, tmo %d\n",
+ 					ioc->name,
+-					oc->sh->host_no,
++					ioc->sh->host_no,
+ 					pg0->PortIdentifier,
+ 					pg0->WWNN,
+ 					pg0->WWPN,
+@@ -562,14 +562,20 @@
+ 
+ 	vtarget->num_luns++;
+ 
++#ifdef DMPT_DEBUG_FC
++	{
++	struct mptfc_rport_info	*ri;
++	ri = *((struct mptfc_rport_info **)rport->dd_data);
+ 	dfcprintk ((MYIOC_s_INFO_FMT
+ 		"mptfc_slv_alloc.%d: num_luns %d, sdev.id %d, "
+ 	        "CurrentTargetID %d, %x %llx %llx\n",
+-		ioc->name,
++		hd->ioc->name,
+ 		sdev->host->host_no,
+ 		vtarget->num_luns,
+ 		sdev->id, ri->pg0.CurrentTargetID,
+ 		ri->pg0.PortIdentifier, ri->pg0.WWPN, ri->pg0.WWNN));
++	}
++#endif
+ 
+ 	return 0;
+ }
+
+--------------090208020606020309060205--
