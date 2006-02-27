@@ -1,44 +1,63 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: Areca RAID driver remaining items?
-Date: Mon, 27 Feb 2006 05:36:55 -0700
-Message-ID: <20060227123655.GA27759@parisc-linux.org>
-References: <001401c63b90$cf646370$b100a8c0@erich2003>
+From: Stephan Rattai <srattai@zmnh.uni-hamburg.de>
+Subject: Re: aic79xx
+Date: Mon, 27 Feb 2006 13:53:47 +0100
+Message-ID: <200602271353.47559.srattai@zmnh.uni-hamburg.de>
+References: <200602221618.58553.srattai@zmnh.uni-hamburg.de> <200602221839.09470.srattai@zmnh.uni-hamburg.de> <1140969107.3692.2.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-6"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:10157 "EHLO
-	palinux.hppa") by vger.kernel.org with ESMTP id S1751236AbWB0Mg5
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Feb 2006 07:36:57 -0500
+Received: from rzaixsrv2.rrz.uni-hamburg.de ([134.100.32.71]:36254 "EHLO
+	rzaixsrv2.rrz.uni-hamburg.de") by vger.kernel.org with ESMTP
+	id S1750800AbWB0Mxy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 27 Feb 2006 07:53:54 -0500
+Received: from mail.zmnh.uni-hamburg.de (mail.zmnh.uni-hamburg.de [134.100.101.11])
+	by rzaixsrv2.rrz.uni-hamburg.de (8.12.10/8.12.9) with ESMTP id k1RCrrpx130772
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Mon, 27 Feb 2006 13:53:53 +0100
+Received: from snoopy.zmnh.uni-hamburg.de (snoopy.zmnh.uni-hamburg.de [192.168.100.1])
+	by mail.zmnh.uni-hamburg.de (8.13.3/8.13.3) with ESMTP id k1RCrm0X029728
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Mon, 27 Feb 2006 13:53:48 +0100
+Received: from konfuzius.zmnh.uni-hamburg.de (localhost [127.0.0.1])
+	by snoopy.zmnh.uni-hamburg.de (8.13.4/8.13.4) with ESMTP id k1RCrmQZ008460
+	for <linux-scsi@vger.kernel.org>; Mon, 27 Feb 2006 13:53:48 +0100
+In-Reply-To: <1140969107.3692.2.camel@mulgrave.il.steeleye.com>
 Content-Disposition: inline
-In-Reply-To: <001401c63b90$cf646370$b100a8c0@erich2003>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: erich <erich@areca.com.tw>
-Cc: Christoph Hellwig <hch@infradead.org>, Arjan van de Ven <arjan@infradead.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, billion.wu@areca.com.tw, akpm@osdl.org, oliver@neukum.org
+To: linux-scsi@vger.kernel.org
 
-On Mon, Feb 27, 2006 at 07:27:33PM +0800, erich wrote:
-> Dear Christoph Hellwig,
-> 
-> Do you have any comments with arcmsr SATA RAID driver on sysfs attribute?
-> There were four types of function template completed in linux.
-> iscsi_function_template
-> sas_function_template
-> spi_function_template
-> fc_function_template
-> Do you have opintion with "arcmsr_transport_functions" ?
-> and Which function templete does "arcmsr" belong to?
+> OK, I'm afraid this is a bit more serious than I thought.  Apparently
+> the aic7xxx code that pulls the settings out of the seeprom didn't get
+> ported over to the aic79xx driver.
+>
+> Temporarily, to achive what you want, you can just do
+>
+> echo 12.5 > /sys/class/spi_transport/target1\:0\:1/min_period
+> echo 1 > /sys/class/spi_transport/target1\:0\:1/revalidate
+>
+> and that should bring the speed down to U160.
+>
+> I'll see what it will take to get the seeprom functions ported, but they
+> probably won't make 2.6.16.
+>
+> James
 
-The transport really refers to the physical cabling.  iSCSI is
-SCSI-over-IP, SAS is Serial Attached SCSI, SPI is Parallel SCSI and FC
-is Fibre Channel.  It seems to me from your website that you're
-using SATA-II drives, so you'll want to look at the SAS template for
-exposing cabling details.
+Well, if I try this, the 
+echo 1 > /sys/class/spi_transport/target1\:0\:1/revalidate
+never returns. 
 
-You missed one useful class though, the raid_function_template, which
-you almost certainly want to use.  See drivers/scsi/raid_class.c and
-include/linux/raid_class.h.  It's early days for the RAID class, so you
-may wish to extend it to meet your needs.
+cat /proc/scsi/aic79xx/1 says:
+Target 1 Negotiation Settings
+        User: 160.000MB/s transfers (80.000MHz RDSTRM|DT|IU|RTI|QAS, 16bit)
+        Goal: 3.300MB/s transfers
+        Curr: 3.300MB/s transfers
 
-James, I presume it's been mis-placed for convenience and it'll move to
-block/ or drivers/block/ at some point?
+Thinks like mt -f /dev/nst0 never return. 
+
+I think I'll just use 2.6.13, the target is working fine there.
+
+Thanks,
+Stephan
