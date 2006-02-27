@@ -1,31 +1,33 @@
 From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: [PATCH] Export spi_populate_* functions
-Date: Mon, 27 Feb 2006 07:49:06 -0700
-Message-ID: <20060227144906.GC27759@parisc-linux.org>
-References: <20060227141826.GB27759@parisc-linux.org> <1141050699.2992.113.camel@laptopd505.fenrus.org>
+Date: Mon, 27 Feb 2006 07:51:27 -0700
+Message-ID: <20060227145127.GD27759@parisc-linux.org>
+References: <20060227141826.GB27759@parisc-linux.org> <1141050699.2992.113.camel@laptopd505.fenrus.org> <1141051662.3228.1.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:26820 "EHLO
-	palinux.hppa") by vger.kernel.org with ESMTP id S1751341AbWB0OtI
+Received: from palinux.external.hp.com ([192.25.206.14]:28868 "EHLO
+	palinux.hppa") by vger.kernel.org with ESMTP id S1751403AbWB0Ov2
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Feb 2006 09:49:08 -0500
+	Mon, 27 Feb 2006 09:51:28 -0500
 Content-Disposition: inline
-In-Reply-To: <1141050699.2992.113.camel@laptopd505.fenrus.org>
+In-Reply-To: <1141051662.3228.1.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Arjan van de Ven <arjan@infradead.org>, linux-scsi@vger.kernel.org
 
-On Mon, Feb 27, 2006 at 03:31:38PM +0100, Arjan van de Ven wrote:
-> On Mon, 2006-02-27 at 07:18 -0700, Matthew Wilcox wrote:
-> > These functions should be usable by modules.
+On Mon, Feb 27, 2006 at 08:47:42AM -0600, James Bottomley wrote:
+> On Mon, 2006-02-27 at 15:31 +0100, Arjan van de Ven wrote:
+> > since this is new and very much linux specific code, shouldn't these be
+> > _GPL exports?
 > 
-> since this is new and very much linux specific code, shouldn't these be
-> _GPL exports?
+> Actually, try this commit:
+> 
+> http://www.kernel.org/git/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commit;h=e855d0f4b3d4c421d4de5f30582e3aa579184adb
+> 
+> It's been there since I put the patch in ... otherwise none of my
+> modules would build ...
 
-how is it very much linux specific?  these  functions take a char
-pointer and fill in that buffer with the messages defined in the scsi
-specs.  there's no linux data structures used.
-
-http://git.kernel.org/git/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=blobdiff;h=c0051a432a97d1f9181229aff0fc9484df10c342;hp=97f4be62f748af9791d1a1932244ea604a1432e7;hb=49db0bbd2a3648b1da8dee31f803fc52a06c57e1;f=drivers/scsi/scsi_transport_spi.c
+How  strange; when I looked  on  gitweb an hour  ago,  it  wasn't
+there,  yet  now it  is.  
