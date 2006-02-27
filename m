@@ -1,47 +1,34 @@
-From: "Jesper Juhl" <jesper.juhl@gmail.com>
-Subject: Re: [PATCH] silence gcc warning about possibly uninitialized use of variable in scsi_scan
-Date: Sun, 26 Feb 2006 21:41:37 +0100
-Message-ID: <9a8748490602261241j6e55cf45g5c4b6ddd211f85c3@mail.gmail.com>
-References: <200602261639.15657.jesper.juhl@gmail.com>
-	 <1140978084.3692.6.camel@mulgrave.il.steeleye.com>
-	 <9a8748490602261023j46eb39f2peaa080d737fee5e1@mail.gmail.com>
-	 <1140980377.3692.9.camel@mulgrave.il.steeleye.com>
-	 <9a8748490602261101q39f4cf8eqabe0143921389ce6@mail.gmail.com>
-	 <1140981714.3692.12.camel@mulgrave.il.steeleye.com>
+From: "erich" <erich@areca.com.tw>
+Subject: Re: Areca RAID driver remaining items?
+Date: Mon, 27 Feb 2006 19:27:33 +0800
+Message-ID: <001401c63b90$cf646370$b100a8c0@erich2003>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	format=flowed;
+	charset="big5";
+	reply-type=original
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.197]:35939 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751209AbWBZUli convert rfc822-to-8bit
+Received: from 220-130-178-143.HINET-IP.hinet.net ([220.130.178.143]:64488
+	"EHLO areca.com.tw") by vger.kernel.org with ESMTP id S1751151AbWB0L1t
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 26 Feb 2006 15:41:38 -0500
-Received: by wproxy.gmail.com with SMTP id 69so1014471wri
-        for <linux-scsi@vger.kernel.org>; Sun, 26 Feb 2006 12:41:37 -0800 (PST)
-In-Reply-To: <1140981714.3692.12.camel@mulgrave.il.steeleye.com>
-Content-Disposition: inline
+	Mon, 27 Feb 2006 06:27:49 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-kernel@vger.kernel.org, Eric Youngdale <eric@andante.org>, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "\"erich\"" <erich@areca.com.tw>, "\"Arjan van de Ven\"" <arjan@infradead.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, billion.wu@areca.com.tw, akpm@osdl.org, oliver@neukum.org
 
-On 2/26/06, James Bottomley <James.Bottomley@steeleye.com> wrote:
-> On Sun, 2006-02-26 at 20:01 +0100, Jesper Juhl wrote:
-> > Hmm, it's quite reproducible and the gcc 3.4.5 I have here is not
-> > patched by the distribution (Slackware). If you want I can send you
-> > the .config that results in the warning..
->
-> I really don't think it's a config issue.  scsi_probe_lun() is always
-> compiled in if CONFIG_SCSI is set.  I think you have a compiler problem.
->
+Dear Christoph Hellwig,
 
-I must admit I think the compiler is OK.
-I have two different boxes with gcc 3.4.5 and they both give the same
-warning (not to mention that that gcc builds everything I've thrown at
-it correctly).
-But nevermind, it's just a silly little warning - just leave it be.
+Do you have any comments with arcmsr SATA RAID driver on sysfs attribute?
+There were four types of function template completed in linux.
+iscsi_function_template
+sas_function_template
+spi_function_template
+fc_function_template
+Do you have opintion with "arcmsr_transport_functions" ?
+and Which function templete does "arcmsr" belong to?
 
---
-Jesper Juhl <jesper.juhl@gmail.com>
-Don't top-post  http://www.catb.org/~esr/jargon/html/T/top-post.html
-Plain text mails only, please      http://www.expita.com/nomime.html
+Best Regards
+Erich Chen
+
