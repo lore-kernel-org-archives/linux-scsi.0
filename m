@@ -1,34 +1,44 @@
-From: "erich" <erich@areca.com.tw>
+From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: Areca RAID driver remaining items?
-Date: Mon, 27 Feb 2006 19:27:33 +0800
-Message-ID: <001401c63b90$cf646370$b100a8c0@erich2003>
+Date: Mon, 27 Feb 2006 05:36:55 -0700
+Message-ID: <20060227123655.GA27759@parisc-linux.org>
+References: <001401c63b90$cf646370$b100a8c0@erich2003>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="big5";
-	reply-type=original
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 220-130-178-143.HINET-IP.hinet.net ([220.130.178.143]:64488
-	"EHLO areca.com.tw") by vger.kernel.org with ESMTP id S1751151AbWB0L1t
+Received: from palinux.external.hp.com ([192.25.206.14]:10157 "EHLO
+	palinux.hppa") by vger.kernel.org with ESMTP id S1751236AbWB0Mg5
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Feb 2006 06:27:49 -0500
+	Mon, 27 Feb 2006 07:36:57 -0500
+Content-Disposition: inline
+In-Reply-To: <001401c63b90$cf646370$b100a8c0@erich2003>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "\"erich\"" <erich@areca.com.tw>, "\"Arjan van de Ven\"" <arjan@infradead.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, billion.wu@areca.com.tw, akpm@osdl.org, oliver@neukum.org
+To: erich <erich@areca.com.tw>
+Cc: Christoph Hellwig <hch@infradead.org>, Arjan van de Ven <arjan@infradead.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, billion.wu@areca.com.tw, akpm@osdl.org, oliver@neukum.org
 
-Dear Christoph Hellwig,
+On Mon, Feb 27, 2006 at 07:27:33PM +0800, erich wrote:
+> Dear Christoph Hellwig,
+> 
+> Do you have any comments with arcmsr SATA RAID driver on sysfs attribute?
+> There were four types of function template completed in linux.
+> iscsi_function_template
+> sas_function_template
+> spi_function_template
+> fc_function_template
+> Do you have opintion with "arcmsr_transport_functions" ?
+> and Which function templete does "arcmsr" belong to?
 
-Do you have any comments with arcmsr SATA RAID driver on sysfs attribute?
-There were four types of function template completed in linux.
-iscsi_function_template
-sas_function_template
-spi_function_template
-fc_function_template
-Do you have opintion with "arcmsr_transport_functions" ?
-and Which function templete does "arcmsr" belong to?
+The transport really refers to the physical cabling.  iSCSI is
+SCSI-over-IP, SAS is Serial Attached SCSI, SPI is Parallel SCSI and FC
+is Fibre Channel.  It seems to me from your website that you're
+using SATA-II drives, so you'll want to look at the SAS template for
+exposing cabling details.
 
-Best Regards
-Erich Chen
+You missed one useful class though, the raid_function_template, which
+you almost certainly want to use.  See drivers/scsi/raid_class.c and
+include/linux/raid_class.h.  It's early days for the RAID class, so you
+may wish to extend it to meet your needs.
 
+James, I presume it's been mis-placed for convenience and it'll move to
+block/ or drivers/block/ at some point?
