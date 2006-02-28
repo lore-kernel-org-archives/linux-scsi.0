@@ -1,73 +1,40 @@
-From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
-Subject: Re: [PATCH 12/13] ATA ACPI: use scsi_bus_shutdown for SATA/PATA
-Date: Tue, 28 Feb 2006 11:44:24 -0800
-Message-ID: <20060228114424.0fb2d495.randy_d_dunlap@linux.intel.com>
-References: <20060222133241.595a8509.randy_d_dunlap@linux.intel.com>
-	<20060222140608.2de3fa24.randy_d_dunlap@linux.intel.com>
-	<20060228115858.GF4081@elf.ucw.cz>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] fix scsi process problems and clean up the target reap
+	issues
+Date: Tue, 28 Feb 2006 13:52:02 -0600
+Message-ID: <1141156322.3258.49.camel@mulgrave.il.steeleye.com>
+References: <1140726438.2809.18.camel@localhost.localdomain>
+	 <20060228172436.GA1456@us.ibm.com>
+	 <1141148345.3258.24.camel@mulgrave.il.steeleye.com>
+	 <20060228191733.GA4913@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20060228115858.GF4081@elf.ucw.cz>
-Sender: linux-ide-owner@vger.kernel.org
-To: Pavel Machek <pavel@ucw.cz>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, akpm@osdl.org, jgarzik@pobox.com, james.bottomley@steeleye.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stat9.steeleye.com ([209.192.50.41]:40150 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S932534AbWB1TwF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Feb 2006 14:52:05 -0500
+In-Reply-To: <20060228191733.GA4913@us.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Tue, 28 Feb 2006 12:58:58 +0100
-Pavel Machek <pavel@ucw.cz> wrote:
+On Tue, 2006-02-28 at 11:17 -0800, Mike Anderson wrote:
+> I believe being on the list longer would solve the aic problem, but I have
+> not tried to a patch to do this. I am trying to get access to the system now.
 
-> Hi!
-> 
-> > From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
-> > 
-> > Add ability for SCSI drivers to invoke a shutdown method.
-> > This allows drivers to make drives safe for shutdown/poweroff,
-> > for example.  Some drives need this to prevent possible problems.
-> > 
-> > Signed-off-by: Randy Dunlap <randy_d_dunlap@linux.intel.com>
-> 
-> > --- linux-2616-rc4-ata.orig/drivers/scsi/scsi_sysfs.c
-> > +++ linux-2616-rc4-ata/drivers/scsi/scsi_sysfs.c
-> > @@ -302,11 +302,27 @@ static int scsi_bus_resume(struct device
-> >  	return err;
-> >  }
-> >  
-> > +static void scsi_bus_shutdown(struct device * dev)
-> > +{
-> > +	struct scsi_device *sdev = to_scsi_device(dev);
-> > +	struct scsi_host_template *sht = sdev->host->hostt;
-> > +	int err;
-> > +
-> > +	err = scsi_device_quiesce(sdev);
-> 
-> int err = scsi_device_quiesce()?
+Actually, the problem is caused by a misordering of target_alloc,
+target_destroy.
 
-Shouldn't matter for the generated code, right?
+The aic target_alloc routine has a BUG_ON() to detect that the target
+entry is null (it's nulled in target_destroy).  So, this could be fixed
+by moving the target_destroy callback, as well.  I'll take a look at it
+and see what springs to mind.  I'm leery of putting the list deletion in
+the release, because that could delay new target creation arbitrarily
+long ...
 
-> > +	if (err)
-> > +		printk(KERN_DEBUG "%s: error (0x%x) during shutdown\n",
-> > +			__FUNCTION__, err);
-> 
-> If you get an error, and then ignore it... that should not be DEBUG
-> message, right?
-> 
-> > +	if (sht->shutdown)
-> > +		sht->shutdown(sdev);
-> > +}
-> > +
-> >  struct bus_type scsi_bus_type = {
-> >          .name		= "scsi",
-> >          .match		= scsi_bus_match,
-> >  	.suspend	= scsi_bus_suspend,
-> >  	.resume		= scsi_bus_resume,
-> > +	.shutdown	= scsi_bus_shutdown,
-> >  };
-> 
-> Whitespace?
+James
 
-Not a problem in my addition.  Are you requesting me to fix
-the other lines?
 
-~Randy
