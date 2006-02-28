@@ -1,66 +1,69 @@
-From: Stephen Degler <stephen@degler.net>
-Subject: Re: aic79xx
-Date: Mon, 27 Feb 2006 15:20:10 -0500
-Message-ID: <44035EFA.5020602@degler.net>
-References: <200602221618.58553.srattai@zmnh.uni-hamburg.de>	 <1140628452.3227.25.camel@mulgrave.il.steeleye.com>	 <200602221839.09470.srattai@zmnh.uni-hamburg.de> <1140969107.3692.2.camel@mulgrave.il.steeleye.com>
+From: Ingo Flaschberger <if@xip.at>
+Subject: Re: Compaq Fiber Channel Array RM4000 / Scsi middle ware driver
+Date: Tue, 28 Feb 2006 01:23:11 +0100 (CET)
+Message-ID: <Pine.GSO.4.64.0602280120290.25994@filebunker.xip.at>
+References: <Pine.GSO.4.64.0602250050410.27649@filebunker.xip.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from crusoe.degler.net ([66.114.64.229]:14535 "EHLO
-	crusoe.degler.net") by vger.kernel.org with ESMTP id S932339AbWB0UUN
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Feb 2006 15:20:13 -0500
-In-Reply-To: <1140969107.3692.2.camel@mulgrave.il.steeleye.com>
+Received: from ns1.xip.at ([193.239.188.99]:3547 "EHLO chile.gbit.at")
+	by vger.kernel.org with ESMTP id S1751800AbWB1AXY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 27 Feb 2006 19:23:24 -0500
+In-Reply-To: <Pine.GSO.4.64.0602250050410.27649@filebunker.xip.at>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Stephan Rattai <srattai@zmnh.uni-hamburg.de>, linux-scsi@vger.kernel.org
+To: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
 
 Hello,
 
-I've observed this problem as well.  I'd be happy to test a patch, or 
-derive one if the patch isn't too involved.
+Where should the "middleware", Compaq Fiber Channel Array RM4000, 
+TYPE_RAID driver reside in the kernel?
 
-skd
+scsi? char? block?
 
-James Bottomley wrote:
+Kind regards,
+ 	ingo flaschberger
 
->On Wed, 2006-02-22 at 18:39 +0100, Stephan Rattai wrote:
->  
->
->>cat /sys/class/spi_transport/target1\:0\:1/min_period
->>6.25
->>
->>2.6.16-rc3 ? Whatever causes this behaviour must have been introduced in 
->>2.6.14. The cat above is taken from 2.6.15.4. The output from 2.6.14 is the 
->>same (as is the output from /proc/scsi/aic79xx/1), 2.6.16-rc4 dito. 2.6.13 
->>was working as expected.
->>    
->>
->
->OK, I'm afraid this is a bit more serious than I thought.  Apparently
->the aic7xxx code that pulls the settings out of the seeprom didn't get
->ported over to the aic79xx driver.
->
->Temporarily, to achive what you want, you can just do
->
->echo 12.5 > /sys/class/spi_transport/target1\:0\:1/min_period
->echo 1 > /sys/class/spi_transport/target1\:0\:1/revalidate
->
->and that should bring the speed down to U160.
->
->I'll see what it will take to get the seeprom functions ported, but they
->probably won't make 2.6.16.
->
->James
->
->
->-
->To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->  
->
+geschaeftsleitung
+crossip communications gmbH
+------------------------------------------------------------------_------------
+sebastian kneipp gasse 1          _____ _____ ____   _____ _____ (_)____
+a-1020 wien                      / ___// ___// __ \ / ___// ___// // __ \
+fix: +43-1-726 15 22-217        / /__ / /   / /_/ /(__  )(__  )/ // /_/ /
+fax: +43-1-726 15 22-111        \___//_/    \____//____//____//_// .___/
+mob: +43-699-105 86 719                                 _______ / /
+www.xip.at                      communications gmbh    /______//_/
+-------------------------------------------------------------------------------
+On Sat, 25 Feb 2006, Ingo Flaschberger wrote:
 
+> Hello,
+>
+> I would like to implement the "black magic" from the cpqfc driver for the 
+> RM4x00 arrays into a seperate module for the 2.6 series kernel.
+>
+> As far as I know, there should be written a middleware because of the raid 
+> disk type and the lun numbers.
+>
+> Because thats my first kernel project and I'm not shure how and where into 
+> the scsi framework this should be implemented, I as for some 
+> guide/hints/whatever; and yes, I'm able to code and understand C.
+>
+> Kind regards,
+> 	ingo flaschberger
+>
+> geschaeftsleitung
+> crossip communications gmbH
+> ------------------------------------------------------------------_------------
+> sebastian kneipp gasse 1          _____ _____ ____   _____ _____ (_)____
+> a-1020 wien                      / ___// ___// __ \ / ___// ___// // __ \
+> fix: +43-1-726 15 22-217        / /__ / /   / /_/ /(__  )(__  )/ // /_/ /
+> fax: +43-1-726 15 22-111        \___//_/    \____//____//____//_// .___/
+> mob: +43-699-105 86 719                                 _______ / /
+> www.xip.at                      communications gmbh    /______//_/
+> -------------------------------------------------------------------------------
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
