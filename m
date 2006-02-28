@@ -1,40 +1,88 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] fix scsi process problems and clean up the target reap
-	issues
-Date: Tue, 28 Feb 2006 13:52:02 -0600
-Message-ID: <1141156322.3258.49.camel@mulgrave.il.steeleye.com>
-References: <1140726438.2809.18.camel@localhost.localdomain>
-	 <20060228172436.GA1456@us.ibm.com>
-	 <1141148345.3258.24.camel@mulgrave.il.steeleye.com>
-	 <20060228191733.GA4913@us.ibm.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: sg regression in 2.6.16-rc5
+Date: Tue, 28 Feb 2006 14:53:14 -0500
+Message-ID: <4404AA2A.5010703@torque.net>
+References: <E94491DE-8378-41DC-9C01-E8C1C91B6B4E@mac.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:40150 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S932534AbWB1TwF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Feb 2006 14:52:05 -0500
-In-Reply-To: <20060228191733.GA4913@us.ibm.com>
+Received: from canuck.infradead.org ([205.233.218.70]:64184 "EHLO
+	canuck.infradead.org") by vger.kernel.org with ESMTP
+	id S932476AbWB1TyQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Feb 2006 14:54:16 -0500
+In-Reply-To: <E94491DE-8378-41DC-9C01-E8C1C91B6B4E@mac.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: Mark Rustad <mrustad@mac.com>
+Cc: linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On Tue, 2006-02-28 at 11:17 -0800, Mike Anderson wrote:
-> I believe being on the list longer would solve the aic problem, but I have
-> not tried to a patch to do this. I am trying to get access to the system now.
+Mark Rustad wrote:
+> We have encountered some kind of sg regression with kernel 2.6.16-rc5 
+> relative to 2.6.15. We have a small program that demonstrates the 
+> failure. On 2.6.15 it produces the output:
+> 
+> Alloced dataptr 0 -> 0xb7d07008
+> IOS: 0
+> ios 100
+> 
+> indicating that it did 100 operations successfully. On 2.6.16-rc5, it 
+> produces the output:
+> 
+> Alloced dataptr 0 -> 0xa7d10008
+> SG_IO ioctl error 12 Cannot allocate memory
+> ios 0
+> 
+> indicating that it did 0 operations successfully. This program is 
+> attempting to do 1MB reads on a SCSI device.
 
-Actually, the problem is caused by a misordering of target_alloc,
-target_destroy.
+Mark,
+You can stop right there with the 1 MB reads. Welcome
+to the new, blander sg driver which now shares many
+size shortcomings with the block subsystem.
 
-The aic target_alloc routine has a BUG_ON() to detect that the target
-entry is null (it's nulled in target_destroy).  So, this could be fixed
-by moving the target_destroy callback, as well.  I'll take a look at it
-and see what springs to mind.  I'm leery of putting the list deletion in
-the release, because that could delay new target creation arbitrarily
-long ...
+In lk 2.6.15 the sg driver (and the st driver) did its
+own scatter gather list allocations. The sg driver
+used 32 KB segments (8 times the normal page size)
+in each scatter gather element. The maximum number
+of scatter gather elements depends on the LLD but
+can be no more than 256. That meant the sg driver
+allowed a maximum single IO size of 8 MB. There was
+also a define in sg.h (SG_SCATTER_SZ and it is still
+there) that allowed the 32KB per segment to be increased
+allowing larger single command transfers (then 8 MB).
 
-James
+ We get the failure both  on
+> an aic79xx parallel SCSI and on aic94xx SAS. With both types of 
+> devices, it works fine on the 2.6.15 kernel. We have also seen this 
+> problem on the 2.6.16-rc4 kernel. In all cases we were running on an 
+> Intel Xeon-based system.
+
+Well this is broken by design. If you and others
+talk to the management it may be reversed or a
+better solution may be found.
+
+Here is an example of the sg driver in lk 2.6.15-rc5.
+The number of bytes each SCSI READ command is trying
+to fetch is 'bs * bpt'. Note that it works for 256 KB
+per SCSI READ but fails for anything bigger:
+
+# modprobe scsi_debug
+# modprobe sg
+# sg_dd if=/dev/sg0 of=. bs=512 bpt=512
+16384+0 records in
+16384+0 records out
+# sg_dd if=/dev/sg0 of=. bs=512 bpt=513
+sg_read failed, try reducing bpt, at or after lba=0 [0x0]
+Some error occurred,  remaining block count=16384
+0+0 records in
+0+0 records out
+# sg_dd if=/dev/sg0 of=. bs=512 bpt=1024
+sg_read failed, try reducing bpt, at or after lba=0 [0x0]
+Some error occurred,  remaining block count=16384
+0+0 records in
+0+0 records out
 
 
+Doug Gilbert
