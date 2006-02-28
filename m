@@ -1,71 +1,43 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [GIT PATCH] SCSI bug fixes for 2.6.16-rc5
-Date: Tue, 28 Feb 2006 11:30:47 -0600
-Message-ID: <1141147847.3258.19.camel@mulgrave.il.steeleye.com>
+Subject: Re: [PATCH] fix scsi process problems and clean up the target reap
+	issues
+Date: Tue, 28 Feb 2006 11:39:04 -0600
+Message-ID: <1141148345.3258.24.camel@mulgrave.il.steeleye.com>
+References: <1140726438.2809.18.camel@localhost.localdomain>
+	 <20060228172436.GA1456@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:43730 "EHLO
+Received: from stat9.steeleye.com ([209.192.50.41]:65234 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S932283AbWB1Rax (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Feb 2006 12:30:53 -0500
+	id S1751071AbWB1RjI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Feb 2006 12:39:08 -0500
+In-Reply-To: <20060228172436.GA1456@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-This represents the current batch of outstanding bug fixes (mostly
-driver bug fixes, but one mid-layer update to support fixing a driver
-bug).
+On Tue, 2006-02-28 at 09:24 -0800, Mike Anderson wrote:
+> The patch was tried on the aic7xxx ahc_linux_target_alloc issue I
+> previously mentioned and it did not change the result of a BUG_ON.
 
-The patch is available from:
+Hmm ... could you repost the panic ... I also put in Brian King's check
+for device_add failure, which should have picked this up ... it sounds
+like there's something else going on.
 
-master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
+> Is there some reason we cannot do the list_del_init(&starget->siblings) in
+> scsi_target_dev_release post calling target_destroy? It would appear with
+> the check for STARGET_DEL that being on the list longer should not be a
+> problem.
 
-The Short changelog is:
+No, it shouldn't ... it just potentially delays the allocation to wait
+for everything to finish using the old target ... we might have to put a
+reschedule in the retry loop in alloc to avoid a busy wait.
 
-Andrew Vasquez:
-  o fc_transport: stop creating duplicate rport entries
-
-Brian King:
-  o scsi: scsi command retries off by one fix
-  o sg: Remove aha1542 hack
-
-Christoph Hellwig:
-  o megaraid_sas: fix physical disk handling
-  o scsi: handle ->slave_configure return value
-
-J=EF=BF=BDgen E. Fischer:
-  o aha152x: fix variable use before initialisation and other bugs
-
-Matthew Wilcox:
-  o Fix uninitialised width and speed in sym2
-
-Ralf B=EF=BF=BDhle:
-  o Delete duplicate driver template
-
-And the diffstat:
-
- aha152x.c               |   85 +++++++++++++++++++++++++++++----------=
----------
- aha152x.h               |    2 -
- jazz_esp.c              |   21 -----------
- megaraid/megaraid_sas.c |   29 ++++++++--------
- pcmcia/aha152x_stub.c   |    4 --
- scsi_error.c            |    4 +-
- scsi_lib.c              |    2 -
- scsi_scan.c             |   16 +++++++--
- scsi_transport_fc.c     |    3 -
- sg.c                    |    2 -
- sym53c8xx_2/sym_hipd.c  |    2 +
- 11 files changed, 90 insertions(+), 80 deletions(-)
+Does that fix your aic problem?
 
 James
 
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
