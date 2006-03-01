@@ -1,70 +1,55 @@
 From: Jamie Wellnitz <Jamie.Wellnitz@emulex.com>
-Subject: [PATCH 7/9] lpfc 8.1.3: Fix polling mode panic
-Date: Tue, 28 Feb 2006 22:33:12 -0500
-Message-ID: <20060301033312.GA21621@shrimp.ma.emulex.com>
+Subject: [PATCH 5/9] lpfc 8.1.3: Fix deadlock in lpfc_fdmi_tmo_handler
+Date: Tue, 28 Feb 2006 22:33:09 -0500
+Message-ID: <20060301033309.GA21575@shrimp.ma.emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from shrimp.ma.emulex.com ([138.239.78.42]:18898 "EHLO
+Received: from shrimp.ma.emulex.com ([138.239.78.42]:45009 "EHLO
 	shrimp.ma.emulex.com") by vger.kernel.org with ESMTP
-	id S1750866AbWCADdN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Feb 2006 22:33:13 -0500
+	id S1750805AbWCADdL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Feb 2006 22:33:11 -0500
 Received: from shrimp.ma.emulex.com (localhost.localdomain [127.0.0.1])
-	by shrimp.ma.emulex.com (8.13.4/8.13.4) with ESMTP id k213XCO8021628
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Feb 2006 22:33:12 -0500
+	by shrimp.ma.emulex.com (8.13.4/8.13.4) with ESMTP id k213X9MO021582
+	for <linux-scsi@vger.kernel.org>; Tue, 28 Feb 2006 22:33:09 -0500
 Received: (from jamesw@localhost)
-	by shrimp.ma.emulex.com (8.13.4/8.13.4/Submit) id k213XC0N021626
-	for linux-scsi@vger.kernel.org; Tue, 28 Feb 2006 22:33:12 -0500
+	by shrimp.ma.emulex.com (8.13.4/8.13.4/Submit) id k213X9Zs021580
+	for linux-scsi@vger.kernel.org; Tue, 28 Feb 2006 22:33:09 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Fix polling mode panic
+Fix deadlock in lpfc_fdmi_tmo_handler
 
-Cause: Race between interrupt driven and polling path in harvesting iocbs
-from
-the response ring.
+lpfc_fdmi_tmo_handler was calling lpfc_fdmi_cmd with the host_lock
+held.  lpfc_fdmi_cmd assumes the host_lock is released as it calls functions
+that acquire the host_lock.  lpfc_fdmi_tmo_handler acquired the host_lock to
+protect access to work_hba_events.  This was already checked in the worker
+thread so we can remove that code completely and remove access to the
+host_lock.
 
 Signed-off-by: Jamie Wellnitz <Jamie.Wellnitz@emulex.com>
 
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -467,6 +467,11 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba 
- 	sdev = cmd->device;
- 	cmd->scsi_done(cmd);
+--- a/drivers/scsi/lpfc/lpfc_ct.c
++++ b/drivers/scsi/lpfc/lpfc_ct.c
+@@ -1166,11 +1166,6 @@ lpfc_fdmi_tmo_handler(struct lpfc_hba *p
+ {
+ 	struct lpfc_nodelist *ndlp;
  
-+	if (phba->cfg_poll & ENABLE_FCP_RING_POLLING) {
-+		lpfc_release_scsi_buf(phba, lpfc_cmd);
-+		return;
-+	}
-+
- 	if (!result && pnode != NULL &&
- 	   ((jiffies - pnode->last_ramp_up_time) >
- 		LPFC_Q_RAMP_UP_INTERVAL * HZ) &&
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -1154,12 +1154,17 @@ lpfc_sli_handle_fast_ring_event(struct l
- 			cmdiocbq = lpfc_sli_iocbq_lookup(phba, pring,
- 							 &rspiocbq);
- 			if ((cmdiocbq) && (cmdiocbq->iocb_cmpl)) {
--				spin_unlock_irqrestore(
--				       phba->host->host_lock, iflag);
--				(cmdiocbq->iocb_cmpl)(phba, cmdiocbq,
--						      &rspiocbq);
--				spin_lock_irqsave(phba->host->host_lock,
--						  iflag);
-+				if (phba->cfg_poll & ENABLE_FCP_RING_POLLING) {
-+					(cmdiocbq->iocb_cmpl)(phba, cmdiocbq,
-+							      &rspiocbq);
-+				} else {
-+					spin_unlock_irqrestore(
-+						phba->host->host_lock, iflag);
-+					(cmdiocbq->iocb_cmpl)(phba, cmdiocbq,
-+							      &rspiocbq);
-+					spin_lock_irqsave(phba->host->host_lock,
-+							  iflag);
-+				}
- 			}
- 			break;
- 		default:
+-	spin_lock_irq(phba->host->host_lock);
+-	if (!(phba->work_hba_events & WORKER_FDMI_TMO)) {
+-		spin_unlock_irq(phba->host->host_lock);
+-		return;
+-	}
+ 	ndlp = lpfc_findnode_did(phba, NLP_SEARCH_ALL, FDMI_DID);
+ 	if (ndlp) {
+ 		if (system_utsname.nodename[0] != '\0') {
+@@ -1179,7 +1174,6 @@ lpfc_fdmi_tmo_handler(struct lpfc_hba *p
+ 			mod_timer(&phba->fc_fdmitmo, jiffies + HZ * 60);
+ 		}
+ 	}
+-	spin_unlock_irq(phba->host->host_lock);
+ 	return;
+ }
+ 
