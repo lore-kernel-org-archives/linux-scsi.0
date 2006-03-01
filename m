@@ -1,51 +1,77 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: Problem with 2.6 kernel and sym53c8xx driver
-Date: Wed, 1 Mar 2006 12:04:46 -0700
-Message-ID: <20060301190446.GD1598@parisc-linux.org>
-References: <440481D2.6030107@iutc3.unicaen.fr> <20060301132055.GA1598@parisc-linux.org> <4405EF0E.1090403@iutc3.unicaen.fr>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: Re[2]: Fwd: Re: problems with scsi_transport_fc and qla2xxx
+Date: Wed, 1 Mar 2006 11:20:08 -0800
+Message-ID: <20060301192008.GF4321@spe2>
+References: <735056370.20060228195436@netvision.net.il> <1984428707.20060228200029@netvision.net.il> <20060228181900.GC4541@andrew-vasquezs-powerbook-g4-15.local> <1261469398.20060301130903@netvision.net.il>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:27084 "EHLO
-	palinux.hppa") by vger.kernel.org with ESMTP id S932122AbWCATEs
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Mar 2006 14:04:48 -0500
+Received: from pat.qlogic.com ([198.70.193.2]:32699 "EHLO avexch02.qlogic.com")
+	by vger.kernel.org with ESMTP id S1750740AbWCATUM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2006 14:20:12 -0500
 Content-Disposition: inline
-In-Reply-To: <4405EF0E.1090403@iutc3.unicaen.fr>
+In-Reply-To: <1261469398.20060301130903@netvision.net.il>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adrien Corbi?re <corbiere@iutc3.unicaen.fr>, James Bottomley <James.Bottomley@steeleye.com>
+To: Maxim Kozover <maximkoz@netvision.net.il>
 Cc: linux-scsi@vger.kernel.org
 
-On Wed, Mar 01, 2006 at 07:59:26PM +0100, Adrien Corbi?re wrote:
-> Matthew Wilcox a ?crit :
+On Wed, 01 Mar 2006, Maxim Kozover wrote:
+
+> Hi Andrew!
+> I applied the patch changing 2 lines in scsi_transport_fc.c to
+> if (fc_host_tgtid_bind_type(shost) != FC_TGTID_BIND_NONE) {
 > 
-> >This looks like a problem with the BROWNIE device, as I've found a
-> >similar problem here:
-> >http://lists.suse.com/archive/suse-amd64/2004-Mar/0069.html
+> I tried first with Emulex as QLogic seemed yesterday to have more
+> problems, (not only orphan rports, but also not creating all rports),
+> so let's start solving problems one by one.
+> 
+> I saw no change in behavior with Emulex.
+> 1. I had 3 LUNs on adapters 6 and 7.
+> # ls /sys/class/fc_remote_ports
+> rport-6:0-0  rport-6:0-1  rport-6:0-2  rport-7:0-0  rport-7:0-1  rport-7:0-2
 
-> Thanks a lot! I've applyed the patch on kernel 2.6.15.4, and it works 
-> very well ! The ouput of dmesg is :
+Ok, so specifically you have one target-port at rport-7:0-2 which has
+three luns (0, 1, and 2).
 
-My goodness.  Looks like when it gets a REPORT_LUNs, it just spews
-complete crap onto the scsi bus ;-)
+	/devices/pci0000:00/0000:00:06.0/0000:05:00.2/0000:07:01.1/host7/rport-7:0-2/target7:0:0/7:0:0:0
+	/devices/pci0000:00/0000:00:06.0/0000:05:00.2/0000:07:01.1/host7/rport-7:0-2/target7:0:0/7:0:0:1
+	/devices/pci0000:00/0000:00:06.0/0000:05:00.2/0000:07:01.1/host7/rport-7:0-2/target7:0:0/7:0:0:2
 
-James, can we add this one to the blacklist?
+So what are the other rports?  Other initiators?
 
-Signed-off-by: Matthew Wilcox <matthew@wil.cx>
+> 2. disconnected the cable between adapter 7 and the switch,
+> rport-7:0-0 disappeared momentarily with Emulex LinkDown event.
+> lpfc 0000:07:01.1: 1:1305 Link Down Event x2 received Data: x2 x20 x110
+> # ls /sys/class/fc_remote_ports
+> rport-6:0-0  rport-6:0-1  rport-6:0-2  rport-7:0-0  rport-7:0-2
 
-Index: ./drivers/scsi/scsi_devinfo.c
-===================================================================
-RCS file: /var/cvs/linux-2.6/drivers/scsi/scsi_devinfo.c,v
-retrieving revision 1.16
-diff -u -p -r1.16 scsi_devinfo.c
---- ./drivers/scsi/scsi_devinfo.c	17 Jan 2006 14:51:49 -0000	1.16
-+++ ./drivers/scsi/scsi_devinfo.c	1 Mar 2006 13:17:21 -0000
-@@ -126,6 +126,7 @@ static struct {
- 	{"ADAPTEC", "Adaptec 5400S", NULL, BLIST_FORCELUN},
- 	{"AFT PRO", "-IX CF", "0.0>", BLIST_FORCELUN},
- 	{"BELKIN", "USB 2 HS-CF", "1.95",  BLIST_FORCELUN | BLIST_INQUIRY_36},
-+	{"BROWNIE", "1600U3P", NULL, BLIST_NOREPORTLUN},
- 	{"CANON", "IPUBJD", NULL, BLIST_SPARSELUN},
- 	{"CBOX3", "USB Storage-SMC", "300A", BLIST_FORCELUN | BLIST_INQUIRY_36},
- 	{"CMD", "CRA-7280", NULL, BLIST_SPARSELUN},	/* CMD RAID Controller */
+Actually, rport-7:0-1 disappears -- my guess an initiator.  Is
+rport-7:0-0 an FCP_TARGET with no luns?
+
+> 3. Then after a timeout I got a message about blocking rport-7:0-2, but
+> nothing changed.
+> rport-7:0-2: blocked FC remote port time out: removing target and saving binding
+
+Exactly, the scsi_target and scsi_device is reaped after TMO expires.
+
+> # ls /sys/class/fc_remote_ports
+> rport-6:0-0  rport-6:0-1  rport-6:0-2  rport-7:0-0  rport-7:0-2
+
+This is still correct.
+
+> However, all scsi entries related to adapter 7 are removed from
+> /proc/scsi/scsi.
+> 
+> Please advise.
+
+If your question is, are the /proc/scsi/scsi devices (/dev/sda, sdb,
+...) supposed to disappear when the rport TMO expires , then yes they
+are supposed to disappear.  The rports persist with a port_state of
+'not present' for persistent-binding purposes, until the port return
+(i.e. you reinsert the cable).  If that were to occur, then upon rport
+addition, the 3-lun storage would be attached to rport-7:0-2 and a
+request signaled for lun scanning by the midlayer.
+
+--
+Andrew
