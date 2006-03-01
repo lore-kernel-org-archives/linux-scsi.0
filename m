@@ -1,45 +1,53 @@
-From: Stefan Kaltenbrunner <mm-mailinglist@madness.at>
-Subject: Re: problems with scsi_transport_fc and qla2xxx
-Date: Wed, 01 Mar 2006 21:25:47 +0100
-Message-ID: <4406034B.9030105@madness.at>
-References: <1413265398.20060227150526@netvision.net.il>	<978150825.20060227210552@netvision.net.il> <20060228221422.282332ef.akpm@osdl.org>
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: [PATCH] SCSI sym53c8xx_2: bigger transfer limits
+Date: Wed, 1 Mar 2006 22:34:28 +0200 (EET)
+Message-ID: <Pine.LNX.4.63.0603012230370.5789@kai.makisara.local>
+References: <Pine.LNX.4.63.0602282104040.6272@kai.makisara.local>
+ <20060301152929.GZ4816@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from madness.at ([217.196.146.217]:33507 "EHLO cronos.madness.at")
-	by vger.kernel.org with ESMTP id S1751024AbWCAUZz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2006 15:25:55 -0500
-In-Reply-To: <20060228221422.282332ef.akpm@osdl.org>
+Received: from fep01-0.kolumbus.fi ([193.229.0.41]:61833 "EHLO
+	fep01-app.kolumbus.fi") by vger.kernel.org with ESMTP
+	id S1751059AbWCAUbd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 1 Mar 2006 15:31:33 -0500
+In-Reply-To: <20060301152929.GZ4816@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: Maxim Kozover <maximkoz@netvision.net.il>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>
+To: Jens Axboe <axboe@suse.de>
+Cc: matthew@wil.cx, linux-scsi@vger.kernel.org
 
-Andrew Morton wrote:
-> Maxim Kozover <maximkoz@netvision.net.il> wrote:
-> 
->>Hi!
-> 
-> 
-> (cc's added)
-> 
-> 
->>Most of the problem seems to be a QLogic driver problem.
->>HBAs are connected to target via FC switch.
->>
->>1. If I have several LUNs on each HBA, with QLogic only 1 directory
->>per adapter (for LUN 0) is created in /sys/class/fc_remote_ports,
->>while with Emulex a directory for every LUN is created.
->>
->>2. The situation I described occurs with QLogic only if the cable
->>connecting between HBA and switch is pulled out/in. If I
->>connect/disconnect the cable between switch and target, disks come
->>back.
+On Wed, 1 Mar 2006, Jens Axboe wrote:
 
-I can confirm that very problem (pulling the cable between HBA and
-switch results in only LUN 0 or nothing coming back afterward) on
-2.6.15.4 here too.
+> On Tue, Feb 28 2006, Kai Makisara wrote:
+> > This patch enables clustering and sets max_sectors to 0xffff to enable 
+> > reading and writing of large blocks with tapes (and large transfers with 
+> > sg). This change is needed after the sg and st drivers started using 
+> > chained bios through scsi_request_async() in 2.6.16.
+> > 
+> > Signed-off-by: Kai Makisara <kai.makisara@kolumbus.fi>
+> > 
+> > --- linux-2.6.16-rc5/drivers/scsi/sym53c8xx_2/sym_glue.c	2006-02-04 13:25:48.000000000 +0200
+> > +++ linux-2.6.16-rc5-k1/drivers/scsi/sym53c8xx_2/sym_glue.c	2006-02-18 09:45:24.000000000 +0200
+> > @@ -1978,7 +1978,8 @@ static struct scsi_host_template sym2_te
+> >  	.eh_bus_reset_handler	= sym53c8xx_eh_bus_reset_handler,
+> >  	.eh_host_reset_handler	= sym53c8xx_eh_host_reset_handler,
+> >  	.this_id		= 7,
+> > -	.use_clustering		= DISABLE_CLUSTERING,
+> > +	.use_clustering		= ENABLE_CLUSTERING,
+> > +	.max_sectors		= 0xFFFF,
+> 
+> Strictly speaking, the clustering bit is unrelated.
 
+It is related. The number of scatter/gather segments in the SCSI HBAs is 
+limited. In order to fit the large requests into these limits, the 
+adjacent pages (that have been split to bios) have to be recombined.
 
-Stefan
+>                                                     I seem to recall
+> Gerard years ago talking about some sym chips that did not like
+> clustering, hence it was disabled.
+> 
+Facts?
+
+-- 
+Kai
