@@ -1,93 +1,61 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: sg regression in 2.6.16-rc5
-Date: Wed, 01 Mar 2006 14:42:49 -0600
-Message-ID: <1141245769.9586.6.camel@max>
-References: <E94491DE-8378-41DC-9C01-E8C1C91B6B4E@mac.com>
-	 <4404AA2A.5010703@torque.net> <20060301083824.GA9871@merlin.emma.line.org>
-	 <Pine.LNX.4.64.0603011027400.22647@g5.osdl.org>
-	 <4405F6F1.9040106@torque.net>
+From: "Tarte, Robert" <Robert_Tarte@adaptec.com>
+Subject: RE: [PATCH] aic94xx: driver assertion in non-x86 BIOS env
+Date: Wed, 1 Mar 2006 12:57:12 -0800
+Message-ID: <8C064C48AB104B428CBA524C342357CA34CFC4@aime2k05.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:57325 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S1751177AbWCAUqP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2006 15:46:15 -0500
-In-Reply-To: <4405F6F1.9040106@torque.net>
+Received: from mail-gw3.adaptec.com ([216.52.22.36]:30162 "EHLO
+	mail-gw3.adaptec.com") by vger.kernel.org with ESMTP
+	id S1751889AbWCAU5i convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2006 15:57:38 -0500
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: Linus Torvalds <torvalds@osdl.org>, Matthias Andree <matthias.andree@gmx.de>, Mark Rustad <mrustad@mac.com>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Mike Anderson <andmike@us.ibm.com>, James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, Jeff Garzik <jgarzik@redhat.com>
 
-On Wed, 2006-03-01 at 14:33 -0500, Douglas Gilbert wrote:
-> Linus Torvalds wrote:
-> > 
-> > On Wed, 1 Mar 2006, Matthias Andree wrote:
-> > 
-> >>On Tue, 28 Feb 2006, Douglas Gilbert wrote:
-> >>
-> >>
-> >>>You can stop right there with the 1 MB reads. Welcome
-> >>>to the new, blander sg driver which now shares many
-> >>>size shortcomings with the block subsystem.
-> >>
-> >>What is the reason to break user-space applications like this?
-> > 
-> > 
-> > Did you read the whole thread? It was a low-level SCSI driver issue, where 
-> > nothing broke user space, but the command was just fed to the drive 
-> > differently, which then hit a limit in the driver.
+I have located an HP machine that is the same flavor as James' (HP
+Integrity rx2600: ia64 with zx1 chipset).  It exhibits the same problem.
+I believe that the architecture may differ with traditional PC/PCI
+architectures in how it deals with non-aligned PCI access.  When I
+converted the OCM initialization code to write on qwords instead of
+dwords, the code was able to pass OCM initialization.  It is possible
+that the machine is doing a qword read/modify/write when accessing OCM
+memory, which would explain the hang.  I haven't hooked up a PCI
+analyzer.  The code now gets to the point where it is trying to read
+NVRAM in order to get the SAS address.  It seems that the machine is
+unable to retrieve non-aligned byte accesses correctly.  I will convert
+the code to pull the correct byte/word/dword from the aligned qword.
+We'll see if that fixes it.  None of these behaviors are exhibited on
+x86, x86_64, powerpc, and ia64 without the zx1 chipset.  I understand
+that there may be a few ARM implementations that have similar issues.
+
+Mike: any word on getting James a machine?
+
+Rob
+
+> -----Original Message-----
+> From: Jeff Garzik [mailto:jgarzik@pobox.com]
+> Sent: Wednesday, March 01, 2006 12:23 PM
+> To: Tarte, Robert
+> Cc: Mike Anderson; James Bottomley; linux-scsi@vger.kernel.org;
+> Tarte@us.ibm.com; Jeff Garzik
+> Subject: Re: [PATCH] aic94xx: driver assertion in non-x86 BIOS env
 > 
-> Linus,
-> That is an optimistic take. The maximum data carrying
-> capacity of a single SCSI command via the SG_IO ioctl
-> depends on the maximum data carrying capacity of a
-> scatter gather list. Assuming all scatter gather list
-> elements carry the same amount of data then the
-> maximum capacity is:
-> 'max_bytes_per_element * max_num_elements'
+> Tarte, Robert wrote:
+> > What model ia64 are you running James?  I'll see if Adaptec has one
+to
+> > try to help reproduce this issue.  Jeff, have you tried the fixes to
+see
+> > if they addressed the issues you were seeing (OCM error when BIOS
+off
+> > and booted off of SCSI)?
 > 
-> Only the latter figure is a "low-level SCSI driver issue"
-> whose maximum seems to be SG_ALL (255). It is the former
-> figure that has changed. The sg driver in lk 2.6.15 used
-> __get_free_pages() with the order set to get 32 KB where
-> as the generic routine used now get a single page (usually
-> 4 KB). 
-
-The current sg driver should use alloc_pages() with an order that should
-get 32 KB. If the order being passed to alloc_pages() in sg.c is only
-getting one page by default that is bug.
-
-The generic routines now being used can turn that 32KB segment into
-multiple 4KB ones if the LLD does not support clustering.
-
-
-> Kai Makisara proposed changes in the SCSI LLD
-> template that made things better in my experiments with
-> scsi_debug.
+> Nah, I'm just waiting for James to ACK that things work on his side,
+> really...
 > 
-> However today James Bottomley confirmed that relying on
-> coalescing pages that may be adjacent is not deterministic:
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=114122991606658&w=2
-> 
-> That leaves a worst case scatter gather list data capacity
-> of (4 * 255) KB if the SCSI LLD (or SATA) uses SG_ALL. That
-> is still just under the 1 MB bar that started this thread.
-
-Actually, we will hit the SCSI_MAX_PHYS_SEGMENTS first. It is 128 by
-default so (4 * 128) KB. Here is a patch, only compile tested, to
-increase SCSI_MAX_PHYS_SEGMENTS to 256.
-
---- linux-2.6.16-rc4/include/scsi/scsi.h.orig	2006-03-01 14:32:18.000000000 -0600
-+++ linux-2.6.16-rc4/include/scsi/scsi.h	2006-03-01 14:33:32.000000000 -0600
-@@ -14,7 +14,7 @@
-  *	The maximum sg list length SCSI can cope with
-  *	(currently must be a power of 2 between 32 and 256)
-  */
--#define SCSI_MAX_PHYS_SEGMENTS	MAX_PHYS_SEGMENTS
-+#define SCSI_MAX_PHYS_SEGMENTS	256
- 
- 
- /*
-
+> 	Jeff
 
