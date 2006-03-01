@@ -1,27 +1,49 @@
-From: alex3dg500@interia.pl
-Subject: THIS IS A COMPENSATION
-Date: 01 Mar 2006 17:02:42 +0100
-Message-ID: <20060301160242.5DE93A416A@poczta.interia.pl>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH] SCSI sym53c8xx_2: bigger transfer limits
+Date: Wed, 1 Mar 2006 17:11:18 +0100
+Message-ID: <20060301161118.GF4816@suse.de>
+References: <Pine.LNX.4.63.0602282104040.6272@kai.makisara.local> <20060301152929.GZ4816@suse.de> <1141227541.3276.26.camel@mulgrave.il.steeleye.com> <4405C538.4050709@torque.net>
 Mime-Version: 1.0
-Content-Type: TEXT/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp3.poczta.interia.pl ([213.25.80.233]:44440 "EHLO
-	smtp.poczta.interia.pl") by vger.kernel.org with ESMTP
-	id S932241AbWCAQGL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2006 11:06:11 -0500
+Received: from ns.virtualhost.dk ([195.184.98.160]:12630 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S1750962AbWCAQOv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2006 11:14:51 -0500
+Content-Disposition: inline
+In-Reply-To: <4405C538.4050709@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: alex3dg500@interia.pl
+To: Douglas Gilbert <dougg@torque.net>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Kai Makisara <Kai.Makisara@kolumbus.fi>, matthew@wil.cx, linux-scsi@vger.kernel.org
 
- Dear  Friend
+On Wed, Mar 01 2006, Douglas Gilbert wrote:
+> James Bottomley wrote:
+> > On Wed, 2006-03-01 at 16:29 +0100, Jens Axboe wrote:
+> > 
+> >>Strictly speaking, the clustering bit is unrelated. I seem to recall
+> >>Gerard years ago talking about some sym chips that did not like
+> >>clustering, hence it was disabled.
+> > 
+> > 
+> > Yes, I remember that too ... I've never been able to find out which
+> > chip, though ... the scripts all seem happily coded for variable size sg
+> > segments.
+> > 
+> > However, given the new way 2.6 does memory allocations,
+> > ENABLE_CLUSTERING will probably make quite a difference to the size of
+> > the sg list ... since we try to allocate contiguous pages, physical
+> > merging becomes much more of a possibility (I think I last measured it
+> > at around 30% of all SG tables, as opposed to <1% with the old
+> > allocation method).
+> 
+> James,
+> So the maximum data carrying size of a scatter gather list
+> is not deterministic? Is the worst case (page_size * SG_ALL)?
 
-I'm happy to inform you about my success in getting those funds transferred  under the cooperation of a new partner from paraguay. Presently i'm in Paraguay for investment projects with my own share of the  total sum. meanwhile,i didn't forget your past efforts and attempts to assist me in transferring those funds despite that it failed us some how. Now contact my secretary in Benin his name is NNA on (nna_maga@myway.com, ask him to send you the total of $800.000.00 
+It's block layer restricted (well not because of the block layer, but
+the limits that the hardware tolds us that it has), typically page_size
+* max_sg_entries is the correct answer but it may of course be more.
 
-which i kept for your compensation for all the past efforts and attempts to  assist me in this matter. I appreciated your efforts at that time very much. so feel free and get in touched with my secretary Mr NNA and instruct him  where to send the amount to you. Please do let me know immediately you receive it so that we can share the  joy after all the sufferness at that time. in the moment, I'm very busy here  because of the investment projects which me and the new partner are having  at hand, finally, remember that I had forwarded instruction to the
-secretary  on your behalf to receive that money, so feel free to get in touch with
-MR NNA, he will send the amount to you without any delay.
- 
-Regards,
-Mr ALEX.
+-- 
+Jens Axboe
 
