@@ -1,58 +1,70 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: problems with scsi_transport_fc and qla2xxx
-Date: Wed, 1 Mar 2006 13:08:02 -0800
-Message-ID: <20060301210802.GA7288@spe2>
-References: <1413265398.20060227150526@netvision.net.il> <978150825.20060227210552@netvision.net.il> <20060228221422.282332ef.akpm@osdl.org> <4406034B.9030105@madness.at>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] aic94xx: driver assertion in non-x86 BIOS env
+Date: Wed, 1 Mar 2006 14:12:25 -0700
+Message-ID: <20060301211225.GE1598@parisc-linux.org>
+References: <8C064C48AB104B428CBA524C342357CA34CFC4@aime2k05.adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:23617 "EHLO avexch02.qlogic.com")
-	by vger.kernel.org with ESMTP id S1751907AbWCAVIG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2006 16:08:06 -0500
+Received: from palinux.external.hp.com ([192.25.206.14]:7333 "EHLO
+	palinux.hppa") by vger.kernel.org with ESMTP id S1751908AbWCAVM0
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 1 Mar 2006 16:12:26 -0500
 Content-Disposition: inline
-In-Reply-To: <4406034B.9030105@madness.at>
+In-Reply-To: <8C064C48AB104B428CBA524C342357CA34CFC4@aime2k05.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Kaltenbrunner <mm-mailinglist@madness.at>
-Cc: Andrew Morton <akpm@osdl.org>, Maxim Kozover <maximkoz@netvision.net.il>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: "Tarte, Robert" <Robert_Tarte@adaptec.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Mike Anderson <andmike@us.ibm.com>, James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, Jeff Garzik <jgarzik@redhat.com>
 
-On Wed, 01 Mar 2006, Stefan Kaltenbrunner wrote:
+On Wed, Mar 01, 2006 at 12:57:12PM -0800, Tarte, Robert wrote:
+> I have located an HP machine that is the same flavor as James' (HP
+> Integrity rx2600: ia64 with zx1 chipset).  It exhibits the same problem.
+> I believe that the architecture may differ with traditional PC/PCI
+> architectures in how it deals with non-aligned PCI access.  When I
+> converted the OCM initialization code to write on qwords instead of
+> dwords, the code was able to pass OCM initialization.  It is possible
+> that the machine is doing a qword read/modify/write when accessing OCM
+> memory, which would explain the hang.  I haven't hooked up a PCI
+> analyzer.  The code now gets to the point where it is trying to read
+> NVRAM in order to get the SAS address.  It seems that the machine is
+> unable to retrieve non-aligned byte accesses correctly.  I will convert
+> the code to pull the correct byte/word/dword from the aligned qword.
+> We'll see if that fixes it.  None of these behaviors are exhibited on
+> x86, x86_64, powerpc, and ia64 without the zx1 chipset.  I understand
+> that there may be a few ARM implementations that have similar issues.
 
-> Andrew Morton wrote:
-> > Maxim Kozover <maximkoz@netvision.net.il> wrote:
-> > 
-> >>Hi!
-> > 
-> > 
-> > (cc's added)
-> > 
-> > 
-> >>Most of the problem seems to be a QLogic driver problem.
-> >>HBAs are connected to target via FC switch.
-> >>
-> >>1. If I have several LUNs on each HBA, with QLogic only 1 directory
-> >>per adapter (for LUN 0) is created in /sys/class/fc_remote_ports,
-> >>while with Emulex a directory for every LUN is created.
-> >>
-> >>2. The situation I described occurs with QLogic only if the cable
-> >>connecting between HBA and switch is pulled out/in. If I
-> >>connect/disconnect the cable between switch and target, disks come
-> >>back.
+You're saying that you do an 8-byte non-DMA write to an address
+that's congruent to 4 mod 8?  Based on briefly skimming the internal
+documentation for zx1, I'd say you're invoking undefined behaviour.
+
+> Mike: any word on getting James a machine?
 > 
-> I can confirm that very problem (pulling the cable between HBA and
-> switch results in only LUN 0 or nothing coming back afterward) on
-> 2.6.15.4 here too.
-
-Please try recent 2.6.16-rcX kernels as there have been a number of
-patches submitted since 2.6.15 which (attempt to) address most of
-these holes -- I'm still trying to get additional details on Maxim's.
-
-387f96b4d9391bf3ce6928fb9cd90c9c7df37291 [PATCH] qla2xxx: Close window on race between rport removal and fcport transition.
-77427f514f88143bfef41ba8c1e624bc45f42297 [SCSI] qla2xxx: Drop legacy 'bypass lun scan for tape device' code.
-052c40c83b4ca37be226112049b60097cb9961e1 [SCSI] qla2xxx: Correct issue where the rport's upcall was not being made after relogin.
-d97994dc1fddcbb8212b745d9c9c9ce96262155c [SCSI] qla2xxx: Correct synchronization issues during rport addition/deletion.
-79f89a4296ff22f09baf538d4ff2a6d0c3097a73 [SCSI] qla2xxx: Disable port-type RSCN handling via driver state-machine.
-
-
-Regards,
-Andrew Vasquez
+> Rob
+> 
+> > -----Original Message-----
+> > From: Jeff Garzik [mailto:jgarzik@pobox.com]
+> > Sent: Wednesday, March 01, 2006 12:23 PM
+> > To: Tarte, Robert
+> > Cc: Mike Anderson; James Bottomley; linux-scsi@vger.kernel.org;
+> > Tarte@us.ibm.com; Jeff Garzik
+> > Subject: Re: [PATCH] aic94xx: driver assertion in non-x86 BIOS env
+> > 
+> > Tarte, Robert wrote:
+> > > What model ia64 are you running James?  I'll see if Adaptec has one
+> to
+> > > try to help reproduce this issue.  Jeff, have you tried the fixes to
+> see
+> > > if they addressed the issues you were seeing (OCM error when BIOS
+> off
+> > > and booted off of SCSI)?
+> > 
+> > Nah, I'm just waiting for James to ACK that things work on his side,
+> > really...
+> > 
+> > 	Jeff
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
