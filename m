@@ -1,85 +1,58 @@
-From: Mark Rustad <mrustad@mac.com>
-Subject: Re: sg regression in 2.6.16-rc5
-Date: Tue, 28 Feb 2006 20:08:19 -0600
-Message-ID: <4DF08E5C-8503-4EEE-AD96-2F847674080D@mac.com>
-References: <E94491DE-8378-41DC-9C01-E8C1C91B6B4E@mac.com> <4404AA2A.5010703@torque.net> <Pine.LNX.4.63.0602282216220.6272@kai.makisara.local>
-Mime-Version: 1.0 (Apple Message framework v746.2)
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: SATA on mptsas performance
+Date: Tue, 28 Feb 2006 22:30:16 -0500
+Message-ID: <44051548.9090408@torque.net>
+References: <F331B95B72AFFB4B87467BE1C8E9CF5F28A5FF@NAMAIL2.ad.lsil.com> <43F2DDA7.7050700@web.de>
+Reply-To: dougg@torque.net
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtpout.mac.com ([17.250.248.89]:44014 "EHLO smtpout.mac.com")
-	by vger.kernel.org with ESMTP id S932648AbWCACL5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Feb 2006 21:11:57 -0500
-In-Reply-To: <Pine.LNX.4.63.0602282216220.6272@kai.makisara.local>
+Received: from canuck.infradead.org ([205.233.218.70]:62919 "EHLO
+	canuck.infradead.org") by vger.kernel.org with ESMTP
+	id S1750764AbWCADbU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Feb 2006 22:31:20 -0500
+In-Reply-To: <43F2DDA7.7050700@web.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Cc: Douglas Gilbert <dougg@torque.net>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Mirko Benz <mirko.benz@web.de>
+Cc: linux-scsi@vger.kernel.org
 
-On Feb 28, 2006, at 2:38 PM, Kai Makisara wrote:
+Mirko Benz wrote:
+> Hello,
+> 
+> The SAS3442X is connected to the JBOD via a x4 SAS cable.
+> The JBOD has an LSI SAS Expander chip - no port multiplier.
+> Disks are Seagate ST3300831AS (300 GB, SATA-I, NCQ)
+> 
+> Does the SAS controller and the SAS expander communicate at 3 Gb when
+> accessing SATA disks?
 
-> On Tue, 28 Feb 2006, Douglas Gilbert wrote:
->
->> Mark,
->> You can stop right there with the 1 MB reads. Welcome
->> to the new, blander sg driver which now shares many
->> size shortcomings with the block subsystem.
->>
->> In lk 2.6.15 the sg driver (and the st driver) did its
->> own scatter gather list allocations. The sg driver
->> used 32 KB segments (8 times the normal page size)
->> in each scatter gather element. The maximum number
->> of scatter gather elements depends on the LLD but
->> can be no more than 256. That meant the sg driver
->> allowed a maximum single IO size of 8 MB. There was
->> also a define in sg.h (SG_SCATTER_SZ and it is still
->> there) that allowed the 32KB per segment to be increased
->> allowing larger single command transfers (then 8 MB).
->
-> This is still possible but it needs some changes to most SCSI HBA  
-> drivers.
-> The big requests are split into bios supporting 256 pages. For 4 kB  
-> pages,
-> this limits i/o to 1 MB. The scsi_execute_async() path used by st  
-> and sg
-> can chain bios and this enables large request at the ULD level. At  
-> lower
-> level, the request consists of pages and now we hit the s/g list  
-> maximum
-> length _unless_ the HBA driver enables clustering. In this case the
-> adjacent pages are coalesced and the large requests fit into the  
-> HBA s/g
-> limits. Well, now we hit another limit: the max_sectors default for  
-> SCSI
-> drivers is 1024 and this limits requests to 512 kB _unless_ the HBA  
-> driver
-> increases max_sectors.
->
-> The aic79xx driver enables clustering but does not increase  
-> max_sectors.
-> This makes the maximum request size 512 kB. If it is possible to set
->
-> 	.max_sectors = 0xFFFF,
->
-> in linux/drivers/scsi/aic7xxx/aic79xx_osm.c without breaking the  
-> driver,
-> this should enable requests up to 8 MB - 256 B. (I don't have the  
-> hardware
-> to test this.)
+If the SATA disk does 3 Gb/sec then yes but SATA-1 disks
+run at 1.5 Gb/sec (and don't have NCQ). When a SAS HBA
+using STP connects to a SATA-1 disk via an expander it
+rate matches. This means that it substitutes a dummy value
+(ALIGN I think) between each data value on that path
+(between the HBA and the expander). Hence it essentially
+wastes half the available bandwidth for the duration of
+the connection. There is talk of multiplexing in SAS-2
+when the the physical link rate is 6 Gb/sec and the
+connection rate is 3 or 1.5 Gb/sec.
 
-Indeed, this seems to work fine, at least with the hardware we have.  
-Gotta love those one-line patches.
+> If not it should give 4 * 150 MB/s r/w throughput for this configuration.
 
-> Several SCSI HBA drivers currently have similar problems.
+4 * 150 MB/sec r/w throughput (half duplex ?) would be
+correct.
 
-Yes. Now that I know about this, it is no problem. I'm not allergic  
-to patches.
+BTW since SAS uses "10b8b" encoding (as do IB,
+FC, SATA, PCIe, 10 gigabit ethernet on copper, etc) which
+encodes 8 data bits into 10 bits on the wire then one
+can flip between "<n> MB/sec" and "(<n> * 10) Mb/sec". The
+capitalization (or not) of the "B" is obviously significant.
+Perhaps somebody from a SAS vendor company could tell us how
+much data one can really send down a 3 Gb/sec SAS/STP
+connection under optimum conditions.
 
-Thanks to both of you for your responses. I would submit a patch for  
-this except that I know I don't know that it won't cause problems for  
-configurations and targets that I can't test.
 
--- 
-Mark Rustad, MRustad@mac.com
+Doug Gilbert
 
