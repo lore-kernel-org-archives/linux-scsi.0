@@ -1,57 +1,94 @@
-From: Jamie Wellnitz <Jamie.Wellnitz@emulex.com>
-Subject: [PATCH 17/22] lpfc 8.1.2: Allow turning on internal loop-back mode
-Date: Tue, 28 Feb 2006 19:25:32 -0500
-Message-ID: <20060301002532.GA15546@shrimp.ma.emulex.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: sg regression in 2.6.16-rc5
+Date: Tue, 28 Feb 2006 21:04:45 -0500
+Message-ID: <4405013D.1050407@torque.net>
+References: <E94491DE-8378-41DC-9C01-E8C1C91B6B4E@mac.com> <4404AA2A.5010703@torque.net> <Pine.LNX.4.63.0602282216220.6272@kai.makisara.local>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from shrimp.ma.emulex.com ([138.239.78.42]:61888 "EHLO
-	shrimp.ma.emulex.com") by vger.kernel.org with ESMTP
-	id S964861AbWCAAZe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Feb 2006 19:25:34 -0500
-Received: from shrimp.ma.emulex.com (localhost.localdomain [127.0.0.1])
-	by shrimp.ma.emulex.com (8.13.4/8.13.4) with ESMTP id k210PWjY015552
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Feb 2006 19:25:32 -0500
-Received: (from jamesw@localhost)
-	by shrimp.ma.emulex.com (8.13.4/8.13.4/Submit) id k210PWdh015551
-	for linux-scsi@vger.kernel.org; Tue, 28 Feb 2006 19:25:32 -0500
-Content-Disposition: inline
+Received: from canuck.infradead.org ([205.233.218.70]:43932 "EHLO
+	canuck.infradead.org") by vger.kernel.org with ESMTP
+	id S932651AbWCACG3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Feb 2006 21:06:29 -0500
+In-Reply-To: <Pine.LNX.4.63.0602282216220.6272@kai.makisara.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Cc: Mark Rustad <mrustad@mac.com>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-Allow turning on internal loop-back mode
+Kai Makisara wrote:
+> On Tue, 28 Feb 2006, Douglas Gilbert wrote:
+> 
+> 
+>>Mark Rustad wrote:
+>>
+>>>We have encountered some kind of sg regression with kernel 2.6.16-rc5 
+>>>relative to 2.6.15. We have a small program that demonstrates the 
+>>>failure. On 2.6.15 it produces the output:
+>>>
+>>>Alloced dataptr 0 -> 0xb7d07008
+>>>IOS: 0
+>>>ios 100
+>>>
+>>>indicating that it did 100 operations successfully. On 2.6.16-rc5, it 
+>>>produces the output:
+>>>
+>>>Alloced dataptr 0 -> 0xa7d10008
+>>>SG_IO ioctl error 12 Cannot allocate memory
+>>>ios 0
+>>>
+>>>indicating that it did 0 operations successfully. This program is 
+>>>attempting to do 1MB reads on a SCSI device.
+>>
+>>Mark,
+>>You can stop right there with the 1 MB reads. Welcome
+>>to the new, blander sg driver which now shares many
+>>size shortcomings with the block subsystem.
+>>
+>>In lk 2.6.15 the sg driver (and the st driver) did its
+>>own scatter gather list allocations. The sg driver
+>>used 32 KB segments (8 times the normal page size)
+>>in each scatter gather element. The maximum number
+>>of scatter gather elements depends on the LLD but
+>>can be no more than 256. That meant the sg driver
+>>allowed a maximum single IO size of 8 MB. There was
+>>also a define in sg.h (SG_SCATTER_SZ and it is still
+>>there) that allowed the 32KB per segment to be increased
+>>allowing larger single command transfers (then 8 MB).
+>>
+> 
+> This is still possible but it needs some changes to most SCSI HBA drivers. 
+> The big requests are split into bios supporting 256 pages. For 4 kB pages, 
+> this limits i/o to 1 MB. The scsi_execute_async() path used by st and sg 
+> can chain bios and this enables large request at the ULD level. At lower 
+> level, the request consists of pages and now we hit the s/g list maximum 
+> length _unless_ the HBA driver enables clustering. In this case the 
+> adjacent pages are coalesced and the large requests fit into the HBA s/g 
+> limits. Well, now we hit another limit: the max_sectors default for SCSI 
+> drivers is 1024 and this limits requests to 512 kB _unless_ the HBA driver 
+> increases max_sectors.
+> 
+> The aic79xx driver enables clustering but does not increase max_sectors. 
+> This makes the maximum request size 512 kB. If it is possible to set
+> 
+> 	.max_sectors = 0xFFFF,
+> 
+> in linux/drivers/scsi/aic7xxx/aic79xx_osm.c without breaking the driver, 
+> this should enable requests up to 8 MB - 256 B. (I don't have the hardware 
+> to test this.)
+> 
+> Several SCSI HBA drivers currently have similar problems.
 
-Signed-off-by: Jamie Wellnitz <Jamie.Wellnitz@emulex.com>
+Kai,
+I applied the above changes to my scsi_debug (plus
+extended .sg_tablesize to SG_ALL (it was 64)) and
+my single command READs topped out at 4 MB exactly
+(bs=512 bpt=8192). When I tried bpt=8193 the
+SG_IO ioctl (via a sg device) yielded ENOMEM which
+is much more informative than EIO.
 
---- a/drivers/scsi/lpfc/lpfc_mbox.c
-+++ b/drivers/scsi/lpfc/lpfc_mbox.c
-@@ -195,6 +195,9 @@ lpfc_init_link(struct lpfc_hba * phba,
- 		mb->un.varInitLnk.link_flags = FLAGS_TOPOLOGY_MODE_PT_PT;
- 		mb->un.varInitLnk.link_flags |= FLAGS_TOPOLOGY_FAILOVER;
- 		break;
-+	case FLAGS_LOCAL_LB:
-+		mb->un.varInitLnk.link_flags = FLAGS_LOCAL_LB;
-+		break;
- 	}
- 
- 	/* NEW_FEATURE
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -616,6 +616,7 @@ LPFC_ATTR_RW(nodev_tmo, 30, 0, 255,
- /*
- # lpfc_topology:  link topology for init link
- #            0x0  = attempt loop mode then point-to-point
-+#            0x01 = internal loopback mode
- #            0x02 = attempt point-to-point mode only
- #            0x04 = attempt loop mode only
- #            0x06 = attempt point-to-point mode then loop
-@@ -623,7 +624,7 @@ LPFC_ATTR_RW(nodev_tmo, 30, 0, 255,
- # Set loop mode if you want to run as an NL_Port. Value range is [0,0x6].
- # Default value is 0.
- */
--LPFC_ATTR_R(topology, 0, 0, 6, "Select Fibre Channel topology");
-+LPFC_ATTR_RW(topology, 0, 0, 6, "Select Fibre Channel topology");
- 
- /*
- # lpfc_link_speed: Link speed selection for initializing the Fibre Channel
+That is an improvement.
+
+Doug Gilbert
