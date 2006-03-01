@@ -1,85 +1,43 @@
 From: Andrew Morton <akpm@osdl.org>
-Subject: Re: problems with scsi_transport_fc and qla2xxx
-Date: Tue, 28 Feb 2006 22:14:22 -0800
-Message-ID: <20060228221422.282332ef.akpm@osdl.org>
-References: <1413265398.20060227150526@netvision.net.il>
-	<978150825.20060227210552@netvision.net.il>
+Subject: Fw: aic79xx + tape 2.6.13.5 -> 2.6.15.4 problem
+Date: Tue, 28 Feb 2006 23:19:47 -0800
+Message-ID: <20060228231947.12cc7076.akpm@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:31656 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932440AbWCAGPr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2006 01:15:47 -0500
-In-Reply-To: <978150825.20060227210552@netvision.net.il>
+Received: from smtp.osdl.org ([65.172.181.4]:34484 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932598AbWCAHVI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2006 02:21:08 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Maxim Kozover <maximkoz@netvision.net.il>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>
+To: linux-scsi@vger.kernel.org
+Cc: Frithjof Kruggel <fkruggel@uci.edu>
 
-Maxim Kozover <maximkoz@netvision.net.il> wrote:
->
-> Hi!
 
-(cc's added)
 
-> Most of the problem seems to be a QLogic driver problem.
-> HBAs are connected to target via FC switch.
-> 
-> 1. If I have several LUNs on each HBA, with QLogic only 1 directory
-> per adapter (for LUN 0) is created in /sys/class/fc_remote_ports,
-> while with Emulex a directory for every LUN is created.
-> 
-> 2. The situation I described occurs with QLogic only if the cable
-> connecting between HBA and switch is pulled out/in. If I
-> connect/disconnect the cable between switch and target, disks come
-> back.
-> 
-> 3. With Emulex in both cases disks come back.
-> 
-> However, both with Emulex and QLogic stale directories in
-> /sys/classfc_remote_ports are left.
-> For example, with Emulex if I had in the beginning
-> rport-6:0-0  rport-6:0-1  rport-6:0-2  rport-7:0-0  rport-7:0-1  rport-7:0-2
-> then disconnected adapter 7, got
-> rport-6:0-0  rport-6:0-1  rport-6:0-2  rport-7:0-0  rport-7:0-2
-> (7-0-0 and 7-0-2 didn't disappear while 7-0-1 did)
-> connected 7 back
-> rport-6:0-0  rport-6:0-1  rport-6:0-2  rport-7:0-2  rport-7:0-4
-> rport-7:0-5 rport-7:0-6
-> (7-0-0 disappeared, but 7-0-2 is still here).
-> 
-> Thanks,
-> 
-> Maxim.
-> 
-> MK> Hi!
-> MK> I'm checking 2.6.16-rc5 with 2 QLogic 2312 adapters using qla2xxx
-> MK> driver from 2.6.16-rc5.
-> MK> As with earlier kernels, I think > 2.6.12 (since scsi_transport_fc
-> MK> gained functionality) I have the following problem.
-> MK> 2 scsi hosts available, 4 and 5 (for QLogic).
-> MK> I disconnect the cable from one of QLogic cards. After timeout I have
-> MK> the message
-> MK> rport-4:0-0: blocked FC remote port time out: removing target and saving binding
-> MK> and appropriate SCSI devices that came from adapter 4 disappear from
-> MK> /proc/scsi/scsi.
-> MK> So far, so good.
-> MK> I reconnect the cable, the directory
-> MK> /sys/class/fc_remote_ports/rport-4:0-1 appears along with the old
-> MK> ones rport-4:0-0 and rport-5:0-0, so currently I have 3.
-> MK> However, no automatic rescan appears on adapter 4.
-> MK> What's worse, if I try echo "0 1 0" > /sys/class/scsi_host/host4/scan
-> MK> the process is stuck.
-> MK> Please advise.
-> 
-> MK> Thanks,
-> 
-> MK> Maxim.
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+Begin forwarded message:
+
+Date: Mon, 27 Feb 2006 18:45:56 -0800
+From: Frithjof Kruggel <fkruggel@uci.edu>
+To: linux-kernel@vger.kernel.org, fkruggel@uci.edu
+Subject: aic79xx + tape 2.6.13.5 -> 2.6.15.4 problem
+
+
+Sorry to bother you with this. I have a server
+system equipped with an Adaptec U320 board,
+attached a HP Ultrium 2 drive.
+Since I upgraded from kernel version 2.6.13.5
+to 2.6.15.4, tape write speeds dropped from
+22 MB/s to 4.5 MB/s. Looks like asynchonous
+write mode is now negotiated.
+Any help is appreciated - please, cc to my
+address above as I am not a regular reader.
+Thanks,
+
+Frithjof
+-
+To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Please read the FAQ at  http://www.tux.org/lkml/
