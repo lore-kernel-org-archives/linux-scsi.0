@@ -1,77 +1,69 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: Re[2]: Fwd: Re: problems with scsi_transport_fc and qla2xxx
-Date: Wed, 1 Mar 2006 11:20:08 -0800
-Message-ID: <20060301192008.GF4321@spe2>
-References: <735056370.20060228195436@netvision.net.il> <1984428707.20060228200029@netvision.net.il> <20060228181900.GC4541@andrew-vasquezs-powerbook-g4-15.local> <1261469398.20060301130903@netvision.net.il>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: sg regression in 2.6.16-rc5
+Date: Wed, 01 Mar 2006 14:33:05 -0500
+Message-ID: <4405F6F1.9040106@torque.net>
+References: <E94491DE-8378-41DC-9C01-E8C1C91B6B4E@mac.com> <4404AA2A.5010703@torque.net> <20060301083824.GA9871@merlin.emma.line.org> <Pine.LNX.4.64.0603011027400.22647@g5.osdl.org>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:32699 "EHLO avexch02.qlogic.com")
-	by vger.kernel.org with ESMTP id S1750740AbWCATUM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2006 14:20:12 -0500
-Content-Disposition: inline
-In-Reply-To: <1261469398.20060301130903@netvision.net.il>
+Received: from canuck.infradead.org ([205.233.218.70]:27056 "EHLO
+	canuck.infradead.org") by vger.kernel.org with ESMTP
+	id S1750790AbWCATe1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 1 Mar 2006 14:34:27 -0500
+In-Reply-To: <Pine.LNX.4.64.0603011027400.22647@g5.osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Maxim Kozover <maximkoz@netvision.net.il>
-Cc: linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: Matthias Andree <matthias.andree@gmx.de>, Mark Rustad <mrustad@mac.com>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On Wed, 01 Mar 2006, Maxim Kozover wrote:
-
-> Hi Andrew!
-> I applied the patch changing 2 lines in scsi_transport_fc.c to
-> if (fc_host_tgtid_bind_type(shost) != FC_TGTID_BIND_NONE) {
+Linus Torvalds wrote:
 > 
-> I tried first with Emulex as QLogic seemed yesterday to have more
-> problems, (not only orphan rports, but also not creating all rports),
-> so let's start solving problems one by one.
+> On Wed, 1 Mar 2006, Matthias Andree wrote:
 > 
-> I saw no change in behavior with Emulex.
-> 1. I had 3 LUNs on adapters 6 and 7.
-> # ls /sys/class/fc_remote_ports
-> rport-6:0-0  rport-6:0-1  rport-6:0-2  rport-7:0-0  rport-7:0-1  rport-7:0-2
-
-Ok, so specifically you have one target-port at rport-7:0-2 which has
-three luns (0, 1, and 2).
-
-	/devices/pci0000:00/0000:00:06.0/0000:05:00.2/0000:07:01.1/host7/rport-7:0-2/target7:0:0/7:0:0:0
-	/devices/pci0000:00/0000:00:06.0/0000:05:00.2/0000:07:01.1/host7/rport-7:0-2/target7:0:0/7:0:0:1
-	/devices/pci0000:00/0000:00:06.0/0000:05:00.2/0000:07:01.1/host7/rport-7:0-2/target7:0:0/7:0:0:2
-
-So what are the other rports?  Other initiators?
-
-> 2. disconnected the cable between adapter 7 and the switch,
-> rport-7:0-0 disappeared momentarily with Emulex LinkDown event.
-> lpfc 0000:07:01.1: 1:1305 Link Down Event x2 received Data: x2 x20 x110
-> # ls /sys/class/fc_remote_ports
-> rport-6:0-0  rport-6:0-1  rport-6:0-2  rport-7:0-0  rport-7:0-2
-
-Actually, rport-7:0-1 disappears -- my guess an initiator.  Is
-rport-7:0-0 an FCP_TARGET with no luns?
-
-> 3. Then after a timeout I got a message about blocking rport-7:0-2, but
-> nothing changed.
-> rport-7:0-2: blocked FC remote port time out: removing target and saving binding
-
-Exactly, the scsi_target and scsi_device is reaped after TMO expires.
-
-> # ls /sys/class/fc_remote_ports
-> rport-6:0-0  rport-6:0-1  rport-6:0-2  rport-7:0-0  rport-7:0-2
-
-This is still correct.
-
-> However, all scsi entries related to adapter 7 are removed from
-> /proc/scsi/scsi.
+>>On Tue, 28 Feb 2006, Douglas Gilbert wrote:
+>>
+>>
+>>>You can stop right there with the 1 MB reads. Welcome
+>>>to the new, blander sg driver which now shares many
+>>>size shortcomings with the block subsystem.
+>>
+>>What is the reason to break user-space applications like this?
 > 
-> Please advise.
+> 
+> Did you read the whole thread? It was a low-level SCSI driver issue, where 
+> nothing broke user space, but the command was just fed to the drive 
+> differently, which then hit a limit in the driver.
 
-If your question is, are the /proc/scsi/scsi devices (/dev/sda, sdb,
-...) supposed to disappear when the rport TMO expires , then yes they
-are supposed to disappear.  The rports persist with a port_state of
-'not present' for persistent-binding purposes, until the port return
-(i.e. you reinsert the cable).  If that were to occur, then upon rport
-addition, the 3-lun storage would be attached to rport-7:0-2 and a
-request signaled for lun scanning by the midlayer.
+Linus,
+That is an optimistic take. The maximum data carrying
+capacity of a single SCSI command via the SG_IO ioctl
+depends on the maximum data carrying capacity of a
+scatter gather list. Assuming all scatter gather list
+elements carry the same amount of data then the
+maximum capacity is:
+'max_bytes_per_element * max_num_elements'
 
---
-Andrew
+Only the latter figure is a "low-level SCSI driver issue"
+whose maximum seems to be SG_ALL (255). It is the former
+figure that has changed. The sg driver in lk 2.6.15 used
+__get_free_pages() with the order set to get 32 KB where
+as the generic routine used now get a single page (usually
+4 KB). Kai Makisara proposed changes in the SCSI LLD
+template that made things better in my experiments with
+scsi_debug.
+
+However today James Bottomley confirmed that relying on
+coalescing pages that may be adjacent is not deterministic:
+http://marc.theaimsgroup.com/?l=linux-scsi&m=114122991606658&w=2
+
+That leaves a worst case scatter gather list data capacity
+of (4 * 255) KB if the SCSI LLD (or SATA) uses SG_ALL. That
+is still just under the 1 MB bar that started this thread.
+
+So I guess we might find out how many people do big,
+single SCSI command data, transfers when lk 2.6.16 comes
+out.
+
+Doug Gilbert
