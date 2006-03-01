@@ -1,49 +1,44 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: sg regression in 2.6.16-rc5
-Date: Wed, 01 Mar 2006 16:56:58 -0600
-Message-ID: <440626BA.4070000@cs.wisc.edu>
-References: <E94491DE-8378-41DC-9C01-E8C1C91B6B4E@mac.com>	 <4404AA2A.5010703@torque.net> <20060301083824.GA9871@merlin.emma.line.org>	 <Pine.LNX.4.64.0603011027400.22647@g5.osdl.org>	 <4405F6F1.9040106@torque.net>  <1141245769.9586.6.camel@max> <1141252235.3276.63.camel@mulgrave.il.steeleye.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: ATA Pass-Through support
+Date: Wed, 01 Mar 2006 18:31:01 -0500
+Message-ID: <44062EB5.7010901@torque.net>
+References: <DF9C50EF9E8CDA45A06FE8735C68F85E568F0D@earthex2.power.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:4481 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S1751106AbWCAW5S (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2006 17:57:18 -0500
-In-Reply-To: <1141252235.3276.63.camel@mulgrave.il.steeleye.com>
+Received: from canuck.infradead.org ([205.233.218.70]:6800 "EHLO
+	canuck.infradead.org") by vger.kernel.org with ESMTP
+	id S1751939AbWCAXcM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 1 Mar 2006 18:32:12 -0500
+In-Reply-To: <DF9C50EF9E8CDA45A06FE8735C68F85E568F0D@earthex2.power.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: dougg@torque.net, Linus Torvalds <torvalds@osdl.org>, Matthias Andree <matthias.andree@gmx.de>, Mark Rustad <mrustad@mac.com>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Quat Le <Quat.Le@dothill.com>
+Cc: linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
-> On Wed, 2006-03-01 at 14:42 -0600, Mike Christie wrote:
-> 
->>The current sg driver should use alloc_pages() with an order that should
->>get 32 KB. If the order being passed to alloc_pages() in sg.c is only
->>getting one page by default that is bug.
-> 
-> 
->>The generic routines now being used can turn that 32KB segment into
->>multiple 4KB ones if the LLD does not support clustering.
-> 
-> 
-> To be honest, the original behaviour was a bug.  A device that doesn't
-> enable clustering is telling us it can't take anything other than
-> PAGE_SIZE chunks ... trying to give it more is likely to end in tears.
+Quat Le wrote:
+> Sorry if this is not the right place to ask this question.
 
-Yeah, we hit this with iscsi_tcp. iscsi_tcp does not suport clustering, 
-not due to a HW limit, but becuase that is just how it was implemented. 
-When we get clustered segments we end up with data corruption or an oops 
-depending on the operation. I think the workaround was to set the 
-default segment for sg and st to a page or just use the block layer sg_io.
+This is the right place to ask.
 
-> 
-> However ... I'm not sure we actually have any devices that anyone can
-> identify which truly can't enable clustering (a lot which have it
-> disabled, I suspect, are that way historically because their writers
-> didn't trust the clustering algorithm).
-> 
+> I wrote some application code to send ATA Pass-Through SCSI commands via
+> SG_IO ioctl to SATA drives connected to a LSI Logic SAS HBA. What I got
+> was ILLEGAL REQUEST (INVALID COMAND OPERATION CODE) for both SCSI
+> OPCODE's A1H and 85H. I tried some other SCSI commands and saw that they
+> were translated to ATA commands correctly. I am running Linux kernel
+> 2.6.15 and am under the impression that it supports ATA Pass-Through.
 
-ok, I can implement clustering for iscsi_tcp. For now it does not much 
-matter since we never supported large sg or st commands.
+I thought support for those two opcodes went into libata
+for lk 2.6.15 as well but haven't written discrete code
+to test it. Does the lsi SAS HBA use libata on its STP
+(or direct connect) path? Eyeballing the libata code,
+those opcodes are used internally. I know that
+"smartctl -a -d ata /dev/sda" works when /dev/sda is a
+SATA disk using libata on a regular SATA HBA. At present I
+do not have any hardware nearby to test it. If you can direct
+connect a SATA disk to a SATA controller on your motherboard
+(i.e. bypassing the SAS HBA) does that make any difference?
+
+Doug Gilbert
