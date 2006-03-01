@@ -1,70 +1,75 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] aic94xx: driver assertion in non-x86 BIOS env
-Date: Wed, 1 Mar 2006 14:12:25 -0700
-Message-ID: <20060301211225.GE1598@parisc-linux.org>
-References: <8C064C48AB104B428CBA524C342357CA34CFC4@aime2k05.adaptec.com>
+From: Maxim Kozover <maximkoz@netvision.net.il>
+Subject: Re[4]: Fwd: Re: problems with scsi_transport_fc and qla2xxx
+Date: Wed, 01 Mar 2006 23:16:02 +0300
+Message-ID: <1986427368.20060301231602@netvision.net.il>
+References: <735056370.20060228195436@netvision.net.il>
+ <1984428707.20060228200029@netvision.net.il>
+ <20060228181900.GC4541@andrew-vasquezs-powerbook-g4-15.local>
+ <1261469398.20060301130903@netvision.net.il> <20060301192008.GF4321@spe2>
+Reply-To: Maxim Kozover <maximkoz@netvision.net.il>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:7333 "EHLO
-	palinux.hppa") by vger.kernel.org with ESMTP id S1751908AbWCAVM0
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Mar 2006 16:12:26 -0500
-Content-Disposition: inline
-In-Reply-To: <8C064C48AB104B428CBA524C342357CA34CFC4@aime2k05.adaptec.com>
+Received: from mxout5.netvision.net.il ([194.90.9.29]:63219 "EHLO
+	mxout5.netvision.net.il") by vger.kernel.org with ESMTP
+	id S1751251AbWCAVP6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 1 Mar 2006 16:15:58 -0500
+In-reply-to: <20060301192008.GF4321@spe2>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Tarte, Robert" <Robert_Tarte@adaptec.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Mike Anderson <andmike@us.ibm.com>, James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, Jeff Garzik <jgarzik@redhat.com>
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Mar 01, 2006 at 12:57:12PM -0800, Tarte, Robert wrote:
-> I have located an HP machine that is the same flavor as James' (HP
-> Integrity rx2600: ia64 with zx1 chipset).  It exhibits the same problem.
-> I believe that the architecture may differ with traditional PC/PCI
-> architectures in how it deals with non-aligned PCI access.  When I
-> converted the OCM initialization code to write on qwords instead of
-> dwords, the code was able to pass OCM initialization.  It is possible
-> that the machine is doing a qword read/modify/write when accessing OCM
-> memory, which would explain the hang.  I haven't hooked up a PCI
-> analyzer.  The code now gets to the point where it is trying to read
-> NVRAM in order to get the SAS address.  It seems that the machine is
-> unable to retrieve non-aligned byte accesses correctly.  I will convert
-> the code to pull the correct byte/word/dword from the aligned qword.
-> We'll see if that fixes it.  None of these behaviors are exhibited on
-> x86, x86_64, powerpc, and ia64 without the zx1 chipset.  I understand
-> that there may be a few ARM implementations that have similar issues.
+Hi Andrew!
+You're right. I didn't look at roles in Emulex case.
+When using Emulex everything is OK.
+Tomorrow I'll connect QLogic again to continue problem investigation.
+Thanks much for quick and professional replies.
 
-You're saying that you do an 8-byte non-DMA write to an address
-that's congruent to 4 mod 8?  Based on briefly skimming the internal
-documentation for zx1, I'd say you're invoking undefined behaviour.
+I'll just describe Emulex situation to confirm.
+Let's connect only 1 Emulex port (adapter 7) to a switch and leave
+adapter 6 not connected. Then we have
+# ls /sys/class/fc_remote_ports/
+rport-7:0-0  rport-7:0-1  rport-7:0-2
+# cat /sys/class/fc_remote_ports/*/roles
+Fabric Port
+Directory Server
+FCP Target, FCP Initiator
 
-> Mike: any word on getting James a machine?
-> 
-> Rob
-> 
-> > -----Original Message-----
-> > From: Jeff Garzik [mailto:jgarzik@pobox.com]
-> > Sent: Wednesday, March 01, 2006 12:23 PM
-> > To: Tarte, Robert
-> > Cc: Mike Anderson; James Bottomley; linux-scsi@vger.kernel.org;
-> > Tarte@us.ibm.com; Jeff Garzik
-> > Subject: Re: [PATCH] aic94xx: driver assertion in non-x86 BIOS env
-> > 
-> > Tarte, Robert wrote:
-> > > What model ia64 are you running James?  I'll see if Adaptec has one
-> to
-> > > try to help reproduce this issue.  Jeff, have you tried the fixes to
-> see
-> > > if they addressed the issues you were seeing (OCM error when BIOS
-> off
-> > > and booted off of SCSI)?
-> > 
-> > Nah, I'm just waiting for James to ACK that things work on his side,
-> > really...
-> > 
-> > 	Jeff
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+When the cable is disconnected from adapter 7, immediately with
+LinkDown event, the rport with the role of Directory server disappears
+and only 2 are left:
+# ls /sys/class/fc_remote_ports/
+rport-7:0-0  rport-7:0-2
+# cat /sys/class/fc_remote_ports/*/roles
+Fabric Port
+FCP Target, FCP Initiator
+
+Then after a timeout, the role of rport-7:0-2 is changed to unknown
+and relevant entries are removed from /proc/scsi/scsi. rport-7:0-0 is
+still here.
+
+rport-7:0-2: blocked FC remote port time out: removing target and saving binding
+# ls /sys/class/fc_remote_ports/
+rport-7:0-0  rport-7:0-2
+# cat /sys/class/fc_remote_ports/*/roles
+Fabric Port
+unknown
+
+After reconnecting the cable, rport-7:0:0 disappears and rport-7:0:4
+and rport-7:0-5 appear along with newly recognized LUNs in /proc/scsi/scsi.
+# ls /sys/class/fc_remote_ports/
+rport-7:0-2  rport-7:0-4  rport-7:0-5
+# cat /sys/class/fc_remote_ports/*/roles
+FCP Target, FCP Initiator
+Fabric Port
+Directory Server
+
+If I'm not mistaken, in QLogic case only 1 rport per adapter appeared
+instead of 3. Tomorrow I'll connect QLogic and report again.
+
+Thanks,
+
+Maxim.
+
