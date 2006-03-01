@@ -1,97 +1,58 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: sg regression in 2.6.16-rc5
-Date: Wed, 1 Mar 2006 23:06:19 +0200 (EET)
-Message-ID: <Pine.LNX.4.63.0603012239440.5789@kai.makisara.local>
-References: <E94491DE-8378-41DC-9C01-E8C1C91B6B4E@mac.com> <4404AA2A.5010703@torque.net>
- <20060301083824.GA9871@merlin.emma.line.org> <Pine.LNX.4.64.0603011027400.22647@g5.osdl.org>
- <4405F6F1.9040106@torque.net>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: problems with scsi_transport_fc and qla2xxx
+Date: Wed, 1 Mar 2006 13:08:02 -0800
+Message-ID: <20060301210802.GA7288@spe2>
+References: <1413265398.20060227150526@netvision.net.il> <978150825.20060227210552@netvision.net.il> <20060228221422.282332ef.akpm@osdl.org> <4406034B.9030105@madness.at>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fep01-0.kolumbus.fi ([193.229.0.41]:46504 "EHLO
-	fep01-app.kolumbus.fi") by vger.kernel.org with ESMTP
-	id S1751199AbWCAVDd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Mar 2006 16:03:33 -0500
-In-Reply-To: <4405F6F1.9040106@torque.net>
+Received: from pat.qlogic.com ([198.70.193.2]:23617 "EHLO avexch02.qlogic.com")
+	by vger.kernel.org with ESMTP id S1751907AbWCAVIG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2006 16:08:06 -0500
+Content-Disposition: inline
+In-Reply-To: <4406034B.9030105@madness.at>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: Linus Torvalds <torvalds@osdl.org>, Matthias Andree <matthias.andree@gmx.de>, Mark Rustad <mrustad@mac.com>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Stefan Kaltenbrunner <mm-mailinglist@madness.at>
+Cc: Andrew Morton <akpm@osdl.org>, Maxim Kozover <maximkoz@netvision.net.il>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Wed, 1 Mar 2006, Douglas Gilbert wrote:
+On Wed, 01 Mar 2006, Stefan Kaltenbrunner wrote:
 
-> Linus Torvalds wrote:
+> Andrew Morton wrote:
+> > Maxim Kozover <maximkoz@netvision.net.il> wrote:
 > > 
-> > On Wed, 1 Mar 2006, Matthias Andree wrote:
+> >>Hi!
 > > 
-> >>On Tue, 28 Feb 2006, Douglas Gilbert wrote:
+> > 
+> > (cc's added)
+> > 
+> > 
+> >>Most of the problem seems to be a QLogic driver problem.
+> >>HBAs are connected to target via FC switch.
 > >>
+> >>1. If I have several LUNs on each HBA, with QLogic only 1 directory
+> >>per adapter (for LUN 0) is created in /sys/class/fc_remote_ports,
+> >>while with Emulex a directory for every LUN is created.
 > >>
-> >>>You can stop right there with the 1 MB reads. Welcome
-> >>>to the new, blander sg driver which now shares many
-> >>>size shortcomings with the block subsystem.
-> >>
-> >>What is the reason to break user-space applications like this?
-> > 
-> > 
-> > Did you read the whole thread? It was a low-level SCSI driver issue, where 
-> > nothing broke user space, but the command was just fed to the drive 
-> > differently, which then hit a limit in the driver.
+> >>2. The situation I described occurs with QLogic only if the cable
+> >>connecting between HBA and switch is pulled out/in. If I
+> >>connect/disconnect the cable between switch and target, disks come
+> >>back.
 > 
-> Linus,
-> That is an optimistic take. The maximum data carrying
-> capacity of a single SCSI command via the SG_IO ioctl
-> depends on the maximum data carrying capacity of a
-> scatter gather list. Assuming all scatter gather list
-> elements carry the same amount of data then the
-> maximum capacity is:
-> 'max_bytes_per_element * max_num_elements'
-> 
-> Only the latter figure is a "low-level SCSI driver issue"
-> whose maximum seems to be SG_ALL (255). It is the former
-> figure that has changed. The sg driver in lk 2.6.15 used
-> __get_free_pages() with the order set to get 32 KB where
-> as the generic routine used now get a single page (usually
-> 4 KB). Kai Makisara proposed changes in the SCSI LLD
-> template that made things better in my experiments with
-> scsi_debug.
-> 
-> However today James Bottomley confirmed that relying on
-> coalescing pages that may be adjacent is not deterministic:
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=114122991606658&w=2
-> 
-If this is James's final opininion, then the changes to st for 2.6.16 
-to use scsi_execute_async _must be reverted_ before final 2.6.16. They 
-cause user-visible regression.
+> I can confirm that very problem (pulling the cable between HBA and
+> switch results in only LUN 0 or nothing coming back afterward) on
+> 2.6.15.4 here too.
 
-I don't think relying on coalescing in this case is non-deterministic: we 
-know that enough pages are adjacent to coalesce. This is because the pages 
-have been split into bios from larger kernel space buffers. (Conceptually 
-I don't like this splitting and re-merging but it works provided the HBA 
-parameters are good.)
+Please try recent 2.6.16-rcX kernels as there have been a number of
+patches submitted since 2.6.15 which (attempt to) address most of
+these holes -- I'm still trying to get additional details on Maxim's.
 
-I am a little frustrated with this whole thing. Several people have talked 
-about switching st to use the block layer. Mike Christie finally did the 
-work and the details were discussed on linux-scsi. I thought that 
-everybody agreed on the details and I tested that the code works for st. 
-Now it seems that there was no agreement!
+387f96b4d9391bf3ce6928fb9cd90c9c7df37291 [PATCH] qla2xxx: Close window on race between rport removal and fcport transition.
+77427f514f88143bfef41ba8c1e624bc45f42297 [SCSI] qla2xxx: Drop legacy 'bypass lun scan for tape device' code.
+052c40c83b4ca37be226112049b60097cb9961e1 [SCSI] qla2xxx: Correct issue where the rport's upcall was not being made after relogin.
+d97994dc1fddcbb8212b745d9c9c9ce96262155c [SCSI] qla2xxx: Correct synchronization issues during rport addition/deletion.
+79f89a4296ff22f09baf538d4ff2a6d0c3097a73 [SCSI] qla2xxx: Disable port-type RSCN handling via driver state-machine.
 
-> That leaves a worst case scatter gather list data capacity
-> of (4 * 255) KB if the SCSI LLD (or SATA) uses SG_ALL. That
-> is still just under the 1 MB bar that started this thread.
-> 
-This is not acceptable.
 
-> So I guess we might find out how many people do big,
-> single SCSI command data, transfers when lk 2.6.16 comes
-> out.
-> 
-Learn the hard way ;-( I know that there are applications that read and 
-write large tape blocks but I think they will hit the problems much later. 
-These are production systems that are probably not updated frequently. 
-When they find out this, they probably have to move away from Linux.
-
-I have talked about st but I think the same arguments apply mostly to sg. 
-
--- 
-Kai
+Regards,
+Andrew Vasquez
