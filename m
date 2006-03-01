@@ -1,66 +1,32 @@
-From: "Asgeir Eiriksson" <asgeir_eiriksson@hotmail.com>
-Subject: Re: SATA on mptsas performance
-Date: Wed, 01 Mar 2006 09:55:54 -0800
-Message-ID: <BAY107-F31DBAB4CFEF7B8F61B3719E6F40@phx.gbl>
-References: <44051548.9090408@torque.net>
+From: Linus Torvalds <torvalds@osdl.org>
+Subject: Re: sg regression in 2.6.16-rc5
+Date: Wed, 1 Mar 2006 10:28:31 -0800 (PST)
+Message-ID: <Pine.LNX.4.64.0603011027400.22647@g5.osdl.org>
+References: <E94491DE-8378-41DC-9C01-E8C1C91B6B4E@mac.com> <4404AA2A.5010703@torque.net>
+ <20060301083824.GA9871@merlin.emma.line.org>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bay107-f31.bay107.hotmail.com ([64.4.51.41]:62736 "EHLO
-	hotmail.com") by vger.kernel.org with ESMTP id S1030189AbWCAR4D
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Mar 2006 12:56:03 -0500
-In-Reply-To: <44051548.9090408@torque.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750767AbWCAS2r@vger.kernel.org>
+In-Reply-To: <20060301083824.GA9871@merlin.emma.line.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Matthias Andree <matthias.andree@gmx.de>
+Cc: Douglas Gilbert <dougg@torque.net>, Mark Rustad <mrustad@mac.com>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net, mirko.benz@web.de
-Cc: linux-scsi@vger.kernel.org
 
-Doug
 
-I realize that your 10b8b arithmetic was probably meant to be approximate, 
-but I'd still like to point out that 10G Ethernet technology uses the 8b 
-number when quoting bandwidth whereas e.g. IB quotes the 10b number (let's 
-refer to this as data rate vs. signaling rate).
 
-For example: so called 10Gbps IB has a data rate limit of 8Gbps, whereas 
-10GE has a data rate lmit of 10Gbps (countinting TCP/IP headers as part of 
-the BW).
-
-For CX-4 copper cable (Infiiniband connectors and cable) the rate of the 
-serdes used are actually different for the two technologies with IB having 4 
-lanes at 2.5GHz whereas 10G Ethernet has 4 lanes at 3.125GHz, leading again 
-to 8Gbps IB vs. 10Gbps Ethernet data rate bandwidth.
-
-Regards,
-
-Asgeir Eiriksson
-Chelsio Communications Inc.
-
->From: Douglas Gilbert <dougg@torque.net>
->Reply-To: dougg@torque.net
->To: Mirko Benz <mirko.benz@web.de>
->CC: linux-scsi@vger.kernel.org
->Subject: Re: SATA on mptsas performance
->Date: Tue, 28 Feb 2006 22:30:16 -0500
+On Wed, 1 Mar 2006, Matthias Andree wrote:
 >
-...
->
->BTW since SAS uses "10b8b" encoding (as do IB,
->FC, SATA, PCIe, 10 gigabit ethernet on copper, etc) which
->encodes 8 data bits into 10 bits on the wire then one
->can flip between "<n> MB/sec" and "(<n> * 10) Mb/sec". The
->capitalization (or not) of the "B" is obviously significant.
->Perhaps somebody from a SAS vendor company could tell us how
->much data one can really send down a 3 Gb/sec SAS/STP
->connection under optimum conditions.
->
->
->Doug Gilbert
->
->-
->To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> On Tue, 28 Feb 2006, Douglas Gilbert wrote:
+> 
+> > You can stop right there with the 1 MB reads. Welcome
+> > to the new, blander sg driver which now shares many
+> > size shortcomings with the block subsystem.
+> 
+> What is the reason to break user-space applications like this?
 
+Did you read the whole thread? It was a low-level SCSI driver issue, where 
+nothing broke user space, but the command was just fed to the drive 
+differently, which then hit a limit in the driver.
 
+		Linus
