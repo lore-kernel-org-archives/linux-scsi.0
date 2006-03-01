@@ -1,63 +1,27 @@
-From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: RE: SATA on mptsas performance
-Date: Wed, 1 Mar 2006 09:04:17 -0700
-Message-ID: <F331B95B72AFFB4B87467BE1C8E9CF5F2FC811@NAMAIL2.ad.lsil.com>
+From: alex3dg500@interia.pl
+Subject: THIS IS A COMPENSATION
+Date: 01 Mar 2006 17:02:42 +0100
+Message-ID: <20060301160242.5DE93A416A@poczta.interia.pl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: TEXT/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:59871 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1030219AbWCAQE2 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Mar 2006 11:04:28 -0500
-Content-class: urn:content-classes:message
+Received: from smtp3.poczta.interia.pl ([213.25.80.233]:44440 "EHLO
+	smtp.poczta.interia.pl") by vger.kernel.org with ESMTP
+	id S932241AbWCAQGL convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2006 11:06:11 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mirko Benz <mirko.benz@web.de>, Jeff Garzik <jgarzik@pobox.com>
-Cc: dougg@torque.net, linux-scsi@vger.kernel.org
+To: alex3dg500@interia.pl
 
-On Wednesday, March 01, 2006 1:16 AM, Mirko Benz wrote: 
-> 
-> As promised we have tested 3 Gb (aka SATA II) disks.
-> Configuration: LSI SAS3442X controller, Promise SAS JBOD, 12 disks 
-> Seagate SATA 80 GB
-> 
-> Tested with parallel dd invocations with bs=32k.
-> The results look better:
-> 
-> # disks    Read    AVG    Write    AVG
-> 1    69    69,0    68    68,0
-> 6    420    70,0    324    54,0
-> 7    459    65,6    367    52,4
-> 8    426    53,3    394    49,3
-> 9    399    44,3    389    43,2
-> 10    410    41,0    431    43,1
-> 11    438    39,8    428    38,9
-> 12    468    39,0    481    40,1
-> 
-> Available bandwidth is 4 * 3 Gb = 1.5 GB (4 lanes / external wide SAS 
-> port).
-> So there is still some room for improvement. Has anyone else 
-> a similar 
-> setup and can provide results?
-> Maybe with the Adaptec SAS controller?
-> 
+ Dear  Friend
 
-Sorry, I've not had a chance to replicate this.  Of late, I've been
-overloaded.
+I'm happy to inform you about my success in getting those funds transferred  under the cooperation of a new partner from paraguay. Presently i'm in Paraguay for investment projects with my own share of the  total sum. meanwhile,i didn't forget your past efforts and attempts to assist me in transferring those funds despite that it failed us some how. Now contact my secretary in Benin his name is NNA on (nna_maga@myway.com, ask him to send you the total of $800.000.00 
 
-I asked co-worker regarding this.  They told me they believe SATA
-devices
-when they open frame, they will complete entire data transaction during 
-a single connection.  Meaning they don't do disconnect, and yield to
-other 
-devices as do SAS devices.  Thus could be the reason when you have 12
-SATA devices,
-the performance is low.   Jeff Garzik is this true?   However, when I
-have a chance, 
-I will verify this via bus analyzer, and do some testing.  I beleive I
-can obtain
-about 10 SATA disk.  
+which i kept for your compensation for all the past efforts and attempts to  assist me in this matter. I appreciated your efforts at that time very much. so feel free and get in touched with my secretary Mr NNA and instruct him  where to send the amount to you. Please do let me know immediately you receive it so that we can share the  joy after all the sufferness at that time. in the moment, I'm very busy here  because of the investment projects which me and the new partner are having  at hand, finally, remember that I had forwarded instruction to the
+secretary  on your behalf to receive that money, so feel free to get in touch with
+MR NNA, he will send the amount to you without any delay.
+ 
+Regards,
+Mr ALEX.
 
-Eric
