@@ -1,69 +1,31 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: sg regression in 2.6.16-rc5
-Date: Wed, 01 Mar 2006 14:33:05 -0500
-Message-ID: <4405F6F1.9040106@torque.net>
-References: <E94491DE-8378-41DC-9C01-E8C1C91B6B4E@mac.com> <4404AA2A.5010703@torque.net> <20060301083824.GA9871@merlin.emma.line.org> <Pine.LNX.4.64.0603011027400.22647@g5.osdl.org>
-Reply-To: dougg@torque.net
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] aic94xx: driver assertion in non-x86 BIOS env
+Date: Wed, 01 Mar 2006 15:22:42 -0500
+Message-ID: <44060292.5020309@pobox.com>
+References: <8C064C48AB104B428CBA524C342357CA324AE4@aime2k05.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from canuck.infradead.org ([205.233.218.70]:27056 "EHLO
-	canuck.infradead.org") by vger.kernel.org with ESMTP
-	id S1750790AbWCATe1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Mar 2006 14:34:27 -0500
-In-Reply-To: <Pine.LNX.4.64.0603011027400.22647@g5.osdl.org>
+Received: from mail.dvmed.net ([216.237.124.58]:39907 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1750790AbWCAUWr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Mar 2006 15:22:47 -0500
+In-Reply-To: <8C064C48AB104B428CBA524C342357CA324AE4@aime2k05.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: Matthias Andree <matthias.andree@gmx.de>, Mark Rustad <mrustad@mac.com>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: "Tarte, Robert" <Robert_Tarte@adaptec.com>
+Cc: Mike Anderson <andmike@us.ibm.com>, James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, Tarte@us.ibm.com, Jeff Garzik <jgarzik@redhat.com>
 
-Linus Torvalds wrote:
-> 
-> On Wed, 1 Mar 2006, Matthias Andree wrote:
-> 
->>On Tue, 28 Feb 2006, Douglas Gilbert wrote:
->>
->>
->>>You can stop right there with the 1 MB reads. Welcome
->>>to the new, blander sg driver which now shares many
->>>size shortcomings with the block subsystem.
->>
->>What is the reason to break user-space applications like this?
-> 
-> 
-> Did you read the whole thread? It was a low-level SCSI driver issue, where 
-> nothing broke user space, but the command was just fed to the drive 
-> differently, which then hit a limit in the driver.
+Tarte, Robert wrote:
+> What model ia64 are you running James?  I'll see if Adaptec has one to
+> try to help reproduce this issue.  Jeff, have you tried the fixes to see
+> if they addressed the issues you were seeing (OCM error when BIOS off
+> and booted off of SCSI)?
 
-Linus,
-That is an optimistic take. The maximum data carrying
-capacity of a single SCSI command via the SG_IO ioctl
-depends on the maximum data carrying capacity of a
-scatter gather list. Assuming all scatter gather list
-elements carry the same amount of data then the
-maximum capacity is:
-'max_bytes_per_element * max_num_elements'
+Nah, I'm just waiting for James to ACK that things work on his side, 
+really...
 
-Only the latter figure is a "low-level SCSI driver issue"
-whose maximum seems to be SG_ALL (255). It is the former
-figure that has changed. The sg driver in lk 2.6.15 used
-__get_free_pages() with the order set to get 32 KB where
-as the generic routine used now get a single page (usually
-4 KB). Kai Makisara proposed changes in the SCSI LLD
-template that made things better in my experiments with
-scsi_debug.
+	Jeff
 
-However today James Bottomley confirmed that relying on
-coalescing pages that may be adjacent is not deterministic:
-http://marc.theaimsgroup.com/?l=linux-scsi&m=114122991606658&w=2
 
-That leaves a worst case scatter gather list data capacity
-of (4 * 255) KB if the SCSI LLD (or SATA) uses SG_ALL. That
-is still just under the 1 MB bar that started this thread.
 
-So I guess we might find out how many people do big,
-single SCSI command data, transfers when lk 2.6.16 comes
-out.
-
-Doug Gilbert
