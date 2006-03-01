@@ -1,44 +1,63 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH] SCSI sym53c8xx_2: bigger transfer limits
-Date: Wed, 01 Mar 2006 11:00:56 -0500
-Message-ID: <4405C538.4050709@torque.net>
-References: <Pine.LNX.4.63.0602282104040.6272@kai.makisara.local>	 <20060301152929.GZ4816@suse.de> <1141227541.3276.26.camel@mulgrave.il.steeleye.com>
-Reply-To: dougg@torque.net
+From: "Moore, Eric" <Eric.Moore@lsil.com>
+Subject: RE: SATA on mptsas performance
+Date: Wed, 1 Mar 2006 09:04:17 -0700
+Message-ID: <F331B95B72AFFB4B87467BE1C8E9CF5F2FC811@NAMAIL2.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from canuck.infradead.org ([205.233.218.70]:6584 "EHLO
-	canuck.infradead.org") by vger.kernel.org with ESMTP
-	id S1030218AbWCAQCF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Mar 2006 11:02:05 -0500
-In-Reply-To: <1141227541.3276.26.camel@mulgrave.il.steeleye.com>
+Received: from mail0.lsil.com ([147.145.40.20]:59871 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1030219AbWCAQE2 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 1 Mar 2006 11:04:28 -0500
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Jens Axboe <axboe@suse.de>, Kai Makisara <Kai.Makisara@kolumbus.fi>, matthew@wil.cx, linux-scsi@vger.kernel.org
+To: Mirko Benz <mirko.benz@web.de>, Jeff Garzik <jgarzik@pobox.com>
+Cc: dougg@torque.net, linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
-> On Wed, 2006-03-01 at 16:29 +0100, Jens Axboe wrote:
+On Wednesday, March 01, 2006 1:16 AM, Mirko Benz wrote: 
 > 
->>Strictly speaking, the clustering bit is unrelated. I seem to recall
->>Gerard years ago talking about some sym chips that did not like
->>clustering, hence it was disabled.
+> As promised we have tested 3 Gb (aka SATA II) disks.
+> Configuration: LSI SAS3442X controller, Promise SAS JBOD, 12 disks 
+> Seagate SATA 80 GB
 > 
+> Tested with parallel dd invocations with bs=32k.
+> The results look better:
 > 
-> Yes, I remember that too ... I've never been able to find out which
-> chip, though ... the scripts all seem happily coded for variable size sg
-> segments.
+> # disks    Read    AVG    Write    AVG
+> 1    69    69,0    68    68,0
+> 6    420    70,0    324    54,0
+> 7    459    65,6    367    52,4
+> 8    426    53,3    394    49,3
+> 9    399    44,3    389    43,2
+> 10    410    41,0    431    43,1
+> 11    438    39,8    428    38,9
+> 12    468    39,0    481    40,1
 > 
-> However, given the new way 2.6 does memory allocations,
-> ENABLE_CLUSTERING will probably make quite a difference to the size of
-> the sg list ... since we try to allocate contiguous pages, physical
-> merging becomes much more of a possibility (I think I last measured it
-> at around 30% of all SG tables, as opposed to <1% with the old
-> allocation method).
+> Available bandwidth is 4 * 3 Gb = 1.5 GB (4 lanes / external wide SAS 
+> port).
+> So there is still some room for improvement. Has anyone else 
+> a similar 
+> setup and can provide results?
+> Maybe with the Adaptec SAS controller?
+> 
 
-James,
-So the maximum data carrying size of a scatter gather list
-is not deterministic? Is the worst case (page_size * SG_ALL)?
+Sorry, I've not had a chance to replicate this.  Of late, I've been
+overloaded.
 
-Doug Gilbert
+I asked co-worker regarding this.  They told me they believe SATA
+devices
+when they open frame, they will complete entire data transaction during 
+a single connection.  Meaning they don't do disconnect, and yield to
+other 
+devices as do SAS devices.  Thus could be the reason when you have 12
+SATA devices,
+the performance is low.   Jeff Garzik is this true?   However, when I
+have a chance, 
+I will verify this via bus analyzer, and do some testing.  I beleive I
+can obtain
+about 10 SATA disk.  
+
+Eric
