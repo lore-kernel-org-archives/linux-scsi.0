@@ -1,52 +1,46 @@
 From: Jamie Wellnitz <Jamie.Wellnitz@emulex.com>
-Subject: [PATCH 22/22] lpfc 8.1.2: Change version number to 8.1.2
-Date: Tue, 28 Feb 2006 19:25:39 -0500
-Message-ID: <20060301002539.GA15608@shrimp.ma.emulex.com>
+Subject: [PATCH 15/22] lpfc 8.1.2: Make lpfc_els_rsp_rps_acc and lpfc_els_rsp_rpl_acc static
+Date: Tue, 28 Feb 2006 19:25:30 -0500
+Message-ID: <20060301002530.GA15521@shrimp.ma.emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from shrimp.ma.emulex.com ([138.239.78.42]:64448 "EHLO
+Received: from shrimp.ma.emulex.com ([138.239.78.42]:48038 "EHLO
 	shrimp.ma.emulex.com") by vger.kernel.org with ESMTP
-	id S964868AbWCAAZl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Feb 2006 19:25:41 -0500
+	id S964863AbWCAAZc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Feb 2006 19:25:32 -0500
 Received: from shrimp.ma.emulex.com (localhost.localdomain [127.0.0.1])
-	by shrimp.ma.emulex.com (8.13.4/8.13.4) with ESMTP id k210Pdjq015614
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Feb 2006 19:25:39 -0500
+	by shrimp.ma.emulex.com (8.13.4/8.13.4) with ESMTP id k210PUts015527
+	for <linux-scsi@vger.kernel.org>; Tue, 28 Feb 2006 19:25:30 -0500
 Received: (from jamesw@localhost)
-	by shrimp.ma.emulex.com (8.13.4/8.13.4/Submit) id k210PdwX015613
-	for linux-scsi@vger.kernel.org; Tue, 28 Feb 2006 19:25:39 -0500
+	by shrimp.ma.emulex.com (8.13.4/8.13.4/Submit) id k210PUwt015526
+	for linux-scsi@vger.kernel.org; Tue, 28 Feb 2006 19:25:30 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Change version number to 8.1.2
+Make lpfc_els_rsp_rps_acc and lpfc_els_rsp_rpl_acc static
 
 Signed-off-by: Jamie Wellnitz <Jamie.Wellnitz@emulex.com>
 
---- a/drivers/scsi/lpfc/lpfc_version.h
-+++ b/drivers/scsi/lpfc/lpfc_version.h
-@@ -1,7 +1,7 @@
- /*******************************************************************
-  * This file is part of the Emulex Linux Device Driver for         *
-  * Fibre Channel Host Bus Adapters.                                *
-- * Copyright (C) 2004-2005 Emulex.  All rights reserved.           *
-+ * Copyright (C) 2004-2006 Emulex.  All rights reserved.           *
-  * EMULEX and SLI are trademarks of Emulex.                        *
-  * www.emulex.com                                                  *
-  *                                                                 *
-@@ -18,12 +18,12 @@
-  * included with this package.                                     *
-  *******************************************************************/
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -2668,7 +2668,7 @@ lpfc_els_rcv_lirr(struct lpfc_hba * phba
+ 	return 0;
+ }
  
--#define LPFC_DRIVER_VERSION "8.1.1"
-+#define LPFC_DRIVER_VERSION "8.1.2"
+-void
++static void
+ lpfc_els_rsp_rps_acc(struct lpfc_hba * phba, LPFC_MBOXQ_t * pmb)
+ {
+ 	struct lpfc_sli *psli;
+@@ -2795,7 +2795,7 @@ lpfc_els_rcv_rps(struct lpfc_hba * phba,
+ 	return 0;
+ }
  
- #define LPFC_DRIVER_NAME "lpfc"
- 
- #define LPFC_MODULE_DESC "Emulex LightPulse Fibre Channel SCSI driver " \
- 		LPFC_DRIVER_VERSION
--#define LPFC_COPYRIGHT "Copyright(c) 2004-2005 Emulex.  All rights reserved."
-+#define LPFC_COPYRIGHT "Copyright(c) 2004-2006 Emulex.  All rights reserved."
- 
- #define DFC_API_VERSION "0.0.0"
+-int
++static int
+ lpfc_els_rsp_rpl_acc(struct lpfc_hba * phba, uint16_t cmdsize,
+ 		 struct lpfc_iocbq * oldiocb, struct lpfc_nodelist * ndlp)
+ {
