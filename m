@@ -1,37 +1,96 @@
 From: Jamie Wellnitz <Jamie.Wellnitz@emulex.com>
-Subject: [PATCH 9/9] lpfc 8.1.3: Change version number to 8.1.3
-Date: Tue, 28 Feb 2006 22:33:15 -0500
-Message-ID: <20060301033315.GA21676@shrimp.ma.emulex.com>
+Subject: [PATCH 8/9] lpfc 8.1.3: Adding hbaapi event support using new fc transport events api
+Date: Tue, 28 Feb 2006 22:33:13 -0500
+Message-ID: <20060301033313.GA21647@shrimp.ma.emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from shrimp.ma.emulex.com ([138.239.78.42]:54738 "EHLO
+Received: from shrimp.ma.emulex.com ([138.239.78.42]:38610 "EHLO
 	shrimp.ma.emulex.com") by vger.kernel.org with ESMTP
-	id S1750869AbWCADdQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Feb 2006 22:33:16 -0500
+	id S1750900AbWCADdP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Feb 2006 22:33:15 -0500
 Received: from shrimp.ma.emulex.com (localhost.localdomain [127.0.0.1])
-	by shrimp.ma.emulex.com (8.13.4/8.13.4) with ESMTP id k213XFOQ021683
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Feb 2006 22:33:15 -0500
+	by shrimp.ma.emulex.com (8.13.4/8.13.4) with ESMTP id k213XDnu021654
+	for <linux-scsi@vger.kernel.org>; Tue, 28 Feb 2006 22:33:13 -0500
 Received: (from jamesw@localhost)
-	by shrimp.ma.emulex.com (8.13.4/8.13.4/Submit) id k213XFqh021681
-	for linux-scsi@vger.kernel.org; Tue, 28 Feb 2006 22:33:15 -0500
+	by shrimp.ma.emulex.com (8.13.4/8.13.4/Submit) id k213XDQF021652
+	for linux-scsi@vger.kernel.org; Tue, 28 Feb 2006 22:33:13 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Change version number to 8.1.3
+Adding hbaapi event support using new fc transport events api
+
+Requires the following patch, which adds event support to the FC transport:
+http://marc.theaimsgroup.com/?l=linux-scsi&m=114062467404472&w=2
 
 Signed-off-by: Jamie Wellnitz <Jamie.Wellnitz@emulex.com>
 
---- a/drivers/scsi/lpfc/lpfc_version.h
-+++ b/drivers/scsi/lpfc/lpfc_version.h
-@@ -18,7 +18,7 @@
-  * included with this package.                                     *
-  *******************************************************************/
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -320,6 +320,8 @@ lpfc_linkdown(struct lpfc_hba * phba)
+ 		spin_unlock_irq(phba->host->host_lock);
+ 	}
  
--#define LPFC_DRIVER_VERSION "8.1.2"
-+#define LPFC_DRIVER_VERSION "8.1.3"
++	fc_host_event_post(phba->host, FCH_EVT_LINKDOWN, 0);
++
+ 	/* Clean up any firmware default rpi's */
+ 	if ((mb = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL))) {
+ 		lpfc_unreg_did(phba, 0xffffffff, mb);
+@@ -415,6 +417,7 @@ lpfc_linkup(struct lpfc_hba * phba)
+ 	phba->fc_ns_retry = 0;
+ 	spin_unlock_irq(phba->host->host_lock);
  
- #define LPFC_DRIVER_NAME "lpfc"
++	fc_host_event_post(phba->host, FCH_EVT_LINKUP, 0);
  
+ 	node_list[0] = &phba->fc_plogi_list;
+ 	node_list[1] = &phba->fc_adisc_list;
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -561,6 +561,7 @@ lpfc_handle_eratt(struct lpfc_hba * phba
+ 
+ 		lpfc_offline(phba);
+ 		phba->hba_state = LPFC_HBA_ERROR;
++		fc_host_event_post(phba->host, FCH_EVT_VENDOR_UNIQUE, 0);
+ 		lpfc_hba_down_post(phba);
+ 	}
+ }
+@@ -1333,6 +1334,8 @@ lpfc_online(struct lpfc_hba * phba)
+ 	if (lpfc_sli_hba_setup(phba))	/* Initialize the HBA */
+ 		return 1;
+ 
++	fc_host_event_post(phba->host, FCH_EVT_PORT_ONLINE, 0);
++
+ 	spin_lock_irq(phba->host->host_lock);
+ 	phba->fc_flag &= ~FC_OFFLINE_MODE;
+ 	spin_unlock_irq(phba->host->host_lock);
+@@ -1354,6 +1357,8 @@ lpfc_offline(struct lpfc_hba * phba)
+ 	if (phba->fc_flag & FC_OFFLINE_MODE)
+ 		return 0;
+ 
++	fc_host_event_post(phba->host, FCH_EVT_PORT_OFFLINE, 0);
++
+ 	psli = &phba->sli;
+ 	pring = &psli->ring[psli->fcp_ring];
+ 
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -2383,6 +2383,7 @@ lpfc_els_rcv_rscn(struct lpfc_hba * phba
+ 	uint32_t *lp;
+ 	IOCB_t *icmd;
+ 	uint32_t payload_len, cmd;
++	int i;
+ 
+ 	icmd = &cmdiocb->iocb;
+ 	pcmd = (struct lpfc_dmabuf *) cmdiocb->context2;
+@@ -2401,6 +2402,9 @@ lpfc_els_rcv_rscn(struct lpfc_hba * phba
+ 			phba->brd_no,
+ 			phba->fc_flag, payload_len, *lp, phba->fc_rscn_id_cnt);
+ 
++	for (i = 0; i < payload_len/sizeof (uint32_t); i++)
++		fc_host_event_post(phba->host, FCH_EVT_RSCN, lp[i]);
++
+ 	/* If we are about to begin discovery, just ACC the RSCN.
+ 	 * Discovery processing will satisfy it.
+ 	 */
