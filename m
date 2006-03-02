@@ -1,104 +1,97 @@
-From: Konstantin Khorenko <khorenko@sw.ru>
-Subject: [patch scsi] cciss: make fair timeouts during initialization
-Date: Thu, 02 Mar 2006 10:10:53 +0300
-Message-ID: <44069A7D.4030201@sw.ru>
+From: Konstantin Khomoutov <flatworm@users.sourceforge.net>
+Subject: Re: What happened to ncr53c8xx module in 2.6? (troubles with sym53c8xx in its place)
+Date: Thu, 2 Mar 2006 03:04:29 +0300
+Message-ID: <20060302000427.GA1610@proxysrv.domain007.com>
+References: <20060226170411.GA300@proxysrv.domain007.com> <20060226190929.GV28587@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------070502030508090406070502"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhub.sw.ru ([195.214.233.200]:41096 "EHLO relay.sw.ru")
-	by vger.kernel.org with ESMTP id S1751405AbWCBHLM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Mar 2006 02:11:12 -0500
+Received: from mailhub.007spb.ru ([212.113.108.55]:12718 "EHLO
+	mailhub.007spb.ru") by vger.kernel.org with ESMTP id S1751418AbWCBH2C
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 2 Mar 2006 02:28:02 -0500
+Received: from localhost.localdomain ([192.168.4.3])
+	by mailhub.007spb.ru (8.13.4/8.13.4/Debian-3) with ESMTP id k227RDTa032659
+	for <linux-scsi@vger.kernel.org>; Thu, 2 Mar 2006 10:27:54 +0300
+Received: from localhost.localdomain (localhost [127.0.0.1])
+	by localhost.localdomain (8.13.4/8.13.4/Debian-3) with ESMTP id k2204T8N016227
+	for <linux-scsi@vger.kernel.org>; Thu, 2 Mar 2006 03:04:29 +0300
+Received: (from kostix@localhost)
+	by localhost.localdomain (8.13.4/8.13.4/Submit) id k2204TXX016225
+	for linux-scsi@vger.kernel.org; Thu, 2 Mar 2006 03:04:29 +0300
+Content-Disposition: inline
+In-Reply-To: <20060226190929.GV28587@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Miller <mike.miller@hp.com>
-Cc: Vasily Averin <vvs@sw.ru>, linux-scsi@vger.kernel.org, iss_storagedev@hp.com, devel@openvz.org, Kirill Korotaev <dev@sw.ru>
+To: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------070502030508090406070502
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+On Sun, Feb 26, 2006 at 12:09:29PM -0700, Matthew Wilcox wrote:
 
-Patch makes fair initialization timeouts in cciss driver.
+[...]
+>> The problem is that I have some pretty old SCSI scanner (HP ScanJet 4p)
+>> that was distributed with its own ISA SCSI card (NCR53c400 based, BTW,
+>> but with that card and its driver I had no luck at all, while under
+>> Win98 that card works OK).
+> Somebody should probably investigate that, but I don't really want to
+> take on another scsi driver ...
+Don't bother with it: to date I have no ISA-bus machines in stock so I
+am even unable to test patches/send reports.
 
-Signed-off-by: Konstantin Khorenko <khorenko@sw.ru>
+>> But sym53c8xx gives me this when I try to insert it while the attached
+>> scanner is ON:
+>> 
+>> PCI: Found IRQ 9 for device 0000:02:09.0
+>> sym0: <810> rev 0x1 at pci 0000:02:09.0 irq 9
+>> sym0: No NVRAM, ID 7, Fast-10, SE, parity checking
+>> CACHE TEST FAILED: timeout.
+>> sym0: CACHE INCORRECTLY CONFIGURED.
+>> sym0: giving up ...
+>> 
+>> The exactly same results I seen when I tried this driver under a 2.4
+>> kernel.
+> Are you saying that it works fine when the scanner isn't plugged in, or
+> is turned off?
+Here's what I get on "cold boot" (e.g. after that PC and the attached
+scanner both stood turned off for more than 8 hours) when the scanner is
+still being turned OFF:
 
------------------------------------
-cciss driver has following code for timeouts during board initialization:
-        ...
-        for(i=0;i<MAX_CONFIG_WAIT;i++) {
-                ...
-                set_current_state(TASK_INTERRUPTIBLE);
-                schedule_timeout(10);
-        }
-        ...
+PCI: Found IRQ 9 for device 0000:02:09.0
+sym0: <810> rev 0x1 at pci 0000:02:09.0 irq 9
+sym0: No NVRAM, ID 7, Fast-10, SE, parity checking
+sym0: SCSI BUS has been reset.
+scsi0 : sym-2.2.1
 
-We compile cciss driver into the kernel and thus at the kernel boot
-schedule_timeout() returns very quickly and resulted timeouts became
-insufficient for correct board initialization.
-Particularly, we often got following error:
---
-HP CISS Driver (v 2.6.8)
-cciss: Device 0x46 has been found at bus 6 dev 1 func 0
-cciss: unable to get board into simple mode
-cciss: probe of 0000:06:01.0 failed with error -1
---
+However, on "warm boot" (i.e. the scanner was turned on, I try to insert
+the sym53c8xx module with no success, and then I turn off the scanner,
+then reboot the PC) I get the *first* output pattern from the driver
+most of the time.
 
-The patch is designed to make fair initialization timeouts.
+Does it mean my SCSI card is going to die? Or the scanner? ;-)
 
-----------
-Hope, you'll check this changes and find them usefull. :)
-Kernel with patch was compiled and tested on two nodes.
-This patch is against mainstream 2.6.16-rc5 kernel.
+Some more info: the scanner has two connectors: Centronics-50 and
+Sub-D25 female, one auto-termination switch (set to ON since it's
+the only device on wire), the SCSI card has micro D-60 connector.
+The cable used is D-60<->Centronics-50 (since the original cable for
+that scanner and its SCSI card was D25<->Centronics-50).
 
--- 
-Best regards,
+AFAIK, my SCSI card is SCSI-2 and my scanner is SCSI-1. I thought that
+SCSI is "backwards compatible", may be I am wrong and they just cannot
+coexist?
 
-Konstantin Khorenko,
-SWsoft, Inc.
+[...]
+>> I've googled that this dumb scanner doesn't report parity and that
+>> disappoints the sym53c8xx driver, but I failed to find an appropriate
+>> option to turn parity checking off. Furthermore, I've also googled some
+>> info that sym53c8xx just doesn't support 53c810 chips at all.
+> I removed the option to disable parity checking.  Looks like I should
+> reinstate it.  I have an 810 card here that works fine, so that
+> information is out of date.
+The SCSI card in subject was previously used to run a bunch of SCSI
+disks out there, successfully, under Linux 2.4.x.
 
---------------070502030508090406070502
-Content-Type: text/plain;
- name="diff-cciss-fair-init-timeouts"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="diff-cciss-fair-init-timeouts"
+P.S.
+May be there's some way to programmatically "spy" somehow on SCSI bus
+for me to take some kind of dump?
 
---- ./drivers/block/cciss.c.16-rc5	2006-03-01 11:13:03.000000000 +0300
-+++ ./drivers/block/cciss.c	2006-03-02 09:30:38.000000000 +0300
-@@ -1893,7 +1893,7 @@ static unsigned long pollcomplete(int ct
- 	for (i = 20 * HZ; i > 0; i--) {
- 		done = hba[ctlr]->access.command_completed(hba[ctlr]);
- 		if (done == FIFO_EMPTY)
--			schedule_timeout_uninterruptible(1);
-+			msleep(1);
- 		else
- 			return (done);
- 	}
-@@ -2817,8 +2817,7 @@ static int cciss_pci_init(ctlr_info_t *c
- 		scratchpad = readl(c->vaddr + SA5_SCRATCHPAD_OFFSET);
- 		if (scratchpad == CCISS_FIRMWARE_READY)
- 			break;
--		set_current_state(TASK_INTERRUPTIBLE);
--		schedule_timeout(HZ / 10); /* wait 100ms */
-+		msleep(100); /* wait 100ms */
- 	}
- 	if (scratchpad != CCISS_FIRMWARE_READY) {
- 		printk(KERN_WARNING "cciss: Board not ready.  Timed out.\n");
-@@ -2903,8 +2902,7 @@ static int cciss_pci_init(ctlr_info_t *c
- 		if (!(readl(c->vaddr + SA5_DOORBELL) & CFGTBL_ChangeReq))
- 			break;
- 		/* delay and try again */
--		set_current_state(TASK_INTERRUPTIBLE);
--		schedule_timeout(10);
-+		msleep(10);
- 	}	
- 
- #ifdef CCISS_DEBUG
-#
-# Patch makes fair initialization timeouts in cciss driver.
-#
-# Signed-off-by: Konstantin Khorenko <khorenko@sw.ru>
-
---------------070502030508090406070502--
+Anyway, thanks for you help!
 
