@@ -1,121 +1,42 @@
-From: "Falkinder, David Malcolm" <david.falkinder@hp.com>
-Subject: RE: sg regression in 2.6.16-rc5
-Date: Thu, 2 Mar 2006 23:04:08 -0000
-Message-ID: <085C28F775E1B74F82122EF0975E6E76045F0360@sdcexc02.emea.cpqcorp.net>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751032AbWCBXDz@vger.kernel.org>
-Content-class: urn:content-classes:message
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>, Douglas Gilbert <dougg@torque.net>
-Cc: Kai Makisara <Kai.Makisara@kolumbus.fi>, Matthias Andree <matthias.andree@gmx.de>, Mark Rustad <mrustad@mac.com>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "Dewar, Charles David" <dave.dewar@hp.com>
-List-Id: linux-scsi@vger.kernel.org
-
-Linus,
-
-I contacted Doug off-list, and he asked me to express my concerns here.
-
-Whilst a Linux advocate, I work cross platform, and have but a shallow
-knowledge of the kernel, so apologies in advance for any technical
-inaccuracies, or misunderstandings ...
-
-Essentially what I conveyed to Doug was :
-
-I guess, I'm not fully aware of the implications of what is being
-discussed as there appears to essentially be two implementations of the
-SG_IO IOCtl - namely the one in the sg driver, and the one in the block
-layer.
-
-One of the key drivers for us using Linux is the ability to do a 16Mb
-contiguous single transfer.
-i.e. WRITE(6) with 0xFF 0xFF 0xFF as the transfer length. Often we use
-patterns like (2^n)-1, 2^n, (2^n)+1, to thoroughly test the SCSI bus, so
-ALL transfer sizes are needed.
-
-Certainly a 1Mb limit would be useless, as would 4Mb.
-
-To achieve our goal of 16Mb all we've had to do to date is recompile the
-kernel having set SG_SCATTER_SZ to (64 * 4096).
-
-Whilst it would be great to just use a vanilla kernel, this is a
-relatively trivial patch to meet our needs. I'd hate to think at any
-point anything would be done to move away from this. Certainly we'd have
-to either find another proprietary solution, or freeze our Linux
-implementation indefinitely. Neither a particularly attractive solution.
-
--------
-
-I (obviously) support your wish to fix broken code. In my technical
-naivety in this area, I obviously can't comment on the ramifications of
-a fix/non fix situation other than pertaining directly to the large
-transfer situation. However it's obvious we ( and I'm sure others ) are
-at the moment exploiting this "defect". I guess I feel to be hearing a
-lot of discussion regarding the fix, so it's obviously contentious, and
-it's agreed it will effectively reduce large transfer functionality of
-the kernel; what I am not hearing is a timeline for restoring that
-functionality. Personally I'd be happy to "miss out" on a couple of
-kernel releases, if I was confident functionality would be restored.
-What does worry me is the potential for this fix to be applied, and the
-functionality I need not be restored. For example the SG_IO IoCtl in the
-block layer was obviously a laudable project, yet to date does not
-provide all the features offered by the SG driver [ that I need at least
-].
-
-Can I request therefore, that unless the fix can be extended to retain
-the large transfer functionality, or a suitable timeline for it's
-restoration be resolved; that the patch not be applied.
-
-Many thanks,
-
-	Best Wishes,
-
-	|\
-	|/ave
-
-
-
-
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Linus Torvalds
-Sent: 02 March 2006 21:25
-To: Douglas Gilbert
-Cc: Kai Makisara; Matthias Andree; Mark Rustad;
-linux-scsi@vger.kernel.org; Linux Kernel Mailing List
+From: Matthias Andree <matthias.andree@gmx.de>
 Subject: Re: sg regression in 2.6.16-rc5
+Date: Fri, 3 Mar 2006 00:06:45 +0100
+Message-ID: <20060302230645.GA16237@merlin.emma.line.org>
+References: <E94491DE-8378-41DC-9C01-E8C1C91B6B4E@mac.com> <4404AA2A.5010703@torque.net> <20060301083824.GA9871@merlin.emma.line.org> <Pine.LNX.4.64.0603011027400.22647@g5.osdl.org> <4405F6F1.9040106@torque.net> <Pine.LNX.4.63.0603012239440.5789@kai.makisara.local> <44074CA1.3000007@torque.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.gmx.net ([213.165.64.20]:30436 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S1751056AbWCBXGv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Mar 2006 18:06:51 -0500
+Content-Disposition: inline
+In-Reply-To: <44074CA1.3000007@torque.net>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
+To: Douglas Gilbert <dougg@torque.net>
+Cc: Kai Makisara <Kai.Makisara@kolumbus.fi>, Linus Torvalds <torvalds@osdl.org>, Matthias Andree <matthias.andree@gmx.de>, Mark Rustad <mrustad@mac.com>, linux-scsi@vger.kernel.org
 
+On Thu, 02 Mar 2006, Douglas Gilbert wrote:
 
+> In 8 years of maintaining the sg driver I cannot remember
+> anybody contacting me regarding the way the sg driver ignored
+> the DISABLE_CLUSTERING flag; that was until Mike Christie raised
+> it yesterday with regard to iscsi_tcp ***. Gerard's post from
+> 2000 implied clustering was not a problem with U160 (SPI-3)
+> so perhaps it was for SPI-2 (1998) or SPI (1995) or SCSI-2 (1993).
+> If so those are pretty old symbios controllers. Why would any
+> storage manufacturer make a DMA element that was restricted
+> to Intel's i386 page size per transfer?
 
-On Thu, 2 Mar 2006, Douglas Gilbert wrote:
-> 
-> As more information has come to light, the worst case "big transfer" 
-> of a single SCSI command through sg (and st I suspect) is 512 KB **. 
-> With full coalescing that figure goes up to 4 MB **. I am also aware 
-> that some users increase SG_SCATTER_SZ in the sg driver to get larger 
-> "big transfer"s than sg's current limit of (8MB - 32KB) **.
-> That facility has now gone (i.e. upping SG_SCATTER_SZ will have no 
-> effect) with no replacement mechanism.
-> 
-> So I'll add my vote to "revert this change before lk 2.6.16"
-> with a view to applying it after some solution to the "big transfer" 
-> problem is found.
+Well, second-hand hardware like that isn't too uncommon for backups,
+U2W adaptors such as Tekram DC-390U2B/U2W (SYM53C895) can be had for a
+song, and so can U2W tape drives (Tandberg SLR6/SLR24, SLR32, SLR7).
+On the other hand, it's not like people would update their backup
+host kernels every week either, so the pain would spread slowly before
+becoming really prominent.
 
-Considering that the old code was apparently known-broken due to not
-honoring the use_clustering flag, I would say that the more likely thing
-is that very few people use sg in the first place, and we should wait
-and see what the reaction is to actually fixing a real bug.
+(dropped linux-kernel@ from the cc: list, linux-scsi@ should be
+sufficient)
 
-Doing more than page-sized transfers can be hard/impossible in
-virtualized environments, for example.
-
-In contrast, upping the limits should be fairly easy, I assume. Same
-goes for if some driver disables clustering even though it shouldn't.
-No?
-
-		Linus
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org More majordomo info
-at  http://vger.kernel.org/majordomo-info.html
+-- 
+Matthias Andree
