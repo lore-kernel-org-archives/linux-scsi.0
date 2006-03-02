@@ -1,135 +1,99 @@
-From: Maxim Kozover <maximkoz@netvision.net.il>
-Subject: Re:Re: problems with scsi_transport_fc and qla2xxx
-Date: Thu, 02 Mar 2006 19:32:48 +0300
-Message-ID: <957728045.20060302193248@netvision.net.il>
-References: <1413265398.20060227150526@netvision.net.il>
- <978150825.20060227210552@netvision.net.il>
- <20060228221422.282332ef.akpm@osdl.org> <4406034B.9030105@madness.at>
- <20060301210802.GA7288@spe2>
-Reply-To: Maxim Kozover <maximkoz@netvision.net.il>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: Re:Re: problems with scsi_transport_fc and qla2xxx
+Date: Thu, 2 Mar 2006 09:38:46 -0800
+Message-ID: <20060302173846.GF498@andrew-vasquezs-powerbook-g4-15.local>
+References: <1413265398.20060227150526@netvision.net.il> <978150825.20060227210552@netvision.net.il> <20060228221422.282332ef.akpm@osdl.org> <4406034B.9030105@madness.at> <20060301210802.GA7288@spe2> <957728045.20060302193248@netvision.net.il>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mxout5.netvision.net.il ([194.90.9.29]:55255 "EHLO
-	mxout5.netvision.net.il") by vger.kernel.org with ESMTP
-	id S932267AbWCBRcm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 2 Mar 2006 12:32:42 -0500
-In-reply-to: <20060301210802.GA7288@spe2>
+Received: from pat.qlogic.com ([198.70.193.2]:59880 "EHLO avexch02.qlogic.com")
+	by vger.kernel.org with ESMTP id S932408AbWCBRis (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Mar 2006 12:38:48 -0500
+Content-Disposition: inline
+In-Reply-To: <957728045.20060302193248@netvision.net.il>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+To: Maxim Kozover <maximkoz@netvision.net.il>
 Cc: Stefan Kaltenbrunner <mm-mailinglist@madness.at>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hi Andrew!
-Today I tested disconnecting QLogic port.
-Adapter 4 is connected via switch to a storage and 3 LUNs are seen via
-the adapter.
-Only 1 rport is created (for FCP Target) while in Emulex case there
-were 3: (Fabric Port, Directory Server and FCP Target, FCP Initiator).
-# ls /sys/class/fc_remote_ports/
-rport-4:0-0
-# cat /sys/class/fc_remote_ports/*/roles
-FCP Target
+On Thu, 02 Mar 2006, Maxim Kozover wrote:
 
-Default dev_loss_tmo is 6 (1+5) while in Emulex case the default was 35.
+> Today I tested disconnecting QLogic port.
+> Adapter 4 is connected via switch to a storage and 3 LUNs are seen via
+> the adapter.
+> Only 1 rport is created (for FCP Target) while in Emulex case there
+> were 3: (Fabric Port, Directory Server and FCP Target, FCP Initiator).
 
-After disconnecting the cable between the HBA and the switch
-qla2xxx 0000:03:01.0: LOOP DOWN detected (2).
- rport-4:0-0: blocked FC remote port time out: removing target and saving binding
+That's correct, we currently don't make an upcall for the SNS server
+port nor the switch fabric port.
 
-# ls /sys/class/fc_remote_ports/
-rport-4:0-0
-# cat /sys/class/fc_remote_ports/*/roles
-unknown
+> # ls /sys/class/fc_remote_ports/
+> rport-4:0-0
+> # cat /sys/class/fc_remote_ports/*/roles
+> FCP Target
+> 
+> Default dev_loss_tmo is 6 (1+5) while in Emulex case the default was 35.
+> 
+> After disconnecting the cable between the HBA and the switch
+> qla2xxx 0000:03:01.0: LOOP DOWN detected (2).
+>  rport-4:0-0: blocked FC remote port time out: removing target and saving binding
+> 
+> # ls /sys/class/fc_remote_ports/
+> rport-4:0-0
+> # cat /sys/class/fc_remote_ports/*/roles
+> unknown
+> 
+> Relevant scsi devices are removed from /proc/scsi/scsi.
+> 
+> After reconnecting the cable
+> qla2xxx 0000:03:01.0: LIP reset occured (f7f7).
+> qla2xxx 0000:03:01.0: LOOP UP detected (2 Gbps).
+> 
+> # ls /sys/class/fc_remote_ports/
+> rport-4:0-0
+> # cat /sys/class/fc_remote_ports/*/roles
+> FCP Target
+> 
+> However, scsi devices don't reappear in /proc/scsi/scsi.
+> When I issue rescan, the command is stuck
+> echo - - - > /sys/class/scsi_host/host4/scan
+> 
+> Please advise.
 
-Relevant scsi devices are removed from /proc/scsi/scsi.
+Could you add the enable-debug patch I sent you earlier and retry the
+test?  Again forward the relevent snippets from var/log/messages.
 
-After reconnecting the cable
-qla2xxx 0000:03:01.0: LIP reset occured (f7f7).
-qla2xxx 0000:03:01.0: LOOP UP detected (2 Gbps).
+Here's the patch again.
 
-# ls /sys/class/fc_remote_ports/
-rport-4:0-0
-# cat /sys/class/fc_remote_ports/*/roles
-FCP Target
+--
+av
 
-However, scsi devices don't reappear in /proc/scsi/scsi.
-When I issue rescan, the command is stuck
-echo - - - > /sys/class/scsi_host/host4/scan
+---
 
-Please advise.
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.h b/drivers/scsi/qla2xxx/qla_dbg.h
+index 935a59a..632f653 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.h
++++ b/drivers/scsi/qla2xxx/qla_dbg.h
+@@ -9,6 +9,7 @@
+  */
+ /* #define QL_DEBUG_LEVEL_1  */ /* Output register accesses to COM1 */
+ /* #define QL_DEBUG_LEVEL_2  */ /* Output error msgs to COM1 */
++#define QL_DEBUG_LEVEL_2   /* Output error msgs to COM1 */
+ /* #define QL_DEBUG_LEVEL_3  */ /* Output function trace msgs to COM1 */
+ /* #define QL_DEBUG_LEVEL_4  */ /* Output NVRAM trace msgs to COM1 */
+ /* #define QL_DEBUG_LEVEL_5  */ /* Output ring trace msgs to COM1 */
+diff --git a/drivers/scsi/qla2xxx/qla_settings.h b/drivers/scsi/qla2xxx/qla_settings.h
+index 363205c..b2e22b0 100644
+--- a/drivers/scsi/qla2xxx/qla_settings.h
++++ b/drivers/scsi/qla2xxx/qla_settings.h
+@@ -8,7 +8,7 @@
+  * Compile time Options:
+  *     0 - Disable and 1 - Enable
+  */
+-#define DEBUG_QLA2100		0	/* For Debug of qla2x00 */
++#define DEBUG_QLA2100		1	/* For Debug of qla2x00 */
+ 
+ #define USE_ABORT_TGT		1	/* Use Abort Target mbx cmd */
+ 
 
-Thanks,
-
-Maxim.
-
-I'm including /var/log/messages output:
-# egrep -v 'Vendor|cron' /var/log/messages
-Mar  2 19:13:49 multipath kernel: QLogic Fibre Channel HBA Driver
-Mar  2 19:13:49 multipath kernel: GSI 24 sharing vector 0xE9 and IRQ 24
-Mar  2 19:13:49 multipath kernel: ACPI: PCI Interrupt 0000:03:01.0[A] -> GSI 48 (level, low) -> IRQ 233
-Mar  2 19:13:49 multipath kernel: qla2xxx 0000:03:01.0: Found an ISP2312, irq 233, iobase 0xffffc20000004000
-Mar  2 19:13:49 multipath kernel: qla2xxx 0000:03:01.0: Configuring PCI space...
-Mar  2 19:13:49 multipath kernel: qla2xxx 0000:03:01.0: Configure NVRAM parameters...
-Mar  2 19:13:49 multipath kernel: qla2xxx 0000:03:01.0: Verifying loaded RISC code...
-Mar  2 19:13:49 multipath kernel: qla2xxx 0000:03:01.0: Waiting for LIP to complete...
-Mar  2 19:13:51 multipath kernel: qla2xxx 0000:03:01.0: LIP reset occured (f7f7).
-Mar  2 19:13:51 multipath kernel: qla2xxx 0000:03:01.0: LOOP UP detected (2 Gbps).
-Mar  2 19:13:51 multipath kernel: qla2xxx 0000:03:01.0: Topology - (F_Port), Host Loop address 0xffff
-Mar  2 19:13:52 multipath kernel: scsi4 : qla2xxx
-Mar  2 19:13:52 multipath kernel: qla2xxx 0000:03:01.0:
-Mar  2 19:13:52 multipath kernel:  QLogic Fibre Channel HBA Driver: 8.01.04-k
-Mar  2 19:13:52 multipath kernel:   QLogic QLA2340 -
-Mar  2 19:13:52 multipath kernel:   ISP2312: PCI-X (133 MHz) @ 0000:03:01.0 hdma-, host#=4, fw=3.03.18 IPX
-Mar  2 19:13:52 multipath kernel: GSI 25 sharing vector 0x32 and IRQ 25
-Mar  2 19:13:52 multipath kernel: ACPI: PCI Interrupt 0000:06:01.0[A] -> GSI 72 (level, low) -> IRQ 50
-Mar  2 19:13:52 multipath kernel: qla2xxx 0000:06:01.0: Configuring PCI space...
-Mar  2 19:13:52 multipath kernel: qla2xxx 0000:06:01.0: Configure NVRAM parameters...
-Mar  2 19:13:52 multipath kernel:   Type:   Direct-Access                      ANSI SCSI revision: 05
-Mar  2 19:13:52 multipath kernel: SCSI device sdb: 33554432 512-byte hdwr sectors (17180 MB)
-Mar  2 19:13:52 multipath kernel: sdb: Write Protect is off
-Mar  2 19:13:52 multipath kernel: SCSI device sdb: drive cache: write through
-Mar  2 19:13:52 multipath kernel: SCSI device sdb: 33554432 512-byte hdwr sectors (17180 MB)
-Mar  2 19:13:52 multipath kernel: sdb: Write Protect is off
-Mar  2 19:13:52 multipath kernel: SCSI device sdb: drive cache: write through
-Mar  2 19:13:52 multipath kernel:  sdb: unknown partition table
-Mar  2 19:13:52 multipath kernel: sd 4:0:0:0: Attached scsi disk sdb
-Mar  2 19:13:52 multipath kernel: qla2xxx 0000:06:01.0: Verifying loaded RISC code...
-Mar  2 19:13:52 multipath kernel:   Type:   Direct-Access                      ANSI SCSI revision: 05
-Mar  2 19:13:52 multipath scsi.agent[4288]: disk at /devices/pci0000:00/0000:00:02.0/0000:01:00.2/0000:03:01.0/host4/rport-4:0-0/target4:0:0/4:0:0:0
-Mar  2 19:13:52 multipath kernel: SCSI device sdc: 67108864 512-byte hdwr sectors (34360 MB)
-Mar  2 19:13:52 multipath kernel: sdc: Write Protect is off
-Mar  2 19:13:52 multipath kernel: SCSI device sdc: drive cache: write through
-Mar  2 19:13:52 multipath kernel: SCSI device sdc: 67108864 512-byte hdwr sectors (34360 MB)
-Mar  2 19:13:52 multipath kernel: sdc: Write Protect is off
-Mar  2 19:13:52 multipath kernel: SCSI device sdc: drive cache: write through
-Mar  2 19:13:52 multipath kernel:  sdc: unknown partition table
-Mar  2 19:13:52 multipath kernel: sd 4:0:0:1: Attached scsi disk sdc
-Mar  2 19:13:52 multipath kernel:   Type:   Direct-Access                      ANSI SCSI revision: 05
-Mar  2 19:13:52 multipath kernel: sdd : very big device. try to use READ CAPACITY(16).
-Mar  2 19:13:52 multipath kernel: SCSI device sdd: 9797894144 512-byte hdwr sectors (5016522 MB)
-Mar  2 19:13:52 multipath kernel: sdd: Write Protect is off
-Mar  2 19:13:52 multipath kernel: SCSI device sdd: drive cache: write through
-Mar  2 19:13:52 multipath kernel: sdd : very big device. try to use READ CAPACITY(16).
-Mar  2 19:13:52 multipath kernel: SCSI device sdd: 9797894144 512-byte hdwr sectors (5016522 MB)
-Mar  2 19:13:52 multipath kernel: sdd: Write Protect is off
-Mar  2 19:13:52 multipath kernel: SCSI device sdd: drive cache: write through
-Mar  2 19:13:52 multipath scsi.agent[4313]: disk at /devices/pci0000:00/0000:00:02.0/0000:01:00.2/0000:03:01.0/host4/rport-4:0-0/target4:0:0/4:0:0:1
-Mar  2 19:13:52 multipath kernel:  sdd: unknown partition table
-Mar  2 19:13:52 multipath kernel: sd 4:0:0:2: Attached scsi disk sdd
-Mar  2 19:13:52 multipath scsi.agent[4331]: disk at /devices/pci0000:00/0000:00:02.0/0000:01:00.2/0000:03:01.0/host4/rport-4:0-0/target4:0:0/4:0:0:2
-Mar  2 19:13:52 multipath kernel: qla2xxx 0000:06:01.0: Waiting for LIP to complete...
-Mar  2 19:14:12 multipath kernel: qla2xxx 0000:06:01.0: Cable is unplugged...
-Mar  2 19:14:12 multipath kernel: scsi5 : qla2xxx
-Mar  2 19:14:12 multipath kernel: qla2xxx 0000:06:01.0:
-Mar  2 19:14:12 multipath kernel:  QLogic Fibre Channel HBA Driver: 8.01.04-k
-Mar  2 19:14:12 multipath kernel:   QLogic QLA2340 -
-Mar  2 19:14:12 multipath kernel:   ISP2312: PCI-X (133 MHz) @ 0000:06:01.0 hdma-, host#=5, fw=3.03.18 IPX
-Mar  2 19:14:17 multipath kernel: qla2xxx 0000:06:01.0: Unable to retrieve host statistics (65535).
-Mar  2 19:14:18 multipath last message repeated 19 times
-Mar  2 19:22:02 multipath kernel: qla2xxx 0000:03:01.0: LOOP DOWN detected (2).
-Mar  2 19:22:08 multipath kernel:  rport-4:0-0: blocked FC remote port time out: removing target and saving binding
-Mar  2 19:24:04 multipath kernel: qla2xxx 0000:03:01.0: LIP reset occured (f7f7).
-Mar  2 19:24:04 multipath kernel: qla2xxx 0000:03:01.0: LOOP UP detected (2 Gbps).
 
