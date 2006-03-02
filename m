@@ -1,104 +1,32 @@
-From: "linux-os \(Dick Johnson\)" <linux-os@analogic.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: RE: Question: how to map SCSI data DMA address to virtual address?
-Date: Thu, 2 Mar 2006 16:32:09 -0500
-Message-ID: <Pine.LNX.4.61.0603021628190.14946@chaos.analogic.com>
+Date: Thu, 02 Mar 2006 15:42:07 -0600
+Message-ID: <1141335727.3238.66.camel@mulgrave.il.steeleye.com>
 References: <9738BCBE884FDB42801FAD8A7769C2651420C5@NAMAIL1.ad.lsil.com>
-Reply-To: "linux-os \(Dick Johnson\)" <linux-os@analogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932551AbWCBVcS@vger.kernel.org>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stat9.steeleye.com ([209.192.50.41]:5304 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S932566AbWCBVmR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 2 Mar 2006 16:42:17 -0500
 In-Reply-To: <9738BCBE884FDB42801FAD8A7769C2651420C5@NAMAIL1.ad.lsil.com>
-Content-class: urn:content-classes:message
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
-Cc: Jens Axboe <axboe@suse.de>, Linux kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
+Cc: "linux-os (Dick Johnson)" <linux-os@analogic.com>, Jens Axboe <axboe@suse.de>, Linux kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+
+On Thu, 2006-03-02 at 14:04 -0700, Ju, Seokmann wrote:
+> Thank you for your valueable comment. One good thing is that the system does 2 GB memory so that highmem won't come into picture. I am implementing the feature with suggestions.
+
+2GB is well into highmem on a traditional x86 with a 3/1 split.
+
+For a private project, you're free to do as you wish subject to the
+constraints of the GPL.  However, if you want whatever you're planning
+to go upstream someday you need to conform to the requirements of the
+Linux API which are as Jens and Christoph have already outlined.
+
+James
 
 
-On Thu, 2 Mar 2006, Ju, Seokmann wrote:
-
-> Hi,
->
-> On Thursday, March 02, 2006 3:04 PM Dick Johnson wrote:
->> On Thu, 2 Mar 2006, Jens Axboe wrote:
->>
->>> On Thu, Mar 02 2006, linux-os (Dick Johnson) wrote:
->>>>
->>>> On Thu, 2 Mar 2006, Ju, Seokmann wrote:
->>>>
->>>>> Hi,
->>>>>
->>>>> In the 'scsi_cmnd' structure, there are two entries
->> holding address
->>>>> information for data to be transferred. One is
->> 'request_buffer' and the
->>>>> other one is 'buffer'.
->>>>> In case of 'use_sg' is non-zero, those entries indicates
->> the address of
->>>>> the scatter-gather table.
->>>>>
->>>>> Is there way to get virtual address (so that the data
->> could be accessed
->>>>> by the driver) of the actual data in the case of 'use_sg'
->> is non-zero?
->>>>>
->>>>> Any comments would be appreciated.
->>>>>
->>>>>
->>>>> Thank you,
->>>>>
->>>>> Seokmann
->>>>> -
->>>>
->>>> There is a macro for this purpose. However, for experiments, in
->>>> the kernel, you can add PAGE_OFFSET (0xC00000000) to get
->> the virtual
->>>> address. The macro is __va(a), its inverse is __pa(a).
->>>>
->>>> Careful. These things can change.
->>>
->>> Bzzt no, this wont work if an iommu is involved. It also
->> wont work if
->>> the page doesn't have a virtual address mapping (think highmem).
->>>
->>> --
->>
->>> Jens Axboe
->>>
->>
->> Are you going to get DMA-able pages out of high memory? The guy is
->> doing scatter-table DMA, i.e., linked DMA. I think you need to
->> build that table with pages from get_dma_page(). If you use
->> highmem, somebody can program the iommu right out from under
->> the DMA engine while a DMA is in progress because the CPU is
->> not involved and can be executing lots of code that can do lots
->> of bad things.
-
-> Thank you for your valueable comment. One good thing is that the system
-> does 2 GB memory so that highmem won't come into picture. I am implementing
-
-> the feature with suggestions.
->
-> Thank you again,
->
-> Seokmann
->
-
-You're welcome. Sometimes the simplest thing is the best thing, especially
-for a debugging hack. Of course, Jens may be "more perfectly" correct,
-but since you are just checking to see the correct data in your
-DMA scatter list, and the memory is "DMA pages", the hack will work.
-
-
-Cheers,
-Dick Johnson
-Penguin : Linux version 2.6.15.4 on an i686 machine (5589.54 BogoMips).
-Warning : 98.36% of all statistics are fiction, book release in April.
-_
-
-
-****************************************************************
-The information transmitted in this message is confidential and may be privileged.  Any review, retransmission, dissemination, or other use of this information by persons or entities other than the intended recipient is prohibited.  If you are not the intended recipient, please notify Analogic Corporation immediately - by replying to this message or by sending an email to DeliveryErrors@analogic.com - and destroy all copies of this information, including any attachments, without reading or disclosing them.
-
-Thank you.
