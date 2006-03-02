@@ -1,43 +1,53 @@
-From: "Quat Le" <Quat.Le@dothill.com>
-Subject: RE: ATA Pass-Through support
-Date: Thu, 2 Mar 2006 10:41:47 -0800
-Message-ID: <DF9C50EF9E8CDA45A06FE8735C68F85E569309@earthex2.power.com>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: Question: how to map SCSI data DMA address to virtual address?
+Date: Thu, 2 Mar 2006 19:49:02 +0100
+Message-ID: <20060302184902.GW4329@suse.de>
+References: <9738BCBE884FDB42801FAD8A7769C2651420C1@NAMAIL1.ad.lsil.com> <Pine.LNX.4.61.0603021203280.14257@chaos.analogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 17.129.dothill.com ([155.254.129.17]:35690 "EHLO
-	earthex1.dothill.com") by vger.kernel.org with ESMTP
-	id S1751648AbWCBSlv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Mar 2006 13:41:51 -0500
-Content-class: urn:content-classes:message
+Received: from ns.virtualhost.dk ([195.184.98.160]:58378 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S1751671AbWCBSt2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Mar 2006 13:49:28 -0500
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.61.0603021203280.14257@chaos.analogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: "Moore, Eric" <Eric.Moore@lsil.com>, dougg@torque.net, linux-scsi@vger.kernel.org, Brian King <brking@us.ibm.com>, linux-ide@vger.kernel.org
+To: "linux-os (Dick Johnson)" <linux-os@analogic.com>
+Cc: "Ju, Seokmann" <Seokmann.Ju@lsil.com>, "Ju, Seokmann" <Seokmann.Ju@engenio.com>, Linux kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-> -----Original Message-----
-> From: Jeff Garzik [mailto:jgarzik@pobox.com]
-> Sent: Thursday, March 02, 2006 10:17 AM
-> To: Quat Le
-> Cc: Moore, Eric; dougg@torque.net; linux-scsi@vger.kernel.org; Brian
-King;
-> linux-ide@vger.kernel.org
-> Subject: Re: ATA Pass-Through support
+On Thu, Mar 02 2006, linux-os (Dick Johnson) wrote:
 > 
-> Brian King, maintainer of the ipr driver, has posted patches which
-> integrate libata SATA support into his driver.  Merging those is on my
-> todo list, though I'm currently waiting on Tejun Heo's error handling
-> work before tackling that (and NCQ and hotplug...).
+> On Thu, 2 Mar 2006, Ju, Seokmann wrote:
 > 
-> 	Jeff
->
+> > Hi,
+> >
+> > In the 'scsi_cmnd' structure, there are two entries holding address
+> > information for data to be transferred. One is 'request_buffer' and the
+> > other one is 'buffer'.
+> > In case of 'use_sg' is non-zero, those entries indicates the address of
+> > the scatter-gather table.
+> >
+> > Is there way to get virtual address (so that the data could be accessed
+> > by the driver) of the actual data in the case of 'use_sg' is non-zero?
+> >
+> > Any comments would be appreciated.
+> >
+> >
+> > Thank you,
+> >
+> > Seokmann
+> > -
+> 
+> There is a macro for this purpose. However, for experiments, in
+> the kernel, you can add PAGE_OFFSET (0xC00000000) to get the virtual
+> address. The macro is __va(a), its inverse is __pa(a).
+> 
+> Careful. These things can change.
 
-Jeff,
-I'm not familiar with the ipr driver. Is this for IBM PowerPC RAID? How
-will this work for me? I don't really need RAID. What I have is a
-Pentium-based machine.  I want to be able to talk to SATA drives on a
-SAS expander.
- 
+Bzzt no, this wont work if an iommu is involved. It also wont work if
+the page doesn't have a virtual address mapping (think highmem).
+
+-- 
+Jens Axboe
 
