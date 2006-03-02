@@ -1,35 +1,63 @@
-From: "Quat Le" <Quat.Le@dothill.com>
-Subject: RE: ATA Pass-Through support
-Date: Thu, 2 Mar 2006 10:00:53 -0800
-Message-ID: <DF9C50EF9E8CDA45A06FE8735C68F85E5692EE@earthex2.power.com>
+From: Pete Zaitcev <zaitcev@redhat.com>
+Subject: Patch from Fujitsu for a weird DVD
+Date: Thu, 2 Mar 2006 10:03:33 -0800
+Message-ID: <20060302100333.24b7ad21.zaitcev@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 17.129.dothill.com ([155.254.129.17]:14434 "EHLO
-	earthex1.dothill.com") by vger.kernel.org with ESMTP
-	id S1751631AbWCBSAz convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Mar 2006 13:00:55 -0500
-Content-class: urn:content-classes:message
+Received: from mx1.redhat.com ([66.187.233.31]:5096 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S1751639AbWCBSDr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Mar 2006 13:03:47 -0500
+Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
+	by mx1.redhat.com (8.12.11/8.12.11) with ESMTP id k22I3klb028015
+	for <linux-scsi@vger.kernel.org>; Thu, 2 Mar 2006 13:03:46 -0500
+Received: from devserv.devel.redhat.com (devserv.devel.redhat.com [172.16.58.1])
+	by int-mx1.corp.redhat.com (8.11.6/8.11.6) with ESMTP id k22I3k116209
+	for <linux-scsi@vger.kernel.org>; Thu, 2 Mar 2006 13:03:46 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Quat Le <Quat.Le@dothill.com>, "Moore, Eric" <Eric.Moore@lsil.com>, dougg@torque.net
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: zaitcev@redhat.com
 
-> Doug,
-> SG_IO ioctl provides SCSI pass-through. It's the new SCSI extensions
-ATA
-> Pass-Through commands (A1H and 85H) that sort of encapsulate ATA
-command
-> in a SCSI CDB. My application is using this interface to perform SMART
-> related functions to SATA drives. Could you please provide me with
-more
-> information on your MPT_COMMAND_IOCTL and
-MPI_FUNCTION_SATA_PASSTHROUGH?
-> 
-> 
-> Thanks,
-> Quat Le
+Clear expecting_cc_ua in case a device went from a reset into operation
+without posting any unit attention.
 
-Sorry, I was addressing the above to Eric (not Doug).
+Signed-off-By: Pete Zaitcev <zaitcev@redhat.com>
+
+---
+
+Hi, All:
+
+This bug was reported by someone anonymous at Fujitsu. They have a DVD
+drive with USB interface, which fails data transfers after a power-up
+(it accepts and processes commands which involve no data block, such
+as TEST UNIT READY). This causes us to go through useless reset cycles
+while the device gathers its wits. After a while, the drive suddenly
+starts working without reporting any sense and everything is fine.
+
+However, since no sense was reported, expecting_cc_ua gets stuck,
+perhaps for hundreds of commands. When a real check condition occurs,
+we discard it and clear expecting_cc_ua. This usually happens when
+someone changes the disc, and so the sr.c fails to sense that the media
+has changed and continues to use the old media size. This wreaks havoc
+with RHEL 4 installs by causing reads beyond the end of the device,
+because CD #2 is larger than CD #1.
+
+The patch seems safe to me. If a command issued by upper levels (not EH)
+completes normally, we do not expect CC or UA anymore, right?
+
+-- Pete
+
+diff -urp -X dontdiff linux-2.6.16-rc5/drivers/scsi/scsi_error.c linux-2.6.16-rc5-lem/drivers/scsi/scsi_error.c
+--- linux-2.6.16-rc5/drivers/scsi/scsi_error.c	2006-02-26 23:04:27.000000000 -0800
++++ linux-2.6.16-rc5-lem/drivers/scsi/scsi_error.c	2006-03-02 09:48:31.000000000 -0800
+@@ -1273,6 +1273,8 @@ int scsi_decide_disposition(struct scsi_
+ 		return ADD_TO_MLQUEUE;
+ 	case GOOD:
+ 	case COMMAND_TERMINATED:
++		scmd->device->expecting_cc_ua = 0;
++		return SUCCESS;
+ 	case TASK_ABORTED:
+ 		return SUCCESS;
+ 	case CHECK_CONDITION:
