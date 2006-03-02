@@ -1,80 +1,49 @@
-From: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
-Subject: RE: Question: how to map SCSI data DMA address to virtual address?
-Date: Thu, 2 Mar 2006 14:04:48 -0700
-Message-ID: <9738BCBE884FDB42801FAD8A7769C2651420C5@NAMAIL1.ad.lsil.com>
+From: Linus Torvalds <torvalds@osdl.org>
+Subject: Re: sg regression in 2.6.16-rc5
+Date: Thu, 2 Mar 2006 13:25:12 -0800 (PST)
+Message-ID: <Pine.LNX.4.64.0603021317520.22647@g5.osdl.org>
+References: <E94491DE-8378-41DC-9C01-E8C1C91B6B4E@mac.com> <4404AA2A.5010703@torque.net>
+ <20060301083824.GA9871@merlin.emma.line.org> <Pine.LNX.4.64.0603011027400.22647@g5.osdl.org>
+ <4405F6F1.9040106@torque.net> <Pine.LNX.4.63.0603012239440.5789@kai.makisara.local>
+ <44074CA1.3000007@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:30112 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S932301AbWCBVEx convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 2 Mar 2006 16:04:53 -0500
-Content-class: urn:content-classes:message
+Received: from smtp.osdl.org ([65.172.181.4]:9376 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751634AbWCBVZf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Mar 2006 16:25:35 -0500
+In-Reply-To: <44074CA1.3000007@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-os (Dick Johnson)" <linux-os@analogic.com>, Jens Axboe <axboe@suse.de>
-Cc: Linux kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: Douglas Gilbert <dougg@torque.net>
+Cc: Kai Makisara <Kai.Makisara@kolumbus.fi>, Matthias Andree <matthias.andree@gmx.de>, Mark Rustad <mrustad@mac.com>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-Hi,
 
-On Thursday, March 02, 2006 3:04 PM Dick Johnson wrote:
-> On Thu, 2 Mar 2006, Jens Axboe wrote:
+
+On Thu, 2 Mar 2006, Douglas Gilbert wrote:
 > 
-> > On Thu, Mar 02 2006, linux-os (Dick Johnson) wrote:
-> >>
-> >> On Thu, 2 Mar 2006, Ju, Seokmann wrote:
-> >>
-> >>> Hi,
-> >>>
-> >>> In the 'scsi_cmnd' structure, there are two entries 
-> holding address
-> >>> information for data to be transferred. One is 
-> 'request_buffer' and the
-> >>> other one is 'buffer'.
-> >>> In case of 'use_sg' is non-zero, those entries indicates 
-> the address of
-> >>> the scatter-gather table.
-> >>>
-> >>> Is there way to get virtual address (so that the data 
-> could be accessed
-> >>> by the driver) of the actual data in the case of 'use_sg' 
-> is non-zero?
-> >>>
-> >>> Any comments would be appreciated.
-> >>>
-> >>>
-> >>> Thank you,
-> >>>
-> >>> Seokmann
-> >>> -
-> >>
-> >> There is a macro for this purpose. However, for experiments, in
-> >> the kernel, you can add PAGE_OFFSET (0xC00000000) to get 
-> the virtual
-> >> address. The macro is __va(a), its inverse is __pa(a).
-> >>
-> >> Careful. These things can change.
-> >
-> > Bzzt no, this wont work if an iommu is involved. It also 
-> wont work if
-> > the page doesn't have a virtual address mapping (think highmem).
-> >
-> > --
+> As more information has come to light, the worst case
+> "big transfer" of a single SCSI command through sg (and
+> st I suspect) is 512 KB **. With full coalescing that figure
+> goes up to 4 MB **. I am also aware that some users
+> increase SG_SCATTER_SZ in the sg driver to get larger
+> "big transfer"s than sg's current limit of (8MB - 32KB) **.
+> That facility has now gone (i.e. upping SG_SCATTER_SZ will
+> have no effect) with no replacement mechanism.
 > 
-> > Jens Axboe
-> >
-> 
-> Are you going to get DMA-able pages out of high memory? The guy is
-> doing scatter-table DMA, i.e., linked DMA. I think you need to
-> build that table with pages from get_dma_page(). If you use
-> highmem, somebody can program the iommu right out from under
-> the DMA engine while a DMA is in progress because the CPU is
-> not involved and can be executing lots of code that can do lots
-> of bad things.
-Thank you for your valueable comment. One good thing is that the system does 2 GB memory so that highmem won't come into picture. I am implementing the feature with suggestions.
+> So I'll add my vote to "revert this change before lk 2.6.16"
+> with a view to applying it after some solution to the "big
+> transfer" problem is found.
 
-Thank you again,
+Considering that the old code was apparently known-broken due to not 
+honoring the use_clustering flag, I would say that the more likely thing 
+is that very few people use sg in the first place, and we should wait and 
+see what the reaction is to actually fixing a real bug.
 
-Seokmann
+Doing more than page-sized transfers can be hard/impossible in virtualized 
+environments, for example.
 
+In contrast, upping the limits should be fairly easy, I assume. Same goes 
+for if some driver disables clustering even though it shouldn't. No?
+
+		Linus
