@@ -1,68 +1,60 @@
-From: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
-Subject: RE: Question: how to map SCSI data DMA address to virtual address?
-Date: Thu, 2 Mar 2006 10:04:57 -0700
-Message-ID: <9738BCBE884FDB42801FAD8A7769C2651420C2@NAMAIL1.ad.lsil.com>
+From: "linux-os \(Dick Johnson\)" <linux-os@analogic.com>
+Subject: Re: Question: how to map SCSI data DMA address to virtual address?
+Date: Thu, 2 Mar 2006 12:09:02 -0500
+Message-ID: <Pine.LNX.4.61.0603021203280.14257@chaos.analogic.com>
+References: <9738BCBE884FDB42801FAD8A7769C2651420C1@NAMAIL1.ad.lsil.com>
+Reply-To: "linux-os \(Dick Johnson\)" <linux-os@analogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:24059 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1751390AbWCBRFE convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 2 Mar 2006 12:05:04 -0500
+Received: from spirit.analogic.com ([204.178.40.4]:31496 "EHLO
+	spirit.analogic.com") by vger.kernel.org with ESMTP
+	id S1752015AbWCBRJD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Mar 2006 12:09:03 -0500
+In-Reply-To: <9738BCBE884FDB42801FAD8A7769C2651420C1@NAMAIL1.ad.lsil.com>
 Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
+Cc: "Ju, Seokmann" <Seokmann.Ju@engenio.com>, Linux kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-Hi,
 
-On Thursday, March 02, 2006 11:58 AM Arjan van de Ven wrote:
-> Why do you need to do this? It's generally bad for drivers to snoop
-> data! 
-I understood that is bad. I am trying to make sure the data written to disk drive are identical with the data from upper layer by comparing actual data in the driver.
-This is a part of debugging only not for release driver, obviously.
-So, is it completely unable to get this done?
-Any tricky solution?
+On Thu, 2 Mar 2006, Ju, Seokmann wrote:
 
-Thank you,
+> Hi,
+>
+> In the 'scsi_cmnd' structure, there are two entries holding address
+> information for data to be transferred. One is 'request_buffer' and the
+> other one is 'buffer'.
+> In case of 'use_sg' is non-zero, those entries indicates the address of
+> the scatter-gather table.
+>
+> Is there way to get virtual address (so that the data could be accessed
+> by the driver) of the actual data in the case of 'use_sg' is non-zero?
+>
+> Any comments would be appreciated.
+>
+>
+> Thank you,
+>
+> Seokmann
+> -
 
-> -----Original Message-----
-> From: Arjan van de Ven [mailto:arjan@infradead.org] 
-> Sent: Thursday, March 02, 2006 11:58 AM
-> To: Ju, Seokmann
-> Cc: Ju, Seokmann; linux-kernel@vger.kernel.org; 
-> linux-scsi@vger.kernel.org
-> Subject: Re: Question: how to map SCSI data DMA address to 
-> virtual address?
-> 
-> On Thu, 2006-03-02 at 09:53 -0700, Ju, Seokmann wrote:
-> > Hi,
-> > 
-> > In the 'scsi_cmnd' structure, there are two entries holding address
-> > information for data to be transferred. One is 
-> 'request_buffer' and the
-> > other one is 'buffer'.
-> > In case of 'use_sg' is non-zero, those entries indicates 
-> the address of
-> > the scatter-gather table.
-> 
-> use_sg is never non-zero so that's easy
-> 
-> > 
-> > Is there way to get virtual address (so that the data could 
-> be accessed
-> > by the driver) of the actual data in the case of 'use_sg' 
-> is non-zero?
-> 
-> not really; unless you mapped it. The physical address may 
-> already been
-> translated by the iommu... at which point there is no direct 
-> mapping to
-> kernel memory.
-> 
-> Why do you need to do this? It's generally bad for drivers to snoop
-> data! 
-> 
-> 
+There is a macro for this purpose. However, for experiments, in
+the kernel, you can add PAGE_OFFSET (0xC00000000) to get the virtual
+address. The macro is __va(a), its inverse is __pa(a).
+
+Careful. These things can change.
+
+Cheers,
+Dick Johnson
+Penguin : Linux version 2.6.15.4 on an i686 machine (5589.54 BogoMips).
+Warning : 98.36% of all statistics are fiction, book release in April.
+_
+
+
+****************************************************************
+The information transmitted in this message is confidential and may be privileged.  Any review, retransmission, dissemination, or other use of this information by persons or entities other than the intended recipient is prohibited.  If you are not the intended recipient, please notify Analogic Corporation immediately - by replying to this message or by sending an email to DeliveryErrors@analogic.com - and destroy all copies of this information, including any attachments, without reading or disclosing them.
+
+Thank you.
