@@ -1,50 +1,78 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [PATCH] add 6.0 Gbit phy definitions to the sas transport class
-Date: Thu, 02 Mar 2006 14:12:56 -0600
-Message-ID: <1141330376.3238.51.camel@mulgrave.il.steeleye.com>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: Question: how to map SCSI data DMA address to virtual address?
+Date: Thu, 2 Mar 2006 21:14:53 +0100
+Message-ID: <20060302201452.GX4329@suse.de>
+References: <9738BCBE884FDB42801FAD8A7769C2651420C1@NAMAIL1.ad.lsil.com> <Pine.LNX.4.61.0603021203280.14257@chaos.analogic.com> <20060302184902.GW4329@suse.de> <Pine.LNX.4.61.0603021458060.14681@chaos.analogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:61365 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S932189AbWCBUM5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 2 Mar 2006 15:12:57 -0500
-Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
-	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id k22KCu215979
-	for <linux-scsi@vger.kernel.org>; Thu, 2 Mar 2006 15:12:56 -0500
+Received: from ns.virtualhost.dk ([195.184.98.160]:57968 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S932300AbWCBUPU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Mar 2006 15:15:20 -0500
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.61.0603021458060.14681@chaos.analogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: "linux-os (Dick Johnson)" <linux-os@analogic.com>
+Cc: "Ju, Seokmann" <Seokmann.Ju@lsil.com>, "Ju, Seokmann" <Seokmann.Ju@engenio.com>, Linux kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-I don't think these exist in silicon yet, but the aic94xx driver has a
-register setting for them.
+On Thu, Mar 02 2006, linux-os (Dick Johnson) wrote:
+> 
+> On Thu, 2 Mar 2006, Jens Axboe wrote:
+> 
+> > On Thu, Mar 02 2006, linux-os (Dick Johnson) wrote:
+> >>
+> >> On Thu, 2 Mar 2006, Ju, Seokmann wrote:
+> >>
+> >>> Hi,
+> >>>
+> >>> In the 'scsi_cmnd' structure, there are two entries holding address
+> >>> information for data to be transferred. One is 'request_buffer' and the
+> >>> other one is 'buffer'.
+> >>> In case of 'use_sg' is non-zero, those entries indicates the address of
+> >>> the scatter-gather table.
+> >>>
+> >>> Is there way to get virtual address (so that the data could be accessed
+> >>> by the driver) of the actual data in the case of 'use_sg' is non-zero?
+> >>>
+> >>> Any comments would be appreciated.
+> >>>
+> >>>
+> >>> Thank you,
+> >>>
+> >>> Seokmann
+> >>> -
+> >>
+> >> There is a macro for this purpose. However, for experiments, in
+> >> the kernel, you can add PAGE_OFFSET (0xC00000000) to get the virtual
+> >> address. The macro is __va(a), its inverse is __pa(a).
+> >>
+> >> Careful. These things can change.
+> >
+> > Bzzt no, this wont work if an iommu is involved. It also wont work if
+> > the page doesn't have a virtual address mapping (think highmem).
+> >
+> > --
 
-James
+> > Jens Axboe
+> >
+> 
+> Are you going to get DMA-able pages out of high memory? The guy is
+> doing scatter-table DMA, i.e., linked DMA. I think you need to
+> build that table with pages from get_dma_page(). If you use
 
-diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
-index eab5c7c..2fa63ff 100644
---- a/drivers/scsi/scsi_transport_sas.c
-+++ b/drivers/scsi/scsi_transport_sas.c
-@@ -151,6 +151,7 @@ static struct {
- 	{ SAS_SATA_SPINUP_HOLD,		"Spin-up hold" },
- 	{ SAS_LINK_RATE_1_5_GBPS,	"1.5 Gbit" },
- 	{ SAS_LINK_RATE_3_0_GBPS,	"3.0 Gbit" },
-+	{ SAS_LINK_RATE_6_0_GBPS,	"6.0 Gbit" },
- };
- sas_bitfield_name_search(linkspeed, sas_linkspeed_names)
- 
-diff --git a/include/scsi/scsi_transport_sas.h b/include/scsi/scsi_transport_sas.h
-index ccef5d2..95e2132 100644
---- a/include/scsi/scsi_transport_sas.h
-+++ b/include/scsi/scsi_transport_sas.h
-@@ -30,6 +30,7 @@ enum sas_linkrate {
- 	SAS_SATA_PORT_SELECTOR,
- 	SAS_LINK_RATE_1_5_GBPS,
- 	SAS_LINK_RATE_3_0_GBPS,
-+	SAS_LINK_RATE_6_0_GBPS,
- 	SAS_LINK_VIRTUAL,
- };
- 
+A highmem page is a regular page, it just doesn't have a kernel virtual
+mapping. You can dma to/from these pages just fine.
 
+> highmem, somebody can program the iommu right out from under
+> the DMA engine while a DMA is in progress because the CPU is
+> not involved and can be executing lots of code that can do lots
+> of bad things.
+
+Nonsense. You can't have multiple iommu mappings or dma transactions
+against the same highmem page of course, however that is no different
+than a low mem page.
+
+-- 
+Jens Axboe
 
