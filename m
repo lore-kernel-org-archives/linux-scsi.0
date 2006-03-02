@@ -1,44 +1,68 @@
-From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: RE: ATA Pass-Through support
-Date: Thu, 2 Mar 2006 10:02:09 -0700
-Message-ID: <F331B95B72AFFB4B87467BE1C8E9CF5F327364@NAMAIL2.ad.lsil.com>
+From: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
+Subject: RE: Question: how to map SCSI data DMA address to virtual address?
+Date: Thu, 2 Mar 2006 10:04:57 -0700
+Message-ID: <9738BCBE884FDB42801FAD8A7769C2651420C2@NAMAIL1.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:2555 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1752014AbWCBRCv convert rfc822-to-8bit
+Received: from mail0.lsil.com ([147.145.40.20]:24059 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1751390AbWCBRFE convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 2 Mar 2006 12:02:51 -0500
+	Thu, 2 Mar 2006 12:05:04 -0500
 Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: Quat Le <Quat.Le@dothill.com>, linux-scsi@vger.kernel.org
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Thursday, March 02, 2006 8:46 AM, Douglas Gilbert wrote: 
+Hi,
 
-> Eric,
-> Ok, that is the definitive answer when the LSI SAS HBA
-> driver is in play. Perhaps you could refer the firmware
-> folks to the SCSI ATA Translation (SAT) draft at:
-> http://www.t10.org/ftp/t10/drafts/sat/sat-r08.pdf
-> which is currently in letter ballot at t10 (LSI voted
-> "no" but judging from their comments that will become
-> a yes).
+On Thursday, March 02, 2006 11:58 AM Arjan van de Ven wrote:
+> Why do you need to do this? It's generally bad for drivers to snoop
+> data! 
+I understood that is bad. I am trying to make sure the data written to disk drive are identical with the data from upper layer by comparing actual data in the driver.
+This is a part of debugging only not for release driver, obviously.
+So, is it completely unable to get this done?
+Any tricky solution?
+
+Thank you,
+
+> -----Original Message-----
+> From: Arjan van de Ven [mailto:arjan@infradead.org] 
+> Sent: Thursday, March 02, 2006 11:58 AM
+> To: Ju, Seokmann
+> Cc: Ju, Seokmann; linux-kernel@vger.kernel.org; 
+> linux-scsi@vger.kernel.org
+> Subject: Re: Question: how to map SCSI data DMA address to 
+> virtual address?
 > 
-
-Yes, we are well aware of SAT. I sit in the cube right next
-to John Lohmeyer, who heads the T10 committee.  The firmware 
-folks have not implemented 0xA1 or 0x85, and its not clear 
-if and when they will.  Today, the key people are at offsite meetings
-so I don't have an answer.  I believe they are leaning
-more towards not, as we have the MPI_FUNCTION_SATA_PASSTHROUGH, 
-which is exported thru ioctl path.  Probably if its important on
-the Linux front, I could look into hooking the 0xA1, 0x85
-opcodes in the driver, and porting them over to
-MPI_FUNCTION_SATA_PASSTHROUGH.
-How important is this?  I can propose those alternatives inside LSI.
-
-Eric    
+> On Thu, 2006-03-02 at 09:53 -0700, Ju, Seokmann wrote:
+> > Hi,
+> > 
+> > In the 'scsi_cmnd' structure, there are two entries holding address
+> > information for data to be transferred. One is 
+> 'request_buffer' and the
+> > other one is 'buffer'.
+> > In case of 'use_sg' is non-zero, those entries indicates 
+> the address of
+> > the scatter-gather table.
+> 
+> use_sg is never non-zero so that's easy
+> 
+> > 
+> > Is there way to get virtual address (so that the data could 
+> be accessed
+> > by the driver) of the actual data in the case of 'use_sg' 
+> is non-zero?
+> 
+> not really; unless you mapped it. The physical address may 
+> already been
+> translated by the iommu... at which point there is no direct 
+> mapping to
+> kernel memory.
+> 
+> Why do you need to do this? It's generally bad for drivers to snoop
+> data! 
+> 
+> 
