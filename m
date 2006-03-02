@@ -1,30 +1,34 @@
-From: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
-Subject: RE: Question: how to map SCSI data DMA address to virtual address?
-Date: Thu, 2 Mar 2006 10:21:51 -0700
-Message-ID: <9738BCBE884FDB42801FAD8A7769C2651420C3@NAMAIL1.ad.lsil.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Question: how to map SCSI data DMA address to virtual address?
+Date: Thu, 02 Mar 2006 11:22:12 -0600
+Message-ID: <1141320132.3238.20.camel@mulgrave.il.steeleye.com>
+References: <9738BCBE884FDB42801FAD8A7769C2651420C1@NAMAIL1.ad.lsil.com>
+	 <20060302170915.GA31316@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:2046 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1752021AbWCBRVz convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 2 Mar 2006 12:21:55 -0500
-Content-class: urn:content-classes:message
+Received: from stat9.steeleye.com ([209.192.50.41]:35249 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1751593AbWCBRWV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 2 Mar 2006 12:22:21 -0500
+In-Reply-To: <20060302170915.GA31316@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: "Ju, Seokmann" <Seokmann.Ju@lsil.com>, "Ju, Seokmann" <Seokmann.Ju@engenio.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hi,
-
-Thursday, March 02, 2006 12:09 PM Christoph Hellwig wrote:
+On Thu, 2006-03-02 at 17:09 +0000, Christoph Hellwig wrote:
 > For each sg list entry do something like:
 > 
 > 	buffer = kmap_atomic(sg->page, KM_USER0) + sg->offset;
 > 	<access buffer>
 > 	kunmap_atomic(buffer - sg->offset, KM_USER0);
-Thank you for your comment!
-I'll try with this.
 
-Thank you again.
+Remember too that the data might not necessarily be valid without a
+flush depending on where it has come from (or where it is going).  See
+the dma_sync_sg_for_device/cpu.
+
+James
+
+
