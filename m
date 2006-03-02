@@ -1,46 +1,80 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: RE: [PATCH] aic94xx: driver assertion in non-x86 BIOS env
-Date: Thu, 02 Mar 2006 08:45:42 -0600
-Message-ID: <1141310742.3238.6.camel@mulgrave.il.steeleye.com>
-References: <8C064C48AB104B428CBA524C342357CA34CFC4@aime2k05.adaptec.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: ATA Pass-Through support
+Date: Thu, 02 Mar 2006 10:46:05 -0500
+Message-ID: <4407133D.1030308@torque.net>
+References: <DF9C50EF9E8CDA45A06FE8735C68F85E56911A@earthex2.power.com> <001c01c63dc0$a2f70270$271015ac@ericmoore>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:21677 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1750947AbWCBOpr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 2 Mar 2006 09:45:47 -0500
-In-Reply-To: <8C064C48AB104B428CBA524C342357CA34CFC4@aime2k05.adaptec.com>
+Received: from canuck.infradead.org ([205.233.218.70]:32953 "EHLO
+	canuck.infradead.org") by vger.kernel.org with ESMTP
+	id S1751554AbWCBPr2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 2 Mar 2006 10:47:28 -0500
+In-Reply-To: <001c01c63dc0$a2f70270$271015ac@ericmoore>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Tarte, Robert" <Robert_Tarte@adaptec.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Mike Anderson <andmike@us.ibm.com>, linux-scsi@vger.kernel.org, Jeff Garzik <jgarzik@redhat.com>
+To: "Moore, Eric" <Eric.Moore@lsil.com>
+Cc: Quat Le <Quat.Le@dothill.com>, linux-scsi@vger.kernel.org
 
-On Wed, 2006-03-01 at 12:57 -0800, Tarte, Robert wrote:
-> I have located an HP machine that is the same flavor as James' (HP
-> Integrity rx2600: ia64 with zx1 chipset).  It exhibits the same problem.
-> I believe that the architecture may differ with traditional PC/PCI
-> architectures in how it deals with non-aligned PCI access.  When I
-> converted the OCM initialization code to write on qwords instead of
-> dwords, the code was able to pass OCM initialization.  It is possible
-> that the machine is doing a qword read/modify/write when accessing OCM
-> memory, which would explain the hang.  I haven't hooked up a PCI
-> analyzer.  The code now gets to the point where it is trying to read
-> NVRAM in order to get the SAS address.  It seems that the machine is
-> unable to retrieve non-aligned byte accesses correctly.  I will convert
-> the code to pull the correct byte/word/dword from the aligned qword.
-> We'll see if that fixes it.  None of these behaviors are exhibited on
-> x86, x86_64, powerpc, and ia64 without the zx1 chipset.  I understand
-> that there may be a few ARM implementations that have similar issues.
+Moore, Eric wrote:
+> On Wednesday, March 01, 2006 4:51 PM,  Quat Le wrote:
+> 
+>> I cannot tell if the LSI SAS HBA driver uses libata or not. A week ago I
+>> did send LSI tech support a question asking if the SCSI-to-ATA
+>> Translation Layer is done in the HBA driver or in a different layer on
+>> Linux.  So far I have not gotten any response.  That's a good idea to
+>> try this on a SATA disk connected to a SATA HBA.  I will try this.
+>>
+> 
+> No, the mptsas driver is not using libata, however we are using
+> scsi_transport_sas.
+> This is firmware assist implementation, meaning SCSI-to-ATA translation
+> is done in firmware; via queue_command entry point, all commands to both
+> SAS and SATA devices are sent via SCSI_IO passthru.   Is the SG_IO ATA
+> passthru encapsalating an ATA command inside a SCSI CDB?  If so, I don't
+> think the firmware folks have not implemented that yet.  When that is
+> completed, I expect no change in driver, as its simply passthru, and the
+> firmware will handle the request. There is an alternative, you can send
+> an IOCTL=MPT_COMMAND IOCTL using the mptctl driver with the function set
+> to MPI_FUNCTION_SATA_PASSTHROUGH.
 
-Could you post the patch that gets it working?
+Eric,
+Ok, that is the definitive answer when the LSI SAS HBA
+driver is in play. Perhaps you could refer the firmware
+folks to the SCSI ATA Translation (SAT) draft at:
+http://www.t10.org/ftp/t10/drafts/sat/sat-r08.pdf
+which is currently in letter ballot at t10 (LSI voted
+"no" but judging from their comments that will become
+a yes).
 
-I'd like to try on my zx2000, and I'm sure the HP ZX1 people would like
-to see it to try and work out what's going on on the ZX1 bus.
+You might also point out that SAT layers will
+be (or maybe already are) inside FC enclosures that are
+full of SATA disks. So applications like smartmontools
+that know they are talking to a SATA device via SCSI
+Block Commands (SBC) will expect to see those SCSI
+ATA pass through commands working (no matter what the
+"plumbing").
 
-Thanks,
+>> I thought support for those two opcodes went into libata
+>> for lk 2.6.15 as well but haven't written discrete code
+>> to test it. Does the lsi SAS HBA use libata on its STP
+>> (or direct connect) path? Eyeballing the libata code,
+>> those opcodes are used internally. I know that
+>> "smartctl -a -d ata /dev/sda" works when /dev/sda is a
+>> SATA disk using libata on a regular SATA HBA. At present I
+>> do not have any hardware nearby to test it. If you can direct
+>> connect a SATA disk to a SATA controller on your motherboard
+>> (i.e. bypassing the SAS HBA) does that make any difference?
+>>
+> 
+> What is smartctl?  Is that part of Doug's sg_tools, or something else.
 
-James
+smartctl is part of smartmontools. It fetches SMART
+information from storage devices. See:
+http://smartmontools.sourceforge.net
+Bruce Allen is the chief maintainer (and Andre Hedrick should
+also get a mention for the earlier smartsuite).
 
-
+Doug Gilbert
