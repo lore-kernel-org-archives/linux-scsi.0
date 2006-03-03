@@ -1,41 +1,36 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: RE: [PATCH] make some sas class properties optional
-Date: Fri, 03 Mar 2006 10:38:01 -0600
-Message-ID: <1141403881.5397.1.camel@mulgrave.il.steeleye.com>
-References: <F331B95B72AFFB4B87467BE1C8E9CF5F3277EC@NAMAIL2.ad.lsil.com>
+From: Brian King <brking@us.ibm.com>
+Subject: Re: ATA Pass-Through support
+Date: Fri, 03 Mar 2006 10:38:17 -0600
+Message-ID: <440870F9.20505@us.ibm.com>
+References: <DF9C50EF9E8CDA45A06FE8735C68F85E569309@earthex2.power.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:9428 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S932288AbWCCQiH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 3 Mar 2006 11:38:07 -0500
-In-Reply-To: <F331B95B72AFFB4B87467BE1C8E9CF5F3277EC@NAMAIL2.ad.lsil.com>
+Received: from e6.ny.us.ibm.com ([32.97.182.146]:397 "EHLO e6.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S932303AbWCCQjA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Mar 2006 11:39:00 -0500
+In-Reply-To: <DF9C50EF9E8CDA45A06FE8735C68F85E569309@earthex2.power.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric" <Eric.Moore@lsil.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Quat Le <Quat.Le@dothill.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, "Moore, Eric" <Eric.Moore@lsil.com>, dougg@torque.net, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Fri, 2006-03-03 at 09:26 -0700, Moore, Eric wrote:
-> Optional, humm.... ??
+Quat Le wrote:
+> I'm not familiar with the ipr driver. Is this for IBM PowerPC RAID? How
+> will this work for me? I don't really need RAID. What I have is a
+> Pentium-based machine.  I want to be able to talk to SATA drives on a
+> SAS expander.
 
-Optional as in the *driver* need not provide the callback.
+There is really two parts to my patchset. One is some general libata changes
+needed for any SAS HBA that wants to use libata to attach SATA devices, and
+the second part is the changes to ipr to use that function.
 
-> These are defined here:
-> 
-> Enclosure Logical ID is SAS 1.1 spec, as SMP REPORT_GENERAL (opcode =
-> 0x40, fuction = 0x0)
-> The slot/bay indentifier should be in SES-II spec.
-> Link Statistics is in SAS 1.1 spec, as SMP REPORT_PHY_ERROR_LOG (opcode
-> = 0x40, fuction = 0x11)
-> Link Reset and Hard Reset is in SAS 1.1 spec, as in SMP PHY_CONTROL
-> (opcode = 0x40, function = 0x91)
+Doug had mentioned a while back that he might look into using libata to attach
+SATA devices to aic94xx adapters. Doug, are you still planning to look
+at this, or is someone else working on this?
 
-As you can see, for a driver that provides an SMP tap, like aic94xx then
-these parameters can be got by the transport class sending the SMP
-queries ... the driver doesn't need to know about it.
-
-James
-
-
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
