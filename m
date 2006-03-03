@@ -1,40 +1,48 @@
-From: "Ravi Anand" <ravi.anand@qlogic.com>
-Subject: RE: qla4xxx : Driver v5.00.05b4-k - RFC requested!!!
-Date: Fri, 3 Mar 2006 15:11:56 -0800
-Message-ID: <3679966B84813344B908D418BA3F6A4A06EE444F@AVEXCH01.qlogic.org>
+From: "Randy.Dunlap" <rdunlap@xenotime.net>
+Subject: Re: CDROM support for Promise 20269
+Date: Fri, 3 Mar 2006 15:35:17 -0800
+Message-ID: <20060303153517.0e10f5d7.rdunlap@xenotime.net>
+References: <5Mquh-2mT-97@gated-at.bofh.it>
+	<4408D082.2070203@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="Windows-1252"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:25455 "EHLO avexch01.qlogic.com")
-	by vger.kernel.org with ESMTP id S932238AbWCCXL4 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 3 Mar 2006 18:11:56 -0500
-content-class: urn:content-classes:message
+Received: from xenotime.net ([66.160.160.81]:56253 "HELO xenotime.net")
+	by vger.kernel.org with SMTP id S1751046AbWCCXdw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Mar 2006 18:33:52 -0500
+Received: from midway.site ([71.111.157.99]) by xenotime.net for <linux-scsi@vger.kernel.org>; Fri, 3 Mar 2006 15:33:52 -0800
+In-Reply-To: <4408D082.2070203@shaw.ca>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Robert Hancock <hancockr@shaw.ca>, albertcc@tw.ibm.com, jtreubig@hotmail.com
+Cc: linux-kernel@vger.kernel.org, scsi <linux-scsi@vger.kernel.org>
 
->>On Thu, 2006-03-02 at 14:52 -0800, Arjan wrote:
->On Thu, 2006-03-02 at 14:52 -0800, Ravi Anand wrote:
-> All,
+On Fri, 03 Mar 2006 17:25:54 -0600 Robert Hancock wrote:
+
+> John Treubig wrote:
+> > I've been working on a problem with Promise 20269 PATA adapter under 
+> > LibATA that if I attach a CDROM drive, I can not see the drive.  The 
+> > message log reports that the driver sees the device, but when I'm fully 
+> > booted, there's no device available.
 > 
-> For the upstream inclusion of qla4xxx driver, following files :
+> ..
 > 
-> - Updated driver source (qla4xxx-src-v5.00.05b4-k_submit.tar.bz2)
-> - Driver patch (patch-qla4xxx-5.00.05b4-k-scsi-rc-fix-2.6.16-rc3)
-> - License.qla4xxx 
+> > [  118.621489] scsi4 : pata_pdc2027x
+> > [  118.643926] ata1(1): WARNING: ATAPI is disabled, device ignored.
+> 
+> Sounds like your problem there.. need to enable ATAPI in your 
+> libata/PATA kernel configuration?
 
->>why is qla4xxx_alloc_ddb using a GFP_ATOMIC and not a GFP_KERNEL?
+Please don't drop cc's etc.  Just use reply-to-all.
 
-Looking at the differnt path that may invoke it, it seems
-we dont have to alloc it right away. We will change it to 
-use GFP_KERNEL, but we will double check to make sure that 
-no lock is being held at this point of time.
+For John:  this means that you need to load libata with this option:
+atapi_enabled=1
+So if you build it into the kernel image, add this to the boot option:
+  libata.atapi_enabled=1
+or if you load it as a module, just add:  atapi_enabled=1
+or you can edit the source file and change the variable to 1,
+but that's the least preferable way IMO.
 
-Thanx
-Ravi
-
-
-
+---
+~Randy
