@@ -1,44 +1,41 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [RFC] aic94xx: attaching to the sas transport class
-Date: Fri, 03 Mar 2006 17:12:06 +0100
-Message-ID: <44086AD6.3060503@s5r6.in-berlin.de>
-References: <20060303102603.87127.qmail@web31804.mail.mud.yahoo.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: RE: [PATCH] make some sas class properties optional
+Date: Fri, 03 Mar 2006 10:38:01 -0600
+Message-ID: <1141403881.5397.1.camel@mulgrave.il.steeleye.com>
+References: <F331B95B72AFFB4B87467BE1C8E9CF5F3277EC@NAMAIL2.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hp3.statik.TU-Cottbus.De ([141.43.120.68]:50701 "EHLO
-	statik.tu-cottbus.de") by vger.kernel.org with ESMTP
-	id S932288AbWCCQhD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 3 Mar 2006 11:37:03 -0500
-In-Reply-To: <20060303102603.87127.qmail@web31804.mail.mud.yahoo.com>
+Received: from stat9.steeleye.com ([209.192.50.41]:9428 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S932288AbWCCQiH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 3 Mar 2006 11:38:07 -0500
+In-Reply-To: <F331B95B72AFFB4B87467BE1C8E9CF5F3277EC@NAMAIL2.ad.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: ltuikov@yahoo.com
-Cc: Mike Anderson <andmike@us.ibm.com>, James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>, "Tarte, Robert" <Robert_Tarte@adaptec.com>
+To: "Moore, Eric" <Eric.Moore@lsil.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Luben Tuikov wrote:
-> --- Mike Anderson <andmike@us.ibm.com> wrote:
->> The issue also results in the device discovery not completing by the time
->> the module load completes resulting in the initrd not finding the boot
->> disk http://bugzilla.kernel.org/show_bug.cgi?id=6045
+On Fri, 2006-03-03 at 09:26 -0700, Moore, Eric wrote:
+> Optional, humm.... ??
+
+Optional as in the *driver* need not provide the callback.
+
+> These are defined here:
 > 
-> They are not wed.
-[...]
-> The boot device may not
-> be accessible right away, the kernel may need to wait for it to become
-> available.  This will be more and more true in the future with more exotic
-> protocols and infrastructures.
+> Enclosure Logical ID is SAS 1.1 spec, as SMP REPORT_GENERAL (opcode =
+> 0x40, fuction = 0x0)
+> The slot/bay indentifier should be in SES-II spec.
+> Link Statistics is in SAS 1.1 spec, as SMP REPORT_PHY_ERROR_LOG (opcode
+> = 0x40, fuction = 0x11)
+> Link Reset and Hard Reset is in SAS 1.1 spec, as in SMP PHY_CONTROL
+> (opcode = 0x40, function = 0x91)
 
-More precisely, the _BIOS_ or an equivalent has to wait for the _boot_
-device (to load the kernel from). The _kernel_ has to wait for the
-device carrying the _initial root filesystem_.
+As you can see, for a driver that provides an SMP tap, like aic94xx then
+these parameters can be got by the transport class sending the SMP
+queries ... the driver doesn't need to know about it.
 
-If the final working root filesystem resides on a device or network
-resource which is more or less slow to be discovered, a minimal initial
-root filesystem is put onto a RAM disk which is loaded together with the
-kernel (a.k.a. an initrd).
--- 
-Stefan Richter
--=====-=-==- --== ---==
-http://arcgraph.de/sr/
+James
+
+
