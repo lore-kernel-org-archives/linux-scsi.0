@@ -1,48 +1,75 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: sg regression in 2.6.16-rc5
-Date: Fri, 03 Mar 2006 15:30:03 -0500
-Message-ID: <4408A74B.30306@garzik.org>
-References: <E94491DE-8378-41DC-9C01-E8C1C91B6B4E@mac.com> <4404AA2A.5010703@torque.net> <20060301083824.GA9871@merlin.emma.line.org> <Pine.LNX.4.64.0603011027400.22647@g5.osdl.org> <4405E8AA.1090803@rtr.ca> <Pine.LNX.4.64.0603011036110.22647@g5.osdl.org> <CF493E39-B369-46D8-85EE-013F2484F1C6@egenera.com> <Pine.LNX.4.64.0603031035140.22647@g5.osdl.org> <44089C34.2030604@garzik.org> <Pine.LNX.4.64.0603031204370.22647@g5.osdl.org>
+From: Linus Torvalds <torvalds@osdl.org>
+Subject: RE: sg regression in 2.6.16-rc5
+Date: Fri, 3 Mar 2006 13:54:01 -0800 (PST)
+Message-ID: <Pine.LNX.4.64.0603031334530.22647@g5.osdl.org>
+References: <085C28F775E1B74F82122EF0975E6E76045F08E3@sdcexc02.emea.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:58769 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932351AbWCCUaL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Mar 2006 15:30:11 -0500
-In-Reply-To: <Pine.LNX.4.64.0603031204370.22647@g5.osdl.org>
+Received: from smtp.osdl.org ([65.172.181.4]:55452 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751630AbWCCVyJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Mar 2006 16:54:09 -0500
+In-Reply-To: <085C28F775E1B74F82122EF0975E6E76045F08E3@sdcexc02.emea.cpqcorp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: Steve Byan <smb@egenera.com>, Mark Lord <lkml@rtr.ca>, Matthias Andree <matthias.andree@gmx.de>, Douglas Gilbert <dougg@torque.net>, Mark Rustad <mrustad@mac.com>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: "Falkinder, David Malcolm" <david.falkinder@hp.com>
+Cc: linux-scsi@vger.kernel.org, dougg@torque.net
 
-Linus Torvalds wrote:
+
+
+On Fri, 3 Mar 2006, Falkinder, David Malcolm wrote:
 > 
-> On Fri, 3 Mar 2006, Jeff Garzik wrote:
-> 
->>256 max sectors IDE driver, 200 max sectors libata (due to driver not
->>hardware).
-> 
-> 
-> When I said "lower due to broken hw" I was more thinking about things like 
-> the SiIimage driver, which actually limits the rqsize to 15 sectors due to 
-> some strange hw interactions with seagate SATA devices.
+> To succinctly re-iterate - you're breaking functionality (albeit an
+> exploited defect), without providing a timeline / plan for it's
+> restoration.
 
-Yep.  There's trouble if the last FIS (sata packet, max 8K) is exactly 7.5K.
+No. 
 
+To succintly re-iterate: you're complaining, without actually having any 
+basis for your complaints.
 
-> (It will then raise it back up to 128 if it's not a Seagate SATA drive. I 
-> forget what the exact issue was. Some strange corruption in some limited 
-> case, and not allowing big requests worked around it. There's some 
-> strange IDE quirks out there...).
+Point to actual breakage, and we'll see what the limitations are, and 
+we'll fix it. Until you do, you are only a whining cry-baby.
 
-Technically its
+As it is, the limits are _different_. For some hardware, the new limits 
+may actually be _higher_ than the old limits for all I know. No, I haven't 
+gone through them. Maybe there's some silly limit in the SCSI code itself 
+that says that they always end up being lower, but the point is, we can 
+fix it. It's just a limit. Usually it's a single constant somewhere.
 
-	if (sectors % 15 == 1)
-		explode
+And no, it has nothing to do with disks, per se. The limits are about more 
+than sector counts aka "total transfer size" (which is independent of 
+"sectors", but we just happen to talk about them in sectors). The limits 
+are about things like how many scatter-gather elements the hardware will 
+take, and about the rules for clustering physically contiguous regions.
 
-:)  Yes, IDE is a weird weird world...
+And yes, there may be mis-features there, but so far, a lot of the people 
+who complain seem to do it because they like to _complain_, not because 
+they have a problem.
 
-	Jeff
+So instead of whining, do what the _productive_ reported did: make a 
+trivial code snippet or binary available that actually shows the problem. 
+Or just _test_ the damn current kernel. The code has been there since -rc1 
+(that's six weeks ago), and quite frankly, if you're complaining without 
+having tested it, you're not part of the solution, you're part of the 
+_real_ problem.
 
+Guess what happened with that productive reporter? He had a suggestion on 
+how to fix it from Kai Makisara within a couple of hours, and could report 
+that it fixed his problems the very same day. That was over a week ago.
 
+Compare that to your post: absolutely _zero_ actual useful content, and 
+just whining about something breaking without you apparently knowing what 
+it is, or at least showing any actual breakage.
+
+And you some people apparently expect me to _respect_ whining like that 
+and be polite about it?
+
+So here's me being REALLY impolite: "Shut the f*ck up until you can 
+actually point to a particular regression".
+
+Ok? Btw, patches are also welcome. The pointless whining just isn't.
+
+Do I make myself clear? 
+
+		Linus
