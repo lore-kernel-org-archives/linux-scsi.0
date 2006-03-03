@@ -1,35 +1,27 @@
-From: Mark Rustad <mrustad@mac.com>
-Subject: Re: [RFC] aic94xx: attaching to the sas transport class
-Date: Fri, 3 Mar 2006 10:51:25 -0600
-Message-ID: <EDB6EB8C-7109-46E1-898E-7D8EAB0D4260@mac.com>
-References: <1141339085.3238.80.camel@mulgrave.il.steeleye.com> <20060302231323.GA12869@us.ibm.com> <A421A6E6-A405-4DEC-847D-C5F33AA0718F@mac.com> <20060302200419.b37c2fd9.rdunlap@xenotime.net>
-Mime-Version: 1.0 (Apple Message framework v746.2)
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Ralf Baechle <ralf@linux-mips.org>
+Subject: Re: [SCSI] Fix missing prototypes by including <linux/interrupt.h>.
+Date: Fri, 3 Mar 2006 17:02:45 +0000
+Message-ID: <20060303170245.GA27487@linux-mips.org>
+References: <20060303152148.GA10566@linux-mips.org> <20060303152506.GL1598@parisc-linux.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtpout.mac.com ([17.250.248.85]:49858 "EHLO smtpout.mac.com")
-	by vger.kernel.org with ESMTP id S1751487AbWCCQvq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Mar 2006 11:51:46 -0500
-In-Reply-To: <20060302200419.b37c2fd9.rdunlap@xenotime.net>
+Received: from mipsfw.mips-uk.com ([194.74.144.146]:39437 "EHLO
+	bacchus.dhis.org") by vger.kernel.org with ESMTP id S1030239AbWCCRCx
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 3 Mar 2006 12:02:53 -0500
+Content-Disposition: inline
+In-Reply-To: <20060303152506.GL1598@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Randy.Dunlap" <rdunlap@xenotime.net>
-Cc: andmike@us.ibm.com, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, Robert_Tarte@adaptec.com
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org
 
-On Mar 2, 2006, at 10:04 PM, Randy.Dunlap wrote:
+On Fri, Mar 03, 2006 at 08:25:06AM -0700, Matthew Wilcox wrote:
 
->> It also is a problem for usb-storage devices. I have to use a kernel
->> parameter of "boot_delay=7" for my USB root device to be available.
->> Fine for my system, but ugly in general.
->
-> where is that kernel boot option, pray tell?
-> I don't seem to be able to find it.
+> If you're adding linux/interrupt.h, you should probably remove the
+> asm/irq.h since it'll be pulled in through asm/hardirq.h
 
-That is because I got it wrong (I should have looked at my menu.lst).  
-It is actually "rootdelay=7" in my case. It is documented in  
-Documentation/kernel-parameters.txt. Sorry for the mistaken  
-information before.
+Indeed.  Resending in separate mail.
 
--- 
-Mark Rustad, MRustad@mac.com
-
+  Ralf
