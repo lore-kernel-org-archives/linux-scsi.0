@@ -1,73 +1,46 @@
-From: Steve Byan <smb@egenera.com>
-Subject: Re: sg regression in 2.6.16-rc5
-Date: Fri, 3 Mar 2006 13:27:56 -0500
-Message-ID: <CF493E39-B369-46D8-85EE-013F2484F1C6@egenera.com>
-References: <E94491DE-8378-41DC-9C01-E8C1C91B6B4E@mac.com> <4404AA2A.5010703@torque.net> <20060301083824.GA9871@merlin.emma.line.org> <Pine.LNX.4.64.0603011027400.22647@g5.osdl.org> <4405E8AA.1090803@rtr.ca> <Pine.LNX.4.64.0603011036110.22647@g5.osdl.org>
-Mime-Version: 1.0 (Apple Message framework v746.2)
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: RE: [PATCH] make some sas class properties optional
+Date: Fri, 3 Mar 2006 10:37:22 -0800 (PST)
+Message-ID: <20060303183722.98821.qmail@web31811.mail.mud.yahoo.com>
+References: <1141403881.5397.1.camel@mulgrave.il.steeleye.com>
+Reply-To: ltuikov@yahoo.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from roadrunner-base.egenera.com ([63.160.166.46]:47827 "EHLO
-	roadrunner-base.egenera.com") by vger.kernel.org with ESMTP
-	id S1161017AbWCCS2C (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 3 Mar 2006 13:28:02 -0500
-In-Reply-To: <Pine.LNX.4.64.0603011036110.22647@g5.osdl.org>
+Received: from web31811.mail.mud.yahoo.com ([68.142.207.74]:23163 "HELO
+	web31811.mail.mud.yahoo.com") by vger.kernel.org with SMTP
+	id S1751337AbWCCShY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 3 Mar 2006 13:37:24 -0500
+In-Reply-To: <1141403881.5397.1.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: Mark Lord <lkml@rtr.ca>, Matthias Andree <matthias.andree@gmx.de>, Douglas Gilbert <dougg@torque.net>, Mark Rustad <mrustad@mac.com>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>, "Moore, Eric" <Eric.Moore@lsil.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
+--- James Bottomley <James.Bottomley@SteelEye.com> wrote:
+> As you can see, for a driver that provides an SMP tap, like aic94xx then
 
-On Mar 1, 2006, at 1:42 PM, Linus Torvalds wrote:
+Please don't call it a "tap".  Use storage terminology please.
 
->
->
-> On Wed, 1 Mar 2006, Mark Lord wrote:
->
->> Linus Torvalds wrote:
->>>
->>> On Wed, 1 Mar 2006, Matthias Andree wrote:
->>>> On Tue, 28 Feb 2006, Douglas Gilbert wrote:
->>>>
->>>>> You can stop right there with the 1 MB reads. Welcome
->>>>> to the new, blander sg driver which now shares many
->>>>> size shortcomings with the block subsystem.
->>>> What is the reason to break user-space applications like this?
->>>
->>> Did you read the whole thread? It was a low-level SCSI driver  
->>> issue, where
->>> nothing broke user space, but the command was just fed to the drive
->>> differently, which then hit a limit in the driver.
->>
->> Will this break major applications like CD/DVD rippers,
->> DVD players, etc.. which read LARGE blocks at a time?
->>
->> If not, then good!
->
-> I wouldn't expect it to. Most people use ATA for that, and it tends to
-> have lower limits than most SCSI HBA's (well, at least the old  
-> PATA), so
-> the change - if any - should at most change some of the sg.c limits  
-> to be
-> no less than what SG_IO has had on ATA forever.
->
-> Not that I expect people to have a SCSI CD/DVD drive anyway in this  
-> day
-> and age, so the sg.c changes probably won't show up at all.
+> these parameters can be got by the transport class sending the SMP
+> queries ... the driver doesn't need to know about it.
 
-CD-ROM support is a frequently-requested feature on the iSCSI  
-Enterprise Target (iet) email list. It won't be long before iSCSI CD  
-and DVD devices start showing up, although the underlying hardware  
-will be ATAPI or else missing entirely (i.e. ISO image file).
+Exactly what the SAS stack does.
 
-Regards,
--Steve
--- 
-Steve Byan <smb@egenera.com>
-Software Architect
-Egenera, Inc.
-165 Forest Street
-Marlboro, MA 01752
-(508) 858-3125
+Furthermore you need to understand that this is _not_ anything special.
+I've explained that before: aic94xx only provides access to SDS, and
+then the SAS stack uses that.  That is, the "scsi_host" abstraction is
+at the SAS stack layer, not at "aic94xx".
 
+This is the provision which "sas_ha->lldd_execute_task" wants and
+which aic94xx provides.  It could be any task supported by the SDS.
+See "struct sas_task" in include/scsi/sas/sas_task.h.
+
+So, you can safely presume that any transport would support executing
+a SCSI task, which is the abstraction at SCSI Core level.  But
+at the transport (lower) level, "struct sas_task" supports SCSI task
+as well as transport specific tasks.
+
+      Luben
 
