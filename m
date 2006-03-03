@@ -1,36 +1,35 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: ATA Pass-Through support
-Date: Fri, 03 Mar 2006 10:50:13 -0600
-Message-ID: <440873C5.8050403@us.ibm.com>
-References: <DF9C50EF9E8CDA45A06FE8735C68F85E5692E5@earthex2.power.com> <440736A3.8090207@pobox.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: Mark Rustad <mrustad@mac.com>
+Subject: Re: [RFC] aic94xx: attaching to the sas transport class
+Date: Fri, 3 Mar 2006 10:51:25 -0600
+Message-ID: <EDB6EB8C-7109-46E1-898E-7D8EAB0D4260@mac.com>
+References: <1141339085.3238.80.camel@mulgrave.il.steeleye.com> <20060302231323.GA12869@us.ibm.com> <A421A6E6-A405-4DEC-847D-C5F33AA0718F@mac.com> <20060302200419.b37c2fd9.rdunlap@xenotime.net>
+Mime-Version: 1.0 (Apple Message framework v746.2)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <440736A3.8090207@pobox.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Quat Le <Quat.Le@dothill.com>, "Moore, Eric" <Eric.Moore@lsil.com>, dougg@torque.net, linux-scsi@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, htejun@gmail.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtpout.mac.com ([17.250.248.85]:49858 "EHLO smtpout.mac.com")
+	by vger.kernel.org with ESMTP id S1751487AbWCCQvq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Mar 2006 11:51:46 -0500
+In-Reply-To: <20060302200419.b37c2fd9.rdunlap@xenotime.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Randy.Dunlap" <rdunlap@xenotime.net>
+Cc: andmike@us.ibm.com, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, Robert_Tarte@adaptec.com
 
-Jeff Garzik wrote:
-> Quat Le wrote:
->> Does anyone know of any SAS HBA vendor whose driver either uses libata
->> or supports SATA Pass-Through SCSI commands in their own layer? 
-> 
-> Brian King, maintainer of the ipr driver, has posted patches which 
-> integrate libata SATA support into his driver.  Merging those is on my 
-> todo list, though I'm currently waiting on Tejun Heo's error handling 
-> work before tackling that (and NCQ and hotplug...).
+On Mar 2, 2006, at 10:04 PM, Randy.Dunlap wrote:
 
-Tejen,
+>> It also is a problem for usb-storage devices. I have to use a kernel
+>> parameter of "boot_delay=7" for my USB root device to be available.
+>> Fine for my system, but ugly in general.
+>
+> where is that kernel boot option, pray tell?
+> I don't seem to be able to find it.
 
-Is there anything I can do to help with the error handling work Jeff
-is referring to?
-
-Brian
+That is because I got it wrong (I should have looked at my menu.lst).  
+It is actually "rootdelay=7" in my case. It is documented in  
+Documentation/kernel-parameters.txt. Sorry for the mistaken  
+information before.
 
 -- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+Mark Rustad, MRustad@mac.com
+
