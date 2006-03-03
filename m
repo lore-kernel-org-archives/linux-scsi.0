@@ -1,44 +1,59 @@
-From: Linus Torvalds <torvalds@osdl.org>
-Subject: Re: sg regression in 2.6.16-rc5
-Date: Thu, 2 Mar 2006 16:12:00 -0800 (PST)
-Message-ID: <Pine.LNX.4.64.0603021604070.22647@g5.osdl.org>
-References: <E94491DE-8378-41DC-9C01-E8C1C91B6B4E@mac.com> <4404AA2A.5010703@torque.net>
- <20060301083824.GA9871@merlin.emma.line.org> <Pine.LNX.4.64.0603011027400.22647@g5.osdl.org>
- <4405F6F1.9040106@torque.net> <Pine.LNX.4.63.0603012239440.5789@kai.makisara.local>
- <44074CA1.3000007@torque.net> <Pine.LNX.4.64.0603021317520.22647@g5.osdl.org>
- <20060302230814.GB16237@merlin.emma.line.org> <Pine.LNX.4.64.0603021518430.22647@g5.osdl.org>
- <Pine.LNX.4.64.0603021555020.22647@g5.osdl.org>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: Mark Rustad <mrustad@mac.com>
+Subject: Re: [RFC] aic94xx: attaching to the sas transport class
+Date: Thu, 2 Mar 2006 20:16:20 -0600
+Message-ID: <A421A6E6-A405-4DEC-847D-C5F33AA0718F@mac.com>
+References: <1141339085.3238.80.camel@mulgrave.il.steeleye.com> <20060302231323.GA12869@us.ibm.com>
+Mime-Version: 1.0 (Apple Message framework v746.2)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:36312 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751003AbWCCAMT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Mar 2006 19:12:19 -0500
-In-Reply-To: <Pine.LNX.4.64.0603021555020.22647@g5.osdl.org>
+Received: from smtpout.mac.com ([17.250.248.88]:51912 "EHLO smtpout.mac.com")
+	by vger.kernel.org with ESMTP id S1752146AbWCCCUn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Mar 2006 21:20:43 -0500
+In-Reply-To: <20060302231323.GA12869@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthias Andree <matthias.andree@gmx.de>
-Cc: Douglas Gilbert <dougg@torque.net>, Kai Makisara <Kai.Makisara@kolumbus.fi>, Mark Rustad <mrustad@mac.com>, linux-scsi@vger.kernel.org
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>, "Tarte, Robert" <Robert_Tarte@adaptec.com>
 
+On Mar 2, 2006, at 5:13 PM, Mike Anderson wrote:
 
-
-On Thu, 2 Mar 2006, Linus Torvalds wrote:
+> James Bottomley <James.Bottomley@SteelEye.com> wrote:
+>> This fairly minimal patch correctly attaches the aic94xx driver to  
+>> the
+>> SAS transport class (The driver is available from
+>>
+>> www.kernel.org/git/jgarzik/sas-2.6
+>>
+>> ).  Unfortunately, the driver itself still has the following critical
+>> issues
+>>
+>> 1. Discovery order is non-deterministic (it starts one thread per  
+>> port,
+>> so the threads race for discovery)
 >
->  - the people who did special things like this are apparently already used 
->    to doing things like changing SG_SCATTER_SZ and then _recompiling_ the 
->    whole kernel (it wasn't ever a dynamic option or anything like that).
+> The issue also results in the device discovery not completing by  
+> the time
+> the module load completes resulting in the initrd not finding the boot
+> disk
+> http://bugzilla.kernel.org/show_bug.cgi?id=6045
+>
+> I agree that we need a solution for this. Should the solution be in  
+> the
+> LLDDs.I thought previous comments was that we wanted this fixed  
+> outside
+> the kernel in user space. Though I have not seen any enabled  
+> support in
+> initrds or support in the initrd bins.
+>
+> This appears to not only be an issue with aic94xx as it appears  
+> this could
+> happen with some of the fc transport LLDDs.
 
-And, final note: yes, the new "honor the limits" means that there may not 
-be a single place to change like before. Most of the limits are 
-per-driver, with some limits set by (arguably bad) SCSI midlevel code (I 
-think max_sectors is a "unsigned short", for example, which obviously 
-implies that 63355 sectors is a limit not of the drivers, but of the SCSI 
-host code.
+It also is a problem for usb-storage devices. I have to use a kernel  
+parameter of "boot_delay=7" for my USB root device to be available.  
+Fine for my system, but ugly in general.
 
-The generic block layer, which people seem to like to blame, should 
-actually be pretty blame-less. I think it tends to use full integers for 
-its limits, for example. And tends to even allow changing the limits 
-through sysfs (ie look for things like "max_sectors_kb" and "nr_reuests" 
-etc in /sys/block/sdx/queue).
+-- 
+Mark Rustad, MRustad@mac.com
 
-		Linus
