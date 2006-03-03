@@ -1,16 +1,16 @@
 From: "Ravi Anand" <ravi.anand@qlogic.com>
 Subject: RE: qla4xxx : Driver v5.00.05b4-k - RFC requested!!!
-Date: Fri, 3 Mar 2006 15:10:40 -0800
-Message-ID: <3679966B84813344B908D418BA3F6A4A06EE4448@AVEXCH01.qlogic.org>
+Date: Fri, 3 Mar 2006 15:11:56 -0800
+Message-ID: <3679966B84813344B908D418BA3F6A4A06EE444F@AVEXCH01.qlogic.org>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="Windows-1252"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:65387 "EHLO avexch01.qlogic.com")
-	by vger.kernel.org with ESMTP id S1751653AbWCCXKk convert rfc822-to-8bit
+Received: from pat.qlogic.com ([198.70.193.2]:25455 "EHLO avexch01.qlogic.com")
+	by vger.kernel.org with ESMTP id S932238AbWCCXL4 convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 3 Mar 2006 18:10:40 -0500
+	Fri, 3 Mar 2006 18:11:56 -0500
 content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -21,25 +21,20 @@ To: linux-scsi@vger.kernel.org
 > All,
 > 
 > For the upstream inclusion of qla4xxx driver, following files :
-
-
+> 
 > - Updated driver source (qla4xxx-src-v5.00.05b4-k_submit.tar.bz2)
+> - Driver patch (patch-qla4xxx-5.00.05b4-k-scsi-rc-fix-2.6.16-rc3)
+> - License.qla4xxx 
 
+>>why is qla4xxx_alloc_ddb using a GFP_ATOMIC and not a GFP_KERNEL?
 
->>another thing:
+Looking at the differnt path that may invoke it, it seems
+we dont have to alloc it right away. We will change it to 
+use GFP_KERNEL, but we will double check to make sure that 
+no lock is being held at this point of time.
 
-+               set_current_state(TASK_UNINTERRUPTIBLE);
-+               schedule_timeout(10);
-
-
->>this is obviously a bug.. for which HZ value is that 10?
-
-
->>I think you really want to use msleep() instead here, which uses
->>wallclock time units, and does the state setting for you as well.
->>(and is generally a nicer albeit simpler API than schedule_timeout() )
-
-Agreed. We will switch to msleep().
-
+Thanx
 Ravi
+
+
 
