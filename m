@@ -1,46 +1,47 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: RE: [PATCH] make some sas class properties optional
-Date: Fri, 3 Mar 2006 10:37:22 -0800 (PST)
-Message-ID: <20060303183722.98821.qmail@web31811.mail.mud.yahoo.com>
-References: <1141403881.5397.1.camel@mulgrave.il.steeleye.com>
-Reply-To: ltuikov@yahoo.com
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: ATA Pass-Through support
+Date: Sat, 4 Mar 2006 03:39:40 +0900
+Message-ID: <20060303183940.GA31100@htj.dyndns.org>
+References: <DF9C50EF9E8CDA45A06FE8735C68F85E5692E5@earthex2.power.com> <440736A3.8090207@pobox.com> <440873C5.8050403@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31811.mail.mud.yahoo.com ([68.142.207.74]:23163 "HELO
-	web31811.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S1751337AbWCCShY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 3 Mar 2006 13:37:24 -0500
-In-Reply-To: <1141403881.5397.1.camel@mulgrave.il.steeleye.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <440873C5.8050403@us.ibm.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Brian King <brking@us.ibm.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Quat Le <Quat.Le@dothill.com>, "Moore, Eric" <Eric.Moore@lsil.com>, dougg@torque.net, linux-scsi@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, "Moore, Eric" <Eric.Moore@lsil.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
---- James Bottomley <James.Bottomley@SteelEye.com> wrote:
-> As you can see, for a driver that provides an SMP tap, like aic94xx then
+On Fri, Mar 03, 2006 at 10:50:13AM -0600, Brian King wrote:
+> Jeff Garzik wrote:
+> >Quat Le wrote:
+> >>Does anyone know of any SAS HBA vendor whose driver either uses libata
+> >>or supports SATA Pass-Through SCSI commands in their own layer? 
+> >
+> >Brian King, maintainer of the ipr driver, has posted patches which 
+> >integrate libata SATA support into his driver.  Merging those is on my 
+> >todo list, though I'm currently waiting on Tejun Heo's error handling 
+> >work before tackling that (and NCQ and hotplug...).
+> 
+> Tejen,
+> 
+> Is there anything I can do to help with the error handling work Jeff
+> is referring to?
+> 
 
-Please don't call it a "tap".  Use storage terminology please.
+Hello, Brian.
 
-> these parameters can be got by the transport class sending the SMP
-> queries ... the driver doesn't need to know about it.
+The EH work is in the process of being merged into libata-dev
+#upstream branch.  The merge process has slowed down a bit lately due
+to bug fixes for 2.6.16 but it's still progressing pretty fast.  I
+think/hope whole EH stuff can be merged during 2.6.17 process or
+post-2.6.17 #upstream.  It shouldn't take too long.  We're just two or
+three patchsets away (and all changes are living in my repository
+happily although they are a bit rough).  So, please give it a few more
+weeks.  We will be there.
 
-Exactly what the SAS stack does.
+Thanks.
 
-Furthermore you need to understand that this is _not_ anything special.
-I've explained that before: aic94xx only provides access to SDS, and
-then the SAS stack uses that.  That is, the "scsi_host" abstraction is
-at the SAS stack layer, not at "aic94xx".
-
-This is the provision which "sas_ha->lldd_execute_task" wants and
-which aic94xx provides.  It could be any task supported by the SDS.
-See "struct sas_task" in include/scsi/sas/sas_task.h.
-
-So, you can safely presume that any transport would support executing
-a SCSI task, which is the abstraction at SCSI Core level.  But
-at the transport (lower) level, "struct sas_task" supports SCSI task
-as well as transport specific tasks.
-
-      Luben
-
+-- 
+tejun
