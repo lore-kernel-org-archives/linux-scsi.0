@@ -1,47 +1,51 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: SCSI target and IO-throttling
-Date: Fri, 03 Mar 2006 19:47:05 +0100
-Message-ID: <44088F29.5030009@s5r6.in-berlin.de>
-References: <44071BA4.3030808@vlnb.net> <8932FBA5-241C-470E-A928-F34868EC0A8D@egenera.com>
+From: Linus Torvalds <torvalds@osdl.org>
+Subject: Re: sg regression in 2.6.16-rc5
+Date: Fri, 3 Mar 2006 10:55:03 -0800 (PST)
+Message-ID: <Pine.LNX.4.64.0603031035140.22647@g5.osdl.org>
+References: <E94491DE-8378-41DC-9C01-E8C1C91B6B4E@mac.com> <4404AA2A.5010703@torque.net>
+ <20060301083824.GA9871@merlin.emma.line.org> <Pine.LNX.4.64.0603011027400.22647@g5.osdl.org>
+ <4405E8AA.1090803@rtr.ca> <Pine.LNX.4.64.0603011036110.22647@g5.osdl.org>
+ <CF493E39-B369-46D8-85EE-013F2484F1C6@egenera.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:8841 "EHLO
-	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
-	id S1161025AbWCCStL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 3 Mar 2006 13:49:11 -0500
-In-Reply-To: <8932FBA5-241C-470E-A928-F34868EC0A8D@egenera.com>
+Received: from smtp.osdl.org ([65.172.181.4]:51415 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1750952AbWCCSzQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Mar 2006 13:55:16 -0500
+In-Reply-To: <CF493E39-B369-46D8-85EE-013F2484F1C6@egenera.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Steve Byan <smb@egenera.com>
-Cc: Vladislav Bolkhovitin <vst@vlnb.net>, linux-scsi@vger.kernel.org
+Cc: Mark Lord <lkml@rtr.ca>, Matthias Andree <matthias.andree@gmx.de>, Douglas Gilbert <dougg@torque.net>, Mark Rustad <mrustad@mac.com>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-Steve Byan wrote:
-> On Mar 2, 2006, at 11:21 AM, Vladislav Bolkhovitin wrote:
->> Could anyone advice how a SCSI target device can IO-throttle its  
->> initiators, i.e. prevent them from queuing too many commands, please?
->>
->> I suppose, the best way for doing this is to inform the initiators  
->> about the maximum queue depth X of the target device,
-[...]
-> Returning QUEUE FULL status is correct, unless the initiator does not  
-> have any pending commands on the LUN, in which case you should return  
-> BUSY. Yes, this can lead to out-of-order execution. That's why tapes  
-> have traditionally not used SCSI command queuing.
-> 
-> Look into the unit attention interlock feature added to SCSI as a  
-> result of uncovering this issue during the development of the iSCSI  
-> standard.
-> 
->> Apparently, hardware SCSI targets don't suffer from queuing  overflow 
-[...]
-> No, they just have big queues.
 
-Depending on the the transport protocol, the problem of queue depth at 
-the target may not even exist in the first place. This is the case with 
-SBP-2 where the queue of command blocks resides at the initiator.
--- 
-Stefan Richter
--=====-=-==- --== ---==
-http://arcgraph.de/sr/
+
+On Fri, 3 Mar 2006, Steve Byan wrote:
+> 
+> On Mar 1, 2006, at 1:42 PM, Linus Torvalds wrote:
+> > 
+> > I wouldn't expect it to. Most people use ATA for that, and it tends to
+> > have lower limits than most SCSI HBA's (well, at least the old PATA), so
+> > the change - if any - should at most change some of the sg.c limits to be
+> > no less than what SG_IO has had on ATA forever.
+> > 
+> > Not that I expect people to have a SCSI CD/DVD drive anyway in this day
+> > and age, so the sg.c changes probably won't show up at all.
+> 
+> CD-ROM support is a frequently-requested feature on the iSCSI Enterprise
+> Target (iet) email list. It won't be long before iSCSI CD and DVD devices
+> start showing up, although the underlying hardware will be ATAPI or else
+> missing entirely (i.e. ISO image file).
+
+Yes, but the point that the ATA limits tend to be on the low side still 
+stands.
+
+For example, I think the IDE driver defaults to a maximum transfer of 256 
+sectors, and the same number of max scatter-gather entries. Some 
+controllers will actually lower that, due to silly hw problems.
+
+The point being that it has worked fine for IDE, and if a SCSI controller 
+has noticeably lower limits than that, there's something really strange 
+going on, like a real bug.
+
+			Linus
