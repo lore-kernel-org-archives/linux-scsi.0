@@ -1,48 +1,20 @@
-From: "Monica Pardee" <monica.pardee@qlogic.com>
-Subject: FW: qla4xxx : Driver v5.00.05b4-k - RFC requested!!!
-Date: Fri, 3 Mar 2006 14:58:04 -0800
-Message-ID: <FE5610BF4F47CA49BA464407A4D3ECD6024BFCE0@AVEXCH02.qlogic.org>
+From: "Ravi Anand" <ravi.anand@qlogic.com>
+Subject: RE: qla4xxx : Driver v5.00.05b4-k - RFC requested!!!
+Date: Fri, 3 Mar 2006 15:08:55 -0800
+Message-ID: <3679966B84813344B908D418BA3F6A4A06EE4440@AVEXCH01.qlogic.org>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
+	charset="Windows-1252"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:35390 "EHLO avexch02.qlogic.com")
-	by vger.kernel.org with ESMTP id S932345AbWCCW6J convert rfc822-to-8bit
+Received: from pat.qlogic.com ([198.70.193.2]:56932 "EHLO avexch01.qlogic.com")
+	by vger.kernel.org with ESMTP id S1750738AbWCCXIz convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 3 Mar 2006 17:58:09 -0500
-Content-class: urn:content-classes:message
+	Fri, 3 Mar 2006 18:08:55 -0500
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-
-
-
-Thanks,
- 
-Monica Pardee
-Windows System Specialist
-QLogic Corp.
-(949) 389-6346
-Cell: (949) 231-2078
-
------Original Message-----
-From: Ravi Anand 
-Sent: Friday, March 03, 2006 2:40 PM
-To: Monica Pardee
-Subject: FW: qla4xxx : Driver v5.00.05b4-k - RFC requested!!!
-
-FYI
-
-Ravi
-
------Original Message-----
-From: Ravi Anand 
-Sent: Friday, March 03, 2006 11:27 AM
-To: arjan@infradead.org
-Cc: linux-scsi@vger.kernel.org
-Subject: RE: qla4xxx : Driver v5.00.05b4-k - RFC requested!!!
-
 
 >>On Thu, 2006-03-02 at 14:52 -0800, Arjan wrote:
 >On Thu, 2006-03-02 at 14:52 -0800, Ravi Anand wrote:
@@ -72,7 +44,6 @@ We will do.
 
 Thanx
 Ravi
-
 
 
 
