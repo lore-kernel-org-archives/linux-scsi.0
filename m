@@ -1,60 +1,66 @@
-From: Ralf Baechle <ralf@linux-mips.org>
-Subject: [SCSI] Avoid ld errors messages by marking sd_major noinline.
-Date: Sat, 4 Mar 2006 17:16:09 +0000
-Message-ID: <20060304171609.GA23288@linux-mips.org>
+From: "Moore, Eric" <Eric.Moore@lsil.com>
+Subject: Re: [RFC] first cut at infrastructure for handling different devicetypes in the sas class
+Date: Sat, 4 Mar 2006 11:17:42 -0700
+Message-ID: <004201c63fb7$ee8b4ef0$1e1015ac@ericmoore>
+References: <1141445103.5397.19.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=original
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ftp.linux-mips.org ([194.74.144.162]:57494 "EHLO
-	ftp.linux-mips.org") by vger.kernel.org with ESMTP id S932218AbWCDRQN
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 4 Mar 2006 12:16:13 -0500
-Received: from localhost.localdomain ([127.0.0.1]:20103 "EHLO bacchus.dhis.org")
-	by ftp.linux-mips.org with ESMTP id S8133495AbWCDRH7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Mar 2006 17:07:59 +0000
-Received: from denk.linux-mips.net (denk.linux-mips.net [127.0.0.1])
-	by bacchus.dhis.org (8.13.4/8.13.4) with ESMTP id k24HG9Zs023297
-	for <linux-scsi@vger.kernel.org>; Sat, 4 Mar 2006 17:16:09 GMT
-Received: (from ralf@localhost)
-	by denk.linux-mips.net (8.13.4/8.13.4/Submit) id k24HG9Gm023296
-	for linux-scsi@vger.kernel.org; Sat, 4 Mar 2006 17:16:09 GMT
-Content-Disposition: inline
+Received: from mail0.lsil.com ([147.145.40.20]:42642 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S932276AbWCDSRg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Mar 2006 13:17:36 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Gcc may compile sd_major() using a jump table which it will put into
-.rodata.  If also inline sd_major's function body into exit_sd() and
-CONFIG_BLK_DEV_SD has been set to y ld is going to discard exit_sd's
-code later at link time.  It won't discard the jump table if was put
-into another section than .exit.data and so the remaining refernces
-to sd_major's function body will result in about 100 lines of non-fatal
-linker error messages.  This is avoided by marking sd_major noinline.
+On Friday, March 03, 2006 9:05 PM, James Bottomley wrote:
 
-Observed on MIPS with GCC 4.0.2 and 4.1.0 but not 3.4.5 and seems
-possible on other architectures such as i386.
 
-Signed-off-by: Ralf Baechle <ralf@linux-mips.org>
+> This one actually does the end devices, since that's all I really have
+> to work with in my setup.  However, I can do the expanders in the same
+> way.  The idea is to make the rphy embedded in the enveloping device
+> structure, so the code which doesn't care about type can still treat the
+> code as a simple rphy, and the code that does care can cast out to the
+> device type.
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 9d98723..f1af700 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -158,8 +158,16 @@ static struct scsi_driver sd_template = 
-  * for major1, ... 
-  * As we stay compatible with our numbering scheme, we can reuse 
-  * the well-know SCSI majors 8, 65--71, 136--143.
-+ *
-+ * Gcc may compile sd_major() using a jump table which it will put into
-+ * .rodata.  If also inline sd_major's function body into exit_sd() and
-+ * CONFIG_BLK_DEV_SD has been set to y ld is going to discard exit_sd's
-+ * code later at link time.  It won't discard the jump table if was put
-+ * into another section than .exit.data and so the remaining refernces to
-+ * sd_major's function body will result in about 100 lines of non-fatal
-+ * linker error messages.  This is avoided by marking sd_major noinline.
-  */
--static int sd_major(int major_idx)
-+static noinline int sd_major(int major_idx)
- {
- 	switch (major_idx) {
- 	case 0:
+I'm not clear what your intent is here.  All the info is there, so I'm not sure
+why this change is needed.  The sas_transport implementation Christoph
+has layed out is a flat model.  In /sys/class/sas_phy, you will see all the
+phys for both hba and expander all togeather in the tree.The rphy is at the 
+end of  a phy link, where it the target protocol could be SMP, STP, SATA, 
+or SAS; e.g. you can see that in rphy->identify.target_port_protocols.  
+You can figure out whether its an end device by the attribute by 
+rphy->indentify.device_type, which could be SAS_END_DEVICE, 
+SAS_EDGE_EXPANDER,  SAS_FANOUT_EXPANDER, or 
+SAS_PHY_UNUSED.  
+
+> 
+> Temporarily, because mptsas doesn't do this, I've put a flag in to
+> indicate whether the rphy is enveloped or not, however, if we enforce
+> this for everything, then eventually that would go away.
+> 
+
+Ok, I'm not sure what this comment means, in respect to mptsas.
+The mptsas driver is reporting all device types to the transport class, 
+as defined in the SAS spec.
+
+> If everyone's OK with this, I'll do expanders next.
+
+Ok, the mptsas driver is already reporing expanders to transport class.  
+This is handled from mptsas.c, in mptsas_probe_one_phy(), when
+we call sas_phy_add().  When there is any attached devices  at
+the end of a phy, we call  sas_rphy_add().  Both these functions 
+exported from sas_transport, work well for both hba, and expanders.
+
+The patch I sent yesterday is adding support when someone needs to 
+add a expander after the start of day, or reomove one.  Its responding
+to the firmware DISCOVERY event.
+
+Eric Moore
+
+
+
