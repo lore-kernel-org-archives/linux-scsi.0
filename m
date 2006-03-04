@@ -1,83 +1,104 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: [PATCH] SCSI sym53c8xx_2: bigger transfer limits
-Date: Sat, 4 Mar 2006 10:16:06 +0200 (EET)
-Message-ID: <Pine.LNX.4.63.0603041002140.9990@kai.makisara.local>
-References: <Pine.LNX.4.63.0602282104040.6272@kai.makisara.local>
- <20060301152929.GZ4816@suse.de> <Pine.LNX.4.63.0603012230370.5789@kai.makisara.local>
- <20060301204345.GP4816@suse.de> <Pine.LNX.4.63.0603020011500.5789@kai.makisara.local>
- <20060302072941.GT4816@suse.de>
+From: Vasily Averin <vvs@sw.ru>
+Subject: [PATCH I2O] memory leak in i2o_exec_lct_modified
+Date: Sat, 04 Mar 2006 11:27:11 +0300
+Message-ID: <44094F5F.9080900@sw.ru>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: multipart/mixed;
+ boundary="------------050603010907070704040403"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fep02-0.kolumbus.fi ([193.229.0.44]:12875 "EHLO
-	fep02-app.kolumbus.fi") by vger.kernel.org with ESMTP
-	id S1751569AbWCDIND (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 4 Mar 2006 03:13:03 -0500
-In-Reply-To: <20060302072941.GT4816@suse.de>
+Received: from mailhub.sw.ru ([195.214.233.200]:40283 "EHLO relay.sw.ru")
+	by vger.kernel.org with ESMTP id S1751560AbWCDI1F (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Mar 2006 03:27:05 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: matthew@wil.cx, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, markus.lidel@shadowconnect.com, devel@openvz.org, Kirill Korotaev <dev@sw.ru>
 
-On Thu, 2 Mar 2006, Jens Axboe wrote:
+This is a multi-part message in MIME format.
+--------------050603010907070704040403
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 
-> On Thu, Mar 02 2006, Kai Makisara wrote:
-> > On Wed, 1 Mar 2006, Jens Axboe wrote:
-> > 
-> > > On Wed, Mar 01 2006, Kai Makisara wrote:
-...
-> > > And it definitely is unrelated to how many sectors you can support. As
-> > > such, these two unrelated patches should submitted seperately. The
-> > > clustering bit is potentially more dangerous, as the hardware can have
-> > > all sorts of 'issues' related to the size and alignment of sg segments.
-> > > 
-> > They are related if in the sense that both are needed in order to support 
-> > large requests. However, I don't mind if someone splits those changes into 
-> > two patches if both go in. Otherwise I don't recommend sym53c8xx_2 and/or 
-> > sym53c8xx chips for any serious work any more.
-> 
-> For debug and bisect reasons alone I think it should be two patches. The
-> cluster change cannot go into 2.6.16, it's way too late for that (I
-> would not personally be against the max_sectors changes...).
-> 
-The max_sectors change alone does not change anything for this driver. 
-The maximum number of scatter/gather segments is set to 96 and this limits 
-the transfers to 384 kB (with 4 kB pages) which is below the 1020 kB limit 
-resulting from increasing max_sectors.
+i2o_exec_lct_modified() does not release memory allocated for work_struct.
 
-For tapes, I don't think it is worth investigating if the number of 
-scatter/gather segments can be increased unless we get a specific user 
-request. AFAIK, block sizes above 256 kB are rare and if some application 
-needs larger size, it may well need beyond 1 MB.
+Signed-off-by: Vasily Averin <vvs@sw.ru>
 
-> > > > >                                                     I seem to recall
-> > > > > Gerard years ago talking about some sym chips that did not like
-> > > > > clustering, hence it was disabled.
-> > > > > 
-> > > > Facts?
-> > > 
-> > > I'm just reporting what Gerald (who definitely knows this hardware very
-> > > well) told me, when I submitted a patch to him enabling clustering a
-> > > long time ago. This might have been about 5 years ago, I seem to recall
-> > > it happening when I used a un ultra10 workstation which had a sym scsi
-> > > board.
-> > > 
-> > A bit vague but I guess this is all we know. Unless Matthew knows more?
-> 
-> So I dig out the old mail from Gerard from April 2000, it's pasted
-> below.
-> 
-[the long message cut from this reply]
+Thank you,
+	Vasily Averin
 
-Thanks for digging up this message. I read it so that most sym53c8xx chips 
-have no problems with arbitrary page alignments and counts if the segment 
-length is below 16 MB. However, there are legitimate questions suggesting 
-that this may not apply to all chips and versions. It is best not to 
-change the limits in the released kernel until the questions have been 
-addressed (which will probably never happen considering the age of the 
-chips series, number of different versions, etc.; sad but we have to 
-accept this). Those who really need the changes (like me) can then edit 
-the driver and take the risk.
+SWsoft Virtuozzo/OpenVZ Linux kernel team
 
--- 
-Kai
+--------------050603010907070704040403
+Content-Type: text/plain;
+ name="diff-drv-i2o-memleak-20060304"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="diff-drv-i2o-memleak-20060304"
+
+--- ./drivers/message/i2o/exec-osm.c.i2ml	2006-03-04 11:09:45.000000000 +0300
++++ ./drivers/message/i2o/exec-osm.c	2006-03-04 11:09:03.000000000 +0300
+@@ -57,6 +57,11 @@ struct i2o_exec_wait {
+ 	struct list_head list;	/* node in global wait list */
+ };
+ 
++struct i2o_workqueue {
++	struct work_struct work;
++	struct i2o_controller *c;
++};
++
+ /* Exec OSM class handling definition */
+ static struct i2o_class_id i2o_exec_class_id[] = {
+ 	{I2O_CLASS_EXECUTIVE},
+@@ -355,16 +360,19 @@ static int i2o_exec_remove(struct device
+  *	new LCT and if the buffer for the LCT was to small sends a LCT NOTIFY
+  *	again, otherwise send LCT NOTIFY to get informed on next LCT change.
+  */
+-static void i2o_exec_lct_modified(struct i2o_controller *c)
++static void i2o_exec_lct_modified(void *data)
+ {
+ 	u32 change_ind = 0;
++	struct i2o_workqueue *cp;
+ 
+-	if (i2o_device_parse_lct(c) != -EAGAIN)
+-		change_ind = c->lct->change_ind + 1;
++	cp = (struct i2o_workqueue *)data;
++	if (i2o_device_parse_lct(cp->c) != -EAGAIN)
++		change_ind = cp->c->lct->change_ind + 1;
+ 
+ #ifdef CONFIG_I2O_LCT_NOTIFY_ON_CHANGES
+-	i2o_exec_lct_notify(c, change_ind);
++	i2o_exec_lct_notify(cp->c, change_ind);
+ #endif
++	kfree(cp);
+ };
+ 
+ /**
+@@ -410,16 +418,22 @@ static int i2o_exec_reply(struct i2o_con
+ 		return i2o_msg_post_wait_complete(c, m, msg, context);
+ 
+ 	if ((le32_to_cpu(msg->u.head[1]) >> 24) == I2O_CMD_LCT_NOTIFY) {
+-		struct work_struct *work;
++		struct i2o_workqueue *cp;
+ 
+ 		pr_debug("%s: LCT notify received\n", c->name);
+ 
+-		work = kmalloc(sizeof(*work), GFP_ATOMIC);
+-		if (!work)
++		cp = kmalloc(sizeof(struct i2o_workqueue), GFP_ATOMIC);
++		if (!cp)
+ 			return -ENOMEM;
+ 
+-		INIT_WORK(work, (void (*)(void *))i2o_exec_lct_modified, c);
+-		queue_work(i2o_exec_driver.event_queue, work);
++		cp->c = c;
++		INIT_WORK(&cp->work, i2o_exec_lct_modified, cp);
++		if (!queue_work(i2o_exec_driver.event_queue, &cp->work)) {
++			printk(KERN_DEBUG "i2o_exec_reply:"
++				" call to queue_work() failed.\n");
++			kfree(cp);
++			return -EIO;
++		}
+ 		return 1;
+ 	}
+ 
+
+--------------050603010907070704040403--
