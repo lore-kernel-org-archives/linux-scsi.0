@@ -1,53 +1,57 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC] first cut at infrastructure for handling different device types in the sas class
-Date: Sat, 4 Mar 2006 15:47:06 +0000
-Message-ID: <20060304154706.GA14174@infradead.org>
-References: <1141445103.5397.19.camel@mulgrave.il.steeleye.com>
+From: Ralf Baechle <ralf@linux-mips.org>
+Subject: [SCSI] Avoid ld errors messages by marking sd_major noinline.
+Date: Sat, 4 Mar 2006 17:12:27 +0000
+Message-ID: <20060304171227.GA16799@linux-mips.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:34757 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1751464AbWCDPrH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 4 Mar 2006 10:47:07 -0500
+Received: from ftp.linux-mips.org ([194.74.144.162]:57494 "EHLO
+	ftp.linux-mips.org") by vger.kernel.org with ESMTP id S1751884AbWCDRMf
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 4 Mar 2006 12:12:35 -0500
+Received: from localhost.localdomain ([127.0.0.1]:3209 "EHLO bacchus.dhis.org")
+	by ftp.linux-mips.org with ESMTP id S8133467AbWCDREU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Mar 2006 17:04:20 +0000
+Received: from denk.linux-mips.net (denk.linux-mips.net [127.0.0.1])
+	by bacchus.dhis.org (8.13.4/8.13.4) with ESMTP id k24HCR62023207
+	for <linux-scsi@vger.kernel.org>; Sat, 4 Mar 2006 17:12:27 GMT
+Received: (from ralf@localhost)
+	by denk.linux-mips.net (8.13.4/8.13.4/Submit) id k24HCRRb023206
+	for linux-scsi@vger.kernel.org; Sat, 4 Mar 2006 17:12:27 GMT
 Content-Disposition: inline
-In-Reply-To: <1141445103.5397.19.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Fri, Mar 03, 2006 at 10:05:03PM -0600, James Bottomley wrote:
-> This one actually does the end devices, since that's all I really have
-> to work with in my setup.  However, I can do the expanders in the same
-> way.  The idea is to make the rphy embedded in the enveloping device
-> structure, so the code which doesn't care about type can still treat the
-> code as a simple rphy, and the code that does care can cast out to the
-> device type.
-> 
-> Temporarily, because mptsas doesn't do this, I've put a flag in to
-> indicate whether the rphy is enveloped or not, however, if we enforce
-> this for everything, then eventually that would go away.
+Gcc may compile sd_major() using a jump table which it will put into
+.rodata.  If also inline sd_major's function body into exit_sd() and
+CONFIG_BLK_DEV_SD has been set to y ld is going to discard exit_sd's
+code later at link time.  It won't discard the jump table if was put
+into another section than .exit.data and so the remaining refernces
+to sd_major's function body will result in about 100 lines of non-fatal
+linker error messages.  This is avoided by marking sd_major noinline.
 
-Looks good in general, but we should probably kill the rphy naming.  That was
-my invention when doing the transport class, when I still thought we'd add a
-remote object for every phy in wide links.  We ended up having just a remote
-object only under one of the phys for a wide link so we should probably
-kill this naming invention.  In the end we should probably just have
-a sas_end_device, sas_expander and sas_sata_device (or just sata_device
-if we can share code with libata) and the common subset (sas_device?)
-shouldn't be exposed to userland on it's own.
+Observed on MIPS with GCC 4.0.2 and 4.1.0 but not 3.4.5 and seems
+possible on other architectures such as i386.
 
->  /**
-> + * sas_rphy_end_device_alloc - allocate an rphy for an end device
-> + *
-> + * Allocates an SAS remote PHY structure, connected to @parent.
-> + *
-> + * Returns:
-> + *	SAS PHY allocated or %NULL if the allocation failed.
-> + */
-> +struct sas_rphy *sas_rphy_end_device_alloc(struct sas_phy *parent)
+Signed-off-by: Ralf Baechle <ralf@linux-mips.org>
 
-this should become sas_end_device_alloc, and so on for the other
-functions.
-
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 9d98723..bee2d0d 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -158,6 +158,14 @@ static struct scsi_driver sd_template = 
+  * for major1, ... 
+  * As we stay compatible with our numbering scheme, we can reuse 
+  * the well-know SCSI majors 8, 65--71, 136--143.
++ *
++ * Gcc may compile sd_major() using a jump table which it will put into
++ * .rodata.  If also inline sd_major's function body into exit_sd() and
++ * CONFIG_BLK_DEV_SD has been set to y ld is going to discard exit_sd's
++ * code later at link time.  It won't discard the jump table if was put
++ * into another section than .exit.data and so the remaining refernces to
++ * sd_major's function body will result in about 100 lines of non-fatal
++ * linker error messages.  This is avoided by marking sd_major noinline.
+  */
+ static int sd_major(int major_idx)
+ {
