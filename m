@@ -1,48 +1,37 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [RFC] first cut at infrastructure for handling different
-	device types in the sas class
-Date: Sat, 04 Mar 2006 12:33:56 -0600
-Message-ID: <1141497236.9895.2.camel@mulgrave.il.steeleye.com>
-References: <1141445103.5397.19.camel@mulgrave.il.steeleye.com>
-	 <20060304154706.GA14174@infradead.org>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [2.6 patch] drivers/message/fusion/mptctl.c: make struct async_queue static
+Date: Sun, 5 Mar 2006 01:08:23 +0100
+Message-ID: <20060305000822.GN9295@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:19339 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751090AbWCDSeB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 4 Mar 2006 13:34:01 -0500
-In-Reply-To: <20060304154706.GA14174@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932285AbWCEAI0@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: Eric Moore <Eric.Moore@lsil.com>, linux-kernel@vger.kernel.org, mpt_linux_developer@lsil.com, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Sat, 2006-03-04 at 15:47 +0000, Christoph Hellwig wrote:
-> Looks good in general, but we should probably kill the rphy naming.  That was
-> my invention when doing the transport class, when I still thought we'd add a
-> remote object for every phy in wide links.  We ended up having just a remote
-> object only under one of the phys for a wide link so we should probably
-> kill this naming invention.  In the end we should probably just have
-> a sas_end_device, sas_expander and sas_sata_device (or just sata_device
-> if we can share code with libata) and the common subset (sas_device?)
-> shouldn't be exposed to userland on it's own.
+There is no good reason for struct async_queue being global.
 
-Yes ... I was going to say eventually that your rphy object is really an
-rport object.
-
-I think, additionally, it would be nice to display ports in the
-hierarchy.  What I'm thinking of is basically putting phys and ports on
-the same level but placing the expanders and rports (rphys) under the
-port directory.  Then the phy can have a simple link to the port it's a
-member of.
-
-> this should become sas_end_device_alloc, and so on for the other
-> functions.
-
-Yes, will do the renaming ... after I spend the day in Chicago.
-
-James
+Additional, this patch adds some missing whitespace.
 
 
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
+
+---
+
+This patch was already sent on:
+- 14 Feb 2006
+- 10 Feb 2006
+
+--- linux-2.6.16-rc2-mm1-full/drivers/message/fusion/mptctl.c.old	2006-02-10 00:43:43.000000000 +0100
++++ linux-2.6.16-rc2-mm1-full/drivers/message/fusion/mptctl.c	2006-02-10 00:43:59.000000000 +0100
+@@ -140,7 +140,7 @@
+  * Event Handler function
+  */
+ static int mptctl_event_process(MPT_ADAPTER *ioc, EventNotificationReply_t *pEvReply);
+-struct fasync_struct *async_queue=NULL;
++static struct fasync_struct *async_queue = NULL;
+ 
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+ /*
