@@ -1,37 +1,41 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] drivers/message/fusion/mptctl.c: make struct async_queue static
-Date: Sun, 5 Mar 2006 01:08:23 +0100
-Message-ID: <20060305000822.GN9295@stusta.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932285AbWCEAI0@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: Eric Moore <Eric.Moore@lsil.com>, linux-kernel@vger.kernel.org, mpt_linux_developer@lsil.com, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
+From: "Rusty Mansfield" <afcybjo@benchmark.com>
+Subject: Top Notch Refinances with ease
+Date: Sun, 05 Mar 2006 02:30:55 +0100
+Message-ID: <23587411.6912745878064.JavaMail.nfsnobody@www1.ag1p.net>
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from zeus1.kernel.org ([204.152.191.4]:47544 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S1751272AbWCEB1i (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Mar 2006 20:27:38 -0500
+Received: from UO6YK67IMJ8F25L (usociwyusz@[218.66.44.85])
+	by zeus1.kernel.org (8.13.1/8.13.1) with SMTP id k251RRf4018230
+	for <linux-scsi@vger.kernel.org>; Sun, 5 Mar 2006 01:27:29 GMT
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-There is no good reason for struct async_queue being global.
+  
+guess what!
 
-Additional, this patch adds some missing whitespace.
+Homeowner
 
+You have been pre-approved for a $414,847 Home Loan at a Introductory APR of
+3.93%
+This offer is being extended to you unconditionally and your credit is in no way
+a factor.
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+To take Advantage of this Limited Time opportunity
 
----
+All we ask is that you visit our Website and complete
+The 1 minute post Approval Form
 
-This patch was already sent on:
-- 14 Feb 2006
-- 10 Feb 2006
+http://www1.ag1p.net/was.asp
 
---- linux-2.6.16-rc2-mm1-full/drivers/message/fusion/mptctl.c.old	2006-02-10 00:43:43.000000000 +0100
-+++ linux-2.6.16-rc2-mm1-full/drivers/message/fusion/mptctl.c	2006-02-10 00:43:59.000000000 +0100
-@@ -140,7 +140,7 @@
-  * Event Handler function
-  */
- static int mptctl_event_process(MPT_ADAPTER *ioc, EventNotificationReply_t *pEvReply);
--struct fasync_struct *async_queue=NULL;
-+static struct fasync_struct *async_queue = NULL;
+Sincerely,
+
+Glen Lusk,
  
- /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
- /*
+Opt0ut
+http://www1.ag1p.net/rem.assp
