@@ -1,27 +1,31 @@
-From: "Leslie Mccray" <TBZYBDLQHXLOIT@hotmail.com>
-Subject: It's Here Now 5v2f
-Date: Mon, 10 May 2004 13:22:50 -0400
-Message-ID: <8A117EE3.7684.8715C2D5@localhost>
+From: Dominik Brodowski <linux@dominikbrodowski.net>
+Subject: [PATCH] scsi: aha152x pcmcia driver needs spi transport
+Date: Sun, 5 Mar 2006 11:42:06 +0100
+Message-ID: <20060305104206.GA22487@isilmar.linta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Return-path: <linux-tape-owner@vger.kernel.org>
-Sender: linux-tape-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org, linux-sound@vger.kernel.org, linux-tape@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from isilmar.linta.de ([213.239.214.66]:23754 "EHLO linta.de")
+	by vger.kernel.org with ESMTP id S932186AbWCEKmH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Mar 2006 05:42:07 -0500
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, fischer@norbit.de
 
+AHA152X PCMCIA module needs spi_print_msg.
 
+Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
 
-
-Lazy to attend exam or classes?
-
-We have Diplomas, Degrees, Masters' or Doctorate
-to choose from any field of your interest.
-
-Only 2 weeks require to delivers the prestigious non-accredited
-universities paper to your doorstep.
-
-Do not hesitate to give us a call today!
-1-484-693-8861
-
-
-fw
+diff --git a/drivers/scsi/pcmcia/Kconfig b/drivers/scsi/pcmcia/Kconfig
+index df52190..eac8e17 100644
+--- a/drivers/scsi/pcmcia/Kconfig
++++ b/drivers/scsi/pcmcia/Kconfig
+@@ -8,6 +8,7 @@ menu "PCMCIA SCSI adapter support"
+ config PCMCIA_AHA152X
+ 	tristate "Adaptec AHA152X PCMCIA support"
+ 	depends on m && !64BIT
++	select SCSI_SPI_ATTRS
+ 	help
+ 	  Say Y here if you intend to attach this type of PCMCIA SCSI host
+ 	  adapter to your computer.
