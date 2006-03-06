@@ -1,74 +1,73 @@
-From: "Mike Snitzer" <snitzer@gmail.com>
-Subject: Re: Re: problems with scsi_transport_fc and qla2xxx
-Date: Mon, 6 Mar 2006 15:00:07 -0500
-Message-ID: <170fa0d20603061200y38315a62uf143258c79659381@mail.gmail.com>
-References: <1413265398.20060227150526@netvision.net.il>
-	 <978150825.20060227210552@netvision.net.il>
-	 <20060228221422.282332ef.akpm@osdl.org> <4406034B.9030105@madness.at>
-	 <20060301210802.GA7288@spe2>
-	 <957728045.20060302193248@netvision.net.il>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: libata SCSI page 0x83 query
+Date: Mon, 06 Mar 2006 15:12:46 -0500
+Message-ID: <440C97BE.1030105@pobox.com>
+References: <43AB446F.6000900@edesix.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751368AbWCFUAM@vger.kernel.org>
-In-Reply-To: <957728045.20060302193248@netvision.net.il>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Maxim Kozover <maximkoz@netvision.net.il>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Stefan Kaltenbrunner <mm-mailinglist@madness.at>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <43AB446F.6000900@edesix.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Chris Paulson-Ellis <chris@edesix.com>
+Cc: linux-ide@vger.kernel.org, Douglas Gilbert <dougg@torque.net>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 3/2/06, Maxim Kozover <maximkoz@netvision.net.il> wrote:
-> Hi Andrew!
-> Today I tested disconnecting QLogic port.
-> Adapter 4 is connected via switch to a storage and 3 LUNs are seen via
-> the adapter.
-> Only 1 rport is created (for FCP Target) while in Emulex case there
-> were 3: (Fabric Port, Directory Server and FCP Target, FCP Initiator).
-> # ls /sys/class/fc_remote_ports/
-> rport-4:0-0
-> # cat /sys/class/fc_remote_ports/*/roles
-> FCP Target
->
-> Default dev_loss_tmo is 6 (1+5) while in Emulex case the default was 35.
->
-> After disconnecting the cable between the HBA and the switch
-> qla2xxx 0000:03:01.0: LOOP DOWN detected (2).
->  rport-4:0-0: blocked FC remote port time out: removing target and saving binding
->
-> # ls /sys/class/fc_remote_ports/
-> rport-4:0-0
-> # cat /sys/class/fc_remote_ports/*/roles
-> unknown
->
-> Relevant scsi devices are removed from /proc/scsi/scsi.
->
-> After reconnecting the cable
-> qla2xxx 0000:03:01.0: LIP reset occured (f7f7).
-> qla2xxx 0000:03:01.0: LOOP UP detected (2 Gbps).
->
-> # ls /sys/class/fc_remote_ports/
-> rport-4:0-0
-> # cat /sys/class/fc_remote_ports/*/roles
-> FCP Target
->
-> However, scsi devices don't reappear in /proc/scsi/scsi.
-> When I issue rescan, the command is stuck
-> echo - - - > /sys/class/scsi_host/host4/scan
+Chris Paulson-Ellis wrote:
+> Hi,
+> 
+> I have a problem with udev persistent device naming for SATA drives that 
+> is caused by the libata implementation of the page 0x83 SCSI device 
+> identifier query. See this thead from hotplug-devel:
+> 
+> http://marc.theaimsgroup.com/?t=113518947900002&r=1&w=2
+> 
+> I can work around the problem using /etc/scsi_id.config or udev rules 
+> (see the thread), but here is a patch to fix the problem at source. What 
+> do you think?
+> 
+> Regards,
+> Chris.
+> 
+> --- drivers/scsi/libata-scsi.c.orig     2005-12-22 23:23:55.000000000 +0000
+> +++ drivers/scsi/libata-scsi.c  2005-12-22 23:56:14.000000000 +0000
+> @@ -1532,16 +1532,13 @@
+>        return 0;
+> }
+> 
+> -static const char *inq_83_str = "Linux ATA-SCSI simulator";
+> -
+> /**
+>  *     ata_scsiop_inq_83 - Simulate INQUIRY EVPD page 83, device identity
+>  *     @args: device IDENTIFY data / SCSI command of interest.
+>  *     @rbuf: Response buffer, to which simulated SCSI cmd output is sent.
+>  *     @buflen: Response buffer length.
+>  *
+> - *     Returns device identification.  Currently hardcoded to
+> - *     return "Linux ATA-SCSI simulator".
+> + *     Returns ATA device serial number (as for page 80).
+>  *
+>  *     LOCKING:
+>  *     spin_lock_irqsave(host_set lock)
+> @@ -1551,13 +1548,14 @@
+>                              unsigned int buflen)
+> {
+>        rbuf[1] = 0x83;                 /* this page code */
+> -       rbuf[3] = 4 + strlen(inq_83_str);       /* page len */
+> +       rbuf[3] = 4 + ATA_SERNO_LEN;    /* page len */
+> 
+>        /* our one and only identification descriptor (vendor-specific) */
+> -       if (buflen > (strlen(inq_83_str) + 4 + 4 - 1)) {
+> +       if (buflen > (ATA_SERNO_LEN + 4 + 4 - 1)) {
+>                rbuf[4 + 0] = 2;        /* code set: ASCII */
+> -               rbuf[4 + 3] = strlen(inq_83_str);
+> -               memcpy(rbuf + 4 + 4, inq_83_str, strlen(inq_83_str));
+> +               rbuf[4 + 3] = ATA_SERNO_LEN;
+> +               ata_dev_id_string(args->id, (unsigned char *) rbuf + 4 + 4,
+> +                                 ATA_ID_SERNO_OFS, ATA_SERNO_LEN);
 
-Historically the qlogic driver rescan is a 2-phase process:
-1) schedule the rescan, e.g.: echo scsi-qlascan > /proc/scsi/qla2xxx/4
-2) rescan, e.g.: echo - - - > /sys/class/scsi_host/host4/scan
+Douglas Gilbert has an improved patch along these lines...
 
-BUT, I've just used scsi-qlascan to discover _new_ devices... not
-existing devices that experienced FC connection loss.  I assume the
-qla driver _should_ just bring those lost devices back?  But does the
-historic 2-phase rescan for new devices speak to why the qlogic driver
-doesn't automagically bring the old devices back?  Or has the latest
-qlogic driver in mainline advanced past this 2-phase requirement in
-general?
+	Jeff
 
-regards,
-Mike
 
-Mike
