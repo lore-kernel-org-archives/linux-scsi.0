@@ -1,62 +1,33 @@
-From: "John Treubig" <jtreubig@hotmail.com>
-Subject: Re: CDROM support for Promise 20269
-Date: Mon, 06 Mar 2006 10:40:58 -0600
-Message-ID: <BAY101-F4F3157DFC8ECF9BA96831DFE90@phx.gbl>
-References: <20060303153517.0e10f5d7.rdunlap@xenotime.net>
+From: "Bloomers E. Halest" <descarte@sammimail.com>
+Subject: =?windows-1251?B?TGludXggw+7w//no5SDy8/D7IOIgw87AIC0gODAwJCAyIO3l5OXr6A==?=
+Date: Mon, 06 Mar 2006 11:00:58 -0700
+Message-ID: <010101c64147$c1519c47$e9d3397d@sammimail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed
+Content-Type: text/plain; charset=windows-1251
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bay101-f4.bay101.hotmail.com ([64.4.56.14]:25440 "EHLO
-	hotmail.com") by vger.kernel.org with ESMTP id S1751934AbWCFQlF
+Received: from NK210-201-138-116.cl.static.apol.com.tw ([210.201.138.116]:4624
+	"HELO 145281408") by vger.kernel.org with SMTP id S1750956AbWCFRx3 convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 6 Mar 2006 11:41:05 -0500
-In-Reply-To: <20060303153517.0e10f5d7.rdunlap@xenotime.net>
+	Mon, 6 Mar 2006 12:53:29 -0500
+Received: from sammimail.com (145264520 [142564152])
+	by NK210-201-138-116.cl.static.apol.com.tw (Qmailv1) with ESMTP id B87C0E432B
+	for <linux-scsi@vger.kernel.org>; Mon, 06 Mar 2006 11:00:58 -0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: rdunlap@xenotime.net, hancockr@shaw.ca, albertcc@tw.ibm.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Linux <linux-scsi@vger.kernel.org>
 
-Thanks Randy and Robert.  Your suggestion fixed the problem.
+=C3=EE=E0 =96 =C8=ED=E4=E8=FF!!!
+
+=C1=E8=EB=E5=F2=FB =96 250$
+
+=D2=F3=F0=FB =96 3* - 800$ =ED=E0 2 =ED=E5=E4=E5=EB=E8
+
+=D2. 258-54-82
 
 
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-To: Robert Hancock <hancockr@shaw.ca>, 
-albertcc@tw.ibm.com,jtreubig@hotmail.com
-CC: linux-kernel@vger.kernel.org, scsi <linux-scsi@vger.kernel.org>
-Subject: Re: CDROM support for Promise 20269
-Date: Fri, 3 Mar 2006 15:35:17 -0800
-
-On Fri, 03 Mar 2006 17:25:54 -0600 Robert Hancock wrote:
-
- > John Treubig wrote:
- > > I've been working on a problem with Promise 20269 PATA adapter under
- > > LibATA that if I attach a CDROM drive, I can not see the drive.  The
- > > message log reports that the driver sees the device, but when I'm fully
- > > booted, there's no device available.
- >
- > ..
- >
- > > [  118.621489] scsi4 : pata_pdc2027x
- > > [  118.643926] ata1(1): WARNING: ATAPI is disabled, device ignored.
- >
- > Sounds like your problem there.. need to enable ATAPI in your
- > libata/PATA kernel configuration?
-
-Please don't drop cc's etc.  Just use reply-to-all.
-
-For John:  this means that you need to load libata with this option:
-atapi_enabled=1
-So if you build it into the kernel image, add this to the boot option:
-   libata.atapi_enabled=1
-or if you load it as a module, just add:  atapi_enabled=1
-or you can edit the source file and change the variable to 1,
-but that's the least preferable way IMO.
-
----
-~Randy
 -
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
 the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
