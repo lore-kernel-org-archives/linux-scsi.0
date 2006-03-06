@@ -1,33 +1,33 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: aic94xx tree up on www.kernel.org
-Date: Mon, 06 Mar 2006 12:25:42 -0600
-Message-ID: <1141669543.3167.25.camel@mulgrave.il.steeleye.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: problems with scsi_transport_fc and qla2xxx
+Date: Mon, 6 Mar 2006 11:06:14 -0800
+Message-ID: <20060306190614.GM6278@andrew-vasquezs-powerbook-g4-15.local>
+References: <1413265398.20060227150526@netvision.net.il> <978150825.20060227210552@netvision.net.il> <20060228221422.282332ef.akpm@osdl.org> <4406034B.9030105@madness.at> <20060301210802.GA7288@spe2> <957728045.20060302193248@netvision.net.il> <20060302173846.GF498@andrew-vasquezs-powerbook-g4-15.local> <862131446.20060303011539@netvision.net.il>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:33995 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1752298AbWCFSZr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 6 Mar 2006 13:25:47 -0500
+Received: from pat.qlogic.com ([198.70.193.2]:35454 "EHLO avexch02.qlogic.com")
+	by vger.kernel.org with ESMTP id S932262AbWCFTGQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Mar 2006 14:06:16 -0500
+Content-Disposition: inline
+In-Reply-To: <862131446.20060303011539@netvision.net.il>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Mike Anderson <andmike@us.ibm.com>, "Tarte, Robert" <Robert_Tarte@adaptec.com>
+To: Maxim Kozover <maximkoz@netvision.net.il>
+Cc: Stefan Kaltenbrunner <mm-mailinglist@madness.at>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-I've put it at
+On Fri, 03 Mar 2006, Maxim Kozover wrote:
 
-http://www.kernel.org/git/?p=linux/kernel/git/jejb/aic94xx-sas-2.6.git;a=summary
+> Please see the log with debug-patch.
+> The module is loaded with option qlport_down_retry=1.
+> Adapter 4 is connected to switch, adapter 5 doesn't have cable attached.
+> After reconnecting the cable the disks don't reappear and rescan is stuck.
+> Before applying your patches ghost rport was staying, now it's OK.
 
-With the rolled up patches and change logs at:
+Before you try the patch I sent earlier, could you send be the output
+from the following:
 
-http://www.kernel.org/pub/linux/kernel/people/jejb/
+	# echo t > /proc/sysrq-trigger
 
-for people who don't do git.  This won't be the final form of the tree,
-because I'll flatten it before including it, but it will give a current
-snapshot of all the changes (it's becoming a bit confusing to follow all
-the patches flying around the mailing list).
-
-James
-
-
+Thanks,
+Andrew Vasquez
