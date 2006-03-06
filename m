@@ -1,33 +1,32 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: problems with scsi_transport_fc and qla2xxx
-Date: Mon, 6 Mar 2006 11:06:14 -0800
-Message-ID: <20060306190614.GM6278@andrew-vasquezs-powerbook-g4-15.local>
-References: <1413265398.20060227150526@netvision.net.il> <978150825.20060227210552@netvision.net.il> <20060228221422.282332ef.akpm@osdl.org> <4406034B.9030105@madness.at> <20060301210802.GA7288@spe2> <957728045.20060302193248@netvision.net.il> <20060302173846.GF498@andrew-vasquezs-powerbook-g4-15.local> <862131446.20060303011539@netvision.net.il>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: aic94xx tree up on www.kernel.org
+Date: Mon, 06 Mar 2006 17:23:51 -0600
+Message-ID: <1141687431.3430.0.camel@mulgrave.il.steeleye.com>
+References: <1141669543.3167.25.camel@mulgrave.il.steeleye.com>
+	 <20060306224458.GA7797@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:35454 "EHLO avexch02.qlogic.com")
-	by vger.kernel.org with ESMTP id S932262AbWCFTGQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Mar 2006 14:06:16 -0500
-Content-Disposition: inline
-In-Reply-To: <862131446.20060303011539@netvision.net.il>
+Received: from stat9.steeleye.com ([209.192.50.41]:9171 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1751957AbWCFXXy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 6 Mar 2006 18:23:54 -0500
+In-Reply-To: <20060306224458.GA7797@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Maxim Kozover <maximkoz@netvision.net.il>
-Cc: Stefan Kaltenbrunner <mm-mailinglist@madness.at>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, "Tarte, Robert" <Robert_Tarte@adaptec.com>
 
-On Fri, 03 Mar 2006, Maxim Kozover wrote:
+On Mon, 2006-03-06 at 14:44 -0800, Mike Anderson wrote:
+> I am hitting an error trying to compile the tree due to the define for
+> struct sas_end_device missing. I saw usage added in "Further updates:". I
+> guess I can reverse these changes to get it to compile or do you have the
+> define and it just did not get added?
 
-> Please see the log with debug-patch.
-> The module is loaded with option qlport_down_retry=1.
-> Adapter 4 is connected to switch, adapter 5 doesn't have cable attached.
-> After reconnecting the cable the disks don't reappear and rescan is stuck.
-> Before applying your patches ghost rport was staying, now it's OK.
+You need scsi-misc-2.6 as well to get the latest sas transport class
+updates.
 
-Before you try the patch I sent earlier, could you send be the output
-from the following:
+James
 
-	# echo t > /proc/sysrq-trigger
 
-Thanks,
-Andrew Vasquez
