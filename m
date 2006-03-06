@@ -1,49 +1,74 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [RFC] aic94xx: attaching to the sas transport class
-Date: Mon, 06 Mar 2006 13:50:28 -0600
-Message-ID: <1141674628.3167.31.camel@mulgrave.il.steeleye.com>
-References: <8C064C48AB104B428CBA524C342357CA34CFCB@aime2k05.adaptec.com>
-	 <1141445373.5397.23.camel@mulgrave.il.steeleye.com>
-	 <20060306193555.GA2316@us.ibm.com>
+From: "Mike Snitzer" <snitzer@gmail.com>
+Subject: Re: Re: problems with scsi_transport_fc and qla2xxx
+Date: Mon, 6 Mar 2006 15:00:07 -0500
+Message-ID: <170fa0d20603061200y38315a62uf143258c79659381@mail.gmail.com>
+References: <1413265398.20060227150526@netvision.net.il>
+	 <978150825.20060227210552@netvision.net.il>
+	 <20060228221422.282332ef.akpm@osdl.org> <4406034B.9030105@madness.at>
+	 <20060301210802.GA7288@spe2>
+	 <957728045.20060302193248@netvision.net.il>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:49613 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751579AbWCFTub (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 6 Mar 2006 14:50:31 -0500
-In-Reply-To: <20060306193555.GA2316@us.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751368AbWCFUAM@vger.kernel.org>
+In-Reply-To: <957728045.20060302193248@netvision.net.il>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Maxim Kozover <maximkoz@netvision.net.il>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Stefan Kaltenbrunner <mm-mailinglist@madness.at>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: "Tarte, Robert" <Robert_Tarte@adaptec.com>, linux-scsi <linux-scsi@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>
 
-On Mon, 2006-03-06 at 11:35 -0800, Mike Anderson wrote:
-> > 99% is good enough for me currently. 
-> 
-> Can you clarify this? Are you indicating that the 99% is only ok for debug
-> purposes or as a permanent solution. It would seem that if I want my system
-> to always boot that I would need to utilize an initramfs solution on top
-> of the driver solution.
+On 3/2/06, Maxim Kozover <maximkoz@netvision.net.il> wrote:
+> Hi Andrew!
+> Today I tested disconnecting QLogic port.
+> Adapter 4 is connected via switch to a storage and 3 LUNs are seen via
+> the adapter.
+> Only 1 rport is created (for FCP Target) while in Emulex case there
+> were 3: (Fabric Port, Directory Server and FCP Target, FCP Initiator).
+> # ls /sys/class/fc_remote_ports/
+> rport-4:0-0
+> # cat /sys/class/fc_remote_ports/*/roles
+> FCP Target
+>
+> Default dev_loss_tmo is 6 (1+5) while in Emulex case the default was 35.
+>
+> After disconnecting the cable between the HBA and the switch
+> qla2xxx 0000:03:01.0: LOOP DOWN detected (2).
+>  rport-4:0-0: blocked FC remote port time out: removing target and saving binding
+>
+> # ls /sys/class/fc_remote_ports/
+> rport-4:0-0
+> # cat /sys/class/fc_remote_ports/*/roles
+> unknown
+>
+> Relevant scsi devices are removed from /proc/scsi/scsi.
+>
+> After reconnecting the cable
+> qla2xxx 0000:03:01.0: LIP reset occured (f7f7).
+> qla2xxx 0000:03:01.0: LOOP UP detected (2 Gbps).
+>
+> # ls /sys/class/fc_remote_ports/
+> rport-4:0-0
+> # cat /sys/class/fc_remote_ports/*/roles
+> FCP Target
+>
+> However, scsi devices don't reappear in /proc/scsi/scsi.
+> When I issue rescan, the command is stuck
+> echo - - - > /sys/class/scsi_host/host4/scan
 
-It means I'll fix races in discovery, but the actual problem of the root
-device being discovered after port discovery completes because of some
-type of disk or cabling issue is beyond this type of fix.  I also have
-to bet that expander configurations can get a bit random in who is
-discovered first, so likewise, the full fix for those will be udev
-updates.
+Historically the qlogic driver rescan is a 2-phase process:
+1) schedule the rescan, e.g.: echo scsi-qlascan > /proc/scsi/qla2xxx/4
+2) rescan, e.g.: echo - - - > /sys/class/scsi_host/host4/scan
 
-> Alexis already created a patch that has some pieces in common with the
-> older adp driver to try and sync discovery, but we did not post as it was
-> failing on a x260 which has an expander configuration. Currently I believe
-> she is trying to port this to your patch series. Is this effort worth
-> continuing?
+BUT, I've just used scsi-qlascan to discover _new_ devices... not
+existing devices that experienced FC connection loss.  I assume the
+qla driver _should_ just bring those lost devices back?  But does the
+historic 2-phase rescan for new devices speak to why the qlogic driver
+doesn't automagically bring the old devices back?  Or has the latest
+qlogic driver in mainline advanced past this 2-phase requirement in
+general?
 
-I can't say until I see the code.  However, if it's just fixing races,
-then yes.  If it's trying to make the driver reorder or wait for a
-preferred root disk, then probably not.
+regards,
+Mike
 
-James
-
-
+Mike
