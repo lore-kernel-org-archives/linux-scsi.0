@@ -1,33 +1,89 @@
-From: "Bloomers E. Halest" <descarte@sammimail.com>
-Subject: =?windows-1251?B?TGludXggw+7w//no5SDy8/D7IOIgw87AIC0gODAwJCAyIO3l5OXr6A==?=
-Date: Mon, 06 Mar 2006 11:00:58 -0700
-Message-ID: <010101c64147$c1519c47$e9d3397d@sammimail.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: RFC: Move SG_GET_SCSI_ID from sg to scsi
+Date: Mon, 06 Mar 2006 14:32:48 -0500
+Message-ID: <440C8E60.6020005@torque.net>
+References: <Pine.LNX.4.58.0603061133070.2997@be1.lrz>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1251
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from NK210-201-138-116.cl.static.apol.com.tw ([210.201.138.116]:4624
-	"HELO 145281408") by vger.kernel.org with SMTP id S1750956AbWCFRx3 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 6 Mar 2006 12:53:29 -0500
-Received: from sammimail.com (145264520 [142564152])
-	by NK210-201-138-116.cl.static.apol.com.tw (Qmailv1) with ESMTP id B87C0E432B
-	for <linux-scsi@vger.kernel.org>; Mon, 06 Mar 2006 11:00:58 -0700
+Received: from canuck.infradead.org ([205.233.218.70]:60550 "EHLO
+	canuck.infradead.org") by vger.kernel.org with ESMTP
+	id S1751661AbWCFTdu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 6 Mar 2006 14:33:50 -0500
+In-Reply-To: <Pine.LNX.4.58.0603061133070.2997@be1.lrz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux <linux-scsi@vger.kernel.org>
+To: Bodo Eggert <7eggert@gmx.de>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-=C3=EE=E0 =96 =C8=ED=E4=E8=FF!!!
+Bodo Eggert wrote:
+> I suggest moving the SG_GET_SCSI_ID ioctl from sg to scsi, since it's 
+> generally usefull and the alternative function SCSI_IOCTL_GET_IDLUN
+> is limited in range (in-kernel data types may be larger) and 
+> functionality (type, ...).
 
-=C1=E8=EB=E5=F2=FB =96 250$
+Bodo,
+ioctls, especially new ones, have become very unpopular
+in the linux kernel. Whoever implemented the SG_IO ioctl
+in the block layer moved just enough other sg ioctls to
+fool cdrecord that it was talking to the sg driver. The
+SG_GET_SCSI_ID ioctl didn't make the cut, probably because
+cdrecord didn't use it.
 
-=D2=F3=F0=FB =96 3* - 800$ =ED=E0 2 =ED=E5=E4=E5=EB=E8
+Mind you, I think it is correct to (try and) move
+SG_GET_SCSI_ID to the SCSI subsystem rather than
+the block layer. Otherwise we would not be able
+to use your proposed ioctl on non-block, sg visible
+only devices (e.g. a SCSI enclosure (SES protocol)).
 
-=D2. 258-54-82
+> However, I have some questions about that ioctl:
+> 
+> - There is the concept of 8-Byte-LUNs: Are they mapped to integer LUNs?
+> Should the extra space in the struct sg_scsi_id be used for that?
+> Or should I abandon the idea and create a new IOCTL instead?
+
+Yes, the SG_GET_SCSI_ID ioctl should allow for 8 byte
+LUNs and that is a flaw in the current design. It is
+no excuse that the rest of the SCSI subsystem has a
+similar shortcoming.
+
+In linux there is also a move away from the host_number,
+channel_number, target_identifier and LUN tuple used
+traditionally by many Unix SCSI subsystems (most do not
+have the second component: channel_number). At least the
+LUN is not controversial (as long as it is 8 byte!). The
+target_identifier is actually transport dependent (but
+could just be a simple enumeration). The host_number is
+typically an enumeration over PCI addresses but some
+other type of computer buses (e.g. microchannel) could be
+involved.
+
+> - The original IOCTL will check for sdp->detached. If the moved-to-scsi 
+> ioctl is called, the check will be done before chaining from sg, but what
+> will I need to check if it's called on a non-sg device?
+
+That should not be needed as the open file descriptor
+to the SCSI device should be sufficient to keep the
+relevant objects alive even if the device was just hot
+unplugged.
+
+> - Are there any (planned) changes that will conflict with this patch?
+
+There is this thing called sysfs which is advertised
+as an ioctl replacement. However if a routine is given
+an open device node and you want to find its identity
+an ioctl does have some advantages over a procfs followed
+by a sysfs trawl. Just like ioctl related structures,
+sysfs also changes, frustrating applications built on
+it. Sysfs might even change more often than a well designed
+ioctl since sysfs is often tightly bound to the driver
+software architecture which may change without impacting
+interfaces.
+
+Lets see if this post gets a response.
+
+Doug Gilbert
 
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
