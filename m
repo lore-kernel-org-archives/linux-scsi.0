@@ -1,113 +1,149 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] /dev/disk/by-id incomplete and unhelpful for SATA drives
-Date: Mon, 06 Mar 2006 15:08:16 -0500
-Message-ID: <440C96B0.7040404@pobox.com>
-References: <doc5jl$acv$1@sea.gmane.org> <20051221185518.GA9100@vrfy.org> <43A9CFE0.2070103@edesix.com> <20051222043527.GA13175@vrfy.org> <43AA8D0B.10504@edesix.com> <20051222183525.GA17871@devserv.devel.redhat.com> <43AB40E2.1050009@edesix.com> <20060106013640.GA27841@aracnet.com> <43BDDCAE.7000506@torque.net> <43BE6506.7090901@torque.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: Steve Byan <smb@egenera.com>
+Subject: Re: SCSI target and IO-throttling
+Date: Mon, 6 Mar 2006 14:55:08 -0500
+Message-ID: <AA15D0CE-1FDF-4707-923D-01846551B90E@egenera.com>
+References: <OF4F9C2429.293D1C5C-ON88257129.00683373-88257129.0069D5D8@us.ibm.com>
+Mime-Version: 1.0 (Apple Message framework v746.2)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:47012 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751200AbWCFUIb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Mar 2006 15:08:31 -0500
-In-Reply-To: <43BE6506.7090901@torque.net>
+Received: from roadrunner-base.egenera.com ([63.160.166.46]:17302 "EHLO
+	roadrunner-base.egenera.com") by vger.kernel.org with ESMTP
+	id S1751490AbWCFTzO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 6 Mar 2006 14:55:14 -0500
+In-Reply-To: <OF4F9C2429.293D1C5C-ON88257129.00683373-88257129.0069D5D8@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: patman@aracnet.com, Chris Paulson-Ellis <chris@edesix.com>, Bill Nottingham <notting@redhat.com>, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
-
-Douglas Gilbert wrote:
-
-> Changelog:
->   - make existing libata VPD device identification page (0x83)
->     supply the ATA serial number in the libata "vendor
->     specific" designator (from Chris Paulson-Ellis)
->   - add a "t10 vendor id based" designator as defined in
->     SAT rev 07a (section 10.3.4.2.3) that supplies ATA
->     model and serial numbers
->   - make the libata VPD page 0x83 more extensible (for
->     adding more designators in the future).
-> 
-> Signed-off-by: Douglas Gilbert <dougg@torque.net>
-
-> ------------------------------------------------------------------------
-> 
-> --- linux/drivers/scsi/libata-scsi.c	2006-01-04 08:50:42.000000000 +1000
-> +++ linux/drivers/scsi/libata-scsi.c2615vpd	2006-01-06 20:16:25.000000000 +1000
-> @@ -1532,16 +1532,16 @@
->  	return 0;
->  }
->  
-> -static const char *inq_83_str = "Linux ATA-SCSI simulator";
-> -
->  /**
->   *	ata_scsiop_inq_83 - Simulate INQUIRY EVPD page 83, device identity
->   *	@args: device IDENTIFY data / SCSI command of interest.
->   *	@rbuf: Response buffer, to which simulated SCSI cmd output is sent.
->   *	@buflen: Response buffer length.
->   *
-> - *	Returns device identification.  Currently hardcoded to
-> - *	return "Linux ATA-SCSI simulator".
-> + *	Yields two logocal unit device identification designators:
-> + *	  - vendor specific ASCII containing the ATA serial number
-> + *	  - SAT defined "t10 vendor id based" containing ASCII vendor
-> + *	    name ("ATA     "), model and serial numbers.
->   *
->   *	LOCKING:
->   *	spin_lock_irqsave(host_set lock)
-> @@ -1550,16 +1550,39 @@
->  unsigned int ata_scsiop_inq_83(struct ata_scsi_args *args, u8 *rbuf,
->  			      unsigned int buflen)
->  {
-> +	int num;
-> +	const int sat_model_serial_desc_len = 68;
-> +	const int ata_model_byte_len = 40;
-> +
->  	rbuf[1] = 0x83;			/* this page code */
-> -	rbuf[3] = 4 + strlen(inq_83_str);	/* page len */
-> +	num = 4;
->  
-> -	/* our one and only identification descriptor (vendor-specific) */
-> -	if (buflen > (strlen(inq_83_str) + 4 + 4 - 1)) {
-> -		rbuf[4 + 0] = 2;	/* code set: ASCII */
-> -		rbuf[4 + 3] = strlen(inq_83_str);
-> -		memcpy(rbuf + 4 + 4, inq_83_str, strlen(inq_83_str));
-> +	if (buflen > (ATA_SERNO_LEN + num + 3)) {
-> +		/* piv=0, assoc=lu, code_set=ACSII, designator=vendor */
-> +		rbuf[num + 0] = 2;	
-> +		rbuf[num + 3] = ATA_SERNO_LEN;
-> +		num += 4;
-> +		ata_dev_id_string(args->id, (unsigned char *) rbuf + num,
-> +				  ATA_ID_SERNO_OFS, ATA_SERNO_LEN);
-> +		num += ATA_SERNO_LEN;
->  	}
-> -
-> +	if (buflen > (sat_model_serial_desc_len + num + 3)) {
-> +		/* SAT defined lu model and serial numbers descriptor */
-> +		/* piv=0, assoc=lu, code_set=ACSII, designator=t10 vendor id */
-> +		rbuf[num + 0] = 2;	
-> +		rbuf[num + 1] = 1;	
-> +		rbuf[num + 3] = sat_model_serial_desc_len;
-> +		num += 4;
-> +		strncpy(rbuf + num, "ATA     ", 8);
-> +		num += 8;
-> +		ata_dev_id_string(args->id, (unsigned char *) rbuf + num,
-> +				  ATA_ID_PROD_OFS, ata_model_byte_len);
-> +		num += ata_model_byte_len;
-> +		ata_dev_id_string(args->id, (unsigned char *) rbuf + num,
-> +				  ATA_ID_SERNO_OFS, ATA_SERNO_LEN);
-> +		num += ATA_SERNO_LEN;
-> +	}
-> +	rbuf[3] = num - 4;    /* page len (assume less than 256 bytes) */
->  	return 0;
+To: Bryan Henderson <hbryan@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org, Vladislav Bolkhovitin <vst@vlnb.net>
 
 
-This removes the identifier that has existed since libata was created, 
-which could break something.
+On Mar 6, 2006, at 2:15 PM, Bryan Henderson wrote:
 
-At the very least, update the existing code to indicate assoc=port, and 
-then append the other descriptor data you wish to add after that.
+>> On Mar 2, 2006, at 11:21 AM, Vladislav Bolkhovitin wrote:
+>>
+>>> Could anyone advice how a SCSI target device can IO-throttle its
+>>> initiators, i.e. prevent them from queuing too many commands,  
+>>> please?
+>>>
+>>> I suppose, the best way for doing this is to inform the initiators
+>>> about the maximum queue depth X of the target device, so any of the
+>>> initiators will not send more than X commands. But I have not found
+>>> anything similar to that on INQUIRY or MODE SENSE pages. Have I
+>>> missed something? Just returning QUEUE FULL status doesn't look to
+>>> be correct, because it can lead to out of order commands execution.
+>>
+>> Returning QUEUE FULL status is correct, unless the initiator does not
+>> have any pending commands on the LUN, in which case you should return
+>> BUSY. Yes, this can lead to out-of-order execution. That's why tapes
+>> have traditionally not used SCSI command queuing.
+>
+> I'm confused,  Vladislav appears to be asking about flow control  
+> such as
+> is built into ISCSI, wherein the ISCSI target tells the intitiator how
+> many tasks it's willing to work on at once and the initiator stops  
+> sending
+> new ones when it has hit that limit and waits for one of the  
+> previous ones
+> to finish.  And the target can continuously change that number.
+>
+> With the more primitive transports,
 
-	Jeff
+Seems like a somewhat loaded description to me. Personally, I'd pick  
+something more neutral.
+
+> I believe this is a manual
+> configuration step -- the target has a fixed maximum queue depth  
+> and you
+> tell the driver via some configuration parameter what it is.
+
+Not true. Consider the case where multiple initiators share one  
+logical unit  - there is no guarantee that a single initiator can  
+queue even a single command, since another initiator may have filled  
+the queue at the device.
+
+Another case is a target that has multiple logical units; it is  
+conceivable that an implementation may share the device queue  
+resources among all logical units. In this case again, there is no  
+fixed number of commands that the target can guarantee to queue for a  
+logical unit.
+
+> As I understand it, any system in which QUEUE FULL (that's another  
+> name
+> for SCSI's Task Set Full, isn't it?)
+
+Yes, you're correct. I should have written TASK SET FULL, which is  
+the correct name for the SCSI status value that we are discussing.
+
+> errors happen is one that is not
+> properly configured.
+
+Absolutely untrue.
+
+> I saw a broken ISCSI system that had QUEUE FULLs
+> happening, and it was a performance disaster.
+
+Was it a performance disaster because of the broken-ness, or solely  
+because of the TASK SET FULLs?
+
+>>> Apparently, hardware SCSI targets don't suffer from queuing
+>>> overflow and don't return all the time QUEUE FULL status, so the
+>>> must be a way to do the throttling more elegantly.
+>>
+>> No, they just have big queues.
+>
+> Big queues are another serious performance problem, when it means a  
+> target
+> accepts work faster than it can do it.  I've seen that cause  
+> initiators to
+> send suboptimal requests (if the target appears to be working at  
+> infinite
+> speed, the initiator sends small chunks of work as soon as each is  
+> ready,
+> whereas if the initiator can tell that the target is choked, the  
+> initiator
+> combines and sorts work while it waits, into a stream the target can
+> handle more efficiently).
+
+1) Considering only first-order effects, who cares whether the  
+initiator sends sub-optimal requests and the target coalesces them,  
+or if the initiator does the coalescing itself?
+
+2) If you care about performance, you don't try to fill the device  
+queue; you just want to have enough outstanding so that the device  
+doesn't go idle when there is work to do.
+
+The reason why you do this has more to do with the access scheduling  
+algorithm in the target more than anything else; brain-damaged  
+marketing values small average access times more than a small  
+variance in access times, so the device folks do crazy shortest- 
+access-time-first scheduling instead of something more sane and less  
+prone to spreading out the access time distribution like CSCAN.
+
+> When systems substitute an oversized queue in a
+> target for initiator-target flow control, the initiator ends up  
+> having to
+> compensate with artificial schemes to withhold work from a willing  
+> target
+> (e.g. Linux "queue plugging").
+
+1) The SCSI architectural standard does not prescribe any method for  
+initiator-target flow control other than TASK SET FULL and BUSY.  
+There's nothing wrong with X-ON and X-OFF for flow control,  
+especially when you cannot deterministically calculate a window size.
+
+2) Tell the device folks to switch from shortest-access-time-first  
+scheduling to something less aggressive like CSCAN, and then you  
+might be able to tolerate the device queuing better.
+
+Regards,
+-Steve
+-- 
+Steve Byan <smb@egenera.com>
+Software Architect
+Egenera, Inc.
+165 Forest Street
+Marlboro, MA 01752
+(508) 858-3125
 
 
