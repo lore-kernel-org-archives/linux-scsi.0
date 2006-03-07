@@ -1,232 +1,185 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: libata SCSI page 0x83 query
-Date: Mon, 06 Mar 2006 18:40:29 -0500
-Message-ID: <440CC86D.7060600@torque.net>
-References: <43AB446F.6000900@edesix.com> <440C97BE.1030105@pobox.com> <440CC5DB.3030802@torque.net>
-Reply-To: dougg@torque.net
+From: Alexis Bruemmer <alexisb@us.ibm.com>
+Subject: Re: [RFC] aic94xx: attaching to the sas transport class
+Date: Mon, 06 Mar 2006 16:44:52 -0800
+Message-ID: <1141692292.8649.75.camel@localhost.localdomain>
+References: <8C064C48AB104B428CBA524C342357CA34CFCB@aime2k05.adaptec.com>
+	 <1141445373.5397.23.camel@mulgrave.il.steeleye.com>
+	 <20060306193555.GA2316@us.ibm.com>
+	 <1141674628.3167.31.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------080103010203020903090608"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from canuck.infradead.org ([205.233.218.70]:12516 "EHLO
-	canuck.infradead.org") by vger.kernel.org with ESMTP
-	id S932480AbWCFXlg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 6 Mar 2006 18:41:36 -0500
-In-Reply-To: <440CC5DB.3030802@torque.net>
+Received: from e32.co.us.ibm.com ([32.97.110.150]:25068 "EHLO
+	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S932541AbWCGApd
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 6 Mar 2006 19:45:33 -0500
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e32.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id k270jWTi031249
+	for <linux-scsi@vger.kernel.org>; Mon, 6 Mar 2006 19:45:32 -0500
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by westrelay02.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k270gqTY263562
+	for <linux-scsi@vger.kernel.org>; Mon, 6 Mar 2006 17:42:52 -0700
+Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k270jWT0001175
+	for <linux-scsi@vger.kernel.org>; Mon, 6 Mar 2006 17:45:32 -0700
+In-Reply-To: <1141674628.3167.31.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Chris Paulson-Ellis <chris@edesix.com>, linux-ide@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Mike Anderson <andmike@us.ibm.com>, "Tarte, Robert" <Robert_Tarte@adaptec.com>, linux-scsi <linux-scsi@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>
 
-This is a multi-part message in MIME format.
---------------080103010203020903090608
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-
-Douglas Gilbert wrote:
-> Jeff Garzik wrote:
+On Mon, 2006-03-06 at 13:50 -0600, James Bottomley wrote:
+> On Mon, 2006-03-06 at 11:35 -0800, Mike Anderson wrote:
+> > > 99% is good enough for me currently. 
+> > 
+> > Can you clarify this? Are you indicating that the 99% is only ok for debug
+> > purposes or as a permanent solution. It would seem that if I want my system
+> > to always boot that I would need to utilize an initramfs solution on top
+> > of the driver solution.
 > 
->>Chris Paulson-Ellis wrote:
->>
->>
->>>Hi,
->>>
->>>I have a problem with udev persistent device naming for SATA drives
->>>that is caused by the libata implementation of the page 0x83 SCSI
->>>device identifier query. See this thead from hotplug-devel:
->>>
->>>http://marc.theaimsgroup.com/?t=113518947900002&r=1&w=2
->>>
->>>I can work around the problem using /etc/scsi_id.config or udev rules
->>>(see the thread), but here is a patch to fix the problem at source.
->>>What do you think?
->>>
->>>Regards,
->>>Chris.
->>>
->>>--- drivers/scsi/libata-scsi.c.orig     2005-12-22 23:23:55.000000000
->>>+0000
->>>+++ drivers/scsi/libata-scsi.c  2005-12-22 23:56:14.000000000 +0000
->>>@@ -1532,16 +1532,13 @@
->>>       return 0;
->>>}
->>>
->>>-static const char *inq_83_str = "Linux ATA-SCSI simulator";
->>>-
->>>/**
->>> *     ata_scsiop_inq_83 - Simulate INQUIRY EVPD page 83, device identity
->>> *     @args: device IDENTIFY data / SCSI command of interest.
->>> *     @rbuf: Response buffer, to which simulated SCSI cmd output is
->>>sent.
->>> *     @buflen: Response buffer length.
->>> *
->>>- *     Returns device identification.  Currently hardcoded to
->>>- *     return "Linux ATA-SCSI simulator".
->>>+ *     Returns ATA device serial number (as for page 80).
->>> *
->>> *     LOCKING:
->>> *     spin_lock_irqsave(host_set lock)
->>>@@ -1551,13 +1548,14 @@
->>>                             unsigned int buflen)
->>>{
->>>       rbuf[1] = 0x83;                 /* this page code */
->>>-       rbuf[3] = 4 + strlen(inq_83_str);       /* page len */
->>>+       rbuf[3] = 4 + ATA_SERNO_LEN;    /* page len */
->>>
->>>       /* our one and only identification descriptor (vendor-specific) */
->>>-       if (buflen > (strlen(inq_83_str) + 4 + 4 - 1)) {
->>>+       if (buflen > (ATA_SERNO_LEN + 4 + 4 - 1)) {
->>>               rbuf[4 + 0] = 2;        /* code set: ASCII */
->>>-               rbuf[4 + 3] = strlen(inq_83_str);
->>>-               memcpy(rbuf + 4 + 4, inq_83_str, strlen(inq_83_str));
->>>+               rbuf[4 + 3] = ATA_SERNO_LEN;
->>>+               ata_dev_id_string(args->id, (unsigned char *) rbuf + 4
->>>+ 4,
->>>+                                 ATA_ID_SERNO_OFS, ATA_SERNO_LEN);
->>
->>
->>Douglas Gilbert has an improved patch along these lines...
+> It means I'll fix races in discovery, but the actual problem of the root
+> device being discovered after port discovery completes because of some
+> type of disk or cabling issue is beyond this type of fix.  
 
-Oops, a minor documentation malfunction with that patch.
-Here is a second attempt ...
+Well the problems I have seen when testing your tree, as well as the
+original aic94xx/sas_class tree, is that the aic94xx driver enables phys
+before the upper level sas layer has discover all phys and ports.
+(again please see the boot dump I posted on Friday). 
 
-I assume that is a prompt to roll another version
-of that VPD patch, this time against lk 2.6.16-rc5
-as my git tree is unavailable.
+> I also have
+> to bet that expander configurations can get a bit random in who is
+> discovered first, so likewise, the full fix for those will be udev
+> updates.
+> 
+> > Alexis already created a patch that has some pieces in common with the
+> > older adp driver to try and sync discovery, but we did not post as it was
+> > failing on a x260 which has an expander configuration. Currently I believe
+> > she is trying to port this to your patch series. Is this effort worth
+> > continuing?
+> 
+> I can't say until I see the code.  However, if it's just fixing races,
+> then yes.  If it's trying to make the driver reorder or wait for a
+> preferred root disk, then probably not.
 
-Changelog:
-  - make existing libata VPD device identification page (0x83)
-    supply the ATA serial number in the libata "vendor
-    specific" designator (from Chris Paulson-Ellis)
-  - add a "t10 vendor id based" designator as defined in
-    SAT rev 08 (section 10.3.4.2.3) that supplies ATA
-    model and serial numbers
-  - make the libata VPD page 0x83 more extensible (for
-    adding more designators in the future).
-  - rename EVPD to VPD in various places. Enable Vital
-    Product Data (EVPD) is a bit in the INQUIRY cdb.
+This patch does fix the problem with aic94xx enabling phys before the sas layer 
+has discovered phys and ports, but it also causes the boot process to wait for 
+device discovery.  And, sense I am not positive if this fix falls under the
+category of "just fixing races" or "wait for a preferred root disk" I
+thought I would post it and see what you think.
 
-Signed-off-by: Douglas Gilbert <dougg@torque.net>
+Thanks,
 
---------------080103010203020903090608
-Content-Type: text/x-patch;
- name="libata_vpd83_2616rc5_2.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="libata_vpd83_2616rc5_2.diff"
+Alexis
 
---- linux/drivers/scsi/libata-scsi.c	2006-02-27 09:46:11.000000000 -0500
-+++ linux/drivers/scsi/libata-scsi.c2616rc5vpd2	2006-03-06 18:32:28.000000000 -0500
-@@ -1445,7 +1445,7 @@
-  *	@buflen: Response buffer length.
-  *
-  *	Returns standard device identification data associated
-- *	with non-EVPD INQUIRY command output.
-+ *	with non-VPD INQUIRY command output.
-  *
-  *	LOCKING:
-  *	spin_lock_irqsave(host_set lock)
-@@ -1496,12 +1496,12 @@
- }
- 
- /**
-- *	ata_scsiop_inq_00 - Simulate INQUIRY EVPD page 0, list of pages
-+ *	ata_scsiop_inq_00 - Simulate INQUIRY VPD page 0, list of pages
-  *	@args: device IDENTIFY data / SCSI command of interest.
-  *	@rbuf: Response buffer, to which simulated SCSI cmd output is sent.
-  *	@buflen: Response buffer length.
-  *
-- *	Returns list of inquiry EVPD pages available.
-+ *	Returns list of inquiry VPD pages available.
-  *
-  *	LOCKING:
-  *	spin_lock_irqsave(host_set lock)
-@@ -1515,7 +1515,7 @@
- 		0x80,	/* page 0x80, unit serial no page */
- 		0x83	/* page 0x83, device ident page */
- 	};
--	rbuf[3] = sizeof(pages);	/* number of supported EVPD pages */
-+	rbuf[3] = sizeof(pages);	/* number of supported VPD pages */
- 
- 	if (buflen > 6)
- 		memcpy(rbuf + 4, pages, sizeof(pages));
-@@ -1524,7 +1524,7 @@
- }
- 
- /**
-- *	ata_scsiop_inq_80 - Simulate INQUIRY EVPD page 80, device serial number
-+ *	ata_scsiop_inq_80 - Simulate INQUIRY VPD page 80, device serial number
-  *	@args: device IDENTIFY data / SCSI command of interest.
-  *	@rbuf: Response buffer, to which simulated SCSI cmd output is sent.
-  *	@buflen: Response buffer length.
-@@ -1553,16 +1553,16 @@
- 	return 0;
- }
- 
--static const char * const inq_83_str = "Linux ATA-SCSI simulator";
--
- /**
-- *	ata_scsiop_inq_83 - Simulate INQUIRY EVPD page 83, device identity
-+ *	ata_scsiop_inq_83 - Simulate INQUIRY VPD page 83, device identity
-  *	@args: device IDENTIFY data / SCSI command of interest.
-  *	@rbuf: Response buffer, to which simulated SCSI cmd output is sent.
-  *	@buflen: Response buffer length.
-  *
-- *	Returns device identification.  Currently hardcoded to
-- *	return "Linux ATA-SCSI simulator".
-+ *	Yields two logical unit device identification designators:
-+ *	 - vendor specific ASCII containing the ATA serial number
-+ *	 - SAT defined "t10 vendor id based" containing ASCII vendor
-+ *	   name ("ATA     "), model and serial numbers.
-  *
-  *	LOCKING:
-  *	spin_lock_irqsave(host_set lock)
-@@ -1571,16 +1571,39 @@
- unsigned int ata_scsiop_inq_83(struct ata_scsi_args *args, u8 *rbuf,
- 			      unsigned int buflen)
+
+Signed-off-by: Alexis Bruemmer <alexisb@us.ibm.com>
+diff -uaNr BUILD-2.6.orig/drivers/scsi/aic94xx/aic94xx_init.c BUILD-2.6/drivers/scsi/aic94xx/aic94xx_init.c
+--- BUILD-2.6.orig/drivers/scsi/aic94xx/aic94xx_init.c	2006-03-06 11:37:01.000000000 -0800
++++ BUILD-2.6/drivers/scsi/aic94xx/aic94xx_init.c	2006-03-06 12:55:19.000000000 -0800
+@@ -218,6 +218,9 @@
  {
-+	int num;
-+	const int sat_model_serial_desc_len = 68;
-+	const int ata_model_byte_len = 40;
-+
- 	rbuf[1] = 0x83;			/* this page code */
--	rbuf[3] = 4 + strlen(inq_83_str);	/* page len */
-+	num = 4;
+ 	int err, i;
  
--	/* our one and only identification descriptor (vendor-specific) */
--	if (buflen > (strlen(inq_83_str) + 4 + 4 - 1)) {
--		rbuf[4 + 0] = 2;	/* code set: ASCII */
--		rbuf[4 + 3] = strlen(inq_83_str);
--		memcpy(rbuf + 4 + 4, inq_83_str, strlen(inq_83_str));
-+	if (buflen > (ATA_SERNO_LEN + num + 3)) {
-+		/* piv=0, assoc=lu, code_set=ACSII, designator=vendor */
-+		rbuf[num + 0] = 2;	
-+		rbuf[num + 3] = ATA_SERNO_LEN;
-+		num += 4;
-+		ata_dev_id_string(args->id, (unsigned char *) rbuf + num,
-+				  ATA_ID_SERNO_OFS, ATA_SERNO_LEN);
-+		num += ATA_SERNO_LEN;
++	init_completion(&asd_ha->sas_ha.discover_phy);
++	asd_ha->sas_ha.discovering_device_flag=0;
++
+ 	err = pci_read_config_byte(asd_ha->pcidev, PCI_REVISION_ID,
+ 				   &asd_ha->revision_id);
+ 	if (err) {
+@@ -631,6 +634,8 @@
+ 		asd_printk("coudln't enable phys, err:%d\n", err);
+ 		goto Err_en_phys;
  	}
--
-+	if (buflen > (sat_model_serial_desc_len + num + 3)) {
-+		/* SAT defined lu model and serial numbers descriptor */
-+		/* piv=0, assoc=lu, code_set=ACSII, designator=t10 vendor id */
-+		rbuf[num + 0] = 2;	
-+		rbuf[num + 1] = 1;	
-+		rbuf[num + 3] = sat_model_serial_desc_len;
-+		num += 4;
-+		strncpy(rbuf + num, "ATA     ", 8);
-+		num += 8;
-+		ata_dev_id_string(args->id, (unsigned char *) rbuf + num,
-+				  ATA_ID_PROD_OFS, ata_model_byte_len);
-+		num += ata_model_byte_len;
-+		ata_dev_id_string(args->id, (unsigned char *) rbuf + num,
-+				  ATA_ID_SERNO_OFS, ATA_SERNO_LEN);
-+		num += ATA_SERNO_LEN;
-+	}
-+	rbuf[3] = num - 4;    /* page len (assume less than 256 bytes) */
++	wait_for_completion(&asd_ha->sas_ha.discover_phy);
++
+ 	ASD_DPRINTK("enabled phys\n");
+ 
  	return 0;
+diff -uaNr BUILD-2.6.orig/drivers/scsi/sas/sas_discover.c BUILD-2.6/drivers/scsi/sas/sas_discover.c
+--- BUILD-2.6.orig/drivers/scsi/sas/sas_discover.c	2006-03-06 11:37:01.000000000 -0800
++++ BUILD-2.6/drivers/scsi/sas/sas_discover.c	2006-03-06 13:07:20.000000000 -0800
+@@ -648,8 +648,11 @@
+ static void sas_discover_work_fn(void *_sas_port)
+ {
+ 	struct sas_port *port = _sas_port;
++	struct sas_ha_struct *sas_ha = port->ha;
+ 	struct sas_discovery *disc = &port->disc;
+ 
++	sas_ha->discovering_device_flag=1;
++
+ 	spin_lock(&disc->disc_event_lock);
+ 	disc->disc_thread = 1;
+ 	while (!disc->disc_thread_quit && !list_empty(&disc->disc_event_list)){
+@@ -678,6 +681,8 @@
+ 	disc->disc_thread = 0;
+ 	spin_unlock(&disc->disc_event_lock);
+ 	up(&disc->disc_sema);
++	mod_timer(&sas_ha->discover_timer, jiffies + 3*HZ);
++	sas_ha->discovering_device_flag=0;
  }
  
+ int sas_discover_event(struct sas_port *port, enum discover_event ev)
+diff -uaNr BUILD-2.6.orig/drivers/scsi/sas/sas_event.c BUILD-2.6/drivers/scsi/sas/sas_event.c
+--- BUILD-2.6.orig/drivers/scsi/sas/sas_event.c	2006-03-06 11:37:01.000000000 -0800
++++ BUILD-2.6/drivers/scsi/sas/sas_event.c	2006-03-06 15:07:47.000000000 -0800
+@@ -68,6 +68,20 @@
+ #include "sas_dump.h"
+ #include <scsi/sas/sas_discover.h>
+ 
++static void discover_timer_handler(struct sas_ha_struct *sas_ha)
++{
++	if (sas_ha->discover_timer_handler_flag==0 && \
++					sas_ha->discovering_device_flag==0) {
++		sas_ha->discover_timer_handler_flag = 1;
++		sas_ha->discovering_device_flag=1;
++		complete(&sas_ha->discover_phy);
++	}
++	else if (sas_ha->discover_timer_handler_flag==1)
++		printk("WARNING: Not all SAS Devices were discovered\n");
++	else
++		printk("Still waiting on a discovery\n");
++}
++
+ static void sas_process_phy_event(struct asd_sas_phy *phy)
+ {
+ 	unsigned long flags;
+@@ -237,6 +251,13 @@
+ 	daemonize("sas_event_%d", sas_ha->core.shost->host_no);
+ 	current->flags |= PF_NOFREEZE;
+ 
++	sas_ha->discover_timer_handler_flag = 0;
++	init_timer(&sas_ha->discover_timer);
++	sas_ha->discover_timer.data=(struct sas_ha_struct *)sas_ha;
++	sas_ha->discover_timer.function=discover_timer_handler;
++	sas_ha->discover_timer.expires=jiffies+2*HZ;
++	add_timer(&sas_ha->discover_timer);
++
+ 	complete(&event_th_comp);
+ 
+ 	while (1) {
+@@ -247,6 +268,7 @@
+ 	}
+ 
+ 	complete(&event_th_comp);
++	complete(&sas_ha->discover_phy);
+ 
+ 	return 0;
+ }
+diff -uaNr BUILD-2.6.orig/include/scsi/sas/sas_class.h BUILD-2.6/include/scsi/sas/sas_class.h
+--- BUILD-2.6.orig/include/scsi/sas/sas_class.h	2006-03-06 11:37:01.000000000 -0800
++++ BUILD-2.6/include/scsi/sas/sas_class.h	2006-03-06 12:57:36.000000000 -0800
+@@ -231,6 +231,11 @@
+ 	struct pci_dev *pcidev;	  /* should be set */
+ 	struct module *lldd_module; /* should be set */
+ 
++	struct completion       discover_phy;
++	int                     discovering_device_flag;
++	struct timer_list       discover_timer;
++	int                     discover_timer_handler_flag;
++
+ 	u8 *sas_addr;		  /* must be set */
+ 	u8 hashed_sas_addr[HASHED_SAS_ADDR_SIZE];
+ 
 
---------------080103010203020903090608--
+
