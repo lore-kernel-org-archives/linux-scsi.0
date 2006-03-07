@@ -1,39 +1,42 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: [PATCH 6/6] lpfc 8.1.4 : Change version number to 8.1.4
-Date: Tue, 07 Mar 2006 15:04:25 -0500
-Message-ID: <1141761865.25430.20.camel@localhost.localdomain>
-Reply-To: James.Smart@Emulex.Com
+From: "Lola Ervin" <lnko@lecher.com>
+Subject: Quality Financing for the USA!
+Date: Tue, 07 Mar 2006 22:13:06 +0100
+Message-ID: <756u916f.8294747@www1.nhj8.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:41932 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S932313AbWCGUEa
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Mar 2006 15:04:30 -0500
-Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
-	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id k27K4Trf021525
-	for <linux-scsi@vger.kernel.org>; Tue, 7 Mar 2006 12:04:29 -0800 (PST)
+Received: from zeus1.kernel.org ([204.152.191.4]:54227 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S1751626AbWCGVJx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2006 16:09:53 -0500
+Received: from p549A55CE.dip.t-dialin.net (p549A55CE.dip.t-dialin.net [84.154.85.206])
+	by zeus1.kernel.org (8.13.1/8.13.1) with SMTP id k27L9fdc028054
+	for <linux-scsi@vger.kernel.org>; Tue, 7 Mar 2006 21:09:45 GMT
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-Change version number to 8.1.4
+Thanks to a nomination by an associate of yours, there are potentially three deals that will be offerêd to you. 
+Notice - past credit history is NOT a factor for this promotion as long as you still have own a home and we recieve word 
+from you within 24 hours. 
 
 
-Signed-off-by: James Smart <James.Smart@emulex.com>
+________Detail Summary___________ 
+Rate: As low as 3% 
+Ammount: Up to 800,000 
+Type: Rêfinancê or Homê Equity 
+Closing Date: 30 days 
 
---- a/drivers/scsi/lpfc/lpfc_version.h
-+++ b/drivers/scsi/lpfc/lpfc_version.h
-@@ -18,7 +18,7 @@
-  * included with this package.                                     *
-  *******************************************************************/
- 
--#define LPFC_DRIVER_VERSION "8.1.3"
-+#define LPFC_DRIVER_VERSION "8.1.4"
- 
- #define LPFC_DRIVER_NAME "lpfc"
- 
+
+In accordance with our terms please visit here to verify your information on our secure, private site to ensure our 
+records are accurate. 
+http://www1.nhj8.net/was.asp
+
+Kaitlin Ferreira
+
+For Deletion 
+http://www1.nhj8.net/rem.asp
 
 
