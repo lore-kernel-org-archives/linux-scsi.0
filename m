@@ -1,98 +1,49 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: RFC: Move SG_GET_SCSI_ID from sg to scsi
-Date: Tue, 07 Mar 2006 13:49:56 -0500
-Message-ID: <440DD5D4.2080403@tmr.com>
-References: <Pine.LNX.4.58.0603061133070.2997@be1.lrz> <440C8E60.6020005@torque.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: Steve Byan <smb@egenera.com>
+Subject: Re: SCSI target and IO-throttling
+Date: Tue, 7 Mar 2006 14:00:12 -0500
+Message-ID: <A59711AB-5397-4DFE-8CD3-33E5B637AD01@egenera.com>
+References: <44071BA4.3030808@vlnb.net> <8932FBA5-241C-470E-A928-F34868EC0A8D@egenera.com> <440DC897.6080408@vlnb.net> <2FBC50BB-5536-4E6F-9D02-7E9AE7174368@egenera.com> <440DD515.7070707@vlnb.net>
+Mime-Version: 1.0 (Apple Message framework v746.2)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from prgy-npn2.prodigy.com ([207.115.54.38]:36102 "EHLO
-	oddball.prodigy.com") by vger.kernel.org with ESMTP
-	id S1751485AbWCGSst (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Mar 2006 13:48:49 -0500
-In-Reply-To: <440C8E60.6020005@torque.net>
+Received: from roadrunner-base.egenera.com ([63.160.166.46]:10981 "EHLO
+	roadrunner-base.egenera.com") by vger.kernel.org with ESMTP
+	id S932074AbWCGTA0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Mar 2006 14:00:26 -0500
+In-Reply-To: <440DD515.7070707@vlnb.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: linux-scsi@vger.kernel.org
 
-Douglas Gilbert wrote:
-> Bodo Eggert wrote:
->> I suggest moving the SG_GET_SCSI_ID ioctl from sg to scsi, since it's 
->> generally usefull and the alternative function SCSI_IOCTL_GET_IDLUN
->> is limited in range (in-kernel data types may be larger) and 
->> functionality (type, ...).
-> 
-> Bodo,
-> ioctls, especially new ones, have become very unpopular
-> in the linux kernel. Whoever implemented the SG_IO ioctl
-> in the block layer moved just enough other sg ioctls to
-> fool cdrecord that it was talking to the sg driver. The
-> SG_GET_SCSI_ID ioctl didn't make the cut, probably because
-> cdrecord didn't use it.
-> 
-> Mind you, I think it is correct to (try and) move
-> SG_GET_SCSI_ID to the SCSI subsystem rather than
-> the block layer. Otherwise we would not be able
-> to use your proposed ioctl on non-block, sg visible
-> only devices (e.g. a SCSI enclosure (SES protocol)).
-> 
->> However, I have some questions about that ioctl:
->>
->> - There is the concept of 8-Byte-LUNs: Are they mapped to integer LUNs?
->> Should the extra space in the struct sg_scsi_id be used for that?
->> Or should I abandon the idea and create a new IOCTL instead?
-> 
-> Yes, the SG_GET_SCSI_ID ioctl should allow for 8 byte
-> LUNs and that is a flaw in the current design. It is
-> no excuse that the rest of the SCSI subsystem has a
-> similar shortcoming.
-> 
-> In linux there is also a move away from the host_number,
-> channel_number, target_identifier and LUN tuple used
-> traditionally by many Unix SCSI subsystems (most do not
-> have the second component: channel_number). At least the
-> LUN is not controversial (as long as it is 8 byte!). The
-> target_identifier is actually transport dependent (but
-> could just be a simple enumeration). The host_number is
-> typically an enumeration over PCI addresses but some
-> other type of computer buses (e.g. microchannel) could be
-> involved.
 
-In real SCSI systems that usually maps to card, bus/cable, ID and LUN 
-and allows some correspondence between physical and logical space. Handy 
-to trouble shoot, if you see a lot of errors on the same cable yo have a 
-clue that it may be common cause.
-> 
->> - The original IOCTL will check for sdp->detached. If the moved-to-scsi 
->> ioctl is called, the check will be done before chaining from sg, but what
->> will I need to check if it's called on a non-sg device?
-> 
-> That should not be needed as the open file descriptor
-> to the SCSI device should be sufficient to keep the
-> relevant objects alive even if the device was just hot
-> unplugged.
-> 
->> - Are there any (planned) changes that will conflict with this patch?
-> 
-> There is this thing called sysfs which is advertised
-> as an ioctl replacement. However if a routine is given
-> an open device node and you want to find its identity
-> an ioctl does have some advantages over a procfs followed
-> by a sysfs trawl. Just like ioctl related structures,
-> sysfs also changes, frustrating applications built on
-> it. Sysfs might even change more often than a well designed
-> ioctl since sysfs is often tightly bound to the driver
-> software architecture which may change without impacting
-> interfaces.
-> 
-> Lets see if this post gets a response.
+On Mar 7, 2006, at 1:46 PM, Vladislav Bolkhovitin wrote:
 
-Good to see you still around and posting about the relevant technical 
-details.
+> Steve Byan wrote:
 
+>> As a data-point, some modern SCSI disks support queue depths in  
+>> the  range of 128 to 256 commands.
+>
+> I rather asked about practical upper limit. From our observations a  
+> Linux initiator could easily send 128+ commands, but usually less.  
+> Looks like it depends from its available memory. Interested to know  
+> the exact rule.
+
+I don't know the rule. Obviously, it could change over time, and be  
+different for different OS's.
+
+Sounds to me like you might be trying to fix a busted initiator by  
+changing the target behavior.
+
+Regards,
+-Steve
 -- 
-    -bill davidsen (davidsen@tmr.com)
-"The secret to procrastination is to put things off until the
-  last possible moment - but no longer"  -me
+Steve Byan <smb@egenera.com>
+Software Architect
+Egenera, Inc.
+165 Forest Street
+Marlboro, MA 01752
+(508) 858-3125
+
+
