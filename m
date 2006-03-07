@@ -1,45 +1,52 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: osst changes required to move forward to block request
-Date: Tue, 7 Mar 2006 11:59:13 +0000
-Message-ID: <20060307115913.GA30421@infradead.org>
-References: <20060206131944.GA1769@lst.de> <1139274141l.7464l.1l@athena.riede.org> <20060207091254.GA11691@infradead.org> <1139687216l.24984l.0l@athena.riede.org>
+From: Frederic TEMPORELLI <frederic.temporelli@ext.bull.net>
+Subject: scsi_track_queue_full function - static values ?
+Date: Tue, 07 Mar 2006 14:32:44 +0100
+Message-ID: <440D8B7C.9020001@ext.bull.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:40424 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1752484AbWCGL7Q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Mar 2006 06:59:16 -0500
-Content-Disposition: inline
-In-Reply-To: <1139687216l.24984l.0l@athena.riede.org>
+Received: from ecfrec.frec.bull.fr ([129.183.4.8]:32424 "EHLO
+	ecfrec.frec.bull.fr") by vger.kernel.org with ESMTP
+	id S1750828AbWCGNcs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Mar 2006 08:32:48 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by ecfrec.frec.bull.fr (Postfix) with ESMTP id B5EED19D906
+	for <linux-scsi@vger.kernel.org>; Tue,  7 Mar 2006 14:32:49 +0100 (CET)
+Received: from ecfrec.frec.bull.fr ([127.0.0.1])
+ by localhost (ecfrec.frec.bull.fr [127.0.0.1]) (amavisd-new, port 10024)
+ with ESMTP id 30018-03 for <linux-scsi@vger.kernel.org>;
+ Tue,  7 Mar 2006 14:32:48 +0100 (CET)
+Received: from ecn002.frec.bull.fr (ecn002.frec.bull.fr [129.183.4.6])
+	by ecfrec.frec.bull.fr (Postfix) with ESMTP id 22A9719D912
+	for <linux-scsi@vger.kernel.org>; Tue,  7 Mar 2006 14:32:48 +0100 (CET)
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+	by openx3.frec.bull.fr (Postfix) with ESMTP id 0EF632B0EB
+	for <linux-scsi@vger.kernel.org>; Tue,  7 Mar 2006 14:32:45 +0100 (CET)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Willem Riede <osst@riede.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Sat, Feb 11, 2006 at 02:46:56PM -0500, Willem Riede wrote:
-> On 02/07/2006 04:12:55 AM, Christoph Hellwig wrote:
-> > On Mon, Feb 06, 2006 at 08:02:21PM -0500, Willem Riede wrote:
-> > 
-> > > But I will certainly help retire scsi_request. And anything else that is  
-> > > needed to keep up with proper kernel style. Let me know what those are, if 
-> > > you  would? I'll start looking at how st has changed, and will be back with 
-> > > any  questions I may have.
-> > 
-> > right now the above is the most urgent bit.  What would be nice but not
-> > required is a conversion to the sense handling helpers, similar to what
-> > st got (aka using the *normalize_sense functions and then dealing with the
-> > parsed sense buffer instead of the raw sense data)
-> 
-> Ok, so here is my first take at satisfying this request.
-> Be warned, that beyond compiling, and checking that the new module
-> doesn't immediately blow up, there hasn't yet been a lot of testing.
-> 
-> But this should allow you to comment on the changes, and move forward
-> with dropping scsi_request from the kernel code.
-> 
-> Signed-off-by: Willem Riede <osst@riede.org>
+Hi,
 
-James, could you put this into the scsi-misc tree so we don't have any ULD
-using the scsi_request APIs anymore?
 
+I was looking at the scsi_track_queue_full (driver/scsi/scsi.c) function.
+
+Can someone tell me how have been defined all the static values in this function ?
+
+- we may have (max) 16 (>>4) jiffies between calls (else there's no need to call 
+this function...),
+
+- queue_full_depth_count should be > 10 (else queue depth still not changed),
+
+- if lun queue depth < 8, lun queue depth is set with cmd_per_lun
+(what's happen if cmd_per_lun > 8 ???)
+
+
+May someone add some #define for these values ?
+Is it a way to use 'auto-adapted' values ?
+
+Best regards.
+
+-- 
+Frederic TEMPORELLI
