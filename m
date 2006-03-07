@@ -1,62 +1,201 @@
 From: James Smart <James.Smart@Emulex.Com>
-Subject: [PATCH 3/6] lpfc 8.1.4 : Fixed a timer panic due to timer firing
-	after freeing ndlp
-Date: Tue, 07 Mar 2006 15:04:06 -0500
-Message-ID: <1141761847.25430.17.camel@localhost.localdomain>
+Subject: [PATCH 2/6] lpfc 8.1.4 : Fixed RSCN handling when a PLOGI is in
+	retry
+Date: Tue, 07 Mar 2006 15:04:01 -0500
+Message-ID: <1141761841.25430.16.camel@localhost.localdomain>
 Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:38092 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S932307AbWCGUEL
+Received: from emulex.emulex.com ([138.239.112.1]:36556 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S932302AbWCGUEF
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Mar 2006 15:04:11 -0500
+	Tue, 7 Mar 2006 15:04:05 -0500
 Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
-	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id k27K49rf021508
-	for <linux-scsi@vger.kernel.org>; Tue, 7 Mar 2006 12:04:10 -0800 (PST)
+	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id k27K44rf021499
+	for <linux-scsi@vger.kernel.org>; Tue, 7 Mar 2006 12:04:04 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-Fixed a timer panic due to timer firing after freeing ndlp
+Fixed RSCN handling when a PLOGI is in retry.
 
 
 Signed-off-by: James Smart <James.Smart@emulex.com>
 
 --- a/drivers/scsi/lpfc/lpfc_hbadisc.c
 +++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -68,6 +68,15 @@ lpfc_process_nodev_timeout(struct lpfc_h
- 		return;
+@@ -1152,13 +1152,9 @@ lpfc_nlp_list(struct lpfc_hba * phba, st
+ 		/* Stop delay tmo if taking node off NPR list */
+ 		if ((nlp->nlp_flag & NLP_DELAY_TMO) &&
+ 		   (list != NLP_NPR_LIST)) {
+-			nlp->nlp_flag &= ~NLP_DELAY_TMO;
+-			nlp->nlp_last_elscmd = 0;
+ 			spin_unlock_irq(phba->host->host_lock);
+-			del_timer_sync(&nlp->nlp_delayfunc);
++			lpfc_cancel_retry_delay_tmo(phba, nlp);
+ 			spin_lock_irq(phba->host->host_lock);
+-			if (!list_empty(&nlp->els_retry_evt.evt_listp))
+-				list_del_init(&nlp->els_retry_evt.evt_listp);
+ 		}
+ 		break;
+ 	}
+@@ -1598,13 +1594,7 @@ lpfc_nlp_remove(struct lpfc_hba * phba, 
+ 
+
+ 	if (ndlp->nlp_flag & NLP_DELAY_TMO) {
+-		spin_lock_irq(phba->host->host_lock);
+-		ndlp->nlp_flag &= ~NLP_DELAY_TMO;
+-		spin_unlock_irq(phba->host->host_lock);
+-		ndlp->nlp_last_elscmd = 0;
+-		del_timer_sync(&ndlp->nlp_delayfunc);
+-		if (!list_empty(&ndlp->els_retry_evt.evt_listp))
+-			list_del_init(&ndlp->els_retry_evt.evt_listp);
++		lpfc_cancel_retry_delay_tmo(phba, ndlp);
  	}
  
-+	/*
-+	 * If a discovery event readded nodev_timer after timer
-+	 * firing and before processing the timer, cancel the
-+	 * nlp_tmofunc.
-+	 */
-+	spin_unlock_irq(phba->host->host_lock);
-+	del_timer_sync(&ndlp->nlp_tmofunc);
-+	spin_lock_irq(phba->host->host_lock);
-+
- 	ndlp->nlp_flag &= ~NLP_NODEV_TMO;
+ 	if (ndlp->nlp_disc_refcnt) {
+@@ -1896,14 +1886,8 @@ lpfc_setup_disc_node(struct lpfc_hba * p
+ 			/* Since this node is marked for discovery,
+ 			 * delay timeout is not needed.
+ 			 */
+-			if (ndlp->nlp_flag & NLP_DELAY_TMO) {
+-				ndlp->nlp_flag &= ~NLP_DELAY_TMO;
+-				del_timer_sync(&ndlp->nlp_delayfunc);
+-				if (!list_empty(&ndlp->els_retry_evt.
+-								evt_listp))
+-					list_del_init(&ndlp->els_retry_evt.
+-						      		evt_listp);
+-			}
++			if (ndlp->nlp_flag & NLP_DELAY_TMO)
++				lpfc_cancel_retry_delay_tmo(phba, ndlp);
+ 		} else {
+ 			ndlp->nlp_flag &= ~NLP_NPR_2B_DISC;
+ 			ndlp = NULL;
+--- a/drivers/scsi/lpfc/lpfc_nportdisc.c
++++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
+@@ -259,13 +259,8 @@ lpfc_els_abort(struct lpfc_hba * phba, s
+ 	} while(found);
  
- 	if (ndlp->nlp_sid != NLP_NO_SID) {
+ 	/* If we are delaying issuing an ELS command, cancel it */
+-	if (ndlp->nlp_flag & NLP_DELAY_TMO) {
+-		ndlp->nlp_flag &= ~NLP_DELAY_TMO;
+-		ndlp->nlp_last_elscmd = 0;
+-		del_timer_sync(&ndlp->nlp_delayfunc);
+-		if (!list_empty(&ndlp->els_retry_evt.evt_listp))
+-			list_del_init(&ndlp->els_retry_evt.evt_listp);
+-	}
++	if (ndlp->nlp_flag & NLP_DELAY_TMO)
++		lpfc_cancel_retry_delay_tmo(phba, ndlp);
+ 	return 0;
+ }
+ 
+@@ -1496,7 +1491,7 @@ lpfc_rcv_plogi_npr_node(struct lpfc_hba 
+ 
+ 	if (lpfc_rcv_plogi(phba, ndlp, cmdiocb)) {
+ 		spin_lock_irq(phba->host->host_lock);
+-		ndlp->nlp_flag &= ~(NLP_NPR_ADISC | NLP_NPR_2B_DISC);
++		ndlp->nlp_flag &= ~NLP_NPR_ADISC;
+ 		spin_unlock_irq(phba->host->host_lock);
+ 		return ndlp->nlp_state;
+ 	}
+@@ -1693,16 +1688,10 @@ lpfc_device_recov_npr_node(struct lpfc_h
+ {
+ 	spin_lock_irq(phba->host->host_lock);
+ 	ndlp->nlp_flag &= ~NLP_NPR_2B_DISC;
++	spin_unlock_irq(phba->host->host_lock);
+ 	if (ndlp->nlp_flag & NLP_DELAY_TMO) {
+-		ndlp->nlp_flag &= ~NLP_DELAY_TMO;
+-		if (!list_empty(&ndlp->els_retry_evt.evt_listp))
+-			list_del_init(&ndlp->els_retry_evt.evt_listp);
+-		spin_unlock_irq(phba->host->host_lock);
+-		ndlp->nlp_last_elscmd = 0;
+-		del_timer_sync(&ndlp->nlp_delayfunc);
+-		return ndlp->nlp_state;
++		lpfc_cancel_retry_delay_tmo(phba, ndlp);
+ 	}
+-	spin_unlock_irq(phba->host->host_lock);
+ 	return ndlp->nlp_state;
+ }
+ 
+--- a/drivers/scsi/lpfc/lpfc_crtn.h
++++ b/drivers/scsi/lpfc/lpfc_crtn.h
+@@ -84,6 +84,7 @@ int lpfc_els_rsp_adisc_acc(struct lpfc_h
+ 			   struct lpfc_nodelist *);
+ int lpfc_els_rsp_prli_acc(struct lpfc_hba *, struct lpfc_iocbq *,
+ 			  struct lpfc_nodelist *);
++void lpfc_cancel_retry_delay_tmo(struct lpfc_hba *, struct lpfc_nodelist *);
+ void lpfc_els_retry_delay(unsigned long);
+ void lpfc_els_retry_delay_handler(struct lpfc_nodelist *);
+ void lpfc_els_unsol_event(struct lpfc_hba *, struct lpfc_sli_ring *,
 --- a/drivers/scsi/lpfc/lpfc_els.c
 +++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -1523,6 +1523,12 @@ lpfc_els_retry_delay_handler(struct lpfc
+@@ -1435,6 +1435,46 @@ lpfc_issue_els_farpr(struct lpfc_hba * p
+ }
  
- 	ndlp->nlp_flag &= ~NLP_DELAY_TMO;
- 	spin_unlock_irq(phba->host->host_lock);
-+	/*
-+	 * If a discovery event readded nlp_delayfunc after timer
-+	 * firing and before processing the timer, cancel the
-+	 * nlp_delayfunc.
-+	 */
-+	del_timer_sync(&ndlp->nlp_delayfunc);
- 	retry = ndlp->nlp_retry;
- 
- 	switch (cmd) {
+ void
++lpfc_cancel_retry_delay_tmo(struct lpfc_hba *phba, struct lpfc_nodelist * nlp)
++{
++	nlp->nlp_flag &= ~NLP_DELAY_TMO;
++	del_timer_sync(&nlp->nlp_delayfunc);
++	nlp->nlp_last_elscmd = 0;
++
++	if (!list_empty(&nlp->els_retry_evt.evt_listp))
++		list_del_init(&nlp->els_retry_evt.evt_listp);
++
++	if (nlp->nlp_flag & NLP_NPR_2B_DISC) {
++		nlp->nlp_flag &= ~NLP_NPR_2B_DISC;
++		if (phba->num_disc_nodes) {
++			/* Check to see if there are more
++			 * PLOGIs to be sent
++			 */
++			lpfc_more_plogi(phba);
++		}
++
++		if (phba->num_disc_nodes == 0) {
++			phba->fc_flag &= ~FC_NDISC_ACTIVE;
++			lpfc_can_disctmo(phba);
++			if (phba->fc_flag & FC_RSCN_MODE) {
++				/* Check to see if more RSCNs
++				 * came in while we were
++				 * processing this one.
++				 */
++				if((phba->fc_rscn_id_cnt==0) &&
++				   (!(phba->fc_flag & FC_RSCN_DISCOVERY))) {
++					phba->fc_flag &= ~FC_RSCN_MODE;
++				}
++				else {
++					lpfc_els_handle_rscn(phba);
++				}
++			}
++		}
++	}
++	return;
++}
++
++void
+ lpfc_els_retry_delay(unsigned long ptr)
+ {
+ 	struct lpfc_nodelist *ndlp;
+@@ -2415,15 +2455,8 @@ lpfc_rscn_recovery_check(struct lpfc_hba
+ 			/* Make sure NLP_DELAY_TMO is NOT running
+ 			 * after a device recovery event.
+ 			 */
+-			if (ndlp->nlp_flag & NLP_DELAY_TMO) {
+-				ndlp->nlp_flag &= ~NLP_DELAY_TMO;
+-				ndlp->nlp_last_elscmd = 0;
+-				del_timer_sync(&ndlp->nlp_delayfunc);
+-				if (!list_empty(&ndlp->
+-						els_retry_evt.evt_listp))
+-					list_del_init(&ndlp->
+-						els_retry_evt.evt_listp);
+-			}
++			if (ndlp->nlp_flag & NLP_DELAY_TMO)
++				lpfc_cancel_retry_delay_tmo(phba, ndlp);
+ 		}
+ 	}
+ 	return 0;
 
 
