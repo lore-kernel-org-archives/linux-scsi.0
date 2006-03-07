@@ -1,42 +1,32 @@
-From: "Lola Ervin" <lnko@lecher.com>
-Subject: Quality Financing for the USA!
-Date: Tue, 07 Mar 2006 22:13:06 +0100
-Message-ID: <756u916f.8294747@www1.nhj8.net>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: osst changes required to move forward to block request
+Date: Tue, 07 Mar 2006 15:53:37 -0600
+Message-ID: <1141768417.3239.52.camel@mulgrave.il.steeleye.com>
+References: <20060206131944.GA1769@lst.de>
+	 <1139274141l.7464l.1l@athena.riede.org>
+	 <20060207091254.GA11691@infradead.org>
+	 <1139687216l.24984l.0l@athena.riede.org>
+	 <20060307115913.GA30421@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:54227 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S1751626AbWCGVJx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2006 16:09:53 -0500
-Received: from p549A55CE.dip.t-dialin.net (p549A55CE.dip.t-dialin.net [84.154.85.206])
-	by zeus1.kernel.org (8.13.1/8.13.1) with SMTP id k27L9fdc028054
-	for <linux-scsi@vger.kernel.org>; Tue, 7 Mar 2006 21:09:45 GMT
+Received: from stat9.steeleye.com ([209.192.50.41]:21123 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S964784AbWCGVx5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Mar 2006 16:53:57 -0500
+In-Reply-To: <20060307115913.GA30421@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Willem Riede <osst@riede.org>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
+On Tue, 2006-03-07 at 11:59 +0000, Christoph Hellwig wrote:
+> James, could you put this into the scsi-misc tree so we don't have any ULD
+> using the scsi_request APIs anymore?
 
-Thanks to a nomination by an associate of yours, there are potentially three deals that will be offerêd to you. 
-Notice - past credit history is NOT a factor for this promotion as long as you still have own a home and we recieve word 
-from you within 24 hours. 
+OK, done ... now could someone actually test it?
 
-
-________Detail Summary___________ 
-Rate: As low as 3% 
-Ammount: Up to 800,000 
-Type: Rêfinancê or Homê Equity 
-Closing Date: 30 days 
-
-
-In accordance with our terms please visit here to verify your information on our secure, private site to ensure our 
-records are accurate. 
-http://www1.nhj8.net/was.asp
-
-Kaitlin Ferreira
-
-For Deletion 
-http://www1.nhj8.net/rem.asp
+James
 
 
