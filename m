@@ -1,26 +1,39 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: osst changes required to move forward to block request
-Date: Tue, 7 Mar 2006 23:43:21 +0100
-Message-ID: <20060307224321.GB17487@lst.de>
-References: <20060206131944.GA1769@lst.de> <1139274141l.7464l.1l@athena.riede.org> <20060207091254.GA11691@infradead.org> <1139687216l.24984l.0l@athena.riede.org> <20060307115913.GA30421@infradead.org> <1141768417.3239.52.camel@mulgrave.il.steeleye.com>
+From: zongo fatima <fat04@zipmail.com.br>
+Subject: FATI
+Date: Tue, 07 Mar 2006 15:51:00 +0100
+Message-ID: <1141743060.440d9dd4387b8@imp.online.net>
+Reply-To: fatimazongo_1969@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:15575 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S964829AbWCGWnb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2006 17:43:31 -0500
-Content-Disposition: inline
-In-Reply-To: <1141768417.3239.52.camel@mulgrave.il.steeleye.com>
+Received: from imp2-j.online.net ([212.27.37.65]:57285 "EHLO imp2-j.online.net")
+	by vger.kernel.org with ESMTP id S964832AbWCGWrG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2006 17:47:06 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Willem Riede <osst@riede.org>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-On Tue, Mar 07, 2006 at 03:53:37PM -0600, James Bottomley wrote:
-> On Tue, 2006-03-07 at 11:59 +0000, Christoph Hellwig wrote:
-> > James, could you put this into the scsi-misc tree so we don't have any ULD
-> > using the scsi_request APIs anymore?
-> 
-> OK, done ... now could someone actually test it?
 
-Willem tested it.
+
+Dear One,
+It is my pleasure to acquaint you with this proposal for the purpose of
+investment in your country under your management. I am MISS FATI ZONGO the only
+daughter of late JULLIUS ZONGO from Sierra Leone.
+My late father was a gold and diamond merchant based in Freetown, Sierra-Leone.
+As a result of the political instability of Sierra-Leone, my late father
+packaged USD35,500,000.00, Thirty five million, five hundred thousand dollars
+in cash which he deposited in a Security Institution for security reasons. He
+declared the deposit as Personal Effects as shown in the certificate of deposit
+in my possession.
+I am here seeking for an avenue to transfer this money to a reliable and
+trustworthy individual for investment and management purpose.
+I am here as a refugee because of the political crisis in my country Sierra
+Leone. Please I would offer you 25% of the total sum of USD35.5M for your
+assistance.Please I need to transfer this money urgently because delay would
+not help at all and I need to relocate based on the political instability in
+this sub-region,to enable me continue my education because i was medical
+student before the death of my parents.
+Your immediate response would be appreciated.
+Best regards,
+MISS FATI ZONGO.
+
