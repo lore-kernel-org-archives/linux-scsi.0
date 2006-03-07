@@ -1,61 +1,45 @@
-From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: RE: [RFC] first cut at infrastructure for handling differentdevicetypes in the sas class
-Date: Mon, 6 Mar 2006 18:09:45 -0700
-Message-ID: <F331B95B72AFFB4B87467BE1C8E9CF5F34BB4E@NAMAIL2.ad.lsil.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: osst changes required to move forward to block request
+Date: Tue, 7 Mar 2006 11:59:13 +0000
+Message-ID: <20060307115913.GA30421@infradead.org>
+References: <20060206131944.GA1769@lst.de> <1139274141l.7464l.1l@athena.riede.org> <20060207091254.GA11691@infradead.org> <1139687216l.24984l.0l@athena.riede.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:22679 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S932579AbWCGBJs convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 6 Mar 2006 20:09:48 -0500
-Content-class: urn:content-classes:message
+Received: from pentafluge.infradead.org ([213.146.154.40]:40424 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1752484AbWCGL7Q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Mar 2006 06:59:16 -0500
+Content-Disposition: inline
+In-Reply-To: <1139687216l.24984l.0l@athena.riede.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: Willem Riede <osst@riede.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-On Monday, March 06, 2006 9:39 AM, James Bottomley wrote:
-
+On Sat, Feb 11, 2006 at 02:46:56PM -0500, Willem Riede wrote:
+> On 02/07/2006 04:12:55 AM, Christoph Hellwig wrote:
+> > On Mon, Feb 06, 2006 at 08:02:21PM -0500, Willem Riede wrote:
+> > 
+> > > But I will certainly help retire scsi_request. And anything else that is  
+> > > needed to keep up with proper kernel style. Let me know what those are, if 
+> > > you  would? I'll start looking at how st has changed, and will be back with 
+> > > any  questions I may have.
+> > 
+> > right now the above is the most urgent bit.  What would be nice but not
+> > required is a conversion to the sense handling helpers, similar to what
+> > st got (aka using the *normalize_sense functions and then dealing with the
+> > parsed sense buffer instead of the raw sense data)
 > 
-> Well, it's not ... the nexus loss timeout parameters weren't 
-> available.
-> The intent is to embed the rphys into more representative structures
-> that can have different parameters (an expander has parameters than an
-> end device doesn't and vice versa).  Eventually, when the whole lot is
-> converted, the ability to alloc a plain rphy will be revoked and
-> everything will be done via the real device type.
+> Ok, so here is my first take at satisfying this request.
+> Be warned, that beyond compiling, and checking that the new module
+> doesn't immediately blow up, there hasn't yet been a lot of testing.
 > 
-
-Christoph mentioned in other email about adding sas_end_device, 
-sas_expander, and sas_sata_device, which is fine.   I'm interested 
-in the changes you forsee, as we need to make plans for that in mptsas. 
-As long as these changes are not breaking the driver....
-
-
-> The aic94xx needs a full tree representation for this, so I'm planning
-> to add this to the sas transport class.  We really need to work out a
-> way for mptsas to display the tree too.  Having different 
-> topology views
-> for the same physical SAS topology show up when you change 
-> HBA is a bit
-> undesirable.
+> But this should allow you to comment on the changes, and move forward
+> with dropping scsi_request from the kernel code.
 > 
+> Signed-off-by: Willem Riede <osst@riede.org>
 
-Agreed.  We need to display same tree.   
-
-> Yes, I know.  However, I need expander devices that contain the
-> necessary information to be able to perform discovery in the sas
-> transport class, so they'll appear eventually in the same way 
-> that this
-> patch adds end devices ... as objects with embedded rphys.
-> 
-
-Ok, define discovery.  I hope that doesn't mean the transport layer is
-sending SMP passthru commands to the driver?  Recall, concerns from our 
-architect over the performance hit?  They recommend to me that we
-providing the topology data via config pages. 
-
+James, could you put this into the scsi-misc tree so we don't have any ULD
+using the scsi_request APIs anymore?
 
