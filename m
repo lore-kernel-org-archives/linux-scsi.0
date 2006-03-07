@@ -1,145 +1,98 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: SCSI target and IO-throttling
-Date: Tue, 07 Mar 2006 21:46:45 +0300
-Message-ID: <440DD515.7070707@vlnb.net>
-References: <44071BA4.3030808@vlnb.net> <8932FBA5-241C-470E-A928-F34868EC0A8D@egenera.com> <440DC897.6080408@vlnb.net> <2FBC50BB-5536-4E6F-9D02-7E9AE7174368@egenera.com>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: RFC: Move SG_GET_SCSI_ID from sg to scsi
+Date: Tue, 07 Mar 2006 13:49:56 -0500
+Message-ID: <440DD5D4.2080403@tmr.com>
+References: <Pine.LNX.4.58.0603061133070.2997@be1.lrz> <440C8E60.6020005@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from out-relay-02.infobox.ru ([195.208.234.171]:44418 "EHLO
-	out-relay-02.infobox.ru") by vger.kernel.org with ESMTP
-	id S1751446AbWCGSq5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Mar 2006 13:46:57 -0500
-In-Reply-To: <2FBC50BB-5536-4E6F-9D02-7E9AE7174368@egenera.com>
+Received: from prgy-npn2.prodigy.com ([207.115.54.38]:36102 "EHLO
+	oddball.prodigy.com") by vger.kernel.org with ESMTP
+	id S1751485AbWCGSst (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Mar 2006 13:48:49 -0500
+In-Reply-To: <440C8E60.6020005@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Steve Byan <smb@egenera.com>
-Cc: linux-scsi@vger.kernel.org
+To: dougg@torque.net
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Steve Byan wrote:
+Douglas Gilbert wrote:
+> Bodo Eggert wrote:
+>> I suggest moving the SG_GET_SCSI_ID ioctl from sg to scsi, since it's 
+>> generally usefull and the alternative function SCSI_IOCTL_GET_IDLUN
+>> is limited in range (in-kernel data types may be larger) and 
+>> functionality (type, ...).
 > 
-> On Mar 7, 2006, at 12:53 PM, Vladislav Bolkhovitin wrote:
+> Bodo,
+> ioctls, especially new ones, have become very unpopular
+> in the linux kernel. Whoever implemented the SG_IO ioctl
+> in the block layer moved just enough other sg ioctls to
+> fool cdrecord that it was talking to the sg driver. The
+> SG_GET_SCSI_ID ioctl didn't make the cut, probably because
+> cdrecord didn't use it.
 > 
->> Steve Byan wrote:
+> Mind you, I think it is correct to (try and) move
+> SG_GET_SCSI_ID to the SCSI subsystem rather than
+> the block layer. Otherwise we would not be able
+> to use your proposed ioctl on non-block, sg visible
+> only devices (e.g. a SCSI enclosure (SES protocol)).
+> 
+>> However, I have some questions about that ioctl:
 >>
->>> On Mar 2, 2006, at 11:21 AM, Vladislav Bolkhovitin wrote:
->>>
->>>> Could anyone advice how a SCSI target device can IO-throttle its   
->>>> initiators, i.e. prevent them from queuing too many commands,  please?
->>>>
->>>> I suppose, the best way for doing this is to inform the  initiators  
->>>> about the maximum queue depth X of the target device,  so any of 
->>>> the  initiators will not send more than X commands. But  I have not 
->>>> found  anything similar to that on INQUIRY or MODE  SENSE pages. 
->>>> Have I  missed something? Just returning QUEUE FULL  status doesn't 
->>>> look to  be correct, because it can lead to out of  order commands 
->>>> execution.
->>>
->>> Returning QUEUE FULL status is correct, unless the initiator does  
->>> not  have any pending commands on the LUN, in which case you  should 
->>> return  BUSY. Yes, this can lead to out-of-order execution.  That's 
->>> why tapes  have traditionally not used SCSI command queuing.
->>> Look into the unit attention interlock feature added to SCSI as a   
->>> result of uncovering this issue during the development of the  iSCSI  
->>> standard.
->>>
->>>> Apparently, hardware SCSI targets don't suffer from queuing   
->>>> overflow and don't return all the time QUEUE FULL status, so the   
->>>> must be a way to do the throttling more elegantly.
->>>
->>> No, they just have big queues.
->>
->>
->> Thanks for the reply!
->>
->> Things are getting clearer for me now, but still there are few  things 
->> that are not very clear for me. Hope, they won't require too  long 
->> answers. I'm asking, because we in SCST project (SCSI target  
->> mid-level for Linux + some target drivers, http://scst.sourceforge.net) must
->> emulate correct SCSI target device  
->> behavior under any IO load, including extreme high one.
->>
->>  - Can you estimate, please, how big target commands queue should  be 
->> in order to initiators will never receive QUEUE FULL status?  
->> Considering case that initiators are Linux-based and each has a  
->> separate and independent queue.
+>> - There is the concept of 8-Byte-LUNs: Are they mapped to integer LUNs?
+>> Should the extra space in the struct sg_scsi_id be used for that?
+>> Or should I abandon the idea and create a new IOCTL instead?
 > 
+> Yes, the SG_GET_SCSI_ID ioctl should allow for 8 byte
+> LUNs and that is a flaw in the current design. It is
+> no excuse that the rest of the SCSI subsystem has a
+> similar shortcoming.
 > 
-> Do you have a per-target pool of resources for handing commands, or  are 
-> the pools per-logical unit?
+> In linux there is also a move away from the host_number,
+> channel_number, target_identifier and LUN tuple used
+> traditionally by many Unix SCSI subsystems (most do not
+> have the second component: channel_number). At least the
+> LUN is not controversial (as long as it is 8 byte!). The
+> target_identifier is actually transport dependent (but
+> could just be a simple enumeration). The host_number is
+> typically an enumeration over PCI addresses but some
+> other type of computer buses (e.g. microchannel) could be
+> involved.
 
-Most limited resource is memory allocated for commands buffers. It is 
-per-target. Other resourses, like internal commands structures, are so 
-small, so they could be considered virtually unlimited. They are also 
-global, but accounting is done by per-(session(nexus), LU).
+In real SCSI systems that usually maps to card, bus/cable, ID and LUN 
+and allows some correspondence between physical and logical space. Handy 
+to trouble shoot, if you see a lot of errors on the same cable yo have a 
+clue that it may be common cause.
+> 
+>> - The original IOCTL will check for sdp->detached. If the moved-to-scsi 
+>> ioctl is called, the check will be done before chaining from sg, but what
+>> will I need to check if it's called on a non-sg device?
+> 
+> That should not be needed as the open file descriptor
+> to the SCSI device should be sufficient to keep the
+> relevant objects alive even if the device was just hot
+> unplugged.
+> 
+>> - Are there any (planned) changes that will conflict with this patch?
+> 
+> There is this thing called sysfs which is advertised
+> as an ioctl replacement. However if a routine is given
+> an open device node and you want to find its identity
+> an ioctl does have some advantages over a procfs followed
+> by a sysfs trawl. Just like ioctl related structures,
+> sysfs also changes, frustrating applications built on
+> it. Sysfs might even change more often than a well designed
+> ioctl since sysfs is often tightly bound to the driver
+> software architecture which may change without impacting
+> interfaces.
+> 
+> Lets see if this post gets a response.
 
-> I'm not sure you could size the queue so that TASK_SET_FULL is never  
-> returned. Just accept the fact the the target must return  TASK_SET_FULL 
-> or BUSY sometimes.
+Good to see you still around and posting about the relevant technical 
+details.
 
-We have relatively cheap method of queuing commands without allocating 
-buffers for them. This way millions of commands could be queued on an 
-average Linux box without problems. Only ABORTs and they influence on 
-performance worry me.
-
-> As a data-point, some modern SCSI disks support queue depths in the  
-> range of 128 to 256 commands.
-
-I rather asked about practical upper limit. From our observations a 
-Linux initiator could easily send 128+ commands, but usually less. Looks 
-like it depends from its available memory. Interested to know the exact 
-rule.
-
->>  - The queue could be so big that the last command in it could not  
->> been processed before the initiator's timeout, then, after the  
->> timeout was hit, the initiator would start issuing ABORTs for the  
->> timeouted command. Is it OK behavior?
-> 
-> 
-> Well, it's the behavior implied by the SCSI standard; that is, on a  
-> timeout, the initiator should abort the command. If an initiator sets  
-> it's timeout to less than the queuing delay at the server, I wouldn't  
-> call that "OK behavior", but it's not the target's fault, it's the  
-> initiator's fault.
-> 
->> Or rather misconfiguration (of who, initiator or target?)? Does the  
->> initiator in such situation supposed to reissue the command after  the 
->> preceding ones finished, or behave somehow else?
-> 
-> 
-> I think it's up to the class driver to decide whether to retry a  
-> command after it times-out.
-> 
->> Apparently, ABORTs must hit the performance at the similar degree  as 
->> too many QUEUE FULLs, if not more.
-> 
-> 
-> Much worse, I would think.
-> 
->> Seems, we should setup on the target queue with virtually unlimited  
->> size and, if an initiator is dumb enough to queue so much commands  
->> that there will be timeouts, then it will be its problem and duty  to 
->> rule the situation without performance loss. Does it looks OK?
-> 
-> 
-> I don't think you need to pick an unlimited size. Something on the  
-> order of 128 to 512 commands should be sufficient. If you have  multiple 
-> logical units, you could probably combine them in a common  pool and 
-> somewhat reduce the number of command resources you allocate  per 
-> logical unit, on the theory that they'll not all be fully  utilized at 
-> the same time.
-
-OK
-
-> By the way, make sure you don't deadlock trying to obtain command- 
-> resources to return TASK_SET_FULL or BUSY to a command in the case  
-> where the pool of command-resources is exhausted. This is one of the  
-> tricky bits.
-
-In our architecture there is no need to allocate any additional 
-resources to reply with TASK_SET_FULL or BUSY. So, we already took care 
-of this.
-
-Thanks,
-Vlad
+-- 
+    -bill davidsen (davidsen@tmr.com)
+"The secret to procrastination is to put things off until the
+  last possible moment - but no longer"  -me
