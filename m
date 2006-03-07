@@ -1,52 +1,39 @@
-From: Frederic TEMPORELLI <frederic.temporelli@ext.bull.net>
-Subject: scsi_track_queue_full function - static values ?
-Date: Tue, 07 Mar 2006 14:32:44 +0100
-Message-ID: <440D8B7C.9020001@ext.bull.net>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: RFC: Move SG_GET_SCSI_ID from sg to scsi
+Date: Tue, 07 Mar 2006 15:58:22 +0100
+Message-ID: <440D9F8E.7050402@s5r6.in-berlin.de>
+References: <Pine.LNX.4.58.0603061133070.2997@be1.lrz> <440C8E60.6020005@torque.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ecfrec.frec.bull.fr ([129.183.4.8]:32424 "EHLO
-	ecfrec.frec.bull.fr") by vger.kernel.org with ESMTP
-	id S1750828AbWCGNcs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Mar 2006 08:32:48 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by ecfrec.frec.bull.fr (Postfix) with ESMTP id B5EED19D906
-	for <linux-scsi@vger.kernel.org>; Tue,  7 Mar 2006 14:32:49 +0100 (CET)
-Received: from ecfrec.frec.bull.fr ([127.0.0.1])
- by localhost (ecfrec.frec.bull.fr [127.0.0.1]) (amavisd-new, port 10024)
- with ESMTP id 30018-03 for <linux-scsi@vger.kernel.org>;
- Tue,  7 Mar 2006 14:32:48 +0100 (CET)
-Received: from ecn002.frec.bull.fr (ecn002.frec.bull.fr [129.183.4.6])
-	by ecfrec.frec.bull.fr (Postfix) with ESMTP id 22A9719D912
-	for <linux-scsi@vger.kernel.org>; Tue,  7 Mar 2006 14:32:48 +0100 (CET)
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-	by openx3.frec.bull.fr (Postfix) with ESMTP id 0EF632B0EB
-	for <linux-scsi@vger.kernel.org>; Tue,  7 Mar 2006 14:32:45 +0100 (CET)
+Received: from einhorn.in-berlin.de ([192.109.42.8]:35970 "EHLO
+	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
+	id S1750759AbWCGPA5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Mar 2006 10:00:57 -0500
+In-Reply-To: <440C8E60.6020005@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: dougg@torque.net
+Cc: Bodo Eggert <7eggert@gmx.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi,
+Douglas Gilbert wrote:
+> In linux there is also a move away from the host_number,
+> channel_number, target_identifier and LUN tuple used
+> traditionally by many Unix SCSI subsystems (most do not
+> have the second component: channel_number). At least the
+> LUN is not controversial (as long as it is 8 byte!). The
+> target_identifier is actually transport dependent (but
+> could just be a simple enumeration). The host_number is
+> typically an enumeration over PCI addresses but some
+> other type of computer buses (e.g. microchannel) could be
+> involved.
 
-
-I was looking at the scsi_track_queue_full (driver/scsi/scsi.c) function.
-
-Can someone tell me how have been defined all the static values in this function ?
-
-- we may have (max) 16 (>>4) jiffies between calls (else there's no need to call 
-this function...),
-
-- queue_full_depth_count should be > 10 (else queue depth still not changed),
-
-- if lun queue depth < 8, lun queue depth is set with cmd_per_lun
-(what's happen if cmd_per_lun > 8 ???)
-
-
-May someone add some #define for these values ?
-Is it a way to use 'auto-adapted' values ?
-
-Best regards.
-
+For some transports, not only the channel but also the Scsi_Host is 
+meaningless. Such transports deal only with targets and logical units. 
+This includes all multi-protocol + multi-bus or network infrastructures 
+such as iSCSI, USB, IEEE 1394.
 -- 
-Frederic TEMPORELLI
+Stefan Richter
+-=====-=-==- --== --===
+http://arcgraph.de/sr/
