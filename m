@@ -1,49 +1,39 @@
-From: Steve Byan <smb@egenera.com>
-Subject: Re: SCSI target and IO-throttling
-Date: Tue, 7 Mar 2006 14:00:12 -0500
-Message-ID: <A59711AB-5397-4DFE-8CD3-33E5B637AD01@egenera.com>
-References: <44071BA4.3030808@vlnb.net> <8932FBA5-241C-470E-A928-F34868EC0A8D@egenera.com> <440DC897.6080408@vlnb.net> <2FBC50BB-5536-4E6F-9D02-7E9AE7174368@egenera.com> <440DD515.7070707@vlnb.net>
-Mime-Version: 1.0 (Apple Message framework v746.2)
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+From: James Smart <James.Smart@Emulex.Com>
+Subject: [PATCH 0/6] lpfc 8.1.4 : Driver Update for bug fixes
+Date: Tue, 07 Mar 2006 15:02:12 -0500
+Message-ID: <1141761732.25430.14.camel@localhost.localdomain>
+Reply-To: James.Smart@Emulex.Com
+Mime-Version: 1.0
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from roadrunner-base.egenera.com ([63.160.166.46]:10981 "EHLO
-	roadrunner-base.egenera.com") by vger.kernel.org with ESMTP
-	id S932074AbWCGTA0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Mar 2006 14:00:26 -0500
-In-Reply-To: <440DD515.7070707@vlnb.net>
+Received: from emulex.emulex.com ([138.239.112.1]:29132 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S932100AbWCGUDc
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Mar 2006 15:03:32 -0500
+Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
+	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id k27K3Orf021469
+	for <linux-scsi@vger.kernel.org>; Tue, 7 Mar 2006 12:03:25 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
 
-On Mar 7, 2006, at 1:46 PM, Vladislav Bolkhovitin wrote:
+This patch set updates the lpfc driver to revision 8.1.4, which includes
+the following changes:
 
-> Steve Byan wrote:
+ - Fix Discovery processing for NPorts that change their NPortId on the fly
+ - Fixed RSCN handling when a PLOGI is in retry.
+ - Fixed a timer panic due to timer firing after freeing ndlp
+ - Introduce lpfc_reset_barrier() function for resets on dual channel adapters
+ - Two misc fixes:
+   - Fix deadlock caused by return with host_lock held in lpfc_findnode_did
+   - Initialize all fields of the allocated mail box structure to zero.
+     Was causing some sysfs mailbox commands to fail immediately after load.
+ - Change version number to 8.1.4
 
->> As a data-point, some modern SCSI disks support queue depths in  
->> the  range of 128 to 256 commands.
->
-> I rather asked about practical upper limit. From our observations a  
-> Linux initiator could easily send 128+ commands, but usually less.  
-> Looks like it depends from its available memory. Interested to know  
-> the exact rule.
+-- james s
 
-I don't know the rule. Obviously, it could change over time, and be  
-different for different OS's.
 
-Sounds to me like you might be trying to fix a busted initiator by  
-changing the target behavior.
-
-Regards,
--Steve
--- 
-Steve Byan <smb@egenera.com>
-Software Architect
-Egenera, Inc.
-165 Forest Street
-Marlboro, MA 01752
-(508) 858-3125
 
 
