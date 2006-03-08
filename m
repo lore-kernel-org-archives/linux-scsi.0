@@ -1,42 +1,59 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [patch 23/28] scsi cd: VariRec, GigaRec and PowerRec as user
-Date: Wed, 8 Mar 2006 08:45:32 -0700
-Message-ID: <20060308154532.GJ7301@parisc-linux.org>
-References: <200603080816.k288GSQO002236@shell0.pdx.osdl.net> <1141830726.3194.8.camel@mulgrave.il.steeleye.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Steve Byan <smb@egenera.com>
+Subject: Re: SCSI target and IO-throttling
+Date: Wed, 8 Mar 2006 10:56:38 -0500
+Message-ID: <D2BA8EC0-6B20-40EF-B9C5-88CABB1B7CDD@egenera.com>
+References: <OF586A820A.80375000-ON8825712A.00712235-8825712A.00815110@us.ibm.com> <440EF9AC.7070903@vlnb.net>
+Mime-Version: 1.0 (Apple Message framework v746.2)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:12437 "EHLO
-	palinux.hppa") by vger.kernel.org with ESMTP id S1751013AbWCHPpd
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Mar 2006 10:45:33 -0500
-Content-Disposition: inline
-In-Reply-To: <1141830726.3194.8.camel@mulgrave.il.steeleye.com>
+Received: from roadrunner-base.egenera.com ([63.160.166.46]:10424 "EHLO
+	roadrunner-base.egenera.com") by vger.kernel.org with ESMTP
+	id S1751292AbWCHP4o (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 8 Mar 2006 10:56:44 -0500
+In-Reply-To: <440EF9AC.7070903@vlnb.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: akpm@osdl.org, linux-scsi@vger.kernel.org, T.Maguin@web.de, axboe@suse.de
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: Bryan Henderson <hbryan@us.ibm.com>, linux-scsi@vger.kernel.org
 
-On Wed, Mar 08, 2006 at 09:12:06AM -0600, James Bottomley wrote:
-> On Wed, 2006-03-08 at 00:14 -0800, akpm@osdl.org wrote:
-> > From: Thomas Maguin <T.Maguin@web.de>
-> 
-> > This patch allows normal users to eectute some Plextor drives
-> > commands:
-> > 
-> > - Hide CD-R
-> > - SingleSession
-> > - SpeedRead
-> > - PowerRec
-> > - VariRec
-> > - GigaRec
-> > 
-> 
-> This one just isn't safe.  We can't add vendor specific commands to the
-> permissions table because they mean different things to different
-> vendors ... get mode on one could be halt and catch fire on another, so
-> the whole concept of safety via command verification is lost.
 
-Thanks for NAKing this one again, James.  I'm a bit disappointed akpm
-picked it up given that I explained how unsafe it was when it was posted:
-http://marc.theaimsgroup.com/?l=linux-scsi&m=113976322621230&w=2
+On Mar 8, 2006, at 10:35 AM, Vladislav Bolkhovitin wrote:
+
+> Bryan Henderson wrote:
+>> Why would the queue have a greater capacity than what is needed  
+>> when you care about performance?  Is there some non-performance  
+>> reason to have a giant queue?
+>> I still think having a giant queue is not a solution to any flow  
+>> control (or, in the words of the original problem, I/O throttling)  
+>> problem.  I'm even skeptical that there's any size you can make  
+>> one that would avoid queue full conditions.  It would be like  
+>> avoiding difficult memory allocation algorithms by just having a  
+>> whole lot of memory.
+>
+> Yes, you're correct. But can you formulate a practical common rule  
+> working on any SCSI transport, including FC, on which a SCSI  
+> target, which knows some limit, can tell it to an initiator, so it  
+> will not try to queue too many commands, please? It looks like I  
+> have no choice, except doing "giant" queue on target hoping that  
+> initiators are smart enough to not queue so many commands that it  
+> starts seeing timeouts.
+
+I still don't understand why you are reluctant to return  
+TASK_SET_FULL or BUSY in this case; it's what the SCSI standard  
+supplies as the way to say "don't queue too many commands, please".
+
+If you don't want to return TASK_SET_FULL, then yes, an effectively  
+unbounded command queue is your only alternative.
+
+Regards,
+-Steve
+-- 
+Steve Byan <smb@egenera.com>
+Software Architect
+Egenera, Inc.
+165 Forest Street
+Marlboro, MA 01752
+(508) 858-3125
+
+
