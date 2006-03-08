@@ -1,180 +1,151 @@
 From: akpm@osdl.org
-Subject: [patch 07/28] drivers/scsi/FlashPoint.c: remove trivial wrappers
-Date: Wed, 08 Mar 2006 00:14:23 -0800
-Message-ID: <200603080816.k288GDSR002169@shell0.pdx.osdl.net>
+Subject: [patch 04/28] MODULE_ALIAS_{BLOCK,CHAR}DEV_MAJOR for drivers/scsi
+Date: Wed, 08 Mar 2006 00:14:20 -0800
+Message-ID: <200603080816.k288G97w002160@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:20140 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1752097AbWCHIQQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Mar 2006 03:16:16 -0500
+Received: from smtp.osdl.org ([65.172.181.4]:25772 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1752097AbWCHIQU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Mar 2006 03:16:20 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, adobriyan@gmail.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, rene.herman@keyaccess.nl, greg@kroah.com, hch@lst.de
 
 
-From: Alexey Dobriyan <adobriyan@gmail.com>
+From: Rene Herman <rene.herman@keyaccess.nl>
 
-Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
+Add device-major aliases in drivers/scsi, allowing kmod autoload:
+
+MODULE_ALIAS_CHARDEV_MAJOR(SCSI_CHANGER_MAJOR)
+MODULE_ALIAS_CHARDEV_MAJOR(OSST_MAJOR)
+MODULE_ALIAS_CHARDEV_MAJOR(SCSI_TAPE_MAJOR)
+MODULE_ALIAS_BLOCKDEV_MAJOR(SCSI_CDROM_MAJOR)
+MODULE_ALIAS_BLOCKDEV_MAJOR(SCSI_DISKN_MAJOR)
+
+Submitted the SCSI_TAPE_MAJOR before to the driver author, but never got
+a reply:
+
+http://marc.theaimsgroup.com/?l=linux-kernel&m=110589612809217&w=2
+
+Cc: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Greg KH <greg@kroah.com>
+Cc: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/FlashPoint.c |   54 ++++++++++++------------------------
- 1 files changed, 19 insertions(+), 35 deletions(-)
+ drivers/scsi/ch.c   |    1 +
+ drivers/scsi/osst.c |    1 +
+ drivers/scsi/sd.c   |   25 +++++++++++++++++++++----
+ drivers/scsi/sg.c   |    2 +-
+ drivers/scsi/sr.c   |    4 ++++
+ drivers/scsi/st.c   |    3 ++-
+ 6 files changed, 30 insertions(+), 6 deletions(-)
 
-diff -puN drivers/scsi/FlashPoint.c~drivers-scsi-flashpointc-remove-trivial-wrappers drivers/scsi/FlashPoint.c
---- 25/drivers/scsi/FlashPoint.c~drivers-scsi-flashpointc-remove-trivial-wrappers	Mon Feb  6 14:49:57 2006
-+++ 25-akpm/drivers/scsi/FlashPoint.c	Mon Feb  6 14:49:57 2006
-@@ -26,25 +26,9 @@
- #undef BUSTYPE_PCI
+diff -puN drivers/scsi/ch.c~module_alias_blockchardev_major-for-drivers-scsi drivers/scsi/ch.c
+--- devel/drivers/scsi/ch.c~module_alias_blockchardev_major-for-drivers-scsi	2006-02-27 20:57:26.000000000 -0800
++++ devel-akpm/drivers/scsi/ch.c	2006-02-27 20:57:26.000000000 -0800
+@@ -39,6 +39,7 @@
+ MODULE_DESCRIPTION("device driver for scsi media changer devices");
+ MODULE_AUTHOR("Gerd Knorr <kraxel@bytesex.org>");
+ MODULE_LICENSE("GPL");
++MODULE_ALIAS_CHARDEV_MAJOR(SCSI_CHANGER_MAJOR);
  
+ static int init = 1;
+ module_param(init, int, 0444);
+diff -puN drivers/scsi/osst.c~module_alias_blockchardev_major-for-drivers-scsi drivers/scsi/osst.c
+--- devel/drivers/scsi/osst.c~module_alias_blockchardev_major-for-drivers-scsi	2006-02-27 20:57:26.000000000 -0800
++++ devel-akpm/drivers/scsi/osst.c	2006-02-27 20:57:26.000000000 -0800
+@@ -86,6 +86,7 @@ static int max_sg_segs = 0;
+ MODULE_AUTHOR("Willem Riede");
+ MODULE_DESCRIPTION("OnStream {DI-|FW-|SC-|USB}{30|50} Tape Driver");
+ MODULE_LICENSE("GPL");
++MODULE_ALIAS_CHARDEV_MAJOR(OSST_MAJOR);
  
--#define OS_InPortByte(port)		inb(port)
--#define OS_InPortWord(port)		inw(port)
--#define OS_InPortLong(port)		inl(port)
--#define OS_OutPortByte(port, value)	outb(value, port)
--#define OS_OutPortWord(port, value)	outw(value, port)
--#define OS_OutPortLong(port, value)	outl(value, port)
+ module_param(max_dev, int, 0444);
+ MODULE_PARM_DESC(max_dev, "Maximum number of OnStream Tape Drives to attach (4)");
+diff -puN drivers/scsi/sd.c~module_alias_blockchardev_major-for-drivers-scsi drivers/scsi/sd.c
+--- devel/drivers/scsi/sd.c~module_alias_blockchardev_major-for-drivers-scsi	2006-02-27 20:57:26.000000000 -0800
++++ devel-akpm/drivers/scsi/sd.c	2006-02-27 20:57:26.000000000 -0800
+@@ -71,6 +71,27 @@
+  */
+ #define SD_MAJORS	16
  
- 
--/*
--  Define name replacements for compatibility with the Linux BusLogic Driver.
--*/
- 
--#define SccbMgr_sense_adapter		FlashPoint_ProbeHostAdapter
--#define SccbMgr_config_adapter		FlashPoint_HardwareResetHostAdapter
--#define SccbMgr_unload_card		FlashPoint_ReleaseHostAdapter
--#define SccbMgr_start_sccb		FlashPoint_StartCCB
--#define SccbMgr_abort_sccb		FlashPoint_AbortCCB
--#define SccbMgr_my_int			FlashPoint_InterruptPending
--#define SccbMgr_isr			FlashPoint_HandleInterrupt
- 
- 
- 
-@@ -266,12 +250,12 @@ typedef struct _SCCB {
- #define SG_ELEMENT_SIZE 8              /*Eight byte per element. */
- 
- 
--#define RD_HARPOON(ioport)          OS_InPortByte((u32bits)ioport)
--#define RDW_HARPOON(ioport)         OS_InPortWord((u32bits)ioport)
--#define RD_HARP32(ioport,offset,data) (data = OS_InPortLong((u32bits)(ioport + offset)))
--#define WR_HARPOON(ioport,val)      OS_OutPortByte((u32bits)ioport,(u08bits) val)
--#define WRW_HARPOON(ioport,val)       OS_OutPortWord((u32bits)ioport,(u16bits)val)
--#define WR_HARP32(ioport,offset,data)  OS_OutPortLong((u32bits)(ioport + offset), data)
-+#define RD_HARPOON(ioport)          inb((u32bits)ioport)
-+#define RDW_HARPOON(ioport)         inw((u32bits)ioport)
-+#define RD_HARP32(ioport,offset,data) (data = inl((u32bits)(ioport + offset)))
-+#define WR_HARPOON(ioport,val)      outb((u08bits) val, (u32bits)ioport)
-+#define WRW_HARPOON(ioport,val)       outw((u16bits)val, (u32bits)ioport)
-+#define WR_HARP32(ioport,offset,data)  outl(data, (u32bits)(ioport + offset))
- 
- 
- #define  TAR_SYNC_MASK     (BIT(7)+BIT(6))
-@@ -1130,13 +1114,13 @@ static void (*FPT_s_PhaseTbl[8]) (ULONG,
- 
- /*---------------------------------------------------------------------
-  *
-- * Function: SccbMgr_sense_adapter
-+ * Function: FlashPoint_ProbeHostAdapter
-  *
-  * Description: Setup and/or Search for cards and return info to caller.
-  *
-  *---------------------------------------------------------------------*/
- 
--static int SccbMgr_sense_adapter(PSCCBMGR_INFO pCardInfo)
-+static int FlashPoint_ProbeHostAdapter(PSCCBMGR_INFO pCardInfo)
- {
-    static UCHAR first_time = 1;
- 
-@@ -1408,13 +1392,13 @@ static int SccbMgr_sense_adapter(PSCCBMG
- 
- /*---------------------------------------------------------------------
-  *
-- * Function: SccbMgr_config_adapter
-+ * Function: FlashPoint_HardwareResetHostAdapter
-  *
-  * Description: Setup adapter for normal operation (hard reset).
-  *
-  *---------------------------------------------------------------------*/
- 
--static ULONG SccbMgr_config_adapter(PSCCBMGR_INFO pCardInfo)
-+static ULONG FlashPoint_HardwareResetHostAdapter(PSCCBMGR_INFO pCardInfo)
- {
-    PSCCBcard CurrCard = NULL;
- 	PNVRamInfo pCurrNvRam;
-@@ -1595,7 +1579,7 @@ static ULONG SccbMgr_config_adapter(PSCC
-    return((ULONG)CurrCard);
++MODULE_AUTHOR("Eric Youngdale");
++MODULE_DESCRIPTION("SCSI disk (sd) driver");
++MODULE_LICENSE("GPL");
++
++MODULE_ALIAS_BLOCKDEV_MAJOR(SCSI_DISK0_MAJOR);
++MODULE_ALIAS_BLOCKDEV_MAJOR(SCSI_DISK1_MAJOR);
++MODULE_ALIAS_BLOCKDEV_MAJOR(SCSI_DISK2_MAJOR);
++MODULE_ALIAS_BLOCKDEV_MAJOR(SCSI_DISK3_MAJOR);
++MODULE_ALIAS_BLOCKDEV_MAJOR(SCSI_DISK4_MAJOR);
++MODULE_ALIAS_BLOCKDEV_MAJOR(SCSI_DISK5_MAJOR);
++MODULE_ALIAS_BLOCKDEV_MAJOR(SCSI_DISK6_MAJOR);
++MODULE_ALIAS_BLOCKDEV_MAJOR(SCSI_DISK7_MAJOR);
++MODULE_ALIAS_BLOCKDEV_MAJOR(SCSI_DISK8_MAJOR);
++MODULE_ALIAS_BLOCKDEV_MAJOR(SCSI_DISK9_MAJOR);
++MODULE_ALIAS_BLOCKDEV_MAJOR(SCSI_DISK10_MAJOR);
++MODULE_ALIAS_BLOCKDEV_MAJOR(SCSI_DISK11_MAJOR);
++MODULE_ALIAS_BLOCKDEV_MAJOR(SCSI_DISK12_MAJOR);
++MODULE_ALIAS_BLOCKDEV_MAJOR(SCSI_DISK13_MAJOR);
++MODULE_ALIAS_BLOCKDEV_MAJOR(SCSI_DISK14_MAJOR);
++MODULE_ALIAS_BLOCKDEV_MAJOR(SCSI_DISK15_MAJOR);
++
+ /*
+  * This is limited by the naming scheme enforced in sd_probe,
+  * add another character to it if you really need more disks.
+@@ -1707,9 +1728,5 @@ static void __exit exit_sd(void)
+ 		unregister_blkdev(sd_major(i), "sd");
  }
  
--static void SccbMgr_unload_card(ULONG pCurrCard)
-+static void FlashPoint_ReleaseHostAdapter(ULONG pCurrCard)
- {
- 	UCHAR i;
- 	ULONG portBase;
-@@ -1687,14 +1671,14 @@ static UCHAR FPT_ChkIfChipInitialized(UL
- }
- /*---------------------------------------------------------------------
-  *
-- * Function: SccbMgr_start_sccb
-+ * Function: FlashPoint_StartCCB
-  *
-  * Description: Start a command pointed to by p_Sccb. When the
-  *              command is completed it will be returned via the
-  *              callback function.
-  *
-  *---------------------------------------------------------------------*/
--static void SccbMgr_start_sccb(ULONG pCurrCard, PSCCB p_Sccb)
-+static void FlashPoint_StartCCB(ULONG pCurrCard, PSCCB p_Sccb)
- {
-    ULONG ioport;
-    UCHAR thisCard, lun;
-@@ -1807,14 +1791,14 @@ static void SccbMgr_start_sccb(ULONG pCu
+-MODULE_LICENSE("GPL");
+-MODULE_AUTHOR("Eric Youngdale");
+-MODULE_DESCRIPTION("SCSI disk (sd) driver");
+-
+ module_init(init_sd);
+ module_exit(exit_sd);
+diff -puN drivers/scsi/sg.c~module_alias_blockchardev_major-for-drivers-scsi drivers/scsi/sg.c
+--- devel/drivers/scsi/sg.c~module_alias_blockchardev_major-for-drivers-scsi	2006-02-27 20:57:26.000000000 -0800
++++ devel-akpm/drivers/scsi/sg.c	2006-02-27 20:57:26.000000000 -0800
+@@ -1569,6 +1569,7 @@ MODULE_AUTHOR("Douglas Gilbert");
+ MODULE_DESCRIPTION("SCSI generic (sg) driver");
+ MODULE_LICENSE("GPL");
+ MODULE_VERSION(SG_VERSION_STR);
++MODULE_ALIAS_CHARDEV_MAJOR(SCSI_GENERIC_MAJOR);
  
- /*---------------------------------------------------------------------
-  *
-- * Function: SccbMgr_abort_sccb
-+ * Function: FlashPoint_AbortCCB
-  *
-  * Description: Abort the command pointed to by p_Sccb.  When the
-  *              command is completed it will be returned via the
-  *              callback function.
-  *
-  *---------------------------------------------------------------------*/
--static int SccbMgr_abort_sccb(ULONG pCurrCard, PSCCB p_Sccb)
-+static int FlashPoint_AbortCCB(ULONG pCurrCard, PSCCB p_Sccb)
- {
- 	ULONG ioport;
+ MODULE_PARM_DESC(def_reserved_size, "size of buffer reserved for each fd");
+ MODULE_PARM_DESC(allow_dio, "allow direct I/O (default: 0 (disallow))");
+@@ -2966,4 +2967,3 @@ static int sg_proc_seq_show_debug(struct
  
-@@ -1908,13 +1892,13 @@ static int SccbMgr_abort_sccb(ULONG pCur
+ module_init(init_sg);
+ module_exit(exit_sg);
+-MODULE_ALIAS_CHARDEV_MAJOR(SCSI_GENERIC_MAJOR);
+diff -puN drivers/scsi/sr.c~module_alias_blockchardev_major-for-drivers-scsi drivers/scsi/sr.c
+--- devel/drivers/scsi/sr.c~module_alias_blockchardev_major-for-drivers-scsi	2006-02-27 20:57:26.000000000 -0800
++++ devel-akpm/drivers/scsi/sr.c	2006-02-27 20:57:26.000000000 -0800
+@@ -60,6 +60,10 @@
+ #include "sr.h"
  
- /*---------------------------------------------------------------------
-  *
-- * Function: SccbMgr_my_int
-+ * Function: FlashPoint_InterruptPending
-  *
-  * Description: Do a quick check to determine if there is a pending
-  *              interrupt for this card and disable the IRQ Pin if so.
-  *
-  *---------------------------------------------------------------------*/
--static UCHAR SccbMgr_my_int(ULONG pCurrCard)
-+static UCHAR FlashPoint_InterruptPending(ULONG pCurrCard)
- {
-    ULONG ioport;
  
-@@ -1934,14 +1918,14 @@ static UCHAR SccbMgr_my_int(ULONG pCurrC
++MODULE_DESCRIPTION("SCSI cdrom (sr) driver");
++MODULE_LICENSE("GPL");
++MODULE_ALIAS_BLOCKDEV_MAJOR(SCSI_CDROM_MAJOR);
++
+ #define SR_DISKS	256
  
- /*---------------------------------------------------------------------
-  *
-- * Function: SccbMgr_isr
-+ * Function: FlashPoint_HandleInterrupt
-  *
-  * Description: This is our entry point when an interrupt is generated
-  *              by the card and the upper level driver passes it on to
-  *              us.
-  *
-  *---------------------------------------------------------------------*/
--static int SccbMgr_isr(ULONG pCurrCard)
-+static int FlashPoint_HandleInterrupt(ULONG pCurrCard)
- {
-    PSCCB currSCCB;
-    UCHAR thisCard,result,bm_status, bm_int_st;
+ #define MAX_RETRIES	3
+diff -puN drivers/scsi/st.c~module_alias_blockchardev_major-for-drivers-scsi drivers/scsi/st.c
+--- devel/drivers/scsi/st.c~module_alias_blockchardev_major-for-drivers-scsi	2006-02-27 20:57:26.000000000 -0800
++++ devel-akpm/drivers/scsi/st.c	2006-02-27 20:57:26.000000000 -0800
+@@ -86,8 +86,9 @@ static int st_nr_dev;
+ static struct class *st_sysfs_class;
+ 
+ MODULE_AUTHOR("Kai Makisara");
+-MODULE_DESCRIPTION("SCSI Tape Driver");
++MODULE_DESCRIPTION("SCSI tape (st) driver");
+ MODULE_LICENSE("GPL");
++MODULE_ALIAS_CHARDEV_MAJOR(SCSI_TAPE_MAJOR);
+ 
+ /* Set 'perm' (4th argument) to 0 to disable module_param's definition
+  * of sysfs parameters (which module_param doesn't yet support).
 _
