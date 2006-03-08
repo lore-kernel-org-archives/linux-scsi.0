@@ -1,94 +1,84 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [patch 02/28] drivers/scsi/aic7xxx/: possible cleanups
-Date: Wed, 8 Mar 2006 05:22:18 -0700
-Message-ID: <20060308122218.GH7301@parisc-linux.org>
-References: <200603080816.k288G72x002153@shell0.pdx.osdl.net>
+From: Sebastian Frei <Sebastian@schnapsleichen.de>
+Subject: dc395x.c: Please, contact ... to help improve support ...
+Date: Wed, 8 Mar 2006 13:36:37 +0100
+Message-ID: <200603081336.37840.Sebastian@schnapsleichen.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:44506 "EHLO
-	palinux.hppa") by vger.kernel.org with ESMTP id S932510AbWCHMWS
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Mar 2006 07:22:18 -0500
+Received: from natipslore.rzone.de ([81.169.145.179]:902 "EHLO
+	natipslore.rzone.de") by vger.kernel.org with ESMTP
+	id S1750991AbWCHMgJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 8 Mar 2006 07:36:09 -0500
+Received: from lapnop.qdt (dslb-084-056-237-108.pools.arcor-ip.net [84.56.237.108])
+	(authenticated bits=0)
+	by post.webmailer.de (8.13.1/8.13.1) with ESMTP id k28Ca27d002180
+	for <linux-scsi@vger.kernel.org>; Wed, 8 Mar 2006 13:36:03 +0100 (MET)
 Content-Disposition: inline
-In-Reply-To: <200603080816.k288G72x002153@shell0.pdx.osdl.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@osdl.org
-Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, bunk@stusta.de
+To: linux-scsi@vger.kernel.org
 
-On Wed, Mar 08, 2006 at 12:14:18AM -0800, akpm@osdl.org wrote:
-> From: Adrian Bunk <bunk@stusta.de>
-> 
-> - make needlessly global code static
-> 
-> - #if 0 the following unused global functions:
->   - aic79xx_core.c: ahd_print_scb
->   - aic79xx_core.c: ahd_suspend
->   - aic79xx_core.c: ahd_resume
->   - aic79xx_core.c: ahd_dump_scbs
->   - aic79xx_osm.c: ahd_softc_comp
-> 
->  
-> @@ -155,7 +155,7 @@ typedef enum {
->  	AHDMSG_1B,
->  	AHDMSG_2B,
->  	AHDMSG_EXT
-> -} ahd_msgtype;
-> +	} ahd_msgtype;
->  static int		ahd_sent_msg(struct ahd_softc *ahd, ahd_msgtype type,
->  				     u_int msgval, int full);
->  static int		ahd_parse_msg(struct ahd_softc *ahd,
+Hello,
 
- - Introduces  some  wrong  whitespace  changes
+(please CC, I'm not subscribed)
 
-> @@ -238,10 +238,33 @@ static int		ahd_handle_target_cmd(struct
->  					      struct target_cmd *cmd);
->  #endif
->  
-> +static int		ahd_abort_scbs(struct ahd_softc *ahd, int target,
-> +				       char channel, int lun, u_int tag,
-> +				       role_t role, uint32_t status);
+I got during a backup the following messages in the system log:
 
- - prototypes some functions, while ...
+Mar  8 03:44:08 PINGUIN dc395x: sg_update_list: sg_to_virt failed
+Mar  8 03:44:08 PINGUIN dc395x: sg_update_list: sg_to_virt failed
+Mar  8 03:44:08 PINGUIN drivers/scsi/dc395x.c: Please, contact 
+<linux-scsi@vger.kernel.org> to help improve support
+for your system.
+Mar  8 03:44:08 PINGUIN dc395x: sg_update_list: sg_to_virt failed
+Mar  8 03:44:08 PINGUIN dc395x: sg_update_list: sg_to_virt failed
+Mar  8 03:44:08 PINGUIN dc395x: sg_update_list: sg_to_virt failed
+Mar  8 03:44:08 PINGUIN dc395x: sg_update_list: sg_to_virt failed
+Mar  8 03:46:30 PINGUIN dc395x: sg_update_list: sg_to_virt failed
+Mar  8 03:46:30 PINGUIN dc395x: sg_update_list: sg_to_virt failed
+Mar  8 04:36:21 PINGUIN dc395x: sg_update_list: sg_to_virt failed
+Mar  8 04:36:21 PINGUIN dc395x: sg_update_list: sg_to_virt failed
+Mar  8 04:39:22 PINGUIN dc395x: sg_update_list: sg_to_virt failed
+Mar  8 04:39:22 PINGUIN dc395x: sg_update_list: sg_to_virt failed
+Mar  8 04:39:22 PINGUIN dc395x: sg_update_list: sg_to_virt failed
+Mar  8 04:39:22 PINGUIN dc395x: sg_update_list: sg_to_virt failed
+Mar  8 04:39:22 PINGUIN dc395x: sg_update_list: sg_to_virt failed
+Mar  8 04:39:22 PINGUIN dc395x: sg_update_list: sg_to_virt failed
+Mar  8 04:39:22 PINGUIN dc395x: sg_update_list: sg_to_virt failed
+Mar  8 04:39:22 PINGUIN dc395x: sg_update_list: sg_to_virt failed
 
-> @@ -295,11 +318,44 @@ ahd_set_active_fifo(struct ahd_softc *ah
->  	}
->  }
->  
-> +static __inline void
-> +ahd_unbusy_tcl(struct ahd_softc *ahd, u_int tcl)
-> +{
-> +	ahd_busy_tcl(ahd, tcl, SCB_LIST_NULL);
-> +}
-> +
-> +/*
-> + * Determine whether the sequencer reported a residual
-> + * for this SCB/transaction.
-> + */
-> +static __inline void
-> +ahd_update_residual(struct ahd_softc *ahd, struct scb *scb)
-> +{
-> +	uint32_t sgptr;
-> +
-> +	sgptr = ahd_le32toh(scb->hscb->sgptr);
-> +	if ((sgptr & SG_STATUS_VALID) != 0)
-> +		ahd_calc_residual(ahd, scb);
-> +}
-> +
-> +static __inline void
-> +ahd_complete_scb(struct ahd_softc *ahd, struct scb *scb)
-> +{
-> +	uint32_t sgptr;
-> +
-> +	sgptr = ahd_le32toh(scb->hscb->sgptr);
-> +	if ((sgptr & SG_STATUS_VALID) != 0)
-> +		ahd_handle_scb_status(ahd, scb);
-> +	else
-> +		ahd_done(ahd, scb);
-> +}
-> +
-> +
+It is an opteron, 1GB RAM, a Tekram DC-315U controller with a HP DDS4 tape 
+drive, connected with a narrow->wide SCSI adaptor.
 
- - ... moving others around.  Consistency?
+Some info:
 
+Linux PINGUIN 2.6.15.6 #15 Mon Mar 6 11:30:52 CET 2006 x86_64 x86_64 x86_64 
+GNU/Linux
+
+Mar  7 19:31:01 PINGUIN dc395x: Tekram DC395(U/UW/F), DC315(U) - ASIC 
+TRM-S1040 v2.05, 2004/03/08
+Mar  7 19:31:01 PINGUIN GSI 19 sharing vector 0xC1 and IRQ 19
+Mar  7 19:31:01 PINGUIN ACPI: PCI Interrupt 0000:00:0e.0[A] -> GSI 19 (level, 
+low) -> IRQ 19
+Mar  7 19:31:01 PINGUIN dc395x: Used settings: AdapterID=07, Speed=0(20.0MHz), 
+dev_mode=0x57
+Mar  7 19:31:01 PINGUIN dc395x:                AdaptMode=0x0f, Tags=4(16), 
+DelayReset=1s
+Mar  7 19:31:01 PINGUIN dc395x: Connectors: int50  Termination: Auto Low High
+Mar  7 19:31:01 PINGUIN dc395x: Performing initial SCSI bus reset
+Mar  7 19:31:01 PINGUIN scsi0 : Tekram DC395(U/UW/F), DC315(U) - ASIC 
+TRM-S1040 v2.05, 2004/03/08
+Mar  7 19:31:01 PINGUIN dc395x: Target 03:  Sync: 48ns Offset 15 (20.8 MB/s)
+Mar  7 19:31:01 PINGUIN Vendor: HP        Model: C5683A            Rev: C111
+Mar  7 19:31:01 PINGUIN Type:   Sequential-Access                  ANSI SCSI 
+revision: 02
+Mar  7 19:31:01 PINGUIN st: Version 20050830, fixed bufsize 1048576, s/g segs 
+256
+Mar  7 19:31:01 PINGUIN st 0:0:3:0: Attached scsi tape st0<4>st0: try direct 
+i/o: yes (alignment 512 B), max page re
+achable by HBA 1048575
+
+Some things I should do ?
+
+S.
