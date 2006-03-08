@@ -1,49 +1,40 @@
-From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: RE: [RFC] first cut at infrastructure for handlingdifferentdevicetypes in the sas class
-Date: Wed, 8 Mar 2006 11:49:49 -0700
-Message-ID: <F331B95B72AFFB4B87467BE1C8E9CF5F34C2DC@NAMAIL2.ad.lsil.com>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: [PATCH Repost 0/2] Block I/O while SG reset operation in progress
+Date: Wed, 08 Mar 2006 14:49:47 -0500
+Message-ID: <1141847387.28879.5.camel@localhost.localdomain>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:18861 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S932337AbWCHSts convert rfc822-to-8bit
+Received: from emulex.emulex.com ([138.239.112.1]:65012 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S932189AbWCHTt6
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Mar 2006 13:49:48 -0500
-Content-class: urn:content-classes:message
+	Wed, 8 Mar 2006 14:49:58 -0500
+Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
+	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id k28Jntrf005019
+	for <linux-scsi@vger.kernel.org>; Wed, 8 Mar 2006 11:49:57 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
-
-On Tuesday, March 07, 2006 8:59 AM, James Bottomley wrote: 
-
-> > As long as these changes are not breaking the driver....
-> 
-
-Your changes did break the driver, :(  
-I just sent separate email containing the oops.
+To: linux-scsi@vger.kernel.org
 
 
-> Discovery is the process of enumerating connected devices.  The
-> transport layer will have to issue SMPs to do it, since 
-> that's the only
-> defined way.  However, I don't envisage making discovery 
-> mandatory; it's
-> going to be in the adjunct class or library, so mptsas can 
-> just make the
-> topology appear based on the SMP discovery done by the firmware.
+Following the discussion with Mike Anderson on the original patch:
+http://marc.theaimsgroup.com/?l=linux-scsi&m=114081263725777&w=2
+and
+http://marc.theaimsgroup.com/?l=linux-scsi&m=114080001928462&w=2
+http://marc.theaimsgroup.com/?l=linux-scsi&m=114080001916527&w=2
+http://marc.theaimsgroup.com/?l=linux-scsi&m=114080002012180&w=2
 
-Good to hear that; e.g. that its not going to be mandatory.
+I've implemented the missing item of waking up those waiting for
+recovery to complete as well as restarting queues that may have
+been stopped.
 
-> 
-> Christoph's working on the needs of mptsas, but it looks like most of
-> the necessary information can be obtained from the firmware pages
-> (except really the stuff we get from SMP_REPORT_MANUFACTURER_INFO,
-> which, I think, even mptsas can stand).
-> 
+In conversations with Mike, it's agreed that this patch is sufficient
+to block i/o while performing resets via SG - the original immediate goal.
+However, we've noted several other issues in this interface that will
+need to be addressed eventually.
 
-We can probably still consider having SMP passthru portal for
-such info.  However it use should be limited.
+-- james s
+
 
