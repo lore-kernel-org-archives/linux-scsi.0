@@ -1,39 +1,61 @@
 From: akpm@osdl.org
-Subject: [patch 24/28] drivers/scsi/aic7xxx/aic79xx_core.c: make ahd_done_with_status() static
-Date: Wed, 08 Mar 2006 00:14:40 -0800
-Message-ID: <200603080816.k288GTWh002243@shell0.pdx.osdl.net>
+Subject: [patch 13/28] drivers/scsi/FlashPoint.c: use standard fixed size types
+Date: Wed, 08 Mar 2006 00:14:28 -0800
+Message-ID: <200603080816.k288GHf6002191@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:53932 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932501AbWCHIQ4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Mar 2006 03:16:56 -0500
+Received: from smtp.osdl.org ([65.172.181.4]:26540 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1752105AbWCHIQU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Mar 2006 03:16:20 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, bunk@stusta.de
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, adobriyan@gmail.com
 
 
-From: Adrian Bunk <bunk@stusta.de>
+From: Alexey Dobriyan <adobriyan@gmail.com>
 
-This patch makes a needlessly global function static.
-
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
+Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/aic7xxx/aic79xx_core.c |    2 +-
- 1 files changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/FlashPoint.c |   20 +++++++-------------
+ 1 files changed, 7 insertions(+), 13 deletions(-)
 
-diff -puN drivers/scsi/aic7xxx/aic79xx_core.c~drivers-scsi-aic7xxx-aic79xx_corec-make-ahd_done_with_status-static drivers/scsi/aic7xxx/aic79xx_core.c
---- devel/drivers/scsi/aic7xxx/aic79xx_core.c~drivers-scsi-aic7xxx-aic79xx_corec-make-ahd_done_with_status-static	2006-03-08 00:13:07.000000000 -0800
-+++ devel-akpm/drivers/scsi/aic7xxx/aic79xx_core.c	2006-03-08 00:13:07.000000000 -0800
-@@ -7372,7 +7372,7 @@ ahd_reset_cmds_pending(struct ahd_softc 
- 	ahd->flags &= ~AHD_UPDATE_PEND_CMDS;
- }
+diff -puN drivers/scsi/FlashPoint.c~drivers-scsi-flashpointc-use-standard-fixed-size-types drivers/scsi/FlashPoint.c
+--- 25/drivers/scsi/FlashPoint.c~drivers-scsi-flashpointc-use-standard-fixed-size-types	Mon Feb  6 14:50:08 2006
++++ 25-akpm/drivers/scsi/FlashPoint.c	Mon Feb  6 14:50:08 2006
+@@ -44,13 +44,7 @@
  
--void
-+static void
- ahd_done_with_status(struct ahd_softc *ahd, struct scb *scb, uint32_t status)
- {
- 	cam_status ostat;
+ 
+ 
+-#define s08bits	char
+-#define s16bits 	short
+-#define s32bits	long
+-
+-#define u08bits	unsigned s08bits
+-#define u16bits	unsigned s16bits
+-#define u32bits	unsigned s32bits
++
+ 
+ 
+ 
+@@ -245,12 +239,12 @@ typedef struct _SCCB {
+ #define SG_ELEMENT_SIZE 8              /*Eight byte per element. */
+ 
+ 
+-#define RD_HARPOON(ioport)          inb((u32bits)ioport)
+-#define RDW_HARPOON(ioport)         inw((u32bits)ioport)
+-#define RD_HARP32(ioport,offset,data) (data = inl((u32bits)(ioport + offset)))
+-#define WR_HARPOON(ioport,val)      outb((u08bits) val, (u32bits)ioport)
+-#define WRW_HARPOON(ioport,val)       outw((u16bits)val, (u32bits)ioport)
+-#define WR_HARP32(ioport,offset,data)  outl(data, (u32bits)(ioport + offset))
++#define RD_HARPOON(ioport)          inb((u32)ioport)
++#define RDW_HARPOON(ioport)         inw((u32)ioport)
++#define RD_HARP32(ioport,offset,data) (data = inl((u32)(ioport + offset)))
++#define WR_HARPOON(ioport,val)      outb((u8) val, (u32)ioport)
++#define WRW_HARPOON(ioport,val)       outw((u16)val, (u32)ioport)
++#define WR_HARP32(ioport,offset,data)  outl(data, (u32)(ioport + offset))
+ 
+ 
+ #define  TAR_SYNC_MASK     (BIT(7)+BIT(6))
 _
