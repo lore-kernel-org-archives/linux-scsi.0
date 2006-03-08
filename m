@@ -1,15 +1,15 @@
 From: ravi.anand@qlogic.com
-Subject: [PATCH 06/11] Change semaphore usage to mutex.
-Date: Tue, 7 Mar 2006 16:35:43 -0800
-Message-ID: <11417781373685-git-send-email-ravi.anand@qlogic.com>
+Subject: [PATCH 07/11] Fixed logic to skip device discovery if IP Addr and Subnet Mask is Zero.
+Date: Tue, 7 Mar 2006 16:35:48 -0800
+Message-ID: <11417781434067-git-send-email-ravi.anand@qlogic.com>
 References: <11417781172980-git-send-email-ravi.anand@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:22001 "EHLO avexch02.qlogic.com")
-	by vger.kernel.org with ESMTP id S964853AbWCHAfq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2006 19:35:46 -0500
+Received: from pat.qlogic.com ([198.70.193.2]:41969 "EHLO avexch02.qlogic.com")
+	by vger.kernel.org with ESMTP id S964855AbWCHAfv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2006 19:35:51 -0500
 In-Reply-To: <11417781172980-git-send-email-ravi.anand@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -21,73 +21,33 @@ Signed-off-by: Ravi Anand <ravi.anand@qlogic.com>
 
 ---
 
- drivers/scsi/qla4xxx/ql4_def.h |    6 +++---
- drivers/scsi/qla4xxx/ql4_mbx.c |    4 ++--
- drivers/scsi/qla4xxx/ql4_os.c  |    2 +-
- 3 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/scsi/qla4xxx/ql4_init.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-d31fabeaf8cc7ba8b9448cbe0d8db464fe04af05
-diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
-index 98c5922..4d1653c 100644
---- a/drivers/scsi/qla4xxx/ql4_def.h
-+++ b/drivers/scsi/qla4xxx/ql4_def.h
-@@ -23,7 +23,7 @@
- #include <linux/kthread.h>
- #include <linux/delay.h>
- #include <linux/interrupt.h>
--#include <asm/semaphore.h>
-+#include <linux/mutex.h>
+54a41b8be941564bb4fd2dd3bb8551cca7d79ee6
+diff --git a/drivers/scsi/qla4xxx/ql4_init.c b/drivers/scsi/qla4xxx/ql4_init.c
+index 004782c..7fffcd4 100644
+--- a/drivers/scsi/qla4xxx/ql4_init.c
++++ b/drivers/scsi/qla4xxx/ql4_init.c
+@@ -1218,6 +1218,7 @@ int
+ qla4xxx_initialize_adapter(scsi_qla_host_t * ha, uint8_t renew_ddb_list)
+ {
+ 	int status = QLA_ERROR;
++	int8_t ip_address[IP_ADDR_LEN] = {0} ;
  
- #include <scsi/scsi.h>
- #include <scsi/scsi_host.h>
-@@ -497,10 +497,10 @@ typedef struct scsi_qla_host {
- 	PDU_ENTRY *free_pdu_bottom;
- 	PDU_ENTRY pdu_queue[MAX_PDU_ENTRIES];
+ 	ha->eeprom_cmd_data = 0;
  
--	/* This semaphore protects several threads to do mailbox commands
-+	/* This mutex protects several threads to do mailbox commands
- 	 * concurrently.
- 	 */
--	struct semaphore mbox_sem;
-+	struct mutex  mbox_sem;
- 	wait_queue_head_t mailbox_wait_queue;
+@@ -1248,8 +1249,8 @@ qla4xxx_initialize_adapter(scsi_qla_host
+ 		return status;
  
- 	/* temporary mailbox status registers */
-diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
-index 0dd350b..823c4c2 100644
---- a/drivers/scsi/qla4xxx/ql4_mbx.c
-+++ b/drivers/scsi/qla4xxx/ql4_mbx.c
-@@ -51,7 +51,7 @@ qla4xxx_mailbox_command(scsi_qla_host_t 
- 	unsigned long flags = 0;
- 	DECLARE_WAITQUEUE(wait, current);
+ 	/* Skip device discovery if ip and subnet is zero */
+-	if (memcmp(ha->ip_address, 0, IP_ADDR_LEN) ||
+-	    memcmp(ha->subnet_mask, 0, IP_ADDR_LEN))
++        if (memcmp(ha->ip_address, ip_address, IP_ADDR_LEN) == 0 ||
++            memcmp(ha->subnet_mask, ip_address, IP_ADDR_LEN) == 0)
+ 		return status;
  
--	down(&ha->mbox_sem);
-+	mutex_lock(&ha->mbox_sem);
- 
- 	/* Mailbox code active */
- 	set_bit(AF_MBOX_COMMAND, &ha->flags);
-@@ -175,7 +175,7 @@ qla4xxx_mailbox_command(scsi_qla_host_t 
- mbox_exit:
- 	clear_bit(AF_MBOX_COMMAND, &ha->flags);
- 	clear_bit(AF_MBOX_COMMAND_DONE, &ha->flags);
--	up(&ha->mbox_sem);
-+	mutex_unlock(&ha->mbox_sem);
- 
- 	return status;
- }
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 1271edf..27aabb9 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -358,7 +358,7 @@ qla4xxx_probe_adapter(struct pci_dev *pd
- 	INIT_LIST_HEAD(&ha->ddb_list);
- 	INIT_LIST_HEAD(&ha->free_srb_q);
- 
--	init_MUTEX(&ha->mbox_sem);
-+	mutex_init(&ha->mbox_sem);
- 	init_waitqueue_head(&ha->mailbox_wait_queue);
- 
- 	spin_lock_init(&ha->hardware_lock);
+ 	if (renew_ddb_list == PRESERVE_DDB_LIST) {
 -- 
 1.2.4.g9201-dirty
 
