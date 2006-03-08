@@ -1,43 +1,52 @@
-From: ravi.anand@qlogic.com
-Subject: [PATCH 11/11] Updated scsi/Kconfig to include qla4xxx/Kconfig path.
-Date: Tue, 7 Mar 2006 16:36:08 -0800
-Message-ID: <1141778163901-git-send-email-ravi.anand@qlogic.com>
-References: <11417781172980-git-send-email-ravi.anand@qlogic.com>
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: [PATCH] aic94xx nexus loss time value
+Date: Tue, 7 Mar 2006 16:57:05 -0800
+Message-ID: <20060308005705.GA1516@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:39155 "EHLO avexch02.qlogic.com")
-	by vger.kernel.org with ESMTP id S964862AbWCHAgM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2006 19:36:12 -0500
-In-Reply-To: <11417781172980-git-send-email-ravi.anand@qlogic.com>
+Received: from e5.ny.us.ibm.com ([32.97.182.145]:64163 "EHLO e5.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1751951AbWCHA5I (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2006 19:57:08 -0500
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e5.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id k280v6jH005207
+	for <linux-scsi@vger.kernel.org>; Tue, 7 Mar 2006 19:57:06 -0500
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by d01relay02.pok.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k280v6TQ099128
+	for <linux-scsi@vger.kernel.org>; Tue, 7 Mar 2006 19:57:06 -0500
+Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
+	by d01av03.pok.ibm.com (8.12.11/8.13.3) with ESMTP id k280v6cU018724
+	for <linux-scsi@vger.kernel.org>; Tue, 7 Mar 2006 19:57:06 -0500
+Received: from hmsbounty.us.ibm.com (sig-9-65-4-120.mts.ibm.com [9.65.4.120])
+	by d01av03.pok.ibm.com (8.12.11/8.12.11) with ESMTP id k280v6YG018690
+	for <linux-scsi@vger.kernel.org>; Tue, 7 Mar 2006 19:57:06 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, arjan@infradead.org
-Cc: ravi.anand@qlogic.com
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-Signed-off-by: Ravi Anand <ravi.anand@qlogic.com>
+The nexus loss time value should not be used for an upper level timeout
+value. The nexus loss time is for connection request retries. The usage of
+the nexus loss time value + HZ (3 seconds) for sdev->timeout leads to
+timeouts under load (Bug 6046).
 
+Signed-off-by: Mike Anderson <andmike@us.ibm.com>
 
----
+ drivers/scsi/sas/sas_scsi_host.c |    4 ----
+ 1 files changed, 4 deletions(-)
 
- drivers/scsi/Kconfig |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-561680121f1a6cb28b1c770589aa18320d4689b7
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 3c606cf..2ca97cf 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -1340,6 +1340,7 @@ config SCSI_QLOGICPTI
- 	  module will be called qlogicpti.
+Index: aic94xx-sas-2.6-patched/drivers/scsi/sas/sas_scsi_host.c
+===================================================================
+--- aic94xx-sas-2.6-patched.orig/drivers/scsi/sas/sas_scsi_host.c	2006-03-06 10:42:59.000000000 -0800
++++ aic94xx-sas-2.6-patched/drivers/scsi/sas/sas_scsi_host.c	2006-03-07 15:42:07.000000000 -0800
+@@ -585,10 +585,6 @@ int sas_slave_configure(struct scsi_devi
+ 		scsi_deactivate_tcq(scsi_dev, 1);
+ 	}
  
- source "drivers/scsi/qla2xxx/Kconfig"
-+source "drivers/scsi/qla4xxx/Kconfig"
+-	if (rdev->I_T_nexus_loss_timeout > 0)
+-		scsi_dev->timeout = HZ +
+-			msecs_to_jiffies(rdev->I_T_nexus_loss_timeout);
+-
+ 	return 0;
+ }
  
- config SCSI_LPFC
- 	tristate "Emulex LightPulse Fibre Channel Support"
--- 
-1.2.4.g9201-dirty
-
-
