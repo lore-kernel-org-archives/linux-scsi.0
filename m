@@ -1,51 +1,43 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [patch 23/28] scsi cd: VariRec, GigaRec and PowerRec as user
-Date: Wed, 8 Mar 2006 16:15:35 +0100
-Message-ID: <20060308151535.GU4595@suse.de>
-References: <200603080816.k288GSQO002236@shell0.pdx.osdl.net> <1141830726.3194.8.camel@mulgrave.il.steeleye.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [RFC] aic94xx: attaching to the sas transport class
+Date: Wed, 08 Mar 2006 09:15:25 -0600
+Message-ID: <1141830925.3194.10.camel@mulgrave.il.steeleye.com>
+References: <8C064C48AB104B428CBA524C342357CA34CFCB@aime2k05.adaptec.com>
+	 <1141445373.5397.23.camel@mulgrave.il.steeleye.com>
+	 <20060306193555.GA2316@us.ibm.com>
+	 <1141674628.3167.31.camel@mulgrave.il.steeleye.com>
+	 <1141692292.8649.75.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:49506 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S932065AbWCHPPy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Mar 2006 10:15:54 -0500
-Content-Disposition: inline
-In-Reply-To: <1141830726.3194.8.camel@mulgrave.il.steeleye.com>
+Received: from stat9.steeleye.com ([209.192.50.41]:27296 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1750716AbWCHPPe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 8 Mar 2006 10:15:34 -0500
+In-Reply-To: <1141692292.8649.75.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: akpm@osdl.org, linux-scsi@vger.kernel.org, T.Maguin@web.de
+To: Alexis Bruemmer <alexisb@us.ibm.com>
+Cc: Mike Anderson <andmike@us.ibm.com>, "Tarte, Robert" <Robert_Tarte@adaptec.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, Mar 08 2006, James Bottomley wrote:
-> On Wed, 2006-03-08 at 00:14 -0800, akpm@osdl.org wrote:
-> > From: Thomas Maguin <T.Maguin@web.de>
-> 
-> > This patch allows normal users to eectute some Plextor drives
-> > commands:
-> > 
-> > - Hide CD-R
-> > - SingleSession
-> > - SpeedRead
-> > - PowerRec
-> > - VariRec
-> > - GigaRec
-> > 
-> 
-> This one just isn't safe.  We can't add vendor specific commands to the
-> permissions table because they mean different things to different
-> vendors ... get mode on one could be halt and catch fire on another, so
-> the whole concept of safety via command verification is lost.
-> 
-> I don't happen to believe in this type of command verification anyway,
-> so I'd be perfectly happy to switch this over to a better facility (like
-> capabilities), but while you're claiming to vet commands, you have to be
-> logically correct (which means no vendor specific commands).
+On Mon, 2006-03-06 at 16:44 -0800, Alexis Bruemmer wrote:
+> Well the problems I have seen when testing your tree, as well as the
+> original aic94xx/sas_class tree, is that the aic94xx driver enables phys
+> before the upper level sas layer has discover all phys and ports.
+> (again please see the boot dump I posted on Friday). 
 
-I have to agree, unfortunately... Perhaps this is some motivation to get
-the fs permission table into the mainline kernel for 2.6.17. It's the
-'cmdfilter' branch of the git block repo. Then we could finally get rid
-of this ugly command table.
+Actually, this code is a much more complex way of doing what I just did
+with the work queues.  The only difference is this:
 
--- 
-Jens Axboe
+> +	wait_for_completion(&asd_ha->sas_ha.discover_phy);
+> +
+>  	ASD_DPRINTK("enabled phys\n");
+
+Which shows that the current scsi_flush_work() is in the wrong place.
+If you move it out of sas_init.c and into aic94xx_init.c at this place,
+I think you'll find everything now works for you.
+
+James
+
 
