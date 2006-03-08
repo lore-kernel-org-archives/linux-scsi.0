@@ -1,69 +1,64 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
+From: Steve Byan <smb@egenera.com>
 Subject: Re: SCSI target and IO-throttling
-Date: Wed, 08 Mar 2006 20:49:20 +0300
-Message-ID: <440F1920.1050608@vlnb.net>
-References: <OF586A820A.80375000-ON8825712A.00712235-8825712A.00815110@us.ibm.com> <440EF9AC.7070903@vlnb.net> <D2BA8EC0-6B20-40EF-B9C5-88CABB1B7CDD@egenera.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Date: Wed, 8 Mar 2006 13:09:35 -0500
+Message-ID: <43998989-7BD3-4F3F-A10A-17385D63411E@egenera.com>
+References: <OF586A820A.80375000-ON8825712A.00712235-8825712A.00815110@us.ibm.com> <440EF9AC.7070903@vlnb.net> <D2BA8EC0-6B20-40EF-B9C5-88CABB1B7CDD@egenera.com> <440F1920.1050608@vlnb.net>
+Mime-Version: 1.0 (Apple Message framework v746.2)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from out-relay-02.infobox.ru ([195.208.234.171]:19419 "EHLO
-	out-relay-02.infobox.ru") by vger.kernel.org with ESMTP
-	id S1751109AbWCHRuM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Mar 2006 12:50:12 -0500
-In-Reply-To: <D2BA8EC0-6B20-40EF-B9C5-88CABB1B7CDD@egenera.com>
+Received: from roadrunner-base.egenera.com ([63.160.166.46]:7364 "EHLO
+	roadrunner-base.egenera.com") by vger.kernel.org with ESMTP
+	id S1751206AbWCHSJy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 8 Mar 2006 13:09:54 -0500
+In-Reply-To: <440F1920.1050608@vlnb.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Steve Byan <smb@egenera.com>
+To: Vladislav Bolkhovitin <vst@vlnb.net>
 Cc: Bryan Henderson <hbryan@us.ibm.com>, linux-scsi@vger.kernel.org
 
-Steve Byan wrote:
-> 
-> On Mar 8, 2006, at 10:35 AM, Vladislav Bolkhovitin wrote:
-> 
->> Bryan Henderson wrote:
+
+On Mar 8, 2006, at 12:49 PM, Vladislav Bolkhovitin wrote:
+
+> Steve Byan wrote:
 >>
->>> Why would the queue have a greater capacity than what is needed  when 
->>> you care about performance?  Is there some non-performance  reason to 
->>> have a giant queue?
->>> I still think having a giant queue is not a solution to any flow  
->>> control (or, in the words of the original problem, I/O throttling)  
->>> problem.  I'm even skeptical that there's any size you can make  one 
->>> that would avoid queue full conditions.  It would be like  avoiding 
->>> difficult memory allocation algorithms by just having a  whole lot of 
->>> memory.
->>
->>
->> Yes, you're correct. But can you formulate a practical common rule  
->> working on any SCSI transport, including FC, on which a SCSI  target, 
->> which knows some limit, can tell it to an initiator, so it  will not 
->> try to queue too many commands, please? It looks like I  have no 
->> choice, except doing "giant" queue on target hoping that  initiators 
->> are smart enough to not queue so many commands that it  starts seeing 
->> timeouts.
-> 
-> 
-> I still don't understand why you are reluctant to return  TASK_SET_FULL 
-> or BUSY in this case; it's what the SCSI standard  supplies as the way 
-> to say "don't queue too many commands, please".
 
-I don't like out of order execution, which happens practically on all 
-such "rejected" commands, because subsequent already queued commands are 
-not "rejected" with it and some of them could be accepted later. And the 
-initiator (Linux with FC driver) is dumb enough to hit this 
-TASK_SET_FULL again and again until the queue is large enough. So, I can 
-see only one solution, which almost eliminate breaking the order, - 
-unbounded command queue.
+>> I still don't understand why you are reluctant to return   
+>> TASK_SET_FULL or BUSY in this case; it's what the SCSI standard   
+>> supplies as the way to say "don't queue too many commands, please".
+>
+> I don't like out of order execution, which happens practically on  
+> all such "rejected" commands, because subsequent already queued  
+> commands are not "rejected" with it and some of them could be  
+> accepted later.
 
-But, maybe I should think/experiment more and ease the ordering 
-restriction...
+I see, you care about order. So do tapes. The historical answer has  
+been to not support tagged command queuing when you care about  
+ordering. To dodge the performance problem due to lack of queuing,  
+the targets usually implement a read-ahead and write-behind cache,  
+and then perform queuing behind the scenes, after telling the  
+initiator that the command has completed. Of course, this has obvious  
+data integrity issues for disk-type logical units.
 
-Thanks,
-Vlad
+The solution introduced for tapes concurrent with iSCSI (which  
+motivated the need for command-queuing for tapes, since some  
+envisioned backing up to a tape drive located on 3000 miles away is  
+something called "unit-attention interlock", or "UA interlock". Check  
+out page 287 of the draft revision 23 of the SCSI Primary Commands -  
+3 (SPC-3) standard from T10.org. The UA_INTLCK_CTRL field can be set  
+to cause a persistent unit attention condition if a command was  
+rejected with TASK_SET_FULL or BUSY.
 
-> If you don't want to return TASK_SET_FULL, then yes, an effectively  
-> unbounded command queue is your only alternative.
-> 
-> Regards,
-> -Steve
+This requires the cooperation of the initiator.
+
+Regards,
+-Steve
+-- 
+Steve Byan <smb@egenera.com>
+Software Architect
+Egenera, Inc.
+165 Forest Street
+Marlboro, MA 01752
+(508) 858-3125
+
 
