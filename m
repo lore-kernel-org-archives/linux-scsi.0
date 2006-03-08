@@ -1,11 +1,11 @@
 From: akpm@osdl.org
-Subject: [patch 16/28] drivers/scsi/FlashPoint.c: untypedef struct SCCBMgr_tar_info
-Date: Wed, 08 Mar 2006 00:14:31 -0800
-Message-ID: <200603080816.k288GLYZ002200@shell0.pdx.osdl.net>
+Subject: [patch 20/28] drivers/scsi/FlashPoint.c: don't use parenthesis with "return"
+Date: Wed, 08 Mar 2006 00:14:37 -0800
+Message-ID: <200603080816.k288GQbt002216@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:32684 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932493AbWCHIQZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Mar 2006 03:16:25 -0500
+Received: from smtp.osdl.org ([65.172.181.4]:39084 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932498AbWCHIQb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Mar 2006 03:16:31 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
@@ -14,255 +14,519 @@ Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, adobriyan@gmail.com
 
 From: Alexey Dobriyan <adobriyan@gmail.com>
 
-* struct SCCBMgr_tar_info => struct sccb_mgr_tar_info
-* PSCCBMgr_tar_info => struct sccb_mgr_tar_info *
-* SCCBMGR_TAR_INFO => struct sccb_mgr_tar_info
-
 Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/FlashPoint.c |   53 +++++++++++++++++-------------------
- 1 files changed, 26 insertions(+), 27 deletions(-)
+ drivers/scsi/FlashPoint.c |  130 ++++++++++++++++++------------------
+ 1 files changed, 65 insertions(+), 65 deletions(-)
 
-diff -puN drivers/scsi/FlashPoint.c~drivers-scsi-flashpointc-untypedef-struct-sccbmgr_tar_info drivers/scsi/FlashPoint.c
---- 25/drivers/scsi/FlashPoint.c~drivers-scsi-flashpointc-untypedef-struct-sccbmgr_tar_info	Mon Feb  6 14:50:15 2006
-+++ 25-akpm/drivers/scsi/FlashPoint.c	Mon Feb  6 14:50:15 2006
-@@ -268,10 +268,9 @@ struct sccb {
- #define  EE_WIDE_SCSI      BIT(7)
+diff -puN drivers/scsi/FlashPoint.c~drivers-scsi-flashpointc-dont-use-parenthesis-with-return drivers/scsi/FlashPoint.c
+--- 25/drivers/scsi/FlashPoint.c~drivers-scsi-flashpointc-dont-use-parenthesis-with-return	Mon Feb  6 14:50:24 2006
++++ 25-akpm/drivers/scsi/FlashPoint.c	Mon Feb  6 14:50:24 2006
+@@ -945,16 +945,16 @@ static int FlashPoint_ProbeHostAdapter(s
+ 	ioport = pCardInfo->si_baseaddr;
  
+ 	if (RD_HARPOON(ioport + hp_vendor_id_0) != ORION_VEND_0)
+-		return ((int)FAILURE);
++		return (int)FAILURE;
  
--typedef struct SCCBMgr_tar_info *PSCCBMgr_tar_info;
+ 	if ((RD_HARPOON(ioport + hp_vendor_id_1) != ORION_VEND_1))
+-		return ((int)FAILURE);
++		return (int)FAILURE;
  
+ 	if ((RD_HARPOON(ioport + hp_device_id_0) != ORION_DEV_0))
+-		return ((int)FAILURE);
++		return (int)FAILURE;
  
--typedef struct SCCBMgr_tar_info {
-+struct sccb_mgr_tar_info {
+ 	if ((RD_HARPOON(ioport + hp_device_id_1) != ORION_DEV_1))
+-		return ((int)FAILURE);
++		return (int)FAILURE;
  
-    struct sccb *    TarSelQ_Head;
-    struct sccb *    TarSelQ_Tail;
-@@ -284,7 +283,7 @@ typedef struct SCCBMgr_tar_info {
-    unsigned char 	TarReserved[2];			/* for alignment */
-    unsigned char 	LunDiscQ_Idx[MAX_LUN];
-    unsigned char    TarLUNBusy[MAX_LUN];
--} SCCBMGR_TAR_INFO;
-+};
+ 	if (RD_HARPOON(ioport + hp_rev_num) != 0x0f) {
  
- typedef struct NVRAMInfo {
- 	unsigned char		niModel;								/* Model No. of card */
-@@ -975,7 +974,7 @@ static void  FPT_shandem(unsigned long p
- static void  FPT_stsyncn(unsigned long port, unsigned char p_card);
- static void  FPT_sisyncr(unsigned long port,unsigned char sync_pulse, unsigned char offset);
- static void  FPT_sssyncv(unsigned long p_port, unsigned char p_id, unsigned char p_sync_value,
--			 PSCCBMgr_tar_info currTar_Info);
-+			 struct sccb_mgr_tar_info * currTar_Info);
- static void  FPT_sresb(unsigned long port, unsigned char p_card);
- static void  FPT_sxfrp(unsigned long p_port, unsigned char p_card);
- static void  FPT_schkdd(unsigned long port, unsigned char p_card);
-@@ -1081,7 +1080,7 @@ static void  FPT_autoLoadDefaultMap(unsi
+@@ -964,7 +964,7 @@ static int FlashPoint_ProbeHostAdapter(s
+ 	device. */
  
+ 		if (RD_HARPOON(ioport + hp_sub_device_id_0) & 0x0f)
+-			return ((int)FAILURE);
++			return (int)FAILURE;
+ 	}
  
+ 	if (first_time) {
+@@ -986,7 +986,7 @@ static int FlashPoint_ProbeHostAdapter(s
+ 				pCurrNvRam->niBaseAddr = ioport;
+ 				FPT_RNVRamData(pCurrNvRam);
+ 			} else
+-				return ((int)FAILURE);
++				return (int)FAILURE;
+ 		}
+ 	} else
+ 		pCurrNvRam = NULL;
+@@ -1194,7 +1194,7 @@ static int FlashPoint_ProbeHostAdapter(s
  
--static SCCBMGR_TAR_INFO FPT_sccbMgrTbl[MAX_CARDS][MAX_SCSI_TAR] = { { { 0 } } };
-+static struct sccb_mgr_tar_info FPT_sccbMgrTbl[MAX_CARDS][MAX_SCSI_TAR] = { { { 0 } } };
- static SCCBCARD FPT_BL_Card[MAX_CARDS] = { { 0 } };
- static SCCBSCAM_INFO FPT_scamInfo[MAX_SCSI_TAR] = { { { 0 } } };
- static NVRAMINFO FPT_nvRamInfo[MAX_MB_CARDS] = { { 0 } };
-@@ -1793,7 +1792,7 @@ static int FlashPoint_AbortCCB(unsigned 
- 	CALL_BK_FN callback;
- 	unsigned char TID;
- 	struct sccb * pSaveSCCB;
--	PSCCBMgr_tar_info currTar_Info;
-+	struct sccb_mgr_tar_info * currTar_Info;
+ 	pCardInfo->si_present = 0x01;
  
+-	return (0);
++	return 0;
+ }
  
- 	ioport = ((PSCCBcard) pCurrCard)->ioPort;
-@@ -2161,7 +2160,7 @@ static unsigned char FPT_SccbMgr_bad_isr
- 				 PSCCBcard pCurrCard, unsigned short p_int)
+ /*---------------------------------------------------------------------
+@@ -1220,7 +1220,7 @@ static unsigned long FlashPoint_Hardware
+ 
+ 		if (thisCard == MAX_CARDS) {
+ 
+-			return (FAILURE);
++			return FAILURE;
+ 		}
+ 
+ 		if (FPT_BL_Card[thisCard].ioPort == ioport) {
+@@ -1388,7 +1388,7 @@ static unsigned long FlashPoint_Hardware
+ 		   (unsigned char)(RD_HARPOON((ioport + hp_semaphore)) |
+ 				   SCCB_MGR_PRESENT));
+ 
+-	return ((unsigned long)CurrCard);
++	return (unsigned long)CurrCard;
+ }
+ 
+ static void FlashPoint_ReleaseHostAdapter(unsigned long pCurrCard)
+@@ -1460,7 +1460,7 @@ static void FPT_RNVRamData(struct nvram_
+ static unsigned char FPT_RdStack(unsigned long portBase, unsigned char index)
  {
-    unsigned char temp, ScamFlg;
--   PSCCBMgr_tar_info currTar_Info;
-+   struct sccb_mgr_tar_info * currTar_Info;
-    PNVRamInfo pCurrNvRam;
+ 	WR_HARPOON(portBase + hp_stack_addr, index);
+-	return (RD_HARPOON(portBase + hp_stack_data));
++	return RD_HARPOON(portBase + hp_stack_data);
+ }
  
- 
-@@ -2373,7 +2372,7 @@ static void FPT_SccbMgrTableInitTarget(u
+ static void FPT_WrStack(unsigned long portBase, unsigned char index,
+@@ -1473,14 +1473,14 @@ static void FPT_WrStack(unsigned long po
+ static unsigned char FPT_ChkIfChipInitialized(unsigned long ioPort)
  {
+ 	if ((RD_HARPOON(ioPort + hp_arb_id) & 0x0f) != FPT_RdStack(ioPort, 4))
+-		return (0);
++		return 0;
+ 	if ((RD_HARPOON(ioPort + hp_clkctrl_0) & CLKCTRL_DEFAULT)
+ 	    != CLKCTRL_DEFAULT)
+-		return (0);
++		return 0;
+ 	if ((RD_HARPOON(ioPort + hp_seltimeout) == TO_250ms) ||
+ 	    (RD_HARPOON(ioPort + hp_seltimeout) == TO_290ms))
+-		return (1);
+-	return (0);
++		return 1;
++	return 0;
  
- 	unsigned char lun, qtag;
--	PSCCBMgr_tar_info currTar_Info;
-+	struct sccb_mgr_tar_info * currTar_Info;
+ }
  
- 	currTar_Info = &FPT_sccbMgrTbl[p_card][target];
+@@ -1642,14 +1642,14 @@ static int FlashPoint_AbortCCB(unsigned 
+ 			callback = p_Sccb->SccbCallback;
+ 			callback(p_Sccb);
  
-@@ -2496,7 +2495,7 @@ static void FPT_ssel(unsigned long port,
-    unsigned long cdb_reg;
-    PSCCBcard CurrCard;
-    struct sccb * currSCCB;
--   PSCCBMgr_tar_info currTar_Info;
-+   struct sccb_mgr_tar_info * currTar_Info;
-    unsigned char lastTag, lun;
+-			return (0);
++			return 0;
+ 		}
  
-    CurrCard = &FPT_BL_Card[p_card];
-@@ -2805,7 +2804,7 @@ static void FPT_sres(unsigned long port,
-    unsigned char our_target, message, lun = 0, tag, msgRetryCount;
+ 		else {
+ 			if (((struct sccb_card *)pCurrCard)->currentSCCB ==
+ 			    p_Sccb) {
+ 				p_Sccb->SccbStatus = SCCB_ABORT;
+-				return (0);
++				return 0;
  
+ 			}
  
--   PSCCBMgr_tar_info currTar_Info;
-+   struct sccb_mgr_tar_info * currTar_Info;
- 	struct sccb * currSCCB;
+@@ -1691,7 +1691,7 @@ static int FlashPoint_AbortCCB(unsigned 
+ 						}
+ 					}
+ 					MENABLE_INT(ioport);
+-					return (0);
++					return 0;
+ 				} else {
+ 					currTar_Info =
+ 					    &FPT_sccbMgrTbl[thisCard][p_Sccb->
+@@ -1702,13 +1702,13 @@ static int FlashPoint_AbortCCB(unsigned 
+ 						      LunDiscQ_Idx[p_Sccb->Lun]]
+ 					    == p_Sccb) {
+ 						p_Sccb->SccbStatus = SCCB_ABORT;
+-						return (0);
++						return 0;
+ 					}
+ 				}
+ 			}
+ 		}
+ 	}
+-	return (-1);
++	return -1;
+ }
  
+ /*---------------------------------------------------------------------
+@@ -1726,12 +1726,12 @@ static unsigned char FlashPoint_Interrup
+ 	ioport = ((struct sccb_card *)pCurrCard)->ioPort;
  
-@@ -3113,7 +3112,7 @@ static void FPT_sdecm(unsigned char mess
- {
- 	struct sccb * currSCCB;
- 	PSCCBcard CurrCard;
--	PSCCBMgr_tar_info currTar_Info;
-+	struct sccb_mgr_tar_info * currTar_Info;
+ 	if (RD_HARPOON(ioport + hp_int_status) & INT_ASSERTED) {
+-		return (1);
++		return 1;
+ 	}
  
- 	CurrCard = &FPT_BL_Card[p_card];
- 	currSCCB = CurrCard->currentSCCB;
-@@ -3370,7 +3369,7 @@ static void FPT_shandem(unsigned long po
- static unsigned char FPT_sisyncn(unsigned long port, unsigned char p_card, unsigned char syncFlag)
- {
-    struct sccb * currSCCB;
--   PSCCBMgr_tar_info currTar_Info;
-+   struct sccb_mgr_tar_info * currTar_Info;
+ 	else
  
-    currSCCB = FPT_BL_Card[p_card].currentSCCB;
-    currTar_Info = &FPT_sccbMgrTbl[p_card][currSCCB->TargID];
-@@ -3446,7 +3445,7 @@ static void FPT_stsyncn(unsigned long po
- {
-    unsigned char sync_msg,offset,sync_reg,our_sync_msg;
-    struct sccb * currSCCB;
--   PSCCBMgr_tar_info currTar_Info;
-+   struct sccb_mgr_tar_info * currTar_Info;
+-		return (0);
++		return 0;
+ }
  
-    currSCCB = FPT_BL_Card[p_card].currentSCCB;
-    currTar_Info = &FPT_sccbMgrTbl[p_card][currSCCB->TargID];
-@@ -3608,7 +3607,7 @@ static void FPT_sisyncr(unsigned long po
- static unsigned char FPT_siwidn(unsigned long port, unsigned char p_card)
- {
-    struct sccb * currSCCB;
--   PSCCBMgr_tar_info currTar_Info;
-+   struct sccb_mgr_tar_info * currTar_Info;
+ /*---------------------------------------------------------------------
+@@ -1783,7 +1783,7 @@ static int FlashPoint_HandleInterrupt(un
+ 			if (result) {
  
-    currSCCB = FPT_BL_Card[p_card].currentSCCB;
-    currTar_Info = &FPT_sccbMgrTbl[p_card][currSCCB->TargID];
-@@ -3661,7 +3660,7 @@ static void FPT_stwidn(unsigned long por
- {
-    unsigned char width;
-    struct sccb * currSCCB;
--   PSCCBMgr_tar_info currTar_Info;
-+   struct sccb_mgr_tar_info * currTar_Info;
+ 				MENABLE_INT(ioport);
+-				return (result);
++				return result;
+ 			}
+ 		}
  
-    currSCCB = FPT_BL_Card[p_card].currentSCCB;
-    currTar_Info = &FPT_sccbMgrTbl[p_card][currSCCB->TargID];
-@@ -3767,7 +3766,7 @@ static void FPT_siwidr(unsigned long por
-  *
-  *---------------------------------------------------------------------*/
- static void FPT_sssyncv(unsigned long p_port, unsigned char p_id, unsigned char p_sync_value,
--			PSCCBMgr_tar_info currTar_Info)
-+			struct sccb_mgr_tar_info * currTar_Info)
- {
-    unsigned char index;
+@@ -1997,7 +1997,7 @@ static int FlashPoint_HandleInterrupt(un
  
-@@ -3842,7 +3841,7 @@ static void FPT_sresb(unsigned long port
- {
-    unsigned char scsiID, i;
+ 	MENABLE_INT(ioport);
  
--   PSCCBMgr_tar_info currTar_Info;
-+   struct sccb_mgr_tar_info * currTar_Info;
+-	return (0);
++	return 0;
+ }
  
-    WR_HARPOON(port+hp_page_ctrl,
-       (RD_HARPOON(port+hp_page_ctrl) | G_INT_DISABLE));
-@@ -4157,7 +4156,7 @@ static void FPT_schkdd(unsigned long por
+ /*---------------------------------------------------------------------
+@@ -2092,7 +2092,7 @@ static unsigned char FPT_SccbMgr_bad_isr
  
- static void FPT_sinits(struct sccb * p_sccb, unsigned char p_card)
- {
--   PSCCBMgr_tar_info currTar_Info;
-+   struct sccb_mgr_tar_info * currTar_Info;
+ 		FPT_scini(p_card, pCurrCard->ourId, 0);
  
- 	if((p_sccb->TargID > MAX_SCSI_TAR) || (p_sccb->Lun > MAX_LUN))
- 	{
-@@ -4429,7 +4428,7 @@ static void FPT_phaseMsgOut(unsigned lon
- {
- 	unsigned char message,scsiID;
- 	struct sccb * currSCCB;
--	PSCCBMgr_tar_info currTar_Info;
-+	struct sccb_mgr_tar_info * currTar_Info;
+-		return (0xFF);
++		return 0xFF;
+ 	}
  
- 	currSCCB = FPT_BL_Card[p_card].currentSCCB;
+ 	else if (p_int & FIFO) {
+@@ -2150,7 +2150,7 @@ static unsigned char FPT_SccbMgr_bad_isr
+ 		WRW_HARPOON((p_port + hp_intstat), SCAM_SEL);
+ 	}
  
-@@ -6936,7 +6935,7 @@ static void FPT_DiagEEPROM(unsigned long
- static void FPT_queueSearchSelect(PSCCBcard pCurrCard, unsigned char p_card)
- {
-    unsigned char scan_ptr, lun;
--   PSCCBMgr_tar_info currTar_Info;
-+   struct sccb_mgr_tar_info * currTar_Info;
- 	struct sccb * pOldSccb;
+-	return (0x00);
++	return 0x00;
+ }
  
-    scan_ptr = pCurrCard->scanIndex;
-@@ -7067,7 +7066,7 @@ static void FPT_queueSearchSelect(PSCCBc
- static void FPT_queueSelectFail(PSCCBcard pCurrCard, unsigned char p_card)
- {
-    unsigned char thisTarg;
--   PSCCBMgr_tar_info currTar_Info;
-+   struct sccb_mgr_tar_info * currTar_Info;
+ /*---------------------------------------------------------------------
+@@ -2295,12 +2295,12 @@ static unsigned char FPT_sfm(unsigned lo
+ 			}
+ 			if (TimeOutLoop > 20000) {
+ 				WRW_HARPOON((port + hp_intstat), PARITY);
+-				return (message);
++				return message;
+ 			}
+ 			if ((RD_HARPOON(port + hp_scsisig) & S_SCSI_PHZ) !=
+ 			    S_MSGI_PH) {
+ 				WRW_HARPOON((port + hp_intstat), PARITY);
+-				return (message);
++				return message;
+ 			}
+ 			WR_HARPOON(port + hp_portctrl_0, SCSI_PORT);
  
-    if (pCurrCard->currentSCCB != NULL)
- 	  {
-@@ -7109,7 +7108,7 @@ static void FPT_queueCmdComplete(PSCCBca
+@@ -2315,7 +2315,7 @@ static unsigned char FPT_sfm(unsigned lo
+ 	WR_HARPOON(port + hp_xferstat, 0);
+ 	WR_HARPOON(port + hp_fiforead, 0);
+ 	WR_HARPOON(port + hp_fifowrite, 0);
+-	return (message);
++	return message;
+ }
  
-    unsigned char i, SCSIcmd;
-    CALL_BK_FN callback;
--   PSCCBMgr_tar_info currTar_Info;
-+   struct sccb_mgr_tar_info * currTar_Info;
+ /*---------------------------------------------------------------------
+@@ -3219,14 +3219,14 @@ static unsigned char FPT_sisyncn(unsigne
+ 				   (AUTO_IMMED + CMD_ONLY_STRT));
+ 		}
  
-    SCSIcmd = p_sccb->Cdb[0];
+-		return (1);
++		return 1;
+ 	}
  
-@@ -7207,7 +7206,7 @@ static void FPT_queueCmdComplete(PSCCBca
-  *---------------------------------------------------------------------*/
- static void FPT_queueDisconnect(struct sccb * p_sccb, unsigned char p_card)
- {
--   PSCCBMgr_tar_info currTar_Info;
-+   struct sccb_mgr_tar_info * currTar_Info;
+ 	else {
  
- 	currTar_Info = &FPT_sccbMgrTbl[p_card][p_sccb->TargID];
+ 		currTar_Info->TarStatus |= (unsigned char)SYNC_SUPPORTED;
+ 		currTar_Info->TarEEValue &= ~EE_SYNC_MASK;
+-		return (0);
++		return 0;
+ 	}
+ }
  
-@@ -7244,7 +7243,7 @@ static void  FPT_queueFlushSccb(unsigned
- {
-    unsigned char qtag,thisTarg;
-    struct sccb * currSCCB;
--   PSCCBMgr_tar_info currTar_Info;
-+   struct sccb_mgr_tar_info * currTar_Info;
+@@ -3431,7 +3431,7 @@ static unsigned char FPT_siwidn(unsigned
+ 					    ~(unsigned char)TAR_WIDE_MASK) |
+ 					   (unsigned char)WIDE_ENABLED);
  
-    currSCCB = FPT_BL_Card[p_card].currentSCCB;
- 	if(currSCCB != NULL)
-@@ -7283,7 +7282,7 @@ static void  FPT_queueFlushTargSccb(unsi
- 				    unsigned char error_code)
- {
-    unsigned char qtag;
--   PSCCBMgr_tar_info currTar_Info;
-+   struct sccb_mgr_tar_info * currTar_Info;
+-		return (1);
++		return 1;
+ 	}
  
-    currTar_Info = &FPT_sccbMgrTbl[p_card][thisTarg];
+ 	else {
+@@ -3441,7 +3441,7 @@ static unsigned char FPT_siwidn(unsigned
+ 					   WIDE_NEGOCIATED);
  
-@@ -7311,7 +7310,7 @@ static void  FPT_queueFlushTargSccb(unsi
+ 		currTar_Info->TarEEValue &= ~EE_WIDE_SCSI;
+-		return (0);
++		return 0;
+ 	}
+ }
  
- static void FPT_queueAddSccb(struct sccb * p_SCCB, unsigned char p_card)
- {
--   PSCCBMgr_tar_info currTar_Info;
-+   struct sccb_mgr_tar_info * currTar_Info;
-    currTar_Info = &FPT_sccbMgrTbl[p_card][p_SCCB->TargID];
+@@ -5155,11 +5155,11 @@ static unsigned char FPT_busMstrTimeOut(
+ 	RD_HARPOON(p_port + hp_int_status);	/*Clear command complete */
  
-    p_SCCB->Sccb_forwardlink = NULL;
-@@ -7346,7 +7345,7 @@ static void FPT_queueAddSccb(struct sccb
- static unsigned char FPT_queueFindSccb(struct sccb * p_SCCB, unsigned char p_card)
- {
-    struct sccb * q_ptr;
--   PSCCBMgr_tar_info currTar_Info;
-+   struct sccb_mgr_tar_info * currTar_Info;
+ 	if (RD_HARPOON(p_port + hp_ext_status) & BM_CMD_BUSY) {
+-		return (1);
++		return 1;
+ 	}
  
-    currTar_Info = &FPT_sccbMgrTbl[p_card][p_SCCB->TargID];
+ 	else {
+-		return (0);
++		return 0;
+ 	}
+ }
  
+@@ -5721,10 +5721,10 @@ static int FPT_scarb(unsigned long p_por
+ 		}
+ 
+ 		if (RD_HARPOON(p_port + hp_scsisig) & SCSI_SEL)
+-			return (0);
++			return 0;
+ 
+ 		if (RD_HARPOON(p_port + hp_scsidata_0) != 00)
+-			return (0);
++			return 0;
+ 
+ 		WR_HARPOON(p_port + hp_scsisig,
+ 			   (RD_HARPOON(p_port + hp_scsisig) | SCSI_BSY));
+@@ -5734,7 +5734,7 @@ static int FPT_scarb(unsigned long p_por
+ 			WR_HARPOON(p_port + hp_scsisig,
+ 				   (RD_HARPOON(p_port + hp_scsisig) &
+ 				    ~SCSI_BSY));
+-			return (0);
++			return 0;
+ 		}
+ 
+ 		WR_HARPOON(p_port + hp_scsisig,
+@@ -5745,7 +5745,7 @@ static int FPT_scarb(unsigned long p_por
+ 			WR_HARPOON(p_port + hp_scsisig,
+ 				   (RD_HARPOON(p_port + hp_scsisig) &
+ 				    ~(SCSI_BSY | SCSI_SEL)));
+-			return (0);
++			return 0;
+ 		}
+ 	}
+ 
+@@ -5764,7 +5764,7 @@ static int FPT_scarb(unsigned long p_por
+ 
+ 	FPT_Wait(p_port, TO_250ms);
+ 
+-	return (1);
++	return 1;
+ }
+ 
+ /*---------------------------------------------------------------------
+@@ -5956,7 +5956,7 @@ static unsigned char FPT_scxferc(unsigne
+ 
+ 	FPT_scwirod(p_port, BIT(6));	/*Wait for DB6 to be released. */
+ 
+-	return (ret_data);
++	return ret_data;
+ }
+ 
+ /*---------------------------------------------------------------------
+@@ -5994,22 +5994,22 @@ static unsigned char FPT_scsendi(unsigne
+ 			}
+ 
+ 			if ((ret_data & 0x1C) == 0x10)
+-				return (0x00);	/*End of isolation stage, we won! */
++				return 0x00;	/*End of isolation stage, we won! */
+ 
+ 			if (ret_data & 0x1C)
+-				return (0xFF);
++				return 0xFF;
+ 
+ 			if ((defer) && (!(ret_data & 0x1F)))
+-				return (0x01);	/*End of isolation stage, we lost. */
++				return 0x01;	/*End of isolation stage, we lost. */
+ 
+ 		}		/*bit loop */
+ 
+ 	}			/*byte loop */
+ 
+ 	if (defer)
+-		return (0x01);	/*We lost */
++		return 0x01;	/*We lost */
+ 	else
+-		return (0);	/*We WON! Yeeessss! */
++		return 0;	/*We WON! Yeeessss! */
+ }
+ 
+ /*---------------------------------------------------------------------
+@@ -6034,7 +6034,7 @@ static unsigned char FPT_sciso(unsigned 
+ 			ret_data = FPT_scxferc(p_port, 0);
+ 
+ 			if (ret_data & 0xFC)
+-				return (0xFF);
++				return 0xFF;
+ 
+ 			else {
+ 
+@@ -6056,9 +6056,9 @@ static unsigned char FPT_sciso(unsigned 
+ 				}
+ */
+ 				if (byte_cnt)
+-					return (0x00);
++					return 0x00;
+ 				else
+-					return (0xFF);
++					return 0xFF;
+ 			}
+ 
+ 		}		/*bit loop */
+@@ -6067,7 +6067,7 @@ static unsigned char FPT_sciso(unsigned 
+ 
+ 	}			/*byte loop */
+ 
+-	return (0);
++	return 0;
+ }
+ 
+ /*---------------------------------------------------------------------
+@@ -6142,10 +6142,10 @@ static unsigned char FPT_scvalq(unsigned
+ 	}
+ 
+ 	if (p_quintet & 0x18)
+-		return (0);
++		return 0;
+ 
+ 	else
+-		return (1);
++		return 1;
+ }
+ 
+ /*---------------------------------------------------------------------
+@@ -6209,7 +6209,7 @@ static unsigned char FPT_scsell(unsigned
+ 			   (RD_HARPOON(p_port + hp_page_ctrl) &
+ 			    ~G_INT_DISABLE));
+ 
+-		return (0);	/*No legacy device */
++		return 0;	/*No legacy device */
+ 	}
+ 
+ 	else {
+@@ -6228,7 +6228,7 @@ static unsigned char FPT_scsell(unsigned
+ 			   (RD_HARPOON(p_port + hp_page_ctrl) &
+ 			    ~G_INT_DISABLE));
+ 
+-		return (1);	/*Found one of them oldies! */
++		return 1;	/*Found one of them oldies! */
+ 	}
+ }
+ 
+@@ -6342,7 +6342,7 @@ static unsigned char FPT_scmachid(unsign
+ 
+ 		if (match) {
+ 			FPT_scamInfo[i].state = ID_ASSIGNED;
+-			return (i);
++			return i;
+ 		}
+ 
+ 	}
+@@ -6372,7 +6372,7 @@ static unsigned char FPT_scmachid(unsign
+ 			if (FPT_BL_Card[p_card].pNvRamInfo == NULL)
+ 				FPT_BL_Card[p_card].globalFlags |=
+ 				    F_UPDATE_EEPROM;
+-			return (match);
++			return match;
+ 
+ 		}
+ 
+@@ -6387,7 +6387,7 @@ static unsigned char FPT_scmachid(unsign
+ 	}
+ 
+ 	if (p_id_string[0] & BIT(7)) {
+-		return (CLR_PRIORITY);
++		return CLR_PRIORITY;
+ 	}
+ 
+ 	if (p_id_string[0] & BIT(5))
+@@ -6416,7 +6416,7 @@ static unsigned char FPT_scmachid(unsign
+ 			if (FPT_BL_Card[p_card].pNvRamInfo == NULL)
+ 				FPT_BL_Card[p_card].globalFlags |=
+ 				    F_UPDATE_EEPROM;
+-			return (match);
++			return match;
+ 
+ 		}
+ 
+@@ -6430,7 +6430,7 @@ static unsigned char FPT_scmachid(unsign
+ 		}
+ 	}
+ 
+-	return (NO_ID_AVAIL);
++	return NO_ID_AVAIL;
+ }
+ 
+ /*---------------------------------------------------------------------
+@@ -7181,7 +7181,7 @@ static unsigned char FPT_queueFindSccb(s
+ 
+ 			currTar_Info->TarSelQ_Cnt--;
+ 
+-			return (1);
++			return 1;
+ 		}
+ 
+ 		else {
+@@ -7189,7 +7189,7 @@ static unsigned char FPT_queueFindSccb(s
+ 		}
+ 	}
+ 
+-	return (0);
++	return 0;
+ 
+ }
+ 
+@@ -7416,14 +7416,14 @@ static unsigned short FPT_utilEERead(uns
+ 		ee_data2 = FPT_utilEEReadOrg(p_port, ee_addr);
+ 
+ 		if (ee_data1 == ee_data2)
+-			return (ee_data1);
++			return ee_data1;
+ 
+ 		ee_data1 = ee_data2;
+ 		i++;
+ 
+ 	} while (i < 4);
+ 
+-	return (ee_data1);
++	return ee_data1;
+ }
+ 
+ /*---------------------------------------------------------------------
+@@ -7471,7 +7471,7 @@ static unsigned short FPT_utilEEReadOrg(
+ 	WR_HARPOON(p_port + hp_ee_ctrl, (ee_value | SEE_MS));	/*Turn off CS */
+ 	WR_HARPOON(p_port + hp_ee_ctrl, ee_value);	/*Turn off Master Select */
+ 
+-	return (ee_data);
++	return ee_data;
+ }
+ 
+ /*---------------------------------------------------------------------
+@@ -7559,7 +7559,7 @@ static unsigned short FPT_CalcCrc16(unsi
+ 			ch >>= 1;
+ 		}
+ 	}
+-	return (crc);
++	return crc;
+ }
+ 
+ static unsigned char FPT_CalcLrc(unsigned char buffer[])
+@@ -7569,7 +7569,7 @@ static unsigned char FPT_CalcLrc(unsigne
+ 	lrc = 0;
+ 	for (i = 0; i < ID_STRING_LENGTH; i++)
+ 		lrc ^= buffer[i];
+-	return (lrc);
++	return lrc;
+ }
+ 
+ /*
 _
