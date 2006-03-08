@@ -1,90 +1,93 @@
 From: ravi.anand@qlogic.com
-Subject: [PATCH 03/11] Drop unused defines.
-Date: Tue, 7 Mar 2006 16:35:27 -0800
-Message-ID: <11417781222011-git-send-email-ravi.anand@qlogic.com>
+Subject: [PATCH 06/11] Change semaphore usage to mutex.
+Date: Tue, 7 Mar 2006 16:35:43 -0800
+Message-ID: <11417781373685-git-send-email-ravi.anand@qlogic.com>
 References: <11417781172980-git-send-email-ravi.anand@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:56303 "EHLO avexch02.qlogic.com")
-	by vger.kernel.org with ESMTP id S964845AbWCHAfb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2006 19:35:31 -0500
+Received: from pat.qlogic.com ([198.70.193.2]:22001 "EHLO avexch02.qlogic.com")
+	by vger.kernel.org with ESMTP id S964853AbWCHAfq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2006 19:35:46 -0500
 In-Reply-To: <11417781172980-git-send-email-ravi.anand@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, arjan@infradead.org
 Cc: ravi.anand@qlogic.com
 
-Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
-
 Signed-off-by: Ravi Anand <ravi.anand@qlogic.com>
 
 
 ---
 
- drivers/scsi/qla4xxx/ql4_def.h |    3 ---
- drivers/scsi/qla4xxx/ql4_fw.h  |   25 -------------------------
- 2 files changed, 0 insertions(+), 28 deletions(-)
+ drivers/scsi/qla4xxx/ql4_def.h |    6 +++---
+ drivers/scsi/qla4xxx/ql4_mbx.c |    4 ++--
+ drivers/scsi/qla4xxx/ql4_os.c  |    2 +-
+ 3 files changed, 6 insertions(+), 6 deletions(-)
 
-06f6483e4c0aed769faa93648ae667291c51ffd9
+d31fabeaf8cc7ba8b9448cbe0d8db464fe04af05
 diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
-index c2e5f56..9eee21f 100644
+index 98c5922..4d1653c 100644
 --- a/drivers/scsi/qla4xxx/ql4_def.h
 +++ b/drivers/scsi/qla4xxx/ql4_def.h
-@@ -42,9 +42,6 @@
- #define IS_QLA4010(ha)	((ha)->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP4010)
- #define IS_QLA4022(ha)	((ha)->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP4022)
+@@ -23,7 +23,7 @@
+ #include <linux/kthread.h>
+ #include <linux/delay.h>
+ #include <linux/interrupt.h>
+-#include <asm/semaphore.h>
++#include <linux/mutex.h>
  
--#define QLA4010
--#define QLA4XXX_BOARD_PORTS		1
--#define QLA4XXX_PROC_NAME		"qla4010"
- #define QLA_SUCCESS			0
- #define QLA_ERROR			1
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_host.h>
+@@ -497,10 +497,10 @@ typedef struct scsi_qla_host {
+ 	PDU_ENTRY *free_pdu_bottom;
+ 	PDU_ENTRY pdu_queue[MAX_PDU_ENTRIES];
  
-diff --git a/drivers/scsi/qla4xxx/ql4_fw.h b/drivers/scsi/qla4xxx/ql4_fw.h
-index 032e845..10f1852 100644
---- a/drivers/scsi/qla4xxx/ql4_fw.h
-+++ b/drivers/scsi/qla4xxx/ql4_fw.h
-@@ -4,38 +4,13 @@
-  *
-  * See LICENSE.qla4xxx for copyright and licensing details.
-  */
--
- #ifndef _QLA4X_FW_H
- #define _QLA4X_FW_H
+-	/* This semaphore protects several threads to do mailbox commands
++	/* This mutex protects several threads to do mailbox commands
+ 	 * concurrently.
+ 	 */
+-	struct semaphore mbox_sem;
++	struct mutex  mbox_sem;
+ 	wait_queue_head_t mailbox_wait_queue;
  
--#ifndef uint64_t
--#define uint64_t __u64
--#endif
--
--#define QLA4XXX_VENDOR_ID   	0x1077
--#define QLA4000_DEVICE_ID  	0x4000
--#define QLA4010_DEVICE_ID  	0x4010
--
--#define QLA4040_SSDID_NIC  	0x011D	/* Uses QLA4010 PCI Device ID */
--#define QLA4040_SSDID_ISCSI  	0x011E
--#define QLA4040C_SSDID_NIC  	0x011F
--#define QLA4040C_SSDID_ISCSI  	0x0120
--
- #define MAX_PRST_DEV_DB_ENTRIES         64
- #define MIN_DISC_DEV_DB_ENTRY           MAX_PRST_DEV_DB_ENTRIES
- #define MAX_DEV_DB_ENTRIES              512
+ 	/* temporary mailbox status registers */
+diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
+index 0dd350b..823c4c2 100644
+--- a/drivers/scsi/qla4xxx/ql4_mbx.c
++++ b/drivers/scsi/qla4xxx/ql4_mbx.c
+@@ -51,7 +51,7 @@ qla4xxx_mailbox_command(scsi_qla_host_t 
+ 	unsigned long flags = 0;
+ 	DECLARE_WAITQUEUE(wait, current);
  
--// ISP Maximum number of DSD per command
--#define DSD_MAX                                 1024
--
--// FW check
--#define FW_UP(reg,stat)                         (((stat = RD_REG_DWORD(reg->mailbox[0])) != 0) && (stat != 0x0007))
--
--#define INVALID_REGISTER 			((uint32_t)-1)
--
--#define ISP4010_NET_FUNCTION                            0
--#define ISP4010_ISCSI_FUNCTION                          1
--
- /*************************************************************************
-  *
-  * 		ISP 4010 I/O Register Set Structure and Definitions
+-	down(&ha->mbox_sem);
++	mutex_lock(&ha->mbox_sem);
+ 
+ 	/* Mailbox code active */
+ 	set_bit(AF_MBOX_COMMAND, &ha->flags);
+@@ -175,7 +175,7 @@ qla4xxx_mailbox_command(scsi_qla_host_t 
+ mbox_exit:
+ 	clear_bit(AF_MBOX_COMMAND, &ha->flags);
+ 	clear_bit(AF_MBOX_COMMAND_DONE, &ha->flags);
+-	up(&ha->mbox_sem);
++	mutex_unlock(&ha->mbox_sem);
+ 
+ 	return status;
+ }
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 1271edf..27aabb9 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -358,7 +358,7 @@ qla4xxx_probe_adapter(struct pci_dev *pd
+ 	INIT_LIST_HEAD(&ha->ddb_list);
+ 	INIT_LIST_HEAD(&ha->free_srb_q);
+ 
+-	init_MUTEX(&ha->mbox_sem);
++	mutex_init(&ha->mbox_sem);
+ 	init_waitqueue_head(&ha->mailbox_wait_queue);
+ 
+ 	spin_lock_init(&ha->hardware_lock);
 -- 
 1.2.4.g9201-dirty
 
