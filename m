@@ -1,23 +1,24 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: [PATCH 01/11] Use msleep() rather than schedule_timeout().
-Date: Wed, 08 Mar 2006 08:21:46 +0100
-Message-ID: <1141802507.3050.5.camel@laptopd505.fenrus.org>
-References: <11417781172980-git-send-email-ravi.anand@qlogic.com>
+From: "Ravi Anand" <ravi.anand@qlogic.com>
+Subject: RE: [PATCH 01/11] Use msleep() rather than schedule_timeout().
+Date: Wed, 8 Mar 2006 00:12:40 -0800
+Message-ID: <3679966B84813344B908D418BA3F6A4A06F5F9C5@AVEXCH01.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="Windows-1252"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:1953 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1751174AbWCHHVt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Mar 2006 02:21:49 -0500
-In-Reply-To: <11417781172980-git-send-email-ravi.anand@qlogic.com>
+Received: from pat.qlogic.com ([198.70.193.2]:33668 "EHLO avexch01.qlogic.com")
+	by vger.kernel.org with ESMTP id S932464AbWCHIMk convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 8 Mar 2006 03:12:40 -0500
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: ravi.anand@qlogic.com
+To: Ravi Anand <ravi.anand@qlogic.com>, Arjan van de Ven <arjan@infradead.org>
 Cc: linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com
 
-On Tue, 2006-03-07 at 16:35 -0800, ravi.anand@qlogic.com wrote:
+>>On Tue, 2006-03-07 at 16:35 -0800, Arjan van de Van wrote:
+>On Tue, 2006-03-07 at 16:35 -0800, ravi.anand@qlogic.com wrote:
 
 
 > diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
@@ -63,7 +64,16 @@ On Tue, 2006-03-07 at 16:35 -0800, ravi.anand@qlogic.com wrote:
 >  	remove_wait_queue(&ha->mailbox_wait_queue, &wait);
 >  
 
-this looks like a major step backwards; this orginal code was right!
+>>this looks like a major step backwards; this orginal code was right!
+
+Good catch. Overlooked, since msleep() does the context switching as well.
+We will queue it for the next release.
+
+Thanx
+Ravi
+
+
+
 
 
 
