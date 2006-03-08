@@ -1,15 +1,15 @@
 From: ravi.anand@qlogic.com
-Subject: [PATCH 04/11] Consolidate #include definitions.
-Date: Tue, 7 Mar 2006 16:35:32 -0800
-Message-ID: <11417781271944-git-send-email-ravi.anand@qlogic.com>
+Subject: [PATCH 02/11] Drop IPAddr*() functions.
+Date: Tue, 7 Mar 2006 16:35:22 -0800
+Message-ID: <1141778117884-git-send-email-ravi.anand@qlogic.com>
 References: <11417781172980-git-send-email-ravi.anand@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:8432 "EHLO avexch02.qlogic.com")
-	by vger.kernel.org with ESMTP id S964851AbWCHAfg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2006 19:35:36 -0500
+Received: from pat.qlogic.com ([198.70.193.2]:34543 "EHLO avexch02.qlogic.com")
+	by vger.kernel.org with ESMTP id S964849AbWCHAf0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Mar 2006 19:35:26 -0500
 In-Reply-To: <11417781172980-git-send-email-ravi.anand@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -23,91 +23,50 @@ Signed-off-by: Ravi Anand <ravi.anand@qlogic.com>
 
 ---
 
- drivers/scsi/qla4xxx/ql4_def.h  |    2 ++
- drivers/scsi/qla4xxx/ql4_glbl.h |    2 --
- drivers/scsi/qla4xxx/ql4_init.c |    2 --
- drivers/scsi/qla4xxx/ql4_mbx.c  |    2 --
- drivers/scsi/qla4xxx/ql4_os.c   |    4 ----
- 5 files changed, 2 insertions(+), 10 deletions(-)
+ drivers/scsi/qla4xxx/ql4_def.h  |   14 --------------
+ drivers/scsi/qla4xxx/ql4_init.c |    3 ++-
+ 2 files changed, 2 insertions(+), 15 deletions(-)
 
-41d009988af1d11ab61a9e3c9e828baf735becc8
+a94b5548a92d8f6feae73f15f631a74aeed8ba2c
 diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
-index 9eee21f..98c5922 100644
+index 8c75929..c2e5f56 100644
 --- a/drivers/scsi/qla4xxx/ql4_def.h
 +++ b/drivers/scsi/qla4xxx/ql4_def.h
-@@ -22,12 +22,14 @@
- #include <linux/spinlock.h>
- #include <linux/kthread.h>
- #include <linux/delay.h>
-+#include <linux/interrupt.h>
- #include <asm/semaphore.h>
+@@ -84,20 +84,6 @@
+ #define BIT_30	0x40000000
+ #define BIT_31	0x80000000
  
- #include <scsi/scsi.h>
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_cmnd.h>
-+#include <scsi/scsi_transport.h>
- #include <scsi/scsi_transport_iscsi.h>
- 
- /* XXX(dg): move to pci_ids.h */
-diff --git a/drivers/scsi/qla4xxx/ql4_glbl.h b/drivers/scsi/qla4xxx/ql4_glbl.h
-index c457151..530a7f6 100644
---- a/drivers/scsi/qla4xxx/ql4_glbl.h
-+++ b/drivers/scsi/qla4xxx/ql4_glbl.h
-@@ -8,8 +8,6 @@
- #ifndef __QLA4x_GBL_H
- #define	__QLA4x_GBL_H
- 
--#include <linux/interrupt.h>
--
+-#define IPAddrIsZero( _X1_ )   ((_X1_)[0] == 0 && \
+-                                (_X1_)[1] == 0 && \
+-                                (_X1_)[2] == 0 && \
+-                                (_X1_)[3] == 0)
+-#define IPAddrIsEqual(_X1_, _X2_) ((_X1_)[0] == (_X2_)[0] && \
+-                                   (_X1_)[1] == (_X2_)[1] && \
+-                                   (_X1_)[2] == (_X2_)[2] && \
+-                                   (_X1_)[3] == (_X2_)[3])
+-#define IPAddr2Uint32(_X1_,_X2_) { \
+-                                  *_X2_ = 0; \
+-				  *_X2_ |= _X1_[3] << 24; \
+-				  *_X2_ |= _X1_[2] << 16; \
+-				  *_X2_ |= _X1_[1] << 8;  \
+-				  *_X2_ |= _X1_[0];}
  /*
-  * Defined in ql4_os.c
-  */
+  * Host adapter default definitions
+  ***********************************/
 diff --git a/drivers/scsi/qla4xxx/ql4_init.c b/drivers/scsi/qla4xxx/ql4_init.c
-index 16dfb26..6d10809 100644
+index 5ad55ec..16dfb26 100644
 --- a/drivers/scsi/qla4xxx/ql4_init.c
 +++ b/drivers/scsi/qla4xxx/ql4_init.c
-@@ -7,8 +7,6 @@
+@@ -1250,7 +1250,8 @@ qla4xxx_initialize_adapter(scsi_qla_host
+ 		return status;
  
- #include "ql4_def.h"
+ 	/* Skip device discovery if ip and subnet is zero */
+-	if (IPAddrIsZero(ha->ip_address) || IPAddrIsZero(ha->subnet_mask))
++	if (memcmp(ha->ip_address, 0, IP_ADDR_LEN) ||
++	    memcmp(ha->subnet_mask, 0, IP_ADDR_LEN))
+ 		return status;
  
--#include <linux/delay.h>
--
- /*
- *  QLogic ISP4xxx Hardware Support Function Prototypes.
-  */
-diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
-index 6959adc..0dd350b 100644
---- a/drivers/scsi/qla4xxx/ql4_mbx.c
-+++ b/drivers/scsi/qla4xxx/ql4_mbx.c
-@@ -7,8 +7,6 @@
- 
- #include "ql4_def.h"
- 
--#include <linux/delay.h>
--
- /*
-  * externals
-  */
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 1578aa0..1271edf 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -7,14 +7,10 @@
- 
- #include "ql4_def.h"
- 
--#include <linux/delay.h>
--#include <linux/vmalloc.h>
- #include <linux/moduleparam.h>
- 
- #include <scsi/scsi_tcq.h>
- #include <scsi/scsicam.h>
--#include <scsi/scsi_transport.h>
--#include <scsi/scsi_transport_iscsi.h>
- 
- /*
-  * Driver version
+ 	if (renew_ddb_list == PRESERVE_DDB_LIST) {
 -- 
 1.2.4.g9201-dirty
 
