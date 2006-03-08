@@ -1,46 +1,57 @@
 From: akpm@osdl.org
-Subject: [patch 25/28] aacraid: fix the comparison with sizeof()
-Date: Wed, 08 Mar 2006 00:14:41 -0800
-Message-ID: <200603080816.k288GUd4002250@shell0.pdx.osdl.net>
+Subject: [patch 26/28] small whitespace cleanup for qlogic driver
+Date: Wed, 08 Mar 2006 00:14:42 -0800
+Message-ID: <200603080816.k288GV1R002257@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:45996 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932497AbWCHIQf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Mar 2006 03:16:35 -0500
+Received: from smtp.osdl.org ([65.172.181.4]:49580 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932499AbWCHIQo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Mar 2006 03:16:44 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, tiwai@suse.de
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, jesper.juhl@gmail.com, andrew.vasquez@qlogic.com
 
 
-From: Takashi Iwai <tiwai@suse.de>
+From: Jesper Juhl <jesper.juhl@gmail.com>
 
-Fix the comparison with sizeof() in min() macro.
+Add a few spaces to MODULE_PARM_DESC() text for qla2xxx. Without these
+spaces text runs together when modinfo prints the text.
 
-Signed-off-by: Takashi Iwai <tiwai@suse.de>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
+Signed-off-by: Jesper Juhl <jesper.juhl@gmail.com>
+Acked-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/aacraid/aachba.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/qla2xxx/qla_os.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-diff -puN drivers/scsi/aacraid/aachba.c~aacraid-fix-the-comparison-with-sizeof drivers/scsi/aacraid/aachba.c
---- devel/drivers/scsi/aacraid/aachba.c~aacraid-fix-the-comparison-with-sizeof	2006-03-08 00:13:07.000000000 -0800
-+++ devel-akpm/drivers/scsi/aacraid/aachba.c	2006-03-08 00:13:07.000000000 -0800
-@@ -1597,13 +1597,13 @@ int aac_scsi_cmd(struct scsi_cmnd * scsi
- 		cp[11] = 0;
- 		cp[12] = 0;
- 		aac_internal_transfer(scsicmd, cp, 0,
--		  min((unsigned int)scsicmd->cmnd[13], sizeof(cp)));
-+		  min((size_t)scsicmd->cmnd[13], sizeof(cp)));
- 		if (sizeof(cp) < scsicmd->cmnd[13]) {
- 			unsigned int len, offset = sizeof(cp);
+diff -puN drivers/scsi/qla2xxx/qla_os.c~small-whitespace-cleanup-for-qlogic-driver drivers/scsi/qla2xxx/qla_os.c
+--- devel/drivers/scsi/qla2xxx/qla_os.c~small-whitespace-cleanup-for-qlogic-driver	2006-03-08 00:13:07.000000000 -0800
++++ devel-akpm/drivers/scsi/qla2xxx/qla_os.c	2006-03-08 00:13:08.000000000 -0800
+@@ -39,14 +39,14 @@ MODULE_PARM_DESC(ql2xlogintimeout,
+ int qlport_down_retry = 30;
+ module_param(qlport_down_retry, int, S_IRUGO|S_IRUSR);
+ MODULE_PARM_DESC(qlport_down_retry,
+-		"Maximum number of command retries to a port that returns"
++		"Maximum number of command retries to a port that returns "
+ 		"a PORT-DOWN status.");
  
- 			memset(cp, 0, offset);
- 			do {
--				len = min(scsicmd->cmnd[13]-offset, sizeof(cp));
-+				len = min((size_t)(scsicmd->cmnd[13]-offset), sizeof(cp));
- 				aac_internal_transfer(scsicmd, cp, offset, len);
- 			} while ((offset += len) < scsicmd->cmnd[13]);
- 		}
+ int ql2xplogiabsentdevice;
+ module_param(ql2xplogiabsentdevice, int, S_IRUGO|S_IWUSR);
+ MODULE_PARM_DESC(ql2xplogiabsentdevice,
+ 		"Option to enable PLOGI to devices that are not present after "
+-		"a Fabric scan.  This is needed for several broken switches."
++		"a Fabric scan.  This is needed for several broken switches. "
+ 		"Default is 0 - no PLOGI. 1 - perfom PLOGI.");
+ 
+ int ql2xloginretrycount = 0;
+@@ -74,7 +74,7 @@ MODULE_PARM_DESC(ql2xfdmienable,
+ int ql2xprocessrscn;
+ module_param(ql2xprocessrscn, int, S_IRUGO|S_IRUSR);
+ MODULE_PARM_DESC(ql2xprocessrscn,
+-		"Option to enable port RSCN handling via a series of less"
++		"Option to enable port RSCN handling via a series of less "
+ 		"fabric intrusive ADISCs and PLOGIs.");
+ 
+ /*
 _
