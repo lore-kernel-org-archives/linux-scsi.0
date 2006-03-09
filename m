@@ -1,16 +1,16 @@
 From: "Ravi Anand" <ravi.anand@qlogic.com>
 Subject: RE: qla4xxx : Driver v5.00.05b4-k - RFC requested!!!
-Date: Thu, 9 Mar 2006 04:11:50 -0800
-Message-ID: <3679966B84813344B908D418BA3F6A4A06F600E7@AVEXCH01.qlogic.org>
+Date: Thu, 9 Mar 2006 04:11:49 -0800
+Message-ID: <3679966B84813344B908D418BA3F6A4A06F600E6@AVEXCH01.qlogic.org>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="Windows-1252"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:22864 "EHLO avexch01.qlogic.com")
-	by vger.kernel.org with ESMTP id S932314AbWCIMLu convert rfc822-to-8bit
+Received: from pat.qlogic.com ([198.70.193.2]:21584 "EHLO avexch01.qlogic.com")
+	by vger.kernel.org with ESMTP id S932282AbWCIMLt convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 9 Mar 2006 07:11:50 -0500
+	Thu, 9 Mar 2006 07:11:49 -0500
 content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -21,25 +21,31 @@ To: linux-scsi@vger.kernel.org
 > All,
 > 
 > For the upstream inclusion of qla4xxx driver, following files :
-
-
+> 
 > - Updated driver source (qla4xxx-src-v5.00.05b4-k_submit.tar.bz2)
+> - Driver patch (patch-qla4xxx-5.00.05b4-k-scsi-rc-fix-2.6.16-rc3)
+> - License.qla4xxx 
 
+>>quick peak shows:
 
->>another thing:
+>>there are a whole bunch of "ugly" defines.... that are never used
+>>such as
+>>QLA4XXX_DELAY
+>>IPAddr2Uint32
 
-+               set_current_state(TASK_UNINTERRUPTIBLE);
-+               schedule_timeout(10);
+First of all thanx for your input. We will clean it up
+and address it in the next set of patches.
 
+>also please change the struct semaphore to be a struct mutex instead;
+>it's a mutex after all; all new code should use struct mutex for mutex
+>use :)
 
->>this is obviously a bug.. for which HZ value is that 10?
+We will do.
 
-
->>I think you really want to use msleep() instead here, which uses
->>wallclock time units, and does the state setting for you as well.
->>(and is generally a nicer albeit simpler API than schedule_timeout() )
-
-Agreed. We will switch to msleep().
-
+Thanx
 Ravi
+
+
+
+
 
