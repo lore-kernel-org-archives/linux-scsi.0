@@ -1,61 +1,66 @@
-From: Dave Jones <davej@redhat.com>
-Subject: Re: two leaks in scsi_alloc_sdev failure paths
-Date: Thu, 9 Mar 2006 10:21:27 -0500
-Message-ID: <20060309152126.GA30809@redhat.com>
-References: <20060309033620.GA19906@redhat.com> <441044B6.3000802@us.ibm.com>
+From: Andreas Herrmann <aherrman@de.ibm.com>
+Subject: [PATCH] scsi_transport_fc: fix FC_HOST_NUM_ATTRS
+Date: Thu, 9 Mar 2006 16:37:49 +0100
+Message-ID: <20060309153749.GA10170@lion28.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:46290 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S1751781AbWCIPVl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Mar 2006 10:21:41 -0500
+Received: from mtagate1.de.ibm.com ([195.212.29.150]:51637 "EHLO
+	mtagate1.de.ibm.com") by vger.kernel.org with ESMTP
+	id S1750762AbWCIPjC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 9 Mar 2006 10:39:02 -0500
+Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
+	by mtagate1.de.ibm.com (8.12.10/8.12.10) with ESMTP id k29Fd17i124826
+	for <linux-scsi@vger.kernel.org>; Thu, 9 Mar 2006 15:39:01 GMT
+Received: from d12av02.megacenter.de.ibm.com (d12av02.megacenter.de.ibm.com [9.149.165.228])
+	by d12nrmr1607.megacenter.de.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k29FdNxe219610
+	for <linux-scsi@vger.kernel.org>; Thu, 9 Mar 2006 16:39:23 +0100
+Received: from d12av02.megacenter.de.ibm.com (loopback [127.0.0.1])
+	by d12av02.megacenter.de.ibm.com (8.12.11/8.13.3) with ESMTP id k29Fd0Lo020232
+	for <linux-scsi@vger.kernel.org>; Thu, 9 Mar 2006 16:39:00 +0100
 Content-Disposition: inline
-In-Reply-To: <441044B6.3000802@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <jejb@steeleye.com>
+Cc: Linux SCSI <linux-scsi@vger.kernel.org>
 
-On Thu, Mar 09, 2006 at 09:07:34AM -0600, Brian King wrote:
- > Dave Jones wrote:
- > >If the scsi_alloc_queue or the slave_alloc calls in scsi_alloc_device fail,
- > >we forget to release the locally allocated sdev on the failure path.
- > 
- > Actually, I think the slave_alloc failure path works today, and this patch
- > breaks it. Today, in the slave_alloc failure path, the release function 
- > called
- > as a result of the put_device in out_device_destroy should end up freeing 
- > the sdev.
+In the past I added an host attribute but unfortunately
+I forgot to increase FC_HOST_NUM_ATTRS.
+This is fixed with the patch. Otherwise an fibre channel
+lld might run into
+      BUG_ON(count > FC_HOST_NUM_ATTRS);
+in fc_attach_transport().
 
-Correct, thanks.
-
- > Rather than this change, I think just adding a kfree(sdev) before the goto 
- > out would accomplish what you want.
-
-looks a lot simpler.
-
-Thanks.
-
-		Dave
+Sorry about that.
 
 
+Regards,
 
-If the scsi_alloc_queue or the slave_alloc calls in scsi_alloc_device fail,
-we forget to release the locally allocated sdev on the failure path.
+Andreas
 
-Coverity #609
-Signed-off-by: Dave Jones <davej@redhat.com>
 
---- linux-2.6/drivers/scsi/scsi_scan.c~	2006-03-09 10:19:51.000000000 -0500
-+++ linux-2.6/drivers/scsi/scsi_scan.c	2006-03-09 10:20:20.000000000 -0500
-@@ -252,6 +252,7 @@ static struct scsi_device *scsi_alloc_sd
- 		/* release fn is set up in scsi_sysfs_device_initialise, so
- 		 * have to free and put manually here */
- 		put_device(&starget->dev);
-+		kfree(sdev);
- 		goto out;
- 	}
+scsi_transport_fc: fix FC_HOST_NUM_ATTRS
+
+Signed-off-by: Andreas Herrmann <aherrman@de.ibm.com>
+
+---
+
+ drivers/scsi/scsi_transport_fc.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+a9b1dbac2ffd19d1360a96809d8fc6f5bc4ab738
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index 929032e..13ea641 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -223,7 +223,7 @@ static void fc_rport_terminate(struct fc
+  */
+ #define FC_STARGET_NUM_ATTRS 	3
+ #define FC_RPORT_NUM_ATTRS	9
+-#define FC_HOST_NUM_ATTRS	16
++#define FC_HOST_NUM_ATTRS	17
  
-
+ struct fc_internal {
+ 	struct scsi_transport_template t;
 -- 
-http://www.codemonkey.org.uk
+0.99.9n-g5a22
