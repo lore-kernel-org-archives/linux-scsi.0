@@ -1,38 +1,111 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Linux SCSI Error Question with SG Driver
-Date: Thu, 9 Mar 2006 07:07:41 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0603090706370.15616@p34>
+From: "Ravi Anand" <ravi.anand@qlogic.com>
+Subject: qla4xxx : Driver v5.00.05b4-k - RFC requested!!!
+Date: Thu, 9 Mar 2006 04:11:35 -0800
+Message-ID: <3679966B84813344B908D418BA3F6A4A06F600DA@AVEXCH01.qlogic.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain;
+	charset="Windows-1252"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lucidpixels.com ([66.45.37.187]:2751 "EHLO lucidpixels.com")
-	by vger.kernel.org with ESMTP id S932158AbWCIMHt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Mar 2006 07:07:49 -0500
+Received: from pat.qlogic.com ([198.70.193.2]:9808 "EHLO avexch01.qlogic.com")
+	by vger.kernel.org with ESMTP id S932308AbWCIMLj convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 9 Mar 2006 07:11:39 -0500
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-I have a tape library connected to a Linux box here and every once and a 
-while I see these in dmesg:
+All,
 
-sg_low_free: bad mem_src=0, buff=0xdb6a8000, rqSz=32768
-sg_low_free: bad mem_src=0, buff=0xdb6b0000, rqSz=28672
-sg_low_free: bad mem_src=0, buff=0xdb738000, rqSz=32768
-sg_low_free: bad mem_src=0, buff=0xdb718000, rqSz=28672
-sg_low_free: bad mem_src=0, buff=0xdb680000, rqSz=32768
-sg_low_free: bad mem_src=0, buff=0xdb678000, rqSz=28672
-sg_low_free: bad mem_src=0, buff=0xdb670000, rqSz=32768
-sg_low_free: bad mem_src=0, buff=0xdb668000, rqSz=28672
-sg_low_free: bad mem_src=0, buff=0xdb660000, rqSz=32768
-sg_low_free: bad mem_src=0, buff=0xdb658000, rqSz=28672
-sg_low_free: bad mem_src=0, buff=0xdb650000, rqSz=32768
-sg_low_free: bad mem_src=0, buff=0xdb648000, rqSz=28672
+For the upstream inclusion of qla4xxx driver, following files :
 
-Does anyone know what they refer to?
+- Updated driver source (qla4xxx-src-v5.00.05b4-k_submit.tar.bz2)
+- Driver patch (patch-qla4xxx-5.00.05b4-k-scsi-rc-fix-2.6.16-rc3)
+- License.qla4xxx 
 
-A quick google and newsgroup search just turn out the actual snippets of 
-code that produce these errors, thanks..
+has been uploaded at the following ftp location for further review :
 
-Justin.
+ ftp://ftp.qlogic.com/outgoing/linux/iSCSI/upstream/5.00.05b4-k
+
+This driver has been build and tested against linux-scsi-rc-fixes tree.
+To compile this driver you need the "use_sid.patch" from Mark Christie
+as well. This patch has been uploaded in the above ftp location.
+
+It currently supports QLogic ISP4010 and ISP4022 products. This is basically based on driver v5.00.03b15-k initially submitted by Andrew Vasquez :
+
+http://marc.theaimsgroup.com/?l=linux-scsi&m=112604454018433&w=2
+
+Significant Changes to this release are :
+
+-  Added the code to register iscsi transport functions. Since a lot of
+   functionality like session creation or destruction etc is handled
+   by our Firmware, we are working on proposing the required changes needed
+   to the open-iscsi/iscsi_transport interface for our Applications
+   to be able to use these interfaces.
+           
+- Create iscsi session & connection for each of the target 
+  discovered by the HBA Firmware. qla4xxx driver is based on one of the 
+  patch send out by Mike Christie to store driver specific stuff in the
+  iscsi_cls_session, similar to what rport provides for FC. The 
+  link to that patch is provided later in this email.
+
+- Stripped out the iSNS functionality as suggested and let be in user space.
+  Again this will require some modification to open-iscsi/iscsi_transport 
+  to support iSCSI HBA, as this functionality is handled in the Firmware.
+  Details will follow later.
+  
+- Incorporated the updated license from qla2xxx (License.qla4xxx).
+
+- Additional API interface changes, including kthread creation.
+ 
+- Bug fixes have being ported over from our latest QLogic std driver.
+
+Our ultimate goal is to be able to fit in with the open-iscsi architecture 
+and leverage the functionality it provides.
+
+The driver patch - patch-qla4xxx-scsi-rc-tree-2.6.16-rc3 build against scsi-rc-fixes tree can be applied as follows :
+
+# cd /usr/src/linux-scsi-rc-fixes-2.6.git
+# patch -p1 < <path_to_qla4xxx_patch_file>
+
+Additional work that need to be done inconjuction to what I have
+already outlined earlier :
+
+- Add the iscsi block/unblock stuff. 
+- Add support for SYSFS attributes
+- Expand the uevent for passing event up needed for the iSCSI HBA.
+- Additional cleanup etc.
+
+If needed we can split the driver patch into subset of patches.
+
+Looking forward to Comments/Criticisms/Suggestions.
+
+Regards
+Ravi Anand
+QLogic Corporation
+
+
+ 
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
