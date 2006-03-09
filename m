@@ -1,57 +1,49 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: [PATCH 0/10]  qla2xxx: updates...
-Date: Thu, 9 Mar 2006 14:24:36 -0800
-Message-ID: <20060309222436.GC10181@andrew-vasquezs-powerbook-g4-15.local>
+From: andrew.vasquez@qlogic.com
+Subject: [PATCH 05/10] qla2xxx: Correct swing/emphasis settings on ISP24xx.
+Date: Thu, 9 Mar 2006 14:27:29 -0800
+Message-ID: <11419432442369-git-send-email-andrew.vasquez@qlogic.com>
+References: <20060309222436.GC10181@andrew-vasquezs-powerbook-g4-15.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:12604 "EHLO avexch02.qlogic.com")
-	by vger.kernel.org with ESMTP id S1751947AbWCIWYi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Mar 2006 17:24:38 -0500
-Content-Disposition: inline
+Received: from pat.qlogic.com ([198.70.193.2]:26437 "EHLO avexch02.qlogic.com")
+	by vger.kernel.org with ESMTP id S1751958AbWCIW13 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Mar 2006 17:27:29 -0500
+In-Reply-To: <20060309222436.GC10181@andrew-vasquezs-powerbook-g4-15.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <james.bottomley@steeleye.com>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
+To: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
+Cc: andrew.vasquez@qlogic.com
 
-Highlights include:
+Reserved-bit 15 must set when updating the swing/emphasis values.
 
-  * Support for new ISP54XX parts.
-  * Updated firmwares for 2GB and 4GB products
-    - The firmware loader qla6312 is no longer needed with the new 2GB
-      firmware.
+Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-    Original module layout:
-  	qla2300.ko supports -- ISP2300 and ISP2312 parts.
-  	qla2322.ko supports -- ISP2322.
-  	qla6312.ko supports -- ISP6312 and ISP6322 parts.
+---
 
-    New module layout:
-  	qla2300.ko supports -- ISP2300, ISP2312 and ISP6312 parts.
-  	qla2322.ko supports -- ISP2322 and ISP6322 parts.
+ drivers/scsi/qla2xxx/qla_mbx.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-    Bottom line: one less firmware blob to manage.
+de7f144d663eec9871f2bbde046acb6808cf2768
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index 267435f..85c83e0 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -2406,9 +2406,9 @@ qla2x00_set_serdes_params(scsi_qla_host_
+ 
+ 	mcp->mb[0] = MBC_SERDES_PARAMS;
+ 	mcp->mb[1] = BIT_0;
+-	mcp->mb[2] = sw_em_1g;
+-	mcp->mb[3] = sw_em_2g;
+-	mcp->mb[4] = sw_em_4g;
++	mcp->mb[2] = sw_em_1g | BIT_15;
++	mcp->mb[3] = sw_em_2g | BIT_15;
++	mcp->mb[4] = sw_em_4g | BIT_15;
+ 	mcp->out_mb = MBX_4|MBX_3|MBX_2|MBX_1|MBX_0;
+ 	mcp->in_mb = MBX_0;
+ 	mcp->tov = 30;
+-- 
+1.2.4.gf067
 
-Changeset:
 
- - qla2xxx: Convert IS_QLA*() defines to bit-operations.
- - qla2xxx: Add ISP54xx support.
- - qla2xxx: Consolidate ISP63xx handling.
- - qla2xxx: NVRAM id-list updates.
- - qla2xxx: Correct swing/emphasis settings on ISP24xx.
- - qla2xxx: Add VPD sysfs attribute.
- - qla2xxx: Further restrict ZIO mode support.
- - qla2xxx: Correct FCAL login retry logic for ISP24xx.
- * qla2xxx: Remove legacy ISP6312 firmware loader.
- * qla2xxx: Firmware updates.
-
-The last two patches are too large to be sent via email.  Retrieve
-each git mailbox patch from:
-
- qla2xxx: Remove legacy ISP6312 firmware loader.
- ftp://ftp.qlogic.com/outgoing/linux/patches/8.x/8.01.04k/2009-qla2xxx-Remove-legacy-ISP6312-firmware-loader.txt
-
- qla2xxx: Firmware updates.
- ftp://ftp.qlogic.com/outgoing/linux/patches/8.x/8.01.04k/2010-qla2xxx-Firmware-updates.txt
-
-and apply with git-am.
