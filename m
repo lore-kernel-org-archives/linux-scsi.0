@@ -1,260 +1,285 @@
 From: andrew.vasquez@qlogic.com
-Subject: [PATCH 01/10] qla2xxx: Convert IS_QLA*() defines to bit-operations.
-Date: Thu, 9 Mar 2006 14:27:08 -0800
-Message-ID: <11419432283911-git-send-email-andrew.vasquez@qlogic.com>
+Subject: [PATCH 04/10] qla2xxx: NVRAM id-list updates.
+Date: Thu, 9 Mar 2006 14:27:24 -0800
+Message-ID: <1141943239529-git-send-email-andrew.vasquez@qlogic.com>
 References: <20060309222436.GC10181@andrew-vasquezs-powerbook-g4-15.local>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:12612 "EHLO avexch02.qlogic.com")
-	by vger.kernel.org with ESMTP id S1751949AbWCIW1N (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Mar 2006 17:27:13 -0500
+Received: from pat.qlogic.com ([198.70.193.2]:63300 "EHLO avexch02.qlogic.com")
+	by vger.kernel.org with ESMTP id S1751953AbWCIW1Y (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Mar 2006 17:27:24 -0500
 In-Reply-To: <20060309222436.GC10181@andrew-vasquezs-powerbook-g4-15.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
 Cc: andrew.vasquez@qlogic.com
 
+Resync with latest NVRAM subsystem ID list.
+
 Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
 ---
 
- drivers/scsi/qla2xxx/qla_def.h  |  115 +++++++++++++--------------------------
- drivers/scsi/qla2xxx/qla_init.c |    1 
- drivers/scsi/qla2xxx/qla_os.c   |   49 +++++++++++++++++
- drivers/scsi/qla2xxx/qla_sup.c  |    5 --
- 4 files changed, 89 insertions(+), 81 deletions(-)
+ drivers/scsi/qla2xxx/qla_devtbl.h |  219 +++++++++++++------------------------
+ drivers/scsi/qla2xxx/qla_init.c   |    6 +
+ 2 files changed, 80 insertions(+), 145 deletions(-)
 
-8e6ea4d1c2e6da691c39c30f44c3c68758cd54c9
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 2e16f32..00b7e82 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -31,82 +31,6 @@
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_transport_fc.h>
+b9b88cd53c028aafda75eac4d551be8d13bd7724
+diff --git a/drivers/scsi/qla2xxx/qla_devtbl.h b/drivers/scsi/qla2xxx/qla_devtbl.h
+index 5109735..a8fc0ff 100644
+--- a/drivers/scsi/qla2xxx/qla_devtbl.h
++++ b/drivers/scsi/qla2xxx/qla_devtbl.h
+@@ -1,146 +1,81 @@
+-#define QLA_MODEL_NAMES         0x44
++#define QLA_MODEL_NAMES         0x4A
  
--#if defined(CONFIG_SCSI_QLA2XXX_EMBEDDED_FIRMWARE)
--#if defined(CONFIG_SCSI_QLA21XX) || defined(CONFIG_SCSI_QLA21XX_MODULE)
--#define IS_QLA2100(ha)	((ha)->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2100)
--#else
--#define IS_QLA2100(ha)	0
--#endif
--
--#if defined(CONFIG_SCSI_QLA22XX) || defined(CONFIG_SCSI_QLA22XX_MODULE)
--#define IS_QLA2200(ha)	((ha)->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2200)
--#else
--#define IS_QLA2200(ha)	0
--#endif
--
--#if defined(CONFIG_SCSI_QLA2300) || defined(CONFIG_SCSI_QLA2300_MODULE)
--#define IS_QLA2300(ha)	((ha)->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2300)
--#define IS_QLA2312(ha)	((ha)->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2312)
--#else
--#define IS_QLA2300(ha)	0
--#define IS_QLA2312(ha)	0
--#endif
--
--#if defined(CONFIG_SCSI_QLA2322) || defined(CONFIG_SCSI_QLA2322_MODULE)
--#define IS_QLA2322(ha)	((ha)->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2322)
--#else
--#define IS_QLA2322(ha)	0
--#endif
--
--#if defined(CONFIG_SCSI_QLA6312) || defined(CONFIG_SCSI_QLA6312_MODULE)
--#define IS_QLA6312(ha)	((ha)->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP6312)
--#define IS_QLA6322(ha)	((ha)->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP6322)
--#else
--#define IS_QLA6312(ha)	0
--#define IS_QLA6322(ha)	0
--#endif
--
--#if defined(CONFIG_SCSI_QLA24XX) || defined(CONFIG_SCSI_QLA24XX_MODULE)
--#define IS_QLA2422(ha)	((ha)->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2422)
--#define IS_QLA2432(ha)	((ha)->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2432)
--#else
--#define IS_QLA2422(ha)	0
--#define IS_QLA2432(ha)	0
--#endif
--
--#if defined(CONFIG_SCSI_QLA25XX) || defined(CONFIG_SCSI_QLA25XX_MODULE)
--#define IS_QLA2512(ha)	((ha)->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2512)
--#define IS_QLA2522(ha)	((ha)->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2522)
--#else
--#define IS_QLA2512(ha)	0
--#define IS_QLA2522(ha)	0
--#endif
--
--#else	/* !defined(CONFIG_SCSI_QLA2XXX_EMBEDDED_FIRMWARE) */
--
--#define IS_QLA2100(ha)	((ha)->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2100)
--#define IS_QLA2200(ha)	((ha)->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2200)
--#define IS_QLA2300(ha)	((ha)->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2300)
--#define IS_QLA2312(ha)	((ha)->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2312)
--#define IS_QLA2322(ha)	((ha)->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2322)
--#define IS_QLA6312(ha)	((ha)->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP6312)
--#define IS_QLA6322(ha)	((ha)->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP6322)
--#define IS_QLA2422(ha)	((ha)->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2422)
--#define IS_QLA2432(ha)	((ha)->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2432)
--#define IS_QLA2512(ha)	((ha)->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2512)
--#define IS_QLA2522(ha)	((ha)->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2522)
--#endif
--
--#define IS_QLA23XX(ha)	(IS_QLA2300(ha) || IS_QLA2312(ha) || IS_QLA2322(ha) || \
--    			 IS_QLA6312(ha) || IS_QLA6322(ha))
--#define IS_QLA24XX(ha)	(IS_QLA2422(ha) || IS_QLA2432(ha))
--#define IS_QLA25XX(ha)	(IS_QLA2512(ha) || IS_QLA2522(ha))
--
--/*
-- * Only non-ISP2[12]00 have extended addressing support in the firmware.
-- */
--#define HAS_EXTENDED_IDS(ha)	(!IS_QLA2100(ha) && !IS_QLA2200(ha))
--
  /*
-  * We have MAILBOX_REGISTER_COUNT sized arrays in a few places,
-  * but that's fine as we don't look at the last 24 ones for
-@@ -2300,6 +2224,45 @@ typedef struct scsi_qla_host {
- #define	SWITCH_FOUND			BIT_3
- #define	DFLG_NO_CABLE			BIT_4
- 
-+	uint32_t	device_type;
-+#define DT_ISP2100			BIT_0
-+#define DT_ISP2200			BIT_1
-+#define DT_ISP2300			BIT_2
-+#define DT_ISP2312			BIT_3
-+#define DT_ISP2322			BIT_4
-+#define DT_ISP6312			BIT_5
-+#define DT_ISP6322			BIT_6
-+#define DT_ISP2422			BIT_7
-+#define DT_ISP2432			BIT_8
-+#define DT_ISP2512			BIT_9
-+#define DT_ISP2522			BIT_10
-+#define DT_ISP_LAST			(DT_ISP2522 << 1)
-+
-+#define DT_OEM_001			BIT_29
-+#define DT_ISP2200A			BIT_30
-+#define DT_EXTENDED_IDS			BIT_31
-+
-+#define DT_MASK(ha)	((ha)->device_type & (DT_ISP_LAST - 1))
-+#define IS_QLA2100(ha)	(DT_MASK(ha) & DT_ISP2100)
-+#define IS_QLA2200(ha)	(DT_MASK(ha) & DT_ISP2200)
-+#define IS_QLA2300(ha)	(DT_MASK(ha) & DT_ISP2300)
-+#define IS_QLA2312(ha)	(DT_MASK(ha) & DT_ISP2312)
-+#define IS_QLA2322(ha)	(DT_MASK(ha) & DT_ISP2322)
-+#define IS_QLA6312(ha)	(DT_MASK(ha) & DT_ISP6312)
-+#define IS_QLA6322(ha)	(DT_MASK(ha) & DT_ISP6322)
-+#define IS_QLA2422(ha)	(DT_MASK(ha) & DT_ISP2422)
-+#define IS_QLA2432(ha)	(DT_MASK(ha) & DT_ISP2432)
-+#define IS_QLA2512(ha)	(DT_MASK(ha) & DT_ISP2512)
-+#define IS_QLA2522(ha)	(DT_MASK(ha) & DT_ISP2522)
-+
-+#define IS_QLA23XX(ha)	(IS_QLA2300(ha) || IS_QLA2312(ha) || IS_QLA2322(ha) || \
-+    			 IS_QLA6312(ha) || IS_QLA6322(ha))
-+#define IS_QLA24XX(ha)	(IS_QLA2422(ha) || IS_QLA2432(ha))
-+#define IS_QLA25XX(ha)	(IS_QLA2512(ha) || IS_QLA2522(ha))
-+
-+#define IS_OEM_001(ha)		((ha)->device_type & DT_OEM_001)
-+#define HAS_EXTENDED_IDS(ha)	((ha)->device_type & DT_EXTENDED_IDS)
-+
- 	/* SRB cache. */
- #define SRB_MIN_REQ	128
- 	mempool_t	*srb_mempool;
+- * Adapter model names.
++ * Adapter model names and descriptions.
+  */
+-static char *qla2x00_model_name[QLA_MODEL_NAMES] = {
+-	"QLA2340",	/* 0x100 */
+-	"QLA2342",	/* 0x101 */
+-	"QLA2344",	/* 0x102 */
+-	"QCP2342",	/* 0x103 */
+-	"QSB2340",	/* 0x104 */
+-	"QSB2342",	/* 0x105 */
+-	"QLA2310",	/* 0x106 */
+-	"QLA2332",	/* 0x107 */
+-	"QCP2332",	/* 0x108 */
+-	"QCP2340",	/* 0x109 */
+-	"QLA2342",	/* 0x10a */
+-	"QCP2342",	/* 0x10b */
+-	"QLA2350",	/* 0x10c */
+-	"QLA2352",	/* 0x10d */
+-	"QLA2352",	/* 0x10e */
+-	"HPQ SVS",	/* 0x10f */
+-	"HPQ SVS",	/* 0x110 */
+-	" ",		/* 0x111 */
+-	" ",		/* 0x112 */
+-	" ",		/* 0x113 */
+-	" ",		/* 0x114 */
+-	"QLA2360",	/* 0x115 */
+-	"QLA2362",	/* 0x116 */
+-	"QLE2360",	/* 0x117 */
+-	"QLE2362",	/* 0x118 */
+-	"QLA200",	/* 0x119 */
+-	"QLA200C",	/* 0x11a */
+-	"QLA200P",	/* 0x11b */
+-	"QLA200P",	/* 0x11c */
+-	" ",		/* 0x11d */
+-	" ",		/* 0x11e */
+-	" ",		/* 0x11f */
+-	" ",		/* 0x120 */
+-	" ",		/* 0x121 */
+-	" ",		/* 0x122 */
+-	" ",		/* 0x123 */
+-	" ",		/* 0x124 */
+-	" ",		/* 0x125 */
+-	" ",		/* 0x126 */
+-	" ",		/* 0x127 */
+-	" ",		/* 0x128 */
+-	" ",		/* 0x129 */
+-	" ",		/* 0x12a */
+-	" ",		/* 0x12b */
+-	" ",		/* 0x12c */
+-	" ",		/* 0x12d */
+-	" ",		/* 0x12e */
+-	"QLA210",	/* 0x12f */
+-	"EMC 250",	/* 0x130 */
+-	"HP A7538A",	/* 0x131 */
+-	"QLA210",	/* 0x132 */
+-	"QLA2460",	/* 0x133 */
+-	"QLA2462",	/* 0x134 */
+-	"QMC2462",	/* 0x135 */
+-	"QMC2462S",	/* 0x136 */
+-	"QLE2460",	/* 0x137 */
+-	"QLE2462",	/* 0x138 */
+-	"QME2462",	/* 0x139 */
+-	"QLA2440",	/* 0x13a */
+-	"QLA2442",	/* 0x13b */
+-	"QSM2442",	/* 0x13c */
+-	"QSM2462",	/* 0x13d */
+-	"QLE210",	/* 0x13e */
+-	"QLE220",	/* 0x13f */
+-	"QLA2460",	/* 0x140 */
+-	"QLA2462",	/* 0x141 */
+-	"QLE2460",	/* 0x142 */
+-	"QLE2462"	/* 0x143 */
+-};
+-
+-static char *qla2x00_model_desc[QLA_MODEL_NAMES] = {
+-	"133MHz PCI-X to 2Gb FC, Single Channel",	/* 0x100 */
+-	"133MHz PCI-X to 2Gb FC, Dual Channel",		/* 0x101 */
+-	"133MHz PCI-X to 2Gb FC, Quad Channel",		/* 0x102 */
+-	" ",						/* 0x103 */
+-	" ",						/* 0x104 */
+-	" ",						/* 0x105 */
+-	" ",						/* 0x106 */
+-	" ",						/* 0x107 */
+-	" ",						/* 0x108 */
+-	" ",						/* 0x109 */
+-	" ",						/* 0x10a */
+-	" ",						/* 0x10b */
+-	"133MHz PCI-X to 2Gb FC, Single Channel",	/* 0x10c */
+-	"133MHz PCI-X to 2Gb FC, Dual Channel",		/* 0x10d */
+-	" ",						/* 0x10e */
+-	"HPQ SVS HBA- Initiator device",		/* 0x10f */
+-	"HPQ SVS HBA- Target device",			/* 0x110 */
+-	" ",						/* 0x111 */
+-	" ",						/* 0x112 */
+-	" ",						/* 0x113 */
+-	" ",						/* 0x114 */
+-	"133MHz PCI-X to 2Gb FC, Single Channel",	/* 0x115 */
+-	"133MHz PCI-X to 2Gb FC, Dual Channel",		/* 0x116 */
+-	"PCI-Express to 2Gb FC, Single Channel",	/* 0x117 */
+-	"PCI-Express to 2Gb FC, Dual Channel",		/* 0x118 */
+-	"133MHz PCI-X to 2Gb FC Optical",		/* 0x119 */
+-	"133MHz PCI-X to 2Gb FC Copper",		/* 0x11a */
+-	"133MHz PCI-X to 2Gb FC SFP",			/* 0x11b */
+-	"133MHz PCI-X to 2Gb FC SFP",			/* 0x11c */
+-	" ",						/* 0x11d */
+-	" ",						/* 0x11e */
+-	" ",						/* 0x11f */
+-	" ",						/* 0x120 */
+-	" ",						/* 0x121 */
+-	" ",						/* 0x122 */
+-	" ",						/* 0x123 */
+-	" ",						/* 0x124 */
+-	" ",						/* 0x125 */
+-	" ",						/* 0x126 */
+-	" ",						/* 0x127 */
+-	" ",						/* 0x128 */
+-	" ",						/* 0x129 */
+-	" ",						/* 0x12a */
+-	" ",						/* 0x12b */
+-	" ",						/* 0x12c */
+-	" ",						/* 0x12d */
+-	" ",						/* 0x12e */
+-	"133MHz PCI-X to 2Gb FC SFF",			/* 0x12f */
+-	"133MHz PCI-X to 2Gb FC SFF",			/* 0x130 */
+-	"HP 1p2g QLA2340",				/* 0x131 */
+-	"133MHz PCI-X to 2Gb FC, Single Channel",	/* 0x132 */
+-	"PCI-X 2.0 to 4Gb FC, Single Channel",		/* 0x133 */
+-	"PCI-X 2.0 to 4Gb FC, Dual Channel",		/* 0x134 */
+-	"IBM eServer BC 4Gb FC Expansion Card",		/* 0x135 */
+-	"IBM eServer BC 4Gb FC Expansion Card SFF",	/* 0x136 */
+-	"PCI-Express to 4Gb FC, Single Channel",	/* 0x137 */
+-	"PCI-Express to 4Gb FC, Dual Channel",		/* 0x138 */
+-	"Dell PCI-Express to 4Gb FC, Dual Channel",	/* 0x139 */
+-	"PCI-X 1.0 to 4Gb FC, Single Channel",		/* 0x13a */
+-	"PCI-X 1.0 to 4Gb FC, Dual Channel",		/* 0x13b */
+-	"Server I/O Module 4Gb FC, Single Channel",	/* 0x13c */
+-	"Server I/O Module 4Gb FC, Single Channel",	/* 0x13d */
+-	"PCI-Express to 2Gb FC, Single Channel",	/* 0x13e */
+-	"PCI-Express to 4Gb FC, Single Channel",	/* 0x13f */
+-	"Sun PCI-X 2.0 to 4Gb FC, Single Channel",	/* 0x140 */
+-	"Sun PCI-X 2.0 to 4Gb FC, Dual Channel",	/* 0x141 */
+-	"Sun PCI-Express to 2Gb FC, Single Channel",	/* 0x142 */
+-	"Sun PCI-Express to 4Gb FC, Single Channel"	/* 0x143 */
++static char *qla2x00_model_name[QLA_MODEL_NAMES*2] = {
++	"QLA2340",	"133MHz PCI-X to 2Gb FC, Single Channel",	/* 0x100 */
++	"QLA2342",	"133MHz PCI-X to 2Gb FC, Dual Channel",		/* 0x101 */
++	"QLA2344",	"133MHz PCI-X to 2Gb FC, Quad Channel",		/* 0x102 */
++	"QCP2342",	"cPCI to 2Gb FC, Dual Channel",			/* 0x103 */
++	"QSB2340",	"SBUS to 2Gb FC, Single Channel",		/* 0x104 */
++	"QSB2342",	"SBUS to 2Gb FC, Dual Channel",			/* 0x105 */
++	"QLA2310",	"Sun 66MHz PCI-X to 2Gb FC, Single Channel",	/* 0x106 */
++	"QLA2332",	"Sun 66MHz PCI-X to 2Gb FC, Single Channel",	/* 0x107 */
++	"QCP2332",	"Sun cPCI to 2Gb FC, Dual Channel",		/* 0x108 */
++	"QCP2340",	"cPCI to 2Gb FC, Single Channel",		/* 0x109 */
++	"QLA2342",	"Sun 133MHz PCI-X to 2Gb FC, Dual Channel",	/* 0x10a */
++	"QCP2342",	"Sun - cPCI to 2Gb FC, Dual Channel",		/* 0x10b */
++	"QLA2350",	"133MHz PCI-X to 2Gb FC, Single Channel",	/* 0x10c */
++	"QLA2352",	"133MHz PCI-X to 2Gb FC, Dual Channel",		/* 0x10d */
++	"QLA2352",	"Sun 133MHz PCI-X to 2Gb FC, Dual Channel",	/* 0x10e */
++	" ",		" ",						/* 0x10f */
++	" ",		" ",						/* 0x110 */
++	" ",		" ",						/* 0x111 */
++	" ",		" ",						/* 0x112 */
++	" ",		" ",						/* 0x113 */
++	" ",		" ",						/* 0x114 */
++	"QLA2360",	"133MHz PCI-X to 2Gb FC, Single Channel",	/* 0x115 */
++	"QLA2362",	"133MHz PCI-X to 2Gb FC, Dual Channel",		/* 0x116 */
++	"QLE2360",	"PCI-Express to 2Gb FC, Single Channel",	/* 0x117 */
++	"QLE2362",	"PCI-Express to 2Gb FC, Dual Channel",		/* 0x118 */
++	"QLA200",	"133MHz PCI-X to 2Gb FC Optical",		/* 0x119 */
++	" ",		" ",						/* 0x11a */
++	" ",		" ",						/* 0x11b */
++	"QLA200P",	"133MHz PCI-X to 2Gb FC SFP",			/* 0x11c */
++	" ",		" ",						/* 0x11d */
++	" ",		" ",						/* 0x11e */
++	" ",		" ",						/* 0x11f */
++	" ",		" ",						/* 0x120 */
++	" ",		" ",						/* 0x121 */
++	" ",		" ",						/* 0x122 */
++	" ",		" ",						/* 0x123 */
++	" ",		" ",						/* 0x124 */
++	" ",		" ",						/* 0x125 */
++	" ",		" ",						/* 0x126 */
++	" ",		" ",						/* 0x127 */
++	" ",		" ",						/* 0x128 */
++	" ",		" ",						/* 0x129 */
++	" ",		" ",						/* 0x12a */
++	" ",		" ",						/* 0x12b */
++	" ",		" ",						/* 0x12c */
++	" ",		" ",						/* 0x12d */
++	" ",		" ",						/* 0x12e */
++	"QLA210",	"133MHz PCI-X to 2Gb FC, Single Channel",	/* 0x12f */
++	"EMC 250",	"133MHz PCI-X to 2Gb FC, Single Channel",	/* 0x130 */
++	"HP A7538A",	"HP 1p2g PCI-X to 2Gb FC, Single Channel",	/* 0x131 */
++	"QLA210",	"Sun 133MHz PCI-X to 2Gb FC, Single Channel",	/* 0x132 */
++	"QLA2460",	"PCI-X 2.0 to 4Gb FC, Single Channel",		/* 0x133 */
++	"QLA2462",	"PCI-X 2.0 to 4Gb FC, Dual Channel",		/* 0x134 */
++	"QMC2462",	"IBM eServer BC 4Gb FC Expansion Card",		/* 0x135 */
++	"QMC2462S",	"IBM eServer BC 4Gb FC Expansion Card SFF",	/* 0x136 */
++	"QLE2460",	"PCI-Express to 4Gb FC, Single Channel",	/* 0x137 */
++	"QLE2462",	"PCI-Express to 4Gb FC, Dual Channel",		/* 0x138 */
++	"QME2462",	"Dell BS PCI-Express to 4Gb FC, Dual Channel",	/* 0x139 */
++	" ",		" ",						/* 0x13a */
++	" ",		" ",						/* 0x13b */
++	" ",		" ",						/* 0x13c */
++	"QEM2462",	"Sun Server I/O Module 4Gb FC, Dual Channel",	/* 0x13d */
++	"QLE210",	"PCI-Express to 2Gb FC, Single Channel",	/* 0x13e */
++	"QLE220",	"PCI-Express to 4Gb FC, Single Channel",	/* 0x13f */
++	"QLA2460",	"Sun PCI-X 2.0 to 4Gb FC, Single Channel",	/* 0x140 */
++	"QLA2462",	"Sun PCI-X 2.0 to 4Gb FC, Dual Channel",	/* 0x141 */
++	"QLE2460",	"Sun PCI-Express to 2Gb FC, Single Channel",	/* 0x142 */
++	"QLE2462",	"Sun PCI-Express to 4Gb FC, Single Channel",	/* 0x143 */
++	"QEM2462"	"Server I/O Module 4Gb FC, Dual Channel",	/* 0x144 */
++	"QLE2440",	"PCI-Express to 4Gb FC, Single Channel",	/* 0x145 */
++	"QLE2464",	"PCI-Express to 4Gb FC, Quad Channel",		/* 0x146 */
++	"QLA2440",	"PCI-X 2.0 to 4Gb FC, Single Channel",		/* 0x147 */
++	" ",		" ",						/* 0x148 */
++	"QLA2340",	"Sun 133MHz PCI-X to 2Gb FC, Single Channel",	/* 0x149 */
+ };
 diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 634ee17..f49eb06 100644
+index d438909..3bc3e17 100644
 --- a/drivers/scsi/qla2xxx/qla_init.c
 +++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -727,6 +727,7 @@ qla2x00_chip_diag(scsi_qla_host_t *ha)
- 		DEBUG3(printk("scsi(%ld): Found QLA2200A chip.\n",
- 		    ha->host_no));
+@@ -1505,9 +1505,9 @@ qla2x00_nvram_config(scsi_qla_host_t *ha
+ 				index = (ha->pdev->subsystem_device & 0xff);
+ 				if (index < QLA_MODEL_NAMES) {
+ 					strcpy(ha->model_number,
+-					    qla2x00_model_name[index]);
++					    qla2x00_model_name[index * 2]);
+ 					ha->model_desc =
+-					    qla2x00_model_desc[index];
++					    qla2x00_model_name[index * 2 + 1];
+ 				} else {
+ 					strcpy(ha->model_number, "QLA23xx");
+ 				}
+@@ -3373,7 +3373,7 @@ qla24xx_nvram_config(scsi_qla_host_t *ha
  
-+		ha->device_type |= DT_ISP2200A;
- 		ha->fw_transfer_size = 128;
- 	}
+ 		index = (ha->pdev->subsystem_device & 0xff);
+ 		if (index < QLA_MODEL_NAMES)
+-			ha->model_desc = qla2x00_model_desc[index];
++			ha->model_desc = qla2x00_model_name[index * 2 + 1];
+ 	} else
+ 		strcpy(ha->model_number, "QLA2462");
  
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 43ca0d8..757c4c4 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -1146,6 +1146,52 @@ qla2x00_config_dma_addressing(scsi_qla_h
- 	pci_set_consistent_dma_mask(ha->pdev, DMA_32BIT_MASK);
- }
- 
-+static inline void
-+qla2x00_set_isp_flags(scsi_qla_host_t *ha)
-+{
-+	ha->device_type = DT_EXTENDED_IDS;
-+	switch (ha->pdev->device) {
-+	case PCI_DEVICE_ID_QLOGIC_ISP2100:
-+		ha->device_type |= DT_ISP2100;
-+		ha->device_type &= ~DT_EXTENDED_IDS;
-+		break;
-+	case PCI_DEVICE_ID_QLOGIC_ISP2200:
-+		ha->device_type |= DT_ISP2200;
-+		ha->device_type &= ~DT_EXTENDED_IDS;
-+		break;
-+	case PCI_DEVICE_ID_QLOGIC_ISP2300:
-+		ha->device_type |= DT_ISP2300;
-+		break;
-+	case PCI_DEVICE_ID_QLOGIC_ISP2312:
-+		ha->device_type |= DT_ISP2312;
-+		break;
-+	case PCI_DEVICE_ID_QLOGIC_ISP2322:
-+		ha->device_type |= DT_ISP2322;
-+		if (ha->pdev->subsystem_vendor == 0x1028 &&
-+		    ha->pdev->subsystem_device == 0x0170)
-+			ha->device_type |= DT_OEM_001;
-+		break;
-+	case PCI_DEVICE_ID_QLOGIC_ISP6312:
-+		ha->device_type |= DT_ISP6312;
-+		break;
-+	case PCI_DEVICE_ID_QLOGIC_ISP6322:
-+		ha->device_type |= DT_ISP6322;
-+		break;
-+	case PCI_DEVICE_ID_QLOGIC_ISP2422:
-+		ha->device_type |= DT_ISP2422;
-+		break;
-+	case PCI_DEVICE_ID_QLOGIC_ISP2432:
-+		ha->device_type |= DT_ISP2432;
-+		break;
-+	case PCI_DEVICE_ID_QLOGIC_ISP2512:
-+		ha->device_type |= DT_ISP2512;
-+		break;
-+	case PCI_DEVICE_ID_QLOGIC_ISP2522:
-+		ha->device_type |= DT_ISP2522;
-+		break;
-+	}
-+}
-+
- static int
- qla2x00_iospace_config(scsi_qla_host_t *ha)
- {
-@@ -1307,6 +1353,9 @@ int qla2x00_probe_one(struct pci_dev *pd
- 	ha->brd_info = brd_info;
- 	sprintf(ha->host_str, "%s_%ld", ha->brd_info->drv_name, ha->host_no);
- 
-+	/* Set ISP-type information. */
-+	qla2x00_set_isp_flags(ha);
-+
- 	/* Configure PCI I/O space */
- 	ret = qla2x00_iospace_config(ha);
- 	if (ret)
-diff --git a/drivers/scsi/qla2xxx/qla_sup.c b/drivers/scsi/qla2xxx/qla_sup.c
-index 8d68c46..8b0121d 100644
---- a/drivers/scsi/qla2xxx/qla_sup.c
-+++ b/drivers/scsi/qla2xxx/qla_sup.c
-@@ -1191,11 +1191,6 @@ qla2x00_poll_flash(scsi_qla_host_t *ha, 
- 	return status;
- }
- 
--#define IS_OEM_001(ha) \
--	((ha)->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2322 && \
--	 (ha)->pdev->subsystem_vendor == 0x1028 && \
--	 (ha)->pdev->subsystem_device == 0x0170)
--
- /**
-  * qla2x00_program_flash_address() - Programs a flash address
-  * @ha: HA context
 -- 
 1.2.4.gf067
 
