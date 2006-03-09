@@ -1,98 +1,88 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [RFC] aic94xx: attaching to the sas transport class
-Date: Thu, 9 Mar 2006 10:05:21 -0800
-Message-ID: <20060309180521.GB5498@us.ibm.com>
-References: <8C064C48AB104B428CBA524C342357CA34CFCB@aime2k05.adaptec.com> <1141445373.5397.23.camel@mulgrave.il.steeleye.com> <20060306193555.GA2316@us.ibm.com> <1141674628.3167.31.camel@mulgrave.il.steeleye.com> <1141692292.8649.75.camel@localhost.localdomain> <1141830925.3194.10.camel@mulgrave.il.steeleye.com> <1141923969.8649.108.camel@localhost.localdomain>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: SCSI target and IO-throttling
+Date: Thu, 09 Mar 2006 21:37:08 +0300
+Message-ID: <441075D4.6010109@vlnb.net>
+References: <OF586A820A.80375000-ON8825712A.00712235-8825712A.00815110@us.ibm.com> <440EF9AC.7070903@vlnb.net> <D2BA8EC0-6B20-40EF-B9C5-88CABB1B7CDD@egenera.com> <440F1920.1050608@vlnb.net> <43998989-7BD3-4F3F-A10A-17385D63411E@egenera.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.150]:51410 "EHLO
-	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751118AbWCISHp
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 9 Mar 2006 13:07:45 -0500
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e32.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id k29I7iWe014747
-	for <linux-scsi@vger.kernel.org>; Thu, 9 Mar 2006 13:07:44 -0500
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by westrelay02.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k29I4xBe244212
-	for <linux-scsi@vger.kernel.org>; Thu, 9 Mar 2006 11:05:00 -0700
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k29I7hXD003011
-	for <linux-scsi@vger.kernel.org>; Thu, 9 Mar 2006 11:07:43 -0700
-Content-Disposition: inline
-In-Reply-To: <1141923969.8649.108.camel@localhost.localdomain>
+Received: from out-relay-02.infobox.ru ([195.208.234.171]:52673 "EHLO
+	out-relay-02.infobox.ru") by vger.kernel.org with ESMTP
+	id S1751282AbWCISiD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 9 Mar 2006 13:38:03 -0500
+In-Reply-To: <43998989-7BD3-4F3F-A10A-17385D63411E@egenera.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alexis Bruemmer <alexisb@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, "Tarte, Robert" <Robert_Tarte@adaptec.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Steve Byan <smb@egenera.com>
+Cc: Bryan Henderson <hbryan@us.ibm.com>, linux-scsi@vger.kernel.org
 
-Alexis Bruemmer <alexisb@us.ibm.com> wrote:
-> > Which shows that the current scsi_flush_work() is in the wrong place.
-> > If you move it out of sas_init.c and into aic94xx_init.c at this place,
-> > I think you'll find everything now works for you.
+Steve Byan wrote:
 > 
-> I tried your suggestion and moved the scsi_flush_work() from sas_init.c
-> to aic94xx_init.c and, unfortunately the discovery race condition still
-> existed with this change (see dump below).  This makes sense because
-> where we are flushing the work queue we cannot guarantee that any work
-> actually exits there yet.
+> On Mar 8, 2006, at 12:49 PM, Vladislav Bolkhovitin wrote:
+> 
+>> Steve Byan wrote:
+>>
+>>>
+> 
+>>> I still don't understand why you are reluctant to return   
+>>> TASK_SET_FULL or BUSY in this case; it's what the SCSI standard   
+>>> supplies as the way to say "don't queue too many commands, please".
+>>
+>>
+>> I don't like out of order execution, which happens practically on  all 
+>> such "rejected" commands, because subsequent already queued  commands 
+>> are not "rejected" with it and some of them could be  accepted later.
+> 
+> 
+> I see, you care about order. So do tapes. The historical answer has  
+> been to not support tagged command queuing when you care about  
+> ordering. To dodge the performance problem due to lack of queuing,  the 
+> targets usually implement a read-ahead and write-behind cache,  and then 
+> perform queuing behind the scenes, after telling the  initiator that the 
+> command has completed. Of course, this has obvious  data integrity 
+> issues for disk-type logical units.
 
-I assume one explanation is that without waiting for the event thread to
-make it passed the event_sema there is no work to flush.
+Yes, tapes just can't work without strict ordering. SCST was originally 
+done for tapes, so I still keep some kind of tape-oriented thinking :)
 
-I have added some notes I had below of the different call chains.
+Actually, with current journaling file systems ordering also became more 
+important for disks as well. Data integrity problem in "behind the 
+scenes" queuing could be on practice easily solved by battery-based 
+backup power on the disks. In case of TASK_SET_FULL things are much 
+worse, because the reordering happens _between_ target and _initiator_, 
+since the initiator must retry "rejected" command explicitly, then in 
+case of the initiator crash before the command will be retried and if FS 
+on it uses ordering barriers to protect the integrity (Linux seems does 
+so, but I could be wrong), the FS data could be written out of order 
+with its journal and the FS could be corrupted. Even worse, 
+TASK_SET_FULL "rejects" basically happen every the queue length'th 
+command, ie very often. This is why I prefer the "dumb" and "safe" way. 
+But, I could overestimate the problem, because it looks like nobody 
+cares about it..
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+> The solution introduced for tapes concurrent with iSCSI (which  
+> motivated the need for command-queuing for tapes, since some  envisioned 
+> backing up to a tape drive located on 3000 miles away is  something 
+> called "unit-attention interlock", or "UA interlock". Check  out page 
+> 287 of the draft revision 23 of the SCSI Primary Commands -  3 (SPC-3) 
+> standard from T10.org. The UA_INTLCK_CTRL field can be set  to cause a 
+> persistent unit attention condition if a command was  rejected with 
+> TASK_SET_FULL or BUSY.
 
-Moving the scsi_flush_work from sas_register_ha to asd_pci_probe() prior
-to return of asd_pci_probe may still miss an event. The difference between
-this move not working and the patch that Alexis posted working could be
-that Alexis's patch was waiting until sas_discover_work_fn had called
-sas_process_events prior to indicating discovery was done.
+Thanks, I'll take a look.
 
-1.) pci probe context
-asd_pci_probe(...)
-asd_register_sas_ha(...)
-	sas_register_ha(...)
-		sas_start_event_thread(...)
-			wait_for_completion(&event_th_comp);
-		<--
-asd_enable_phys(...)
-scsi_flush_work(sas_ha->core.shost);
+> This requires the cooperation of the initiator.
 
+Which practically means that it will not work for at least several 
+years. I think, I won't be wrong, if say that no Linux initiators use 
+this feature and going to use...
 
-2.) hw interrupt leading to event context.
-asd_hw_isr(...)
-	asd_process_donelist_isr(...)
-		asd_dl_tasklet_handler(...)
-			asd_task_tasklet_complete(...)
-			or
-			control_phy_tasklet_complete(...)
-			or
-			escb_tasklet_complete(...)
-				asd_bytes_dmaed_tasklet(...)
-					notify_port_event(...)
-						 up(&ha->event_sema);
+BTW, it is also impossible to correctly process commands errors (CHECK 
+CONDITIONs) in async environment without using ACA (Auto Contingent 
+Allegiance). Again, I see no sign that it's used by Linux or somebody 
+interested to use it in Linux. Have I missed anything and it is not 
+important? (rather rhetorical question)
 
-
-3.) event thread context
-sas_event_thread(...)
-	complete(&event_th_comp);
-	down_interruptible(&sas_ha->event_sema);
-	sas_process_events(...)
-		sas_process_port_event(...)
-			sas_porte_bytes_dmaed(...)
-				sas_form_port(...)
-					sas_discover_event(...)
-			INIT_WORK(&port->work, sas_discover_work_fn, port);
-			scsi_queue_work(port->ha->core.shost, &port->work);
-
-4.) work fn context
-sas_discover_work_fn(...)
-	sas_discover_domain(...)
-		sas_discover_end_dev(...)
-			sas_rphy_add(...)
-				scsi_scan_target(...)
+Thanks,
+Vlad
