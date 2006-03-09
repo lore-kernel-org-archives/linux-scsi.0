@@ -1,20 +1,34 @@
 From: "Ravi Anand" <ravi.anand@qlogic.com>
-Subject: qla4xxx : Driver v5.00.05b4-k - RFC requested!!!
-Date: Thu, 9 Mar 2006 13:23:58 -0800
-Message-ID: <3679966B84813344B908D418BA3F6A4A06F604AE@AVEXCH01.qlogic.org>
+Subject: RE:  qla4xxx : Driver v5.00.05b4-k - RFC requested!!!
+Date: Thu, 9 Mar 2006 13:24:37 -0800
+Message-ID: <3679966B84813344B908D418BA3F6A4A06F604D1@AVEXCH01.qlogic.org>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="Windows-1252"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:56167 "EHLO avexch01.qlogic.com")
-	by vger.kernel.org with ESMTP id S1751608AbWCIVYC convert rfc822-to-8bit
+Received: from pat.qlogic.com ([198.70.193.2]:30057 "EHLO avexch01.qlogic.com")
+	by vger.kernel.org with ESMTP id S1751791AbWCIVYi convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 9 Mar 2006 16:24:02 -0500
+	Thu, 9 Mar 2006 16:24:38 -0500
 content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+
+My Outlook client resend a lot of past emails out. Trying to get it addressed it.
+Sorry for the confusion!!
+
+Thanx
+Ravi
+
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org]On Behalf Of Ravi Anand
+Sent: Thursday, March 09, 2006 4:12 AM
+To: linux-scsi@vger.kernel.org
+Subject: qla4xxx : Driver v5.00.05b4-k - RFC requested!!!
+
 
 All,
 
@@ -109,3 +123,7 @@ QLogic Corporation
 
 
 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
