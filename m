@@ -1,129 +1,57 @@
-From: "Ravi Anand" <ravi.anand@qlogic.com>
-Subject: RE:  qla4xxx : Driver v5.00.05b4-k - RFC requested!!!
-Date: Thu, 9 Mar 2006 13:24:37 -0800
-Message-ID: <3679966B84813344B908D418BA3F6A4A06F604D1@AVEXCH01.qlogic.org>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: [PATCH 0/10]  qla2xxx: updates...
+Date: Thu, 9 Mar 2006 14:24:36 -0800
+Message-ID: <20060309222436.GC10181@andrew-vasquezs-powerbook-g4-15.local>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="Windows-1252"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:30057 "EHLO avexch01.qlogic.com")
-	by vger.kernel.org with ESMTP id S1751791AbWCIVYi convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 9 Mar 2006 16:24:38 -0500
-content-class: urn:content-classes:message
+Received: from pat.qlogic.com ([198.70.193.2]:12604 "EHLO avexch02.qlogic.com")
+	by vger.kernel.org with ESMTP id S1751947AbWCIWYi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Mar 2006 17:24:38 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <james.bottomley@steeleye.com>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-My Outlook client resend a lot of past emails out. Trying to get it addressed it.
-Sorry for the confusion!!
+Highlights include:
 
-Thanx
-Ravi
+  * Support for new ISP54XX parts.
+  * Updated firmwares for 2GB and 4GB products
+    - The firmware loader qla6312 is no longer needed with the new 2GB
+      firmware.
 
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org]On Behalf Of Ravi Anand
-Sent: Thursday, March 09, 2006 4:12 AM
-To: linux-scsi@vger.kernel.org
-Subject: qla4xxx : Driver v5.00.05b4-k - RFC requested!!!
+    Original module layout:
+  	qla2300.ko supports -- ISP2300 and ISP2312 parts.
+  	qla2322.ko supports -- ISP2322.
+  	qla6312.ko supports -- ISP6312 and ISP6322 parts.
 
+    New module layout:
+  	qla2300.ko supports -- ISP2300, ISP2312 and ISP6312 parts.
+  	qla2322.ko supports -- ISP2322 and ISP6322 parts.
 
-All,
+    Bottom line: one less firmware blob to manage.
 
-For the upstream inclusion of qla4xxx driver, following files :
+Changeset:
 
-- Updated driver source (qla4xxx-src-v5.00.05b4-k_submit.tar.bz2)
-- Driver patch (patch-qla4xxx-5.00.05b4-k-scsi-rc-fix-2.6.16-rc3)
-- License.qla4xxx 
+ - qla2xxx: Convert IS_QLA*() defines to bit-operations.
+ - qla2xxx: Add ISP54xx support.
+ - qla2xxx: Consolidate ISP63xx handling.
+ - qla2xxx: NVRAM id-list updates.
+ - qla2xxx: Correct swing/emphasis settings on ISP24xx.
+ - qla2xxx: Add VPD sysfs attribute.
+ - qla2xxx: Further restrict ZIO mode support.
+ - qla2xxx: Correct FCAL login retry logic for ISP24xx.
+ * qla2xxx: Remove legacy ISP6312 firmware loader.
+ * qla2xxx: Firmware updates.
 
-has been uploaded at the following ftp location for further review :
+The last two patches are too large to be sent via email.  Retrieve
+each git mailbox patch from:
 
- ftp://ftp.qlogic.com/outgoing/linux/iSCSI/upstream/5.00.05b4-k
+ qla2xxx: Remove legacy ISP6312 firmware loader.
+ ftp://ftp.qlogic.com/outgoing/linux/patches/8.x/8.01.04k/2009-qla2xxx-Remove-legacy-ISP6312-firmware-loader.txt
 
-This driver has been build and tested against linux-scsi-rc-fixes tree.
-To compile this driver you need the "use_sid.patch" from Mark Christie
-as well. This patch has been uploaded in the above ftp location.
+ qla2xxx: Firmware updates.
+ ftp://ftp.qlogic.com/outgoing/linux/patches/8.x/8.01.04k/2010-qla2xxx-Firmware-updates.txt
 
-It currently supports QLogic ISP4010 and ISP4022 products. This is basically based on driver v5.00.03b15-k initially submitted by Andrew Vasquez :
-
-http://marc.theaimsgroup.com/?l=linux-scsi&m=112604454018433&w=2
-
-Significant Changes to this release are :
-
--  Added the code to register iscsi transport functions. Since a lot of
-   functionality like session creation or destruction etc is handled
-   by our Firmware, we are working on proposing the required changes needed
-   to the open-iscsi/iscsi_transport interface for our Applications
-   to be able to use these interfaces.
-           
-- Create iscsi session & connection for each of the target 
-  discovered by the HBA Firmware. qla4xxx driver is based on one of the 
-  patch send out by Mike Christie to store driver specific stuff in the
-  iscsi_cls_session, similar to what rport provides for FC. The 
-  link to that patch is provided later in this email.
-
-- Stripped out the iSNS functionality as suggested and let be in user space.
-  Again this will require some modification to open-iscsi/iscsi_transport 
-  to support iSCSI HBA, as this functionality is handled in the Firmware.
-  Details will follow later.
-  
-- Incorporated the updated license from qla2xxx (License.qla4xxx).
-
-- Additional API interface changes, including kthread creation.
- 
-- Bug fixes have being ported over from our latest QLogic std driver.
-
-Our ultimate goal is to be able to fit in with the open-iscsi architecture 
-and leverage the functionality it provides.
-
-The driver patch - patch-qla4xxx-scsi-rc-tree-2.6.16-rc3 build against scsi-rc-fixes tree can be applied as follows :
-
-# cd /usr/src/linux-scsi-rc-fixes-2.6.git
-# patch -p1 < <path_to_qla4xxx_patch_file>
-
-Additional work that need to be done inconjuction to what I have
-already outlined earlier :
-
-- Add the iscsi block/unblock stuff. 
-- Add support for SYSFS attributes
-- Expand the uevent for passing event up needed for the iSCSI HBA.
-- Additional cleanup etc.
-
-If needed we can split the driver patch into subset of patches.
-
-Looking forward to Comments/Criticisms/Suggestions.
-
-Regards
-Ravi Anand
-QLogic Corporation
-
-
- 
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+and apply with git-am.
