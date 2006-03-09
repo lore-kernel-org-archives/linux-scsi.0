@@ -1,40 +1,36 @@
 From: "Ravi Anand" <ravi.anand@qlogic.com>
-Subject: RE: qla4xxx : Driver v5.00.05b4-k - RFC requested!!!
-Date: Thu, 9 Mar 2006 13:24:14 -0800
-Message-ID: <3679966B84813344B908D418BA3F6A4A06F604BC@AVEXCH01.qlogic.org>
+Subject: RE: [PATCH 0/11] qla4xxx-v5.00.05b5-k : Addresses issues reported as part of initial RFC
+Date: Thu, 9 Mar 2006 13:24:21 -0800
+Message-ID: <3679966B84813344B908D418BA3F6A4A06F604C2@AVEXCH01.qlogic.org>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="Windows-1252"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:26472 "EHLO avexch01.qlogic.com")
-	by vger.kernel.org with ESMTP id S1751769AbWCIVYO convert rfc822-to-8bit
+Received: from pat.qlogic.com ([198.70.193.2]:49000 "EHLO avexch01.qlogic.com")
+	by vger.kernel.org with ESMTP id S1751759AbWCIVYV convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 9 Mar 2006 16:24:14 -0500
+	Thu, 9 Mar 2006 16:24:21 -0500
 content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
->>On Thu, 2006-03-02 at 14:52 -0800, Arjan wrote:
->On Thu, 2006-03-02 at 14:52 -0800, Ravi Anand wrote:
-> All,
-> 
-> For the upstream inclusion of qla4xxx driver, following files :
-> 
-> - Updated driver source (qla4xxx-src-v5.00.05b4-k_submit.tar.bz2)
-> - Driver patch (patch-qla4xxx-5.00.05b4-k-scsi-rc-fix-2.6.16-rc3)
-> - License.qla4xxx 
+Following set of patches addresses the issues reported by Arjan, plus
+some additional bug fixes. Looking forward for further feedback and suggestions.
 
->>why is qla4xxx_alloc_ddb using a GFP_ATOMIC and not a GFP_KERNEL?
-
-Looking at the differnt path that may invoke it, it seems
-we dont have to alloc it right away. We will change it to 
-use GFP_KERNEL, but we will double check to make sure that 
-no lock is being held at this point of time.
+-Use-msleep-rather-than-schedule_timeout.txt
+-Drop-IPAddr-functions.txt
+-Drop-unused-defines.txt
+-Consolidate-include-definitions.txt
+-Correct-allocations-of-ddb_entry.txt
+-Change-semaphore-usage-to-mutex.txt
+-Fixed-logic-to-skip-device-discovery-if-IP-Addr-and-Subnet-Mask-is-Zero.txt
+-Updated-Comment-at-the-head-of-the-func-s.txt
+-Drop-Unused-Code.txt
+-Update-Driver-Version-to-5.00.05b5-k.txt
+-Updated-scsi-Kconfig-to-include-qla4xxx-Kconfig-path.txt
 
 Thanx
-Ravi
-
-
-
+Ravi Anand
+QLogic Corporation
