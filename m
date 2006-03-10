@@ -1,134 +1,64 @@
-From: Andreas Herrmann <aherrman@de.ibm.com>
-Subject: [PATCH] zfcp: fix device registration issues
-Date: Fri, 10 Mar 2006 00:56:16 +0100
-Message-ID: <20060309235616.GA16524@lion28.ibm.com>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Serial Attached SCSI, An Architecture For Linux
+Date: Thu, 9 Mar 2006 23:27:22 -0800 (PST)
+Message-ID: <20060310072722.96803.qmail@web31802.mail.mud.yahoo.com>
+References: <F331B95B72AFFB4B87467BE1C8E9CF5F34BFE0@NAMAIL2.ad.lsil.com>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate1.de.ibm.com ([195.212.29.150]:49928 "EHLO
-	mtagate1.de.ibm.com") by vger.kernel.org with ESMTP
-	id S1750809AbWCIX5a (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 9 Mar 2006 18:57:30 -0500
-Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
-	by mtagate1.de.ibm.com (8.12.10/8.12.10) with ESMTP id k29NvT7i205418
-	for <linux-scsi@vger.kernel.org>; Thu, 9 Mar 2006 23:57:29 GMT
-Received: from d12av02.megacenter.de.ibm.com (d12av02.megacenter.de.ibm.com [9.149.165.228])
-	by d12nrmr1607.megacenter.de.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k29Nvqxe157032
-	for <linux-scsi@vger.kernel.org>; Fri, 10 Mar 2006 00:57:52 +0100
-Received: from d12av02.megacenter.de.ibm.com (loopback [127.0.0.1])
-	by d12av02.megacenter.de.ibm.com (8.12.11/8.13.3) with ESMTP id k29NvTm4003612
-	for <linux-scsi@vger.kernel.org>; Fri, 10 Mar 2006 00:57:29 +0100
-Content-Disposition: inline
+Received: from web31802.mail.mud.yahoo.com ([68.142.207.65]:30836 "HELO
+	web31802.mail.mud.yahoo.com") by vger.kernel.org with SMTP
+	id S1751757AbWCJH1Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Mar 2006 02:27:25 -0500
+In-Reply-To: <F331B95B72AFFB4B87467BE1C8E9CF5F34BFE0@NAMAIL2.ad.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jejb@steeleye.com>
-Cc: Linux SCSI <linux-scsi@vger.kernel.org>
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-As always I have some late zfcp bug fixes. This time for 2.6.16.
+            Me, early Jan'06: Paper submitted.
+Linuxsymposium, 16 Feb 2006 : Paper approved.
+Linuxsymposium, date unknown: Silently moved to a BOF, I was never notified.
+            Me,  9 Mar 2006 : BOF rejected by me because last year I did held a SAS BOF.
+Linuxsymposium,  9 Mar 2006 : moved back to a paper.
+Linuxsymposium,  9 Mar 2006 : paper rejected.
 
-The patch fixes following issues:
+Serial Attached SCSI, An Architecture For Linux
+https://www.linuxsymposium.org/2006/view_proposal.php?hide_vote=1&content_key=2
+---------------------------------
+This paper would start with an overview of SCSI (SCSI-3, that is), its
+object oriented nature and why such is the direction of SCSI.
 
-(1) Replace scsi_add_device with scsi_scan_target.
-(Thus the rport instead of the scsi_host becomes parent of a
-scsi_target again.)
+Then an introduction to SAS from this SCSI point of view will be given,
+i.e. where it fits in the object oriented model, why and how. There may be
+very little SAS technical introduction--a couple of sentences, something
+anyone would understand and something sufficient for the latter sections of
+the paper.
 
-(2) Avoid scsi_device allocation during registration of an remote port.
-(Would be done during fc_scsi_scan_rport.)
+Then an introduction to SAS as an architecture in a SCSI stack would
+follow. A layered, object oriented model will be presented, similar to the
+one found in my code.
 
-(3) Fix queuecommand behaviour when an zfcp unit is blocked.
-(Call scsi_done with DID_NO_CONNECT instead of returning
-SCSI_MLQUEUE_DEVICE_BUSY otherwise we might end up waiting
-for completion in blk_execute_rq for ever.)
+This will be accompanied with a SCSI "architectural roadmap", the how and
+why the architecture.
 
+Then an overview of pure-SCSI drivers would be given (at this point the
+paper talks about implementations at each layer of the software
+stack). Those are implementations which hide the transport layer completely
+in their firmware, and present a pure SCSI "picture", a la SAM, to the
+OS. How and why they do it.
 
-Please apply. Thanks.
+Then the paper would talk about what unifies those implementations, how it
+can be done, and why it should be done this way. An introduction to SDI,
+SCSI Driver Interface, would be presented. Why SDI makes sense and how it
+can be done for a SCSI stack architecture in an object oriented way. Who
+registers it, what they implement, how and why.
 
-Andreas
+There would be a section on a SCSI/ATA Translation, SAT, and a SAT
+Layer. Where it fits, how and why. What its interface is and why.
 
-
-zfcp: fix device registration issues
-
-Replace scsi_add_device with scsi_scan_target.
-Avoid scsi_device allocation during registration of an remote port.
-Fix queuecommand behaviour when an zfcp unit is blocked.
-
-
-Signed-off-by: Andreas Herrmann <aherrman@de.ibm.com>
-
-
----
-
- drivers/s390/scsi/zfcp_def.h  |    1 +
- drivers/s390/scsi/zfcp_erp.c  |   11 +++++++----
- drivers/s390/scsi/zfcp_scsi.c |    6 ++++--
- 3 files changed, 12 insertions(+), 6 deletions(-)
-
-7d33dfc4fa7f88f83b70cf1ac41bc4e5e5685fe7
-diff --git a/drivers/s390/scsi/zfcp_def.h b/drivers/s390/scsi/zfcp_def.h
-index 7f551d6..6eba56c 100644
---- a/drivers/s390/scsi/zfcp_def.h
-+++ b/drivers/s390/scsi/zfcp_def.h
-@@ -664,6 +664,7 @@ do { \
- #define ZFCP_STATUS_UNIT_TEMPORARY		0x00000002
- #define ZFCP_STATUS_UNIT_SHARED			0x00000004
- #define ZFCP_STATUS_UNIT_READONLY		0x00000008
-+#define ZFCP_STATUS_UNIT_REGISTERED		0x00000010
- 
- /* FSF request status (this does not have a common part) */
- #define ZFCP_STATUS_FSFREQ_NOT_INIT		0x00000000
-diff --git a/drivers/s390/scsi/zfcp_erp.c b/drivers/s390/scsi/zfcp_erp.c
-index e3c4bdd..57cb628 100644
---- a/drivers/s390/scsi/zfcp_erp.c
-+++ b/drivers/s390/scsi/zfcp_erp.c
-@@ -3391,10 +3391,13 @@ zfcp_erp_action_cleanup(int action, stru
- 		    && (!atomic_test_mask(ZFCP_STATUS_UNIT_TEMPORARY,
- 					  &unit->status))
- 		    && !unit->device
--		    && port->rport)
-- 			scsi_add_device(port->adapter->scsi_host, 0,
-- 					port->rport->scsi_target_id,
--					unit->scsi_lun);
-+		    && port->rport) {
-+			atomic_set_mask(ZFCP_STATUS_UNIT_REGISTERED,
-+					&unit->status);
-+ 			scsi_scan_target(&port->rport->dev, 0,
-+					 port->rport->scsi_target_id,
-+					 unit->scsi_lun, 0);
-+		}
- 		zfcp_unit_put(unit);
- 		break;
- 	case ZFCP_ERP_ACTION_REOPEN_PORT_FORCED:
-diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
-index a2de3c9..9e6d07d 100644
---- a/drivers/s390/scsi/zfcp_scsi.c
-+++ b/drivers/s390/scsi/zfcp_scsi.c
-@@ -183,7 +183,8 @@ zfcp_scsi_slave_alloc(struct scsi_device
- 
- 	read_lock_irqsave(&zfcp_data.config_lock, flags);
- 	unit = zfcp_unit_lookup(adapter, sdp->channel, sdp->id, sdp->lun);
--	if (unit) {
-+	if (unit && atomic_test_mask(ZFCP_STATUS_UNIT_REGISTERED,
-+				     &unit->status)) {
- 		sdp->hostdata = unit;
- 		unit->device = sdp;
- 		zfcp_unit_get(unit);
-@@ -208,6 +209,7 @@ zfcp_scsi_slave_destroy(struct scsi_devi
- 	struct zfcp_unit *unit = (struct zfcp_unit *) sdpnt->hostdata;
- 
- 	if (unit) {
-+		atomic_clear_mask(ZFCP_STATUS_UNIT_REGISTERED, &unit->status);
- 		sdpnt->hostdata = NULL;
- 		unit->device = NULL;
- 		zfcp_unit_put(unit);
-@@ -291,7 +293,7 @@ zfcp_scsi_command_async(struct zfcp_adap
- 			       "on port 0x%016Lx in recovery\n",
- 			       zfcp_get_busid_by_unit(unit),
- 			       unit->fcp_lun, unit->port->wwpn);
--		retval = SCSI_MLQUEUE_DEVICE_BUSY;
-+		zfcp_scsi_command_fail(scpnt, DID_NO_CONNECT);
- 		goto out;
- 	}
- 
--- 
-1.2.4.gf067
+The paper would include pictures and figures as necessary to show layers,
+object oriented concepts and the like.
+----------------------------------------
 
