@@ -1,14 +1,14 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 4/6] block layer: use blk_rq_bio_prep in
- init_request_from_bio
-Date: Fri, 10 Mar 2006 20:47:05 +0900
-Message-ID: <20060310204705Q.tomof@acm.org>
+Subject: [PATCH 2/6] block layer: add partial mappings support to
+ bio_map_user
+Date: Fri, 10 Mar 2006 20:46:59 +0900
+Message-ID: <20060310204659N.tomof@acm.org>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:29859 "EHLO
-	tama5.ecl.ntt.co.jp") by vger.kernel.org with ESMTP id S932732AbWCJLua
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:28835 "EHLO
+	tama5.ecl.ntt.co.jp") by vger.kernel.org with ESMTP id S932327AbWCJLua
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 10 Mar 2006 06:50:30 -0500
 Sender: linux-scsi-owner@vger.kernel.org
@@ -16,11 +16,19 @@ List-Id: linux-scsi@vger.kernel.org
 To: axboe@suse.de, james.bottomley@steeleye.com
 Cc: linux-scsi@vger.kernel.org
 
-Patch to use blk_rq_bio_prep in init_request_from_bio. And remove
-blk_rq_bio_prep's flags copying. The first three bits have not been
-the same for some time so that has been broken. The user of
-blk_rq_bio_prep will setup the request flags so if it wanted failfast
-or to be a barrier it will set the correct flag itself.
+This is the updated patch for partial mappings support.
+
+- bio_map_user_iov always allows partial mappings.
+
+- The two users (blk_rq_map_user and blk_rq_map_user_iov) will fails
+if the bio is partially mapped.
+
+- Added a length argument to blk_rq_map_user_iov in order to avoid
+including sg.h in ll_rw_blk.c for struct sg_iovec.
+
+This is a resend:
+
+http://marc.theaimsgroup.com/?l=linux-scsi&m=114086655400806&w=2
 
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
@@ -28,42 +36,129 @@ Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 
 ---
 
- block/ll_rw_blk.c |   11 ++---------
- 1 files changed, 2 insertions(+), 9 deletions(-)
+ block/ll_rw_blk.c      |   29 ++++++++++++++++++-----------
+ block/scsi_ioctl.c     |    3 ++-
+ fs/bio.c               |   14 +-------------
+ include/linux/blkdev.h |    3 ++-
+ 4 files changed, 23 insertions(+), 26 deletions(-)
 
-a0f146d5293039d720f6cc38ef30eff1713e8758
+bd5a6476b9a4fe5953527fd7c162a1e7754eea7c
 diff --git a/block/ll_rw_blk.c b/block/ll_rw_blk.c
-index 13c40a0..da2c57d 100644
+index 03d9c82..6849859 100644
 --- a/block/ll_rw_blk.c
 +++ b/block/ll_rw_blk.c
-@@ -2765,16 +2765,12 @@ static void init_request_from_bio(struct
+@@ -2291,19 +2291,20 @@ int blk_rq_map_user(request_queue_t *q, 
+ 	else
+ 		bio = bio_copy_user(q, uaddr, len, reading);
  
- 	req->errors = 0;
- 	req->hard_sector = req->sector = bio->bi_sector;
--	req->hard_nr_sectors = req->nr_sectors = bio_sectors(bio);
--	req->current_nr_sectors = req->hard_cur_sectors = bio_cur_sectors(bio);
--	req->nr_phys_segments = bio_phys_segments(req->q, bio);
--	req->nr_hw_segments = bio_hw_segments(req->q, bio);
--	req->buffer = bio_data(bio);	/* see ->buffer comment above */
- 	req->waiting = NULL;
--	req->bio = req->biotail = bio;
- 	req->ioprio = bio_prio(bio);
- 	req->rq_disk = bio->bi_bdev->bd_disk;
- 	req->start_time = jiffies;
-+
-+	blk_rq_bio_prep(req->q, req, bio);
+-	if (!IS_ERR(bio)) {
+-		rq->bio = rq->biotail = bio;
+-		blk_rq_bio_prep(q, rq, bio);
++	if (IS_ERR(bio))
++		return PTR_ERR(bio);
+ 
+-		rq->buffer = rq->data = NULL;
+-		rq->data_len = len;
+-		return 0;
++	if (bio->bi_size != len) {
++		bio_endio(bio, bio->bi_size, 0);
++		bio_unmap_user(bio);
++		return -EINVAL;
+ 	}
+ 
+-	/*
+-	 * bio is the err-ptr
+-	 */
+-	return PTR_ERR(bio);
++	rq->bio = rq->biotail = bio;
++	blk_rq_bio_prep(q, rq, bio);
++	rq->buffer = rq->data = NULL;
++	rq->data_len = len;
++	return 0;
  }
  
- static int __make_request(request_queue_t *q, struct bio *bio)
-@@ -3403,9 +3399,6 @@ EXPORT_SYMBOL(end_request);
- 
- void blk_rq_bio_prep(request_queue_t *q, struct request *rq, struct bio *bio)
+ EXPORT_SYMBOL(blk_rq_map_user);
+@@ -2329,7 +2330,7 @@ EXPORT_SYMBOL(blk_rq_map_user);
+  *    unmapping.
+  */
+ int blk_rq_map_user_iov(request_queue_t *q, struct request *rq,
+-			struct sg_iovec *iov, int iov_count)
++			struct sg_iovec *iov, int iov_count, unsigned int len)
  {
--	/* first three bits are identical in rq->flags and bio->bi_rw */
--	rq->flags |= (bio->bi_rw & 7);
+ 	struct bio *bio;
+ 
+@@ -2343,6 +2344,12 @@ int blk_rq_map_user_iov(request_queue_t 
+ 	if (IS_ERR(bio))
+ 		return PTR_ERR(bio);
+ 
++	if (bio->bi_size != len) {
++		bio_endio(bio, bio->bi_size, 0);
++		bio_unmap_user(bio);
++		return -EINVAL;
++	}
++
+ 	rq->bio = rq->biotail = bio;
+ 	blk_rq_bio_prep(q, rq, bio);
+ 	rq->buffer = rq->data = NULL;
+diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+index 24f7af9..ef9900d 100644
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -274,7 +274,8 @@ static int sg_io(struct file *file, requ
+ 			goto out;
+ 		}
+ 
+-		ret = blk_rq_map_user_iov(q, rq, iov, hdr->iovec_count);
++		ret = blk_rq_map_user_iov(q, rq, iov, hdr->iovec_count,
++					  hdr->dxfer_len);
+ 		kfree(iov);
+ 	} else if (hdr->dxfer_len)
+ 		ret = blk_rq_map_user(q, rq, hdr->dxferp, hdr->dxfer_len);
+diff --git a/fs/bio.c b/fs/bio.c
+index d8259d9..f51a873 100644
+--- a/fs/bio.c
++++ b/fs/bio.c
+@@ -749,7 +749,6 @@ struct bio *bio_map_user_iov(request_que
+ 			     int write_to_vm)
+ {
+ 	struct bio *bio;
+-	int len = 0, i;
+ 
+ 	bio = __bio_map_user_iov(q, bdev, iov, iov_count, write_to_vm);
+ 
+@@ -764,18 +763,7 @@ struct bio *bio_map_user_iov(request_que
+ 	 */
+ 	bio_get(bio);
+ 
+-	for (i = 0; i < iov_count; i++)
+-		len += iov[i].iov_len;
 -
- 	rq->nr_phys_segments = bio_phys_segments(q, bio);
- 	rq->nr_hw_segments = bio_hw_segments(q, bio);
- 	rq->current_nr_sectors = bio_cur_sectors(bio);
+-	if (bio->bi_size == len)
+-		return bio;
+-
+-	/*
+-	 * don't support partial mappings
+-	 */
+-	bio_endio(bio, bio->bi_size, 0);
+-	bio_unmap_user(bio);
+-	return ERR_PTR(-EINVAL);
++	return bio;
+ }
+ 
+ static void __bio_unmap_user(struct bio *bio)
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 860e7a4..619ef1d 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -611,7 +611,8 @@ extern void blk_queue_activity_fn(reques
+ extern int blk_rq_map_user(request_queue_t *, struct request *, void __user *, unsigned int);
+ extern int blk_rq_unmap_user(struct bio *, unsigned int);
+ extern int blk_rq_map_kern(request_queue_t *, struct request *, void *, unsigned int, gfp_t);
+-extern int blk_rq_map_user_iov(request_queue_t *, struct request *, struct sg_iovec *, int);
++extern int blk_rq_map_user_iov(request_queue_t *, struct request *,
++			       struct sg_iovec *, int, unsigned int);
+ extern int blk_execute_rq(request_queue_t *, struct gendisk *,
+ 			  struct request *, int);
+ extern void blk_execute_rq_nowait(request_queue_t *, struct gendisk *,
 -- 
 1.1.5
