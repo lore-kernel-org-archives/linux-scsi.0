@@ -1,35 +1,174 @@
-From: "Jane Billings" <hfhvcxawfhcamw@arsenal.co.uk>
-Subject: Don't miss out on improving your performance!
-Date: Sat, 11 Mar 2006 09:53:26 -0500
-Message-ID: <1D6AA7EB.2260536__41305.9142920703$1142088832$gmane$org@nexgo.uk>
+From: Alfred Arnold <alfred@ccac.rwth-aachen.de>
+Subject: qla1280 driver not working on AlphaStation 600 5/266
+Date: Sat, 11 Mar 2006 20:19:50 +0100 (CET)
+Message-ID: <Pine.NEB.4.58.0603112006270.25114@kepler.ccac.rwth-aachen.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: MULTIPART/MIXED; BOUNDARY="0-2146224649-1142104790=:25114"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [220.92.122.174] ([220.92.122.174]:53259 "HELO 3CBBA270")
-	by vger.kernel.org with SMTP id S1750828AbWCKOx2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 11 Mar 2006 09:53:28 -0500
+Received: from kepler.ccac.RWTH-Aachen.DE ([134.130.220.230]:9732 "EHLO
+	kepler.ccac.rwth-aachen.de") by vger.kernel.org with ESMTP
+	id S1750703AbWCKTSj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 11 Mar 2006 14:18:39 -0500
+Received: from localhost (localhost [[UNIX: localhost]])
+	by kepler.ccac.rwth-aachen.de (8.8.8/8.8.8) with ESMTP id UAA25120
+	for <linux-scsi@vger.kernel.org>; Sat, 11 Mar 2006 20:19:51 +0100 (CET)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-net@vger.kernel.org, linux-newbie@vger.kernel.org, linux-ppp@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
+  Send mail to mime@docserver.cac.washington.edu for more info.
 
-hi friends :)
+--0-2146224649-1142104790=:25114
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 
-tried other product not working 
+Hi,
 
-then please try us our product come with 
-100% money back guarrantee
+I have a Digital AlphaStation 600 5/266, and I am trying to get kernel
+2.6.15.3 running on it.  I have however a problem with the qla1280 driver
+for the SCSI controller.  The only output I get is
 
-Ultimate hooddia -lose weeight in no time 
-http://ok-hood.com
+qla1280: QLA1040 found on PCI bus 1, dev 2
+qla1280: Failed mbox check
+qla1280_mailbox_command: Command failed, mailbox0 = 0x0007, mailbox_out0 =
+0x4003, istatus = 0x0000
+m0 4003, m1 aaaa, m2 0000, m3 aa55
+m4 55aa, m5 a5a5, m6 a5a5, m7 a5a5
 
-Perfect HHGGGHH - feel Young again
-http://zg-heeal.com
+...and booting naturally ends with a kernel panic because it cannot mount
+the root filesystem.
 
-Male Virility - have better sex 
-http://og-white.com
+I had used kernel 2.4.32 before and the qlogicisp driver in this kernel
+works without problems.  I have also patched the qlogicisp driver back
+into kernel 2.6.15.3 (taken from 2.6.14), and this one works either,
+except for some complaints about error handling at bootup.
 
-alsatian
+Attached is the lspci output on this machine.  The two ISP1020 chips are
+located together with a Tulip Ethernet chip and a PCI bridge on a single,
+long PCI card.
+
+I'd also like to mention that the qla1280 driver works fine on an
+AlphaStation 500 that has an on-board ISP1020.  The only difference I can
+see from the lspci output is that the ISP1020 chip in this machine has a
+newer revision (02 instead of 01).  Is it possible that the qla1280 driver
+tries to use commands that are not supported on early 1020 chips?
+
+Best regards
+
+Alfred Arnold
+
+-- 
+Alfred Arnold                   E-Mail: alfred@ccac.rwth-aachen.de
+Computer Club at the            http://john.ccac.rwth-aachen.de:8000/alf/
+Technical University            Phone: +49-241-406526
+of Aachen                       Fax:   +49-241-406527
+--0-2146224649-1142104790=:25114
+Content-Type: TEXT/PLAIN; charset=US-ASCII; name=lspci-as600-266
+Content-Transfer-Encoding: BASE64
+Content-ID: <Pine.NEB.4.58.0603112019500.25114@kepler.ccac.rwth-aachen.de>
+Content-Description: 
+Content-Disposition: attachment; filename=lspci-as600-266
+
+MDAwMDowMDowNy4wIFZHQSBjb21wYXRpYmxlIGNvbnRyb2xsZXI6IFRleGFz
+IEluc3RydW1lbnRzIFRWUDQwMjAgW1Blcm1lZGlhIDJdIChyZXYgMDEpIChw
+cm9nLWlmIDAwIFtWR0FdKQ0KCVN1YnN5c3RlbTogRWxzYSBBRyBHTG9yaWEg
+U3luZXJneQ0KCUNvbnRyb2w6IEkvTysgTWVtKyBCdXNNYXN0ZXIrIFNwZWND
+eWNsZS0gTWVtV0lOVi0gVkdBU25vb3AtIFBhckVyci0gU3RlcHBpbmctIFNF
+UlItIEZhc3RCMkItDQoJU3RhdHVzOiBDYXAtIDY2TUh6LSBVREYtIEZhc3RC
+MkIrIFBhckVyci0gREVWU0VMPW1lZGl1bSA+VEFib3J0LSA8VEFib3J0LSA8
+TUFib3J0LSA+U0VSUi0gPFBFUlItDQoJTGF0ZW5jeTogMjU1ICg0ODAwMG5z
+IG1pbiwgNDgwMDBucyBtYXgpDQoJSW50ZXJydXB0OiBwaW4gQSByb3V0ZWQg
+dG8gSVJRIDI0DQoJUmVnaW9uIDA6IE1lbW9yeSBhdCAwMDAwMDAwMDAyMzAw
+MDAwICgzMi1iaXQsIG5vbi1wcmVmZXRjaGFibGUpIFtzaXplPTEyOEtdDQoJ
+UmVnaW9uIDE6IE1lbW9yeSBhdCAwMDAwMDAwMDAyODAwMDAwICgzMi1iaXQs
+IG5vbi1wcmVmZXRjaGFibGUpIFtzaXplPThNXQ0KCVJlZ2lvbiAyOiBNZW1v
+cnkgYXQgMDAwMDAwMDAwMzAwMDAwMCAoMzItYml0LCBub24tcHJlZmV0Y2hh
+YmxlKSBbc2l6ZT04TV0NCglFeHBhbnNpb24gUk9NIGF0IDAwMDAwMDAwMDIz
+NDAwMDAgW2Rpc2FibGVkXSBbc2l6ZT02NEtdDQoNCjAwMDA6MDA6MDguMCBQ
+Q0kgYnJpZGdlOiBEaWdpdGFsIEVxdWlwbWVudCBDb3Jwb3JhdGlvbiBERUNj
+aGlwIDIxMDUwIChyZXYgMDIpIChwcm9nLWlmIDAwIFtOb3JtYWwgZGVjb2Rl
+XSkNCglDb250cm9sOiBJL08rIE1lbSsgQnVzTWFzdGVyKyBTcGVjQ3ljbGUt
+IE1lbVdJTlYtIFZHQVNub29wLSBQYXJFcnItIFN0ZXBwaW5nLSBTRVJSKyBG
+YXN0QjJCLQ0KCVN0YXR1czogQ2FwLSA2Nk1Iei0gVURGLSBGYXN0QjJCKyBQ
+YXJFcnItIERFVlNFTD1tZWRpdW0gPlRBYm9ydC0gPFRBYm9ydC0gPE1BYm9y
+dC0gPlNFUlItIDxQRVJSLQ0KCUxhdGVuY3k6IDI0OCwgQ2FjaGUgTGluZSBT
+aXplOiAweDEwICg2NCBieXRlcykNCglCdXM6IHByaW1hcnk9MDAsIHNlY29u
+ZGFyeT0wMSwgc3Vib3JkaW5hdGU9MDEsIHNlYy1sYXRlbmN5PTI0OA0KCUkv
+TyBiZWhpbmQgYnJpZGdlOiAwMDAwOTAwMC0wMDAwOWZmZg0KCU1lbW9yeSBi
+ZWhpbmQgYnJpZGdlOiAwMjIwMDAwMC0wMjJmZmZmZg0KCVByZWZldGNoYWJs
+ZSBtZW1vcnkgYmVoaW5kIGJyaWRnZTogZmZmMDAwMDAtMDAwZmZmZmYNCglC
+cmlkZ2VDdGw6IFBhcml0eS0gU0VSUisgTm9JU0ErIFZHQS0gTUFib3J0LSA+
+UmVzZXQtIEZhc3RCMkItDQoNCjAwMDA6MDA6MDkuMCBNdWx0aW1lZGlhIGF1
+ZGlvIGNvbnRyb2xsZXI6IEF2YW5jZSBMb2dpYyBJbmMuIEFMUzQwMDAgQXVk
+aW8gQ2hpcHNldA0KCVN1YnN5c3RlbTogQXZhbmNlIExvZ2ljIEluYy4gQUxT
+NDAwMCBBdWRpbyBDaGlwc2V0DQoJQ29udHJvbDogSS9PKyBNZW0tIEJ1c01h
+c3RlcisgU3BlY0N5Y2xlLSBNZW1XSU5WLSBWR0FTbm9vcC0gUGFyRXJyLSBT
+dGVwcGluZy0gU0VSUi0gRmFzdEIyQi0NCglTdGF0dXM6IENhcCsgNjZNSHot
+IFVERi0gRmFzdEIyQi0gUGFyRXJyLSBERVZTRUw9bWVkaXVtID5UQWJvcnQt
+IDxUQWJvcnQtIDxNQWJvcnQtID5TRVJSLSA8UEVSUi0NCglMYXRlbmN5OiAy
+NDANCglJbnRlcnJ1cHQ6IHBpbiBBIHJvdXRlZCB0byBJUlEgMjgNCglSZWdp
+b24gMDogSS9PIHBvcnRzIGF0IGEwMDAgW3NpemU9MTI4XQ0KCUNhcGFiaWxp
+dGllczogW2RjXSBQb3dlciBNYW5hZ2VtZW50IHZlcnNpb24gMg0KCQlGbGFn
+czogUE1FQ2xrLSBEU0krIEQxLSBEMisgQXV4Q3VycmVudD0wbUEgUE1FKEQw
+LSxEMS0sRDIrLEQzaG90KyxEM2NvbGQtKQ0KCQlTdGF0dXM6IEQwIFBNRS1F
+bmFibGUtIERTZWw9MCBEU2NhbGU9MCBQTUUtDQoNCjAwMDA6MDA6MGEuMCBO
+b24tVkdBIHVuY2xhc3NpZmllZCBkZXZpY2U6IEludGVsIENvcnAuIDgyMzc1
+RUIvU0IgUENJIHRvIEVJU0EgQnJpZGdlIChyZXYgMDQpDQoJQ29udHJvbDog
+SS9PKyBNZW0rIEJ1c01hc3RlcisgU3BlY0N5Y2xlLSBNZW1XSU5WLSBWR0FT
+bm9vcC0gUGFyRXJyLSBTdGVwcGluZy0gU0VSUi0gRmFzdEIyQi0NCglTdGF0
+dXM6IENhcC0gNjZNSHotIFVERi0gRmFzdEIyQi0gUGFyRXJyLSBERVZTRUw9
+bWVkaXVtID5UQWJvcnQtIDxUQWJvcnQtIDxNQWJvcnQtID5TRVJSLSA8UEVS
+Ui0NCglMYXRlbmN5OiAyNDgNCg0KMDAwMDowMDowYy4wIEV0aGVybmV0IGNv
+bnRyb2xsZXI6IDNDb20gQ29ycG9yYXRpb24gM2M5MDVDLVRYL1RYLU0gW1Rv
+cm5hZG9dIChyZXYgNzQpDQoJU3Vic3lzdGVtOiAzQ29tIENvcnBvcmF0aW9u
+IDNDOTA1Qy1UWCBGYXN0IEV0aGVybGluayBmb3IgUEMgTWFuYWdlbWVudCBO
+SUMNCglDb250cm9sOiBJL08rIE1lbSsgQnVzTWFzdGVyKyBTcGVjQ3ljbGUt
+IE1lbVdJTlYtIFZHQVNub29wLSBQYXJFcnIrIFN0ZXBwaW5nLSBTRVJSLSBG
+YXN0QjJCLQ0KCVN0YXR1czogQ2FwKyA2Nk1Iei0gVURGLSBGYXN0QjJCLSBQ
+YXJFcnItIERFVlNFTD1tZWRpdW0gPlRBYm9ydC0gPFRBYm9ydC0gPE1BYm9y
+dC0gPlNFUlItIDxQRVJSLQ0KCUxhdGVuY3k6IDI0OCAoMjUwMG5zIG1pbiwg
+MjUwMG5zIG1heCkNCglJbnRlcnJ1cHQ6IHBpbiBBIHJvdXRlZCB0byBJUlEg
+MjANCglSZWdpb24gMDogSS9PIHBvcnRzIGF0IGEwODAgW3NpemU9MTI4XQ0K
+CVJlZ2lvbiAxOiBNZW1vcnkgYXQgMDAwMDAwMDAwMjM1MDAwMCAoMzItYml0
+LCBub24tcHJlZmV0Y2hhYmxlKSBbc2l6ZT0xMjhdDQoJRXhwYW5zaW9uIFJP
+TSBhdCAwMDAwMDAwMDAyMzIwMDAwIFtkaXNhYmxlZF0gW3NpemU9MTI4S10N
+CglDYXBhYmlsaXRpZXM6IFtkY10gUG93ZXIgTWFuYWdlbWVudCB2ZXJzaW9u
+IDINCgkJRmxhZ3M6IFBNRUNsay0gRFNJLSBEMSsgRDIrIEF1eEN1cnJlbnQ9
+MG1BIFBNRShEMCssRDErLEQyKyxEM2hvdCssRDNjb2xkLSkNCgkJU3RhdHVz
+OiBEMCBQTUUtRW5hYmxlLSBEU2VsPTAgRFNjYWxlPTIgUE1FLQ0KDQowMDAw
+OjAxOjAwLjAgRXRoZXJuZXQgY29udHJvbGxlcjogRGlnaXRhbCBFcXVpcG1l
+bnQgQ29ycG9yYXRpb24gREVDY2hpcCAyMTA0MCBbVHVsaXBdIChyZXYgMjMp
+DQoJQ29udHJvbDogSS9PKyBNZW0rIEJ1c01hc3RlcisgU3BlY0N5Y2xlLSBN
+ZW1XSU5WLSBWR0FTbm9vcC0gUGFyRXJyKyBTdGVwcGluZy0gU0VSUi0gRmFz
+dEIyQi0NCglTdGF0dXM6IENhcC0gNjZNSHotIFVERi0gRmFzdEIyQisgUGFy
+RXJyLSBERVZTRUw9bWVkaXVtID5UQWJvcnQtIDxUQWJvcnQtIDxNQWJvcnQt
+ID5TRVJSLSA8UEVSUi0NCglMYXRlbmN5OiAyNTUNCglJbnRlcnJ1cHQ6IHBp
+biBBIHJvdXRlZCB0byBJUlEgMzINCglSZWdpb24gMDogSS9PIHBvcnRzIGF0
+IDk4MDAgW3NpemU9MTI4XQ0KCVJlZ2lvbiAxOiBNZW1vcnkgYXQgMDAwMDAw
+MDAwMjIyMjAwMCAoMzItYml0LCBub24tcHJlZmV0Y2hhYmxlKSBbc2l6ZT0x
+MjhdDQoNCjAwMDA6MDE6MDEuMCBTQ1NJIHN0b3JhZ2UgY29udHJvbGxlcjog
+UUxvZ2ljIENvcnAuIElTUDEwMjAgRmFzdC13aWRlIFNDU0kgKHJldiAwMSkN
+CglDb250cm9sOiBJL08rIE1lbSsgQnVzTWFzdGVyKyBTcGVjQ3ljbGUtIE1l
+bVdJTlYtIFZHQVNub29wLSBQYXJFcnIrIFN0ZXBwaW5nLSBTRVJSLSBGYXN0
+QjJCLQ0KCVN0YXR1czogQ2FwLSA2Nk1Iei0gVURGLSBGYXN0QjJCLSBQYXJF
+cnItIERFVlNFTD1tZWRpdW0gPlRBYm9ydC0gPFRBYm9ydC0gPE1BYm9ydC0g
+PlNFUlItIDxQRVJSLQ0KCUxhdGVuY3k6IDI0OA0KCUludGVycnVwdDogcGlu
+IEEgcm91dGVkIHRvIElSUSAzMw0KCVJlZ2lvbiAwOiBJL08gcG9ydHMgYXQg
+OTAwMCBbc2l6ZT0yNTZdDQoJUmVnaW9uIDE6IE1lbW9yeSBhdCAwMDAwMDAw
+MDAyMjIwMDAwICgzMi1iaXQsIG5vbi1wcmVmZXRjaGFibGUpIFtzaXplPTRL
+XQ0KCUV4cGFuc2lvbiBST00gYXQgMDAwMDAwMDAwMjIwMDAwMCBbZGlzYWJs
+ZWRdIFtzaXplPTY0S10NCg0KMDAwMDowMTowMi4wIFNDU0kgc3RvcmFnZSBj
+b250cm9sbGVyOiBRTG9naWMgQ29ycC4gSVNQMTAyMCBGYXN0LXdpZGUgU0NT
+SSAocmV2IDAxKQ0KCUNvbnRyb2w6IEkvTysgTWVtKyBCdXNNYXN0ZXIrIFNw
+ZWNDeWNsZS0gTWVtV0lOVi0gVkdBU25vb3AtIFBhckVycisgU3RlcHBpbmct
+IFNFUlItIEZhc3RCMkItDQoJU3RhdHVzOiBDYXAtIDY2TUh6LSBVREYtIEZh
+c3RCMkItIFBhckVyci0gREVWU0VMPW1lZGl1bSA+VEFib3J0LSA8VEFib3J0
+LSA8TUFib3J0LSA+U0VSUi0gPFBFUlItDQoJTGF0ZW5jeTogMjQ4DQoJSW50
+ZXJydXB0OiBwaW4gQSByb3V0ZWQgdG8gSVJRIDM0DQoJUmVnaW9uIDA6IEkv
+TyBwb3J0cyBhdCA5NDAwIFtzaXplPTI1Nl0NCglSZWdpb24gMTogTWVtb3J5
+IGF0IDAwMDAwMDAwMDIyMjEwMDAgKDMyLWJpdCwgbm9uLXByZWZldGNoYWJs
+ZSkgW3NpemU9NEtdDQoJRXhwYW5zaW9uIFJPTSBhdCAwMDAwMDAwMDAyMjEw
+MDAwIFtkaXNhYmxlZF0gW3NpemU9NjRLXQ0KDQo=
+
+--0-2146224649-1142104790=:25114--
