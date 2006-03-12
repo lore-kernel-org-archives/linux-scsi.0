@@ -1,54 +1,60 @@
-From: Maxim Kozover <maximkoz@netvision.net.il>
-Subject: Re[8]: problems with scsi_transport_fc and qla2xxx
-Date: Sun, 12 Mar 2006 00:10:14 +0300
-Message-ID: <1699632492.20060312001014@netvision.net.il>
-References: <1119462161.20060306230951@netvision.net.il>
- <20060306212835.GO6278@andrew-vasquezs-powerbook-g4-15.local>
- <1229893529.20060307000953@netvision.net.il>
- <20060306232831.GS6278@andrew-vasquezs-powerbook-g4-15.local>
- <1219491790.20060307124035@netvision.net.il>
- <20060307172227.GE6275@andrew-vasquezs-powerbook-g4-15.local>
- <1343850424.20060307231141@netvision.net.il>
- <20060308080050.GF9956@andrew-vasquezs-powerbook-g4-15.local>
- <20060308154341.GA1779@andrew-vasquezs-powerbook-g4-15.local>
- <1502511597.20060308213247@netvision.net.il>
- <20060310231344.GB641@andrew-vasquezs-powerbook-g4-15.local>
-Reply-To: Maxim Kozover <maximkoz@netvision.net.il>
+From: Petraset Pet Centre <info@petrasetcentre.com>
+Subject: Update Sales
+Date: Sun, 12 Mar 2006 08:59:15 GMT
+Message-ID: <200603120859.k2C8xFnK020907@s18.uklinux.net>
+Reply-To: info@petrasetcentre.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mxout1.netvision.net.il ([194.90.9.20]:1135 "EHLO
-	mxout1.netvision.net.il") by vger.kernel.org with ESMTP
-	id S1751280AbWCKWJc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 11 Mar 2006 17:09:32 -0500
-In-reply-to: <20060310231344.GB641@andrew-vasquezs-powerbook-g4-15.local>
+Received: from [80.84.64.18] ([80.84.64.18]:28896 "EHLO s18.uklinux.net")
+	by vger.kernel.org with ESMTP id S1751187AbWCLI7a (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 12 Mar 2006 03:59:30 -0500
+Received: from s18.uklinux.net (s18.uklinux.net [127.0.0.1])
+	by s18.uklinux.net (8.12.11/8.12.11) with ESMTP id k2C8xFF2020909
+	for <linux-scsi@vger.kernel.org>; Sun, 12 Mar 2006 08:59:15 GMT
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Hi Andrew!
-Congratulations! The kernel from scsi-rc-fixes git and your patch are
-working.
-By the way, could you, please, tell me how I get only scsi patches
-from the git repository, cause I got the whole kernel by using
-cg-clone http://kernel.org/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
+Dear
 
-Now the process looks like following:
-Mar 11 23:54:22 multipath kernel: qla2xxx 0000:03:01.0: LOOP DOWN detected (2).
-Mar 11 23:54:28 multipath kernel:  rport-4:0-0: blocked FC remote port time out:
- removing target and saving binding
-Mar 11 23:54:37 multipath kernel: qla2xxx 0000:03:01.0: LIP reset occured (f7f7).
-Mar 11 23:54:37 multipath kernel: qla2xxx 0000:03:01.0: LOOP UP detected (2 Gbps).
-Mar 11 23:54:59 multipath kernel:  4:0:0:0: timing out command, waited 22s
+As a valued customer, we couldn't
+wait to bring you the good news. This letter is to
+announce the Latest Pets ,Newly breeded. Well, maybe we haven't thought of a great
+Investment for it yet, but if you read on I think you'll agree
+that no matter what we call it, it's super!
 
-And the disks appear.
-Could you tell me, please, where this 22sec timeout came from?
+Starting on April 1st, a series of pets like Replenished dogs, white horse dogs 
 
-Again, congratulations for good work!
+with our store will be maintained on a cumulative basis for a
+period of one year. Once your purchases have reached
+$1000, you will be automatically entitled to a 5% discount
+on any order placed, including orders for sale items.
+When your orders have reached the $2,000 mark, your
+discount will increase to 10%. A $3,500 accumulation of
+orders will entitle you to a 15% discount and once you
+have reached $2,000 you will receive 20% off all
+merchandise orders. We think it's a great idea and hope
+that you agree.
 
-Thanks much,
+Won't you send us a purchase order today to get you
+started on your way? If you think of a good name for us
+to tag onto this new discount program, please let us know!
 
-Maxim.
+by mailing us at info@petrasetcentre.com
+
+Visit Our Websites at http://www.petrasetcentre.com
+
+Head Office Dubai  : Ph: 00971 -502885690
+
+
+
+Management
+
+Richard Hops
+
+
+
 
