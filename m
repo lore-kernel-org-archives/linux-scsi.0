@@ -1,56 +1,43 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: Re[8]: problems with scsi_transport_fc and qla2xxx
-Date: Sun, 12 Mar 2006 10:28:03 +0100
-Message-ID: <1142155684.2882.15.camel@laptopd505.fenrus.org>
+From: Maxim Kozover <maximkoz@netvision.net.il>
+Subject: Re: Re: Re[8]: problems with scsi_transport_fc and qla2xxx
+Date: Sun, 12 Mar 2006 14:46:55 +0300
+Message-ID: <518308279.20060312144655@netvision.net.il>
 References: <1119462161.20060306230951@netvision.net.il>
-	 <20060306212835.GO6278@andrew-vasquezs-powerbook-g4-15.local>
-	 <1229893529.20060307000953@netvision.net.il>
-	 <20060306232831.GS6278@andrew-vasquezs-powerbook-g4-15.local>
-	 <1219491790.20060307124035@netvision.net.il>
-	 <20060307172227.GE6275@andrew-vasquezs-powerbook-g4-15.local>
-	 <1343850424.20060307231141@netvision.net.il>
-	 <20060308080050.GF9956@andrew-vasquezs-powerbook-g4-15.local>
-	 <20060308154341.GA1779@andrew-vasquezs-powerbook-g4-15.local>
-	 <1502511597.20060308213247@netvision.net.il>
-	 <20060310231344.GB641@andrew-vasquezs-powerbook-g4-15.local>
-	 <1699632492.20060312001014@netvision.net.il>
-Reply-To: arjan@infradead.org
+ <20060306212835.GO6278@andrew-vasquezs-powerbook-g4-15.local>
+ <1229893529.20060307000953@netvision.net.il>
+ <20060306232831.GS6278@andrew-vasquezs-powerbook-g4-15.local>
+ <1219491790.20060307124035@netvision.net.il>
+ <20060307172227.GE6275@andrew-vasquezs-powerbook-g4-15.local>
+ <1343850424.20060307231141@netvision.net.il>
+ <20060308080050.GF9956@andrew-vasquezs-powerbook-g4-15.local>
+ <20060308154341.GA1779@andrew-vasquezs-powerbook-g4-15.local>
+ <1502511597.20060308213247@netvision.net.il>
+ <20060310231344.GB641@andrew-vasquezs-powerbook-g4-15.local>
+ <1699632492.20060312001014@netvision.net.il>
+ <1142155684.2882.15.camel@laptopd505.fenrus.org>
+Reply-To: Maxim Kozover <maximkoz@netvision.net.il>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:21458 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1751291AbWCLJ2M (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 12 Mar 2006 04:28:12 -0500
-In-Reply-To: <1699632492.20060312001014@netvision.net.il>
+Received: from mxout1.netvision.net.il ([194.90.9.20]:45622 "EHLO
+	mxout1.netvision.net.il") by vger.kernel.org with ESMTP
+	id S932104AbWCLMqZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 12 Mar 2006 07:46:25 -0500
+In-reply-to: <1142155684.2882.15.camel@laptopd505.fenrus.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Maxim Kozover <maximkoz@netvision.net.il>
+To: Arjan van de Ven <arjan@infradead.org>
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-On Sun, 2006-03-12 at 00:10 +0300, Maxim Kozover wrote:
-> Hi Andrew!
-> Congratulations! The kernel from scsi-rc-fixes git and your patch are
-> working.
-> By the way, could you, please, tell me how I get only scsi patches
-> from the git repository, cause I got the whole kernel by using
-> cg-clone http://kernel.org/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
-> 
-> Now the process looks like following:
-> Mar 11 23:54:22 multipath kernel: qla2xxx 0000:03:01.0: LOOP DOWN detected (2).
-> Mar 11 23:54:28 multipath kernel:  rport-4:0-0: blocked FC remote port time out:
->  removing target and saving binding
-> Mar 11 23:54:37 multipath kernel: qla2xxx 0000:03:01.0: LIP reset occured (f7f7).
-> Mar 11 23:54:37 multipath kernel: qla2xxx 0000:03:01.0: LOOP UP detected (2 Gbps).
-> Mar 11 23:54:59 multipath kernel:  4:0:0:0: timing out command, waited 22s
-> 
-> And the disks appear.
-> Could you tell me, please, where this 22sec timeout came from?
+OK, Arjan, thanks!
 
-looks like your fiber fabric decided to renegotiate, and halfway it went
-for a coffee and donuts break to not upset the union rules :)
+Maxim.
 
-I've seen LOOP negotiations take 10+ seconds before, and that is on a
-really simple setup.... so nothing super special 
+AvdV> looks like your fiber fabric decided to renegotiate, and halfway it went
+AvdV> for a coffee and donuts break to not upset the union rules :)
+
+AvdV> I've seen LOOP negotiations take 10+ seconds before, and that is on a
+AvdV> really simple setup.... so nothing super special 
+
 
