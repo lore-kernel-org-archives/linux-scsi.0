@@ -1,214 +1,57 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [PATCH 2.6.16-rc6] Promise SuperTrak driver
-Date: Mon, 13 Mar 2006 19:20:42 -0800
-Message-ID: <20060313192042.56bf67b3.akpm@osdl.org>
-References: <NONAMEBgJJ72jYxDwLd000000d3@nonameb.ptu.promise.com>
+From: "MR. ANDRE AMOUSSOU" <aa2006bj@katamail.com>
+Subject: Good Morning,
+Date: Mon, 13 Mar 2006 14:53:20 +0100
+Message-ID: <1142258000.4415795088d9d@imp.online.net>
+Reply-To: amoussou_10@yahoo.fr
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:46208 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751809AbWCNDXK (ORCPT
+Received: from imp2-j.online.net ([212.27.37.65]:11448 "EHLO imp2-j.online.net")
+	by vger.kernel.org with ESMTP id S932545AbWCNDqw (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Mar 2006 22:23:10 -0500
-In-Reply-To: <NONAMEBgJJ72jYxDwLd000000d3@nonameb.ptu.promise.com>
+	Mon, 13 Mar 2006 22:46:52 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ed Lin <ed.lin@promise.com>
-Cc: linux-scsi@vger.kernel.org, promise_linux@promise.com, linux-kernel@vger.kernel.org
 
-"Ed Lin" <ed.lin@promise.com> wrote:
->
-> ....
->
-> >
-> >Please comment that, and check it.  Consider using clear_bit or __clear_bit.
-> >
-> >> +static inline struct status_msg *shasta_get_status(struct st_hba *hba)
-> >> +{
-> >> +	struct status_msg *status = 
-> >> +		hba->status_buffer + hba->status_tail;
-> >> +
-> >> +	++hba->status_tail;
-> >> +	hba->status_tail %= MU_STATUS_COUNT;
-> >> +
-> >> +	return status;
-> >> +}
-> >> +
-> >> +static inline struct req_msg *shasta_alloc_req(struct st_hba *hba)
-> >> +{
-> >> +	struct req_msg *req = ((struct req_msg *)hba->dma_mem) +
-> >> +		hba->req_head;
-> >> +
-> >> +	++hba->req_head;
-> >> +	hba->req_head %= MU_REQ_COUNT;
-> >> +
-> >> +	return req;
-> >> +}
-> >
-> >This is the awkward way of managing a ring buffer.  It's simpler to let the
-> >head and tail incides wrap up to 0xffffffff and only mask them when
-> >actually using them as indices.   That way,
-> >
-> >	if (tail-head == size)
-> >		buffer is full
-> >
-> >	if (tail-head == 0)
-> >		buffer is empty
-> >
-> >in fact, at all times,
-> >
-> >	tail-head == items_in_buffer
-> >
-> 
-> I was always thinking about this problem, because here the req count is not
-> power of 2.
-> If we use wrap up, is the extra code handling 0xffffffff needed?
+Good Morning,
+I am Mr.Amoussou Andre, a credit officer in First National Bank Cotonou Benin,
+and personal account manager to an expartriate who used to work with Benin
+Total Oil Company(B.T.O.C). On the 2nd of January 2005, I recieved a call that
+my client died in the Tsunami Disaster with his wife and two kids while on
+vacation at Phuket Island in Thailand.
 
-It's less code:
+Since then I have made several enquiries to locate any of my client's extended
+relatives. This has proved unsuccessful. I have contacted you to assist in
+repartriating the money left behind by my client before it gets confiscated or
+declared unserviceable by the bank.
 
-static inline unsigned round(unsigned x)
-{
-	return x % N;
-}
+Particularly, the bank where the deceased had an account valued at
+US$19,500,000.00 (Nineteen Million, Five Hundred Th! ousand United States
+Dollars). The bank has issued me a notice to provide the next-of-kin or have
+the account confiscated. Since I have been unsuccessful in locating the
+biological relatives of my late client, I hereby seek your consent to present
+you to the bank as next-of-kin of the deceased since you
+are a
+foreigner, so that the proceeds of this account valued at US$19.5M can be
+transfered to you as inheritance and thereafter, you and me can share the
+money; 50% to me and 35% to you, while 5% will be donated to the Tsunami
+Disaster Charity Fund, and 10% for expenditures.
 
-add()
-{
-	buf[round(tail++)] = item;
-}
+I have original copy of Certificate of Deposit of the funds, which will be
+used to substantiate our inherittance claims. All I require is your consent
+and honest co-operation to enable us see the deal through.
 
-remove()
-{
-	return buf[round(head++)];
-}
+Furthermore, I guarantee that the transaction will be executed under a
+legitimate arrangement that will protect you from any breach of the law.
+Please contact me via ! email to enable us discuss further.
 
-num_in_buffer()
-{
-	return tail - head;
-}
+Thank you.
+Yours faithfully,
+Mr.Amoussou Andre,
+(Credit Officer)
+Email:amoussou_10@yahoo.fr
 
-Not terribly important though.
 
-> >> +static inline void shasta_map_sg(struct st_hba *hba,
-> >> +	struct req_msg *req, struct scsi_cmnd *cmd)
-> >> +{
-> >> +	struct pci_dev *pdev = hba->pdev;
-> >> +	dma_addr_t dma_handle;
-> >> +	struct scatterlist *src;
-> >> +	struct st_sgtable *dst;
-> >> +	int i;
-> >> +
-> >> +	dst = (struct st_sgtable *)req->variable;
-> >> +	dst->max_sg_count = cpu_to_le16(ST_MAX_SG);
-> >> +	dst->sz_in_byte = cpu_to_le32(cmd->request_bufflen);
-> >> +
-> >> +	if (cmd->use_sg) {
-> >> +		src = (struct scatterlist *) cmd->request_buffer;
-> >> +		dst->sg_count = cpu_to_le16((u16)pci_map_sg(pdev, src,
-> >> +			cmd->use_sg, cmd->sc_data_direction));
-> >> +
-> >> +		for (i = 0; i < dst->sg_count; i++, src++) {
-> >> +			dst->table[i].count = cpu_to_le32((u32)sg_dma_len(src));
-> >> +			dst->table[i].addr = 
-> >> +				cpu_to_le32(sg_dma_address(src) & 0xffffffff);
-> >
-> >What does that 0xffffffff do?
-> >
-> >Should it be DMA_32BIT_MASK?
-> >
-> 
-> It is just a 32-bit mask.
 
-Well yes ;)
-
-But what are the implications of this mask on 64-bit platforms?
-
-> I guess DMA_32BIT_MASK is OK?
-
-If that's semantically what the 0xffffffff means then yes.
-
-> > ...
-> >>
-> >> +static inline void
-> >> +shasta_send_cmd(struct st_hba *hba, struct req_msg *req, u16 tag)
-> >> +{
-> >> +	req->tag = cpu_to_le16(tag);
-> >> +	req->task_attr = TASK_ATTRIBUTE_SIMPLE;
-> >> +	req->task_manage = 0; /* not supported yet */
-> >> +	req->payload_sz = (u8)((sizeof(struct req_msg))/sizeof(u32));
-> >> +
-> >> +	hba->ccb[tag].req = req;
-> >> +	hba->out_req_cnt++;
-> >> +	wmb();
-> >> +
-> >> +	writel(hba->req_head, hba->mmio_base + IMR0);
-> >> +	writel(MU_INBOUND_DOORBELL_REQHEADCHANGED, hba->mmio_base + IDBL);
-> >> +	readl(hba->mmio_base + IDBL); /* flush */
-> >> +}
-> >
-> >What is the wmb() for?  Flushing memory for the upcoming DMA?  That's not
-> >what it's for.
-> >
-> >When adding any sort of open-coded barrier, please always add a comment
-> >explaining why it is there.
-> >
-> >This function has two callsites and should be uninlined.
-> >
-> 
-> It's just for write order, but it seems unnecessary on i386.
-
-write order of what with respect to what?
-
-> >
-> >> +	switch (cmd->cmnd[0]) {
-> >> +	case READ_6:
-> >> +	case WRITE_6:
-> >> +		cmd->cmnd[9] = 0;
-> >> +		cmd->cmnd[8] = cmd->cmnd[4];
-> >> +		cmd->cmnd[7] = 0;
-> >> +		cmd->cmnd[6] = 0;
-> >> +		cmd->cmnd[5] = cmd->cmnd[3];
-> >> +		cmd->cmnd[4] = cmd->cmnd[2];
-> >> +		cmd->cmnd[3] = cmd->cmnd[1] & 0x1f;
-> >> +		cmd->cmnd[2] = 0;
-> >> +		cmd->cmnd[1] &= 0xe0;
-> >> +		cmd->cmnd[0] += READ_10 - READ_6;
-> >> +		break;
-> >> +	case MODE_SENSE:
-> >> +	{
-> >> +		char mode_sense[4] = { 3, 0, 0, 0 };
-> >
-> >static?
-> >
-> >> +		shasta_direct_cp(cmd, mode_sense, sizeof(mode_sense));
-> >> +		cmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
-> >> +		fn(cmd);
-> >> +		return 0;
-> >> +	}
-> >> +	case MODE_SENSE_10:
-> >> +	{
-> >> +		char mode_sense10[8] = { 0, 6, 0, 0, 0, 0, 0, 0 };
-> >
-> >static?
-> >
-> 
-> These commands are called just one or two times anyway, maybe need not
-> static here?
-
-The way you have the code here the compiler will need to create an array on
-the stack and then populate each item in that array each time it's used.
-
-If these are made static, that's all done at compile time.
-
-> The rmb() here intends to guarantee every readl() to be really effective 
-> (directly from hardware), although there is already "volatile".
-
-readl() should already take care of all that.
-
-> The megaraid_mbox driver uses this...
-> 
-> I used to observe sporadic handshake failure, so I added this(rmb()).
-
-In that case something funny is going on.  We should understand what that
-is - it'll come back to bite us.
 
