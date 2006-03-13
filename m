@@ -1,79 +1,498 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: Re[8]: problems with scsi_transport_fc and qla2xxx
-Date: Mon, 13 Mar 2006 15:19:03 -0800
-Message-ID: <20060313231903.GK11755@andrew-vasquezs-powerbook-g4-15.local>
-References: <1229893529.20060307000953@netvision.net.il> <20060306232831.GS6278@andrew-vasquezs-powerbook-g4-15.local> <1219491790.20060307124035@netvision.net.il> <20060307172227.GE6275@andrew-vasquezs-powerbook-g4-15.local> <1343850424.20060307231141@netvision.net.il> <20060308080050.GF9956@andrew-vasquezs-powerbook-g4-15.local> <20060308154341.GA1779@andrew-vasquezs-powerbook-g4-15.local> <1502511597.20060308213247@netvision.net.il> <20060310231344.GB641@andrew-vasquezs-powerbook-g4-15.local> <1699632492.20060312001014@netvision.net.il>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [PATCH 2.6.16-rc6] Promise SuperTrak driver
+Date: Mon, 13 Mar 2006 15:42:36 -0800
+Message-ID: <20060313154236.32293cf9.akpm@osdl.org>
+References: <20060313224112.GA19513@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:20319 "EHLO avexch02.qlogic.com")
-	by vger.kernel.org with ESMTP id S1751418AbWCMXTJ (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:25009 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1750797AbWCMXpF (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Mar 2006 18:19:09 -0500
-Content-Disposition: inline
-In-Reply-To: <1699632492.20060312001014@netvision.net.il>
+	Mon, 13 Mar 2006 18:45:05 -0500
+In-Reply-To: <20060313224112.GA19513@havoc.gtf.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Maxim Kozover <maximkoz@netvision.net.il>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Michael Reed <mdr@sgi.com>, James.Smart@Emulex.Com
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-scsi@vger.kernel.org, promise_linux@promise.com, linux-kernel@vger.kernel.org
 
-On Sun, 12 Mar 2006, Maxim Kozover wrote:
-
-> Congratulations! The kernel from scsi-rc-fixes git and your patch are
-> working.
-
-Actually Mike R. and James S. deserve the credit for the composite
-patch which consists of:
-
-1) [PATCH] FC transport : Avoid device offline cases by stalling aborts until device unblocked
-   http://marc.theaimsgroup.com/?l=linux-scsi&m=114225658724378&w=2
-
-2) Serialize scan work during fc_remote_port_delete() so rport removal
-doesn't deadlock midlayer scans.  The problem you were seeing.  (Mike
-R.)
-
-3) rport race fixes during removal (James S.).
-
-> By the way, could you, please, tell me how I get only scsi patches
-> from the git repository, cause I got the whole kernel by using
-> cg-clone http://kernel.org/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
+Jeff Garzik <jeff@garzik.org> wrote:
+>
+> All,
 > 
-> Now the process looks like following:
-> Mar 11 23:54:22 multipath kernel: qla2xxx 0000:03:01.0: LOOP DOWN detected (2).
-> Mar 11 23:54:28 multipath kernel:  rport-4:0-0: blocked FC remote port time out:
->  removing target and saving binding
-> Mar 11 23:54:37 multipath kernel: qla2xxx 0000:03:01.0: LIP reset occured (f7f7).
-> Mar 11 23:54:37 multipath kernel: qla2xxx 0000:03:01.0: LOOP UP detected (2 Gbps).
-> Mar 11 23:54:59 multipath kernel:  4:0:0:0: timing out command, waited 22s
+> Here follows the 'shasta' driver, contributed by Promise, for review.
+> They've asked me to make the "open source introduction" for them.
+> The SuperTrak hardware is a controller where you talk to a firmware
+> via SCSI CDBs.
 > 
-> And the disks appear.
-> Could you tell me, please, where this 22sec timeout came from?
+> It's been through a couple rounds of review by me, so its pretty clean
+> already.  I already spotted another couple niggles though: my mispelling
+> of 'SuperTrek', and the deprecated use of pci_module_init().
+> 
+> Anyway, comment away...  The driver maintainer is CC'd.
 
-Essentially there's currently several issues with rport consumers
-making delete() calls during mid-layer scanning.
+Hopefully a Signed-off-by: is forthcoming.
 
-I'm hoping at a minimum we can get Mike R's fixes into 2.6.16, and
-address the additional races going forward...  James/Mike?
+> The 'shasta' branch of
+> git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/misc-2.6.git
+> 
 
-Here's a minimal the serialize scan-work patch, could you check to see
-that this addresses your issue?  Start with any latest linux-2.6.git
-tree.
+Should I add that to -mm?
 
-Thanks,
-Andrew
+Looks generally good to me.  Minor comments:
 
----
 
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index 929032e..3d09920 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -1649,6 +1649,8 @@ fc_remote_port_delete(struct fc_rport  *
- 		return;
- 	}
- 
-+	/* flush any scan work */ /* which can sleep */
-+	scsi_flush_work(rport_to_shost(rport));
- 	scsi_target_block(&rport->dev);
- 
- 	/* cap the length the devices can be blocked until they are deleted */
+> +config SCSI_SHASTA
+> +	tristate "Promise SuperTrek EX8350/8300/16350/16300 support"
+> +	depends on PCI && SCSI
+
+Might it also depend upon BLK_DEV_SD?
+
+> +#include <linux/config.h>
+> +#include <linux/fs.h>
+> +#include <linux/init.h>
+> +#include <linux/errno.h>
+> +#include <linux/kernel.h>
+> +#include <linux/ioport.h>
+> +#include <linux/delay.h>
+> +#include <linux/sched.h>
+> +#include <linux/time.h>
+> +#include <linux/pci.h>
+> +#include <linux/irq.h>
+
+Can't include linux/irq.h from generic code (we really ought to fix that).
+
+> +#define ST_DRIVER_DATE "(Mar 6, 2006)"
+> +#define ST_DRIVER_VERSION "2.9.0.13"
+> +#define VER_MAJOR 		2	
+> +#define VER_MINOR 		9
+> +#define OEM 			0
+> +#define BUILD_VER 		13
+
+This info tends to go out of date quickly.
+
+These identifires are rather generic-sounding and might clash with others
+at some stage.
+
+
+> +struct st_sgitem {
+> +struct st_sgtable {
+> +struct handshake_frame {
+> +struct req_msg {
+> +struct status_msg {
+
+Has this all been tested on big-endian hardware?
+
+> +static char console_inq_page[] =
+
+const?
+
+> +{
+> +	0x03,0x00,0x03,0x03,0xFA,0x00,0x00,0x30,
+> +	0x50,0x72,0x6F,0x6D,0x69,0x73,0x65,0x20,	/* "Promise " */
+> +	0x52,0x41,0x49,0x44,0x20,0x43,0x6F,0x6E,	/* "RAID Con" */
+> +	0x73,0x6F,0x6C,0x65,0x20,0x20,0x20,0x20,	/* "sole    " */
+> +	0x31,0x2E,0x30,0x30,0x20,0x20,0x20,0x20,	/* "1.00    " */
+> +	0x53,0x58,0x2F,0x52,0x53,0x41,0x46,0x2D,	/* "SX/RSAF-" */
+> +	0x54,0x45,0x31,0x2E,0x30,0x30,0x20,0x20,	/* "TE1.00  " */
+> +	0x0C,0x20,0x20,0x20,0x20,0x20,0x20,0x20
+> +};
+> +
+> +MODULE_AUTHOR("Ed Lin");
+> +MODULE_DESCRIPTION("Promise Technology SuperTrak EX Controllers");
+> +MODULE_LICENSE("GPL");
+> +MODULE_VERSION(ST_DRIVER_VERSION);
+> +
+> ...
+>
+> +static inline u16 shasta_alloc_tag(u32 *bitmap)
+> +{
+> +	u16 i;
+> +	for (i = 0; i < TAG_BITMAP_LENGTH; i++) 
+> +		if (!((*bitmap) & (1 << i))) {
+> +			*bitmap |= (1 << i);
+> +			return i;
+> +		}
+> +
+> +	return TAG_BITMAP_LENGTH;
+> +}
+
+This is too large to be inlined.
+
+> +static inline void shasta_free_tag(u32 *bitmap, u16 tag)
+> +{
+> +	*bitmap &= ~(1 << tag);
+> +}
+
+What locking is used here?  hba->host->host_lock?
+
+Please comment that, and check it.  Consider using clear_bit or __clear_bit.
+
+> +static inline struct status_msg *shasta_get_status(struct st_hba *hba)
+> +{
+> +	struct status_msg *status = 
+> +		hba->status_buffer + hba->status_tail;
+> +
+> +	++hba->status_tail;
+> +	hba->status_tail %= MU_STATUS_COUNT;
+> +
+> +	return status;
+> +}
+> +
+> +static inline struct req_msg *shasta_alloc_req(struct st_hba *hba)
+> +{
+> +	struct req_msg *req = ((struct req_msg *)hba->dma_mem) +
+> +		hba->req_head;
+> +
+> +	++hba->req_head;
+> +	hba->req_head %= MU_REQ_COUNT;
+> +
+> +	return req;
+> +}
+
+This is the awkward way of managing a ring buffer.  It's simpler to let the
+head and tail incides wrap up to 0xffffffff and only mask them when
+actually using them as indices.   That way,
+
+	if (tail-head == size)
+		buffer is full
+
+	if (tail-head == 0)
+		buffer is empty
+
+in fact, at all times,
+
+	tail-head == items_in_buffer
+
+> +static inline void shasta_map_sg(struct st_hba *hba,
+> +	struct req_msg *req, struct scsi_cmnd *cmd)
+> +{
+> +	struct pci_dev *pdev = hba->pdev;
+> +	dma_addr_t dma_handle;
+> +	struct scatterlist *src;
+> +	struct st_sgtable *dst;
+> +	int i;
+> +
+> +	dst = (struct st_sgtable *)req->variable;
+> +	dst->max_sg_count = cpu_to_le16(ST_MAX_SG);
+> +	dst->sz_in_byte = cpu_to_le32(cmd->request_bufflen);
+> +
+> +	if (cmd->use_sg) {
+> +		src = (struct scatterlist *) cmd->request_buffer;
+> +		dst->sg_count = cpu_to_le16((u16)pci_map_sg(pdev, src,
+> +			cmd->use_sg, cmd->sc_data_direction));
+> +
+> +		for (i = 0; i < dst->sg_count; i++, src++) {
+> +			dst->table[i].count = cpu_to_le32((u32)sg_dma_len(src));
+> +			dst->table[i].addr = 
+> +				cpu_to_le32(sg_dma_address(src) & 0xffffffff);
+
+What does that 0xffffffff do?
+
+Should it be DMA_32BIT_MASK?
+
+> +			dst->table[i].addr_hi = 
+> +				cpu_to_le32((sg_dma_address(src) >> 16) >> 16);
+> +			dst->table[i].ctrl = SG_CF_64B | SG_CF_HOST;
+> +    		}
+> +		dst->table[--i].ctrl |= SG_CF_EOT;
+> +		return;
+> +	}
+> +
+> +	dma_handle = pci_map_single(pdev, cmd->request_buffer,
+> +		cmd->request_bufflen, cmd->sc_data_direction);
+> +	cmd->SCp.dma_handle = dma_handle;
+> +
+> +	dst->sg_count = cpu_to_le16(1);
+> +	dst->table[0].addr = cpu_to_le32(dma_handle & 0xffffffff);
+> +	dst->table[0].addr_hi = cpu_to_le32((dma_handle >> 16) >> 16);
+> +	dst->table[0].count = cpu_to_le32((u32)cmd->request_bufflen);
+> +	dst->table[0].ctrl = SG_CF_EOT | SG_CF_64B | SG_CF_HOST;
+> +}
+> +
+> +static int shasta_direct_cp(struct scsi_cmnd *cmd, void *src, unsigned int len)
+> +{
+> +	void *dest;
+> +	unsigned int cp_len;
+> +	struct scatterlist *sg = cmd->request_buffer;
+> +
+> +	if (cmd->use_sg) {
+> +		dest = kmap_atomic(sg->page, KM_IRQ0) + sg->offset;
+
+Please ensure that all usage of KM_IRQn always happens under
+local_iq_disable().  If it doesn't, we have a nasty subtle bug.  (From my
+quick reading we're OK, but please check).
+
+
+> +		cp_len = min(sg->length, len);
+> +	} else {
+> +		dest = cmd->request_buffer;
+> +		cp_len = min(cmd->request_bufflen, len);
+> +	}
+> +
+> +	memcpy(dest, src, cp_len);
+> +
+> +	if (cmd->use_sg) 
+> +		kunmap_atomic(dest - sg->offset, KM_IRQ0);
+> +	return cp_len == len;
+> +}
+> +
+> ...
+>
+> +static inline void
+> +shasta_send_cmd(struct st_hba *hba, struct req_msg *req, u16 tag)
+> +{
+> +	req->tag = cpu_to_le16(tag);
+> +	req->task_attr = TASK_ATTRIBUTE_SIMPLE;
+> +	req->task_manage = 0; /* not supported yet */
+> +	req->payload_sz = (u8)((sizeof(struct req_msg))/sizeof(u32));
+> +
+> +	hba->ccb[tag].req = req;
+> +	hba->out_req_cnt++;
+> +	wmb();
+> +
+> +	writel(hba->req_head, hba->mmio_base + IMR0);
+> +	writel(MU_INBOUND_DOORBELL_REQHEADCHANGED, hba->mmio_base + IDBL);
+> +	readl(hba->mmio_base + IDBL); /* flush */
+> +}
+
+What is the wmb() for?  Flushing memory for the upcoming DMA?  That's not
+what it's for.
+
+When adding any sort of open-coded barrier, please always add a comment
+explaining why it is there.
+
+This function has two callsites and should be uninlined.
+
+> +static int
+> +shasta_queuecommand(struct scsi_cmnd *cmd, void (* fn)(struct scsi_cmnd *))
+> +{
+> +	struct st_hba *hba;
+> + 	struct Scsi_Host *host;
+> +	unsigned int id,lun;
+> +	struct req_msg *req;
+> +	u16 tag;
+> +	host = cmd->device->host;
+> +	id = cmd->device->id;
+> +	lun = cmd->device->channel; /* firmware lun issue work around */
+> +	hba = (struct st_hba *)host->hostdata;
+
+Unneeded typecast.
+
+> +	switch (cmd->cmnd[0]) {
+> +	case READ_6:
+> +	case WRITE_6:
+> +		cmd->cmnd[9] = 0;
+> +		cmd->cmnd[8] = cmd->cmnd[4];
+> +		cmd->cmnd[7] = 0;
+> +		cmd->cmnd[6] = 0;
+> +		cmd->cmnd[5] = cmd->cmnd[3];
+> +		cmd->cmnd[4] = cmd->cmnd[2];
+> +		cmd->cmnd[3] = cmd->cmnd[1] & 0x1f;
+> +		cmd->cmnd[2] = 0;
+> +		cmd->cmnd[1] &= 0xe0;
+> +		cmd->cmnd[0] += READ_10 - READ_6;
+> +		break;
+> +	case MODE_SENSE:
+> +	{
+> +		char mode_sense[4] = { 3, 0, 0, 0 };
+
+static?
+
+> +		shasta_direct_cp(cmd, mode_sense, sizeof(mode_sense));
+> +		cmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
+> +		fn(cmd);
+> +		return 0;
+> +	}
+> +	case MODE_SENSE_10:
+> +	{
+> +		char mode_sense10[8] = { 0, 6, 0, 0, 0, 0, 0, 0 };
+
+static?
+
+> +static inline void shasta_unmap_sg(struct st_hba *hba, struct scsi_cmnd *cmd)
+> +{
+> +	dma_addr_t dma_handle;
+> +	if (cmd->sc_data_direction != DMA_NONE) {
+> + 		if (cmd->use_sg) {
+> +			pci_unmap_sg(hba->pdev, cmd->request_buffer,
+> +				cmd->use_sg, cmd->sc_data_direction);
+> +		} else {
+> + 			dma_handle = cmd->SCp.dma_handle;
+> +			pci_unmap_single(hba->pdev, dma_handle,
+> +				cmd->request_bufflen, cmd->sc_data_direction);
+> + 		}
+> +	}
+> +}
+
+Three callsites, please uninline.
+
+> +
+> +static inline void shasta_mu_intr(struct st_hba *hba, u32 doorbell)
+> +{
+
+Two callsites, waaaaaaaay to big to be inlined.
+
+<OK, I'll stop going on about overzealous inlining.  Please review all
+inlined functions.  Unless they are exceedingly small or have a single
+callsite, they should be uinlined>.
+
+
+> +			if (waitqueue_active(&hba->waitq))
+> +				wake_up(&hba->waitq);
+
+This optimisation can cause missed wakeups unless done with care (addition
+of memory barriers).  If there's extra locking which makes it safe then OK,
+but some comment might be needed.
+
+> +static int shasta_handshake(struct st_hba *hba)
+> +{
+> +	void __iomem *base = hba->mmio_base;
+> +	struct handshake_frame *h;
+> +	int i;
+> +
+> +	if (readl(base + OMR0) != MU_HANDSHAKE_SIGNATURE) {
+> +		writel(MU_INBOUND_DOORBELL_HANDSHAKE, base + IDBL);
+> +		readl(base + IDBL);
+> +		for (i = 0; readl(base + OMR0) != MU_HANDSHAKE_SIGNATURE
+> +			&& i < MU_MAX_DELAY_TIME; i++) {
+> +			rmb();
+> +			msleep(1);
+> +		}
+> +
+> +		if (i == MU_MAX_DELAY_TIME) {
+> +			printk(KERN_ERR SHASTA_NAME
+> +				"(%s): no handshake signature\n",
+> +				pci_name(hba->pdev));
+> +			return -1;
+> +		}
+> +	}
+> +
+> +	udelay(10);
+> +
+> +	h = (struct handshake_frame *)(hba->dma_mem + MU_REQ_BUFFER_SIZE);
+> +	h->rb_phy = cpu_to_le32(hba->dma_handle);
+> +	h->rb_phy_hi = cpu_to_le32((hba->dma_handle >> 16) >> 16);
+> +	h->req_sz = cpu_to_le16(sizeof(struct req_msg));
+> +	h->req_cnt = cpu_to_le16(MU_REQ_COUNT);
+> +	h->status_sz = cpu_to_le16(sizeof(struct status_msg));
+> +	h->status_cnt = cpu_to_le16(MU_STATUS_COUNT);
+> +	shasta_gettime(&h->hosttime);
+> +	h->partner_type = HMU_PARTNER_TYPE;
+> +	wmb();
+
+Another mystery barrier.
+
+> +	writel(hba->dma_handle + MU_REQ_BUFFER_SIZE, base + IMR0);
+> +	readl(base + IMR0);
+> +	writel((hba->dma_handle >> 16) >> 16, base + OMR0); /* 4G border safe */
+> +	readl(base + OMR0);
+> +	writel(MU_INBOUND_DOORBELL_HANDSHAKE, base + IDBL);
+> +	readl(base + IDBL); /* flush */
+> +
+> +	udelay(10);
+> +	for (i = 0; readl(base + OMR0) != MU_HANDSHAKE_SIGNATURE
+> +		&& i < MU_MAX_DELAY_TIME; i++) {
+> +		rmb();
+
+??
+
+> +		msleep(1);
+> +	}
+> +
+> +	if (i == MU_MAX_DELAY_TIME) {
+> +		printk(KERN_ERR SHASTA_NAME
+> +			"(%s): no signature after handshake frame\n",
+> +			pci_name(hba->pdev));
+> +		return -1;
+> +	}
+> +
+> +	writel(0, base + IMR0);
+> +	readl(base + IMR0);
+> +	writel(0, base + OMR0);
+> +	readl(base + OMR0);
+> +	writel(0, base + IMR1);
+> +	readl(base + IMR1);
+> +	writel(0, base + OMR1);
+> +	readl(base + OMR1); /* flush */
+> +	hba->mu_status = MU_STATE_STARTED;
+> +	return 0;
+> +}
+> +
+> +static int shasta_abort(struct scsi_cmnd *cmd)
+> +{
+> +	struct Scsi_Host *host = cmd->device->host;
+> +	struct st_hba *hba = (struct st_hba *)host->hostdata;
+> +	u16 tag;
+> +	void __iomem *base;
+> +	u32 data;
+> +	int fail = 0;
+
+int result = SUCCESS;
+
+> +	unsigned long flags;
+> +	base = hba->mmio_base;
+> +	spin_lock_irqsave(host->host_lock, flags);
+> +
+> +	for (tag = 0; tag < MU_MAX_REQUEST; tag++)
+> +		if (hba->ccb[tag].cmd == cmd && (hba->tag & (1 << tag))) {
+> +			hba->wait_ccb = &(hba->ccb[tag]);
+> +			break;
+> +		}
+> +	if (tag >= MU_MAX_REQUEST) goto out;
+
+newline here, please.
+
+> +
+> +	data = readl(base + ODBL);
+> +	if (data == 0 || data == 0xffffffff) goto fail_out;
+> +
+> +	writel(data, base + ODBL);
+> +	readl(base + ODBL); /* flush */
+> +
+> +	shasta_mu_intr(hba, data);
+> +
+> + 	if (hba->wait_ccb == NULL) {
+> + 		printk(KERN_WARNING SHASTA_NAME
+> +			"(%s): lost interrupt\n", pci_name(hba->pdev));
+> +		goto out;
+> +	}
+> +
+> +fail_out:
+> +	hba->wait_ccb->req = NULL; /* nullify the req's future return */
+> +	hba->wait_ccb = NULL;
+> +	fail = 1;
+
+result = FAILED;
+
+> +out:
+> +	spin_unlock_irqrestore(host->host_lock, flags);
+> +	return fail ? FAILED : SUCCESS;
+
+return result;
+
+> +}
+>
+> +static int shasta_reset(struct scsi_cmnd *cmd)
+> +{
+> +	struct st_hba *hba;
+> +	int tag;
+> +	int i = 0;
+> +	unsigned long flags;
+> +	hba = (struct st_hba *)cmd->device->host->hostdata;
+
+Unneeded cast.
+
+> +wait_cmds:
+> +	spin_lock_irqsave(hba->host->host_lock, flags);
+> +	for (tag = 0; tag < MU_MAX_REQUEST; tag++)
+> +		if ((hba->tag & (1 << tag)) && hba->ccb[tag].req != NULL) 
+> +			break;
+> +	spin_unlock_irqrestore(hba->host->host_lock, flags);
+> +	if (tag < MU_MAX_REQUEST) {
+> +		msleep(1000);
+> +		if (++i < 10) goto wait_cmds;
+
+newline.
+
