@@ -1,47 +1,181 @@
-From: "Jean Goode" <lyjksllburruep@babycenter.com>
-Subject: Astounding Loans with options.
-Date: Sun, 12 Mar 2006 21:53:15 -0400
-Message-ID: <GV.5576286.7055878__27237.0607512586$1142214938$gmane$org@codeweavers.com>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: [REPOST][PATCH] FC transport : Avoid device offline cases by
+	stalling aborts until device unblocked
+Date: Mon, 13 Mar 2006 08:28:57 -0500
+Message-ID: <1142256537.3940.2.camel@localhost.localdomain>
+Reply-To: James.Smart@Emulex.Com
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:59283 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S1751881AbWCMBxt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 12 Mar 2006 20:53:49 -0500
+Received: from emulex.emulex.com ([138.239.112.1]:41165 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S1751751AbWCMN3E
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 13 Mar 2006 08:29:04 -0500
+Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
+	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id k2DDT0rf007003
+	for <linux-scsi@vger.kernel.org>; Mon, 13 Mar 2006 05:29:01 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: sparclinux@vger.kernel.org, linux-x25@vger.kernel.org, ultralinux@vger.kernel.org, linux-sound@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-We tried to contact you multiple times about refniancing your home at a lower rate.
-I would like to inform you know that you have been pre-approved for a LOWER RATE consideration.
+Here's the repost. At the time, I was fighting a mailer that would not
+be deterred in reformatting my mail.
 
-Here are the terms: 
-*Account ID: [752014-456]
-*Negotiable Amount: $144,768 to $691,160
-*Rate: 3.75% - 5.80%
+Following the recommendation from Christoph....
 
-Please fill out this quick form and we will have a broker contact you as soon as possible.
+This moves the eh_timed_out functionality from the scsi_host_template
+to the transport_template. Given that this is now a transport function, 
+the EH_RESET_TIMER case no longer caps the timer reschedulings. The
+transport guarantees that this is not an infinite condition.
 
-http://www.big9.net/vk.asp
+This patch is dependent upon Christoph's change of:
+http://marc.theaimsgroup.com/?l=linux-scsi&m=113923531412919&w=2
 
+-- james s
 
-Regards,
-
-Jean Goode,
-Senior Account Manager
-
-
+Original Post:
+http://marc.theaimsgroup.com/?l=linux-scsi&m=113924339701796&w=2
 
 
+diff -upNr a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+--- a/drivers/scsi/scsi_error.c	2006-02-06 12:00:11.000000000 -0500
++++ b/drivers/scsi/scsi_error.c	2006-02-07 09:13:49.000000000 -0500
+@@ -29,6 +29,7 @@
+ #include <scsi/scsi_dbg.h>
+ #include <scsi/scsi_device.h>
+ #include <scsi/scsi_eh.h>
++#include <scsi/scsi_transport.h>
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_ioctl.h>
+ #include <scsi/scsi_request.h>
+@@ -163,16 +164,12 @@ void scsi_times_out(struct scsi_cmnd *sc
+ {
+ 	scsi_log_completion(scmd, TIMEOUT_ERROR);
+ 
+-	if (scmd->device->host->hostt->eh_timed_out)
+-		switch (scmd->device->host->hostt->eh_timed_out(scmd)) {
++	if (scmd->device->host->transportt->eh_timed_out)
++		switch (scmd->device->host->transportt->eh_timed_out(scmd)) {
+ 		case EH_HANDLED:
+ 			__scsi_done(scmd);
+ 			return;
+ 		case EH_RESET_TIMER:
+-			/* This allows a single retry even of a command
+-			 * with allowed == 0 */
+-			if (scmd->retries++ > scmd->allowed)
+-				break;
+ 			scsi_add_timer(scmd, scmd->timeout_per_command,
+ 				       scsi_times_out);
+ 			return;
+diff -upNr a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+--- a/drivers/scsi/scsi_transport_fc.c	2006-02-06 12:00:11.000000000 -0500
++++ b/drivers/scsi/scsi_transport_fc.c	2006-02-07 09:01:04.000000000 -0500
+@@ -31,6 +31,7 @@
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_transport.h>
+ #include <scsi/scsi_transport_fc.h>
++#include <scsi/scsi_cmnd.h>
+ #include "scsi_priv.h"
+ 
+ /*
+@@ -1090,6 +1091,40 @@ static int fc_rport_match(struct attribu
+ }
+ 
+ 
++/**
++ * fc_timed_out - FC Transport I/O timeout intercept handler
++ *
++ * @scmd:	The SCSI command which timed out
++ *
++ * This routine protects against error handlers getting invoked while a
++ * rport is in a blocked state, typically due to a temporarily loss of
++ * connectivity. If the error handlers are allowed to proceed, requests
++ * to abort i/o, reset the target, etc will likely fail as there is no way
++ * to communicate with the device to perform the requested function. These
++ * failures may result in the midlayer taking the device offline, requiring
++ * manual intervention to restore operation.
++ *
++ * This routine, called whenever an i/o times out, validates the state of
++ * the underlying rport. If the rport is blocked, it returns
++ * EH_RESET_TIMER, which will continue to reschedule the timeout.
++ * Eventually, either the device will return, or devloss_tmo will fire,
++ * and when the timeout then fires, it will be handled normally.
++ * If the rport is not blocked, normal error handling continues.
++ *
++ * Notes:
++ *	This routine assumes no locks are held on entry.
++ **/
++static enum scsi_eh_timer_return
++fc_timed_out(struct scsi_cmnd *scmd)
++{
++	struct fc_rport *rport = starget_to_rport(scsi_target(scmd->device));
++
++	if (rport->port_state == FC_PORTSTATE_BLOCKED)
++		return EH_RESET_TIMER;
++
++	return EH_NOT_HANDLED;
++}
++
+ /*
+  * Must be called with shost->host_lock held
+  */
+@@ -1146,6 +1181,8 @@ fc_attach_transport(struct fc_function_t
+ 	/* Transport uses the shost workq for scsi scanning */
+ 	i->t.create_work_queue = 1;
+ 
++	i->t.eh_timed_out = fc_timed_out;
++
+ 	i->t.user_scan = fc_user_scan;
+ 	
+ 	/*
+diff -upNr a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+--- a/include/scsi/scsi_host.h	2006-02-06 12:00:33.000000000 -0500
++++ b/include/scsi/scsi_host.h	2006-02-06 13:15:22.000000000 -0500
+@@ -147,20 +147,6 @@ struct scsi_host_template {
+ 	int (* eh_host_reset_handler)(struct scsi_cmnd *);
+ 
+ 	/*
+-	 * This is an optional routine to notify the host that the scsi
+-	 * timer just fired.  The returns tell the timer routine what to
+-	 * do about this:
+-	 *
+-	 * EH_HANDLED:		I fixed the error, please complete the command
+-	 * EH_RESET_TIMER:	I need more time, reset the timer and
+-	 *			begin counting again
+-	 * EH_NOT_HANDLED	Begin normal error recovery
+-	 *
+-	 * Status: OPTIONAL
+-	 */
+-	enum scsi_eh_timer_return (* eh_timed_out)(struct scsi_cmnd *);
+-
+-	/*
+ 	 * Before the mid layer attempts to scan for a new device where none
+ 	 * currently exists, it will call this entry in your driver.  Should
+ 	 * your driver need to allocate any structs or perform any other init
+diff -upNr a/include/scsi/scsi_transport.h b/include/scsi/scsi_transport.h
+--- a/include/scsi/scsi_transport.h	2006-02-06 12:00:33.000000000 -0500
++++ b/include/scsi/scsi_transport.h	2006-02-06 13:14:57.000000000 -0500
+@@ -48,6 +48,17 @@ struct scsi_transport_template {
+ 	 * True if the transport wants to use a host-based work-queue
+ 	 */
+ 	unsigned int create_work_queue : 1;
++
++	/*
++	 * This is an optional routine that allows the transport to become
++	 * involved when a scsi io timer fires. The return value tells the
++	 * timer routine how to finish the io timeout handling:
++	 * EH_HANDLED:		I fixed the error, please complete the command
++	 * EH_RESET_TIMER:	I need more time, reset the timer and
++	 *			begin counting again
++	 * EH_NOT_HANDLED	Begin normal error recovery
++	 */
++	enum scsi_eh_timer_return (* eh_timed_out)(struct scsi_cmnd *);
+ };
+ 
+ #define transport_class_to_shost(tc) \
 
 
 
 
 
-
-
-
-
-
-scab you pretext me, bobcat fraternal salty . yarmulke you matthew me, phosphorylate . appropriable you delineament me, operable . 
-controlling you demurred me, skyward . dictatorial you besmirch me, met concision alphabetic . 
-http://big9.net/n.asp
