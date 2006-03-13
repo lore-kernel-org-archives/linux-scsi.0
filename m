@@ -1,324 +1,413 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [RFC] Preliminary expander support for aic94xx
-Date: Mon, 13 Mar 2006 19:02:57 -0600
-Message-ID: <1142298177.3238.59.camel@mulgrave.il.steeleye.com>
+From: "Ed Lin" <ed.lin@promise.com>
+Subject: Re: [PATCH 2.6.16-rc6] Promise SuperTrak driver
+Date: Mon, 13 Mar 2006 18:38:33 +0800
+Message-ID: <NONAMEBgJJ72jYxDwLd000000d3@nonameb.ptu.promise.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="gb2312"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:22936 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S932533AbWCNBC7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Mar 2006 20:02:59 -0500
-Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
-	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id k2E12v213947
-	for <linux-scsi@vger.kernel.org>; Mon, 13 Mar 2006 20:02:58 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750877AbWCNCim@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "promise_linux@promise.com" <promise_linux@promise.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
 
-This is dependent on the previously posted transport class expander
-patch, but now it makes aic94xx handle expanders in a reasonable
-fashion.
+Thanks for the comments. Here is a quick answer to some questions.
 
-With this, the driver should be useable by almost all SAS (not SATA)
-configurations ... as long as you don't try and remove it as a
-module ...
+>
+>> +#include <linux/config.h>
+>> +#include <linux/fs.h>
+>> +#include <linux/init.h>
+>> +#include <linux/errno.h>
+>> +#include <linux/kernel.h>
+>> +#include <linux/ioport.h>
+>> +#include <linux/delay.h>
+>> +#include <linux/sched.h>
+>> +#include <linux/time.h>
+>> +#include <linux/pci.h>
+>> +#include <linux/irq.h>
+>
+>Can't include linux/irq.h from generic code (we really ought to fix that).
+>
 
-James
+OK. This line could be deleted.
 
-diff --git a/drivers/scsi/sas/sas_discover.c b/drivers/scsi/sas/sas_discover.c
-index c10b453..8b568ad 100644
---- a/drivers/scsi/sas/sas_discover.c
-+++ b/drivers/scsi/sas/sas_discover.c
-@@ -230,7 +230,21 @@ static int sas_get_port_device(struct sa
- 
- 	sas_init_dev(dev);
- 
--	rphy = dev->dev_type == SAS_END_DEV ? sas_end_device_alloc(phy->phy) : sas_rphy_alloc(phy->phy);
-+	switch (dev->dev_type) {
-+	case SAS_END_DEV:
-+		rphy = sas_end_device_alloc(phy->phy);
-+		break;
-+	case EDGE_DEV:
-+		rphy = sas_expander_alloc(phy->phy, SAS_EDGE_EXPANDER_DEVICE);
-+		break;
-+	case FANOUT_DEV:
-+		rphy = sas_expander_alloc(phy->phy, SAS_FANOUT_EXPANDER_DEVICE);
-+		break;
-+	default:
-+		rphy = sas_rphy_alloc(phy->phy);
-+		break;
-+	}
-+
- 	if (!rphy) {
- 		spin_unlock_irqrestore(&port->phy_list_lock, flags);
- 		kfree(dev);
-diff --git a/drivers/scsi/sas/sas_expander.c b/drivers/scsi/sas/sas_expander.c
-index 0db6301..4713b19 100644
---- a/drivers/scsi/sas/sas_expander.c
-+++ b/drivers/scsi/sas/sas_expander.c
-@@ -142,6 +142,13 @@ static void sas_set_ex_phy(struct domain
- 	struct ex_phy *phy = &ex->ex_phy[phy_id];
- 	struct smp_resp *resp = disc_resp;
- 	struct discover_resp *dr = &resp->disc;
-+	struct sas_rphy *rphy = dev->rphy;
-+
-+	phy->phy = sas_phy_alloc(&rphy->dev, phy_id);
-+	dev_printk(KERN_ERR, &phy->phy->dev, "ALLOCATED\n\n");
-+
-+	/* FIXME: error_handling */
-+	BUG_ON(!phy->phy);
- 
- 	switch (resp->result) {
- 	case SMP_RESP_PHY_VACANT:
-@@ -170,6 +177,33 @@ static void sas_set_ex_phy(struct domain
- 	phy->virtual = dr->virtual;
- 	phy->last_da_index = -1;
- 
-+	/* FIXME: This probably isn't right, but it will do for now*/
-+	phy->phy->local_attached = 1;
-+
-+	phy->phy->identify.initiator_port_protocols = phy->attached_iproto;
-+	phy->phy->identify.target_port_protocols = phy->attached_tproto;
-+	phy->phy->identify.phy_identifier = phy_id;
-+	phy->phy->minimum_linkrate_hw = SAS_LINK_RATE_1_5_GBPS;
-+	phy->phy->maximum_linkrate_hw = SAS_LINK_RATE_3_0_GBPS;
-+	phy->phy->minimum_linkrate = SAS_LINK_RATE_1_5_GBPS;
-+	phy->phy->maximum_linkrate = SAS_LINK_RATE_3_0_GBPS;
-+	switch (phy->linkrate) {
-+	case PHY_LINKRATE_1_5:
-+		phy->phy->negotiated_linkrate = SAS_LINK_RATE_1_5_GBPS;
-+		break;
-+	case PHY_LINKRATE_3:
-+		phy->phy->negotiated_linkrate = SAS_LINK_RATE_3_0_GBPS;
-+		break;
-+	case PHY_LINKRATE_6:
-+		phy->phy->negotiated_linkrate = SAS_LINK_RATE_6_0_GBPS;
-+		break;
-+	default:
-+		phy->phy->negotiated_linkrate = SAS_LINK_RATE_UNKNOWN;
-+		break;
-+	}
-+
-+	sas_phy_add(phy->phy);
-+
- 	SAS_DPRINTK("ex %016llx phy%02d:%c attached: %016llx\n",
- 		    SAS_ADDR(dev->sas_addr), phy->phy_id,
- 		    phy->routing_attr == TABLE_ROUTING ? 'T' :
-@@ -319,16 +353,19 @@ static inline void ex_assign_manuf_info(
- 					*_mi_resp)
- {
- 	u8 *mi_resp = _mi_resp;
-+	struct sas_rphy *rphy = dev->rphy;
-+	struct sas_expander_device *edev = rphy_to_expander_device(rphy);
- 
--	memcpy(dev->ex_dev.vendor_id, mi_resp + 12, 8);
--	memcpy(dev->ex_dev.product_id, mi_resp + 20, 16);
--	memcpy(dev->ex_dev.product_rev, mi_resp + 36, 4);
-+	memcpy(edev->vendor_id, mi_resp + 12, SAS_EXPANDER_VENDOR_ID_LEN);
-+	memcpy(edev->product_id, mi_resp + 20, SAS_EXPANDER_PRODUCT_ID_LEN);
-+	memcpy(edev->product_rev, mi_resp + 36,
-+	       SAS_EXPANDER_PRODUCT_REV_LEN);
- 
- 	if (mi_resp[8] & 1) {
--		memcpy(dev->ex_dev.component_vendor_id, mi_resp + 40, 8);
--		dev->ex_dev.component_id =
--			be16_to_cpu(*(__be16 *)(mi_resp + 48));
--		dev->ex_dev.component_revision_id = mi_resp[50];
-+		memcpy(edev->component_vendor_id, mi_resp + 40,
-+		       SAS_EXPANDER_COMPONENT_VENDOR_ID_LEN);
-+		edev->component_id = mi_resp[48] << 8 | mi_resp[49];
-+		edev->component_revision_id = mi_resp[50];
- 	}
- }
- 
-@@ -501,6 +538,7 @@ static struct domain_device *sas_ex_disc
- 	struct expander_device *parent_ex = &parent->ex_dev;
- 	struct ex_phy *phy = &parent_ex->ex_phy[phy_id];
- 	struct domain_device *child = NULL;
-+	struct sas_rphy *rphy;
- 	int res;
- 
- 	if (phy->attached_sata_host || phy->attached_sata_ps)
-@@ -519,6 +557,7 @@ static struct domain_device *sas_ex_disc
- 
- 	if ((phy->attached_tproto & SAS_PROTO_STP) || phy->attached_sata_dev) {
- 		child->dev_type = SATA_DEV;
-+		rphy = sas_rphy_alloc(phy->phy);
- 		if (phy->attached_tproto & SAS_PROTO_STP)
- 			child->tproto = phy->attached_tproto;
- 		if (phy->attached_sata_dev)
-@@ -546,8 +585,23 @@ static struct domain_device *sas_ex_disc
- 		}
- 	} else if (phy->attached_tproto & SAS_PROTO_SSP) {
- 		child->dev_type = SAS_END_DEV;
-+		rphy = sas_end_device_alloc(phy->phy);
-+		/* FIXME: error handling */
-+		BUG_ON(!rphy);
- 		child->tproto = phy->attached_tproto;
- 		sas_init_dev(child);
-+
-+		child->rphy = rphy;
-+		rphy->identify.phy_identifier = phy->phy->identify.phy_identifier;
-+		rphy->identify.device_type = SAS_END_DEVICE;
-+		rphy->identify.sas_address = SAS_ADDR(child->sas_addr);
-+		rphy->identify.initiator_port_protocols = child->iproto;
-+		rphy->identify.target_port_protocols = child->tproto;
-+
-+		spin_lock(&parent->port->dev_list_lock);
-+		list_add_tail(&child->dev_list_node, &parent->port->dev_list);
-+		spin_unlock(&parent->port->dev_list_lock);
-+
- 		res = sas_discover_end_dev(child);
- 		if (res) {
- 			SAS_DPRINTK("sas_discover_end_dev() for device %16llx "
-@@ -561,7 +615,9 @@ static struct domain_device *sas_ex_disc
- 		SAS_DPRINTK("target proto 0x%x at %016llx:0x%x not handled\n",
- 			    phy->attached_tproto, SAS_ADDR(parent->sas_addr),
- 			    phy_id);
-+		rphy = sas_rphy_alloc(phy->phy);
- 	}
-+
- 	list_add_tail(&child->siblings, &parent_ex->children);
- 	return child;
- }
-@@ -569,9 +625,11 @@ static struct domain_device *sas_ex_disc
- static struct domain_device *sas_ex_discover_expander(
- 	struct domain_device *parent, int phy_id)
- {
--	struct expander_device *parent_ex = &parent->ex_dev;
--	struct ex_phy *phy = &parent_ex->ex_phy[phy_id];
-+	struct sas_expander_device *parent_ex = rphy_to_expander_device(parent->rphy);
-+	struct ex_phy *phy = &parent->ex_dev.ex_phy[phy_id];
- 	struct domain_device *child = NULL;
-+	struct sas_rphy *rphy;
-+	struct sas_expander_device *edev;
- 	int res;
- 
- 	if (phy->routing_attr == DIRECT_ROUTING) {
-@@ -585,6 +643,19 @@ static struct domain_device *sas_ex_disc
- 	child = kzalloc(sizeof(*child), GFP_KERNEL);
- 	if (!child)
- 		return NULL;
-+	switch (phy->attached_dev_type) {
-+	case EDGE_DEV:
-+		rphy = sas_expander_alloc(phy->phy, SAS_EDGE_EXPANDER_DEVICE);
-+		break;
-+	case FANOUT_DEV:
-+		rphy = sas_expander_alloc(phy->phy, SAS_FANOUT_EXPANDER_DEVICE);
-+		break;
-+	default:
-+		rphy = NULL;	/* shut gcc up */
-+		BUG();
-+	}
-+	child->rphy = rphy;
-+	edev = rphy_to_expander_device(rphy);
- 	child->dev_type = phy->attached_dev_type;
- 	child->parent = parent;
- 	child->port = parent->port;
-@@ -593,16 +664,15 @@ static struct domain_device *sas_ex_disc
- 	memcpy(child->sas_addr, phy->attached_sas_addr, SAS_ADDR_SIZE);
- 	sas_hash_addr(child->hashed_sas_addr, child->sas_addr);
- 	sas_ex_get_linkrate(parent, child, phy);
--	child->ex_dev.level = parent_ex->level + 1;
-+	edev->level = parent_ex->level + 1;
- 	parent->port->disc.max_level = max(parent->port->disc.max_level,
--					   child->ex_dev.level);
-+					   edev->level);
- 	sas_init_dev(child);
- 	res = sas_discover_expander(child);
- 	if (res) {
- 		kfree(child);
- 		return NULL;
- 	}
--	list_add_tail(&child->siblings, &parent_ex->children);
- 	return child;
- }
- 
-@@ -1248,7 +1318,8 @@ static int sas_ex_level_discovery(struct
- 	list_for_each_entry(dev, &port->dev_list, dev_list_node) {
- 		if (dev->dev_type == EDGE_DEV ||
- 		    dev->dev_type == FANOUT_DEV) {
--			struct expander_device *ex = &dev->ex_dev;
-+			struct sas_expander_device *ex =
-+				rphy_to_expander_device(dev->rphy);
- 
- 			if (level == ex->level)
- 				res = sas_ex_discover_devices(dev, -1);
-@@ -1275,8 +1346,11 @@ static int sas_ex_bfs_disc(struct sas_po
- int sas_discover_root_expander(struct domain_device *dev)
- {
- 	int res;
-+	struct sas_expander_device *ex = rphy_to_expander_device(dev->rphy);
-+
-+	sas_rphy_add(dev->rphy);
- 
--	dev->ex_dev.level = dev->port->disc.max_level; /* 0 */
-+	ex->level = dev->port->disc.max_level; /* 0 */
- 	res = sas_discover_expander(dev);
- 	if (!res)
- 		sas_ex_bfs_disc(dev->port);
-@@ -1482,7 +1556,8 @@ static int sas_discover_bfs_by_root_leve
- 	list_for_each_entry(child, &ex_root->children, siblings) {
- 		if (child->dev_type == EDGE_DEV ||
- 		    child->dev_type == FANOUT_DEV) {
--			struct expander_device *ex = &child->ex_dev;
-+			struct sas_expander_device *ex =
-+				rphy_to_expander_device(child->rphy);
- 
- 			if (level > ex->level)
- 				res = sas_discover_bfs_by_root_level(child,
-@@ -1497,7 +1572,8 @@ static int sas_discover_bfs_by_root_leve
- static int sas_discover_bfs_by_root(struct domain_device *dev)
- {
- 	int res;
--	int level = dev->ex_dev.level+1;
-+	struct sas_expander_device *ex = rphy_to_expander_device(dev->rphy);
-+	int level = ex->level+1;
- 
- 	res = sas_ex_discover_devices(dev, -1);
- 	if (res)
-diff --git a/include/scsi/sas/sas_expander.h b/include/scsi/sas/sas_expander.h
-index bd00e1c..e83b41c 100644
---- a/include/scsi/sas/sas_expander.h
-+++ b/include/scsi/sas/sas_expander.h
-@@ -70,13 +70,13 @@ struct ex_phy {
- 	u8   virtual:1;
- 
- 	int  last_da_index;
-+
-+	struct sas_phy *phy;
- };
- 
- struct expander_device {
- 	struct list_head children;
- 
--	int    level;
--
- 	u16    ex_change_count;
- 	u16    max_route_indexes;
- 	u8     num_phys;
-@@ -84,20 +84,7 @@ struct expander_device {
- 	u8     conf_route_table:1;
- 	u8     enclosure_logical_id[8];
- 
--	char   vendor_id[8+1];
--	char   product_id[16+1];
--	char   product_rev[4+1];
--	char   component_vendor_id[8+1];
--	u16    component_id;
--	u8     component_revision_id;
--
- 	struct ex_phy *ex_phy;
--
--	struct bin_attribute smp_bin_attr;
--	void *smp_req;
--	int   smp_req_size;
--	int   smp_portal_pid;
--	struct semaphore smp_sema;
- };
- 
- int  sas_discover_root_expander(struct domain_device *dev);
+>> +#define ST_DRIVER_DATE "(Mar 6, 2006)"
+>> +#define ST_DRIVER_VERSION "2.9.0.13"
+>> +#define VER_MAJOR 		2	
+>> +#define VER_MINOR 		9
+>> +#define OEM 			0
+>> +#define BUILD_VER 		13
+>
+>This info tends to go out of date quickly.
+>
+>These identifires are rather generic-sounding and might clash with others
+>at some stage.
+>
 
+We could add prefixes for this matter.
 
+>
+>> +struct st_sgitem {
+>> +struct st_sgtable {
+>> +struct handshake_frame {
+>> +struct req_msg {
+>> +struct status_msg {
+>
+>Has this all been tested on big-endian hardware?
+>
+
+No. It was only tested on i386 and x86-64 machines.
+
+> ...
+>
+>> +static inline void shasta_free_tag(u32 *bitmap, u16 tag)
+>> +{
+>> +	*bitmap &= ~(1 << tag);
+>> +}
+>
+>What locking is used here?  hba->host->host_lock?
+
+This is called always with hba->host->host_lock locked.
+
+>
+>Please comment that, and check it.  Consider using clear_bit or __clear_bit.
+>
+>> +static inline struct status_msg *shasta_get_status(struct st_hba *hba)
+>> +{
+>> +	struct status_msg *status = 
+>> +		hba->status_buffer + hba->status_tail;
+>> +
+>> +	++hba->status_tail;
+>> +	hba->status_tail %= MU_STATUS_COUNT;
+>> +
+>> +	return status;
+>> +}
+>> +
+>> +static inline struct req_msg *shasta_alloc_req(struct st_hba *hba)
+>> +{
+>> +	struct req_msg *req = ((struct req_msg *)hba->dma_mem) +
+>> +		hba->req_head;
+>> +
+>> +	++hba->req_head;
+>> +	hba->req_head %= MU_REQ_COUNT;
+>> +
+>> +	return req;
+>> +}
+>
+>This is the awkward way of managing a ring buffer.  It's simpler to let the
+>head and tail incides wrap up to 0xffffffff and only mask them when
+>actually using them as indices.   That way,
+>
+>	if (tail-head == size)
+>		buffer is full
+>
+>	if (tail-head == 0)
+>		buffer is empty
+>
+>in fact, at all times,
+>
+>	tail-head == items_in_buffer
+>
+
+I was always thinking about this problem, because here the req count is not
+power of 2.
+If we use wrap up, is the extra code handling 0xffffffff needed?
+
+>> +static inline void shasta_map_sg(struct st_hba *hba,
+>> +	struct req_msg *req, struct scsi_cmnd *cmd)
+>> +{
+>> +	struct pci_dev *pdev = hba->pdev;
+>> +	dma_addr_t dma_handle;
+>> +	struct scatterlist *src;
+>> +	struct st_sgtable *dst;
+>> +	int i;
+>> +
+>> +	dst = (struct st_sgtable *)req->variable;
+>> +	dst->max_sg_count = cpu_to_le16(ST_MAX_SG);
+>> +	dst->sz_in_byte = cpu_to_le32(cmd->request_bufflen);
+>> +
+>> +	if (cmd->use_sg) {
+>> +		src = (struct scatterlist *) cmd->request_buffer;
+>> +		dst->sg_count = cpu_to_le16((u16)pci_map_sg(pdev, src,
+>> +			cmd->use_sg, cmd->sc_data_direction));
+>> +
+>> +		for (i = 0; i < dst->sg_count; i++, src++) {
+>> +			dst->table[i].count = cpu_to_le32((u32)sg_dma_len(src));
+>> +			dst->table[i].addr = 
+>> +				cpu_to_le32(sg_dma_address(src) & 0xffffffff);
+>
+>What does that 0xffffffff do?
+>
+>Should it be DMA_32BIT_MASK?
+>
+
+It is just a 32-bit mask. I guess DMA_32BIT_MASK is OK?
+
+> ...
+>>
+>> +static inline void
+>> +shasta_send_cmd(struct st_hba *hba, struct req_msg *req, u16 tag)
+>> +{
+>> +	req->tag = cpu_to_le16(tag);
+>> +	req->task_attr = TASK_ATTRIBUTE_SIMPLE;
+>> +	req->task_manage = 0; /* not supported yet */
+>> +	req->payload_sz = (u8)((sizeof(struct req_msg))/sizeof(u32));
+>> +
+>> +	hba->ccb[tag].req = req;
+>> +	hba->out_req_cnt++;
+>> +	wmb();
+>> +
+>> +	writel(hba->req_head, hba->mmio_base + IMR0);
+>> +	writel(MU_INBOUND_DOORBELL_REQHEADCHANGED, hba->mmio_base + IDBL);
+>> +	readl(hba->mmio_base + IDBL); /* flush */
+>> +}
+>
+>What is the wmb() for?  Flushing memory for the upcoming DMA?  That's not
+>what it's for.
+>
+>When adding any sort of open-coded barrier, please always add a comment
+>explaining why it is there.
+>
+>This function has two callsites and should be uninlined.
+>
+
+It's just for write order, but it seems unnecessary on i386.
+
+>
+>> +	switch (cmd->cmnd[0]) {
+>> +	case READ_6:
+>> +	case WRITE_6:
+>> +		cmd->cmnd[9] = 0;
+>> +		cmd->cmnd[8] = cmd->cmnd[4];
+>> +		cmd->cmnd[7] = 0;
+>> +		cmd->cmnd[6] = 0;
+>> +		cmd->cmnd[5] = cmd->cmnd[3];
+>> +		cmd->cmnd[4] = cmd->cmnd[2];
+>> +		cmd->cmnd[3] = cmd->cmnd[1] & 0x1f;
+>> +		cmd->cmnd[2] = 0;
+>> +		cmd->cmnd[1] &= 0xe0;
+>> +		cmd->cmnd[0] += READ_10 - READ_6;
+>> +		break;
+>> +	case MODE_SENSE:
+>> +	{
+>> +		char mode_sense[4] = { 3, 0, 0, 0 };
+>
+>static?
+>
+>> +		shasta_direct_cp(cmd, mode_sense, sizeof(mode_sense));
+>> +		cmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
+>> +		fn(cmd);
+>> +		return 0;
+>> +	}
+>> +	case MODE_SENSE_10:
+>> +	{
+>> +		char mode_sense10[8] = { 0, 6, 0, 0, 0, 0, 0, 0 };
+>
+>static?
+>
+
+These commands are called just one or two times anyway, maybe need not
+static here?
+
+>> +static inline void shasta_unmap_sg(struct st_hba *hba, struct scsi_cmnd *cmd)
+>> +{
+>> +	dma_addr_t dma_handle;
+>> +	if (cmd->sc_data_direction != DMA_NONE) {
+>> + 		if (cmd->use_sg) {
+>> +			pci_unmap_sg(hba->pdev, cmd->request_buffer,
+>> +				cmd->use_sg, cmd->sc_data_direction);
+>> +		} else {
+>> + 			dma_handle = cmd->SCp.dma_handle;
+>> +			pci_unmap_single(hba->pdev, dma_handle,
+>> +				cmd->request_bufflen, cmd->sc_data_direction);
+>> + 		}
+>> +	}
+>> +}
+>
+>Three callsites, please uninline.
+>
+>> +
+>> +static inline void shasta_mu_intr(struct st_hba *hba, u32 doorbell)
+>> +{
+>
+>Two callsites, waaaaaaaay to big to be inlined.
+>
+><OK, I'll stop going on about overzealous inlining.  Please review all
+>inlined functions.  Unless they are exceedingly small or have a single
+>callsite, they should be uinlined>.
+>
+>
+
+I'll check and fix them.
+
+>> +			if (waitqueue_active(&hba->waitq))
+>> +				wake_up(&hba->waitq);
+>
+>This optimisation can cause missed wakeups unless done with care (addition
+>of memory barriers).  If there's extra locking which makes it safe then OK,
+>but some comment might be needed.
+>
+>> +static int shasta_handshake(struct st_hba *hba)
+>> +{
+>> +	void __iomem *base = hba->mmio_base;
+>> +	struct handshake_frame *h;
+>> +	int i;
+>> +
+>> +	if (readl(base + OMR0) != MU_HANDSHAKE_SIGNATURE) {
+>> +		writel(MU_INBOUND_DOORBELL_HANDSHAKE, base + IDBL);
+>> +		readl(base + IDBL);
+>> +		for (i = 0; readl(base + OMR0) != MU_HANDSHAKE_SIGNATURE
+>> +			&& i < MU_MAX_DELAY_TIME; i++) {
+>> +			rmb();
+>> +			msleep(1);
+>> +		}
+>> +
+>> +		if (i == MU_MAX_DELAY_TIME) {
+>> +			printk(KERN_ERR SHASTA_NAME
+>> +				"(%s): no handshake signature\n",
+>> +				pci_name(hba->pdev));
+>> +			return -1;
+>> +		}
+>> +	}
+>> +
+>> +	udelay(10);
+>> +
+>> +	h = (struct handshake_frame *)(hba->dma_mem + MU_REQ_BUFFER_SIZE);
+>> +	h->rb_phy = cpu_to_le32(hba->dma_handle);
+>> +	h->rb_phy_hi = cpu_to_le32((hba->dma_handle >> 16) >> 16);
+>> +	h->req_sz = cpu_to_le16(sizeof(struct req_msg));
+>> +	h->req_cnt = cpu_to_le16(MU_REQ_COUNT);
+>> +	h->status_sz = cpu_to_le16(sizeof(struct status_msg));
+>> +	h->status_cnt = cpu_to_le16(MU_STATUS_COUNT);
+>> +	shasta_gettime(&h->hosttime);
+>> +	h->partner_type = HMU_PARTNER_TYPE;
+>> +	wmb();
+>
+>Another mystery barrier.
+>
+
+It's same for the "write order" thing. It can be deleted if unnecessary.
+
+>> +	writel(hba->dma_handle + MU_REQ_BUFFER_SIZE, base + IMR0);
+>> +	readl(base + IMR0);
+>> +	writel((hba->dma_handle >> 16) >> 16, base + OMR0); /* 4G border safe */
+>> +	readl(base + OMR0);
+>> +	writel(MU_INBOUND_DOORBELL_HANDSHAKE, base + IDBL);
+>> +	readl(base + IDBL); /* flush */
+>> +
+>> +	udelay(10);
+>> +	for (i = 0; readl(base + OMR0) != MU_HANDSHAKE_SIGNATURE
+>> +		&& i < MU_MAX_DELAY_TIME; i++) {
+>> +		rmb();
+>
+>??
+
+The rmb() here intends to guarantee every readl() to be really effective 
+(directly from hardware), although there is already "volatile".
+
+The megaraid_mbox driver uses this...
+
+I used to observe sporadic handshake failure, so I added this(rmb()).
+
+>
+>> +		msleep(1);
+>> +	}
+>> +
+>> +	if (i == MU_MAX_DELAY_TIME) {
+>> +		printk(KERN_ERR SHASTA_NAME
+>> +			"(%s): no signature after handshake frame\n",
+>> +			pci_name(hba->pdev));
+>> +		return -1;
+>> +	}
+>> +
+>> +	writel(0, base + IMR0);
+>> +	readl(base + IMR0);
+>> +	writel(0, base + OMR0);
+>> +	readl(base + OMR0);
+>> +	writel(0, base + IMR1);
+>> +	readl(base + IMR1);
+>> +	writel(0, base + OMR1);
+>> +	readl(base + OMR1); /* flush */
+>> +	hba->mu_status = MU_STATE_STARTED;
+>> +	return 0;
+>> +}
+>> +
+>> +static int shasta_abort(struct scsi_cmnd *cmd)
+>> +{
+>> +	struct Scsi_Host *host = cmd->device->host;
+>> +	struct st_hba *hba = (struct st_hba *)host->hostdata;
+>> +	u16 tag;
+>> +	void __iomem *base;
+>> +	u32 data;
+>> +	int fail = 0;
+>
+>int result = SUCCESS;
+>
+>> +	unsigned long flags;
+>> +	base = hba->mmio_base;
+>> +	spin_lock_irqsave(host->host_lock, flags);
+>> +
+>> +	for (tag = 0; tag < MU_MAX_REQUEST; tag++)
+>> +		if (hba->ccb[tag].cmd == cmd && (hba->tag & (1 << tag))) {
+>> +			hba->wait_ccb = &(hba->ccb[tag]);
+>> +			break;
+>> +		}
+>> +	if (tag >= MU_MAX_REQUEST) goto out;
+>
+>newline here, please.
+>
+>> +
+>> +	data = readl(base + ODBL);
+>> +	if (data == 0 || data == 0xffffffff) goto fail_out;
+>> +
+>> +	writel(data, base + ODBL);
+>> +	readl(base + ODBL); /* flush */
+>> +
+>> +	shasta_mu_intr(hba, data);
+>> +
+>> + 	if (hba->wait_ccb == NULL) {
+>> + 		printk(KERN_WARNING SHASTA_NAME
+>> +			"(%s): lost interrupt\n", pci_name(hba->pdev));
+>> +		goto out;
+>> +	}
+>> +
+>> +fail_out:
+>> +	hba->wait_ccb->req = NULL; /* nullify the req's future return */
+>> +	hba->wait_ccb = NULL;
+>> +	fail = 1;
+>
+>result = FAILED;
+>
+>> +out:
+>> +	spin_unlock_irqrestore(host->host_lock, flags);
+>> +	return fail ? FAILED : SUCCESS;
+>
+>return result;
+>
+>> +}
+>>
+>> +static int shasta_reset(struct scsi_cmnd *cmd)
+>> +{
+>> +	struct st_hba *hba;
+>> +	int tag;
+>> +	int i = 0;
+>> +	unsigned long flags;
+>> +	hba = (struct st_hba *)cmd->device->host->hostdata;
+>
+>Unneeded cast.
+>
+>> +wait_cmds:
+>> +	spin_lock_irqsave(hba->host->host_lock, flags);
+>> +	for (tag = 0; tag < MU_MAX_REQUEST; tag++)
+>> +		if ((hba->tag & (1 << tag)) && hba->ccb[tag].req != NULL) 
+>> +			break;
+>> +	spin_unlock_irqrestore(hba->host->host_lock, flags);
+>> +	if (tag < MU_MAX_REQUEST) {
+>> +		msleep(1000);
+>> +		if (++i < 10) goto wait_cmds;
+>
+>newline.
+>
+
+OK, I will modify as the comments suggest. Thanks!
