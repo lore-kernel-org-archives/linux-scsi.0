@@ -1,15 +1,15 @@
 From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: [PATCH 6/10] fusion - exclosure misspelled
-Date: Mon, 13 Mar 2006 17:52:23 -0700
-Message-ID: <F331B95B72AFFB4B87467BE1C8E9CF5F36D824@NAMAIL2.ad.lsil.com>
+Subject: [PATCH 7/10] fusion - memory leak, and initializing fields
+Date: Mon, 13 Mar 2006 17:52:26 -0700
+Message-ID: <F331B95B72AFFB4B87467BE1C8E9CF5F36D825@NAMAIL2.ad.lsil.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C64701.8EA41FA2"
+	boundary="----_=_NextPart_001_01C64701.90AE41C5"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:18348 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1751896AbWCNAwd (ORCPT
+Received: from mail0.lsil.com ([147.145.40.20]:19372 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1751896AbWCNAwh (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Mar 2006 19:52:33 -0500
+	Mon, 13 Mar 2006 19:52:37 -0500
 Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,38 +18,59 @@ Cc: James.Bottomley@SteelEye.com, hch@lst.de
 
 This is a multi-part message in MIME format.
 
-------_=_NextPart_001_01C64701.8EA41FA2
+------_=_NextPart_001_01C64701.90AE41C5
 Content-Type: text/plain;
 	charset="US-ASCII"
 Content-Transfer-Encoding: quoted-printable
 
-exclosure should be enclosure
+Changelog:
+(1) fix memory leak: p->phy_info
+(2) initialize device_info and port_info data fields
+(3) initialize the hba firmware handle
+(4) initialize phy_id for attached phy_info data fields
+(5) initialize attached phy_info data fields
 
 Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
 
-------_=_NextPart_001_01C64701.8EA41FA2
+------_=_NextPart_001_01C64701.90AE41C5
 Content-Type: application/octet-stream;
-	name="6_exclosure.patch"
+	name="7_memleak.patch"
 Content-Transfer-Encoding: base64
-Content-Description: 6_exclosure.patch
+Content-Description: 7_memleak.patch
 Content-Disposition: attachment;
-	filename="6_exclosure.patch"
+	filename="7_memleak.patch"
 
 ZGlmZiAtdWFyTiBiL2RyaXZlcnMvbWVzc2FnZS9mdXNpb24vbXB0c2FzLmMgYS9kcml2ZXJzL21l
 c3NhZ2UvZnVzaW9uL21wdHNhcy5jDQotLS0gYi9kcml2ZXJzL21lc3NhZ2UvZnVzaW9uL21wdHNh
-cy5jCTIwMDYtMDMtMTMgMTI6NDg6NTguMDAwMDAwMDAwIC0wNzAwDQorKysgYS9kcml2ZXJzL21l
-c3NhZ2UvZnVzaW9uL21wdHNhcy5jCTIwMDYtMDMtMTMgMTI6NTI6MjcuMDAwMDAwMDAwIC0wNzAw
-DQpAQCAtMjcxLDcgKzI3MSw3IEBADQogfQ0KIA0KIHN0YXRpYyBpbnQNCi1tcHRzYXNfc2FzX2V4
-Y2xvc3VyZV9wZzAoTVBUX0FEQVBURVIgKmlvYywgc3RydWN0IG1wdHNhc19lbmNsb3N1cmUgKmVu
-Y2xvc3VyZSwNCittcHRzYXNfc2FzX2VuY2xvc3VyZV9wZzAoTVBUX0FEQVBURVIgKmlvYywgc3Ry
-dWN0IG1wdHNhc19lbmNsb3N1cmUgKmVuY2xvc3VyZSwNCiAJCXUzMiBmb3JtLCB1MzIgZm9ybV9z
-cGVjaWZpYykNCiB7DQogCUNvbmZpZ0V4dGVuZGVkUGFnZUhlYWRlcl90IGhkcjsNCkBAIC02NTUs
-NyArNjU1LDcgQEANCiAgZm91bmRfaW5mbzoNCiAJbXV0ZXhfdW5sb2NrKCZpb2MtPnNhc190b3Bv
-bG9neV9tdXRleCk7DQogCW1lbXNldCgmZW5jbG9zdXJlX2luZm8sIDAsIHNpemVvZihzdHJ1Y3Qg
-bXB0c2FzX2VuY2xvc3VyZSkpOw0KLQllcnJvciA9IG1wdHNhc19zYXNfZXhjbG9zdXJlX3BnMChp
-b2MsICZlbmNsb3N1cmVfaW5mbywNCisJZXJyb3IgPSBtcHRzYXNfc2FzX2VuY2xvc3VyZV9wZzAo
-aW9jLCAmZW5jbG9zdXJlX2luZm8sDQogCQkJKE1QSV9TQVNfRU5DTE9TX1BHQURfRk9STV9IQU5E
-TEUgPDwNCiAJCQkgTVBJX1NBU19FTkNMT1NfUEdBRF9GT1JNX1NISUZUKSwgZW5jbG9zdXJlX2hh
-bmRsZSk7DQogCWlmICghZXJyb3IpDQo=
+cy5jCTIwMDYtMDMtMTMgMTI6NTI6MjcuMDAwMDAwMDAwIC0wNzAwDQorKysgYS9kcml2ZXJzL21l
+c3NhZ2UvZnVzaW9uL21wdHNhcy5jCTIwMDYtMDMtMTMgMTM6NDY6MDMuMDAwMDAwMDAwIC0wNzAw
+DQpAQCAtNzQ5LDYgKzc0OSw5IEBADQogCQlnb3RvIG91dF9mcmVlX2NvbnNpc3RlbnQ7DQogCX0N
+CiANCisJaWYgKHBvcnRfaW5mby0+bnVtX3BoeXMpDQorCQlwb3J0X2luZm8tPmhhbmRsZSA9DQor
+CQkgICAgbGUxNl90b19jcHUoYnVmZmVyLT5QaHlEYXRhWzBdLkNvbnRyb2xsZXJEZXZIYW5kbGUp
+Ow0KIAlmb3IgKGkgPSAwOyBpIDwgcG9ydF9pbmZvLT5udW1fcGh5czsgaSsrKSB7DQogCQltcHRz
+YXNfcHJpbnRfcGh5X2RhdGEoJmJ1ZmZlci0+UGh5RGF0YVtpXSk7DQogCQlwb3J0X2luZm8tPnBo
+eV9pbmZvW2ldLnBoeV9pZCA9IGk7DQpAQCAtODU1LDYgKzg1OCw3IEBADQogCWNmZy5kaXIgPSAw
+OwkvKiByZWFkICovDQogCWNmZy50aW1lb3V0ID0gMTA7DQogDQorCW1lbXNldChkZXZpY2VfaW5m
+bywgMCwgc2l6ZW9mKHN0cnVjdCBtcHRzYXNfZGV2aW5mbykpOw0KIAllcnJvciA9IG1wdF9jb25m
+aWcoaW9jLCAmY2ZnKTsNCiAJaWYgKGVycm9yKQ0KIAkJZ290byBvdXQ7DQpAQCAtOTI1LDYgKzky
+OSw3IEBADQogCWNmZy5kaXIgPSAwOwkvKiByZWFkICovDQogCWNmZy50aW1lb3V0ID0gMTA7DQog
+DQorCW1lbXNldChwb3J0X2luZm8sIDAsIHNpemVvZihzdHJ1Y3QgbXB0c2FzX3BvcnRpbmZvKSk7
+DQogCWVycm9yID0gbXB0X2NvbmZpZyhpb2MsICZjZmcpOw0KIAlpZiAoZXJyb3IpDQogCQlnb3Rv
+IG91dDsNCkBAIC0xMzM0LDYgKzEzMzksOCBAQA0KIAkJCQkoTVBJX1NBU19ERVZJQ0VfUEdBRF9G
+T1JNX0hBTkRMRSA8PA0KIAkJCQkgTVBJX1NBU19ERVZJQ0VfUEdBRF9GT1JNX1NISUZUKSwNCiAJ
+CQkJcG9ydF9pbmZvLT5waHlfaW5mb1tpXS5hdHRhY2hlZC5oYW5kbGUpOw0KKwkJCXBvcnRfaW5m
+by0+cGh5X2luZm9baV0uYXR0YWNoZWQucGh5X2lkID0NCisJCQkgICAgcG9ydF9pbmZvLT5waHlf
+aW5mb1tpXS5waHlfaWQ7DQogCQl9DQogDQogCQkvKg0KQEAgLTEzNjAsNiArMTM2Nyw3IEBADQog
+CXJldHVybiAwOw0KIA0KICBvdXRfZnJlZV9wb3J0X2luZm86DQorCWtmcmVlKHBvcnRfaW5mby0+
+cGh5X2luZm8pOw0KIAlrZnJlZShwb3J0X2luZm8pOw0KICBvdXQ6DQogCXJldHVybiBlcnJvcjsN
+CkBAIC0xNDg1LDYgKzE0OTMsNyBAQA0KIA0KIAkJaWYgKHBoeV9pbmZvLT5ycGh5KSB7DQogCQkJ
+c2FzX3JwaHlfZGVsZXRlKHBoeV9pbmZvLT5ycGh5KTsNCisJCQltZW1zZXQoJnBoeV9pbmZvLT5h
+dHRhY2hlZCwgMCwgc2l6ZW9mKHN0cnVjdCBtcHRzYXNfZGV2aW5mbykpOw0KIAkJCXBoeV9pbmZv
+LT5ycGh5ID0gTlVMTDsNCiAJCX0NCiAJCWJyZWFrOw0KQEAgLTE5NTUsNiArMTk2NCw4IEBADQog
+CW11dGV4X2xvY2soJmlvYy0+c2FzX3RvcG9sb2d5X211dGV4KTsNCiAJbGlzdF9mb3JfZWFjaF9l
+bnRyeV9zYWZlKHAsIG4sICZpb2MtPnNhc190b3BvbG9neSwgbGlzdCkgew0KIAkJbGlzdF9kZWwo
+JnAtPmxpc3QpOw0KKwkJaWYgKHAtPnBoeV9pbmZvKQ0KKwkJCWtmcmVlKHAtPnBoeV9pbmZvKTsN
+CiAJCWtmcmVlKHApOw0KIAl9DQogCW11dGV4X3VubG9jaygmaW9jLT5zYXNfdG9wb2xvZ3lfbXV0
+ZXgpOw0K
 
-------_=_NextPart_001_01C64701.8EA41FA2--
+------_=_NextPart_001_01C64701.90AE41C5--
