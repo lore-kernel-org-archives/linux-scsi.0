@@ -1,29 +1,28 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH ] drivers/scsi/scsi.c - export reprobe
-Date: Tue, 14 Mar 2006 16:08:28 +0000
-Message-ID: <20060314160828.GA18239@infradead.org>
-References: <F331B95B72AFFB4B87467BE1C8E9CF5F36D82A@NAMAIL2.ad.lsil.com> <20060314153524.GB8071@suse.de>
+From: "Moore, Eric" <Eric.Moore@lsil.com>
+Subject: [PATCH 4/10] fusion - removing target_id/bus_id from the VirtDevice structure
+Date: Tue, 14 Mar 2006 09:14:09 -0700
+Message-ID: <F331B95B72AFFB4B87467BE1C8E9CF5F36D926@NAMAIL2.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:49557 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1751026AbWCNQIe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Mar 2006 11:08:34 -0500
-Content-Disposition: inline
-In-Reply-To: <20060314153524.GB8071@suse.de>
+Received: from mail0.lsil.com ([147.145.40.20]:14986 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1751953AbWCNQO0 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Mar 2006 11:14:26 -0500
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <gregkh@suse.de>
-Cc: "Moore, Eric" <Eric.Moore@lsil.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James.Bottomley@SteelEye.com, hch@lst.de
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@SteelEye.com, hch@lst.de, mdr@sgi.com
 
-On Tue, Mar 14, 2006 at 07:35:24AM -0800, Greg KH wrote:
-> On Mon, Mar 13, 2006 at 05:52:43PM -0700, Moore, Eric wrote:
-> > Request for exporting device_reprobe - 
-> > This is scsi wrapper portion.
-> 
-> Is this even really needed?  It's just a single pointer dereference...
+It makes no sense in keeping the target_id and bus_id
+in the VirtDevice structure, when it can be obtained
+from the VirtTarget structure.  
 
-We don't want SCSI LLDDs to know about implementations details like
-sdev->sdev_gendev.  Of course an inline or a macro could do this aswell.
+In addition, this patch fix's couple compilation bugs 
+in mptfc.c when MPT_DEBUG_FC is enabled. This
+provided by Micheal Reed.
 
+Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
