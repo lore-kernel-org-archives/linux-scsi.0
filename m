@@ -1,79 +1,61 @@
-From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: [PATCH 3/10] fusion - static fix's
-Date: Tue, 14 Mar 2006 09:14:06 -0700
-Message-ID: <F331B95B72AFFB4B87467BE1C8E9CF5F36D925@NAMAIL2.ad.lsil.com>
+From: Jan-Benedict Glaw <jbglaw@lug-owl.de>
+Subject: Re: [PATCH ] drivers/base/bus.c - export reprobe
+Date: Tue, 14 Mar 2006 17:27:25 +0100
+Message-ID: <20060314162725.GQ32065@lug-owl.de>
+References: <F331B95B72AFFB4B87467BE1C8E9CF5F36D938@NAMAIL2.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C64782.5202498D"
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="y2MHPAl/EzyWgzIZ"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:61067 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1751331AbWCNQVn (ORCPT
+Received: from lug-owl.de ([195.71.106.12]:12515 "EHLO lug-owl.de")
+	by vger.kernel.org with ESMTP id S1751834AbWCNQ11 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Mar 2006 11:21:43 -0500
-Content-class: urn:content-classes:message
+	Tue, 14 Mar 2006 11:27:27 -0500
+Content-Disposition: inline
+In-Reply-To: <F331B95B72AFFB4B87467BE1C8E9CF5F36D938@NAMAIL2.ad.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@SteelEye.com, hch@lst.de, bunk@stusta.de
+To: "Moore, Eric" <Eric.Moore@lsil.com>
+Cc: Greg KH <gregkh@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James.Bottomley@SteelEye.com, hch@lst.de
 
-This is a multi-part message in MIME format.
 
-------_=_NextPart_001_01C64782.5202498D
-Content-Type: text/plain;
-	charset="US-ASCII"
+--y2MHPAl/EzyWgzIZ
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-Patch previously provided from Adrian Bunk <bunk@stusta.de>,
-moving some functions to static.  This is already in
-the -mm tree.
+On Tue, 2006-03-14 09:18:18 -0700, Moore, Eric <Eric.Moore@lsil.com> wrote:
+> On Tuesday, March 14, 2006 8:35 AM,  Greg KH wrote:
+> > base64 for the attachment with DOS line ends?  ugh, can you please fix
+> > this up and resend?
+>=20
+> Here is repost of patch due to dos line endings.
 
-Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
+Mangled again...
 
-------_=_NextPart_001_01C64782.5202498D
-Content-Type: application/octet-stream;
-	name="3_static.patch"
-Content-Transfer-Encoding: base64
-Content-Description: 3_static.patch
-Content-Disposition: attachment;
-	filename="3_static.patch"
+MfG, JBG
 
-ZGlmZiAtdWFyTiBiL2RyaXZlcnMvbWVzc2FnZS9mdXNpb24vbXB0YmFzZS5jIGEvZHJpdmVycy9t
-ZXNzYWdlL2Z1c2lvbi9tcHRiYXNlLmMKLS0tIGIvZHJpdmVycy9tZXNzYWdlL2Z1c2lvbi9tcHRi
-YXNlLmMJMjAwNi0wMy0xMyAxMjowMToxMi4wMDAwMDAwMDAgLTA3MDAKKysrIGEvZHJpdmVycy9t
-ZXNzYWdlL2Z1c2lvbi9tcHRiYXNlLmMJMjAwNi0wMy0xMyAxMjowMTozNC4wMDAwMDAwMDAgLTA3
-MDAKQEAgLTE4MCw2ICsxODAsNyBAQAogc3RhdGljIHZvaWQJbXB0X2ZjX2xvZ19pbmZvKE1QVF9B
-REFQVEVSICppb2MsIHUzMiBsb2dfaW5mbyk7CiBzdGF0aWMgdm9pZAltcHRfc3BpX2xvZ19pbmZv
-KE1QVF9BREFQVEVSICppb2MsIHUzMiBsb2dfaW5mbyk7CiBzdGF0aWMgdm9pZAltcHRfc2FzX2xv
-Z19pbmZvKE1QVF9BREFQVEVSICppb2MsIHUzMiBsb2dfaW5mbyk7CitzdGF0aWMgaW50CW1wdF9y
-ZWFkX2lvY19wZ18zKE1QVF9BREFQVEVSICppb2MpOwogCiAvKiBtb2R1bGUgZW50cnkgcG9pbnQg
-Ki8KIHN0YXRpYyBpbnQgIF9faW5pdCAgICBmdXNpb25faW5pdCAgKHZvaWQpOwpAQCAtNDg3MSw3
-ICs0ODcyLDcgQEAKIAlyZXR1cm4gcmM7CiB9CiAKLWludAorc3RhdGljIGludAogbXB0X3JlYWRf
-aW9jX3BnXzMoTVBUX0FEQVBURVIgKmlvYykKIHsKIAlJT0NQYWdlM190CQkqcElvYzM7CkBAIC02
-NDUzLDcgKzY0NTQsNiBAQAogRVhQT1JUX1NZTUJPTChtcHRfSGFyZFJlc2V0SGFuZGxlcik7CiBF
-WFBPUlRfU1lNQk9MKG1wdF9jb25maWcpOwogRVhQT1JUX1NZTUJPTChtcHRfZmluZEltVm9sdW1l
-cyk7Ci1FWFBPUlRfU1lNQk9MKG1wdF9yZWFkX2lvY19wZ18zKTsKIEVYUE9SVF9TWU1CT0wobXB0
-X2FsbG9jX2Z3X21lbW9yeSk7CiBFWFBPUlRfU1lNQk9MKG1wdF9mcmVlX2Z3X21lbW9yeSk7CiBF
-WFBPUlRfU1lNQk9MKG1wdGJhc2Vfc2FzX3BlcnNpc3Rfb3BlcmF0aW9uKTsKZGlmZiAtdWFyTiBi
-L2RyaXZlcnMvbWVzc2FnZS9mdXNpb24vbXB0YmFzZS5oIGEvZHJpdmVycy9tZXNzYWdlL2Z1c2lv
-bi9tcHRiYXNlLmgKLS0tIGIvZHJpdmVycy9tZXNzYWdlL2Z1c2lvbi9tcHRiYXNlLmgJMjAwNi0w
-My0xMyAxMTo0NzoxNC4wMDAwMDAwMDAgLTA3MDAKKysrIGEvZHJpdmVycy9tZXNzYWdlL2Z1c2lv
-bi9tcHRiYXNlLmgJMjAwNi0wMy0xMyAxMTo1NzowOC4wMDAwMDAwMDAgLTA3MDAKQEAgLTEwMjcs
-NyArMTAyNyw2IEBACiBleHRlcm4gdm9pZAkgbXB0X2FsbG9jX2Z3X21lbW9yeShNUFRfQURBUFRF
-UiAqaW9jLCBpbnQgc2l6ZSk7CiBleHRlcm4gdm9pZAkgbXB0X2ZyZWVfZndfbWVtb3J5KE1QVF9B
-REFQVEVSICppb2MpOwogZXh0ZXJuIGludAkgbXB0X2ZpbmRJbVZvbHVtZXMoTVBUX0FEQVBURVIg
-KmlvYyk7Ci1leHRlcm4gaW50CSBtcHRfcmVhZF9pb2NfcGdfMyhNUFRfQURBUFRFUiAqaW9jKTsK
-IGV4dGVybiBpbnQJIG1wdGJhc2Vfc2FzX3BlcnNpc3Rfb3BlcmF0aW9uKE1QVF9BREFQVEVSICpp
-b2MsIHU4IHBlcnNpc3Rfb3Bjb2RlKTsKIGV4dGVybiBpbnQJIG1wdGJhc2VfR2V0RmNQb3J0UGFn
-ZTAoTVBUX0FEQVBURVIgKmlvYywgaW50IHBvcnRudW0pOwogCmRpZmYgLXVhck4gYi9kcml2ZXJz
-L21lc3NhZ2UvZnVzaW9uL21wdGN0bC5jIGEvZHJpdmVycy9tZXNzYWdlL2Z1c2lvbi9tcHRjdGwu
-YwotLS0gYi9kcml2ZXJzL21lc3NhZ2UvZnVzaW9uL21wdGN0bC5jCTIwMDYtMDMtMTMgMTE6NTA6
-MzAuMDAwMDAwMDAwIC0wNzAwCisrKyBhL2RyaXZlcnMvbWVzc2FnZS9mdXNpb24vbXB0Y3RsLmMJ
-MjAwNi0wMy0xMyAxMTo1Njo0OS4wMDAwMDAwMDAgLTA3MDAKQEAgLTE0MCw3ICsxNDAsNyBAQAog
-ICogRXZlbnQgSGFuZGxlciBmdW5jdGlvbgogICovCiBzdGF0aWMgaW50IG1wdGN0bF9ldmVudF9w
-cm9jZXNzKE1QVF9BREFQVEVSICppb2MsIEV2ZW50Tm90aWZpY2F0aW9uUmVwbHlfdCAqcEV2UmVw
-bHkpOwotc3RydWN0IGZhc3luY19zdHJ1Y3QgKmFzeW5jX3F1ZXVlPU5VTEw7CitzdGF0aWMgc3Ry
-dWN0IGZhc3luY19zdHJ1Y3QgKmFzeW5jX3F1ZXVlPU5VTEw7CiAKIC8qPS09LT0tPS09LT0tPS09
-LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0t
-PS09Ki8KIC8qCg==
+--=20
+Jan-Benedict Glaw       jbglaw@lug-owl.de    . +49-172-7608481             =
+_ O _
+"Eine Freie Meinung in  einem Freien Kopf    | Gegen Zensur | Gegen Krieg  =
+_ _ O
+ f=C3=BCr einen Freien Staat voll Freier B=C3=BCrger"  | im Internet! |   i=
+m Irak!   O O O
+ret =3D do_actions((curr | FREE_SPEECH) & ~(NEW_COPYRIGHT_LAW | DRM | TCPA)=
+);
 
-------_=_NextPart_001_01C64782.5202498D--
+--y2MHPAl/EzyWgzIZ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFEFu7tHb1edYOZ4bsRAjo4AJ9WZwaJfnAdrrMsEX0BRrAZZfySMQCeLOCv
+HJgLIg8PoCZtNoebzQwyUww=
+=DWmt
+-----END PGP SIGNATURE-----
+
+--y2MHPAl/EzyWgzIZ--
