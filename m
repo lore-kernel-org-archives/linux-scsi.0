@@ -1,60 +1,47 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: [PATCH] scsi: move target_destroy call
-Date: Tue, 14 Mar 2006 11:18:46 -0800
-Message-ID: <20060314191846.GA16127@us.ibm.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH 2.6.16-rc6] Promise SuperTrak driver
+Date: Tue, 14 Mar 2006 13:04:30 -0700
+Message-ID: <20060314200430.GW1653@parisc-linux.org>
+References: <20060313224112.GA19513@havoc.gtf.org> <20060313154236.32293cf9.akpm@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.152]:18893 "EHLO
-	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S1752032AbWCNTUC
+Received: from palinux.external.hp.com ([192.25.206.14]:65004 "EHLO
+	palinux.hppa") by vger.kernel.org with ESMTP id S1751337AbWCNUEg
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Mar 2006 14:20:02 -0500
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e34.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id k2EJK2qW030673
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Mar 2006 14:20:02 -0500
-Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
-	by d03relay04.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k2EJMuHd168562
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Mar 2006 12:22:56 -0700
-Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av01.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k2EJK0J8029223
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Mar 2006 12:20:01 -0700
-Received: from hmsbounty.us.ibm.com (dyn9047022094.beaverton.ibm.com [9.47.22.94])
-	by d03av01.boulder.ibm.com (8.12.11/8.12.11) with ESMTP id k2EJK0q8029159
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Mar 2006 12:20:00 -0700
+	Tue, 14 Mar 2006 15:04:36 -0500
 Content-Disposition: inline
+In-Reply-To: <20060313154236.32293cf9.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: Andrew Morton <akpm@osdl.org>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org, promise_linux@promise.com, linux-kernel@vger.kernel.org
 
-This patch moves the calling of target_destroy next to the list_del. This
-closed a race being seen while doing a device add on the aic7xxx.
+On Mon, Mar 13, 2006 at 03:42:36PM -0800, Andrew Morton wrote:
+> > +#include <linux/irq.h>
+> 
+> Can't include linux/irq.h from generic code (we really ought to fix that).
 
-Signed-off-by: Mike Anderson <andmike@us.ibm.com>
+In a sense we have -- everybody should include <linux/interrupt.h> and
+not <*/irq.h>.  Perhaps we need to poison the includes.
 
- drivers/scsi/scsi_scan.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
+> > +static inline u16 shasta_alloc_tag(u32 *bitmap)
+> > +{
+> > +	u16 i;
+> > +	for (i = 0; i < TAG_BITMAP_LENGTH; i++) 
+> > +		if (!((*bitmap) & (1 << i))) {
+> > +			*bitmap |= (1 << i);
+> > +			return i;
+> > +		}
+> > +
+> > +	return TAG_BITMAP_LENGTH;
+> > +}
+> 
+> This is too large to be inlined.
 
-Index: aic94xx-sas-2.6-patched/drivers/scsi/scsi_scan.c
-===================================================================
---- aic94xx-sas-2.6-patched.orig/drivers/scsi/scsi_scan.c	2006-03-12 14:39:27.000000000 -0800
-+++ aic94xx-sas-2.6-patched/drivers/scsi/scsi_scan.c	2006-03-14 11:09:00.000000000 -0800
-@@ -288,10 +288,7 @@ static void scsi_target_dev_release(stru
- {
- 	struct device *parent = dev->parent;
- 	struct scsi_target *starget = to_scsi_target(dev);
--	struct Scsi_Host *shost = dev_to_shost(parent);
- 
--	if (shost->hostt->target_destroy)
--		shost->hostt->target_destroy(starget);
- 	kfree(starget);
- 	put_device(parent);
- }
-@@ -416,6 +413,8 @@ static void scsi_target_reap_usercontext
- 	device_del(&starget->dev);
- 	transport_destroy_device(&starget->dev);
- 	spin_lock_irqsave(shost->host_lock, flags);
-+	if (shost->hostt->target_destroy)
-+		shost->hostt->target_destroy(starget);
- 	list_del_init(&starget->siblings);
- 	spin_unlock_irqrestore(shost->host_lock, flags);
- 	put_device(&starget->dev);
+And if I read the driver right, is unnecessary code.  It could just use
+the midlayer tag code (ok, not scsi_populate_tag_msg() which is
+SPI-specific, but scsi_activate_tcq(), scsi_deactivate_tcq(),
+scsi_find_tag(), scsi_set_tag_type(), and scsi_get_tag_type() should all
+work, being thin wrappers around the block layer functionality.
+
