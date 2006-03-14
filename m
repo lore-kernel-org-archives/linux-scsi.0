@@ -1,498 +1,265 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [PATCH 2.6.16-rc6] Promise SuperTrak driver
-Date: Mon, 13 Mar 2006 15:42:36 -0800
-Message-ID: <20060313154236.32293cf9.akpm@osdl.org>
-References: <20060313224112.GA19513@havoc.gtf.org>
+From: "Moore, Eric" <Eric.Moore@lsil.com>
+Subject: [PATCH 1/10] fusion - loginfo update
+Date: Mon, 13 Mar 2006 17:52:05 -0700
+Message-ID: <F331B95B72AFFB4B87467BE1C8E9CF5F36D81F@NAMAIL2.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="----_=_NextPart_001_01C64701.83FF0443"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:25009 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1750797AbWCMXpF (ORCPT
+Received: from mail0.lsil.com ([147.145.40.20]:12460 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1751893AbWCNAwY (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Mar 2006 18:45:05 -0500
-In-Reply-To: <20060313224112.GA19513@havoc.gtf.org>
+	Mon, 13 Mar 2006 19:52:24 -0500
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-scsi@vger.kernel.org, promise_linux@promise.com, linux-kernel@vger.kernel.org
-
-Jeff Garzik <jeff@garzik.org> wrote:
->
-> All,
-> 
-> Here follows the 'shasta' driver, contributed by Promise, for review.
-> They've asked me to make the "open source introduction" for them.
-> The SuperTrak hardware is a controller where you talk to a firmware
-> via SCSI CDBs.
-> 
-> It's been through a couple rounds of review by me, so its pretty clean
-> already.  I already spotted another couple niggles though: my mispelling
-> of 'SuperTrek', and the deprecated use of pci_module_init().
-> 
-> Anyway, comment away...  The driver maintainer is CC'd.
-
-Hopefully a Signed-off-by: is forthcoming.
-
-> The 'shasta' branch of
-> git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/misc-2.6.git
-> 
-
-Should I add that to -mm?
-
-Looks generally good to me.  Minor comments:
-
-
-> +config SCSI_SHASTA
-> +	tristate "Promise SuperTrek EX8350/8300/16350/16300 support"
-> +	depends on PCI && SCSI
-
-Might it also depend upon BLK_DEV_SD?
-
-> +#include <linux/config.h>
-> +#include <linux/fs.h>
-> +#include <linux/init.h>
-> +#include <linux/errno.h>
-> +#include <linux/kernel.h>
-> +#include <linux/ioport.h>
-> +#include <linux/delay.h>
-> +#include <linux/sched.h>
-> +#include <linux/time.h>
-> +#include <linux/pci.h>
-> +#include <linux/irq.h>
-
-Can't include linux/irq.h from generic code (we really ought to fix that).
-
-> +#define ST_DRIVER_DATE "(Mar 6, 2006)"
-> +#define ST_DRIVER_VERSION "2.9.0.13"
-> +#define VER_MAJOR 		2	
-> +#define VER_MINOR 		9
-> +#define OEM 			0
-> +#define BUILD_VER 		13
-
-This info tends to go out of date quickly.
-
-These identifires are rather generic-sounding and might clash with others
-at some stage.
-
-
-> +struct st_sgitem {
-> +struct st_sgtable {
-> +struct handshake_frame {
-> +struct req_msg {
-> +struct status_msg {
-
-Has this all been tested on big-endian hardware?
-
-> +static char console_inq_page[] =
-
-const?
-
-> +{
-> +	0x03,0x00,0x03,0x03,0xFA,0x00,0x00,0x30,
-> +	0x50,0x72,0x6F,0x6D,0x69,0x73,0x65,0x20,	/* "Promise " */
-> +	0x52,0x41,0x49,0x44,0x20,0x43,0x6F,0x6E,	/* "RAID Con" */
-> +	0x73,0x6F,0x6C,0x65,0x20,0x20,0x20,0x20,	/* "sole    " */
-> +	0x31,0x2E,0x30,0x30,0x20,0x20,0x20,0x20,	/* "1.00    " */
-> +	0x53,0x58,0x2F,0x52,0x53,0x41,0x46,0x2D,	/* "SX/RSAF-" */
-> +	0x54,0x45,0x31,0x2E,0x30,0x30,0x20,0x20,	/* "TE1.00  " */
-> +	0x0C,0x20,0x20,0x20,0x20,0x20,0x20,0x20
-> +};
-> +
-> +MODULE_AUTHOR("Ed Lin");
-> +MODULE_DESCRIPTION("Promise Technology SuperTrak EX Controllers");
-> +MODULE_LICENSE("GPL");
-> +MODULE_VERSION(ST_DRIVER_VERSION);
-> +
-> ...
->
-> +static inline u16 shasta_alloc_tag(u32 *bitmap)
-> +{
-> +	u16 i;
-> +	for (i = 0; i < TAG_BITMAP_LENGTH; i++) 
-> +		if (!((*bitmap) & (1 << i))) {
-> +			*bitmap |= (1 << i);
-> +			return i;
-> +		}
-> +
-> +	return TAG_BITMAP_LENGTH;
-> +}
-
-This is too large to be inlined.
-
-> +static inline void shasta_free_tag(u32 *bitmap, u16 tag)
-> +{
-> +	*bitmap &= ~(1 << tag);
-> +}
-
-What locking is used here?  hba->host->host_lock?
-
-Please comment that, and check it.  Consider using clear_bit or __clear_bit.
-
-> +static inline struct status_msg *shasta_get_status(struct st_hba *hba)
-> +{
-> +	struct status_msg *status = 
-> +		hba->status_buffer + hba->status_tail;
-> +
-> +	++hba->status_tail;
-> +	hba->status_tail %= MU_STATUS_COUNT;
-> +
-> +	return status;
-> +}
-> +
-> +static inline struct req_msg *shasta_alloc_req(struct st_hba *hba)
-> +{
-> +	struct req_msg *req = ((struct req_msg *)hba->dma_mem) +
-> +		hba->req_head;
-> +
-> +	++hba->req_head;
-> +	hba->req_head %= MU_REQ_COUNT;
-> +
-> +	return req;
-> +}
-
-This is the awkward way of managing a ring buffer.  It's simpler to let the
-head and tail incides wrap up to 0xffffffff and only mask them when
-actually using them as indices.   That way,
-
-	if (tail-head == size)
-		buffer is full
-
-	if (tail-head == 0)
-		buffer is empty
-
-in fact, at all times,
-
-	tail-head == items_in_buffer
-
-> +static inline void shasta_map_sg(struct st_hba *hba,
-> +	struct req_msg *req, struct scsi_cmnd *cmd)
-> +{
-> +	struct pci_dev *pdev = hba->pdev;
-> +	dma_addr_t dma_handle;
-> +	struct scatterlist *src;
-> +	struct st_sgtable *dst;
-> +	int i;
-> +
-> +	dst = (struct st_sgtable *)req->variable;
-> +	dst->max_sg_count = cpu_to_le16(ST_MAX_SG);
-> +	dst->sz_in_byte = cpu_to_le32(cmd->request_bufflen);
-> +
-> +	if (cmd->use_sg) {
-> +		src = (struct scatterlist *) cmd->request_buffer;
-> +		dst->sg_count = cpu_to_le16((u16)pci_map_sg(pdev, src,
-> +			cmd->use_sg, cmd->sc_data_direction));
-> +
-> +		for (i = 0; i < dst->sg_count; i++, src++) {
-> +			dst->table[i].count = cpu_to_le32((u32)sg_dma_len(src));
-> +			dst->table[i].addr = 
-> +				cpu_to_le32(sg_dma_address(src) & 0xffffffff);
-
-What does that 0xffffffff do?
-
-Should it be DMA_32BIT_MASK?
-
-> +			dst->table[i].addr_hi = 
-> +				cpu_to_le32((sg_dma_address(src) >> 16) >> 16);
-> +			dst->table[i].ctrl = SG_CF_64B | SG_CF_HOST;
-> +    		}
-> +		dst->table[--i].ctrl |= SG_CF_EOT;
-> +		return;
-> +	}
-> +
-> +	dma_handle = pci_map_single(pdev, cmd->request_buffer,
-> +		cmd->request_bufflen, cmd->sc_data_direction);
-> +	cmd->SCp.dma_handle = dma_handle;
-> +
-> +	dst->sg_count = cpu_to_le16(1);
-> +	dst->table[0].addr = cpu_to_le32(dma_handle & 0xffffffff);
-> +	dst->table[0].addr_hi = cpu_to_le32((dma_handle >> 16) >> 16);
-> +	dst->table[0].count = cpu_to_le32((u32)cmd->request_bufflen);
-> +	dst->table[0].ctrl = SG_CF_EOT | SG_CF_64B | SG_CF_HOST;
-> +}
-> +
-> +static int shasta_direct_cp(struct scsi_cmnd *cmd, void *src, unsigned int len)
-> +{
-> +	void *dest;
-> +	unsigned int cp_len;
-> +	struct scatterlist *sg = cmd->request_buffer;
-> +
-> +	if (cmd->use_sg) {
-> +		dest = kmap_atomic(sg->page, KM_IRQ0) + sg->offset;
-
-Please ensure that all usage of KM_IRQn always happens under
-local_iq_disable().  If it doesn't, we have a nasty subtle bug.  (From my
-quick reading we're OK, but please check).
-
-
-> +		cp_len = min(sg->length, len);
-> +	} else {
-> +		dest = cmd->request_buffer;
-> +		cp_len = min(cmd->request_bufflen, len);
-> +	}
-> +
-> +	memcpy(dest, src, cp_len);
-> +
-> +	if (cmd->use_sg) 
-> +		kunmap_atomic(dest - sg->offset, KM_IRQ0);
-> +	return cp_len == len;
-> +}
-> +
-> ...
->
-> +static inline void
-> +shasta_send_cmd(struct st_hba *hba, struct req_msg *req, u16 tag)
-> +{
-> +	req->tag = cpu_to_le16(tag);
-> +	req->task_attr = TASK_ATTRIBUTE_SIMPLE;
-> +	req->task_manage = 0; /* not supported yet */
-> +	req->payload_sz = (u8)((sizeof(struct req_msg))/sizeof(u32));
-> +
-> +	hba->ccb[tag].req = req;
-> +	hba->out_req_cnt++;
-> +	wmb();
-> +
-> +	writel(hba->req_head, hba->mmio_base + IMR0);
-> +	writel(MU_INBOUND_DOORBELL_REQHEADCHANGED, hba->mmio_base + IDBL);
-> +	readl(hba->mmio_base + IDBL); /* flush */
-> +}
-
-What is the wmb() for?  Flushing memory for the upcoming DMA?  That's not
-what it's for.
-
-When adding any sort of open-coded barrier, please always add a comment
-explaining why it is there.
-
-This function has two callsites and should be uninlined.
-
-> +static int
-> +shasta_queuecommand(struct scsi_cmnd *cmd, void (* fn)(struct scsi_cmnd *))
-> +{
-> +	struct st_hba *hba;
-> + 	struct Scsi_Host *host;
-> +	unsigned int id,lun;
-> +	struct req_msg *req;
-> +	u16 tag;
-> +	host = cmd->device->host;
-> +	id = cmd->device->id;
-> +	lun = cmd->device->channel; /* firmware lun issue work around */
-> +	hba = (struct st_hba *)host->hostdata;
-
-Unneeded typecast.
-
-> +	switch (cmd->cmnd[0]) {
-> +	case READ_6:
-> +	case WRITE_6:
-> +		cmd->cmnd[9] = 0;
-> +		cmd->cmnd[8] = cmd->cmnd[4];
-> +		cmd->cmnd[7] = 0;
-> +		cmd->cmnd[6] = 0;
-> +		cmd->cmnd[5] = cmd->cmnd[3];
-> +		cmd->cmnd[4] = cmd->cmnd[2];
-> +		cmd->cmnd[3] = cmd->cmnd[1] & 0x1f;
-> +		cmd->cmnd[2] = 0;
-> +		cmd->cmnd[1] &= 0xe0;
-> +		cmd->cmnd[0] += READ_10 - READ_6;
-> +		break;
-> +	case MODE_SENSE:
-> +	{
-> +		char mode_sense[4] = { 3, 0, 0, 0 };
-
-static?
-
-> +		shasta_direct_cp(cmd, mode_sense, sizeof(mode_sense));
-> +		cmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
-> +		fn(cmd);
-> +		return 0;
-> +	}
-> +	case MODE_SENSE_10:
-> +	{
-> +		char mode_sense10[8] = { 0, 6, 0, 0, 0, 0, 0, 0 };
-
-static?
-
-> +static inline void shasta_unmap_sg(struct st_hba *hba, struct scsi_cmnd *cmd)
-> +{
-> +	dma_addr_t dma_handle;
-> +	if (cmd->sc_data_direction != DMA_NONE) {
-> + 		if (cmd->use_sg) {
-> +			pci_unmap_sg(hba->pdev, cmd->request_buffer,
-> +				cmd->use_sg, cmd->sc_data_direction);
-> +		} else {
-> + 			dma_handle = cmd->SCp.dma_handle;
-> +			pci_unmap_single(hba->pdev, dma_handle,
-> +				cmd->request_bufflen, cmd->sc_data_direction);
-> + 		}
-> +	}
-> +}
-
-Three callsites, please uninline.
-
-> +
-> +static inline void shasta_mu_intr(struct st_hba *hba, u32 doorbell)
-> +{
-
-Two callsites, waaaaaaaay to big to be inlined.
-
-<OK, I'll stop going on about overzealous inlining.  Please review all
-inlined functions.  Unless they are exceedingly small or have a single
-callsite, they should be uinlined>.
-
-
-> +			if (waitqueue_active(&hba->waitq))
-> +				wake_up(&hba->waitq);
-
-This optimisation can cause missed wakeups unless done with care (addition
-of memory barriers).  If there's extra locking which makes it safe then OK,
-but some comment might be needed.
-
-> +static int shasta_handshake(struct st_hba *hba)
-> +{
-> +	void __iomem *base = hba->mmio_base;
-> +	struct handshake_frame *h;
-> +	int i;
-> +
-> +	if (readl(base + OMR0) != MU_HANDSHAKE_SIGNATURE) {
-> +		writel(MU_INBOUND_DOORBELL_HANDSHAKE, base + IDBL);
-> +		readl(base + IDBL);
-> +		for (i = 0; readl(base + OMR0) != MU_HANDSHAKE_SIGNATURE
-> +			&& i < MU_MAX_DELAY_TIME; i++) {
-> +			rmb();
-> +			msleep(1);
-> +		}
-> +
-> +		if (i == MU_MAX_DELAY_TIME) {
-> +			printk(KERN_ERR SHASTA_NAME
-> +				"(%s): no handshake signature\n",
-> +				pci_name(hba->pdev));
-> +			return -1;
-> +		}
-> +	}
-> +
-> +	udelay(10);
-> +
-> +	h = (struct handshake_frame *)(hba->dma_mem + MU_REQ_BUFFER_SIZE);
-> +	h->rb_phy = cpu_to_le32(hba->dma_handle);
-> +	h->rb_phy_hi = cpu_to_le32((hba->dma_handle >> 16) >> 16);
-> +	h->req_sz = cpu_to_le16(sizeof(struct req_msg));
-> +	h->req_cnt = cpu_to_le16(MU_REQ_COUNT);
-> +	h->status_sz = cpu_to_le16(sizeof(struct status_msg));
-> +	h->status_cnt = cpu_to_le16(MU_STATUS_COUNT);
-> +	shasta_gettime(&h->hosttime);
-> +	h->partner_type = HMU_PARTNER_TYPE;
-> +	wmb();
-
-Another mystery barrier.
-
-> +	writel(hba->dma_handle + MU_REQ_BUFFER_SIZE, base + IMR0);
-> +	readl(base + IMR0);
-> +	writel((hba->dma_handle >> 16) >> 16, base + OMR0); /* 4G border safe */
-> +	readl(base + OMR0);
-> +	writel(MU_INBOUND_DOORBELL_HANDSHAKE, base + IDBL);
-> +	readl(base + IDBL); /* flush */
-> +
-> +	udelay(10);
-> +	for (i = 0; readl(base + OMR0) != MU_HANDSHAKE_SIGNATURE
-> +		&& i < MU_MAX_DELAY_TIME; i++) {
-> +		rmb();
-
-??
-
-> +		msleep(1);
-> +	}
-> +
-> +	if (i == MU_MAX_DELAY_TIME) {
-> +		printk(KERN_ERR SHASTA_NAME
-> +			"(%s): no signature after handshake frame\n",
-> +			pci_name(hba->pdev));
-> +		return -1;
-> +	}
-> +
-> +	writel(0, base + IMR0);
-> +	readl(base + IMR0);
-> +	writel(0, base + OMR0);
-> +	readl(base + OMR0);
-> +	writel(0, base + IMR1);
-> +	readl(base + IMR1);
-> +	writel(0, base + OMR1);
-> +	readl(base + OMR1); /* flush */
-> +	hba->mu_status = MU_STATE_STARTED;
-> +	return 0;
-> +}
-> +
-> +static int shasta_abort(struct scsi_cmnd *cmd)
-> +{
-> +	struct Scsi_Host *host = cmd->device->host;
-> +	struct st_hba *hba = (struct st_hba *)host->hostdata;
-> +	u16 tag;
-> +	void __iomem *base;
-> +	u32 data;
-> +	int fail = 0;
-
-int result = SUCCESS;
-
-> +	unsigned long flags;
-> +	base = hba->mmio_base;
-> +	spin_lock_irqsave(host->host_lock, flags);
-> +
-> +	for (tag = 0; tag < MU_MAX_REQUEST; tag++)
-> +		if (hba->ccb[tag].cmd == cmd && (hba->tag & (1 << tag))) {
-> +			hba->wait_ccb = &(hba->ccb[tag]);
-> +			break;
-> +		}
-> +	if (tag >= MU_MAX_REQUEST) goto out;
-
-newline here, please.
-
-> +
-> +	data = readl(base + ODBL);
-> +	if (data == 0 || data == 0xffffffff) goto fail_out;
-> +
-> +	writel(data, base + ODBL);
-> +	readl(base + ODBL); /* flush */
-> +
-> +	shasta_mu_intr(hba, data);
-> +
-> + 	if (hba->wait_ccb == NULL) {
-> + 		printk(KERN_WARNING SHASTA_NAME
-> +			"(%s): lost interrupt\n", pci_name(hba->pdev));
-> +		goto out;
-> +	}
-> +
-> +fail_out:
-> +	hba->wait_ccb->req = NULL; /* nullify the req's future return */
-> +	hba->wait_ccb = NULL;
-> +	fail = 1;
-
-result = FAILED;
-
-> +out:
-> +	spin_unlock_irqrestore(host->host_lock, flags);
-> +	return fail ? FAILED : SUCCESS;
-
-return result;
-
-> +}
->
-> +static int shasta_reset(struct scsi_cmnd *cmd)
-> +{
-> +	struct st_hba *hba;
-> +	int tag;
-> +	int i = 0;
-> +	unsigned long flags;
-> +	hba = (struct st_hba *)cmd->device->host->hostdata;
-
-Unneeded cast.
-
-> +wait_cmds:
-> +	spin_lock_irqsave(hba->host->host_lock, flags);
-> +	for (tag = 0; tag < MU_MAX_REQUEST; tag++)
-> +		if ((hba->tag & (1 << tag)) && hba->ccb[tag].req != NULL) 
-> +			break;
-> +	spin_unlock_irqrestore(hba->host->host_lock, flags);
-> +	if (tag < MU_MAX_REQUEST) {
-> +		msleep(1000);
-> +		if (++i < 10) goto wait_cmds;
-
-newline.
-
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@SteelEye.com, hch@lst.de
+
+This is a multi-part message in MIME format.
+
+------_=_NextPart_001_01C64701.83FF0443
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: quoted-printable
+
+Updated loginfo header.
+
+This header is provided to better understand
+loginfo codes returned by the mpt fusion firmware.
+
+Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
+
+------_=_NextPart_001_01C64701.83FF0443
+Content-Type: application/octet-stream;
+	name="1_loginfo.patch"
+Content-Transfer-Encoding: base64
+Content-Description: 1_loginfo.patch
+Content-Disposition: attachment;
+	filename="1_loginfo.patch"
+
+ZGlmZiAtdWFyTiBiL2RyaXZlcnMvbWVzc2FnZS9mdXNpb24vbHNpL21waV9sb2dfc2FzLmggYS9k
+cml2ZXJzL21lc3NhZ2UvZnVzaW9uL2xzaS9tcGlfbG9nX3Nhcy5oDQotLS0gYi9kcml2ZXJzL21l
+c3NhZ2UvZnVzaW9uL2xzaS9tcGlfbG9nX3Nhcy5oCTIwMDYtMDMtMTMgMTA6Mjk6MjQuMDAwMDAw
+MDAwIC0wNzAwDQorKysgYS9kcml2ZXJzL21lc3NhZ2UvZnVzaW9uL2xzaS9tcGlfbG9nX3Nhcy5o
+CTIwMDYtMDMtMTAgMTc6MzM6MjUuMDAwMDAwMDAwIC0wNzAwDQpAQCAtMywzOCArMywxMSBAQA0K
+ICAqICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICoNCiAgKiAgQ29weXJpZ2h0IDIwMDMgTFNJIExvZ2ljIENvcnBv
+cmF0aW9uLiAgQWxsIHJpZ2h0cyByZXNlcnZlZC4gICAgICAgICAgICAqDQogICogICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgKg0KLSAqICBUaGlzIGZpbGUgaXMgY29uZmlkZW50aWFsIGFuZCBhIHRyYWRlIHNlY3Jl
+dCBvZiBMU0kgTG9naWMuICBUaGUgICAgICAgICoNCi0gKiAgcmVjZWlwdCBvZiBvciBwb3NzZXNz
+aW9uIG9mIHRoaXMgZmlsZSBkb2VzIG5vdCBjb252ZXkgYW55IHJpZ2h0cyB0byAgICAqDQotICog
+IHJlcHJvZHVjZSBvciBkaXNjbG9zZSBpdHMgY29udGVudHMgb3IgdG8gbWFudWZhY3R1cmUsIHVz
+ZSwgb3Igc2VsbCAgICAgKg0KLSAqICBhbnl0aGluZyBpdCBtYXkgZGVzY3JpYmUsIGluIHdob2xl
+LCBvciBpbiBwYXJ0LCB3aXRob3V0IHRoZSBzcGVjaWZpYyAgICoNCi0gKiAgd3JpdHRlbiBjb25z
+ZW50IG9mIExTSSBMb2dpYyBDb3Jwb3JhdGlvbi4gICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAqDQorICogRGVzY3JpcHRpb24gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgKg0KKyAqIC0tLS0tLS0tLS0tLSAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICoNCisgKiBUaGlz
+IGluY2x1ZGUgZmlsZSBjb250YWlucyBTQVMgZmlybXdhcmUgaW50ZXJmYWNlIElPQyBMb2cgSW5m
+byBjb2RlcyAgICAqDQogICogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgKg0KLSAqKioqKioqKioqKioqKioqKioq
+KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioN
+Ci0gKg0KLSAqICAgICAgICAgICBOYW1lOiAgaW9waUlvY0xvZ0luZm8uaA0KLSAqICAgICAgICAg
+IFRpdGxlOiAgU0FTIEZpcm13YXJlIElPUCBJbnRlcmZhY2UgSU9DIExvZyBJbmZvIERlZmluaXRp
+b25zDQotICogICAgIFByb2dyYW1tZXI6ICBHdXkgS2VuZGFsbA0KLSAqICBDcmVhdGlvbiBEYXRl
+OiAgU2VwdGVtYmVyIDI0LCAyMDAzDQotICoNCi0gKiAgVmVyc2lvbiBIaXN0b3J5DQotICogIC0t
+LS0tLS0tLS0tLS0tLQ0KLSAqDQotICogIExhc3QgVXBkYXRlZA0KLSAqICAtLS0tLS0tLS0tLS0t
+DQotICogIFZlcnNpb24gICAgICAgICAldmVyc2lvbjogMjIgJQ0KLSAqICBEYXRlIFVwZGF0ZWQg
+ICAgJWRhdGVfbW9kaWZpZWQ6ICUNCi0gKiAgUHJvZ3JhbW1lciAgICAgICVjcmVhdGVkX2J5OiBu
+cGVydWNjYSAlDQotICoNCi0gKiAgRGF0ZSAgICAgIFdobyAgIERlc2NyaXB0aW9uDQotICogIC0t
+LS0tLS0tICAtLS0gICAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tDQotICogIDA5LzI0LzAzICBHV0sgICBJbml0aWFsIHZlcnNpb24NCi0gKg0K
+LSAqDQotICogRGVzY3JpcHRpb24NCi0gKiAtLS0tLS0tLS0tLS0NCi0gKiBUaGlzIGluY2x1ZGUg
+ZmlsZSBjb250YWlucyBTQVMgZmlybXdhcmUgaW50ZXJmYWNlIElPQyBMb2cgSW5mbyBjb2Rlcw0K
+LSAqDQotICotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQorICotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tKg0KICAqLw0KIA0K
+ICNpZm5kZWYgSU9QSV9JT0NMT0dJTkZPX0hfSU5DTFVERUQNCkBAIC01Nyw2ICszMCw4IEBADQog
+I2RlZmluZSBJT0NfTE9HSU5GT19PUklHSU5BVE9SX1BMICAgICAgICAgICAgICAgICAgICAgICAo
+MHgwMTAwMDAwMCkNCiAjZGVmaW5lIElPQ19MT0dJTkZPX09SSUdJTkFUT1JfSVIgICAgICAgICAg
+ICAgICAgICAgICAgICgweDAyMDAwMDAwKQ0KIA0KKyNkZWZpbmUgSU9DX0xPR0lORk9fT1JJR0lO
+QVRPUl9NQVNLICAgICAgICAgICAgICAgICAgICAgKDB4MEYwMDAwMDApDQorDQogLyoqKioqKioq
+KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioq
+KioqKioqKioqKiovDQogLyogTE9HSU5GT19DT0RFIGRlZmluZXMgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICovDQogLyoqKioqKioqKioqKioqKioq
+KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioq
+KiovDQpAQCAtNzgsMTEgKzUzLDI3IEBADQogI2RlZmluZSBJT1BfTE9HSU5GT19DT0RFX0NPTkZJ
+R19JTlZBTElEX1BBR0VfREVGQVVMVCAgICAoMHgwMDAzMDcwMCkgLyogRGVmYXVsdCBQYWdlIG5v
+dCBmb3VuZCAqLw0KICNkZWZpbmUgSU9QX0xPR0lORk9fQ09ERV9UQVNLX1RFUk1JTkFURUQgICAg
+ICAgICAgICAgICAgKDB4MDAwNTAwMDApDQogDQorI2RlZmluZSBJT1BfTE9HSU5GT19DT0RFX0VO
+Q0xfTUdNVF9SRUFEX0FDVElPTl9FUlIwUiAgICAoMHgwMDA2MDAwMSkgLyogUmVhZCBBY3Rpb24g
+bm90IHN1cHBvcnRlZCBmb3IgU0VQIG1zZyAqLw0KKyNkZWZpbmUgSU9QX0xPR0lORk9fQ09ERV9F
+TkNMX01HTVRfSU5WQUxJRF9CVVNfSURfRVJSMFIgKDB4MDAwNjAwMDIpIC8qIEludmFsaWQgQnVz
+L0lEIGluIFNFUCBtc2cgKi8NCisNCisjZGVmaW5lIElPUF9MT0dJTkZPX0NPREVfVEFSR0VUX0FT
+U0lTVF9URVJNSU5BVEVEICAgICAgICgweDAwMDcwMDAxKQ0KKyNkZWZpbmUgSU9QX0xPR0lORk9f
+Q09ERV9UQVJHRVRfU1RBVFVTX1NFTkRfVEVSTUlOQVRFRCAgKDB4MDAwNzAwMDIpDQorI2RlZmlu
+ZSBJT1BfTE9HSU5GT19DT0RFX1RBUkdFVF9NT0RFX0FCT1JUX0FMTF9JTyAgICAgICAoMHgwMDA3
+MDAwMykNCisjZGVmaW5lIElPUF9MT0dJTkZPX0NPREVfVEFSR0VUX01PREVfQUJPUlRfRVhBQ1Rf
+SU8gICAgICgweDAwMDcwMDA0KQ0KKyNkZWZpbmUgSU9QX0xPR0lORk9fQ09ERV9UQVJHRVRfTU9E
+RV9BQk9SVF9FWEFDVF9JT19SRVEgKDB4MDAwNzAwMDUpDQogDQogLyoqKioqKioqKioqKioqKioq
+KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioq
+KiovDQogLyogUEwgTE9HSU5GT19DT0RFIGRlZmluZXMsIHZhbGlkIGlmIElPQ19MT0dJTkZPX09S
+SUdJTkFUT1IgPSBQTCAgICAgICAgICAgICovDQogLyoqKioqKioqKioqKioqKioqKioqKioqKioq
+KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKiovDQogI2Rl
+ZmluZSBQTF9MT0dJTkZPX0NPREVfT1BFTl9GQUlMVVJFICAgICAgICAgICAgICAgICAgICAgICAg
+KDB4MDAwMTAwMDApDQorI2RlZmluZSBQTF9MT0dfSU5GT19DT0RFX09QRU5fRkFJTFVSRV9OT19E
+RVNUX1RJTUVfT1VUICAgICAgKDB4MDAwMTAwMDEpDQorI2RlZmluZSBQTF9MT0dJTkZPX0NPREVf
+T1BFTl9GQUlMVVJFX0JBRF9ERVNUSU5BVElPTiAgICAgICAgKDB4MDAwMTAwMTEpDQorI2RlZmlu
+ZSBQTF9MT0dJTkZPX0NPREVfT1BFTl9GQUlMVVJFX1BST1RPQ09MX05PVF9TVVBQT1JURUQgKDB4
+MDAwMTAwMTMpDQorI2RlZmluZSBQTF9MT0dJTkZPX0NPREVfT1BFTl9GQUlMVVJFX1NUUF9SRVNP
+VVJDRVNfQlNZICAgICAgKDB4MDAwMTAwMTgpDQorI2RlZmluZSBQTF9MT0dJTkZPX0NPREVfT1BF
+Tl9GQUlMVVJFX1dST05HX0RFU1RJTkFUSU9OICAgICAgKDB4MDAwMTAwMTkpDQorI2RlZmluZSBQ
+TF9MT0dJTkZPX0NPREVfT1BFTl9GQUlMVVJFX09SUl9USU1FT1VUICAgICAgICAgICAgKDBYMDAw
+MTAwMUEpDQorI2RlZmluZSBQTF9MT0dJTkZPX0NPREVfT1BFTl9GQUlMVVJFX1BBVEhXQVlfQkxP
+Q0tFRCAgICAgICAgKDB4MDAwMTAwMUIpDQorI2RlZmluZSBQTF9MT0dJTkZPX0NPREVfT1BFTl9G
+QUlMVVJFX0FXVF9NQVhFRCAgICAgICAgICAgICAgKDB4MDAwMTAwMUMpDQogI2RlZmluZSBQTF9M
+T0dJTkZPX0NPREVfSU5WQUxJRF9TR0wgICAgICAgICAgICAgICAgICAgICAgICAgKDB4MDAwMjAw
+MDApDQogI2RlZmluZSBQTF9MT0dJTkZPX0NPREVfV1JPTkdfUkVMX09GRl9PUl9GUkFNRV9MRU5H
+VEggICAgICAgKDB4MDAwMzAwMDApDQogI2RlZmluZSBQTF9MT0dJTkZPX0NPREVfRlJBTUVfWEZF
+Ul9FUlJPUiAgICAgICAgICAgICAgICAgICAgKDB4MDAwNDAwMDApDQpAQCAtOTcsNiArODgsNyBA
+QA0KICNkZWZpbmUgUExfTE9HSU5GT19DT0RFX1NBVEFfTElOS19ET1dOICAgICAgICAgICAgICAg
+ICAgICAgICgweDAwMEQwMDAwKQ0KICNkZWZpbmUgUExfTE9HSU5GT19DT0RFX0RJU0NPVkVSWV9T
+QVRBX0lOSVRfV19JT1MgICAgICAgICAgICgweDAwMEUwMDAwKQ0KICNkZWZpbmUgUExfTE9HSU5G
+T19DT0RFX0NPTkZJR19JTlZBTElEX1BBR0UgICAgICAgICAgICAgICAgICgweDAwMEYwMDAwKQ0K
+KyNkZWZpbmUgUExfTE9HSU5GT19DT0RFX0NPTkZJR19QTF9OT1RfSU5JVElBTElaRUQgICAgICAg
+ICAgICgweDAwMEYwMDAxKSAvKiBQTCBub3QgeWV0IGluaXRpYWxpemVkLCBjYW4ndCBkbyBjb25m
+aWcgcGFnZSByZXEuICovDQogI2RlZmluZSBQTF9MT0dJTkZPX0NPREVfQ09ORklHX0lOVkFMSURf
+UEFHRV9QVCAgICAgICAgICAgICAgKDB4MDAwRjAxMDApIC8qIEludmFsaWQgUGFnZSBUeXBlICov
+DQogI2RlZmluZSBQTF9MT0dJTkZPX0NPREVfQ09ORklHX0lOVkFMSURfUEFHRV9OVU1fUEhZUyAg
+ICAgICAgKDB4MDAwRjAyMDApIC8qIEludmFsaWQgTnVtYmVyIG9mIFBoeXMgKi8NCiAjZGVmaW5l
+IFBMX0xPR0lORk9fQ09ERV9DT05GSUdfSU5WQUxJRF9QQUdFX05PVF9JTVAgICAgICAgICAoMHgw
+MDBGMDMwMCkgLyogQ2FzZSBOb3QgSGFuZGxlZCAqLw0KQEAgLTEwNSwxMSArOTcsMjMgQEANCiAj
+ZGVmaW5lIFBMX0xPR0lORk9fQ09ERV9DT05GSUdfSU5WQUxJRF9QQUdFX1BIWSAgICAgICAgICAg
+ICAoMHgwMDBGMDYwMCkgLyogSW52YWxpZCBQaHkgKi8NCiAjZGVmaW5lIFBMX0xPR0lORk9fQ09E
+RV9DT05GSUdfSU5WQUxJRF9QQUdFX05PX09XTkVSICAgICAgICAoMHgwMDBGMDcwMCkgLyogTm8g
+T3duZXIgRm91bmQgKi8NCiAjZGVmaW5lIFBMX0xPR0lORk9fQ09ERV9EU0NWUllfU0FUQV9JTklU
+X1RJTUVPVVQgICAgICAgICAgICAoMHgwMDEwMDAwMCkNCi0jZGVmaW5lIFBMX0xPR0lORk9fQ09E
+RV9SRVNFVCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoMHgwMDExMDAwMCkNCi0jZGVm
+aW5lIFBMX0xPR0lORk9fQ09ERV9BQk9SVCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAo
+MHgwMDEyMDAwMCkNCisjZGVmaW5lIFBMX0xPR0lORk9fQ09ERV9SRVNFVCAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAoMHgwMDExMDAwMCkgLyogU2VlIFN1Yi1Db2RlcyBiZWxvdyAqLw0K
+KyNkZWZpbmUgUExfTE9HSU5GT19DT0RFX0FCT1JUICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICgweDAwMTIwMDAwKSAvKiBTZWUgU3ViLUNvZGVzIGJlbG93ICovDQogI2RlZmluZSBQTF9M
+T0dJTkZPX0NPREVfSU9fTk9UX1lFVF9FWEVDVVRFRCAgICAgICAgICAgICAgICAgKDB4MDAxMzAw
+MDApDQogI2RlZmluZSBQTF9MT0dJTkZPX0NPREVfSU9fRVhFQ1VURUQgICAgICAgICAgICAgICAg
+ICAgICAgICAgKDB4MDAxNDAwMDApDQorI2RlZmluZSBQTF9MT0dJTkZPX0NPREVfUEVSU19SRVNW
+X09VVF9OT1RfQUZGSUxfT1dORVIgICAgICAgKDB4MDAxNTAwMDApDQorI2RlZmluZSBQTF9MT0dJ
+TkZPX0NPREVfT1BFTl9UWERNQV9BQk9SVCAgICAgICAgICAgICAgICAgICAgKDB4MDAxNjAwMDAp
+DQogI2RlZmluZSBQTF9MT0dJTkZPX1NVQl9DT0RFX09QRU5fRkFJTFVSRSAgICAgICAgICAgICAg
+ICAgICAgKDB4MDAwMDAxMDApDQorI2RlZmluZSBQTF9MT0dJTkZPX1NVQl9DT0RFX09QRU5fRkFJ
+TFVSRV9OT19ERVNUX1RJTUVPVVQgICAgKDB4MDAwMDAxMDEpDQorI2RlZmluZSBQTF9MT0dJTkZP
+X1NVQl9DT0RFX09QRU5fRkFJTFVSRV9PUlJfVElNRU9VVCAgICAgICAgKDB4MDAwMDAxMUEpIC8q
+IE9wZW4gUmVqZWN0IChSZXRyeSkgVGltZW91dCAqLw0KKyNkZWZpbmUgUExfTE9HSU5GT19TVUJf
+Q09ERV9PUEVOX0ZBSUxVUkVfUEFUSFdBWV9CTE9DS0VEICAgICgweDAwMDAwMTFCKQ0KKyNkZWZp
+bmUgUExfTE9HSU5GT19TVUJfQ09ERV9PUEVOX0ZBSUxVUkVfQVdUX01BWEVEICAgICAgICAgICgw
+eDAwMDAwMTFDKSAvKiBBcmJpdHJhdGlvbiBXYWl0IFRpbWVyIE1heGVkICovDQorDQorI2RlZmlu
+ZSBQTF9MT0dJTkZPX1NVQl9DT0RFX1RBUkdFVF9CVVNfUkVTRVQgICAgICAgICAgICAgICAgKDB4
+MDAwMDAxMjApDQorI2RlZmluZSBQTF9MT0dJTkZPX1NVQl9DT0RFX1RSQU5TUE9SVF9MQVlFUiAg
+ICAgICAgICAgICAgICAgKDB4MDAwMDAxMzApICAvKiBMZWF2ZSBsb3dlciBuaWJibGUgKDEtZikg
+cmVzZXJ2ZWQuICovDQorI2RlZmluZSBQTF9MT0dJTkZPX1NVQl9DT0RFX1BPUlRfTEFZRVIgICAg
+ICAgICAgICAgICAgICAgICAgKDB4MDAwMDAxNDApICAvKiBMZWF2ZSBsb3dlciBuaWJibGUgKDEt
+ZikgcmVzZXJ2ZWQuICovDQorDQorDQogI2RlZmluZSBQTF9MT0dJTkZPX1NVQl9DT0RFX0lOVkFM
+SURfU0dMICAgICAgICAgICAgICAgICAgICAgKDB4MDAwMDAyMDApDQogI2RlZmluZSBQTF9MT0dJ
+TkZPX1NVQl9DT0RFX1dST05HX1JFTF9PRkZfT1JfRlJBTUVfTEVOR1RIICAgKDB4MDAwMDAzMDAp
+DQogI2RlZmluZSBQTF9MT0dJTkZPX1NVQl9DT0RFX0ZSQU1FX1hGRVJfRVJST1IgICAgICAgICAg
+ICAgICAgKDB4MDAwMDA0MDApDQpAQCAtMTIzLDI2ICsxMjcsMzkgQEANCiAjZGVmaW5lIFBMX0xP
+R0lORk9fU1VCX0NPREVfUlhfRk1fQ1VSUkVOVF9GUkFNRV9FUlJPUiAgICAgICAoMHgwMDAwMEMw
+MCkNCiAjZGVmaW5lIFBMX0xPR0lORk9fU1VCX0NPREVfU0FUQV9MSU5LX0RPV04gICAgICAgICAg
+ICAgICAgICAoMHgwMDAwMEQwMCkNCiAjZGVmaW5lIFBMX0xPR0lORk9fU1VCX0NPREVfRElTQ09W
+RVJZX1NBVEFfSU5JVF9XX0lPUyAgICAgICAoMHgwMDAwMEUwMCkNCisjZGVmaW5lIFBMX0xPR0lO
+Rk9fU1VCX0NPREVfRElTQ09WRVJZX1JFTU9URV9TRVBfUkVTRVQgICAgICAoMHgwMDAwMEUwMSkN
+CisjZGVmaW5lIFBMX0xPR0lORk9fU1VCX0NPREVfU0VDT05EX09QRU4gICAgICAgICAgICAgICAg
+ICAgICAoMHgwMDAwMEYwMCkNCiAjZGVmaW5lIFBMX0xPR0lORk9fU1VCX0NPREVfRFNDVlJZX1NB
+VEFfSU5JVF9USU1FT1VUICAgICAgICAoMHgwMDAwMTAwMCkNCiANCiANCiAjZGVmaW5lIFBMX0xP
+R0lORk9fQ09ERV9FTkNMX01HTVRfU01QX0ZSQU1FX0ZBSUxVUkUgICAgICAgICAoMHgwMDIwMDAw
+MCkgLyogQ2FuJ3QgZ2V0IFNNUCBGcmFtZSAqLw0KLSNkZWZpbmUgUExfTE9HSU5GT19DT0RFX0VO
+Q0xfTUdNVF9TTVBfUkVBRF9FUlJPUiAgICAgICAgICAgICgweDAwMjAwMDAxKSAvKiBFcnJvciBv
+Y2N1cmVkIG9uIFNNUCBSZWFkICovDQotI2RlZmluZSBQTF9MT0dJTkZPX0NPREVfRU5DTF9NR01U
+X1NNUF9XUklURV9FUlJPUiAgICAgICAgICAgKDB4MDAyMDAwMDIpIC8qIEVycm9yIG9jY3VyZWQg
+b24gU01QIFdyaXRlICovDQotI2RlZmluZSBQTF9MT0dJTkZPX0NPREVfRU5DTF9NR01UX05PVF9T
+VVBQT1JURURfT05fRU5DTCAgICAgKDB4MDAyMDAwMDQpIC8qIEVuY2wgTWdtdCBzZXJ2aWNlcyBu
+b3QgYXZhaWxhYmxlIGZvciB0aGlzIFdXSUQgKi8NCi0jZGVmaW5lIFBMX0xPR0lORk9fQ09ERV9F
+TkNMX01HTVRfQUREUl9NT0RFX05PVF9TVVBQT1JURUQgICAoMHgwMDIwMDAwNSkgLyogQWRkcmVz
+cyBNb2RlIG5vdCBzdXBwb3JlZCAqLw0KLSNkZWZpbmUgUExfTE9HSU5GT19DT0RFX0VOQ0xfTUdN
+VF9CQURfU0xPVF9OVU0gICAgICAgICAgICAgICgweDAwMjAwMDA2KSAvKiBJbnZhbGlkIFNsb3Qg
+TnVtYmVyIGluIFNFUCBNc2cgKi8NCi0jZGVmaW5lIFBMX0xPR0lORk9fQ09ERV9FTkNMX01HTVRf
+U0dQSU9fTk9UX1BSRVNFTlQgICAgICAgICAoMHgwMDIwMDAwNykgLyogU0dQSU8gbm90IHByZXNl
+bnQvZW5hYmxlZCAqLw0KKyNkZWZpbmUgUExfTE9HSU5GT19DT0RFX0VOQ0xfTUdNVF9TTVBfUkVB
+RF9FUlJPUiAgICAgICAgICAgICgweDAwMjAwMDEwKSAvKiBFcnJvciBvY2N1cmVkIG9uIFNNUCBS
+ZWFkICovDQorI2RlZmluZSBQTF9MT0dJTkZPX0NPREVfRU5DTF9NR01UX1NNUF9XUklURV9FUlJP
+UiAgICAgICAgICAgKDB4MDAyMDAwMjApIC8qIEVycm9yIG9jY3VyZWQgb24gU01QIFdyaXRlICov
+DQorI2RlZmluZSBQTF9MT0dJTkZPX0NPREVfRU5DTF9NR01UX05PVF9TVVBQT1JURURfT05fRU5D
+TCAgICAgKDB4MDAyMDAwNDApIC8qIEVuY2wgTWdtdCBzZXJ2aWNlcyBub3QgYXZhaWxhYmxlIGZv
+ciB0aGlzIFdXSUQgKi8NCisjZGVmaW5lIFBMX0xPR0lORk9fQ09ERV9FTkNMX01HTVRfQUREUl9N
+T0RFX05PVF9TVVBQT1JURUQgICAoMHgwMDIwMDA1MCkgLyogQWRkcmVzcyBNb2RlIG5vdCBzdXBw
+b3JlZCAqLw0KKyNkZWZpbmUgUExfTE9HSU5GT19DT0RFX0VOQ0xfTUdNVF9CQURfU0xPVF9OVU0g
+ICAgICAgICAgICAgICgweDAwMjAwMDYwKSAvKiBJbnZhbGlkIFNsb3QgTnVtYmVyIGluIFNFUCBN
+c2cgKi8NCisjZGVmaW5lIFBMX0xPR0lORk9fQ09ERV9FTkNMX01HTVRfU0dQSU9fTk9UX1BSRVNF
+TlQgICAgICAgICAoMHgwMDIwMDA3MCkgLyogU0dQSU8gbm90IHByZXNlbnQvZW5hYmxlZCAqLw0K
+KyNkZWZpbmUgUExfTE9HSU5GT19DT0RFX0VOQ0xfTUdNVF9HUElPX05PVF9DT05GSUdVUkVEICAg
+ICAgICgweDAwMjAwMDgwKSAvKiBHUElPIG5vdCBjb25maWd1cmVkICovDQorI2RlZmluZSBQTF9M
+T0dJTkZPX0NPREVfRU5DTF9NR01UX0dQSU9fRlJBTUVfRVJST1IgICAgICAgICAgKDB4MDAyMDAw
+OTApIC8qIEdQSU8gY2FuJ3QgYWxsb2NhdGUgYSBmcmFtZSAqLw0KKyNkZWZpbmUgUExfTE9HSU5G
+T19DT0RFX0VOQ0xfTUdNVF9HUElPX0NPTkZJR19QQUdFX0VSUk9SICAgICgweDAwMjAwMEEwKSAv
+KiBHUElPIGZhaWxlZCBjb25maWcgcGFnZSByZXF1ZXN0ICovDQorI2RlZmluZSBQTF9MT0dJTkZP
+X0NPREVfRU5DTF9NR01UX1NFU19GUkFNRV9BTExPQ19FUlJPUiAgICAgKDB4MDAyMDAwQjApIC8q
+IENhbid0IGdldCBmcmFtZSBmb3IgU0VTIGNvbW1hbmQgKi8NCisjZGVmaW5lIFBMX0xPR0lORk9f
+Q09ERV9FTkNMX01HTVRfU0VTX0lPX0VSUk9SICAgICAgICAgICAgICAoMHgwMDIwMDBDMCkgLyog
+SS9PIGV4ZWN1dGlvbiBlcnJvciAqLw0KKyNkZWZpbmUgUExfTE9HSU5GT19DT0RFX0VOQ0xfTUdN
+VF9TRVNfUkVUUklFU19FWEhBVVNURUQgICAgICgweDAwMjAwMEQwKSAvKiBTRVAgSS9PIHJldHJp
+ZXMgZXhoYXVzdGVkICovDQorI2RlZmluZSBQTF9MT0dJTkZPX0NPREVfRU5DTF9NR01UX1NNUF9G
+UkFNRV9BTExPQ19FUlJPUiAgICAgKDB4MDAyMDAwRTApIC8qIENhbid0IGdldCBmcmFtZSBmb3Ig
+U01QIGNvbW1hbmQgKi8NCiANCiAjZGVmaW5lIFBMX0xPR0lORk9fREFfU0VQX05PVF9QUkVTRU5U
+ICAgICAgICAgICAgICAgICAgICAgICAoMHgwMDIwMDEwMCkgLyogU0VQIG5vdCBwcmVzZW50IHdo
+ZW4gbXNnIHJlY2VpdmVkICovDQogI2RlZmluZSBQTF9MT0dJTkZPX0RBX1NFUF9TSU5HTEVfVEhS
+RUFEX0VSUk9SICAgICAgICAgICAgICAgKDB4MDAyMDAxMDEpIC8qIENhbiBvbmx5IGFjY2VwdCAx
+IG1zZyBhdCBhIHRpbWUgKi8NCiAjZGVmaW5lIFBMX0xPR0lORk9fREFfU0VQX0lTVFdJX0lOVFJf
+SU5fSURMRV9TVEFURSAgICAgICAgICAoMHgwMDIwMDEwMikgLyogSVNUV0kgaW50ZXJydXB0IHJl
+Y3ZkLiB3aGlsZSBJRExFICovDQogI2RlZmluZSBQTF9MT0dJTkZPX0RBX1NFUF9SRUNFSVZFRF9O
+QUNLX0ZST01fU0xBVkUgICAgICAgICAgKDB4MDAyMDAxMDMpIC8qIFNFUCBOQUNLJ2QsIGl0IGlz
+IGJ1c3kgKi8NCi0jZGVmaW5lIFBMX0xPR0lORk9fREFfU0VQX0JBRF9TVEFUVVNfSERSX0NIS1NV
+TSAgICAgICAgICAgICAoMHgwMDIwMDEwNCkgLyogU0VQIHN0b3BwZWQgb3Igc2VudCBiYWQgY2hr
+c3VtIGluIEhkciAqLw0KLSNkZWZpbmUgUExfTE9HSU5GT19EQV9TRVBfVU5TVVBQT1JURURfU0NT
+SV9TVEFUVVNfMSAgICAgICAgICgweDAwMjAwMTA1KSAvKiBTRVAgcmV0dXJuZWQgdW5rbm93biBz
+Y3NpIHN0YXR1cyAqLw0KLSNkZWZpbmUgUExfTE9HSU5GT19EQV9TRVBfVU5TVVBQT1JURURfU0NT
+SV9TVEFUVVNfMiAgICAgICAgICgweDAwMjAwMTA2KSAvKiBTRVAgcmV0dXJuZWQgdW5rbm93biBz
+Y3NpIHN0YXR1cyAqLw0KLSNkZWZpbmUgUExfTE9HSU5GT19EQV9TRVBfQ0hLU1VNX0VSUk9SX0FG
+VEVSX1NUT1AgICAgICAgICAgICgweDAwMjAwMTA3KSAvKiBTRVAgcmV0dXJuZWQgYmFkIGNoa3N1
+bSBhZnRlciBTVE9QICovDQotI2RlZmluZSBQTF9MT0dJTkZPX0RBX1NFUF9DSEtTVU1fRVJST1Jf
+QUZURVJfU1RPUF9HRVREQVRBICAgKDB4MDAyMDAxMDgpIC8qIFNFUCByZXR1cm5lZCBiYWQgY2hr
+c3VtIGFmdGVyIFNUT1Agd2hpbGUgZ2V0dGluIGRhdGEqLw0KKyNkZWZpbmUgUExfTE9HSU5GT19E
+QV9TRVBfRElEX05PVF9SRUNFSVZFX0FDSyAgICAgICAgICAgICAgICgweDAwMjAwMTA0KSAvKiBT
+RVAgZGlkbid0IHJjdi4gQUNLIChMYXN0IFJjdmQgQml0ID0gMSkgKi8NCisjZGVmaW5lIFBMX0xP
+R0lORk9fREFfU0VQX0JBRF9TVEFUVVNfSERSX0NIS1NVTSAgICAgICAgICAgICAoMHgwMDIwMDEw
+NSkgLyogU0VQIHN0b3BwZWQgb3Igc2VudCBiYWQgY2hrc3VtIGluIEhkciAqLw0KKyNkZWZpbmUg
+UExfTE9HSU5GT19EQV9TRVBfU1RPUF9PTl9EQVRBICAgICAgICAgICAgICAgICAgICAgICgweDAw
+MjAwMTA2KSAvKiBTRVAgc3RvcHBlZCB3aGlsZSB0cmFuc2ZlcmluZyBkYXRhICovDQorI2RlZmlu
+ZSBQTF9MT0dJTkZPX0RBX1NFUF9TVE9QX09OX1NFTlNFX0RBVEEgICAgICAgICAgICAgICAgKDB4
+MDAyMDAxMDcpIC8qIFNFUCBzdG9wcGVkIHdoaWxlIHRyYW5zZmVyaW5nIHNlbnNlIGRhdGEgKi8N
+CisjZGVmaW5lIFBMX0xPR0lORk9fREFfU0VQX1VOU1VQUE9SVEVEX1NDU0lfU1RBVFVTXzEgICAg
+ICAgICAoMHgwMDIwMDEwOCkgLyogU0VQIHJldHVybmVkIHVua25vd24gc2NzaSBzdGF0dXMgKi8N
+CisjZGVmaW5lIFBMX0xPR0lORk9fREFfU0VQX1VOU1VQUE9SVEVEX1NDU0lfU1RBVFVTXzIgICAg
+ICAgICAoMHgwMDIwMDEwOSkgLyogU0VQIHJldHVybmVkIHVua25vd24gc2NzaSBzdGF0dXMgKi8N
+CisjZGVmaW5lIFBMX0xPR0lORk9fREFfU0VQX0NIS1NVTV9FUlJPUl9BRlRFUl9TVE9QICAgICAg
+ICAgICAoMHgwMDIwMDEwQSkgLyogU0VQIHJldHVybmVkIGJhZCBjaGtzdW0gYWZ0ZXIgU1RPUCAq
+Lw0KKyNkZWZpbmUgUExfTE9HSU5GT19EQV9TRVBfQ0hLU1VNX0VSUk9SX0FGVEVSX1NUT1BfR0VU
+REFUQSAgICgweDAwMjAwMTBCKSAvKiBTRVAgcmV0dXJuZWQgYmFkIGNoa3N1bSBhZnRlciBTVE9Q
+IHdoaWxlIGdldHRpbiBkYXRhKi8NCisjZGVmaW5lIFBMX0xPR0lORk9fREFfU0VQX1VOU1VQUE9S
+VEVEX0NPTU1BTkQgICAgICAgICAgICAgICAoMHgwMDIwMDEwQykgLyogU0VQIGRvZXNuJ3Qgc3Vw
+cG9ydCBDREIgb3Bjb2RlICovDQogDQogDQogLyoqKioqKioqKioqKioqKioqKioqKioqKioqKioq
+KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKiovDQpkaWZmIC11
+YXJOIGIvZHJpdmVycy9tZXNzYWdlL2Z1c2lvbi9tcHRiYXNlLmMgYS9kcml2ZXJzL21lc3NhZ2Uv
+ZnVzaW9uL21wdGJhc2UuYw0KLS0tIGIvZHJpdmVycy9tZXNzYWdlL2Z1c2lvbi9tcHRiYXNlLmMJ
+MjAwNi0wMy0xMyAxMDozMDoyMi4wMDAwMDAwMDAgLTA3MDANCisrKyBhL2RyaXZlcnMvbWVzc2Fn
+ZS9mdXNpb24vbXB0YmFzZS5jCTIwMDYtMDMtMTMgMTE6NDI6MzQuMDAwMDAwMDAwIC0wNzAwDQpA
+QCAtNjEzOCw4ICs2MTM4LDggQEANCiAJCSJBYm9ydCIsCQkJCQkvKiAxMmggKi8NCiAJCSJJTyBO
+b3QgWWV0IEV4ZWN1dGVkIiwJCQkJLyogMTNoICovDQogCQkiSU8gRXhlY3V0ZWQiLAkJCQkJLyog
+MTRoICovDQotCQlOVUxMLAkJCQkJCS8qIDE1aCAqLw0KLQkJTlVMTCwJCQkJCQkvKiAxNmggKi8N
+CisJCSJQZXJzaXN0YW50IFJlc2VydmF0aW9uIE91dCBOb3QgQWZmaWxpYXRpb24gT3duZXIiLCAv
+KiAxNWggKi8NCisJCSJPcGVuIFRyYW5zbWl0IERNQSBBYm9ydCIsCQkJLyogMTZoICovDQogCQlO
+VUxMLAkJCQkJCS8qIDE3aCAqLw0KIAkJTlVMTCwJCQkJCQkvKiAxOGggKi8NCiAJCU5VTEwsCQkJ
+CQkJLyogMTloICovDQo=
+
+------_=_NextPart_001_01C64701.83FF0443--
