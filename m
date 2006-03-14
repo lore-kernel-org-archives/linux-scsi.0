@@ -1,36 +1,57 @@
-From: Greg KH <gregkh@suse.de>
-Subject: Re: [PATCH ] drivers/base/bus.c - export reprobe
-Date: Tue, 14 Mar 2006 09:57:41 -0800
-Message-ID: <20060314175741.GA2697@suse.de>
-References: <F331B95B72AFFB4B87467BE1C8E9CF5F36D829@NAMAIL2.ad.lsil.com> <20060314153455.GA8071@suse.de> <20060314170855.GA18342@infradead.org> <20060314171951.GA22678@suse.de> <20060314172543.GA20331@infradead.org> <20060314172933.GA24619@suse.de> <1142358210.3241.28.camel@mulgrave.il.steeleye.com>
+From: Alexis Bruemmer <alexisb@us.ibm.com>
+Subject: Re: [SCSI] aic94xx: remove event thread
+Date: Tue, 14 Mar 2006 10:00:00 -0800
+Message-ID: <1142359200.8649.156.camel@localhost.localdomain>
+References: <1142179567.3297.13.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750726AbWCNR5y@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1142358210.3241.28.camel@mulgrave.il.steeleye.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "Moore, Eric" <Eric.Moore@lsil.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hch@lst.de
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e35.co.us.ibm.com ([32.97.110.153]:56537 "EHLO
+	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S1752342AbWCNSA4
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Mar 2006 13:00:56 -0500
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e35.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id k2EI0uxW021793
+	for <linux-scsi@vger.kernel.org>; Tue, 14 Mar 2006 13:00:56 -0500
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
+	by d03relay04.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k2EI3oHd162194
+	for <linux-scsi@vger.kernel.org>; Tue, 14 Mar 2006 11:03:50 -0700
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k2EI0toa005117
+	for <linux-scsi@vger.kernel.org>; Tue, 14 Mar 2006 11:00:55 -0700
+In-Reply-To: <1142179567.3297.13.camel@mulgrave.il.steeleye.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Tue, Mar 14, 2006 at 11:43:30AM -0600, James Bottomley wrote:
-> On Tue, 2006-03-14 at 09:29 -0800, Greg KH wrote:
-> > Ah, ok, that makes more sense.
-> > 
-> > Eric, care to resend without the mime crud so I can apply it?
+On Sun, 2006-03-12 at 10:06 -0600, James Bottomley wrote:
+> This patch moves the discovery and event processing entirely over to
+> being workqueue based.  Additionally, it tries to ensure discovery gets
+> time to proceed before finishing the module load.  There's still a
+> non-determinism in there since it starts with a port interrupt for a
+> connected phy after phys are enabled, so there's a ssleep(1) in there to
+> capture this before the scsi_flush_work() waits for it to complete.
+
+Just wanted to let you know that this patch has passed an overnight
+reboot test on a x366.  The ssleep(1) seems to allow for enough time in
+order to verify that sas_process_events has been called before waiting
+on discovery.
+
 > 
-> Actually, would it be OK if you sign off on this and I take it via the
-> scsi tree?  Otherwise there'll be a nasty cross dependency between
-> scsi-misc and usb and I'll spend the next week explaining what trees you
-> need to pull in to get scsi-misc to build.
+> James
+> 
 
-Sure, that makes a lot of sense:
+Regards,
 
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+Alexis
 
-Oh, and please make that scsi wrapper function either
-EXPORT_SYMBOL_GPL() or an inline function or macro.
+>  
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-thanks,
-
-greg k-h
