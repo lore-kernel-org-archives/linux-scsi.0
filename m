@@ -1,71 +1,53 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: SCSI target and IO-throttling
-Date: Tue, 14 Mar 2006 15:54:32 -0500
-Message-ID: <44172D88.6070201@torque.net>
-References: <OF586A820A.80375000-ON8825712A.00712235-8825712A.00815110@us.ibm.com> <440EF9AC.7070903@vlnb.net> <D2BA8EC0-6B20-40EF-B9C5-88CABB1B7CDD@egenera.com> <440F1920.1050608@vlnb.net> <43998989-7BD3-4F3F-A10A-17385D63411E@egenera.com> <441075D4.6010109@vlnb.net> <80454C34-75B9-409B-A454-B8AB0DB1AF4D@egenera.com> <4411C99C.9040200@vlnb.net>
-Reply-To: dougg@torque.net
+From: "Jun'ichi Nomura" <j-nomura@ce.jp.nec.com>
+Subject: Re: [PATCH 6/6] scsi tgt: Makefile and Kconfig changes
+Date: Tue, 14 Mar 2006 16:58:04 -0500
+Message-ID: <44173C6C.1050003@ce.jp.nec.com>
+References: <1140119627.20193.55.camel@max>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------060208050900010705090605"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from canuck.infradead.org ([205.233.218.70]:49289 "EHLO
-	canuck.infradead.org") by vger.kernel.org with ESMTP
-	id S932132AbWCNU5Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Mar 2006 15:57:25 -0500
-In-Reply-To: <4411C99C.9040200@vlnb.net>
+Received: from mx1.redhat.com ([66.187.233.31]:5792 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S932513AbWCNV4g (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Mar 2006 16:56:36 -0500
+In-Reply-To: <1140119627.20193.55.camel@max>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: Steve Byan <smb@egenera.com>, Bryan Henderson <hbryan@us.ibm.com>, linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>, fujita.tomonori@lab.ntt.co.jp
+Cc: linux-scsi@vger.kernel.org
 
-Vladislav Bolkhovitin wrote:
-> Steve Byan wrote:
+This is a multi-part message in MIME format.
+--------------060208050900010705090605
+Content-Type: text/plain; charset=ISO-2022-JP
+Content-Transfer-Encoding: 7bit
 
-<snip>
+Hello Mike, Fujita-san,
 
-> BTW, do you have any statistic how many modern SCSI disks support those
-> features (ORDERED, ACA, UA_INTLCK_CTL, etc)? Few years ago none of
-> available for us SCSI hardware, including tape libraries, supported ACA.
-> It was not very modern for that time, though
+scsi_tgt_if.c depends on CONFIG_NET for using netlink.
+So it would be nice if the Kconfig entry checks it.
 
-Vlad,
-Here is part of the control mode page from a
-recent SCSI disk (Cheetah 15k.4) :
+Thanks,
+-- 
+Jun'ichi Nomura, NEC Solutions (America), Inc.
 
-# sdparm -p co /dev/sdb -ll
-    /dev/sdb: SEAGATE   ST336754SS        0003
-    Direct access device specific parameters: WP=0  DPOFUA=1
-Control mode page [PS=1]:
-  TST         0  [cha: n, def:  0, sav:  0]  Task set type
-        0: lu maintains one task set for all I_T nexuses
-        1: lu maintains separate task sets for each I_T nexus
-  TMF_ONLY    0  [cha: n, def:  0, sav:  0]  Task management functions only
-  D_SENSE     0  [cha: n, def:  0, sav:  0]  Descriptor format sense data
-  GLTSD       0  [cha: y, def:  1, sav:  0]  Global logging target save disable
-  RLEC        0  [cha: y, def:  0, sav:  0]  Report log exception condition
-  QAM         0  [cha: y, def:  0, sav:  0]  Queue algorithm modifier
-        0: restricted re-ordering; 1: unrestricted
-  QERR        0  [cha: n, def:  0, sav:  0]  Queue error management
-        0: only affected task gets CC; 1: affected tasks aborted
-        3: affected tasks aborted on same I_T nexus
-  RAC         0  [cha: n, def:  0, sav:  0]  Report a check
-  UA_INTLCK   0  [cha: n, def:  0, sav:  0]  Unit attention interlocks control
-        0: unit attention cleared with check condition status
-        2: unit attention not cleared with check condition status
-        3: as 2 plus ua on busy, task set full or reservation conflict
-  SWP         0  [cha: n, def:  0, sav:  0]  Software write protect
-  ATO         0  [cha: n, def:  0, sav:  0]  Application tag owner
-  TAS         0  [cha: n, def:  0, sav:  0]  Task aborted status
-        0: tasks aborted without response to app client
-        1: any other I_T nexuses receive task aborted
+--------------060208050900010705090605
+Content-Type: text/x-patch;
+ name="scsi_tgt_kconf.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="scsi_tgt_kconf.patch"
 
-So it doesn't support UA_INTLCK ("cha: n" implies the user
-cannot change that value). QAM can be changed to allow
-unrestricted re-ordering (of task with the SIMPLE task
-attribute).
+--- linux-2.6.16-rc6-mm1.orig/drivers/scsi/Kconfig	2006-03-14 09:52:19.000000000 -0500
++++ linux-2.6.16-rc6-mm1/drivers/scsi/Kconfig	2006-03-14 15:56:32.000000000 -0500
+@@ -29,7 +29,7 @@ config SCSI
+ 
+ config SCSI_TGT
+ 	tristate "SCSI target support"
+-	depends on SCSI && EXPERIMENTAL
++	depends on SCSI && NET && EXPERIMENTAL
+ 	---help---
+ 	  If you want to use SCSI target mode drivers enable this option.
+ 	  If you choose M, the module will be called scsi_tgt.
 
-The NormACA bit in the standard INQUIRY response is 0 so
-it doesn't support ACA either.
-
-Doug Gilbert
-
+--------------060208050900010705090605--
