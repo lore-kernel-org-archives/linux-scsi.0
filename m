@@ -1,74 +1,71 @@
 From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: [PATCH 7/10] fusion - memory leak, and initializing fields
-Date: Tue, 14 Mar 2006 09:14:18 -0700
-Message-ID: <F331B95B72AFFB4B87467BE1C8E9CF5F36D92A@NAMAIL2.ad.lsil.com>
+Subject: RE: [PATCH ] drivers/scsi/scsi.c - export reprobe
+Date: Tue, 14 Mar 2006 09:18:23 -0700
+Message-ID: <F331B95B72AFFB4B87467BE1C8E9CF5F36D939@NAMAIL2.ad.lsil.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C64782.589F0C63"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:15242 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1751299AbWCNQOX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Mar 2006 11:14:23 -0500
+	boundary="----_=_NextPart_001_01C64782.EADDADA2"
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752125AbWCNQSe@vger.kernel.org>
 Content-class: urn:content-classes:message
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Moore, Eric" <Eric.Moore@lsil.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: James.Bottomley@SteelEye.com, hch@lst.de, gregkh@novell.com
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@SteelEye.com, hch@lst.de
 
 This is a multi-part message in MIME format.
 
-------_=_NextPart_001_01C64782.589F0C63
+------_=_NextPart_001_01C64782.EADDADA2
 Content-Type: text/plain;
 	charset="US-ASCII"
 Content-Transfer-Encoding: quoted-printable
 
-Changelog:
-(1) fix memory leak: p->phy_info
-(2) initialize device_info and port_info data fields
-(3) initialize the hba firmware handle
-(4) initialize phy_id for attached phy_info data fields
-(5) initialize attached phy_info data fields
+On  Monday, March 13, 2006 5:53 PM, Eric Moore wrote:
 
-Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
+>=20
+> ---------------------------------------------------
+> Adding support for exposing hidden raid components=20
+> for sg interface. The sdev->no_uld_attach flag
+> will set set accordingly.
+>=20
+> The sas module supports adding/removing raid
+> volumes using online storage management application
+> interface. =20
+>=20
+> This patch was provided to me by Christoph Hellwig.
+>=20
+> Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
 
-------_=_NextPart_001_01C64782.589F0C63
+
+Here is repost of patch due to dos line endings.
+
+------_=_NextPart_001_01C64782.EADDADA2
 Content-Type: application/octet-stream;
-	name="7_memleak.patch"
+	name="scsi_device_reprobe"
 Content-Transfer-Encoding: base64
-Content-Description: 7_memleak.patch
+Content-Description: scsi_device_reprobe
 Content-Disposition: attachment;
-	filename="7_memleak.patch"
+	filename="scsi_device_reprobe"
 
-ZGlmZiAtdWFyTiBiL2RyaXZlcnMvbWVzc2FnZS9mdXNpb24vbXB0c2FzLmMgYS9kcml2ZXJzL21l
-c3NhZ2UvZnVzaW9uL21wdHNhcy5jCi0tLSBiL2RyaXZlcnMvbWVzc2FnZS9mdXNpb24vbXB0c2Fz
-LmMJMjAwNi0wMy0xMyAxMjo1MjoyNy4wMDAwMDAwMDAgLTA3MDAKKysrIGEvZHJpdmVycy9tZXNz
-YWdlL2Z1c2lvbi9tcHRzYXMuYwkyMDA2LTAzLTEzIDEzOjQ2OjAzLjAwMDAwMDAwMCAtMDcwMApA
-QCAtNzQ5LDYgKzc0OSw5IEBACiAJCWdvdG8gb3V0X2ZyZWVfY29uc2lzdGVudDsKIAl9CiAKKwlp
-ZiAocG9ydF9pbmZvLT5udW1fcGh5cykKKwkJcG9ydF9pbmZvLT5oYW5kbGUgPQorCQkgICAgbGUx
-Nl90b19jcHUoYnVmZmVyLT5QaHlEYXRhWzBdLkNvbnRyb2xsZXJEZXZIYW5kbGUpOwogCWZvciAo
-aSA9IDA7IGkgPCBwb3J0X2luZm8tPm51bV9waHlzOyBpKyspIHsKIAkJbXB0c2FzX3ByaW50X3Bo
-eV9kYXRhKCZidWZmZXItPlBoeURhdGFbaV0pOwogCQlwb3J0X2luZm8tPnBoeV9pbmZvW2ldLnBo
-eV9pZCA9IGk7CkBAIC04NTUsNiArODU4LDcgQEAKIAljZmcuZGlyID0gMDsJLyogcmVhZCAqLwog
-CWNmZy50aW1lb3V0ID0gMTA7CiAKKwltZW1zZXQoZGV2aWNlX2luZm8sIDAsIHNpemVvZihzdHJ1
-Y3QgbXB0c2FzX2RldmluZm8pKTsKIAllcnJvciA9IG1wdF9jb25maWcoaW9jLCAmY2ZnKTsKIAlp
-ZiAoZXJyb3IpCiAJCWdvdG8gb3V0OwpAQCAtOTI1LDYgKzkyOSw3IEBACiAJY2ZnLmRpciA9IDA7
-CS8qIHJlYWQgKi8KIAljZmcudGltZW91dCA9IDEwOwogCisJbWVtc2V0KHBvcnRfaW5mbywgMCwg
-c2l6ZW9mKHN0cnVjdCBtcHRzYXNfcG9ydGluZm8pKTsKIAllcnJvciA9IG1wdF9jb25maWcoaW9j
-LCAmY2ZnKTsKIAlpZiAoZXJyb3IpCiAJCWdvdG8gb3V0OwpAQCAtMTMzNCw2ICsxMzM5LDggQEAK
-IAkJCQkoTVBJX1NBU19ERVZJQ0VfUEdBRF9GT1JNX0hBTkRMRSA8PAogCQkJCSBNUElfU0FTX0RF
-VklDRV9QR0FEX0ZPUk1fU0hJRlQpLAogCQkJCXBvcnRfaW5mby0+cGh5X2luZm9baV0uYXR0YWNo
-ZWQuaGFuZGxlKTsKKwkJCXBvcnRfaW5mby0+cGh5X2luZm9baV0uYXR0YWNoZWQucGh5X2lkID0K
-KwkJCSAgICBwb3J0X2luZm8tPnBoeV9pbmZvW2ldLnBoeV9pZDsKIAkJfQogCiAJCS8qCkBAIC0x
-MzYwLDYgKzEzNjcsNyBAQAogCXJldHVybiAwOwogCiAgb3V0X2ZyZWVfcG9ydF9pbmZvOgorCWtm
-cmVlKHBvcnRfaW5mby0+cGh5X2luZm8pOwogCWtmcmVlKHBvcnRfaW5mbyk7CiAgb3V0OgogCXJl
-dHVybiBlcnJvcjsKQEAgLTE0ODUsNiArMTQ5Myw3IEBACiAKIAkJaWYgKHBoeV9pbmZvLT5ycGh5
-KSB7CiAJCQlzYXNfcnBoeV9kZWxldGUocGh5X2luZm8tPnJwaHkpOworCQkJbWVtc2V0KCZwaHlf
-aW5mby0+YXR0YWNoZWQsIDAsIHNpemVvZihzdHJ1Y3QgbXB0c2FzX2RldmluZm8pKTsKIAkJCXBo
-eV9pbmZvLT5ycGh5ID0gTlVMTDsKIAkJfQogCQlicmVhazsKQEAgLTE5NTUsNiArMTk2NCw4IEBA
-CiAJbXV0ZXhfbG9jaygmaW9jLT5zYXNfdG9wb2xvZ3lfbXV0ZXgpOwogCWxpc3RfZm9yX2VhY2hf
-ZW50cnlfc2FmZShwLCBuLCAmaW9jLT5zYXNfdG9wb2xvZ3ksIGxpc3QpIHsKIAkJbGlzdF9kZWwo
-JnAtPmxpc3QpOworCQlpZiAocC0+cGh5X2luZm8pCisJCQlrZnJlZShwLT5waHlfaW5mbyk7CiAJ
-CWtmcmVlKHApOwogCX0KIAltdXRleF91bmxvY2soJmlvYy0+c2FzX3RvcG9sb2d5X211dGV4KTsK
+SW5kZXg6IHNjc2ktbWlzYy0yLjYvZHJpdmVycy9zY3NpL3Njc2kuYw0KPT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQ0KLS0t
+IHNjc2ktbWlzYy0yLjYub3JpZy9kcml2ZXJzL3Njc2kvc2NzaS5jCTIwMDYtMDMtMDQgMTM6MDc6
+NDQuMDAwMDAwMDAwICswMTAwDQorKysgc2NzaS1taXNjLTIuNi9kcml2ZXJzL3Njc2kvc2NzaS5j
+CTIwMDYtMDMtMDcgMjE6NTc6MjEuMDAwMDAwMDAwICswMTAwDQpAQCAtMTIxNCw2ICsxMjE0LDEz
+IEBADQogfQ0KIEVYUE9SVF9TWU1CT0woc2NzaV9kZXZpY2VfY2FuY2VsKTsNCiANCit2b2lkIHNj
+c2lfZGV2aWNlX3JlcHJvYmUoc3RydWN0IHNjc2lfZGV2aWNlICpzZGV2KQ0KK3sNCisJZGV2aWNl
+X3JlcHJvYmUoJnNkZXYtPnNkZXZfZ2VuZGV2KTsNCit9DQorDQorRVhQT1JUX1NZTUJPTChzY3Np
+X2RldmljZV9yZXByb2JlKTsNCisNCiBNT0RVTEVfREVTQ1JJUFRJT04oIlNDU0kgY29yZSIpOw0K
+IE1PRFVMRV9MSUNFTlNFKCJHUEwiKTsNCiANCkluZGV4OiBzY3NpLW1pc2MtMi42L2luY2x1ZGUv
+c2NzaS9zY3NpX2RldmljZS5oDQo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09DQotLS0gc2NzaS1taXNjLTIuNi5vcmlnL2lu
+Y2x1ZGUvc2NzaS9zY3NpX2RldmljZS5oCTIwMDYtMDMtMDQgMTM6MDc6NDkuMDAwMDAwMDAwICsw
+MTAwDQorKysgc2NzaS1taXNjLTIuNi9pbmNsdWRlL3Njc2kvc2NzaV9kZXZpY2UuaAkyMDA2LTAz
+LTA3IDIxOjU3OjQ1LjAwMDAwMDAwMCArMDEwMA0KQEAgLTIwNCw2ICsyMDQsNyBAQA0KIAkJCSAg
+IHVpbnQgdGFyZ2V0LCB1aW50IGx1bik7DQogZXh0ZXJuIHZvaWQgc2NzaV9yZW1vdmVfZGV2aWNl
+KHN0cnVjdCBzY3NpX2RldmljZSAqKTsNCiBleHRlcm4gaW50IHNjc2lfZGV2aWNlX2NhbmNlbChz
+dHJ1Y3Qgc2NzaV9kZXZpY2UgKiwgaW50KTsNCitleHRlcm4gdm9pZCBzY3NpX2RldmljZV9yZXBy
+b2JlKHN0cnVjdCBzY3NpX2RldmljZSAqKTsNCiANCiBleHRlcm4gaW50IHNjc2lfZGV2aWNlX2dl
+dChzdHJ1Y3Qgc2NzaV9kZXZpY2UgKik7DQogZXh0ZXJuIHZvaWQgc2NzaV9kZXZpY2VfcHV0KHN0
+cnVjdCBzY3NpX2RldmljZSAqKTsNCg==
 
-------_=_NextPart_001_01C64782.589F0C63--
+------_=_NextPart_001_01C64782.EADDADA2--
