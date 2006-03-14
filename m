@@ -1,75 +1,53 @@
 From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: RE: [PATCH ] drivers/base/bus.c - export reprobe
-Date: Tue, 14 Mar 2006 09:18:18 -0700
-Message-ID: <F331B95B72AFFB4B87467BE1C8E9CF5F36D938@NAMAIL2.ad.lsil.com>
+Subject: [PATCH 10/10] fusion - bump version
+Date: Tue, 14 Mar 2006 09:14:26 -0700
+Message-ID: <F331B95B72AFFB4B87467BE1C8E9CF5F36D92D@NAMAIL2.ad.lsil.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C64782.E81E5913"
+	boundary="----_=_NextPart_001_01C64782.5DF068E6"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:28043 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1752099AbWCNQSj (ORCPT
+Received: from zeus1.kernel.org ([204.152.191.4]:2737 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S1751527AbWCNQTi (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Mar 2006 11:18:39 -0500
+	Tue, 14 Mar 2006 11:19:38 -0500
+Received: from mail0.lsil.com (mail0.lsil.com [147.145.40.20])
+	by zeus1.kernel.org (8.13.1/8.13.1) with ESMTP id k2EGJaqA004381
+	for <linux-scsi@vger.kernel.org>; Tue, 14 Mar 2006 16:19:37 GMT
 Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <gregkh@suse.de>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James.Bottomley@SteelEye.com, hch@lst.de
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@SteelEye.com, hch@lst.de
 
 This is a multi-part message in MIME format.
 
-------_=_NextPart_001_01C64782.E81E5913
+------_=_NextPart_001_01C64782.5DF068E6
 Content-Type: text/plain;
 	charset="US-ASCII"
 Content-Transfer-Encoding: quoted-printable
 
-On Tuesday, March 14, 2006 8:35 AM,  Greg KH wrote:
+version bump
 
->=20
-> base64 for the attachment with DOS line ends?  ugh, can you please fix
-> this up and resend?
->=20
+Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
 
-Here is repost of patch due to dos line endings.
-
-
-
-------_=_NextPart_001_01C64782.E81E5913
+------_=_NextPart_001_01C64782.5DF068E6
 Content-Type: application/octet-stream;
-	name="rescan_device"
+	name="10_bump.patch"
 Content-Transfer-Encoding: base64
-Content-Description: rescan_device
+Content-Description: 10_bump.patch
 Content-Disposition: attachment;
-	filename="rescan_device"
+	filename="10_bump.patch"
 
-SW5kZXg6IHNjc2ktbWlzYy0yLjYvZHJpdmVycy9iYXNlL2J1cy5jDQo9PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09DQotLS0g
-c2NzaS1taXNjLTIuNi5vcmlnL2RyaXZlcnMvYmFzZS9idXMuYwkyMDA2LTAzLTA0IDEzOjA3OjQw
-LjAwMDAwMDAwMCArMDEwMA0KKysrIHNjc2ktbWlzYy0yLjYvZHJpdmVycy9iYXNlL2J1cy5jCTIw
-MDYtMDMtMDcgMjE6MDY6NTkuMDAwMDAwMDAwICswMTAwDQpAQCAtNTM2LDYgKzUzNiwyOCBAQA0K
-IAlidXNfZm9yX2VhY2hfZGV2KGJ1cywgTlVMTCwgTlVMTCwgYnVzX3Jlc2Nhbl9kZXZpY2VzX2hl
-bHBlcik7DQogfQ0KIA0KKy8qKg0KKyAqIGRldmljZV9yZXByb2JlIC0gcmVtb3ZlIGRyaXZlciBm
-b3IgYSBkZXZpY2UgYW5kIHByb2JlIGZvciBhIG5ldyBkcml2ZXINCisgKiBAZGV2OiB0aGUgZGV2
-aWNlIHRvIHJlcHJvYmUNCisgKg0KKyAqIFRoaXMgZnVuY3Rpb24gZGV0YWNoZXMgdGhlIGF0dGFj
-aGVkIGRyaXZlciAoaWYgYW55KSBmb3IgdGhlIGdpdmVuDQorICogZGV2aWNlIGFuZCByZXN0YXJ0
-cyB0aGUgZHJpdmVyIHByb2JpbmcgcHJvY2Vzcy4gIEl0IGlzIGludGVuZGVkDQorICogdG8gdXNl
-IGlmIHByb2JpbmcgY3JpdGVyaWEgY2hhbmdlZCBkdXJpbmcgYSBkZXZpY2VzIGxpZmV0aW1lIGFu
-ZA0KKyAqIGRyaXZlciBhdHRhY2htZW50IHNob3VsZCBjaGFuZ2UgYWNjb3JkaW5nbHkuDQorICov
-DQordm9pZCBkZXZpY2VfcmVwcm9iZShzdHJ1Y3QgZGV2aWNlICpkZXYpDQorew0KKwlpZiAoZGV2
-LT5kcml2ZXIpIHsNCisJCWlmIChkZXYtPnBhcmVudCkgICAgICAgIC8qIE5lZWRlZCBmb3IgVVNC
-ICovDQorCQkJZG93bigmZGV2LT5wYXJlbnQtPnNlbSk7DQorCQlkZXZpY2VfcmVsZWFzZV9kcml2
-ZXIoZGV2KTsNCisJCWlmIChkZXYtPnBhcmVudCkNCisJCQl1cCgmZGV2LT5wYXJlbnQtPnNlbSk7
-DQorCX0NCisNCisJYnVzX3Jlc2Nhbl9kZXZpY2VzX2hlbHBlcihkZXYsIE5VTEwpOw0KK30NCitF
-WFBPUlRfU1lNQk9MX0dQTChkZXZpY2VfcmVwcm9iZSk7DQogDQogc3RydWN0IGJ1c190eXBlICog
-Z2V0X2J1cyhzdHJ1Y3QgYnVzX3R5cGUgKiBidXMpDQogew0KSW5kZXg6IHNjc2ktbWlzYy0yLjYv
-aW5jbHVkZS9saW51eC9kZXZpY2UuaA0KPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQ0KLS0tIHNjc2ktbWlzYy0yLjYub3Jp
-Zy9pbmNsdWRlL2xpbnV4L2RldmljZS5oCTIwMDYtMDMtMDQgMTM6MDc6NDkuMDAwMDAwMDAwICsw
-MTAwDQorKysgc2NzaS1taXNjLTIuNi9pbmNsdWRlL2xpbnV4L2RldmljZS5oCTIwMDYtMDMtMDcg
-MjA6NTM6NDMuMDAwMDAwMDAwICswMTAwDQpAQCAtMzc4LDYgKzM3OCw3IEBADQogZXh0ZXJuIHZv
-aWQgZGV2aWNlX3JlbGVhc2VfZHJpdmVyKHN0cnVjdCBkZXZpY2UgKiBkZXYpOw0KIGV4dGVybiBp
-bnQgIGRldmljZV9hdHRhY2goc3RydWN0IGRldmljZSAqIGRldik7DQogZXh0ZXJuIHZvaWQgZHJp
-dmVyX2F0dGFjaChzdHJ1Y3QgZGV2aWNlX2RyaXZlciAqIGRydik7DQorZXh0ZXJuIHZvaWQgZGV2
-aWNlX3JlcHJvYmUoc3RydWN0IGRldmljZSAqZGV2KTsNCiANCiANCiAvKg0K
+ZGlmZiAtdWFyTiBiL2RyaXZlcnMvbWVzc2FnZS9mdXNpb24vbXB0YmFzZS5oIGEvZHJpdmVycy9t
+ZXNzYWdlL2Z1c2lvbi9tcHRiYXNlLmgKLS0tIGIvZHJpdmVycy9tZXNzYWdlL2Z1c2lvbi9tcHRi
+YXNlLmgJMjAwNi0wMy0xMyAxMzoyOTozNS4wMDAwMDAwMDAgLTA3MDAKKysrIGEvZHJpdmVycy9t
+ZXNzYWdlL2Z1c2lvbi9tcHRiYXNlLmgJMjAwNi0wMy0xMyAxMzo0ODo1Ni4wMDAwMDAwMDAgLTA3
+MDAKQEAgLTc2LDggKzc2LDggQEAKICNkZWZpbmUgQ09QWVJJR0hUCSJDb3B5cmlnaHQgKGMpIDE5
+OTktMjAwNSAiIE1PRFVMRUFVVEhPUgogI2VuZGlmCiAKLSNkZWZpbmUgTVBUX0xJTlVYX1ZFUlNJ
+T05fQ09NTU9OCSIzLjAzLjA3IgotI2RlZmluZSBNUFRfTElOVVhfUEFDS0FHRV9OQU1FCQkiQCgj
+KW1wdGxpbnV4LTMuMDMuMDciCisjZGVmaW5lIE1QVF9MSU5VWF9WRVJTSU9OX0NPTU1PTgkiMy4w
+My4wOCIKKyNkZWZpbmUgTVBUX0xJTlVYX1BBQ0tBR0VfTkFNRQkJIkAoIyltcHRsaW51eC0zLjAz
+LjA4IgogI2RlZmluZSBXSEFUX01BR0lDX1NUUklORwkJIkAiICIoIiAiIyIgIikiCiAKICNkZWZp
+bmUgc2hvd19tcHRtb2RfdmVyKHMsdmVyKSAgXAo=
 
-------_=_NextPart_001_01C64782.E81E5913--
+------_=_NextPart_001_01C64782.5DF068E6--
