@@ -1,57 +1,55 @@
-From: Alexis Bruemmer <alexisb@us.ibm.com>
-Subject: Re: [SCSI] aic94xx: remove event thread
-Date: Tue, 14 Mar 2006 10:00:00 -0800
-Message-ID: <1142359200.8649.156.camel@localhost.localdomain>
-References: <1142179567.3297.13.camel@mulgrave.il.steeleye.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [GIT PATCH] SCSI bug fixes for 2.6.16-rc6
+Date: Tue, 14 Mar 2006 12:34:46 -0600
+Message-ID: <1142361287.3241.44.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:56537 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S1752342AbWCNSA4
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Mar 2006 13:00:56 -0500
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e35.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id k2EI0uxW021793
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Mar 2006 13:00:56 -0500
-Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
-	by d03relay04.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k2EI3oHd162194
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Mar 2006 11:03:50 -0700
-Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av04.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k2EI0toa005117
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Mar 2006 11:00:55 -0700
-In-Reply-To: <1142179567.3297.13.camel@mulgrave.il.steeleye.com>
+Received: from stat9.steeleye.com ([209.192.50.41]:27822 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1751248AbWCNSe4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Mar 2006 13:34:56 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Sun, 2006-03-12 at 10:06 -0600, James Bottomley wrote:
-> This patch moves the discovery and event processing entirely over to
-> being workqueue based.  Additionally, it tries to ensure discovery gets
-> time to proceed before finishing the module load.  There's still a
-> non-determinism in there since it starts with a port interrupt for a
-> connected phy after phys are enabled, so there's a ssleep(1) in there to
-> capture this before the scsi_flush_work() waits for it to complete.
+This is just a minor selection of bug fixes (two in zfcp which no-one
+other than s390 will see).  The others are a build failure in the
+aha152x pcmcia driver and blacklisting a brownie array which fails
+rather badly when given a report luns command and a fc transport
+parameter miscount that could result in a BUG_ON().
 
-Just wanted to let you know that this patch has passed an overnight
-reboot test on a x366.  The ssleep(1) seems to allow for enough time in
-order to verify that sas_process_events has been called before waiting
-on discovery.
+The fix is here:
 
-> 
-> James
-> 
+master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
 
-Regards,
+The short changelog is:
 
-Alexis
+Andreas Herrmann:
+  o zfcp: fix device registration issues
+  o scsi_transport_fc: fix FC_HOST_NUM_ATTRS
+  o zfcp: correctly set this_id for hosts
 
->  
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dominik Brodowski:
+  o scsi: aha152x pcmcia driver needs spi transport
+
+Matthew Wilcox:
+  o Add Brownie to blacklist
+
+And the diffstat:
+
+ s390/scsi/zfcp_def.h     |    1 +
+ s390/scsi/zfcp_erp.c     |   11 +++++++----
+ s390/scsi/zfcp_scsi.c    |    8 +++++---
+ scsi/pcmcia/Kconfig      |    1 +
+ scsi/scsi_devinfo.c      |    1 +
+ scsi/scsi_transport_fc.c |    2 +-
+ 6 files changed, 16 insertions(+), 8 deletions(-)
+
+James
+
+
+
 
