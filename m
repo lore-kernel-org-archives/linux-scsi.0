@@ -1,38 +1,36 @@
 From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: [PATCH ] drivers/scsi/scsi.c - export reprobe
-Date: Tue, 14 Mar 2006 09:58:06 +0100
-Message-ID: <1142326687.3027.20.camel@laptopd505.fenrus.org>
-References: <F331B95B72AFFB4B87467BE1C8E9CF5F36D82A@NAMAIL2.ad.lsil.com>
-Reply-To: arjan@infradead.org
+Subject: Re: [PATCH 2.6.16-rc6] Promise SuperTrak driver
+Date: Tue, 14 Mar 2006 10:18:26 +0100
+Message-ID: <1142327906.3027.24.camel@laptopd505.fenrus.org>
+References: <NONAMEBgJJ72jYxDwLd000000d3@nonameb.ptu.promise.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:54918 "EHLO
+Received: from pentafluge.infradead.org ([213.146.154.40]:65491 "EHLO
 	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1751021AbWCNI6P (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Mar 2006 03:58:15 -0500
-In-Reply-To: <F331B95B72AFFB4B87467BE1C8E9CF5F36D82A@NAMAIL2.ad.lsil.com>
+	id S1751092AbWCNJSc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Mar 2006 04:18:32 -0500
+In-Reply-To: <NONAMEBgJJ72jYxDwLd000000d3@nonameb.ptu.promise.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric" <Eric.Moore@lsil.com>
-Cc: gregkh@novell.com, hch@lst.de, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
+To: Ed Lin <ed.lin@promise.com>
+Cc: Andrew Morton <akpm@osdl.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "promise_linux@promise.com" <promise_linux@promise.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On Mon, 2006-03-13 at 17:52 -0700, Moore, Eric wrote:
-> Request for exporting device_reprobe - 
-> This is scsi wrapper portion.
+
+> >
+> >> +struct st_sgitem {
+> >> +struct st_sgtable {
+> >> +struct handshake_frame {
+> >> +struct req_msg {
+> >> +struct status_msg {
+> >
+> >Has this all been tested on big-endian hardware?
+> >
 > 
-> ---------------------------------------------------
-> Adding support for exposing hidden raid components 
-> for sg interface. The sdev->no_uld_attach flag
-> will set set accordingly.
-> 
-> The sas module supports adding/removing raid
-> volumes using online storage management application
-> interface.  
+> No. It was only tested on i386 and x86-64 machines.
 
+you'll want those to be __attribute__((packed)) as well btw
 
-I'd say this export wants to be _GPL as well; it's a most trivial
-wrapper around a _GPL export after all, and new functionality
 
 
