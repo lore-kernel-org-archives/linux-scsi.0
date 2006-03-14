@@ -1,34 +1,45 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: [PATCH] qla2xxx: update MAINTAINERS
-Date: Tue, 14 Mar 2006 14:41:04 -0800
-Message-ID: <20060314224104.GE9379@andrew-vasquezs-powerbook-g4-15.local>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH ] drivers/base/bus.c - export reprobe
+Date: Tue, 14 Mar 2006 16:43:37 -0600
+Message-ID: <1142376218.3241.82.camel@mulgrave.il.steeleye.com>
+References: <F331B95B72AFFB4B87467BE1C8E9CF5F36D829@NAMAIL2.ad.lsil.com>
+	 <20060314153455.GA8071@suse.de> <20060314170855.GA18342@infradead.org>
+	 <20060314171951.GA22678@suse.de> <20060314172543.GA20331@infradead.org>
+	 <20060314172933.GA24619@suse.de>
+	 <1142358210.3241.28.camel@mulgrave.il.steeleye.com>
+	 <20060314175741.GA2697@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:30591 "EHLO avexch02.qlogic.com")
-	by vger.kernel.org with ESMTP id S1751944AbWCNWlK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Mar 2006 17:41:10 -0500
-Content-Disposition: inline
+Received: from stat9.steeleye.com ([209.192.50.41]:19124 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1751944AbWCNWnz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Mar 2006 17:43:55 -0500
+In-Reply-To: <20060314175741.GA2697@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Greg KH <gregkh@suse.de>
+Cc: Christoph Hellwig <hch@infradead.org>, "Moore, Eric" <Eric.Moore@lsil.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hch@lst.de
 
-Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
----
+On Tue, 2006-03-14 at 09:57 -0800, Greg KH wrote:
+> On Tue, Mar 14, 2006 at 11:43:30AM -0600, James Bottomley wrote:
+> > Actually, would it be OK if you sign off on this and I take it via the
+> > scsi tree?  Otherwise there'll be a nasty cross dependency between
+> > scsi-misc and usb and I'll spend the next week explaining what trees you
+> > need to pull in to get scsi-misc to build.
+> 
+> Sure, that makes a lot of sense:
+> 
+> Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
 
-QLogic has a local reflector for linux related patches and inquiries.
+OK, got it in scsi-misc, thanks.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 3d7d30d..f151860 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -2146,7 +2146,7 @@ S:	Maintained
- 
- QLOGIC QLA2XXX FC-SCSI DRIVER
- P:	Andrew Vasquez
--M:	andrew.vasquez@qlogic.com
-+M:	linux-driver@qlogic.com
- L:	linux-scsi@vger.kernel.org
- S:	Supported
- 
+> Oh, and please make that scsi wrapper function either
+> EXPORT_SYMBOL_GPL() or an inline function or macro.
+
+I've put it in as an inline function.
+
+James
+
+
