@@ -1,47 +1,71 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH 2.6.16-rc6] Promise SuperTrak driver
-Date: Tue, 14 Mar 2006 13:04:30 -0700
-Message-ID: <20060314200430.GW1653@parisc-linux.org>
-References: <20060313224112.GA19513@havoc.gtf.org> <20060313154236.32293cf9.akpm@osdl.org>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: SCSI target and IO-throttling
+Date: Tue, 14 Mar 2006 15:54:32 -0500
+Message-ID: <44172D88.6070201@torque.net>
+References: <OF586A820A.80375000-ON8825712A.00712235-8825712A.00815110@us.ibm.com> <440EF9AC.7070903@vlnb.net> <D2BA8EC0-6B20-40EF-B9C5-88CABB1B7CDD@egenera.com> <440F1920.1050608@vlnb.net> <43998989-7BD3-4F3F-A10A-17385D63411E@egenera.com> <441075D4.6010109@vlnb.net> <80454C34-75B9-409B-A454-B8AB0DB1AF4D@egenera.com> <4411C99C.9040200@vlnb.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:65004 "EHLO
-	palinux.hppa") by vger.kernel.org with ESMTP id S1751337AbWCNUEg
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Mar 2006 15:04:36 -0500
-Content-Disposition: inline
-In-Reply-To: <20060313154236.32293cf9.akpm@osdl.org>
+Received: from canuck.infradead.org ([205.233.218.70]:49289 "EHLO
+	canuck.infradead.org") by vger.kernel.org with ESMTP
+	id S932132AbWCNU5Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Mar 2006 15:57:25 -0500
+In-Reply-To: <4411C99C.9040200@vlnb.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org, promise_linux@promise.com, linux-kernel@vger.kernel.org
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: Steve Byan <smb@egenera.com>, Bryan Henderson <hbryan@us.ibm.com>, linux-scsi@vger.kernel.org
 
-On Mon, Mar 13, 2006 at 03:42:36PM -0800, Andrew Morton wrote:
-> > +#include <linux/irq.h>
-> 
-> Can't include linux/irq.h from generic code (we really ought to fix that).
+Vladislav Bolkhovitin wrote:
+> Steve Byan wrote:
 
-In a sense we have -- everybody should include <linux/interrupt.h> and
-not <*/irq.h>.  Perhaps we need to poison the includes.
+<snip>
 
-> > +static inline u16 shasta_alloc_tag(u32 *bitmap)
-> > +{
-> > +	u16 i;
-> > +	for (i = 0; i < TAG_BITMAP_LENGTH; i++) 
-> > +		if (!((*bitmap) & (1 << i))) {
-> > +			*bitmap |= (1 << i);
-> > +			return i;
-> > +		}
-> > +
-> > +	return TAG_BITMAP_LENGTH;
-> > +}
-> 
-> This is too large to be inlined.
+> BTW, do you have any statistic how many modern SCSI disks support those
+> features (ORDERED, ACA, UA_INTLCK_CTL, etc)? Few years ago none of
+> available for us SCSI hardware, including tape libraries, supported ACA.
+> It was not very modern for that time, though
 
-And if I read the driver right, is unnecessary code.  It could just use
-the midlayer tag code (ok, not scsi_populate_tag_msg() which is
-SPI-specific, but scsi_activate_tcq(), scsi_deactivate_tcq(),
-scsi_find_tag(), scsi_set_tag_type(), and scsi_get_tag_type() should all
-work, being thin wrappers around the block layer functionality.
+Vlad,
+Here is part of the control mode page from a
+recent SCSI disk (Cheetah 15k.4) :
+
+# sdparm -p co /dev/sdb -ll
+    /dev/sdb: SEAGATE   ST336754SS        0003
+    Direct access device specific parameters: WP=0  DPOFUA=1
+Control mode page [PS=1]:
+  TST         0  [cha: n, def:  0, sav:  0]  Task set type
+        0: lu maintains one task set for all I_T nexuses
+        1: lu maintains separate task sets for each I_T nexus
+  TMF_ONLY    0  [cha: n, def:  0, sav:  0]  Task management functions only
+  D_SENSE     0  [cha: n, def:  0, sav:  0]  Descriptor format sense data
+  GLTSD       0  [cha: y, def:  1, sav:  0]  Global logging target save disable
+  RLEC        0  [cha: y, def:  0, sav:  0]  Report log exception condition
+  QAM         0  [cha: y, def:  0, sav:  0]  Queue algorithm modifier
+        0: restricted re-ordering; 1: unrestricted
+  QERR        0  [cha: n, def:  0, sav:  0]  Queue error management
+        0: only affected task gets CC; 1: affected tasks aborted
+        3: affected tasks aborted on same I_T nexus
+  RAC         0  [cha: n, def:  0, sav:  0]  Report a check
+  UA_INTLCK   0  [cha: n, def:  0, sav:  0]  Unit attention interlocks control
+        0: unit attention cleared with check condition status
+        2: unit attention not cleared with check condition status
+        3: as 2 plus ua on busy, task set full or reservation conflict
+  SWP         0  [cha: n, def:  0, sav:  0]  Software write protect
+  ATO         0  [cha: n, def:  0, sav:  0]  Application tag owner
+  TAS         0  [cha: n, def:  0, sav:  0]  Task aborted status
+        0: tasks aborted without response to app client
+        1: any other I_T nexuses receive task aborted
+
+So it doesn't support UA_INTLCK ("cha: n" implies the user
+cannot change that value). QAM can be changed to allow
+unrestricted re-ordering (of task with the SIMPLE task
+attribute).
+
+The NormACA bit in the standard INQUIRY response is 0 so
+it doesn't support ACA either.
+
+Doug Gilbert
 
