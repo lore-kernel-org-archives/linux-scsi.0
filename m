@@ -1,56 +1,44 @@
-From: "Ultra All Inclusiv-5 Sterne." <toursi@freenet.de>
-Subject: Ultra All Inclusiv-5 Sterne Hotels.
-Date: Wed, 15 Mar 2006 22:54:57 +0200
-Message-ID: <e6d3898e49f062f0c5f2228216738cbb@freenet.de>
-Reply-To: toursi@doruk.net
+From: Mark Haverkamp <markh@osdl.org>
+Subject: [PATCH] lpfc: Fix timer related panic
+Date: Wed, 15 Mar 2006 14:12:39 -0800
+Message-ID: <1142460759.28540.8.camel@markh3.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1254
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dsl.dynamic8596103177.ttnet.net.tr ([85.96.103.177]:15117 "HELO
-	a-air") by vger.kernel.org with SMTP id S1750738AbWCOU4u convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Mar 2006 15:56:50 -0500
+Received: from smtp.osdl.org ([65.172.181.4]:62630 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751680AbWCOWMp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Mar 2006 17:12:45 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "James.Smart@Emulex.Com" <James.Smart@Emulex.Com>, James Bottomley <James.Bottomley@steeleye.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Sehr geehrte Damen und Herren,
-=46=FCr das Jahr 2006 Sommer und Herbst haben wir Ihnen ein preislich
-unschlagbares Angebot an die t=FCrkische Riviera-BELEK und SIDE(Ultra A=
-ll Inclusiv-5 Sterne Hotels)
-anzubieten.
-Ab Frankfurt-Dusseldorf-Hamburg-Wien- Zuerich-Basel-Friedrichshafen und=
- Muenchen.
-INCLUSIV FLUG  Hin und Zur=FCck und
-8-t=E4gige Ferien an der T=FCrkischen Riviera-Antalya-5 Sterne ULTRA AL=
-L INCLUSIV.
-TERMINE UND PREISE:
-Mai-Juni     -Euro 549
-Juli-August -Euro 599
-Kinder            :0-2 Frei.
-Kinder            :2 bis 14 Jahre Festpreis Euro 345.
-HERBST
-30.09 bis 07.10.2006  Euro 549
-07.10 bis 14.10.2006  Euro 549
-14.10 bis 21.10.2006  Euro 549=20
-21.10 bis 28.10.2006  Euro 549
-Kinder            :0-2 Frei.
-Kinder            :2 bis 14 Jahre Festpreis Euro 345
-Inklusivleistungen:=20
-=2E Flug nach Antalya und zur=FCck-Mit Condor Maschinen Sun Express-Peg=
-asus .
-=2E Transfers Flughafen - Hotel -Flughafen
-=2E Moderner klimatisierter Reisebus f=FCr die Ausfl=FCge
-=2E 7 =DCbernachtungen im 5 Sterne All Inclusiv.
-=2E Begr=FC=DFungscocktail und Orientierungsfahrt.=20
-=2E Deutschsprachige Reiseleitung.
-Mit Herzlichen Gr=FCssen.
-S.GROUP-TOURSI
+This is a re-send of a patch I sent out a couple months ago.  It fixes a
+panic in the timeout handler when I have lots of devices being
+configured.
+
+Signed-of-by: Mark Haverkamp <markh@osdl.org>
+
+---
+
+Applies to scsi-misc-2.6
+
+--- scsi-misc-2.6.orig/drivers/scsi/lpfc/lpfc_els.c	2006-03-13 13:28:18.000000000 -0800
++++ scsi-misc-2.6/drivers/scsi/lpfc/lpfc_els.c	2006-03-15 14:00:38.000000000 -0800
+@@ -3270,8 +3270,7 @@
+ 			lpfc_sli_release_iocbq(phba, piocb);
+ 	}
+ 	if (phba->sli.ring[LPFC_ELS_RING].txcmplq_cnt) {
+-		phba->els_tmofunc.expires = jiffies + HZ * timeout;
+-		add_timer(&phba->els_tmofunc);
++		mod_timer(&phba->els_tmofunc, jiffies + HZ * timeout);
+ 	}
+ 	spin_unlock_irq(phba->host->host_lock);
+ }
 
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Mark Haverkamp <markh@osdl.org>
+
