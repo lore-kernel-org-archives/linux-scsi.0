@@ -1,44 +1,28 @@
-From: Mark Haverkamp <markh@osdl.org>
-Subject: [PATCH] lpfc: Fix timer related panic
-Date: Wed, 15 Mar 2006 14:12:39 -0800
-Message-ID: <1142460759.28540.8.camel@markh3.pdx.osdl.net>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 6/6] scsi tgt: Makefile and Kconfig changes
+Date: Thu, 16 Mar 2006 09:00:17 +0900
+Message-ID: <20060316090017H.fujita.tomonori@lab.ntt.co.jp>
+References: <1140119627.20193.55.camel@max>
+	<44173C6C.1050003@ce.jp.nec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:62630 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751680AbWCOWMp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Mar 2006 17:12:45 -0500
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:20952 "EHLO
+	tama5.ecl.ntt.co.jp") by vger.kernel.org with ESMTP id S932549AbWCPAA2
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Mar 2006 19:00:28 -0500
+In-Reply-To: <44173C6C.1050003@ce.jp.nec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James.Smart@Emulex.Com" <James.Smart@Emulex.Com>, James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: j-nomura@ce.jp.nec.com
+Cc: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
 
-This is a re-send of a patch I sent out a couple months ago.  It fixes a
-panic in the timeout handler when I have lots of devices being
-configured.
+From: "Jun'ichi Nomura" <j-nomura@ce.jp.nec.com>
+Subject: Re: [PATCH 6/6] scsi tgt: Makefile and Kconfig changes
+Date: Tue, 14 Mar 2006 16:58:04 -0500
 
-Signed-of-by: Mark Haverkamp <markh@osdl.org>
+> scsi_tgt_if.c depends on CONFIG_NET for using netlink.
+> So it would be nice if the Kconfig entry checks it.
 
----
-
-Applies to scsi-misc-2.6
-
---- scsi-misc-2.6.orig/drivers/scsi/lpfc/lpfc_els.c	2006-03-13 13:28:18.000000000 -0800
-+++ scsi-misc-2.6/drivers/scsi/lpfc/lpfc_els.c	2006-03-15 14:00:38.000000000 -0800
-@@ -3270,8 +3270,7 @@
- 			lpfc_sli_release_iocbq(phba, piocb);
- 	}
- 	if (phba->sli.ring[LPFC_ELS_RING].txcmplq_cnt) {
--		phba->els_tmofunc.expires = jiffies + HZ * timeout;
--		add_timer(&phba->els_tmofunc);
-+		mod_timer(&phba->els_tmofunc, jiffies + HZ * timeout);
- 	}
- 	spin_unlock_irq(phba->host->host_lock);
- }
-
-
--- 
-Mark Haverkamp <markh@osdl.org>
-
+Yep. Thanks.
