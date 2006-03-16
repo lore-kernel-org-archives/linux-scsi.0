@@ -1,32 +1,40 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 2.6.16-rc6] Promise SuperTrak driver
-Date: Thu, 16 Mar 2006 00:11:08 -0500
-Message-ID: <4418F36C.1090508@garzik.org>
-References: <NONAMEBSkcJse1fTvOS000001bc@nonameb.ptu.promise.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=GB2312
+From: "Marshall Workman" <bwfaxcngq@schoenberg.com>
+Subject: you wont find anything better Fran
+Date: Thu, 16 Mar 2006 08:33:35 +0100
+Message-ID: <9.6.4.9.7.98180305501983.982a2859@209.132.176.167>
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:48789 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932400AbWCPFLN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Mar 2006 00:11:13 -0500
-In-Reply-To: <NONAMEBSkcJse1fTvOS000001bc@nonameb.ptu.promise.com>
+Received: from 64-73-246-215-cust.telepacific.net ([64.73.246.215]:54027 "HELO
+	64-73-246-215-cust.telepacific.net") by vger.kernel.org with SMTP
+	id S1752221AbWCPHdv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Mar 2006 02:33:51 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ed Lin <ed.lin@promise.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "promise_linux@promise.com" <promise_linux@promise.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-Ed Lin wrote:
-> I think the tcq is good after reading the related kernel code. But driver
-> still need to keep track of the tag for eh and flush. Maybe the driver
-> can use find_first_zero_bit(), __set_bit(), and __test_and_clear_bit(),
-> because this is what the block layer uses for tag operations.
+Homeowner 
 
 
-Once mapped by the block layer, the tag should be accessible via struct
-request::tag variable for the lifetime of the struct request.
+You have been pre-approved for a $478,273 Home Loan at a 3.73 Fixed Rate. 
+This offer is being extended to you unconditionally and your credit is in no way a factor. 
 
-	Jeff
+
+To take Advantage of this Limited Time opportunity 
+
+
+All we ask is that you visit our Website and complete 
+The 1 minute post Approval Form 
+
+
+http://www5.fa3k.com/was.asp
+
+
+Best Wishes, 
+
+
+Angelique Farrell
+
 
 
