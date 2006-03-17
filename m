@@ -1,94 +1,99 @@
 From: Brian King <brking@us.ibm.com>
-Subject: [PATCH 05/15] libata: Add __ata_scsi_ioctl
-Date: Fri, 17 Mar 2006 17:04:27 -0600
-Message-ID: <200603172304.k2HN4Stx030065@d01av02.pok.ibm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e3.ny.us.ibm.com ([32.97.182.143]:15535 "EHLO e3.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S932849AbWCQXEt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Mar 2006 18:04:49 -0500
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [PATCH 07/15] libata: Remove dependence on host_set->dev for SAS
+Date: Fri, 17 Mar 2006 17:04:41 -0600
+Message-ID: <200603172304.k2HN4gNg015028@d03av03.boulder.ibm.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
 To: jgarzik@pobox.com
 Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, brking@us.ibm.com
+List-Id: linux-scsi@vger.kernel.org
 
 
-In preparation for SAS, export a new interface that SAS LLDDs can
-call to handle libata ioctls. The existing interface in insufficient
-for this purpose since it assumes it owns the scsi_host struct.
+Remove some of the dependence on the host_set struct
+in preparation for supporting SAS HBAs. Adds a struct device
+pointer to the ata_port struct.
 
 Signed-off-by: Brian King <brking@us.ibm.com>
 ---
 
- libata-dev-bjking1/drivers/scsi/libata-scsi.c |   36 ++++++++++++++++----------
- libata-dev-bjking1/include/linux/libata.h     |    1 
- 2 files changed, 24 insertions(+), 13 deletions(-)
+ libata-dev-bjking1/drivers/scsi/libata-core.c |   13 +++++++------
+ libata-dev-bjking1/include/linux/libata.h     |    1 +
+ 2 files changed, 8 insertions(+), 6 deletions(-)
 
-diff -puN drivers/scsi/libata-scsi.c~libata_scsi_ioctl drivers/scsi/libata-scsi.c
---- libata-dev/drivers/scsi/libata-scsi.c~libata_scsi_ioctl	2006-03-14 13:55:40.000000000 -0600
-+++ libata-dev-bjking1/drivers/scsi/libata-scsi.c	2006-03-14 13:55:40.000000000 -0600
-@@ -255,22 +255,10 @@ int ata_task_ioctl(struct scsi_device *s
- 	return rc;
- }
+diff -puN include/linux/libata.h~libata_host_set_dev include/linux/libata.h
+--- libata-dev/include/linux/libata.h~libata_host_set_dev	2006-03-17 15:35:38.000000000 -0600
++++ libata-dev-bjking1/include/linux/libata.h	2006-03-17 15:35:38.000000000 -0600
+@@ -395,6 +395,7 @@ struct ata_port {
  
--int ata_scsi_ioctl(struct scsi_device *scsidev, int cmd, void __user *arg)
-+int __ata_scsi_ioctl(struct scsi_device *scsidev, int cmd, void __user *arg)
- {
--	struct ata_port *ap;
--	struct ata_device *dev;
- 	int val = -EINVAL, rc = -EINVAL;
+ 	struct ata_host_stats	stats;
+ 	struct ata_host_set	*host_set;
++	struct device 		*dev;
  
--	ap = (struct ata_port *) &scsidev->host->hostdata[0];
--	if (!ap)
--		goto out;
--
--	dev = ata_scsi_find_dev(ap, scsidev);
--	if (!dev) {
--		rc = -ENODEV;
--		goto out;
--	}
--
- 	switch (cmd) {
- 	case ATA_IOC_GET_IO32:
- 		val = 0;
-@@ -299,6 +287,28 @@ int ata_scsi_ioctl(struct scsi_device *s
- 		break;
+ 	struct work_struct	port_task;
+ 
+diff -puN drivers/scsi/libata-core.c~libata_host_set_dev drivers/scsi/libata-core.c
+--- libata-dev/drivers/scsi/libata-core.c~libata_host_set_dev	2006-03-17 15:35:38.000000000 -0600
++++ libata-dev-bjking1/drivers/scsi/libata-core.c	2006-03-17 15:35:38.000000000 -0600
+@@ -2740,7 +2740,7 @@ static void ata_sg_clean(struct ata_queu
+ 
+ 	if (qc->flags & ATA_QCFLAG_SG) {
+ 		if (qc->n_elem)
+-			dma_unmap_sg(ap->host_set->dev, sg, qc->n_elem, dir);
++			dma_unmap_sg(ap->dev, sg, qc->n_elem, dir);
+ 		/* restore last sg */
+ 		sg[qc->orig_n_elem - 1].length += qc->pad_len;
+ 		if (pad_buf) {
+@@ -2751,7 +2751,7 @@ static void ata_sg_clean(struct ata_queu
+ 		}
+ 	} else {
+ 		if (qc->n_elem)
+-			dma_unmap_single(ap->host_set->dev,
++			dma_unmap_single(ap->dev,
+ 				sg_dma_address(&sg[0]), sg_dma_len(&sg[0]),
+ 				dir);
+ 		/* restore sg */
+@@ -2963,7 +2963,7 @@ static int ata_sg_setup_one(struct ata_q
+ 		goto skip_map;
  	}
  
-+	return rc;
-+}
-+EXPORT_SYMBOL_GPL(__ata_scsi_ioctl);
-+
-+int ata_scsi_ioctl(struct scsi_device *scsidev, int cmd, void __user *arg)
-+{
-+	struct ata_port *ap;
-+	struct ata_device *dev;
-+	int rc = -EINVAL;
-+
-+	ap = (struct ata_port *) &scsidev->host->hostdata[0];
-+	if (!ap)
-+		goto out;
-+
-+	dev = ata_scsi_find_dev(ap, scsidev);
-+	if (!dev) {
-+		rc = -ENODEV;
-+		goto out;
-+	}
-+
-+	rc = __ata_scsi_ioctl(scsidev, cmd, arg);
-+
- out:
- 	return rc;
- }
-diff -puN include/linux/libata.h~libata_scsi_ioctl include/linux/libata.h
---- libata-dev/include/linux/libata.h~libata_scsi_ioctl	2006-03-14 13:55:40.000000000 -0600
-+++ libata-dev-bjking1/include/linux/libata.h	2006-03-14 13:55:40.000000000 -0600
-@@ -507,6 +507,7 @@ extern int ata_device_add(const struct a
- extern void ata_host_set_remove(struct ata_host_set *host_set);
- extern int ata_scsi_detect(struct scsi_host_template *sht);
- extern int ata_scsi_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
-+extern int __ata_scsi_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
- extern int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *));
- extern enum scsi_eh_timer_return ata_scsi_timed_out(struct scsi_cmnd *cmd);
- extern int ata_scsi_error(struct Scsi_Host *host);
+-	dma_address = dma_map_single(ap->host_set->dev, qc->buf_virt,
++	dma_address = dma_map_single(ap->dev, qc->buf_virt,
+ 				     sg->length, dir);
+ 	if (dma_mapping_error(dma_address)) {
+ 		/* restore sg */
+@@ -3051,7 +3051,7 @@ static int ata_sg_setup(struct ata_queue
+ 	}
+ 
+ 	dir = qc->dma_dir;
+-	n_elem = dma_map_sg(ap->host_set->dev, sg, pre_n_elem, dir);
++	n_elem = dma_map_sg(ap->dev, sg, pre_n_elem, dir);
+ 	if (n_elem < 1) {
+ 		/* restore last sg */
+ 		lsg->length += qc->pad_len;
+@@ -4497,7 +4497,7 @@ int ata_device_suspend(struct ata_port *
+ 
+ int ata_port_start (struct ata_port *ap)
+ {
+-	struct device *dev = ap->host_set->dev;
++	struct device *dev = ap->dev;
+ 	int rc;
+ 
+ 	ap->prd = dma_alloc_coherent(dev, ATA_PRD_TBL_SZ, &ap->prd_dma, GFP_KERNEL);
+@@ -4530,7 +4530,7 @@ int ata_port_start (struct ata_port *ap)
+ 
+ void ata_port_stop (struct ata_port *ap)
+ {
+-	struct device *dev = ap->host_set->dev;
++	struct device *dev = ap->dev;
+ 
+ 	dma_free_coherent(dev, ATA_PRD_TBL_SZ, ap->prd, ap->prd_dma);
+ 	ata_pad_free(ap, dev);
+@@ -4596,6 +4596,7 @@ static void ata_host_init(struct ata_por
+ 	ap->host = host;
+ 	ap->ctl = ATA_DEVCTL_OBS;
+ 	ap->host_set = host_set;
++	ap->dev = ent->dev;
+ 	ap->port_no = port_no;
+ 	ap->hard_port_no =
+ 		ent->legacy_mode ? ent->hard_port_no : port_no;
 _
