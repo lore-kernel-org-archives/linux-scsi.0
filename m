@@ -1,50 +1,52 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: [PATCH] link scsi_debug later
-Date: Fri, 17 Mar 2006 12:44:07 -0800
-Message-ID: <20060317124407.5f19cc09.rdunlap@xenotime.net>
+From: Mark Haverkamp <markh@osdl.org>
+Subject: Re: how to use scsi_remove_device
+Date: Fri, 17 Mar 2006 13:11:48 -0800
+Message-ID: <1142629908.15834.15.camel@markh3.pdx.osdl.net>
+References: <1142598225.25906.256865850@webmail.messagingengine.com>
+	 <441B1388.20704@s5r6.in-berlin.de>  <441B1C7F.2090605@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:5599 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S932757AbWCQUmG (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:28634 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932788AbWCQVL6 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Mar 2006 15:42:06 -0500
-Received: from midway.site ([71.111.157.99]) by xenotime.net for <linux-scsi@vger.kernel.org>; Fri, 17 Mar 2006 12:42:04 -0800
+	Fri, 17 Mar 2006 16:11:58 -0500
+In-Reply-To: <441B1C7F.2090605@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: scsi <linux-scsi@vger.kernel.org>
-Cc: jejb <james.bottomley@steeleye.com>, akpm <akpm@osdl.org>
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: Mark Salyzyn <mark_salyzyn@adaptec.com>, linux-scsi@vger.kernel.org, Eric Moore <Eric.Moore@lsil.com>, Leon Woestenberg <leonw@mailcan.com>
 
-From: Randy Dunlap <rdunlap@xenotime.net>
+On Fri, 2006-03-17 at 21:30 +0100, Stefan Richter wrote:
+> Hi all,
+> 
+> the following drivers use [__]scsi_add_device/ scsi_remove_device:
+> 
+> drivers/ieee1394/sbp2.c
+> drivers/message/i2o/i2o_scsi.c
+> drivers/message/fusion/mptsas.c
+> drivers/scsi/aacraid/commsup.c
+> drivers/scsi/ipr.c
+> 
+> Sbp2 calls scsi_add_device + scsi_remove_device.
+> I2o_scsi calls __scsi_add_device + scsi_remove_device + scsi_device_put.
+> Ipr calls scsi_add_device + scsi_device_get + scsi_remove_device + 
+> scsi_device_put.
+> 
+> But aacraid and mptsas call scsi_add_device + scsi_remove_device + 
+> scsi_device_put. AFAICS this is either one scsi_device_put too many or 
+> one scsi_device_get too few.
 
-Link scsi-debug driver after SATA so that scsi-debug does not
-interfere with real SCSI device ordering.
-Yes, I was bitten by this.
+I copied Mark Salyzyn since he is the aacraid driver writer.
 
-Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
----
- drivers/scsi/Makefile |    2 +-
- 1 files changed, 1 insertion(+), 1 deletion(-)
+Looking at commsup.c, though, I think that the scsi_device_put is done
+after the scsi_device_lookup only if the scsi_device_remove is not done.
 
---- linux-2616-rc6.orig/drivers/scsi/Makefile
-+++ linux-2616-rc6/drivers/scsi/Makefile
-@@ -117,7 +117,6 @@ obj-$(CONFIG_SCSI_PPA)		+= ppa.o
- obj-$(CONFIG_SCSI_IMM)		+= imm.o
- obj-$(CONFIG_JAZZ_ESP)		+= NCR53C9x.o	jazz_esp.o
- obj-$(CONFIG_SUN3X_ESP)		+= NCR53C9x.o	sun3x_esp.o
--obj-$(CONFIG_SCSI_DEBUG)	+= scsi_debug.o
- obj-$(CONFIG_SCSI_FCAL)		+= fcal.o
- obj-$(CONFIG_SCSI_LASI700)	+= 53c700.o lasi700.o
- obj-$(CONFIG_SCSI_NSP32)	+= nsp32.o
-@@ -140,6 +139,7 @@ obj-$(CONFIG_SCSI_SATA_MV)	+= libata.o s
- obj-$(CONFIG_SCSI_PDC_ADMA)	+= libata.o pdc_adma.o
- 
- obj-$(CONFIG_ARM)		+= arm/
-+obj-$(CONFIG_SCSI_DEBUG)	+= scsi_debug.o
- 
- obj-$(CONFIG_CHR_DEV_ST)	+= st.o
- obj-$(CONFIG_CHR_DEV_OSST)	+= osst.o
+Mark.
 
+> 
+> (I am looking at Linus' tree.)
+-- 
+Mark Haverkamp <markh@osdl.org>
 
----
