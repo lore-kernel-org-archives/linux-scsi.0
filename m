@@ -1,40 +1,58 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: how to use scsi_remove_device
-Date: Fri, 17 Mar 2006 15:39:23 -0600
-Message-ID: <1142631563.3270.35.camel@mulgrave.il.steeleye.com>
-References: <1142598225.25906.256865850@webmail.messagingengine.com>
-	 <441B1388.20704@s5r6.in-berlin.de>  <441B1C7F.2090605@s5r6.in-berlin.de>
+From: Brian King <brking@us.ibm.com>
+Subject: [PATCH 0/15] libata: Add support for SATA attachment to SAS adapters
+Date: Fri, 17 Mar 2006 17:03:28 -0600
+Message-ID: <441B4040.4070600@us.ibm.com>
+Reply-To: brking@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:16040 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S932795AbWCQVj3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Mar 2006 16:39:29 -0500
-In-Reply-To: <441B1C7F.2090605@s5r6.in-berlin.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: linux-scsi@vger.kernel.org, Mark Haverkamp <markh@osdl.org>, Eric Moore <Eric.Moore@lsil.com>, Leon Woestenberg <leonw@mailcan.com>
 
-On Fri, 2006-03-17 at 21:30 +0100, Stefan Richter wrote:
-> the following drivers use [__]scsi_add_device/ scsi_remove_device:
+This is a repost of the patchset I have been carrying. No
+real feature changes here, mainly just a refresh against Jeff's
+#upstream libata git tree. I've been running with these patches
+for a while now without problems.
 
-The rule is that scsi_add_device() doesn't leave you with a reference,
-but __scsi_add_device() does.
+The following patchset enhances libata to allow SAS device drivers
+to utilize libata to talk to SATA devices. It introduces some
+new APIs which allow libata to be used without allocating a
+virtual scsi host.
 
-scsi_remove_device() does just that, but it doesn't put any references
-you might have taken separately.
+New APIs:
 
-> But aacraid and mptsas call scsi_add_device + scsi_remove_device + 
-> scsi_device_put. AFAICS this is either one scsi_device_put too many or 
-> one scsi_device_get too few.
+ata_sas_port_alloc - Allocate an ata_port 
+ata_sas_port_init - Initialize an ata_port (probe device, etc)
+ata_sas_port_destroy - Free an ata_port allocated by ata_sas_port_alloc
+ata_sas_slave_configure - configure scsi device
+ata_sas_queuecmd - queue a scsi command, similar to ata_scsi_queuecomand
 
-These all look correct.  The scsi_device_puts are paired with
-scsi_device_lookup() which does indeed get a reference which needs
-putting.
+These new APIs can be used either directly by a SAS LLDD or could be used
+by the SAS transport class. 
 
-James
+Possible usage for a SAS LLDD would be:
 
+scsi_scan_host
+	target_alloc
+		ata_sas_port_alloc
+	slave_alloc
+		ata_sas_port_init
+	slave_configure
+		ata_sas_slave_configure
 
+Commands received by the LLDD for SATA devices would call ata_sas_queuecmd.
+
+Device teardown would occur with:
+
+slave_destroy
+	port_disable
+target_destroy
+	ata_sas_port_destroy
+
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
