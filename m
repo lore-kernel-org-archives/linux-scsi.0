@@ -1,114 +1,75 @@
 From: Brian King <brking@us.ibm.com>
-Subject: [PATCH 03/15] libata: ata_scsi_slave_config cleanup
-Date: Fri, 17 Mar 2006 17:04:15 -0600
-Message-ID: <200603172304.k2HN4Fpi019095@d01av01.pok.ibm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.144]:14044 "EHLO e4.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S932831AbWCQXEg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Mar 2006 18:04:36 -0500
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [PATCH 10/15] ipr: Disk remove path cleanup
+Date: Fri, 17 Mar 2006 17:05:02 -0600
+Message-ID: <200603172305.k2HN53KE031131@d01av02.pok.ibm.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
 To: jgarzik@pobox.com
 Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, brking@us.ibm.com
+List-Id: linux-scsi@vger.kernel.org
 
 
-Encapsulate some of ata_scsi_slave_config so that parts
-can be reused in future SAS patches.
+Instead of NULLing the resource entry pointer when a disk
+goes away to prevent any new commands being sent to it,
+set the adapter resource handle to an invalid value so
+new ops getting sent to it will fail with a selection timeout
+response. This patch is needed for future SATA patches.
+
 
 Signed-off-by: Brian King <brking@us.ibm.com>
 ---
 
- libata-dev-bjking1/drivers/scsi/libata-scsi.c |   62 +++++++++++++++-----------
- 1 files changed, 37 insertions(+), 25 deletions(-)
+ libata-dev-bjking1/drivers/scsi/ipr.c |    6 +++---
+ libata-dev-bjking1/drivers/scsi/ipr.h |    1 +
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
-diff -puN drivers/scsi/libata-scsi.c~libata_sdev_config drivers/scsi/libata-scsi.c
---- libata-dev/drivers/scsi/libata-scsi.c~libata_sdev_config	2006-02-14 09:34:12.000000000 -0600
-+++ libata-dev-bjking1/drivers/scsi/libata-scsi.c	2006-02-14 09:38:47.000000000 -0600
-@@ -662,6 +662,41 @@ void ata_gen_fixed_sense(struct ata_queu
- 	}
- }
+diff -puN drivers/scsi/ipr.c~ipr_disk_remove_cleanup drivers/scsi/ipr.c
+--- libata-dev/drivers/scsi/ipr.c~ipr_disk_remove_cleanup	2006-03-06 09:20:06.000000000 -0600
++++ libata-dev-bjking1/drivers/scsi/ipr.c	2006-03-06 09:20:06.000000000 -0600
+@@ -869,8 +869,8 @@ static void ipr_handle_config_change(str
  
-+static void ata_scsi_sdev_config(struct scsi_device *sdev)
-+{
-+	sdev->use_10_for_rw = 1;
-+	sdev->use_10_for_ms = 1;
-+}
-+
-+static void ata_scsi_dev_config(struct scsi_device *sdev,
-+				struct ata_device *dev)
-+{
-+	unsigned int max_sectors;
-+
-+	/* TODO: 2048 is an arbitrary number, not the
-+	 * hardware maximum.  This should be increased to
-+	 * 65534 when Jens Axboe's patch for dynamically
-+	 * determining max_sectors is merged.
-+	 */
-+	max_sectors = ATA_MAX_SECTORS;
-+	if (dev->flags & ATA_DFLAG_LBA48)
-+		max_sectors = 2048;
-+	if (dev->max_sectors)
-+		max_sectors = dev->max_sectors;
-+
-+	blk_queue_max_sectors(sdev->request_queue, max_sectors);
-+
-+	/*
-+	 * SATA DMA transfers must be multiples of 4 byte, so
-+	 * we need to pad ATAPI transfers using an extra sg.
-+	 * Decrement max hw segments accordingly.
-+	 */
-+	if (dev->class == ATA_DEV_ATAPI) {
-+		request_queue_t *q = sdev->request_queue;
-+		blk_queue_max_hw_segments(q, q->max_hw_segments - 1);
-+	}
-+}
-+
- /**
-  *	ata_scsi_slave_config - Set SCSI device attributes
-  *	@sdev: SCSI device to examine
-@@ -676,41 +711,18 @@ void ata_gen_fixed_sense(struct ata_queu
+ 	if (hostrcb->hcam.notify_type == IPR_HOST_RCB_NOTIF_TYPE_REM_ENTRY) {
+ 		if (res->sdev) {
+-			res->sdev->hostdata = NULL;
+ 			res->del_from_ml = 1;
++			res->cfgte.res_handle = IPR_INVALID_RES_HANDLE;
+ 			if (ioa_cfg->allow_ml_add_del)
+ 				schedule_work(&ioa_cfg->work_q);
+ 		} else
+@@ -2107,7 +2107,6 @@ restart:
+ 				did_work = 1;
+ 				sdev = res->sdev;
+ 				if (!scsi_device_get(sdev)) {
+-					res->sdev = NULL;
+ 					list_move_tail(&res->queue, &ioa_cfg->free_res_q);
+ 					spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+ 					scsi_remove_device(sdev);
+@@ -2124,6 +2123,7 @@ restart:
+ 			bus = res->cfgte.res_addr.bus;
+ 			target = res->cfgte.res_addr.target;
+ 			lun = res->cfgte.res_addr.lun;
++			res->add_to_ml = 0;
+ 			spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+ 			scsi_add_device(ioa_cfg->host, bus, target, lun);
+ 			spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
+@@ -4980,7 +4980,7 @@ static int ipr_init_res_table(struct ipr
+ 	list_for_each_entry_safe(res, temp, &old_res, queue) {
+ 		if (res->sdev) {
+ 			res->del_from_ml = 1;
+-			res->sdev->hostdata = NULL;
++			res->cfgte.res_handle = IPR_INVALID_RES_HANDLE;
+ 			list_move_tail(&res->queue, &ioa_cfg->used_res_q);
+ 		} else {
+ 			list_move_tail(&res->queue, &ioa_cfg->free_res_q);
+diff -puN drivers/scsi/ipr.h~ipr_disk_remove_cleanup drivers/scsi/ipr.h
+--- libata-dev/drivers/scsi/ipr.h~ipr_disk_remove_cleanup	2006-03-06 09:20:06.000000000 -0600
++++ libata-dev-bjking1/drivers/scsi/ipr.h	2006-03-06 09:20:06.000000000 -0600
+@@ -133,6 +133,7 @@
+ #define IPR_MAX_SCSI_RATE(width) ((320 * 10) / ((width) / 8))
  
- int ata_scsi_slave_config(struct scsi_device *sdev)
- {
--	sdev->use_10_for_rw = 1;
--	sdev->use_10_for_ms = 1;
-+	ata_scsi_sdev_config(sdev);
+ #define IPR_IOA_RES_HANDLE				0xffffffff
++#define IPR_INVALID_RES_HANDLE			0
+ #define IPR_IOA_RES_ADDR				0x00ffffff
  
- 	blk_queue_max_phys_segments(sdev->request_queue, LIBATA_MAX_PRD);
- 
- 	if (sdev->id < ATA_MAX_DEVICES) {
- 		struct ata_port *ap;
- 		struct ata_device *dev;
--		unsigned int max_sectors;
- 
- 		ap = (struct ata_port *) &sdev->host->hostdata[0];
- 		dev = &ap->device[sdev->id];
- 
--		/* TODO: 2048 is an arbitrary number, not the
--		 * hardware maximum.  This should be increased to
--		 * 65534 when Jens Axboe's patch for dynamically
--		 * determining max_sectors is merged.
--		 */
--		max_sectors = ATA_MAX_SECTORS;
--		if (dev->flags & ATA_DFLAG_LBA48)
--			max_sectors = 2048;
--		if (dev->max_sectors)
--			max_sectors = dev->max_sectors;
--
--		blk_queue_max_sectors(sdev->request_queue, max_sectors);
--
--		/*
--		 * SATA DMA transfers must be multiples of 4 byte, so
--		 * we need to pad ATAPI transfers using an extra sg.
--		 * Decrement max hw segments accordingly.
--		 */
--		if (dev->class == ATA_DEV_ATAPI) {
--			request_queue_t *q = sdev->request_queue;
--			blk_queue_max_hw_segments(q, q->max_hw_segments - 1);
--		}
-+		ata_scsi_dev_config(sdev, dev);
- 	}
- 
- 	return 0;	/* scsi layer doesn't check return value, sigh */
+ /*
 _
