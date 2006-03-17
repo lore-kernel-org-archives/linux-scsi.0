@@ -1,54 +1,68 @@
 From: Brian King <brking@us.ibm.com>
-Subject: [PATCH 02/15] libata: Add some dummy noop functions
-Date: Fri, 17 Mar 2006 17:04:03 -0600
-Message-ID: <200603172304.k2HN49hr018969@d03av01.boulder.ibm.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
+Subject: [PATCH 04/15] libata: ata_scsi_queuecmd cleanup
+Date: Fri, 17 Mar 2006 17:04:21 -0600
+Message-ID: <200603172304.k2HN4LDp014215@d03av03.boulder.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e36.co.us.ibm.com ([32.97.110.154]:12169 "EHLO
+	e36.co.us.ibm.com") by vger.kernel.org with ESMTP id S932848AbWCQXEX
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Mar 2006 18:04:23 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: jgarzik@pobox.com
 Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, brking@us.ibm.com
-List-Id: linux-scsi@vger.kernel.org
 
 
-Add some dummy noop functions for use by libata clients
-that do not need to do anything. Future SAS patches will
-utilize these functions.
+Encapsulate part of ata_scsi_queuecmd so that it can be
+reused by future SAS patches.
 
 Signed-off-by: Brian King <brking@us.ibm.com>
 ---
 
- libata-dev-bjking1/drivers/scsi/libata-core.c |    3 +++
- libata-dev-bjking1/include/linux/libata.h     |    1 +
- 2 files changed, 4 insertions(+)
+ libata-dev-bjking1/drivers/scsi/libata-scsi.c |   26 ++++++++++++++++----------
+ 1 files changed, 16 insertions(+), 10 deletions(-)
 
-diff -puN drivers/scsi/libata-core.c~libata_noop_funcs drivers/scsi/libata-core.c
---- libata-dev/drivers/scsi/libata-core.c~libata_noop_funcs	2006-03-17 15:35:29.000000000 -0600
-+++ libata-dev-bjking1/drivers/scsi/libata-core.c	2006-03-17 15:35:30.000000000 -0600
-@@ -2863,6 +2863,8 @@ void ata_qc_prep(struct ata_queued_cmd *
- 	ata_fill_sg(qc);
+diff -puN drivers/scsi/libata-scsi.c~libata_scsi_queuecmd drivers/scsi/libata-scsi.c
+--- libata-dev/drivers/scsi/libata-scsi.c~libata_scsi_queuecmd	2006-03-14 13:55:38.000000000 -0600
++++ libata-dev-bjking1/drivers/scsi/libata-scsi.c	2006-03-14 13:55:38.000000000 -0600
+@@ -2565,6 +2565,21 @@ static inline void ata_scsi_dump_cdb(str
+ #endif
  }
  
-+void ata_noop_qc_prep(struct ata_queued_cmd *qc) { }
++static void __ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *),
++				struct ata_port *ap, struct ata_device *dev)
++{
++	if (dev->class == ATA_DEV_ATA) {
++		ata_xlat_func_t xlat_func = ata_get_xlat_func(dev,
++							      cmd->cmnd[0]);
++
++		if (xlat_func)
++			ata_scsi_translate(ap, dev, cmd, done, xlat_func);
++		else
++			ata_scsi_simulate(ap, dev, cmd, done);
++	} else
++		ata_scsi_translate(ap, dev, cmd, done, atapi_xlat);
++}
 +
  /**
-  *	ata_sg_init_one - Associate command with memory buffer
-  *	@qc: Command to be associated
-@@ -5063,6 +5065,7 @@ EXPORT_SYMBOL_GPL(ata_port_stop);
- EXPORT_SYMBOL_GPL(ata_host_stop);
- EXPORT_SYMBOL_GPL(ata_interrupt);
- EXPORT_SYMBOL_GPL(ata_qc_prep);
-+EXPORT_SYMBOL_GPL(ata_noop_qc_prep);
- EXPORT_SYMBOL_GPL(ata_bmdma_setup);
- EXPORT_SYMBOL_GPL(ata_bmdma_start);
- EXPORT_SYMBOL_GPL(ata_bmdma_irq_clear);
-diff -puN include/linux/libata.h~libata_noop_funcs include/linux/libata.h
---- libata-dev/include/linux/libata.h~libata_noop_funcs	2006-03-17 15:35:29.000000000 -0600
-+++ libata-dev-bjking1/include/linux/libata.h	2006-03-17 15:35:30.000000000 -0600
-@@ -543,6 +543,7 @@ extern void ata_port_stop (struct ata_po
- extern void ata_host_stop (struct ata_host_set *host_set);
- extern irqreturn_t ata_interrupt (int irq, void *dev_instance, struct pt_regs *regs);
- extern void ata_qc_prep(struct ata_queued_cmd *qc);
-+extern void ata_noop_qc_prep(struct ata_queued_cmd *qc);
- extern unsigned int ata_qc_issue_prot(struct ata_queued_cmd *qc);
- extern void ata_sg_init_one(struct ata_queued_cmd *qc, void *buf,
- 		unsigned int buflen);
+  *	ata_scsi_queuecmd - Issue SCSI cdb to libata-managed device
+  *	@cmd: SCSI command to be sent
+@@ -2605,16 +2620,7 @@ int ata_scsi_queuecmd(struct scsi_cmnd *
+ 		goto out_unlock;
+ 	}
+ 
+-	if (dev->class == ATA_DEV_ATA) {
+-		ata_xlat_func_t xlat_func = ata_get_xlat_func(dev,
+-							      cmd->cmnd[0]);
+-
+-		if (xlat_func)
+-			ata_scsi_translate(ap, dev, cmd, done, xlat_func);
+-		else
+-			ata_scsi_simulate(ap, dev, cmd, done);
+-	} else
+-		ata_scsi_translate(ap, dev, cmd, done, atapi_xlat);
++	__ata_scsi_queuecmd(cmd, done, ap, dev);
+ 
+ out_unlock:
+ 	spin_unlock(&ap->host_set->lock);
 _
