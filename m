@@ -1,103 +1,85 @@
-From: Brian King <brking@us.ibm.com>
-Subject: [PATCH 12/15] ipr: Simplify status area dumping
-Date: Fri, 17 Mar 2006 17:05:15 -0600
-Message-ID: <200603172305.k2HN5FsU016296@d03av03.boulder.ibm.com>
+From: Leon Woestenberg <leonw@mailcan.com>
+Subject: Re: how to use scsi_remove_device
+Date: Sat, 18 Mar 2006 00:25:26 +0100
+Message-ID: <441B4566.8000803@mailcan.com>
+References: <1142598225.25906.256865850@webmail.messagingengine.com> <441B1388.20704@s5r6.in-berlin.de> <441B1C7F.2090605@s5r6.in-berlin.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:49615 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S932824AbWCQXFR
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Mar 2006 18:05:17 -0500
+Received: from out4.smtp.messagingengine.com ([66.111.4.28]:62881 "EHLO
+	out4.smtp.messagingengine.com") by vger.kernel.org with ESMTP
+	id S1751343AbWCQXZg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Mar 2006 18:25:36 -0500
+In-Reply-To: <441B1C7F.2090605@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, brking@us.ibm.com
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: linux-scsi@vger.kernel.org, Mark Haverkamp <markh@osdl.org>, Eric Moore <Eric.Moore@lsil.com>
 
+Hello all,
 
-Simplify the dumping of the command status area by
-removing some device specific information that has proven
-to not be worthwhile.
+Stefan Richter wrote:
+> Hi all,
+>
+> the following drivers use [__]scsi_add_device/ scsi_remove_device:
+>
+> drivers/ieee1394/sbp2.c
+> drivers/message/i2o/i2o_scsi.c
+> drivers/message/fusion/mptsas.c
+> drivers/scsi/aacraid/commsup.c
+> drivers/scsi/ipr.c
+>
+> Sbp2 calls scsi_add_device + scsi_remove_device.
+> I2o_scsi calls __scsi_add_device + scsi_remove_device + scsi_device_put.
+> Ipr calls scsi_add_device + scsi_device_get + scsi_remove_device + 
+> scsi_device_put.
+>
+> But aacraid and mptsas call scsi_add_device + scsi_remove_device + 
+> scsi_device_put. AFAICS this is either one scsi_device_put too many or 
+> one scsi_device_get too few.
+>
+> (I am looking at Linus' tree.)
+I was just searching the linux-scsi mailing list and noticed this 
+in-progress hotplug patch for the libata SATA framework, which in turn 
+uses the SCSI layers.
 
-Signed-off-by: Brian King <brking@us.ibm.com>
----
+In particular notice the lookup of the scsi_device before it 
+scsi_remove_device(), then scsi_device_put().
 
- linux-2.6-bjking1/drivers/scsi/ipr.c |   39 +++--------------------------------
- 1 files changed, 4 insertions(+), 35 deletions(-)
+In my particular case (Marvell's GPL'd SATA driver, not the libata one) 
+*it seems* the device lookup is missing, although I have to do more work 
+to verify this statement.
 
-diff -puN drivers/scsi/ipr.c~ipr_dump_ioasa_simplify drivers/scsi/ipr.c
---- linux-2.6/drivers/scsi/ipr.c~ipr_dump_ioasa_simplify	2006-01-31 16:53:22.000000000 -0600
-+++ linux-2.6-bjking1/drivers/scsi/ipr.c	2006-01-31 16:53:22.000000000 -0600
-@@ -164,29 +164,6 @@ MODULE_PARM_DESC(auto_create, "Auto-crea
- MODULE_LICENSE("GPL");
- MODULE_VERSION(IPR_DRIVER_VERSION);
- 
--static const char *ipr_gpdd_dev_end_states[] = {
--	"Command complete",
--	"Terminated by host",
--	"Terminated by device reset",
--	"Terminated by bus reset",
--	"Unknown",
--	"Command not started"
--};
--
--static const char *ipr_gpdd_dev_bus_phases[] = {
--	"Bus free",
--	"Arbitration",
--	"Selection",
--	"Message out",
--	"Command",
--	"Message in",
--	"Data out",
--	"Data in",
--	"Status",
--	"Reselection",
--	"Unknown"
--};
--
- /*  A constant array of IOASCs/URCs/Error Messages */
- static const
- struct ipr_error_table_t ipr_error_table[] = {
-@@ -3938,6 +3915,7 @@ static void ipr_erp_cancel_all(struct ip
-  * ipr_dump_ioasa - Dump contents of IOASA
-  * @ioa_cfg:	ioa config struct
-  * @ipr_cmd:	ipr command struct
-+ * @res:		resource entry struct
-  *
-  * This function is invoked by the interrupt handler when ops
-  * fail. It will log the IOASA if appropriate. Only called
-@@ -3947,7 +3925,7 @@ static void ipr_erp_cancel_all(struct ip
-  * 	none
-  **/
- static void ipr_dump_ioasa(struct ipr_ioa_cfg *ioa_cfg,
--			   struct ipr_cmnd *ipr_cmd)
-+			   struct ipr_cmnd *ipr_cmd, struct ipr_resource_entry *res)
- {
- 	int i;
- 	u16 data_len;
-@@ -3975,16 +3953,7 @@ static void ipr_dump_ioasa(struct ipr_io
- 			return;
- 	}
- 
--	ipr_sdev_err(ipr_cmd->scsi_cmd->device, "%s\n",
--		     ipr_error_table[error_index].error);
--
--	if ((ioasa->u.gpdd.end_state <= ARRAY_SIZE(ipr_gpdd_dev_end_states)) &&
--	    (ioasa->u.gpdd.bus_phase <=  ARRAY_SIZE(ipr_gpdd_dev_bus_phases))) {
--		ipr_sdev_err(ipr_cmd->scsi_cmd->device,
--			     "Device End state: %s Phase: %s\n",
--			     ipr_gpdd_dev_end_states[ioasa->u.gpdd.end_state],
--			     ipr_gpdd_dev_bus_phases[ioasa->u.gpdd.bus_phase]);
--	}
-+	ipr_res_err(ioa_cfg, res, "%s\n", ipr_error_table[error_index].error);
- 
- 	if (sizeof(struct ipr_ioasa) < be16_to_cpu(ioasa->ret_stat_len))
- 		data_len = sizeof(struct ipr_ioasa);
-@@ -4141,7 +4110,7 @@ static void ipr_erp_start(struct ipr_ioa
- 	}
- 
- 	if (ipr_is_gscsi(res))
--		ipr_dump_ioasa(ioa_cfg, ipr_cmd);
-+		ipr_dump_ioasa(ioa_cfg, ipr_cmd, res);
- 	else
- 		ipr_gen_sense(ipr_cmd);
- 
-_
+Regards,
+
+Leon.
+
++void ata_scsi_hot_plug(struct ata_port *ap, unsigned int device)
++{
++	/* libata uses the 'id' or 'target' value */
++	scsi_add_device(ap->host, 0, device, 0);
++}
++
+
++void ata_scsi_hot_unplug(struct ata_port *ap, unsigned int device)
++{
++	/* libata uses the 'id' or 'target' value */
++	struct scsi_device *scd = scsi_device_lookup(ap->host, 0, device, 0);
++
++	/* Make sure that we set this here, in case we aren't called as a
++	 * result of sata_hot_unplug */
++	ap->device[device].class = ATA_DEV_NONE;
++
++	if (scd)  /* Set to cancel state to block further I/O */
++		scsi_device_set_state(scd, SDEV_CANCEL);
++
++	/* We might have a pending qc on I/O to a removed device. */
++	ata_check_kill_qc(ap, device);
++	
++	if (scd) {
++		scsi_remove_device(scd);
++		scsi_device_put(scd);
++	}
++}
+
