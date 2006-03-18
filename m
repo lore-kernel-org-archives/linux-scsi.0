@@ -1,85 +1,125 @@
-From: Leon Woestenberg <leonw@mailcan.com>
-Subject: Re: how to use scsi_remove_device
-Date: Sat, 18 Mar 2006 00:25:26 +0100
-Message-ID: <441B4566.8000803@mailcan.com>
-References: <1142598225.25906.256865850@webmail.messagingengine.com> <441B1388.20704@s5r6.in-berlin.de> <441B1C7F.2090605@s5r6.in-berlin.de>
+From: Alexis Bruemmer <alexisb@us.ibm.com>
+Subject: [PATCH] aic94xx: attaching to the sas transport class
+Date: Fri, 17 Mar 2006 17:45:04 -0800
+Message-ID: <1142646304.7462.36.camel@localhost.localdomain>
+References: <1141339085.3238.80.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from out4.smtp.messagingengine.com ([66.111.4.28]:62881 "EHLO
-	out4.smtp.messagingengine.com") by vger.kernel.org with ESMTP
-	id S1751343AbWCQXZg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Mar 2006 18:25:36 -0500
-In-Reply-To: <441B1C7F.2090605@s5r6.in-berlin.de>
+Received: from e35.co.us.ibm.com ([32.97.110.153]:2433 "EHLO e35.co.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1750998AbWCRBpL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Mar 2006 20:45:11 -0500
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e35.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id k2I1jBuq000619
+	for <linux-scsi@vger.kernel.org>; Fri, 17 Mar 2006 20:45:11 -0500
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by westrelay02.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k2I1gFAg244316
+	for <linux-scsi@vger.kernel.org>; Fri, 17 Mar 2006 18:42:15 -0700
+Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k2I1jAYb009650
+	for <linux-scsi@vger.kernel.org>; Fri, 17 Mar 2006 18:45:10 -0700
+In-Reply-To: <1141339085.3238.80.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: linux-scsi@vger.kernel.org, Mark Haverkamp <markh@osdl.org>, Eric Moore <Eric.Moore@lsil.com>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, "Tarte, Robert" <Robert_Tarte@adaptec.com>
 
-Hello all,
+On Thu, 2006-03-02 at 16:38 -0600, James Bottomley wrote:
+> This fairly minimal patch correctly attaches the aic94xx driver to the
+> SAS transport class (The driver is available from
+> 
+> www.kernel.org/git/jgarzik/sas-2.6
+> 
+> ).  Unfortunately, the driver itself still has the following critical
+> issues
+> 
+> 1. Discovery order is non-deterministic (it starts one thread per port,
+> so the threads race for discovery)
+> 
+> 2. The minimal attachment to the sas transport class doesn't do
+> expanders.  This needs to be fixed up by patching better expander
+> support into the class.  The way to do this is probably to pull the
+> domain_device into the sas transport class.
+> 
+> 3. The object lifetimes are all basically infinite (this will probably
+> fixed by 2)
 
-Stefan Richter wrote:
-> Hi all,
->
-> the following drivers use [__]scsi_add_device/ scsi_remove_device:
->
-> drivers/ieee1394/sbp2.c
-> drivers/message/i2o/i2o_scsi.c
-> drivers/message/fusion/mptsas.c
-> drivers/scsi/aacraid/commsup.c
-> drivers/scsi/ipr.c
->
-> Sbp2 calls scsi_add_device + scsi_remove_device.
-> I2o_scsi calls __scsi_add_device + scsi_remove_device + scsi_device_put.
-> Ipr calls scsi_add_device + scsi_device_get + scsi_remove_device + 
-> scsi_device_put.
->
-> But aacraid and mptsas call scsi_add_device + scsi_remove_device + 
-> scsi_device_put. AFAICS this is either one scsi_device_put too many or 
-> one scsi_device_get too few.
->
-> (I am looking at Linus' tree.)
-I was just searching the linux-scsi mailing list and noticed this 
-in-progress hotplug patch for the libata SATA framework, which in turn 
-uses the SCSI layers.
+Here is a proposed solution for 3.  I have tested this patch on an x366
+and it seems to have fixed the wired refcnt problem as well as fixing
+the problems encountered when trying to load and unload the module. Also
+with this fix I was able to remove and add hard drives at will without
+the usual I/O buffer errors.
 
-In particular notice the lookup of the scsi_device before it 
-scsi_remove_device(), then scsi_device_put().
-
-In my particular case (Marvell's GPL'd SATA driver, not the libata one) 
-*it seems* the device lookup is missing, although I have to do more work 
-to verify this statement.
+Please let me know what you think.
 
 Regards,
 
-Leon.
+Alexis
 
-+void ata_scsi_hot_plug(struct ata_port *ap, unsigned int device)
-+{
-+	/* libata uses the 'id' or 'target' value */
-+	scsi_add_device(ap->host, 0, device, 0);
-+}
-+
 
-+void ata_scsi_hot_unplug(struct ata_port *ap, unsigned int device)
-+{
-+	/* libata uses the 'id' or 'target' value */
-+	struct scsi_device *scd = scsi_device_lookup(ap->host, 0, device, 0);
-+
-+	/* Make sure that we set this here, in case we aren't called as a
-+	 * result of sata_hot_unplug */
-+	ap->device[device].class = ATA_DEV_NONE;
-+
-+	if (scd)  /* Set to cancel state to block further I/O */
-+		scsi_device_set_state(scd, SDEV_CANCEL);
-+
-+	/* We might have a pending qc on I/O to a removed device. */
-+	ata_check_kill_qc(ap, device);
-+	
-+	if (scd) {
-+		scsi_remove_device(scd);
-+		scsi_device_put(scd);
-+	}
-+}
+Signed-off-by: Mike Anderson <andmike@us.ibm.com>
+Signed-off-by: Alexis Bruemmer <alexisb@us.ibm.com>
+
+diff -pNaur aic94xx-sas-2.6-patched.orig/drivers/scsi/sas/sas_discover.c aic94xx-sas-2.6-patched/drivers/scsi/sas/sas_discover.c
+--- aic94xx-sas-2.6-patched.orig/drivers/scsi/sas/sas_discover.c        2006-03-14 08:51:51.000000000 -0800
++++ aic94xx-sas-2.6-patched/drivers/scsi/sas/sas_discover.c     2006-03-17 17:09:43.000000000 -0800
+@@ -586,9 +586,6 @@ static void sas_unregister_domain_device
+        struct domain_device *dev, *n;
+        struct sas_port *port = data;
+
+-       sas_begin_event(DISCE_PORT_GONE, &port->disc.disc_event_lock,
+-                       &port->disc.pending);
+-
+        list_for_each_entry_reverse_safe(dev,n,&port->dev_list,dev_list_node)
+                sas_unregister_dev(dev);
+ }
+diff -pNaur aic94xx-sas-2.6-patched.orig/drivers/scsi/sas/sas_port.c aic94xx-sas-2.6-patched/drivers/scsi/sas/sas_port.c
+--- aic94xx-sas-2.6-patched.orig/drivers/scsi/sas/sas_port.c    2006-03-12 14:40:39.000000000 -0800
++++ aic94xx-sas-2.6-patched/drivers/scsi/sas/sas_port.c 2006-03-17 17:10:53.000000000 -0800
+@@ -132,12 +132,6 @@ void sas_deform_port(struct asd_sas_phy
+        if (port->port_dev)
+                port->port_dev->pathways--;
+
+-       if (port->num_phys == 1) {
+-               init_completion(&port->port_gone_completion);
+-               sas_discover_event(port, DISCE_PORT_GONE);
+-               wait_for_completion(&port->port_gone_completion);
+-       }
+-
+        if (sas_ha->lldd_port_deformed)
+                sas_ha->lldd_port_deformed(phy);
+
+diff -pNaur aic94xx-sas-2.6-patched.orig/drivers/scsi/sas/sas_scsi_host.c aic94xx-sas-2.6-patched/drivers/scsi/sas/sas_scsi_host.c
+--- aic94xx-sas-2.6-patched.orig/drivers/scsi/sas/sas_scsi_host.c       2006-03-12 14:40:39.000000000 -0800
++++ aic94xx-sas-2.6-patched/drivers/scsi/sas/sas_scsi_host.c    2006-03-17 16:48:10.000000000 -0800
+@@ -693,6 +693,7 @@ out_err:
+
+ void sas_unregister_scsi_host(struct sas_ha_struct *sas_ha)
+ {
++       sas_remove_host(sas_ha->core.shost);
+        scsi_remove_host(sas_ha->core.shost);
+        scsi_host_put(sas_ha->core.shost);
+        sas_ha->core.shost = NULL;
+diff -pNaur aic94xx-sas-2.6-patched.orig/include/scsi/sas/sas_discover.h aic94xx-sas-2.6-patched/include/scsi/sas/sas_discover.h
+--- aic94xx-sas-2.6-patched.orig/include/scsi/sas/sas_discover.h        2006-03-12 14:40:39.000000000 -0800
++++ aic94xx-sas-2.6-patched/include/scsi/sas/sas_discover.h     2006-03-17 17:20:30.000000000 -0800
+@@ -128,8 +128,6 @@ static inline int sas_notify_lldd_dev_fo
+        int res = 0;
+        struct sas_ha_struct *sas_ha = dev->port->ha;
+
+-       if (!try_module_get(sas_ha->lldd_module))
+-               return -ENOMEM;
+        if (sas_ha->lldd_dev_found) {
+                res = sas_ha->lldd_dev_found(dev);
+                if (res) {
+@@ -146,7 +144,6 @@ static inline void sas_notify_lldd_dev_g
+
+
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
