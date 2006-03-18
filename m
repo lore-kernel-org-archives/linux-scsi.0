@@ -1,55 +1,140 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: Re: [PATCH] link scsi_debug later
-Date: Sat, 18 Mar 2006 11:07:32 -0800
-Message-ID: <20060318110732.bbb2fe87.rdunlap@xenotime.net>
-References: <20060317124407.5f19cc09.rdunlap@xenotime.net>
-	<20060317212924.11a86800.akpm@osdl.org>
-	<20060317221920.3c84fc65.rdunlap@xenotime.net>
-	<441BA783.3030807@torque.net>
-	<1142688164.3241.1.camel@mulgrave.il.steeleye.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [PATCH] add scsi_mode_select to scsi_lib.c
+Date: Sat, 18 Mar 2006 14:10:35 -0600
+Message-ID: <1142712635.3773.1.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:5567 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S1750822AbWCRTFa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 18 Mar 2006 14:05:30 -0500
-Received: from midway.site ([71.111.157.99]) by xenotime.net for <linux-scsi@vger.kernel.org>; Sat, 18 Mar 2006 11:05:28 -0800
-In-Reply-To: <1142688164.3241.1.camel@mulgrave.il.steeleye.com>
+Received: from stat9.steeleye.com ([209.192.50.41]:42692 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1750841AbWCRUKh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 18 Mar 2006 15:10:37 -0500
+Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
+	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id k2IKAa222413
+	for <linux-scsi@vger.kernel.org>; Sat, 18 Mar 2006 15:10:36 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: dougg@torque.net, akpm@osdl.org, linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Sat, 18 Mar 2006 07:22:44 -0600 James Bottomley wrote:
+This complements the scsi_mode_sense() function
 
-> On Sat, 2006-03-18 at 01:24 -0500, Douglas Gilbert wrote:
-> > Ah, if scsi_debug is a module, nothing is going to
-> > load it automatically (at least the PCI subsystem
-> > won't load it). However if it is built in then
-> > it will "steal" /dev/sda (if some other SCSI LLD
-> > hasn't already got it). That would then cause
-> > a SATA driver to get /dev/sdb ... That is enough
-> > to cause a kernel parameter like "root=/dev/sda8"
-> > to flounder and give the "could not find root filesystem"
-> > error.
-> 
-> Is there actually any purpose for not compiling scsi_debug as a module?
-> i.e. isn't the problem really that we simply shouldn't allow it to be
-> built directly into the kernel and it should only be compilable as a
-> module?
+James
 
-I don't see a need to be that restrictive about it.
-As long as SCSI_DEBUG is last, it won't affect the device order
-(boot or other devices), which is the problem IMO.
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 9a05076..ede158d 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1811,6 +1811,84 @@ void scsi_exit_queue(void)
+ 		kmem_cache_destroy(sgp->slab);
+ 	}
+ }
++
++/**
++ *	scsi_mode_select - issue a mode select
++ *	@sdev:	SCSI device to be queried
++ *	@pf:	Page format bit (1 == standard, 0 == vendor specific)
++ *	@sp:	Save page bit (0 == don't save, 1 == save)
++ *	@modepage: mode page being requested
++ *	@buffer: request buffer (may not be smaller than eight bytes)
++ *	@len:	length of request buffer.
++ *	@timeout: command timeout
++ *	@retries: number of retries before failing
++ *	@data: returns a structure abstracting the mode header data
++ *	@sense: place to put sense data (or NULL if no sense to be collected).
++ *		must be SCSI_SENSE_BUFFERSIZE big.
++ *
++ *	Returns zero if successful; negative error number or scsi
++ *	status on error
++ *
++ */
++int
++scsi_mode_select(struct scsi_device *sdev, int pf, int sp, int modepage,
++		 unsigned char *buffer, int len, int timeout, int retries,
++		 struct scsi_mode_data *data, struct scsi_sense_hdr *sshdr)
++{
++	unsigned char cmd[10];
++	unsigned char *real_buffer;
++	int ret;
++
++	memset(cmd, 0, sizeof(cmd));
++	cmd[1] = (pf ? 0x10 : 0) | (sp ? 0x01 : 0);
++
++	if (sdev->use_10_for_ms) {
++		if (len > 65535)
++			return -EINVAL;
++		real_buffer = kmalloc(8 + len, GFP_KERNEL);
++		if (!real_buffer)
++			return -ENOMEM;
++		memcpy(real_buffer + 8, buffer, len);
++		len += 8;
++		real_buffer[0] = 0;
++		real_buffer[1] = 0;
++		real_buffer[2] = data->medium_type;
++		real_buffer[3] = data->device_specific;
++		real_buffer[4] = data->longlba ? 0x01 : 0;
++		real_buffer[5] = 0;
++		real_buffer[6] = data->block_descriptor_length >> 8;
++		real_buffer[7] = data->block_descriptor_length;
++
++		cmd[0] = MODE_SELECT_10;
++		cmd[7] = len >> 8;
++		cmd[8] = len;
++	} else {
++		if (len > 255 || data->block_descriptor_length > 255 ||
++		    data->longlba)
++			return -EINVAL;
++
++		real_buffer = kmalloc(4 + len, GFP_KERNEL);
++		if (!real_buffer)
++			return -ENOMEM;
++		memcpy(real_buffer + 4, buffer, len);
++		len += 4;
++		real_buffer[0] = 0;
++		real_buffer[1] = data->medium_type;
++		real_buffer[2] = data->device_specific;
++		real_buffer[3] = data->block_descriptor_length;
++		
++
++		cmd[0] = MODE_SELECT;
++		cmd[4] = len;
++	}
++
++	ret = scsi_execute_req(sdev, cmd, DMA_TO_DEVICE, real_buffer, len,
++			       sshdr, timeout, retries);
++	kfree(real_buffer);
++	return ret;
++}
++EXPORT_SYMBOL_GPL(scsi_mode_select);
++
+ /**
+  *	scsi_mode_sense - issue a mode sense, falling back from 10 to 
+  *		six bytes if necessary.
+@@ -1832,7 +1910,8 @@ void scsi_exit_queue(void)
+ int
+ scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
+ 		  unsigned char *buffer, int len, int timeout, int retries,
+-		  struct scsi_mode_data *data, struct scsi_sense_hdr *sshdr) {
++		  struct scsi_mode_data *data, struct scsi_sense_hdr *sshdr)
++{
+ 	unsigned char cmd[12];
+ 	int use_10_for_ms;
+ 	int header_length;
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index f2193cd..895d212 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -261,6 +261,11 @@ extern int scsi_mode_sense(struct scsi_d
+ 			   unsigned char *buffer, int len, int timeout,
+ 			   int retries, struct scsi_mode_data *data,
+ 			   struct scsi_sense_hdr *);
++extern int scsi_mode_select(struct scsi_device *sdev, int pf, int sp,
++			    int modepage, unsigned char *buffer, int len,
++			    int timeout, int retries,
++			    struct scsi_mode_data *data,
++			    struct scsi_sense_hdr *);
+ extern int scsi_test_unit_ready(struct scsi_device *sdev, int timeout,
+ 				int retries);
+ extern int scsi_device_set_state(struct scsi_device *sdev,
 
-Yes, the scsi-debug device(s) could become different devices
-depending on what other SCSI devices were found, so maybe someone's
-scripts would have to change (scripts should be flexible :).
-But that would also happen if SCSI_DEBUG=m.
 
-Anyway, I'll let Doug/James decide.
-
----
-~Randy
