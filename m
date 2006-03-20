@@ -1,35 +1,41 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: how to use scsi_remove_device
-Date: Sun, 19 Mar 2006 20:37:17 +0100
-Message-ID: <441DB2ED.703@s5r6.in-berlin.de>
-References: <1142598225.25906.256865850@webmail.messagingengine.com>	 <441B1388.20704@s5r6.in-berlin.de>  <441B1C7F.2090605@s5r6.in-berlin.de> <1142629908.15834.15.camel@markh3.pdx.osdl.net>
+From: Martin Michlmayr <tbm@cyrius.com>
+Subject: [PATCH 12/12] [SCSI] mem_start is a physical address already
+Date: Mon, 20 Mar 2006 04:41:27 +0000
+Message-ID: <20060320044127.GL20416@deprecation.cyrius.com>
+References: <20060320043802.GA20389@deprecation.cyrius.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:50589 "EHLO
-	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
-	id S1750755AbWCSTiA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 19 Mar 2006 14:38:00 -0500
-In-Reply-To: <1142629908.15834.15.camel@markh3.pdx.osdl.net>
+Received: from sorrow.cyrius.com ([65.19.161.204]:64527 "EHLO
+	sorrow.cyrius.com") by vger.kernel.org with ESMTP id S1751488AbWCTEln
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 19 Mar 2006 23:41:43 -0500
+Content-Disposition: inline
+In-Reply-To: <20060320043802.GA20389@deprecation.cyrius.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Haverkamp <markh@osdl.org>
-Cc: Mark Salyzyn <mark_salyzyn@adaptec.com>, linux-scsi@vger.kernel.org, Eric Moore <Eric.Moore@lsil.com>, Leon Woestenberg <leonw@mailcan.com>
+To: akpm@osdl.org
+Cc: linux-kernel@vger.kernel.org, linux-mips@linux-mips.org, linux-scsi@vger.kernel.org
 
-Mark Haverkamp wrote:
-> On Fri, 2006-03-17 at 21:30 +0100, Stefan Richter wrote:
->>But aacraid and mptsas call scsi_add_device + scsi_remove_device + 
->>scsi_device_put. AFAICS this is either one scsi_device_put too many or 
->>one scsi_device_get too few.
-...
-> Looking at commsup.c, though, I think that the scsi_device_put is done
-> after the scsi_device_lookup
-...
+mem_start is a physical address already so there's no need to call
+CPHYSADDR().  This brings the file in sync with the linux-mips tree.
 
-Yes, the scsi_device_put is correct since scsi_device_lookup took a 
-reference.
+Signed-off-by: Martin Michlmayr <tbm@cyrius.com>
+Acked-by: Maciej W. Rozycki <macro@linux-mips.org>
+
+
+--- linux-2.6/drivers/scsi/dec_esp.c	2006-03-05 19:35:05.000000000 +0000
++++ mips.git/drivers/scsi/dec_esp.c	2006-03-05 18:51:16.000000000 +0000
+@@ -230,7 +230,7 @@
+ 			mem_start = get_tc_base_addr(slot);
+ 
+ 			/* Store base addr into esp struct */
+-			esp->slot = CPHYSADDR(mem_start);
++			esp->slot = mem_start;
+ 
+ 			esp->dregs = 0;
+ 			esp->eregs = (void *)CKSEG1ADDR(mem_start +
+
 -- 
-Stefan Richter
--=====-=-==- --== =--==
-http://arcgraph.de/sr/
+Martin Michlmayr
+http://www.cyrius.com/
