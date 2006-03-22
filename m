@@ -1,100 +1,60 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: [PATCH 2/2] aic94xx: ref count update
-Date: Wed, 22 Mar 2006 13:44:11 -0800
-Message-ID: <20060322214411.GC661@us.ibm.com>
-References: <20060322214119.GA661@us.ibm.com>
+From: "Randy.Dunlap" <rdunlap@xenotime.net>
+Subject: [PATCH] SCSI: link scsi_debug later (updated)
+Date: Wed, 22 Mar 2006 13:47:10 -0800
+Message-ID: <20060322134710.2de9e19d.rdunlap@xenotime.net>
+References: <1142956795.4377.19.camel@mulgrave.il.steeleye.com>
+	<20060322083647.cc0ccdd4.rdunlap@xenotime.net>
+	<Pine.LNX.4.64.0603221048210.26286@g5.osdl.org>
+	<1143055627.3629.1.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.150]:34259 "EHLO
-	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751232AbWCVVoM
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Mar 2006 16:44:12 -0500
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e32.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id k2MLiCkw021640
-	for <linux-scsi@vger.kernel.org>; Wed, 22 Mar 2006 16:44:12 -0500
-Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
-	by westrelay02.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k2MLfAOa230250
-	for <linux-scsi@vger.kernel.org>; Wed, 22 Mar 2006 14:41:10 -0700
-Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av04.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k2MLiCgM027418
-	for <linux-scsi@vger.kernel.org>; Wed, 22 Mar 2006 14:44:12 -0700
-Received: from hmsbounty.us.ibm.com (sig-9-76-215-94.mts.ibm.com [9.76.215.94])
-	by d03av04.boulder.ibm.com (8.12.11/8.12.11) with ESMTP id k2MLiBHr027382
-	for <linux-scsi@vger.kernel.org>; Wed, 22 Mar 2006 14:44:11 -0700
-Content-Disposition: inline
-In-Reply-To: <20060322214119.GA661@us.ibm.com>
+Received: from xenotime.net ([66.160.160.81]:19915 "HELO xenotime.net")
+	by vger.kernel.org with SMTP id S1751271AbWCVVpC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Mar 2006 16:45:02 -0500
+Received: from midway.site ([71.111.157.99]) by xenotime.net for <linux-scsi@vger.kernel.org>; Wed, 22 Mar 2006 13:44:59 -0800
+In-Reply-To: <1143055627.3629.1.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: torvalds@osdl.org, akpm@osdl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Allow aic94xx driver to unloaded and load.
+From: Randy Dunlap <rdunlap@xenotime.net>
 
-Signed-off-by: Mike Anderson <andmike@us.ibm.com>
-Signed-off-by: Alexis Bruemmer <alexisb@us.ibm.com>
+Changing CONFIG_SCSI_DEBUG from =n or =m to =y can cause the enumeration
+of the SATA devices to change.
 
- drivers/scsi/sas/sas_discover.c  |    2 ++
- drivers/scsi/sas/sas_init.c      |    2 --
- drivers/scsi/sas/sas_scsi_host.c |    1 +
- include/scsi/sas/sas_discover.h  |    3 ---
- 4 files changed, 3 insertions(+), 5 deletions(-)
+Fix that by linking the scsi_debug driver after the SATA drivers.
+Leave scsi_debug at the bottom of the list of low-level drivers so
+that this problem doesn't happen again.
 
-Index: aic94xx-sas-2.6-patched/include/scsi/sas/sas_discover.h
-===================================================================
---- aic94xx-sas-2.6-patched.orig/include/scsi/sas/sas_discover.h	2006-03-22 13:22:22.000000000 -0800
-+++ aic94xx-sas-2.6-patched/include/scsi/sas/sas_discover.h	2006-03-22 13:24:39.000000000 -0800
-@@ -128,8 +128,6 @@ static inline int sas_notify_lldd_dev_fo
- 	int res = 0;
- 	struct sas_ha_struct *sas_ha = dev->port->ha;
+Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+Signed-off-by: Douglas Gilbert <dougg@torque.net>
+---
+ drivers/scsi/Makefile |    2 +-
+ 1 files changed, 1 insertion(+), 1 deletion(-)
+
+--- linux-2616-rc6.orig/drivers/scsi/Makefile
++++ linux-2616-rc6/drivers/scsi/Makefile
+@@ -117,7 +117,6 @@ obj-$(CONFIG_SCSI_PPA)		+= ppa.o
+ obj-$(CONFIG_SCSI_IMM)		+= imm.o
+ obj-$(CONFIG_JAZZ_ESP)		+= NCR53C9x.o	jazz_esp.o
+ obj-$(CONFIG_SUN3X_ESP)		+= NCR53C9x.o	sun3x_esp.o
+-obj-$(CONFIG_SCSI_DEBUG)	+= scsi_debug.o
+ obj-$(CONFIG_SCSI_FCAL)		+= fcal.o
+ obj-$(CONFIG_SCSI_LASI700)	+= 53c700.o lasi700.o
+ obj-$(CONFIG_SCSI_NSP32)	+= nsp32.o
+@@ -140,6 +139,7 @@ obj-$(CONFIG_SCSI_SATA_MV)	+= libata.o s
+ obj-$(CONFIG_SCSI_PDC_ADMA)	+= libata.o pdc_adma.o
  
--	if (!try_module_get(sas_ha->lldd_module))
--		return -ENOMEM;
- 	if (sas_ha->lldd_dev_found) {
- 		res = sas_ha->lldd_dev_found(dev);
- 		if (res) {
-@@ -146,7 +144,6 @@ static inline void sas_notify_lldd_dev_g
- {
- 	if (dev->port->ha->lldd_dev_gone)
- 		dev->port->ha->lldd_dev_gone(dev);
--	module_put(dev->port->ha->lldd_module);
- }
+ obj-$(CONFIG_ARM)		+= arm/
++obj-$(CONFIG_SCSI_DEBUG)	+= scsi_debug.o
  
- static inline void sas_init_dev(struct domain_device *dev)
-Index: aic94xx-sas-2.6-patched/drivers/scsi/sas/sas_scsi_host.c
-===================================================================
---- aic94xx-sas-2.6-patched.orig/drivers/scsi/sas/sas_scsi_host.c	2006-03-22 13:22:22.000000000 -0800
-+++ aic94xx-sas-2.6-patched/drivers/scsi/sas/sas_scsi_host.c	2006-03-22 13:24:39.000000000 -0800
-@@ -693,6 +693,7 @@ out_err:
- 
- void sas_unregister_scsi_host(struct sas_ha_struct *sas_ha)
- {
-+	sas_remove_host(sas_ha->core.shost);
- 	scsi_remove_host(sas_ha->core.shost);
- 	scsi_host_put(sas_ha->core.shost);
- 	sas_ha->core.shost = NULL;
-Index: aic94xx-sas-2.6-patched/drivers/scsi/sas/sas_init.c
-===================================================================
---- aic94xx-sas-2.6-patched.orig/drivers/scsi/sas/sas_init.c	2006-03-22 13:22:22.000000000 -0800
-+++ aic94xx-sas-2.6-patched/drivers/scsi/sas/sas_init.c	2006-03-22 13:24:39.000000000 -0800
-@@ -108,8 +108,6 @@ Undo:
- 
- int sas_unregister_ha(struct sas_ha_struct *sas_ha)
- {
--	sas_unregister_devices(sas_ha);
--
- 	if (sas_ha->lldd_max_execute_num > 1) {
- 		sas_shutdown_queue(sas_ha);
- 	}
-Index: aic94xx-sas-2.6-patched/drivers/scsi/sas/sas_discover.c
-===================================================================
---- aic94xx-sas-2.6-patched.orig/drivers/scsi/sas/sas_discover.c	2006-03-22 13:22:22.000000000 -0800
-+++ aic94xx-sas-2.6-patched/drivers/scsi/sas/sas_discover.c	2006-03-22 13:24:39.000000000 -0800
-@@ -591,6 +591,8 @@ static void sas_unregister_domain_device
- 
- 	list_for_each_entry_reverse_safe(dev,n,&port->dev_list,dev_list_node)
- 		sas_unregister_dev(dev);
-+
-+	complete(&port->port_gone_completion);
- }
- 
- /* ---------- Discovery and Revalidation ---------- */
+ obj-$(CONFIG_CHR_DEV_ST)	+= st.o
+ obj-$(CONFIG_CHR_DEV_OSST)	+= osst.o
+
+
+
+---
