@@ -1,47 +1,55 @@
-From: Bryan Holty <lgeek@frontiernet.net>
-Subject: [PATCH] scsi: Fix sg memory leak building 2 scatter-gather lists
-Date: Wed, 22 Mar 2006 17:03:59 -0600
-Message-ID: <200603221703.59337.lgeek@frontiernet.net>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [RFC PATCH 35/35] Add Xen virtual block device driver.
+Date: Wed, 22 Mar 2006 18:09:55 -0500
+Message-ID: <4421D943.1090804@garzik.org>
+References: <A95E2296287EAD4EB592B5DEEFCE0E9D4B9E8A@liverpoolst.ad.cl.cam.ac.uk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay04.roc.ny.frontiernet.net ([66.133.182.167]:42187 "EHLO
-	relay04.roc.ny.frontiernet.net") by vger.kernel.org with ESMTP
-	id S1751424AbWCVXEE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Mar 2006 18:04:04 -0500
-Received: from [192.168.0.100] (208-186-91-54.dsl1.apv.mn.frontiernet.net [208.186.91.54])
-	by relay04.roc.ny.frontiernet.net (Postfix) with ESMTP id CBDD53582CD
-	for <linux-scsi@vger.kernel.org>; Wed, 22 Mar 2006 23:04:00 +0000 (UTC)
-Content-Disposition: inline
+Received: from srv5.dvmed.net ([207.36.208.214]:52887 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751425AbWCVXKE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Mar 2006 18:10:04 -0500
+In-Reply-To: <A95E2296287EAD4EB592B5DEEFCE0E9D4B9E8A@liverpoolst.ad.cl.cam.ac.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: Ian Pratt <m+Ian.Pratt@cl.cam.ac.uk>
+Cc: Anthony Liguori <aliguori@us.ibm.com>, Chris Wright <chrisw@sous-sol.org>, virtualization@lists.osdl.org, xen-devel@lists.xensource.com, linux-kernel@vger.kernel.org, Ian Pratt <ian.pratt@xensource.com>, ian.pratt@cl.cam.ac.uk, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Hello,
-    There is a memory leak in sg that is hit in the case when direct_io is in 
-use and the length of the data is longer than we can fit into a single 
-scatter-gather list.  Two scatter-gather lists are allocated for each io that 
-meets the criteria, and only 1 ever gets released.
+Ian Pratt wrote:
+>>This is another thing that has always put me off.  The 
+>>virtual block device driver has the ability to masquerade as 
+>>other types of block devices.  It actually claims to be an 
+>>IDE or SCSI device allocating the appropriate major/minor numbers.
+>>
+>>This seems to be pretty evil and creating interesting failure 
+>>conditions for users who load IDE or SCSI modules.  I've seen 
+>>it trip up a number of people in the past.  I think we should 
+>>only ever use the major number that was actually allocated to us.
+> 
+> 
+> We certainly should be pushing everyone toward using the 'xdX' etc
+> devices that are allocated to us. However, the installers of certain
+> older distros and other user space tools won't except anything other
+> than hdX/sdX, so its useful from a compatibility POV even if it never
+> goes into mainline, which I agree it probably shouldn't. 
 
-    The following fix releases the scatter-gather list created by the 
-attempted sg_build_direct when abandoning the effort in favor of 
-sg_build_indirect.  sg_build_indirect creates a new scatter-gather list.
+Yes, this is true.  Red Hat installer guys grumbled at me when I wrote 
+the 'sx8' block driver:  since it wasn't hda/sda, they had to write 
+special code for it, as they apparently must do for any new block driver 
+"class".  SuSE and other distros are probably similar, since each block 
+driver provides its own special behaviors and feature exports.
+
+I should have spoken up a long time ago about this, but anyway:
+
+An IBM hypervisor on ppc64 communicates uses SCSI RPC messages.  I think 
+this would be quite nice for Xen, because SCSI (a) is a message-based 
+model, and (b) implementing block using SCSI has a very high Just 
+Works(tm) value which cannot be ignored.  And perhaps (c) SCSI target 
+code already exists, so implementing the server side doesn't require 
+starting from scratch, but rather simply connecting the Legos.
+
+	Jeff
 
 
-Signed-off-by: Bryan Holty <lgeek@frontiernet.net>
-
---- a/drivers/scsi/sg.c	2006-03-03 13:17:23.000000000 -0600
-+++ b/drivers/scsi/sg.c	2006-03-22 16:32:17.536091840 -0600
-@@ -1648,6 +1648,7 @@
- 		res = sg_build_direct(srp, sfp, dxfer_len);
- 		if (res <= 0)	/* -ve -> error, 0 -> done, 1 -> try indirect */
- 			return res;
-+		sg_remove_scat(req_schp);
- 	}
- 	if ((!sg_res_in_use(sfp)) && (dxfer_len <= rsv_schp->bufflen))
- 		sg_link_reserve(sfp, srp, dxfer_len);
--- 
---
- Bryan Holty
