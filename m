@@ -1,82 +1,21 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH] scsi: Fix sg memory leak building 2 scatter-gather lists
-Date: Wed, 22 Mar 2006 18:32:17 -0500
-Message-ID: <4421DE81.3090805@torque.net>
-References: <200603221703.59337.lgeek@frontiernet.net>
-Reply-To: dougg@torque.net
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 04/15] libata: ata_scsi_queuecmd cleanup
+Date: Wed, 22 Mar 2006 18:34:59 -0500
+Message-ID: <4421DF23.1030605@pobox.com>
+References: <200603172304.k2HN4LDp014215@d03av03.boulder.ibm.com> <4420ADB0.10904@pobox.com> <4421DBB8.1030908@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------060200070500090006010804"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from canuck.infradead.org ([205.233.218.70]:58014 "EHLO
-	canuck.infradead.org") by vger.kernel.org with ESMTP
-	id S932569AbWCVXcd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Mar 2006 18:32:33 -0500
-In-Reply-To: <200603221703.59337.lgeek@frontiernet.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4421DBB8.1030908@us.ibm.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: brking@us.ibm.com
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bryan Holty <lgeek@frontiernet.net>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------060200070500090006010804
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Brian King wrote:
+> ok. How about the following patch?
 
-Bryan Holty wrote:
-> Hello,
->     There is a memory leak in sg that is hit in the case when direct_io is in 
-> use and the length of the data is longer than we can fit into a single 
-> scatter-gather list.  Two scatter-gather lists are allocated for each io that 
-> meets the criteria, and only 1 ever gets released.
-> 
->     The following fix releases the scatter-gather list created by the 
-> attempted sg_build_direct when abandoning the effort in favor of 
-> sg_build_indirect.  sg_build_indirect creates a new scatter-gather list.
-
-Wow, sg leak fixes are coming thick and fast.
-I agree there is a leak there but I'm not sure about
-the placement of sg_remove_scat().
-
-Bryan, what do you think about the variant attached to
-this post? It is untested.
-
-Doug Gilbert
-
-> Signed-off-by: Bryan Holty <lgeek@frontiernet.net>
-> 
-> --- a/drivers/scsi/sg.c	2006-03-03 13:17:23.000000000 -0600
-> +++ b/drivers/scsi/sg.c	2006-03-22 16:32:17.536091840 -0600
-> @@ -1648,6 +1648,7 @@
->  		res = sg_build_direct(srp, sfp, dxfer_len);
->  		if (res <= 0)	/* -ve -> error, 0 -> done, 1 -> try indirect */
->  			return res;
-> +		sg_remove_scat(req_schp);
->  	}
->  	if ((!sg_res_in_use(sfp)) && (dxfer_len <= rsv_schp->bufflen))
->  		sg_link_reserve(sfp, srp, dxfer_len);
+ACK
 
 
---------------060200070500090006010804
-Content-Type: text/x-patch;
- name="sg2616dio_lk.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="sg2616dio_lk.diff"
-
---- linux/drivers/scsi/sg.c	2006-03-20 10:08:49.000000000 -0500
-+++ linux/drivers/scsi/sg.c2616dio_lk	2006-03-22 18:26:23.000000000 -0500
-@@ -1834,8 +1834,10 @@
- 	res = st_map_user_pages(schp->buffer, mx_sc_elems,
- 				(unsigned long)hp->dxferp, dxfer_len, 
- 				(SG_DXFER_TO_DEV == hp->dxfer_direction) ? 1 : 0);
--	if (res <= 0)
-+	if (res <= 0) {
-+		sg_remove_scat(schp);
- 		return 1;
-+	}
- 	schp->k_use_sg = res;
- 	schp->dio_in_use = 1;
- 	hp->info |= SG_INFO_DIRECT_IO;
-
---------------060200070500090006010804--
