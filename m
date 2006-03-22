@@ -1,33 +1,54 @@
-From: "Martin K. Petersen" <mkp@mkp.net>
-Subject: Re: Compaq Fiber Channel Array RM4000 / Scsi middle ware driver
-Date: Wed, 22 Mar 2006 13:41:23 -0500
-Message-ID: <yq1lkv2iap8.fsf@wilson.lab.mkp.net>
-References: <Pine.GSO.4.64.0602250050410.27649@filebunker.xip.at>
-	<Pine.GSO.4.64.0602280120290.25994@filebunker.xip.at>
-	<Pine.GSO.4.64.0602280130320.25994@filebunker.xip.at>
-	<20060228004043.GH27759@parisc-linux.org>
-	<Pine.GSO.4.64.0603221911370.14214@filebunker.xip.at>
+From: Linus Torvalds <torvalds@osdl.org>
+Subject: Re: [GIT PATCH] pending SCSI updates for post 2.6.16
+Date: Wed, 22 Mar 2006 10:49:52 -0800 (PST)
+Message-ID: <Pine.LNX.4.64.0603221048210.26286@g5.osdl.org>
+References: <1142956795.4377.19.camel@mulgrave.il.steeleye.com>
+ <20060322083647.cc0ccdd4.rdunlap@xenotime.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from jaguar.mkp.net ([192.139.46.146]:48770 "EHLO jaguar.mkp.net")
-	by vger.kernel.org with ESMTP id S1751116AbWCVSl0 (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:31165 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932328AbWCVSt4 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Mar 2006 13:41:26 -0500
-In-Reply-To: <Pine.GSO.4.64.0603221911370.14214@filebunker.xip.at> (Ingo Flaschberger's message of "Wed, 22 Mar 2006 19:17:52 +0100 (CET)")
+	Wed, 22 Mar 2006 13:49:56 -0500
+In-Reply-To: <20060322083647.cc0ccdd4.rdunlap@xenotime.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ingo Flaschberger <if@xip.at>
-Cc: Matthew Wilcox <matthew@wil.cx>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, mark@markschaefer.org
+To: "Randy.Dunlap" <rdunlap@xenotime.net>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, akpm@osdl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
->>>>> "Ingo" == Ingo Flaschberger <if@xip.at> writes:
 
-Ingo> The only modifications are in: drivers/scsi/scsi_scan.c
-Ingo> modification of the lun search code
 
-Very cool!  
+On Wed, 22 Mar 2006, Randy.Dunlap wrote:
+> 
+> Can we get a SCSI_DEBUG link order change (or force it to not
+> built-in)?
 
-Do you support both PDA and VSA?
+Just something like this? Or did you have something else in mind?
 
--- 
-Martin K. Petersen      http://mkp.net/
+(Pls test and ack).
+
+		Linus
+
+----
+diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
+index 15dc2e0..4f907da 100644
+--- a/drivers/scsi/Makefile
++++ b/drivers/scsi/Makefile
+@@ -117,7 +117,6 @@ obj-$(CONFIG_SCSI_PPA)		+= ppa.o
+ obj-$(CONFIG_SCSI_IMM)		+= imm.o
+ obj-$(CONFIG_JAZZ_ESP)		+= NCR53C9x.o	jazz_esp.o
+ obj-$(CONFIG_SUN3X_ESP)		+= NCR53C9x.o	sun3x_esp.o
+-obj-$(CONFIG_SCSI_DEBUG)	+= scsi_debug.o
+ obj-$(CONFIG_SCSI_FCAL)		+= fcal.o
+ obj-$(CONFIG_SCSI_LASI700)	+= 53c700.o lasi700.o
+ obj-$(CONFIG_SCSI_NSP32)	+= nsp32.o
+@@ -148,6 +147,8 @@ obj-$(CONFIG_BLK_DEV_SR)	+= sr_mod.o
+ obj-$(CONFIG_CHR_DEV_SG)	+= sg.o
+ obj-$(CONFIG_CHR_DEV_SCH)	+= ch.o
+ 
++obj-$(CONFIG_SCSI_DEBUG)	+= scsi_debug.o
++
+ scsi_mod-y			+= scsi.o hosts.o scsi_ioctl.o constants.o \
+ 				   scsicam.o scsi_error.o scsi_lib.o \
+ 				   scsi_scan.o scsi_sysfs.o \
