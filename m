@@ -1,42 +1,27 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 05/15] libata: Add __ata_scsi_ioctl
-Date: Tue, 21 Mar 2006 20:54:28 -0500
-Message-ID: <4420AE54.6090603@pobox.com>
-References: <200603172304.k2HN4Stx030065@d01av02.pok.ibm.com>
+Subject: Re: [PATCH 06/15] libata: Stop using host->max_cmd_len
+Date: Tue, 21 Mar 2006 21:03:07 -0500
+Message-ID: <4420B05B.6090702@pobox.com>
+References: <200603172304.k2HN4YEF019986@d03av01.boulder.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <200603172304.k2HN4Stx030065@d01av02.pok.ibm.com>
+In-Reply-To: <200603172304.k2HN4YEF019986@d03av01.boulder.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 To: Brian King <brking@us.ibm.com>
 Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 Brian King wrote:
->  
-> -int ata_scsi_ioctl(struct scsi_device *scsidev, int cmd, void __user *arg)
-> +int __ata_scsi_ioctl(struct scsi_device *scsidev, int cmd, void __user *arg)
->  {
-> -	struct ata_port *ap;
-> -	struct ata_device *dev;
->  	int val = -EINVAL, rc = -EINVAL;
->  
-> -	ap = (struct ata_port *) &scsidev->host->hostdata[0];
-> -	if (!ap)
-> -		goto out;
-> -
-> -	dev = ata_scsi_find_dev(ap, scsidev);
-> -	if (!dev) {
-> -		rc = -ENODEV;
-> -		goto out;
-> -	}
-> -
->  	switch (cmd) {
+> In preparation for SAS attached SATA devices, quit using
+> the max_cmd_len in the scsi_host struct.
+> 
+> Signed-off-by: Brian King <brking@us.ibm.com>
 
-
-Rather than create a new function, it looks like the above code can 
-simply be removed.  I don't see anything that uses 'ap' or 'dev'.
+I see this as a bit of a hack.  In general, its best to inform upper 
+layers of known limits as soon as possible.  For the non-SAS case, for 
+that point of view, this patch is a regression.
 
 	Jeff
 
