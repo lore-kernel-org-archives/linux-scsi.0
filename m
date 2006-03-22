@@ -1,57 +1,30 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] remove generic symlink from sg
-Date: Wed, 22 Mar 2006 09:58:24 -0600
-Message-ID: <1143043104.3633.11.camel@mulgrave.il.steeleye.com>
-References: <1142715978.3773.13.camel@mulgrave.il.steeleye.com>
-	 <44216C67.2040701@torque.net>
+Subject: RE: Question: where should the SCSI driver place MODE_SENSE data ?
+Date: Wed, 22 Mar 2006 10:14:37 -0600
+Message-ID: <1143044077.3633.15.camel@mulgrave.il.steeleye.com>
+References: <9738BCBE884FDB42801FAD8A7769C26514211A@NAMAIL1.ad.lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:15819 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751011AbWCVP63 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Mar 2006 10:58:29 -0500
-In-Reply-To: <44216C67.2040701@torque.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751339AbWCVQOm@vger.kernel.org>
+In-Reply-To: <9738BCBE884FDB42801FAD8A7769C26514211A@NAMAIL1.ad.lsil.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, 2006-03-22 at 10:25 -0500, Douglas Gilbert wrote:
-> Careful with the spin:-) It is arguable which one is
-> redundant. I am testing this patch and it breaks
-> lsscsi and sg_map26 (again). Could you tell me which
-> version of the lk 2.6 series the scsi_generic:sg<n>
-> link appeared in? Because if I switch my code to
-> search for a scsi_generic:sg<n> symlink rather than
-> following the generic symlink then I will break
-> backward compatibility prior to that version (unless
-> I cope with both). At least one major distro has an
-> "enterprise" edition based on lk 2.6.5
+On Wed, 2006-03-22 at 08:52 -0700, Ju, Seokmann wrote:
+> On Tuesday, March 21, 2006 6:02 PM, James Bottomley wrote:
+> > I don't understand the question.  Are you asking why
+> > sd_read_write_protect_flag and sd_read_cache_type operate in the way
+> > they do?  i.e. header first then actual data.
+> For any SCSI command including MODE_SENSE, 'bufflen'in scsi_cmnd structure holds actual data buffer size in bytes if 'use_sg' flage is NOT set.
+> The question is that "value of bufflen is 4 for the sd_read_cache_type operation and that is NOT sufficient to return header and page data by driver".
+> If there is something that I misunderstood with the operation, please guide.
 
-It was this patch
-
-76d1ce00bdd76c2987fbfb763cd40447413a55b3
-[PATCH] Driver core: link device and all class devices derived from it.
-
-which added it on 10 July 05 according to the log.
-
-I'd suggest not checking for version, but instead check for
-scsi_generic: as the beginning of the link and then fallback if it's not
-found.
-
-> > I'm open to going through the deprecated features business for this,
-> > since this would represent a user visible change of the scsi sysfs
-> > interface if you wish.
-> 
-> I can see from my lsscsi code and the st driver that
-> tape devices still have a plain old "tape" symlink.
-> Should I be expecting that one to break in the near
-> future?
-
-Presumably if that link is likewise redundant.
+If you look at the functions in sd.c you'll see it goes about asking for
+mode sense very carefully, because there are a lot of broken devices out
+there.  The first request is only for enough of the headers to work out
+the length of the page.
 
 James
-
-
