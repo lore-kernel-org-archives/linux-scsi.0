@@ -1,47 +1,56 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH] remove generic symlink from sg
-Date: Wed, 22 Mar 2006 10:25:27 -0500
-Message-ID: <44216C67.2040701@torque.net>
-References: <1142715978.3773.13.camel@mulgrave.il.steeleye.com>
-Reply-To: dougg@torque.net
+From: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
+Subject: RE: Question: where should the SCSI driver place MODE_SENSE data ?
+Date: Wed, 22 Mar 2006 08:52:50 -0700
+Message-ID: <9738BCBE884FDB42801FAD8A7769C26514211A@NAMAIL1.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from canuck.infradead.org ([205.233.218.70]:32171 "EHLO
-	canuck.infradead.org") by vger.kernel.org with ESMTP
-	id S1751315AbWCVPZw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Mar 2006 10:25:52 -0500
-In-Reply-To: <1142715978.3773.13.camel@mulgrave.il.steeleye.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751190AbWCVP65@vger.kernel.org>
+Content-class: urn:content-classes:message
+Sender: linux-kernel-owner@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
-> This has been redundant ever since James Smart added the class back
-> links since every scsi_device now gets one of these of the form
-> scsi_generic:sg<n>.
+On Tuesday, March 21, 2006 6:02 PM, James Bottomley wrote:
+> I don't understand the question.  Are you asking why
+> sd_read_write_protect_flag and sd_read_cache_type operate in the way
+> they do?  i.e. header first then actual data.
+For any SCSI command including MODE_SENSE, 'bufflen'in scsi_cmnd structure holds actual data buffer size in bytes if 'use_sg' flage is NOT set.
+The question is that "value of bufflen is 4 for the sd_read_cache_type operation and that is NOT sufficient to return header and page data by driver".
+If there is something that I misunderstood with the operation, please guide.
 
-James,
-Careful with the spin:-) It is arguable which one is
-redundant. I am testing this patch and it breaks
-lsscsi and sg_map26 (again). Could you tell me which
-version of the lk 2.6 series the scsi_generic:sg<n>
-link appeared in? Because if I switch my code to
-search for a scsi_generic:sg<n> symlink rather than
-following the generic symlink then I will break
-backward compatibility prior to that version (unless
-I cope with both). At least one major distro has an
-"enterprise" edition based on lk 2.6.5
-
-> I'm open to going through the deprecated features business for this,
-> since this would represent a user visible change of the scsi sysfs
-> interface if you wish.
-
-I can see from my lsscsi code and the st driver that
-tape devices still have a plain old "tape" symlink.
-Should I be expecting that one to break in the near
-future?
-
-Doug Gilbert
+> -----Original Message-----
+> From: James Bottomley [mailto:James.Bottomley@SteelEye.com] 
+> Sent: Tuesday, March 21, 2006 6:02 PM
+> To: Ju, Seokmann
+> Cc: linux-scsi; linux-kernel
+> Subject: Re: Question: where should the SCSI driver place 
+> MODE_SENSE data ?
+> 
+> On Tue, 2006-03-21 at 09:44 -0700, Ju, Seokmann wrote:
+> > In the 2.6 (2.6.9 and scsi-misc in git) kernel, MODE_SENSE 
+> SCSI command
+> > packet (scsi_cmnd) carries following entries with 
+> unexpectedly small in
+> > size.
+> > - request_bufflen
+> > - bufflen
+> > 
+> > Especially for MODE SENSE with page code 8 (caching page), 
+> driver has
+> > minumum 12 Bytes MODE_SENSE data to deliver besides 'mode parameter
+> > header' and 'block descriptors'.
+> > When I dump those entries, they both are 4 Bytes in size.
+> > To me, it seems like that SCSI mid layer allocated 512 Bytes for
+> > MODE_SENSE data buffer, but the buffer length passed down to LLD
+> > incorrectly.
+> 
+> I don't understand the question.  Are you asking why
+> sd_read_write_protect_flag and sd_read_cache_type operate in the way
+> they do?  i.e. header first then actual data.
+> 
+> James
+> 
+> 
+> 
