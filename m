@@ -1,30 +1,29 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: unify SCSI_IOCTL_SEND_COMMAND implementations
-Date: Thu, 23 Mar 2006 15:48:00 +0100
-Message-ID: <20060323144800.GA27044@lst.de>
-References: <20060322165204.GA32287@lst.de> <20060323101819.GV4285@suse.de>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] scsi: properly count the number of pages in scsi_req_map_sg()
+Date: Thu, 23 Mar 2006 14:52:03 +0000
+Message-ID: <20060323145203.GA13637@infradead.org>
+References: <20060321083830.GA2364@localdomain> <1142956494.4377.12.camel@mulgrave.il.steeleye.com> <20060321161912.GA32051@localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:30687 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S932413AbWCWOsD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 23 Mar 2006 09:48:03 -0500
+Received: from pentafluge.infradead.org ([213.146.154.40]:44998 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S964834AbWCWOwH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 23 Mar 2006 09:52:07 -0500
 Content-Disposition: inline
-In-Reply-To: <20060323101819.GV4285@suse.de>
+In-Reply-To: <20060321161912.GA32051@localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: jejb@steeleye.com, linux-scsi@vger.kernel.org
+To: Dan Aloni <da-x@monatomic.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel List <linux-kernel@vger.kernel.org>, brking@us.ibm.com, dror@xiv.co.il
 
-On Thu, Mar 23, 2006 at 11:18:19AM +0100, Jens Axboe wrote:
-> > the non-S/G I/O path.  Jens, what do you think about adding a check
-> > for non-S/G I/O in the midlayer?
-> 
-> Looks good to me. Are cdrom/sr sg clean as well?
+On Tue, Mar 21, 2006 at 06:19:12PM +0200, Dan Aloni wrote:
+> These scatterlists can be generated using the sg driver. Though I am
+> actually running a customized version of the sg driver, it seems the 
+> conversion from a userspace array of sg_iovec_t to scatterlist stays 
+> the same and also applies to the original driver (see 
+> st_map_user_pages()).
 
-there's just one place in cdrom.c that sends a request directly:
-cdrom_read_cdda_bpc, which sends a S/G BLOCK_PC one. Everything else
-goes through ->packet_command which is implemented as oldstyle-PC
-requests in IDE and S/G BLOCK_PC in scsi.  all scsi-internal requests
-including those from sr are S/G of BLOCK_PC type.
+What kernel version did you reproduce this with?  Since 2.6.16 sg should
+obey all request size/alingment limitations.  If not that's a bug in
+scsi_execute_async and it's helpers and should be fixed there.
