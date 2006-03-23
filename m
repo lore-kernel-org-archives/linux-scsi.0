@@ -1,39 +1,34 @@
 From: Jens Axboe <axboe@suse.de>
-Subject: Re: unify SCSI_IOCTL_SEND_COMMAND implementations
-Date: Thu, 23 Mar 2006 11:18:19 +0100
-Message-ID: <20060323101819.GV4285@suse.de>
-References: <20060322165204.GA32287@lst.de>
+Subject: Re: [PATCH] allow displaying and setting of cache type via sysfs
+Date: Thu, 23 Mar 2006 11:18:37 +0100
+Message-ID: <20060323101836.GW4285@suse.de>
+References: <1142712861.3773.6.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:46671 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S932106AbWCWKSQ (ORCPT
+Received: from ns.virtualhost.dk ([195.184.98.160]:12113 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S932170AbWCWKSb (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 23 Mar 2006 05:18:16 -0500
+	Thu, 23 Mar 2006 05:18:31 -0500
 Content-Disposition: inline
-In-Reply-To: <20060322165204.GA32287@lst.de>
+In-Reply-To: <1142712861.3773.6.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: jejb@steeleye.com, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, Mar 22 2006, Christoph Hellwig wrote:
-> We currently have two implementations of this obsolete ioctl, one in
-> the block layer and one in the scsi code.  Both of them have drawbacks.
+On Sat, Mar 18 2006, James Bottomley wrote:
+> I think I promised to do this two years ago
 > 
-> This patch kills the scsi layer version after updating the block version
-> with the missing bits:
+> This patch adds a scsi_disk class with the cache type and FUA
+> parameters, so user land application can easily obtain them without
+> having to parse dmesg.  It also allows setting the cache type (use with
+> care...)
 > 
->  - argument checking
->  - use scatterlist I/O
->  - set number of retries based on the submitted command
-> 
-> This is the last user of non-S/G I/O except for the gdth driver, so
-> getting this in ASAP and through the scsi tree would be nie to kill
-> the non-S/G I/O path.  Jens, what do you think about adding a check
-> for non-S/G I/O in the midlayer?
+> This patch is a bit dangerous because I've replaced the disk kref with a
+> class device reference ...
 
-Looks good to me. Are cdrom/sr sg clean as well?
+Woo, thanks James :-)
 
 -- 
 Jens Axboe
