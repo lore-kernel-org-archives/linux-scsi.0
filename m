@@ -1,38 +1,46 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: unify SCSI_IOCTL_SEND_COMMAND implementations
-Date: Thu, 23 Mar 2006 16:43:05 +0100
-Message-ID: <20060323154304.GA27733@suse.de>
-References: <20060322165204.GA32287@lst.de> <20060323101819.GV4285@suse.de> <20060323144800.GA27044@lst.de>
+From: Bryan Holty <lgeek@frontiernet.net>
+Subject: Re: [PATCH] scsi: properly count the number of pages in scsi_req_map_sg()
+Date: Thu, 23 Mar 2006 10:51:51 -0600
+Message-ID: <200603231051.51519.lgeek@frontiernet.net>
+References: <20060321083830.GA2364@localdomain> <20060321161912.GA32051@localdomain> <20060323145203.GA13637@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:15953 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S932434AbWCWPnA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 23 Mar 2006 10:43:00 -0500
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751351AbWCWQv6@vger.kernel.org>
+In-Reply-To: <20060323145203.GA13637@infradead.org>
 Content-Disposition: inline
-In-Reply-To: <20060323144800.GA27044@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Dan Aloni <da-x@monatomic.org>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel List <linux-kernel@vger.kernel.org>, brking@us.ibm.com, dror@xiv.co.il
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: jejb@steeleye.com, linux-scsi@vger.kernel.org
 
-On Thu, Mar 23 2006, Christoph Hellwig wrote:
-> On Thu, Mar 23, 2006 at 11:18:19AM +0100, Jens Axboe wrote:
-> > > the non-S/G I/O path.  Jens, what do you think about adding a check
-> > > for non-S/G I/O in the midlayer?
-> > 
-> > Looks good to me. Are cdrom/sr sg clean as well?
-> 
-> there's just one place in cdrom.c that sends a request directly:
-> cdrom_read_cdda_bpc, which sends a S/G BLOCK_PC one. Everything else
-> goes through ->packet_command which is implemented as oldstyle-PC
-> requests in IDE and S/G BLOCK_PC in scsi.  all scsi-internal requests
-> including those from sr are S/G of BLOCK_PC type.
+On Thursday 23 March 2006 08:52, Christoph Hellwig wrote:
+> On Tue, Mar 21, 2006 at 06:19:12PM +0200, Dan Aloni wrote:
+> > These scatterlists can be generated using the sg driver. Though I am
+> > actually running a customized version of the sg driver, it seems the
+> > conversion from a userspace array of sg_iovec_t to scatterlist stays
+> > the same and also applies to the original driver (see
+> > st_map_user_pages()).
+>
+> What kernel version did you reproduce this with?  Since 2.6.16 sg should
+> obey all request size/alingment limitations.  If not that's a bug in
+> scsi_execute_async and it's helpers and should be fixed there.
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
 
-Ok thanks for confirming, then lets just add that non-sg check in the
-mid layer.
+I am able to reproduce this with 2.6.16-rc5 - 2.6.16.  There is a problem in 
+scsi_req_map_sg which is called by scsi_execute_async.
 
--- 
-Jens Axboe
+Currently, scsi_req_map_sg assumes every sgl entry is page aligned.  It will 
+cause later slab corruption by under-allocating the number of bio entries if 
+sgl[0].offset + sgl[last].length > PAGE_SIZE.
 
+Dan pointed this out, and I have submitted a patch that I believe correctly 
+fixes the issue.  Just waiting for some feedback.
+
+--
+ Bryan Holty
