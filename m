@@ -1,51 +1,40 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 05/15] libata: Add __ata_scsi_ioctl
-Date: Wed, 22 Mar 2006 18:35:29 -0500
-Message-ID: <4421DF41.3000200@pobox.com>
-References: <200603172304.k2HN4Stx030065@d01av02.pok.ibm.com> <4420AE54.6090603@pobox.com> <4421DC35.6090109@us.ibm.com>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: unify SCSI_IOCTL_SEND_COMMAND implementations
+Date: Thu, 23 Mar 2006 11:18:19 +0100
+Message-ID: <20060323101819.GV4285@suse.de>
+References: <20060322165204.GA32287@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4421DC35.6090109@us.ibm.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: brking@us.ibm.com
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ns.virtualhost.dk ([195.184.98.160]:46671 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S932106AbWCWKSQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 23 Mar 2006 05:18:16 -0500
+Content-Disposition: inline
+In-Reply-To: <20060322165204.GA32287@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: jejb@steeleye.com, linux-scsi@vger.kernel.org
 
-Brian King wrote:
-> Jeff Garzik wrote:
+On Wed, Mar 22 2006, Christoph Hellwig wrote:
+> We currently have two implementations of this obsolete ioctl, one in
+> the block layer and one in the scsi code.  Both of them have drawbacks.
 > 
->>Brian King wrote:
->>
->>> 
->>>-int ata_scsi_ioctl(struct scsi_device *scsidev, int cmd, void __user *arg)
->>>+int __ata_scsi_ioctl(struct scsi_device *scsidev, int cmd, void __user *arg)
->>> {
->>>-	struct ata_port *ap;
->>>-	struct ata_device *dev;
->>> 	int val = -EINVAL, rc = -EINVAL;
->>> 
->>>-	ap = (struct ata_port *) &scsidev->host->hostdata[0];
->>>-	if (!ap)
->>>-		goto out;
->>>-
->>>-	dev = ata_scsi_find_dev(ap, scsidev);
->>>-	if (!dev) {
->>>-		rc = -ENODEV;
->>>-		goto out;
->>>-	}
->>>-
->>> 	switch (cmd) {
->>
->>
->>Rather than create a new function, it looks like the above code can 
->>simply be removed.  I don't see anything that uses 'ap' or 'dev'.
->>
+> This patch kills the scsi layer version after updating the block version
+> with the missing bits:
 > 
+>  - argument checking
+>  - use scatterlist I/O
+>  - set number of retries based on the submitted command
 > 
-> Sounds good to me. Patch below.
+> This is the last user of non-S/G I/O except for the gdth driver, so
+> getting this in ASAP and through the scsi tree would be nie to kill
+> the non-S/G I/O path.  Jens, what do you think about adding a check
+> for non-S/G I/O in the midlayer?
 
-ACK
+Looks good to me. Are cdrom/sr sg clean as well?
 
+-- 
+Jens Axboe
 
