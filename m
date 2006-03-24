@@ -1,42 +1,51 @@
-From: Stephen Degler <stephen@degler.net>
-Subject: Re: scsi negotiation problem on aic79xx (39320A) in 2.6.14
-Date: Fri, 24 Mar 2006 13:05:43 -0500
-Message-ID: <442434F7.1070804@degler.net>
-References: <20051114224512.GF9905@mathom.us> <20060323180909.GD15140@mathom.us> <1143139044.3415.26.camel@mulgrave.il.steeleye.com> <20060324122715.GG15140@mathom.us> <4423E65E.20005@suse.de> <20060324123229.GH15140@mathom.us>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [RFC PATCH 35/35] Add Xen virtual block device
+	driver.
+Date: Fri, 24 Mar 2006 13:04:43 -0600
+Message-ID: <442442CB.4090603@cs.wisc.edu>
+References: <A95E2296287EAD4EB592B5DEEFCE0E9D4B9E8A@liverpoolst.ad.cl.cam.ac.uk>	<4421D943.1090804@garzik.org>	<1143202673.18986.5.camel@localhost.localdomain>	<4423E853.1040707@garzik.org>	<4423F60B.6020805@garzik.org>	<1143207657.2882.65.camel@laptopd505.fenrus.org>	<4423F91F.4060007@garzik.org>
+	<17444.4455.240044.724257@hound.rchland.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from crusoe.degler.net ([66.114.64.229]:17915 "EHLO
-	crusoe.degler.net") by vger.kernel.org with ESMTP id S1751293AbWCXSGE
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Mar 2006 13:06:04 -0500
-In-Reply-To: <20060324123229.GH15140@mathom.us>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <xen-devel-bounces@lists.xensource.com>
+In-Reply-To: <17444.4455.240044.724257@hound.rchland.ibm.com>
+List-Unsubscribe: <http://lists.xensource.com/cgi-bin/mailman/listinfo/xen-devel>,
+	<mailto:xen-devel-request@lists.xensource.com?subject=unsubscribe>
+List-Post: <mailto:xen-devel@lists.xensource.com>
+List-Help: <mailto:xen-devel-request@lists.xensource.com?subject=help>
+List-Subscribe: <http://lists.xensource.com/cgi-bin/mailman/listinfo/xen-devel>,
+	<mailto:xen-devel-request@lists.xensource.com?subject=subscribe>
+Sender: xen-devel-bounces@lists.xensource.com
+Errors-To: xen-devel-bounces@lists.xensource.com
+To: Dave C Boutcher <boutcher@cs.umn.edu>
+Cc: Ian Pratt <m+Ian.Pratt@cl.cam.ac.uk>, xen-devel@lists.xensource.com, SCSI Mailing List <linux-scsi@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Ian Pratt <ian.pratt@xensource.com>, linux-kernel@vger.kernel.org, Chris Wright <chrisw@sous-sol.org>, virtualization@lists.osdl.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Arjan van de Ven <arjan@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Stone <mstone@mathom.us>
-Cc: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
 
-Note that Hannes' patch specific to observing the bios defaults applies 
-cleanly to 2.6.14.x mainline.
+Dave C Boutcher wrote:
+> Jeff Garzik wrote:
+>> Arjan van de Ven wrote:
+>>> On Fri, 2006-03-24 at 08:37 -0500, Jeff Garzik wrote:
+>>>> Jeff Garzik wrote:
+>>>>> In fact, SCSI should make a few things easier, because the notion of 
+>>>>> host+bus topology is already present, and notion of messaging is already 
+>>>>> present, so you don't have to recreate that in a Xen block device 
+>>>>> infrastructure.
+>>>> Another benefit of SCSI:  when an IBM hypervisor in the Linux kernel 
+>>>> switched to SCSI, that allowed them to replace several drivers (virt 
+>>>> disk, virt cdrom, virt floppy?) with a single virt-SCSI driver.
+>>> but there's a generic one for that: iSCSI
+>>> so in theory you only need to provide a network driver then ;)
+>> Talk about lots of overhead :)
+>>
+>> OTOH, I bet that T10 is acting at high speed, right this second, to form 
+>> a committee, and multiple sub-committees, to standardize SCSI 
+>> transported over XenBus.  SXP anyone?  :)
+> 
+> Actually SRP (which T10 has now stopped working on) fits the bill very
+> nicely.
+> 
 
-skd
-
-Michael Stone wrote:
-
-> On Fri, Mar 24, 2006 at 01:30:22PM +0100, Hannes Reinecke wrote:
->
->> Well, yes. You can limit the transfer speed in the BIOS for that device.
->> With the latest patches from scsi-misc we're finally picking them up :-)
->
->
-> I actually thought I had done that at one point when I was testing, 
-> but I'll double check next time I reboot at the console.
->
-> Mike Stone
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
+Does the IBM vscsi code/SPEC follow the SRP SPEC or is it slightly 
+modified? We also have a SRP initiator in kernel now too. It is just not 
+in the drivers/scsi dir.
