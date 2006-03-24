@@ -1,35 +1,41 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [RFC PATCH 35/35] Add Xen virtual block device driver.
-Date: Fri, 24 Mar 2006 12:17:53 +0000
-Message-ID: <1143202673.18986.5.camel@localhost.localdomain>
-References: <A95E2296287EAD4EB592B5DEEFCE0E9D4B9E8A@liverpoolst.ad.cl.cam.ac.uk>
-	 <4421D943.1090804@garzik.org>
+From: Michael Stone <mstone@mathom.us>
+Subject: Re: scsi negotiation problem on aic79xx (39320A) in 2.6.14
+Date: Fri, 24 Mar 2006 07:27:17 -0500
+Message-ID: <20060324122715.GG15140@mathom.us>
+References: <20051114224512.GF9905@mathom.us>
+ <20060323180909.GD15140@mathom.us>
+ <1143139044.3415.26.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:32423 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S932503AbWCXML1
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Mar 2006 07:11:27 -0500
-In-Reply-To: <4421D943.1090804@garzik.org>
+Received: from vms048pub.verizon.net ([206.46.252.48]:7665 "EHLO
+	vms048pub.verizon.net") by vger.kernel.org with ESMTP
+	id S1422724AbWCXM1X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Mar 2006 07:27:23 -0500
+Received: from osgiliath.mathom.us ([151.200.254.241])
+ by vms048.mailsrvcs.net (Sun Java System Messaging Server 6.2-4.02 (built Sep
+ 9 2005)) with ESMTPA id <0IWM007FNT9KO4A4@vms048.mailsrvcs.net> for
+ linux-scsi@vger.kernel.org; Fri, 24 Mar 2006 06:27:20 -0600 (CST)
+In-reply-to: <1143139044.3415.26.camel@mulgrave.il.steeleye.com>
+Content-disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Ian Pratt <m+Ian.Pratt@cl.cam.ac.uk>, Anthony Liguori <aliguori@us.ibm.com>, Chris Wright <chrisw@sous-sol.org>, virtualization@lists.osdl.org, xen-devel@lists.xensource.com, linux-kernel@vger.kernel.org, Ian Pratt <ian.pratt@xensource.com>, ian.pratt@cl.cam.ac.uk, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Mer, 2006-03-22 at 18:09 -0500, Jeff Garzik wrote:
-> An IBM hypervisor on ppc64 communicates uses SCSI RPC messages.  I think 
-> this would be quite nice for Xen, because SCSI (a) is a message-based 
-> model, and (b) implementing block using SCSI has a very high Just 
-> Works(tm) value which cannot be ignored.  And perhaps (c) SCSI target 
-> code already exists, so implementing the server side doesn't require 
-> starting from scratch, but rather simply connecting the Legos.
+On Thu, Mar 23, 2006 at 01:37:23PM -0500, James Bottomley wrote:
+>Well, since the driver works normally for most people, it sounds like
+>there's some issue with this configuration.  First of all, look
+>in /sys/class/spi_transport/target2:0:0 and tell me what min_period,
+>max_offset and max_width are.  Then, if min_period is too high, echo
+>12.5 to it and 1 to revalidate.  Finally, see if you can set the period
+>yourself using the period file.  Also, what does /proc/scsi/aic79xx/2
+>say?  If none of that works, we can try debug the negotiation.
 
-A pure SCSI abstraction doesn't allow for shared head scheduling which
-you will need to scale Xen sanely on typical PC boxes. SCSI emulations
-are also always full of bits people got wrong, often critical bits like
-tagged queues and error sequences - things that break your journalled
-file system.
+Thanks for the reply, it's finally working. The min_period was 6.5, 
+changing it to 12.5 & revalidating made it properly negotiate 160MB/s 
+instead of asynchronous. max_offset was 254 & max_width was 1. Is there 
+a way to make that permenant beside setting the proc entries on each 
+boot?
 
-
+Mike Stone
