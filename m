@@ -1,34 +1,51 @@
-From: Michael Stone <mstone@mathom.us>
-Subject: Re: scsi negotiation problem on aic79xx (39320A) in 2.6.14
-Date: Fri, 24 Mar 2006 07:32:30 -0500
-Message-ID: <20060324123229.GH15140@mathom.us>
-References: <20051114224512.GF9905@mathom.us>
- <20060323180909.GD15140@mathom.us>
- <1143139044.3415.26.camel@mulgrave.il.steeleye.com>
- <20060324122715.GG15140@mathom.us> <4423E65E.20005@suse.de>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [RFC PATCH 35/35] Add Xen virtual block device driver.
+Date: Fri, 24 Mar 2006 07:38:43 -0500
+Message-ID: <4423E853.1040707@garzik.org>
+References: <A95E2296287EAD4EB592B5DEEFCE0E9D4B9E8A@liverpoolst.ad.cl.cam.ac.uk>	 <4421D943.1090804@garzik.org> <1143202673.18986.5.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vms042pub.verizon.net ([206.46.252.42]:30009 "EHLO
-	vms042pub.verizon.net") by vger.kernel.org with ESMTP
-	id S932192AbWCXMch (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Mar 2006 07:32:37 -0500
-Received: from osgiliath.mathom.us ([151.200.254.241])
- by vms042.mailsrvcs.net (Sun Java System Messaging Server 6.2-4.02 (built Sep
- 9 2005)) with ESMTPA id <0IWM007JSTI8L294@vms042.mailsrvcs.net> for
- linux-scsi@vger.kernel.org; Fri, 24 Mar 2006 06:32:33 -0600 (CST)
-In-reply-to: <4423E65E.20005@suse.de>
-Content-disposition: inline
+Received: from srv5.dvmed.net ([207.36.208.214]:29669 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1422741AbWCXMi4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Mar 2006 07:38:56 -0500
+In-Reply-To: <1143202673.18986.5.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: linux-scsi@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Ian Pratt <m+Ian.Pratt@cl.cam.ac.uk>, Anthony Liguori <aliguori@us.ibm.com>, Chris Wright <chrisw@sous-sol.org>, virtualization@lists.osdl.org, xen-devel@lists.xensource.com, linux-kernel@vger.kernel.org, Ian Pratt <ian.pratt@xensource.com>, ian.pratt@cl.cam.ac.uk, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Fri, Mar 24, 2006 at 01:30:22PM +0100, Hannes Reinecke wrote:
->Well, yes. You can limit the transfer speed in the BIOS for that device.
->With the latest patches from scsi-misc we're finally picking them up :-)
+Alan Cox wrote:
+> On Mer, 2006-03-22 at 18:09 -0500, Jeff Garzik wrote:
+>> An IBM hypervisor on ppc64 communicates uses SCSI RPC messages.  I think 
+>> this would be quite nice for Xen, because SCSI (a) is a message-based 
+>> model, and (b) implementing block using SCSI has a very high Just 
+>> Works(tm) value which cannot be ignored.  And perhaps (c) SCSI target 
+>> code already exists, so implementing the server side doesn't require 
+>> starting from scratch, but rather simply connecting the Legos.
+> 
+> A pure SCSI abstraction doesn't allow for shared head scheduling which
+> you will need to scale Xen sanely on typical PC boxes.
 
-I actually thought I had done that at one point when I was testing, but 
-I'll double check next time I reboot at the console.
+Not true at all.  If you can do it with a block device, you can do it 
+with a SCSI block device.
 
-Mike Stone
+In fact, SCSI should make a few things easier, because the notion of 
+host+bus topology is already present, and notion of messaging is already 
+present, so you don't have to recreate that in a Xen block device 
+infrastructure.
+
+
+> SCSI emulations
+> are also always full of bits people got wrong, often critical bits like
+> tagged queues and error sequences - things that break your journalled
+> file system.
+
+This I'll grant you.
+
+	Jeff
+
+
+
