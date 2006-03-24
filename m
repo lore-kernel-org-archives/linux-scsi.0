@@ -1,63 +1,53 @@
-From: boutcher@cs.umn.edu (Dave C Boutcher)
-Subject: Re: [RFC PATCH 35/35] Add Xen virtual block device driver.
-Date: Fri, 24 Mar 2006 09:33:59 -0600
-Message-ID: <17444.4455.240044.724257@hound.rchland.ibm.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [RFC PATCH 35/35] Add Xen virtual block device
+	driver.
+Date: Fri, 24 Mar 2006 15:55:27 +0000
+Message-ID: <1143215728.18986.15.camel@localhost.localdomain>
 References: <A95E2296287EAD4EB592B5DEEFCE0E9D4B9E8A@liverpoolst.ad.cl.cam.ac.uk>
 	<4421D943.1090804@garzik.org>
 	<1143202673.18986.5.camel@localhost.localdomain>
 	<4423E853.1040707@garzik.org>
-	<4423F60B.6020805@garzik.org>
-	<1143207657.2882.65.camel@laptopd505.fenrus.org>
-	<4423F91F.4060007@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.cs.umn.edu ([128.101.36.202]:59010 "EHLO mail.cs.umn.edu")
-	by vger.kernel.org with ESMTP id S1750874AbWCXPfU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Mar 2006 10:35:20 -0500
-In-Reply-To: <4423F91F.4060007@garzik.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <xen-devel-bounces@lists.xensource.com>
+In-Reply-To: <4423E853.1040707@garzik.org>
+List-Unsubscribe: <http://lists.xensource.com/cgi-bin/mailman/listinfo/xen-devel>,
+	<mailto:xen-devel-request@lists.xensource.com?subject=unsubscribe>
+List-Post: <mailto:xen-devel@lists.xensource.com>
+List-Help: <mailto:xen-devel-request@lists.xensource.com?subject=help>
+List-Subscribe: <http://lists.xensource.com/cgi-bin/mailman/listinfo/xen-devel>,
+	<mailto:xen-devel-request@lists.xensource.com?subject=subscribe>
+Sender: xen-devel-bounces@lists.xensource.com
+Errors-To: xen-devel-bounces@lists.xensource.com
 To: Jeff Garzik <jeff@garzik.org>
-Cc: Arjan van de Ven <arjan@infradead.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Ian Pratt <m+Ian.Pratt@cl.cam.ac.uk>, Anthony Liguori <aliguori@us.ibm.com>, Chris Wright <chrisw@sous-sol.org>, virtualization@lists.osdl.org, xen-devel@lists.xensource.com, linux-kernel@vger.kernel.org, Ian Pratt <ian.pratt@xensource.com>, ian.pratt@cl.cam.ac.uk, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: Ian Pratt <m+Ian.Pratt@cl.cam.ac.uk>, xen-devel@lists.xensource.com, SCSI Mailing List <linux-scsi@vger.kernel.org>, Ian Pratt <ian.pratt@xensource.com>, linux-kernel@vger.kernel.org, Chris Wright <chrisw@sous-sol.org>, virtualization@lists.osdl.org
+List-Id: linux-scsi@vger.kernel.org
 
+On Gwe, 2006-03-24 at 07:38 -0500, Jeff Garzik wrote:
+> > A pure SCSI abstraction doesn't allow for shared head scheduling which
+> > you will need to scale Xen sanely on typical PC boxes.
+> 
+> Not true at all.  If you can do it with a block device, you can do it 
+> with a SCSI block device.
 
-Jeff Garzik wrote:
->Arjan van de Ven wrote:
->> On Fri, 2006-03-24 at 08:37 -0500, Jeff Garzik wrote:
->>> Jeff Garzik wrote:
->>>> In fact, SCSI should make a few things easier, because the notion of 
->>>> host+bus topology is already present, and notion of messaging is already 
->>>> present, so you don't have to recreate that in a Xen block device 
->>>> infrastructure.
->>> Another benefit of SCSI:  when an IBM hypervisor in the Linux kernel 
->>> switched to SCSI, that allowed them to replace several drivers (virt 
->>> disk, virt cdrom, virt floppy?) with a single virt-SCSI driver.
->
->> but there's a generic one for that: iSCSI
->> so in theory you only need to provide a network driver then ;)
->
->Talk about lots of overhead :)
->
->OTOH, I bet that T10 is acting at high speed, right this second, to form 
->a committee, and multiple sub-committees, to standardize SCSI 
->transported over XenBus.  SXP anyone?  :)
+I don't believe this is true. The complexity of expressing sequences of
+command ordering between virtual machines acting in a co-operative but
+secure manner isn't as far as I can see expressable sanely in SCSI TCQ
+> 
+> In fact, SCSI should make a few things easier, because the notion of 
+> host+bus topology is already present, and notion of messaging is already 
+> present, so you don't have to recreate that in a Xen block device 
+> infrastructure.
 
-Actually SRP (which T10 has now stopped working on) fits the bill very
-nicely.
+Those are the easy bits. 
 
-I have to say that moving the IBM virtual drivers from a random
-collection of unique drivers (viodisk, viotape, viocd) to a single
-virtual SCSI HBA made life much easier.
+> > are also always full of bits people got wrong, often critical bits like
+> > tagged queues and error sequences - things that break your journalled
+> > file system.
+> 
+> This I'll grant you.
 
-There is a group (actually, at least two groups) working on SCSI
-target infrastructures...once that is in place, I would expect we
-could start hacking a Xen virtual HBA.
+And every one you get wrong is a corruptor....
 
-We looked at iSCSI as a transport (instead of SRP) but we felt that 
-the added complexity made it unlikely that the average human could
-successfully boot their virtual machine
-
-Dave B
+Alan
