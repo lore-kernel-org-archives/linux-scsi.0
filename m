@@ -1,35 +1,41 @@
-From: "Jonathan Pereira" <kiapcvjqazdt@macys.com>
-Subject: Boosts Energy
-Date: Sat, 25 Mar 2006 13:46:27 -0400
-Message-ID: <69420.euphemist.1__30737.7698984512$1143308613$gmane$org@p0jp.com>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: Re: [2.6 patch] schedule the SCSI qlogicfc driver for removal
+Date: Sat, 25 Mar 2006 19:04:51 +0100
+Message-ID: <20060325180451.GJ4053@stusta.de>
+References: <20051024141646.6265c0da.akpm@osdl.org> <20051027152637.GC7889@plap.qlogic.org> <20051027190227.GA16211@infradead.org> <20051027215313.GB7889@plap.qlogic.org> <20051028225155.GA13958@infradead.org> <20051028230303.GI15018@plap.qlogic.org> <1130542543.23729.160.camel@localhost.localdomain> <20060204225801.GD4528@stusta.de> <20060214001409.GA17604@stusta.de> <20060214174308.GA25817@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [218.37.13.156] ([218.37.13.156]:18696 "HELO 209.132.176.167")
-	by vger.kernel.org with SMTP id S1751461AbWCYRnS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 25 Mar 2006 12:43:18 -0500
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:43535 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S1751058AbWCYSEw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 25 Mar 2006 13:04:52 -0500
+Content-Disposition: inline
+In-Reply-To: <20060214174308.GA25817@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: sparclinux@vger.kernel.org
-Cc: linux-x25@vger.kernel.org, ultralinux@vger.kernel.org, linux-sound@vger.kernel.org, linux-scsi@vger.kernel.org, linux-newbie@vger.kernel.org, linux-serial@vger.kernel.org, linux-net@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, Badari Pulavarty <pbadari@gmail.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Andrew Morton <akpm@osdl.org>, lkml <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
+On Tue, Feb 14, 2006 at 05:43:09PM +0000, Christoph Hellwig wrote:
+> On Tue, Feb 14, 2006 at 01:14:09AM +0100, Adrian Bunk wrote:
+> > As usual, there isn't much feedback regarding problems with one driver 
+> > from people using an obsolete driver for the same hardware.
+> > 
+> > So schedule the SCSI qlogicfc driver for removal and let the 
+> > flames^Wfeedback begin...
+> 
+> The driver has been deprecatedd since long before the official deprecation
+> mechanisms existed.  It'll go away for 2.6.17.
 
-Summer is coming, did you look in the mirror lately?
+Is this patch pending somewhere or should I send a patch?
 
-If you`re still overweight you MUST visit us:
+cu
+Adrian
 
-http://051.sureimreadysiir.com
+-- 
 
-WE WILL HELP YOU!
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
 
-
-
-
-
-
-
-
-
-
-campsite you articulatory me, launch reprieve . evangel you consider me, catawba . 
-gob you labyrinth me, cantaloupe contrary . effete you shrivel me, bennington astronomic . tub you bryozoa me, person equilateral . 
-http://051.sureimreadysiir.com/rm/
