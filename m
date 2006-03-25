@@ -1,33 +1,39 @@
-From: Roland Dreier <rdreier@cisco.com>
-Subject: Re: [RFC PATCH 35/35] Add Xen virtual block device driver.
-Date: Fri, 24 Mar 2006 16:47:26 -0800
-Message-ID: <adaveu3fizl.fsf@cisco.com>
-References: <A95E2296287EAD4EB592B5DEEFCE0E9D4B9E8A@liverpoolst.ad.cl.cam.ac.uk>
-	<4421D943.1090804@garzik.org>
-	<1143202673.18986.5.camel@localhost.localdomain>
-	<4423E853.1040707@garzik.org> <4423F60B.6020805@garzik.org>
-	<1143207657.2882.65.camel@laptopd505.fenrus.org>
-	<4423F91F.4060007@garzik.org>
-	<17444.4455.240044.724257@hound.rchland.ibm.com>
-	<442442CB.4090603@cs.wisc.edu>
-	<17444.18012.796603.193315@hound.rchland.ibm.com>
+From: bossekr titters <ljzkBartlett@hideakifan.com>
+Subject: Nice job
+Date: Sat, 25 Mar 2006 14:54:53 +0000
+Message-ID: <b6dd01c6501c$9e679146$39441a5f@hideakifan.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+    format=flowed;
+    charset="iso-8859-1";
+    reply-type=original
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sj-iport-4.cisco.com ([171.68.10.86]:24865 "EHLO
-	sj-iport-4.cisco.com") by vger.kernel.org with ESMTP
-	id S1751320AbWCYAre (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Mar 2006 19:47:34 -0500
-In-Reply-To: <17444.18012.796603.193315@hound.rchland.ibm.com> (Dave C. Boutcher's message of "Fri, 24 Mar 2006 13:19:56 -0600")
+Received: from [222.105.28.47] ([222.105.28.47]:49674 "HELO 222.105.28.47")
+	by vger.kernel.org with SMTP id S1751632AbWCYCKV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Mar 2006 21:10:21 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dave C Boutcher <boutcher@cs.umn.edu>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Jeff Garzik <jeff@garzik.org>, Arjan van de Ven <arjan@infradead.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Ian Pratt <m+Ian.Pratt@cl.cam.ac.uk>, Anthony Liguori <aliguori@us.ibm.com>, Chris Wright <chrisw@sous-sol.org>, virtualization@lists.osdl.org, xen-devel@lists.xensource.com, linux-kernel@vger.kernel.org, Ian Pratt <ian.pratt@xensource.com>, ian.pratt@cl.cam.ac.uk, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-    Dave> And yeah, I'm aware that there is another SRP implementation
-    Dave> in the kernel...Merging would be good...
+Please read this letter attentively! 
+Hello, our company opens a new vacancy. Now we have started our activity in the territory of Germany a nd we need to employ people who will work as our representative in the territory of Germany. Any 
+ 
+interested person can become our manager. Our vacancy is opened for you if you are:  
+ 
+- Age: from 18 till 60 years  
+- Located in the territory of Germany  
+- Have a skill to communicate and access to the Internet.  
+ 
+You will earn from 1000 up to 3000 Euro, working only some hours per day. You can work part time or 
+ 
+full time. Any person located in Germany can become our employee.  
+ 
+If you are interested in our offer send the following data to our e-mail germany@euroemperealz.com
+  
+ahcl@pbxtqa.ei - vtfjayjav raeftst
 
-Changing the ibmvscsi driver to use the include/scsi/srp.h header file
-at least is on my list of things to do.  Probably a 2.6.18 type of thing.
-
- - R.
+- Your full name   
+- Your contact e-mail  
+- Your phone number
