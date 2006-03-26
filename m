@@ -1,53 +1,32 @@
-From: Matthew Wilcox <matthew@wil.cx>
+From: Arjan van de Ven <arjan@infradead.org>
 Subject: Re: [PATCH] Move SG_GET_SCSI_ID from sg to scsi
-Date: Sun, 26 Mar 2006 13:08:26 -0700
-Message-ID: <20060326200826.GB3486@parisc-linux.org>
-References: <Pine.LNX.4.58.0603262108500.13001@be1.lrz> <1143402698.3055.28.camel@laptopd505.fenrus.org>
+Date: Sun, 26 Mar 2006 22:41:20 +0200
+Message-ID: <1143405680.3055.31.camel@laptopd505.fenrus.org>
+References: <Pine.LNX.4.58.0603262108500.13001@be1.lrz>
+	 <1143402698.3055.28.camel@laptopd505.fenrus.org>
+	 <20060326200826.GB3486@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:1744 "EHLO
-	palinux.hppa") by vger.kernel.org with ESMTP id S1751528AbWCZUI2
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 26 Mar 2006 15:08:28 -0500
-Content-Disposition: inline
-In-Reply-To: <1143402698.3055.28.camel@laptopd505.fenrus.org>
+Received: from pentafluge.infradead.org ([213.146.154.40]:28295 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1751544AbWCZUlY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 26 Mar 2006 15:41:24 -0500
+In-Reply-To: <20060326200826.GB3486@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
+To: Matthew Wilcox <matthew@wil.cx>
 Cc: Bodo Eggert <7eggert@gmx.de>, torvalds@osdl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Sun, Mar 26, 2006 at 09:51:38PM +0200, Arjan van de Ven wrote:
-> On Sun, 2006-03-26 at 21:28 +0200, Bodo Eggert wrote:
-> > Having a SCSI ID is a generic SCSI property, therefore reading it should 
-> > not be restricted to sg. The SCSI_IOCTL_GET_IDLUN from scsi is limited 
-> > below the kernel data types, so it isn't an adequate replacement.
-> > 
-> > This patch moves SG_GET_SCSI_ID from sg to scsi while renaming it to
-> > SCSI_IOCTL_GET_PCI. Additionally, I renamed struct sg_scsi_id to struct
-> > scsi_ioctl_id, since it is no longer restricted to sg. The corresponding 
-> > typedef will be gone.
-> 
-> To be honest, I think this is the wrong direction; this ioctl seems to
-> be a bad idea (it exposes the SPI parameters... while SPI is only one of
-> many nowadays). Expanding the use of such a thing... please no.
 
-What's SPI specific?
+> Everything has to support HCIL, even if it's through some kind of
+> mapping. 
 
-+struct scsi_ioctl_id { /* used by SCSI_IOCTL_GET_ID ioctl() */
-+    int host_no;        /* as in "scsi<n>" where 'n' is one of 0, 1, 2
-etc */
-+    int channel;
-+    int scsi_id;        /* scsi id of target device */
-+    int lun;
-+    int scsi_type;      /* TYPE_... defined in scsi/scsi.h */
-+    short h_cmd_per_lun;/* host (adapter) maximum commands per lun */
-+    short d_queue_depth;/* device (or adapter) maximum queue length */
-+    int unused[2];      /* unused part should be zero */
-+}; /* 32 bytes long on i386 */
+for now ;)
+>  Yes, I know it might not make much *sense* for some
+> transports, but we do need to support it.  
 
-Everything has to support HCIL, even if it's through some kind of
-mapping.  Yes, I know it might not make much *sense* for some
-transports, but we do need to support it.  Type isn't SPI-specific.
-cmd_per_lun isn't SPI-specific either, and neither is d_queue_depth,
-although neither may make too much sense for some adapters or targets.
+but at least we should support 64 bit luns etc then...
+(there is padding space.. so it can even be done in the same struct)
+
