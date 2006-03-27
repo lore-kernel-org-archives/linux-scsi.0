@@ -1,53 +1,35 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] Move SG_GET_SCSI_ID from sg to scsi
-Date: Mon, 27 Mar 2006 10:25:30 -0700
-Message-ID: <20060327172530.GH3486@parisc-linux.org>
-References: <Pine.LNX.4.58.0603262108500.13001@be1.lrz> <Pine.LNX.4.64.0603261424590.15714@g5.osdl.org> <4427FEC9.4010803@torque.net> <Pine.LNX.4.64.0603270854570.15714@g5.osdl.org>
+From: Mark Haverkamp <markh@osdl.org>
+Subject: [PATCH 0/11] aacraid: Driver updates
+Date: Mon, 27 Mar 2006 09:43:10 -0800
+Message-ID: <1143481390.21975.34.camel@markh3.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:53652 "EHLO
-	palinux.hppa") by vger.kernel.org with ESMTP id S1750743AbWC0RZc
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Mar 2006 12:25:32 -0500
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0603270854570.15714@g5.osdl.org>
+Received: from smtp.osdl.org ([65.172.181.4]:8127 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751095AbWC0RnO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 27 Mar 2006 12:43:14 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: Douglas Gilbert <dougg@torque.net>, Bodo Eggert <7eggert@gmx.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Mark Salyzyn <mark_salyzyn@adaptec.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, Mar 27, 2006 at 09:15:35AM -0800, Linus Torvalds wrote:
-> On Mon, 27 Mar 2006, Douglas Gilbert wrote:
-> >
-> > There are two things that really count:
-> >   1) the identifier (preferably a world wide unique name)
-> >      of the logical unit that is being addressed
-> >   2) a topological description of how that logical unit
-> >      is connected
-> 
-> And "SCSI ID" doesn't describe either.
-> 
-> > Linux's <hctl> may be a ham fisted way of describing
-> > a path through a topology, but it easily beats /dev/sdabc
-> > and /dev/sg4711 .
-> 
-> Sure, you can easily beat it by selecting what you compare it against.
-> 
-> But face it, /dev/sdabc or /dev/sg4711 simply isn't what you should 
-> compare against. What you should compare against is
-> 
-> 	/dev/cdrom
-> 	/sys/bus/ide/devices/0.0/block:hda/dev
-> 	/dev/uuid/3d9e6e8dfaa3d116
-> 	..
-> 
-> and a million OTHER ways to specify which device you're interested in.
-> 
-> The fact is, they can potentially all do the SCSI command set. And a "SCSI 
-> ID" makes absolutely zero sense for them (those three devices may be the 
-> same device, they may not be, they might be on another machine, who 
-> knows..)
+The following 11 patches contain various aacraid driver updates
+described in each mail.
 
-If this ioctl is generally supported, then you'll be able to find out if
-they're all the same ;-)
+Patches apply to the scsi-misc-2.6 tree.
+
+ aachba.c   |   94 +++++++++++++++++++++++++++++++------------------------------
+ aacraid.h  |   11 ++++++-
+ commctrl.c |   12 +++++++
+ commsup.c  |   41 ++++++++++++++++++--------
+ linit.c    |   64 +++++++++++++++++++++++++++++++----------
+ rkt.c      |    4 +-
+ rx.c       |    4 +-
+ sa.c       |    2 -
+ 8 files changed, 152 insertions(+), 80 deletions(-)
+
+-- 
+Mark Haverkamp <markh@osdl.org>
+
