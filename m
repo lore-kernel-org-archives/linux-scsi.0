@@ -1,84 +1,29 @@
-From: Douglas Gilbert <dougg@torque.net>
+From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: [PATCH] Move SG_GET_SCSI_ID from sg to scsi
-Date: Mon, 27 Mar 2006 10:03:37 -0500
-Message-ID: <4427FEC9.4010803@torque.net>
-References: <Pine.LNX.4.58.0603262108500.13001@be1.lrz> <Pine.LNX.4.64.0603261424590.15714@g5.osdl.org>
-Reply-To: dougg@torque.net
+Date: Mon, 27 Mar 2006 08:20:26 -0700
+Message-ID: <20060327152026.GG3486@parisc-linux.org>
+References: <Pine.LNX.4.58.0603262108500.13001@be1.lrz> <20060326200522.GA3486@parisc-linux.org> <Pine.LNX.4.58.0603271158360.3209@be1.lrz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from canuck.infradead.org ([205.233.218.70]:17820 "EHLO
-	canuck.infradead.org") by vger.kernel.org with ESMTP
-	id S1751061AbWC0PDy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Mar 2006 10:03:54 -0500
-In-Reply-To: <Pine.LNX.4.64.0603261424590.15714@g5.osdl.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751083AbWC0PUa@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.58.0603271158360.3209@be1.lrz>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bodo Eggert <7eggert@gmx.de>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, torvalds@osdl.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: Bodo Eggert <7eggert@gmx.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Linus Torvalds wrote:
+On Mon, Mar 27, 2006 at 12:11:14PM +0200, Bodo Eggert wrote:
+> > > +			__put_user(0, &idp->unused[0]);
+> > > +			__put_user(0, &idp->unused[1]);
+> > 
+> > Is it time to repurpose the unused bytes for the 64-bit LUN?
 > 
-> On Sun, 26 Mar 2006, Bodo Eggert wrote:
-> 
->>Having a SCSI ID is a generic SCSI property
-> 
-> 
-> No it's not.
-> 
-> Havign a SCSI ID is a f*cking idiotic thing to do.
-> 
-> Only idiots like Joerg Schilling thinks that any such thing even _exists_. 
-> It does not, never has, and never will.
-> 
-> The way you reach a SCSI device is through the device filename, and trying 
-> to use controller/channel/id/lun naming IS INSANE!
-> 
-> Stop it now. We should kill that ioctl, not try to make it look like it is 
-> sensible. It's not a sensible way to look up SCSI devices, and the fact 
-> that some SCSI people think it is is doesn't make it so.
-> 
-> The fact is, you CANNOT ID a SCSI device that way. Look at how /sys does 
-> it, and realize that there's a damn good reason we do it that way. We ID 
-> the same device in many different ways, because different people want to 
-> ID it differently.
-> 
-> You can ask "what's the first device we enumerated", you can ask "what's 
-> the physical path to the device" or you can ask "what's the intrisic UUID 
-> of the device". But the controller/channel/id/lun thing is just stupid. 
-> You can look it up that way if you want to, but I refuse to have idiotic 
-> interfaces that somehow try to make that the "official" name, when it 
-> clearly is NOT.
+> ACK, but I didn't find out how to fill it, and having ints instead of
+> __uXX made the struct look ugly. Therefore I postponed it to a later patch.
 
-Linus,
-There are two things that really count:
-  1) the identifier (preferably a world wide unique name)
-     of the logical unit that is being addressed
-  2) a topological description of how that logical unit
-     is connected
-
-For the last 25 years various OS SCSI subsystems have used
-variants of 2) as a proxy for 1). Modern SCSI disks (and
-soon SATA disks) have a world wide unique name associated
-with their logical unit.
-
-So why are modern SCSI standards full of terms like
-I_T_L ** and I_T_L_Q nexus? Probably because the topology,
-especially when there are multiple paths to the same
-logical unit, is significant.
-
-Linux's <hctl> may be a ham fisted way of describing
-a path through a topology, but it easily beats /dev/sdabc
-and /dev/sg4711 .
-With a device node name like /dev/sdabc, a SCSI INQUIRY or
-an ATA IDENTIFY DEVICE command can be sent to ascertain 1)
-but I am unaware of any command sent to a logical unit that
-will yield 2).
-
-
-** that is: the nexus of an Initiator port, a Target port
-   and a Logical unit number.
-
-Doug Gilbert
-
+So we don't currently save the scsi_lun anywhere.  We, er, translate it
+into a 32-bit int, and carry that around.  Obviously this is going to
+have to change for things like iSCSI, but this is totally offtopic for
+your patch.  So I agree with you, whoever adds the 64-bit LUN support
+gets to patch the ioctl struct too.
