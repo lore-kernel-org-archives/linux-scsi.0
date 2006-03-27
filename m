@@ -1,43 +1,41 @@
-From: Linus Torvalds <torvalds@osdl.org>
-Subject: Re: [PATCH] Move SG_GET_SCSI_ID from sg to scsi
-Date: Sun, 26 Mar 2006 16:06:56 -0800 (PST)
-Message-ID: <Pine.LNX.4.64.0603261602070.15714@g5.osdl.org>
-References: <Pine.LNX.4.58.0603262108500.13001@be1.lrz>
- <Pine.LNX.4.64.0603261424590.15714@g5.osdl.org> <Pine.LNX.4.61.0603270116150.15593@yvahk01.tjqt.qr>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: "Donovan Crowe" <rffpgck@nietzsche.com>
+Subject: Quality Financing for the USA!
+Date: Mon, 27 Mar 2006 02:19:32 +0100
+Message-ID: <63160484.7621686030060.JavaMail.nfsnobody@www5.p0si.net>
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:9374 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932231AbWC0AHJ (ORCPT
+Received: from zeus1.kernel.org ([204.152.191.4]:4744 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S932267AbWC0ATk (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 26 Mar 2006 19:07:09 -0500
-In-Reply-To: <Pine.LNX.4.61.0603270116150.15593@yvahk01.tjqt.qr>
+	Sun, 26 Mar 2006 19:19:40 -0500
+Received: from 204.152.191.4 (zwbrjzc@[222.72.12.12])
+	by zeus1.kernel.org (8.13.1/8.13.1) with SMTP id k2R0JKSQ001625
+	for <linux-scsi@vger.kernel.org>; Mon, 27 Mar 2006 00:19:23 GMT
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jan Engelhardt <jengelh@linux01.gwdg.de>
-Cc: Bodo Eggert <7eggert@gmx.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+Homeowner 
 
 
+You have been pre-approved for a $495,386 Home Loan at a 3.75 Fixed Rate. 
+This offer is being extended to you unconditionally and your credit is in no way a factor. 
 
-On Mon, 27 Mar 2006, Jan Engelhardt wrote:
-> 
-> Ah. So all the minix, bsd and sun c?t?[dps]? naming is based on what then 
-> (someone drinking just too much coffe?), if BTL/CTD/HCIL (call it what you 
-> want) never existed?
 
-Right. 
+To take Advantage of this Limited Time opportunity 
 
-It was a stupid idea even in the 80's. It's only gotten stupider since.
 
-Now, during the 80's it was at least _excusable_. It was reasonable to 
-think that you can just enumerate the controllers. And it was simple, and 
-since hotplug controllers back then was "operator plug", not the modern 
-kind of "they magically show up", it worked and controller numbers _meant_ 
-something (even though they'd change when you switched things around, but 
-you can expect that).
+All we ask is that you visit our Website and complete 
+The 1 minute post Approval Form 
 
-These days, you just cannot enumerate controllers in any meaningful 
-manner. I don't think you ever really could, but at least with static 
-hardware, any random enumeration was as good as any other.
 
-			Linus
+http://www5.p0si.net/was.asp
+
+
+Best Wishes, 
+
+
+Celina Stout
+
