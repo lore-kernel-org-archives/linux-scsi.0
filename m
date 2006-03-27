@@ -1,52 +1,45 @@
-From: Doug Maxey <dwm@austin.ibm.com>
-Subject: [RFC] qla4xxx 2.6.16 status on power5
-Date: Mon, 27 Mar 2006 14:03:27 -0600
-Message-ID: <200603272003.k2RK3ReI005754@falcon10.austin.ibm.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH] Move SG_GET_SCSI_ID from sg to scsi
+Date: Mon, 27 Mar 2006 16:29:13 -0500
+Message-ID: <44285929.4020806@torque.net>
+References: <Pine.LNX.4.58.0603262108500.13001@be1.lrz>	 <Pine.LNX.4.64.0603261424590.15714@g5.osdl.org>	 <4427FEC9.4010803@torque.net>	 <Pine.LNX.4.64.0603270854570.15714@g5.osdl.org>	 <20060327172530.GH3486@parisc-linux.org>	 <Pine.LNX.4.64.0603270936290.15714@g5.osdl.org> <1143489287.4970.76.camel@localhost.localdomain>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e2.ny.us.ibm.com ([32.97.182.142]:49128 "EHLO e2.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1751106AbWC0UDj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Mar 2006 15:03:39 -0500
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e2.ny.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k2RK3chV031411
-	for <linux-scsi@vger.kernel.org>; Mon, 27 Mar 2006 15:03:38 -0500
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by d01relay02.pok.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k2RK3PHs182562
-	for <linux-scsi@vger.kernel.org>; Mon, 27 Mar 2006 15:03:25 -0500
-Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
-	by d01av01.pok.ibm.com (8.12.11/8.13.3) with ESMTP id k2RK3O9B021457
-	for <linux-scsi@vger.kernel.org>; Mon, 27 Mar 2006 15:03:24 -0500
+Received: from canuck.infradead.org ([205.233.218.70]:35974 "EHLO
+	canuck.infradead.org") by vger.kernel.org with ESMTP
+	id S1751461AbWC0VbQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 27 Mar 2006 16:31:16 -0500
+In-Reply-To: <1143489287.4970.76.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Christoph Hellwig <hch@lst.de>, Mike Anderson <andmike@us.ibm.com>, linux-scsi@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Linus Torvalds <torvalds@osdl.org>, Matthew Wilcox <matthew@wil.cx>, Bodo Eggert <7eggert@gmx.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Howdy!
+Alan Cox wrote:
+> On Llu, 2006-03-27 at 09:43 -0800, Linus Torvalds wrote:
+> 
+>>The fact is, BUS/ID/LUN crap really doesn't make sense for the majority of 
+>>devices out there. Never has, never will. The fact that old-fashioned SCSI 
+>>devices think of themselves that way has absolutely zero to do with 
+>>reality today.
+> 
+> 
+> It is still a very visible reality if you work in a data centre or with
+> server kit, or if you have tape arrays or multi-CD towers. The LUN or
+> device number in particular are generally the number emblazoned on each
+> slot in the unit and knowing the LUN reliably is sort of critical to not
+> making embarrasing (and career limiting) screwups when swapping drives.
+> 
+> Controller is a pretty abstract concept and except on arrays so is
+> device, but both device and LUN do need to be accessible reliably for
+> the hardware that thinks that way. What other hardware does is
+> irrelevant and "-EINVAL" seems as good an answer as anything.
 
-Just wanted to pass along the qla4xxx driver on a power5 system has 
-successfully completed a 96 hour stress test run with internal tools.
-Target was a netapp n3700 with 1 lun per adapter.  The system had 2 
-adapters.
+USB multi-card readers seem to like the concept of
+LUNs as well.
 
-The driver tested on 2.6.16
-http://marc.theaimsgroup.com/?l=linux-scsi&m=114193951009286&w=4
-
-plus the following patches:
-http://marc.theaimsgroup.com/?l=linux-scsi&m=114193946709005&w=2
-http://marc.theaimsgroup.com/?l=linux-scsi&m=114193946711722&w=2
-http://marc.theaimsgroup.com/?l=linux-scsi&m=114177830426848&w=2
-http://marc.theaimsgroup.com/?l=linux-scsi&m=114177830426848&w=2
-http://marc.theaimsgroup.com/?l=linux-scsi&m=114177830527117&w=2
-http://marc.theaimsgroup.com/?l=linux-scsi&m=114177830307138&w=2
-http://marc.theaimsgroup.com/?l=linux-scsi&m=114177830505665&w=2
-http://marc.theaimsgroup.com/?l=linux-scsi&m=114177830428477&w=2
-http://marc.theaimsgroup.com/?l=linux-scsi&m=114177830619052&w=2
-http://marc.theaimsgroup.com/?l=linux-scsi&m=114177830530112&w=2
-http://marc.theaimsgroup.com/?l=linux-scsi&m=114177830402866&w=2
-http://marc.theaimsgroup.com/?l=linux-scsi&m=114177830407731&w=2
-http://marc.theaimsgroup.com/?l=linux-scsi&m=114177830601763&w=2
-
-++doug
-
+Doug Gilbert
+"What, never? Well, hardly ever." G+S HMS Pinafore
