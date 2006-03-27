@@ -1,58 +1,65 @@
-From: Peter Chubb <peterc@gelato.unsw.edu.au>
-Subject: Re: [RFC PATCH 35/35] Add Xen virtual block device driver.
-Date: Mon, 27 Mar 2006 21:14:23 +1100
-Message-ID: <17447.47871.35204.347588@wombat.chubb.wattle.id.au>
-References: <A95E2296287EAD4EB592B5DEEFCE0E9D4B9E8A@liverpoolst.ad.cl.cam.ac.uk>
-	<4421D943.1090804@garzik.org>
+From: Bodo Eggert <7eggert@gmx.de>
+Subject: Re: [PATCH] Move SG_GET_SCSI_ID from sg to scsi
+Date: Mon, 27 Mar 2006 13:42:15 +0200 (CEST)
+Message-ID: <Pine.LNX.4.58.0603271306140.3209@be1.lrz>
+References: <Pine.LNX.4.58.0603262108500.13001@be1.lrz>
+ <Pine.LNX.4.64.0603261424590.15714@g5.osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail05.syd.optusnet.com.au ([211.29.132.186]:54498 "EHLO
-	mail05.syd.optusnet.com.au") by vger.kernel.org with ESMTP
-	id S1750864AbWC0KTN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Mar 2006 05:19:13 -0500
-In-Reply-To: <4421D943.1090804@garzik.org>
+Received: from mail-in-08.arcor-online.net ([151.189.21.48]:31666 "EHLO
+	mail-in-08.arcor-online.net") by vger.kernel.org with ESMTP
+	id S1750911AbWC0LmZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 27 Mar 2006 06:42:25 -0500
+In-Reply-To: <Pine.LNX.4.64.0603261424590.15714@g5.osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Ian Pratt <m+Ian.Pratt@cl.cam.ac.uk>, Anthony Liguori <aliguori@us.ibm.com>, Chris Wright <chrisw@sous-sol.org>, virtualization@lists.osdl.org, xen-devel@lists.xensource.com, linux-kernel@vger.kernel.org, Ian Pratt <ian.pratt@xensource.com>, ian.pratt@cl.cam.ac.uk, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: Bodo Eggert <7eggert@gmx.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
->>>>> "Jeff" == Jeff Garzik <jeff@garzik.org> writes:
+On Sun, 26 Mar 2006, Linus Torvalds wrote:
+> On Sun, 26 Mar 2006, Bodo Eggert wrote:
 
-Jeff> Ian Pratt wrote:
->> 
->> We certainly should be pushing everyone toward using the 'xdX' etc
->> devices that are allocated to us. However, the installers of
->> certain older distros and other user space tools won't except
->> anything other than hdX/sdX, so its useful from a compatibility POV
->> even if it never goes into mainline, which I agree it probably
->> shouldn't.
+> > Having a SCSI ID is a generic SCSI property
+> 
+> No it's not.
 
-Jeff> Yes, this is true.  Red Hat installer guys grumbled at me when I
-Jeff> wrote the 'sx8' block driver: since it wasn't hda/sda, they had
-Jeff> to write special code for it, as they apparently must do for any
-Jeff> new block driver "class".  SuSE and other distros are probably
-Jeff> similar, since each block driver provides its own special
-Jeff> behaviors and feature exports.
+With respect to sg vs. scsi, it is.
 
-Jeff> I should have spoken up a long time ago about this, but anyway:
+> Havign a SCSI ID is a f*cking idiotic thing to do.
+> 
+> Only idiots like Joerg Schilling thinks that any such thing even _exists_. 
+> It does not, never has, and never will.
 
-Jeff> An IBM hypervisor on ppc64 communicates uses SCSI RPC messages.
-Jeff> I think this would be quite nice for Xen, because SCSI (a) is a
-Jeff> message-based model, and (b) implementing block using SCSI has a
-Jeff> very high Just Works(tm) value which cannot be ignored.  And
-Jeff> perhaps (c) SCSI target code already exists, so implementing the
-Jeff> server side doesn't require starting from scratch, but rather
-Jeff> simply connecting the Legos.
+For the host ID ACK, but some transports do support channel/ID/LUN. In
+/these/ cases having them exported is a sane thing to do. I don't even try
+to argue if it's better to use sysfs or ioctl.
 
-The IA64 virtualisation work (Xen and Linux-on-Linux) uses the SKI
-simulator virtual scsi device --- which looks just like any other scsi
-disk, but uses hypervisor calls to do read/write/open/close calls like
-a user-mode process.  For performance, it needs to be extended a bit
-to do asynchronous I/O and interrupt on completion.  As a halfway
-house, the ski simscsi driver would be fairly easy to port, I think.
+> The way you reach a SCSI device is through the device filename, and trying 
+> to use controller/channel/id/lun naming IS INSANE!
+
+ACK, and having an address space of 340 * 10^36 will make it perfectly
+clear. One day a subsystem might hand out ID and LUN cookies instead of
+counters, and a certain table of sg numbers will stop fitting in memory.
+I'm just handing out the bigger gun with the automatic foot-finder.-)
+
+</chasing the pink herring>
+
+> Stop it now. We should kill that ioctl, not try to make it look like it is 
+> sensible. It's not a sensible way to look up SCSI devices, and the fact 
+> that some SCSI people think it is is doesn't make it so.
+
+Schedule for removal?
+
+As I understand, having a /dev/sd0815 corresponding to a /dev/sg4711 is
+the root of all evil and idiotic things, and moving all sg functions into
+the apropiate place is the sane thing to do.
+
+This patch is a part of the process, and as soon as all sg functions are
+available using /dev/s[dtr]*, the corresponding sg devices should be
+deprecated and removed.
 
 -- 
-Dr Peter Chubb  http://www.gelato.unsw.edu.au  peterc AT gelato.unsw.edu.au
-http://www.ertos.nicta.com.au           ERTOS within National ICT Australia
+Those who desire to give up Freedom in order to gain Security,
+will not have, nor do they deserve, either one.
+	-- T. Jefferson
