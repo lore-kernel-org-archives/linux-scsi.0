@@ -1,173 +1,84 @@
-From: Bodo Eggert <7eggert@gmx.de>
-Subject: [PATCH] Move SG_GET_SCSI_ID from sg to scsi (try #2)
-Date: Mon, 27 Mar 2006 16:17:06 +0200 (CEST)
-Message-ID: <Pine.LNX.4.58.0603271605450.4775@be1.lrz>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH] Move SG_GET_SCSI_ID from sg to scsi
+Date: Mon, 27 Mar 2006 10:03:37 -0500
+Message-ID: <4427FEC9.4010803@torque.net>
+References: <Pine.LNX.4.58.0603262108500.13001@be1.lrz> <Pine.LNX.4.64.0603261424590.15714@g5.osdl.org>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751033AbWC0ORS@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, torvalds@osdl.org, Matthew Wilcox <matthew@wil.cx>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from canuck.infradead.org ([205.233.218.70]:17820 "EHLO
+	canuck.infradead.org") by vger.kernel.org with ESMTP
+	id S1751061AbWC0PDy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 27 Mar 2006 10:03:54 -0500
+In-Reply-To: <Pine.LNX.4.64.0603261424590.15714@g5.osdl.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: Bodo Eggert <7eggert@gmx.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Having a SCSI ID is a generic SCSI property, therefore reading it should
-not be restricted to sg. The SCSI_IOCTL_GET_IDLUN from scsi is limited
-below the kernel data types, so it isn't an adequate replacement.
+Linus Torvalds wrote:
+> 
+> On Sun, 26 Mar 2006, Bodo Eggert wrote:
+> 
+>>Having a SCSI ID is a generic SCSI property
+> 
+> 
+> No it's not.
+> 
+> Havign a SCSI ID is a f*cking idiotic thing to do.
+> 
+> Only idiots like Joerg Schilling thinks that any such thing even _exists_. 
+> It does not, never has, and never will.
+> 
+> The way you reach a SCSI device is through the device filename, and trying 
+> to use controller/channel/id/lun naming IS INSANE!
+> 
+> Stop it now. We should kill that ioctl, not try to make it look like it is 
+> sensible. It's not a sensible way to look up SCSI devices, and the fact 
+> that some SCSI people think it is is doesn't make it so.
+> 
+> The fact is, you CANNOT ID a SCSI device that way. Look at how /sys does 
+> it, and realize that there's a damn good reason we do it that way. We ID 
+> the same device in many different ways, because different people want to 
+> ID it differently.
+> 
+> You can ask "what's the first device we enumerated", you can ask "what's 
+> the physical path to the device" or you can ask "what's the intrisic UUID 
+> of the device". But the controller/channel/id/lun thing is just stupid. 
+> You can look it up that way if you want to, but I refuse to have idiotic 
+> interfaces that somehow try to make that the "official" name, when it 
+> clearly is NOT.
 
-This patch moves SG_GET_SCSI_ID from sg to scsi while renaming it to
-SCSI_IOCTL_GET_PCI. Additionally, I renamed struct sg_scsi_id to struct
-scsi_ioctl_id, since it is no longer restricted to sg. The corresponding
-typedef will be gone.
+Linus,
+There are two things that really count:
+  1) the identifier (preferably a world wide unique name)
+     of the logical unit that is being addressed
+  2) a topological description of how that logical unit
+     is connected
 
-Signed-off-by: Bodo Eggert <7eggert@gmx.de>
+For the last 25 years various OS SCSI subsystems have used
+variants of 2) as a proxy for 1). Modern SCSI disks (and
+soon SATA disks) have a world wide unique name associated
+with their logical unit.
 
----
-This patch applies to 2.6.16. No structural change is made to the struct
-nor the IOCTL number, so userspace will continue to work properly.
+So why are modern SCSI standards full of terms like
+I_T_L ** and I_T_L_Q nexus? Probably because the topology,
+especially when there are multiple paths to the same
+logical unit, is significant.
 
-Maybe this IOCTL should be extended to return the 64 bit LUN, but I wasn't
-able to find out enough details to do the change within reasonable time,
-so this is postponed to a later patch.
+Linux's <hctl> may be a ham fisted way of describing
+a path through a topology, but it easily beats /dev/sdabc
+and /dev/sg4711 .
+With a device node name like /dev/sdabc, a SCSI INQUIRY or
+an ATA IDENTIFY DEVICE command can be sent to ascertain 1)
+but I am unaware of any command sent to a logical unit that
+will yield 2).
 
-This version of the patch adds changes suggested by Matthew Wilcox
 
-diff -X dontdiff -pruN 2.6.15.ori/drivers/scsi/scsi_ioctl.c 2.6.15/drivers/scsi/scsi_ioctl.c
---- 2.6.15.ori/drivers/scsi/scsi_ioctl.c	2006-02-08 15:10:48.000000000 +0100
-+++ 2.6.15/drivers/scsi/scsi_ioctl.c	2006-03-27 15:46:31.000000000 +0200
-@@ -434,6 +434,27 @@ int scsi_ioctl(struct scsi_device *sdev,
- 				     START_STOP_TIMEOUT, NORMAL_RETRIES);
-         case SCSI_IOCTL_GET_PCI:
-                 return scsi_ioctl_get_pci(sdev, arg);
-+	case SCSI_IOCTL_GET_ID:
-+		if (!access_ok(VERIFY_WRITE, arg, sizeof (struct scsi_ioctl_id)))
-+			return -EFAULT;
-+		else {
-+			struct scsi_ioctl_id __user *idp = arg;
-+
-+			__put_user(sdev->host->host_no,
-+				   &idp->host_no);
-+			__put_user(sdev->channel,
-+				   &idp->channel);
-+			__put_user(sdev->id, &idp->scsi_id);
-+			__put_user(sdev->lun, &idp->lun);
-+			__put_user(sdev->type, &idp->scsi_type);
-+			__put_user(sdev->host->cmd_per_lun,
-+				   &idp->h_cmd_per_lun);
-+			__put_user(sdev->queue_depth,
-+				   &idp->d_queue_depth);
-+			__put_user(0, &idp->unused[0]);
-+			__put_user(0, &idp->unused[1]);
-+			return 0;
-+		}
- 	default:
- 		if (sdev->host->hostt->ioctl)
- 			return sdev->host->hostt->ioctl(sdev, cmd, arg);
-diff -X dontdiff -pruN 2.6.15.ori/drivers/scsi/sg.c 2.6.15/drivers/scsi/sg.c
---- 2.6.15.ori/drivers/scsi/sg.c	2006-02-08 15:10:48.000000000 +0100
-+++ 2.6.15/drivers/scsi/sg.c	2006-03-11 11:20:16.000000000 +0100
-@@ -871,29 +871,6 @@ sg_ioctl(struct inode *inode, struct fil
- 		return 0;
- 	case SG_GET_LOW_DMA:
- 		return put_user((int) sfp->low_dma, ip);
--	case SG_GET_SCSI_ID:
--		if (!access_ok(VERIFY_WRITE, p, sizeof (sg_scsi_id_t)))
--			return -EFAULT;
--		else {
--			sg_scsi_id_t __user *sg_idp = p;
--
--			if (sdp->detached)
--				return -ENODEV;
--			__put_user((int) sdp->device->host->host_no,
--				   &sg_idp->host_no);
--			__put_user((int) sdp->device->channel,
--				   &sg_idp->channel);
--			__put_user((int) sdp->device->id, &sg_idp->scsi_id);
--			__put_user((int) sdp->device->lun, &sg_idp->lun);
--			__put_user((int) sdp->device->type, &sg_idp->scsi_type);
--			__put_user((short) sdp->device->host->cmd_per_lun,
--				   &sg_idp->h_cmd_per_lun);
--			__put_user((short) sdp->device->queue_depth,
--				   &sg_idp->d_queue_depth);
--			__put_user(0, &sg_idp->unused[0]);
--			__put_user(0, &sg_idp->unused[1]);
--			return 0;
--		}
- 	case SG_SET_FORCE_PACK_ID:
- 		result = get_user(val, ip);
- 		if (result)
-@@ -1071,6 +1048,7 @@ sg_ioctl(struct inode *inode, struct fil
- 	case SCSI_IOCTL_GET_IDLUN:
- 	case SCSI_IOCTL_GET_BUS_NUMBER:
- 	case SCSI_IOCTL_PROBE_HOST:
-+	case SCSI_IOCTL_GET_ID:
- 	case SG_GET_TRANSFORM:
- 		if (sdp->detached)
- 			return -ENODEV;
-diff -X dontdiff -pruN 2.6.15.ori/include/scsi/scsi.h 2.6.15/include/scsi/scsi.h
---- 2.6.15.ori/include/scsi/scsi.h	2006-02-08 15:11:08.000000000 +0100
-+++ 2.6.15/include/scsi/scsi.h	2006-03-27 15:46:30.000000000 +0200
-@@ -245,6 +245,17 @@ struct scsi_lun {
- 	__u8 scsi_lun[8];
- };
- 
-+struct scsi_ioctl_id { /* used by SCSI_IOCTL_GET_ID ioctl() */
-+	int host_no;        /* as in "scsi<n>" where 'n' is one of 0, 1, 2 etc */
-+	int channel;
-+	int scsi_id;        /* scsi id of target device */
-+	int lun;
-+	int scsi_type;      /* TYPE_... defined in scsi/scsi.h */
-+	short h_cmd_per_lun;/* host (adapter) maximum commands per lun */
-+	short d_queue_depth;/* device (or adapter) maximum queue length */
-+	int unused[2];      /* unused part should be zero */
-+}; /* 32 bytes long on i386 */
-+
- /*
-  *  MESSAGE CODES
-  */
-@@ -427,4 +438,11 @@ struct scsi_lun {
- /* Used to obtain the PCI location of a device */
- #define SCSI_IOCTL_GET_PCI		0x5387
- 
-+/* The following ioctl has a 'struct scsi_ioctl_id *' object as its 3rd argument. */
-+/* 'struct scsi_ioctl_id' was renamed from 'sg_scsi_id_t'. */
-+#define SCSI_IOCTL_GET_ID 0x2276   /* Yields fd's bus, chan, dev, lun + type */
-+#define SG_GET_SCSI_ID SCSI_IOCTL_GET_ID /* old name */
-+/* SCSI id information can also be obtained from SCSI_IOCTL_GET_IDLUN, *
-+ * but that is limited in range (/usurally/ no problem ...)            */
-+
- #endif /* _SCSI_SCSI_H */
-diff -X dontdiff -pruN 2.6.15.ori/include/scsi/sg.h 2.6.15/include/scsi/sg.h
---- 2.6.15.ori/include/scsi/sg.h	2005-06-17 21:48:29.000000000 +0200
-+++ 2.6.15/include/scsi/sg.h	2006-03-11 12:10:14.000000000 +0100
-@@ -155,18 +155,6 @@ typedef struct sg_io_hdr
- #define SG_INFO_DIRECT_IO 0x2   /* direct IO requested and performed */
- #define SG_INFO_MIXED_IO 0x4    /* part direct, part indirect IO */
- 
--
--typedef struct sg_scsi_id { /* used by SG_GET_SCSI_ID ioctl() */
--    int host_no;        /* as in "scsi<n>" where 'n' is one of 0, 1, 2 etc */
--    int channel;
--    int scsi_id;        /* scsi id of target device */
--    int lun;
--    int scsi_type;      /* TYPE_... defined in scsi/scsi.h */
--    short h_cmd_per_lun;/* host (adapter) maximum commands per lun */
--    short d_queue_depth;/* device (or adapter) maximum queue length */
--    int unused[2];      /* probably find a good use, set 0 for now */
--} sg_scsi_id_t; /* 32 bytes long on i386 */
--
- typedef struct sg_req_info { /* used by SG_GET_REQUEST_TABLE ioctl() */
-     char req_state;     /* 0 -> not used, 1 -> written, 2 -> ready to read */
-     char orphan;        /* 0 -> normal request, 1 -> from interruped SG_IO */
-@@ -195,10 +183,6 @@ typedef struct sg_req_info { /* used by 
- #define SG_SET_RESERVED_SIZE 0x2275  /* request a new reserved buffer size */
- #define SG_GET_RESERVED_SIZE 0x2272  /* actual size of reserved buffer */
- 
--/* The following ioctl has a 'sg_scsi_id_t *' object as its 3rd argument. */
--#define SG_GET_SCSI_ID 0x2276   /* Yields fd's bus, chan, dev, lun + type */
--/* SCSI id information can also be obtained from SCSI_IOCTL_GET_IDLUN */
--
- /* Override host setting and always DMA using low memory ( <16MB on i386) */
- #define SG_SET_FORCE_LOW_DMA 0x2279  /* 0-> use adapter setting, 1-> force */
- #define SG_GET_LOW_DMA 0x227a   /* 0-> use all ram for dma; 1-> low dma ram */
+** that is: the nexus of an Initiator port, a Target port
+   and a Logical unit number.
 
--- 
-The weapon that usually jams when you need it the most is the M60. 
+Doug Gilbert
+
