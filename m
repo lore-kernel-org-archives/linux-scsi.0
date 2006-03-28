@@ -1,39 +1,31 @@
-From: Jan Engelhardt <jengelh@linux01.gwdg.de>
-Subject: Re: [PATCH] Move SG_GET_SCSI_ID from sg to scsi
-Date: Tue, 28 Mar 2006 16:17:05 +0200 (MEST)
-Message-ID: <Pine.LNX.4.61.0603281616230.27529@yvahk01.tjqt.qr>
-References: <Pine.LNX.4.58.0603262108500.13001@be1.lrz>
- <Pine.LNX.4.64.0603261424590.15714@g5.osdl.org>  <4427FEC9.4010803@torque.net>
-  <Pine.LNX.4.64.0603270854570.15714@g5.osdl.org>  <20060327172530.GH3486@parisc-linux.org>
-  <Pine.LNX.4.64.0603270936290.15714@g5.osdl.org> <1143489287.4970.76.camel@localhost.localdomain>
- <44285929.4020806@torque.net> <4428E7CB.6030407@s5r6.in-berlin.de>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] aic94xx: move entirely over to correct transport class
+	formulation
+Date: Tue, 28 Mar 2006 09:06:26 -0600
+Message-ID: <1143558386.3353.6.camel@mulgrave.il.steeleye.com>
+References: <1143499534.3334.33.camel@mulgrave.il.steeleye.com>
+	 <20060328053902.GA15968@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from linux01.gwdg.de ([134.76.13.21]:28563 "EHLO linux01.gwdg.de")
-	by vger.kernel.org with ESMTP id S932256AbWC1ORW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Mar 2006 09:17:22 -0500
-In-Reply-To: <4428E7CB.6030407@s5r6.in-berlin.de>
+Received: from stat9.steeleye.com ([209.192.50.41]:17643 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1750780AbWC1PGs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Mar 2006 10:06:48 -0500
+In-Reply-To: <20060328053902.GA15968@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: Douglas Gilbert <dougg@torque.net>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Linus Torvalds <torvalds@osdl.org>, Matthew Wilcox <matthew@wil.cx>, Bodo Eggert <7eggert@gmx.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
->[host/ channel/ target/ LU enumeration...]
->>> is still a very visible reality if you work in a data centre or with
->>> server kit, or if you have tape arrays or multi-CD towers. The LUN or
->>> device number in particular are generally the number emblazoned on each
->>> slot in the unit
->...
->> USB multi-card readers seem to like the concept of LUNs as well.
->
->Sure. The h:c:i:l tuple does not provide the LUN though, only an ersatz.
+On Mon, 2006-03-27 at 21:39 -0800, Mike Anderson wrote:
+> I did a git pull from the aic tree and scsi-misc, and applied your patch.
+> Was scsi_sas_internal.h suppose to be in this patch?
 
-[For the list:]
+No .. that has to go through scsi-misc-2.6, which I'm in the process of
+setting up ...
 
-..., only a replacement.
+James
 
 
-Jan Engelhardt
--- 
