@@ -1,41 +1,34 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [PATCH] aic94xx: move entirely over to correct transport class formulation
-Date: Mon, 27 Mar 2006 21:39:02 -0800
-Message-ID: <20060328053902.GA15968@us.ibm.com>
-References: <1143499534.3334.33.camel@mulgrave.il.steeleye.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH] Move SG_GET_SCSI_ID from sg to scsi
+Date: Tue, 28 Mar 2006 09:37:47 +0200
+Message-ID: <4428E7CB.6030407@s5r6.in-berlin.de>
+References: <Pine.LNX.4.58.0603262108500.13001@be1.lrz>	 <Pine.LNX.4.64.0603261424590.15714@g5.osdl.org>	 <4427FEC9.4010803@torque.net>	 <Pine.LNX.4.64.0603270854570.15714@g5.osdl.org>	 <20060327172530.GH3486@parisc-linux.org>	 <Pine.LNX.4.64.0603270936290.15714@g5.osdl.org> <1143489287.4970.76.camel@localhost.localdomain> <44285929.4020806@torque.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:11406 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751314AbWC1FjG
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Mar 2006 00:39:06 -0500
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e35.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k2S5d67G010936
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Mar 2006 00:39:06 -0500
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by westrelay02.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k2S5ZvUw228610
-	for <linux-scsi@vger.kernel.org>; Mon, 27 Mar 2006 22:35:57 -0700
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k2S5d5mZ002382
-	for <linux-scsi@vger.kernel.org>; Mon, 27 Mar 2006 22:39:05 -0700
-Content-Disposition: inline
-In-Reply-To: <1143499534.3334.33.camel@mulgrave.il.steeleye.com>
+Received: from hp3.statik.TU-Cottbus.De ([141.43.120.68]:7406 "EHLO
+	hp3.statik.tu-cottbus.de") by vger.kernel.org with ESMTP
+	id S932250AbWC1Hig (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Mar 2006 02:38:36 -0500
+In-Reply-To: <44285929.4020806@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: Douglas Gilbert <dougg@torque.net>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Linus Torvalds <torvalds@osdl.org>, Matthew Wilcox <matthew@wil.cx>, Bodo Eggert <7eggert@gmx.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-James Bottomley <James.Bottomley@SteelEye.com> wrote:
-> +#include <scsi/scsi_transport.h>
-> +#include <scsi/scsi_transport_sas.h>
-> +#include "../scsi_sas_internal.h"
+Douglas Gilbert wrote:
+> Alan Cox wrote:
+[host/ channel/ target/ LU enumeration...]
+>> is still a very visible reality if you work in a data centre or with
+>> server kit, or if you have tape arrays or multi-CD towers. The LUN or
+>> device number in particular are generally the number emblazoned on each
+>> slot in the unit
+...
+> USB multi-card readers seem to like the concept of LUNs as well.
 
-
-I did a git pull from the aic tree and scsi-misc, and applied your patch.
-Was scsi_sas_internal.h suppose to be in this patch?
-
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+Sure. The h:c:i:l tuple does not provide the LUN though, only an ersatz.
+-- 
+Stefan Richter
+-=====-=-==- --== ===--
+http://arcgraph.de/sr/
