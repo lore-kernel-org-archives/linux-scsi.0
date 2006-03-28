@@ -1,70 +1,43 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] aic94xx: move entirely over to correct transport class
-	formulation
-Date: Tue, 28 Mar 2006 09:28:58 -0600
-Message-ID: <1143559739.3353.13.camel@mulgrave.il.steeleye.com>
-References: <1143499534.3334.33.camel@mulgrave.il.steeleye.com>
-	 <20060328053902.GA15968@us.ibm.com>
+From: =?iso-8859-1?b?RW1tYW51ZWwgRnVzdOk=?= <emmanuel.fuste@laposte.net>
+Subject: [PATCH 0/5] AIC7xxx port of latests AIC79xx patchs
+Date: Tue, 28 Mar 2006 17:34:09 +0200
+Message-ID: <IWUGKX$64C8B807C7164D533A1533981DC12077@laposte.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:25580 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751016AbWC1P3C (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Mar 2006 10:29:02 -0500
-In-Reply-To: <20060328053902.GA15968@us.ibm.com>
+Received: from mx.laposte.net ([81.255.54.11]:63116 "EHLO mx.laposte.net")
+	by vger.kernel.org with ESMTP id S1751096AbWC1PfN convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Mar 2006 10:35:13 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: hare <hare@suse.de>
+Cc: "James.Bottomley" <James.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, 2006-03-27 at 21:39 -0800, Mike Anderson wrote:
-> I did a git pull from the aic tree and scsi-misc, and applied your patch.
-> Was scsi_sas_internal.h suppose to be in this patch?
+Hello,
 
-Oh, wait, git cockup ... it won't diff new files.  This is
-scsi_sas_internal.h
+I port latest Hannes Reinecke patchs to aic7xxx.
+Compile tested only, runtime report later.
 
-James
+The first four are obvious and should cause no problems.
 
-#ifndef _SCSI_SAS_INTERNAL_H
-#define _SCSI_SAS_INTERNAL_H
+The latest is ... well ... we will see.
 
-#define SAS_HOST_ATTRS		0
-#define SAS_PORT_ATTRS		17
-#define SAS_RPORT_ATTRS		7
-#define SAS_END_DEV_ATTRS	3
-#define SAS_EXPANDER_ATTRS	7
+Comments ?
 
-struct sas_internal {
-	struct scsi_transport_template t;
-	struct sas_function_template *f;
-	struct sas_domain_function_template *dft;
+Cheers,
 
-	struct class_device_attribute private_host_attrs[SAS_HOST_ATTRS];
-	struct class_device_attribute private_phy_attrs[SAS_PORT_ATTRS];
-	struct class_device_attribute private_rphy_attrs[SAS_RPORT_ATTRS];
-	struct class_device_attribute private_end_dev_attrs[SAS_END_DEV_ATTRS];
-	struct class_device_attribute private_expander_attrs[SAS_EXPANDER_ATTRS];
+Emmanuel.
+---
 
-	struct transport_container phy_attr_cont;
-	struct transport_container rphy_attr_cont;
-	struct transport_container end_dev_attr_cont;
-	struct transport_container expander_attr_cont;
-
-	/*
-	 * The array of null terminated pointers to attributes
-	 * needed by scsi_sysfs.c
-	 */
-	struct class_device_attribute *host_attrs[SAS_HOST_ATTRS + 1];
-	struct class_device_attribute *phy_attrs[SAS_PORT_ATTRS + 1];
-	struct class_device_attribute *rphy_attrs[SAS_RPORT_ATTRS + 1];
-	struct class_device_attribute *end_dev_attrs[SAS_END_DEV_ATTRS + 1];
-	struct class_device_attribute *expander_attrs[SAS_EXPANDER_ATTRS + 1];
-};
-#define to_sas_internal(tmpl)	container_of(tmpl, struct sas_internal, t)
-
-#endif
+Acc=E9dez au courrier =E9lectronique de La Poste : www.laposte.net ;=20
+3615 LAPOSTENET (0,34 =80/mn) ; t=E9l : 08 92 68 13 50 (0,34=80/mn)
 
 
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
