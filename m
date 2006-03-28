@@ -1,34 +1,39 @@
-From: Matthias Andree <matthias.andree@gmx.de>
+From: Jan Engelhardt <jengelh@linux01.gwdg.de>
 Subject: Re: [PATCH] Move SG_GET_SCSI_ID from sg to scsi
-Date: Tue, 28 Mar 2006 11:43:22 +0200
-Message-ID: <20060328094322.GA345@merlin.emma.line.org>
-References: <Pine.LNX.4.58.0603262108500.13001@be1.lrz> <Pine.LNX.4.64.0603261424590.15714@g5.osdl.org> <Pine.LNX.4.58.0603271306140.3209@be1.lrz>
+Date: Tue, 28 Mar 2006 16:17:05 +0200 (MEST)
+Message-ID: <Pine.LNX.4.61.0603281616230.27529@yvahk01.tjqt.qr>
+References: <Pine.LNX.4.58.0603262108500.13001@be1.lrz>
+ <Pine.LNX.4.64.0603261424590.15714@g5.osdl.org>  <4427FEC9.4010803@torque.net>
+  <Pine.LNX.4.64.0603270854570.15714@g5.osdl.org>  <20060327172530.GH3486@parisc-linux.org>
+  <Pine.LNX.4.64.0603270936290.15714@g5.osdl.org> <1143489287.4970.76.camel@localhost.localdomain>
+ <44285929.4020806@torque.net> <4428E7CB.6030407@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751281AbWC1Jn3@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.58.0603271306140.3209@be1.lrz>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bodo Eggert <7eggert@gmx.de>
-Cc: Linus Torvalds <torvalds@osdl.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from linux01.gwdg.de ([134.76.13.21]:28563 "EHLO linux01.gwdg.de")
+	by vger.kernel.org with ESMTP id S932256AbWC1ORW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Mar 2006 09:17:22 -0500
+In-Reply-To: <4428E7CB.6030407@s5r6.in-berlin.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: Douglas Gilbert <dougg@torque.net>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Linus Torvalds <torvalds@osdl.org>, Matthew Wilcox <matthew@wil.cx>, Bodo Eggert <7eggert@gmx.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Bodo Eggert schrieb am 2006-03-27:
+>[host/ channel/ target/ LU enumeration...]
+>>> is still a very visible reality if you work in a data centre or with
+>>> server kit, or if you have tape arrays or multi-CD towers. The LUN or
+>>> device number in particular are generally the number emblazoned on each
+>>> slot in the unit
+>...
+>> USB multi-card readers seem to like the concept of LUNs as well.
+>
+>Sure. The h:c:i:l tuple does not provide the LUN though, only an ersatz.
 
-> As I understand, having a /dev/sd0815 corresponding to a /dev/sg4711 is
-> the root of all evil and idiotic things, and moving all sg functions into
-> the apropiate place is the sane thing to do.
-> 
-> This patch is a part of the process, and as soon as all sg functions are
-> available using /dev/s[dtr]*, the corresponding sg devices should be
-> deprecated and removed.
+[For the list:]
 
-Oh, I hear Schilling wailing...
+..., only a replacement.
 
-Seriously, at the time such changes are committed, a good manual for how
-user-space applications are to be upgraded wouldn't hurt, and I am
-indeed proposing that those familiar with the code should write it -
-perhaps when porting an existing application to the new interfaces.
 
+Jan Engelhardt
 -- 
-Matthias Andree
