@@ -1,68 +1,47 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH 06/10] Use SPI messages where possible
+Subject: [PATCH 04/10] Mark div_10M array const
 Date: Tue, 28 Mar 2006 11:03:44 -0500
-Message-ID: <11435618242974-git-send-email-matthew@wil.cx>
+Message-ID: <1143561824125-git-send-email-matthew@wil.cx>
 Reply-To: Matthew Wilcox <matthew@wil.cx>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.magma.ca ([206.191.0.250]:38326 "EHLO mx2.magma.ca")
-	by vger.kernel.org with ESMTP id S1751205AbWC1QDb (ORCPT
+Received: from mx2.magma.ca ([206.191.0.250]:51894 "EHLO mx2.magma.ca")
+	by vger.kernel.org with ESMTP id S932078AbWC1QDh (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Mar 2006 11:03:31 -0500
+	Tue, 28 Mar 2006 11:03:37 -0500
 In-Reply-To: 20060328160156.GJ3486@parisc-linux.org
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Matthew Wilcox <matthew@wil.cx>
+Cc: Matthew Wilcox <matthew@wil.cx>, Arjan van de Ven <arjan@infradead.org>
 
-Now sym2 is using spi_print_msg, we don't need to have our own messages
-for IGNORE WIDE RESIDUE and MODIFY DATA POINTER, so provide the option
-of passing NULL for the label.
+Patch below is one out of a large series to mark kernel data const when
+possible, goal is to use .rodata and avoid false sharing
 
+Signed-off-by: Arjan van de Ven <arjan@infradead.org>
 Signed-off-by: Matthew Wilcox <matthew@wil.cx>
 
 ---
 
- drivers/scsi/sym53c8xx_2/sym_hipd.c |    9 ++++++---
- 1 files changed, 6 insertions(+), 3 deletions(-)
+ drivers/scsi/sym53c8xx_2/sym_hipd.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-63492c20b95a7cae585076a01e3932f8da0725af
+e042461b9e5f62b0c9862cd1af711444e13f41bd
 diff --git a/drivers/scsi/sym53c8xx_2/sym_hipd.c b/drivers/scsi/sym53c8xx_2/sym_hipd.c
-index a6cbb90..1d01c24 100644
+index a95b262..b2ac482 100644
 --- a/drivers/scsi/sym53c8xx_2/sym_hipd.c
 +++ b/drivers/scsi/sym53c8xx_2/sym_hipd.c
-@@ -72,7 +72,10 @@ static void sym_printl_hex(u_char *p, in
+@@ -472,7 +472,7 @@ static int sym_getpciclock (struct sym_h
+  *  calculations more simple.
+  */
+ #define _5M 5000000
+-static u32 div_10M[] = {2*_5M, 3*_5M, 4*_5M, 6*_5M, 8*_5M, 12*_5M, 16*_5M};
++static const u32 div_10M[] = {2*_5M, 3*_5M, 4*_5M, 6*_5M, 8*_5M, 12*_5M, 16*_5M};
  
- static void sym_print_msg(struct sym_ccb *cp, char *label, u_char *msg)
- {
--	sym_print_addr(cp->cmd, "%s: ", label);
-+	if (label)
-+		sym_print_addr(cp->cmd, "%s: ", label);
-+	else
-+		sym_print_addr(cp->cmd, "");
- 
- 	spi_print_msg(msg);
- 	printf("\n");
-@@ -4486,7 +4489,7 @@ static void sym_int_sir (struct sym_hcb 
- 			switch (np->msgin [2]) {
- 			case M_X_MODIFY_DP:
- 				if (DEBUG_FLAGS & DEBUG_POINTER)
--					sym_print_msg(cp,"modify DP",np->msgin);
-+					sym_print_msg(cp, NULL, np->msgin);
- 				tmp = (np->msgin[3]<<24) + (np->msgin[4]<<16) + 
- 				      (np->msgin[5]<<8)  + (np->msgin[6]);
- 				sym_modify_dp(np, tp, cp, tmp);
-@@ -4513,7 +4516,7 @@ static void sym_int_sir (struct sym_hcb 
- 		 */
- 		case M_IGN_RESIDUE:
- 			if (DEBUG_FLAGS & DEBUG_POINTER)
--				sym_print_msg(cp,"ign wide residue", np->msgin);
-+				sym_print_msg(cp, NULL, np->msgin);
- 			if (cp->host_flags & HF_SENSE)
- 				OUTL_DSP(np, SCRIPTA_BA(np, clrack));
- 			else
+ /*
+  *  Get clock factor and sync divisor for a given 
 -- 
 1.2.4.g375a5
 
