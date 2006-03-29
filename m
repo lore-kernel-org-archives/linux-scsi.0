@@ -1,75 +1,64 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: [PATCH] lpfc: sparse NULL warnings
-Date: Wed, 29 Mar 2006 11:19:27 -0800
-Message-ID: <20060329111927.3cb3aa6b.rdunlap@xenotime.net>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: Maxtor drive doesn't wake from sleep
+Date: Wed, 29 Mar 2006 21:20:24 +0200
+Message-ID: <442ADDF8.30209@s5r6.in-berlin.de>
+References: <442AB4A8.8070307@alma.ch> <442AC484.2070107@s5r6.in-berlin.de> <442AD047.5050002@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:49384 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S1750879AbWC2TRO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Mar 2006 14:17:14 -0500
-Received: from midway.site ([71.111.157.99]) by xenotime.net for <linux-scsi@vger.kernel.org>; Wed, 29 Mar 2006 11:17:11 -0800
+Received: from einhorn.in-berlin.de ([192.109.42.8]:13994 "EHLO
+	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
+	id S1750852AbWC2TVi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Mar 2006 14:21:38 -0500
+In-Reply-To: <442AD047.5050002@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: scsi <linux-scsi@vger.kernel.org>
-Cc: jejb <james.bottomley@steeleye.com>, hch@infradead.org
+To: dougg@torque.net
+Cc: Mi <mi.lists@alma.ch>, linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 
-From: Randy Dunlap <rdunlap@xenotime.net>
+Douglas Gilbert wrote:
+>>Mi wrote at linux1394-devel:
+>>>I have 3 external firewire Maxtor One Touch III drives, which appear
+>>>to go into a "sleep" state after between one and two hours, and cannot
+>>>be accessed after that.
+...
+>>>I later found scsi-spin which is also able to wake up the drive:
+>>>  scsi-spin -u /dev/sdd
+...
+>>>Note that there is absolutely nothing in the logs when the drive goes
+>>>to sleep. Only errors when I try to access them:
+>>>   kernel: Device sdd not ready.
+>>>   kernel: end_request: I/O error, dev sdd, sector 0
+...
+> I believe the sd driver should issue a START STOP UNIT
+> (start) command when confronted with a "... initializing
+> command required" error [sk,asc,ascq: 2,4,2]. It also
+> needs to tell the block layer to go away and amuse itself
+> while it polls the device until it is ready.
+> 
+> When I suggested this some time ago, the response was that
+> whatever app was responsible for stopping the device bore
+> the responsibility for spinning it up again (i.e. "not our
+> problem").
+> 
+> The power condition state machine of ATA and SCSI differ
+> see: http://www.torque.net/sg/power.html
+> For devices that use SAT as a guide (and Maxtor seems to be)
+> the reported problem is going to become more signficant:
+>    a) external device decides to spin itself down after
+>       a period of inactivity
+>    b) user later accesses mounted file system and sd driver
+>       receives a "2,4,2" error
 
-Fix sparse warnings: use NULL instead of 0 for pointers:
-drivers/scsi/lpfc/lpfc_els.c:827:56: warning: Using plain integer as NULL pointer
-drivers/scsi/lpfc/lpfc_els.c:2781:18: warning: Using plain integer as NULL pointer
-drivers/scsi/lpfc/lpfc_els.c:2782:18: warning: Using plain integer as NULL pointer
-drivers/scsi/lpfc/lpfc_init.c:951:21: warning: Using plain integer as NULL pointer
-drivers/scsi/lpfc/lpfc_init.c:956:20: warning: Using plain integer as NULL pointer
+Thanks a lot for the pointer. This may indeed become more relevant now, 
+including SBP-2 enclosures because vendors have mixed IEEE 1394 and 
+(e)SATA product families now.
 
-Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
----
- drivers/scsi/lpfc/lpfc_els.c  |    6 +++---
- drivers/scsi/lpfc/lpfc_init.c |    4 ++--
- 2 files changed, 5 insertions(+), 5 deletions(-)
-
---- linux-2616-g16.orig/drivers/scsi/lpfc/lpfc_els.c
-+++ linux-2616-g16/drivers/scsi/lpfc/lpfc_els.c
-@@ -824,7 +824,7 @@ lpfc_issue_els_plogi(struct lpfc_hba * p
- 	pring = &psli->ring[LPFC_ELS_RING];	/* ELS ring */
- 
- 	cmdsize = (sizeof (uint32_t) + sizeof (struct serv_parm));
--	elsiocb = lpfc_prep_els_iocb(phba, 1, cmdsize, retry, 0, did,
-+	elsiocb = lpfc_prep_els_iocb(phba, 1, cmdsize, retry, NULL, did,
- 								ELS_CMD_PLOGI);
- 	if (!elsiocb)
- 		return 1;
-@@ -2778,8 +2778,8 @@ lpfc_els_rsp_rps_acc(struct lpfc_hba * p
- 
- 	ndlp = (struct lpfc_nodelist *) pmb->context2;
- 	xri = (uint16_t) ((unsigned long)(pmb->context1));
--	pmb->context1 = 0;
--	pmb->context2 = 0;
-+	pmb->context1 = NULL;
-+	pmb->context2 = NULL;
- 
- 	if (mb->mbxStatus) {
- 		mempool_free( pmb, phba->mbox_mem_pool);
---- linux-2616-g16.orig/drivers/scsi/lpfc/lpfc_init.c
-+++ linux-2616-g16/drivers/scsi/lpfc/lpfc_init.c
-@@ -948,12 +948,12 @@ lpfc_get_hba_model_desc(struct lpfc_hba 
- 					"10-port ", "PCIe"};
- 			break;
- 		default:
--			m = (typeof(m)){ 0 };
-+			m = (typeof(m)){ NULL };
- 			break;
- 		}
- 		break;
- 	default:
--		m = (typeof(m)){ 0 };
-+		m = (typeof(m)){ NULL };
- 		break;
- 	}
- 
-
-
----
+Mi, I would be glad to help and implement what Douglas described. 
+However there is still so much on my sbp2 todo-list that I'm not yet 
+considering to go hack other drivers.
+-- 
+Stefan Richter
+-=====-=-==- --== ===-=
+http://arcgraph.de/sr/
