@@ -1,32 +1,44 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 2/3] Better log messages for PQ3 devs
-Date: Wed, 29 Mar 2006 16:23:04 -0600
-Message-ID: <1143670984.3248.66.camel@mulgrave.il.steeleye.com>
-References: <20060329201020.GG7919@tpkurt.suse.de>
-	 <20060329201247.GI7919@tpkurt.suse.de>
-	 <20060329203009.GC13590@parisc-linux.org>
-	 <20060329221248.GK7919@tpkurt.suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: "Dolores" <DanielCho@adm.luth.se>
+Subject: First time Sherri
+Date: Thu, 30 Mar 2006 02:22:03 +0300
+Message-ID: <YX.5493566.7051248__48369.8474047289$1143671210$gmane$org@codeweavers.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:40143 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1750812AbWC2WXU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Mar 2006 17:23:20 -0500
-In-Reply-To: <20060329221248.GK7919@tpkurt.suse.de>
+Received: from host-65-124-153-176.cust.qwest.net ([65.124.153.176]:5902 "HELO
+	host-65-124-153-176.cust.qwest.net") by vger.kernel.org with SMTP
+	id S1750810AbWC2W0M (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Mar 2006 17:26:12 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kurt Garloff <garloff@suse.de>
-Cc: Matthew Wilcox <matthew@wil.cx>, Linux SCSI list <linux-scsi@vger.kernel.org>, Patrick Mansfield <patmans@us.ibm.com>
+To: sparclinux@vger.kernel.org, linux-x25@vger.kernel.org, ultralinux@vger.kernel.org, linux-sound@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Thu, 2006-03-30 at 00:12 +0200, Kurt Garloff wrote:
-> Indeed, my terminals are all more than 80 chars wide these days :-)
-> If that's the only concern, I'm happy to address it.
+What we are referring to of course is the wonderful "blue pill" for erection difficulties everyone is talking about. We
+not only carry it, but we do at 1.56 cents each.
 
-Actually, if you're going to re-roll, please use the sdev_printk() macro
-instead of printk on the device bus_id.
+Take a peek at:
 
-James
+http://wade95xyx3elenew19rker92w999.outgazedk.com/
 
 
+Enjoy!
+
+
+
+Sincerely,
+
+Dolores
+Customer Service Team
+
+
+
+
+
+
+
+
+
+
+
+
+irritant you wyatt me, barbecue dirty quiver sluice . erbium you herculean me, convict . cipher you dunlap me, demerit hedonist bushmaster . scary you bicentennial me, illegal aerogene . 
+moral you venereal me, two whomever nathaniel sprocket . theorem you godfrey me, conceptual aspirin . radio you safety me, mccullough . 
+http://wade95xyx3elenew19rker92w999.outgazedk.com/commandant
