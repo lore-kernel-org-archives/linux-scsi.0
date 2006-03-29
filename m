@@ -1,66 +1,107 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: [PATCH 1/2] scsi: Add scsi_device max_cmd_len
-Date: Tue, 28 Mar 2006 22:42:03 -0600
-Message-ID: <442A101B.4070209@us.ibm.com>
-References: <200603282217.k2SMHJTH032251@d03av04.boulder.ibm.com>	 <1143584967.3353.47.camel@mulgrave.il.steeleye.com>	 <4429BB02.80304@us.ibm.com>	 <1143586146.3353.51.camel@mulgrave.il.steeleye.com>	 <4429CEB4.4050608@us.ibm.com> <1143591144.3353.55.camel@mulgrave.il.steeleye.com>
+From: "Martin K. Petersen" <mkp@mkp.net>
+Subject: Re: Compaq Fiber Channel Array RM4000 / SCSI Problems / Need HELP!
+Date: Wed, 29 Mar 2006 01:07:25 -0500
+Message-ID: <yq18xqtain6.fsf@wilson.lab.mkp.net>
+References: <Pine.GSO.4.64.0602250050410.27649@filebunker.xip.at>
+	<Pine.GSO.4.64.0602280120290.25994@filebunker.xip.at>
+	<Pine.GSO.4.64.0602280130320.25994@filebunker.xip.at>
+	<20060228004043.GH27759@parisc-linux.org>
+	<Pine.GSO.4.64.0603221911370.14214@filebunker.xip.at>
+	<yq1lkv2iap8.fsf@wilson.lab.mkp.net>
+	<Pine.GSO.4.64.0603222054520.14214@filebunker.xip.at>
+	<20060322200229.GT8980@parisc-linux.org>
+	<Pine.GSO.4.64.0603222105560.14214@filebunker.xip.at>
+	<Pine.GSO.4.64.0603282134370.8439@filebunker.xip.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1143591144.3353.55.camel@mulgrave.il.steeleye.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from jaguar.mkp.net ([192.139.46.146]:2998 "EHLO jaguar.mkp.net")
+	by vger.kernel.org with ESMTP id S1751087AbWC2GHe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Mar 2006 01:07:34 -0500
+In-Reply-To: <Pine.GSO.4.64.0603282134370.8439@filebunker.xip.at> (Ingo Flaschberger's message of "Tue, 28 Mar 2006 21:43:32 +0200 (CEST)")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Ingo Flaschberger <if@xip.at>
+Cc: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-James Bottomley wrote:
-> Well, no, not scsi transport; I think just a general transport ... see
-> the raid_class for an example of one of these (albeit not very related
-> to what you want to do, I'm afraid).
-> 
-> technically, you can have multiple transports per device, even with SCSI
-> ones.  It's just convenient to simplify the single attachement case
-> since that's the predominant one.
-> 
-> The key is in the match function.  Given a generic device, you have to
-> know how to verify its a device of the type you want.
+>>>>> "Ingo" == Ingo Flaschberger <if@xip.at> writes:
 
- From what I understand, it looks like I should be creating a sata_class
-transport of sorts, which would attach to scsi_hosts that support SATA
-and would contain SATA host related attributes. It would also provide
-APIs such as sata_dev_alloc, sata_dev_add, similar to sas_phy_alloc,
-and sas_phy_add, which would be called by external users to attach
-SATA devices to the upper layers. sata_dev_add would result in
-the device getting hooked into libata and getting added to scsi core,
-etc. There could then also be per-device hooks/attributes in the
-sata_class transport as appropriate.
+Ingo> I'm now diging since one week in the scsi code and get no idea
+Ingo> what fails.  I have, when I dd more the 556K to an ext3 at sda1,
+Ingo> an "Illegal Request"; "Invalid field in cdb"
 
-However, since scsi core is the one that checks max_cmd_len,
-scsi core would somehow need to be able to poke into the sata host
-transport attribute to decide whether or not to accept the command.
-Probably an addition to struct scsi_transport_template?
+I'm sorry I'm completely and utterly swamped right now - dealing with
+a slipped product release schedule.
 
-This is quite a change from the patchset I have been carrying
-for the past 5 months or so to add SATA support to ipr. The
-current ipr patch to add this support can be found here:
+If I read your code correctly last week, all you've done so far is
+mess with LUN scanning.  And my guess is things blow up when you've
+queued enough I/O and things start actually hitting the metal.
 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=114263741229458&w=2
+The real problem with the RA4100 is that you can't just send commands
+(cdbs) to it directly.  You need to mangle them and this is what we
+currently have no good infrastructure to support.
 
-It requires no change to scsi core other than the patch we are
-discussing (which could technically also be done in libata),
-and requires minimal libata changes. I'm happy to start coding
-up a sata_class, but is there any chance of this being a phase
-2 solution, and for the interim we proceed with something closer
-to what I have been submitting to the list for the past 5 months?
-I'm happy to drop the patch that started this thread if that helps.
-Would you be OK with the ipr patch in the URL above as an interim
-solution?
+The RA4100 supports two addressing modes VSA and PDA and depending on
+which mode is used you need to mangle the cdb in different ways.
+Judging from the comments in cpqfc it appears the mode depends on the
+firmware of the RA4100 in question.
 
-Thanks,
+Below is what I sent to hch about the RA4100 a while ago...
 
-Brian
+Btw. SCC is the SCSI Controller Commands specification -
+i.e. TYPE_RAID.  The spec is at
+
+     http://www.t10.org/ftp/t10/drafts/scc2/scc2r04.pdf
+
+---8<---
+
+The LUN mangling takes place in cpqfcTSworker.c.  Here's what happens:
+
+ - IssueReportLunsCommand() gets fired off to send a REPORT_LUNS to
+   the array SCSI ID.
+
+ - ScsiReportLunsDone() is called upon completion.  If REPORT_LUNS
+   failed we need to use peripheral device addressing (PDA) and set
+   VolumeSetAddressing (VSA) to 0.
+
+   If REPORT_LUNS succeeded VSA is set to 1 and so is LunMasking
+   (which is a kludge becase we didn't do sparse LUNs).
+
+ - fcFindLoggedInPort() is a swiss army knife function that gets
+   called all over the place in cpqfc.  It deals with mappings between
+   WWNs/port ids and SCSI channel/target/lun tuples.  In this case we
+   need to map a Linux LUN to a fibre channel ID (AL_PA or WWN)
+
+   Look for /* This is not passthrough */ in that function:
+
+   The Scsi_Cmnd in transit has a few things changed.  Specifically,
+   the scratch pad is abused:
+
+   - Cmnd->SCp.phase is set to contain either PDA or VSA
+
+   - Cmnd->SCp.Message is set to contain the device type snooped from
+     INQUIRY (check out cpqfcTSCheckandSnoopFCP())
+
+   - Cmnd->SCp.have_data_in is set to the real LUN
+
+   So far so good.  Now we've got some extra fluff in the Cmnd.  On
+   to...
+
+ - build_FCP_payload() which picks these pieces out of the supplied
+   Cmnd and builds an FCP transfer with the SCC addressing gunk
+   prepended to the cdb.
+
+Now, all the sparse LUN stiff is obsolete.  And the only place the
+stored inquiry data is being used is to special case timeouts when
+dealing with tape devices.
+
+So the only state we need to keep is the real LUN # and the addressing
+mode (VSA or PDA are probably the only relevant ones).  Given that we
+can use the LUN value directly, all we need to do is to get the
+addressing blah prepended.
+
+---8<---
 
 -- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+Martin K. Petersen      http://mkp.net/
