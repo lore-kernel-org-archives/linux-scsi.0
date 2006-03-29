@@ -1,29 +1,40 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: typo in scsi_devinfo.h
-Date: Wed, 29 Mar 2006 06:43:10 -0700
-Message-ID: <20060329134310.GA13590@parisc-linux.org>
-References: <Pine.GSO.4.64.0603221911370.14214@filebunker.xip.at> <yq1lkv2iap8.fsf@wilson.lab.mkp.net> <Pine.GSO.4.64.0603222054520.14214@filebunker.xip.at> <20060322200229.GT8980@parisc-linux.org> <Pine.GSO.4.64.0603222105560.14214@filebunker.xip.at> <Pine.GSO.4.64.0603282134370.8439@filebunker.xip.at> <yq18xqtain6.fsf@wilson.lab.mkp.net> <Pine.GSO.4.64.0603291305590.4009@filebunker.xip.at> <Pine.GSO.4.64.0603291428590.4009@filebunker.xip.at> <Pine.GSO.4.64.0603291518230.4009@filebunker.xip.at>
+From: Brian King <brking@us.ibm.com>
+Subject: Re: [PATCH 1/2] scsi: Add scsi_device max_cmd_len
+Date: Wed, 29 Mar 2006 08:15:24 -0600
+Message-ID: <442A967C.8070805@us.ibm.com>
+References: <200603282217.k2SMHJTH032251@d03av04.boulder.ibm.com> <20060329091104.GB7940@infradead.org>
+Reply-To: brking@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:24261 "EHLO
-	palinux.hppa") by vger.kernel.org with ESMTP id S1750719AbWC2NnM
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Mar 2006 08:43:12 -0500
-Content-Disposition: inline
-In-Reply-To: <Pine.GSO.4.64.0603291518230.4009@filebunker.xip.at>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20060329091104.GB7940@infradead.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: jgarzik@pobox.com, James.Bottomley@steeleye.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ingo Flaschberger <if@xip.at>
-Cc: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, Mar 29, 2006 at 03:19:06PM +0200, Ingo Flaschberger wrote:
-> Hello,
+Christoph Hellwig wrote:
+> On Tue, Mar 28, 2006 at 04:17:18PM -0600, Brian King wrote:
+>> Add a max_cmd_len field to the scsi_device struct
+>> to allow for per device limits of allowable command
+>> lengths. This will be used by libata, which is currently
+>> using the max_cmd_len field in the scsi_host struct,
+>> which doesn't work for attaching libata controlled
+>> SATA devices to SAS HBAs.
 > 
-> in file include/scsi/scsi_devinfo.h:
-> #define BLIST_BORKEN            0x004   /* Flag for broken handshaking */
->          ^^^^^^^^^^^^
->          typo
+> this sounds wrong to me.  cdb length is a limitation of the host (driver).
+> A target will reject unknown commands, no matter what length they have.
 
-it's actually humour, not a tpyo.
-http://en.wiktionary.org/wiki/bork
+In that case, this patch can probably be dropped. Currently libata has
+some code that looks at all the devices attached to a port and sets
+the scsi_host's max_cmd_len to the max of these values. I was assuming
+this was due to some misbehaving ATA/ATAPI devices out there.
+
+Jeff, care to comment on this one?
+
+
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
