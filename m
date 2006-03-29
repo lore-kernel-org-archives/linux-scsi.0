@@ -1,36 +1,103 @@
 From: Brian King <brking@us.ibm.com>
-Subject: [PATCH 01/10] libata: Setup nbytes in ata_sg_init_one
-Date: Wed, 29 Mar 2006 08:37:52 -0600
-Message-ID: <200603291437.k2TEbq6x012211@d01av01.pok.ibm.com>
+Subject: [PATCH 07/10] ipr: Simplify status area dumping
+Date: Wed, 29 Mar 2006 08:38:31 -0600
+Message-ID: <200603291438.k2TEcV1H031440@d01av04.pok.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e3.ny.us.ibm.com ([32.97.182.143]:64414 "EHLO e3.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1751128AbWC2OiN (ORCPT
+Received: from e4.ny.us.ibm.com ([32.97.182.144]:32926 "EHLO e4.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1751156AbWC2Oik (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Mar 2006 09:38:13 -0500
+	Wed, 29 Mar 2006 09:38:40 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jgarzik@pobox.com
 Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@steeleye.com, brking@us.ibm.com
 
 
-Setup nbytes in ata_sg_init_one to the total transfer length
-of the command.
+Simplify the dumping of the command status area by
+removing some device specific information that has proven
+to not be worthwhile.
 
 Signed-off-by: Brian King <brking@us.ibm.com>
 ---
 
- libata-dev-bjking1/drivers/scsi/libata-core.c |    1 +
- 1 files changed, 1 insertion(+)
+ linux-2.6-bjking1/drivers/scsi/ipr.c |   39 +++--------------------------------
+ 1 files changed, 4 insertions(+), 35 deletions(-)
 
-diff -puN drivers/scsi/libata-core.c~libata_setup_nbytes drivers/scsi/libata-core.c
---- libata-dev/drivers/scsi/libata-core.c~libata_setup_nbytes	2006-03-29 08:18:14.000000000 -0600
-+++ libata-dev-bjking1/drivers/scsi/libata-core.c	2006-03-29 08:18:14.000000000 -0600
-@@ -2922,6 +2922,7 @@ void ata_sg_init_one(struct ata_queued_c
- 	qc->n_elem = 1;
- 	qc->orig_n_elem = 1;
- 	qc->buf_virt = buf;
-+	qc->nbytes = buflen;
+diff -puN drivers/scsi/ipr.c~ipr_dump_ioasa_simplify drivers/scsi/ipr.c
+--- linux-2.6/drivers/scsi/ipr.c~ipr_dump_ioasa_simplify	2006-01-31 16:53:22.000000000 -0600
++++ linux-2.6-bjking1/drivers/scsi/ipr.c	2006-01-31 16:53:22.000000000 -0600
+@@ -164,29 +164,6 @@ MODULE_PARM_DESC(auto_create, "Auto-crea
+ MODULE_LICENSE("GPL");
+ MODULE_VERSION(IPR_DRIVER_VERSION);
  
- 	sg = qc->__sg;
- 	sg_init_one(sg, buf, buflen);
+-static const char *ipr_gpdd_dev_end_states[] = {
+-	"Command complete",
+-	"Terminated by host",
+-	"Terminated by device reset",
+-	"Terminated by bus reset",
+-	"Unknown",
+-	"Command not started"
+-};
+-
+-static const char *ipr_gpdd_dev_bus_phases[] = {
+-	"Bus free",
+-	"Arbitration",
+-	"Selection",
+-	"Message out",
+-	"Command",
+-	"Message in",
+-	"Data out",
+-	"Data in",
+-	"Status",
+-	"Reselection",
+-	"Unknown"
+-};
+-
+ /*  A constant array of IOASCs/URCs/Error Messages */
+ static const
+ struct ipr_error_table_t ipr_error_table[] = {
+@@ -3938,6 +3915,7 @@ static void ipr_erp_cancel_all(struct ip
+  * ipr_dump_ioasa - Dump contents of IOASA
+  * @ioa_cfg:	ioa config struct
+  * @ipr_cmd:	ipr command struct
++ * @res:		resource entry struct
+  *
+  * This function is invoked by the interrupt handler when ops
+  * fail. It will log the IOASA if appropriate. Only called
+@@ -3947,7 +3925,7 @@ static void ipr_erp_cancel_all(struct ip
+  * 	none
+  **/
+ static void ipr_dump_ioasa(struct ipr_ioa_cfg *ioa_cfg,
+-			   struct ipr_cmnd *ipr_cmd)
++			   struct ipr_cmnd *ipr_cmd, struct ipr_resource_entry *res)
+ {
+ 	int i;
+ 	u16 data_len;
+@@ -3975,16 +3953,7 @@ static void ipr_dump_ioasa(struct ipr_io
+ 			return;
+ 	}
+ 
+-	ipr_sdev_err(ipr_cmd->scsi_cmd->device, "%s\n",
+-		     ipr_error_table[error_index].error);
+-
+-	if ((ioasa->u.gpdd.end_state <= ARRAY_SIZE(ipr_gpdd_dev_end_states)) &&
+-	    (ioasa->u.gpdd.bus_phase <=  ARRAY_SIZE(ipr_gpdd_dev_bus_phases))) {
+-		ipr_sdev_err(ipr_cmd->scsi_cmd->device,
+-			     "Device End state: %s Phase: %s\n",
+-			     ipr_gpdd_dev_end_states[ioasa->u.gpdd.end_state],
+-			     ipr_gpdd_dev_bus_phases[ioasa->u.gpdd.bus_phase]);
+-	}
++	ipr_res_err(ioa_cfg, res, "%s\n", ipr_error_table[error_index].error);
+ 
+ 	if (sizeof(struct ipr_ioasa) < be16_to_cpu(ioasa->ret_stat_len))
+ 		data_len = sizeof(struct ipr_ioasa);
+@@ -4141,7 +4110,7 @@ static void ipr_erp_start(struct ipr_ioa
+ 	}
+ 
+ 	if (ipr_is_gscsi(res))
+-		ipr_dump_ioasa(ioa_cfg, ipr_cmd);
++		ipr_dump_ioasa(ioa_cfg, ipr_cmd, res);
+ 	else
+ 		ipr_gen_sense(ipr_cmd);
+ 
 _
