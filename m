@@ -1,58 +1,41 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH 2/3] Better log messages for PQ3 devs
-Date: Wed, 29 Mar 2006 13:30:09 -0700
-Message-ID: <20060329203009.GC13590@parisc-linux.org>
-References: <20060329201020.GG7919@tpkurt.suse.de> <20060329201247.GI7919@tpkurt.suse.de>
+From: "Nicholas A. Bellinger" <nab@kernel.org>
+Subject: Core-iSCSI v1.6.2.5 & Core-iSCSI-tools v3.3
+Date: Wed, 29 Mar 2006 12:41:19 -0800
+Message-ID: <1143664879.17194.12.camel@haakon>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:30905 "EHLO
-	palinux.hppa") by vger.kernel.org with ESMTP id S1750815AbWC2UaK
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Mar 2006 15:30:10 -0500
-Content-Disposition: inline
-In-Reply-To: <20060329201247.GI7919@tpkurt.suse.de>
+Received: from smtp108.sbc.mail.re2.yahoo.com ([68.142.229.97]:6065 "HELO
+	smtp108.sbc.mail.re2.yahoo.com") by vger.kernel.org with SMTP
+	id S1750947AbWC2Uss (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Mar 2006 15:48:48 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kurt Garloff <garloff@suse.de>, Linux SCSI list <linux-scsi@vger.kernel.org>, Patrick Mansfield <patmans@us.ibm.com>
+To: Core-iSCSI <Core-iSCSI@googlegroups.com>, Open iSCSI <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, iet-dev <iscsitarget-devel@lists.sourceforge.net>
+Cc: LKML <linux-kernel@vger.kernel.org>
 
-On Wed, Mar 29, 2006 at 10:12:47PM +0200, Kurt Garloff wrote:
->  		 */
-> -		SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO
-> -					"scsi scan: peripheral qualifier of 3,"
-> -					" no device added\n"));
-> +		SCSI_LOG_SCAN_BUS(2, printk(KERN_INFO "scsi scan: periph.qual. of 3,"
-> +				" device %s not added\n",
-> +				sdev->sdev_gendev.bus_id));
+Greetings all,
 
-You seem to be suffering from long-line-itis, probably as a result of
-too much exposure to ia64 code.  How about:
+Core-iSCSI v1.6.2.5 and Core-iSCSI-tools v3.3 are now available from:
 
-		SCSI_LOG_SCAN_BUS(2, printk(KERN_INFO "scsi scan: peripheral "
-				"qualifier of 3, device %s not added\n",
-				sdev->sdev_gendev.bus_id));
+http://www.kernel.org/pub/linux/kernel/people/nab/iscsi-initiator-core/core-iscsi-v1.6.2.5.tar.bz2
+http://www.kernel.org/pub/linux/utils/storage/iscsi/core-iscsi-tools-v3.3.tar.bz2
 
-> +		if (lun == 0) {
-> +			unsigned char vend[9], mod[17];
-> +			SCSI_LOG_SCAN_BUS(1, printk(KERN_INFO "scsi scan: consider passing "
-> +					"scsi_mod.dev_flags=%s:%s:0x240 or 0x800240\n",
+The changes a relatively minor relating to a fix for core-iscsi on ARM
+(namely the Nokia 770), as well as some fixes related to using the
+core-iscsi-tools scripts in a busybox environment.  v3.3 of the tools
+should also fix the authentication problem that appeared with v1.6.2.5
+of the stack.
 
+On a related note, the wiki on http://www.linux-iscsi.org has been
+filling in nicely, and I would like to thank everyone that has
+contributed.  linux-iscsi.org will continue to move forward the
+evolution of Linux/iSCSI on all platfroms along with the Open/iSCSI and
+IET development communities.
 
-Likewise:
+Thanks!
 
-			SCSI_LOG_SCAN_BUS(1, printk(KERN_INFO "scsi scan: "
-					"consider passing scsi_mod.dev_flags="
-					"%s:%s:0x240 or 0x800240\n",
-
-> +					scsi_inq_str(vend, result, 8, 16),
-> +					scsi_inq_str(mod, result, 16, 32)));
-> +		}
-> +		
->  		res = SCSI_SCAN_TARGET_PRESENT;
->  		goto out_free_result;
->  	}
->  
-> -- 
-> Kurt Garloff, Head Architect Linux R&D, Novell Inc.
-
+-- 
+Nicholas A. Bellinger <nab@kernel.org>
 
