@@ -1,84 +1,112 @@
-From: Christian =?iso-8859-1?q?Sch=F6niger?=
-	<christian.schoeniger@fes-aes.de>
-Subject: PROBLEM: aic79xx probe order for multi-channel controllers
-Date: Wed, 29 Mar 2006 17:33:25 +0200
-Message-ID: <200603291733.25955.christian.schoeniger@fes-aes.de>
-Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+From: Brian King <brking@us.ibm.com>
+Subject: [PATCH 3/6] ipr: Simplify status area dumping
+Date: Wed, 29 Mar 2006 09:37:29 -0600
+Message-ID: <200603291537.k2TFbU2t020491@d01av04.pok.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.fes-aes.de ([62.153.241.252]:15543 "EHLO mx2.fes-aes.de")
-	by vger.kernel.org with ESMTP id S1751177AbWC2Pd7 (ORCPT
+Received: from e3.ny.us.ibm.com ([32.97.182.143]:30343 "EHLO e3.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1751182AbWC2Phm (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Mar 2006 10:33:59 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by mx2.fes-aes.de (Postfix) with ESMTP id DE37016AFE
-	for <linux-scsi@vger.kernel.org>; Wed, 29 Mar 2006 17:33:48 +0200 (CEST)
-Received: from mx2.fes-aes.de ([127.0.0.1])
- by localhost (mx2.fes-aes.de [127.0.0.1]) (amavisd-new, port 10024) with LMTP
- id 01901-02 for <linux-scsi@vger.kernel.org>;
- Wed, 29 Mar 2006 17:33:33 +0200 (CEST)
-Received: from fes-aes.de (mailserver [194.49.70.8])
-	by mx2.fes-aes.de (Postfix) with ESMTP id 66D5416ADA
-	for <linux-scsi@vger.kernel.org>; Wed, 29 Mar 2006 17:33:31 +0200 (CEST)
-Received: from linux43.fes-aes.de ([194.49.70.43] verified)
-  by fes-aes.de (CommuniGate Pro SMTP 5.0.6)
-  with ESMTP id 4230736 for linux-scsi@vger.kernel.org; Wed, 29 Mar 2006 17:33:26 +0200
-Content-Disposition: inline
+	Wed, 29 Mar 2006 10:37:42 -0500
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e3.ny.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k2TFbf2l007871
+	for <linux-scsi@vger.kernel.org>; Wed, 29 Mar 2006 10:37:41 -0500
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay04.pok.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k2TFbV6F235376
+	for <linux-scsi@vger.kernel.org>; Wed, 29 Mar 2006 10:37:31 -0500
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.12.11/8.13.3) with ESMTP id k2TFbUO0020515
+	for <linux-scsi@vger.kernel.org>; Wed, 29 Mar 2006 10:37:31 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-Hi,
-
-Many onboard scsi controllers are multi-channel and use channel "B" as 
-internal bus. Anything on the external channel ("A") is attached before 
-the internal devices.
-This applies e.g. to Intel SR1300 Servers with AIC-7902 U320 chipset.
-
-The "reverse_scan" option doesn't seem to effect the multi-channel
-probe order.
-
-In the Adaptec BIOS you can specify the boot channel. This channel 
-should be scanned first. This works fine with AIC-78xx controllers.
-The aic79xx driver ignores this setting. Looking at the code, I found it 
-disabled.
-
-/usr/src/kernel-source-2.6.8/drivers/scsi/aic7xxx/aic79xx_osm.c:
-*snip*
-int
-ahd_softc_comp(struct ahd_softc *lahd, struct ahd_softc *rahd)
-{
-        int     value;
-
-        /*
-         * Under Linux, cards are ordered as follows:
-         *      1) PCI devices that are marked as the boot controller.
-         *      2) PCI devices with BIOS enabled sorted by 
-bus/slot/func.
-         *      3) All remaining PCI devices sorted by bus/slot/func.
-         */
-#if 0
-        value = (lahd->flags & AHD_BOOT_CHANNEL)
-              - (rahd->flags & AHD_BOOT_CHANNEL);
-        if (value != 0)
-                /* Controllers set for boot have a *higher* priority */
-                return (value);
-#endif
-*snip*
-
-Affected aic79xx driver versions are at 1.3.11 up to the latest Adaptec 
-version 2.0.12.
-
-Removing the "# if 0 ... endif" statements causes the boot channel 
-probed first.
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, brking@us.ibm.com
 
 
-Christian
+Simplify the dumping of the command status area by
+removing some device specific information that has proven
+to not be worthwhile.
 
--- 
----=================================================================---
-Christian Schoeniger, SYSADMIN, FES GmbH - Fahrzeug-Entwicklung Sachsen
-phone: +49 375 56 60 254 fax: +49 375 56 60 92254 http://www.fes-aes.de
----===> I haven't lost my mind; I know exactly where I left it. <===---
+Signed-off-by: Brian King <brking@us.ibm.com>
+---
+
+ linux-2.6-bjking1/drivers/scsi/ipr.c |   39 +++--------------------------------
+ 1 files changed, 4 insertions(+), 35 deletions(-)
+
+diff -puN drivers/scsi/ipr.c~ipr_dump_ioasa_simplify drivers/scsi/ipr.c
+--- linux-2.6/drivers/scsi/ipr.c~ipr_dump_ioasa_simplify	2006-01-31 16:53:22.000000000 -0600
++++ linux-2.6-bjking1/drivers/scsi/ipr.c	2006-01-31 16:53:22.000000000 -0600
+@@ -164,29 +164,6 @@ MODULE_PARM_DESC(auto_create, "Auto-crea
+ MODULE_LICENSE("GPL");
+ MODULE_VERSION(IPR_DRIVER_VERSION);
+ 
+-static const char *ipr_gpdd_dev_end_states[] = {
+-	"Command complete",
+-	"Terminated by host",
+-	"Terminated by device reset",
+-	"Terminated by bus reset",
+-	"Unknown",
+-	"Command not started"
+-};
+-
+-static const char *ipr_gpdd_dev_bus_phases[] = {
+-	"Bus free",
+-	"Arbitration",
+-	"Selection",
+-	"Message out",
+-	"Command",
+-	"Message in",
+-	"Data out",
+-	"Data in",
+-	"Status",
+-	"Reselection",
+-	"Unknown"
+-};
+-
+ /*  A constant array of IOASCs/URCs/Error Messages */
+ static const
+ struct ipr_error_table_t ipr_error_table[] = {
+@@ -3938,6 +3915,7 @@ static void ipr_erp_cancel_all(struct ip
+  * ipr_dump_ioasa - Dump contents of IOASA
+  * @ioa_cfg:	ioa config struct
+  * @ipr_cmd:	ipr command struct
++ * @res:		resource entry struct
+  *
+  * This function is invoked by the interrupt handler when ops
+  * fail. It will log the IOASA if appropriate. Only called
+@@ -3947,7 +3925,7 @@ static void ipr_erp_cancel_all(struct ip
+  * 	none
+  **/
+ static void ipr_dump_ioasa(struct ipr_ioa_cfg *ioa_cfg,
+-			   struct ipr_cmnd *ipr_cmd)
++			   struct ipr_cmnd *ipr_cmd, struct ipr_resource_entry *res)
+ {
+ 	int i;
+ 	u16 data_len;
+@@ -3975,16 +3953,7 @@ static void ipr_dump_ioasa(struct ipr_io
+ 			return;
+ 	}
+ 
+-	ipr_sdev_err(ipr_cmd->scsi_cmd->device, "%s\n",
+-		     ipr_error_table[error_index].error);
+-
+-	if ((ioasa->u.gpdd.end_state <= ARRAY_SIZE(ipr_gpdd_dev_end_states)) &&
+-	    (ioasa->u.gpdd.bus_phase <=  ARRAY_SIZE(ipr_gpdd_dev_bus_phases))) {
+-		ipr_sdev_err(ipr_cmd->scsi_cmd->device,
+-			     "Device End state: %s Phase: %s\n",
+-			     ipr_gpdd_dev_end_states[ioasa->u.gpdd.end_state],
+-			     ipr_gpdd_dev_bus_phases[ioasa->u.gpdd.bus_phase]);
+-	}
++	ipr_res_err(ioa_cfg, res, "%s\n", ipr_error_table[error_index].error);
+ 
+ 	if (sizeof(struct ipr_ioasa) < be16_to_cpu(ioasa->ret_stat_len))
+ 		data_len = sizeof(struct ipr_ioasa);
+@@ -4141,7 +4110,7 @@ static void ipr_erp_start(struct ipr_ioa
+ 	}
+ 
+ 	if (ipr_is_gscsi(res))
+-		ipr_dump_ioasa(ioa_cfg, ipr_cmd);
++		ipr_dump_ioasa(ioa_cfg, ipr_cmd, res);
+ 	else
+ 		ipr_gen_sense(ipr_cmd);
+ 
+_
