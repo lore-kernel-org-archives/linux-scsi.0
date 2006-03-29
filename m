@@ -1,64 +1,72 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: Maxtor drive doesn't wake from sleep
-Date: Wed, 29 Mar 2006 21:20:24 +0200
-Message-ID: <442ADDF8.30209@s5r6.in-berlin.de>
-References: <442AB4A8.8070307@alma.ch> <442AC484.2070107@s5r6.in-berlin.de> <442AD047.5050002@torque.net>
+From: Kurt Garloff <garloff@suse.de>
+Subject: [PATCH 0/3] SCSI scanning for PQ3 devs
+Date: Wed, 29 Mar 2006 22:10:20 +0200
+Message-ID: <20060329201020.GG7919@tpkurt.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="HHGSYth2upt+0nQt"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:13994 "EHLO
-	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
-	id S1750852AbWC2TVi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Mar 2006 14:21:38 -0500
-In-Reply-To: <442AD047.5050002@torque.net>
+Received: from cantor.suse.de ([195.135.220.2]:36321 "EHLO mx1.suse.de")
+	by vger.kernel.org with ESMTP id S1750913AbWC2UJn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Mar 2006 15:09:43 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: Mi <mi.lists@alma.ch>, linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+To: Linux SCSI list <linux-scsi@vger.kernel.org>
+Cc: Patrick Mansfield <patmans@us.ibm.com>
 
-Douglas Gilbert wrote:
->>Mi wrote at linux1394-devel:
->>>I have 3 external firewire Maxtor One Touch III drives, which appear
->>>to go into a "sleep" state after between one and two hours, and cannot
->>>be accessed after that.
-...
->>>I later found scsi-spin which is also able to wake up the drive:
->>>  scsi-spin -u /dev/sdd
-...
->>>Note that there is absolutely nothing in the logs when the drive goes
->>>to sleep. Only errors when I try to access them:
->>>   kernel: Device sdd not ready.
->>>   kernel: end_request: I/O error, dev sdd, sector 0
-...
-> I believe the sd driver should issue a START STOP UNIT
-> (start) command when confronted with a "... initializing
-> command required" error [sk,asc,ascq: 2,4,2]. It also
-> needs to tell the block layer to go away and amuse itself
-> while it polls the device until it is ready.
-> 
-> When I suggested this some time ago, the response was that
-> whatever app was responsible for stopping the device bore
-> the responsibility for spinning it up again (i.e. "not our
-> problem").
-> 
-> The power condition state machine of ATA and SCSI differ
-> see: http://www.torque.net/sg/power.html
-> For devices that use SAT as a guide (and Maxtor seems to be)
-> the reported problem is going to become more signficant:
->    a) external device decides to spin itself down after
->       a period of inactivity
->    b) user later accesses mounted file system and sd driver
->       receives a "2,4,2" error
 
-Thanks a lot for the pointer. This may indeed become more relevant now, 
-including SBP-2 enclosures because vendors have mixed IEEE 1394 and 
-(e)SATA product families now.
+--HHGSYth2upt+0nQt
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Mi, I would be glad to help and implement what Douglas described. 
-However there is still so much on my sbp2 todo-list that I'm not yet 
-considering to go hack other drivers.
--- 
-Stefan Richter
--=====-=-==- --== ===-=
-http://arcgraph.de/sr/
+Hi,
+
+solving some SCSI scanning problems that have been reported to us,
+I came up with the followin patch set.
+
+The trouble is that there are devices that report a LUN with
+peripheral qualifier on LUN0.
+We currently don't handle this well yet:
+- Blacklist flags are not used to do special handling if needed.
+- If the device does NOT support the REPORT_LUNS scan, we won't
+  see any LUN at all, as we don't even look for LUN 1 then.
+
+Yes, such devices do exist, actually, see PATCH3 ..
+
+The patches do:
+- Unconditionally at least look for LUN 1 if LUN 0 was a PQ3
+  device (but abort scanning there is SPARSELUN is not set
+  and no device can be attached to LUN 1)
+- Return the blacklist flags for further usage even if LUN 0
+  was a PQ3 device.
+- Improve the scsi logging information for the the user about
+  the PQ3 issue.
+- Introduce a blacklist flag BLIST_ATTACH_PQ3 that allows
+  a PQ3 device to be registered with the OS and thus sg can
+  attach to it. Add two devices to the list.
+  (One could argue that this should be default, but who knows
+   what virtual scsi driver will break then ...)
+
+Patches are agains 2.6.16, please consider merging for 2.6.17
+or shoot back feedback to me.
+
+Best,
+--=20
+Kurt Garloff, Head Architect Linux R&D, Novell Inc.
+
+--HHGSYth2upt+0nQt
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2 (GNU/Linux)
+
+iD8DBQFEKumsxmLh6hyYd04RAlAnAKCZiW0sBX5WCbypazRK4FyA6Dc5MgCghuAj
+C0SCPBwCL3VqzRdT6q+VjCM=
+=7jUZ
+-----END PGP SIGNATURE-----
+
+--HHGSYth2upt+0nQt--
