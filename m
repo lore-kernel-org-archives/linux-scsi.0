@@ -1,48 +1,75 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Compaq Fiber Channel Array RM4000 / 2.6.16 kernel patch
-Date: Wed, 29 Mar 2006 13:03:48 -0600
-Message-ID: <1143659029.3248.42.camel@mulgrave.il.steeleye.com>
-References: <20060228004043.GH27759@parisc-linux.org>
-	 <Pine.GSO.4.64.0603221911370.14214@filebunker.xip.at>
-	 <yq1lkv2iap8.fsf@wilson.lab.mkp.net>
-	 <Pine.GSO.4.64.0603222054520.14214@filebunker.xip.at>
-	 <20060322200229.GT8980@parisc-linux.org>
-	 <Pine.GSO.4.64.0603222105560.14214@filebunker.xip.at>
-	 <Pine.GSO.4.64.0603282134370.8439@filebunker.xip.at>
-	 <yq18xqtain6.fsf@wilson.lab.mkp.net>
-	 <Pine.GSO.4.64.0603291305590.4009@filebunker.xip.at>
-	 <Pine.GSO.4.64.0603291428590.4009@filebunker.xip.at>
-	 <20060329150729.GA14690@infradead.org>
-	 <Pine.GSO.4.64.0603291845550.4009@filebunker.xip.at>
-	 <1143653396.3248.34.camel@mulgrave.il.steeleye.com>
-	 <Pine.GSO.4.64.0603291949370.4009@filebunker.xip.at>
-	 <1143656547.3248.36.camel@mulgrave.il.steeleye.com>
-	 <Pine.GSO.4.64.0603292025500.4009@filebunker.xip.at>
-	 <1143657838.3248.39.camel@mulgrave.il.steeleye.com>
-	 <Pine.GSO.4.64.0603292052430.4009@filebunker.xip.at>
+From: "Randy.Dunlap" <rdunlap@xenotime.net>
+Subject: [PATCH] lpfc: sparse NULL warnings
+Date: Wed, 29 Mar 2006 11:19:27 -0800
+Message-ID: <20060329111927.3cb3aa6b.rdunlap@xenotime.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:15814 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1750767AbWC2TDv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Mar 2006 14:03:51 -0500
-In-Reply-To: <Pine.GSO.4.64.0603292052430.4009@filebunker.xip.at>
+Received: from xenotime.net ([66.160.160.81]:49384 "HELO xenotime.net")
+	by vger.kernel.org with SMTP id S1750879AbWC2TRO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Mar 2006 14:17:14 -0500
+Received: from midway.site ([71.111.157.99]) by xenotime.net for <linux-scsi@vger.kernel.org>; Wed, 29 Mar 2006 11:17:11 -0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ingo Flaschberger <if@xip.at>
-Cc: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: scsi <linux-scsi@vger.kernel.org>
+Cc: jejb <james.bottomley@steeleye.com>, hch@infradead.org
 
-On Wed, 2006-03-29 at 20:54 +0200, Ingo Flaschberger wrote:
-> I need to avoid the return 1; and go on in the function.....
+From: Randy Dunlap <rdunlap@xenotime.net>
 
-Oh, OK, then the third line should be (starget->scsi_level < SCSI_3 ||
-starget->scsi_level == SCSI_UNKNOWN)
+Fix sparse warnings: use NULL instead of 0 for pointers:
+drivers/scsi/lpfc/lpfc_els.c:827:56: warning: Using plain integer as NULL pointer
+drivers/scsi/lpfc/lpfc_els.c:2781:18: warning: Using plain integer as NULL pointer
+drivers/scsi/lpfc/lpfc_els.c:2782:18: warning: Using plain integer as NULL pointer
+drivers/scsi/lpfc/lpfc_init.c:951:21: warning: Using plain integer as NULL pointer
+drivers/scsi/lpfc/lpfc_init.c:956:20: warning: Using plain integer as NULL pointer
 
-which should do it.  There are several other places for that ... a patch
-was posted for some of them quite a while ago.
+Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+---
+ drivers/scsi/lpfc/lpfc_els.c  |    6 +++---
+ drivers/scsi/lpfc/lpfc_init.c |    4 ++--
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-James
+--- linux-2616-g16.orig/drivers/scsi/lpfc/lpfc_els.c
++++ linux-2616-g16/drivers/scsi/lpfc/lpfc_els.c
+@@ -824,7 +824,7 @@ lpfc_issue_els_plogi(struct lpfc_hba * p
+ 	pring = &psli->ring[LPFC_ELS_RING];	/* ELS ring */
+ 
+ 	cmdsize = (sizeof (uint32_t) + sizeof (struct serv_parm));
+-	elsiocb = lpfc_prep_els_iocb(phba, 1, cmdsize, retry, 0, did,
++	elsiocb = lpfc_prep_els_iocb(phba, 1, cmdsize, retry, NULL, did,
+ 								ELS_CMD_PLOGI);
+ 	if (!elsiocb)
+ 		return 1;
+@@ -2778,8 +2778,8 @@ lpfc_els_rsp_rps_acc(struct lpfc_hba * p
+ 
+ 	ndlp = (struct lpfc_nodelist *) pmb->context2;
+ 	xri = (uint16_t) ((unsigned long)(pmb->context1));
+-	pmb->context1 = 0;
+-	pmb->context2 = 0;
++	pmb->context1 = NULL;
++	pmb->context2 = NULL;
+ 
+ 	if (mb->mbxStatus) {
+ 		mempool_free( pmb, phba->mbox_mem_pool);
+--- linux-2616-g16.orig/drivers/scsi/lpfc/lpfc_init.c
++++ linux-2616-g16/drivers/scsi/lpfc/lpfc_init.c
+@@ -948,12 +948,12 @@ lpfc_get_hba_model_desc(struct lpfc_hba 
+ 					"10-port ", "PCIe"};
+ 			break;
+ 		default:
+-			m = (typeof(m)){ 0 };
++			m = (typeof(m)){ NULL };
+ 			break;
+ 		}
+ 		break;
+ 	default:
+-		m = (typeof(m)){ 0 };
++		m = (typeof(m)){ NULL };
+ 		break;
+ 	}
+ 
 
 
+---
