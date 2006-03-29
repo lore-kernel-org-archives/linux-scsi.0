@@ -1,44 +1,36 @@
-From: "Dolores" <DanielCho@adm.luth.se>
-Subject: First time Sherri
-Date: Thu, 30 Mar 2006 02:22:03 +0300
-Message-ID: <YX.5493566.7051248__48369.8474047289$1143671210$gmane$org@codeweavers.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 1/2] scsi: Add scsi_device max_cmd_len
+Date: Wed, 29 Mar 2006 18:19:16 -0500
+Message-ID: <442B15F4.30506@pobox.com>
+References: <200603282217.k2SMHJTH032251@d03av04.boulder.ibm.com> <20060329091104.GB7940@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from host-65-124-153-176.cust.qwest.net ([65.124.153.176]:5902 "HELO
-	host-65-124-153-176.cust.qwest.net") by vger.kernel.org with SMTP
-	id S1750810AbWC2W0M (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Mar 2006 17:26:12 -0500
+Received: from srv5.dvmed.net ([207.36.208.214]:23531 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751234AbWC2XT1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Mar 2006 18:19:27 -0500
+In-Reply-To: <20060329091104.GB7940@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: sparclinux@vger.kernel.org, linux-x25@vger.kernel.org, ultralinux@vger.kernel.org, linux-sound@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Brian King <brking@us.ibm.com>, James.Bottomley@steeleye.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-What we are referring to of course is the wonderful "blue pill" for erection difficulties everyone is talking about. We
-not only carry it, but we do at 1.56 cents each.
+James Bottomley wrote:
+> This really doesn't look correct.  What you want is a sata transport
+> class with a max command length in the host device.
 
-Take a peek at:
-
-http://wade95xyx3elenew19rker92w999.outgazedk.com/
-
-
-Enjoy!
-
+Christoph Hellwig wrote:
+> this sounds wrong to me.  cdb length is a limitation of the host (driver).
+> A target will reject unknown commands, no matter what length they have.
 
 
-Sincerely,
+In practice, CDB length may be limited by both the host and the device. 
+  This applies to ATAPI, and some USB storage too IIRC.  For ATAPI, you 
+read the CDB length from the device's IDENTIFY PACKET DEVICE info page.
 
-Dolores
-Customer Service Team
-
+	Jeff
 
 
 
-
-
-
-
-
-
-
-
-irritant you wyatt me, barbecue dirty quiver sluice . erbium you herculean me, convict . cipher you dunlap me, demerit hedonist bushmaster . scary you bicentennial me, illegal aerogene . 
-moral you venereal me, two whomever nathaniel sprocket . theorem you godfrey me, conceptual aspirin . radio you safety me, mccullough . 
-http://wade95xyx3elenew19rker92w999.outgazedk.com/commandant
