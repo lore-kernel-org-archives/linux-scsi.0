@@ -1,76 +1,48 @@
 From: Brian King <brking@us.ibm.com>
-Subject: [PATCH 0/10] libata: Add support for SATA attachment to SAS adapters
-Date: Wed, 29 Mar 2006 08:37:41 -0600
-Message-ID: <442A9BB5.9040407@us.ibm.com>
-Reply-To: brking@us.ibm.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH 03/10] libata: Conditionally set host->max_cmd_len
+Date: Wed, 29 Mar 2006 08:38:05 -0600
+Message-ID: <200603291438.k2TEc5rh022074@d03av04.boulder.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:63374 "EHLO e1.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1751116AbWC2Ohp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Mar 2006 09:37:45 -0500
+Received: from e31.co.us.ibm.com ([32.97.110.149]:25766 "EHLO
+	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751123AbWC2OiH
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Mar 2006 09:38:07 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@steeleye.com
-
-Jeff,
-
-Here is a refresh of my patchset to add support to libata to
-allow for SAS HBAs to use libata to attach SATA devices.
-The patchset is against your #upstream branch. Once again,
-no real feature changes here, just a refresh (some of the
-patches no longer would apply). Additionally, I have removed
-the CDB length checking code that was discussed yesterday
-on the list. I've been running with these patches for a
-while now without problems.
-
-Please apply.
-
-Thanks,
-
-Brian
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@steeleye.com, brking@us.ibm.com
 
 
-The following patchset enhances libata to allow SAS device drivers
-to utilize libata to talk to SATA devices. It introduces some
-new APIs which allow libata to be used without allocating a
-virtual scsi host.
+In preparation for SAS attached SATA devices, which will
+not have a libata scsi_host, only setup host->max_cmd_len
+if ap->host exists.
 
-New APIs:
+Signed-off-by: Brian King <brking@us.ibm.com>
+---
 
-ata_sas_port_alloc - Allocate an ata_port 
-ata_sas_port_init - Initialize an ata_port (probe device, etc)
-ata_sas_port_destroy - Free an ata_port allocated by ata_sas_port_alloc
-ata_sas_slave_configure - configure scsi device
-ata_sas_queuecmd - queue a scsi command, similar to ata_scsi_queuecomand
+ drivers/scsi/libata-core.c |   12 +++++++-----
+ 1 files changed, 7 insertions(+), 5 deletions(-)
 
-These new APIs can be used either directly by a SAS LLDD or could be used
-by the SAS transport class. 
-
-Possible usage for a SAS LLDD would be:
-
-scsi_scan_host
-	target_alloc
-		ata_sas_port_alloc
-	slave_alloc
-		ata_sas_port_init
-	slave_configure
-		ata_sas_slave_configure
-
-Commands received by the LLDD for SATA devices would call ata_sas_queuecmd.
-
-Device teardown would occur with:
-
-slave_destroy
-	port_disable
-target_destroy
-	ata_sas_port_destroy
-
-
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+diff -puN drivers/scsi/libata-core.c~libata_cdb_len drivers/scsi/libata-core.c
+--- libata-dev/drivers/scsi/libata-core.c~libata_cdb_len	2006-03-24 13:09:11.000000000 -0600
++++ libata-dev-bjking1/drivers/scsi/libata-core.c	2006-03-24 13:09:11.000000000 -0600
+@@ -1311,11 +1311,13 @@ static int ata_dev_configure(struct ata_
+ 			       ap->id, dev->devno, ata_mode_string(xfer_mask));
+ 	}
+ 
+-	ap->host->max_cmd_len = 0;
+-	for (i = 0; i < ATA_MAX_DEVICES; i++)
+-		ap->host->max_cmd_len = max_t(unsigned int,
+-					      ap->host->max_cmd_len,
+-					      ap->device[i].cdb_len);
++	if (ap->host) {
++		ap->host->max_cmd_len = 0;
++		for (i = 0; i < ATA_MAX_DEVICES; i++)
++			ap->host->max_cmd_len = max_t(unsigned int,
++						      ap->host->max_cmd_len,
++						      ap->device[i].cdb_len);
++	}
+ 
+ 	/* limit bridge transfers to udma5, 200 sectors */
+ 	if (ata_dev_knobble(ap, dev)) {
+_
