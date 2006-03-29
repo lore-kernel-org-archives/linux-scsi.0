@@ -1,41 +1,57 @@
-From: Kevin K <k_krieser@sbcglobal.net>
-Subject: SCSI selection issue with aic7xxx_old driver
-Date: Wed, 29 Mar 2006 11:51:48 -0600
-Message-ID: <F6783F90-89ED-4D3C-9D42-8F97D91907E0@sbcglobal.net>
-Mime-Version: 1.0 (Apple Message framework v746.3)
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Ingo Flaschberger <if@xip.at>
+Subject: Re: Compaq Fiber Channel Array RM4000 / 2.6.16 kernel patch
+Date: Wed, 29 Mar 2006 19:53:14 +0200 (CEST)
+Message-ID: <Pine.GSO.4.64.0603291949370.4009@filebunker.xip.at>
+References: <20060228004043.GH27759@parisc-linux.org>
+ <Pine.GSO.4.64.0603221911370.14214@filebunker.xip.at>  <yq1lkv2iap8.fsf@wilson.lab.mkp.net>
+  <Pine.GSO.4.64.0603222054520.14214@filebunker.xip.at>
+ <20060322200229.GT8980@parisc-linux.org>  <Pine.GSO.4.64.0603222105560.14214@filebunker.xip.at>
+  <Pine.GSO.4.64.0603282134370.8439@filebunker.xip.at>  <yq18xqtain6.fsf@wilson.lab.mkp.net>
+  <Pine.GSO.4.64.0603291305590.4009@filebunker.xip.at>
+ <Pine.GSO.4.64.0603291428590.4009@filebunker.xip.at>  <20060329150729.GA14690@infradead.org>
+  <Pine.GSO.4.64.0603291845550.4009@filebunker.xip.at>
+ <1143653396.3248.34.camel@mulgrave.il.steeleye.com>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp110.sbc.mail.mud.yahoo.com ([68.142.198.209]:8545 "HELO
-	smtp110.sbc.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S1750908AbWC2Rvv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Mar 2006 12:51:51 -0500
+Received: from ns1.xip.at ([193.239.188.99]:49316 "EHLO chile.gbit.at")
+	by vger.kernel.org with ESMTP id S1750913AbWC2RxQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Mar 2006 12:53:16 -0500
+In-Reply-To: <1143653396.3248.34.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-I'm in the process up converting from RHEL 2.1 to RHEL 4, and have  
-encountered an issue with the aic7xxx_old driver (5.2.6, as provided  
-with the RH 2.4.9-34 kernel, and with 2.6.15.5 kernel).
+Hello James,
 
-  The SCSI card is an Adaptec 2940U card.
 
-  Namely, an old SCSI device isn't being seen very often.  Maybe 1 in  
-10 times loading the module.  Under the 2.4.18 kernel, it was always  
-seen using this driver except in the case of hardware/cabling issues.
+> On Wed, 2006-03-29 at 18:47 +0200, Ingo Flaschberger wrote:
+>> -       sdev->scsi_level = inq_result[2] & 0x07;
+>> +
+>> +       if (BLIST_FORCE_SCSI2 & *bflags) {      /* force SCSI2 for
+>> RA4x00 */
+>> +               sdev->scsi_level = 2;
+>> +       } else {
+>> +               sdev->scsi_level = inq_result[2] & 0x07;
+>> +       }
+>
+>
+> Really no to this we're trying to get away from changing actual reported
+> device information.  I assume the device reports SCSI-3
 
-  With the same hardware and OS, but using the new driver (aic7xxx),  
-the hardware is consistently seen.
+The device reports "zero" and thats why I need to force SCSI2!
+Its better to force SCSI2 in one position than to deal with "SCSI_UNKNOWN" 
+in severall position?
 
-  I've recompiled the module to enable VERBOSE debugging, and tried  
-all 4 different seltime values, and it doesn't seem to matter what  
-the seltime values are.  I still get selection timeouts.
+> and then
+> something goes wrong with the REPORT LUNS scan?  In which case
+> BLIST_NOREPORTLUNS should work.
 
-  Any ideas?  I can provide debug logs from /var/log/messages.
+no, does not work.
 
-If there is a better place to ask, let me know.
+Sorry, thats the only idea I have to ship around the problem.
 
-I didn't post this with Red Hat since it happens with a vanilla  
-kernel too.
-
-Kevin
+bye,
+ 	Ingo
