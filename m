@@ -1,106 +1,41 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: Maxtor drive doesn't wake from sleep
-Date: Wed, 29 Mar 2006 19:31:48 +0200
-Message-ID: <442AC484.2070107@s5r6.in-berlin.de>
-References: <442AB4A8.8070307@alma.ch>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+From: Kevin K <k_krieser@sbcglobal.net>
+Subject: SCSI selection issue with aic7xxx_old driver
+Date: Wed, 29 Mar 2006 11:51:48 -0600
+Message-ID: <F6783F90-89ED-4D3C-9D42-8F97D91907E0@sbcglobal.net>
+Mime-Version: 1.0 (Apple Message framework v746.3)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:9118 "EHLO
-	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
-	id S1750894AbWC2Rc5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Mar 2006 12:32:57 -0500
-In-Reply-To: <442AB4A8.8070307@alma.ch>
+Received: from smtp110.sbc.mail.mud.yahoo.com ([68.142.198.209]:8545 "HELO
+	smtp110.sbc.mail.mud.yahoo.com") by vger.kernel.org with SMTP
+	id S1750908AbWC2Rvv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Mar 2006 12:51:51 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mi <mi.lists@alma.ch>
-Cc: linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Mi wrote at linux1394-devel:
-> Hello,
-> 
-> I have 3 external firewire Maxtor One Touch III drives, which appear to 
-> go into a "sleep" state after between one and two hours, and cannot be 
-> accessed after that.
-> 
-> After a lot of searches and tests, I have found a few clues, but still 
-> wonder why they don't wake up automatically as needed. Is there anything 
-> I can do to my system so that it "Just Works"? Is this a known problem?
+I'm in the process up converting from RHEL 2.1 to RHEL 4, and have  
+encountered an issue with the aic7xxx_old driver (5.2.6, as provided  
+with the RH 2.4.9-34 kernel, and with 2.6.15.5 kernel).
 
-There are very few vendors which implement auto-spin-down in FireWire 
-disk enclosures. And of these few, only few get it right.
+  The SCSI card is an Adaptec 2940U card.
 
-> To have the drive re-appear, I found I can
-> 
->   rmmod sbp2
->   modprobe sbp2
-> 
-> and I later found scsi-spin which is also able to wake up the drive:
-> 
->   scsi-spin -u /dev/sdd
-> 
-> But since these drives are on a server and suposed to be mounted with 
-> automount, these manual steps to wake them are nt much help.
-> 
-> Note that there is absolutely nothing in the logs when the drive goes to 
-> sleep. Only errors when I try to access them:
-> 
->    kernel: Device sdd not ready.
->    kernel: end_request: I/O error, dev sdd, sector 0
+  Namely, an old SCSI device isn't being seen very often.  Maybe 1 in  
+10 times loading the module.  Under the 2.4.18 kernel, it was always  
+seen using this driver except in the case of hardware/cabling issues.
 
-I don't think this could be solved in the FireWire drivers. It seems 
-sd_mod is the place to look for a solution. The sbp2 driver is not aware 
-that there is something wrong with the disk, else there would be error 
-messages.
+  With the same hardware and OS, but using the new driver (aic7xxx),  
+the hardware is consistently seen.
 
-That's why I added linux-scsi to the recipients. I'd be glad if somebody 
-of the SCSI folk could comment.
+  I've recompiled the module to enable VERBOSE debugging, and tried  
+all 4 different seltime values, and it doesn't seem to matter what  
+the seltime values are.  I still get selection timeouts.
 
-> My system is Debian stable (Sarge / 3.1) with kernel 2.6:
-> 
-> # uname -a
-> Linux gc 2.6.8-2-686 #1 Tue Aug 16 13:22:48 UTC 2005 i686 GNU/Linux
+  Any ideas?  I can provide debug logs from /var/log/messages.
 
-This is quite an old kernel. I don't know though if newer kernels 
-contain changes to sd_mod which are relevant to the problem.
+If there is a better place to ask, let me know.
 
-> In case it's relevant, the Firewire card is
-> 
->  0000:02:02.0 FireWire (IEEE 1394): Texas Instruments TSB82AA2 
-> IEEE-1394b Link Layer Controller (rev 01) (prog-if 10 [OHCI])
->        Subsystem: Timedia Technology Co Ltd: Unknown device 3110
->        Flags: bus master, medium devsel, latency 32, IRQ 209
->        Memory at fe9ff800 (32-bit, non-prefetchable) [size=2K]
->        Memory at fe9f8000 (32-bit, non-prefetchable) [size=16K]
->        Capabilities: [44] Power Management version 2
-> 
-> and an excerpt from lsmod (I kept the loaded modules which looked 
-> relevant + the ones I didn't know):
-> 
-> sbp2                   24392  0
-> ohci1394               35492  0
-> ieee1394              111512  2 sbp2,ohci1394
-> shpchp                101900  0
-> pciehp                 99020  0
-> pci_hotplug            34640  2 shpchp,pciehp
-> ide_scsi               17412  0
-> capability              4520  0
-> commoncap               7232  1 capability
-> mbcache                 9348  2 ext2,ext3
-> sd_mod                 21728  11
-> scsi_mod              125228  5 sbp2,aic79xx,ide_scsi,sd_mod,aic7xxx
-> 
-> 
-> I don't know how to find out the module versions, but they are the 
-> modules which come with that stock Debian kernel.
-> 
-> 
-> Thanks for any help
-> 
-> M
+I didn't post this with Red Hat since it happens with a vanilla  
+kernel too.
 
--- 
-Stefan Richter
--=====-=-==- --== ===-=
-http://arcgraph.de/sr/
+Kevin
