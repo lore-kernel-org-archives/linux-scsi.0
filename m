@@ -1,65 +1,134 @@
-From: minemoto <minemoto@soft.fujitsu.com>
-Subject: [kernel 2.4.32] reboot problem
-Date: Wed, 29 Mar 2006 19:02:08 +0900
-Message-ID: <20060329100129.22A021C009@mail1-sv.soft.fujitsu.com>
+From: Ingo Flaschberger <if@xip.at>
+Subject: Re: Compaq Fiber Channel Array RM4000 / SCSI Problems / Need HELP!
+Date: Wed, 29 Mar 2006 13:17:08 +0200 (CEST)
+Message-ID: <Pine.GSO.4.64.0603291305590.4009@filebunker.xip.at>
+References: <Pine.GSO.4.64.0602250050410.27649@filebunker.xip.at>
+ <Pine.GSO.4.64.0602280120290.25994@filebunker.xip.at>
+ <Pine.GSO.4.64.0602280130320.25994@filebunker.xip.at>
+ <20060228004043.GH27759@parisc-linux.org> <Pine.GSO.4.64.0603221911370.14214@filebunker.xip.at>
+ <yq1lkv2iap8.fsf@wilson.lab.mkp.net> <Pine.GSO.4.64.0603222054520.14214@filebunker.xip.at>
+ <20060322200229.GT8980@parisc-linux.org> <Pine.GSO.4.64.0603222105560.14214@filebunker.xip.at>
+ <Pine.GSO.4.64.0603282134370.8439@filebunker.xip.at> <yq18xqtain6.fsf@wilson.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:11148 "EHLO
-	fgwmail6.fujitsu.co.jp") by vger.kernel.org with ESMTP
-	id S1751172AbWC2KBe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Mar 2006 05:01:34 -0500
-Received: from m5.gw.fujitsu.co.jp ([10.0.50.75])
-        by fgwmail6.fujitsu.co.jp (Fujitsu Gateway)
-        with ESMTP id k2TA1WrT009443 for <linux-scsi@vger.kernel.org>; Wed, 29 Mar 2006 19:01:32 +0900
-        (envelope-from minemoto@soft.fujitsu.com)
-Received: from s10.gw.fujitsu.co.jp by m5.gw.fujitsu.co.jp (8.12.10/Fujitsu Domain Master)
-	id k2TA1VkG017056 for <linux-scsi@vger.kernel.org>; Wed, 29 Mar 2006 19:01:31 +0900
-	(envelope-from minemoto@soft.fujitsu.com)
-Received: from s10.gw.fujitsu.co.jp (s10 [127.0.0.1])
-	by s10.gw.fujitsu.co.jp (Postfix) with ESMTP id 7D89C1CC0BD
-	for <linux-scsi@vger.kernel.org>; Wed, 29 Mar 2006 19:01:31 +0900 (JST)
-Received: from mail1-sv.soft.fujitsu.com (smtp.soft.fujitsu.com [10.124.20.52])
-	by s10.gw.fujitsu.co.jp (Postfix) with ESMTP id 217A51CC107
-	for <linux-scsi@vger.kernel.org>; Wed, 29 Mar 2006 19:01:31 +0900 (JST)
-Received: from mail1-sv.soft.fujitsu.com (mail1-sv [127.0.0.1])
-	by localhost.soft.fujitsu.com (Postfix) with ESMTP id A96231C00C
-	for <linux-scsi@vger.kernel.org>; Wed, 29 Mar 2006 19:01:29 +0900 (JST)
-Received: from smtp.soft.fujitsu.com (unknown [10.124.100.246])
-	by mail1-sv.soft.fujitsu.com (Postfix) with SMTP id 22A021C009
-	for <linux-scsi@vger.kernel.org>; Wed, 29 Mar 2006 19:01:29 +0900 (JST)
+Received: from ns1.xip.at ([193.239.188.99]:44195 "EHLO chile.gbit.at")
+	by vger.kernel.org with ESMTP id S1751155AbWC2LRU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Mar 2006 06:17:20 -0500
+In-Reply-To: <yq18xqtain6.fsf@wilson.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <mkp@mkp.net>
+Cc: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
 
+Hi Martin,
 
-Hello!
+Uhm, I have now tracked down the problem to over 512K 10byte write 
+transfers via sd.c.
+When I keep at 512K, it works without problems.
+But, thanks for the hints.
+see inline.
 
-We are using linux-2.4.32
+I have also to check if it works with more than one lun.
 
-We are now testing of cluster system configured by lifekeeper.
-When we linkdown FC disks, lifekeeper detected the error and
-called reboot(2) two or more times at the same time.
+bye,
+ 	ingo flaschberger
 
-In sys_reboot() function, lock_kernel() was called, but some
-drivers(ex. megaraid2 driver) called by notifier_call_chain()
-(When it is megaraid2 driver, it is megaraid_reboot_notify())
-calls schedule() or schedule_timeout() in thefunction and it 
-cause the destruction of kernel lock.
-As a result, dead lock occures in the notifier function of the
-driver and system hang occurred.
+geschaeftsleitung
+crossip communications gmbH
+------------------------------------------------------------------_------------
+sebastian kneipp gasse 1          _____ _____ ____   _____ _____ (_)____
+a-1020 wien                      / ___// ___// __ \ / ___// ___// // __ \
+fix: +43-1-726 15 22-217        / /__ / /   / /_/ /(__  )(__  )/ // /_/ /
+fax: +43-1-726 15 22-111        \___//_/    \____//____//____//_// .___/
+mob: +43-699-105 86 719                                 _______ / /
+www.xip.at                      communications gmbh    /______//_/
+-------------------------------------------------------------------------------
+On Wed, 29 Mar 2006, Martin K. Petersen wrote:
 
-What do you think which is better to keep lock?
-1.lock in the sys_reboot() and each drivers called by notifier_call_chain() should
-  not break the lock(not to call schedule() or schedule_timeout() function).
-2.each drivers called by notifier_call_chain(U) mentions lock in their functions
-  each other.
+>>>>>> "Ingo" == Ingo Flaschberger <if@xip.at> writes:
+>
+> Ingo> I'm now diging since one week in the scsi code and get no idea
+> Ingo> what fails.  I have, when I dd more the 556K to an ext3 at sda1,
+> Ingo> an "Illegal Request"; "Invalid field in cdb"
+>
+> I'm sorry I'm completely and utterly swamped right now - dealing with
+> a slipped product release schedule.
+>
+> If I read your code correctly last week, all you've done so far is
+> mess with LUN scanning.  And my guess is things blow up when you've
+> queued enough I/O and things start actually hitting the metal.
 
-I am not on this mailing list, please cc to me.
-to : minemoto@soft.fujitsu.com
+yep.
 
-Best regards,
-shintaro minemoto
+> The real problem with the RA4100 is that you can't just send commands
+> (cdbs) to it directly.  You need to mangle them and this is what we
+> currently have no good infrastructure to support.
 
+but it works now like this.
 
+> The RA4100 supports two addressing modes VSA and PDA and depending on
+> which mode is used you need to mangle the cdb in different ways.
+> Judging from the comments in cpqfc it appears the mode depends on the
+> firmware of the RA4100 in question.
+>
+> Below is what I sent to hch about the RA4100 a while ago...
+>
+> Btw. SCC is the SCSI Controller Commands specification -
+> i.e. TYPE_RAID.  The spec is at
+>
+>     http://www.t10.org/ftp/t10/drafts/scc2/scc2r04.pdf
+>
+> ---8<---
+>
+> The LUN mangling takes place in cpqfcTSworker.c.  Here's what happens:
+>
+> - IssueReportLunsCommand() gets fired off to send a REPORT_LUNS to
+>   the array SCSI ID.
+>
+> - ScsiReportLunsDone() is called upon completion.  If REPORT_LUNS
+>   failed we need to use peripheral device addressing (PDA) and set
+>   VolumeSetAddressing (VSA) to 0.
+>
+>   If REPORT_LUNS succeeded VSA is set to 1 and so is LunMasking
+>   (which is a kludge becase we didn't do sparse LUNs).
+>
+> - fcFindLoggedInPort() is a swiss army knife function that gets
+>   called all over the place in cpqfc.  It deals with mappings between
+>   WWNs/port ids and SCSI channel/target/lun tuples.  In this case we
+>   need to map a Linux LUN to a fibre channel ID (AL_PA or WWN)
+>
+>   Look for /* This is not passthrough */ in that function:
+>
+>   The Scsi_Cmnd in transit has a few things changed.  Specifically,
+>   the scratch pad is abused:
+>
+>   - Cmnd->SCp.phase is set to contain either PDA or VSA
+>
+>   - Cmnd->SCp.Message is set to contain the device type snooped from
+>     INQUIRY (check out cpqfcTSCheckandSnoopFCP())
+>
+>   - Cmnd->SCp.have_data_in is set to the real LUN
+>
+>   So far so good.  Now we've got some extra fluff in the Cmnd.  On
+>   to...
+>
+> - build_FCP_payload() which picks these pieces out of the supplied
+>   Cmnd and builds an FCP transfer with the SCC addressing gunk
+>   prepended to the cdb.
+>
+> Now, all the sparse LUN stiff is obsolete.  And the only place the
+> stored inquiry data is being used is to special case timeouts when
+> dealing with tape devices.
+>
+> So the only state we need to keep is the real LUN # and the addressing
+> mode (VSA or PDA are probably the only relevant ones).  Given that we
+> can use the LUN value directly, all we need to do is to get the
+> addressing blah prepended.
+>
+> ---8<---
+>
+> -- 
+> Martin K. Petersen      http://mkp.net/
+>
