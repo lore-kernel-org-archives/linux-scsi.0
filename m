@@ -1,31 +1,40 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/2] scsi: Add scsi_device max_cmd_len
-Date: Wed, 29 Mar 2006 10:11:04 +0100
-Message-ID: <20060329091104.GB7940@infradead.org>
-References: <200603282217.k2SMHJTH032251@d03av04.boulder.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Online Banking Chase <service@chase.com>
+Subject: {Virus?} Important information regarding your Chase account
+Date: Wed, 29 Mar 2006 04:45:29 -0500
+Message-ID: <200603290945.k2T9jTGa028437@mail.mrbooks.com>
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:1495 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1750799AbWC2JL2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Mar 2006 04:11:28 -0500
-Content-Disposition: inline
-In-Reply-To: <200603282217.k2SMHJTH032251@d03av04.boulder.ibm.com>
+Received: from corp-200-105-227-214-uio.punto.net.ec ([200.105.227.214]:17338
+	"EHLO mail.mrbooks.com") by vger.kernel.org with ESMTP
+	id S1751116AbWC2Jz1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Mar 2006 04:55:27 -0500
+Received: from mail.mrbooks.com (mail.mrbooks.com [127.0.0.1])
+	by mail.mrbooks.com (8.12.11/8.12.11) with ESMTP id k2T9jTkB028439
+	for <linux-scsi@vger.kernel.org>; Wed, 29 Mar 2006 04:45:30 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@us.ibm.com>
-Cc: jgarzik@pobox.com, James.Bottomley@steeleye.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, Mar 28, 2006 at 04:17:18PM -0600, Brian King wrote:
-> 
-> Add a max_cmd_len field to the scsi_device struct
-> to allow for per device limits of allowable command
-> lengths. This will be used by libata, which is currently
-> using the max_cmd_len field in the scsi_host struct,
-> which doesn't work for attaching libata controlled
-> SATA devices to SAS HBAs.
+Warning: This message has had one or more attachments removed
+Warning: (the entire message).
+Warning: Please read the "yoursite-Attachment-Warning.txt" attachment(s) for more information.
 
-this sounds wrong to me.  cdb length is a limitation of the host (driver).
-A target will reject unknown commands, no matter what length they have.
+This is a message from the MailScanner E-Mail Virus Protection Service
+----------------------------------------------------------------------
+The original e-mail attachment "the entire message"
+was believed to be infected by a virus and has been replaced by this warning
+message.
+
+If you wish to receive a copy of the *infected* attachment, please
+e-mail helpdesk and include the whole of this message
+in your request. Alternatively, you can call them, with
+the contents of this message to hand when you call.
+
+At Wed Mar 29 04:45:32 2006 the virus scanner said:
+   ClamAV: msg-12550-3789.html contains HTML.Phishing.Bank-393 
+
+Note to Help Desk: Look on the yoursite MailScanner in /var/spool/MailScanner/quarantine/20060329 (message k2T9jTkB028439).
+-- 
+Postmaster
+MailScanner thanks transtec Computers for their support
 
