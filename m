@@ -1,100 +1,61 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH 11/10] Fix build when spinlock debugging is enabled
-Date: Wed, 29 Mar 2006 14:45:18 -0700
-Message-ID: <20060329214518.GD13590@parisc-linux.org>
-References: <1143561824743-git-send-email-matthew@wil.cx> <1143585873.1061.44.camel@markh3.pdx.osdl.net>
+From: Kurt Garloff <garloff@suse.de>
+Subject: Re: [PATCH 2/3] Better log messages for PQ3 devs
+Date: Thu, 30 Mar 2006 00:12:48 +0200
+Message-ID: <20060329221248.GK7919@tpkurt.suse.de>
+References: <20060329201020.GG7919@tpkurt.suse.de> <20060329201247.GI7919@tpkurt.suse.de> <20060329203009.GC13590@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="+eiC+3eBSP0wAgz0"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:60057 "EHLO
-	palinux.hppa") by vger.kernel.org with ESMTP id S1750760AbWC2VpU
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Mar 2006 16:45:20 -0500
+Received: from cantor.suse.de ([195.135.220.2]:33153 "EHLO mx1.suse.de")
+	by vger.kernel.org with ESMTP id S1751028AbWC2WMW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Mar 2006 17:12:22 -0500
 Content-Disposition: inline
-In-Reply-To: <1143585873.1061.44.camel@markh3.pdx.osdl.net>
+In-Reply-To: <20060329203009.GC13590@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Haverkamp <markh@osdl.org>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>, Andrew Morton <akpm@osdl.org>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Linux SCSI list <linux-scsi@vger.kernel.org>, Patrick Mansfield <patmans@us.ibm.com>
 
-On Tue, Mar 28, 2006 at 02:44:33PM -0800, Mark Haverkamp wrote:
-> I am seeing a compile error here:
-> drivers/scsi/sym53c8xx_2/sym_glue.c: In function ???sym_eh_done???:
-> drivers/scsi/sym53c8xx_2/sym_glue.c:711: error: size of array ???type name??? is negative
-> make[3]: *** [drivers/scsi/sym53c8xx_2/sym_glue.o] Error 1
-> 
-> config attached.
 
-Thanks, Mark.
+--+eiC+3eBSP0wAgz0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
------------
+Hi Matthew,
 
-When spinlock debugging is turned on, a struct completion grows beyond the
-size allowed for the scsi_pointer.  So move the struct completion back onto
-the stack.  The additional memory barriers are to keep us from completing
-a random piece of kernel stack if the command happens to complete after
-the error handling has finished.
+On Wed, Mar 29, 2006 at 01:30:09PM -0700, Matthew Wilcox wrote:
+> On Wed, Mar 29, 2006 at 10:12:47PM +0200, Kurt Garloff wrote:
+> >  		 */
+> > -		SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO
+> > -					"scsi scan: peripheral qualifier of 3,"
+> > -					" no device added\n"));
+> > +		SCSI_LOG_SCAN_BUS(2, printk(KERN_INFO "scsi scan: periph.qual. of 3,"
+> > +				" device %s not added\n",
+> > +				sdev->sdev_gendev.bus_id));
+>=20
+> You seem to be suffering from long-line-itis, probably as a result of
+> too much exposure to ia64 code.  How about:a
 
-Signed-off-by: Matthew Wilcox <matthew@wil.cx>
+Indeed, my terminals are all more than 80 chars wide these days :-)
+If that's the only concern, I'm happy to address it.
 
-diff --git a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8xx_2/sym_glue.c
-index 2c4e5f1..9c83b4d 100644
---- a/drivers/scsi/sym53c8xx_2/sym_glue.c
-+++ b/drivers/scsi/sym53c8xx_2/sym_glue.c
-@@ -140,11 +140,11 @@ static struct scsi_transport_template *s
-  *  Driver private area in the SCSI command structure.
-  */
- struct sym_ucmd {		/* Override the SCSI pointer structure */
--	struct completion done;
--	void (*old_done)(struct scsi_cmnd *);
--	dma_addr_t data_mapping;
--	int to_do;
--	u_char data_mapped; /* corresponds to data_mapping above */
-+	dma_addr_t	data_mapping;
-+	unsigned char	data_mapped;
-+	unsigned char	to_do;			/* For error handling */
-+	void (*old_done)(struct scsi_cmnd *);	/* For error handling */
-+	struct completion *eh_done;		/* For error handling */
- };
- 
- #define SYM_UCMD_PTR(cmd)  ((struct sym_ucmd *)(&(cmd)->SCp))
-@@ -713,7 +713,7 @@ static void sym_eh_done(struct scsi_cmnd
- 	cmd->scsi_done = ucmd->old_done;
- 
- 	if (ucmd->to_do == SYM_EH_DO_WAIT)
--		complete(&ucmd->done);
-+		complete(ucmd->eh_done);
- }
- 
- /*
-@@ -728,6 +728,7 @@ static int sym_eh_handler(int op, char *
- 	SYM_QUEHEAD *qp;
- 	int to_do = SYM_EH_DO_IGNORE;
- 	int sts = -1;
-+	struct completion eh_done;
- 
- 	dev_warn(&cmd->device->sdev_gendev, "%s operation started.\n", opname);
- 
-@@ -742,8 +743,10 @@ static int sym_eh_handler(int op, char *
- 	}
- 
- 	if (to_do == SYM_EH_DO_WAIT) {
--		init_completion(&ucmd->done);
-+		init_completion(&eh_done);
- 		ucmd->old_done = cmd->scsi_done;
-+		ucmd->eh_done = &eh_done;
-+		wmb();
- 		cmd->scsi_done = sym_eh_done;
- 	}
- 
-@@ -779,8 +782,9 @@ static int sym_eh_handler(int op, char *
- 	spin_unlock_irq(host->host_lock);
- 
- 	if (to_do == SYM_EH_DO_WAIT) {
--		if (!wait_for_completion_timeout(&ucmd->done, 5*HZ)) {
-+		if (!wait_for_completion_timeout(&eh_done, 5*HZ)) {
- 			ucmd->to_do = SYM_EH_DO_IGNORE;
-+			wmb();
- 			sts = -2;
- 		}
- 	}
+Thx,
+--=20
+Kurt Garloff, Head Architect Linux R&D, Novell Inc.
+
+--+eiC+3eBSP0wAgz0
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2 (GNU/Linux)
+
+iD8DBQFEKwZgxmLh6hyYd04RAjzqAKCVIRWdb7rMXHUVESM0VUh0nUnP8QCeJtyy
+kdk3Pu8dAvqcdWO3rW4Fc/E=
+=Om4o
+-----END PGP SIGNATURE-----
+
+--+eiC+3eBSP0wAgz0--
