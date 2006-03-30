@@ -1,227 +1,140 @@
-From: Ingo Flaschberger <if@xip.at>
+From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: Compaq Fiber Channel Array RM4000 / 2.6.16 kernel patch
-Date: Thu, 30 Mar 2006 12:53:10 +0200 (CEST)
-Message-ID: <Pine.GSO.4.64.0603301252100.595@filebunker.xip.at>
-References: <20060228004043.GH27759@parisc-linux.org>
- <Pine.GSO.4.64.0603221911370.14214@filebunker.xip.at>  <yq1lkv2iap8.fsf@wilson.lab.mkp.net>
-  <Pine.GSO.4.64.0603222054520.14214@filebunker.xip.at>
- <20060322200229.GT8980@parisc-linux.org>  <Pine.GSO.4.64.0603222105560.14214@filebunker.xip.at>
-  <Pine.GSO.4.64.0603282134370.8439@filebunker.xip.at>  <yq18xqtain6.fsf@wilson.lab.mkp.net>
-  <Pine.GSO.4.64.0603291305590.4009@filebunker.xip.at>
- <Pine.GSO.4.64.0603291428590.4009@filebunker.xip.at>  <20060329150729.GA14690@infradead.org>
-  <Pine.GSO.4.64.0603291845550.4009@filebunker.xip.at>
- <1143653396.3248.34.camel@mulgrave.il.steeleye.com>
- <Pine.GSO.4.64.0603291949370.4009@filebunker.xip.at>
- <1143656547.3248.36.camel@mulgrave.il.steeleye.com>
- <Pine.GSO.4.64.0603292025500.4009@filebunker.xip.at>
- <1143657838.3248.39.camel@mulgrave.il.steeleye.com>
- <Pine.GSO.4.64.0603292052430.4009@filebunker.xip.at>
- <1143659029.3248.42.camel@mulgrave.il.steeleye.com>
- <Pine.GSO.4.64.0603292125370.4009@filebunker.xip.at>
- <1143666681.3248.48.camel@mulgrave.il.steeleye.com>
+Date: Thu, 30 Mar 2006 05:58:16 -0700
+Message-ID: <20060330125816.GG13590@parisc-linux.org>
+References: <1143653396.3248.34.camel@mulgrave.il.steeleye.com> <Pine.GSO.4.64.0603291949370.4009@filebunker.xip.at> <1143656547.3248.36.camel@mulgrave.il.steeleye.com> <Pine.GSO.4.64.0603292025500.4009@filebunker.xip.at> <1143657838.3248.39.camel@mulgrave.il.steeleye.com> <Pine.GSO.4.64.0603292052430.4009@filebunker.xip.at> <1143659029.3248.42.camel@mulgrave.il.steeleye.com> <Pine.GSO.4.64.0603292125370.4009@filebunker.xip.at> <1143666681.3248.48.camel@mulgrave.il.steeleye.com> <Pine.GSO.4.64.0603301252100.595@filebunker.xip.at>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-559023410-758783491-1143715990=:595"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns1.xip.at ([193.239.188.99]:34982 "EHLO chile.gbit.at")
-	by vger.kernel.org with ESMTP id S932169AbWC3KxM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 30 Mar 2006 05:53:12 -0500
-In-Reply-To: <1143666681.3248.48.camel@mulgrave.il.steeleye.com>
+Received: from palinux.external.hp.com ([192.25.206.14]:57756 "EHLO
+	palinux.hppa") by vger.kernel.org with ESMTP id S932194AbWC3M6R
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 30 Mar 2006 07:58:17 -0500
+Content-Disposition: inline
+In-Reply-To: <Pine.GSO.4.64.0603301252100.595@filebunker.xip.at>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Ingo Flaschberger <if@xip.at>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Thu, Mar 30, 2006 at 12:53:10PM +0200, Ingo Flaschberger wrote:
+>   *  out_of_space hacks, D. Gilbert (dpg) 990608
+> + *
+> + *  Added Compaq RA4x00 Fiber Channel Array support, 29.03.2006
+> + *	crossip communications gmbh - Ingo Flaschberger <if@xip.at>
+> + *
+>   */
 
----559023410-758783491-1143715990=:595
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+I think you can drop the changelog entry here -- it's not been updated
+in many years.  Plus, it's not really accurate.
 
-Hello James,
+>  	{"CNSi", "G8324", NULL, BLIST_SPARSELUN},	/* Chaparral G8324 RAID */
+> +	{"COMPAQ", "ARRAY CONTROLLER", "2.60", BLIST_SPARSELUN | BLIST_LARGELUN |
+> +		BLIST_MAX_512K}, /* Compaq RA4x00 */
+> +	{"COMPAQ", "LOGICAL VOLUME", "2.60", BLIST_MAX_512K}, /* Compaq RA4x00 */
+>  	{"COMPAQ", "LOGICAL VOLUME", NULL, BLIST_FORCELUN},
 
-> On Wed, 2006-03-29 at 22:23 +0200, Ingo Flaschberger wrote:
->> When you mean:
->> if ((bflags & BLIST_NOREPORTLUN) ||
->>               starget->scsi_level < SCSI_2 ||
->>              ((starget->scsi_level < SCSI_3 ||
->>               starget->scsi_level == SCSI_UNKNOWN) &&
->>               (!(bflags & BLIST_REPORTLUN2) || shost->max_lun <= 8)) )
->>  		return 1;
->> That also hits return.
->
-> Then invert the SCSI2 test
+I wonder if you should just be adding BLIST_MAX_512K to the current
+entry for LOGICAL VOLUME instead?
 
-And need to do some checks in SCSI-3 also.
-See the attached patch version 2.
+>   * 		or a LUN is seen that cannot have a device attached to it.
+> + * 
+> + * Modification history:
+> + * 	- Added Compaq RA4x00 Fiber Channel Array support, 29.03.2006
+> + *		crossip communications gmbh - Ingo Flaschberger <if@xip.at>
+> + *
+>   */
 
-Bye,
- 	Ingo
----559023410-758783491-1143715990=:595
-Content-Type: TEXT/PLAIN; charset=US-ASCII; name=RA4x00_linux_2.6.16_ver2.patch
-Content-Transfer-Encoding: BASE64
-Content-ID: <Pine.GSO.4.64.0603301253101.595@filebunker.xip.at>
-Content-Description: 
-Content-Disposition: attachment; filename=RA4x00_linux_2.6.16_ver2.patch
+Definitely don't start a changelog.  That's what SCMs are for.
 
-ZGlmZiAtciAtdSBsaW51eC0yLjYuMTZfb3JnL0RvY3VtZW50YXRpb24vc2Nz
-aS9SQTR4MDAudHh0IGxpbnV4LTIuNi4xNi9Eb2N1bWVudGF0aW9uL3Njc2kv
-UkE0eDAwLnR4dA0KLS0tIGxpbnV4LTIuNi4xNl9vcmcvRG9jdW1lbnRhdGlv
-bi9zY3NpL1JBNHgwMC50eHQJMjAwNi0wMy0zMCAwMDoxOTozMi4wMDAwMDAw
-MDAgKzAyMDANCisrKyBsaW51eC0yLjYuMTYvRG9jdW1lbnRhdGlvbi9zY3Np
-L1JBNHgwMC50eHQJMjAwNi0wMy0yOSAyMDozNToxNy4wMDAwMDAwMDAgKzAy
-MDANCkBAIC0wLDAgKzEsMjAgQEANCitDb21wYXEgUkE0eDAwIEZpYmVyIENo
-YW5uZWwgQXJyYXkgc3VwcG9ydAlpZkB4aXAuYXQgMjkuMDMuMjAwNg0KKwkJ
-CQkJCWNyb3NzaXAgY29tbXVuaWNhdGlvbnMgZ21iaA0KKw0KK0luIDIuNC54
-IGxpbnV4IGtlcm5lbHMgdGhlIGNwcWZjIGRyaXZlciBzdXBwb3J0ZWQgdGhl
-IENvbXBhcSBSQTR4MDAgRmliZXIgDQorQ2hhbm5lbCBBcnJheS4gTGltaXRh
-dGlvbiBpbiAyLjQueCBrZXJuZWxzIHdhcyB0aGF0IHRoZSBSQTR4MDAgb25s
-eSB3b3JrZWQgd2l0aA0KK2EgY3BxZmMgc3VwcG9ydGVkIGZpYmVyIGNoYW5u
-ZWwgYWRhcHRlciAoVGFjaHlvbiBjaGlwc2V0KS4NCisNCitJbiAyLjYueCBs
-aW51eCBrZXJuZWxzIHRoZSBzdXBwb3J0IGZvciB0aGUgY3BxZmMgaGFzIGJl
-ZW4gZHJvcHBlZCBiZWNhdXNlIG9mDQordmVyeSBhd2Z1bCBjb2RlIGFuZCBy
-ZXN1bHRpbmcgcG9ydGluZyBwcm9ibGVtcyBmcm9tIDIuNC54IHRvIDIuNi54
-Lg0KKw0KK1N1cHBvcnQgZm9yIHRoZSBSQTR4MDAgaXMgbm93IGRpcmVjdGx5
-IGluIHRoZSBsaW51eCBrZXJuZWwgYnV0IG5lZWQgc29tZQ0KK3NwZWNpYWwg
-Y29uZmlndXJhdGlvbjoNCisqKSBVc2UgYSBhbHJlYWR5IHN1cHBvcnRlZCBm
-aWJlciBjaGFubmVsIGNhcmRzDQorKikgVXBkYXRlIHRoZSBSQTR4MDAgdG8g
-ZmlybXdhcmUgdmVyc2lvbiAyLjYwDQorKikgTG9hZCB0aGUgc2NzaV9tb2Qg
-bW9kdWxlcyB3aXRoIG9wdGlvbjogbWF4X2x1bnM9NDI5NDk2NzI5NQ0KKw0K
-Kw0KK01vcmUgaW5mb3JtYXRpb24gYWJvdXQgdGhlIFJBNHgwMCBjb3VsZCBi
-ZSBmb3VuZDoNCitodHRwOi8vaHAuY29tDQoraHR0cDovL3JhNHgwMC54aXAu
-YXQNCmRpZmYgLXIgLXUgbGludXgtMi42LjE2X29yZy9kcml2ZXJzL3Njc2kv
-c2NzaS5jIGxpbnV4LTIuNi4xNi9kcml2ZXJzL3Njc2kvc2NzaS5jDQotLS0g
-bGludXgtMi42LjE2X29yZy9kcml2ZXJzL3Njc2kvc2NzaS5jCTIwMDYtMDMt
-MjAgMDY6NTM6MjkuMDAwMDAwMDAwICswMTAwDQorKysgbGludXgtMi42LjE2
-L2RyaXZlcnMvc2NzaS9zY3NpLmMJMjAwNi0wMy0zMCAxNDo0Njo1Mi4wMDAw
-MDAwMDAgKzAyMDANCkBAIC0zNSw2ICszNSwxMCBAQA0KICAqICBKaWZmaWVz
-IHdyYXAgZml4ZXMgKGhvc3QtPnJlc2V0dGluZyksIDMgRGVjIDE5OTggQW5k
-cmVhIEFyY2FuZ2VsaQ0KICAqDQogICogIG91dF9vZl9zcGFjZSBoYWNrcywg
-RC4gR2lsYmVydCAoZHBnKSA5OTA2MDgNCisgKg0KKyAqICBBZGRlZCBDb21w
-YXEgUkE0eDAwIEZpYmVyIENoYW5uZWwgQXJyYXkgc3VwcG9ydCwgMjkuMDMu
-MjAwNg0KKyAqCWNyb3NzaXAgY29tbXVuaWNhdGlvbnMgZ21iaCAtIEluZ28g
-Rmxhc2NoYmVyZ2VyIDxpZkB4aXAuYXQ+DQorICoNCiAgKi8NCiANCiAjaW5j
-bHVkZSA8bGludXgvbW9kdWxlLmg+DQpAQCAtNTY3LDcgKzU3MSw3IEBADQog
-CS8qIA0KIAkgKiBJZiBTQ1NJLTIgb3IgbG93ZXIsIHN0b3JlIHRoZSBMVU4g
-dmFsdWUgaW4gY21uZC4NCiAJICovDQotCWlmIChjbWQtPmRldmljZS0+c2Nz
-aV9sZXZlbCA8PSBTQ1NJXzIpIHsNCisJaWYgKChjbWQtPmRldmljZS0+c2Nz
-aV9sZXZlbCA8PSBTQ1NJXzIpICYmIChjbWQtPmRldmljZS0+c2NzaV9sZXZl
-bCAhPSBTQ1NJX1VOS05PV04pKSB7DQogCQljbWQtPmNtbmRbMV0gPSAoY21k
-LT5jbW5kWzFdICYgMHgxZikgfA0KIAkJCSAgICAgICAoY21kLT5kZXZpY2Ut
-Pmx1biA8PCA1ICYgMHhlMCk7DQogCX0NCmRpZmYgLXIgLXUgbGludXgtMi42
-LjE2X29yZy9kcml2ZXJzL3Njc2kvc2NzaV9kZXZpbmZvLmMgbGludXgtMi42
-LjE2L2RyaXZlcnMvc2NzaS9zY3NpX2RldmluZm8uYw0KLS0tIGxpbnV4LTIu
-Ni4xNl9vcmcvZHJpdmVycy9zY3NpL3Njc2lfZGV2aW5mby5jCTIwMDYtMDMt
-MjAgMDY6NTM6MjkuMDAwMDAwMDAwICswMTAwDQorKysgbGludXgtMi42LjE2
-L2RyaXZlcnMvc2NzaS9zY3NpX2RldmluZm8uYwkyMDA2LTAzLTMwIDE0OjMz
-OjU0LjAwMDAwMDAwMCArMDIwMA0KQEAgLTEzMiw2ICsxMzIsOSBAQA0KIAl7
-IkNNRCIsICJDUkEtNzI4MCIsIE5VTEwsIEJMSVNUX1NQQVJTRUxVTn0sCS8q
-IENNRCBSQUlEIENvbnRyb2xsZXIgKi8NCiAJeyJDTlNJIiwgIkc3MzI0Iiwg
-TlVMTCwgQkxJU1RfU1BBUlNFTFVOfSwJLyogQ2hhcGFycmFsIEc3MzI0IFJB
-SUQgKi8NCiAJeyJDTlNpIiwgIkc4MzI0IiwgTlVMTCwgQkxJU1RfU1BBUlNF
-TFVOfSwJLyogQ2hhcGFycmFsIEc4MzI0IFJBSUQgKi8NCisJeyJDT01QQVEi
-LCAiQVJSQVkgQ09OVFJPTExFUiIsICIyLjYwIiwgQkxJU1RfU1BBUlNFTFVO
-IHwgQkxJU1RfTEFSR0VMVU4gfA0KKwkJQkxJU1RfTUFYXzUxMkt9LCAvKiBD
-b21wYXEgUkE0eDAwICovDQorCXsiQ09NUEFRIiwgIkxPR0lDQUwgVk9MVU1F
-IiwgIjIuNjAiLCBCTElTVF9NQVhfNTEyS30sIC8qIENvbXBhcSBSQTR4MDAg
-Ki8NCiAJeyJDT01QQVEiLCAiTE9HSUNBTCBWT0xVTUUiLCBOVUxMLCBCTElT
-VF9GT1JDRUxVTn0sDQogCXsiQ09NUEFRIiwgIkNSMzUwMCIsIE5VTEwsIEJM
-SVNUX0ZPUkNFTFVOfSwNCiAJeyJDT01QQVEiLCAiTVNBMTAwMCIsIE5VTEws
-IEJMSVNUX1NQQVJTRUxVTiB8IEJMSVNUX05PU1RBUlRPTkFERH0sDQpkaWZm
-IC1yIC11IGxpbnV4LTIuNi4xNl9vcmcvZHJpdmVycy9zY3NpL3Njc2lfc2Nh
-bi5jIGxpbnV4LTIuNi4xNi9kcml2ZXJzL3Njc2kvc2NzaV9zY2FuLmMNCi0t
-LSBsaW51eC0yLjYuMTZfb3JnL2RyaXZlcnMvc2NzaS9zY3NpX3NjYW4uYwky
-MDA2LTAzLTIwIDA2OjUzOjI5LjAwMDAwMDAwMCArMDEwMA0KKysrIGxpbnV4
-LTIuNi4xNi9kcml2ZXJzL3Njc2kvc2NzaV9zY2FuLmMJMjAwNi0wMy0zMCAx
-NDo0MjoyOC4wMDAwMDAwMDAgKzAyMDANCkBAIC0yMyw2ICsyMywxMSBAQA0K
-ICAqIAkJYWxsIG9mIHRoZSBMVU5zIHJldHVybmVkIGJ5IHRoZSBSRVBPUlQg
-TFVOOyBlbHNlLA0KICAqIAkJc2VxdWVudGlhbGx5IHNjYW4gTFVOcyB1cCB1
-bnRpbCBzb21lIG1heGltdW0gaXMgcmVhY2hlZCwNCiAgKiAJCW9yIGEgTFVO
-IGlzIHNlZW4gdGhhdCBjYW5ub3QgaGF2ZSBhIGRldmljZSBhdHRhY2hlZCB0
-byBpdC4NCisgKiANCisgKiBNb2RpZmljYXRpb24gaGlzdG9yeToNCisgKiAJ
-LSBBZGRlZCBDb21wYXEgUkE0eDAwIEZpYmVyIENoYW5uZWwgQXJyYXkgc3Vw
-cG9ydCwgMjkuMDMuMjAwNg0KKyAqCQljcm9zc2lwIGNvbW11bmljYXRpb25z
-IGdtYmggLSBJbmdvIEZsYXNjaGJlcmdlciA8aWZAeGlwLmF0Pg0KKyAqDQog
-ICovDQogDQogI2luY2x1ZGUgPGxpbnV4L2NvbmZpZy5oPg0KQEAgLTY0Nyw2
-ICs2NTIsNyBAQA0KIAljYXNlIFRZUEVfTUVESVVNX0NIQU5HRVI6DQogCWNh
-c2UgVFlQRV9FTkNMT1NVUkU6DQogCWNhc2UgVFlQRV9DT01NOg0KKwljYXNl
-IFRZUEVfUkFJRDoNCiAJY2FzZSBUWVBFX1JCQzoNCiAJCXNkZXYtPndyaXRl
-YWJsZSA9IDE7DQogCQlicmVhazsNCkBAIC03MTUsNiArNzIxLDE0IEBADQog
-CWlmICgqYmZsYWdzICYgQkxJU1RfU0VMRUNUX05PX0FUTikNCiAJCXNkZXYt
-PnNlbGVjdF9ub19hdG4gPSAxOw0KIA0KKyAgICAgICAgLyoNCisgICAgICAg
-ICogTWF4aW11bSA1MTJLIGNkYiB0cmFuc2ZlciBsZW5ndGgNCisgICAgICAg
-ICogYnJva2VuIFJBNHgwMCBDb21wYXEgRGlzayBBcnJheQ0KKyAgICAgICAg
-Ki8NCisgICAgICAgIGlmICgqYmZsYWdzICYgQkxJU1RfTUFYXzUxMkspIHsN
-CisgICAgICAgICAgICAgICAgc2Rldi0+bWF4XzUxMmsgPSAxOw0KKyAgICAg
-ICAgfQ0KKw0KIAkvKg0KIAkgKiBTb21lIGRldmljZXMgbWF5IG5vdCB3YW50
-IHRvIGhhdmUgYSBzdGFydCBjb21tYW5kIGF1dG9tYXRpY2FsbHkNCiAJICog
-aXNzdWVkIHdoZW4gYSBkZXZpY2UgaXMgYWRkZWQuDQpAQCAtMTA4OSw5ICsx
-MTAzLDEyIEBADQogCSAqIHN1cHBvcnQgbW9yZSB0aGFuIDggTFVOcy4NCiAJ
-ICovDQogCWlmICgoYmZsYWdzICYgQkxJU1RfTk9SRVBPUlRMVU4pIHx8IA0K
-LQkgICAgIHN0YXJnZXQtPnNjc2lfbGV2ZWwgPCBTQ1NJXzIgfHwNCi0JICAg
-IChzdGFyZ2V0LT5zY3NpX2xldmVsIDwgU0NTSV8zICYmIA0KLQkgICAgICgh
-KGJmbGFncyAmIEJMSVNUX1JFUE9SVExVTjIpIHx8IHNob3N0LT5tYXhfbHVu
-IDw9IDgpKSApDQorICAgICAgICAgICAgKChzdGFyZ2V0LT5zY3NpX2xldmVs
-IDwgU0NTSV8yKSAmJg0KKyAgICAgICAgICAgIChzdGFyZ2V0LT5zY3NpX2xl
-dmVsICE9IFNDU0lfVU5LTk9XTikpIHx8DQorICAgICAgICAgICAgKHN0YXJn
-ZXQtPnNjc2lfbGV2ZWwgPCBTQ1NJXzMgJiYNCisgICAgICAgICAgICAoKCEo
-YmZsYWdzICYgQkxJU1RfUkVQT1JUTFVOMikgJiYgDQorCSAgICAoc3Rhcmdl
-dC0+c2NzaV9sZXZlbCAhPSBTQ1NJX1VOS05PV04pKSB8fCANCisJICAgIHNo
-b3N0LT5tYXhfbHVuIDw9IDgpKSApDQogCQlyZXR1cm4gMTsNCiAJaWYgKGJm
-bGFncyAmIEJMSVNUX05PTFVOKQ0KIAkJcmV0dXJuIDA7DQpkaWZmIC1yIC11
-IGxpbnV4LTIuNi4xNl9vcmcvZHJpdmVycy9zY3NpL3NkLmMgbGludXgtMi42
-LjE2L2RyaXZlcnMvc2NzaS9zZC5jDQotLS0gbGludXgtMi42LjE2X29yZy9k
-cml2ZXJzL3Njc2kvc2QuYwkyMDA2LTAzLTIwIDA2OjUzOjI5LjAwMDAwMDAw
-MCArMDEwMA0KKysrIGxpbnV4LTIuNi4xNi9kcml2ZXJzL3Njc2kvc2QuYwky
-MDA2LTAzLTI5IDIwOjAzOjE3LjAwMDAwMDAwMCArMDIwMA0KQEAgLTIyLDYg
-KzIyLDggQEANCiAgKgkgLSBCYWRhcmkgUHVsYXZhcnR5IDxwYmFkYXJpQHVz
-LmlibS5jb20+LCBNYXR0aGV3IFdpbGNveCANCiAgKgkgICA8d2lsbHlAZGVi
-aWFuLm9yZz4sIEt1cnQgR2FybG9mZiA8Z2FybG9mZkBzdXNlLmRlPjogDQog
-ICoJICAgU3VwcG9ydCAzMmsvMU0gZGlza3MuDQorICogICAgICAgLSBBZGRl
-ZCBDb21wYXEgUkE0eDAwIEZpYmVyIENoYW5uZWwgQXJyYXkgc3VwcG9ydCwg
-MjkuMDMuMjAwNg0KKyAqICAgICAgICAgY3Jvc3NpcCBjb21tdW5pY2F0aW9u
-cyBnbWJoIC0gSW5nbyBGbGFzY2hiZXJnZXIgPGlmQHhpcC5hdD4NCiAgKg0K
-ICAqCUxvZ2dpbmcgcG9saWN5IChuZWVkcyBDT05GSUdfU0NTSV9MT0dHSU5H
-IGRlZmluZWQpOg0KICAqCSAtIHNldHRpbmcgdXAgdHJhbnNmZXI6IFNDU0lf
-TE9HX0hMUVVFVUUgbGV2ZWxzIDEgYW5kIDINCkBAIC0zNDQsOCArMzQ2LDE0
-IEBADQogCQlTQ3BudC0+Y21uZFsxNF0gPSBTQ3BudC0+Y21uZFsxNV0gPSAw
-Ow0KIAl9IGVsc2UgaWYgKCh0aGlzX2NvdW50ID4gMHhmZikgfHwgKGJsb2Nr
-ID4gMHgxZmZmZmYpIHx8DQogCQkgICBTQ3BudC0+ZGV2aWNlLT51c2VfMTBf
-Zm9yX3J3KSB7DQotCQlpZiAodGhpc19jb3VudCA+IDB4ZmZmZikNCi0JCQl0
-aGlzX2NvdW50ID0gMHhmZmZmOw0KKwkJaWYgKFNDcG50LT5kZXZpY2UtPm1h
-eF81MTJrKSB7DQorCQkJaWYgKHRoaXNfY291bnQgPiAweDIwMCkgew0KKwkJ
-CQl0aGlzX2NvdW50ID0gMHgyMDA7DQorCQkJfQ0KKwkJfSBlbHNlIHsNCisJ
-CQlpZiAodGhpc19jb3VudCA+IDB4ZmZmZikNCisJCQkJdGhpc19jb3VudCA9
-IDB4ZmZmZjsNCisJCX0NCiANCiAJCVNDcG50LT5jbW5kWzBdICs9IFJFQURf
-MTAgLSBSRUFEXzY7DQogCQlTQ3BudC0+Y21uZFsxXSB8PSBibGtfZnVhX3Jx
-KHJxKSA/IDB4OCA6IDA7DQpkaWZmIC1yIC11IGxpbnV4LTIuNi4xNl9vcmcv
-aW5jbHVkZS9zY3NpL3Njc2lfZGV2aWNlLmggbGludXgtMi42LjE2L2luY2x1
-ZGUvc2NzaS9zY3NpX2RldmljZS5oDQotLS0gbGludXgtMi42LjE2X29yZy9p
-bmNsdWRlL3Njc2kvc2NzaV9kZXZpY2UuaAkyMDA2LTAzLTIwIDA2OjUzOjI5
-LjAwMDAwMDAwMCArMDEwMA0KKysrIGxpbnV4LTIuNi4xNi9pbmNsdWRlL3Nj
-c2kvc2NzaV9kZXZpY2UuaAkyMDA2LTAzLTMwIDE0OjI5OjQ1LjAwMDAwMDAw
-MCArMDIwMA0KQEAgLTExMiw2ICsxMTIsNyBAQA0KIAkJCQkgKiB0aGlzIGRl
-dmljZSAqLw0KIAl1bnNpZ25lZCBleHBlY3RpbmdfY2NfdWE6MTsgLyogRXhw
-ZWN0aW5nIGEgQ0hFQ0tfQ09ORElUSU9OL1VOSVRfQVRUTg0KIAkJCQkgICAg
-ICogYmVjYXVzZSB3ZSBkaWQgYSBidXMgcmVzZXQuICovDQorCXVuc2lnbmVk
-IG1heF81MTJrOjE7CS8qIG1heGltdW0gNTEySyBjZGIgdHJhbnNmZXIgbGVu
-Z3RoICovDQogCXVuc2lnbmVkIHVzZV8xMF9mb3Jfcnc6MTsgLyogZmlyc3Qg
-dHJ5IDEwLWJ5dGUgcmVhZCAvIHdyaXRlICovDQogCXVuc2lnbmVkIHVzZV8x
-MF9mb3JfbXM6MTsgLyogZmlyc3QgdHJ5IDEwLWJ5dGUgbW9kZSBzZW5zZS9z
-ZWxlY3QgKi8NCiAJdW5zaWduZWQgc2tpcF9tc19wYWdlXzg6MTsJLyogZG8g
-bm90IHVzZSBNT0RFIFNFTlNFIHBhZ2UgMHgwOCAqLw0KZGlmZiAtciAtdSBs
-aW51eC0yLjYuMTZfb3JnL2luY2x1ZGUvc2NzaS9zY3NpX2RldmluZm8uaCBs
-aW51eC0yLjYuMTYvaW5jbHVkZS9zY3NpL3Njc2lfZGV2aW5mby5oDQotLS0g
-bGludXgtMi42LjE2X29yZy9pbmNsdWRlL3Njc2kvc2NzaV9kZXZpbmZvLmgJ
-MjAwNi0wMy0yMCAwNjo1MzoyOS4wMDAwMDAwMDAgKzAxMDANCisrKyBsaW51
-eC0yLjYuMTYvaW5jbHVkZS9zY3NpL3Njc2lfZGV2aW5mby5oCTIwMDYtMDMt
-MzAgMTQ6Mjk6MTkuMDAwMDAwMDAwICswMjAwDQpAQCAtMjgsNCArMjgsNSBA
-QA0KICNkZWZpbmUgQkxJU1RfTk9fVUxEX0FUVEFDSAkweDEwMDAwMCAvKiBk
-ZXZpY2UgaXMgYWN0dWFsbHkgZm9yIFJBSUQgY29uZmlnICovDQogI2RlZmlu
-ZSBCTElTVF9TRUxFQ1RfTk9fQVROCTB4MjAwMDAwIC8qIHNlbGVjdCB3aXRo
-b3V0IEFUTiAqLw0KICNkZWZpbmUgQkxJU1RfUkVUUllfSFdFUlJPUgkweDQw
-MDAwMCAvKiByZXRyeSBIQVJEV0FSRV9FUlJPUiAqLw0KKyNkZWZpbmUgQkxJ
-U1RfTUFYXzUxMksgICAgICAgICAgMHgxMDAwMDAwIC8qIG1heGltdW0gNTEy
-SyBjZGIgdHJhbnNmZXIgbGVuZ3RoICovDQogI2VuZGlmDQo=
+> @@ -715,6 +721,14 @@
+>  	if (*bflags & BLIST_SELECT_NO_ATN)
+>  		sdev->select_no_atn = 1;
+>  
+> +        /*
+> +        * Maximum 512K cdb transfer length
+> +        * broken RA4x00 Compaq Disk Array
+> +        */
+> +        if (*bflags & BLIST_MAX_512K) {
+> +                sdev->max_512k = 1;
+> +        }
+> +
 
----559023410-758783491-1143715990=:595--
+Indent with tabs, not spaces.  Also, sdev->max_512k is a bit ...
+specific.  How about adding an unsigned short to struct scsi_device
+(right above queue_depth, so it fits in the padding) called something
+like max_xfer_len?  Then you can do something like:
+
+	sdev->max_xfer_len = 0xffff;
+	if (*bflags & BLIST_MAX_512K)
+		sdev->max_xfer_len = 0x200;
+
+and later:
+
+> @@ -344,8 +346,14 @@
+>  		SCpnt->cmnd[14] = SCpnt->cmnd[15] = 0;
+>  	} else if ((this_count > 0xff) || (block > 0x1fffff) ||
+>  		   SCpnt->device->use_10_for_rw) {
+> -		if (this_count > 0xffff)
+> -			this_count = 0xffff;
+> +		if (SCpnt->device->max_512k) {
+> +			if (this_count > 0x200) {
+> +				this_count = 0x200;
+> +			}
+> +		} else {
+> +			if (this_count > 0xffff)
+> +				this_count = 0xffff;
+> +		}
+>  
+>  		SCpnt->cmnd[0] += READ_10 - READ_6;
+>  		SCpnt->cmnd[1] |= blk_fua_rq(rq) ? 0x8 : 0;
+
+simplifies to:
+
+	if (this_count > SCpnt->device->max_xfer_len)
+		this_count = SCpnt->device->max_xfer_len;
+
+> @@ -1089,9 +1103,12 @@
+>  	 * support more than 8 LUNs.
+>  	 */
+>  	if ((bflags & BLIST_NOREPORTLUN) || 
+> -	     starget->scsi_level < SCSI_2 ||
+> -	    (starget->scsi_level < SCSI_3 && 
+> -	     (!(bflags & BLIST_REPORTLUN2) || shost->max_lun <= 8)) )
+> +            ((starget->scsi_level < SCSI_2) &&
+> +            (starget->scsi_level != SCSI_UNKNOWN)) ||
+> +            (starget->scsi_level < SCSI_3 &&
+> +            ((!(bflags & BLIST_REPORTLUN2) && 
+> +	    (starget->scsi_level != SCSI_UNKNOWN)) || 
+> +	    shost->max_lun <= 8)) )
+>  		return 1;
+
+That conditional makes my brain hurt.  Can we split it up?
+
+	if ((bflags & BLIST_NOREPORTLUN)
+		return 1;
+	if ((starget->scsi_level < SCSI_2) &&
+			(starget->scsi_level != SCSI_UNKNOWN))
+		return 1;
+	if ((starget->scsi_level < SCSI_3) &&
+	    ((!(bflags & BLIST_REPORTLUN2) &&
+	      (starget->scsi_level != SCSI_UNKNOWN) ||
+	      shost->max_lun <= 8)))
+	      	return 1;
+
+I'm not sure that's what you meant to do, even.  How about more simply:
+
+	/*
+	 * Only support SCSI-3 and up devices if BLIST_NOREPORTLUN is not set.
+	 * Also allow SCSI-2 and unknown devices if BLIST_REPORTLUN2 is set
+	 * and host adapter supports more than 8 LUNs.
+	 */
+	if ((bflags & BLIST_NOREPORTLUN)
+		return 1;
+	if ((starget->scsi_level < SCSI_2) &&
+			(starget->scsi_level != SCSI_UNKNOWN))
+		return 1;
+	if ((starget->scsi_level < SCSI_3) &&
+			(!(bflags & BLIST_REPORTLUN2) || shost->max_lun <= 8))
+		return 1;
+
