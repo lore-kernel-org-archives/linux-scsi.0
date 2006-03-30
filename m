@@ -1,40 +1,54 @@
-From: "Bradly Stafford" <wfufdz@joaquin.com>
-Subject: Astounding Mortgages for the USA!
-Date: Thu, 30 Mar 2006 08:02:08 +0100
-Message-ID: <555q636u.1417980@www4.vj93.com>
+From: Grant Grundler <grundler@parisc-linux.org>
+Subject: Re: I/O performance measurement tools on Linux
+Date: Wed, 29 Mar 2006 23:54:55 -0700
+Message-ID: <20060330065455.GA31964@colo.lackof.org>
+References: <890BF3111FB9484E9526987D912B261901BC88@NAMAIL3.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [60.1.130.215] ([60.1.130.215]:43784 "HELO 209.132.176.167")
-	by vger.kernel.org with SMTP id S1751040AbWC3GCR (ORCPT
+Received: from colo.lackof.org ([198.49.126.79]:3746 "EHLO colo.lackof.org")
+	by vger.kernel.org with ESMTP id S1751145AbWC3Gnt (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 30 Mar 2006 01:02:17 -0500
+	Thu, 30 Mar 2006 01:43:49 -0500
+Content-Disposition: inline
+In-Reply-To: <890BF3111FB9484E9526987D912B261901BC88@NAMAIL3.ad.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
+Cc: "Ju, Seokmann" <Seokmann.Ju@engenio.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+
+On Tue, Mar 28, 2006 at 10:53:14AM -0800, Ju, Seokmann wrote:
+> Hi,
+> 
+> Are there any performance measurement tools available that running on
+> Linux?
+> I would like to measure disk I/O performance (file system and raw I/O)
+> on several kernels.
+
+iozone and bonnie are two well established benchmarks.
+Multiple versions of diskbench (aka "db") are also good.
+"spew" is a new kid on the block but easy to use.
+
+Hrm...looks like debian dropped iozone from the next release.
+
+> Please lead me to the place.
+
+google is your friend. :)
+google can lead to to all of the above if you don't have
+debian (ie "apt-get install bonnie++ spew").
+
+Note that having a bench marking tool is just half the battle.
+Knowing _what_ the result means is the other half.
 
 
-Thanks to a nomination by an associate of yours, there are potentially three deals that will be offerêd to you. 
-Notice - past credit history is NOT a factor for this promotion as long as you still have own a home and we recieve word 
-from you within 24 hours. 
+hth,
+grant
 
-
-________Detail Summary___________ 
-Rate: As low as 3% 
-Ammount: Up to 800,000 
-Type: Rêfinancê or Homê Equity 
-Closing Date: 30 days 
-
-
-In accordance with our terms please visit here to verify your information on our secure, private site to ensure our 
-records are accurate. 
-http://www4.vj93.com/was.asp
-
-Francis Carmichael
-
-For Deletion 
-http://www4.vj93.com/rem.asp
-
-
+> 
+> Thank you,
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
