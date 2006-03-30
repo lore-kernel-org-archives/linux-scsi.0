@@ -1,60 +1,60 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: [PATCH repost] aic94xx: sas_alloc_task
-Date: Thu, 30 Mar 2006 09:13:32 -0800
-Message-ID: <20060330171332.GA32555@us.ibm.com>
+From: Bryan Holty <lgeek@frontiernet.net>
+Subject: Re: [PATCH] sg: fix leak when dio setup fails
+Date: Thu, 30 Mar 2006 13:15:25 -0600
+Message-ID: <200603301315.25447.lgeek@frontiernet.net>
+References: <44299306.4080709@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.144]:5829 "EHLO e4.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S932256AbWC3RlN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 30 Mar 2006 12:41:13 -0500
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e4.ny.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k2UHf0xn009251
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Mar 2006 12:41:03 -0500
-Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by d01relay02.pok.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k2UHeoo9016102
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Mar 2006 12:40:50 -0500
-Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
-	by d01av03.pok.ibm.com (8.12.11/8.13.3) with ESMTP id k2UHeoop024712
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Mar 2006 12:40:50 -0500
-Received: from hmsbounty.us.ibm.com (sig-9-65-22-248.mts.ibm.com [9.65.22.248])
-	by d01av03.pok.ibm.com (8.12.11/8.12.11) with ESMTP id k2UHen3W024410
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Mar 2006 12:40:49 -0500
+Received: from relay02.roc.ny.frontiernet.net ([66.133.182.165]:16270 "EHLO
+	relay02.roc.ny.frontiernet.net") by vger.kernel.org with ESMTP
+	id S1750911AbWC3U7b (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 30 Mar 2006 15:59:31 -0500
+In-Reply-To: <44299306.4080709@torque.net>
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: dougg@torque.net
+Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
 
-Check kmem_cache_alloc return prior to init of sas_task struct.
+On Tuesday 28 March 2006 13:48, Douglas Gilbert wrote:
+> Further to this thread started by Bryan Holty:
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=114306885116728&w=2
+>
+> Here is the reworked patch again. This time it has been
+> tested with a program provided by Bryan. The patch is
+> against lk 2.6.16 .
+>
+> Changelog:
+>   - when the sg driver is unable to setup direct IO,
+>     free that scatter gather list prior to falling
+>     back to indirect IO
+>
+> Signed-off-by: Douglas Gilbert <dougg@torque.net>
+>
+> Doug Gilbert
 
-Signed-off-by: Mike Anderson <andmike@us.ibm.com>
+Thanks Doug, this fixes the fixes the sg memory leak and the eventual kernel 
+out of memory killer.
 
- include/scsi/sas/sas_task.h |   14 ++++++++------
- 1 files changed, 8 insertions(+), 6 deletions(-)
+Signed-off-by: Douglas Gilbert <dougg@torque.net>
+Signed-off-by: Bryan Holty <lgeek@frontiernet.net>
 
-Index: aic94xx-sas-2.6-patched/include/scsi/sas/sas_task.h
-===================================================================
---- aic94xx-sas-2.6-patched.orig/include/scsi/sas/sas_task.h	2006-03-28 09:19:29.000000000 -0800
-+++ aic94xx-sas-2.6-patched/include/scsi/sas/sas_task.h	2006-03-30 08:46:06.000000000 -0800
-@@ -212,12 +212,14 @@ static inline struct sas_task *sas_alloc
- 	extern kmem_cache_t *sas_task_cache;
- 	struct sas_task *task = kmem_cache_alloc(sas_task_cache, flags);
- 
--	memset(task, 0, sizeof(*task));
--	INIT_LIST_HEAD(&task->list);
--	spin_lock_init(&task->task_state_lock);
--	task->task_state_flags = SAS_TASK_STATE_PENDING;
--	init_timer(&task->timer);
--	init_completion(&task->completion);
-+	if (task) {
-+		memset(task, 0, sizeof(*task));
-+		INIT_LIST_HEAD(&task->list);
-+		spin_lock_init(&task->task_state_lock);
-+		task->task_state_flags = SAS_TASK_STATE_PENDING;
-+		init_timer(&task->timer);
-+		init_completion(&task->completion);
+--- linux/drivers/scsi/sg.c	2006-03-20 10:08:49.000000000 -0500
++++ linux/drivers/scsi/sg.c2616dio_lk	2006-03-22 18:26:23.000000000 -0500
+@@ -1834,8 +1834,10 @@
+ 	res = st_map_user_pages(schp->buffer, mx_sc_elems,
+ 				(unsigned long)hp->dxferp, dxfer_len, 
+ 				(SG_DXFER_TO_DEV == hp->dxfer_direction) ? 1 : 0);
+-	if (res <= 0)
++	if (res <= 0) {
++		sg_remove_scat(schp);
+ 		return 1;
 +	}
- 
- 	return task;
- }
+ 	schp->k_use_sg = res;
+ 	schp->dio_in_use = 1;
+ 	hp->info |= SG_INFO_DIRECT_IO;
+--
+ Bryan Holty
