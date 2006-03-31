@@ -1,60 +1,38 @@
-From: Bryan Holty <lgeek@frontiernet.net>
-Subject: Re: [PATCH] sg: fix leak when dio setup fails
-Date: Thu, 30 Mar 2006 13:15:25 -0600
-Message-ID: <200603301315.25447.lgeek@frontiernet.net>
-References: <44299306.4080709@torque.net>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: SCSI selection issue with aic7xxx_old driver
+Date: Fri, 31 Mar 2006 12:59:15 +0200
+Message-ID: <1143802756.3053.0.camel@laptopd505.fenrus.org>
+References: <F6783F90-89ED-4D3C-9D42-8F97D91907E0@sbcglobal.net>
+Reply-To: arjan@infradead.org
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay02.roc.ny.frontiernet.net ([66.133.182.165]:16270 "EHLO
-	relay02.roc.ny.frontiernet.net") by vger.kernel.org with ESMTP
-	id S1750911AbWC3U7b (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 30 Mar 2006 15:59:31 -0500
-In-Reply-To: <44299306.4080709@torque.net>
-Content-Disposition: inline
+Received: from morbo.e-centre.net ([66.154.82.3]:26353 "EHLO
+	cubert.e-centre.net") by vger.kernel.org with ESMTP
+	id S1751313AbWCaK7S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 31 Mar 2006 05:59:18 -0500
+In-Reply-To: <F6783F90-89ED-4D3C-9D42-8F97D91907E0@sbcglobal.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
+To: Kevin K <k_krieser@sbcglobal.net>
+Cc: linux-scsi@vger.kernel.org
 
-On Tuesday 28 March 2006 13:48, Douglas Gilbert wrote:
-> Further to this thread started by Bryan Holty:
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=114306885116728&w=2
->
-> Here is the reworked patch again. This time it has been
-> tested with a program provided by Bryan. The patch is
-> against lk 2.6.16 .
->
-> Changelog:
->   - when the sg driver is unable to setup direct IO,
->     free that scatter gather list prior to falling
->     back to indirect IO
->
-> Signed-off-by: Douglas Gilbert <dougg@torque.net>
->
-> Doug Gilbert
+On Wed, 2006-03-29 at 11:51 -0600, Kevin K wrote:
+> I'm in the process up converting from RHEL 2.1 to RHEL 4, and have  
+> encountered an issue with the aic7xxx_old driver (5.2.6, as provided  
+> with the RH 2.4.9-34 kernel, and with 2.6.15.5 kernel).
+> 
+>   The SCSI card is an Adaptec 2940U card.
+> 
+>   Namely, an old SCSI device isn't being seen very often.  Maybe 1 in  
+> 10 times loading the module.  Under the 2.4.18 kernel, it was always  
+> seen using this driver except in the case of hardware/cabling issues.
+> 
+>   With the same hardware and OS, but using the new driver (aic7xxx),  
+> the hardware is consistently seen.
 
-Thanks Doug, this fixes the fixes the sg memory leak and the eventual kernel 
-out of memory killer.
+well... sounds you have a solution right there... ;)
+the _old driver isn't really actively maintained anymore since... a long
+time. At least the "new" one has been getting maintenance
 
-Signed-off-by: Douglas Gilbert <dougg@torque.net>
-Signed-off-by: Bryan Holty <lgeek@frontiernet.net>
-
---- linux/drivers/scsi/sg.c	2006-03-20 10:08:49.000000000 -0500
-+++ linux/drivers/scsi/sg.c2616dio_lk	2006-03-22 18:26:23.000000000 -0500
-@@ -1834,8 +1834,10 @@
- 	res = st_map_user_pages(schp->buffer, mx_sc_elems,
- 				(unsigned long)hp->dxferp, dxfer_len, 
- 				(SG_DXFER_TO_DEV == hp->dxfer_direction) ? 1 : 0);
--	if (res <= 0)
-+	if (res <= 0) {
-+		sg_remove_scat(schp);
- 		return 1;
-+	}
- 	schp->k_use_sg = res;
- 	schp->dio_in_use = 1;
- 	hp->info |= SG_INFO_DIRECT_IO;
---
- Bryan Holty
