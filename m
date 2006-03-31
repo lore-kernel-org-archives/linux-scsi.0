@@ -1,46 +1,44 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [PATCH 1/3] Try LUN 1 and use bflags
-Date: Fri, 31 Mar 2006 08:39:52 -0800
-Message-ID: <20060331163952.GA22277@us.ibm.com>
-References: <20060329201020.GG7919@tpkurt.suse.de> <20060329201147.GH7919@tpkurt.suse.de>
+From: Ingo Flaschberger <if@xip.at>
+Subject: Re: Compaq Fiber Channel Array RM4000 / 2.6.16 kernel patch VER6
+Date: Fri, 31 Mar 2006 19:36:58 +0200 (CEST)
+Message-ID: <Pine.GSO.4.64.0603311936360.23160@filebunker.xip.at>
+References: <1143656547.3248.36.camel@mulgrave.il.steeleye.com>
+ <Pine.GSO.4.64.0603292025500.4009@filebunker.xip.at>
+ <1143657838.3248.39.camel@mulgrave.il.steeleye.com>
+ <Pine.GSO.4.64.0603292052430.4009@filebunker.xip.at>
+ <1143659029.3248.42.camel@mulgrave.il.steeleye.com>
+ <Pine.GSO.4.64.0603292125370.4009@filebunker.xip.at>
+ <1143666681.3248.48.camel@mulgrave.il.steeleye.com>
+ <Pine.GSO.4.64.0603301252100.595@filebunker.xip.at> <20060330125816.GG13590@parisc-linux.org>
+ <Pine.GSO.4.64.0603301523130.6412@filebunker.xip.at> <20060330162429.GI13590@parisc-linux.org>
+ <Pine.GSO.4.64.0603301825560.14161@filebunker.xip.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:20099 "EHLO
-	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751418AbWCaQj4
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 31 Mar 2006 11:39:56 -0500
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e33.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k2VGduRq025104
-	for <linux-scsi@vger.kernel.org>; Fri, 31 Mar 2006 11:39:56 -0500
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by westrelay02.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k2VGagku221288
-	for <linux-scsi@vger.kernel.org>; Fri, 31 Mar 2006 09:36:42 -0700
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k2VGdtn3006597
-	for <linux-scsi@vger.kernel.org>; Fri, 31 Mar 2006 09:39:55 -0700
-Content-Disposition: inline
-In-Reply-To: <20060329201147.GH7919@tpkurt.suse.de>
+Received: from ns1.xip.at ([193.239.188.99]:20395 "EHLO chile.gbit.at")
+	by vger.kernel.org with ESMTP id S1751094AbWCaRhK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 31 Mar 2006 12:37:10 -0500
+In-Reply-To: <Pine.GSO.4.64.0603301825560.14161@filebunker.xip.at>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kurt Garloff <garloff@suse.de>, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, Mar 29, 2006 at 10:11:47PM +0200, Kurt Garloff wrote:
-> @@ -945,11 +945,13 @@ static void scsi_sequential_lun_scan(str
->  		sparse_lun = 0;
->  
->  	/*
-> -	 * If not sparse lun and no device attached at LUN 0 do not scan
-> -	 * any further.
-> -	 */
-> +	 * If LUN0 did respond, but did not have an attachable LUN (PQ=3),
-> +	 * we do NOT abort the sequential scan yet, let's try one more
-> +	 * LUN and only abort the scan if we don't find anything there.
-> +	 * 
->  	if (!sparse_lun && (lun0_res != SCSI_SCAN_LUN_PRESENT))
->  		return;
-> +	 */
+Hello,
 
-Just delete all that, and get rid of lun0_res.
+Is it ok now?
 
--- Patrick Mansfield
+bye,
+ 	ingo flaschberger
+
+geschaeftsleitung
+crossip communications gmbH
+------------------------------------------------------------------_------------
+sebastian kneipp gasse 1          _____ _____ ____   _____ _____ (_)____
+a-1020 wien                      / ___// ___// __ \ / ___// ___// // __ \
+fix: +43-1-726 15 22-217        / /__ / /   / /_/ /(__  )(__  )/ // /_/ /
+fax: +43-1-726 15 22-111        \___//_/    \____//____//____//_// .___/
+mob: +43-699-105 86 719                                 _______ / /
+www.xip.at                      communications gmbh    /______//_/
+-------------------------------------------------------------------------------
