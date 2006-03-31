@@ -1,69 +1,46 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 2.6.16-rc6] Promise SuperTrak driver
-Date: Fri, 31 Mar 2006 10:21:06 -0500
-Message-ID: <442D48E2.3050706@garzik.org>
-References: <NONAMEBK04QBh0TzlYb000006b5@nonameb.ptu.promise.com>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [PATCH 1/3] Try LUN 1 and use bflags
+Date: Fri, 31 Mar 2006 08:39:52 -0800
+Message-ID: <20060331163952.GA22277@us.ibm.com>
+References: <20060329201020.GG7919@tpkurt.suse.de> <20060329201147.GH7919@tpkurt.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=GB2312
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:52154 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751333AbWCaPVO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 31 Mar 2006 10:21:14 -0500
-In-Reply-To: <NONAMEBK04QBh0TzlYb000006b5@nonameb.ptu.promise.com>
+Received: from e33.co.us.ibm.com ([32.97.110.151]:20099 "EHLO
+	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751418AbWCaQj4
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 31 Mar 2006 11:39:56 -0500
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e33.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k2VGduRq025104
+	for <linux-scsi@vger.kernel.org>; Fri, 31 Mar 2006 11:39:56 -0500
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by westrelay02.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k2VGagku221288
+	for <linux-scsi@vger.kernel.org>; Fri, 31 Mar 2006 09:36:42 -0700
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k2VGdtn3006597
+	for <linux-scsi@vger.kernel.org>; Fri, 31 Mar 2006 09:39:55 -0700
+Content-Disposition: inline
+In-Reply-To: <20060329201147.GH7919@tpkurt.suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ed Lin <ed.lin@promise.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, Andrew Morton <akpm@osdl.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "promise_linux@promise.com" <promise_linux@promise.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Kurt Garloff <garloff@suse.de>, Linux SCSI list <linux-scsi@vger.kernel.org>
 
-Ed Lin wrote:
-> ======= On 2006-03-15 04:04:30, Matthew Wilcox wrote:
-> 
->> On Mon, Mar 13, 2006 at 03:42:36PM -0800, Andrew Morton wrote:
->>>> +#include <linux/irq.h>
->>> Can't include linux/irq.h from generic code (we really ought to fix that).
->> In a sense we have -- everybody should include <linux/interrupt.h> and
->> not <*/irq.h>.  Perhaps we need to poison the includes.
->>
->>>> +static inline u16 shasta_alloc_tag(u32 *bitmap)
->>>> +{
->>>> +	u16 i;
->>>> +	for (i = 0; i < TAG_BITMAP_LENGTH; i++) 
->>>> +		if (!((*bitmap) & (1 << i))) {
->>>> +			*bitmap |= (1 << i);
->>>> +			return i;
->>>> +		}
->>>> +
->>>> +	return TAG_BITMAP_LENGTH;
->>>> +}
->>> This is too large to be inlined.
->> And if I read the driver right, is unnecessary code.  It could just use
->> the midlayer tag code (ok, not scsi_populate_tag_msg() which is
->> SPI-specific, but scsi_activate_tcq(), scsi_deactivate_tcq(),
->> scsi_find_tag(), scsi_set_tag_type(), and scsi_get_tag_type() should all
->> work, being thin wrappers around the block layer functionality.
->>
-> 
-> Really sorry about that. But...
-> 
-> When I was starting to implement the tcq according to the advice, I
-> suddenly found there may be a misunderstanding here. I think the tagged
-> command queue should be applied to a disk. But here the tag is adapter(HBA)
-> wide, not just for a specific disk. So maybe this is not the proper case
-> where tagged queue is being used...
+On Wed, Mar 29, 2006 at 10:11:47PM +0200, Kurt Garloff wrote:
+> @@ -945,11 +945,13 @@ static void scsi_sequential_lun_scan(str
+>  		sparse_lun = 0;
+>  
+>  	/*
+> -	 * If not sparse lun and no device attached at LUN 0 do not scan
+> -	 * any further.
+> -	 */
+> +	 * If LUN0 did respond, but did not have an attachable LUN (PQ=3),
+> +	 * we do NOT abort the sequential scan yet, let's try one more
+> +	 * LUN and only abort the scan if we don't find anything there.
+> +	 * 
+>  	if (!sparse_lun && (lun0_res != SCSI_SCAN_LUN_PRESENT))
+>  		return;
+> +	 */
 
-The block layer code works just fine with host queueing, but I agree
-that it may not be appropriate for the SCSI tcq API.
+Just delete all that, and get rid of lun0_res.
 
-In any case, I'm fine with merging the driver with existing tagging --
-since its known to work -- and then pondering the best course of action
-for tagging APIs in a later patch to the shasta driver.
-
-Let's go ahead and get it in, minus the requested tagging changes but
-including the other requests.
-
-	Jeff
-
-
-
+-- Patrick Mansfield
