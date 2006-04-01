@@ -1,84 +1,258 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: [PATCH 09/10] Enable clustering and large transfers
-Date: Sat, 1 Apr 2006 17:35:13 +0300 (EEST)
-Message-ID: <Pine.LNX.4.63.0604011656490.10426@kai.makisara.local>
-References: <1143561824404-git-send-email-matthew@wil.cx>
+From: Ingo Flaschberger <if@xip.at>
+Subject: Re: Compaq Fiber Channel Array RM4000 / 2.6.16 kernel patch VER6
+Date: Sat, 1 Apr 2006 18:46:36 +0200 (CEST)
+Message-ID: <Pine.GSO.4.64.0604011845220.12969@filebunker.xip.at>
+References: <1143656547.3248.36.camel@mulgrave.il.steeleye.com>
+ <Pine.GSO.4.64.0603292025500.4009@filebunker.xip.at>
+ <1143657838.3248.39.camel@mulgrave.il.steeleye.com>
+ <Pine.GSO.4.64.0603292052430.4009@filebunker.xip.at>
+ <1143659029.3248.42.camel@mulgrave.il.steeleye.com>
+ <Pine.GSO.4.64.0603292125370.4009@filebunker.xip.at>
+ <1143666681.3248.48.camel@mulgrave.il.steeleye.com>
+ <Pine.GSO.4.64.0603301252100.595@filebunker.xip.at>  <20060330125816.GG13590@parisc-linux.org>
+  <Pine.GSO.4.64.0603301523130.6412@filebunker.xip.at>
+ <20060330162429.GI13590@parisc-linux.org>  <Pine.GSO.4.64.0603301825560.14161@filebunker.xip.at>
+  <1143834313.3342.54.camel@mulgrave.il.steeleye.com>
+ <Pine.GSO.4.64.0603312311590.25350@filebunker.xip.at>
+ <1143840100.3342.57.camel@mulgrave.il.steeleye.com>
+ <Pine.GSO.4.64.0603312323350.25350@filebunker.xip.at>
+ <Pine.GSO.4.64.0604010312590.4531@filebunker.xip.at>
+ <1143857265.3381.3.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: MULTIPART/MIXED; BOUNDARY="-559023410-851401618-1143909996=:12969"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fep32-0.kolumbus.fi ([193.229.0.63]:26612 "EHLO
-	fep32-app.kolumbus.fi") by vger.kernel.org with ESMTP
-	id S1751530AbWDAOfZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 1 Apr 2006 09:35:25 -0500
-In-Reply-To: <1143561824404-git-send-email-matthew@wil.cx>
+Received: from ns1.xip.at ([193.239.188.99]:13741 "EHLO chile.gbit.at")
+	by vger.kernel.org with ESMTP id S1751548AbWDAQqj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 1 Apr 2006 11:46:39 -0500
+In-Reply-To: <1143857265.3381.3.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org, Jens Axboe <axboe@suse.de>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, 28 Mar 2006, Matthew Wilcox wrote:
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-> This patch enables clustering and sets max_sectors to 0xffff to enable
-> reading and writing of large blocks with tapes (and large transfers with
-> sg). This change is needed after the sg and st drivers started using
-> chained bios through scsi_request_async() in 2.6.16.
-> 
-> Signed-off-by: Kai Makisara <kai.makisara@kolumbus.fi>
-> Signed-off-by: Matthew Wilcox <matthew@wil.cx>
-> 
-> ---
-> 
->  drivers/scsi/sym53c8xx_2/sym_glue.c |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
-> 
-> 1c573ec4648b4b4ddadcbd1945a9a608977df513
-> diff --git a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8xx_2/sym_glue.c
-> index e48409e..2c4e5f1 100644
-> --- a/drivers/scsi/sym53c8xx_2/sym_glue.c
-> +++ b/drivers/scsi/sym53c8xx_2/sym_glue.c
-> @@ -1870,7 +1870,8 @@ static struct scsi_host_template sym2_te
->  	.eh_bus_reset_handler	= sym53c8xx_eh_bus_reset_handler,
->  	.eh_host_reset_handler	= sym53c8xx_eh_host_reset_handler,
->  	.this_id		= 7,
-> -	.use_clustering		= DISABLE_CLUSTERING,
-> +	.use_clustering		= ENABLE_CLUSTERING,
-> +	.max_sectors		= 0xFFFF,
->  #ifdef SYM_LINUX_PROC_INFO_SUPPORT
->  	.proc_info		= sym53c8xx_proc_info,
->  	.proc_name		= NAME53C8XX,
-> 
-Did you approve this patch or just forgot to remove it from the queue 
-after the discussion initiated by Jens Axboe?
+---559023410-851401618-1143909996=:12969
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 
-I have done some more investigation based on the message from Gerard 
-Roudier that Jens found. I fetched the FreeBSD driver. It had a 
-work-around for the 896 rev. 1 chips but I did not find that in the Linux 
-version. The work-around does build two device s/g elements for any 
-original s/g segment that crosses a 16 MB boundary.
+Hello James,
 
-In Linux we can do that by setting the .dma_boundary field in the 
-scsi_host_template. Would it be an acceptable solution to set the 16 MB 
-limit for all sym53c8xx adapters? It would take care of the known errata 
-and Gerards suspicions about possible problems with other chips.
+> On Sat, 2006-04-01 at 03:16 +0200, Ingo Flaschberger wrote:
+>> I have looked around in the kernel but I get no idea how to inform the
+>> block layer about the limit.
+>> Please advise.
+>
+> OK, try this out.  It places the sector limit in the block queue.  I
+> also removed all the superfluous condition braces and tried to change
+> the comments to match what you're doing (the block size is actually in
+> multiples of 512 bytes, so the limit you impose is actually 512 *blocks*
+> or 256kB).
 
-The patch at the end does compile and it is running in this system but has 
-not had any more testing.
+Works, Thanks!
 
--- 
-Kai
+Attached version 7.
+Please for info if ok now.
 
---- linux-2.6.16/drivers/scsi/sym53c8xx_2/sym_glue.c	2006-03-20 23:13:18.000000000 +0200
-+++ linux-2.6.16-k1/drivers/scsi/sym53c8xx_2/sym_glue.c	2006-04-01 17:21:34.000000000 +0300
-@@ -1978,7 +1978,11 @@ static struct scsi_host_template sym2_te
- 	.eh_bus_reset_handler	= sym53c8xx_eh_bus_reset_handler,
- 	.eh_host_reset_handler	= sym53c8xx_eh_host_reset_handler,
- 	.this_id		= 7,
--	.use_clustering		= DISABLE_CLUSTERING,
-+	.use_clustering		= ENABLE_CLUSTERING,
-+	.max_sectors		= 0xFFFF,
-+	/* Due to errata on the 896 rev. 1 chip, don't allow s/g segments to
-+	   cross 16 MB boundary */
-+	.dma_boundary		= 0xFFFFFF,
- #ifdef SYM_LINUX_PROC_INFO_SUPPORT
- 	.proc_info		= sym53c8xx_proc_info,
- 	.proc_name		= NAME53C8XX,
+bye,
+ 	Ingo
+---559023410-851401618-1143909996=:12969
+Content-Type: TEXT/PLAIN; charset=US-ASCII; name=RA4x00_linux_2.6.16_ver7.patch
+Content-Transfer-Encoding: BASE64
+Content-ID: <Pine.GSO.4.64.0604011846360.12969@filebunker.xip.at>
+Content-Description: 
+Content-Disposition: attachment; filename=RA4x00_linux_2.6.16_ver7.patch
+
+ZGlmZiAtciAtdSBsaW51eC0yLjYuMTZfb3JnL2RyaXZlcnMvc2NzaS9zY3Np
+LmMgbGludXgtMi42LjE2L2RyaXZlcnMvc2NzaS9zY3NpLmMNCi0tLSBsaW51
+eC0yLjYuMTZfb3JnL2RyaXZlcnMvc2NzaS9zY3NpLmMJMjAwNi0wMy0yMCAw
+Njo1MzoyOS4wMDAwMDAwMDAgKzAxMDANCisrKyBsaW51eC0yLjYuMTYvZHJp
+dmVycy9zY3NpL3Njc2kuYwkyMDA2LTA0LTAxIDE0OjUwOjU0LjAwMDAwMDAw
+MCArMDIwMA0KQEAgLTU2Nyw3ICs1NjcsOCBAQA0KIAkvKiANCiAJICogSWYg
+U0NTSS0yIG9yIGxvd2VyLCBzdG9yZSB0aGUgTFVOIHZhbHVlIGluIGNtbmQu
+DQogCSAqLw0KLQlpZiAoY21kLT5kZXZpY2UtPnNjc2lfbGV2ZWwgPD0gU0NT
+SV8yKSB7DQorCWlmIChjbWQtPmRldmljZS0+c2NzaV9sZXZlbCA8PSBTQ1NJ
+XzIgJiYNCisJCQljbWQtPmRldmljZS0+c2NzaV9sZXZlbCAhPSBTQ1NJX1VO
+S05PV04pIHsNCiAJCWNtZC0+Y21uZFsxXSA9IChjbWQtPmNtbmRbMV0gJiAw
+eDFmKSB8DQogCQkJICAgICAgIChjbWQtPmRldmljZS0+bHVuIDw8IDUgJiAw
+eGUwKTsNCiAJfQ0KZGlmZiAtciAtdSBsaW51eC0yLjYuMTZfb3JnL2RyaXZl
+cnMvc2NzaS9zY3NpX2RldmluZm8uYyBsaW51eC0yLjYuMTYvZHJpdmVycy9z
+Y3NpL3Njc2lfZGV2aW5mby5jDQotLS0gbGludXgtMi42LjE2X29yZy9kcml2
+ZXJzL3Njc2kvc2NzaV9kZXZpbmZvLmMJMjAwNi0wMy0zMCAxOToxNTozMC4w
+MDAwMDAwMDAgKzAyMDANCisrKyBsaW51eC0yLjYuMTYvZHJpdmVycy9zY3Np
+L3Njc2lfZGV2aW5mby5jCTIwMDYtMDQtMDEgMTQ6MzU6NDkuMDAwMDAwMDAw
+ICswMjAwDQpAQCAtMTMyLDcgKzEzMiw5IEBADQogCXsiQ01EIiwgIkNSQS03
+MjgwIiwgTlVMTCwgQkxJU1RfU1BBUlNFTFVOfSwJLyogQ01EIFJBSUQgQ29u
+dHJvbGxlciAqLw0KIAl7IkNOU0kiLCAiRzczMjQiLCBOVUxMLCBCTElTVF9T
+UEFSU0VMVU59LAkvKiBDaGFwYXJyYWwgRzczMjQgUkFJRCAqLw0KIAl7IkNO
+U2kiLCAiRzgzMjQiLCBOVUxMLCBCTElTVF9TUEFSU0VMVU59LAkvKiBDaGFw
+YXJyYWwgRzgzMjQgUkFJRCAqLw0KLQl7IkNPTVBBUSIsICJMT0dJQ0FMIFZP
+TFVNRSIsIE5VTEwsIEJMSVNUX0ZPUkNFTFVOfSwNCisJeyJDT01QQVEiLCAi
+QVJSQVkgQ09OVFJPTExFUiIsIE5VTEwsIEJMSVNUX1NQQVJTRUxVTiB8IEJM
+SVNUX0xBUkdFTFVOIHwNCisJCUJMSVNUX01BWF81MTIgfCBCTElTVF9SRVBP
+UlRMVU59LCAvKiBDb21wYXEgUkE0eDAwICovDQorCXsiQ09NUEFRIiwgIkxP
+R0lDQUwgVk9MVU1FIiwgTlVMTCwgQkxJU1RfRk9SQ0VMVU4gfCBCTElTVF9N
+QVhfNTEyfSwgLyogQ29tcGFxIFJBNHgwMCAqLw0KIAl7IkNPTVBBUSIsICJD
+UjM1MDAiLCBOVUxMLCBCTElTVF9GT1JDRUxVTn0sDQogCXsiQ09NUEFRIiwg
+Ik1TQTEwMDAiLCBOVUxMLCBCTElTVF9TUEFSU0VMVU4gfCBCTElTVF9OT1NU
+QVJUT05BRER9LA0KIAl7IkNPTVBBUSIsICJNU0ExMDAwIFZPTFVNRSIsIE5V
+TEwsIEJMSVNUX1NQQVJTRUxVTiB8IEJMSVNUX05PU1RBUlRPTkFERH0sDQpk
+aWZmIC1yIC11IGxpbnV4LTIuNi4xNl9vcmcvZHJpdmVycy9zY3NpL3Njc2lf
+c2Nhbi5jIGxpbnV4LTIuNi4xNi9kcml2ZXJzL3Njc2kvc2NzaV9zY2FuLmMN
+Ci0tLSBsaW51eC0yLjYuMTZfb3JnL2RyaXZlcnMvc2NzaS9zY3NpX3NjYW4u
+YwkyMDA2LTAzLTMwIDE5OjI5OjEyLjAwMDAwMDAwMCArMDIwMA0KKysrIGxp
+bnV4LTIuNi4xNi9kcml2ZXJzL3Njc2kvc2NzaV9zY2FuLmMJMjAwNi0wNC0w
+MSAxNDo1NDowOS4wMDAwMDAwMDAgKzAyMDANCkBAIC02NDcsNiArNjQ3LDcg
+QEANCiAJY2FzZSBUWVBFX01FRElVTV9DSEFOR0VSOg0KIAljYXNlIFRZUEVf
+RU5DTE9TVVJFOg0KIAljYXNlIFRZUEVfQ09NTToNCisJY2FzZSBUWVBFX1JB
+SUQ6DQogCWNhc2UgVFlQRV9SQkM6DQogCQlzZGV2LT53cml0ZWFibGUgPSAx
+Ow0KIAkJYnJlYWs7DQpAQCAtNzE2LDYgKzcxNywxMyBAQA0KIAkJc2Rldi0+
+c2VsZWN0X25vX2F0biA9IDE7DQogDQogCS8qDQorCSogTWF4aW11bSA1MTIg
+c2VjdG9yIHRyYW5zZmVyIGxlbmd0aA0KKwkqIGJyb2tlbiBSQTR4MDAgQ29t
+cGFxIERpc2sgQXJyYXkNCisJKi8NCisJaWYgKCpiZmxhZ3MgJiBCTElTVF9N
+QVhfNTEyKQ0KKwkJYmxrX3F1ZXVlX21heF9zZWN0b3JzKHNkZXYtPnJlcXVl
+c3RfcXVldWUsIDUxMik7DQorDQorCS8qDQogCSAqIFNvbWUgZGV2aWNlcyBt
+YXkgbm90IHdhbnQgdG8gaGF2ZSBhIHN0YXJ0IGNvbW1hbmQgYXV0b21hdGlj
+YWxseQ0KIAkgKiBpc3N1ZWQgd2hlbiBhIGRldmljZSBpcyBhZGRlZC4NCiAJ
+ICovDQpAQCAtMTA4OCwxMCArMTA5NiwxMyBAQA0KIAkgKiBBbHNvIGFsbG93
+IFNDU0ktMiBhbmQgU0NTSS1VTktOT1dOIGlmIEJMSVNUX1JFUE9SVExVTiBp
+cyBzZXQgYW5kIGhvc3QNCiAJICogYWRhcHRlciBkb2VzIHN1cHBvcnQgbW9y
+ZSB0aGFuIDggTFVOcy4NCiAJICovDQotCWlmICgoYmZsYWdzICYgQkxJU1Rf
+Tk9SRVBPUlRMVU4pIHx8IA0KLQkgICAgIHN0YXJnZXQtPnNjc2lfbGV2ZWwg
+PCBTQ1NJXzIgfHwNCi0JICAgIChzdGFyZ2V0LT5zY3NpX2xldmVsIDwgU0NT
+SV8zICYmIA0KLQkgICAgICghKGJmbGFncyAmIEJMSVNUX1JFUE9SVExVTikg
+fHwgc2hvc3QtPm1heF9sdW4gPD0gOCkpICkNCisJaWYgKGJmbGFncyAmIEJM
+SVNUX05PUkVQT1JUTFVOKQ0KKwkJcmV0dXJuIDE7DQorCWlmIChzdGFyZ2V0
+LT5zY3NpX2xldmVsIDwgU0NTSV8yICYmDQorCQkJc3RhcmdldC0+c2NzaV9s
+ZXZlbCAhPSBTQ1NJX1VOS05PV04pDQorCQlyZXR1cm4gMTsNCisJaWYgKHN0
+YXJnZXQtPnNjc2lfbGV2ZWwgPCBTQ1NJXzMgJiYNCisJCQkoIShiZmxhZ3Mg
+JiBCTElTVF9SRVBPUlRMVU4pIHx8IHNob3N0LT5tYXhfbHVuIDw9IDgpKQ0K
+IAkJcmV0dXJuIDE7DQogCWlmIChiZmxhZ3MgJiBCTElTVF9OT0xVTikNCiAJ
+CXJldHVybiAwOw0KZGlmZiAtciAtdSBsaW51eC0yLjYuMTZfb3JnL2luY2x1
+ZGUvc2NzaS9zY3NpX2RldmluZm8uaCBsaW51eC0yLjYuMTYvaW5jbHVkZS9z
+Y3NpL3Njc2lfZGV2aW5mby5oDQotLS0gbGludXgtMi42LjE2X29yZy9pbmNs
+dWRlL3Njc2kvc2NzaV9kZXZpbmZvLmgJMjAwNi0wMy0zMCAxOTozNzo1Ni4w
+MDAwMDAwMDAgKzAyMDANCisrKyBsaW51eC0yLjYuMTYvaW5jbHVkZS9zY3Np
+L3Njc2lfZGV2aW5mby5oCTIwMDYtMDQtMDEgMTQ6NDc6MTcuMDAwMDAwMDAw
+ICswMjAwDQpAQCAtMjksNCArMjksNSBAQA0KICNkZWZpbmUgQkxJU1RfTk9f
+VUxEX0FUVEFDSAkweDEwMDAwMCAvKiBkZXZpY2UgaXMgYWN0dWFsbHkgZm9y
+IFJBSUQgY29uZmlnICovDQogI2RlZmluZSBCTElTVF9TRUxFQ1RfTk9fQVRO
+CTB4MjAwMDAwIC8qIHNlbGVjdCB3aXRob3V0IEFUTiAqLw0KICNkZWZpbmUg
+QkxJU1RfUkVUUllfSFdFUlJPUgkweDQwMDAwMCAvKiByZXRyeSBIQVJEV0FS
+RV9FUlJPUiAqLw0KKyNkZWZpbmUgQkxJU1RfTUFYXzUxMgkJMHg4MDAwMDAg
+LyogbWF4aW11bSA1MTIgc2VjdG9yIGNkYiBsZW5ndGggKi8NCiAjZW5kaWYN
+Cg==
+
+---559023410-851401618-1143909996=:12969
+Content-Type: TEXT/PLAIN; charset=US-ASCII; name=BLIST_REPORTLUN_2.6.16.patch
+Content-Transfer-Encoding: BASE64
+Content-ID: <Pine.GSO.4.64.0604011846361.12969@filebunker.xip.at>
+Content-Description: 
+Content-Disposition: attachment; filename=BLIST_REPORTLUN_2.6.16.patch
+
+ZGlmZiAtciAtdSBsaW51eC0yLjYuMTZfb3JnL2RyaXZlcnMvc2NzaS9zY3Np
+X2RldmluZm8uYyBsaW51eC0yLjYuMTYvZHJpdmVycy9zY3NpL3Njc2lfZGV2
+aW5mby5jDQotLS0gbGludXgtMi42LjE2X29yZy9kcml2ZXJzL3Njc2kvc2Nz
+aV9kZXZpbmZvLmMJMjAwNi0wMy0yMCAwNjo1MzoyOS4wMDAwMDAwMDAgKzAx
+MDANCisrKyBsaW51eC0yLjYuMTYvZHJpdmVycy9zY3NpL3Njc2lfZGV2aW5m
+by5jCTIwMDYtMDMtMzAgMTk6MTU6MzAuMDAwMDAwMDAwICswMjAwDQpAQCAt
+MTIxLDcgKzEyMSw3IEBADQogCSAqIE90aGVyIHR5cGVzIG9mIGRldmljZXMg
+dGhhdCBoYXZlIHNwZWNpYWwgZmxhZ3MuDQogCSAqIE5vdGUgdGhhdCBhbGwg
+VVNCIGRldmljZXMgc2hvdWxkIGhhdmUgdGhlIEJMSVNUX0lOUVVJUllfMzYg
+ZmxhZy4NCiAJICovDQotCXsiM1BBUmRhdGEiLCAiVlYiLCBOVUxMLCBCTElT
+VF9SRVBPUlRMVU4yfSwNCisJeyIzUEFSZGF0YSIsICJWViIsIE5VTEwsIEJM
+SVNUX1JFUE9SVExVTn0sDQogCXsiQURBUFRFQyIsICJBQUNSQUlEIiwgTlVM
+TCwgQkxJU1RfRk9SQ0VMVU59LA0KIAl7IkFEQVBURUMiLCAiQWRhcHRlYyA1
+NDAwUyIsIE5VTEwsIEJMSVNUX0ZPUkNFTFVOfSwNCiAJeyJBRlQgUFJPIiwg
+Ii1JWCBDRiIsICIwLjA+IiwgQkxJU1RfRk9SQ0VMVU59LA0KQEAgLTEzNiw5
+ICsxMzYsOSBAQA0KIAl7IkNPTVBBUSIsICJDUjM1MDAiLCBOVUxMLCBCTElT
+VF9GT1JDRUxVTn0sDQogCXsiQ09NUEFRIiwgIk1TQTEwMDAiLCBOVUxMLCBC
+TElTVF9TUEFSU0VMVU4gfCBCTElTVF9OT1NUQVJUT05BRER9LA0KIAl7IkNP
+TVBBUSIsICJNU0ExMDAwIFZPTFVNRSIsIE5VTEwsIEJMSVNUX1NQQVJTRUxV
+TiB8IEJMSVNUX05PU1RBUlRPTkFERH0sDQotCXsiQ09NUEFRIiwgIkhTVjEx
+MCIsIE5VTEwsIEJMSVNUX1JFUE9SVExVTjIgfCBCTElTVF9OT1NUQVJUT05B
+RER9LA0KKwl7IkNPTVBBUSIsICJIU1YxMTAiLCBOVUxMLCBCTElTVF9SRVBP
+UlRMVU4gfCBCTElTVF9OT1NUQVJUT05BRER9LA0KIAl7IkRETiIsICJTQU4g
+RGF0YURpcmVjdG9yIiwgIioiLCBCTElTVF9TUEFSU0VMVU59LA0KLQl7IkRF
+QyIsICJIU0c4MCIsIE5VTEwsIEJMSVNUX1JFUE9SVExVTjIgfCBCTElTVF9O
+T1NUQVJUT05BRER9LA0KKwl7IkRFQyIsICJIU0c4MCIsIE5VTEwsIEJMSVNU
+X1JFUE9SVExVTiB8IEJMSVNUX05PU1RBUlRPTkFERH0sDQogCXsiREVMTCIs
+ICJQVjY2MEYiLCBOVUxMLCBCTElTVF9TUEFSU0VMVU59LA0KIAl7IkRFTEwi
+LCAiUFY2NjBGICAgUFNFVURPIiwgTlVMTCwgQkxJU1RfU1BBUlNFTFVOfSwN
+CiAJeyJERUxMIiwgIlBTRVVETyBERVZJQ0UgLiIsIE5VTEwsIEJMSVNUX1NQ
+QVJTRUxVTn0sCS8qIERlbGwgUFYgNTMwRiAqLw0KQEAgLTE1OCw3ICsxNTgs
+NyBAQA0KIAl7IkhQIiwgIkE2MTg5QSIsIE5VTEwsIEJMSVNUX1NQQVJTRUxV
+TiB8IEJMSVNUX0xBUkdFTFVOfSwJLyogSFAgVkE3NDAwICovDQogCXsiSFAi
+LCAiT1BFTi0iLCAiKiIsIEJMSVNUX1NQQVJTRUxVTiB8IEJMSVNUX0xBUkdF
+TFVOfSwgLyogSFAgWFAgQXJyYXlzICovDQogCXsiSFAiLCAiTmV0UkFJRC00
+TSIsIE5VTEwsIEJMSVNUX0ZPUkNFTFVOfSwNCi0JeyJIUCIsICJIU1YxMDAi
+LCBOVUxMLCBCTElTVF9SRVBPUlRMVU4yIHwgQkxJU1RfTk9TVEFSVE9OQURE
+fSwNCisJeyJIUCIsICJIU1YxMDAiLCBOVUxMLCBCTElTVF9SRVBPUlRMVU4g
+fCBCTElTVF9OT1NUQVJUT05BRER9LA0KIAl7IkhQIiwgIkMxNTU3QSIsIE5V
+TEwsIEJMSVNUX0ZPUkNFTFVOfSwNCiAJeyJIUCIsICJDMzMyMy0zMDAiLCAi
+NDI2OSIsIEJMSVNUX05PVFF9LA0KIAl7IklCTSIsICJBdVNhVjFTMiIsIE5V
+TEwsIEJMSVNUX0ZPUkNFTFVOfSwNCkBAIC0xNzYsNyArMTc2LDcgQEANCiAJ
+eyJNZWRpb24iLCAiRmxhc2ggWEwgIE1NQy9TRCIsICIyLjZEIiwgQkxJU1Rf
+Rk9SQ0VMVU59LA0KIAl7Ik1lZ2FSQUlEIiwgIkxEIiwgTlVMTCwgQkxJU1Rf
+Rk9SQ0VMVU59LA0KIAl7Ik1JQ1JPUCIsICI0MTEwIiwgTlVMTCwgQkxJU1Rf
+Tk9UUX0sDQotCXsiTVlMRVgiLCAiREFDQVJNUkIiLCAiKiIsIEJMSVNUX1JF
+UE9SVExVTjJ9LA0KKwl7Ik1ZTEVYIiwgIkRBQ0FSTVJCIiwgIioiLCBCTElT
+VF9SRVBPUlRMVU59LA0KIAl7Im5DaXBoZXIiLCAiRmFzdG5lc3MgQ3J5cHRv
+IiwgTlVMTCwgQkxJU1RfRk9SQ0VMVU59LA0KIAl7Ik5BS0FNSUNIIiwgIk1K
+LTQuOFMiLCBOVUxMLCBCTElTVF9GT1JDRUxVTiB8IEJMSVNUX1NJTkdMRUxV
+Tn0sDQogCXsiTkFLQU1JQ0giLCAiTUotNS4xNlMiLCBOVUxMLCBCTElTVF9G
+T1JDRUxVTiB8IEJMSVNUX1NJTkdMRUxVTn0sDQpAQCAtMTkzLDcgKzE5Myw3
+IEBADQogCXsiU0VBR0FURSIsICJTVDMzOTBOIiwgIjk1NDYiLCBCTElTVF9O
+T1RRfSwNCiAJeyJTR0kiLCAiUkFJRDMiLCAiKiIsIEJMSVNUX1NQQVJTRUxV
+Tn0sDQogCXsiU0dJIiwgIlJBSUQ1IiwgIioiLCBCTElTVF9TUEFSU0VMVU59
+LA0KLQl7IlNHSSIsICJUUDkxMDAiLCAiKiIsIEJMSVNUX1JFUE9SVExVTjJ9
+LA0KKwl7IlNHSSIsICJUUDkxMDAiLCAiKiIsIEJMSVNUX1JFUE9SVExVTn0s
+DQogCXsiU0dJIiwgIlVuaXZlcnNhbCBYcG9ydCIsICIqIiwgQkxJU1RfTk9f
+VUxEX0FUVEFDSH0sDQogCXsiSUJNIiwgIlVuaXZlcnNhbCBYcG9ydCIsICIq
+IiwgQkxJU1RfTk9fVUxEX0FUVEFDSH0sDQogCXsiU01TQyIsICJVU0IgMiBI
+Uy1DRiIsIE5VTEwsIEJMSVNUX1NQQVJTRUxVTiB8IEJMSVNUX0lOUVVJUllf
+MzZ9LA0KZGlmZiAtciAtdSBsaW51eC0yLjYuMTZfb3JnL2RyaXZlcnMvc2Nz
+aS9zY3NpX3NjYW4uYyBsaW51eC0yLjYuMTYvZHJpdmVycy9zY3NpL3Njc2lf
+c2Nhbi5jDQotLS0gbGludXgtMi42LjE2X29yZy9kcml2ZXJzL3Njc2kvc2Nz
+aV9zY2FuLmMJMjAwNi0wMy0yMCAwNjo1MzoyOS4wMDAwMDAwMDAgKzAxMDAN
+CisrKyBsaW51eC0yLjYuMTYvZHJpdmVycy9zY3NpL3Njc2lfc2Nhbi5jCTIw
+MDYtMDMtMzAgMTk6Mjk6MTIuMDAwMDAwMDAwICswMjAwDQpAQCAtMTA4NSwx
+MyArMTA4NSwxMyBAQA0KIA0KIAkvKg0KIAkgKiBPbmx5IHN1cHBvcnQgU0NT
+SS0zIGFuZCB1cCBkZXZpY2VzIGlmIEJMSVNUX05PUkVQT1JUTFVOIGlzIG5v
+dCBzZXQuDQotCSAqIEFsc28gYWxsb3cgU0NTSS0yIGlmIEJMSVNUX1JFUE9S
+VExVTjIgaXMgc2V0IGFuZCBob3N0IGFkYXB0ZXIgZG9lcw0KLQkgKiBzdXBw
+b3J0IG1vcmUgdGhhbiA4IExVTnMuDQorCSAqIEFsc28gYWxsb3cgU0NTSS0y
+IGFuZCBTQ1NJLVVOS05PV04gaWYgQkxJU1RfUkVQT1JUTFVOIGlzIHNldCBh
+bmQgaG9zdA0KKwkgKiBhZGFwdGVyIGRvZXMgc3VwcG9ydCBtb3JlIHRoYW4g
+OCBMVU5zLg0KIAkgKi8NCiAJaWYgKChiZmxhZ3MgJiBCTElTVF9OT1JFUE9S
+VExVTikgfHwgDQogCSAgICAgc3RhcmdldC0+c2NzaV9sZXZlbCA8IFNDU0lf
+MiB8fA0KIAkgICAgKHN0YXJnZXQtPnNjc2lfbGV2ZWwgPCBTQ1NJXzMgJiYg
+DQotCSAgICAgKCEoYmZsYWdzICYgQkxJU1RfUkVQT1JUTFVOMikgfHwgc2hv
+c3QtPm1heF9sdW4gPD0gOCkpICkNCisJICAgICAoIShiZmxhZ3MgJiBCTElT
+VF9SRVBPUlRMVU4pIHx8IHNob3N0LT5tYXhfbHVuIDw9IDgpKSApDQogCQly
+ZXR1cm4gMTsNCiAJaWYgKGJmbGFncyAmIEJMSVNUX05PTFVOKQ0KIAkJcmV0
+dXJuIDA7DQpkaWZmIC1yIC11IGxpbnV4LTIuNi4xNl9vcmcvaW5jbHVkZS9z
+Y3NpL3Njc2lfZGV2aW5mby5oIGxpbnV4LTIuNi4xNi9pbmNsdWRlL3Njc2kv
+c2NzaV9kZXZpbmZvLmgNCi0tLSBsaW51eC0yLjYuMTZfb3JnL2luY2x1ZGUv
+c2NzaS9zY3NpX2RldmluZm8uaAkyMDA2LTAzLTIwIDA2OjUzOjI5LjAwMDAw
+MDAwMCArMDEwMA0KKysrIGxpbnV4LTIuNi4xNi9pbmNsdWRlL3Njc2kvc2Nz
+aV9kZXZpbmZvLmgJMjAwNi0wMy0zMCAxOTozNzo1Ni4wMDAwMDAwMDAgKzAy
+MDANCkBAIC0yMSw4ICsyMSw5IEBADQogI2RlZmluZSBCTElTVF9NU19TS0lQ
+X1BBR0VfM0YJMHg0MDAwCS8qIGRvIG5vdCBzZW5kIG1zIHBhZ2UgMHgzZiAq
+Lw0KICNkZWZpbmUgQkxJU1RfVVNFXzEwX0JZVEVfTVMJMHg4MDAwCS8qIHVz
+ZSAxMCBieXRlIG1zIGJlZm9yZSA2IGJ5dGUgbXMgKi8NCiAjZGVmaW5lIEJM
+SVNUX01TXzE5Ml9CWVRFU19GT1JfM0YJMHgxMDAwMAkvKiAgMTkyIGJ5dGUg
+bXMgcGFnZSAweDNmIHJlcXVlc3QgKi8NCi0jZGVmaW5lIEJMSVNUX1JFUE9S
+VExVTjIJMHgyMDAwMAkvKiB0cnkgUkVQT1JUX0xVTlMgZXZlbiBmb3IgU0NT
+SS0yIGRldnMNCi0gCQkJCQkgICAoaWYgSEJBIHN1cHBvcnRzIG1vcmUgdGhh
+biA4IExVTnMpICovDQorI2RlZmluZSBCTElTVF9SRVBPUlRMVU4JCTB4MjAw
+MDAJLyogdHJ5IFJFUE9SVF9MVU5TIGV2ZW4gZm9yIFNDU0ktMiBhbmQNCisJ
+CQkJCVNDU0ktVU5LTk9XTiBkZXZzDQorCQkJCQkoaWYgSEJBIHN1cHBvcnRz
+IG1vcmUgdGhhbiA4IExVTnMpICovDQogI2RlZmluZSBCTElTVF9OT1JFUE9S
+VExVTgkweDQwMDAwCS8qIGRvbid0IHRyeSBSRVBPUlRfTFVOUyBzY2FuIChT
+Q1NJLTMgZGV2cykgKi8NCiAjZGVmaW5lIEJMSVNUX05PVF9MT0NLQUJMRQkw
+eDgwMDAwCS8qIGRvbid0IHVzZSBQUkVWRU5ULUFMTE9XIGNvbW1hbmRzICov
+DQogI2RlZmluZSBCTElTVF9OT19VTERfQVRUQUNICTB4MTAwMDAwIC8qIGRl
+dmljZSBpcyBhY3R1YWxseSBmb3IgUkFJRCBjb25maWcgKi8NCg==
+
+---559023410-851401618-1143909996=:12969--
