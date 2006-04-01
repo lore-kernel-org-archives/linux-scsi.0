@@ -1,28 +1,38 @@
-From: Arjan van de Ven <arjan@infradead.org>
+From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: [PATCH] move ->eh_strategy_handler to the transport class
-Date: Sat, 01 Apr 2006 19:56:29 +0200
-Message-ID: <1143914189.3076.20.camel@laptopd505.fenrus.org>
+Date: Sat, 01 Apr 2006 13:10:28 -0500
+Message-ID: <442EC214.1040303@garzik.org>
 References: <20060401172104.GA16921@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from morbo.e-centre.net ([66.154.82.3]:63981 "EHLO
-	cubert.e-centre.net") by vger.kernel.org with ESMTP
-	id S1750786AbWDAR4k (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 1 Apr 2006 12:56:40 -0500
+Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <20060401172104.GA16921@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi@vger.kernel.org
+Cc: jejb@steeleye.com, linux-scsi@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
-On Sat, 2006-04-01 at 19:21 +0200, Christoph Hellwig wrote:
+Christoph Hellwig wrote:
 > Overriding the whole EH code is a per-transport, not per-host thing.
 > Move ->eh_strategy_handler to the transport class, same as
 > ->eh_timed_out.
+> 
+> Downside is that scsi_host_alloc can't check for the total lack of EH
+> anymore, but the transition period from old EH where we needed it is
+> long gone already.
+> 
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
+Looks OK to me.  I agree the transport the better place for 
+eh_strategy_handler.
 
-I like it, nice cleanup and it's fundamentally the right place to do it
+I would prefer to merge it through the libata-dev queue, since -- as a 
+glance through the recent kernel changelog shows -- Tejun Heo has been 
+ripping through this part of libata as well.
+
+	Jeff
+
 
 
