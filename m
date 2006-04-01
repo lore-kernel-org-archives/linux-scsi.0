@@ -1,7 +1,7 @@
 From: Ingo Flaschberger <if@xip.at>
 Subject: Re: Compaq Fiber Channel Array RM4000 / 2.6.16 kernel patch VER6
-Date: Fri, 31 Mar 2006 23:24:47 +0200 (CEST)
-Message-ID: <Pine.GSO.4.64.0603312323350.25350@filebunker.xip.at>
+Date: Sat, 1 Apr 2006 03:16:31 +0200 (CEST)
+Message-ID: <Pine.GSO.4.64.0604010312590.4531@filebunker.xip.at>
 References: <1143656547.3248.36.camel@mulgrave.il.steeleye.com>
  <Pine.GSO.4.64.0603292025500.4009@filebunker.xip.at>
  <1143657838.3248.39.camel@mulgrave.il.steeleye.com>
@@ -15,14 +15,15 @@ References: <1143656547.3248.36.camel@mulgrave.il.steeleye.com>
   <1143834313.3342.54.camel@mulgrave.il.steeleye.com>
  <Pine.GSO.4.64.0603312311590.25350@filebunker.xip.at>
  <1143840100.3342.57.camel@mulgrave.il.steeleye.com>
+ <Pine.GSO.4.64.0603312323350.25350@filebunker.xip.at>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns1.xip.at ([193.239.188.99]:36779 "EHLO chile.gbit.at")
-	by vger.kernel.org with ESMTP id S1750812AbWCaVYs (ORCPT
+Received: from ns1.xip.at ([193.239.188.99]:54955 "EHLO chile.gbit.at")
+	by vger.kernel.org with ESMTP id S1751461AbWDABQo (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 31 Mar 2006 16:24:48 -0500
-In-Reply-To: <1143840100.3342.57.camel@mulgrave.il.steeleye.com>
+	Fri, 31 Mar 2006 20:16:44 -0500
+In-Reply-To: <Pine.GSO.4.64.0603312323350.25350@filebunker.xip.at>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>
@@ -30,12 +31,16 @@ Cc: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
 
 Hello James,
 
->> Here, but only for the RA4x00.
+>>> Here, but only for the RA4x00.
+>> 
+>> That's the read/write command conversion.  There doesn't seem to be
+>> anywhere the limit is communicated to the block layer.
 >
-> That's the read/write command conversion.  There doesn't seem to be
-> anywhere the limit is communicated to the block layer.
+> So, what do you suggest?
 
-So, what do you suggest?
+I have looked around in the kernel but I get no idea how to inform the 
+block layer about the limit.
+Please advise.
 
 bye,
  	Ingo
