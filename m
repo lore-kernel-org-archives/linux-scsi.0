@@ -1,37 +1,33 @@
 From: Doug Maxey <dwm@maxeymade.com>
-Subject: Re: [CMT 02/16] qla4xxx: driver review ql4_dbg.c
-Date: Sat, 01 Apr 2006 02:33:43 -0600
-Message-ID: <200604010833.k318Xh7A004285@falcon30.maxeymade.com>
+Subject: Re: [CMT 03/16] qla4xxx: driver review ql4_dbg.h
+Date: Sat, 01 Apr 2006 02:34:39 -0600
+Message-ID: <200604010834.k318YdjK004650@falcon30.maxeymade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from falcon30.maxeymade.com ([24.173.215.190]:53218 "EHLO
+Received: from falcon30.maxeymade.com ([24.173.215.190]:57058 "EHLO
 	falcon30.maxeymade.com") by vger.kernel.org with ESMTP
-	id S1751474AbWDAIdy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 1 Apr 2006 03:33:54 -0500
+	id S1751479AbWDAIeu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 1 Apr 2006 03:34:50 -0500
 In-reply-to: 200604010418.k314Iqam008288@falcon30.maxeymade.com
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Ravi Anand <ravi.anand@qlogic.com>
 Cc: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-This file looks pretty decent.
 
-The primary issue is that lotso printk's are missing a level.
+Lots of unused macros.
 
-Another issue - most of the funcs are small and the names are self
-explanitory.  At least one sppears to have a function header.  That
-header would be good candidate to have the kerneldoc treatment
-applied.
+Comment at the end regarding use of void*.
 
 ++doug
 --
-diff --git a/drivers/scsi/qla4xxx/ql4_dbg.c b/drivers/scsi/qla4xxx/ql4_dbg.c
+diff --git a/drivers/scsi/qla4xxx/ql4_dbg.h b/drivers/scsi/qla4xxx/ql4_dbg.h
 new file mode 100644
-index 0000000..2649e49
+index 0000000..d9a8fa9
 --- /dev/null
-+++ b/drivers/scsi/qla4xxx/ql4_dbg.c
-@@ -0,0 +1,211 @@
++++ b/drivers/scsi/qla4xxx/ql4_dbg.h
+@@ -0,0 +1,64 @@
 +/*
 + * QLogic iSCSI HBA Driver
 + * Copyright (c)  2003-2006 QLogic Corporation
@@ -39,249 +35,72 @@ index 0000000..2649e49
 + * See LICENSE.qla4xxx for copyright and licensing details.
 + */
 +
-+#include "ql4_def.h"
++/*
++ * Driver debug definitions.
++ */
++/* #define QL_DEBUG  */			/* DEBUG messages */
++/* #define QL_DEBUG_LEVEL_3  */		/* Output function tracing */
++/* #define QL_DEBUG_LEVEL_4  */
++/* #define QL_DEBUG_LEVEL_5  */
++/* #define QL_DEBUG_LEVEL_9  */
++
++#define QL_DEBUG_LEVEL_2	/* ALways enable error messagess */
++#if defined(QL_DEBUG)
++#define DEBUG(x)   do {x;} while (0);
++#else
++#define DEBUG(x)	do {} while (0);
++#endif
++
++#if defined(QL_DEBUG_LEVEL_2)
++#define DEBUG2(x)      do {if(extended_error_logging == 2) x;} while (0);
++#define DEBUG2_3(x)   do {x;} while (0);
++#else				/*  */
++#define DEBUG2(x)	do {} while (0);
++#endif				/*  */
++
++#if defined(QL_DEBUG_LEVEL_3)
++#define DEBUG3(x)      do {if(extended_error_logging == 3) x;} while (0);
++#else				/*  */
++#define DEBUG3(x)	do {} while (0);
++#if !defined(QL_DEBUG_LEVEL_2)
++#define DEBUG2_3(x)	do {} while (0);
+
+-ENOTUSED
+
++#endif				/*  */
++#endif				/*  */
++#if defined(QL_DEBUG_LEVEL_4)
++#define DEBUG4(x)	do {x;} while (0);
++#else				/*  */
++#define DEBUG4(x)	do {} while (0);
++#endif				/*  */
+
+-ENOTUSED
+
++
++#if defined(QL_DEBUG_LEVEL_5)
++#define DEBUG5(x)	do {x;} while (0);
++#else				/*  */
++#define DEBUG5(x)	do {} while (0);
++#endif				/*  */
++
++#if defined(QL_DEBUG_LEVEL_9)
++#define DEBUG9(x)	do {x;} while (0);
++#else				/*  */
++#define DEBUG9(x)	do {} while (0);
++#endif				/*  */
+
+-ENOTUSED
+
 +
 +/*
-+ * qla4xxx_print_srb_cmd
-+ *	This routine displays the SRB command
++ *  Debug Print Routines.
 + */
-+static void qla4xxx_print_srb_info(srb_t * srb)
-+{
-+	printk("%s: srb = 0x%p, flags=0x%02x\n", __func__, srb, srb->flags);
-+	printk("%s: cmd = 0x%p, saved_dma_handle = 0x%lx\n",
-+	       __func__, srb->cmd, (unsigned long) srb->dma_handle);
-+	printk("%s: fw_ddb_index = %d, lun = %d\n",
-+	       __func__, srb->fw_ddb_index, srb->cmd->device->lun);
-+	printk("%s: iocb_tov = %d\n",
-+	       __func__, srb->iocb_tov);
-+	printk("%s: cc_stat = 0x%x, r_start = 0x%lx, u_start = 0x%lx\n\n",
-+	       __func__, srb->cc_stat, srb->r_start, srb->u_start);
-+}
++void qla4xxx_print_scsi_cmd(struct scsi_cmnd *cmd);
++void __dump_registers(scsi_qla_host_t * ha);
++void qla4xxx_dump_mbox_registers(scsi_qla_host_t * ha);
++void qla4xxx_dump_registers(scsi_qla_host_t * ha);
++void qla4xxx_dump_buffer(uint8_t * b, uint32_t size);
 
-missing printk levels.
-
-+
-+/*
-+ * qla4xxx_print_scsi_cmd
-+ *	This routine displays the SCSI command
-+ */
-+void qla4xxx_print_scsi_cmd(struct scsi_cmnd *cmd)
-+{
-+	int i;
-+	printk("SCSI Command = 0x%p, Handle=0x%p\n", cmd, cmd->host_scribble);
-+	printk("  b=%d, t=%02xh, l=%02xh, cmd_len = %02xh\n",
-+	       cmd->device->channel, cmd->device->id, cmd->device->lun,
-+	       cmd->cmd_len);
-+	printk("  CDB = ");
-
-missing printk levels.
-
-+	for (i = 0; i < cmd->cmd_len; i++)
-+		printk("%02x ", cmd->cmnd[i]);
-
-missing printk levels.
-
-+	printk("  seg_cnt = %d\n", cmd->use_sg);
-
-missing printk levels.
-
-+	printk("  request buffer = 0x%p, request buffer len = 0x%x\n",
-+	       cmd->request_buffer, cmd->request_bufflen);
-
-missing printk levels.
-
-+	if (cmd->use_sg) {
-+		struct scatterlist *sg;
-+		sg = (struct scatterlist *)cmd->request_buffer;
-+		printk("  SG buffer: \n");
-
-missing printk levels.
-
-+		qla4xxx_dump_buffer((caddr_t) sg,
-+				    (cmd->use_sg * sizeof(struct scatterlist)));
-
-line length.
-
-+	}
-+	printk("  tag = %d, transfersize = 0x%x \n", cmd->tag,
-+	       cmd->transfersize);
-
-missing printk levels.
-
-+	printk("  Pid = %d, SP = 0x%p\n", (int)cmd->pid, CMD_SP(cmd));
-
-missing printk levels.
-
-+	printk("  underflow size = 0x%x, direction=0x%x\n", cmd->underflow,
-+	       cmd->sc_data_direction);
-
-missing printk levels.
-
-+	printk("  Current time (jiffies) = 0x%lx, "
-+	       "timeout expires = 0x%lx\n", jiffies, cmd->eh_timeout.expires);
-+	qla4xxx_print_srb_info((srb_t *) CMD_SP(cmd));
-+}
-+
-+void __dump_registers(scsi_qla_host_t * ha)
-+{
-+	uint8_t i;
-+	for (i = 0; i < MBOX_REG_COUNT; i++) {
-+		printk(KERN_INFO "0x%02X mailbox[%d]      = 0x%08X\n",
-+		       (uint8_t) offsetof(isp_reg_t, mailbox[i]), i,
-+		       RD_REG_DWORD(&ha->reg->mailbox[i]));
-+	}
-+	printk(KERN_INFO "0x%02X flash_address   = 0x%08X\n",
-+	       (uint8_t) offsetof(isp_reg_t, flash_address),
-+	       RD_REG_DWORD(&ha->reg->flash_address));
-+	printk(KERN_INFO "0x%02X flash_data      = 0x%08X\n",
-+	       (uint8_t) offsetof(isp_reg_t, flash_data),
-+	       RD_REG_DWORD(&ha->reg->flash_data));
-+	printk(KERN_INFO "0x%02X ctrl_status     = 0x%08X\n",
-+	       (uint8_t) offsetof(isp_reg_t, ctrl_status),
-+	       RD_REG_DWORD(&ha->reg->ctrl_status));
-+	if (IS_QLA4010(ha)) {
-+		printk(KERN_INFO "0x%02X nvram           = 0x%08X\n",
-+		       (uint8_t) offsetof(isp_reg_t, u1.isp4010.nvram),
-+		       RD_REG_DWORD(&ha->reg->u1.isp4010.nvram));
-+	}
-+
-+	else if (IS_QLA4022(ha)) {
-+		printk(KERN_INFO "0x%02X intr_mask       = 0x%08X\n",
-+		       (uint8_t) offsetof(isp_reg_t, u1.isp4022.intr_mask),
-+		       RD_REG_DWORD(&ha->reg->u1.isp4022.intr_mask));
-+		printk(KERN_INFO "0x%02X nvram           = 0x%08X\n",
-+		       (uint8_t) offsetof(isp_reg_t, u1.isp4022.nvram),
-+		       RD_REG_DWORD(&ha->reg->u1.isp4022.nvram));
-+		printk(KERN_INFO "0x%02X semaphore       = 0x%08X\n",
-+		       (uint8_t) offsetof(isp_reg_t, u1.isp4022.semaphore),
-+		       RD_REG_DWORD(&ha->reg->u1.isp4022.semaphore));
-+	}
-+	printk(KERN_INFO "0x%02X req_q_in        = 0x%08X\n",
-+	       (uint8_t) offsetof(isp_reg_t, req_q_in),
-+	       RD_REG_DWORD(&ha->reg->req_q_in));
-+	printk(KERN_INFO "0x%02X rsp_q_out       = 0x%08X\n",
-+	       (uint8_t) offsetof(isp_reg_t, rsp_q_out),
-+	       RD_REG_DWORD(&ha->reg->rsp_q_out));
-+	if (IS_QLA4010(ha)) {
-+		printk(KERN_INFO "0x%02X ext_hw_conf     = 0x%08X\n",
-+		       (uint8_t) offsetof(isp_reg_t, u2.isp4010.ext_hw_conf),
-+		       RD_REG_DWORD(&ha->reg->u2.isp4010.ext_hw_conf));
-+		printk(KERN_INFO "0x%02X port_ctrl       = 0x%08X\n",
-+		       (uint8_t) offsetof(isp_reg_t, u2.isp4010.port_ctrl),
-+		       RD_REG_DWORD(&ha->reg->u2.isp4010.port_ctrl));
-+		printk(KERN_INFO "0x%02X port_status     = 0x%08X\n",
-+		       (uint8_t) offsetof(isp_reg_t, u2.isp4010.port_status),
-+		       RD_REG_DWORD(&ha->reg->u2.isp4010.port_status));
-+		printk(KERN_INFO "0x%02X req_q_out       = 0x%08X\n",
-+		       (uint8_t) offsetof(isp_reg_t, u2.isp4010.req_q_out),
-+		       RD_REG_DWORD(&ha->reg->u2.isp4010.req_q_out));
-+		printk(KERN_INFO "0x%02X gp_out          = 0x%08X\n",
-+		       (uint8_t) offsetof(isp_reg_t, u2.isp4010.gp_out),
-+		       RD_REG_DWORD(&ha->reg->u2.isp4010.gp_out));
-+		printk(KERN_INFO "0x%02X gp_in           = 0x%08X\n",
-+		       (uint8_t) offsetof(isp_reg_t, u2.isp4010.gp_in),
-+		       RD_REG_DWORD(&ha->reg->u2.isp4010.gp_in));
-+		printk(KERN_INFO "0x%02X port_err_status = 0x%08X\n",
-+		       (uint8_t) offsetof(isp_reg_t,
-+					  u2.isp4010.port_err_status),
-+		       RD_REG_DWORD(&ha->reg->u2.isp4010.port_err_status));
-+	}
-+
-+	else if (IS_QLA4022(ha)) {
-+		printk(KERN_INFO "Page 0 Registers:\n");
-+		printk(KERN_INFO "0x%02X ext_hw_conf     = 0x%08X\n",
-+		       (uint8_t) offsetof(isp_reg_t,
-+					  u2.isp4022.p0.ext_hw_conf),
-+		       RD_REG_DWORD(&ha->reg->u2.isp4022.p0.ext_hw_conf));
-+		printk(KERN_INFO "0x%02X port_ctrl       = 0x%08X\n",
-+		       (uint8_t) offsetof(isp_reg_t,
-+					  u2.isp4022.p0.port_ctrl),
-+		       RD_REG_DWORD(&ha->reg->u2.isp4022.p0.port_ctrl));
-+		printk(KERN_INFO "0x%02X port_status     = 0x%08X\n",
-+		       (uint8_t) offsetof(isp_reg_t,
-+					  u2.isp4022.p0.port_status),
-+		       RD_REG_DWORD(&ha->reg->u2.isp4022.p0.port_status));
-+		printk(KERN_INFO "0x%02X gp_out          = 0x%08X\n",
-+		       (uint8_t) offsetof(isp_reg_t, u2.isp4022.p0.gp_out),
-+		       RD_REG_DWORD(&ha->reg->u2.isp4022.p0.gp_out));
-+		printk(KERN_INFO "0x%02X gp_in           = 0x%08X\n",
-+		       (uint8_t) offsetof(isp_reg_t, u2.isp4022.p0.gp_in),
-+		       RD_REG_DWORD(&ha->reg->u2.isp4022.p0.gp_in));
-+		printk(KERN_INFO "0x%02X port_err_status = 0x%08X\n",
-+		       (uint8_t) offsetof(isp_reg_t,
-+					  u2.isp4022.p0.port_err_status),
-+		       RD_REG_DWORD(&ha->reg->u2.isp4022.p0.port_err_status));
-+		printk(KERN_INFO "Page 1 Registers:\n");
-+		WRT_REG_DWORD(&ha->reg->ctrl_status,
-+			      HOST_MEM_CFG_PAGE &
-+			      SET_RMASK(CSR_SCSI_PAGE_SELECT));
-+		printk(KERN_INFO "0x%02X req_q_out       = 0x%08X\n",
-+		       (uint8_t) offsetof(isp_reg_t,
-+					  u2.isp4022.p1.req_q_out),
-+		       RD_REG_DWORD(&ha->reg->u2.isp4022.p1.req_q_out));
-+		WRT_REG_DWORD(&ha->reg->ctrl_status,
-+			      PORT_CTRL_STAT_PAGE &
-+			      SET_RMASK(CSR_SCSI_PAGE_SELECT));
-+	}
-+}
-+
-+/*
-+ * qla4xxx_dump_registers
-+ *	This routine displays ISP registers
-+ *
-+ * Input:
-+ *	ha       - adapter structure pointer
-+ *
-+ */
-
-kerneldoc style would be good.
-
-+void qla4xxx_dump_mbox_registers(scsi_qla_host_t * ha)
-+{
-+	unsigned long flags = 0;
-+	int i = 0;
-+	spin_lock_irqsave(&ha->hardware_lock, flags);
-+	for (i = 1; i < MBOX_REG_COUNT; i++)
-+		printk(KERN_INFO "  Mailbox[%d] = %08x\n", i,
-+		       RD_REG_DWORD(&ha->reg->mailbox[i]));
-+	spin_unlock_irqrestore(&ha->hardware_lock, flags);
-+}
-+
-+void qla4xxx_dump_registers(scsi_qla_host_t * ha)
-+{
-+	unsigned long flags = 0;
-+	spin_lock_irqsave(&ha->hardware_lock, flags);
-+	__dump_registers(ha);
-+	spin_unlock_irqrestore(&ha->hardware_lock, flags);
-+}
-+
-+void qla4xxx_dump_buffer(uint8_t * b, uint32_t size)
-+{
-+	uint32_t cnt;
-+	uint8_t c;
-+	printk(" 0   1   2   3   4   5   6   7   8   9  Ah  Bh  Ch  Dh  Eh  "
-+	    "Fh\n");
-
-missing printk levels.
-
-+	printk("------------------------------------------------------------"
-+	    "--\n");
-
-missing printk levels.
-
-+	for (cnt = 0; cnt < size;) {
-+		c = *b++;
-+		printk("%02x", (uint32_t) c);
-+		cnt++;
-+		if (!(cnt % 16))
-+			printk("\n");
-+
-+		else
-+			printk("  ");
-+	}
-+	if (cnt % 16)
-+		printk("\n");
-+}
-
-missing printk levels.  maybe.
+'b' could also be a void*.
 
