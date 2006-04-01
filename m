@@ -1,69 +1,42 @@
-From: Nigel Cunningham <ncunningham@cyclades.com>
-Subject: Compilation warnings in the current git tree.
-Date: Sat, 1 Apr 2006 22:24:23 +1000
-Message-ID: <200604012224.29745.ncunningham@cyclades.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart4561905.qC5FpIaXsU";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
+From: "Arlene Hull" <zruftcel@stroll.com>
+Subject: Extending Purchases at low rates
+Date: Sat, 01 Apr 2006 14:56:49 +0100
+Message-ID: <2.3.6.6.4.80330581947187.787a3173@204.152.191.36>
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cust8446.nsw01.dataco.com.au ([203.171.93.254]:41935 "EHLO
-	cust8446.nsw01.dataco.com.au") by vger.kernel.org with ESMTP
-	id S1750924AbWDAMZh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 1 Apr 2006 07:25:37 -0500
+Received: from zeus2.kernel.org ([204.152.191.36]:20400 "EHLO zeus2.kernel.org")
+	by vger.kernel.org with ESMTP id S1751359AbWDAM5C (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 1 Apr 2006 07:57:02 -0500
+Received: from 204.152.191.36 ([61.52.146.12])
+	by zeus2.kernel.org (8.13.1/8.13.1) with SMTP id k31Cukp5021823
+	for <linux-scsi@vger.kernel.org>; Sat, 1 Apr 2006 12:56:52 GMT
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-acpi@vger.kernel.org, linux-scsi@vger.kernel.org, netfilter-devel@lists.netfilter.org
-Cc: linux-kernel@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
---nextPart4561905.qC5FpIaXsU
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-Hi all.
-
-Previous comment not-withstanding, there are some issues I found with current git. Apologies to anyone wrongly cc'd :)
-
-Hope this helps.
-
-Regards,
-
-Nigel
-
-WARNING: vmlinux: 'strlen' exported twice. Previous export was in vmlinux
-WARNING: drivers/acpi/processor.o - Section mismatch: reference to .init.data: from .text between 'acpi_processor_power_init' (at offset 0x2449) and 'acpi_processor_power_exit'
-WARNING: drivers/scsi/sd_mod.o - Section mismatch: reference to .exit.text: from .rodata after '' (at offset 0x0)
-WARNING: drivers/scsi/sd_mod.o - Section mismatch: reference to .exit.text: from .rodata after '' (at offset 0x8)
-WARNING: drivers/scsi/sd_mod.o - Section mismatch: reference to .exit.text: from .rodata after '' (at offset 0x10)
-WARNING: drivers/scsi/sd_mod.o - Section mismatch: reference to .exit.text: from .rodata after '' (at offset 0x18)
-WARNING: drivers/scsi/sd_mod.o - Section mismatch: reference to .exit.text: from .rodata after '' (at offset 0x20)
-WARNING: drivers/scsi/sd_mod.o - Section mismatch: reference to .exit.text: from .rodata after '' (at offset 0x28)
-WARNING: drivers/scsi/sd_mod.o - Section mismatch: reference to .exit.text: from .rodata after '' (at offset 0x30)
-WARNING: drivers/scsi/sd_mod.o - Section mismatch: reference to .exit.text: from .rodata after '' (at offset 0x38)
-WARNING: drivers/scsi/sd_mod.o - Section mismatch: reference to .exit.text: from .rodata after '' (at offset 0x40)
-WARNING: drivers/scsi/sd_mod.o - Section mismatch: reference to .exit.text: from .rodata after '' (at offset 0x48)
-WARNING: drivers/scsi/sd_mod.o - Section mismatch: reference to .exit.text: from .rodata after '' (at offset 0x50)
-WARNING: drivers/scsi/sd_mod.o - Section mismatch: reference to .exit.text: from .rodata after '' (at offset 0x58)
-WARNING: drivers/scsi/sd_mod.o - Section mismatch: reference to .exit.text: from .rodata after '' (at offset 0x60)
-WARNING: drivers/scsi/sd_mod.o - Section mismatch: reference to .exit.text: from .rodata after '' (at offset 0x68)
-WARNING: drivers/scsi/sd_mod.o - Section mismatch: reference to .exit.text: from .rodata after '' (at offset 0x70)
-WARNING: drivers/scsi/sd_mod.o - Section mismatch: reference to .exit.text: from .rodata after '' (at offset 0x78)
-WARNING: net/ipv4/netfilter/ip_conntrack.o - Section mismatch: reference to .init.text:ip_conntrack_init from .text between 'init_or_cleanup' (at offset 0x6ad) and '__hash_conntrack'
+Homeowner 
 
 
---nextPart4561905.qC5FpIaXsU
-Content-Type: application/pgp-signature
+You have been pre-approved for a $467,057 Home Loan at a 3.76 Fixed Rate. 
+This offer is being extended to you unconditionally and your credit is in no way a factor. 
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
 
-iD8DBQBELnD9N0y+n1M3mo0RAjBEAJ9nSvRzaPrY0cO02fKlJzjD3hHEaACgwKOd
-5/K54Skguy8K3tKENGLl8MM=
-=IdMR
------END PGP SIGNATURE-----
+To take Advantage of this Limited Time opportunity 
 
---nextPart4561905.qC5FpIaXsU--
+
+All we ask is that you visit our Website and complete 
+The 1 minute post Approval Form 
+
+
+http://www5.su8d.com/was.asp
+
+
+Best Wishes, 
+
+
+Odis Davies
+
+
+
