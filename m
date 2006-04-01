@@ -1,78 +1,970 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: [PATCH 09/10] Enable clustering and large transfers
-Date: Sat, 1 Apr 2006 23:26:20 +0300 (EEST)
-Message-ID: <Pine.LNX.4.63.0604012049310.4172@kai.makisara.local>
-References: <1143561824404-git-send-email-matthew@wil.cx>
- <Pine.LNX.4.63.0604011656490.10426@kai.makisara.local> <20060401170345.GA4029@infradead.org>
+From: Doug Maxey <dwm@maxeymade.com>
+Subject: Re: [CMT 10/16] qla4xxx: driver review ql4_isr.c
+Date: Sat, 01 Apr 2006 14:32:00 -0600
+Message-ID: <200604012032.k31KW09I005112@falcon30.maxeymade.com>
+Reply-To: dwm@maxeymade.com
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fep32-0.kolumbus.fi ([193.229.0.63]:236 "EHLO
-	fep32-app.kolumbus.fi") by vger.kernel.org with ESMTP
-	id S932183AbWDAU0b (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 1 Apr 2006 15:26:31 -0500
-In-Reply-To: <20060401170345.GA4029@infradead.org>
+Received: from falcon30.maxeymade.com ([24.173.215.190]:11948 "EHLO
+	falcon30.maxeymade.com") by vger.kernel.org with ESMTP
+	id S932187AbWDAUcO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 1 Apr 2006 15:32:14 -0500
+In-reply-to: 200604010418.k314Iqam008288@falcon30.maxeymade.com
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@suse.de>
+To: Ravi Anand <ravi.anand@qlogic.com>
+Cc: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Sat, 1 Apr 2006, Christoph Hellwig wrote:
+Missing printk levels, needs kerneldoc format for some of the func
+headers, and a few lines too long.
 
-> On Sat, Apr 01, 2006 at 05:35:13PM +0300, Kai Makisara wrote:
-> > I have done some more investigation based on the message from Gerard 
-> > Roudier that Jens found. I fetched the FreeBSD driver. It had a 
-> > work-around for the 896 rev. 1 chips but I did not find that in the Linux 
-> > version. The work-around does build two device s/g elements for any 
-> > original s/g segment that crosses a 16 MB boundary.
-> > 
-> > In Linux we can do that by setting the .dma_boundary field in the 
-> > scsi_host_template. Would it be an acceptable solution to set the 16 MB 
-> > limit for all sym53c8xx adapters? It would take care of the known errata 
-> > and Gerards suspicions about possible problems with other chips.
-> 
-> We can also set the flag in the scsi_host so not all adapters are punished.
-> 
-Yes, but the question is, do we want to be conservative and set the mask 
-for all adapters (including the ones possibly having errata we don't 
-know), or less conservative and set it for the ones we know are buggy.
+The first func has a good header, then the formatting reverts.
 
-For those who make decisions, below is an attempt at limiting dma only for 
-the chip we know is having a problem. Builds and boots (with 53c1010).
-
-Kai
-
---- linux-2.6.16/drivers/scsi/sym53c8xx_2/sym_glue.c	2006-03-20 23:13:18.000000000 +0200
-+++ linux-2.6.16-k1/drivers/scsi/sym53c8xx_2/sym_glue.c	2006-04-01 23:16:04.000000000 +0300
-@@ -1576,6 +1576,7 @@ static struct Scsi_Host * __devinit sym_
- 	struct host_data *host_data;
- 	struct sym_hcb *np = NULL;
- 	struct Scsi_Host *instance = NULL;
-+	struct sym_chip *chip = &dev->chip;
- 	struct pci_dev *pdev = dev->pdev;
- 	unsigned long flags;
- 	struct sym_fw *fw;
-@@ -1712,6 +1713,13 @@ static struct Scsi_Host * __devinit sym_
- 	BUG_ON(sym2_transport_template == NULL);
- 	instance->transportt	= sym2_transport_template;
- 
-+	/*
-+	 *  Due to errata on the 896 rev. 1 chip, don't allow s/g segments to
-+	 *  cross 16 MB boundary
-+	 */
-+	if (pdev->device == PCI_DEVICE_ID_NCR_53C896 && chip->revision_id < 2)
-+		instance->dma_boundary = 0xFFFFFF;
+++doug
+--
+diff --git a/drivers/scsi/qla4xxx/ql4_isr.c b/drivers/scsi/qla4xxx/ql4_isr.c
+new file mode 100644
+index 0000000..4a7b199
+--- /dev/null
++++ b/drivers/scsi/qla4xxx/ql4_isr.c
+@@ -0,0 +1,821 @@
++/*
++ * QLogic iSCSI HBA Driver
++ * Copyright (c)  2003-2006 QLogic Corporation
++ *
++ * See LICENSE.qla4xxx for copyright and licensing details.
++ */
 +
- 	spin_unlock_irqrestore(instance->host_lock, flags);
- 
- 	return instance;
-@@ -1978,7 +1986,8 @@ static struct scsi_host_template sym2_te
- 	.eh_bus_reset_handler	= sym53c8xx_eh_bus_reset_handler,
- 	.eh_host_reset_handler	= sym53c8xx_eh_host_reset_handler,
- 	.this_id		= 7,
--	.use_clustering		= DISABLE_CLUSTERING,
-+	.use_clustering		= ENABLE_CLUSTERING,
-+	.max_sectors		= 0xFFFF,
- #ifdef SYM_LINUX_PROC_INFO_SUPPORT
- 	.proc_info		= sym53c8xx_proc_info,
- 	.proc_name		= NAME53C8XX,
++#include "ql4_def.h"
++
++/**
++ * qla2x00_process_completed_request() - Process a Fast Post response.
++ * @ha: SCSI driver HA context
++ * @index: SRB index
++ */
++static void
++qla4xxx_process_completed_request(struct scsi_qla_host *ha, uint32_t index)
++{
++	srb_t *srb;
++
++	srb = del_from_active_array(ha, index);
++	if (srb) {
++		/* Save ISP completion status */
++		srb->cmd->result = DID_OK << 16;
++		qla4xxx_srb_compl(ha, srb);
++	} else {
++		DEBUG2(printk("scsi%ld: Invalid ISP SCSI completion handle = "
++		    "%d\n", ha->host_no, index));
+
+-EPRINTKMISSINGLEVEL
+
++		set_bit(DPC_RESET_HA, &ha->dpc_flags);
++	}
++}
++
++/**************************************************************************
++ * qla4xxx_status_entry
++ *	This routine processes Status IOCBs
++ *
++ * Input:
++ * 	ha - Pointer to host adapter structure.
++ *      sts_entry - Pointer to status entry structure.
++ *
++ * Returns:
++ *	None
++ *
++ * Context:
++ *	Interrupt context.
++ **************************************************************************/
+
+-ENEEDSKERNELDOC
+
++static void
++qla4xxx_status_entry(scsi_qla_host_t *ha, STATUS_ENTRY *sts_entry)
++{
++	uint8_t scsi_status;
++	struct scsi_cmnd *cmd;
++	srb_t *srb;
++	ddb_entry_t *ddb_entry;
++	uint32_t residual;
++	uint16_t sensebytecnt;
++
++	if (sts_entry->completionStatus == SCS_COMPLETE &&
++	    sts_entry->scsiStatus == 0) {
++		qla4xxx_process_completed_request(ha,
++		    le32_to_cpu(sts_entry->handle));
++		return;
++	}
++
++	srb = del_from_active_array(ha, le32_to_cpu(sts_entry->handle));
++	if (!srb) {
++		/* FIXMEdg: Don't we need to reset ISP in this case??? */
++		DEBUG2(printk(KERN_WARNING "scsi%ld: %s: Status Entry invalid "
++		    "handle 0x%x, sp=%p. This cmd may have already been "
++		    "completed.\n", ha->host_no, __func__,
++		    le32_to_cpu(sts_entry->handle), srb));
++	}
++
++	cmd = srb->cmd;
++	if (cmd == NULL) {
++		DEBUG2(printk("scsi%ld: %s: Command already returned back to "
++		    "OS pkt->handle=%d srb=%p srb->state:%d\n", ha->host_no,
++		    __func__, sts_entry->handle, srb, srb->state));
+
+-EPRINTKMISSINGLEVEL
+
++		ql4_printk(KERN_WARNING, ha,
++		    "Command is NULL: already returned to OS (srb=%p)\n", srb);
++		return;
++	}
++
++	ddb_entry = srb->ddb;
++	if (ddb_entry == NULL) {
++		cmd->result = DID_NO_CONNECT << 16;
++		goto status_entry_exit;
++	}
++
++	residual = le32_to_cpu(sts_entry->residualByteCnt);
++
++	/* Translate ISP error to a Linux SCSI error. */
++	scsi_status = sts_entry->scsiStatus;
++	switch (sts_entry->completionStatus) {
++	case SCS_COMPLETE:
++		if (scsi_status == 0) {
++			cmd->result = DID_OK << 16;
++			break;
++		}
++
++		if (sts_entry->iscsiFlags &
++		    (ISCSI_FLAG_RESIDUAL_OVER|ISCSI_FLAG_RESIDUAL_UNDER))
++			cmd->resid = residual;
++
++		cmd->result = DID_OK << 16 | scsi_status;
++
++		if (scsi_status != SCSI_CHECK_CONDITION)
++			break;
++
++		/* Copy Sense Data into sense buffer. */
++		memset(cmd->sense_buffer, 0, sizeof(cmd->sense_buffer));
++
++		sensebytecnt = le16_to_cpu(sts_entry->senseDataByteCnt);
++		if (sensebytecnt == 0)
++			break;
++
++		memcpy(cmd->sense_buffer, sts_entry->senseData,
++		    min(sensebytecnt, (uint16_t) sizeof(cmd->sense_buffer)));
++
++		DEBUG2(printk("scsi%ld:%d:%d:%d: %s: sense key = %x, "
++		    "ASC/ASCQ = %02x/%02x\n", ha->host_no,
++		    cmd->device->channel, cmd->device->id, cmd->device->lun,
++		    __func__, sts_entry->senseData[2] & 0x0f,
++		    sts_entry->senseData[12], sts_entry->senseData[13]));
+
+-EPRINTKMISSINGLEVEL
+
++
++		srb->flags |= SRB_GOT_SENSE;
++		break;
++
++	case SCS_INCOMPLETE:
++		/* Always set the status to DID_ERROR, since
++		 * all conditions result in that status anyway */
++		cmd->result = DID_ERROR << 16;
++		break;
++
++	case SCS_RESET_OCCURRED:
++		DEBUG2(printk("scsi%ld:%d:%d:%d: %s: Device RESET occurred\n",
++		    ha->host_no, cmd->device->channel, cmd->device->id,
++		    cmd->device->lun, __func__));
+
+-EPRINTKMISSINGLEVEL
+
++
++		cmd->result = DID_RESET << 16;
++		break;
++
++	case SCS_ABORTED:
++		DEBUG2(printk("scsi%ld:%d:%d:%d: %s: Abort occurred\n",
++		    ha->host_no, cmd->device->channel, cmd->device->id,
++		    cmd->device->lun, __func__));
+
+-EPRINTKMISSINGLEVEL
+
++
++		cmd->result = DID_RESET << 16;
++		break;
++
++	case SCS_TIMEOUT:
++		DEBUG2(printk(KERN_INFO "scsi%ld:%d:%d:%d: Timeout\n",
++		    ha->host_no, cmd->device->channel, cmd->device->id,
++		    cmd->device->lun));
+
+-EPRINTKMISSINGLEVEL
+
++
++		cmd->result = DID_BUS_BUSY << 16;
++
++		/*
++		 * Mark device missing so that we won't continue to send
++		 * I/O to this device.  We should get a ddb state change
++		 * AEN soon.
++		 */
++		if (atomic_read(&ddb_entry->state) == DDB_STATE_ONLINE)
++			qla4xxx_mark_device_missing(ha, ddb_entry);
++		break;
++
++	case SCS_DATA_UNDERRUN:
++	case SCS_DATA_OVERRUN:
++		if (sts_entry->iscsiFlags & ISCSI_FLAG_RESIDUAL_OVER) {
++			DEBUG2(printk("scsi%ld:%d:%d:%d: %s: " "Data overrun, "
++			    "residual = 0x%x\n", ha->host_no,
++			    cmd->device->channel, cmd->device->id,
++			    cmd->device->lun, __func__, residual));
+
+-EPRINTKMISSINGLEVEL
+
++
++			cmd->result = DID_ERROR << 16;
++			break;
++		}
++
++		if ((sts_entry->iscsiFlags & ISCSI_FLAG_RESIDUAL_UNDER) == 0) {
++			/*
++			 * Firmware detected a SCSI transport underrun condition
++			 */
++			cmd->resid = residual;
++			DEBUG2(printk("scsi%ld:%d:%d:%d: %s: UNDERRUN status "
++			    "detected, xferlen = 0x%x, residual = 0x%x\n",
++			    ha->host_no, cmd->device->channel, cmd->device->id,
++			    cmd->device->lun, __func__, cmd->request_bufflen,
++			    residual));
+
+-EPRINTKMISSINGLEVEL
+
++		}
++
++		/*
++		 * If there is scsi_status, it takes precedense over
++		 * underflow condition.
++		 */
++		if (scsi_status != 0) {
++			cmd->result = DID_OK << 16 | scsi_status;
++
++			if (scsi_status != SCSI_CHECK_CONDITION)
++				break;
++
++			/* Copy Sense Data into sense buffer. */
++			memset(cmd->sense_buffer, 0,
++			    sizeof(cmd->sense_buffer));
++
++			sensebytecnt = le16_to_cpu(sts_entry->senseDataByteCnt);
++			if (sensebytecnt == 0)
++				break;
++
++			memcpy(cmd->sense_buffer, sts_entry->senseData,
++			    min(sensebytecnt,
++				    (uint16_t) sizeof(cmd->sense_buffer)));
++
++			DEBUG2(printk("scsi%ld:%d:%d:%d: %s: sense key = %x, "
++			    "ASC/ASCQ = %02x/%02x\n", ha->host_no,
++			    cmd->device->channel, cmd->device->id,
++			    cmd->device->lun, __func__,
++			    sts_entry->senseData[2] & 0x0f,
++			    sts_entry->senseData[12],
++			    sts_entry->senseData[13]));
+
+-EPRINTKMISSINGLEVEL
+
++		} else {
++			/*
++			 * If RISC reports underrun and target does not
++			 * report it then we must have a lost frame, so
++			 * tell upper layer to retry it by reporting a
++			 * bus busy.
++			 */
++			if ((sts_entry->iscsiFlags &
++			    ISCSI_FLAG_RESIDUAL_UNDER) == 0) {
++				cmd->result = DID_BUS_BUSY << 16;
++			} else if ((cmd->request_bufflen - residual) <
++				   cmd->underflow) {
++				/*
++				 * Handle mid-layer underflow???
++				 *
++				 * For kernels less than 2.4, the driver must
++				 * return an error if an underflow is detected.
++				 * For kernels equal-to and above 2.4, the
++				 * mid-layer will appearantly handle the
++				 * underflow by detecting the residual count --
++				 * unfortunately, we do not see where this is
++				 * actually being done.  In the interim, we
++				 * will return DID_ERROR.
++				 */
++				DEBUG2(printk("scsi%ld:%d:%d:%d: %s: "
++				    "Mid-layer Data underrun, xferlen = 0x%x, "
++				    "residual = 0x%x\n", ha->host_no,
++				    cmd->device->channel, cmd->device->id,
++				    cmd->device->lun, __func__,
++				    cmd->request_bufflen, residual));
+
+-EPRINTKMISSINGLEVEL
+
++
++				cmd->result = DID_ERROR << 16;
++			} else {
++				cmd->result = DID_OK << 16;
++			}
++		}
++		break;
++
++	case SCS_DEVICE_LOGGED_OUT:
++	case SCS_DEVICE_UNAVAILABLE:
++		/*
++		 * Mark device missing so that we won't continue to
++		 * send I/O to this device.  We should get a ddb
++		 * state change AEN soon.
++		 */
++		if (atomic_read(&ddb_entry->state) == DDB_STATE_ONLINE)
++			qla4xxx_mark_device_missing(ha, ddb_entry);
++
++		if ((srb->flags & SRB_TAPE) || atomic_read(&ddb_entry->state) ==
++		    DDB_STATE_MISSING)
++			cmd->result = DID_NO_CONNECT << 16;
++		else
++			cmd->result = DID_ERROR << 16;
++		break;
++
++	case SCS_QUEUE_FULL:
++		/*
++		 * SCSI Mid-Layer handles device queue full
++		 */
++		cmd->result = DID_OK << 16 | sts_entry->scsiStatus;
++		DEBUG2(printk("scsi%ld:%d:%d: %s: QUEUE FULL detected "
++		    "compl=%02x, scsi=%02x, state=%02x, iFlags=%02x, "
++		    "iResp=%02x\n", ha->host_no, cmd->device->id,
++		    cmd->device->lun, __func__, sts_entry->completionStatus,
++		    sts_entry->scsiStatus, sts_entry->state_flags,
++		    sts_entry->iscsiFlags, sts_entry->iscsiResponse));
+
+-EPRINTKMISSINGLEVEL
+
++		break;
++
++	default:
++		cmd->result = DID_ERROR << 16;
++		break;
++	}
++
++status_entry_exit:
++
++	/* complete the request */
++	srb->cc_stat = sts_entry->completionStatus;
++	qla4xxx_srb_compl(ha, srb);
++}
++
++/**************************************************************************
++ * qla4xxx_process_response_queue
++ *	This routine handles the Response Queue Completion.
++ *
++ * Input:
++ * 	ha - Pointer to host adapter structure.
++ *
++ * Output:
++ *	None
++ *
++ * Remarks:
++ *	hardware_lock locked upon entry
++ *
++ * Returns:
++ *	QLA_SUCCESS - Successfully processed response queue
++ *	QLA_ERROR   - Failed to process response queue
++ *
++ * Context:
++ *	Interrupt context.
++ **************************************************************************/
+
+-ENEEDSKERNELDOC
+
++static void
++qla4xxx_process_response_queue(scsi_qla_host_t * ha)
++{
++	uint32_t count = 0;
++	srb_t *srb = 0;
++	STATUS_ENTRY *sts_entry;
++
++	/* Process all responses from response queue */
++	while ((ha->response_in =
++	    (uint16_t)le32_to_cpu(ha->shadow_regs->rsp_q_in)) !=
++		ha->response_out) {
++		sts_entry = (STATUS_ENTRY *) ha->response_ptr;
++		count++;
++
++		/* Advance pointers for next entry */
++		if (ha->response_out == (RESPONSE_QUEUE_DEPTH - 1)) {
++			ha->response_out = 0;
++			ha->response_ptr = ha->response_ring;
++		} else {
++			ha->response_out++;
++			ha->response_ptr++;
++		}
++
++		/* process entry */
++		switch (sts_entry->hdr.entryType) {
++		case ET_STATUS:
++			/*
++			 * Common status - Single completion posted in single
++			 * IOSB.
++			 */
++			qla4xxx_status_entry(ha, sts_entry);
++			break;
++
++		case ET_STATUS_CONTINUATION:
++			/* Just throw away the status continuation entries */
++			DEBUG2(printk("scsi%ld: %s: Status Continuation entry "
++			    "- ignoring\n", ha->host_no, __func__));
+
+-EPRINTKMISSINGLEVEL
+
++			break;
++
++		case ET_COMMAND:
++			/* ISP device queue is full. Command not accepted by
++			 * ISP.  Queue command for later */
++
++			srb = del_from_active_array(ha,
++			    le32_to_cpu(sts_entry->handle));
++			if (srb == NULL)
++				goto exit_prq_invalid_handle;
++
++			DEBUG2(printk("scsi%ld: %s: FW device queue full, "
++			    "srb %p\n", ha->host_no, __func__, srb));
+
+-ENEEDSKERNELDOC
+
++
++			/* ETRY normally by sending it back with DID_BUS_BUSY */
+
+-ELINETOOLONG
+
++			srb->cmd->result = DID_BUS_BUSY << 16;
++			qla4xxx_srb_compl(ha, srb);
++			break;
++
++		case ET_CONTINUE:
++			/* Just throw away the continuation entries */
++			DEBUG2(printk("scsi%ld: %s: Continuation entry - "
++			    "ignoring\n", ha->host_no, __func__));
+
+-EPRINTKMISSINGLEVEL
+
++			break;
++
++		default:
++			/*
++			 * Invalid entry in response queue, reset RISC
++			 * firmware.
++			 */
++			DEBUG2(printk("scsi%ld: %s: Invalid entry %x in "
++			    "response queue \n", ha->host_no, __func__,
++			    sts_entry->hdr.entryType));
+
+-EPRINTKMISSINGLEVEL
+
++			goto exit_prq_error;
++		}
++	}
++
++	/*
++	 * Done with responses, update the ISP For QLA4010, this also clears
++	 * the interrupt.
++	 */
++	WRT_REG_DWORD(&ha->reg->rsp_q_out, ha->response_out);
++	PCI_POSTING(&ha->reg->rsp_q_out);
++
++	return;
++
++exit_prq_invalid_handle:
++	DEBUG2(printk("scsi%ld: %s: Invalid handle(srb)=%p type=%x IOCS=%x\n",
++	    ha->host_no, __func__, srb, sts_entry->hdr.entryType,
++	    sts_entry->completionStatus));
++
++exit_prq_error:
++	WRT_REG_DWORD(&ha->reg->rsp_q_out, ha->response_out);
++	PCI_POSTING(&ha->reg->rsp_q_out);
++
++	set_bit(DPC_RESET_HA, &ha->dpc_flags);
++}
++
++/**************************************************************************
++ * qla4xxx_isr_decode_mailbox
++ *	This routine decodes the mailbox status during the ISR.
++ *
++ * Input:
++ * 	ha - Pointer to host adapter structure.
++ *	mailbox_status - Mailbox status.
++ *
++ * Remarks:
++ *      hardware_lock locked upon entry
++ *
++ * Returns:
++ *	None.
++ *
++ * Context:
++ *	Interrupt context.
++ **************************************************************************/
+
+-ENEEDSKERNELDOC
+
++static void
++qla4xxx_isr_decode_mailbox(scsi_qla_host_t * ha, uint32_t mbox_status)
++{
++	int i;
++
++	if ((mbox_status == MBOX_STS_BUSY) ||
++	    (mbox_status == MBOX_STS_INTERMEDIATE_COMPLETION) ||
++	    (mbox_status >> 12 == MBOX_COMPLETION_STATUS)) {
++		ha->mbox_status[0] = mbox_status;
++
++		if (test_bit(AF_MBOX_COMMAND, &ha->flags)) {
++			/*
++			 * Copy all mailbox registers to a temporary
++			 * location and set mailbox command done flag
++			 */
++			for (i = 1; i < ha->mbox_status_count; i++)
++				ha->mbox_status[i] =
++				    RD_REG_DWORD(&ha->reg->mailbox[i]);
++
++			set_bit(AF_MBOX_COMMAND_DONE, &ha->flags);
++			wake_up(&ha->mailbox_wait_queue);
++		}
++	} else if (mbox_status >> 12 == MBOX_ASYNC_EVENT_STATUS) {
++		/* Immediately process the AENs that don't require much work.
++		 * Only queue the database_changed AENs */
++		switch (mbox_status) {
++		case MBOX_ASTS_SYSTEM_ERROR:
++			/* Log Mailbox registers */
++			if (ql4xdontresethba) {
++				DEBUG2(printk("%s:Dont Reset HBA\n", __func__));
+
+-EPRINTKMISSINGLEVEL
+-ELINETOOLONG
+
++			} else {
++				set_bit(AF_GET_CRASH_RECORD, &ha->flags);
++				set_bit(DPC_RESET_HA, &ha->dpc_flags);
++			}
++			break;
++
++		case MBOX_ASTS_REQUEST_TRANSFER_ERROR:
++		case MBOX_ASTS_RESPONSE_TRANSFER_ERROR:
++		case MBOX_ASTS_NVRAM_INVALID:
++		case MBOX_ASTS_IP_ADDRESS_CHANGED:
++		case MBOX_ASTS_DHCP_LEASE_EXPIRED:
++			DEBUG2(printk("scsi%ld: AEN %04x, ERROR Status, "
++			    "Reset HA\n", ha->host_no, mbox_status));
+
+-EPRINTKMISSINGLEVEL
+
++			set_bit(DPC_RESET_HA, &ha->dpc_flags);
++			break;
++
++		case MBOX_ASTS_LINK_UP:
++			DEBUG2(printk("scsi%ld: AEN %04x Adapter LINK UP\n",
++			    ha->host_no, mbox_status));
+
+-EPRINTKMISSINGLEVEL
+
++			set_bit(AF_LINK_UP, &ha->flags);
++			break;
++
++		case MBOX_ASTS_LINK_DOWN:
++			DEBUG2(printk("scsi%ld: AEN %04x Adapter LINK DOWN\n",
++			    ha->host_no, mbox_status));
+
+-EPRINTKMISSINGLEVEL
+
++			clear_bit(AF_LINK_UP, &ha->flags);
++			break;
++
++		case MBOX_ASTS_HEARTBEAT:
++			ha->seconds_since_last_heartbeat = 0;
++			break;
++
++		case MBOX_ASTS_DHCP_LEASE_ACQUIRED:
++			DEBUG2(printk("scsi%ld: AEN %04x DHCP LEASE "
++			    "ACQUIRED\n", ha->host_no, mbox_status));
+
+-EPRINTKMISSINGLEVEL
+
++			set_bit(DPC_GET_DHCP_IP_ADDR, &ha->dpc_flags);
++			break;
++
++		case MBOX_ASTS_PROTOCOL_STATISTIC_ALARM:
++		case MBOX_ASTS_SCSI_COMMAND_PDU_REJECTED: /* Target mode only */
++		case MBOX_ASTS_UNSOLICITED_PDU_RECEIVED:  /* Connection mode */
++		case MBOX_ASTS_IPSEC_SYSTEM_FATAL_ERROR:
++		case MBOX_ASTS_SUBNET_STATE_CHANGE:
++			/* No action */
++			DEBUG2(printk("scsi%ld: AEN %04x\n", ha->host_no,
++			    mbox_status));
+
+-EPRINTKMISSINGLEVEL
+
++			break;
++
++		case MBOX_ASTS_MAC_ADDRESS_CHANGED:
++		case MBOX_ASTS_DNS:
++			/* No action */
++			DEBUG2(printk(KERN_INFO "scsi%ld: AEN %04x, "
++			    "mbox_sts[1]=%04x, mbox_sts[2]=%04x\n",
++			    ha->host_no, mbox_status,
++			    RD_REG_DWORD(&ha->reg->mailbox[1]),
++			    RD_REG_DWORD(&ha->reg->mailbox[2])));
+
+-EPRINTKMISSINGLEVEL
+
++			break;
++
++		case MBOX_ASTS_SELF_TEST_FAILED:
++		case MBOX_ASTS_LOGIN_FAILED:
++			/* No action */
++			DEBUG2(printk("scsi%ld: AEN %04x, mbox_sts[1]=%04x, "
++			    "mbox_sts[2]=%04x, mbox_sts[3]=%04x\n",
++			    ha->host_no, mbox_status,
++			    RD_REG_DWORD(&ha->reg->mailbox[1]),
++			    RD_REG_DWORD(&ha->reg->mailbox[2]),
++			    RD_REG_DWORD(&ha->reg->mailbox[3])));
+
+-EPRINTKMISSINGLEVEL
+
++			break;
++
++		case MBOX_ASTS_DATABASE_CHANGED:
++			/* Queue AEN information and process it in the DPC
++			 * routine */
++			if (ha->aen_q_count > 0) {
++				/* advance pointer */
++				if (ha->aen_in == (MAX_AEN_ENTRIES - 1))
++					ha->aen_in = 0;
++				else
++					ha->aen_in++;
++
++				/* decrement available counter */
++				ha->aen_q_count--;
++
++				for (i = 1; i < MBOX_AEN_REG_COUNT; i++)
++					ha->aen_q[ha->aen_in].mbox_sts[i] =
++					    RD_REG_DWORD(&ha->reg->mailbox[i]);
++
++				ha->aen_q[ha->aen_in].mbox_sts[0] = mbox_status;
++
++				/* print debug message */
++				DEBUG2(printk("scsi%ld: AEN[%d] %04x queued"
++				    " mb1:0x%x mb2:0x%x mb3:0x%x mb4:0x%x\n",
++				    ha->host_no, ha->aen_in, mbox_status,
++				    ha->aen_q[ha->aen_in].mbox_sts[1],
++				    ha->aen_q[ha->aen_in].mbox_sts[2],
++				    ha->aen_q[ha->aen_in].mbox_sts[3],
++				    ha->aen_q[ha->aen_in].  mbox_sts[4]));
+
+-EPRINTKMISSINGLEVEL
+
++
++				    /* The DPC routine will process the aen */
++				    set_bit(DPC_AEN, &ha->dpc_flags);
++			} else {
++				DEBUG2(printk("scsi%ld: %s: aen %04x, queue "
++				    "overflowed!  AEN LOST!!\n", ha->host_no,
++				    __func__, mbox_status));
+
+-EPRINTKMISSINGLEVEL
+
++
++				DEBUG2(printk("scsi%ld: DUMP AEN QUEUE\n",
++				    ha->host_no));
+
+-EPRINTKMISSINGLEVEL
+
++
++				for (i = 0; i < MAX_AEN_ENTRIES; i++) {
++					DEBUG2(printk("AEN[%d] %04x %04x %04x "
++					    "%04x\n", i,
++					    ha->aen_q[i].mbox_sts[0],
++					    ha->aen_q[i].mbox_sts[1],
++					    ha->aen_q[i].mbox_sts[2],
++					    ha->aen_q[i].mbox_sts[3]));
+
+-EPRINTKMISSINGLEVEL
+
++				}
++			}
++			break;
++
++		default:
++			DEBUG2(printk(KERN_WARNING
++			    "scsi%ld: AEN %04x UNKNOWN\n", ha->host_no,
++			    mbox_status));
+
+-EPRINTKMISSINGLEVEL
+
++			break;
++		}
++	} else {
++		DEBUG2(printk("scsi%ld: Unknown mailbox status %08X\n",
++		    ha->host_no, mbox_status));
+
+-EPRINTKMISSINGLEVEL
+
++
++		ha->mbox_status[0] = mbox_status;
++	}
++}
++
++/**************************************************************************
++ * qla4xxx_interrupt_service_routine
++ *	This routine services the interrupt
++ *
++ * Input:
++ * 	ha - Pointer to host adapter structure.
++ *
++ * Remarks:
++ *      hardware_lock locked upon entry
++ *
++ * Returns:
++ *      QLA_SUCCESS - success, An interrupt was found and processed
++ *	QLA_ERROR - failure, The adapter was not interrupting
++ *
++ * Context:
++ *	Interrupt context.
++ **************************************************************************/
+
+-ENEEDSKERNELDOC
+
++void
++qla4xxx_interrupt_service_routine(scsi_qla_host_t * ha, uint32_t intr_status)
++{
++	/* Process response queue interrupt. */
++	if (intr_status & CSR_SCSI_COMPLETION_INTR)
++		qla4xxx_process_response_queue(ha);
++
++	/* Process mailbox/asynch event  interrupt.*/
++	if (intr_status & CSR_SCSI_PROCESSOR_INTR) {
++		qla4xxx_isr_decode_mailbox(ha,
++		    RD_REG_DWORD(&ha->reg->mailbox[0]));
++
++		/* Clear Mailbox Interrupt */
++		WRT_REG_DWORD(&ha->reg->ctrl_status,
++		    SET_RMASK(CSR_SCSI_PROCESSOR_INTR));
++		PCI_POSTING(&ha->reg->ctrl_status);
++	}
++}
++
++/**************************************************************************
++ * qla4xxx_intr_handler
++ *	This routine handles the H/W interrupt
++ *
++ * Input:
++ *	irq - Unused
++ *	dev_id - Pointer to host adapter structure
++ *	regs - Unused
++ *
++ * Returns:
++ *	None
++ *
++ * Context:
++ *	Interrupt context.
++ **************************************************************************/
+
+-ENEEDSKERNELDOC
+
++irqreturn_t
++qla4xxx_intr_handler(int irq, void *dev_id, struct pt_regs *regs)
++{
++	scsi_qla_host_t *ha;
++	uint32_t intr_status;
++	unsigned long flags = 0;
++	uint8_t reqs_count = 0;
++
++	ha = (scsi_qla_host_t *) dev_id;
++	if (!ha) {
++		DEBUG2(printk(KERN_INFO
++		    "qla4xxx: Interrupt with NULL host ptr\n"));
++		return IRQ_NONE;
++	}
++
++	spin_lock_irqsave(&ha->hardware_lock, flags);
++
++	/*
++	 * Repeatedly service interrupts up to a maximum of
++	 * MAX_REQS_SERVICED_PER_INTR
++	 */
++	while (1) {
++		/*
++		 * Read interrupt status
++		 */
++		if (le32_to_cpu(ha->shadow_regs->rsp_q_in) !=
++		    ha->response_out)
++			intr_status = CSR_SCSI_COMPLETION_INTR;
++		else
++			intr_status = RD_REG_DWORD(&ha->reg->ctrl_status);
++
++		if ((intr_status &
++		    (CSR_SCSI_RESET_INTR|CSR_FATAL_ERROR|INTR_PENDING)) == 0) {
++			if (reqs_count == 0)
++				ha->spurious_int_count++;
++			break;
++		}
++
++		if (intr_status & CSR_FATAL_ERROR) {
++			DEBUG2(printk(KERN_INFO "scsi%ld: Fatal Error, "
++			    "Status 0x%04x\n", ha->host_no,
++			    RD_REG_DWORD(ISP_PORT_ERROR_STATUS (ha))));
++
++			/* Issue Soft Reset to clear this error condition.
++			 * This will prevent the RISC from repeatedly
++			 * interrupting the driver; thus, allowing the DPC to
++			 * get scheduled to continue error recovery.
++			 * NOTE: Disabling RISC interrupts does not work in
++			 * this case, as CSR_FATAL_ERROR overrides
++			 * CSR_SCSI_INTR_ENABLE */
++			if ((RD_REG_DWORD(&ha->reg->ctrl_status) &
++			    CSR_SCSI_RESET_INTR) == 0) {
++				WRT_REG_DWORD(&ha->reg->ctrl_status,
++				    SET_RMASK(CSR_SOFT_RESET));
++				PCI_POSTING(&ha->reg->ctrl_status);
++			}
++
++			WRT_REG_DWORD(&ha->reg->ctrl_status,
++			    SET_RMASK(CSR_FATAL_ERROR));
++			PCI_POSTING(&ha->reg->ctrl_status);
++
++			__qla4xxx_disable_intrs(ha);
++
++			set_bit(DPC_RESET_HA, &ha->dpc_flags);
++
++			break;
++		} else if (intr_status & CSR_SCSI_RESET_INTR) {
++			clear_bit(AF_ONLINE, &ha->flags);
++			__qla4xxx_disable_intrs(ha);
++
++			WRT_REG_DWORD(&ha->reg->ctrl_status,
++			    SET_RMASK(CSR_SCSI_RESET_INTR));
++			PCI_POSTING(&ha->reg->ctrl_status);
++
++			set_bit(DPC_RESET_HA_INTR, &ha->dpc_flags);
++
++			break;
++		} else if (intr_status & INTR_PENDING) {
++			qla4xxx_interrupt_service_routine(ha, intr_status);
++			ha->total_io_count++;
++			if (++reqs_count == MAX_REQS_SERVICED_PER_INTR) {
++				break;
++			}
++			intr_status = 0;
++		}
++	}
++
++	spin_unlock_irqrestore(&ha->hardware_lock, flags);
++
++	return IRQ_HANDLED;
++}
++
++/**************************************************************************
++ * qla4xxx_process_aen
++ *	This routine processes Asynchronous Events received from the firmware.
++ *
++ * Input:
++ * 	ha - Pointer to host adapter structure.
++ *	process_aen -
++ *      	PROCESS_ALL_AENS	 0
++ *      	FLUSH_DDB_CHANGED_AENS	 1
++ *      	RELOGIN_DDB_CHANGED_AENS 2
++ *
++ * Returns:
++ *	None
++ **************************************************************************/
+
+-ENEEDSKERNELDOC
+
++void
++qla4xxx_process_aen(scsi_qla_host_t * ha, uint8_t process_aen)
++{
++	uint32_t mbox_sts[MBOX_AEN_REG_COUNT];
++	aen_t *aen;
++	int i;
++	unsigned long flags;
++
++	spin_lock_irqsave(&ha->hardware_lock, flags);
++	while (ha->aen_out != ha->aen_in) {
++		/* Advance pointers for next entry */
++		if (ha->aen_out == (MAX_AEN_ENTRIES - 1))
++			ha->aen_out = 0;
++		else
++			ha->aen_out++;
++
++		ha->aen_q_count++;
++		aen = &ha->aen_q[ha->aen_out];
++
++		/* copy aen information to local structure */
++		for (i = 0; i < MBOX_AEN_REG_COUNT; i++)
++			mbox_sts[i] = aen->mbox_sts[i];
++
++		spin_unlock_irqrestore(&ha->hardware_lock, flags);
++
++		DEBUG(printk("scsi%ld: AEN[%d] %04x, index [%d] state=%04x "
++		    "mod=%x conerr=%08x \n", ha->host_no, ha->aen_out,
++		    mbox_sts[0], mbox_sts[2], mbox_sts[3], mbox_sts[1],
++		    mbox_sts[4]));
+
+-EPRINTKMISSINGLEVEL
+
++
++		switch (mbox_sts[0]) {
++		case MBOX_ASTS_DATABASE_CHANGED:
++			if (process_aen == FLUSH_DDB_CHANGED_AENS) {
++				DEBUG2(printk("scsi%ld: AEN[%d] %04x, index "
++				    "[%d] state=%04x FLUSHED!\n", ha->host_no,
++				    ha->aen_out, mbox_sts[0], mbox_sts[2],
++				    mbox_sts[3]));
+
+-EPRINTKMISSINGLEVEL
+
++				break;
++			} else if (process_aen == RELOGIN_DDB_CHANGED_AENS) {
++				/* for use during init time, we only want to
++				 * relogin non-active ddbs */
++				ddb_entry_t *ddb_entry;
++
++				ddb_entry = qla4xxx_lookup_ddb_by_fw_index(ha,
++				    mbox_sts[2]);
++				if (!ddb_entry)
++					break;
++
++				ddb_entry->dev_scan_wait_to_complete_relogin =0;
++				ddb_entry->dev_scan_wait_to_start_relogin =
++				    jiffies + ((ddb_entry->default_time2wait +
++					4) * HZ);
++
++				DEBUG2(printk("scsi%ld: ddb index [%d] initate "
++				    "RELOGIN after %d seconds\n", ha->host_no,
++				    ddb_entry->fw_ddb_index,
++				    ddb_entry->default_time2wait + 4));
+
+-EPRINTKMISSINGLEVEL
+
++				break;
++			}
++
++			if (mbox_sts[1] == 0) {	/* Global DB change. */
++				qla4xxx_reinitialize_ddb_list(ha);
++			} else if (mbox_sts[1] == 1) {	/* Specific device. */
++				qla4xxx_process_ddb_changed(ha, mbox_sts[2],
++				    mbox_sts[3]);
++			}
++			break;
++		}
++		spin_lock_irqsave(&ha->hardware_lock, flags);
++	}
++	spin_unlock_irqrestore(&ha->hardware_lock, flags);
++
++}
