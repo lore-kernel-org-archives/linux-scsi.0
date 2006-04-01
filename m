@@ -1,39 +1,37 @@
 From: Doug Maxey <dwm@maxeymade.com>
-Subject: Re: [CMT 01/16] qla4xxx: driver review ql4_attr.c
-Date: Sat, 01 Apr 2006 02:30:43 -0600
-Message-ID: <200604010830.k318Uh3O003096@falcon30.maxeymade.com>
+Subject: Re: [CMT 02/16] qla4xxx: driver review ql4_dbg.c
+Date: Sat, 01 Apr 2006 02:33:43 -0600
+Message-ID: <200604010833.k318Xh7A004285@falcon30.maxeymade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from falcon30.maxeymade.com ([24.173.215.190]:29327 "EHLO
+Received: from falcon30.maxeymade.com ([24.173.215.190]:53218 "EHLO
 	falcon30.maxeymade.com") by vger.kernel.org with ESMTP
-	id S1751465AbWDAIaz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 1 Apr 2006 03:30:55 -0500
+	id S1751474AbWDAIdy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 1 Apr 2006 03:33:54 -0500
 In-reply-to: 200604010418.k314Iqam008288@falcon30.maxeymade.com
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Ravi Anand <ravi.anand@qlogic.com>
 Cc: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
 
+This file looks pretty decent.
 
-In general, there are several functions that appear to have no effect,
-either by being empty or the code in the function looks like a
-placeholder.
+The primary issue is that lotso printk's are missing a level.
 
-It would be good to have the functions empty until they are required.
-Looking at it another way, since they are just placeholders, _maybe_
-they could be removed then re-added with a followup patch when they
-are needed.
+Another issue - most of the funcs are small and the names are self
+explanitory.  At least one sppears to have a function header.  That
+header would be good candidate to have the kerneldoc treatment
+applied.
 
 ++doug
-
 --
-diff --git a/drivers/scsi/qla4xxx/ql4_attr.c b/drivers/scsi/qla4xxx/ql4_attr.c
+diff --git a/drivers/scsi/qla4xxx/ql4_dbg.c b/drivers/scsi/qla4xxx/ql4_dbg.c
 new file mode 100644
-index 0000000..9955d0b
+index 0000000..2649e49
 --- /dev/null
-+++ b/drivers/scsi/qla4xxx/ql4_attr.c
-@@ -0,0 +1,273 @@
++++ b/drivers/scsi/qla4xxx/ql4_dbg.c
+@@ -0,0 +1,211 @@
 +/*
 + * QLogic iSCSI HBA Driver
 + * Copyright (c)  2003-2006 QLogic Corporation
@@ -42,316 +40,248 @@ index 0000000..9955d0b
 + */
 +
 +#include "ql4_def.h"
-+#include <scsi/scsi_transport_iscsi.h>
 +
-+/* Host attributes. */
-+
-+static void qla4xxx_get_initiator_name(struct Scsi_Host *shost)
++/*
++ * qla4xxx_print_srb_cmd
++ *	This routine displays the SRB command
++ */
++static void qla4xxx_print_srb_info(srb_t * srb)
 +{
-+	scsi_qla_host_t *ha = to_qla_host(shost);
-+
-+	/* &ha->iscsi_name[0]; */
-+	/*  ha->ip_address[0], ha->ip_address[1], ha->ip_address[2], ha->ip_address[3]) */
-+	/* ha->subnet_mask[0], ha->subnet_mask[1], ha->subnet_mask[2], ha->subnet_mask[3]) */
-+	/* init_fw_cb->GatewayIPAddr[0],
-+			init_fw_cb->GatewayIPAddr[1],
-+			init_fw_cb->GatewayIPAddr[2],
-+			init_fw_cb->GatewayIPAddr[3]) */
-+
++	printk("%s: srb = 0x%p, flags=0x%02x\n", __func__, srb, srb->flags);
++	printk("%s: cmd = 0x%p, saved_dma_handle = 0x%lx\n",
++	       __func__, srb->cmd, (unsigned long) srb->dma_handle);
++	printk("%s: fw_ddb_index = %d, lun = %d\n",
++	       __func__, srb->fw_ddb_index, srb->cmd->device->lun);
++	printk("%s: iocb_tov = %d\n",
++	       __func__, srb->iocb_tov);
++	printk("%s: cc_stat = 0x%x, r_start = 0x%lx, u_start = 0x%lx\n\n",
++	       __func__, srb->cc_stat, srb->r_start, srb->u_start);
 +}
 
-This one has no callers other than the set in
-qla4xxx_transport_functions().  The function has no effect as all the
-code is commented out, so could be removed.
+missing printk levels.
 
 +
-+static void qla4xxx_get_initiator_alias(struct Scsi_Host *shost)
++/*
++ * qla4xxx_print_scsi_cmd
++ *	This routine displays the SCSI command
++ */
++void qla4xxx_print_scsi_cmd(struct scsi_cmnd *cmd)
 +{
-+	scsi_qla_host_t *ha = to_qla_host(shost);
-+}
++	int i;
++	printk("SCSI Command = 0x%p, Handle=0x%p\n", cmd, cmd->host_scribble);
++	printk("  b=%d, t=%02xh, l=%02xh, cmd_len = %02xh\n",
++	       cmd->device->channel, cmd->device->id, cmd->device->lun,
++	       cmd->cmd_len);
++	printk("  CDB = ");
 
-nll function.
+missing printk levels.
 
-+
-+/* Target attributes. */
-+static void qla4xxx_get_isid(struct scsi_target *starget)
-+{
-+	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
-+	scsi_qla_host_t *ha = to_qla_host(shost);
-+	struct ddb_entry *ddb;
-+}
++	for (i = 0; i < cmd->cmd_len; i++)
++		printk("%02x ", cmd->cmnd[i]);
 
-null function.
-make a macro or an inline that gets the struct ddb_entry from the
-shost.  This code is repeated in most of the funcs in this file.
+missing printk levels.
 
-+
-+static void qla4xxx_get_tsih(struct scsi_target *starget)
-+{
-+	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
-+	scsi_qla_host_t *ha = to_qla_host(shost);
-+	struct ddb_entry *ddb = qla4xxx_lookup_ddb_by_fw_index(ha, starget->id);
-+}
++	printk("  seg_cnt = %d\n", cmd->use_sg);
 
-null function.
+missing printk levels.
 
-+
-+static void qla4xxx_get_ip_address(struct scsi_target *starget)
-+{
-+	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
-+	scsi_qla_host_t *ha = to_qla_host(shost);
-+	struct ddb_entry *ddb = qla4xxx_lookup_ddb_by_fw_index(ha, starget->id);
-+
-+	if (ddb)
-+		memcpy(&iscsi_sin_addr(starget), &ddb->ipaddress,
-+		    ISCSI_IPADDR_SIZE);
-+}
-+
-+static void qla4xxx_get_port(struct scsi_target *starget)
-+{
-+	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
-+	scsi_qla_host_t *ha = to_qla_host(shost);
-+	struct ddb_entry *ddb = qla4xxx_lookup_ddb_by_fw_index(ha, starget->id);
-+
-+	struct sockaddr_in *addr = (struct sockaddr_in *)&ddb->addr;
-+	iscsi_port(starget) = addr->sin_port;
-+}
-+
-+static void qla4xxx_get_tpgt(struct scsi_target *starget)
-+{
-+	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
-+	scsi_qla_host_t *ha = to_qla_host(shost);
-+	struct ddb_entry *ddb = qla4xxx_lookup_ddb_by_fw_index(ha, starget->id);
-+
-+	iscsi_tpgt(starget) = ddb->portal_group_tag;
-+}
-+
-+static void qla4xxx_get_isid(struct scsi_target *starget)
-+{
-+	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
-+	scsi_qla_host_t *ha = to_qla_host(shost);
-+	struct ddb_entry *ddb = qla4xxx_lookup_ddb_by_fw_index(ha, starget->id);
-+
-+	memcpy(iscsi_isid(starget), ddb->isid, sizeof(ddb->isid));
-+}
-+
-+static void qla4xxx_get_initial_r2t(struct scsi_target *starget)
-+{
-+}
++	printk("  request buffer = 0x%p, request buffer len = 0x%x\n",
++	       cmd->request_buffer, cmd->request_bufflen);
 
-null function.
+missing printk levels.
 
-+
-+static void qla4xxx_get_immediate_data(struct scsi_target *starget)
-+{
-+}
++	if (cmd->use_sg) {
++		struct scatterlist *sg;
++		sg = (struct scatterlist *)cmd->request_buffer;
++		printk("  SG buffer: \n");
 
-null function.
+missing printk levels.
 
-+
-+static void qla4xxx_get_header_digest(struct scsi_target *starget)
-+{
-+}
++		qla4xxx_dump_buffer((caddr_t) sg,
++				    (cmd->use_sg * sizeof(struct scatterlist)));
 
-null function.
+line length.
 
-+
-+static void qla4xxx_get_data_digest(struct scsi_target *starget)
-+{
-+}
-
-null function.
-
-+
-+static void qla4xxx_get_max_burst_len(struct scsi_target *starget)
-+{
-+}
-
-null function.
-
-+
-+static void qla4xxx_get_first_burst_len(struct scsi_target *starget)
-+{
-+}
-
-null function.
-
-+
-+static void qla4xxx_get_max_recv_data_segment_len(struct scsi_target *starget)
-+{
-+}
-
-null function.
-
-+
-+static void qla4xxx_get_starget_loss_tmo(struct scsi_target *starget)
-+{
-+	struct Scsi_Host *host = dev_to_shost(starget->dev.parent);
-+	scsi_qla_host_t *ha = to_qla_host(host);
-+
-+	iscsi_starget_dev_loss_tmo(starget) = ha->port_down_retry_count + 5;
-+}
-+
-+static void
-+qla4xxx_set_starget_loss_tmo(struct scsi_target *starget, uint32_t timeout)
-+{
-+	struct Scsi_Host *host = dev_to_shost(starget->dev.parent);
-+	scsi_qla_host_t *ha = to_qla_host(host);
-+
-+	if (timeout)
-+		ha->port_down_retry_count = timeout;
-+	else
-+		ha->port_down_retry_count = 1;
-+}
-+
-+static struct fc_function_template qla4xxx_transport_functions = {
-+	.get_isid = qla4xxx_get_isid,
-+	.show_isid = 1,
-+	.get_tsih = qla4xxx_get_tsih,
-+	.show_tsih = 1,
-+	.get_port = qla4xxx_get_target_port,
-+	.show_port = 1,
-+	.get_tpgt = qla4xxx_get_tpgt,
-+	.show_tpgt = 1,
-+	.get_ip_address = qla4xxx_get_target_ip_address,
-+	.show_ip_address = 1,
-+	.get_initial_r2t = qla4xxx_get_initial_r2t,
-+	.show_initial_r2t = 1,
-+	.get_immediate_data = qla4xxx_get_immediate_data,
-+	.show_immediate_data = 1,
-+	.get_header_digest = qla4xxx_get_header_digest,
-+	.show_header_digest = 1,
-+	.get_data_digest = qla4xxx_get_data_digest,
-+	.show_data_digest = 1,
-+	.get_max_burst_len = qla4xxx_get_max_burst_len,
-+	.show_max_burst_len = 1,
-+	.get_first_burst_len = qla4xxx_get_first_burst_len,
-+	.show_first_burst_len = 1,
-+	.get_max_recv_data_segment_len = qla4xxx_get_max_recv_data_segment_len,
-+	.show_max_recv_data_segment_len = 1,
-+	.get_target_name = qla4xxx_get_target_name,
-+	.show_target_name = 1,
-+	.get_target_alias = qla4xxx_get_target_alias,
-+	.show_target_alias = 1,
-+	.get_initiator_alias = qla4xxx_get_initiator_alias,
-+	.show_initiator_alias = 1,
-+	.get_initiator_name = qla4xxx_get_initiator_name,
-+	.show_initiator_name = 1,
-+
-+	.get_starget_dev_loss_tmo = qla4xxx_get_starget_loss_tmo,
-+	.set_starget_dev_loss_tmo = qla4xxx_set_starget_loss_tmo,
-+	.show_starget_dev_loss_tmo = 1,
-+
-+};
-+
-+struct scsi_transport_template *qla4xxx_alloc_transport_tmpl(void)
-+{
-+	return (iscsi_attach_transport(&qla4xxx_transport_functions));
-+}
-
-return is not a function, and does not require parens around the
-expression.  On the other hand, you are consistent.
-
-+
-+/* SYSFS attributes --------------------------------------------------------- */
-+
-+static ssize_t
-+qla4xxx_sysfs_read_nvram(struct kobject *kobj, char *buf, loff_t off,
-
-void* is the preferred data type for buf.  saves the cast later.
-arithmetic works the same on the
-
-+    size_t count)
-+{
-+	struct scsi_qla_host *ha = to_qla_host(dev_to_shost(container_of(kobj,
-+	    struct device, kobj)));
-+	uint16_t *witer;
-+	unsigned long flags;
-+	uint16_t cnt;
-+
-+	if (!capable(CAP_SYS_ADMIN) || off != 0 || count != sizeof(nvram_t))
-+		return 0;
-+
-+	/* Read NVRAM. */
-+	spin_lock_irqsave(&ha->hardware_lock, flags);
-+	qla4xxx_lock_nvram_access(ha);
-+	witer = (uint16_t *) buf;
-+	for (cnt = 0; cnt < count / 2; cnt++) {
-+		*witer = cpu_to_le16(qla2x00_get_nvram_word(ha,
-+		    cnt + ha->nvram_base));
-+		witer++;
 +	}
-+	qla4xxx_unlock_nvram_access(ha);
-+	spin_unlock_irqrestore(&ha->hardware_lock, flags);
-+
-+	return (count);
++	printk("  tag = %d, transfersize = 0x%x \n", cmd->tag,
++	       cmd->transfersize);
+
+missing printk levels.
+
++	printk("  Pid = %d, SP = 0x%p\n", (int)cmd->pid, CMD_SP(cmd));
+
+missing printk levels.
+
++	printk("  underflow size = 0x%x, direction=0x%x\n", cmd->underflow,
++	       cmd->sc_data_direction);
+
+missing printk levels.
+
++	printk("  Current time (jiffies) = 0x%lx, "
++	       "timeout expires = 0x%lx\n", jiffies, cmd->eh_timeout.expires);
++	qla4xxx_print_srb_info((srb_t *) CMD_SP(cmd));
 +}
 +
-+static ssize_t
-+qla4xxx_sysfs_write_nvram(struct kobject *kobj, char *buf, loff_t off,
-+    size_t count)
-
-like wise on the buf data type.
-
++void __dump_registers(scsi_qla_host_t * ha)
 +{
-+	struct scsi_qla_host *ha = to_qla_host(dev_to_shost(container_of(kobj,
-+	    struct device, kobj)));
-+	uint8_t *iter;
-+	uint16_t *witer;
-+	unsigned long flags;
-+	uint16_t cnt;
-+	uint8_t chksum;
-+
-+	if (!capable(CAP_SYS_ADMIN) || off != 0 || count != sizeof(nvram_t))
-+		return 0;
-+
-+	/* Checksum NVRAM. */
-+	iter = (uint8_t *) buf;
-+	chksum = 0;
-+	for (cnt = 0; cnt < count - 1; cnt++)
-+		chksum += *iter++;
-+	chksum = ~chksum + 1;
-+	*iter = chksum;
-+
-+	/* Write NVRAM. */
-+	spin_lock_irqsave(&ha->hardware_lock, flags);
-+	qla4xxx_lock_nvram_access(ha);
-+	qla4xxx_release_nvram_protection(ha);
-+	witer = (uint16_t *) buf;
-+	for (cnt = 0; cnt < count / 2; cnt++) {
-+		qla4xxx_write_nvram_word(ha, cnt + ha->nvram_base,
-+		    cpu_to_le16(*witer));
-+		witer++;
++	uint8_t i;
++	for (i = 0; i < MBOX_REG_COUNT; i++) {
++		printk(KERN_INFO "0x%02X mailbox[%d]      = 0x%08X\n",
++		       (uint8_t) offsetof(isp_reg_t, mailbox[i]), i,
++		       RD_REG_DWORD(&ha->reg->mailbox[i]));
 +	}
-+	qla4xxx_unlock_nvram_access(ha);
++	printk(KERN_INFO "0x%02X flash_address   = 0x%08X\n",
++	       (uint8_t) offsetof(isp_reg_t, flash_address),
++	       RD_REG_DWORD(&ha->reg->flash_address));
++	printk(KERN_INFO "0x%02X flash_data      = 0x%08X\n",
++	       (uint8_t) offsetof(isp_reg_t, flash_data),
++	       RD_REG_DWORD(&ha->reg->flash_data));
++	printk(KERN_INFO "0x%02X ctrl_status     = 0x%08X\n",
++	       (uint8_t) offsetof(isp_reg_t, ctrl_status),
++	       RD_REG_DWORD(&ha->reg->ctrl_status));
++	if (IS_QLA4010(ha)) {
++		printk(KERN_INFO "0x%02X nvram           = 0x%08X\n",
++		       (uint8_t) offsetof(isp_reg_t, u1.isp4010.nvram),
++		       RD_REG_DWORD(&ha->reg->u1.isp4010.nvram));
++	}
++
++	else if (IS_QLA4022(ha)) {
++		printk(KERN_INFO "0x%02X intr_mask       = 0x%08X\n",
++		       (uint8_t) offsetof(isp_reg_t, u1.isp4022.intr_mask),
++		       RD_REG_DWORD(&ha->reg->u1.isp4022.intr_mask));
++		printk(KERN_INFO "0x%02X nvram           = 0x%08X\n",
++		       (uint8_t) offsetof(isp_reg_t, u1.isp4022.nvram),
++		       RD_REG_DWORD(&ha->reg->u1.isp4022.nvram));
++		printk(KERN_INFO "0x%02X semaphore       = 0x%08X\n",
++		       (uint8_t) offsetof(isp_reg_t, u1.isp4022.semaphore),
++		       RD_REG_DWORD(&ha->reg->u1.isp4022.semaphore));
++	}
++	printk(KERN_INFO "0x%02X req_q_in        = 0x%08X\n",
++	       (uint8_t) offsetof(isp_reg_t, req_q_in),
++	       RD_REG_DWORD(&ha->reg->req_q_in));
++	printk(KERN_INFO "0x%02X rsp_q_out       = 0x%08X\n",
++	       (uint8_t) offsetof(isp_reg_t, rsp_q_out),
++	       RD_REG_DWORD(&ha->reg->rsp_q_out));
++	if (IS_QLA4010(ha)) {
++		printk(KERN_INFO "0x%02X ext_hw_conf     = 0x%08X\n",
++		       (uint8_t) offsetof(isp_reg_t, u2.isp4010.ext_hw_conf),
++		       RD_REG_DWORD(&ha->reg->u2.isp4010.ext_hw_conf));
++		printk(KERN_INFO "0x%02X port_ctrl       = 0x%08X\n",
++		       (uint8_t) offsetof(isp_reg_t, u2.isp4010.port_ctrl),
++		       RD_REG_DWORD(&ha->reg->u2.isp4010.port_ctrl));
++		printk(KERN_INFO "0x%02X port_status     = 0x%08X\n",
++		       (uint8_t) offsetof(isp_reg_t, u2.isp4010.port_status),
++		       RD_REG_DWORD(&ha->reg->u2.isp4010.port_status));
++		printk(KERN_INFO "0x%02X req_q_out       = 0x%08X\n",
++		       (uint8_t) offsetof(isp_reg_t, u2.isp4010.req_q_out),
++		       RD_REG_DWORD(&ha->reg->u2.isp4010.req_q_out));
++		printk(KERN_INFO "0x%02X gp_out          = 0x%08X\n",
++		       (uint8_t) offsetof(isp_reg_t, u2.isp4010.gp_out),
++		       RD_REG_DWORD(&ha->reg->u2.isp4010.gp_out));
++		printk(KERN_INFO "0x%02X gp_in           = 0x%08X\n",
++		       (uint8_t) offsetof(isp_reg_t, u2.isp4010.gp_in),
++		       RD_REG_DWORD(&ha->reg->u2.isp4010.gp_in));
++		printk(KERN_INFO "0x%02X port_err_status = 0x%08X\n",
++		       (uint8_t) offsetof(isp_reg_t,
++					  u2.isp4010.port_err_status),
++		       RD_REG_DWORD(&ha->reg->u2.isp4010.port_err_status));
++	}
++
++	else if (IS_QLA4022(ha)) {
++		printk(KERN_INFO "Page 0 Registers:\n");
++		printk(KERN_INFO "0x%02X ext_hw_conf     = 0x%08X\n",
++		       (uint8_t) offsetof(isp_reg_t,
++					  u2.isp4022.p0.ext_hw_conf),
++		       RD_REG_DWORD(&ha->reg->u2.isp4022.p0.ext_hw_conf));
++		printk(KERN_INFO "0x%02X port_ctrl       = 0x%08X\n",
++		       (uint8_t) offsetof(isp_reg_t,
++					  u2.isp4022.p0.port_ctrl),
++		       RD_REG_DWORD(&ha->reg->u2.isp4022.p0.port_ctrl));
++		printk(KERN_INFO "0x%02X port_status     = 0x%08X\n",
++		       (uint8_t) offsetof(isp_reg_t,
++					  u2.isp4022.p0.port_status),
++		       RD_REG_DWORD(&ha->reg->u2.isp4022.p0.port_status));
++		printk(KERN_INFO "0x%02X gp_out          = 0x%08X\n",
++		       (uint8_t) offsetof(isp_reg_t, u2.isp4022.p0.gp_out),
++		       RD_REG_DWORD(&ha->reg->u2.isp4022.p0.gp_out));
++		printk(KERN_INFO "0x%02X gp_in           = 0x%08X\n",
++		       (uint8_t) offsetof(isp_reg_t, u2.isp4022.p0.gp_in),
++		       RD_REG_DWORD(&ha->reg->u2.isp4022.p0.gp_in));
++		printk(KERN_INFO "0x%02X port_err_status = 0x%08X\n",
++		       (uint8_t) offsetof(isp_reg_t,
++					  u2.isp4022.p0.port_err_status),
++		       RD_REG_DWORD(&ha->reg->u2.isp4022.p0.port_err_status));
++		printk(KERN_INFO "Page 1 Registers:\n");
++		WRT_REG_DWORD(&ha->reg->ctrl_status,
++			      HOST_MEM_CFG_PAGE &
++			      SET_RMASK(CSR_SCSI_PAGE_SELECT));
++		printk(KERN_INFO "0x%02X req_q_out       = 0x%08X\n",
++		       (uint8_t) offsetof(isp_reg_t,
++					  u2.isp4022.p1.req_q_out),
++		       RD_REG_DWORD(&ha->reg->u2.isp4022.p1.req_q_out));
++		WRT_REG_DWORD(&ha->reg->ctrl_status,
++			      PORT_CTRL_STAT_PAGE &
++			      SET_RMASK(CSR_SCSI_PAGE_SELECT));
++	}
++}
++
++/*
++ * qla4xxx_dump_registers
++ *	This routine displays ISP registers
++ *
++ * Input:
++ *	ha       - adapter structure pointer
++ *
++ */
+
+kerneldoc style would be good.
+
++void qla4xxx_dump_mbox_registers(scsi_qla_host_t * ha)
++{
++	unsigned long flags = 0;
++	int i = 0;
++	spin_lock_irqsave(&ha->hardware_lock, flags);
++	for (i = 1; i < MBOX_REG_COUNT; i++)
++		printk(KERN_INFO "  Mailbox[%d] = %08x\n", i,
++		       RD_REG_DWORD(&ha->reg->mailbox[i]));
 +	spin_unlock_irqrestore(&ha->hardware_lock, flags);
-+
-+	return (count);
 +}
 +
-+static struct bin_attribute sysfs_nvram_attr = {
-+	.attr = {
-+		 .name = "nvram",
-+		 .mode = S_IRUSR | S_IWUSR,
-+		 .owner = THIS_MODULE,
-+		 },
-+	.size = sizeof(nvram_t),
-+	.read = qla4xxx_sysfs_read_nvram,
-+	.write = qla4xxx_sysfs_write_nvram,
-+};
-+
-+void qla4xxx_alloc_sysfs_attr(scsi_qla_host_t * ha)
++void qla4xxx_dump_registers(scsi_qla_host_t * ha)
 +{
-+	struct Scsi_Host *host = ha->host;
-+
-+	sysfs_create_bin_file(&host->shost_gendev.kobj, &sysfs_fw_dump_attr);
-+	sysfs_create_bin_file(&host->shost_gendev.kobj, &sysfs_nvram_attr);
++	unsigned long flags = 0;
++	spin_lock_irqsave(&ha->hardware_lock, flags);
++	__dump_registers(ha);
++	spin_unlock_irqrestore(&ha->hardware_lock, flags);
 +}
 +
-+void qla4xxx_free_sysfs_attr(scsi_qla_host_t * ha)
++void qla4xxx_dump_buffer(uint8_t * b, uint32_t size)
 +{
-+	struct Scsi_Host *host = ha->host;
++	uint32_t cnt;
++	uint8_t c;
++	printk(" 0   1   2   3   4   5   6   7   8   9  Ah  Bh  Ch  Dh  Eh  "
++	    "Fh\n");
+
+missing printk levels.
+
++	printk("------------------------------------------------------------"
++	    "--\n");
+
+missing printk levels.
+
++	for (cnt = 0; cnt < size;) {
++		c = *b++;
++		printk("%02x", (uint32_t) c);
++		cnt++;
++		if (!(cnt % 16))
++			printk("\n");
 +
-+	sysfs_remove_bin_file(&host->shost_gendev.kobj, &sysfs_fw_dump_attr);
-+	sysfs_remove_bin_file(&host->shost_gendev.kobj, &sysfs_nvram_attr);
++		else
++			printk("  ");
++	}
++	if (cnt % 16)
++		printk("\n");
 +}
+
+missing printk levels.  maybe.
+
