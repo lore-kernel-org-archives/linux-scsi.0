@@ -1,45 +1,36 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] SCSI: implement scsi_eh_schedule()
-Date: Sat, 01 Apr 2006 15:14:23 -0500
-Message-ID: <442EDF1F.6000001@pobox.com>
-References: <20060401103857.GG13172@htj.dyndns.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] move ->eh_strategy_handler to the transport class
+Date: Sat, 01 Apr 2006 15:16:52 -0500
+Message-ID: <442EDFB4.4050201@garzik.org>
+References: <20060401172104.GA16921@lst.de> <1143914189.3076.20.camel@laptopd505.fenrus.org> <442EDB68.2060707@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20060401103857.GG13172@htj.dyndns.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: hch@lst.de, James.Bottomley@SteelEye.com, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:9694 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932178AbWDAURC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 1 Apr 2006 15:17:02 -0500
+In-Reply-To: <442EDB68.2060707@s5r6.in-berlin.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: Arjan van de Ven <arjan@infradead.org>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-Tejun Heo wrote:
-> [PATCH] SCSI: implement scsi_eh_schedule()
+Stefan Richter wrote:
+> Arjan van de Ven wrote:
+>> On Sat, 2006-04-01 at 19:21 +0200, Christoph Hellwig wrote:
+>>> Overriding the whole EH code is a per-transport, not per-host thing.
+>>> Move ->eh_strategy_handler to the transport class, same as
+>>> ->eh_timed_out.
+>>
+>> I like it, nice cleanup and it's fundamentally the right place to do it
 > 
-> This patch implements scsi_eh_schedule() which provides a way to
-> directly invoke SCSI EH from drivers which implement EH using
-> ->eh_strategy_handler.  Combined with scsi_eh_flush_done_q(), this
-> gives such drivers complete control over when and how to invoke EH and
-> handle failed commands.
-> 
-> scsi_eh_schedule() can also be invoked without a scmd.  This is useful
-> for handling exception conditions occurring while no command is in
-> progress.  New Scsi_Host field host_eh_invoked is added for this.
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> BTW, why are there Scsi_Hosts in (s)ata drivers anyway instead of being 
+> hidden by libata? (Think of libata---or a transport class---as a layer.)
 
-Not so sure about this one:
-
-1) Rather than creating the scmd==NULL special case path, just create a 
-new function scsi_kick_eh() or somesuch.  I presume such an 
-implementation would be quite tiny:  satisfy the condition 
-'shost->host_busy == shost->host_failed', then call scsi_eh_wakeup().
-
-2) Looks almost exactly like scsi_eh_scmd_add().  Minus the code deleted 
-via suggestion #1, you really just add a timer check.  Why not add a 
-SCSI EH flag which says "check timer", then just call scsi_eh_scmd_add()?
-
-3) I would think that host_eh_invoked could be deduced.
+Because they shouldn't be hidden by libata.  aic94xx hides it, which is 
+the wrong layering.  Each libata driver is a first-class SCSI driver, 
+where a lot of the SCSI stuff is handled by common library functions.
 
 	Jeff
 
