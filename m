@@ -1,54 +1,88 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] SCSI: implement scsi_eh_schedule()
-Date: Sun, 02 Apr 2006 10:15:41 +0900
-Message-ID: <442F25BD.8040000@gmail.com>
-References: <20060401103857.GG13172@htj.dyndns.org> <442EDF1F.6000001@pobox.com>
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: [PATCH 09/10] Enable clustering and large transfers
+Date: Sun, 2 Apr 2006 17:18:05 +0300 (EEST)
+Message-ID: <Pine.LNX.4.63.0604021706270.4221@kai.makisara.local>
+References: <1143561824404-git-send-email-matthew@wil.cx>
+ <Pine.LNX.4.63.0604011656490.10426@kai.makisara.local> <442EE0F0.7000102@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <442EDF1F.6000001@pobox.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: hch@lst.de, James.Bottomley@SteelEye.com, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from fep02-0.kolumbus.fi ([193.229.0.44]:25156 "EHLO
+	fep02-app.kolumbus.fi") by vger.kernel.org with ESMTP
+	id S932346AbWDBOSN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 2 Apr 2006 10:18:13 -0400
+In-Reply-To: <442EE0F0.7000102@torque.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Douglas Gilbert <dougg@torque.net>
+Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@suse.de>
 
-Jeff Garzik wrote:
-> Tejun Heo wrote:
->> [PATCH] SCSI: implement scsi_eh_schedule()
->>
->> This patch implements scsi_eh_schedule() which provides a way to
->> directly invoke SCSI EH from drivers which implement EH using
->> ->eh_strategy_handler.  Combined with scsi_eh_flush_done_q(), this
->> gives such drivers complete control over when and how to invoke EH and
->> handle failed commands.
->>
->> scsi_eh_schedule() can also be invoked without a scmd.  This is useful
->> for handling exception conditions occurring while no command is in
->> progress.  New Scsi_Host field host_eh_invoked is added for this.
->>
->> Signed-off-by: Tejun Heo <htejun@gmail.com>
+On Sat, 1 Apr 2006, Douglas Gilbert wrote:
+
+> Kai Makisara wrote:
+> > On Tue, 28 Mar 2006, Matthew Wilcox wrote:
+> > 
+> > 
+> >>This patch enables clustering and sets max_sectors to 0xffff to enable
+> >>reading and writing of large blocks with tapes (and large transfers with
+> >>sg). This change is needed after the sg and st drivers started using
+> >>chained bios through scsi_request_async() in 2.6.16.
+> >>
+> >>Signed-off-by: Kai Makisara <kai.makisara@kolumbus.fi>
+> >>Signed-off-by: Matthew Wilcox <matthew@wil.cx>
+> >>
+> >>---
+> >>
+> >> drivers/scsi/sym53c8xx_2/sym_glue.c |    3 ++-
+> >> 1 files changed, 2 insertions(+), 1 deletions(-)
+> >>
+> >>1c573ec4648b4b4ddadcbd1945a9a608977df513
+> >>diff --git a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8xx_2/sym_glue.c
+> >>index e48409e..2c4e5f1 100644
+> >>--- a/drivers/scsi/sym53c8xx_2/sym_glue.c
+> >>+++ b/drivers/scsi/sym53c8xx_2/sym_glue.c
+> >>@@ -1870,7 +1870,8 @@ static struct scsi_host_template sym2_te
+> >> 	.eh_bus_reset_handler	= sym53c8xx_eh_bus_reset_handler,
+> >> 	.eh_host_reset_handler	= sym53c8xx_eh_host_reset_handler,
+> >> 	.this_id		= 7,
+> >>-	.use_clustering		= DISABLE_CLUSTERING,
+> >>+	.use_clustering		= ENABLE_CLUSTERING,
+> >>+	.max_sectors		= 0xFFFF,
+> >> #ifdef SYM_LINUX_PROC_INFO_SUPPORT
+> >> 	.proc_info		= sym53c8xx_proc_info,
+> >> 	.proc_name		= NAME53C8XX,
+> >>
+...
+> Kai + Matthew,
+> In my testing with lk 2.6.16 the 16 MB boundary is a
+> hard limit, after several other things are tweaked.
 > 
-> Not so sure about this one:
+> The sym53c8xx driver won't even come close due to:
+>   #define SYM_CONF_MAX_SG             (96)
+>  ...
+>   instance->sg_tablesize  = SYM_CONF_MAX_SG;
 > 
-> 1) Rather than creating the scmd==NULL special case path, just create a 
-> new function scsi_kick_eh() or somesuch.  I presume such an 
-> implementation would be quite tiny:  satisfy the condition 
-> 'shost->host_busy == shost->host_failed', then call scsi_eh_wakeup().
+I was able to read 65535 blocks (32 MB - 512 B) for each SCSI command from 
+my disk using the sym53c8xx_2 driver and SG_IO through the sg driverv. I 
+did not change SYM_CONF_MAX but I did add
 
-I see.
+	blk_queue_max_segment_size(sdev->request_queue, 256 * 1024);
 
-> 2) Looks almost exactly like scsi_eh_scmd_add().  Minus the code deleted 
-> via suggestion #1, you really just add a timer check.  Why not add a 
-> SCSI EH flag which says "check timer", then just call scsi_eh_scmd_add()?
+to sym53c8xx_slave_configure to increase the maximum segment size for the 
+queue. Did you do also this?
 
-I didn't want to add stuff to SCSI main EH path which isn't necessary to 
-main EH. But you're right, they are almost identical. Maybe a wrapper 
-around scsi_eh_scmd_add() should work.
-
-> 3) I would think that host_eh_invoked could be deduced.
-
-Okay, I'll try to cook something prettier.
+> I assume that the st driver (like sg) limits on .sg_tablesize .
+> Matthew, if you change this please set it at 256 (not SG_ALL
+> which is 255).
+> 
+> I have attempted to capture the current (overly complex)
+> constraints on maximum transfer size at:
+> http://www.torque.net/sg/sg_io.html
+> in the section on "Maximum transfer size per command".
+> 
+The maximum segments size limitation is mentioned on your page. Maybe you 
+emphasize that without changing this you can't get beyond 16 MB with only 
+128 segments.
 
 -- 
-tejun
+Kai
