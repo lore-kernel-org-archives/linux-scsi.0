@@ -1,44 +1,40 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 1/2] scsi: Add scsi_device max_cmd_len
-Date: Tue, 04 Apr 2006 05:25:07 -0400
-Message-ID: <44323B73.9070903@pobox.com>
-References: <200603282217.k2SMHJTH032251@d03av04.boulder.ibm.com> <20060329091104.GB7940@infradead.org> <442B15F4.30506@pobox.com> <442C09A8.50200@us.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: "Clare Morton" <hahwp@grosset.com>
+Subject: Quality Financing for the USA!
+Date: Tue, 04 Apr 2006 19:04:36 +0100
+Message-ID: <24493912.0241884533332.JavaMail.nfsnobody@www5.j8uk.com>
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:39367 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932407AbWDDJZ3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Apr 2006 05:25:29 -0400
-In-Reply-To: <442C09A8.50200@us.ibm.com>
+Received: from zeus2.kernel.org ([204.152.191.36]:64197 "EHLO zeus2.kernel.org")
+	by vger.kernel.org with ESMTP id S1750758AbWDDRE5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Apr 2006 13:04:57 -0400
+Received: from 204.152.191.36 ([221.195.129.254])
+	by zeus2.kernel.org (8.13.1/8.13.1) with SMTP id k34H4hCs022661
+	for <linux-scsi@vger.kernel.org>; Tue, 4 Apr 2006 17:04:46 GMT
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: brking@us.ibm.com
-Cc: Christoph Hellwig <hch@infradead.org>, James.Bottomley@steeleye.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Brian King wrote:
-> Jeff Garzik wrote:
->> James Bottomley wrote:
->>> This really doesn't look correct.  What you want is a sata transport
->>> class with a max command length in the host device.
->> Christoph Hellwig wrote:
->>> this sounds wrong to me.  cdb length is a limitation of the host (driver).
->>> A target will reject unknown commands, no matter what length they have.
->>
->> In practice, CDB length may be limited by both the host and the device. 
->>   This applies to ATAPI, and some USB storage too IIRC.  For ATAPI, you 
->> read the CDB length from the device's IDENTIFY PACKET DEVICE info page.
-> 
-> So the question remains, do we need to police the CDB length on a per device
-> basis, or is a per host basis ok? Will we have ATAPI devices falling on the
-> floor if they get sent too large of a cdb?
-
-It _must_ be limited by both device and host.  If you have a device that 
-supports 16-byte CDBs and a host controller which only supports 12-byte 
-CDBs, clearly the limit is 12, due to host.  However, a reversed 
-situation (limited by device) is equally plausible/possible.
-
-	Jeff
+Homeowner 
 
 
+You have been pre-approved for a $417,223 Home Loan at a 3.77 Fixed Rate. 
+This offer is being extended to you unconditionally and your credit is in no way a factor. 
+
+
+To take Advantage of this Limited Time opportunity 
+
+
+All we ask is that you visit our Website and complete 
+The 1 minute post Approval Form 
+
+
+http://www5.j8uk.com/was.asp
+
+
+Best Wishes, 
+
+
+Judith Swanson
 
