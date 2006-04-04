@@ -1,66 +1,44 @@
-From: mda2376 <mda2376@gmail.com>
-Subject: Re: SATA support in aic94xx
-Date: Mon, 3 Apr 2006 17:11:45 -0400
-Message-ID: <eb7c0afb0604031411h1e09887eu743b747c0551de6d@mail.gmail.com>
-References: <89FD792A883D4B47AD469FEA2E5D1F9B17F916@aime2k302.adaptec.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 1/2] scsi: Add scsi_device max_cmd_len
+Date: Tue, 04 Apr 2006 05:25:07 -0400
+Message-ID: <44323B73.9070903@pobox.com>
+References: <200603282217.k2SMHJTH032251@d03av04.boulder.ibm.com> <20060329091104.GB7940@infradead.org> <442B15F4.30506@pobox.com> <442C09A8.50200@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xproxy.gmail.com ([66.249.82.194]:3941 "EHLO xproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751793AbWDCVLq convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 3 Apr 2006 17:11:46 -0400
-Received: by xproxy.gmail.com with SMTP id t10so873188wxc
-        for <linux-scsi@vger.kernel.org>; Mon, 03 Apr 2006 14:11:45 -0700 (PDT)
-In-Reply-To: <89FD792A883D4B47AD469FEA2E5D1F9B17F916@aime2k302.adaptec.com>
-Content-Disposition: inline
+Received: from srv5.dvmed.net ([207.36.208.214]:39367 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932407AbWDDJZ3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Apr 2006 05:25:29 -0400
+In-Reply-To: <442C09A8.50200@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Tarte, Robert" <Robert_Tarte@adaptec.com>
-Cc: linux-scsi@vger.kernel.org
+To: brking@us.ibm.com
+Cc: Christoph Hellwig <hch@infradead.org>, James.Bottomley@steeleye.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Rob,
+Brian King wrote:
+> Jeff Garzik wrote:
+>> James Bottomley wrote:
+>>> This really doesn't look correct.  What you want is a sata transport
+>>> class with a max command length in the host device.
+>> Christoph Hellwig wrote:
+>>> this sounds wrong to me.  cdb length is a limitation of the host (driver).
+>>> A target will reject unknown commands, no matter what length they have.
+>>
+>> In practice, CDB length may be limited by both the host and the device. 
+>>   This applies to ATAPI, and some USB storage too IIRC.  For ATAPI, you 
+>> read the CDB length from the device's IDENTIFY PACKET DEVICE info page.
+> 
+> So the question remains, do we need to police the CDB length on a per device
+> basis, or is a per host basis ok? Will we have ATAPI devices falling on the
+> floor if they get sent too large of a cdb?
 
-I found a reference to the adp94xx driver on Adaptec's site as
-adp94xx-openbuild-b5484.i386.tar.gz (
-http://www.adaptec.com/worldwide/support/driverdetail.jsp?sess=no&filekey=adp94xx-openbuild-b5484.i386.tar.gz&language=English+US
-). I was able to follow the instructions to merge the adp94xx driver
-source with a 2.6.16.1 kernel however it fails to compile. I will try
-again later this evening with a 2.6.13 kernel since I've read of some
-people having success with this.
+It _must_ be limited by both device and host.  If you have a device that 
+supports 16-byte CDBs and a host controller which only supports 12-byte 
+CDBs, clearly the limit is 12, due to host.  However, a reversed 
+situation (limited by device) is equally plausible/possible.
 
-Is there another source from Adaptec for the adp94xx? Or is there
-anyone I can contact for support on this issue?
-
-Thanks.
-
-On 4/2/06, Tarte, Robert <Robert_Tarte@adaptec.com> wrote:
-> > Subject: SATA support in aic94xx
-> >
-> > I have an Adaptec AIC-9410W SAS/SATA Host Adapter integrated on a new
-> > server motherboard with 4 SATA disc's attached. I'm trying to use the
-> > aic94xx driver and haven't had any success with it recognizing the
-> > drives. All 4 drives are detected in the Adaptec BIOS. I've tried both
-> > the 2.6.13-sas kernel available from Adaptec's website and the support
-> > available in 2.6.16-mm2. The controller is recognized by the kernel
-> > but does not detect any of the SATA discs.
-> >
-> > I see that this driver is still under development but I am curious if
-> > support for SATA discs is available, or if there is anything else I
-> > can try? My dmesg output with aic94xx compiled in debug mode is
-> > attached if this would be helpful.
->
-> The aic94xx driver does not currently support SATA, but the adp94xx
-> driver does.  The adp94xx driver is a transitional AIC-9410W driver for
-> 2.6 and the only driver available for the 2.4 kernel.  I'll try to
-> figure out where it is on the Adaptec web site ...
->
-> Rob
->
+	Jeff
 
 
---
-matt.
 
-http://www.pc.ibm.com/us/thinkpad/community/legends/index.html
