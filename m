@@ -1,29 +1,33 @@
-From: "Tampering H. Overdraft" <mariana@comidamexicana.com>
-Subject: =?windows-1251?B?wiDg8OXt5PMg7vTo8SDiIOHo5+3l8S325e3y8OUg6uvg8fHgIKvCK7sg?=
-	=?windows-1251?B?7C4gz+Di5evl9urg/w==?=
-Date: Wed, 05 Apr 2006 15:19:57 -0400
-Message-ID: <111101c658e5$7c0753d2$27377697@comidamexicana.com>
+From: Ingo Flaschberger <if@xip.at>
+Subject: Re: Compaq Fiber Channel Array RM4000 / 2.6.16 kernel patch VER7
+Date: Thu, 6 Apr 2006 13:21:35 +0200 (CEST)
+Message-ID: <Pine.GSO.4.64.0604061320420.17476@filebunker.xip.at>
+References: <Pine.GSO.4.64.0604011845220.12969@filebunker.xip.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1251
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus2.kernel.org ([204.152.191.36]:35994 "EHLO zeus2.kernel.org")
-	by vger.kernel.org with ESMTP id S1751337AbWDETMJ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 5 Apr 2006 15:12:09 -0400
-Received: from -1221445280 (50-106-176.dial.cust.tie.cl [200.50.106.176])
-	by zeus2.kernel.org (8.13.1/8.13.1) with SMTP id k35JBrUO029196
-	for <linux-scsi@vger.kernel.org>; Wed, 5 Apr 2006 19:12:05 GMT
-Received: from comidamexicana.com (-1221574568 [-1221512496])
-	by 50-106-176.dial.cust.tie.cl (Qmailv1) with ESMTP id F2FA030727
-	for <linux-scsi@vger.kernel.org>; Wed, 05 Apr 2006 15:19:57 -0400
+Received: from ns1.xip.at ([193.239.188.99]:38084 "EHLO chile.gbit.at")
+	by vger.kernel.org with ESMTP id S1751109AbWDFLVr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Apr 2006 07:21:47 -0400
+In-Reply-To: <Pine.GSO.4.64.0604011845220.12969@filebunker.xip.at>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux <linux-scsi@vger.kernel.org>
+To: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-=FF=FE=12=04=20
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hello,
+
+Is it ok now? Will the code move into the new kernel?
+
+Kind regards,
+ 	ingo flaschberger
+
+geschaeftsleitung
+crossip communications gmbH
+------------------------------------------------------------------_------------
+sebastian kneipp gasse 1          _____ _____ ____   _____ _____ (_)____
+a-1020 wien                      / ___// ___// __ \ / ___// ___// // __ \
+fix: +43-1-726 15 22-217        / /__ / /   / /_/ /(__  )(__  )/ // /_/ /
+fax: +43-1-726 15 22-111        \___//_/    \____//____//____//_// .___/
+mob: +43-699-105 86 719                                 _______ / /
+www.xip.at                      communications gmbh    /______//_/
+-------------------------------------------------------------------------------
