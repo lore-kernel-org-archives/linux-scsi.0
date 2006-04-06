@@ -1,33 +1,71 @@
-From: Ingo Flaschberger <if@xip.at>
-Subject: Re: Compaq Fiber Channel Array RM4000 / 2.6.16 kernel patch VER7
-Date: Thu, 6 Apr 2006 13:21:35 +0200 (CEST)
-Message-ID: <Pine.GSO.4.64.0604061320420.17476@filebunker.xip.at>
-References: <Pine.GSO.4.64.0604011845220.12969@filebunker.xip.at>
+From: "erich" <erich@areca.com.tw>
+Subject: areca-raid-linux-scsi-driver-update5.patch for 2.6.17-rc1-mm1
+Date: Thu, 6 Apr 2006 20:10:05 +0800
+Message-ID: <001901c65973$0bf933b0$b100a8c0@erich2003>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: multipart/mixed;
+	boundary="----=_NextPart_000_0016_01C659B6.18986BC0"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns1.xip.at ([193.239.188.99]:38084 "EHLO chile.gbit.at")
-	by vger.kernel.org with ESMTP id S1751109AbWDFLVr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Apr 2006 07:21:47 -0400
-In-Reply-To: <Pine.GSO.4.64.0604011845220.12969@filebunker.xip.at>
+Received: from 220-130-178-143.HINET-IP.hinet.net ([220.130.178.143]:11771
+	"EHLO areca.com.tw") by vger.kernel.org with ESMTP id S1751204AbWDFMLU
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 6 Apr 2006 08:11:20 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: oliver@neukum.org, akpm@osdl.org, alan@lxorguk.ukuu.org.uk, billion.wu@areca.com.tw, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "\"\"\"Christoph Hellwig\"\"\"" <hch@infradead.org>, Chris Caputo <ccaputo@alt.net>
 
-Hello,
+This is a multi-part message in MIME format.
 
-Is it ok now? Will the code move into the new kernel?
+------=_NextPart_000_0016_01C659B6.18986BC0
+Content-Type: text/plain;
+	format=flowed;
+	charset="big5";
+	reply-type=original
+Content-Transfer-Encoding: 7bit
 
-Kind regards,
- 	ingo flaschberger
+From: Erich Chen <erich@areca.com.tw>
 
-geschaeftsleitung
-crossip communications gmbH
-------------------------------------------------------------------_------------
-sebastian kneipp gasse 1          _____ _____ ____   _____ _____ (_)____
-a-1020 wien                      / ___// ___// __ \ / ___// ___// // __ \
-fix: +43-1-726 15 22-217        / /__ / /   / /_/ /(__  )(__  )/ // /_/ /
-fax: +43-1-726 15 22-111        \___//_/    \____//____//____//_// .___/
-mob: +43-699-105 86 719                                 _______ / /
-www.xip.at                      communications gmbh    /______//_/
--------------------------------------------------------------------------------
+  1- modify ARCMSR_MAX_XFER_SECTORS 4096 into 512
+  2- add new SAS RAID Adapter device id
+
+Signed-off-by: Erich Chen <erich@areca.com.tw>
+---
+ drivers/scsi/arcmsr/arcmsr.h     |    2 
+ drivers/scsi/arcmsr/arcmsr_hba.c |   80 ++++++++---------------------
+ include/linux/pci_ids.h          |    4 +
+ 3 files changed, 28 insertions(+), 58 deletions(-)
+
+Best Regards
+Erich Chen
+------=_NextPart_000_0016_01C659B6.18986BC0
+Content-Type: application/x-compressed;
+	name="areca-raid-linux-scsi-driver-update5.patch.gz"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+	filename="areca-raid-linux-scsi-driver-update5.patch.gz"
+
+H4sICId3NUQAA2FyZWNhLXJhaWQtbGludXgtc2NzaS1kcml2ZXItdXBkYXRlNS5wYXRjaADNWP9P
+o0gU/7n8FS9eLmkt08JQvti9NSJFl0TbBtDzkksIArVkKzWA6xrP//1mgFpra4fTvV0nKUOGz3vz
+Po/PvGF6lM6v+2CmcTAFYxol8EdE7w/8NAr8TjC/7uR3+xwHICK4nofx5B502zh1bO9Uv/Aujkzb
+c0zDHdkO9IQ9BeIkn4MsYmKBEfhhCEl0B47ugK1bA9BD/yaPUgijb3EQQRxynBNfJVGI5pMJurxn
+h4IQ4iBM429RmnWzIIu7fhpcZ2nVdaZA2z/0gmEb0pteEq8FUhOgXTW0qXGEVjC7DaPuLE5uv3dv
+gtiLw6yaazlhD9ocSDCJZ1EGwdRPrqKQB6wR8yxK83ieZM12iwdZIwmYReUAanGUFJSutzHrzNP4
+qoEFQUFCDwkKiFIf9/qy0BEWDciwIHCESA1/L10p/Z625urgAFBP41VoF9eDAw5+C6NJnETPhXBk
+m6ZhHHrDs9NG2bCmrSEHtnVOBEN+jjUaUtTOoIgPzkmMJBsgdjBl0xGlnTVrx3AszxparqUTvXnW
+oJpIljm0IaTn2iyR1auiOuXatSwahZI3QF3dPjbdRQgNENUtsJOz4QIH60mhOON04I1NuwI+fzI6
+cx1XHw6s4TFF1VJKqeyNapH7kvgmtZQ+X7jr4b6oblSMKEm8Am3aiQIRDWS5n8cB6dLbIAe6gMoS
+QNYRVDMUAxw0HsaG5Q3Mc8swm/T23BwOivft6bZp6Dwsnz8NeiJWhNYj/3Zz9X3mWmHefqO59F5z
+8T3myvtmV8rZSeoEHoRHHrq74EbpdZyQV55cQZTk6T3sdjl4/MTB6WhwdmIuvLj64YnZJHLgV1RA
+ZeHl/uUsan2q9CSrPC3ToqSIfA8/k1RAimhOq20Ku5WPOJnMm5XUHCqpG904hM+wGKt2IWNOIpvP
+Dmfz4CvstmA6z3K0T6+hn/sk1sZSo5+B+kD7N2QI7ZfjFJHdxXkwbT4BW/DAoUbgZ9HmZImi0CeQ
+NgOyFYAJ4IHM3WhkNynZcCfNy9sJT6Yl9bSA0AJC3VBzdEG2pfHIdh2yC7t6uQ0bo6Frj05OTBt2
+yFRPdgXiy8hxQR/oY5c8XofTeXf+ThYb3+9ZOcRvLvKtT8XTyzTyvxa3j9vTg9npwYz0iBILoLAA
+KusNsGLArBgwKwbMjEErUsWUAV7IQPvxMmjScQWZw2NraIKVZHEYtf43bUhMbZA6uj1ppFJuBygs
+D6Ta1Uq7tEi7iP9D3p0PmHalSDtiEVaeCCvbCaOaFNBWCmhJATEpqPUoqAsKmFEyfz4FLNaigKui
+b16MbdNxWKUfrdfyHxgyrhcyXg2ZUaZ+QeqlejykVR6sdf8LiNRbyVh5QeTDrWdcbz1jdZXIB1zV
+dLehn5kT/3aWs/aVC+T+NTZr7CMV8GdvJcuz6St/l2w8kop9GW85kr7i6oUXWe3Le5tPonuaXBxF
+aV+cRZcn8NdWSUP4TjsWUC2BKhOolUBNWP7t8NrnCwVKNYBiCRQZQKX0qDA9KqVH0nGwSmd5CHSw
+NYKVRizUUH6NPsV7f1rD53hZlUTuX8n0lLF1FAAA
+
+------=_NextPart_000_0016_01C659B6.18986BC0--
+
