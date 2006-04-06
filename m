@@ -1,29 +1,33 @@
-From: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
-Subject: Question: how to redirect Ctrl-Alt-F4 output to serial during installation?
-Date: Thu, 6 Apr 2006 16:10:41 -0600
-Message-ID: <890BF3111FB9484E9526987D912B261901BCB4@NAMAIL3.ad.lsil.com>
+From: alan <alan@clueserver.org>
+Subject: Re: Question: how to redirect Ctrl-Alt-F4 output to serial during
+ installation?
+Date: Thu, 6 Apr 2006 15:16:00 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0604061514500.7269@blackbox.fnordora.org>
+References: <890BF3111FB9484E9526987D912B261901BCB4@NAMAIL3.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:970 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1751341AbWDFWKn convert rfc822-to-8bit
+Received: from 216-99-213-120.dsl.aracnet.com ([216.99.213.120]:51615 "EHLO
+	clueserver.org") by vger.kernel.org with ESMTP id S1751343AbWDFWQB
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 6 Apr 2006 18:10:43 -0400
-Content-class: urn:content-classes:message
+	Thu, 6 Apr 2006 18:16:01 -0400
+In-Reply-To: <890BF3111FB9484E9526987D912B261901BCB4@NAMAIL3.ad.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Ju, Seokmann" <Seokmann.Ju@engenio.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
+Cc: "Ju, Seokmann" <Seokmann.Ju@engenio.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-Hi,
+On Thu, 6 Apr 2006, Ju, Seokmann wrote:
 
-During installation, I'm seeing all messages coming from SCSI HBA driver
-displayed on Ctrl-Alt-F4 (not on console).
-I would like to capture/analyze all messages stored in file.
-Is there anyway that I could redirect Ctrl-Alt-F4 output to serial?
+> Hi,
+>
+> During installation, I'm seeing all messages coming from SCSI HBA driver
+> displayed on Ctrl-Alt-F4 (not on console).
+> I would like to capture/analyze all messages stored in file.
+> Is there anyway that I could redirect Ctrl-Alt-F4 output to serial?
 
-Thank you for any comments.
+I would try redirecting the kernel messages to the serial device of choice 
+via /etc/syslog.conf.
 
-Seokmann
+-- 
+"Remember there is a big difference between kneeling down and bending over." - Frank Zappa
