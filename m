@@ -1,36 +1,51 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 0/2] scsi tgt updates (replace the elevator code)
-Date: Fri, 07 Apr 2006 08:20:42 -0400
-Message-ID: <1144412442.3606.1.camel@mulgrave.il.steeleye.com>
-References: <20060316090410E.fujita.tomonori@lab.ntt.co.jp>
-	 <4435CABD.7000200@cs.wisc.edu>
+From: Brian King <brking@us.ibm.com>
+Subject: Re: [PATCH 1/2] scsi: Add scsi_device max_cmd_len
+Date: Fri, 07 Apr 2006 08:36:44 -0500
+Message-ID: <44366AEC.4070504@us.ibm.com>
+References: <200603282217.k2SMHJTH032251@d03av04.boulder.ibm.com> <20060329091104.GB7940@infradead.org> <442B15F4.30506@pobox.com> <442C09A8.50200@us.ibm.com> <44323B73.9070903@pobox.com>
+Reply-To: brking@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:42645 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S932434AbWDGMVG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 7 Apr 2006 08:21:06 -0400
-In-Reply-To: <4435CABD.7000200@cs.wisc.edu>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <44323B73.9070903@pobox.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Christoph Hellwig <hch@infradead.org>, James.Bottomley@steeleye.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: FUJITA Tomonori <tomof@acm.org>, linux-scsi@vger.kernel.org
 
-On Thu, 2006-04-06 at 21:13 -0500, Mike Christie wrote:
-> Hey James the patchset referred to in this mail, this patchset and the 
-> "[PATCH] scsi tgt: add task management function support" patch did not 
-> get merged to the tgt merged. Did you want us to resend the patchsets or 
-> did you not like them, or do you wnat them in one nice large patchset? 
-> Or did you want us to ask Jens to merge some of the not so controversial 
-> block layer stuff like "[PATCH 4/6] block layer: use blk_rq_bio_prep in 
-> init_request_from_bio" first? Thanks.
+Jeff Garzik wrote:
+> Brian King wrote:
+>> Jeff Garzik wrote:
+>>> James Bottomley wrote:
+>>>> This really doesn't look correct.  What you want is a sata transport
+>>>> class with a max command length in the host device.
+>>> Christoph Hellwig wrote:
+>>>> this sounds wrong to me.  cdb length is a limitation of the host (driver).
+>>>> A target will reject unknown commands, no matter what length they have.
+>>> In practice, CDB length may be limited by both the host and the device. 
+>>>   This applies to ATAPI, and some USB storage too IIRC.  For ATAPI, you 
+>>> read the CDB length from the device's IDENTIFY PACKET DEVICE info page.
+>> So the question remains, do we need to police the CDB length on a per device
+>> basis, or is a per host basis ok? Will we have ATAPI devices falling on the
+>> floor if they get sent too large of a cdb?
+> 
+> It _must_ be limited by both device and host.  If you have a device that 
+> supports 16-byte CDBs and a host controller which only supports 12-byte 
+> CDBs, clearly the limit is 12, due to host.  However, a reversed 
+> situation (limited by device) is equally plausible/possible.
 
-Yes, just resend them to linux-scsi, thanks.  I'm going to be away for a
-few days, so I'll probably get around to merging them on Wednesday or
-so.
+Ok. That is what I was assuming, which was the reason I submitted this
+patch in the first place.
 
-James
+James, given this information, are you ok with the patch, or do you
+still have an objection?
 
+Thanks,
 
+Brian
+
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
