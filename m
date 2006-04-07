@@ -1,2343 +1,478 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: [PATCH 4/5] iscsi: add libiscsi
-Date: Thu, 06 Apr 2006 21:13:41 -0500
-Message-ID: <1144376022.11062.22.camel@max>
+Subject: [PATCH 5/5] iscsi: convert iscsi tcp to libiscsi
+Date: Thu, 06 Apr 2006 21:26:46 -0500
+Message-ID: <4435CDE6.8010704@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------090300010405080407020106"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:57006 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S932289AbWDGCPr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Apr 2006 22:15:47 -0400
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:61102 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S932293AbWDGC0z (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Apr 2006 22:26:55 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com
 
-There is a lot of code duplcited between iscsi_tcp
-and the upcoming iscsi_iser driver. This patch puts
-the duplicated code in a lib. There is more code
-to move around but this takes care of the
-basics. For iscsi_offload if they use the lib we will
-probably move some things around. For example in the
-queuecommand we will not assume that the LLD wants
-to do queue_work, but it is better to handle that
-later when we know for sure what iscsi_offload looks
-like (we could probably do this for iscsi_iser though to).
+This is a multi-part message in MIME format.
+--------------090300010405080407020106
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Ideally I would like to get the iscsi_transports modules
-to a place where all they really have to do is put data
-on the wire, but how to do that will hopefully be more clear
-when we see other modules like iscsi_offload. Or maybe
-iscsi_offload will not use the lib and it will just be
-iscsi_iser and iscsi_tcp and maybe the iscsi_tcp_tgt if that
-is allowed in mainline.
+This patch is pretty large. It will not go through embedded (already failed once today).
+There was a about 2000 lines duplicated in iscsi_tcp and iscsi_iser.
 
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+diffstat 05-convert-tcp2.patch
+  iscsi_tcp.c | 2899 +++++++++++++++++-------------------------------------------
+  iscsi_tcp.h |  182 ---
+  2 files changed, 844 insertions(+), 2237 deletions(-)
 
-diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-index 81803a1..3ce80ab 100644
---- a/drivers/scsi/Makefile
-+++ b/drivers/scsi/Makefile
-@@ -33,7 +33,7 @@ obj-$(CONFIG_SCSI_FC_ATTRS) 	+= scsi_tra
- obj-$(CONFIG_SCSI_ISCSI_ATTRS)	+= scsi_transport_iscsi.o
- obj-$(CONFIG_SCSI_SAS_ATTRS)	+= scsi_transport_sas.o
- 
--obj-$(CONFIG_ISCSI_TCP) 	+= iscsi_tcp.o
-+obj-$(CONFIG_ISCSI_TCP) 	+= libiscsi.o	iscsi_tcp.o
- obj-$(CONFIG_SCSI_AMIGA7XX)	+= amiga7xx.o	53c7xx.o
- obj-$(CONFIG_A3000_SCSI)	+= a3000.o	wd33c93.o
- obj-$(CONFIG_A2091_SCSI)	+= a2091.o	wd33c93.o
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-new file mode 100644
-index 0000000..9346a85
---- /dev/null
-+++ b/drivers/scsi/libiscsi.c
-@@ -0,0 +1,1697 @@
-+/*
-+ * iSCSI lib functions
-+ *
-+ * Copyright (C) 2006 Red Hat, Inc.  All rights reserved.
-+ * Copyright (C) 2004 - 2006 Mike Christie
-+ * Copyright (C) 2004 - 2005 Dmitry Yusupov
-+ * Copyright (C) 2004 - 2005 Alex Aizman
-+ * maintained by open-iscsi@googlegroups.com
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ */
-+#include <linux/types.h>
-+#include <linux/mutex.h>
-+#include <linux/kfifo.h>
-+#include <linux/delay.h>
-+#include <net/tcp.h>
-+#include <scsi/scsi_cmnd.h>
-+#include <scsi/scsi_device.h>
-+#include <scsi/scsi_eh.h>
-+#include <scsi/scsi_tcq.h>
-+#include <scsi/scsi_host.h>
-+#include <scsi/scsi.h>
-+#include <scsi/iscsi_proto.h>
-+#include <scsi/scsi_transport.h>
-+#include <scsi/scsi_transport_iscsi.h>
-+#include <scsi/libiscsi.h>
-+
-+struct iscsi_session *
-+class_to_transport_session(struct iscsi_cls_session *cls_session)
-+{
-+	struct Scsi_Host *shost = iscsi_session_to_shost(cls_session);
-+	return iscsi_hostdata(shost->hostdata);
-+}
-+EXPORT_SYMBOL_GPL(class_to_transport_session);
-+
-+#define INVALID_SN_DELTA	0xffff
-+
-+int
-+iscsi_check_assign_cmdsn(struct iscsi_session *session, struct iscsi_nopin *hdr)
-+{
-+	uint32_t max_cmdsn = be32_to_cpu(hdr->max_cmdsn);
-+	uint32_t exp_cmdsn = be32_to_cpu(hdr->exp_cmdsn);
-+
-+	if (max_cmdsn < exp_cmdsn -1 &&
-+	    max_cmdsn > exp_cmdsn - INVALID_SN_DELTA)
-+		return ISCSI_ERR_MAX_CMDSN;
-+	if (max_cmdsn > session->max_cmdsn ||
-+	    max_cmdsn < session->max_cmdsn - INVALID_SN_DELTA)
-+		session->max_cmdsn = max_cmdsn;
-+	if (exp_cmdsn > session->exp_cmdsn ||
-+	    exp_cmdsn < session->exp_cmdsn - INVALID_SN_DELTA)
-+		session->exp_cmdsn = exp_cmdsn;
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(iscsi_check_assign_cmdsn);
-+
-+void iscsi_prep_unsolicit_data_pdu(struct iscsi_cmd_task *ctask,
-+				   struct iscsi_data *hdr,
-+				   int transport_data_cnt)
-+{
-+	struct iscsi_conn *conn = ctask->conn;
-+
-+	memset(hdr, 0, sizeof(struct iscsi_data));
-+	hdr->ttt = cpu_to_be32(ISCSI_RESERVED_TAG);
-+	hdr->datasn = cpu_to_be32(ctask->unsol_datasn);
-+	ctask->unsol_datasn++;
-+	hdr->opcode = ISCSI_OP_SCSI_DATA_OUT;
-+	memcpy(hdr->lun, ctask->hdr->lun, sizeof(hdr->lun));
-+
-+	hdr->itt = ctask->hdr->itt;
-+	hdr->exp_statsn = cpu_to_be32(conn->exp_statsn);
-+
-+	hdr->offset = cpu_to_be32(ctask->total_length -
-+				  transport_data_cnt -
-+				  ctask->unsol_count);
-+
-+	if (ctask->unsol_count > conn->max_xmit_dlength) {
-+		hton24(hdr->dlength, conn->max_xmit_dlength);
-+		ctask->data_count = conn->max_xmit_dlength;
-+		hdr->flags = 0;
-+	} else {
-+		hton24(hdr->dlength, ctask->unsol_count);
-+		ctask->data_count = ctask->unsol_count;
-+		hdr->flags = ISCSI_FLAG_CMD_FINAL;
-+	}
-+}
-+EXPORT_SYMBOL_GPL(iscsi_prep_unsolicit_data_pdu);
-+
-+/**
-+ * iscsi_prep_scsi_cmd_pdu - prep iscsi scsi cmd pdu
-+ * @ctask: iscsi cmd task
-+ *
-+ * Prep basic iSCSI PDU fields for a scsi cmd pdu. The LLD should set
-+ * fields like dlength or final based on how much data it sends
-+ */
-+static void iscsi_prep_scsi_cmd_pdu(struct iscsi_cmd_task *ctask)
-+{
-+	struct iscsi_conn *conn = ctask->conn;
-+	struct iscsi_session *session = conn->session;
-+	struct iscsi_cmd *hdr = ctask->hdr;
-+	struct scsi_cmnd *sc = ctask->sc;
-+
-+        hdr->opcode = ISCSI_OP_SCSI_CMD;
-+        hdr->flags = ISCSI_ATTR_SIMPLE;
-+        int_to_scsilun(sc->device->lun, (struct scsi_lun *)hdr->lun);
-+        hdr->itt = ctask->itt | (conn->id << ISCSI_CID_SHIFT) |
-+                         (session->age << ISCSI_AGE_SHIFT);
-+        hdr->data_length = cpu_to_be32(sc->request_bufflen);
-+        hdr->cmdsn = cpu_to_be32(session->cmdsn);
-+        session->cmdsn++;
-+        hdr->exp_statsn = cpu_to_be32(conn->exp_statsn);
-+        memcpy(hdr->cdb, sc->cmnd, sc->cmd_len);
-+        memset(&hdr->cdb[sc->cmd_len], 0, MAX_COMMAND_SIZE - sc->cmd_len);
-+
-+	if (sc->sc_data_direction == DMA_TO_DEVICE) {
-+		hdr->flags |= ISCSI_FLAG_CMD_WRITE;
-+		/*
-+		 * Write counters:
-+		 *
-+		 *	imm_count	bytes to be sent right after
-+		 *			SCSI PDU Header
-+		 *
-+		 *	unsol_count	bytes(as Data-Out) to be sent
-+		 *			without	R2T ack right after
-+		 *			immediate data
-+		 *
-+		 *	r2t_data_count	bytes to be sent via R2T ack's
-+		 *
-+		 *      pad_count       bytes to be sent as zero-padding
-+		 */
-+		ctask->imm_count = 0;
-+		ctask->unsol_count = 0;
-+		ctask->unsol_datasn = 0;
-+
-+		if (session->imm_data_en) {
-+			if (ctask->total_length >= session->first_burst)
-+				ctask->imm_count = min(session->first_burst,
-+							conn->max_xmit_dlength);
-+			else
-+				ctask->imm_count = min(ctask->total_length,
-+							conn->max_xmit_dlength);
-+			hton24(ctask->hdr->dlength, ctask->imm_count);
-+		} else
-+			zero_data(ctask->hdr->dlength);
-+
-+		if (!session->initial_r2t_en)
-+			ctask->unsol_count = min(session->first_burst,
-+				ctask->total_length) - ctask->imm_count;
-+		if (!ctask->unsol_count)
-+			/* No unsolicit Data-Out's */
-+			ctask->hdr->flags |= ISCSI_FLAG_CMD_FINAL;
-+	} else {
-+		ctask->datasn = 0;
-+		hdr->flags |= ISCSI_FLAG_CMD_FINAL;
-+		zero_data(hdr->dlength);
-+
-+		if (sc->sc_data_direction == DMA_FROM_DEVICE)
-+			hdr->flags |= ISCSI_FLAG_CMD_READ;
-+	}
-+
-+	conn->scsicmd_pdus_cnt++;
-+}
-+EXPORT_SYMBOL_GPL(iscsi_prep_scsi_cmd_pdu);
-+
-+/**
-+ * iscsi_complete_command - return command back to scsi-ml
-+ * @session: iscsi session
-+ * @ctask: iscsi cmd task
-+ *
-+ * Must be called with session lock.
-+ * This function returns the scsi command to scsi-ml and returns
-+ * the cmd task to the pool of available cmd tasks.
-+ */
-+static void iscsi_complete_command(struct iscsi_session *session,
-+				   struct iscsi_cmd_task *ctask)
-+{
-+	struct scsi_cmnd *sc = ctask->sc;
-+
-+	ctask->sc = NULL;
-+	list_del_init(&ctask->running);
-+	__kfifo_put(session->cmdpool.queue, (void*)&ctask, sizeof(void*));
-+	sc->scsi_done(sc);
-+}
-+
-+/**
-+ * iscsi_cmd_rsp - SCSI Command Response processing
-+ * @conn: iscsi connection
-+ * @hdr: iscsi header
-+ * @ctask: scsi command task
-+ * @data: cmd data buffer
-+ * @datalen: len of buffer
-+ *
-+ * iscsi_cmd_rsp sets up the scsi_cmnd fields based on the PDU and
-+ * then completes the command and task.
-+ **/
-+static int iscsi_scsi_cmd_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
-+			      struct iscsi_cmd_task *ctask, char *data,
-+			      int datalen)
-+{
-+	int rc;
-+	struct iscsi_cmd_rsp *rhdr = (struct iscsi_cmd_rsp *)hdr;
-+	struct iscsi_session *session = conn->session;
-+	struct scsi_cmnd *sc = ctask->sc;
-+
-+	rc = iscsi_check_assign_cmdsn(session, (struct iscsi_nopin*)rhdr);
-+	if (rc) {
-+		sc->result = DID_ERROR << 16;
-+		goto out;
-+	}
-+
-+	conn->exp_statsn = be32_to_cpu(rhdr->statsn) + 1;
-+
-+	sc->result = (DID_OK << 16) | rhdr->cmd_status;
-+
-+	if (rhdr->response != ISCSI_STATUS_CMD_COMPLETED) {
-+		sc->result = DID_ERROR << 16;
-+		goto out;
-+	}
-+
-+	if (rhdr->cmd_status == SAM_STAT_CHECK_CONDITION) {
-+		int senselen;
-+
-+		if (datalen < 2) {
-+invalid_datalen:
-+			printk(KERN_ERR "Got CHECK_CONDITION but invalid "
-+			       "data buffer size of %d\n", datalen);
-+			sc->result = DID_BAD_TARGET << 16;
-+			goto out;
-+		}
-+
-+		senselen = (data[0] << 8) | data[1];
-+		if (datalen < senselen)
-+			goto invalid_datalen;
-+
-+		memcpy(sc->sense_buffer, data + 2,
-+		       min(senselen, SCSI_SENSE_BUFFERSIZE));
-+		debug_scsi("copied %d bytes of sense\n",
-+			   min(senselen, SCSI_SENSE_BUFFERSIZE));
-+	}
-+
-+	if (sc->sc_data_direction == DMA_TO_DEVICE)
-+		goto out;
-+
-+	if (rhdr->flags & ISCSI_FLAG_CMD_UNDERFLOW) {
-+		int res_count = be32_to_cpu(rhdr->residual_count);
-+
-+		if (res_count > 0 && res_count <= sc->request_bufflen)
-+			sc->resid = res_count;
-+		else
-+			sc->result = (DID_BAD_TARGET << 16) | rhdr->cmd_status;
-+	} else if (rhdr->flags & ISCSI_FLAG_CMD_BIDI_UNDERFLOW)
-+		sc->result = (DID_BAD_TARGET << 16) | rhdr->cmd_status;
-+	else if (rhdr->flags & ISCSI_FLAG_CMD_OVERFLOW)
-+		sc->resid = be32_to_cpu(rhdr->residual_count);
-+
-+out:
-+	debug_scsi("done [sc %lx res %d itt 0x%x]\n",
-+		   (long)sc, sc->result, ctask->itt);
-+	conn->scsirsp_pdus_cnt++;
-+
-+	iscsi_complete_command(conn->session, ctask);
-+	return rc;
-+}
-+
-+/**
-+ * __iscsi_complete_pdu - complete pdu
-+ * @conn: iscsi conn
-+ * @hdr: iscsi header
-+ * @data: data buffer
-+ * @datalen: len of data buffer
-+ *
-+ * Completes pdu processing by freeing any resources allocated at
-+ * queuecommand or send generic. session lock must be held and verify
-+ * itt must have been called.
-+ */
-+int __iscsi_complete_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
-+			 char *data, int datalen)
-+{
-+	struct iscsi_session *session = conn->session;
-+	int opcode = hdr->opcode & ISCSI_OPCODE_MASK, rc = 0;
-+	struct iscsi_cmd_task *ctask;
-+	struct iscsi_mgmt_task *mtask;
-+	uint32_t itt;
-+
-+	if (hdr->itt != cpu_to_be32(ISCSI_RESERVED_TAG))
-+		itt = hdr->itt & ISCSI_ITT_MASK;
-+	else
-+		itt = hdr->itt;
-+
-+	if (itt < session->cmds_max) {
-+		ctask = session->cmds[itt];
-+
-+		debug_scsi("cmdrsp [op 0x%x cid %d itt 0x%x len %d]\n",
-+			   opcode, conn->id, ctask->itt, datalen);
-+
-+		switch(opcode) {
-+		case ISCSI_OP_SCSI_CMD_RSP:
-+			BUG_ON((void*)ctask != ctask->sc->SCp.ptr);
-+			rc = iscsi_scsi_cmd_rsp(conn, hdr, ctask, data,
-+						datalen);
-+			break;
-+		case ISCSI_OP_SCSI_DATA_IN:
-+			BUG_ON((void*)ctask != ctask->sc->SCp.ptr);
-+			if (hdr->flags & ISCSI_FLAG_DATA_STATUS) {
-+				conn->scsirsp_pdus_cnt++;
-+				iscsi_complete_command(session, ctask);
-+			}
-+			break;
-+		case ISCSI_OP_R2T:
-+			/* LLD handles this for now */
-+			break;
-+		default:
-+			rc = ISCSI_ERR_BAD_OPCODE;
-+			break;
-+		}
-+	} else if (itt >= ISCSI_MGMT_ITT_OFFSET &&
-+		   itt < ISCSI_MGMT_ITT_OFFSET + session->mgmtpool_max) {
-+		mtask = session->mgmt_cmds[itt - ISCSI_MGMT_ITT_OFFSET];
-+
-+		debug_scsi("immrsp [op 0x%x cid %d itt 0x%x len %d]\n",
-+			   opcode, conn->id, mtask->itt, datalen);
-+
-+		switch(opcode) {
-+		case ISCSI_OP_LOGIN_RSP:
-+		case ISCSI_OP_TEXT_RSP:
-+		case ISCSI_OP_LOGOUT_RSP:
-+			rc = iscsi_check_assign_cmdsn(session,
-+						 (struct iscsi_nopin*)hdr);
-+			if (rc)
-+				break;
-+
-+			rc = iscsi_recv_pdu(conn->cls_conn, hdr, data, datalen);
-+			list_del(&mtask->running);
-+			if (conn->login_mtask != mtask)
-+				__kfifo_put(session->mgmtpool.queue,
-+					    (void*)&mtask, sizeof(void*));
-+			break;
-+		case ISCSI_OP_SCSI_TMFUNC_RSP:
-+			rc = iscsi_check_assign_cmdsn(session,
-+						 (struct iscsi_nopin*)hdr);
-+			if (rc)
-+				break;
-+
-+			if (datalen) {
-+				rc = ISCSI_ERR_PROTO;
-+				break;
-+			}
-+			conn->tmfrsp_pdus_cnt++;
-+			if (conn->tmabort_state == TMABORT_INITIAL) {
-+				conn->tmabort_state =
-+					((struct iscsi_tm_rsp *)hdr)->
-+					response == ISCSI_TMF_RSP_COMPLETE ?
-+						TMABORT_SUCCESS:TMABORT_FAILED;
-+				/* unblock eh_abort() */
-+				wake_up(&conn->ehwait);
-+			}
-+			break;
-+		case ISCSI_OP_NOOP_IN:
-+			if (hdr->ttt != ISCSI_RESERVED_TAG) {
-+				rc = ISCSI_ERR_PROTO;
-+				break;
-+			}
-+			rc = iscsi_check_assign_cmdsn(session,
-+						(struct iscsi_nopin*)hdr);
-+			if (rc)
-+				break;
-+			conn->exp_statsn = be32_to_cpu(hdr->statsn) + 1;
-+
-+			rc = iscsi_recv_pdu(conn->cls_conn, hdr, data, datalen);
-+			list_del(&mtask->running);
-+			if (conn->login_mtask != mtask)
-+				__kfifo_put(session->mgmtpool.queue,
-+					    (void*)&mtask, sizeof(void*));
-+			break;
-+		default:
-+			rc = ISCSI_ERR_BAD_OPCODE;
-+			break;
-+		}
-+	} else if (itt == ISCSI_RESERVED_TAG) {
-+		switch(opcode) {
-+		case ISCSI_OP_NOOP_IN:
-+			if (!datalen) {
-+				rc = iscsi_check_assign_cmdsn(session,
-+						 (struct iscsi_nopin*)hdr);
-+				if (!rc && hdr->ttt != ISCSI_RESERVED_TAG)
-+					rc = iscsi_recv_pdu(conn->cls_conn,
-+							    hdr, NULL, 0);
-+			} else
-+				rc = ISCSI_ERR_PROTO;
-+			break;
-+		case ISCSI_OP_REJECT:
-+			/* we need sth like iscsi_reject_rsp()*/
-+		case ISCSI_OP_ASYNC_EVENT:
-+			/* we need sth like iscsi_async_event_rsp() */
-+			rc = ISCSI_ERR_BAD_OPCODE;
-+			break;
-+		default:
-+			rc = ISCSI_ERR_BAD_OPCODE;
-+			break;
-+		}
-+	} else
-+		rc = ISCSI_ERR_BAD_ITT;
-+
-+	return rc;
-+}
-+EXPORT_SYMBOL_GPL(__iscsi_complete_pdu);
-+
-+int iscsi_complete_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
-+		       char *data, int datalen)
-+{
-+	int rc;
-+
-+	spin_lock(&conn->session->lock);
-+	rc = __iscsi_complete_pdu(conn, hdr, data, datalen);
-+	spin_unlock(&conn->session->lock);
-+	return rc;
-+}
-+EXPORT_SYMBOL_GPL(iscsi_complete_pdu);
-+
-+/* verify itt (itt encoding: age+cid+itt) */
-+int iscsi_verify_itt(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
-+		     uint32_t *ret_itt)
-+{
-+	struct iscsi_session *session = conn->session;
-+	struct iscsi_cmd_task *ctask;
-+	uint32_t itt;
-+
-+	if (hdr->itt != cpu_to_be32(ISCSI_RESERVED_TAG)) {
-+		if ((hdr->itt & ISCSI_AGE_MASK) !=
-+		    (session->age << ISCSI_AGE_SHIFT)) {
-+			printk(KERN_ERR "iscsi_tcp: received itt %x expected "
-+				"session age (%x)\n", hdr->itt,
-+				session->age & ISCSI_AGE_MASK);
-+			return ISCSI_ERR_BAD_ITT;
-+		}
-+
-+		if ((hdr->itt & ISCSI_CID_MASK) !=
-+		    (conn->id << ISCSI_CID_SHIFT)) {
-+			printk(KERN_ERR "iscsi_tcp: received itt %x, expected "
-+				"CID (%x)\n", hdr->itt, conn->id);
-+			return ISCSI_ERR_BAD_ITT;
-+		}
-+		itt = hdr->itt & ISCSI_ITT_MASK;
-+	} else
-+		itt = hdr->itt;
-+
-+	if (itt < session->cmds_max) {
-+		ctask = session->cmds[itt];
-+
-+		if (!ctask->sc) {
-+			printk(KERN_INFO "iscsi_tcp: dropping ctask with "
-+			       "itt 0x%x\n", ctask->itt);
-+			/* force drop */
-+			return ISCSI_ERR_NO_SCSI_CMD;
-+		}
-+
-+		if (ctask->sc->SCp.phase != session->age) {
-+			printk(KERN_ERR "iscsi_tcp: ctask's session age %d, "
-+				"expected %d\n", ctask->sc->SCp.phase,
-+				session->age);
-+			return ISCSI_ERR_SESSION_FAILED;
-+		}
-+	}
-+
-+	*ret_itt = itt;
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(iscsi_verify_itt);
-+
-+void iscsi_conn_failure(struct iscsi_conn *conn, enum iscsi_err err)
-+{
-+	struct iscsi_session *session = conn->session;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&session->lock, flags);
-+	if (session->conn_cnt == 1 || session->leadconn == conn)
-+		session->state = ISCSI_STATE_FAILED;
-+	spin_unlock_irqrestore(&session->lock, flags);
-+	set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx);
-+	set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_rx);
-+	iscsi_conn_error(conn->cls_conn, err);
-+}
-+EXPORT_SYMBOL_GPL(iscsi_conn_failure);
-+
-+/**
-+ * iscsi_data_xmit - xmit any command into the scheduled connection
-+ * @conn: iscsi connection
-+ *
-+ * Notes:
-+ *	The function can return -EAGAIN in which case the caller must
-+ *	re-schedule it again later or recover. '0' return code means
-+ *	successful xmit.
-+ **/
-+static int iscsi_data_xmit(struct iscsi_conn *conn)
-+{
-+	struct iscsi_transport *tt;
-+
-+	if (unlikely(conn->suspend_tx)) {
-+		debug_scsi("conn %d Tx suspended!\n", conn->id);
-+		return 0;
-+	}
-+	tt = conn->session->tt;
-+
-+	/*
-+	 * Transmit in the following order:
-+	 *
-+	 * 1) un-finished xmit (ctask or mtask)
-+	 * 2) immediate control PDUs
-+	 * 3) write data
-+	 * 4) SCSI commands
-+	 * 5) non-immediate control PDUs
-+	 *
-+	 * No need to lock around __kfifo_get as long as
-+	 * there's one producer and one consumer.
-+	 */
-+
-+	BUG_ON(conn->ctask && conn->mtask);
-+
-+	if (conn->ctask) {
-+		if (tt->xmit_cmd_task(conn, conn->ctask))
-+			goto again;
-+		/* done with this in-progress ctask */
-+		conn->ctask = NULL;
-+	}
-+	if (conn->mtask) {
-+	        if (tt->xmit_mgmt_task(conn, conn->mtask))
-+		        goto again;
-+		/* done with this in-progress mtask */
-+		conn->mtask = NULL;
-+	}
-+
-+	/* process immediate first */
-+        if (unlikely(__kfifo_len(conn->immqueue))) {
-+	        while (__kfifo_get(conn->immqueue, (void*)&conn->mtask,
-+			           sizeof(void*))) {
-+			list_add_tail(&conn->mtask->running,
-+				      &conn->mgmt_run_list);
-+		        if (tt->xmit_mgmt_task(conn, conn->mtask))
-+			        goto again;
-+	        }
-+		/* done with this mtask */
-+		conn->mtask = NULL;
-+	}
-+
-+	/* process command queue */
-+	while (__kfifo_get(conn->xmitqueue, (void*)&conn->ctask,
-+			   sizeof(void*))) {
-+		/*
-+		 * iscsi tcp may readd the task to the xmitqueue to send
-+		 * write data
-+		 */
-+		if (list_empty(&conn->ctask->running))
-+			list_add_tail(&conn->ctask->running, &conn->run_list);
-+		if (tt->xmit_cmd_task(conn, conn->ctask))
-+			goto again;
-+	}
-+	/* done with this ctask */
-+	conn->ctask = NULL;
-+
-+	/* process the rest control plane PDUs, if any */
-+        if (unlikely(__kfifo_len(conn->mgmtqueue))) {
-+	        while (__kfifo_get(conn->mgmtqueue, (void*)&conn->mtask,
-+			           sizeof(void*))) {
-+			list_add_tail(&conn->mtask->running,
-+				      &conn->mgmt_run_list);
-+		        if (tt->xmit_mgmt_task(conn, conn->mtask))
-+			        goto again;
-+	        }
-+		/* done with this mtask */
-+		conn->mtask = NULL;
-+	}
-+
-+	return 0;
-+
-+again:
-+	if (unlikely(conn->suspend_tx))
-+		return 0;
-+
-+	return -EAGAIN;
-+}
-+
-+static void iscsi_xmitworker(void *data)
-+{
-+	struct iscsi_conn *conn = data;
-+
-+	/*
-+	 * serialize Xmit worker on a per-connection basis.
-+	 */
-+	mutex_lock(&conn->xmitmutex);
-+	if (iscsi_data_xmit(conn))
-+		scsi_queue_work(conn->session->host, &conn->xmitwork);
-+	mutex_unlock(&conn->xmitmutex);
-+}
-+
-+enum {
-+	FAILURE_BAD_HOST = 1,
-+	FAILURE_SESSION_FAILED,
-+	FAILURE_SESSION_FREED,
-+	FAILURE_WINDOW_CLOSED,
-+	FAILURE_SESSION_TERMINATE,
-+	FAILURE_SESSION_RECOVERY_TIMEOUT,
-+};
-+
-+int iscsi_queuecommand(struct scsi_cmnd *sc, void (*done)(struct scsi_cmnd *))
-+{
-+	struct Scsi_Host *host;
-+	int reason = 0;
-+	struct iscsi_session *session;
-+	struct iscsi_conn *conn;
-+	struct iscsi_cmd_task *ctask = NULL;
-+
-+	sc->scsi_done = done;
-+	sc->result = 0;
-+
-+	host = sc->device->host;
-+	session = iscsi_hostdata(host->hostdata);
-+
-+	spin_lock(&session->lock);
-+
-+	if (session->state != ISCSI_STATE_LOGGED_IN) {
-+		if (session->recovery_failed) {
-+			reason = FAILURE_SESSION_RECOVERY_TIMEOUT;
-+			goto fault;
-+		} else if (session->state == ISCSI_STATE_FAILED) {
-+			reason = FAILURE_SESSION_FAILED;
-+			goto reject;
-+		} else if (session->state == ISCSI_STATE_TERMINATE) {
-+			reason = FAILURE_SESSION_TERMINATE;
-+			goto fault;
-+		}
-+		reason = FAILURE_SESSION_FREED;
-+		goto fault;
-+	}
-+
-+	/*
-+	 * Check for iSCSI window and take care of CmdSN wrap-around
-+	 */
-+	if ((int)(session->max_cmdsn - session->cmdsn) < 0) {
-+		reason = FAILURE_WINDOW_CLOSED;
-+		goto reject;
-+	}
-+
-+	conn = session->leadconn;
-+
-+	__kfifo_get(session->cmdpool.queue, (void*)&ctask, sizeof(void*));
-+	sc->SCp.phase = session->age;
-+	sc->SCp.ptr = (char *)ctask;
-+
-+	ctask->mtask = NULL;
-+	ctask->conn = conn;
-+	ctask->sc = sc;
-+	INIT_LIST_HEAD(&ctask->running);
-+	ctask->total_length = sc->request_bufflen;
-+	iscsi_prep_scsi_cmd_pdu(ctask);
-+
-+	session->tt->init_cmd_task(ctask);
-+
-+	__kfifo_put(conn->xmitqueue, (void*)&ctask, sizeof(void*));
-+	debug_scsi(
-+	       "ctask enq [%s cid %d sc %lx itt 0x%x len %d cmdsn %d win %d]\n",
-+		sc->sc_data_direction == DMA_TO_DEVICE ? "write" : "read",
-+		conn->id, (long)sc, ctask->itt, sc->request_bufflen,
-+		session->cmdsn, session->max_cmdsn - session->exp_cmdsn + 1);
-+	spin_unlock(&session->lock);
-+
-+	scsi_queue_work(host, &conn->xmitwork);
-+	return 0;
-+
-+reject:
-+	spin_unlock(&session->lock);
-+	debug_scsi("cmd 0x%x rejected (%d)\n", sc->cmnd[0], reason);
-+	return SCSI_MLQUEUE_HOST_BUSY;
-+
-+fault:
-+	spin_unlock(&session->lock);
-+	printk(KERN_ERR "iscsi_tcp: cmd 0x%x is not queued (%d)\n",
-+	       sc->cmnd[0], reason);
-+	sc->result = (DID_NO_CONNECT << 16);
-+	sc->resid = sc->request_bufflen;
-+	sc->scsi_done(sc);
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(iscsi_queuecommand);
-+
-+int iscsi_change_queue_depth(struct scsi_device *sdev, int depth)
-+{
-+	if (depth > ISCSI_MAX_CMD_PER_LUN)
-+		depth = ISCSI_MAX_CMD_PER_LUN;
-+	scsi_adjust_queue_depth(sdev, scsi_get_tag_type(sdev), depth);
-+	return sdev->queue_depth;
-+}
-+EXPORT_SYMBOL_GPL(iscsi_change_queue_depth);
-+
-+static int
-+iscsi_conn_send_generic(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
-+			char *data, uint32_t data_size)
-+{
-+	struct iscsi_session *session = conn->session;
-+	struct iscsi_nopout *nop = (struct iscsi_nopout *)hdr;
-+	struct iscsi_mgmt_task *mtask;
-+
-+	spin_lock_bh(&session->lock);
-+	if (session->state == ISCSI_STATE_TERMINATE) {
-+		spin_unlock_bh(&session->lock);
-+		return -EPERM;
-+	}
-+	if (hdr->opcode == (ISCSI_OP_LOGIN | ISCSI_OP_IMMEDIATE) ||
-+	    hdr->opcode == (ISCSI_OP_TEXT | ISCSI_OP_IMMEDIATE))
-+		/*
-+		 * Login and Text are sent serially, in
-+		 * request-followed-by-response sequence.
-+		 * Same mtask can be used. Same ITT must be used.
-+		 * Note that login_mtask is preallocated at conn_create().
-+		 */
-+		mtask = conn->login_mtask;
-+	else {
-+	        BUG_ON(conn->c_stage == ISCSI_CONN_INITIAL_STAGE);
-+	        BUG_ON(conn->c_stage == ISCSI_CONN_STOPPED);
-+
-+		if (!__kfifo_get(session->mgmtpool.queue,
-+				 (void*)&mtask, sizeof(void*))) {
-+			spin_unlock_bh(&session->lock);
-+			return -ENOSPC;
-+		}
-+	}
-+
-+	/*
-+	 * pre-format CmdSN and ExpStatSN for outgoing PDU.
-+	 */
-+	if (hdr->itt != cpu_to_be32(ISCSI_RESERVED_TAG)) {
-+		hdr->itt = mtask->itt | (conn->id << ISCSI_CID_SHIFT) |
-+			   (session->age << ISCSI_AGE_SHIFT);
-+		nop->cmdsn = cpu_to_be32(session->cmdsn);
-+		if (conn->c_stage == ISCSI_CONN_STARTED &&
-+		    !(hdr->opcode & ISCSI_OP_IMMEDIATE))
-+			session->cmdsn++;
-+	} else
-+		/* do not advance CmdSN */
-+		nop->cmdsn = cpu_to_be32(session->cmdsn);
-+
-+	nop->exp_statsn = cpu_to_be32(conn->exp_statsn);
-+
-+	if (data_size) {
-+		memcpy(mtask->data, data, data_size);
-+		mtask->data_count = data_size;
-+	} else
-+		mtask->data_count = 0;
-+
-+	INIT_LIST_HEAD(&mtask->running);
-+	memcpy(mtask->hdr, hdr, sizeof(struct iscsi_hdr));
-+	if (session->tt->init_mgmt_task)
-+		session->tt->init_mgmt_task(conn, mtask, data, data_size);
-+	spin_unlock_bh(&session->lock);
-+
-+	debug_scsi("mgmtpdu [op 0x%x hdr->itt 0x%x datalen %d]\n",
-+		   hdr->opcode, hdr->itt, data_size);
-+
-+	/*
-+	 * since send_pdu() could be called at least from two contexts,
-+	 * we need to serialize __kfifo_put, so we don't have to take
-+	 * additional lock on fast data-path
-+	 */
-+        if (hdr->opcode & ISCSI_OP_IMMEDIATE)
-+	        __kfifo_put(conn->immqueue, (void*)&mtask, sizeof(void*));
-+	else
-+	        __kfifo_put(conn->mgmtqueue, (void*)&mtask, sizeof(void*));
-+
-+	scsi_queue_work(session->host, &conn->xmitwork);
-+	return 0;
-+}
-+
-+int iscsi_conn_send_pdu(struct iscsi_cls_conn *cls_conn, struct iscsi_hdr *hdr,
-+			char *data, uint32_t data_size)
-+{
-+	struct iscsi_conn *conn = cls_conn->dd_data;
-+	int rc;
-+
-+	mutex_lock(&conn->xmitmutex);
-+	rc = iscsi_conn_send_generic(conn, hdr, data, data_size);
-+	mutex_unlock(&conn->xmitmutex);
-+
-+	return rc;
-+}
-+EXPORT_SYMBOL_GPL(iscsi_conn_send_pdu);
-+
-+void iscsi_session_recovery_timedout(struct iscsi_cls_session *cls_session)
-+{
-+	struct iscsi_session *session = class_to_transport_session(cls_session);
-+	struct iscsi_conn *conn = session->leadconn;
-+
-+	spin_lock_bh(&session->lock);
-+	if (session->state != ISCSI_STATE_LOGGED_IN) {
-+		session->recovery_failed = 1;
-+		if (conn)
-+			wake_up(&conn->ehwait);
-+	}
-+	spin_unlock_bh(&session->lock);
-+}
-+EXPORT_SYMBOL_GPL(iscsi_session_recovery_timedout);
-+
-+int iscsi_eh_host_reset(struct scsi_cmnd *sc)
-+{
-+	struct Scsi_Host *host = sc->device->host;
-+	struct iscsi_session *session = iscsi_hostdata(host->hostdata);
-+	struct iscsi_conn *conn = session->leadconn;
-+	int fail_session = 0;
-+
-+	spin_lock_bh(&session->lock);
-+	if (session->state == ISCSI_STATE_TERMINATE) {
-+failed:
-+		debug_scsi("failing host reset: session terminated "
-+			   "[CID %d age %d]", conn->id, session->age);
-+		spin_unlock_bh(&session->lock);
-+		return FAILED;
-+	}
-+
-+	if (sc->SCp.phase == session->age) {
-+		debug_scsi("failing connection CID %d due to SCSI host reset",
-+			   conn->id);
-+		fail_session = 1;
-+	}
-+	spin_unlock_bh(&session->lock);
-+
-+	/*
-+	 * we drop the lock here but the leadconn cannot be destoyed while
-+	 * we are in the scsi eh
-+	 */
-+	if (fail_session) {
-+		iscsi_conn_failure(conn, ISCSI_ERR_CONN_FAILED);
-+		/*
-+		 * if userspace cannot respond then we must kick this off
-+		 * here for it
-+		 */
-+		iscsi_start_session_recovery(session, conn, STOP_CONN_RECOVER);
-+	}
-+
-+	debug_scsi("iscsi_eh_host_reset wait for relogin\n");
-+	wait_event_interruptible(conn->ehwait,
-+				 session->state == ISCSI_STATE_TERMINATE ||
-+				 session->state == ISCSI_STATE_LOGGED_IN ||
-+				 session->recovery_failed);
-+	if (signal_pending(current))
-+		flush_signals(current);
-+
-+	spin_lock_bh(&session->lock);
-+	if (session->state == ISCSI_STATE_LOGGED_IN)
-+		printk(KERN_INFO "host reset succeeded\n");
-+	else
-+		goto failed;
-+	spin_unlock_bh(&session->lock);
-+
-+	return SUCCESS;
-+}
-+EXPORT_SYMBOL_GPL(iscsi_eh_host_reset);
-+
-+static void iscsi_tmabort_timedout(unsigned long data)
-+{
-+	struct iscsi_cmd_task *ctask = (struct iscsi_cmd_task *)data;
-+	struct iscsi_conn *conn = ctask->conn;
-+	struct iscsi_session *session = conn->session;
-+
-+	spin_lock(&session->lock);
-+	if (conn->tmabort_state == TMABORT_INITIAL) {
-+		conn->tmabort_state = TMABORT_TIMEDOUT;
-+		debug_scsi("tmabort timedout [sc %p itt 0x%x]\n",
-+			ctask->sc, ctask->itt);
-+		/* unblock eh_abort() */
-+		wake_up(&conn->ehwait);
-+	}
-+	spin_unlock(&session->lock);
-+}
-+
-+/* must be called with the mutex lock */
-+static int iscsi_exec_abort_task(struct scsi_cmnd *sc,
-+				 struct iscsi_cmd_task *ctask)
-+{
-+	struct iscsi_conn *conn = ctask->conn;
-+	struct iscsi_session *session = conn->session;
-+	struct iscsi_tm *hdr = &conn->tmhdr;
-+	int rc;
-+
-+	/*
-+	 * ctask timed out but session is OK requests must be serialized.
-+	 */
-+	memset(hdr, 0, sizeof(struct iscsi_tm));
-+	hdr->opcode = ISCSI_OP_SCSI_TMFUNC | ISCSI_OP_IMMEDIATE;
-+	hdr->flags = ISCSI_TM_FUNC_ABORT_TASK;
-+	hdr->flags |= ISCSI_FLAG_CMD_FINAL;
-+	memcpy(hdr->lun, ctask->hdr->lun, sizeof(hdr->lun));
-+	hdr->rtt = ctask->hdr->itt;
-+	hdr->refcmdsn = ctask->hdr->cmdsn;
-+
-+	rc = iscsi_conn_send_generic(conn, (struct iscsi_hdr *)hdr,
-+				     NULL, 0);
-+	if (rc) {
-+		iscsi_conn_failure(conn, ISCSI_ERR_CONN_FAILED);
-+		debug_scsi("abort sent failure [itt 0x%x] %d", ctask->itt, rc);
-+		return rc;
-+	}
-+
-+	debug_scsi("abort sent [itt 0x%x]\n", ctask->itt);
-+
-+	spin_lock_bh(&session->lock);
-+	ctask->mtask = (struct iscsi_mgmt_task *)
-+			session->mgmt_cmds[(hdr->itt & ISCSI_ITT_MASK) -
-+					ISCSI_MGMT_ITT_OFFSET];
-+
-+	if (conn->tmabort_state == TMABORT_INITIAL) {
-+		conn->tmfcmd_pdus_cnt++;
-+		conn->tmabort_timer.expires = 10*HZ + jiffies;
-+		conn->tmabort_timer.function = iscsi_tmabort_timedout;
-+		conn->tmabort_timer.data = (unsigned long)ctask;
-+		add_timer(&conn->tmabort_timer);
-+		debug_scsi("abort set timeout [itt 0x%x]", ctask->itt);
-+	}
-+	spin_unlock_bh(&session->lock);
-+	mutex_unlock(&conn->xmitmutex);
-+
-+	/*
-+	 * block eh thread until:
-+	 *
-+	 * 1) abort response
-+	 * 2) abort timeout
-+	 * 3) session is terminated or restarted or userspace has
-+	 * given up on recovery
-+	 */
-+	wait_event_interruptible(conn->ehwait,
-+				 sc->SCp.phase != session->age ||
-+				 session->state != ISCSI_STATE_LOGGED_IN ||
-+				 conn->tmabort_state != TMABORT_INITIAL ||
-+				 session->recovery_failed);
-+	if (signal_pending(current))
-+		flush_signals(current);
-+	del_timer_sync(&conn->tmabort_timer);
-+
-+	mutex_lock(&conn->xmitmutex);
-+	return 0;
-+}
-+
-+/*
-+ * xmit mutex and session lock must be held
-+ */
-+#define iscsi_remove_task(tasktype)					\
-+static struct iscsi_##tasktype *					\
-+iscsi_remove_##tasktype(struct kfifo *fifo, uint32_t itt)		\
-+{									\
-+	int i, nr_tasks = __kfifo_len(fifo) / sizeof(void*);		\
-+	struct iscsi_##tasktype *task;					\
-+									\
-+	debug_scsi("searching %d tasks\n", nr_tasks);			\
-+									\
-+	for (i = 0; i < nr_tasks; i++) {				\
-+		__kfifo_get(fifo, (void*)&task, sizeof(void*));		\
-+		debug_scsi("check task %u\n", task->itt);		\
-+									\
-+		if (task->itt == itt) {					\
-+			debug_scsi("matched task\n");			\
-+			break;						\
-+		}							\
-+									\
-+		__kfifo_put(fifo, (void*)&task, sizeof(void*));		\
-+	}								\
-+	return NULL;							\
-+}
-+
-+iscsi_remove_task(mgmt_task);
-+iscsi_remove_task(cmd_task);
-+
-+static int iscsi_ctask_mtask_cleanup(struct iscsi_cmd_task *ctask)
-+{
-+	struct iscsi_conn *conn = ctask->conn;
-+	struct iscsi_session *session = conn->session;
-+
-+	if (!ctask->mtask)
-+		return -EINVAL;
-+
-+	if (!iscsi_remove_mgmt_task(conn->immqueue, ctask->mtask->itt))
-+		list_del(&ctask->mtask->running);
-+	__kfifo_put(session->mgmtpool.queue, (void*)&ctask->mtask,
-+		    sizeof(void*));
-+	ctask->mtask = NULL;
-+	return 0;
-+}
-+
-+/*
-+ * session lock and xmitmutex must be held
-+ */
-+static void fail_command(struct iscsi_conn *conn, struct iscsi_cmd_task *ctask,
-+			 int err)
-+{
-+	struct scsi_cmnd *sc;
-+
-+	conn->session->tt->cleanup_cmd_task(conn, ctask);
-+	iscsi_ctask_mtask_cleanup(ctask);
-+
-+	sc = ctask->sc;
-+	if (!sc)
-+		return;
-+	sc->result = err;
-+	sc->resid = sc->request_bufflen;
-+	iscsi_complete_command(conn->session, ctask);
-+}
-+
-+int iscsi_eh_abort(struct scsi_cmnd *sc)
-+{
-+	struct iscsi_cmd_task *ctask = (struct iscsi_cmd_task *)sc->SCp.ptr;
-+	struct iscsi_conn *conn = ctask->conn;
-+	struct iscsi_session *session = conn->session;
-+	struct iscsi_cmd_task *pending_ctask;
-+	int rc;
-+
-+	conn->eh_abort_cnt++;
-+	debug_scsi("aborting [sc %p itt 0x%x]\n", sc, ctask->itt);
-+
-+	mutex_lock(&conn->xmitmutex);
-+	spin_lock_bh(&session->lock);
-+
-+	/*
-+	 * If we are not logged in or we have started a new session
-+	 * then let the host reset code handle this
-+	 */
-+	if (session->state != ISCSI_STATE_LOGGED_IN ||
-+	    sc->SCp.phase != session->age)
-+		goto failed;
-+
-+	/* ctask completed before time out */
-+	if (!ctask->sc)
-+		goto success;
-+
-+	/* what should we do here ? */
-+	if (conn->ctask == ctask) {
-+		printk(KERN_INFO "sc %p itt 0x%x partially sent. Failing "
-+		       "abort\n", sc, ctask->itt);
-+		goto failed;
-+	}
-+
-+	/* check for the easy pending cmd abort */
-+	pending_ctask = iscsi_remove_cmd_task(conn->xmitqueue, ctask->itt);
-+	if (pending_ctask) {
-+		/* iscsi_tcp queues write transfers on the xmitqueue */
-+		if (list_empty(&pending_ctask->running)) {
-+			debug_scsi("found pending task\n");
-+			goto success;
-+		} else 
-+			__kfifo_put(conn->xmitqueue, (void*)&pending_ctask,
-+				    sizeof(void*));
-+	}
-+
-+	conn->tmabort_state = TMABORT_INITIAL;
-+
-+	spin_unlock_bh(&session->lock);
-+	rc = iscsi_exec_abort_task(sc, ctask);
-+	spin_lock_bh(&session->lock);
-+
-+	iscsi_ctask_mtask_cleanup(ctask);
-+	if (rc || sc->SCp.phase != session->age ||
-+	    session->state != ISCSI_STATE_LOGGED_IN)
-+		goto failed;
-+
-+	/* ctask completed before tmf abort response */
-+	if (!ctask->sc) {
-+		debug_scsi("sc completed while abort in progress\n");
-+		goto success;
-+	}
-+
-+	if (conn->tmabort_state != TMABORT_SUCCESS) {
-+		spin_unlock_bh(&session->lock);
-+		iscsi_conn_failure(conn, ISCSI_ERR_CONN_FAILED);
-+		spin_lock_bh(&session->lock);
-+		goto failed;
-+	}
-+
-+success:
-+	debug_scsi("abort success [sc %lx itt 0x%x]\n", (long)sc, ctask->itt);
-+	spin_unlock_bh(&session->lock);
-+
-+	/*
-+	 * clean up task if aborted. we have the xmitmutex so grab
-+	 * the recv lock as a writer
-+	 */
-+	write_lock_bh(conn->recv_lock);
-+	spin_lock(&session->lock);
-+	fail_command(conn, ctask, DID_ABORT << 16);
-+	spin_unlock(&session->lock);
-+	write_unlock_bh(conn->recv_lock);
-+
-+	mutex_unlock(&conn->xmitmutex);
-+	return SUCCESS;	
-+
-+failed:
-+	spin_unlock_bh(&session->lock);
-+	mutex_unlock(&conn->xmitmutex);
-+
-+	debug_scsi("abort failed [sc %lx itt 0x%x]\n", (long)sc, ctask->itt);
-+	return FAILED;
-+}
-+EXPORT_SYMBOL_GPL(iscsi_eh_abort);
-+
-+int
-+iscsi_pool_init(struct iscsi_queue *q, int max, void ***items, int item_size)
-+{
-+	int i;
-+
-+	*items = kmalloc(max * sizeof(void*), GFP_KERNEL);
-+	if (*items == NULL)
-+		return -ENOMEM;
-+
-+	q->max = max;
-+	q->pool = kmalloc(max * sizeof(void*), GFP_KERNEL);
-+	if (q->pool == NULL) {
-+		kfree(*items);
-+		return -ENOMEM;
-+	}
-+
-+	q->queue = kfifo_init((void*)q->pool, max * sizeof(void*),
-+			      GFP_KERNEL, NULL);
-+	if (q->queue == ERR_PTR(-ENOMEM)) {
-+		kfree(q->pool);
-+		kfree(*items);
-+		return -ENOMEM;
-+	}
-+
-+	for (i = 0; i < max; i++) {
-+		q->pool[i] = kmalloc(item_size, GFP_KERNEL);
-+		if (q->pool[i] == NULL) {
-+			int j;
-+
-+			for (j = 0; j < i; j++)
-+				kfree(q->pool[j]);
-+
-+			kfifo_free(q->queue);
-+			kfree(q->pool);
-+			kfree(*items);
-+			return -ENOMEM;
-+		}
-+		memset(q->pool[i], 0, item_size);
-+		(*items)[i] = q->pool[i];
-+		__kfifo_put(q->queue, (void*)&q->pool[i], sizeof(void*));
-+	}
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(iscsi_pool_init);
-+
-+void iscsi_pool_free(struct iscsi_queue *q, void **items)
-+{
-+	int i;
-+
-+	for (i = 0; i < q->max; i++)
-+		kfree(items[i]);
-+	kfree(q->pool);
-+	kfree(items);
-+}
-+EXPORT_SYMBOL_GPL(iscsi_pool_free);
-+
-+/*
-+ * iSCSI Session's hostdata organization:
-+ *
-+ *    *------------------* <== hostdata_session(host->hostdata)
-+ *    | ptr to class sess|
-+ *    |------------------| <== iscsi_hostdata(host->hostdata)
-+ *    | iscsi_session    |
-+ *    *------------------*
-+ */
-+
-+#define hostdata_privsize(_sz)	(sizeof(unsigned long) + _sz + \
-+				 _sz % sizeof(unsigned long))
-+
-+#define hostdata_session(_hostdata) (iscsi_ptr(*(unsigned long *)_hostdata))
-+
-+/**
-+ * iscsi_session_setup - create iscsi cls session and host and session
-+ * @scsit: scsi transport template
-+ * @iscsit: iscsi transport template
-+ * @initial_cmdsn: initial CmdSN
-+ * @hostno: host no allocated
-+ *
-+ * This can be used by software iscsi_transports that allocate
-+ * a session per scsi host.
-+ **/
-+struct iscsi_cls_session *
-+iscsi_session_setup(struct iscsi_transport *iscsit,
-+		    struct scsi_transport_template *scsit,
-+		    int cmd_task_size, int mgmt_task_size,
-+		    uint32_t initial_cmdsn, uint32_t *hostno)
-+{
-+	struct Scsi_Host *shost;
-+	struct iscsi_session *session;
-+	struct iscsi_cls_session *cls_session;
-+	int cmd_i;
-+
-+	shost = scsi_host_alloc(iscsit->host_template,
-+				hostdata_privsize(sizeof(*session)));
-+	if (!shost)
-+		return NULL;
-+
-+	shost->max_id = 1;
-+	shost->max_channel = 0;
-+	shost->max_lun = iscsit->max_lun;
-+	shost->max_cmd_len = iscsit->max_cmd_len;
-+	shost->transportt = scsit;
-+	shost->transportt->create_work_queue = 1;
-+	*hostno = shost->host_no;
-+
-+	session = iscsi_hostdata(shost->hostdata);
-+	memset(session, 0, sizeof(struct iscsi_session));
-+	session->host = shost;
-+	session->state = ISCSI_STATE_FREE;
-+	session->mgmtpool_max = ISCSI_MGMT_CMDS_MAX;
-+	session->cmds_max = ISCSI_XMIT_CMDS_MAX;
-+	session->cmdsn = initial_cmdsn;
-+	session->exp_cmdsn = initial_cmdsn + 1;
-+	session->max_cmdsn = initial_cmdsn + 1;
-+	session->max_r2t = 1;
-+	session->tt = iscsit;
-+
-+	/* initialize SCSI PDU commands pool */
-+	if (iscsi_pool_init(&session->cmdpool, session->cmds_max,
-+			    (void***)&session->cmds,
-+			    cmd_task_size + sizeof(struct iscsi_cmd_task)))
-+		goto cmdpool_alloc_fail;
-+
-+	/* pre-format cmds pool with ITT */
-+	for (cmd_i = 0; cmd_i < session->cmds_max; cmd_i++) {
-+		struct iscsi_cmd_task *ctask = session->cmds[cmd_i];
-+
-+		if (cmd_task_size)
-+			ctask->dd_data = &ctask[1];
-+		ctask->itt = cmd_i;
-+	}
-+
-+	spin_lock_init(&session->lock);
-+	INIT_LIST_HEAD(&session->connections);
-+
-+	/* initialize immediate command pool */
-+	if (iscsi_pool_init(&session->mgmtpool, session->mgmtpool_max,
-+			   (void***)&session->mgmt_cmds,
-+			   mgmt_task_size + sizeof(struct iscsi_mgmt_task)))
-+		goto mgmtpool_alloc_fail;
-+
-+
-+	/* pre-format immediate cmds pool with ITT */
-+	for (cmd_i = 0; cmd_i < session->mgmtpool_max; cmd_i++) {
-+		struct iscsi_mgmt_task *mtask = session->mgmt_cmds[cmd_i];
-+
-+		if (mgmt_task_size)
-+			mtask->dd_data = &mtask[1];
-+		mtask->itt = ISCSI_MGMT_ITT_OFFSET + cmd_i;
-+		mtask->data = kmalloc(DEFAULT_MAX_RECV_DATA_SEGMENT_LENGTH,
-+				     GFP_KERNEL);
-+		if (!mtask->data) {
-+			int j;
-+
-+			for (j = 0; j < cmd_i; j++)
-+				kfree(session->mgmt_cmds[j]->data);
-+			goto immdata_alloc_fail;
-+		}
-+	}
-+
-+	if (scsi_add_host(shost, NULL))
-+		goto add_host_fail;
-+
-+	cls_session = iscsi_create_session(shost, iscsit, 0);
-+	if (!cls_session)
-+		goto cls_session_fail;
-+	*(unsigned long*)shost->hostdata = (unsigned long)cls_session;
-+
-+	return cls_session;
-+
-+cls_session_fail:
-+	scsi_remove_host(shost);
-+add_host_fail:
-+	for (cmd_i = 0; cmd_i < session->mgmtpool_max; cmd_i++)
-+		kfree(session->mgmt_cmds[cmd_i]->data);
-+immdata_alloc_fail:
-+	iscsi_pool_free(&session->mgmtpool, (void**)session->mgmt_cmds);
-+mgmtpool_alloc_fail:
-+	iscsi_pool_free(&session->cmdpool, (void**)session->cmds);
-+cmdpool_alloc_fail:
-+	scsi_host_put(shost);
-+	return NULL;
-+}
-+EXPORT_SYMBOL_GPL(iscsi_session_setup);
-+
-+/**
-+ * iscsi_session_teardown - destroy session, host, and cls_session
-+ * shost: scsi host
-+ *
-+ * This can be used by software iscsi_transports that allocate
-+ * a session per scsi host.
-+ **/
-+void iscsi_session_teardown(struct iscsi_cls_session *cls_session)
-+{
-+	struct Scsi_Host *shost = iscsi_session_to_shost(cls_session);
-+	struct iscsi_session *session = iscsi_hostdata(shost->hostdata);
-+	int cmd_i;
-+
-+	scsi_remove_host(shost);
-+
-+	for (cmd_i = 0; cmd_i < session->mgmtpool_max; cmd_i++)
-+		kfree(session->mgmt_cmds[cmd_i]->data);
-+
-+	iscsi_pool_free(&session->mgmtpool, (void**)session->mgmt_cmds);
-+	iscsi_pool_free(&session->cmdpool, (void**)session->cmds);
-+
-+	iscsi_destroy_session(cls_session);
-+	scsi_host_put(shost);
-+}
-+EXPORT_SYMBOL_GPL(iscsi_session_teardown);
-+
-+/**
-+ * iscsi_conn_setup - create iscsi_cls_conn and iscsi_conn
-+ * @cls_session: iscsi_cls_session
-+ * @conn_idx: cid
-+ **/
-+struct iscsi_cls_conn *
-+iscsi_conn_setup(struct iscsi_cls_session *cls_session, uint32_t conn_idx)
-+{
-+	struct iscsi_session *session = class_to_transport_session(cls_session);
-+	struct iscsi_conn *conn;
-+	struct iscsi_cls_conn *cls_conn;
-+
-+	cls_conn = iscsi_create_conn(cls_session, conn_idx);
-+	if (!cls_conn)
-+		return NULL;
-+	conn = cls_conn->dd_data;
-+	memset(conn, 0, sizeof(*conn));
-+
-+	conn->session = session;
-+	conn->cls_conn = cls_conn;
-+	conn->c_stage = ISCSI_CONN_INITIAL_STAGE;
-+	conn->id = conn_idx;
-+	conn->exp_statsn = 0;
-+	conn->tmabort_state = TMABORT_INITIAL;
-+	INIT_LIST_HEAD(&conn->run_list);
-+	INIT_LIST_HEAD(&conn->mgmt_run_list);
-+
-+	/* initialize general xmit PDU commands queue */
-+	conn->xmitqueue = kfifo_alloc(session->cmds_max * sizeof(void*),
-+					GFP_KERNEL, NULL);
-+	if (conn->xmitqueue == ERR_PTR(-ENOMEM))
-+		goto xmitqueue_alloc_fail;
-+
-+	/* initialize general immediate & non-immediate PDU commands queue */
-+	conn->immqueue = kfifo_alloc(session->mgmtpool_max * sizeof(void*),
-+			                GFP_KERNEL, NULL);
-+	if (conn->immqueue == ERR_PTR(-ENOMEM))
-+		goto immqueue_alloc_fail;
-+
-+	conn->mgmtqueue = kfifo_alloc(session->mgmtpool_max * sizeof(void*),
-+			                GFP_KERNEL, NULL);
-+	if (conn->mgmtqueue == ERR_PTR(-ENOMEM))
-+		goto mgmtqueue_alloc_fail;
-+
-+	INIT_WORK(&conn->xmitwork, iscsi_xmitworker, conn);
-+
-+	/* allocate login_mtask used for the login/text sequences */
-+	spin_lock_bh(&session->lock);
-+	if (!__kfifo_get(session->mgmtpool.queue,
-+                         (void*)&conn->login_mtask,
-+			 sizeof(void*))) {
-+		spin_unlock_bh(&session->lock);
-+		goto login_mtask_alloc_fail;
-+	}
-+	spin_unlock_bh(&session->lock);
-+
-+	init_timer(&conn->tmabort_timer);
-+	mutex_init(&conn->xmitmutex);
-+	init_waitqueue_head(&conn->ehwait);
-+
-+	return cls_conn;
-+
-+login_mtask_alloc_fail:
-+	kfifo_free(conn->mgmtqueue);
-+mgmtqueue_alloc_fail:
-+	kfifo_free(conn->immqueue);
-+immqueue_alloc_fail:
-+	kfifo_free(conn->xmitqueue);
-+xmitqueue_alloc_fail:
-+	iscsi_destroy_conn(cls_conn);
-+	return NULL;
-+}
-+EXPORT_SYMBOL_GPL(iscsi_conn_setup);
-+
-+/**
-+ * iscsi_conn_teardown - teardown iscsi connection
-+ * cls_conn: iscsi class connection
-+ *
-+ * TODO: we may need to make this into a two step process
-+ * like scsi-mls remove + put host
-+ */
-+void iscsi_conn_teardown(struct iscsi_cls_conn *cls_conn)
-+{
-+	struct iscsi_conn *conn = cls_conn->dd_data;
-+	struct iscsi_session *session = conn->session;
-+	unsigned long flags;
-+
-+	mutex_lock(&conn->xmitmutex);
-+	set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx);
-+	if (conn->c_stage == ISCSI_CONN_INITIAL_STAGE) {
-+		if (session->tt->suspend_conn_recv)
-+			session->tt->suspend_conn_recv(conn);
-+
-+		session->tt->terminate_conn(conn);
-+	}
-+
-+	spin_lock_bh(&session->lock);
-+	conn->c_stage = ISCSI_CONN_CLEANUP_WAIT;
-+	if (session->leadconn == conn) {
-+		/*
-+		 * leading connection? then give up on recovery.
-+		 */
-+		session->state = ISCSI_STATE_TERMINATE;
-+		wake_up(&conn->ehwait);
-+	}
-+	spin_unlock_bh(&session->lock);
-+
-+	mutex_unlock(&conn->xmitmutex);
-+
-+	/*
-+	 * Block until all in-progress commands for this connection
-+	 * time out or fail.
-+	 */
-+	for (;;) {
-+		spin_lock_irqsave(session->host->host_lock, flags);
-+		if (!session->host->host_busy) { /* OK for ERL == 0 */
-+			spin_unlock_irqrestore(session->host->host_lock, flags);
-+			break;
-+		}
-+		spin_unlock_irqrestore(session->host->host_lock, flags);
-+		msleep_interruptible(500);
-+		printk("conn_destroy(): host_busy %d host_failed %d\n",
-+			session->host->host_busy, session->host->host_failed);
-+		/*
-+		 * force eh_abort() to unblock
-+		 */
-+		wake_up(&conn->ehwait);
-+	}
-+
-+	spin_lock_bh(&session->lock);
-+	__kfifo_put(session->mgmtpool.queue, (void*)&conn->login_mtask,
-+		    sizeof(void*));
-+	list_del(&conn->item);
-+	if (list_empty(&session->connections))
-+		session->leadconn = NULL;
-+	if (session->leadconn && session->leadconn == conn)
-+		session->leadconn = container_of(session->connections.next,
-+			struct iscsi_conn, item);
-+
-+	if (session->leadconn == NULL)
-+		/* no connections exits.. reset sequencing */
-+		session->cmdsn = session->max_cmdsn = session->exp_cmdsn = 1;
-+	spin_unlock_bh(&session->lock);
-+
-+	kfifo_free(conn->xmitqueue);
-+	kfifo_free(conn->immqueue);
-+	kfifo_free(conn->mgmtqueue);
-+
-+	iscsi_destroy_conn(cls_conn);
-+}
-+EXPORT_SYMBOL_GPL(iscsi_conn_teardown);
-+
-+int iscsi_conn_start(struct iscsi_cls_conn *cls_conn)
-+{
-+	struct iscsi_conn *conn = cls_conn->dd_data;
-+	struct iscsi_session *session = conn->session;
-+
-+	if (session == NULL) {
-+		printk(KERN_ERR "iscsi: can't start unbound connection\n");
-+		return -EPERM;
-+	}
-+
-+	spin_lock_bh(&session->lock);
-+	conn->c_stage = ISCSI_CONN_STARTED;
-+	session->state = ISCSI_STATE_LOGGED_IN;
-+
-+	switch(conn->stop_stage) {
-+	case STOP_CONN_RECOVER:
-+		/*
-+		 * unblock eh_abort() if it is blocked. re-try all
-+		 * commands after successful recovery
-+		 */
-+		session->conn_cnt++;
-+		conn->stop_stage = 0;
-+		conn->tmabort_state = TMABORT_INITIAL;
-+		session->age++;
-+		session->recovery_failed = 0;
-+		spin_unlock_bh(&session->lock);
-+
-+		iscsi_unblock_session(session_to_cls(session));
-+		wake_up(&conn->ehwait);
-+		return 0;
-+	case STOP_CONN_TERM:
-+		session->conn_cnt++;
-+		conn->stop_stage = 0;
-+		break;
-+	case STOP_CONN_SUSPEND:
-+		conn->stop_stage = 0;
-+		clear_bit(ISCSI_SUSPEND_BIT, &conn->suspend_rx);
-+		clear_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx);
-+		break;
-+	default:
-+		break;
-+	}
-+	spin_unlock_bh(&session->lock);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(iscsi_conn_start);
-+
-+static void
-+flush_control_queues(struct iscsi_session *session, struct iscsi_conn *conn)
-+{
-+	struct iscsi_mgmt_task *mtask, *tmp;
-+
-+	/* handle pending */
-+	while (__kfifo_get(conn->immqueue, (void*)&mtask, sizeof(void*)) ||
-+	       __kfifo_get(conn->mgmtqueue, (void*)&mtask, sizeof(void*))) {
-+		if (mtask == conn->login_mtask)
-+			continue;
-+		debug_scsi("flushing pending mgmt task itt 0x%x\n", mtask->itt);
-+		__kfifo_put(session->mgmtpool.queue, (void*)&mtask,
-+			    sizeof(void*));
-+	}
-+
-+	/* handle running */
-+	list_for_each_entry_safe(mtask, tmp, &conn->mgmt_run_list, running) {
-+		debug_scsi("flushing running mgmt task itt 0x%x\n", mtask->itt);
-+		if (mtask == conn->login_mtask)
-+			continue;
-+		list_del(&mtask->running);
-+		__kfifo_put(session->mgmtpool.queue, (void*)&conn->mtask,
-+			   sizeof(void*));
-+	}
-+
-+	conn->mtask = NULL;
-+}
-+
-+/* Fail commands. Mutex and session lock held and recv side suspended */
-+static void fail_all_commands(struct iscsi_conn *conn)
-+{
-+	struct iscsi_cmd_task *ctask, *tmp;
-+
-+	/* flush pending */	
-+	while (__kfifo_get(conn->xmitqueue, (void*)&ctask, sizeof(void*))) {
-+		debug_scsi("failing pending sc %p itt 0x%x\n", ctask->sc,
-+			   ctask->itt);
-+		fail_command(conn, ctask, DID_BUS_BUSY << 16);
-+	}
-+
-+	/* fail all other running */
-+	list_for_each_entry_safe(ctask, tmp, &conn->run_list, running) {
-+		debug_scsi("failing in progress sc %p itt 0x%x\n",
-+			   ctask->sc, ctask->itt);
-+		fail_command(conn, ctask, DID_BUS_BUSY << 16);
-+	}
-+
-+	conn->ctask = NULL;
-+}
-+
-+void iscsi_start_session_recovery(struct iscsi_session *session,
-+				  struct iscsi_conn *conn, int flag)
-+{
-+	spin_lock_bh(&session->lock);
-+	if (conn->stop_stage == STOP_CONN_RECOVER ||
-+	    conn->stop_stage == STOP_CONN_TERM) {
-+		spin_unlock_bh(&session->lock);
-+		return;
-+	}
-+	conn->stop_stage = flag;
-+	spin_unlock_bh(&session->lock);
-+
-+	if (session->tt->suspend_conn_recv)
-+		session->tt->suspend_conn_recv(conn);
-+
-+	mutex_lock(&conn->xmitmutex);
-+	spin_lock_bh(&session->lock);
-+	conn->c_stage = ISCSI_CONN_STOPPED;
-+	set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx);
-+
-+	session->conn_cnt--;
-+	if (session->conn_cnt == 0 || session->leadconn == conn)
-+		session->state = ISCSI_STATE_FAILED;
-+
-+	spin_unlock_bh(&session->lock);
-+
-+	session->tt->terminate_conn(conn);
-+	/*
-+	 * flush queues.
-+	 */
-+	spin_lock_bh(&session->lock);
-+	fail_all_commands(conn);
-+	flush_control_queues(session, conn);
-+	spin_unlock_bh(&session->lock);
-+
-+	/*
-+	 * for connection level recovery we should not calculate
-+	 * header digest. conn->hdr_size used for optimization
-+	 * in hdr_extract() and will be re-negotiated at
-+	 * set_param() time.
-+	 */
-+	if (flag == STOP_CONN_RECOVER) {
-+		conn->hdrdgst_en = 0;
-+		conn->datadgst_en = 0;
-+
-+		if (session->state == ISCSI_STATE_FAILED)
-+			iscsi_block_session(session_to_cls(session));
-+	}
-+	mutex_unlock(&conn->xmitmutex);
-+}
-+EXPORT_SYMBOL_GPL(iscsi_start_session_recovery);
-+
-+void iscsi_conn_stop(struct iscsi_cls_conn *cls_conn, int flag)
-+{
-+	struct iscsi_conn *conn = cls_conn->dd_data;
-+	struct iscsi_session *session = conn->session;
-+
-+	switch (flag) {
-+	case STOP_CONN_RECOVER:
-+	case STOP_CONN_TERM:
-+		iscsi_start_session_recovery(session, conn, flag);
-+		return;
-+	case STOP_CONN_SUSPEND:
-+		if (session->tt->suspend_conn_recv)
-+			session->tt->suspend_conn_recv(conn);
-+
-+		mutex_lock(&conn->xmitmutex);
-+		spin_lock_bh(&session->lock);
-+
-+		conn->stop_stage = flag;
-+		conn->c_stage = ISCSI_CONN_STOPPED;
-+		set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx);
-+
-+		spin_unlock_bh(&session->lock);
-+		mutex_unlock(&conn->xmitmutex);
-+		break;
-+	default:
-+		printk(KERN_ERR "invalid stop flag %d\n", flag);
-+	}
-+}
-+EXPORT_SYMBOL_GPL(iscsi_conn_stop);
-+
-+int iscsi_conn_bind(struct iscsi_cls_session *cls_session,
-+		    struct iscsi_cls_conn *cls_conn, int is_leading)
-+{
-+	struct iscsi_session *session = class_to_transport_session(cls_session);
-+	struct iscsi_conn *tmp = ERR_PTR(-EEXIST), *conn = cls_conn->dd_data;
-+
-+	/* lookup for existing connection */
-+	spin_lock_bh(&session->lock);
-+	list_for_each_entry(tmp, &session->connections, item) {
-+		if (tmp == conn) {
-+			if (conn->c_stage != ISCSI_CONN_STOPPED ||
-+			    conn->stop_stage == STOP_CONN_TERM) {
-+				printk(KERN_ERR "iscsi_tcp: can't bind "
-+				       "non-stopped connection (%d:%d)\n",
-+				       conn->c_stage, conn->stop_stage);
-+				spin_unlock_bh(&session->lock);
-+				return -EIO;
-+			}
-+			break;
-+		}
-+	}
-+	if (tmp != conn) {
-+		/* bind new iSCSI connection to session */
-+		conn->session = session;
-+		list_add(&conn->item, &session->connections);
-+	}
-+	spin_unlock_bh(&session->lock);
-+
-+	if (is_leading)
-+		session->leadconn = conn;
-+
-+	/*
-+	 * Unblock xmitworker(), Login Phase will pass through.
-+	 */
-+	clear_bit(ISCSI_SUSPEND_BIT, &conn->suspend_rx);
-+	clear_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx);
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(iscsi_conn_bind);
-+
-+MODULE_AUTHOR("Mike Christie");
-+MODULE_DESCRIPTION("iSCSI library functions");
-+MODULE_LICENSE("GPL");
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index 7f6b4dd..e24dbe8 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -472,106 +472,6 @@ int iscsi_destroy_conn(struct iscsi_cls_
- EXPORT_SYMBOL_GPL(iscsi_destroy_conn);
- 
- /*
-- * These functions are used only by software iscsi_transports
-- * which do not allocate and more their scsi_hosts since this
-- * is initiated from userspace.
-- */
--
--/*
-- * iSCSI Session's hostdata organization:
-- *
-- *    *------------------* <== hostdata_session(host->hostdata)
-- *    | ptr to class sess|
-- *    |------------------| <== iscsi_hostdata(host->hostdata)
-- *    | transport's data |
-- *    *------------------*
-- */
--
--#define hostdata_privsize(_t)	(sizeof(unsigned long) + _t->hostdata_size + \
--				 _t->hostdata_size % sizeof(unsigned long))
--
--#define hostdata_session(_hostdata) (iscsi_ptr(*(unsigned long *)_hostdata))
--
--/**
-- * iscsi_transport_create_session - create iscsi cls session and host
-- * scsit: scsi transport template
-- * transport: iscsi transport template
-- *
-- * This can be used by software iscsi_transports that allocate
-- * a session per scsi host.
-- **/
--struct Scsi_Host *
--iscsi_transport_create_session(struct scsi_transport_template *scsit,
--			       struct iscsi_transport *transport)
--{
--	struct iscsi_cls_session *session;
--	struct Scsi_Host *shost;
--	unsigned long flags;
--
--	shost = scsi_host_alloc(transport->host_template,
--				hostdata_privsize(transport));
--	if (!shost) {
--		printk(KERN_ERR "iscsi: can not allocate SCSI host for "
--			"session\n");
--		return NULL;
--	}
--
--	shost->max_id = 1;
--	shost->max_channel = 0;
--	shost->max_lun = transport->max_lun;
--	shost->max_cmd_len = transport->max_cmd_len;
--	shost->transportt = scsit;
--	shost->transportt->create_work_queue = 1;
--
--	if (scsi_add_host(shost, NULL))
--		goto free_host;
--
--	session = iscsi_create_session(shost, transport, 0);
--	if (!session)
--		goto remove_host;
--
--	*(unsigned long*)shost->hostdata = (unsigned long)session;
--	spin_lock_irqsave(&sesslock, flags);
--	list_add(&session->sess_list, &sesslist);
--	spin_unlock_irqrestore(&sesslock, flags);
--	return shost;
--
--remove_host:
--	scsi_remove_host(shost);
--free_host:
--	scsi_host_put(shost);
--	return NULL;
--}
--
--EXPORT_SYMBOL_GPL(iscsi_transport_create_session);
--
--/**
-- * iscsi_transport_destroy_session - destroy session and scsi host
-- * shost: scsi host
-- *
-- * This can be used by software iscsi_transports that allocate
-- * a session per scsi host.
-- **/
--int iscsi_transport_destroy_session(struct Scsi_Host *shost)
--{
--	struct iscsi_cls_session *session;
--	unsigned long flags;
--
--	session = hostdata_session(shost->hostdata);
--	spin_lock_irqsave(&sesslock, flags);
--	list_del(&session->sess_list);
--	spin_unlock_irqrestore(&sesslock, flags);
--	iscsi_destroy_session(session);
--
--	scsi_remove_host(shost);
--	/* ref from host alloc */
--	scsi_host_put(shost);
--	return 0;
--}
--
--EXPORT_SYMBOL_GPL(iscsi_transport_destroy_session);
--
--/*
-  * iscsi interface functions
-  */
- static struct iscsi_internal *
-@@ -857,14 +757,19 @@ iscsi_if_create_session(struct iscsi_int
- {
- 	struct iscsi_transport *transport = priv->iscsi_transport;
- 	struct iscsi_cls_session *session;
-+	unsigned long flags;
- 	uint32_t hostno;
- 
--	session = transport->create_session(&priv->t,
-+	session = transport->create_session(transport, &priv->t,
- 					    ev->u.c_session.initial_cmdsn,
- 					    &hostno);
- 	if (!session)
- 		return -ENOMEM;
- 
-+	spin_lock_irqsave(&sesslock, flags);
-+	list_add(&session->sess_list, &sesslist);
-+	spin_unlock_irqrestore(&sesslock, flags);
-+
- 	ev->r.c_session_ret.host_no = hostno;
- 	ev->r.c_session_ret.sid = session->sid;
- 	return 0;
-@@ -1032,6 +937,7 @@ iscsi_if_recv_msg(struct sk_buff *skb, s
- 	struct iscsi_internal *priv;
- 	struct iscsi_cls_session *session;
- 	struct iscsi_cls_conn *conn;
-+	unsigned long flags;
- 
- 	priv = iscsi_if_transport_lookup(iscsi_ptr(ev->transport_handle));
- 	if (!priv)
-@@ -1047,9 +953,13 @@ iscsi_if_recv_msg(struct sk_buff *skb, s
- 		break;
- 	case ISCSI_UEVENT_DESTROY_SESSION:
- 		session = iscsi_session_lookup(ev->u.d_session.sid);
--		if (session)
-+		if (session) {
-+			spin_lock_irqsave(&sesslock, flags);
-+			list_del(&session->sess_list);
-+			spin_unlock_irqrestore(&sesslock, flags);
-+
- 			transport->destroy_session(session);
--		else
-+		} else
- 			err = -EINVAL;
- 		break;
- 	case ISCSI_UEVENT_CREATE_CONN:
-diff --git a/include/scsi/iscsi_if.h b/include/scsi/iscsi_if.h
-index b14ba7a..4fc623f 100644
---- a/include/scsi/iscsi_if.h
-+++ b/include/scsi/iscsi_if.h
-@@ -148,7 +148,8 @@ enum iscsi_err {
- 	ISCSI_ERR_SESSION_FAILED	= ISCSI_ERR_BASE + 13,
- 	ISCSI_ERR_HDR_DGST		= ISCSI_ERR_BASE + 14,
- 	ISCSI_ERR_DATA_DGST		= ISCSI_ERR_BASE + 15,
--	ISCSI_ERR_PARAM_NOT_FOUND	= ISCSI_ERR_BASE + 16
-+	ISCSI_ERR_PARAM_NOT_FOUND	= ISCSI_ERR_BASE + 16,
-+	ISCSI_ERR_NO_SCSI_CMD		= ISCSI_ERR_BASE + 17,
- };
- 
- /*
-diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
-new file mode 100644
-index 0000000..6cea744
---- /dev/null
-+++ b/include/scsi/libiscsi.h
-@@ -0,0 +1,286 @@
-+/*
-+ * iSCSI lib definitions
-+ *
-+ * Copyright (C) 2006 Red Hat, Inc.  All rights reserved.
-+ * Copyright (C) 2004 - 2006 Mike Christie
-+ * Copyright (C) 2004 - 2005 Dmitry Yusupov
-+ * Copyright (C) 2004 - 2005 Alex Aizman
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ */
-+#ifndef LIBISCSI_H
-+#define LIBISCSI_H
-+
-+#include <linux/types.h>
-+#include <linux/mutex.h>
-+#include <scsi/iscsi_proto.h>
-+#include <scsi/iscsi_if.h>
-+
-+struct scsi_transport_template;
-+struct scsi_device;
-+struct Scsi_Host;
-+struct scsi_cmnd;
-+struct socket;
-+struct iscsi_transport;
-+struct iscsi_cls_session;
-+struct iscsi_cls_conn;
-+struct iscsi_session;
-+struct iscsi_nopin;
-+
-+/* #define DEBUG_SCSI */
-+#ifdef DEBUG_SCSI
-+#define debug_scsi(fmt...) printk(KERN_INFO "scsi: " fmt)
-+#else
-+#define debug_scsi(fmt...)
-+#endif
-+
-+#define ISCSI_XMIT_CMDS_MAX	128	/* must be power of 2 */
-+#define ISCSI_MGMT_CMDS_MAX	32	/* must be power of 2 */
-+#define ISCSI_CONN_MAX			1
-+
-+#define ISCSI_MGMT_ITT_OFFSET	0xa00
-+
-+#define ISCSI_DEF_CMD_PER_LUN		32
-+#define ISCSI_MAX_CMD_PER_LUN		128
-+
-+/* Task Mgmt states */
-+#define TMABORT_INITIAL			0x0
-+#define TMABORT_SUCCESS			0x1
-+#define TMABORT_FAILED			0x2
-+#define TMABORT_TIMEDOUT		0x3
-+
-+/* Connection suspend "bit" */
-+#define ISCSI_SUSPEND_BIT		1
-+
-+#define ISCSI_ITT_MASK			(0xfff)
-+#define ISCSI_CID_SHIFT			12
-+#define ISCSI_CID_MASK			(0xffff << ISCSI_CID_SHIFT)
-+#define ISCSI_AGE_SHIFT			28
-+#define ISCSI_AGE_MASK			(0xf << ISCSI_AGE_SHIFT)
-+
-+struct iscsi_mgmt_task {
-+	/*
-+	 * Becuae LLDs allocate their hdr differently, this is a pointer to
-+	 * that storage. It must be setup at session creation time.
-+	 */
-+	struct iscsi_hdr	*hdr; 
-+	char			*data;		/* mgmt payload */
-+	int			data_count;	/* counts data to be sent */
-+	uint32_t		itt;		/* this ITT */
-+	void			*dd_data;	/* driver/transport data */
-+	struct list_head	running;
-+};
-+
-+struct iscsi_cmd_task {
-+	/*
-+	 * Becuae LLDs allocate their hdr differently, this is a pointer to
-+	 * that storage. It must be setup at session creation time.
-+	 */
-+	struct iscsi_cmd	*hdr;
-+	int			itt;		/* this ITT */
-+	int			datasn;		/* DataSN */
-+
-+	uint32_t		unsol_datasn;
-+	int			imm_count;	/* imm-data (bytes)   */
-+	int			unsol_count;	/* unsolicited (bytes)*/
-+	int			data_count;	/* remaining Data-Out */
-+	struct scsi_cmnd	*sc;		/* associated SCSI cmd*/
-+	int			total_length;
-+	struct iscsi_conn	*conn;		/* used connection    */
-+	struct iscsi_mgmt_task	*mtask;		/* tmf mtask in progr */
-+
-+	struct list_head	running;	/* running cmd list */
-+	void			*dd_data;	/* driver/transport data */
-+};
-+
-+struct iscsi_conn {
-+	struct iscsi_cls_conn	*cls_conn;	/* ptr to class connection */
-+	void			*dd_data;	/* iscsi_transport data */
-+	struct iscsi_session	*session;	/* parent session */
-+	/*
-+	 * LLDs should set this lock. It protects the transport recv
-+	 * code
-+	 */
-+	rwlock_t		*recv_lock;
-+	/*
-+	 * conn_stop() flag: stop to recover, stop to terminate
-+	 */
-+        int			stop_stage;
-+
-+	/* iSCSI connection-wide sequencing */
-+	uint32_t		exp_statsn;
-+
-+	/* control data */
-+	int			id;		/* CID */
-+	struct list_head	item;		/* maintains list of conns */
-+	int			c_stage;	/* connection state */
-+	struct iscsi_mgmt_task	*login_mtask;	/* mtask used for login/text */
-+	struct iscsi_mgmt_task	*mtask;		/* xmit mtask in progress */
-+	struct iscsi_cmd_task	*ctask;		/* xmit ctask in progress */
-+
-+	/* xmit */
-+	struct kfifo		*immqueue;	/* immediate xmit queue */
-+	struct kfifo		*mgmtqueue;	/* mgmt (control) xmit queue */
-+	struct list_head	mgmt_run_list;	/* list of control tasks */
-+	struct kfifo		*xmitqueue;	/* data-path cmd queue */
-+	struct list_head	run_list;	/* list of cmds in progress */
-+	struct work_struct	xmitwork;	/* per-conn. xmit workqueue */
-+	/*
-+	 * serializes connection xmit, access to kfifos:
-+	 * xmitqueue, immqueue, mgmtqueue
-+	 */
-+	struct mutex		xmitmutex;
-+
-+	unsigned long		suspend_tx;	/* suspend Tx */
-+	unsigned long		suspend_rx;	/* suspend Rx */
-+
-+	/* abort */
-+	wait_queue_head_t	ehwait;		/* used in eh_abort() */
-+	struct iscsi_tm		tmhdr;
-+	struct timer_list	tmabort_timer;
-+	int			tmabort_state;	/* see TMABORT_INITIAL, etc.*/
-+
-+	/* negotiated params */
-+	int			max_recv_dlength; /* initiator_max_recv_dsl*/
-+	int			max_xmit_dlength; /* target_max_recv_dsl */
-+	int			hdrdgst_en;
-+	int			datadgst_en;
-+
-+	/* MIB-statistics */
-+	uint64_t		txdata_octets;
-+	uint64_t		rxdata_octets;
-+	uint32_t		scsicmd_pdus_cnt;
-+	uint32_t		dataout_pdus_cnt;
-+	uint32_t		scsirsp_pdus_cnt;
-+	uint32_t		datain_pdus_cnt;
-+	uint32_t		r2t_pdus_cnt;
-+	uint32_t		tmfcmd_pdus_cnt;
-+	int32_t			tmfrsp_pdus_cnt;
-+
-+	/* custom statistics */
-+	uint32_t		eh_abort_cnt;
-+};
-+
-+struct iscsi_queue {
-+	struct kfifo		*queue;		/* FIFO Queue */
-+	void			**pool;		/* Pool of elements */
-+	int			max;		/* Max number of elements */
-+};
-+
-+struct iscsi_session {
-+	/* iSCSI session-wide sequencing */
-+	uint32_t		cmdsn;
-+	uint32_t		exp_cmdsn;
-+	uint32_t		max_cmdsn;
-+
-+	/* configuration */
-+	int			initial_r2t_en;
-+	int			max_r2t;
-+	int			imm_data_en;
-+	int			first_burst;
-+	int			max_burst;
-+	int			time2wait;
-+	int			time2retain;
-+	int			pdu_inorder_en;
-+	int			dataseq_inorder_en;
-+	int			erl;
-+	int			ifmarker_en;
-+	int			ofmarker_en;
-+
-+	/* control data */
-+	struct iscsi_transport	*tt;
-+	struct Scsi_Host	*host;
-+	struct iscsi_conn	*leadconn;	/* leading connection */
-+	spinlock_t		lock;		/* protects session state, *
-+						 * sequence numbers,       *
-+						 * session resources:      *
-+						 * - cmdpool,		   *
-+						 * - mgmtpool,		   *
-+						 * - r2tpool		   */
-+	int			state;		/* session state           */
-+	int			recovery_failed;
-+	struct list_head	item;
-+	int			conn_cnt;
-+	int			age;		/* counts session re-opens */
-+
-+	struct list_head	connections;	/* list of connections */
-+	int			cmds_max;	/* size of cmds array */
-+	struct iscsi_cmd_task	**cmds;		/* Original Cmds arr */
-+	struct iscsi_queue	cmdpool;	/* PDU's pool */
-+	int			mgmtpool_max;	/* size of mgmt array */
-+	struct iscsi_mgmt_task	**mgmt_cmds;	/* Original mgmt arr */
-+	struct iscsi_queue	mgmtpool;	/* Mgmt PDU's pool */
-+};
-+
-+/*
-+ * scsi host template
-+ */
-+extern int iscsi_change_queue_depth(struct scsi_device *sdev, int depth);
-+extern int iscsi_eh_abort(struct scsi_cmnd *sc);
-+extern int iscsi_eh_host_reset(struct scsi_cmnd *sc);
-+extern int iscsi_queuecommand(struct scsi_cmnd *sc,
-+			      void (*done)(struct scsi_cmnd *));
-+
-+/*
-+ * session management
-+ */
-+extern struct iscsi_cls_session *
-+iscsi_session_setup(struct iscsi_transport *, struct scsi_transport_template *,
-+		    int, int, uint32_t, uint32_t *);
-+extern void iscsi_session_teardown(struct iscsi_cls_session *);
-+extern struct iscsi_session *class_to_transport_session(struct iscsi_cls_session *);
-+extern void iscsi_start_session_recovery(struct iscsi_session *,
-+					struct iscsi_conn *, int);
-+extern void iscsi_session_recovery_timedout(struct iscsi_cls_session *);
-+
-+#define session_to_cls(_sess) \
-+	hostdata_session(_sess->host->hostdata)
-+
-+/*
-+ * connection management
-+ */
-+extern struct iscsi_cls_conn *iscsi_conn_setup(struct iscsi_cls_session *,
-+					       uint32_t);
-+extern void iscsi_conn_teardown(struct iscsi_cls_conn *);
-+extern int iscsi_conn_start(struct iscsi_cls_conn *);
-+extern void iscsi_conn_stop(struct iscsi_cls_conn *, int);
-+extern int iscsi_conn_bind(struct iscsi_cls_session *, struct iscsi_cls_conn *,
-+			   int);
-+extern void iscsi_conn_failure(struct iscsi_conn *conn, enum iscsi_err err);
-+
-+/*
-+ * pdu and task processing
-+ */
-+extern int iscsi_check_assign_cmdsn(struct iscsi_session *,
-+				    struct iscsi_nopin *);
-+extern void iscsi_prep_unsolicit_data_pdu(struct iscsi_cmd_task *,
-+					struct iscsi_data *hdr,
-+					int transport_data_cnt);
-+extern int iscsi_conn_send_pdu(struct iscsi_cls_conn *, struct iscsi_hdr *,
-+				char *, uint32_t);
-+extern int iscsi_complete_pdu(struct iscsi_conn *, struct iscsi_hdr *,
-+			      char *, int);
-+extern int __iscsi_complete_pdu(struct iscsi_conn *, struct iscsi_hdr *,
-+				char *, int);
-+extern int iscsi_verify_itt(struct iscsi_conn *, struct iscsi_hdr *,
-+			    uint32_t *);
-+
-+/*
-+ * generic helpers
-+ */
-+extern void iscsi_pool_free(struct iscsi_queue *, void **);
-+extern int iscsi_pool_init(struct iscsi_queue *, int, void ***, int);
-+
-+#endif
-diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
-index 9d2b991..70a039e 100644
---- a/include/scsi/scsi_transport_iscsi.h
-+++ b/include/scsi/scsi_transport_iscsi.h
-@@ -2,7 +2,7 @@
-  * iSCSI transport class definitions
-  *
-  * Copyright (C) IBM Corporation, 2004
-- * Copyright (C) Mike Christie, 2004 - 2005
-+ * Copyright (C) Mike Christie, 2004 - 2006
-  * Copyright (C) Dmitry Yusupov, 2004 - 2005
-  * Copyright (C) Alex Aizman, 2004 - 2005
-  *
-@@ -27,9 +27,13 @@
- #include <scsi/iscsi_if.h>
- 
- struct scsi_transport_template;
-+struct iscsi_transport;
- struct Scsi_Host;
- struct mempool_zone;
- struct iscsi_cls_conn;
-+struct iscsi_conn;
-+struct iscsi_cmd_task;
-+struct iscsi_mgmt_task;
- 
- /**
-  * struct iscsi_transport - iSCSI Transport template
-@@ -46,6 +50,20 @@ struct iscsi_cls_conn;
-  * @start_conn:		set connection to be operational
-  * @stop_conn:		suspend/recover/terminate connection
-  * @send_pdu:		send iSCSI PDU, Login, Logout, NOP-Out, Reject, Text.
-+ * @session_recovery_timedout: notify LLD a block during recovery timed out
-+ * @suspend_conn_recv:	susepend the recv side of the connection
-+ * @termincate_conn:	destroy socket connection. Called with mutex lock.
-+ * @init_cmd_task:	Initialize a iscsi_cmd_task and any internal structs.
-+ *			Called from queuecommand with session lock held.
-+ * @init_mgmt_task:	Initialize a iscsi_mgmt_task and any internal structs.
-+ *			Called from iscsi_conn_send_generic with xmitmutex.
-+ * @xmit_cmd_task:	requests LLD to transfer cmd task
-+ * @xmit_mgmt_task:	requests LLD to transfer mgmt task
-+ * @cleanup_cmd_task:	requests LLD to fail cmd task. Called with xmitmutex
-+ *			and session->lock after the connection has been
-+ *			suspended and terminated during recovery. If called
-+ *			from abort task then connection is not suspended
-+ *			or terminated but sk_callback_lock is held
-  *
-  * Template API provided by iSCSI Transport
-  */
-@@ -56,8 +74,6 @@ struct iscsi_transport {
- 	/* LLD sets this to indicate what values it can export to sysfs */
- 	unsigned int param_mask;
- 	struct scsi_host_template *host_template;
--	/* LLD session/scsi_host data size */
--	int hostdata_size;
- 	/* LLD connection data size */
- 	int conndata_size;
- 	/* LLD session data size */
-@@ -65,8 +81,8 @@ struct iscsi_transport {
- 	int max_lun;
- 	unsigned int max_conn;
- 	unsigned int max_cmd_len;
--	struct iscsi_cls_session *(*create_session)
--		(struct scsi_transport_template *t, uint32_t sn, uint32_t *hn);
-+	struct iscsi_cls_session *(*create_session) (struct iscsi_transport *it,
-+		struct scsi_transport_template *t, uint32_t sn, uint32_t *hn);
- 	void (*destroy_session) (struct iscsi_cls_session *session);
- 	struct iscsi_cls_conn *(*create_conn) (struct iscsi_cls_session *sess,
- 				uint32_t cid);
-@@ -90,6 +106,18 @@ struct iscsi_transport {
- 			 char *data, uint32_t data_size);
- 	void (*get_stats) (struct iscsi_cls_conn *conn,
- 			   struct iscsi_stats *stats);
-+	void (*suspend_conn_recv) (struct iscsi_conn *conn);
-+	void (*terminate_conn) (struct iscsi_conn *conn);
-+	void (*init_cmd_task) (struct iscsi_cmd_task *ctask);
-+	void (*init_mgmt_task) (struct iscsi_conn *conn,
-+				struct iscsi_mgmt_task *mtask,
-+				char *data, uint32_t data_size);
-+	int (*xmit_cmd_task) (struct iscsi_conn *conn,
-+			      struct iscsi_cmd_task *ctask);
-+	void (*cleanup_cmd_task) (struct iscsi_conn *conn,
-+				  struct iscsi_cmd_task *ctask);
-+	int (*xmit_mgmt_task) (struct iscsi_conn *conn,
-+			       struct iscsi_mgmt_task *mtask); 
- 	void (*session_recovery_timedout) (struct iscsi_cls_session *session);
- };
- 
-@@ -106,6 +134,13 @@ extern void iscsi_conn_error(struct iscs
- extern int iscsi_recv_pdu(struct iscsi_cls_conn *conn, struct iscsi_hdr *hdr,
- 			  char *data, uint32_t data_size);
- 
-+
-+/* Connection's states */
-+#define ISCSI_CONN_INITIAL_STAGE	0
-+#define ISCSI_CONN_STARTED		1
-+#define ISCSI_CONN_STOPPED		2
-+#define ISCSI_CONN_CLEANUP_WAIT		3
-+
- struct iscsi_cls_conn {
- 	struct list_head conn_list;	/* item in connlist */
- 	void *dd_data;			/* LLD private data */
-@@ -129,6 +164,12 @@ struct iscsi_cls_conn {
- #define iscsi_dev_to_conn(_dev) \
- 	container_of(_dev, struct iscsi_cls_conn, dev)
- 
-+/* Session's states */
-+#define ISCSI_STATE_FREE		1
-+#define ISCSI_STATE_LOGGED_IN		2
-+#define ISCSI_STATE_FAILED		3
-+#define ISCSI_STATE_TERMINATE		4
-+
- struct iscsi_cls_session {
- 	struct list_head sess_list;		/* item in session_list */
- 	struct list_head host_list;
-@@ -174,12 +215,4 @@ extern int iscsi_destroy_conn(struct isc
- extern void iscsi_unblock_session(struct iscsi_cls_session *session);
- extern void iscsi_block_session(struct iscsi_cls_session *session);
- 
--/*
-- * session functions used by software iscsi
-- */
--extern struct Scsi_Host *
--iscsi_transport_create_session(struct scsi_transport_template *scsit,
--                               struct iscsi_transport *transport);
--extern int iscsi_transport_destroy_session(struct Scsi_Host *shost);
--
- #endif
+A lot of the additions in the patch is due to a rename of iscsi_tcp
+structs to avoid conflicts with the lib. The patch is mostly the
+ripping out of the code that was added in libiscsi.c and replacement
+with a call to the libiscsi function.
 
+I attached the patch as a bz2 file. Sorry about this.
 
+--------------090300010405080407020106
+Content-Type: application/x-bzip;
+ name="05-convert-tcp2.patch.bz2"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline;
+ filename="05-convert-tcp2.patch.bz2"
+
+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
+Ir1EnyKECHeThH/8XckU4UJCvddV+A==
+--------------090300010405080407020106--
