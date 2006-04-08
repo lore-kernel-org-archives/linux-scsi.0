@@ -1,44 +1,92 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [Bugme-new] [Bug 6357] New: Megaraid driver is more recent for
- my hardware
-Date: Sat, 8 Apr 2006 11:41:46 -0700
-Message-ID: <20060408114146.442bae31.akpm@osdl.org>
-References: <200604081650.k38Goegv012572@fire-2.osdl.org>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: [RFC PATCH] sbp2: remove manipulation of inquiry response
+Date: Sat, 8 Apr 2006 20:45:24 +0200 (CEST)
+Message-ID: <tkrat.d3b4470a9a767dd4@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; CHARSET=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:34514 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S965045AbWDHSnN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Apr 2006 14:43:13 -0400
-In-Reply-To: <200604081650.k38Goegv012572@fire-2.osdl.org>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:52356 "EHLO
+	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
+	id S965038AbWDHSqq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 8 Apr 2006 14:46:46 -0400
+Content-Disposition: INLINE
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Neela.Kolli@engenio.com
-Cc: qdiverses@ifrance.com, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux1394-devel@lists.sourceforge.net
 
-bugme-daemon@bugzilla.kernel.org wrote:
->
-> http://bugzilla.kernel.org/show_bug.cgi?id=6357
-> 
->            Summary: Megaraid driver is more recent for my hardware
->     Kernel Version: 2.4.8 -> 2.6.16.1
->             Status: NEW
->           Severity: blocking
->              Owner: scsi_drivers-other@kernel-bugs.osdl.org
->          Submitter: qdiverses@ifrance.com
-> 
-> 
-> Most recent kernel where this bug did not occur:
-> Distribution: Debian Sarge
-> Hardware Environment: Hp Netserver LH3 with Netraid (driver Megaraid)
-> Software Environment: Without, I try to update
-> Problem Description:
-> Hello from France,
-> I install with my CD, Debian with a 2.4.8 Kernel. My SCSI card was ok with the 
-> megaraid driver. I try to update the kernel with the 2.6.16.1 version. But 
-> after the boot hang on my Scsi card. I read this, a new driver for the megaraid 
-> is present on the 2.6 kernel. And it doesn't work with my "old" card.
-> How can I copy, compile, .... the megaraid driver of 2.4 kernel in 2.6 kenel.
-> I start in the world linux and kernel. Can you explain with more sentence
-> 
+This code became ineffective a few Linux releases ago and is
+apparently not required anyway.
+
+Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
+
+Index: linux-2.6.17-rc1/drivers/ieee1394/sbp2.c
+===================================================================
+--- linux-2.6.17-rc1.orig/drivers/ieee1394/sbp2.c	2006-04-08 09:43:33.000000000 +0200
++++ linux-2.6.17-rc1/drivers/ieee1394/sbp2.c	2006-04-08 20:40:00.000000000 +0200
+@@ -2079,33 +2079,6 @@ static unsigned int sbp2_status_to_sense
+ }
+ 
+ /*
+- * This function is called after a command is completed, in order to do any necessary SBP-2
+- * response data translations for the SCSI stack
+- */
+-static void sbp2_check_sbp2_response(struct scsi_id_instance_data *scsi_id,
+-				     struct scsi_cmnd *SCpnt)
+-{
+-	u8 *scsi_buf = SCpnt->request_buffer;
+-
+-	SBP2_DEBUG_ENTER();
+-
+-	if (SCpnt->cmnd[0] == INQUIRY && (SCpnt->cmnd[1] & 3) == 0) {
+-		/*
+-		 * Make sure data length is ok. Minimum length is 36 bytes
+-		 */
+-		if (scsi_buf[4] == 0) {
+-			scsi_buf[4] = 36 - 5;
+-		}
+-
+-		/*
+-		 * Fix ansi revision and response data format
+-		 */
+-		scsi_buf[2] |= 2;
+-		scsi_buf[3] = (scsi_buf[3] & 0xf0) | 2;
+-	}
+-}
+-
+-/*
+  * This function deals with status writes from the SBP-2 device
+  */
+ static int sbp2_handle_status_write(struct hpsb_host *host, int nodeid, int destid,
+@@ -2444,13 +2417,6 @@ static void sbp2scsi_complete_command(st
+ 	}
+ 
+ 	/*
+-	 * Take care of any sbp2 response data mucking here (RBC stuff, etc.)
+-	 */
+-	if (SCpnt->result == DID_OK << 16) {
+-		sbp2_check_sbp2_response(scsi_id, SCpnt);
+-	}
+-
+-	/*
+ 	 * If a bus reset is in progress and there was an error, complete
+ 	 * the command as busy so that it will get retried.
+ 	 */
+Index: linux-2.6.17-rc1/drivers/ieee1394/sbp2.h
+===================================================================
+--- linux-2.6.17-rc1.orig/drivers/ieee1394/sbp2.h	2006-04-08 09:43:32.000000000 +0200
++++ linux-2.6.17-rc1/drivers/ieee1394/sbp2.h	2006-04-08 20:40:00.000000000 +0200
+@@ -394,9 +394,8 @@ static int sbp2_link_orb_command(struct 
+ static int sbp2_send_command(struct scsi_id_instance_data *scsi_id,
+ 			     struct scsi_cmnd *SCpnt,
+ 			     void (*done)(struct scsi_cmnd *));
+-static unsigned int sbp2_status_to_sense_data(unchar *sbp2_status, unchar *sense_data);
+-static void sbp2_check_sbp2_response(struct scsi_id_instance_data *scsi_id,
+-				     struct scsi_cmnd *SCpnt);
++static unsigned int sbp2_status_to_sense_data(unchar *sbp2_status,
++					      unchar *sense_data);
+ static void sbp2_parse_unit_directory(struct scsi_id_instance_data *scsi_id,
+ 				      struct unit_directory *ud);
+ static int sbp2_set_busy_timeout(struct scsi_id_instance_data *scsi_id);
+
+
