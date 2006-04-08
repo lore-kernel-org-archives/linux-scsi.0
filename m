@@ -1,56 +1,44 @@
 From: Andrew Morton <akpm@osdl.org>
-Subject: Fw: [BUG] 2.6.17-rc1: SCSI kobject_add problems
-Date: Fri, 7 Apr 2006 17:14:33 -0700
-Message-ID: <20060407171433.06e454bd.akpm@osdl.org>
+Subject: Re: [Bugme-new] [Bug 6357] New: Megaraid driver is more recent for
+ my hardware
+Date: Sat, 8 Apr 2006 11:41:46 -0700
+Message-ID: <20060408114146.442bae31.akpm@osdl.org>
+References: <200604081650.k38Goegv012572@fire-2.osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:33752 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751372AbWDHAMc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Apr 2006 20:12:32 -0400
+Received: from smtp.osdl.org ([65.172.181.4]:34514 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S965045AbWDHSnN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Apr 2006 14:43:13 -0400
+In-Reply-To: <200604081650.k38Goegv012572@fire-2.osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: linux-scsi@vger.kernel.org, rct@gherkin.frus.com
+To: Neela.Kolli@engenio.com
+Cc: qdiverses@ifrance.com, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>, linux-scsi@vger.kernel.org
 
-
-
-Begin forwarded message:
-
-Date: Fri, 7 Apr 2006 13:31:05 -0500 (CDT)
-From: rct@gherkin.frus.com (Bob Tracy)
-To: linux-kernel@vger.kernel.org
-Subject: [BUG] 2.6.17-rc1: SCSI kobject_add problems
-
-
-System is a DEC Alpha 433au with two SCSI disks.  SCSI controller is a
-QLA1040 supported by the qla1280 driver.  Runs 2.6.16 fine.  Tried
-booting 2.6.17-rc1 and got
-
-kobject_add failed for 0:0: with -EEXIST, don't try to register things with the same name in the same directory
-
-and a fairly long trace output when the system attempted to add sdb.
-Not surprisingly, sdb was inaccessible.
-
-Normally (for 2.6.16 anyway), the following relationship exists:
-
-sd 0:0:0:0	sda
-sd 0:0:1:0	sdb
-
-More information *might* be available if needed, but will have to be
-transcribed by hand.  My /usr partition is on sdb, so I don't get very
-far with 2.6.17-rc1 on Alpha :-).  The problem is probably specific to
-the qla1280 or the Alpha, as I have a x86 Adaptec SCSI-based system
-with multiple spindles that works fine with 2.6.17-rc1.
-
--- 
------------------------------------------------------------------------
-Bob Tracy                   WTO + WIPO = DMCA? http://www.anti-dmca.org
-rct@frus.com
------------------------------------------------------------------------
--
-To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-Please read the FAQ at  http://www.tux.org/lkml/
+bugme-daemon@bugzilla.kernel.org wrote:
+>
+> http://bugzilla.kernel.org/show_bug.cgi?id=6357
+> 
+>            Summary: Megaraid driver is more recent for my hardware
+>     Kernel Version: 2.4.8 -> 2.6.16.1
+>             Status: NEW
+>           Severity: blocking
+>              Owner: scsi_drivers-other@kernel-bugs.osdl.org
+>          Submitter: qdiverses@ifrance.com
+> 
+> 
+> Most recent kernel where this bug did not occur:
+> Distribution: Debian Sarge
+> Hardware Environment: Hp Netserver LH3 with Netraid (driver Megaraid)
+> Software Environment: Without, I try to update
+> Problem Description:
+> Hello from France,
+> I install with my CD, Debian with a 2.4.8 Kernel. My SCSI card was ok with the 
+> megaraid driver. I try to update the kernel with the 2.6.16.1 version. But 
+> after the boot hang on my Scsi card. I read this, a new driver for the megaraid 
+> is present on the 2.6 kernel. And it doesn't work with my "old" card.
+> How can I copy, compile, .... the megaraid driver of 2.4 kernel in 2.6 kenel.
+> I start in the world linux and kernel. Can you explain with more sentence
+> 
