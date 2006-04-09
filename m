@@ -1,44 +1,31 @@
-From: "Elinor Arellano" <oohovlyjf@colon.com>
-Subject: Astounding Mortgages for the USA!
-Date: Sun, 09 Apr 2006 06:28:43 +0100
-Message-ID: <378l259h.4235921@www5.h0ok.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [RFC PATCH] sbp2: remove manipulation of inquiry response
+Date: Sun, 09 Apr 2006 07:08:01 -0400
+Message-ID: <4438EB11.2070708@garzik.org>
+References: <tkrat.d3b4470a9a767dd4@s5r6.in-berlin.de> <4438070E.9000804@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:55248 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S965043AbWDIE3D (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Apr 2006 00:29:03 -0400
-Received: from HFA-62-0-158-23.bb.netvision.net.il (HFA-62-0-158-23.bb.netvision.net.il [62.0.158.23])
-	by zeus1.kernel.org (8.13.1/8.13.1) with SMTP id k394SILo011863
-	for <linux-scsi@vger.kernel.org>; Sun, 9 Apr 2006 04:28:54 GMT
+Received: from srv5.dvmed.net ([207.36.208.214]:49306 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1750723AbWDILIE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Apr 2006 07:08:04 -0400
+In-Reply-To: <4438070E.9000804@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: linux-scsi@vger.kernel.org, linux1394-devel@lists.sourceforge.net
 
-Homeowner 
+Stefan Richter wrote:
+> I wrote:
+>> This code became ineffective a few Linux releases ago and is
+>> apparently not required anyway.
+> 
+> PS: Of my SBP-2 devices, 3 of 3 CD-RWs and 3 of 7 HDDs report a SCSI 
+> level of 0. With and without the patch.
 
+That's expected... ATAPI-based MMC devices do that too.
 
-You have been pre-approved for a $455,843 Home Loan at a 3.76 Fixed Rate. 
-This offer is being extended to you unconditionally and your credit is in no way a factor. 
-
-
-To take Advantage of this Limited Time opportunity 
-
-
-All we ask is that you visit our Website and complete 
-The 1 minute post Approval Form 
-
-
-http://www5.h0ok.com/was.asp
-
-
-Best Wishes, 
-
-
-Hannah Mayfield
-
-
+	Jeff
 
 
