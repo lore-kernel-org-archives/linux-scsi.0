@@ -1,40 +1,56 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [RFC PATCH] sbp2: remove manipulation of inquiry response
-Date: Sat, 08 Apr 2006 20:55:10 +0200
-Message-ID: <4438070E.9000804@s5r6.in-berlin.de>
-References: <tkrat.d3b4470a9a767dd4@s5r6.in-berlin.de>
+From: "Jason" <shwdf@tom.com>
+Subject: Total Language Solution
+Date: Sun, 9 Apr 2006 11:58:26 +0800
+Message-ID: <200604090358.k393wLr3024940@zeus1.kernel.org>
+Reply-To: shwdf@tom.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-admin@lists.sourceforge.net>
-In-Reply-To: <tkrat.d3b4470a9a767dd4@s5r6.in-berlin.de>
-Sender: linux1394-devel-admin@lists.sourceforge.net
-Errors-To: linux1394-devel-admin@lists.sourceforge.net
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux1394-devel>
-To: linux-scsi@vger.kernel.org
-Cc: linux1394-devel@lists.sourceforge.net
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from zeus1.kernel.org ([204.152.191.4]:39367 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S965069AbWDID63 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Apr 2006 23:58:29 -0400
+Received: from tom.com ([222.68.74.147])
+	by zeus1.kernel.org (8.13.1/8.13.1) with ESMTP id k393wLr3024940
+	for <linux-scsi@vger.kernel.org>; Sun, 9 Apr 2006 03:58:23 GMT
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-I wrote:
-> This code became ineffective a few Linux releases ago and is
-> apparently not required anyway.
+Dear Sir,=20
+      We would like to take this opportunity to introduce our company.=20
+      We are a professional translation company=A3=ACone of China=A1=AF=
+s leading translation & interpretation companies, dedicates herself in =
+providing our clients with highly professional language solutions.=20
+      In a global marketplace distinguished by remarkable growth and co=
+nsolidation, We provides many language solutions that will assist in ef=
+fective communication and organizational development.=20
+All of our existing clients are continually looking to acquire best lan=
+guage solutions in order to improve business process and break through =
+bottle neck, which enables them to gain competitive advantages and atta=
+in commercial objectives.=20
+      With over 200 highly qualified translators and interpreters with =
+local and international industrial experience, We generates revenue fro=
+m a client list including over 60% of world top 1000 companies=20
+      By providing translation and interpretation services in different=
+ industries, WTC people are passionate to deliver premium products and =
+services that meet all of your personal and company needs.=20
+      If you have any requirements, please feel free to contact us.=20
+      For more information, please reply to this.
+=20
+      Best regards
+      Jason
 
-PS: Of my SBP-2 devices, 3 of 3 CD-RWs and 3 of 7 HDDs report a SCSI 
-level of 0. With and without the patch.
--- 
-Stefan Richter
--=====-=-==- -=-- -=---
-http://arcgraph.de/sr/
-
-
--------------------------------------------------------
-This SF.Net email is sponsored by xPML, a groundbreaking scripting language
-that extends applications into web and mobile media. Attend the live webcast
-and join the prime developer group breaking into this new coding territory!
-http://sel.as-us.falkag.net/sel?cmd=lnk&kid=110944&bid=241720&dat=121642
+      Account Exective: Jason =20
+      M P: 13482251975=20
+      Q Q: 87386590=20
+      email:haibinjia@yahoo.com.cn
+              =20
+=20
+      JASON
+=20
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
