@@ -1,51 +1,46 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: [PATCH] deinline some functions in aic7xxx drivers, save 80k
-	of text
-Date: Mon, 10 Apr 2006 18:20:40 +0200
-Message-ID: <1144686041.2876.2.camel@laptopd505.fenrus.org>
-References: <200604100844.12151.vda@ilport.com.ua>
-	 <200604100903.35431.eike-kernel@sf-tec.de>
-	 <200604101015.36869.vda@ilport.com.ua>
-	 <200604100919.23244.eike-kernel@sf-tec.de>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: Zach Brown <zach.brown@oracle.com>
+Subject: [PATCH] [qla2xxx] only free_irq() after request_irq() succeeds
+Date: Mon, 10 Apr 2006 16:39:36 -0700 (PDT)
+Message-ID: <20060410233936.28628.13303.sendpatchset@tetsuo.zabbo.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [4.79.56.4] ([4.79.56.4]:16014 "EHLO localhost.localdomain")
-	by vger.kernel.org with ESMTP id S932172AbWDJXc6 (ORCPT
+Received: from tetsuo.zabbo.net ([207.173.201.20]:6592 "EHLO tetsuo.zabbo.net")
+	by vger.kernel.org with ESMTP id S932179AbWDJXjg (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Apr 2006 19:32:58 -0400
-In-Reply-To: <200604100919.23244.eike-kernel@sf-tec.de>
+	Mon, 10 Apr 2006 19:39:36 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Cc: Denis Vlasenko <vda@ilport.com.ua>, SCSI List <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org
+To: linux-driver@qlogic.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Mon, 2006-04-10 at 09:19 +0200, Rolf Eike Beer wrote:
-> [Full quote and readded CC adresses. My fault, pressed wrong button]
-> 
-> Denis Vlasenko wrote:
-> > On Monday 10 April 2006 10:03, Rolf Eike Beer wrote:
-> > > Am Montag, 10. April 2006 07:49 schrieben Sie:
-> > > > On Monday 10 April 2006 08:44, Denis Vlasenko wrote:
-> > > > > I also spotted two bugs in the process, patches
-> > > > > for those will follow.
-> > > >
-> > > > ahd_delay(usec) is buggy. Just think how would it work
-> > > > with usec == 1024*100 + 1...
-> > >
-> > > This is unneeded. The biggest argument this function is ever called with
-> > > is 1000.
-> >
-> > I know.
-> >
-> > > I would suggest to delete this function completely. If one ever has to
-> > > wait for a longer period mdelay() is the right function to call.
-> >
-> > I am leaving it up to maintainer to decide. After all, the driver
-> > is for multiple OSes, other OS may lack mdelay().
+[qla2xxx] only free_irq() after request_irq() succeeds
 
+If qla2x00_probe_one() fails before calling request_irq() but gets to
+qla2x00_free_device() then it will mistakenly tree to free an irq it didn't
+request.  It's chosing to free based on ha->pdev->irq which is always set.
 
-actually this driver isn't shared anymore with other oses so it's ok to
-remove (buggy) abstractions
+host->irq is set after request_irq() succeeds so let's use that to decide
+to free or not.
 
+This was observed and tested when a silly set of circumstances lead to firmware
+loading failing on a 2100.
+
+  Signed-off-by: Zach Brown <zach.brown@oracle.com>
+---
+
+ drivers/scsi/qla2xxx/qla_os.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+Index: 2.6.17-rc1-mm2-qlafreeirq/drivers/scsi/qla2xxx/qla_os.c
+===================================================================
+--- 2.6.17-rc1-mm2-qlafreeirq.orig/drivers/scsi/qla2xxx/qla_os.c
++++ 2.6.17-rc1-mm2-qlafreeirq/drivers/scsi/qla2xxx/qla_os.c
+@@ -1700,8 +1700,8 @@ qla2x00_free_device(scsi_qla_host_t *ha)
+ 	ha->flags.online = 0;
+ 
+ 	/* Detach interrupts */
+-	if (ha->pdev->irq)
+-		free_irq(ha->pdev->irq, ha);
++	if (ha->host->irq)
++		free_irq(ha->host->irq, ha);
+ 
+ 	/* release io space registers  */
+ 	if (ha->iobase)
