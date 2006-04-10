@@ -1,37 +1,21 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 01/10] block layer: revoke the original patch to add
- partial mappings support
-Date: Mon, 10 Apr 2006 10:49:13 +0900 (JST)
-Message-ID: <20060410104521U.fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 06/10] scsi tgt: fix double lock in scsi_uspace_request_fn
+Date: Mon, 10 Apr 2006 10:49:14 +0900 (JST)
+Message-ID: <20060410104612O.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:3069 "EHLO
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:15101 "EHLO
 	tama5.ecl.ntt.co.jp") by vger.kernel.org with ESMTP
-	id S1750863AbWDJBtX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 9 Apr 2006 21:49:23 -0400
+	id S1750865AbWDJBtc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 9 Apr 2006 21:49:32 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@SteelEye.com
 Cc: linux-scsi@vger.kernel.org
 
-For target mode we could end up with the case where we get very large
-request from the initiator. The request could be so large that we
-cannot transfer all the data in one operation. For example the
-HBA's segment or max_sector limits might limit us to a 1 MB transfer.
-To send a 5 MB command then we need to transfer the command chunk by chunk.
-
-To do this, tgt core will map in as much data as possible into a bio,
-send this off, then when that transfer is completed we send off another
-request/bio. To be able to pack as much data into a bio as possible
-we need bio_map_user to support partially mapped bios.
-
-Following the comments from Jens on the original patch:
-
-http://marc.theaimsgroup.com/?l=linux-scsi&m=114012008928530&w=2
-
-This patch will revoke changes by the original patch.
+Fix double lock in scsi_uspace_request_fn.
 
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
@@ -39,107 +23,22 @@ Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 
 ---
 
- block/ll_rw_blk.c   |    5 ++---
- fs/bio.c            |   11 ++++-------
- include/linux/bio.h |    5 ++---
- 3 files changed, 8 insertions(+), 13 deletions(-)
+ drivers/scsi/scsi_tgt_lib.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-4d84a7a7218de12ef1e3f58a0a5514a730994848
-diff --git a/block/ll_rw_blk.c b/block/ll_rw_blk.c
-index 13c40a0..03d9c82 100644
---- a/block/ll_rw_blk.c
-+++ b/block/ll_rw_blk.c
-@@ -2287,7 +2287,7 @@ int blk_rq_map_user(request_queue_t *q, 
- 	 */
- 	uaddr = (unsigned long) ubuf;
- 	if (!(uaddr & queue_dma_alignment(q)) && !(len & queue_dma_alignment(q)))
--		bio = bio_map_user(q, NULL, uaddr, len, reading, 0);
-+		bio = bio_map_user(q, NULL, uaddr, len, reading);
- 	else
- 		bio = bio_copy_user(q, uaddr, len, reading);
- 
-@@ -2339,8 +2339,7 @@ int blk_rq_map_user_iov(request_queue_t 
- 	/* we don't allow misaligned data like bio_map_user() does.  If the
- 	 * user is using sg, they're expected to know the alignment constraints
- 	 * and respect them accordingly */
--	bio = bio_map_user_iov(q, NULL, iov, iov_count, rq_data_dir(rq)== READ,
--				0);
-+	bio = bio_map_user_iov(q, NULL, iov, iov_count, rq_data_dir(rq)== READ);
- 	if (IS_ERR(bio))
- 		return PTR_ERR(bio);
- 
-diff --git a/fs/bio.c b/fs/bio.c
-index 3e940c9..d8259d9 100644
---- a/fs/bio.c
-+++ b/fs/bio.c
-@@ -718,21 +718,19 @@ static struct bio *__bio_map_user_iov(re
-  *	@uaddr: start of user address
-  *	@len: length in bytes
-  *	@write_to_vm: bool indicating writing to pages or not
-- *	@support_partial: support partial mappings
-  *
-  *	Map the user space address into a bio suitable for io to a block
-  *	device. Returns an error pointer in case of error.
-  */
- struct bio *bio_map_user(request_queue_t *q, struct block_device *bdev,
--			 unsigned long uaddr, unsigned int len, int write_to_vm,
--			 int support_partial)
-+			 unsigned long uaddr, unsigned int len, int write_to_vm)
- {
- 	struct sg_iovec iov;
- 
- 	iov.iov_base = (void __user *)uaddr;
- 	iov.iov_len = len;
- 
--	return bio_map_user_iov(q, bdev, &iov, 1, write_to_vm, support_partial);
-+	return bio_map_user_iov(q, bdev, &iov, 1, write_to_vm);
+1ddfd113a764450e7998cc16dd07dcc37077b05b
+diff --git a/drivers/scsi/scsi_tgt_lib.c b/drivers/scsi/scsi_tgt_lib.c
+index 8746236..5d76078 100644
+--- a/drivers/scsi/scsi_tgt_lib.c
++++ b/drivers/scsi/scsi_tgt_lib.c
+@@ -136,7 +136,7 @@ requeue:
+ 	spin_lock_irq(q->queue_lock);
+ 	/* need to track cnts and plug */
+ 	blk_requeue_request(q, rq);
+-	spin_lock_irq(q->queue_lock);
++	spin_unlock_irq(q->queue_lock);
  }
  
  /**
-@@ -742,14 +740,13 @@ struct bio *bio_map_user(request_queue_t
-  *	@iov:	the iovec.
-  *	@iov_count: number of elements in the iovec
-  *	@write_to_vm: bool indicating writing to pages or not
-- *	@support_partial: support partial mappings
-  *
-  *	Map the user space address into a bio suitable for io to a block
-  *	device. Returns an error pointer in case of error.
-  */
- struct bio *bio_map_user_iov(request_queue_t *q, struct block_device *bdev,
- 			     struct sg_iovec *iov, int iov_count,
--			     int write_to_vm, int support_partial)
-+			     int write_to_vm)
- {
- 	struct bio *bio;
- 	int len = 0, i;
-@@ -770,7 +767,7 @@ struct bio *bio_map_user_iov(request_que
- 	for (i = 0; i < iov_count; i++)
- 		len += iov[i].iov_len;
- 
--	if (bio->bi_size == len || support_partial)
-+	if (bio->bi_size == len)
- 		return bio;
- 
- 	/*
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index fc0906c..b60ffe3 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -295,13 +295,12 @@ extern int bio_add_page(struct bio *, st
- extern int bio_add_pc_page(struct request_queue *, struct bio *, struct page *,
- 			   unsigned int, unsigned int);
- extern int bio_get_nr_vecs(struct block_device *);
--extern int __bio_get_nr_vecs(struct request_queue *);
- extern struct bio *bio_map_user(struct request_queue *, struct block_device *,
--				unsigned long, unsigned int, int, int);
-+				unsigned long, unsigned int, int);
- struct sg_iovec;
- extern struct bio *bio_map_user_iov(struct request_queue *,
- 				    struct block_device *,
--				    struct sg_iovec *, int, int, int);
-+				    struct sg_iovec *, int, int);
- extern void bio_unmap_user(struct bio *);
- extern struct bio *bio_map_kern(struct request_queue *, void *, unsigned int,
- 				gfp_t);
 -- 
 1.1.5
