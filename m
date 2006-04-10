@@ -1,34 +1,39 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 02/10] block layer: add partial mappings support to
- bio_map_user
-Date: Mon, 10 Apr 2006 10:49:13 +0900 (JST)
-Message-ID: <20060410104536S.fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 08/10] scsi tgt: replace the elevator code
+Date: Mon, 10 Apr 2006 10:49:15 +0900 (JST)
+Message-ID: <20060410104627J.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:25597 "EHLO
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:17917 "EHLO
 	tama5.ecl.ntt.co.jp") by vger.kernel.org with ESMTP
-	id S1750875AbWDJBti (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 9 Apr 2006 21:49:38 -0400
+	id S1750868AbWDJBtb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 9 Apr 2006 21:49:31 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: axboe@suse.de, James.Bottomley@SteelEye.com
+To: James.Bottomley@SteelEye.com
 Cc: linux-scsi@vger.kernel.org
 
-This is the updated patch for partial mappings support.
+tgt uses the elevator code to send SCSI commands to the user-space
+daemon (q->request_fn sends netlink packets including commands).
 
-- bio_map_user_iov always allows partial mappings.
+This patch replaces the elevator code with a simple list.
 
-- The two users (blk_rq_map_user and blk_rq_map_user_iov) will fails
-if the bio is partially mapped.
+This is mainly because tgt also needs to send TMF requests to the
+user-space daemon (the daemon does all the SCSI state machine
+stuff). tgt must send SCSI commands and TMF requests in an exact order
+so that it would be preferable to use a single queue (per host) for
+both. To uses the elevator code for TMF requests, tgt needs to
+allocate request structures for them. That's wasteful because request
+structures is useless for TMF requests, which don't perform any I/Os.
 
-- Added a length argument to blk_rq_map_user_iov in order to avoid
-including sg.h in ll_rw_blk.c for struct sg_iovec.
+We basically have a netdev queue of events to send to userspace so by
+using the request_queue and netdev queue we are basically double
+queueing and wasting resources and it is affecting performance
 
-This is a resend:
-
-http://marc.theaimsgroup.com/?l=linux-scsi&m=114086655400806&w=2
+We like to use shared memory stuff between kernel and user spaces
+instead of netlink in the future. These queues would go away.
 
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
@@ -36,129 +41,314 @@ Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 
 ---
 
- block/ll_rw_blk.c      |   29 ++++++++++++++++++-----------
- block/scsi_ioctl.c     |    3 ++-
- fs/bio.c               |   14 +-------------
- include/linux/blkdev.h |    3 ++-
- 4 files changed, 23 insertions(+), 26 deletions(-)
+ drivers/scsi/scsi_tgt_lib.c  |  180 ++++++++++++++++++++++++++++++------------
+ drivers/scsi/scsi_tgt_priv.h |    4 -
+ 2 files changed, 129 insertions(+), 55 deletions(-)
 
-d43dcc5c747b5896c795e1fe1f8a6d5df525daa6
-diff --git a/block/ll_rw_blk.c b/block/ll_rw_blk.c
-index 03d9c82..6849859 100644
---- a/block/ll_rw_blk.c
-+++ b/block/ll_rw_blk.c
-@@ -2291,19 +2291,20 @@ int blk_rq_map_user(request_queue_t *q, 
- 	else
- 		bio = bio_copy_user(q, uaddr, len, reading);
+c4bb05742e1834d664a7d8e721ecea71d42fd7f7
+diff --git a/drivers/scsi/scsi_tgt_lib.c b/drivers/scsi/scsi_tgt_lib.c
+index 274d929..2cbc749 100644
+--- a/drivers/scsi/scsi_tgt_lib.c
++++ b/drivers/scsi/scsi_tgt_lib.c
+@@ -20,7 +20,7 @@
+  * 02110-1301 USA
+  */
+ #include <linux/blkdev.h>
+-#include <linux/elevator.h>
++#include <linux/hash.h>
+ #include <linux/module.h>
+ #include <linux/pagemap.h>
+ #include <scsi/scsi.h>
+@@ -46,6 +46,24 @@ struct scsi_tgt_cmd {
+ 	struct bio_list xfer_done_list;
+ 	struct bio_list xfer_list;
+ 	struct scsi_lun *lun;
++
++	struct list_head hash_list;
++	struct request *rq;
++};
++
++#define TGT_HASH_ORDER	4
++#define cmd_hashfn(cid)	hash_long((cid), TGT_HASH_ORDER)
++
++struct scsi_tgt_queuedata {
++	struct Scsi_Host *shost;
++	struct list_head cmd_hash[1 << TGT_HASH_ORDER];
++	spinlock_t cmd_hash_lock;
++
++	struct work_struct uspace_send_work;
++
++	spinlock_t cmd_req_lock;
++	struct mutex cmd_req_mutex;
++	struct list_head cmd_req;
+ };
  
--	if (!IS_ERR(bio)) {
--		rq->bio = rq->biotail = bio;
--		blk_rq_bio_prep(q, rq, bio);
-+	if (IS_ERR(bio))
-+		return PTR_ERR(bio);
+ static void scsi_unmap_user_pages(struct scsi_tgt_cmd *tcmd)
+@@ -68,9 +86,16 @@ static void scsi_tgt_cmd_destroy(void *d
+ {
+ 	struct scsi_cmnd *cmd = data;
+ 	struct scsi_tgt_cmd *tcmd = cmd->request->end_io_data;
++	struct scsi_tgt_queuedata *qdata = cmd->request->q->queuedata;
++	unsigned long flags;
  
--		rq->buffer = rq->data = NULL;
--		rq->data_len = len;
--		return 0;
-+	if (bio->bi_size != len) {
-+		bio_endio(bio, bio->bi_size, 0);
-+		bio_unmap_user(bio);
-+		return -EINVAL;
- 	}
+ 	dprintk("cmd %p %d %lu\n", cmd, cmd->sc_data_direction,
+ 		rq_data_dir(cmd->request));
++
++	spin_lock_irqsave(&qdata->cmd_hash_lock, flags);
++	list_del(&tcmd->hash_list);
++	spin_unlock_irqrestore(&qdata->cmd_hash_lock, flags);
++
+ 	/*
+ 	 * We must set rq->flags here because bio_map_user and
+ 	 * blk_rq_bio_prep ruined ti.
+@@ -88,55 +113,84 @@ static void scsi_tgt_cmd_destroy(void *d
  
--	/*
--	 * bio is the err-ptr
--	 */
--	return PTR_ERR(bio);
-+	rq->bio = rq->biotail = bio;
-+	blk_rq_bio_prep(q, rq, bio);
-+	rq->buffer = rq->data = NULL;
-+	rq->data_len = len;
-+	return 0;
+ static void init_scsi_tgt_cmd(struct request *rq, struct scsi_tgt_cmd *tcmd)
+ {
++	struct scsi_tgt_queuedata *qdata = rq->q->queuedata;
++	unsigned long flags;
++	struct list_head *head;
++	static u32 tag = 0;
++
+ 	tcmd->lun = rq->end_io_data;
+ 	bio_list_init(&tcmd->xfer_list);
+ 	bio_list_init(&tcmd->xfer_done_list);
+-}
+-
+-static int scsi_uspace_prep_fn(struct request_queue *q, struct request *rq)
+-{
+-	struct scsi_tgt_cmd *tcmd;
+ 
+-	tcmd = kmem_cache_alloc(scsi_tgt_cmd_cache, GFP_ATOMIC);
+-	if (!tcmd)
+-		return BLKPREP_DEFER;
++	spin_lock_irqsave(&qdata->cmd_hash_lock, flags);
++	rq->tag = tag++;
++	head = &qdata->cmd_hash[cmd_hashfn(rq->tag)];
++	list_add(&tcmd->hash_list, head);
++	spin_unlock_irqrestore(&qdata->cmd_hash_lock, flags);
+ 
+-	init_scsi_tgt_cmd(rq, tcmd);
++	tcmd->rq = rq;
+ 	rq->end_io_data = tcmd;
+ 	rq->flags |= REQ_DONTPREP;
+-	return BLKPREP_OK;
  }
  
- EXPORT_SYMBOL(blk_rq_map_user);
-@@ -2329,7 +2330,7 @@ EXPORT_SYMBOL(blk_rq_map_user);
-  *    unmapping.
-  */
- int blk_rq_map_user_iov(request_queue_t *q, struct request *rq,
--			struct sg_iovec *iov, int iov_count)
-+			struct sg_iovec *iov, int iov_count, unsigned int len)
+-static void scsi_uspace_request_fn(struct request_queue *q)
++static void scsi_tgt_uspace_send_fn(void *data)
  {
- 	struct bio *bio;
++	struct request_queue *q = data;
++	struct scsi_tgt_queuedata *qdata = q->queuedata;
+ 	struct request *rq;
+ 	struct scsi_cmnd *cmd;
+ 	struct scsi_tgt_cmd *tcmd;
++	unsigned long flags;
++	int err;
  
-@@ -2343,6 +2344,12 @@ int blk_rq_map_user_iov(request_queue_t 
- 	if (IS_ERR(bio))
- 		return PTR_ERR(bio);
+-	/*
+-	 * TODO: just send everthing in the queue to userspace in
+-	 * one vector instead of multiple calls
+-	 */
+-	while ((rq = elv_next_request(q)) != NULL) {
+-		cmd = rq->special;
+-		tcmd = rq->end_io_data;
++retry:
++	err = 0;
++	if (list_empty(&qdata->cmd_req))
++		return;
  
-+	if (bio->bi_size != len) {
-+		bio_endio(bio, bio->bi_size, 0);
-+		bio_unmap_user(bio);
-+		return -EINVAL;
+-		/* the completion code kicks us in case we hit this */
+-		if (blk_queue_start_tag(q, rq))
+-			break;
++	tcmd = kmem_cache_alloc(scsi_tgt_cmd_cache, GFP_ATOMIC);
++	if (!tcmd) {
++		err = -ENOMEM;
++		goto out;
 +	}
 +
- 	rq->bio = rq->biotail = bio;
- 	blk_rq_bio_prep(q, rq, bio);
- 	rq->buffer = rq->data = NULL;
-diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-index 24f7af9..ef9900d 100644
---- a/block/scsi_ioctl.c
-+++ b/block/scsi_ioctl.c
-@@ -274,7 +274,8 @@ static int sg_io(struct file *file, requ
- 			goto out;
- 		}
++	mutex_lock(&qdata->cmd_req_mutex);
  
--		ret = blk_rq_map_user_iov(q, rq, iov, hdr->iovec_count);
-+		ret = blk_rq_map_user_iov(q, rq, iov, hdr->iovec_count,
-+					  hdr->dxfer_len);
- 		kfree(iov);
- 	} else if (hdr->dxfer_len)
- 		ret = blk_rq_map_user(q, rq, hdr->dxferp, hdr->dxfer_len);
-diff --git a/fs/bio.c b/fs/bio.c
-index d8259d9..f51a873 100644
---- a/fs/bio.c
-+++ b/fs/bio.c
-@@ -749,7 +749,6 @@ struct bio *bio_map_user_iov(request_que
- 			     int write_to_vm)
- {
- 	struct bio *bio;
--	int len = 0, i;
+-		spin_unlock_irq(q->queue_lock);
+-		if (scsi_tgt_uspace_send(cmd, tcmd->lun, GFP_ATOMIC) < 0)
+-			goto requeue;
+-		spin_lock_irq(q->queue_lock);
++	spin_lock_irqsave(&qdata->cmd_req_lock, flags);
++	if (list_empty(&qdata->cmd_req)) {
++		spin_unlock_irqrestore(&qdata->cmd_req_lock, flags);
++		mutex_unlock(&qdata->cmd_req_mutex);
++		kmem_cache_free(scsi_tgt_cmd_cache, tcmd);
++		goto out;
+ 	}
++	rq = list_entry_rq(qdata->cmd_req.next);
++	list_del_init(&rq->queuelist);
++	spin_unlock_irqrestore(&qdata->cmd_req_lock, flags);
  
- 	bio = __bio_map_user_iov(q, bdev, iov, iov_count, write_to_vm);
- 
-@@ -764,18 +763,7 @@ struct bio *bio_map_user_iov(request_que
- 	 */
- 	bio_get(bio);
- 
--	for (i = 0; i < iov_count; i++)
--		len += iov[i].iov_len;
--
--	if (bio->bi_size == len)
--		return bio;
--
--	/*
--	 * don't support partial mappings
--	 */
--	bio_endio(bio, bio->bi_size, 0);
--	bio_unmap_user(bio);
--	return ERR_PTR(-EINVAL);
-+	return bio;
+-	return;
+-requeue:
+-	spin_lock_irq(q->queue_lock);
+-	/* need to track cnts and plug */
+-	blk_requeue_request(q, rq);
+-	spin_unlock_irq(q->queue_lock);
++	if ((rq->flags & REQ_DONTPREP)) {
++		kmem_cache_free(scsi_tgt_cmd_cache, tcmd);
++		tcmd = rq->end_io_data;
++	} else
++		init_scsi_tgt_cmd(rq, tcmd);
++
++	cmd = rq->special;
++	err = scsi_tgt_uspace_send(cmd, tcmd->lun, GFP_ATOMIC);
++	if (err < 0) {
++		eprintk("failed to send: %p %d\n", cmd, err);
++
++		spin_lock_irqsave(&qdata->cmd_req_lock, flags);
++		list_add(&rq->queuelist, &qdata->cmd_req);
++		spin_unlock_irqrestore(&qdata->cmd_req_lock, flags);
++	}
++
++	mutex_unlock(&qdata->cmd_req_mutex);
++out:
++	/* TODO: proper error handling */
++	if (err < 0)
++		queue_delayed_work(scsi_tgtd, &qdata->uspace_send_work,
++				   HZ / 10);
++	else
++		goto retry;
  }
  
- static void __bio_unmap_user(struct bio *bio)
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 860e7a4..619ef1d 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -611,7 +611,8 @@ extern void blk_queue_activity_fn(reques
- extern int blk_rq_map_user(request_queue_t *, struct request *, void __user *, unsigned int);
- extern int blk_rq_unmap_user(struct bio *, unsigned int);
- extern int blk_rq_map_kern(request_queue_t *, struct request *, void *, unsigned int, gfp_t);
--extern int blk_rq_map_user_iov(request_queue_t *, struct request *, struct sg_iovec *, int);
-+extern int blk_rq_map_user_iov(request_queue_t *, struct request *,
-+			       struct sg_iovec *, int, unsigned int);
- extern int blk_execute_rq(request_queue_t *, struct gendisk *,
- 			  struct request *, int);
- extern void blk_execute_rq_nowait(request_queue_t *, struct gendisk *,
+ /**
+@@ -150,13 +204,13 @@ int scsi_tgt_alloc_queue(struct Scsi_Hos
+ {
+ 	struct scsi_tgt_queuedata *queuedata;
+ 	struct request_queue *q;
+-	int err;
++	int err, i;
+ 
+ 	/*
+ 	 * Do we need to send a netlink event or should uspace
+ 	 * just respond to the hotplug event?
+ 	 */
+-	q = __scsi_alloc_queue(shost, scsi_uspace_request_fn);
++	q = __scsi_alloc_queue(shost, NULL);
+ 	if (!q)
+ 		return -ENOMEM;
+ 
+@@ -168,19 +222,12 @@ int scsi_tgt_alloc_queue(struct Scsi_Hos
+ 	queuedata->shost = shost;
+ 	q->queuedata = queuedata;
+ 
+-	elevator_exit(q->elevator);
+-	err = elevator_init(q, "noop");
+-	if (err)
+-		goto free_data;
+-
+-	blk_queue_prep_rq(q, scsi_uspace_prep_fn);
+ 	/*
+ 	 * this is a silly hack. We should probably just queue as many
+ 	 * command as is recvd to userspace. uspace can then make
+ 	 * sure we do not overload the HBA
+ 	 */
+ 	q->nr_requests = shost->hostt->can_queue;
+-	blk_queue_init_tags(q, shost->hostt->can_queue, NULL);
+ 	/*
+ 	 * We currently only support software LLDs so this does
+ 	 * not matter for now. Do we need this for the cards we support?
+@@ -189,10 +236,17 @@ int scsi_tgt_alloc_queue(struct Scsi_Hos
+ 	blk_queue_dma_alignment(q, 0);
+ 	shost->uspace_req_q = q;
+ 
++	for (i = 0; i < ARRAY_SIZE(queuedata->cmd_hash); i++)
++		INIT_LIST_HEAD(&queuedata->cmd_hash[i]);
++	spin_lock_init(&queuedata->cmd_hash_lock);
++
++	INIT_LIST_HEAD(&queuedata->cmd_req);
++	spin_lock_init(&queuedata->cmd_req_lock);
++	INIT_WORK(&queuedata->uspace_send_work, scsi_tgt_uspace_send_fn, q);
++	mutex_init(&queuedata->cmd_req_mutex);
++
+ 	return 0;
+ 
+-free_data:
+-	kfree(queuedata);
+ cleanup_queue:
+ 	blk_cleanup_queue(q);
+ 	return err;
+@@ -215,14 +269,17 @@ EXPORT_SYMBOL_GPL(scsi_tgt_cmd_to_host);
+ void scsi_tgt_queue_command(struct scsi_cmnd *cmd, struct scsi_lun *scsilun,
+ 			    int noblock)
+ {
+-	/*
+-	 * For now this just calls the request_fn from this context.
+-	 * For HW llds though we do not want to execute from here so
+-	 * the elevator code needs something like a REQ_TGT_CMD or
+-	 * REQ_MSG_DONT_UNPLUG_IMMED_BECUASE_WE_WILL_HANDLE_IT
+-	 */
++	struct request_queue *q = cmd->request->q;
++	struct scsi_tgt_queuedata *qdata = q->queuedata;
++	unsigned long flags;
++
+ 	cmd->request->end_io_data = scsilun;
+-	elv_add_request(cmd->request->q, cmd->request, ELEVATOR_INSERT_BACK, 1);
++
++	spin_lock_irqsave(&qdata->cmd_req_lock, flags);
++	list_add_tail(&cmd->request->queuelist, &qdata->cmd_req);
++	spin_unlock_irqrestore(&qdata->cmd_req_lock, flags);
++
++	queue_work(scsi_tgtd, &qdata->uspace_send_work);
+ }
+ EXPORT_SYMBOL_GPL(scsi_tgt_queue_command);
+ 
+@@ -438,6 +495,27 @@ static int scsi_tgt_copy_sense(struct sc
+ 	return 0;
+ }
+ 
++static struct request *tgt_cmd_hash_lookup(struct request_queue *q, u32 cid)
++{
++	struct scsi_tgt_queuedata *qdata = q->queuedata;
++	struct request *rq = NULL;
++	struct list_head *head;
++	struct scsi_tgt_cmd *tcmd;
++	unsigned long flags;
++
++	head = &qdata->cmd_hash[cmd_hashfn(cid)];
++	spin_lock_irqsave(&qdata->cmd_hash_lock, flags);
++	list_for_each_entry(tcmd, head, hash_list) {
++		if (tcmd->rq->tag == cid) {
++			rq = tcmd->rq;
++			break;
++		}
++	}
++	spin_unlock_irqrestore(&qdata->cmd_hash_lock, flags);
++
++	return rq;
++}
++
+ int scsi_tgt_kspace_exec(int host_no, u32 cid, int result, u32 len,
+ 			 unsigned long uaddr, u8 rw)
+ {
+@@ -456,7 +534,7 @@ int scsi_tgt_kspace_exec(int host_no, u3
+ 		return -EINVAL;
+ 	}
+ 
+-	rq = blk_queue_find_tag(shost->uspace_req_q, cid);
++	rq = tgt_cmd_hash_lookup(shost->uspace_req_q, cid);
+ 	if (!rq) {
+ 		printk(KERN_ERR "Could not find cid %u\n", cid);
+ 		err = -EINVAL;
+diff --git a/drivers/scsi/scsi_tgt_priv.h b/drivers/scsi/scsi_tgt_priv.h
+index fcf2ec6..6fedcec 100644
+--- a/drivers/scsi/scsi_tgt_priv.h
++++ b/drivers/scsi/scsi_tgt_priv.h
+@@ -11,10 +11,6 @@ do {								\
+ 
+ #define eprintk dprintk
+ 
+-struct scsi_tgt_queuedata {
+-	struct Scsi_Host *shost;
+-};
+-
+ extern void scsi_tgt_if_exit(void);
+ extern int scsi_tgt_if_init(void);
+ 
 -- 
 1.1.5
