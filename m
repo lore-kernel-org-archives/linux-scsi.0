@@ -1,82 +1,62 @@
-From: Denis Vlasenko <vda@ilport.com.ua>
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
 Subject: Re: [PATCH] deinline some functions in aic7xxx drivers, save 80k of text
-Date: Mon, 10 Apr 2006 08:49:37 +0300
-Message-ID: <200604100849.37943.vda@ilport.com.ua>
-References: <200604100844.12151.vda@ilport.com.ua>
+Date: Mon, 10 Apr 2006 09:19:19 +0200
+Message-ID: <200604100919.23244.eike-kernel@sf-tec.de>
+References: <200604100844.12151.vda@ilport.com.ua> <200604100903.35431.eike-kernel@sf-tec.de> <200604101015.36869.vda@ilport.com.ua>
 Mime-Version: 1.0
-Content-Type: Multipart/Mixed;
-  boundary="Boundary-00=_xHfOE5YeiHnHSq5"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 167.imtp.Ilyichevsk.Odessa.UA ([195.66.192.167]:63462 "HELO
-	ilport.com.ua") by vger.kernel.org with SMTP id S1751015AbWDJFuQ
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Apr 2006 01:50:16 -0400
-In-Reply-To: <200604100844.12151.vda@ilport.com.ua>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/signed;
+  boundary="nextPart1735792.7TOZKksDQo";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751067AbWDJHXS@vger.kernel.org>
+In-Reply-To: <200604101015.36869.vda@ilport.com.ua>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Denis Vlasenko <vda@ilport.com.ua>, SCSI List <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org, gibbs@scsiguy.com
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: gibbs@scsiguy.com, linux-kernel@vger.kernel.org
 
---Boundary-00=_xHfOE5YeiHnHSq5
+--nextPart1735792.7TOZKksDQo
 Content-Type: text/plain;
   charset="koi8-r"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
 
-On Monday 10 April 2006 08:44, Denis Vlasenko wrote:
-> I also spotted two bugs in the process, patches
-> for those will follow.
+[Full quote and readded CC adresses. My fault, pressed wrong button]
 
-ahd_delay(usec) is buggy. Just think how would it work
-with usec == 1024*100 + 1...
+Denis Vlasenko wrote:
+> On Monday 10 April 2006 10:03, Rolf Eike Beer wrote:
+> > Am Montag, 10. April 2006 07:49 schrieben Sie:
+> > > On Monday 10 April 2006 08:44, Denis Vlasenko wrote:
+> > > > I also spotted two bugs in the process, patches
+> > > > for those will follow.
+> > >
+> > > ahd_delay(usec) is buggy. Just think how would it work
+> > > with usec == 1024*100 + 1...
+> >
+> > This is unneeded. The biggest argument this function is ever called with
+> > is 1000.
+>
+> I know.
+>
+> > I would suggest to delete this function completely. If one ever has to
+> > wait for a longer period mdelay() is the right function to call.
+>
+> I am leaving it up to maintainer to decide. After all, the driver
+> is for multiple OSes, other OS may lack mdelay().
 
-Signed-off-by: Denis Vlasenko <vda@ilport.com.ua>
---
-vda
+The comment says about multiple milliseconds sleeps which just don't happen.
 
---Boundary-00=_xHfOE5YeiHnHSq5
-Content-Type: text/x-diff;
-  charset="koi8-r";
-  name="2.6.16.aic7_42.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="2.6.16.aic7_42.patch"
+Eike
 
-Fix yet another bug
+--nextPart1735792.7TOZKksDQo
+Content-Type: application/pgp-signature
 
-diff -urpN linux-2.6.16.aic7_2/drivers/scsi/aic7xxx/aic79xx_osm_o.c linux-2.6.16.aic7_3/drivers/scsi/aic7xxx/aic79xx_osm_o.c
---- linux-2.6.16.aic7_2/drivers/scsi/aic7xxx/aic79xx_osm_o.c	Sun Apr  9 21:53:01 2006
-+++ linux-2.6.16.aic7_3/drivers/scsi/aic7xxx/aic79xx_osm_o.c	Sun Apr  9 22:25:30 2006
-@@ -28,9 +28,11 @@ ahd_delay(long usec)
- 	 * multi-millisecond waits.  Wait at most
- 	 * 1024us per call.
- 	 */
-+	udelay(usec & 1023);
-+	usec >>= 10;
- 	while (usec > 0) {
--		udelay(usec % 1024);
--		usec -= 1024;
-+		udelay(1024);
-+		usec--;
- 	}
- }
- 
-diff -urpN linux-2.6.16.aic7_2/drivers/scsi/aic7xxx/aic7xxx_osm_o.c linux-2.6.16.aic7_3/drivers/scsi/aic7xxx/aic7xxx_osm_o.c
---- linux-2.6.16.aic7_2/drivers/scsi/aic7xxx/aic7xxx_osm_o.c	Sun Apr  9 21:54:39 2006
-+++ linux-2.6.16.aic7_3/drivers/scsi/aic7xxx/aic7xxx_osm_o.c	Sun Apr  9 22:24:59 2006
-@@ -14,9 +14,11 @@ ahc_delay(long usec)
- 	 * multi-millisecond waits.  Wait at most
- 	 * 1024us per call.
- 	 */
-+	udelay(usec & 1023);
-+	usec >>= 10;
- 	while (usec > 0) {
--		udelay(usec % 1024);
--		usec -= 1024;
-+		udelay(1024);
-+		usec--;
- 	}
- }
- 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.0 (GNU/Linux)
 
---Boundary-00=_xHfOE5YeiHnHSq5--
+iD8DBQBEOgb7XKSJPmm5/E4RAk+TAJwPY+pGOAZUzzOkosqbBp10V/1PDwCfRqba
+uZjUfV17FHWkHwIpV9B5WZ4=
+=3QeF
+-----END PGP SIGNATURE-----
+
+--nextPart1735792.7TOZKksDQo--
