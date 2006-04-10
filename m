@@ -1,160 +1,51 @@
-From: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
-Subject: [PATCH 1/1] cciss: bug fix for crash when running hpacucli
-Date: Mon, 10 Apr 2006 15:25:41 -0500
-Message-ID: <20060410202541.GA28328@beardog.cca.cpqcorp.net>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [PATCH] deinline some functions in aic7xxx drivers, save 80k
+	of text
+Date: Mon, 10 Apr 2006 18:20:40 +0200
+Message-ID: <1144686041.2876.2.camel@laptopd505.fenrus.org>
+References: <200604100844.12151.vda@ilport.com.ua>
+	 <200604100903.35431.eike-kernel@sf-tec.de>
+	 <200604101015.36869.vda@ilport.com.ua>
+	 <200604100919.23244.eike-kernel@sf-tec.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palrel11.hp.com ([156.153.255.246]:35515 "EHLO palrel11.hp.com")
-	by vger.kernel.org with ESMTP id S932100AbWDJUZs (ORCPT
+Received: from [4.79.56.4] ([4.79.56.4]:16014 "EHLO localhost.localdomain")
+	by vger.kernel.org with ESMTP id S932172AbWDJXc6 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Apr 2006 16:25:48 -0400
-Content-Disposition: inline
+	Mon, 10 Apr 2006 19:32:58 -0400
+In-Reply-To: <200604100919.23244.eike-kernel@sf-tec.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@osdl.org, axboe@suse.de
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, steve.cameron@hp.com
+To: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Cc: Denis Vlasenko <vda@ilport.com.ua>, SCSI List <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org
 
-PATCH 1/1
+On Mon, 2006-04-10 at 09:19 +0200, Rolf Eike Beer wrote:
+> [Full quote and readded CC adresses. My fault, pressed wrong button]
+> 
+> Denis Vlasenko wrote:
+> > On Monday 10 April 2006 10:03, Rolf Eike Beer wrote:
+> > > Am Montag, 10. April 2006 07:49 schrieben Sie:
+> > > > On Monday 10 April 2006 08:44, Denis Vlasenko wrote:
+> > > > > I also spotted two bugs in the process, patches
+> > > > > for those will follow.
+> > > >
+> > > > ahd_delay(usec) is buggy. Just think how would it work
+> > > > with usec == 1024*100 + 1...
+> > >
+> > > This is unneeded. The biggest argument this function is ever called with
+> > > is 1000.
+> >
+> > I know.
+> >
+> > > I would suggest to delete this function completely. If one ever has to
+> > > wait for a longer period mdelay() is the right function to call.
+> >
+> > I am leaving it up to maintainer to decide. After all, the driver
+> > is for multiple OSes, other OS may lack mdelay().
 
-This patch fixes a crash when running hpacucli with multiple logical volumes
-on a cciss controller. We were not properly initializing the disk->queue
-and causing a fault.
-Thanks to Hasso Tepper for reporting the problem. Thanks to Steve Cameron
-for root causing the problem.
-Most of the patch just moves things around. The fix is a one-liner.
 
-Signed-off-by: Mike Miller <mike.miller@hp.com>
-Signed-off-by: Stephen Cameron <steve.cameron@hp.com>
+actually this driver isn't shared anymore with other oses so it's ok to
+remove (buggy) abstractions
 
---------------------------------------------------------------------------------
- cciss.c |   96 ++++++++++++++++++++++++++++++++--------------------------------
- 1 files changed, 49 insertions(+), 47 deletions(-)
-
-diff -burNp linux-2.6.16.2.orig/drivers/block/cciss.c linux-2.6.16.2/drivers/block/cciss.c
---- linux-2.6.16.2.orig/drivers/block/cciss.c	2006-04-10 10:28:38.000000000 -0500
-+++ linux-2.6.16.2/drivers/block/cciss.c	2006-04-10 15:07:12.000000000 -0500
-@@ -1181,6 +1181,53 @@ static int revalidate_allvol(ctlr_info_t
-         return 0;
- }
- 
-+static inline void complete_buffers(struct bio *bio, int status)
-+{
-+	while (bio) {
-+		struct bio *xbh = bio->bi_next; 
-+		int nr_sectors = bio_sectors(bio);
-+
-+		bio->bi_next = NULL; 
-+		blk_finished_io(len);
-+		bio_endio(bio, nr_sectors << 9, status ? 0 : -EIO);
-+		bio = xbh;
-+	}
-+
-+} 
-+
-+static void cciss_softirq_done(struct request *rq)
-+{
-+	CommandList_struct *cmd = rq->completion_data;
-+	ctlr_info_t *h = hba[cmd->ctlr];
-+	unsigned long flags;
-+	u64bit temp64;
-+	int i, ddir;
-+
-+	if (cmd->Request.Type.Direction == XFER_READ)
-+		ddir = PCI_DMA_FROMDEVICE;
-+	else
-+		ddir = PCI_DMA_TODEVICE;
-+
-+	/* command did not need to be retried */
-+	/* unmap the DMA mapping for all the scatter gather elements */
-+	for(i=0; i<cmd->Header.SGList; i++) {
-+		temp64.val32.lower = cmd->SG[i].Addr.lower;
-+		temp64.val32.upper = cmd->SG[i].Addr.upper;
-+		pci_unmap_page(h->pdev, temp64.val, cmd->SG[i].Len, ddir);
-+	}
-+
-+	complete_buffers(rq->bio, rq->errors);
-+
-+#ifdef CCISS_DEBUG
-+	printk("Done with %p\n", rq);
-+#endif /* CCISS_DEBUG */ 
-+
-+	spin_lock_irqsave(&h->lock, flags);
-+	end_that_request_last(rq, rq->errors);
-+	cmd_free(h, cmd,1);
-+	spin_unlock_irqrestore(&h->lock, flags);
-+}
-+
- /* This function will check the usage_count of the drive to be updated/added.
-  * If the usage_count is zero then the drive information will be updated and
-  * the disk will be re-registered with the kernel.  If not then it will be
-@@ -1249,6 +1296,8 @@ static void cciss_update_drive_info(int 
- 
- 		blk_queue_max_sectors(disk->queue, 512);
- 
-+		blk_queue_softirq_done(disk->queue, cciss_softirq_done);
-+
- 		disk->queue->queuedata = hba[ctlr];
- 
- 		blk_queue_hardsect_size(disk->queue,
-@@ -2148,20 +2197,6 @@ static void start_io( ctlr_info_t *h)
- 		addQ (&(h->cmpQ), c); 
- 	}
- }
--
--static inline void complete_buffers(struct bio *bio, int status)
--{
--	while (bio) {
--		struct bio *xbh = bio->bi_next; 
--		int nr_sectors = bio_sectors(bio);
--
--		bio->bi_next = NULL; 
--		blk_finished_io(len);
--		bio_endio(bio, nr_sectors << 9, status ? 0 : -EIO);
--		bio = xbh;
--	}
--
--} 
- /* Assumes that CCISS_LOCK(h->ctlr) is held. */
- /* Zeros out the error record and then resends the command back */
- /* to the controller */
-@@ -2179,39 +2214,6 @@ static inline void resend_cciss_cmd( ctl
- 	start_io(h);
- }
- 
--static void cciss_softirq_done(struct request *rq)
--{
--	CommandList_struct *cmd = rq->completion_data;
--	ctlr_info_t *h = hba[cmd->ctlr];
--	unsigned long flags;
--	u64bit temp64;
--	int i, ddir;
--
--	if (cmd->Request.Type.Direction == XFER_READ)
--		ddir = PCI_DMA_FROMDEVICE;
--	else
--		ddir = PCI_DMA_TODEVICE;
--
--	/* command did not need to be retried */
--	/* unmap the DMA mapping for all the scatter gather elements */
--	for(i=0; i<cmd->Header.SGList; i++) {
--		temp64.val32.lower = cmd->SG[i].Addr.lower;
--		temp64.val32.upper = cmd->SG[i].Addr.upper;
--		pci_unmap_page(h->pdev, temp64.val, cmd->SG[i].Len, ddir);
--	}
--
--	complete_buffers(rq->bio, rq->errors);
--
--#ifdef CCISS_DEBUG
--	printk("Done with %p\n", rq);
--#endif /* CCISS_DEBUG */ 
--
--	spin_lock_irqsave(&h->lock, flags);
--	end_that_request_last(rq, rq->errors);
--	cmd_free(h, cmd,1);
--	spin_unlock_irqrestore(&h->lock, flags);
--}
--
- /* checks the status of the job and calls complete buffers to mark all 
-  * buffers for the completed job. Note that this function does not need
-  * to hold the hba/queue lock.
