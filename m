@@ -1,111 +1,160 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: command queueing cmd_per_lun, queue_depth and tags
-Date: Mon, 10 Apr 2006 15:04:47 -0500
-Message-ID: <443ABA5F.9010306@us.ibm.com>
-References: <20060407214954.GA4990@us.ibm.com> <4436E7C8.5030204@us.ibm.com> <20060410185919.GA15124@us.ibm.com>
-Reply-To: brking@us.ibm.com
+From: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
+Subject: [PATCH 1/1] cciss: bug fix for crash when running hpacucli
+Date: Mon, 10 Apr 2006 15:25:41 -0500
+Message-ID: <20060410202541.GA28328@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:46309 "EHLO e1.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S932100AbWDJUEv (ORCPT
+Received: from palrel11.hp.com ([156.153.255.246]:35515 "EHLO palrel11.hp.com")
+	by vger.kernel.org with ESMTP id S932100AbWDJUZs (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Apr 2006 16:04:51 -0400
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e1.ny.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k3AK4pQC011433
-	for <linux-scsi@vger.kernel.org>; Mon, 10 Apr 2006 16:04:51 -0400
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay02.pok.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k3AK4pIm219370
-	for <linux-scsi@vger.kernel.org>; Mon, 10 Apr 2006 16:04:51 -0400
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11/8.13.3) with ESMTP id k3AK4oRB028205
-	for <linux-scsi@vger.kernel.org>; Mon, 10 Apr 2006 16:04:50 -0400
-In-Reply-To: <20060410185919.GA15124@us.ibm.com>
+	Mon, 10 Apr 2006 16:25:48 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org
+To: akpm@osdl.org, axboe@suse.de
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, steve.cameron@hp.com
 
-Patrick Mansfield wrote:
-> On Fri, Apr 07, 2006 at 05:29:28PM -0500, Brian King wrote:
->> Patrick Mansfield wrote:
->>> Currently cmd_per_lun is the default queue depth for both tagged and
->>> untagged queueing. That is, if the LLDD does not modify queue_depth in its
->>> slave_configure, queue_depth will be set to cmd_per_lun, no matter what
->>> the command queueing/tag support. 
->>>
->>> If we don't allow queueing in the LLDD, and cmd_per_lun is supposed to be
->>> the default depth for untagged support, shouldn't it always be 1, and
->>> hence go away? 
->> This seems to assume there are no SCSI devices which do command queuing, but do
->> not support queue tags. This is not the case.
-> 
-> I should not have used "untagged", that is misleading and a problem with
-> current scsi core, where we reference tcq, tags, and don't seem to mention
-> task attributes.
-> 
-> But LLDD can override anything in slave_configure.
+PATCH 1/1
 
-I guess my biggest problem with this part of the patch is that it prevents an
-LLDD that wants this behavior from being able to use scsi_adjust_queue_depth
-to set the queue depth, whether it be in slave_configure, change_queue_depth, etc.
+This patch fixes a crash when running hpacucli with multiple logical volumes
+on a cciss controller. We were not properly initializing the disk->queue
+and causing a fault.
+Thanks to Hasso Tepper for reporting the problem. Thanks to Steve Cameron
+for root causing the problem.
+Most of the patch just moves things around. The fix is a one-liner.
 
-> Also, it looks like we could safely use cmd_per_lun as the default
-> queue_depth, rather than setting it to 1 as done in my previous
-> post/patch.
+Signed-off-by: Mike Miller <mike.miller@hp.com>
+Signed-off-by: Stephen Cameron <steve.cameron@hp.com>
 
-Ok. If we do that and also allow scsi_adjust_queue_depth
-to adjust the queue depth when tagged == 0, as is allowed today,
-then I think most of my objections to the patch should disappear,
-although it may require me to make a couple ipr changes.
+--------------------------------------------------------------------------------
+ cciss.c |   96 ++++++++++++++++++++++++++++++++--------------------------------
+ 1 files changed, 49 insertions(+), 47 deletions(-)
 
->>> Similarily, why do some LLDD's use a cmd_per_lun of 3, or (like
->>> ncr53c8xx_slave_configure) set queue_depth for !tagged_supported to
->>> anything other than 1?
->> In the case of ipr, there are two scenarios. The first is for JBOD disks.
->> I use a default queue depth of 6 in ipr. When running untagged, with a queue depth
->> of > 1, the ipr adapter firmware then maintains a queue, guaranteeing only
->> one command will be outstanding to the device at once. This lower level
->> queue allows for a faster turnaround of commands and improved performance.
->> The second case is that of RAID arrays. These show up as logical scsi disks.
->> They support command queueing, but not tagged command queueing.
-> 
-> So you just want the task attibutes, and don't care about tag management
-> (i.e. you don't ever use cmd->request->tags)? That is similar to FCP.
-
-Correct. The ipr adapter firmware generates its own queue tags before sending
-tagged commands to the device. 
-
->>> I know (at least) FCP can always do simple queueing, but I don't think
->>> scsi core should allow multiple commands to be sent if the device does not
->>> have CMDQUE (or BQUE).
->> This will break both of the working scenarios I described above for ipr
->> and performance will suffer significantly. The inquiry data for ipr RAID
->> arrays does not set either CMDQUE or BQUE.
-> 
-> Sounds like they are sort of SCSI-2 compliant, that is allowed there but
-> mentioned as obsolete in current SCSI-3 (spc3r23.pdf).
-> 
-> The LLDD can override the queue_depth for these cases.
-
-Agreed, but my first comment applies here as well.
-
->>> Also we don't even check the BQUE in the INQUIRY result (byte 6, bit 7).
->>> Should this be changed? That is set tagged_supported if BQUE is set, like
->>> we do for CMDQUE (byte 7 bit 1). And also set simple_tags if
->>> tagged_supported is set.
->> I don't like the idea of always enabling TCQ in scsi core simply if
->> the device supports it. What if the HBA does not support it? To make
->> matters more interesting, what if the HBA does not support TCQ, but does
->> support untagged command queueing, similar to ipr as described above?
-> 
-> They can override it in slave_configure.
-
-Sure. I could add a scsi_deactivate_tcq in slave_configure.
-
-
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+diff -burNp linux-2.6.16.2.orig/drivers/block/cciss.c linux-2.6.16.2/drivers/block/cciss.c
+--- linux-2.6.16.2.orig/drivers/block/cciss.c	2006-04-10 10:28:38.000000000 -0500
++++ linux-2.6.16.2/drivers/block/cciss.c	2006-04-10 15:07:12.000000000 -0500
+@@ -1181,6 +1181,53 @@ static int revalidate_allvol(ctlr_info_t
+         return 0;
+ }
+ 
++static inline void complete_buffers(struct bio *bio, int status)
++{
++	while (bio) {
++		struct bio *xbh = bio->bi_next; 
++		int nr_sectors = bio_sectors(bio);
++
++		bio->bi_next = NULL; 
++		blk_finished_io(len);
++		bio_endio(bio, nr_sectors << 9, status ? 0 : -EIO);
++		bio = xbh;
++	}
++
++} 
++
++static void cciss_softirq_done(struct request *rq)
++{
++	CommandList_struct *cmd = rq->completion_data;
++	ctlr_info_t *h = hba[cmd->ctlr];
++	unsigned long flags;
++	u64bit temp64;
++	int i, ddir;
++
++	if (cmd->Request.Type.Direction == XFER_READ)
++		ddir = PCI_DMA_FROMDEVICE;
++	else
++		ddir = PCI_DMA_TODEVICE;
++
++	/* command did not need to be retried */
++	/* unmap the DMA mapping for all the scatter gather elements */
++	for(i=0; i<cmd->Header.SGList; i++) {
++		temp64.val32.lower = cmd->SG[i].Addr.lower;
++		temp64.val32.upper = cmd->SG[i].Addr.upper;
++		pci_unmap_page(h->pdev, temp64.val, cmd->SG[i].Len, ddir);
++	}
++
++	complete_buffers(rq->bio, rq->errors);
++
++#ifdef CCISS_DEBUG
++	printk("Done with %p\n", rq);
++#endif /* CCISS_DEBUG */ 
++
++	spin_lock_irqsave(&h->lock, flags);
++	end_that_request_last(rq, rq->errors);
++	cmd_free(h, cmd,1);
++	spin_unlock_irqrestore(&h->lock, flags);
++}
++
+ /* This function will check the usage_count of the drive to be updated/added.
+  * If the usage_count is zero then the drive information will be updated and
+  * the disk will be re-registered with the kernel.  If not then it will be
+@@ -1249,6 +1296,8 @@ static void cciss_update_drive_info(int 
+ 
+ 		blk_queue_max_sectors(disk->queue, 512);
+ 
++		blk_queue_softirq_done(disk->queue, cciss_softirq_done);
++
+ 		disk->queue->queuedata = hba[ctlr];
+ 
+ 		blk_queue_hardsect_size(disk->queue,
+@@ -2148,20 +2197,6 @@ static void start_io( ctlr_info_t *h)
+ 		addQ (&(h->cmpQ), c); 
+ 	}
+ }
+-
+-static inline void complete_buffers(struct bio *bio, int status)
+-{
+-	while (bio) {
+-		struct bio *xbh = bio->bi_next; 
+-		int nr_sectors = bio_sectors(bio);
+-
+-		bio->bi_next = NULL; 
+-		blk_finished_io(len);
+-		bio_endio(bio, nr_sectors << 9, status ? 0 : -EIO);
+-		bio = xbh;
+-	}
+-
+-} 
+ /* Assumes that CCISS_LOCK(h->ctlr) is held. */
+ /* Zeros out the error record and then resends the command back */
+ /* to the controller */
+@@ -2179,39 +2214,6 @@ static inline void resend_cciss_cmd( ctl
+ 	start_io(h);
+ }
+ 
+-static void cciss_softirq_done(struct request *rq)
+-{
+-	CommandList_struct *cmd = rq->completion_data;
+-	ctlr_info_t *h = hba[cmd->ctlr];
+-	unsigned long flags;
+-	u64bit temp64;
+-	int i, ddir;
+-
+-	if (cmd->Request.Type.Direction == XFER_READ)
+-		ddir = PCI_DMA_FROMDEVICE;
+-	else
+-		ddir = PCI_DMA_TODEVICE;
+-
+-	/* command did not need to be retried */
+-	/* unmap the DMA mapping for all the scatter gather elements */
+-	for(i=0; i<cmd->Header.SGList; i++) {
+-		temp64.val32.lower = cmd->SG[i].Addr.lower;
+-		temp64.val32.upper = cmd->SG[i].Addr.upper;
+-		pci_unmap_page(h->pdev, temp64.val, cmd->SG[i].Len, ddir);
+-	}
+-
+-	complete_buffers(rq->bio, rq->errors);
+-
+-#ifdef CCISS_DEBUG
+-	printk("Done with %p\n", rq);
+-#endif /* CCISS_DEBUG */ 
+-
+-	spin_lock_irqsave(&h->lock, flags);
+-	end_that_request_last(rq, rq->errors);
+-	cmd_free(h, cmd,1);
+-	spin_unlock_irqrestore(&h->lock, flags);
+-}
+-
+ /* checks the status of the job and calls complete buffers to mark all 
+  * buffers for the completed job. Note that this function does not need
+  * to hold the hba/queue lock.
