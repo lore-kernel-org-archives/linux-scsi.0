@@ -1,46 +1,26 @@
-From: Zach Brown <zach.brown@oracle.com>
-Subject: [PATCH] [qla2xxx] only free_irq() after request_irq() succeeds
-Date: Mon, 10 Apr 2006 16:39:36 -0700 (PDT)
-Message-ID: <20060410233936.28628.13303.sendpatchset@tetsuo.zabbo.net>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [PATCH 1/1] cciss: bug fix for crash when running hpacucli
+Date: Mon, 10 Apr 2006 15:38:00 -0700
+Message-ID: <20060410153800.3c018fc1.akpm@osdl.org>
+References: <20060410202541.GA28328@beardog.cca.cpqcorp.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tetsuo.zabbo.net ([207.173.201.20]:6592 "EHLO tetsuo.zabbo.net")
-	by vger.kernel.org with ESMTP id S932179AbWDJXjg (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:129 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932191AbWDJXl7 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Apr 2006 19:39:36 -0400
+	Mon, 10 Apr 2006 19:41:59 -0400
+In-Reply-To: <20060410202541.GA28328@beardog.cca.cpqcorp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-driver@qlogic.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
+Cc: axboe@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, steve.cameron@hp.com
 
-[qla2xxx] only free_irq() after request_irq() succeeds
+"Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net> wrote:
+>
+> This patch fixes a crash when running hpacucli with multiple logical volumes
+>  on a cciss controller. We were not properly initializing the disk->queue
+>  and causing a fault.
 
-If qla2x00_probe_one() fails before calling request_irq() but gets to
-qla2x00_free_device() then it will mistakenly tree to free an irq it didn't
-request.  It's chosing to free based on ha->pdev->irq which is always set.
-
-host->irq is set after request_irq() succeeds so let's use that to decide
-to free or not.
-
-This was observed and tested when a silly set of circumstances lead to firmware
-loading failing on a 2100.
-
-  Signed-off-by: Zach Brown <zach.brown@oracle.com>
----
-
- drivers/scsi/qla2xxx/qla_os.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-Index: 2.6.17-rc1-mm2-qlafreeirq/drivers/scsi/qla2xxx/qla_os.c
-===================================================================
---- 2.6.17-rc1-mm2-qlafreeirq.orig/drivers/scsi/qla2xxx/qla_os.c
-+++ 2.6.17-rc1-mm2-qlafreeirq/drivers/scsi/qla2xxx/qla_os.c
-@@ -1700,8 +1700,8 @@ qla2x00_free_device(scsi_qla_host_t *ha)
- 	ha->flags.online = 0;
- 
- 	/* Detach interrupts */
--	if (ha->pdev->irq)
--		free_irq(ha->pdev->irq, ha);
-+	if (ha->host->irq)
-+		free_irq(ha->host->irq, ha);
- 
- 	/* release io space registers  */
- 	if (ha->iobase)
+Please confirm that this is safe&appropriate for backporting into 2.6.16.x?
