@@ -1,26 +1,26 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 04/10] block layer: use blk_rq_bio_prep in
- init_request_from_bio
+Subject: [PATCH 05/10] scsi tgt: kernel/user interface changes
 Date: Mon, 10 Apr 2006 10:49:14 +0900 (JST)
-Message-ID: <20060410104559M.fujita.tomonori@lab.ntt.co.jp>
+Message-ID: <20060410104604S.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:42493 "EHLO
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:39166 "EHLO
 	tama5.ecl.ntt.co.jp") by vger.kernel.org with ESMTP
-	id S1750880AbWDJBts (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 9 Apr 2006 21:49:48 -0400
+	id S1750879AbWDJBvn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 9 Apr 2006 21:51:43 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: axboe@suse.de, James.Bottomley@SteelEye.com
+To: James.Bottomley@SteelEye.com
 Cc: linux-scsi@vger.kernel.org
 
-Patch to use blk_rq_bio_prep in init_request_from_bio. And remove
-blk_rq_bio_prep's flags copying. The first three bits have not been
-the same for some time so that has been broken. The user of
-blk_rq_bio_prep will setup the request flags so if it wanted failfast
-or to be a barrier it will set the correct flag itself.
+Simplify the tgt kernel/user interface.
+
+- merge the tgt command structure with the the event structure for simplicity.
+- add a new event type for task management.
+- remove some of unused event types.
+- send task attributes to user-space daemon.
 
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
@@ -28,42 +28,282 @@ Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 
 ---
 
- block/ll_rw_blk.c |   11 ++---------
- 1 files changed, 2 insertions(+), 9 deletions(-)
+ drivers/scsi/scsi_tgt_if.c   |   52 ++++++++++++++++++------------------------
+ drivers/scsi/scsi_tgt_lib.c  |   10 ++++----
+ drivers/scsi/scsi_tgt_priv.h |    4 ++-
+ include/scsi/scsi_tgt_if.h   |   50 ++++++++++++++++++++--------------------
+ 4 files changed, 54 insertions(+), 62 deletions(-)
 
-4b387c65f0645e86794c06eb3e734b0ec6e5733c
-diff --git a/block/ll_rw_blk.c b/block/ll_rw_blk.c
-index 13c40a0..da2c57d 100644
---- a/block/ll_rw_blk.c
-+++ b/block/ll_rw_blk.c
-@@ -2765,16 +2765,12 @@ static void init_request_from_bio(struct
+5804be31dad9a5ca05bef0ff2674cde90299ac3d
+diff --git a/drivers/scsi/scsi_tgt_if.c b/drivers/scsi/scsi_tgt_if.c
+index 38b35da..a31c8d5 100644
+--- a/drivers/scsi/scsi_tgt_if.c
++++ b/drivers/scsi/scsi_tgt_if.c
+@@ -35,15 +35,15 @@
+ static int tgtd_pid;
+ static struct sock *nl_sk;
  
- 	req->errors = 0;
- 	req->hard_sector = req->sector = bio->bi_sector;
--	req->hard_nr_sectors = req->nr_sectors = bio_sectors(bio);
--	req->current_nr_sectors = req->hard_cur_sectors = bio_cur_sectors(bio);
--	req->nr_phys_segments = bio_phys_segments(req->q, bio);
--	req->nr_hw_segments = bio_hw_segments(req->q, bio);
--	req->buffer = bio_data(bio);	/* see ->buffer comment above */
- 	req->waiting = NULL;
--	req->bio = req->biotail = bio;
- 	req->ioprio = bio_prio(bio);
- 	req->rq_disk = bio->bi_bdev->bd_disk;
- 	req->start_time = jiffies;
+-static int send_event_res(uint16_t type, struct tgt_event *p,
+-			  void *data, int dlen, gfp_t flags, pid_t pid)
++static int send_event_rsp(uint16_t type, struct tgt_event *p, gfp_t flags,
++			  pid_t pid)
+ {
+ 	struct tgt_event *ev;
+ 	struct nlmsghdr *nlh;
+ 	struct sk_buff *skb;
+ 	uint32_t len;
+ 
+-	len = NLMSG_SPACE(sizeof(*ev) + dlen);
++	len = NLMSG_SPACE(sizeof(*ev));
+ 	skb = alloc_skb(len, flags);
+ 	if (!skb)
+ 		return -ENOMEM;
+@@ -52,8 +52,6 @@ static int send_event_res(uint16_t type,
+ 
+ 	ev = NLMSG_DATA(nlh);
+ 	memcpy(ev, p, sizeof(*ev));
+-	if (dlen)
+-		memcpy(ev->data, data, dlen);
+ 
+ 	return netlink_unicast(nl_sk, skb, pid, 0);
+ }
+@@ -64,10 +62,12 @@ int scsi_tgt_uspace_send(struct scsi_cmn
+ 	struct sk_buff *skb;
+ 	struct nlmsghdr *nlh;
+ 	struct tgt_event *ev;
+-	struct tgt_cmd *tcmd;
+ 	int err, len;
+ 
+-	len = NLMSG_SPACE(sizeof(*ev) + sizeof(struct tgt_cmd));
++	/* FIXME: we need scsi core to do that. */
++	memcpy(cmd->cmnd, cmd->data_cmnd, MAX_COMMAND_SIZE);
 +
-+	blk_rq_bio_prep(req->q, req, bio);
++	len = NLMSG_SPACE(sizeof(*ev));
+ 	/*
+ 	 * TODO: add MAX_COMMAND_SIZE to ev and add mempool
+ 	 */
+@@ -82,17 +82,13 @@ int scsi_tgt_uspace_send(struct scsi_cmn
+ 	ev->k.cmd_req.host_no = shost->host_no;
+ 	ev->k.cmd_req.cid = cmd->request->tag;
+ 	ev->k.cmd_req.data_len = cmd->request_bufflen;
++	memcpy(ev->k.cmd_req.scb, cmd->cmnd, sizeof(ev->k.cmd_req.scb));
++	memcpy(ev->k.cmd_req.lun, lun, sizeof(ev->k.cmd_req.lun));
++	ev->k.cmd_req.attribute = cmd->tag;
+ 
+ 	dprintk("%d %u %u\n", ev->k.cmd_req.host_no, ev->k.cmd_req.cid,
+ 		ev->k.cmd_req.data_len);
+ 
+-	/* FIXME: we need scsi core to do that. */
+-	memcpy(cmd->cmnd, cmd->data_cmnd, MAX_COMMAND_SIZE);
+-
+-	tcmd = (struct tgt_cmd *) ev->data;
+-	memcpy(tcmd->scb, cmd->cmnd, sizeof(tcmd->scb));
+-	memcpy(tcmd->lun, lun, sizeof(struct scsi_lun));
+-
+ 	err = netlink_unicast(nl_sk, skb, tgtd_pid, 0);
+ 	if (err < 0)
+ 		printk(KERN_ERR "scsi_tgt_uspace_send: could not send skb %d\n",
+@@ -104,15 +100,13 @@ int scsi_tgt_uspace_send_status(struct s
+ {
+ 	struct Scsi_Host *shost = scsi_tgt_cmd_to_host(cmd);
+ 	struct tgt_event ev;
+-	char dummy[sizeof(struct tgt_cmd)];
+ 
+ 	memset(&ev, 0, sizeof(ev));
+ 	ev.k.cmd_done.host_no = shost->host_no;
+ 	ev.k.cmd_done.cid = cmd->request->tag;
+ 	ev.k.cmd_done.result = cmd->result;
+ 
+-	return send_event_res(TGT_KEVENT_CMD_DONE, &ev, dummy, sizeof(dummy),
+-			      gfp_mask, tgtd_pid);
++	return send_event_rsp(TGT_KEVENT_CMD_DONE, &ev, gfp_mask, tgtd_pid);
  }
  
- static int __make_request(request_queue_t *q, struct bio *bio)
-@@ -3403,9 +3399,6 @@ EXPORT_SYMBOL(end_request);
+ static int event_recv_msg(struct sk_buff *skb, struct nlmsghdr *nlh)
+@@ -124,19 +118,17 @@ static int event_recv_msg(struct sk_buff
+ 		nlh->nlmsg_pid, current->pid);
  
- void blk_rq_bio_prep(request_queue_t *q, struct request *rq, struct bio *bio)
+ 	switch (nlh->nlmsg_type) {
+-	case TGT_UEVENT_TGTD_BIND:
++	case TGT_UEVENT_REQ:
+ 		tgtd_pid = NETLINK_CREDS(skb)->pid;
+ 		break;
+-	case TGT_UEVENT_CMD_RES:
++	case TGT_UEVENT_CMD_RSP:
+ 		/* TODO: handle multiple cmds in one event */
+-		err = scsi_tgt_kspace_exec(ev->u.cmd_res.host_no,
+-					   ev->u.cmd_res.cid,
+-					   ev->u.cmd_res.result,
+-					   ev->u.cmd_res.len,
+-					   ev->u.cmd_res.offset,
+-					   ev->u.cmd_res.uaddr,
+-					   ev->u.cmd_res.rw,
+-					   ev->u.cmd_res.try_map);
++		err = scsi_tgt_kspace_exec(ev->u.cmd_rsp.host_no,
++					   ev->u.cmd_rsp.cid,
++					   ev->u.cmd_rsp.result,
++					   ev->u.cmd_rsp.len,
++					   ev->u.cmd_rsp.uaddr,
++					   ev->u.cmd_rsp.rw);
+ 		break;
+ 	default:
+ 		eprintk("unknown type %d\n", nlh->nlmsg_type);
+@@ -166,12 +158,12 @@ static int event_recv_skb(struct sk_buff
+ 		 * TODO for passthru commands the lower level should
+ 		 * probably handle the result or we should modify this
+ 		 */
+-		if (nlh->nlmsg_type != TGT_UEVENT_CMD_RES) {
++		if (nlh->nlmsg_type != TGT_UEVENT_CMD_RSP) {
+ 			struct tgt_event ev;
+ 
+ 			memset(&ev, 0, sizeof(ev));
+-			ev.k.event_res.err = err;
+-			send_event_res(TGT_KEVENT_RESPONSE, &ev, NULL, 0,
++			ev.k.event_rsp.err = err;
++			send_event_rsp(TGT_KEVENT_RSP, &ev,
+ 				       GFP_KERNEL | __GFP_NOFAIL,
+ 					nlh->nlmsg_pid);
+ 		}
+diff --git a/drivers/scsi/scsi_tgt_lib.c b/drivers/scsi/scsi_tgt_lib.c
+index 8746236..3549e7c 100644
+--- a/drivers/scsi/scsi_tgt_lib.c
++++ b/drivers/scsi/scsi_tgt_lib.c
+@@ -315,7 +315,7 @@ static int scsi_map_user_pages(struct sc
+ 
+ 	while (len > 0) {
+ 		dprintk("%lx %u\n", (unsigned long) uaddr, len);
+-		bio = bio_map_user(q, NULL, (unsigned long) uaddr, len, rw, 1);
++		bio = bio_map_user(q, NULL, (unsigned long) uaddr, len, rw);
+ 		if (IS_ERR(bio)) {
+ 			err = PTR_ERR(bio);
+ 			dprintk("fail to map %lx %u %d %x\n",
+@@ -438,16 +438,16 @@ static int scsi_tgt_copy_sense(struct sc
+ 	return 0;
+ }
+ 
+-int scsi_tgt_kspace_exec(int host_no, u32 cid, int result, u32 len, u64 offset,
+-			 unsigned long uaddr, u8 rw, u8 try_map)
++int scsi_tgt_kspace_exec(int host_no, u32 cid, int result, u32 len,
++			 unsigned long uaddr, u8 rw)
  {
--	/* first three bits are identical in rq->flags and bio->bi_rw */
--	rq->flags |= (bio->bi_rw & 7);
+ 	struct Scsi_Host *shost;
+ 	struct scsi_cmnd *cmd;
+ 	struct request *rq;
+ 	int err = 0;
+ 
+-	dprintk("%d %u %d %u %llu %lx %u %u\n", host_no, cid, result,
+-		len, (unsigned long long) offset, uaddr, rw, try_map);
++	dprintk("%d %u %d %u %lx %u\n", host_no, cid, result,
++		len, uaddr, rw);
+ 
+ 	/* TODO: replace with a O(1) alg */
+ 	shost = scsi_host_lookup(host_no);
+diff --git a/drivers/scsi/scsi_tgt_priv.h b/drivers/scsi/scsi_tgt_priv.h
+index 4236e50..fcf2ec6 100644
+--- a/drivers/scsi/scsi_tgt_priv.h
++++ b/drivers/scsi/scsi_tgt_priv.h
+@@ -21,5 +21,5 @@ extern int scsi_tgt_if_init(void);
+ extern int scsi_tgt_uspace_send(struct scsi_cmnd *cmd, struct scsi_lun *lun, gfp_t flags);
+ extern int scsi_tgt_uspace_send_status(struct scsi_cmnd *cmd, gfp_t flags);
+ extern int scsi_tgt_kspace_exec(int host_no, u32 cid, int result, u32 len,
+-				u64 offset, unsigned long uaddr, u8 rw,
+-				u8 try_map);
++				unsigned long uaddr, u8 rw);
++
+diff --git a/include/scsi/scsi_tgt_if.h b/include/scsi/scsi_tgt_if.h
+index da3a808..ebca452 100644
+--- a/include/scsi/scsi_tgt_if.h
++++ b/include/scsi/scsi_tgt_if.h
+@@ -24,65 +24,65 @@
+ 
+ enum tgt_event_type {
+ 	/* user -> kernel */
+-	TGT_UEVENT_TGTD_BIND,
+-	TGT_UEVENT_TARGET_SETUP,
+-	TGT_UEVENT_CMD_RES,
++	TGT_UEVENT_REQ,
++	TGT_UEVENT_CMD_RSP,
++	TGT_UEVENT_TSK_MGMT_RSP,
+ 
+ 	/* kernel -> user */
+-	TGT_KEVENT_RESPONSE,
++	TGT_KEVENT_RSP,
+ 	TGT_KEVENT_CMD_REQ,
+ 	TGT_KEVENT_CMD_DONE,
++	TGT_KEVENT_TSK_MGMT_REQ,
+ };
+ 
+ struct tgt_event {
+ 	/* user-> kernel */
+ 	union {
+ 		struct {
+-			int pk_fd;
+-		} tgtd_bind;
++			int type;
++			int host_no;
++		} event_req;
+ 		struct {
+ 			int host_no;
+ 			uint32_t cid;
+ 			uint32_t len;
+ 			int result;
+ 			uint64_t uaddr;
+-			uint64_t offset;
+ 			uint8_t rw;
+-			uint8_t try_map;
+-		} cmd_res;
++		} cmd_rsp;
++		struct {
++			int host_no;
++			int mid;
++			int result;
++		} tsk_mgmt_rsp;
+ 	} u;
+ 
+ 	/* kernel -> user */
+ 	union {
+ 		struct {
+ 			int err;
+-		} event_res;
++		} event_rsp;
+ 		struct {
+ 			int host_no;
+ 			uint32_t cid;
+ 			uint32_t data_len;
+-			uint64_t dev_id;
++			uint8_t scb[16];
++			uint8_t lun[8];
++			int attribute;
+ 		} cmd_req;
+ 		struct {
+ 			int host_no;
+ 			uint32_t cid;
+ 			int result;
+ 		} cmd_done;
++		struct {
++			int host_no;
++			int mid;
++			uint64_t tag;
++			uint8_t lun[8];
++			int function;
++		} tsk_mgmt_req;
+ 	} k;
+ 
+-	/*
+-	 * I think a pointer is a unsigned long but this struct
+-	 * gets passed around from the kernel to userspace and
+-	 * back again so to handle some ppc64 setups where userspace is
+-	 * 32 bits but the kernel is 64 we do this odd thing
+-	 */
+-	uint64_t data[0];
+-} __attribute__ ((aligned (sizeof(uint64_t))));
 -
- 	rq->nr_phys_segments = bio_phys_segments(q, bio);
- 	rq->nr_hw_segments = bio_hw_segments(q, bio);
- 	rq->current_nr_sectors = bio_cur_sectors(bio);
+-struct tgt_cmd {
+-	uint8_t scb[16];
+-	uint8_t lun[8];
+-	int tags;
+ } __attribute__ ((aligned (sizeof(uint64_t))));
+-
+ #endif
 -- 
 1.1.5
