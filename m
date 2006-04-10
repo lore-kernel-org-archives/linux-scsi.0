@@ -1,24 +1,21 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 10/10] scsi tgt: add NET dependence to Kconfig
-Date: Mon, 10 Apr 2006 10:49:15 +0900 (JST)
-Message-ID: <20060410104636Y.fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 03/10] scsi tgt: use the original bio_map_user interface
+Date: Mon, 10 Apr 2006 10:49:14 +0900 (JST)
+Message-ID: <20060410104550U.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:21757 "EHLO
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:18685 "EHLO
 	tama5.ecl.ntt.co.jp") by vger.kernel.org with ESMTP
-	id S1750868AbWDJBtd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 9 Apr 2006 21:49:33 -0400
+	id S1750866AbWDJBtc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 9 Apr 2006 21:49:32 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@SteelEye.com
 Cc: linux-scsi@vger.kernel.org
 
-> From: "Jun'ichi Nomura" <j-nomura@ce.jp.nec.com>:
-
-scsi_tgt_if.c depends on CONFIG_NET for using netlink.
-So it would be nice if the Kconfig entry checks it.
+Return to the original bio_map_user interface.
 
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
@@ -26,22 +23,22 @@ Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 
 ---
 
- drivers/scsi/Kconfig |    2 +-
+ drivers/scsi/scsi_tgt_lib.c |    2 +-
  1 files changed, 1 insertions(+), 1 deletions(-)
 
-731f4924dd33579ffa5ff45ad03b7b7e933f728b
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index d09c792..5b5eeb4 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -29,7 +29,7 @@ config SCSI
+2c78c6353dc183a16ef3e12b9c5618dd5b89679c
+diff --git a/drivers/scsi/scsi_tgt_lib.c b/drivers/scsi/scsi_tgt_lib.c
+index 8746236..941dd64 100644
+--- a/drivers/scsi/scsi_tgt_lib.c
++++ b/drivers/scsi/scsi_tgt_lib.c
+@@ -315,7 +315,7 @@ static int scsi_map_user_pages(struct sc
  
- config SCSI_TGT
- 	tristate "SCSI target support"
--	depends on SCSI && EXPERIMENTAL
-+	depends on SCSI && NET && EXPERIMENTAL
- 	---help---
- 	  If you want to use SCSI target mode drivers enable this option.
- 	  If you choose M, the module will be called scsi_tgt.
+ 	while (len > 0) {
+ 		dprintk("%lx %u\n", (unsigned long) uaddr, len);
+-		bio = bio_map_user(q, NULL, (unsigned long) uaddr, len, rw, 1);
++		bio = bio_map_user(q, NULL, (unsigned long) uaddr, len, rw);
+ 		if (IS_ERR(bio)) {
+ 			err = PTR_ERR(bio);
+ 			dprintk("fail to map %lx %u %d %x\n",
 -- 
 1.1.5
