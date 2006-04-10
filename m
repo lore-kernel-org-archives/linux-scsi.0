@@ -1,38 +1,21 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: [PATCH] dc395x: dynamically map scatter-gather for PIO (take 2)
-Date: Sun, 9 Apr 2006 21:10:31 +0200 (CEST)
-Message-ID: <Pine.LNX.4.60.0604092107150.5879@poirot.grange>
-References: <Pine.LNX.4.60.0604022004520.17410@poirot.grange>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 00/10] scsi tgt: updates (repost)
+Date: Mon, 10 Apr 2006 10:49:13 +0900 (JST)
+Message-ID: <20060410104401D.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:26766 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S1750826AbWDITK1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Apr 2006 15:10:27 -0400
-In-Reply-To: <Pine.LNX.4.60.0604022004520.17410@poirot.grange>
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:26109 "EHLO
+	tama5.ecl.ntt.co.jp") by vger.kernel.org with ESMTP
+	id S1750874AbWDJBti (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 9 Apr 2006 21:49:38 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi@vger.kernel.org, Sebastian Frei <Sebastian@schnapsleichen.de>, Fredrik Roubert <roubert@df.lth.se>, lenehan@twibble.org
+To: James.Bottomley@SteelEye.com, axboe@suse.de
+Cc: linux-scsi@vger.kernel.org
 
-On Sun, 2 Apr 2006, Guennadi Liakhovetski wrote:
+This is the repost of the patches to synchronize the scsi-target-2.6
+git tree with the latest code in the tgt subversion repository.
 
-> Hello all,
-> 
-> This time I really mean it:-)
-> 
-> The current dc395x driver uses PIO to transfer up to 4 bytes which do not 
-> get transferred by DMA (under unclear circumstances). For this the driver 
-> uses page_address() which is broken on highmem. Apart from this the 
-> actual calculation of the virtual address is wrong (even without highmem). 
-> So, e.g., for reading it reads bytes from the driver to a wrong address 
-> and returns wrong data, I guess, for writing it would just output random 
-> data to the device.
-
-It's been a week since the patch submission. James, Jamie, I'd really like 
-to hear some feedback.
-
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
+Jens, can you take a look at the block layer patches please?
