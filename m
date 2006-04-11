@@ -1,12 +1,12 @@
 From: akpm@osdl.org
-Subject: [patch 05/15] drivers/scsi/gdth.c: make __gdth_execute() static
-Date: Mon, 10 Apr 2006 23:26:23 -0700
-Message-ID: <200604110727.k3B7R4Eb015289@shell0.pdx.osdl.net>
+Subject: [patch 07/15] drivers/scsi/aic7xxx/aic79xx_core.c: make ahd_done_with_status() static
+Date: Mon, 10 Apr 2006 23:26:34 -0700
+Message-ID: <200604110727.k3B7RGSS015300@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:14474 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932317AbWDKHab (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:23178 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932318AbWDKHaj (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Apr 2006 03:30:31 -0400
+	Tue, 11 Apr 2006 03:30:39 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
@@ -15,39 +15,26 @@ Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, bunk@stusta.de
 
 From: Adrian Bunk <bunk@stusta.de>
 
-I don't see any reason for __gdth_execute() being global.
+This patch makes a needlessly global function static.
 
 Signed-off-by: Adrian Bunk <bunk@stusta.de>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/gdth.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/aic7xxx/aic79xx_core.c |    2 +-
+ 1 files changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/gdth.c~drivers-scsi-gdthc-make-__gdth_execute-static drivers/scsi/gdth.c
---- devel/drivers/scsi/gdth.c~drivers-scsi-gdthc-make-__gdth_execute-static	2006-04-05 21:27:56.000000000 -0700
-+++ devel-akpm/drivers/scsi/gdth.c	2006-04-05 21:27:56.000000000 -0700
-@@ -693,8 +693,8 @@ static void gdth_scsi_done(struct scsi_c
- 		complete(scp->request->waiting);
+diff -puN drivers/scsi/aic7xxx/aic79xx_core.c~drivers-scsi-aic7xxx-aic79xx_corec-make-ahd_done_with_status-static drivers/scsi/aic7xxx/aic79xx_core.c
+--- devel/drivers/scsi/aic7xxx/aic79xx_core.c~drivers-scsi-aic7xxx-aic79xx_corec-make-ahd_done_with_status-static	2006-03-21 23:05:42.000000000 -0800
++++ devel-akpm/drivers/scsi/aic7xxx/aic79xx_core.c	2006-03-21 23:05:42.000000000 -0800
+@@ -7375,7 +7375,7 @@ ahd_reset_cmds_pending(struct ahd_softc 
+ 	ahd->flags &= ~AHD_UPDATE_PEND_CMDS;
  }
  
--int __gdth_execute(struct scsi_device *sdev, gdth_cmd_str *gdtcmd, char *cmnd,
--		 int timeout, u32 *info)
-+static int __gdth_execute(struct scsi_device *sdev, gdth_cmd_str *gdtcmd,
-+			  char *cmnd, int timeout, u32 *info)
+-void
++static void
+ ahd_done_with_status(struct ahd_softc *ahd, struct scb *scb, uint32_t status)
  {
- 	struct scsi_request *scp = scsi_allocate_request(sdev, GFP_KERNEL);
- 	unsigned bufflen = gdtcmd ? sizeof(gdth_cmd_str) : 0;
-@@ -727,8 +727,8 @@ static void gdth_scsi_done(Scsi_Cmnd *sc
- 		complete(scp->request.waiting);
- }
- 
--int __gdth_execute(struct scsi_device *sdev, gdth_cmd_str *gdtcmd, char *cmnd,
--		 int timeout, u32 *info)
-+static int __gdth_execute(struct scsi_device *sdev, gdth_cmd_str *gdtcmd,
-+			  char *cmnd, int timeout, u32 *info)
- {
- 	Scsi_Cmnd *scp = scsi_allocate_device(sdev, 1, FALSE);
- 	unsigned bufflen = gdtcmd ? sizeof(gdth_cmd_str) : 0;
+ 	cam_status ostat;
 _
