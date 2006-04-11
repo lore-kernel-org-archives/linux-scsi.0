@@ -1,39 +1,43 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 1/1] 3ware 9000 disable local irqs during kmap_atomic
-Date: Tue, 11 Apr 2006 15:25:27 -0400
-Message-ID: <443C02A7.5020407@garzik.org>
-References: <b1bc6a000604111125s74a95319m39e23598ed4755a5@mail.gmail.com>	 <443BFB37.8080400@garzik.org> <b1bc6a000604111212i1fe8e057j1857fc9a512d3363@mail.gmail.com>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [PATCH] cleanup after deinlining patch 1/2
+Date: Tue, 11 Apr 2006 14:21:15 -0700
+Message-ID: <20060411142115.4e19b1c9.akpm@osdl.org>
+References: <200604111004.40339.vda@ilport.com.ua>
+	<200604111013.26800.vda@ilport.com.ua>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:40586 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751079AbWDKTZc (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:202 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751098AbWDKVUb (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Apr 2006 15:25:32 -0400
-In-Reply-To: <b1bc6a000604111212i1fe8e057j1857fc9a512d3363@mail.gmail.com>
+	Tue, 11 Apr 2006 17:20:31 -0400
+In-Reply-To: <200604111013.26800.vda@ilport.com.ua>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: adam radford <aradford@gmail.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Denis Vlasenko <vda@ilport.com.ua>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arjan@infradead.org, hare@suse.de, gibbs@scsiguy.com, eike-kernel@sf-tec.de, stefanr@s5r6.in-berlin.de
 
-adam radford wrote:
-> On 4/11/06, Jeff Garzik <jeff@garzik.org> wrote:
->> I saw the fix go into 2.6.17-rc1-git on git-commits-head list.  Please
->> check out the latest linux-2.6.git and send a patch against what's in
->> there...
->>
->>         Jeff
->>
+Denis Vlasenko <vda@ilport.com.ua> wrote:
+>
+> On Tuesday 11 April 2006 10:04, Denis Vlasenko wrote:
+> > * moved inlines into aic79xx_core.c and aic7xxx_core.c
+> > * fixed bug in ahd_delay (made it a trivial wrapper around udelay)
+> > * fixed bug in aic7xxx_pci.c (wrong order of parameters
+> >   in ahc_pci_write_config calls)
+> > * marked a few functions static
+> > * spelling fix in error message
 > 
-> Jeff,
+> Won't apply t your tree because I failed to notice that you
+> already included those two small fixes.
 > 
-> The patch in 2.6.17-rc1-git5 is for the 3w-xxxx driver, which is fine.
-> The patch I sent is the same fix for the 3w-9xxx driver.
+> Rediffed patch (which hopefully will apply) is attached. Sorry.
+> 
+> > Patch which does s/__inline/inline/g will follow in a few minutes.
+> 
+> This one (which I already sent) should apply.
 
-Ah!  Ignore me, then :)
+I dropped everything except for aic7xxx-ahc_pci_write_config-fix.patch.
 
-	Jeff
-
-
-
+So please resend all patches from scratch.  Preferably with accurate
+Subject:s and with standalone changelogs, thanks.
