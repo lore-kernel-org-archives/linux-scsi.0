@@ -1,69 +1,47 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] SCSI: fix scsi_kill_request() busy count handling
-Date: Tue, 11 Apr 2006 17:27:53 +0900
-Message-ID: <20060411082753.GA387@htj.dyndns.org>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [Comments Needed] scan vs remove_target deadlock
+Date: Tue, 11 Apr 2006 10:53:36 +0200
+Message-ID: <443B6E90.4020705@s5r6.in-berlin.de>
+References: <1144693508.3820.33.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pproxy.gmail.com ([64.233.166.182]:4071 "EHLO pproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932362AbWDKI2C (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Apr 2006 04:28:02 -0400
-Received: by pproxy.gmail.com with SMTP id i49so1317920pye
-        for <linux-scsi@vger.kernel.org>; Tue, 11 Apr 2006 01:28:01 -0700 (PDT)
-Content-Disposition: inline
+Received: from hp3.statik.TU-Cottbus.De ([141.43.120.68]:28291 "EHLO
+	hp3.statik.tu-cottbus.de") by vger.kernel.org with ESMTP
+	id S932358AbWDKIyo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Apr 2006 04:54:44 -0400
+In-Reply-To: <1144693508.3820.33.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, Jeff Garzik <jgarzik@pobox.com>, hch@lst.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: James.Smart@Emulex.Com
+Cc: linux-scsi@vger.kernel.org
 
-scsi_kill_request() completes requests via normal SCSI completion path
-which decrements busy counts; however, requests which get passed to
-scsi_kill_request() aren't holding busy counts and scsi_kill_request()
-don't increment them before invoking completion path resulting in
-incorrect busy counts.  Bump up busy counts before invoking completion
-path.
+James Smart wrote:
+> In the case
+> where the block/unblock interfaces are being used (fc transport), the
+> request queue can be stopped - which stops scanning.  If the same or
+> unrelated sdev is then to be removed, we enter a deadlock waiting for
+> the scan mutex to be released.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
+Another driver which uses a block/unblock interface is sbp2. It blocks
+shosts (because one shost == one SBP-2 LU at the moment) during 1394 bus
+reset/ 1394 nodes rescan/ SBP-2 reconnect phases. I learned the hard way
+that an shost (or sdev if you will) *must not be blocked* when an shost
+(or sdev) is to be removed. This is generally true, not only during
+scanning, because SCSI command set drivers' shutdown methods go into
+deadlock as well if an shost (or sdev) is blocked. I posted an addition
+for Documentation/scsi/scsi_mid_low_api.txt a while ago to document this
+pitfall.
 
----
-
- drivers/scsi/scsi_lib.c |   15 +++++++++++++++
- 1 files changed, 15 insertions(+), 0 deletions(-)
-
-a12bf362489393691d147f93fbe1aa5d5a3a513d
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 8f010a3..7b0f9a3 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1479,6 +1479,8 @@ static inline int scsi_host_queue_ready(
- static void scsi_kill_request(struct request *req, request_queue_t *q)
- {
- 	struct scsi_cmnd *cmd = req->special;
-+	struct scsi_device *sdev = cmd->device;
-+	struct Scsi_Host *shost = sdev->host;
- 
- 	blkdev_dequeue_request(req);
- 
-@@ -1491,6 +1493,19 @@ static void scsi_kill_request(struct req
- 	scsi_init_cmd_errh(cmd);
- 	cmd->result = DID_NO_CONNECT << 16;
- 	atomic_inc(&cmd->device->iorequest_cnt);
-+
-+	/*
-+	 * SCSI request completion path will do scsi_device_unbusy(),
-+	 * bump busy counts.  To bump the counters, we need to dance
-+	 * with the locks as normal issue path does.
-+	 */
-+	sdev->device_busy++;
-+	spin_unlock(sdev->request_queue->queue_lock);
-+	spin_lock(shost->host_lock);
-+	shost->host_busy++;
-+	spin_unlock(shost->host_lock);
-+	spin_lock(sdev->request_queue->queue_lock);
-+
- 	__scsi_done(cmd);
- }
- 
+IOW before a transport may remove an sdev or shost, it has to unblock it
+and it also has to make sure that all commands that were enqueued before
+the blocking are being completed. But isn't it rather a responsibility
+of the SCSI core to get a LU's or target's state transitions right? When
+an sdev is "blocked" and the transport tells the core to transition it
+to "to be removed", then the core should know that the sdev's LU cannot
+be reached anymore and act accordingly.
 -- 
-1.2.4
-
+Stefan Richter
+-=====-=-==- -=-- -=-==
+http://arcgraph.de/sr/
