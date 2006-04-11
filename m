@@ -1,125 +1,41 @@
 From: akpm@osdl.org
-Subject: [patch 06/15] drivers/scsi/qla2xxx/: make some functions static
-Date: Mon, 10 Apr 2006 23:26:30 -0700
-Message-ID: <200604110727.k3B7RCgu015297@shell0.pdx.osdl.net>
+Subject: [patch 12/15] Overrun in drivers/scsi/sim710.c
+Date: Mon, 10 Apr 2006 23:27:03 -0700
+Message-ID: <200604110727.k3B7Rjrt015343@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:55431 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932225AbWDKH1Y (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:15240 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932234AbWDKH2A (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Apr 2006 03:27:24 -0400
+	Tue, 11 Apr 2006 03:28:00 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, bunk@stusta.de
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, snakebyte@gmx.de
 
 
-From: Adrian Bunk <bunk@stusta.de>
+From: Eric Sesterhenn <snakebyte@gmx.de>
 
-This patch makes some needlessly global functions static.
+This fixes coverity bug id #480.  Since id_array is declared as
+id_array[MAX_SLOTS], the check for i>MAX_SLOTS is obviously false.
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+Signed-off-by: Eric Sesterhenn <snakebyte@gmx.de>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/qla2xxx/qla_os.c  |   12 ++++++------
- drivers/scsi/qla2xxx/qla_sup.c |    8 ++++----
- 2 files changed, 10 insertions(+), 10 deletions(-)
+ drivers/scsi/sim710.c |    2 +-
+ 1 files changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/qla2xxx/qla_os.c~drivers-scsi-qla2xxx-make-some-functions-static drivers/scsi/qla2xxx/qla_os.c
---- devel/drivers/scsi/qla2xxx/qla_os.c~drivers-scsi-qla2xxx-make-some-functions-static	2006-03-21 23:05:42.000000000 -0800
-+++ devel-akpm/drivers/scsi/qla2xxx/qla_os.c	2006-03-21 23:05:42.000000000 -0800
-@@ -274,7 +274,7 @@ qla24xx_pci_info_str(struct scsi_qla_hos
- 	return str;
- }
- 
--char *
-+static char *
- qla2x00_fw_version_str(struct scsi_qla_host *ha, char *str)
- {
- 	char un_str[10];
-@@ -312,7 +312,7 @@ qla2x00_fw_version_str(struct scsi_qla_h
- 	return (str);
- }
- 
--char *
-+static char *
- qla24xx_fw_version_str(struct scsi_qla_host *ha, char *str)
- {
- 	sprintf(str, "%d.%02d.%02d ", ha->fw_major_version,
-@@ -600,7 +600,7 @@ qla2x00_wait_for_loop_ready(scsi_qla_hos
- *
- * Note:
- **************************************************************************/
--int
-+static int
- qla2xxx_eh_abort(struct scsi_cmnd *cmd)
- {
- 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
-@@ -734,7 +734,7 @@ qla2x00_eh_wait_for_pending_target_comma
- *    SUCCESS/FAILURE (defined as macro in scsi.h).
- *
- **************************************************************************/
--int
-+static int
- qla2xxx_eh_device_reset(struct scsi_cmnd *cmd)
- {
- 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
-@@ -865,7 +865,7 @@ qla2x00_eh_wait_for_pending_commands(scs
- *    SUCCESS/FAILURE (defined as macro in scsi.h).
- *
- **************************************************************************/
--int
-+static int
- qla2xxx_eh_bus_reset(struct scsi_cmnd *cmd)
- {
- 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
-@@ -926,7 +926,7 @@ eh_bus_reset_done:
- *
- * Note:
- **************************************************************************/
--int
-+static int
- qla2xxx_eh_host_reset(struct scsi_cmnd *cmd)
- {
- 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
-diff -puN drivers/scsi/qla2xxx/qla_sup.c~drivers-scsi-qla2xxx-make-some-functions-static drivers/scsi/qla2xxx/qla_sup.c
---- devel/drivers/scsi/qla2xxx/qla_sup.c~drivers-scsi-qla2xxx-make-some-functions-static	2006-03-21 23:05:42.000000000 -0800
-+++ devel-akpm/drivers/scsi/qla2xxx/qla_sup.c	2006-03-21 23:05:42.000000000 -0800
-@@ -428,7 +428,7 @@ nvram_data_to_access_addr(uint32_t naddr
- 	return FARX_ACCESS_NVRAM_DATA | naddr;
- }
- 
--uint32_t
-+static uint32_t
- qla24xx_read_flash_dword(scsi_qla_host_t *ha, uint32_t addr)
- {
- 	int rval;
-@@ -469,7 +469,7 @@ qla24xx_read_flash_data(scsi_qla_host_t 
- 	return dwptr;
- }
- 
--int
-+static int
- qla24xx_write_flash_dword(scsi_qla_host_t *ha, uint32_t addr, uint32_t data)
- {
- 	int rval;
-@@ -491,7 +491,7 @@ qla24xx_write_flash_dword(scsi_qla_host_
- 	return rval;
- }
- 
--void
-+static void
- qla24xx_get_flash_manufacturer(scsi_qla_host_t *ha, uint8_t *man_id,
-     uint8_t *flash_id)
- {
-@@ -502,7 +502,7 @@ qla24xx_get_flash_manufacturer(scsi_qla_
- 	*flash_id = MSB(ids);
- }
- 
--int
-+static int
- qla24xx_write_flash_data(scsi_qla_host_t *ha, uint32_t *dwptr, uint32_t faddr,
-     uint32_t dwords)
- {
+diff -puN drivers/scsi/sim710.c~overrun-in-drivers-scsi-sim710c drivers/scsi/sim710.c
+--- devel/drivers/scsi/sim710.c~overrun-in-drivers-scsi-sim710c	2006-04-10 00:09:58.000000000 -0700
++++ devel-akpm/drivers/scsi/sim710.c	2006-04-10 00:09:58.000000000 -0700
+@@ -75,7 +75,7 @@ param_setup(char *str)
+ 		else if(!strncmp(pos, "id:", 3)) {
+ 			if(slot == -1) {
+ 				printk(KERN_WARNING "sim710: Must specify slot for id parameter\n");
+-			} else if(slot > MAX_SLOTS) {
++			} else if(slot >= MAX_SLOTS) {
+ 				printk(KERN_WARNING "sim710: Illegal slot %d for id %d\n", slot, val);
+ 			} else {
+ 				id_array[slot] = val;
 _
