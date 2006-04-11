@@ -1,76 +1,38 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [Comments Needed] scan vs remove_target deadlock
-Date: Mon, 10 Apr 2006 23:03:05 -0500
-Message-ID: <443B2A79.4020600@cs.wisc.edu>
-References: <1144693508.3820.33.camel@localhost.localdomain>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH 1/1] cciss: bug fix for crash when running hpacucli
+Date: Tue, 11 Apr 2006 07:39:40 +0200
+Message-ID: <20060411053940.GJ3859@suse.de>
+References: <20060410202541.GA28328@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:51395 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S1751222AbWDKEDR (ORCPT
+Received: from ns.virtualhost.dk ([195.184.98.160]:63553 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S1751190AbWDKFmh (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Apr 2006 00:03:17 -0400
-In-Reply-To: <1144693508.3820.33.camel@localhost.localdomain>
+	Tue, 11 Apr 2006 01:42:37 -0400
+Content-Disposition: inline
+In-Reply-To: <20060410202541.GA28328@beardog.cca.cpqcorp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: linux-scsi@vger.kernel.org
+To: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
+Cc: akpm@osdl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, steve.cameron@hp.com
 
-James Smart wrote:
-> We've seen a very nasty deadlock condition between the scan code and
-> the scsi remove code, when the sdev block/unblock functionality is
-> used. The scsi_scan mutex is taken as a very coarse lock over the
-> scan code, and will be held across multiple SCSI i/o's while the
-> scan is proceeding. The scan may be on a single lun basis, or on a
-> target basis. The jist is - it's held a loooonnng time. Additionally,
-> the scan code uses the block request queue for scan i/o's.  In the case
-> where the block/unblock interfaces are being used (fc transport), the
-> request queue can be stopped - which stops scanning.  If the same or
-> unrelated sdev is then to be removed, we enter a deadlock waiting for
-> the scan mutex to be released. In most cases, a background timer fires
-> that unblocks the sdev and things eventually unclog (granted a *lot*
-> of time may have gone by). In a few cases, we are seeing the sdev
-> request queue get plugged, then this deadlock really locks up. One last
-> observation: don't mix scan code and other work on the same workq.
-> Workq flushing will fall over fast.
+On Mon, Apr 10 2006, Mike Miller (OS Dev) wrote:
+> PATCH 1/1
 > 
+> This patch fixes a crash when running hpacucli with multiple logical volumes
+> on a cciss controller. We were not properly initializing the disk->queue
+> and causing a fault.
+> Thanks to Hasso Tepper for reporting the problem. Thanks to Steve Cameron
+> for root causing the problem.
+> Most of the patch just moves things around. The fix is a one-liner.
 > 
-> I'd like to poll the wisdom of those on this list as to the best way
-> to approach this issue:
-> 
-> - The plugged queue logic needs to be tracked down. Anyone have any
->   insights ?
+> Signed-off-by: Mike Miller <mike.miller@hp.com>
+> Signed-off-by: Stephen Cameron <steve.cameron@hp.com>
 
-Are you referring to a problem in a function like our prep or request fn 
-where we could plug the queue if the device state is not online? Do we 
-need the scan mutex to change the device state? I mean if a scan has the 
-mutex lock, and the transport class decides to remove the device it 
-tries to grab the scan_mutex by calling scsi_remove_device, but if we 
-moved the state change invocation before the scan_mutex is taken in 
-scsi_remove_device then, I assume eventually the device should get 
-unplugged, the prep or request_fn will see the new state and fail the 
-request.
+Thanks for nailing this one Mike! I'll add it to the upstream branch, it
+should be included for 2.6.16.x as well.
 
-I am also asking because if you change the state from userspace we do 
-not grab the scan_mutex so I did not know if that was bug.
+-- 
+Jens Axboe
 
-
-> - The scan mutex, as coarse as it is, is really broken. It would be
->   great to reduce the lock holding so the lock isn't held while an
->   i/o is pending.  This change would be extremely invasive to the scan
->   code. Any other alternatives ?
-> - If an sdev is "blocked", we shouldn't be wasting our time scanning it.
->   Should we be adding this checks before sending each scan i/o, or is
->   there a better lower-level function place this check ? Should we be
-
-are you referring to our request or prep fn or scsi_dispatch_cmd or 
-something else like when the scan code calls the scsi_execute?
-
->   creating an explicit return code, or continue to piggy-back on
->   DID_NO_CONNECT ? How do we deal with a scan i/o which may already be
->   queued when the device is blocked ?
-
-Are you thinking about adding a abort/cancel_request() callback to the 
-request_queue? Something that could also be called by upper layers like 
-DM, and could eventually end up calling a scsi abort function?
