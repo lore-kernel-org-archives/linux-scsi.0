@@ -1,39 +1,125 @@
 From: akpm@osdl.org
-Subject: [patch 01/15] megaraid: unused variable
-Date: Mon, 10 Apr 2006 23:26:03 -0700
-Message-ID: <200604110726.k3B7QjBb015265@shell0.pdx.osdl.net>
+Subject: [patch 06/15] drivers/scsi/qla2xxx/: make some functions static
+Date: Mon, 10 Apr 2006 23:26:30 -0700
+Message-ID: <200604110727.k3B7RCgu015297@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:42375 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932221AbWDKH0z (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:55431 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932225AbWDKH1Y (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Apr 2006 03:26:55 -0400
+	Tue, 11 Apr 2006 03:27:24 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, bunk@stusta.de
 
 
-From: Andrew Morton <akpm@osdl.org>
+From: Adrian Bunk <bunk@stusta.de>
 
-drivers/scsi/megaraid.c: In function `mega_internal_command':
-drivers/scsi/megaraid.c:4474: warning: unused variable `flags'
+This patch makes some needlessly global functions static.
 
-
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/megaraid.c |    1 -
- 1 files changed, 1 deletion(-)
+ drivers/scsi/qla2xxx/qla_os.c  |   12 ++++++------
+ drivers/scsi/qla2xxx/qla_sup.c |    8 ++++----
+ 2 files changed, 10 insertions(+), 10 deletions(-)
 
-diff -puN drivers/scsi/megaraid.c~megaraid-unused-variable drivers/scsi/megaraid.c
---- devel/drivers/scsi/megaraid.c~megaraid-unused-variable	2006-04-05 21:27:55.000000000 -0700
-+++ devel-akpm/drivers/scsi/megaraid.c	2006-04-05 21:27:55.000000000 -0700
-@@ -4471,7 +4471,6 @@ mega_internal_command(adapter_t *adapter
- {
- 	Scsi_Cmnd	*scmd;
- 	struct	scsi_device *sdev;
--	unsigned long	flags = 0;
- 	scb_t	*scb;
- 	int	rval;
+diff -puN drivers/scsi/qla2xxx/qla_os.c~drivers-scsi-qla2xxx-make-some-functions-static drivers/scsi/qla2xxx/qla_os.c
+--- devel/drivers/scsi/qla2xxx/qla_os.c~drivers-scsi-qla2xxx-make-some-functions-static	2006-03-21 23:05:42.000000000 -0800
++++ devel-akpm/drivers/scsi/qla2xxx/qla_os.c	2006-03-21 23:05:42.000000000 -0800
+@@ -274,7 +274,7 @@ qla24xx_pci_info_str(struct scsi_qla_hos
+ 	return str;
+ }
  
+-char *
++static char *
+ qla2x00_fw_version_str(struct scsi_qla_host *ha, char *str)
+ {
+ 	char un_str[10];
+@@ -312,7 +312,7 @@ qla2x00_fw_version_str(struct scsi_qla_h
+ 	return (str);
+ }
+ 
+-char *
++static char *
+ qla24xx_fw_version_str(struct scsi_qla_host *ha, char *str)
+ {
+ 	sprintf(str, "%d.%02d.%02d ", ha->fw_major_version,
+@@ -600,7 +600,7 @@ qla2x00_wait_for_loop_ready(scsi_qla_hos
+ *
+ * Note:
+ **************************************************************************/
+-int
++static int
+ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
+ {
+ 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
+@@ -734,7 +734,7 @@ qla2x00_eh_wait_for_pending_target_comma
+ *    SUCCESS/FAILURE (defined as macro in scsi.h).
+ *
+ **************************************************************************/
+-int
++static int
+ qla2xxx_eh_device_reset(struct scsi_cmnd *cmd)
+ {
+ 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
+@@ -865,7 +865,7 @@ qla2x00_eh_wait_for_pending_commands(scs
+ *    SUCCESS/FAILURE (defined as macro in scsi.h).
+ *
+ **************************************************************************/
+-int
++static int
+ qla2xxx_eh_bus_reset(struct scsi_cmnd *cmd)
+ {
+ 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
+@@ -926,7 +926,7 @@ eh_bus_reset_done:
+ *
+ * Note:
+ **************************************************************************/
+-int
++static int
+ qla2xxx_eh_host_reset(struct scsi_cmnd *cmd)
+ {
+ 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
+diff -puN drivers/scsi/qla2xxx/qla_sup.c~drivers-scsi-qla2xxx-make-some-functions-static drivers/scsi/qla2xxx/qla_sup.c
+--- devel/drivers/scsi/qla2xxx/qla_sup.c~drivers-scsi-qla2xxx-make-some-functions-static	2006-03-21 23:05:42.000000000 -0800
++++ devel-akpm/drivers/scsi/qla2xxx/qla_sup.c	2006-03-21 23:05:42.000000000 -0800
+@@ -428,7 +428,7 @@ nvram_data_to_access_addr(uint32_t naddr
+ 	return FARX_ACCESS_NVRAM_DATA | naddr;
+ }
+ 
+-uint32_t
++static uint32_t
+ qla24xx_read_flash_dword(scsi_qla_host_t *ha, uint32_t addr)
+ {
+ 	int rval;
+@@ -469,7 +469,7 @@ qla24xx_read_flash_data(scsi_qla_host_t 
+ 	return dwptr;
+ }
+ 
+-int
++static int
+ qla24xx_write_flash_dword(scsi_qla_host_t *ha, uint32_t addr, uint32_t data)
+ {
+ 	int rval;
+@@ -491,7 +491,7 @@ qla24xx_write_flash_dword(scsi_qla_host_
+ 	return rval;
+ }
+ 
+-void
++static void
+ qla24xx_get_flash_manufacturer(scsi_qla_host_t *ha, uint8_t *man_id,
+     uint8_t *flash_id)
+ {
+@@ -502,7 +502,7 @@ qla24xx_get_flash_manufacturer(scsi_qla_
+ 	*flash_id = MSB(ids);
+ }
+ 
+-int
++static int
+ qla24xx_write_flash_data(scsi_qla_host_t *ha, uint32_t *dwptr, uint32_t faddr,
+     uint32_t dwords)
+ {
 _
