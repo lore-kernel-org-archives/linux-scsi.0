@@ -1,41 +1,60 @@
 From: akpm@osdl.org
-Subject: [patch 12/15] Overrun in drivers/scsi/sim710.c
-Date: Mon, 10 Apr 2006 23:27:03 -0700
-Message-ID: <200604110727.k3B7Rjrt015343@shell0.pdx.osdl.net>
+Subject: [patch 10/15] remove drivers/scsi/constants.c:scsi_print_req_sense()
+Date: Mon, 10 Apr 2006 23:26:49 -0700
+Message-ID: <200604110727.k3B7RVXr015324@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:15240 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932234AbWDKH2A (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:6536 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932234AbWDKH1s (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Apr 2006 03:28:00 -0400
+	Tue, 11 Apr 2006 03:27:48 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, snakebyte@gmx.de
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, bunk@stusta.de
 
 
-From: Eric Sesterhenn <snakebyte@gmx.de>
+From: Adrian Bunk <bunk@stusta.de>
 
-This fixes coverity bug id #480.  Since id_array is declared as
-id_array[MAX_SLOTS], the check for i>MAX_SLOTS is obviously false.
+This function is no longer used anywhere.
 
-Signed-off-by: Eric Sesterhenn <snakebyte@gmx.de>
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/sim710.c |    2 +-
- 1 files changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/constants.c |   10 ----------
+ include/scsi/scsi_dbg.h  |    1 -
+ 2 files changed, 11 deletions(-)
 
-diff -puN drivers/scsi/sim710.c~overrun-in-drivers-scsi-sim710c drivers/scsi/sim710.c
---- devel/drivers/scsi/sim710.c~overrun-in-drivers-scsi-sim710c	2006-04-10 00:09:58.000000000 -0700
-+++ devel-akpm/drivers/scsi/sim710.c	2006-04-10 00:09:58.000000000 -0700
-@@ -75,7 +75,7 @@ param_setup(char *str)
- 		else if(!strncmp(pos, "id:", 3)) {
- 			if(slot == -1) {
- 				printk(KERN_WARNING "sim710: Must specify slot for id parameter\n");
--			} else if(slot > MAX_SLOTS) {
-+			} else if(slot >= MAX_SLOTS) {
- 				printk(KERN_WARNING "sim710: Illegal slot %d for id %d\n", slot, val);
- 			} else {
- 				id_array[slot] = val;
+diff -puN drivers/scsi/constants.c~remove-drivers-scsi-constantscscsi_print_req_sense drivers/scsi/constants.c
+--- devel/drivers/scsi/constants.c~remove-drivers-scsi-constantscscsi_print_req_sense	2006-04-05 21:27:56.000000000 -0700
++++ devel-akpm/drivers/scsi/constants.c	2006-04-05 21:27:56.000000000 -0700
+@@ -1268,16 +1268,6 @@ void scsi_print_sense(const char *devcla
+ }
+ EXPORT_SYMBOL(scsi_print_sense);
+ 
+-void scsi_print_req_sense(const char *devclass, struct scsi_request *sreq)
+-{
+-	const char *name = devclass;
+-
+-	if (sreq->sr_request->rq_disk)
+-		name = sreq->sr_request->rq_disk->disk_name;
+-	__scsi_print_sense(name, sreq->sr_sense_buffer, SCSI_SENSE_BUFFERSIZE);
+-}
+-EXPORT_SYMBOL(scsi_print_req_sense);
+-
+ void scsi_print_command(struct scsi_cmnd *cmd)
+ {
+ 	/* Assume appended output (i.e. not at start of line) */
+diff -puN include/scsi/scsi_dbg.h~remove-drivers-scsi-constantscscsi_print_req_sense include/scsi/scsi_dbg.h
+--- devel/include/scsi/scsi_dbg.h~remove-drivers-scsi-constantscscsi_print_req_sense	2006-04-05 21:27:56.000000000 -0700
++++ devel-akpm/include/scsi/scsi_dbg.h	2006-04-05 21:27:56.000000000 -0700
+@@ -9,7 +9,6 @@ extern void scsi_print_command(struct sc
+ extern void scsi_print_sense_hdr(const char *, struct scsi_sense_hdr *);
+ extern void __scsi_print_command(unsigned char *);
+ extern void scsi_print_sense(const char *, struct scsi_cmnd *);
+-extern void scsi_print_req_sense(const char *, struct scsi_request *);
+ extern void __scsi_print_sense(const char *name,
+ 			       const unsigned char *sense_buffer,
+ 			       int sense_len);
 _
