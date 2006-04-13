@@ -1,15 +1,15 @@
 From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: [PATCH 2/3] - mpt fusion -
-Date: Thu, 13 Apr 2006 16:08:22 -0600
-Message-ID: <664A4EBB07F29743873A87CF62C26D70080B51@NAMAIL4.ad.lsil.com>
+Subject: [PATCH 2/3] - mpt fusion - bug fix for duplicate targets
+Date: Thu, 13 Apr 2006 16:11:54 -0600
+Message-ID: <664A4EBB07F29743873A87CF62C26D70080B57@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C65F46.D8617876"
+	boundary="----_=_NextPart_001_01C65F47.56AB07A6"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:32469 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S932467AbWDMWIY (ORCPT
+Received: from mail0.lsil.com ([147.145.40.20]:61653 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S932472AbWDMWL7 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Apr 2006 18:08:24 -0400
+	Thu, 13 Apr 2006 18:11:59 -0400
 Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,7 +18,7 @@ Cc: James.Bottomley@SteelEye.com
 
 This is a multi-part message in MIME format.
 
-------_=_NextPart_001_01C65F46.D8617876
+------_=_NextPart_001_01C65F47.56AB07A6
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
@@ -52,7 +52,7 @@ JEJB: Pls apply to scsi-rc-fixes tree.
 
 Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
 
-------_=_NextPart_001_01C65F46.D8617876
+------_=_NextPart_001_01C65F47.56AB07A6
 Content-Type: application/octet-stream;
 	name="duplicate_targets.patch"
 Content-Transfer-Encoding: base64
@@ -96,4 +96,4 @@ T19TQVRBX0RFVklDRSkpKQotCQlyZXR1cm4gMTsKLQllbHNlCi0JCXJldHVybiAwOwotfQotCiBz
 dGF0aWMgdm9pZAogbXB0c2FzX3BhcnNlX2RldmljZV9pbmZvKHN0cnVjdCBzYXNfaWRlbnRpZnkg
 KmlkZW50aWZ5LAogCQlzdHJ1Y3QgbXB0c2FzX2RldmluZm8gKmRldmljZV9pbmZvKQo=
 
-------_=_NextPart_001_01C65F46.D8617876--
+------_=_NextPart_001_01C65F47.56AB07A6--
