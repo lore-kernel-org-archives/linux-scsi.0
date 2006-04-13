@@ -1,37 +1,50 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 1/3] - mpt fusion - panic in mptsas_slave_configure
-Date: Thu, 13 Apr 2006 17:28:14 -0500
-Message-ID: <1144967295.3474.68.camel@mulgrave.il.steeleye.com>
-References: <664A4EBB07F29743873A87CF62C26D70080B50@NAMAIL4.ad.lsil.com>
+From: boutcher@cs.umn.edu (Dave C Boutcher)
+Subject: [PATCH] ibmvscsi: convert kmalloc + memset to kcalloc
+Date: Thu, 13 Apr 2006 17:58:54 -0500
+Message-ID: <17470.55214.687901.979984@hound.rchland.ibm.com>
+References: <20060407191003X.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:24747 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S965002AbWDMW2S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Apr 2006 18:28:18 -0400
-In-Reply-To: <664A4EBB07F29743873A87CF62C26D70080B50@NAMAIL4.ad.lsil.com>
+Received: from mail.cs.umn.edu ([128.101.36.202]:52462 "EHLO mail.cs.umn.edu")
+	by vger.kernel.org with ESMTP id S1751170AbWDMW7w (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 13 Apr 2006 18:59:52 -0400
+In-Reply-To: <20060407191003X.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric" <Eric.Moore@lsil.com>
-Cc: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: boutcher@cs.umn.edu, linux-scsi@vger.kernel.org
 
-On Thu, 2006-04-13 at 16:08 -0600, Moore, Eric wrote:
-> This issue was created in due to recent scsi_transport_sas change,
-> when sas_read_port_mode_page was added into the mptsas drivers
-> slave_config entry point.    
+On Fri, 07 Apr 2006 19:10:03 +0900, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> said:
 > 
-> This new API expects that all sdev's to be assocated to an rphy, however
-> that is not the case for logical volumes, as they are created using
-> scsi_add_device, instead of sas_rphy_add().
+> Convert kmalloc + memset to kcalloc in ibmvscsi
+> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> ---
 
-Erm, there's something else wrong here, then.  The sas transport class
-shouldn't be attaching to the raid volumes (only the raid components)
-since a RAID volume is not a SAS device.  I think when this came up ages
-ago, I said the SAS class should do a deny_binding() callback like the
-SPI transport class does for the mptfusion driver ... 
+Acked-by: Dave Boutcher <sleddog@us.ibm.com>
 
-James
-
-
+> 
+>  drivers/scsi/ibmvscsi/ibmvscsi.c |    3 +--
+>  1 files changed, 1 insertions(+), 2 deletions(-)
+> 
+> 359289bba3bd58e6650088ff65ff95e9a549efc0
+> diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
+> index 0a8ad37..12cb743 100644
+> --- a/drivers/scsi/ibmvscsi/ibmvscsi.c
+> +++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
+> @@ -121,10 +121,9 @@ static int initialize_event_pool(struct 
+>  
+>	pool-> size = size;
+>	pool-> next = 0;
+> -	pool->events = kmalloc(pool->size * sizeof(*pool->events), GFP_KERNEL);
+> +	pool->events = kcalloc(pool->size, sizeof(*pool->events), GFP_KERNEL);
+>  	if (!pool->events)
+>  		return -ENOMEM;
+> -	memset(pool->events, 0x00, pool->size * sizeof(*pool->events));
+>  
+>	pool-> iu_storage =
+>  	    dma_alloc_coherent(hostdata->dev,
+> -- 
+> 1.1.3
