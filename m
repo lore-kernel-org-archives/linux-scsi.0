@@ -1,61 +1,37 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: HBA self selection
-Date: Thu, 13 Apr 2006 13:58:25 -0400
-Message-ID: <443E9141.6030901@torque.net>
-References: <5CCF5F0F2514664CBE20FD24BCE17614044BF8@cceexc17.americas.cpqcorp.net>
-Reply-To: dougg@torque.net
+From: "Cameron, Steve" <Steve.Cameron@hp.com>
+Subject: RE: HBA self selection
+Date: Thu, 13 Apr 2006 13:35:19 -0500
+Message-ID: <5CCF5F0F2514664CBE20FD24BCE17614044BFD@cceexc17.americas.cpqcorp.net>
+References: <5CCF5F0F2514664CBE20FD24BCE17614044BF8@cceexc17.americas.cpqcorp.net><20060413152419.GD24104@parisc-linux.org> <1144950427.3474.39.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from simmts8.bellnexxia.net ([206.47.199.166]:61433 "EHLO
-	simmts8-srv.bellnexxia.net") by vger.kernel.org with ESMTP
-	id S932114AbWDMR6b (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Apr 2006 13:58:31 -0400
-In-Reply-To: <5CCF5F0F2514664CBE20FD24BCE17614044BF8@cceexc17.americas.cpqcorp.net>
+Received: from ccerelbas01.cce.hp.com ([161.114.21.104]:43190 "EHLO
+	ccerelbas01.cce.hp.com") by vger.kernel.org with ESMTP
+	id S964827AbWDMSfk convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Apr 2006 14:35:40 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Cameron, Steve" <Steve.Cameron@hp.com>
+To: James Bottomley <James.Bottomley@SteelEye.com>, Matthew Wilcox <matthew@wil.cx>
 Cc: linux-scsi@vger.kernel.org
 
-Cameron, Steve wrote:
-> Noticed in scsi_scan.c (2.6.15.2 kernel...)
-> 
->    1336 static void __scsi_scan_target(struct device *parent, unsigned int chann        el,
->    1337                 unsigned int id, unsigned int lun, int rescan)
->    1338 {
->    1339         struct Scsi_Host *shost = dev_to_shost(parent);
->    1340         int bflags = 0;
->    1341         int res;
->    1342         struct scsi_target *starget;
->    1343
->    1344         if (shost->this_id == id)
->    1345                 /*
->    1346                  * Don't scan the host adapter
->    1347                  */
->    1348                 return;
->    1349
-> 
-> There exist some target devices which depend on the adapter being
-> able to do self selection.  The HP MSA30 presents a processor device
-> at ID 7, for instance.
-> 
-> The processor device at ID 7 will generally not be accessible, because
-> the HBA is generally at this ID.  The processor device doesn't care that the
-> HBA is at id 7.  He says, "hmm, the adapter is talking to himself,
-> that means, he's talking to me."   It's just a way to put a processor
-> device on the bus without really "using up" a scsi id, since there
-> are only a few of them.
-> 
-> This used to work, I'm pretty sure.  Could do 
-> "echo scsi add-single-device 0 0 7 0 > /proc/scsi/scsi" and 
-> the processor device would show up.  Now it doesn't.
+James Bottomley wrote:
 
-Steve,
-I suppose the lk 2.6 equivalent of:
-# echo "0 7 0" > /sys/class/scsi_host/host<n>/scan
-doesn't work either? [The reason I ask is that the
-new technique works for finding "well known" lus.]
+> Steve, how exactly is this supposed to work?  The SPI 
+> protocol wasn't designed to allow two devices on the bus 
+> with the same ID.  I'm assuming the device doesn't do all 
+> the things that simply can't work, like disconnect/reconnect?
 
-Doug Gilbert
+I don't really know how it's made to work.
 
+If it's a bad idea for general usage... maybe some 
+way to permit it on a per scsi host basis?  Maybe a 
+way to enable/disable this feature thru sysfs or 
+something, with the default being disabled?
+
+Otherwise our SNMP agents won't be able to know that
+fans failed, overtemp etc. in the storage box.
+
+-- steve
