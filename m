@@ -1,50 +1,49 @@
-From: boutcher@cs.umn.edu (Dave C Boutcher)
-Subject: [PATCH] ibmvscsi: convert kmalloc + memset to kcalloc
-Date: Thu, 13 Apr 2006 17:58:54 -0500
-Message-ID: <17470.55214.687901.979984@hound.rchland.ibm.com>
-References: <20060407191003X.fujita.tomonori@lab.ntt.co.jp>
+From: "Moore, Eric" <Eric.Moore@lsil.com>
+Subject: RE: [PATCH 1/3] - mpt fusion - panic in mptsas_slave_configure
+Date: Thu, 13 Apr 2006 17:15:10 -0600
+Message-ID: <664A4EBB07F29743873A87CF62C26D70080B8F@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.cs.umn.edu ([128.101.36.202]:52462 "EHLO mail.cs.umn.edu")
-	by vger.kernel.org with ESMTP id S1751170AbWDMW7w (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Apr 2006 18:59:52 -0400
-In-Reply-To: <20060407191003X.fujita.tomonori@lab.ntt.co.jp>
+Received: from mail0.lsil.com ([147.145.40.20]:42205 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S965020AbWDMXPM convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 13 Apr 2006 19:15:12 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: boutcher@cs.umn.edu, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, 07 Apr 2006 19:10:03 +0900, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> said:
-> 
-> Convert kmalloc + memset to kcalloc in ibmvscsi
-> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> ---
+On Thursday, April 13, 2006 4:28 PM, James Bottomley wrote: 
 
-Acked-by: Dave Boutcher <sleddog@us.ibm.com>
+> Erm, there's something else wrong here, then.  The sas transport class
+> shouldn't be attaching to the raid volumes (only the raid components)
+> since a RAID volume is not a SAS device.  I think when this 
+> came up ages
+> ago, I said the SAS class should do a deny_binding() callback like the
+> SPI transport class does for the mptfusion driver ... 
+> 
 
-> 
->  drivers/scsi/ibmvscsi/ibmvscsi.c |    3 +--
->  1 files changed, 1 insertions(+), 2 deletions(-)
-> 
-> 359289bba3bd58e6650088ff65ff95e9a549efc0
-> diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
-> index 0a8ad37..12cb743 100644
-> --- a/drivers/scsi/ibmvscsi/ibmvscsi.c
-> +++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-> @@ -121,10 +121,9 @@ static int initialize_event_pool(struct 
->  
->	pool-> size = size;
->	pool-> next = 0;
-> -	pool->events = kmalloc(pool->size * sizeof(*pool->events), GFP_KERNEL);
-> +	pool->events = kcalloc(pool->size, sizeof(*pool->events), GFP_KERNEL);
->  	if (!pool->events)
->  		return -ENOMEM;
-> -	memset(pool->events, 0x00, pool->size * sizeof(*pool->events));
->  
->	pool-> iu_storage =
->  	    dma_alloc_coherent(hostdata->dev,
-> -- 
-> 1.1.3
+???, the mptsas driver is not attaching the raid volumes to sas
+ transport. Only the raid components are attached.
+
+What the fusion driver is doing is placing the raid volumes on virtual 
+channel beyond the last known channel for the rphys.  Basically the 
+reverse of what you did for fusion when you added the spi transport 
+support.  What this means is the raid volumes are located at 
+ioc->num_ports.  Then we use scsi_add_device and scsi_remove_device 
+to handle adding and removing the raid volumes attaching on this 
+virtual channel.   From mptsas_slave_alloc(), we bypass the logic 
+for rphy handling near the comment that says "RAID Volumes placed 
+beyond the last expected port". I beleive all this is correct, 
+okay'd by you and Christoph several months ago.  However the problem
+came when you added the mptsas_slave_configure. We need to add the same 
+check that bypasses calling the sas transport layer API for anything
+sitting
+this virtual channel reserved for RAID.
+
+Eric   
+
