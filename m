@@ -1,55 +1,92 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 1/2] aic7xxx: deinline large functions, save 80k of text
-Date: Thu, 13 Apr 2006 10:02:36 -0500
-Message-ID: <1144940556.3474.10.camel@mulgrave.il.steeleye.com>
-References: <200604120945.34419.vda@ilport.com.ua>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [Comments Needed] scan vs remove_target deadlock
+Date: Thu, 13 Apr 2006 11:14:36 -0400
+Message-ID: <443E6ADC.8080206@emulex.com>
+References: <1144693508.3820.33.camel@localhost.localdomain> <443B2A79.4020600@cs.wisc.edu>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:33436 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1750750AbWDMPDb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Apr 2006 11:03:31 -0400
-In-Reply-To: <200604120945.34419.vda@ilport.com.ua>
+Received: from emulex.emulex.com ([138.239.112.1]:19883 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S1750835AbWDMPOx
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 13 Apr 2006 11:14:53 -0400
+In-Reply-To: <443B2A79.4020600@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Denis Vlasenko <vda@ilport.com.ua>
-Cc: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arjan@infradead.org, hare@suse.de, gibbs@scsiguy.com, eike-kernel@sf-tec.de, stefanr@s5r6.in-berlin.de
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, 2006-04-12 at 09:45 +0300, Denis Vlasenko wrote:
-> This patch
+
+
+Mike Christie wrote:
+>> - The plugged queue logic needs to be tracked down. Anyone have any
+>>   insights ?
 > 
-> moves big inlines into aic79xx_core.c and aic7xxx_core.c
-> makes ahd_delay just a wrapper around udelay
-> marks a few functions static
-> fixes spelling fix in error message
+> Are you referring to a problem in a function like our prep or request fn 
+> where we could plug the queue if the device state is not online?
 
-There are two things that really spring to mind here
+I believe so. One signature is that the scan i/o failed, starting recovery,
+and right as recovery started, the sdev blocked, which caused recovery to
+fail and sdev to be taken offline.
 
-1. This alters the Adaptec HIM layer (the machine independent bit).  I
-think no one cares about this anymore, so that's fine.  However, if
-you're going to do this, do it properly, so get rid of the superfluous
-HIM layer abstractions like this:
+ > Do we
+> need the scan mutex to change the device state? I mean if a scan has the 
+> mutex lock, and the transport class decides to remove the device it 
+> tries to grab the scan_mutex by calling scsi_remove_device, but if we 
+> moved the state change invocation before the scan_mutex is taken in 
+> scsi_remove_device then, I assume eventually the device should get 
+> unplugged, the prep or request_fn will see the new state and fail the 
+> request.
 
-#define ahd_timer_init init_timer
-#define ahd_timer_stop del_timer_sync
-typedef void ahd_linux_callback_t (u_long);  
+This may be what's needed. I don't understand all of this path yet, so I
+can only speculate (and likely w/ error). Thus, the questions.
 
-Just make it use the linux types natively.
+> I am also asking because if you change the state from userspace we do 
+> not grab the scan_mutex so I did not know if that was bug.
+> 
+> 
+>> - The scan mutex, as coarse as it is, is really broken. It would be
+>>   great to reduce the lock holding so the lock isn't held while an
+>>   i/o is pending.  This change would be extremely invasive to the scan
+>>   code. Any other alternatives ?
+>> - If an sdev is "blocked", we shouldn't be wasting our time scanning it.
+>>   Should we be adding this checks before sending each scan i/o, or is
+>>   there a better lower-level function place this check ? Should we be
+> 
+> are you referring to our request or prep fn or scsi_dispatch_cmd or 
+> something else like when the scan code calls the scsi_execute?
 
-2. There's no actual code content to this, which always makes me
-reluctant to accept changes.  However, I notice this alters the inb/outb
-abstractions, so what you could do, if you were feeling brave is
-eliminate the Adaptec implementation of ioread8/iowrite8 and replace it
-with the linux one (i.e. use ioport_map if the card really wants port
-I/O).  This has been on my Todo list for a long time; even if you
-haven't got the hardware, Hannes and I can test it for you.
+Well, we want to stop the i/o before it gets on the request queue, thus it
+should be in scsi_execute(). We tried modifying scsi_execute() to bounce
+i/o's (w/ DID_NO_CONNECT) if the sdev was offline.  This made the deadlock
+harder to hit, but didn't remove it. We'll probably be augmenting this
+with a check for the blocked state as well.
 
-Note that you can't use ioread16 or any of the longer reads or writes.
-The adaptec cards have terrible problems with write combining, so
-everything needs to still be done in terms of ioread8/iowrite8
+Once the i/o is on the queue, we have to ensure the queues get run, and the
+LLDD/transport will bounce the i/o. However, we would have liked to avoid
+the delay while waiting on the queue to run.
 
-James
+> 
+>>   creating an explicit return code, or continue to piggy-back on
+>>   DID_NO_CONNECT ? How do we deal with a scan i/o which may already be
+>>   queued when the device is blocked ?
+> 
+> Are you thinking about adding a abort/cancel_request() callback to the 
+> request_queue? Something that could also be called by upper layers like 
+> DM, and could eventually end up calling a scsi abort function?
 
+Actually - yes, and I knew things like DM would have liked this. There's
+2 states we have to be aware of though... 1st state is where the i/o is
+queued, but not yet given to the LLDD (which I believe is the stall case
+that is hurting us here). The 2nd case is where the i/o has been issued
+to the LLDD, but the sdev blocked is not blocked when the abort is issued.
+Unfortunately, since the block state implies a loss of connectivity, we
+can't send the abort, so we have to sit and wait until the block times out.
+No real way to avoid this delay.
+
+Hope this makes sense.
+
+-- james s
 
