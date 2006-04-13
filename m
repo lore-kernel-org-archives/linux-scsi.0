@@ -1,56 +1,55 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [Comments Needed] scan vs remove_target deadlock
-Date: Thu, 13 Apr 2006 11:21:04 -0400
-Message-ID: <443E6C60.3050501@emulex.com>
-References: <1144693508.3820.33.camel@localhost.localdomain> <443B6E90.4020705@s5r6.in-berlin.de>
-Reply-To: James.Smart@Emulex.Com
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: HBA self selection
+Date: Thu, 13 Apr 2006 09:24:19 -0600
+Message-ID: <20060413152419.GD24104@parisc-linux.org>
+References: <5CCF5F0F2514664CBE20FD24BCE17614044BF8@cceexc17.americas.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:62124 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S1750736AbWDMPVK
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Apr 2006 11:21:10 -0400
-In-Reply-To: <443B6E90.4020705@s5r6.in-berlin.de>
+Received: from palinux.external.hp.com ([192.25.206.14]:41091 "EHLO
+	palinux.external.hp.com") by vger.kernel.org with ESMTP
+	id S1750814AbWDMPYV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 13 Apr 2006 11:24:21 -0400
+Content-Disposition: inline
+In-Reply-To: <5CCF5F0F2514664CBE20FD24BCE17614044BF8@cceexc17.americas.cpqcorp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+To: "Cameron, Steve" <Steve.Cameron@hp.com>
 Cc: linux-scsi@vger.kernel.org
 
-Thanks Stefan...
+On Thu, Apr 13, 2006 at 09:58:50AM -0500, Cameron, Steve wrote:
+> There exist some target devices which depend on the adapter being
+> able to do self selection.  The HP MSA30 presents a processor device
+> at ID 7, for instance.
+> 
+> The processor device at ID 7 will generally not be accessible, because
+> the HBA is generally at this ID.  The processor device doesn't care that the
+> HBA is at id 7.  He says, "hmm, the adapter is talking to himself,
+> that means, he's talking to me."   It's just a way to put a processor
+> device on the bus without really "using up" a scsi id, since there
+> are only a few of them.
 
-> Another driver which uses a block/unblock interface is sbp2. It blocks
-> shosts (because one shost == one SBP-2 LU at the moment) during 1394 bus
-> reset/ 1394 nodes rescan/ SBP-2 reconnect phases. I learned the hard way
-> that an shost (or sdev if you will) *must not be blocked* when an shost
-> (or sdev) is to be removed.
+Hmm.  That means it never used to work with sym2 -- has anyone ever
+tested the MSA30 with an LSI 1010/896 card?  I appreciate it's an U320
+device, so that's probably not a common configuration.
 
-True. The FC transport explicitly performs an unblock prior to the remove
-call. However, the remove is then deadlocking on the scan_mutext vs the
-pending request queue (still trying to find out why it's really stuck).
+I can take the code out that prevents us talking to the bus; it's pretty
+much a one-liner:
 
-> IOW before a transport may remove an sdev or shost, it has to unblock it
-> and it also has to make sure that all commands that were enqueued before
-> the blocking are being completed.
+-        if (sdev->id == np->myaddr) {
+-                sym_xpt_done2(np, cmd, DID_NO_CONNECT);
+-                return 0;
+-        }
 
-True. The FC transport explicitly performs an unblock prior to the remove
-call. What I'm seeing would align with "not" making sure the prior queued
-commands are completed before it removes.
+but I'd like this change tested, if you wouldn't mind.  After the
+midlayer's fixed, of course ;-)
 
- > But isn't it rather a responsibility
-> of the SCSI core to get a LU's or target's state transitions right?
-
-Agreed. The real issue is - define the window for prior queued commands.
-You may flush all that are there right now, but that may immediately
-requeue a retry, etc - which means you have to start all over.
-
- > When
-> an sdev is "blocked" and the transport tells the core to transition it
-> to "to be removed", then the core should know that the sdev's LU cannot
-> be reached anymore and act accordingly.
-
-I would assume - that's what we'll eventually get to, with the mutex
-being the first onion layer to get pulled.
-
--- james s
+> This used to work, I'm pretty sure.  Could do 
+> "echo scsi add-single-device 0 0 7 0 > /proc/scsi/scsi" and 
+> the processor device would show up.  Now it doesn't.
+> 
+> -- steve
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
