@@ -1,66 +1,80 @@
-From: "Greg Freemyer" <greg.freemyer@gmail.com>
-Subject: Tape issues w 2.6.14-4
-Date: Wed, 12 Apr 2006 18:06:32 -0400
-Message-ID: <87f94c370604121506i4088faa9n57d2a67b2b389ea3@mail.gmail.com>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [PATCH 1/1] megaraid_{mm,mbox}: fix a bug in reset handler
+Date: Wed, 12 Apr 2006 22:00:11 -0700
+Message-ID: <20060412220011.2ddd6f63.akpm@osdl.org>
+References: <890BF3111FB9484E9526987D912B261901BCC2@NAMAIL3.ad.lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from uproxy.gmail.com ([66.249.92.171]:42123 "EHLO uproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932338AbWDLWGd convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Apr 2006 18:06:33 -0400
-Received: by uproxy.gmail.com with SMTP id m2so949373uge
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Apr 2006 15:06:32 -0700 (PDT)
-Content-Disposition: inline
+Received: from smtp.osdl.org ([65.172.181.4]:19383 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S964784AbWDMFAb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 13 Apr 2006 01:00:31 -0400
+In-Reply-To: <890BF3111FB9484E9526987D912B261901BCC2@NAMAIL3.ad.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
+Cc: Seokmann.Ju@engenio.com, James.Bottomley@SteelEye.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-I have an LTO-1 drive that I have been making backups on for about 3 years.
+"Ju, Seokmann" <Seokmann.Ju@lsil.com> wrote:
+>
+> This patch has fix for a bug in the 'megaraid_reset_handler()'.
+> 
+>  When abort failed, the driver gets reset handleer called. In the reset
+>  handler, driver calls 'scsi_done()' callback for same SCSI command
+>  packet (struct scsi_cmnd) multiple times if there are multiple SCSI
+>  command packet in the pend_list. More over, if there are entry in the
+>  pend_lsit with IOCTL packet associated, the driver returns it to wrong
+>  free_list so that, in turn, the driver could end up with 'NULL pointer
+>  dereference..' during I/O command building with incorrect resource.
+> 
+>  Also, the patch contains several minor/cosmetic changes besides this.
+>
+> ..
+>
+> @@ -2655,32 +2655,48 @@
+>  	// Also, reset all the commands currently owned by the driver
+>  	spin_lock_irqsave(PENDING_LIST_LOCK(adapter), flags);
+>  	list_for_each_entry_safe(scb, tmp, &adapter->pend_list, list) {
+> -
+>  		list_del_init(&scb->list);	// from pending list
+>  
+> -		con_log(CL_ANN, (KERN_WARNING
+> -			"megaraid: %ld:%d[%d:%d], reset from pending list\n",
+> -				scp->serial_number, scb->sno,
+> -				scb->dev_channel, scb->dev_target));
+> +		if (scb->sno >= MBOX_MAX_SCSI_CMDS) {
+> +			con_log(CL_ANN, (KERN_WARNING 
+> +			"megaraid: IOCTL packet with %d[%d:%d] being reset\n",
+> +			scb->sno, scb->dev_channel, scb->dev_target));
+>  
+> -		scp->result = (DID_RESET << 16);
+> -		scp->scsi_done(scp);
+> +			scb->status = -EFAULT;
 
-I was trying to read in some older tapes today and something funny is
-going on. (2.6.14-4 vanilla kernel).
+What is the significance of -EFAULT here?  Seems inappropriate?
 
-If a take a recently written tape and do a simple dd I get a nice
-stream of non-repeating data.
+> @@ -2918,12 +2933,12 @@
+>  	wmb();
+>  	WRINDOOR(raid_dev, raid_dev->mbox_dma | 0x1);
+>  
+> -	for (i = 0; i < 0xFFFFF; i++) {
+> +	for (i = 0; i < 0xFFFFFF; i++) {
+>  		if (mbox->numstatus != 0xFF) break;
+>  		rmb();
+>  	}
 
-If I take an older tape  I get the same data repeating over and over.
+Oh my.  That's an awfully long interrupts-off spin.  1.7e7 operations with
+an NMI watchdog timeout of five seconds - I'm surprised it doesn't trigger.
 
-I tried 4 tapes, 2 of which were tar backups made on this machine and
-are labeled 256KB blocks.  The other 2 are NTbackup backups made on
-different hardware/OS.  I don't know what blocksize NTbackup uses.
+Is that reading from a PCI register there?   Or main memory?
 
-At first I thought it was the data on the media, but now I'm not so
-sure.  When I change the dd blocksize I change the amount of data
-being repeated.
+I'm somewhat surprised that the compiler never "optimises" this into a
+lockup, actually.  That's what `volatile' is for.
 
-It appears the first block of data from a dd perspective is just
-repeated forever.
+Is it not possible to do this with an interrupt?
 
-ie.
-dd bs=10k  gives 1 10k block repeated over and over
-dd bs=32k  gives 1 32k block repeated over and over
-dd bs=256k gives 1 256k block repeated over and over
-dd bs=512k gives 1 512k block repeated over and over
-
-OTOH only the first few kb of the above blocks look valid anyway.  The
-rest of the repeating block appears to be full of nulls so I'm not
-really getting more data by extending the block size.
-
-Does anyone have any idea what is going on?
-
-Could this be a kernel issue?  I hope so because I don't want to lose
-all those old tapes.
-
-Greg
---
-Greg Freemyer
-The Norcross Group
-Forensics for the 21st Century
+A `cpu_relax()' in that loop would help cool things down a bit.
 
 
---
-Greg Freemyer
-The Norcross Group
-Forensics for the 21st Century
