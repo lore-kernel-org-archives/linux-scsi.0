@@ -1,22 +1,47 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: HBA self selection
-Date: Thu, 13 Apr 2006 09:24:19 -0600
-Message-ID: <20060413152419.GD24104@parisc-linux.org>
-References: <5CCF5F0F2514664CBE20FD24BCE17614044BF8@cceexc17.americas.cpqcorp.net>
+From: "Cameron, Steve" <Steve.Cameron@hp.com>
+Subject: RE: HBA self selection
+Date: Thu, 13 Apr 2006 11:13:32 -0500
+Message-ID: <5CCF5F0F2514664CBE20FD24BCE17614044BF9@cceexc17.americas.cpqcorp.net>
+References: <5CCF5F0F2514664CBE20FD24BCE17614044BF8@cceexc17.americas.cpqcorp.net> <20060413152419.GD24104@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:41091 "EHLO
-	palinux.external.hp.com") by vger.kernel.org with ESMTP
-	id S1750814AbWDMPYV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Apr 2006 11:24:21 -0400
-Content-Disposition: inline
-In-Reply-To: <5CCF5F0F2514664CBE20FD24BCE17614044BF8@cceexc17.americas.cpqcorp.net>
+Received: from ccerelbas02.cce.hp.com ([161.114.21.105]:30896 "EHLO
+	ccerelbas02.cce.hp.com") by vger.kernel.org with ESMTP
+	id S1751031AbWDMQNx convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Apr 2006 12:13:53 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Cameron, Steve" <Steve.Cameron@hp.com>
+To: Matthew Wilcox <matthew@wil.cx>
 Cc: linux-scsi@vger.kernel.org
 
+
+When you say it never used to work with sym2, you mean
+what?  Didn't work at all, or just the prcoessor device at id 7?
+
+I think that most people using an MSA30 don't 
+particularly care if they can't talk to the processor devices on
+that box, and are unaware of its existence.  They can still access 
+the disks just fine. (the MSA30 is a scsi JBOD, essentially.)
+Pretty much only HP's SNMP storage agents try to talk
+to that processor device, I think, so unless you're running them,
+you won't notice or care, so long as the disks are working.
+
+I think we originally saw the problem with an LSI card,
+but I forget exactly which one, it used the mptlinux driver,
+I think.  
+
+-- steve
+
+-----Original Message-----
+From: Matthew Wilcox [mailto:matthew@wil.cx]
+Sent: Thu 4/13/2006 10:24 AM
+To: Cameron, Steve
+Cc: linux-scsi@vger.kernel.org
+Subject: Re: HBA self selection
+ 
 On Thu, Apr 13, 2006 at 09:58:50AM -0500, Cameron, Steve wrote:
 > There exist some target devices which depend on the adapter being
 > able to do self selection.  The HP MSA30 presents a processor device
@@ -53,3 +78,4 @@ midlayer's fixed, of course ;-)
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
