@@ -1,63 +1,57 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [Comments Needed] scan vs remove_target deadlock
-Date: Fri, 14 Apr 2006 21:16:08 +0200
-Message-ID: <443FF4F8.6010402@s5r6.in-berlin.de>
-References: <1144693508.3820.33.camel@localhost.localdomain> <443B6E90.4020705@s5r6.in-berlin.de> <443E6C60.3050501@emulex.com>
+From: "Randy.Dunlap" <rdunlap@xenotime.net>
+Subject: Re: section mismatches (scsi e.g.)
+Date: Fri, 14 Apr 2006 12:25:20 -0700
+Message-ID: <20060414122520.d1d1a46e.rdunlap@xenotime.net>
+References: <20060414092911.71f25ac1.rdunlap@xenotime.net>
+	<20060414165210.GA4053@mars.ravnborg.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:1159 "EHLO
-	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
-	id S1751423AbWDNTQ2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Apr 2006 15:16:28 -0400
-In-Reply-To: <443E6C60.3050501@emulex.com>
+Received: from xenotime.net ([66.160.160.81]:4314 "HELO xenotime.net")
+	by vger.kernel.org with SMTP id S1751423AbWDNTWz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Apr 2006 15:22:55 -0400
+Received: from midway.site ([71.111.157.99]) by xenotime.net for <linux-scsi@vger.kernel.org>; Fri, 14 Apr 2006 12:22:52 -0700
+In-Reply-To: <20060414165210.GA4053@mars.ravnborg.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
+To: Sam Ravnborg <sam@ravnborg.org>
 Cc: linux-scsi@vger.kernel.org
 
-James Smart wrote:
-(I wrote)
-...
->> before a transport may remove an sdev or shost, it has to unblock it
->> and it also has to make sure that all commands that were enqueued before
->> the blocking are being completed.
-> 
-> True. The FC transport explicitly performs an unblock prior to the remove
-> call. What I'm seeing would align with "not" making sure the prior queued
-> commands are completed before it removes.
-> 
->> But isn't it rather a responsibility
->> of the SCSI core to get a LU's or target's state transitions right?
-> 
-> Agreed. The real issue is - define the window for prior queued commands.
-> You may flush all that are there right now, but that may immediately
-> requeue a retry, etc - which means you have to start all over.
+On Fri, 14 Apr 2006 18:52:10 +0200 Sam Ravnborg wrote:
 
-The retry problem is of course also to be solved in the SCSI core and/or 
-above, i.e. in the protocol driver (and perhaps in userspace apps doing 
-sg_io, although this is not very relevant to this discussion).
+> On Fri, Apr 14, 2006 at 09:29:11AM -0700, Randy.Dunlap wrote:
+> > Hi Sam,
+> > 
+> > I was looking at these warnings (on 2.6.17-rc1-git8):
+> > 
+[snip]
 
-For example, sr_mod seems to issue and retry commands to LUs which are 
-even in "offline" state.
+> Darren Jenkins already pointed this pattern out but somehow I lost
+> the patch (not applied).
+> It is here:
 
->> When
->> an sdev is "blocked" and the transport tells the core to transition it
->> to "to be removed", then the core should know that the sdev's LU cannot
->> be reached anymore and act accordingly.
-> 
-> I would assume - that's what we'll eventually get to, with the mutex
-> being the first onion layer to get pulled.
+OK, I applied the patch.  Now please consider these (that I doubt):
 
-The deadlocks which sbp2<->scsi plagued in the past did not seem 
-scan_mutex related. But I will stress-test this again to see if a same 
-or similar situation as you described can be provoked with sbp2. Maybe 
-it is completely impossible because /a/ sbp2 (currently) has only one LU 
-beneath each Scsi_Host and /b/ sdev removal will never be started before 
-the scanning finished, due to how the IEEE 1394 subsystem (currently) 
-adds and removes units.
--- 
-Stefan Richter
--=====-=-==- -=-- -===-
-http://arcgraph.de/sr/
+WARNING: drivers/scsi/sd_mod.o - Section mismatch: reference to .exit.text: from .rodata after '' (at offset 0x0)
+WARNING: drivers/scsi/sd_mod.o - Section mismatch: reference to .exit.text: from .rodata after '' (at offset 0x8)
+WARNING: drivers/scsi/sd_mod.o - Section mismatch: reference to .exit.text: from .rodata after '' (at offset 0x10)
+WARNING: drivers/scsi/sd_mod.o - Section mismatch: reference to .exit.text: from .rodata after '' (at offset 0x18)
+WARNING: drivers/scsi/sd_mod.o - Section mismatch: reference to .exit.text: from .rodata after '' (at offset 0x20)
+WARNING: drivers/scsi/sd_mod.o - Section mismatch: reference to .exit.text: from .rodata after '' (at offset 0x28)
+WARNING: drivers/scsi/sd_mod.o - Section mismatch: reference to .exit.text: from .rodata after '' (at offset 0x30)
+WARNING: drivers/scsi/sd_mod.o - Section mismatch: reference to .exit.text: from .rodata after '' (at offset 0x38)
+WARNING: drivers/scsi/sd_mod.o - Section mismatch: reference to .exit.text: from .rodata after '' (at offset 0x40)
+WARNING: drivers/scsi/sd_mod.o - Section mismatch: reference to .exit.text: from .rodata after '' (at offset 0x48)
+WARNING: drivers/scsi/sd_mod.o - Section mismatch: reference to .exit.text: from .rodata after '' (at offset 0x50)
+WARNING: drivers/scsi/sd_mod.o - Section mismatch: reference to .exit.text: from .rodata after '' (at offset 0x58)
+WARNING: drivers/scsi/sd_mod.o - Section mismatch: reference to .exit.text: from .rodata after '' (at offset 0x60)
+WARNING: drivers/scsi/sd_mod.o - Section mismatch: reference to .exit.text: from .rodata after '' (at offset 0x68)
+WARNING: drivers/scsi/sd_mod.o - Section mismatch: reference to .exit.text: from .rodata after '' (at offset 0x70)
+WARNING: drivers/scsi/sd_mod.o - Section mismatch: reference to .exit.text: from .rodata after '' (at offset 0x78)
+
+Any ideas?
+
+---
+~Randy
