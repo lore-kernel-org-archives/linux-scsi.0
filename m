@@ -1,29 +1,33 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [Comments Needed] scan vs remove_target deadlock
-Date: Fri, 14 Apr 2006 06:19:22 -0400
-Message-ID: <443F772A.3080302@emulex.com>
-References: <1144693508.3820.33.camel@localhost.localdomain> <443B2A79.4020600@cs.wisc.edu> <443E6ADC.8080206@emulex.com> <443F23D7.9090000@cs.wisc.edu>
-Reply-To: James.Smart@Emulex.Com
+From: laertes@alemail.com
+Subject: Lolita is my name
+Date: Fri, 14 Apr 2006 11:41:53 -0700
+Message-ID: <001001c65ff3$65ef1826$6f18b0b8@alemail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:29605 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S965134AbWDNKTg
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Apr 2006 06:19:36 -0400
-In-Reply-To: <443F23D7.9090000@cs.wisc.edu>
+Received: from [211.227.42.115] ([211.227.42.115]:41482 "EHLO alacarta.com")
+	by vger.kernel.org with ESMTP id S1751068AbWDNLrL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Apr 2006 07:47:11 -0400
+Received: from alemail.com (alemail-com-bk.mr.outblaze.com [208.36.123.75])
+	by alacarta.com with esmtp
+	id 8B5DA0876E for <linux-scsi@vger.kernel.org>; Fri, 14 Apr 2006 11:41:53 -0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: linux-scsi@vger.kernel.org
+To: Linux <linux-scsi@vger.kernel.org>
 
+Dear Sir!
+Brand new Small models of  pics sets!
 
-> Actually, maybe, I should not have brought this up as it could just be
-> more of a workaround of the core problem. For FC in fc_user_scan() do
-> you need some sort of lock around the rport loop?
+pics galleries
 
-Yes, I had noticed this as well. However, I don't think this is influencing
-the deadlock.
+http://lvxc6543gfdk.com/
 
--- james s
+Incredible galleries of 
+tempting Lolitas playing secret games:
+
+* free samples
+* regular updates
+* full confidentiality
+
