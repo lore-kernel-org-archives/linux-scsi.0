@@ -1,53 +1,35 @@
-From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: Re: [PATCH 2/3] - mpt fusion -
-Date: Thu, 13 Apr 2006 20:14:41 -0600
-Message-ID: <002c01c65f69$319745c0$201015ac@ericmoore>
-References: <664A4EBB07F29743873A87CF62C26D70080B51@NAMAIL4.ad.lsil.com> <20060414010405.GB23580@infradead.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [Comments Needed] scan vs remove_target deadlock
+Date: Thu, 13 Apr 2006 23:23:51 -0500
+Message-ID: <443F23D7.9090000@cs.wisc.edu>
+References: <1144693508.3820.33.camel@localhost.localdomain> <443B2A79.4020600@cs.wisc.edu> <443E6ADC.8080206@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=original
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:51953 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S965073AbWDNCOj (ORCPT
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:55000 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S1751110AbWDNEX7 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Apr 2006 22:14:39 -0400
+	Fri, 14 Apr 2006 00:23:59 -0400
+In-Reply-To: <443E6ADC.8080206@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
+To: James.Smart@Emulex.Com
+Cc: linux-scsi@vger.kernel.org
 
-On Thursday, April 13, 2006 7:04 PM, Christoph Hellwig wrote:
-
->> 
->> I'll explain the problem.
->> The sas drivers have a rphy to rphy relationship.  An rphy
->> created on a hba phy points to the expander phy.  Then the expander
->> phy creates a rphy pointing back to the same hba rphy. The expander
->> phy which contains the rphy pointing back to the hba phy, contains
->> the attributes device_type = SAS_END_DEVICE, and target_port_protocals =
->> 0.
->> Hence the recent change in sas_rphy_add() make it drop down to
->> scsi_scan_target, whereas before there was sepecial handling to 
->> prevent this case from happening.  With this change, the mptsas slave
->> entry 
->> points are called to enumerate the rphy that points back to the hba phy.
->> The target id in our data structures is the same as a real target device
->> on another phy.  Thus we end up mapping the same target to two different
->> rphys.
->> To fix this, I added a check in mptsas_slave_alloc to make sure the
->> requested rphy is mapped to a true end device.
+James Smart wrote:
+>> Do we
+>> need the scan mutex to change the device state? I mean if a scan has
+>> the mutex lock, and the transport class decides to remove the device
+>> it tries to grab the scan_mutex by calling scsi_remove_device, but if
+>> we moved the state change invocation before the scan_mutex is taken in
+>> scsi_remove_device then, I assume eventually the device should get
+>> unplugged, the prep or request_fn will see the new state and fail the
+>> request.
 > 
-> This needs to be fixed in the transport class again.
-> 
+> This may be what's needed. I don't understand all of this path yet, so I
+> can only speculate (and likely w/ error). Thus, the questions.
 
-Christoph can you help me on this, please?
-The original sas_rphy_add() function from three weeks back works for mptsas.
-I'm not sure why that change was made, and whether reverting back to its orginal code
-would break the other sas driver.  
-
-Eric
-
-
+Actually, maybe, I should not have brought this up as it could just be
+more of a workaround of the core problem. For FC in fc_user_scan() do
+you need some sort of lock around the rport loop?
