@@ -1,37 +1,38 @@
-From: Sam Ravnborg <sam@ravnborg.org>
-Subject: Re: section mismatches (scsi e.g.)
-Date: Fri, 14 Apr 2006 18:53:36 +0200
-Message-ID: <20060414165336.GB4053@mars.ravnborg.org>
-References: <20060414092911.71f25ac1.rdunlap@xenotime.net> <1145033415.3520.36.camel@mulgrave.il.steeleye.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [Comments Needed] scan vs remove_target deadlock
+Date: Fri, 14 Apr 2006 12:48:10 -0500
+Message-ID: <443FE05A.8090501@cs.wisc.edu>
+References: <1144693508.3820.33.camel@localhost.localdomain> <443B2A79.4020600@cs.wisc.edu> <443E6ADC.8080206@emulex.com> <443F23D7.9090000@cs.wisc.edu> <443F772A.3080302@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pasmtp.tele.dk ([193.162.159.95]:59400 "EHLO pasmtp.tele.dk")
-	by vger.kernel.org with ESMTP id S1751284AbWDNQxy (ORCPT
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:42459 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S1751333AbWDNRsT (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Apr 2006 12:53:54 -0400
-Content-Disposition: inline
-In-Reply-To: <1145033415.3520.36.camel@mulgrave.il.steeleye.com>
+	Fri, 14 Apr 2006 13:48:19 -0400
+In-Reply-To: <443F772A.3080302@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: "Randy.Dunlap" <rdunlap@xenotime.net>, scsi <linux-scsi@vger.kernel.org>
+To: James.Smart@Emulex.Com
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, Apr 14, 2006 at 11:50:15AM -0500, James Bottomley wrote:
-> On Fri, 2006-04-14 at 09:29 -0700, Randy.Dunlap wrote:
-> > WARNING: drivers/scsi/3w-9xxx.o - Section mismatch: reference to .init.data: from .data between 'twa_driver' (at offset 0x18) and 'twa_error_table'
-> > WARNING: drivers/scsi/3w-xxxx.o - Section mismatch: reference to .init.data: from .data between 'tw_driver' (at offset 0x18) and 'tw_sense_table'
-> > WARNING: drivers/scsi/gdth.o - Section mismatch: reference to .init.text:gdth_detect from .data between 'driver_template' (at offset 0x270) and 'async_cache_tab'
-> > 
-> > I either don't see a problem or I'm having trouble reading/decoding
-> > the warning messages.  Could you look at these 3 sometime?
+James Smart wrote:
 > 
-> These seem to have been turning up all over the tree.  The only common
-> feature seems to be that if you re-run the build, they don't show up
-> again.
+>> Actually, maybe, I should not have brought this up as it could just be
+>> more of a workaround of the core problem. For FC in fc_user_scan() do
+>> you need some sort of lock around the rport loop?
+> 
+> Yes, I had noticed this as well. However, I don't think this is influencing
+> the deadlock.
+> 
 
-I really hope this is not true. The reporting ought to be conistent.
-If you can give me something reproduceable then I will try to hunt it
-down.
-
-	Sam
+iscsi needed a lock too. And so we ended up just adding a semaphore
+around the addition and deletion and scanning of sessions. We also do
+some weird things in that we initiate some tasks from userspace
+(scanning and shutting down devices, transport shutdown, etc), but the
+locking issues are similar and by doing some of the things in userspace
+iscsi is just trying to work around some of the issues. I was just
+thinking maybe your original thought about a more invasive locking
+change may be needed instead of the workaround I was suggesting earlier
+in the thread.
