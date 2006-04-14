@@ -1,42 +1,39 @@
-From: boutcher@cs.umn.edu (Dave C Boutcher)
-Subject: Re: [PATCH] ibmvscsi: convert the ibmvscsi driver to use
- include/scsi/srp.h
-Date: Thu, 13 Apr 2006 19:24:36 -0500
-Message-ID: <17470.60356.84136.133609@hound.rchland.ibm.com>
-References: <20060326035714H.tomof@acm.org>
-	<adaek0qfieb.fsf@cisco.com>
-	<20060326101910L.fujita.tomonori@lab.ntt.co.jp>
-	<20060407191016C.fujita.tomonori@lab.ntt.co.jp>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/3] - mpt fusion - panic in mptsas_slave_configure
+Date: Fri, 14 Apr 2006 02:02:53 +0100
+Message-ID: <20060414010253.GA23580@infradead.org>
+References: <664A4EBB07F29743873A87CF62C26D70080B50@NAMAIL4.ad.lsil.com> <1144967295.3474.68.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.cs.umn.edu ([128.101.35.202]:13976 "EHLO mail.cs.umn.edu")
-	by vger.kernel.org with ESMTP id S965033AbWDNAZF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Apr 2006 20:25:05 -0400
-In-Reply-To: <20060407191016C.fujita.tomonori@lab.ntt.co.jp>
+Received: from pentafluge.infradead.org ([213.146.154.40]:51083 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S965039AbWDNBDQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 13 Apr 2006 21:03:16 -0400
+Content-Disposition: inline
+In-Reply-To: <1144967295.3474.68.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: rdreier@cisco.com, boutcher@cs.umn.edu, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: "Moore, Eric" <Eric.Moore@lsil.com>, linux-scsi@vger.kernel.org
 
-On Fri, 07 Apr 2006 19:10:16 +0900, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> said:
+On Thu, Apr 13, 2006 at 05:28:14PM -0500, James Bottomley wrote:
+> On Thu, 2006-04-13 at 16:08 -0600, Moore, Eric wrote:
+> > This issue was created in due to recent scsi_transport_sas change,
+> > when sas_read_port_mode_page was added into the mptsas drivers
+> > slave_config entry point.    
+> > 
+> > This new API expects that all sdev's to be assocated to an rphy, however
+> > that is not the case for logical volumes, as they are created using
+> > scsi_add_device, instead of sas_rphy_add().
 > 
-> From: FUJITA Tomonori <tomof@acm.org>
-> Subject: Re: [PATCH] ibmvscsi: convert the ibmvscsi driver to use include/scsi/srp.h
-> Date: Sun, 26 Mar 2006 10:19:10 +0900
-> 
->> > It seems like you can completely delete drivers/scsi/ibmvscsi/srp.h as
->> > part of this patch, right?
->> 
->> Yes. We can get rid of it.
-> 
-> This can go into scsi-misc.
-> 
-> ibmvscsi: remove drivers/scsi/ibmvscsi/srp.h
-> 
-> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Acked-by: Dave Boutcher <sleddog@us.ibm.com>
+> Erm, there's something else wrong here, then.  The sas transport class
+> shouldn't be attaching to the raid volumes (only the raid components)
+> since a RAID volume is not a SAS device.  I think when this came up ages
+> ago, I said the SAS class should do a deny_binding() callback like the
+> SPI transport class does for the mptfusion driver ... 
 
-Dave Boutcher
+mptsas_slave_configure isn't anything sas transport class specificy, it's
+the ->slave_configure method in the host template for all fusion SAS
+controllers.  Independent of possibly needing a ->deny_binding this is the
+right thing to do here.
