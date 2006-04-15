@@ -1,99 +1,46 @@
-From: Andre Hedrick <andre@linux-ide.org>
-Subject: Re: [PATCH 1/1] megaraid_{mm,mbox}: fix a bug in reset handler
-Date: Sat, 15 Apr 2006 00:10:04 -0700 (PDT)
-Message-ID: <Pine.LNX.4.10.10604150007520.4450-100000@master.linux-ide.org>
-References: <20060412220011.2ddd6f63.akpm@osdl.org>
+From: Pls.fax.instead.of.e-mail@zeus1.kernel.org
+Subject: To make various molded parts for you(Small Q'ty OK)(cmb+wlw)
+Date: Sat, 15 Apr 2006 08:57:20 +0000 (UTC)
+Message-ID: <200604150855.k3F8soQk008120@zeus1.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;boundary= "----=_NextPart_000_00EC_CBCC5360.F690B528"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from astound-64-85-224-252.ca.astound.net ([64.85.224.252]:15365
-	"EHLO master.linux-ide.org") by vger.kernel.org with ESMTP
-	id S1750718AbWDOHM4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 15 Apr 2006 03:12:56 -0400
-In-Reply-To: <20060412220011.2ddd6f63.akpm@osdl.org>
+Received: from zeus1.kernel.org ([204.152.191.4]:48615 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S1751584AbWDOI4i (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 15 Apr 2006 04:56:38 -0400
+Received: from dtk ([218.210.168.90])
+	by zeus1.kernel.org (8.13.1/8.13.1) with ESMTP id k3F8soQk008120
+	for <linux-scsi@vger.kernel.org>; Sat, 15 Apr 2006 08:55:46 GMT
+Date: Fri, 14 Apr 06 21:43:46 Taipei Standard Time
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: "Ju, Seokmann" <Seokmann.Ju@lsil.com>, Seokmann.Ju@engenio.com, James.Bottomley@SteelEye.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
+------=_NextPart_000_00EC_CBCC5360.F690B528
+Content-Type: text/plain; charset= "US-ASCII"
+Content-Transfer-Encoding: base64
 
-Andrew,
-
-This is real, and is a known bug which is 100% reproducable (sp).
-There are other harry issues too, but this is as much as I can say.
-
-cpu_relax() will not work, already tried some time ago.
-
-
-Andre Hedrick
-LAD Storage Consulting Group
-
-On Wed, 12 Apr 2006, Andrew Morton wrote:
-
-> "Ju, Seokmann" <Seokmann.Ju@lsil.com> wrote:
-> >
-> > This patch has fix for a bug in the 'megaraid_reset_handler()'.
-> > 
-> >  When abort failed, the driver gets reset handleer called. In the reset
-> >  handler, driver calls 'scsi_done()' callback for same SCSI command
-> >  packet (struct scsi_cmnd) multiple times if there are multiple SCSI
-> >  command packet in the pend_list. More over, if there are entry in the
-> >  pend_lsit with IOCTL packet associated, the driver returns it to wrong
-> >  free_list so that, in turn, the driver could end up with 'NULL pointer
-> >  dereference..' during I/O command building with incorrect resource.
-> > 
-> >  Also, the patch contains several minor/cosmetic changes besides this.
-> >
-> > ..
-> >
-> > @@ -2655,32 +2655,48 @@
-> >  	// Also, reset all the commands currently owned by the driver
-> >  	spin_lock_irqsave(PENDING_LIST_LOCK(adapter), flags);
-> >  	list_for_each_entry_safe(scb, tmp, &adapter->pend_list, list) {
-> > -
-> >  		list_del_init(&scb->list);	// from pending list
-> >  
-> > -		con_log(CL_ANN, (KERN_WARNING
-> > -			"megaraid: %ld:%d[%d:%d], reset from pending list\n",
-> > -				scp->serial_number, scb->sno,
-> > -				scb->dev_channel, scb->dev_target));
-> > +		if (scb->sno >= MBOX_MAX_SCSI_CMDS) {
-> > +			con_log(CL_ANN, (KERN_WARNING 
-> > +			"megaraid: IOCTL packet with %d[%d:%d] being reset\n",
-> > +			scb->sno, scb->dev_channel, scb->dev_target));
-> >  
-> > -		scp->result = (DID_RESET << 16);
-> > -		scp->scsi_done(scp);
-> > +			scb->status = -EFAULT;
-> 
-> What is the significance of -EFAULT here?  Seems inappropriate?
-> 
-> > @@ -2918,12 +2933,12 @@
-> >  	wmb();
-> >  	WRINDOOR(raid_dev, raid_dev->mbox_dma | 0x1);
-> >  
-> > -	for (i = 0; i < 0xFFFFF; i++) {
-> > +	for (i = 0; i < 0xFFFFFF; i++) {
-> >  		if (mbox->numstatus != 0xFF) break;
-> >  		rmb();
-> >  	}
-> 
-> Oh my.  That's an awfully long interrupts-off spin.  1.7e7 operations with
-> an NMI watchdog timeout of five seconds - I'm surprised it doesn't trigger.
-> 
-> Is that reading from a PCI register there?   Or main memory?
-> 
-> I'm somewhat surprised that the compiler never "optimises" this into a
-> lockup, actually.  That's what `volatile' is for.
-> 
-> Is it not possible to do this with an interrupt?
-> 
-> A `cpu_relax()' in that loop would help cool things down a bit.
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
+RGVhciBTaXIvTWFkYW0sDQoNCldlIGxlYXJudCB5b3VyIGUtbWFpbCBhZGQuZnJvbSBpbnRl
+cm5ldC4NCiANCkZJUlNUIE9GIEFMTCxQTEVBU0UgS0lORExZIE5PVEUgVEhJUyBFLU1BSUwg
+SVMgU0VOVCBCWQ0KT1VSICJBRFZFUlRJU0lORyBDT01QQU5ZIiBBTkQgVEhFIEUtTUFJTCBB
+RERSRVNTIElTDQpOT1QgIlJFQUwiKFZJUlRVQUwpLFRIRVJFRk9SRSxQTEVBU0UgQ09OVEFD
+VCBVUw0KVklBICJGQVgiICBPUiAiUE9TVCIuRE9OJ1QgRElSRUNUTFkgUkVTUE9OU0UgVklB
+ICIgRS1NQUlMIg0KQkVDQVVTRSBXRSBDQU4nVCBSRUNFSVZFIFlPVVIgRS1NQUlMLg0KSUYg
+WU9VIFdBTlQgVE8gQkUgUkVNT1ZFRCBGUk9NIFRIRSBMSVNULFBMRUFTRSBBRFZJU0UNCllP
+VVIgRS1NQUlMIEFERFJFU1MgJiBUSElTIEUtTUFJTCBDT05URU5UIE9SIFNVQkpFQ1QgVklB
+ICJGQVgiIE9SICJQT1NUIi4NCg0KV2UgYXJlIHRoZSBwcm9mZXNzaW9uYWwgbW9sZCAmIGRp
+ZSBtYWtlciBhbmQgbW9sZGVkIHBhcnRzKG1vbGRpbmdzKSBzdXBwbGllcg0KZm9yIHRoZSBm
+b2xsb3dpbmcgcGFydHM6DQoNCiogQ2FzdGluZ3Moc2FuZCBjYXN0aW5ncykgZm9yIGlyb24g
+JiBhbHVtaW5pdW0NCiogKFByZXNzdXJlKSBEaWUgQ2FzdGluZyBmb3IgWmluYyBvciBhbHVt
+aW5pdW0NCiogUGxhc3RpYyBJbmplY3Rpb24gbW9sZGluZ3MuDQoqIFNoZWV0IE1ldGFsIFN0
+YW1waW5ncy4NCiogT2lsIFNlYWxzICYgb3RoZXIgUnViYmVyIE1vbGRpbmdzKGJvdGggZm9y
+IGluZHVzdHJpYWwgb3IgZ2VuZXJhbCB1c2VzKS4NCiogVmFyaW91cyBNYWduZXRzLg0KKiBN
+YWNoaW5pbmdzKE1hY2hpbmVkIHBhcnRzKQ0KKiBBc3NlbWJsZWQgdW5pdChjb21wb25lbnRz
+IGFzc2VtYmxlZCkNCg0KU01BTEwgT1JERVIgSVMgT0ssUExFQVNFIENPTlRBQ1QgVVMgVE8g
+U0FWRSBZT1VSIENPU1QhDQoNClRoYW5rIHlvdQ0KDQpCZXN0IFJlZ2FyZHMNClJvYmVydCBM
+aW4NClAuTy5Cb3ggMS0xMjAgWXVuZy1IbyxUYWlwZWksVGFpd2FuDQpGYXg6ODg2LTQtODc4
+MzMxMCAoODg2IGlzIHRoZSBjb3VudHJ5IGNvZGUpDQoNCg0KDQpQLk8uQm94IDEtMTIwIFl1
+bmctSG8sVGFpcGVpIEhzaWVuLFRhaXdhbg0KRmF4OiA4ODYtNC04ODc1ODY2ICg4ODYgaXMg
+dGhlIGNvdW50cnkgY29kZSkgICAg
+------=_NextPart_000_00EC_CBCC5360.F690B528--
