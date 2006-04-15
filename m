@@ -1,37 +1,35 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: [PATCH 7/7] lpfc 8.1.5 : Change version number to 8.1.5
-Date: Sat, 15 Apr 2006 11:53:24 -0400
-Message-ID: <1145116404.3795.6.camel@localhost.localdomain>
-Reply-To: James.Smart@Emulex.Com
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 4/7] lpfc 8.1.5 : Fix cleanup code in the lpfc_pci_probe_one() error code path
+Date: Sat, 15 Apr 2006 17:40:26 +0100
+Message-ID: <20060415164026.GA2939@infradead.org>
+References: <1145116391.3795.3.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:42163 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S1030280AbWDOPx1
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 15 Apr 2006 11:53:27 -0400
-Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
-	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id k3FFrPrf011050
-	for <linux-scsi@vger.kernel.org>; Sat, 15 Apr 2006 08:53:26 -0700 (PDT)
+Received: from pentafluge.infradead.org ([213.146.154.40]:29668 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1030287AbWDOQkr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 15 Apr 2006 12:40:47 -0400
+Content-Disposition: inline
+In-Reply-To: <1145116391.3795.3.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Smart <James.Smart@Emulex.Com>
+Cc: linux-scsi@vger.kernel.org
 
-Change version number to 8.1.5
+On Sat, Apr 15, 2006 at 11:53:10AM -0400, James Smart wrote:
+> @@ -1725,9 +1730,14 @@ static void __devexit
+>  lpfc_pci_remove_one(struct pci_dev *pdev)
+>  {
+>  	struct Scsi_Host   *host = pci_get_drvdata(pdev);
+> -	struct lpfc_hba    *phba = (struct lpfc_hba *)host->hostdata;
+> +	struct lpfc_hba    *phba;
+>  	unsigned long iflag;
+>  
+> +	if (host == NULL)
+> +		return;
+> +
+> +	phba = (struct lpfc_hba *)host->hostdata;
 
-Signed-off-by: James Smart <James.Smart@emulex.com>
-
---- a/drivers/scsi/lpfc/lpfc_version.h
-+++ b/drivers/scsi/lpfc/lpfc_version.h
-@@ -18,7 +18,7 @@
-  * included with this package.                                     *
-  *******************************************************************/
- 
--#define LPFC_DRIVER_VERSION "8.1.4"
-+#define LPFC_DRIVER_VERSION "8.1.5"
- 
- #define LPFC_DRIVER_NAME "lpfc"
- 
-
-
+If this ever happen there's something really badly wrong in lpfc_pci_probe_one,
+so please don't put this check in.
