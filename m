@@ -1,51 +1,42 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] dc395x: dynamically map scatter-gather for PIO (take 2)
-Date: Fri, 14 Apr 2006 17:33:27 -0500
-Message-ID: <1145054008.3520.69.camel@mulgrave.il.steeleye.com>
-References: <Pine.LNX.4.60.0604022004520.17410@poirot.grange>
+From: "Moore, Eric" <Eric.Moore@lsil.com>
+Subject: Re: [PATCH 2/3] - mpt fusion -
+Date: Fri, 14 Apr 2006 18:45:24 -0600
+Message-ID: <005d01c66025$e2cbeeb0$231015ac@ericmoore>
+References: <664A4EBB07F29743873A87CF62C26D70080B51@NAMAIL4.ad.lsil.com> <20060414010405.GB23580@infradead.org> <002c01c65f69$319745c0$201015ac@ericmoore> <1145026079.3520.12.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=original
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:23773 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S965183AbWDNWde (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Apr 2006 18:33:34 -0400
-In-Reply-To: <Pine.LNX.4.60.0604022004520.17410@poirot.grange>
+Received: from mail0.lsil.com ([147.145.40.20]:19686 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1751471AbWDOApW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Apr 2006 20:45:22 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: linux-scsi@vger.kernel.org, Sebastian Frei <Sebastian@schnapsleichen.de>, Fredrik Roubert <roubert@df.lth.se>, lenehan@twibble.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
-On Sun, 2006-04-02 at 21:57 +0200, Guennadi Liakhovetski wrote:
-> +                               if (fc == 0x40 &&
-> (srb->dcb->sync_period & WIDE_SYNC)) {
-> +                                       /* Read the last byte ... */
-> +                                       if (srb->total_xfer_length >
-> 0) {
-> +                                               u8 byte =
-> DC395x_read8(acb, TRM_S1040_SCSI_FIFO);
-> +
-> +                                               *virt++ = byte;
-> +                                               srb->total_xfer_length--;
-> +                                               if
-> (debug_enabled(DBG_PIO))
-> +                                                       printk(" %
-> 02x", byte);
-> +                                       }
-> +
-> +                                       DC395x_write8(acb,
-> TRM_S1040_SCSI_CONFIG2, 0);
-> +                               }
-> +
-> +                               if (srb->cmd->use_sg) {
-> +                                       scsi_kunmap_atomic_sg(base);
+On Friday, April 14, 2006 8:47 AM, James Bottomley wrote:
 
-I put this in, but just a warning here.  You're modifying a kmapped
-page, so you need to call flush_kernel_dcache_page() before unmapping it
-otherwise user space may not see the change on VIPT or VIVT CPU (the
-data may be in a non congruent cache line).
 
-James
+> On Thu, 2006-04-13 at 20:14 -0600, Moore, Eric wrote:
+>> Christoph can you help me on this, please?
+>> The original sas_rphy_add() function from three weeks back works for mptsas.
+>> I'm not sure why that change was made, and whether reverting back to its orginal code
+>> would break the other sas driver.  
+> 
+> Does this fix the problem?
+> 
 
+I think this will fix it.  I appears to do what the previous sas_rphy_add() had done, so I'm happy.
+However, today was a holiday, and I went skiing one more time. So I hadn't tested it out yet.   
+I noticed that you've submitted this with your scsi bug fix's to Linus, so thanks.
+
+Can we get that [PATCH 3/3] fusion patch in for rc2?    I had fix some bugs in the handling 
+reporting of raid components when power is turned off and on to the devices.   These are critical fix's.
+
+Eric
 
