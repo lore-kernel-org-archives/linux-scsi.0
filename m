@@ -1,46 +1,55 @@
-From: Pls.fax.instead.of.e-mail@zeus1.kernel.org
-Subject: To make various molded parts for you(Small Q'ty OK)(cmb+wlw)
-Date: Sat, 15 Apr 2006 08:57:20 +0000 (UTC)
-Message-ID: <200604150855.k3F8soQk008120@zeus1.kernel.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH 1/1] megaraid_{mm,mbox}: fix a bug in reset handler
+Date: Sat, 15 Apr 2006 09:00:23 -0500
+Message-ID: <1145109623.3573.7.camel@mulgrave.il.steeleye.com>
+References: <890BF3111FB9484E9526987D912B261901BCC2@NAMAIL3.ad.lsil.com>
+	 <20060412220011.2ddd6f63.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;boundary= "----=_NextPart_000_00EC_CBCC5360.F690B528"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:48615 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S1751584AbWDOI4i (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 15 Apr 2006 04:56:38 -0400
-Received: from dtk ([218.210.168.90])
-	by zeus1.kernel.org (8.13.1/8.13.1) with ESMTP id k3F8soQk008120
-	for <linux-scsi@vger.kernel.org>; Sat, 15 Apr 2006 08:55:46 GMT
-Date: Fri, 14 Apr 06 21:43:46 Taipei Standard Time
+Received: from stat9.steeleye.com ([209.192.50.41]:30612 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1030250AbWDOOAm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 15 Apr 2006 10:00:42 -0400
+In-Reply-To: <20060412220011.2ddd6f63.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: "Ju, Seokmann" <Seokmann.Ju@lsil.com>, Seokmann.Ju@engenio.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-------=_NextPart_000_00EC_CBCC5360.F690B528
-Content-Type: text/plain; charset= "US-ASCII"
-Content-Transfer-Encoding: base64
+On Wed, 2006-04-12 at 22:00 -0700, Andrew Morton wrote:
+> Oh my.  That's an awfully long interrupts-off spin.  1.7e7 operations with
+> an NMI watchdog timeout of five seconds - I'm surprised it doesn't trigger.
+> 
+> Is that reading from a PCI register there?   Or main memory?
 
-RGVhciBTaXIvTWFkYW0sDQoNCldlIGxlYXJudCB5b3VyIGUtbWFpbCBhZGQuZnJvbSBpbnRl
-cm5ldC4NCiANCkZJUlNUIE9GIEFMTCxQTEVBU0UgS0lORExZIE5PVEUgVEhJUyBFLU1BSUwg
-SVMgU0VOVCBCWQ0KT1VSICJBRFZFUlRJU0lORyBDT01QQU5ZIiBBTkQgVEhFIEUtTUFJTCBB
-RERSRVNTIElTDQpOT1QgIlJFQUwiKFZJUlRVQUwpLFRIRVJFRk9SRSxQTEVBU0UgQ09OVEFD
-VCBVUw0KVklBICJGQVgiICBPUiAiUE9TVCIuRE9OJ1QgRElSRUNUTFkgUkVTUE9OU0UgVklB
-ICIgRS1NQUlMIg0KQkVDQVVTRSBXRSBDQU4nVCBSRUNFSVZFIFlPVVIgRS1NQUlMLg0KSUYg
-WU9VIFdBTlQgVE8gQkUgUkVNT1ZFRCBGUk9NIFRIRSBMSVNULFBMRUFTRSBBRFZJU0UNCllP
-VVIgRS1NQUlMIEFERFJFU1MgJiBUSElTIEUtTUFJTCBDT05URU5UIE9SIFNVQkpFQ1QgVklB
-ICJGQVgiIE9SICJQT1NUIi4NCg0KV2UgYXJlIHRoZSBwcm9mZXNzaW9uYWwgbW9sZCAmIGRp
-ZSBtYWtlciBhbmQgbW9sZGVkIHBhcnRzKG1vbGRpbmdzKSBzdXBwbGllcg0KZm9yIHRoZSBm
-b2xsb3dpbmcgcGFydHM6DQoNCiogQ2FzdGluZ3Moc2FuZCBjYXN0aW5ncykgZm9yIGlyb24g
-JiBhbHVtaW5pdW0NCiogKFByZXNzdXJlKSBEaWUgQ2FzdGluZyBmb3IgWmluYyBvciBhbHVt
-aW5pdW0NCiogUGxhc3RpYyBJbmplY3Rpb24gbW9sZGluZ3MuDQoqIFNoZWV0IE1ldGFsIFN0
-YW1waW5ncy4NCiogT2lsIFNlYWxzICYgb3RoZXIgUnViYmVyIE1vbGRpbmdzKGJvdGggZm9y
-IGluZHVzdHJpYWwgb3IgZ2VuZXJhbCB1c2VzKS4NCiogVmFyaW91cyBNYWduZXRzLg0KKiBN
-YWNoaW5pbmdzKE1hY2hpbmVkIHBhcnRzKQ0KKiBBc3NlbWJsZWQgdW5pdChjb21wb25lbnRz
-IGFzc2VtYmxlZCkNCg0KU01BTEwgT1JERVIgSVMgT0ssUExFQVNFIENPTlRBQ1QgVVMgVE8g
-U0FWRSBZT1VSIENPU1QhDQoNClRoYW5rIHlvdQ0KDQpCZXN0IFJlZ2FyZHMNClJvYmVydCBM
-aW4NClAuTy5Cb3ggMS0xMjAgWXVuZy1IbyxUYWlwZWksVGFpd2FuDQpGYXg6ODg2LTQtODc4
-MzMxMCAoODg2IGlzIHRoZSBjb3VudHJ5IGNvZGUpDQoNCg0KDQpQLk8uQm94IDEtMTIwIFl1
-bmctSG8sVGFpcGVpIEhzaWVuLFRhaXdhbg0KRmF4OiA4ODYtNC04ODc1ODY2ICg4ODYgaXMg
-dGhlIGNvdW50cnkgY29kZSkgICAg
-------=_NextPart_000_00EC_CBCC5360.F690B528--
+It's a "mailbox" region, which is a piece of main memory shared between
+the driver and the card (allocated using dma_alloc_coherent).
+
+> I'm somewhat surprised that the compiler never "optimises" this into a
+> lockup, actually.  That's what `volatile' is for.
+
+The rmb(); below ensures the compiler can't optimise.  However, I do
+agree; tagging the mailbox as volatile would show the compiler better
+what the intent is.
+
+> Is it not possible to do this with an interrupt?
+
+I'd guess not.  A lot of these types of driver have what's called a
+doorbell/mailbox interface which means that as long as there's a command
+slot you get access to the device (or wait for an interrupt to tell you
+one's free) but you have to post the command to the device, so you wait
+at the mailbox to see that it's taken (usually because the device has to
+assign things like tracking numbers or indexes).  The intent is for
+there to be a fairly instantaneous response however firmware doesn't
+always see it that way ...
+
+> A `cpu_relax()' in that loop would help cool things down a bit.
+
+Actually, I think a simple udelay(25) might help in a lot of these
+loops.
+
+James
+
+
