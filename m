@@ -1,112 +1,152 @@
-From: =?ISO-8859-1?Q?Roger_H=E5kansson?= <hson@ludd.luth.se>
-Subject: lpfc target renumbering problem
-Date: Sun, 16 Apr 2006 04:06:11 +0200
-Message-ID: <4441A693.7060004@ludd.luth.se>
+From: Arne Redlich <redlich@xiranet.com>
+Subject: [PATCH] srp.h: avoid padding of structs
+Date: Sun, 16 Apr 2006 21:34:43 +0200
+Message-ID: <20060416193443.GA1806@cheetah>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mother.ludd.ltu.se ([130.240.16.3]:34489 "EHLO
-	mother.ludd.ltu.se") by vger.kernel.org with ESMTP id S932193AbWDPCGQ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 15 Apr 2006 22:06:16 -0400
-Received: from [192.168.1.104] (root@localhost [127.0.0.1])
-	by mother.ludd.ltu.se (8.13.6+Sun/8.12.10) with ESMTP id k3G267mG018084
-	for <linux-scsi@vger.kernel.org>; Sun, 16 Apr 2006 04:06:08 +0200 (MEST)
+Received: from 162.237.80.212.versanetonline.de ([212.80.237.162]:20934 "EHLO
+	cheetah.dd.xiranet.com") by vger.kernel.org with ESMTP
+	id S1750743AbWDPTe4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 16 Apr 2006 15:34:56 -0400
+Received: from cheetah.dd.xiranet.com (redlich@localhost [127.0.0.1])
+	by cheetah.dd.xiranet.com (8.13.4/8.13.4/Debian-1) with ESMTP id k3GJYiWm001841
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Sun, 16 Apr 2006 21:34:44 +0200
+Received: (from redlich@localhost)
+	by cheetah.dd.xiranet.com (8.13.4/8.13.4/Submit) id k3GJYhuJ001840
+	for linux-scsi@vger.kernel.org; Sun, 16 Apr 2006 21:34:43 +0200
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-=46irst some background info:
-I have a Infortrend A16F-R2211 diskarray connected to two independent
-Qlogic 5200 to which I also have connected a couple of machines with tw=
-o
-Exmulex LP10000-M2 HBA's, all running CentOS 4.3.
+Several structs in srp.h are padded by the compiler on some architectures, causing problems e.g. in ib_srp:
 
-The Infortrend box have four SFP-ports which is connected to two
-redundant controllers which each have two "channels".
-In the Infortrend-box you can configure logical drives (and optionally
-logical volumes) which then can be mapped to LUNs on each channel.
-Each logical drive can only be assigned to one controller, but in case
-of a controller failure, the other controller will take over the logica=
-l
-drives from the failed controller.
-A LUN mapped to a logical drive will have the same WWNN on both
-channels, but different WWPN.
+				i386	x86_64	(SRP spec)
 
+sizeof(struct indirect_buf)	20	24	(20)
+sizeof(struct srp_login_rsp)	52	56	(52)
+sizeof(struct srp_rsp)		36	40	(36)
 
+The patch below addresses this issue by packing these three structs, as well as the remaining ones.
 
-Now to my problem:
-I was hoping to be able to set up a fault tolerant solution using
-multipathing so that if a controller, fabric, fiber-cable or HBA fails,
-a filesystem is still accessible on the hosts using device-mapper-multi=
-path.
-This works ok if a fabric, fibre-cable or HBA fails, but when a
-controller fails all paths become "stale".
-This seems to be due to the fact that the lpfc-driver maps the LUNs to
-different target numbers after a controller failure, but only if the
-disks are "active" (i.e mounted)
+Signed-off-by: Arne Redlich <arne.redlich@xiranet.com>
 
-If I do 'cat /proc/scsi/lpfc/*' when everything is ok, it looks like th=
-is:
-lpfc0t00 DID 010025 WWPN 21:00:00:d0:23:0b:01:91 WWNN
-20:00:00:d0:23:0b:01:91
-lpfc1t00 DID 020025 WWPN 22:00:00:d0:23:0b:01:91 WWNN
-20:00:00:d0:23:0b:01:91
-At the same time, the output from 'multipath -ll' is:
-mpath1 (3600d0230000000000b01910b4d313400)
-[size=3D97 GB][features=3D0][hwhandler=3D0]
-\_ round-robin 0 [prio=3D0][active]
- \_ 1:0:0:0 sde 8:16  [active][ready]
- \_ 2:0:0:0 sdf 8:32  [active][ready]
-
-
-If I manually fail the controller, while having the filesystem mounted
-the output from 'cat /proc/scsi/lpfc/*' looks like this:
-lpfc0t01 DID 010025 WWPN 21:00:00:d0:23:0b:01:91 WWNN
-20:00:00:d0:23:0b:01:91
-lpfc1t01 DID 020025 WWPN 22:00:00:d0:23:0b:01:91 WWNN
-20:00:00:d0:23:0b:01:91
-Due to this both paths fails and the filsystem is inaccessible
-
-I've tried:
-echo 1 >/sys/class/scsi_device/1:0:0:0/device/delete
-echo 1 >/sys/class/scsi_device/2:0:0:0/device/delete
-echo "- - -" > /sys/class/scsi_host/host1/scan
-echo "- - -" > /sys/class/scsi_host/host2/scan
-
-But this will render me new sdb/sdc at 1:0:1:0/2:0:1:0 which isn't what
-I need.
-
-When I "fix" the failed controller, and the diskarray returns to
-two-controller-mode, 'cat /proc/scsi/lpfc/*' looks like this again:
-lpfc0t00 DID 010025 WWPN 21:00:00:d0:23:0b:01:91 WWNN
-20:00:00:d0:23:0b:01:91
-lpfc1t00 DID 020025 WWPN 22:00:00:d0:23:0b:01:91 WWNN
-20:00:00:d0:23:0b:01:91
-
-
-If I don't have the filsystem mounted (and not mapped via dm-multipath
-either), but accessible as sdb/sdc, and then manually fail the
-controller, the targetnumber isn't renumbered.
-
-
-
-Now my question:
-Is there anything I can do to "fix" this, or do I have to "accept" that
-this hardware/software-combination can't do what I want?
-
-
-I'm running CentOS 4.3 on x86_64, running kernel 2.6.9-34.ELsmp which
-has a lpfc-driver identifying itself as "Emulex LightPulse Fibre Channe=
-l
-SCSI driver 8.0.16.18"
-
---
-Roger H=E5kansson
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff -prauN a/include/scsi/srp.h b/include/scsi/srp.h
+--- a/include/scsi/srp.h	2006-04-16 19:12:27.347924280 +0200
++++ b/include/scsi/srp.h	2006-04-16 19:16:47.789331168 +0200
+@@ -91,18 +91,13 @@ struct srp_direct_buf {
+ 	__be64	va;
+ 	__be32	key;
+ 	__be32  len;
+-};
++} __attribute__((packed));
+ 
+-/*
+- * We need the packed attribute because the SRP spec puts the list of
+- * descriptors at an offset of 20, which is not aligned to the size
+- * of struct srp_direct_buf.
+- */
+ struct srp_indirect_buf {
+ 	struct srp_direct_buf	table_desc;
+ 	__be32			len;
+ 	struct srp_direct_buf	desc_list[0] __attribute__((packed));
+-};
++} __attribute__((packed));
+ 
+ enum {
+ 	SRP_MULTICHAN_SINGLE = 0,
+@@ -120,7 +115,7 @@ struct srp_login_req {
+ 	u8	reserved3[5];
+ 	u8	initiator_port_id[16];
+ 	u8	target_port_id[16];
+-};
++} __attribute__((packed));
+ 
+ struct srp_login_rsp {
+ 	u8	opcode;
+@@ -132,7 +127,7 @@ struct srp_login_rsp {
+ 	__be16	buf_fmt;
+ 	u8	rsp_flags;
+ 	u8	reserved2[25];
+-};
++} __attribute__((packed));
+ 
+ struct srp_login_rej {
+ 	u8	opcode;
+@@ -142,13 +137,13 @@ struct srp_login_rej {
+ 	u8	reserved2[8];
+ 	__be16	buf_fmt;
+ 	u8	reserved3[6];
+-};
++} __attribute__((packed));
+ 
+ struct srp_i_logout {
+ 	u8	opcode;
+ 	u8	reserved[7];
+ 	u64	tag;
+-};
++} __attribute__((packed));
+ 
+ struct srp_t_logout {
+ 	u8	opcode;
+@@ -156,30 +151,22 @@ struct srp_t_logout {
+ 	u8	reserved[2];
+ 	__be32	reason;
+ 	u64	tag;
+-};
++} __attribute__((packed));
+ 
+-/*
+- * We need the packed attribute because the SRP spec only aligns the
+- * 8-byte LUN field to 4 bytes.
+- */
+ struct srp_tsk_mgmt {
+ 	u8	opcode;
+ 	u8	sol_not;
+ 	u8	reserved1[6];
+ 	u64	tag;
+ 	u8	reserved2[4];
+-	__be64	lun __attribute__((packed));
++	__be64	lun;
+ 	u8	reserved3[2];
+ 	u8	tsk_mgmt_func;
+ 	u8	reserved4;
+ 	u64	task_tag;
+ 	u8	reserved5[8];
+-};
++} __attribute__((packed));
+ 
+-/*
+- * We need the packed attribute because the SRP spec only aligns the
+- * 8-byte LUN field to 4 bytes.
+- */
+ struct srp_cmd {
+ 	u8	opcode;
+ 	u8	sol_not;
+@@ -189,14 +176,14 @@ struct srp_cmd {
+ 	u8	data_in_desc_cnt;
+ 	u64	tag;
+ 	u8	reserved2[4];
+-	__be64	lun __attribute__((packed));
++	__be64	lun;
+ 	u8	reserved3;
+ 	u8	task_attr;
+ 	u8	reserved4;
+ 	u8	add_cdb_len;
+ 	u8	cdb[16];
+ 	u8	add_data[0];
+-};
++} __attribute__((packed));
+ 
+ enum {
+ 	SRP_RSP_FLAG_RSPVALID = 1 << 0,
+@@ -221,6 +208,6 @@ struct srp_rsp {
+ 	__be32	sense_data_len;
+ 	__be32	resp_data_len;
+ 	u8	data[0];
+-};
++} __attribute__((packed));
+ 
+ #endif /* SCSI_SRP_H */
