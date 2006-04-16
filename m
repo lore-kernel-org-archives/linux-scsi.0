@@ -1,49 +1,49 @@
-From: =?ISO-8859-1?Q?Roger_H=E5kansson?= <hson@ludd.luth.se>
-Subject: Re: lpfc target renumbering problem
-Date: Sun, 16 Apr 2006 23:35:53 +0200
-Message-ID: <4442B8B9.3040103@ludd.luth.se>
-References: <4441A693.7060004@ludd.luth.se>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [PATCH 4/7] lpfc 8.1.5 : Fix cleanup code in the lpfc_pci_probe_one()
+ error code path
+Date: Sun, 16 Apr 2006 19:03:29 -0400
+Message-ID: <4442CD41.6010106@emulex.com>
+References: <1145116391.3795.3.camel@localhost.localdomain> <20060415164026.GA2939@infradead.org>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mother.ludd.ltu.se ([130.240.16.3]:59046 "EHLO
-	mother.ludd.ltu.se") by vger.kernel.org with ESMTP id S1750810AbWDPVgB convert rfc822-to-8bit
+Received: from emulex.emulex.com ([138.239.112.1]:33999 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S1750829AbWDPXD5
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 16 Apr 2006 17:36:01 -0400
-Received: from [192.168.150.100] (root@localhost [127.0.0.1])
-	by mother.ludd.ltu.se (8.13.6+Sun/8.12.10) with ESMTP id k3GLZxYM027746
-	for <linux-scsi@vger.kernel.org>; Sun, 16 Apr 2006 23:35:59 +0200 (MEST)
-In-Reply-To: <4441A693.7060004@ludd.luth.se>
+	Sun, 16 Apr 2006 19:03:57 -0400
+In-Reply-To: <20060415164026.GA2939@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org
 
-Roger H=E5kansson wrote:
->=20
-> Now my question:
-> Is there anything I can do to "fix" this, or do I have to "accept" th=
-at
-> this hardware/software-combination can't do what I want?
->=20
+Ok - so what's going on here is that the pci subsystem treated any
+positive (not just zero) return value as success. We returned error codes,
+but not negative error codes. Thus, the pci subsystem was calling our
+remove function even though we returned an error status in our probe
+function.
 
-I've found a "solution" which seems to work, but I'm not sure how to
-implement it.
-If I, before device-mapper-multipath determines the devices to be
-"dead", do "echo 1 > /sys/class/scsi_device/1:0:0:0/device/rescan", bot=
-h
-sdb (which 1:0:0:0 was mapped to at the time of my test) and(!, even
-though its on another HBA) sdc (2:0:0:0) doesn't get marked as dead.
-But how do this in a more automatic fashion?
-I could set up a script which polls /var/log/messages, or write a
-program which opens a pipe and let syslogd write to that pipe, and pars=
-e
-the log in order to watch for SCSI-errors, but none of this seems like
-the right way to do it.
-Anyone got a better solution?
+the updated patch will be posted shortly.
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- james
+
+Christoph Hellwig wrote:
+> On Sat, Apr 15, 2006 at 11:53:10AM -0400, James Smart wrote:
+>> @@ -1725,9 +1730,14 @@ static void __devexit
+>>  lpfc_pci_remove_one(struct pci_dev *pdev)
+>>  {
+>>  	struct Scsi_Host   *host = pci_get_drvdata(pdev);
+>> -	struct lpfc_hba    *phba = (struct lpfc_hba *)host->hostdata;
+>> +	struct lpfc_hba    *phba;
+>>  	unsigned long iflag;
+>>  
+>> +	if (host == NULL)
+>> +		return;
+>> +
+>> +	phba = (struct lpfc_hba *)host->hostdata;
+> 
+> If this ever happen there's something really badly wrong in lpfc_pci_probe_one,
+> so please don't put this check in.
+> 
