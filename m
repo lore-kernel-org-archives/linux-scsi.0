@@ -1,32 +1,25 @@
 From: "Mun Hamlet" <hamletmun@hotmail.com>
-Subject: Re: [SCSI] correct transport class abstraction to work outside SCSI
-Date: Mon, 17 Apr 2006 11:33:38 -0300
-Message-ID: <BAY112-F3701EC7A4597119EA266AEA0C70@phx.gbl>
-References: <1145038797.3520.50.camel@mulgrave.il.steeleye.com>
+Subject: [Bug 5659] Adaptec 29160 Ultra160 SCSI doesn't work with 2.6.14 or +
+Date: Mon, 17 Apr 2006 11:47:27 -0300
+Message-ID: <BAY112-F188649A1A87780776413D9A0C70@phx.gbl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ks_c_5601-1987; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bay112-f37.bay112.hotmail.com ([64.4.26.47]:35732 "EHLO
-	hotmail.com") by vger.kernel.org with ESMTP id S1751023AbWDQOdn
+Received: from bay112-f18.bay112.hotmail.com ([64.4.26.28]:19449 "EHLO
+	hotmail.com") by vger.kernel.org with ESMTP id S1751043AbWDQOra
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 17 Apr 2006 10:33:43 -0400
-In-Reply-To: <1145038797.3520.50.camel@mulgrave.il.steeleye.com>
+	Mon, 17 Apr 2006 10:47:30 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, bugme-daemon@bugzilla.kernel.org
 
-Thank you for your reply.
-
-To verify the git bisecting result, I did
-
-Vanilla kernel 2.6.13
-www.kernel.org/pub/linux/kernel/v2.6/linux-2.6.13.tar.bz2
-Your patch
+After git bisecting... I found this
 http://www.kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff_plain;h=d0a7e574007fd547d72ec693bfa35778623d0738;hp=10c1b88987d618f4f89c10e11e574c76de73b5e7
 
+could be causing the problem.
 
-It does BOOT, but it shows this strange dmesg...
+To verify the result, I applied this patch to vanilla 2.6.13
+At least it boots, but this is the output I obtained:
 
 25f085>] pci_register_driver+0x7e/0x94
  [<c02e0706>] ahc_linux_pci_init+0xf/0x1b
@@ -719,7 +712,8 @@ Attached scsi generic sg3 at scsi0, channel 0, id 5, lun 0,  type 0
 Attached scsi generic sg4 at scsi1, channel 0, id 0, lun 0,  type 0
 mice: PS/2 mouse device common for all mice
 Advanced Linux Sound Architecture Driver Version 1.0.9b (Thu Jul 28 
-12:20:13 2005 UTC).
+12:20:13
+2005 UTC).
 ALSA device list:
   No soundcards found.
 NET: Registered protocol family 2
@@ -746,8 +740,5 @@ Device not ready. Make sure there is a disc in the drive.
 PCI: Setting latency timer of device 0000:00:1b.0 to 64
 XFS mounting filesystem sdc1
 Ending clean XFS mount for filesystem: sdc1
-
-http://bugzilla.kernel.org/show_bug.cgi?id=5659
-http://bugs.gentoo.org/show_bug.cgi?id=127991
 
 
