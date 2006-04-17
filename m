@@ -1,37 +1,73 @@
-From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: RE: [RFC] FC Transport : Async Events via netlink interface
-Date: Mon, 17 Apr 2006 16:46:08 -0600
-Message-ID: <664A4EBB07F29743873A87CF62C26D70080E17@NAMAIL4.ad.lsil.com>
+From: Brian King <brking@us.ibm.com>
+Subject: [PATCH 2/2] libata: Use scsi_device max_cmd_len (resend)
+Date: Mon, 17 Apr 2006 17:48:33 -0500
+Message-ID: <44441B41.40206@us.ibm.com>
+References: <200604172240.k3HMes2V010154@d01av01.pok.ibm.com>
+Reply-To: brking@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:4043 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1751360AbWDQWqX convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 17 Apr 2006 18:46:23 -0400
-Content-class: urn:content-classes:message
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/mixed;
+ boundary="------------060009020501020401050307"
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <200604172240.k3HMes2V010154@d01av01.pok.ibm.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Brian King <brking@us.ibm.com>
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: linux-scsi@vger.kernel.org
 
-On Monday, April 17, 2006 2:44 PM, James Smart wrote:  
+This is a multi-part message in MIME format.
+--------------060009020501020401050307
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-> 
-> [netdev folks copied to review the use of the netlink interface]
-> 
-> This patch adds HBAAPI async event support to the FC transport.
-> 
-> Events are pushed to userspace via Netlink. This is per the previous
-> RFC comments given in :
 
-It would be nice to extend this to scsi_transport_sas, and start
-work to addressing sas management, e.g. csmi/sdi. But I did get copied
-on an email from Bob Nixon of Emulex saying something about extending
-the 
-HBA API defined for Fibre Channel/FCP to include consistent management 
-of SAS HBAs as well. Do you know anything about this James?
+--------------060009020501020401050307
+Content-Type: text/x-patch;
+ name="libata_sd_cdb_len.patch"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="libata_sd_cdb_len.patch"
 
-Eric Moore
+ClVzZSB0aGUgbmV3bHkgYWRkZWQgbWF4X2NtZF9sZW4gaW4gdGhlIHNjc2lfZGV2aWNlCnN0
+cnVjdCBpbnN0ZWFkIG9mIHRoZSBmaWVsZCBieSB0aGUgc2FtZSBuYW1lIGluCnRoZSBzY3Np
+X2hvc3Qgc3RydWN0LiBUaGlzIGFsbG93cyBmb3IgYmV0dGVyCmdyYW51bGFyaXR5IG9mIGNv
+bnRyb2wgb2YgdGhlIG1heCBhbGxvd2VkIGNvbW1hbmQKbGVuZ3RoIGFuZCBhbGxvd3MgZm9y
+IFNBUy9TQVRBIGhvc3RzIHRvIGltcG9zZSB0aGVpcgpvd24gaG9zdCByZXN0cmljdGlvbnMg
+b24gbWF4IGNvbW1hbmQgbGVuZ3RoLCBpZiBuZWVkZWQuCkl0IGFsc28gc2ltcGxpZmllcyB1
+c2luZyBsaWJhdGEgZm9yIFNBVEEgZGV2aWNlcyB1bmRlcgpTQVMgSEJBcy4KClNpZ25lZC1v
+ZmYtYnk6IEJyaWFuIEtpbmcgPGJya2luZ0B1cy5pYm0uY29tPgotLS0KCiBsaWJhdGEtZGV2
+LWJqa2luZzEvZHJpdmVycy9zY3NpL2xpYmF0YS1jb3JlLmMgfCAgIDEwICsrLS0tLS0tLS0K
+IGxpYmF0YS1kZXYtYmpraW5nMS9kcml2ZXJzL3Njc2kvbGliYXRhLXNjc2kuYyB8ICAgIDEg
+KwogMiBmaWxlcyBjaGFuZ2VkLCAzIGluc2VydGlvbnMoKyksIDggZGVsZXRpb25zKC0pCgpk
+aWZmIC1wdU4gZHJpdmVycy9zY3NpL2xpYmF0YS1jb3JlLmN+bGliYXRhX3NkX2NkYl9sZW4g
+ZHJpdmVycy9zY3NpL2xpYmF0YS1jb3JlLmMKLS0tIGxpYmF0YS1kZXYvZHJpdmVycy9zY3Np
+L2xpYmF0YS1jb3JlLmN+bGliYXRhX3NkX2NkYl9sZW4JMjAwNi0wNC0xNyAxNzozMDoyMC4w
+MDAwMDAwMDAgLTA1MDAKKysrIGxpYmF0YS1kZXYtYmpraW5nMS9kcml2ZXJzL3Njc2kvbGli
+YXRhLWNvcmUuYwkyMDA2LTA0LTE3IDE3OjMwOjIwLjAwMDAwMDAwMCAtMDUwMApAQCAtMTIy
+NSw3ICsxMjI1LDcgQEAgc3RhdGljIGludCBhdGFfZGV2X2NvbmZpZ3VyZShzdHJ1Y3QgYXRh
+XwogewogCWNvbnN0IHUxNiAqaWQgPSBkZXYtPmlkOwogCXVuc2lnbmVkIGludCB4ZmVyX21h
+c2s7Ci0JaW50IGksIHJjOworCWludCByYzsKIAogCWlmICghYXRhX2Rldl9lbmFibGVkKGRl
+dikpIHsKIAkJRFBSSU5USygiRU5URVIvRVhJVCAoaG9zdCAldSwgZGV2ICV1KSAtLSBub2Rl
+dlxuIiwKQEAgLTEzMjgsMTIgKzEzMjgsNiBAQCBzdGF0aWMgaW50IGF0YV9kZXZfY29uZmln
+dXJlKHN0cnVjdCBhdGFfCiAJCQkgICAgICAgYXAtPmlkLCBkZXYtPmRldm5vLCBhdGFfbW9k
+ZV9zdHJpbmcoeGZlcl9tYXNrKSk7CiAJfQogCi0JYXAtPmhvc3QtPm1heF9jbWRfbGVuID0g
+MDsKLQlmb3IgKGkgPSAwOyBpIDwgQVRBX01BWF9ERVZJQ0VTOyBpKyspCi0JCWFwLT5ob3N0
+LT5tYXhfY21kX2xlbiA9IG1heF90KHVuc2lnbmVkIGludCwKLQkJCQkJICAgICAgYXAtPmhv
+c3QtPm1heF9jbWRfbGVuLAotCQkJCQkgICAgICBhcC0+ZGV2aWNlW2ldLmNkYl9sZW4pOwot
+CiAJLyogbGltaXQgYnJpZGdlIHRyYW5zZmVycyB0byB1ZG1hNSwgMjAwIHNlY3RvcnMgKi8K
+IAlpZiAoYXRhX2Rldl9rbm9iYmxlKGFwLCBkZXYpKSB7CiAJCWlmIChwcmludF9pbmZvKQpA
+QCAtNDU3Myw3ICs0NTY3LDcgQEAgc3RhdGljIHZvaWQgYXRhX2hvc3RfaW5pdChzdHJ1Y3Qg
+YXRhX3BvcgogCWhvc3QtPm1heF9sdW4gPSAxOwogCWhvc3QtPm1heF9jaGFubmVsID0gMTsK
+IAlob3N0LT51bmlxdWVfaWQgPSBhdGFfdW5pcXVlX2lkKys7Ci0JaG9zdC0+bWF4X2NtZF9s
+ZW4gPSAxMjsKKwlob3N0LT5tYXhfY21kX2xlbiA9IEFUQVBJX0NEQl9MRU47CiAKIAlhcC0+
+ZmxhZ3MgPSBBVEFfRkxBR19ESVNBQkxFRDsKIAlhcC0+aWQgPSBob3N0LT51bmlxdWVfaWQ7
+CmRpZmYgLXB1TiBkcml2ZXJzL3Njc2kvbGliYXRhLXNjc2kuY35saWJhdGFfc2RfY2RiX2xl
+biBkcml2ZXJzL3Njc2kvbGliYXRhLXNjc2kuYwotLS0gbGliYXRhLWRldi9kcml2ZXJzL3Nj
+c2kvbGliYXRhLXNjc2kuY35saWJhdGFfc2RfY2RiX2xlbgkyMDA2LTA0LTE3IDE3OjMwOjIw
+LjAwMDAwMDAwMCAtMDUwMAorKysgbGliYXRhLWRldi1iamtpbmcxL2RyaXZlcnMvc2NzaS9s
+aWJhdGEtc2NzaS5jCTIwMDYtMDQtMTcgMTc6MzA6MjAuMDAwMDAwMDAwIC0wNTAwCkBAIC02
+NzAsNiArNjcwLDcgQEAgc3RhdGljIHZvaWQgYXRhX3Njc2lfZGV2X2NvbmZpZyhzdHJ1Y3Qg
+cwogCQltYXhfc2VjdG9ycyA9IGRldi0+bWF4X3NlY3RvcnM7CiAKIAlibGtfcXVldWVfbWF4
+X3NlY3RvcnMoc2Rldi0+cmVxdWVzdF9xdWV1ZSwgbWF4X3NlY3RvcnMpOworCXNkZXYtPm1h
+eF9jbWRfbGVuID0gZGV2LT5jZGJfbGVuOwogCiAJLyoKIAkgKiBTQVRBIERNQSB0cmFuc2Zl
+cnMgbXVzdCBiZSBtdWx0aXBsZXMgb2YgNCBieXRlLCBzbwpfCg==
+--------------060009020501020401050307--
