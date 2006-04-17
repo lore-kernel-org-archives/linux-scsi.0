@@ -1,73 +1,38 @@
-From: Brian King <brking@us.ibm.com>
-Subject: [PATCH 2/2] libata: Use scsi_device max_cmd_len (resend)
-Date: Mon, 17 Apr 2006 17:48:33 -0500
-Message-ID: <44441B41.40206@us.ibm.com>
-References: <200604172240.k3HMes2V010154@d01av01.pok.ibm.com>
-Reply-To: brking@us.ibm.com
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 2/2] libata: Use scsi_device max_cmd_len (resend)
+Date: Mon, 17 Apr 2006 18:52:45 -0400
+Message-ID: <44441C3D.80906@pobox.com>
+References: <200604172240.k3HMes2V010154@d01av01.pok.ibm.com> <44441B41.40206@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------060009020501020401050307"
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <200604172240.k3HMes2V010154@d01av01.pok.ibm.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Brian King <brking@us.ibm.com>
-Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-
-This is a multi-part message in MIME format.
---------------060009020501020401050307
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:18826 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751356AbWDQWwt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 17 Apr 2006 18:52:49 -0400
+In-Reply-To: <44441B41.40206@us.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
+To: brking@us.ibm.com
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+
+Brian King wrote:
+> @@ -4573,7 +4567,7 @@ static void ata_host_init(struct ata_por
+>  	host->max_lun = 1;
+>  	host->max_channel = 1;
+>  	host->unique_id = ata_unique_id++;
+> -	host->max_cmd_len = 12;
+> +	host->max_cmd_len = ATAPI_CDB_LEN;
+>  
 
 
---------------060009020501020401050307
-Content-Type: text/x-patch;
- name="libata_sd_cdb_len.patch"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="libata_sd_cdb_len.patch"
+Have you audited the code paths to ensure that a CDB of length 15 is 
+_NEVER_ sent, before ata_scsi_dev_config() is called?
 
-ClVzZSB0aGUgbmV3bHkgYWRkZWQgbWF4X2NtZF9sZW4gaW4gdGhlIHNjc2lfZGV2aWNlCnN0
-cnVjdCBpbnN0ZWFkIG9mIHRoZSBmaWVsZCBieSB0aGUgc2FtZSBuYW1lIGluCnRoZSBzY3Np
-X2hvc3Qgc3RydWN0LiBUaGlzIGFsbG93cyBmb3IgYmV0dGVyCmdyYW51bGFyaXR5IG9mIGNv
-bnRyb2wgb2YgdGhlIG1heCBhbGxvd2VkIGNvbW1hbmQKbGVuZ3RoIGFuZCBhbGxvd3MgZm9y
-IFNBUy9TQVRBIGhvc3RzIHRvIGltcG9zZSB0aGVpcgpvd24gaG9zdCByZXN0cmljdGlvbnMg
-b24gbWF4IGNvbW1hbmQgbGVuZ3RoLCBpZiBuZWVkZWQuCkl0IGFsc28gc2ltcGxpZmllcyB1
-c2luZyBsaWJhdGEgZm9yIFNBVEEgZGV2aWNlcyB1bmRlcgpTQVMgSEJBcy4KClNpZ25lZC1v
-ZmYtYnk6IEJyaWFuIEtpbmcgPGJya2luZ0B1cy5pYm0uY29tPgotLS0KCiBsaWJhdGEtZGV2
-LWJqa2luZzEvZHJpdmVycy9zY3NpL2xpYmF0YS1jb3JlLmMgfCAgIDEwICsrLS0tLS0tLS0K
-IGxpYmF0YS1kZXYtYmpraW5nMS9kcml2ZXJzL3Njc2kvbGliYXRhLXNjc2kuYyB8ICAgIDEg
-KwogMiBmaWxlcyBjaGFuZ2VkLCAzIGluc2VydGlvbnMoKyksIDggZGVsZXRpb25zKC0pCgpk
-aWZmIC1wdU4gZHJpdmVycy9zY3NpL2xpYmF0YS1jb3JlLmN+bGliYXRhX3NkX2NkYl9sZW4g
-ZHJpdmVycy9zY3NpL2xpYmF0YS1jb3JlLmMKLS0tIGxpYmF0YS1kZXYvZHJpdmVycy9zY3Np
-L2xpYmF0YS1jb3JlLmN+bGliYXRhX3NkX2NkYl9sZW4JMjAwNi0wNC0xNyAxNzozMDoyMC4w
-MDAwMDAwMDAgLTA1MDAKKysrIGxpYmF0YS1kZXYtYmpraW5nMS9kcml2ZXJzL3Njc2kvbGli
-YXRhLWNvcmUuYwkyMDA2LTA0LTE3IDE3OjMwOjIwLjAwMDAwMDAwMCAtMDUwMApAQCAtMTIy
-NSw3ICsxMjI1LDcgQEAgc3RhdGljIGludCBhdGFfZGV2X2NvbmZpZ3VyZShzdHJ1Y3QgYXRh
-XwogewogCWNvbnN0IHUxNiAqaWQgPSBkZXYtPmlkOwogCXVuc2lnbmVkIGludCB4ZmVyX21h
-c2s7Ci0JaW50IGksIHJjOworCWludCByYzsKIAogCWlmICghYXRhX2Rldl9lbmFibGVkKGRl
-dikpIHsKIAkJRFBSSU5USygiRU5URVIvRVhJVCAoaG9zdCAldSwgZGV2ICV1KSAtLSBub2Rl
-dlxuIiwKQEAgLTEzMjgsMTIgKzEzMjgsNiBAQCBzdGF0aWMgaW50IGF0YV9kZXZfY29uZmln
-dXJlKHN0cnVjdCBhdGFfCiAJCQkgICAgICAgYXAtPmlkLCBkZXYtPmRldm5vLCBhdGFfbW9k
-ZV9zdHJpbmcoeGZlcl9tYXNrKSk7CiAJfQogCi0JYXAtPmhvc3QtPm1heF9jbWRfbGVuID0g
-MDsKLQlmb3IgKGkgPSAwOyBpIDwgQVRBX01BWF9ERVZJQ0VTOyBpKyspCi0JCWFwLT5ob3N0
-LT5tYXhfY21kX2xlbiA9IG1heF90KHVuc2lnbmVkIGludCwKLQkJCQkJICAgICAgYXAtPmhv
-c3QtPm1heF9jbWRfbGVuLAotCQkJCQkgICAgICBhcC0+ZGV2aWNlW2ldLmNkYl9sZW4pOwot
-CiAJLyogbGltaXQgYnJpZGdlIHRyYW5zZmVycyB0byB1ZG1hNSwgMjAwIHNlY3RvcnMgKi8K
-IAlpZiAoYXRhX2Rldl9rbm9iYmxlKGFwLCBkZXYpKSB7CiAJCWlmIChwcmludF9pbmZvKQpA
-QCAtNDU3Myw3ICs0NTY3LDcgQEAgc3RhdGljIHZvaWQgYXRhX2hvc3RfaW5pdChzdHJ1Y3Qg
-YXRhX3BvcgogCWhvc3QtPm1heF9sdW4gPSAxOwogCWhvc3QtPm1heF9jaGFubmVsID0gMTsK
-IAlob3N0LT51bmlxdWVfaWQgPSBhdGFfdW5pcXVlX2lkKys7Ci0JaG9zdC0+bWF4X2NtZF9s
-ZW4gPSAxMjsKKwlob3N0LT5tYXhfY21kX2xlbiA9IEFUQVBJX0NEQl9MRU47CiAKIAlhcC0+
-ZmxhZ3MgPSBBVEFfRkxBR19ESVNBQkxFRDsKIAlhcC0+aWQgPSBob3N0LT51bmlxdWVfaWQ7
-CmRpZmYgLXB1TiBkcml2ZXJzL3Njc2kvbGliYXRhLXNjc2kuY35saWJhdGFfc2RfY2RiX2xl
-biBkcml2ZXJzL3Njc2kvbGliYXRhLXNjc2kuYwotLS0gbGliYXRhLWRldi9kcml2ZXJzL3Nj
-c2kvbGliYXRhLXNjc2kuY35saWJhdGFfc2RfY2RiX2xlbgkyMDA2LTA0LTE3IDE3OjMwOjIw
-LjAwMDAwMDAwMCAtMDUwMAorKysgbGliYXRhLWRldi1iamtpbmcxL2RyaXZlcnMvc2NzaS9s
-aWJhdGEtc2NzaS5jCTIwMDYtMDQtMTcgMTc6MzA6MjAuMDAwMDAwMDAwIC0wNTAwCkBAIC02
-NzAsNiArNjcwLDcgQEAgc3RhdGljIHZvaWQgYXRhX3Njc2lfZGV2X2NvbmZpZyhzdHJ1Y3Qg
-cwogCQltYXhfc2VjdG9ycyA9IGRldi0+bWF4X3NlY3RvcnM7CiAKIAlibGtfcXVldWVfbWF4
-X3NlY3RvcnMoc2Rldi0+cmVxdWVzdF9xdWV1ZSwgbWF4X3NlY3RvcnMpOworCXNkZXYtPm1h
-eF9jbWRfbGVuID0gZGV2LT5jZGJfbGVuOwogCiAJLyoKIAkgKiBTQVRBIERNQSB0cmFuc2Zl
-cnMgbXVzdCBiZSBtdWx0aXBsZXMgb2YgNCBieXRlLCBzbwpfCg==
---------------060009020501020401050307--
+The current code intentionally uses the minimum -- 12 -- and then raises 
+it if both device and host are capable of more.
+
+	Jeff
+
+
