@@ -1,185 +1,159 @@
-From: Andre Hedrick <andre@linux-ide.org>
-Subject: RE: [PATCH 1/1] megaraid_{mm,mbox}: fix a bug in reset handler
-Date: Tue, 18 Apr 2006 09:33:28 -0700 (PDT)
-Message-ID: <Pine.LNX.4.10.10604180925510.19916-100000@master.linux-ide.org>
-References: <890BF3111FB9484E9526987D912B261901BCDA@NAMAIL3.ad.lsil.com>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: lpfc target renumbering problem
+Date: Tue, 18 Apr 2006 12:41:10 -0400
+Message-ID: <444516A6.6020400@emulex.com>
+References: <4441A693.7060004@ludd.luth.se>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from astound-64-85-224-252.ca.astound.net ([64.85.224.252]:26885
-	"EHLO master.linux-ide.org") by vger.kernel.org with ESMTP
-	id S1751031AbWDRQhJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Apr 2006 12:37:09 -0400
-In-Reply-To: <890BF3111FB9484E9526987D912B261901BCDA@NAMAIL3.ad.lsil.com>
+Received: from emulex.emulex.com ([138.239.112.1]:30902 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S1751068AbWDRQlZ
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Apr 2006 12:41:25 -0400
+In-Reply-To: <4441A693.7060004@ludd.luth.se>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
-Cc: "Ju, Seokmann" <Seokmann.Ju@engenio.com>, Andrew Morton <akpm@osdl.org>, James.Bottomley@SteelEye.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: =?ISO-8859-1?Q?Roger_H=E5kansson?= <hson@ludd.luth.se>
+Cc: linux-scsi@vger.kernel.org
 
+Roger,
 
-Seokmann,
+First off, the lastest driver for that release is 8.0.16.26 and can be
+downloaded from our sourceforge site:
+http://sourceforge.net/project/showfiles.php?group_id=103050&package_id=141007
+Based on the kernel revision, I am assuming this is a RHEL4-derived
+kernel, so be sure to compile with "make OS=RHEL".
 
-In the case where the card or the host issues a pci master abort that
-wedges the adapter and marks adapter->hw_error = 1 and then never recovers
-again, where is the code to bring the card back online?  I know first hand
-this is a problem because I am working with the firmware folk to address
-this issue.
+> The Infortrend box have four SFP-ports which is connected to two
+> redundant controllers which each have two "channels".
+> In the Infortrend-box you can configure logical drives (and optionally
+> logical volumes) which then can be mapped to LUNs on each channel.
+> Each logical drive can only be assigned to one controller, but in case
+> of a controller failure, the other controller will take over the logical
+> drives from the failed controller.
+> A LUN mapped to a logical drive will have the same WWNN on both
+> channels, but different WWPN.
 
-Also please explain how changing the number of times one loops from 5 F's
-to 6 F's allows the FW to continue?  I am betting it I take the new driver
-and the firmware posted on LSI's websight it will still crash in the same
-conditions.  Anybody up for lunch paid by the non-winning party?  I have
-not tested it yet but everything I see does not address the fundamental
-issues.
+Please note - you should not be tracking luns by WWNN and WWPN. These are
+target port identifiers, and not lun identifiers. The lun should be
+tracked via a SCSI-level Inquiry VPD page 0x83 or page 0x80. The community
+position is to use udev (and device-mapper on udev) in conjunction with
+scsi_id, etc to identify devices independent of their physical pathing.
 
-Cheers,
+If the target has a different WWNN/WWPN pair, then it is indeed a different
+target and the luns should be seen at a different target id. From a pure
+scsi perspective, there is no guarantee nor relationship that says the
+scsi device at 1:0:0:0 should be the same scsi device as 1:0:1:0. It's up
+to tools that look at SCSI WWN's and/or Serial numbers that provide this
+correlation.
 
-Andre Hedrick
-LAD Storage Consulting Group
+> Now to my problem:
+> I was hoping to be able to set up a fault tolerant solution using
+> multipathing so that if a controller, fabric, fiber-cable or HBA fails,
+> a filesystem is still accessible on the hosts using device-mapper-multipath.
+> This works ok if a fabric, fibre-cable or HBA fails, but when a
+> controller fails all paths become "stale".
+> This seems to be due to the fact that the lpfc-driver maps the LUNs to
+> different target numbers after a controller failure, but only if the
+> disks are "active" (i.e mounted)
 
-On Tue, 18 Apr 2006, Ju, Seokmann wrote:
+Note: The lpfc driver doesn't map luns. We only track targets, which are
+uniquely identified via the WWNN/WWPN pair. Luns are things that just happen
+to be discovered (by the scsi midlayer) as it scans each target.
 
-> Hi,
+The only thing we, the lpfc driver, can screw up is the target mapping. As
+long as the WWNN/WWPN stays the same, the target mapping should stay the same.
+
+The other thing that is important is that you have the proper hardware
+handlers and tools within device-mapper to properly manage a Infortrend
+array.
+
+> If I do 'cat /proc/scsi/lpfc/*' when everything is ok, it looks like this:
+> lpfc0t00 DID 010025 WWPN 21:00:00:d0:23:0b:01:91 WWNN
+> 20:00:00:d0:23:0b:01:91
+> lpfc1t00 DID 020025 WWPN 22:00:00:d0:23:0b:01:91 WWNN
+> 20:00:00:d0:23:0b:01:91
+> At the same time, the output from 'multipath -ll' is:
+> mpath1 (3600d0230000000000b01910b4d313400)
+> [size=97 GB][features=0][hwhandler=0]
+> \_ round-robin 0 [prio=0][active]
+>  \_ 1:0:0:0 sde 8:16  [active][ready]
+>  \_ 2:0:0:0 sdf 8:32  [active][ready]
 > 
-> I've seen the patch (megaraid_mmmbox_fix_a_bug_in_reset_handler.patch) available on 2.6.17-rc1-mm3 under "SCSI warning fix" section.
-> What should I do to remove "warning" tag on the patch.
-> I've attached another patch in previous email that has 'udelay()' in the loop to remove NMI concern, and waiting for confirmation on it. Will this change remove the "warning"?
 > 
-> I'll submit the patch officially by end of today.
+> If I manually fail the controller, while having the filesystem mounted
+> the output from 'cat /proc/scsi/lpfc/*' looks like this:
+> lpfc0t01 DID 010025 WWPN 21:00:00:d0:23:0b:01:91 WWNN
+> 20:00:00:d0:23:0b:01:91
+> lpfc1t01 DID 020025 WWPN 22:00:00:d0:23:0b:01:91 WWNN
+> 20:00:00:d0:23:0b:01:91
+> Due to this both paths fails and the filsystem is inaccessible
+
+So this is confusing...
+Please double-check these values. They are the same WWPN/WWNN's as above.
+You implied above, if the LUN becomes active on another controller or
+channel, the WWPN would minimally change. That didn't occur here.
+Also, assuming the failed-over connection is now via a different switch
+port, it would be very odd to see the same device show up with the same
+DID address as before. Please check that this is not a cut and paste
+error.
+
+If the WWPN/WWNN values are indeed the same, then we have to assume a
+driver error, and I recommend testing the 8.0.16.26 driver.
+
+> I've tried:
+> echo 1 >/sys/class/scsi_device/1:0:0:0/device/delete
+> echo 1 >/sys/class/scsi_device/2:0:0:0/device/delete
+> echo "- - -" > /sys/class/scsi_host/host1/scan
+> echo "- - -" > /sys/class/scsi_host/host2/scan
 > 
-> Any comment would be appreciated.
+> But this will render me new sdb/sdc at 1:0:1:0/2:0:1:0 which isn't what
+> I need.
+
+Ok. but the system behavior is consistent with what it should be.
+
+> When I "fix" the failed controller, and the diskarray returns to
+> two-controller-mode, 'cat /proc/scsi/lpfc/*' looks like this again:
+> lpfc0t00 DID 010025 WWPN 21:00:00:d0:23:0b:01:91 WWNN
+> 20:00:00:d0:23:0b:01:91
+> lpfc1t00 DID 020025 WWPN 22:00:00:d0:23:0b:01:91 WWNN
+> 20:00:00:d0:23:0b:01:91
 > 
-> Thank you,
-> 
-> 
-> > -----Original Message-----
-> > From: Ju, Seokmann 
-> > Sent: Monday, April 17, 2006 9:13 AM
-> > To: 'Andre Hedrick'; Andrew Morton
-> > Cc: James.Bottomley@SteelEye.com; 
-> > linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org
-> > Subject: RE: [PATCH 1/1] megaraid_{mm,mbox}: fix a bug in 
-> > reset handler
-> > 
-> > Hi,
-> > 
-> > Thank you all for comment on the issue.
-> > From the comment, it looks having 'ndelay/udelay' would be 
-> > right way to address the issue.
-> > I've attached a patch for just review purpose.
-> > Once it confirmed, I'll post the patch officially.
-> > 
-> > Thank you,
-> > 
-> > > -----Original Message-----
-> > > From: Andre Hedrick [mailto:andre@linux-ide.org] 
-> > > Sent: Saturday, April 15, 2006 3:10 AM
-> > > To: Andrew Morton
-> > > Cc: Ju, Seokmann; Ju, Seokmann; James.Bottomley@SteelEye.com; 
-> > > linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org
-> > > Subject: Re: [PATCH 1/1] megaraid_{mm,mbox}: fix a bug in 
-> > > reset handler
-> > > 
-> > > 
-> > > Andrew,
-> > > 
-> > > This is real, and is a known bug which is 100% reproducable (sp).
-> > > There are other harry issues too, but this is as much as I can say.
-> > > 
-> > > cpu_relax() will not work, already tried some time ago.
-> > > 
-> > > 
-> > > Andre Hedrick
-> > > LAD Storage Consulting Group
-> > > 
-> > > On Wed, 12 Apr 2006, Andrew Morton wrote:
-> > > 
-> > > > "Ju, Seokmann" <Seokmann.Ju@lsil.com> wrote:
-> > > > >
-> > > > > This patch has fix for a bug in the 'megaraid_reset_handler()'.
-> > > > > 
-> > > > >  When abort failed, the driver gets reset handleer 
-> > > called. In the reset
-> > > > >  handler, driver calls 'scsi_done()' callback for same 
-> > > SCSI command
-> > > > >  packet (struct scsi_cmnd) multiple times if there are 
-> > > multiple SCSI
-> > > > >  command packet in the pend_list. More over, if there are 
-> > > entry in the
-> > > > >  pend_lsit with IOCTL packet associated, the driver 
-> > > returns it to wrong
-> > > > >  free_list so that, in turn, the driver could end up with 
-> > > 'NULL pointer
-> > > > >  dereference..' during I/O command building with 
-> > > incorrect resource.
-> > > > > 
-> > > > >  Also, the patch contains several minor/cosmetic changes 
-> > > besides this.
-> > > > >
-> > > > > ..
-> > > > >
-> > > > > @@ -2655,32 +2655,48 @@
-> > > > >  	// Also, reset all the commands currently owned 
-> > by the driver
-> > > > >  	spin_lock_irqsave(PENDING_LIST_LOCK(adapter), flags);
-> > > > >  	list_for_each_entry_safe(scb, tmp, 
-> > &adapter->pend_list, list) {
-> > > > > -
-> > > > >  		list_del_init(&scb->list);	// from 
-> > pending list
-> > > > >  
-> > > > > -		con_log(CL_ANN, (KERN_WARNING
-> > > > > -			"megaraid: %ld:%d[%d:%d], reset from 
-> > > pending list\n",
-> > > > > -				scp->serial_number, scb->sno,
-> > > > > -				scb->dev_channel, 
-> > scb->dev_target));
-> > > > > +		if (scb->sno >= MBOX_MAX_SCSI_CMDS) {
-> > > > > +			con_log(CL_ANN, (KERN_WARNING 
-> > > > > +			"megaraid: IOCTL packet with %d[%d:%d] 
-> > > being reset\n",
-> > > > > +			scb->sno, scb->dev_channel, 
-> > scb->dev_target));
-> > > > >  
-> > > > > -		scp->result = (DID_RESET << 16);
-> > > > > -		scp->scsi_done(scp);
-> > > > > +			scb->status = -EFAULT;
-> > > > 
-> > > > What is the significance of -EFAULT here?  Seems inappropriate?
-> > > > 
-> > > > > @@ -2918,12 +2933,12 @@
-> > > > >  	wmb();
-> > > > >  	WRINDOOR(raid_dev, raid_dev->mbox_dma | 0x1);
-> > > > >  
-> > > > > -	for (i = 0; i < 0xFFFFF; i++) {
-> > > > > +	for (i = 0; i < 0xFFFFFF; i++) {
-> > > > >  		if (mbox->numstatus != 0xFF) break;
-> > > > >  		rmb();
-> > > > >  	}
-> > > > 
-> > > > Oh my.  That's an awfully long interrupts-off spin.  1.7e7 
-> > > operations with
-> > > > an NMI watchdog timeout of five seconds - I'm surprised it 
-> > > doesn't trigger.
-> > > > 
-> > > > Is that reading from a PCI register there?   Or main memory?
-> > > > 
-> > > > I'm somewhat surprised that the compiler never "optimises" 
-> > > this into a
-> > > > lockup, actually.  That's what `volatile' is for.
-> > > > 
-> > > > Is it not possible to do this with an interrupt?
-> > > > 
-> > > > A `cpu_relax()' in that loop would help cool things down a bit.
-> > > > 
-> > > > 
-> > > > -
-> > > > To unsubscribe from this list: send the line "unsubscribe 
-> > > linux-scsi" in
-> > > > the body of a message to majordomo@vger.kernel.org
-> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > > > 
-> > > 
-> > > 
-> 
+> If I don't have the filsystem mounted (and not mapped via dm-multipath
+> either), but accessible as sdb/sdc, and then manually fail the
+> controller, the targetnumber isn't renumbered.
+
+Ok - this is very odd. The driver is the one managing the target id
+assignments, and it doesn't know whether a filesystem is active or not,
+so it shouldn't matter.
+
+ >> Now my question:
+ >> Is there anything I can do to "fix" this, or do I have to "accept" that
+ >> this hardware/software-combination can't do what I want?
+ >>
+ >
+ > I've found a "solution" which seems to work, but I'm not sure how to
+ > implement it.
+ > If I, before device-mapper-multipath determines the devices to be
+ > "dead", do "echo 1 > /sys/class/scsi_device/1:0:0:0/device/rescan", both
+ > sdb (which 1:0:0:0 was mapped to at the time of my test) and(!, even
+ > though its on another HBA) sdc (2:0:0:0) doesn't get marked as dead.
+ > But how do this in a more automatic fashion?
+ > I could set up a script which polls /var/log/messages, or write a
+ > program which opens a pipe and let syslogd write to that pipe, and parse
+ > the log in order to watch for SCSI-errors, but none of this seems like
+ > the right way to do it.
+ > Anyone got a better solution?
+
+I don't have any good answers, and recommend that you first follow the
+recommendations above. After that, we can take this off-list and do more
+detailed logging to see what's going on.
+
+If it is a cut-n-paste error above, then I believe that if you convert to
+using dm based on udev names, then you will likely get the success you
+desire.
+
+-- james s
 
