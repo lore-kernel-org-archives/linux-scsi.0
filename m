@@ -1,62 +1,185 @@
-From: Roland Dreier <rdreier@cisco.com>
-Subject: Re: [PATCH] srp.h: avoid padding of structs
-Date: Tue, 18 Apr 2006 09:33:04 -0700
-Message-ID: <adairp6j133.fsf@cisco.com>
-References: <20060416193443.GA1806@cheetah> <20060417091752.GA2947@cheetah>
-	<adavet6j2cs.fsf_-_@cisco.com>
-	<1145377662.8447.2.camel@confield.dd.xiranet.com>
+From: Andre Hedrick <andre@linux-ide.org>
+Subject: RE: [PATCH 1/1] megaraid_{mm,mbox}: fix a bug in reset handler
+Date: Tue, 18 Apr 2006 09:33:28 -0700 (PDT)
+Message-ID: <Pine.LNX.4.10.10604180925510.19916-100000@master.linux-ide.org>
+References: <890BF3111FB9484E9526987D912B261901BCDA@NAMAIL3.ad.lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from test-iport-3.cisco.com ([171.71.176.78]:52544 "EHLO
-	test-iport-3.cisco.com") by vger.kernel.org with ESMTP
-	id S1750951AbWDRQdG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Apr 2006 12:33:06 -0400
-In-Reply-To: <1145377662.8447.2.camel@confield.dd.xiranet.com> (Arne Redlich's message of "Tue, 18 Apr 2006 18:27:42 +0200")
+Received: from astound-64-85-224-252.ca.astound.net ([64.85.224.252]:26885
+	"EHLO master.linux-ide.org") by vger.kernel.org with ESMTP
+	id S1751031AbWDRQhJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Apr 2006 12:37:09 -0400
+In-Reply-To: <890BF3111FB9484E9526987D912B261901BCDA@NAMAIL3.ad.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: arne.redlich@xiranet.com
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
+To: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
+Cc: "Ju, Seokmann" <Seokmann.Ju@engenio.com>, Andrew Morton <akpm@osdl.org>, James.Bottomley@SteelEye.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-    Arne> Sure - I wasn't aware that gcc will produce different code
-    Arne> even if it doesn't have to insert padding bytes.
 
-Yes, it gets paranoid about alignment.  For example, if you build the
-following on ia64:
+Seokmann,
 
-	struct foo { int a; };
-	struct bar { int b; } __attribute__((packed));
+In the case where the card or the host issues a pci master abort that
+wedges the adapter and marks adapter->hw_error = 1 and then never recovers
+again, where is the code to bring the card back online?  I know first hand
+this is a problem because I am working with the firmware folk to address
+this issue.
 
-	int c(struct foo *x) { return x->a; }
-	int d(struct bar *x) { return x->b; }
+Also please explain how changing the number of times one loops from 5 F's
+to 6 F's allows the FW to continue?  I am betting it I take the new driver
+and the firmware posted on LSI's websight it will still crash in the same
+conditions.  Anybody up for lunch paid by the non-winning party?  I have
+not tested it yet but everything I see does not address the fundamental
+issues.
 
-Then c() compiles to:
+Cheers,
 
-      0:       13 40 00 40 10 10       [MBB]       ld4 r8=[r32]
-      6:       00 00 00 00 10 80                   nop.b 0x0
-      c:       08 00 84 00                         br.ret.sptk.many b0;;
+Andre Hedrick
+LAD Storage Consulting Group
 
-and d() compiles to:
+On Tue, 18 Apr 2006, Ju, Seokmann wrote:
 
-     10:       09 70 00 40 00 21       [MMI]       mov r14=r32
-     16:       f0 10 80 00 42 00                   adds r15=2,r32
-     1c:       34 00 01 84                         adds r32=3,r32;;
-     20:       19 80 04 1c 00 14       [MMB]       ld1 r16=[r14],1
-     26:       f0 00 3c 00 20 00                   ld1 r15=[r15]
-     2c:       00 00 00 20                         nop.b 0x0;;
-     30:       09 70 00 1c 00 10       [MMI]       ld1 r14=[r14]
-     36:       80 00 80 00 20 e0                   ld1 r8=[r32]
-     3c:       f1 78 bd 53                         shl r15=r15,16;;
-     40:       01 00 00 00 01 00       [MII]       nop.m 0x0
-     46:       e0 70 dc ee 29 00                   shl r14=r14,8
-     4c:       81 38 9d 53                         shl r8=r8,24;;
-     50:       0b 70 40 1c 0e 20       [MMI]       or r14=r16,r14;;
-     56:       f0 70 3c 1c 40 00                   or r15=r14,r15
-     5c:       00 00 04 00                         nop.i 0x0;;
-     60:       11 00 00 00 01 00       [MIB]       nop.m 0x0
-     66:       80 78 20 1c 40 80                   or r8=r15,r8
-     6c:       08 00 84 00                         br.ret.sptk.many b0;;
+> Hi,
+> 
+> I've seen the patch (megaraid_mmmbox_fix_a_bug_in_reset_handler.patch) available on 2.6.17-rc1-mm3 under "SCSI warning fix" section.
+> What should I do to remove "warning" tag on the patch.
+> I've attached another patch in previous email that has 'udelay()' in the loop to remove NMI concern, and waiting for confirmation on it. Will this change remove the "warning"?
+> 
+> I'll submit the patch officially by end of today.
+> 
+> Any comment would be appreciated.
+> 
+> Thank you,
+> 
+> 
+> > -----Original Message-----
+> > From: Ju, Seokmann 
+> > Sent: Monday, April 17, 2006 9:13 AM
+> > To: 'Andre Hedrick'; Andrew Morton
+> > Cc: James.Bottomley@SteelEye.com; 
+> > linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org
+> > Subject: RE: [PATCH 1/1] megaraid_{mm,mbox}: fix a bug in 
+> > reset handler
+> > 
+> > Hi,
+> > 
+> > Thank you all for comment on the issue.
+> > From the comment, it looks having 'ndelay/udelay' would be 
+> > right way to address the issue.
+> > I've attached a patch for just review purpose.
+> > Once it confirmed, I'll post the patch officially.
+> > 
+> > Thank you,
+> > 
+> > > -----Original Message-----
+> > > From: Andre Hedrick [mailto:andre@linux-ide.org] 
+> > > Sent: Saturday, April 15, 2006 3:10 AM
+> > > To: Andrew Morton
+> > > Cc: Ju, Seokmann; Ju, Seokmann; James.Bottomley@SteelEye.com; 
+> > > linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org
+> > > Subject: Re: [PATCH 1/1] megaraid_{mm,mbox}: fix a bug in 
+> > > reset handler
+> > > 
+> > > 
+> > > Andrew,
+> > > 
+> > > This is real, and is a known bug which is 100% reproducable (sp).
+> > > There are other harry issues too, but this is as much as I can say.
+> > > 
+> > > cpu_relax() will not work, already tried some time ago.
+> > > 
+> > > 
+> > > Andre Hedrick
+> > > LAD Storage Consulting Group
+> > > 
+> > > On Wed, 12 Apr 2006, Andrew Morton wrote:
+> > > 
+> > > > "Ju, Seokmann" <Seokmann.Ju@lsil.com> wrote:
+> > > > >
+> > > > > This patch has fix for a bug in the 'megaraid_reset_handler()'.
+> > > > > 
+> > > > >  When abort failed, the driver gets reset handleer 
+> > > called. In the reset
+> > > > >  handler, driver calls 'scsi_done()' callback for same 
+> > > SCSI command
+> > > > >  packet (struct scsi_cmnd) multiple times if there are 
+> > > multiple SCSI
+> > > > >  command packet in the pend_list. More over, if there are 
+> > > entry in the
+> > > > >  pend_lsit with IOCTL packet associated, the driver 
+> > > returns it to wrong
+> > > > >  free_list so that, in turn, the driver could end up with 
+> > > 'NULL pointer
+> > > > >  dereference..' during I/O command building with 
+> > > incorrect resource.
+> > > > > 
+> > > > >  Also, the patch contains several minor/cosmetic changes 
+> > > besides this.
+> > > > >
+> > > > > ..
+> > > > >
+> > > > > @@ -2655,32 +2655,48 @@
+> > > > >  	// Also, reset all the commands currently owned 
+> > by the driver
+> > > > >  	spin_lock_irqsave(PENDING_LIST_LOCK(adapter), flags);
+> > > > >  	list_for_each_entry_safe(scb, tmp, 
+> > &adapter->pend_list, list) {
+> > > > > -
+> > > > >  		list_del_init(&scb->list);	// from 
+> > pending list
+> > > > >  
+> > > > > -		con_log(CL_ANN, (KERN_WARNING
+> > > > > -			"megaraid: %ld:%d[%d:%d], reset from 
+> > > pending list\n",
+> > > > > -				scp->serial_number, scb->sno,
+> > > > > -				scb->dev_channel, 
+> > scb->dev_target));
+> > > > > +		if (scb->sno >= MBOX_MAX_SCSI_CMDS) {
+> > > > > +			con_log(CL_ANN, (KERN_WARNING 
+> > > > > +			"megaraid: IOCTL packet with %d[%d:%d] 
+> > > being reset\n",
+> > > > > +			scb->sno, scb->dev_channel, 
+> > scb->dev_target));
+> > > > >  
+> > > > > -		scp->result = (DID_RESET << 16);
+> > > > > -		scp->scsi_done(scp);
+> > > > > +			scb->status = -EFAULT;
+> > > > 
+> > > > What is the significance of -EFAULT here?  Seems inappropriate?
+> > > > 
+> > > > > @@ -2918,12 +2933,12 @@
+> > > > >  	wmb();
+> > > > >  	WRINDOOR(raid_dev, raid_dev->mbox_dma | 0x1);
+> > > > >  
+> > > > > -	for (i = 0; i < 0xFFFFF; i++) {
+> > > > > +	for (i = 0; i < 0xFFFFFF; i++) {
+> > > > >  		if (mbox->numstatus != 0xFF) break;
+> > > > >  		rmb();
+> > > > >  	}
+> > > > 
+> > > > Oh my.  That's an awfully long interrupts-off spin.  1.7e7 
+> > > operations with
+> > > > an NMI watchdog timeout of five seconds - I'm surprised it 
+> > > doesn't trigger.
+> > > > 
+> > > > Is that reading from a PCI register there?   Or main memory?
+> > > > 
+> > > > I'm somewhat surprised that the compiler never "optimises" 
+> > > this into a
+> > > > lockup, actually.  That's what `volatile' is for.
+> > > > 
+> > > > Is it not possible to do this with an interrupt?
+> > > > 
+> > > > A `cpu_relax()' in that loop would help cool things down a bit.
+> > > > 
+> > > > 
+> > > > -
+> > > > To unsubscribe from this list: send the line "unsubscribe 
+> > > linux-scsi" in
+> > > > the body of a message to majordomo@vger.kernel.org
+> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > > 
+> > > 
+> > > 
+> 
 
-We should use __attribute__((packed)) only when it's really needed.
-
- - R.
