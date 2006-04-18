@@ -1,87 +1,111 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [RFC] FC Transport : Async Events via netlink interface
-Date: Tue, 18 Apr 2006 09:01:21 -0700
-Message-ID: <20060418160121.GA2707@us.ibm.com>
-References: <1145306661.4151.0.camel@localhost.localdomain>
+From: Roland Dreier <rdreier@cisco.com>
+Subject: [PATCH] srp.h: avoid padding of structs
+Date: Tue, 18 Apr 2006 09:05:39 -0700
+Message-ID: <adavet6j2cs.fsf_-_@cisco.com>
+References: <20060416193443.GA1806@cheetah> <20060417091752.GA2947@cheetah>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:8116 "EHLO e31.co.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1750807AbWDRQBX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Apr 2006 12:01:23 -0400
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e31.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k3IG1Mej002009
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Apr 2006 12:01:22 -0400
-Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
-	by westrelay02.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k3IFvjMS265168
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Apr 2006 09:57:45 -0600
-Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av01.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k3IG1MnU026393
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Apr 2006 10:01:22 -0600
-Content-Disposition: inline
-In-Reply-To: <1145306661.4151.0.camel@localhost.localdomain>
+Received: from test-iport-1.cisco.com ([171.71.176.117]:51843 "EHLO
+	test-iport-1.cisco.com") by vger.kernel.org with ESMTP
+	id S1750928AbWDRQFp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Apr 2006 12:05:45 -0400
+In-Reply-To: <20050823221723.GE31949@krispykreme> (Anton Blanchard's message of "Wed, 24 Aug 2005 08:17:23 +1000")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <James.Smart@Emulex.Com>
-Cc: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, arne.redlich@xiranet.com
 
-Looks good, comments below.
+Thanks for pointing out this problem.  However I don't think we should
+pack every structure in the file, because packing structures that
+don't need it leads to gcc generating horrible code on architectures
+like ia64.  I'd prefer something like the following.
 
-James Smart <James.Smart@Emulex.Com> wrote:
-> +static void
-> +fc_send_event(struct fc_nl_user *nluser, struct fc_nl_event *event)
-> +{
-> +	struct sk_buff *skb;
-> +	struct nlmsghdr	*nlh;
-> +	struct fc_nl_event *evt;
-> +	const char *name, *fn;
-> +	u32 len = NLMSG_SPACE(sizeof(*event));
-> +	int err;
-> +
-> +	skb = alloc_skb(len, GFP_KERNEL);
-> +	if (!skb) {
-> +		err = -ENOBUFS;
-> +		fn = "alloc_skb";
-> +		goto send_fail;
-> +	}
-> +
-> +	nlh = nlmsg_put(skb, nluser->pid, 0, FC_TRANSPORT_MSG,
-> +			len - sizeof(*nlh), 0);
-> +	if (!nlh) {
-> +		err = -ENOBUFS;
-> +		fn = "nlmsg_put";
-> +		goto send_fail;
-> +	}
-> +	evt = NLMSG_DATA(nlh);
-> +	memcpy(evt, event, sizeof(*event));
-> +
-> +	err = nlmsg_unicast(fc_nl_sock, skb, nluser->pid);
-> +	if (err < 0) {
-> +		fn = "nlmsg_unicast";
-> +		goto send_fail;
-> +	}
+James, can you queue this up?  I'd be happy to merge it through my
+tree but it seems more appropriate for it to go through the SCSI tree.
+It's probably 2.6.17 material at this point in the cycle.
 
-Is there some reason that you are not using nlmsg_multicast. The caller of
-this function is somewhat simulating the function of multicast.
-
-> +
-> +	return;
-> +
-> +send_fail:
-> +	name = get_fc_host_event_code_name(event->event_code);
-> +	printk(KERN_WARNING
-> +		"%s: Dropped Event to PID %d : %s data 0x%08x : %s : err %d\n",
-> +		__FUNCTION__, nluser->pid, (name) ? name : "<unknown>",
-> +		event->event_data, fn, err);
-> +	return;
-> +}
-
-In the send_fail case it looks like you leak skbs. Do you need to add a
-call to nlmsg_free or kfree_skb?
+Thanks,
+  Roland
 
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+
+Several structs in <scsi/srp.h> get padded to a multiple of 8 bytes on
+64-bit architectures and end up with a size that does not match the
+definition in the SRP spec:
+
+                                     SRP spec     64-bit
+    sizeof (struct indirect_buf)        20          24
+    sizeof (struct srp_login_rsp)       52          56
+    sizeof (struct srp_rsp)             36          40
+
+Fix this by adding __attribute__((packed)) to the offending structs.
+
+Problem pointed out by Arne Redlich <arne.redlich@xiranet.com>.
+
+Signed-off-by: Roland Dreier <rolandd@cisco.com>
+
+diff --git a/include/scsi/srp.h b/include/scsi/srp.h
+index 6c2681d..637f77e 100644
+--- a/include/scsi/srp.h
++++ b/include/scsi/srp.h
+@@ -95,14 +95,15 @@ struct srp_direct_buf {
+ 
+ /*
+  * We need the packed attribute because the SRP spec puts the list of
+- * descriptors at an offset of 20, which is not aligned to the size
+- * of struct srp_direct_buf.
++ * descriptors at an offset of 20, which is not aligned to the size of
++ * struct srp_direct_buf.  The whole structure must be packed to avoid
++ * having the 20-byte structure padded to 24 bytes on 64-bit architectures.
+  */
+ struct srp_indirect_buf {
+ 	struct srp_direct_buf	table_desc;
+ 	__be32			len;
+-	struct srp_direct_buf	desc_list[0] __attribute__((packed));
+-};
++	struct srp_direct_buf	desc_list[0];
++} __attribute__((packed));
+ 
+ enum {
+ 	SRP_MULTICHAN_SINGLE = 0,
+@@ -122,6 +123,11 @@ struct srp_login_req {
+ 	u8	target_port_id[16];
+ };
+ 
++/*
++ * The SRP spec defines the size of the LOGIN_RSP structure to be 52
++ * bytes, so it needs to be packed to avoid having it padded to 56
++ * bytes on 64-bit architectures.
++ */
+ struct srp_login_rsp {
+ 	u8	opcode;
+ 	u8	reserved1[3];
+@@ -132,7 +138,7 @@ struct srp_login_rsp {
+ 	__be16	buf_fmt;
+ 	u8	rsp_flags;
+ 	u8	reserved2[25];
+-};
++} __attribute__((packed));
+ 
+ struct srp_login_rej {
+ 	u8	opcode;
+@@ -207,6 +213,11 @@ enum {
+ 	SRP_RSP_FLAG_DIUNDER  = 1 << 5
+ };
+ 
++/*
++ * The SRP spec defines the size of the RSP structure to be 36 bytes,
++ * so it needs to be packed to avoid having it padded to 40 bytes on
++ * 64-bit architectures.
++ */
+ struct srp_rsp {
+ 	u8	opcode;
+ 	u8	sol_not;
+@@ -221,6 +232,6 @@ struct srp_rsp {
+ 	__be32	sense_data_len;
+ 	__be32	resp_data_len;
+ 	u8	data[0];
+-};
++} __attribute__((packed));
+ 
+ #endif /* SCSI_SRP_H */
