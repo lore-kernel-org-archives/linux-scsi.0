@@ -1,42 +1,39 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] - mpt fusion - resend negotiation parameters after
-	host reset and resume
-Date: Tue, 18 Apr 2006 18:22:48 -0500
-Message-ID: <1145402568.3421.64.camel@mulgrave.il.steeleye.com>
-References: <664A4EBB07F29743873A87CF62C26D70081166@NAMAIL4.ad.lsil.com>
+From: "Moore, Eric" <Eric.Moore@lsil.com>
+Subject: RE: [PATCH] - mpt fusion - resend negotiation parameters afterhost reset and resume
+Date: Tue, 18 Apr 2006 17:58:57 -0600
+Message-ID: <664A4EBB07F29743873A87CF62C26D70081184@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:56032 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1750780AbWDRXWw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Apr 2006 19:22:52 -0400
-In-Reply-To: <664A4EBB07F29743873A87CF62C26D70081166@NAMAIL4.ad.lsil.com>
+Received: from mail0.lsil.com ([147.145.40.20]:59893 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1750868AbWDRX7A convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Apr 2006 19:59:00 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric" <Eric.Moore@lsil.com>
+To: James Bottomley <James.Bottomley@SteelEye.com>
 Cc: linux-scsi@vger.kernel.org
 
-On Tue, 2006-04-18 at 17:08 -0600, Moore, Eric wrote:
-> +static void
-> +mptspi_renegotiate(struct scsi_target *starget)
-> +{
-> +       struct _CONFIG_PAGE_SCSI_DEVICE_1 pg1;
-> +       u32 nego;
-> +
-> +       nego = mptspi_getRP(starget);
-> +
-> +       pg1.RequestedParameters = cpu_to_le32(nego);
-> +       pg1.Reserved = 0;
-> +       pg1.Configuration = 0;
-> +
-> +       mptspi_write_spi_device_pg1(starget, &pg1);
-> +}
+On Tuesday, April 18, 2006 5:23 PM, James Bottomley wrote: 
+> 
+> You probably want to use spi_schedule_dv() here instead of 
+> this for all
+> cases, don't you?
 
-You probably want to use spi_schedule_dv() here instead of this for all
-cases, don't you?
+I was merely implementing this code as it existed prior to 
+spi transport additions.  Meaning we would only send out
+the saved values from the previous dv run, not actually run
+dv all over again.  
 
-James
+Are there other spi drivers that do this?  I greped the tree,
+and couldn't find one that ran dv all over again after 
+a host reset.   
 
+I guess its possible that someone could of swapping out or 
+cutting a cable, then it would make sense to have dv kick started
+again after reset, right?  Is that your concern?  
 
+Eric
