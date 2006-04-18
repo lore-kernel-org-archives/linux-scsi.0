@@ -1,67 +1,36 @@
-From: Konstantin Khorenko <khorenko@sw.ru>
-Subject: Re: Compaq Fiber Channel Array RM4000 / 2.6.16 kernel patch VER6
-Date: Tue, 18 Apr 2006 15:10:06 +0400
-Message-ID: <4444C90E.6020804@sw.ru>
+From: "Jay Bailey" <karlr1157@groupdestiny.com>
+Subject: Academic Qualifications available from prestigious NON-ACCREDITED universities
+Date: Tue, 18 Apr 2006 08:58:35 -0600
+Message-ID: <000001c66311$1b48fd80$0100007f__2090.16529047421$1145364567$gmane$org@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+	charset="windows-1251"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhub.sw.ru ([195.214.233.200]:50180 "EHLO relay.sw.ru")
-	by vger.kernel.org with ESMTP id S932146AbWDRLKQ (ORCPT
+Received: from w130.z064000082.was-dc.dsl.cnc.net ([64.0.82.130]:23813 "helo
+	localhost") by vger.kernel.org with SMTP id S1751098AbWDRMsz (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Apr 2006 07:10:16 -0400
+	Tue, 18 Apr 2006 08:48:55 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi@vger.kernel.org, Ingo Flaschberger <if@xip.at>, Vasily Averin <vvs@sw.ru>
+To: linux-scsi@vger.kernel.org
 
-Hello James,
 
-excuse me, but i have a question concerning following changes, made for support 
-of Compaq Fiber Channel Array RM4000.
+NO ONE is turned down.
 
-This patch changes logic for ALL devices which have scsi_level detected as 
-SCSI_UNKNOWN,
-all such devices now won't store LUN values in scsi commands and ALL of them 
-would report their luns.
-Do you know if there are such devices (with scsi_level detected as 
-SCSI_UNKNOWN) other then Compaq Fiber Channel Array RM4000?
-Wouldn't these changes brake their support?
+According to the U.S. Census Bureau, with the following degrees, 
+here's how much you can  expect to make in your lifetime:
 
-http://www.kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=4d7db04a7a69099accd84984a78c64d2178252f1
-http://marc.theaimsgroup.com/?l=linux-scsi&m=114391012120176&w=2
+High School Diploma:  $1,100,000
+Bachelor's Degree:    $2,100,000
+Master's Degree:      $2,500,000
+Doctorate:            $4,400,000
 
-Hunks from the patch i'm talking about:
+You Need a Better Degree, and we can Help!
+Obtain degrees from Prestigious non-accredited
+Universities based on you life experience.
+NO ONE is turned down.
 
-linux-2.6.16/drivers/scsi/scsi.c:
-  	 * If SCSI-2 or lower, store the LUN value in cmnd.
-  	 */
--	if (cmd->device->scsi_level <= SCSI_2) {
-+	if (cmd->device->scsi_level <= SCSI_2 &&
-+			cmd->device->scsi_level != SCSI_UNKNOWN) {
-  		cmd->cmnd[1] = (cmd->cmnd[1] & 0x1f) |
-  			       (cmd->device->lun << 5 & 0xe0);
-  	}
-
-linux-2.6.16/drivers/scsi/scsi_scan.c:
-  	 * Also allow SCSI-2 and SCSI-UNKNOWN if BLIST_REPORTLUN is set and host
-  	 * adapter does support more than 8 LUNs.
-  	 */
--	if ((bflags & BLIST_NOREPORTLUN) ||
--	     starget->scsi_level < SCSI_2 ||
--	    (starget->scsi_level < SCSI_3 &&
--	     (!(bflags & BLIST_REPORTLUN) || shost->max_lun <= 8)) )
-+	if (bflags & BLIST_NOREPORTLUN)
-+		return 1;
-+	if (starget->scsi_level < SCSI_2 &&
-+			starget->scsi_level != SCSI_UNKNOWN)
-+		return 1;
-+	if (starget->scsi_level < SCSI_3 &&
-+			(!(bflags & BLIST_REPORTLUN) || shost->max_lun <= 8))
-  		return 1;
-
-Thank you.
--- 
-Konstantin Khorenko,
-SWsoft, Inc.
+Call Now 7 days a week.
+"1-718-504-5376"
 
