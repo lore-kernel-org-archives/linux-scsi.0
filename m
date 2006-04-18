@@ -1,78 +1,42 @@
-From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: [PATCH] - mpt fusion - resend negotiation parameters after host reset and resume
-Date: Tue, 18 Apr 2006 17:08:28 -0600
-Message-ID: <664A4EBB07F29743873A87CF62C26D70081166@NAMAIL4.ad.lsil.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] - mpt fusion - resend negotiation parameters after
+	host reset and resume
+Date: Tue, 18 Apr 2006 18:22:48 -0500
+Message-ID: <1145402568.3421.64.camel@mulgrave.il.steeleye.com>
+References: <664A4EBB07F29743873A87CF62C26D70081166@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C6633D.00DD3988"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:57328 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1750804AbWDRXIe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Apr 2006 19:08:34 -0400
-Content-class: urn:content-classes:message
+Received: from stat9.steeleye.com ([209.192.50.41]:56032 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1750780AbWDRXWw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Apr 2006 19:22:52 -0400
+In-Reply-To: <664A4EBB07F29743873A87CF62C26D70081166@NAMAIL4.ad.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@SteelEye.com
+To: "Moore, Eric" <Eric.Moore@lsil.com>
+Cc: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
+On Tue, 2006-04-18 at 17:08 -0600, Moore, Eric wrote:
+> +static void
+> +mptspi_renegotiate(struct scsi_target *starget)
+> +{
+> +       struct _CONFIG_PAGE_SCSI_DEVICE_1 pg1;
+> +       u32 nego;
+> +
+> +       nego = mptspi_getRP(starget);
+> +
+> +       pg1.RequestedParameters = cpu_to_le32(nego);
+> +       pg1.Reserved = 0;
+> +       pg1.Configuration = 0;
+> +
+> +       mptspi_write_spi_device_pg1(starget, &pg1);
+> +}
 
-------_=_NextPart_001_01C6633D.00DD3988
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+You probably want to use spi_schedule_dv() here instead of this for all
+cases, don't you?
 
-This is a bug fix for mptspi driver, where after a host reset=20
-or resume, we resend the negotiation parameters to all devices.  =20
-This bug was introduced when the driver was ported to use
-the spi transport layer.
+James
 
-JEJB: This patch is urgent, please apply to scsi-rc-fixes tree.
 
-Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
-
-------_=_NextPart_001_01C6633D.00DD3988
-Content-Type: application/octet-stream;
-	name="spi_dv_fix.patch"
-Content-Transfer-Encoding: base64
-Content-Description: spi_dv_fix.patch
-Content-Disposition: attachment;
-	filename="spi_dv_fix.patch"
-
-ZGlmZiAtdWFyTiBiL2RyaXZlcnMvbWVzc2FnZS9mdXNpb24vbXB0c3BpLmMgYS9kcml2ZXJzL21l
-c3NhZ2UvZnVzaW9uL21wdHNwaS5jCi0tLSBiL2RyaXZlcnMvbWVzc2FnZS9mdXNpb24vbXB0c3Bp
-LmMJMjAwNi0wNC0xNyAxMDozMzo1MC4wMDAwMDAwMDAgLTA2MDAKKysrIGEvZHJpdmVycy9tZXNz
-YWdlL2Z1c2lvbi9tcHRzcGkuYwkyMDA2LTA0LTE4IDE2OjM1OjIxLjAwMDAwMDAwMCAtMDYwMApA
-QCAtNzgzLDYgKzc4Myw1NyBAQAogfTsKIE1PRFVMRV9ERVZJQ0VfVEFCTEUocGNpLCBtcHRzcGlf
-cGNpX3RhYmxlKTsKIAorLyoKKyAqIHJlbmVnb3RpYXRlIGZvciBhIGdpdmVuIHRhcmdldAorICov
-CitzdGF0aWMgdm9pZAorbXB0c3BpX3JlbmVnb3RpYXRlKHN0cnVjdCBzY3NpX3RhcmdldCAqc3Rh
-cmdldCkKK3sKKwlzdHJ1Y3QgX0NPTkZJR19QQUdFX1NDU0lfREVWSUNFXzEgcGcxOworCXUzMiBu
-ZWdvOworCisJbmVnbyA9IG1wdHNwaV9nZXRSUChzdGFyZ2V0KTsKKworCXBnMS5SZXF1ZXN0ZWRQ
-YXJhbWV0ZXJzID0gY3B1X3RvX2xlMzIobmVnbyk7CisJcGcxLlJlc2VydmVkID0gMDsKKwlwZzEu
-Q29uZmlndXJhdGlvbiA9IDA7CisKKwltcHRzcGlfd3JpdGVfc3BpX2RldmljZV9wZzEoc3Rhcmdl
-dCwgJnBnMSk7Cit9CisKKy8qCisgKiBzcGkgbW9kdWxlIHJlc2V0IGhhbmRsZXIKKyAqLworc3Rh
-dGljIGludAorbXB0c3BpX2lvY19yZXNldChNUFRfQURBUFRFUiAqaW9jLCBpbnQgcmVzZXRfcGhh
-c2UpCit7CisgICAgICAgIHN0cnVjdCBzY3NpX2RldmljZSAqc2RldjsKKworCWlmIChyZXNldF9w
-aGFzZSA9PSBNUFRfSU9DX1BPU1RfUkVTRVQpCisJCXNob3N0X2Zvcl9lYWNoX2RldmljZShzZGV2
-LCBpb2MtPnNoKQorCQkJbXB0c3BpX3JlbmVnb3RpYXRlKHNkZXYtPnNkZXZfdGFyZ2V0KTsKKwor
-CXJldHVybiBtcHRzY3NpaF9pb2NfcmVzZXQoaW9jLCByZXNldF9waGFzZSk7Cit9CisKKy8qCisg
-KiBzcGkgbW9kdWxlIHJlc3VtZSBoYW5kbGVyCisgKi8KK3N0YXRpYyBpbnQKK21wdHNwaV9yZXN1
-bWUoc3RydWN0IHBjaV9kZXYgKnBkZXYpCit7CisJTVBUX0FEQVBURVIgCSppb2MgPSBwY2lfZ2V0
-X2RydmRhdGEocGRldik7CisgICAgICAgIHN0cnVjdCBzY3NpX2RldmljZSAqc2RldjsKKwlpbnQg
-cmM7CisKKwlyYyA9IG1wdHNjc2loX3Jlc3VtZShwZGV2KTsKKworCXNob3N0X2Zvcl9lYWNoX2Rl
-dmljZShzZGV2LCBpb2MtPnNoKQorCQltcHRzcGlfcmVuZWdvdGlhdGUoc2Rldi0+c2Rldl90YXJn
-ZXQpOworCisJcmV0dXJuIHJjOworfQorCiAvKj0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09
-LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPSovCiAvKj0tPS09
-LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0t
-PS09LT0tPS09LT0tPSovCiAvKgpAQCAtMTAzMiw3ICsxMDgzLDcgQEAKIAkuc2h1dGRvd24JPSBt
-cHRzY3NpaF9zaHV0ZG93biwKICNpZmRlZiBDT05GSUdfUE0KIAkuc3VzcGVuZAk9IG1wdHNjc2lo
-X3N1c3BlbmQsCi0JLnJlc3VtZQkJPSBtcHRzY3NpaF9yZXN1bWUsCisJLnJlc3VtZQkJPSBtcHRz
-cGlfcmVzdW1lLAogI2VuZGlmCiB9OwogCkBAIC0xMDYxLDcgKzExMTIsNyBAQAogCQkgICI6IFJl
-Z2lzdGVyZWQgZm9yIElPQyBldmVudCBub3RpZmljYXRpb25zXG4iKSk7CiAJfQogCi0JaWYgKG1w
-dF9yZXNldF9yZWdpc3RlcihtcHRzcGlEb25lQ3R4LCBtcHRzY3NpaF9pb2NfcmVzZXQpID09IDAp
-IHsKKwlpZiAobXB0X3Jlc2V0X3JlZ2lzdGVyKG1wdHNwaURvbmVDdHgsIG1wdHNwaV9pb2NfcmVz
-ZXQpID09IDApIHsKIAkJZHByaW50aygoS0VSTl9JTkZPIE1ZTkFNCiAJCSAgIjogUmVnaXN0ZXJl
-ZCBmb3IgSU9DIHJlc2V0IG5vdGlmaWNhdGlvbnNcbiIpKTsKIAl9Cg==
-
-------_=_NextPart_001_01C6633D.00DD3988--
