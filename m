@@ -1,39 +1,60 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: 2.6.14 regression: aic7xxx hangs on boot
-Date: Wed, 19 Apr 2006 11:02:07 -0500
-Message-ID: <1145462527.6183.5.camel@mulgrave.il.steeleye.com>
-References: <44461FB5.8060705@gentoo.org>
-	 <1145454585.3465.5.camel@mulgrave.il.steeleye.com>
-	 <444658BE.5080309@gentoo.org>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [RFC] FC Transport : Async Events via netlink interface
+Date: Wed, 19 Apr 2006 12:11:16 -0400
+Message-ID: <44466124.7000809@emulex.com>
+References: <1145306661.4151.0.camel@localhost.localdomain> <20060419145931.GL24104@parisc-linux.org>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:26265 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1750969AbWDSQCP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Apr 2006 12:02:15 -0400
-In-Reply-To: <444658BE.5080309@gentoo.org>
+Received: from emulex.emulex.com ([138.239.112.1]:27612 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S1750979AbWDSQLT
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Apr 2006 12:11:19 -0400
+In-Reply-To: <20060419145931.GL24104@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Daniel Drake <dsd@gentoo.org>
-Cc: gibbs@scsiguy.com, linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, 2006-04-19 at 16:35 +0100, Daniel Drake wrote:
-> James Bottomley wrote:
-> > Really, 2.6.13-16 are the kernels around which the aic7xxx driver
-> > changed rapidly.  What happens with 2.6.17-rc1?
+
+
+Matthew Wilcox wrote:
+> enable NET in order to force netlink to be built.  So something like
+> this would be enough:
 > 
-> Exactly the same.
+>  config SCSI_FC_ATTRS
+>  	tristate "FiberChannel Transport Attributes"
+>  	depends on SCSI
+> +	select NET
+>  	help
+>  	  If you wish to export transport-specific information about
+>  	  each attached FiberChannel device to sysfs, say Y.
 
-OK ... so more details, like the dmesg up to the problem (primarily to
-diagnose the transport parameters and what's on the bus).  Plus, what
-were the transport parameters in the case where it worked
-(from /proc/scsi/aic7xxx/*)
+Thanks....
 
-Also, if it's a multi-device bus is the problem caused by a single
-device (as in do a binary search pulling things off the bus).
+>> +#define get_list_head_entry(pos, head, member) 		\
+>> +	pos = list_entry((head)->next, typeof(*pos), member)
+>> +
+> 
+> This one sets alarm bells ringing ...
 
-James
+Please explain why. I've always wondered why the list macros never
+let you look, without dequeuing, the head of the list. It will let
+you look - as long as you use the functions that make it think
+you're going to walk the list.
+
+
+> I would write this as:
+> 
+> 	struct fc_nl_user *nluser, *tmp;
+> 	list_for_each_entry_safe(nluser, tmp, &fc_nl_user_list, ulist) {
+> 		kfree(nluser);
+> 	}
+
+ok.. Subtle though, as you have to know you are consuming the entire list.
+
+-- james
 
 
