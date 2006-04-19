@@ -1,51 +1,58 @@
 From: akpm@osdl.org
-Subject: [patch 15/17] qla2xxx: only free_irq() after request_irq() succeeds
-Date: Tue, 18 Apr 2006 21:09:22 -0700
-Message-ID: <200604190410.k3J4A47j008254@shell0.pdx.osdl.net>
+Subject: [patch 09/17] small whitespace cleanup for qlogic driver
+Date: Tue, 18 Apr 2006 21:09:17 -0700
+Message-ID: <200604190409.k3J49wuO008221@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:38605 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1750781AbWDSEKU (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:36813 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1750779AbWDSEKP (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Apr 2006 00:10:20 -0400
+	Wed, 19 Apr 2006 00:10:15 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, zach.brown@oracle.com, andrew.vasquez@qlogic.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, jesper.juhl@gmail.com, andrew.vasquez@qlogic.com
 
 
-From: Zach Brown <zach.brown@oracle.com>
+From: Jesper Juhl <jesper.juhl@gmail.com>
 
-If qla2x00_probe_one() fails before calling request_irq() but gets to
-qla2x00_free_device() then it will mistakenly try to free an irq it didn't
-request.  It's chosing to free based on ha->pdev->irq which is always set.
+Add a few spaces to MODULE_PARM_DESC() text for qla2xxx. Without these
+spaces text runs together when modinfo prints the text.
 
-host->irq is set after request_irq() succeeds so let's use that to decide
-to free or not.
-
-This was observed and tested when a silly set of circumstances lead to
-firmware loading failing on a 2100.
-
-Signed-off-by: Zach Brown <zach.brown@oracle.com>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
+Signed-off-by: Jesper Juhl <jesper.juhl@gmail.com>
+Acked-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/qla2xxx/qla_os.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/qla2xxx/qla_os.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-diff -puN drivers/scsi/qla2xxx/qla_os.c~qla2xxx-only-free_irq-after-request_irq-succeeds drivers/scsi/qla2xxx/qla_os.c
---- 25/drivers/scsi/qla2xxx/qla_os.c~qla2xxx-only-free_irq-after-request_irq-succeeds	Tue Apr 11 14:12:45 2006
-+++ 25-akpm/drivers/scsi/qla2xxx/qla_os.c	Tue Apr 11 14:12:45 2006
-@@ -1700,8 +1700,8 @@ qla2x00_free_device(scsi_qla_host_t *ha)
- 	ha->flags.online = 0;
+diff -puN drivers/scsi/qla2xxx/qla_os.c~small-whitespace-cleanup-for-qlogic-driver drivers/scsi/qla2xxx/qla_os.c
+--- devel/drivers/scsi/qla2xxx/qla_os.c~small-whitespace-cleanup-for-qlogic-driver	2006-03-21 23:05:42.000000000 -0800
++++ devel-akpm/drivers/scsi/qla2xxx/qla_os.c	2006-03-21 23:05:42.000000000 -0800
+@@ -39,14 +39,14 @@ MODULE_PARM_DESC(ql2xlogintimeout,
+ int qlport_down_retry = 30;
+ module_param(qlport_down_retry, int, S_IRUGO|S_IRUSR);
+ MODULE_PARM_DESC(qlport_down_retry,
+-		"Maximum number of command retries to a port that returns"
++		"Maximum number of command retries to a port that returns "
+ 		"a PORT-DOWN status.");
  
- 	/* Detach interrupts */
--	if (ha->pdev->irq)
--		free_irq(ha->pdev->irq, ha);
-+	if (ha->host->irq)
-+		free_irq(ha->host->irq, ha);
+ int ql2xplogiabsentdevice;
+ module_param(ql2xplogiabsentdevice, int, S_IRUGO|S_IWUSR);
+ MODULE_PARM_DESC(ql2xplogiabsentdevice,
+ 		"Option to enable PLOGI to devices that are not present after "
+-		"a Fabric scan.  This is needed for several broken switches."
++		"a Fabric scan.  This is needed for several broken switches. "
+ 		"Default is 0 - no PLOGI. 1 - perfom PLOGI.");
  
- 	/* release io space registers  */
- 	if (ha->iobase)
+ int ql2xloginretrycount = 0;
+@@ -74,7 +74,7 @@ MODULE_PARM_DESC(ql2xfdmienable,
+ int ql2xprocessrscn;
+ module_param(ql2xprocessrscn, int, S_IRUGO|S_IRUSR);
+ MODULE_PARM_DESC(ql2xprocessrscn,
+-		"Option to enable port RSCN handling via a series of less"
++		"Option to enable port RSCN handling via a series of less "
+ 		"fabric intrusive ADISCs and PLOGIs.");
+ 
+ /*
 _
