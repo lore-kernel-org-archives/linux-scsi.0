@@ -1,41 +1,60 @@
-From: Tony Mantler <nicoya@ubb.ca>
-Subject: QLogic qla2xxx firmware
-Date: Wed, 19 Apr 2006 16:42:04 -0500
-Message-ID: <61312D45-4977-470A-B750-2F5774C16157@ubb.ca>
-Mime-Version: 1.0 (Apple Message framework v749.3)
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+From: Orion Poplawski <orion@cora.nwra.com>
+Subject: Re: Vendor specific cdrom error messages
+Date: Wed, 19 Apr 2006 15:55:43 -0600
+Message-ID: <4446B1DF.9000105@cora.nwra.com>
+References: <e25obb$2fp$1@sea.gmane.org> <44468948.6000109@torque.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from S01060080c85517f6.wp.shawcable.net ([24.79.196.167]:35234 "EHLO
-	ubb.ca") by vger.kernel.org with ESMTP id S1751173AbWDSVmL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Apr 2006 17:42:11 -0400
-Received: from kiska.fast ([192.168.1.3])
-	by ubb.ca with esmtps (TLS-1.0:RSA_ARCFOUR_SHA1:16)
-	(Exim 4.61)
-	(envelope-from <nicoya@ubb.ca>)
-	id 1FWKR3-0001de-Pr
-	for linux-scsi@vger.kernel.org; Wed, 19 Apr 2006 16:42:05 -0500
+Received: from earth.cora.nwra.com ([65.125.157.180]:7149 "EHLO
+	earth.cora.nwra.com") by vger.kernel.org with ESMTP
+	id S1751254AbWDSVz7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Apr 2006 17:55:59 -0400
+In-Reply-To: <44468948.6000109@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: dougg@torque.net
+Cc: linux-scsi@vger.kernel.org
 
-Reading the config help for the qla2xxx driver in 2.6.16 indicates  
-that the firmware for the various cards can be downloaded from <ftp:// 
-ftp.qlogic.com/outgoing/linux/firmware/>. This FTP directory exists,  
-but is empty.
+Douglas Gilbert wrote:
+> Orion Poplawski wrote:
+>> I got the following error trying to burn a DVD on an IBM USB2 DVD-R burner:
+>>
+>> Nov  7 11:40:36 makani kernel: cdrom: This disc doesn't have any tracks
+>> I recognize!
+>> Nov  7 11:41:59 makani kernel: sr 0:0:0:0: SCSI error: return code =
+>> 0x8000002
+>> Nov  7 11:41:59 makani kernel: sr0: Current: sense key: Data Protect
+>> Nov  7 11:41:59 makani kernel:     ASC=0x27 <<vendor>> ASCQ=0xff
+>>
+>> This is on Fedora Core 4 and kernel 2.6.13-1.1532_FC4.
+>>
+>> It turns out that this is because the drive did not have enough power
+>> (it was not plugged into the separate ac adapter).  I was able to
+>> determine this by booting into Windows, which gave me a nice descriptive
+>> error message.
+>>
+>> I was wondering if it makes sense for the kernel drivers to know these
+>> error messages and report better errors, of it should be left up to user
+>> space tools.
+> 
+> I think that you can guess the answer to the above query.
+> Asc and/or ascq codes >= 0x80 (and <= 0xff) mark the
+> additional sense code as vendor specific.
 
-I'm rather concerned that my QLA2100 is going to stop working if I  
-update to this or future kernels without first retrieving a firmware  
-image. Is this correct? Where should this firmware be found if not  
-from the indicated URL?
+Sorry, I'm a bad guesser.  So, user space?
 
+> The ascq code looks suspicious. An asc/ascq tuple of
+> <0x27,0x0> ("Write protected") would tie in pretty well
+> with the sense key of "Data Protect". A better choice
+> might be <0x5e,0x0> "Low power condition on".
 
-Cheers - Tony 'Nicoya' Mantler :)
+But we don't have any choice here right?  Isn't this simply what the 
+drive returns to us?  Are these codes passed on to user space?
 
---
-Tony 'Nicoya' Mantler - Master of Code-fu
--- nicoya@ubb.ca -- http://www.ubb.ca/ --
-
+Sorry, completely unfamiliar with the linux scsi stack.  Just trying to 
+get the tools (dvd+rw-tools in this case) to return more informative 
+error messages and thought I'd start from the bottom.
 
 
