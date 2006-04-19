@@ -1,42 +1,76 @@
 From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: [PATCH 1/2] SCSI: implement scsi_eh_schedule_cmd()
-Date: Wed, 19 Apr 2006 11:49:16 -0700 (PDT)
-Message-ID: <20060419184916.22608.qmail@web31809.mail.mud.yahoo.com>
-References: <443F8F41.1060002@gmail.com>
+Subject: [PATCH] [SCSI] Introduce scsi_req_abort_cmd (REPOST)
+Date: Wed, 19 Apr 2006 11:59:33 -0700 (PDT)
+Message-ID: <20060419185933.82872.qmail@web31811.mail.mud.yahoo.com>
 Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31809.mail.mud.yahoo.com ([68.142.207.72]:18082 "HELO
-	web31809.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S1751085AbWDSStT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Apr 2006 14:49:19 -0400
-In-Reply-To: <443F8F41.1060002@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
+Cc: Tejun Heo <htejun@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, Jeff Garzik <jgarzik@pobox.com>, hch@lst.de, James.Bottomley@SteelEye.com, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, arjan@infradead.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hi Tejun,
+Introduce scsi_req_abort_cmd(struct scsi_cmnd *).
+This function requests that SCSI Core start recovery for the
+command by deleting the timer and adding the command to the eh
+queue.  It can be called by either LLDDs or SCSI Core.  LLDDs who
+implement their own error recovery MAY ignore the timeout event if
+they generated scsi_req_abort_cmd.
 
---- Tejun Heo <htejun@gmail.com> wrote:
-> So, what's your suggestion here?  Do you think libata should do such 
-> things with its own mechanism?
+First post:
+http://marc.theaimsgroup.com/?l=linux-scsi&m=113833937421677&w=2
 
-Your instinct is correct.  Anything between I and T, as in I_T, is SDS
-domain.  That is, SAM doesn't have a _context_ for anything between the I and T.
-(In SATA's case I_T_L, of course.)
+Signed-off-by: Luben Tuikov <ltuikov@yahoo.com>
 
-So this is why you shouldn't call SCSI's ER without context, as in "Hey,
-neither command, nor device is broken, but do some ER for me."  Such work belongs
-in your SATA Layer, unless either a device or command is involved, as we discussed.
+---
 
-Handle protocol ER in your SATA layer.  Note however that most of your ER could
-be done on behalf of a command or device, since of course, a device or command(s)
-end up being affected.  Basically "do as little as possible but no less" technique.
+ drivers/scsi/scsi.c      |   18 ++++++++++++++++++
+ include/scsi/scsi_cmnd.h |    1 +
+ 2 files changed, 19 insertions(+), 0 deletions(-)
 
-Good luck!
-     Luben
-
+51df19a1669bd502b536178d6c294e68be25ce79
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 245ca99..1af9795 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -721,6 +721,24 @@ void scsi_init_cmd_from_req(struct scsi_
+ static DEFINE_PER_CPU(struct list_head, scsi_done_q);
+ 
+ /**
++ * scsi_req_abort_cmd -- Request command recovery for the specified command
++ * cmd: pointer to the SCSI command of interest
++ *
++ * This function requests that SCSI Core start recovery for the
++ * command by deleting the timer and adding the command to the eh
++ * queue.  It can be called by either LLDDs or SCSI Core.  LLDDs who
++ * implement their own error recovery MAY ignore the timeout event if
++ * they generated scsi_req_abort_cmd.
++ */
++void scsi_req_abort_cmd(struct scsi_cmnd *cmd)
++{
++	if (!scsi_delete_timer(cmd))
++		return;
++	scsi_times_out(cmd);
++}
++EXPORT_SYMBOL(scsi_req_abort_cmd);
++
++/**
+  * scsi_done - Enqueue the finished SCSI command into the done queue.
+  * @cmd: The SCSI Command for which a low-level device driver (LLDD) gives
+  * ownership back to SCSI Core -- i.e. the LLDD has finished with it.
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index 7529f43..8b9ad8c 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -151,5 +151,6 @@ extern struct scsi_cmnd *scsi_get_comman
+ extern void scsi_put_command(struct scsi_cmnd *);
+ extern void scsi_io_completion(struct scsi_cmnd *, unsigned int, unsigned int);
+ extern void scsi_finish_command(struct scsi_cmnd *cmd);
++extern void scsi_req_abort_cmd(struct scsi_cmnd *cmd);
+ 
+ #endif /* _SCSI_SCSI_CMND_H */
+-- 
+1.3.0.ga809
 
