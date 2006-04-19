@@ -1,80 +1,103 @@
-From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: RE: [PATCH] - mpt fusion - mptspi - host reset, kick off domainvalidation again.
-Date: Wed, 19 Apr 2006 15:14:44 -0600
-Message-ID: <664A4EBB07F29743873A87CF62C26D700813E8@NAMAIL4.ad.lsil.com>
+From: Mathieu Chouquet-Stringer <mchouque@free.fr>
+Subject: class_device_add error in SCSI with 2.6.17-rc2-g52824b6b
+Date: Wed, 19 Apr 2006 23:31:29 +0200
+Message-ID: <20060419213129.GA9148@localhost>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C663F6.4812D2E5"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:38128 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1751243AbWDSVOr (ORCPT
+Received: from smtp13.wanadoo.fr ([193.252.22.54]:218 "EHLO smtp13.wanadoo.fr")
+	by vger.kernel.org with ESMTP id S1751164AbWDSVci (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Apr 2006 17:14:47 -0400
-Content-class: urn:content-classes:message
+	Wed, 19 Apr 2006 17:32:38 -0400
+Received: from me-wanadoo.net (localhost [127.0.0.1])
+	by mwinf1309.wanadoo.fr (SMTP Server) with ESMTP id D664C700009D
+	for <linux-scsi@vger.kernel.org>; Wed, 19 Apr 2006 23:32:31 +0200 (CEST)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
 
-This is a multi-part message in MIME format.
+	Hello James,
 
-------_=_NextPart_001_01C663F6.4812D2E5
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+While booting 2.6.17-rc2-g52824b6b on an alpha (a 164LX clone), I get
+the following error messages for every sd devices that get registered:
 
-On Wednesday, April 19, 2006 1:36 PM, James Bottomley wrote: =20
->=20
-> The equivalent of this check is *already* in=20
-> mptspi_dv_device(), so you
-> don't need to check it again.  Simply replacing=20
-> mptspi_renegotiate with
-> mptspi_dv_device() should work fine.
->=20
+sd 0:0:0:0: Attached scsi disk sda
+kobject_add failed for 0:0: with -EEXIST, don't try to register things with the same name in the same directory.
+fffffc0000e4bc88 0000000000100100 fffffc000045c398 fffffc0000ec9910 
+       fffffc0000ec9910 0000000000000000 fffffc0000688080 0000000000100100 
+       fffffc0000488b84 fffffc0000ec9910 fffffc0000ec9500 fffffc0000ec9900 
+       fffffc0000ec1800 0000000000000000 fffffc0000ec18e8 fffffc0000ec1a18 
+       0000000000000000 ffffffffffffffea fffffc000045ac8c fffffc0000ec18e8 
+       0000000000000000 fffffc0000687f50 fffffc0000683d48 0000000000000000 
+Trace:
+[<fffffc000045c398>] class_device_add+0xb4/0x388
+[<fffffc0000488b84>] sd_probe+0x154/0x4cc
+[<fffffc000045ac8c>] driver_probe_device+0x6c/0xf0
+[<fffffc000045ae90>] __driver_attach+0x9c/0x11c
+[<fffffc0000459bac>] bus_for_each_dev+0x5c/0xb0
+[<fffffc000045adf4>] __driver_attach+0x0/0x11c
+[<fffffc000045af3c>] driver_attach+0x2c/0x40
+[<fffffc000045a390>] bus_add_driver+0xa8/0x1d4
+[<fffffc000045b644>] driver_register+0xa8/0xc0
+[<fffffc0000476018>] scsi_register_driver+0x24/0x38
+[<fffffc0000310200>] init+0x11c/0x360
+[<fffffc0000311598>] kernel_thread+0x28/0x90
+[<fffffc0000311580>] kernel_thread+0x10/0x90
 
-Yes, your right. Thanks for seeing that.  I've fix'd that
-up, and attached is the new patch.
 
-Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
+Looking at 'git whatchanged' for drivers/scsi/sd.c, I guess (just a wild
+guess, I'll bisect tomorrow if needed) this patch probably broke the
+whole thing:
 
-------_=_NextPart_001_01C663F6.4812D2E5
-Content-Type: application/octet-stream;
-	name="spi_dv_fix.patch"
-Content-Transfer-Encoding: base64
-Content-Description: spi_dv_fix.patch
-Content-Disposition: attachment;
-	filename="spi_dv_fix.patch"
+diff-tree 6bdaa1f17dd32ec62345c7b57842f53e6278a2fa (from
+5baba830e93732e802dc7e0a362eb730e1917f58)
+Author: James Bottomley <James.Bottomley@steeleye.com>
+Date:   Sat Mar 18 14:14:21 2006 -0600
 
-ZGlmZiAtdWFyTiBiL2RyaXZlcnMvbWVzc2FnZS9mdXNpb24vbXB0c3BpLmMgYS9kcml2ZXJzL21l
-c3NhZ2UvZnVzaW9uL21wdHNwaS5jCi0tLSBiL2RyaXZlcnMvbWVzc2FnZS9mdXNpb24vbXB0c3Bp
-LmMJMjAwNi0wNC0xNyAxMDozMzo1MC4wMDAwMDAwMDAgLTA2MDAKKysrIGEvZHJpdmVycy9tZXNz
-YWdlL2Z1c2lvbi9tcHRzcGkuYwkyMDA2LTA0LTE5IDE1OjA4OjExLjAwMDAwMDAwMCAtMDYwMApA
-QCAtNzgzLDYgKzc4Myw0NCBAQAogfTsKIE1PRFVMRV9ERVZJQ0VfVEFCTEUocGNpLCBtcHRzcGlf
-cGNpX3RhYmxlKTsKIAorLyoKKyAqIHNwaSBtb2R1bGUgcmVzZXQgaGFuZGxlcgorICovCitzdGF0
-aWMgaW50CittcHRzcGlfaW9jX3Jlc2V0KE1QVF9BREFQVEVSICppb2MsIGludCByZXNldF9waGFz
-ZSkKK3sKKwlzdHJ1Y3QgX01QVF9TQ1NJX0hPU1QgKmhkID0gKHN0cnVjdCBfTVBUX1NDU0lfSE9T
-VCAqKWlvYy0+c2gtPmhvc3RkYXRhOworCXN0cnVjdCBzY3NpX2RldmljZSAqc2RldjsKKwlpbnQg
-cmM7CisKKwlyYyA9IG1wdHNjc2loX2lvY19yZXNldChpb2MsIHJlc2V0X3BoYXNlKTsKKworCWlm
-IChyZXNldF9waGFzZSA9PSBNUFRfSU9DX1BPU1RfUkVTRVQpCisJCXNob3N0X2Zvcl9lYWNoX2Rl
-dmljZShzZGV2LCBpb2MtPnNoKQorCQkJbXB0c3BpX2R2X2RldmljZShoZCwgc2Rldik7CisKKwly
-ZXR1cm4gcmM7Cit9CisKKy8qCisgKiBzcGkgbW9kdWxlIHJlc3VtZSBoYW5kbGVyCisgKi8KK3N0
-YXRpYyBpbnQKK21wdHNwaV9yZXN1bWUoc3RydWN0IHBjaV9kZXYgKnBkZXYpCit7CisJTVBUX0FE
-QVBURVIgCSppb2MgPSBwY2lfZ2V0X2RydmRhdGEocGRldik7CisJc3RydWN0IF9NUFRfU0NTSV9I
-T1NUICpoZCA9IChzdHJ1Y3QgX01QVF9TQ1NJX0hPU1QgKilpb2MtPnNoLT5ob3N0ZGF0YTsKKyAg
-ICAgICAgc3RydWN0IHNjc2lfZGV2aWNlICpzZGV2OworCWludCByYzsKKworCXJjID0gbXB0c2Nz
-aWhfcmVzdW1lKHBkZXYpOworCisJc2hvc3RfZm9yX2VhY2hfZGV2aWNlKHNkZXYsIGlvYy0+c2gp
-CisJCW1wdHNwaV9kdl9kZXZpY2UoaGQsIHNkZXYpOworCisJcmV0dXJuIHJjOworfQorCiAvKj0t
-PS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09
-LT0tPS09LT0tPS09LT0tPSovCiAvKj0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09
-LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPSovCiAvKgpAQCAtMTAzMiw3
-ICsxMDcwLDcgQEAKIAkuc2h1dGRvd24JPSBtcHRzY3NpaF9zaHV0ZG93biwKICNpZmRlZiBDT05G
-SUdfUE0KIAkuc3VzcGVuZAk9IG1wdHNjc2loX3N1c3BlbmQsCi0JLnJlc3VtZQkJPSBtcHRzY3Np
-aF9yZXN1bWUsCisJLnJlc3VtZQkJPSBtcHRzcGlfcmVzdW1lLAogI2VuZGlmCiB9OwogCkBAIC0x
-MDYxLDcgKzEwOTksNyBAQAogCQkgICI6IFJlZ2lzdGVyZWQgZm9yIElPQyBldmVudCBub3RpZmlj
-YXRpb25zXG4iKSk7CiAJfQogCi0JaWYgKG1wdF9yZXNldF9yZWdpc3RlcihtcHRzcGlEb25lQ3R4
-LCBtcHRzY3NpaF9pb2NfcmVzZXQpID09IDApIHsKKwlpZiAobXB0X3Jlc2V0X3JlZ2lzdGVyKG1w
-dHNwaURvbmVDdHgsIG1wdHNwaV9pb2NfcmVzZXQpID09IDApIHsKIAkJZHByaW50aygoS0VSTl9J
-TkZPIE1ZTkFNCiAJCSAgIjogUmVnaXN0ZXJlZCBmb3IgSU9DIHJlc2V0IG5vdGlmaWNhdGlvbnNc
-biIpKTsKIAl9Cg==
+    [SCSI] allow displaying and setting of cache type via sysfs
 
-------_=_NextPart_001_01C663F6.4812D2E5--
+    I think I promised to do this two years ago
+
+    This patch adds a scsi_disk class with the cache type and FUA
+    parameters, so user land application can easily obtain them without
+    having to parse dmesg.  It also allows setting the cache type (use with
+    care...)
+
+    This patch is a bit dangerous because I've replaced the disk kref with a
+    class device reference ...
+
+    Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
+
+
+Looking at the backtrace, this portion of the patch appears to be
+failing:
+
+@@ -1566,7 +1642,16 @@ static int sd_probe(struct device *dev)
+        if (error)
+                goto out_put;
+
++       class_device_initialize(&sdkp->cdev);
++       sdkp->cdev.dev = &sdp->sdev_gendev;
++       sdkp->cdev.class = &sd_disk_class;
++       strncpy(sdkp->cdev.class_id, sdp->sdev_gendev.bus_id, BUS_ID_SIZE);
++
++       if (class_device_add(&sdkp->cdev))
++               goto out_put;
++
+        get_device(&sdp->sdev_gendev);
++
+        sdkp->device = sdp;
+        sdkp->driver = &sd_template;
+        sdkp->disk = gd;
+
+
+I'll look some more at the whole thing tomorrow as I'm not familiar at
+all with kobject/sysfs...
+
+Cheers,
+
+-- 
+Mathieu Chouquet-Stringer                         mchouque@free.fr
+
