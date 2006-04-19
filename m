@@ -1,34 +1,30 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: RE: [PATCH] - mpt fusion - mptspi - host reset, kick off
-	domainvalidation again.
-Date: Wed, 19 Apr 2006 18:45:21 -0400
-Message-ID: <1145486721.4003.11.camel@mulgrave.il.steeleye.com>
-References: <664A4EBB07F29743873A87CF62C26D700813E8@NAMAIL4.ad.lsil.com>
+From: Andrew Morton <akpm@osdl.org>
+Subject: areca RAID driver
+Date: Wed, 19 Apr 2006 15:53:00 -0700
+Message-ID: <20060419155300.321c352e.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:33958 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751303AbWDSWpb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Apr 2006 18:45:31 -0400
-In-Reply-To: <664A4EBB07F29743873A87CF62C26D700813E8@NAMAIL4.ad.lsil.com>
+Received: from smtp.osdl.org ([65.172.181.4]:35018 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751309AbWDSWup (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Apr 2006 18:50:45 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric" <Eric.Moore@lsil.com>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@suse.de>
+Cc: erich <erich@areca.com.tw>, billion.wu@areca.com.tw, linux-scsi@vger.kernel.org
 
-On Wed, 2006-04-19 at 15:14 -0600, Moore, Eric wrote:
-> -       if (mpt_reset_register(mptspiDoneCtx, mptscsih_ioc_reset) ==
-> 0) {
-> +       if (mpt_reset_register(mptspiDoneCtx, mptspi_ioc_reset) == 0)
-> {
 
-I haven't followed all the paths, but I'm fairly certain
-mptspi_ioc_reset can be invoked from interrupt context, can't it?  In
-which case it has to use spi_schedule_dv() to get the necessary user
-context to perform the DV.
+Gents, Erich thinks that the Areca driver is pretty much ready to go.
 
-James
+We still have the weird read-past-EOF problem if MAX_XFER_SECTORS=4096, but
+this version of the driver has it set to 512, which makes the problem go
+away.  I've suggested that we can set that problem aside for now.
 
+I've put a copy of the latest diff at
+http://www.zip.com.au/~akpm/linux/patches/stuff/areca-raid-linux-scsi-driver.patch.
+ Could you please take a look sometime, decide how we should proceed?
+
+Thanks.
 
