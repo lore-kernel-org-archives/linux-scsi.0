@@ -1,39 +1,54 @@
-From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: RE: [PATCH] - mpt fusion - resend negotiation parameters afterhost reset and resume
-Date: Tue, 18 Apr 2006 17:58:57 -0600
-Message-ID: <664A4EBB07F29743873A87CF62C26D70081184@NAMAIL4.ad.lsil.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: 2.6.17-rc1+git, Sym2: unknown symbol pcibios_resource_to_bus (fwd)
+Date: Tue, 18 Apr 2006 21:59:08 -0600
+Message-ID: <20060419035908.GH24104@parisc-linux.org>
+References: <Pine.SOC.4.61.0604171849100.21709@math.ut.ee> <20060417.131705.40072804.davem@davemloft.net> <20060417.132638.84565849.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:59893 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1750868AbWDRX7A convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Apr 2006 19:59:00 -0400
-Content-class: urn:content-classes:message
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <sparclinux-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20060417.132638.84565849.davem@davemloft.net>
+Sender: sparclinux-owner@vger.kernel.org
+To: "David S. Miller" <davem@davemloft.net>
+Cc: mroos@linux.ee, sparclinux@vger.kernel.org, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, uclinux-v850@lsi.nec.co.jp, rmk@arm.linux.org.uk
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi@vger.kernel.org
 
-On Tuesday, April 18, 2006 5:23 PM, James Bottomley wrote: 
+On Mon, Apr 17, 2006 at 01:26:38PM -0700, David S. Miller wrote:
+> From: "David S. Miller" <davem@davemloft.net>
+> Date: Mon, 17 Apr 2006 13:17:05 -0700 (PDT)
 > 
-> You probably want to use spi_schedule_dv() here instead of 
-> this for all
-> cases, don't you?
+> > > Forwarded from linux-scsi.
+> >  ...
+> > > pcibios_resource_to_bus is a new function which is inline in
+> > > asm-generic/pci.h.   However, sparc64 overrides it as an external
+> > > function which is in arch/sparc64/kernel/pci.c, so this looks like some
+> > > type of sparc issue.
 
-I was merely implementing this code as it existed prior to 
-spi transport additions.  Meaning we would only send out
-the saved values from the previous dv run, not actually run
-dv all over again.  
+"new" in the sense of "2 years old"?
+2003-03-16 	rmk 	[PCI] pci-8: pci_resource_to_bus()
 
-Are there other spi drivers that do this?  I greped the tree,
-and couldn't find one that ran dv all over again after 
-a host reset.   
+> > Why does the SYM2 driver possible even need this symbol?
+> > That's what I'd like to have explained.
 
-I guess its possible that someone could of swapping out or 
-cutting a cable, then it would make sense to have dv kick started
-again after reset, right?  Is that your concern?  
+Because the firmware needs to be programmed with the bus address.  It's
+not unique in this; the Emulex lpfc driver should also be using this
+function.
 
-Eric
+> If you're going to do stuff like this, being that you're the
+> first driver to ever make direct usage of this interface,
+> please double check the exports on all platforms so that you
+> haven't broken the build of the driver as you have on sparc64.
+
+Er, pcmcia was already using it:
+
+./drivers/pcmcia/i82092.c:      pcibios_resource_to_bus(sock_info->dev,
+&region, mem->res);
+./drivers/pcmcia/yenta_socket.c:
+pcibios_resource_to_bus(socket->dev, &region, mem->res);
+./drivers/pcmcia/yenta_socket.c:
+pcibios_resource_to_bus(socket->dev, &region, &dev->resource[0]);
+
+I suppose you don't test pci-pcmcia adapters very often on sparc64.
+
+Is there a problem with adding the symbol export?  I noticed that v850
+also doesn't export that symbol.
