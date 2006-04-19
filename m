@@ -1,49 +1,48 @@
-From: Stephen Hemminger <shemminger@osdl.org>
-Subject: Re: [RFC] Netlink and user-space buffer pointers
-Date: Wed, 19 Apr 2006 09:26:45 -0700
-Message-ID: <20060419092645.29cb0420@localhost.localdomain>
-References: <1145306661.4151.0.camel@localhost.localdomain>
-	<20060418160121.GA2707@us.ibm.com>
-	<444633B5.5030208@emulex.com>
+From: Orion Poplawski <orion@cora.nwra.com>
+Subject: Vendor specific cdrom error messages
+Date: Wed, 19 Apr 2006 10:26:14 -0600
+Message-ID: <e25obb$2fp$1@sea.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:27064 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1750995AbWDSQ0z (ORCPT
+Received: from main.gmane.org ([80.91.229.2]:56215 "EHLO ciao.gmane.org")
+	by vger.kernel.org with ESMTP id S1750990AbWDSQ07 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Apr 2006 12:26:55 -0400
-In-Reply-To: <444633B5.5030208@emulex.com>
+	Wed, 19 Apr 2006 12:26:59 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1FWFVh-0004fa-VZ
+	for linux-scsi@vger.kernel.org; Wed, 19 Apr 2006 18:26:34 +0200
+Received: from inferno.cora.nwra.com ([65.125.157.178])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Apr 2006 18:26:33 +0200
+Received: from orion by inferno.cora.nwra.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Apr 2006 18:26:33 +0200
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: linux-scsi@vger.kernel.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Wed, 19 Apr 2006 08:57:25 -0400
-James Smart <James.Smart@Emulex.Com> wrote:
+I got the following error trying to burn a DVD on an IBM USB2 DVD-R burner:
 
-> Folks,
-> 
-> To take netlink to where we want to use it within the SCSI subsystem (as
-> the mechanism of choice to replace ioctls), we're going to need to pass
-> user-space buffer pointers.
+Nov  7 11:40:36 makani kernel: cdrom: This disc doesn't have any tracks 
+I recognize!
+Nov  7 11:41:59 makani kernel: sr 0:0:0:0: SCSI error: return code = 
+0x8000002
+Nov  7 11:41:59 makani kernel: sr0: Current: sense key: Data Protect
+Nov  7 11:41:59 makani kernel:     ASC=0x27 <<vendor>> ASCQ=0xff
 
-This changes the design of netlink. It is desired that netlink
-can be done remotely over the network as well as queueing.
-The current design is message based, not RPC based. By including a
-user-space pointer, you are making the message dependent on the
-context as it is process.
+This is on Fedora Core 4 and kernel 2.6.13-1.1532_FC4.
 
-Please rethink your design.
+It turns out that this is because the drive did not have enough power 
+(it was not plugged into the separate ac adapter).  I was able to 
+determine this by booting into Windows, which gave me a nice descriptive 
+error message.
 
-> What is the best, portable manner to pass a pointer between user and kernel
-> space within a netlink message ?  The example I've seen is in the iscsi
-> target code - and it's passed between user-kernel space as a u64, then
-> typecast to a void *, and later within the bio_map_xxx functions, as an
-> unsigned long. I assume we are going to continue with this method ?
-> 
-> -- james s
-> -
-> To unsubscribe from this list: send the line "unsubscribe netdev" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I was wondering if it makes sense for the kernel drivers to know these 
+error messages and report better errors, of it should be left up to user 
+space tools.
+
+- Orion
+
