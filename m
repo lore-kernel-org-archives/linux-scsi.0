@@ -1,12 +1,12 @@
 From: akpm@osdl.org
-Subject: [patch 10/17] scsi/megaraid/megaraid_mm.c: fix a NULL pointer dereference
-Date: Tue, 18 Apr 2006 21:09:18 -0700
-Message-ID: <200604190409.k3J49xpI008230@shell0.pdx.osdl.net>
+Subject: [patch 07/17] drivers/scsi/qla2xxx/: make some functions static
+Date: Tue, 18 Apr 2006 21:09:15 -0700
+Message-ID: <200604190409.k3J49vIO008215@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:6862 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1750801AbWDSENN (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:4814 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1750799AbWDSENL (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Apr 2006 00:13:13 -0400
+	Wed, 19 Apr 2006 00:13:11 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
@@ -15,31 +15,111 @@ Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, bunk@stusta.de
 
 From: Adrian Bunk <bunk@stusta.de>
 
-This patch fixes a NULL pointer dereference spotted by the Coverity
-checker.
+This patch makes some needlessly global functions static.
 
 Signed-off-by: Adrian Bunk <bunk@stusta.de>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/megaraid/megaraid_mm.c |    6 ++----
- 1 files changed, 2 insertions(+), 4 deletions(-)
+ drivers/scsi/qla2xxx/qla_os.c  |   12 ++++++------
+ drivers/scsi/qla2xxx/qla_sup.c |    8 ++++----
+ 2 files changed, 10 insertions(+), 10 deletions(-)
 
-diff -puN drivers/scsi/megaraid/megaraid_mm.c~scsi-megaraid-megaraid_mmc-fix-a-null-pointer-dereference drivers/scsi/megaraid/megaraid_mm.c
---- devel/drivers/scsi/megaraid/megaraid_mm.c~scsi-megaraid-megaraid_mmc-fix-a-null-pointer-dereference	2006-03-21 23:05:42.000000000 -0800
-+++ devel-akpm/drivers/scsi/megaraid/megaraid_mm.c	2006-03-21 23:05:42.000000000 -0800
-@@ -898,10 +898,8 @@ mraid_mm_register_adp(mraid_mmadp_t *lld
+diff -puN drivers/scsi/qla2xxx/qla_os.c~drivers-scsi-qla2xxx-make-some-functions-static drivers/scsi/qla2xxx/qla_os.c
+--- devel/drivers/scsi/qla2xxx/qla_os.c~drivers-scsi-qla2xxx-make-some-functions-static	2006-03-21 23:05:42.000000000 -0800
++++ devel-akpm/drivers/scsi/qla2xxx/qla_os.c	2006-03-21 23:05:42.000000000 -0800
+@@ -274,7 +274,7 @@ qla24xx_pci_info_str(struct scsi_qla_hos
+ 	return str;
+ }
  
- 	adapter = kmalloc(sizeof(mraid_mmadp_t), GFP_KERNEL);
+-char *
++static char *
+ qla2x00_fw_version_str(struct scsi_qla_host *ha, char *str)
+ {
+ 	char un_str[10];
+@@ -312,7 +312,7 @@ qla2x00_fw_version_str(struct scsi_qla_h
+ 	return (str);
+ }
  
--	if (!adapter) {
--		rval = -ENOMEM;
--		goto memalloc_error;
--	}
-+	if (!adapter)
-+		return -ENOMEM;
+-char *
++static char *
+ qla24xx_fw_version_str(struct scsi_qla_host *ha, char *str)
+ {
+ 	sprintf(str, "%d.%02d.%02d ", ha->fw_major_version,
+@@ -600,7 +600,7 @@ qla2x00_wait_for_loop_ready(scsi_qla_hos
+ *
+ * Note:
+ **************************************************************************/
+-int
++static int
+ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
+ {
+ 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
+@@ -734,7 +734,7 @@ qla2x00_eh_wait_for_pending_target_comma
+ *    SUCCESS/FAILURE (defined as macro in scsi.h).
+ *
+ **************************************************************************/
+-int
++static int
+ qla2xxx_eh_device_reset(struct scsi_cmnd *cmd)
+ {
+ 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
+@@ -865,7 +865,7 @@ qla2x00_eh_wait_for_pending_commands(scs
+ *    SUCCESS/FAILURE (defined as macro in scsi.h).
+ *
+ **************************************************************************/
+-int
++static int
+ qla2xxx_eh_bus_reset(struct scsi_cmnd *cmd)
+ {
+ 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
+@@ -926,7 +926,7 @@ eh_bus_reset_done:
+ *
+ * Note:
+ **************************************************************************/
+-int
++static int
+ qla2xxx_eh_host_reset(struct scsi_cmnd *cmd)
+ {
+ 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
+diff -puN drivers/scsi/qla2xxx/qla_sup.c~drivers-scsi-qla2xxx-make-some-functions-static drivers/scsi/qla2xxx/qla_sup.c
+--- devel/drivers/scsi/qla2xxx/qla_sup.c~drivers-scsi-qla2xxx-make-some-functions-static	2006-03-21 23:05:42.000000000 -0800
++++ devel-akpm/drivers/scsi/qla2xxx/qla_sup.c	2006-03-21 23:05:42.000000000 -0800
+@@ -428,7 +428,7 @@ nvram_data_to_access_addr(uint32_t naddr
+ 	return FARX_ACCESS_NVRAM_DATA | naddr;
+ }
  
- 	memset(adapter, 0, sizeof(mraid_mmadp_t));
+-uint32_t
++static uint32_t
+ qla24xx_read_flash_dword(scsi_qla_host_t *ha, uint32_t addr)
+ {
+ 	int rval;
+@@ -469,7 +469,7 @@ qla24xx_read_flash_data(scsi_qla_host_t 
+ 	return dwptr;
+ }
  
+-int
++static int
+ qla24xx_write_flash_dword(scsi_qla_host_t *ha, uint32_t addr, uint32_t data)
+ {
+ 	int rval;
+@@ -491,7 +491,7 @@ qla24xx_write_flash_dword(scsi_qla_host_
+ 	return rval;
+ }
+ 
+-void
++static void
+ qla24xx_get_flash_manufacturer(scsi_qla_host_t *ha, uint8_t *man_id,
+     uint8_t *flash_id)
+ {
+@@ -502,7 +502,7 @@ qla24xx_get_flash_manufacturer(scsi_qla_
+ 	*flash_id = MSB(ids);
+ }
+ 
+-int
++static int
+ qla24xx_write_flash_data(scsi_qla_host_t *ha, uint32_t *dwptr, uint32_t faddr,
+     uint32_t dwords)
+ {
 _
