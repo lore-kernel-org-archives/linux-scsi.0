@@ -1,60 +1,41 @@
-From: Orion Poplawski <orion@cora.nwra.com>
-Subject: Re: Vendor specific cdrom error messages
-Date: Wed, 19 Apr 2006 15:55:43 -0600
-Message-ID: <4446B1DF.9000105@cora.nwra.com>
-References: <e25obb$2fp$1@sea.gmane.org> <44468948.6000109@torque.net>
+From: rct@gherkin.frus.com (Bob Tracy)
+Subject: Re: class_device_add error in SCSI with 2.6.17-rc2-g52824b6b
+Date: Wed, 19 Apr 2006 16:58:03 -0500 (CDT)
+Message-ID: <20060419215803.6DE5BDBA1@gherkin.frus.com>
+References: <20060419213129.GA9148@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from earth.cora.nwra.com ([65.125.157.180]:7149 "EHLO
-	earth.cora.nwra.com") by vger.kernel.org with ESMTP
-	id S1751254AbWDSVz7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Apr 2006 17:55:59 -0400
-In-Reply-To: <44468948.6000109@torque.net>
+Received: from gherkin.frus.com ([192.158.254.49]:27912 "EHLO gherkin.frus.com")
+	by vger.kernel.org with ESMTP id S1751265AbWDSV6F (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Apr 2006 17:58:05 -0400
+In-Reply-To: <20060419213129.GA9148@localhost> "from Mathieu Chouquet-Stringer
+ at Apr 19, 2006 11:31:29 pm"
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi@vger.kernel.org
+To: Mathieu Chouquet-Stringer <mchouque@free.fr>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
 
-Douglas Gilbert wrote:
-> Orion Poplawski wrote:
->> I got the following error trying to burn a DVD on an IBM USB2 DVD-R burner:
->>
->> Nov  7 11:40:36 makani kernel: cdrom: This disc doesn't have any tracks
->> I recognize!
->> Nov  7 11:41:59 makani kernel: sr 0:0:0:0: SCSI error: return code =
->> 0x8000002
->> Nov  7 11:41:59 makani kernel: sr0: Current: sense key: Data Protect
->> Nov  7 11:41:59 makani kernel:     ASC=0x27 <<vendor>> ASCQ=0xff
->>
->> This is on Fedora Core 4 and kernel 2.6.13-1.1532_FC4.
->>
->> It turns out that this is because the drive did not have enough power
->> (it was not plugged into the separate ac adapter).  I was able to
->> determine this by booting into Windows, which gave me a nice descriptive
->> error message.
->>
->> I was wondering if it makes sense for the kernel drivers to know these
->> error messages and report better errors, of it should be left up to user
->> space tools.
+Mathieu Chouquet-Stringer wrote:
+> While booting 2.6.17-rc2-g52824b6b on an alpha (a 164LX clone), I get
+> the following error messages for every sd devices that get registered:
 > 
-> I think that you can guess the answer to the above query.
-> Asc and/or ascq codes >= 0x80 (and <= 0xff) mark the
-> additional sense code as vendor specific.
+> sd 0:0:0:0: Attached scsi disk sda
+> kobject_add failed for 0:0: with -EEXIST, don't try to register things with the same name in the same directory.
 
-Sorry, I'm a bad guesser.  So, user space?
+Similar error previously reported by me for 2.6.17-rc1, except sda got
+added fine: error occurred when attempting to add/register sdb. 
+Thankfully, you were able to append a trace...
 
-> The ascq code looks suspicious. An asc/ascq tuple of
-> <0x27,0x0> ("Write protected") would tie in pretty well
-> with the sense key of "Data Protect". A better choice
-> might be <0x5e,0x0> "Low power condition on".
+I'll be trying the just-released 2.6.17-rc2 this evening.  Report to
+follow, and if there's a problem, I'll attempt to provide the trace
+(will have to be transcribed by hand, as system won't come up far
+enough for syslog to capture anything).
 
-But we don't have any choice here right?  Isn't this simply what the 
-drive returns to us?  Are these codes passed on to user space?
-
-Sorry, completely unfamiliar with the linux scsi stack.  Just trying to 
-get the tools (dvd+rw-tools in this case) to return more informative 
-error messages and thought I'd start from the bottom.
-
-
+-- 
+-----------------------------------------------------------------------
+Bob Tracy                   WTO + WIPO = DMCA? http://www.anti-dmca.org
+rct@frus.com
+-----------------------------------------------------------------------
