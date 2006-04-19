@@ -1,10 +1,10 @@
 From: akpm@osdl.org
-Subject: [patch 01/17] git-scsi-misc-scsi_kmap_atomic_sg-warning-fix
-Date: Tue, 18 Apr 2006 21:09:08 -0700
-Message-ID: <200604190409.k3J49o0o008191@shell0.pdx.osdl.net>
+Subject: [patch 02/17] megaraid: unused variable
+Date: Tue, 18 Apr 2006 21:09:10 -0700
+Message-ID: <200604190409.k3J49pT3008194@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:19661 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1750716AbWDSEJy (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:19917 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1750703AbWDSEJy (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 19 Apr 2006 00:09:54 -0400
 Sender: linux-scsi-owner@vger.kernel.org
@@ -15,29 +15,25 @@ Cc: linux-scsi@vger.kernel.org, akpm@osdl.org
 
 From: Andrew Morton <akpm@osdl.org>
 
-drivers/scsi/scsi_lib.c: In function `scsi_kmap_atomic_sg':
-drivers/scsi/scsi_lib.c:2394: warning: unsigned int format, different type arg (arg 3)
-drivers/scsi/scsi_lib.c:2394: warning: unsigned int format, different type arg (arg 4)
-
+drivers/scsi/megaraid.c: In function `mega_internal_command':
+drivers/scsi/megaraid.c:4474: warning: unused variable `flags'
 
 
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/scsi_lib.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/megaraid.c |    1 -
+ 1 files changed, 1 deletion(-)
 
-diff -puN drivers/scsi/scsi_lib.c~git-scsi-misc-scsi_kmap_atomic_sg-warning-fix drivers/scsi/scsi_lib.c
---- 25/drivers/scsi/scsi_lib.c~git-scsi-misc-scsi_kmap_atomic_sg-warning-fix	2006-04-17 05:26:50.000000000 -0600
-+++ 25-akpm/drivers/scsi/scsi_lib.c	2006-04-17 05:28:25.000000000 -0600
-@@ -2390,7 +2390,8 @@ void *scsi_kmap_atomic_sg(struct scatter
- 	}
+diff -puN drivers/scsi/megaraid.c~megaraid-unused-variable drivers/scsi/megaraid.c
+--- devel/drivers/scsi/megaraid.c~megaraid-unused-variable	2006-04-05 21:27:55.000000000 -0700
++++ devel-akpm/drivers/scsi/megaraid.c	2006-04-05 21:27:55.000000000 -0700
+@@ -4471,7 +4471,6 @@ mega_internal_command(adapter_t *adapter
+ {
+ 	Scsi_Cmnd	*scmd;
+ 	struct	scsi_device *sdev;
+-	unsigned long	flags = 0;
+ 	scb_t	*scb;
+ 	int	rval;
  
- 	if (unlikely(i == sg_count)) {
--		printk(KERN_ERR "%s: Bytes in sg: %u, requested offset %u, elements %d\n",
-+		printk(KERN_ERR "%s: Bytes in sg: %zu, requested offset %zu, "
-+			"elements %d\n",
- 		       __FUNCTION__, sg_len, *offset, sg_count);
- 		WARN_ON(1);
- 		return NULL;
 _
