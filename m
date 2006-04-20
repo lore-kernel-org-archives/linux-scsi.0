@@ -1,61 +1,95 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: areca RAID driver
-Date: Wed, 19 Apr 2006 21:04:25 -0600
-Message-ID: <20060420030425.GN24104@parisc-linux.org>
-References: <20060419155300.321c352e.akpm@osdl.org>
+From: "Zhikun Wang" <raidwang@gmail.com>
+Subject: might_sleep warnings in gereric_make_request
+Date: Thu, 20 Apr 2006 11:05:55 +0800
+Message-ID: <200604201105448287687@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:63153 "EHLO
-	palinux.external.hp.com") by vger.kernel.org with ESMTP
-	id S1750887AbWDTDE3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Apr 2006 23:04:29 -0400
-Content-Disposition: inline
-In-Reply-To: <20060419155300.321c352e.akpm@osdl.org>
+Received: from pproxy.gmail.com ([64.233.166.179]:18935 "EHLO pproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1750887AbWDTDGT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Apr 2006 23:06:19 -0400
+Received: by pproxy.gmail.com with SMTP id i49so54261pye
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Apr 2006 20:06:18 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@suse.de>, erich <erich@areca.com.tw>, billion.wu@areca.com.tw, linux-scsi@vger.kernel.org
+To: Neil Brown <neilb@suse.de>, linux-raid <linux-raid@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Eric Moore <Eric.Moore@lsil.com>
 
-On Wed, Apr 19, 2006 at 03:53:00PM -0700, Andrew Morton wrote:
-> 
-> Gents, Erich thinks that the Areca driver is pretty much ready to go.
-> 
-> We still have the weird read-past-EOF problem if MAX_XFER_SECTORS=4096, but
-> this version of the driver has it set to 512, which makes the problem go
-> away.  I've suggested that we can set that problem aside for now.
-> 
-> I've put a copy of the latest diff at
-> http://www.zip.com.au/~akpm/linux/patches/stuff/areca-raid-linux-scsi-driver.patch.
->  Could you please take a look sometime, decide how we should proceed?
+Hi:
+	I want to call genric_make_request in bio->bi_end_io function. But it incurs might_sleep warnings! I wonder this method is safe in the kernel? Thanks a lot! 
 
-1.
 
-+static int arcmsr_initialize(struct AdapterControlBlock *pACB, struct pci_dev *pdev)
-[...]
-+       pci_read_config_byte(pdev, PCI_COMMAND, &pcicmd);
-+       pci_write_config_byte(pdev, PCI_COMMAND,
-+               pcicmd | PCI_COMMAND_INVALIDATE | PCI_COMMAND_MASTER | PCI_COMMAND_MEMORY);
+cfq: depth 4 reached, tagging now on
+Debug: sleeping function called from invalid context at drivers/block/ll_rw_blk.c:2878
+in_atomic():1, irqs_disabled():0
+ [<c0279467>] generic_make_request+0x1e/0x23a
+ [<c011ad1a>] recalc_task_prio+0xc1/0x150
+ [<c011adff>] activate_task+0x56/0x65
+ [<e0a35dfb>] raid1_end_sync_read+0x245/0x364 [raid1]
+ [<c011be66>] __wake_up_common+0x39/0x59
+ [<e0a35bb6>] raid1_end_sync_read+0x0/0x364 [raid1]
+ [<c0181f29>] bio_endio+0x3d/0x68
+ [<c015576c>] mempool_free+0x67/0x1ca
+ [<c0279a25>] __end_that_request_first+0xc1/0x1f5
+ [<c0274a70>] elv_queue_empty+0x12/0x1b
+ [<e0821e45>] scsi_end_request+0x1e/0x210 [scsi_mod]
+ [<c015576c>] mempool_free+0x67/0x1ca
+ [<c02e5460>] ip_local_deliver+0x60/0x1a2
+ [<e082231b>] scsi_io_completion+0x16c/0x4c2 [scsi_mod]
+ [<c011ad1a>] recalc_task_prio+0xc1/0x150
+ [<c011ad1a>] recalc_task_prio+0xc1/0x150
+ [<e0869fe2>] sd_rw_intr+0x137/0x3b1 [sd_mod]
+ [<e081b3a9>] scsi_finish_command+0x8e/0xc1 [scsi_mod]
+ [<c0103c0e>] common_interrupt+0x1a/0x20
+ [<e081b2d0>] scsi_softirq+0x9e/0xc3 [scsi_mod]
+ [<c0127f1e>] __do_softirq+0x3e/0x8a
+ [<c0105c29>] do_softirq+0x3e/0x42
+ =======================
+ [<c0105b24>] do_IRQ+0x51/0x82
+ [<c0105b24>] do_IRQ+0x51/0x82
+ [<c0103c0e>] common_interrupt+0x1a/0x20
+ [<c010101a>] default_idle+0x0/0x29
+ [<c0101040>] default_idle+0x26/0x29
+ [<c01010a6>] cpu_idle+0x34/0x4c
+ [<c03be71f>] start_kernel+0x154/0x1ab
+ [<c03be2fe>] unknown_bootoption+0x0/0x1cd
+cfq: depth 4 reached, tagging now on
+Debug: sleeping function called from invalid context at drivers/block/ll_rw_blk.c:2878
+in_atomic():1, irqs_disabled():0
+ [<c0279467>] generic_make_request+0x1e/0x23a
+ [<c015576c>] mempool_free+0x67/0x1ca
+ [<c0276e35>] __generic_unplug_device+0x31/0x33
+ [<c011be66>] __wake_up_common+0x39/0x59
+ [<e0a35dfb>] raid1_end_sync_read+0x245/0x364 [raid1]
+ [<e08f67a3>] raid_done_sync+0x2b/0x4a [raid]
+ [<c02cbae7>] skb_checksum+0x55/0x2cc
+ [<e0a35bb6>] raid1_end_sync_read+0x0/0x364 [raid1]
+ [<c0181f29>] bio_endio+0x3d/0x68
+ [<c015576c>] mempool_free+0x67/0x1ca
+ [<c0279a25>] __end_that_request_first+0xc1/0x1f5
+ [<c0274a70>] elv_queue_empty+0x12/0x1b
+ [<e0821e45>] scsi_end_request+0x1e/0x210 [scsi_mod]
+ [<c015576c>] mempool_free+0x67/0x1ca
+ [<c02e5460>] ip_local_deliver+0x60/0x1a2
+ [<e082231b>] scsi_io_completion+0x16c/0x4c2 [scsi_mod]
+ [<e0869fe2>] sd_rw_intr+0x137/0x3b1 [sd_mod]
+ [<c012c59e>] cascade+0x21/0x3b
+ [<e081b3a9>] scsi_finish_command+0x8e/0xc1 [scsi_mod]
+ [<c0103c0e>] common_interrupt+0x1a/0x20
+ [<e081b2d0>] scsi_softirq+0x9e/0xc3 [scsi_mod]
+ [<c0127f1e>] __do_softirq+0x3e/0x8a
+ [<c0105c29>] do_softirq+0x3e/0x42
+ =======================
+ [<c0105b24>] do_IRQ+0x51/0x82
+ [<c0105b24>] do_IRQ+0x51/0x82
+ [<c0103c0e>] common_interrupt+0x1a/0x20
+ [<c010101a>] default_idle+0x0/0x29
+ [<c0101040>] default_idle+0x26/0x29
+ [<c01010a6>] cpu_idle+0x34/0x4c
+ [<c03be71f>] start_kernel+0x154/0x1ab
+ [<c03be2fe>] unknown_bootoption+0x0/0x1cd
 
-It's already calling pci_enable_device() and pci_set_master().  To set
-PCI_COMMAND_INVALIDATE, it should also be calling pci_set_mwi().
 
-2. arcmsr_attr_host_pci_info() is just weird.  I can't imagine why
-anyone would need that information -- you can get it all from sysfs
-already.
 
-3. arcmsr_transport_functions are declared extern ... and never used.
-
-4. There's a *lot* of unnecessarily long lines.  Often in documentation,
-even!
-+**             on the internal bus. Some time later, a PCI master attempts a Memory Read with the same address
-
-5. The other sysfs files don't exactly conform to 'one value per file'
-either.
-
-6. It seems weird to split the driver into three files -- one with the
-sysfs attributes in it, one with everything else, and a header file.
-I don't see why it shouldn't *all* be in drivers/scsi/arcmsr.c
-
-7. The 'linux bug' workaround in queue_command looks decidedly dodgy to
-me, but I'd like someone more experienced to comment on it.
