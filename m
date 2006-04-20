@@ -1,82 +1,122 @@
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: [RFC] Netlink and user-space buffer pointers
-Date: Thu, 20 Apr 2006 16:44:04 -0700
-Message-ID: <20060420234404.GM8514@andrew-vasquezs-powerbook-g4-15.local>
-References: <1145306661.4151.0.camel@localhost.localdomain> <20060418160121.GA2707@us.ibm.com> <444633B5.5030208@emulex.com> <4446AC80.6040604@cs.wisc.edu> <44479BA8.1000405@emulex.com> <4447C8C2.30909@cs.wisc.edu> <4447E91E.7030603@emulex.com>
+Subject: Re: qla2xxx lock ordering question
+Date: Thu, 20 Apr 2006 16:46:06 -0700
+Message-ID: <20060420234606.GO8514@andrew-vasquezs-powerbook-g4-15.local>
+References: <1145438524.3085.19.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:3380 "EHLO avexch02.qlogic.com")
-	by vger.kernel.org with ESMTP id S1751286AbWDTXoE (ORCPT
+Received: from pat.qlogic.com ([198.70.193.2]:2874 "EHLO avexch02.qlogic.com")
+	by vger.kernel.org with ESMTP id S1751288AbWDTXqM (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Apr 2006 19:44:04 -0400
+	Thu, 20 Apr 2006 19:46:12 -0400
 Content-Disposition: inline
-In-Reply-To: <4447E91E.7030603@emulex.com>
+In-Reply-To: <1145438524.3085.19.camel@laptopd505.fenrus.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <James.Smart@Emulex.Com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: mingo@elte.hu, linux-scsi@vger.kernel.org
 
-On Thu, 20 Apr 2006, James Smart wrote:
+On Wed, 19 Apr 2006, Arjan van de Ven wrote:
 
-> Note: We've transitioned off topic. If what this means is "there isn't a 
-> good
-> way except by ioctls (which still isn't easily portable) or system calls",
-> then that's ok. Then at least we know the limits and can look at other
-> implementation alternatives.
-
-this topic has been brought-up many times in the past, most recently:
-
-	http://thread.gmane.org/gmane.linux.drivers.openib/19525/focus=19525
-	http://thread.gmane.org/gmane.linux.kernel/387375/focus=387455
-
-where is was suggested to pathscale folks to use some blend of sysfs,
-netlink sockets and debugfs:
-
-	http://kerneltrap.org/node/4394
-
-> >>Mike Christie wrote:
-> >Instead of netlink for scsi commands and transport requests....
-> >
-> >For scsi commands could we just use sg io, or is there something special
-> >about the command you want to send? If you can use sg io for scsi
-> >commands, maybe for transport level requests (in my example iscsi pdu)
-> >we could modify something like sg/bsg/block layer scsi_ioctl.c to send
-> >down transport requests to the classes and encapsulate them in some new
-> >struct transport_requests or use the existing struct request but do that
-> >thing people keep taling about using the request/request_queue for
-> >message passing.
+> a question about qla2xxx lock ordering since it trips up with Ingo's
+> lock depenceny tool:
 > 
-> Well - there's 2 parts to this answer:
+> in qla2x00_mailbox_command() the code first grabs the mbx_reg_lock lock,
+> then the hardware_lock. So far so good. But then...
+> it drops the mbx_reg_lock, does stuff, and regrabs the mbx_reg_lock
+> lock, while keeping the hardware_lock held!
 > 
-> First : IOCTL's are considered dangerous/bad practice and therefore it would
->   be nice to find a replacement mechanism that eliminates them. If that
->   mechanism has some of the cool features that netlink does, even better.
->   Using sg io, in the manner you indicate, wouldn't remove the ioctl use.
->   Note: I have OEMs/users that are very confused about the community's 
->   statement
->   about ioctls. They've heard they are bad, should never be allowed, will no
->   be longer supported, but yet they are at the heart of DM and sg io and 
->   other
->   subsystems. Other than a "grandfathered" explanation, they don't 
->   understand
->   why the rules bend for one piece of code but not for another. To them, all
->   the features are just as critical regardless of whose providing them.
+> This appears to be an AB-BA deadlock risk since for the second part you
+> are taking the locks in the wrong order... or am I missing something
+> here?
 
-I believe it to be the same for most hardware-vendor's customers...
+Actually the code is a bit convoluted, but I believe we are OK.  There
+are two scenarios we need to consider:
 
-> Second: transport level i/o could be done like you suggest, and we've
->   prototyped some of this as well. However, there's something very wrong
->   about putting "block device" wrappers and settings around something that
->   is not a block device.
+   abort_active == 0 && io_lock_on == 1:
 
-Eeww...  no wrappers.  Your netlink prototypes certainly get FC-
-transport further along, but would also be nice if there could be some
-subsystem consensus on *the* interface.
+	- mbx_reg_lock is acquired:
 
-I honestly don't know which interface is *best*, but from a HBA
-vendors perspective managing per-request locally allocated memory is
-undesirable.
+		...
+		/* Try to get mailbox register access */
+		if (!abort_active)
+			spin_lock_irqsave(&ha->mbx_reg_lock, mbx_flags);
 
-Thanks,
-av
+	- hardware_lock is acquired
+
+		...
+		DEBUG11(printk("scsi(%ld): prepare to issue mbox cmd=0x%x.\n",
+		   ha->host_no, mcp->mb[0]);)
+
+		spin_lock_irqsave(&ha->hardware_lock, flags);
+
+	- hardware_lock is relinquished:
+
+		...
+		/* Wait for mbx cmd completion until timeout */
+
+		if (!abort_active && io_lock_on) {
+			...
+			if (IS_QLA24XX(ha) || IS_QLA54XX(ha))
+				WRT_REG_DWORD(&reg->isp24.hccr, HCCRX_SET_HOST_INT);
+			else
+				WRT_REG_WORD(&reg->isp.hccr, HCCR_SET_HOST_INT);
+			spin_unlock_irqrestore(&ha->hardware_lock, flags);
+
+	- mbx_reg_lock is relinquished:
+
+			if (!abort_active)
+				spin_unlock_irqrestore(&ha->mbx_reg_lock, mbx_flags);
+			...
+
+	- mbx_reg_lock is acquired:
+
+			...
+		}
+
+		if (!abort_active)
+			spin_lock_irqsave(&ha->mbx_reg_lock, mbx_flags);
+
+	- mbx_reg_lock is relinquished:
+
+		...
+		if (!abort_active)
+			spin_unlock_irqrestore(&ha->mbx_reg_lock, mbx_flags);
+
+and the second:
+
+   abort_active == 1 && io_lock_on == DONT_CARE:
+
+	- hardware_lock is acquired
+
+		...
+		DEBUG11(printk("scsi(%ld): prepare to issue mbox cmd=0x%x.\n",
+		   ha->host_no, mcp->mb[0]);)
+
+		spin_lock_irqsave(&ha->hardware_lock, flags);
+
+	- hardware_lock is relinquished:
+
+		...
+		/* Wait for mbx cmd completion until timeout */
+
+		if (!abort_active && io_lock_on) {
+			...
+		} else {
+			DEBUG3_11(printk("%s(%ld): cmd=%x POLLING MODE.\n", __func__,
+			    ha->host_no, command);)
+
+			if (IS_QLA24XX(ha) || IS_QLA54XX(ha))
+				WRT_REG_DWORD(&reg->isp24.hccr, HCCRX_SET_HOST_INT);
+			else
+				WRT_REG_WORD(&reg->isp.hccr, HCCR_SET_HOST_INT);
+			spin_unlock_irqrestore(&ha->hardware_lock, flags);
+
+> Greetings,
+>    Arjan van de Ven
+
+Not pretty, I had to looks at this several times as well...
+
+-- 
+AV
