@@ -1,102 +1,74 @@
-From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: RE: [PATCH] - mpt fusion - mptspi - host reset, kick offdomainvalidation again.
-Date: Wed, 19 Apr 2006 18:28:24 -0600
-Message-ID: <664A4EBB07F29743873A87CF62C26D70081480@NAMAIL4.ad.lsil.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 1/2] SCSI: implement scsi_eh_schedule_cmd()
+Date: Thu, 20 Apr 2006 11:07:11 +0900
+Message-ID: <4446ECCF.7080000@gmail.com>
+References: <20060419184916.22608.qmail@web31809.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C66411.573FBD85"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:36483 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1751340AbWDTA2c (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Apr 2006 20:28:32 -0400
-Content-class: urn:content-classes:message
+Received: from nz-out-0102.google.com ([64.233.162.205]:49719 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1750722AbWDTCHa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Apr 2006 22:07:30 -0400
+Received: by nz-out-0102.google.com with SMTP id o37so45505nzf
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Apr 2006 19:07:29 -0700 (PDT)
+In-Reply-To: <20060419184916.22608.qmail@web31809.mail.mud.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi@vger.kernel.org
+To: ltuikov@yahoo.com
+Cc: Patrick Mansfield <patmans@us.ibm.com>, Jeff Garzik <jgarzik@pobox.com>, hch@lst.de, James.Bottomley@SteelEye.com, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, arjan@infradead.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
+Luben Tuikov wrote:
+> Hi Tejun,
+> 
+> --- Tejun Heo <htejun@gmail.com> wrote:
+>> So, what's your suggestion here?  Do you think libata should do such 
+>> things with its own mechanism?
+> 
+> Your instinct is correct.  Anything between I and T, as in I_T, is SDS
+> domain.  That is, SAM doesn't have a _context_ for anything between the I and T.
+> (In SATA's case I_T_L, of course.)
+> 
+> So this is why you shouldn't call SCSI's ER without context, as in "Hey,
+> neither command, nor device is broken, but do some ER for me."  Such work belongs
+> in your SATA Layer, unless either a device or command is involved, as we discussed.
+> 
+> Handle protocol ER in your SATA layer.  Note however that most of your ER could
+> be done on behalf of a command or device, since of course, a device or command(s)
+> end up being affected.  Basically "do as little as possible but no less" technique.
+> 
 
-------_=_NextPart_001_01C66411.573FBD85
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Hello, Luben.
 
-On Wednesday, April 19, 2006 4:45 PM, James Bottomley wrote:=20
->=20
-> I haven't followed all the paths, but I'm fairly certain
-> mptspi_ioc_reset can be invoked from interrupt context, can't it?  In
-> which case it has to use spi_schedule_dv() to get the necessary user
-> context to perform the DV.
->=20
+I see your point regarding SAM.  If this is the consensus among SCSI 
+developers, I guess eh_schedule_host() shouldn't be added.
 
-Yes, it appears that all calling functions of MptResetHandlers[], pass
-the sleepFlag.  Therefore its a possibility that at some time it could
-be=20
-called at interrupt time, but mostly like not.   Thanks for pointing out
-that.
+Hmmm.. libata isn't SCSI.  It's just hitch-hiking on the back of SCSI at 
+the moment.  And, being able to invoke EH on the host directly makes 
+things a lot simpler for libata.  So, what do you think about just 
+adding shost->host_eh_scheduled, adding a condition to 
+scsi_error_handler() and export scsi_eh_wakeup()?  The changes will be 
+like three lines.  And, also, ->host_eh_scheduled can be marked as hack 
+for libata.  libata can handle the rest.
 
-We need to quiese io before and after calling spi_schedule_dv(),
-therefore
-I prefer if we spawn a work thread from mptspi, then call
-mptspi_dv_device.
+This may not be the most graceful thing to do but...
 
-Attached updated patch.
+1. SCSI change is minimal
 
-Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
+2. it's a temporary measure (moving libata out of SCSI is one of the 
+items on my agenda and if no one else does it I'm gonna give a shot at 
+it in not-so-distant future.  Once libata is gone of SCSI, the three 
+lines can be removed.)
 
+3. It will take a lot more work to achieve the same thing in libata 
+proper without the three line change.
 
+Luben, what do you think?
 
+James and Jeff, any opinion on this matter?
 
+Thanks.
 
-
-------_=_NextPart_001_01C66411.573FBD85
-Content-Type: application/octet-stream;
-	name="spi_dv_fix.patch"
-Content-Transfer-Encoding: base64
-Content-Description: spi_dv_fix.patch
-Content-Disposition: attachment;
-	filename="spi_dv_fix.patch"
-
-ZGlmZiAtdWFyTiBiL2RyaXZlcnMvbWVzc2FnZS9mdXNpb24vbXB0c3BpLmMgYS9kcml2ZXJzL21l
-c3NhZ2UvZnVzaW9uL21wdHNwaS5jCi0tLSBiL2RyaXZlcnMvbWVzc2FnZS9mdXNpb24vbXB0c3Bp
-LmMJMjAwNi0wNC0xNyAxMDozMzo1MC4wMDAwMDAwMDAgLTA2MDAKKysrIGEvZHJpdmVycy9tZXNz
-YWdlL2Z1c2lvbi9tcHRzcGkuYwkyMDA2LTA0LTE5IDE4OjE2OjExLjAwMDAwMDAwMCAtMDYwMApA
-QCAtNzgzLDYgKzc4Myw3MCBAQAogfTsKIE1PRFVMRV9ERVZJQ0VfVEFCTEUocGNpLCBtcHRzcGlf
-cGNpX3RhYmxlKTsKIAorCisvKgorICogcmVuZWdvdGlhdGUgZm9yIGEgZ2l2ZW4gdGFyZ2V0Cisg
-Ki8KK3N0YXRpYyB2b2lkCittcHRzcGlfZHZfcmVuZWdvdGlhdGVfd29yayh2b2lkICpkYXRhKQor
-eworCXN0cnVjdCB3b3JrX3F1ZXVlX3dyYXBwZXIgKndxdyA9IChzdHJ1Y3Qgd29ya19xdWV1ZV93
-cmFwcGVyICopZGF0YTsKKwlzdHJ1Y3QgX01QVF9TQ1NJX0hPU1QgKmhkID0gd3F3LT5oZDsKKwlz
-dHJ1Y3Qgc2NzaV9kZXZpY2UgKnNkZXY7CisKKwlrZnJlZSh3cXcpOworCisJc2hvc3RfZm9yX2Vh
-Y2hfZGV2aWNlKHNkZXYsIGhkLT5pb2MtPnNoKQorCQltcHRzcGlfZHZfZGV2aWNlKGhkLCBzZGV2
-KTsKK30KKworc3RhdGljIHZvaWQKK21wdHNwaV9kdl9yZW5lZ290aWF0ZShzdHJ1Y3QgX01QVF9T
-Q1NJX0hPU1QgKmhkKQoreworCXN0cnVjdCB3b3JrX3F1ZXVlX3dyYXBwZXIgKndxdyA9IGttYWxs
-b2Moc2l6ZW9mKCp3cXcpLCBHRlBfQVRPTUlDKTsKKworCWlmICghd3F3KQorCQlyZXR1cm47CisK
-KwlJTklUX1dPUksoJndxdy0+d29yaywgbXB0c3BpX2R2X3JlbmVnb3RpYXRlX3dvcmssIHdxdyk7
-CisJd3F3LT5oZCA9IGhkOworCisJc2NoZWR1bGVfd29yaygmd3F3LT53b3JrKTsKK30KKworLyoK
-KyAqIHNwaSBtb2R1bGUgcmVzZXQgaGFuZGxlcgorICovCitzdGF0aWMgaW50CittcHRzcGlfaW9j
-X3Jlc2V0KE1QVF9BREFQVEVSICppb2MsIGludCByZXNldF9waGFzZSkKK3sKKwlzdHJ1Y3QgX01Q
-VF9TQ1NJX0hPU1QgKmhkID0gKHN0cnVjdCBfTVBUX1NDU0lfSE9TVCAqKWlvYy0+c2gtPmhvc3Rk
-YXRhOworCWludCByYzsKKworCXJjID0gbXB0c2NzaWhfaW9jX3Jlc2V0KGlvYywgcmVzZXRfcGhh
-c2UpOworCisJaWYgKHJlc2V0X3BoYXNlID09IE1QVF9JT0NfUE9TVF9SRVNFVCkKKwkJbXB0c3Bp
-X2R2X3JlbmVnb3RpYXRlKGhkKTsKKworCXJldHVybiByYzsKK30KKworLyoKKyAqIHNwaSBtb2R1
-bGUgcmVzdW1lIGhhbmRsZXIKKyAqLworc3RhdGljIGludAorbXB0c3BpX3Jlc3VtZShzdHJ1Y3Qg
-cGNpX2RldiAqcGRldikKK3sKKwlNUFRfQURBUFRFUiAJKmlvYyA9IHBjaV9nZXRfZHJ2ZGF0YShw
-ZGV2KTsKKwlzdHJ1Y3QgX01QVF9TQ1NJX0hPU1QgKmhkID0gKHN0cnVjdCBfTVBUX1NDU0lfSE9T
-VCAqKWlvYy0+c2gtPmhvc3RkYXRhOworCWludCByYzsKKworCXJjID0gbXB0c2NzaWhfcmVzdW1l
-KHBkZXYpOworCW1wdHNwaV9kdl9yZW5lZ290aWF0ZShoZCk7CisKKwlyZXR1cm4gcmM7Cit9CisK
-IC8qPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0t
-PS09LT0tPS09LT0tPS09LT0tPS09Ki8KIC8qPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0t
-PS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09Ki8KIC8qCkBAIC0x
-MDMyLDcgKzEwOTYsNyBAQAogCS5zaHV0ZG93bgk9IG1wdHNjc2loX3NodXRkb3duLAogI2lmZGVm
-IENPTkZJR19QTQogCS5zdXNwZW5kCT0gbXB0c2NzaWhfc3VzcGVuZCwKLQkucmVzdW1lCQk9IG1w
-dHNjc2loX3Jlc3VtZSwKKwkucmVzdW1lCQk9IG1wdHNwaV9yZXN1bWUsCiAjZW5kaWYKIH07CiAK
-QEAgLTEwNjEsNyArMTEyNSw3IEBACiAJCSAgIjogUmVnaXN0ZXJlZCBmb3IgSU9DIGV2ZW50IG5v
-dGlmaWNhdGlvbnNcbiIpKTsKIAl9CiAKLQlpZiAobXB0X3Jlc2V0X3JlZ2lzdGVyKG1wdHNwaURv
-bmVDdHgsIG1wdHNjc2loX2lvY19yZXNldCkgPT0gMCkgeworCWlmIChtcHRfcmVzZXRfcmVnaXN0
-ZXIobXB0c3BpRG9uZUN0eCwgbXB0c3BpX2lvY19yZXNldCkgPT0gMCkgewogCQlkcHJpbnRrKChL
-RVJOX0lORk8gTVlOQU0KIAkJICAiOiBSZWdpc3RlcmVkIGZvciBJT0MgcmVzZXQgbm90aWZpY2F0
-aW9uc1xuIikpOwogCX0K
-
-------_=_NextPart_001_01C66411.573FBD85--
+-- 
+tejun
