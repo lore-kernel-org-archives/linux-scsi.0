@@ -1,76 +1,105 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: areca RAID driver
-Date: Thu, 20 Apr 2006 13:07:23 -0700
-Message-ID: <20060420130723.2cc2396e.akpm@osdl.org>
-References: <20060419155300.321c352e.akpm@osdl.org>
-	<20060420194831.GA7923@lst.de>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [RFC] Netlink and user-space buffer pointers
+Date: Thu, 20 Apr 2006 16:18:12 -0400
+Message-ID: <4447EC84.7030502@torque.net>
+References: <1145306661.4151.0.camel@localhost.localdomain> <20060418160121.GA2707@us.ibm.com> <444633B5.5030208@emulex.com> <4446AC80.6040604@cs.wisc.edu> <44479BA8.1000405@emulex.com> <4447C8C2.30909@cs.wisc.edu>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:20712 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751241AbWDTUId (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Apr 2006 16:08:33 -0400
-In-Reply-To: <20060420194831.GA7923@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <4447C8C2.30909@cs.wisc.edu>
+Sender: netdev-owner@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: James.Smart@Emulex.Com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@steeleye.com, hch@lst.de, axboe@suse.de, erich@areca.com.tw, billion.wu@areca.com.tw, linux-scsi@vger.kernel.org
 
-Christoph Hellwig <hch@lst.de> wrote:
->
-> On Wed, Apr 19, 2006 at 03:53:00PM -0700, Andrew Morton wrote:
-> > 
-> > Gents, Erich thinks that the Areca driver is pretty much ready to go.
-> > 
-> > We still have the weird read-past-EOF problem if MAX_XFER_SECTORS=4096, but
-> > this version of the driver has it set to 512, which makes the problem go
-> > away.  I've suggested that we can set that problem aside for now.
-> > 
-> > I've put a copy of the latest diff at
-> > http://www.zip.com.au/~akpm/linux/patches/stuff/areca-raid-linux-scsi-driver.patch.
-> >  Could you please take a look sometime, decide how we should proceed?
+Mike Christie wrote:
+> James Smart wrote:
 > 
-> It still doesn't address lots of the month-old comments.
+>>Mike Christie wrote:
+>>
+>>>For the tasks you want to do for the fc class is performance critical?
+>>
+>>No, it should not be.
+>>
+>>
+>>>If not, you could do what the iscsi class (for the netdev people this is
+>>>drivers/scsi/scsi_transport_iscsi.c) does and just suffer a couple
+>>>copies. For iscsi we do this in userspace to send down a login pdu:
+>>>
+>>>    /*
+>>>     * xmitbuf is a buffer that is large enough for the iscsi_event,
+>>>     * iscsi pdu (hdr_size) and iscsi pdu data (data_size)
+>>>     */
+>>
+>>Well, the real difference is that the payload of the "message" is actually
+>>the payload of the SCSI command or ELS/CT Request. Thus, the payload may
 > 
-> Serious stuff:
->  - doesn't follow one value per file in sysfs rule
->  - arcmsr_device_probe (which should really be called arcmsr_probe!)
->    doesn't propagate the pci_enable_device return value
->  - ditto  for request_irq
->  - please do proper goto unwinding in arcmsr_device_probe instead of
->    calling arcmsr_pcidev_disattach in various places
->  - arcmsr_report_sense_info is buggy.  all scsi-commands are S/G lists
->    now.
->  - pleaase don't put that odd "linux bug" workaround into
->    arcmsr_queue_command.  If you can reproduce that bug please report it
->    and we'll fix it.
->  - the target 16 inquiry emulation is broken for the same reasons as the
->    report_luns one above.  Care to explain why you need it at all?
->  - I can't see any endianess handling in the whole driver.  Was this
->    tested on a BE platform like powerpc?
->  - the probe path is doing mmio access before pci_request_regions.
->  - scsi_remove_host is called far too late
->  - dma_addr_ts are casted to unsigned longs which doesn't work
->    with 64bit dma and 32bit plattforms
 > 
-> Cosmetical stuff:
+> I am not sure I follow. For iscsi, everything after the iscsi_event
+> struct can be the iscsi request that is to be transmitted. The payload
+> will not normally be Mbytes but it is not a couple if bytes.
 > 
->  - odd formated comments instead of kerneldoc / per CondingStyle
->  - very odd variable naming, lots of uppercase and p prefixes
->  - please kill all these useless forward-declarations and format
->    the code in the natural call flow
->  - the consistent_dma_mask is 32bits by default, not need to call
->    pci_set_consistent_dma_mask
 > 
+>>range in size from a few hundred bytes to several kbytes (> 1 page) to
+>>Mbyte's in size. Rather than buffer all of this, and push it over the
+>>socket,
+>>thus the extra copies - it would best to have the LLDD simply DMA the
+>>payload like on a typical SCSI command.  Additionally, there will be
+>>response data that can be several kbytes in length.
+>>
+> 
+> 
+> Once you have got the buffer to the class, the class can create a
+> scatterlist to DMA from for the LLD. I thought. iscsi does not do this
+> just because it is software right now. For qla4xxx we do not need
+> something like what you are talking about (see below for what I was
+> thinking about for the initiators). If you are saying the extra step of
+> the copy is plain dumb, I agree, but this happens (you have to suffer
+> some copy and cannot do dio) for sg io as well in some cases. I think
+> for the sg driver the copy_*_user is the default.
 
-Thanks again, Christoph.  I'll add the above to the changelog (along with
-Matthew's observations)
+Mike,
+Indirect IO is the default in the sg driver because:
+  - it has always been thus
+  - the sg driver is less constrained (e.g. max number
+    of scatg elements is a bigger issue with dio)
+  - the only alignment to worry about is byte
+    alignment (some folks would like bit alignment
+    but you can't please everybody)
+  - there is no need for the sg driver to pin user
+    pages in memory (as there is with direct IO and
+    mmaped-IO)
 
-> And there's probably a lot more issues.  Below is a patch that tries to
-> cleanup the pci driver entry points according to the above list.  Due
-> to all this moving things around it's pretty huge.
+> Instead of netlink for scsi commands and transport requests....
 
-Erich, could you please test and review this patch, and send the result
-back to me for integration?
+With a netlink based pass through one might:
+  - improve on the SG_IO ioctl and add things like
+    tags that are currently missing
+  - introduce a proper SCSI task management function
+    pass through (no request queue please)
+  - make other pass throughs for SAS: SMP and STP
+  - have an alternative to sysfs for various control
+    functions in a HBA (e.g. in SAS: link and hard
+    reset) and fetching performance data from a HBA
 
+Apart from how to get data efficiently between the HBA
+and the user space, another major issue is the flexibility
+of the bind() in s_netlink (storage netlink??).
+
+> For scsi commands could we just use sg io, or is there something special
+> about the command you want to send? If you can use sg io for scsi
+> commands, maybe for transport level requests (in my example iscsi pdu)
+> we could modify something like sg/bsg/block layer scsi_ioctl.c to send
+> down transport requests to the classes and encapsulate them in some new
+> struct transport_requests or use the existing struct request but do that
+> thing people keep taling about using the request/request_queue for
+> message passing.
+
+Some SG_IO ioctl users want up to 32 MB in one transaction
+and others want their data fast. Many pass through users
+view the kernel as an impediment (not so much as "the way"
+as "in the way").
+
+Doug Gilbert
