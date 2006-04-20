@@ -1,60 +1,92 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [RFC] Netlink and user-space buffer pointers
-Date: Thu, 20 Apr 2006 16:51:09 -0500
-Message-ID: <4448024D.3030800@cs.wisc.edu>
-References: <1145306661.4151.0.camel@localhost.localdomain> <20060418160121.GA2707@us.ibm.com> <444633B5.5030208@emulex.com> <4446AC80.6040604@cs.wisc.edu> <44479BA8.1000405@emulex.com> <4447C8C2.30909@cs.wisc.edu> <4447E91E.7030603@emulex.com>
+From: Ken Witherow <ken@krwtech.com>
+Subject: [PATCH 2.6.16] scsi: clean up warnings in Advansys driver
+Date: Thu, 20 Apr 2006 18:19:53 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0604201735100.2044@death>
+References: <Pine.LNX.4.64.0604191444200.1841@death> <20060419163247.6986a87c.akpm@osdl.org>
+ <20060419224202.3e2f99f5.akpm@osdl.org> <Pine.LNX.4.64.0604200242410.3134@death>
+ <20060420004915.45cd34be.akpm@osdl.org>
+Reply-To: Ken Witherow <ken@krwtech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:12181 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S932071AbWDTVvR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Apr 2006 17:51:17 -0400
-In-Reply-To: <4447E91E.7030603@emulex.com>
+Received: from cpe-66-66-109-154.rochester.res.rr.com ([66.66.109.154]:46051
+	"EHLO death.krwtech.com") by vger.kernel.org with ESMTP
+	id S932081AbWDTWT7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Apr 2006 18:19:59 -0400
+In-Reply-To: <20060420004915.45cd34be.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: linux-scsi@vger.kernel.org
+To: James.Bottomley@SteelEye.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Andrew Morton <akpm@osdl.org>
 
-snipped lkml and netdev. I do not think they care do they.
+Fix typecast warnings and switch from check_region to request_region
 
-James Smart wrote:
-> Note: We've transitioned off topic. If what this means is "there isn't a
-> good
-> way except by ioctls (which still isn't easily portable) or system calls",
-> then that's ok. Then at least we know the limits and can look at other
-> implementation alternatives.
-> 
+Signed-off-by: Ken Witherow <ken@krwtech.com>
 
-So we have
+---
+  drivers/scsi/advansys.c |   17 ++++++++++-------
+  1 file changed, 10 insertions(+), 7 deletions(-)
 
-1. sysfs: prbably bad becuase to pass down every attr for the command we
-need a seperate file. This does not seem like it meets the binary sysfs
-file requirement.
 
-2. configfs: again bad becuase we have to pass down eveyr attr for the
-command in a speperate file.
 
-3. ioctl: Christoph has not allowed scsi drivers to add ioctls so I
-doubt he would let some other scsi code let it.
+--- linux-2.6.16/drivers/scsi/advansys.c	2006-03-20 00:53:29.000000000 -0500
++++ linux/drivers/scsi/advansys.c	2006-04-20 17:27:43.000000000 -0400
+@@ -2056,11 +2056,11 @@ STATIC ASC_DCNT  AscGetMaxDmaCount(ushor
+  /*
+   * Define Adv Library required memory access macros.
+   */
+-#define ADV_MEM_READB(addr) readb(addr)
+-#define ADV_MEM_READW(addr) readw(addr)
+-#define ADV_MEM_WRITEB(addr, byte) writeb(byte, addr)
+-#define ADV_MEM_WRITEW(addr, word) writew(word, addr)
+-#define ADV_MEM_WRITEDW(addr, dword) writel(dword, addr)
++#define ADV_MEM_READB(addr) readb((void *) addr)
++#define ADV_MEM_READW(addr) readw((void *) addr)
++#define ADV_MEM_WRITEB(addr, byte) writeb(byte, (void *) addr)
++#define ADV_MEM_WRITEW(addr, word) writew(word, (void *) addr)
++#define ADV_MEM_WRITEDW(addr, dword) writel(dword,(void *) addr)
 
-4. syscall:
+  #define ADV_CARRIER_COUNT (ASC_DEF_MAX_HOST_QNG + 15)
 
-5. netlink: netdev guys do not want use to pass pointers. So we either
-have a worst case double copy (copy from userspace to network and
-network to buffer that is within the LLDs queue limits (do like sg where
-it as a preallocated buffer)) or if we used the bio code like how the
-ll_rw_blk.c does just fail if the command is to large. In some cases the
-io may just be too large and have to fail though.
+@@ -4415,7 +4415,7 @@ advansys_detect(struct scsi_host_templat
+                          ASC_DBG1(1,
+                                  "advansys_detect: probing I/O port 0x%x...\n",
+                              iop);
+-                        if (check_region(iop, ASC_IOADR_GAP) != 0) {
++			if (!request_region(iop, ASC_IOADR_GAP, "advansys")){
+                              printk(
+  "AdvanSys SCSI: specified I/O Port 0x%X is busy\n", iop);
+                              /* Don't try this I/O port twice. */
+@@ -4425,6 +4425,7 @@ advansys_detect(struct scsi_host_templat
+                              printk(
+  "AdvanSys SCSI: specified I/O Port 0x%X has no adapter\n", iop);
+                              /* Don't try this I/O port twice. */
++			    release_region(iop, ASC_IOADR_GAP);
+                              asc_ioport[ioport] = 0;
+                              goto ioport_try_again;
+                          } else {
+@@ -4445,6 +4446,7 @@ advansys_detect(struct scsi_host_templat
+                                   ioport++;
+                                   goto ioport_try_again;
+                              }
++			    release_region(iop, ASC_IOADR_GAP);
+                          }
+                          /*
+                           * This board appears good, don't try the I/O port
+@@ -9752,13 +9754,14 @@ AscSearchIOPortAddr11(
+      }
+      for (; i < ASC_IOADR_TABLE_MAX_IX; i++) {
+          iop_base = _asc_def_iop_base[i];
+-        if (check_region(iop_base, ASC_IOADR_GAP) != 0) {
++	if (!request_region(iop_base, ASC_IOADR_GAP, "advansys")){
+              ASC_DBG1(1,
+                 "AscSearchIOPortAddr11: check_region() failed I/O port 0x%x\n",
+                       iop_base);
+              continue;
+          }
+          ASC_DBG1(1, "AscSearchIOPortAddr11: probing I/O port 0x%x\n", iop_base);
++	release_region(iop_base, ASC_IOADR_GAP);
+          if (AscFindSignature(iop_base)) {
+              return (iop_base);
+          }
 
-	5A. modify netlink to copy data to a buffer that is within some sort of
-limits we can DMA from.
-	5B. debate with netdev guys about passing poitners, in which case we
-could have some of the problem 5 has in that when we map data we do not
-have much control over the pages so we may have to drop down to a copy
-to some preallocate buffer or fail model.
-
-6. char device
-
-7. what else...
