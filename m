@@ -1,74 +1,61 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 1/2] SCSI: implement scsi_eh_schedule_cmd()
-Date: Thu, 20 Apr 2006 11:07:11 +0900
-Message-ID: <4446ECCF.7080000@gmail.com>
-References: <20060419184916.22608.qmail@web31809.mail.mud.yahoo.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: areca RAID driver
+Date: Wed, 19 Apr 2006 21:04:25 -0600
+Message-ID: <20060420030425.GN24104@parisc-linux.org>
+References: <20060419155300.321c352e.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.205]:49719 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S1750722AbWDTCHa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Apr 2006 22:07:30 -0400
-Received: by nz-out-0102.google.com with SMTP id o37so45505nzf
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Apr 2006 19:07:29 -0700 (PDT)
-In-Reply-To: <20060419184916.22608.qmail@web31809.mail.mud.yahoo.com>
+Received: from palinux.external.hp.com ([192.25.206.14]:63153 "EHLO
+	palinux.external.hp.com") by vger.kernel.org with ESMTP
+	id S1750887AbWDTDE3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Apr 2006 23:04:29 -0400
+Content-Disposition: inline
+In-Reply-To: <20060419155300.321c352e.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: ltuikov@yahoo.com
-Cc: Patrick Mansfield <patmans@us.ibm.com>, Jeff Garzik <jgarzik@pobox.com>, hch@lst.de, James.Bottomley@SteelEye.com, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, arjan@infradead.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@suse.de>, erich <erich@areca.com.tw>, billion.wu@areca.com.tw, linux-scsi@vger.kernel.org
 
-Luben Tuikov wrote:
-> Hi Tejun,
+On Wed, Apr 19, 2006 at 03:53:00PM -0700, Andrew Morton wrote:
 > 
-> --- Tejun Heo <htejun@gmail.com> wrote:
->> So, what's your suggestion here?  Do you think libata should do such 
->> things with its own mechanism?
+> Gents, Erich thinks that the Areca driver is pretty much ready to go.
 > 
-> Your instinct is correct.  Anything between I and T, as in I_T, is SDS
-> domain.  That is, SAM doesn't have a _context_ for anything between the I and T.
-> (In SATA's case I_T_L, of course.)
+> We still have the weird read-past-EOF problem if MAX_XFER_SECTORS=4096, but
+> this version of the driver has it set to 512, which makes the problem go
+> away.  I've suggested that we can set that problem aside for now.
 > 
-> So this is why you shouldn't call SCSI's ER without context, as in "Hey,
-> neither command, nor device is broken, but do some ER for me."  Such work belongs
-> in your SATA Layer, unless either a device or command is involved, as we discussed.
-> 
-> Handle protocol ER in your SATA layer.  Note however that most of your ER could
-> be done on behalf of a command or device, since of course, a device or command(s)
-> end up being affected.  Basically "do as little as possible but no less" technique.
-> 
+> I've put a copy of the latest diff at
+> http://www.zip.com.au/~akpm/linux/patches/stuff/areca-raid-linux-scsi-driver.patch.
+>  Could you please take a look sometime, decide how we should proceed?
 
-Hello, Luben.
+1.
 
-I see your point regarding SAM.  If this is the consensus among SCSI 
-developers, I guess eh_schedule_host() shouldn't be added.
++static int arcmsr_initialize(struct AdapterControlBlock *pACB, struct pci_dev *pdev)
+[...]
++       pci_read_config_byte(pdev, PCI_COMMAND, &pcicmd);
++       pci_write_config_byte(pdev, PCI_COMMAND,
++               pcicmd | PCI_COMMAND_INVALIDATE | PCI_COMMAND_MASTER | PCI_COMMAND_MEMORY);
 
-Hmmm.. libata isn't SCSI.  It's just hitch-hiking on the back of SCSI at 
-the moment.  And, being able to invoke EH on the host directly makes 
-things a lot simpler for libata.  So, what do you think about just 
-adding shost->host_eh_scheduled, adding a condition to 
-scsi_error_handler() and export scsi_eh_wakeup()?  The changes will be 
-like three lines.  And, also, ->host_eh_scheduled can be marked as hack 
-for libata.  libata can handle the rest.
+It's already calling pci_enable_device() and pci_set_master().  To set
+PCI_COMMAND_INVALIDATE, it should also be calling pci_set_mwi().
 
-This may not be the most graceful thing to do but...
+2. arcmsr_attr_host_pci_info() is just weird.  I can't imagine why
+anyone would need that information -- you can get it all from sysfs
+already.
 
-1. SCSI change is minimal
+3. arcmsr_transport_functions are declared extern ... and never used.
 
-2. it's a temporary measure (moving libata out of SCSI is one of the 
-items on my agenda and if no one else does it I'm gonna give a shot at 
-it in not-so-distant future.  Once libata is gone of SCSI, the three 
-lines can be removed.)
+4. There's a *lot* of unnecessarily long lines.  Often in documentation,
+even!
++**             on the internal bus. Some time later, a PCI master attempts a Memory Read with the same address
 
-3. It will take a lot more work to achieve the same thing in libata 
-proper without the three line change.
+5. The other sysfs files don't exactly conform to 'one value per file'
+either.
 
-Luben, what do you think?
+6. It seems weird to split the driver into three files -- one with the
+sysfs attributes in it, one with everything else, and a header file.
+I don't see why it shouldn't *all* be in drivers/scsi/arcmsr.c
 
-James and Jeff, any opinion on this matter?
-
-Thanks.
-
--- 
-tejun
+7. The 'linux bug' workaround in queue_command looks decidedly dodgy to
+me, but I'd like someone more experienced to comment on it.
