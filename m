@@ -1,170 +1,105 @@
-From: Vinayak <vinayak.pane@gmail.com>
-Subject: updated 2.6.16 qla2xxx driver doesn't work for qla2342 card
-Date: Thu, 20 Apr 2006 16:27:55 +0530
-Message-ID: <7ea3a06a0604200357j4a2bf1bw8be522ed8eb769c8@mail.gmail.com>
+From: Mathieu Chouquet-Stringer <mchouque@free.fr>
+Subject: Re: class_device_add error in SCSI with 2.6.17-rc2-g52824b6b
+Date: Thu, 20 Apr 2006 12:57:09 +0200
+Message-ID: <20060420105709.GA21067@localhost>
+References: <20060419213129.GA9148@localhost> <20060419215803.6DE5BDBA1@gherkin.frus.com> <20060420101448.GA20087@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.205]:63028 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S1750811AbWDTK5z convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Apr 2006 06:57:55 -0400
-Received: by nz-out-0102.google.com with SMTP id 14so83253nzn
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Apr 2006 03:57:55 -0700 (PDT)
+Received: from smtp13.wanadoo.fr ([193.252.22.54]:18366 "EHLO
+	smtp13.wanadoo.fr") by vger.kernel.org with ESMTP id S1750826AbWDTK6L
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Apr 2006 06:58:11 -0400
+Received: from me-wanadoo.net (localhost [127.0.0.1])
+	by mwinf1307.wanadoo.fr (SMTP Server) with ESMTP id C60E0700009A
+	for <linux-scsi@vger.kernel.org>; Thu, 20 Apr 2006 12:58:10 +0200 (CEST)
 Content-Disposition: inline
+In-Reply-To: <20060420101448.GA20087@localhost>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Bob Tracy <rct@gherkin.frus.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, linux-alpha@vger.kernel.org
 
-Hi,
-My server is having one qla2342 card & one qla2300 card which I used
-to connect to my RAID controller. It works properly with 2.6.12
-drivers.
+On Thu, Apr 20, 2006 at 12:14:48PM +0200, Mathieu Chouquet-Stringer wrote:
+> So I guess the strncpy routine on alpha is fscked up or gcc is doing
+> something crazy. The function is under arch/alpha/lib/strncpy.S, time to
+> learn assembly.
 
-Now, when I upgraded my kernel to 2.6.16 it stopped working.
-I compiled the kernel & qla sources again & again , but no success.
+Replying to myself here, i've created the following test program and
+redefined strncpy to mystrncpy (I used strncpy.S and stxncpy.S from
+arch/alpha/lib):
 
-Actually, it fails where it tries to fetch the firmware image from card.
-Exactly, it fails in "qla2x00_request_firmware" ---> request_firmware
---> _request_firmware ( in firmware_class.c file)
+=============================================================================
+#include <stdio.h>
+#include <string.h>
+#define FOO 50
 
-I enabled the debug levels also. The detailed log is as bellow I have
-added some of my comments too.
-If you have any clues, why this is happening then let me know about it.
-Probably, qla2342 series doesn't support such request. Because I could
-see that in  2.6.12 the firmware image is hard coded.
+extern char *mystrncpy(char *dest, const char *src, size_t count);
 
--vinayak
+int main(int argc, char **argv)
+{
 
-The detailed log is as below :
+	char src[FOO] = "";
+	char dest[FOO];
+	char letter[] = "a";
+	int i;
 
-Apr 18 16:02:08 localhost kernel: [17180036.200000] QLogic Fibre
-Channel HBA Driver
-Apr 18 16:02:08 localhost kernel: [17180036.204000] ACPI: PCI
-Interrupt 0000:02:09.0[A] -> GSI 21 (level, low) -> IRQ 20
-Apr 18 16:02:08 localhost kernel: [17180036.204000] qla2xxx
-0000:02:09.0: Found an ISP2300, irq 20, iobase 0xe00ee000
-Apr 18 16:02:08 localhost kernel: [17180036.204000] qla2xxx
-0000:02:09.0: Configuring PCI space...
-Apr 18 16:02:08 localhost kernel: [17180036.204000] qla2xxx
-0000:02:09.0: Configure NVRAM parameters...
-Apr 18 16:02:08 localhost kernel: [17180036.300000] scsi(6): VP::
-Contents of NVRAM
-Apr 18 16:02:08 localhost kernel: [ 17180036.304000]  0   1   2   3  
-4   5   6   7   8   9  Ah  Bh  Ch  Dh  Eh  Fh
-Apr 18 16:02:08 localhost kernel: [17180036.304000]
-------------------------------
---------------------------------
-Apr 18 16:02:08 localhost kernel: [ 17180036.304000] 49  53  50  20 
-01  00  01  00  06  a0  00  08  00  01  00  01
-Apr 18 16:02:08 localhost kernel: [17180036.304000] 3c  01  21  00  00
- e0  8b  04  ff  75  00  00  00  00  00  00
-Apr 18 16:02:08 localhost kernel: [ 17180036.304000] 00  00  00  00 
-00  00  00  00  00  00  00  00  00  00  00  00
-Apr 18 16:02:08 localhost kernel: [17180036.304000] 00  00  00  00  00
- 00  00  00  00  00  00  00  00  00  00  00
-Apr 18 16:02:08 localhost kernel: [ 17180036.304000] 00  00  00  00 
-00  00  82  04  00  00  00  00  00  00  00  00
-Apr 18 16:02:08 localhost kernel: [17180036.304000] 00  05  3c  00  08
- 00  00  00  00  00  00  00  00  00  00  00
-Apr 18 16:02:08 localhost kernel: [ 17180036.304000] 00  00  00  00 
-00  00  00  00  00  00  00  00  00  00  00  00
-Apr 18 16:02:08 localhost kernel: [17180036.304000] 09  01  00  0b  01
- 00  18  00  00  00  00  00  03  00  03  10
-Apr 18 16:02:08 localhost kernel: [ 17180036.304000] 00  00  00  00 
-00  00  00  00  00  00  00  00  00  00  00  00
-Apr 18 16:02:08 localhost last message repeated 4 times
-Apr 18 16:02:08 localhost kernel: [17180036.308000] 00  00  00  00  00
- 00  00  00  00  00  00  00  00  00  00  00
-Apr 18 16:02:08 localhost kernel: [17180036.308000] 00  00  00  00  00
- 00  00  00  00  00  00  00  00  00  00  00
-Apr 18 16:02:08 localhost kernel: [17180036.308000] 00  00  00  00  00
- 00  00  00  00  00  77  10  09  00  00  5e
-Apr 18 16:02:08 localhost kernel: [17180036.308000] qla2xxx
-0000:02:09.0: Verifying loaded RISC code...
-Apr 18 16:02:08 localhost kernel: [17180036.308000] scsi(6): **** Load
-RISC code ****
-Apr 18 16:02:08 localhost kernel: [ 17180036.308000] scsi(6): Testing
-device at e00ee000.
-Apr 18 16:02:08 localhost kernel: [17180036.308000] scsi(6): Reset
-register cleared by chip reset
-Apr 18 16:02:08 localhost kernel: [17180036.308000] scsi(6): Checking
-product ID of chip
-Apr 18 16:02:08 localhost kernel: [17180036.308000] scsi(6): Checking mailboxes.
-Apr 18 16:02:08 localhost kernel: [17180036.308000]
-qla2x00_mbx_reg_test(6): entered.
-Apr 18 16:02:08 localhost kernel: [17180036.308000  ]
-qla2x00_mailbox_command(6): entered.
-Apr 18 16:02:08 localhost kernel: [17180036.308000] scsi(6): prepare
-to issue mbox cmd=0x6.
-Apr 18 16:02:08 localhost kernel: [17180036.308000]
-qla2x00_mailbox_command(6): Loaded MBX registers (displayed in bytes)
-=
-Apr 18 16:02:08 localhost kernel: [17180036.308000]  0   1   2   3   4
-  5   6   7   8   9  Ah  Bh  Ch  Dh  Eh  Fh
-Apr 18 16:02:08 localhost kernel: [17180036.308000]
---------------------------------------------------------------
-Apr 18 16:02:08 localhost kernel: [17180036.308000] 06  00  aa  aa  55
- 55  55  aa  aa  55  a5  a5  5a  5a  25  25
-Apr 18 16:02:08 localhost kernel: [17180036.308000]
-Apr 18 16:02:08 localhost kernel: [17180036.308000  ]  0   1   2   3  
-4   5   6   7   8   9  Ah  Bh  Ch  Dh  Eh  Fh
-Apr 18 16:02:08 localhost kernel: [17180036.308000]
---------------------------------------------------------------
-Apr 18 16:02:08 localhost kernel: [ 17180036.308000] 31  38  30  30 
-33  36  2e  33  30  38  30  30  30  5d  20  00
-Apr 18 16:02:08 localhost kernel: [17180036.308000]
-Apr 18 16:02:08 localhost kernel: [17180036.308000]  0   1   2   3   4
-  5   6   7   8   9  Ah  Bh  Ch  Dh  Eh  Fh
-Apr 18 16:02:08 localhost kernel: [17180036.308000]
---------------------------------------------------------------
-Apr 18 16:02:08 localhost kernel: [17180036.308000] 26  09  3d  00  5c
- c1  8d  cd
-Apr 18 16:02:08 localhost kernel: [ 17180036.308000]
-Apr 18 16:02:08 localhost kernel: [17180036.308000]
-qla2x00_mailbox_command(6): I/O address = e00ee080.
-Apr 18 16:02:08 localhost kernel: [17180036.308000] Mailbox registers:
-Apr 18 16:02:08 localhost kernel: [ 17180036.308000] scsi(6): mbox 0 0x0000
-Apr 18 16:02:08 localhost kernel: [17180036.308000] scsi(6): mbox 1 0x4953
-Apr 18 16:02:08 localhost kernel: [17180036.308000] scsi(6): mbox 2 0x5020
-Apr 18 16:02:08 localhost kernel: [ 17180036.308000] scsi(6): mbox 3 0x2020
-Apr 18 16:02:08 localhost kernel: [17180036.308000] scsi(6): mbox 4 0x0001
-Apr 18 16:02:08 localhost kernel: [17180036.308000] scsi(6): mbox 5 0x0004
-Apr 18 16:02:08 localhost kernel: [ 17180036.308000]
-qla2x00_mailbox_command(6): going to unlock irq & waiting for
-interrupt. jiffies=a335.
-Apr 18 16:02:08 localhost kernel: [17180036.308000]
-qla2x00_mailbox_command(6): cmd=6 POLLING MODE.
-Apr 18 16:02:08 localhost kernel: [ 17180036.312000]
-qla2x00_mbx_completion(6): Got mailbox completion. cmd=6.
-Apr 18 16:02:08 localhost kernel: [17180036.312000]
-qla2x00_mailbox_command(6): cmd 6 completed.
-Apr 18 16:02:08 localhost kernel: [17180036.312000  ]
-qla2x00_mailbox_command(6): checking for additional resp interrupt.
-Apr 18 16:02:08 localhost kernel: [17180036.312000]
-qla2x00_mailbox_command(6): done.
-Apr 18 16:02:08 localhost kernel: [17180036.312000]
-qla2x00_mbx_reg_test(6): done.
-Apr 18 16:02:08 localhost kernel: [17180036.360000] scsi(6): VP::
-Failed to load firmware image (ql2300_fw.bin).
-Apr 18 16:02:08 localhost kernel: [17180036.360000] scsi(6): Setup
-chip **** FAILED ****.
-Apr 18 16:02:08 localhost kernel: [ 17180036.360000]
-qla2x00_initialize_adapter(): **** FAILED ****
-Apr 18 16:02:08 localhost kernel: [17180036.360000] qla2xxx
-0000:02:09.0: Failed to initialize adapter
-Apr 18 16:02:08 localhost kernel: [17180036.364000  ] scsi(6): Failed
-to initialize adapter - Adapter flags 0.
-Apr 18 16:02:08 localhost kernel: [17180036.364000] ACPI: PCI
-interrupt for device 0000:02:09.0 disabled
-Apr 18 16:02:08 localhost kernel: [17180036.364000 ] ACPI: PCI
-interrupt for device 0000:02: 09.0 disabled
-Apr 18 16:02:08 localhost kernel: [17180036.364000] ACPI: PCI
-Interrupt 0000:02:0b.0[A] -> GSI 23 (level, low) -> IRQ 19
-Apr 18 16:02:08 localhost kernel: [17180036.364000] qla2xxx
-0000:02:0b.0: Found an ISP2312, irq 19, iobase 0xe00ee000
-Apr 18 16:02:08 localhost kernel: [17180036.364000] qla2xxx
-0000:02:0b.0: Configuring PCI space...
-Apr 18 16:02:08 localhost kernel: [17180036.364000] qla2xxx
-0000:02:0b.0: Configure NVRAM parameters...
+	for (i = 0; i < FOO - 1; i++) {
+		size_t beflen, aftlen;
+
+		letter[0] = 'a' + i;
+		strncat(src, letter, FOO);
+		beflen = strlen(src);
+
+		mystrncpy(dest, src, FOO);
+		aftlen = strlen(dest);
+		if (beflen != aftlen)
+			printf("fails for strlen = %ld (copied %ld)\n",
+				beflen, aftlen);
+	}
+
+
+	return 0;
+}
+=============================================================================
+
+And here's the output using gcc version 3.4.4 (Gentoo 3.4.4-r1,
+ssp-3.4.4-1.0, pie-8.7.8), note i didn't use flag except -Wall:
+
+fails for strlen = 3 (copied 2)
+fails for strlen = 4 (copied 2)
+fails for strlen = 5 (copied 2)
+fails for strlen = 6 (copied 2)
+fails for strlen = 7 (copied 2)
+fails for strlen = 11 (copied 10)
+fails for strlen = 12 (copied 10)
+fails for strlen = 13 (copied 10)
+fails for strlen = 14 (copied 10)
+fails for strlen = 15 (copied 10)
+fails for strlen = 19 (copied 18)
+fails for strlen = 20 (copied 18)
+fails for strlen = 21 (copied 18)
+fails for strlen = 22 (copied 18)
+fails for strlen = 23 (copied 18)
+fails for strlen = 27 (copied 26)
+fails for strlen = 28 (copied 26)
+fails for strlen = 29 (copied 26)
+fails for strlen = 30 (copied 26)
+fails for strlen = 31 (copied 26)
+fails for strlen = 35 (copied 34)
+fails for strlen = 36 (copied 34)
+fails for strlen = 37 (copied 34)
+fails for strlen = 38 (copied 34)
+fails for strlen = 39 (copied 34)
+fails for strlen = 43 (copied 42)
+fails for strlen = 44 (copied 42)
+fails for strlen = 45 (copied 42)
+fails for strlen = 46 (copied 42)
+fails for strlen = 47 (copied 42)
+
+
+So much for this function...  I'll look at the assembly to see if I can
+understand what's going on: it always copy a multiple of 8 + 2 bytes (as
+in 8x + 2).
+-- 
+Mathieu Chouquet-Stringer                           mchouque@free.fr
+
