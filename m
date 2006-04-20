@@ -1,69 +1,170 @@
-From: Mathieu Chouquet-Stringer <mchouque@free.fr>
-Subject: Re: class_device_add error in SCSI with 2.6.17-rc2-g52824b6b
-Date: Thu, 20 Apr 2006 12:14:48 +0200
-Message-ID: <20060420101448.GA20087@localhost>
-References: <20060419213129.GA9148@localhost> <20060419215803.6DE5BDBA1@gherkin.frus.com>
+From: Vinayak <vinayak.pane@gmail.com>
+Subject: updated 2.6.16 qla2xxx driver doesn't work for qla2342 card
+Date: Thu, 20 Apr 2006 16:27:55 +0530
+Message-ID: <7ea3a06a0604200357j4a2bf1bw8be522ed8eb769c8@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-alpha-owner@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from nz-out-0102.google.com ([64.233.162.205]:63028 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1750811AbWDTK5z convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Apr 2006 06:57:55 -0400
+Received: by nz-out-0102.google.com with SMTP id 14so83253nzn
+        for <linux-scsi@vger.kernel.org>; Thu, 20 Apr 2006 03:57:55 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <20060419215803.6DE5BDBA1@gherkin.frus.com>
-Sender: linux-alpha-owner@vger.kernel.org
-To: Bob Tracy <rct@gherkin.frus.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, linux-alpha@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Wed, Apr 19, 2006 at 04:58:03PM -0500, Bob Tracy wrote:
-> Similar error previously reported by me for 2.6.17-rc1, except sda go=
-t
-> added fine: error occurred when attempting to add/register sdb.=20
-> Thankfully, you were able to append a trace...
+Hi,
+My server is having one qla2342 card & one qla2300 card which I used
+to connect to my RAID controller. It works properly with 2.6.12
+drivers.
 
-In my case, I was able to solve the problem by replacing this call at
-line 1648 in drivers/scsi/sd.c (patch attached):
-strncpy(sdkp->cdev.class_id, sdp->sdev_gendev.bus_id, BUS_ID_SIZE);
+Now, when I upgraded my kernel to 2.6.16 it stopped working.
+I compiled the kernel & qla sources again & again , but no success.
 
-by
+Actually, it fails where it tries to fetch the firmware image from card.
+Exactly, it fails in "qla2x00_request_firmware" ---> request_firmware
+--> _request_firmware ( in firmware_class.c file)
 
-snprintf(sdkp->cdev.class_id, BUS_ID_SIZE, "%s", sdp->sdev_gendev.bus_i=
-d);
+I enabled the debug levels also. The detailed log is as bellow I have
+added some of my comments too.
+If you have any clues, why this is happening then let me know about it.
+Probably, qla2342 series doesn't support such request. Because I could
+see that in  2.6.12 the firmware image is hard coded.
 
-Then it works.
+-vinayak
 
-While debugging the whole thing, I was printk'ing the value of
-sdkp->cdev.class_id right after the strncpy call and here's what I
-getting (basically only the first 4 chars + final \0):=20
-"0:0:"
+The detailed log is as below :
 
-So I guess the strncpy routine on alpha is fscked up or gcc is doing
-something crazy. The function is under arch/alpha/lib/strncpy.S, time t=
-o
-learn assembly.
-
-
---- linux-2.6/drivers/scsi/sd.c	2006-03-28 13:28:24.000000000 +0200
-+++ linux-2.6-mat/drivers/scsi/sd.c	2006-04-20 12:12:36.000000000 +0200
-@@ -1645,7 +1645,8 @@
- 	class_device_initialize(&sdkp->cdev);
- 	sdkp->cdev.dev =3D &sdp->sdev_gendev;
- 	sdkp->cdev.class =3D &sd_disk_class;
--	strncpy(sdkp->cdev.class_id, sdp->sdev_gendev.bus_id, BUS_ID_SIZE);
-+	snprintf(sdkp->cdev.class_id, BUS_ID_SIZE, "%s",
-+		sdp->sdev_gendev.bus_id);
-=20
- 	if (class_device_add(&sdkp->cdev))
- 		goto out_put;
-
-
---=20
-Mathieu Chouquet-Stringer                           mchouque@free.fr
-    "Le disparu, si l'on v=E9n=E8re sa m=E9moire, est plus pr=E9sent et
-                 plus puissant que le vivant".
-           -- Antoine de Saint-Exup=E9ry, Citadelle --
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-alpha" =
-in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Apr 18 16:02:08 localhost kernel: [17180036.200000] QLogic Fibre
+Channel HBA Driver
+Apr 18 16:02:08 localhost kernel: [17180036.204000] ACPI: PCI
+Interrupt 0000:02:09.0[A] -> GSI 21 (level, low) -> IRQ 20
+Apr 18 16:02:08 localhost kernel: [17180036.204000] qla2xxx
+0000:02:09.0: Found an ISP2300, irq 20, iobase 0xe00ee000
+Apr 18 16:02:08 localhost kernel: [17180036.204000] qla2xxx
+0000:02:09.0: Configuring PCI space...
+Apr 18 16:02:08 localhost kernel: [17180036.204000] qla2xxx
+0000:02:09.0: Configure NVRAM parameters...
+Apr 18 16:02:08 localhost kernel: [17180036.300000] scsi(6): VP::
+Contents of NVRAM
+Apr 18 16:02:08 localhost kernel: [ 17180036.304000]  0   1   2   3  
+4   5   6   7   8   9  Ah  Bh  Ch  Dh  Eh  Fh
+Apr 18 16:02:08 localhost kernel: [17180036.304000]
+------------------------------
+--------------------------------
+Apr 18 16:02:08 localhost kernel: [ 17180036.304000] 49  53  50  20 
+01  00  01  00  06  a0  00  08  00  01  00  01
+Apr 18 16:02:08 localhost kernel: [17180036.304000] 3c  01  21  00  00
+ e0  8b  04  ff  75  00  00  00  00  00  00
+Apr 18 16:02:08 localhost kernel: [ 17180036.304000] 00  00  00  00 
+00  00  00  00  00  00  00  00  00  00  00  00
+Apr 18 16:02:08 localhost kernel: [17180036.304000] 00  00  00  00  00
+ 00  00  00  00  00  00  00  00  00  00  00
+Apr 18 16:02:08 localhost kernel: [ 17180036.304000] 00  00  00  00 
+00  00  82  04  00  00  00  00  00  00  00  00
+Apr 18 16:02:08 localhost kernel: [17180036.304000] 00  05  3c  00  08
+ 00  00  00  00  00  00  00  00  00  00  00
+Apr 18 16:02:08 localhost kernel: [ 17180036.304000] 00  00  00  00 
+00  00  00  00  00  00  00  00  00  00  00  00
+Apr 18 16:02:08 localhost kernel: [17180036.304000] 09  01  00  0b  01
+ 00  18  00  00  00  00  00  03  00  03  10
+Apr 18 16:02:08 localhost kernel: [ 17180036.304000] 00  00  00  00 
+00  00  00  00  00  00  00  00  00  00  00  00
+Apr 18 16:02:08 localhost last message repeated 4 times
+Apr 18 16:02:08 localhost kernel: [17180036.308000] 00  00  00  00  00
+ 00  00  00  00  00  00  00  00  00  00  00
+Apr 18 16:02:08 localhost kernel: [17180036.308000] 00  00  00  00  00
+ 00  00  00  00  00  00  00  00  00  00  00
+Apr 18 16:02:08 localhost kernel: [17180036.308000] 00  00  00  00  00
+ 00  00  00  00  00  77  10  09  00  00  5e
+Apr 18 16:02:08 localhost kernel: [17180036.308000] qla2xxx
+0000:02:09.0: Verifying loaded RISC code...
+Apr 18 16:02:08 localhost kernel: [17180036.308000] scsi(6): **** Load
+RISC code ****
+Apr 18 16:02:08 localhost kernel: [ 17180036.308000] scsi(6): Testing
+device at e00ee000.
+Apr 18 16:02:08 localhost kernel: [17180036.308000] scsi(6): Reset
+register cleared by chip reset
+Apr 18 16:02:08 localhost kernel: [17180036.308000] scsi(6): Checking
+product ID of chip
+Apr 18 16:02:08 localhost kernel: [17180036.308000] scsi(6): Checking mailboxes.
+Apr 18 16:02:08 localhost kernel: [17180036.308000]
+qla2x00_mbx_reg_test(6): entered.
+Apr 18 16:02:08 localhost kernel: [17180036.308000  ]
+qla2x00_mailbox_command(6): entered.
+Apr 18 16:02:08 localhost kernel: [17180036.308000] scsi(6): prepare
+to issue mbox cmd=0x6.
+Apr 18 16:02:08 localhost kernel: [17180036.308000]
+qla2x00_mailbox_command(6): Loaded MBX registers (displayed in bytes)
+=
+Apr 18 16:02:08 localhost kernel: [17180036.308000]  0   1   2   3   4
+  5   6   7   8   9  Ah  Bh  Ch  Dh  Eh  Fh
+Apr 18 16:02:08 localhost kernel: [17180036.308000]
+--------------------------------------------------------------
+Apr 18 16:02:08 localhost kernel: [17180036.308000] 06  00  aa  aa  55
+ 55  55  aa  aa  55  a5  a5  5a  5a  25  25
+Apr 18 16:02:08 localhost kernel: [17180036.308000]
+Apr 18 16:02:08 localhost kernel: [17180036.308000  ]  0   1   2   3  
+4   5   6   7   8   9  Ah  Bh  Ch  Dh  Eh  Fh
+Apr 18 16:02:08 localhost kernel: [17180036.308000]
+--------------------------------------------------------------
+Apr 18 16:02:08 localhost kernel: [ 17180036.308000] 31  38  30  30 
+33  36  2e  33  30  38  30  30  30  5d  20  00
+Apr 18 16:02:08 localhost kernel: [17180036.308000]
+Apr 18 16:02:08 localhost kernel: [17180036.308000]  0   1   2   3   4
+  5   6   7   8   9  Ah  Bh  Ch  Dh  Eh  Fh
+Apr 18 16:02:08 localhost kernel: [17180036.308000]
+--------------------------------------------------------------
+Apr 18 16:02:08 localhost kernel: [17180036.308000] 26  09  3d  00  5c
+ c1  8d  cd
+Apr 18 16:02:08 localhost kernel: [ 17180036.308000]
+Apr 18 16:02:08 localhost kernel: [17180036.308000]
+qla2x00_mailbox_command(6): I/O address = e00ee080.
+Apr 18 16:02:08 localhost kernel: [17180036.308000] Mailbox registers:
+Apr 18 16:02:08 localhost kernel: [ 17180036.308000] scsi(6): mbox 0 0x0000
+Apr 18 16:02:08 localhost kernel: [17180036.308000] scsi(6): mbox 1 0x4953
+Apr 18 16:02:08 localhost kernel: [17180036.308000] scsi(6): mbox 2 0x5020
+Apr 18 16:02:08 localhost kernel: [ 17180036.308000] scsi(6): mbox 3 0x2020
+Apr 18 16:02:08 localhost kernel: [17180036.308000] scsi(6): mbox 4 0x0001
+Apr 18 16:02:08 localhost kernel: [17180036.308000] scsi(6): mbox 5 0x0004
+Apr 18 16:02:08 localhost kernel: [ 17180036.308000]
+qla2x00_mailbox_command(6): going to unlock irq & waiting for
+interrupt. jiffies=a335.
+Apr 18 16:02:08 localhost kernel: [17180036.308000]
+qla2x00_mailbox_command(6): cmd=6 POLLING MODE.
+Apr 18 16:02:08 localhost kernel: [ 17180036.312000]
+qla2x00_mbx_completion(6): Got mailbox completion. cmd=6.
+Apr 18 16:02:08 localhost kernel: [17180036.312000]
+qla2x00_mailbox_command(6): cmd 6 completed.
+Apr 18 16:02:08 localhost kernel: [17180036.312000  ]
+qla2x00_mailbox_command(6): checking for additional resp interrupt.
+Apr 18 16:02:08 localhost kernel: [17180036.312000]
+qla2x00_mailbox_command(6): done.
+Apr 18 16:02:08 localhost kernel: [17180036.312000]
+qla2x00_mbx_reg_test(6): done.
+Apr 18 16:02:08 localhost kernel: [17180036.360000] scsi(6): VP::
+Failed to load firmware image (ql2300_fw.bin).
+Apr 18 16:02:08 localhost kernel: [17180036.360000] scsi(6): Setup
+chip **** FAILED ****.
+Apr 18 16:02:08 localhost kernel: [ 17180036.360000]
+qla2x00_initialize_adapter(): **** FAILED ****
+Apr 18 16:02:08 localhost kernel: [17180036.360000] qla2xxx
+0000:02:09.0: Failed to initialize adapter
+Apr 18 16:02:08 localhost kernel: [17180036.364000  ] scsi(6): Failed
+to initialize adapter - Adapter flags 0.
+Apr 18 16:02:08 localhost kernel: [17180036.364000] ACPI: PCI
+interrupt for device 0000:02:09.0 disabled
+Apr 18 16:02:08 localhost kernel: [17180036.364000 ] ACPI: PCI
+interrupt for device 0000:02: 09.0 disabled
+Apr 18 16:02:08 localhost kernel: [17180036.364000] ACPI: PCI
+Interrupt 0000:02:0b.0[A] -> GSI 23 (level, low) -> IRQ 19
+Apr 18 16:02:08 localhost kernel: [17180036.364000] qla2xxx
+0000:02:0b.0: Found an ISP2312, irq 19, iobase 0xe00ee000
+Apr 18 16:02:08 localhost kernel: [17180036.364000] qla2xxx
+0000:02:0b.0: Configuring PCI space...
+Apr 18 16:02:08 localhost kernel: [17180036.364000] qla2xxx
+0000:02:0b.0: Configure NVRAM parameters...
