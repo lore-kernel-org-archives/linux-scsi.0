@@ -1,115 +1,86 @@
-From: Daniel Drake <dsd@gentoo.org>
-Subject: Re: 2.6.14 regression: aic7xxx hangs on boot
-Date: Thu, 20 Apr 2006 00:08:22 +0100
-Message-ID: <4446C2E6.6040708@gentoo.org>
-References: <44461FB5.8060705@gentoo.org>	 <1145454585.3465.5.camel@mulgrave.il.steeleye.com>	 <444658BE.5080309@gentoo.org> <1145462527.6183.5.camel@mulgrave.il.steeleye.com>
+From: "Randy.Dunlap" <rdunlap@xenotime.net>
+Subject: Re: [PATCH] dc395x: dynamically map scatter-gather for PIO (take 2)
+Date: Wed, 19 Apr 2006 17:27:33 -0700
+Message-ID: <20060419172733.d61e3365.rdunlap@xenotime.net>
+References: <Pine.LNX.4.60.0604022004520.17410@poirot.grange>
+	<20060413132932.31871824.rdunlap@xenotime.net>
+	<Pine.LNX.4.60.0604132256490.4711@poirot.grange>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mta07-winn.ispmail.ntl.com ([81.103.221.47]:15518 "EHLO
-	mtaout01-winn.ispmail.ntl.com") by vger.kernel.org with ESMTP
-	id S1751314AbWDSWyj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Apr 2006 18:54:39 -0400
-In-Reply-To: <1145462527.6183.5.camel@mulgrave.il.steeleye.com>
+Received: from xenotime.net ([66.160.160.81]:51928 "HELO xenotime.net")
+	by vger.kernel.org with SMTP id S1751243AbWDTAZI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Apr 2006 20:25:08 -0400
+Received: from midway.site ([71.111.157.99]) by xenotime.net for <linux-scsi@vger.kernel.org>; Wed, 19 Apr 2006 17:25:06 -0700
+In-Reply-To: <Pine.LNX.4.60.0604132256490.4711@poirot.grange>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: gibbs@scsiguy.com, linux-scsi@vger.kernel.org
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, Sebastian@schnapsleichen.de, roubert@df.lth.se, lenehan@twibble.org
 
-James Bottomley wrote:
-> OK ... so more details, like the dmesg up to the problem (primarily to
-> diagnose the transport parameters and what's on the bus).  Plus, what
-> were the transport parameters in the case where it worked
-> (from /proc/scsi/aic7xxx/*)
+On Thu, 13 Apr 2006 23:02:04 +0200 (CEST) Guennadi Liakhovetski wrote:
 
-The loop/crash occurs during early boot, so it's not possible to login 
-and run dmesg. I will ask if a serial console is available.
+> On Thu, 13 Apr 2006, Randy.Dunlap wrote:
+> 
+> > On Sun, 2 Apr 2006 21:57:43 +0200 (CEST) Guennadi Liakhovetski wrote:
+> > 
+> > > Hello all,
+> > > 
+> > > This time I really mean it:-)
+> > 
+> > Hi Guennadi,
+> > James pointed me at this patch since I have aha152x also having
+> > problems with using page_address() while trying to do PIO.
+> > I see a NULL pointer during a data-out phase.  I'll attempt
+> > to use the kmap_atomic() support that you have added in the
+> > aha152x driver.
+> 
+> Would be great to put these functions under some more extensive testing! 
+> I also want to use them in tmscsim, but there I do not have a test case 
+> for PIO:-(
 
-Here is /proc/scsi/aic7xxx/0 from 2.6.13.4:
+I have a patch that seems to work for the data-in phase of the
+aha152x (_cs) driver.  However, the data-out phase is causing
+data corruption.  (I'm only using it on a test target, so no big
+deal.)
 
-Adaptec AIC7xxx driver version: 6.2.36
-Adaptec 29160 Ultra160 SCSI adapter
-aic7892: Ultra160 Wide Channel A, SCSI Id=7, 32/253 SCBs
-Allocated SCBs: 36, SG List Length: 128
+Does anyone know/recall this condition in aha152x.c::datao_end() ?
+("bytes to resend"):
 
-Serial EEPROM:
-0x433a 0xc13a 0xc13a 0xc13a 0xc13a 0xc13a 0xc13a 0xc13a
-0xc13a 0xc13a 0xc13a 0xc13a 0xc13a 0xc13a 0xc13a 0xc13a
-0x08f4 0x7c5d 0x2807 0x0010 0x0300 0xffff 0xffff 0xffff
-0xffff 0xffff 0xffff 0xffff 0xffff 0xffff 0x0250 0x484f
+	if(TESTLO(DMASTAT, DFIFOEMP)) {
+		int data_count = (DATA_LEN - CURRENT_SC->resid) - GETSTCNT();
 
-Target 0 Negotiation Settings
-         User: 160.000MB/s transfers (80.000MHz DT, offset 127, 16bit)
-         Goal: 160.000MB/s transfers (80.000MHz DT, offset 62, 16bit)
-         Curr: 160.000MB/s transfers (80.000MHz DT, offset 62, 16bit)
-         Channel A Target 0 Lun 0 Settings
-                 Commands Queued 19329
-                 Commands Active 0
-                 Command Openings 32
-                 Max Tagged Openings 32
-                 Device Queue Frozen Count 0
-Target 1 Negotiation Settings
-         User: 160.000MB/s transfers (80.000MHz DT, offset 127, 16bit)
-Target 2 Negotiation Settings
-         User: 160.000MB/s transfers (80.000MHz DT, offset 127, 16bit)
-Target 3 Negotiation Settings
-         User: 160.000MB/s transfers (80.000MHz DT, offset 127, 16bit)
-         Goal: 3.300MB/s transfers
-         Curr: 3.300MB/s transfers
-         Channel A Target 3 Lun 0 Settings
-                 Commands Queued 19
-                 Commands Active 0
-                 Command Openings 1
-                 Max Tagged Openings 0
-                 Device Queue Frozen Count 0
-Target 4 Negotiation Settings
-         User: 160.000MB/s transfers (80.000MHz DT, offset 127, 16bit)
-         Goal: 20.000MB/s transfers (20.000MHz, offset 15)
-         Curr: 20.000MB/s transfers (20.000MHz, offset 15)
-         Channel A Target 4 Lun 0 Settings
-                 Commands Queued 23
-                 Commands Active 0
-                 Command Openings 1
-                 Max Tagged Openings 0
-                 Device Queue Frozen Count 0
-Target 5 Negotiation Settings
-         User: 160.000MB/s transfers (80.000MHz DT, offset 127, 16bit)
-         Goal: 3.300MB/s transfers
-         Curr: 3.300MB/s transfers
-         Channel A Target 5 Lun 0 Settings
-                 Commands Queued 29
-                 Commands Active 0
-                 Command Openings 1
-                 Max Tagged Openings 0
-                 Device Queue Frozen Count 0
-Target 6 Negotiation Settings
-         User: 160.000MB/s transfers (80.000MHz DT, offset 127, 16bit)
-Target 7 Negotiation Settings
-         User: 160.000MB/s transfers (80.000MHz DT, offset 127, 16bit)
-Target 8 Negotiation Settings
-         User: 160.000MB/s transfers (80.000MHz DT, offset 127, 16bit)
-Target 9 Negotiation Settings
-         User: 160.000MB/s transfers (80.000MHz DT, offset 127, 16bit)
-Target 10 Negotiation Settings
-         User: 160.000MB/s transfers (80.000MHz DT, offset 127, 16bit)
-Target 11 Negotiation Settings
-         User: 160.000MB/s transfers (80.000MHz DT, offset 127, 16bit)
-Target 12 Negotiation Settings
-         User: 160.000MB/s transfers (80.000MHz DT, offset 127, 16bit)
-Target 13 Negotiation Settings
-         User: 160.000MB/s transfers (80.000MHz DT, offset 127, 16bit)
-Target 14 Negotiation Settings
-         User: 160.000MB/s transfers (80.000MHz DT, offset 127, 16bit)
-Target 15 Negotiation Settings
-         User: 160.000MB/s transfers (80.000MHz DT, offset 127, 16bit)
+		DPRINTK(debug_datao, DEBUG_LEAD "datao: %d bytes to resend (%d written, %d transferred)\n",
+			CMDINFO(CURRENT_SC),
+			data_count,
+			DATA_LEN-CURRENT_SC->resid,
+			GETSTCNT());
 
-> Also, if it's a multi-device bus is the problem caused by a single
-> device (as in do a binary search pulling things off the bus).
+		CURRENT_SC->resid += data_count;
 
-There is 1 disk, 2 CD drives, and 1 zip drive. The system is booting 
-from the disk, which makes this a bit tricky. The same problem still 
-occurs when the CD and zip drives have been disconnected.
+and then (if use_sg), the driver mucks with the SCp scratch/work area:
 
-Daniel
+		if(CURRENT_SC->use_sg) {
+			data_count -= CURRENT_SC->SCp.ptr - SG_ADDRESS(CURRENT_SC->SCp.buffer);
+			while(data_count>0) {
+				CURRENT_SC->SCp.buffer--;
+				CURRENT_SC->SCp.buffers_residual++;
+				data_count -= CURRENT_SC->SCp.buffer->length;
+			}
+			CURRENT_SC->SCp.ptr           = SG_ADDRESS(CURRENT_SC->SCp.buffer) - data_count;
+			CURRENT_SC->SCp.this_residual = CURRENT_SC->SCp.buffer->length + data_count;
+		} else {
+			CURRENT_SC->SCp.ptr           -= data_count;
+			CURRENT_SC->SCp.this_residual += data_count;
+		}
+	}
 
+Does modifying the SCp: buffer, buffers_residual, ptr, this_residual...
+tell the SCSI mid-layer anything?  or does this tell the driver
+internally where to restart a data transfer?  (if so, where is that,
+if anyone knows.  I can't find it.)
+
+---
+~Randy
