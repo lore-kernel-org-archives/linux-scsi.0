@@ -1,34 +1,34 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: areca RAID driver
-Date: Thu, 20 Apr 2006 08:44:52 +0200
-Message-ID: <20060420064452.GP614@suse.de>
-References: <20060419155300.321c352e.akpm@osdl.org>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [Bugme-new] [Bug 6416] New: AIC79xx crashes with AHA39320 and 6
+ LUNs on 1 ID
+Date: Thu, 20 Apr 2006 02:36:11 -0700
+Message-ID: <20060420023611.21e22082.akpm@osdl.org>
+References: <200604200921.k3K9LJ2Y002500@fire-2.osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:35412 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S1751192AbWDTGoW (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:64403 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1750786AbWDTJhO (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Apr 2006 02:44:22 -0400
-Content-Disposition: inline
-In-Reply-To: <20060419155300.321c352e.akpm@osdl.org>
+	Thu, 20 Apr 2006 05:37:14 -0400
+In-Reply-To: <200604200921.k3K9LJ2Y002500@fire-2.osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Christoph Hellwig <hch@lst.de>, erich <erich@areca.com.tw>, billion.wu@areca.com.tw, linux-scsi@vger.kernel.org
+To: bugme-daemon@bugzilla.kernel.org
+Cc: oscar@netpromote.hu, linux-scsi@vger.kernel.org
 
-On Wed, Apr 19 2006, Andrew Morton wrote:
+bugme-daemon@bugzilla.kernel.org wrote:
+>
+> http://bugzilla.kernel.org/show_bug.cgi?id=6416
 > 
-> Gents, Erich thinks that the Areca driver is pretty much ready to go.
-> 
-> We still have the weird read-past-EOF problem if MAX_XFER_SECTORS=4096, but
-> this version of the driver has it set to 512, which makes the problem go
-> away.  I've suggested that we can set that problem aside for now.
+>             Summary: AIC79xx crashes with AHA39320 and 6 LUNs on 1 ID
+>      Kernel Version: 2.6.16.9
 
-The hardware clearly just cannot handle that large a xfer size, so it
-should just be left at 512 until that problem is fully understood at
-Areca's end.
+Looks like we recurred onto a spinlock, but that driver is so obfuscated
+it's rather hard to tell which one.
 
--- 
-Jens Axboe
+Can you please retest with CONFIG_DEBUG_SLAB=y, CONFIG_DEBUG_SPINLOCK=y,
+CONFIG_DEBUG_SPINLOCK_SLEEP=y, CONFIG_PREEMPT=y and any other CONFIG_DEBUG
+options which look useful?
 
