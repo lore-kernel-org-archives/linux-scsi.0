@@ -1,91 +1,75 @@
-From: Chiaki <ishikawa@yk.rim.or.jp>
-Subject: Re: [patch 14/17] aic7xxx: ahc_pci_write_config() fix
-Date: Fri, 21 Apr 2006 03:59:00 +0900
-Message-ID: <4447D9F4.6000800@yk.rim.or.jp>
-References: <200604190410.k3J4A3R4008248@shell0.pdx.osdl.net>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: [PATCH 1/2] SCSI: implement scsi_eh_schedule_cmd()
+Date: Thu, 20 Apr 2006 12:23:57 -0700 (PDT)
+Message-ID: <20060420192357.26257.qmail@web31814.mail.mud.yahoo.com>
+References: <4446ECCF.7080000@gmail.com>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 61.70.150.220.ap.yournet.ne.jp ([220.150.70.61]:65159 "EHLO
-	standard.erephon") by vger.kernel.org with ESMTP id S1750744AbWDTTGL
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Apr 2006 15:06:11 -0400
-Received: from [127.0.0.1] (really [127.0.0.1]) by yk.rim.or.jp
-	via smail with esmtp
-	id <m1FWeNa-002GJKC@standard.erephon> (Debian Smail3.2.0.115)
-	for <linux-scsi@vger.kernel.org>; Fri, 21 Apr 2006 03:59:50 +0900 (JST)
-In-Reply-To: <200604190410.k3J4A3R4008248@shell0.pdx.osdl.net>
+Received: from web31814.mail.mud.yahoo.com ([68.142.206.167]:56695 "HELO
+	web31814.mail.mud.yahoo.com") by vger.kernel.org with SMTP
+	id S1750861AbWDTTX6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Apr 2006 15:23:58 -0400
+In-Reply-To: <4446ECCF.7080000@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: akpm@osdl.org, James.Bottomley@steeleye.com, vda@ilport.com.ua
+To: Tejun Heo <htejun@gmail.com>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, Jeff Garzik <jgarzik@pobox.com>, hch@lst.de, James.Bottomley@SteelEye.com, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, arjan@infradead.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Can anyone explain with these incorrect(?) calls
-how the current aic7xxx has been working for me for a few months?
-Sorry, I am not using the latest and greatest kernel version, still...
+--- Tejun Heo <htejun@gmail.com> wrote:
+> Hmmm.. libata isn't SCSI.  It's just hitch-hiking on the back of SCSI at 
+> the moment.  And, being able to invoke EH on the host directly makes 
+> things a lot simpler for libata.  So, what do you think about just 
+> adding shost->host_eh_scheduled, adding a condition to 
+> scsi_error_handler() and export scsi_eh_wakeup()?  The changes will be 
+> like three lines.  And, also, ->host_eh_scheduled can be marked as hack 
+> for libata.  libata can handle the rest.
 
-Linux duron 2.6.15.6-test-tmscsim #6 Wed Mar 29 02:02:01 JST 2006 i686 GNU/Linux
+Hi Tejun,
 
-And the version of aci7xxx driver : from the
-output of demsg:
-scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 7.0
+I don't mind such a patch.  It is well defined -- all you want is
+process (ER) context to do some hw/proto ER work.  Clearly the architecture
+of libata doesn't allow for protocol/hw work in a process as we'd discussed,
+and so I think such a small patch would be completely ok to make the rest
+of your work go through.
 
-
-Are these parameters one of those not so important
-parameters? Yet, it might explain the problem of Mutt Hamlet and
-a few others.
-
-
-
-
-akpm@osdl.org wrote:
-> From: Denis Vlasenko <vda@ilport.com.ua>
+> This may not be the most graceful thing to do but...
 > 
-> Fix ahc_pci_write_config's (wrong order of arguments).
-> 
-> Signed-off-by: Denis Vlasenko <vda@ilport.com.ua>
-> Cc: James Bottomley <James.Bottomley@steeleye.com>
-> Signed-off-by: Andrew Morton <akpm@osdl.org>
-> ---
-> 
->  drivers/scsi/aic7xxx/aic7xxx_pci.c |   12 ++++++------
->  1 files changed, 6 insertions(+), 6 deletions(-)
-> 
-> diff -puN drivers/scsi/aic7xxx/aic7xxx_pci.c~aic7xxx-ahc_pci_write_config-fix drivers/scsi/aic7xxx/aic7xxx_pci.c
-> --- devel/drivers/scsi/aic7xxx/aic7xxx_pci.c~aic7xxx-ahc_pci_write_config-fix	2006-04-10 00:19:55.000000000 -0700
-> +++ devel-akpm/drivers/scsi/aic7xxx/aic7xxx_pci.c	2006-04-10 00:19:55.000000000 -0700
-> @@ -2036,12 +2036,12 @@ ahc_pci_resume(struct ahc_softc *ahc)
->  	 * that the OS doesn't know about and rely on our chip
->  	 * reset handler to handle the rest.
->  	 */
-> -	ahc_pci_write_config(ahc->dev_softc, DEVCONFIG, /*bytes*/4,
-> -			     ahc->bus_softc.pci_softc.devconfig);
-> -	ahc_pci_write_config(ahc->dev_softc, PCIR_COMMAND, /*bytes*/1,
-> -			     ahc->bus_softc.pci_softc.command);
-> -	ahc_pci_write_config(ahc->dev_softc, CSIZE_LATTIME, /*bytes*/1,
-> -			     ahc->bus_softc.pci_softc.csize_lattime);
-> +	ahc_pci_write_config(ahc->dev_softc, DEVCONFIG,
-> +			     ahc->bus_softc.pci_softc.devconfig, /*bytes*/4);
-> +	ahc_pci_write_config(ahc->dev_softc, PCIR_COMMAND,
-> +			     ahc->bus_softc.pci_softc.command, /*bytes*/1);
-> +	ahc_pci_write_config(ahc->dev_softc, CSIZE_LATTIME,
-> +			     ahc->bus_softc.pci_softc.csize_lattime, /*bytes*/1);
->  	if ((ahc->flags & AHC_HAS_TERM_LOGIC) != 0) {
->  		struct	seeprom_descriptor sd;
->  		u_int	sxfrctl1;
-> _
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+> 1. SCSI change is minimal
 
+I think this is a good thing, and for clearly understood and well defined
+solutions we want patches to be small.  Your architecural SATA layer work
+can be as big as it needs to be and I think you're doing an excellent
+job -- FWIW, if it hadn't been for your patches, a lot of things would
+be pretty stagnant in libata, SCSI and the block layer.
 
--- 
-int main(void){int j=2006;/*(c)2006 cishikawa. */
-char t[] ="<CI> @abcdefghijklmnopqrstuvwxyz.,\n\"";
-char *i ="d>qtCIuqivb,gCwe\np@.ietCIuqi\"tqkvv is>dnamz";
-while(*i)((j+=(int)strchr(t,*i++)-(int)t),(j%=sizeof t-1),
-(putchar(t[j])));return 0;}/* under GPL */
+> 2. it's a temporary measure (moving libata out of SCSI is one of the 
+> items on my agenda and if no one else does it I'm gonna give a shot at 
+> it in not-so-distant future.  Once libata is gone of SCSI, the three 
+> lines can be removed.)
+
+You are a very, very smart person to want to move libata out of SCSI.
+It is very unfortunate, but I clearly understand why you'd want to do
+it.
+
+> 3. It will take a lot more work to achieve the same thing in libata 
+> proper without the three line change.
+> 
+> Luben, what do you think?
+
+I think it sounds good.
+
+Good luck!
+       Luben
+
+P.S.  Remember what we'd discussed earlier, if you can offload something
+to command ER or device ER, do it!  It will save you a lot of special
+cases, IRQ/process context jungle, and differing paths and races.
+
+Don't you mind that if a command fails, you know that all of them
+queued commands would have to get zapped and that the device would probably
+have to be reset.  Just call scsi_req_abort_cmd() and do that abstraction
+later in process context when it calls your ER routine.
+
