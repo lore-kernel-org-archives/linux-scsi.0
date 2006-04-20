@@ -1,90 +1,51 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
 Subject: Re: [RFC] Netlink and user-space buffer pointers
-Date: Thu, 20 Apr 2006 15:40:25 -0500
-Message-ID: <4447F1B9.1010003@cs.wisc.edu>
+Date: Thu, 20 Apr 2006 16:41:52 -0500
+Message-ID: <44480020.3080100@cs.wisc.edu>
 References: <1145306661.4151.0.camel@localhost.localdomain> <20060418160121.GA2707@us.ibm.com> <444633B5.5030208@emulex.com> <4446AC80.6040604@cs.wisc.edu> <44479BA8.1000405@emulex.com> <4447C8C2.30909@cs.wisc.edu> <4447E91E.7030603@emulex.com> <4447F09D.9090501@cs.wisc.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:21908 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S1751262AbWDTUkd (ORCPT
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:1941 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S1751345AbWDTVmD (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Apr 2006 16:40:33 -0400
+	Thu, 20 Apr 2006 17:42:03 -0400
 In-Reply-To: <4447F09D.9090501@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: linux-scsi@vger.kernel.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: James.Smart@Emulex.Com, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
 Mike Christie wrote:
-> James Smart wrote:
->> Note: We've transitioned off topic. If what this means is "there isn't a
->> good
->> way except by ioctls (which still isn't easily portable) or system calls",
->> then that's ok. Then at least we know the limits and can look at other
->> implementation alternatives.
->>
->> Mike Christie wrote:
->>> James Smart wrote:
->>>> Mike Christie wrote:
->>>>> For the tasks you want to do for the fc class is performance critical?
->>>> No, it should not be.
->>>>
->>>>> If not, you could do what the iscsi class (for the netdev people
->>>>> this is
->>>>> drivers/scsi/scsi_transport_iscsi.c) does and just suffer a couple
->>>>> copies. For iscsi we do this in userspace to send down a login pdu:
->>>>>
->>>>>     /*
->>>>>      * xmitbuf is a buffer that is large enough for the iscsi_event,
->>>>>      * iscsi pdu (hdr_size) and iscsi pdu data (data_size)
->>>>>      */
->>>> Well, the real difference is that the payload of the "message" is
->>>> actually
->>>> the payload of the SCSI command or ELS/CT Request. Thus, the payload may
->>> I am not sure I follow. For iscsi, everything after the iscsi_event
->>> struct can be the iscsi request that is to be transmitted. The payload
->>> will not normally be Mbytes but it is not a couple if bytes.
->> True... For a large read/write - it will eventually total what the i/o
->> request size was, and you did have to push it through the socekt.
->> What this discussion really comes down to is the difference between
->> initiator
->> offload and what a target does.
->>
->> The initiator offloads the "full" i/o from the users - e.g. send command,
->> get response. In the initiator case, the user isn't aware of each and
->> every IU that makes up the i/o. As it's on an i/o basis, the LLDD doing
->> the offload needs the full buffer sitting and ready. DMA is preferred so
->> the buffer doesn't have to be consuming socket/kernel/driver buffers while
->> it's pending - plus speed.
->>
->> In the target case, the target controls each IU and it's size, thus it
->> only has to have access to as much buffer space as it wants to push the
->> next
->> IU. The i/o can be "paced" by the target. Unfortunately, this is an
->> entirely
->> different use model than users of a scsi initiator expect, and it won't map
->> well into replacing things like our sg_io ioctls.
+>> Second: transport level i/o could be done like you suggest, and we've
+>>   prototyped some of this as well. However, there's something very wrong
+>>   about putting "block device" wrappers and settings around something that
+>>   is not a block device.  In general, it's a heck of a lot of overhead and
+>>   still doesn't solve the real issue - how to portably pass that user
+>> buffer
 > 
 > 
-> I am not talking about the target here. For the open-iscsi initiator
-> that is in mainline that I referecnced in the example we send pdus from
-> userpsace to the LLD. In the future, initaitors that offload some iscsi
-> processing and will login from userspace or have userspace monitor the
-> transport by doing iscsi pings, we need to be able to send these pdus.
-> And the iscsi pdu cannot be broken up at the iscsi level (they can at
-> the interconect level though). From the iscsi host level they have to go
-> out like a scsi command would in that the LLD cannot decide to send out
-> mutiple pdus for he pdu that userspace sends down.
-> 
-> I do agree with you that targets can break down a scsi command into
-> multiple transport level packets as it sees fit.
+> I am not talking about putting block device wrappers. This the magic
+> part and the message passing comes in. A while back I made the requuest
+> queue a class (only sent the patch to Jens and did not follow up). The
+> original reason was for the io sched swap and some multipath stuff, but
+> since with then the request queue would need a block device to be
+> exposed to userspace through sysfs and would not need a block device to
+> send messages throgh. You just need a way to commniutate between
+> userspace and the kernel but it does not have to be through a block
+> device. I think this path has other benefits in that you could do
+> userspace level scanning as well since you do not need the block device
+> and ULD like we do today.
 > 
 
-Oh yeah is
-
-FC IU == iscsi tcp packet
-or
-FC IU == iscsi pdu
-?
+Again for a bad example look at the target code. The original idea was
+to use the request_queue for messages because it did not work so well
+for them to take target requests (we do not need the io scheduler for
+example) to send request from the target interrupt handler to the netink
+code. It was over kill becuase all we really want is a per cpu list, but
+we used the request queue becuase it had the queue limits that we
+needed. It was mean as temporary and I think tomo is working on
+replacing that with a per process list and softirq. But the point is
+that you can use the request queue to pass around requests and still use
+netlink for the interface between the kernel and userspace.
