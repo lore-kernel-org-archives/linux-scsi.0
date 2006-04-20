@@ -1,93 +1,76 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [RFC] Netlink and user-space buffer pointers
-Date: Thu, 20 Apr 2006 16:03:42 -0400
-Message-ID: <4447E91E.7030603@emulex.com>
-References: <1145306661.4151.0.camel@localhost.localdomain> <20060418160121.GA2707@us.ibm.com> <444633B5.5030208@emulex.com> <4446AC80.6040604@cs.wisc.edu> <44479BA8.1000405@emulex.com> <4447C8C2.30909@cs.wisc.edu>
-Reply-To: James.Smart@Emulex.Com
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: areca RAID driver
+Date: Thu, 20 Apr 2006 13:07:23 -0700
+Message-ID: <20060420130723.2cc2396e.akpm@osdl.org>
+References: <20060419155300.321c352e.akpm@osdl.org>
+	<20060420194831.GA7923@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <4447C8C2.30909@cs.wisc.edu>
-Sender: netdev-owner@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: linux-scsi@vger.kernel.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.osdl.org ([65.172.181.4]:20712 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751241AbWDTUId (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Apr 2006 16:08:33 -0400
+In-Reply-To: <20060420194831.GA7923@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@steeleye.com, hch@lst.de, axboe@suse.de, erich@areca.com.tw, billion.wu@areca.com.tw, linux-scsi@vger.kernel.org
 
-Note: We've transitioned off topic. If what this means is "there isn't a good
-way except by ioctls (which still isn't easily portable) or system calls",
-then that's ok. Then at least we know the limits and can look at other
-implementation alternatives.
-
-Mike Christie wrote:
-> James Smart wrote:
->> Mike Christie wrote:
->>> For the tasks you want to do for the fc class is performance critical?
->> No, it should not be.
->>
->>> If not, you could do what the iscsi class (for the netdev people this is
->>> drivers/scsi/scsi_transport_iscsi.c) does and just suffer a couple
->>> copies. For iscsi we do this in userspace to send down a login pdu:
->>>
->>>     /*
->>>      * xmitbuf is a buffer that is large enough for the iscsi_event,
->>>      * iscsi pdu (hdr_size) and iscsi pdu data (data_size)
->>>      */
->> Well, the real difference is that the payload of the "message" is actually
->> the payload of the SCSI command or ELS/CT Request. Thus, the payload may
+Christoph Hellwig <hch@lst.de> wrote:
+>
+> On Wed, Apr 19, 2006 at 03:53:00PM -0700, Andrew Morton wrote:
+> > 
+> > Gents, Erich thinks that the Areca driver is pretty much ready to go.
+> > 
+> > We still have the weird read-past-EOF problem if MAX_XFER_SECTORS=4096, but
+> > this version of the driver has it set to 512, which makes the problem go
+> > away.  I've suggested that we can set that problem aside for now.
+> > 
+> > I've put a copy of the latest diff at
+> > http://www.zip.com.au/~akpm/linux/patches/stuff/areca-raid-linux-scsi-driver.patch.
+> >  Could you please take a look sometime, decide how we should proceed?
 > 
-> I am not sure I follow. For iscsi, everything after the iscsi_event
-> struct can be the iscsi request that is to be transmitted. The payload
-> will not normally be Mbytes but it is not a couple if bytes.
-
-True... For a large read/write - it will eventually total what the i/o
-request size was, and you did have to push it through the socekt.
-What this discussion really comes down to is the difference between initiator
-offload and what a target does.
-
-The initiator offloads the "full" i/o from the users - e.g. send command,
-get response. In the initiator case, the user isn't aware of each and
-every IU that makes up the i/o. As it's on an i/o basis, the LLDD doing
-the offload needs the full buffer sitting and ready. DMA is preferred so
-the buffer doesn't have to be consuming socket/kernel/driver buffers while
-it's pending - plus speed.
-
-In the target case, the target controls each IU and it's size, thus it
-only has to have access to as much buffer space as it wants to push the next
-IU. The i/o can be "paced" by the target. Unfortunately, this is an entirely
-different use model than users of a scsi initiator expect, and it won't map
-well into replacing things like our sg_io ioctls.
-
-> Instead of netlink for scsi commands and transport requests....
+> It still doesn't address lots of the month-old comments.
 > 
-> For scsi commands could we just use sg io, or is there something special
-> about the command you want to send? If you can use sg io for scsi
-> commands, maybe for transport level requests (in my example iscsi pdu)
-> we could modify something like sg/bsg/block layer scsi_ioctl.c to send
-> down transport requests to the classes and encapsulate them in some new
-> struct transport_requests or use the existing struct request but do that
-> thing people keep taling about using the request/request_queue for
-> message passing.
+> Serious stuff:
+>  - doesn't follow one value per file in sysfs rule
+>  - arcmsr_device_probe (which should really be called arcmsr_probe!)
+>    doesn't propagate the pci_enable_device return value
+>  - ditto  for request_irq
+>  - please do proper goto unwinding in arcmsr_device_probe instead of
+>    calling arcmsr_pcidev_disattach in various places
+>  - arcmsr_report_sense_info is buggy.  all scsi-commands are S/G lists
+>    now.
+>  - pleaase don't put that odd "linux bug" workaround into
+>    arcmsr_queue_command.  If you can reproduce that bug please report it
+>    and we'll fix it.
+>  - the target 16 inquiry emulation is broken for the same reasons as the
+>    report_luns one above.  Care to explain why you need it at all?
+>  - I can't see any endianess handling in the whole driver.  Was this
+>    tested on a BE platform like powerpc?
+>  - the probe path is doing mmio access before pci_request_regions.
+>  - scsi_remove_host is called far too late
+>  - dma_addr_ts are casted to unsigned longs which doesn't work
+>    with 64bit dma and 32bit plattforms
+> 
+> Cosmetical stuff:
+> 
+>  - odd formated comments instead of kerneldoc / per CondingStyle
+>  - very odd variable naming, lots of uppercase and p prefixes
+>  - please kill all these useless forward-declarations and format
+>    the code in the natural call flow
+>  - the consistent_dma_mask is 32bits by default, not need to call
+>    pci_set_consistent_dma_mask
+> 
 
-Well - there's 2 parts to this answer:
+Thanks again, Christoph.  I'll add the above to the changelog (along with
+Matthew's observations)
 
-First : IOCTL's are considered dangerous/bad practice and therefore it would
-   be nice to find a replacement mechanism that eliminates them. If that
-   mechanism has some of the cool features that netlink does, even better.
-   Using sg io, in the manner you indicate, wouldn't remove the ioctl use.
-   Note: I have OEMs/users that are very confused about the community's statement
-   about ioctls. They've heard they are bad, should never be allowed, will no
-   be longer supported, but yet they are at the heart of DM and sg io and other
-   subsystems. Other than a "grandfathered" explanation, they don't understand
-   why the rules bend for one piece of code but not for another. To them, all
-   the features are just as critical regardless of whose providing them.
+> And there's probably a lot more issues.  Below is a patch that tries to
+> cleanup the pci driver entry points according to the above list.  Due
+> to all this moving things around it's pretty huge.
 
-Second: transport level i/o could be done like you suggest, and we've
-   prototyped some of this as well. However, there's something very wrong
-   about putting "block device" wrappers and settings around something that
-   is not a block device.  In general, it's a heck of a lot of overhead and
-   still doesn't solve the real issue - how to portably pass that user buffer
-   in to/out of the kernel.
+Erich, could you please test and review this patch, and send the result
+back to me for integration?
 
-
--- james s
