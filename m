@@ -1,86 +1,102 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: Re: [PATCH] dc395x: dynamically map scatter-gather for PIO (take 2)
-Date: Wed, 19 Apr 2006 17:27:33 -0700
-Message-ID: <20060419172733.d61e3365.rdunlap@xenotime.net>
-References: <Pine.LNX.4.60.0604022004520.17410@poirot.grange>
-	<20060413132932.31871824.rdunlap@xenotime.net>
-	<Pine.LNX.4.60.0604132256490.4711@poirot.grange>
+From: "Moore, Eric" <Eric.Moore@lsil.com>
+Subject: RE: [PATCH] - mpt fusion - mptspi - host reset, kick offdomainvalidation again.
+Date: Wed, 19 Apr 2006 18:28:24 -0600
+Message-ID: <664A4EBB07F29743873A87CF62C26D70081480@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="----_=_NextPart_001_01C66411.573FBD85"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:51928 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S1751243AbWDTAZI (ORCPT
+Received: from mail0.lsil.com ([147.145.40.20]:36483 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1751340AbWDTA2c (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Apr 2006 20:25:08 -0400
-Received: from midway.site ([71.111.157.99]) by xenotime.net for <linux-scsi@vger.kernel.org>; Wed, 19 Apr 2006 17:25:06 -0700
-In-Reply-To: <Pine.LNX.4.60.0604132256490.4711@poirot.grange>
+	Wed, 19 Apr 2006 20:28:32 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, Sebastian@schnapsleichen.de, roubert@df.lth.se, lenehan@twibble.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, 13 Apr 2006 23:02:04 +0200 (CEST) Guennadi Liakhovetski wrote:
+This is a multi-part message in MIME format.
 
-> On Thu, 13 Apr 2006, Randy.Dunlap wrote:
-> 
-> > On Sun, 2 Apr 2006 21:57:43 +0200 (CEST) Guennadi Liakhovetski wrote:
-> > 
-> > > Hello all,
-> > > 
-> > > This time I really mean it:-)
-> > 
-> > Hi Guennadi,
-> > James pointed me at this patch since I have aha152x also having
-> > problems with using page_address() while trying to do PIO.
-> > I see a NULL pointer during a data-out phase.  I'll attempt
-> > to use the kmap_atomic() support that you have added in the
-> > aha152x driver.
-> 
-> Would be great to put these functions under some more extensive testing! 
-> I also want to use them in tmscsim, but there I do not have a test case 
-> for PIO:-(
+------_=_NextPart_001_01C66411.573FBD85
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-I have a patch that seems to work for the data-in phase of the
-aha152x (_cs) driver.  However, the data-out phase is causing
-data corruption.  (I'm only using it on a test target, so no big
-deal.)
+On Wednesday, April 19, 2006 4:45 PM, James Bottomley wrote:=20
+>=20
+> I haven't followed all the paths, but I'm fairly certain
+> mptspi_ioc_reset can be invoked from interrupt context, can't it?  In
+> which case it has to use spi_schedule_dv() to get the necessary user
+> context to perform the DV.
+>=20
 
-Does anyone know/recall this condition in aha152x.c::datao_end() ?
-("bytes to resend"):
+Yes, it appears that all calling functions of MptResetHandlers[], pass
+the sleepFlag.  Therefore its a possibility that at some time it could
+be=20
+called at interrupt time, but mostly like not.   Thanks for pointing out
+that.
 
-	if(TESTLO(DMASTAT, DFIFOEMP)) {
-		int data_count = (DATA_LEN - CURRENT_SC->resid) - GETSTCNT();
+We need to quiese io before and after calling spi_schedule_dv(),
+therefore
+I prefer if we spawn a work thread from mptspi, then call
+mptspi_dv_device.
 
-		DPRINTK(debug_datao, DEBUG_LEAD "datao: %d bytes to resend (%d written, %d transferred)\n",
-			CMDINFO(CURRENT_SC),
-			data_count,
-			DATA_LEN-CURRENT_SC->resid,
-			GETSTCNT());
+Attached updated patch.
 
-		CURRENT_SC->resid += data_count;
+Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
 
-and then (if use_sg), the driver mucks with the SCp scratch/work area:
 
-		if(CURRENT_SC->use_sg) {
-			data_count -= CURRENT_SC->SCp.ptr - SG_ADDRESS(CURRENT_SC->SCp.buffer);
-			while(data_count>0) {
-				CURRENT_SC->SCp.buffer--;
-				CURRENT_SC->SCp.buffers_residual++;
-				data_count -= CURRENT_SC->SCp.buffer->length;
-			}
-			CURRENT_SC->SCp.ptr           = SG_ADDRESS(CURRENT_SC->SCp.buffer) - data_count;
-			CURRENT_SC->SCp.this_residual = CURRENT_SC->SCp.buffer->length + data_count;
-		} else {
-			CURRENT_SC->SCp.ptr           -= data_count;
-			CURRENT_SC->SCp.this_residual += data_count;
-		}
-	}
 
-Does modifying the SCp: buffer, buffers_residual, ptr, this_residual...
-tell the SCSI mid-layer anything?  or does this tell the driver
-internally where to restart a data transfer?  (if so, where is that,
-if anyone knows.  I can't find it.)
 
----
-~Randy
+
+
+------_=_NextPart_001_01C66411.573FBD85
+Content-Type: application/octet-stream;
+	name="spi_dv_fix.patch"
+Content-Transfer-Encoding: base64
+Content-Description: spi_dv_fix.patch
+Content-Disposition: attachment;
+	filename="spi_dv_fix.patch"
+
+ZGlmZiAtdWFyTiBiL2RyaXZlcnMvbWVzc2FnZS9mdXNpb24vbXB0c3BpLmMgYS9kcml2ZXJzL21l
+c3NhZ2UvZnVzaW9uL21wdHNwaS5jCi0tLSBiL2RyaXZlcnMvbWVzc2FnZS9mdXNpb24vbXB0c3Bp
+LmMJMjAwNi0wNC0xNyAxMDozMzo1MC4wMDAwMDAwMDAgLTA2MDAKKysrIGEvZHJpdmVycy9tZXNz
+YWdlL2Z1c2lvbi9tcHRzcGkuYwkyMDA2LTA0LTE5IDE4OjE2OjExLjAwMDAwMDAwMCAtMDYwMApA
+QCAtNzgzLDYgKzc4Myw3MCBAQAogfTsKIE1PRFVMRV9ERVZJQ0VfVEFCTEUocGNpLCBtcHRzcGlf
+cGNpX3RhYmxlKTsKIAorCisvKgorICogcmVuZWdvdGlhdGUgZm9yIGEgZ2l2ZW4gdGFyZ2V0Cisg
+Ki8KK3N0YXRpYyB2b2lkCittcHRzcGlfZHZfcmVuZWdvdGlhdGVfd29yayh2b2lkICpkYXRhKQor
+eworCXN0cnVjdCB3b3JrX3F1ZXVlX3dyYXBwZXIgKndxdyA9IChzdHJ1Y3Qgd29ya19xdWV1ZV93
+cmFwcGVyICopZGF0YTsKKwlzdHJ1Y3QgX01QVF9TQ1NJX0hPU1QgKmhkID0gd3F3LT5oZDsKKwlz
+dHJ1Y3Qgc2NzaV9kZXZpY2UgKnNkZXY7CisKKwlrZnJlZSh3cXcpOworCisJc2hvc3RfZm9yX2Vh
+Y2hfZGV2aWNlKHNkZXYsIGhkLT5pb2MtPnNoKQorCQltcHRzcGlfZHZfZGV2aWNlKGhkLCBzZGV2
+KTsKK30KKworc3RhdGljIHZvaWQKK21wdHNwaV9kdl9yZW5lZ290aWF0ZShzdHJ1Y3QgX01QVF9T
+Q1NJX0hPU1QgKmhkKQoreworCXN0cnVjdCB3b3JrX3F1ZXVlX3dyYXBwZXIgKndxdyA9IGttYWxs
+b2Moc2l6ZW9mKCp3cXcpLCBHRlBfQVRPTUlDKTsKKworCWlmICghd3F3KQorCQlyZXR1cm47CisK
+KwlJTklUX1dPUksoJndxdy0+d29yaywgbXB0c3BpX2R2X3JlbmVnb3RpYXRlX3dvcmssIHdxdyk7
+CisJd3F3LT5oZCA9IGhkOworCisJc2NoZWR1bGVfd29yaygmd3F3LT53b3JrKTsKK30KKworLyoK
+KyAqIHNwaSBtb2R1bGUgcmVzZXQgaGFuZGxlcgorICovCitzdGF0aWMgaW50CittcHRzcGlfaW9j
+X3Jlc2V0KE1QVF9BREFQVEVSICppb2MsIGludCByZXNldF9waGFzZSkKK3sKKwlzdHJ1Y3QgX01Q
+VF9TQ1NJX0hPU1QgKmhkID0gKHN0cnVjdCBfTVBUX1NDU0lfSE9TVCAqKWlvYy0+c2gtPmhvc3Rk
+YXRhOworCWludCByYzsKKworCXJjID0gbXB0c2NzaWhfaW9jX3Jlc2V0KGlvYywgcmVzZXRfcGhh
+c2UpOworCisJaWYgKHJlc2V0X3BoYXNlID09IE1QVF9JT0NfUE9TVF9SRVNFVCkKKwkJbXB0c3Bp
+X2R2X3JlbmVnb3RpYXRlKGhkKTsKKworCXJldHVybiByYzsKK30KKworLyoKKyAqIHNwaSBtb2R1
+bGUgcmVzdW1lIGhhbmRsZXIKKyAqLworc3RhdGljIGludAorbXB0c3BpX3Jlc3VtZShzdHJ1Y3Qg
+cGNpX2RldiAqcGRldikKK3sKKwlNUFRfQURBUFRFUiAJKmlvYyA9IHBjaV9nZXRfZHJ2ZGF0YShw
+ZGV2KTsKKwlzdHJ1Y3QgX01QVF9TQ1NJX0hPU1QgKmhkID0gKHN0cnVjdCBfTVBUX1NDU0lfSE9T
+VCAqKWlvYy0+c2gtPmhvc3RkYXRhOworCWludCByYzsKKworCXJjID0gbXB0c2NzaWhfcmVzdW1l
+KHBkZXYpOworCW1wdHNwaV9kdl9yZW5lZ290aWF0ZShoZCk7CisKKwlyZXR1cm4gcmM7Cit9CisK
+IC8qPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0t
+PS09LT0tPS09LT0tPS09LT0tPS09Ki8KIC8qPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0t
+PS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09Ki8KIC8qCkBAIC0x
+MDMyLDcgKzEwOTYsNyBAQAogCS5zaHV0ZG93bgk9IG1wdHNjc2loX3NodXRkb3duLAogI2lmZGVm
+IENPTkZJR19QTQogCS5zdXNwZW5kCT0gbXB0c2NzaWhfc3VzcGVuZCwKLQkucmVzdW1lCQk9IG1w
+dHNjc2loX3Jlc3VtZSwKKwkucmVzdW1lCQk9IG1wdHNwaV9yZXN1bWUsCiAjZW5kaWYKIH07CiAK
+QEAgLTEwNjEsNyArMTEyNSw3IEBACiAJCSAgIjogUmVnaXN0ZXJlZCBmb3IgSU9DIGV2ZW50IG5v
+dGlmaWNhdGlvbnNcbiIpKTsKIAl9CiAKLQlpZiAobXB0X3Jlc2V0X3JlZ2lzdGVyKG1wdHNwaURv
+bmVDdHgsIG1wdHNjc2loX2lvY19yZXNldCkgPT0gMCkgeworCWlmIChtcHRfcmVzZXRfcmVnaXN0
+ZXIobXB0c3BpRG9uZUN0eCwgbXB0c3BpX2lvY19yZXNldCkgPT0gMCkgewogCQlkcHJpbnRrKChL
+RVJOX0lORk8gTVlOQU0KIAkJICAiOiBSZWdpc3RlcmVkIGZvciBJT0MgcmVzZXQgbm90aWZpY2F0
+aW9uc1xuIikpOwogCX0K
+
+------_=_NextPart_001_01C66411.573FBD85--
