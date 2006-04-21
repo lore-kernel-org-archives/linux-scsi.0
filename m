@@ -1,58 +1,32 @@
 From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
 Subject: Re: [PATCH] dc395x: dynamically map scatter-gather for PIO (take 2)
-Date: Fri, 21 Apr 2006 23:28:16 +0200 (CEST)
-Message-ID: <Pine.LNX.4.60.0604212310450.3237@poirot.grange>
+Date: Fri, 21 Apr 2006 23:42:43 +0200 (CEST)
+Message-ID: <Pine.LNX.4.60.0604212341260.3237@poirot.grange>
 References: <Pine.LNX.4.60.0604022004520.17410@poirot.grange>
- <1145054008.3520.69.camel@mulgrave.il.steeleye.com>
+ <20060413132932.31871824.rdunlap@xenotime.net> <Pine.LNX.4.60.0604132256490.4711@poirot.grange>
+ <20060419172733.d61e3365.rdunlap@xenotime.net>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.de ([213.165.64.20]:22179 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S964790AbWDUV2R (ORCPT
+Received: from mail.gmx.de ([213.165.64.20]:21229 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S964801AbWDUVmu (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Apr 2006 17:28:17 -0400
-In-Reply-To: <1145054008.3520.69.camel@mulgrave.il.steeleye.com>
+	Fri, 21 Apr 2006 17:42:50 -0400
+In-Reply-To: <20060419172733.d61e3365.rdunlap@xenotime.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi@vger.kernel.org, Sebastian Frei <Sebastian@schnapsleichen.de>, Fredrik Roubert <roubert@df.lth.se>, lenehan@twibble.org
+To: "Randy.Dunlap" <rdunlap@xenotime.net>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org, Sebastian@schnapsleichen.de, roubert@df.lth.se, lenehan@twibble.org
 
-On Fri, 14 Apr 2006, James Bottomley wrote:
+On Wed, 19 Apr 2006, Randy.Dunlap wrote:
 
-> I put this in, but just a warning here.  You're modifying a kmapped
-> page, so you need to call flush_kernel_dcache_page() before unmapping it
-> otherwise user space may not see the change on VIPT or VIVT CPU (the
-> data may be in a non congruent cache line).
+> I have a patch that seems to work for the data-in phase of the
+> aha152x (_cs) driver.  However, the data-out phase is causing
+> data corruption.  (I'm only using it on a test target, so no big
+> deal.)
 
-While we are at it, there's something else in dc395x.c I wanted to ask 
-about:
-
-		DC395x_write32(acb, TRM_S1040_DMA_XHIGHADDR, 0);
-		if (srb->cmd->use_sg) {	/* with S/G */
-			io_dir |= DMACMD_SG;
-			DC395x_write32(acb, TRM_S1040_DMA_XLOWADDR,
-				       srb->sg_bus_addr +
-				       sizeof(struct SGentry) *
-				       srb->sg_index);
-			/* load how many bytes in the sg list table */
-			DC395x_write32(acb, TRM_S1040_DMA_XCNT,
-				       ((u32)(srb->sg_count -
-					      srb->sg_index) << 3));
-		} else {	/* without S/G */
-			io_dir &= ~DMACMD_SG;
-			DC395x_write32(acb, TRM_S1040_DMA_XLOWADDR,
-				       srb->segment_x[0].address);
-			DC395x_write32(acb, TRM_S1040_DMA_XCNT,
-				       srb->segment_x[0].length);
-		}
-
-So, it looks like TRM_S1040_DMA_XHIGHADDR is always written with 0. The 
-question - is TRM_S1040_DMA_XHIGHADDR the high part of a (64-bit) address? 
-If so, would it work just loading it appropriately (I don't have specs)? 
-If not / unknown, do we have to set pci_set_dma_mask(dev, DMA_32BIT_MASK) 
-for this to work on 64-bit? What do PCI bus addresses look like on IA64 
-and other 64-bit systems? Is it the 64-bit PCI extension they are using? 
-Sorry, no experience with 64-bit so far.
+Could you provide some detail? Your current patch? Maybe try to debug the 
+data corruption if it is reproducible / predictable?
 
 Thanks
 Guennadi
