@@ -1,45 +1,34 @@
-From: Tony Mantler <nicoya@ubb.ca>
-Subject: Re: QLogic qla2xxx firmware
-Date: Thu, 20 Apr 2006 18:48:19 -0500
-Message-ID: <F4938AA8-DA6C-4E5D-B597-A53FFA81A3CD@ubb.ca>
-References: <20060420234308.GK8514@andrew-vasquezs-powerbook-g4-15.local>
-Mime-Version: 1.0 (Apple Message framework v749.3)
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 1/2] SCSI: implement scsi_eh_schedule_cmd()
+Date: Fri, 21 Apr 2006 11:22:12 +0900
+Message-ID: <20060421022212.GG25726@htj.dyndns.org>
+References: <20060419184916.22608.qmail@web31809.mail.mud.yahoo.com> <4446ECCF.7080000@gmail.com> <20060420130113.GA10415@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from S01060080c85517f6.wp.shawcable.net ([24.79.196.167]:23452 "EHLO
-	ubb.ca") by vger.kernel.org with ESMTP id S1751293AbWDTXs0 (ORCPT
+Received: from pproxy.gmail.com ([64.233.166.177]:26340 "EHLO pproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1750743AbWDUCWD (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Apr 2006 19:48:26 -0400
-In-Reply-To: <20060420234308.GK8514@andrew-vasquezs-powerbook-g4-15.local>
+	Thu, 20 Apr 2006 22:22:03 -0400
+Received: by pproxy.gmail.com with SMTP id i49so373689pye
+        for <linux-scsi@vger.kernel.org>; Thu, 20 Apr 2006 19:22:03 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <20060420130113.GA10415@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: ltuikov@yahoo.com, Patrick Mansfield <patmans@us.ibm.com>, Jeff Garzik <jgarzik@pobox.com>, hch@lst.de, James.Bottomley@SteelEye.com, alan@lxorguk.ukuu.org.uk, albertcc@tw.ibm.com, arjan@infradead.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
+On Thu, Apr 20, 2006 at 02:01:13PM +0100, Christoph Hellwig wrote:
+> On Thu, Apr 20, 2006 at 11:07:11AM +0900, Tejun Heo wrote:
+> > James and Jeff, any opinion on this matter?
+> 
+> I think you hack looks okayish.  But I want to see the whole libata
+> ->eh_strategy_handler first.
 
-On 20-Apr-06, at 6:43 PM, Andrew Vasquez wrote:
+Thanks, Christoph.
 
-> On Wed, 19 Apr 2006, Tony Mantler wrote:
->
->> Reading the config help for the qla2xxx driver in 2.6.16 indicates
->> that the firmware for the various cards can be downloaded from  
->> <ftp://
->> ftp.qlogic.com/outgoing/linux/firmware/>. This FTP directory exists,
->> but is empty.
->
-> Sorry, I just got back from a rather long holiday and noticed this as
-> well.  Please try to access the site again, the contents should be
-> present.  This should not happen again -- so says IT...
+I'll CC you on the next post of libata EH patches.
 
-Yup, that works perfect now. Thanks!
-
-
-Cheers - Tony 'Nicoya' Mantler :)
-
---
-Tony 'Nicoya' Mantler - Master of Code-fu
--- nicoya@ubb.ca -- http://www.ubb.ca/ --
-
-
-
+-- 
+tejun
