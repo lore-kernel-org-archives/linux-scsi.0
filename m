@@ -1,43 +1,54 @@
 From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
 Subject: Re: [PATCH] dc395x: dynamically map scatter-gather for PIO (take 2)
-Date: Fri, 21 Apr 2006 22:58:44 +0200 (CEST)
-Message-ID: <Pine.LNX.4.60.0604212255290.3237@poirot.grange>
+Date: Fri, 21 Apr 2006 23:00:14 +0200 (CEST)
+Message-ID: <Pine.LNX.4.60.0604212258570.3237@poirot.grange>
 References: <Pine.LNX.4.60.0604022004520.17410@poirot.grange>
- <20060413132932.31871824.rdunlap@xenotime.net>
+ <1145054008.3520.69.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:50645 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S932467AbWDUU6q (ORCPT
+Received: from mail.gmx.de ([213.165.64.20]:53958 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S932347AbWDUVAS (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Apr 2006 16:58:46 -0400
-In-Reply-To: <20060413132932.31871824.rdunlap@xenotime.net>
+	Fri, 21 Apr 2006 17:00:18 -0400
+In-Reply-To: <1145054008.3520.69.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Randy.Dunlap" <rdunlap@xenotime.net>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org, lenehan@twibble.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi@vger.kernel.org, Sebastian Frei <Sebastian@schnapsleichen.de>, Fredrik Roubert <roubert@df.lth.se>, lenehan@twibble.org
 
-On Thu, 13 Apr 2006, Randy.Dunlap wrote:
+On Fri, 14 Apr 2006, James Bottomley wrote:
 
-> On Sun, 2 Apr 2006 21:57:43 +0200 (CEST) Guennadi Liakhovetski wrote:
+> On Sun, 2006-04-02 at 21:57 +0200, Guennadi Liakhovetski wrote:
+> > +                               if (fc == 0x40 &&
+> > (srb->dcb->sync_period & WIDE_SYNC)) {
+> > +                                       /* Read the last byte ... */
+> > +                                       if (srb->total_xfer_length >
+> > 0) {
+> > +                                               u8 byte =
+> > DC395x_read8(acb, TRM_S1040_SCSI_FIFO);
+> > +
+> > +                                               *virt++ = byte;
+> > +                                               srb->total_xfer_length--;
+> > +                                               if
+> > (debug_enabled(DBG_PIO))
+> > +                                                       printk(" %
+> > 02x", byte);
+> > +                                       }
+> > +
+> > +                                       DC395x_write8(acb,
+> > TRM_S1040_SCSI_CONFIG2, 0);
+> > +                               }
+> > +
+> > +                               if (srb->cmd->use_sg) {
+> > +                                       scsi_kunmap_atomic_sg(base);
 > 
-> > + * scsi_kmap_atomic_sg - find and atomically map an sg-elemnt
-> 
-> s/elemnt/element/
+> I put this in, but just a warning here.  You're modifying a kmapped
+> page, so you need to call flush_kernel_dcache_page() before unmapping it
+> otherwise user space may not see the change on VIPT or VIVT CPU (the
+> data may be in a non congruent cache line).
 
-...
-
-> > +/**
-> > + * scsi_kunmap_atomic_sg - atomically unmap a virtual address, previously
-> > + *			   mapped with scsi_kmap_atomic_sg
-> 
-> First line of function kernel-doc must be just one line long.  Sorry.  :(
-> You can add more descriptive text after the parameter(s) plus one
-> blank line if you want to do it that way.
-
-Does the below look good?
-
-James, I hope it will be close enough to your current scsi-misc...
+Does the patch below get it right?
 
 Thanks
 Guennadi
@@ -46,29 +57,14 @@ Guennadi Liakhovetski
 
 Signed-off-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
 
-diff -ur a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
---- a/drivers/scsi/scsi_lib.c	2006-04-20 00:42:59.000000000 +0200
-+++ b/drivers/scsi/scsi_lib.c	2006-04-20 00:17:21.000000000 +0200
-@@ -2352,7 +2352,7 @@
- EXPORT_SYMBOL_GPL(scsi_target_unblock);
+diff -ur a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
+--- a/drivers/scsi/dc395x.c	2006-04-20 00:42:12.000000000 +0200
++++ b/drivers/scsi/dc395x.c	2006-04-20 00:41:58.000000000 +0200
+@@ -2343,6 +2343,7 @@
+ 				}
  
- /**
-- * scsi_kmap_atomic_sg - find and atomically map an sg-elemnt
-+ * scsi_kmap_atomic_sg - find and atomically map an sg-element
-  * @sg:		scatter-gather list
-  * @sg_count:	number of segments in sg
-  * @offset:	offset in bytes into sg, on return offset into the mapped area
-@@ -2398,9 +2398,11 @@
- EXPORT_SYMBOL(scsi_kmap_atomic_sg);
- 
- /**
-- * scsi_kunmap_atomic_sg - atomically unmap a virtual address, previously
-- *			   mapped with scsi_kmap_atomic_sg
-+ * scsi_kunmap_atomic_sg - atomically unmap a virtual address
-  * @virt:	virtual address to be unmapped
-+ *
-+ * unmap a virtual address, previously mapped with
-+ * scsi_kmap_atomic_sg
-  */
- void scsi_kunmap_atomic_sg(void *virt)
- {
+ 				if (srb->cmd->use_sg) {
++					flush_kernel_dcache_page(kmap_atomic_to_page(base));
+ 					scsi_kunmap_atomic_sg(base);
+ 					local_irq_restore(flags);
+ 				}
