@@ -1,45 +1,27 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: qla2xxx lock ordering question
-Date: Sat, 22 Apr 2006 15:41:40 +0200
-Message-ID: <1145713301.2882.3.camel@laptopd505.fenrus.org>
-References: <1145438524.3085.19.camel@laptopd505.fenrus.org>
-	 <20060420234606.GO8514@andrew-vasquezs-powerbook-g4-15.local>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: "Alba Conner" <pdxyh@yahoo.com>
+Subject: Degree or Diploma of Your Choice ge
+Date: Sat, 22 Apr 2006 19:11:54 -0500
+Message-ID: <LAW64.OE649yfB4mvo189353d5__49008.4386933178$1145747923$gmane$org@motmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:58051 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S1751089AbWDVTuw (ORCPT
+Received: from [194.183.32.79] ([194.183.32.79]:3854 "HELO 209.132.176.167")
+	by vger.kernel.org with SMTP id S1751261AbWDVXSS (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 22 Apr 2006 15:50:52 -0400
-Received: from pentafluge.infradead.org (pentafluge.infradead.org [213.146.154.40])
-	by zeus1.kernel.org (8.13.1/8.13.1) with ESMTP id k3MDiuwV006447
-	for <linux-scsi@vger.kernel.org>; Sat, 22 Apr 2006 13:44:59 GMT
-In-Reply-To: <20060420234606.GO8514@andrew-vasquezs-powerbook-g4-15.local>
+	Sat, 22 Apr 2006 19:18:18 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: mingo@elte.hu, linux-scsi@vger.kernel.org
-
-On Thu, 2006-04-20 at 16:46 -0700, Andrew Vasquez wrote:
-> On Wed, 19 Apr 2006, Arjan van de Ven wrote:
-> 
-> > a question about qla2xxx lock ordering since it trips up with Ingo's
-> > lock depenceny tool:
-> > 
-> > in qla2x00_mailbox_command() the code first grabs the mbx_reg_lock lock,
-> > then the hardware_lock. So far so good. But then...
-> > it drops the mbx_reg_lock, does stuff, and regrabs the mbx_reg_lock
-> > lock, while keeping the hardware_lock held!
-> > 
-> > This appears to be an AB-BA deadlock risk since for the second part you
-> > are taking the locks in the wrong order... or am I missing something
-> > here?
-> 
-> Actually the code is a bit convoluted, but I believe we are OK.  There
-> are two scenarios we need to consider:
+To: linux-net@vger.kernel.org
 
 
-I actually don't believe so based on what the lockdep checker sees; it
-really really sees a third behavior..
+Lazy to attend exam or classes?
 
+We have Diplomas, Degrees, Masters' or Doctorate
+to choose from any field of your interest.
+
+Only 2 weeks require to delivers the prestigious non-accredited
+universities paper to your doorstep.
+
+Do not hesitate to give us a call today!
+1-484-693-8861
+
+
+LNGhxb
