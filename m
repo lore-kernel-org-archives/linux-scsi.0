@@ -1,55 +1,51 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: [PATCH] dc395x: dynamically map scatter-gather for PIO (take 2)
-Date: Sat, 22 Apr 2006 21:41:53 +0200 (CEST)
-Message-ID: <Pine.LNX.4.60.0604222138300.3186@poirot.grange>
-References: <Pine.LNX.4.60.0604022004520.17410@poirot.grange>
- <1145054008.3520.69.camel@mulgrave.il.steeleye.com>
- <Pine.LNX.4.60.0604212258570.3237@poirot.grange> <20060421165441.69617da9.rdunlap@xenotime.net>
+From: Jesper Juhl <jesper.juhl@gmail.com>
+Subject: [PATCH] SCSI: aic7xxx_osm_pci resource leak fix.
+Date: Sun, 23 Apr 2006 20:16:02 +0200
+Message-ID: <200604232016.02979.jesper.juhl@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:38791 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S1751396AbWDWMcH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 23 Apr 2006 08:32:07 -0400
-In-Reply-To: <20060421165441.69617da9.rdunlap@xenotime.net>
+Received: from nz-out-0102.google.com ([64.233.162.193]:10120 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1751438AbWDWSPV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 23 Apr 2006 14:15:21 -0400
+Received: by nz-out-0102.google.com with SMTP id n1so905424nzf
+        for <linux-scsi@vger.kernel.org>; Sun, 23 Apr 2006 11:15:20 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Randy.Dunlap" <rdunlap@xenotime.net>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, Sebastian@schnapsleichen.de, roubert@df.lth.se, lenehan@twibble.org
+To: linux-kernel@vger.kernel.org
+Cc: James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, Jesper Juhl <jesper.juhl@gmail.com>
 
-On Fri, 21 Apr 2006, Randy.Dunlap wrote:
 
-> On Fri, 21 Apr 2006 23:00:14 +0200 (CEST) Guennadi Liakhovetski wrote:
-> 
-> > diff -ur a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
-> > --- a/drivers/scsi/dc395x.c	2006-04-20 00:42:12.000000000 +0200
-> > +++ b/drivers/scsi/dc395x.c	2006-04-20 00:41:58.000000000 +0200
-> > @@ -2343,6 +2343,7 @@
-> >  				}
-> >  
-> >  				if (srb->cmd->use_sg) {
-> > +					flush_kernel_dcache_page(kmap_atomic_to_page(base));
-> >  					scsi_kunmap_atomic_sg(base);
-> >  					local_irq_restore(flags);
-> >  				}
-> > -
-> 
-> Looks right to me, but why not have scsi_kunmap_atomic_sg() do that
-> instead of every caller having to do it?  Is there some good reason
-> not to do that?
+Fix resource leak in 
+drivers/scsi/aic7xxx/aic7xxx_osm_pci.c::ahc_linux_pci_dev_probe()
 
-I wouldn't do it for a couple of reasons:
+Found by the coverity checker (#668)
 
-1. kmap_atomic / kunmap_atomic pair doesn't do that
 
-2. You only need it if you write to the newly-mapped page. Not if you read 
-from it.
-
-You could add a new function line unmap_flush() or an extra parameter, but 
-that would just obfuscate things?
-
-Thanks
-Guennadi
+Signed-off-by: Jesper Juhl <jesper.juhl@gmail.com>
 ---
-Guennadi Liakhovetski
+
+ drivers/scsi/aic7xxx/aic7xxx_osm_pci.c |    1 +
+ 1 files changed, 1 insertion(+)
+
+--- linux-2.6.17-rc2-git4-orig/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c	2006-03-20 06:53:29.000000000 +0100
++++ linux-2.6.17-rc2-git4/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c	2006-04-23 20:05:50.000000000 +0200
+@@ -219,6 +219,7 @@ ahc_linux_pci_dev_probe(struct pci_dev *
+ 		ahc->flags |= AHC_39BIT_ADDRESSING;
+ 	} else {
+ 		if (dma_set_mask(dev, DMA_32BIT_MASK)) {
++			ahc_free(ahc);
+ 			printk(KERN_WARNING "aic7xxx: No suitable DMA available.\n");
+                 	return (-ENODEV);
+ 		}
+
+
+
+
+(please keep replies CC'ed to me)
+
+
