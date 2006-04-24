@@ -1,66 +1,53 @@
-From: Kai Meemken <Kai.Meemken@seyes.org>
-Subject: http://linux.adaptec.com/sas/index.html with broken links
-Date: Mon, 24 Apr 2006 10:53:58 +0200
-Message-ID: <OF13A772C0.7052F4B2-ONC125715A.002F8CAD-C125715A.0030E2BA@seyes.org>
+From: Or Gerlitz <ogerlitz@voltaire.com>
+Subject: Re: [PATCH] iscsi transport endpoint calls
+Date: Mon, 24 Apr 2006 17:54:38 +0300
+Message-ID: <444CE6AE.8020502@voltaire.com>
+References: <Pine.LNX.4.44.0604111646040.18200-100000@zuben>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p15107724.pureserver.info ([217.160.141.215]:40109 "EHLO
-	seyes.org") by vger.kernel.org with ESMTP id S932084AbWDXIyD convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Apr 2006 04:54:03 -0400
+Received: from taurus.voltaire.com ([193.47.165.240]:34342 "EHLO
+	taurus.voltaire.com") by vger.kernel.org with ESMTP
+	id S1750812AbWDXOyn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Apr 2006 10:54:43 -0400
+In-Reply-To: <Pine.LNX.4.44.0604111646040.18200-100000@zuben>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James.Bottomley@SteelEye.com, hch@lst.de, linux-scsi@vger.kernel.org
+Cc: michaelc@cs.wisc.edu
 
---------> to whom it may concern --> the email address given with the s=
-as=20
-patches "Luben Tuikov <luben_tuikov@adaptec.com>" appears to be dead.
+Or Gerlitz wrote:
+> This patch allows for iscsi transport to have its connection 
+> being established and disconnected from the kernel.
+> 
+> The patch is the sixth iscsi update to 2.6.18 and is needed by iser,
+> it is relative to the five iscsi patches sent by Mike Christie.
+> 
+> Doing this is a must for iSER and some of the iscsi offloads but on the
+> other hand not needed for TCP where a socket (fd) is connected in user space
+> and then sent down to the kernel where struct sock is retrieved from the fd.
+> 
+> The iscsi user space implementation was enhanced to have a user space
+> transport where TCP is doing things directly from user space and iSER
+> is using the extension to the iscsi u/k IPC ABI to do things in the kernel.
+> 
+> Acked-by: Mike Christie <michaelc@cs.wisc.edu>
+> Signed-off-by: Or Gerlitz <ogerlitz@voltaire.com>
 
-Maybe this will not reach Luben, but someone else, who can help ???
+James, Christoph:
 
-Hi Luben,
+As the iscsi patches sent by Mike Christie were accepted and merged into 
+the scsi-misc git tree, this patch is the remaining iscsi related piece 
+on which iser is dependent and is not yet accepted for upstream push.
 
-I need to compile the sas code against kernel 2.6.16. Unfortunately the=
-=20
-given patch on the above mentioned adaptec site only works against 2.6.=
-14=20
-and the "recent updates" link:
+We really need your feedback on the patch, which allowed us to remove 
+the pseudo socket from iser (Christoph is aware to the details).
 
-http://linux.adaptec.com/sas/git/?p=3Dlinux-2.6-sas.git&a=3Dsearch&s=3D=
-Signed-off-by%3A+Luben
+Once the patch is accepted, Roland will open a branch for iser upstream 
+push on the his infiniband git tree and pull the iscsi updates into it, 
+so the tree compiles.
 
-seems to be broken. ^->
----------------------------------------------
-Network Error (gateway_error)
-
-An error occurred attempting to communicate with an HTTP or SOCKS gatew=
-ay.
-The gateway may be temporarily unavailable, or there could be a network=
-=20
-problem.
----------------------------------------------
-
-I would appreciate your help.
+Or.
 
 
-regards/Mit freundlichen Gr=FC=DFen
-
-Kai Meemken
-Gesch=E4ftsf=FChrer
-
-seyes GmbH
-Sophienstr 21
-95444 Bayreuth
-
-=46on: +49 (0)921 787775 - 0
-Mobil: +49 (0)174 348 7214
-
-Kai.Meemken@seyes.org
-www.seyes.org
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
