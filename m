@@ -1,54 +1,31 @@
-From: <infoadvert1@o2.co.uk>
-Subject: REPRESENTATIVE/MANAGER WANTED
-Date: Mon, 24 Apr 2006 20:56:31 +0100 (BST)
-Message-ID: <18369647.1145908591662.JavaMail.root__25921.7235063717$1145909140$gmane$org@pippin>
-Reply-To: <infoadvert1@o2.co.uk>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: Fw: [BUG] 2.6.17-rc1: SCSI kobject_add problems
+Date: Mon, 24 Apr 2006 13:15:08 -0700
+Message-ID: <20060424131508.72bf2f15.akpm@osdl.org>
+References: <444CE9A6.6030304@sgi.com>
+	<20060424185533.6229EDBA1@gherkin.frus.com>
 Mime-Version: 1.0
-Content-Type: text/plain;charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kanga.london.ongenie.net ([193.113.160.14]:58836 "EHLO
-	mail.o2.co.uk") by vger.kernel.org with ESMTP id S1751208AbWDXUE5
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Apr 2006 16:04:57 -0400
+Received: from smtp.osdl.org ([65.172.181.4]:51350 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1750971AbWDXUQv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Apr 2006 16:16:51 -0400
+In-Reply-To: <20060424185533.6229EDBA1@gherkin.frus.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bob Tracy <rct@gherkin.frus.com>
+Cc: mdr@sgi.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, Ivan Kokshaysky <ink@jurassic.park.msu.ru>
 
-AGROHERB EXPORT
-16 Bartly Wood Business Park Bartly Way
-Hook RG27 9UZ
-UK
-We are exporters of raw materials. We need
-representatives who can help us establish
-a medium of getting to our customers in U.S.A
-and Canada, Asia and the rest of Europe. You
-shall also receive payments from our creditors.
-Subject to your Satisfaction you will be given 
-the opportunity to Negotiate your mode of which 
-we will pay for your services as our representative 
-in U.S.A ,Canada, Asia & Europe.
-Please If Your Are Interested contact our
-Procurement officer, 
-Name: Austin Francis 
+rct@gherkin.frus.com (Bob Tracy) wrote:
+>
+> My "kobject_add failed" issue with 2.6.17-rc1 and -rc2 was a previously
+>  undiscovered code error in the Alpha-specific strncpy() routine.  See
+>  http://marc.theaimsgroup.com/?t=114555387000005&r=1&w=2
+>  for the gory details.  Ivan Kokshaysky provided the fix, which I hope
+>  has been captured for inclusion in -rc3.
 
-email : info_world_export@yahoo.com.cn
+I don't have Ivan's strncpy() fix and I don't think it's in mainline either.
 
-With the following information so that we can
-Forward to you immediately our agent form
-for official enlistment.
-1) Your Full name
-2) Your Mailing address
-3) Your Phone and Fax Number
-4) Your Age & Your business experience 
-
-NOTE:
-We are sending you this email because you may 
-have subscribe to 
-one or more website requesting information on 
-business, we do not wish 
-to disturb your private life so if you feel 
-you received this email 
-erroneously please delete and do not reply 
-
-
-
+Ivan, pelase send it over when it's ready?
