@@ -1,54 +1,70 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] iscsi transport endpoint calls
-Date: Mon, 24 Apr 2006 12:01:19 -0500
-Message-ID: <444D045F.2070901@cs.wisc.edu>
-References: <Pine.LNX.4.44.0604111646040.18200-100000@zuben> <444CE6AE.8020502@voltaire.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: SCSI trow USB-STORAGE or SBP2 Debug for buggy device Kernels
+	2.6.X
+Date: Mon, 24 Apr 2006 13:38:08 -0500
+Message-ID: <1145903888.3528.21.camel@mulgrave.il.steeleye.com>
+References: <200604241029.14932.gustavo@compunauta.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:8373 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S1750742AbWDXRBV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Apr 2006 13:01:21 -0400
-In-Reply-To: <444CE6AE.8020502@voltaire.com>
+Received: from stat9.steeleye.com ([209.192.50.41]:51376 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1751109AbWDXSiT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Apr 2006 14:38:19 -0400
+In-Reply-To: <200604241029.14932.gustavo@compunauta.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Or Gerlitz <ogerlitz@voltaire.com>
-Cc: James.Bottomley@SteelEye.com, hch@lst.de, linux-scsi@vger.kernel.org
+To: Gustavo Guillermo =?ISO-8859-1?Q?P=E9rez?= <gustavo@compunauta.com>
+Cc: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org
 
-Or Gerlitz wrote:
-> Or Gerlitz wrote:
->> This patch allows for iscsi transport to have its connection being
->> established and disconnected from the kernel.
->>
->> The patch is the sixth iscsi update to 2.6.18 and is needed by iser,
->> it is relative to the five iscsi patches sent by Mike Christie.
->>
->> Doing this is a must for iSER and some of the iscsi offloads but on the
->> other hand not needed for TCP where a socket (fd) is connected in user
->> space
->> and then sent down to the kernel where struct sock is retrieved from
->> the fd.
->>
->> The iscsi user space implementation was enhanced to have a user space
->> transport where TCP is doing things directly from user space and iSER
->> is using the extension to the iscsi u/k IPC ABI to do things in the
->> kernel.
->>
->> Acked-by: Mike Christie <michaelc@cs.wisc.edu>
->> Signed-off-by: Or Gerlitz <ogerlitz@voltaire.com>
-> 
-> James, Christoph:
-> 
-> As the iscsi patches sent by Mike Christie were accepted and merged into
-> the scsi-misc git tree, this patch is the remaining iscsi related piece
-> on which iser is dependent and is not yet accepted for upstream push.
-> 
-> We really need your feedback on the patch, which allowed us to remove
-> the pseudo socket from iser (Christoph is aware to the details).
-> 
+On Mon, 2006-04-24 at 10:29 -0500, Gustavo Guillermo P=C3=A9rez wrote:
+> Then I have an Idea, what happen if on scsi_lib.c where resides the f=
+aulty=20
+> code:
+> if (!(req->flags & REQ_QUIET))
+>               dev_printk(KERN_INFO,
+>               &cmd->device->sdev_gendev,
+>               "Device not ready.\n");
+>               scsi_end_request(cmd, 0, this_count, 1);
+>               return;
+> I change scsi_end_request(cmd, 0, this_count, 1);
+> by a comparison about vendor ID and Model
+> and then if is a buggy one executes scsi_requeue_command(q, cmd); ins=
+tead of=20
+> scsi_end_request(cmd, 0, this_count, 1);
 
-I was going to send this patch with a update I was making (trying to
-send them by the end of the week). I can resend this with my other stuff
-if it is ok with everyone.
+Let's actually debug the problem before trying to fix it.  It would be
+helpful to know what type of not-ready this is (and whether it's
+internally generated in usb or firewire, but that comes later).
+
+Try this addition and see what it tells us.
+
+James
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 7b0f9a3..cd9df1b 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1074,9 +1074,12 @@ void scsi_io_completion(struct scsi_cmnd
+ 				scsi_requeue_command(q, cmd);
+ 				return;
+ 			}
+-			if (!(req->flags & REQ_QUIET))
++			if (!(req->flags & REQ_QUIET)) {
+ 				scmd_printk(KERN_INFO, cmd,
+-					   "Device not ready.\n");
++					   "Device not ready: ");
++				scsi_print_sense_hdr("", &sshdr);
++			}
++			=09
+ 			scsi_end_request(cmd, 0, this_count, 1);
+ 			return;
+ 		case VOLUME_OVERFLOW:
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
