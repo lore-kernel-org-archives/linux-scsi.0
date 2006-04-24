@@ -1,42 +1,54 @@
-From: rct@gherkin.frus.com (Bob Tracy)
-Subject: Re: Fw: [BUG] 2.6.17-rc1: SCSI kobject_add problems
-Date: Mon, 24 Apr 2006 13:55:33 -0500 (CDT)
-Message-ID: <20060424185533.6229EDBA1@gherkin.frus.com>
-References: <444CE9A6.6030304@sgi.com>
+From: <infoadvert1@o2.co.uk>
+Subject: REPRESENTATIVE/MANAGER WANTED
+Date: Mon, 24 Apr 2006 20:23:08 +0100 (BST)
+Message-ID: <18872835.1145906588199.JavaMail.root__32351.5576463707$1145907352$gmane$org@pippin>
+Reply-To: <infoadvert1@o2.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gherkin.frus.com ([192.158.254.49]:32270 "EHLO gherkin.frus.com")
-	by vger.kernel.org with ESMTP id S1751123AbWDXSzf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Apr 2006 14:55:35 -0400
-In-Reply-To: <444CE9A6.6030304@sgi.com> "from Michael Reed at Apr 24, 2006 10:07:18
- am"
+Received: from kanga.london.ongenie.net ([193.113.160.14]:17569 "EHLO
+	mail.o2.co.uk") by vger.kernel.org with ESMTP id S1751152AbWDXTfU
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Apr 2006 15:35:20 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Reed <mdr@sgi.com>
-Cc: Andrew Morton <akpm@osdl.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-scsi@vger.kernel.org
 
-Michael Reed wrote:
-> See my post on 4/21:
-> 
-> 	"2.6.17-rc2: kobject_add failed"
-> 
-> 	http://marc.theaimsgroup.com/?l=linux-scsi&m=114563629810793&w=2
-> 
-> Perhaps this is related?
-> 
-> http://marc.theaimsgroup.com/?t=114443491400001&r=1&w=2
+AGROHERB EXPORT
+16 Bartly Wood Business Park Bartly Way
+Hook RG27 9UZ
+UK
+We are exporters of raw materials. We need
+representatives who can help us establish
+a medium of getting to our customers in U.S.A
+and Canada, Asia and the rest of Europe. You
+shall also receive payments from our creditors.
+Subject to your Satisfaction you will be given 
+the opportunity to Negotiate your mode of which 
+we will pay for your services as our representative 
+in U.S.A ,Canada, Asia & Europe.
+Please If Your Are Interested contact our
+Procurement officer, 
+Name: Austin Francis 
 
-My "kobject_add failed" issue with 2.6.17-rc1 and -rc2 was a previously
-undiscovered code error in the Alpha-specific strncpy() routine.  See
-http://marc.theaimsgroup.com/?t=114555387000005&r=1&w=2
-for the gory details.  Ivan Kokshaysky provided the fix, which I hope
-has been captured for inclusion in -rc3.
+email : info_world_export@yahoo.com.cn
 
--- 
------------------------------------------------------------------------
-Bob Tracy                   WTO + WIPO = DMCA? http://www.anti-dmca.org
-rct@frus.com
------------------------------------------------------------------------
+With the following information so that we can
+Forward to you immediately our agent form
+for official enlistment.
+1) Your Full name
+2) Your Mailing address
+3) Your Phone and Fax Number
+4) Your Age & Your business experience 
+
+NOTE:
+We are sending you this email because you may 
+have subscribe to 
+one or more website requesting information on 
+business, we do not wish 
+to disturb your private life so if you feel 
+you received this email 
+erroneously please delete and do not reply 
+
+
+
