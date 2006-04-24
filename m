@@ -1,51 +1,66 @@
-From: Jesper Juhl <jesper.juhl@gmail.com>
-Subject: [PATCH] SCSI: aic7xxx_osm_pci resource leak fix.
-Date: Sun, 23 Apr 2006 20:16:02 +0200
-Message-ID: <200604232016.02979.jesper.juhl@gmail.com>
+From: Kai Meemken <Kai.Meemken@seyes.org>
+Subject: http://linux.adaptec.com/sas/index.html with broken links
+Date: Mon, 24 Apr 2006 10:53:58 +0200
+Message-ID: <OF13A772C0.7052F4B2-ONC125715A.002F8CAD-C125715A.0030E2BA@seyes.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.193]:10120 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S1751438AbWDWSPV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 23 Apr 2006 14:15:21 -0400
-Received: by nz-out-0102.google.com with SMTP id n1so905424nzf
-        for <linux-scsi@vger.kernel.org>; Sun, 23 Apr 2006 11:15:20 -0700 (PDT)
-Content-Disposition: inline
+Received: from p15107724.pureserver.info ([217.160.141.215]:40109 "EHLO
+	seyes.org") by vger.kernel.org with ESMTP id S932084AbWDXIyD convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Apr 2006 04:54:03 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, Jesper Juhl <jesper.juhl@gmail.com>
+To: linux-scsi@vger.kernel.org
+
+--------> to whom it may concern --> the email address given with the s=
+as=20
+patches "Luben Tuikov <luben_tuikov@adaptec.com>" appears to be dead.
+
+Maybe this will not reach Luben, but someone else, who can help ???
+
+Hi Luben,
+
+I need to compile the sas code against kernel 2.6.16. Unfortunately the=
+=20
+given patch on the above mentioned adaptec site only works against 2.6.=
+14=20
+and the "recent updates" link:
+
+http://linux.adaptec.com/sas/git/?p=3Dlinux-2.6-sas.git&a=3Dsearch&s=3D=
+Signed-off-by%3A+Luben
+
+seems to be broken. ^->
+---------------------------------------------
+Network Error (gateway_error)
+
+An error occurred attempting to communicate with an HTTP or SOCKS gatew=
+ay.
+The gateway may be temporarily unavailable, or there could be a network=
+=20
+problem.
+---------------------------------------------
+
+I would appreciate your help.
 
 
-Fix resource leak in 
-drivers/scsi/aic7xxx/aic7xxx_osm_pci.c::ahc_linux_pci_dev_probe()
+regards/Mit freundlichen Gr=FC=DFen
 
-Found by the coverity checker (#668)
+Kai Meemken
+Gesch=E4ftsf=FChrer
 
+seyes GmbH
+Sophienstr 21
+95444 Bayreuth
 
-Signed-off-by: Jesper Juhl <jesper.juhl@gmail.com>
----
+=46on: +49 (0)921 787775 - 0
+Mobil: +49 (0)174 348 7214
 
- drivers/scsi/aic7xxx/aic7xxx_osm_pci.c |    1 +
- 1 files changed, 1 insertion(+)
-
---- linux-2.6.17-rc2-git4-orig/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c	2006-03-20 06:53:29.000000000 +0100
-+++ linux-2.6.17-rc2-git4/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c	2006-04-23 20:05:50.000000000 +0200
-@@ -219,6 +219,7 @@ ahc_linux_pci_dev_probe(struct pci_dev *
- 		ahc->flags |= AHC_39BIT_ADDRESSING;
- 	} else {
- 		if (dma_set_mask(dev, DMA_32BIT_MASK)) {
-+			ahc_free(ahc);
- 			printk(KERN_WARNING "aic7xxx: No suitable DMA available.\n");
-                 	return (-ENODEV);
- 		}
-
-
-
-
-(please keep replies CC'ed to me)
-
-
+Kai.Meemken@seyes.org
+www.seyes.org
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
