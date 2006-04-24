@@ -1,53 +1,62 @@
-From: Or Gerlitz <ogerlitz@voltaire.com>
-Subject: Re: [PATCH] iscsi transport endpoint calls
-Date: Mon, 24 Apr 2006 17:54:38 +0300
-Message-ID: <444CE6AE.8020502@voltaire.com>
-References: <Pine.LNX.4.44.0604111646040.18200-100000@zuben>
+From: Michael Reed <mdr@sgi.com>
+Subject: Re: Fw: [BUG] 2.6.17-rc1: SCSI kobject_add problems
+Date: Mon, 24 Apr 2006 10:07:18 -0500
+Message-ID: <444CE9A6.6030304@sgi.com>
+References: <20060407171433.06e454bd.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from taurus.voltaire.com ([193.47.165.240]:34342 "EHLO
-	taurus.voltaire.com") by vger.kernel.org with ESMTP
-	id S1750812AbWDXOyn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Apr 2006 10:54:43 -0400
-In-Reply-To: <Pine.LNX.4.44.0604111646040.18200-100000@zuben>
+Received: from omx2-ext.sgi.com ([192.48.171.19]:10951 "EHLO omx2.sgi.com")
+	by vger.kernel.org with ESMTP id S1750897AbWDXPHk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Apr 2006 11:07:40 -0400
+In-Reply-To: <20060407171433.06e454bd.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com, hch@lst.de, linux-scsi@vger.kernel.org
-Cc: michaelc@cs.wisc.edu
+To: Andrew Morton <akpm@osdl.org>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-scsi@vger.kernel.org, rct@gherkin.frus.com
 
-Or Gerlitz wrote:
-> This patch allows for iscsi transport to have its connection 
-> being established and disconnected from the kernel.
+See my post on 4/21:
+
+	"2.6.17-rc2: kobject_add failed"
+
+	http://marc.theaimsgroup.com/?l=linux-scsi&m=114563629810793&w=2
+
+Perhaps this is related?
+
+http://marc.theaimsgroup.com/?t=114443491400001&r=1&w=2
+
+Mike
+
+
+Andrew Morton wrote:
 > 
-> The patch is the sixth iscsi update to 2.6.18 and is needed by iser,
-> it is relative to the five iscsi patches sent by Mike Christie.
+> Begin forwarded message:
 > 
-> Doing this is a must for iSER and some of the iscsi offloads but on the
-> other hand not needed for TCP where a socket (fd) is connected in user space
-> and then sent down to the kernel where struct sock is retrieved from the fd.
+> Date: Fri, 7 Apr 2006 13:31:05 -0500 (CDT)
+> From: rct@gherkin.frus.com (Bob Tracy)
+> To: linux-kernel@vger.kernel.org
+> Subject: [BUG] 2.6.17-rc1: SCSI kobject_add problems
 > 
-> The iscsi user space implementation was enhanced to have a user space
-> transport where TCP is doing things directly from user space and iSER
-> is using the extension to the iscsi u/k IPC ABI to do things in the kernel.
 > 
-> Acked-by: Mike Christie <michaelc@cs.wisc.edu>
-> Signed-off-by: Or Gerlitz <ogerlitz@voltaire.com>
-
-James, Christoph:
-
-As the iscsi patches sent by Mike Christie were accepted and merged into 
-the scsi-misc git tree, this patch is the remaining iscsi related piece 
-on which iser is dependent and is not yet accepted for upstream push.
-
-We really need your feedback on the patch, which allowed us to remove 
-the pseudo socket from iser (Christoph is aware to the details).
-
-Once the patch is accepted, Roland will open a branch for iser upstream 
-push on the his infiniband git tree and pull the iscsi updates into it, 
-so the tree compiles.
-
-Or.
-
-
+> System is a DEC Alpha 433au with two SCSI disks.  SCSI controller is a
+> QLA1040 supported by the qla1280 driver.  Runs 2.6.16 fine.  Tried
+> booting 2.6.17-rc1 and got
+> 
+> kobject_add failed for 0:0: with -EEXIST, don't try to register things with the same name in the same directory
+> 
+> and a fairly long trace output when the system attempted to add sdb.
+> Not surprisingly, sdb was inaccessible.
+> 
+> Normally (for 2.6.16 anyway), the following relationship exists:
+> 
+> sd 0:0:0:0	sda
+> sd 0:0:1:0	sdb
+> 
+> More information *might* be available if needed, but will have to be
+> transcribed by hand.  My /usr partition is on sdb, so I don't get very
+> far with 2.6.17-rc1 on Alpha :-).  The problem is probably specific to
+> the qla1280 or the Alpha, as I have a x86 Adaptec SCSI-based system
+> with multiple spindles that works fine with 2.6.17-rc1.
+> 
