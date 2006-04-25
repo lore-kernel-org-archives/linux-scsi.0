@@ -1,57 +1,64 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: Re: aha152x(_cs) oops
-Date: Tue, 25 Apr 2006 14:03:27 -0700
-Message-ID: <20060425140327.605f22ac.rdunlap@xenotime.net>
-References: <20060413093615.661b7018.rdunlap@xenotime.net>
-	<1144950036.3474.36.camel@mulgrave.il.steeleye.com>
-	<20060425115709.0db4332f.rdunlap@xenotime.net>
-	<Pine.LNX.4.60.0604252143550.3893@poirot.grange>
+From: Gustavo Guillermo =?iso-8859-1?q?P=E9rez?=
+	<gustavo@compunauta.com>
+Subject: Re: SCSI trow USB-STORAGE or SBP2 Debug for buggy device Kernels 2.6.X
+Date: Tue, 25 Apr 2006 16:41:53 -0500
+Message-ID: <200604251641.54084.gustavo@compunauta.com>
+References: <200604241029.14932.gustavo@compunauta.com> <200604241712.26445.gustavo@compunauta.com> <444DBD0D.9010309@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:22145 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S1751483AbWDYVBB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Apr 2006 17:01:01 -0400
-Received: from midway.site ([71.111.157.99]) by xenotime.net for <linux-scsi@vger.kernel.org>; Tue, 25 Apr 2006 14:01:00 -0700
-In-Reply-To: <Pine.LNX.4.60.0604252143550.3893@poirot.grange>
+Received: from compunauta.com ([69.36.170.169]:14509 "EHLO compunauta.com")
+	by vger.kernel.org with ESMTP id S1751625AbWDYVmF convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Apr 2006 17:42:05 -0400
+In-Reply-To: <444DBD0D.9010309@s5r6.in-berlin.de>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>, James Bottomley <James.Bottomley@steeleye.com>, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org
 
-On Tue, 25 Apr 2006 22:41:28 +0200 (CEST) Guennadi Liakhovetski wrote:
+El Martes, 25 de Abril de 2006 01:09, escribi=F3:
+> Gustavo Guillermo P=E9rez wrote:
+> > El Lunes, 24 de Abril de 2006 17:02, James Bottomley escribi=F3:
+> >>So, I could change the long write in progress to a retry.  However,=
+ I
+> >>suspect the reason we got that return is because this device is unt=
+agged
+> >>(doesn't accept multiple commands at once) and perhaps a better fix
+> >>might be to reduce the queue depth down to one to prevent more than=
+ one
+> >>command being outstanding at any one time.
+> >
+> > It would not be better to include some handling on the black list? =
+it
+> > means doing a new BLACK_CONST to handle just this special case?.
+>
+> For now you can and should test a queue depth of one via sbp2:
+> # modprobe sbp2 serialize_io=3D1
+>
+> But isn't usb-storage's queue depth already 1?
+Yes, I was tested it cause driver said something about this option, the=
+n I was=20
+checked the option 1 or 0, same result.
+> Dou you use all the different Pioneer drives with the same
+> IDE/USB+FireWire bridge or do you have different bridges?
+Yes I have 3 diferent bridges, with 5 diferent DVDRW from pioneer other=
+ Drives=20
+I've tested with this same USB-IDE Bridges works without this problem.
+I've tried the flag BLACK_XXX for non tagged queue for this drive but w=
+ith no=20
+results.
 
-> On Tue, 25 Apr 2006, Randy.Dunlap wrote:
-> 
-> > I've spent a lot of time using the sg-PIO patch with the aha152x
-> > driver.  The sg-PIO part of it works for me, but the aha152x driver
-> > sometimes does not complete a full DMA-out transfer (data-out phase).
-> > The driver calls this the need to "resend" some data (in datao_end()).
-> 
-> Sorry, didn't quite understand it - you mean the "in" direction modified 
-> to use sg-pio works, whereas the "out" doesn't? How exactly it doesn't 
-> work?
+{"PIONEER", "DVD-RW  DVR-110D", NULL, BLIST_RETRY_HWERROR | BLIST_NOTQ}
 
-It's not a problem with the (your) sg patch.  It's just that this
-SCSI chip sometimes (apparently) stops a DMA-out transfer before
-it should (e.g., half way thru an sg list).  The driver detects this
-and decides that it needs to "resend" the remaining part of the sg
-list, but first it must back up the sg list ptr (possibly), the data
-transfer ptr (before this patch), this_residual, and possibly
-buffers_residual.  I've made many attempts at doing that, but
-they are not succeeding.
-
-> > I can't get this resend logic to work correctly with the sg-PIO
-> > changes and I can't keep spending time on it without some docs and/or
-> > errata, so I'll just continue to use my lowmem patch for the
-> > aha152x driver.
-> 
-> Could you send me / upload your current patch using k(un)map_atomic_pio?
-
-Sure, it's here:
-http://www.xenotime.net/linux/patches/aha152x-sg-pio.patch
-
----
-~Randy
+:S
+--=20
+Gustavo Guillermo P=E9rez
+Compunauta uLinux
+www.compunauta.com
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
