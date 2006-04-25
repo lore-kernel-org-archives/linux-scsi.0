@@ -1,63 +1,47 @@
 From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: Re: [PATCH] dc395x: dynamically map scatter-gather for PIO (take 2)
-Date: Tue, 25 Apr 2006 11:46:49 -0700
-Message-ID: <20060425114649.1086b5b7.rdunlap@xenotime.net>
-References: <Pine.LNX.4.60.0604022004520.17410@poirot.grange>
-	<1145054008.3520.69.camel@mulgrave.il.steeleye.com>
-	<Pine.LNX.4.60.0604212258570.3237@poirot.grange>
-	<20060421165441.69617da9.rdunlap@xenotime.net>
-	<Pine.LNX.4.60.0604222138300.3186@poirot.grange>
+Subject: Re: aha152x(_cs) oops
+Date: Tue, 25 Apr 2006 11:57:09 -0700
+Message-ID: <20060425115709.0db4332f.rdunlap@xenotime.net>
+References: <20060413093615.661b7018.rdunlap@xenotime.net>
+	<1144950036.3474.36.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:4241 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S1751172AbWDYSo1 (ORCPT
+Received: from xenotime.net ([66.160.160.81]:6817 "HELO xenotime.net")
+	by vger.kernel.org with SMTP id S1751514AbWDYSyo (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Apr 2006 14:44:27 -0400
-Received: from midway.site ([71.111.157.99]) by xenotime.net for <linux-scsi@vger.kernel.org>; Tue, 25 Apr 2006 11:44:23 -0700
-In-Reply-To: <Pine.LNX.4.60.0604222138300.3186@poirot.grange>
+	Tue, 25 Apr 2006 14:54:44 -0400
+Received: from midway.site ([71.111.157.99]) by xenotime.net for <linux-scsi@vger.kernel.org>; Tue, 25 Apr 2006 11:54:42 -0700
+In-Reply-To: <1144950036.3474.36.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, Sebastian@schnapsleichen.de, roubert@df.lth.se, lenehan@twibble.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi@vger.kernel.org, g.liakhovetski@gmx.de
 
-On Sat, 22 Apr 2006 21:41:53 +0200 (CEST) Guennadi Liakhovetski wrote:
+On Thu, 13 Apr 2006 12:40:36 -0500 James Bottomley wrote:
 
-> On Fri, 21 Apr 2006, Randy.Dunlap wrote:
-> 
-> > On Fri, 21 Apr 2006 23:00:14 +0200 (CEST) Guennadi Liakhovetski wrote:
+> On Thu, 2006-04-13 at 09:36 -0700, Randy.Dunlap wrote:
+> > Is aha152x(_cs) known not to work with highmem or is it just busted
+> > in its use of s/g list handling?
+> > This is 2.6.17-rc1-git7 on a Dell notebook with 2 GB RAM.
 > > 
-> > > diff -ur a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
-> > > --- a/drivers/scsi/dc395x.c	2006-04-20 00:42:12.000000000 +0200
-> > > +++ b/drivers/scsi/dc395x.c	2006-04-20 00:41:58.000000000 +0200
-> > > @@ -2343,6 +2343,7 @@
-> > >  				}
-> > >  
-> > >  				if (srb->cmd->use_sg) {
-> > > +					flush_kernel_dcache_page(kmap_atomic_to_page(base));
-> > >  					scsi_kunmap_atomic_sg(base);
-> > >  					local_irq_restore(flags);
-> > >  				}
-> > > -
-> > 
-> > Looks right to me, but why not have scsi_kunmap_atomic_sg() do that
-> > instead of every caller having to do it?  Is there some good reason
-> > not to do that?
+> > On all recent kernels, I get an Oops in aha152x.c:datao_run(),
+> > where the SG_ADDRESS() macro uses page_address().
 > 
-> I wouldn't do it for a couple of reasons:
-> 
-> 1. kmap_atomic / kunmap_atomic pair doesn't do that
-> 
-> 2. You only need it if you write to the newly-mapped page. Not if you read 
-> from it.
+> This routine is trying to do the identical action that Guennady
+> Liakhovetski just posted a dc395x patch for (i.e. re-feed a DMA
+> transaction via PIO) could we see if we can utilise pieces of that patch
+> to do this correctly (or provide more common infrastructure)?
 
-That's a very good reason.
-
-> You could add a new function line unmap_flush() or an extra parameter, but 
-> that would just obfuscate things?
-
-Yes.
+I've spent a lot of time using the sg-PIO patch with the aha152x
+driver.  The sg-PIO part of it works for me, but the aha152x driver
+sometimes does not complete a full DMA-out transfer (data-out phase).
+The driver calls this the need to "resend" some data (in datao_end()).
+I can't get this resend logic to work correctly with the sg-PIO
+changes and I can't keep spending time on it without some docs and/or
+errata, so I'll just continue to use my lowmem patch for the
+aha152x driver.
 
 ---
 ~Randy
