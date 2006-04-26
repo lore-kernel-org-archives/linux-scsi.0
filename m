@@ -1,86 +1,104 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: Re: aha152x(_cs) oops
-Date: Wed, 26 Apr 2006 13:29:01 -0700
-Message-ID: <20060426132901.ec6d0952.rdunlap@xenotime.net>
-References: <20060413093615.661b7018.rdunlap@xenotime.net>
-	<1144950036.3474.36.camel@mulgrave.il.steeleye.com>
-	<20060425115709.0db4332f.rdunlap@xenotime.net>
-	<Pine.LNX.4.60.0604252143550.3893@poirot.grange>
-	<20060425140327.605f22ac.rdunlap@xenotime.net>
-	<Pine.LNX.4.60.0604262202200.6890@poirot.grange>
+From: Mark Lord <lkml@rtr.ca>
+Subject: [PATCH] drivers/scsi/sd.c: fix uninitialized variable in handling medium errors
+Date: Wed, 26 Apr 2006 16:27:29 -0400
+Message-ID: <200604261627.29419.lkml@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:33949 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S964864AbWDZU0g (ORCPT
+Received: from rtr.ca ([64.26.128.89]:15033 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S964866AbWDZU1s (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Apr 2006 16:26:36 -0400
-Received: from midway.site ([71.111.157.99]) by xenotime.net for <linux-scsi@vger.kernel.org>; Wed, 26 Apr 2006 13:26:34 -0700
-In-Reply-To: <Pine.LNX.4.60.0604262202200.6890@poirot.grange>
+	Wed, 26 Apr 2006 16:27:48 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>
 
-On Wed, 26 Apr 2006 22:05:40 +0200 (CEST) Guennadi Liakhovetski wrote:
+From: Mark Lord <lkml@rtr.ca>
 
-> Hi
-> 
-> On Tue, 25 Apr 2006, Randy.Dunlap wrote:
-> 
-> > On Tue, 25 Apr 2006 22:41:28 +0200 (CEST) Guennadi Liakhovetski wrote:
-> > 
-> > > On Tue, 25 Apr 2006, Randy.Dunlap wrote:
-> > > 
-> > > > I've spent a lot of time using the sg-PIO patch with the aha152x
-> > > > driver.  The sg-PIO part of it works for me, but the aha152x driver
-> > > > sometimes does not complete a full DMA-out transfer (data-out phase).
-> > > > The driver calls this the need to "resend" some data (in datao_end()).
-> > > 
-> > > Sorry, didn't quite understand it - you mean the "in" direction modified 
-> > > to use sg-pio works, whereas the "out" doesn't? How exactly it doesn't 
-> > > work?
-> > 
-> > It's not a problem with the (your) sg patch.  It's just that this
-> > SCSI chip sometimes (apparently) stops a DMA-out transfer before
-> > it should (e.g., half way thru an sg list).  The driver detects this
-> > and decides that it needs to "resend" the remaining part of the sg
-> > list, but first it must back up the sg list ptr (possibly), the data
-> > transfer ptr (before this patch), this_residual, and possibly
-> > buffers_residual.  I've made many attempts at doing that, but
-> > they are not succeeding.
-> 
-> What kind of device is it and what are you doing to reproduce the error? 
-> Do you know if the stock kernel / aha152x driver work if you boot without 
-> highmem?
+I am looking into how SCSI/SATA handle medium (disk) errors,
+and the observed behaviour is a little more random than expected,
+due to a bug in sd.c.
 
-I'm using a PCMCIA (not CardBus) Adapter AP-1460 card on a new Dell
-notebook, with an iomega Jaz drive attached to it.
+When scsi_get_sense_info_fld() fails (returns 0), it does NOT update the
+value of first_err_block.  But sd_rw_intr() merrily continues to use that
+variable regardless, possibly making incorrect decisions about retries and the like.
 
-I haven't tested without highmem.  I know that the in-kernel driver
-with a one-line patch works for me.  The patch forces all buffers
-to lowmem, by setting
-+       .unchecked_isa_dma              = 1,
-in the scsi_host_template.
+This patch removes the randomness there, by using the first sector of the
+request (SCpnt->request->sector) in such cases, instead of first_err_block.
 
-I can test with a non-highmem kernel if you want me to, but I don't
-see much need to do that.
+The patch shows more context than usual, to help see what's going on.
 
-To reproduce the error:  a kernel build will do it.  However, the
-easiest way (hardest on the driver) is:  mkfs.ext3 /dev/sdX4
-
-
-> Transferring "residual" bytes left after an incomplete DMA is exactly the 
-> same situation as in dc395x and tmscsim...
-> 
-> > > Could you send me / upload your current patch using k(un)map_atomic_pio?
-> > 
-> > Sure, it's here:
-> > http://www.xenotime.net/linux/patches/aha152x-sg-pio.patch
-> 
-> Thanks, looking at it. I have an old ISA SCSI card, that runs under 
-> aha152x...
-
+Signed-off-by: Mark Lord <lkml@rtr.ca>
 ---
-~Randy
+--- linux-2.6.17-rc2-git8/drivers/scsi/sd.c	2006-04-26 15:36:12.000000000 -0400
++++ linux/drivers/scsi/sd.c	2006-04-26 16:07:39.000000000 -0400
+@@ -930,64 +930,66 @@
+ 			info_valid = scsi_get_sense_info_fld(
+ 				SCpnt->sense_buffer, SCSI_SENSE_BUFFERSIZE,
+ 				&first_err_block);
+ 			/*
+ 			 * May want to warn and skip if following cast results
+ 			 * in actual truncation (if sector_t < 64 bits)
+ 			 */
+ 			error_sector = (sector_t)first_err_block;
+ 			if (SCpnt->request->bio != NULL)
+ 				block_sectors = bio_sectors(SCpnt->request->bio);
+ 			switch (SCpnt->device->sector_size) {
+ 			case 1024:
+ 				error_sector <<= 1;
+ 				if (block_sectors < 2)
+ 					block_sectors = 2;
+ 				break;
+ 			case 2048:
+ 				error_sector <<= 2;
+ 				if (block_sectors < 4)
+ 					block_sectors = 4;
+ 				break;
+ 			case 4096:
+ 				error_sector <<=3;
+ 				if (block_sectors < 8)
+ 					block_sectors = 8;
+ 				break;
+ 			case 256:
+ 				error_sector >>= 1;
+ 				break;
+ 			default:
+ 				break;
+ 			}
++			if (!info_valid)
++				error_sector = SCpnt->request->sector;
+ 
+ 			error_sector &= ~(block_sectors - 1);
+ 			good_bytes = (error_sector - SCpnt->request->sector) << 9;
+ 			if (good_bytes < 0 || good_bytes >= this_count)
+ 				good_bytes = 0;
+ 			break;
+ 
+ 		case RECOVERED_ERROR: /* an error occurred, but it recovered */
+ 		case NO_SENSE: /* LLDD got sense data */
+ 			/*
+ 			 * Inform the user, but make sure that it's not treated
+ 			 * as a hard error.
+ 			 */
+ 			scsi_print_sense("sd", SCpnt);
+ 			SCpnt->result = 0;
+ 			memset(SCpnt->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
+ 			good_bytes = this_count;
+ 			break;
+ 
+ 		case ILLEGAL_REQUEST:
+ 			if (SCpnt->device->use_10_for_rw &&
+ 			    (SCpnt->cmnd[0] == READ_10 ||
+ 			     SCpnt->cmnd[0] == WRITE_10))
+ 				SCpnt->device->use_10_for_rw = 0;
+ 			if (SCpnt->device->use_10_for_ms &&
+ 			    (SCpnt->cmnd[0] == MODE_SENSE_10 ||
+ 			     SCpnt->cmnd[0] == MODE_SELECT_10))
+ 				SCpnt->device->use_10_for_ms = 0;
+ 			break;
+ 
+ 		default:
+ 			break;
