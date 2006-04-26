@@ -1,43 +1,57 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] drivers/scsi/sd.c: fix uninitialized variable
-	in	handling medium errors
-Date: Wed, 26 Apr 2006 18:18:16 -0500
-Message-ID: <1146093496.12914.11.camel@mulgrave.il.steeleye.com>
-References: <200604261627.29419.lkml@rtr.ca>
-	 <1146092161.12914.3.camel@mulgrave.il.steeleye.com>
-	 <444FFC9B.4090603@rtr.ca>
+From: Mark Lord <lkml@rtr.ca>
+Subject: Re: [PATCH] drivers/scsi/sd.c: fix uninitialized variable in handling
+ medium errors
+Date: Wed, 26 Apr 2006 19:20:19 -0400
+Message-ID: <44500033.3010605@rtr.ca>
+References: <200604261627.29419.lkml@rtr.ca>	<1146092161.12914.3.camel@mulgrave.il.steeleye.com> <20060426161444.423a8296.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:5038 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S932398AbWDZXST (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Apr 2006 19:18:19 -0400
-In-Reply-To: <444FFC9B.4090603@rtr.ca>
+Received: from rtr.ca ([64.26.128.89]:5837 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S932429AbWDZXUi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 26 Apr 2006 19:20:38 -0400
+In-Reply-To: <20060426161444.423a8296.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Lord <lkml@rtr.ca>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>
+To: Andrew Morton <akpm@osdl.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, 2006-04-26 at 19:04 -0400, Mark Lord wrote:
-> Yes, but the difficulty there is that all of the convoluted logic
-> seems to still be wanted to set a correct "block_sectors" value,
-> needed as a parameter on the final call:
+Andrew Morton wrote:
 > 
->     scsi_io_completion(SCpnt, good_bytes, block_sectors << 9);
+> It'd be nice to have something simple-and-obvious for the
+> simple-and-obvious -stable maintainers.
 
-Erm, but that's only used for volume overflow (or other single sector
-errors), which this isn't ... Actually, as far as I can tell, the whole
-block_sectors calculation can be killed as well.
+That's why I kept the original patch very simple and focused,
+rather than trying to fix all of the convoluted code around it.
 
-> >How does this work?
-> ...
-> 
-> Looks potentially buggy (still).
+It's nice and simple, and *looks* correct.
 
-Where?
+A longer term cleanup of that function is better left to James!
 
-James
+> That's if we think -stable needs this fixed.
 
+Let's say a bunch of read bio's get coalesced into a single
+200+ sector request.  This then fails on one single bad sector
+out of the 200+.  Without the patch, there is a very good chance
+that sd.c will simply fail the entire request, all 200+ sectors.
+
+With the patch, it will fail the first block, and then retry
+the remaining blocks.  And repeat this until something works,
+or until everything has failed one by one.
+
+Better, but still not the best.
+
+What I need to have happen when a request is failed due to bad-media,
+is have it split the request into a sequence of single-block requests
+that are passed to the LLD one at a time.  The ones with real bad
+sectors will then be independently failed, and the rest will get done.
+
+Much better.  Much more complex.
+
+I'm thinking about something like that, just not sure whether to put it
+(initially) in libata, sd.c, or the block layer.
+
+Cheers
 
