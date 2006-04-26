@@ -1,67 +1,47 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: aha152x(_cs) oops
-Date: Wed, 26 Apr 2006 23:32:06 +0200 (CEST)
-Message-ID: <Pine.LNX.4.60.0604262312580.6890@poirot.grange>
-References: <20060413093615.661b7018.rdunlap@xenotime.net>
- <1144950036.3474.36.camel@mulgrave.il.steeleye.com>
- <20060425115709.0db4332f.rdunlap@xenotime.net> <Pine.LNX.4.60.0604252143550.3893@poirot.grange>
- <20060425140327.605f22ac.rdunlap@xenotime.net> <Pine.LNX.4.60.0604262202200.6890@poirot.grange>
- <20060426132901.ec6d0952.rdunlap@xenotime.net>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: akpm@osdl.org
+Subject: [patch 1/1] drivers/scsi: fix proc_scsi_write to return "length" on success with remove-single-device case
+Date: Wed, 26 Apr 2006 14:41:15 -0700
+Message-ID: <200604262138.k3QLchcv009103@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.de ([213.165.64.20]:43465 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S964887AbWDZVe6 (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:37778 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S964890AbWDZVis (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Apr 2006 17:34:58 -0400
-In-Reply-To: <20060426132901.ec6d0952.rdunlap@xenotime.net>
+	Wed, 26 Apr 2006 17:38:48 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Randy.Dunlap" <rdunlap@xenotime.net>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, suzuki@in.ibm.com
 
-On Wed, 26 Apr 2006, Randy.Dunlap wrote:
 
-> I'm using a PCMCIA (not CardBus) Adapter AP-1460 card on a new Dell
-> notebook, with an iomega Jaz drive attached to it.
+From: Suzuki <suzuki@in.ibm.com>
 
-Ok, I attached a ZIP drive to my card...
+proc_scsi_write doesn't return the "length" upon successfully removing a
+device; instead it returns 0.  This causes commands like "echo" to redo the
+write(), which ends up in something like,
 
-> I haven't tested without highmem.  I know that the in-kernel driver
-> with a one-line patch works for me.  The patch forces all buffers
-> to lowmem, by setting
-> +       .unchecked_isa_dma              = 1,
-> in the scsi_host_template.
-> 
-> I can test with a non-highmem kernel if you want me to, but I don't
-> see much need to do that.
+$ echo "scsi remove-single-device 0 0 3 0" > /proc/scsi/scsi
+"-bash: echo: write error: No such device or address"
 
-What I want to achieve with this test is see, if the stock driver works 
-fine without highmem in the PIO case. As you know, the driver has to 
-calculate the position in the buffer where from/to it has to transfer the 
-data. So, by disabling highmem we would see, if those calculations are 
-right there, that would mean we have a problem with the kmem_atomic 
-conversion, in which case we just have to check carefully our own 
-calculations and compare them with the stock lowmem case. Whereas, if 
-already the stock driver has a problem with lowmem PIO, then we, probably, 
-won't get much further without chip docs.
+, even though the device was removed.
 
-> To reproduce the error:  a kernel build will do it.  However, the
-> easiest way (hardest on the driver) is:  mkfs.ext3 /dev/sdX4
-
-Ok, just tried
-
-smartctl -a -T permissive /dev/sda
-
-on my Zip - and got
-
-(scsi0:6:9) command sent incompletely (6/10)
-
-which also looks like a case similar to yours? Whereas creating a ext3 fs 
-+ running fsck -c -f didn't produce any more output. However, this doesn't 
-mean much.
-
-Thanks
-Guennadi
+Signed-off-by: Suzuki K P <suzuki@in.ibm.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
+Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
-Guennadi Liakhovetski
+
+ drivers/scsi/scsi_proc.c |    2 ++
+ 1 files changed, 2 insertions(+)
+
+diff -puN drivers/scsi/scsi_proc.c~drivers-scsi-fix-proc_scsi_write-to-return-length-on drivers/scsi/scsi_proc.c
+--- 25/drivers/scsi/scsi_proc.c~drivers-scsi-fix-proc_scsi_write-to-return-length-on	Wed Apr 26 14:39:48 2006
++++ 25-akpm/drivers/scsi/scsi_proc.c	Wed Apr 26 14:39:48 2006
+@@ -282,6 +282,8 @@ static ssize_t proc_scsi_write(struct fi
+ 		lun = simple_strtoul(p + 1, &p, 0);
+ 
+ 		err = scsi_remove_single_device(host, channel, id, lun);
++		if (!err)
++			err = length;
+ 	}
+ 
+  out:
+_
