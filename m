@@ -1,39 +1,129 @@
-From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: Re: [PATCH] sas transport sysfs write attributes bug fix
-Date: Tue, 25 Apr 2006 23:18:02 -0600
-Message-ID: <001301c668f0$cb1887a0$1a1015ac@ericmoore>
-References: <20060425233528.GA9238@lsil.com> <1146009448.3529.65.camel@mulgrave.il.steeleye.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=original
-Content-Transfer-Encoding: 7bit
+From: Brian King <brking@us.ibm.com>
+Subject: [PATCH 1/1] scsi: Device scanning oops for offlined devices
+Date: Wed, 26 Apr 2006 11:52:40 -0500
+Message-ID: <200604261652.k3QGqoOZ013283@d03av01.boulder.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:43408 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S932378AbWDZFSD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Apr 2006 01:18:03 -0400
+Received: from e35.co.us.ibm.com ([32.97.110.153]:37550 "EHLO
+	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S932073AbWDZQwz
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 26 Apr 2006 12:52:55 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e35.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k3QGqpCp030333
+	for <linux-scsi@vger.kernel.org>; Wed, 26 Apr 2006 12:52:51 -0400
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by d03relay04.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k3QGuKtY127622
+	for <linux-scsi@vger.kernel.org>; Wed, 26 Apr 2006 10:56:20 -0600
+Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k3QGqoaH013642
+	for <linux-scsi@vger.kernel.org>; Wed, 26 Apr 2006 10:52:51 -0600
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi@vger.kernel.org
-
-On Tuesday, April 25, 2006 5:57 PM, James Bottomley wrote:
-
-> Heh, that's a bit of a screw up in the templates (cut and paste error, I
-> think), but isn't this the simpler fix?
-> 
-
-Agreed.
-
-Yes, it would be simpler if we didn't bother with the store and show pointer
-from SETUP_TEMPLATE.  I'm sure the i struct would of been already initialized
-by now, and corresponding store/show fields would be set accordingly.
-
-Regards,
-Eric
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, brking@us.ibm.com
 
 
+If a device gets offlined as a result of the Inquiry sent
+during scanning, the following oops can occur. After the
+disk gets put into the SDEV_OFFLINE state, the error handler
+sends back the failed inquiry, which wakes the thread doing
+the scan. This starts a race between the scanning thread
+freeing the scsi device and the error handler calling
+scsi_run_host_queues to restart the host. Since the disk
+is in the SDEV_OFFLINE state, scsi_device_get will still
+work, which results in __scsi_iterate_devices getting
+a reference to the scsi disk when it shouldn't.
 
+The following execution thread causes the oops:
 
+CPU 0 (scan)				CPU 1 (eh)
+---------------------------------------------------------
+scsi_probe_and_add_lun
+			....
+					scsi_eh_offline_sdevs
+					scsi_eh_flush_done_q
+scsi_destroy_sdev
+scsi_device_dev_release
+					scsi_restart_operations
+					 scsi_run_host_queues
+					  __scsi_iterate_devices
+					   get_device
+scsi_device_dev_release_usercontext
+					  scsi_run_queue
+					    <---OOPS--->
+
+The patch fixes this by changing the state of the sdev to SDEV_DEL
+before doing the final put_device, which should prevent the race
+from occurring.
+
+Original oops follows:
+
+Badness in kref_get at lib/kref.c:32
+Call Trace:
+[C00000002F4476D0] [C00000000000EE20] .show_stack+0x68/0x1b0 (unreliable)
+[C00000002F447770] [C00000000037515C] .program_check_exception+0x1cc/0x5a8
+[C00000002F447840] [C00000000000446C] program_check_common+0xec/0x100
+ Exception: 700 at .kref_get+0x10/0x28
+    LR = .kobject_get+0x20/0x3c
+[C00000002F447B30] [C00000002F447BC0] 0xc00000002f447bc0 (unreliable)
+[C00000002F447BB0] [C000000000254BDC] .get_device+0x20/0x3c
+[C00000002F447C30] [D000000000063188] .scsi_device_get+0x34/0xdc [scsi_mod]
+[C00000002F447CC0] [D0000000000633EC] .__scsi_iterate_devices+0x50/0xbc [scsi_mod]
+[C00000002F447D60] [D00000000006A910] .scsi_run_host_queues+0x34/0x5c [scsi_mod]
+[C00000002F447DF0] [D000000000069054] .scsi_error_handler+0xdb4/0xe44 [scsi_mod]
+[C00000002F447EE0] [C00000000007B4E0] .kthread+0x128/0x178
+[C00000002F447F90] [C000000000025E84] .kernel_thread+0x4c/0x68
+Unable to handle kernel paging request for <7>PCI: Enabling device: (0002:41:01.1), cmd 143
+data at address 0x000001b8
+Faulting instruction address: 0xd0000000000698e4
+sym1: <1010-66> rev 0x1 at pci 0002:41:01.1 irq 216
+sym1: No NVRAM, ID 7, Fast-80, LVD, parity checking
+sym1: SCSI BUS has been reset.
+scsi2 : sym-2.2.2
+cpu 0x0: Vector: 300 (Data Access) at [c00000002f447a30]
+    pc: d0000000000698e4: .scsi_run_queue+0x2c/0x218 [scsi_mod]
+    lr: d00000000006a904: .scsi_run_host_queues+0x28/0x5c [scsi_mod]
+    sp: c00000002f447cb0
+   msr: 9000000000009032
+   dar: 1b8
+ dsisr: 40000000
+  current = 0xc0000000045fecd0
+  paca    = 0xc00000000048ee80
+    pid   = 1123, comm = scsi_eh_1
+enter ? for help
+[c00000002f447d60] d00000000006a904 .scsi_run_host_queues+0x28/0x5c [scsi_mod]
+[c00000002f447df0] d000000000069054 .scsi_error_handler+0xdb4/0xe44 [scsi_mod]
+[c00000002f447ee0] c00000000007b4e0 .kthread+0x128/0x178
+[c00000002f447f90] c000000000025e84 .kernel_thread+0x4c/0x68
+
+Signed-off-by: Brian King <brking@us.ibm.com>
+---
+
+ linux-2.6-bjking1/drivers/scsi/scsi_lib.c  |    3 +++
+ linux-2.6-bjking1/drivers/scsi/scsi_scan.c |    1 +
+ 2 files changed, 4 insertions(+)
+
+diff -puN drivers/scsi/scsi_lib.c~scsi_fix_scan_offline drivers/scsi/scsi_lib.c
+--- linux-2.6/drivers/scsi/scsi_lib.c~scsi_fix_scan_offline	2006-04-24 13:42:57.000000000 -0500
++++ linux-2.6-bjking1/drivers/scsi/scsi_lib.c	2006-04-24 14:25:36.000000000 -0500
+@@ -2121,6 +2121,9 @@ scsi_device_set_state(struct scsi_device
+ 
+ 	case SDEV_DEL:
+ 		switch (oldstate) {
++		case SDEV_CREATED:
++		case SDEV_RUNNING:
++		case SDEV_OFFLINE:
+ 		case SDEV_CANCEL:
+ 			break;
+ 		default:
+diff -puN drivers/scsi/scsi_scan.c~scsi_fix_scan_offline drivers/scsi/scsi_scan.c
+--- linux-2.6/drivers/scsi/scsi_scan.c~scsi_fix_scan_offline	2006-04-24 14:02:51.000000000 -0500
++++ linux-2.6-bjking1/drivers/scsi/scsi_scan.c	2006-04-24 14:26:13.000000000 -0500
+@@ -810,6 +810,7 @@ static int scsi_add_lun(struct scsi_devi
+ 
+ static inline void scsi_destroy_sdev(struct scsi_device *sdev)
+ {
++	scsi_device_set_state(sdev, SDEV_DEL);
+ 	if (sdev->host->hostt->slave_destroy)
+ 		sdev->host->hostt->slave_destroy(sdev);
+ 	transport_destroy_device(&sdev->sdev_gendev);
+_
