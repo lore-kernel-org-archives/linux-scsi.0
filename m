@@ -1,57 +1,42 @@
-From: Mark Lord <lkml@rtr.ca>
-Subject: Re: [PATCH] drivers/scsi/sd.c: fix uninitialized variable in handling
- medium errors
-Date: Wed, 26 Apr 2006 19:20:19 -0400
-Message-ID: <44500033.3010605@rtr.ca>
-References: <200604261627.29419.lkml@rtr.ca>	<1146092161.12914.3.camel@mulgrave.il.steeleye.com> <20060426161444.423a8296.akpm@osdl.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] drivers/scsi/sd.c: fix uninitialized variable in
+	handling medium errors
+Date: Wed, 26 Apr 2006 18:22:03 -0500
+Message-ID: <1146093723.12914.16.camel@mulgrave.il.steeleye.com>
+References: <200604261627.29419.lkml@rtr.ca>
+	 <1146092161.12914.3.camel@mulgrave.il.steeleye.com>
+	 <20060426161444.423a8296.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:5837 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S932429AbWDZXUi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Apr 2006 19:20:38 -0400
+Received: from stat9.steeleye.com ([209.192.50.41]:17582 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1750726AbWDZXWM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 26 Apr 2006 19:22:12 -0400
 In-Reply-To: <20060426161444.423a8296.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Andrew Morton <akpm@osdl.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: lkml@rtr.ca, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Andrew Morton wrote:
-> 
+On Wed, 2006-04-26 at 16:14 -0700, Andrew Morton wrote:
 > It'd be nice to have something simple-and-obvious for the
-> simple-and-obvious -stable maintainers.
+> simple-and-obvious -stable maintainers.  That's if we think -stable needs
+> this fixed.
 
-That's why I kept the original patch very simple and focused,
-rather than trying to fix all of the convoluted code around it.
+Well .. the original will do for that.  
 
-It's nice and simple, and *looks* correct.
+> > +				int sector_size_div =
+> > +					512 / SCpnt->device->sector_size;
+> > +				error_sector /= sector_size_div;
+> 
+> You sure about this bit?
 
-A longer term cleanup of that function is better left to James!
+Yes.  If the <hardware sector size> is < 512 bytes then to convert the
+listed error sector to the standard 512 byte sector size block index, we
+have to divide (512/<hardware sector size>).
 
-> That's if we think -stable needs this fixed.
+James
 
-Let's say a bunch of read bio's get coalesced into a single
-200+ sector request.  This then fails on one single bad sector
-out of the 200+.  Without the patch, there is a very good chance
-that sd.c will simply fail the entire request, all 200+ sectors.
-
-With the patch, it will fail the first block, and then retry
-the remaining blocks.  And repeat this until something works,
-or until everything has failed one by one.
-
-Better, but still not the best.
-
-What I need to have happen when a request is failed due to bad-media,
-is have it split the request into a sequence of single-block requests
-that are passed to the LLD one at a time.  The ones with real bad
-sectors will then be independently failed, and the rest will get done.
-
-Much better.  Much more complex.
-
-I'm thinking about something like that, just not sure whether to put it
-(initially) in libata, sd.c, or the block layer.
-
-Cheers
 
