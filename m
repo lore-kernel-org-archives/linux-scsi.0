@@ -1,171 +1,65 @@
-From: Eric Moore <eric.moore@lsil.com>
-Subject: [PATCH] fusion - bug fix stack overflow in mptbase
-Date: Wed, 26 Apr 2006 13:22:37 -0600
-Message-ID: <20060426192237.GA25964@lsil.com>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: aha152x(_cs) oops
+Date: Wed, 26 Apr 2006 22:05:40 +0200 (CEST)
+Message-ID: <Pine.LNX.4.60.0604262202200.6890@poirot.grange>
+References: <20060413093615.661b7018.rdunlap@xenotime.net>
+ <1144950036.3474.36.camel@mulgrave.il.steeleye.com>
+ <20060425115709.0db4332f.rdunlap@xenotime.net> <Pine.LNX.4.60.0604252143550.3893@poirot.grange>
+ <20060425140327.605f22ac.rdunlap@xenotime.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:41706 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S964848AbWDZTYD (ORCPT
+Received: from mail.gmx.net ([213.165.64.20]:19863 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S932388AbWDZUFn (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Apr 2006 15:24:03 -0400
-Content-Disposition: inline
+	Wed, 26 Apr 2006 16:05:43 -0400
+In-Reply-To: <20060425140327.605f22ac.rdunlap@xenotime.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@SteelEye.com
+To: "Randy.Dunlap" <rdunlap@xenotime.net>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
 
-Bug fix for stack overflow in EventDescriptionStr, (a function
-for debuging firmware events).  We allocated 50 bytes on local stack
-for buff[], however there are places in the code where we've attempted
-copying in greater than 50 bytes into buff[].
+Hi
 
-Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
+On Tue, 25 Apr 2006, Randy.Dunlap wrote:
 
-diff -uarN b/drivers/message/fusion/mptbase.c a/drivers/message/fusion/mptbase.c
---- b/drivers/message/fusion/mptbase.c	2006-04-26 11:59:09.000000000 -0600
-+++ a/drivers/message/fusion/mptbase.c	2006-04-25 09:25:18.000000000 -0600
-@@ -5735,12 +5735,13 @@
- 	return rc;
- }
- 
-+# define EVENT_DESCR_STR_SZ		100
-+
- /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
- static void
- EventDescriptionStr(u8 event, u32 evData0, char *evStr)
- {
--	char *ds;
--	char buf[50];
-+	char *ds = NULL;
- 
- 	switch(event) {
- 	case MPI_EVENT_NONE:
-@@ -5777,9 +5778,9 @@
- 		if (evData0 == MPI_EVENT_LOOP_STATE_CHANGE_LIP)
- 			ds = "Loop State(LIP) Change";
- 		else if (evData0 == MPI_EVENT_LOOP_STATE_CHANGE_LPE)
--			ds = "Loop State(LPE) Change";			/* ??? */
-+			ds = "Loop State(LPE) Change";		/* ??? */
- 		else
--			ds = "Loop State(LPB) Change";			/* ??? */
-+			ds = "Loop State(LPB) Change";		/* ??? */
- 		break;
- 	case MPI_EVENT_LOGOUT:
- 		ds = "Logout";
-@@ -5845,22 +5846,28 @@
- 		u8 ReasonCode = (u8)(evData0 >> 16);
- 		switch (ReasonCode) {
- 		case MPI_EVENT_SAS_DEV_STAT_RC_ADDED:
--			sprintf(buf,"SAS Device Status Change: Added: id=%d", id);
-+			snprintf(evStr, EVENT_DESCR_STR_SZ,
-+			    "SAS Device Status Change: Added: id=%d", id);
- 			break;
- 		case MPI_EVENT_SAS_DEV_STAT_RC_NOT_RESPONDING:
--			sprintf(buf,"SAS Device Status Change: Deleted: id=%d", id);
-+			snprintf(evStr, EVENT_DESCR_STR_SZ,
-+			    "SAS Device Status Change: Deleted: id=%d", id);
- 			break;
- 		case MPI_EVENT_SAS_DEV_STAT_RC_SMART_DATA:
--			sprintf(buf,"SAS Device Status Change: SMART Data: id=%d", id);
-+			snprintf(evStr, EVENT_DESCR_STR_SZ,
-+			    "SAS Device Status Change: SMART Data: id=%d",
-+			    id);
- 			break;
- 		case MPI_EVENT_SAS_DEV_STAT_RC_NO_PERSIST_ADDED:
--			sprintf(buf,"SAS Device Status Change: No Persistancy Added: id=%d", id);
-+			snprintf(evStr, EVENT_DESCR_STR_SZ,
-+			    "SAS Device Status Change: No Persistancy "
-+			    "Added: id=%d", id);
- 			break;
- 		default:
--			sprintf(buf,"SAS Device Status Change: Unknown: id=%d", id);
--		break;
-+			snprintf(evStr, EVENT_DESCR_STR_SZ,
-+			    "SAS Device Status Change: Unknown: id=%d", id);
-+			break;
- 		}
--		ds = buf;
- 		break;
- 	}
- 	case MPI_EVENT_ON_BUS_TIMER_EXPIRED:
-@@ -5883,34 +5890,40 @@
- 			MPI_EVENT_SAS_PLS_LR_CURRENT_SHIFT;
- 		switch (LinkRates) {
- 		case MPI_EVENT_SAS_PLS_LR_RATE_UNKNOWN:
--			sprintf(buf,"SAS PHY Link Status: Phy=%d:"
-+			snprintf(evStr, EVENT_DESCR_STR_SZ,
-+			   "SAS PHY Link Status: Phy=%d:"
- 			   " Rate Unknown",PhyNumber);
- 			break;
- 		case MPI_EVENT_SAS_PLS_LR_RATE_PHY_DISABLED:
--			sprintf(buf,"SAS PHY Link Status: Phy=%d:"
-+			snprintf(evStr, EVENT_DESCR_STR_SZ,
-+			   "SAS PHY Link Status: Phy=%d:"
- 			   " Phy Disabled",PhyNumber);
- 			break;
- 		case MPI_EVENT_SAS_PLS_LR_RATE_FAILED_SPEED_NEGOTIATION:
--			sprintf(buf,"SAS PHY Link Status: Phy=%d:"
-+			snprintf(evStr, EVENT_DESCR_STR_SZ,
-+			   "SAS PHY Link Status: Phy=%d:"
- 			   " Failed Speed Nego",PhyNumber);
- 			break;
- 		case MPI_EVENT_SAS_PLS_LR_RATE_SATA_OOB_COMPLETE:
--			sprintf(buf,"SAS PHY Link Status: Phy=%d:"
-+			snprintf(evStr, EVENT_DESCR_STR_SZ,
-+			   "SAS PHY Link Status: Phy=%d:"
- 			   " Sata OOB Completed",PhyNumber);
- 			break;
- 		case MPI_EVENT_SAS_PLS_LR_RATE_1_5:
--			sprintf(buf,"SAS PHY Link Status: Phy=%d:"
-+			snprintf(evStr, EVENT_DESCR_STR_SZ,
-+			   "SAS PHY Link Status: Phy=%d:"
- 			   " Rate 1.5 Gbps",PhyNumber);
- 			break;
- 		case MPI_EVENT_SAS_PLS_LR_RATE_3_0:
--			sprintf(buf,"SAS PHY Link Status: Phy=%d:"
-+			snprintf(evStr, EVENT_DESCR_STR_SZ,
-+			   "SAS PHY Link Status: Phy=%d:"
- 			   " Rate 3.0 Gpbs",PhyNumber);
- 			break;
- 		default:
--			sprintf(buf,"SAS PHY Link Status: Phy=%d", PhyNumber);
-+			snprintf(evStr, EVENT_DESCR_STR_SZ,
-+			   "SAS PHY Link Status: Phy=%d", PhyNumber);
- 			break;
- 		}
--		ds = buf;
- 		break;
- 	}
- 	case MPI_EVENT_SAS_DISCOVERY_ERROR:
-@@ -5919,8 +5932,8 @@
- 	case MPI_EVENT_IR_RESYNC_UPDATE:
- 	{
- 		u8 resync_complete = (u8)(evData0 >> 16);
--		sprintf(buf,"IR Resync Update: Complete = %d:",resync_complete);
--		ds = buf;
-+		snprintf(evStr, EVENT_DESCR_STR_SZ,
-+		    "IR Resync Update: Complete = %d:",resync_complete);
- 		break;
- 	}
- 	case MPI_EVENT_IR2:
-@@ -5973,7 +5986,8 @@
- 		ds = "Unknown";
- 		break;
- 	}
--	strcpy(evStr,ds);
-+	if (ds)
-+		strncpy(evStr, ds, EVENT_DESCR_STR_SZ);
- }
- 
- /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
-@@ -5995,7 +6009,7 @@
- 	int ii;
- 	int r = 0;
- 	int handlers = 0;
--	char evStr[100];
-+	char evStr[EVENT_DESCR_STR_SZ];
- 	u8 event;
- 
- 	/*
- 	}
+> On Tue, 25 Apr 2006 22:41:28 +0200 (CEST) Guennadi Liakhovetski wrote:
+> 
+> > On Tue, 25 Apr 2006, Randy.Dunlap wrote:
+> > 
+> > > I've spent a lot of time using the sg-PIO patch with the aha152x
+> > > driver.  The sg-PIO part of it works for me, but the aha152x driver
+> > > sometimes does not complete a full DMA-out transfer (data-out phase).
+> > > The driver calls this the need to "resend" some data (in datao_end()).
+> > 
+> > Sorry, didn't quite understand it - you mean the "in" direction modified 
+> > to use sg-pio works, whereas the "out" doesn't? How exactly it doesn't 
+> > work?
+> 
+> It's not a problem with the (your) sg patch.  It's just that this
+> SCSI chip sometimes (apparently) stops a DMA-out transfer before
+> it should (e.g., half way thru an sg list).  The driver detects this
+> and decides that it needs to "resend" the remaining part of the sg
+> list, but first it must back up the sg list ptr (possibly), the data
+> transfer ptr (before this patch), this_residual, and possibly
+> buffers_residual.  I've made many attempts at doing that, but
+> they are not succeeding.
+
+What kind of device is it and what are you doing to reproduce the error? 
+Do you know if the stock kernel / aha152x driver work if you boot without 
+highmem?
+
+Transferring "residual" bytes left after an incomplete DMA is exactly the 
+same situation as in dc395x and tmscsim...
+
+> > Could you send me / upload your current patch using k(un)map_atomic_pio?
+> 
+> Sure, it's here:
+> http://www.xenotime.net/linux/patches/aha152x-sg-pio.patch
+
+Thanks, looking at it. I have an old ISA SCSI card, that runs under 
+aha152x...
+
+Guennadi
+---
+Guennadi Liakhovetski
