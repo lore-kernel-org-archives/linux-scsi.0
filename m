@@ -1,47 +1,135 @@
-From: akpm@osdl.org
-Subject: [patch 1/1] drivers/scsi: fix proc_scsi_write to return "length" on success with remove-single-device case
-Date: Wed, 26 Apr 2006 14:41:15 -0700
-Message-ID: <200604262138.k3QLchcv009103@shell0.pdx.osdl.net>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:37778 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S964890AbWDZVis (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Apr 2006 17:38:48 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] drivers/scsi/sd.c: fix uninitialized variable in
+	handling medium errors
+Date: Wed, 26 Apr 2006 17:56:01 -0500
+Message-ID: <1146092161.12914.3.camel@mulgrave.il.steeleye.com>
+References: <200604261627.29419.lkml@rtr.ca>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964891AbWDZW4H@vger.kernel.org>
+In-Reply-To: <200604261627.29419.lkml@rtr.ca>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mark Lord <lkml@rtr.ca>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, suzuki@in.ibm.com
 
+On Wed, 2006-04-26 at 16:27 -0400, Mark Lord wrote:
+> From: Mark Lord <lkml@rtr.ca>
+> 
+> I am looking into how SCSI/SATA handle medium (disk) errors,
+> and the observed behaviour is a little more random than expected,
+> due to a bug in sd.c.
+> 
+> When scsi_get_sense_info_fld() fails (returns 0), it does NOT update the
+> value of first_err_block.  But sd_rw_intr() merrily continues to use that
+> variable regardless, possibly making incorrect decisions about retries and the like.
+> 
+> This patch removes the randomness there, by using the first sector of the
+> request (SCpnt->request->sector) in such cases, instead of first_err_block.
+> 
+> The patch shows more context than usual, to help see what's going on.
 
-From: Suzuki <suzuki@in.ibm.com>
+Thanks for finding the bug.  Your solution is a bit, um, convoluted.
+What it should really be doing if we find no valid information field is
+a break so we go out with the default good_sectors of zero (rather than
+arriving at that value via a circuitous route).
 
-proc_scsi_write doesn't return the "length" upon successfully removing a
-device; instead it returns 0.  This causes commands like "echo" to redo the
-write(), which ends up in something like,
+And, of course, I couldn't resist eliminating the superfluous info_valid
+variable and tidying the logic to be programmatic instead of a switch
+case.  How does this work?
 
-$ echo "scsi remove-single-device 0 0 3 0" > /proc/scsi/scsi
-"-bash: echo: write error: No such device or address"
+James
 
-, even though the device was removed.
-
-Signed-off-by: Suzuki K P <suzuki@in.ibm.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
-Signed-off-by: Andrew Morton <akpm@osdl.org>
----
-
- drivers/scsi/scsi_proc.c |    2 ++
- 1 files changed, 2 insertions(+)
-
-diff -puN drivers/scsi/scsi_proc.c~drivers-scsi-fix-proc_scsi_write-to-return-length-on drivers/scsi/scsi_proc.c
---- 25/drivers/scsi/scsi_proc.c~drivers-scsi-fix-proc_scsi_write-to-return-length-on	Wed Apr 26 14:39:48 2006
-+++ 25-akpm/drivers/scsi/scsi_proc.c	Wed Apr 26 14:39:48 2006
-@@ -282,6 +282,8 @@ static ssize_t proc_scsi_write(struct fi
- 		lun = simple_strtoul(p + 1, &p, 0);
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index c647d85..fff423e 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -894,12 +894,10 @@ static void sd_rw_intr(struct scsi_cmnd 
+ 	int this_count = SCpnt->bufflen;
+ 	int good_bytes = (result == 0 ? this_count : 0);
+ 	sector_t block_sectors = 1;
+-	u64 first_err_block;
+ 	sector_t error_sector;
+ 	struct scsi_sense_hdr sshdr;
+ 	int sense_valid = 0;
+ 	int sense_deferred = 0;
+-	int info_valid;
  
- 		err = scsi_remove_single_device(host, channel, id, lun);
-+		if (!err)
-+			err = length;
- 	}
+ 	if (result) {
+ 		sense_valid = scsi_command_normalize_sense(SCpnt, &sshdr);
+@@ -923,43 +921,44 @@ #endif
+ 	 */
+ 	if (driver_byte(result) != 0 &&
+ 		 sense_valid && !sense_deferred) {
++		u64 first_err_block;
++		int sector_size;
++
+ 		switch (sshdr.sense_key) {
+ 		case MEDIUM_ERROR:
+ 			if (!blk_fs_request(SCpnt->request))
+ 				break;
+-			info_valid = scsi_get_sense_info_fld(
+-				SCpnt->sense_buffer, SCSI_SENSE_BUFFERSIZE,
+-				&first_err_block);
+-			/*
+-			 * May want to warn and skip if following cast results
+-			 * in actual truncation (if sector_t < 64 bits)
+-			 */
+-			error_sector = (sector_t)first_err_block;
+-			if (SCpnt->request->bio != NULL)
+-				block_sectors = bio_sectors(SCpnt->request->bio);
+-			switch (SCpnt->device->sector_size) {
+-			case 1024:
+-				error_sector <<= 1;
+-				if (block_sectors < 2)
+-					block_sectors = 2;
+-				break;
+-			case 2048:
+-				error_sector <<= 2;
+-				if (block_sectors < 4)
+-					block_sectors = 4;
+-				break;
+-			case 4096:
+-				error_sector <<=3;
+-				if (block_sectors < 8)
+-					block_sectors = 8;
+-				break;
+-			case 256:
+-				error_sector >>= 1;
+-				break;
+-			default:
++			if (!scsi_get_sense_info_fld(SCpnt->sense_buffer,
++						    SCSI_SENSE_BUFFERSIZE,
++						    &first_err_block))
+ 				break;
++
++			sector_size = SCpnt->device->sector_size / 512;
++
++			if (SCpnt->request->bio != NULL)
++				block_sectors = 
++					bio_sectors(SCpnt->request->bio);
++			if (block_sectors < sector_size)
++				block_sectors = sector_size;
++
++			error_sector = (sector_t)first_err_block;
++			/* 
++			 * convert from physical sector size to
++			 * standard 512 byte sized sectors
++			 */
++			if (sector_size)
++				error_sector *= sector_size;
++			else {
++				int sector_size_div =
++					512 / SCpnt->device->sector_size;
++				error_sector /= sector_size_div;
+ 			}
  
-  out:
-_
++			/*
++			 * if the device has a larger logical than
++			 * physical sector size, round down to the
++			 * beginning of a logical sector
++			 */
+ 			error_sector &= ~(block_sectors - 1);
+ 			good_bytes = (error_sector - SCpnt->request->sector) << 9;
+ 			if (good_bytes < 0 || good_bytes >= this_count)
