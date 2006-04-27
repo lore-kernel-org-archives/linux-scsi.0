@@ -1,37 +1,53 @@
-From: Avi Kivity <avi@argo.co.il>
-Subject: Re: [PATCH] drivers/scsi/sd.c: fix uninitialized variable in handling
- medium errors
-Date: Thu, 27 Apr 2006 12:37:24 +0300
-Message-ID: <445090D4.2070203@argo.co.il>
-References: <200604261627.29419.lkml@rtr.ca>	<1146092161.12914.3.camel@mulgrave.il.steeleye.com>	<20060426161444.423a8296.akpm@osdl.org>	<44500033.3010605@rtr.ca> <20060426163536.6f7bff77.akpm@osdl.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: akpm@osdl.org
+Subject: [patch 06/20] drivers/scsi/gdth.c: make __gdth_execute() static
+Date: Thu, 27 Apr 2006 02:33:00 -0700
+Message-ID: <200604270934.k3R9YSt6025445@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gateway.argo.co.il ([194.90.79.130]:46598 "EHLO
-	argo2k.argo.co.il") by vger.kernel.org with ESMTP id S965032AbWD0Jh2
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Apr 2006 05:37:28 -0400
-In-Reply-To: <20060426163536.6f7bff77.akpm@osdl.org>
+Received: from smtp.osdl.org ([65.172.181.4]:4305 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S965044AbWD0Jhm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Apr 2006 05:37:42 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: Mark Lord <lkml@rtr.ca>, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, bunk@stusta.de
 
-Andrew Morton wrote:
-> block, I suspect.  My DVD trauma was IDE-induced.  Jens is mulling the
-> problem - I'd suggest you coordinate with him.
->
-> It would be a good thing to fix.
->
-> It's moderately hard to test, though.  Easy enough for DVDs and CDs, but
-> it's harder to take a marker pen to a hard drive.
->   
-If it's in the block layer, perhaps using a device mapper error target 
-can help in testing. One could write a table to map an entire partition 
-to a logical volume, then replace it with a table that maps a few 
-sectors to the error target.
 
--- 
-error compiling committee.c: too many arguments to function
+From: Adrian Bunk <bunk@stusta.de>
 
+I don't see any reason for __gdth_execute() being global.
+
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
+Signed-off-by: Andrew Morton <akpm@osdl.org>
+---
+
+ drivers/scsi/gdth.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
+
+diff -puN drivers/scsi/gdth.c~drivers-scsi-gdthc-make-__gdth_execute-static drivers/scsi/gdth.c
+--- devel/drivers/scsi/gdth.c~drivers-scsi-gdthc-make-__gdth_execute-static	2006-04-05 21:27:56.000000000 -0700
++++ devel-akpm/drivers/scsi/gdth.c	2006-04-05 21:27:56.000000000 -0700
+@@ -693,8 +693,8 @@ static void gdth_scsi_done(struct scsi_c
+ 		complete(scp->request->waiting);
+ }
+ 
+-int __gdth_execute(struct scsi_device *sdev, gdth_cmd_str *gdtcmd, char *cmnd,
+-		 int timeout, u32 *info)
++static int __gdth_execute(struct scsi_device *sdev, gdth_cmd_str *gdtcmd,
++			  char *cmnd, int timeout, u32 *info)
+ {
+ 	struct scsi_request *scp = scsi_allocate_request(sdev, GFP_KERNEL);
+ 	unsigned bufflen = gdtcmd ? sizeof(gdth_cmd_str) : 0;
+@@ -727,8 +727,8 @@ static void gdth_scsi_done(Scsi_Cmnd *sc
+ 		complete(scp->request.waiting);
+ }
+ 
+-int __gdth_execute(struct scsi_device *sdev, gdth_cmd_str *gdtcmd, char *cmnd,
+-		 int timeout, u32 *info)
++static int __gdth_execute(struct scsi_device *sdev, gdth_cmd_str *gdtcmd,
++			  char *cmnd, int timeout, u32 *info)
+ {
+ 	Scsi_Cmnd *scp = scsi_allocate_device(sdev, 1, FALSE);
+ 	unsigned bufflen = gdtcmd ? sizeof(gdth_cmd_str) : 0;
+_
