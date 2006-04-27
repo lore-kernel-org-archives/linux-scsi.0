@@ -1,43 +1,28 @@
-From: akpm@osdl.org
-Subject: [patch 05/20] drivers/scsi/megaraid.c: add a dummy mega_create_proc_entry() for PROC_FS=y
-Date: Thu, 27 Apr 2006 02:32:59 -0700
-Message-ID: <200604270934.k3R9YRP4025442@shell0.pdx.osdl.net>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [patch 17/20] enable advansys driver
+Date: Thu, 27 Apr 2006 14:18:33 +0200
+Message-ID: <1146140313.2894.32.camel@laptopd505.fenrus.org>
+References: <200604270934.k3R9YcKZ025485@shell0.pdx.osdl.net>
+Reply-To: arjan@infradead.org
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:6097 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S965036AbWD0Jhn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Apr 2006 05:37:43 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:10974 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S965104AbWD0MSg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Apr 2006 08:18:36 -0400
+In-Reply-To: <200604270934.k3R9YcKZ025485@shell0.pdx.osdl.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, bunk@stusta.de, Neela.Kolli@engenio.com
+To: akpm@osdl.org
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@steeleye.com
+
+On Thu, 2006-04-27 at 02:33 -0700, akpm@osdl.org wrote:
+> From: Andrew Morton <akpm@osdl.org>
+> 
+> Apparently it works OK.  It was marked broken because:
 
 
-From: Adrian Bunk <bunk@stusta.de>
+did the tester test this on a machine with > 4Gb ram ?
 
-Add a dummy mega_create_proc_entry() for CONFIG_PROC_FS=n.
-
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
-Cc: Neela Syam Kolli <Neela.Kolli@engenio.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
-Signed-off-by: Andrew Morton <akpm@osdl.org>
----
-
- drivers/scsi/megaraid.c |    4 ++++
- 1 files changed, 4 insertions(+)
-
-diff -puN drivers/scsi/megaraid.c~drivers-scsi-megaraidc-add-a-dummy-mega_create_proc_entry-for-proc_fs=y drivers/scsi/megaraid.c
---- devel/drivers/scsi/megaraid.c~drivers-scsi-megaraidc-add-a-dummy-mega_create_proc_entry-for-proc_fs=y	2006-04-05 21:27:56.000000000 -0700
-+++ devel-akpm/drivers/scsi/megaraid.c	2006-04-05 21:27:56.000000000 -0700
-@@ -3180,6 +3180,10 @@ proc_rdrv(adapter_t *adapter, char *page
- 
- 	return len;
- }
-+#else  /*  CONFIG_PROC_FS  */
-+
-+static inline void
-+mega_create_proc_entry(int index, struct proc_dir_entry *parent) {}
- 
- #endif
- 
-_
