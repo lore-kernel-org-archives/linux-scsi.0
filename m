@@ -1,33 +1,42 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [patch 17/20] enable advansys driver
-Date: Thu, 27 Apr 2006 10:56:06 -0700
-Message-ID: <20060427105606.21f1b27b.akpm@osdl.org>
-References: <200604270934.k3R9YcKZ025485@shell0.pdx.osdl.net>
-	<1146140313.2894.32.camel@laptopd505.fenrus.org>
+From: "Tony Battersby" <tonyb@cybernetics.com>
+Subject: [PATCH] mptscsih: set resid for retried commands
+Date: Thu, 27 Apr 2006 14:28:38 -0400
+Message-ID: <NDBBLGKNDFLNBMEOAAANGEJBEJAF.tonyb@cybernetics.com>
+Reply-To: <tonyb@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:58506 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S965015AbWD0R5s (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Apr 2006 13:57:48 -0400
-In-Reply-To: <1146140313.2894.32.camel@laptopd505.fenrus.org>
+Received: from cyborg.cybernetics.com ([206.246.200.18]:3089 "EHLO
+	cyborg.cybernetics.com") by vger.kernel.org with ESMTP
+	id S964919AbWD0S2s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Apr 2006 14:28:48 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: arjan@infradead.org
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@steeleye.com
+To: Eric.Moore@lsil.com, mpt_linux_developer@lsil.com
+Cc: linux-scsi@vger.kernel.org
 
-Arjan van de Ven <arjan@infradead.org> wrote:
->
-> On Thu, 2006-04-27 at 02:33 -0700, akpm@osdl.org wrote:
-> > From: Andrew Morton <akpm@osdl.org>
-> > 
-> > Apparently it works OK.  It was marked broken because:
-> 
-> 
-> did the tester test this on a machine with > 4Gb ram ?
+Most of the time, the data transfer residual is initialized to 0 before the
+SCSI command is queued, so it is not necessary to set it to 0 explicitly if
+the command completes successfully.  However, if the command fails with e.g.
+queue full status, the data transfer residual will be set to a nonzero value
+when the command is queued for retry.  This patch ensures that the residual
+is set to 0 if the retry completes successfully rather than retaining the
+residual from the first execution of the command.
 
-I doubt it.
+--- linux-2.6.17-rc3/drivers/message/fusion/mptscsih.c.orig	2006-04-27 13:45:48.000000000 -0400
++++ linux-2.6.17-rc3/drivers/message/fusion/mptscsih.c	2006-04-27 13:46:45.000000000 -0400
+@@ -569,7 +569,7 @@ mptscsih_io_done(MPT_ADAPTER *ioc, MPT_F
+ 
+ 	if (pScsiReply == NULL) {
+ 		/* special context reply handling */
+-		;
++		sc->resid = 0;
+ 	} else {
+ 		u32	 xfer_cnt;
+ 		u16	 status;
 
-This patch is -mm only, actually - administrative error at akpmlabs.
+Anthony J. Battersby
+Cybernetics
+
