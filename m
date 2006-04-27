@@ -1,48 +1,75 @@
-From: Guido Guenther <agx@sigxcpu.org>
-Subject: EMC Symmetrix vs. no storage on LUN 0
-Date: Thu, 27 Apr 2006 11:13:22 +0200
-Message-ID: <20060427091322.GA19126@bogon.ms20.nix>
+From: Rogier Wolff <R.E.Wolff@BitWizard.nl>
+Subject: Re: [PATCH] drivers/scsi/sd.c: fix uninitialized variable in handling medium errors
+Date: Thu, 27 Apr 2006 11:28:12 +0200
+Message-ID: <20060427092812.GA25867@bitwizard.nl>
+References: <200604261627.29419.lkml@rtr.ca> <1146092161.12914.3.camel@mulgrave.il.steeleye.com> <20060426161444.423a8296.akpm@osdl.org> <44500033.3010605@rtr.ca> <20060426163536.6f7bff77.akpm@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from honk1.physik.uni-konstanz.de ([134.34.140.224]:60129 "EHLO
-	honk1.physik.uni-konstanz.de") by vger.kernel.org with ESMTP
-	id S964985AbWD0JVL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Apr 2006 05:21:11 -0400
+Received: from dtp.xs4all.nl ([80.126.206.180]:27261 "HELO abra2.bitwizard.nl")
+	by vger.kernel.org with SMTP id S965017AbWD0J2O (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Apr 2006 05:28:14 -0400
 Content-Disposition: inline
+In-Reply-To: <20060426163536.6f7bff77.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: frankpiotrowski@web.de
+To: Andrew Morton <akpm@osdl.org>
+Cc: Mark Lord <lkml@rtr.ca>, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi,
-we have a rather old EMC Symmetrix which always has a peripheral
-qualifier of 001b on LUN0. This has the problem that the
-scsi_probe_and_add_lun code bails out to out_free_result: before we
-apply the device flags (that we got from scsi_probe_lun just before this
-check) to bflagsp. The result is that (without these flags) we stop
-scanning and don't see any devices on the EMC. This patch against 2.6.16
-ignores this peripheral qualifier for LUN 0 and the devices get detected
-properly:
+On Wed, Apr 26, 2006 at 04:35:36PM -0700, Andrew Morton wrote:
+> Mark Lord <lkml@rtr.ca> wrote:
+> >
+> > > That's if we think -stable needs this fixed.
+> > 
+> > Let's say a bunch of read bio's get coalesced into a single
+> > 200+ sector request.  This then fails on one single bad sector
+> > out of the 200+.  Without the patch, there is a very good chance
+> > that sd.c will simply fail the entire request, all 200+ sectors.
+> > 
+> > With the patch, it will fail the first block, and then retry
+> > the remaining blocks.  And repeat this until something works,
+> > or until everything has failed one by one.
+> 
+> Yowch.  I have the feeling that this'll take our EIO-handling time from
+> far-too-long to far-too-long*200.
 
---- linux-2.6.16.7/drivers/scsi/scsi_scan.c.orig	2006-04-17 23:53:25.000000000 +0200
-+++ linux-2.6.16.7/drivers/scsi/scsi_scan.c	2006-04-26 20:12:21.000000000 +0200
-@@ -853,7 +862,7 @@
- 	/*
- 	 * result contains valid SCSI INQUIRY data.
- 	 */
--	if ((result[0] >> 5) == 3) {
-+	if ((result[0] >> 5) == 3 && lun != 0) {
- 		/*
- 		 * For a Peripheral qualifier 3 (011b), the SCSI
- 		 * spec says: The device server is not capable of
+Whoa! Can't get worse. 
 
-Signed-Off-By: Guido Guenther <agx@sigxcpu.org>
+Hmm. OK. Maybe it can. It seems that IDE at least used to do the
+"*200" behaviour.
 
-Historical note: we always had issues with this machine, we had a
-different patch for 2.6.11, discussion about it is here:
-http://marc.theaimsgroup.com/?l=linux-scsi&m=110297733824960&w=2
-Due to code changes in recent kernels we just need the above now, can
-this be applied?
-Cheers,
- -- Guido
+I now issue a read for (1k-)block 1024 on my disk, which has blocks
+1024 ... 1536 being bad. Kernel has decided i'm doing linear reads, so
+it will issue a readahead for 1024-1536. 
+
+I then don't want to have the kernel continue the 1025-1536 readahead.
+
+Also, if just block 1027 is bad, a normal read of block 1024 will read
+the page 1024-1027, and return EIO on 1024 because it couldn't read
+the whole page. We've learned to live with this, but if you guys are
+going to look into it, keep this in mind, please.... 
+
+> It's moderately hard to test, though.  Easy enough for DVDs and CDs,
+> but it's harder to take a marker pen to a hard drive.
+
+I (accidentally) scratched a SCSI drive with a paperclip some weeks
+ago. 65 bad blocks. (36 files hurt). I did manage to use the paperclip
+to push the metal part that had fallen off the inside of the drive
+somewhere to a spot where I could remove it. That metal part was
+preventing the head from leaving the parking zone. 
+
+Anyway, I have enough disks with bad blocks that I can make the
+following offer: Serious kernel developpers that need a
+drive-with-bad-blocks for testing should submit their snail-mail
+address. I'll see what I can do. (Specify SCSI or IDE or both). 
+
+	Roger Wolff
+	R.E.Wolff@harddisk-recovery.nl
+
+-- 
+** R.E.Wolff@BitWizard.nl ** http://www.BitWizard.nl/ ** +31-15-2600998 **
+*-- BitWizard writes Linux device drivers for any device you may have! --*
+Q: It doesn't work. A: Look buddy, doesn't work is an ambiguous statement. 
+Does it sit on the couch all day? Is it unemployed? Please be specific! 
+Define 'it' and what it isn't doing. --------- Adapted from lxrbot FAQ
