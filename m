@@ -1,12 +1,12 @@
 From: akpm@osdl.org
-Subject: [patch 06/20] drivers/scsi/gdth.c: make __gdth_execute() static
-Date: Thu, 27 Apr 2006 02:33:00 -0700
-Message-ID: <200604270934.k3R9YSt6025445@shell0.pdx.osdl.net>
+Subject: [patch 11/20] drivers/scsi/aic7xxx/aic79xx_core.c: make ahd_match_scb() static
+Date: Thu, 27 Apr 2006 02:33:04 -0700
+Message-ID: <200604270934.k3R9YW7w025463@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:4305 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S965044AbWD0Jhm (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:8913 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S965044AbWD0Jhq (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Apr 2006 05:37:42 -0400
+	Thu, 27 Apr 2006 05:37:46 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
@@ -15,39 +15,48 @@ Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, bunk@stusta.de
 
 From: Adrian Bunk <bunk@stusta.de>
 
-I don't see any reason for __gdth_execute() being global.
-
 Signed-off-by: Adrian Bunk <bunk@stusta.de>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/gdth.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/aic7xxx/aic79xx.h      |    3 ---
+ drivers/scsi/aic7xxx/aic79xx_core.c |    5 ++++-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff -puN drivers/scsi/gdth.c~drivers-scsi-gdthc-make-__gdth_execute-static drivers/scsi/gdth.c
---- devel/drivers/scsi/gdth.c~drivers-scsi-gdthc-make-__gdth_execute-static	2006-04-05 21:27:56.000000000 -0700
-+++ devel-akpm/drivers/scsi/gdth.c	2006-04-05 21:27:56.000000000 -0700
-@@ -693,8 +693,8 @@ static void gdth_scsi_done(struct scsi_c
- 		complete(scp->request->waiting);
+diff -puN drivers/scsi/aic7xxx/aic79xx_core.c~drivers-scsi-aic7xxx-aic79xx_corec-make-ahd_match_scb-static drivers/scsi/aic7xxx/aic79xx_core.c
+--- devel/drivers/scsi/aic7xxx/aic79xx_core.c~drivers-scsi-aic7xxx-aic79xx_corec-make-ahd_match_scb-static	2006-04-14 23:41:42.000000000 -0700
++++ devel-akpm/drivers/scsi/aic7xxx/aic79xx_core.c	2006-04-14 23:41:42.000000000 -0700
+@@ -262,6 +262,9 @@ static void		ahd_update_coalescing_value
+ 						     u_int mincmds);
+ static int		ahd_verify_vpd_cksum(struct vpd_config *vpd);
+ static int		ahd_wait_seeprom(struct ahd_softc *ahd);
++static int		ahd_match_scb(struct ahd_softc *ahd, struct scb *scb,
++				      int target, char channel, int lun,
++				      u_int tag, role_t role);
+ 
+ /******************************** Private Inlines *****************************/
+ 
+@@ -7213,7 +7216,7 @@ ahd_busy_tcl(struct ahd_softc *ahd, u_in
  }
  
--int __gdth_execute(struct scsi_device *sdev, gdth_cmd_str *gdtcmd, char *cmnd,
--		 int timeout, u32 *info)
-+static int __gdth_execute(struct scsi_device *sdev, gdth_cmd_str *gdtcmd,
-+			  char *cmnd, int timeout, u32 *info)
+ /************************** SCB and SCB queue management **********************/
+-int
++static int
+ ahd_match_scb(struct ahd_softc *ahd, struct scb *scb, int target,
+ 	      char channel, int lun, u_int tag, role_t role)
  {
- 	struct scsi_request *scp = scsi_allocate_request(sdev, GFP_KERNEL);
- 	unsigned bufflen = gdtcmd ? sizeof(gdth_cmd_str) : 0;
-@@ -727,8 +727,8 @@ static void gdth_scsi_done(Scsi_Cmnd *sc
- 		complete(scp->request.waiting);
- }
+diff -puN drivers/scsi/aic7xxx/aic79xx.h~drivers-scsi-aic7xxx-aic79xx_corec-make-ahd_match_scb-static drivers/scsi/aic7xxx/aic79xx.h
+--- devel/drivers/scsi/aic7xxx/aic79xx.h~drivers-scsi-aic7xxx-aic79xx_corec-make-ahd_match_scb-static	2006-04-14 23:41:42.000000000 -0700
++++ devel-akpm/drivers/scsi/aic7xxx/aic79xx.h	2006-04-14 23:41:42.000000000 -0700
+@@ -1347,9 +1347,6 @@ int	ahd_pci_test_register_access(struct 
+ /************************** SCB and SCB queue management **********************/
+ void		ahd_qinfifo_requeue_tail(struct ahd_softc *ahd,
+ 					 struct scb *scb);
+-int		ahd_match_scb(struct ahd_softc *ahd, struct scb *scb,
+-			      int target, char channel, int lun,
+-			      u_int tag, role_t role);
  
--int __gdth_execute(struct scsi_device *sdev, gdth_cmd_str *gdtcmd, char *cmnd,
--		 int timeout, u32 *info)
-+static int __gdth_execute(struct scsi_device *sdev, gdth_cmd_str *gdtcmd,
-+			  char *cmnd, int timeout, u32 *info)
- {
- 	Scsi_Cmnd *scp = scsi_allocate_device(sdev, 1, FALSE);
- 	unsigned bufflen = gdtcmd ? sizeof(gdth_cmd_str) : 0;
+ /****************************** Initialization ********************************/
+ struct ahd_softc	*ahd_alloc(void *platform_arg, char *name);
 _
