@@ -1,216 +1,241 @@
 From: akpm@osdl.org
-Subject: [patch 20/20] kdump: mpt fusion driver initialization failure fix
-Date: Thu, 27 Apr 2006 02:33:13 -0700
-Message-ID: <200604270934.k3R9YfsE025494@shell0.pdx.osdl.net>
+Subject: [patch 14/20] megaraid_{mm,mbox}: fix a bug in reset handler
+Date: Thu, 27 Apr 2006 02:33:06 -0700
+Message-ID: <200604270934.k3R9YYeY025473@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:12240 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S965037AbWD0Jeu (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:7632 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S965035AbWD0Jel (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Apr 2006 05:34:50 -0400
+	Thu, 27 Apr 2006 05:34:41 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, vgoyal@in.ibm.com, Eric.Moore@lsil.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, Seokmann.Ju@lsil.com, seokmann.ju@lsil.com
 
 
-From: Vivek Goyal <vgoyal@in.ibm.com>
+From: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
 
-MPT fusion driver initialization fails while second kernel is booting,
-after a system crash (if kdump kernel is configured).  Oops message is
-pasted below.  I have attached a patch to fix the issue.  Your suggestions
-are welcome.
+When abort failed, the driver gets reset handleer called.  In the reset
+handler, driver calls 'scsi_done()' callback for same SCSI command packet
+(struct scsi_cmnd) multiple times if there are multiple SCSI command packet
+in the pend_list.  More over, if there are entry in the pend_lsit with
+IOCTL packet associated, the driver returns it to wrong free_list so that,
+in turn, the driver could end up with 'NULL pointer dereference..' during
+I/O command building with incorrect resource.
 
-*****************************************************************************
-Fusion MPT base driver 3.03.08
-Copyright (c) 1999-2005 LSI Logic Corporation
-Fusion MPT SAS Host driver 3.03.08 ACPI: PCI Interrupt 0000:01:00.0[A] -> Link [LNKA] -> GSI 5 (level, low) -> IRQ 5
-mptbase: Initiating ioc0 bringup
-BUG: unable to handle kernel paging request at virtual address 00002608
- printing eip:
-c11782fd
-*pde = 00000000
-Oops: 0000 [#1]
-Modules linked in:
-CPU:    0
-EIP:    0060:[<c11782fd>]    Not tainted VLI
-EFLAGS: 00010046   (2.6.17-rc1-16M #2)
-EIP is at mptscsih_io_done+0x27/0x3a3
-eax: c4fed000   ebx: c4fed000   ecx: 00002600   edx: 00000298
-esi: c11782d6   edi: 00002600   ebp: 00000000   esp: c1332f74
-ds: 007b   es: 007b   ss: 0068
-Process swapper (pid: 0, threadinfo=c1332000 task=c128f9c0) Stack: <0>0000006c 00000020 00000298 00002600 c4fed000 c4fed000 c11782d6 0000260 0
-       00000000 c1172c49 c4fed000 c1305b40 00000005 00000000 c1172d75 c48877e0
-       c1029687 00000000 c1307fb8 00000000 c1305a00 00000001 00000000 c1307fb8
-Call Trace:
- <c11782d6> mptscsih_io_done+0x0/0x3a3   <c1172c49> mpt_turbo_reply+0xbb/0xd3
- <c1172d75> mpt_interrupt+0x22/0x2b   <c1029687> misrouted_irq+0x63/0xcb
- <c10297b3> note_interrupt+0x43/0x98   <c10292f9> __do_IRQ+0x68/0x8f
- <c1003fac> do_IRQ+0x36/0x4e
- =======================
- <c1002aa6> common_interrupt+0x1a/0x20   <c1001150> mwait_idle+0x1a/0x2a
- <c10010bf> cpu_idle+0x40/0x5c   <c1308610> start_kernel+0x17a/0x17c Code: 5e 5f 5d c3 55 89 cd 57 56 53 83 ec 14 89 54 24 0c 89 44 24 10 8b 90 cc 00  00 00 8b 4c 24 0c 81 c2 98 02 00 00 85 ed 89 54 24 08 <0f> b7 79 08 89 fe 74 04  0f b7 75 08 66 39 f7 75 0d 8b 44 24 0c
-*******************************************************************************
+Also, the patch contains several minor/cosmetic changes besides this.
 
-o Kdump capture kernel boot fails during initialization of MPT fusion driver.
-  (LSI Logic / Symbios Logic SAS1064E PCI-Express Fusion-MPT SAS (rev 01))
-
-o Problem is easily reproducible, if system crashed while some disk activity
-  like cp operation was going on.
-
-o After a system crash, devices are not shutdown and capture kenrel starts
-  booting while skipping BIOS. Hence underlying device is left in operational
-  state. In this case scsi contoller was left with interrupt line asserted
-  reply FIFO was not empty. When driver starts initializing in the second
-  kernel, it receives the interrupt the moment request_irq() is called.
-  Interrupt handler, reads the message from reply FIFO and tries to access
-  the associated message frame and panics, as in the new kernel's context
-  that message frame is not valid at all.
-
-o In this scenario, probably we should delay the request_irq() call. First
-  bring up the IOC, reset it if needed and then should register for irq.
-
-o I have tested the patch with SAS1064E and 53c1030 controllers.
-
-Signed-off-by: Vivek Goyal <vgoyal@in.ibm.com>
-Cc: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Signed-off-by: Seokmann Ju <seokmann.ju@lsil.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/message/fusion/mptbase.c |   88 ++++++++++++++++-------------
- 1 files changed, 50 insertions(+), 38 deletions(-)
+ Documentation/scsi/ChangeLog.megaraid |   25 ++++++++++
+ drivers/scsi/megaraid/megaraid_mbox.c |   59 ++++++++++++++++--------
+ drivers/scsi/megaraid/megaraid_mbox.h |    7 ++
+ 3 files changed, 71 insertions(+), 20 deletions(-)
 
-diff -puN drivers/message/fusion/mptbase.c~mpt-fusion-driver-initialization-failure-fix drivers/message/fusion/mptbase.c
---- 25/drivers/message/fusion/mptbase.c~mpt-fusion-driver-initialization-failure-fix	Wed Apr 26 14:31:26 2006
-+++ 25-akpm/drivers/message/fusion/mptbase.c	Wed Apr 26 14:31:26 2006
-@@ -1386,39 +1386,6 @@ mpt_attach(struct pci_dev *pdev, const s
- 	/* Set lookup ptr. */
- 	list_add_tail(&ioc->list, &ioc_list);
- 
--	ioc->pci_irq = -1;
--	if (pdev->irq) {
--		if (mpt_msi_enable && !pci_enable_msi(pdev))
--			printk(MYIOC_s_INFO_FMT "PCI-MSI enabled\n", ioc->name);
--
--		r = request_irq(pdev->irq, mpt_interrupt, SA_SHIRQ, ioc->name, ioc);
--
--		if (r < 0) {
--#ifndef __sparc__
--			printk(MYIOC_s_ERR_FMT "Unable to allocate interrupt %d!\n",
--					ioc->name, pdev->irq);
--#else
--			printk(MYIOC_s_ERR_FMT "Unable to allocate interrupt %s!\n",
--					ioc->name, __irq_itoa(pdev->irq));
--#endif
--			list_del(&ioc->list);
--			iounmap(mem);
--			kfree(ioc);
--			return -EBUSY;
--		}
--
--		ioc->pci_irq = pdev->irq;
--
--		pci_set_master(pdev);			/* ?? */
--		pci_set_drvdata(pdev, ioc);
--
--#ifndef __sparc__
--		dprintk((KERN_INFO MYNAM ": %s installed at interrupt %d\n", ioc->name, pdev->irq));
--#else
--		dprintk((KERN_INFO MYNAM ": %s installed at interrupt %s\n", ioc->name, __irq_itoa(pdev->irq)));
--#endif
--	}
--
- 	/* Check for "bound ports" (929, 929X, 1030, 1035) to reduce redundant resets.
- 	 */
- 	mpt_detect_bound_ports(ioc, pdev);
-@@ -1428,11 +1395,7 @@ mpt_attach(struct pci_dev *pdev, const s
- 		printk(KERN_WARNING MYNAM
- 		  ": WARNING - %s did not initialize properly! (%d)\n",
- 		  ioc->name, r);
--
- 		list_del(&ioc->list);
--		free_irq(ioc->pci_irq, ioc);
--		if (mpt_msi_enable)
--			pci_disable_msi(pdev);
- 		if (ioc->alt_ioc)
- 			ioc->alt_ioc->alt_ioc = NULL;
- 		iounmap(mem);
-@@ -1636,6 +1599,7 @@ mpt_do_ioc_recovery(MPT_ADAPTER *ioc, u3
- 	int	 handlers;
- 	int	 ret = 0;
- 	int	 reset_alt_ioc_active = 0;
-+	int	 irq_allocated = 0;
- 
- 	printk(KERN_INFO MYNAM ": Initiating %s %s\n",
- 			ioc->name, reason==MPT_HOSTEVENT_IOC_BRINGUP ? "bringup" : "recovery");
-@@ -1719,6 +1683,48 @@ mpt_do_ioc_recovery(MPT_ADAPTER *ioc, u3
- 		}
- 	}
- 
-+	/*
-+	 * Device is reset now. It must have de-asserted the interrupt line
-+	 * (if it was asserted) and it should be safe to register for the
-+	 * interrupt now.
-+	 */
-+	if ((ret == 0) && (reason == MPT_HOSTEVENT_IOC_BRINGUP)) {
-+		ioc->pci_irq = -1;
-+		if (ioc->pcidev->irq) {
-+			if (mpt_msi_enable && !pci_enable_msi(ioc->pcidev))
-+				printk(MYIOC_s_INFO_FMT "PCI-MSI enabled\n",
-+					ioc->name);
-+			rc = request_irq(ioc->pcidev->irq, mpt_interrupt,
-+					SA_SHIRQ, ioc->name, ioc);
-+			if (rc < 0) {
-+#ifndef __sparc__
-+				printk(MYIOC_s_ERR_FMT "Unable to allocate "
-+					"interrupt %d!\n", ioc->name,
-+					ioc->pcidev->irq);
-+#else
-+				printk(MYIOC_s_ERR_FMT "Unable to allocate "
-+					"interrupt %s!\n", ioc->name,
-+					__irq_itoa(ioc->pcidev->irq));
-+#endif
-+				if (mpt_msi_enable)
-+					pci_disable_msi(ioc->pcidev);
-+				return -EBUSY;
-+			}
-+			irq_allocated = 1;
-+			ioc->pci_irq = ioc->pcidev->irq;
-+			pci_set_master(ioc->pcidev);		/* ?? */
-+			pci_set_drvdata(ioc->pcidev, ioc);
-+#ifndef __sparc__
-+			dprintk((KERN_INFO MYNAM ": %s installed at interrupt "
-+				"%d\n", ioc->name, ioc->pcidev->irq));
-+#else
-+			dprintk((KERN_INFO MYNAM ": %s installed at interrupt "
-+				"%s\n", ioc->name,
-+				__irq_itoa(ioc->pcidev->irq)));
-+#endif
-+		}
-+	}
+diff -puN Documentation/scsi/ChangeLog.megaraid~megaraid_mmmbox-fix-a-bug-in-reset-handler Documentation/scsi/ChangeLog.megaraid
+--- devel/Documentation/scsi/ChangeLog.megaraid~megaraid_mmmbox-fix-a-bug-in-reset-handler	2006-04-17 21:42:59.000000000 -0700
++++ devel-akpm/Documentation/scsi/ChangeLog.megaraid	2006-04-17 21:42:59.000000000 -0700
+@@ -1,3 +1,28 @@
++Release Date	: Mon Apr 11 12:27:22 EST 2006 - Seokmann Ju <sju@lsil.com>
++Current Version : 2.20.4.8 (scsi module), 2.20.2.6 (cmm module)
++Older Version	: 2.20.4.7 (scsi module), 2.20.2.6 (cmm module)
 +
- 	/* Prime reply & request queues!
- 	 * (mucho alloc's) Must be done prior to
- 	 * init as upper addresses are needed for init.
-@@ -1818,7 +1824,7 @@ mpt_do_ioc_recovery(MPT_ADAPTER *ioc, u3
- 				ret = mptbase_sas_persist_operation(ioc,
- 				    MPI_SAS_OP_CLEAR_NOT_PRESENT);
- 				if(ret != 0)
--					return -1;
-+					goto out;
- 			}
++1.	Fixed a bug in megaraid_reset_handler().
++	Customer reported "Unable to handle kernel NULL pointer dereference
++	at virtual address 00000000" when system goes to reset condition
++	for some reason. It happened randomly.
++	Root Cause: in the megaraid_reset_handler(), there is possibility not
++	returning pending packets in the pend_list if there are multiple
++	pending packets.
++	Fix: Made the change in the driver so that it will return all packets
++	in the pend_list.
++
++2.	Added change request.
++	As found in the following URL, rmb() only didn't help the
++	problem. I had to increase the loop counter to 0xFFFFFF. (6 F's)
++	http://marc.theaimsgroup.com/?l=linux-scsi&m=110971060502497&w=2
++
++	I attached a patch for your reference, too.
++	Could you check and get this fix in your driver?
++
++	Best Regards,
++	Jun'ichi Nomura
++
+ Release Date	: Fri Nov 11 12:27:22 EST 2005 - Seokmann Ju <sju@lsil.com>
+ Current Version : 2.20.4.7 (scsi module), 2.20.2.6 (cmm module)
+ Older Version	: 2.20.4.6 (scsi module), 2.20.2.6 (cmm module)
+diff -puN drivers/scsi/megaraid/megaraid_mbox.c~megaraid_mmmbox-fix-a-bug-in-reset-handler drivers/scsi/megaraid/megaraid_mbox.c
+--- devel/drivers/scsi/megaraid/megaraid_mbox.c~megaraid_mmmbox-fix-a-bug-in-reset-handler	2006-04-17 21:42:59.000000000 -0700
++++ devel-akpm/drivers/scsi/megaraid/megaraid_mbox.c	2006-04-17 21:42:59.000000000 -0700
+@@ -10,7 +10,7 @@
+  *	   2 of the License, or (at your option) any later version.
+  *
+  * FILE		: megaraid_mbox.c
+- * Version	: v2.20.4.7 (Nov 14 2005)
++ * Version	: v2.20.4.8 (Apr 11 2006)
+  *
+  * Authors:
+  * 	Atul Mukker		<Atul.Mukker@lsil.com>
+@@ -2278,6 +2278,7 @@ megaraid_mbox_dpc(unsigned long devp)
+ 	unsigned long		flags;
+ 	uint8_t			c;
+ 	int			status;
++	uioc_t			*kioc;
  
- 			/* Find IM volumes
-@@ -1899,6 +1905,12 @@ mpt_do_ioc_recovery(MPT_ADAPTER *ioc, u3
- 		/* FIXME?  Examine results here? */
+ 
+ 	if (!adapter) return;
+@@ -2320,6 +2321,9 @@ megaraid_mbox_dpc(unsigned long devp)
+ 			// remove from local clist
+ 			list_del_init(&scb->list);
+ 
++			kioc			= (uioc_t *)scb->gp;
++			kioc->status		= 0;
++
+ 			megaraid_mbox_mm_done(adapter, scb);
+ 
+ 			continue;
+@@ -2636,6 +2640,7 @@ megaraid_reset_handler(struct scsi_cmnd 
+ 	int		recovery_window;
+ 	int		recovering;
+ 	int		i;
++	uioc_t		*kioc;
+ 
+ 	adapter		= SCP2ADAPTER(scp);
+ 	raid_dev	= ADAP2RAIDDEV(adapter);
+@@ -2655,32 +2660,51 @@ megaraid_reset_handler(struct scsi_cmnd 
+ 	// Also, reset all the commands currently owned by the driver
+ 	spin_lock_irqsave(PENDING_LIST_LOCK(adapter), flags);
+ 	list_for_each_entry_safe(scb, tmp, &adapter->pend_list, list) {
+-
+ 		list_del_init(&scb->list);	// from pending list
+ 
+-		con_log(CL_ANN, (KERN_WARNING
+-			"megaraid: %ld:%d[%d:%d], reset from pending list\n",
+-				scp->serial_number, scb->sno,
+-				scb->dev_channel, scb->dev_target));
++		if (scb->sno >= MBOX_MAX_SCSI_CMDS) {
++			con_log(CL_ANN, (KERN_WARNING
++			"megaraid: IOCTL packet with %d[%d:%d] being reset\n",
++			scb->sno, scb->dev_channel, scb->dev_target));
+ 
+-		scp->result = (DID_RESET << 16);
+-		scp->scsi_done(scp);
++			scb->status = -1;
+ 
+-		megaraid_dealloc_scb(adapter, scb);
++			kioc			= (uioc_t *)scb->gp;
++			kioc->status		= -EFAULT;
++
++			megaraid_mbox_mm_done(adapter, scb);
++		} else {
++			if (scb->scp == scp) {	// Found command
++				con_log(CL_ANN, (KERN_WARNING
++					"megaraid: %ld:%d[%d:%d], reset from pending list\n",
++					scp->serial_number, scb->sno,
++					scb->dev_channel, scb->dev_target));
++			} else {
++				con_log(CL_ANN, (KERN_WARNING
++				"megaraid: IO packet with %d[%d:%d] being reset\n",
++				scb->sno, scb->dev_channel, scb->dev_target));
++			}
++
++			scb->scp->result = (DID_RESET << 16);
++			scb->scp->scsi_done(scb->scp);
++
++			megaraid_dealloc_scb(adapter, scb);
++		}
+ 	}
+ 	spin_unlock_irqrestore(PENDING_LIST_LOCK(adapter), flags);
+ 
+ 	if (adapter->outstanding_cmds) {
+ 		con_log(CL_ANN, (KERN_NOTICE
+ 			"megaraid: %d outstanding commands. Max wait %d sec\n",
+-			adapter->outstanding_cmds, MBOX_RESET_WAIT));
++			adapter->outstanding_cmds,
++			(MBOX_RESET_WAIT + MBOX_RESET_EXT_WAIT)));
  	}
  
-+out:
-+	if ((ret != 0) && irq_allocated) {
-+		free_irq(ioc->pci_irq, ioc);
-+		if (mpt_msi_enable)
-+			pci_disable_msi(ioc->pcidev);
-+	}
- 	return ret;
- }
+ 	recovery_window = MBOX_RESET_WAIT + MBOX_RESET_EXT_WAIT;
  
+ 	recovering = adapter->outstanding_cmds;
+ 
+-	for (i = 0; i < recovery_window && adapter->outstanding_cmds; i++) {
++	for (i = 0; i < recovery_window; i++) {
+ 
+ 		megaraid_ack_sequence(adapter);
+ 
+@@ -2689,12 +2713,11 @@ megaraid_reset_handler(struct scsi_cmnd 
+ 			con_log(CL_ANN, (
+ 			"megaraid mbox: Wait for %d commands to complete:%d\n",
+ 				adapter->outstanding_cmds,
+-				MBOX_RESET_WAIT - i));
++				(MBOX_RESET_WAIT + MBOX_RESET_EXT_WAIT) - i));
+ 		}
+ 
+ 		// bailout if no recovery happended in reset time
+-		if ((i == MBOX_RESET_WAIT) &&
+-			(recovering == adapter->outstanding_cmds)) {
++		if (adapter->outstanding_cmds == 0) {
+ 			break;
+ 		}
+ 
+@@ -2918,12 +2941,13 @@ mbox_post_sync_cmd_fast(adapter_t *adapt
+ 	wmb();
+ 	WRINDOOR(raid_dev, raid_dev->mbox_dma | 0x1);
+ 
+-	for (i = 0; i < 0xFFFFF; i++) {
++	for (i = 0; i < MBOX_SYNC_WAIT_CNT; i++) {
+ 		if (mbox->numstatus != 0xFF) break;
+ 		rmb();
++		udelay(MBOX_SYNC_DELAY_200);
+ 	}
+ 
+-	if (i == 0xFFFFF) {
++	if (i == MBOX_SYNC_WAIT_CNT) {
+ 		// We may need to re-calibrate the counter
+ 		con_log(CL_ANN, (KERN_CRIT
+ 			"megaraid: fast sync command timed out\n"));
+@@ -3475,7 +3499,7 @@ megaraid_cmm_register(adapter_t *adapter
+ 	adp.drvr_data		= (unsigned long)adapter;
+ 	adp.pdev		= adapter->pdev;
+ 	adp.issue_uioc		= megaraid_mbox_mm_handler;
+-	adp.timeout		= 300;
++	adp.timeout		= MBOX_RESET_WAIT + MBOX_RESET_EXT_WAIT;
+ 	adp.max_kioc		= MBOX_MAX_USER_CMDS;
+ 
+ 	if ((rval = mraid_mm_register_adp(&adp)) != 0) {
+@@ -3702,7 +3726,6 @@ megaraid_mbox_mm_done(adapter_t *adapter
+ 	unsigned long		flags;
+ 
+ 	kioc			= (uioc_t *)scb->gp;
+-	kioc->status		= 0;
+ 	mbox64			= (mbox64_t *)(unsigned long)kioc->cmdbuf;
+ 	mbox64->mbox32.status	= scb->status;
+ 	raw_mbox		= (uint8_t *)&mbox64->mbox32;
+diff -puN drivers/scsi/megaraid/megaraid_mbox.h~megaraid_mmmbox-fix-a-bug-in-reset-handler drivers/scsi/megaraid/megaraid_mbox.h
+--- devel/drivers/scsi/megaraid/megaraid_mbox.h~megaraid_mmmbox-fix-a-bug-in-reset-handler	2006-04-17 21:42:59.000000000 -0700
++++ devel-akpm/drivers/scsi/megaraid/megaraid_mbox.h	2006-04-17 21:42:59.000000000 -0700
+@@ -21,8 +21,8 @@
+ #include "megaraid_ioctl.h"
+ 
+ 
+-#define MEGARAID_VERSION	"2.20.4.7"
+-#define MEGARAID_EXT_VERSION	"(Release Date: Mon Nov 14 12:27:22 EST 2005)"
++#define MEGARAID_VERSION	"2.20.4.8"
++#define MEGARAID_EXT_VERSION	"(Release Date: Mon Apr 11 12:27:22 EST 2006)"
+ 
+ 
+ /*
+@@ -100,6 +100,9 @@
+ #define MBOX_BUSY_WAIT		10	// max usec to wait for busy mailbox
+ #define MBOX_RESET_WAIT		180	// wait these many seconds in reset
+ #define MBOX_RESET_EXT_WAIT	120	// extended wait reset
++#define MBOX_SYNC_WAIT_CNT	0xFFFF	// wait loop index for synchronous mode
++
++#define MBOX_SYNC_DELAY_200	200	// 200 micro-seconds
+ 
+ /*
+  * maximum transfer that can happen through the firmware commands issued
 _
