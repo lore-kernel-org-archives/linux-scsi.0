@@ -1,319 +1,71 @@
 From: akpm@osdl.org
-Subject: [patch 16/20] scsi: remove Documentation/scsi/cpqfc.txt
-Date: Thu, 27 Apr 2006 02:33:08 -0700
-Message-ID: <200604270934.k3R9Yatg025482@shell0.pdx.osdl.net>
+Subject: [patch 19/20] scsi: clean up warnings in Advansys driver
+Date: Thu, 27 Apr 2006 02:33:11 -0700
+Message-ID: <200604270934.k3R9YdEa025491@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:12496 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S965039AbWD0Jev (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:16336 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S965040AbWD0Jez (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Apr 2006 05:34:51 -0400
+	Thu, 27 Apr 2006 05:34:55 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, apgo@patchbomb.org, James.Bottomley@steeleye.com, mkp@mkp.net
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, ken@krwtech.com
 
 
-From: apgo@patchbomb.org (Arthur Othieno)
+From: Ken Witherow <ken@krwtech.com>
 
-cpqfc driver flushed out with: [SCSI] remove broken driver cpqfc (commit
-ca61f10ab2b874b889e89d14ea09fae2dcccdca6) but somehow
-Documentation/scsi/cpqfc.txt managed to survive the blast.
+Fix typecast warnings and switch from check_region to request_region
 
-Signed-off-by: Arthur Othieno <apgo@patchbomb.org>
-Cc: Martin K. Petersen <mkp@mkp.net>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>
+Signed-off-by: Ken Witherow <ken@krwtech.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- dev/null                    |  272 ----------------------------------
- Documentation/scsi/00-INDEX |    2 
- 2 files changed, 274 deletions(-)
+ drivers/scsi/advansys.c |    7 +++++--
+ 1 files changed, 5 insertions(+), 2 deletions(-)
 
-diff -puN Documentation/scsi/00-INDEX~scsi-remove-documentation-scsi-cpqfctxt Documentation/scsi/00-INDEX
---- devel/Documentation/scsi/00-INDEX~scsi-remove-documentation-scsi-cpqfctxt	2006-04-20 00:04:36.000000000 -0700
-+++ devel-akpm/Documentation/scsi/00-INDEX	2006-04-20 00:04:36.000000000 -0700
-@@ -30,8 +30,6 @@ aic7xxx.txt
- 	- info on driver for Adaptec controllers
- aic7xxx_old.txt
- 	- info on driver for Adaptec controllers, old generation
--cpqfc.txt
--	- info on driver for Compaq Tachyon TS adapters
- dpti.txt
- 	- info on driver for DPT SmartRAID and Adaptec I2O RAID based adapters
- dtc3x80.txt
-diff -L Documentation/scsi/cpqfc.txt -puN Documentation/scsi/cpqfc.txt~scsi-remove-documentation-scsi-cpqfctxt /dev/null
---- devel/Documentation/scsi/cpqfc.txt
-+++ /dev/null	2003-09-15 06:40:47.000000000 -0700
-@@ -1,272 +0,0 @@
--Notes for CPQFCTS driver for Compaq Tachyon TS
--Fibre Channel Host Bus Adapter, PCI 64-bit, 66MHz
--for Linux (RH 6.1, 6.2 kernel 2.2.12-32, 2.2.14-5)
--SMP tested
--Tested in single and dual HBA configuration, 32 and 64bit busses,
--33 and 66MHz.  Only supports FC-AL.
--SEST size 512 Exchanges (simultaneous I/Os) limited by module kmalloc() 
--	max of 128k bytes contiguous.
--
--Ver 2.5.4  Oct 03, 2002
--   * fixed memcpy of sense buffer in ioctl to copy the smaller defined size
--Ver 2.5.3  Aug 01, 2002
--   * fix the passthru ioctl to handle the Scsi_Cmnd->request being a pointer
--Ver 2.5.1  Jul 30, 2002
--   * fix ioctl to pay attention to the specified LUN.
--Ver 2.5.0  Nov 29, 2001
--   * eliminated io_request_lock.  This change makes the driver specific
--     to the 2.5.x kernels.
--   * silenced excessively noisy printks.
--
--Ver 2.1.2  July 23, 2002
--   * initialize DumCmnd->lun in cpqfcTS_ioctl (used in fcFindLoggedInPorts as LUN index)
--
--Ver 2.1.1  Oct 18, 2001
--   * reinitialize Cmnd->SCp.sent_command (used to identify commands as
--     passthrus) on calling scsi_done, since the scsi mid layer does not
--     use (or reinitialize) this field to prevent subsequent comands from
--     having it set incorrectly. 
--
--Ver 2.1.0  Aug 27, 2001
--   * Revise driver to use new kernel 2.4.x PCI DMA API, instead of 
--     virt_to_bus().  (enables driver to work w/ ia64 systems with >2Gb RAM.)
--     Rework main scatter-gather code to handle cases where SG element
--     lengths are larger than 0x7FFFF bytes and use as many scatter 
--     gather pages as necessary. (Steve Cameron)
--   * Makefile changes to bring cpqfc into line w/ rest of SCSI drivers
--     (thanks to Keith Owens)
--
--Ver 2.0.5  Aug 06, 2001
--   * Reject non-existent luns in the driver rather than letting the 
--     hardware do it.  (some HW behaves differently than others in this area.)
--   * Changed Makefile to rely on "make dep" instead of explicit dependencies
--   * ifdef'ed out fibre channel analyzer triggering debug code
--   * fixed a jiffies wrapping issue
--
--Ver 2.0.4  Aug 01, 2001
--   * Incorporated fix for target device reset from Steeleye
--   * Fixed passthrough ioctl so it doesn't hang.
--   * Fixed hang in launch_FCworker_thread() that occurred on some machines.
--   * Avoid problem when number of volumes in a single cabinet > 8
--
--Ver 2.0.2  July 23, 2001
--   Changed the semiphore changes so the driver would compile in 2.4.7. 
--   This version is for 2.4.7 and beyond. 
-- 
--Ver 2.0.1  May 	7, 2001
--   Merged version 1.3.6 fixes into version 2.0.0.   
--
--Ver 2.0.0  May   7, 2001
--  Fixed problem so spinlock is being initialized to UNLOCKED. 
--  Fixed updated driver so it compiles in the 2.4 tree. 
-- 
-- Ver 1.3.6  Feb  27, 2001
--   Added Target_Device_Reset function for SCSI error handling
--   Fixed problem with not reseting addressing mode after implicit logout
-- 
--
--Ver 1.3.4  Sep   7, 2000
--  Added Modinfo information
--  Fixed problem with statically linking the driver
--
--Ver 1.3.3, Aug  23, 2000
--  Fixed device/function number in ioctl
--
--Ver 1.3.2, July 27, 2000
--  Add include for Alpha compile on 2.2.14 kernel (cpq*i2c.c)
--  Change logic for different FCP-RSP sense_buffer location for HSG80 target
--  And search for Agilent Tachyon XL2 HBAs (not finished! - in test)
--
--Tested with 
--(storage):
--           Compaq RA-4x000, RAID firmware ver 2.40 - 2.54
--           Seagate FC drives model ST39102FC, rev 0006
--           Hitachi DK31CJ-72FC rev J8A8
--           IBM DDYF-T18350R rev F60K
--           Compaq FC-SCSI bridge w/ DLT 35/70 Gb DLT (tape)
--(servers):
--           Compaq PL-1850R
--           Compaq PL-6500 Xeon (400MHz)
--	   Compaq PL-8500 (500MHz, 66MHz, 64bit PCI)
--           Compaq Alpha DS20 (RH 6.1)
--(hubs):
--           Vixel Rapport 1000 (7-port "dumb")
--	   Gadzoox Gibralter (12-port "dumb")
--	   Gadzoox Capellix 2000, 3000 
--(switches):
--           Brocade 2010, 2400, 2800, rev 2.0.3a (& later)
--           Gadzoox 3210 (Fabric blade beta)
--           Vixel 7100 (Fabric beta firmare - known hot plug issues)
--using "qa_test" (esp. io_test script) suite modified from Unix tests.
--	
--Installation:
--make menuconfig
--  (select SCSI low-level, Compaq FC HBA)
--make modules
--make modules_install
--
--e.g. insmod -f cpqfc
--
--Due to Fabric/switch delays, driver requires 4 seconds 
--to initialize.  If adapters are found, there will be a entries at
--/proc/scsi/cpqfcTS/*
--
--sample contents of startup messages
--
--*************************
-- scsi_register allocating 3596 bytes for CPQFCHBA
-- ioremap'd Membase: c887e600
--  HBA Tachyon RevId 1.2
--Allocating 119808 for 576 Exchanges @ c0dc0000
--Allocating 112904 for LinkQ @ c0c20000 (576 elements)
--Allocating 110600 for TachSEST for 512 Exchanges
--  cpqfcTS: writing IMQ BASE 7C0000h    PI 7C4000h
--  cpqfcTS: SEST c0e40000(virt): Wrote base E40000h @ c887e740
--cpqfcTS: New FC port 0000E8h WWN: 500507650642499D SCSI Chan/Trgt 0/0
--cpqfcTS: New FC port 0000EFh WWN: 50000E100000D5A6 SCSI Chan/Trgt 0/1
--cpqfcTS: New FC port 0000E4h WWN: 21000020370097BB SCSI Chan/Trgt 0/2
--cpqfcTS: New FC port 0000E2h WWN: 2100002037009946 SCSI Chan/Trgt 0/3
--cpqfcTS: New FC port 0000E1h WWN: 21000020370098FE SCSI Chan/Trgt 0/4
--cpqfcTS: New FC port 0000E0h WWN: 21000020370097B2 SCSI Chan/Trgt 0/5
--cpqfcTS: New FC port 0000DCh WWN: 2100002037006CC1 SCSI Chan/Trgt 0/6
--cpqfcTS: New FC port 0000DAh WWN: 21000020370059F6 SCSI Chan/Trgt 0/7
--cpqfcTS: New FC port 00000Fh WWN: 500805F1FADB0E20 SCSI Chan/Trgt 0/8
--cpqfcTS: New FC port 000008h WWN: 500805F1FADB0EBA SCSI Chan/Trgt 0/9
--cpqfcTS: New FC port 000004h WWN: 500805F1FADB1EB9 SCSI Chan/Trgt 0/10
--cpqfcTS: New FC port 000002h WWN: 500805F1FADB1ADE SCSI Chan/Trgt 0/11
--cpqfcTS: New FC port 000001h WWN: 500805F1FADBA2CA SCSI Chan/Trgt 0/12
--scsi4 : Compaq FibreChannel HBA Tachyon TS HPFC-5166A/1.2: WWN 500508B200193F50
-- on PCI bus 0 device 0xa0fc irq 5 IObaseL 0x3400, MEMBASE 0xc6ef8600
--PCI bus width 32 bits, bus speed 33 MHz
--FCP-SCSI Driver v1.3.0
--GBIC detected: Short-wave.  LPSM 0h Monitor
--scsi : 5 hosts.
--  Vendor: IBM       Model: DDYF-T18350R      Rev: F60K
--  Type:   Direct-Access                      ANSI SCSI revision: 03
--Detected scsi disk sdb at scsi4, channel 0, id 0, lun 0
--  Vendor: HITACHI   Model: DK31CJ-72FC       Rev: J8A8
--  Type:   Direct-Access                      ANSI SCSI revision: 02
--Detected scsi disk sdc at scsi4, channel 0, id 1, lun 0
--  Vendor: SEAGATE   Model: ST39102FC         Rev: 0006
--  Type:   Direct-Access                      ANSI SCSI revision: 02
--Detected scsi disk sdd at scsi4, channel 0, id 2, lun 0
--  Vendor: SEAGATE   Model: ST39102FC         Rev: 0006
--  Type:   Direct-Access                      ANSI SCSI revision: 02
--Detected scsi disk sde at scsi4, channel 0, id 3, lun 0
--  Vendor: SEAGATE   Model: ST39102FC         Rev: 0006
--  Type:   Direct-Access                      ANSI SCSI revision: 02
--Detected scsi disk sdf at scsi4, channel 0, id 4, lun 0
--  Vendor: SEAGATE   Model: ST39102FC         Rev: 0006
--  Type:   Direct-Access                      ANSI SCSI revision: 02
--Detected scsi disk sdg at scsi4, channel 0, id 5, lun 0
--  Vendor: SEAGATE   Model: ST39102FC         Rev: 0006
--  Type:   Direct-Access                      ANSI SCSI revision: 02
--Detected scsi disk sdh at scsi4, channel 0, id 6, lun 0
--  Vendor: SEAGATE   Model: ST39102FC         Rev: 0006
--  Type:   Direct-Access                      ANSI SCSI revision: 02
--Detected scsi disk sdi at scsi4, channel 0, id 7, lun 0
--  Vendor: COMPAQ    Model: LOGICAL VOLUME    Rev: 2.48
--  Type:   Direct-Access                      ANSI SCSI revision: 02
--Detected scsi disk sdj at scsi4, channel 0, id 8, lun 0
--  Vendor: COMPAQ    Model: LOGICAL VOLUME    Rev: 2.48
--  Type:   Direct-Access                      ANSI SCSI revision: 02
--Detected scsi disk sdk at scsi4, channel 0, id 8, lun 1
--  Vendor: COMPAQ    Model: LOGICAL VOLUME    Rev: 2.40
--  Type:   Direct-Access                      ANSI SCSI revision: 02
--Detected scsi disk sdl at scsi4, channel 0, id 9, lun 0
--  Vendor: COMPAQ    Model: LOGICAL VOLUME    Rev: 2.40
--  Type:   Direct-Access                      ANSI SCSI revision: 02
--Detected scsi disk sdm at scsi4, channel 0, id 9, lun 1
--  Vendor: COMPAQ    Model: LOGICAL VOLUME    Rev: 2.54
--  Type:   Direct-Access                      ANSI SCSI revision: 02
--Detected scsi disk sdn at scsi4, channel 0, id 10, lun 0
--  Vendor: COMPAQ    Model: LOGICAL VOLUME    Rev: 2.54
--  Type:   Direct-Access                      ANSI SCSI revision: 02
--Detected scsi disk sdo at scsi4, channel 0, id 11, lun 0
--  Vendor: COMPAQ    Model: LOGICAL VOLUME    Rev: 2.54
--  Type:   Direct-Access                      ANSI SCSI revision: 02
--Detected scsi disk sdp at scsi4, channel 0, id 11, lun 1
--  Vendor: COMPAQ    Model: LOGICAL VOLUME    Rev: 2.54
--  Type:   Direct-Access                      ANSI SCSI revision: 02
--Detected scsi disk sdq at scsi4, channel 0, id 12, lun 0
--  Vendor: COMPAQ    Model: LOGICAL VOLUME    Rev: 2.54
--  Type:   Direct-Access                      ANSI SCSI revision: 02
--Detected scsi disk sdr at scsi4, channel 0, id 12, lun 1
--resize_dma_pool: unknown device type 12
--resize_dma_pool: unknown device type 12
--SCSI device sdb: hdwr sector= 512 bytes. Sectors= 35843670 [17501 MB] [17.5 GB]
-- sdb: sdb1
--SCSI device sdc: hdwr sector= 512 bytes. Sectors= 144410880 [70513 MB] [70.5 GB]
-- sdc: sdc1
--SCSI device sdd: hdwr sector= 512 bytes. Sectors= 17783240 [8683 MB] [8.7 GB]
-- sdd: sdd1
--SCSI device sde: hdwr sector= 512 bytes. Sectors= 17783240 [8683 MB] [8.7 GB]
-- sde: sde1
--SCSI device sdf: hdwr sector= 512 bytes. Sectors= 17783240 [8683 MB] [8.7 GB]
-- sdf: sdf1
--SCSI device sdg: hdwr sector= 512 bytes. Sectors= 17783240 [8683 MB] [8.7 GB]
-- sdg: sdg1
--SCSI device sdh: hdwr sector= 512 bytes. Sectors= 17783240 [8683 MB] [8.7 GB]
-- sdh: sdh1
--SCSI device sdi: hdwr sector= 512 bytes. Sectors= 17783240 [8683 MB] [8.7 GB]
-- sdi: sdi1
--SCSI device sdj: hdwr sector= 512 bytes. Sectors= 2056160 [1003 MB] [1.0 GB]
-- sdj: sdj1
--SCSI device sdk: hdwr sector= 512 bytes. Sectors= 2052736 [1002 MB] [1.0 GB]
-- sdk: sdk1
--SCSI device sdl: hdwr sector= 512 bytes. Sectors= 17764320 [8673 MB] [8.7 GB]
-- sdl: sdl1
--SCSI device sdm: hdwr sector= 512 bytes. Sectors= 8380320 [4091 MB] [4.1 GB]
-- sdm: sdm1
--SCSI device sdn: hdwr sector= 512 bytes. Sectors= 17764320 [8673 MB] [8.7 GB]
-- sdn: sdn1
--SCSI device sdo: hdwr sector= 512 bytes. Sectors= 17764320 [8673 MB] [8.7 GB]
-- sdo: sdo1
--SCSI device sdp: hdwr sector= 512 bytes. Sectors= 17764320 [8673 MB] [8.7 GB]
-- sdp: sdp1
--SCSI device sdq: hdwr sector= 512 bytes. Sectors= 2056160 [1003 MB] [1.0 GB]
-- sdq: sdq1
--SCSI device sdr: hdwr sector= 512 bytes. Sectors= 2052736 [1002 MB] [1.0 GB]
-- sdr: sdr1
--
--*************************
--
--If a GBIC of type Short-wave, Long-wave, or Copper is detected, it will
--print out; otherwise, "none" is displayed.  If the cabling is correct
--and a loop circuit is completed, you should see "Monitor"; otherwise, 
--"LoopFail" (on open circuit) or some LPSM number/state with bit 3 set.
--
--
--ERRATA:
--1. Normally, Linux Scsi queries FC devices with INQUIRY strings.  All LUNs
--found according to INQUIRY should get READ commands at sector 0 to find
--partition table, etc.  Older kernels only query the first 4 devices.  Some
--Linux kernels only look for one LUN per target (i.e. FC device).
--
--2. Physically removing a device, or a malfunctioning system which hides a
--device, leads to a 30-second timeout and subsequent _abort call.  
--In some process contexts, this will hang the kernel (crashing the system).
--Single bit errors in frames and virtually all hot plugging events are 
--gracefully handled with internal driver timer and Abort processing.
--
--3. Some SCSI drives with error conditions will not handle the 7 second timeout
--in this software driver, leading to infinite retries on timed out SCSI commands.
--The 7 secs balances the need to quickly recover from lost frames (esp. on sequence
--initiatives) and time needed by older/slower/error-state drives in responding.
--This can be easily changed in "Exchanges[].timeOut".
--
--4. Due to the nature of FC soft addressing, there is no assurance that the 
--same LUNs (drives) will have the same path (e.g. /dev/sdb1) from one boot to
--next.  Dynamic soft address changes (i.e. 24-bit FC port_id) are
--supported during run time (e.g. due to hot plug event) by the use of WWN to
--SCSI Nexus (channel/target/LUN) mapping.
--
--5. Compaq RA4x00 firmware version 2.54 and later supports SSP (Selective 
--Storage Presentation), which maps LUNs to a WWN.  If RA4x00 firmware prior
--2.54 (e.g. older controller) is used, or the FC HBA is replaced (another WWN
--is used), logical volumes on the RA4x00 will no longer be visible.
--
--
--Send questions/comments to:
--Amy Vanzant-Hodge (fibrechannel@compaq.com)
--
+diff -puN drivers/scsi/advansys.c~scsi-clean-up-warnings-in-advansys-driver drivers/scsi/advansys.c
+--- devel/drivers/scsi/advansys.c~scsi-clean-up-warnings-in-advansys-driver	2006-04-27 02:32:20.000000000 -0700
++++ devel-akpm/drivers/scsi/advansys.c	2006-04-27 02:32:22.000000000 -0700
+@@ -4416,7 +4416,7 @@ advansys_detect(struct scsi_host_templat
+                         ASC_DBG1(1,
+                                 "advansys_detect: probing I/O port 0x%x...\n",
+                             iop);
+-                        if (check_region(iop, ASC_IOADR_GAP) != 0) {
++			if (!request_region(iop, ASC_IOADR_GAP, "advansys")){
+                             printk(
+ "AdvanSys SCSI: specified I/O Port 0x%X is busy\n", iop);
+                             /* Don't try this I/O port twice. */
+@@ -4426,6 +4426,7 @@ advansys_detect(struct scsi_host_templat
+                             printk(
+ "AdvanSys SCSI: specified I/O Port 0x%X has no adapter\n", iop);
+                             /* Don't try this I/O port twice. */
++			    release_region(iop, ASC_IOADR_GAP);
+                             asc_ioport[ioport] = 0;
+                             goto ioport_try_again;
+                         } else {
+@@ -4444,6 +4445,7 @@ advansys_detect(struct scsi_host_templat
+                                   * 'ioport' past this board.
+                                   */
+                                  ioport++;
++				 release_region(iop, ASC_IOADR_GAP);
+                                  goto ioport_try_again;
+                             }
+                         }
+@@ -9753,13 +9755,14 @@ AscSearchIOPortAddr11(
+     }
+     for (; i < ASC_IOADR_TABLE_MAX_IX; i++) {
+         iop_base = _asc_def_iop_base[i];
+-        if (check_region(iop_base, ASC_IOADR_GAP) != 0) {
++	if (!request_region(iop_base, ASC_IOADR_GAP, "advansys")){
+             ASC_DBG1(1,
+                "AscSearchIOPortAddr11: check_region() failed I/O port 0x%x\n",
+                      iop_base);
+             continue;
+         }
+         ASC_DBG1(1, "AscSearchIOPortAddr11: probing I/O port 0x%x\n", iop_base);
++	release_region(iop_base, ASC_IOADR_GAP);
+         if (AscFindSignature(iop_base)) {
+             return (iop_base);
+         }
 _
