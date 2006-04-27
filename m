@@ -1,72 +1,87 @@
-From: "Emmanuel Eleganza" <emmanueleleganza@tiscali.cz>
-Subject: Accept in good faith.
-Date: Thu, 27 Apr 2006 23:21:58 +0100
-Message-ID: <443E4BCB0001D386__10434.3881867409$1146176563$gmane$org@nzoth.tiscali.cz>
-Reply-To: joelzuma112@yahoo.com
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: [PATCH] qla2xxx: Correct eh_abort recovery logic.
+Date: Thu, 27 Apr 2006 16:25:30 -0700
+Message-ID: <20060427232530.GV3956@andrew-vasquezs-powerbook-g4-15.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nzoth.tiscali.cz ([213.235.135.69]:57235 "EHLO mail.tiscali.cz")
-	by vger.kernel.org with ESMTP id S1751659AbWD0WW0 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Apr 2006 18:22:26 -0400
+Received: from pat.qlogic.com ([198.70.193.2]:52465 "EHLO avexch01.qlogic.com")
+	by vger.kernel.org with ESMTP id S1751720AbWD0XZc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Apr 2006 19:25:32 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <james.bottomley@steeleye.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: Michael Reed <mdr@sgi.com>
 
-Goodday,
+From: Michael Reed <mdr@sgi.com>
 
-I got your contact over the internet as a=20
-trustworthy and reliable person.please pay=20
-attention and understand my reason of=20
-contacting you today through this email.=20
-My name is HON.EMMANUEL ELEGANZA..I am the=20
-personal solicitor to a foreinger, Late=20
-Mr. Morris Thompson ,an American who=20
-unfortunately lost his life in the plane=20
-crash of Alaska Airlines Flight 261, which=20
-crashed on January 31 2000. You may read=20
-more about the crash on visiting this C.N.N=20
-News internet website.=20
+Now that you're back, I thought I'd resend this patch to
+error recovery which fixes the driver to return SUCCESS
+if the firmware or driver doesn't have a command to abort, i.e.,
+it's already been returned.  Without this patch, error
+recovery will take the target offline as it tries
+harder and harder to get the driver to return the command
+it no longer has.
 
-http://archives.cnn.com/2000/US/02/01/alaska.
-airlines.list/=20
+Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-I desprately need your assistance to secure=20
-and move huge sums of money left behind by=20
-my late client to the tune of $85,000,000=20
-(Eight five million united states dollars).=20
-I will pay you 20% of the total sum for your=20
-coperation in this matter.I will give you more=20
-details,on your positive response, also=20
-include in your reply and acknowledgement of=20
-this mail your tel number so that we can=20
-disscuss in details. I can be reached=20
-urgently through my private mail address=20
-below.=20
+---
 
-emmaeleganza2003@kaixo.com
-
-Yours Faithfully,=20
-
-EMMANUEL ELEGANZA
-Address: 3 Presley Way
-Crownhill, Milton Keynes
-Buckinghamshire MK8 OES
-United Kingdom.
-TELEPHONE +44 702 4082191
-
-______________________________________
-Plat=EDte zbyte=E8n=EC drah=E9 povinn=E9 ru=E8en=ED? Zjist=ECte si cenu=
- v online kalkula=E8ce
-nebo na tel. 841 444 444. O bonus nep=F8ijdete, p=F8evedeme v=E1m ho.
-http://ad.tiscali.com/adclick/CID=3D0002ceb4c6efdc0e00000000/SITE=3DCZ.=
-TISCALI/AREA=3DNEWSLETTER..HOME/POS=3DL2
-
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--- 63c/drivers/scsi/qla2xxx/qla_os.c	2006-02-19 19:13:16.000000000 -0600
++++ 63/drivers/scsi/qla2xxx/qla_os.c	2006-03-23 15:17:34.523394730 -0600
+@@ -599,6 +599,7 @@
+ *    Either SUCCESS or FAILED.
+ *
+ * Note:
++*    Only return FAILED if command not returned by firmware.
+ **************************************************************************/
+ int
+ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
+@@ -609,11 +610,12 @@
+ 	unsigned int id, lun;
+ 	unsigned long serial;
+ 	unsigned long flags;
++	int wait = 0;
+ 
+ 	if (!CMD_SP(cmd))
+-		return FAILED;
++		return SUCCESS;
+ 
+-	ret = FAILED;
++	ret = SUCCESS;
+ 
+ 	id = cmd->device->id;
+ 	lun = cmd->device->lun;
+@@ -642,7 +644,7 @@
+ 		} else {
+ 			DEBUG3(printk("%s(%ld): abort_command "
+ 			    "mbx success.\n", __func__, ha->host_no));
+-			ret = SUCCESS;
++			wait = 1;
+ 		}
+ 		spin_lock_irqsave(&ha->hardware_lock, flags);
+ 
+@@ -651,17 +653,18 @@
+ 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ 
+ 	/* Wait for the command to be returned. */
+-	if (ret == SUCCESS) {
++	if (wait) {
+ 		if (qla2x00_eh_wait_on_command(ha, cmd) != QLA_SUCCESS) {
+ 			qla_printk(KERN_ERR, ha,
+ 			    "scsi(%ld:%d:%d): Abort handler timed out -- %lx "
+ 			    "%x.\n", ha->host_no, id, lun, serial, ret);
++			ret = FAILED;
+ 		}
+ 	}
+ 
+ 	qla_printk(KERN_INFO, ha,
+-	    "scsi(%ld:%d:%d): Abort command issued -- %lx %x.\n", ha->host_no,
+-	    id, lun, serial, ret);
++	    "scsi(%ld:%d:%d): Abort command issued -- %d %lx %x.\n",
++	    ha->host_no, id, lun, wait, serial, ret);
+ 
+ 	return ret;
+ }
