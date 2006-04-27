@@ -1,42 +1,58 @@
-From: "Tony Battersby" <tonyb@cybernetics.com>
-Subject: [PATCH] mptscsih: set resid for retried commands
-Date: Thu, 27 Apr 2006 14:28:38 -0400
-Message-ID: <NDBBLGKNDFLNBMEOAAANGEJBEJAF.tonyb@cybernetics.com>
-Reply-To: <tonyb@cybernetics.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [patch 1/1] drivers/scsi: fix proc_scsi_write to return
+	"length" on success with remove-single-device case
+Date: Thu, 27 Apr 2006 14:07:49 -0500
+Message-ID: <1146164869.3528.20.camel@mulgrave.il.steeleye.com>
+References: <200604262138.k3QLchcv009103@shell0.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cyborg.cybernetics.com ([206.246.200.18]:3089 "EHLO
-	cyborg.cybernetics.com") by vger.kernel.org with ESMTP
-	id S964919AbWD0S2s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Apr 2006 14:28:48 -0400
+Received: from stat9.steeleye.com ([209.192.50.41]:52443 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1750754AbWD0TIG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Apr 2006 15:08:06 -0400
+In-Reply-To: <200604262138.k3QLchcv009103@shell0.pdx.osdl.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Eric.Moore@lsil.com, mpt_linux_developer@lsil.com
-Cc: linux-scsi@vger.kernel.org
+To: akpm@osdl.org
+Cc: linux-scsi@vger.kernel.org, suzuki@in.ibm.com
 
-Most of the time, the data transfer residual is initialized to 0 before the
-SCSI command is queued, so it is not necessary to set it to 0 explicitly if
-the command completes successfully.  However, if the command fails with e.g.
-queue full status, the data transfer residual will be set to a nonzero value
-when the command is queued for retry.  This patch ensures that the residual
-is set to 0 if the retry completes successfully rather than retaining the
-residual from the first execution of the command.
+On Wed, 2006-04-26 at 14:41 -0700, akpm@osdl.org wrote:
+> +               if (!err)
+> +                       err = length;
 
---- linux-2.6.17-rc3/drivers/message/fusion/mptscsih.c.orig	2006-04-27 13:45:48.000000000 -0400
-+++ linux-2.6.17-rc3/drivers/message/fusion/mptscsih.c	2006-04-27 13:46:45.000000000 -0400
-@@ -569,7 +569,7 @@ mptscsih_io_done(MPT_ADAPTER *ioc, MPT_F
+We have more than one of these cases; we might as well accommodate them
+all at the bottom of the routine, like the attached
+
+James
+
+diff --git a/drivers/scsi/scsi_proc.c b/drivers/scsi/scsi_proc.c
+index 07be62b..55200e4 100644
+--- a/drivers/scsi/scsi_proc.c
++++ b/drivers/scsi/scsi_proc.c
+@@ -266,8 +266,6 @@ static ssize_t proc_scsi_write(struct fi
+ 		lun = simple_strtoul(p + 1, &p, 0);
  
- 	if (pScsiReply == NULL) {
- 		/* special context reply handling */
--		;
-+		sc->resid = 0;
- 	} else {
- 		u32	 xfer_cnt;
- 		u16	 status;
+ 		err = scsi_add_single_device(host, channel, id, lun);
+-		if (err >= 0)
+-			err = length;
+ 
+ 	/*
+ 	 * Usage: echo "scsi remove-single-device 0 1 2 3" >/proc/scsi/scsi
+@@ -284,6 +282,13 @@ static ssize_t proc_scsi_write(struct fi
+ 		err = scsi_remove_single_device(host, channel, id, lun);
+ 	}
+ 
++	/*
++	 * convert success returns so that we return the 
++	 * number of bytes consumed.
++	 */
++	if (!err)
++		err = length;
++
+  out:
+ 	free_page((unsigned long)buffer);
+ 	return err;
 
-Anthony J. Battersby
-Cybernetics
 
