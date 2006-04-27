@@ -1,27 +1,40 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [patch 17/20] enable advansys driver
-Date: Thu, 27 Apr 2006 14:41:51 +0100
-Message-ID: <20060427134151.GA20935@infradead.org>
-References: <200604270934.k3R9YcKZ025485@shell0.pdx.osdl.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: "Lolita Kimble" <omdw@goshawk.com>
+Subject: Quality Credit Loans hassle free
+Date: Thu, 27 Apr 2006 16:42:11 +0100
+Message-ID: <8.0.3.1.2.53758147923093.948a8809@209.132.176.167>
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:14269 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S965047AbWD0Nlx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Apr 2006 09:41:53 -0400
-Content-Disposition: inline
-In-Reply-To: <200604270934.k3R9YcKZ025485@shell0.pdx.osdl.net>
+Received: from erz83.neoplus.adsl.tpnet.pl ([83.20.119.83]:9488 "HELO
+	erz83.neoplus.adsl.tpnet.pl") by vger.kernel.org with SMTP
+	id S965040AbWD0OmD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Apr 2006 10:42:03 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@osdl.org
-Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Thu, Apr 27, 2006 at 02:33:09AM -0700, akpm@osdl.org wrote:
-> 
-> From: Andrew Morton <akpm@osdl.org>
-> 
-> Apparently it works OK.  It was marked broken because:
+Homeowner 
 
-no it doesn't.  it kinda works on some x86 setups by accident.
+
+You have been pre-approved for a $431,795 Home Loan at a 3.78 Fixed Rate. 
+This offer is being extended to you unconditionally and your credit is in no way a factor. 
+
+
+To take Advantage of this Limited Time opportunity 
+
+
+All we ask is that you visit our Website and complete 
+The 1 minute post Approval Form 
+
+
+http://www5.hi9u.net/was.asp
+
+
+Best Wishes, 
+
+
+Tad Spears
+
+
 
