@@ -1,58 +1,76 @@
-From: Mark Lord <mlord@pobox.com>
-Subject: Re: [PATCH] drivers/scsi/sd.c: fix uninitialized variable in handling
- medium errors
-Date: Thu, 27 Apr 2006 12:03:10 -0400
-Message-ID: <4450EB3E.7000902@pobox.com>
-References: <200604261627.29419.lkml@rtr.ca>	<1146092161.12914.3.camel@mulgrave.il.steeleye.com>	<20060426161444.423a8296.akpm@osdl.org>	<44500033.3010605@rtr.ca> <20060426163536.6f7bff77.akpm@osdl.org>
+From: "Randy.Dunlap" <rdunlap@xenotime.net>
+Subject: Re: aha152x(_cs) oops
+Date: Thu, 27 Apr 2006 09:19:37 -0700
+Message-ID: <20060427091937.f21c6e81.rdunlap@xenotime.net>
+References: <20060413093615.661b7018.rdunlap@xenotime.net>
+	<1144950036.3474.36.camel@mulgrave.il.steeleye.com>
+	<20060425115709.0db4332f.rdunlap@xenotime.net>
+	<Pine.LNX.4.60.0604252143550.3893@poirot.grange>
+	<20060425140327.605f22ac.rdunlap@xenotime.net>
+	<Pine.LNX.4.60.0604262202200.6890@poirot.grange>
+	<20060426132901.ec6d0952.rdunlap@xenotime.net>
+	<Pine.LNX.4.60.0604262312580.6890@poirot.grange>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from proof.pobox.com ([207.106.133.28]:11962 "EHLO proof.pobox.com")
-	by vger.kernel.org with ESMTP id S965164AbWD0QDk (ORCPT
+Received: from xenotime.net ([66.160.160.81]:54435 "HELO xenotime.net")
+	by vger.kernel.org with SMTP id S965047AbWD0QRT (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Apr 2006 12:03:40 -0400
-In-Reply-To: <20060426163536.6f7bff77.akpm@osdl.org>
+	Thu, 27 Apr 2006 12:17:19 -0400
+Received: from midway.site ([71.111.157.99]) by xenotime.net for <linux-scsi@vger.kernel.org>; Thu, 27 Apr 2006 09:17:10 -0700
+In-Reply-To: <Pine.LNX.4.60.0604262312580.6890@poirot.grange>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
 
-Andrew Morton wrote:
-> Mark Lord <lkml@rtr.ca> wrote:
->>> That's if we think -stable needs this fixed.
->> Let's say a bunch of read bio's get coalesced into a single
->> 200+ sector request.  This then fails on one single bad sector
->> out of the 200+.  Without the patch, there is a very good chance
->> that sd.c will simply fail the entire request, all 200+ sectors.
->>
->> With the patch, it will fail the first block, and then retry
->> the remaining blocks.  And repeat this until something works,
->> or until everything has failed one by one.
+On Wed, 26 Apr 2006 23:32:06 +0200 (CEST) Guennadi Liakhovetski wrote:
+
+> On Wed, 26 Apr 2006, Randy.Dunlap wrote:
 > 
-> Yowch.  I have the feeling that this'll take our EIO-handling time from
-> far-too-long to far-too-long*200.
+> > I'm using a PCMCIA (not CardBus) Adapter AP-1460 card on a new Dell
+> > notebook, with an iomega Jaz drive attached to it.
 > 
-> I am still traumatised by my recent ten-minute wait for a dodgy DVD to
-> become ejectable.
+> Ok, I attached a ZIP drive to my card...
 > 
-> I don't think -stable needs this, personally.
+> > I haven't tested without highmem.  I know that the in-kernel driver
+> > with a one-line patch works for me.  The patch forces all buffers
+> > to lowmem, by setting
+> > +       .unchecked_isa_dma              = 1,
+> > in the scsi_host_template.
+> > 
+> > I can test with a non-highmem kernel if you want me to, but I don't
+> > see much need to do that.
+> 
+> What I want to achieve with this test is see, if the stock driver works 
+> fine without highmem in the PIO case. As you know, the driver has to 
+> calculate the position in the buffer where from/to it has to transfer the 
+> data. So, by disabling highmem we would see, if those calculations are 
+> right there, that would mean we have a problem with the kmem_atomic 
+> conversion, in which case we just have to check carefully our own 
+> calculations and compare them with the stock lowmem case. Whereas, if 
+> already the stock driver has a problem with lowmem PIO, then we, probably, 
+> won't get much further without chip docs.
+> 
+> > To reproduce the error:  a kernel build will do it.  However, the
+> > easiest way (hardest on the driver) is:  mkfs.ext3 /dev/sdX4
+> 
+> Ok, just tried
+> 
+> smartctl -a -T permissive /dev/sda
+> 
+> on my Zip - and got
+> 
+> (scsi0:6:9) command sent incompletely (6/10)
+> 
+> which also looks like a case similar to yours? Whereas creating a ext3 fs 
+> + running fsck -c -f didn't produce any more output. However, this doesn't 
+> mean much.
 
-Perhaps, perhaps not.  The current behaviour is semi *random*, though.
-Sometimes it may just fail the entire request (wrong!),
-sometimes it may do the (almost as wrong) fail a block at a time
-from the beginning, until the bad sector is passed, and then succeed
-on the remainder.
+I built a kernel without highmem support and banged on the jaz drive
+quite a bit with it, without errors AFAICT.  I also did not see any
+evidence of "resend"s being needed, so it was a bit inconclusive.
 
-Ugh.
->> What I need to have happen when a request is failed due to bad-media,
->> is have it split the request into a sequence of single-block requests
->> that are passed to the LLD one at a time.  The ones with real bad
->> sectors will then be independently failed, and the rest will get done.
->>
->> Much better.  Much more complex.
-
--- 
-Mark Lord
-Real-Time Remedies Inc.
-mlord@pobox.com
+---
+~Randy
