@@ -1,106 +1,160 @@
-From: Gustavo Guillermo =?utf-8?q?P=C3=A9rez?= <gustavo@compunauta.com>
-Subject: Re: SCSI trow USB-STORAGE or SBP2 Debug for buggy device Kernels 2.6.X
-Date: Thu, 27 Apr 2006 12:40:35 -0500
-Message-ID: <200604271240.35274.gustavo@compunauta.com>
-References: <200604241029.14932.gustavo@compunauta.com> <200604251641.54084.gustavo@compunauta.com> <1146001711.3529.58.camel@mulgrave.il.steeleye.com>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [2.6 patch] drivers/scsi/advansys.c: cleanups
+Date: Thu, 27 Apr 2006 19:57:23 +0200
+Message-ID: <20060427175723.GG3570@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from compunauta.com ([69.36.170.169]:55220 "EHLO compunauta.com")
-	by vger.kernel.org with ESMTP id S965163AbWD0Rkt convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Apr 2006 13:40:49 -0400
-In-Reply-To: <1146001711.3529.58.camel@mulgrave.il.steeleye.com>
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:64517 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S965020AbWD0R5Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Apr 2006 13:57:25 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org
+To: James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-El Martes, 25 de Abril de 2006 16:48, James Bottomley escribi=C3=B3:
-> OK ... My best guess has to be that this device accepted and complete=
-d
-> the command but is still processing it on the medium, hence the retur=
-n.
-> Try the attached; I think it makes for these cases.  I could be
-> persuaded to drop format and reconstruction in progress, because thos=
-e
-> can be *very* long operations.
-I was having power source failures on my neighborhood, and I was not ha=
-ving=20
-time to test it, today the Company was replaced the transformer and I c=
-ant=20
-test it now.
+This patch contains the following cleanups:
+- remove the unneeded advansys.h
+- make needlessly global functions static
 
-Let me see, the patch of course does not apply, but I can figure out ho=
-w to=20
-proceed on kernel 2.6.16.
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
-But guess who, not Device busy as error, of course and NO BAD SECTORS W=
-ith=20
-pktcdvd UDF.
+---
 
-:)
+ drivers/scsi/advansys.c |   19 +++++++++----------
+ drivers/scsi/advansys.h |   36 ------------------------------------
+ 2 files changed, 9 insertions(+), 46 deletions(-)
 
-Txs, do you think this modification I can use without care on Sata o ot=
-her=20
-devices going trow SCSI?, cause I be wonder if this could be into main =
-kernel=20
-line.
-
-Regards!!!!
-
-> James
->
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 7b0f9a3..764a8b3 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -1067,16 +1067,29 @@ void scsi_io_completion(struct scsi_cmnd
->  			break;
->  		case NOT_READY:
->  			/*
-> -			 * If the device is in the process of becoming ready,
-> -			 * retry.
-> +			 * If the device is in the process of becoming
-> +			 * ready, or has a temporary blockage, retry.
->  			 */
-> -			if (sshdr.asc =3D=3D 0x04 && sshdr.ascq =3D=3D 0x01) {
-> -				scsi_requeue_command(q, cmd);
-> -				return;
-> +			if (sshdr.asc =3D=3D 0x04) {
-> +				switch (sshdr.ascq) {
-> +				case 0x01: /* becoming ready */
-> +				case 0x04: /* format in progress */
-> +				case 0x05: /* rebuild in progress */
-> +				case 0x06: /* recalculation in progress */
-> +				case 0x07: /* operation in progress */
-> +				case 0x08: /* Long write in progress */
-> +				case 0x09: /* self test in progress */
-> +					scsi_requeue_command(q, cmd);
-> +					return;
-> +				default:
-> +					break;
-> +				}
->  			}
-> -			if (!(req->flags & REQ_QUIET))
-> +			if (!(req->flags & REQ_QUIET)) {
->  				scmd_printk(KERN_INFO, cmd,
-> -					   "Device not ready.\n");
-> +					   "Device not ready: ");
-> +				scsi_print_sense_hdr("", &sshdr);
-> +			}
->  			scsi_end_request(cmd, 0, this_count, 1);
->  			return;
->  		case VOLUME_OVERFLOW:
-
---=20
-Gustavo Guillermo P=C3=A9rez
-Compunauta uLinux
-www.compunauta.com
+--- linux-2.6.17-rc2-mm1-full/drivers/scsi/advansys.h	2006-04-27 17:41:44.000000000 +0200
++++ /dev/null	2006-04-23 00:42:46.000000000 +0200
+@@ -1,36 +0,0 @@
+-/*
+- * advansys.h - Linux Host Driver for AdvanSys SCSI Adapters
+- * 
+- * Copyright (c) 1995-2000 Advanced System Products, Inc.
+- * Copyright (c) 2000-2001 ConnectCom Solutions, Inc.
+- * All Rights Reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that redistributions of source
+- * code retain the above copyright notice and this comment without
+- * modification.
+- *
+- * As of March 8, 2000 Advanced System Products, Inc. (AdvanSys)
+- * changed its name to ConnectCom Solutions, Inc.
+- *
+- */
 -
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-#ifndef _ADVANSYS_H
+-#define _ADVANSYS_H
+-
+-/*
+- * struct scsi_host_template function prototypes.
+- */
+-int advansys_detect(struct scsi_host_template *);
+-int advansys_release(struct Scsi_Host *);
+-const char *advansys_info(struct Scsi_Host *);
+-int advansys_queuecommand(struct scsi_cmnd *, void (* done)(struct scsi_cmnd *));
+-int advansys_reset(struct scsi_cmnd *);
+-int advansys_biosparam(struct scsi_device *, struct block_device *,
+-		sector_t, int[]);
+-static int advansys_slave_configure(struct scsi_device *);
+-
+-/* init/main.c setup function */
+-void advansys_setup(char *, int *);
+-
+-#endif /* _ADVANSYS_H */
+--- linux-2.6.17-rc2-mm1-full/drivers/scsi/advansys.c.old	2006-04-27 17:42:00.000000000 +0200
++++ linux-2.6.17-rc2-mm1-full/drivers/scsi/advansys.c	2006-04-27 17:44:49.000000000 +0200
+@@ -799,7 +799,6 @@
+ #include <scsi/scsi_tcq.h>
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_host.h>
+-#include "advansys.h"
+ #ifdef CONFIG_PCI
+ #include <linux/pci.h>
+ #endif /* CONFIG_PCI */
+@@ -2013,7 +2012,7 @@
+ STATIC void      AscEnableIsaDma(uchar);
+ #endif /* CONFIG_ISA */
+ STATIC ASC_DCNT  AscGetMaxDmaCount(ushort);
+-
++static const char *advansys_info(struct Scsi_Host *shp);
+ 
+ /*
+  * --- Adv Library Constants and Macros
+@@ -4093,7 +4092,7 @@
+  * if 'prtbuf' is too small it will not be overwritten. Instead the
+  * user just won't get all the available statistics.
+  */
+-int
++static int
+ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
+ 		off_t offset, int length, int inout)
+ {
+@@ -4309,7 +4308,7 @@
+  * it must not call SCSI mid-level functions including scsi_malloc()
+  * and scsi_free().
+  */
+-int __init
++static int __init
+ advansys_detect(struct scsi_host_template *tpnt)
+ {
+     static int          detect_called = ASC_FALSE;
+@@ -5441,7 +5440,7 @@
+  *
+  * Release resources allocated for a single AdvanSys adapter.
+  */
+-int
++static int
+ advansys_release(struct Scsi_Host *shp)
+ {
+     asc_board_t    *boardp;
+@@ -5488,7 +5487,7 @@
+  * Note: The information line should not exceed ASC_INFO_SIZE bytes,
+  * otherwise the static 'info' array will be overrun.
+  */
+-const char *
++static const char *
+ advansys_info(struct Scsi_Host *shp)
+ {
+     static char     info[ASC_INFO_SIZE];
+@@ -5581,7 +5580,7 @@
+  * This function always returns 0. Command return status is saved
+  * in the 'scp' result field.
+  */
+-int
++static int
+ advansys_queuecommand(struct scsi_cmnd *scp, void (*done)(struct scsi_cmnd *))
+ {
+     struct Scsi_Host    *shp;
+@@ -5669,7 +5668,7 @@
+  * sleeping is allowed and no locking other than for host structures is
+  * required. Returns SUCCESS or FAILED.
+  */
+-int
++static int
+ advansys_reset(struct scsi_cmnd *scp)
+ {
+     struct Scsi_Host     *shp;
+@@ -5854,7 +5853,7 @@
+  * ip[1]: sectors
+  * ip[2]: cylinders
+  */
+-int
++static int
+ advansys_biosparam(struct scsi_device *sdev, struct block_device *bdev,
+ 		sector_t capacity, int ip[])
+ {
+@@ -5921,7 +5920,7 @@
+  * ints[2] - second argument
+  * ...
+  */
+-void __init
++static void __init
+ advansys_setup(char *str, int *ints)
+ {
+     int    i;
+
