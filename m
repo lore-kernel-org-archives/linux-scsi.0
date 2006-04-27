@@ -1,160 +1,33 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] drivers/scsi/advansys.c: cleanups
-Date: Thu, 27 Apr 2006 19:57:23 +0200
-Message-ID: <20060427175723.GG3570@stusta.de>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [patch 17/20] enable advansys driver
+Date: Thu, 27 Apr 2006 10:56:06 -0700
+Message-ID: <20060427105606.21f1b27b.akpm@osdl.org>
+References: <200604270934.k3R9YcKZ025485@shell0.pdx.osdl.net>
+	<1146140313.2894.32.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:64517 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S965020AbWD0R5Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Apr 2006 13:57:25 -0400
-Content-Disposition: inline
+Received: from smtp.osdl.org ([65.172.181.4]:58506 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S965015AbWD0R5s (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Apr 2006 13:57:48 -0400
+In-Reply-To: <1146140313.2894.32.camel@laptopd505.fenrus.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: arjan@infradead.org
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@steeleye.com
 
-This patch contains the following cleanups:
-- remove the unneeded advansys.h
-- make needlessly global functions static
+Arjan van de Ven <arjan@infradead.org> wrote:
+>
+> On Thu, 2006-04-27 at 02:33 -0700, akpm@osdl.org wrote:
+> > From: Andrew Morton <akpm@osdl.org>
+> > 
+> > Apparently it works OK.  It was marked broken because:
+> 
+> 
+> did the tester test this on a machine with > 4Gb ram ?
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+I doubt it.
 
----
-
- drivers/scsi/advansys.c |   19 +++++++++----------
- drivers/scsi/advansys.h |   36 ------------------------------------
- 2 files changed, 9 insertions(+), 46 deletions(-)
-
---- linux-2.6.17-rc2-mm1-full/drivers/scsi/advansys.h	2006-04-27 17:41:44.000000000 +0200
-+++ /dev/null	2006-04-23 00:42:46.000000000 +0200
-@@ -1,36 +0,0 @@
--/*
-- * advansys.h - Linux Host Driver for AdvanSys SCSI Adapters
-- * 
-- * Copyright (c) 1995-2000 Advanced System Products, Inc.
-- * Copyright (c) 2000-2001 ConnectCom Solutions, Inc.
-- * All Rights Reserved.
-- *
-- * Redistribution and use in source and binary forms, with or without
-- * modification, are permitted provided that redistributions of source
-- * code retain the above copyright notice and this comment without
-- * modification.
-- *
-- * As of March 8, 2000 Advanced System Products, Inc. (AdvanSys)
-- * changed its name to ConnectCom Solutions, Inc.
-- *
-- */
--
--#ifndef _ADVANSYS_H
--#define _ADVANSYS_H
--
--/*
-- * struct scsi_host_template function prototypes.
-- */
--int advansys_detect(struct scsi_host_template *);
--int advansys_release(struct Scsi_Host *);
--const char *advansys_info(struct Scsi_Host *);
--int advansys_queuecommand(struct scsi_cmnd *, void (* done)(struct scsi_cmnd *));
--int advansys_reset(struct scsi_cmnd *);
--int advansys_biosparam(struct scsi_device *, struct block_device *,
--		sector_t, int[]);
--static int advansys_slave_configure(struct scsi_device *);
--
--/* init/main.c setup function */
--void advansys_setup(char *, int *);
--
--#endif /* _ADVANSYS_H */
---- linux-2.6.17-rc2-mm1-full/drivers/scsi/advansys.c.old	2006-04-27 17:42:00.000000000 +0200
-+++ linux-2.6.17-rc2-mm1-full/drivers/scsi/advansys.c	2006-04-27 17:44:49.000000000 +0200
-@@ -799,7 +799,6 @@
- #include <scsi/scsi_tcq.h>
- #include <scsi/scsi.h>
- #include <scsi/scsi_host.h>
--#include "advansys.h"
- #ifdef CONFIG_PCI
- #include <linux/pci.h>
- #endif /* CONFIG_PCI */
-@@ -2013,7 +2012,7 @@
- STATIC void      AscEnableIsaDma(uchar);
- #endif /* CONFIG_ISA */
- STATIC ASC_DCNT  AscGetMaxDmaCount(ushort);
--
-+static const char *advansys_info(struct Scsi_Host *shp);
- 
- /*
-  * --- Adv Library Constants and Macros
-@@ -4093,7 +4092,7 @@
-  * if 'prtbuf' is too small it will not be overwritten. Instead the
-  * user just won't get all the available statistics.
-  */
--int
-+static int
- advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
- 		off_t offset, int length, int inout)
- {
-@@ -4309,7 +4308,7 @@
-  * it must not call SCSI mid-level functions including scsi_malloc()
-  * and scsi_free().
-  */
--int __init
-+static int __init
- advansys_detect(struct scsi_host_template *tpnt)
- {
-     static int          detect_called = ASC_FALSE;
-@@ -5441,7 +5440,7 @@
-  *
-  * Release resources allocated for a single AdvanSys adapter.
-  */
--int
-+static int
- advansys_release(struct Scsi_Host *shp)
- {
-     asc_board_t    *boardp;
-@@ -5488,7 +5487,7 @@
-  * Note: The information line should not exceed ASC_INFO_SIZE bytes,
-  * otherwise the static 'info' array will be overrun.
-  */
--const char *
-+static const char *
- advansys_info(struct Scsi_Host *shp)
- {
-     static char     info[ASC_INFO_SIZE];
-@@ -5581,7 +5580,7 @@
-  * This function always returns 0. Command return status is saved
-  * in the 'scp' result field.
-  */
--int
-+static int
- advansys_queuecommand(struct scsi_cmnd *scp, void (*done)(struct scsi_cmnd *))
- {
-     struct Scsi_Host    *shp;
-@@ -5669,7 +5668,7 @@
-  * sleeping is allowed and no locking other than for host structures is
-  * required. Returns SUCCESS or FAILED.
-  */
--int
-+static int
- advansys_reset(struct scsi_cmnd *scp)
- {
-     struct Scsi_Host     *shp;
-@@ -5854,7 +5853,7 @@
-  * ip[1]: sectors
-  * ip[2]: cylinders
-  */
--int
-+static int
- advansys_biosparam(struct scsi_device *sdev, struct block_device *bdev,
- 		sector_t capacity, int ip[])
- {
-@@ -5921,7 +5920,7 @@
-  * ints[2] - second argument
-  * ...
-  */
--void __init
-+static void __init
- advansys_setup(char *str, int *ints)
- {
-     int    i;
-
+This patch is -mm only, actually - administrative error at akpmlabs.
