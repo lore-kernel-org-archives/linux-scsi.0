@@ -1,12 +1,12 @@
 From: akpm@osdl.org
-Subject: [patch 07/20] drivers/scsi/qla2xxx/: make some functions static
-Date: Thu, 27 Apr 2006 02:33:00 -0700
-Message-ID: <200604270934.k3R9YSwT025449@shell0.pdx.osdl.net>
+Subject: [patch 10/20] remove drivers/scsi/constants.c:scsi_print_req_sense()
+Date: Thu, 27 Apr 2006 02:33:03 -0700
+Message-ID: <200604270934.k3R9YV58025458@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:4817 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S965050AbWD0Jhn (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:7377 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S965049AbWD0Jhp (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Apr 2006 05:37:43 -0400
+	Thu, 27 Apr 2006 05:37:45 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
@@ -15,111 +15,46 @@ Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, bunk@stusta.de
 
 From: Adrian Bunk <bunk@stusta.de>
 
-This patch makes some needlessly global functions static.
+This function is no longer used anywhere.
 
 Signed-off-by: Adrian Bunk <bunk@stusta.de>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/qla2xxx/qla_os.c  |   12 ++++++------
- drivers/scsi/qla2xxx/qla_sup.c |    8 ++++----
- 2 files changed, 10 insertions(+), 10 deletions(-)
+ drivers/scsi/constants.c |   10 ----------
+ include/scsi/scsi_dbg.h  |    1 -
+ 2 files changed, 11 deletions(-)
 
-diff -puN drivers/scsi/qla2xxx/qla_os.c~drivers-scsi-qla2xxx-make-some-functions-static drivers/scsi/qla2xxx/qla_os.c
---- devel/drivers/scsi/qla2xxx/qla_os.c~drivers-scsi-qla2xxx-make-some-functions-static	2006-03-21 23:05:42.000000000 -0800
-+++ devel-akpm/drivers/scsi/qla2xxx/qla_os.c	2006-03-21 23:05:42.000000000 -0800
-@@ -274,7 +274,7 @@ qla24xx_pci_info_str(struct scsi_qla_hos
- 	return str;
+diff -puN drivers/scsi/constants.c~remove-drivers-scsi-constantscscsi_print_req_sense drivers/scsi/constants.c
+--- devel/drivers/scsi/constants.c~remove-drivers-scsi-constantscscsi_print_req_sense	2006-04-05 21:27:56.000000000 -0700
++++ devel-akpm/drivers/scsi/constants.c	2006-04-05 21:27:56.000000000 -0700
+@@ -1268,16 +1268,6 @@ void scsi_print_sense(const char *devcla
  }
+ EXPORT_SYMBOL(scsi_print_sense);
  
--char *
-+static char *
- qla2x00_fw_version_str(struct scsi_qla_host *ha, char *str)
+-void scsi_print_req_sense(const char *devclass, struct scsi_request *sreq)
+-{
+-	const char *name = devclass;
+-
+-	if (sreq->sr_request->rq_disk)
+-		name = sreq->sr_request->rq_disk->disk_name;
+-	__scsi_print_sense(name, sreq->sr_sense_buffer, SCSI_SENSE_BUFFERSIZE);
+-}
+-EXPORT_SYMBOL(scsi_print_req_sense);
+-
+ void scsi_print_command(struct scsi_cmnd *cmd)
  {
- 	char un_str[10];
-@@ -312,7 +312,7 @@ qla2x00_fw_version_str(struct scsi_qla_h
- 	return (str);
- }
- 
--char *
-+static char *
- qla24xx_fw_version_str(struct scsi_qla_host *ha, char *str)
- {
- 	sprintf(str, "%d.%02d.%02d ", ha->fw_major_version,
-@@ -600,7 +600,7 @@ qla2x00_wait_for_loop_ready(scsi_qla_hos
- *
- * Note:
- **************************************************************************/
--int
-+static int
- qla2xxx_eh_abort(struct scsi_cmnd *cmd)
- {
- 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
-@@ -734,7 +734,7 @@ qla2x00_eh_wait_for_pending_target_comma
- *    SUCCESS/FAILURE (defined as macro in scsi.h).
- *
- **************************************************************************/
--int
-+static int
- qla2xxx_eh_device_reset(struct scsi_cmnd *cmd)
- {
- 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
-@@ -865,7 +865,7 @@ qla2x00_eh_wait_for_pending_commands(scs
- *    SUCCESS/FAILURE (defined as macro in scsi.h).
- *
- **************************************************************************/
--int
-+static int
- qla2xxx_eh_bus_reset(struct scsi_cmnd *cmd)
- {
- 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
-@@ -926,7 +926,7 @@ eh_bus_reset_done:
- *
- * Note:
- **************************************************************************/
--int
-+static int
- qla2xxx_eh_host_reset(struct scsi_cmnd *cmd)
- {
- 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
-diff -puN drivers/scsi/qla2xxx/qla_sup.c~drivers-scsi-qla2xxx-make-some-functions-static drivers/scsi/qla2xxx/qla_sup.c
---- devel/drivers/scsi/qla2xxx/qla_sup.c~drivers-scsi-qla2xxx-make-some-functions-static	2006-03-21 23:05:42.000000000 -0800
-+++ devel-akpm/drivers/scsi/qla2xxx/qla_sup.c	2006-03-21 23:05:42.000000000 -0800
-@@ -428,7 +428,7 @@ nvram_data_to_access_addr(uint32_t naddr
- 	return FARX_ACCESS_NVRAM_DATA | naddr;
- }
- 
--uint32_t
-+static uint32_t
- qla24xx_read_flash_dword(scsi_qla_host_t *ha, uint32_t addr)
- {
- 	int rval;
-@@ -469,7 +469,7 @@ qla24xx_read_flash_data(scsi_qla_host_t 
- 	return dwptr;
- }
- 
--int
-+static int
- qla24xx_write_flash_dword(scsi_qla_host_t *ha, uint32_t addr, uint32_t data)
- {
- 	int rval;
-@@ -491,7 +491,7 @@ qla24xx_write_flash_dword(scsi_qla_host_
- 	return rval;
- }
- 
--void
-+static void
- qla24xx_get_flash_manufacturer(scsi_qla_host_t *ha, uint8_t *man_id,
-     uint8_t *flash_id)
- {
-@@ -502,7 +502,7 @@ qla24xx_get_flash_manufacturer(scsi_qla_
- 	*flash_id = MSB(ids);
- }
- 
--int
-+static int
- qla24xx_write_flash_data(scsi_qla_host_t *ha, uint32_t *dwptr, uint32_t faddr,
-     uint32_t dwords)
- {
+ 	/* Assume appended output (i.e. not at start of line) */
+diff -puN include/scsi/scsi_dbg.h~remove-drivers-scsi-constantscscsi_print_req_sense include/scsi/scsi_dbg.h
+--- devel/include/scsi/scsi_dbg.h~remove-drivers-scsi-constantscscsi_print_req_sense	2006-04-05 21:27:56.000000000 -0700
++++ devel-akpm/include/scsi/scsi_dbg.h	2006-04-05 21:27:56.000000000 -0700
+@@ -9,7 +9,6 @@ extern void scsi_print_command(struct sc
+ extern void scsi_print_sense_hdr(const char *, struct scsi_sense_hdr *);
+ extern void __scsi_print_command(unsigned char *);
+ extern void scsi_print_sense(const char *, struct scsi_cmnd *);
+-extern void scsi_print_req_sense(const char *, struct scsi_request *);
+ extern void __scsi_print_sense(const char *name,
+ 			       const unsigned char *sense_buffer,
+ 			       int sense_len);
 _
