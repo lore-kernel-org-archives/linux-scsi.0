@@ -1,76 +1,106 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: Re: aha152x(_cs) oops
-Date: Thu, 27 Apr 2006 09:19:37 -0700
-Message-ID: <20060427091937.f21c6e81.rdunlap@xenotime.net>
-References: <20060413093615.661b7018.rdunlap@xenotime.net>
-	<1144950036.3474.36.camel@mulgrave.il.steeleye.com>
-	<20060425115709.0db4332f.rdunlap@xenotime.net>
-	<Pine.LNX.4.60.0604252143550.3893@poirot.grange>
-	<20060425140327.605f22ac.rdunlap@xenotime.net>
-	<Pine.LNX.4.60.0604262202200.6890@poirot.grange>
-	<20060426132901.ec6d0952.rdunlap@xenotime.net>
-	<Pine.LNX.4.60.0604262312580.6890@poirot.grange>
+From: Gustavo Guillermo =?utf-8?q?P=C3=A9rez?= <gustavo@compunauta.com>
+Subject: Re: SCSI trow USB-STORAGE or SBP2 Debug for buggy device Kernels 2.6.X
+Date: Thu, 27 Apr 2006 12:40:35 -0500
+Message-ID: <200604271240.35274.gustavo@compunauta.com>
+References: <200604241029.14932.gustavo@compunauta.com> <200604251641.54084.gustavo@compunauta.com> <1146001711.3529.58.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:54435 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S965047AbWD0QRT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Apr 2006 12:17:19 -0400
-Received: from midway.site ([71.111.157.99]) by xenotime.net for <linux-scsi@vger.kernel.org>; Thu, 27 Apr 2006 09:17:10 -0700
-In-Reply-To: <Pine.LNX.4.60.0604262312580.6890@poirot.grange>
+Received: from compunauta.com ([69.36.170.169]:55220 "EHLO compunauta.com")
+	by vger.kernel.org with ESMTP id S965163AbWD0Rkt convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Apr 2006 13:40:49 -0400
+In-Reply-To: <1146001711.3529.58.camel@mulgrave.il.steeleye.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org
 
-On Wed, 26 Apr 2006 23:32:06 +0200 (CEST) Guennadi Liakhovetski wrote:
+El Martes, 25 de Abril de 2006 16:48, James Bottomley escribi=C3=B3:
+> OK ... My best guess has to be that this device accepted and complete=
+d
+> the command but is still processing it on the medium, hence the retur=
+n.
+> Try the attached; I think it makes for these cases.  I could be
+> persuaded to drop format and reconstruction in progress, because thos=
+e
+> can be *very* long operations.
+I was having power source failures on my neighborhood, and I was not ha=
+ving=20
+time to test it, today the Company was replaced the transformer and I c=
+ant=20
+test it now.
 
-> On Wed, 26 Apr 2006, Randy.Dunlap wrote:
-> 
-> > I'm using a PCMCIA (not CardBus) Adapter AP-1460 card on a new Dell
-> > notebook, with an iomega Jaz drive attached to it.
-> 
-> Ok, I attached a ZIP drive to my card...
-> 
-> > I haven't tested without highmem.  I know that the in-kernel driver
-> > with a one-line patch works for me.  The patch forces all buffers
-> > to lowmem, by setting
-> > +       .unchecked_isa_dma              = 1,
-> > in the scsi_host_template.
-> > 
-> > I can test with a non-highmem kernel if you want me to, but I don't
-> > see much need to do that.
-> 
-> What I want to achieve with this test is see, if the stock driver works 
-> fine without highmem in the PIO case. As you know, the driver has to 
-> calculate the position in the buffer where from/to it has to transfer the 
-> data. So, by disabling highmem we would see, if those calculations are 
-> right there, that would mean we have a problem with the kmem_atomic 
-> conversion, in which case we just have to check carefully our own 
-> calculations and compare them with the stock lowmem case. Whereas, if 
-> already the stock driver has a problem with lowmem PIO, then we, probably, 
-> won't get much further without chip docs.
-> 
-> > To reproduce the error:  a kernel build will do it.  However, the
-> > easiest way (hardest on the driver) is:  mkfs.ext3 /dev/sdX4
-> 
-> Ok, just tried
-> 
-> smartctl -a -T permissive /dev/sda
-> 
-> on my Zip - and got
-> 
-> (scsi0:6:9) command sent incompletely (6/10)
-> 
-> which also looks like a case similar to yours? Whereas creating a ext3 fs 
-> + running fsck -c -f didn't produce any more output. However, this doesn't 
-> mean much.
+Let me see, the patch of course does not apply, but I can figure out ho=
+w to=20
+proceed on kernel 2.6.16.
 
-I built a kernel without highmem support and banged on the jaz drive
-quite a bit with it, without errors AFAICT.  I also did not see any
-evidence of "resend"s being needed, so it was a bit inconclusive.
+But guess who, not Device busy as error, of course and NO BAD SECTORS W=
+ith=20
+pktcdvd UDF.
 
----
-~Randy
+:)
+
+Txs, do you think this modification I can use without care on Sata o ot=
+her=20
+devices going trow SCSI?, cause I be wonder if this could be into main =
+kernel=20
+line.
+
+Regards!!!!
+
+> James
+>
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 7b0f9a3..764a8b3 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -1067,16 +1067,29 @@ void scsi_io_completion(struct scsi_cmnd
+>  			break;
+>  		case NOT_READY:
+>  			/*
+> -			 * If the device is in the process of becoming ready,
+> -			 * retry.
+> +			 * If the device is in the process of becoming
+> +			 * ready, or has a temporary blockage, retry.
+>  			 */
+> -			if (sshdr.asc =3D=3D 0x04 && sshdr.ascq =3D=3D 0x01) {
+> -				scsi_requeue_command(q, cmd);
+> -				return;
+> +			if (sshdr.asc =3D=3D 0x04) {
+> +				switch (sshdr.ascq) {
+> +				case 0x01: /* becoming ready */
+> +				case 0x04: /* format in progress */
+> +				case 0x05: /* rebuild in progress */
+> +				case 0x06: /* recalculation in progress */
+> +				case 0x07: /* operation in progress */
+> +				case 0x08: /* Long write in progress */
+> +				case 0x09: /* self test in progress */
+> +					scsi_requeue_command(q, cmd);
+> +					return;
+> +				default:
+> +					break;
+> +				}
+>  			}
+> -			if (!(req->flags & REQ_QUIET))
+> +			if (!(req->flags & REQ_QUIET)) {
+>  				scmd_printk(KERN_INFO, cmd,
+> -					   "Device not ready.\n");
+> +					   "Device not ready: ");
+> +				scsi_print_sense_hdr("", &sshdr);
+> +			}
+>  			scsi_end_request(cmd, 0, this_count, 1);
+>  			return;
+>  		case VOLUME_OVERFLOW:
+
+--=20
+Gustavo Guillermo P=C3=A9rez
+Compunauta uLinux
+www.compunauta.com
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
