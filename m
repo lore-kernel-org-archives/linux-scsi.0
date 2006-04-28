@@ -1,41 +1,52 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: Re: aha152x(_cs) oops
-Date: Fri, 28 Apr 2006 07:31:53 -0700 (PDT)
-Message-ID: <Pine.LNX.4.58.0604280731220.8301@shark.he.net>
-References: <20060413093615.661b7018.rdunlap@xenotime.net>
- <1144950036.3474.36.camel@mulgrave.il.steeleye.com>
- <20060425115709.0db4332f.rdunlap@xenotime.net> <Pine.LNX.4.60.0604252143550.3893@poirot.grange>
- <20060425140327.605f22ac.rdunlap@xenotime.net> <Pine.LNX.4.60.0604262202200.6890@poirot.grange>
- <20060426132901.ec6d0952.rdunlap@xenotime.net> <Pine.LNX.4.60.0604262312580.6890@poirot.grange>
- <20060427091937.f21c6e81.rdunlap@xenotime.net> <Pine.LNX.4.60.0604280733060.4148@poirot.grange>
+From: =?iso-8859-1?b?RW1tYW51ZWwgRnVzdOk=?= <emmanuel.fuste@laposte.net>
+Subject: Re: Re:[PATCH 0/5] AIC7xxx port of latests AIC79xx patchs
+Date: Fri, 28 Apr 2006 16:37:34 +0200
+Message-ID: <IYFSMM$5E5B7483695B4FB653014150338B475B@laposte.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:59084 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S1030293AbWD1Obz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Apr 2006 10:31:55 -0400
-Received: from shark.he.net ([66.160.160.2]) by xenotime.net for <linux-scsi@vger.kernel.org>; Fri, 28 Apr 2006 07:31:53 -0700
-In-Reply-To: <Pine.LNX.4.60.0604280733060.4148@poirot.grange>
+Received: from mx.laposte.net ([81.255.54.11]:9863 "EHLO mx.laposte.net")
+	by vger.kernel.org with ESMTP id S965213AbWD1Oih convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Apr 2006 10:38:37 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: "Randy.Dunlap" <rdunlap@xenotime.net>, James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
+To: "James.Bottomley" <James.Bottomley@SteelEye.com>
+Cc: hare <hare@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Fri, 28 Apr 2006, Guennadi Liakhovetski wrote:
+> On Tue, 2006-03-28 at 21:32 +0200, Emmanuel Fust=E9 wrote:
+> > > Hello,
+> > >=20
+> > > I port latest Hannes Reinecke patchs to aic7xxx.
+> > > Compile tested only, runtime report later.
+> > >=20
+> > Ok,
+> > As you could see all work fine.
+> > Now it will be time to triger the recovery part.
+> > Will now try the killer cmd: cdrwtools -d /dev/scd0 -q
+>=20
+> Is there any update on this ... like have you actually
+tested with
+> actual hardware?
+>=20
+My computer is running fine with these six patches applied
+since last month.
+I did not have access to other hardware to test it.
 
-> On Thu, 27 Apr 2006, Randy.Dunlap wrote:
->
-> > I built a kernel without highmem support and banged on the jaz drive
-> > quite a bit with it, without errors AFAICT.  I also did not see any
-> > evidence of "resend"s being needed, so it was a bit inconclusive.
->
-> Hm, well, I don't see a burning need in fixing this particular driver
-> "properly", I think, it might do with your fix for now. I might give it a
-> couple more tries but it won't be too soon and not too intensive either,
-> unless someone can give good reasons for the opposite.
+As you could have seen in a previous mail, I have no
+regressions on my hardware and it made things better with my
+cdrw problem (but it does not fix it).
 
-Agreed, I don't have a problem with that.
+Emmanuel.
 
--- 
-~Randy
+Acc=E9dez au courrier =E9lectronique de La Poste : www.laposte.net ;=20
+3615 LAPOSTENET (0,34 =80/mn) ; t=E9l : 08 92 68 13 50 (0,34=80/mn)
+
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
