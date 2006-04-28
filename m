@@ -1,34 +1,50 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: [PATCH 1/2] scsi: Add scsi_device max_cmd_len (resend)
-Date: Fri, 28 Apr 2006 10:47:47 -0700 (PDT)
-Message-ID: <20060428174747.15085.qmail@web31804.mail.mud.yahoo.com>
-References: <1146237433.5251.7.camel@mulgrave.il.steeleye.com>
-Reply-To: ltuikov@yahoo.com
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: request to add aic94xx to -mm
+Date: Fri, 28 Apr 2006 10:55:21 -0700
+Message-ID: <20060428175521.GB18383@us.ibm.com>
+References: <1146243246.5251.29.camel@mulgrave.il.steeleye.com> <20060428172736.GA11321@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1146237433.5251.7.camel@mulgrave.il.steeleye.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, brking@us.ibm.com
-Cc: linux-scsi@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e5.ny.us.ibm.com ([32.97.182.145]:30399 "EHLO e5.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1751107AbWD1Rz0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Apr 2006 13:55:26 -0400
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e5.ny.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k3SHtP0n001412
+	for <linux-scsi@vger.kernel.org>; Fri, 28 Apr 2006 13:55:25 -0400
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by d01relay02.pok.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k3SHtPOk106478
+	for <linux-scsi@vger.kernel.org>; Fri, 28 Apr 2006 13:55:25 -0400
+Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
+	by d01av03.pok.ibm.com (8.12.11/8.13.3) with ESMTP id k3SHtOPe007078
+	for <linux-scsi@vger.kernel.org>; Fri, 28 Apr 2006 13:55:25 -0400
+Content-Disposition: inline
+In-Reply-To: <20060428172736.GA11321@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, "Tarte, Robert" <Robert_Tarte@adaptec.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@osdl.org>, linux-scsi <linux-scsi@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>
 
---- James Bottomley <James.Bottomley@SteelEye.com> wrote:
-> On Fri, 2006-04-28 at 09:28 -0500, Brian King wrote:
-> > Any comments on the patch below?
+Christoph Hellwig <hch@infradead.org> wrote:
+> On Fri, Apr 28, 2006 at 11:54:05AM -0500, James Bottomley wrote:
+> > Could you send any bugs found back to linux-scsi (not the kernel
+> > bugzilla)?
 > 
-> The mechanistic comment is that the max_cmd_len parameter should be per
-> target not per device.
-> 
-> However, since this is SATA only, and SATA is supposed to be moving out
-> of the SCSI subsystem,
+> not a bug strictly speaking, but it should stop including the firmware
+> blob and use request_firmware, similar to the discussion we had about
+> qla2xxx recently.  It would be even nicer if adaptec continued publishing
+> their sequencer code as with aic7xxx and aic79xx which look remarkably
+> similar, of course.
 
-Can you justify this "decision" with a technological argument.*  A lot of
-technologists following this mailing list would love to learn.
+I added Rob to this thread so he could comment on this.
 
-Thank you,
-    Luben
-* I.e. a technological argument aside from Linux and the state of SCSI Core.
+It would also be good before we put another card through this process that
+at least a few distros have the request_firmware infrastructure fully
+functional. I have seen indications that there where a few bumps in the
+road in getting this working.
 
-
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
