@@ -1,41 +1,94 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Re:[PATCH 0/5] AIC7xxx port of latests AIC79xx patchs
-Date: Fri, 28 Apr 2006 09:24:06 -0500
-Message-ID: <1146234246.3527.27.camel@mulgrave.il.steeleye.com>
-References: <IWURLU$9A7E79C7D8BCF1A9AE8A8B540822E5C2@laposte.net>
+From: Brian King <brking@us.ibm.com>
+Subject: Re: [PATCH 1/2] scsi: Add scsi_device max_cmd_len (resend)
+Date: Fri, 28 Apr 2006 09:28:02 -0500
+Message-ID: <44522672.5010607@us.ibm.com>
+References: <200604172240.k3HMes2V010154@d01av01.pok.ibm.com>
+Reply-To: brking@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:7852 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1030316AbWD1OYR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Apr 2006 10:24:17 -0400
-In-Reply-To: <IWURLU$9A7E79C7D8BCF1A9AE8A8B540822E5C2@laposte.net>
+Received: from e1.ny.us.ibm.com ([32.97.182.141]:6275 "EHLO e1.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S965206AbWD1O2H (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Apr 2006 10:28:07 -0400
+In-Reply-To: <200604172240.k3HMes2V010154@d01av01.pok.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Emmanuel =?ISO-8859-1?Q?Fust=E9?= <emmanuel.fuste@laposte.net>
-Cc: hare <hare@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Brian King <brking@us.ibm.com>
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-On Tue, 2006-03-28 at 21:32 +0200, Emmanuel Fust=C3=A9 wrote:
-> > Hello,
-> >=20
-> > I port latest Hannes Reinecke patchs to aic7xxx.
-> > Compile tested only, runtime report later.
-> >=20
-> Ok,
-> As you could see all work fine.
-> Now it will be time to triger the recovery part.
-> Will now try the killer cmd: cdrwtools -d /dev/scd0 -q
+James,
 
-Is there any update on this ... like have you actually tested with
-actual hardware?
+Any comments on the patch below?
 
-James
+Thanks
+
+Brian
+
+Brian King wrote:
+> Add a max_cmd_len field to the scsi_device struct
+> to allow for per device limits of allowable command
+> lengths. This patch was submitted earlier and resulted
+> in a bit of discussion regarding whether or not
+> CDB length is a limitation of the host or the device.
+> For ATA, both the host and the device can limit the
+> CDB length. Currently libata reads the IDENTIFY
+> PACKET DEVICE data for an ATAPI device and sets
+> the max_cmd_len in the scsi host for the maximum
+> supported CDB length of all ATA/ATAPI devices attached
+> to the same scsi host. This patch allows libata to
+> set the max CDB length on a per device basis and
+> allows the SAS/SATA HBA to set its own max command
+> length in the scsi host template.
+> 
+> Signed-off-by: Brian King <brking@us.ibm.com>
+> ---
+> 
+>  libata-dev-bjking1/drivers/scsi/scsi.c        |    3 ++-
+>  libata-dev-bjking1/drivers/scsi/scsi_scan.c   |    1 +
+>  libata-dev-bjking1/include/scsi/scsi_device.h |    1 +
+>  3 files changed, 4 insertions(+), 1 deletion(-)
+> 
+> diff -puN include/scsi/scsi_device.h~scsi_device_cdb_len include/scsi/scsi_device.h
+> --- libata-dev/include/scsi/scsi_device.h~scsi_device_cdb_len	2006-04-17 17:17:50.000000000 -0500
+> +++ libata-dev-bjking1/include/scsi/scsi_device.h	2006-04-17 17:17:50.000000000 -0500
+> @@ -72,6 +72,7 @@ struct scsi_device {
+>  	unsigned int manufacturer;	/* Manufacturer of device, for using 
+>  					 * vendor-specific cmd's */
+>  	unsigned sector_size;	/* size in bytes */
+> +	unsigned char max_cmd_len;
+>  
+>  	void *hostdata;		/* available to low-level driver */
+>  	char type;
+> diff -puN drivers/scsi/scsi_scan.c~scsi_device_cdb_len drivers/scsi/scsi_scan.c
+> --- libata-dev/drivers/scsi/scsi_scan.c~scsi_device_cdb_len	2006-04-17 17:17:50.000000000 -0500
+> +++ libata-dev-bjking1/drivers/scsi/scsi_scan.c	2006-04-17 17:17:50.000000000 -0500
+> @@ -218,6 +218,7 @@ static struct scsi_device *scsi_alloc_sd
+>  	sdev->lun = lun;
+>  	sdev->channel = starget->channel;
+>  	sdev->sdev_state = SDEV_CREATED;
+> +	sdev->max_cmd_len = MAX_COMMAND_SIZE;
+>  	INIT_LIST_HEAD(&sdev->siblings);
+>  	INIT_LIST_HEAD(&sdev->same_target_siblings);
+>  	INIT_LIST_HEAD(&sdev->cmd_list);
+> diff -puN drivers/scsi/scsi.c~scsi_device_cdb_len drivers/scsi/scsi.c
+> --- libata-dev/drivers/scsi/scsi.c~scsi_device_cdb_len	2006-04-17 17:17:50.000000000 -0500
+> +++ libata-dev-bjking1/drivers/scsi/scsi.c	2006-04-17 17:17:50.000000000 -0500
+> @@ -610,7 +610,8 @@ int scsi_dispatch_cmd(struct scsi_cmnd *
+>  	 * Before we queue this command, check if the command
+>  	 * length exceeds what the host adapter can handle.
+>  	 */
+> -	if (CDB_SIZE(cmd) > cmd->device->host->max_cmd_len) {
+> +	if (CDB_SIZE(cmd) > cmd->device->host->max_cmd_len ||
+> +	    CDB_SIZE(cmd) > cmd->device->max_cmd_len) {
+>  		SCSI_LOG_MLQUEUE(3,
+>  				printk("queuecommand : command too long.\n"));
+>  		cmd->result = (DID_ABORT << 16);
+> _
 
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
