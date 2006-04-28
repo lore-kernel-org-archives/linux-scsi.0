@@ -1,59 +1,108 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 1/2] scsi: Add scsi_device max_cmd_len (resend)
-Date: Fri, 28 Apr 2006 16:54:02 -0500
-Message-ID: <1146261242.5251.99.camel@mulgrave.il.steeleye.com>
-References: <200604172240.k3HMes2V010154@d01av01.pok.ibm.com>
-	 <44522672.5010607@us.ibm.com>
-	 <1146237433.5251.7.camel@mulgrave.il.steeleye.com>
-	 <44525CBE.1030409@us.ibm.com>
-	 <1146249006.5251.64.camel@mulgrave.il.steeleye.com>
-	 <44526702.1010400@us.ibm.com>
-	 <1146257803.5251.82.camel@mulgrave.il.steeleye.com>
-	 <44528508.3060003@us.ibm.com>  <445289F5.6070608@pobox.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: qla2xxx lock ordering question
+Date: Fri, 28 Apr 2006 15:29:30 -0700
+Message-ID: <20060428222930.GC18838@andrew-vasquezs-powerbook-g4-15.local>
+References: <1145438524.3085.19.camel@laptopd505.fenrus.org> <20060420234606.GO8514@andrew-vasquezs-powerbook-g4-15.local> <1146127792.2894.24.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:50118 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751400AbWD1VyH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Apr 2006 17:54:07 -0400
-In-Reply-To: <445289F5.6070608@pobox.com>
+Received: from pat.qlogic.com ([198.70.193.2]:18059 "EHLO avexch01.qlogic.com")
+	by vger.kernel.org with ESMTP id S1751787AbWD1W3c (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Apr 2006 18:29:32 -0400
+Content-Disposition: inline
+In-Reply-To: <1146127792.2894.24.camel@laptopd505.fenrus.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: brking@us.ibm.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: mingo@elte.hu, linux-scsi@vger.kernel.org
 
-On Fri, 2006-04-28 at 17:32 -0400, Jeff Garzik wrote:
-> If both host controller and device support 16-byte CDB, it should not be 
-> limited to 12 bytes.
+On Thu, 27 Apr 2006, Arjan van de Ven wrote:
 
-Well, the limit should really only reflect what the controller supports.
-The SCSI heuristics, or slave configure flags should take care of the
-devices.
+> On Thu, 2006-04-20 at 16:46 -0700, Andrew Vasquez wrote:
+> > On Wed, 19 Apr 2006, Arjan van de Ven wrote:
+> > 
+> > > a question about qla2xxx lock ordering since it trips up with Ingo's
+> > > lock depenceny tool:
+> > > 
+> > > in qla2x00_mailbox_command() the code first grabs the mbx_reg_lock lock,
+> > > then the hardware_lock. So far so good. But then...
+> > > it drops the mbx_reg_lock, does stuff, and regrabs the mbx_reg_lock
+> > > lock, while keeping the hardware_lock held!
+> > > 
+> > > This appears to be an AB-BA deadlock risk since for the second part you
+> > > are taking the locks in the wrong order... or am I missing something
+> > > here?
+> > 
+> > Actually the code is a bit convoluted, but I believe we are OK.  There
+> > are two scenarios we need to consider:
+> 
+> 
+> ok found the real culprits ;)
+> 
+> in qla2x00_reset_chip the driver first takes the hardware lock, and then
+> later on takes the mbx lock.
+> 
+> In the mailbox_command code.. it goes the other way around.
 
-> libata is not "playing games", just exporting what the hardware supports 
-> as best the API allows.  It needs to support 16-byte CDBs for the same 
-> reason any SCSI LLDD supports 16-byte CDBs.
+Ahh yes... that is suspicious...
 
-I think he means this piece of code in libata-core.c:ata_dev_configure()
+> Now I don't know if reset_chip can in theory race with the mailbox code,
+> but I'd not be surprised since reset_chip is called in error recovery
+> iirc...
 
-	ap->host->max_cmd_len = 0;
-	for (i = 0; i < ATA_MAX_DEVICES; i++)
-		ap->host->max_cmd_len = max_t(unsigned int,
-					      ap->host->max_cmd_len,
-					      ap->device[i].cdb_len);
+ISP chip recovery (resulting in a subsequent call to
+qla2x00_reset_chip()) can only take place from the DPC thread context
+(that at least drops most of mailbox command initiators, since we are
+single threaded).  But, we are still left with mid-layer
+error-handling initiators of mailbox commands (abort, device reset and
+loop reset).
 
-You're setting the max_cmd_len based on the largest one supported by the
-device.  What happens if that's larger than the HBA can support?
+Hmm...  we do have a small window there where we could race.  In going
+through the locking hierarchy though, I'm not entirely convinced
+taking the mbx_reg_lock while resetting is needed as it's only meant
+to protect an HA's mbx_cmd_flags state; which is only set during
+interrupt processing (after we've released the hardware_lock).  The
+reset-chip code has also disabled interrupts, further reducing the
+window...
 
-> Remember ATAPI<->SCSI bridges exist, thus any SCSI disk can appear 
-> attached to ATAPI.
+I'll do some testing with the following patch which drops the
+acquisition of mbx_reg_lock.  Baring any major objections locally,
+I'll post a formal patch to ls next week.
 
-Well, that's like attaching a 4TB SPI array to a qla1280 (which has a
-firmware 12 byte command limit).  You don't do it unless you want a
-horrible mess.
+BTW: cool tool.
 
-James
+Thanks,
+Andrew Vasquez
 
+---
+
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 89a3fc0..7dc4067 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -519,20 +519,8 @@ qla2x00_reset_chip(scsi_qla_host_t *ha)
+ 
+ 	if (IS_QLA2100(ha) || IS_QLA2200(ha) || IS_QLA2300(ha)) {
+ 		for (cnt = 0; cnt < 30000; cnt++) {
+-			if (!(test_bit(ABORT_ISP_ACTIVE, &ha->dpc_flags)))
+-				spin_lock_irqsave(&ha->mbx_reg_lock, mbx_flags);
+-
+-			if (RD_MAILBOX_REG(ha, reg, 0) != MBS_BUSY) {
+-				if (!(test_bit(ABORT_ISP_ACTIVE,
+-				    &ha->dpc_flags)))
+-					spin_unlock_irqrestore(
+-					    &ha->mbx_reg_lock, mbx_flags);
++			if (RD_MAILBOX_REG(ha, reg, 0) != MBS_BUSY)
+ 				break;
+-			}
+-
+-			if (!(test_bit(ABORT_ISP_ACTIVE, &ha->dpc_flags)))
+-				spin_unlock_irqrestore(&ha->mbx_reg_lock,
+-				    mbx_flags);
+ 
+ 			udelay(100);
+ 		}
+
+> 
 
