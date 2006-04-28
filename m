@@ -1,94 +1,41 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: [PATCH 1/2] scsi: Add scsi_device max_cmd_len (resend)
-Date: Fri, 28 Apr 2006 09:28:02 -0500
-Message-ID: <44522672.5010607@us.ibm.com>
-References: <200604172240.k3HMes2V010154@d01av01.pok.ibm.com>
-Reply-To: brking@us.ibm.com
+From: "Randy.Dunlap" <rdunlap@xenotime.net>
+Subject: Re: aha152x(_cs) oops
+Date: Fri, 28 Apr 2006 07:31:53 -0700 (PDT)
+Message-ID: <Pine.LNX.4.58.0604280731220.8301@shark.he.net>
+References: <20060413093615.661b7018.rdunlap@xenotime.net>
+ <1144950036.3474.36.camel@mulgrave.il.steeleye.com>
+ <20060425115709.0db4332f.rdunlap@xenotime.net> <Pine.LNX.4.60.0604252143550.3893@poirot.grange>
+ <20060425140327.605f22ac.rdunlap@xenotime.net> <Pine.LNX.4.60.0604262202200.6890@poirot.grange>
+ <20060426132901.ec6d0952.rdunlap@xenotime.net> <Pine.LNX.4.60.0604262312580.6890@poirot.grange>
+ <20060427091937.f21c6e81.rdunlap@xenotime.net> <Pine.LNX.4.60.0604280733060.4148@poirot.grange>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:6275 "EHLO e1.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S965206AbWD1O2H (ORCPT
+Received: from xenotime.net ([66.160.160.81]:59084 "HELO xenotime.net")
+	by vger.kernel.org with SMTP id S1030293AbWD1Obz (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Apr 2006 10:28:07 -0400
-In-Reply-To: <200604172240.k3HMes2V010154@d01av01.pok.ibm.com>
+	Fri, 28 Apr 2006 10:31:55 -0400
+Received: from shark.he.net ([66.160.160.2]) by xenotime.net for <linux-scsi@vger.kernel.org>; Fri, 28 Apr 2006 07:31:53 -0700
+In-Reply-To: <Pine.LNX.4.60.0604280733060.4148@poirot.grange>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@us.ibm.com>
-Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: "Randy.Dunlap" <rdunlap@xenotime.net>, James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
 
-James,
+On Fri, 28 Apr 2006, Guennadi Liakhovetski wrote:
 
-Any comments on the patch below?
+> On Thu, 27 Apr 2006, Randy.Dunlap wrote:
+>
+> > I built a kernel without highmem support and banged on the jaz drive
+> > quite a bit with it, without errors AFAICT.  I also did not see any
+> > evidence of "resend"s being needed, so it was a bit inconclusive.
+>
+> Hm, well, I don't see a burning need in fixing this particular driver
+> "properly", I think, it might do with your fix for now. I might give it a
+> couple more tries but it won't be too soon and not too intensive either,
+> unless someone can give good reasons for the opposite.
 
-Thanks
-
-Brian
-
-Brian King wrote:
-> Add a max_cmd_len field to the scsi_device struct
-> to allow for per device limits of allowable command
-> lengths. This patch was submitted earlier and resulted
-> in a bit of discussion regarding whether or not
-> CDB length is a limitation of the host or the device.
-> For ATA, both the host and the device can limit the
-> CDB length. Currently libata reads the IDENTIFY
-> PACKET DEVICE data for an ATAPI device and sets
-> the max_cmd_len in the scsi host for the maximum
-> supported CDB length of all ATA/ATAPI devices attached
-> to the same scsi host. This patch allows libata to
-> set the max CDB length on a per device basis and
-> allows the SAS/SATA HBA to set its own max command
-> length in the scsi host template.
-> 
-> Signed-off-by: Brian King <brking@us.ibm.com>
-> ---
-> 
->  libata-dev-bjking1/drivers/scsi/scsi.c        |    3 ++-
->  libata-dev-bjking1/drivers/scsi/scsi_scan.c   |    1 +
->  libata-dev-bjking1/include/scsi/scsi_device.h |    1 +
->  3 files changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff -puN include/scsi/scsi_device.h~scsi_device_cdb_len include/scsi/scsi_device.h
-> --- libata-dev/include/scsi/scsi_device.h~scsi_device_cdb_len	2006-04-17 17:17:50.000000000 -0500
-> +++ libata-dev-bjking1/include/scsi/scsi_device.h	2006-04-17 17:17:50.000000000 -0500
-> @@ -72,6 +72,7 @@ struct scsi_device {
->  	unsigned int manufacturer;	/* Manufacturer of device, for using 
->  					 * vendor-specific cmd's */
->  	unsigned sector_size;	/* size in bytes */
-> +	unsigned char max_cmd_len;
->  
->  	void *hostdata;		/* available to low-level driver */
->  	char type;
-> diff -puN drivers/scsi/scsi_scan.c~scsi_device_cdb_len drivers/scsi/scsi_scan.c
-> --- libata-dev/drivers/scsi/scsi_scan.c~scsi_device_cdb_len	2006-04-17 17:17:50.000000000 -0500
-> +++ libata-dev-bjking1/drivers/scsi/scsi_scan.c	2006-04-17 17:17:50.000000000 -0500
-> @@ -218,6 +218,7 @@ static struct scsi_device *scsi_alloc_sd
->  	sdev->lun = lun;
->  	sdev->channel = starget->channel;
->  	sdev->sdev_state = SDEV_CREATED;
-> +	sdev->max_cmd_len = MAX_COMMAND_SIZE;
->  	INIT_LIST_HEAD(&sdev->siblings);
->  	INIT_LIST_HEAD(&sdev->same_target_siblings);
->  	INIT_LIST_HEAD(&sdev->cmd_list);
-> diff -puN drivers/scsi/scsi.c~scsi_device_cdb_len drivers/scsi/scsi.c
-> --- libata-dev/drivers/scsi/scsi.c~scsi_device_cdb_len	2006-04-17 17:17:50.000000000 -0500
-> +++ libata-dev-bjking1/drivers/scsi/scsi.c	2006-04-17 17:17:50.000000000 -0500
-> @@ -610,7 +610,8 @@ int scsi_dispatch_cmd(struct scsi_cmnd *
->  	 * Before we queue this command, check if the command
->  	 * length exceeds what the host adapter can handle.
->  	 */
-> -	if (CDB_SIZE(cmd) > cmd->device->host->max_cmd_len) {
-> +	if (CDB_SIZE(cmd) > cmd->device->host->max_cmd_len ||
-> +	    CDB_SIZE(cmd) > cmd->device->max_cmd_len) {
->  		SCSI_LOG_MLQUEUE(3,
->  				printk("queuecommand : command too long.\n"));
->  		cmd->result = (DID_ABORT << 16);
-> _
-
+Agreed, I don't have a problem with that.
 
 -- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+~Randy
