@@ -1,41 +1,69 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: request to add aic94xx to -mm
-Date: Fri, 28 Apr 2006 12:31:29 -0500
-Message-ID: <1146245489.5251.42.camel@mulgrave.il.steeleye.com>
+Date: Fri, 28 Apr 2006 18:46:23 +0100
+Message-ID: <20060428174623.GA17119@infradead.org>
 References: <1146243246.5251.29.camel@mulgrave.il.steeleye.com>
-	 <44524DF6.3000509@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:18102 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751429AbWD1Rbr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Apr 2006 13:31:47 -0400
-In-Reply-To: <44524DF6.3000509@torque.net>
+Received: from pentafluge.infradead.org ([213.146.154.40]:29877 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1751666AbWD1RqZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Apr 2006 13:46:25 -0400
+Content-Disposition: inline
+In-Reply-To: <1146243246.5251.29.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
+To: James Bottomley <James.Bottomley@SteelEye.com>
 Cc: Andrew Morton <akpm@osdl.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Fri, 2006-04-28 at 13:16 -0400, Douglas Gilbert wrote:
-> James Bottomley wrote:
-> > Hi Andrew,
-> > 
-> > I'd like to see aic94xx added to -mm to get it wider exposure subject to
-> > the following caveats:
-> > 
-> > 1. Hotplug is still a bit of a mess
-> > 2. SATA attachment doesn't work
-> 
-> 3. my whole SCSI subsystem locked up a couple of times.
 
-Well, no, the above is supposed to be the list of things I'm not
-interested in bug reports on unless accompanied by code fixes.  If it
-locks up the scsi subsystem I am interested in that ... I do run two of
-these machines as SCSI test/build machines with no problems like
-this ... do you have a bug report?
+There's also various issues around the sas code which aic94xx needs:
 
-James
+ - all the code should be renamed to libsas to make sure this is helpers
+   for a host-based sas implementation, including the config option
+ - the sas* headers should go directly to include/scsi/
+ - sas_frames*.h need to be changed to avoid on the wite bitfields which
+   are completely non-portable.  That'll cause quite a bit of churn all
+   over the codebase unfortuantely.  some of those headers should be merged
+   with the current scsi_transport_sas.h, e.g. the latter should lose various
+   constants that are in sas.h
+ - list_for_each_entry_reverse_safe from sas_discover.h should go to
+   linux/list.h instead
+ - struct domain_device is totally misnamed
+ - sas_init_dev shouldn't be inline
+ - in the sas headers generic on the wire stuff should be separated from
+   libsas internals, e.g. most of sas_disocvery.h should become
+   libsas_discovery.h or merged into libsas.h, but the smp defintions should
+   go into a sas_smp.h or merged with sas_frames.h (why not sas_frame.h btw?)
+   similar for sas_task.h
+   generally I'd say all the headers currently in include/scsi/sas/ should
+   probably be merged into just two:
+
+    * include/scsi/sas.h for on the wire SAS defintions, best annotate with
+      reference to what section in the standard they correspond to
+    * include/scsi/libsas.h for all structures and prototypes of the host
+      based sas code
+ - drivers/scsi/sas/README needs to be updated to match reality and move
+   to Documentation/
+ - expander_conf.c should go away from the kernel tree.
+ - sas_common.c seems to only contain duplicate code
+   from scsi_transport_sas.c
+ - all these //depot SCM comments should go
+ - the priority queue implementation the long comment in sas_event.c
+   talks about doesn't exist anymore, so kill it.  Also there's not a lot
+   left in that file, and what's left doesn't make a lot of sense, as
+   the one-element local sas_ha_event_fns array.  I'd suggest merging it
+   into another
+ - libsas should implement all methods in the sas_function_template.  They're
+   supporting functionality that's in the SAS spec and are expected by
+   userland to be present.  There should be no driver code involvded here,
+   just libsas.  I'd move the actual template to the driver, though so
+   a driver could override it, similar to what we do with the host template.
+ - Various functions marked inline that shouldn't.  there's rarely a use
+   for inlines except for ver ysmall functions
+ - why don't sas_queue_event and as_begin_event use bitops?
 
 
+this was just a quick 15 minute skip through the driver, once those are
+addresses I'll do a real review.
