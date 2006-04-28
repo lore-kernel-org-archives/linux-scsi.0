@@ -1,50 +1,31 @@
-From: Mike Anderson <andmike@us.ibm.com>
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: request to add aic94xx to -mm
-Date: Fri, 28 Apr 2006 10:55:21 -0700
-Message-ID: <20060428175521.GB18383@us.ibm.com>
-References: <1146243246.5251.29.camel@mulgrave.il.steeleye.com> <20060428172736.GA11321@infradead.org>
+Date: Fri, 28 Apr 2006 18:58:26 +0100
+Message-ID: <20060428175826.GA18373@infradead.org>
+References: <1146243246.5251.29.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:30399 "EHLO e5.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1751107AbWD1Rz0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Apr 2006 13:55:26 -0400
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e5.ny.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k3SHtP0n001412
-	for <linux-scsi@vger.kernel.org>; Fri, 28 Apr 2006 13:55:25 -0400
-Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by d01relay02.pok.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k3SHtPOk106478
-	for <linux-scsi@vger.kernel.org>; Fri, 28 Apr 2006 13:55:25 -0400
-Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
-	by d01av03.pok.ibm.com (8.12.11/8.13.3) with ESMTP id k3SHtOPe007078
-	for <linux-scsi@vger.kernel.org>; Fri, 28 Apr 2006 13:55:25 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:16098 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1751426AbWD1R62 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Apr 2006 13:58:28 -0400
 Content-Disposition: inline
-In-Reply-To: <20060428172736.GA11321@infradead.org>
+In-Reply-To: <1146243246.5251.29.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, "Tarte, Robert" <Robert_Tarte@adaptec.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@osdl.org>, linux-scsi <linux-scsi@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Andrew Morton <akpm@osdl.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Christoph Hellwig <hch@infradead.org> wrote:
-> On Fri, Apr 28, 2006 at 11:54:05AM -0500, James Bottomley wrote:
-> > Could you send any bugs found back to linux-scsi (not the kernel
-> > bugzilla)?
-> 
-> not a bug strictly speaking, but it should stop including the firmware
-> blob and use request_firmware, similar to the discussion we had about
-> qla2xxx recently.  It would be even nicer if adaptec continued publishing
-> their sequencer code as with aic7xxx and aic79xx which look remarkably
-> similar, of course.
+more comments on the actual aic94xx driver:
 
-I added Rob to this thread so he could comment on this.
-
-It would also be good before we put another card through this process that
-at least a few distros have the request_firmware infrastructure fully
-functional. I have seen indications that there where a few bumps in the
-road in getting this working.
-
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+ - the README file wouldn't contain much anymore after the outdated
+   bits are removed, I'd suggest killing it and listing the supported
+   hardware in the Kconfig instead
+ - lots of inline abuse that should go away
+ - please use the pci_iomap api to support pio and mmio transparently
+   instead of the local wrappers
+ - no need to handle signle-element SG lists anymore
+ - CLEAR_NEXUS_PRE and CLEAR_NEXUS_POST should become real functions instead
+   of context-sensitive macros
+ - what about replacing ASD_DPRINTK with the standard debugging helpers?
