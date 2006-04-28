@@ -1,29 +1,40 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 1/2] scsi: Add scsi_device max_cmd_len (resend)
-Date: Fri, 28 Apr 2006 10:17:13 -0500
-Message-ID: <1146237433.5251.7.camel@mulgrave.il.steeleye.com>
-References: <200604172240.k3HMes2V010154@d01av01.pok.ibm.com>
-	 <44522672.5010607@us.ibm.com>
+Subject: request to add aic94xx to -mm
+Date: Fri, 28 Apr 2006 11:54:05 -0500
+Message-ID: <1146243246.5251.29.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <44522672.5010607@us.ibm.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: brking@us.ibm.com
-Cc: linux-scsi@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stat9.steeleye.com ([209.192.50.41]:1716 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1751376AbWD1QyO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Apr 2006 12:54:14 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Fri, 2006-04-28 at 09:28 -0500, Brian King wrote:
-> Any comments on the patch below?
+Hi Andrew,
 
-The mechanistic comment is that the max_cmd_len parameter should be per
-target not per device.
+I'd like to see aic94xx added to -mm to get it wider exposure subject to
+the following caveats:
 
-However, since this is SATA only, and SATA is supposed to be moving out
-of the SCSI subsystem, I'm a bit loath to add things we'll have to
-attempt to extract later.  What would be the consequence of simply
-lowering the host max_cmd_len by the result returned from IDENTIFY?
+1. Hotplug is still a bit of a mess
+2. SATA attachment doesn't work
+
+Could you send any bugs found back to linux-scsi (not the kernel
+bugzilla)?
+
+The tree is at
+
+master.kernel.org:/pub/scm/linux/kernel/git/jejb/aic94xx-sas-2.6.git
+
+It's pretty much a working tree (as in most of the patches don't have
+proper commit logs), so I'm going to flatten it once we get agreement
+that it should go forwards into scsi-misc.
+
+Thanks,
 
 James
 
