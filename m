@@ -1,33 +1,40 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: How to replace bus_to_virt()?
-Date: Sun, 30 Apr 2006 17:50:14 +0200
-Message-ID: <1146412215.20760.10.camel@laptopd505.fenrus.org>
-References: <4454CF35.7010803@s5r6.in-berlin.de>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: "Vanessa Billings" <nkglxkhx@pipeline.com>
+Subject: Solid Home Loans made easy
+Date: Mon, 01 May 2006 00:23:06 +0100
+Message-ID: <9.1.0.6.4.44295949751295.055a8742@209.132.176.167>
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:64930 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1751155AbWD3PuR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 30 Apr 2006 11:50:17 -0400
-In-Reply-To: <4454CF35.7010803@s5r6.in-berlin.de>
+Received: from 88-136-182-1.adslgp.cegetel.net ([88.136.182.1]:9230 "HELO
+	88-136-182-1.adslgp.cegetel.net") by vger.kernel.org with SMTP
+	id S1751230AbWD3WXJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 30 Apr 2006 18:23:09 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Sun, 2006-04-30 at 16:52 +0200, Stefan Richter wrote:
-> Hi all,
-> 
-> is there a *direct* future-proof replacement for bus_to_virt()?
-> 
-> It appears there are already architectures which do not define a 
-> bus_to_virt() funtion or macro. If there isn't a direct replacement, is 
-> there at least a way to detect at compile time whether bus_to_virt() exists?
+Homeowner 
 
-I'd go one step further: given a world with iommu's, and multiple pci
-domains etc, how can you know there even IS such a translation possible
-(without first having set it up from the other direction)?
+
+You have been pre-approved for a $428,168 Home Loan at a 3.76 Fixed Rate. 
+This offer is being extended to you unconditionally and your credit is in no way a factor. 
+
+
+To take Advantage of this Limited Time opportunity 
+
+
+All we ask is that you visit our Website and complete 
+The 1 minute post Approval Form 
+
+
+http://www5.dt5u.com/was.asp
+
+
+Best Wishes, 
+
+
+Crystal Tran
+
 
 
