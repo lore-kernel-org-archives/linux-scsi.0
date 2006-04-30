@@ -1,46 +1,45 @@
-From: "Avery" <adflkgbzjhv@brianpinkerton.com>
-Subject: Certain combinations will work.
-Date: Sat, 29 Apr 2006 21:29:24 -0800
-Message-ID: <00b101c66c0e$a898dc90$3019d85b__22932.7752058909$1146371379$gmane$org@DTZUKD>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: How to replace bus_to_virt()?
+Date: Sun, 30 Apr 2006 16:52:37 +0200
+Message-ID: <4454CF35.7010803@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=original
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:24243 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S1750919AbWD3E3X (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 30 Apr 2006 00:29:23 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751140AbWD3OzU@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-hams@vger.kernel.org, linux-x25@vger.kernel.org, nel-owner@vger.kernel.org, linux-fsedevel@vger.kernel.org, linux-ide@vger.kernel.org
-Cc: linux-ipx@vger.kernel.org
 
-F A S T    T R A C K   D E G R E E   P R O G R A M 
+Hi all,
 
-Obtain the degree you deserve, based on your present knowledge and life experience.
+is there a *direct* future-proof replacement for bus_to_virt()?
 
-A prosperous future, money earning power, and the Admiration of all.
+It appears there are already architectures which do not define a 
+bus_to_virt() funtion or macro. If there isn't a direct replacement, is 
+there at least a way to detect at compile time whether bus_to_virt() exists?
 
-Degrees from an Established, Prestigious, Leading Institution.
+I am asking because the sbp2 driver uses bus_to_virt() if 
+CONFIG_IEEE1394_SBP2_PHYS_DMA=y. I would like to replace this option by 
+an automatic detection when the respective code in sbp2 is actually 
+required.
 
-Your Degree will show exactly what you really can do.
+The current implementation is this: Sbp2 uses bus_to_virt() to map from 
+1394 bus addresses (which are currently identical to local host bus 
+addresses) to virtual addresses. These addresses are supplied by SBP-2 
+target devices and point to *arbitrary* locations within buffers. These 
+buffers are supplied by the SCSI subsystem/ block IO subsystem. That is, 
+sbp2 has no influence on the location of the buffers, nor has it 
+influence on the location of the chunk of data which an SBP-2 target is 
+reading or writing at a particular moment. But thanks to bus_to_virt(), 
+sbp2 does not need to know which SCSI command buffer (and to which 
+scatter/gather element in the buffer) a particular data transfer belongs to.
 
-Get the Job, Promotion, Business Opportunity
-
-and Social Advancement you Desire!
-
-Eliminates classrooms and traveling.
-
-Achieve your Bachelors, Masters, MBA, or PhD
-in the field of your expertise
-
-Professional and affordable
-
-Call now - your Graduation is a phone call away.
-
-Please call:
-1-206-666-5510
-Calls returned promptly
+ From what I found out so far, I am afraid I have to implement a totally 
+different address mapping scheme for the cases where physical DMA is not 
+available; i.e. a scheme that enables sbp2 to look up the s/g element to 
+which a transfer is directed, based on the 1394 bus address of the transfer.
+-- 
+Stefan Richter
+-=====-=-==- -=-- ====-
+http://arcgraph.de/sr/
