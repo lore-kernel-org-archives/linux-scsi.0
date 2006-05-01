@@ -1,40 +1,57 @@
-From: Segher Boessenkool <segher@kernel.crashing.org>
-Subject: Re: How to replace bus_to_virt()?
-Date: Mon, 1 May 2006 14:30:02 +0200
-Message-ID: <EFD1A7C4-9A9E-48EA-985E-9154428AFFE6@kernel.crashing.org>
-References: <4454CF35.7010803@s5r6.in-berlin.de>
-Mime-Version: 1.0 (Apple Message framework v749.3)
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: + drivers-scsi-use-array_size-macro.patch added to -mm tree
+Date: Mon, 01 May 2006 19:45:19 +0200
+Message-ID: <1146505519.20760.60.camel@laptopd505.fenrus.org>
+References: <200605011717.k41HHagU001787@shell0.pdx.osdl.net>
+Mime-Version: 1.0
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-in-02.arcor-online.net ([151.189.21.42]:6569 "EHLO
-	mail-in-02.arcor-online.net") by vger.kernel.org with ESMTP
-	id S932076AbWEAMaK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 1 May 2006 08:30:10 -0400
-In-Reply-To: <4454CF35.7010803@s5r6.in-berlin.de>
+Received: from pentafluge.infradead.org ([213.146.154.40]:50352 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S932178AbWEARpW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 1 May 2006 13:45:22 -0400
+In-Reply-To: <200605011717.k41HHagU001787@shell0.pdx.osdl.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: tklauser@nuerscht.ch, akpm@osdl.org, linux-scsi@vger.kernel.org
 
-> is there a *direct* future-proof replacement for bus_to_virt()?
->
-> It appears there are already architectures which do not define a  
-> bus_to_virt() funtion or macro. If there isn't a direct  
-> replacement, is there at least a way to detect at compile time  
-> whether bus_to_virt() exists?
->
-> I am asking because the sbp2 driver uses bus_to_virt() if  
-> CONFIG_IEEE1394_SBP2_PHYS_DMA=y. I would like to replace this  
-> option by an automatic detection when the respective code in sbp2  
-> is actually required.
->
-> The current implementation is this: Sbp2 uses bus_to_virt() to map  
-> from 1394 bus addresses (which are currently identical to local  
-> host bus addresses) to virtual addresses.
+On Mon, 2006-05-01 at 10:15 -0700, akpm@osdl.org wrote:
+> diff -puN drivers/scsi/53c700.c~drivers-scsi-use-array_size-macro drivers/scsi/53c700.c
+> --- devel/drivers/scsi/53c700.c~drivers-scsi-use-array_size-macro	2006-05-01 10:15:39.000000000 -0700
+> +++ devel-akpm/drivers/scsi/53c700.c	2006-05-01 10:15:39.000000000 -0700
+> @@ -316,7 +316,7 @@ NCR_700_detect(struct scsi_host_template
+>  	BUG_ON(!dma_is_consistent(pScript) && L1_CACHE_BYTES < dma_get_cache_alignment());
+>  	hostdata->slots = (struct NCR_700_command_slot *)(memory + SLOTS_OFFSET);
+>  	hostdata->dev = dev;
+> -		
+> +
+>  	pSlots = pScript + SLOTS_OFFSET;
+>  
+>  	/* Fill in the missing routines from the host template */
 
-Sounds like you should be using phys_to_virt() anyway?
+noise?
+
+> @@ -332,19 +332,18 @@ NCR_700_detect(struct scsi_host_template
+>  	tpnt->slave_destroy = NCR_700_slave_destroy;
+>  	tpnt->change_queue_depth = NCR_700_change_queue_depth;
+>  	tpnt->change_queue_type = NCR_700_change_queue_type;
+> -	
+> +
+
+more noise?
+> @@ -385,17 +382,17 @@ NCR_700_detect(struct scsi_host_template
+>  	host->hostdata[0] = (unsigned long)hostdata;
+>  	/* kick the chip */
+>  	NCR_700_writeb(0xff, host, CTEST9_REG);
+> -	if(hostdata->chip710) 
+> +	if (hostdata->chip710)
+
+while a nice cleanup.. does it fit in this patch?
 
 
-Segher
+(many more such things snipped)
+
+
 
