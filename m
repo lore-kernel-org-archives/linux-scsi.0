@@ -1,38 +1,65 @@
-From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: RE: [PATCH] fusion - race between mptfc_register_dev and  mptfc_target_alloc
-Date: Mon, 1 May 2006 12:10:43 -0600
-Message-ID: <664A4EBB07F29743873A87CF62C26D700C6921@NAMAIL4.ad.lsil.com>
+From: Tobias Klauser <tklauser@nuerscht.ch>
+Subject: Re: + drivers-scsi-use-array_size-macro.patch added to -mm tree
+Date: Mon, 1 May 2006 22:34:01 +0200
+Message-ID: <20060501203401.GA3557@neon.tklauser.home>
+References: <200605011717.k41HHagU001787@shell0.pdx.osdl.net> <1146505519.20760.60.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:54464 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1750789AbWEASKw convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 1 May 2006 14:10:52 -0400
-Content-class: urn:content-classes:message
+Received: from mail.shorthander.org ([85.10.227.118]:29403 "EHLO
+	herakles.nuerscht.net") by vger.kernel.org with ESMTP
+	id S932231AbWEAUeG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 1 May 2006 16:34:06 -0400
+Content-Disposition: inline
+In-Reply-To: <1146505519.20760.60.camel@laptopd505.fenrus.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: mdr@sgi.com, linux-scsi@vger.kernel.org
-Cc: James.Bottomley@SteelEye.com, jeremy@sgi.com, gwh@sgi.com
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: linux-kernel@vger.kernel.org, akpm@osdl.org, linux-scsi@vger.kernel.org
 
-On Monday, May 01, 2006 12:07 PM, Micheal Reed wrote: 
+On 2006-05-01 at 19:45:19 +0200, Arjan van de Ven <arjan@infradead.org> wrote:
+> On Mon, 2006-05-01 at 10:15 -0700, akpm@osdl.org wrote:
+> > diff -puN drivers/scsi/53c700.c~drivers-scsi-use-array_size-macro drivers/scsi/53c700.c
+> > --- devel/drivers/scsi/53c700.c~drivers-scsi-use-array_size-macro	2006-05-01 10:15:39.000000000 -0700
+> > +++ devel-akpm/drivers/scsi/53c700.c	2006-05-01 10:15:39.000000000 -0700
+> > @@ -316,7 +316,7 @@ NCR_700_detect(struct scsi_host_template
+> >  	BUG_ON(!dma_is_consistent(pScript) && L1_CACHE_BYTES < dma_get_cache_alignment());
+> >  	hostdata->slots = (struct NCR_700_command_slot *)(memory + SLOTS_OFFSET);
+> >  	hostdata->dev = dev;
+> > -		
+> > +
+> >  	pSlots = pScript + SLOTS_OFFSET;
+> >  
+> >  	/* Fill in the missing routines from the host template */
+> 
+> noise?
 
+I usually remove trailing whitespaces which are around the section I'm
+patching (I highlight them in my vim). Is that a problem?
+
+> > @@ -332,19 +332,18 @@ NCR_700_detect(struct scsi_host_template
+> >  	tpnt->slave_destroy = NCR_700_slave_destroy;
+> >  	tpnt->change_queue_depth = NCR_700_change_queue_depth;
+> >  	tpnt->change_queue_type = NCR_700_change_queue_type;
+> > -	
+> > +
+> 
+> more noise?
+
+Same here
+
+> > @@ -385,17 +382,17 @@ NCR_700_detect(struct scsi_host_template
+> >  	host->hostdata[0] = (unsigned long)hostdata;
+> >  	/* kick the chip */
+> >  	NCR_700_writeb(0xff, host, CTEST9_REG);
+> > -	if(hostdata->chip710) 
+> > +	if (hostdata->chip710)
+> 
+> while a nice cleanup.. does it fit in this patch?
 > 
 > 
-> This patch applies to 2.6.17-rc3 after applying these patches from
-> scsi-rc-fixes-2.6.git.
-> 
->    [SCSI] mptfusion: bug fix's for raid components adding/deleting
->    [SCSI] - fusion - mptfc bug fix's to prevent deadlock situations
->    [SCSI] fusion - bug fix stack overflow in mptbase
-> 
+> (many more such things snipped)
 
-These three patchs are there in James Bottomley's rc-fixes-2.6 tree.
-
-http://www.kernel.org/pub/linux/kernel/people/jejb/scsi-rc-fixes-2.6.dif
-f
-
-Eric
-
+I probably should have mentioned the whitespace/coding style cleanups in
+the description of the patch. Or should I just leave out these kind of
+cleanups?
