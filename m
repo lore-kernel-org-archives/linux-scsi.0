@@ -1,63 +1,40 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: [PATCH] aic7*: cleanup MODULE_PARM_DESC strings
-Date: Sun, 30 Apr 2006 19:25:44 -0700
-Message-ID: <20060430192544.f48da359.rdunlap@xenotime.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+From: Segher Boessenkool <segher@kernel.crashing.org>
+Subject: Re: How to replace bus_to_virt()?
+Date: Mon, 1 May 2006 14:30:02 +0200
+Message-ID: <EFD1A7C4-9A9E-48EA-985E-9154428AFFE6@kernel.crashing.org>
+References: <4454CF35.7010803@s5r6.in-berlin.de>
+Mime-Version: 1.0 (Apple Message framework v749.3)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:29878 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S1750764AbWEACXT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 30 Apr 2006 22:23:19 -0400
-Received: from midway.site ([71.111.157.99]) by xenotime.net for <linux-scsi@vger.kernel.org>; Sun, 30 Apr 2006 19:23:18 -0700
+Received: from mail-in-02.arcor-online.net ([151.189.21.42]:6569 "EHLO
+	mail-in-02.arcor-online.net") by vger.kernel.org with ESMTP
+	id S932076AbWEAMaK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 1 May 2006 08:30:10 -0400
+In-Reply-To: <4454CF35.7010803@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: scsi <linux-scsi@vger.kernel.org>
-Cc: jejb <james.bottomley@steeleye.com>, akpm <akpm@osdl.org>
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-From: Randy Dunlap <rdunlap@xenotime.net>
+> is there a *direct* future-proof replacement for bus_to_virt()?
+>
+> It appears there are already architectures which do not define a  
+> bus_to_virt() funtion or macro. If there isn't a direct  
+> replacement, is there at least a way to detect at compile time  
+> whether bus_to_virt() exists?
+>
+> I am asking because the sbp2 driver uses bus_to_virt() if  
+> CONFIG_IEEE1394_SBP2_PHYS_DMA=y. I would like to replace this  
+> option by an automatic detection when the respective code in sbp2  
+> is actually required.
+>
+> The current implementation is this: Sbp2 uses bus_to_virt() to map  
+> from 1394 bus addresses (which are currently identical to local  
+> host bus addresses) to virtual addresses.
 
-Modify beginning string to be more readable.
-Remove one trailing newline.
-
-Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
----
- drivers/scsi/aic7xxx/aic79xx_osm.c |    4 ++--
- drivers/scsi/aic7xxx/aic7xxx_osm.c |    2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
-
---- linux-2617-rc3.orig/drivers/scsi/aic7xxx/aic79xx_osm.c
-+++ linux-2617-rc3/drivers/scsi/aic7xxx/aic79xx_osm.c
-@@ -340,7 +340,7 @@ MODULE_LICENSE("Dual BSD/GPL");
- MODULE_VERSION(AIC79XX_DRIVER_VERSION);
- module_param(aic79xx, charp, 0444);
- MODULE_PARM_DESC(aic79xx,
--"period delimited, options string.\n"
-+"period-delimited options string:\n"
- "	verbose			Enable verbose/diagnostic logging\n"
- "	allow_memio		Allow device registers to be memory mapped\n"
- "	debug			Bitmask of debug values to enable\n"
-@@ -366,7 +366,7 @@ MODULE_PARM_DESC(aic79xx,
- "		Shorten the selection timeout to 128ms\n"
- "\n"
- "	options aic79xx 'aic79xx=verbose.tag_info:{{}.{}.{..10}}.seltime:1'\n"
--"\n");
-+);
- 
- static void ahd_linux_handle_scsi_status(struct ahd_softc *,
- 					 struct scsi_device *,
---- linux-2617-rc3.orig/drivers/scsi/aic7xxx/aic7xxx_osm.c
-+++ linux-2617-rc3/drivers/scsi/aic7xxx/aic7xxx_osm.c
-@@ -341,7 +341,7 @@ MODULE_LICENSE("Dual BSD/GPL");
- MODULE_VERSION(AIC7XXX_DRIVER_VERSION);
- module_param(aic7xxx, charp, 0444);
- MODULE_PARM_DESC(aic7xxx,
--"period delimited, options string.\n"
-+"period-delimited options string:\n"
- "	verbose			Enable verbose/diagnostic logging\n"
- "	allow_memio		Allow device registers to be memory mapped\n"
- "	debug			Bitmask of debug values to enable\n"
+Sounds like you should be using phys_to_virt() anyway?
 
 
----
+Segher
+
