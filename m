@@ -1,64 +1,48 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: Re: [PATCH] fusion - race between mptfc_register_dev and 	mptfc_target_alloc
-Date: Wed, 03 May 2006 13:43:03 -0500
-Message-ID: <4458F9B7.10201@sgi.com>
-References: <664A4EBB07F29743873A87CF62C26D700C6921@NAMAIL4.ad.lsil.com> <1146679737.3346.77.camel@mulgrave.il.steeleye.com>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: How to replace bus_to_virt()?
+Date: Wed, 3 May 2006 21:11:03 +0200 (CEST)
+Message-ID: <Pine.LNX.4.60.0605032109110.5865@poirot.grange>
+References: <4454CF35.7010803@s5r6.in-berlin.de> <1146412215.20760.10.camel@laptopd505.fenrus.org>
+ <44554AFE.30804@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:12468 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S1750720AbWECSnK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 May 2006 14:43:10 -0400
-In-Reply-To: <1146679737.3346.77.camel@mulgrave.il.steeleye.com>
+Received: from mail.gmx.de ([213.165.64.20]:65436 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S1750723AbWECTLF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 May 2006 15:11:05 -0400
+In-Reply-To: <44554AFE.30804@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: "Moore, Eric" <Eric.Moore@lsil.com>, linux-scsi@vger.kernel.org, jeremy@sgi.com, gwh@sgi.com
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: Arjan van de Ven <arjan@infradead.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-I think it's implicit in both the private email I included and Eric's
-posting of 05/01/2006 at 13:10PM (CDT).
+On Mon, 1 May 2006, Stefan Richter wrote:
 
-> Based on a private email from Eric Moore, I'm providing his sign-off.
+> Arjan van de Ven wrote:
+> > On Sun, 2006-04-30 at 16:52 +0200, Stefan Richter wrote:
+> > > is there a *direct* future-proof replacement for bus_to_virt()?
+> > > 
+> > > It appears there are already architectures which do not define a
+> > > bus_to_virt() funtion or macro. If there isn't a direct replacement, is
+> > > there at least a way to detect at compile time whether bus_to_virt()
+> > > exists?
+> > 
+> > 
+> > I'd go one step further: given a world with iommu's, and multiple pci
+> > domains etc, how can you know there even IS such a translation possible
+> > (without first having set it up from the other direction)?
 > 
->> > Mike - Pls go ahead with posting this patch
->> > to linux-scsi@ and bugzilla 170314.   Steve Shirron
->> > has reveiwed this, and I believe they will be testing
->> > the latest drivers as well.
->> >
->> > I'm not going to have time today to post
->> > this, and next week I have Jury Duty.
->> >
->> > Eric
+> Well, we actually do set it up from the other direction. But in a way that
+> does not work with IOMMUs...
 > 
-> 
+> AFAIU, the patch "dc395x: dynamically map scatter-gather for PIO" [1] by
+> Guennadi Liakhovetski is dealing with the same issue. I am not yet clear
+> whether I could adopt this method for sbp2.
+> [1] http://marc.theaimsgroup.com/?l=linux-scsi&t=114400790300004
 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=114650712415619&w=2
+I would be, obviously, interested to hear any results with that one.
 
-Doesn't mean that Eric won't provide what you need....
-
-Mike
-
-
-
-James Bottomley wrote:
-> On Mon, 2006-05-01 at 12:10 -0600, Moore, Eric wrote:
->> On Monday, May 01, 2006 12:07 PM, Micheal Reed wrote: 
->>> This patch applies to 2.6.17-rc3 after applying these patches from
->>> scsi-rc-fixes-2.6.git.
->>>
->>>    [SCSI] mptfusion: bug fix's for raid components adding/deleting
->>>    [SCSI] - fusion - mptfc bug fix's to prevent deadlock situations
->>>    [SCSI] fusion - bug fix stack overflow in mptbase
-> 
-> Is there an Ack for this patch?
-> 
-> James
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
