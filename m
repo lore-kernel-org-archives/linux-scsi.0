@@ -1,257 +1,137 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: [PATCH] scsi_wq (fc transport) thread hang
-Date: Thu, 04 May 2006 11:18:51 -0500
-Message-ID: <445A296B.3060501@sgi.com>
+From: Vasily Averin <vvs@sw.ru>
+Subject: megaraid_mbox: garbage in file
+Date: Thu, 04 May 2006 22:48:47 +0400
+Message-ID: <445A4C8F.5030204@sw.ru>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------050208030705000406080508"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:10196 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S932346AbWEDQU5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 May 2006 12:20:57 -0400
+Received: from mailhub.sw.ru ([195.214.233.200]:56458 "EHLO relay.sw.ru")
+	by vger.kernel.org with ESMTP id S1030293AbWEDSpl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 May 2006 14:45:41 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Michael Reed <mdr@sgi.com>, Gary Hagensen <gwh@sgi.com>, Jeremy Higdon <jeremy@sgi.com>, "Moore, Eric Dean" <Eric.Moore@lsil.com>, "Shirron, Stephen" <Stephen.Shirron@lsil.com>, James.Smart@Emulex.Com
+To: linux-scsi@vger.kernel.org, Neela.Kolli@engenio.com, Atul Mukker <Atul.Mukker@lsil.com>, Seokmann.Ju@lsil.com, sreenib@lsil.com, James.Bottomley@SteelEye.com, devel@openvz.org
 
-This is a multi-part message in MIME format.
---------------050208030705000406080508
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Hello all,
 
-I was testing changes to the LSI fc driver and managed to wedge the
-fc transport's scsi_wq thread.  Here's what caused it.
+I've investigated customers claim on the unstable work of their node and found a
+strange effect: reading from some files leads to the
+ "attempt to access beyond end of device" messages.
 
-reset board via lsiutil command
+I've checked filesystem, memory on the node, motherboard BIOS version, but it
+does not help and issue still has been reproduced by simple file reading.
 
-	(While I may not be 100% correct in the actual sequence
-	of resetting the board, I'd say I'm close enough to
-	accurately describe the problem.)
+Reproducer is simple:
 
-	reset function 0
-		fc_remote_port_delete() of all ports on
-		both functions (board just works that way)
+echo 0xffffffff >/proc/sys/dev/scsi/logging_level ;
+cat /vz/private/101/root/etc/ld.so.cache >/tmp/ttt  ;
+echo 0 >/proc/sys/dev/scsi/logging
 
-	board sends rescan event after reset completes
-	which causes
-		fc_remote_port_add() / fc_remote_port_rolechg()
-		of all targets on both functions
+It leads to the following messages in dmesg
 
-	reset function 1
-		fc_remote_port_delete() of all ports on
-		both functions
+sd_init_command: disk=sda, block=871769260, count=26
+sda : block=871769260
+sda : reading 26/26 512 byte blocks.
+scsi_add_timer: scmd: f79ed980, time: 7500, (c02b1420)
+sd 0:1:0:0: send 0xf79ed980                  sd 0:1:0:0:
+        command: Read (10): 28 00 33 f6 24 ac 00 00 1a 00
+buffer = 0xf7cfb540, bufflen = 13312, done = 0xc0366b40, queuecommand 0xc0344010
+leaving scsi_dispatch_cmnd()
+scsi_delete_timer: scmd: f79ed980, rtn: 1
+sd 0:1:0:0: done 0xf79ed980 SUCCESS        0 sd 0:1:0:0:
+        command: Read (10): 28 00 33 f6 24 ac 00 00 1a 00
+scsi host busy 1 failed 0
+sd 0:1:0:0: Notifying upper driver of completion (result 0)
+sd_rw_intr: sda: res=0x0
+26 sectors total, 13312 bytes done.
+use_sg is 4
+attempt to access beyond end of device
+sda6: rw=0, want=1044134458, limit=951401367
+Buffer I/O error on device sda6, logical block 522067228
+attempt to access beyond end of device
+sda6: rw=0, want=1178878530, limit=951401367
+Buffer I/O error on device sda6, logical block 589439264
+...
 
-		a scan was in progress for the recently added
-		rports.  the delete blocks the target(s).
-		One of the scans was issuing scsi commands
-		at the time of the block.
+As far as I see first read operation has finished without errors, but when we
+read the rest of file we get an access to beyond end of device.
 
-	board sends rescan event after reset completes
-	for second function which causes
-		fc_remote_port_add() / fc_remote_port_rolechg()
-		of all targets on both functions, again.
+Originally it was found on Virtuozzo kernels (2.6.8.1-based x86 32-bit),
+reproduced on RHEL4 kernels 2.6.9-22.EL and 2.6.9-34.EL,
+on FC5 (2.6.16-1.2096_FC5) and on vanilla 2.6.16 kernels.
 
-		rolechg again queues the scan work for the
-		target which was blocked while a scan was in
-		progress.
+However, when I first read these blocks by using dd with bs=512 or 1024 it works
+without any troubles. Then I can cat this file, copy it, map it and so on -- and
+get correct content without any errors. Moreover, this issue may be workarounded
+by memory limitation: it helps to use mem=4G in kernel commandline or kernels
+without PAE support.
 
-		scsi_target_unblock() is part of the
-		scan work and hence isn't called.
+I've noticed that we attempt to access to the blocks with a strange numbers:
 
-		nothing unblocks the target so the scan hangs.
+522067228 = 0x1f1e1d1c
+589439264 = 0x23222120 and so on.
 
-After turning on debug output and adding a strategically placed
-printk, this output shows that an rport is being deleted while
-a scan is in progress/scheduled.  As there is nothing which will
-unblock the target which has scan work in progress once the resets
-complete, the scan (and the thread) hang.
+Then I've found that I've read strange garbage from file:
 
-I've attached a patch which corrects the in my test config.  This
-patch has been previously forwarded to James Smart, but as he's been
-unable to respond (my patience is sometimes lacking) I decided to
-post to linux-scsi to make others aware of the problem.  (I know,
-I should have done this in parallel with the email to James....)
+# hexdump /tmp/ttt
+0000000 0100 0302 0504 0706 0908 0b0a 0d0c 0f0e
+0000010 1110 1312 1514 1716 1918 1b1a 1d1c 1f1e
+0000020 2120 2322 2524 2726 2928 2b2a 2d2c 2f2e
+0000030 3130 3332 3534 3736 3938 3b3a 3d3c 3f3e
+0000040 4140 4342 4544 4746 4948 4b4a 4d4c 4f4e
+0000050 5150 5352 5554 5756 5958 5b5a 5d5c 5f5e
+0000060 6160 6362 6564 6766 6968 6b6a 6d6c 6f6e
+0000070 7170 7372 7574 7776 7978 7b7a 7d7c 7f7e
+0000080 0100 0302 0504 0706 0908 0b0a 0d0c 0f0e
+0000090 1110 1312 1514 1716 1918 1b1a 1d1c 1f1e
+00000a0 2120 2322 2524 2726 2928 2b2a 2d2c 2f2e
+...
+00000f0 7170 7372 7574 7776 7978 7b7a 7d7c 7f7e
+0000100 0100 0302 0504 0706 0908 0b0a 0d0c 0f0e
+...
 
+Then I've discovered that "access beyond end of device" occurs due reading of
+the same garbage from the 13-th (Indirect) block of the file.
 
-May  3 13:17:45 duck kernel: mptbase: ioc3: Sending Config request type 5, page 1 and action 0
-May  3 13:17:45 duck kernel: mptbase: ioc3: config_complete (mf=e00000b005e1ac00,mr=e00000b005e00050)
-May  3 13:17:45 duck kernel:   IOCStatus=0000h, IOCLogInfo=00000000h
-May  3 13:17:45 duck kernel: mptfc: ioc2: mptfc_reg_dev.4: 130bd9, 20000011c61e3afb / 21000011c61e3afb, tid 1, rport tid 1, tmo 60
-May  3 13:17:45 duck kernel: mptfc: ioc2: mptfc_reg_dev.4: 130ad9, 20000011c61e3af8 / 21000011c61e3af8, tid 3, rport tid 3, tmo 60
-May  3 13:17:45 duck kernel: mptfc: ioc2: mptfc_reg_dev.4: 130bd6, 20000011c61e3adb / 21000011c61e3adb, tid 5, rport tid 5, tmo 60
-May  3 13:17:45 duck kernel: mptfc: ioc2: mptfc_reg_dev.4: 130ace, 20000011c61e3ad9 / 21000011c61e3ad9, tid 7, rport tid 7, tmo 60
-May  3 13:17:45 duck kernel: mptfc: ioc2: mptfc_reg_dev.4: 130ad5, 20000011c61e3ad5 / 21000011c61e3ad5, tid 9, rport tid 9, tmo 60
-May  3 13:17:45 duck kernel: mptfc: ioc2: mptfc_reg_dev.4: 130bd5, 20000011c61e3a2d / 21000011c61e3a2d, tid 11, rport tid 11, tmo 60
-May  3 13:17:45 duck kernel: mptfc: ioc2: mptfc_reg_dev.4: 130ad4, 20000011c61e39f9 / 21000011c61e39f9, tid 13, rport tid 13, tmo 60
-May  3 13:17:45 duck kernel: mptfc: ioc2: mptfc_reg_dev.4: 130ad1, 20000011c61e39d1 / 21000011c61e39d1, tid 15, rport tid 15, tmo 60
-May  3 13:17:45 duck kernel: mptfc: ioc2: mptfc_reg_dev.4: 130bd3, 20000011c61e1a41 / 21000011c61e1a41, tid 17, rport tid 17, tmo 60
-May  3 13:17:45 duck kernel: mptfc: ioc2: mptfc_reg_dev.4: 130ad2, 20000011c61dec10 / 21000011c61dec10, tid 19, rport tid 19, tmo 60
-May  3 13:17:45 duck kernel: mptfc: ioc2: mptfc_reg_dev.4: 130bd1, 20000011c61de9fa / 21000011c61de9fa, tid 21, rport tid 21, tmo 60
-May  3 13:17:45 duck kernel: mptfc: ioc2: mptfc_reg_dev.4: 130bd4, 20000011c61de980 / 21000011c61de980, tid 23, rport tid 23, tmo 60
-May  3 13:17:45 duck kernel: mptfc: ioc2: mptfc_reg_dev.4: 130ad3, 20000011c61de970 / 21000011c61de970, tid 25, rport tid 25, tmo 60
-May  3 13:17:45 duck kernel: mptfc: ioc2: mptfc_qcmd.4: 1:0, mptscsih_qcmd returns non-zero, (1055).
-May  3 13:17:45 duck kernel: mptfc: ioc2: mptfc_reg_dev.4: 130bce, 20000011c61dd86c / 21000011c61dd86c, tid 27, rport tid 27, tmo 60
-May  3 13:17:45 duck kernel: mptfc: ioc2: mptfc_reg_dev.4: 130bd2, 20000011c61dd851 / 21000011c61dd851, tid 29, rport tid 29, tmo 60
-May  3 13:17:45 duck kernel: mptfc: ioc2: mptfc_reg_dev.4: 130ad6, 20000011c61dd831 / 21000011c61dd831, tid 31, rport tid 31, tmo 60
-May  3 13:17:45 duck kernel: mptfc: ioc2: mptfc_reg_dev.4: 130c00, 200700a0b81130aa / 204700a0b81130aa, tid 32, rport tid 32, tmo 60
-May  3 13:17:45 duck kernel: mptfc: ioc2: mptfc_reg_dev.4: 130d00, 200700a0b81130aa / 202700a0b81130aa, tid 34, rport tid 34, tmo 60
-May  3 13:17:45 duck kernel: fc_remote_port_delete.4: blocking rport 130bd9 with scan pending
-May  3 13:17:45 duck kernel: mptfc: ioc2: mptfc_setup_reset.4: 21000011c61e3afb deleted
-May  3 13:17:45 duck kernel: fc_remote_port_delete.4: blocking rport 130ad9 with scan pending
-May  3 13:17:45 duck kernel: mptfc: ioc2: mptfc_setup_reset.4: 21000011c61e3af8 deleted
-May  3 13:17:45 duck kernel: fc_remote_port_delete.4: blocking rport 130bd6 with scan pending
-May  3 13:17:45 duck kernel: mptfc: ioc2: mptfc_setup_reset.4: 21000011c61e3adb deleted
-May  3 13:17:45 duck kernel: fc_remote_port_delete.4: blocking rport 130ace with scan pending
-May  3 13:17:45 duck kernel: mptfc: ioc2: mptfc_setup_reset.4: 21000011c61e3ad9 deleted
-May  3 13:17:45 duck kernel: fc_remote_port_delete.4: blocking rport 130ad5 with scan pending
-May  3 13:17:45 duck kernel: mptfc: ioc2: mptfc_setup_reset.4: 21000011c61e3ad5 deleted
-May  3 13:17:45 duck kernel: fc_remote_port_delete.4: blocking rport 130bd5 with scan pending
-May  3 13:17:45 duck kernel: mptfc: ioc2: mptfc_setup_reset.4: 21000011c61e3a2d deleted
-May  3 13:17:45 duck kernel: fc_remote_port_delete.4: blocking rport 130ad4 with scan pending
-May  3 13:17:45 duck kernel: mptfc: ioc2: mptfc_setup_reset.4: 21000011c61e39f9 deleted
-May  3 13:17:45 duck kernel: fc_remote_port_delete.4: blocking rport 130ad1 with scan pending
-May  3 13:17:45 duck kernel: mptfc: ioc2: mptfc_setup_reset.4: 21000011c61e39d1 deleted
-May  3 13:17:45 duck kernel: fc_remote_port_delete.4: blocking rport 130bd3 with scan pending
-May  3 13:17:45 duck kernel: mptfc: ioc2: mptfc_setup_reset.4: 21000011c61e1a41 deleted
-May  3 13:17:45 duck kernel: fc_remote_port_delete.4: blocking rport 130ad2 with scan pending
-May  3 13:17:45 duck kernel: mptfc: ioc2: mptfc_setup_reset.4: 21000011c61dec10 deleted
-May  3 13:17:45 duck kernel: fc_remote_port_delete.4: blocking rport 130bd1 with scan pending
-May  3 13:17:45 duck kernel: mptfc: ioc2: mptfc_setup_reset.4: 21000011c61de9fa deleted
-May  3 13:17:45 duck kernel: fc_remote_port_delete.4: blocking rport 130bd4 with scan pending
-May  3 13:17:45 duck kernel: mptfc: ioc2: mptfc_setup_reset.4: 21000011c61de980 deleted
-May  3 13:17:45 duck kernel: fc_remote_port_delete.4: blocking rport 130ad3 with scan pending
-May  3 13:17:45 duck kernel: mptfc: ioc2: mptfc_setup_reset.4: 21000011c61de970 deleted
-May  3 13:17:45 duck kernel: fc_remote_port_delete.4: blocking rport 130bce with scan pending
-May  3 13:17:45 duck kernel: mptfc: ioc2: mptfc_setup_reset.4: 21000011c61dd86c deleted
-May  3 13:17:45 duck kernel: fc_remote_port_delete.4: blocking rport 130bd2 with scan pending
-May  3 13:17:45 duck kernel: mptfc: ioc2: mptfc_setup_reset.4: 21000011c61dd851 deleted
-May  3 13:17:45 duck kernel: fc_remote_port_delete.4: blocking rport 130ad6 with scan pending
-May  3 13:17:45 duck kernel: mptfc: ioc2: mptfc_setup_reset.4: 21000011c61dd831 deleted
-May  3 13:17:45 duck kernel: fc_remote_port_delete.4: blocking rport 130c00 with scan pending
-May  3 13:17:45 duck kernel: mptfc: ioc2: mptfc_setup_reset.4: 204700a0b81130aa deleted
-May  3 13:17:45 duck kernel: fc_remote_port_delete.4: blocking rport 130d00 with scan pending
-May  3 13:17:45 duck kernel: mptfc: ioc2: mptfc_setup_reset.4: 202700a0b81130aa deleted
-May  3 13:17:45 duck kernel: mptbase: ioc3: Sending Config request type 5, page 1 and action 1
-May  3 13:17:45 duck kernel: mptbase: ioc3: config_complete (mf=e00000b005e1ae80,mr=e00000b005e000a0)
-May  3 13:17:45 duck kernel:   IOCStatus=0000h, IOCLogInfo=00000000h
-May  3 13:17:45 duck kernel: mptbase: ioc3: Sending Config request type 5, page 1 and action 0
-May  3 13:17:45 duck kernel: mptbase: ioc3: config_complete (mf=e00000b005e1af80,mr=e00000b005e000f0)
-May  3 13:17:45 duck kernel:   IOCStatus=0000h, IOCLogInfo=00000000h
-May  3 13:17:45 duck kernel: mptbase: ioc3: Sending Config request type 5, page 1 and action 2
-May  3 13:17:45 duck kernel: mptbase: ioc3: config_complete (mf=e00000b005e1b080,mr=e00000b005e00140)
-May  3 13:17:45 duck kernel:   IOCStatus=0000h, IOCLogInfo=00000000h
+I've tried to understand where we got this garbage and found that it is present
+in the data buffers beginning at megaraid_mbox driver functions.
+
+Could somebody explain me what is the strange garbage: repeated 0...127?
+Seokmann, Atul, could you please tell me if it is a known issue?
+James, from my point of view it is not looks like a driver bug, but probably I'm
+wrong?
+
+I suppose it is MegaRAID SATA 150-4 firmware issue. I've seen similar firmware
+fixes for MegaRAID SATA 300 controllers ("Support PAE mode fixed" and "Fixed the
+operating systems using more than 4 gig of memory"). Is it probably the same
+issues are present in SATA 150-4 firmware? Or may be I use broken controller?
+
+Hardware Environment:
+Tyan B2881
+2 x Opteron 246
+8G RAM
+LSI MegaRAID SATA 150-4
+/vz partition formatted as ext3 with 1Kb blocksize
+
+megaraid cmm: 2.20.2.6 (Release Date: Mon Mar 7 00:01:03 EST 2005)
+megaraid: 2.20.4.7 (Release Date: Mon Nov 14 12:27:22 EST 2005)
+megaraid: probe new device 0x1000:0x1960:0x1000:0x4523: bus 1:slot 4:func 0
+ACPI: PCI Interrupt 0000:01:04.0[A] -> GSI 29 (level, low) -> IRQ 16
+megaraid: fw version:[713N] bios version:[G119]
+scsi0 : LSI Logic MegaRAID driver
+scsi[0]: scanning scsi channel 0 [Phy 0] for non-raid devices
+scsi[0]: scanning scsi channel 1 [virtual] for logical drives
+  Vendor: MegaRAID  Model: LD 0 RAID1  476G  Rev: 713N
+  Type:   Direct-Access                      ANSI SCSI revision: 02
 
 
-Mike
+Also I would note that from my point of view this issue looks similar to
+http://bugzilla.kernel.org/show_bug.cgi?id=6052
 
-		
+It seems for me both of our cases may have the same cause.
 
+Thank you,
+	Vasily Averin
 
---------------050208030705000406080508
-Content-Type: text/x-patch;
- name="fc_transport_unblock_scan_work.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="fc_transport_unblock_scan_work.patch"
-
-It is possible for a transport initiated scan of a target to be in progress
-with scsi commands outstanding when the lldd calls the transport to (again)
-delete the device via fc_remote_port_delete().  The transport will then (again)
-block the target.  When the lldd later calls fc_remote_port_add() for the
-blocked target, the scan work is requeued but nothing unblocks the target
-so that the active can complete.  (The unblock is integrated within the
-scan work.)
-
-This patch tests the pending flag and will either unblock the target if a
-scan is already in progress or will initiate a scan which will unblock
-the target when the work executes.
-
-Signed-off-by: Michale Reed <mdr@sgi.com>
-
-
-
---- rc3u/drivers/scsi/scsi_transport_fc.c	2006-04-27 12:32:06.000000000 -0500
-+++ rc3/drivers/scsi/scsi_transport_fc.c	2006-05-04 10:35:51.276537641 -0500
-@@ -1625,6 +1625,7 @@
- 	struct fc_rport *rport;
- 	unsigned long flags;
- 	int match = 0;
-+	int unblock = 0;
- 
- 	/* ensure any stgt delete functions are done */
- 	fc_flush_work(shost);
-@@ -1702,10 +1703,15 @@
- 				rport->flags &= ~FC_RPORT_DEVLOSS_PENDING;
- 
- 				/* initiate a scan of the target */
--				rport->flags |= FC_RPORT_SCAN_PENDING;
--				scsi_queue_work(shost, &rport->scan_work);
--
-+				if (rport->flags & FC_RPORT_SCAN_PENDING)
-+					unblock = 1;
-+				else {
-+					rport->flags |= FC_RPORT_SCAN_PENDING;
-+					scsi_queue_work(shost, &rport->scan_work);
-+				}
- 				spin_unlock_irqrestore(shost->host_lock, flags);
-+				if (unblock)
-+					scsi_target_unblock(&rport->dev);
- 
- 				return rport;
- 			}
-@@ -1760,11 +1766,17 @@
- 
- 			if (rport->roles & FC_RPORT_ROLE_FCP_TARGET) {
- 				/* initiate a scan of the target */
--				rport->flags |= FC_RPORT_SCAN_PENDING;
--				scsi_queue_work(shost, &rport->scan_work);
-+				if (rport->flags & FC_RPORT_SCAN_PENDING)
-+					unblock = 1;
-+				else {
-+					rport->flags |= FC_RPORT_SCAN_PENDING;
-+					scsi_queue_work(shost, &rport->scan_work);
-+				}
- 			}
- 
- 			spin_unlock_irqrestore(shost->host_lock, flags);
-+			if (unblock)
-+				scsi_target_unblock(&rport->dev);
- 
- 			return rport;
- 		}
-@@ -1859,7 +1871,6 @@
- 	rport->port_state = FC_PORTSTATE_BLOCKED;
- 
- 	rport->flags |= FC_RPORT_DEVLOSS_PENDING;
--
- 	spin_unlock_irqrestore(shost->host_lock, flags);
- 
- 	scsi_target_block(&rport->dev);
-@@ -1896,6 +1907,7 @@
- 	struct fc_host_attrs *fc_host = shost_to_fc_host(shost);
- 	unsigned long flags;
- 	int create = 0;
-+	int unblock = 0;
- 
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	if (roles & FC_RPORT_ROLE_FCP_TARGET) {
-@@ -1935,9 +1947,15 @@
- 
- 		/* initiate a scan of the target */
- 		spin_lock_irqsave(shost->host_lock, flags);
--		rport->flags |= FC_RPORT_SCAN_PENDING;
--		scsi_queue_work(shost, &rport->scan_work);
-+		if (rport->flags & FC_RPORT_SCAN_PENDING)
-+			unblock = 1;
-+		else {
-+			rport->flags |= FC_RPORT_SCAN_PENDING;
-+			scsi_queue_work(shost, &rport->scan_work);
-+		}
- 		spin_unlock_irqrestore(shost->host_lock, flags);
-+		if (unblock)
-+			scsi_target_unblock(&rport->dev);
- 	}
- }
- EXPORT_SYMBOL(fc_remote_port_rolechg);
-
---------------050208030705000406080508--
+SWsoft Virtuozzo/OpenVZ Linux kernel team
