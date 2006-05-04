@@ -1,39 +1,44 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: How to replace bus_to_virt()?
-Date: Wed, 03 May 2006 23:01:27 +0200
-Message-ID: <1146690087.6818.19.camel@laptopd505.fenrus.org>
-References: <4454CF35.7010803@s5r6.in-berlin.de>
-	 <1146412215.20760.10.camel@laptopd505.fenrus.org>
-	 <44554AFE.30804@s5r6.in-berlin.de>
-	 <Pine.LNX.4.60.0605032109110.5865@poirot.grange>
-	 <Pine.LNX.4.61.0605031615470.29989@chaos.analogic.com>
+From: "Desegregation G. Handymen" <wolfie@gloriavanderbilt.com>
+Subject: Software
+Date: Thu, 04 May 2006 02:53:04 -0400
+Message-ID: <1738366541.20060504025304@gloriavanderbilt.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:49330 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1751345AbWECVBb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 3 May 2006 17:01:31 -0400
-In-Reply-To: <Pine.LNX.4.61.0605031615470.29989@chaos.analogic.com>
+Received: from zeus1.kernel.org ([204.152.191.4]:37866 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S1751470AbWEDJuQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 May 2006 05:50:16 -0400
+Received: from 149063480 ([60.20.103.223])
+	by zeus1.kernel.org (8.13.1/8.13.1) with SMTP id k449n7LH010711
+	for <linux-scsi@vger.kernel.org>; Thu, 4 May 2006 09:50:13 GMT
+Received: from gloriavanderbilt.com (149601128 [143262472])
+	by gradeseek.com (Qmailv1) with ESMTP id 8327E47A39
+	for <linux-scsi@vger.kernel.org>; Thu, 04 May 2006 02:53:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-os (Dick Johnson)" <linux-os@analogic.com>
-Cc: Guennadi Liakhovetski <g.liakhovetski@gmx.de>, Stefan Richter <stefanr@s5r6.in-berlin.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Linux <linux-scsi@vger.kernel.org>
 
+Software Compatibility....ain't it great? 
+Learn to build simple and clean websites that can bring in the dough... 
 
-> Just make your own macro! When they change the "@(#*%^+@~%" kernel,
-> which they will continue to do,
+New software on our site:
 
-we're not changing 2.6.12. If you don't want changes you can just keep
-using the kernel you are using ;)
+Windows 98 - $49.95
+FileMaker 7.0 Professional - $69.95
+Visio 2003 Professional - $69.95
+Office XP Professional - $79.95
+Office 97 SR2 - $49.95
+Flash MX 2004 - $69.95
+Illustrator CS CE - $69.95
+Streets and Trips 2004 North America (2CD) - $69.95
+Creative Suite Standard (3 CD) - $129.95
+Borland Delphi 7 Enterprise Edition (2CD) - $69.95
+WordPerfect Office 10 - $69.95
+PageMaker 7 (2CD) - $69.95
+InDesign CS PageMaker Edition (2CD) - $69.95
+Streets and Trips 2004 North America (2CD) - $69.95
 
->  just adapt your macro. You've
-> probably already figured out that, for ix86-32 bits (no extended
-> addressing), you OR in PAGE_OFFSET. That's an artifact of how the
-> pages tables are set up.
-
-and that isn't even possible like that on other architectures, like ones
-which have IOMMU's. That is actually the reason stuff like this is
-deprecated, and why we have a real API for dma nowadays. 
+Our site:
+http://net9tjtuayaj45n0s5nis5n5.reactantck.com
 
