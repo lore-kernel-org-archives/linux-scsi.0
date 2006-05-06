@@ -1,56 +1,62 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: [PATCH] scsi_queue_work() documented return value is incorrect
-Date: Fri, 05 May 2006 09:18:43 -0500
-Message-ID: <445B5EC3.5060808@sgi.com>
+From: "Sherman Shook" <ihfozswn@appleisp.net>
+Subject: $$ casino
+Date: Sat, 06 May 2006 12:07:41 +0300
+Message-ID: <675928197671.TAV66025__22515.6271284961$1146841924$gmane$org@sequestration.charterpipeline.net>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------070709070701040401040506"
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:43154 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S1751123AbWEEOSq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 May 2006 10:18:46 -0400
+Received: from [222.184.212.150] ([222.184.212.150]:42252 "HELO 588691E8")
+	by vger.kernel.org with SMTP id S1751140AbWEEPLt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 May 2006 11:11:49 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: James.Smart@Emulex.Com
+To: linux-hams@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------070709070701040401040506
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Hey, so glad to finally get hold of you, 
 
-If you examine the queue_work() routine you'll see that it returns
-1 on success, 0 on not queuing the work.
+Log on to Hi oller Casino and get $888 FREE 
 
-This patch corrects the source code documentation for the function.
-
-Mike
+Feel like getting rich in the comfort of your own home?
+Welcome to Hi Roller Casino, Where Fortunes are Made! 
 
 
---------------070709070701040401040506
-Content-Type: text/x-patch;
- name="scsi_queue_work.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="scsi_queue_work.patch"
+Hi Roller Casino offers over 60 interactive games, 
+including six progressive slots and three progressive
+games that have paid out some of the largest 
+online jackpots in history! 
+Even better. Hi Roller Casino will give you $10 
+Free when you download the free software and open a 
+real account. Once you've opened your REAL account 
+and made your first deposit, 
+Hi Roller Casino will match it up to $888. 
 
-Fix scsi_queue_work function documentation.
 
-Signed-off-by: Michael Reed <mdr@sgi.com>
+All commercial transactions at Hi Roller Casino are 
+facilitated by Proc-Cyber Services, a well-known and 
+established e-cash merchant. Which means you can 
+rest assured that all your credit card transactions 
+are 100% secured by digital encryption as well as a 
+unique password and account number. Online banking can
+be done through a variety of safe and user-friendly 
+methods like FirePay, Citadel, NETeller, PrePaidATM, 
+ACH, Wire transfers or Credit Cards. 
 
 
---- rc3u/drivers/scsi/hosts.c	2006-04-27 12:32:05.000000000 -0500
-+++ rc3/drivers/scsi/hosts.c	2006-05-05 09:12:53.347943283 -0500
-@@ -487,7 +487,9 @@
-  * @work:	Work to queue for execution.
-  *
-  * Return value:
-- * 	0 on success / != 0 for error
-+ * 	1 - work queued for execution
-+ *	0 - work is already queued
-+ *	-EINVAL - work queue doesn't exist
-  **/
- int scsi_queue_work(struct Scsi_Host *shost, struct work_struct *work)
- {
+Need help? Hi Roller Casino provides a friendly, 
+efficient 24/7 Support Desk 
+via email and toll-free lines. 
 
---------------070709070701040401040506--
+
+By now you'll be keen to start making your fortune, 
+so click here: 
+http://allnetbox.com/d1/now and start WINNING! 
+
+
+This e-mail is not spam. You are receiving this e-mail
+as you have either opted to receive our newsletter, 
+or you entered one of our competitions. 
+Please note that this e-mail has NOT been sent
+by our sponsor, casino or partner/s that is/are being 
+listed in this e-mail. There is no need to unsubscribe 
+as this is a one time only email
+
