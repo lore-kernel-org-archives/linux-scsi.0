@@ -1,39 +1,86 @@
-From: "Shu Lee Wong" <kydeienterprisecoltd@yahoo.com.hk>
-Subject: KYDEI ENTERPRISE (H.K) CO.LTD.
-Date: Mon, 08 May 2006 10:30:15 +0200
-Message-ID: <193cbcd2d744e01f9b793a530e39eb01__1715.49049341611$1147077275$gmane$org@promail4you.at>
-Reply-To: "Shu Lee Wong" <kydei_enterprisecoltd@yahoo.com.hk>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH] make kernel ignore bogus partitions
+Date: Mon, 08 May 2006 11:00:32 -0400
+Message-ID: <445F5D10.3090401@torque.net>
+References: <20060503210055.GB31048@beardog.cca.cpqcorp.net> <20060508072701.GB15941@apps.cwi.nl>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 193-80-232-250.ip.osiris.at ([193.80.232.250]:27408 "EHLO
-	mailexchange.oundt.net") by vger.kernel.org with ESMTP
-	id S932361AbWEHIeY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 8 May 2006 04:34:24 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:56496 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S932365AbWEHPBA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 8 May 2006 11:01:00 -0400
+In-Reply-To: <20060508072701.GB15941@apps.cwi.nl>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andries Brouwer <Andries.Brouwer@cwi.nl>
+Cc: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-KYDEI ENTERPRISE (H.K) CO.LTD.
-29-32/F., 30 Queen’s Road Central, Hong Kong,
-HONG KONG.
+Andries Brouwer wrote:
+> On Wed, May 03, 2006 at 04:00:55PM -0500, Mike Miller (OS Dev) wrote:
+> 
+>>Patch 1/1
+>>Sometimes partitions claim to be larger than the reported capacity of a
+>>disk device. This patch makes the kernel ignore those partitions.
+>>
+>>Signed-off-by: Mike Miller <mike.miller@hp.com>
+>>Signed-off-by: Stephen Cameron <steve.cameron@hp.com>
+> 
+> 
+>>+		if (from+size-1 > get_capacity(disk)) {
+>>+			printk(" %s: p%d exceeds device capacity, ignoring.\n", 
+>>+				disk->disk_name, p);
+>>+			continue;
+>>+		}
+> 
+> 
+> I debated for a while with myself whether I should like or dislike
+> such a patch. On the one hand, this partition stuff is rather messy,
+> and if you invent strict rules that partitions should satisfy then
+> during the transition lots of people will be unhappy, but afterwards
+> the stuff may be less messy.
+> 
+> On the other hand, such changes do indeed make people unhappy.
+> Indeed, with this change one of my systems does not boot anymore.
+> 
+> There can be reasons, or there can have been reasons, for partitions
+> larger than the disk. Maybe the disk has a jumper clipping the capacity
+> while in other machines such a jumper is unnecessary, or while soon
+> after booting the setmax utility is called to set the disk to full
+> capacity again.
+> Or, while doing forensics on a disk one copies the start to some
+> other disk, and that other disk may be smaller.
+> Etc.
 
-Dear Sir/Madam,
- 
-We the management, members and staff of Kydei  Enterprise (H.K)co. ltd, will be very glad if you can represent us in your country as a medium of receiving payments for goods supplied to our customers in North America. We deal in Chinese art and interior design and the global need for our goods has given rise to a significant increase in our customer base world wide. Commission for your services is subject to negotiation upon acceptance of our proposal. In anticipation of your acceptance of our proposal, I am taking the liberty of explaining in detail the requirements and need for your services.
- 
-I am an exporter based in Hong Kong who exports Chinese art and interior design. Due to the growing trend for the need for Chinese arts and interior design in North America and the world in general, there has been an upsurge in my customer base and the need for me to expand my business to meet up with the new responsibility at hand. I assume you understand the need for every business to grow and expand to increase profit. As a result of this development, I have had the need to extend my customer base to North America. However, it is only logical that changes are put in place to meet up with the demands of a speedy intercontinental monetary transaction as time is always a factor in effective business management. To give you a better understanding of what your responsibilities will be as my private payment agent, it is important that you understand some difficulties that I am faced with pr
- esently in receiving funds from clients in North America.
- 
-Firstly, most payments for goods are drawn in checks and it takes approximately two-four weeks for checks from other continents to clear with our local banks. These delays mostly result in our late response to orders and we sometimes loose clients to other suppliers.
- 
-Secondly, we experience high tariffs and foreign exchange charges as funds will have to be converted by our banks to local currencies as they are cleared with our banks and re converted to foreign currency as we place orders for supplies from our international suppliers. As you can see, the back and forth process of currency conversion, results to high charges for foreign exchange thereby resulting to increase in cost of doing business. But with your assistance, funds that are to be used for supplies will be sent directly by you to my supplies there by avoiding the intercontinental banking processing time between Asia and North America.
- 
->From My business experience, I have come to realize that every good business reference starts with a satisfactory performance and I have decided that it is better for us to prove to ourselves how efficient we are. I believe this is better than any recommendation or reference. Good business partnership is bonded firmly by friendship and understanding because we are all unique and different that is why character and understanding cannot be over looked. Because of this factor, I have come to the agreement that any funds received by you on my behalf, entitles you to10% of the total funds for your services as commission. I do hope this is acceptable to you.
- 
-I need you to understand that my requirement of your services is totally legal and there is no reason for you to have any concerns. I personally will not involve myself in any business venture that is not 100% legal and I will not advise you to throw caution to the wind in that regard as well. All I have asked is for your services to initiate a reduction in time and cost of doing business. This will automatically instigate progress that will obviously be beneficial to both parties. I do hope the term of business is acceptable to you. Upon receipt of your acceptance, I will update you on how we may proceed. Please accept my sincerest appreciation for your willingness to render your services and I look forward to your prompt response to my email.
- 
-Thank you.
- 
-SHU LEE WONG.
-KYDEI ENTERPRISE (H.K) CO.LTD.
+Andries,
+With the creative use of the MODE SELECT SCSI command
+one can "short stroke" a disk, making subsequent READ
+CAPACITY commands report less than is actually available.
+READ and WRITE commands also would be crimped. For
+example a 300 GB SCSI disk could be made to report
+a capacity of 1 sector. [see sg_format in sg3_utils]
+
+More practically RAID replacement disks may use this
+facility if the firmware wants all disks the same
+size and a smaller size disk (e.g. 18 GB SCSI disk) is
+no longer available.
+
+Without a product manual in which a manufacturer states
+what the number of sectors should be, it may not be
+obvious short stroking has occurred.
+
+
+There are other situations I have come across, that can
+be made to work if you know what is happening. When I
+put a 160 GB PATA disk in an external USB enclosure that
+doesn't support 48 bit lba, then I can't access anything
+above the 137 (?) GB mark. By arranging my partitions
+accordingly (e.g. 3 under, 1 over) the lower partitions
+are still useable in the USB enclosure.
+
+> So, it seems that Linux loses a little bit of its power when such things
+> are made impossible.
+
+Doug Gilbert
