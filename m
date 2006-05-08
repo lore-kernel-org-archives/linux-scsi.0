@@ -1,16 +1,16 @@
 From: "Shu Lee Wong" <kydeienterprisecoltd@yahoo.com.hk>
 Subject: KYDEI ENTERPRISE (H.K) CO.LTD.
-Date: Mon, 08 May 2006 10:25:13 +0200
-Message-ID: <bbfc0cbb53f025ba7f694d60c79a4bb7__19892.0717732564$1147077072$gmane$org@promail4you.at>
+Date: Mon, 08 May 2006 10:30:15 +0200
+Message-ID: <193cbcd2d744e01f9b793a530e39eb01__1715.49049341611$1147077275$gmane$org@promail4you.at>
 Reply-To: "Shu Lee Wong" <kydei_enterprisecoltd@yahoo.com.hk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 193-80-232-250.ip.osiris.at ([193.80.232.250]:62217 "EHLO
+Received: from 193-80-232-250.ip.osiris.at ([193.80.232.250]:27408 "EHLO
 	mailexchange.oundt.net") by vger.kernel.org with ESMTP
-	id S932187AbWEHIav (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 8 May 2006 04:30:51 -0400
+	id S932361AbWEHIeY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 8 May 2006 04:34:24 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
