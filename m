@@ -1,51 +1,39 @@
-From: Andries Brouwer <Andries.Brouwer@cwi.nl>
-Subject: Re: [PATCH] make kernel ignore bogus partitions
-Date: Mon, 8 May 2006 09:27:01 +0200
-Message-ID: <20060508072701.GB15941@apps.cwi.nl>
-References: <20060503210055.GB31048@beardog.cca.cpqcorp.net>
+From: "Shu Lee Wong" <kydeienterprisecoltd@yahoo.com.hk>
+Subject: KYDEI ENTERPRISE (H.K) CO.LTD.
+Date: Mon, 08 May 2006 10:25:13 +0200
+Message-ID: <bbfc0cbb53f025ba7f694d60c79a4bb7__19892.0717732564$1147077072$gmane$org@promail4you.at>
+Reply-To: "Shu Lee Wong" <kydei_enterprisecoltd@yahoo.com.hk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750757AbWEHHeg@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20060503210055.GB31048@beardog.cca.cpqcorp.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Andries.Brouwer@cwi.nl
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 193-80-232-250.ip.osiris.at ([193.80.232.250]:62217 "EHLO
+	mailexchange.oundt.net") by vger.kernel.org with ESMTP
+	id S932187AbWEHIav (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 8 May 2006 04:30:51 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, May 03, 2006 at 04:00:55PM -0500, Mike Miller (OS Dev) wrote:
-> Patch 1/1
-> Sometimes partitions claim to be larger than the reported capacity of a
-> disk device. This patch makes the kernel ignore those partitions.
-> 
-> Signed-off-by: Mike Miller <mike.miller@hp.com>
-> Signed-off-by: Stephen Cameron <steve.cameron@hp.com>
+KYDEI ENTERPRISE (H.K) CO.LTD.
+29-32/F., 30 Queen’s Road Central, Hong Kong,
+HONG KONG.
 
-> +		if (from+size-1 > get_capacity(disk)) {
-> +			printk(" %s: p%d exceeds device capacity, ignoring.\n", 
-> +				disk->disk_name, p);
-> +			continue;
-> +		}
-
-I debated for a while with myself whether I should like or dislike
-such a patch. On the one hand, this partition stuff is rather messy,
-and if you invent strict rules that partitions should satisfy then
-during the transition lots of people will be unhappy, but afterwards
-the stuff may be less messy.
-
-On the other hand, such changes do indeed make people unhappy.
-Indeed, with this change one of my systems does not boot anymore.
-
-There can be reasons, or there can have been reasons, for partitions
-larger than the disk. Maybe the disk has a jumper clipping the capacity
-while in other machines such a jumper is unnecessary, or while soon
-after booting the setmax utility is called to set the disk to full
-capacity again.
-Or, while doing forensics on a disk one copies the start to some
-other disk, and that other disk may be smaller.
-Etc.
-
-So, it seems that Linux loses a little bit of its power when such things
-are made impossible.
-
-Andries
+Dear Sir/Madam,
+ 
+We the management, members and staff of Kydei  Enterprise (H.K)co. ltd, will be very glad if you can represent us in your country as a medium of receiving payments for goods supplied to our customers in North America. We deal in Chinese art and interior design and the global need for our goods has given rise to a significant increase in our customer base world wide. Commission for your services is subject to negotiation upon acceptance of our proposal. In anticipation of your acceptance of our proposal, I am taking the liberty of explaining in detail the requirements and need for your services.
+ 
+I am an exporter based in Hong Kong who exports Chinese art and interior design. Due to the growing trend for the need for Chinese arts and interior design in North America and the world in general, there has been an upsurge in my customer base and the need for me to expand my business to meet up with the new responsibility at hand. I assume you understand the need for every business to grow and expand to increase profit. As a result of this development, I have had the need to extend my customer base to North America. However, it is only logical that changes are put in place to meet up with the demands of a speedy intercontinental monetary transaction as time is always a factor in effective business management. To give you a better understanding of what your responsibilities will be as my private payment agent, it is important that you understand some difficulties that I am faced with pr
+ esently in receiving funds from clients in North America.
+ 
+Firstly, most payments for goods are drawn in checks and it takes approximately two-four weeks for checks from other continents to clear with our local banks. These delays mostly result in our late response to orders and we sometimes loose clients to other suppliers.
+ 
+Secondly, we experience high tariffs and foreign exchange charges as funds will have to be converted by our banks to local currencies as they are cleared with our banks and re converted to foreign currency as we place orders for supplies from our international suppliers. As you can see, the back and forth process of currency conversion, results to high charges for foreign exchange thereby resulting to increase in cost of doing business. But with your assistance, funds that are to be used for supplies will be sent directly by you to my supplies there by avoiding the intercontinental banking processing time between Asia and North America.
+ 
+>From My business experience, I have come to realize that every good business reference starts with a satisfactory performance and I have decided that it is better for us to prove to ourselves how efficient we are. I believe this is better than any recommendation or reference. Good business partnership is bonded firmly by friendship and understanding because we are all unique and different that is why character and understanding cannot be over looked. Because of this factor, I have come to the agreement that any funds received by you on my behalf, entitles you to10% of the total funds for your services as commission. I do hope this is acceptable to you.
+ 
+I need you to understand that my requirement of your services is totally legal and there is no reason for you to have any concerns. I personally will not involve myself in any business venture that is not 100% legal and I will not advise you to throw caution to the wind in that regard as well. All I have asked is for your services to initiate a reduction in time and cost of doing business. This will automatically instigate progress that will obviously be beneficial to both parties. I do hope the term of business is acceptable to you. Upon receipt of your acceptance, I will update you on how we may proceed. Please accept my sincerest appreciation for your willingness to render your services and I look forward to your prompt response to my email.
+ 
+Thank you.
+ 
+SHU LEE WONG.
+KYDEI ENTERPRISE (H.K) CO.LTD.
