@@ -1,40 +1,58 @@
-From: Andries Brouwer <Andries.Brouwer@cwi.nl>
-Subject: Re: [PATCH] make kernel ignore bogus partitions
-Date: Wed, 10 May 2006 00:48:49 +0200
-Message-ID: <20060509224848.GA29754@apps.cwi.nl>
-References: <20060503210055.GB31048@beardog.cca.cpqcorp.net> <20060509124138.43e4bac0.akpm@osdl.org>
+From: "Yum Rayan" <yum.rayan@gmail.com>
+Subject: Re:[PATCH] hptiop: HighPoint RocketRAID 3xxx controller driver
+Date: Tue, 9 May 2006 16:29:47 -0700
+Message-ID: <df35dfeb0605091629y6f2390f3lad8f99c7aad62c4f@mail.gmail.com>
+References: <464B3C0C5BFD894FADEFDD94B6D734E488181E@taus-ies1.dom1.taus.us.thales>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII;
+	format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.cwi.nl ([192.16.191.8]:764 "EHLO hera.cwi.nl")
-	by vger.kernel.org with ESMTP id S1750905AbWEIW4f (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 May 2006 18:56:35 -0400
+Received: from wr-out-0506.google.com ([64.233.184.233]:42262 "EHLO
+	wr-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S932097AbWEIX3s convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 May 2006 19:29:48 -0400
+Received: by wr-out-0506.google.com with SMTP id i12so25537wra
+        for <linux-scsi@vger.kernel.org>; Tue, 09 May 2006 16:29:47 -0700 (PDT)
+In-Reply-To: <464B3C0C5BFD894FADEFDD94B6D734E488181E@taus-ies1.dom1.taus.us.thales>
 Content-Disposition: inline
-In-Reply-To: <20060509124138.43e4bac0.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Andries.Brouwer@cwi.nl
+To: amah@highpoint-tech.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, akpm@osdl.org
 
-On Tue, May 09, 2006 at 12:41:38PM -0700, Andrew Morton wrote:
+> +static ssize_t hptiop_show_devicelist(struct class_device *class_dev,
+> char
+> *buf)
 
-> > +		if (from+size-1 > get_capacity(disk)) {
-> > +			printk(" %s: p%d exceeds device capacity, ignoring.\n", 
-> > +				disk->disk_name, p);
-> > +			continue;
-> > +		}
-> >  		add_partition(disk, p, from, size);
+There is a one value per sysfs attribute rule. Seems like you are
+returning quite some info here.
 
-> Shouldn't that be
-> 
-> 	if (from+size > get_capacity(disk)) {
-> 
-> ?
+> + /* map buffer to kernel. */
+> + if (ioctl_k.inbuf_size) {
+> +  ioctl_k.inbuf = kmalloc(ioctl_k.inbuf_size, GFP_KERNEL);
+> +  if (!ioctl_k.inbuf) {
+> +   dprintk("scsi%d: fail to alloc inbuf\n",
+> +     hba->host->host_no);
+> +   err = -ENOMEM;
+> +   goto err_exit;
+> +  }
+> +
+> +  if (copy_from_user(ioctl_k.inbuf,
+> +    ioctl_u->inbuf, ioctl_k.inbuf_size)) {
+> +   goto err_exit;
+> +  }
 
-Ha, you are awake. Yes, it should.
-And no "ignoring". And no "continue". E.g.:
+You are essentially wrapping ioctl with sysfs and passing user space
+buffers....
 
-	printk(" %s: warning: p%d exceeds device capacity.\n", ...);
+> + .proc_name                  = driver_name,
 
-Andries
+I believe this is going away.
 
+> + printk(KERN_INFO "%s %s\n", driver_name_long, driver_ver);
+> +
+> + return pci_module_init(&hptiop_pci_driver);
+> +}
+> +
+
+pci_register_driver? pci.h indicates that pci_module_init is being obsoleted...
