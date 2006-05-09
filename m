@@ -1,42 +1,61 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Alexey Dobriyan <adobriyan@gmail.com>
 Subject: Re: [PATCH] hptiop: HighPoint RocketRAID 3xxx controller driver
-Date: Tue, 09 May 2006 23:19:21 +0100
-Message-ID: <1147213161.3172.157.camel@localhost.localdomain>
-References: <200605092128.k49LSQ6R024308@mail.hypersurf.com>
+Date: Wed, 10 May 2006 02:34:05 +0400
+Message-ID: <20060509223404.GE7237@mipter.zuzino.mipt.ru>
+References: <200605092128.k49LSQ6R024308@mail.hypersurf.com> <20060509215936.GD7237@mipter.zuzino.mipt.ru>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:15316 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1751137AbWEIWHf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 9 May 2006 18:07:35 -0400
-In-Reply-To: <200605092128.k49LSQ6R024308@mail.hypersurf.com>
+Received: from nf-out-0910.google.com ([64.233.182.187]:21399 "EHLO
+	nf-out-0910.google.com") by vger.kernel.org with ESMTP
+	id S1751241AbWEIWfd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 9 May 2006 18:35:33 -0400
+Received: by nf-out-0910.google.com with SMTP id b2so1297336nfe
+        for <linux-scsi@vger.kernel.org>; Tue, 09 May 2006 15:35:31 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <20060509215936.GD7237@mipter.zuzino.mipt.ru>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: amah@highpoint-tech.com
+To: Allen <amah@highpoint-tech.com>
 Cc: linux-scsi@vger.kernel.org, 'Andrew Morton' <akpm@osdl.org>, linux-kernel@vger.kernel.org
 
+On Wed, May 10, 2006 at 01:59:36AM +0400, Alexey Dobriyan wrote:
+> That plethora of HPT_IOCTL_* defines, where are you using them? What
+> arguments are passed in and out?
 
-> +Non-queued requests (reset/flush etc) can be sent via inbound message
-> +register 0. An outbound message with the same value indicates the
-> completion
-> +of an inbouind message.
+Argh, sorry for confusion, I've checked several first in the list and wrongly
+concluded nothing is used. Anyway, please, remove unused HPT_IOCTL_ defines.
 
-One typo..
+> #ifdef MODULE_LICENSE
+> MODULE_LICENSE("GPL");
+> #endif
 
+#ifdef is totally unneeded.
 
-> +static int iop_wait_ready(struct hpt_iopmu __iomem * iop, u32 millisec)
-> +{
-> + u32 req = 0;
-> + int i;
-> +
+Module init and exit functions should be marked with __init and __exit
+resp.
 
-Your mailer seems to have removed the tabs in the file (at least the
-preview version had the formatting correct and this one does not)
+Use DMA_??BIT_MASK in calls to pci_set_dma_mask(). See
+include/linux/dma-mapping.h for readily available items.
 
-If you can't get the mailer not to do this you might want to try
-resending it as an attachment if other fixes don't work.
+hptiop_get_logical_devices can return -1 and you'll end up with
 
-Alan
+	for (j = 0; j < -1; j++)
+
+in hptiop_show_devicelist()
+
+u64 things are printed as
+
+	"%llu", (unsigned long long)capacity
+
+Is unsigned long long enough in this case?
+
+I also suggest to use vsnprintf() in hptiop_copy_info() because you use
+it with strings.
+
+Funny, that you do
+
+	driveid->model[20] = 0;
+
+when ->model is in fact 40 chars long.
 
