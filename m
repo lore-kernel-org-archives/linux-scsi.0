@@ -1,61 +1,40 @@
-From: Alexey Dobriyan <adobriyan@gmail.com>
-Subject: Re: [PATCH] hptiop: HighPoint RocketRAID 3xxx controller driver
-Date: Wed, 10 May 2006 02:34:05 +0400
-Message-ID: <20060509223404.GE7237@mipter.zuzino.mipt.ru>
-References: <200605092128.k49LSQ6R024308@mail.hypersurf.com> <20060509215936.GD7237@mipter.zuzino.mipt.ru>
+From: Andries Brouwer <Andries.Brouwer@cwi.nl>
+Subject: Re: [PATCH] make kernel ignore bogus partitions
+Date: Wed, 10 May 2006 00:48:49 +0200
+Message-ID: <20060509224848.GA29754@apps.cwi.nl>
+References: <20060503210055.GB31048@beardog.cca.cpqcorp.net> <20060509124138.43e4bac0.akpm@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.187]:21399 "EHLO
-	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S1751241AbWEIWfd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 9 May 2006 18:35:33 -0400
-Received: by nf-out-0910.google.com with SMTP id b2so1297336nfe
-        for <linux-scsi@vger.kernel.org>; Tue, 09 May 2006 15:35:31 -0700 (PDT)
+Received: from hera.cwi.nl ([192.16.191.8]:764 "EHLO hera.cwi.nl")
+	by vger.kernel.org with ESMTP id S1750905AbWEIW4f (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 May 2006 18:56:35 -0400
 Content-Disposition: inline
-In-Reply-To: <20060509215936.GD7237@mipter.zuzino.mipt.ru>
+In-Reply-To: <20060509124138.43e4bac0.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Allen <amah@highpoint-tech.com>
-Cc: linux-scsi@vger.kernel.org, 'Andrew Morton' <akpm@osdl.org>, linux-kernel@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Andries.Brouwer@cwi.nl
 
-On Wed, May 10, 2006 at 01:59:36AM +0400, Alexey Dobriyan wrote:
-> That plethora of HPT_IOCTL_* defines, where are you using them? What
-> arguments are passed in and out?
+On Tue, May 09, 2006 at 12:41:38PM -0700, Andrew Morton wrote:
 
-Argh, sorry for confusion, I've checked several first in the list and wrongly
-concluded nothing is used. Anyway, please, remove unused HPT_IOCTL_ defines.
+> > +		if (from+size-1 > get_capacity(disk)) {
+> > +			printk(" %s: p%d exceeds device capacity, ignoring.\n", 
+> > +				disk->disk_name, p);
+> > +			continue;
+> > +		}
+> >  		add_partition(disk, p, from, size);
 
-> #ifdef MODULE_LICENSE
-> MODULE_LICENSE("GPL");
-> #endif
+> Shouldn't that be
+> 
+> 	if (from+size > get_capacity(disk)) {
+> 
+> ?
 
-#ifdef is totally unneeded.
+Ha, you are awake. Yes, it should.
+And no "ignoring". And no "continue". E.g.:
 
-Module init and exit functions should be marked with __init and __exit
-resp.
+	printk(" %s: warning: p%d exceeds device capacity.\n", ...);
 
-Use DMA_??BIT_MASK in calls to pci_set_dma_mask(). See
-include/linux/dma-mapping.h for readily available items.
-
-hptiop_get_logical_devices can return -1 and you'll end up with
-
-	for (j = 0; j < -1; j++)
-
-in hptiop_show_devicelist()
-
-u64 things are printed as
-
-	"%llu", (unsigned long long)capacity
-
-Is unsigned long long enough in this case?
-
-I also suggest to use vsnprintf() in hptiop_copy_info() because you use
-it with strings.
-
-Funny, that you do
-
-	driveid->model[20] = 0;
-
-when ->model is in fact 40 chars long.
+Andries
 
