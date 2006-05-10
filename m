@@ -1,54 +1,132 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH/RFC] Allowing REQ_FAILFAST to be set from SG_IO
-Date: Wed, 10 May 2006 13:42:49 -0400
-Message-ID: <44622619.4020805@torque.net>
-References: <4461EFD0.50902@suse.de>  <446217D5.3020606@torque.net> <1147279812.3671.8.camel@mulgrave.il.steeleye.com>
-Reply-To: dougg@torque.net
+From: "Bailey, Scott" <scott.bailey@eds.com>
+Subject: FIXED: Bogus st failures from qla1280 timeouts
+Date: Wed, 10 May 2006 13:44:27 -0400
+Message-ID: <F3598542BAC24B4783B7A440D45522FF04050577@usahm236.amer.corp.eds.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:39099 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S932229AbWEJRnH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 May 2006 13:43:07 -0400
-In-Reply-To: <1147279812.3671.8.camel@mulgrave.il.steeleye.com>
+Received: from ahmler1.mail.eds.com ([192.85.154.71]:36780 "EHLO
+	ahmler1.mail.eds.com") by vger.kernel.org with ESMTP
+	id S932307AbWEJRpT convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 May 2006 13:45:19 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Hannes Reinecke <hare@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Jes.Sorensen@cern.ch, Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org, "Bailey, Scott" <scott.bailey@eds.com>
 
-James Bottomley wrote:
-> On Wed, 2006-05-10 at 12:41 -0400, Douglas Gilbert wrote:
-> 
->>Looks good. There is no proposed change to sg.c .
->>Could SG_FLAG_FAILFAST be made to work via sg device
->>nodes?
-> 
-> 
-> Rather than having to maintain two separate paths for SG_IO and hence
-> keep running into this issue, what will it take for sg to use the block
-> scsi_ioctl.c?
+Absent more informed guidance, I went nuts and increased the timeout
+settings in qla1280.c from 30 seconds to 15 minutes. My tape drive works
+great now. The attached Debian bug report (bug 366730) summarizes the
+situation. I don't know if this is something suitable for inclusion to
+the kernel "as-is" or if I am overlooking some horrible side-effect that
+will bite me down the road.
 
-Methinks a large amount of code and a lot of testing.
-Hannes is proposing a new SG_FLAG value that would
-only be active in the block layer SG_IO. The existing
-SG_FLAG values are only implemented by the sg driver.
-Around that level in the sg driver, the command
-injection and response processing are asynchronous
-and that can be exposed to the sg user. The block
-SG_IO is synchronous with no easy way to break
-it down to its component parts.
+Any feedback?
 
-On further thought if anything in the scsi midlayer
-(or the block layer) is slowing down an error report
-getting back to a sg user then that is most likely a
-bug. The sg driver sends commands with retries set to
-zero. Also settings in the read/write error recovery
-mode page can effect how long a disk (or cd/drive)
-spends trying to recovery from errors (and
-SG_FLAG_FASTFAIL has no effect at the device (lu)
-end).
+	Scott
 
-Doug Gilbert
+-----Original Message-----
+From: R. Scott Bailey [mailto:scott.bailey@eds.com] 
+Sent: Wednesday, May 10, 2006 1:26 PM
+To: Debian Bug Tracking System
+Subject: linux-source-2.6.16: bogus scsi timeouts with qla1280 driver
 
+Package: linux-source-2.6.16
+Version: 2.6.16-12
+Severity: normal
+Tags: patch
+
+
+I have been aggravated by tape problems since upgrading to 2.6 on my 
+Alphaserver using the qla1280 driver with ISP1020/1040 support enabled. 
+It appears on inspection that the problem lies with the qla1280 driver 
+itself, which enforces a 30-second timeout on all (?) SCSI operations it
+
+issues. The result is that operations on my TZ89 DLT4 tape drive which 
+take longer than that to complete (for example, "mt eod" or "mt fsf" in 
+particular) abort and force a device reset.
+
+The attached kludgy patch demonstrates the fix I am using, namely to 
+increase the timeout to 900 seconds. This is fine because my hardware is
+
+all solid and I'm not worried at the moment about a disk going bad and 
+hanging my system for 15 minutes while the I/O times out... :-)
+
+Probably the timeout could be reduced to perhaps 5 minutes, but I am 
+erring on the side of longer since these errant "errors" really screw up
+
+my backups and restores.
+
+I have posted to linux-scsi on this but haven't gotten much of a 
+response. I'll report this there too but figured it would be better to 
+have more eyes on the problem.
+
+Thanks,
+
+  Scott Bailey
+  scott.bailey@eds.com
+
+--- drivers/scsi/qla1280.c	2006-03-20 00:53:29.000000000 -0500
++++ drivers/scsi/qla1280.c	2006-05-10 10:02:39.000000000 -0400
+@@ -17,9 +17,11 @@
+ * General Public License for more details.
+ *
+ 
+************************************************************************
+******/
+-#define QLA1280_VERSION      "3.26"
++#define QLA1280_VERSION      "3.26.rsb"
+ 
+/***********************************************************************
+******
+     Revision History:
++    Rev  3.26.rsb, May 10, 2006 R. Scott Bailey
++	- Increase timeouts (?) from 30 to 900 sec for tape support
+     Rev  3.26, January 16, 2006 Jes Sorensen
+ 	- Ditch all < 2.6 support
+     Rev  3.25.1, February 10, 2005 Christoph Hellwig
+@@ -2886,7 +2888,7 @@
+ 	memset(((char *)pkt + 8), 0, (REQUEST_ENTRY_SIZE - 8));
+ 
+ 	/* Set ISP command timeout. */
+-	pkt->timeout = cpu_to_le16(30);
++	pkt->timeout = cpu_to_le16(900); /* was 30 - RSB */
+ 
+ 	/* Set device target ID and LUN */
+ 	pkt->lun = SCSI_LUN_32(cmd);
+@@ -3185,7 +3187,7 @@
+ 	memset(((char *)pkt + 8), 0, (REQUEST_ENTRY_SIZE - 8));
+ 
+ 	/* Set ISP command timeout. */
+-	pkt->timeout = cpu_to_le16(30);
++	pkt->timeout = cpu_to_le16(900); /* was 30 - RSB */
+ 
+ 	/* Set device target ID and LUN */
+ 	pkt->lun = SCSI_LUN_32(cmd);
+
+
+
+-- System Information:
+Debian Release: testing/unstable
+Architecture: alpha
+Shell:  /bin/sh linked to /bin/bash
+Kernel: Linux 2.6.16-scsi.12
+Locale: LANG=C, LC_CTYPE=C (charmap=ANSI_X3.4-1968)
+
+Versions of packages linux-source-2.6.16 depends on:
+ii  binutils             2.16.1cvs20060413-1 The GNU assembler, linker
+and bina
+ii  bzip2                1.0.3-2             high-quality block-sorting
+file co
+
+Versions of packages linux-source-2.6.16 recommends:
+ii  gcc                           4:4.0.2-2  The GNU C compiler
+ii  libc6.1-dev [libc6-dev]       2.3.6-7    GNU C Library: Development
+Librari
+ii  make                          3.81-1     The GNU version of the
+"make" util
+
+-- no debconf information
