@@ -1,83 +1,48 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH/RFC] Allowing REQ_FAILFAST to be set from SG_IO
-Date: Wed, 10 May 2006 15:51:12 +0200
-Message-ID: <4461EFD0.50902@suse.de>
+From: Mirko Benz <mirko.benz@web.de>
+Subject: LSI megaraid sas performance
+Date: Wed, 10 May 2006 16:03:44 +0200
+Message-ID: <4461F2C0.3090903@web.de>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------070805040909000406000407"
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.suse.de ([195.135.220.2]:11724 "EHLO mx1.suse.de")
-	by vger.kernel.org with ESMTP id S964958AbWEJNvS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 May 2006 09:51:18 -0400
-Received: from Relay2.suse.de (mail2.suse.de [195.135.221.8])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mx1.suse.de (Postfix) with ESMTP id 13EC7EF19
-	for <linux-scsi@vger.kernel.org>; Wed, 10 May 2006 15:51:16 +0200 (CEST)
+Received: from 162.237.80.212.versanetonline.de ([212.80.237.162]:10412 "EHLO
+	cheetah.dd.xiranet.com") by vger.kernel.org with ESMTP
+	id S1751393AbWEJOEA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 May 2006 10:04:00 -0400
+Received: from [192.168.0.242] (dhcp242.dd.xiranet.com [192.168.0.242])
+	(authenticated bits=0)
+	by cheetah.dd.xiranet.com (8.13.4/8.13.4/Debian-1) with ESMTP id k4AE3oiT001856
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Wed, 10 May 2006 16:03:54 +0200
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------070805040909000406000407
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 8bit
+Hello,
 
-Hi all,
+We are testing the LSI 8480E SAS RAID controller with the following setup:
+-  Dual XEON server, 1 GB RAM
+- 12 SATA II disks in Promise J300S SAS JBOD connected with a single x4 
+SAS cable
+- stripe size is 64k, write back caching enabled
 
-this patch allows to set the REQ_FAILFAST flag to be set from SG_IO
-commands. With it one can send generic SCSI commands which behave
-exactly like normal requests send via the block layer.
+Measured with IOMETER. First two values are for read/write with 64 kb 
+block size with sequential I/O. Default test is RANDOM I/O 2/3 read + 
+1/3 write at 2k block size.
 
-Comments etc welcome.
+- Windows 2003 Server-64 bit:
+RAID 0 - R: 606 MB/s, W: 335 MB/s, Default: 820 IOPS
+RAID 5 - R: 593 MB/s, W: 304 MB/s, Default: 475 IOPS
+//RAID 0 write should be better but otherwise ok
 
-Cheers,
+- Linux 2.6.16.9-64 bit:
+RAID 0 - R: 165 MB/s, W: 373 MB/s, Default: 76 IOPS
+RAID 5 - R: 147 MB/s, W: 285 MB/s, Default: 74 IOPS
 
-Hannes
--- 
-Dr. Hannes Reinecke			hare@suse.de
-SuSE Linux Products GmbH		S390 & zSeries
-Maxfeldstraße 5				+49 911 74053 688
-90409 Nürnberg				http://www.suse.de
+READ performance is bad. Random I/O is like a single disk. The 8408 
+(internal version) shows the same behaveour. Has anyone else results for 
+this controller or suggestions to improve this?
 
---------------070805040909000406000407
-Content-Type: text/plain;
- name="sg-failfast-request"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="sg-failfast-request"
-
-Allow FAILFAST flag to be set for SG_IO commands
-
-This patch allows the FAILFAST flag to be set for SG_IO commands.
-
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-
-diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-index b33eda2..658b1b5 100644
---- a/block/scsi_ioctl.c
-+++ b/block/scsi_ioctl.c
-@@ -295,6 +295,8 @@ static int sg_io(struct file *file, requ
- 	rq->sense_len = 0;
- 
- 	rq->flags |= REQ_BLOCK_PC;
-+	if (hdr->flags & SG_FLAGS_FAILFAST)
-+		rq->flags |= REQ_FAILFAST;
- 	bio = rq->bio;
- 
- 	/*
-diff --git a/include/scsi/sg.h b/include/scsi/sg.h
-index 0a487fe..9cc466a 100644
---- a/include/scsi/sg.h
-+++ b/include/scsi/sg.h
-@@ -142,6 +142,7 @@ typedef struct sg_io_hdr
- #define SG_FLAG_UNUSED_LUN_INHIBIT 2   /* default is overwrite lun in SCSI */
- 				/* command block (when <= SCSI_2) */
- #define SG_FLAG_MMAP_IO 4       /* request memory mapped IO */
-+#define SG_FLAG_FAILFAST 8      /* request should set FAILFAST flag */
- #define SG_FLAG_NO_DXFER 0x10000 /* no transfer of kernel buffers to/from */
- 				/* user space (debug indirect IO) */
- 
-
---------------070805040909000406000407--
+Thanks,
+Mirko
