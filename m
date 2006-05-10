@@ -1,15 +1,15 @@
 From: Mark Haverkamp <markh@osdl.org>
-Subject: [PATCH 3/5] aacraid: adjustable timeouts
-Date: Wed, 10 May 2006 09:12:48 -0700
-Message-ID: <1147277568.29108.34.camel@markh3.pdx.osdl.net>
+Subject: [PATCH 5/5] aacraid: remove unneeded list
+Date: Wed, 10 May 2006 09:13:37 -0700
+Message-ID: <1147277617.29108.37.camel@markh3.pdx.osdl.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:16260 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S965001AbWEJQMv (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:35460 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S965007AbWEJQNl (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 May 2006 12:12:51 -0400
+	Wed, 10 May 2006 12:13:41 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@steeleye.com>
@@ -17,125 +17,93 @@ Cc: Mark Salyzyn <mark_salyzyn@adaptec.com>, linux-scsi <linux-scsi@vger.kernel.
 
 Received From Mark Salyzyn
 
-Add the ability to adjust for unusual corner case failures. Both of
-these additional module parameters deal with embedded, non-intel or
-complicated system scenarios.
-
-Aif_timeout can be increased past the default 2 minute timeout to drop
-application registrations when a system has an unusually high event load
-resulting from continuing management requests, or simultaneous builds,
-or sluggish user space as a result of system load.
-
-Startup_timeout can be increased past the default 3 minute timeout to
-drop an adapter initialization for systems that have a very large number
-of targets, or slow to spin-up targets, or a complicated set of array
-configurations that extend the time for the firmware to declare that it
-is operational. This timeout would only have an affect on non-intel
-based systems, as the (more patient) BIOS would generally be where the
-startup delay would be dealt with.
+The queue tracking is just not being used, not even for debugging. Information
+about outstanding commands can be acquired from the scsi structures.
 
 Signed-off-by: Mark Haverkamp <markh@osdl.org>
-
 ---
-Applies to the scsi-misc-2.6 tree.
+Applies to the scsi-misc-2.6 git tree.
 
---- scsi-misc-aac.orig/drivers/scsi/aacraid/aachba.c	2006-04-17 13:23:57.000000000 -0700
-+++ scsi-misc-aac/drivers/scsi/aacraid/aachba.c	2006-04-20 12:55:54.000000000 -0700
-@@ -148,6 +148,8 @@
- static int dacmode = -1;
- 
- static int commit = -1;
-+int startup_timeout = 180;
-+int aif_timeout = 120;
- 
- module_param(nondasd, int, S_IRUGO|S_IWUSR);
- MODULE_PARM_DESC(nondasd, "Control scanning of hba for nondasd devices. 0=off, 1=on");
-@@ -155,6 +157,10 @@
- MODULE_PARM_DESC(dacmode, "Control whether dma addressing is using 64 bit DAC. 0=off, 1=on");
- module_param(commit, int, S_IRUGO|S_IWUSR);
- MODULE_PARM_DESC(commit, "Control whether a COMMIT_CONFIG is issued to the adapter for foreign arrays.\nThis is typically needed in systems that do not have a BIOS. 0=off, 1=on");
-+module_param(startup_timeout, int, S_IRUGO|S_IWUSR);
-+MODULE_PARM_DESC(startup_timeout, "The duration of time in seconds to wait for adapter to have it's kernel up and\nrunning. This is typically adjusted for large systems that do not have a BIOS.");
-+module_param(aif_timeout, int, S_IRUGO|S_IWUSR);
-+MODULE_PARM_DESC(aif_timeout, "The duration of time in seconds to wait for applications to pick up AIFs before\nderegistering them. This is typically adjusted for heavily burdened systems.");
- 
- int numacb = -1;
- module_param(numacb, int, S_IRUGO|S_IWUSR);
---- scsi-misc-aac.orig/drivers/scsi/aacraid/commsup.c	2006-04-17 13:22:33.000000000 -0700
-+++ scsi-misc-aac/drivers/scsi/aacraid/commsup.c	2006-05-09 14:48:14.000000000 -0700
-@@ -1214,7 +1214,7 @@
- 						 * since the last read off
- 						 * the queue?
- 						 */
--						if ((time_now - time_last) > 120) {
-+						if ((time_now - time_last) > aif_timeout) {
- 							entry = entry->next;
- 							aac_close_fib_context(dev, fibctx);
- 							continue;
---- scsi-misc-aac.orig/drivers/scsi/aacraid/rkt.c	2006-04-17 13:22:33.000000000 -0700
-+++ scsi-misc-aac/drivers/scsi/aacraid/rkt.c	2006-05-09 14:48:27.000000000 -0700
-@@ -444,14 +444,14 @@
+--- scsi-misc-aac.orig/drivers/scsi/aacraid/aacraid.h	2006-05-09 14:49:33.000000000 -0700
++++ scsi-misc-aac/drivers/scsi/aacraid/aacraid.h	2006-05-09 14:50:00.000000000 -0700
+@@ -563,7 +563,6 @@
+ 	spinlock_t		lockdata;	/* Actual lock (used only on one side of the lock) */
+ 	struct list_head 	cmdq;	   	/* A queue of FIBs which need to be prcessed by the FS thread. This is */
+                                 		/* only valid for command queues which receive entries from the adapter. */
+-	struct list_head	pendingq;	/* A queue of outstanding fib's to the adapter. */
+ 	u32			numpending;	/* Number of entries on outstanding queue. */
+ 	struct aac_dev *	dev;		/* Back pointer to adapter structure */
+ };
+@@ -826,7 +825,6 @@
+ 	 *	The following is used to put this fib context onto the 
+ 	 *	Outstanding I/O queue.
  	 */
- 	while (!(rkt_readl(dev, MUnit.OMRx[0]) & KERNEL_UP_AND_RUNNING))
- 	{
--		if(time_after(jiffies, start+180*HZ))
-+		if(time_after(jiffies, start+startup_timeout*HZ))
- 		{
- 			status = rkt_readl(dev, MUnit.OMRx[0]);
- 			printk(KERN_ERR "%s%d: adapter kernel failed to start, init status = %lx.\n", 
- 					dev->name, instance, status);
- 			goto error_iounmap;
- 		}
--		schedule_timeout_uninterruptible(1);
-+		msleep(1);
- 	}
- 	if (request_irq(dev->scsi_host_ptr->irq, aac_rkt_intr, SA_SHIRQ|SA_INTERRUPT, "aacraid", (void *)dev)<0) 
- 	{
---- scsi-misc-aac.orig/drivers/scsi/aacraid/rx.c	2006-04-17 13:22:33.000000000 -0700
-+++ scsi-misc-aac/drivers/scsi/aacraid/rx.c	2006-05-09 14:48:40.000000000 -0700
-@@ -444,14 +444,14 @@
- 	while ((!(rx_readl(dev, IndexRegs.Mailbox[7]) & KERNEL_UP_AND_RUNNING))
- 		|| (!(rx_readl(dev, MUnit.OMRx[0]) & KERNEL_UP_AND_RUNNING)))
- 	{
--		if(time_after(jiffies, start+180*HZ))
-+		if(time_after(jiffies, start+startup_timeout*HZ))
- 		{
- 			status = rx_readl(dev, IndexRegs.Mailbox[7]);
- 			printk(KERN_ERR "%s%d: adapter kernel failed to start, init status = %lx.\n", 
- 					dev->name, instance, status);
- 			goto error_iounmap;
- 		}
--		schedule_timeout_uninterruptible(1);
-+		msleep(1);
- 	}
- 	if (request_irq(dev->scsi_host_ptr->irq, aac_rx_intr, SA_SHIRQ|SA_INTERRUPT, "aacraid", (void *)dev)<0) 
- 	{
---- scsi-misc-aac.orig/drivers/scsi/aacraid/sa.c	2006-04-17 13:22:33.000000000 -0700
-+++ scsi-misc-aac/drivers/scsi/aacraid/sa.c	2006-05-09 14:48:58.000000000 -0700
-@@ -318,13 +318,13 @@
- 	 *	Wait for the adapter to be up and running. Wait up to 3 minutes.
- 	 */
- 	while (!(sa_readl(dev, Mailbox7) & KERNEL_UP_AND_RUNNING)) {
--		if (time_after(jiffies, start+180*HZ)) {
-+		if (time_after(jiffies, start+startup_timeout*HZ)) {
- 			status = sa_readl(dev, Mailbox7);
- 			printk(KERN_WARNING "%s%d: adapter kernel failed to start, init status = %lx.\n", 
- 					name, instance, status);
- 			goto error_iounmap;
- 		}
--		schedule_timeout_uninterruptible(1);
-+		msleep(1);
- 	}
+-	struct list_head	queue;
+ 	/*
+ 	 *	And for the internal issue/reply queues (we may be able
+ 	 *	to merge these two)
+--- scsi-misc-aac.orig/drivers/scsi/aacraid/comminit.c	2006-05-09 14:46:37.000000000 -0700
++++ scsi-misc-aac/drivers/scsi/aacraid/comminit.c	2006-05-09 14:50:00.000000000 -0700
+@@ -159,7 +159,6 @@
+ {
+ 	q->numpending = 0;
+ 	q->dev = dev;
+-	INIT_LIST_HEAD(&q->pendingq);
+ 	init_waitqueue_head(&q->cmdready);
+ 	INIT_LIST_HEAD(&q->cmdq);
+ 	init_waitqueue_head(&q->qfull);
+--- scsi-misc-aac.orig/drivers/scsi/aacraid/commsup.c	2006-05-09 14:48:14.000000000 -0700
++++ scsi-misc-aac/drivers/scsi/aacraid/commsup.c	2006-05-09 14:50:00.000000000 -0700
+@@ -472,7 +472,6 @@
+ 	spin_lock_irqsave(q->lock, qflags);
+ 	if (dev->new_comm_interface) {
+ 		unsigned long count = 10000000L; /* 50 seconds */
+-		list_add_tail(&fibptr->queue, &q->pendingq);
+ 		q->numpending++;
+ 		spin_unlock_irqrestore(q->lock, qflags);
+ 		while (aac_adapter_send(fibptr) != 0) {
+@@ -481,7 +480,6 @@
+ 					spin_unlock_irqrestore(&fibptr->event_lock, flags);
+ 				spin_lock_irqsave(q->lock, qflags);
+ 				q->numpending--;
+-				list_del(&fibptr->queue);
+ 				spin_unlock_irqrestore(q->lock, qflags);
+ 				return -ETIMEDOUT;
+ 			}
+@@ -492,7 +490,6 @@
+ 		unsigned long nointr = 0;
+ 		aac_queue_get( dev, &index, AdapNormCmdQueue, hw_fib, 1, fibptr, &nointr);
  
- 	if (request_irq(dev->scsi_host_ptr->irq, aac_sa_intr, SA_SHIRQ|SA_INTERRUPT, "aacraid", (void *)dev ) < 0) {
---- scsi-misc-aac.orig/drivers/scsi/aacraid/aacraid.h	2006-05-09 14:46:37.000000000 -0700
-+++ scsi-misc-aac/drivers/scsi/aacraid/aacraid.h	2006-05-09 14:49:33.000000000 -0700
-@@ -1815,3 +1815,5 @@
- extern int numacb;
- extern int acbsize;
- extern char aac_driver_version[];
-+extern int startup_timeout;
-+extern int aif_timeout;
+-		list_add_tail(&fibptr->queue, &q->pendingq);
+ 		q->numpending++;
+ 		*(q->headers.producer) = cpu_to_le32(index + 1);
+ 		spin_unlock_irqrestore(q->lock, qflags);
+@@ -520,7 +517,6 @@
+ 				if (--count == 0) {
+ 					spin_lock_irqsave(q->lock, qflags);
+ 					q->numpending--;
+-					list_del(&fibptr->queue);
+ 					spin_unlock_irqrestore(q->lock, qflags);
+ 					if (wait == -1) {
+ 	        				printk(KERN_ERR "aacraid: aac_fib_send: first asynchronous command timed out.\n"
+--- scsi-misc-aac.orig/drivers/scsi/aacraid/dpcsup.c	2006-05-09 14:46:37.000000000 -0700
++++ scsi-misc-aac/drivers/scsi/aacraid/dpcsup.c	2006-05-09 14:50:00.000000000 -0700
+@@ -86,7 +86,6 @@
+ 		 *	the fib timed out.
+ 		 */
+ 		if (!(fib->flags & FIB_CONTEXT_FLAG_TIMED_OUT)) {
+-			list_del(&fib->queue);
+ 			dev->queues->queue[AdapNormCmdQueue].numpending--;
+ 		} else {
+ 			printk(KERN_WARNING "aacraid: FIB timeout (%x).\n", fib->flags);
+@@ -284,7 +283,6 @@
+ 			return 0;
+ 		}
+ 
+-		list_del(&fib->queue);
+ 		dev->queues->queue[AdapNormCmdQueue].numpending--;
+ 
+ 		if (fast) {
 
 -- 
 Mark Haverkamp <markh@osdl.org>
