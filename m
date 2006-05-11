@@ -1,95 +1,62 @@
-From: Erik Mouw <erik@harddisk-recovery.com>
-Subject: [BUG 2.6.17-git] kmem_cache_create: duplicate cache scsi_cmd_cache
-Date: Thu, 11 May 2006 17:14:57 +0200
-Message-ID: <20060511151456.GD3755@harddisk-recovery.com>
+From: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
+Subject: Re: [PATCH] make kernel ignore bogus partitions
+Date: Thu, 11 May 2006 11:04:17 -0500
+Message-ID: <20060511160417.GA7730@beardog.cca.cpqcorp.net>
+References: <20060503210055.GB31048@beardog.cca.cpqcorp.net> <20060509124138.43e4bac0.akpm@osdl.org> <20060509224848.GA29754@apps.cwi.nl> <20060511040014.66ea16fc.akpm@osdl.org> <20060511115117.GA870@apps.cwi.nl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dtp.xs4all.nl ([80.126.206.180]:15188 "HELO abra2.bitwizard.nl")
-	by vger.kernel.org with SMTP id S1030220AbWEKPO7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 May 2006 11:14:59 -0400
-Received: from erik by zurix.bitwizard.nl with local (Exim 3.36 #1 (Debian))
-	id 1FeCsT-0002Yv-00
-	for <linux-scsi@vger.kernel.org>; Thu, 11 May 2006 17:14:57 +0200
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030306AbWEKQEn@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20060511115117.GA870@apps.cwi.nl>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andries Brouwer <Andries.Brouwer@cwi.nl>
+Cc: Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Hi,
-
-While playing with libata in 2.6.17-git from today, I got this bug:
-
-SCSI subsystem initialized
-libata version 1.20 loaded.
-sata_promise 0000:02:05.0: version 1.04
-kmem_cache_create: duplicate cache scsi_cmd_cache
- <c0159591> kmem_cache_create+0x331/0x390
- <e0924371> scsi_setup_command_freelist+0x71/0xf0 [scsi_mod]
- <e092588e> scsi_host_alloc+0x17e/0x270 [scsi_mod]
- <e08fd061> ata_host_add+0x41/0xc0 [libata]
- <c0148c9f> __kzalloc+0x1f/0x50
- <e08fd190> ata_device_add+0xb0/0x240 [libata]
- <e0839baf> pdc_ata_init_one+0x27f/0x330 [sata_promise]
- <c01dd1a9> pci_call_probe+0x19/0x20
- <c01dd20e> __pci_device_probe+0x5e/0x70
- <c01dd24f> pci_device_probe+0x2f/0x50
- <c0220977> driver_probe_device+0xb7/0xe0
- <c02b338a> klist_dec_and_del+0x1a/0x20
- <c0220a30> __driver_attach+0x0/0x90
- <c0220aa1>__driver_attach+0x71/0x90
- <c021fd49> bus_for_each_dev+0x69/0x80
- <c0220ae6> driver_attach+0x26/0x30
- <c0220a30> __driver_attach+0x0/0x90
- <c02202a3> bus_add_driver+0x83/0xc0
- <c01dd4ed> __pci_register_driver+0x4d/0x70
- <e0880017> pdc_ata_init+0x17/0x1b [sata_promise]
- <c013a1a0> sys_init_module+0x120/0x1b0
- <c0102f27> syscall_call+0x7/0xb
-
-How to recreate:
-
-- fully modular scsi and libata
-- modprobe sata_promise ; modprobe sd_mod
-- rmmod sd_mod ; rmmod sata_promise ; rmmod libata ; rmmod scsi_mod
-- modprobe sata_promise
-
-At first glance Looks to me like scsi_mod forgot to delete the
-scsi_cmd_cache at module unload. Note that I can only trigger the bug
-when there are devices connected to the SATA controller.
-
-It doesn't look libata related, cause I can also trigger it using the
-sym53c8xx driver:
-
-SCSI subsystem initialized
-sym0: <895> rev 0x1 at pci 0000:02:06.0 irq 17
-kmem_cache_create: duplicate cache scsi_cmd_cache
- <c0159591> kmem_cache_create+0x331/0x390
- <e0924371> scsi_setup_command_freelist+0x71/0xf0 [scsi_mod]
- <e092588e> scsi_host_alloc+0x17e/0x270 [scsi_mod]
- <c011e697> printk+0x17/0x20
- <e09493e5> sym_attach+0x75/0x3d0 [sym53c8xx]
- <e0949d99> sym2_probe+0xc9/0x130 [sym53c8xx]
- <c01dd1a9> pci_call_probe+0x19/0x20
- <c01dd20e> __pci_device_probe+0x5e/0x70
- <c01dd24f> pci_device_probe+0x2f/0x50
- <c0220977> driver_probe_device+0xb7/0xe0
- <c02b338a> klist_dec_and_del+0x1a/0x20
- <c0220a30> __driver_attach+0x0/0x90
- <c0220aa1> __driver_attach+0x71/0x90
- <c021fd49> bus_for_each_dev+0x69/0x80
- <c0220ae6> driver_attach+0x26/0x30
- <c0220a30> __driver_attach+0x0/0x90
- <c02202a3> bus_add_driver+0x83/0xc0
- <c01dd4ed> __pci_register_driver+0x4d/0x70
- <e083903a> sym2_init+0x3a/0x5b [sym53c8xx]
- <c013a1a0> sys_init_module+0x120/0x1b0
- <c0102f27> syscall_call+0x7/0xb
+On Thu, May 11, 2006 at 01:51:17PM +0200, Andries Brouwer wrote:
+> On Thu, May 11, 2006 at 04:00:14AM -0700, Andrew Morton wrote:
+> 
+> > > Yes, it should.
+> > > And no "ignoring". And no "continue". E.g.:
+> > > 
+> > > 	printk(" %s: warning: p%d exceeds device capacity.\n", ...);
+> > > 
+> > 
+> > So you're saying that after detecting this inconsistency we should proceed
+> > to use the partition anyway?
+> > 
+> > For what reason?
+> 
+> The normal situation is that partitions are contained within
+> the disk. In the normal situation the test is superfluous.
+> 
+> Suppose the test fails. Why might that be? There isn't really
+> a good scenario where this is a mistake. In all the (rare) cases
+> that I can imagine, it would make matters worse to reject the
+> partition and make access impossible (or at least more difficult).
+> 
+> Case 1: The kernel is mistaken about the size of the disk.
+> (There are commands to clip a disk to a certain capacity,
+> there are jumpers to tell a disk that it should report a certain
+> capacity etc. Usually this is because of BIOS bugs. In bad cases
+> the machine will crash in the BIOS and hence fail to boot if
+> the disk reports full capacity.)
+> In such cases actually accessing the blocks of the partition
+> may work fine, or may work fine after running an unclip utility.
+> I wrote "setmax" some years ago precisely for this reason.
+> 
+> Case 2: There was a messy partition table (maybe just a rounding
+> error) but the actual filesystem on the partition is contained
+> in the physical disk. Now using the filesystem goes without problem.
+> 
+> Case 3: Both partition and filesystem extend beyond the end of the disk.
+> In forensic or debugging situations one often uses a copy of the start
+> of a disk. Now access beyond the end gives an expected I/O error.
 
 
-Erik
+Continuing to use the partition will result in io errors when accessing 
+any block that is past the end of the physical device. We see this as
+unacceptable. Why would it make matters worse to prevent access to the
+partition? The partition _should_ be correct.
 
--- 
-+-- Erik Mouw -- www.harddisk-recovery.com -- +31 70 370 12 90 --
-| Lab address: Delftechpark 26, 2628 XH, Delft, The Netherlands
+mikem
