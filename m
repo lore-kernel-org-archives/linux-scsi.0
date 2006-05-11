@@ -1,171 +1,48 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: [PATCH] fc transport: resolve scan vs delete deadlocks
-Date: Thu, 11 May 2006 13:27:09 -0400
-Message-ID: <1147368429.18517.3.camel@localhost.localdomain>
-Reply-To: James.Smart@Emulex.Com
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [RFC] Asynchronous scsi scanning
+Date: Thu, 11 May 2006 13:15:40 -0500
+Message-ID: <44637F4C.3070102@cs.wisc.edu>
+References: <20060511143352.GI12272@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:42971 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S1030386AbWEKR0w
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 May 2006 13:26:52 -0400
-Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
-	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id k4BHQo8t019733
-	for <linux-scsi@vger.kernel.org>; Thu, 11 May 2006 10:26:51 -0700 (PDT)
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:52096 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S1750701AbWEKSMU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 May 2006 14:12:20 -0400
+In-Reply-To: <20060511143352.GI12272@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org
+
+Matthew Wilcox wrote:
+> A customer has a machine with 162 scsi hosts, and just scanning the scsi
+> busses takes over an hour.  Here's what I've come up with to reduce that.
+> For drivers which call scsi_scan_host(), no changes are necessary.
+> The fibrechannel and SAS drivers are going to take a bit more work,
+> but I thought I'd send out the core first.  I'm not entirely happy about
+> how the threads rendezvous; it'd be nice to not have to use a completion.
+> 
+> One user-visible change in behaviour is that after loading a driver, the
+> insmod will return before discovery is finished.  Apparently Ubuntu's
+> userspace already copes with this, but it's something to be aware of.
+> The late_initcall takes care of this for built-in modules, but it'd be
+> nice if there were an API to say "run this function before insmod exits".
+> 
 
 
-In a prior posting to linux-scsi on the fc transport and workq
-deadlocks, we noted a second error that did not have a patch:
-  http://marc.theaimsgroup.com/?l=linux-scsi&m=114467847711383&w=2
-  - There's a deadlock where scsi_remove_target() has to sit behind 
-    scsi_scan_target() due to contention over the scan_lock().
+Instead of all the scanning from work queue and kthreads, what about
+just running something from the host addition hotplug event. When a host
+or target or rport or whatever we want is added, userspace gets a
+hotplug event today, I thought. From that event could you just do
 
-Subsequently we posted a request for comments about the deadlock:
-  http://marc.theaimsgroup.com/?l=linux-scsi&m=114469358829500&w=2
+echo - - - > path-to-object/scan
 
-This posting resolves the second error. Here's what we now understand,
-and are implementing:
-
-  If the lldd deletes the rport while a scan is active, the sdev's queue
-  is blocked which stops the issuing of commands associated with the scan.
-  At this point, the scan stalls, and does so with the shost->scan_mutex held.
-  If, at this point, if any scan or delete request is made on the host, it
-  will stall waiting for the scan_mutex.
-  
-  For the FC transport, we queue all delete work to a single workq.
-  So, things worked fine when competing with the scan, as long as the
-  target blocking the scan was the same target at the top of our delete
-  workq, as the delete workq routine always unblocked just prior to
-  requesting the delete.  Unfortunately, if the top of our delete workq
-  was for a different target, we deadlock.  Additionally, if the target
-  blocking scan returned, we were unblocking it in the scan workq routine,
-  which really won't execute until the existing stalled scan workq
-  completes (e.g. we're re-scheduling it while it is in the midst of its
-  execution).
-
-  This patch moves the unblock out of the workq routines and moves it to
-  the context that is scheduling the work. This ensures that at some point,
-  we will unblock the target that is blocking scan.  Please note, however,
-  that the deadlock condition may still occur while it waits for the
-  transport to timeout an unblock on a target.  Worst case, this is bounded
-  by the transport dev_loss_tmo (default: 30 seconds).
-
-
-Finally, Michael Reed deserves the credit for the bulk of this patch,
-analysis, and it's testing. Thank you for your help.
-
--- james s
-
-Note: this patch supercedes a previous preliminary post by Michael Reed
-  http://marc.theaimsgroup.com/?l=linux-scsi&m=114675967824701&w=2
-
-Note: The request for comments statements about the gross-ness of the
-  scan_mutex still stand.
-
-
-
-Signed-off-by: Michael Reed <mdr@sgi.com>
-Signed-off-by: James Smart <james.smart@emulex.com>
-
-
-diff -upNr a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
---- a/drivers/scsi/scsi_transport_fc.c	2006-05-11 10:43:31.000000000 -0400
-+++ b/drivers/scsi/scsi_transport_fc.c	2006-05-11 12:04:36.000000000 -0400
-@@ -1284,7 +1284,9 @@ EXPORT_SYMBOL(fc_release_transport);
-  * @work:	Work to queue for execution.
-  *
-  * Return value:
-- * 	0 on success / != 0 for error
-+ * 	1 - work queued for execution
-+ *	0 - work is already queued
-+ *	-EINVAL - work queue doesn't exist
-  **/
- static int
- fc_queue_work(struct Scsi_Host *shost, struct work_struct *work)
-@@ -1434,8 +1436,6 @@ fc_starget_delete(void *data)
- 	struct Scsi_Host *shost = rport_to_shost(rport);
- 	unsigned long flags;
- 
--	scsi_target_unblock(&rport->dev);
--
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	if (rport->flags & FC_RPORT_DEVLOSS_PENDING) {
- 		spin_unlock_irqrestore(shost->host_lock, flags);
-@@ -1707,6 +1707,8 @@ fc_remote_port_add(struct Scsi_Host *sho
- 
- 				spin_unlock_irqrestore(shost->host_lock, flags);
- 
-+				scsi_target_unblock(&rport->dev);
-+
- 				return rport;
- 			}
- 		}
-@@ -1762,9 +1764,10 @@ fc_remote_port_add(struct Scsi_Host *sho
- 				/* initiate a scan of the target */
- 				rport->flags |= FC_RPORT_SCAN_PENDING;
- 				scsi_queue_work(shost, &rport->scan_work);
--			}
--
--			spin_unlock_irqrestore(shost->host_lock, flags);
-+				spin_unlock_irqrestore(shost->host_lock, flags);
-+				scsi_target_unblock(&rport->dev);
-+			} else
-+				spin_unlock_irqrestore(shost->host_lock, flags);
- 
- 			return rport;
- 		}
-@@ -1938,6 +1941,7 @@ fc_remote_port_rolechg(struct fc_rport  
- 		rport->flags |= FC_RPORT_SCAN_PENDING;
- 		scsi_queue_work(shost, &rport->scan_work);
- 		spin_unlock_irqrestore(shost->host_lock, flags);
-+		scsi_target_unblock(&rport->dev);
- 	}
- }
- EXPORT_SYMBOL(fc_remote_port_rolechg);
-@@ -1970,8 +1974,9 @@ fc_timeout_deleted_rport(void  *data)
- 		dev_printk(KERN_ERR, &rport->dev,
- 			"blocked FC remote port time out: no longer"
- 			" a FCP target, removing starget\n");
--		fc_queue_work(shost, &rport->stgt_delete_work);
- 		spin_unlock_irqrestore(shost->host_lock, flags);
-+		scsi_target_unblock(&rport->dev);
-+		fc_queue_work(shost, &rport->stgt_delete_work);
- 		return;
- 	}
- 
-@@ -2035,17 +2040,15 @@ fc_timeout_deleted_rport(void  *data)
- 	 * went away and didn't come back - we'll remove
- 	 * all attached scsi devices.
- 	 */
--	fc_queue_work(shost, &rport->stgt_delete_work);
--
- 	spin_unlock_irqrestore(shost->host_lock, flags);
-+
-+	scsi_target_unblock(&rport->dev);
-+	fc_queue_work(shost, &rport->stgt_delete_work);
- }
- 
- /**
-  * fc_scsi_scan_rport - called to perform a scsi scan on a remote port.
-  *
-- * Will unblock the target (in case it went away and has now come back),
-- * then invoke a scan.
-- *
-  * @data:	remote port to be scanned.
-  **/
- static void
-@@ -2057,7 +2060,6 @@ fc_scsi_scan_rport(void *data)
- 
- 	if ((rport->port_state == FC_PORTSTATE_ONLINE) &&
- 	    (rport->roles & FC_RPORT_ROLE_FCP_TARGET)) {
--		scsi_target_unblock(&rport->dev);
- 		scsi_scan_target(&rport->dev, rport->channel,
- 			rport->scsi_target_id, SCAN_WILD_CARD, 1);
- 	}
-
-
+This is basically what we do for iscsi. We can scan all hosts or
+sessions in parrallel which makes startup pretty fast. The problem is of
+course getting the distros to support it. I guess if they have to
+support async scanning for all hosts (I think fedora and red hat does
+not support this - maybe just for usb), then they could also userspace
+scanning support at the same time.
