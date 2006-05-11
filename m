@@ -1,61 +1,29 @@
-From: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
-Subject: Re: [PATCH] make kernel ignore bogus partitions
-Date: Thu, 11 May 2006 11:17:36 -0500
-Message-ID: <20060511161736.GB8124@beardog.cca.cpqcorp.net>
-References: <20060503210055.GB31048@beardog.cca.cpqcorp.net> <20060509124138.43e4bac0.akpm@osdl.org>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [PATCH] scsi_wq (fc transport) thread hang
+Date: Thu, 11 May 2006 12:24:39 -0400
+Message-ID: <44636547.6060700@emulex.com>
+References: <445A296B.3060501@sgi.com>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palrel10.hp.com ([156.153.255.245]:51677 "EHLO palrel10.hp.com")
-	by vger.kernel.org with ESMTP id S1030308AbWEKQRj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 May 2006 12:17:39 -0400
-Content-Disposition: inline
-In-Reply-To: <20060509124138.43e4bac0.akpm@osdl.org>
+Received: from emulex.emulex.com ([138.239.112.1]:46799 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S1030319AbWEKQYW
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 May 2006 12:24:22 -0400
+In-Reply-To: <445A296B.3060501@sgi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, aeb@cwi.nl
+To: Michael Reed <mdr@sgi.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Gary Hagensen <gwh@sgi.com>, Jeremy Higdon <jeremy@sgi.com>, "Moore, Eric Dean" <Eric.Moore@lsil.com>, "Shirron, Stephen" <Stephen.Shirron@lsil.com>
 
-On Tue, May 09, 2006 at 12:41:38PM -0700, Andrew Morton wrote:
-> "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net> wrote:
-> >
-> > Patch 1/1
-> > Sometimes partitions claim to be larger than the reported capacity of a
-> > disk device. This patch makes the kernel ignore those partitions.
-> > 
-> > Signed-off-by: Mike Miller <mike.miller@hp.com>
-> > Signed-off-by: Stephen Cameron <steve.cameron@hp.com>
-> > 
-> > Please consider this for inclusion.
-> > 
-> > 
-> >  fs/partitions/check.c |    5 +++++
-> >  1 files changed, 5 insertions(+)
-> > 
-> > --- linux-2.6.14/fs/partitions/check.c~partition_vs_capacity	2006-01-06 09:32:14.000000000 -0600
-> > +++ linux-2.6.14-root/fs/partitions/check.c	2006-01-06 11:24:50.000000000 -0600
-> > @@ -382,6 +382,11 @@ int rescan_partitions(struct gendisk *di
-> >  		sector_t from = state->parts[p].from;
-> >  		if (!size)
-> >  			continue;
-> > +		if (from+size-1 > get_capacity(disk)) {
-> > +			printk(" %s: p%d exceeds device capacity, ignoring.\n", 
-> > +				disk->disk_name, p);
-> > +			continue;
-> > +		}
-> >  		add_partition(disk, p, from, size);
-> >  #ifdef CONFIG_BLK_DEV_MD
-> >  		if (state->parts[p].flags)
-> 
-> Shouldn't that be
-> 
-> 	if (from+size > get_capacity(disk)) {
-> 
-> ?
-> 
-Since the partition size is 0-based this is correct:
+Everyone,
 
-	if (from+size-1 > get_capacity(disk)) {
+FYI - please note that this patch has been NACK'd.
 
-mikem
+Michael continued to work on this issue and has realized that this
+patch is not the correct one. I will be posting an updated patch for
+this issue shortly.
+
+-- james s
