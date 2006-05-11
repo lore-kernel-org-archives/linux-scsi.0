@@ -1,39 +1,40 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [RFC] Asynchronous scsi scanning
-Date: Thu, 11 May 2006 12:56:02 -0600
-Message-ID: <20060511185602.GL12272@parisc-linux.org>
-References: <20060511143352.GI12272@parisc-linux.org> <44637F4C.3070102@cs.wisc.edu> <20060511182119.GK12272@parisc-linux.org> <44638736.70708@cs.wisc.edu>
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: FIXED: Bogus st failures from qla1280 timeouts
+Date: Thu, 11 May 2006 22:04:03 +0300 (EEST)
+Message-ID: <Pine.LNX.4.63.0605112155510.4698@kai.makisara.local>
+References: <F3598542BAC24B4783B7A440D45522FF04050577@usahm236.amer.corp.eds.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:37095 "EHLO
-	palinux.external.hp.com") by vger.kernel.org with ESMTP
-	id S1750705AbWEKS4D (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 May 2006 14:56:03 -0400
-Content-Disposition: inline
-In-Reply-To: <44638736.70708@cs.wisc.edu>
+Received: from fep30-0.kolumbus.fi ([193.229.0.32]:8043 "EHLO
+	fep30-app.kolumbus.fi") by vger.kernel.org with ESMTP
+	id S1750713AbWEKTEG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 May 2006 15:04:06 -0400
+In-Reply-To: <F3598542BAC24B4783B7A440D45522FF04050577@usahm236.amer.corp.eds.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: linux-scsi@vger.kernel.org
+To: "Bailey, Scott" <scott.bailey@eds.com>
+Cc: Jes.Sorensen@cern.ch, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-On Thu, May 11, 2006 at 01:49:26PM -0500, Mike Christie wrote:
-> > 2) Unless it's serialised (in which case it still takes two hours to
-> > boot), you lose drive numbering.
+On Wed, 10 May 2006, Bailey, Scott wrote:
+
+> Absent more informed guidance, I went nuts and increased the timeout
+> settings in qla1280.c from 30 seconds to 15 minutes. My tape drive works
+> great now. The attached Debian bug report (bug 366730) summarizes the
+> situation. I don't know if this is something suitable for inclusion to
+> the kernel "as-is" or if I am overlooking some horrible side-effect that
+> will bite me down the road.
 > 
-> Drive numbering refers to the bus, target numbering right?
+> Any feedback?
+> 
+Good. This solves your practical problem but raises one (theoretic?) 
+question: why is the qla1280 driver even trying to enforce device level 
+timeouts? This should be left to the upper layers.
 
-No, I mean sda, sdb, sdc, etc.
+The default timeouts in the st driver were increased several times 
+according to reports from users. The 900 second timeout in your patch may 
+be too short in some cases but it probably is wise not to increase it too 
+much unless someone really needs that.
 
-> Currently
-> when you scan a host you are serialized at the host level because of the
-> host->scan_mutex aren't we? So for each host addition hotplug event you
-> can scan that host with the command above, and then you can scan all
-> your hosts in parallel and the drive numbering is not affected is it? I
-> thought, your patch is basically creating a kernel thread and running
-> scan host selected, which grabs the scan_mutex, with all wild cards.
-> What I suggested ends up calling scan host selected with all wild cards
-> but from userspace.
-
-The trick is to avoid adding the sdevs to sysfs until all prior sdevs
-have been added.  I don't see a good way to do that from userspace.
+-- 
+Kai
