@@ -1,48 +1,36 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
+From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: [RFC] Asynchronous scsi scanning
-Date: Thu, 11 May 2006 13:15:40 -0500
-Message-ID: <44637F4C.3070102@cs.wisc.edu>
-References: <20060511143352.GI12272@parisc-linux.org>
+Date: Thu, 11 May 2006 12:21:19 -0600
+Message-ID: <20060511182119.GK12272@parisc-linux.org>
+References: <20060511143352.GI12272@parisc-linux.org> <44637F4C.3070102@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:52096 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S1750701AbWEKSMU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 May 2006 14:12:20 -0400
-In-Reply-To: <20060511143352.GI12272@parisc-linux.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:49882 "EHLO
+	palinux.external.hp.com") by vger.kernel.org with ESMTP
+	id S1750722AbWEKSVV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 May 2006 14:21:21 -0400
+Content-Disposition: inline
+In-Reply-To: <44637F4C.3070102@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
+To: Mike Christie <michaelc@cs.wisc.edu>
 Cc: linux-scsi@vger.kernel.org
 
-Matthew Wilcox wrote:
-> A customer has a machine with 162 scsi hosts, and just scanning the scsi
-> busses takes over an hour.  Here's what I've come up with to reduce that.
-> For drivers which call scsi_scan_host(), no changes are necessary.
-> The fibrechannel and SAS drivers are going to take a bit more work,
-> but I thought I'd send out the core first.  I'm not entirely happy about
-> how the threads rendezvous; it'd be nice to not have to use a completion.
+On Thu, May 11, 2006 at 01:15:40PM -0500, Mike Christie wrote:
+> Instead of all the scanning from work queue and kthreads, what about
+> just running something from the host addition hotplug event. When a host
+> or target or rport or whatever we want is added, userspace gets a
+> hotplug event today, I thought. From that event could you just do
 > 
-> One user-visible change in behaviour is that after loading a driver, the
-> insmod will return before discovery is finished.  Apparently Ubuntu's
-> userspace already copes with this, but it's something to be aware of.
-> The late_initcall takes care of this for built-in modules, but it'd be
-> nice if there were an API to say "run this function before insmod exits".
-> 
+> echo - - - > path-to-object/scan
 
+1) Assumes userspace exists.  People still use monolithic kernels and
+there's no requirement for initramfs yet.
+2) Unless it's serialised (in which case it still takes two hours to
+boot), you lose drive numbering.
 
-Instead of all the scanning from work queue and kthreads, what about
-just running something from the host addition hotplug event. When a host
-or target or rport or whatever we want is added, userspace gets a
-hotplug event today, I thought. From that event could you just do
-
-echo - - - > path-to-object/scan
-
-This is basically what we do for iscsi. We can scan all hosts or
-sessions in parrallel which makes startup pretty fast. The problem is of
-course getting the distros to support it. I guess if they have to
-support async scanning for all hosts (I think fedora and red hat does
-not support this - maybe just for usb), then they could also userspace
-scanning support at the same time.
+Now, arguably, we don't need to preserve drive numbering any more,
+since we have alternatives like uuids.  But I can guarantee you we'll
+be buried in bug reports and unhappy users if drive numbers start
+changing arbitrarily.
