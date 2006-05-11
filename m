@@ -1,50 +1,34 @@
-From: Hannes Reinecke <hare@suse.de>
+From: Jens Axboe <axboe@suse.de>
 Subject: Re: [PATCH/RFC] Allowing REQ_FAILFAST to be set from SG_IO
-Date: Thu, 11 May 2006 12:28:14 +0200
-Message-ID: <446311BE.8070104@suse.de>
-References: <4461EFD0.50902@suse.de> <446217D5.3020606@torque.net>
+Date: Thu, 11 May 2006 12:36:36 +0200
+Message-ID: <20060511103636.GJ4157@suse.de>
+References: <4461EFD0.50902@suse.de> <446217D5.3020606@torque.net> <1147279812.3671.8.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:21701 "EHLO mx2.suse.de")
-	by vger.kernel.org with ESMTP id S1750738AbWEKK23 (ORCPT
+Received: from ns.virtualhost.dk ([195.184.98.160]:33121 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S1030213AbWEKKgQ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 May 2006 06:28:29 -0400
-In-Reply-To: <446217D5.3020606@torque.net>
+	Thu, 11 May 2006 06:36:16 -0400
+Content-Disposition: inline
+In-Reply-To: <1147279812.3671.8.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: dougg@torque.net, Hannes Reinecke <hare@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Douglas Gilbert wrote:
-> Hannes Reinecke wrote:
->> Hi all,
->>
->> this patch allows to set the REQ_FAILFAST flag to be set from SG_IO
->> commands. With it one can send generic SCSI commands which behave
->> exactly like normal requests send via the block layer.
->>
->> Comments etc welcome.
->=20
-> Hannes,
-> Looks good. There is no proposed change to sg.c .
-> Could SG_FLAG_FAILFAST be made to work via sg device
-> nodes?
->=20
-That will be tricky. sg.c is using scsi_execute_async() which doesn't
-provide for any flags to be passed.
+On Wed, May 10 2006, James Bottomley wrote:
+> On Wed, 2006-05-10 at 12:41 -0400, Douglas Gilbert wrote:
+> > Looks good. There is no proposed change to sg.c .
+> > Could SG_FLAG_FAILFAST be made to work via sg device
+> > nodes?
+> 
+> Rather than having to maintain two separate paths for SG_IO and hence
+> keep running into this issue, what will it take for sg to use the block
+> scsi_ioctl.c?
 
-Cheers,
+The plan still remains to use bsg to consolidate the two.
 
-Hannes
---=20
-Dr. Hannes Reinecke			hare@suse.de
-SuSE Linux Products GmbH		S390 & zSeries
-Maxfeldstra=DFe 5				+49 911 74053 688
-90409 N=FCrnberg				http://www.suse.de
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Jens Axboe
+
