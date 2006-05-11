@@ -1,45 +1,70 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: [PATCH] update max sdev block limit
-Date: Wed, 10 May 2006 21:40:24 -0400
-Message-ID: <1147311624.3507.0.camel@localhost.localdomain>
-Reply-To: James.Smart@Emulex.Com
+From: "Chhavi Agarwal" <Chhavi.Agarwal@patni.com>
+Subject: unknown symbol scsi_bus_type
+Date: Thu, 11 May 2006 13:11:30 +0530
+Message-ID: <00d601c674ce$520f0980$f4041aac@pcp42816>
+Reply-To: <Chhavi.Agarwal@patni.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="----------=_1147333281-11516-70"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:42114 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S965109AbWEKBj6
+Received: from pcsbom.patni.com ([203.124.139.208]:60133 "EHLO
+	pcsspz.PATNI.COM") by vger.kernel.org with ESMTP id S965195AbWEKHj5
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 May 2006 21:39:58 -0400
-Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
-	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id k4B1dvxt027018
-	for <linux-scsi@vger.kernel.org>; Wed, 10 May 2006 18:39:57 -0700 (PDT)
+	Thu, 11 May 2006 03:39:57 -0400
+Received: from rakshak.patni.com (rakshak.patni.com [203.124.139.211])
+	by pcsspz.PATNI.COM (8.12.8/8.12.8) with SMTP id k4B7h676030302
+	for <linux-scsi@vger.kernel.org>; Thu, 11 May 2006 13:13:15 +0530
+Received: from spzha1.patni.com ([192.168.0.6])
+ by rakshak.patni.com (SMSSMTP 4.1.11.41) with SMTP id M2006051113150807344
+ for <linux-scsi@vger.kernel.org>; Thu, 11 May 2006 13:15:08 +0530
+Received: from pcp42816 ([172.26.4.244])
+	(authenticated bits=0)
+	by spzha1.patni.com (8.13.4/8.12.9) with ESMTP id k4B7fLF5026535
+	for <linux-scsi@vger.kernel.org>; Thu, 11 May 2006 13:11:21 +0530
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Linux-Scsi (E-mail)" <linux-scsi@vger.kernel.org>
 
-This patch ups the maximum limit for how long an sdev is allowed to
-be blocked. Originally, the value was 60 seconds. However, we are aware
-of array failover and switch reboot times that can be as high
-as 90 seconds. We're proposing to change the max to 120 seconds.
+This is a multi-part message in MIME format...
 
--- james s
+------------=_1147333281-11516-70
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+Hi,
+
+I am using a linux-2.6.14 kernel.
+I am trying to load my iSCSI module but when using insmod the error is
+
+insmod: error inserting 'unh_scsi_target.ko': -1 Unknown symbol in module
+
+linux:/home/chhavi/unh_iscsi.1.6.00/src # dmesg
+unh_scsi_target: Unknown symbol scsi_bus_type
+
+I had exported scsi_bus_type and rebuild the kernel.
+its seen as exported in module.symvers.
+
+but still the error persists.
+
+any help will be appreciated.
+
+Thanks
 
 
-Signed-off-by: James Smart <James.Smart@emulex.com>
+http://www.patni.com
+World-Wide Partnerships. World-Class Solutions.
+_____________________________________________________________________
 
+This e-mail message may contain proprietary, confidential or legally
+privileged information for the sole use of the person or entity to
+whom this message was originally addressed. Any review, e-transmission
+dissemination or other use of or taking of any action in reliance upon
+this information by persons or entities other than the intended
+recipient is prohibited. If you have received this e-mail in error
+kindly delete  this e-mail from your records. If it appears that this
+mail has been forwarded to you without proper authority, please notify
+us immediately at netadmin@patni.com and delete this mail. 
+_____________________________________________________________________
 
-diff -upNr a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
---- a/drivers/scsi/scsi_priv.h	2006-05-10 11:36:25.000000000 -0400
-+++ b/drivers/scsi/scsi_priv.h	2006-05-10 11:36:54.000000000 -0400
-@@ -127,7 +127,7 @@ extern struct bus_type scsi_bus_type;
-  * classes.
-  */
- 
--#define SCSI_DEVICE_BLOCK_MAX_TIMEOUT	(HZ*60)
-+#define SCSI_DEVICE_BLOCK_MAX_TIMEOUT	(HZ*120)
- extern int scsi_internal_device_block(struct scsi_device *sdev);
- extern int scsi_internal_device_unblock(struct scsi_device *sdev);
- 
-
-
+------------=_1147333281-11516-70--
