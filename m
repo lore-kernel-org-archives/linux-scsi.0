@@ -1,40 +1,29 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: FIXED: Bogus st failures from qla1280 timeouts
-Date: Thu, 11 May 2006 22:04:03 +0300 (EEST)
-Message-ID: <Pine.LNX.4.63.0605112155510.4698@kai.makisara.local>
-References: <F3598542BAC24B4783B7A440D45522FF04050577@usahm236.amer.corp.eds.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [RFC] Asynchronous scsi scanning
+Date: Thu, 11 May 2006 14:09:56 -0500
+Message-ID: <44638C04.8010507@cs.wisc.edu>
+References: <20060511143352.GI12272@parisc-linux.org> <44637F4C.3070102@cs.wisc.edu> <20060511182119.GK12272@parisc-linux.org> <44638736.70708@cs.wisc.edu> <20060511185602.GL12272@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fep30-0.kolumbus.fi ([193.229.0.32]:8043 "EHLO
-	fep30-app.kolumbus.fi") by vger.kernel.org with ESMTP
-	id S1750713AbWEKTEG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 May 2006 15:04:06 -0400
-In-Reply-To: <F3598542BAC24B4783B7A440D45522FF04050577@usahm236.amer.corp.eds.com>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:18305 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S1750715AbWEKTGg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 May 2006 15:06:36 -0400
+In-Reply-To: <20060511185602.GL12272@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Bailey, Scott" <scott.bailey@eds.com>
-Cc: Jes.Sorensen@cern.ch, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, 10 May 2006, Bailey, Scott wrote:
-
-> Absent more informed guidance, I went nuts and increased the timeout
-> settings in qla1280.c from 30 seconds to 15 minutes. My tape drive works
-> great now. The attached Debian bug report (bug 366730) summarizes the
-> situation. I don't know if this is something suitable for inclusion to
-> the kernel "as-is" or if I am overlooking some horrible side-effect that
-> will bite me down the road.
+Matthew Wilcox wrote:
+> On Thu, May 11, 2006 at 01:49:26PM -0500, Mike Christie wrote:
+>>> 2) Unless it's serialised (in which case it still takes two hours to
+>>> boot), you lose drive numbering.
+>> Drive numbering refers to the bus, target numbering right?
 > 
-> Any feedback?
+> No, I mean sda, sdb, sdc, etc.
 > 
-Good. This solves your practical problem but raises one (theoretic?) 
-question: why is the qla1280 driver even trying to enforce device level 
-timeouts? This should be left to the upper layers.
 
-The default timeouts in the st driver were increased several times 
-according to reports from users. The 900 second timeout in your patch may 
-be too short in some cases but it probably is wise not to increase it too 
-much unless someone really needs that.
-
--- 
-Kai
+Ah ok, I see what you mean.
