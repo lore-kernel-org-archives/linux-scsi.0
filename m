@@ -1,57 +1,72 @@
-From: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
+From: Daniel Barkalow <barkalow@iabervon.org>
 Subject: Re: [PATCH] make kernel ignore bogus partitions
-Date: Thu, 11 May 2006 16:47:09 -0500
-Message-ID: <20060511214709.GA26045@beardog.cca.cpqcorp.net>
-References: <20060503210055.GB31048@beardog.cca.cpqcorp.net> <20060509124138.43e4bac0.akpm@osdl.org> <20060509224848.GA29754@apps.cwi.nl> <20060511040014.66ea16fc.akpm@osdl.org>
+Date: Thu, 11 May 2006 19:08:49 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0605111822320.6713@iabervon.org>
+References: <20060503210055.GB31048@beardog.cca.cpqcorp.net>
+ <20060509124138.43e4bac0.akpm@osdl.org> <20060509224848.GA29754@apps.cwi.nl>
+ <20060511040014.66ea16fc.akpm@osdl.org> <20060511115117.GA870@apps.cwi.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palrel10.hp.com ([156.153.255.245]:22738 "EHLO palrel10.hp.com")
-	by vger.kernel.org with ESMTP id S1750785AbWEKVrK (ORCPT
+Received: from iabervon.org ([66.92.72.58]:11013 "EHLO iabervon.org")
+	by vger.kernel.org with ESMTP id S1750823AbWEKXHy (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 May 2006 17:47:10 -0400
-Content-Disposition: inline
-In-Reply-To: <20060511040014.66ea16fc.akpm@osdl.org>
+	Thu, 11 May 2006 19:07:54 -0400
+In-Reply-To: <20060511115117.GA870@apps.cwi.nl>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: Andries Brouwer <Andries.Brouwer@cwi.nl>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Andries Brouwer <Andries.Brouwer@cwi.nl>
+Cc: Andrew Morton <akpm@osdl.org>, mikem@beardog.cca.cpqcorp.net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Thu, May 11, 2006 at 04:00:14AM -0700, Andrew Morton wrote:
-> Andries Brouwer <Andries.Brouwer@cwi.nl> wrote:
-> >
-> > On Tue, May 09, 2006 at 12:41:38PM -0700, Andrew Morton wrote:
-> > 
-> > > > +		if (from+size-1 > get_capacity(disk)) {
-> > > > +			printk(" %s: p%d exceeds device capacity, ignoring.\n", 
-> > > > +				disk->disk_name, p);
-> > > > +			continue;
-> > > > +		}
-> > > >  		add_partition(disk, p, from, size);
-> > 
-> > > Shouldn't that be
-> > > 
-> > > 	if (from+size > get_capacity(disk)) {
-> > > 
-> > > ?
-> > 
-> > Ha, you are awake.
-> 
-> Opinions differ.
-> 
-> > Yes, it should.
-> > And no "ignoring". And no "continue". E.g.:
-> > 
-> > 	printk(" %s: warning: p%d exceeds device capacity.\n", ...);
-> > 
-> 
-> So you're saying that after detecting this inconsistency we should proceed
-> to use the partition anyway?
-> 
-> For what reason?
+On Thu, 11 May 2006, Andries Brouwer wrote:
 
-Using the partition will result in io errors when accessing beyond the end
-of the device. Most users don't appreciate that. It makes them nervous
-about the hw.
+> The normal situation is that partitions are contained within
+> the disk. In the normal situation the test is superfluous.
+> 
+> Suppose the test fails. Why might that be? There isn't really
+> a good scenario where this is a mistake. In all the (rare) cases
+> that I can imagine, it would make matters worse to reject the
+> partition and make access impossible (or at least more difficult).
+> 
+> Case 1: The kernel is mistaken about the size of the disk.
+> (There are commands to clip a disk to a certain capacity,
+> there are jumpers to tell a disk that it should report a certain
+> capacity etc. Usually this is because of BIOS bugs. In bad cases
+> the machine will crash in the BIOS and hence fail to boot if
+> the disk reports full capacity.)
+> In such cases actually accessing the blocks of the partition
+> may work fine, or may work fine after running an unclip utility.
+> I wrote "setmax" some years ago precisely for this reason.
 
-mikem
+Perhaps the kernel should try reading beyond the ends of disks when it 
+detects them, so that it can determine if there's actually available 
+storage there, and automatically increase the size if there is? Or, at 
+least, it could check whether the medium actually goes out to the point 
+the partition table implies, and suppress the I/O error if the disk 
+actually ends where it claims to.
+
+> Case 2: There was a messy partition table (maybe just a rounding
+> error) but the actual filesystem on the partition is contained
+> in the physical disk. Now using the filesystem goes without problem.
+
+I think I've seen cameras format SD cards like this. If I understand the 
+situation correctly, it's a pain to mount them, because the kernel pokes 
+around beyond the end of the medium trying to determine the filesystem 
+type. In this case, wouldn't the right thing be to add the partition as 
+ending at the end of the disk, rather than where it claims to?
+
+> Case 3: Both partition and filesystem extend beyond the end of the disk.
+> In forensic or debugging situations one often uses a copy of the start
+> of a disk. Now access beyond the end gives an expected I/O error.
+
+I think cropping the partition to the size of the copied area is fine 
+here, too, and should generate I/O errors on the partition without errors 
+on the underlying block device, so it will be more clear that the hardware 
+is fine, but your filesystem has problems (i.e., part of it isn't 
+included).
+
+In any case, I don't think it makes sense to leave the partition and 
+underlying device inconsistant, rather than correcting one or the other.
+
+	-Daniel
+*This .sig left intentionally blank*
