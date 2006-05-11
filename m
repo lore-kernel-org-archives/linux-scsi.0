@@ -1,51 +1,55 @@
-From: Andrew Morton <akpm@osdl.org>
+From: Andries Brouwer <Andries.Brouwer@cwi.nl>
 Subject: Re: [PATCH] make kernel ignore bogus partitions
-Date: Thu, 11 May 2006 04:00:14 -0700
-Message-ID: <20060511040014.66ea16fc.akpm@osdl.org>
-References: <20060503210055.GB31048@beardog.cca.cpqcorp.net>
-	<20060509124138.43e4bac0.akpm@osdl.org>
-	<20060509224848.GA29754@apps.cwi.nl>
+Date: Thu, 11 May 2006 13:51:17 +0200
+Message-ID: <20060511115117.GA870@apps.cwi.nl>
+References: <20060503210055.GB31048@beardog.cca.cpqcorp.net> <20060509124138.43e4bac0.akpm@osdl.org> <20060509224848.GA29754@apps.cwi.nl> <20060511040014.66ea16fc.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:59267 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1030222AbWEKLGc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 May 2006 07:06:32 -0400
-In-Reply-To: <20060509224848.GA29754@apps.cwi.nl>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751558AbWEKL7K@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20060511040014.66ea16fc.akpm@osdl.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: Andries Brouwer <Andries.Brouwer@cwi.nl>, mikem@beardog.cca.cpqcorp.net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-Cc: mikem@beardog.cca.cpqcorp.net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Andries.Brouwer@cwi.nl
 
-Andries Brouwer <Andries.Brouwer@cwi.nl> wrote:
->
-> On Tue, May 09, 2006 at 12:41:38PM -0700, Andrew Morton wrote:
-> 
-> > > +		if (from+size-1 > get_capacity(disk)) {
-> > > +			printk(" %s: p%d exceeds device capacity, ignoring.\n", 
-> > > +				disk->disk_name, p);
-> > > +			continue;
-> > > +		}
-> > >  		add_partition(disk, p, from, size);
-> 
-> > Shouldn't that be
+On Thu, May 11, 2006 at 04:00:14AM -0700, Andrew Morton wrote:
+
+> > Yes, it should.
+> > And no "ignoring". And no "continue". E.g.:
 > > 
-> > 	if (from+size > get_capacity(disk)) {
+> > 	printk(" %s: warning: p%d exceeds device capacity.\n", ...);
 > > 
-> > ?
 > 
-> Ha, you are awake.
-
-Opinions differ.
-
-> Yes, it should.
-> And no "ignoring". And no "continue". E.g.:
+> So you're saying that after detecting this inconsistency we should proceed
+> to use the partition anyway?
 > 
-> 	printk(" %s: warning: p%d exceeds device capacity.\n", ...);
-> 
+> For what reason?
 
-So you're saying that after detecting this inconsistency we should proceed
-to use the partition anyway?
+The normal situation is that partitions are contained within
+the disk. In the normal situation the test is superfluous.
 
-For what reason?
+Suppose the test fails. Why might that be? There isn't really
+a good scenario where this is a mistake. In all the (rare) cases
+that I can imagine, it would make matters worse to reject the
+partition and make access impossible (or at least more difficult).
+
+Case 1: The kernel is mistaken about the size of the disk.
+(There are commands to clip a disk to a certain capacity,
+there are jumpers to tell a disk that it should report a certain
+capacity etc. Usually this is because of BIOS bugs. In bad cases
+the machine will crash in the BIOS and hence fail to boot if
+the disk reports full capacity.)
+In such cases actually accessing the blocks of the partition
+may work fine, or may work fine after running an unclip utility.
+I wrote "setmax" some years ago precisely for this reason.
+
+Case 2: There was a messy partition table (maybe just a rounding
+error) but the actual filesystem on the partition is contained
+in the physical disk. Now using the filesystem goes without problem.
+
+Case 3: Both partition and filesystem extend beyond the end of the disk.
+In forensic or debugging situations one often uses a copy of the start
+of a disk. Now access beyond the end gives an expected I/O error.
+
+Andries
