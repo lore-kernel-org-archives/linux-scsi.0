@@ -1,119 +1,57 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [GIT PATCH] scsi bug fixes for 2.6.17-rc3
-Date: Thu, 11 May 2006 14:43:19 -0500
-Message-ID: <1147376599.3638.24.camel@mulgrave.il.steeleye.com>
+From: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
+Subject: Re: [PATCH] make kernel ignore bogus partitions
+Date: Thu, 11 May 2006 16:47:09 -0500
+Message-ID: <20060511214709.GA26045@beardog.cca.cpqcorp.net>
+References: <20060503210055.GB31048@beardog.cca.cpqcorp.net> <20060509124138.43e4bac0.akpm@osdl.org> <20060509224848.GA29754@apps.cwi.nl> <20060511040014.66ea16fc.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:8359 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1750716AbWEKTnk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 May 2006 15:43:40 -0400
+Received: from palrel10.hp.com ([156.153.255.245]:22738 "EHLO palrel10.hp.com")
+	by vger.kernel.org with ESMTP id S1750785AbWEKVrK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 May 2006 17:47:10 -0400
+Content-Disposition: inline
+In-Reply-To: <20060511040014.66ea16fc.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Andrew Morton <akpm@osdl.org>
+Cc: Andries Brouwer <Andries.Brouwer@cwi.nl>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-These are basically assorted fixes (and a warning elimination for
-Andrew).  The patch is available here:
+On Thu, May 11, 2006 at 04:00:14AM -0700, Andrew Morton wrote:
+> Andries Brouwer <Andries.Brouwer@cwi.nl> wrote:
+> >
+> > On Tue, May 09, 2006 at 12:41:38PM -0700, Andrew Morton wrote:
+> > 
+> > > > +		if (from+size-1 > get_capacity(disk)) {
+> > > > +			printk(" %s: p%d exceeds device capacity, ignoring.\n", 
+> > > > +				disk->disk_name, p);
+> > > > +			continue;
+> > > > +		}
+> > > >  		add_partition(disk, p, from, size);
+> > 
+> > > Shouldn't that be
+> > > 
+> > > 	if (from+size > get_capacity(disk)) {
+> > > 
+> > > ?
+> > 
+> > Ha, you are awake.
+> 
+> Opinions differ.
+> 
+> > Yes, it should.
+> > And no "ignoring". And no "continue". E.g.:
+> > 
+> > 	printk(" %s: warning: p%d exceeds device capacity.\n", ...);
+> > 
+> 
+> So you're saying that after detecting this inconsistency we should proceed
+> to use the partition anyway?
+> 
+> For what reason?
 
-master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
+Using the partition will result in io errors when accessing beyond the end
+of the device. Most users don't appreciate that. It makes them nervous
+about the hw.
 
-The short changelog is:
-
-<mdr:sgi.com>:
-  o mptfc: race between mptfc_register_dev and mptfc_target_alloc
-
-Adrian Bunk:
-  o megaraid/megaraid_mm.c: fix a NULL pointer dereference
-
-Andrew Morton:
-  o megaraid: unused variable
-
-Brian King:
-  o scsi: Add IBM 2104-DU3 to blist
-
-Denis Vlasenko:
-  o aic7xxx: ahc_pci_write_config() fix
-
-Eric Moore:
-  o mptspi: revalidate negotiation parameters after host reset and
-resume
-  o fusion - bug fix stack overflow in mptbase
-  o fusion - mptfc bug fix's to prevent deadlock situations
-  o mptfusion: bug fix's for raid components adding/deleting
-
-Eric Sesterhenn:
-  o Overrun in drivers/scsi/sim710.c
-
-James Bottomley:
-  o Fix DVD burning issues
-
-James Smart:
-  o lpfc 8.1.6 : Fix Data Corruption in Bus Reset Path
-  o lpfc 8.1.5 : Change version number to 8.1.5
-  o lpfc 8.1.5 : Misc small fixes
-  o lpfc 8.1.5 : Additional fixes to LOGO, PLOGI, and RSCN processing
-  o lpfc 8.1.5 : Fix cleanup code in the lpfc_pci_probe_one() error code
-path
-  o lpfc 8.1.5 : Fixed FC protocol violation in handling of PRLO
-  o lpfc 8.1.5 : Use asynchronous ABTS completion to speed up abort
-completions
-  o lpfc 8.1.5 : Fix Discovery processing for NPorts that hit nodev_tmo
-during discovery
-
-Jesper Juhl:
-  o aic7xxx_osm_pci resource leak fix
-
-Michael Reed:
-  o qla2xxx: Correct eh_abort recovery logic
-
-Roland Dreier:
-  o srp.h: avoid padding of structs
-
-Seokmann Ju:
-  o megaraid_{mm,mbox}: fix a bug in reset handler
-
-Tomonori FUJITA:
-  o ibmvscsi: fix leak when failing to send srp event
-
-Zach Brown:
-  o qla2xxx: only free_irq() after request_irq() succeeds
-
-And the diffstat:
-
- Documentation/scsi/ChangeLog.megaraid  |   25 ++++++
- drivers/message/fusion/mptbase.c       |   63 +++++++++------
- drivers/message/fusion/mptbase.h       |   10 --
- drivers/message/fusion/mptfc.c         |  134 ++++++++++++++++++++-------------
- drivers/message/fusion/mptsas.c        |   99 +++++++++++++++++-------
- drivers/message/fusion/mptscsih.c      |   50 ++++++------
- drivers/message/fusion/mptspi.c        |   68 ++++++++++++++++
- drivers/scsi/aic7xxx/aic7xxx_osm_pci.c |    1 
- drivers/scsi/aic7xxx/aic7xxx_pci.c     |   12 +-
- drivers/scsi/ibmvscsi/ibmvscsi.c       |   30 ++++---
- drivers/scsi/lpfc/lpfc_crtn.h          |    1 
- drivers/scsi/lpfc/lpfc_disc.h          |    1 
- drivers/scsi/lpfc/lpfc_els.c           |   95 +++++++++++++----------
- drivers/scsi/lpfc/lpfc_hbadisc.c       |   18 ++--
- drivers/scsi/lpfc/lpfc_hw.h            |    3 
- drivers/scsi/lpfc/lpfc_init.c          |   22 ++---
- drivers/scsi/lpfc/lpfc_mbox.c          |   33 --------
- drivers/scsi/lpfc/lpfc_nportdisc.c     |  134 +++++++++++++++++++++++----------
- drivers/scsi/lpfc/lpfc_scsi.c          |   68 ++++------------
- drivers/scsi/lpfc/lpfc_version.h       |    2 
- drivers/scsi/megaraid.c                |    1 
- drivers/scsi/megaraid/megaraid_mbox.c  |   59 ++++++++++----
- drivers/scsi/megaraid/megaraid_mbox.h  |    7 +
- drivers/scsi/megaraid/megaraid_mm.c    |    6 -
- drivers/scsi/qla2xxx/qla_os.c          |   19 ++--
- drivers/scsi/scsi_devinfo.c            |    2 
- drivers/scsi/scsi_lib.c                |   27 ++++--
- drivers/scsi/sim710.c                  |    2 
- include/scsi/srp.h                     |   23 ++++-
- 29 files changed, 632 insertions(+), 383 deletions(-)
-
-James
-
-
+mikem
