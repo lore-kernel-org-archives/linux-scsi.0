@@ -1,62 +1,61 @@
 From: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
 Subject: Re: [PATCH] make kernel ignore bogus partitions
-Date: Thu, 11 May 2006 11:04:17 -0500
-Message-ID: <20060511160417.GA7730@beardog.cca.cpqcorp.net>
-References: <20060503210055.GB31048@beardog.cca.cpqcorp.net> <20060509124138.43e4bac0.akpm@osdl.org> <20060509224848.GA29754@apps.cwi.nl> <20060511040014.66ea16fc.akpm@osdl.org> <20060511115117.GA870@apps.cwi.nl>
+Date: Thu, 11 May 2006 11:17:36 -0500
+Message-ID: <20060511161736.GB8124@beardog.cca.cpqcorp.net>
+References: <20060503210055.GB31048@beardog.cca.cpqcorp.net> <20060509124138.43e4bac0.akpm@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030306AbWEKQEn@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from palrel10.hp.com ([156.153.255.245]:51677 "EHLO palrel10.hp.com")
+	by vger.kernel.org with ESMTP id S1030308AbWEKQRj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 May 2006 12:17:39 -0400
 Content-Disposition: inline
-In-Reply-To: <20060511115117.GA870@apps.cwi.nl>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andries Brouwer <Andries.Brouwer@cwi.nl>
-Cc: Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+In-Reply-To: <20060509124138.43e4bac0.akpm@osdl.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, aeb@cwi.nl
 
-On Thu, May 11, 2006 at 01:51:17PM +0200, Andries Brouwer wrote:
-> On Thu, May 11, 2006 at 04:00:14AM -0700, Andrew Morton wrote:
-> 
-> > > Yes, it should.
-> > > And no "ignoring". And no "continue". E.g.:
-> > > 
-> > > 	printk(" %s: warning: p%d exceeds device capacity.\n", ...);
-> > > 
+On Tue, May 09, 2006 at 12:41:38PM -0700, Andrew Morton wrote:
+> "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net> wrote:
+> >
+> > Patch 1/1
+> > Sometimes partitions claim to be larger than the reported capacity of a
+> > disk device. This patch makes the kernel ignore those partitions.
 > > 
-> > So you're saying that after detecting this inconsistency we should proceed
-> > to use the partition anyway?
+> > Signed-off-by: Mike Miller <mike.miller@hp.com>
+> > Signed-off-by: Stephen Cameron <steve.cameron@hp.com>
 > > 
-> > For what reason?
+> > Please consider this for inclusion.
+> > 
+> > 
+> >  fs/partitions/check.c |    5 +++++
+> >  1 files changed, 5 insertions(+)
+> > 
+> > --- linux-2.6.14/fs/partitions/check.c~partition_vs_capacity	2006-01-06 09:32:14.000000000 -0600
+> > +++ linux-2.6.14-root/fs/partitions/check.c	2006-01-06 11:24:50.000000000 -0600
+> > @@ -382,6 +382,11 @@ int rescan_partitions(struct gendisk *di
+> >  		sector_t from = state->parts[p].from;
+> >  		if (!size)
+> >  			continue;
+> > +		if (from+size-1 > get_capacity(disk)) {
+> > +			printk(" %s: p%d exceeds device capacity, ignoring.\n", 
+> > +				disk->disk_name, p);
+> > +			continue;
+> > +		}
+> >  		add_partition(disk, p, from, size);
+> >  #ifdef CONFIG_BLK_DEV_MD
+> >  		if (state->parts[p].flags)
 > 
-> The normal situation is that partitions are contained within
-> the disk. In the normal situation the test is superfluous.
+> Shouldn't that be
 > 
-> Suppose the test fails. Why might that be? There isn't really
-> a good scenario where this is a mistake. In all the (rare) cases
-> that I can imagine, it would make matters worse to reject the
-> partition and make access impossible (or at least more difficult).
+> 	if (from+size > get_capacity(disk)) {
 > 
-> Case 1: The kernel is mistaken about the size of the disk.
-> (There are commands to clip a disk to a certain capacity,
-> there are jumpers to tell a disk that it should report a certain
-> capacity etc. Usually this is because of BIOS bugs. In bad cases
-> the machine will crash in the BIOS and hence fail to boot if
-> the disk reports full capacity.)
-> In such cases actually accessing the blocks of the partition
-> may work fine, or may work fine after running an unclip utility.
-> I wrote "setmax" some years ago precisely for this reason.
+> ?
 > 
-> Case 2: There was a messy partition table (maybe just a rounding
-> error) but the actual filesystem on the partition is contained
-> in the physical disk. Now using the filesystem goes without problem.
-> 
-> Case 3: Both partition and filesystem extend beyond the end of the disk.
-> In forensic or debugging situations one often uses a copy of the start
-> of a disk. Now access beyond the end gives an expected I/O error.
+Since the partition size is 0-based this is correct:
 
-
-Continuing to use the partition will result in io errors when accessing 
-any block that is past the end of the physical device. We see this as
-unacceptable. Why would it make matters worse to prevent access to the
-partition? The partition _should_ be correct.
+	if (from+size-1 > get_capacity(disk)) {
 
 mikem
