@@ -1,67 +1,130 @@
-From: "Or Gerlitz" <or.gerlitz@gmail.com>
-Subject: Re: [BUG 2.6.17-git] kmem_cache_create: duplicate cache scsi_cmd_cache
-Date: Fri, 12 May 2006 06:53:27 +0200
-Message-ID: <15ddcffd0605112153q57f139a1k7068e204a3eeaf1f@mail.gmail.com>
-References: <20060511151456.GD3755@harddisk-recovery.com>
+From: Andrew Morton <akpm@osdl.org>
+Subject: git-acpi breakage, sym2
+Date: Thu, 11 May 2006 23:10:05 -0700
+Message-ID: <20060511231005.0bce3384.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
-	format=flowed
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.204]:40013 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S1750895AbWELEx2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 May 2006 00:53:28 -0400
-Received: by nz-out-0102.google.com with SMTP id 13so384684nzn
-        for <linux-scsi@vger.kernel.org>; Thu, 11 May 2006 21:53:27 -0700 (PDT)
-In-Reply-To: <20060511151456.GD3755@harddisk-recovery.com>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-acpi-owner@vger.kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
+To: linux-acpi@vger.kernel.org, "Brown, Len" <len.brown@intel.com>, linux-scsi@vger.kernel.org, Matthew Wilcox <willy@debian.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Erik Mouw <erik@harddisk-recovery.com>
-Cc: linux-scsi@vger.kernel.org
 
-On 5/11/06, Erik Mouw <erik@harddisk-recovery.com> wrote:
-> Hi,
->
-> While playing with libata in 2.6.17-git from today, I got this bug:
->
-> SCSI subsystem initialized
-> libata version 1.20 loaded.
-> sata_promise 0000:02:05.0: version 1.04
-> kmem_cache_create: duplicate cache scsi_cmd_cache
->  <c0159591> kmem_cache_create+0x331/0x390
->  <e0924371> scsi_setup_command_freelist+0x71/0xf0 [scsi_mod]
->  <e092588e> scsi_host_alloc+0x17e/0x270 [scsi_mod]
->  <e08fd061> ata_host_add+0x41/0xc0 [libata]
->  <c0148c9f> __kzalloc+0x1f/0x50
->  <e08fd190> ata_device_add+0xb0/0x240 [libata]
->  <e0839baf> pdc_ata_init_one+0x27f/0x330 [sata_promise]
->  <c01dd1a9> pci_call_probe+0x19/0x20
->  <c01dd20e> __pci_device_probe+0x5e/0x70
->  <c01dd24f> pci_device_probe+0x2f/0x50
->  <c0220977> driver_probe_device+0xb7/0xe0
->  <c02b338a> klist_dec_and_del+0x1a/0x20
->  <c0220a30> __driver_attach+0x0/0x90
->  <c0220aa1>__driver_attach+0x71/0x90
->  <c021fd49> bus_for_each_dev+0x69/0x80
->  <c0220ae6> driver_attach+0x26/0x30
->  <c0220a30> __driver_attach+0x0/0x90
->  <c02202a3> bus_add_driver+0x83/0xc0
->  <c01dd4ed> __pci_register_driver+0x4d/0x70
->  <e0880017> pdc_ata_init+0x17/0x1b [sata_promise]
->  <c013a1a0> sys_init_module+0x120/0x1b0
->  <c0102f27> syscall_call+0x7/0xb
->
-> How to recreate:
 
-Hi,
+The latest
+git+ssh://master.kernel.org/pub/scm/linux/kernel/git/lenb/linux-acpi-2.6.git#test
+kills my very vanilla P4 box.
 
-I was pointing on 2.6.17 kmem_cache related  issues while back to LKML
-and it turns out that you can reproduce them easily with standalone
-trivial module, see
-http://openib.org/pipermail/openib-general/2006-April/020582.html
+Without:
 
-So far no one picked the issue anb i was adviced to use bisection...
+Linux Plug and Play Support v0.97 (c) Adam Belay
+pnp: PnP ACPI init
+pnp: PnP ACPI: found 15 devices
+PnPBIOS: Disabled by ACPI PNP
+SCSI subsystem initialized
+PCI: Using ACPI for IRQ routing
+PCI: If a device doesn't work, try "pci=routeirq".  If it helps, post a report
+pnp: 00:02: ioport range 0x400-0x47f could not be reserved
+pnp: 00:02: ioport range 0x500-0x53f has been reserved
+pnp: 00:02: ioport range 0x800-0x87f has been reserved
+PCI: Bridge: 0000:00:01.0
+  IO window: disabled.
+  MEM window: fc900000-fe9fffff
+  PREFETCH window: e4500000-f46fffff
+PCI: Bridge: 0000:00:1e.0
+  IO window: d000-dfff
+  MEM window: fea00000-feafffff
+  PREFETCH window: f4700000-f47fffff
 
-Or.
+
+With:
+
+Linux Plug and Play Support v0.97 (c) Adam Belay
+pnp: PnP ACPI: disabled
+PnPBIOS: Scanning system for PnP BIOS support...
+PnPBIOS: Found PnP BIOS installation structure at 0xc00f2500
+PnPBIOS: PnP BIOS version 1.0, entry 0xf0000:0x1e2a, dseg 0xf0000
+PnPBIOS: 18 nodes reported by PnP BIOS; 18 recorded by driver
+SCSI subsystem initialized
+PCI: Probing PCI hardware
+PCI quirk: region 0400-047f claimed by ICH4 ACPI/GPIO/TCO
+PCI quirk: region 0500-053f claimed by ICH4 GPIO
+PCI: Transparent bridge - 0000:00:1e.0
+PCI: Using IRQ router PIIX/ICH [8086/2440] at 0000:00:1f.0
+PCI BIOS passed nonexistent PCI bus 0!
+PCI BIOS passed nonexistent PCI bus 0!
+PCI BIOS passed nonexistent PCI bus 0!
+PCI BIOS passed nonexistent PCI bus 1!
+PCI BIOS passed nonexistent PCI bus 0!
+PCI BIOS passed nonexistent PCI bus 2!
+PCI BIOS passed nonexistent PCI bus 0!
+PCI BIOS passed nonexistent PCI bus 2!
+PCI BIOS passed nonexistent PCI bus 0!
+PCI BIOS passed nonexistent PCI bus 2!
+PCI BIOS passed nonexistent PCI bus 0!
+PCI BIOS passed nonexistent PCI bus 2!
+PCI BIOS passed nonexistent PCI bus 0!
+PCI BIOS passed nonexistent PCI bus 2!
+PCI BIOS passed nonexistent PCI bus 0!
+PCI BIOS passed nonexistent PCI bus 2!
+PCI BIOS passed nonexistent PCI bus 0!
+PCI BIOS passed nonexistent PCI bus 2!
+PCI BIOS passed nonexistent PCI bus 0!
+pnp: 00:09: ioport range 0x4d0-0x4d1 has been reserved
+pnp: 00:09: ioport range 0xcf8-0xcff has been reserved
+pnp: 00:0b: ioport range 0x800-0x87f has been reserved
+PCI: Bridge: 0000:00:01.0
+  IO window: disabled.
+  MEM window: fc900000-fe9fffff
+  PREFETCH window: e4500000-f46fffff
+PCI: Bridge: 0000:00:1e.0
+  IO window: d000-dfff
+  MEM window: fea00000-feafffff
+  PREFETCH window: f4700000-f47fffff
+NET: Registered protocol family 2
+
+
+So I'll temporarily drop that patch, along with the enormous shower of
+still-unmerged other acpi patches which are probably dependent upon it.  A
+swift fix would be really appreciated...
+
+
+
+The above bug appears to trigger a scsi or sym2 bug.  With git-acpi.patch
+present I get
+
+sym0: <895> rev 0x2 at pci 0000:02:0c.0 irq 9
+sym0: Symbios NVRAM, ID 7, Fast-40, SE, parity checking
+sym0: SCSI BUS has been reset.
+scsi0 : sym-2.2.3
+ target0:0:0: Multiple LUNs disabled in NVRAM
+ 0:0:0:0: ABORT operation started.
+ 0:0:0:0: ABORT operation timed-out.
+ 0:0:0:0: DEVICE RESET operation started.
+ 0:0:0:0: DEVICE RESET operation timed-out.
+ 0:0:0:0: BUS RESET operation started.
+ 0:0:0:0: BUS RESET operation timed-out.
+ 0:0:0:0: HOST RESET operation started.
+sym0: SCSI BUS has been reset.
+ 0:0:0:0: HOST RESET operation timed-out.
+ 0:0:0:0: scsi: Device offlined - not ready after error recovery
+ 0:0:1:0: ABORT operation started.
+ 0:0:1:0: ABORT operation timed-out.
+ 0:0:1:0: DEVICE RESET operation started.
+ 0:0:1:0: DEVICE RESET operation timed-out.
+ 0:0:1:0: BUS RESET operation started.
+ 0:0:1:0: BUS RESET operation timed-out.
+ 0:0:1:0: HOST RESET operation started.
+sym0: SCSI BUS has been reset.
+ 0:0:1:0: HOST RESET operation timed-out.
+ 0:0:1:0: scsi: Device offlined - not ready after error recovery
+ 0:0:2:0: ABORT operation started.
+ 0:0:2:0: ABORT operation timed-out.
+ 0:0:2:0: DEVICE RESET operation started.
+ 0:0:2:0: DEVICE RESET operation timed-out.
+ 0:0:2:0: BUS RESET operation started.
+ 0:0:2:0: BUS RESET operation timed-out.
+ 0:0:2:0: HOST RESET operation started.
+sym0: SCSI BUS has been reset.
+
+ad infinitum.  How come?
