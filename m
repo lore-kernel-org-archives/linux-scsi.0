@@ -1,77 +1,106 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [RFC] printks in print_inquiry
-Date: Fri, 12 May 2006 10:08:54 -0700
-Message-ID: <20060512170854.GA11215@us.ibm.com>
-References: <20060511150015.GJ12272@parisc-linux.org>
+From: Erik Mouw <erik@harddisk-recovery.com>
+Subject: Re: [BUG 2.6.17-git] kmem_cache_create: duplicate cache scsi_cmd_cache
+Date: Fri, 12 May 2006 19:16:33 +0200
+Message-ID: <20060512171632.GA29077@harddisk-recovery.com>
+References: <20060511151456.GD3755@harddisk-recovery.com> <15ddcffd0605112153q57f139a1k7068e204a3eeaf1f@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e2.ny.us.ibm.com ([32.97.182.142]:26016 "EHLO e2.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1750818AbWELRJA (ORCPT
+Received: from dtp.xs4all.nl ([80.126.206.180]:5716 "HELO abra2.bitwizard.nl")
+	by vger.kernel.org with SMTP id S1750837AbWELRQf (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 May 2006 13:09:00 -0400
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e2.ny.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k4CH8w9a009458
-	for <linux-scsi@vger.kernel.org>; Fri, 12 May 2006 13:08:58 -0400
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay02.pok.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k4CH8wxo253726
-	for <linux-scsi@vger.kernel.org>; Fri, 12 May 2006 13:08:58 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11/8.13.3) with ESMTP id k4CH8w7a020062
-	for <linux-scsi@vger.kernel.org>; Fri, 12 May 2006 13:08:58 -0400
+	Fri, 12 May 2006 13:16:35 -0400
 Content-Disposition: inline
-In-Reply-To: <20060511150015.GJ12272@parisc-linux.org>
+In-Reply-To: <15ddcffd0605112153q57f139a1k7068e204a3eeaf1f@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org
+To: Or Gerlitz <or.gerlitz@gmail.com>
+Cc: linux-scsi@vger.kernel.org, rmk@arm.linux.org.uk, axboe@suse.de, linux-kernel@vger.kernel.org, torvalds@osdl.org
 
-On Thu, May 11, 2006 at 09:00:15AM -0600, Matthew Wilcox wrote:
+On Fri, May 12, 2006 at 06:53:27AM +0200, Or Gerlitz wrote:
+> On 5/11/06, Erik Mouw <erik@harddisk-recovery.com> wrote:
+> >Hi,
+> >
+> >While playing with libata in 2.6.17-git from today, I got this bug:
+> >
+> >SCSI subsystem initialized
+> >libata version 1.20 loaded.
+> >sata_promise 0000:02:05.0: version 1.04
+> >kmem_cache_create: duplicate cache scsi_cmd_cache
+> > <c0159591> kmem_cache_create+0x331/0x390
+> > <e0924371> scsi_setup_command_freelist+0x71/0xf0 [scsi_mod]
+> > <e092588e> scsi_host_alloc+0x17e/0x270 [scsi_mod]
+> > <e08fd061> ata_host_add+0x41/0xc0 [libata]
+> > <c0148c9f> __kzalloc+0x1f/0x50
+> > <e08fd190> ata_device_add+0xb0/0x240 [libata]
+> > <e0839baf> pdc_ata_init_one+0x27f/0x330 [sata_promise]
+> > <c01dd1a9> pci_call_probe+0x19/0x20
+> > <c01dd20e> __pci_device_probe+0x5e/0x70
+> > <c01dd24f> pci_device_probe+0x2f/0x50
+> > <c0220977> driver_probe_device+0xb7/0xe0
+> > <c02b338a> klist_dec_and_del+0x1a/0x20
+> > <c0220a30> __driver_attach+0x0/0x90
+> > <c0220aa1>__driver_attach+0x71/0x90
+> > <c021fd49> bus_for_each_dev+0x69/0x80
+> > <c0220ae6> driver_attach+0x26/0x30
+> > <c0220a30> __driver_attach+0x0/0x90
+> > <c02202a3> bus_add_driver+0x83/0xc0
+> > <c01dd4ed> __pci_register_driver+0x4d/0x70
+> > <e0880017> pdc_ata_init+0x17/0x1b [sata_promise]
+> > <c013a1a0> sys_init_module+0x120/0x1b0
+> > <c0102f27> syscall_call+0x7/0xb
 > 
-> One of the side-effects of my previous patch to parallelise scsi
-> scanning is that it causes print_inquiry to run when there's already a
-> lot of other printk traffic.  Due to the way it works, it's very easy
-> for print_inquiry to be in the middle of printing something when
-> something else chooses to emit a printk.  This could of course happen
-> without the async scsi scanning patch, it's just a lot more frequent
-> with it.
+> I was pointing on 2.6.17 kmem_cache related  issues while back to LKML
+> and it turns out that you can reproduce them easily with standalone
+> trivial module, see
+> http://openib.org/pipermail/openib-general/2006-April/020582.html
 > 
-> This is one way of solving the problem -- accumulate each line into a
-> buffer, then display each line in one shot.  However, the comment above
+> So far no one picked the issue anb i was adviced to use bisection...
 
-Terser one line output would be nice (even for a few devices), with "scsi"
-and bus_id. We don't need "Type", like:
+I tracked it down with git bisect. The culprit is this commit:
 
-SCSI 2:0:0:0: Vendor: FOO      Model: BAR              Rev: 0.2 ANSI rev: 04
+56cf6504fc1c0c221b82cebc16a444b684140fb7 is first bad commit
+diff-tree 56cf6504fc1c0c221b82cebc16a444b684140fb7 (from
+d98550e334715b2d9e45f8f0f4e1608720108640)
+Author: Russell King <rmk@dyn-67.arm.linux.org.uk>
+Date:   Fri May 5 17:57:52 2006 +0100
 
-And maybe use printk("%-16s") formatting? But garbage might get printed
-for non-ASCII (though the SCSI specs say it is not allowed ...).
+    [BLOCK] Fix oops on removal of SD/MMC card
 
-> the function says we should be packaging all this up into a hotplug
-> event.  Is that still true?  If so, I can do that, and we can forget
-> about this patch.
+    The block layer keeps a reference (driverfs_dev) to the struct
+    device associated with the block device, and uses it internally
+    for generating uevents in block_uevent.
 
-There is already a hotplug event. 
+    Block device uevents include umounting the partition, which can
+    occur after the backing device has been removed.
 
-But the timing and output of it won't match well with the other SCSI (sd)
-messages, they'll likely be output before hotplug handling for the event.
+    Unfortunately, this reference is not counted.  This means that
+    if the struct device is removed from the device tree, the block
+    layers reference will become stale.
 
-And then if relying on udev for the output: it replays hotplug events when
-it starts up, so (AFAICT) you'd get a flurry of output after all the other
-scsi kernel messages for no udev in initrd and for monolithic kernels
-(well any time udev is started after scsi discovery).
+    Guard against this by holding a reference to the struct device
+    in add_disk(), and only drop the reference when we're releasing
+    the gendisk kobject - in other words when we can be sure that no
+    further uevents will be generated for this block device.
 
-But try a udev rule like:
+    Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+    Acked-by: Jens Axboe <axboe@suse.de>
 
-ACTION=="add", SUBSYSTEM=="scsi_device" RUN+="/sbin/scsi_notify"
+:040000 040000 4923c988a57db93382546cd83f4e3043b06c0eed 08e396a4fbf3c7d0beb9178f0fd0c9205c0b5305 M      block
 
-And then /sbin/scsi_notify bash script like:
+After reverting this commit in 2.6.17-rc4 I can't trigger the bug
+anymore. Might be worth fixing before 2.6.17-final.
 
-#! /bin/bash
-sys=/sys
-sdev=${sys}${PHYSDEVPATH}
-bus_id=${sdev##*/}
-logger -t scsi "$(printf "%s: Vendor: %-8s Model: %-16s\n" ${bus_id} \
-        $(cat ${sdev}/vendor) $(cat ${sdev}/model))"
+Note: I'm going on holiday next week, so I'm not able to test any
+fixes. However, because this bug is very easy to trigger[1], anybody
+with root on NFS and fully modular SCSI or libata should be able to
+test.
 
--- Patrick Mansfield
+
+Erik
+
+[1] See http://marc.theaimsgroup.com/?l=linux-scsi&m=114736053211943&w=2
+
+-- 
++-- Erik Mouw -- www.harddisk-recovery.com -- +31 70 370 12 90 --
+| Lab address: Delftechpark 26, 2628 XH, Delft, The Netherlands
