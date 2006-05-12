@@ -1,72 +1,53 @@
-From: Daniel Barkalow <barkalow@iabervon.org>
-Subject: Re: [PATCH] make kernel ignore bogus partitions
-Date: Thu, 11 May 2006 19:08:49 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0605111822320.6713@iabervon.org>
-References: <20060503210055.GB31048@beardog.cca.cpqcorp.net>
- <20060509124138.43e4bac0.akpm@osdl.org> <20060509224848.GA29754@apps.cwi.nl>
- <20060511040014.66ea16fc.akpm@osdl.org> <20060511115117.GA870@apps.cwi.nl>
+From: Kumba <kumba@gentoo.org>
+Subject: qla1280: failing mbox check
+Date: Fri, 12 May 2006 00:06:34 -0400
+Message-ID: <446409CA.2090100@gentoo.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iabervon.org ([66.92.72.58]:11013 "EHLO iabervon.org")
-	by vger.kernel.org with ESMTP id S1750823AbWEKXHy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 May 2006 19:07:54 -0400
-In-Reply-To: <20060511115117.GA870@apps.cwi.nl>
+Received: from sccrmhc11.comcast.net ([204.127.200.81]:51627 "EHLO
+	sccrmhc11.comcast.net") by vger.kernel.org with ESMTP
+	id S1750895AbWELEG0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 May 2006 00:06:26 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andries Brouwer <Andries.Brouwer@cwi.nl>
-Cc: Andrew Morton <akpm@osdl.org>, mikem@beardog.cca.cpqcorp.net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Thu, 11 May 2006, Andries Brouwer wrote:
 
-> The normal situation is that partitions are contained within
-> the disk. In the normal situation the test is superfluous.
-> 
-> Suppose the test fails. Why might that be? There isn't really
-> a good scenario where this is a mistake. In all the (rare) cases
-> that I can imagine, it would make matters worse to reject the
-> partition and make access impossible (or at least more difficult).
-> 
-> Case 1: The kernel is mistaken about the size of the disk.
-> (There are commands to clip a disk to a certain capacity,
-> there are jumpers to tell a disk that it should report a certain
-> capacity etc. Usually this is because of BIOS bugs. In bad cases
-> the machine will crash in the BIOS and hence fail to boot if
-> the disk reports full capacity.)
-> In such cases actually accessing the blocks of the partition
-> may work fine, or may work fine after running an unclip utility.
-> I wrote "setmax" some years ago precisely for this reason.
+Trying to get 2.6.17-rc3 up and running on my SGI Octane, I've hit an odd quirk, 
+and I'm looking for some clarification on whether the bug may potentially lie in 
+the SCSI layer, or possibly more in the mips core someplace.
 
-Perhaps the kernel should try reading beyond the ends of disks when it 
-detects them, so that it can determine if there's actually available 
-storage there, and automatically increase the size if there is? Or, at 
-least, it could check whether the medium actually goes out to the point 
-the partition table implies, and suppress the I/O error if the disk 
-actually ends where it claims to.
+Booting 2.6.17, the QLogic 1040 chip is detected, but upon sending the mbox 
+command, it timeouts and fails, reporting this message:
 
-> Case 2: There was a messy partition table (maybe just a rounding
-> error) but the actual filesystem on the partition is contained
-> in the physical disk. Now using the filesystem goes without problem.
+scsi(0): mailbox timed out, mailbox0 4000, ictrl 0006, istatus 0004
+qla1280: Failed mbox check
+scsi(0): mailbox timed out, mailbox0 4000, ictrl 0006, istatus 0004
 
-I think I've seen cameras format SD cards like this. If I understand the 
-situation correctly, it's a pain to mount them, because the kernel pokes 
-around beyond the end of the medium trying to determine the filesystem 
-type. In this case, wouldn't the right thing be to add the partition as 
-ending at the end of the disk, rather than where it claims to?
+The last line will then repeat indefinitely.
 
-> Case 3: Both partition and filesystem extend beyond the end of the disk.
-> In forensic or debugging situations one often uses a copy of the start
-> of a disk. Now access beyond the end gives an expected I/O error.
 
-I think cropping the partition to the size of the copied area is fine 
-here, too, and should generate I/O errors on the partition without errors 
-on the underlying block device, so it will be more clear that the hardware 
-is fine, but your filesystem has problems (i.e., part of it isn't 
-included).
+Now I know between 2.6.16 and 2.6.17-rc3, a lot of changes occured across a 
+number of archs to consolidate some of the bitops functions into the generic 
+section of the tree, I'm not sure if this is one possible area of breakage or 
+not.  I tried turning all the debug options for qla1280, but didn't get any 
+additional output that was meaningful.  Are there other ways to debug this?  I 
+stuck a printk to see what the returned values of mb[] are, and got nothing but 
+0x0, so I can only assume something bad is happening to them someplace.
 
-In any case, I don't think it makes sense to leave the partition and 
-underlying device inconsistant, rather than correcting one or the other.
+Any ideas where to start looking or things to try?  2.6.16.* works flawlessly, 
+and I didn't see anything odd done to qla1280.c itself that could be the point 
+of breakage.  So I can only assume that the error is in a higher-level somewheres.
 
-	-Daniel
-*This .sig left intentionally blank*
+
+
+--Kumba
+
+-- 
+Gentoo/MIPS Team Lead
+Gentoo Foundation Board of Trustees
+
+"Such is oft the course of deeds that move the wheels of the world: small hands 
+do them because they must, while the eyes of the great are elsewhere."  --Elrond
