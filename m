@@ -1,69 +1,59 @@
-From: Linus Torvalds <torvalds@osdl.org>
+From: Greg KH <gregkh@suse.de>
 Subject: Re: [BUG 2.6.17-git] kmem_cache_create: duplicate cache scsi_cmd_cache
-Date: Fri, 12 May 2006 16:50:32 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0605121647250.3866@g5.osdl.org>
-References: <20060512203416.GA17120@flint.arm.linux.org.uk>
- <20060512214354.GP27946@ftp.linux.org.uk> <20060512215520.GH17120@flint.arm.linux.org.uk>
- <20060512220807.GR27946@ftp.linux.org.uk> <Pine.LNX.4.64.0605121519420.3866@g5.osdl.org>
- <20060512222816.GS27946@ftp.linux.org.uk> <20060512224804.GT27946@ftp.linux.org.uk>
- <20060512225101.GU27946@ftp.linux.org.uk> <Pine.LNX.4.64.0605121559490.3866@g5.osdl.org>
- <20060512232131.GV27946@ftp.linux.org.uk> <20060512233711.GW27946@ftp.linux.org.uk>
+Date: Fri, 12 May 2006 16:57:45 -0700
+Message-ID: <20060512235745.GA31148@suse.de>
+References: <1147456038.3769.39.camel@mulgrave.il.steeleye.com> <1147460325.3769.46.camel@mulgrave.il.steeleye.com> <Pine.LNX.4.64.0605121209020.3866@g5.osdl.org> <20060512203850.GC17120@flint.arm.linux.org.uk> <Pine.LNX.4.64.0605121346060.3866@g5.osdl.org> <20060512205804.GD17120@flint.arm.linux.org.uk> <Pine.LNX.4.64.0605121409250.3866@g5.osdl.org> <20060512215151.GG17120@flint.arm.linux.org.uk> <Pine.LNX.4.64.0605121508590.3866@g5.osdl.org> <Pine.LNX.4.64.0605121532360.3866@g5.osdl.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:49128 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932203AbWELXuo (ORCPT
+Received: from ns.suse.de ([195.135.220.2]:7874 "EHLO mx1.suse.de")
+	by vger.kernel.org with ESMTP id S932279AbWEMAAD (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 May 2006 19:50:44 -0400
-In-Reply-To: <20060512233711.GW27946@ftp.linux.org.uk>
+	Fri, 12 May 2006 20:00:03 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0605121532360.3866@g5.osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Al Viro <viro@ftp.linux.org.uk>
-Cc: Erik Mouw <erik@harddisk-recovery.com>, Or Gerlitz <or.gerlitz@gmail.com>, linux-scsi@vger.kernel.org, axboe@suse.de, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: Russell King <rmk+lkml@arm.linux.org.uk>, James Bottomley <James.Bottomley@SteelEye.com>, Erik Mouw <erik@harddisk-recovery.com>, Or Gerlitz <or.gerlitz@gmail.com>, linux-scsi@vger.kernel.org, axboe@suse.de, Andrew Vasquez <andrew.vasquez@qlogic.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Todd Blumer <todd@sdgsystems.com>
 
-
-
-On Sat, 13 May 2006, Al Viro wrote:
+On Fri, May 12, 2006 at 03:37:59PM -0700, Linus Torvalds wrote:
 > 
-> BTW, the best option is to kill bdev_uevent() again.  Short of that,
-> skip PHYSDEV mess if disk doesn't have GENHD_FL_UP.
+> 
+> On Fri, 12 May 2006, Linus Torvalds wrote:
+> > 
+> > On Fri, 12 May 2006, Russell King wrote:
+> > > 
+> > > From: Todd Blumer <todd@sdgsystems.com>
+> > > On a PXA27x handheld (iPAQ hx4700), when we eject a mounted SD memory
+> > > card, we get a kernel panic (kernel trying to clean up non-existent
+> > > device). One hack patch to avoid the panic is:
+> > > 
+> > > --- fs/partitions/check.c       10 Apr 2006 22:57:27 -0000      1.15
+> > > +++ fs/partitions/check.c       4 May 2006 20:30:15 -0000
+> > > @@ -491,6 +491,7 @@
+> > >                         kfree(disk_name);
+> > >                 }
+> > >                 put_device(disk->driverfs_dev);
+> > > +               disk->driverfs_dev = 0; /* HACK - what's the right solution? */
+> > >         }
+> > >         kobject_uevent(&disk->kobj, KOBJ_REMOVE);
+> > >         kobject_del(&disk->kobj);
+> > 
+> > Btw, on the face it of, I really think that this patch is correct 
+> > regardless of any other issues.
+> 
+> .. and I suspect it also shows what the "other issues" are.
+> 
+> Shouldn't that KOBJ_REMOVE uevent happen _before_ we do all the freeing of 
+> the backing dev object? That KOBJ_REMOVE thing actually seems to want to 
+> report the pathname for the disk it removes. Preferably before the thing 
+> is gone and can't be reported on..
+> 
+> Ie shouldn't the diff be something like this?
 
-I do think the mount/umount events are valid and interesting, so I'd much 
-rather see the second version.
+It looks sane to me.  Russell, does it solve your oops too?
 
-However, that does beg the question: wouldn't that effectively be what the 
-patch I posted would do? Notably the "disk->driverfs_dev = NULL" part 
-after we've dropped it (the "KOBJ_REMOVE" event move is a separate issue, 
-mixed here into the same patch, but should result in possibly better name 
-generation for the event).
+thanks,
 
-Basically, onces driverfs_dev has been dropped, we NULL it out, and then 
-the people who use it automatically get the right result.
-
-Yes? No? "You're a total klutz, Linus, that patch won't actually do 
-anything, because <xyz>"?
-
-		Linus
-
----
-diff --git a/fs/partitions/check.c b/fs/partitions/check.c
-index 45ae7dd..7ef1f09 100644
---- a/fs/partitions/check.c
-+++ b/fs/partitions/check.c
-@@ -533,6 +533,7 @@ void del_gendisk(struct gendisk *disk)
- 
- 	devfs_remove_disk(disk);
- 
-+	kobject_uevent(&disk->kobj, KOBJ_REMOVE);
- 	if (disk->holder_dir)
- 		kobject_unregister(disk->holder_dir);
- 	if (disk->slave_dir)
-@@ -545,7 +546,7 @@ void del_gendisk(struct gendisk *disk)
- 			kfree(disk_name);
- 		}
- 		put_device(disk->driverfs_dev);
-+		disk->driverfs_dev = NULL;
- 	}
--	kobject_uevent(&disk->kobj, KOBJ_REMOVE);
- 	kobject_del(&disk->kobj);
- }
+greg k-h
