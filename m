@@ -1,27 +1,24 @@
-From: Al Viro <viro@ftp.linux.org.uk>
+From: Russell King <rmk+lkml@arm.linux.org.uk>
 Subject: Re: [BUG 2.6.17-git] kmem_cache_create: duplicate cache scsi_cmd_cache
-Date: Fri, 12 May 2006 23:28:16 +0100
-Message-ID: <20060512222816.GS27946@ftp.linux.org.uk>
+Date: Fri, 12 May 2006 23:37:56 +0100
+Message-ID: <20060512223755.GJ17120@flint.arm.linux.org.uk>
 References: <20060511151456.GD3755@harddisk-recovery.com> <15ddcffd0605112153q57f139a1k7068e204a3eeaf1f@mail.gmail.com> <20060512171632.GA29077@harddisk-recovery.com> <Pine.LNX.4.64.0605121024310.3866@g5.osdl.org> <20060512203416.GA17120@flint.arm.linux.org.uk> <20060512214354.GP27946@ftp.linux.org.uk> <20060512215520.GH17120@flint.arm.linux.org.uk> <20060512220807.GR27946@ftp.linux.org.uk> <Pine.LNX.4.64.0605121519420.3866@g5.osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:30647 "EHLO
-	ZenIV.linux.org.uk") by vger.kernel.org with ESMTP id S1750897AbWELW2S
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 May 2006 18:28:18 -0400
+Received: from caramon.arm.linux.org.uk ([212.18.232.186]:30988 "EHLO
+	caramon.arm.linux.org.uk") by vger.kernel.org with ESMTP
+	id S1751031AbWELWiE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 May 2006 18:38:04 -0400
 Content-Disposition: inline
 In-Reply-To: <Pine.LNX.4.64.0605121519420.3866@g5.osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Linus Torvalds <torvalds@osdl.org>
-Cc: Erik Mouw <erik@harddisk-recovery.com>, Or Gerlitz <or.gerlitz@gmail.com>, linux-scsi@vger.kernel.org, axboe@suse.de, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: Al Viro <viro@ftp.linux.org.uk>, Erik Mouw <erik@harddisk-recovery.com>, Or Gerlitz <or.gerlitz@gmail.com>, linux-scsi@vger.kernel.org, axboe@suse.de, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
 On Fri, May 12, 2006 at 03:22:42PM -0700, Linus Torvalds wrote:
-> 
-> 
 > On Fri, 12 May 2006, Al Viro wrote:
-> > 
 > > Secondary question: who had resurrected that crap?  I distinctly remember
 > > killing it off...
 > 
@@ -34,7 +31,49 @@ On Fri, May 12, 2006 at 03:22:42PM -0700, Linus Torvalds wrote:
 > 
 > Of course, you may have killed off an even earlier incarnation..
 
-Ah, right - there was another uevent mess in fs/super.c.  Sorry, got them
-confused... and that FPOS _is_ back.
+The changes in question are:
 
-gregkh, may I ask why had bdev_uevent() been resurrected?
+commit fa675765afed59bb89adba3369094ebd428b930b
+tree 777a8c1bb48ef7de39073104f974209f4a462b6f
+parent b00dc3ad74fdb676552d46ee573b88e927240d0c
+author Greg Kroah-Hartman <gregkh@suse.de> Wed, 22 Feb 2006 09:39:02 -0800
+committer Greg Kroah-Hartman <gregkh@suse.de> Wed, 22 Feb 2006 09:39:02 -0800
+
+    Revert mount/umount uevent removal
+
+    This change reverts the 033b96fd30db52a710d97b06f87d16fc59fee0f1 commit
+    from Kay Sievers that removed the mount/umount uevents from the kernel.
+    Some older versions of HAL still depend on these events to detect when a
+    new device has been mounted.  These events are not correctly emitted,
+    and are broken by design, and so, should not be relied upon by any
+    future program.  Instead, the /proc/mounts file should be polled to
+    properly detect this kind of event.
+
+    A feature-removal-schedule.txt entry has been added, noting when this
+    interface will be removed from the kernel.
+
+    Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+
+commit 033b96fd30db52a710d97b06f87d16fc59fee0f1
+tree 00fbccf2cf478307e213f298a221e330f3ba12ae
+parent 0f76e5acf9dc788e664056dda1e461f0bec93948
+author Kay Sievers <kay.sievers@suse.de> 1131685795 +0100
+committer Greg Kroah-Hartman <gregkh@suse.de> 1136420287 -0800
+
+    [PATCH] remove mount/umount uevents from superblock handling
+
+    The names of these events have been confusing from the beginning
+    on, as they have been more like claim/release events. We needed these
+    events for noticing HAL if storage devices have been mounted.
+
+    Thanks to Al, we have the proper solution now and can poll()
+    /proc/mounts instead to get notfied about mount tree changes.
+
+    Signed-off-by: Kay Sievers <kay.sievers@suse.de>
+    Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+
+
+-- 
+Russell King
+ Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
+ maintainer of:  2.6 Serial core
