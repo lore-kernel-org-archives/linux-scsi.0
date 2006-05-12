@@ -1,53 +1,53 @@
-From: Kumba <kumba@gentoo.org>
-Subject: qla1280: failing mbox check
-Date: Fri, 12 May 2006 00:06:34 -0400
-Message-ID: <446409CA.2090100@gentoo.org>
+From: Vasily Averin <vvs@sw.ru>
+Subject: Re: megaraid_mbox: garbage in file
+Date: Fri, 12 May 2006 08:18:32 +0400
+Message-ID: <44640C98.3070006@sw.ru>
+References: <890BF3111FB9484E9526987D912B261901BD42@NAMAIL3.ad.lsil.com> <445BE14D.8000706@sw.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sccrmhc11.comcast.net ([204.127.200.81]:51627 "EHLO
-	sccrmhc11.comcast.net") by vger.kernel.org with ESMTP
-	id S1750895AbWELEG0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 May 2006 00:06:26 -0400
+Received: from mailhub.sw.ru ([195.214.233.200]:6419 "EHLO relay.sw.ru")
+	by vger.kernel.org with ESMTP id S1750902AbWELEPS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 May 2006 00:15:18 -0400
+In-Reply-To: <445BE14D.8000706@sw.ru>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Vasily Averin <vvs@sw.ru>
+Cc: "Ju, Seokmann" <Seokmann.Ju@lsil.com>, James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, "Kolli, Neela" <Neela.Kolli@engenio.com>, "Mukker, Atul" <Atul.Mukker@engenio.com>, "Bagalkote, Sreenivas" <Sreenivas.Bagalkote@engenio.com>, devel@openvz.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
+Vasily Averin wrote:
+> Ju, Seokmann wrote:
+>>I'm waiting for feedback from F/W team for MegaRAID 150-4 controller if it supports 64-bit DMA.
+>>
+>>I'll update here as I get.
 
-Trying to get 2.6.17-rc3 up and running on my SGI Octane, I've hit an odd quirk, 
-and I'm looking for some clarification on whether the bug may potentially lie in 
-the SCSI layer, or possibly more in the mips core someplace.
+Could you please tell me any updates? Could you confirm that this issue was
+reproduced on your nodes?
 
-Booting 2.6.17, the QLogic 1040 chip is detected, but upon sending the mbox 
-command, it timeouts and fails, reporting this message:
+>>Can you do one quick change in the driver?
+>>Search for 'pci_set_dma_mask()' API calls in the driver and mask out one of them with DMA_64BIT_MASK as follow.
+>>---
+>>	// if (pci_set_dma_mask(adapter->pdev, DMA_64BIT_MASK) != 0) {
+>>
+>>	// 	conlog(CL_ANN, (KERN_WARNING
+>>	// 		"megaraid: could not set DMA mask for 64-bit.\n"));
+>>
+>>	// 	goto out_free_sysfs_res;
+>>	// }
+>>---
+>>
+>>I found that the driver is NOT checking 64-bit DMA capability of the controllers accordingly and this could be a reason.
+> 
+> This change help me:
+> Errors go away, file content is correct.
 
-scsi(0): mailbox timed out, mailbox0 4000, ictrl 0006, istatus 0004
-qla1280: Failed mbox check
-scsi(0): mailbox timed out, mailbox0 4000, ictrl 0006, istatus 0004
+I'm going to use this change in production, at least as temporal workaround.
+Could you please confirm that it is safe for all controllers supported by this
+driver?
 
-The last line will then repeat indefinitely.
+Thank you,
+	Vasily Averin
 
-
-Now I know between 2.6.16 and 2.6.17-rc3, a lot of changes occured across a 
-number of archs to consolidate some of the bitops functions into the generic 
-section of the tree, I'm not sure if this is one possible area of breakage or 
-not.  I tried turning all the debug options for qla1280, but didn't get any 
-additional output that was meaningful.  Are there other ways to debug this?  I 
-stuck a printk to see what the returned values of mb[] are, and got nothing but 
-0x0, so I can only assume something bad is happening to them someplace.
-
-Any ideas where to start looking or things to try?  2.6.16.* works flawlessly, 
-and I didn't see anything odd done to qla1280.c itself that could be the point 
-of breakage.  So I can only assume that the error is in a higher-level somewheres.
-
-
-
---Kumba
-
--- 
-Gentoo/MIPS Team Lead
-Gentoo Foundation Board of Trustees
-
-"Such is oft the course of deeds that move the wheels of the world: small hands 
-do them because they must, while the eyes of the great are elsewhere."  --Elrond
+SWsoft Virtuozzo/OpenVZ Linux kernel team
