@@ -1,48 +1,46 @@
-From: Russell King <rmk+lkml@arm.linux.org.uk>
+From: Greg KH <gregkh@suse.de>
 Subject: Re: [BUG 2.6.17-git] kmem_cache_create: duplicate cache scsi_cmd_cache
-Date: Fri, 12 May 2006 22:03:01 +0100
-Message-ID: <20060512210300.GE17120@flint.arm.linux.org.uk>
-References: <20060511151456.GD3755@harddisk-recovery.com> <15ddcffd0605112153q57f139a1k7068e204a3eeaf1f@mail.gmail.com> <20060512171632.GA29077@harddisk-recovery.com> <Pine.LNX.4.64.0605121024310.3866@g5.osdl.org> <1147456038.3769.39.camel@mulgrave.il.steeleye.com> <1147460325.3769.46.camel@mulgrave.il.steeleye.com> <Pine.LNX.4.64.0605121209020.3866@g5.osdl.org> <20060512203850.GC17120@flint.arm.linux.org.uk> <20060512205215.GA26501@kroah.com>
+Date: Fri, 12 May 2006 14:18:53 -0700
+Message-ID: <20060512211853.GB26708@suse.de>
+References: <20060511151456.GD3755@harddisk-recovery.com> <15ddcffd0605112153q57f139a1k7068e204a3eeaf1f@mail.gmail.com> <20060512171632.GA29077@harddisk-recovery.com> <Pine.LNX.4.64.0605121024310.3866@g5.osdl.org> <1147456038.3769.39.camel@mulgrave.il.steeleye.com> <1147460325.3769.46.camel@mulgrave.il.steeleye.com> <Pine.LNX.4.64.0605121209020.3866@g5.osdl.org> <20060512203850.GC17120@flint.arm.linux.org.uk> <Pine.LNX.4.64.0605121346060.3866@g5.osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([212.18.232.186]:11279 "EHLO
-	caramon.arm.linux.org.uk") by vger.kernel.org with ESMTP
-	id S1750818AbWELVDL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 May 2006 17:03:11 -0400
+Received: from cantor.suse.de ([195.135.220.2]:2993 "EHLO mx1.suse.de")
+	by vger.kernel.org with ESMTP id S1751196AbWELVU4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 May 2006 17:20:56 -0400
 Content-Disposition: inline
-In-Reply-To: <20060512205215.GA26501@kroah.com>
+In-Reply-To: <Pine.LNX.4.64.0605121346060.3866@g5.osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: Linus Torvalds <torvalds@osdl.org>, James Bottomley <James.Bottomley@SteelEye.com>, Erik Mouw <erik@harddisk-recovery.com>, Or Gerlitz <or.gerlitz@gmail.com>, linux-scsi@vger.kernel.org, axboe@suse.de, Andrew Vasquez <andrew.vasquez@qlogic.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: Russell King <rmk+lkml@arm.linux.org.uk>, James Bottomley <James.Bottomley@SteelEye.com>, Erik Mouw <erik@harddisk-recovery.com>, Or Gerlitz <or.gerlitz@gmail.com>, linux-scsi@vger.kernel.org, axboe@suse.de, Andrew Vasquez <andrew.vasquez@qlogic.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On Fri, May 12, 2006 at 01:52:15PM -0700, Greg KH wrote:
-> On Fri, May 12, 2006 at 09:38:50PM +0100, Russell King wrote:
-> > On Fri, May 12, 2006 at 12:09:50PM -0700, Linus Torvalds wrote:
-> > > On Fri, 12 May 2006, James Bottomley wrote:
-> > > > I suggest simply reversing this patch at the moment.  If Russell and
-> > > > Jens can tell me what they're trying to do I'll see if there's another
-> > > > way to do it.
-> > > 
-> > > Reverted, with a big changelog entry to explain why. 
-> > 
-> > Great, I'm fucked by the SCSI folk again.
-> > 
+On Fri, May 12, 2006 at 01:50:46PM -0700, Linus Torvalds wrote:
+> On Fri, 12 May 2006, Russell King wrote:
 > > Can we revert the patch which broke the MMC/SD layer - the one which
 > > added the mount/unmount hotplug events as well then.
+> > 
+> > That way we get back to a working MMC/SD layer as well as a working
+> > SCSI layer.
 > 
-> Why would the mount/unmount hotplug event change break MMC/SD?  Do you
-> have a reference to the patch in question?
+> That's certainly the logical fix - push the pain up the chain to the 
+> person who introduced it. Which commit is that, do you know?
+> 
+> Really, the added ref-count should be gotten by whoever holds on to the 
+> thing, and it sounds like it's the hotplug event that caused this and 
+> should have held on to its hotplug reference.
+> 
+> Greg added to the Cc: list in case he already knows off-hand which commit 
+> it is..
 
-Please read the commit message in the change in question.
+No, I don't know, that's why I just asked :)
 
-The block layer holds on to a reference to a struct device which
-isn't refcounted (until I added it with my patch.)  Hence struct
-gendisk structures have a completely independent lifetime and are
-only destroyed when all references to them are removed.
+And this bug doesn't have anything to do with why my mmc/sd cards are
+suddenly not showing up at all anymore in my laptop, right?  I need to
+track that regression from 2.6.17-rc1 down...
 
--- 
-Russell King
- Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
- maintainer of:  2.6 Serial core
+thanks,
+
+greg k-h
