@@ -1,44 +1,79 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: git-acpi breakage, sym2
-Date: Fri, 12 May 2006 05:40:46 -0600
-Message-ID: <20060512114046.GO12272@parisc-linux.org>
-References: <20060511231005.0bce3384.akpm@osdl.org> <20060512112345.GM12272@parisc-linux.org> <20060512042504.33b1ad20.akpm@osdl.org>
+From: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
+Subject: RE: megaraid_mbox: garbage in file
+Date: Fri, 12 May 2006 06:19:48 -0600
+Message-ID: <890BF3111FB9484E9526987D912B261901BD6E@NAMAIL3.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:43244 "EHLO
-	palinux.external.hp.com") by vger.kernel.org with ESMTP
-	id S1751241AbWELLkr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 May 2006 07:40:47 -0400
-Content-Disposition: inline
-In-Reply-To: <20060512042504.33b1ad20.akpm@osdl.org>
+Received: from mail0.lsil.com ([147.145.40.20]:12517 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1751180AbWELMUf convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 May 2006 08:20:35 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-acpi@vger.kernel.org, len.brown@intel.com, linux-scsi@vger.kernel.org, willy@debian.org
+To: Vasily Averin <vvs@sw.ru>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, "Kolli, Neela" <Neela.Kolli@engenio.com>, "Mukker, Atul" <Atul.Mukker@engenio.com>, "Bagalkote, Sreenivas" <Sreenivas.Bagalkote@engenio.com>, devel@openvz.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On Fri, May 12, 2006 at 04:25:04AM -0700, Andrew Morton wrote:
-> Matthew Wilcox <matthew@wil.cx> wrote:
-> > > scsi0 : sym-2.2.3
-> > >  0:0:0:0: ABORT operation started.
-> > >  0:0:1:0: ABORT operation started.
-> > >  0:0:2:0: ABORT operation started.
-> > > 
-> > > ad infinitum.  How come?
+Hi,
+Friday, May 12, 2006 12:19 AM, Vasily Averin wrote:
+> Could you please tell me any updates? Could you confirm that 
+> this issue was
+> reproduced on your nodes?
+Yes, it has confirmed by F/W team that the controller doesn't support 64-bit DMA.
+A patch addresses the issue will followed by soon.
+
+Thank you,
+
+> -----Original Message-----
+> From: Vasily Averin [mailto:vvs@sw.ru] 
+> Sent: Friday, May 12, 2006 12:19 AM
+> To: Vasily Averin
+> Cc: Ju, Seokmann; James Bottomley; 
+> linux-scsi@vger.kernel.org; Kolli, Neela; Mukker, Atul; 
+> Bagalkote, Sreenivas; devel@openvz.org; Linux Kernel Mailing List
+> Subject: Re: megaraid_mbox: garbage in file
+> 
+> Vasily Averin wrote:
+> > Ju, Seokmann wrote:
+> >>I'm waiting for feedback from F/W team for MegaRAID 150-4 
+> controller if it supports 64-bit DMA.
+> >>
+> >>I'll update here as I get.
+> 
+> Could you please tell me any updates? Could you confirm that 
+> this issue was
+> reproduced on your nodes?
+> 
+> >>Can you do one quick change in the driver?
+> >>Search for 'pci_set_dma_mask()' API calls in the driver and 
+> mask out one of them with DMA_64BIT_MASK as follow.
+> >>---
+> >>	// if (pci_set_dma_mask(adapter->pdev, DMA_64BIT_MASK) != 0) {
+> >>
+> >>	// 	conlog(CL_ANN, (KERN_WARNING
+> >>	// 		"megaraid: could not set DMA mask for 
+> 64-bit.\n"));
+> >>
+> >>	// 	goto out_free_sysfs_res;
+> >>	// }
+> >>---
+> >>
+> >>I found that the driver is NOT checking 64-bit DMA 
+> capability of the controllers accordingly and this could be a reason.
 > > 
-> > Are you sure it's ad infinitum or just once for every device?
+> > This change help me:
+> > Errors go away, file content is correct.
 > 
-> I have a single card talking to a single disk.  I whacked it after a couple
-> of minutes.
-
-Sure, but it has to probe each device to find out it's not there.  See
-the target number increasing in the snippet I left above?
-
-> > Anyway, this looks like a fairly classic "sym2 isn't getting any
-> > interrupts" scenario.
+> I'm going to use this change in production, at least as 
+> temporal workaround.
+> Could you please confirm that it is safe for all controllers 
+> supported by this
+> driver?
 > 
-> It is - Len found that one.
-
-Cool.  I'd love sym2 to behave more sanely in the 'no interrupts' case
-because it means I get a lot of bug reports directed my way from people
-with bad setups.  I don't see a nice way to do it though ...
+> Thank you,
+> 	Vasily Averin
+> 
+> SWsoft Virtuozzo/OpenVZ Linux kernel team
+> 
