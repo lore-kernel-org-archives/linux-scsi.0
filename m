@@ -1,106 +1,54 @@
-From: Erik Mouw <erik@harddisk-recovery.com>
-Subject: Re: [BUG 2.6.17-git] kmem_cache_create: duplicate cache scsi_cmd_cache
-Date: Fri, 12 May 2006 19:16:33 +0200
-Message-ID: <20060512171632.GA29077@harddisk-recovery.com>
-References: <20060511151456.GD3755@harddisk-recovery.com> <15ddcffd0605112153q57f139a1k7068e204a3eeaf1f@mail.gmail.com>
+From: Gabriel Gomiz <gomita@cooperativaobrera.com.ar>
+Subject: Re: Symbios-NCR 6285-3621 + Adaptec 2944W multilun problem
+Date: Fri, 12 May 2006 14:19:00 -0300
+Message-ID: <4464C384.2050605@cooperativaobrera.com.ar>
+References: <44648D9C.2090602@cooperativaobrera.com.ar>	 <1147442986.3769.2.camel@mulgrave.il.steeleye.com>	 <44649CE5.7070604@cooperativaobrera.com.ar> <1147446596.3769.25.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dtp.xs4all.nl ([80.126.206.180]:5716 "HELO abra2.bitwizard.nl")
-	by vger.kernel.org with SMTP id S1750837AbWELRQf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 May 2006 13:16:35 -0400
-Content-Disposition: inline
-In-Reply-To: <15ddcffd0605112153q57f139a1k7068e204a3eeaf1f@mail.gmail.com>
+Received: from 200-26-107-84.advance.com.ar ([200.26.107.84]:22730 "EHLO
+	thorin.cooperativaobrera.com.ar") by vger.kernel.org with ESMTP
+	id S1750837AbWELRTQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 May 2006 13:19:16 -0400
+In-Reply-To: <1147446596.3769.25.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Or Gerlitz <or.gerlitz@gmail.com>
-Cc: linux-scsi@vger.kernel.org, rmk@arm.linux.org.uk, axboe@suse.de, linux-kernel@vger.kernel.org, torvalds@osdl.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, May 12, 2006 at 06:53:27AM +0200, Or Gerlitz wrote:
-> On 5/11/06, Erik Mouw <erik@harddisk-recovery.com> wrote:
-> >Hi,
-> >
-> >While playing with libata in 2.6.17-git from today, I got this bug:
-> >
-> >SCSI subsystem initialized
-> >libata version 1.20 loaded.
-> >sata_promise 0000:02:05.0: version 1.04
-> >kmem_cache_create: duplicate cache scsi_cmd_cache
-> > <c0159591> kmem_cache_create+0x331/0x390
-> > <e0924371> scsi_setup_command_freelist+0x71/0xf0 [scsi_mod]
-> > <e092588e> scsi_host_alloc+0x17e/0x270 [scsi_mod]
-> > <e08fd061> ata_host_add+0x41/0xc0 [libata]
-> > <c0148c9f> __kzalloc+0x1f/0x50
-> > <e08fd190> ata_device_add+0xb0/0x240 [libata]
-> > <e0839baf> pdc_ata_init_one+0x27f/0x330 [sata_promise]
-> > <c01dd1a9> pci_call_probe+0x19/0x20
-> > <c01dd20e> __pci_device_probe+0x5e/0x70
-> > <c01dd24f> pci_device_probe+0x2f/0x50
-> > <c0220977> driver_probe_device+0xb7/0xe0
-> > <c02b338a> klist_dec_and_del+0x1a/0x20
-> > <c0220a30> __driver_attach+0x0/0x90
-> > <c0220aa1>__driver_attach+0x71/0x90
-> > <c021fd49> bus_for_each_dev+0x69/0x80
-> > <c0220ae6> driver_attach+0x26/0x30
-> > <c0220a30> __driver_attach+0x0/0x90
-> > <c02202a3> bus_add_driver+0x83/0xc0
-> > <c01dd4ed> __pci_register_driver+0x4d/0x70
-> > <e0880017> pdc_ata_init+0x17/0x1b [sata_promise]
-> > <c013a1a0> sys_init_module+0x120/0x1b0
-> > <c0102f27> syscall_call+0x7/0xb
-> 
-> I was pointing on 2.6.17 kmem_cache related  issues while back to LKML
-> and it turns out that you can reproduce them easily with standalone
-> trivial module, see
-> http://openib.org/pipermail/openib-general/2006-April/020582.html
-> 
-> So far no one picked the issue anb i was adviced to use bisection...
+James Bottomley wrote:
+> Well, what I was hoping for was mode sense messages but, unfortunately,
+> there aren't any.  My suspicion is that the 6285 is dual controller
+> running in RDAC mode and you're attached to the inactive controller (in
+> that configuration it allowed INQUIRY and MODE SENSE through but errors
+> out on all other I/O operations).  I think you can verify by physically
+> removing one of the controllers and rebooting the array (or just attach
+> the SCSI cable to the other controller)
 
-I tracked it down with git bisect. The culprit is this commit:
+James:
 
-56cf6504fc1c0c221b82cebc16a444b684140fb7 is first bad commit
-diff-tree 56cf6504fc1c0c221b82cebc16a444b684140fb7 (from
-d98550e334715b2d9e45f8f0f4e1608720108640)
-Author: Russell King <rmk@dyn-67.arm.linux.org.uk>
-Date:   Fri May 5 17:57:52 2006 +0100
+You were right. The server was attached to controller "B" of the array. 
+I attached it to controller "A" and it is working ok with 2.6.16.13 
+vanilla kernel!!!
 
-    [BLOCK] Fix oops on removal of SD/MMC card
+But with 2.6.9-34EL Red Hat Enterprise Stock kernel I'm still having 
+errors and dmesg output is a lot more verbose. I'm attaching both dmesg 
+outputs just in case it helps.
+Do I need to report this to Red Hat?
+Is it a bug? or a kernel configuration error?
 
-    The block layer keeps a reference (driverfs_dev) to the struct
-    device associated with the block device, and uses it internally
-    for generating uevents in block_uevent.
+BTW: Do anybody in this list knows how to manage this model of array 
+from Linux? Any software available? Boot disk? Symplicity Software? Any 
+hint you can provide will be greatly appreciated.
+Array model is Symbios/NCR 6285-3621.
 
-    Block device uevents include umounting the partition, which can
-    occur after the backing device has been removed.
-
-    Unfortunately, this reference is not counted.  This means that
-    if the struct device is removed from the device tree, the block
-    layers reference will become stale.
-
-    Guard against this by holding a reference to the struct device
-    in add_disk(), and only drop the reference when we're releasing
-    the gendisk kobject - in other words when we can be sure that no
-    further uevents will be generated for this block device.
-
-    Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
-    Acked-by: Jens Axboe <axboe@suse.de>
-
-:040000 040000 4923c988a57db93382546cd83f4e3043b06c0eed 08e396a4fbf3c7d0beb9178f0fd0c9205c0b5305 M      block
-
-After reverting this commit in 2.6.17-rc4 I can't trigger the bug
-anymore. Might be worth fixing before 2.6.17-final.
-
-Note: I'm going on holiday next week, so I'm not able to test any
-fixes. However, because this bug is very easy to trigger[1], anybody
-with root on NFS and fully modular SCSI or libata should be able to
-test.
-
-
-Erik
-
-[1] See http://marc.theaimsgroup.com/?l=linux-scsi&m=114736053211943&w=2
+Again, many thanks for your wonderful support!
 
 -- 
-+-- Erik Mouw -- www.harddisk-recovery.com -- +31 70 370 12 90 --
-| Lab address: Delftechpark 26, 2628 XH, Delft, The Netherlands
+       .^.    Lic. Gabriel Gomiz - Red Hat Certified Engineer (RHCE)
+       /V\    Administrador Red/Sistemas - Desarrollo Sistema POSEIDON
+      // \\   Gerencia de Sistemas - Cooperativa Obrera Ltda.
+     /(   )\  Tel (0291) 456-0084
+      ^^-^^   s/Window[$s]/LINUX!!/g or die;
+
