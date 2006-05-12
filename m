@@ -1,39 +1,52 @@
-From: Russell King <rmk+lkml@arm.linux.org.uk>
+From: Linus Torvalds <torvalds@osdl.org>
 Subject: Re: [BUG 2.6.17-git] kmem_cache_create: duplicate cache scsi_cmd_cache
-Date: Fri, 12 May 2006 21:38:50 +0100
-Message-ID: <20060512203850.GC17120@flint.arm.linux.org.uk>
-References: <20060511151456.GD3755@harddisk-recovery.com> <15ddcffd0605112153q57f139a1k7068e204a3eeaf1f@mail.gmail.com> <20060512171632.GA29077@harddisk-recovery.com> <Pine.LNX.4.64.0605121024310.3866@g5.osdl.org> <1147456038.3769.39.camel@mulgrave.il.steeleye.com> <1147460325.3769.46.camel@mulgrave.il.steeleye.com> <Pine.LNX.4.64.0605121209020.3866@g5.osdl.org>
+Date: Fri, 12 May 2006 13:50:46 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0605121346060.3866@g5.osdl.org>
+References: <20060511151456.GD3755@harddisk-recovery.com>
+ <15ddcffd0605112153q57f139a1k7068e204a3eeaf1f@mail.gmail.com>
+ <20060512171632.GA29077@harddisk-recovery.com> <Pine.LNX.4.64.0605121024310.3866@g5.osdl.org>
+ <1147456038.3769.39.camel@mulgrave.il.steeleye.com>
+ <1147460325.3769.46.camel@mulgrave.il.steeleye.com>
+ <Pine.LNX.4.64.0605121209020.3866@g5.osdl.org> <20060512203850.GC17120@flint.arm.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([212.18.232.186]:12813 "EHLO
-	caramon.arm.linux.org.uk") by vger.kernel.org with ESMTP
-	id S1751364AbWELUi6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 May 2006 16:38:58 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0605121209020.3866@g5.osdl.org>
+Received: from smtp.osdl.org ([65.172.181.4]:2488 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932065AbWELUvM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 May 2006 16:51:12 -0400
+In-Reply-To: <20060512203850.GC17120@flint.arm.linux.org.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Erik Mouw <erik@harddisk-recovery.com>, Or Gerlitz <or.gerlitz@gmail.com>, linux-scsi@vger.kernel.org, axboe@suse.de, Andrew Vasquez <andrew.vasquez@qlogic.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Russell King <rmk+lkml@arm.linux.org.uk>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Erik Mouw <erik@harddisk-recovery.com>, Or Gerlitz <or.gerlitz@gmail.com>, linux-scsi@vger.kernel.org, axboe@suse.de, Andrew Vasquez <andrew.vasquez@qlogic.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Greg KH <gregkh@suse.de>
 
-On Fri, May 12, 2006 at 12:09:50PM -0700, Linus Torvalds wrote:
-> On Fri, 12 May 2006, James Bottomley wrote:
-> > I suggest simply reversing this patch at the moment.  If Russell and
-> > Jens can tell me what they're trying to do I'll see if there's another
-> > way to do it.
+
+
+On Fri, 12 May 2006, Russell King wrote:
 > 
-> Reverted, with a big changelog entry to explain why. 
+> Great, I'm fucked by the SCSI folk again.
 
-Great, I'm fucked by the SCSI folk again.
+No, you introduced a regression. This isn't the SCSI layer being evil, 
+this is the "regressions aren't acceptable".
 
-Can we revert the patch which broke the MMC/SD layer - the one which
-added the mount/unmount hotplug events as well then.
+Fixing one bug and introducing another is actively _worse_ than having the 
+same bug stay around.
 
-That way we get back to a working MMC/SD layer as well as a working
-SCSI layer.
+> Can we revert the patch which broke the MMC/SD layer - the one which
+> added the mount/unmount hotplug events as well then.
+> 
+> That way we get back to a working MMC/SD layer as well as a working
+> SCSI layer.
 
--- 
-Russell King
- Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
- maintainer of:  2.6 Serial core
+That's certainly the logical fix - push the pain up the chain to the 
+person who introduced it. Which commit is that, do you know?
+
+Really, the added ref-count should be gotten by whoever holds on to the 
+thing, and it sounds like it's the hotplug event that caused this and 
+should have held on to its hotplug reference.
+
+Greg added to the Cc: list in case he already knows off-hand which commit 
+it is..
+
+		Linus
