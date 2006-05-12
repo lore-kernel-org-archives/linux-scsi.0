@@ -1,49 +1,32 @@
 From: Al Viro <viro@ftp.linux.org.uk>
 Subject: Re: [BUG 2.6.17-git] kmem_cache_create: duplicate cache scsi_cmd_cache
-Date: Sat, 13 May 2006 00:21:31 +0100
-Message-ID: <20060512232131.GV27946@ftp.linux.org.uk>
-References: <Pine.LNX.4.64.0605121024310.3866@g5.osdl.org> <20060512203416.GA17120@flint.arm.linux.org.uk> <20060512214354.GP27946@ftp.linux.org.uk> <20060512215520.GH17120@flint.arm.linux.org.uk> <20060512220807.GR27946@ftp.linux.org.uk> <Pine.LNX.4.64.0605121519420.3866@g5.osdl.org> <20060512222816.GS27946@ftp.linux.org.uk> <20060512224804.GT27946@ftp.linux.org.uk> <20060512225101.GU27946@ftp.linux.org.uk> <Pine.LNX.4.64.0605121559490.3866@g5.osdl.org>
+Date: Sat, 13 May 2006 00:37:12 +0100
+Message-ID: <20060512233711.GW27946@ftp.linux.org.uk>
+References: <20060512203416.GA17120@flint.arm.linux.org.uk> <20060512214354.GP27946@ftp.linux.org.uk> <20060512215520.GH17120@flint.arm.linux.org.uk> <20060512220807.GR27946@ftp.linux.org.uk> <Pine.LNX.4.64.0605121519420.3866@g5.osdl.org> <20060512222816.GS27946@ftp.linux.org.uk> <20060512224804.GT27946@ftp.linux.org.uk> <20060512225101.GU27946@ftp.linux.org.uk> <Pine.LNX.4.64.0605121559490.3866@g5.osdl.org> <20060512232131.GV27946@ftp.linux.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:27606 "EHLO
-	ZenIV.linux.org.uk") by vger.kernel.org with ESMTP id S1751077AbWELXVd
+Received: from zeniv.linux.org.uk ([195.92.253.2]:12450 "EHLO
+	ZenIV.linux.org.uk") by vger.kernel.org with ESMTP id S932148AbWELXhN
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 May 2006 19:21:33 -0400
+	Fri, 12 May 2006 19:37:13 -0400
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0605121559490.3866@g5.osdl.org>
+In-Reply-To: <20060512232131.GV27946@ftp.linux.org.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Linus Torvalds <torvalds@osdl.org>
 Cc: Erik Mouw <erik@harddisk-recovery.com>, Or Gerlitz <or.gerlitz@gmail.com>, linux-scsi@vger.kernel.org, axboe@suse.de, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On Fri, May 12, 2006 at 04:04:53PM -0700, Linus Torvalds wrote:
+On Sat, May 13, 2006 at 12:21:31AM +0100, Al Viro wrote:
+> The problem is with disk->driverfs_dev, not disk itself.  Block layer
+> has no fscking business touching it after del_gendisk() - if nothing else,
+> we might have _no_ underlying object at all from the very beginning.
 > 
-> 
-> On Fri, 12 May 2006, Al Viro wrote:
-> > 
-> > PS: it _is_ OK to trigger than puppy from add_disk()/del_gendisk() and in
-> > between.  I'm not sure if anyone needs it for anything, though.  Triggering
-> > it from bdev_uevent() is definitely bogus.
-> 
-> Wouldn't it be perfectly ok if we just made sure to keep the disk device 
-> refcount elevated by the _mount_?
-> 
-> Ie Russell's patch to elevate it around everything didn't work, but 
-> elevating the bdev->bd_disk reference count by a mount, and dropping it on 
-> umount (after doing the umount event) should be ok. No?
+> So anything that wants events related to partitions, let alone mounting,
+> can't expect to see PHYSDEV... crap.  Moreover, it can bloody well
+> get to PHYSDEV... itself *if* it wants to and if it's there.  There's
+> a reason why we have that symlink in sys/block/<device> and userland can
+> bloody well access it on its own.
 
-->bd_disk _is_ pinned down.  However, it's not the problem - we keep
-gendisk for as long as anyone uses it.  Which might be after the underlying
-object is gone; that one is controlled by driver and driver calls
-del_gendisk() when it decides that we are through.
-
-The problem is with disk->driverfs_dev, not disk itself.  Block layer
-has no fscking business touching it after del_gendisk() - if nothing else,
-we might have _no_ underlying object at all from the very beginning.
-
-So anything that wants events related to partitions, let alone mounting,
-can't expect to see PHYSDEV... crap.  Moreover, it can bloody well
-get to PHYSDEV... itself *if* it wants to and if it's there.  There's
-a reason why we have that symlink in sys/block/<device> and userland can
-bloody well access it on its own.
+BTW, the best option is to kill bdev_uevent() again.  Short of that,
+skip PHYSDEV mess if disk doesn't have GENHD_FL_UP.
