@@ -1,46 +1,51 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: git-acpi breakage, sym2
-Date: Fri, 12 May 2006 00:35:18 -0700
-Message-ID: <20060512003518.276420bc.akpm@osdl.org>
-References: <CFF307C98FEABE47A452B27C06B85BB66D5565@hdsmsx411.amr.corp.intel.com>
+From: Jan Engelhardt <jengelh@linux01.gwdg.de>
+Subject: Re: [PATCH] make kernel ignore bogus partitions
+Date: Fri, 12 May 2006 12:32:47 +0200 (MEST)
+Message-ID: <Pine.LNX.4.61.0605121223560.9918@yvahk01.tjqt.qr>
+References: <20060503210055.GB31048@beardog.cca.cpqcorp.net>
+ <20060509124138.43e4bac0.akpm@osdl.org> <20060509224848.GA29754@apps.cwi.nl>
+ <20060511040014.66ea16fc.akpm@osdl.org> <20060511115117.GA870@apps.cwi.nl>
+ <Pine.LNX.4.64.0605111822320.6713@iabervon.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <CFF307C98FEABE47A452B27C06B85BB66D5565@hdsmsx411.amr.corp.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: "Brown, Len" <len.brown@intel.com>
-Cc: linux-acpi@vger.kernel.org, linux-scsi@vger.kernel.org, willy@debian.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from linux01.gwdg.de ([134.76.13.21]:37611 "EHLO linux01.gwdg.de")
+	by vger.kernel.org with ESMTP id S1751148AbWELKdj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 May 2006 06:33:39 -0400
+In-Reply-To: <Pine.LNX.4.64.0605111822320.6713@iabervon.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Daniel Barkalow <barkalow@iabervon.org>
+Cc: Andries Brouwer <Andries.Brouwer@cwi.nl>, Andrew Morton <akpm@osdl.org>, mikem@beardog.cca.cpqcorp.net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-"Brown, Len" <len.brown@intel.com> wrote:
 >
-> >The latest
-> >git+ssh://master.kernel.org/pub/scm/linux/kernel/git/lenb/linux
-> >-acpi-2.6.git#test
-> >kills my very vanilla P4 box.
-> 
-> hmmm, killed my p4 box too in a similar way.
-> 
-> booting with "acpi=off" made it work,
-> so I expect the failures after ACPI refuses to start
-> are due to ACPI and not do to something outside ACPI.
-> 
+>Perhaps the kernel should try reading beyond the ends of disks when it 
+>detects them, so that it can determine if there's actually available 
+>storage there, and automatically increase the size if there is? Or, at 
+>least, it could check whether the medium actually goes out to the point 
+>the partition table implies, and suppress the I/O error if the disk 
+>actually ends where it claims to.
+>
+Sounds like a good idea. In fact, I had miscreated a sun disklabel on a 
+disk because it has a slightly different notion of cylinders that I am used 
+to from x86; IOW:
 
-Yeah.  Turns out I'm basically unable to drop the acpi tree because I have
-so much other stuff dependent upon it.  So it's debugging time.
+dmesg:
+SCSI device sdb: 35378533 512-byte hdwr sectors (18114 MB)
 
-By the time we get to IO_APIC_get_PCI_irq_vector(), mp_bus_id_to_pci_bus[]
-is still all -1's.
+fdisk:
+Disk /dev/sdb (Sun disk label): 19 heads, 248 sectors, 7200 rpm
+7508 cylinders, 2 alternate cylinders, 7510 physical cylinders
+0 extra sects/cyl, interleave 1:1
+(should have been 7506 cyl, 2 alt, 7508 phys)
 
-Because MP_bus_info() hasn't been called yet.
+And Solaris rightfully barfs about it when scanning disks,
+because 7510*19*248 > 35378533. Linux keeps silent,
+and I am not sure if I have a silent data corruption there (currently not 
+as it seems).
+(Since it's just a test box ATM, it's not critical.)
 
-get_smp_config() is being called, but bales because
 
-	 if (acpi_lapic && acpi_ioapic) {
-
-returns true.
-
-However that all appears to be normal.  Am still poking at it.
-
-git-bisect came up with garbage.
+Jan Engelhardt
+-- 
