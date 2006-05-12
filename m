@@ -1,61 +1,39 @@
 From: Linus Torvalds <torvalds@osdl.org>
 Subject: Re: [BUG 2.6.17-git] kmem_cache_create: duplicate cache scsi_cmd_cache
-Date: Fri, 12 May 2006 15:15:10 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0605121508590.3866@g5.osdl.org>
-References: <15ddcffd0605112153q57f139a1k7068e204a3eeaf1f@mail.gmail.com>
+Date: Fri, 12 May 2006 15:22:42 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0605121519420.3866@g5.osdl.org>
+References: <20060511151456.GD3755@harddisk-recovery.com>
+ <15ddcffd0605112153q57f139a1k7068e204a3eeaf1f@mail.gmail.com>
  <20060512171632.GA29077@harddisk-recovery.com> <Pine.LNX.4.64.0605121024310.3866@g5.osdl.org>
- <1147456038.3769.39.camel@mulgrave.il.steeleye.com>
- <1147460325.3769.46.camel@mulgrave.il.steeleye.com>
- <Pine.LNX.4.64.0605121209020.3866@g5.osdl.org> <20060512203850.GC17120@flint.arm.linux.org.uk>
- <Pine.LNX.4.64.0605121346060.3866@g5.osdl.org> <20060512205804.GD17120@flint.arm.linux.org.uk>
- <Pine.LNX.4.64.0605121409250.3866@g5.osdl.org> <20060512215151.GG17120@flint.arm.linux.org.uk>
+ <20060512203416.GA17120@flint.arm.linux.org.uk> <20060512214354.GP27946@ftp.linux.org.uk>
+ <20060512215520.GH17120@flint.arm.linux.org.uk> <20060512220807.GR27946@ftp.linux.org.uk>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:53455 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1750823AbWELWPh (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:12243 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932265AbWELWXC (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 May 2006 18:15:37 -0400
-In-Reply-To: <20060512215151.GG17120@flint.arm.linux.org.uk>
+	Fri, 12 May 2006 18:23:02 -0400
+In-Reply-To: <20060512220807.GR27946@ftp.linux.org.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Russell King <rmk+lkml@arm.linux.org.uk>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Erik Mouw <erik@harddisk-recovery.com>, Or Gerlitz <or.gerlitz@gmail.com>, linux-scsi@vger.kernel.org, axboe@suse.de, Andrew Vasquez <andrew.vasquez@qlogic.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Greg KH <gregkh@suse.de>
+To: Al Viro <viro@ftp.linux.org.uk>
+Cc: Erik Mouw <erik@harddisk-recovery.com>, Or Gerlitz <or.gerlitz@gmail.com>, linux-scsi@vger.kernel.org, axboe@suse.de, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
 
 
-On Fri, 12 May 2006, Russell King wrote:
+On Fri, 12 May 2006, Al Viro wrote:
 > 
-> From: Todd Blumer <todd@sdgsystems.com>
-> On a PXA27x handheld (iPAQ hx4700), when we eject a mounted SD memory
-> card, we get a kernel panic (kernel trying to clean up non-existent
-> device). One hack patch to avoid the panic is:
-> 
-> --- fs/partitions/check.c       10 Apr 2006 22:57:27 -0000      1.15
-> +++ fs/partitions/check.c       4 May 2006 20:30:15 -0000
-> @@ -491,6 +491,7 @@
->                         kfree(disk_name);
->                 }
->                 put_device(disk->driverfs_dev);
-> +               disk->driverfs_dev = 0; /* HACK - what's the right solution? */
->         }
->         kobject_uevent(&disk->kobj, KOBJ_REMOVE);
->         kobject_del(&disk->kobj);
+> Secondary question: who had resurrected that crap?  I distinctly remember
+> killing it off...
 
-Btw, on the face it of, I really think that this patch is correct 
-regardless of any other issues.
+If you did, I don't think it ever got into the kernel.
 
-We're clearly getting rid of "disk->driverfs_dev" (that's what the 
-"put_device()" does). So we should clear it out - using 
-"disk->driverfs_dev" afterwards is clearly not _valid_, because we've 
-dropped the reference.
+It was added by Kay Sievers on Nov 3, 2004, according to the old history 
+(back then it was in drivers/block/genhd.c, and the function was called 
+"block_hotplug()", but apart from renaming the function and moving the 
+file, it's recognizably the same.
 
-Of course, we shouldn't assign zero to it. We should assign NULL. 
-Alternatively, we could poison it (so that anybody who tries to use it 
-gets a nice oops ASAP).
-
-Now, regardless of whether that is correct or not, it might not be the 
-only problem, of course. It sounds like there is something else going on 
-here too.
+Of course, you may have killed off an even earlier incarnation..
 
 			Linus
