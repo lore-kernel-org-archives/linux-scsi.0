@@ -1,28 +1,31 @@
 From: Al Viro <viro@ftp.linux.org.uk>
 Subject: Re: [BUG 2.6.17-git] kmem_cache_create: duplicate cache scsi_cmd_cache
-Date: Fri, 12 May 2006 22:39:16 +0100
-Message-ID: <20060512213916.GO27946@ftp.linux.org.uk>
-References: <20060511151456.GD3755@harddisk-recovery.com> <15ddcffd0605112153q57f139a1k7068e204a3eeaf1f@mail.gmail.com> <20060512171632.GA29077@harddisk-recovery.com> <Pine.LNX.4.64.0605121024310.3866@g5.osdl.org> <1147456038.3769.39.camel@mulgrave.il.steeleye.com> <1147460325.3769.46.camel@mulgrave.il.steeleye.com> <Pine.LNX.4.64.0605121209020.3866@g5.osdl.org> <20060512203850.GC17120@flint.arm.linux.org.uk> <20060512205215.GA26501@kroah.com> <20060512210300.GE17120@flint.arm.linux.org.uk>
+Date: Fri, 12 May 2006 22:43:54 +0100
+Message-ID: <20060512214354.GP27946@ftp.linux.org.uk>
+References: <20060511151456.GD3755@harddisk-recovery.com> <15ddcffd0605112153q57f139a1k7068e204a3eeaf1f@mail.gmail.com> <20060512171632.GA29077@harddisk-recovery.com> <Pine.LNX.4.64.0605121024310.3866@g5.osdl.org> <20060512203416.GA17120@flint.arm.linux.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:17887 "EHLO
-	ZenIV.linux.org.uk") by vger.kernel.org with ESMTP id S1750842AbWELVjY
+Received: from zeniv.linux.org.uk ([195.92.253.2]:28070 "EHLO
+	ZenIV.linux.org.uk") by vger.kernel.org with ESMTP id S1750900AbWELVn5
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 May 2006 17:39:24 -0400
+	Fri, 12 May 2006 17:43:57 -0400
 Content-Disposition: inline
-In-Reply-To: <20060512210300.GE17120@flint.arm.linux.org.uk>
+In-Reply-To: <20060512203416.GA17120@flint.arm.linux.org.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <greg@kroah.com>, Linus Torvalds <torvalds@osdl.org>, James Bottomley <James.Bottomley@SteelEye.com>, Erik Mouw <erik@harddisk-recovery.com>, Or Gerlitz <or.gerlitz@gmail.com>, linux-scsi@vger.kernel.org, axboe@suse.de, Andrew Vasquez <andrew.vasquez@qlogic.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Linus Torvalds <torvalds@osdl.org>, Erik Mouw <erik@harddisk-recovery.com>, Or Gerlitz <or.gerlitz@gmail.com>, linux-scsi@vger.kernel.org, axboe@suse.de, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On Fri, May 12, 2006 at 10:03:01PM +0100, Russell King wrote:
-> The block layer holds on to a reference to a struct device which
-> isn't refcounted (until I added it with my patch.)  Hence struct
-> gendisk structures have a completely independent lifetime and are
-> only destroyed when all references to them are removed.
+On Fri, May 12, 2006 at 09:34:16PM +0100, Russell King wrote:
+> On Fri, May 12, 2006 at 10:36:57AM -0700, Linus Torvalds wrote:
+> > Yes. We could just revert that commit, but it seems correct, and I'd 
+> > really like for somebody to understand _why_ that commit matters at all. I 
+> > certainly don't see the overlap here..
+> 
+> Reverting the commit breaks MMC/SD in a very real way, and the fix
+> is plainly correct and is actually the only possible fix that can be
+> applied.
 
-Yes, they are and that's intentional.
-
-Can you explain WTF do you drop that reference so late and not in the
-del_gendisk() time?
+Bullshit.  Could you explain what generic code dereferences ->driverfs_dev
+after del_gendisk()?  If you see such beast, please tell; _that_ is the
+real bug.
