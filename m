@@ -1,79 +1,49 @@
-From: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
-Subject: RE: megaraid_mbox: garbage in file
-Date: Fri, 12 May 2006 06:19:48 -0600
-Message-ID: <890BF3111FB9484E9526987D912B261901BD6E@NAMAIL3.ad.lsil.com>
+From: Kumba <kumba@gentoo.org>
+Subject: Re: qla1280: failing mbox check
+Date: Fri, 12 May 2006 09:07:22 -0400
+Message-ID: <4464888A.1000807@gentoo.org>
+References: <446409CA.2090100@gentoo.org> <yq04pzvr9dz.fsf@jaguar.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:12517 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1751180AbWELMUf convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 May 2006 08:20:35 -0400
-Content-class: urn:content-classes:message
+Received: from rwcrmhc11.comcast.net ([204.127.192.81]:6095 "EHLO
+	rwcrmhc11.comcast.net") by vger.kernel.org with ESMTP
+	id S1751279AbWELNHO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 May 2006 09:07:14 -0400
+In-Reply-To: <yq04pzvr9dz.fsf@jaguar.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vasily Averin <vvs@sw.ru>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, "Kolli, Neela" <Neela.Kolli@engenio.com>, "Mukker, Atul" <Atul.Mukker@engenio.com>, "Bagalkote, Sreenivas" <Sreenivas.Bagalkote@engenio.com>, devel@openvz.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-Hi,
-Friday, May 12, 2006 12:19 AM, Vasily Averin wrote:
-> Could you please tell me any updates? Could you confirm that 
-> this issue was
-> reproduced on your nodes?
-Yes, it has confirmed by F/W team that the controller doesn't support 64-bit DMA.
-A patch addresses the issue will followed by soon.
+Jes Sorensen wrote:
+> 'git bisect' is your friend here.
+> 
+> Cheers,
+> Jes
 
-Thank you,
+That was the answer I was afraid of....  Already tried using git bisect to track 
+down a bootmem allocation bug in SGI O2 systems (2.6.17 just broke everything it 
+seems...), but the bisection point happened to be around the time when all the 
+bitops changes were occuring (moving duplicate functions from asm-mips -> 
+asm-generic), resulting in a tree that wouldn't even compile.
 
-> -----Original Message-----
-> From: Vasily Averin [mailto:vvs@sw.ru] 
-> Sent: Friday, May 12, 2006 12:19 AM
-> To: Vasily Averin
-> Cc: Ju, Seokmann; James Bottomley; 
-> linux-scsi@vger.kernel.org; Kolli, Neela; Mukker, Atul; 
-> Bagalkote, Sreenivas; devel@openvz.org; Linux Kernel Mailing List
-> Subject: Re: megaraid_mbox: garbage in file
-> 
-> Vasily Averin wrote:
-> > Ju, Seokmann wrote:
-> >>I'm waiting for feedback from F/W team for MegaRAID 150-4 
-> controller if it supports 64-bit DMA.
-> >>
-> >>I'll update here as I get.
-> 
-> Could you please tell me any updates? Could you confirm that 
-> this issue was
-> reproduced on your nodes?
-> 
-> >>Can you do one quick change in the driver?
-> >>Search for 'pci_set_dma_mask()' API calls in the driver and 
-> mask out one of them with DMA_64BIT_MASK as follow.
-> >>---
-> >>	// if (pci_set_dma_mask(adapter->pdev, DMA_64BIT_MASK) != 0) {
-> >>
-> >>	// 	conlog(CL_ANN, (KERN_WARNING
-> >>	// 		"megaraid: could not set DMA mask for 
-> 64-bit.\n"));
-> >>
-> >>	// 	goto out_free_sysfs_res;
-> >>	// }
-> >>---
-> >>
-> >>I found that the driver is NOT checking 64-bit DMA 
-> capability of the controllers accordingly and this could be a reason.
-> > 
-> > This change help me:
-> > Errors go away, file content is correct.
-> 
-> I'm going to use this change in production, at least as 
-> temporal workaround.
-> Could you please confirm that it is safe for all controllers 
-> supported by this
-> driver?
-> 
-> Thank you,
-> 	Vasily Averin
-> 
-> SWsoft Virtuozzo/OpenVZ Linux kernel team
-> 
+Having to patch up a broken tree so it even builds to determine if the bisection 
+is good or bad might obscure the bug, but well, guess that's something to try on 
+the weekend.
+
+Offhand, though, is there anything I should keep an eye out for that can do 
+things like setting mb[] to 0x0 (i.e., things you guys might've seen happen in 
+the past?).  And what do those numbers for 'mailbox0', 'ictrl', and 'istatus' 
+mean (I'm guessing not much, because they're probably qla1040-specific error 
+codes that require chip docs to understand).
+
+
+--Kumba
+
+-- 
+Gentoo/MIPS Team Lead
+Gentoo Foundation Board of Trustees
+
+"Such is oft the course of deeds that move the wheels of the world: small hands 
+do them because they must, while the eyes of the great are elsewhere."  --Elrond
