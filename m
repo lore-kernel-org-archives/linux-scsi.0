@@ -1,38 +1,37 @@
 From: Russell King <rmk+lkml@arm.linux.org.uk>
 Subject: Re: [BUG 2.6.17-git] kmem_cache_create: duplicate cache scsi_cmd_cache
-Date: Fri, 12 May 2006 21:37:50 +0100
-Message-ID: <20060512203749.GB17120@flint.arm.linux.org.uk>
-References: <20060511151456.GD3755@harddisk-recovery.com> <15ddcffd0605112153q57f139a1k7068e204a3eeaf1f@mail.gmail.com> <20060512171632.GA29077@harddisk-recovery.com> <Pine.LNX.4.64.0605121024310.3866@g5.osdl.org> <1147456038.3769.39.camel@mulgrave.il.steeleye.com> <1147460325.3769.46.camel@mulgrave.il.steeleye.com>
+Date: Fri, 12 May 2006 21:38:50 +0100
+Message-ID: <20060512203850.GC17120@flint.arm.linux.org.uk>
+References: <20060511151456.GD3755@harddisk-recovery.com> <15ddcffd0605112153q57f139a1k7068e204a3eeaf1f@mail.gmail.com> <20060512171632.GA29077@harddisk-recovery.com> <Pine.LNX.4.64.0605121024310.3866@g5.osdl.org> <1147456038.3769.39.camel@mulgrave.il.steeleye.com> <1147460325.3769.46.camel@mulgrave.il.steeleye.com> <Pine.LNX.4.64.0605121209020.3866@g5.osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([212.18.232.186]:10509 "EHLO
+Received: from caramon.arm.linux.org.uk ([212.18.232.186]:12813 "EHLO
 	caramon.arm.linux.org.uk") by vger.kernel.org with ESMTP
-	id S1750762AbWELUh4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 May 2006 16:37:56 -0400
+	id S1751364AbWELUi6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 May 2006 16:38:58 -0400
 Content-Disposition: inline
-In-Reply-To: <1147460325.3769.46.camel@mulgrave.il.steeleye.com>
+In-Reply-To: <Pine.LNX.4.64.0605121209020.3866@g5.osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Linus Torvalds <torvalds@osdl.org>, Erik Mouw <erik@harddisk-recovery.com>, Or Gerlitz <or.gerlitz@gmail.com>, linux-scsi@vger.kernel.org, axboe@suse.de, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Erik Mouw <erik@harddisk-recovery.com>, Or Gerlitz <or.gerlitz@gmail.com>, linux-scsi@vger.kernel.org, axboe@suse.de, Andrew Vasquez <andrew.vasquez@qlogic.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On Fri, May 12, 2006 at 01:58:45PM -0500, James Bottomley wrote:
-> I suggest simply reversing this patch at the moment.  If Russell and
-> Jens can tell me what they're trying to do I'll see if there's another
-> way to do it.
+On Fri, May 12, 2006 at 12:09:50PM -0700, Linus Torvalds wrote:
+> On Fri, 12 May 2006, James Bottomley wrote:
+> > I suggest simply reversing this patch at the moment.  If Russell and
+> > Jens can tell me what they're trying to do I'll see if there's another
+> > way to do it.
+> 
+> Reverted, with a big changelog entry to explain why. 
 
-When a MMC card is pulled, we remove the MMC device structure (which
-is what the driverfs_dev points at.)  At this point, the MMC layer
-*totally* forgets about the MMC device and deletes it.
+Great, I'm fucked by the SCSI folk again.
 
-Unfortunately, an uncounted reference is kept while the partition is
-mounted by the gendisk layer, which when the partition is unmounted
-via hotplug causes another hotplug event to be generated with respect
-to this freed MMC device structure, and hence you get an oops.
+Can we revert the patch which broke the MMC/SD layer - the one which
+added the mount/unmount hotplug events as well then.
 
-Since the MMC layer has lost all knowledge of the device, the only
-possible solution is as given in that patch.
+That way we get back to a working MMC/SD layer as well as a working
+SCSI layer.
 
 -- 
 Russell King
