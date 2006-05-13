@@ -1,77 +1,49 @@
-From: Al Viro <viro@ftp.linux.org.uk>
-Subject: Re: [BUG 2.6.17-git] kmem_cache_create: duplicate cache scsi_cmd_cache
-Date: Sat, 13 May 2006 01:20:36 +0100
-Message-ID: <20060513002036.GX27946@ftp.linux.org.uk>
-References: <20060512215520.GH17120@flint.arm.linux.org.uk> <20060512220807.GR27946@ftp.linux.org.uk> <Pine.LNX.4.64.0605121519420.3866@g5.osdl.org> <20060512222816.GS27946@ftp.linux.org.uk> <20060512224804.GT27946@ftp.linux.org.uk> <20060512225101.GU27946@ftp.linux.org.uk> <Pine.LNX.4.64.0605121559490.3866@g5.osdl.org> <20060512232131.GV27946@ftp.linux.org.uk> <20060512233711.GW27946@ftp.linux.org.uk> <Pine.LNX.4.64.0605121647250.3866@g5.osdl.org>
+From: =?UTF-8?Q?georgesmith=5F11?= <georgesmith_11@o2.pl>
+Subject: =?UTF-8?Q?INVESTMENT=20PROJECT=3F?=
+Date: Sat, 13 May 2006 03:06:04 +0200
+Message-ID: <52ce4eb2.680bd90f.446530fc.135e3__2432.93592143363$1147482515$gmane$org@o2.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:27039 "EHLO
-	ZenIV.linux.org.uk") by vger.kernel.org with ESMTP id S932227AbWEMAUi
+Received: from rekin8.go2.pl ([193.17.41.28]:16810 "EHLO rekin8.go2.pl")
+	by vger.kernel.org with ESMTP id S1750848AbWEMBIG convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 May 2006 20:20:38 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0605121647250.3866@g5.osdl.org>
+	Fri, 12 May 2006 21:08:06 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: Erik Mouw <erik@harddisk-recovery.com>, Or Gerlitz <or.gerlitz@gmail.com>, linux-scsi@vger.kernel.org, axboe@suse.de, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: georgesmith_11@o2.pl
 
-On Fri, May 12, 2006 at 04:50:32PM -0700, Linus Torvalds wrote:
-> 
-> 
-> On Sat, 13 May 2006, Al Viro wrote:
-> > 
-> > BTW, the best option is to kill bdev_uevent() again.  Short of that,
-> > skip PHYSDEV mess if disk doesn't have GENHD_FL_UP.
-> 
-> I do think the mount/umount events are valid and interesting, so I'd much 
-> rather see the second version.
+Dear Beloved,
 
-mount/umount events are BS, but that's a separate story.  In case you've
-missed the original discussion:
-	* mount/umount is not tied to block device; if you really want
-to track mount tree changes, you need much more; if you want to track
-the set of filesystems being active, you _still_ need more.
-	* "block device is used by fs" is valid, but bdev_uevent() is _NOT_
-that; we miss e.g. journals.
-	* "block device is being claimed exclusively" - even more interesting,
-and again, bdev_uevent() isn't it.
-	* "underlying object of _the_ block device used by a filesystem"
-is not well-defined, to put it mildly.
+I am looking for your cooperation in building a Tourist Hotel/shopping
+Mall or Real Estate in your country. I am sorry if this is not in your
+line with your business.I need an experienced person like you to assist me to set up , develop the project and assume responsibility of
+ownership as chairman but will be bringing in profit /distribute profit monthly or annually.
 
-IOW, it's a big mess.  Note that if you care about real mount events
-("set of mounts has changed") you can do that already, and get _all_
-of them - including mount --move, etc.  poll(2) on /proc/mounts
-will do that for you.  And you don't need to be priveleged for that,
-while we are at it.
+I am Dr.George Smith,a citizen of Nairobi ,Kenya.A former Presidential
+adviser on Budget and planning to the former president of Kenya,Daniel
+Ara Moi.I acuirred this money as a result of gold and diamond export.
 
-That's what hald wanted bdev_uevent() for.  All attempts to find what
-other users are really trying to get had not brought anything.
+I am currently in possession of $25.1m,which i want to use for
+investment purposes preferably in your country.Now the present
+government of Mwai ibaki has intensified efforts at probing Moi\'s
+government,goverment officials have turned their backs on us and have
+been frustrating me and others that served under Daniel Arab Moi. For
+this reason, I left Kenya for Western part of Africa, in the Calabar
+City.
 
-I'm not saying that we don't need something similar, but let's try to make
-sure it makes _sense_ and isn't just "oh, my userland code rereads too
-often; guess if I would see when kernel reaches this, this and that point
-I would be able to reduce the frequency of rereads and wouldn't miss too
-much in the cases I've ran into so far".
+That is why i need someone like you who is trustworhty and honest, to
+assist me achieve my objectives,and also manage the business for me.
+However ,I got your email information on your Hotel contact list,that
+is why i am making thisexclusive contact with you. your immediate reply will be highly appreciated and I shall give you more information on this project,and your percentage and all what is expected of you.
 
-In the current form bdev_uevent() makes no sense.  It pushes a lot of
-vaguely related stuff and doesn't cover _any_ sane use fully.
+You call me my numbers :234-8033-585896
+Reply to this my email address::georgesmith@casinomail.com
+Your responseis higly welcomed.
 
-So yeah, I'm seriously pissed off at the bdev_uevent() merge - at hald
-crowd for pushing it to gregkh, at gregkh for blindly passing it on
-and at myself for missing it back then.  Note that as soon as hald folks
-_did_ explain what they really wanted, they've got a sane solution (and
-are using it now just fine).
+Thanks and God bless.
 
-> However, that does beg the question: wouldn't that effectively be what the 
-> patch I posted would do? Notably the "disk->driverfs_dev = NULL" part 
-> after we've dropped it (the "KOBJ_REMOVE" event move is a separate issue, 
-> mixed here into the same patch, but should result in possibly better name 
-> generation for the event).
-> 
-> Basically, onces driverfs_dev has been dropped, we NULL it out, and then 
-> the people who use it automatically get the right result.
+I Remain Yours;
+Dr.George Smith
 
-More or less.  We don't want to mess with refcounts at all; aside of that,
-yes, checking if it's NULL is OK.  subsystem mutex should be enough, AFAICS.
