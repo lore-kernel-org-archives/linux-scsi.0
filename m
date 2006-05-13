@@ -1,118 +1,97 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 02/22] SCSI: implement host_eh_scheduled hack for libata
-Date: Sat, 13 May 2006 17:34:54 -0400
-Message-ID: <446650FE.8050308@pobox.com>
-References: <11473487904197-git-send-email-htejun@gmail.com>
+From: Jesper Juhl <jesper.juhl@gmail.com>
+Subject: [PATCH] fix (unlikely) memory leak in DAC960 driver
+Date: Sun, 14 May 2006 00:39:38 +0200
+Message-ID: <200605140039.38385.jesper.juhl@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <11473487904197-git-send-email-htejun@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from nf-out-0910.google.com ([64.233.182.185]:40325 "EHLO
+	nf-out-0910.google.com") by vger.kernel.org with ESMTP
+	id S932378AbWEMWip (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 13 May 2006 18:38:45 -0400
+Received: by nf-out-0910.google.com with SMTP id p46so184226nfa
+        for <linux-scsi@vger.kernel.org>; Sat, 13 May 2006 15:38:43 -0700 (PDT)
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Andrew Morton <akpm@osdl.org>, James.Bottomley@hansenpartnership.com, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org, Jesper Juhl <jesper.juhl@gmail.com>
 
-Tejun Heo wrote:
-> libata needs to invoke EH without scmd.  This patch adds
-> shost->host_eh_scheduled to implement such behavior.
-> 
-> As this is a temporary hack for libata, no general interface is
-> defined.  This patch simply adds handling for host_eh_scheduled where
-> needed and exports scsi_eh_wakeup() to modules.  The rest is upto
-> libata.
-> 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
+The Coverity checker found a memory leak (bug nr. 1245) in
+ drivers/block/DAC960.c::DAC960_V2_ProcessCompletedCommand()
 
-I ACK the change (the important part), but not the description or comments.
+The leak is pretty unlikely since it requires that the first of two 
+successive kmalloc() calls fail while the second one succeeds. But it can 
+still happen even if it's unlikely.
 
-Rationale for ACK (if it matters):  Back when the first version of this 
-was posted, after our initial discussion I reviewed the uses of 
-->host_failed and ->host_busy, and had considered twiddling those rather 
-than adding another state variable.  Being in EH when host_failed==0 
-made me nervous.  However, after reviewing the uses, I now feel that 
-your approach presented probably creates less complex code.
+If the first call that allocates 'PhysicalDeviceInfo' fails but the one 
+that allocates 'InquiryUnitSerialNumber' succeeds, then we will leak the 
+memory allocated to 'InquiryUnitSerialNumber' when the variable goes out 
+of scope.
+
+A simple fix for this is to change the existing code that frees 
+'PhysicalDeviceInfo' if that one was allocated but 
+'InquiryUnitSerialNumber' was not, into a check for either pointer 
+being NULL and if so just free both. This is safe since kfree() can 
+deal with being passed a NULL pointer and it avoids the leak.
+
+While I was there I also removed the casts of the kmalloc() return 
+value since it's pointless.
+I also updated the driver version since this patch changes the workings of
+the code (however slightly).
+
+This issue could probably be fixed a lot more elegantly, but the code 
+is a big mess IMHO and I just took the least intrusive route to a fix 
+that I could find instead of starting on a cleanup as well (that can 
+come later).
+ 
+Please consider for inclusion.
+
+
+Signed-off-by: Jesper Juhl <jesper.juhl@gmail.com>
+---
+
+ drivers/block/DAC960.c |   13 +++++++------
+ 1 files changed, 7 insertions(+), 6 deletions(-)
+
+--- linux-2.6.17-rc4-git2-orig/drivers/block/DAC960.c	2006-05-13 21:28:19.000000000 +0200
++++ linux-2.6.17-rc4-git2/drivers/block/DAC960.c	2006-05-14 00:31:16.000000000 +0200
+@@ -17,8 +17,8 @@
+ */
+ 
+ 
+-#define DAC960_DriverVersion			"2.5.47"
+-#define DAC960_DriverDate			"14 November 2002"
++#define DAC960_DriverVersion			"2.5.48"
++#define DAC960_DriverDate			"14 May 2006"
+ 
+ 
+ #include <linux/module.h>
+@@ -4780,15 +4780,16 @@ static void DAC960_V2_ProcessCompletedCo
+ 	      (NewPhysicalDeviceInfo->LogicalUnit !=
+ 	       PhysicalDeviceInfo->LogicalUnit))
+ 	    {
+-	      PhysicalDeviceInfo = (DAC960_V2_PhysicalDeviceInfo_T *)
++	      PhysicalDeviceInfo =
+ 		kmalloc(sizeof(DAC960_V2_PhysicalDeviceInfo_T), GFP_ATOMIC);
+ 	      InquiryUnitSerialNumber =
+-		(DAC960_SCSI_Inquiry_UnitSerialNumber_T *)
+ 		  kmalloc(sizeof(DAC960_SCSI_Inquiry_UnitSerialNumber_T),
+ 			  GFP_ATOMIC);
+-	      if (InquiryUnitSerialNumber == NULL &&
+-		  PhysicalDeviceInfo != NULL)
++	      if (InquiryUnitSerialNumber == NULL ||
++		  PhysicalDeviceInfo == NULL)
+ 		{
++		  kfree(InquiryUnitSerialNumber);
++		  InquiryUnitSerialNumber = NULL;
+ 		  kfree(PhysicalDeviceInfo);
+ 		  PhysicalDeviceInfo = NULL;
+ 		}
 
 
 
-> b3095135fd8d02d5b31591d87243afb3aeb217da
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index 1c75646..442ae59 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -56,6 +56,7 @@ void scsi_eh_wakeup(struct Scsi_Host *sh
->  				printk("Waking error handler thread\n"));
->  	}
->  }
-> +EXPORT_SYMBOL_GPL(scsi_eh_wakeup);	/* exported only for libata */
->  
->  /**
->   * scsi_eh_scmd_add - add scsi cmd to error handling.
-> @@ -1517,7 +1518,7 @@ int scsi_error_handler(void *data)
->  	 */
->  	set_current_state(TASK_INTERRUPTIBLE);
->  	while (!kthread_should_stop()) {
-> -		if (shost->host_failed == 0 ||
-> +		if ((shost->host_failed == 0 && shost->host_eh_scheduled == 0) ||
->  		    shost->host_failed != shost->host_busy) {
->  			SCSI_LOG_ERROR_RECOVERY(1,
->  				printk("Error handler scsi_eh_%d sleeping\n",
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 7b0f9a3..c55d195 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -566,7 +566,7 @@ void scsi_device_unbusy(struct scsi_devi
->  	spin_lock_irqsave(shost->host_lock, flags);
->  	shost->host_busy--;
->  	if (unlikely(scsi_host_in_recovery(shost) &&
-> -		     shost->host_failed))
-> +		     (shost->host_failed || shost->host_eh_scheduled)))
->  		scsi_eh_wakeup(shost);
->  	spin_unlock(shost->host_lock);
->  	spin_lock(sdev->request_queue->queue_lock);
-> diff --git a/include/scsi/scsi_eh.h b/include/scsi/scsi_eh.h
-> index d160880..e31ada2 100644
-> --- a/include/scsi/scsi_eh.h
-> +++ b/include/scsi/scsi_eh.h
-> @@ -35,6 +35,7 @@ static inline int scsi_sense_valid(struc
->  }
->  
->  
-> +extern void scsi_eh_wakeup(struct Scsi_Host *shost);	/* libata only */
->  extern void scsi_eh_finish_cmd(struct scsi_cmnd *scmd,
->  			       struct list_head *done_q);
->  extern void scsi_eh_flush_done_q(struct list_head *done_q);
-> diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-> index de6ce54..3b454c2 100644
-> --- a/include/scsi/scsi_host.h
-> +++ b/include/scsi/scsi_host.h
-> @@ -472,6 +472,7 @@ struct Scsi_Host {
->  	 */
->  	unsigned int host_busy;		   /* commands actually active on low-level */
->  	unsigned int host_failed;	   /* commands that failed. */
-> +	unsigned int host_eh_scheduled;	   /* XXX - libata hack, do NOT use */
-
-However, the nitpicks I have with the comments and patch description:
-
-* Although your comments about "libata only" are true, it is more 
-correct to say that these are exclusive to ->eh_strategy_handler() 
-users.  It just so happens that libata is the only in-tree user... 
-however when making changes to the SCSI driver API, you should be in a 
-"I'm updating the SCSI EH API" frame of mine as well.
-
-* In your patch description you mention this change (or a subset 
-thereof) is temporary, but do not explain why it is temporary, and what 
-will be the eventual replacement.
-
-* In general this change should be described as an addition to the SCSI 
-LLDD EH API...  I even disagree to some extent of calling it a hack. 
-One must Do What Needs To Be Done, And No More.  There is no shame in 
-that :)
-
-The ->eh_strategy_handler API is guaranteed to be rough, because there 
-weren't really any in-tree users until libata came along.  Now we're 
-exposing the rough edges, and fixing them.
-
-	Jeff
 
 
