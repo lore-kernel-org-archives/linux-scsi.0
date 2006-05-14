@@ -1,75 +1,60 @@
-From: "don_george120@katamail.com" <don_george120@katamail.com>
-Subject: SINCERE  COMPENSATION
-Date: Sun, 14 May 2006 15:50:43 +0000
-Message-ID: <81.199.146.130.1252555348.1147621847@webmail.katamail.com>
+From: Russell King <rmk+lkml@arm.linux.org.uk>
+Subject: Re: [BUG 2.6.17-git] kmem_cache_create: duplicate cache scsi_cmd_cache
+Date: Sun, 14 May 2006 17:01:44 +0100
+Message-ID: <20060514160144.GA28324@flint.arm.linux.org.uk>
+References: <1147460325.3769.46.camel@mulgrave.il.steeleye.com> <Pine.LNX.4.64.0605121209020.3866@g5.osdl.org> <20060512203850.GC17120@flint.arm.linux.org.uk> <Pine.LNX.4.64.0605121346060.3866@g5.osdl.org> <20060512205804.GD17120@flint.arm.linux.org.uk> <Pine.LNX.4.64.0605121409250.3866@g5.osdl.org> <20060512215151.GG17120@flint.arm.linux.org.uk> <Pine.LNX.4.64.0605121508590.3866@g5.osdl.org> <Pine.LNX.4.64.0605121532360.3866@g5.osdl.org> <20060512235745.GA31148@suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="_I.MAIL_boundary_oYaLuKnCjKaCmUjQlFpV1147621847"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fe-7c.inet.it ([213.92.5.114]:22454 "EHLO fe-7c.inet.it")
-	by vger.kernel.org with ESMTP id S1751464AbWENP4l (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 14 May 2006 11:56:41 -0400
+Received: from caramon.arm.linux.org.uk ([212.18.232.186]:30482 "EHLO
+	caramon.arm.linux.org.uk") by vger.kernel.org with ESMTP
+	id S1751478AbWENQB7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 14 May 2006 12:01:59 -0400
+Content-Disposition: inline
+In-Reply-To: <20060512235745.GA31148@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Greg KH <gregkh@suse.de>
+Cc: Linus Torvalds <torvalds@osdl.org>, James Bottomley <James.Bottomley@SteelEye.com>, Erik Mouw <erik@harddisk-recovery.com>, Or Gerlitz <or.gerlitz@gmail.com>, linux-scsi@vger.kernel.org, axboe@suse.de, Andrew Vasquez <andrew.vasquez@qlogic.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Todd Blumer <todd@sdgsystems.com>
 
---_I.MAIL_boundary_oYaLuKnCjKaCmUjQlFpV1147621847
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+On Fri, May 12, 2006 at 04:57:45PM -0700, Greg KH wrote:
+> On Fri, May 12, 2006 at 03:37:59PM -0700, Linus Torvalds wrote:
+> > On Fri, 12 May 2006, Linus Torvalds wrote:
+> > > On Fri, 12 May 2006, Russell King wrote:
+> > > > 
+> > > > From: Todd Blumer <todd@sdgsystems.com>
+> > > > On a PXA27x handheld (iPAQ hx4700), when we eject a mounted SD memory
+> > > > card, we get a kernel panic (kernel trying to clean up non-existent
+> > > > device). One hack patch to avoid the panic is:
+> > > > 
+> > > > --- fs/partitions/check.c       10 Apr 2006 22:57:27 -0000      1.15
+> > > > +++ fs/partitions/check.c       4 May 2006 20:30:15 -0000
+> > > > @@ -491,6 +491,7 @@
+> > > >                         kfree(disk_name);
+> > > >                 }
+> > > >                 put_device(disk->driverfs_dev);
+> > > > +               disk->driverfs_dev = 0; /* HACK - what's the right solution? */
+> > > >         }
+> > > >         kobject_uevent(&disk->kobj, KOBJ_REMOVE);
+> > > >         kobject_del(&disk->kobj);
+> > > 
+> > > Btw, on the face it of, I really think that this patch is correct 
+> > > regardless of any other issues.
+> > 
+> > .. and I suspect it also shows what the "other issues" are.
+> > 
+> > Shouldn't that KOBJ_REMOVE uevent happen _before_ we do all the freeing of 
+> > the backing dev object? That KOBJ_REMOVE thing actually seems to want to 
+> > report the pathname for the disk it removes. Preferably before the thing 
+> > is gone and can't be reported on..
+> > 
+> > Ie shouldn't the diff be something like this?
+> 
+> It looks sane to me.  Russell, does it solve your oops too?
 
-DOWNLOAN N READ
+It appears to.
 
-________________________________________________________________________
-SERVIZIO VOICE: TELEFONA e INVIA SMS dal tuo computer a tariffe vantaggiose! 
-Scopri come telefonare e videochiamare gratis da pc a pc.
-http://voice.repubblica.it
-
-
-
-
---_I.MAIL_boundary_oYaLuKnCjKaCmUjQlFpV1147621847
-Content-Type: text/plain
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="don.txt"
-
-RlJPTTogRHIgRG9uIEdlb3JnZSAoUGhpbGFudHJvcGlzdCkNCkRlYXIgLA0KICAgICAgICAg
-ICAgICAgICAgICAgICBTVUJKRUNUIE1BVFRFUiA6ICBTSU5DRVJFICBDT01QRU5TQVRJT04N
-CllvdSBtaWdodCBmaW5kIGl0IHNvIGRpZmZpY3VsdCB0byByZW1lbWJlciBtZS4gVGhvdWdo
-LCBpdCBpcyBpbmRlZWQsIGEgDQp2ZXJ5IGxvbmcgdGltZS4gICBPbiBteSBzaW5ndWxhciwg
-SSBhbSBtdWNoIGRlbGlnaHRlZCBhbmQgcHJpdmlsZWdlZCB0byANCmNvbnRhY3QgeW91IGFn
-YWluLCBhZnRlciBjb3VwbGUgb2YgeWVhcnMgbm93LiAgSXQgdGFrZXMgZmF0ZSwgY291cmFn
-ZSANCmFuZCBHb2QncyBmZWFyaW5nIHRvIHJlbWVtYmVyIG9sZCBmcmllbmRzIGFuZCBhdCB0
-aGUgc2FtZSB0aW1lLCB0byBzaG93IA0KZ3JhdGlmaWNhdGlvbiB0byB0aGVtLCBkZXNwaXRl
-IGNpcmN1bXN0YW5jZXMgdGhhdCBtYWRlIHRoaW5ncywgbm90IA0Kd29ya2VkIG91dCBhcyB3
-ZSBwcm9qZWN0ZWQgdGhlbi4NCkkgdGFrZSB0aGlzIGxpYmVydHkgdG8gaW5mb3JtIHlvdSB0
-aGF0LCB0aGUgdHJhbnNhY3Rpb24gd2Ugd2VyZSBwdXJzaW5nIA0KdG9nZXRoZXIsIGZpbmFs
-bHkgd29ya2VkIG91dCBieSBHb2QncyBpbmZpbml0ZSAgbWVyY3kgYW5kIEkgZGVjaWRlZCB0
-byANCmNvbnRhY3QgeW91LCBqdXN0IHRvIGxldCB5b3Uga25vdy4gSSBoYXZlIGNvbnNjaWVu
-Y2UgYXMgYSBodW1hbiAgYmVpZ24sIA0KZHVlIHRvIHlvdXIgdHJlbWVuZGlvdXMgZWZmb3J0
-IGFuZCBjb250cmlidXRpb24gdG8gbWFrZSB0aGluZ3Mgd29yayBvdXQgDQppbiByZXRyb3Nw
-ZWN0Lg0KTWVhbndoaWxlLCAgSSBtdXN0IGluZm9ybSB5b3UgdGhhdCwgSSBhbSBwcmVzZW50
-bHkgaW4gTHV4ZW1idXJnIGZvciANCm51bWVyb3VzIGJ1c2luZXNzIG5lZ290aWF0aW9ucyBh
-bmQgZXN0YWJsaXNobWVudC4gSSBqdXN0IGFycml2ZWQgeWVzdGVyZGF5IA0KbmlnaHQgYW5k
-IGNoZWNrZWQgaW5uLCBpbiBhIGhvdGVsIGFuZCBkZWNpZGVkIHRvIGdvIGRvd24gdG8gdGhl
-IGhvdGVsIA0KYnVzaW5lc3MgY2VudHJlIHRvIG1haWwgeW91LiBOb3csIHdpdGggbXkgc2lu
-Y2VyZSBoZWFydCwgSSBoYXZlIHJhaXNlZCANCmFuZCBzaWduZWQgYW4gSW50ZXJuYXRpb25h
-bCBDYXNoaWVyJ3MgQmFuayBEcmFmdCwgdG8gdGhlIHR1bmUgb2YgDQpVU0QkNTIwLDAwMC4w
-MCAoIEZJVkUgSFVORFJFRCBBTkQgVFdFTlRZIFRIT1VTQU5EIERFQ0lNQUwgWkVSTy1aRVJP
-IFVOSVRFRCANClNUQVRFUyBET0xMQVJTKSBvbmx5IGluIHlvdXIgbmFtZSBhcyBDT01QRU5T
-QVRJT04gdG8geW91ciBkZWRpY2F0aW9uLCANCmh1bWFuaXR5IGFuZCBjb250cmlidXRpb24s
-IGFzIGl0IHdlcmUuDQpQbGVhc2UsIGNvbnRhY3QgTk9XLCBteSBjb25maWRlbnRpYWwgc2Vj
-cmV0YXJ5LGhpcyBuYW1lIGlzOg0KTVIuQnJ1Y2UgVWxhbmQoIFNlY3JldGF5KQ0KRS1tYWls
-IDpkYW5fb2swNjZAZXhjaXRlLmNvbQ0KVEVsICA6MjM0LTgwMjMxMDIzMzINCllvdSBhcmUg
-dG8gZm9yd2FyZCB0byBoaW0sIHRoZSBmb2xsb3dpbmcgOg0KMS4gIFlPVVIgRlVMTCBOQU1F
-ICYgQUREUkVTUw0KMi4gIFlPVVIgVEVMRVBIT05FIE5VTUJFUiAoIElmIG5lY2Vzc2F5KQ0K
-SGUsIHdpbGwgYWR2aXNlIHlvdSBmdXJ0aGVyIGFib3V0IHRoZSBzaGlwbWVudCBvZiB0aGUg
-SUNCRCB0byB5b3VyIA0KUmVzaWRlbmNlIEFkZHJlc3Mgb3IgT2ZmaWNlIEFkZHJlc3MgeW91
-IG1heSBwcm92aWRlZC4gIEZlZWwgZnJlZSB0byByZWFjaCANCnZpYSB0aGlzIHZlcnkgbWFp
-bCBhZGRyZXNzLiBNb3N0IGltcG9ydGFudGx5LCB0aGUgSUNCRCBoYXMgb25seSB2YWxpZGl0
-eSANCnBlcmlvZCBvZiAxMiBiYW5raW5nIGRheXMuDQpTbywgeW91ciBlYXJseSByZXNwb25z
-ZSB0byB0aGF0IGVmZmVjdCwgc2hhbGwgYmUgYWRtaXJlZC4gWW91IGhhdmUgdG8gDQptaW5k
-IHRoZSBkYXlzIG9uIHJvdXRlIHNoaXBtZW50Lg0KU2luY2VyZWx5IFlvdXJzLA0KRHIgRG9u
-IEdlb3JnZQ0KKFBoaWxhbnRyb3Bpc3Qp
-
-
---_I.MAIL_boundary_oYaLuKnCjKaCmUjQlFpV1147621847--
-
+-- 
+Russell King
+ Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
+ maintainer of:  2.6 Serial core
