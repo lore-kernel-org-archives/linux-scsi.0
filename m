@@ -1,97 +1,65 @@
-From: Jesper Juhl <jesper.juhl@gmail.com>
-Subject: [PATCH] fix (unlikely) memory leak in DAC960 driver
-Date: Sun, 14 May 2006 00:39:38 +0200
-Message-ID: <200605140039.38385.jesper.juhl@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [RFC] libata support for async scanning
+Date: Sat, 13 May 2006 21:26:04 -0400
+Message-ID: <4466872C.5010201@garzik.org>
+References: <20060513050529.GS12272@parisc-linux.org> <44656BBE.7020806@garzik.org> <20060513131639.GT12272@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.185]:40325 "EHLO
-	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S932378AbWEMWip (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 13 May 2006 18:38:45 -0400
-Received: by nf-out-0910.google.com with SMTP id p46so184226nfa
-        for <linux-scsi@vger.kernel.org>; Sat, 13 May 2006 15:38:43 -0700 (PDT)
-Content-Disposition: inline
+Received: from srv5.dvmed.net ([207.36.208.214]:22924 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1750706AbWENB0H (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 13 May 2006 21:26:07 -0400
+In-Reply-To: <20060513131639.GT12272@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Andrew Morton <akpm@osdl.org>, James.Bottomley@hansenpartnership.com, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org, Jesper Juhl <jesper.juhl@gmail.com>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org
 
-The Coverity checker found a memory leak (bug nr. 1245) in
- drivers/block/DAC960.c::DAC960_V2_ProcessCompletedCommand()
+Matthew Wilcox wrote:
+> On Sat, May 13, 2006 at 01:16:46AM -0400, Jeff Garzik wrote:
+>> Matthew Wilcox wrote:
+>>> I don't think SATA target scanning occupies a huge amount of boot time,
+>>> however it will currently force all async scanners to complete before it
+>>> scans.  The Rolls-Royce solution would be somethinkg akin to the new
+>>> scsi_scan_host(), but I don't think that's necessaary.  This patch just
+>>> acknowledges that async scanning exists and will permit the drive
+>>> additions to finish some time after libata has triggered the probe.
+>> This seems to add needless complexity.
+> 
+> It doesn't, honest.
+> 
+>> The internal probe is complete before the loop begins.  Thus, 
+>> ata_scan_scan_host() is simply walking data structures in memory (due to 
+>> SCSI simulator) for ATA devices, and for ATAPI devices parallelism is 
+>> largely inadvisable :)  Its overkill, and in some rare cases could make 
+>> debugging more annoying.
+> 
+> It won't be parallelised with respect to itself, just with respect to
+> other scsi scans.  See my message
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=114735805518594&w=2
+> 
+> Without this patch (on top of that one), libata's calls to
+> scsi_scan_target() will block until all asynchronous scans have
+> completed (see the conditional call to scsi_complete_async_scans() in
+> scsi_scan_target()).  With this patch, libata will scan the targets
+> in parallel with other scsi hosts scanning their targets.  It will still
+> block, but it'll do it later, when it calls scsi_finish_async_scan().
+> 
+> Hmm.  Maybe I can improve the API such that scsi_finish_async_scan()
+> won't make it block ...
+> 
+> Anyway, the point here is actually to make your life easier.  If someone
+> has a lot of scsi hosts and libata doesn't have this patch, all of a
+> sudden people are going to be asking you why libata's taking so long to
+> initialise.  And if you debug it, you'll find it's sleeping in
+> scsi_complete_async_scans().
 
-The leak is pretty unlikely since it requires that the first of two 
-successive kmalloc() calls fail while the second one succeeds. But it can 
-still happen even if it's unlikely.
+First of all, let's establish the large I-dont-care factor on my part. 
+I think its an academic exercise that none will notice, with respect to 
+libata, but I won't NAK your patch...
 
-If the first call that allocates 'PhysicalDeviceInfo' fails but the one 
-that allocates 'InquiryUnitSerialNumber' succeeds, then we will leak the 
-memory allocated to 'InquiryUnitSerialNumber' when the variable goes out 
-of scope.
-
-A simple fix for this is to change the existing code that frees 
-'PhysicalDeviceInfo' if that one was allocated but 
-'InquiryUnitSerialNumber' was not, into a check for either pointer 
-being NULL and if so just free both. This is safe since kfree() can 
-deal with being passed a NULL pointer and it avoids the leak.
-
-While I was there I also removed the casts of the kmalloc() return 
-value since it's pointless.
-I also updated the driver version since this patch changes the workings of
-the code (however slightly).
-
-This issue could probably be fixed a lot more elegantly, but the code 
-is a big mess IMHO and I just took the least intrusive route to a fix 
-that I could find instead of starting on a cleanup as well (that can 
-come later).
- 
-Please consider for inclusion.
-
-
-Signed-off-by: Jesper Juhl <jesper.juhl@gmail.com>
----
-
- drivers/block/DAC960.c |   13 +++++++------
- 1 files changed, 7 insertions(+), 6 deletions(-)
-
---- linux-2.6.17-rc4-git2-orig/drivers/block/DAC960.c	2006-05-13 21:28:19.000000000 +0200
-+++ linux-2.6.17-rc4-git2/drivers/block/DAC960.c	2006-05-14 00:31:16.000000000 +0200
-@@ -17,8 +17,8 @@
- */
- 
- 
--#define DAC960_DriverVersion			"2.5.47"
--#define DAC960_DriverDate			"14 November 2002"
-+#define DAC960_DriverVersion			"2.5.48"
-+#define DAC960_DriverDate			"14 May 2006"
- 
- 
- #include <linux/module.h>
-@@ -4780,15 +4780,16 @@ static void DAC960_V2_ProcessCompletedCo
- 	      (NewPhysicalDeviceInfo->LogicalUnit !=
- 	       PhysicalDeviceInfo->LogicalUnit))
- 	    {
--	      PhysicalDeviceInfo = (DAC960_V2_PhysicalDeviceInfo_T *)
-+	      PhysicalDeviceInfo =
- 		kmalloc(sizeof(DAC960_V2_PhysicalDeviceInfo_T), GFP_ATOMIC);
- 	      InquiryUnitSerialNumber =
--		(DAC960_SCSI_Inquiry_UnitSerialNumber_T *)
- 		  kmalloc(sizeof(DAC960_SCSI_Inquiry_UnitSerialNumber_T),
- 			  GFP_ATOMIC);
--	      if (InquiryUnitSerialNumber == NULL &&
--		  PhysicalDeviceInfo != NULL)
-+	      if (InquiryUnitSerialNumber == NULL ||
-+		  PhysicalDeviceInfo == NULL)
- 		{
-+		  kfree(InquiryUnitSerialNumber);
-+		  InquiryUnitSerialNumber = NULL;
- 		  kfree(PhysicalDeviceInfo);
- 		  PhysicalDeviceInfo = NULL;
- 		}
-
-
-
+	Jeff
 
 
