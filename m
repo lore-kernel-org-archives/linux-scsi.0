@@ -1,35 +1,75 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 01/22] SCSI: Introduce scsi_req_abort_cmd (REPOST)
-Date: Sat, 13 May 2006 22:12:36 -0400
-Message-ID: <44669214.7070309@pobox.com>
-References: <20060514020833.88076.qmail@web31813.mail.mud.yahoo.com>
+From: "don_george120@katamail.com" <don_george120@katamail.com>
+Subject: SINCERE  COMPENSATION
+Date: Sun, 14 May 2006 15:50:43 +0000
+Message-ID: <81.199.146.130.1252555348.1147621847@webmail.katamail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20060514020833.88076.qmail@web31813.mail.mud.yahoo.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: ltuikov@yahoo.com
-Cc: Tejun Heo <htejun@gmail.com>, alan@lxorguk.ukuu.org.uk, axboe@suse.de, albertcc@tw.ibm.com, forrest.zhao@intel.com, efalk@google.com, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: multipart/mixed; boundary="_I.MAIL_boundary_oYaLuKnCjKaCmUjQlFpV1147621847"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from fe-7c.inet.it ([213.92.5.114]:22454 "EHLO fe-7c.inet.it")
+	by vger.kernel.org with ESMTP id S1751464AbWENP4l (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 14 May 2006 11:56:41 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Luben Tuikov wrote:
-> --- Jeff Garzik <jgarzik@pobox.com> wrote:
-> 
->> Luben Tuikov wrote:
->>> Now that's the patch in its entirety, Jeff.
->>>
->>>      Luben
->>
->> hehe, thanks Dad :)
-> 
-> It is not very nice to chop off the patch email which GIT generated,
-> and then claim, as you did, that that was the whole thing, when
-> it clearly it was not.
+--_I.MAIL_boundary_oYaLuKnCjKaCmUjQlFpV1147621847
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 
-Clearly, its a conspiracy.  No one ever makes mistakes.
+DOWNLOAN N READ
 
-	Jeff
+________________________________________________________________________
+SERVIZIO VOICE: TELEFONA e INVIA SMS dal tuo computer a tariffe vantaggiose! 
+Scopri come telefonare e videochiamare gratis da pc a pc.
+http://voice.repubblica.it
 
 
+
+
+--_I.MAIL_boundary_oYaLuKnCjKaCmUjQlFpV1147621847
+Content-Type: text/plain
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="don.txt"
+
+RlJPTTogRHIgRG9uIEdlb3JnZSAoUGhpbGFudHJvcGlzdCkNCkRlYXIgLA0KICAgICAgICAg
+ICAgICAgICAgICAgICBTVUJKRUNUIE1BVFRFUiA6ICBTSU5DRVJFICBDT01QRU5TQVRJT04N
+CllvdSBtaWdodCBmaW5kIGl0IHNvIGRpZmZpY3VsdCB0byByZW1lbWJlciBtZS4gVGhvdWdo
+LCBpdCBpcyBpbmRlZWQsIGEgDQp2ZXJ5IGxvbmcgdGltZS4gICBPbiBteSBzaW5ndWxhciwg
+SSBhbSBtdWNoIGRlbGlnaHRlZCBhbmQgcHJpdmlsZWdlZCB0byANCmNvbnRhY3QgeW91IGFn
+YWluLCBhZnRlciBjb3VwbGUgb2YgeWVhcnMgbm93LiAgSXQgdGFrZXMgZmF0ZSwgY291cmFn
+ZSANCmFuZCBHb2QncyBmZWFyaW5nIHRvIHJlbWVtYmVyIG9sZCBmcmllbmRzIGFuZCBhdCB0
+aGUgc2FtZSB0aW1lLCB0byBzaG93IA0KZ3JhdGlmaWNhdGlvbiB0byB0aGVtLCBkZXNwaXRl
+IGNpcmN1bXN0YW5jZXMgdGhhdCBtYWRlIHRoaW5ncywgbm90IA0Kd29ya2VkIG91dCBhcyB3
+ZSBwcm9qZWN0ZWQgdGhlbi4NCkkgdGFrZSB0aGlzIGxpYmVydHkgdG8gaW5mb3JtIHlvdSB0
+aGF0LCB0aGUgdHJhbnNhY3Rpb24gd2Ugd2VyZSBwdXJzaW5nIA0KdG9nZXRoZXIsIGZpbmFs
+bHkgd29ya2VkIG91dCBieSBHb2QncyBpbmZpbml0ZSAgbWVyY3kgYW5kIEkgZGVjaWRlZCB0
+byANCmNvbnRhY3QgeW91LCBqdXN0IHRvIGxldCB5b3Uga25vdy4gSSBoYXZlIGNvbnNjaWVu
+Y2UgYXMgYSBodW1hbiAgYmVpZ24sIA0KZHVlIHRvIHlvdXIgdHJlbWVuZGlvdXMgZWZmb3J0
+IGFuZCBjb250cmlidXRpb24gdG8gbWFrZSB0aGluZ3Mgd29yayBvdXQgDQppbiByZXRyb3Nw
+ZWN0Lg0KTWVhbndoaWxlLCAgSSBtdXN0IGluZm9ybSB5b3UgdGhhdCwgSSBhbSBwcmVzZW50
+bHkgaW4gTHV4ZW1idXJnIGZvciANCm51bWVyb3VzIGJ1c2luZXNzIG5lZ290aWF0aW9ucyBh
+bmQgZXN0YWJsaXNobWVudC4gSSBqdXN0IGFycml2ZWQgeWVzdGVyZGF5IA0KbmlnaHQgYW5k
+IGNoZWNrZWQgaW5uLCBpbiBhIGhvdGVsIGFuZCBkZWNpZGVkIHRvIGdvIGRvd24gdG8gdGhl
+IGhvdGVsIA0KYnVzaW5lc3MgY2VudHJlIHRvIG1haWwgeW91LiBOb3csIHdpdGggbXkgc2lu
+Y2VyZSBoZWFydCwgSSBoYXZlIHJhaXNlZCANCmFuZCBzaWduZWQgYW4gSW50ZXJuYXRpb25h
+bCBDYXNoaWVyJ3MgQmFuayBEcmFmdCwgdG8gdGhlIHR1bmUgb2YgDQpVU0QkNTIwLDAwMC4w
+MCAoIEZJVkUgSFVORFJFRCBBTkQgVFdFTlRZIFRIT1VTQU5EIERFQ0lNQUwgWkVSTy1aRVJP
+IFVOSVRFRCANClNUQVRFUyBET0xMQVJTKSBvbmx5IGluIHlvdXIgbmFtZSBhcyBDT01QRU5T
+QVRJT04gdG8geW91ciBkZWRpY2F0aW9uLCANCmh1bWFuaXR5IGFuZCBjb250cmlidXRpb24s
+IGFzIGl0IHdlcmUuDQpQbGVhc2UsIGNvbnRhY3QgTk9XLCBteSBjb25maWRlbnRpYWwgc2Vj
+cmV0YXJ5LGhpcyBuYW1lIGlzOg0KTVIuQnJ1Y2UgVWxhbmQoIFNlY3JldGF5KQ0KRS1tYWls
+IDpkYW5fb2swNjZAZXhjaXRlLmNvbQ0KVEVsICA6MjM0LTgwMjMxMDIzMzINCllvdSBhcmUg
+dG8gZm9yd2FyZCB0byBoaW0sIHRoZSBmb2xsb3dpbmcgOg0KMS4gIFlPVVIgRlVMTCBOQU1F
+ICYgQUREUkVTUw0KMi4gIFlPVVIgVEVMRVBIT05FIE5VTUJFUiAoIElmIG5lY2Vzc2F5KQ0K
+SGUsIHdpbGwgYWR2aXNlIHlvdSBmdXJ0aGVyIGFib3V0IHRoZSBzaGlwbWVudCBvZiB0aGUg
+SUNCRCB0byB5b3VyIA0KUmVzaWRlbmNlIEFkZHJlc3Mgb3IgT2ZmaWNlIEFkZHJlc3MgeW91
+IG1heSBwcm92aWRlZC4gIEZlZWwgZnJlZSB0byByZWFjaCANCnZpYSB0aGlzIHZlcnkgbWFp
+bCBhZGRyZXNzLiBNb3N0IGltcG9ydGFudGx5LCB0aGUgSUNCRCBoYXMgb25seSB2YWxpZGl0
+eSANCnBlcmlvZCBvZiAxMiBiYW5raW5nIGRheXMuDQpTbywgeW91ciBlYXJseSByZXNwb25z
+ZSB0byB0aGF0IGVmZmVjdCwgc2hhbGwgYmUgYWRtaXJlZC4gWW91IGhhdmUgdG8gDQptaW5k
+IHRoZSBkYXlzIG9uIHJvdXRlIHNoaXBtZW50Lg0KU2luY2VyZWx5IFlvdXJzLA0KRHIgRG9u
+IEdlb3JnZQ0KKFBoaWxhbnRyb3Bpc3Qp
+
+
+--_I.MAIL_boundary_oYaLuKnCjKaCmUjQlFpV1147621847--
 
