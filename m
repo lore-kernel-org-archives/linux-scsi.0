@@ -1,49 +1,51 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] hptiop: HighPoint RocketRAID 3xxx controller driver
-Date: Mon, 15 May 2006 03:25:15 -0400
-Message-ID: <44682CDB.9080804@garzik.org>
-References: <200605122209.k4CM95oW014664@mail.hypersurf.com>	 <041901c677e7$fdd9fbf0$1200a8c0@GMM> <1147676215.3121.2.camel@laptopd505.fenrus.org>
+From: Jes Sorensen <jes@sgi.com>
+Subject: Re: qla1280: failing mbox check
+Date: 15 May 2006 05:13:34 -0400
+Message-ID: <yq0r72vps5d.fsf@jaguar.mkp.net>
+References: <446409CA.2090100@gentoo.org> <yq04pzvr9dz.fsf@jaguar.mkp.net>
+	<4464888A.1000807@gentoo.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:25009 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751214AbWEOHZX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 May 2006 03:25:23 -0400
-In-Reply-To: <1147676215.3121.2.camel@laptopd505.fenrus.org>
+Received: from vanessarodrigues.com ([192.139.46.150]:52687 "EHLO
+	jaguar.mkp.net") by vger.kernel.org with ESMTP id S1750792AbWEOJNf
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 May 2006 05:13:35 -0400
+In-Reply-To: <4464888A.1000807@gentoo.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: HighPoint Linux Team <linux@highpoint-tech.com>, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Kumba <kumba@gentoo.org>
+Cc: linux-scsi@vger.kernel.org
 
-Arjan van de Ven wrote:
-> On Mon, 2006-05-15 at 14:22 +0800, HighPoint Linux Team wrote:
->> Could you give more explanation about pci posting flush? When (and why) do we need it?
-> 
-> pci posting is where the chipset internally delays (posts) writes (as
-> done by writel and such) to see if more writes will come that can then
-> be combined into one burst. While in practice these queues are finite
-> (and often have a timeout) it's bad practice to depend on that. The
-> simplest way to flush out this posting is to do a (dummy) readl() from
-> the same device. (alternative is to do dma from the device to ram, but
-> readl() is a lot easier ;)
-> 
->> In an old posting (http://lkml.org/lkml/2003/5/8/278) said pci posting flush is unnecessary - is it correct?
-> 
-> no not really, not as a general statement.
+>>>>> "Kumba" == Kumba  <kumba@gentoo.org> writes:
 
-ACK.
+Kumba> Jes Sorensen wrote:
+>> 'git bisect' is your friend here.  Cheers, Jes
 
-Generally speaking, readl() is the best way to ensure that all writes 
-have been flushed across various layers of PCI bridges, etc.
+Kumba> That was the answer I was afraid of....  Already tried using
+Kumba> git bisect to track down a bootmem allocation bug in SGI O2
+Kumba> systems (2.6.17 just broke everything it seems...), but the
+Kumba> bisection point happened to be around the time when all the
+Kumba> bitops changes were occuring (moving duplicate functions from
+Kumba> asm-mips -> asm-generic), resulting in a tree that wouldn't
+Kumba> even compile.
 
-It is particularly important to get this right if you are issuing a 
-delay (i.e. udelay) after a write.  If the write is not guaranteed to be 
-flushed at the time the delay begins, then you are no longer truly 
-delaying for the time requested.
+Kumba> Having to patch up a broken tree so it even builds to determine
+Kumba> if the bisection is good or bad might obscure the bug, but
+Kumba> well, guess that's something to try on the weekend.
 
-	Jeff
+Uh oh!, bitops changing half way? Maybe the thing to try first is to
+revert all the bitops mangling.
 
+Kumba> Offhand, though, is there anything I should keep an eye out for
+Kumba> that can do things like setting mb[] to 0x0 (i.e., things you
+Kumba> guys might've seen happen in the past?).  And what do those
+Kumba> numbers for 'mailbox0', 'ictrl', and 'istatus' mean (I'm
+Kumba> guessing not much, because they're probably qla1040-specific
+Kumba> error codes that require chip docs to understand).
 
+I believe ICTRL == interrupt control, ISTATUS == interrupt
+status. Don't have the docts in front of me though.
 
+Cheers,
+Jes
