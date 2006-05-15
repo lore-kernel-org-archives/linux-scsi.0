@@ -1,60 +1,77 @@
-From: Russell King <rmk+lkml@arm.linux.org.uk>
-Subject: Re: [BUG 2.6.17-git] kmem_cache_create: duplicate cache scsi_cmd_cache
-Date: Sun, 14 May 2006 17:01:44 +0100
-Message-ID: <20060514160144.GA28324@flint.arm.linux.org.uk>
-References: <1147460325.3769.46.camel@mulgrave.il.steeleye.com> <Pine.LNX.4.64.0605121209020.3866@g5.osdl.org> <20060512203850.GC17120@flint.arm.linux.org.uk> <Pine.LNX.4.64.0605121346060.3866@g5.osdl.org> <20060512205804.GD17120@flint.arm.linux.org.uk> <Pine.LNX.4.64.0605121409250.3866@g5.osdl.org> <20060512215151.GG17120@flint.arm.linux.org.uk> <Pine.LNX.4.64.0605121508590.3866@g5.osdl.org> <Pine.LNX.4.64.0605121532360.3866@g5.osdl.org> <20060512235745.GA31148@suse.de>
+From: "HighPoint Linux Team" <linux@highpoint-tech.com>
+Subject: Re: [PATCH] hptiop: HighPoint RocketRAID 3xxx controller driver
+Date: Mon, 15 May 2006 14:22:44 +0800
+Message-ID: <041901c677e7$fdd9fbf0$1200a8c0@GMM>
+References: <200605122209.k4CM95oW014664@mail.hypersurf.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([212.18.232.186]:30482 "EHLO
-	caramon.arm.linux.org.uk") by vger.kernel.org with ESMTP
-	id S1751478AbWENQB7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 14 May 2006 12:01:59 -0400
-Content-Disposition: inline
-In-Reply-To: <20060512235745.GA31148@suse.de>
+Received: from stats.hypersurf.com ([209.237.0.12]:24839 "EHLO
+	stats.hypersurf.com") by vger.kernel.org with ESMTP id S932114AbWEOGWa
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 May 2006 02:22:30 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <gregkh@suse.de>
-Cc: Linus Torvalds <torvalds@osdl.org>, James Bottomley <James.Bottomley@SteelEye.com>, Erik Mouw <erik@harddisk-recovery.com>, Or Gerlitz <or.gerlitz@gmail.com>, linux-scsi@vger.kernel.org, axboe@suse.de, Andrew Vasquez <andrew.vasquez@qlogic.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Todd Blumer <todd@sdgsystems.com>
+To: "\"Arjan van de Ven\"" <arjan@infradead.org>
+Cc: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, May 12, 2006 at 04:57:45PM -0700, Greg KH wrote:
-> On Fri, May 12, 2006 at 03:37:59PM -0700, Linus Torvalds wrote:
-> > On Fri, 12 May 2006, Linus Torvalds wrote:
-> > > On Fri, 12 May 2006, Russell King wrote:
-> > > > 
-> > > > From: Todd Blumer <todd@sdgsystems.com>
-> > > > On a PXA27x handheld (iPAQ hx4700), when we eject a mounted SD memory
-> > > > card, we get a kernel panic (kernel trying to clean up non-existent
-> > > > device). One hack patch to avoid the panic is:
-> > > > 
-> > > > --- fs/partitions/check.c       10 Apr 2006 22:57:27 -0000      1.15
-> > > > +++ fs/partitions/check.c       4 May 2006 20:30:15 -0000
-> > > > @@ -491,6 +491,7 @@
-> > > >                         kfree(disk_name);
-> > > >                 }
-> > > >                 put_device(disk->driverfs_dev);
-> > > > +               disk->driverfs_dev = 0; /* HACK - what's the right solution? */
-> > > >         }
-> > > >         kobject_uevent(&disk->kobj, KOBJ_REMOVE);
-> > > >         kobject_del(&disk->kobj);
-> > > 
-> > > Btw, on the face it of, I really think that this patch is correct 
-> > > regardless of any other issues.
-> > 
-> > .. and I suspect it also shows what the "other issues" are.
-> > 
-> > Shouldn't that KOBJ_REMOVE uevent happen _before_ we do all the freeing of 
-> > the backing dev object? That KOBJ_REMOVE thing actually seems to want to 
-> > report the pathname for the disk it removes. Preferably before the thing 
-> > is gone and can't be reported on..
-> > 
-> > Ie shouldn't the diff be something like this?
-> 
-> It looks sane to me.  Russell, does it solve your oops too?
 
-It appears to.
+Could you give more explanation about pci posting flush? When (and why) do we need it?
+In an old posting (http://lkml.org/lkml/2003/5/8/278) said pci posting flush is unnecessary - is it correct?
 
--- 
-Russell King
- Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
- maintainer of:  2.6 Serial core
+Thanks.
+
+>
+>> + }
+>> +
+>> + if (req != IOPMU_QUEUE_EMPTY) {
+> +  writel(req, &iop->outbound_queue);
+>
+>does this need a PCI posting flush?
+>
+>> +
+>> +static int iop_send_sync_msg(struct hptiop_hba * hba, u32 msg, u32 
+>> +millisec) {
+>> + u32 i;
+>> +
+>> + hba->msg_done = 0;
+>> +
+>> + writel(msg, &hba->iop->inbound_msgaddr0);
+>> +
+>> + for (i = 0; i < millisec; i++) {
+>> +  __iop_intr(hba);
+>> +  if (hba->msg_done)
+>> +   break;
+>> +  mdelay(1);
+>> + }
+>>
+>>and here, but here you're very clearly missing a pci posting flush
+>>
+>> + else
+>> +  arg->result = HPT_IOCTL_RESULT_FAILED;
+>> +
+>> + arg->done(arg);
+>> + writel(tag, &hba->iop->outbound_queue); }
+>
+>this looks like it needs a posting flush again
+>
+>> + memcpy(req->cdb, scp->cmnd, sizeof(req->cdb));
+>> +
+>> + writel(IOPMU_QUEUE_ADDR_HOST_BIT | _req->req_shifted_phy,
+>> +   &hba->iop->inbound_queue);
+>
+>this needs pci posting flush
+>
+>> +
+>> +static int hptiop_reset_hba(struct hptiop_hba * hba) {  if 
+>> +(atomic_xchg(&hba->resetting, 1) == 0) {
+>> +  atomic_inc(&hba->reset_count);
+>> +  writel(IOPMU_INBOUND_MSG0_RESET,
+>> +    &hba->iop->outbound_msgaddr0);
+>> + }
+>
+>this needs a pci posting flush
+
+
