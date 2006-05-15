@@ -1,51 +1,76 @@
-From: Jes Sorensen <jes@sgi.com>
-Subject: Re: qla1280: failing mbox check
-Date: 15 May 2006 05:13:34 -0400
-Message-ID: <yq0r72vps5d.fsf@jaguar.mkp.net>
-References: <446409CA.2090100@gentoo.org> <yq04pzvr9dz.fsf@jaguar.mkp.net>
-	<4464888A.1000807@gentoo.org>
+From: Maik Hampel <Maik.Hampel@xiranet.com>
+Subject: Hotplug does not work with Fusion MPT
+Date: Mon, 15 May 2006 14:08:14 +0200
+Message-ID: <1147694894.9689.15.camel@c64.dd.xiranet.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vanessarodrigues.com ([192.139.46.150]:52687 "EHLO
-	jaguar.mkp.net") by vger.kernel.org with ESMTP id S1750792AbWEOJNf
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 May 2006 05:13:35 -0400
-In-Reply-To: <4464888A.1000807@gentoo.org>
+Received: from 162.237.80.212.versanetonline.de ([212.80.237.162]:5053 "EHLO
+	cheetah.dd.xiranet.com") by vger.kernel.org with ESMTP
+	id S1751406AbWEOMIU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 May 2006 08:08:20 -0400
+Received: from c64.dd.xiranet.com (c64.dd.xiranet.com [192.168.0.130])
+	by cheetah.dd.xiranet.com (8.13.4/8.13.4/Debian-1) with ESMTP id k4FC8Fbp027138
+	for <linux-scsi@vger.kernel.org>; Mon, 15 May 2006 14:08:16 +0200
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kumba <kumba@gentoo.org>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
->>>>> "Kumba" == Kumba  <kumba@gentoo.org> writes:
+Hello,
 
-Kumba> Jes Sorensen wrote:
->> 'git bisect' is your friend here.  Cheers, Jes
+I'm using MPT-Fusion driver (linux-2.6.16.x) with LSI 53C1030 on SPI.
 
-Kumba> That was the answer I was afraid of....  Already tried using
-Kumba> git bisect to track down a bootmem allocation bug in SGI O2
-Kumba> systems (2.6.17 just broke everything it seems...), but the
-Kumba> bisection point happened to be around the time when all the
-Kumba> bitops changes were occuring (moving duplicate functions from
-Kumba> asm-mips -> asm-generic), resulting in a tree that wouldn't
-Kumba> even compile.
+I recognized, that removing a scsi-drive (connected with SCA) did not
+remove it from linux scsi subsystem. The physically removed drive was
+still listed in /proc/scsi/scsi:
 
-Kumba> Having to patch up a broken tree so it even builds to determine
-Kumba> if the bisection is good or bad might obscure the bug, but
-Kumba> well, guess that's something to try on the weekend.
+Host: scsi0 Channel: 00 Id: 04 Lun: 00
+  Vendor: FUJITSU  Model: MAP3367NC        Rev: 0108
+  Type:   Direct-Access                    ANSI SCSI revision: 03
 
-Uh oh!, bitops changing half way? Maybe the thing to try first is to
-revert all the bitops mangling.
+On access via cfdisk /dev/sdd the following error messages occured in
+syslog:
 
-Kumba> Offhand, though, is there anything I should keep an eye out for
-Kumba> that can do things like setting mb[] to 0x0 (i.e., things you
-Kumba> guys might've seen happen in the past?).  And what do those
-Kumba> numbers for 'mailbox0', 'ictrl', and 'istatus' mean (I'm
-Kumba> guessing not much, because they're probably qla1040-specific
-Kumba> error codes that require chip docs to understand).
+mptbase: ioc0: IOCStatus(0x0043): SCSI Device Not There
+sd 0:0:4:0: SCSI error: return code = 0x10000
+end_request: I/O error, dev sdd, sector 0
+Buffer I/O error on device sdd, logical block 0
+mptbase: ioc0: IOCStatus(0x0043): SCSI Device Not There
+sd 0:0:4:0: SCSI error: return code = 0x10000
+end_request: I/O error, dev sdd, sector 4
+Buffer I/O error on device sdd, logical block 1
+mptbase: ioc0: IOCStatus(0x0043): SCSI Device Not There
+sd 0:0:4:0: SCSI error: return code = 0x10000
+end_request: I/O error, dev sdd, sector 8
+Buffer I/O error on device sdd, logical block 2
+mptbase: ioc0: IOCStatus(0x0043): SCSI Device Not There
+sd 0:0:4:0: SCSI error: return code = 0x10000
+end_request: I/O error, dev sdd, sector 0
+Buffer I/O error on device sdd, logical block 0
+mptbase: ioc0: IOCStatus(0x0043): SCSI Device Not There
+sd 0:0:4:0: SCSI error: return code = 0x10000
+end_request: I/O error, dev sdd, sector 12
+Buffer I/O error on device sdd, logical block 3
+mptbase: ioc0: IOCStatus(0x0043): SCSI Device Not There
+sd 0:0:4:0: SCSI error: return code = 0x10000
+end_request: I/O error, dev sdd, sector 4
+Buffer I/O error on device sdd, logical block 1
+mptbase: ioc0: IOCStatus(0x0043): SCSI Device Not There
+sd 0:0:4:0: SCSI error: return code = 0x10000
+end_request: I/O error, dev sdd, sector 16
+Buffer I/O error on device sdd, logical block 4
+mptbase: ioc0: IOCStatus(0x0043): SCSI Device Not There
+sd 0:0:4:0: SCSI error: return code = 0x10000
+end_request: I/O error, dev sdd, sector 20
+Buffer I/O error on device sdd, logical block 5
+mptbase: ioc0: IOCStatus(0x0043): SCSI Device Not There
+sd 0:0:4:0: SCSI error: return code = 0x10000
+end_request: I/O error, dev sdd, sector 24
 
-I believe ICTRL == interrupt control, ISTATUS == interrupt
-status. Don't have the docts in front of me though.
+Any suggestions about that?
 
-Cheers,
-Jes
+
+Maik Hampel
+
+
