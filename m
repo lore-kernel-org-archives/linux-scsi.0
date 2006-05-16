@@ -1,78 +1,80 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [Fwd: [RFT] major libata update]
-Date: Tue, 16 May 2006 10:51:48 -0500
-Message-ID: <1147794708.3505.30.camel@mulgrave.il.steeleye.com>
-References: <4468B596.9090508@garzik.org>
-	 <1147789098.3505.19.camel@mulgrave.il.steeleye.com>
-	 <4469F2B2.703@garzik.org>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [REPOST][PATCH] update max sdev block limit
+Date: Tue, 16 May 2006 12:05:19 -0400
+Message-ID: <4469F83F.4030407@emulex.com>
+References: <1147358563.3507.4.camel@localhost.localdomain> <4469EB45.7070104@sgi.com>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4469F2B2.703@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from emulex.emulex.com ([138.239.112.1]:4844 "EHLO emulex.emulex.com")
+	by vger.kernel.org with ESMTP id S1751828AbWEPQC7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 May 2006 12:02:59 -0400
+In-Reply-To: <4469EB45.7070104@sgi.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Michael Reed <mdr@sgi.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, 2006-05-16 at 11:41 -0400, Jeff Garzik wrote:
-> I can't see a case _in libata operation_ where a set of circumstances 
-> arises that causes missed wakeups, can you elaborate?
+I don't mind making it bigger, especially as this is just a max, not the
+default value. I tried to keep it low, as I believe even 2 mins is a long
+time from the system's perspective. 10 minutes is forever (and remember
+the scan deadlock that we just worked through).
 
-This is scsi_eh_wakeup():
+-- james
 
-void scsi_eh_wakeup(struct Scsi_Host *shost)
-{
-	if (shost->host_busy == shost->host_failed) {
-		wake_up_process(shost->ehandler);
 
-so if you try a wakeup with no failed commands and the host still busy,
-nothing happens.
-
-> > move the prototype out of scsi_priv.h ... it should only be used by
-> > transport classes, anyway.
+Michael Reed wrote:
+> I disagree with this patch.
 > 
-> We're talking about all ->eh_strategy_handler() users, which is a valid 
-> EH API for an LLDD to choose.  Granted libata is really the only one 
-> right now.
-
-We're busy revoking the LLDD driver, so in future it will be transport
-classes only.
-
-> Long term, ->eh_strategy_handler and transport classes are block layer 
-> not SCSI level anyway, so scsi_priv.h is clearly inappropriate.
-
-That can be sorted out if someone actually gets around to moving error
-handling to the block level.  In the meantime, it's SCSI that we're
-discussing.
-
-> > 2) This scsi_req_abort_cmd() is fundamentally the wrong logic.
-> > Everything else is communicated back as a result code from the command
-> > in done().  This should be no different ... A status return of
-> > DID_FAILED which scsi_decide_disposition() always translates to FAILED
-> > would seem to do exactly what you want without all the overhead.
+> My personal opinion is that the previous value of 6000 (assume HZ==100),
+> or around 1 hour 40 minutes, was probably too long.  But, 120 seconds is too
+> short.  I would suggest a MAX value of maybe 10 minutes, or 600 seconds.
+> It appears that introducing an upper bound which is now more than an order
+> of magnitude smaller than the previous value could have some impact at
+> customer sites.
 > 
-> Inigo sez[1]:  I do not think "fundamentally wrong" means what you think 
-> it means.
+> There are raid devices which require around 200+ seconds to crash, dump,
+> reboot, and return on line.  (Yes, I've timed it!)
 > 
-> You miss the fact that the timer may have already fired, in which 
-> completing a command gets you...... not a damned thing.  scsi_done() 
-> will simply return, if the timeout has fired.  This has always been an 
-> annoying problem to work around.
-
-No ... in that case the eh is already active, and your API does this:
-
-void scsi_req_abort_cmd(struct scsi_cmnd *cmd)
-{
-	if (!scsi_delete_timer(cmd))
-		return;
-		^^^^^^^
-	scsi_times_out(cmd);
-}
-
-Which likewise does nothing if the timer has already fired, so they both
-have the same effect.
-
-James
-
-
+> Mike
+> 
+> 
+> James Smart wrote:
+>> Updated patch to address comments from Andreas Herrman, who noted that
+>> the initialization, with the HZ, was inconsistent with its use in the
+>> FC transport.
+>> --
+>> This patch ups the maximum limit for how long an sdev is allowed to
+>> be blocked. Originally, the value was 60 seconds. However, we are aware
+>> of array failover and switch reboot times that can be as high
+>> as 90 seconds. We're proposing to change the max to 120 seconds.
+>>
+>> -- james s
+>>
+>>
+>> Signed-off-by: James Smart <James.Smart@emulex.com>
+>>
+>> diff -upNr a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+>> --- a/drivers/scsi/scsi_priv.h	2006-05-10 11:36:25.000000000 -0400
+>> +++ b/drivers/scsi/scsi_priv.h	2006-05-11 10:37:57.000000000 -0400
+>> @@ -127,7 +127,7 @@ extern struct bus_type scsi_bus_type;
+>>   * classes.
+>>   */
+>>  
+>> -#define SCSI_DEVICE_BLOCK_MAX_TIMEOUT	(HZ*60)
+>> +#define SCSI_DEVICE_BLOCK_MAX_TIMEOUT	120	/* units in seconds */
+>>  extern int scsi_internal_device_block(struct scsi_device *sdev);
+>>  extern int scsi_internal_device_unblock(struct scsi_device *sdev);
+>>  
+>>
+>>
+>> -
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>>
+> 
