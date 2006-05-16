@@ -1,117 +1,90 @@
-From: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
-Subject: RE: [RFC] Megaraid update, submission
-Date: Tue, 16 May 2006 13:03:24 -0600
-Message-ID: <890BF3111FB9484E9526987D912B261901BD80@NAMAIL3.ad.lsil.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [RFC] Megaraid update, submission
+Date: Tue, 16 May 2006 13:44:17 -0600
+Message-ID: <20060516194417.GA1604@parisc-linux.org>
+References: <446A14C4.8050002@garzik.org> <Pine.LNX.4.10.10605161112140.3589-200000@master.linux-ide.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:41940 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1751932AbWEPTDt convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 May 2006 15:03:49 -0400
-Content-class: urn:content-classes:message
+Received: from palinux.external.hp.com ([192.25.206.14]:57740 "EHLO
+	palinux.external.hp.com") by vger.kernel.org with ESMTP
+	id S1750724AbWEPToT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 May 2006 15:44:19 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.10.10605161112140.3589-200000@master.linux-ide.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andre Hedrick <andre@linux-ide.org>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@osdl.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@infradead.org>, "Mukker, Atul" <Atul.Mukker@engenio.com>
+To: Andre Hedrick <andre@linux-ide.org>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org, Seokmann.Ju@lsil.com, Andrew Morton <akpm@osdl.org>, James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@infradead.org>, Atul Mukker <Atul.Mukker@lsil.com>
 
-Hi,
+On Tue, May 16, 2006 at 11:13:14AM -0700, Andre Hedrick wrote:
+>  /**
+> + * megaraid_pci_master_abort
+> + * @dev                : pci device structure
+> + *
+> + * Tests for PCI Master Abort on the host adapter and clears state
+> + * Returns state of error with inverted logic test to give proper
+> + * state of the pci statuts bit describing master_abort.
+> + */
+> +static int megaraid_pci_master_abort(struct pci_dev* dev)
+> +{
+> +	u16 status, error_bits;
+> +
+> +	pci_read_config_word(dev, PCI_STATUS, &status);
+> +	error_bits = (status & PCI_STATUS_REC_MASTER_ABORT);
+> +	if (error_bits)
+> +		pci_write_config_word(dev, PCI_STATUS, error_bits);
+> +	pci_read_config_word(dev, PCI_STATUS, &status);
+> +	error_bits = (status & PCI_STATUS_REC_MASTER_ABORT);
+> +	return (!error_bits) ? 0 : 1;
 
-I cannot agree on the changes in the patch for following reasons.
+A little clunky still.  How about:
 
-On Tuesday, May 16, 2006 1:44 PM, Andre Hedrick wrote:
-> Random (hard to reproduce, without a noise injection into the SATA
-> connector or cable) hardware error states which locks the 
-> card and in the
-> majority of the cases caused the array to be lost.  If the 
-> array was not
-> lost then a drive was failed but one could not remove/replace w/ a new
-> drive.  Thus adding in a pci_master_abort test and clear 
-> function proved
-> to allow recovery in all cases where the card shutdown 
-> communication to
-> the host.  This may not address all cases; however, clearly this is a
-> missing part of the driver base when entry to eh_scsi_* begins.
-If 'raid_dev->hw_error' is non-zero, this means that the controller has gone bad and will (and should not to avoid further memory corruption) not be able to recoverd unless reboot.
-The overall issue described here already taken care by the patch that I've submitted.
-The patch has been accepted and should be available on 2.6.17-rc1-mm3 as specified in Andrew Morton's email.
-> The compond issue in the failed recovery resulted in a deref 
-> NULL pointer
-> in the various list_head calls.  After change the individual 
-> list_add to
-> list_move and such, the NULL point issue has never shown up 
-> in the past 6
-> weeks of heavy testing.
-I'm not sure how this changes help for the issue. Furthermore, I'm not sure what is _the NULL point issue_ refering to. If you see the issue with driver available on 2.6.17-rc1-mm3, please let me know.
-Following link will leads you to further details of the patch.
-http://www.kernel.org/git/?p=linux/kernel/git/jejb/scsi-rc-fixes-2.6.git;a=commit;h=c005fb4fb2d23ba29ad21dee5042b2f8451ca8ba
+	u16 status;
+	pci_read_config_word(dev, PCI_STATUS, &status);
+	if (!(status & PCI_STATUS_REC_MASTER_ABORT))
+		return 0;
+	pci_write_config_word(dev, PCI_STATUS, PCI_STATUS_REC_MASTER_ABORT);
+	pci_read_config_word(dev, PCI_STATUS, &status);
+	return (status & PCI_STATUS_REC_MASTER_ABORT) ? 1 : 0;
 
-Thank you,
+> @@ -2519,14 +2547,13 @@
+>  	list_for_each_entry_safe(scb, tmp, &adapter->completed_list, list) {
+>  
+>  		if (scb->scp == scp) {	// Found command
+> -
+> -			list_del_init(&scb->list);	// from completed list
+> -
+>  			con_log(CL_ANN, (KERN_WARNING
+>  			"megaraid: %ld:%d[%d:%d], abort from completed list\n",
+>  				scp->serial_number, scb->sno,
+>  				scb->dev_channel, scb->dev_target));
+>  
+> +			list_del_init(&scb->list);	// from completed list
+> +
+>  			scp->result = (DID_ABORT << 16);
+>  			scp->scsi_done(scp);
+>  
 
-Seokmann
+Not quite sure why this change makes any difference
 
-> -----Original Message-----
-> From: Andre Hedrick [mailto:andre@linux-ide.org] 
-> Sent: Tuesday, May 16, 2006 1:44 PM
-> To: linux-scsi@vger.kernel.org; Ju, Seokmann; Andrew Morton
-> Cc: James Bottomley; Christoph Hellwig; Mukker, Atul
-> Subject: [RFC] Megaraid update, submission
-> 
-> 
-> Linux-scsi, et al.
-> 
-> The follow patch address two major issues found under 
-> extensive testing.
-> 
-> While pounding data io down the card and performing large 
-> scale queries to
-> the controller about device state and function parameters, 
-> the following
-> were discovered.
-> 
-> Random (hard to reproduce, without a noise injection into the SATA
-> connector or cable) hardware error states which locks the 
-> card and in the
-> majority of the cases caused the array to be lost.  If the 
-> array was not
-> lost then a drive was failed but one could not remove/replace w/ a new
-> drive.  Thus adding in a pci_master_abort test and clear 
-> function proved
-> to allow recovery in all cases where the card shutdown 
-> communication to
-> the host.  This may not address all cases; however, clearly this is a
-> missing part of the driver base when entry to eh_scsi_* begins.
-> 
-> The compond issue in the failed recovery resulted in a deref 
-> NULL pointer
-> in the various list_head calls.  After change the individual 
-> list_add to
-> list_move and such, the NULL point issue has never shown up 
-> in the past 6
-> weeks of heavy testing.
-> 
-> In all cases in the past, the baseline for error was 6:1.  
-> Meaning either
-> one system in six failed and/or one in six test/stress runs 
-> failed.  With
-> the attached changes, there have been zero failures in the past three
-> weeks.  This sound great, but I wish it would fail to allow some
-> statistics of improved error handling.
-> 
-> Please note the changes to SAS are minor and not tested, but 
-> seem correct
-> for the entire directory code base.  SAS shares the CMM core 
-> with MBOX,
-> thus the rational for changes to SAS.
-> 
-> Please comment and provide suggestions.
-> 
-> Cheers,
-> 
-> Andre Hedrick
-> LAD Storage Consulting Group
-> 
-> 
-> 
-> 
+> @@ -2549,8 +2576,6 @@
+>  
+>  		if (scb->scp == scp) {	// Found command
+>  
+> -			list_del_init(&scb->list);	// from pending list
+> -
+>  			ASSERT(!(scb->state & SCB_ISSUED));
+>  
+>  			con_log(CL_ANN, (KERN_WARNING
+> @@ -2558,6 +2583,8 @@
+>  				scp->serial_number, scb->dev_channel,
+>  				scb->dev_target));
+>  
+> +			list_del_init(&scb->list);	// from pending list
+> +
+>  			scp->result = (DID_ABORT << 16);
+>  			scp->scsi_done(scp);
+
+ditto
+
