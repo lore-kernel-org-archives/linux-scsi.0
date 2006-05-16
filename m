@@ -1,54 +1,85 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [REPOST][PATCH] update max sdev block limit
-Date: Tue, 16 May 2006 14:14:02 -0400
-Message-ID: <446A166A.6080405@emulex.com>
-References: <1147358563.3507.4.camel@localhost.localdomain> <4469EB45.7070104@sgi.com> <4469F83F.4030407@emulex.com> <20060516163450.GA25071@us.ibm.com>
-Reply-To: James.Smart@Emulex.Com
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: [Fwd: [RFT] major libata update]
+Date: Tue, 16 May 2006 11:15:12 -0700 (PDT)
+Message-ID: <20060516181512.73141.qmail@web31815.mail.mud.yahoo.com>
+References: <4469F2B2.703@garzik.org>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:19077 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S932397AbWEPSLg
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 May 2006 14:11:36 -0400
-In-Reply-To: <20060516163450.GA25071@us.ibm.com>
+Received: from web31815.mail.mud.yahoo.com ([68.142.206.168]:48983 "HELO
+	web31815.mail.mud.yahoo.com") by vger.kernel.org with SMTP
+	id S1751442AbWEPSPM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 May 2006 14:15:12 -0400
+In-Reply-To: <4469F2B2.703@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Michael Reed <mdr@sgi.com>, linux-scsi@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
 
-
-
-Patrick Mansfield wrote:
-> On Tue, May 16, 2006 at 12:05:19PM -0400, James Smart wrote:
->> I don't mind making it bigger, especially as this is just a max, not the
->> default value. I tried to keep it low, as I believe even 2 mins is a long
->> time from the system's perspective. 10 minutes is forever (and remember
->> the scan deadlock that we just worked through).
+--- Jeff Garzik <jeff@garzik.org> wrote:
+> (CC's restored)
 > 
-> Yes, so add default and max settings instead of using the max as the default.
-
-Agreed - doing so.
-
-> And I still don't see how the scsi timeout can (reliably) make it through
-> these block/unblocks. EH_RESET_TIMER doesn't freeze the scsi timeout like
-> you really need, just restarts it. 
+> James Bottomley wrote:
+> > 1) your host_eh_scheduled logic looks wrong.  It seems to me that you
+> > can miss the wakeup if the host is busy?  I also don't see a need to
 > 
-> For example, with default sd timeout of 30, you could be one second into a
-> command, block for 28 seconds, unblock, and then still timeout.
+> I can't see a case _in libata operation_ where a set of circumstances 
+> arises that causes missed wakeups, can you elaborate?
+> 
+> 
+> > move the prototype out of scsi_priv.h ... it should only be used by
+> > transport classes, anyway.
+> 
+> We're talking about all ->eh_strategy_handler() users, which is a valid 
+> EH API for an LLDD to choose.  Granted libata is really the only one 
+> right now.
+> 
+> Long term, ->eh_strategy_handler and transport classes are block layer 
+> not SCSI level anyway, so scsi_priv.h is clearly inappropriate.
 
-True.  However, the point was not necessarily to allow the command to
-succeed. Note: any target disappearance for any real amount of time (like 28s)
-is likely going to be a condition that required a new login and killed the
-i/o anyway.
+The physical stack (HW) looks like:
+Block ->
+  SCSI ->
+    Transport ->
+      Interconnect ->
+        Device.
 
-The rescheduling of the timeout was to avoid the ramifications of the timeout
-fails, which it would do, as there's no target to send the abort request to.
-What was happening was the abort was failing, the device reset was failing,
-and it escalated up to bus resets and adapter resets - followed by a Test Unit
-Ready being sent, which of course was to a non-existent target, which failed
-and took the device offline. Which then required manual interaction to restart
-io.
+Not sure how you're going to achieve a SW abstraction whereby
+"->eh_strategy_handler and transport classes are block layer",
+when, the HW abstraction is different.
 
--- james
+    Luben
+
+> 
+> 
+> > 2) This scsi_req_abort_cmd() is fundamentally the wrong logic.
+> > Everything else is communicated back as a result code from the command
+> > in done().  This should be no different ... A status return of
+> > DID_FAILED which scsi_decide_disposition() always translates to FAILED
+> > would seem to do exactly what you want without all the overhead.
+> 
+> Inigo sez[1]:  I do not think "fundamentally wrong" means what you think 
+> it means.
+> 
+> You miss the fact that the timer may have already fired, in which 
+> completing a command gets you...... not a damned thing.  scsi_done() 
+> will simply return, if the timeout has fired.  This has always been an 
+> annoying problem to work around.
+> 
+> scsi_req_abort_cmd() may perhaps be misnamed, but it GUARANTEES a set of 
+> operations which libata EH wants.  Certainly, if we can guarantee this 
+> set of conditions another way, we are open to any alternate path.
+> 
+> 	Jeff
+> 
+> 
+> [1] from one of my favorite movies.  search 
+> http://us.imdb.com/title/tt0093779/quotes for "INCONCEIVABLE"
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
