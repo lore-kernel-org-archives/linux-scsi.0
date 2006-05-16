@@ -1,35 +1,83 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [Fwd: [RFT] major libata update]
-Date: Tue, 16 May 2006 16:28:55 -0500
-Message-ID: <1147814935.3505.88.camel@mulgrave.il.steeleye.com>
-References: <4468B596.9090508@garzik.org>
-	 <1147789098.3505.19.camel@mulgrave.il.steeleye.com>
-	 <4469F2B2.703@garzik.org>
-	 <1147794708.3505.30.camel@mulgrave.il.steeleye.com>
-	 <4469F906.7040602@gmail.com>
-	 <1147796999.3505.42.camel@mulgrave.il.steeleye.com>
-	 <446A0053.5070203@gmail.com>
-	 <1147798226.3505.56.camel@mulgrave.il.steeleye.com>
-	 <446A06C7.5050609@gmail.com>  <20060516195836.GA3807@infradead.org>
+From: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
+Subject: RE: Help: strange messages from kernel on IA64 platform
+Date: Tue, 16 May 2006 15:30:07 -0600
+Message-ID: <890BF3111FB9484E9526987D912B261901BD87@NAMAIL3.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20060516195836.GA3807@infradead.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail0.lsil.com ([147.145.40.20]:10221 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S932092AbWEPVaK convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 May 2006 17:30:10 -0400
+Content-class: urn:content-classes:message
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: =?iso-8859-1?Q?=22D=F6hr=2C_Markus_ICC-H=22?= <Markus.Doehr@siegenia-aubi.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, 2006-05-16 at 20:58 +0100, Christoph Hellwig wrote:
-> Things used by the transport classes traditionally weren't in scsi_priv.h,
-> that was for scsi_mod internals only.  Should we changed that?  I'd rather
-> have another header for semi-volatile APIs transport classes use.
+Hi,
 
-well ... OK we don't necessarily have a header for SCSI APIs exported
-exclusively to transport classes.  how about
-drivers/scsi/scsi_transport_api.h?
+Tuesday, May 16, 2006 5:20 PM, "D=F6hr, Markus ICC-H" wrote:
+> We have this message too on our main database server; the=20
+> interesting part
+> is, that the application, which triggers this error, is a=20
+> database (MaxDB)
+> and the process name is "kernel"... Just to avoid confusion:=20
+> look if there's
+> an application with such name running on your system.
+I quickly looked at the system with 'ps' command.
+It seems there is no such process which starting its name with "kernel.=
+=2E" on the system.
+Thank you for your comment.
 
-James
+Regards,
 
-
+> -----Original Message-----
+> From: "D=F6hr, Markus ICC-H" [mailto:Markus.Doehr@siegenia-aubi.com]=20
+> Sent: Tuesday, May 16, 2006 5:20 PM
+> To: Ju, Seokmann; Linux Kernel Mailing List
+> Cc: linux-scsi@vger.kernel.org
+> Subject: RE: Help: strange messages from kernel on IA64 platform
+>=20
+> > During communication in between application and megaraid=20
+> > driver via IOCTL, the system displays messages which are not=20
+> > easy to track down.
+> > Following is one of the messages and same messages with=20
+> > different values are poping up regularly.
+> > ---
+> > Kernel unaligned access to 0xe00000007f3d80dc ip=3D0xa0000002000373=
+b1
+> > ---
+>=20
+> We have this message too on our main database server; the=20
+> interesting part
+> is, that the application, which triggers this error, is a=20
+> database (MaxDB)
+> and the process name is "kernel"... Just to avoid confusion:=20
+> look if there's
+> an application with such name running on your system.
+>=20
+>=20
+> Greetz,
+>=20
+>=20
+> SIEGENIA-AUBI KG
+> Informationswesen
+> =20
+> i.A.
+> =20
+> Markus D=F6hr
+> SAP-CC/BC, SAPDB-DBA
+>=20
+> Tel.:	 +49 6503 917-152
+> Fax:	 +49 6503 917-7152
+> E-Mail: markus.doehr@siegenia-aubi.com
+> Internet: http://www.siegenia-aubi.com=20
+>  =20
+>=20
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
