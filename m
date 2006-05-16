@@ -1,57 +1,35 @@
-From: =?iso-8859-1?Q?=22D=F6hr=2C_Markus_ICC-H=22?=
-	<Markus.Doehr@siegenia-aubi.com>
-Subject: RE: Help: strange messages from kernel on IA64 platform
-Date: Tue, 16 May 2006 23:19:55 +0200
-Message-ID: <FC7F4950D2B3B845901C3CE3A1CA6766015CC246@mxnd200-9.si-aubi.siegenia-aubi.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [Fwd: [RFT] major libata update]
+Date: Tue, 16 May 2006 16:28:55 -0500
+Message-ID: <1147814935.3505.88.camel@mulgrave.il.steeleye.com>
+References: <4468B596.9090508@garzik.org>
+	 <1147789098.3505.19.camel@mulgrave.il.steeleye.com>
+	 <4469F2B2.703@garzik.org>
+	 <1147794708.3505.30.camel@mulgrave.il.steeleye.com>
+	 <4469F906.7040602@gmail.com>
+	 <1147796999.3505.42.camel@mulgrave.il.steeleye.com>
+	 <446A0053.5070203@gmail.com>
+	 <1147798226.3505.56.camel@mulgrave.il.steeleye.com>
+	 <446A06C7.5050609@gmail.com>  <20060516195836.GA3807@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.siegenia-aubi.com ([217.5.180.129]:12942 "EHLO
-	alg-1.siegenia-aubi.com") by vger.kernel.org with ESMTP
-	id S932065AbWEPVUE convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 May 2006 17:20:04 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20060516195836.GA3807@infradead.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Ju, Seokmann" <Seokmann.Ju@lsil.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Cc: linux-scsi@vger.kernel.org
 
-> During communication in between application and megaraid=20
-> driver via IOCTL, the system displays messages which are not=20
-> easy to track down.
-> Following is one of the messages and same messages with=20
-> different values are poping up regularly.
-> ---
-> Kernel unaligned access to 0xe00000007f3d80dc ip=3D0xa0000002000373b1
-> ---
+On Tue, 2006-05-16 at 20:58 +0100, Christoph Hellwig wrote:
+> Things used by the transport classes traditionally weren't in scsi_priv.h,
+> that was for scsi_mod internals only.  Should we changed that?  I'd rather
+> have another header for semi-volatile APIs transport classes use.
 
-We have this message too on our main database server; the interesting p=
-art
-is, that the application, which triggers this error, is a database (Max=
-DB)
-and the process name is "kernel"... Just to avoid confusion: look if th=
-ere's
-an application with such name running on your system.
+well ... OK we don't necessarily have a header for SCSI APIs exported
+exclusively to transport classes.  how about
+drivers/scsi/scsi_transport_api.h?
+
+James
 
 
-Greetz,
-
-
-SIEGENIA-AUBI KG
-Informationswesen
-=20
-i.A.
-=20
-Markus D=F6hr
-SAP-CC/BC, SAPDB-DBA
-
-Tel.:	 +49 6503 917-152
-=46ax:	 +49 6503 917-7152
-E-Mail: markus.doehr@siegenia-aubi.com
-Internet: http://www.siegenia-aubi.com=20
- =20
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
