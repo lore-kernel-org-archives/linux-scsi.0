@@ -1,77 +1,57 @@
-From: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
+From: =?iso-8859-1?Q?=22D=F6hr=2C_Markus_ICC-H=22?=
+	<Markus.Doehr@siegenia-aubi.com>
 Subject: RE: Help: strange messages from kernel on IA64 platform
-Date: Tue, 16 May 2006 15:12:51 -0600
-Message-ID: <890BF3111FB9484E9526987D912B261901BD86@NAMAIL3.ad.lsil.com>
+Date: Tue, 16 May 2006 23:19:55 +0200
+Message-ID: <FC7F4950D2B3B845901C3CE3A1CA6766015CC246@mxnd200-9.si-aubi.siegenia-aubi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:15338 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1750835AbWEPVMz convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 May 2006 17:12:55 -0400
-Content-class: urn:content-classes:message
+Received: from mail.siegenia-aubi.com ([217.5.180.129]:12942 "EHLO
+	alg-1.siegenia-aubi.com") by vger.kernel.org with ESMTP
+	id S932065AbWEPVUE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 May 2006 17:20:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chase Venters <chase.venters@clientec.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: "Ju, Seokmann" <Seokmann.Ju@lsil.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: linux-scsi@vger.kernel.org
 
-Hi,
+> During communication in between application and megaraid=20
+> driver via IOCTL, the system displays messages which are not=20
+> easy to track down.
+> Following is one of the messages and same messages with=20
+> different values are poping up regularly.
+> ---
+> Kernel unaligned access to 0xe00000007f3d80dc ip=3D0xa0000002000373b1
+> ---
 
-Tuesday, May 16, 2006 5:00 PM, Chase Venters wrote:
-> It's a trap, which means the CPU is effectively calling that 
-> function.
-O.K, that's why...
-Then, Is there anyway to look up trap table that the CPU has?
-> My best suggestion is to figure out what data is at 
-> 0xe00000007f3d80dc and 
-> what instructions are at 0xa0000002000373b1.
-I will try as you suggested.
-Thank you very much for comment.
+We have this message too on our main database server; the interesting p=
+art
+is, that the application, which triggers this error, is a database (Max=
+DB)
+and the process name is "kernel"... Just to avoid confusion: look if th=
+ere's
+an application with such name running on your system.
 
-Regards,
 
-> -----Original Message-----
-> From: Chase Venters [mailto:chase.venters@clientec.com] 
-> Sent: Tuesday, May 16, 2006 5:00 PM
-> To: Ju, Seokmann
-> Cc: Linux Kernel Mailing List; linux-scsi@vger.kernel.org
-> Subject: Re: Help: strange messages from kernel on IA64 platform
-> 
-> On Tue, 16 May 2006, Ju, Seokmann wrote:
-> 
-> > Hi,
-> >
-> > During communication in between application and megaraid driver via
-> > IOCTL, the system displays messages which are not easy to 
-> track down.
-> > Following is one of the messages and same messages with 
-> different values
-> > are poping up regularly.
-> > ---
-> > Kernel unaligned access to 0xe00000007f3d80dc ip=0xa0000002000373b1
-> > ---
-> >
-> > I understand the kernel is complaining about the address 
-> which is not
-> > aligned and, found the message is coming from function
-> > 'ia64_handle_unaligned()' in the arch/ia64/kernel/unaligned.c.
-> > But, I couldn't find who is calling this function and 
-> further details of
-> > reasons.
-> >
-> > Where should I start to figure out it?
-> 
-> It's a trap, which means the CPU is effectively calling that 
-> function. My 
-> best suggestion is to figure out what data is at 
-> 0xe00000007f3d80dc and 
-> what instructions are at 0xa0000002000373b1.
-> 
-> > Thank you,
-> >
-> > Seokmann
-> 
-> Thanks,
-> Chase
-> 
+Greetz,
+
+
+SIEGENIA-AUBI KG
+Informationswesen
+=20
+i.A.
+=20
+Markus D=F6hr
+SAP-CC/BC, SAPDB-DBA
+
+Tel.:	 +49 6503 917-152
+=46ax:	 +49 6503 917-7152
+E-Mail: markus.doehr@siegenia-aubi.com
+Internet: http://www.siegenia-aubi.com=20
+ =20
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
