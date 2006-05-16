@@ -1,39 +1,42 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Blacklist entry for HP dat changer
-Date: Tue, 16 May 2006 08:59:32 -0500
-Message-ID: <1147787972.3505.7.camel@mulgrave.il.steeleye.com>
-References: <20060516043829.GA13482@alpha.franken.de>
+Subject: Re: [Fwd: [RFT] major libata update]
+Date: Tue, 16 May 2006 09:18:18 -0500
+Message-ID: <1147789098.3505.19.camel@mulgrave.il.steeleye.com>
+References: <4468B596.9090508@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:35510 "EHLO
+Received: from stat9.steeleye.com ([209.192.50.41]:44473 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751102AbWEPN7g (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 May 2006 09:59:36 -0400
-In-Reply-To: <20060516043829.GA13482@alpha.franken.de>
+	id S1751110AbWEPOS1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 May 2006 10:18:27 -0400
+In-Reply-To: <4468B596.9090508@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
-Cc: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, 2006-05-16 at 06:38 +0200, Thomas Bogendoerfer wrote:
-> scsi: host 1 channel 0 id 5 lun16777216 has a LUN larger than allowed by
-> the host adapter
+On Mon, 2006-05-15 at 13:08 -0400, Jeff Garzik wrote:
+> linux-scsi should have been included in the CC.
 
-This is a classic symptom of a device incorrectly executing report luns,
-yes.
+Yes, it should, thanks.
 
-> Looking at the misdetected LUN number I'm still thinking there might
-> be an endianess problem (16777216 = 0x01000000 -> little endian 0x01).
-> Is this possible ?
+It's a pretty huge change, so I haven't gone over it all.  However, two
+things leap to mind immediately about this patch set
 
-It's possible, but if so it would have to be inside the device.  SCSI is
-big endian explicitly in the protocol documents.
+1) your host_eh_scheduled logic looks wrong.  It seems to me that you
+can miss the wakeup if the host is busy?  I also don't see a need to
+move the prototype out of scsi_priv.h ... it should only be used by
+transport classes, anyway.
 
-> +	{"HP", "C5713A", NULL, BLIST_NOREPORTLUN},
+2) This scsi_req_abort_cmd() is fundamentally the wrong logic.
+Everything else is communicated back as a result code from the command
+in done().  This should be no different ... A status return of
+DID_FAILED which scsi_decide_disposition() always translates to FAILED
+would seem to do exactly what you want without all the overhead.
 
-This looks to be the correct fix ... I'll add it.
+I'll find time to go over the rest of this later ...
 
 James
 
