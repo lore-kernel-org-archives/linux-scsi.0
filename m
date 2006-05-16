@@ -1,90 +1,25 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [RFC] Megaraid update, submission
-Date: Tue, 16 May 2006 13:44:17 -0600
-Message-ID: <20060516194417.GA1604@parisc-linux.org>
-References: <446A14C4.8050002@garzik.org> <Pine.LNX.4.10.10605161112140.3589-200000@master.linux-ide.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [Fwd: [RFT] major libata update]
+Date: Tue, 16 May 2006 20:58:36 +0100
+Message-ID: <20060516195836.GA3807@infradead.org>
+References: <4468B596.9090508@garzik.org> <1147789098.3505.19.camel@mulgrave.il.steeleye.com> <4469F2B2.703@garzik.org> <1147794708.3505.30.camel@mulgrave.il.steeleye.com> <4469F906.7040602@gmail.com> <1147796999.3505.42.camel@mulgrave.il.steeleye.com> <446A0053.5070203@gmail.com> <1147798226.3505.56.camel@mulgrave.il.steeleye.com> <446A06C7.5050609@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:57740 "EHLO
-	palinux.external.hp.com") by vger.kernel.org with ESMTP
-	id S1750724AbWEPToT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 May 2006 15:44:19 -0400
+Return-path: <linux-ide-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.10.10605161112140.3589-200000@master.linux-ide.org>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <446A06C7.5050609@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Jeff Garzik <jeff@garzik.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Andre Hedrick <andre@linux-ide.org>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org, Seokmann.Ju@lsil.com, Andrew Morton <akpm@osdl.org>, James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@infradead.org>, Atul Mukker <Atul.Mukker@lsil.com>
 
-On Tue, May 16, 2006 at 11:13:14AM -0700, Andre Hedrick wrote:
->  /**
-> + * megaraid_pci_master_abort
-> + * @dev                : pci device structure
-> + *
-> + * Tests for PCI Master Abort on the host adapter and clears state
-> + * Returns state of error with inverted logic test to give proper
-> + * state of the pci statuts bit describing master_abort.
-> + */
-> +static int megaraid_pci_master_abort(struct pci_dev* dev)
-> +{
-> +	u16 status, error_bits;
-> +
-> +	pci_read_config_word(dev, PCI_STATUS, &status);
-> +	error_bits = (status & PCI_STATUS_REC_MASTER_ABORT);
-> +	if (error_bits)
-> +		pci_write_config_word(dev, PCI_STATUS, error_bits);
-> +	pci_read_config_word(dev, PCI_STATUS, &status);
-> +	error_bits = (status & PCI_STATUS_REC_MASTER_ABORT);
-> +	return (!error_bits) ? 0 : 1;
+On Wed, May 17, 2006 at 02:07:19AM +0900, Tejun Heo wrote:
+> > Yes, but in scsi_priv.h, please ... I can actually think of another use
+> > for it in terms of getting the SG reset handler to work properly.
+> 
+> Okay, will do in scsi_priv.h
 
-A little clunky still.  How about:
-
-	u16 status;
-	pci_read_config_word(dev, PCI_STATUS, &status);
-	if (!(status & PCI_STATUS_REC_MASTER_ABORT))
-		return 0;
-	pci_write_config_word(dev, PCI_STATUS, PCI_STATUS_REC_MASTER_ABORT);
-	pci_read_config_word(dev, PCI_STATUS, &status);
-	return (status & PCI_STATUS_REC_MASTER_ABORT) ? 1 : 0;
-
-> @@ -2519,14 +2547,13 @@
->  	list_for_each_entry_safe(scb, tmp, &adapter->completed_list, list) {
->  
->  		if (scb->scp == scp) {	// Found command
-> -
-> -			list_del_init(&scb->list);	// from completed list
-> -
->  			con_log(CL_ANN, (KERN_WARNING
->  			"megaraid: %ld:%d[%d:%d], abort from completed list\n",
->  				scp->serial_number, scb->sno,
->  				scb->dev_channel, scb->dev_target));
->  
-> +			list_del_init(&scb->list);	// from completed list
-> +
->  			scp->result = (DID_ABORT << 16);
->  			scp->scsi_done(scp);
->  
-
-Not quite sure why this change makes any difference
-
-> @@ -2549,8 +2576,6 @@
->  
->  		if (scb->scp == scp) {	// Found command
->  
-> -			list_del_init(&scb->list);	// from pending list
-> -
->  			ASSERT(!(scb->state & SCB_ISSUED));
->  
->  			con_log(CL_ANN, (KERN_WARNING
-> @@ -2558,6 +2583,8 @@
->  				scp->serial_number, scb->dev_channel,
->  				scb->dev_target));
->  
-> +			list_del_init(&scb->list);	// from pending list
-> +
->  			scp->result = (DID_ABORT << 16);
->  			scp->scsi_done(scp);
-
-ditto
+Things used by the transport classes traditionally weren't in scsi_priv.h,
+that was for scsi_mod internals only.  Should we changed that?  I'd rather
+have another header for semi-volatile APIs transport classes use.
 
