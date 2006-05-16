@@ -1,51 +1,57 @@
-From: Tejun Heo <htejun@gmail.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: [Fwd: [RFT] major libata update]
-Date: Wed, 17 May 2006 01:39:47 +0900
-Message-ID: <446A0053.5070203@gmail.com>
-References: <4468B596.9090508@garzik.org>	 <1147789098.3505.19.camel@mulgrave.il.steeleye.com>	 <4469F2B2.703@garzik.org>	 <1147794708.3505.30.camel@mulgrave.il.steeleye.com>	 <4469F906.7040602@gmail.com> <1147796999.3505.42.camel@mulgrave.il.steeleye.com>
+Date: Tue, 16 May 2006 11:50:26 -0500
+Message-ID: <1147798226.3505.56.camel@mulgrave.il.steeleye.com>
+References: <4468B596.9090508@garzik.org>
+	 <1147789098.3505.19.camel@mulgrave.il.steeleye.com>
+	 <4469F2B2.703@garzik.org>
+	 <1147794708.3505.30.camel@mulgrave.il.steeleye.com>
+	 <4469F906.7040602@gmail.com>
+	 <1147796999.3505.42.camel@mulgrave.il.steeleye.com>
+	 <446A0053.5070203@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=EUC-KR
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1147796999.3505.42.camel@mulgrave.il.steeleye.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Jeff Garzik <jeff@garzik.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stat9.steeleye.com ([209.192.50.41]:19410 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1751871AbWEPQud (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 May 2006 12:50:33 -0400
+In-Reply-To: <446A0053.5070203@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
 
-James Bottomley wrote:
-> On Wed, 2006-05-17 at 01:08 +0900, Tejun Heo wrote:
->> It's handled the same way shost->host_failed is handled.
->> scsi_device_unbusy() wakes it up when the condition is met.
+On Wed, 2006-05-17 at 01:39 +0900, Tejun Heo wrote:
+> I certainly can, and it was done that way first time around.  Please
+> note the following discussion.
 > 
-> That's the piece I hadn't spotted, yet ... thanks.  That will do it.
+> http://thread.gmane.org/gmane.linux.scsi/23853/focus=9760
 > 
-> could you move ata_schedule_scsi_eh to scsi_error (with the appropriate
-> API rename).  That way the SCSI state model changes aren't in libata
-> (and no-one else who wants to use this has to open code the
-> ata_schedule_scsi_eh API).
+> Luben objected the interface made public because SCSI host is not
+> supposed to know about exception conditions which are not associated
+> with ITL nor ITLQ nexus.  Thus, I made it a temporary measure only for
+> libata, which is planned to move out.
+
+His objection is still valid.  However, as the balance of evils, I
+think, if you have to do this, it's better to contain it in a way where
+it's obvious what's being done.  Plus you don't want someone to modify
+the host state model and suddenly find libata doesn't work anymore
+because they failed to spot that it needed to change as well ...
+
+> So, SCSI contains only the necessary bits required to implement the
+> feature and libata open-codes the rest.  As it's not an exported
+> interface, no other SCSI driver is supposed to use it and the SCSI
+> modifications can be easily removed after libata moves out.
 > 
+> As long as libata can do EH not associated with scmd or device, I'm okay
+> either way and think it's your call.  So, considering the above
+> discussion, do you want it to be a generic SCSI interface?
 
-I certainly can, and it was done that way first time around.  Please
-note the following discussion.
+Yes, but in scsi_priv.h, please ... I can actually think of another use
+for it in terms of getting the SG reset handler to work properly.
 
-http://thread.gmane.org/gmane.linux.scsi/23853/focus=9760
+James
 
-Luben objected the interface made public because SCSI host is not
-supposed to know about exception conditions which are not associated
-with ITL nor ITLQ nexus.  Thus, I made it a temporary measure only for
-libata, which is planned to move out.
 
-So, SCSI contains only the necessary bits required to implement the
-feature and libata open-codes the rest.  As it's not an exported
-interface, no other SCSI driver is supposed to use it and the SCSI
-modifications can be easily removed after libata moves out.
-
-As long as libata can do EH not associated with scmd or device, I'm okay
-either way and think it's your call.  So, considering the above
-discussion, do you want it to be a generic SCSI interface?
-
-Thanks.
-
--- 
-tejun
