@@ -1,59 +1,34 @@
-From: Jeff Garzik <jeff@garzik.org>
+From: Tejun Heo <htejun@gmail.com>
 Subject: Re: [Fwd: [RFT] major libata update]
-Date: Tue, 16 May 2006 12:12:43 -0400
-Message-ID: <4469F9FB.7020807@garzik.org>
-References: <4468B596.9090508@garzik.org>	 <1147789098.3505.19.camel@mulgrave.il.steeleye.com>	 <4469F2B2.703@garzik.org> <1147794708.3505.30.camel@mulgrave.il.steeleye.com>
+Date: Wed, 17 May 2006 01:13:58 +0900
+Message-ID: <4469FA46.1010503@gmail.com>
+References: <4468B596.9090508@garzik.org>	 <1147789098.3505.19.camel@mulgrave.il.steeleye.com>	 <4469F2B2.703@garzik.org> <1147794708.3505.30.camel@mulgrave.il.steeleye.com> <4469F906.7040602@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=EUC-KR
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1147794708.3505.30.camel@mulgrave.il.steeleye.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from wr-out-0506.google.com ([64.233.184.224]:18821 "EHLO
+	wr-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S932097AbWEPQOF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 May 2006 12:14:05 -0400
+Received: by wr-out-0506.google.com with SMTP id 37so10333wra
+        for <linux-scsi@vger.kernel.org>; Tue, 16 May 2006 09:14:04 -0700 (PDT)
+In-Reply-To: <4469F906.7040602@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Jeff Garzik <jeff@garzik.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
 
-James Bottomley wrote:
-> On Tue, 2006-05-16 at 11:41 -0400, Jeff Garzik wrote:
->> I can't see a case _in libata operation_ where a set of circumstances 
->> arises that causes missed wakeups, can you elaborate?
-> 
-> This is scsi_eh_wakeup():
-> 
-> void scsi_eh_wakeup(struct Scsi_Host *shost)
-> {
-> 	if (shost->host_busy == shost->host_failed) {
-> 		wake_up_process(shost->ehandler);
-> 
-> so if you try a wakeup with no failed commands and the host still busy,
-> nothing happens.
+Tejun Heo wrote:
+[--snip--]
+> Currently, there is no reliable way to trigger DID_FAILED
+> unconditionally.  I thought about adding some host code or whatever to
+> force it but it felt too hackish and went with the
+> scsi_eh_schedule_scmd().  Then, Luben suggested scsi_req_abort_cmd(), so
+> that's what I've ended up with.
 
-Clearly.  And where in the code do you see that this condition will strike?
+Oops, wasn't thinking straight.  Time to go bad.  The obstacle I
+couldn't avoid was the forced scmd timeout in scsi_softirq_done().
 
-If we are talking about impossible runtime conditions, then the 
-objection is academic.
-
-
->>> move the prototype out of scsi_priv.h ... it should only be used by
->>> transport classes, anyway.
->> We're talking about all ->eh_strategy_handler() users, which is a valid 
->> EH API for an LLDD to choose.  Granted libata is really the only one 
->> right now.
-> 
-> We're busy revoking the LLDD driver, so in future it will be transport
-> classes only.
-> 
->> Long term, ->eh_strategy_handler and transport classes are block layer 
->> not SCSI level anyway, so scsi_priv.h is clearly inappropriate.
-> 
-> That can be sorted out if someone actually gets around to moving error
-> handling to the block level.  In the meantime, it's SCSI that we're
-> discussing.
-
-Its an API-which-only-libata-uses that we're discussing.  And because 
-its moving to the block layer, its also a 
-temporary-API-which-only-libata-uses.
-
-	Jeff
-
-
+-- 
+tejun
