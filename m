@@ -1,74 +1,55 @@
-From: Jeff Garzik <jeff@garzik.org>
+From: Tejun Heo <htejun@gmail.com>
 Subject: Re: [Fwd: [RFT] major libata update]
-Date: Tue, 16 May 2006 12:57:47 -0400
-Message-ID: <446A048B.6040703@garzik.org>
-References: <4468B596.9090508@garzik.org>	 <1147789098.3505.19.camel@mulgrave.il.steeleye.com>	 <4469F2B2.703@garzik.org>	 <1147794708.3505.30.camel@mulgrave.il.steeleye.com>	 <4469F9FB.7020807@garzik.org> <1147797507.3505.52.camel@mulgrave.il.steeleye.com>
+Date: Wed, 17 May 2006 02:07:19 +0900
+Message-ID: <446A06C7.5050609@gmail.com>
+References: <4468B596.9090508@garzik.org>	 <1147789098.3505.19.camel@mulgrave.il.steeleye.com>	 <4469F2B2.703@garzik.org>	 <1147794708.3505.30.camel@mulgrave.il.steeleye.com>	 <4469F906.7040602@gmail.com>	 <1147796999.3505.42.camel@mulgrave.il.steeleye.com>	 <446A0053.5070203@gmail.com> <1147798226.3505.56.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=EUC-KR
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1147797507.3505.52.camel@mulgrave.il.steeleye.com>
+In-Reply-To: <1147798226.3505.56.camel@mulgrave.il.steeleye.com>
 Sender: linux-ide-owner@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, Jens Axboe <axboe@suse.de>
+Cc: Jeff Garzik <jeff@garzik.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
 List-Id: linux-scsi@vger.kernel.org
 
 James Bottomley wrote:
-> On Tue, 2006-05-16 at 12:12 -0400, Jeff Garzik wrote:
->> Its an API-which-only-libata-uses that we're discussing.  And because 
->> its moving to the block layer, its also a 
->> temporary-API-which-only-libata-uses.
+> On Wed, 2006-05-17 at 01:39 +0900, Tejun Heo wrote:
+>> I certainly can, and it was done that way first time around.  Please
+>> note the following discussion.
+>>
+>> http://thread.gmane.org/gmane.linux.scsi/23853/focus=9760
+>>
+>> Luben objected the interface made public because SCSI host is not
+>> supposed to know about exception conditions which are not associated
+>> with ITL nor ITLQ nexus.  Thus, I made it a temporary measure only for
+>> libata, which is planned to move out.
 > 
-> OK ... this may be the root of the problem.  I really would like libata
-> to migrate to being block only ... especially as PATA looks to be trying
-> to follow you into the SCSI subsystem.  However, this has been the
-> statement for the past two years (at least), and really, few
-> enhancements have been made to block that you need to make good on this.
-> I think one of the things we'll try to find time to do at the storage
-> summit is to take a hard look at block to see exactly what has to be
-> added to make libata solely dependent upon it.
+> His objection is still valid.  However, as the balance of evils, I
+> think, if you have to do this, it's better to contain it in a way where
+> it's obvious what's being done.  Plus you don't want someone to modify
+> the host state model and suddenly find libata doesn't work anymore
+> because they failed to spot that it needed to change as well ...
 
-100% agreed...
+I see.
 
-The general list, off the top of my head:
+>> So, SCSI contains only the necessary bits required to implement the
+>> feature and libata open-codes the rest.  As it's not an exported
+>> interface, no other SCSI driver is supposed to use it and the SCSI
+>> modifications can be easily removed after libata moves out.
+>>
+>> As long as libata can do EH not associated with scmd or device, I'm okay
+>> either way and think it's your call.  So, considering the above
+>> discussion, do you want it to be a generic SCSI interface?
+> 
+> Yes, but in scsi_priv.h, please ... I can actually think of another use
+> for it in terms of getting the SG reset handler to work properly.
 
-* objects: storage message, storage device, storage host, and the 
-requisite interconnections
-* queuecommand-style API
-* EH thread(s)
-* timers, for command timeouts
-* SCSI-style MLqueue and state stuff, i.e. ability to return "device 
-busy", "host busy", "retry this command", ...
+Okay, will do in scsi_priv.h
 
-And once libata is happy at the block layer, move SCSI to using this 
-stuff too :)
+Jeff, it seems that we need to reset #upstream and rebuild it.  Do you
+have any other idea than resetting libata-tj#for-jeff and
+libata-dev#upstream?
 
-FWIW, as ATAPI continues to align ever more closely with SCSI MMC, I 
-strongly feel that libata should continue to use the "SCSI MMC device 
-class driver" (i.e. sr), and other applicable SCSI device class drivers 
-(st, ...).
-
-Like modern SAS controllers, which support plugging SATA drives, libata 
-must mix SCSI and non-SCSI.  Thus, most of the above infrastructure 
-basically _must_ live outside the SCSI layer, if we are going to 
-properly support modern controllers in a modular fashion.
-
-
-> However, the bottom line is that if you want to modify the *SCSI* API
-> then you follow the same process as everyone else  (i.e. demonstrate
-> justification and utility and worry about long lived maintainability of
-> the API).
-
-Well...
-* ->eh_strategy_handler() API was unusable before libata (evidence: all 
-the bugs we've fixed)
-* there were zero users before libata (evidence: grep past 2.4.0)
-* there is only one user today, libata (evidence: grep)
-
-So you'll pardon my skepticism when newly elevated standards for this 
-API suddenly appear.  libata is just trying to Do What Needs To Be Done, 
-And Nothing More.
-
-	Jeff
-
-
+-- 
+tejun
