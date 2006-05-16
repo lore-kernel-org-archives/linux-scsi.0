@@ -1,38 +1,51 @@
-From: Jeff Garzik <jeff@garzik.org>
+From: Tejun Heo <htejun@gmail.com>
 Subject: Re: [Fwd: [RFT] major libata update]
-Date: Tue, 16 May 2006 12:39:13 -0400
-Message-ID: <446A0031.1080209@garzik.org>
-References: <4468B596.9090508@garzik.org>	 <1147789098.3505.19.camel@mulgrave.il.steeleye.com>	 <4469F2B2.703@garzik.org>	 <1147794708.3505.30.camel@mulgrave.il.steeleye.com>	 <4469F879.9020009@garzik.org> <1147797042.3505.44.camel@mulgrave.il.steeleye.com>
+Date: Wed, 17 May 2006 01:39:47 +0900
+Message-ID: <446A0053.5070203@gmail.com>
+References: <4468B596.9090508@garzik.org>	 <1147789098.3505.19.camel@mulgrave.il.steeleye.com>	 <4469F2B2.703@garzik.org>	 <1147794708.3505.30.camel@mulgrave.il.steeleye.com>	 <4469F906.7040602@gmail.com> <1147796999.3505.42.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=EUC-KR
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:4485 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932125AbWEPQjP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 May 2006 12:39:15 -0400
-In-Reply-To: <1147797042.3505.44.camel@mulgrave.il.steeleye.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1147796999.3505.42.camel@mulgrave.il.steeleye.com>
+Sender: linux-ide-owner@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: Jeff Garzik <jeff@garzik.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+List-Id: linux-scsi@vger.kernel.org
 
 James Bottomley wrote:
-> On Tue, 2006-05-16 at 12:06 -0400, Jeff Garzik wrote:
->> Sigh.  They clearly do not have the same effect, because the above code 
->> guarantees that a timeout is forced, regardless of whether the timer has 
->> fired or not.  That in turn guarantees that the timeout callback 
->> (->eh_timed_out) is called, and the cmd is in a very specific state.
+> On Wed, 2006-05-17 at 01:08 +0900, Tejun Heo wrote:
+>> It's handled the same way shost->host_failed is handled.
+>> scsi_device_unbusy() wakes it up when the condition is met.
 > 
-> the API claims to be forcibly aborting a command, which is *not* a
-> timeout  ... trying to pretend to the midlayer that it is is the wrong
-> processing model.  You may choose to call this API because of a class
-> internal timeout, but you don't need the callback notification that it
-> is a timeout in this case, you already know it is.
+> That's the piece I hadn't spotted, yet ... thanks.  That will do it.
+> 
+> could you move ata_schedule_scsi_eh to scsi_error (with the appropriate
+> API rename).  That way the SCSI state model changes aren't in libata
+> (and no-one else who wants to use this has to open code the
+> ata_schedule_scsi_eh API).
+> 
 
-I can certainly agree the name may not be the best choice.  Naming based 
-on implementation, it could be scsi_force_timeout_cmd() or somesuch.
+I certainly can, and it was done that way first time around.  Please
+note the following discussion.
 
-	Jeff
+http://thread.gmane.org/gmane.linux.scsi/23853/focus=9760
 
+Luben objected the interface made public because SCSI host is not
+supposed to know about exception conditions which are not associated
+with ITL nor ITLQ nexus.  Thus, I made it a temporary measure only for
+libata, which is planned to move out.
 
+So, SCSI contains only the necessary bits required to implement the
+feature and libata open-codes the rest.  As it's not an exported
+interface, no other SCSI driver is supposed to use it and the SCSI
+modifications can be easily removed after libata moves out.
+
+As long as libata can do EH not associated with scmd or device, I'm okay
+either way and think it's your call.  So, considering the above
+discussion, do you want it to be a generic SCSI interface?
+
+Thanks.
+
+-- 
+tejun
