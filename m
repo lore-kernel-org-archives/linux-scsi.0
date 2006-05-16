@@ -1,44 +1,34 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [REPOST][PATCH] update max sdev block limit
-Date: Tue, 16 May 2006 09:34:50 -0700
-Message-ID: <20060516163450.GA25071@us.ibm.com>
-References: <1147358563.3507.4.camel@localhost.localdomain> <4469EB45.7070104@sgi.com> <4469F83F.4030407@emulex.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [Fwd: [RFT] major libata update]
+Date: Tue, 16 May 2006 12:37:55 -0400
+Message-ID: <4469FFE3.3020009@garzik.org>
+References: <4468B596.9090508@garzik.org>	 <1147789098.3505.19.camel@mulgrave.il.steeleye.com>	 <4469F2B2.703@garzik.org>	 <1147794708.3505.30.camel@mulgrave.il.steeleye.com>	 <4469F906.7040602@gmail.com> <1147796999.3505.42.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:31369 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S932111AbWEPQfG
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 May 2006 12:35:06 -0400
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e35.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k4GGZ5WB007169
-	for <linux-scsi@vger.kernel.org>; Tue, 16 May 2006 12:35:05 -0400
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by westrelay02.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k4GGZ5Kh264260
-	for <linux-scsi@vger.kernel.org>; Tue, 16 May 2006 10:35:05 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k4GGZ3YT003824
-	for <linux-scsi@vger.kernel.org>; Tue, 16 May 2006 10:35:04 -0600
-Content-Disposition: inline
-In-Reply-To: <4469F83F.4030407@emulex.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:64132 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932120AbWEPQh6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 May 2006 12:37:58 -0400
+In-Reply-To: <1147796999.3505.42.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <James.Smart@Emulex.Com>
-Cc: Michael Reed <mdr@sgi.com>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Tejun Heo <htejun@gmail.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
 
-On Tue, May 16, 2006 at 12:05:19PM -0400, James Smart wrote:
-> I don't mind making it bigger, especially as this is just a max, not the
-> default value. I tried to keep it low, as I believe even 2 mins is a long
-> time from the system's perspective. 10 minutes is forever (and remember
-> the scan deadlock that we just worked through).
+James Bottomley wrote:
+> On Wed, 2006-05-17 at 01:08 +0900, Tejun Heo wrote:
+>> It's handled the same way shost->host_failed is handled.
+>> scsi_device_unbusy() wakes it up when the condition is met.
+> 
+> That's the piece I hadn't spotted, yet ... thanks.  That will do it.
+> 
+> could you move ata_schedule_scsi_eh to scsi_error (with the appropriate
+> API rename).  That way the SCSI state model changes aren't in libata
+> (and no-one else who wants to use this has to open code the
+> ata_schedule_scsi_eh API).
 
-Yes, so add default and max settings instead of using the max as the default.
+ACK
 
-And I still don't see how the scsi timeout can (reliably) make it through
-these block/unblocks. EH_RESET_TIMER doesn't freeze the scsi timeout like
-you really need, just restarts it. 
 
-For example, with default sd timeout of 30, you could be one second into a
-command, block for 28 seconds, unblock, and then still timeout.
-
--- Patrick Mansfield
