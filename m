@@ -1,39 +1,54 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [RFC] Megaraid update, submission
-Date: Tue, 16 May 2006 14:07:00 -0400
-Message-ID: <446A14C4.8050002@garzik.org>
-References: <Pine.LNX.4.10.10605161020140.3589-200000@master.linux-ide.org>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [REPOST][PATCH] update max sdev block limit
+Date: Tue, 16 May 2006 14:14:02 -0400
+Message-ID: <446A166A.6080405@emulex.com>
+References: <1147358563.3507.4.camel@localhost.localdomain> <4469EB45.7070104@sgi.com> <4469F83F.4030407@emulex.com> <20060516163450.GA25071@us.ibm.com>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:15502 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751563AbWEPSHF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 May 2006 14:07:05 -0400
-In-Reply-To: <Pine.LNX.4.10.10605161020140.3589-200000@master.linux-ide.org>
+Received: from emulex.emulex.com ([138.239.112.1]:19077 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S932397AbWEPSLg
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 May 2006 14:11:36 -0400
+In-Reply-To: <20060516163450.GA25071@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andre Hedrick <andre@linux-ide.org>
-Cc: linux-scsi@vger.kernel.org, Seokmann.Ju@lsil.com, Andrew Morton <akpm@osdl.org>, James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@infradead.org>, Atul Mukker <Atul.Mukker@lsil.com>
-
-Andre Hedrick wrote:
-> +static int megaraid_pci_master_abort(struct pci_dev* dev)
-> +{
-> +	u16 status, error_bits;
-> +
-> +	pci_read_config_word(dev, PCI_STATUS, &status);
-> +	if (error_bits)
-> +		pci_write_config_word(dev, PCI_STATUS, error_bits);
-> +	pci_read_config_word(dev, PCI_STATUS, &status);
-
-error_bits is used before a value is assigned to it.  Presumably you are 
-missing a duplicate of a line further down in the function,
-
-	error_bits = (status & PCI_STATUS_REC_MASTER_ABORT);
-
-The list stuff looks OK, to my quick glance.
-
-	Jeff
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: Michael Reed <mdr@sgi.com>, linux-scsi@vger.kernel.org
 
 
+
+Patrick Mansfield wrote:
+> On Tue, May 16, 2006 at 12:05:19PM -0400, James Smart wrote:
+>> I don't mind making it bigger, especially as this is just a max, not the
+>> default value. I tried to keep it low, as I believe even 2 mins is a long
+>> time from the system's perspective. 10 minutes is forever (and remember
+>> the scan deadlock that we just worked through).
+> 
+> Yes, so add default and max settings instead of using the max as the default.
+
+Agreed - doing so.
+
+> And I still don't see how the scsi timeout can (reliably) make it through
+> these block/unblocks. EH_RESET_TIMER doesn't freeze the scsi timeout like
+> you really need, just restarts it. 
+> 
+> For example, with default sd timeout of 30, you could be one second into a
+> command, block for 28 seconds, unblock, and then still timeout.
+
+True.  However, the point was not necessarily to allow the command to
+succeed. Note: any target disappearance for any real amount of time (like 28s)
+is likely going to be a condition that required a new login and killed the
+i/o anyway.
+
+The rescheduling of the timeout was to avoid the ramifications of the timeout
+fails, which it would do, as there's no target to send the abort request to.
+What was happening was the abort was failing, the device reset was failing,
+and it escalated up to bus resets and adapter resets - followed by a Test Unit
+Ready being sent, which of course was to a non-existent target, which failed
+and took the device offline. Which then required manual interaction to restart
+io.
+
+-- james
