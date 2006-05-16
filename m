@@ -1,431 +1,2187 @@
-From: "Simon Matthews" <simon.d.matthews@gmail.com>
-Subject: Poor NFS performance with Adaptec 2820SA
-Date: Mon, 15 May 2006 22:24:24 -0700
-Message-ID: <40b437200605152224n2e49027emcf59e28078c6b9eb@mail.gmail.com>
+From: HighPoint Linux Team <linux@highpoint-tech.com>
+Subject: Re: [PATCH] hptiop: HighPoint RocketRAID 3xxx controller driver
+Date: Tue, 16 May 2006 14:38:09 +0800
+Message-ID: <200605161438.09717.linux@highpoint-tech.com>
+References: <200605101704.27491.linux@highpoint-tech.com> <200605121107.48597.linux@highpoint-tech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
-	format=flowed
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.176]:8155 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1751305AbWEPFYZ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 May 2006 01:24:25 -0400
-Received: by py-out-1112.google.com with SMTP id x31so1563050pye
-        for <linux-scsi@vger.kernel.org>; Mon, 15 May 2006 22:24:24 -0700 (PDT)
+Received: from stats.hypersurf.com ([209.237.0.12]:40721 "EHLO
+	stats.hypersurf.com") by vger.kernel.org with ESMTP
+	id S1751520AbWEPGYM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 May 2006 02:24:12 -0400
+In-Reply-To: <200605121107.48597.linux@highpoint-tech.com>
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-I have a Supermicro system with an Adaptec 2820SA SATA-II RAID
-controller. 4 x 400GB SATA disks in a RAID-5/one hotspare config
-(approx 740GB).
+A wholesale replacement for the first submission.
 
-I am running a RedHat system with RedHat kernel 2.6.9-34.ELsmp and
-seeing very slow performance over NFS.
+Merge Andrew Morton's patches:
+- Provide locking for global list
+- Fix debug printks
+- uninline function with multiple callsites
+- coding style fixups
+- remove unneeded casts of void*
+- kfree(NULL) is legal
+- Don't "succeed" if register_chrdev() failed - otherwise we'll later
+  unregister a not-registered chrdev.
+- Don't return from hptiop_do_ioctl() with the spinlock held.
+- uninline __hpt_do_ioctl()
 
-"top" shows almost no cpu activity, while "uptime" shows load figures
-approaching 2.  The problem seems to be related to creating files --
-for example, it took about 5 minutes to un-tar a 15MB file (running
-tar on another machine with the files mounted via NFS on the
-Supermicro server). With a single file, it was able to copy a 3GB file
-in 5 minutes over NFS (not fast, but acceptable).
+Update for Arjan van de Ven's comments:
+- put all asm/ includes after the linux/ ones
+- replace mdelay with msleep
+- add pci posting flush
+- do not set pci command reqister in map_pci_bar
+- do not try merging sg elements in hptiop_buildsgl()
+- remove unused outstandingcommands member from hba structure
+- remove unimplemented hptiop_abort() handler
+- remove typedef u32 hpt_id_t
 
-Running un-tar locally took approx 2 seconds.
+Other updates:
+- fix endianess
 
-I am going to try the latest vanilla kernel (2.6.16.16), but in the
-meanwhile has anyone seen anything like this? Any pointers to solve
-this?
+Signed-off-by: HighPoint Linux Team <linux@highpoint-tech.com>
+---
 
-I should also mention that the system was very slow to build the
-filesystem: it spent over an hour writing inodes (a little over 1
-inode per second) for the ext3 filesystem.
+ Documentation/scsi/hptiop.txt |   92 +++
+ MAINTAINERS                   |    6 
+ drivers/scsi/Kconfig          |   10 
+ drivers/scsi/Makefile         |    1 
+ drivers/scsi/hptiop.c         | 1501 +++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/hptiop.h         |  465 +++++++++++++
+ 6 files changed, 2075 insertions(+), 0 deletions(-)
+ create mode 100644 Documentation/scsi/hptiop.txt
+ create mode 100644 drivers/scsi/hptiop.c
+ create mode 100644 drivers/scsi/hptiop.h
+diff --git a/Documentation/scsi/hptiop.txt b/Documentation/scsi/hptiop.txt
+new file mode 100644
+index 0000000..d28a312
+--- /dev/null
++++ b/Documentation/scsi/hptiop.txt
+@@ -0,0 +1,92 @@
++HIGHPOINT ROCKETRAID 3xxx RAID DRIVER (hptiop)
++
++Controller Register Map
++-------------------------
++
++The controller IOP is accessed via PCI BAR0.
++
++     BAR0 offset    Register
++            0x10    Inbound Message Register 0
++            0x14    Inbound Message Register 1
++            0x18    Outbound Message Register 0
++            0x1C    Outbound Message Register 1
++            0x20    Inbound Doorbell Register
++            0x24    Inbound Interrupt Status Register
++            0x28    Inbound Interrupt Mask Register
++            0x30    Outbound Interrupt Status Register
++            0x34    Outbound Interrupt Mask Register
++            0x40    Inbound Queue Port
++            0x44    Outbound Queue Port
++
++
++I/O Request Workflow
++----------------------
++
++All queued requests are handled via inbound/outbound queue port.
++A request packet can be allocated in either IOP or host memory.
++
++To send a request to the controller:
++
++    - Get a free request packet by reading the inbound queue port or
++      allocate a free request in host DMA coherent memory.
++
++      The value returned from the inbound queue port is an offset
++      relative to the IOP BAR0.
++
++      Requests allocated in host memory must be aligned on 32-bytes boundary.
++
++    - Fill the packet.
++
++    - Post the packet to IOP by writing it to inbound queue. For requests
++      allocated in IOP memory, write the offset to inbound queue port. For
++      requests allocated in host memory, write (0x80000000|(bus_addr>>5))
++      to the inbound queue port.
++
++    - The IOP process the request. When the request is completed, it
++      will be put into outbound queue. An outbound interrupt will be
++      generated.
++
++      For requests allocated in IOP memory, the request offset is posted to
++      outbound queue.
++
++      For requests allocated in host memory, (0x80000000|(bus_addr>>5))
++      is posted to the outbound queue. If IOP_REQUEST_FLAG_OUTPUT_CONTEXT
++      flag is set in the request, the low 32-bit context value will be
++      posted instead.
++
++    - The host read the outbound queue and complete the request.
++
++      For requests allocated in IOP memory, the host driver free the request
++      by writing it to the outbound queue.
++
++Non-queued requests (reset/flush etc) can be sent via inbound message
++register 0. An outbound message with the same value indicates the completion
++of an inbound message.
++
++
++User-level Interface
++---------------------
++
++The driver exposes following sysfs attributes:
++
++     NAME                 R/W    Description
++     driver-version        R     driver version string
++     firmware-version      R     firmware version string
++
++The driver registers char device "hptiop" to communicate with HighPoint RAID
++management software. Its ioctl routine acts as a general binary interface 
++between the IOP firmware and HighPoint RAID management software. New management
++functions can be implemented in application/firmware without modification
++in driver code.
++
++
++-----------------------------------------------------------------------------
++Copyright (C) 2006 HighPoint Technologies, Inc. All Rights Reserved.
++
++  This file is distributed in the hope that it will be useful,
++  but WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++  GNU General Public License for more details.
++
++  linux@highpoint-tech.com
++  http://www.highpoint-tech.com
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 246153d..f83c892 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -1126,6 +1126,12 @@ L:	linux-hams@vger.kernel.org
+ W:	http://www.nt.tuwien.ac.at/~kkudielk/Linux/
+ S:	Maintained
+ 
++HIGHPOINT ROCKETRAID 3xxx RAID DRIVER
++P:	HighPoint Linux Team
++M:	linux@highpoint-tech.com
++W:	http://www.highpoint-tech.com
++S:	Supported
++
+ HIPPI
+ P:	Jes Sorensen
+ M:	jes@trained-monkey.org
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index a480a37..44728ae 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -532,6 +532,16 @@ config SCSI_PDC_ADMA
+ 
+ 	  If unsure, say N.
+ 
++config SCSI_HPTIOP
++	tristate "HighPoint RocketRAID 3xxx Controller support"
++	depends on SCSI && PCI
++	help
++	  This option enables support for HighPoint RocketRAID 3xxx
++	  controllers.
++
++	  To compile this driver as a module, choose M here; the module
++	  will be called hptiop. If unsure, say N.
++
+ config SCSI_SATA_QSTOR
+ 	tristate "Pacific Digital SATA QStor support"
+ 	depends on SCSI_SATA && PCI
+diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
+index 81803a1..e7de6a0 100644
+--- a/drivers/scsi/Makefile
++++ b/drivers/scsi/Makefile
+@@ -136,6 +136,7 @@ obj-$(CONFIG_SCSI_SATA_NV)	+= libata.o s
+ obj-$(CONFIG_SCSI_SATA_ULI)	+= libata.o sata_uli.o
+ obj-$(CONFIG_SCSI_SATA_MV)	+= libata.o sata_mv.o
+ obj-$(CONFIG_SCSI_PDC_ADMA)	+= libata.o pdc_adma.o
++obj-$(CONFIG_SCSI_HPTIOP)	+= hptiop.o
+ 
+ obj-$(CONFIG_ARM)		+= arm/
+ 
+diff --git a/drivers/scsi/hptiop.c b/drivers/scsi/hptiop.c
+new file mode 100644
+index 0000000..8302f3b
+--- /dev/null
++++ b/drivers/scsi/hptiop.c
+@@ -0,0 +1,1501 @@
++/*
++ * HighPoint RR3xxx controller driver for Linux
++ * Copyright (C) 2006 HighPoint Technologies, Inc. All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; version 2 of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * Please report bugs/comments/suggestions to linux@highpoint-tech.com
++ *
++ * For more information, visit http://www.highpoint-tech.com
++ */
++#include <linux/config.h>
++#include <linux/module.h>
++#include <linux/types.h>
++#include <linux/string.h>
++#include <linux/kernel.h>
++#include <linux/pci.h>
++#include <linux/interrupt.h>
++#include <linux/errno.h>
++#include <linux/delay.h>
++#include <linux/timer.h>
++#include <linux/spinlock.h>
++#include <linux/hdreg.h>
++#include <asm/uaccess.h>
++#include <asm/io.h>
++#include <asm/div64.h>
++#include <scsi/scsi_cmnd.h>
++#include <scsi/scsi_device.h>
++#include <scsi/scsi.h>
++#include <scsi/scsi_tcq.h>
++#include <scsi/scsi_host.h>
++
++#include "hptiop.h"
++
++MODULE_AUTHOR("HighPoint Technologies, Inc.");
++MODULE_DESCRIPTION("HighPoint RocketRAID 3xxx SATA Controller Driver");
++
++static char driver_name[] = "hptiop";
++static const char driver_name_long[] = "RocketRAID 3xxx SATA Controller driver";
++static const char driver_ver[] = "v1.0 (060426)";
++
++static DEFINE_SPINLOCK(hptiop_hba_list_lock);
++static LIST_HEAD(hptiop_hba_list);
++static int hptiop_cdev_major = -1;
++
++static void hptiop_host_request_callback(struct hptiop_hba *hba, u32 tag);
++static void hptiop_iop_request_callback(struct hptiop_hba *hba, u32 tag);
++static void hptiop_message_callback(struct hptiop_hba *hba, u32 msg);
++
++static inline void hptiop_pci_posting_flush(struct hpt_iopmu __iomem *iop)
++{
++	readl(&iop->outbound_intstatus);
++}
++
++static int iop_wait_ready(struct hpt_iopmu __iomem *iop, u32 millisec)
++{
++	u32 req = 0;
++	int i;
++
++	for (i = 0; i < millisec; i++) {
++		req = readl(&iop->inbound_queue);
++		if (req != IOPMU_QUEUE_EMPTY)
++			break;
++		msleep(1);
++	}
++
++	if (req != IOPMU_QUEUE_EMPTY) {
++		writel(req, &iop->outbound_queue);
++		hptiop_pci_posting_flush(iop);
++		return 0;
++	}
++
++	return -1;
++}
++
++static void hptiop_request_callback(struct hptiop_hba *hba, u32 tag)
++{
++	if ((tag & IOPMU_QUEUE_MASK_HOST_BITS) == IOPMU_QUEUE_ADDR_HOST_BIT)
++		return hptiop_host_request_callback(hba,
++				tag & ~IOPMU_QUEUE_ADDR_HOST_BIT);
++	else
++		return hptiop_iop_request_callback(hba, tag);
++}
++
++static inline void hptiop_drain_outbound_queue(struct hptiop_hba *hba)
++{
++	u32 req;
++
++	while ((req = readl(&hba->iop->outbound_queue)) != IOPMU_QUEUE_EMPTY) {
++
++		if (req & IOPMU_QUEUE_MASK_HOST_BITS)
++			hptiop_request_callback(hba, req);
++		else {
++			struct hpt_iop_request_header __iomem * p;
++
++			p = (struct hpt_iop_request_header __iomem *)
++				((char __iomem *)hba->iop + req);
++
++			if (readl(&p->flags) & IOP_REQUEST_FLAG_SYNC_REQUEST) {
++				if (readl(&p->context))
++					hptiop_request_callback(hba, req);
++				else
++					writel(1, &p->context);
++			}
++			else
++				hptiop_request_callback(hba, req);
++		}
++	}
++}
++
++static int __iop_intr(struct hptiop_hba *hba)
++{
++	struct hpt_iopmu __iomem *iop = hba->iop;
++	u32 status;
++	int ret = 0;
++
++	status = readl(&iop->outbound_intstatus);
++
++	if (status & IOPMU_OUTBOUND_INT_MSG0) {
++		u32 msg = readl(&iop->outbound_msgaddr0);
++		dprintk("received outbound msg %x\n", msg);
++		writel(IOPMU_OUTBOUND_INT_MSG0, &iop->outbound_intstatus);
++		hptiop_message_callback(hba, msg);
++		ret = 1;
++	}
++
++	if (status & IOPMU_OUTBOUND_INT_POSTQUEUE) {
++		hptiop_drain_outbound_queue(hba);
++		ret = 1;
++	}
++
++	return ret;
++}
++
++static int iop_send_sync_request(struct hptiop_hba *hba,
++					void __iomem *_req, u32 millisec)
++{
++	struct hpt_iop_request_header __iomem *req = _req;
++	u32 i;
++
++	writel(readl(&req->flags) | IOP_REQUEST_FLAG_SYNC_REQUEST,
++			&req->flags);
++
++	writel(0, &req->context);
++
++	writel((unsigned long)req - (unsigned long)hba->iop,
++			&hba->iop->inbound_queue);
++
++	hptiop_pci_posting_flush(hba->iop);
++
++	for (i = 0; i < millisec; i++) {
++		__iop_intr(hba);
++		if (readl(&req->context))
++			return 0;
++		msleep(1);
++	}
++
++	return -1;
++}
++
++static int iop_send_sync_msg(struct hptiop_hba *hba, u32 msg, u32 millisec)
++{
++	u32 i;
++
++	hba->msg_done = 0;
++
++	writel(msg, &hba->iop->inbound_msgaddr0);
++
++	hptiop_pci_posting_flush(hba->iop);
++
++	for (i = 0; i < millisec; i++) {
++		spin_lock_irq(hba->host->host_lock);
++		__iop_intr(hba);
++		spin_unlock_irq(hba->host->host_lock);
++		if (hba->msg_done)
++			break;
++		msleep(1);
++	}
++
++	return hba->msg_done? 0 : -1;
++}
++
++static int iop_get_config(struct hptiop_hba *hba,
++				struct hpt_iop_request_get_config *config)
++{
++	u32 req32;
++	struct hpt_iop_request_get_config __iomem *req;
++
++	req32 = readl(&hba->iop->inbound_queue);
++	if (req32 == IOPMU_QUEUE_EMPTY)
++		return -1;
++
++	req = (struct hpt_iop_request_get_config __iomem *)
++			((unsigned long)hba->iop + req32);
++
++	writel(0, &req->header.flags);
++	writel(IOP_REQUEST_TYPE_GET_CONFIG, &req->header.type);
++	writel(sizeof(struct hpt_iop_request_get_config), &req->header.size);
++	writel(IOP_RESULT_PENDING, &req->header.result);
++
++	if (iop_send_sync_request(hba, req, 20000)) {
++		dprintk("Get config send cmd failed\n");
++		return -1;
++	}
++
++	memcpy_fromio(config, req, sizeof(*config));
++	writel(req32, &hba->iop->outbound_queue);
++	return 0;
++}
++
++static int iop_set_config(struct hptiop_hba *hba,
++				struct hpt_iop_request_set_config *config)
++{
++	u32 req32;
++	struct hpt_iop_request_set_config __iomem *req;
++
++	req32 = readl(&hba->iop->inbound_queue);
++	if (req32 == IOPMU_QUEUE_EMPTY)
++		return -1;
++
++	req = (struct hpt_iop_request_set_config __iomem *)
++			((unsigned long)hba->iop + req32);
++
++	memcpy_toio((u8 __iomem *)req + sizeof(struct hpt_iop_request_header),
++		(u8 *)config + sizeof(struct hpt_iop_request_header),
++		sizeof(struct hpt_iop_request_set_config) -
++			sizeof(struct hpt_iop_request_header));
++
++	writel(0, &req->header.flags);
++	writel(IOP_REQUEST_TYPE_SET_CONFIG, &req->header.type);
++	writel(sizeof(struct hpt_iop_request_set_config), &req->header.size);
++	writel(IOP_RESULT_PENDING, &req->header.result);
++
++	if (iop_send_sync_request(hba, req, 20000)) {
++		dprintk("Set config send cmd failed\n");
++		return -1;
++	}
++
++	writel(req32, &hba->iop->outbound_queue);
++	return 0;
++}
++
++static int hptiop_initialize_iop(struct hptiop_hba *hba)
++{
++	struct hpt_iopmu __iomem *iop = hba->iop;
++
++	/* enable interrupts */
++	writel(~(IOPMU_OUTBOUND_INT_POSTQUEUE | IOPMU_OUTBOUND_INT_MSG0),
++			&iop->outbound_intmask);
++
++	hba->initialized = 1;
++
++	/* start background tasks */
++	if (iop_send_sync_msg(hba,
++			IOPMU_INBOUND_MSG0_START_BACKGROUND_TASK, 5000)) {
++		printk(KERN_ERR "scsi%d: fail to start background task\n",
++			hba->host->host_no);
++		return -1;
++	}
++	return 0;
++}
++
++static int hptiop_map_pci_bar(struct hptiop_hba *hba)
++{
++	u32 mem_base_phy, length;
++	void __iomem *mem_base_virt;
++	struct pci_dev *pcidev = hba->pcidev;
++
++	if (!(pci_resource_flags(pcidev, 0) & IORESOURCE_MEM)) {
++		printk(KERN_ERR "scsi%d: pci resource invalid\n",
++				hba->host->host_no);
++		return -1;
++	}
++
++	mem_base_phy = pci_resource_start(pcidev, 0);
++	length = pci_resource_len(pcidev, 0);
++	mem_base_virt = ioremap(mem_base_phy, length);
++
++	if (!mem_base_virt) {
++		printk(KERN_ERR "scsi%d: Fail to ioremap memory space\n",
++				hba->host->host_no);
++		return -1;
++	}
++
++	hba->iop = mem_base_virt;
++	dprintk("hptiop_map_pci_bar: iop=%p\n", hba->iop);
++	return 0;
++}
++
++static void hptiop_message_callback(struct hptiop_hba *hba, u32 msg)
++{
++	dprintk("iop message 0x%x\n", msg);
++
++	if (!hba->initialized)
++		return;
++
++	if (msg == IOPMU_INBOUND_MSG0_RESET) {
++		atomic_set(&hba->resetting, 0);
++		wake_up(&hba->reset_wq);
++	}
++	else if (msg <= IOPMU_INBOUND_MSG0_MAX)
++		hba->msg_done = 1;
++}
++
++static inline struct hptiop_request *get_req(struct hptiop_hba *hba)
++{
++	struct hptiop_request *ret;
++
++	dprintk("get_req : req=%p\n", hba->req_list);
++
++	ret = hba->req_list;
++	if (ret)
++		hba->req_list = ret->next;
++
++	return ret;
++}
++
++static inline void free_req(struct hptiop_hba *hba, struct hptiop_request *req)
++{
++	dprintk("free_req(%d, %p)\n", req->index, req);
++	req->next = hba->req_list;
++	hba->req_list = req;
++}
++
++static void hptiop_host_request_callback(struct hptiop_hba *hba, u32 tag)
++{
++	struct hpt_iop_request_scsi_command *req;
++	struct scsi_cmnd *scp;
++
++	req = (struct hpt_iop_request_scsi_command *)hba->reqs[tag].req_virt;
++	dprintk("hptiop_host_request_callback: req=%p, type=%d, "
++			"result=%d, context=0x%x tag=%d\n",
++			req, req->header.type, req->header.result,
++			req->header.context, tag);
++
++	BUG_ON(!req->header.result);
++	BUG_ON(req->header.type != cpu_to_le32(IOP_REQUEST_TYPE_SCSI_COMMAND));
++
++	scp = hba->reqs[tag].scp;
++
++	if (HPT_SCP(scp)->mapped) {
++		if (scp->use_sg)
++			pci_unmap_sg(hba->pcidev,
++				(struct scatterlist *)scp->request_buffer,
++				scp->use_sg,
++				scp->sc_data_direction
++			);
++		else
++			pci_unmap_single(hba->pcidev,
++				HPT_SCP(scp)->dma_handle,
++				scp->request_bufflen,
++				scp->sc_data_direction
++			);
++	}
++
++	switch (le32_to_cpu(req->header.result)) {
++	case IOP_RESULT_SUCCESS:
++		scp->result = (DID_OK<<16);
++		break;
++	case IOP_RESULT_BAD_TARGET:
++		scp->result = (DID_BAD_TARGET<<16);
++		break;
++	case IOP_RESULT_BUSY:
++		scp->result = (DID_BUS_BUSY<<16);
++		break;
++	case IOP_RESULT_RESET:
++		scp->result = (DID_RESET<<16);
++		break;
++	case IOP_RESULT_FAIL:
++		scp->result = (DID_ERROR<<16);
++		break;
++	case IOP_RESULT_INVALID_REQUEST:
++		scp->result = (DID_ABORT<<16);
++		break;
++	case IOP_RESULT_MODE_SENSE_CHECK_CONDITION:
++		scp->result = SAM_STAT_CHECK_CONDITION;
++		memset(&scp->sense_buffer,
++				0, sizeof(scp->sense_buffer));
++		memcpy(&scp->sense_buffer,
++			&req->sg_list, le32_to_cpu(req->dataxfer_length));
++		break;
++
++	default:
++		scp->result = ((DRIVER_INVALID|SUGGEST_ABORT)<<24) |
++					(DID_ABORT<<16);
++		break;
++	}
++
++	dprintk("scsi_done(%p)\n", scp);
++	scp->scsi_done(scp);
++	free_req(hba, &hba->reqs[tag]);
++}
++
++void hptiop_iop_request_callback(struct hptiop_hba *hba, u32 tag)
++{
++	struct hpt_iop_request_header __iomem *req;
++	struct hpt_iop_request_ioctl_command __iomem *p;
++	struct hpt_ioctl_k *arg;
++
++	req = (struct hpt_iop_request_header __iomem *)
++			((unsigned long)hba->iop + tag);
++	dprintk("hptiop_iop_request_callback: req=%p, type=%d, "
++			"result=%d, context=0x%x tag=%d\n",
++			req, readl(&req->type), readl(&req->result),
++			readl(&req->context), tag);
++
++	BUG_ON(!readl(&req->result));
++	BUG_ON(readl(&req->type) != IOP_REQUEST_TYPE_IOCTL_COMMAND);
++
++	p = (struct hpt_iop_request_ioctl_command __iomem *)req;
++	arg = (struct hpt_ioctl_k *)(unsigned long)
++		(readl(&req->context) |
++			((u64)readl(&req->context_hi32)<<32));
++
++	if (readl(&req->result) == IOP_RESULT_SUCCESS) {
++		arg->result = HPT_IOCTL_RESULT_OK;
++
++		if (arg->outbuf_size)
++			memcpy_fromio(arg->outbuf,
++				&p->buf[(readl(&p->inbuf_size) + 3)& ~3],
++				arg->outbuf_size);
++
++		if (arg->bytes_returned)
++			*arg->bytes_returned = arg->outbuf_size;
++	}
++	else
++		arg->result = HPT_IOCTL_RESULT_FAILED;
++
++	arg->done(arg);
++	writel(tag, &hba->iop->outbound_queue);
++}
++
++static irqreturn_t hptiop_intr(int irq, void *dev_id, struct pt_regs *regs)
++{
++	struct hptiop_hba  *hba = dev_id;
++	int  handled;
++	unsigned long flags;
++
++	spin_lock_irqsave(hba->host->host_lock, flags);
++	handled = __iop_intr(hba);
++	spin_unlock_irqrestore(hba->host->host_lock, flags);
++
++	return handled;
++}
++
++static int hptiop_buildsgl(struct scsi_cmnd *scp, struct hpt_iopsg *psg)
++{
++	struct Scsi_Host *host = scp->device->host;
++	struct hptiop_hba *hba = (struct hptiop_hba *)host->hostdata;
++	struct scatterlist *sglist = (struct scatterlist *)scp->request_buffer;
++
++	/*
++	 * though we'll not get non-use_sg fields anymore,
++	 * keep use_sg checking anyway
++	 */
++	if (scp->use_sg) {
++		int idx;
++
++		HPT_SCP(scp)->sgcnt = pci_map_sg(hba->pcidev,
++				sglist, scp->use_sg,
++				scp->sc_data_direction);
++		HPT_SCP(scp)->mapped = 1;
++		BUG_ON(HPT_SCP(scp)->sgcnt > hba->max_sg_descriptors);
++
++		for (idx = 0; idx < HPT_SCP(scp)->sgcnt; idx++) {
++			psg[idx].pci_address =
++				cpu_to_le64(sg_dma_address(&sglist[idx]));
++			psg[idx].size = cpu_to_le32(sg_dma_len(&sglist[idx]));
++			psg[idx].eot = (idx == HPT_SCP(scp)->sgcnt - 1) ?
++				cpu_to_le32(1) : 0;
++		}
++
++		return HPT_SCP(scp)->sgcnt;
++	} else {
++		HPT_SCP(scp)->dma_handle = pci_map_single(
++				hba->pcidev,
++				scp->request_buffer,
++				scp->request_bufflen,
++				scp->sc_data_direction
++			);
++		HPT_SCP(scp)->mapped = 1;
++		psg->pci_address = cpu_to_le64(HPT_SCP(scp)->dma_handle);
++		psg->size = cpu_to_le32(scp->request_bufflen);
++		psg->eot = cpu_to_le32(1);
++		return 1;
++	}
++}
++
++static int hptiop_queuecommand(struct scsi_cmnd *scp,
++				void (*done)(struct scsi_cmnd *))
++{
++	struct Scsi_Host *host = scp->device->host;
++	struct hptiop_hba *hba = (struct hptiop_hba *)host->hostdata;
++	struct hpt_iop_request_scsi_command *req;
++	int sg_count = 0;
++	struct hptiop_request *_req;
++
++	BUG_ON(!done);
++	scp->scsi_done = done;
++
++	/*
++	 * hptiop_shutdown will flash controller cache.
++	 */
++	if (scp->cmnd[0] == SYNCHRONIZE_CACHE)  {
++		scp->result = DID_OK<<16;
++		goto cmd_done;
++	}
++
++	_req = get_req(hba);
++	if (_req == NULL) {
++		dprintk("hptiop_queuecmd : no free req\n");
++		scp->result = DID_BUS_BUSY << 16;
++		goto cmd_done;
++	}
++
++	_req->scp = scp;
++
++	dprintk("hptiop_queuecmd(scp=%p) %d/%d/%d/%d cdb=(%x-%x-%x) "
++			"req_index=%d, req=%p\n",
++			scp,
++			host->host_no, scp->device->channel,
++			scp->device->id, scp->device->lun,
++			*((u32 *)&scp->cmnd),
++			*((u32 *)&scp->cmnd + 1),
++			*((u32 *)&scp->cmnd + 2),
++			_req->index, _req->req_virt);
++
++	scp->result = 0;
++
++	if (scp->device->channel || scp->device->lun ||
++			scp->device->id > hba->max_devices) {
++		scp->result = DID_BAD_TARGET << 16;
++		free_req(hba, _req);
++		goto cmd_done;
++	}
++
++	req = (struct hpt_iop_request_scsi_command *)_req->req_virt;
++
++	/* build S/G table */
++	if (scp->request_bufflen)
++		sg_count = hptiop_buildsgl(scp, req->sg_list);
++	else
++		HPT_SCP(scp)->mapped = 0;
++
++	req->header.flags = cpu_to_le32(IOP_REQUEST_FLAG_OUTPUT_CONTEXT);
++	req->header.type = cpu_to_le32(IOP_REQUEST_TYPE_SCSI_COMMAND);
++	req->header.result = cpu_to_le32(IOP_RESULT_PENDING);
++	req->header.context = cpu_to_le32(IOPMU_QUEUE_ADDR_HOST_BIT |
++							(u32)_req->index);
++	req->header.context_hi32 = 0;
++	req->dataxfer_length = cpu_to_le32(scp->bufflen);
++	req->channel = scp->device->channel;
++	req->target = scp->device->id;
++	req->lun = scp->device->lun;
++	req->header.size = cpu_to_le32(
++				sizeof(struct hpt_iop_request_scsi_command)
++				 - sizeof(struct hpt_iopsg)
++				 + sg_count * sizeof(struct hpt_iopsg));
++
++	memcpy(req->cdb, scp->cmnd, sizeof(req->cdb));
++
++	writel(IOPMU_QUEUE_ADDR_HOST_BIT | _req->req_shifted_phy,
++			&hba->iop->inbound_queue);
++
++	return 0;
++
++cmd_done:
++	dprintk("scsi_done(scp=%p)\n", scp);
++	scp->scsi_done(scp);
++	return 0;
++}
++
++static const char *hptiop_info(struct Scsi_Host *host)
++{
++	return driver_name_long;
++}
++
++static int hptiop_reset_hba(struct hptiop_hba *hba)
++{
++	if (atomic_xchg(&hba->resetting, 1) == 0) {
++		atomic_inc(&hba->reset_count);
++		writel(IOPMU_INBOUND_MSG0_RESET,
++				&hba->iop->outbound_msgaddr0);
++		hptiop_pci_posting_flush(hba->iop);
++	}
++
++	wait_event_timeout(hba->reset_wq,
++			atomic_read(&hba->resetting) == 0, 60 * HZ);
++
++	if (atomic_read(&hba->resetting)) {
++		/* IOP is in unkown state, abort reset */
++		printk(KERN_ERR "scsi%d: reset failed\n", hba->host->host_no);
++		return -1;
++	}
++
++	if (iop_send_sync_msg(hba,
++		IOPMU_INBOUND_MSG0_START_BACKGROUND_TASK, 5000)) {
++		dprintk("scsi%d: fail to start background task\n",
++				hba->host->host_no);
++	}
++
++	return 0;
++}
++
++static int hptiop_reset(struct scsi_cmnd *scp)
++{
++	struct Scsi_Host * host = scp->device->host;
++	struct hptiop_hba * hba = (struct hptiop_hba *)host->hostdata;
++
++	printk(KERN_WARNING "hptiop_reset(%d/%d/%d) scp=%p\n",
++			scp->device->host->host_no, scp->device->channel,
++			scp->device->id, scp);
++
++	return hptiop_reset_hba(hba)? FAILED : SUCCESS;
++}
++
++static int hptiop_adjust_disk_queue_depth(struct scsi_device *sdev,
++						int queue_depth)
++{
++	if(queue_depth > 256)
++		queue_depth = 256;
++	scsi_adjust_queue_depth(sdev, MSG_ORDERED_TAG, queue_depth);
++	return queue_depth;
++}
++
++struct hptiop_getinfo {
++	char __user *buffer;
++	loff_t buflength;
++	loff_t bufoffset;
++	loff_t buffillen;
++	loff_t filpos;
++};
++
++static void hptiop_copy_mem_info(struct hptiop_getinfo *pinfo,
++					char *data, int datalen)
++{
++	if (pinfo->filpos < pinfo->bufoffset) {
++		if (pinfo->filpos + datalen <= pinfo->bufoffset) {
++			pinfo->filpos += datalen;
++			return;
++		} else {
++			data += (pinfo->bufoffset - pinfo->filpos);
++			datalen  -= (pinfo->bufoffset - pinfo->filpos);
++			pinfo->filpos = pinfo->bufoffset;
++		}
++	}
++
++	pinfo->filpos += datalen;
++	if (pinfo->buffillen == pinfo->buflength)
++		return;
++
++	if (pinfo->buflength - pinfo->buffillen < datalen)
++		datalen = pinfo->buflength - pinfo->buffillen;
++
++	if (copy_to_user(pinfo->buffer + pinfo->buffillen, data, datalen))
++		return;
++
++	pinfo->buffillen += datalen;
++}
++
++static int hptiop_copy_info(struct hptiop_getinfo *pinfo, char *fmt, ...)
++{
++	va_list args;
++	char buf[128];
++	int len;
++
++	va_start(args, fmt);
++	len = vsnprintf(buf, sizeof(buf), fmt, args);
++	va_end(args);
++	hptiop_copy_mem_info(pinfo, buf, len);
++	return len;
++}
++
++static void hptiop_ioctl_done(struct hpt_ioctl_k *arg)
++{
++	arg->done = NULL;
++	wake_up(&arg->hba->ioctl_wq);
++}
++
++static void hptiop_do_ioctl(struct hpt_ioctl_k *arg)
++{
++	struct hptiop_hba *hba = arg->hba;
++	u32 val;
++	struct hpt_iop_request_ioctl_command __iomem *req;
++	int ioctl_retry = 0;
++
++	dprintk("scsi%d: hptiop_do_ioctl\n", hba->host->host_no);
++
++	/*
++	 * check (in + out) buff size from application.
++	 * outbuf must be dword aligned.
++	 */
++	if (((arg->inbuf_size + 3) & ~3) + arg->outbuf_size >
++			hba->max_request_size
++				- sizeof(struct hpt_iop_request_header)
++				- 4 * sizeof(u32)) {
++		dprintk("scsi%d: ioctl buf size (%d/%d) is too large\n",
++				hba->host->host_no,
++				arg->inbuf_size, arg->outbuf_size);
++		arg->result = HPT_IOCTL_RESULT_FAILED;
++		return;
++	}
++
++retry:
++	spin_lock_irq(hba->host->host_lock);
++
++	val = readl(&hba->iop->inbound_queue);
++	if (val == IOPMU_QUEUE_EMPTY) {
++		spin_unlock_irq(hba->host->host_lock);
++		dprintk("scsi%d: no free req for ioctl\n", hba->host->host_no);
++		arg->result = -1;
++		return;
++	}
++
++	req = (struct hpt_iop_request_ioctl_command __iomem *)
++			((unsigned long)hba->iop + val);
++
++	writel(HPT_CTL_CODE_LINUX_TO_IOP(arg->ioctl_code),
++			&req->ioctl_code);
++	writel(arg->inbuf_size, &req->inbuf_size);
++	writel(arg->outbuf_size, &req->outbuf_size);
++
++	/*
++	 * use the buffer on the IOP local memory first, then copy it
++	 * back to host.
++	 * the caller's request buffer shoudl be little-endian.
++	 */
++	if (arg->inbuf_size)
++		memcpy_toio(req->buf, arg->inbuf, arg->inbuf_size);
++
++	/* correct the controller ID for IOP */
++	if ((arg->ioctl_code == HPT_IOCTL_GET_CHANNEL_INFO ||
++		arg->ioctl_code == HPT_IOCTL_GET_CONTROLLER_INFO_V2 ||
++		arg->ioctl_code == HPT_IOCTL_GET_CONTROLLER_INFO)
++		&& arg->inbuf_size >= sizeof(u32))
++		writel(0, req->buf);
++
++	writel(IOP_REQUEST_TYPE_IOCTL_COMMAND, &req->header.type);
++	writel(0, &req->header.flags);
++	writel(offsetof(struct hpt_iop_request_ioctl_command, buf)
++			+ arg->inbuf_size, &req->header.size);
++	writel((u32)(unsigned long)arg, &req->header.context);
++	writel(BITS_PER_LONG > 32 ? (u32)((unsigned long)arg>>32) : 0,
++			&req->header.context_hi32);
++	writel(IOP_RESULT_PENDING, &req->header.result);
++
++	arg->result = HPT_IOCTL_RESULT_FAILED;
++	arg->done = hptiop_ioctl_done;
++
++	writel(val, &hba->iop->inbound_queue);
++	hptiop_pci_posting_flush(hba->iop);
++
++	spin_unlock_irq(hba->host->host_lock);
++
++	wait_event_timeout(hba->ioctl_wq, arg->done == NULL, 60 * HZ);
++
++	if (arg->done != NULL) {
++		hptiop_reset_hba(hba);
++		if (ioctl_retry++ < 3)
++			goto retry;
++	}
++
++	dprintk("hpt_iop_ioctl %x result %d\n",
++			arg->ioctl_code, arg->result);
++}
++
++static int __hpt_do_ioctl(struct hptiop_hba *hba, u32 code, void *inbuf,
++			u32 insize, void *outbuf, u32 outsize)
++{
++	struct hpt_ioctl_k arg;
++	arg.hba = hba;
++	arg.ioctl_code = code;
++	arg.inbuf = inbuf;
++	arg.outbuf = outbuf;
++	arg.inbuf_size = insize;
++	arg.outbuf_size = outsize;
++	arg.bytes_returned = NULL;
++	hptiop_do_ioctl(&arg);
++	return arg.result;
++}
++
++static inline int hpt_id_valid(__le32 id)
++{
++	return id != 0 && id != cpu_to_le32(0xffffffff);
++}
++
++static int hptiop_get_controller_info(struct hptiop_hba *hba,
++					struct hpt_controller_info *pinfo)
++{
++	int id = 0;
++
++	return __hpt_do_ioctl(hba, HPT_IOCTL_GET_CONTROLLER_INFO,
++		&id, sizeof(int), pinfo, sizeof(*pinfo));
++}
++
++
++static int hptiop_get_channel_info(struct hptiop_hba *hba, int bus,
++					struct hpt_channel_info *pinfo)
++{
++	u32 ids[2];
++
++	ids[0] = 0;
++	ids[1] = bus;
++	return __hpt_do_ioctl(hba, HPT_IOCTL_GET_CHANNEL_INFO,
++				ids, sizeof(ids), pinfo, sizeof(*pinfo));
++
++}
++
++static int hptiop_get_logical_devices(struct hptiop_hba *hba,
++					__le32 *pids, int maxcount)
++{
++	int i;
++	u32 count = maxcount - 1;
++
++	if (__hpt_do_ioctl(hba, HPT_IOCTL_GET_LOGICAL_DEVICES,
++			&count, sizeof(u32),
++			pids, sizeof(u32) * maxcount))
++		return -1;
++
++	maxcount = le32_to_cpu(pids[0]);
++	for (i = 0; i < maxcount; i++)
++		pids[i] = pids[i+1];
++
++	return maxcount;
++}
++
++static int hptiop_get_device_info_v3(struct hptiop_hba *hba, __le32 id,
++				struct hpt_logical_device_info_v3 *pinfo)
++{
++	return __hpt_do_ioctl(hba, HPT_IOCTL_GET_DEVICE_INFO_V3,
++				&id, sizeof(u32),
++				pinfo, sizeof(*pinfo));
++}
++
++static const char *get_array_status(struct hpt_logical_device_info_v3 *devinfo)
++{
++	static char s[64];
++	u32 flags = le32_to_cpu(devinfo->u.array.flags);
++	u32 trans_prog = le32_to_cpu(devinfo->u.array.transforming_progress);
++	u32 reb_prog = le32_to_cpu(devinfo->u.array.rebuilding_progress);
++
++	if (flags & ARRAY_FLAG_DISABLED)
++		return "Disabled";
++	else if (flags & ARRAY_FLAG_TRANSFORMING)
++		sprintf(s, "Expanding/Migrating %d.%d%%%s%s",
++			trans_prog / 100,
++			trans_prog % 100,
++			(flags & (ARRAY_FLAG_NEEDBUILDING|ARRAY_FLAG_BROKEN))?
++					", Critical" : "",
++			((flags & ARRAY_FLAG_NEEDINITIALIZING) &&
++			 !(flags & ARRAY_FLAG_REBUILDING) &&
++			 !(flags & ARRAY_FLAG_INITIALIZING))?
++					", Unintialized" : "");
++	else if ((flags & ARRAY_FLAG_BROKEN) &&
++				devinfo->u.array.array_type != AT_RAID6)
++		return "Critical";
++	else if (flags & ARRAY_FLAG_REBUILDING)
++		sprintf(s,
++			(flags & ARRAY_FLAG_NEEDINITIALIZING)?
++				"%sBackground initializing %d.%d%%" :
++					"%sRebuilding %d.%d%%",
++			(flags & ARRAY_FLAG_BROKEN)? "Critical, " : "",
++			reb_prog / 100,
++			reb_prog % 100);
++	else if (flags & ARRAY_FLAG_VERIFYING)
++		sprintf(s, "%sVerifying %d.%d%%",
++			(flags & ARRAY_FLAG_BROKEN)? "Critical, " : "",
++			reb_prog / 100,
++			reb_prog % 100);
++	else if (flags & ARRAY_FLAG_INITIALIZING)
++		sprintf(s, "%sForground initializing %d.%d%%",
++			(flags & ARRAY_FLAG_BROKEN)? "Critical, " : "",
++			reb_prog / 100,
++			reb_prog % 100);
++	else if (flags & ARRAY_FLAG_NEEDTRANSFORM)
++		sprintf(s,"%s%s%s", "Need Expanding/Migrating",
++			(flags & ARRAY_FLAG_BROKEN)? "Critical, " : "",
++			((flags & ARRAY_FLAG_NEEDINITIALIZING) &&
++			 !(flags & ARRAY_FLAG_REBUILDING) &&
++			 !(flags & ARRAY_FLAG_INITIALIZING))?
++				", Unintialized" : "");
++	else if (flags & ARRAY_FLAG_NEEDINITIALIZING &&
++		!(flags & ARRAY_FLAG_REBUILDING) &&
++		!(flags & ARRAY_FLAG_INITIALIZING))
++		sprintf(s,"%sUninitialized",
++			(flags & ARRAY_FLAG_BROKEN)? "Critical, " : "");
++	else if ((flags & ARRAY_FLAG_NEEDBUILDING) ||
++			(flags & ARRAY_FLAG_BROKEN))
++		return "Critical";
++	else
++		return "Normal";
++	return s;
++}
++
++static void hptiop_dump_devinfo(struct hptiop_hba *hba,
++			struct hptiop_getinfo *pinfo, __le32 id, int indent)
++{
++	struct hpt_logical_device_info_v3 devinfo;
++	int i;
++	u64 capacity;
++
++	for (i = 0; i < indent; i++)
++		hptiop_copy_info(pinfo, "\t");
++
++	if (hptiop_get_device_info_v3(hba, id, &devinfo)) {
++		hptiop_copy_info(pinfo, "unknown\n");
++		return;
++	}
++
++	switch (devinfo.type) {
++
++	case LDT_DEVICE: {
++		struct hd_driveid *driveid;
++		u32 flags = le32_to_cpu(devinfo.u.device.flags);
++
++		driveid = (struct hd_driveid *)devinfo.u.device.ident;
++		/* model[] is 40 chars long, but we just want 20 chars here */
++		driveid->model[20] = 0;
++
++		if (indent)
++			if (flags & DEVICE_FLAG_DISABLED)
++				hptiop_copy_info(pinfo,"Missing\n");
++			else
++				hptiop_copy_info(pinfo, "CH%d %s\n",
++					devinfo.u.device.path_id + 1,
++					driveid->model);
++		else {
++			capacity = le64_to_cpu(devinfo.capacity) * 512;
++			do_div(capacity, 1000000);
++			hptiop_copy_info(pinfo,
++				"CH%d %s, %lluMB, %s %s%s%s%s\n",
++				devinfo.u.device.path_id + 1,
++				driveid->model,
++				capacity,
++				(flags & DEVICE_FLAG_DISABLED)?
++					"Disabled" : "Normal",
++				devinfo.u.device.read_ahead_enabled?
++						"[RA]" : "",
++				devinfo.u.device.write_cache_enabled?
++						"[WC]" : "",
++				devinfo.u.device.TCQ_enabled?
++						"[TCQ]" : "",
++				devinfo.u.device.NCQ_enabled?
++						"[NCQ]" : ""
++			);
++		}
++		break;
++	}
++
++	case LDT_ARRAY:
++		if (devinfo.target_id != INVALID_TARGET_ID)
++			hptiop_copy_info(pinfo, "[DISK %d_%d] ",
++					devinfo.vbus_id, devinfo.target_id);
++
++		capacity = le64_to_cpu(devinfo.capacity) * 512;
++		do_div(capacity, 1000000);
++		hptiop_copy_info(pinfo, "%s (%s), %lluMB, %s\n",
++			devinfo.u.array.name,
++			devinfo.u.array.array_type==AT_RAID0? "RAID0" :
++				devinfo.u.array.array_type==AT_RAID1? "RAID1" :
++				devinfo.u.array.array_type==AT_RAID5? "RAID5" :
++				devinfo.u.array.array_type==AT_RAID6? "RAID6" :
++				devinfo.u.array.array_type==AT_JBOD? "JBOD" :
++					"unknown",
++			capacity,
++			get_array_status(&devinfo));
++		for (i = 0; i < devinfo.u.array.ndisk; i++) {
++			if (hpt_id_valid(devinfo.u.array.members[i])) {
++				if (cpu_to_le16(1<<i) &
++					devinfo.u.array.critical_members)
++					hptiop_copy_info(pinfo, "\t*");
++				hptiop_dump_devinfo(hba, pinfo,
++					devinfo.u.array.members[i], indent+1);
++			}
++			else
++				hptiop_copy_info(pinfo, "\tMissing\n");
++		}
++		if (id == devinfo.u.array.transform_source) {
++			hptiop_copy_info(pinfo, "\tExpanding/Migrating to:\n");
++			hptiop_dump_devinfo(hba, pinfo,
++				devinfo.u.array.transform_target, indent+1);
++		}
++		break;
++	}
++}
++
++static ssize_t hptiop_show_version(struct class_device *class_dev, char *buf)
++{
++	return snprintf(buf, PAGE_SIZE, "%s\n", driver_ver);
++}
++
++static ssize_t hptiop_cdev_read(struct file *filp, char __user *buf,
++				size_t count, loff_t *ppos)
++{
++	struct hptiop_hba *hba = filp->private_data;
++	struct hptiop_getinfo info;
++	int i, j, ndev;
++	struct hpt_controller_info con_info;
++	struct hpt_channel_info chan_info;
++	__le32 ids[32];
++
++	info.buffer     = buf;
++	info.buflength  = count;
++	info.bufoffset  = ppos ? *ppos : 0;
++	info.filpos     = 0;
++	info.buffillen  = 0;
++
++	if (hptiop_get_controller_info(hba, &con_info))
++		return -EIO;
++
++	for (i = 0; i < con_info.num_buses; i++) {
++		if (hptiop_get_channel_info(hba, i, &chan_info) == 0) {
++			if (hpt_id_valid(chan_info.devices[0]))
++				hptiop_dump_devinfo(hba, &info,
++						chan_info.devices[0], 0);
++			if (hpt_id_valid(chan_info.devices[1]))
++				hptiop_dump_devinfo(hba, &info,
++						chan_info.devices[1], 0);
++		}
++	}
++
++	ndev = hptiop_get_logical_devices(hba, ids,
++					sizeof(ids) / sizeof(ids[0]));
++
++	/*
++	 * if hptiop_get_logical_devices fails, ndev==-1 and it just
++	 * output nothing here
++	 */
++	for (j = 0; j < ndev; j++)
++		hptiop_dump_devinfo(hba, &info, ids[j], 0);
++
++	if (ppos)
++		*ppos += info.buffillen;
++
++	return info.buffillen;
++}
++
++static int hptiop_cdev_ioctl(struct inode *inode,  struct file *file,
++					unsigned int cmd, unsigned long arg)
++{
++	struct hptiop_hba *hba = file->private_data;
++	struct hpt_ioctl_u ioctl_u;
++	struct hpt_ioctl_k ioctl_k;
++	u32 bytes_returned;
++	int err = -EINVAL;
++
++	if (copy_from_user(&ioctl_u,
++		(void __user *)arg, sizeof(struct hpt_ioctl_u)))
++		return -EINVAL;
++
++	if (ioctl_u.magic != HPT_IOCTL_MAGIC)
++		return -EINVAL;
++
++	ioctl_k.ioctl_code = ioctl_u.ioctl_code;
++	ioctl_k.inbuf = NULL;
++	ioctl_k.inbuf_size = ioctl_u.inbuf_size;
++	ioctl_k.outbuf = NULL;
++	ioctl_k.outbuf_size = ioctl_u.outbuf_size;
++	ioctl_k.hba = hba;
++	ioctl_k.bytes_returned = &bytes_returned;
++
++	/* verify user buffer */
++	if ((ioctl_k.inbuf_size && !access_ok(VERIFY_READ,
++			ioctl_u.inbuf, ioctl_k.inbuf_size)) ||
++		(ioctl_k.outbuf_size && !access_ok(VERIFY_WRITE,
++			ioctl_u.outbuf, ioctl_k.outbuf_size)) ||
++		(ioctl_u.bytes_returned && !access_ok(VERIFY_WRITE,
++			ioctl_u.bytes_returned, sizeof(u32))) ||
++		ioctl_k.inbuf_size + ioctl_k.outbuf_size > 0x10000) {
++
++		dprintk("scsi%d: got bad user address\n", hba->host->host_no);
++		return -EINVAL;
++	}
++
++	/* map buffer to kernel. */
++	if (ioctl_k.inbuf_size) {
++		ioctl_k.inbuf = kmalloc(ioctl_k.inbuf_size, GFP_KERNEL);
++		if (!ioctl_k.inbuf) {
++			dprintk("scsi%d: fail to alloc inbuf\n",
++					hba->host->host_no);
++			err = -ENOMEM;
++			goto err_exit;
++		}
++
++		if (copy_from_user(ioctl_k.inbuf,
++				ioctl_u.inbuf, ioctl_k.inbuf_size)) {
++			goto err_exit;
++		}
++	}
++
++	if (ioctl_k.outbuf_size) {
++		ioctl_k.outbuf = kmalloc(ioctl_k.outbuf_size, GFP_KERNEL);
++		if (!ioctl_k.outbuf) {
++			dprintk("scsi%d: fail to alloc outbuf\n",
++					hba->host->host_no);
++			err = -ENOMEM;
++			goto err_exit;
++		}
++	}
++
++	hptiop_do_ioctl(&ioctl_k);
++
++	if (ioctl_k.result == HPT_IOCTL_RESULT_OK) {
++		if (ioctl_k.outbuf_size &&
++			copy_to_user(ioctl_u.outbuf,
++				ioctl_k.outbuf, ioctl_k.outbuf_size))
++			goto err_exit;
++
++		if (ioctl_u.bytes_returned &&
++			copy_to_user(ioctl_u.bytes_returned,
++				&bytes_returned, sizeof(u32)))
++			goto err_exit;
++
++		err = 0;
++	}
++
++err_exit:
++	kfree(ioctl_k.inbuf);
++	kfree(ioctl_k.outbuf);
++
++	return err;
++}
++
++static int hptiop_cdev_open(struct inode *inode, struct file *file)
++{
++	struct hptiop_hba *hba;
++	unsigned i = 0, minor = iminor(inode);
++	int ret = -ENODEV;
++
++	spin_lock(&hptiop_hba_list_lock);
++	list_for_each_entry(hba, &hptiop_hba_list, link) {
++		if (i == minor) {
++			file->private_data = hba;
++			ret = 0;
++			goto out;
++		}
++		i++;
++	}
++
++out:
++	spin_unlock(&hptiop_hba_list_lock);
++	return ret;
++}
++
++static struct file_operations hptiop_cdev_fops = {
++	.owner = THIS_MODULE,
++	.read  = hptiop_cdev_read,
++	.ioctl = hptiop_cdev_ioctl,
++	.open  = hptiop_cdev_open,
++};
++
++static ssize_t hptiop_show_fw_version(struct class_device *class_dev, char *buf)
++{
++	struct Scsi_Host *host = class_to_shost(class_dev);
++	struct hptiop_hba *hba = (struct hptiop_hba *)host->hostdata;
++
++	return snprintf(buf, PAGE_SIZE, "%d.%d.%d.%d\n",
++				hba->firmware_version >> 24,
++				(hba->firmware_version >> 16) & 0xff,
++				(hba->firmware_version >> 8) & 0xff,
++				hba->firmware_version & 0xff);
++}
++
++static struct class_device_attribute hptiop_attr_version = {
++	.attr = {
++		.name = "driver-version",
++		.mode = S_IRUGO,
++	},
++	.show = hptiop_show_version,
++};
++
++static struct class_device_attribute hptiop_attr_fw_version = {
++	.attr = {
++		.name = "firmware-version",
++		.mode = S_IRUGO,
++	},
++	.show = hptiop_show_fw_version,
++};
++
++static struct class_device_attribute *hptiop_attrs[] = {
++	&hptiop_attr_version,
++	&hptiop_attr_fw_version,
++	NULL
++};
++
++static struct scsi_host_template driver_template = {
++	.module                     = THIS_MODULE,
++	.name                       = driver_name,
++	.queuecommand               = hptiop_queuecommand,
++	.eh_device_reset_handler    = hptiop_reset,
++	.eh_bus_reset_handler       = hptiop_reset,
++	.info                       = hptiop_info,
++	.unchecked_isa_dma          = 0,
++	.emulated                   = 0,
++	.use_clustering             = ENABLE_CLUSTERING,
++	.proc_name                  = driver_name,
++	.shost_attrs                = hptiop_attrs,
++	.this_id                    = -1,
++	.change_queue_depth         = hptiop_adjust_disk_queue_depth,
++};
++
++static int __devinit hptiop_probe(struct pci_dev *pcidev,
++					const struct pci_device_id *id)
++{
++	struct Scsi_Host *host = NULL;
++	struct hptiop_hba *hba;
++	struct hpt_iop_request_get_config iop_config;
++	struct hpt_iop_request_set_config set_config;
++	dma_addr_t start_phy;
++	void *start_virt;
++	u32 offset, i, req_size;
++
++	dprintk("hptiop_probe(%p)\n", pcidev);
++
++	if (pci_enable_device(pcidev)) {
++		printk(KERN_ERR "hptiop: fail to enable pci device\n");
++		return -ENODEV;
++	}
++
++	printk(KERN_INFO "adapter at PCI %d:%d:%d, IRQ %d\n",
++		pcidev->bus->number, pcidev->devfn >> 3, pcidev->devfn & 7,
++		pcidev->irq);
++
++	pci_set_master(pcidev);
++
++	/* Enable 64bit DMA if possible */
++	if (pci_set_dma_mask(pcidev, DMA_64BIT_MASK)) {
++		if (pci_set_dma_mask(pcidev, DMA_32BIT_MASK)) {
++			printk(KERN_ERR "hptiop: fail to set dma_mask\n");
++			goto disable_pci_device;
++		}
++	}
++
++	if (pci_request_regions(pcidev, driver_name)) {
++		printk(KERN_ERR "hptiop: pci_request_regions failed\n");
++		goto disable_pci_device;
++	}
++
++	host = scsi_host_alloc(&driver_template, sizeof(struct hptiop_hba));
++	if (!host) {
++		printk(KERN_ERR "hptiop: fail to alloc scsi host\n");
++		goto free_pci_regions;
++	}
++
++	hba = (struct hptiop_hba *)host->hostdata;
++
++	hba->pcidev = pcidev;
++	hba->host = host;
++	hba->initialized = 0;
++
++	atomic_set(&hba->resetting, 0);
++	atomic_set(&hba->reset_count, 0);
++
++	init_waitqueue_head(&hba->reset_wq);
++	init_waitqueue_head(&hba->ioctl_wq);
++
++	host->max_lun = 1;
++	host->max_channel = 0;
++	host->io_port = 0;
++	host->n_io_port = 0;
++	host->irq = pcidev->irq;
++
++	if (hptiop_map_pci_bar(hba))
++		goto free_scsi_host;
++
++	if (iop_wait_ready(hba->iop, 20000)) {
++		printk(KERN_ERR "scsi%d: firmware not ready\n",
++				hba->host->host_no);
++		goto unmap_pci_bar;
++	}
++
++	if (iop_get_config(hba, &iop_config)) {
++		printk(KERN_ERR "scsi%d: get config failed\n",
++				hba->host->host_no);
++		goto unmap_pci_bar;
++	}
++
++	hba->max_requests = min(le32_to_cpu(iop_config.max_requests),
++				HPTIOP_MAX_REQUESTS);
++	hba->max_devices = le32_to_cpu(iop_config.max_devices);
++	hba->max_request_size = le32_to_cpu(iop_config.request_size);
++	hba->max_sg_descriptors = le32_to_cpu(iop_config.max_sg_count);
++	hba->firmware_version = le32_to_cpu(iop_config.firmware_version);
++	hba->sdram_size = le32_to_cpu(iop_config.sdram_size);
++
++	host->max_sectors = le32_to_cpu(iop_config.data_transfer_length) >> 9;
++	host->max_id = le32_to_cpu(iop_config.max_devices);
++	host->sg_tablesize = le32_to_cpu(iop_config.max_sg_count);
++	host->can_queue = le32_to_cpu(iop_config.max_requests);
++	host->cmd_per_lun = le32_to_cpu(iop_config.max_requests);
++	host->max_cmd_len = 16;
++
++	set_config.vbus_id = cpu_to_le32(host->host_no);
++	set_config.iop_id = cpu_to_le32(host->host_no);
++
++	if (iop_set_config(hba, &set_config)) {
++		printk(KERN_ERR "scsi%d: set config failed\n",
++				hba->host->host_no);
++		goto unmap_pci_bar;
++	}
++
++	if (scsi_add_host(host, &pcidev->dev)) {
++		printk(KERN_ERR "scsi%d: scsi_add_host failed\n",
++					hba->host->host_no);
++		goto unmap_pci_bar;
++	}
++
++	pci_set_drvdata(pcidev, host);
++
++	if (request_irq(pcidev->irq, hptiop_intr, SA_SHIRQ,
++					driver_name, hba)) {
++		printk(KERN_ERR "scsi%d: request irq %d failed\n",
++					hba->host->host_no, pcidev->irq);
++		goto remove_scsi_host;
++	}
++
++	/* Allocate request mem */
++	req_size = sizeof(struct hpt_iop_request_scsi_command)
++		+ sizeof(struct hpt_iopsg) * (hba->max_sg_descriptors - 1);
++	if ((req_size& 0x1f) != 0)
++		req_size = (req_size + 0x1f) & ~0x1f;
++
++	dprintk("req_size=%d, max_requests=%d\n", req_size, hba->max_requests);
++
++	hba->req_size = req_size;
++	start_virt = dma_alloc_coherent(&pcidev->dev,
++				hba->req_size*hba->max_requests + 0x20,
++				&start_phy, GFP_KERNEL);
++
++	if (!start_virt) {
++		printk(KERN_ERR "scsi%d: fail to alloc request mem\n",
++					hba->host->host_no);
++		goto free_request_irq;
++	}
++
++	hba->dma_coherent = start_virt;
++	hba->dma_coherent_handle = start_phy;
++
++	if ((start_phy & 0x1f) != 0)
++	{
++		offset = ((start_phy + 0x1f) & ~0x1f) - start_phy;
++		start_phy += offset;
++		start_virt += offset;
++	}
++
++	hba->req_list = start_virt;
++	for (i = 0; i < hba->max_requests; i++) {
++		hba->reqs[i].next = NULL;
++		hba->reqs[i].req_virt = start_virt;
++		hba->reqs[i].req_shifted_phy = start_phy >> 5;
++		hba->reqs[i].index = i;
++		free_req(hba, &hba->reqs[i]);
++		start_virt = (char *)start_virt + hba->req_size;
++		start_phy = start_phy + hba->req_size;
++	}
++
++	/* Enable Interrupt and start background task */
++	if (hptiop_initialize_iop(hba))
++		goto free_request_mem;
++
++	spin_lock(&hptiop_hba_list_lock);
++	list_add_tail(&hba->link, &hptiop_hba_list);
++	spin_unlock(&hptiop_hba_list_lock);
++
++	scsi_scan_host(host);
++
++	dprintk("scsi%d: hptiop_probe successfully\n", hba->host->host_no);
++	return 0;
++
++free_request_mem:
++	dma_free_coherent(&hba->pcidev->dev,
++			hba->req_size*hba->max_requests + 0x20,
++			hba->dma_coherent, hba->dma_coherent_handle);
++
++free_request_irq:
++	free_irq(hba->pcidev->irq, hba);
++
++remove_scsi_host:
++	scsi_remove_host(host);
++
++unmap_pci_bar:
++	iounmap(hba->iop);
++
++free_pci_regions:
++	pci_release_regions(pcidev) ;
++
++free_scsi_host:
++	scsi_host_put(host);
++
++disable_pci_device:
++	pci_disable_device(pcidev);
++
++	dprintk("scsi%d: hptiop_probe fail\n", host->host_no);
++	return -ENODEV;
++}
++
++static void hptiop_shutdown(struct pci_dev *pcidev)
++{
++	struct Scsi_Host *host = pci_get_drvdata(pcidev);
++	struct hptiop_hba *hba = (struct hptiop_hba *)host->hostdata;
++	struct hpt_iopmu __iomem *iop = hba->iop;
++	u32    int_mask;
++
++	dprintk("hptiop_shutdown(%p)\n", hba);
++
++	/* stop the iop */
++	if (iop_send_sync_msg(hba, IOPMU_INBOUND_MSG0_SHUTDOWN, 60000))
++		printk(KERN_ERR "scsi%d: shutdown the iop timeout\n",
++					hba->host->host_no);
++
++	/* disable all outbound interrupts */
++	int_mask = readl(&iop->outbound_intmask);
++	writel(int_mask |
++		IOPMU_OUTBOUND_INT_MSG0 | IOPMU_OUTBOUND_INT_POSTQUEUE,
++		&iop->outbound_intmask);
++	hptiop_pci_posting_flush(iop);
++}
++
++static void hptiop_remove(struct pci_dev *pcidev)
++{
++	struct Scsi_Host *host = pci_get_drvdata(pcidev);
++	struct hptiop_hba *hba = (struct hptiop_hba *)host->hostdata;
++
++	dprintk("scsi%d: hptiop_remove\n", hba->host->host_no);
++
++	spin_lock(&hptiop_hba_list_lock);
++	list_del_init(&hba->link);
++	spin_unlock(&hptiop_hba_list_lock);
++
++	hptiop_shutdown(pcidev);
++
++	free_irq(hba->pcidev->irq, hba);
++
++	dma_free_coherent(&hba->pcidev->dev,
++			hba->req_size * hba->max_requests + 0x20,
++			hba->dma_coherent,
++			hba->dma_coherent_handle);
++
++	iounmap(hba->iop);
++
++	pci_release_regions(hba->pcidev);
++	pci_set_drvdata(hba->pcidev, NULL);
++	pci_disable_device(hba->pcidev);
++
++	scsi_remove_host(host);
++	scsi_host_put(host);
++}
++
++static struct pci_device_id hptiop_id_table[] = {
++	{ PCI_DEVICE(0x1103, 0x3220) },
++	{ PCI_DEVICE(0x1103, 0x3320) },
++	{},
++};
++
++MODULE_DEVICE_TABLE(pci, hptiop_id_table);
++
++static struct pci_driver hptiop_pci_driver = {
++	.name       = driver_name,
++	.id_table   = hptiop_id_table,
++	.probe      = hptiop_probe,
++	.remove     = hptiop_remove,
++	.shutdown   = hptiop_shutdown,
++};
++
++static int __init hptiop_module_init(void)
++{
++	int error;
++
++	printk(KERN_INFO "%s %s\n", driver_name_long, driver_ver);
++
++	error = pci_register_driver(&hptiop_pci_driver);
++	if (error < 0)
++		return error;
++
++	hptiop_cdev_major = register_chrdev(0, "hptiop", &hptiop_cdev_fops);
++	if (hptiop_cdev_major < 0) {
++		printk(KERN_WARNING "unable to register hptiop device.\n");
++		return hptiop_cdev_major;
++	}
++
++	return 0;
++}
++
++static void __exit hptiop_module_exit(void)
++{
++	dprintk("hptiop_module_exit\n");
++	unregister_chrdev(hptiop_cdev_major, "hptiop");
++	pci_unregister_driver(&hptiop_pci_driver);
++}
++
++
++module_init(hptiop_module_init);
++module_exit(hptiop_module_exit);
++
++MODULE_LICENSE("GPL");
+diff --git a/drivers/scsi/hptiop.h b/drivers/scsi/hptiop.h
+new file mode 100644
+index 0000000..f04f7e8
+--- /dev/null
++++ b/drivers/scsi/hptiop.h
+@@ -0,0 +1,465 @@
++/*
++ * HighPoint RR3xxx controller driver for Linux
++ * Copyright (C) 2006 HighPoint Technologies, Inc. All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; version 2 of the License.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * Please report bugs/comments/suggestions to linux@highpoint-tech.com
++ *
++ * For more information, visit http://www.highpoint-tech.com
++ */
++#ifndef _HPTIOP_H_
++#define _HPTIOP_H_
++
++/*
++ * logical device type.
++ * Identify array (logical device) and physical device.
++ */
++#define LDT_ARRAY   1
++#define LDT_DEVICE  2
++
++/*
++ * Array types
++ */
++#define AT_UNKNOWN  0
++#define AT_RAID0    1
++#define AT_RAID1    2
++#define AT_RAID5    3
++#define AT_RAID6    4
++#define AT_JBOD     7
++
++#define MAX_NAME_LENGTH     36
++#define MAX_ARRAYNAME_LEN   16
++
++#define MAX_ARRAY_MEMBERS_V1 8
++#define MAX_ARRAY_MEMBERS_V2 16
++
++/* keep definition for source code compatiblity */
++#define MAX_ARRAY_MEMBERS MAX_ARRAY_MEMBERS_V1
++
++/*
++ * array flags
++ */
++#define ARRAY_FLAG_DISABLED         0x00000001 /* The array is disabled */
++#define ARRAY_FLAG_NEEDBUILDING     0x00000002 /* need to be rebuilt */
++#define ARRAY_FLAG_REBUILDING       0x00000004 /* in rebuilding process */
++#define ARRAY_FLAG_BROKEN           0x00000008 /* broken but still working */
++#define ARRAY_FLAG_BOOTDISK         0x00000010 /* has a active partition */
++#define ARRAY_FLAG_BOOTMARK         0x00000040 /* array has boot mark set */
++#define ARRAY_FLAG_NEED_AUTOREBUILD 0x00000080 /* auto-rebuild should start */
++#define ARRAY_FLAG_VERIFYING        0x00000100 /* is being verified */
++#define ARRAY_FLAG_INITIALIZING     0x00000200 /* is being initialized */
++#define ARRAY_FLAG_TRANSFORMING     0x00000400 /* tranform in progress */
++#define ARRAY_FLAG_NEEDTRANSFORM    0x00000800 /* array need tranform */
++#define ARRAY_FLAG_NEEDINITIALIZING 0x00001000 /* initialization not done */
++#define ARRAY_FLAG_BROKEN_REDUNDANT 0x00002000 /* broken but redundant */
++
++/*
++ * device flags
++ */
++#define DEVICE_FLAG_DISABLED        0x00000001 /* device is disabled */
++#define DEVICE_FLAG_UNINITIALIZED   0x00010000 /* device is not initialized */
++#define DEVICE_FLAG_LEGACY          0x00020000 /* lagacy drive */
++#define DEVICE_FLAG_IS_SPARE        0x80000000 /* is a spare disk */
++
++/*
++ * ioctl codes
++ */
++#define HPT_CTL_CODE(x) (x+0xFF00)
++#define HPT_CTL_CODE_LINUX_TO_IOP(x) ((x)-0xff00)
++
++#define HPT_IOCTL_GET_CONTROLLER_INFO       HPT_CTL_CODE(2)
++#define HPT_IOCTL_GET_CHANNEL_INFO          HPT_CTL_CODE(3)
++#define HPT_IOCTL_GET_LOGICAL_DEVICES       HPT_CTL_CODE(4)
++#define HPT_IOCTL_GET_DRIVER_CAPABILITIES   HPT_CTL_CODE(19)
++#define HPT_IOCTL_GET_DEVICE_INFO_V3        HPT_CTL_CODE(46)
++#define HPT_IOCTL_GET_CONTROLLER_INFO_V2    HPT_CTL_CODE(47)
++
++/*
++ * Controller information.
++ */
++struct hpt_controller_info {
++	u8      chip_type;                    /* chip type */
++	u8      interrupt_level;              /* IRQ level */
++	u8      num_buses;                    /* bus count */
++	u8      chip_flags;
++
++	u8      product_id[MAX_NAME_LENGTH];/* product name */
++	u8      vendor_id[MAX_NAME_LENGTH]; /* vendor name */
++}
++__attribute__((packed));
++
++/*
++ * Channel information.
++ */
++struct hpt_channel_info {
++	__le32  io_port;         /* IDE Base Port Address */
++	__le32  control_port;    /* IDE Control Port Address */
++	__le32  devices[2];      /* device connected to this channel */
++}
++__attribute__((packed));
++
++/*
++ * Array information.
++ */
++struct hpt_array_info_v3 {
++	u8      name[MAX_ARRAYNAME_LEN]; /* array name */
++	u8      description[64];         /* array description */
++	u8      create_manager[16];      /* who created it */
++	__le32  create_time;             /* when created it */
++
++	u8      array_type;              /* array type */
++	u8      block_size_shift;        /* stripe size */
++	u8      ndisk;                   /* Number of ID in Members[] */
++	u8      reserved;
++
++	__le32  flags;                   /* working flags, see ARRAY_FLAG_XXX */
++	__le32  members[MAX_ARRAY_MEMBERS_V2];  /* member array/disks */
++
++	__le32  rebuilding_progress;
++	__le64  rebuilt_sectors; /* rebuilding point (LBA) for single member */
++
++	__le32  transform_source;
++	__le32  transform_target;    /* destination device ID */
++	__le32  transforming_progress;
++	__le32  signature;              /* persistent identification*/
++	__le16  critical_members;       /* bit mask of critical members */
++	__le16  reserve2;
++	__le32  reserve;
++}
++__attribute__((packed));
++
++/*
++ * physical device information.
++ */
++#define MAX_PARENTS_PER_DISK    8
++
++struct hpt_device_info_v2 {
++	u8   ctlr_id;             /* controller id */
++	u8   path_id;             /* bus */
++	u8   target_id;           /* id */
++	u8   device_mode_setting; /* Current Data Transfer mode: 0-4 PIO0-4 */
++				  /* 5-7 MW DMA0-2, 8-13 UDMA0-5 */
++	u8   device_type;         /* device type */
++	u8   usable_mode;         /* highest usable mode */
++
++#ifdef __BIG_ENDIAN_BITFIELD
++	u8   NCQ_enabled: 1;
++	u8   NCQ_supported: 1;
++	u8   TCQ_enabled: 1;
++	u8   TCQ_supported: 1;
++	u8   write_cache_enabled: 1;
++	u8   write_cache_supported: 1;
++	u8   read_ahead_enabled: 1;
++	u8   read_ahead_supported: 1;
++	u8   reserved6: 6;
++	u8   spin_up_mode: 2;
++#else
++	u8   read_ahead_supported: 1;
++	u8   read_ahead_enabled: 1;
++	u8   write_cache_supported: 1;
++	u8   write_cache_enabled: 1;
++	u8   TCQ_supported: 1;
++	u8   TCQ_enabled: 1;
++	u8   NCQ_supported: 1;
++	u8   NCQ_enabled: 1;
++	u8   spin_up_mode: 2;
++	u8   reserved6: 6;
++#endif
++
++	__le32  flags;         /* working flags, see DEVICE_FLAG_XXX */
++	u8      ident[150];    /* (partitial) Identify Data of this device */
++
++	__le64  total_free;
++	__le64  max_free;
++	__le64  bad_sectors;
++	__le32  parent_arrays[MAX_PARENTS_PER_DISK];
++}
++__attribute__((packed));
++
++/*
++ * Logical device information.
++ */
++#define INVALID_TARGET_ID   0xFF
++#define INVALID_BUS_ID      0xFF
++
++struct hpt_logical_device_info_v3 {
++	u8       type;                   /* LDT_ARRAY or LDT_DEVICE */
++	u8       cache_policy;           /* refer to CACHE_POLICY_xxx */
++	u8       vbus_id;                /* vbus sequence in vbus_list */
++	u8       target_id;              /* OS target id. 0xFF is invalid */
++					 /* OS name: DISK $VBusId_$TargetId */
++	__le64   capacity;               /* array capacity */
++	__le32   parent_array;           /* don't use this field for physical
++					    device. use ParentArrays field in
++					    hpt_device_info_v2 */
++	/* reserved statistic fields */
++	__le32   stat1;
++	__le32   stat2;
++	__le32   stat3;
++	__le32   stat4;
++
++	union {
++		struct hpt_array_info_v3 array;
++		struct hpt_device_info_v2 device;
++	} __attribute__((packed)) u;
++
++}
++__attribute__((packed));
++
++/*
++ * ioctl structure
++ */
++#define HPT_IOCTL_MAGIC   0xA1B2C3D4
++
++struct hpt_ioctl_u {
++	u32   magic;            /* used to check if it's a valid ioctl packet */
++	u32   ioctl_code;       /* operation control code */
++	void __user *inbuf;     /* input data buffer */
++	u32   inbuf_size;       /* size of input data buffer */
++	void __user *outbuf;    /* output data buffer */
++	u32   outbuf_size;      /* size of output data buffer */
++	void __user *bytes_returned;   /* count of bytes returned */
++}
++__attribute__((packed));
++
++
++struct hpt_iopmu
++{
++	__le32 resrved0[4];
++	__le32 inbound_msgaddr0;
++	__le32 inbound_msgaddr1;
++	__le32 outbound_msgaddr0;
++	__le32 outbound_msgaddr1;
++	__le32 inbound_doorbell;
++	__le32 inbound_intstatus;
++	__le32 inbound_intmask;
++	__le32 outbound_doorbell;
++	__le32 outbound_intstatus;
++	__le32 outbound_intmask;
++	__le32 reserved1[2];
++	__le32 inbound_queue;
++	__le32 outbound_queue;
++};
++
++#define IOPMU_QUEUE_EMPTY            0xffffffff
++#define IOPMU_QUEUE_MASK_HOST_BITS   0xf0000000
++#define IOPMU_QUEUE_ADDR_HOST_BIT    0x80000000
++
++#define IOPMU_OUTBOUND_INT_MSG0      1
++#define IOPMU_OUTBOUND_INT_MSG1      2
++#define IOPMU_OUTBOUND_INT_DOORBELL  4
++#define IOPMU_OUTBOUND_INT_POSTQUEUE 8
++#define IOPMU_OUTBOUND_INT_PCI       0x10
++
++#define IOPMU_INBOUND_INT_MSG0       1
++#define IOPMU_INBOUND_INT_MSG1       2
++#define IOPMU_INBOUND_INT_DOORBELL   4
++#define IOPMU_INBOUND_INT_ERROR      8
++#define IOPMU_INBOUND_INT_POSTQUEUE  0x10
++
++enum hpt_iopmu_message {
++	/* host-to-iop messages */
++	IOPMU_INBOUND_MSG0_NOP = 0,
++	IOPMU_INBOUND_MSG0_RESET,
++	IOPMU_INBOUND_MSG0_FLUSH,
++	IOPMU_INBOUND_MSG0_SHUTDOWN,
++	IOPMU_INBOUND_MSG0_STOP_BACKGROUND_TASK,
++	IOPMU_INBOUND_MSG0_START_BACKGROUND_TASK,
++	IOPMU_INBOUND_MSG0_MAX = 0xff,
++	/* iop-to-host messages */
++	IOPMU_OUTBOUND_MSG0_REGISTER_DEVICE_0 = 0x100,
++	IOPMU_OUTBOUND_MSG0_REGISTER_DEVICE_MAX = 0x1ff,
++	IOPMU_OUTBOUND_MSG0_UNREGISTER_DEVICE_0 = 0x200,
++	IOPMU_OUTBOUND_MSG0_UNREGISTER_DEVICE_MAX = 0x2ff,
++	IOPMU_OUTBOUND_MSG0_REVALIDATE_DEVICE_0 = 0x300,
++	IOPMU_OUTBOUND_MSG0_REVALIDATE_DEVICE_MAX = 0x3ff,
++};
++
++struct hpt_iop_request_header
++{
++	__le32 size;
++	__le32 type;
++	__le32 flags;
++	__le32 result;
++	__le32 context; /* host context */
++	__le32 context_hi32;
++};
++
++#define IOP_REQUEST_FLAG_SYNC_REQUEST 1
++#define IOP_REQUEST_FLAG_BIST_REQUEST 2
++#define IOP_REQUEST_FLAG_REMAPPED     4
++#define IOP_REQUEST_FLAG_OUTPUT_CONTEXT 8
++
++enum hpt_iop_request_type {
++	IOP_REQUEST_TYPE_GET_CONFIG = 0,
++	IOP_REQUEST_TYPE_SET_CONFIG,
++	IOP_REQUEST_TYPE_BLOCK_COMMAND,
++	IOP_REQUEST_TYPE_SCSI_COMMAND,
++	IOP_REQUEST_TYPE_IOCTL_COMMAND,
++	IOP_REQUEST_TYPE_MAX
++};
++
++enum hpt_iop_result_type {
++	IOP_RESULT_PENDING = 0,
++	IOP_RESULT_SUCCESS,
++	IOP_RESULT_FAIL,
++	IOP_RESULT_BUSY,
++	IOP_RESULT_RESET,
++	IOP_RESULT_INVALID_REQUEST,
++	IOP_RESULT_BAD_TARGET,
++	IOP_RESULT_MODE_SENSE_CHECK_CONDITION,
++};
++
++struct hpt_iop_request_get_config
++{
++	struct hpt_iop_request_header header;
++	__le32 interface_version;
++	__le32 firmware_version;
++	__le32 max_requests;
++	__le32 request_size;
++	__le32 max_sg_count;
++	__le32 data_transfer_length;
++	__le32 alignment_mask;
++	__le32 max_devices;
++	__le32 sdram_size;
++};
++
++struct hpt_iop_request_set_config
++{
++	struct hpt_iop_request_header header;
++	__le32 iop_id;
++	__le32 vbus_id;
++	__le32 reserve[6];
++};
++
++struct hpt_iopsg
++{
++	__le32 size;
++	__le32 eot; /* non-zero: end of table */
++	__le64 pci_address;
++};
++
++struct hpt_iop_request_block_command
++{
++	struct hpt_iop_request_header header;
++	u8     channel;
++	u8     target;
++	u8     lun;
++	u8     pad1;
++	__le16 command; /* IOP_BLOCK_COMMAND_{READ,WRITE} */
++	__le16 sectors;
++	__le64 lba;
++	struct hpt_iopsg sg_list[1];
++};
++
++#define IOP_BLOCK_COMMAND_READ     1
++#define IOP_BLOCK_COMMAND_WRITE    2
++#define IOP_BLOCK_COMMAND_VERIFY   3
++#define IOP_BLOCK_COMMAND_FLUSH    4
++#define IOP_BLOCK_COMMAND_SHUTDOWN 5
++
++struct hpt_iop_request_scsi_command
++{
++	struct hpt_iop_request_header header;
++	u8     channel;
++	u8     target;
++	u8     lun;
++	u8     pad1;
++	u8     cdb[16];
++	__le32 dataxfer_length;
++	struct hpt_iopsg sg_list[1];
++};
++
++struct hpt_iop_request_ioctl_command
++{
++	struct hpt_iop_request_header header;
++	__le32 ioctl_code;
++	__le32 inbuf_size;
++	__le32 outbuf_size;
++	__le32 bytes_returned;
++	u8     buf[1];
++	/* out data should be put at buf[(inbuf_size+3)&~3] */
++};
++
++#define HPTIOP_MAX_REQUESTS  256u
++
++struct hptiop_request {
++	struct hptiop_request * next;
++	void *                  req_virt;
++	u32                     req_shifted_phy;
++	struct scsi_cmnd *      scp;
++	int                     index;
++};
++
++struct hpt_scsi_pointer {
++	int mapped;
++	int sgcnt;
++	dma_addr_t dma_handle;
++};
++
++#define HPT_SCP(scp) ((struct hpt_scsi_pointer *)&(scp)->SCp)
++
++struct hptiop_hba {
++	struct hpt_iopmu __iomem * iop;
++	struct Scsi_Host * host;
++	struct pci_dev * pcidev;
++
++	struct list_head link;
++
++	/* IOP config info */
++	u32     firmware_version;
++	u32     sdram_size;
++	u32     max_devices;
++	u32     max_requests;
++	u32     max_request_size;
++	u32     max_sg_descriptors;
++
++	u32     req_size; /* host-allocated request buffer size */
++	int     initialized;
++	int     msg_done;
++
++	struct hptiop_request * req_list;
++	struct hptiop_request reqs[HPTIOP_MAX_REQUESTS];
++
++	/* used to free allocated dma area */
++	void *      dma_coherent;
++	dma_addr_t  dma_coherent_handle;
++
++	atomic_t    reset_count;
++	atomic_t    resetting;
++
++	wait_queue_head_t reset_wq;
++	wait_queue_head_t ioctl_wq;
++};
++
++struct hpt_ioctl_k
++{
++	struct hptiop_hba * hba;
++	u32    ioctl_code;
++	u32    inbuf_size;
++	u32    outbuf_size;
++	void * inbuf;
++	void * outbuf;
++	u32  * bytes_returned;
++	void (*done)(struct hpt_ioctl_k *);
++	int    result; /* HPT_IOCTL_RESULT_ */
++};
++
++#define HPT_IOCTL_RESULT_OK         0
++#define HPT_IOCTL_RESULT_FAILED     (-1)
++
++#if 0
++#define dprintk(fmt, args...) do { printk(fmt, ##args); } while(0)
++#else
++#define dprintk(fmt, args...)
++#endif
++
++#endif
 
-My first install, I used LVM. With this performance (even locally) was
-terrible.
-
-lspci:
-]# lspci
-00:01.0 PCI bridge: Advanced Micro Devices [AMD] AMD-8132 PCI-X Bridge (rev 11)
-00:01.1 PIC: Advanced Micro Devices [AMD] AMD-8132 PCI-X IOAPIC (rev 11)
-00:02.0 PCI bridge: Advanced Micro Devices [AMD] AMD-8132 PCI-X Bridge (rev 11)
-00:02.1 PIC: Advanced Micro Devices [AMD] AMD-8132 PCI-X IOAPIC (rev 11)
-00:06.0 PCI bridge: Advanced Micro Devices [AMD] AMD-8111 PCI (rev 07)
-00:07.0 ISA bridge: Advanced Micro Devices [AMD] AMD-8111 LPC (rev 05)
-00:07.1 IDE interface: Advanced Micro Devices [AMD] AMD-8111 IDE (rev 03)
-00:07.2 SMBus: Advanced Micro Devices [AMD] AMD-8111 SMBus 2.0 (rev 02)
-00:07.3 Bridge: Advanced Micro Devices [AMD] AMD-8111 ACPI (rev 05)
-00:18.0 Host bridge: Advanced Micro Devices [AMD] K8
-[Athlon64/Opteron] HyperTransport Technology Configuration
-00:18.1 Host bridge: Advanced Micro Devices [AMD] K8
-[Athlon64/Opteron] Address Map
-00:18.2 Host bridge: Advanced Micro Devices [AMD] K8
-[Athlon64/Opteron] DRAM Controller
-00:18.3 Host bridge: Advanced Micro Devices [AMD] K8
-[Athlon64/Opteron] Miscellaneous Control
-01:00.0 USB Controller: Advanced Micro Devices [AMD] AMD-8111 USB (rev 0b)
-01:00.1 USB Controller: Advanced Micro Devices [AMD] AMD-8111 USB (rev 0b)
-01:04.0 VGA compatible controller: ATI Technologies Inc Rage XL (rev 27)
-02:01.0 RAID bus controller: Adaptec AAC-RAID (Rocket) (rev 02)
-02:03.0 Ethernet controller: Broadcom Corporation NetXtreme BCM5704
-Gigabit Ethernet (rev 10)
-02:03.1 Ethernet controller: Broadcom Corporation NetXtreme BCM5704
-Gigabit Ethernet (rev 10)
-03:03.0 RAID bus controller: Marvell Technology Group Ltd. MV88SX6041
-4-port SATA II PCI-X Controller (rev 03)
-
-/proc/cpuinfo:
-processor       : 0
-vendor_id       : AuthenticAMD
-cpu family      : 15
-model           : 33
-model name      : Dual Core AMD Opteron(tm) Processor 270
-stepping        : 2
-cpu MHz         : 2005.107
-cache size      : 1024 KB
-fdiv_bug        : no
-hlt_bug         : no
-f00f_bug        : no
-coma_bug        : no
-fpu             : yes
-fpu_exception   : yes
-cpuid level     : 1
-wp              : yes
-flags           : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge
-mca cmov pat pse36 clflush mmx fxsr sse sse2 ht sysc
-all nx mmxext lm 3dnowext 3dnow pni
-bogomips        : 4014.79
-
-processor       : 1
-vendor_id       : AuthenticAMD
-.....
-
-dmesg
-Linux version 2.6.9-34.ELsmp (bhcompile@hs20-bc1-7.build.redhat.com)
-(gcc version 3.4.5 20051201 (Red Hat 3.4.5-2)) #1 SMP Fri Feb 24
-16:54:53 EST 2006
-BIOS-provided physical RAM map:
- BIOS-e820: 0000000000000000 - 000000000009fc00 (usable)
- BIOS-e820: 000000000009fc00 - 00000000000a0000 (reserved)
- BIOS-e820: 00000000000e8000 - 0000000000100000 (reserved)
- BIOS-e820: 0000000000100000 - 000000007fff0000 (usable)
- BIOS-e820: 000000007fff0000 - 000000007ffff000 (ACPI data)
- BIOS-e820: 000000007ffff000 - 0000000080000000 (ACPI NVS)
- BIOS-e820: 00000000ff780000 - 0000000100000000 (reserved)
-1151MB HIGHMEM available.
-896MB LOWMEM available.
-found SMP MP-table at 000ff780
-NX (Execute Disable) protection: active
-On node 0 totalpages: 524272
-  DMA zone: 4096 pages, LIFO batch:1
-  Normal zone: 225280 pages, LIFO batch:16
-  HighMem zone: 294896 pages, LIFO batch:16
-DMI 2.3 present.
-Using APIC driver default
-ACPI: RSDP (v000 ACPIAM                                ) @ 0x000f97a0
-ACPI: RSDT (v001 A M I  OEMRSDT  0x04000610 MSFT 0x00000097) @ 0x7fff0000
-ACPI: FADT (v002 A M I  OEMFACP  0x04000610 MSFT 0x00000097) @ 0x7fff0200
-ACPI: MADT (v001 A M I  OEMAPIC  0x04000610 MSFT 0x00000097) @ 0x7fff0380
-ACPI: OEMB (v001 A M I  OEMBIOS  0x04000610 MSFT 0x00000097) @ 0x7ffff040
-ACPI: DSDT (v001  H8DAR H8DAR010 0x00000000 INTL 0x02002026) @ 0x00000000
-ACPI: PM-Timer IO Port: 0x5008
-ACPI: Local APIC address 0xfee00000
-ACPI: LAPIC (acpi_id[0x01] lapic_id[0x00] enabled)
-Processor #0 15:1 APIC version 16
-ACPI: LAPIC (acpi_id[0x02] lapic_id[0x01] enabled)
-Processor #1 15:1 APIC version 16
-ACPI: LAPIC (acpi_id[0x03] lapic_id[0x82] disabled)
-ACPI: LAPIC (acpi_id[0x04] lapic_id[0x83] disabled)
-Enabling APIC mode:  Flat.  Using 0 I/O APICs
-ACPI: IOAPIC (id[0x02] address[0xfec00000] gsi_base[0])
-IOAPIC[0]: apic_id 2, version 17, address 0xfec00000, GSI 0-23
-ACPI: IOAPIC (id[0x07] address[0xfebfe000] gsi_base[40])
-IOAPIC[1]: apic_id 7, version 17, address 0xfebfe000, GSI 40-46
-ACPI: IOAPIC (id[0x08] address[0xfebff000] gsi_base[47])
-IOAPIC[2]: apic_id 8, version 17, address 0xfebff000, GSI 47-53
-ACPI: INT_SRC_OVR (bus 0 bus_irq 0 global_irq 2 dfl dfl)
-ACPI: INT_SRC_OVR (bus 0 bus_irq 0 global_irq 2 dfl dfl)
-ACPI: IRQ0 used by override.
-ACPI: IRQ2 used by override.
-ACPI: IRQ9 used by override.
-Using ACPI (MADT) for SMP configuration information
-Built 1 zonelists
-Kernel command line: ro root=LABEL=/ rhgb quiet
-Initializing CPU#0
-CPU 0 irqstacks, hard=c03ea000 soft=c03ca000
-PID hash table entries: 4096 (order: 12, 65536 bytes)
-Detected 2005.107 MHz processor.
-Using tsc for high-res timesource
-Console: colour VGA+ 80x25
-Dentry cache hash table entries: 131072 (order: 7, 524288 bytes)
-Inode-cache hash table entries: 65536 (order: 6, 262144 bytes)
-Memory: 2073636k/2097088k available (1868k kernel code, 22428k
-reserved, 755k data, 180k init, 1179584k highmem)
-Calibrating delay using timer specific routine.. 4014.79 BogoMIPS (lpj=2007397)
-Security Scaffold v1.0.0 initialized
-SELinux:  Initializing.
-SELinux:  Starting in permissive mode
-There is already a security framework initialized, register_security failed.
-selinux_register_security:  Registering secondary module capability
-Capability LSM initialized as secondary
-Mount-cache hash table entries: 512 (order: 0, 4096 bytes)
-CPU: After generic identify, caps: 178bfbff e3d3fbff 00000000 00000000
-CPU: After vendor identify, caps:  178bfbff e3d3fbff 00000000 00000000
-CPU: L1 I Cache: 64K (64 bytes/line), D cache 64K (64 bytes/line)
-CPU: L2 Cache: 1024K (64 bytes/line)
-CPU: After all inits, caps:        178bfbff e3d3fbff 00000000 00000010
-Intel machine check architecture supported.
-Intel machine check reporting enabled on CPU#0.
-Enabling fast FPU save and restore... done.
-Enabling unmasked SIMD FPU exception support... done.
-Checking 'hlt' instruction... OK.
-CPU0: AMD Dual Core AMD Opteron(tm) Processor 270 stepping 02
-per-CPU timeslice cutoff: 2925.70 usecs.
-task migration cache decay timeout: 3 msecs.
-Booting processor 1/1 eip 3000
-CPU 1 irqstacks, hard=c03eb000 soft=c03cb000
-Initializing CPU#1
-Calibrating delay using timer specific routine.. 4008.51 BogoMIPS (lpj=2004258)
-CPU: After generic identify, caps: 178bfbff e3d3fbff 00000000 00000000
-CPU: After vendor identify, caps:  178bfbff e3d3fbff 00000000 00000000
-CPU: L1 I Cache: 64K (64 bytes/line), D cache 64K (64 bytes/line)
-CPU: L2 Cache: 1024K (64 bytes/line)
-CPU: After all inits, caps:        178bfbff e3d3fbff 00000000 00000010
-Intel machine check architecture supported.
-Intel machine check reporting enabled on CPU#1.
-CPU1: AMD Dual Core AMD Opteron(tm) Processor 270 stepping 02
-Total of 2 processors activated (8023.31 BogoMIPS).
-ENABLING IO-APIC IRQs
-..TIMER: vector=0x31 pin1=2 pin2=-1
-checking TSC synchronization across 2 CPUs: passed.
-Brought up 2 CPUs
-zapping low mappings.
-checking if image is initramfs... it is
-Freeing initrd memory: 476k freed
-NET: Registered protocol family 16
-PCI: PCI BIOS revision 2.10 entry at 0xf0031, last bus=3
-PCI: Using configuration type 1
-mtrr: v2.0 (20020519)
-ACPI: Subsystem revision 20040816
-ACPI: Interpreter enabled
-ACPI: Using IOAPIC for interrupt routing
-ACPI: PCI Root Bridge [PCI0] (00:00)
-PCI: Probing PCI hardware (bus 00)
-ACPI: PCI Interrupt Routing Table [\_SB_.PCI0._PRT]
-ACPI: PCI Interrupt Routing Table [\_SB_.PCI0.PCI1._PRT]
-ACPI: PCI Interrupt Routing Table [\_SB_.PCI0.POGA._PRT]
-ACPI: PCI Interrupt Routing Table [\_SB_.PCI0.POGB._PRT]
-ACPI: PCI Interrupt Link [LNKA] (IRQs 3 4 5 6 7 9 *10 11 12 14 15)
-ACPI: PCI Interrupt Link [LNKB] (IRQs 3 4 5 6 7 9 10 *11 12 14 15)
-ACPI: PCI Interrupt Link [LNKC] (IRQs 3 4 *5 6 7 9 10 11 12 14 15)
-ACPI: PCI Interrupt Link [LNKD] (IRQs 3 4 5 6 7 *9 10 11 12 14 15)
-Linux Plug and Play Support v0.97 (c) Adam Belay
-usbcore: registered new driver usbfs
-usbcore: registered new driver hub
-PCI: Using ACPI for IRQ routing
-ACPI: PCI interrupt 0000:00:07.2[D] -> GSI 19 (level, low) -> IRQ 169
-ACPI: PCI interrupt 0000:03:03.0[A] -> GSI 42 (level, low) -> IRQ 177
-ACPI: PCI interrupt 0000:02:01.0[A] -> GSI 47 (level, low) -> IRQ 185
-ACPI: PCI interrupt 0000:02:03.0[A] -> GSI 49 (level, low) -> IRQ 193
-ACPI: PCI interrupt 0000:02:03.1[B] -> GSI 50 (level, low) -> IRQ 201
-ACPI: PCI interrupt 0000:01:00.0[D] -> GSI 19 (level, low) -> IRQ 169
-ACPI: PCI interrupt 0000:01:00.1[D] -> GSI 19 (level, low) -> IRQ 169
-ACPI: PCI interrupt 0000:01:04.0[A] -> GSI 17 (level, low) -> IRQ 209
-apm: BIOS not found.
-audit: initializing netlink socket (disabled)
-audit(1147608466.509:1): initialized
-highmem bounce pool size: 64 pages
-Total HugeTLB memory allocated, 0
-VFS: Disk quotas dquot_6.5.1
-Dquot-cache hash table entries: 1024 (order 0, 4096 bytes)
-SELinux:  Registering netfilter hooks
-Initializing Cryptographic API
-ksign: Installing public key data
-Loading keyring
-- Added public key 63EFDF11AD6BAA3
-- User ID: Red Hat, Inc. (Kernel Module GPG key)
-pci_hotplug: PCI Hot Plug PCI Core version: 0.5
-ACPI: Processor [CPU1] (supports C1, 8 throttling states)
-ACPI: Processor [CPU2] (supports C1)
-Real Time Clock Driver v1.12
-Linux agpgart interface v0.100 (c) Dave Jones
-serio: i8042 AUX port at 0x60,0x64 irq 12
-serio: i8042 KBD port at 0x60,0x64 irq 1
-Serial: 8250/16550 driver $Revision: 1.90 $ 8 ports, IRQ sharing enabled
-ttyS0 at I/O 0x3f8 (irq = 4) is a 16550A
-ttyS1 at I/O 0x2f8 (irq = 3) is a 16550A
-RAMDISK driver initialized: 16 RAM disks of 16384K size 1024 blocksize
-divert: not allocating divert_blk for non-ethernet device lo
-Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
-ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
-AMD8111: IDE controller at PCI slot 0000:00:07.1
-AMD8111: chipset revision 3
-AMD8111: not 100% native mode: will probe irqs later
-AMD8111: 0000:00:07.1 (rev 03) UDMA133 controller
-    ide0: BM-DMA at 0xffa0-0xffa7, BIOS settings: hda:DMA, hdb:pio
-    ide1: BM-DMA at 0xffa8-0xffaf, BIOS settings: hdc:pio, hdd:pio
-Probing IDE interface ide0...
-hda: CD-224E-N, ATAPI CD/DVD-ROM drive
-Using cfq io scheduler
-ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
-Probing IDE interface ide1...
-Probing IDE interface ide1...
-Probing IDE interface ide2...
-Probing IDE interface ide3...
-Probing IDE interface ide4...
-Probing IDE interface ide5...
-hda: ATAPI 24X CD-ROM drive, 256kB Cache, UDMA(33)
-Uniform CD-ROM driver Revision: 3.20
-ide-floppy driver 0.99.newide
-usbcore: registered new driver hiddev
-usbcore: registered new driver usbhid
-drivers/usb/input/hid-core.c: v2.0:USB HID core driver
-mice: PS/2 mouse device common for all mice
-input: AT Translated Set 2 keyboard on isa0060/serio0
-input: GenPS/2 Genius Wheel Mouse on isa0060/serio1
-md: md driver 0.90.0 MAX_MD_DEVS=256, MD_SB_DISKS=27
-NET: Registered protocol family 2
-IP: routing cache hash table of 8192 buckets, 128Kbytes
-TCP: Hash tables configured (established 262144 bind 43690)
-Initializing IPsec netlink socket
-NET: Registered protocol family 1
-NET: Registered protocol family 17
-ACPI: (supports S0 S1 S4 S5)
-ACPI wakeup devices:
-PCI1 USB0 USB1 PS2K PS2M UAR1 UAR2 POGA POGB PWRB
-Freeing unused kernel memory: 180k freed
-SCSI subsystem initialized
-Adaptec aacraid driver (1.1-5[2412])
-ACPI: PCI interrupt 0000:02:01.0[A] -> GSI 47 (level, low) -> IRQ 185
-aacraid0: kernel 5.1-0[8832]
-aacraid0: monitor 5.1-0[8832]
-aacraid0: bios 5.1-0[8832]
-aacraid0: serial 504e8b
-scsi0 : aacraid
-  Vendor: Adaptec   Model: ned               Rev: V1.0
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-SCSI device sda: 1562193920 512-byte hdwr sectors (799843 MB)
-sda: Write Protect is off
-sda: Mode Sense: 03 00 00 00
-SCSI device sda: drive cache: write through
-SCSI device sda: 1562193920 512-byte hdwr sectors (799843 MB)
-sda: Write Protect is off
-sda: Mode Sense: 03 00 00 00
-SCSI device sda: drive cache: write through
- sda: sda1 sda2 sda3
-Attached scsi removable disk sda at scsi0, channel 0, id 0, lun 0
-kjournald starting.  Commit interval 5 seconds
-EXT3-fs: mounted filesystem with ordered data mode.
-security:  3 users, 4 roles, 354 types, 26 bools
-security:  55 classes, 21833 rules
-SELinux:  Completing initialization.
-SELinux:  Setting up existing superblocks.
-SELinux: initialized (dev sda1, type ext3), uses xattr
-SELinux: initialized (dev tmpfs, type tmpfs), uses transition SIDs
-SELinux: initialized (dev selinuxfs, type selinuxfs), uses genfs_contexts
-SELinux: initialized (dev mqueue, type mqueue), not configured for labeling
-SELinux: initialized (dev hugetlbfs, type hugetlbfs), uses genfs_contexts
-SELinux: initialized (dev devpts, type devpts), uses transition SIDs
-SELinux: initialized (dev eventpollfs, type eventpollfs), uses genfs_contexts
-SELinux: initialized (dev pipefs, type pipefs), uses task SIDs
-SELinux: initialized (dev tmpfs, type tmpfs), uses transition SIDs
-SELinux: initialized (dev futexfs, type futexfs), uses genfs_contexts
-SELinux: initialized (dev sockfs, type sockfs), uses task SIDs
-SELinux: initialized (dev proc, type proc), uses genfs_contexts
-SELinux: initialized (dev bdev, type bdev), uses genfs_contexts
-SELinux: initialized (dev rootfs, type rootfs), uses genfs_contexts
-SELinux: initialized (dev sysfs, type sysfs), uses genfs_contexts
-SELinux: initialized (dev usbfs, type usbfs), uses genfs_contexts
-inserting floppy driver for 2.6.9-34.ELsmp
-Floppy drive(s): fd0 is 1.44M
-FDC 0 is a post-1991 82077
-tg3.c:v3.43-rh (Oct 24, 2005)
-ACPI: PCI interrupt 0000:02:03.0[A] -> GSI 49 (level, low) -> IRQ 193
-divert: allocating divert_blk for eth0
-eth0: Tigon3 [partno(BCM95704A6) rev 2100 PHY(5704)]
-(PCIX:133MHz:64-bit) 10/100/1000BaseT Ethernet 00:30:48:58:df:ae
-eth0: RXcsums[1] LinkChgREG[0] MIirq[0] ASF[1] Split[0] WireSpeed[1] TSOcap[0]
-eth0: dma_rwctrl[769f4000]
-ACPI: PCI interrupt 0000:02:03.1[B] -> GSI 50 (level, low) -> IRQ 201
-divert: allocating divert_blk for eth1
-eth1: Tigon3 [partno(BCM95704A6) rev 2100 PHY(5704)]
-(PCIX:133MHz:64-bit) 10/100/1000BaseT Ethernet 00:30:48:58:df:af
-eth1: RXcsums[1] LinkChgREG[0] MIirq[0] ASF[0] Split[0] WireSpeed[1] TSOcap[1]
-eth1: dma_rwctrl[769f4000]
-hw_random: AMD768 system management I/O registers at 0x5000.
-hw_random hardware driver 1.0.0 loaded
-shpchp: HPC vendor_id 1022 device_id 7458 ss_vid 0 ss_did 0
-shpchp: shpc_init: cannot reserve MMIO region
-shpchp: HPC vendor_id 1022 device_id 7458 ss_vid 0 ss_did 0
-shpchp: shpc_init: cannot reserve MMIO region
-shpchp: HPC vendor_id 1022 device_id 7460 ss_vid 0 ss_did 0
-shpchp: shpc_init: cannot reserve MMIO region
-shpchp: Standard Hot Plug PCI Controller Driver version: 0.4
-ohci_hcd: 2004 Feb 02 USB 1.1 'Open' Host Controller (OHCI) Driver (PCI)
-ACPI: PCI interrupt 0000:01:00.0[D] -> GSI 19 (level, low) -> IRQ 169
-ohci_hcd 0000:01:00.0: OHCI Host Controller
-ohci_hcd 0000:01:00.0: irq 169, pci mem f881a000
-SELinux: initialized (dev usbdevfs, type usbdevfs), uses genfs_contexts
-ohci_hcd 0000:01:00.0: new USB bus registered, assigned bus number 1
-hub 1-0:1.0: USB hub found
-hub 1-0:1.0: 3 ports detected
-ACPI: PCI interrupt 0000:01:00.1[D] -> GSI 19 (level, low) -> IRQ 169
-ohci_hcd 0000:01:00.1: OHCI Host Controller
-ohci_hcd 0000:01:00.1: irq 169, pci mem f881c000
-ohci_hcd 0000:01:00.1: new USB bus registered, assigned bus number 2
-hub 2-0:1.0: USB hub found
-hub 2-0:1.0: 3 ports detected
-md: Autodetecting RAID arrays.
-md: autorun ...
-md: ... autorun DONE.
-ACPI: Power Button (FF) [PWRF]
-EXT3 FS on sda1, internal journal
-device-mapper: 4.5.0-ioctl (2005-10-04) initialised: dm-devel@redhat.com
-cdrom: open failed.
-SELinux: initialized (dev tmpfs, type tmpfs), uses transition SIDs
-kjournald starting.  Commit interval 5 seconds
-EXT3-fs warning: mounting fs with errors, running e2fsck is recommended
-EXT3 FS on sda3, internal journal
-EXT3-fs: mounted filesystem with ordered data mode.
-SELinux: initialized (dev sda3, type ext3), uses xattr
-Adding 2048276k swap on /dev/sda2.  Priority:-1 extents:1
-SELinux: initialized (dev binfmt_misc, type binfmt_misc), uses genfs_contexts
-parport0: PC-style at 0x378 [PCSPP,TRISTATE]
-ip_tables: (C) 2000-2002 Netfilter core team
-ip_tables: (C) 2000-2002 Netfilter core team
-tg3: eth0: Link is up at 1000 Mbps, full duplex.
-tg3: eth0: Flow control is on for TX and on for RX.
-ip_tables: (C) 2000-2002 Netfilter core team
-tg3: eth1: Link is up at 1000 Mbps, full duplex.
-tg3: eth1: Flow control is on for TX and on for RX.
-SELinux: initialized (dev rpc_pipefs, type rpc_pipefs), uses genfs_contexts
-i2c /dev entries driver
-parport0: PC-style at 0x378 [PCSPP,TRISTATE]
-lp0: using parport0 (polling).
-lp0: console ready
-NET: Registered protocol family 10
-Disabled Privacy Extensions on device c0342040(lo)
-IPv6 over IPv4 tunneling driver
-divert: not allocating divert_blk for non-ethernet device sit0
-Installing knfsd (copyright (C) 1996 okir@monad.swb.de).
-SELinux: initialized (dev nfsd, type nfsd), uses genfs_contexts
-eth1: no IPv6 routers present
-eth0: no IPv6 routers present
-SELinux: initialized (dev autofs, type autofs), uses genfs_contexts
-SELinux: initialized (dev 0:15, type nfs), uses genfs_contexts
-SCSI device sda: 1562193920 512-byte hdwr sectors (799843 MB)
-sda: Write Protect is off
-sda: Mode Sense: 03 00 00 00
-SCSI device sda: drive cache: write through
-SELinux: initialized (dev 0:15, type nfs), uses genfs_contexts
-SELinux: initialized (dev 0:15, type nfs), uses genfs_contexts
-i2c-sensor.o: Unknown VRM version of your x86 CPU
-SELinux: initialized (dev 0:15, type nfs), uses genfs_contexts
-SELinux: initialized (dev 0:15, type nfs), uses genfs_contexts
-SELinux: initialized (dev 0:15, type nfs), uses genfs_contexts
-SELinux: initialized (dev 0:15, type nfs), uses genfs_contexts
-SELinux: initialized (dev 0:15, type nfs), uses genfs_contexts
-
-Regards,
-Simon
