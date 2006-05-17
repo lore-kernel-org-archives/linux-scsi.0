@@ -1,27 +1,43 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [Fwd: [RFT] major libata update]
-Date: Wed, 17 May 2006 18:15:29 -0400
-Message-ID: <446BA081.6000909@garzik.org>
-References: <4468B596.9090508@garzik.org>	 <1147789098.3505.19.camel@mulgrave.il.steeleye.com>	 <4469F2B2.703@garzik.org>	 <1147794708.3505.30.camel@mulgrave.il.steeleye.com>	 <4469F9FB.7020807@garzik.org>	 <1147797507.3505.52.camel@mulgrave.il.steeleye.com>	 <446A048B.6040703@garzik.org> <20060517073701.GE4197@suse.de>	 <446B3BE0.8040806@garzik.org>	 <1147881002.3463.23.camel@mulgrave.il.steeleye.com>	 <446B4CAA.1030409@garzik.org> <1147888381.3463.49.camel@mulgrave.il.steeleye.com> <446B9ED7.5050204@garzik.org>
+From: Eric Moore <eric.moore@lsil.com>
+Subject: [PATCH] fusion - mptspi - reset handler shouldn't be called for other bus protocals
+Date: Wed, 17 May 2006 16:17:24 -0600
+Message-ID: <20060517221724.GA8700@lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:25291 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751235AbWEQWPc (ORCPT
+Received: from mail0.lsil.com ([147.145.40.20]:41638 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1750974AbWEQWV6 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 May 2006 18:15:32 -0400
-In-Reply-To: <446B9ED7.5050204@garzik.org>
+	Wed, 17 May 2006 18:21:58 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Jens Axboe <axboe@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@SteelEye.com
 
-Jeff Garzik wrote:
-> Like I said above, think "libstorage".  I think block as-is, too.
+All registered reset callback handlers are called during reset processing.
+The mptspi modules has its own reset callback handler, just recently
+added for issuing domain validation after host reset.  If either the mptsas or
+mptfc driver are loaded, this callback could be called. Thus resulting
+in domain validation being issued for sas or fibre end devices.
+This patch insures domain validation is only occuring on spi end devices
 
-Er, make that "I like block as-is, too"
+This is urgent bug fix. Pls apply this to scsi-rc-fixes-2.6,
+as well as this patch posted yesterday:
+http://marc.theaimsgroup.com/?l=linux-scsi&m=114782261719616&w=2
 
-	Jeff
 
+Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
 
+--- rc4u/drivers/message/fusion/mptspi.c	2006-05-12 00:14:15.000000000 -0500
++++ rc4/drivers/message/fusion/mptspi.c	2006-05-17 12:23:08.924423654 -0500
+@@ -825,6 +825,9 @@
+ 
+ 	rc = mptscsih_ioc_reset(ioc, reset_phase);
+ 
++	if (rc == 0 || ioc->bus_type != SPI)
++		return rc;
++
+ 	if (reset_phase == MPT_IOC_POST_RESET)
+ 		mptspi_dv_renegotiate(hd);
+ 
