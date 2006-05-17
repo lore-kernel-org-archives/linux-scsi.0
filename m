@@ -1,74 +1,76 @@
-From: Kilian CAVALOTTI <kilian.cavalotti@lip6.fr>
-Subject: SCSI errors with multipath IO
-Date: Wed, 17 May 2006 20:26:26 +0200
-Message-ID: <200605172026.26745.kilian.cavalotti@lip6.fr>
+From: Michael Reed <mdr@sgi.com>
+Subject: [BUG} 2.6.17-rc4-git5 - kobject_add fails after fibre channel switchdisable
+ / switchenable
+Date: Wed, 17 May 2006 15:59:18 -0500
+Message-ID: <446B8EA6.1080306@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kick.jknet.org ([82.231.159.30]:28678 "EHLO smtp.jknet.org")
-	by vger.kernel.org with ESMTP id S1750854AbWEQS0X convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 May 2006 14:26:23 -0400
-Received: from spip.jknet.org (spip.jknet.org [192.168.0.8])
-	by smtp.jknet.org (Postfix) with ESMTP id 4FF6876F74
-	for <linux-scsi@vger.kernel.org>; Wed, 17 May 2006 20:26:19 +0200 (CEST)
-Content-Disposition: inline
+Received: from omx2-ext.sgi.com ([192.48.171.19]:43748 "EHLO omx2.sgi.com")
+	by vger.kernel.org with ESMTP id S1751117AbWEQU7U (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 May 2006 16:59:20 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Gary Hagensen <gwh@sgi.com>, Jeremy Higdon <jeremy@sgi.com>, linux-kernel@vger.kernel.org
 
-Hello,
+I get these messages after doing a switchdisable and waiting for the fibre channel
+rports to be removed and then doing a switchenable.  It is driver agnostic.
+I didn't notice these messages at this severity with rc3.  With rc3 I'd see one
+every once in the while.  So, something has brought this out big time.
 
-I have a problem with a file server setup, using mdadm multipath featur=
-es.
+http://marc.theaimsgroup.com/?l=linux-scsi&m=114589164424203&w=2
 
-The host has two identical HBAs (LSI Logic U320, using mptspi module fr=
-om=20
-2.6.16), each of them is linked to a dual channel SCSI-to-SATA RAID Sub=
-system=20
-(http://www.infortrend.com/2_product/a16u-g1410.asp). This way, I aim t=
-o have=20
-a redundant IO path to the disks array to assure failover.
+and
 
-I created the MD device using mdadm:
-mdadm --create /dev/md0 -n 2 --level=3Dmultipath /dev/sdb /dev/sdc
-I also tried with multipath-tools, and that works great until some poin=
-t,=20
-where I get the following errors:
+http://marc.theaimsgroup.com/?l=linux-kernel&m=114443482812255&w=2
 
-sd 3:0:0:0: SCSI error: return code =3D 0xb0000
-end_request: I/O error, dev sdc, sector 439427200
-device-mapper: dm-multipath: Failing path 8:32.
-end_request: I/O error, dev sdc, sector 439427208
-mptbase: ioc2: LogInfo(0x11070000): F/W: DMA Error
-mptbase: ioc2: IOCStatus(0x004b): SCSI IOC Terminated
-mptbase: ioc2: LogInfo(0x11070000): F/W: DMA Error
-mptbase: ioc2: IOCStatus(0x004b): SCSI IOC Terminated
-=2E..
+I think my comment in the previous posting about "missing partitions"
+is a wild goose and should be ignored.
 
-The part I'm curious about is the "SCSI error: return code =3D 0xb0000"=
-=2E What=20
-does that mean?
-This error appears randomly on both interfaces, under heavy I/O. And it=
- does=20
-not seems to occur when using only one interface (/dev/sdb directly, ra=
-ther=20
-than /dev/md0 or /dev/mapper/<id>.
+I have the recent fc transport patch applied which fixes the scan vs. delete
+deadlocks but I tested both with and without.
+([PATCH] fc transport: resolve scan vs delete deadlocks)
 
-Is this a mpt or md related problem?
+This appears to occur now for each target on the fabric.  It's no longer
+intermittent.
 
-Thanks in advance for any hint,
---=20
-Kilian CAVALOTTI                      Administrateur r=C3=A9seaux et sy=
-st=C3=A8mes
-UPMC / CNRS - LIP6 (C870)
-8, rue du Capitaine Scott                          Tel. : 01 44 27 88 5=
-4
-75015 Paris - France                               Fax. : 01 44 27 70 0=
-0
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Mike
+
+
+May 17 14:08:15 duck kernel: kobject_add failed for 2:0:38:0 with -EEXIST, don't try to register things\
+                               with the same name in the same directory.
+May 17 14:08:15 duck kernel:
+May 17 14:08:15 duck kernel: Call Trace:
+May 17 14:08:15 duck kernel:  [<a000000100012560>] show_stack+0x40/0xa0
+May 17 14:08:15 duck kernel:                                 sp=e00000301520fa80 bsp=e000003015209340
+May 17 14:08:15 duck kernel:  [<a0000001000125f0>] dump_stack+0x30/0x60
+May 17 14:08:15 duck kernel:                                 sp=e00000301520fc50 bsp=e000003015209328
+May 17 14:08:15 duck kernel:  [<a00000010040da80>] kobject_add+0x3a0/0x420
+May 17 14:08:15 duck kernel:                                 sp=e00000301520fc50 bsp=e0000030152092e8
+May 17 14:08:15 duck kernel:  [<a0000001004e3a60>] device_add+0xe0/0x2e0
+May 17 14:08:15 duck kernel:                                 sp=e00000301520fc50 bsp=e0000030152092a8
+May 17 14:08:15 duck kernel:  [<a0000001005646a0>] scsi_sysfs_add_sdev+0x60/0x520
+May 17 14:08:15 duck kernel:                                 sp=e00000301520fc50 bsp=e000003015209260
+May 17 14:08:15 duck kernel:  [<a000000100560250>] scsi_probe_and_add_lun+0x11b0/0x1440
+May 17 14:08:15 duck kernel:                                 sp=e00000301520fc50 bsp=e0000030152091f0
+May 17 14:08:15 duck kernel:  [<a0000001005618a0>] __scsi_scan_target+0x720/0xb60
+May 17 14:08:15 duck kernel:                                 sp=e00000301520fc70 bsp=e000003015209188
+May 17 14:08:15 duck kernel:  [<a000000100562290>] scsi_scan_target+0xd0/0x100
+May 17 14:08:15 duck kernel:                                 sp=e00000301520fcd0 bsp=e000003015209138
+May 17 14:08:15 duck kernel:  [<a00000010056f400>] fc_scsi_scan_rport+0xe0/0x160
+May 17 14:08:15 duck kernel:                                 sp=e00000301520fcd0 bsp=e000003015209110
+May 17 14:08:15 duck kernel:  [<a0000001000cac40>] run_workqueue+0x1c0/0x280
+May 17 14:08:15 duck kernel:                                 sp=e00000301520fcd0 bsp=e0000030152090d0
+May 17 14:08:15 duck kernel:  [<a0000001000cbf90>] worker_thread+0x1d0/0x260
+May 17 14:08:15 duck kernel:                                 sp=e00000301520fcd0 bsp=e0000030152090a0
+May 17 14:08:15 duck kernel:  [<a0000001000d3be0>] kthread+0x220/0x2a0
+May 17 14:08:15 duck kernel:                                 sp=e00000301520fd50 bsp=e000003015209058
+May 17 14:08:15 duck kernel:  [<a000000100010af0>] kernel_thread_helper+0xd0/0x100
+May 17 14:08:15 duck kernel:                                 sp=e00000301520fe30 bsp=e000003015209030
+May 17 14:08:15 duck kernel:  [<a000000100009140>] start_kernel_thread+0x20/0x40
+May 17 14:08:15 duck kernel:                                 sp=e00000301520fe30 bsp=e000003015209030
+May 17 14:08:15 duck kernel: error 1
