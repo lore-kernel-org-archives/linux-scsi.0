@@ -1,76 +1,71 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: [BUG} 2.6.17-rc4-git5 - kobject_add fails after fibre channel switchdisable
- / switchenable
-Date: Wed, 17 May 2006 15:59:18 -0500
-Message-ID: <446B8EA6.1080306@sgi.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [Fwd: [RFT] major libata update]
+Date: Wed, 17 May 2006 17:41:36 -0400
+Message-ID: <446B9890.7030200@garzik.org>
+References: <4468B596.9090508@garzik.org>  <1147789098.3505.19.camel@mulgrave.il.steeleye.com>  <4469F2B2.703@garzik.org>  <1147794708.3505.30.camel@mulgrave.il.steeleye.com>  <4469F9FB.7020807@garzik.org>  <1147797507.3505.52.camel@mulgrave.il.steeleye.com>  <446A048B.6040703@garzik.org> <20060517073701.GE4197@suse.de>  <446B3BE0.8040806@garzik.org> <1147881002.3463.23.camel@mulgrave.il.steeleye.com> <Pine.LNX.4.64.0605171036140.10823@g5.osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:43748 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S1751117AbWEQU7U (ORCPT
+Received: from srv5.dvmed.net ([207.36.208.214]:40649 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751153AbWEQVlr (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 May 2006 16:59:20 -0400
+	Wed, 17 May 2006 17:41:47 -0400
+In-Reply-To: <Pine.LNX.4.64.0605171036140.10823@g5.osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Gary Hagensen <gwh@sgi.com>, Jeremy Higdon <jeremy@sgi.com>, linux-kernel@vger.kernel.org
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <axboe@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Andrew Morton <akpm@osdl.org>
 
-I get these messages after doing a switchdisable and waiting for the fibre channel
-rports to be removed and then doing a switchenable.  It is driver agnostic.
-I didn't notice these messages at this severity with rc3.  With rc3 I'd see one
-every once in the while.  So, something has brought this out big time.
+Linus Torvalds wrote:
+> 
+> On Wed, 17 May 2006, James Bottomley wrote:
+>> This is one of the questions.  Currently block has no concept of "host".
+> 
+> That's good. 
+> 
+> I don't understand why you'd ever _want_ a concept of "host". The whole 
+> concept is broken and unnecessary. At no point should you even need to map 
+> from request to host, but if you do, you don't need to introduce any 
+> generic "host" notion, you can do it easily per-queue.
 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=114589164424203&w=2
+"host" is ultimately the wrong word, sure.
 
-and
+It's more about (a) grouping queues into a topology that the user 
+expects, as exported by sysfs, and (b) grouping queues for the purposes 
+of useful and/or necessary hardware operations like "stop <these> 
+queues, so that we can bitbang the hardware".
 
-http://marc.theaimsgroup.com/?l=linux-kernel&m=114443482812255&w=2
+That grouping of queues, along with the lib-ification of highly common 
+request management code[1], is part of the non-SCSI utility that libata 
+derives from drivers/scsi.
 
-I think my comment in the previous posting about "missing partitions"
-is a wild goose and should be ignored.
-
-I have the recent fc transport patch applied which fixes the scan vs. delete
-deadlocks but I tested both with and without.
-([PATCH] fc transport: resolve scan vs delete deadlocks)
-
-This appears to occur now for each target on the fabric.  It's no longer
-intermittent.
-
-
-Mike
+"group-wide operations" are highly common, and generic code inevitably 
+results from that.  But IMO that's helper code, living on top of the 
+perfectly-fine existing code.
 
 
-May 17 14:08:15 duck kernel: kobject_add failed for 2:0:38:0 with -EEXIST, don't try to register things\
-                               with the same name in the same directory.
-May 17 14:08:15 duck kernel:
-May 17 14:08:15 duck kernel: Call Trace:
-May 17 14:08:15 duck kernel:  [<a000000100012560>] show_stack+0x40/0xa0
-May 17 14:08:15 duck kernel:                                 sp=e00000301520fa80 bsp=e000003015209340
-May 17 14:08:15 duck kernel:  [<a0000001000125f0>] dump_stack+0x30/0x60
-May 17 14:08:15 duck kernel:                                 sp=e00000301520fc50 bsp=e000003015209328
-May 17 14:08:15 duck kernel:  [<a00000010040da80>] kobject_add+0x3a0/0x420
-May 17 14:08:15 duck kernel:                                 sp=e00000301520fc50 bsp=e0000030152092e8
-May 17 14:08:15 duck kernel:  [<a0000001004e3a60>] device_add+0xe0/0x2e0
-May 17 14:08:15 duck kernel:                                 sp=e00000301520fc50 bsp=e0000030152092a8
-May 17 14:08:15 duck kernel:  [<a0000001005646a0>] scsi_sysfs_add_sdev+0x60/0x520
-May 17 14:08:15 duck kernel:                                 sp=e00000301520fc50 bsp=e000003015209260
-May 17 14:08:15 duck kernel:  [<a000000100560250>] scsi_probe_and_add_lun+0x11b0/0x1440
-May 17 14:08:15 duck kernel:                                 sp=e00000301520fc50 bsp=e0000030152091f0
-May 17 14:08:15 duck kernel:  [<a0000001005618a0>] __scsi_scan_target+0x720/0xb60
-May 17 14:08:15 duck kernel:                                 sp=e00000301520fc70 bsp=e000003015209188
-May 17 14:08:15 duck kernel:  [<a000000100562290>] scsi_scan_target+0xd0/0x100
-May 17 14:08:15 duck kernel:                                 sp=e00000301520fcd0 bsp=e000003015209138
-May 17 14:08:15 duck kernel:  [<a00000010056f400>] fc_scsi_scan_rport+0xe0/0x160
-May 17 14:08:15 duck kernel:                                 sp=e00000301520fcd0 bsp=e000003015209110
-May 17 14:08:15 duck kernel:  [<a0000001000cac40>] run_workqueue+0x1c0/0x280
-May 17 14:08:15 duck kernel:                                 sp=e00000301520fcd0 bsp=e0000030152090d0
-May 17 14:08:15 duck kernel:  [<a0000001000cbf90>] worker_thread+0x1d0/0x260
-May 17 14:08:15 duck kernel:                                 sp=e00000301520fcd0 bsp=e0000030152090a0
-May 17 14:08:15 duck kernel:  [<a0000001000d3be0>] kthread+0x220/0x2a0
-May 17 14:08:15 duck kernel:                                 sp=e00000301520fd50 bsp=e000003015209058
-May 17 14:08:15 duck kernel:  [<a000000100010af0>] kernel_thread_helper+0xd0/0x100
-May 17 14:08:15 duck kernel:                                 sp=e00000301520fe30 bsp=e000003015209030
-May 17 14:08:15 duck kernel:  [<a000000100009140>] start_kernel_thread+0x20/0x40
-May 17 14:08:15 duck kernel:                                 sp=e00000301520fe30 bsp=e000003015209030
-May 17 14:08:15 duck kernel: error 1
+> The whole fixation with "host" in the SCSI layer is a bug, I think. What 
+> does it matter, really? And when do you actually have a "request_queue" 
+> entry without already knowing which controller it is connected to (ie why 
+> do you even need that mapping)?
+
+True, the mapping is obtained from request_queue not request.
+
+The entry point into a block driver is via q->request_fn(), which only 
+has a request_queue for an argument.  So in practice, one usually 
+obtains the private controller-info and bus-info data via the 
+request_queue's ->queuedata.
+
+Deep into sub-APIs, I've seen that sometimes you'll see only the request 
+passed as an argument, because it's easier to walk 
+request->queue->controller_info than to pass additional arguments to 
+every function.
+
+	Jeff
+
+
+[1] "resource management":  refers to drivers/scsi's handling of 'device 
+busy', 'group-of-queues busy' style transient errors, well integrated 
+with block layer's command queueing and well synchronized with the EH 
+thread.
