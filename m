@@ -1,52 +1,36 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: [Fwd: [RFT] major libata update]
-Date: Tue, 16 May 2006 17:25:42 -0700 (PDT)
-Message-ID: <20060517002542.81288.qmail@web31803.mail.mud.yahoo.com>
-References: <1147821176.3505.101.camel@mulgrave.il.steeleye.com>
-Reply-To: ltuikov@yahoo.com
+From: Peter Chubb <peterc@gelato.unsw.edu.au>
+Subject: RE: Help: strange messages from kernel on IA64 platform
+Date: Wed, 17 May 2006 11:08:46 +1000
+Message-ID: <17514.30622.22763.24688@wombat.chubb.wattle.id.au>
+References: <890BF3111FB9484E9526987D912B261901BD86@NAMAIL3.ad.lsil.com>
+	<4t153d$13ldvv@azsmga001.ch.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31803.mail.mud.yahoo.com ([68.142.207.66]:33915 "HELO
-	web31803.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S932355AbWEQAZn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 May 2006 20:25:43 -0400
-In-Reply-To: <1147821176.3505.101.camel@mulgrave.il.steeleye.com>
+Received: from mail25.syd.optusnet.com.au ([211.29.133.166]:42448 "EHLO
+	mail25.syd.optusnet.com.au") by vger.kernel.org with ESMTP
+	id S1751037AbWEQBI7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 May 2006 21:08:59 -0400
+In-Reply-To: <4t153d$13ldvv@azsmga001.ch.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Jeff Garzik <jeff@garzik.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: "Chen, Kenneth W" <kenneth.w.chen@intel.com>
+Cc: "'Ju, Seokmann'" <Seokmann.Ju@lsil.com>, Chase Venters <chase.venters@clientec.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
---- James Bottomley <James.Bottomley@SteelEye.com> wrote:
-> On Tue, 2006-05-16 at 16:02 -0700, Luben Tuikov wrote:
-> > The nexus between the driver and SCSI Core is terminated only when
-> > done() is called.  done() is the antagonist of queuecommand().
-> > 
-> > Until done() is called, if the LLDD/IC/SCSI Core want to request that
-> > a command be aborted for whatever reason, it calls
-> > scsi_req_abort_cmd().
-> > 
-> > That is, until the nexus created by calling queuecommand(), is
-> > returned
-> > to SCSI Core (by the driver calling done()), if either the driver or
-> > SCSI Core want to request the command be aborted, they call
-> > scsi_req_abort_cmd().
-> 
-> Erm, no, actually, I think if you look at SAM-3 (section 4.12) you'll
-> find that a nexus can only be maintained with the consent of both the
-> initiator and the target.  The (transport dependent) signal of
-> completion is an indicator of nexus termination (except in the linked
-> command case).
+>>>>> "Kenneth" == Kenneth W Chen <Chen> writes:
 
-Erm, no, actually, I'm not talking about a SAM nexus.  I'm talking about
-the nexus established between SCSI Core and LLDD when SCSI Core called
-queuecommand().  This nexus exists until the LLDD calls done().
+Kenneth> Ju, Seokmann wrote on Tuesday, May 16, 2006 2:13 PM
+>> Tuesday, May 16, 2006 5:00 PM, Chase Venters wrote: > It's a trap,
+>> which means the CPU is effectively calling that function.  O.K,
+>> that's why...  Then, Is there anyway to look up trap table that the
+>> CPU has?
 
-Now in between that time, if either one wants to abort the command
-then they call scsi_req_abort_cmd().
+Kenneth> By looking at the instruction address that triggered the
+Kenneth> unaligned fault, it is coming from a kernel module.
 
-Most likely that would be the LLDD/IC.
-
-    Luben
-
+General details for tracking down unaligned access problems in IA64
+linux at http://www.gelato.unsw.edu.au/IA64wiki/UnalignedAccesses
+-- 
+Dr Peter Chubb  http://www.gelato.unsw.edu.au  peterc AT gelato.unsw.edu.au
+http://www.ertos.nicta.com.au           ERTOS within National ICT Australia
