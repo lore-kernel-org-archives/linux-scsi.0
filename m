@@ -1,141 +1,67 @@
-From: Jens Axboe <axboe@suse.de>
+From: Linus Torvalds <torvalds@osdl.org>
 Subject: Re: [Fwd: [RFT] major libata update]
-Date: Wed, 17 May 2006 19:37:29 +0200
-Message-ID: <20060517173729.GS4197@suse.de>
-References: <4468B596.9090508@garzik.org> <1147789098.3505.19.camel@mulgrave.il.steeleye.com> <4469F2B2.703@garzik.org> <1147794708.3505.30.camel@mulgrave.il.steeleye.com> <4469F9FB.7020807@garzik.org> <1147797507.3505.52.camel@mulgrave.il.steeleye.com> <446A048B.6040703@garzik.org> <20060517073701.GE4197@suse.de> <446B3BE0.8040806@garzik.org>
+Date: Wed, 17 May 2006 10:47:39 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0605171036140.10823@g5.osdl.org>
+References: <4468B596.9090508@garzik.org>  <1147789098.3505.19.camel@mulgrave.il.steeleye.com>
+  <4469F2B2.703@garzik.org>  <1147794708.3505.30.camel@mulgrave.il.steeleye.com>
+  <4469F9FB.7020807@garzik.org>  <1147797507.3505.52.camel@mulgrave.il.steeleye.com>
+  <446A048B.6040703@garzik.org> <20060517073701.GE4197@suse.de>
+ <446B3BE0.8040806@garzik.org> <1147881002.3463.23.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:64601 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S1750778AbWEQRhC (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:17370 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1750820AbWEQRsJ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 May 2006 13:37:02 -0400
-Content-Disposition: inline
-In-Reply-To: <446B3BE0.8040806@garzik.org>
+	Wed, 17 May 2006 13:48:09 -0400
+In-Reply-To: <1147881002.3463.23.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Jens Axboe <axboe@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Andrew Morton <akpm@osdl.org>
 
-On Wed, May 17 2006, Jeff Garzik wrote:
-> Jens Axboe wrote:
-> >On Tue, May 16 2006, Jeff Garzik wrote:
-> >>James Bottomley wrote:
-> >>>On Tue, 2006-05-16 at 12:12 -0400, Jeff Garzik wrote:
-> >>>>Its an API-which-only-libata-uses that we're discussing.  And because 
-> >>>>its moving to the block layer, its also a 
-> >>>>temporary-API-which-only-libata-uses.
-> >>>OK ... this may be the root of the problem.  I really would like libata
-> >>>to migrate to being block only ... especially as PATA looks to be trying
-> >>>to follow you into the SCSI subsystem.  However, this has been the
-> >>>statement for the past two years (at least), and really, few
-> >>>enhancements have been made to block that you need to make good on this.
-> >>>I think one of the things we'll try to find time to do at the storage
-> >>>summit is to take a hard look at block to see exactly what has to be
-> >>>added to make libata solely dependent upon it.
-> >>100% agreed...
-> >
-> >Ditto! I'd be more than willing to implement some of these features (and
-> >already started to, the per command timeout for instance), but I was
-> >starting to write off libata moving to block as a silly pipe dream in
-> >all honesty... But if momentum is picking up behind this move, then I'll
-> >all for it.
+
+
+On Wed, 17 May 2006, James Bottomley wrote:
 > 
-> Just gotta be patient.  Rome wasn't built in a day, and all that :)
+> This is one of the questions.  Currently block has no concept of "host".
 
-:-)
+That's good. 
 
-> Like I mentioned in another message, the ideal world is that libata uses 
-> an ATA disk driver and a SCSI MMC driver -- just like a modern SAS 
-> controller (which likely supports SATA too) will use both an ATA disk 
-> driver and a SCSI disk driver.
->
-> Given this "ideal world", its IMO best that the "storage driver" 
-> infrastructure lives in the block layer not SCSI layer.
+I don't understand why you'd ever _want_ a concept of "host". The whole 
+concept is broken and unnecessary. At no point should you even need to map 
+from request to host, but if you do, you don't need to introduce any 
+generic "host" notion, you can do it easily per-queue.
 
-Right
+> All it knows about are queues (which may be per host or per device
+> depending on the implementation).  Do we need to introduce the concept
+> of something like queue grouping (a sort of lightweight infrastructure
+> that could be used by the underlying transport to implement a host
+> concept without introducing hosts at the block layer)?
 
-> >>The general list, off the top of my head:
-> >>
-> >>* objects: storage message, storage device, storage host, and the 
-> >>requisite interconnections
-> >
-> >Storage message -> request. The rq-cmd-type branch of the block repo has
-> >most/some of that done. For an explicit storage device + host, I have no
-> >plans to expland on what we have.
-> 
-> Agreed that storage message == request.
-> 
-> storage device and storage host are key objects included in the 
-> infrastructure libata uses SCSI for.  They fall naturally out of the 
-> infrastructure that provides "device busy", "host busy", EH and EH 
-> synchronization across multiple devices, etc.  Though these, SCSI also 
-> provides infrastructure through which an LLDD may export a bus topology 
-> to the user.
+We already have it. Each queue has its lock pointer. If you want to have a 
+"host" notion, you do it by just setting the queue lock to point to the 
+host lock (since if they are dependent, you'd _better_ share the lock 
+between the queues anyway), and then you do
 
-James/others already touched on that, and I agree it's a useful
-abstraction. It's something that we can use for other drivers right now,
-such as cciss.
+  struct myhost_struct *queue_host(struct request_queue *queue)
+  {
+	return container_of(queue->queue_lock, myhost_struct, host_lock);
+  }
 
-> >>* queuecommand-style API
-> >
-> >That's a style issue, rather than a required item. You can roll that on
-> >top of the current api by just doing a:
-> >
-> >int queuecommand_helper(request_queue_t *q, struct request *rq)
-> >{
-> >        /* issue request */
-> >        ...
-> >        return OK/DEFER/REJECT/WHATEVER
-> >}
-> >
-> >blk_queuecommand_helper(request_queue_t *q, queue_command_fn *fn)
-> >{
-> >        struct request *rq;
-> >        int ret;
-> >
-> >        do {
-> >                rq = elv_next_request(q);
-> >                if (!rq)
-> >                        break;
-> >
-> >                ret = fn(q, rq);
-> >                if (ret == OK)
-> >                        continue;
-> >
-> >                /* handle replugging/killing/whatever */
-> >        } while (1);
-> >}
-> >
-> >if you really wanted.
-> 
-> That's not an optional piece.  Given the needed timeout / device / host 
+and there are no changes necessary to the queue layer.
 
-I think we have a different opinion on what 'optional' is then - because
-things can certainly work just fine the way they current do. And it's
-faster, too.
+You can do it other ways too: the "struct kobject" in the queue obviously 
+contains a pointer to the parent of the queue, and that might well be your 
+"host" object. Again, exact same deal, except now you'd use
 
-> infrastructure, you inevitably wind up with the following code pattern:
-> 
-> 	infrastructure code
-> 	send fully prepared request to hardware
-> 	infrastructure code
+	container_of(queue->kobj.parent, myhost_struct, host_kobject);
 
-But yes, you can make the code nicer for _some_ things with a
-->queueone() type setup.
+instead. Entirely up to you.
 
-> At this point I should note that all of what I've been describing is
-> an _optional addition_ to the block layer.  Its all helpers and a few
-> new, optional structs.  This SHOULD NOT involve changing the core
-> block layer at all.  Well, maybe struct request would like the
-> addition of a timer.  But that's it, and such a mod is easy to do.
+The whole fixation with "host" in the SCSI layer is a bug, I think. What 
+does it matter, really? And when do you actually have a "request_queue" 
+entry without already knowing which controller it is connected to (ie why 
+do you even need that mapping)?
 
-The timer is a given, we can't escape that. And the ->queueone() is
-basically hashed out above, no infrastructure changes needed.
-queuecommand_helper would be driver supplied, blk_queuecommand_helper()
-would be a block layer helper. With better names of course, I truly do
-suck at naming functions :-)
-
--- 
-Jens Axboe
-
+			Linus
