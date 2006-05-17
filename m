@@ -1,36 +1,99 @@
-From: Peter Chubb <peterc@gelato.unsw.edu.au>
-Subject: RE: Help: strange messages from kernel on IA64 platform
-Date: Wed, 17 May 2006 11:08:46 +1000
-Message-ID: <17514.30622.22763.24688@wombat.chubb.wattle.id.au>
-References: <890BF3111FB9484E9526987D912B261901BD86@NAMAIL3.ad.lsil.com>
-	<4t153d$13ldvv@azsmga001.ch.intel.com>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [Fwd: [RFT] major libata update]
+Date: Wed, 17 May 2006 09:37:02 +0200
+Message-ID: <20060517073701.GE4197@suse.de>
+References: <4468B596.9090508@garzik.org> <1147789098.3505.19.camel@mulgrave.il.steeleye.com> <4469F2B2.703@garzik.org> <1147794708.3505.30.camel@mulgrave.il.steeleye.com> <4469F9FB.7020807@garzik.org> <1147797507.3505.52.camel@mulgrave.il.steeleye.com> <446A048B.6040703@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail25.syd.optusnet.com.au ([211.29.133.166]:42448 "EHLO
-	mail25.syd.optusnet.com.au") by vger.kernel.org with ESMTP
-	id S1751037AbWEQBI7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 May 2006 21:08:59 -0400
-In-Reply-To: <4t153d$13ldvv@azsmga001.ch.intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <446A048B.6040703@garzik.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Chen, Kenneth W" <kenneth.w.chen@intel.com>
-Cc: "'Ju, Seokmann'" <Seokmann.Ju@lsil.com>, Chase Venters <chase.venters@clientec.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
->>>>> "Kenneth" == Kenneth W Chen <Chen> writes:
+On Tue, May 16 2006, Jeff Garzik wrote:
+> James Bottomley wrote:
+> >On Tue, 2006-05-16 at 12:12 -0400, Jeff Garzik wrote:
+> >>Its an API-which-only-libata-uses that we're discussing.  And because 
+> >>its moving to the block layer, its also a 
+> >>temporary-API-which-only-libata-uses.
+> >
+> >OK ... this may be the root of the problem.  I really would like libata
+> >to migrate to being block only ... especially as PATA looks to be trying
+> >to follow you into the SCSI subsystem.  However, this has been the
+> >statement for the past two years (at least), and really, few
+> >enhancements have been made to block that you need to make good on this.
+> >I think one of the things we'll try to find time to do at the storage
+> >summit is to take a hard look at block to see exactly what has to be
+> >added to make libata solely dependent upon it.
+> 
+> 100% agreed...
 
-Kenneth> Ju, Seokmann wrote on Tuesday, May 16, 2006 2:13 PM
->> Tuesday, May 16, 2006 5:00 PM, Chase Venters wrote: > It's a trap,
->> which means the CPU is effectively calling that function.  O.K,
->> that's why...  Then, Is there anyway to look up trap table that the
->> CPU has?
+Ditto! I'd be more than willing to implement some of these features (and
+already started to, the per command timeout for instance), but I was
+starting to write off libata moving to block as a silly pipe dream in
+all honesty... But if momentum is picking up behind this move, then I'll
+all for it.
 
-Kenneth> By looking at the instruction address that triggered the
-Kenneth> unaligned fault, it is coming from a kernel module.
+> The general list, off the top of my head:
+> 
+> * objects: storage message, storage device, storage host, and the 
+> requisite interconnections
 
-General details for tracking down unaligned access problems in IA64
-linux at http://www.gelato.unsw.edu.au/IA64wiki/UnalignedAccesses
+Storage message -> request. The rq-cmd-type branch of the block repo has
+most/some of that done. For an explicit storage device + host, I have no
+plans to expland on what we have.
+
+> * queuecommand-style API
+
+That's a style issue, rather than a required item. You can roll that on
+top of the current api by just doing a:
+
+int queuecommand_helper(request_queue_t *q, struct request *rq)
+{
+        /* issue request */
+        ...
+        return OK/DEFER/REJECT/WHATEVER
+}
+
+blk_queuecommand_helper(request_queue_t *q, queue_command_fn *fn)
+{
+        struct request *rq;
+        int ret;
+
+        do {
+                rq = elv_next_request(q);
+                if (!rq)
+                        break;
+
+                ret = fn(q, rq);
+                if (ret == OK)
+                        continue;
+
+                /* handle replugging/killing/whatever */
+        } while (1);
+}
+
+if you really wanted.
+
+> * EH thread(s)
+> * timers, for command timeouts
+
+Agree, we can abstract out the grunt handling of timeouts and the
+context required in the block layer.
+
+> * SCSI-style MLqueue and state stuff, i.e. ability to return "device 
+> busy", "host busy", "retry this command", ...
+
+Comes with the blk_queuecommand_helper() type setup from above.
+
+> And once libata is happy at the block layer, move SCSI to using this 
+> stuff too :)
+
+Definitely.
+
 -- 
-Dr Peter Chubb  http://www.gelato.unsw.edu.au  peterc AT gelato.unsw.edu.au
-http://www.ertos.nicta.com.au           ERTOS within National ICT Australia
+Jens Axboe
+
