@@ -1,59 +1,78 @@
-From: Jeff Garzik <jeff@garzik.org>
+From: Linus Torvalds <torvalds@osdl.org>
 Subject: Re: [Fwd: [RFT] major libata update]
-Date: Wed, 17 May 2006 17:58:32 -0400
-Message-ID: <446B9C88.4030005@garzik.org>
-References: <4468B596.9090508@garzik.org> <1147789098.3505.19.camel@mulgrave.il.steeleye.com> <4469F2B2.703@garzik.org> <1147794708.3505.30.camel@mulgrave.il.steeleye.com> <4469F9FB.7020807@garzik.org> <1147797507.3505.52.camel@mulgrave.il.steeleye.com> <446A048B.6040703@garzik.org> <20060517073701.GE4197@suse.de> <446B3BE0.8040806@garzik.org> <20060517173729.GS4197@suse.de>
+Date: Wed, 17 May 2006 15:04:51 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0605171455050.10823@g5.osdl.org>
+References: <1147789098.3505.19.camel@mulgrave.il.steeleye.com>
+ <4469F2B2.703@garzik.org> <1147794708.3505.30.camel@mulgrave.il.steeleye.com>
+ <4469F9FB.7020807@garzik.org> <1147797507.3505.52.camel@mulgrave.il.steeleye.com>
+ <446A048B.6040703@garzik.org> <20060517073701.GE4197@suse.de>
+ <446B3BE0.8040806@garzik.org> <1147881002.3463.23.camel@mulgrave.il.steeleye.com>
+ <Pine.LNX.4.64.0605171036140.10823@g5.osdl.org> <20060517175541.GT4197@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:19402 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751170AbWEQV6g (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:31167 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751190AbWEQWFR (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 May 2006 17:58:36 -0400
-In-Reply-To: <20060517173729.GS4197@suse.de>
+	Wed, 17 May 2006 18:05:17 -0400
+In-Reply-To: <20060517175541.GT4197@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jens Axboe <axboe@suse.de>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
-
-Jens Axboe wrote:
-> I think we have a different opinion on what 'optional' is then - because
-> things can certainly work just fine the way they current do. And it's
-> faster, too.
-> 
->> infrastructure, you inevitably wind up with the following code pattern:
->>
->> 	infrastructure code
->> 	send fully prepared request to hardware
->> 	infrastructure code
-> 
-> But yes, you can make the code nicer for _some_ things with a
-> ->queueone() type setup.
-
-That ->queueone() maps the closest to what most hardware appears to 
-want: "attempt to push request onto an async hardware queue".
-
-It also enables additional entry points for returning 'device busy' or 
-(in SCSI lingo) 'host busy'.  The ability to signal and handle random 
-transient conditions like that when hardware resources disappear is easy 
-to overlook, but its really powerful.
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Jeff Garzik <jeff@garzik.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Andrew Morton <akpm@osdl.org>
 
 
->> At this point I should note that all of what I've been describing is
->> an _optional addition_ to the block layer.  Its all helpers and a few
->> new, optional structs.  This SHOULD NOT involve changing the core
->> block layer at all.  Well, maybe struct request would like the
->> addition of a timer.  But that's it, and such a mod is easy to do.
-> 
-> The timer is a given, we can't escape that. And the ->queueone() is
-> basically hashed out above, no infrastructure changes needed.
-> queuecommand_helper would be driver supplied, blk_queuecommand_helper()
-> would be a block layer helper. With better names of course, I truly do
-> suck at naming functions :-)
 
-Likewise :)
+On Wed, 17 May 2006, Jens Axboe wrote:
+>
+> That gets you the "parent" structure (or "host") for the queues, but it
+> doesn't help you with managing them. One issue could be a shared tag
+> queue - we already solved that by sharing the tag map between the
+> queues, but that still allows on queue to deplete more entries that it
+> should be allowed to. And so on.
 
-	Jeff
+Right. But all of this is very much dependent on the actual hardware. It 
+makes no sense to have a "generic host" kind of structure like SCSI has, 
+except for historical reasons.
 
+It makes sense to make _individual_ design issues be able to share some 
+resource(s) between queues, and that's exactly what we do. We have the 
+notion of having a shared lock (which makes sense because while the queues 
+might be otherwise independent, they may go through a shared hw 
+interface), and as you point out, we can also share the tags for exactly 
+the same reason.
 
+But in _no_ case is is valid to think that a shared resource would somehow 
+mean anything more being shared. There simply is no "host" level sharing. 
+It's very much -not- an all-or-nothing thing. It's a "some hardware may 
+share some stuff, and it very much depends on the hw which parts it might 
+end up sharing between the queues.
+
+So what I was objecting to was introducing the overlying "host" notion 
+that SCSI has. I don't think it makes any sense from any generic 
+standpoint, and I wanted to point out that _if_ you have a "all or 
+nothing" shared model like SCSI has, you can use any of the fields that we 
+_can_ share (eg the lock field) as a way to tie that one field together 
+with all the other fields.
+
+But it would be wrong to see that as anything but a special case.
+
+> Some devices need serialization between them, and the only way to
+> achieve that currently is by sharing a queue.
+
+Hmm? No. We share the queue for some things, but the most _common_ example 
+of a device that needs serialization between queues is IDE, and we don't 
+share queues there. We have independent queues, they just end up sharing 
+certain infrastructure (tags and locking).
+
+But they _are_ independent, and you can have different elevators, 
+different merging rules, and even different request functions for the 
+different queues - even if they also have some things they share.
+
+And yes, you can see an ATA host as a host in the SCSI sense, but I wanted 
+to point out that you don't _need_ to see it that way, and indeed, the 
+requests queues don't. The fact that a driver can then _use_ the request 
+queues as if there was a "host" is fine. But we should not _enforce_ such 
+a totally broken and limited model on the queues.
+
+		Linus
