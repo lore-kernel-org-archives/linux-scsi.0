@@ -1,78 +1,74 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [Fwd: [RFT] major libata update]
-Date: Wed, 17 May 2006 19:55:42 +0200
-Message-ID: <20060517175541.GT4197@suse.de>
-References: <1147789098.3505.19.camel@mulgrave.il.steeleye.com> <4469F2B2.703@garzik.org> <1147794708.3505.30.camel@mulgrave.il.steeleye.com> <4469F9FB.7020807@garzik.org> <1147797507.3505.52.camel@mulgrave.il.steeleye.com> <446A048B.6040703@garzik.org> <20060517073701.GE4197@suse.de> <446B3BE0.8040806@garzik.org> <1147881002.3463.23.camel@mulgrave.il.steeleye.com> <Pine.LNX.4.64.0605171036140.10823@g5.osdl.org>
+From: Kilian CAVALOTTI <kilian.cavalotti@lip6.fr>
+Subject: SCSI errors with multipath IO
+Date: Wed, 17 May 2006 20:26:26 +0200
+Message-ID: <200605172026.26745.kilian.cavalotti@lip6.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from kick.jknet.org ([82.231.159.30]:28678 "EHLO smtp.jknet.org")
+	by vger.kernel.org with ESMTP id S1750854AbWEQS0X convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 May 2006 14:26:23 -0400
+Received: from spip.jknet.org (spip.jknet.org [192.168.0.8])
+	by smtp.jknet.org (Postfix) with ESMTP id 4FF6876F74
+	for <linux-scsi@vger.kernel.org>; Wed, 17 May 2006 20:26:19 +0200 (CEST)
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0605171036140.10823@g5.osdl.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Jeff Garzik <jeff@garzik.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Andrew Morton <akpm@osdl.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Wed, May 17 2006, Linus Torvalds wrote:
-> 
-> 
-> On Wed, 17 May 2006, James Bottomley wrote:
-> > 
-> > This is one of the questions.  Currently block has no concept of "host".
-> 
-> That's good. 
-> 
-> I don't understand why you'd ever _want_ a concept of "host". The whole 
-> concept is broken and unnecessary. At no point should you even need to map 
-> from request to host, but if you do, you don't need to introduce any 
-> generic "host" notion, you can do it easily per-queue.
+Hello,
 
-Maybe "host" is the wrong word, but there is some usefulness to look at
-dependencies of queues.
+I have a problem with a file server setup, using mdadm multipath featur=
+es.
 
-> > All it knows about are queues (which may be per host or per device
-> > depending on the implementation).  Do we need to introduce the concept
-> > of something like queue grouping (a sort of lightweight infrastructure
-> > that could be used by the underlying transport to implement a host
-> > concept without introducing hosts at the block layer)?
-> 
-> We already have it. Each queue has its lock pointer. If you want to have a 
-> "host" notion, you do it by just setting the queue lock to point to the 
-> host lock (since if they are dependent, you'd _better_ share the lock 
-> between the queues anyway), and then you do
-> 
->   struct myhost_struct *queue_host(struct request_queue *queue)
->   {
-> 	return container_of(queue->queue_lock, myhost_struct, host_lock);
->   }
-> 
-> and there are no changes necessary to the queue layer.
+The host has two identical HBAs (LSI Logic U320, using mptspi module fr=
+om=20
+2.6.16), each of them is linked to a dual channel SCSI-to-SATA RAID Sub=
+system=20
+(http://www.infortrend.com/2_product/a16u-g1410.asp). This way, I aim t=
+o have=20
+a redundant IO path to the disks array to assure failover.
 
-That gets you the "parent" structure (or "host") for the queues, but it
-doesn't help you with managing them. One issue could be a shared tag
-queue - we already solved that by sharing the tag map between the
-queues, but that still allows on queue to deplete more entries that it
-should be allowed to. And so on.
+I created the MD device using mdadm:
+mdadm --create /dev/md0 -n 2 --level=3Dmultipath /dev/sdb /dev/sdc
+I also tried with multipath-tools, and that works great until some poin=
+t,=20
+where I get the following errors:
 
-> You can do it other ways too: the "struct kobject" in the queue obviously 
-> contains a pointer to the parent of the queue, and that might well be your 
-> "host" object. Again, exact same deal, except now you'd use
-> 
-> 	container_of(queue->kobj.parent, myhost_struct, host_kobject);
-> 
-> instead. Entirely up to you.
-> 
-> The whole fixation with "host" in the SCSI layer is a bug, I think. What 
-> does it matter, really? And when do you actually have a "request_queue" 
-> entry without already knowing which controller it is connected to (ie why 
-> do you even need that mapping)?
+sd 3:0:0:0: SCSI error: return code =3D 0xb0000
+end_request: I/O error, dev sdc, sector 439427200
+device-mapper: dm-multipath: Failing path 8:32.
+end_request: I/O error, dev sdc, sector 439427208
+mptbase: ioc2: LogInfo(0x11070000): F/W: DMA Error
+mptbase: ioc2: IOCStatus(0x004b): SCSI IOC Terminated
+mptbase: ioc2: LogInfo(0x11070000): F/W: DMA Error
+mptbase: ioc2: IOCStatus(0x004b): SCSI IOC Terminated
+=2E..
 
-Some devices need serialization between them, and the only way to
-achieve that currently is by sharing a queue. But that fails eg at the
-io scheduler level - and other places also assume a 1:1 mapping between
-queues and devices. And this you cannot do generically right now, and
-it's one thing I would like to handle.
+The part I'm curious about is the "SCSI error: return code =3D 0xb0000"=
+=2E What=20
+does that mean?
+This error appears randomly on both interfaces, under heavy I/O. And it=
+ does=20
+not seems to occur when using only one interface (/dev/sdb directly, ra=
+ther=20
+than /dev/md0 or /dev/mapper/<id>.
 
--- 
-Jens Axboe
+Is this a mpt or md related problem?
 
+Thanks in advance for any hint,
+--=20
+Kilian CAVALOTTI                      Administrateur r=C3=A9seaux et sy=
+st=C3=A8mes
+UPMC / CNRS - LIP6 (C870)
+8, rue du Capitaine Scott                          Tel. : 01 44 27 88 5=
+4
+75015 Paris - France                               Fax. : 01 44 27 70 0=
+0
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
