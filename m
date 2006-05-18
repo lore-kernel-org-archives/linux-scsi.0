@@ -1,141 +1,325 @@
-From: Kilian CAVALOTTI <kilian.cavalotti@lip6.fr>
-Subject: Re: SCSI errors with multipath IO
-Date: Thu, 18 May 2006 18:25:57 +0200
-Message-ID: <200605181825.57547.kilian.cavalotti@lip6.fr>
-References: <200605172026.26745.kilian.cavalotti@lip6.fr>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: [PATCH] Asynchronous scsi scanning
+Date: Thu, 18 May 2006 11:22:58 -0600
+Message-ID: <20060518172258.GL1604@parisc-linux.org>
+References: <20060511143352.GI12272@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from isis.lip6.fr ([132.227.60.2]:30159 "EHLO isis.lip6.fr")
-	by vger.kernel.org with ESMTP id S1751373AbWERQZ6 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 May 2006 12:25:58 -0400
-Received: from poleia.lip6.fr (poleia.lip6.fr [132.227.205.24])
-          by isis.lip6.fr (8.13.6/jtpda-5.4+mv) with ESMTP id k4IGPtc1004531
-          for <linux-scsi@vger.kernel.org>; Thu, 18 May 2006 18:25:55 +0200
-Received: from spip.lip6.fr (mailia [127.0.0.1])
-          by poleia.lip6.fr (8.13.3/jtpda-5.4+CB) with ESMTP id k4IGPjlg030101
-          for <linux-scsi@vger.kernel.org>; Thu, 18 May 2006 18:25:45 +0200
-In-Reply-To: <200605172026.26745.kilian.cavalotti@lip6.fr>
+Received: from palinux.external.hp.com ([192.25.206.14]:59590 "EHLO
+	palinux.external.hp.com") by vger.kernel.org with ESMTP
+	id S932075AbWERRW7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 May 2006 13:22:59 -0400
 Content-Disposition: inline
+In-Reply-To: <20060511143352.GI12272@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-On Wednesday 17 May 2006 20:26, you wrote:
-> sd 3:0:0:0: SCSI error: return code =3D 0xb0000
-> end_request: I/O error, dev sdc, sector 439427200
-> device-mapper: dm-multipath: Failing path 8:32.
-> end_request: I/O error, dev sdc, sector 439427208
-> mptbase: ioc2: LogInfo(0x11070000): F/W: DMA Error
-> mptbase: ioc2: IOCStatus(0x004b): SCSI IOC Terminated
-> mptbase: ioc2: LogInfo(0x11070000): F/W: DMA Error
-> mptbase: ioc2: IOCStatus(0x004b): SCSI IOC Terminated
+On Thu, May 11, 2006 at 08:33:52AM -0600, Matthew Wilcox wrote:
+> A customer has a machine with 162 scsi hosts, and just scanning the scsi
+> busses takes over an hour.  Here's what I've come up with to reduce that.
+> For drivers which call scsi_scan_host(), no changes are necessary.
+> The fibrechannel and SAS drivers are going to take a bit more work,
+> but I thought I'd send out the core first.  I'm not entirely happy about
+> how the threads rendezvous; it'd be nice to not have to use a completion.
 
-I forgot to include the following error, which I get each time:
-mptbase: ioc2: IOCStatus(0x0003): Invalid SGL
-mptbase: ioc2: LogInfo(0x11070000): F/W: DMA Error
+I guess nobody looked at this patch to find my bugs ;-)  Here's an
+updated patch which fixes a few problems:
 
-> This error appears randomly on both interfaces, under heavy I/O. And =
-it
-> does not seems to occur when using only one interface (/dev/sdb direc=
-tly,
-> rather than /dev/md0 or /dev/mapper/<id>.
+ - scsi_complete_async_scans() now hooks onto the end of the list and
+   waits for completion, rather than the rather hacky 'sleep for one
+   second until the list is empty'.
+ - scsi_prep_aync_scan() now takes a reference to the host, which is
+   released by scsi_finish_async_scan().  That prevents the host from
+   going away while we're scanning.  I don't think this is a danger with
+   normal scsi hosts, but I couldn't prove USB couldn't do it ... and
+   better safe than sorry.
+ - Handle some error conditions like kmalloc() and scsi_host_get() failing.
+ - Keep the list lock around the wake-up-the-next-one logic to prevent
+   a double-completion.
 
-Actually, that's not true. ;) It just took more time to appear : I get =
-the=20
-same errors when only using one of the two interfaces (only one SCSI li=
-nk). So=20
-it's probably not a MD-related issue. It seems to be more related to th=
-e mpt=20
-driver (I currently use the 2.6.16-1-em64t-p4-smp debian kernel).=20
+I'm going to put this patch into the parisc-linux tree to get it some
+more testers.  It'd be nice if we could get this into 2.6.18 ...
 
-Does that ring a bell anywhere?=20
+--- cut ---
 
-ioc0: 53C1030: Capabilities=3D{Initiator}
-scsi0 : ioc0: LSI53C1030, FwRev=3D01030a00h, Ports=3D1, MaxQ=3D222, IRQ=
-=3D201
-  Vendor: IFT       Model: A16U-G1410        Rev: 342J
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-GSI 21 sharing vector 0xD1 and IRQ 21
-ACPI: PCI Interrupt 0000:03:0b.1[B] -> GSI 38 (level, low) -> IRQ 209
-mptbase: Initiating ioc1 bringup
-ioc1: 53C1030: Capabilities=3D{Initiator}
-scsi1 : ioc1: LSI53C1030, FwRev=3D01030a00h, Ports=3D1, MaxQ=3D222, IRQ=
-=3D209
-GSI 22 sharing vector 0xD9 and IRQ 22
-ACPI: PCI Interrupt 0000:05:04.0[A] -> GSI 106 (level, low) -> IRQ 217
-mptbase: Initiating ioc2 bringup
-ioc2: 53C1030: Capabilities=3D{Initiator}
-scsi2 : ioc2: LSI53C1030, FwRev=3D01030a00h, Ports=3D1, MaxQ=3D222, IRQ=
-=3D217
-GSI 23 sharing vector 0xE1 and IRQ 23
-ACPI: PCI Interrupt 0000:05:04.1[B] -> GSI 107 (level, low) -> IRQ 225
-mptbase: Initiating ioc3 bringup
-ioc3: 53C1030: Capabilities=3D{Initiator}
-scsi3 : ioc3: LSI53C1030, FwRev=3D01030a00h, Ports=3D1, MaxQ=3D222, IRQ=
-=3D225
-GSI 24 sharing vector 0xE9 and IRQ 24
-ACPI: PCI Interrupt 0000:00:1d.7[D] -> GSI 23 (level, low) -> IRQ 233
-PCI: Setting latency timer of device 0000:00:1d.7 to 64
-PCI: cache line size of 128 is not supported by device 0000:00:1d.7
-sda : very big device. try to use READ CAPACITY(16).
-SCSI device sda: 5466216448 512-byte hdwr sectors (2798703 MB)
-sda: Write Protect is off
-sda: Mode Sense: 9b 00 00 08
-SCSI device sda: drive cache: write through
-sda : very big device. try to use READ CAPACITY(16).
-SCSI device sda: 5466216448 512-byte hdwr sectors (2798703 MB)
-sda: Write Protect is off
-sda: Mode Sense: 9b 00 00 08
-SCSI device sda: drive cache: write through
- sda: unknown partition table
-sd 0:0:1:0: Attached scsi disk sda
-sd 0:0:1:0: SCSI error: return code =3D 0xb0000
-end_request: I/O error, dev sda, sector 5466216320
-Buffer I/O error on device sda, logical block 683277040
-sd 0:0:1:0: SCSI error: return code =3D 0xb0000
-end_request: I/O error, dev sda, sector 5466216320
-Buffer I/O error on device sda, logical block 683277040
-sd 0:0:1:0: SCSI error: return code =3D 0xb0000
-end_request: I/O error, dev sda, sector 5466216440
-Buffer I/O error on device sda, logical block 683277055
-sd 0:0:1:0: SCSI error: return code =3D 0xb0000
-end_request: I/O error, dev sda, sector 5466216440
-Buffer I/O error on device sda, logical block 683277055
-sd 0:0:1:0: SCSI error: return code =3D 0xb0000
-end_request: I/O error, dev sda, sector 5466216440
-Buffer I/O error on device sda, logical block 683277055
-sd 0:0:1:0: SCSI error: return code =3D 0xb0000
-end_request: I/O error, dev sda, sector 5466216440
-Buffer I/O error on device sda, logical block 683277055
-sd 0:0:1:0: SCSI error: return code =3D 0xb0000
-end_request: I/O error, dev sda, sector 5466216440
-Buffer I/O error on device sda, logical block 683277055
-sd 0:0:1:0: SCSI error: return code =3D 0xb0000
-end_request: I/O error, dev sda, sector 5466216440
-Buffer I/O error on device sda, logical block 683277055
-sd 0:0:1:0: SCSI error: return code =3D 0xb0000
-end_request: I/O error, dev sda, sector 5466216384
-Buffer I/O error on device sda, logical block 683277048
+Scanning SCSI busses takes an inordinately long time at boot.  Attempt
+to ameliorate the situation by scanning all scsi busses in parallel.
+This effects a dramatic improvement in boot time, even on machines with
+a single scsi bus, as the bus scan can complete while other
+initialisation is occurring.  On one large configuration I have access
+to, it cuts boot time from 276.45 seconds down to 149.59 seconds; over
+two minutes saved.
 
-What do I have to check? The RAID array seems in good shape, the cables=
- are=20
-brand new, as are the HBAs. I'm running out of ideas, so I'd really=20
-appreciate any clue.
+Great care is taken not to perturb scsi device naming.
 
-Thanks in advance,
---=20
-Kilian CAVALOTTI                      Administrateur r=C3=A9seaux et sy=
-st=C3=A8mes
-UPMC / CNRS - LIP6 (C870)
-8, rue du Capitaine Scott                          Tel. : 01 44 27 88 5=
-4
-75015 Paris - France                               Fax. : 01 44 27 70 0=
-0
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Matthew Wilcox <mattheww@wil.cx>
+
+Index: ./drivers/scsi/scsi_scan.c
+===================================================================
+RCS file: /var/cvs/linux-2.6/drivers/scsi/scsi_scan.c,v
+retrieving revision 1.38
+diff -u -p -r1.38 scsi_scan.c
+--- ./drivers/scsi/scsi_scan.c	19 Apr 2006 04:55:59 -0000	1.38
++++ ./drivers/scsi/scsi_scan.c	18 May 2006 16:34:50 -0000
+@@ -30,7 +30,9 @@
+ #include <linux/moduleparam.h>
+ #include <linux/init.h>
+ #include <linux/blkdev.h>
+-#include <asm/semaphore.h>
++#include <linux/delay.h>
++#include <linux/kthread.h>
++#include <linux/spinlock.h>
+ 
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_device.h>
+@@ -109,6 +111,45 @@ MODULE_PARM_DESC(inq_timeout, 
+ 		 "Timeout (in seconds) waiting for devices to answer INQUIRY."
+ 		 " Default is 5. Some non-compliant devices need more.");
+ 
++static spinlock_t async_scan_lock = SPIN_LOCK_UNLOCKED;
++static LIST_HEAD(scanning_hosts);
++
++struct async_scan_data {
++	struct list_head list;
++	struct Scsi_Host *shost;
++	struct completion prev_finished;
++};
++
++static int scsi_complete_async_scans(void)
++{
++	struct async_scan_data *data;
++	if (list_empty(&scanning_hosts))
++		return 0;
++
++	data = kmalloc(sizeof(*data), GFP_KERNEL);
++	data->shost = NULL;
++	init_completion(&data->prev_finished);
++
++	spin_lock(&async_scan_lock);
++	if (list_empty(&scanning_hosts))
++		goto done;
++	list_add_tail(&data->list, &scanning_hosts);
++	spin_unlock(&async_scan_lock);
++
++	printk(KERN_INFO "scsi: waiting for bus probes to complete ...\n");
++	wait_for_completion(&data->prev_finished);
++
++	spin_lock(&async_scan_lock);
++	list_del(&data->list);
++	spin_unlock(&async_scan_lock);
++
++ done:
++	kfree(data);
++	return 0;
++}
++late_initcall(scsi_complete_async_scans);
++
++
+ /**
+  * scsi_unlock_floptical - unlock device via a special MODE SENSE command
+  * @sdev:	scsi device to send command to
+@@ -629,7 +670,8 @@ static int scsi_probe_lun(struct scsi_de
+  *     SCSI_SCAN_NO_RESPONSE: could not allocate or setup a scsi_device
+  *     SCSI_SCAN_LUN_PRESENT: a new scsi_device was allocated and initialized
+  **/
+-static int scsi_add_lun(struct scsi_device *sdev, char *inq_result, int *bflags)
++static int scsi_add_lun(struct scsi_device *sdev, char *inq_result,
++			int *bflags, int async)
+ {
+ 	/*
+ 	 * XXX do not save the inquiry, since it can change underneath us,
+@@ -802,7 +844,7 @@ static int scsi_add_lun(struct scsi_devi
+ 	 * register it and tell the rest of the kernel
+ 	 * about it.
+ 	 */
+-	if (scsi_sysfs_add_sdev(sdev) != 0)
++	if (!async && scsi_sysfs_add_sdev(sdev) != 0)
+ 		return SCSI_SCAN_NO_RESPONSE;
+ 
+ 	return SCSI_SCAN_LUN_PRESENT;
+@@ -914,7 +956,7 @@ static int scsi_probe_and_add_lun(struct
+ 		goto out_free_result;
+ 	}
+ 
+-	res = scsi_add_lun(sdev, result, &bflags);
++	res = scsi_add_lun(sdev, result, &bflags, shost->async_scan);
+ 	if (res == SCSI_SCAN_LUN_PRESENT) {
+ 		if (bflags & BLIST_KEY) {
+ 			sdev->lockable = 0;
+@@ -1427,6 +1469,9 @@ void scsi_scan_target(struct device *par
+ {
+ 	struct Scsi_Host *shost = dev_to_shost(parent);
+ 
++	if (!shost->async_scan)
++		scsi_complete_async_scans();
++
+ 	mutex_lock(&shost->scan_mutex);
+ 	if (scsi_host_scan_allowed(shost))
+ 		__scsi_scan_target(parent, channel, id, lun, rescan);
+@@ -1492,14 +1537,127 @@ int scsi_scan_host_selected(struct Scsi_
+ 	return 0;
+ }
+ 
++/* The error handling here is pretty yucky.  Do we want an
++ * shost_for_each_device_safe() iterator?
++ */
++static void scsi_sysfs_add_devices(struct Scsi_Host *shost)
++{
++	struct scsi_device *sdev;
++	shost_for_each_device(sdev, shost) {
++		int err;
++ next:
++		err = scsi_sysfs_add_sdev(sdev);
++		if (err) {
++			struct scsi_device *tmp = sdev;
++			sdev = __scsi_iterate_devices(shost, sdev);
++			scsi_destroy_sdev(tmp);
++			goto next;
++		}
++	}
++}
++
++/**
++ * scsi_prep_async_scan - prepare for an async scan
++ * @shost: the host which will be scanned
++ * Returns: a cookie to be passed to scsi_finish_async_scan()
++ *
++ * If your driver does not use scsi_scan_host(), you can call this function
++ * to tell the midlayer you're about to commence an asynchronous scan.
++ * This reserves your device's position in the scanning list and ensures
++ * that other asynchronous scans started after yours won't affect the
++ * disc ordering.
++ */
++struct async_scan_data * scsi_prep_async_scan(struct Scsi_Host *shost)
++{
++	struct async_scan_data *data;
++
++	if (shost->async_scan) {
++		printk("%s called twice for host %d", __FUNCTION__,
++				shost->host_no);
++		dump_stack();
++		return NULL;
++	}
++
++	data = kmalloc(sizeof(*data), GFP_KERNEL);
++	if (!data)
++		goto err;
++	data->shost = scsi_host_get(shost);
++	if (!data->shost)
++		goto err;
++	init_completion(&data->prev_finished);
++
++	spin_lock(&async_scan_lock);
++	shost->async_scan = 1;
++	if (list_empty(&scanning_hosts))
++		complete(&data->prev_finished);
++	list_add_tail(&data->list, &scanning_hosts);
++	spin_unlock(&async_scan_lock);
++
++	return data;
++
++ err:
++	kfree(data);
++	return NULL;
++}
++EXPORT_SYMBOL_GPL(scsi_prep_async_scan);
++
++/**
++ * scsi_finish_async_scan - asynchronous scan has finished
++ * @data: cookie returned from earlier call to scsi_prep_async_scan()
++ *
++ * Once your driver has found all the devices currently present, call
++ * this function.  It will announce all the devices it has found to
++ * the rest of the system.
++ */
++void scsi_finish_async_scan(struct async_scan_data *data)
++{
++	struct Scsi_Host *shost = data->shost;
++	if (!shost->async_scan) {
++		printk("%s called twice for host %d", __FUNCTION__,
++				shost->host_no);
++		dump_stack();
++		return;
++	}
++
++	wait_for_completion(&data->prev_finished);
++
++	scsi_sysfs_add_devices(shost);
++
++	spin_lock(&async_scan_lock);
++	shost->async_scan = 0;
++	list_del(&data->list);
++	if (!list_empty(&scanning_hosts)) {
++		struct async_scan_data *next = list_entry(scanning_hosts.next,
++				struct async_scan_data, list);
++		complete(&next->prev_finished);
++	}
++	spin_unlock(&async_scan_lock);
++
++	scsi_host_put(shost);
++	kfree(data);
++}
++EXPORT_SYMBOL_GPL(scsi_finish_async_scan);
++
++static int do_scan_async(void *_data)
++{
++	struct async_scan_data *data = _data;
++	scsi_scan_host_selected(data->shost, SCAN_WILD_CARD, SCAN_WILD_CARD,
++				SCAN_WILD_CARD, 0);
++
++	scsi_finish_async_scan(data);
++	return 0;
++}
++
+ /**
+  * scsi_scan_host - scan the given adapter
+  * @shost:	adapter to scan
+  **/
+ void scsi_scan_host(struct Scsi_Host *shost)
+ {
+-	scsi_scan_host_selected(shost, SCAN_WILD_CARD, SCAN_WILD_CARD,
+-				SCAN_WILD_CARD, 0);
++	struct async_scan_data *data = scsi_prep_async_scan(shost);
++	if (!data)
++		return;
++	kthread_run(do_scan_async, data, "scsi_scan_%d", shost->host_no);
+ }
+ EXPORT_SYMBOL(scsi_scan_host);
+ 
+Index: ./include/scsi/scsi_device.h
+===================================================================
+RCS file: /var/cvs/linux-2.6/include/scsi/scsi_device.h,v
+retrieving revision 1.27
+diff -u -p -r1.27 scsi_device.h
+--- ./include/scsi/scsi_device.h	3 Apr 2006 13:46:08 -0000	1.27
++++ ./include/scsi/scsi_device.h	18 May 2006 16:34:50 -0000
+@@ -298,6 +298,10 @@ extern int scsi_execute_async(struct scs
+ 			      void (*done)(void *, char *, int, int),
+ 			      gfp_t gfp);
+ 
++struct async_scan_data;
++struct async_scan_data * scsi_prep_async_scan(struct Scsi_Host *shost);
++void scsi_finish_async_scan(struct async_scan_data *data);
++
+ static inline void scsi_device_reprobe(struct scsi_device *sdev)
+ {
+ 	device_reprobe(&sdev->sdev_gendev);
+Index: ./include/scsi/scsi_host.h
+===================================================================
+RCS file: /var/cvs/linux-2.6/include/scsi/scsi_host.h,v
+retrieving revision 1.26
+diff -u -p -r1.26 scsi_host.h
+--- ./include/scsi/scsi_host.h	19 Apr 2006 04:56:20 -0000	1.26
++++ ./include/scsi/scsi_host.h	18 May 2006 16:34:50 -0000
+@@ -541,6 +541,9 @@ struct Scsi_Host {
+ 	 */
+ 	unsigned ordered_tag:1;
+ 
++	/* Are we currently performing an async scan? */
++	unsigned async_scan:1;
++
+ 	/*
+ 	 * Optional work queue to be utilized by the transport
+ 	 */
