@@ -1,139 +1,216 @@
 From: Michael Reed <mdr@sgi.com>
-Subject: [PATCH 4/6] mpt fusion - fix fibre channel infinite request/response
- loop
-Date: Thu, 18 May 2006 15:00:17 -0500
-Message-ID: <446CD251.8090307@sgi.com>
+Subject: [PATCH 5/6] mpt fusion - abort of board reset leaves port dead requiring
+ reboot
+Date: Thu, 18 May 2006 15:00:32 -0500
+Message-ID: <446CD260.7040703@sgi.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------070802020305060303020209"
+ boundary="------------030109000203080307040004"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:50873 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S1751394AbWERUAT (ORCPT
+Received: from omx2-ext.sgi.com ([192.48.171.19]:58041 "EHLO omx2.sgi.com")
+	by vger.kernel.org with ESMTP id S1751396AbWERUAe (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 May 2006 16:00:19 -0400
+	Thu, 18 May 2006 16:00:34 -0400
 Received: from cthulhu.engr.sgi.com (cthulhu.engr.sgi.com [192.26.80.2])
-	by omx2.sgi.com (8.12.11/8.12.9/linux-outbound_gateway-1.1) with ESMTP id k4IMI58V010630
-	for <linux-scsi@vger.kernel.org>; Thu, 18 May 2006 15:18:05 -0700
+	by omx2.sgi.com (8.12.11/8.12.9/linux-outbound_gateway-1.1) with ESMTP id k4IMILsh010640
+	for <linux-scsi@vger.kernel.org>; Thu, 18 May 2006 15:18:21 -0700
 Received: from [128.162.233.78] (hd28.americas.sgi.com [128.162.233.78])
-	by cthulhu.engr.sgi.com (SGI-8.12.5/8.12.5) with ESMTP id k4IK0H4126267909
-	for <linux-scsi@vger.kernel.org>; Thu, 18 May 2006 13:00:18 -0700 (PDT)
+	by cthulhu.engr.sgi.com (SGI-8.12.5/8.12.5) with ESMTP id k4IK0X4126262097
+	for <linux-scsi@vger.kernel.org>; Thu, 18 May 2006 13:00:33 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>
 
 This is a multi-part message in MIME format.
---------------070802020305060303020209
+--------------030109000203080307040004
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 
-While doing board reset testing I was able to put the system in
-an infinite request/response loop between the scsi layer and
-mptscsih_qcmd() by aborting the reset.  This patch installs
-a "SETUP RESET" handler which calls fc_remote_port_delete()
-for all registered rports.  This blocks the target which
-prevents the loop.  Additionally, should the reset fail to
-complete, the transport will now terminate i/o to the target.
+The driver uses msleep_interruptible() in the code path responsible
+for resetting the card's ports via the lsiutil command.  If a
+<ctrl-c> is received during the reset it can leave a port in such
+a state that the only way to regain its use is to reboot the system.
+Changing from msleep_interruptible() to msleep() corrects the problem.
 
 Signed-off-by: Michael Reed <mdr@sgi.com>
 
 
 
 
---------------070802020305060303020209
+--------------030109000203080307040004
 Content-Type: text/x-patch;
- name="04-mptfc_setup_reset.patch"
+ name="05-mptfc_msleep.patch"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline;
- filename="04-mptfc_setup_reset.patch"
+ filename="05-mptfc_msleep.patch"
 
-While doing board reset testing I was able to put the system in
-an infinite request/response loop between the scsi layer and
-mptscsih_qcmd() by aborting the reset.  This patch installs
-a "SETUP RESET" handler which calls fc_remote_port_delete()
-for all registered rports.  This blocks the target which
-prevents the loop.  Additionally, should the reset fail to
-complete, the transport will now terminate i/o to the target.
+The driver uses msleep_interruptible() in the code path responsible
+for resetting the card's ports via the lsiutil command.  If a
+<ctrl-c> is received during the reset it can leave a port in such
+a state that the only way to regain its use is to reboot the system.
+Changing from msleep_interruptible() to msleep() corrects the problem.
 
 Signed-off-by: Michael Reed <mdr@sgi.com>
 
 
---- rc3c/drivers/message/fusion/mptbase.h	2006-05-08 14:49:37.730936614 -0500
-+++ rc3/drivers/message/fusion/mptbase.h	2006-05-08 14:50:02.161951124 -0500
-@@ -635,6 +635,7 @@
- 	int			 num_ports;
- 	struct work_struct	 mptscsih_persistTask;
+--- rc3c/drivers/message/fusion/mptbase.c	2006-05-08 14:55:27.276697653 -0500
++++ rc3/drivers/message/fusion/mptbase.c	2006-05-08 14:58:55.364106345 -0500
+@@ -2264,7 +2264,7 @@
+ 		}
  
-+	struct work_struct	 fc_setup_reset_work;
- 	struct list_head	 fc_rports;
- 	spinlock_t		 fc_rescan_work_lock;
- 	int			 fc_rescan_work_count;
---- rc3c/drivers/message/fusion/mptfc.c	2006-05-08 14:49:37.730936614 -0500
-+++ rc3/drivers/message/fusion/mptfc.c	2006-05-08 14:50:02.161951124 -0500
-@@ -580,10 +580,10 @@
- #ifdef DMPT_DEBUG_FC
- 	if (unlikely(err)) {
- 		dfcprintk ((MYIOC_s_INFO_FMT
--			"mptfc_qcmd.%d: %d:%d, mptscsih_qcmd returns non-zero.\n",
-+			"mptfc_qcmd.%d: %d:%d, mptscsih_qcmd returns non-zero, (%x).\n",
- 			((MPT_SCSI_HOST *) SCpnt->device->host->hostdata)->ioc->name,
- 			((MPT_SCSI_HOST *) SCpnt->device->host->hostdata)->ioc->sh->host_no,
--			SCpnt->device->id,SCpnt->device->lun));
-+			SCpnt->device->id,SCpnt->device->lun,err));
+ 		if (sleepFlag == CAN_SLEEP) {
+-			msleep_interruptible(1);
++			msleep(1);
+ 		} else {
+ 			mdelay (1);	/* 1 msec delay */
+ 		}
+@@ -2652,7 +2652,7 @@
+ 	state = mpt_GetIocState(ioc, 1);
+ 	while (state != MPI_IOC_STATE_OPERATIONAL && --cntdn) {
+ 		if (sleepFlag == CAN_SLEEP) {
+-			msleep_interruptible(1);
++			msleep(1);
+ 		} else {
+ 			mdelay(1);
+ 		}
+@@ -2904,7 +2904,7 @@
+ 
+ 	/* wait 1 msec */
+ 	if (sleepFlag == CAN_SLEEP) {
+-		msleep_interruptible(1);
++		msleep(1);
+ 	} else {
+ 		mdelay (1);
  	}
- #endif
- 	return err;
-@@ -873,6 +873,31 @@
- }
+@@ -2921,7 +2921,7 @@
+ 		}
+ 		/* wait .1 sec */
+ 		if (sleepFlag == CAN_SLEEP) {
+-			msleep_interruptible (100);
++			msleep (100);
+ 		} else {
+ 			mdelay (100);
+ 		}
+@@ -3011,7 +3011,7 @@
  
- static void
-+mptfc_setup_reset(void *arg)
-+{
-+	MPT_ADAPTER		*ioc = (MPT_ADAPTER *)arg;
-+	u64			pn;
-+	struct mptfc_rport_info *ri;
-+
-+	/* reset about to happen, delete (block) all rports */
-+	list_for_each_entry(ri, &ioc->fc_rports, list) {
-+		if (ri->flags & MPT_RPORT_INFO_FLAGS_REGISTERED) {
-+			ri->flags &= ~MPT_RPORT_INFO_FLAGS_REGISTERED;
-+			fc_remote_port_delete(ri->rport);	/* won't sleep */
-+			ri->rport = NULL;
-+
-+			pn = (u64)ri->pg0.WWPN.High << 32 |
-+			     (u64)ri->pg0.WWPN.Low;
-+			dfcprintk ((MYIOC_s_INFO_FMT
-+				"mptfc_setup_reset.%d: %llx deleted\n",
-+				ioc->name,
-+				ioc->sh->host_no,
-+				(unsigned long long)pn));
-+		}
-+	}
-+}
-+
-+static void
- mptfc_rescan_devices(void *arg)
- {
- 	MPT_ADAPTER		*ioc = (MPT_ADAPTER *)arg;
-@@ -1018,6 +1043,7 @@
+ 		/* wait 1 msec */
+ 		if (sleepFlag == CAN_SLEEP) {
+-			msleep_interruptible (1);
++			msleep (1);
+ 		} else {
+ 			mdelay (1);
+ 		}
+@@ -3059,7 +3059,7 @@
+ 			return 0;
+ 		}
+ 		if (sleepFlag == CAN_SLEEP) {
+-			msleep_interruptible (10);
++			msleep (10);
+ 		} else {
+ 			mdelay (10);
+ 		}
+@@ -3110,7 +3110,7 @@
+ 		SendIocReset(ioc, MPI_FUNCTION_IOC_MESSAGE_UNIT_RESET, sleepFlag);
  
- 	spin_lock_init(&ioc->fc_rescan_work_lock);
- 	INIT_WORK(&ioc->fc_rescan_work, mptfc_rescan_devices,(void *)ioc);
-+	INIT_WORK(&ioc->fc_setup_reset_work, mptfc_setup_reset, (void *)ioc);
+ 		if (sleepFlag == CAN_SLEEP) {
+-			msleep_interruptible (1000);
++			msleep (1000);
+ 		} else {
+ 			mdelay (1000);
+ 		}
+@@ -3132,7 +3132,7 @@
+ 			return hard_reset_done;
+ 		}
+ 		if (sleepFlag == CAN_SLEEP) {
+-			msleep_interruptible (10);
++			msleep (10);
+ 		} else {
+ 			mdelay (10);
+ 		}
+@@ -3203,7 +3203,7 @@
  
- 	spin_lock_irqsave(&ioc->FreeQlock, flags);
+ 			/* wait 100 msec */
+ 			if (sleepFlag == CAN_SLEEP) {
+-				msleep_interruptible (100);
++				msleep (100);
+ 			} else {
+ 				mdelay (100);
+ 			}
+@@ -3282,7 +3282,7 @@
  
-@@ -1240,6 +1266,12 @@
- 		reset_phase==MPT_IOC_PRE_RESET ? "pre" : "post")));
+ 				/* wait 1 sec */
+ 				if (sleepFlag == CAN_SLEEP) {
+-					msleep_interruptible (1000);
++					msleep (1000);
+ 				} else {
+ 					mdelay (1000);
+ 				}
+@@ -3310,7 +3310,7 @@
  
- 	if (reset_phase == MPT_IOC_SETUP_RESET) {
-+		spin_lock_irqsave(&ioc->fc_rescan_work_lock, flags);
-+		if (ioc->fc_rescan_work_q) {
-+			queue_work(ioc->fc_rescan_work_q,
-+				   &ioc->fc_setup_reset_work);
-+		}
-+		spin_unlock_irqrestore(&ioc->fc_rescan_work_lock, flags);
- 	}
+ 				/* wait 1 sec */
+ 				if (sleepFlag == CAN_SLEEP) {
+-					msleep_interruptible (1000);
++					msleep (1000);
+ 				} else {
+ 					mdelay (1000);
+ 				}
+@@ -3344,7 +3344,7 @@
  
- 	else if (reset_phase == MPT_IOC_PRE_RESET) {
+ 		/* wait 100 msec */
+ 		if (sleepFlag == CAN_SLEEP) {
+-			msleep_interruptible (100);
++			msleep (100);
+ 		} else {
+ 			mdelay (100);
+ 		}
+@@ -3438,7 +3438,7 @@
+ 		}
+ 
+ 		if (sleepFlag == CAN_SLEEP) {
+-			msleep_interruptible(1);
++			msleep(1);
+ 		} else {
+ 			mdelay (1);	/* 1 msec delay */
+ 		}
+@@ -3878,7 +3878,7 @@
+ 			intstat = CHIPREG_READ32(&ioc->chip->IntStatus);
+ 			if (! (intstat & MPI_HIS_IOP_DOORBELL_STATUS))
+ 				break;
+-			msleep_interruptible (1);
++			msleep (1);
+ 			count++;
+ 		}
+ 	} else {
+@@ -3927,7 +3927,7 @@
+ 			intstat = CHIPREG_READ32(&ioc->chip->IntStatus);
+ 			if (intstat & MPI_HIS_DOORBELL_INTERRUPT)
+ 				break;
+-			msleep_interruptible(1);
++			msleep(1);
+ 			count++;
+ 		}
+ 	} else {
+--- rc3c/drivers/message/fusion/mptfc.c	2006-05-08 14:55:38.828222127 -0500
++++ rc3/drivers/message/fusion/mptfc.c	2006-05-08 14:58:58.911964756 -0500
+@@ -678,7 +678,7 @@
+ 			 */
+ 			if (pp0dest->PortState == MPI_FCPORTPAGE0_PORTSTATE_UNKNOWN) {
+ 				if (count-- > 0) {
+-					msleep_interruptible(100);
++					msleep(100);
+ 					goto try_again;
+ 				}
+ 				printk(MYIOC_s_INFO_FMT "Firmware discovery not"
+--- rc3c/drivers/message/fusion/mptscsih.c	2006-05-08 14:55:06.453554069 -0500
++++ rc3/drivers/message/fusion/mptscsih.c	2006-05-08 14:59:04.163755105 -0500
+@@ -1922,7 +1922,7 @@
+ 			break;
+ 		}
+ 		spin_unlock_irqrestore(&hd->ioc->FreeQlock, flags);
+-		msleep_interruptible(250);
++		msleep(250);
+ 	} while (--loop_count);
+ 
+ 	return status;
 
---------------070802020305060303020209--
+--------------030109000203080307040004--
