@@ -1,47 +1,36 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
+From: Tejun Heo <htejun@gmail.com>
 Subject: Re: [Fwd: [RFT] major libata update]
-Date: Wed, 17 May 2006 20:04:55 -0700 (PDT)
-Message-ID: <20060518030455.62177.qmail@web31814.mail.mud.yahoo.com>
-References: <Pine.LNX.4.64.0605171036140.10823@g5.osdl.org>
-Reply-To: ltuikov@yahoo.com
+Date: Thu, 18 May 2006 12:27:48 +0900
+Message-ID: <446BE9B4.60605@gmail.com>
+References: <4468B596.9090508@garzik.org>	 <1147789098.3505.19.camel@mulgrave.il.steeleye.com>	 <4469F2B2.703@garzik.org>	 <1147794708.3505.30.camel@mulgrave.il.steeleye.com>	 <4469F906.7040602@gmail.com>	 <1147796999.3505.42.camel@mulgrave.il.steeleye.com>	 <446A0053.5070203@gmail.com>	 <1147798226.3505.56.camel@mulgrave.il.steeleye.com>	 <446A06C7.5050609@gmail.com>  <20060516195836.GA3807@infradead.org> <1147814935.3505.88.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=EUC-KR
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31814.mail.mud.yahoo.com ([68.142.206.167]:19333 "HELO
-	web31814.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S1750974AbWERDE4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 May 2006 23:04:56 -0400
-In-Reply-To: <Pine.LNX.4.64.0605171036140.10823@g5.osdl.org>
+Received: from nf-out-0910.google.com ([64.233.182.184]:19880 "EHLO
+	nf-out-0910.google.com") by vger.kernel.org with ESMTP
+	id S1751138AbWERD15 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 May 2006 23:27:57 -0400
+Received: by nf-out-0910.google.com with SMTP id d4so280195nfe
+        for <linux-scsi@vger.kernel.org>; Wed, 17 May 2006 20:27:56 -0700 (PDT)
+In-Reply-To: <1147814935.3505.88.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>, James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Jens Axboe <axboe@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Andrew Morton <akpm@osdl.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Jeff Garzik <jeff@garzik.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
 
---- Linus Torvalds <torvalds@osdl.org> wrote:
-> On Wed, 17 May 2006, James Bottomley wrote:
-> > 
-> > This is one of the questions.  Currently block has no concept of "host".
+James Bottomley wrote:
+> On Tue, 2006-05-16 at 20:58 +0100, Christoph Hellwig wrote:
+>> Things used by the transport classes traditionally weren't in scsi_priv.h,
+>> that was for scsi_mod internals only.  Should we changed that?  I'd rather
+>> have another header for semi-volatile APIs transport classes use.
 > 
-> That's good. 
+> well ... OK we don't necessarily have a header for SCSI APIs exported
+> exclusively to transport classes.  how about
+> drivers/scsi/scsi_transport_api.h?
 > 
-> I don't understand why you'd ever _want_ a concept of "host". The whole 
-> concept is broken and unnecessary. At no point should you even need to map 
-> from request to host, but if you do, you don't need to introduce any 
-> generic "host" notion, you can do it easily per-queue.
 
-You are correct.  The concept of "host" should NOT be exported to
-higher than PCI/SCSI* level.
+Are we agreed on this?  A new header file drivers/scsi/scsi_transport_api.h?
 
-* See below.
-
-> The whole fixation with "host" in the SCSI layer is a bug, I think. What 
-> does it matter, really? And when do you actually have a "request_queue" 
-> entry without already knowing which controller it is connected to (ie why 
-> do you even need that mapping)?
-
-Not quite, the concept of a "host" is needed as it is the "host" which
-provides "SCSI ports" to the "SCSI domain".
-
-     Luben
-
+-- 
+tejun
