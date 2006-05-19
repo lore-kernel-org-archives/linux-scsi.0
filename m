@@ -1,303 +1,194 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: [PATCH 3/6] iscsi update: kill dtask mempools
-Date: Thu, 18 May 2006 20:31:36 -0500
-Message-ID: <1148002296.3248.24.camel@max>
+Subject: [PATCH 4/6] iscsi update: support mutiple daemons
+Date: Thu, 18 May 2006 20:31:39 -0500
+Message-ID: <1148002299.3248.25.camel@max>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:60548 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S932182AbWESBdU (ORCPT
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:61060 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S932202AbWESBdr (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 May 2006 21:33:20 -0400
+	Thu, 18 May 2006 21:33:47 -0400
 Received: from [192.168.0.4] (c-69-180-176-191.hsd1.mn.comcast.net [69.180.176.191])
 	(authenticated bits=0)
-	by sabe.cs.wisc.edu (8.13.6/8.13.6) with ESMTP id k4J1WxZR007199
+	by sabe.cs.wisc.edu (8.13.6/8.13.6) with ESMTP id k4J1XQwN007215
 	(version=TLSv1/SSLv3 cipher=RC4-MD5 bits=128 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Thu, 18 May 2006 20:33:19 -0500
+	for <linux-scsi@vger.kernel.org>; Thu, 18 May 2006 20:33:46 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Discovered by steven@hayter.me.uk and patch by michaelc@cs.wisc.edu
+Patch from david.somayajulu@qlogic.com and cleaned up by Tomo.
 
-The dtask mempool is reserving 261120 items per session! Since we are now
-sending headers with sendmsg there is no reason for the mempool and that
-was causing us to us carzy amounts of mem. We can preallicate a header in
-the r2t and task struct and reuse them
+qla4xxx is going to have a different daemon so this patch
+just routes the events to the right daemon.
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index 7c2ed7b..08357a6 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -67,9 +67,6 @@ MODULE_VERSION("0:4.445");
- static unsigned int iscsi_max_lun = 512;
- module_param_named(max_lun, iscsi_max_lun, uint, S_IRUGO);
+
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index 44adafa..5569fdc 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -36,6 +36,7 @@
+ #define ISCSI_HOST_ATTRS 0
  
--/* global data */
--static kmem_cache_t *taskcache;
--
- static inline void
- iscsi_buf_init_iov(struct iscsi_buf *ibuf, char *vbuf, int size)
+ struct iscsi_internal {
++	int daemon_pid;
+ 	struct scsi_transport_template t;
+ 	struct iscsi_transport *iscsi_transport;
+ 	struct list_head list;
+@@ -145,7 +146,6 @@ static DECLARE_TRANSPORT_CLASS(iscsi_con
+ 			       NULL);
+ 
+ static struct sock *nls;
+-static int daemon_pid;
+ static DEFINE_MUTEX(rx_queue_mutex);
+ 
+ struct mempool_zone {
+@@ -572,13 +572,13 @@ mempool_zone_get_skb(struct mempool_zone
+ }
+ 
+ static int
+-iscsi_unicast_skb(struct mempool_zone *zone, struct sk_buff *skb)
++iscsi_unicast_skb(struct mempool_zone *zone, struct sk_buff *skb, int pid)
  {
-@@ -195,16 +192,6 @@ __iscsi_ctask_cleanup(struct iscsi_conn 
- 	if (unlikely(!sc))
+ 	unsigned long flags;
+ 	int rc;
+ 
+ 	skb_get(skb);
+-	rc = netlink_unicast(nls, skb, daemon_pid, MSG_DONTWAIT);
++	rc = netlink_unicast(nls, skb, pid, MSG_DONTWAIT);
+ 	if (rc < 0) {
+ 		mempool_free(skb, zone->pool);
+ 		printk(KERN_ERR "iscsi: can not unicast skb (%d)\n", rc);
+@@ -600,9 +600,14 @@ int iscsi_recv_pdu(struct iscsi_cls_conn
+ 	struct sk_buff *skb;
+ 	struct iscsi_uevent *ev;
+ 	char *pdu;
++	struct iscsi_internal *priv;
+ 	int len = NLMSG_SPACE(sizeof(*ev) + sizeof(struct iscsi_hdr) +
+ 			      data_size);
+ 
++	priv = iscsi_if_transport_lookup(conn->transport);
++	if (!priv)
++		return -EINVAL;
++
+ 	mempool_zone_complete(conn->z_pdu);
+ 
+ 	skb = mempool_zone_get_skb(conn->z_pdu);
+@@ -613,7 +618,7 @@ int iscsi_recv_pdu(struct iscsi_cls_conn
+ 		return -ENOMEM;
+ 	}
+ 
+-	nlh = __nlmsg_put(skb, daemon_pid, 0, 0, (len - sizeof(*nlh)), 0);
++	nlh = __nlmsg_put(skb, priv->daemon_pid, 0, 0, (len - sizeof(*nlh)), 0);
+ 	ev = NLMSG_DATA(nlh);
+ 	memset(ev, 0, sizeof(*ev));
+ 	ev->transport_handle = iscsi_handle(conn->transport);
+@@ -626,7 +631,7 @@ int iscsi_recv_pdu(struct iscsi_cls_conn
+ 	memcpy(pdu, hdr, sizeof(struct iscsi_hdr));
+ 	memcpy(pdu + sizeof(struct iscsi_hdr), data, data_size);
+ 
+-	return iscsi_unicast_skb(conn->z_pdu, skb);
++	return iscsi_unicast_skb(conn->z_pdu, skb, priv->daemon_pid);
+ }
+ EXPORT_SYMBOL_GPL(iscsi_recv_pdu);
+ 
+@@ -635,8 +640,13 @@ void iscsi_conn_error(struct iscsi_cls_c
+ 	struct nlmsghdr	*nlh;
+ 	struct sk_buff	*skb;
+ 	struct iscsi_uevent *ev;
++	struct iscsi_internal *priv;
+ 	int len = NLMSG_SPACE(sizeof(*ev));
+ 
++	priv = iscsi_if_transport_lookup(conn->transport);
++	if (!priv)
++		return;
++
+ 	mempool_zone_complete(conn->z_error);
+ 
+ 	skb = mempool_zone_get_skb(conn->z_error);
+@@ -646,7 +656,7 @@ void iscsi_conn_error(struct iscsi_cls_c
  		return;
+ 	}
  
--	if (sc->sc_data_direction == DMA_TO_DEVICE) {
--		struct iscsi_data_task *dtask, *n;
--
--		/* WRITE: cleanup Data-Out's if any */
--		list_for_each_entry_safe(dtask, n, &tcp_ctask->dataqueue,
--					 item) {
--			list_del(&dtask->item);
--			mempool_free(dtask, tcp_ctask->datapool);
--		}
--	}
- 	tcp_ctask->xmstate = XMSTATE_IDLE;
- 	tcp_ctask->r2t = NULL;
- }
-@@ -286,14 +273,10 @@ iscsi_solicit_data_init(struct iscsi_con
- 			struct iscsi_r2t_info *r2t)
- {
- 	struct iscsi_data *hdr;
--	struct iscsi_data_task *dtask;
- 	struct scsi_cmnd *sc = ctask->sc;
- 	struct iscsi_tcp_cmd_task *tcp_ctask = ctask->dd_data;
+-	nlh = __nlmsg_put(skb, daemon_pid, 0, 0, (len - sizeof(*nlh)), 0);
++	nlh = __nlmsg_put(skb, priv->daemon_pid, 0, 0, (len - sizeof(*nlh)), 0);
+ 	ev = NLMSG_DATA(nlh);
+ 	ev->transport_handle = iscsi_handle(conn->transport);
+ 	ev->type = ISCSI_KEVENT_CONN_ERROR;
+@@ -656,7 +666,7 @@ void iscsi_conn_error(struct iscsi_cls_c
+ 	ev->r.connerror.cid = conn->cid;
+ 	ev->r.connerror.sid = iscsi_conn_get_sid(conn);
  
--	dtask = mempool_alloc(tcp_ctask->datapool, GFP_ATOMIC);
--	BUG_ON(!dtask);
--	INIT_LIST_HEAD(&dtask->item);
--	hdr = &dtask->hdr;
-+	hdr = &r2t->dtask.hdr;
- 	memset(hdr, 0, sizeof(struct iscsi_data));
- 	hdr->ttt = r2t->ttt;
- 	hdr->datasn = cpu_to_be32(r2t->solicit_datasn);
-@@ -319,8 +302,6 @@ iscsi_solicit_data_init(struct iscsi_con
- 	iscsi_buf_init_iov(&r2t->headbuf, (char*)hdr,
- 			   sizeof(struct iscsi_hdr));
+-	iscsi_unicast_skb(conn->z_error, skb);
++	iscsi_unicast_skb(conn->z_error, skb, priv->daemon_pid);
  
--	r2t->dtask = dtask;
--
- 	if (sc->use_sg) {
- 		int i, sg_count = 0;
- 		struct scatterlist *sg = sc->request_buffer;
-@@ -352,8 +333,6 @@ iscsi_solicit_data_init(struct iscsi_con
- 		iscsi_buf_init_iov(&tcp_ctask->sendbuf,
- 			    (char*)sc->request_buffer + r2t->data_offset,
- 			    r2t->data_count);
--
--	list_add(&dtask->item, &tcp_ctask->dataqueue);
+ 	dev_printk(KERN_INFO, &conn->dev, "iscsi: detected conn error (%d)\n",
+ 		   error);
+@@ -686,7 +696,7 @@ iscsi_if_send_reply(int pid, int seq, in
+ 	nlh = __nlmsg_put(skb, pid, seq, t, (len - sizeof(*nlh)), 0);
+ 	nlh->nlmsg_flags = flags;
+ 	memcpy(NLMSG_DATA(nlh), payload, size);
+-	return iscsi_unicast_skb(z_reply, skb);
++	return iscsi_unicast_skb(z_reply, skb, pid);
  }
  
- /**
-@@ -1229,14 +1208,10 @@ iscsi_solicit_data_cont(struct iscsi_con
- {
- 	struct iscsi_tcp_cmd_task *tcp_ctask = ctask->dd_data;
- 	struct iscsi_data *hdr;
--	struct iscsi_data_task *dtask;
- 	struct scsi_cmnd *sc = ctask->sc;
- 	int new_offset;
+ static int
+@@ -698,12 +708,17 @@ iscsi_if_get_stats(struct iscsi_transpor
+ 	struct iscsi_cls_conn *conn;
+ 	struct nlmsghdr	*nlhstat;
+ 	struct iscsi_uevent *evstat;
++	struct iscsi_internal *priv;
+ 	int len = NLMSG_SPACE(sizeof(*ev) +
+ 			      sizeof(struct iscsi_stats) +
+ 			      sizeof(struct iscsi_stats_custom) *
+ 			      ISCSI_STATS_CUSTOM_MAX);
+ 	int err = 0;
  
--	dtask = mempool_alloc(tcp_ctask->datapool, GFP_ATOMIC);
--	BUG_ON(!dtask);
--	INIT_LIST_HEAD(&dtask->item);
--	hdr = &dtask->hdr;
-+	hdr = &r2t->dtask.hdr;
- 	memset(hdr, 0, sizeof(struct iscsi_data));
- 	hdr->ttt = r2t->ttt;
- 	hdr->datasn = cpu_to_be32(r2t->solicit_datasn);
-@@ -1260,8 +1235,6 @@ iscsi_solicit_data_cont(struct iscsi_con
- 	iscsi_buf_init_iov(&r2t->headbuf, (char*)hdr,
- 			   sizeof(struct iscsi_hdr));
- 
--	r2t->dtask = dtask;
--
- 	if (sc->use_sg && !iscsi_buf_left(&r2t->sendbuf)) {
- 		BUG_ON(tcp_ctask->bad_sg == r2t->sg);
- 		iscsi_buf_init_sg(&r2t->sendbuf, r2t->sg);
-@@ -1270,8 +1243,6 @@ iscsi_solicit_data_cont(struct iscsi_con
- 		iscsi_buf_init_iov(&tcp_ctask->sendbuf,
- 			    (char*)sc->request_buffer + new_offset,
- 			    r2t->data_count);
--
--	list_add(&dtask->item, &tcp_ctask->dataqueue);
- }
- 
- static void
-@@ -1280,17 +1251,11 @@ iscsi_unsolicit_data_init(struct iscsi_c
- 	struct iscsi_tcp_cmd_task *tcp_ctask = ctask->dd_data;
- 	struct iscsi_data_task *dtask;
- 
--	dtask = mempool_alloc(tcp_ctask->datapool, GFP_ATOMIC);
--	BUG_ON(!dtask);
--	INIT_LIST_HEAD(&dtask->item);
--
-+	dtask = tcp_ctask->dtask = &tcp_ctask->unsol_dtask;
- 	iscsi_prep_unsolicit_data_pdu(ctask, &dtask->hdr,
- 				      tcp_ctask->r2t_data_count);
- 	iscsi_buf_init_iov(&tcp_ctask->headbuf, (char*)&dtask->hdr,
- 			   sizeof(struct iscsi_hdr));
--
--	list_add(&dtask->item, &tcp_ctask->dataqueue);
--	tcp_ctask->dtask = dtask;
- }
- 
- /**
-@@ -1534,7 +1499,6 @@ handle_xmstate_uns_hdr(struct iscsi_conn
- 	tcp_ctask->xmstate |= XMSTATE_UNS_DATA;
- 	if (tcp_ctask->xmstate & XMSTATE_UNS_INIT) {
- 		iscsi_unsolicit_data_init(conn, ctask);
--		BUG_ON(!tcp_ctask->dtask);
- 		dtask = tcp_ctask->dtask;
- 		if (conn->hdrdgst_en)
- 			iscsi_hdr_digest(conn, &tcp_ctask->headbuf,
-@@ -1643,7 +1607,7 @@ handle_xmstate_sol_data(struct iscsi_con
- 	struct iscsi_tcp_conn *tcp_conn = conn->dd_data;
- 	struct iscsi_tcp_cmd_task *tcp_ctask = ctask->dd_data;
- 	struct iscsi_r2t_info *r2t = tcp_ctask->r2t;
--	struct iscsi_data_task *dtask = r2t->dtask;
-+	struct iscsi_data_task *dtask = &r2t->dtask;
- 	int left;
- 
- 	tcp_ctask->xmstate &= ~XMSTATE_SOL_DATA;
-@@ -1857,7 +1821,7 @@ solicit_head_again:
- 		r2t = tcp_ctask->r2t;
- 		if (conn->hdrdgst_en)
- 			iscsi_hdr_digest(conn, &r2t->headbuf,
--					(u8*)r2t->dtask->hdrext);
-+					(u8*)r2t->dtask.hdrext);
- 		if (iscsi_sendhdr(conn, &r2t->headbuf, r2t->data_count)) {
- 			tcp_ctask->xmstate &= ~XMSTATE_SOL_DATA;
- 			tcp_ctask->xmstate |= XMSTATE_SOL_HDR;
-@@ -2113,21 +2077,6 @@ iscsi_r2tpool_alloc(struct iscsi_session
- 					(void**)tcp_ctask->r2ts);
- 			goto r2t_alloc_fail;
++	priv = iscsi_if_transport_lookup(transport);
++	if (!priv)
++		return -EINVAL;
++
+ 	conn = iscsi_conn_lookup(ev->u.get_stats.sid, ev->u.get_stats.cid);
+ 	if (!conn)
+ 		return -EEXIST;
+@@ -720,7 +735,7 @@ iscsi_if_get_stats(struct iscsi_transpor
+ 			return -ENOMEM;
  		}
--
--		/*
--		 * number of
--		 * Data-Out PDU's within R2T-sequence can be quite big;
--		 * using mempool
--		 */
--		tcp_ctask->datapool = mempool_create_slab_pool(ISCSI_DTASK_DEFAULT_MAX,
--							       taskcache);
--		if (tcp_ctask->datapool == NULL) {
--			kfifo_free(tcp_ctask->r2tqueue);
--			iscsi_pool_free(&tcp_ctask->r2tpool,
--					(void**)tcp_ctask->r2ts);
--			goto r2t_alloc_fail;
--		}
--		INIT_LIST_HEAD(&tcp_ctask->dataqueue);
- 	}
  
- 	return 0;
-@@ -2137,7 +2086,6 @@ r2t_alloc_fail:
- 		struct iscsi_cmd_task *ctask = session->cmds[i];
- 		struct iscsi_tcp_cmd_task *tcp_ctask = ctask->dd_data;
+-		nlhstat = __nlmsg_put(skbstat, daemon_pid, 0, 0,
++		nlhstat = __nlmsg_put(skbstat, priv->daemon_pid, 0, 0,
+ 				      (len - sizeof(*nlhstat)), 0);
+ 		evstat = NLMSG_DATA(nlhstat);
+ 		memset(evstat, 0, sizeof(*evstat));
+@@ -746,7 +761,7 @@ iscsi_if_get_stats(struct iscsi_transpor
+ 		skb_trim(skbstat, NLMSG_ALIGN(actual_size));
+ 		nlhstat->nlmsg_len = actual_size;
  
--		mempool_destroy(tcp_ctask->datapool);
- 		kfifo_free(tcp_ctask->r2tqueue);
- 		iscsi_pool_free(&tcp_ctask->r2tpool,
- 				(void**)tcp_ctask->r2ts);
-@@ -2154,7 +2102,6 @@ iscsi_r2tpool_free(struct iscsi_session 
- 		struct iscsi_cmd_task *ctask = session->cmds[i];
- 		struct iscsi_tcp_cmd_task *tcp_ctask = ctask->dd_data;
+-		err = iscsi_unicast_skb(conn->z_pdu, skbstat);
++		err = iscsi_unicast_skb(conn->z_pdu, skbstat, priv->daemon_pid);
+ 	} while (err < 0 && err != -ECONNREFUSED);
  
--		mempool_destroy(tcp_ctask->datapool);
- 		kfifo_free(tcp_ctask->r2tqueue);
- 		iscsi_pool_free(&tcp_ctask->r2tpool,
- 				(void**)tcp_ctask->r2ts);
-@@ -2496,21 +2443,6 @@ r2tpool_alloc_fail:
+ 	return err;
+@@ -981,6 +996,8 @@ iscsi_if_recv_msg(struct sk_buff *skb, s
+ 	if (!try_module_get(transport->owner))
+ 		return -EINVAL;
  
- static void iscsi_tcp_session_destroy(struct iscsi_cls_session *cls_session)
- {
--	struct iscsi_session *session = class_to_transport_session(cls_session);
--	struct iscsi_data_task *dtask, *n;
--	int cmd_i;
--
--	for (cmd_i = 0; cmd_i < session->cmds_max; cmd_i++) {
--		struct iscsi_cmd_task *ctask = session->cmds[cmd_i];
--		struct iscsi_tcp_cmd_task *tcp_ctask = ctask->dd_data;
--
--		list_for_each_entry_safe(dtask, n, &tcp_ctask->dataqueue,
--					 item) {
--			list_del(&dtask->item);
--			mempool_free(dtask, tcp_ctask->datapool);
--		}
--	}
--
- 	iscsi_r2tpool_free(class_to_transport_session(cls_session));
- 	iscsi_session_teardown(cls_session);
- }
-@@ -2592,14 +2524,8 @@ iscsi_tcp_init(void)
- 	}
- 	iscsi_tcp_transport.max_lun = iscsi_max_lun;
++	priv->daemon_pid = NETLINK_CREDS(skb)->pid;
++
+ 	switch (nlh->nlmsg_type) {
+ 	case ISCSI_UEVENT_CREATE_SESSION:
+ 		err = iscsi_if_create_session(priv, ev);
+@@ -1073,7 +1090,6 @@ iscsi_if_rx(struct sock *sk, int len)
+ 			skb_pull(skb, skb->len);
+ 			goto free_skb;
+ 		}
+-		daemon_pid = NETLINK_CREDS(skb)->pid;
  
--	taskcache = kmem_cache_create("iscsi_taskcache",
--			sizeof(struct iscsi_data_task), 0,
--			SLAB_HWCACHE_ALIGN, NULL, NULL);
--	if (!taskcache)
--		return -ENOMEM;
--
- 	if (!iscsi_register_transport(&iscsi_tcp_transport))
--		kmem_cache_destroy(taskcache);
-+		return -ENODEV;
- 
- 	return 0;
- }
-@@ -2608,7 +2534,6 @@ static void __exit
- iscsi_tcp_exit(void)
- {
- 	iscsi_unregister_transport(&iscsi_tcp_transport);
--	kmem_cache_destroy(taskcache);
- }
- 
- module_init(iscsi_tcp_init);
-diff --git a/drivers/scsi/iscsi_tcp.h b/drivers/scsi/iscsi_tcp.h
-index c591885..8083028 100644
---- a/drivers/scsi/iscsi_tcp.h
-+++ b/drivers/scsi/iscsi_tcp.h
-@@ -118,11 +118,9 @@ struct iscsi_buf {
- struct iscsi_data_task {
- 	struct iscsi_data	hdr;			/* PDU */
- 	char			hdrext[sizeof(__u32)];	/* Header-Digest */
--	struct list_head	item;			/* data queue item */
- 	struct iscsi_buf	digestbuf;		/* digest buffer */
- 	uint32_t		digest;			/* data digest */
- };
--#define ISCSI_DTASK_DEFAULT_MAX	ISCSI_SG_TABLESIZE * PAGE_SIZE / 512
- 
- struct iscsi_tcp_mgmt_task {
- 	struct iscsi_hdr	hdr;
-@@ -144,7 +142,7 @@ struct iscsi_r2t_info {
- 	int			data_count;	/* DATA-Out payload progress */
- 	struct scatterlist	*sg;		/* per-R2T SG list */
- 	int			solicit_datasn;
--	struct iscsi_data_task   *dtask;        /* which data task */
-+	struct iscsi_data_task   dtask;        /* which data task */
- };
- 
- struct iscsi_tcp_cmd_task {
-@@ -167,14 +165,13 @@ struct iscsi_tcp_cmd_task {
- 	struct iscsi_queue	r2tpool;
- 	struct kfifo		*r2tqueue;
- 	struct iscsi_r2t_info	**r2ts;
--	struct list_head	dataqueue;		/* Data-Out dataqueue */
--	mempool_t		*datapool;
- 	uint32_t		datadigest;		/* for recover digest */
- 	int			digest_count;
- 	uint32_t		immdigest;		/* for imm data */
- 	struct iscsi_buf	immbuf;			/* for imm data digest */
--	struct iscsi_data_task   *dtask;		/* data task in progress*/
--	int			digest_offset;		/* for partial buff digest */
-+	struct iscsi_data_task	*dtask;		/* data task in progress*/
-+	struct iscsi_data_task	unsol_dtask;	/* unsol data task */
-+	int			digest_offset;	/* for partial buff digest */
- };
- 
- #endif /* ISCSI_H */
+ 		while (skb->len >= NLMSG_SPACE(0)) {
+ 			int err;
 
 
