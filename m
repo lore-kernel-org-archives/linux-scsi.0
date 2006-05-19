@@ -1,33 +1,45 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: [ANNOUNCE] sdparm 0.98
-Date: Fri, 19 May 2006 00:39:13 -0400
-Message-ID: <446D4BF1.4090506@torque.net>
-Reply-To: dougg@torque.net
+From: "Randy.Dunlap" <rdunlap@xenotime.net>
+Subject: [PATCH] ppa: no highmem pages
+Date: Thu, 18 May 2006 22:07:44 -0700
+Message-ID: <20060518220744.cb986f3f.rdunlap@xenotime.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932232AbWESEjU@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, tomfa@debian.org, kumba@gentoo.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from xenotime.net ([66.160.160.81]:16526 "HELO xenotime.net")
+	by vger.kernel.org with SMTP id S932233AbWESFFQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 May 2006 01:05:16 -0400
+Received: from midway.site ([71.245.102.105]) by xenotime.net for <linux-scsi@vger.kernel.org>; Thu, 18 May 2006 22:05:14 -0700
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: scsi <linux-scsi@vger.kernel.org>
+Cc: jejb <james.bottomley@steeleye.com>, akpm <akpm@osdl.org>
 
-sdparm is a command line utility designed to get and set
-SCSI device parameters (cf hdparm for ATA disks). The
-parameters are held in mode pages. Apart from SCSI devices
-(e.g. disks, tapes and enclosures) sdparm can be used on
-any device that uses a SCSI command set. Virtually all CD/DVD
-drives use the SCSI MMC set irrespective of the transport.
-sdparm also can decode VPD pages including the device
-identification page. Commands to start and stop the media;
-load and unload removable media and some other housekeeping
-functions are supported. sdparm supports both the lk 2.4 and
-2.6 series.
+From: Randy Dunlap <rdunlap@xenotime.net>
 
-For more information and downloads see:
-http://www.torque.net/sg/sdparm.html
+ppa cannot handle highmem pages, and like imm, which already has
+this patch, the device is slow, so performance is not a big issue,
+so just force pages to be in low memory (hence mapped).
 
-Changelog:
-http://www.torque.net/sg/p/sdparm.ChangeLog
+Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+---
+ drivers/scsi/ppa.c |    4 ++++
+ 1 files changed, 4 insertions(+)
 
-Doug Gilbert
+--- linux-2.6.17-rc4.orig/drivers/scsi/ppa.c
++++ linux-2.6.17-rc4/drivers/scsi/ppa.c
+@@ -997,6 +997,10 @@ static struct scsi_host_template ppa_tem
+ 	.cmd_per_lun		= 1,
+ 	.use_clustering		= ENABLE_CLUSTERING,
+ 	.can_queue		= 1,
++	.unchecked_isa_dma	= 1, /* ppa cannot deal with highmem, so
++				      * this is an easy trick to ensure
++				      * all io pages for this host reside
++				      * in low memory */
+ };
+ 
+ /***************************************************************************
+
+
+---
