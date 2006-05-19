@@ -1,71 +1,57 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: [PATCH 6/6] iscsi update: update version
-Date: Thu, 18 May 2006 20:31:43 -0500
-Message-ID: <1148002303.3248.27.camel@max>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: [Fwd: [RFT] major libata update]
+Date: Thu, 18 May 2006 20:28:32 -0700 (PDT)
+Message-ID: <20060519032832.11025.qmail@web31805.mail.mud.yahoo.com>
+References: <1147960665.3475.4.camel@mulgrave.il.steeleye.com>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:62084 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S932211AbWESBek (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 May 2006 21:34:40 -0400
-Received: from [192.168.0.4] (c-69-180-176-191.hsd1.mn.comcast.net [69.180.176.191])
-	(authenticated bits=0)
-	by sabe.cs.wisc.edu (8.13.6/8.13.6) with ESMTP id k4J1YJtj007225
-	(version=TLSv1/SSLv3 cipher=RC4-MD5 bits=128 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Thu, 18 May 2006 20:34:40 -0500
+Received: from web31805.mail.mud.yahoo.com ([68.142.207.68]:28334 "HELO
+	web31805.mail.mud.yahoo.com") by vger.kernel.org with SMTP
+	id S932177AbWESD2d (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 May 2006 23:28:33 -0400
+In-Reply-To: <1147960665.3475.4.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Jeff Garzik <jeff@garzik.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-update version
+--- James Bottomley <James.Bottomley@SteelEye.com> wrote:
+> On Wed, 2006-05-17 at 19:39 -0700, Luben Tuikov wrote:
+> > Apparently you have no detailed knowlege of the implementation of
+> > SCSI storage stacks, for example: driver->fw->interconnect->device.
+> 
+> Well, I'm sure I read about it in a comic book somewhere ...
 
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+And so your correspondence agrees...
 
+> > You also fail to understand who the "I" and "T" could be in an
+> > I_T_x_x nexus at each stage of an implementation.
+> > 
+> > You also fail to understand that a SAM nexus is not necessarily
+> > established
+> > when queuecommand() is called. 
+> 
+> I didn't say it was.  The point, which you're ignoring, is that when the
+> driver knows the SAM nexus is terminated, it should call ->done() ASAP
 
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index 08357a6..c66faee 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -43,11 +43,13 @@
- 
- #include "iscsi_tcp.h"
- 
-+#define ISCSI_TCP_VERSION "1.0-574"
-+
- MODULE_AUTHOR("Dmitry Yusupov <dmitry_yus@yahoo.com>, "
- 	      "Alex Aizman <itn780@yahoo.com>");
- MODULE_DESCRIPTION("iSCSI/TCP data-path");
- MODULE_LICENSE("GPL");
--MODULE_VERSION("0:4.445");
-+MODULE_VERSION(ISCSI_TCP_VERSION);
- /* #define DEBUG_TCP */
- #define DEBUG_ASSERT
- 
-@@ -2448,8 +2450,8 @@ static void iscsi_tcp_session_destroy(st
- }
- 
- static struct scsi_host_template iscsi_sht = {
--	.name			= "iSCSI Initiator over TCP/IP, v."
--				  ISCSI_VERSION_STR,
-+	.name			= "iSCSI Initiator over TCP/IP, v"
-+				  ISCSI_TCP_VERSION,
- 	.queuecommand           = iscsi_queuecommand,
- 	.change_queue_depth	= iscsi_change_queue_depth,
- 	.can_queue		= ISCSI_XMIT_CMDS_MAX - 1,
-diff --git a/include/scsi/iscsi_proto.h b/include/scsi/iscsi_proto.h
-index 4feda05..02f6e4b 100644
---- a/include/scsi/iscsi_proto.h
-+++ b/include/scsi/iscsi_proto.h
-@@ -21,8 +21,6 @@
- #ifndef ISCSI_PROTO_H
- #define ISCSI_PROTO_H
- 
--#define ISCSI_VERSION_STR	"0.3"
--#define ISCSI_DATE_STR		"22-Apr-2005"
- #define ISCSI_DRAFT20_VERSION	0x00
- 
- /* default iSCSI listen port for incoming connections */
+No, I'm not saying that.  Not at all.  You simply don't understand.
 
+There is no way I can explain it to you unless I educate you.  And I'm not
+willing to do that.
+
+> to inform the mid-layer of this condition, so the mid-layer model of the
+> device interactions follows the SAM interactions as closely as possible.
+> The API you want to introduce and the implementation of it in libata lie
+> to the mid-layer and pretend the nexus still exists when the driver
+> knows it doesn't ... what I'm saying is that I see no reason to do that.
+
+Stop trying to convince the world that SCSI Core has any resemblance
+to SAM.  It doesn't.  It is a far cry from it.
+
+There is no "mid-layer model" and there is no SAM resemblance.
+
+     Luben
 
