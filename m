@@ -1,501 +1,174 @@
-From: Fo Loeng Wahidin <flw@zenucom.com>
-Subject: Newbie - Help required on SAS driver for adp94xx for FC5
-Date: Fri, 19 May 2006 18:43:00 +1000
-Message-ID: <446D8514.4030401@zenucom.com>
-Reply-To: flw@zenucom.com
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] SCSI: make scsi_implement_eh() generic API for SCSI transports
+Date: Fri, 19 May 2006 21:07:05 +0900
+Message-ID: <20060519120705.GB10058@htj.dyndns.org>
+References: <4469F2B2.703@garzik.org> <1147794708.3505.30.camel@mulgrave.il.steeleye.com> <4469F906.7040602@gmail.com> <1147796999.3505.42.camel@mulgrave.il.steeleye.com> <446A0053.5070203@gmail.com> <1147798226.3505.56.camel@mulgrave.il.steeleye.com> <446A06C7.5050609@gmail.com> <20060516195836.GA3807@infradead.org> <1147814935.3505.88.camel@mulgrave.il.steeleye.com> <446BE9B4.60605@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 146.041.dsl.syd.iprimus.net.au ([211.26.164.146]:11200 "EHLO
-	zmail.zenucom.com") by vger.kernel.org with ESMTP id S932197AbWESInJ
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 May 2006 04:43:09 -0400
-Received: from [192.168.20.188] ([192.168.20.188])
-	(authenticated bits=0)
-	by zmail.zenucom.com (8.13.4/8.13.4) with ESMTP id k4J8bHVb023627
-	for <linux-scsi@vger.kernel.org>; Fri, 19 May 2006 18:37:17 +1000
+Received: from py-out-1112.google.com ([64.233.166.182]:52030 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S932298AbWESMHN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 May 2006 08:07:13 -0400
+Received: by py-out-1112.google.com with SMTP id z59so900716pyg
+        for <linux-scsi@vger.kernel.org>; Fri, 19 May 2006 05:07:12 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <446BE9B4.60605@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Jeff Garzik <jeff@garzik.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
 
-Dear All,
+libata implemented a feature to schedule EH without an associated EH
+by manipulating shost->host_eh_scheduled in ata_scsi_schedule_eh()
+directly.  Move this function to scsi_error.c and rename it to
+scsi_schedule_eh().  It is now an exported API for SCSI transports and
+exported via new header file drivers/scsi/scsi_transport_api.h
 
-I am a newbie in kernel configuration.
+This patch also de-export scsi_eh_wakeup() which was exported
+specifically for ata_scsi_schedule_eh().
 
-I am posting on this m-list to get some help with an FC5 installation.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-I have read some earlier discussion on
-"Adaptec SAS integration notes" last December,
-however I could not understand what needs to be done.
+---
 
-I got a IBM xseries 306m, with the Adaptec 9405 controller and
-a 70 GB SAS drive, and I am trying to install FC5 on it.
+Okay, I went with drivers/scsi/scsi_transport_api.h.  I intentionally
+didn't add any banner at the top of the file.  Feel free to fill with
+appropriate description/blurb.
 
-I got some driver on the cdrom, however they are for Rhel4 and
-it does not seems to recognize the disk during FC5 installation.
+ drivers/scsi/libata-eh.c          |    3 ++-
+ drivers/scsi/libata-scsi.c        |   24 ------------------------
+ drivers/scsi/scsi_error.c         |   23 ++++++++++++++++++++++-
+ drivers/scsi/scsi_priv.h          |    1 +
+ drivers/scsi/scsi_transport_api.h |    6 ++++++
+ include/scsi/scsi_eh.h            |    1 -
+ 6 files changed, 31 insertions(+), 27 deletions(-)
+ create mode 100644 drivers/scsi/scsi_transport_api.h
 
-So I thought of recompiling the driver on other FC5 machine.
-
-I installed another FC5 on a normal IDE drive machine and downloaded
-the adp94xx-1.0.8-6.src.tgz from adaptec website.
-
-I have also installed the kernel develpment rpm of the FC5.
-It put the files in
-/usr/src/kernels/2.6.15-1.2054_FC5-i686
-
-I unpack the driver from adaptec and put it at
-/usr/src/kernels/2.6.15-1.2054_FC5-i686/drivers/scsi/adp94xx
-as instructed.
-
-I then did a
-make -C /usr/src/kernels/2.6.15-1.2054_FC5-i686 M=3D`pwd`
-as mentioned by the readme
-
-However I then got lots of error message.
-
-Can somebody point me to the location a driver that I can use for FC5=20
-please?
-
-Thanks
-
-=46o Loeng Wahidin
-
-The content of the Makefile is as follow:
-------------------------------------------------
-#
-# Makefile for the Linux adp94xx SAS driver.
-#
-# $Id: //depot/razor/linux/src/Makefile.2_6#10 $
-#
-
-EXTRA_CFLAGS +=3D -Idrivers/scsi -UASD_DEBUG -DSEQUENCER_UPDATE=20
--DSATA_SKIP_FIX -DCONCURRENT_SUPPORT
-
-ifeq ($(CONFIG_SCSI_ADP94XX),)
-        CONFIG_SCSI_ADP94XX=3Dm
-endif
-
-obj-$(CONFIG_SCSI_ADP94XX)      +=3D adp94xx.o
-
-# OSM and HWI Specific Files
-adp94xx-y                       +=3D adp94xx_osm.o        \
-                                   adp94xx_hwi.o        \
-                                   adp94xx_seq.o        \
-                                   adp94xx_discover.o
-
-# IOCTL Specific File
-adp94xx-y                       +=3D adp94xx_ioctl.o
-
-# SATA Specific File
-adp94xx-y                       +=3D adp94xx_sata.o
-------------------------------------------------
-
-I have tried to do a symbolic link of
-/usr/src/kernels/2.6.15-1.2054_FC5-i686 to /usr/src/linux
-and re-run, and it is still giving error message.
-
-The error message that I got is
-
-[root@localhost /usr/src/linux/drivers/scsi/adp94xx]# make -C=20
-/usr/src/linux M=3D`pwd`
-make: Entering directory `/usr/src/kernels/2.6.15-1.2054_FC5-i686'
-  LD      /usr/src/linux/drivers/scsi/adp94xx/built-in.o
-  CC [M]  /usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.o
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:46:5: warning:=20
-"KDB_ENABLE" is not defined
-In file included from /usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c=
-:49:
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.h:77:18: error: scsi.h:=
-=20
-No such file or directory
-In file included from /usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c=
-:49:
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.h:420: error: invalid=20
-use of undefined type =E2struct scsi_cmnd=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.h:427: error: field=20
-=E2scsi_cmd=E2 has incomplete type
-In file included from /usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c=
-:49:
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.h:597: error: expected=20
-specifier-qualifier-list before =E2Scsi_Device=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.h:1230: error: expected=
-=20
-=E2)=E2 before =E2*=E2 token
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.h:1231: error: expected=
-=20
-=E2)=E2 before =E2*=E2 token
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.h:1232: error: expected=
-=20
-=E2)=E2 before =E2*=E2 token
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.h:1233: error: expected=
-=20
-=E2)=E2 before =E2*=E2 token
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.h:1248: error: expected=
-=20
-=E2)=E2 before =E2*=E2 token
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.h:1255: error: expected=
-=20
-=E2)=E2 before =E2*=E2 token
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.h:1262: error: expected=
-=20
-=E2)=E2 before =E2*=E2 token
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.h:1269: error: expected=
-=20
-=E2)=E2 before =E2*=E2 token
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.h:1275: error: expected=
-=20
-=E2)=E2 before =E2*=E2 token
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.h:1306: error: expected=
-=20
-declaration specifiers or =E2...=E2 before =E2Scsi_Cmnd=E2
-In file included from /usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c=
-:53:
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_inline.h: In function=20
-=E2asd_next_device_to_run=E2:
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_inline.h:773: error: =E2str=
-uct=20
-asd_device=E2 has no member named =E2target=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_inline.h: At top level:
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_inline.h:904: error:=20
-expected =E2)=E2 before =E2*=E2 token
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_inline.h:905: error:=20
-expected =E2)=E2 before =E2*=E2 token
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_inline.h:993: error:=20
-expected =E2)=E2 before =E2*=E2 token
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_inline.h:1018: error:=20
-expected =E2)=E2 before =E2*=E2 token
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:59: error: expected=20
-=E2=3D=E2, =E2,=E2, =E2;=E2, =E2asm=E2 or =E2__attribute__=E2 before =E2=
-asd_sht=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:126: error: expected=20
-=E2)=E2 before =E2*=E2 token
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:128: error: expected=20
-=E2)=E2 before =E2*=E2 token
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:130: error: expected=20
-=E2)=E2 before =E2*=E2 token
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:135: error: expected=20
-=E2)=E2 before =E2*=E2 token
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:136: error: expected=20
-=E2)=E2 before =E2*=E2 token
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:137: error: expected=20
-=E2)=E2 before =E2*=E2 token
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c: In function=20
-=E2asd_unmap_scb=E2:
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:400: error:=20
-=E2Scsi_Cmnd=E2 undeclared (first use in this function)
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:400: error: (Each=20
-undeclared identifier is reported only once
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:400: error: for each=20
-function it appears in.)
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:400: error: =E2cmd=E2=
-=20
-undeclared (first use in this function)
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:401: warning: ISO C90=
-=20
-forbids mixed declarations and code
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c: In function=20
-=E2asd_check_device_queue=E2:
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:429: error: =E2struct=
-=20
-asd_device=E2 has no member named =E2target=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:432: error: =E2struct=
-=20
-asd_device=E2 has no member named =E2target=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:705:5: warning:=20
-"KDB_ENABLE" is not defined
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c: In function =E2asd_i=
-nit=E2:
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:709: warning: implici=
-t=20
-declaration of function =E2asd_detect=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:709: error: =E2asd_sh=
-t=E2=20
-undeclared (first use in this function)
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c: At top level:
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:956: error: expected=20
-=E2)=E2 before =E2*=E2 token
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c: In function=20
-=E2asd_register_host=E2:
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:1083: error: =E2asd_s=
-ht=E2=20
-undeclared (first use in this function)
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c: In function=20
-=E2asd_alloc_device=E2:
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:1208: error: =E2struc=
-t=20
-asd_device=E2 has no member named =E2target=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c: In function=20
-=E2asd_free_device=E2:
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:1245: error: =E2struc=
-t=20
-asd_device=E2 has no member named =E2target=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c: In function=20
-=E2asd_flush_device_queue=E2:
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:1360: error: =E2struc=
-t=20
-asd_device=E2 has no member named =E2target=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:1373: error: =E2struc=
-t=20
-asd_device=E2 has no member named =E2target=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:1398: error: =E2struc=
-t=20
-asd_device=E2 has no member named =E2target=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:1400: warning:=20
-implicit declaration of function =E2asd_cmd_set_host_status=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:1400: error:=20
-=E2DID_NO_CONNECT=E2 undeclared (first use in this function)
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:1404: error:=20
-dereferencing pointer to incomplete type
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:1408: error:=20
-dereferencing pointer to incomplete type
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:1423: error: =E2struc=
-t=20
-asd_device=E2 has no member named =E2target=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:1424: error:=20
-dereferencing pointer to incomplete type
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:1432: error: =E2struc=
-t=20
-asd_device=E2 has no member named =E2target=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:1467: error:=20
-dereferencing pointer to incomplete type
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:1472: error:=20
-dereferencing pointer to incomplete type
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:1496: error:=20
-dereferencing pointer to incomplete type
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c: In function=20
-=E2asd_dev_timed_unfreeze=E2:
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:1574: error: =E2struc=
-t=20
-asd_device=E2 has no member named =E2target=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:1586: error: =E2struc=
-t=20
-asd_device=E2 has no member named =E2target=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c: In function=20
-=E2asd_timed_run_dev_queue=E2:
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:1605: error: =E2struc=
-t=20
-asd_device=E2 has no member named =E2target=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:1611: error: =E2struc=
-t=20
-asd_device=E2 has no member named =E2target=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:1612: error: =E2struc=
-t=20
-asd_device=E2 has no member named =E2target=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c: In function=20
-=E2asd_scb_done=E2:
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:1629: error:=20
-=E2Scsi_Cmnd=E2 undeclared (first use in this function)
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:1629: error: =E2cmd=E2=
-=20
-undeclared (first use in this function)
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:1630: warning: ISO C9=
-0=20
-forbids mixed declarations and code
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:1680: error: =E2DID_O=
-K=E2=20
-undeclared (first use in this function)
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:1699: error:=20
-=E2DID_ERROR=E2 undeclared (first use in this function)
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:1709: error:=20
-=E2DID_ABORT=E2 undeclared (first use in this function)
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:1729: error:=20
-=E2DID_NO_CONNECT=E2 undeclared (first use in this function)
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:1734: error:=20
-=E2DID_SOFT_ERROR=E2 undeclared (first use in this function)
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:1774: error: =E2struc=
-t=20
-asd_device=E2 has no member named =E2target=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c: In function=20
-=E2asd_handle_sas_status=E2:
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:1875: error:=20
-=E2Scsi_Cmnd=E2 undeclared (first use in this function)
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:1875: error: =E2cmd=E2=
-=20
-undeclared (first use in this function)
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:1882: error:=20
-=E2DID_ERROR=E2 undeclared (first use in this function)
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:1896: error:=20
-=E2DID_SOFT_ERROR=E2 undeclared (first use in this function)
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:1924: warning:=20
-implicit declaration of function =E2asd_cmd_set_driver_status=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:1924: error:=20
-=E2DRIVER_SENSE=E2 undeclared (first use in this function)
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:1930: error:=20
-=E2UNIT_ATTENTION=E2 undeclared (first use in this function)
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:1938: error: =E2DID_O=
-K=E2=20
-undeclared (first use in this function)
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:1939: warning:=20
-implicit declaration of function =E2asd_cmd_set_scsi_status=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:2022: warning:=20
-implicit declaration of function =E2asd_cmd_set_retry_status=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:2041: error: =E2struc=
-t=20
-asd_device=E2 has no member named =E2target=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:2041: error: =E2struc=
-t=20
-asd_device=E2 has no member named =E2target=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c: At top level:
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:2073: error: expected=
-=20
-declaration specifiers or =E2...=E2 before =E2Scsi_Cmnd=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c: In function=20
-=E2asd_setup_data=E2:
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:2089: error: =E2cmd=E2=
-=20
-undeclared (first use in this function)
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c: In function=20
-=E2asd_build_sas_scb=E2:
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:2179: error:=20
-=E2Scsi_Cmnd=E2 undeclared (first use in this function)
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:2179: error: =E2cmd=E2=
-=20
-undeclared (first use in this function)
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:2181: warning: ISO C9=
-0=20
-forbids mixed declarations and code
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:2195: error: =E2struc=
-t=20
-asd_device=E2 has no member named =E2target=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:2215: warning:=20
-implicit declaration of function =E2scsi_populate_tag_msg=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:2216: error:=20
-=E2MSG_SIMPLE_TAG=E2 undeclared (first use in this function)
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:2223: error: too many=
-=20
-arguments to function =E2asd_setup_data=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c: In function=20
-=E2asd_configure_target=E2:
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:2616: warning:=20
-implicit declaration of function =E2scsi_add_device=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c: In function=20
-=E2asd_dev_intl_times_out=E2:
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:2724: error: =E2struc=
-t=20
-asd_device=E2 has no member named =E2target=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c: In function=20
-=E2asd_clear_device_io=E2:
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:2769: error: =E2struc=
-t=20
-asd_device=E2 has no member named =E2target=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c: In function=20
-=E2asd_destroy_device=E2:
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:2804: error: =E2struc=
-t=20
-asd_device=E2 has no member named =E2target=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:2820: error:=20
-=E2DID_NO_CONNECT=E2 undeclared (first use in this function)
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:2824: error:=20
-dereferencing pointer to incomplete type
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:2833: error: =E2struc=
-t=20
-asd_device=E2 has no member named =E2target=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:2851: warning:=20
-implicit declaration of function =E2scsi_device_set_state=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:2851: error: =E2struc=
-t=20
-asd_device=E2 has no member named =E2scsi_device=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:2851: error:=20
-=E2SDEV_OFFLINE=E2 undeclared (first use in this function)
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:2859: warning:=20
-implicit declaration of function =E2scsi_remove_device=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:2859: error: =E2struc=
-t=20
-asd_device=E2 has no member named =E2scsi_device=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c: In function=20
-=E2asd_get_os_platform_map_from_sasaddr=E2:
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:3153: error:=20
-=E2Scsi_Device=E2 undeclared (first use in this function)
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:3153: error:=20
-=E2scsi_device=E2 undeclared (first use in this function)
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:3154: warning: ISO C9=
-0=20
-forbids mixed declarations and code
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:3170: error: =E2struc=
-t=20
-asd_device=E2 has no member named =E2scsi_device=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c: In function=20
-=E2asd_get_sas_addr_from_platform_map=E2:
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:3206: warning:=20
-comparison is always false due to limited range of data type
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c: In function=20
-=E2asd_find_pending_scb_by_qtag=E2:
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:3247: error:=20
-dereferencing pointer to incomplete type
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c: At top level:
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:4818: error: expected=
-=20
-=E2)=E2 before =E2*=E2 token
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:5014: error: expected=
-=20
-=E2)=E2 before =E2*=E2 token
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:5026: error: expected=
-=20
-=E2)=E2 before =E2*=E2 token
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:5055: error: expected=
-=20
-=E2)=E2 before =E2*=E2 token
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c: In function=20
-=E2asd_get_user_tagdepth=E2:
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:5135: error: =E2struc=
-t=20
-asd_device=E2 has no member named =E2target=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:5136: error: =E2struc=
-t=20
-asd_device=E2 has no member named =E2target=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c: In function=20
-=E2asd_set_device_queue_depth=E2:
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:5159: error: =E2struc=
-t=20
-asd_device=E2 has no member named =E2scsi_device=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:5160: error: =E2struc=
-t=20
-asd_device=E2 has no member named =E2scsi_device=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:5163: error: =E2struc=
-t=20
-asd_device=E2 has no member named =E2target=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:5163: error: =E2struc=
-t=20
-asd_device=E2 has no member named =E2target=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c: In function=20
-=E2asd_set_tags=E2:
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:5229: error: =E2struc=
-t=20
-asd_device=E2 has no member named =E2scsi_device=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:5232: warning:=20
-implicit declaration of function =E2scsi_adjust_queue_depth=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:5232: error: =E2struc=
-t=20
-asd_device=E2 has no member named =E2scsi_device=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:5233: error:=20
-=E2MSG_SIMPLE_TAG=E2 undeclared (first use in this function)
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:5237: error: =E2struc=
-t=20
-asd_device=E2 has no member named =E2scsi_device=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:5238: error:=20
-=E2MSG_ORDERED_TAG=E2 undeclared (first use in this function)
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:5248: error: =E2struc=
-t=20
-asd_device=E2 has no member named =E2scsi_device=E2
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c: At top level:
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:5383: error: expected=
-=20
-=E2)=E2 before =E2*=E2 token
-/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.c:6162: error: expected=
-=20
-=E2=3D=E2, =E2,=E2, =E2;=E2, =E2asm=E2 or =E2__attribute__=E2 before =E2=
-asd_sht=E2
-make[1]: *** [/usr/src/linux/drivers/scsi/adp94xx/adp94xx_osm.o] Error =
-1
-make: *** [_module_/usr/src/linux/drivers/scsi/adp94xx] Error 2
-make: Leaving directory `/usr/src/kernels/2.6.15-1.2054_FC5-i686'
-
-
-
+6daec98e81a98db0dafc4846a97432746bf94f9c
+diff --git a/drivers/scsi/libata-eh.c b/drivers/scsi/libata-eh.c
+index 750e734..71b45ad 100644
+--- a/drivers/scsi/libata-eh.c
++++ b/drivers/scsi/libata-eh.c
+@@ -39,6 +39,7 @@ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_eh.h>
+ #include <scsi/scsi_device.h>
+ #include <scsi/scsi_cmnd.h>
++#include "scsi_transport_api.h"
+ 
+ #include <linux/libata.h>
+ 
+@@ -432,7 +433,7 @@ void ata_port_schedule_eh(struct ata_por
+ 	WARN_ON(!ap->ops->error_handler);
+ 
+ 	ap->flags |= ATA_FLAG_EH_PENDING;
+-	ata_schedule_scsi_eh(ap->host);
++	scsi_schedule_eh(ap->host);
+ 
+ 	DPRINTK("port EH scheduled\n");
+ }
+diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
+index f036ae4..2007b4b 100644
+--- a/drivers/scsi/libata-scsi.c
++++ b/drivers/scsi/libata-scsi.c
+@@ -2745,27 +2745,3 @@ void ata_scsi_scan_host(struct ata_port 
+ 			scsi_scan_target(&ap->host->shost_gendev, 0, i, 0, 0);
+ 	}
+ }
 -
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-/**
+- *	ata_schedule_scsi_eh - schedule EH for SCSI host
+- *	@shost:	SCSI host to invoke error handling on.
+- *
+- *	Schedule SCSI EH without scmd.  This is a hack.
+- *
+- *	LOCKING:
+- *	spin_lock_irqsave(host_set lock)
+- **/
+-void ata_schedule_scsi_eh(struct Scsi_Host *shost)
+-{
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(shost->host_lock, flags);
+-
+-	if (scsi_host_set_state(shost, SHOST_RECOVERY) == 0 ||
+-	    scsi_host_set_state(shost, SHOST_CANCEL_RECOVERY) == 0) {
+-		shost->host_eh_scheduled++;
+-		scsi_eh_wakeup(shost);
+-	}
+-
+-	spin_unlock_irqrestore(shost->host_lock, flags);
+-}
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 9ca71cb..346ab72 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -56,7 +56,28 @@ void scsi_eh_wakeup(struct Scsi_Host *sh
+ 				printk("Waking error handler thread\n"));
+ 	}
+ }
+-EXPORT_SYMBOL_GPL(scsi_eh_wakeup);
++
++/**
++ * scsi_schedule_eh - schedule EH for SCSI host
++ * @shost:	SCSI host to invoke error handling on.
++ *
++ * Schedule SCSI EH without scmd.
++ **/
++void scsi_schedule_eh(struct Scsi_Host *shost)
++{
++	unsigned long flags;
++
++	spin_lock_irqsave(shost->host_lock, flags);
++
++	if (scsi_host_set_state(shost, SHOST_RECOVERY) == 0 ||
++	    scsi_host_set_state(shost, SHOST_CANCEL_RECOVERY) == 0) {
++		shost->host_eh_scheduled++;
++		scsi_eh_wakeup(shost);
++	}
++
++	spin_unlock_irqrestore(shost->host_lock, flags);
++}
++EXPORT_SYMBOL_GPL(scsi_schedule_eh);
+ 
+ /**
+  * scsi_eh_scmd_add - add scsi cmd to error handling.
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index 0b39081..27c4827 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -63,6 +63,7 @@ extern int scsi_delete_timer(struct scsi
+ extern void scsi_times_out(struct scsi_cmnd *cmd);
+ extern int scsi_error_handler(void *host);
+ extern int scsi_decide_disposition(struct scsi_cmnd *cmd);
++extern void scsi_eh_wakeup(struct Scsi_Host *shost);
+ extern int scsi_eh_scmd_add(struct scsi_cmnd *, int);
+ 
+ /* scsi_lib.c */
+diff --git a/drivers/scsi/scsi_transport_api.h b/drivers/scsi/scsi_transport_api.h
+new file mode 100644
+index 0000000..934f0e6
+--- /dev/null
++++ b/drivers/scsi/scsi_transport_api.h
+@@ -0,0 +1,6 @@
++#ifndef _SCSI_TRANSPORT_API_H
++#define _SCSI_TRANSPORT_API_H
++
++void scsi_schedule_eh(struct Scsi_Host *shost);
++
++#endif /* _SCSI_TRANSPORT_API_H */
+diff --git a/include/scsi/scsi_eh.h b/include/scsi/scsi_eh.h
+index 212c983..d160880 100644
+--- a/include/scsi/scsi_eh.h
++++ b/include/scsi/scsi_eh.h
+@@ -35,7 +35,6 @@ static inline int scsi_sense_valid(struc
+ }
+ 
+ 
+-extern void scsi_eh_wakeup(struct Scsi_Host *shost);
+ extern void scsi_eh_finish_cmd(struct scsi_cmnd *scmd,
+ 			       struct list_head *done_q);
+ extern void scsi_eh_flush_done_q(struct list_head *done_q);
+-- 
+1.3.2
+
