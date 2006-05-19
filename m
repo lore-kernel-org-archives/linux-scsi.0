@@ -1,56 +1,74 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: [PATCH] imm: no need for unchecked_isa_dma
-Date: Fri, 19 May 2006 11:55:58 -0700
-Message-ID: <20060519115558.7a76015a.rdunlap@xenotime.net>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [RFC] printks in print_inquiry
+Date: Fri, 19 May 2006 13:08:48 -0600
+Message-ID: <20060519190848.GA2826@parisc-linux.org>
+References: <20060511150015.GJ12272@parisc-linux.org> <20060512170854.GA11215@us.ibm.com> <20060513050059.GR12272@parisc-linux.org> <20060518183652.GM1604@parisc-linux.org> <20060518200957.GA29200@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:11727 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S932260AbWESSxc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 May 2006 14:53:32 -0400
-Received: from midway.site ([71.245.102.105]) by xenotime.net for <linux-scsi@vger.kernel.org>; Fri, 19 May 2006 11:53:29 -0700
+Received: from palinux.external.hp.com ([192.25.206.14]:44239 "EHLO
+	palinux.external.hp.com") by vger.kernel.org with ESMTP
+	id S932471AbWESTIt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 May 2006 15:08:49 -0400
+Content-Disposition: inline
+In-Reply-To: <20060518200957.GA29200@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: scsi <linux-scsi@vger.kernel.org>
-Cc: jejb <james.bottomley@steeleye.com>, akpm <akpm@osdl.org>
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org
 
-From: Randy Dunlap <rdunlap@xenotime.net>
+On Thu, May 18, 2006 at 01:09:57PM -0700, Patrick Mansfield wrote:
+> > scsi: 2:0:1:0: Vendor: HP 18.2G Model: ATLAS10K3_18_SCA Rev: HP05 ANSI rev: 02  
+> That is very nice ... as is replacing print_inquiry with one line of code.
 
-Relax the lowmem bounce buffer requirement for imm so that any
-low memory page will do -- they don't need to be below the
-ISA 16 MB limit, just need to be mapped in low memory.
+Thanks.  However, I'm now wondering about the length of the line.
+Aren't people agitating to replace the channel with a string?  which
+could be longer than the, oh, three bytes left after the end of the
+current string?  Losing the scsi: isn't really a good idea.  So how
+about:
 
-Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
----
- drivers/scsi/imm.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+scsi: 2:0:1:0 Device: HP 18.2G ATLAS10K3_18_SCA HP05 ANSI 02
+scsi: 4:0:2:0 Device: HP       DVD-ROM 305      1.01 ANSI 02
 
---- linux-2.6.17-rc4.orig/drivers/scsi/imm.c
-+++ linux-2.6.17-rc4/drivers/scsi/imm.c
-@@ -1119,6 +1119,10 @@ static int device_check(imm_struct *dev)
- 	return -ENODEV;
- }
- 
-+/*
-+ * imm cannot deal with highmem, so this causes all IO pages for this host
-+ * to reside in low memory (hence mapped)
-+ */
- static int imm_adjust_queue(struct scsi_device *device)
- {
- 	blk_queue_bounce_limit(device->request_queue, BLK_BOUNCE_HIGH);
-@@ -1141,10 +1145,6 @@ static struct scsi_host_template imm_tem
- 	.use_clustering		= ENABLE_CLUSTERING,
- 	.can_queue		= 1,
- 	.slave_alloc		= imm_adjust_queue,
--	.unchecked_isa_dma	= 1, /* imm cannot deal with highmem, so
--				      * this is an easy trick to ensure
--				      * all io pages for this host reside
--				      * in low memory */
- };
- 
- /***************************************************************************
+If we really wanted to be smart, we could even do:
 
+scsi: 2:0:1:0 Direct-Access      HP 18.2G ATLAS10K3_18_SCA HP05 ANSI 02
+scsi: 4:0:2:0 CD-ROM             HP       DVD-ROM 305      1.01 ANSI 02
 
----
+I'm still in two minds about even reporting the ANSI version.  Is there
+ever a time when having that information would be useful to debug a
+problem *and* we don't have access to that (eg through sysfs)?
+
+> > sda: 35566480 512-byte hdwr sectors (18210 MB)
+> > sda: Write Protect is off
+> > sda: drive cache: write through w/ FUA
+> >  sda: sda1 sda2 sda3
+> > sd 2:0:1:0: Attached scsi disk sda
+> > sd 2:0:1:0: Attached scsi generic sg0 type 0
+> 
+> Yes, better. I guess those should all be sdev_printk in sd.c.
+
+Not sure I agree, actually.  A lot of these things pertain much more to
+the sda-ness of the device than they do to the 2:0:1:0'ness of the device.
+
+> Funky how loading sd after sg changes the output ... and using the driver
+> name as a prefix sometimes messes this up for scsi.
+> 
+> i.e. scan without sd_mod or sg loaded (and distro I'm using loads sg
+> before sd_mod via udev rules):
+> 
+>  0:0:0:0: Attached scsi generic sg0 type 0
+>  0:0:0:1: Attached scsi generic sg1 type 0
+> 
+> Then remove/add those devices, and sg lines become:
+> 
+> sd 1:0:0:0: Attached scsi generic sg0 type 0
+> sd 1:0:0:1: Attached scsi generic sg1 type 0
+
+I'm going to reply to this in a separate email, as I think we need
+buy-in from Greg on this one.
+
+> It is the only place that we modify the inquiry result, and I thought it
+> was gross and (a bit) confusing.
+
+I agree, nice patch, makes much more sense.
