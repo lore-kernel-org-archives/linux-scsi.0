@@ -1,54 +1,60 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [RFC] printks in print_inquiry
-Date: Fri, 19 May 2006 15:43:26 -0400
-Message-ID: <446E1FDE.1080404@emulex.com>
-References: <20060511150015.GJ12272@parisc-linux.org> <20060512170854.GA11215@us.ibm.com> <20060513050059.GR12272@parisc-linux.org> <20060518183652.GM1604@parisc-linux.org> <20060518200957.GA29200@us.ibm.com> <20060519190848.GA2826@parisc-linux.org>
-Reply-To: James.Smart@Emulex.Com
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: dev_printk output
+Date: Fri, 19 May 2006 14:11:42 -0600
+Message-ID: <20060519201142.GB2826@parisc-linux.org>
+References: <20060511150015.GJ12272@parisc-linux.org> <20060512170854.GA11215@us.ibm.com> <20060513050059.GR12272@parisc-linux.org> <20060518183652.GM1604@parisc-linux.org> <20060518200957.GA29200@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:10372 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S1750938AbWESTnc
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 May 2006 15:43:32 -0400
-In-Reply-To: <20060519190848.GA2826@parisc-linux.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:34189 "EHLO
+	palinux.external.hp.com") by vger.kernel.org with ESMTP
+	id S964800AbWESULn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 May 2006 16:11:43 -0400
+Content-Disposition: inline
+In-Reply-To: <20060518200957.GA29200@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, linux-scsi@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org, Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org
 
-
-
-Matthew Wilcox wrote:
-> On Thu, May 18, 2006 at 01:09:57PM -0700, Patrick Mansfield wrote:
->>> scsi: 2:0:1:0: Vendor: HP 18.2G Model: ATLAS10K3_18_SCA Rev: HP05 ANSI rev: 02  
->> That is very nice ... as is replacing print_inquiry with one line of code.
+On Thu, May 18, 2006 at 01:09:57PM -0700, Patrick Mansfield wrote:
+> Funky how loading sd after sg changes the output ... and using the driver
+> name as a prefix sometimes messes this up for scsi.
 > 
-> Thanks.  However, I'm now wondering about the length of the line.
-> Aren't people agitating to replace the channel with a string?  which
-> could be longer than the, oh, three bytes left after the end of the
-> current string?  Losing the scsi: isn't really a good idea.  So how
-> about:
+> i.e. scan without sd_mod or sg loaded (and distro I'm using loads sg
+> before sd_mod via udev rules):
 > 
-> scsi: 2:0:1:0 Device: HP 18.2G ATLAS10K3_18_SCA HP05 ANSI 02
-> scsi: 4:0:2:0 Device: HP       DVD-ROM 305      1.01 ANSI 02
+>  0:0:0:0: Attached scsi generic sg0 type 0
+>  0:0:0:1: Attached scsi generic sg1 type 0
 > 
-> If we really wanted to be smart, we could even do:
+> Then remove/add those devices, and sg lines become:
 > 
-> scsi: 2:0:1:0 Direct-Access      HP 18.2G ATLAS10K3_18_SCA HP05 ANSI 02
-> scsi: 4:0:2:0 CD-ROM             HP       DVD-ROM 305      1.01 ANSI 02
+> sd 1:0:0:0: Attached scsi generic sg0 type 0
+> sd 1:0:0:1: Attached scsi generic sg1 type 0
 
-I wouldn't bother with the device type, unless you are reporting it as the
-byte0 contents (eg. PQ bits and dev type). I would like to see the PQ bits.
-I also expect the class driver to typically bind to the device right after
-this, so I'll get the sd or st lines which will further reflect device type.
+I find that a bit confusing too.  Obviously, we should distinguish
+different kinds of bus_id from each other somehow -- but isn't the
+obvious thing to use the bus name?  That must already be unique as sysfs
+relies on it.  ie this patch:
 
-> I'm still in two minds about even reporting the ANSI version.  Is there
-> ever a time when having that information would be useful to debug a
-> problem *and* we don't have access to that (eg through sysfs)?
+(seems that dev->bus isn't always set; I got a null ptr dereference when
+booting without that check).
 
-It makes a difference if debugging a scan issue. I would think it's useful
-to see what Lun 0 has as it drives other scanning.
+Signed-off-by: Matthew Wilcox <matthew@wil.cx>
 
--- james s
+Index: include/linux/device.h
+===================================================================
+RCS file: /var/cvs/linux-2.6/include/linux/device.h,v
+retrieving revision 1.25
+diff -u -p -r1.25 device.h
+--- include/linux/device.h	13 May 2006 04:12:30 -0000	1.25
++++ include/linux/device.h	19 May 2006 19:54:04 -0000
+@@ -412,7 +412,7 @@ extern void firmware_unregister(struct s
+ 
+ /* debugging and troubleshooting/diagnostic helpers. */
+ #define dev_printk(level, dev, format, arg...)	\
+-	printk(level "%s %s: " format , (dev)->driver ? (dev)->driver->name : "" , (dev)->bus_id , ## arg)
++	printk(level "%s %s: " format , (dev)->bus ? (dev)->bus->name : "", (dev)->bus_id , ## arg)
+ 
+ #ifdef DEBUG
+ #define dev_dbg(dev, format, arg...)		\
