@@ -1,60 +1,53 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: dev_printk output
-Date: Fri, 19 May 2006 14:11:42 -0600
-Message-ID: <20060519201142.GB2826@parisc-linux.org>
-References: <20060511150015.GJ12272@parisc-linux.org> <20060512170854.GA11215@us.ibm.com> <20060513050059.GR12272@parisc-linux.org> <20060518183652.GM1604@parisc-linux.org> <20060518200957.GA29200@us.ibm.com>
+From: Greg KH <greg@kroah.com>
+Subject: Re: dev_printk output
+Date: Fri, 19 May 2006 13:28:47 -0700
+Message-ID: <20060519202847.GB8865@kroah.com>
+References: <20060511150015.GJ12272@parisc-linux.org> <20060512170854.GA11215@us.ibm.com> <20060513050059.GR12272@parisc-linux.org> <20060518183652.GM1604@parisc-linux.org> <20060518200957.GA29200@us.ibm.com> <20060519201142.GB2826@parisc-linux.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:34189 "EHLO
-	palinux.external.hp.com") by vger.kernel.org with ESMTP
-	id S964800AbWESULn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 May 2006 16:11:43 -0400
+Received: from ns.suse.de ([195.135.220.2]:9150 "EHLO mx1.suse.de")
+	by vger.kernel.org with ESMTP id S964822AbWESUbB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 May 2006 16:31:01 -0400
 Content-Disposition: inline
-In-Reply-To: <20060518200957.GA29200@us.ibm.com>
+In-Reply-To: <20060519201142.GB2826@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, May 18, 2006 at 01:09:57PM -0700, Patrick Mansfield wrote:
-> Funky how loading sd after sg changes the output ... and using the driver
-> name as a prefix sometimes messes this up for scsi.
+On Fri, May 19, 2006 at 02:11:42PM -0600, Matthew Wilcox wrote:
+> On Thu, May 18, 2006 at 01:09:57PM -0700, Patrick Mansfield wrote:
+> > Funky how loading sd after sg changes the output ... and using the driver
+> > name as a prefix sometimes messes this up for scsi.
+> > 
+> > i.e. scan without sd_mod or sg loaded (and distro I'm using loads sg
+> > before sd_mod via udev rules):
+> > 
+> >  0:0:0:0: Attached scsi generic sg0 type 0
+> >  0:0:0:1: Attached scsi generic sg1 type 0
+> > 
+> > Then remove/add those devices, and sg lines become:
+> > 
+> > sd 1:0:0:0: Attached scsi generic sg0 type 0
+> > sd 1:0:0:1: Attached scsi generic sg1 type 0
 > 
-> i.e. scan without sd_mod or sg loaded (and distro I'm using loads sg
-> before sd_mod via udev rules):
+> I find that a bit confusing too.  Obviously, we should distinguish
+> different kinds of bus_id from each other somehow -- but isn't the
+> obvious thing to use the bus name?  That must already be unique as sysfs
+> relies on it.  ie this patch:
 > 
->  0:0:0:0: Attached scsi generic sg0 type 0
->  0:0:0:1: Attached scsi generic sg1 type 0
-> 
-> Then remove/add those devices, and sg lines become:
-> 
-> sd 1:0:0:0: Attached scsi generic sg0 type 0
-> sd 1:0:0:1: Attached scsi generic sg1 type 0
+> (seems that dev->bus isn't always set; I got a null ptr dereference when
+> booting without that check).
 
-I find that a bit confusing too.  Obviously, we should distinguish
-different kinds of bus_id from each other somehow -- but isn't the
-obvious thing to use the bus name?  That must already be unique as sysfs
-relies on it.  ie this patch:
+Yes, not all devices are on a bus, so this will not work.  And we want
+to know the driver that controls the device too.  So how about adding
+the bus if it's not null?
 
-(seems that dev->bus isn't always set; I got a null ptr dereference when
-booting without that check).
+Something like (untested):
+	printk(level "%s %s %s: " format , (dev)->bus ? (dev)->bus->name : "", (dev)->driver ? (dev)->driver->name : "", (dev)->bus_id , ## arg)
 
-Signed-off-by: Matthew Wilcox <matthew@wil.cx>
+thanks,
 
-Index: include/linux/device.h
-===================================================================
-RCS file: /var/cvs/linux-2.6/include/linux/device.h,v
-retrieving revision 1.25
-diff -u -p -r1.25 device.h
---- include/linux/device.h	13 May 2006 04:12:30 -0000	1.25
-+++ include/linux/device.h	19 May 2006 19:54:04 -0000
-@@ -412,7 +412,7 @@ extern void firmware_unregister(struct s
- 
- /* debugging and troubleshooting/diagnostic helpers. */
- #define dev_printk(level, dev, format, arg...)	\
--	printk(level "%s %s: " format , (dev)->driver ? (dev)->driver->name : "" , (dev)->bus_id , ## arg)
-+	printk(level "%s %s: " format , (dev)->bus ? (dev)->bus->name : "", (dev)->bus_id , ## arg)
- 
- #ifdef DEBUG
- #define dev_dbg(dev, format, arg...)		\
+greg k-h
