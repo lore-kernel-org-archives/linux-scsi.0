@@ -1,42 +1,43 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: dev_printk output
-Date: Sat, 20 May 2006 08:46:57 -0500
-Message-ID: <1148132817.3529.1.camel@mulgrave.il.steeleye.com>
-References: <20060511150015.GJ12272@parisc-linux.org>
-	 <20060512170854.GA11215@us.ibm.com>
-	 <20060513050059.GR12272@parisc-linux.org>
-	 <20060518183652.GM1604@parisc-linux.org>
-	 <20060518200957.GA29200@us.ibm.com>
-	 <20060519201142.GB2826@parisc-linux.org> <20060519202847.GB8865@kroah.com>
-	 <20060520045544.GD2826@parisc-linux.org>
+Subject: Re: scsi negotiation problem on aic79xx (39320A) in 2.6.14
+Date: Sat, 20 May 2006 08:51:01 -0500
+Message-ID: <1148133061.3529.3.camel@mulgrave.il.steeleye.com>
+References: <20051114224512.GF9905@mathom.us>
+	 <20060323180909.GD15140@mathom.us>
+	 <1143139044.3415.26.camel@mulgrave.il.steeleye.com>
+	 <20060324122715.GG15140@mathom.us>  <446EA4B5.2030507@cococafe.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:52631 "EHLO
+Received: from stat9.steeleye.com ([209.192.50.41]:26776 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S964854AbWETNrI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 20 May 2006 09:47:08 -0400
-In-Reply-To: <20060520045544.GD2826@parisc-linux.org>
+	id S964858AbWETNvF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 20 May 2006 09:51:05 -0400
+In-Reply-To: <446EA4B5.2030507@cococafe.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Greg KH <greg@kroah.com>, Patrick Mansfield <patmans@us.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Denny Page <denny@cococafe.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, 2006-05-19 at 22:55 -0600, Matthew Wilcox wrote:
-> Then we still get the inconsistency of device names changing as
-> drivers
-> are loaded.  I think we should declare it a bug for devices to not be
-> on a bus.  The only example I have of devices not-on-a-bus are scsi
-> targets.  I would propose introducing a new scsi_target bus for them,
-> then removing the 'target' from the start of the bus_id.  Adding them
-> to
-> the scsi bus looks like it'd be a lot of work.
+On Fri, 2006-05-19 at 22:10 -0700, Denny Page wrote:
+> The problem that Michael describes appears to be identical to the
+> problem
+> that I had reported with the HP-460 tape drives.  Same 6.5 min period,
+> fixed
+> by echo 12.5 and validating.  Perhaps the problem is specific to the
+> card
+> rather than with the array and tape drive?
+> 
+> Setting the xfer speed in the bios does not appear to affect the
+> result with
+> the 2.6.16 kernel.
 
-It's not just the target.  All the intermediate devices in transport
-classes don't have busses either.   The only reason scsi_device has a
-bus is so we can use the driver model to bind the ULDs.
+That's odd ... the code to recognise the BIOS settings went into 2.6.16.
+What does /proc/scsi/aic79xx/<n> say?
 
 James
 
+
+> 
 
