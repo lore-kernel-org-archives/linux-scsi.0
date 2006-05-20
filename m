@@ -1,39 +1,46 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] scsi: Return -EINVAL when "id == max_id" in scsi_scan_host_selected()
-Date: Fri, 19 May 2006 22:21:32 -0600
-Message-ID: <20060520042132.GC2826@parisc-linux.org>
-References: <1148080489.23417.18.camel@amitarora.in.ibm.com>
+Subject: Re: dev_printk output
+Date: Fri, 19 May 2006 22:55:44 -0600
+Message-ID: <20060520045544.GD2826@parisc-linux.org>
+References: <20060511150015.GJ12272@parisc-linux.org> <20060512170854.GA11215@us.ibm.com> <20060513050059.GR12272@parisc-linux.org> <20060518183652.GM1604@parisc-linux.org> <20060518200957.GA29200@us.ibm.com> <20060519201142.GB2826@parisc-linux.org> <20060519202847.GB8865@kroah.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:215 "EHLO
+Received: from palinux.external.hp.com ([192.25.206.14]:61378 "EHLO
 	palinux.external.hp.com") by vger.kernel.org with ESMTP
-	id S932482AbWETEVd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 20 May 2006 00:21:33 -0400
+	id S1751231AbWETEzp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 20 May 2006 00:55:45 -0400
 Content-Disposition: inline
-In-Reply-To: <1148080489.23417.18.camel@amitarora.in.ibm.com>
+In-Reply-To: <20060519202847.GB8865@kroah.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Amit Arora <aarora@in.ibm.com>
-Cc: linux-scsi@vger.kernel.org, patmans@us.ibm.com
+To: Greg KH <greg@kroah.com>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, May 19, 2006 at 04:14:50PM -0700, Amit Arora wrote:
-> The scsi_scan_host_selected() should return -EINVAL when the id is equal
-> to the max_id. Currently it uses ">" when comparing with max_id, and
-> hence leaves the border case when "id==max_id".
-> The channel and lun have values valid from 0 up to,
-> and including, max_channel or max_lun. But, the valid values for id
-> range from 0 to max_id-1. This patch fixes the problem.
+On Fri, May 19, 2006 at 01:28:47PM -0700, Greg KH wrote:
+> On Fri, May 19, 2006 at 02:11:42PM -0600, Matthew Wilcox wrote:
+> > On Thu, May 18, 2006 at 01:09:57PM -0700, Patrick Mansfield wrote:
+> > > Funky how loading sd after sg changes the output ... and using the driver
+> > > name as a prefix sometimes messes this up for scsi.
+> > > 
+> > >  0:0:0:0: Attached scsi generic sg0 type 0
+> > > sd 1:0:0:0: Attached scsi generic sg0 type 0
+> > 
+> > I find that a bit confusing too.  Obviously, we should distinguish
+> > different kinds of bus_id from each other somehow -- but isn't the
+> > obvious thing to use the bus name?  That must already be unique as sysfs
+> > relies on it.  ie this patch:
+> 
+> Yes, not all devices are on a bus, so this will not work.  And we want
+> to know the driver that controls the device too.  So how about adding
+> the bus if it's not null?
+> 
+> Something like (untested):
+> 	printk(level "%s %s %s: " format , (dev)->bus ? (dev)->bus->name : "", (dev)->driver ? (dev)->driver->name : "", (dev)->bus_id , ## arg)
 
-You're right, but the patch is wrong.  It's not acceptable to have
-different meanings for variables with such similar names.  Either it
-needs to be renamed to id_count or we need to fix all the other users of
-max_id.
-
-BTW, I think we have another problem with max_lun:
-
-	max_dev_lun = min(max_scsi_luns, shost->max_lun);
-	...
-	for (lun = 1; lun < max_dev_lun; ++lun)
-
-surely that should be <= ?
+Then we still get the inconsistency of device names changing as drivers
+are loaded.  I think we should declare it a bug for devices to not be
+on a bus.  The only example I have of devices not-on-a-bus are scsi
+targets.  I would propose introducing a new scsi_target bus for them,
+then removing the 'target' from the start of the bus_id.  Adding them to
+the scsi bus looks like it'd be a lot of work.
