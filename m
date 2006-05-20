@@ -1,58 +1,57 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: sd.c: speed up detection of missing media
-Date: Sat, 20 May 2006 15:54:01 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0605201549370.29313-100000@netrider.rowland.org>
+From: Greg KH <greg@kroah.com>
+Subject: Re: dev_printk output
+Date: Sat, 20 May 2006 14:21:35 -0700
+Message-ID: <20060520212135.GB24672@kroah.com>
+References: <20060511150015.GJ12272@parisc-linux.org> <20060512170854.GA11215@us.ibm.com> <20060513050059.GR12272@parisc-linux.org> <20060518183652.GM1604@parisc-linux.org> <20060518200957.GA29200@us.ibm.com> <20060519201142.GB2826@parisc-linux.org> <20060519202847.GB8865@kroah.com> <20060520045544.GD2826@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.rowland.org ([192.131.102.7]:34565 "HELO mx2.rowland.org")
-	by vger.kernel.org with SMTP id S1751474AbWETTyB (ORCPT
+Received: from mail.kroah.org ([69.55.234.183]:62888 "EHLO perch.kroah.org")
+	by vger.kernel.org with ESMTP id S932384AbWETVju (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 20 May 2006 15:54:01 -0400
+	Sat, 20 May 2006 17:39:50 -0400
+Content-Disposition: inline
+In-Reply-To: <20060520045544.GD2826@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-The patch below is intended to improve medium-not-present detection in
-sd_spinup_disk.  Is there any reason why it shouldn't work better than the
-current code?
+On Fri, May 19, 2006 at 10:55:44PM -0600, Matthew Wilcox wrote:
+> On Fri, May 19, 2006 at 01:28:47PM -0700, Greg KH wrote:
+> > On Fri, May 19, 2006 at 02:11:42PM -0600, Matthew Wilcox wrote:
+> > > On Thu, May 18, 2006 at 01:09:57PM -0700, Patrick Mansfield wrote:
+> > > > Funky how loading sd after sg changes the output ... and using the driver
+> > > > name as a prefix sometimes messes this up for scsi.
+> > > > 
+> > > >  0:0:0:0: Attached scsi generic sg0 type 0
+> > > > sd 1:0:0:0: Attached scsi generic sg0 type 0
+> > > 
+> > > I find that a bit confusing too.  Obviously, we should distinguish
+> > > different kinds of bus_id from each other somehow -- but isn't the
+> > > obvious thing to use the bus name?  That must already be unique as sysfs
+> > > relies on it.  ie this patch:
+> > 
+> > Yes, not all devices are on a bus, so this will not work.  And we want
+> > to know the driver that controls the device too.  So how about adding
+> > the bus if it's not null?
+> > 
+> > Something like (untested):
+> > 	printk(level "%s %s %s: " format , (dev)->bus ? (dev)->bus->name : "", (dev)->driver ? (dev)->driver->name : "", (dev)->bus_id , ## arg)
+> 
+> Then we still get the inconsistency of device names changing as drivers
+> are loaded.
 
-Alan Stern
+The bus id doesn't change, just the "hint" as to who is controling it at
+that point in time.  Which is something that is needed/wanted by a lot
+of people.
 
+> I think we should declare it a bug for devices to not be on a bus.
 
+No!  We have a few places already that are devices with no related bus,
+and are only getting more and more with the shift away from class_device
+to device (see a patch in my quilt tree that allows this.)
 
-Index: usb-2.6/drivers/scsi/sd.c
-===================================================================
---- usb-2.6.orig/drivers/scsi/sd.c
-+++ usb-2.6/drivers/scsi/sd.c
-@@ -1047,6 +1048,14 @@ sd_spinup_disk(struct scsi_disk *sdkp, c
- 						      &sshdr, SD_TIMEOUT,
- 						      SD_MAX_RETRIES);
- 
-+			/*
-+			 * If the drive has indicated to us that it
-+			 * doesn't have any media in it, don't bother
-+			 * with any of the rest of this crap.
-+			 */
-+			if (media_not_present(sdkp, &sshdr))
-+				return;
-+
- 			if (the_result)
- 				sense_valid = scsi_sense_valid(&sshdr);
- 			retries++;
-@@ -1055,14 +1064,6 @@ sd_spinup_disk(struct scsi_disk *sdkp, c
- 			  ((driver_byte(the_result) & DRIVER_SENSE) &&
- 			  sense_valid && sshdr.sense_key == UNIT_ATTENTION)));
- 
--		/*
--		 * If the drive has indicated to us that it doesn't have
--		 * any media in it, don't bother with any of the rest of
--		 * this crap.
--		 */
--		if (media_not_present(sdkp, &sshdr))
--			return;
--
- 		if ((driver_byte(the_result) & DRIVER_SENSE) == 0) {
- 			/* no sense, TUR either succeeded or failed
- 			 * with a status error */
+thanks,
 
+greg k-h
