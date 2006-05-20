@@ -1,55 +1,39 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [RFC] printks in print_inquiry
-Date: Sat, 20 May 2006 08:19:58 -0600
-Message-ID: <20060520141958.GE2826@parisc-linux.org>
-References: <20060511150015.GJ12272@parisc-linux.org> <20060512170854.GA11215@us.ibm.com> <20060513050059.GR12272@parisc-linux.org> <20060518183652.GM1604@parisc-linux.org> <20060518200957.GA29200@us.ibm.com> <20060519190848.GA2826@parisc-linux.org> <446E1FDE.1080404@emulex.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: scsi negotiation problem on aic79xx (39320A) in 2.6.14
+Date: Sat, 20 May 2006 09:20:36 -0500
+Message-ID: <1148134836.3529.5.camel@mulgrave.il.steeleye.com>
+References: <20051114224512.GF9905@mathom.us>
+	 <20060323180909.GD15140@mathom.us>
+	 <1143139044.3415.26.camel@mulgrave.il.steeleye.com>
+	 <20060324122715.GG15140@mathom.us>  <446EA4B5.2030507@cococafe.com>
+	 <1148133061.3529.3.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:24783 "EHLO
-	palinux.external.hp.com") by vger.kernel.org with ESMTP
-	id S964858AbWETOUC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 20 May 2006 10:20:02 -0400
-Content-Disposition: inline
-In-Reply-To: <446E1FDE.1080404@emulex.com>
+Received: from stat9.steeleye.com ([209.192.50.41]:65180 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S964859AbWETOUi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 20 May 2006 10:20:38 -0400
+In-Reply-To: <1148133061.3529.3.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <James.Smart@Emulex.Com>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, linux-scsi@vger.kernel.org
+To: Denny Page <denny@cococafe.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, May 19, 2006 at 03:43:26PM -0400, James Smart wrote:
-> Matthew Wilcox wrote:
-> >scsi: 2:0:1:0 Device: HP 18.2G ATLAS10K3_18_SCA HP05 ANSI 02
-> >scsi: 4:0:2:0 Device: HP       DVD-ROM 305      1.01 ANSI 02
-> >
-> >If we really wanted to be smart, we could even do:
-> >
-> >scsi: 2:0:1:0 Direct-Access      HP 18.2G ATLAS10K3_18_SCA HP05 ANSI 02
-> >scsi: 4:0:2:0 CD-ROM             HP       DVD-ROM 305      1.01 ANSI 02
+On Sat, 2006-05-20 at 08:51 -0500, James Bottomley wrote:
+> On Fri, 2006-05-19 at 22:10 -0700, Denny Page wrote:
+> > Setting the xfer speed in the bios does not appear to affect the
+> > result with
+> > the 2.6.16 kernel.
 > 
-> I wouldn't bother with the device type, unless you are reporting it as the
-> byte0 contents (eg. PQ bits and dev type). I would like to see the PQ bits.
-> I also expect the class driver to typically bind to the device right after
-> this, so I'll get the sd or st lines which will further reflect device type.
+> That's odd ... the code to recognise the BIOS settings went into 2.6.16.
+> What does /proc/scsi/aic79xx/<n> say?
 
-Ah, well, that's no longer true with the async scanning patches.  They
-work by scanning all the luns first, then going back and adding the luns
-to sysfs.  I did this to preserve drive naming.  There were some other
-options I considered, but this was the simplest way of doing things.
+Oh ... actually, I should have traversed the tree rather than going by
+commit date.  Apparently the BIOS code didn't make it in until post
+2.6.16, so if you check 2.6.17-rc4, it should work.
 
-Looking at the device type stuff, I feel the urge to change the
-interface to it -- no longer export the array directly, but change
-it to a function which returns a string.  That way we can pass in
-inquiry byte 0 and have it return an appropriate string based on PQ and
-PQT.
+James
 
-> >I'm still in two minds about even reporting the ANSI version.  Is there
-> >ever a time when having that information would be useful to debug a
-> >problem *and* we don't have access to that (eg through sysfs)?
-> 
-> It makes a difference if debugging a scan issue. I would think it's useful
-> to see what Lun 0 has as it drives other scanning.
 
-Certainly -- but don't we get sysfs access to debug this kind of problem?
-Or do people sometimes have this problem and can't find their root
-device as a consequence?
