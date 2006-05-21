@@ -1,57 +1,95 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: dev_printk output
-Date: Sat, 20 May 2006 14:21:35 -0700
-Message-ID: <20060520212135.GB24672@kroah.com>
-References: <20060511150015.GJ12272@parisc-linux.org> <20060512170854.GA11215@us.ibm.com> <20060513050059.GR12272@parisc-linux.org> <20060518183652.GM1604@parisc-linux.org> <20060518200957.GA29200@us.ibm.com> <20060519201142.GB2826@parisc-linux.org> <20060519202847.GB8865@kroah.com> <20060520045544.GD2826@parisc-linux.org>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: [PATCH] scsi: Return -EINVAL when "id == max_id" in scsi_scan_host_selected()
+Date: Sat, 20 May 2006 20:34:28 -0700 (PDT)
+Message-ID: <20060521033428.61699.qmail@web31813.mail.mud.yahoo.com>
+References: <1148108792.13190.36.camel@amitarora.in.ibm.com>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kroah.org ([69.55.234.183]:62888 "EHLO perch.kroah.org")
-	by vger.kernel.org with ESMTP id S932384AbWETVju (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 20 May 2006 17:39:50 -0400
-Content-Disposition: inline
-In-Reply-To: <20060520045544.GD2826@parisc-linux.org>
+Received: from web31813.mail.mud.yahoo.com ([68.142.207.76]:36494 "HELO
+	web31813.mail.mud.yahoo.com") by vger.kernel.org with SMTP
+	id S1751347AbWEUDe3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 20 May 2006 23:34:29 -0400
+In-Reply-To: <1148108792.13190.36.camel@amitarora.in.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Amit Arora <aarora@in.ibm.com>, Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org, patmans@us.ibm.com
 
-On Fri, May 19, 2006 at 10:55:44PM -0600, Matthew Wilcox wrote:
-> On Fri, May 19, 2006 at 01:28:47PM -0700, Greg KH wrote:
-> > On Fri, May 19, 2006 at 02:11:42PM -0600, Matthew Wilcox wrote:
-> > > On Thu, May 18, 2006 at 01:09:57PM -0700, Patrick Mansfield wrote:
-> > > > Funky how loading sd after sg changes the output ... and using the driver
-> > > > name as a prefix sometimes messes this up for scsi.
-> > > > 
-> > > >  0:0:0:0: Attached scsi generic sg0 type 0
-> > > > sd 1:0:0:0: Attached scsi generic sg0 type 0
-> > > 
-> > > I find that a bit confusing too.  Obviously, we should distinguish
-> > > different kinds of bus_id from each other somehow -- but isn't the
-> > > obvious thing to use the bus name?  That must already be unique as sysfs
-> > > relies on it.  ie this patch:
+--- Amit Arora <aarora@in.ibm.com> wrote:
+> On Fri, 2006-05-19 at 21:21, Matthew Wilcox wrote:
+> > On Fri, May 19, 2006 at 04:14:50PM -0700, Amit Arora wrote:
+> > > The scsi_scan_host_selected() should return -EINVAL when the id is equal
+> > > to the max_id. Currently it uses ">" when comparing with max_id, and
+> > > hence leaves the border case when "id==max_id".
+> > > The channel and lun have values valid from 0 up to,
+> > > and including, max_channel or max_lun. But, the valid values for id
+> > > range from 0 to max_id-1. This patch fixes the problem.
 > > 
-> > Yes, not all devices are on a bus, so this will not work.  And we want
-> > to know the driver that controls the device too.  So how about adding
-> > the bus if it's not null?
-> > 
-> > Something like (untested):
-> > 	printk(level "%s %s %s: " format , (dev)->bus ? (dev)->bus->name : "", (dev)->driver ? (dev)->driver->name : "", (dev)->bus_id , ## arg)
+> > You're right, but the patch is wrong.  It's not acceptable to have
+> > different meanings for variables with such similar names.  Either it
+> > needs to be renamed to id_count or we need to fix all the other users of
+> > max_id.
 > 
-> Then we still get the inconsistency of device names changing as drivers
-> are loaded.
+> I agree that similar sounding variable names should not have different
+> meanings, but having this slight inconsistency for the time being (till
+> we have a new naming convention for these variables) is better than
+> having a bug in the code which brings down the whole system ! Obviously
+> the current code is wrong and is thus resulting in a system crash
+> (actually a BUG_ON) when following command is issued on a system with an
+> Adaptec SCSI controller (aic7xxx/aic79xx driver) :
+> "echo 0 16 0 > /sys/class/scsi_host/host0/scan"
+> It might behave similarly on other drivers as well.
+> 
+> Thus, I still think applying the patch might be a good idea in the
+> immediate future. Moreover, this patch doesn't change the current
+> definition of any of these variables and results in a behavior which is
+> currently expected. So, till the time we figure out what should be done
+> in the long run to remove any confusion over the definition of these
+> variables - why not apply the patch ?
+> 
+> Sorry, being a novice in this area, I did not understand what you meant
+> by "other users of max_id". I think all the drivers currently have it as
+> "maximum value of id possible" + 1. Please correct me if I am wrong.
+> 
+> > 
+> > BTW, I think we have another problem with max_lun:
+> > 
+> > 	max_dev_lun = min(max_scsi_luns, shost->max_lun);
+> > 	...
+> > 	for (lun = 1; lun < max_dev_lun; ++lun)
+> > 
+> > surely that should be <= ?
+> 
+> Yes, looks wrong to me.
 
-The bus id doesn't change, just the "hint" as to who is controling it at
-that point in time.  Which is something that is needed/wanted by a lot
-of people.
+Hi Amit,
 
-> I think we should declare it a bug for devices to not be on a bus.
+Welcome to the club!
 
-No!  We have a few places already that are devices with no related bus,
-and are only getting more and more with the shift away from class_device
-to device (see a patch in my quilt tree that allows this.)
+You'll find a lot more other "bugs" in the Linux SCSI Core.  Not much
+has changed in the past 6 years, nothing in the core at least.
 
-thanks,
+As to your particular gripe: you're right.  But I doubt anything would
+get fixed or changed any time soon.  There is very little competence
+which also has power to change things in the SCSI part of the Linux.
+Take a look at the SCSI mailing list archives for good ol' laughs.
 
-greg k-h
+People here think that the concept of a "host" should be escalated to
+the block subsystem, people here think that "REQUEST SENSE" clears ACA,
+and that calling done() and then turning around to do eh on the
+command in question is ok.  People here think that using link
+commands has something to do with barriers and atomic transactions.
+"SCSI device with Target ports" is called "techno-gibberish" here.
+
+Anyway, I'd suggest fixing such things in your own version/git tree
+of the kernel.
+
+As to naming: I always call such things "num_of_xyz" to be absolutely
+clear that the enumeration is "0 <= index_xyz < num_of_xyz".
+
+Good luck,
+    Luben
+
