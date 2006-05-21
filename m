@@ -1,48 +1,58 @@
-From: "Vicky" <lkzlpkamcn@internetinvestor.com>
-Subject: PM fromVicky
-Date: Sun, 21 May 2006 16:34:10 +0300
-Message-ID: <JC.5622996.7055168__39399.1134399132$1148215295$gmane$org@codeweavers.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Serial Console capture
+Date: Sun, 21 May 2006 10:30:28 -0500
+Message-ID: <1148225428.17239.11.camel@mulgrave.il.steeleye.com>
+References: <BAY112-F171BA6C2D4226546E27C7EA0A50@phx.gbl>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:15513 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S1750949AbWEUMlF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 21 May 2006 08:41:05 -0400
+Received: from stat9.steeleye.com ([209.192.50.41]:11173 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S964892AbWEUPab (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 21 May 2006 11:30:31 -0400
+In-Reply-To: <BAY112-F171BA6C2D4226546E27C7EA0A50@phx.gbl>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: sparclinux@vger.kernel.org, linux-x25@vger.kernel.org, ultralinux@vger.kernel.org, linux-sound@vger.kernel.org, linux-scsi@vger.kernel.org, linux-newbie@vger.kernel.org, linux-serial@vger.kernel.org
+To: Mun Hamlet <hamletmun@hotmail.com>
+Cc: linux-scsi@vger.kernel.org
 
-Hi,
+On Sun, 2006-05-21 at 06:58 -0300, Mun Hamlet wrote:
 
-em..... 
-I gotta tell you something. Some years ago I used to watch porno often. I always admired those guys cumming.
-They splashed out so much sperm on their girls, it looked so cool, so manlike. 
-Now I have a girlfriend.. but quantity of my sperm was so scanty, that I felt ill at ease.
+> scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 7.0 
+>         <Adaptec 29160 Ultra160 SCSI adapter> 
+>         aic7892: Ultra160 Wide Channel A, SCSI Id=7, 32/253 SCBs 
+> 
+>   Vendor: WDIGTL    Model: WD91 ULTRA2       Rev: 1.00 
+>   Type:   Direct-Access                      ANSI SCSI revision: 02 
+> scsi0:A:0:0: Tagged Queuing enabled.  Depth 32 
+> target0:0:0: Beginning Domain Validation 
+> target0:0:0: wide asynchronous 
+> target0:0:0: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 62) 
+> 0:0:0:0: Write Buffer failure 8000002 
+> target0:0:0: Domain Validation detected failure, dropping back 
+> target0:0:0: FAST-40 WIDE SCSI 80.0 MB/s DT (25 ns, offset 62) 
+> 0:0:0:0: Write Buffer failure 8000002 
+> target0:0:0: Domain Validation detected failure, dropping back 
+> target0:0:0: FAST-40 WIDE SCSI 66.0 MB/s DT (30.3 ns, offset 62) 
+> 0:0:0:0: Write Buffer failure 8000002 
+> target0:0:0: Domain Validation detected failure, dropping back 
+> target0:0:0: FAST-20 WIDE SCSI 40.0 MB/s DT (50 ns, offset 62) 
+> 0:0:0:0: Write Buffer failure 8000002 
+> target0:0:0: Domain Validation detected failure, dropping back 
+> target0:0:0: FAST-10 WIDE SCSI 20.0 MB/s DT (100 ns, offset 62) 
+> (scsi0:A:0:0): parity error detected in Data-in phase.
 
- I was advised to eat green apples but even this didn't help. A month ago I was hanging around at the bar with my best friend. 
-And he said that I should try MAX LOADS. Well, - I thought, - sounds interesting. 
+This suggests to me that your bus is unstable in LVD mode.  Which must
+be true, since your CD's are SE only.  There must be something rather
+wrong in the bus set up, since the HBA loop test should have detected
+the presence of SE devices and thus disallowed all LVD modes.
 
-Next day I came to know that it was really a highly effective all-natural dietary supplement,
- which not only increases the sperm volume but also improves the sperm quality and the mobility of spermatozoa.
+On the other hand, this is starting to sound familiar ... I've seen
+discs before which try to report LVD requiring modes on a SE bus.
+Perhaps the SPI class should be verifying signal type ... but before
+that can happen, the aic7xxx would actually have to report signal type.
 
-Having ordered and tried I was shocked how cool it was. 
-
-I'd even say, it changed my life. I'm happy. I even became a better lover, knowing how it all would end. 
-By the way, read about MAX LOADS at this site:
-
-http://www.weallcreatethis.com/
-
-
-Yes, that guys have really acceptable prices if you decide to order and ship worldwide.
-http://www.weallcreatethis.com/
+James
 
 
-
-
-
-
-
-
-
-
-spec you abbe me, utensil . today you banquet me, cajole sniffle . degum you digestion me, burtt cost zinc confession . 
-http://www.weallcreatethis.com/c82/
