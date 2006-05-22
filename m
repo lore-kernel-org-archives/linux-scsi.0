@@ -1,39 +1,46 @@
-From: =?ISO-8859-1?Q?=20=22Yal=FD?= Pansiyon" <y@superonline.com>
-Subject: Dikilide Tatil   www.yalipansiyon.com
-Date: Mon, 22 May 2006 20:30:17 +0300
-Message-ID: <200605221730.k4MHU5FZ023907@zeus2.kernel.org>
+From: Michael Reed <mdr@sgi.com>
+Subject: Re: [PATCH 1/6] mpt fusion - fibre channel target discovery	prematurely
+ terminates
+Date: Mon, 22 May 2006 12:31:12 -0500
+Message-ID: <4471F560.8050709@sgi.com>
+References: <446CD224.6060806@sgi.com> <1148139217.3529.19.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1254
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus2.kernel.org ([204.152.191.36]:14830 "EHLO zeus2.kernel.org")
-	by vger.kernel.org with ESMTP id S1751079AbWEVRaT convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 May 2006 13:30:19 -0400
-Received: from ommo.net ([85.108.45.60])
-	by zeus2.kernel.org (8.13.1/8.13.1) with SMTP id k4MHU5FZ023907
-	for <linux-scsi@vger.kernel.org>; Mon, 22 May 2006 17:30:18 GMT
+Received: from omx2-ext.sgi.com ([192.48.171.19]:14482 "EHLO omx2.sgi.com")
+	by vger.kernel.org with ESMTP id S1751078AbWEVRbQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 May 2006 13:31:16 -0400
+In-Reply-To: <1148139217.3529.19.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
-izmirin kuzey il=E7elerinden Dikili de Yal=FD Pansiyon i=E7in tatil tan=
-=FDt=FDm ama=E7l=FD mailimizdir
-Yal=FD pansiyon denize s=FDf=FDr =F6n=FC plaj butik otel nitelikli s=FD=
-cak ve kaliteli bir tesistir
-
-detayl=FD bilgi  ve fotograf galerileri i=E7in l=FCtfen
-                          www.yalipansiyon.com
-
-Yal=FD Pansiyon Dikili Kent Konseyi Turizm Komisyonu =FCyesi ve
-Dikili Turizm Giri=FEimcileri Kurucu =FCyesidir.
-
-0.232.671 99 22
-www.yalipansiyon.com
-yalipansiyon@superonline.com
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+James Bottomley wrote:
+> On Thu, 2006-05-18 at 14:59 -0500, Michael Reed wrote:
+>> mpt_config() can return EAGAIN.  When this happens, fibre channel target
+>> discovery can prematurely terminate with fewer than the total number of
+>> targets discovered.  This patch detects EAGAIN and reschedules the scan
+>> work.
+>>
+>> Generally, this situation only occurs when the lsiutil program is being
+>> used to reset the board.
+> 
+> mpt_config() only returns EAGAIN when it's out of message frames.  That
+> should be a very transient condition, so if this rarely occurs anyway,
+> why not just put an msleep(10) on the condition and then retry?  It
+> would save all the requeue logic.
+
+It's not so transient during reset processing.  I've measured 10 to
+15 seconds of elapsed time.  But, it always eventually succeeds.
+
+Mike
+
+> 
+> James
+> 
+> 
