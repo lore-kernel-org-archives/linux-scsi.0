@@ -1,182 +1,313 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Fw: [Bugme-new] [Bug 6593] New: Plextor CDR PX-W4012 and kernel >
- 2.6.13
-Date: Sun, 21 May 2006 12:21:56 -0700
-Message-ID: <20060521122156.3dc70bd9.akpm@osdl.org>
+From: "Mun Hamlet" <hamletmun@hotmail.com>
+Subject: Re: Serial Console capture
+Date: Sun, 21 May 2006 22:21:16 -0300
+Message-ID: <BAY112-F74E77A101CA9730539071A09A0@phx.gbl>
+References: <1148231265.17239.17.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ks_c_5601-1987; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:32394 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S964918AbWEUTWF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 21 May 2006 15:22:05 -0400
-Received: from shell0.pdx.osdl.net (fw.osdl.org [65.172.181.6])
-	by smtp.osdl.org (8.12.8/8.12.8) with ESMTP id k4LJM3tH031221
-	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Sun, 21 May 2006 12:22:03 -0700
-Received: from bix (shell0.pdx.osdl.net [10.9.0.31])
-	by shell0.pdx.osdl.net (8.13.1/8.11.6) with SMTP id k4LJM3sr002611
-	for <linux-scsi@vger.kernel.org>; Sun, 21 May 2006 12:22:03 -0700
+Received: from bay112-f7.bay112.hotmail.com ([64.4.26.17]:55402 "EHLO
+	hotmail.com") by vger.kernel.org with ESMTP id S932361AbWEVBVS
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 21 May 2006 21:21:18 -0400
+In-Reply-To: <1148231265.17239.17.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
+
+Thank you for your quick answer
+
+I applied the patch to 2.6.16.9 source, I mean, gentoo-sources-2.6.16-r7 to 
+be exact
+
+But the kernel showed the very same message:
+
+<<<<<<<<<<<<<<<<< Dump Card State Ends >>>>>>>>>>>>>>>>>>
+Recovery code sleeping
+Recovery code awake
+aic7xxx_abort returns 0x2002
+aic7xxx_dev_reset returns 0x2002
+Recovery SCB completes
+
+Any way I appreciate the patch you wrote for me.
+
+>From: James Bottomley <James.Bottomley@SteelEye.com>
+>To: Mun Hamlet <hamletmun@hotmail.com>
+>CC: linux-scsi@vger.kernel.org
+>Subject: Re: Serial Console capture
+>Date: Sun, 21 May 2006 12:07:44 -0500
+>
+>OK, try this ... I think it will correct for the Western Digital
+>problem.
+>
+>James
+>
+>diff --git a/drivers/scsi/aic7xxx/aic7xxx.h 
+b/drivers/scsi/aic7xxx/aic7xxx.h
+>index 91d294c..5ba306c 100644
+>--- a/drivers/scsi/aic7xxx/aic7xxx.h
+>+++ b/drivers/scsi/aic7xxx/aic7xxx.h
+>@@ -233,6 +233,7 @@ typedef enum {
+>  	AHC_TARGETMODE	= 0x20000,	/* Has tested target mode support */
+>  	AHC_MULTIROLE	= 0x40000,	/* Space for two roles at a time */
+>  	AHC_REMOVABLE	= 0x80000,	/* Hot-Swap supported */
+>+	AHC_HVD		= 0x100000,	/* HVD rather than SE */
+>  	AHC_AIC7770_FE	= AHC_FENONE,
+>  	/*
+>  	 * The real 7850 does not support Ultra modes, but there are
+>diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c 
+b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+>index 2c80167..cb4269f 100644
+>--- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
+>+++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+>@@ -2537,6 +2537,22 @@ static void ahc_linux_set_iu(struct scsi
+>  }
+>  #endif
+>
+>+static void ahc_linux_get_signalling(struct Scsi_Host *shost)
+>+{
+>+	struct ahc_softc *ahc = *(struct ahc_softc **)shost->hostdata;
+>+	u8 mode = ahc_inb(ahc, SBLKCTL);
+>+
+>+	if (mode & ENAB40)
+>+		spi_signalling(shost) = SPI_SIGNAL_LVD;
+>+	else if (mode & ENAB20)
+>+		spi_signalling(shost) =
+>+			ahc->features & AHC_HVD ?
+>+			SPI_SIGNAL_HVD :
+>+			SPI_SIGNAL_SE;
+>+	else
+>+		spi_signalling(shost) = SPI_SIGNAL_UNKNOWN;
+>+}
+>+
+>  static struct spi_function_template ahc_linux_transport_functions = {
+>  	.set_offset	= ahc_linux_set_offset,
+>  	.show_offset	= 1,
+>@@ -2552,6 +2568,7 @@ #if 0
+>  	.set_qas	= ahc_linux_set_qas,
+>  	.show_qas	= 1,
+>  #endif
+>+	.get_signalling	= ahc_linux_get_signalling,
+>  };
+>
+>
+>diff --git a/drivers/scsi/aic7xxx/aic7xxx_pci.c 
+b/drivers/scsi/aic7xxx/aic7xxx_pci.c
+>index 3adecef..aee106b 100644
+>--- a/drivers/scsi/aic7xxx/aic7xxx_pci.c
+>+++ b/drivers/scsi/aic7xxx/aic7xxx_pci.c
+>@@ -144,16 +144,22 @@ static ahc_device_setup_t ahc_aic785X_se
+>  static ahc_device_setup_t ahc_aic7860_setup;
+>  static ahc_device_setup_t ahc_apa1480_setup;
+>  static ahc_device_setup_t ahc_aic7870_setup;
+>+static ahc_device_setup_t ahc_aic7870h_setup;
+>  static ahc_device_setup_t ahc_aha394X_setup;
+>+static ahc_device_setup_t ahc_aha394Xh_setup;
+>  static ahc_device_setup_t ahc_aha494X_setup;
+>+static ahc_device_setup_t ahc_aha494Xh_setup;
+>  static ahc_device_setup_t ahc_aha398X_setup;
+>  static ahc_device_setup_t ahc_aic7880_setup;
+>+static ahc_device_setup_t ahc_aic7880h_setup;
+>  static ahc_device_setup_t ahc_aha2940Pro_setup;
+>  static ahc_device_setup_t ahc_aha394XU_setup;
+>+static ahc_device_setup_t ahc_aha394XUh_setup;
+>  static ahc_device_setup_t ahc_aha398XU_setup;
+>  static ahc_device_setup_t ahc_aic7890_setup;
+>  static ahc_device_setup_t ahc_aic7892_setup;
+>  static ahc_device_setup_t ahc_aic7895_setup;
+>+static ahc_device_setup_t ahc_aic7895h_setup;
+>  static ahc_device_setup_t ahc_aic7896_setup;
+>  static ahc_device_setup_t ahc_aic7899_setup;
+>  static ahc_device_setup_t ahc_aha29160C_setup;
+>@@ -225,19 +231,19 @@ struct ahc_pci_identity ahc_pci_ident_ta
+>  		ID_AHA_2944,
+>  		ID_ALL_MASK,
+>  		"Adaptec 2944 SCSI adapter",
+>-		ahc_aic7870_setup
+>+		ahc_aic7870h_setup
+>  	},
+>  	{
+>  		ID_AHA_3944,
+>  		ID_ALL_MASK,
+>  		"Adaptec 3944 SCSI adapter",
+>-		ahc_aha394X_setup
+>+		ahc_aha394Xh_setup
+>  	},
+>  	{
+>  		ID_AHA_4944,
+>  		ID_ALL_MASK,
+>  		"Adaptec 4944 SCSI adapter",
+>-		ahc_aha494X_setup
+>+		ahc_aha494Xh_setup
+>  	},
+>  	/* aic7880 based controllers */
+>  	{
+>@@ -256,13 +262,13 @@ struct ahc_pci_identity ahc_pci_ident_ta
+>  		ID_AHA_2944U & ID_DEV_VENDOR_MASK,
+>  		ID_DEV_VENDOR_MASK,
+>  		"Adaptec 2944 Ultra SCSI adapter",
+>-		ahc_aic7880_setup
+>+		ahc_aic7880h_setup
+>  	},
+>  	{
+>  		ID_AHA_3944U & ID_DEV_VENDOR_MASK,
+>  		ID_DEV_VENDOR_MASK,
+>  		"Adaptec 3944 Ultra SCSI adapter",
+>-		ahc_aha394XU_setup
+>+		ahc_aha394XUh_setup
+>  	},
+>  	{
+>  		ID_AHA_398XU & ID_DEV_VENDOR_MASK,
+>@@ -278,7 +284,7 @@ struct ahc_pci_identity ahc_pci_ident_ta
+>  		ID_AHA_4944U & ID_DEV_VENDOR_MASK,
+>  		ID_DEV_VENDOR_MASK,
+>  		"Adaptec 4944 Ultra SCSI adapter",
+>-		ahc_aic7880_setup
+>+		ahc_aic7880h_setup
+>  	},
+>  	{
+>  		ID_AHA_2930U & ID_DEV_VENDOR_MASK,
+>@@ -414,7 +420,7 @@ struct ahc_pci_identity ahc_pci_ident_ta
+>  		ID_AHA_3944AU,
+>  		ID_ALL_MASK,
+>  		"Adaptec 3944A Ultra SCSI adapter",
+>-		ahc_aic7895_setup
+>+		ahc_aic7895h_setup
+>  	},
+>  	{
+>  		ID_AIC7895_ARO,
+>@@ -2121,6 +2127,16 @@ ahc_aic7870_setup(struct ahc_softc *ahc)
+>  }
+>
+>  static int
+>+ahc_aic7870h_setup(struct ahc_softc *ahc)
+>+{
+>+	int error = ahc_aic7870_setup(ahc);
+>+
+>+	ahc->features |= AHC_HVD;
+>+
+>+	return error;
+>+}
+>+
+>+static int
+>  ahc_aha394X_setup(struct ahc_softc *ahc)
+>  {
+>  	int error;
+>@@ -2132,6 +2148,16 @@ ahc_aha394X_setup(struct ahc_softc *ahc)
+>  }
+>
+>  static int
+>+ahc_aha394Xh_setup(struct ahc_softc *ahc)
+>+{
+>+	int error = ahc_aha394X_setup(ahc);
+>+
+>+	ahc->features |= AHC_HVD;
+>+
+>+	return error;
+>+}
+>+
+>+static int
+>  ahc_aha398X_setup(struct ahc_softc *ahc)
+>  {
+>  	int error;
+>@@ -2154,6 +2180,16 @@ ahc_aha494X_setup(struct ahc_softc *ahc)
+>  }
+>
+>  static int
+>+ahc_aha494Xh_setup(struct ahc_softc *ahc)
+>+{
+>+	int error = ahc_aha494X_setup(ahc);
+>+
+>+	ahc->features |= AHC_HVD;
+>+
+>+	return error;
+>+}
+>+
+>+static int
+>  ahc_aic7880_setup(struct ahc_softc *ahc)
+>  {
+>  	ahc_dev_softc_t pci;
+>@@ -2175,6 +2211,17 @@ ahc_aic7880_setup(struct ahc_softc *ahc)
+>  }
+>
+>  static int
+>+ahc_aic7880h_setup(struct ahc_softc *ahc)
+>+{
+>+	int error = ahc_aic7880_setup(ahc);
+>+
+>+	ahc->features |= AHC_HVD;
+>+
+>+	return error;
+>+}
+>+
+>+
+>+static int
+>  ahc_aha2940Pro_setup(struct ahc_softc *ahc)
+>  {
+>
+>@@ -2194,6 +2241,16 @@ ahc_aha394XU_setup(struct ahc_softc *ahc
+>  }
+>
+>  static int
+>+ahc_aha394XUh_setup(struct ahc_softc *ahc)
+>+{
+>+	int error = ahc_aha394XU_setup(ahc);
+>+
+>+	ahc->features |= AHC_HVD;
+>+
+>+	return error;
+>+}
+>+
+>+static int
+>  ahc_aha398XU_setup(struct ahc_softc *ahc)
+>  {
+>  	int error;
+>@@ -2292,6 +2349,16 @@ #endif
+>  }
+>
+>  static int
+>+ahc_aic7895h_setup(struct ahc_softc *ahc)
+>+{
+>+	int error = ahc_aic7895_setup(ahc);
+>+
+>+	ahc->features |= AHC_HVD;
+>+
+>+	return error;
+>+}
+>+
+>+static int
+>  ahc_aic7896_setup(struct ahc_softc *ahc)
+>  {
+>  	ahc_dev_softc_t pci;
+>diff --git a/drivers/scsi/scsi_transport_spi.c 
+b/drivers/scsi/scsi_transport_spi.c
+>index 780aaed..e993b73 100644
+>--- a/drivers/scsi/scsi_transport_spi.c
+>+++ b/drivers/scsi/scsi_transport_spi.c
+>@@ -785,6 +785,7 @@ spi_dv_device_internal(struct scsi_devic
+>  {
+>  	struct spi_internal *i = to_spi_internal(sdev->host->transportt);
+>  	struct scsi_target *starget = sdev->sdev_target;
+>+	struct Scsi_Host *shost = sdev->host;
+>  	int len = sdev->inquiry_len;
+>  	/* first set us up for narrow async */
+>  	DV_SET(offset, 0);
+>@@ -844,6 +845,14 @@ spi_dv_device_internal(struct scsi_devic
+>  		if (spi_min_period(starget) == 8)
+>  			DV_SET(pcomp_en, 1);
+>  	}
+>+	/* now that we've done all this, actually check the bus
+>+	 * signal type (if known).  Some devices are stupid on
+>+	 * a SE bus and still claim they can try LVD only settings */
+>+	if (i->f->get_signalling)
+>+		i->f->get_signalling(shost);
+>+	if (spi_signalling(shost) == SPI_SIGNAL_SE ||
+>+	    spi_signalling(shost) == SPI_SIGNAL_HVD)
+>+		DV_SET(dt, 0);
+>  	/* Do the read only INQUIRY tests */
+>  	spi_dv_retrain(sdev, buffer, buffer + sdev->inquiry_len,
+>  		       spi_dv_device_compare_inquiry);
+>
+>
 
 
-A regression..
-
-Begin forwarded message:
-
-Date: Sun, 21 May 2006 10:34:50 -0700
-From: bugme-daemon@bugzilla.kernel.org
-To: bugme-new@lists.osdl.org
-Subject: [Bugme-new] [Bug 6593] New: Plextor CDR PX-W4012 and kernel > 2.6.13
-
-
-http://bugzilla.kernel.org/show_bug.cgi?id=6593
-
-           Summary: Plextor CDR PX-W4012 and kernel > 2.6.13
-    Kernel Version: 2.6.14 and higher version
-            Status: NEW
-          Severity: normal
-             Owner: scsi_drivers-other@kernel-bugs.osdl.org
-         Submitter: nkieffer@gon0s.com
-
-
-Most recent kernel where this bug did not occur: vanilla 2.6.17-rc4
-Distribution: Gentoo
-Hardware Environment: Adaptec SCSI Card 29160, MSI K7-Master Motherboard
-Software Environment: kernel 2.6.14 and higher
-Problem Description:
-When I upgraded the kernel from Vanilla 2.6.13.4 to 2.6.14.x and higher, the
-plextor CDR PX-W4012 (SCSI ID 3) is encountering errors when inserting and
-mounting a CD. The scsi channel is then restarted again and again.
-The weird thing is the Plextor SCSI CD-ROM PX-40TS reader is not impacted by
-this issue. So it does only impact some specific drives.
-
-I do not think it is related to this bug :
-http://bugzilla.kernel.org/show_bug.cgi?id=5659
-
-Using older kernel (<2.6.14 series) do not show this issue ! I even tried latest
- gentoo kernel available and the same problem occur, whereas the gentoo 2.6.16r7
-almost permit to access to CD between 2 channel reset.
-
---------------DMESG-----------------------------------------------------------
-ACPI: PCI Interrupt 0000:00:09.0[A] -> GSI 17 (level, low) -> IRQ 17
-scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 7.0
-        <Adaptec 29160 Ultra160 SCSI adapter>
-        aic7892: Ultra160 Wide Channel A, SCSI Id=7, 32/253 SCBs
-
-  Vendor: QUANTUM   Model: ATLAS10K2-TY184L  Rev: DDD6
-  Type:   Direct-Access                      ANSI SCSI revision: 03
-scsi0:A:0:0: Tagged Queuing enabled.  Depth 32
- target0:0:0: Beginning Domain Validation
- target0:0:0: wide asynchronous
- target0:0:0: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 127)
- target0:0:0: Ending Domain Validation
-  Vendor: MAXTOR    Model: ATLAS10K4_36WLS   Rev: DFV0
-  Type:   Direct-Access                      ANSI SCSI revision: 03
-scsi0:A:1:0: Tagged Queuing enabled.  Depth 32
- target0:0:1: Beginning Domain Validation
- target0:0:1: wide asynchronous
- target0:0:1: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 127)
- target0:0:1: Ending Domain Validation
-  Vendor: MAXTOR    Model: ATLAS10K4_36WLS   Rev: DFV0
-  Type:   Direct-Access                      ANSI SCSI revision: 03
-scsi0:A:2:0: Tagged Queuing enabled.  Depth 32
- target0:0:2: Beginning Domain Validation
- target0:0:2: wide asynchronous
- target0:0:2: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 127)
- target0:0:2: Ending Domain Validation
-  Vendor: PLEXTOR   Model: CD-R   PX-W4012S  Rev: 1.05
-  Type:   CD-ROM                             ANSI SCSI revision: 02
- target0:0:3: Beginning Domain Validation
- target0:0:3: FAST-20 SCSI 20.0 MB/s ST (50 ns, offset 15)
- target0:0:3: Domain Validation skipping write tests
- target0:0:3: Ending Domain Validation
-  Vendor: PLEXTOR   Model: CD-ROM PX-40TS    Rev: 1.14
-  Type:   CD-ROM                             ANSI SCSI revision: 02
- target0:0:4: Beginning Domain Validation
- target0:0:4: FAST-20 SCSI 20.0 MB/s ST (50 ns, offset 15)
- target0:0:4: Domain Validation skipping write tests
- target0:0:4: Ending Domain Validation
-SCSI device sda: 35860910 512-byte hdwr sectors (18361 MB)
-sda: Write Protect is off
-sda: Mode Sense: f5 00 10 08
-SCSI device sda: drive cache: write back w/ FUA
-SCSI device sda: 35860910 512-byte hdwr sectors (18361 MB)
-sda: Write Protect is off
-sda: Mode Sense: f5 00 10 08
-SCSI device sda: drive cache: write back w/ FUA
- sda: sda1 sda2 sda3
-sd 0:0:0:0: Attached scsi disk sda
-SCSI device sdb: 71833096 512-byte hdwr sectors (36779 MB)
-sdb: Write Protect is off
-sdb: Mode Sense: ed 00 10 08
-SCSI device sdb: drive cache: write back w/ FUA
-SCSI device sdb: 71833096 512-byte hdwr sectors (36779 MB)
-sdb: Write Protect is off
-sdb: Mode Sense: ed 00 10 08
-SCSI device sdb: drive cache: write back w/ FUA
- sdb: sdb1 sdb2 < sdb5 >
-sd 0:0:1:0: Attached scsi disk sdb
-SCSI device sdc: 71833096 512-byte hdwr sectors (36779 MB)
-sdc: Write Protect is off
-sdc: Mode Sense: ed 00 10 08
-SCSI device sdc: drive cache: write back w/ FUA
-SCSI device sdc: 71833096 512-byte hdwr sectors (36779 MB)
-sdc: Write Protect is off
-sdc: Mode Sense: ed 00 10 08
-SCSI device sdc: drive cache: write back w/ FUA
- sdc: sdc1 sdc2 < sdc5 >
-sd 0:0:2:0: Attached scsi disk sdc
-sr0: scsi3-mmc drive: 40x/40x writer cd/rw xa/form2 cdda tray
-sr 0:0:3:0: Attached scsi CD-ROM sr0
-sr1: scsi-1 drive
-sr 0:0:4:0: Attached scsi CD-ROM sr1
-sd 0:0:0:0: Attached scsi generic sg0 type 0
-sd 0:0:1:0: Attached scsi generic sg1 type 0
-sd 0:0:2:0: Attached scsi generic sg2 type 0
-sr 0:0:3:0: Attached scsi generic sg3 type 5
-sr 0:0:4:0: Attached scsi generic sg4 type 5
- --snip--
-
-After inserting a CD in the tray and pmount/hal trying to mount it :
-
--- DMESG new messages with Vanilla kernel 2.6.14 ------------------------------
-sr0: Hmm, seems the drive doesn't support multisession CD's
- target0:0:3: FAST-20 SCSI 20.0 MB/s ST (50 ns, offset 15)
- (scsi0:A:3:0): No or incomplete CDB sent to device.
- scsi0: Issued Channel A Bus Reset. 1 SCBs aborted
- (scsi0:A:3:0): No or incomplete CDB sent to device.
- (scsi0:A:3:0): Protocol violation in Message-in phase.  Attempting to abort.
- (scsi0:A:3:0): Unexpected busfree in Message-in phase
- SEQADDR == 0x16c
- (scsi0:A:3:0): No or incomplete CDB sent to device.
- scsi0: Issued Channel A Bus Reset. 1 SCBs aborted
- (scsi0:A:3:0): No or incomplete CDB sent to device.
- (scsi0:A:3:0): Protocol violation in Message-in phase.  Attempting to abort.
- (scsi0:A:3:0): Unexpected busfree in Message-in phase
- SEQADDR == 0x16c
- (scsi0:A:3:0): No or incomplete CDB sent to device.
- scsi0: Issued Channel A Bus Reset. 1 SCBs aborted
- sr 0:0:3:0: SCSI error: return code = 0x70000
-
---DMESG new message with Gentoo kernel 2.6.16r7-------------------------------
-(scsi0:A:3:0): No or incomplete CDB sent to device.
-scsi0: Issued Channel A Bus Reset. 1 SCBs aborted
-sr 0:0:3:0: SCSI error: return code = 0x10002
-end_request: I/O error, dev sr0, sector 63128
-Buffer I/O error on device sr0, logical block 15782
-(scsi0:A:3:0): No or incomplete CDB sent to device.
-scsi0: Issued Channel A Bus Reset. 1 SCBs aborted
-VFS: busy inodes on changed media.
-(scsi0:A:3:0): No or incomplete CDB sent to device.
-scsi0: Issued Channel A Bus Reset. 1 SCBs aborted
-
-
-Steps to reproduce: insert a CD in the tray, close the door and wait the volume
-is mounted by pmount (or manually mounted doing the same result)
-
-------- You are receiving this mail because: -------
-You are on the CC list for the bug, or are watching someone who is.
