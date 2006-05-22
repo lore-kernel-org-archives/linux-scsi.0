@@ -1,29 +1,37 @@
-From: Daniel Drake <dsd@gentoo.org>
-Subject: Re: 2.6.14 regression: aic7xxx hangs on boot
-Date: Mon, 22 May 2006 16:02:04 +0100
-Message-ID: <4471D26C.6070609@gentoo.org>
-References: <44461FB5.8060705@gentoo.org>	 <1145454585.3465.5.camel@mulgrave.il.steeleye.com>	 <444658BE.5080309@gentoo.org>	 <1145462527.6183.5.camel@mulgrave.il.steeleye.com>	 <4471CD38.8010400@gentoo.org> <1148308599.3320.26.camel@mulgrave.il.steeleye.com>
+From: Andreas Herrmann <aherrman@de.ibm.com>
+Subject: [PATCH 0/8] zfcp update
+Date: Mon, 22 May 2006 18:13:00 +0200
+Message-ID: <20060522161300.GA25218@lion28.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mta09-winn.ispmail.ntl.com ([81.103.221.49]:50040 "EHLO
-	mtaout03-winn.ispmail.ntl.com") by vger.kernel.org with ESMTP
-	id S1750877AbWEVOno (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 May 2006 10:43:44 -0400
-In-Reply-To: <1148308599.3320.26.camel@mulgrave.il.steeleye.com>
+Received: from mtagate6.uk.ibm.com ([195.212.29.139]:47080 "EHLO
+	mtagate6.uk.ibm.com") by vger.kernel.org with ESMTP
+	id S1750913AbWEVQPe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 May 2006 12:15:34 -0400
+Received: from d06nrmr1407.portsmouth.uk.ibm.com (d06nrmr1407.portsmouth.uk.ibm.com [9.149.38.185])
+	by mtagate6.uk.ibm.com (8.13.6/8.13.6) with ESMTP id k4MGFWeg089830
+	for <linux-scsi@vger.kernel.org>; Mon, 22 May 2006 16:15:32 GMT
+Received: from d06av02.portsmouth.uk.ibm.com (d06av02.portsmouth.uk.ibm.com [9.149.37.228])
+	by d06nrmr1407.portsmouth.uk.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k4MGGX2o141904
+	for <linux-scsi@vger.kernel.org>; Mon, 22 May 2006 17:16:33 +0100
+Received: from d06av02.portsmouth.uk.ibm.com (loopback [127.0.0.1])
+	by d06av02.portsmouth.uk.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k4MGFWem011535
+	for <linux-scsi@vger.kernel.org>; Mon, 22 May 2006 17:15:32 +0100
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: gibbs@scsiguy.com, linux-scsi@vger.kernel.org
+To: James Bottomley <jejb@steeleye.com>
+Cc: Linux SCSI <linux-scsi@vger.kernel.org>
 
-James Bottomley wrote:
-> That's identical to this, isn't it?
-> 
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=114820550424513
+Following a series of eight zfcp patches:
+some cleanup stuff and transport related
+changes for zfcp.
 
-Yep, same person. I'll keep an eye on that thread - thanks!
-
-Daniel
+The patches are against current linux-2.6 git tree and
+thought for the next kernel release (no rc-fixes).
 
 
+Regards,
+
+Andreas
