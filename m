@@ -1,45 +1,39 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 2/2] scsi tgt: ibmvstgt driver
-Date: Tue, 23 May 2006 01:53:45 +0900 (JST)
-Message-ID: <20060523015029Y.fujita.tomonori@lab.ntt.co.jp>
-References: <20060429155926B.fujita.tomonori@lab.ntt.co.jp>
+From: =?ISO-8859-1?Q?=20=22Yal=FD?= Pansiyon" <y@superonline.com>
+Subject: Dikilide Tatil   www.yalipansiyon.com
+Date: Mon, 22 May 2006 20:30:17 +0300
+Message-ID: <200605221730.k4MHU5FZ023907@zeus2.kernel.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1254
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:45715 "EHLO
-	tama5.ecl.ntt.co.jp") by vger.kernel.org with ESMTP
-	id S1750985AbWEVQxx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 May 2006 12:53:53 -0400
-In-Reply-To: <20060429155926B.fujita.tomonori@lab.ntt.co.jp>
+Received: from zeus2.kernel.org ([204.152.191.36]:14830 "EHLO zeus2.kernel.org")
+	by vger.kernel.org with ESMTP id S1751079AbWEVRaT convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 May 2006 13:30:19 -0400
+Received: from ommo.net ([85.108.45.60])
+	by zeus2.kernel.org (8.13.1/8.13.1) with SMTP id k4MHU5FZ023907
+	for <linux-scsi@vger.kernel.org>; Mon, 22 May 2006 17:30:18 GMT
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org
 
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 2/2] scsi tgt: ibmvstgt driver
-Date: Sat, 29 Apr 2006 15:59:37 +0900 (JST)
+izmirin kuzey il=E7elerinden Dikili de Yal=FD Pansiyon i=E7in tatil tan=
+=FDt=FDm ama=E7l=FD mailimizdir
+Yal=FD pansiyon denize s=FDf=FDr =F6n=FC plaj butik otel nitelikli s=FD=
+cak ve kaliteli bir tesistir
 
-> This is IBM Virtual SCSI target driver for tgt.
-> 
-> This patch dependents on the previous patch to convert the ibmvscsi
-> driver to use include/scsi/srp.h.
-> 
-> The driver is based on the original ibmvscsis driver:
-> 
-> http://lkml.org/lkml/2005/10/17/99
-> 
-> 
-> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+detayl=FD bilgi  ve fotograf galerileri i=E7in l=FCtfen
+                          www.yalipansiyon.com
 
-Thanks for merging this (and sorry about the complie error).  Seems
-that you forgot to merge the ibmvstgt driver
-(drivers/scsi/ibmvscsi/ibmvstgt.c).
+Yal=FD Pansiyon Dikili Kent Konseyi Turizm Komisyonu =FCyesi ve
+Dikili Turizm Giri=FEimcileri Kurucu =FCyesidir.
 
-We have one more issue with this. It depends on the viosrp change:
-
-http://kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=%20ef265673434680f2307ceafae4a2badc657e94cc
+0.232.671 99 22
+www.yalipansiyon.com
+yalipansiyon@superonline.com
 
 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
