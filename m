@@ -1,44 +1,36 @@
-From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: RE: [PATCH 1/6] mpt fusion - fibre channel target discovery	prematurely terminates
-Date: Mon, 22 May 2006 17:09:21 -0600
-Message-ID: <664A4EBB07F29743873A87CF62C26D7011BD54@NAMAIL4.ad.lsil.com>
+From: "Dan Carpenter" <error27@gmail.com>
+Subject: mptspi doesn't work the nStor
+Date: Mon, 22 May 2006 16:37:16 -0700
+Message-ID: <a63d67fe0605221637i231d4b48n942461ccdf4ee470@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII;
+	format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:3276 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1751162AbWEVXJ3 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 May 2006 19:09:29 -0400
-Content-class: urn:content-classes:message
+Received: from nz-out-0102.google.com ([64.233.162.195]:23348 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S1751304AbWEVXhS convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 May 2006 19:37:18 -0400
+Received: by nz-out-0102.google.com with SMTP id 8so1433515nzo
+        for <linux-scsi@vger.kernel.org>; Mon, 22 May 2006 16:37:17 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Reed <mdr@sgi.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org, mpt_linux_developer@lsil.com
 
-On Monday, May 22, 2006 12:41 PM, Michael Reed wrote:
+I can't get mptspi to work with my nStor in FC5.  I think it broke
+when mptscsih get split up.  The split has been back ported to
+sles9sp3 and rhel4u3 and it breaks those as well.
 
-> > I doubt there would be regressions.  We would need to 
-> implement timeout
-> > on not receiving a mf, then return EAGAIN as we do today.
-> 
-> Then is there a reason to implement the change at all?  If the caller
-> can still receive EAGAIN, the caller still has to handle it.
-> Or just view it as an opaque error as callers do today.
-> 
+Are there any patches that make it work again?
 
+Fedora Core 5 bugzilla
+https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=188487
+RHEL 4u3 buzilla
+https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=190760
 
-Callers of mpt_config don't care about EAGAIN.  Some return the
-return value up the calling stack, however ends with them evaulating
-a non-zero value as a error, not as retry me later.  So my suggestion of
-returning EGAIN after waiting on mf's to be available, really doesn't
-matter,
-in regards to regressions.
+For now I've just forward ported the pre-split drivers.  That's not a
+great long term solution but if anyone needs it I can send it to you.
 
-I will not have time the next three weeks to address this, as I will
-be on the road.  I prefer mpt_config to be fixed, however I understand
-your
-concerns, as far as testing and timing goes.
-
-Eric
+regards,
+dan carpenter
