@@ -1,78 +1,72 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: Re: [PATCH 1/6] mpt fusion - fibre channel target discovery	prematurely
- terminates
-Date: Mon, 22 May 2006 13:40:39 -0500
-Message-ID: <447205A7.2020600@sgi.com>
-References: <664A4EBB07F29743873A87CF62C26D7011BBF2@NAMAIL4.ad.lsil.com>
+From: Amit Arora <aarora@in.ibm.com>
+Subject: Re: [PATCH] scsi: Return -EINVAL when "id == max_id" in
+	scsi_scan_host_selected()
+Date: Mon, 22 May 2006 12:01:39 -0700
+Message-ID: <1148324498.24379.13.camel@amitarora.in.ibm.com>
+References: <20060521033428.61699.qmail@web31813.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:10148 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S1751037AbWEVSkr (ORCPT
+Received: from e4.ny.us.ibm.com ([32.97.182.144]:50095 "EHLO e4.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1750868AbWEVTC3 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 May 2006 14:40:47 -0400
-In-Reply-To: <664A4EBB07F29743873A87CF62C26D7011BBF2@NAMAIL4.ad.lsil.com>
+	Mon, 22 May 2006 15:02:29 -0400
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e4.ny.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k4MJ2QYG016609
+	for <linux-scsi@vger.kernel.org>; Mon, 22 May 2006 15:02:26 -0400
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay02.pok.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k4MJ2QmQ075862
+	for <linux-scsi@vger.kernel.org>; Mon, 22 May 2006 15:02:26 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k4MJ2P6I008556
+	for <linux-scsi@vger.kernel.org>; Mon, 22 May 2006 15:02:26 -0400
+In-Reply-To: <20060521033428.61699.qmail@web31813.mail.mud.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric" <Eric.Moore@lsil.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: ltuikov@yahoo.com
+Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org, patmans@us.ibm.com
+
+On Sat, 2006-05-20 at 20:34, Luben Tuikov wrote:
+> Hi Amit,
+> 
+> Welcome to the club!
+> 
+> You'll find a lot more other "bugs" in the Linux SCSI Core.  Not much
+> has changed in the past 6 years, nothing in the core at least.
+> 
+> As to your particular gripe: you're right.  But I doubt anything would
+> get fixed or changed any time soon.  There is very little competence
+> which also has power to change things in the SCSI part of the Linux.
+> Take a look at the SCSI mailing list archives for good ol' laughs.
+> 
+> People here think that the concept of a "host" should be escalated to
+> the block subsystem, people here think that "REQUEST SENSE" clears ACA,
+> and that calling done() and then turning around to do eh on the
+> command in question is ok.  People here think that using link
+> commands has something to do with barriers and atomic transactions.
+> "SCSI device with Target ports" is called "techno-gibberish" here.
+> 
+> Anyway, I'd suggest fixing such things in your own version/git tree
+> of the kernel.
+> 
+> As to naming: I always call such things "num_of_xyz" to be absolutely
+> clear that the enumeration is "0 <= index_xyz < num_of_xyz".
+> 
+> Good luck,
+>     Luben 
+
+Hi Luben,
+
+Thanks for replying!
+
+I understand the competency part - but then, there are experts like you
+who can surely fix such problems. :)
+I would appreciate if you can come up with an acceptable patch for this.
+
+Thanks again!
+Regards,
+Amit Arora
 
 
 
-Moore, Eric wrote:
-> On Monday, May 22, 2006 12:06 PM,  Michael Reed wrote:
->>
->> Changing mpt_config() to sleep changes the behavior in that 
->> EAGAIN might no longer
->> be returned.  lan, ctl, sas, spi, and fc all make use of 
->> mpt_config().  This may be
->> non-trivial with regard to testing.  Or it may not.  And, as 
->> James points out,
->> we have to assure that the caller is in a context which can sleep.
->>
-> 
-> The caller context of mpt_config() *MUST* be able to sleep.   
-> Towards this end of this function we call wait_event().  This is
-> because we are waiting on the firmware reply.  If the fw reply
-> doesn't come, then watchdog timer kicks in, then mpt_timer_expired 
-> is called.
-> 
-> 
->> Can we leave the interface alone for the moment and accept the patch
->> as written?  Then, look at changing mpt_config() and the evaluate the
->> testing burden that the change might impose?
->>
-> 
-> James?
-> 
->> My vested interest is in getting the functionality into certain
->> distros of interest.  I have no problem with rearchitecting the
->> patchset as described above.  I'm just concerned with the timing.
->> I suspect that the testing required will push the patch's acceptance
->> beyond my potential window of opportunity.  As written, the change
->> is confined to fibre channel so will not potentially introduce
->> regressions into the other drivers.
->>
-> 
-> How?
-> 
-> I doubt there would be regressions.  We would need to implement timeout
-> on not receiving a mf, then return EAGAIN as we do today.
-
-Then is there a reason to implement the change at all?  If the caller
-can still receive EAGAIN, the caller still has to handle it.
-Or just view it as an opaque error as callers do today.
-
-Mike
-
-> 
-> Eric 
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
