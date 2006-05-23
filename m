@@ -1,33 +1,40 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] scsi: Return -EINVAL when "id == max_id" in scsi_scan_host_selected()
-Date: Mon, 22 May 2006 19:16:19 -0600
-Message-ID: <20060523011619.GG4093@parisc-linux.org>
-References: <1148080489.23417.18.camel@amitarora.in.ibm.com> <20060520042132.GC2826@parisc-linux.org> <1148108792.13190.36.camel@amitarora.in.ibm.com> <1148345675.3320.77.camel@mulgrave.il.steeleye.com>
+From: "Moore, Eric" <Eric.Moore@lsil.com>
+Subject: Re: mptspi doesn't work the nStor
+Date: Mon, 22 May 2006 22:14:32 -0600
+Message-ID: <008901c67e1f$654674c0$321015ac@ericmoore>
+References: <a63d67fe0605221637i231d4b48n942461ccdf4ee470@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=response
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:13735 "EHLO
-	palinux.external.hp.com") by vger.kernel.org with ESMTP
-	id S1750726AbWEWBQV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 May 2006 21:16:21 -0400
-Content-Disposition: inline
-In-Reply-To: <1148345675.3320.77.camel@mulgrave.il.steeleye.com>
+Received: from mail0.lsil.com ([147.145.40.20]:22760 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1751215AbWEWEOT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 May 2006 00:14:19 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Amit Arora <aarora@in.ibm.com>, linux-scsi@vger.kernel.org, patmans@us.ibm.com
+To: Dan Carpenter <error27@gmail.com>, linux-scsi@vger.kernel.org, mpt_linux_developer@lsil.com
 
-On Mon, May 22, 2006 at 07:54:35PM -0500, James Bottomley wrote:
-> Actually, we've got another cockup here with drivers: some have set this
-> to 8 or 16 and others to 7 or 15.  If we apply this without auditing
-> them, for those who set it to 7 or 15, the last target will end up
-> inaccessible.
+On Monday, May 22, 2006 5:37 PM, Dan Carpenter wrote:
+>I can't get mptspi to work with my nStor in FC5.  I think it broke
+> when mptscsih get split up.  The split has been back ported to
+> sles9sp3 and rhel4u3 and it breaks those as well.
+> 
+> Are there any patches that make it work again?
+> 
+> Fedora Core 5 bugzilla
+> https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=188487
+> RHEL 4u3 buzilla
+> https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=190760
+> 
 
-So as scsi maintainer, what's your preference for the 'right way' to fix
-this?  Clearly a whole-scale driver audit is needed, so my preference is
-to rename the variable (how about id_limit?) and then do a sweep
-checking that everybody's using it correctly.
+Ok, I see various things here, such as the end device being busy, and data underruns,
+and device not there.  Nothing conclusive.  Can you send me your pariticular dmesg
+with debuging enabled in the driver.  Also in private email I will send you our latest drivers.
 
-Then we need to do a similar check for max_lun and max_channel.  As far
-as conventions go, I think we should use 8 and 16; it's just so much
-more natural to write 'for (id = 0; id < id_limit; id++)'.
+Eric Moore
+LSI Logic
+
