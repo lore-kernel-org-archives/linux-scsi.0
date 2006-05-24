@@ -1,30 +1,49 @@
-From: "Mohit Katiyar" <katiyar.mohit@gmail.com>
-Subject: iSCSI adapters
-Date: Tue, 23 May 2006 17:34:36 +0900
-Message-ID: <46465bb30605230134j58811b3bn53ebc8b534a2b0cf@mail.gmail.com>
+From: "Dan Carpenter" <error27@gmail.com>
+Subject: Re: mptspi doesn't work the nStor
+Date: Tue, 23 May 2006 23:46:15 -0700
+Message-ID: <a63d67fe0605232346p73d66be7jc0d717604e894ff6@mail.gmail.com>
+References: <a63d67fe0605221637i231d4b48n942461ccdf4ee470@mail.gmail.com>
+	 <008901c67e1f$654674c0$321015ac@ericmoore>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII;
 	format=flowed
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:27874 "EHLO
-	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S932113AbWEWIeh convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 May 2006 04:34:37 -0400
-Received: by nf-out-0910.google.com with SMTP id c31so578503nfb
-        for <linux-scsi@vger.kernel.org>; Tue, 23 May 2006 01:34:36 -0700 (PDT)
+Received: from nz-out-0102.google.com ([64.233.162.197]:45847 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S932623AbWEXGqQ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 May 2006 02:46:16 -0400
+Received: by nz-out-0102.google.com with SMTP id 8so1749995nzo
+        for <linux-scsi@vger.kernel.org>; Tue, 23 May 2006 23:46:16 -0700 (PDT)
+In-Reply-To: <008901c67e1f$654674c0$321015ac@ericmoore>
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Moore, Eric" <Eric.Moore@lsil.com>
+Cc: linux-scsi@vger.kernel.org, mpt_linux_developer@lsil.com, coldwell@redhat.com
 
-Hi all,
+On 5/22/06, Moore, Eric <Eric.Moore@lsil.com> wrote:
+> On Monday, May 22, 2006 5:37 PM, Dan Carpenter wrote:
+> >I can't get mptspi to work with my nStor in FC5.
 
-Could anyone explain me the pattern of /sys/class/scsi_host/iscsi
-deirectory structure? I have a question if i have two iSCSI host
-adapter on a single system how will the entries in
-/sys/class/scsi_host/iscsi  gets populated? Are there different
-drectories for different host or some other pattern.
+> > Fedora Core 5 bugzilla
+> > https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=188487
+> > RHEL 4u3 buzilla
+> > https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=190760
+> >
+>
+> Ok, I see various things here, such as the end device being busy, and data underruns,
+> and device not there.  Nothing conclusive.  Can you send me your pariticular dmesg
+> with debuging enabled in the driver.  Also in private email I will send you our latest drivers.
+>
+> Eric Moore
 
-TIA
-Mohit
+The new drivers don't fix it I'm afraid.
+
+I've attached my dmesg with debugging enabled...  The dumb thing is
+that I'm using fusion for the onboard drives so the debugging messages
+from the nstor get mixed in with the (working) onboard drives.  Sorry
+about that, I'll load a different system tomorrow and send that.
+
+regards,
+dan carpenter
