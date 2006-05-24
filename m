@@ -1,58 +1,101 @@
-From: "Fredrik Lindgren" <fli@swip.net>
-Subject: Hotplug problems on MPT Fusion SAS
-Date: Wed, 24 May 2006 17:27:12 +0200
-Message-ID: <9f16bed6bf0b614496b81a5d22cf8201@swip.net>
+From: Michael Reed <mdr@sgi.com>
+Subject: Re: [PATCH 1/6] mpt fusion - fibre channel target discovery prematurely
+ terminates
+Date: Wed, 24 May 2006 13:48:19 -0500
+Message-ID: <4474AA73.900@sgi.com>
+References: <664A4EBB07F29743873A87CF62C26D7011BBF2@NAMAIL4.ad.lsil.com> <447205A7.2020600@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailfe01.swip.net ([212.247.154.1]:44004 "EHLO swip.net")
-	by vger.kernel.org with ESMTP id S932335AbWEXP1Q convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 May 2006 11:27:16 -0400
-Received: from [130.244.254.1] (account fli@swip.net)
-  by mailbe05.swip.net (CommuniGate Pro IMAP 5.0.9)
-  with XMIT id 8907382 for linux-scsi@vger.kernel.org; Wed, 24 May 2006 17:27:14 +0200
+Received: from omx2-ext.sgi.com ([192.48.171.19]:52622 "EHLO omx2.sgi.com")
+	by vger.kernel.org with ESMTP id S932457AbWEXSsZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 May 2006 14:48:25 -0400
+In-Reply-To: <447205A7.2020600@sgi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "Moore, Eric" <Eric.Moore@lsil.com>, James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Michael Reed <mdr@sgi.com>, linux-scsi <linux-scsi@vger.kernel.org>, Jeremy Higdon <jeremy@sgi.com>, Gary Hagensen <gwh@sgi.com>
 
-Hello
+I've done some investigation into WHY mpt_config() is returning EAGAIN
+during my board reset testing.  It's not because there are no message
+frames, it is because mpt_get_msg_frame() is checking ioc->active and
+finding it zero.  ioc->active is set to zero in mpt_do_ioc_recovery()
+and it remains zero until the board reset is complete.  This takes
+some time.
 
-I'm having some problems with a the LSI SAS controller in a 
-Sun x4200 machine.
+With this new understanding, I've tested an alternate bit of code.
+The fc routine in question examines ioc->active, and if zero, it exits.
+The existing code in the driver already reschedules the work once
+the ioc becomes active.  So, I can get rid of the sleep.  (Yeah.)
 
-I can't get the hotplugging of disks to work. When I boot the machine
-with all the disks in place on kernel 2.6.16.16 it find them all right.
-But when I remove a drive and reinsert it, this happens:
+Thank you for making me re-examine this issue.  A better fix was
+^^^^^^^^^
+available.
 
-May 23 16:40:02 localhost kernel: mptsas: remove event for non-existant
-PHY.
-May 23 16:42:22 localhost kernel: mptsas: add event for non-existant
-PHY.
+I'll repost the patches later today.
 
-When the drive is removed, the device disappears, but when it's 
-reinserted I just the "add event for non-existant PHY." message
-and no device appears.
-
-I tried it with kernel 2.6.17-rc4 too, booting the machine and then
-inserting the drive. Nothing happens, noting at all. Drives attached
-when the machine is booted works great on both kernels. I've been
-fooling around with scsiadd too, with no results. But my understanding
-is that this shouldn't be needed with SAS?
-
-Are there any known issues with this controller? I haven't been able
-to find anything online.
-
-This is what /proc/scsi/mptsas/0 says about the controller:
-
-ioc0: LSISAS1064, FwRev=01040000h, Ports=1, MaxQ=511
-
-Distro is Debian Stable, with our own kernel.
-
-Regards,
-  Fredrik Lindgren
+Mike
 
 
 
+Michael Reed wrote:
+> 
+> Moore, Eric wrote:
+>> On Monday, May 22, 2006 12:06 PM,  Michael Reed wrote:
+>>> Changing mpt_config() to sleep changes the behavior in that 
+>>> EAGAIN might no longer
+>>> be returned.  lan, ctl, sas, spi, and fc all make use of 
+>>> mpt_config().  This may be
+>>> non-trivial with regard to testing.  Or it may not.  And, as 
+>>> James points out,
+>>> we have to assure that the caller is in a context which can sleep.
+>>>
+>> The caller context of mpt_config() *MUST* be able to sleep.   
+>> Towards this end of this function we call wait_event().  This is
+>> because we are waiting on the firmware reply.  If the fw reply
+>> doesn't come, then watchdog timer kicks in, then mpt_timer_expired 
+>> is called.
+>>
+>>
+>>> Can we leave the interface alone for the moment and accept the patch
+>>> as written?  Then, look at changing mpt_config() and the evaluate the
+>>> testing burden that the change might impose?
+>>>
+>> James?
+>>
+>>> My vested interest is in getting the functionality into certain
+>>> distros of interest.  I have no problem with rearchitecting the
+>>> patchset as described above.  I'm just concerned with the timing.
+>>> I suspect that the testing required will push the patch's acceptance
+>>> beyond my potential window of opportunity.  As written, the change
+>>> is confined to fibre channel so will not potentially introduce
+>>> regressions into the other drivers.
+>>>
+>> How?
+>>
+>> I doubt there would be regressions.  We would need to implement timeout
+>> on not receiving a mf, then return EAGAIN as we do today.
+> 
+> Then is there a reason to implement the change at all?  If the caller
+> can still receive EAGAIN, the caller still has to handle it.
+> Or just view it as an opaque error as callers do today.
+> 
+> Mike
+> 
+>> Eric 
+>>
+>>
+>> -
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
