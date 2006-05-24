@@ -1,50 +1,58 @@
-From: Erik Mouw <erik@harddisk-recovery.com>
-Subject: Re: [BUG 2.6.17-git] kmem_cache_create: duplicate cache scsi_cmd_cache
-Date: Wed, 24 May 2006 16:07:39 +0200
-Message-ID: <20060524140739.GA12022@harddisk-recovery.nl>
-References: <20060512215520.GH17120@flint.arm.linux.org.uk> <20060512220807.GR27946@ftp.linux.org.uk> <Pine.LNX.4.64.0605121519420.3866@g5.osdl.org> <20060512222816.GS27946@ftp.linux.org.uk> <20060512224804.GT27946@ftp.linux.org.uk> <20060512225101.GU27946@ftp.linux.org.uk> <Pine.LNX.4.64.0605121559490.3866@g5.osdl.org> <20060512232131.GV27946@ftp.linux.org.uk> <20060512233711.GW27946@ftp.linux.org.uk> <Pine.LNX.4.64.0605121647250.3866@g5.osdl.org>
+From: "Fredrik Lindgren" <fli@swip.net>
+Subject: Hotplug problems on MPT Fusion SAS
+Date: Wed, 24 May 2006 17:27:12 +0200
+Message-ID: <9f16bed6bf0b614496b81a5d22cf8201@swip.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dtp.xs4all.nl ([80.126.206.180]:31288 "HELO abra2.bitwizard.nl")
-	by vger.kernel.org with SMTP id S1751014AbWEXOHl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 May 2006 10:07:41 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0605121647250.3866@g5.osdl.org>
+Received: from mailfe01.swip.net ([212.247.154.1]:44004 "EHLO swip.net")
+	by vger.kernel.org with ESMTP id S932335AbWEXP1Q convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 May 2006 11:27:16 -0400
+Received: from [130.244.254.1] (account fli@swip.net)
+  by mailbe05.swip.net (CommuniGate Pro IMAP 5.0.9)
+  with XMIT id 8907382 for linux-scsi@vger.kernel.org; Wed, 24 May 2006 17:27:14 +0200
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: Al Viro <viro@ftp.linux.org.uk>, Or Gerlitz <or.gerlitz@gmail.com>, linux-scsi@vger.kernel.org, axboe@suse.de, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Fri, May 12, 2006 at 04:50:32PM -0700, Linus Torvalds wrote:
-> On Sat, 13 May 2006, Al Viro wrote:
-> > 
-> > BTW, the best option is to kill bdev_uevent() again.  Short of that,
-> > skip PHYSDEV mess if disk doesn't have GENHD_FL_UP.
-> 
-> I do think the mount/umount events are valid and interesting, so I'd much 
-> rather see the second version.
-> 
-> However, that does beg the question: wouldn't that effectively be what the 
-> patch I posted would do? Notably the "disk->driverfs_dev = NULL" part 
-> after we've dropped it (the "KOBJ_REMOVE" event move is a separate issue, 
-> mixed here into the same patch, but should result in possibly better name 
-> generation for the event).
-> 
-> Basically, onces driverfs_dev has been dropped, we NULL it out, and then 
-> the people who use it automatically get the right result.
-> 
-> Yes? No? "You're a total klutz, Linus, that patch won't actually do 
-> anything, because <xyz>"?
+Hello
 
-Just want to confirm that I can't recreate the SCSI slab error anymore
-with your patch (032ebf2620ef99a4fedaa0f77dc2272095ac5863) in the
-current -git kernel.
+I'm having some problems with a the LSI SAS controller in a 
+Sun x4200 machine.
+
+I can't get the hotplugging of disks to work. When I boot the machine
+with all the disks in place on kernel 2.6.16.16 it find them all right.
+But when I remove a drive and reinsert it, this happens:
+
+May 23 16:40:02 localhost kernel: mptsas: remove event for non-existant
+PHY.
+May 23 16:42:22 localhost kernel: mptsas: add event for non-existant
+PHY.
+
+When the drive is removed, the device disappears, but when it's 
+reinserted I just the "add event for non-existant PHY." message
+and no device appears.
+
+I tried it with kernel 2.6.17-rc4 too, booting the machine and then
+inserting the drive. Nothing happens, noting at all. Drives attached
+when the machine is booted works great on both kernels. I've been
+fooling around with scsiadd too, with no results. But my understanding
+is that this shouldn't be needed with SAS?
+
+Are there any known issues with this controller? I haven't been able
+to find anything online.
+
+This is what /proc/scsi/mptsas/0 says about the controller:
+
+ioc0: LSISAS1064, FwRev=01040000h, Ports=1, MaxQ=511
+
+Distro is Debian Stable, with our own kernel.
+
+Regards,
+  Fredrik Lindgren
 
 
-Erik
 
--- 
-+-- Erik Mouw -- www.harddisk-recovery.nl -- +31 70 370 12 90 --
-| Lab address: Delftechpark 26, 2628 XH, Delft, The Netherlands
