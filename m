@@ -1,61 +1,56 @@
-From: Alexis Bruemmer <alexisb@us.ibm.com>
-Subject: Re: driver removal problems with mptsas?
-Date: Thu, 25 May 2006 14:04:31 -0700
-Message-ID: <1148591071.11298.0.camel@localhost.localdomain>
-References: <447602C5.10007@sanblaze.com>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [PATCH] megaraid_mbox: fix section mismatch warnings
+Date: Thu, 25 May 2006 14:39:50 -0700
+Message-ID: <20060525143950.3eef04fa.akpm@osdl.org>
+References: <20060525094614.d2927f2a.rdunlap@xenotime.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:58798 "EHLO
-	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751237AbWEYVEE
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 May 2006 17:04:04 -0400
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e33.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k4PL438d000798
-	for <linux-scsi@vger.kernel.org>; Thu, 25 May 2006 17:04:03 -0400
-Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
-	by westrelay02.boulder.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k4PL43jP255826
-	for <linux-scsi@vger.kernel.org>; Thu, 25 May 2006 15:04:03 -0600
-Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av04.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k4PL4357004117
-	for <linux-scsi@vger.kernel.org>; Thu, 25 May 2006 15:04:03 -0600
-In-Reply-To: <447602C5.10007@sanblaze.com>
+Received: from smtp.osdl.org ([65.172.181.4]:29662 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1030439AbWEYVkb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 25 May 2006 17:40:31 -0400
+In-Reply-To: <20060525094614.d2927f2a.rdunlap@xenotime.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Scott O'Connor <soconnor@sanblaze.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "Randy.Dunlap" <rdunlap@xenotime.net>
+Cc: ismail@pardus.org.tr, linux-scsi@vger.kernel.org, james.bottomley@steeleye.com, Neela.Kolli@engenio.com
 
-Hi Scott,
-
-Your right this was a problem, but was addressed with a recent patch
-in scsi-misc:
-http://www.kernel.org/git/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commitdiff;h=92aab6464be735139f9ea38fd039c3b84c722630
-
---Alexis
-
-
-On Thu, 2006-05-25 at 15:17 -0400, Scott O'Connor wrote:
-> Hello,
+"Randy.Dunlap" <rdunlap@xenotime.net> wrote:
+>
+> From: Randy Dunlap <rdunlap@xenotime.net>
 > 
-> I have noticed that if I 'rmmod mptsas', the scsi_eh_<n> kernel
-> thread is not stopped.  If I 'modprobe mptsas' a new scsi_eh_<n>
-> is started.  If I put the above in a loop, a new scsi_eh_<n>
-> is started for each modprobe of mptsas.
+> Fix section warning:
+> WARNING: drivers/scsi/megaraid/megaraid_mbox.o - Section mismatch: reference to .init.text: from .text between 'megaraid_probe_one' (at offset 0x171e) and 'megaraid_queue_command'
 > 
-> I also believe that mptsas is not cleaning up properly
-> when removed.  I have a 1068 and during probe, sas_phy_alloc()
-> is called for each of the 8 phys.  During mptsas_remove() I
-> would expect to see those 8 allocated sas_phy structures
-> freed by calls to sas_phy_delete()/sas_phy_free().  Or are they
-> removed elsewhere?
+> Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+> ---
+>  drivers/scsi/megaraid/megaraid_mbox.c |    2 +-
+>  1 files changed, 1 insertion(+), 1 deletion(-)
 > 
-> I'm running 2.6.16.18 and using LSISAS1068 card.
+> --- linux-2617-rc5.orig/drivers/scsi/megaraid/megaraid_mbox.c
+> +++ linux-2617-rc5/drivers/scsi/megaraid/megaraid_mbox.c
+> @@ -714,7 +714,7 @@ megaraid_io_detach(adapter_t *adapter)
+>   * . Allocate memory required for all the commands
+>   * . Use internal library of FW routines, build up complete soft state
+>   */
+> -static int __init
+> +static int __devinit
+>  megaraid_init_mbox(adapter_t *adapter)
+>  {
+>  	struct pci_dev		*pdev;
 > 
-> -Scott.
 > 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
+<trying to get the old brain sorted out here>
+
+This one's a bugfix, isn't it?  In the CONFIG_HOTPLUG kernel the __devinit
+megaraid_probe_one() resides in .text and calls the __init
+megaraid_init_mbox(), which isn't there any more.  So if this driver is
+statically linked into vmlinux and the kernel is hotplug-capable and if
+someone hotplugs one of these devices we go blam.
+
+You agree with that analysis?
+
+If so, I'll toss this onto the 2.6.17 pile, thanks.
