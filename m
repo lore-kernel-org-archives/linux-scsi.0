@@ -1,56 +1,64 @@
 From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [PATCH] megaraid_mbox: fix section mismatch warnings
-Date: Thu, 25 May 2006 14:39:50 -0700
-Message-ID: <20060525143950.3eef04fa.akpm@osdl.org>
-References: <20060525094614.d2927f2a.rdunlap@xenotime.net>
+Subject: Re: [PATCH] qla1280: fix section mismatch warnings
+Date: Thu, 25 May 2006 14:46:33 -0700
+Message-ID: <20060525144633.706ab79e.akpm@osdl.org>
+References: <20060525103932.ca36a587.rdunlap@xenotime.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:29662 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1030439AbWEYVkb (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:62175 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1030450AbWEYVrM (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 May 2006 17:40:31 -0400
-In-Reply-To: <20060525094614.d2927f2a.rdunlap@xenotime.net>
+	Thu, 25 May 2006 17:47:12 -0400
+In-Reply-To: <20060525103932.ca36a587.rdunlap@xenotime.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Randy.Dunlap" <rdunlap@xenotime.net>
-Cc: ismail@pardus.org.tr, linux-scsi@vger.kernel.org, james.bottomley@steeleye.com, Neela.Kolli@engenio.com
+Cc: ismail@pardus.org.tr, linux-scsi@vger.kernel.org, james.bottomley@steeleye.com, jes@trained-monkey.org
 
 "Randy.Dunlap" <rdunlap@xenotime.net> wrote:
 >
 > From: Randy Dunlap <rdunlap@xenotime.net>
 > 
-> Fix section warning:
-> WARNING: drivers/scsi/megaraid/megaraid_mbox.o - Section mismatch: reference to .init.text: from .text between 'megaraid_probe_one' (at offset 0x171e) and 'megaraid_queue_command'
+> Fix section mismatch warnings:
+> WARNING: drivers/scsi/qla1280.o - Section mismatch: reference to
+> .init.data: from .text between 'qla1280_get_token' (at offset 0x2a16)
+> and 'qla1280_probe_one'
+> WARNING: drivers/scsi/qla1280.o - Section mismatch: reference to
+> .init.data: from .text between 'qla1280_get_token' (at offset 0x2a3c)
+> and 'qla1280_probe_one'
 > 
 > Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
 > ---
->  drivers/scsi/megaraid/megaraid_mbox.c |    2 +-
->  1 files changed, 1 insertion(+), 1 deletion(-)
+>  drivers/scsi/qla1280.c |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
 > 
-> --- linux-2617-rc5.orig/drivers/scsi/megaraid/megaraid_mbox.c
-> +++ linux-2617-rc5/drivers/scsi/megaraid/megaraid_mbox.c
-> @@ -714,7 +714,7 @@ megaraid_io_detach(adapter_t *adapter)
->   * . Allocate memory required for all the commands
->   * . Use internal library of FW routines, build up complete soft state
+> --- linux-2617-rc5.orig/drivers/scsi/qla1280.c
+> +++ linux-2617-rc5/drivers/scsi/qla1280.c
+> @@ -456,7 +456,7 @@ static void qla1280_remove_one(struct pc
+>   *  QLogic Driver Support Function Prototypes.
 >   */
-> -static int __init
-> +static int __devinit
->  megaraid_init_mbox(adapter_t *adapter)
+>  static void qla1280_done(struct scsi_qla_host *);
+> -static int qla1280_get_token(char *);
+> +static int qla1280_get_token(char *) __init;
+
+We don't normally put section tags on declarations.  So I dropped this hunk
+- unless you see a need for it?
+
+>  static int qla1280_setup(char *s) __init;
+
+OK, for consistency.   But let's not be consistent with inconsistent stuff ;)
+
+>  /*
+> @@ -4234,7 +4234,7 @@ qla1280_setup(char *s)
+>  }
+>  
+>  
+> -static int
+> +static int __init
+>  qla1280_get_token(char *str)
 >  {
->  	struct pci_dev		*pdev;
-> 
-> 
+>  	char *sep;
 
-<trying to get the old brain sorted out here>
-
-This one's a bugfix, isn't it?  In the CONFIG_HOTPLUG kernel the __devinit
-megaraid_probe_one() resides in .text and calls the __init
-megaraid_init_mbox(), which isn't there any more.  So if this driver is
-statically linked into vmlinux and the kernel is hotplug-capable and if
-someone hotplugs one of these devices we go blam.
-
-You agree with that analysis?
-
-If so, I'll toss this onto the 2.6.17 pile, thanks.
+And that's not really a bugfix - it's just a save-a-bit-of-memory fix.
