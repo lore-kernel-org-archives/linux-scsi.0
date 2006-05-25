@@ -1,42 +1,231 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: [PATCH] megaraid_mbox: fix section mismatch warnings
-Date: Thu, 25 May 2006 09:46:14 -0700
-Message-ID: <20060525094614.d2927f2a.rdunlap@xenotime.net>
+From: "Andrey Dmitriev" <admitriev@mentora.com>
+Subject: RE: resizing LUN (not file system) while the file system (ext3) is online
+Date: Thu, 25 May 2006 13:27:23 -0400
+Message-ID: <006701c68020$7c5b60f0$6600a8c0@andreyT43>
+References: <20060525054027.GA6905@laptop.exavio.cn>
+Reply-To: <admitriev@mentora.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:45233 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S1030269AbWEYQnl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 May 2006 12:43:41 -0400
-Received: from midway.site ([71.245.102.105]) by xenotime.net for <linux-scsi@vger.kernel.org>; Thu, 25 May 2006 09:43:39 -0700
+Received: from p78-65.acedsl.com ([66.114.78.65]:25805 "EHLO
+	karlson.dmitriev.net") by vger.kernel.org with ESMTP
+	id S1030291AbWEYR1m (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 25 May 2006 13:27:42 -0400
+Received: from andreyT43 (IDENT:root@localhost [127.0.0.1])
+	by karlson.dmitriev.net (8.11.0/8.11.0) with ESMTP id k4PI9Xt26050
+	for <linux-scsi@vger.kernel.org>; Thu, 25 May 2006 14:09:34 -0400
+In-Reply-To: <20060525054027.GA6905@laptop.exavio.cn>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: =?ISO-8859-1?B?X19zbWFpbCBE9m5tZXo=?= <ismail@pardus.org.tr>, scsi <linux-scsi@vger.kernel.org>
-Cc: akpm <akpm@osdl.org>, jejb <james.bottomley@steeleye.com>, Neela.Kolli@engenio.com
+To: linux-scsi@vger.kernel.org
 
-From: Randy Dunlap <rdunlap@xenotime.net>
+A production (database) system needs it's LUNs resized. It doesn't run LVM,
+nor am I not sure if we want to add another layer.
 
-Fix section warning:
-WARNING: drivers/scsi/megaraid/megaraid_mbox.o - Section mismatch: reference to .init.text: from .text between 'megaraid_probe_one' (at offset 0x171e) and 'megaraid_queue_command'
+We could've probably used reiserfs or vxfs if we thought about resizing in
+advance.
 
-Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
----
- drivers/scsi/megaraid/megaraid_mbox.c |    2 +-
- 1 files changed, 1 insertion(+), 1 deletion(-)
+Anyway, my point was more about why does EMC and NetApp (and even Veritas)
+ask to unmount the file system prior to resizing the LUN (or volume in
+Veritas case). From my point of view, it doesn't make sense.. and I seem to
+have succeeded in doing what I wanted to do (resizing the LUN while file
+system is mounted, followed by quickly unmounting, fsck'ing, resizing,
+mounting). Am I missing something?
 
---- linux-2617-rc5.orig/drivers/scsi/megaraid/megaraid_mbox.c
-+++ linux-2617-rc5/drivers/scsi/megaraid/megaraid_mbox.c
-@@ -714,7 +714,7 @@ megaraid_io_detach(adapter_t *adapter)
-  * . Allocate memory required for all the commands
-  * . Use internal library of FW routines, build up complete soft state
-  */
--static int __init
-+static int __devinit
- megaraid_init_mbox(adapter_t *adapter)
- {
- 	struct pci_dev		*pdev;
+Thanks,
+Andrey
+
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Limin Wang
+Sent: Thursday, May 25, 2006 1:40 AM
+To: linux-scsi@vger.kernel.org
+Subject: Re: resizing LUN (not file system) while the file system (ext3) is
+online
 
 
----
+Try with LVM, resize can be done online, without disrupting user service.
+
+
+Regards,
+Limin
+
+* Andrey Dmitriev <admitriev@mentora.com> [2006-05-25 01:16:27 -0400]:
+
+> Dear List,
+> 
+> Both EMC and NetApp claim that the file system needs to be unmounted while
+> the LUN is being resized (migrated and resized in our case). 
+> 
+> I understand that ext3 doesn't support online expansion (not in RedHat
+ES/AS
+> at least), however, does it really matter what you're doing to the actual
+> LUN in the background (as long as you're not reducing the LUN size)? The
+> operating system won't know the partitioning changed until you tell it to
+> reread the partition table. 
+> 
+> Not following EMC/NetApp 'overcautious' instructions could save a
+tremendous
+> amount of time during a LUN migration (instead of waiting for a LUN to
+> migrate while the file system is online, the only wait you really sustain
+is
+> how fast you type and re-partition)
+> 
+> I have just tried this with ext3 file system online, and it worked like I
+> expected it to work.
+> 
+> EMC specifically states in the emc122304 (from their knowledge base): 
+> " Step 3: Increase the size of the LUN using the backend array tools. In
+> some cases, like with CLARiiON MetaLUN, this can actually be performed
+> "online" in order to decrease the time that the file system is
+unavailable.
+> However, just because the disk array can be done online that does not mean
+> the application layer can handle online expansion (some file systems can
+> handle online expansion, currently ext3 cannot)."
+> 
+> Yeah, file system can't expand.. but I am resizing the file system
+offline,
+> why can't I resize the LUN online?
+> 
+> Am I missing something?
+> 
+> Below are my results.. I tried doing IO while migrating (and resizing) the
+> LUN, but I think IO seized before migration was complete. Also, the
+majority
+> of LUNs that usually need resizing are near capacity, mine obviously
+wasn't
+> 
+> B4 migration/growth
+> 
+> [root@ad-nfs1 kerberos]# df -k
+> /dev/emcpowerc1       20642412   5030932  14562908  26% /emc1
+> 
+> --after growth while the system was online
+> 
+> fdisk /dev/emcpowerc
+> Disk /dev/emcpowerc: 21.4 GB, 21474836480 bytes
+> 64 heads, 32 sectors/track, 20480 cylinders
+> Units = cylinders of 2048 * 512 = 1048576 bytes
+> 
+>          Device Boot      Start         End      Blocks   Id  System
+> /dev/emcpowerc1               1       20480    20971504   83  Linux
+> 
+> Command (m for help): q
+> 
+> [root@ad-nfs1 kerberos]# sfdisk -R /dev/emcpowerc
+> [root@ad-nfs1 kerberos]# fdisk /dev/emcpowerc
+> 
+> The number of cylinders for this disk is set to 30720.
+> There is nothing wrong with that, but this is larger than 1024,
+> and could in certain setups cause problems with:
+> 1) software that runs at boot time (e.g., old versions of LILO)
+> 2) booting and partitioning software from other OSs
+>    (e.g., DOS FDISK, OS/2 FDISK)
+> 
+> Command (m for help): p
+> 
+> Disk /dev/emcpowerc: 32.2 GB, 32212254720 bytes
+> 64 heads, 32 sectors/track, 30720 cylinders
+> Units = cylinders of 2048 * 512 = 1048576 bytes
+> 
+>          Device Boot      Start         End      Blocks   Id  System
+> /dev/emcpowerc1               1       20480    20971504   83  Linux
+> 
+> 
+> [root@ad-nfs1 kerberos]# fdisk /dev/emcpowerc
+> 
+> The number of cylinders for this disk is set to 30720.
+> There is nothing wrong with that, but this is larger than 1024,
+> and could in certain setups cause problems with:
+> 1) software that runs at boot time (e.g., old versions of LILO)
+> 2) booting and partitioning software from other OSs
+>    (e.g., DOS FDISK, OS/2 FDISK)
+> 
+> Command (m for help): p
+> 
+> Disk /dev/emcpowerc: 32.2 GB, 32212254720 bytes
+> 64 heads, 32 sectors/track, 30720 cylinders
+> Units = cylinders of 2048 * 512 = 1048576 bytes
+> 
+>          Device Boot      Start         End      Blocks   Id  System
+> /dev/emcpowerc1               1       20480    20971504   83  Linux
+> 
+> Command (m for help): d
+> Selected partition 1
+> 
+> Command (m for help): p
+> 
+> Disk /dev/emcpowerc: 32.2 GB, 32212254720 bytes
+> 64 heads, 32 sectors/track, 30720 cylinders
+> Units = cylinders of 2048 * 512 = 1048576 bytes
+> 
+>          Device Boot      Start         End      Blocks   Id  System
+> 
+> Command (m for help): n
+> Command action
+>    e   extended
+>    p   primary partition (1-4)
+> 1
+> Invalid partition number for type `1'
+> Command action
+>    e   extended
+>    p   primary partition (1-4)
+> p
+> Partition number (1-4): 1
+> First cylinder (1-30720, default 1):
+> Using default value 1
+> Last cylinder or +size or +sizeM or +sizeK (1-30720, default 30720):
+> Using default value 30720
+> 
+> Command (m for help): w
+> The partition table has been altered!
+> 
+> Calling ioctl() to re-read partition table.
+> Syncing disks.
+> [root@ad-nfs1 kerberos]# fdisk -l /dev/emcpowerc
+> 
+> Disk /dev/emcpowerc: 32.2 GB, 32212254720 bytes
+> 64 heads, 32 sectors/track, 30720 cylinders
+> Units = cylinders of 2048 * 512 = 1048576 bytes
+> 
+>          Device Boot      Start         End      Blocks   Id  System
+> /dev/emcpowerc1               1       30720    31457264   83  Linux
+> 
+> 
+> -- notice, w/o fsck it'll not resize.. w/o -f option
+> 
+> [root@ad-nfs1 kerberos]# time fsck -f /dev/emcpowerc1
+> fsck 1.35 (28-Feb-2004)
+> e2fsck 1.35 (28-Feb-2004)
+> Pass 1: Checking inodes, blocks, and sizes
+> Pass 2: Checking directory structure
+> Pass 3: Checking directory connectivity
+> Pass 4: Checking reference counts
+> Pass 5: Checking group summary information
+> /dev/emcpowerc1: 254481/2621440 files (0.8% non-contiguous),
+1410133/5242876
+> blocks
+> 
+> real    1m4.984s
+> user    0m1.348s
+> sys     0m1.617s
+> [root@ad-nfs1 kerberos]# resize2fs /dev/emcpowerc1
+> resize2fs 1.35 (28-Feb-2004)
+> Resizing the filesystem on /dev/emcpowerc1 to 7864316 (4k) blocks.
+> The filesystem on /dev/emcpowerc1 is now 7864316 blocks long.
+> 
+> [root@ad-nfs1 kerberos]# mount /dev/emcpowerc1 /emc1/
+> [root@ad-nfs1 kerberos]# df -k|grep emc
+> /dev/emcpowerc1       30963692   5311440  24393964  18% /emc1
+> 
+> 
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
