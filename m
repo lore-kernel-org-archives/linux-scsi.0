@@ -1,69 +1,54 @@
-From: Matthew Wilcox <matthew@wil.cx>
+From: Doug Maxey <dwm@austin.ibm.com>
 Subject: Re: PATCH: Bogus disk geometry on large disks
-Date: Fri, 26 May 2006 12:20:02 -0600
-Message-ID: <20060526182002.GG19587@parisc-linux.org>
+Date: Fri, 26 May 2006 14:57:16 -0500
+Message-ID: <200605261957.k4QJvGAe000892@falcon10.austin.ibm.com>
 References: <1148660965.20856.35.camel@localhost.localdomain> <20060526175713.GB19587@parisc-linux.org> <1148667738.20856.40.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=unknown-8bit
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:52425 "EHLO
-	palinux.external.hp.com") by vger.kernel.org with ESMTP
-	id S1751236AbWEZSUD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 26 May 2006 14:20:03 -0400
-Content-Disposition: inline
-In-Reply-To: <1148667738.20856.40.camel@localhost.localdomain>
+Received: from e2.ny.us.ibm.com ([32.97.182.142]:4325 "EHLO e2.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1751404AbWEZT5b (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 26 May 2006 15:57:31 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e2.ny.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k4QJvSru015995
+	for <linux-scsi@vger.kernel.org>; Fri, 26 May 2006 15:57:28 -0400
+Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by d01relay04.pok.ibm.com (8.12.10/NCO/VER6.8) with ESMTP id k4QJvSpF065444
+	for <linux-scsi@vger.kernel.org>; Fri, 26 May 2006 15:57:28 -0400
+Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
+	by d01av01.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k4QJvRPE022638
+	for <linux-scsi@vger.kernel.org>; Fri, 26 May 2006 15:57:28 -0400
+In-reply-to: <20060526182002.GG19587@parisc-linux.org> 
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: akpm@osdl.org, linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, akpm@osdl.org, linux-scsi@vger.kernel.org
 
-On Fri, May 26, 2006 at 07:22:18PM +0100, Alan Cox wrote:
-> On Gwe, 2006-05-26 at 11:57 -0600, Matthew Wilcox wrote:
-> > On Fri, May 26, 2006 at 05:29:25PM +0100, Alan Cox wrote:
-> > > =20
-> > > -	if (ret =3D=3D -1) {
-> > > +	if (ret =3D=3D -1 && capacity < (1ULL << 32)) {
-> > >  		/* pick some standard mapping with at most 1024 cylinders,
-> >=20
-> > won't that provoke a gcc warning when sector_t is 32-bit?  how abou=
-t ...
->=20
-> I don't believe it will as the type is forced to "1ULL"
 
-gcc disagrees with you ;-)
+On Fri, 26 May 2006 12:20:02 MDT, Matthew Wilcox wrote:
+...
+>(anyone know how you turn off that fucking UTF8 crap that gcc insists
+>on putting into its warning/error messages?  Who thought that was a
+>good idea?)
 
-$ cat test.c=20
-unsigned int y;
+LANG=C works here, and inside emacs.
 
-int main(void)
-{
-        if (y < (1ULL << 32))
-                return 0;
-        return 1;
-}
+However, when run from gterm in FC5, looks ok on the screen.
+
 $ gcc -O2 -W -Wall -o test test.c
-test.c: In function =E2=80=98main=E2=80=99:
-test.c:5: warning: comparison is always true due to limited range of da=
-ta type
+x.c: In function \u2018main\u2019:
+x.c:5: warning: comparison is always true due to limited range of data type
+$ echo $LANG
+en_US.UTF-8
 
-$ cat test.c=20
-unsigned int y;
 
-int main(void)
-{
-        if (((y >> 16) >> 16) > 0)
-                return 0;
-        return 1;
-}
-$ gcc -O2 -W -Wall -o test test.c
+$ LANG=C gcc -O2 -W -Wall -o test x.c
+x.c: In function 'main':
+x.c:5: warning: comparison is always true due to limited range of data type
+$
 
-(anyone know how you turn off that fucking UTF8 crap that gcc insists
-on putting into its warning/error messages?  Who thought that was a
-good idea?)
+So it appears to fix.
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+++doug
+
