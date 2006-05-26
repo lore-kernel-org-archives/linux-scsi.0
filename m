@@ -1,35 +1,30 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: PATCH: Bogus disk geometry on large disks
-Date: Fri, 26 May 2006 17:29:25 +0100
-Message-ID: <1148660965.20856.35.camel@localhost.localdomain>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: PATCH: Bogus disk geometry on large disks
+Date: Fri, 26 May 2006 11:57:13 -0600
+Message-ID: <20060526175713.GB19587@parisc-linux.org>
+References: <1148660965.20856.35.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:60878 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1750721AbWEZQPR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 26 May 2006 12:15:17 -0400
+Received: from palinux.external.hp.com ([192.25.206.14]:45468 "EHLO
+	palinux.external.hp.com") by vger.kernel.org with ESMTP
+	id S1750895AbWEZR5P (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 26 May 2006 13:57:15 -0400
+Content-Disposition: inline
+In-Reply-To: <1148660965.20856.35.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@osdl.org, linux-scsi@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: akpm@osdl.org, linux-scsi@vger.kernel.org
 
-We currently stuff a truncated size into the geometry logic and return
-the result which can produce bizarre reports for a 4Tb array. Since that
-mapping logic isn't useful for disks that big don't try and map this way
-at all.
+On Fri, May 26, 2006 at 05:29:25PM +0100, Alan Cox wrote:
+>  
+> -	if (ret == -1) {
+> +	if (ret == -1 && capacity < (1ULL << 32)) {
+>  		/* pick some standard mapping with at most 1024 cylinders,
 
-Signed-off-by: Alan Cox <alan@redhat.com>
+won't that provoke a gcc warning when sector_t is 32-bit?  how about ...
 
---- libata-ref/drivers/scsi/scsicam.c	2006-05-23 13:05:45.000000000 +0100
-+++ libata-dev/drivers/scsi/scsicam.c	2006-05-24 01:07:57.541182984 +0100
-@@ -68,7 +68,7 @@
- 			       (unsigned int *)ip + 0, (unsigned int *)ip + 1);
- 	kfree(p);
- 
--	if (ret == -1) {
-+	if (ret == -1 && capacity < (1ULL << 32)) {
- 		/* pick some standard mapping with at most 1024 cylinders,
- 		   and at most 62 sectors per track - this works up to
- 		   7905 MB */
++	if (ret == -1 && ((capacity >> 16) >> 16) > 0)
 
+instead?
