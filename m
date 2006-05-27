@@ -1,32 +1,38 @@
-From: "Robert Mueller" <robm@fastmail.fm>
-Subject: Re: Areca driver recap + status
-Date: Tue, 27 Jun 2006 08:32:19 +1000
-Message-ID: <057801c69970$70b45090$0e00cb0a@robm>
-References: <09be01c695b3$2ed8c2c0$c100a8c0@robm> <20060621222826.ff080422.akpm@osdl.org> <1151333338.2673.4.camel@mulgrave.il.steeleye.com>
+From: "pheylen" <MarcieiJLee@exis.net>
+Subject: Prestige Repli!a Watches 86
+Date: Sat, 27 May 2006 15:11:30 +0300
+Message-ID: <9BBAB4BC.CA1D157@exis.net>
+Reply-To: "phaser2002" <MarcieiJLee@exis.net>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	format=flowed;
-	charset="Windows-1252";
-	reply-type=original
-Content-Transfer-Encoding: 7bit
+	charset="us-ascii"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:35793 "EHLO
-	out3.smtp.messagingengine.com") by vger.kernel.org with ESMTP
-	id S933114AbWFZWcZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Jun 2006 18:32:25 -0400
+Received: from [222.122.60.187] ([222.122.60.187]:38154 "HELO exis.net")
+	by vger.kernel.org with SMTP id S933249AbWFZXPb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 26 Jun 2006 19:15:31 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@osdl.org>
-Cc: rdunlap@xenotime.net, hch@infradead.org, erich@areca.com.tw, brong@fastmail.fm, dax@gurulabs.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: phil_chez_2001 <linux-scsi@vger.kernel.org>
 
+Get the Finest Watch Replica!
 
-> - PAE (cast of dma_addr_t to unsigned long) issues.
+We only sell premium watches. There's no battery in these replicas just
+like the real ones since they charge themselves as you move. The second hand
+moves JUST like the real ones, too. These original watches sell in stores
+for thousands of dollars. We sell them for much less.
 
-Can you explain a bit what this is about and what the effect is? It's just 
-that we've been using the driver (older version from the areca website) in a 
-PAE kernel on machines with 8G of memory and haven't had a problem yet 
-(running high IO load for several weeks) but this sounds like it 
-might/should cause corruption or crashing in this situation?
+- Replicated to the Smallest Detail
+- 98% Perfectly Accurate Markings
+- Signature Green Sticker w/ Serial Number on Watch Back
+- Magnified Quickset Date
+- Includes all Proper Markings
 
-Rob
+http://nca.rolzbulgari.com/
+
+Shang, before you jump to conclusions, Sitting next to Nellie 
+Will that frown turn upside down! Six of the best
+What? Skin and blister 
+
 
