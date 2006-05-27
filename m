@@ -1,38 +1,50 @@
-From: "marco cicerchia" <marco@radiomarte.it>
-Subject: Fw: MEGARAID driver error with HP NETRAID 1Si
-Date: Sat, 27 May 2006 21:09:19 +0200
-Message-ID: <001601c681c1$0e8c1310$058f0997@server>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [GIT PATCH] scsi bug fixes for 2.6.17-rc5
+Date: Sat, 27 May 2006 13:07:11 -0700
+Message-ID: <1148760432.3890.4.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dns.radiomarte.it ([151.9.143.2]:6784 "EHLO radiomarte.it")
-	by vger.kernel.org with ESMTP id S964941AbWE0TK0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 27 May 2006 15:10:26 -0400
+Received: from stat9.steeleye.com ([209.192.50.41]:30437 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S964932AbWE0UHU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 27 May 2006 16:07:20 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Neela.Kolli@engenio.com
+To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Dear kernel developer,
+This is my current slew of small bug fixes which either fix serious
+bugs, or are completely safe for this -rc5 stage of the kernel.
 
-I'm trying to use the HP NETRAID 1Si controller on 2.6.x kernel but I got
-some errors connected with the megaraid 1.14g driver.
->From different forums I read that the 1.14b version (included in 2.4.x
-kernels) gives no problem (I've also verified it).
-Is it possible to use the older megaraid version with 2.6.x kernels? Can you
-suggest me other solutions?
-Do you think that newer kernel versions will solve this problem?
+The patch is available from:
 
-Thank you for your kind cooperation.
-Looking forward to have an answer from you I send you
+master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
 
-Best Regards.
+The short changelog is:
 
-Marco Cicerchia
-Radio Marte s.r.l.
-marco@radiomarte.it
-www.radiomarte.it
+Eric Moore:
+  o scsi_transport_sas: make write attrs writeable
+
+James Bottomley:
+  o scsi_transport_sas; fix user_scan
+  o mptspi: reset handler shouldn't be called for other bus protocols
+
+Randy.Dunlap:
+  o ppa: fix for machines with highmem
+
+Thomas Bogendoerfer:
+  o Blacklist entry for HP dat changer
+
+And the diffstat:
+
+ message/fusion/mptbase.c  |   27 +++++++++++++++++++++------
+ scsi/ppa.c                |    7 +++++++
+ scsi/scsi_devinfo.c       |    1 +
+ scsi/scsi_transport_sas.c |    4 ++--
+ 4 files changed, 31 insertions(+), 8 deletions(-)
+
+James
+
 
