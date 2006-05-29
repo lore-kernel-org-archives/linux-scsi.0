@@ -1,31 +1,40 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: Asynchronous scsi scanning, version 9
-Date: Mon, 29 May 2006 07:19:00 -0600
-Message-ID: <20060529131900.GA20416@parisc-linux.org>
-References: <20060511143352.GI12272@parisc-linux.org> <20060518172258.GL1604@parisc-linux.org> <20060529031915.GB23405@parisc-linux.org> <447AB2F5.2000700@s5r6.in-berlin.de> <20060529130515.GE23405@parisc-linux.org> <1148908267.3291.82.camel@laptopd505.fenrus.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: dev_printk output
+Date: Mon, 29 May 2006 11:30:05 -0500
+Message-ID: <1148920205.3328.0.camel@mulgrave.il.steeleye.com>
+References: <20060511150015.GJ12272@parisc-linux.org>
+	 <20060512170854.GA11215@us.ibm.com>
+	 <20060513050059.GR12272@parisc-linux.org>
+	 <20060518183652.GM1604@parisc-linux.org>
+	 <20060518200957.GA29200@us.ibm.com>
+	 <20060519201142.GB2826@parisc-linux.org> <20060519202847.GB8865@kroah.com>
+	 <20060520045544.GD2826@parisc-linux.org> <20060520212135.GB24672@kroah.com>
+	 <20060529035725.GC23405@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:42410 "EHLO
-	palinux.external.hp.com") by vger.kernel.org with ESMTP
-	id S1750828AbWE2NTB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 May 2006 09:19:01 -0400
-Content-Disposition: inline
-In-Reply-To: <1148908267.3291.82.camel@laptopd505.fenrus.org>
+Received: from stat9.steeleye.com ([209.192.50.41]:60584 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1750907AbWE2QaS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 May 2006 12:30:18 -0400
+In-Reply-To: <20060529035725.GC23405@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: linux-scsi@vger.kernel.org, Stefan Richter <stefanr@s5r6.in-berlin.de>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Greg KH <greg@kroah.com>, Patrick Mansfield <patmans@us.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, May 29, 2006 at 03:11:07PM +0200, Arjan van de Ven wrote:
-> > That's what scsi_complete_async_scans() is for.  If you have a built-in
-> > module, it will wait for the async scans to finish before we get as far
-> > as trying to mount root.
-> 
-> that sounds the wrong place, at least, I would expect the wait is needed
-> before starting the initramfs, since that is where some distros mount
-> their root (mount-by-label and I suspect many other cases will do it
-> from there, such as iscsi rootfs etc)
+On Sun, 2006-05-28 at 21:57 -0600, Matthew Wilcox wrote:
+> Obviously, we could argue about the exact naming until the cows come
+> home, 
+> so let me say that I don't really care.  I just want something that
+> looks like "scsi 0:0:0:0" rather than "sd 0:0:0:0" or " 0:0:0:0",
+> depending on whether sd has been loaded or not.
 
-It's a late_initcall(), so it happens before initramfs too.
+If we follow the recommendations of the storage summit, we'll have to
+trash the scsi bus type to get ata an upper level driver, so even this
+will eventually no longer print what you want ...
+
+James
+
 
