@@ -1,48 +1,37 @@
-From: Roland Dreier <rdreier@cisco.com>
-Subject: Re: [PATCH] IB/iser: do I/O path allocations with GFP_NOIO
-Date: Tue, 30 May 2006 13:35:37 -0700
-Message-ID: <ada64jn6yjq.fsf@cisco.com>
-References: <Pine.LNX.4.64.0605301448001.734@zuben>
-	<447CA214.7010202@cs.wisc.edu>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Dmesg of 2.6.17-rc4-mm3
+Date: Tue, 30 May 2006 15:43:06 -0500
+Message-ID: <1149021786.3545.13.camel@mulgrave.il.steeleye.com>
+References: <BAY112-F143F3D9A825305B0A57787A0920@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sj-iport-4.cisco.com ([171.68.10.86]:65433 "EHLO
-	sj-iport-4.cisco.com") by vger.kernel.org with ESMTP
-	id S932404AbWE3Uft (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 May 2006 16:35:49 -0400
-In-Reply-To: <447CA214.7010202@cs.wisc.edu> (Mike Christie's message of "Tue, 30 May 2006 14:50:44 -0500")
+Received: from stat9.steeleye.com ([209.192.50.41]:11210 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S932402AbWE3UnL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 May 2006 16:43:11 -0400
+In-Reply-To: <BAY112-F143F3D9A825305B0A57787A0920@phx.gbl>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Or Gerlitz <ogerlitz@voltaire.com>, openib-general@openib.org, linux-scsi@vger.kernel.org
+To: Mun Hamlet <hamletmun@hotmail.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-    Mike> Should iser patches have linux-scsi ccd on them in the
-    Mike> future? And should they go through the scsi maintainer
-    Mike> normally (I understand they cannot now since James does not
-    Mike> have all the infinniband bits)? I am really just trying to
-    Mike> avoid any coordinatation issues that come about by having
-    Mike> core iscsi and tcp iscsi patched sent to the scsi maintainer
-    Mike> then having to have iser going through Roland.
+On Tue, 2006-05-30 at 11:53 -0300, Mun Hamlet wrote:
+> Well, cat /sys/class/spi_host/host0/signalling says "unknown"
 
-    Mike> Does srp go from openib-general and Roland then to lkml? For
-    Mike> iscsi we do not go through net-dev and we live in
-    Mike> drivers/scsi so maybe we are the odd driver?:) What is the
-    Mike> proper or normal procedure?
+Are you sure the patch was applied?  It shouldn't have said unknown.
 
-It's a problem because SRP and iSER are straddling both the SCSI and
-IB worlds.  Probably the best policy is to cc all relevant mailing
-lists (at least linux-scsi and openib-general) whenever there's a
-doubt about who should see something.
+> 29160
+> 50-pin = empty = empty = empty = empty =Yamaha CRW4260 = UltraPlextor = 
+> Iomega ZIP (terminated)
+> 68-pin LVD = empty = empty = Western Digital = empty = terminator
 
-As far as merging patches goes, I've been merging SRP changes directly
-to Linus, except for generic fixes to <scsi/srp.h>, which I've been
-sending through James.  Or felt that iSCSI should be merged through my
-tree, but I have no problem if in the future patches bypass my tree.
-(But I would like to be cc'ed on changes to IB stuff, especially core
-things outside of specific drivers)
+So this is a dual cable assembly ... I think the card is probably also
+dual transciever.  It looks like there's some type of transceiver error
+which is signalling LVD on a SE bus or vice versa.  What happens if you
+pull the narrow cable off and boot (and also with the wide cable off).
 
-(Which all reminds me I have a question about SCSI EH and SRP to send
-to the linux-scsi list...)
+James
 
- - R.
+
