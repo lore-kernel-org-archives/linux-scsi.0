@@ -1,188 +1,97 @@
-From: Milan Kupcevic <milan@physics.harvard.edu>
-Subject: Re: [PATCH] sata_promise: Port enumeration order - SATA 150 TX4,
- SATA 300 TX4
-Date: Tue, 30 May 2006 17:31:32 -0400
-Message-ID: <447CB9B4.50700@physics.harvard.edu>
-References: <43FFAE3D.7010002@physics.harvard.edu> <44000036.7070403@eyal.emu.id.au> <011f01c639f9$8dc86bc0$3d64880a@speedy> <442DB29D.1010102@avona.com>
+From: "Michal Piotrowski" <michal.k.k.piotrowski@gmail.com>
+Subject: Re: 2.6.17-rc5-mm1
+Date: Tue, 30 May 2006 23:57:10 +0200
+Message-ID: <6bffcb0e0605301457v9ba284bk75b8b6d14384489a@mail.gmail.com>
+References: <20060530022925.8a67b613.akpm@osdl.org>
+	 <6bffcb0e0605301155h3b472d79h65e8403e7fa0b214@mail.gmail.com>
+	 <6bffcb0e0605301157o6b7c5f66q3c9f151cbb4537d5@mail.gmail.com>
+	 <20060530194259.GB22742@elte.hu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <442DB29D.1010102@avona.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Fabian Knittel <fabian.knittel@avona.com>, Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Eyal Lebedinsky <eyal@eyal.emu.id.au>, Stan Seibert <volsung@mailsnare.net>, linux-ide@vger.kernel.org, Christiaan den Besten <chris@scorpion.nl>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from wr-out-0506.google.com ([64.233.184.226]:50850 "EHLO
+	wr-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S932491AbWE3V5L (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 May 2006 17:57:11 -0400
+Received: by wr-out-0506.google.com with SMTP id i21so771126wra
+        for <linux-scsi@vger.kernel.org>; Tue, 30 May 2006 14:57:10 -0700 (PDT)
+In-Reply-To: <20060530194259.GB22742@elte.hu>
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Ingo Molnar <mingo@elte.hu>
+Cc: Arjan van de Ven <arjan@linux.intel.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>
 
-
-Fabian Knittel wrote:
-
->In other words: The boards appear to be wired correctly (or maybe just
->uniformly the wrong way) and the bios, the windows driver and the closed
->source promise driver (reportedly) know how to handle it.
+On 30/05/06, Ingo Molnar <mingo@elte.hu> wrote:
+> * Michal Piotrowski <michal.k.k.piotrowski@gmail.com> wrote:
 >
->We have a SATA 150 TX4 board with the same behaviour and would love to
->see this annoying little bug fixed in linux. :)
+> > SCSI or libata problem.
 >
->  Fabian
+> i think SCSI and libata is innocent here.
 >
->Christiaan den Besten wrote:
->  
+> > ============================
+> > [ BUG: illegal lock usage! ]
+> > ----------------------------
+> > illegal {in-hardirq-W} -> {hardirq-on-W} usage.
 >
->>We have several of these boards in use [SATA 300 TX4] (bought over time
->>.. not in one batch). All of them have the ordering as described below.
->>So another vote for "Please fix!" :)
->>
->>    
->>
->>>Milan Kupcevic wrote:
->>>
->>>      
->>>
->>>>From: Milan Kupcevic <milan@physics.harvard.edu>
->>>>
->>>>Fix Promise SATAII 150 TX4 (PDC40518) and Promise SATA 300 TX4
->>>>(PDC40718-GP) wrong port enumeration order that makes it (nearly)
->>>>impossible to deal with boot problems using two or more drives.
->>>>
->>>>Signed-off-by: Milan Kupcevic <milan@physics.harvard.edu>
->>>>---
->>>>
->>>>The current kernel driver assumes:
->>>>
->>>>port 1 - scsi3
->>>>port 2 - scsi1
->>>>port 3 - scsi0
->>>>port 4 - scsi2
->>>>        
->>>>
->>>I totally agree with the fact that the Linux driver gets the ports wrong
->>>when compared to the BIOS, Windows and surely contradicts the port
->>>numbers printed on the board. I doubt we all got samples on the one
->>>bad batch...
->>>
->>>It *is* a real problem and if the solution is correct then I support it.
->>>
->>>Maybe we need a quick feedback from current users: do you guys find
->>>that the ports are detected as they are labelled (white silk screen)
->>>on the board or do they show up out of order (as listed above by
->>>Milan)?
->>>      
->>>
+> > 1 locks held by init/1:
+> > #0:  (&base->lock#2){++..}, at: [<c0129a24>] lock_timer_base+0x29/0x55
+> >
+> > stack backtrace:
+> > [<c0103e52>] show_trace_log_lvl+0x4b/0xf4
+> > [<c01044b3>] show_trace+0xd/0x10
+> > [<c010457b>] dump_stack+0x19/0x1b
+> > [<c0137d63>] print_usage_bug+0x1a1/0x1ab
+> > [<c0138458>] mark_lock+0x2d7/0x514
+> > [<c01386dc>] mark_held_locks+0x47/0x65
+> > [<c0139745>] trace_hardirqs_on+0x12b/0x16f
+> > [<c02f2b61>] restore_nocheck+0x8/0xb
+>
+> weird. We are holding base->lock#2 [CPU#1's timer base lock], _and_ we
+> execute restore_nocheck - which is a return-to-userspace thing.
+>
+> unfortunately the stacktrace provides no clues of how we got here.
+> For such nasty cases i have a kernel tracing patch prepared, you can get
+> it from:
+>
+>   http://redhat.com/~mingo/lockdep-patches/latency-tracing-lockdep.patch
+>
+> just apply it ontop of your current tree and accept all the new .config
+> options as the kernel suggests them to you.
 
-This is a list of Promise SATA TX4 and FastTrak TX4xxx controllers, I 
-have in my lab, affected with the "wiring" bug:
+I can't boot with that patch. I even don't see "Uncompressing
+Linux..." - machine reboots.
+I have 2.6.17-rc5-mm1 +
+genirq-cleanup-remove-irq_descp-fix.patch
+lock-validator-irqtrace-support-non-x86-architectures.patch
+lock-validator-special-locking-sb-s_umount-2-fix.patch
+from hot fixes
++
+Arjan's net/ipv4/igmp.c patch.
 
-Retail name: SATAII150 TX4
-Chip label: PDC40518  SATAII150
-Vendor-Device number: 105a:3d18 (rev 02)
-Wiring: NEW
+BTW. I got error when compiling kernel/latency.c, so I change
+if (DEBUG_WARN_ON((val < PREEMPT_MASK) && !(preempt_count() & PREEMPT_MASK))))
 
-Retail name: FastTrak TX4200
-Chip label: PDC40519  RAID  SATAII150
-Vendor-Device number: 105a:3519
-Wiring: NEW
+to
 
-Retail name: SATA300 TX4
-Chip label: PDC40718-GP  SATAII300
-Vendor-Device number: 105a:3d17 (rev 02)
-Wiring: NEW
+if (DEBUG_WARN_ON((val < PREEMPT_MASK) && !(preempt_count() & PREEMPT_MASK)))
 
+Here is config
+http://www.stardust.webpages.pl/files/mm/2.6.17-rc5-mm1/mm-config3
 
-This is the only one Promise TX4 controller, I have in my lab, that is 
-working properly regarding the "wiring" bug with the current kernel driver:
+Here is "Kernel Bug : The Movie" (4,3MB)
+www.stardust.webpages.pl/files/crap/kbtm.avi
 
-Retail name: FastTrak S150 TX4
-Chip label: PDC20319 RAID SATA 150
-Vendor-Device number: 105a:3319 (rev 02)
-Wiring: OLD
+[snip]
+>
+>         Ingo
+>
 
-
-This is a list of Promise SATA TX2 and FastTrak TX2xxx controllers, I 
-have in my lab, that are working correctly regarding the "wiring" bug 
-with the current kernel driver:
-
-Retail name: FastTrak S150 TX2plus
-Chip label: PDC20371  SATA 150
-Vendor-Device number: 105a:3371 (rev 02)
-
-Retail name: SATA150 TX2plus
-Chip label: PDC20375  SATA 150
-Vendor-Device number: 105a:3375 (rev 02)
-
-Retail name: FastTrak TX2200
-Chip label: PDC20571  SATAII150
-Vendor-Device number: 105a:3571 (rev 02)
-
-
-It seems the problem exists on all newer Promise SATA TX4 and FastTrak 
-TX4xxx controllers, so I refer to them as the "new wiring" Promise SATA 
-controllers.  All the Promise SATA TX2 and FastTrak TX2xxx I have in my 
-lab are working correctly with the current kernel driver, so it seems 
-this "wiring" problem does not affect the TX2(xxx) controllers; only 
-SATA TX4 and FastTrak TX4xxx are affected.
-
-For driver to be able to distinguish the "new wiring" and the "old 
-wiring" Promise TX4(xxx) controllers we need a feedback from the users 
-that are aware of this problem.
-
-Q. How to know if a controller has the "new wiring"? 
-A. You need to be able to boot your testing machine using a hard drive 
-not attached to the controller you are going to test.  Connect 4 
-different size/brand/model SATA hard drives to the testing controller so 
-you can see the particular order they are recognized by the BIOS and by 
-the kernel (not patched for the "new wiring"). 
-   Boot the machine and look for the BIOS recognized hard drive order.  
-The BIOS recognized hard drive order always matches the order the hard 
-drives are connected to, with respect to port number labels.  If you are 
-testing FastTrak TX series controller you may need to press Ctrl-F (or 
-Ctrl-A) to get into controllers' BIOS and then press "2" to see the BIOS 
-recognized order.  Plain SATA models do not have controller specific 
-BIOS and they will report the BIOS recognized order without user 
-intervention.  You may want to press the "Pause" key on your keyboard to 
-have enough time to read the text on the screen.  If you are arguing 
-with your machine using a serial terminal, there is a Hold Screen button 
-somewhere on the terminal keyboard. 
-   When the machine boots up, type "cat /proc/scsi/scsi", it will show 
-up the order hard drives are recognized by the kernel.  Make sure the 
-kernel you are using is NOT patched for the "new wiring" bug.  If you 
-have the "new wiring" case, the order will be 3-2-4-1; that means, the 
-drive connected to the "port 3" and recognized as the third drive 
-connected to the controller by the BIOS, will be seen by the kernel as 
-first hard drive connected to this controller.  The second drive is 
-always at second place, the fourth one goes at third place and the first 
-one goes at fourth place.
-
-
-Please respond with this data:
-
-- Your Promise SATA controller retail name
-- Chip label (PDCxxxxx)
-- PCI vendor and device code as you can get with "lspci -n"
-- Say if the controler has the new or the old wiring
- 
-Your feedback will be appreciated.
-
-
-NOTE: the patch I have submitted ( 
-http://marc.theaimsgroup.com/?l=linux-ide&m=114082978311290&w=2 ) is a 
-solution that doesn't know about the older Promise SATA controllers, 
-which are not affected with the "new wiring" problem, so the older 
-controllers will appear screwed if you use it.
-
-Hopefully we will collect enough info about all the SATA Promise 
-controllers to distinguish the new and the old wiring controllers, then 
-produce a new patch that will be a correct solution to the "new wiring" 
-problem.
-
-
-The best to all,
-
-Milan
+Regards,
+Michal
 
 -- 
-Milan Kupcevic
-System Administrator
-Harvard University
-Department of Physics
-
+Michal K. K. Piotrowski
+LTG - Linux Testers Group
+(http://www.stardust.webpages.pl/ltg/wiki/)
