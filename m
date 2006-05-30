@@ -1,66 +1,99 @@
-From: Ingo Molnar <mingo@elte.hu>
-Subject: Re: 2.6.17-rc5-mm1
-Date: Tue, 30 May 2006 21:42:59 +0200
-Message-ID: <20060530194259.GB22742@elte.hu>
-References: <20060530022925.8a67b613.akpm@osdl.org> <6bffcb0e0605301155h3b472d79h65e8403e7fa0b214@mail.gmail.com> <6bffcb0e0605301157o6b7c5f66q3c9f151cbb4537d5@mail.gmail.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] IB/iser: do I/O path allocations with GFP_NOIO
+Date: Tue, 30 May 2006 14:50:44 -0500
+Message-ID: <447CA214.7010202@cs.wisc.edu>
+References: <Pine.LNX.4.64.0605301448001.734@zuben>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx3.mail.elte.hu ([157.181.1.138]:41642 "EHLO mx3.mail.elte.hu")
-	by vger.kernel.org with ESMTP id S932439AbWE3Tml (ORCPT
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:56250 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S932441AbWE3Tpe (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 May 2006 15:42:41 -0400
-Content-Disposition: inline
-In-Reply-To: <6bffcb0e0605301157o6b7c5f66q3c9f151cbb4537d5@mail.gmail.com>
+	Tue, 30 May 2006 15:45:34 -0400
+In-Reply-To: <Pine.LNX.4.64.0605301448001.734@zuben>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
-Cc: Arjan van de Ven <arjan@linux.intel.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>
+To: Or Gerlitz <ogerlitz@voltaire.com>
+Cc: rdreier@cisco.com, openib-general@openib.org, linux-scsi@vger.kernel.org
 
-* Michal Piotrowski <michal.k.k.piotrowski@gmail.com> wrote:
+Should iser patches have linux-scsi ccd on them in the future? And
+should they go through the scsi maintainer normally (I understand they
+cannot now since James does not have all the infinniband bits)? I am
+really just trying to avoid any coordinatation issues that come about by
+having core iscsi and tcp iscsi patched sent to the scsi maintainer then
+having to have iser going through Roland.
 
-> SCSI or libata problem.
+For example I left a bit in the core iscsi code so I would not break
+iser. Now iser is updating their code, so we do not need that bit, but
+Or's patch missed the cleanup. If we sent everything through one
+maintainer then we could have cleaned everything up in one pass.
 
-i think SCSI and libata is innocent here.
+Does srp go from openib-general and Roland then to lkml? For iscsi we do
+not go through net-dev and we live in drivers/scsi so maybe we are the
+odd driver?:) What is the proper or normal procedure?
 
-> ============================
-> [ BUG: illegal lock usage! ]
-> ----------------------------
-> illegal {in-hardirq-W} -> {hardirq-on-W} usage.
 
-> 1 locks held by init/1:
-> #0:  (&base->lock#2){++..}, at: [<c0129a24>] lock_timer_base+0x29/0x55
+
+
+
+Or Gerlitz wrote:
+> Thanks for Mike Christie for pointing this out - Or.
 > 
-> stack backtrace:
-> [<c0103e52>] show_trace_log_lvl+0x4b/0xf4
-> [<c01044b3>] show_trace+0xd/0x10
-> [<c010457b>] dump_stack+0x19/0x1b
-> [<c0137d63>] print_usage_bug+0x1a1/0x1ab
-> [<c0138458>] mark_lock+0x2d7/0x514
-> [<c01386dc>] mark_held_locks+0x47/0x65
-> [<c0139745>] trace_hardirqs_on+0x12b/0x16f
-> [<c02f2b61>] restore_nocheck+0x8/0xb
+> a block driver is not allowed to use GFP_KERNEL allocations on its I/O code
+> path since the allocation might require I/O (eg to pageout other memory),
+> resulting in either deadlock or tightloop.
+> 
+> move I/O path (queuecommand) allocations to be done with GFP_NOIO
+> 
+> Signed-off-by: Or Gerlitz <ogerlitz@voltaire.com>
+> 
+> diff --git a/drivers/infiniband/ulp/iser/iser_initiator.c b/drivers/infiniband/ulp/iser/iser_initiator.c
+> index 2703bb0..073e7b5 100644
+> --- a/drivers/infiniband/ulp/iser/iser_initiator.c
+> +++ b/drivers/infiniband/ulp/iser/iser_initiator.c
+> @@ -225,7 +225,7 @@ static int iser_post_receive_control(str
+>  	struct iser_device  *device = iser_conn->ib_conn->device;
+>  	int rx_data_size, err = 0;
+> 
+> -	rx_desc = kmem_cache_alloc(ig.desc_cache, GFP_KERNEL);
+> +	rx_desc = kmem_cache_alloc(ig.desc_cache, GFP_NOIO);
+>  	if (rx_desc == NULL) {
+>  		iser_err("Failed to alloc desc for post recv\n");
+>  		return -ENOMEM;
+> @@ -238,7 +238,7 @@ static int iser_post_receive_control(str
+>  	else /* FIXME till user space sets conn->max_recv_dlength correctly */
+>  		rx_data_size = 128;
+> 
+> -	rx_desc->data = kmalloc(rx_data_size, GFP_KERNEL);
+> +	rx_desc->data = kmalloc(rx_data_size, GFP_NOIO);
+>  	if (rx_desc->data == NULL) {
+>  		iser_err("Failed to alloc data buf for post recv\n");
+>  		err = -ENOMEM;
+> @@ -467,7 +467,7 @@ int iser_send_data_out(struct iscsi_conn
+>  	iser_dbg("%s itt %d dseg_len %d offset %d\n",
+>  		 __func__,(int)itt,(int)data_seg_len,(int)buf_offset);
+> 
+> -	tx_desc = kmem_cache_alloc(ig.desc_cache, GFP_KERNEL);
+> +	tx_desc = kmem_cache_alloc(ig.desc_cache, GFP_NOIO);
+>  	if (tx_desc == NULL) {
+>  		iser_err("Failed to alloc desc for post dataout\n");
+>  		return -ENOMEM;
+> diff --git a/drivers/infiniband/ulp/iser/iser_memory.c b/drivers/infiniband/ulp/iser/iser_memory.c
+> index 0881f55..31950a5 100644
+> --- a/drivers/infiniband/ulp/iser/iser_memory.c
+> +++ b/drivers/infiniband/ulp/iser/iser_memory.c
+> @@ -111,10 +111,10 @@ int iser_start_rdma_unaligned_sg(struct
+>  	unsigned long  cmd_data_len = data->data_len;
+> 
+>  	if (cmd_data_len > ISER_KMALLOC_THRESHOLD)
+> -		mem = (void *)__get_free_pages(GFP_KERNEL,
+> +		mem = (void *)__get_free_pages(GFP_NOIO,
+>  		      long_log2(roundup_pow_of_two(cmd_data_len)) - PAGE_SHIFT);
+>  	else
+> -		mem = kmalloc(cmd_data_len, GFP_KERNEL);
+> +		mem = kmalloc(cmd_data_len, GFP_NOIO);
+> 
+>  	if (mem == NULL) {
+>  		iser_err("Failed to allocate mem size %d %d for copying sglist\n",
 
-weird. We are holding base->lock#2 [CPU#1's timer base lock], _and_ we 
-execute restore_nocheck - which is a return-to-userspace thing.
-
-unfortunately the stacktrace provides no clues of how we got here. 
-For such nasty cases i have a kernel tracing patch prepared, you can get 
-it from:
-
-  http://redhat.com/~mingo/lockdep-patches/latency-tracing-lockdep.patch
-
-just apply it ontop of your current tree and accept all the new .config 
-options as the kernel suggests them to you. Then rebuild and reboot into 
-the kernel, and reproduce the lockdep bug. Once such a bug is reported, 
-/proc/latency_trace should have a full kernel trace leading up to the 
-bug. Please upload that trace to your site and send us the URL.
-
-(the tracer runs nonstop and it saves the current trace if it encounters 
-a lockdep bug. That way i can see the history of the bug.)
-
-if possible it would be nice to boot with maxcpus=1 as well, to make 
-sure we have all relevant kernel activity traced. (assuming that booting 
-with maxcpus=1 does not make the bug go away)
-
-	Ingo
