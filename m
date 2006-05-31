@@ -1,74 +1,94 @@
-From: Alexis Bruemmer <alexisb@us.ibm.com>
-Subject: Re: [PATCH] aic94xx: make use of the new sas_port
-Date: Wed, 31 May 2006 16:16:49 -0700
-Message-ID: <1149117409.7543.96.camel@localhost.localdomain>
-References: <1149048555.3545.64.camel@mulgrave.il.steeleye.com>
-	 <1149104797.7543.64.camel@localhost.localdomain>
-	 <447E0B78.5050700@torque.net>
-	 <1149114619.7543.93.camel@localhost.localdomain>
-	 <1149115036.22134.153.camel@mulgrave.il.steeleye.com>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: Asynchronous scsi scanning, version 9
+Date: Wed, 31 May 2006 16:21:39 -0700
+Message-ID: <20060531232139.GA3202@us.ibm.com>
+References: <20060511143352.GI12272@parisc-linux.org> <20060518172258.GL1604@parisc-linux.org> <20060529031915.GB23405@parisc-linux.org> <447AB2F5.2000700@s5r6.in-berlin.de> <20060529130515.GE23405@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.150]:18326 "EHLO
-	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S965253AbWEaXQ4
+Received: from e31.co.us.ibm.com ([32.97.110.149]:34708 "EHLO
+	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S964847AbWEaXVq
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 31 May 2006 19:16:56 -0400
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e32.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k4VNGsCp017068
+	Wed, 31 May 2006 19:21:46 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e31.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k4VNLjW5000381
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-scsi@vger.kernel.org>; Wed, 31 May 2006 19:16:54 -0400
-Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
-	by westrelay02.boulder.ibm.com (8.13.6/NCO/VER7.0) with ESMTP id k4VNGsvS265954
+	for <linux-scsi@vger.kernel.org>; Wed, 31 May 2006 19:21:45 -0400
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay04.boulder.ibm.com (8.13.6/NCO/VER7.0) with ESMTP id k4VNLj3N143686
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Wed, 31 May 2006 17:16:54 -0600
-Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av01.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k4VNGrIO018196
-	for <linux-scsi@vger.kernel.org>; Wed, 31 May 2006 17:16:54 -0600
-In-Reply-To: <1149115036.22134.153.camel@mulgrave.il.steeleye.com>
+	for <linux-scsi@vger.kernel.org>; Wed, 31 May 2006 17:21:45 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k4VNLi9c016239
+	for <linux-scsi@vger.kernel.org>; Wed, 31 May 2006 17:21:45 -0600
+Content-Disposition: inline
+In-Reply-To: <20060529130515.GE23405@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Alexis Bruemmer <alexisb@us.ibm.com>, dougg@torque.net, linux-scsi <linux-scsi@vger.kernel.org>
+To: Matthew Wilcox <matthew@wil.cx>, linux-hotplug-devel@lists.sourceforge.net
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, linux-scsi@vger.kernel.org
 
-On Wed, 2006-05-31 at 17:37 -0500, James Bottomley wrote:
-> On Wed, 2006-05-31 at 15:30 -0700, Alexis Bruemmer wrote:
-> > sas: phy0 added to port0, phy_mask:0x1
-> > [  155.328494] sas: phy1 matched wide port0
-> > [  155.328499] sas: phy1 added to port0, phy_mask:0x3
-> > [  155.328516] sas: phy2 matched wide port0
-> > [  155.328520] sas: phy2 added to port0, phy_mask:0x7
-> > [  155.328541] sas: phy3 matched wide port0
-> > [  155.328548] sas: phy3 added to port0, phy_mask:0xf
-> > [  155.328578] sas: DOING DISCOVERY on port 0, pid:1785
-> > [  155.328917] sas: ex 5005076a00000a40 phy00:T attached:
-> > 50010b9000021585
-> > [  155.328996] sas: ex 5005076a00000a40 phy01:T attached:
-> > 50010b9000021575
-> > [  155.329081] sas: ex 5005076a00000a40 phy02:T attached:
-> > 50010b900004b87e
-> > [  155.329169] sas: ex 5005076a00000a40 phy03:S attached:
-> > 5005076a011061c0
-> 
-> No.  Look again.  the first four, which are a wide port, are phys 0-3 on
-> the HBA.
-> 
-> The second four, which have separate attached devices are phys 0-3 on
-> the expander (that's what the sightly cryptic ex 5005076a00000a40 phy<n>
-> means).
-> 
-> You can see this better in the transport class tree
-> 
-> James
+[adding hotplug-devel ... maybe Marco or Kay can comment]
 
-OK, that makes more sense, thank you for explaining. 
-
---Alexis
+On Mon, May 29, 2006 at 07:05:15AM -0600, Matthew Wilcox wrote:
+> On Mon, May 29, 2006 at 10:38:13AM +0200, Stefan Richter wrote:
+> > Matthew Wilcox wrote:
+> > > Add the scsi_mod.scan kernel parameter to determine how scsi busses
+> > > are scanned.  "sync" is the current behaviour.  "none" punts scanning
+> > > scsi busses to userspace.  "async" is the new default.
+> > 
+> > This parameter is only relevant with LLDDs which use scsi_scan_host, right?
 > 
+> Not entirely.  If you set it to "none", scsi_scan_target() also returns
+> without doing anything.  If you use the scsi_prep_async_scan() and
+> scsi_finish_async_scan() API, you can also use this infrastructure to
+> make scanning sbp2 synchronised with other scsi hosts.  Then the setting
+> of sync vs async also triggers old vs new behaviour.
 > 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > Furthermore, "sync|async" basically means "serialized|parallelized
+> > across host adapters". Does it also mean "finishing before|after driver
+> > initialization"? (With LLDDs which use scsi_scan_host.)
+> 
+> That's what scsi_complete_async_scans() is for.  If you have a built-in
+> module, it will wait for the async scans to finish before we get as far
+> as trying to mount root.  It does change observable behaviour in that
+> sys_module_init() will return before scans are complete.  However, I
+> believe most distros userspace copes with this these days.  For example,
+> Debian has:
+> 
+>     # wait for the udevd childs to finish
+>     log_action_begin_msg "Waiting for /dev to be fully populated"
+>     while [ -d /dev/.udev/queue/ ]; do
+>         sleep 1
+>         udevd_timeout=$(($udevd_timeout - 1))
+> [...]
 
+Not sure where that is, but AFAIR that is to process the cold plug case,
+where udev starts up, the hotplug/netlink events are replayed, and we
+don't want to continue until all those events have been processed.
+
+SLES 10 has similar code, but a sleep of 0.1 (see their /etc/init.d/boot.udev,
+and I think /sbin/mkinitrd).
+
+> Since the scsi scan is going to be finding new devices the entire time,
+> the queue directory is going to not empty.
+
+It won't always be finding new devices, there could be glitches like a
+timeout, or some read (partitition check) that happens to take more than a
+second, and the udev queue becomes empty even though the scsi /sd scan is
+still in progress.
+
+You really want some udev rule that mounts root or such and then the boot
+continues from there ... rather than waiting for an unrelated sets of
+events, and then trying to mount root unconditionally (and possibly
+failing). I thought Hannes or someone had posted an example udev rule or
+such for this. Maybe it is even in SLES 10?
+
+Same for applications - you want them to start after a dev (or set of
+devs) shows up, though if we wait for the root dev it is even less likely
+that an app's dev will be unavailable.
+
+Of course if you aren't using udev in your init{rd|ramfs}, udev rules
+and such can't fix the problem :-(
+
+-- Patrick Mansfield
