@@ -1,56 +1,63 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [GIT PATCH] scsi bug fixes for 2.6.17-rc5
-Date: Wed, 31 May 2006 11:26:58 -0500
-Message-ID: <1149092818.22134.45.camel@mulgrave.il.steeleye.com>
+From: "Moore, Eric" <Eric.Moore@lsil.com>
+Subject: RE: [PATCH] scsi_transport_sas: introduce a sas_port entity
+Date: Wed, 31 May 2006 11:10:20 -0600
+Message-ID: <664A4EBB07F29743873A87CF62C26D70141DC9@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:31131 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1750957AbWEaQ1I (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 31 May 2006 12:27:08 -0400
+Received: from mail0.lsil.com ([147.145.40.20]:41701 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1751739AbWEaRKX convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 31 May 2006 13:10:23 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-This is my current slew of small bug fixes which either fix serious
-bugs, or are completely safe for this -rc5 stage of the kernel.  I've
-added one more since I last sent you this pull request (the fix memory
-building non-aligned sg lists)
+On Tuesday, May 30, 2006 10:05 PM, James Bottomley wrote: 
 
-The patch is available from:
-
-master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
-
-The short changelog is:
-
-Bryan Holty:
-  o fix memory building non-aligned sg lists
-
-Eric Moore:
-  o scsi_transport_sas: make write attrs writeable
-
-James Bottomley:
-  o scsi_transport_sas; fix user_scan
-  o mptspi: reset handler shouldn't be called for other bus protocols
-
-Randy.Dunlap:
-  o ppa: fix for machines with highmem
-
-Thomas Bogendoerfer:
-  o Blacklist entry for HP dat changer
-
-And the diffstat:
-
- message/fusion/mptbase.c  |   27 +++++++++++++++++++++------
- scsi/ppa.c                |    7 +++++++
- scsi/scsi_devinfo.c       |    1 +
- scsi/scsi_lib.c           |    2 +-
- scsi/scsi_transport_sas.c |    4 ++--
- 5 files changed, 32 insertions(+), 9 deletions(-)
-
-James
+> +void sas_port_add_phy(struct sas_port *port, struct sas_phy *phy)
+> +{
+> +	BUG_ON(!list_empty(&phy->port_siblings));
+> +	mutex_lock(&port->phy_list_mutex);
+> +	sas_port_create_link(port, phy);
+> +	list_add_tail(&phy->port_siblings, &port->phy_list);
+> +	port->num_phys++;
+> +	mutex_unlock(&port->phy_list_mutex);
+> +}
+> +EXPORT_SYMBOL(sas_port_add_phy);
+> +
+> +void sas_port_delete_phy(struct sas_port *port, struct sas_phy *phy)
+> +{
+> +	mutex_lock(&port->phy_list_mutex);
+> +	sas_port_delete_link(port, phy);
+> +	list_del_init(&port->phy_list);
+> +	port->num_phys--;
+> +	mutex_unlock(&port->phy_list_mutex);
+> +}
+> +EXPORT_SYMBOL(sas_port_delete_phy);
+> +
 
 
+Just want to confirm whether these two API is for handling
+adding/deleting phys to the sas_port object once the wide port is
+formed?
+
+During the cable push case, I will be reporting a narrow port
+first, then later needing to populate the transport sas_port 
+object with the rest of my phys that form the wide port. It doesn't
+all happen all at once, probably requiring about 2 seconds for 
+each link to come up, thus several calls to my hotplug_work thread.
+
+If that is the case, I will begin adding your new API today into
+the fusion driver.   I've already added support in the fusion driver
+for forming wide ports in sas_topology tree, that done in my internal
+source a couple weeks back.  I will provide you my sotd ( source of the
+day) before I go on vacation.
+
+Eric Moore 
+
+
+    
