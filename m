@@ -1,42 +1,34 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+From: Roland Dreier <rdreier@cisco.com>
 Subject: Re: [PATCH] IB/iser: do I/O path allocations with GFP_NOIO
-Date: Wed, 31 May 2006 23:29:30 +0900
-Message-ID: <20060531232930L.fujita.tomonori@lab.ntt.co.jp>
+Date: Wed, 31 May 2006 07:41:33 -0700
+Message-ID: <adalksi2r4y.fsf@cisco.com>
 References: <Pine.LNX.4.64.0605301448001.734@zuben>
 	<447CA214.7010202@cs.wisc.edu>
+	<20060531232930L.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:31104 "EHLO
-	tama5.ecl.ntt.co.jp") by vger.kernel.org with ESMTP id S965037AbWEaO3c
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 31 May 2006 10:29:32 -0400
-In-Reply-To: <447CA214.7010202@cs.wisc.edu>
+Received: from sj-iport-5.cisco.com ([171.68.10.87]:3866 "EHLO
+	sj-iport-5.cisco.com") by vger.kernel.org with ESMTP
+	id S965044AbWEaOlh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 31 May 2006 10:41:37 -0400
+In-Reply-To: <20060531232930L.fujita.tomonori@lab.ntt.co.jp> (FUJITA Tomonori's message of "Wed, 31 May 2006 23:29:30 +0900")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: michaelc@cs.wisc.edu
-Cc: ogerlitz@voltaire.com, rdreier@cisco.com, openib-general@openib.org, linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: michaelc@cs.wisc.edu, ogerlitz@voltaire.com, openib-general@openib.org, linux-scsi@vger.kernel.org
 
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] IB/iser: do I/O path allocations with GFP_NOIO
-Date: Tue, 30 May 2006 14:50:44 -0500
+    > Roland, as proposed in the past, how about moving the iSER
+    > and SRP drivers to drivers/scsi? As you said, they
+    > straddle in SCSI and IB worlds, however, they are just
+    > LLDs like iscsi_tcp, which straddle in SCSI and TCP
+    > worlds.
 
-> Should iser patches have linux-scsi ccd on them in the future? And
-> should they go through the scsi maintainer normally (I understand they
-> cannot now since James does not have all the infinniband bits)? I am
-> really just trying to avoid any coordinatation issues that come about by
-> having core iscsi and tcp iscsi patched sent to the scsi maintainer then
-> having to have iser going through Roland.
-> 
-> For example I left a bit in the core iscsi code so I would not break
-> iser. Now iser is updating their code, so we do not need that bit, but
-> Or's patch missed the cleanup. If we sent everything through one
-> maintainer then we could have cleaned everything up in one pass.
+I have no problem with that, although in general I'm not thrilled
+about moving files around, since it usually is churn without a
+technical advantage.
 
-Roland, as proposed in the past, how about moving the iSER and SRP
-drivers to drivers/scsi? As you said, they straddle in SCSI and IB
-worlds, however, they are just LLDs like iscsi_tcp, which straddle in
-SCSI and TCP worlds.
+If SRP and iSER were in drivers/scsi, would that mean James would have
+to maintain them?  That would be a change in workflow.
 
-That would help to avoid coordinatation issues too.
+ - R.
