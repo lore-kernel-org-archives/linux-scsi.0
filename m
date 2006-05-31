@@ -1,55 +1,48 @@
-From: "Roy Alvarez" <idlqzispy@ambient.com>
-Subject: get the better job - buy a diploma today
-Date: Wed, 31 May 2006 05:26:48 -0600
-Message-ID: <58636902.0844791549060.JavaMail.nfsnobody@www.s00b.com>
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from CPE-138-130-183-29.nsw.bigpond.net.au ([138.130.183.29]:22540
-	"HELO CPE-138-130-183-29.nsw.bigpond.net.au") by vger.kernel.org
-	with SMTP id S964955AbWEaK07 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 May 2006 06:26:59 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Ingo Molnar <mingo@elte.hu>
+Subject: Re: 2.6.17-rc5-mm1
+Date: Wed, 31 May 2006 12:56:09 +0200
+Message-ID: <20060531105609.GA608@elte.hu>
+References: <20060530022925.8a67b613.akpm@osdl.org> <6bffcb0e0605301155h3b472d79h65e8403e7fa0b214@mail.gmail.com> <6bffcb0e0605301157o6b7c5f66q3c9f151cbb4537d5@mail.gmail.com> <20060530194259.GB22742@elte.hu> <6bffcb0e0605301457v9ba284bk75b8b6d14384489a@mail.gmail.com> <20060530220931.GA32759@elte.hu> <20060530221850.GA1764@elte.hu> <20060530222608.GA3274@elte.hu> <20060530222954.GA3746@elte.hu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964947AbWEaKzv@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20060530222954.GA3746@elte.hu>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Cc: Arjan van de Ven <arjan@linux.intel.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-F A S T    T R A C K   D I P L O M A   P L A N 
-
-      Achieve it now! 
-     
-      Dear Candidate:
-
-      We've been helping people since 1957 obtain the recognition they deserve for their life experience. Through established relationships with distinguished non-accredited Universities and Colleges, we can help you too.
-
-      We grant non-accredited recognition for your knowledge and life experience - 
-
-      Obtain the Diploma or Degree you deserve. If you're too busy to sit in a classroom, the fast track provides a Bachelor's, Master's or Doctorate that shows what you really can do, truly "a higher education certificate what you ALREADY know" - 
-     
 
 
-     :: No Books
-     :: No Courses!
-     :: No Tests!
-     :: No Hassles! 
-     
+* Ingo Molnar <mingo@elte.hu> wrote:
 
-     
-      To help us determine the right program for you, tell us about your
+> CONFIG_PROFILE_LIKELY it is, please disable it in your config, along 
+> with CONFIG_DEBUG_STACKOVERFLOW:
 
-        a.. Previous experience or training in the field
-        for which you are seeking recognition. 
+the tracer fix for PROFILE_LIKELY is below. I have also uploaded an 
+updated tracing patch to
 
-        b.. Your self-assessment and self-evaluation. 
+  http://redhat.com/~mingo/lockdep-patches/latency-tracing-lockdep.patch
 
-        c.. Previous course work. 
+which allows the enabling of PROFILE_LIKELY && LATENCY_TRACING again. 
+There's an updated combo patch too:
 
-        d.. Personal goals and career path. 
+  http://redhat.com/~mingo/lockdep-patches/lockdep-combo-2.6.17-rc5-mm1.patch
 
-      NOTE: You must be 27 years of age or older, and must have at least five years of experience or training in the field for which you are seeking recognition. Help us to help you by providing an accurate self-assessment when filling out the form.
-     
-      Complete as many details as possible. Note that your contact telephone numbers are very important and that both a daytime and evening number should be provided for quick response.	
+for easy pickup of all current fixes against mm1 baseline.
 
-      http://www.s00b.com/mba.asp
+	Ingo
 
-
+Index: linux/lib/likely_prof.c
+===================================================================
+--- linux.orig/lib/likely_prof.c
++++ linux/lib/likely_prof.c
+@@ -20,7 +20,7 @@
+ 
+ static struct likeliness *likeliness_head;
+ 
+-int do_check_likely(struct likeliness *likeliness, int ret)
++int notrace do_check_likely(struct likeliness *likeliness, int ret)
+ {
+ 	static unsigned long likely_lock;
+ 
