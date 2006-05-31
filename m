@@ -1,43 +1,42 @@
-From: Or Gerlitz <ogerlitz@voltaire.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 Subject: Re: [PATCH] IB/iser: do I/O path allocations with GFP_NOIO
-Date: Wed, 31 May 2006 15:55:28 +0300
-Message-ID: <447D9240.3010106@voltaire.com>
-References: <Pine.LNX.4.64.0605301448001.734@zuben>	<447CA214.7010202@cs.wisc.edu> <ada64jn6yjq.fsf@cisco.com>
+Date: Wed, 31 May 2006 23:29:30 +0900
+Message-ID: <20060531232930L.fujita.tomonori@lab.ntt.co.jp>
+References: <Pine.LNX.4.64.0605301448001.734@zuben>
+	<447CA214.7010202@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from taurus.voltaire.com ([193.47.165.240]:42383 "EHLO
-	taurus.voltaire.com") by vger.kernel.org with ESMTP id S964988AbWEaMzd
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:31104 "EHLO
+	tama5.ecl.ntt.co.jp") by vger.kernel.org with ESMTP id S965037AbWEaO3c
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 31 May 2006 08:55:33 -0400
-In-Reply-To: <ada64jn6yjq.fsf@cisco.com>
+	Wed, 31 May 2006 10:29:32 -0400
+In-Reply-To: <447CA214.7010202@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Roland Dreier <rdreier@cisco.com>, openib-general@openib.org, linux-scsi@vger.kernel.org
+To: michaelc@cs.wisc.edu
+Cc: ogerlitz@voltaire.com, rdreier@cisco.com, openib-general@openib.org, linux-scsi@vger.kernel.org
 
-Roland Dreier wrote:
-> It's a problem because SRP and iSER are straddling both the SCSI and
-> IB worlds.  Probably the best policy is to cc all relevant mailing
-> lists (at least linux-scsi and openib-general) whenever there's a
-> doubt about who should see something.
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] IB/iser: do I/O path allocations with GFP_NOIO
+Date: Tue, 30 May 2006 14:50:44 -0500
 
-We are monitoring linux-scsi for tracking iscsi upstream updates.
+> Should iser patches have linux-scsi ccd on them in the future? And
+> should they go through the scsi maintainer normally (I understand they
+> cannot now since James does not have all the infinniband bits)? I am
+> really just trying to avoid any coordinatation issues that come about by
+> having core iscsi and tcp iscsi patched sent to the scsi maintainer then
+> having to have iser going through Roland.
+> 
+> For example I left a bit in the core iscsi code so I would not break
+> iser. Now iser is updating their code, so we do not need that bit, but
+> Or's patch missed the cleanup. If we sent everything through one
+> maintainer then we could have cleaned everything up in one pass.
 
-> As far as merging patches goes, I've been merging SRP changes directly
-> to Linus, except for generic fixes to <scsi/srp.h>, which I've been
-> sending through James.  Or felt that iSCSI should be merged through my
-> tree, but I have no problem if in the future patches bypass my tree.
-> (But I would like to be cc'ed on changes to IB stuff, especially core
-> things outside of specific drivers)
+Roland, as proposed in the past, how about moving the iSER and SRP
+drivers to drivers/scsi? As you said, they straddle in SCSI and IB
+worlds, however, they are just LLDs like iscsi_tcp, which straddle in
+SCSI and TCP worlds.
 
-At this point, we prefer that iser related updates/merges would go 
-through Roland, the IB maintainer, if this poses a problem for 
-scsi/iscsi updates we are open to send our updates/merges via the scsi 
-maintainer.
-
-Or.
-
-
-
+That would help to avoid coordinatation issues too.
