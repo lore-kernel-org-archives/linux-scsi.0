@@ -1,48 +1,35 @@
-From: Ingo Molnar <mingo@elte.hu>
-Subject: Re: 2.6.17-rc5-mm1
-Date: Wed, 31 May 2006 12:56:09 +0200
-Message-ID: <20060531105609.GA608@elte.hu>
-References: <20060530022925.8a67b613.akpm@osdl.org> <6bffcb0e0605301155h3b472d79h65e8403e7fa0b214@mail.gmail.com> <6bffcb0e0605301157o6b7c5f66q3c9f151cbb4537d5@mail.gmail.com> <20060530194259.GB22742@elte.hu> <6bffcb0e0605301457v9ba284bk75b8b6d14384489a@mail.gmail.com> <20060530220931.GA32759@elte.hu> <20060530221850.GA1764@elte.hu> <20060530222608.GA3274@elte.hu> <20060530222954.GA3746@elte.hu>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] megaraid_mbox: fix section mismatch warnings
+Date: Wed, 31 May 2006 06:30:29 -0600
+Message-ID: <20060531123029.GF1610@parisc-linux.org>
+References: <890BF3111FB9484E9526987D912B261901BD9C@NAMAIL3.ad.lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964947AbWEaKzv@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:48058 "EHLO
+	palinux.external.hp.com") by vger.kernel.org with ESMTP
+	id S964970AbWEaMab (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 31 May 2006 08:30:31 -0400
 Content-Disposition: inline
-In-Reply-To: <20060530222954.GA3746@elte.hu>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
-Cc: Arjan van de Ven <arjan@linux.intel.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>
+In-Reply-To: <890BF3111FB9484E9526987D912B261901BD9C@NAMAIL3.ad.lsil.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
+Cc: "Randy.Dunlap" <rdunlap@xenotime.net>, __smail D?nmez <ismail@pardus.org.tr>, scsi <linux-scsi@vger.kernel.org>, akpm <akpm@osdl.org>, jejb <james.bottomley@steeleye.com>, "Kolli, Neela" <Neela.Kolli@engenio.com>
 
+On Tue, May 30, 2006 at 11:11:59AM -0600, Ju, Seokmann wrote:
+> > Why would you want to do that?  A subfunction of a __devinit function
+> > should also be __devinit (unless it's alsoi used by something which
+> > isn't __devinit, of course)
+> For similar reason as you pointed out, I thought it would be good to remove (unless it is required) the tag so that it can be called by any functions in the driver if needed be.
 
-* Ingo Molnar <mingo@elte.hu> wrote:
+If it turns out you want to call it from elsewhere in the driver, you
+should remove the __devinit tag at that time.
 
-> CONFIG_PROFILE_LIKELY it is, please disable it in your config, along 
-> with CONFIG_DEBUG_STACKOVERFLOW:
+> I don't have enough knowledge on the topic, unfortunately. Is it hardly required to have the tag on all sub-functions called in the function?
+> If so, there are couple of other sub-functions need to have the tag.
 
-the tracer fix for PROFILE_LIKELY is below. I have also uploaded an 
-updated tracing patch to
-
-  http://redhat.com/~mingo/lockdep-patches/latency-tracing-lockdep.patch
-
-which allows the enabling of PROFILE_LIKELY && LATENCY_TRACING again. 
-There's an updated combo patch too:
-
-  http://redhat.com/~mingo/lockdep-patches/lockdep-combo-2.6.17-rc5-mm1.patch
-
-for easy pickup of all current fixes against mm1 baseline.
-
-	Ingo
-
-Index: linux/lib/likely_prof.c
-===================================================================
---- linux.orig/lib/likely_prof.c
-+++ linux/lib/likely_prof.c
-@@ -20,7 +20,7 @@
- 
- static struct likeliness *likeliness_head;
- 
--int do_check_likely(struct likeliness *likeliness, int ret)
-+int notrace do_check_likely(struct likeliness *likeliness, int ret)
- {
- 	static unsigned long likely_lock;
- 
+It's not required, but it is a good idea.  Marking the function as
+__devinit allows the function to be discarded when we know it can't be
+called again (an infrequent case these days, to be sure, but one the
+embedded people are grateful for).
