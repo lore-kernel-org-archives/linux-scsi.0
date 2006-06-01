@@ -1,39 +1,48 @@
-From: Matthew Wilcox <matthew@wil.cx>
+From: "Alexander E. Patrakov" <patrakov@ums.usu.ru>
 Subject: Re: Asynchronous scsi scanning, version 9
-Date: Thu, 1 Jun 2006 07:23:15 -0600
-Message-ID: <20060601132315.GD32143@parisc-linux.org>
-References: <20060511143352.GI12272@parisc-linux.org> <20060518172258.GL1604@parisc-linux.org> <20060529031915.GB23405@parisc-linux.org> <447AB2F5.2000700@s5r6.in-berlin.de> <20060529130515.GE23405@parisc-linux.org> <20060531232139.GA3202@us.ibm.com> <447EE81D.2050906@ums.usu.ru>
+Date: Thu, 01 Jun 2006 19:26:29 +0600
+Message-ID: <447EEB05.6020302@ums.usu.ru>
+References: <20060511143352.GI12272@parisc-linux.org> <20060518172258.GL1604@parisc-linux.org> <20060529031915.GB23405@parisc-linux.org> <447AB2F5.2000700@s5r6.in-berlin.de> <20060529130515.GE23405@parisc-linux.org> <20060531232139.GA3202@us.ibm.com> <447EE81D.2050906@ums.usu.ru> <20060601132315.GD32143@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:53973 "EHLO
-	palinux.external.hp.com") by vger.kernel.org with ESMTP
-	id S965101AbWFANXR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Jun 2006 09:23:17 -0400
-Content-Disposition: inline
-In-Reply-To: <447EE81D.2050906@ums.usu.ru>
+Received: from relay4.usu.ru ([194.226.235.39]:55730 "EHLO relay4.usu.ru")
+	by vger.kernel.org with ESMTP id S965116AbWFAN0e (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2006 09:26:34 -0400
+Received: from relay4.usu.ru (localhost [127.0.0.1])
+	by relay4.usu.ru (PostSystem) with ESMTP id E275E4185
+	for <linux-scsi@vger.kernel.org>; Thu,  1 Jun 2006 19:26:38 +0600 (YEKST)
+Received: from usu2.usu.ru (usu2.usu.ru [194.226.237.16])
+	by relay4.usu.ru (PostSystem) with ESMTP id 6D8574185
+	for <linux-scsi@vger.kernel.org>; Thu,  1 Jun 2006 19:26:38 +0600 (YEKST)
+Received: from localhost.usu2.usu.ru (localhost.usu2.usu.ru [127.0.0.1])
+	by usu2.usu.ru (Postfix) with ESMTP id 255BEA7EBF
+	for <linux-scsi@vger.kernel.org>; Thu,  1 Jun 2006 19:26:32 +0600 (YEKST)
+Received: from ums.usu.ru (ums.usu.ru [194.226.236.116])
+	by usu2.usu.ru (Postfix) with ESMTP id A698EA7A37
+	for <linux-scsi@vger.kernel.org>; Thu,  1 Jun 2006 19:26:31 +0600 (YEKST)
+In-Reply-To: <20060601132315.GD32143@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Alexander E. Patrakov" <patrakov@ums.usu.ru>
+To: Matthew Wilcox <matthew@wil.cx>
 Cc: Patrick Mansfield <patmans@us.ibm.com>, linux-hotplug-devel@lists.sourceforge.net, Stefan Richter <stefanr@s5r6.in-berlin.de>, linux-scsi@vger.kernel.org
 
-On Thu, Jun 01, 2006 at 07:14:05PM +0600, Alexander E. Patrakov wrote:
-> Patrick Mansfield wrote:
-> >>That's what scsi_complete_async_scans() is for.  If you have a built-in
-> >>module, it will wait for the async scans to finish before we get as far
-> >>as trying to mount root.  It does change observable behaviour in that
-> >>sys_module_init() will return before scans are complete.
+Matthew Wilcox wrote:
+> On Thu, Jun 01, 2006 at 07:14:05PM +0600, Alexander E. Patrakov wrote:
+>> Patrick Mansfield wrote:
+>>>> That's what scsi_complete_async_scans() is for.  If you have a built-in
+>>>> module, it will wait for the async scans to finish before we get as far
+>>>> as trying to mount root.  It does change observable behaviour in that
+>>>> sys_module_init() will return before scans are complete.
+>> What are the expected interactions of this code with early userspace aka 
+>> "kinit" that comes with (soon to be merged) klibc? Does this 
+>> scsi_complete_async_scans() function get called at all if such "default" 
+>> initramfs with kinit is used?
 > 
-> What are the expected interactions of this code with early userspace aka 
-> "kinit" that comes with (soon to be merged) klibc? Does this 
-> scsi_complete_async_scans() function get called at all if such "default" 
-> initramfs with kinit is used?
+> It gets called as a late_initcall -- before initramfs gets started.
 
-It gets called as a late_initcall -- before initramfs gets started.  The
-problem comes when you load your scsi driver as a module.
+Many thanks for clarifying the situation.
 
-There's a potential solution to this.  If we add a hook to sys_module_init
-such that it'll call a specified function before returning, we can make
-it wait until all scans are done.  This way, userspace never sees the
-asynchronous scanning behaviour.  But if you have devices of different
-types, you won't get the overlapping scans.
+-- 
+Alexander E. Patrakov
