@@ -1,48 +1,61 @@
 From: akpm@osdl.org
-Subject: [patch 08/25] small whitespace cleanup for qlogic driver
-Date: Thu, 01 Jun 2006 20:42:33 -0700
-Message-ID: <200606020338.k523cEkg029227@shell0.pdx.osdl.net>
+Subject: [patch 18/25] mpt_interrupt() should return IRQ_NONE when appropriate
+Date: Thu, 01 Jun 2006 20:42:44 -0700
+Message-ID: <200606020338.k523cPtr029258@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:26807 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751219AbWFBDid (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2006 23:38:33 -0400
+Received: from smtp.osdl.org ([65.172.181.4]:53175 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751235AbWFBDip (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2006 23:38:45 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, jesper.juhl@gmail.com, andrew.vasquez@qlogic.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, jbeulich@novell.com, Eric.Moore@lsil.com
 
 
-From: Jesper Juhl <jesper.juhl@gmail.com>
+From: "Jan Beulich" <jbeulich@novell.com>
 
-Add a few spaces to MODULE_PARM_DESC() text for qla2xxx. Without these
-spaces text runs together when modinfo prints the text.
+The way mpt_interrupt() was coded, it was impossible for the unhandled
+interrupt detection logic to ever trigger. All interrupt handlers should
+return IRQ_NONE when they have nothing to do.
 
-Signed-off-by: Jesper Juhl <jesper.juhl@gmail.com>
-Acked-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Signed-off-by: Jan Beulich <jbeulich@novell.com>
+Cc: "Moore, Eric Dean" <Eric.Moore@lsil.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/qla2xxx/qla_os.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/message/fusion/mptbase.c |   15 ++++++++-------
+ 1 file changed, 8 insertions(+), 7 deletions(-)
 
-diff -puN drivers/scsi/qla2xxx/qla_os.c~small-whitespace-cleanup-for-qlogic-driver drivers/scsi/qla2xxx/qla_os.c
---- devel/drivers/scsi/qla2xxx/qla_os.c~small-whitespace-cleanup-for-qlogic-driver	2006-06-01 20:41:50.000000000 -0700
-+++ devel-akpm/drivers/scsi/qla2xxx/qla_os.c	2006-06-01 20:41:50.000000000 -0700
-@@ -39,14 +39,14 @@ MODULE_PARM_DESC(ql2xlogintimeout,
- int qlport_down_retry = 30;
- module_param(qlport_down_retry, int, S_IRUGO|S_IRUSR);
- MODULE_PARM_DESC(qlport_down_retry,
--		"Maximum number of command retries to a port that returns"
-+		"Maximum number of command retries to a port that returns "
- 		"a PORT-DOWN status.");
+diff -puN drivers/message/fusion/mptbase.c~mpt_interrupt-should-return-irq_none-when drivers/message/fusion/mptbase.c
+--- devel/drivers/message/fusion/mptbase.c~mpt_interrupt-should-return-irq_none-when	2006-06-01 20:41:51.000000000 -0700
++++ devel-akpm/drivers/message/fusion/mptbase.c	2006-06-01 20:41:51.000000000 -0700
+@@ -372,20 +372,21 @@ static irqreturn_t
+ mpt_interrupt(int irq, void *bus_id, struct pt_regs *r)
+ {
+ 	MPT_ADAPTER *ioc = bus_id;
+-	u32 pa;
++	u32 pa = CHIPREG_READ32_dmasync(&ioc->chip->ReplyFifo);
++
++	if (pa == 0xFFFFFFFF)
++		return IRQ_NONE;
  
- int ql2xplogiabsentdevice;
- module_param(ql2xplogiabsentdevice, int, S_IRUGO|S_IWUSR);
- MODULE_PARM_DESC(ql2xplogiabsentdevice,
- 		"Option to enable PLOGI to devices that are not present after "
--		"a Fabric scan.  This is needed for several broken switches."
-+		"a Fabric scan.  This is needed for several broken switches. "
- 		"Default is 0 - no PLOGI. 1 - perfom PLOGI.");
+ 	/*
+ 	 *  Drain the reply FIFO!
+ 	 */
+-	while (1) {
+-		pa = CHIPREG_READ32_dmasync(&ioc->chip->ReplyFifo);
+-		if (pa == 0xFFFFFFFF)
+-			return IRQ_HANDLED;
+-		else if (pa & MPI_ADDRESS_REPLY_A_BIT)
++	do {
++		if (pa & MPI_ADDRESS_REPLY_A_BIT)
+ 			mpt_reply(ioc, pa);
+ 		else
+ 			mpt_turbo_reply(ioc, pa);
+-	}
++		pa = CHIPREG_READ32_dmasync(&ioc->chip->ReplyFifo);
++	} while (pa != 0xFFFFFFFF);
  
- int ql2xloginretrycount = 0;
+ 	return IRQ_HANDLED;
+ }
 _
