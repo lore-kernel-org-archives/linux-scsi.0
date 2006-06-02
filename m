@@ -1,34 +1,55 @@
-From: Tim Cullen <timcullen2001@yahoo.com>
-Subject: scsi layer differences between 2.4 and 2.6
-Date: Fri, 2 Jun 2006 14:23:47 -0700 (PDT)
-Message-ID: <20060602212347.9796.qmail@web30306.mail.mud.yahoo.com>
+From: Mark Lord <lkml@rtr.ca>
+Subject: Re: [patch 02/25] drivers/scsi/sd.c: fix uninitialized variable in
+ handling medium errors
+Date: Fri, 02 Jun 2006 18:21:08 -0400
+Message-ID: <4480B9D4.60006@rtr.ca>
+References: <200606020338.k523cAbw029209@shell0.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web30306.mail.mud.yahoo.com ([68.142.200.99]:36453 "HELO
-	web30306.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S1030296AbWFBVXs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 Jun 2006 17:23:48 -0400
+Received: from rtr.ca ([64.26.128.89]:5342 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S1751514AbWFBWVJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Jun 2006 18:21:09 -0400
+In-Reply-To: <200606020338.k523cAbw029209@shell0.pdx.osdl.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: akpm@osdl.org
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
 
-Several of our customers as well as those of our
-partners have been inquiring about a performance
-regression that looks like its being caused by the
-scsi layer in the 2.6 kernel. Compared to the
-performance that can been seen using the same hardware
-with a 2.4 kernel.
+akpm@osdl.org wrote:
+> From: Mark Lord <lkml@rtr.ca>
+> 
+> When scsi_get_sense_info_fld() fails (returns 0), it does NOT update the
+> value of first_err_block.  But sd_rw_intr() merrily continues to use that
+> variable regardless, possibly making incorrect decisions about retries and
+> the like.
+> 
+> This patch removes the randomness there, by using the first sector of the
+> request (SCpnt->request->sector) in such cases, instead of first_err_block.
+> 
+> Signed-off-by: Mark Lord <lkml@rtr.ca>
+> Cc: James Bottomley <James.Bottomley@steeleye.com>
+> Signed-off-by: Andrew Morton <akpm@osdl.org>
 
-Can somebody give me a summary of the changes that
-were made to the scsi layer between 2.4 and 2.6?
+By the way.  I have a more complete fix for the root issue here now,
+for an older SUSE-9 kernel (prepared for a client).
 
-thanks
-tim
+The problem with the current implementation, is that when a libata drive
+(possibly also a USB2 or Firewire drive) hits a bad sector at block 50 of a 100
+block request, SCSI will fail the first 50 blocks of that request,
+in a very painfully slow fashion (it literally can take *hours* to complete).
 
+Correct behaviour is to just fail the actual bad block. One method for doing this
+is to walk over the failed request, issuing each block one at a time to the LLD,
+and passing/failing them one at a time.  This avoids failing "good" blocks,
+while giving near-instant recovery from errors.
 
-__________________________________________________
-Do You Yahoo!?
-Tired of spam?  Yahoo! Mail has the best spam protection around 
-http://mail.yahoo.com 
+My patch for SUSE-9 does exactly that, with a minimum of fuss.
+It would be good to see something like that implemented ASAP upstream,
+and I'm sure that James (or Christoph) could code something like this
+in their sleep.  Or use my patch as a starting point if they're too busy.
+
+Cheers
+
+Mark Lord
