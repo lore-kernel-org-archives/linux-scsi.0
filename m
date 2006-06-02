@@ -1,1558 +1,2376 @@
 From: akpm@osdl.org
-Subject: [patch 16/25] drivers/scsi: Use ARRAY_SIZE macro
-Date: Thu, 01 Jun 2006 20:42:41 -0700
-Message-ID: <200606020338.k523cN1O029252@shell0.pdx.osdl.net>
+Subject: [patch 11/25] aic7xxx: deinline large functions, save 80k of text
+Date: Thu, 01 Jun 2006 20:42:36 -0700
+Message-ID: <200606020338.k523cHdX029237@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:43703 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751230AbWFBDij (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2006 23:38:39 -0400
+Received: from smtp.osdl.org ([65.172.181.4]:58551 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751240AbWFBDi5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2006 23:38:57 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, tklauser@nuerscht.ch
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, vda@ilport.com.ua
 
 
-From: Tobias Klauser <tklauser@nuerscht.ch>
+From: Denis Vlasenko <vda@ilport.com.ua>
 
-Use ARRAY_SIZE macro instead of sizeof(x)/sizeof(x[0]) and remove
-duplicates of the macro.
+- move big inlines into aic79xx_core.c and aic7xxx_core.c
 
-Signed-off-by: Tobias Klauser <tklauser@nuerscht.ch>
+- make ahd_delay just a wrapper around udelay
+
+- mark a few functions static
+
+- fix spelling fix in error message
+
+Signed-off-by: Denis Vlasenko <vda@ilport.com.ua>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/3w-xxxx.c              |    6 ++--
- drivers/scsi/53c700.c               |   19 ++++++--------
- drivers/scsi/53c7xx.c               |   14 +++++------
- drivers/scsi/NCR53c406a.c           |    8 +++---
- drivers/scsi/aacraid/aachba.c       |   18 ++++++--------
- drivers/scsi/aacraid/commctrl.c     |    2 -
- drivers/scsi/aha1542.c              |   31 +++++++++++-------------
- drivers/scsi/aic7xxx/aic7770.c      |    2 -
- drivers/scsi/aic7xxx/aic79xx.h      |    2 -
- drivers/scsi/aic7xxx/aic79xx_core.c |   10 +++----
- drivers/scsi/aic7xxx/aic79xx_osm.c  |   20 +++++++--------
- drivers/scsi/aic7xxx/aic79xx_pci.c  |    2 -
- drivers/scsi/aic7xxx/aic79xx_proc.c |    4 ---
- drivers/scsi/aic7xxx/aic7xxx.h      |    2 -
- drivers/scsi/aic7xxx/aic7xxx_core.c |    8 +++---
- drivers/scsi/aic7xxx/aic7xxx_osm.c  |   12 ++++-----
- drivers/scsi/aic7xxx/aic7xxx_pci.c  |    2 -
- drivers/scsi/aic7xxx/aic7xxx_proc.c |    4 ---
- drivers/scsi/aic7xxx_old.c          |    2 -
- drivers/scsi/constants.c            |   33 ++++++++++----------------
- drivers/scsi/dtc.c                  |   18 +++++++-------
- drivers/scsi/fd_mcs.c               |    2 -
- drivers/scsi/fdomain.c              |   10 +++----
- drivers/scsi/g_NCR5380.c            |   19 +++++++-------
- drivers/scsi/gdth.c                 |    4 +--
- drivers/scsi/ibmmca.c               |   16 +++++-------
- drivers/scsi/in2000.c               |    2 -
- drivers/scsi/initio.c               |    3 --
- drivers/scsi/ips.c                  |    2 -
- drivers/scsi/osst.c                 |    4 +--
- drivers/scsi/pas16.c                |    8 +++---
- drivers/scsi/qla1280.c              |    7 +----
- drivers/scsi/qlogicpti.c            |    2 -
- drivers/scsi/raid_class.c           |    4 +--
- drivers/scsi/scsi_lib.c             |    2 -
- drivers/scsi/scsi_sysfs.c           |    8 +++---
- drivers/scsi/scsi_transport_fc.c    |    6 ++--
- drivers/scsi/scsi_transport_sas.c   |    4 +--
- drivers/scsi/scsi_transport_spi.c   |    4 +--
- drivers/scsi/sd.c                   |    2 -
- drivers/scsi/seagate.c              |    4 +--
- drivers/scsi/sg.c                   |    6 +---
- drivers/scsi/st.c                   |    2 -
- drivers/scsi/sym53c8xx_2/sym_hipd.c |    3 --
- drivers/scsi/t128.c                 |   10 +++----
- drivers/scsi/wd33c93.c              |    2 -
- drivers/scsi/wd7000.c               |   12 ++++-----
- 47 files changed, 167 insertions(+), 200 deletions(-)
+ drivers/scsi/aic7xxx/aic79xx_core.c   |  601 +++++++++++++++++++++++-
+ drivers/scsi/aic7xxx/aic79xx_inline.h |  548 ---------------------
+ drivers/scsi/aic7xxx/aic79xx_osm.c    |    2 
+ drivers/scsi/aic7xxx/aic79xx_osm.h    |  130 -----
+ drivers/scsi/aic7xxx/aic7xxx_core.c   |  359 ++++++++++++++
+ drivers/scsi/aic7xxx/aic7xxx_inline.h |  336 -------------
+ drivers/scsi/aic7xxx/aic7xxx_osm.c    |    6 
+ drivers/scsi/aic7xxx/aic7xxx_osm.h    |   85 ---
+ 8 files changed, 1015 insertions(+), 1052 deletions(-)
 
-diff -puN drivers/scsi/3w-xxxx.c~drivers-scsi-use-array_size-macro drivers/scsi/3w-xxxx.c
---- devel/drivers/scsi/3w-xxxx.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/3w-xxxx.c	2006-06-01 20:41:51.000000000 -0700
-@@ -405,7 +405,7 @@ static int tw_decode_sense(TW_Device_Ext
- 	/* Attempt to return intelligent sense information */
- 	if (fill_sense) {
- 		if ((command->status == 0xc7) || (command->status == 0xcb)) {
--			for (i=0;i<(sizeof(tw_sense_table)/sizeof(tw_sense_table[0]));i++) {
-+			for (i = 0; i < ARRAY_SIZE(tw_sense_table); i++) {
- 				if (command->flags == tw_sense_table[i][0]) {
+diff -puN drivers/scsi/aic7xxx/aic79xx_core.c~aic7xxx-deinline-large-functions-save-80k-of-text drivers/scsi/aic7xxx/aic79xx_core.c
+--- devel/drivers/scsi/aic7xxx/aic79xx_core.c~aic7xxx-deinline-large-functions-save-80k-of-text	2006-06-01 20:41:50.000000000 -0700
++++ devel-akpm/drivers/scsi/aic7xxx/aic79xx_core.c	2006-06-01 20:41:50.000000000 -0700
+@@ -50,6 +50,601 @@
+ #include <dev/aic7xxx/aicasm/aicasm_insformat.h>
+ #endif
  
- 					/* Valid bit and 'current errors' */
-@@ -625,7 +625,7 @@ static int tw_aen_complete(TW_Device_Ext
- 	if (aen == 0x0ff) {
- 		printk(KERN_WARNING "3w-xxxx: scsi%d: AEN: INFO: AEN queue overflow.\n", tw_dev->host->host_no);
- 	} else {
--		table_max = sizeof(tw_aen_string)/sizeof(char *);
-+		table_max = ARRAY_SIZE(tw_aen_string);
- 		if ((aen & 0x0ff) < table_max) {
- 			if ((tw_aen_string[aen & 0xff][strlen(tw_aen_string[aen & 0xff])-1]) == '#') {
- 				printk(KERN_WARNING "3w-xxxx: scsi%d: AEN: %s%d.\n", tw_dev->host->host_no, tw_aen_string[aen & 0xff], aen >> 8);
-@@ -786,7 +786,7 @@ static int tw_aen_drain_queue(TW_Device_
- 					if (aen == 0x0ff) {
- 						printk(KERN_WARNING "3w-xxxx: AEN: INFO: AEN queue overflow.\n");
- 					} else {
--						table_max = sizeof(tw_aen_string)/sizeof(char *);
-+						table_max = ARRAY_SIZE(tw_aen_string);
- 						if ((aen & 0x0ff) < table_max) {
- 							if ((tw_aen_string[aen & 0xff][strlen(tw_aen_string[aen & 0xff])-1]) == '#') {
- 								printk(KERN_WARNING "3w-xxxx: AEN: %s%d.\n", tw_aen_string[aen & 0xff], aen >> 8);
-diff -puN drivers/scsi/53c700.c~drivers-scsi-use-array_size-macro drivers/scsi/53c700.c
---- devel/drivers/scsi/53c700.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/53c700.c	2006-06-01 20:41:51.000000000 -0700
-@@ -316,7 +316,7 @@ NCR_700_detect(struct scsi_host_template
- 	BUG_ON(!dma_is_consistent(pScript) && L1_CACHE_BYTES < dma_get_cache_alignment());
- 	hostdata->slots = (struct NCR_700_command_slot *)(memory + SLOTS_OFFSET);
- 	hostdata->dev = dev;
--		
-+
- 	pSlots = pScript + SLOTS_OFFSET;
- 
- 	/* Fill in the missing routines from the host template */
-@@ -332,19 +332,18 @@ NCR_700_detect(struct scsi_host_template
- 	tpnt->slave_destroy = NCR_700_slave_destroy;
- 	tpnt->change_queue_depth = NCR_700_change_queue_depth;
- 	tpnt->change_queue_type = NCR_700_change_queue_type;
--	
-+
- 	if(tpnt->name == NULL)
- 		tpnt->name = "53c700";
- 	if(tpnt->proc_name == NULL)
- 		tpnt->proc_name = "53c700";
--	
- 
- 	host = scsi_host_alloc(tpnt, 4);
- 	if (!host)
- 		return NULL;
- 	memset(hostdata->slots, 0, sizeof(struct NCR_700_command_slot)
- 	       * NCR_700_COMMAND_SLOTS_PER_HOST);
--	for(j = 0; j < NCR_700_COMMAND_SLOTS_PER_HOST; j++) {
-+	for (j = 0; j < NCR_700_COMMAND_SLOTS_PER_HOST; j++) {
- 		dma_addr_t offset = (dma_addr_t)((unsigned long)&hostdata->slots[j].SG[0]
- 					  - (unsigned long)&hostdata->slots[0].SG[0]);
- 		hostdata->slots[j].pSG = (struct NCR_700_SG_List *)((unsigned long)(pSlots + offset));
-@@ -355,14 +354,12 @@ NCR_700_detect(struct scsi_host_template
- 		hostdata->slots[j].state = NCR_700_SLOT_FREE;
- 	}
- 
--	for(j = 0; j < sizeof(SCRIPT)/sizeof(SCRIPT[0]); j++) {
-+	for (j = 0; j < ARRAY_SIZE(SCRIPT); j++)
- 		script[j] = bS_to_host(SCRIPT[j]);
--	}
- 
- 	/* adjust all labels to be bus physical */
--	for(j = 0; j < PATCHES; j++) {
-+	for (j = 0; j < PATCHES; j++)
- 		script[LABELPATCHES[j]] = bS_to_host(pScript + SCRIPT[LABELPATCHES[j]]);
--	}
- 	/* now patch up fixed addresses. */
- 	script_patch_32(script, MessageLocation,
- 			pScript + MSGOUT_OFFSET);
-@@ -385,17 +382,17 @@ NCR_700_detect(struct scsi_host_template
- 	host->hostdata[0] = (unsigned long)hostdata;
- 	/* kick the chip */
- 	NCR_700_writeb(0xff, host, CTEST9_REG);
--	if(hostdata->chip710) 
-+	if (hostdata->chip710)
- 		hostdata->rev = (NCR_700_readb(host, CTEST8_REG)>>4) & 0x0f;
- 	else
- 		hostdata->rev = (NCR_700_readb(host, CTEST7_REG)>>4) & 0x0f;
- 	hostdata->fast = (NCR_700_readb(host, CTEST9_REG) == 0);
--	if(banner == 0) {
-+	if (banner == 0) {
- 		printk(KERN_NOTICE "53c700: Version " NCR_700_VERSION " By James.Bottomley@HansenPartnership.com\n");
- 		banner = 1;
- 	}
- 	printk(KERN_NOTICE "scsi%d: %s rev %d %s\n", host->host_no,
--	       hostdata->chip710 ? "53c710" : 
-+	       hostdata->chip710 ? "53c710" :
- 	       (hostdata->fast ? "53c700-66" : "53c700"),
- 	       hostdata->rev, hostdata->differential ?
- 	       "(Differential)" : "");
-diff -puN drivers/scsi/53c7xx.c~drivers-scsi-use-array_size-macro drivers/scsi/53c7xx.c
---- devel/drivers/scsi/53c7xx.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/53c7xx.c	2006-06-01 20:41:51.000000000 -0700
-@@ -361,7 +361,7 @@ int CmdPageStart = (0 - Ent_dsa_zero - s
- static char *setup_strings[] =
- 	{"","","","","","","",""};
- 
--#define MAX_SETUP_STRINGS (sizeof(setup_strings) / sizeof(char *))
-+#define MAX_SETUP_STRINGS ARRAY_SIZE(setup_strings)
- #define SETUP_BUFFER_SIZE 200
- static char setup_buffer[SETUP_BUFFER_SIZE];
- static char setup_used[MAX_SETUP_STRINGS];
-@@ -2190,15 +2190,15 @@ static const struct {
-  */
- 
- 
--static void 
++/***************************** Timer Facilities *******************************/
++#define ahd_timer_init init_timer
++#define ahd_timer_stop del_timer_sync
++typedef void ahd_linux_callback_t (u_long);
 +static void
- synchronous (struct Scsi_Host *host, int target, char *msg) {
-     struct NCR53c7x0_hostdata *hostdata = (struct NCR53c7x0_hostdata *)
- 	host->hostdata[0];
-     int desire, divisor, i, limit;
-     unsigned char scntl3, sxfer;
- /* The diagnostic message fits on one line, even with max. width integers */
--    char buf[80];	
--   
-+    char buf[80];
++ahd_timer_reset(ahd_timer_t *timer, int usec, ahd_callback_t *func, void *arg)
++{
++	struct ahd_softc *ahd;
 +
- /* Desired transfer clock in Hz */
-     desire = 1000000000L / (msg[3] * 4);
- /* Scale the available SCSI clock by 10 so we get tenths */
-@@ -2209,14 +2209,14 @@ synchronous (struct Scsi_Host *host, int
- 	msg[4] = 8;
- 
-     if (hostdata->options & OPTION_DEBUG_SDTR)
--    	printk("scsi%d : optimal synchronous divisor of %d.%01d\n", 
-+    	printk("scsi%d : optimal synchronous divisor of %d.%01d\n",
- 	    host->host_no, divisor / 10, divisor % 10);
- 
--    limit = (sizeof(syncs) / sizeof(syncs[0]) -1);
-+    limit = ARRAY_SIZE(syncs) - 1;
-     for (i = 0; (i < limit) && (divisor > syncs[i].div); ++i);
- 
-     if (hostdata->options & OPTION_DEBUG_SDTR)
--    	printk("scsi%d : selected synchronous divisor of %d.%01d\n", 
-+    	printk("scsi%d : selected synchronous divisor of %d.%01d\n",
- 	    host->host_no, syncs[i].div / 10, syncs[i].div % 10);
- 
-     msg[3] = ((1000000000L / hostdata->scsi_clock) * syncs[i].div / 10 / 4);
-diff -puN drivers/scsi/aacraid/aachba.c~drivers-scsi-use-array_size-macro drivers/scsi/aacraid/aachba.c
---- devel/drivers/scsi/aacraid/aachba.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/aacraid/aachba.c	2006-06-01 20:41:51.000000000 -0700
-@@ -641,13 +641,13 @@ static void setinqstr(struct aac_dev *de
- 			cp[sizeof(str->pid)] = c;
- 	} else {
- 		struct aac_driver_ident *mp = aac_get_driver_ident(dev->cardtype);
--   
--		inqstrcpy (mp->vname, str->vid); 
++	ahd = (struct ahd_softc *)arg;
++	del_timer(timer);
++	timer->data = (u_long)arg;
++	timer->expires = jiffies + (usec * HZ)/1000000;
++	timer->function = (ahd_linux_callback_t*)func;
++	add_timer(timer);
++}
 +
-+		inqstrcpy (mp->vname, str->vid);
- 		/* last six chars reserved for vol type */
- 		inqstrcpy (mp->model, str->pid);
- 	}
- 
--	if (tindex < (sizeof(container_types)/sizeof(char *))){
-+	if (tindex < ARRAY_SIZE(container_types)){
- 		char *findit = str->pid;
- 
- 		for ( ; *findit != ' '; findit++); /* walk till we find a space */
-@@ -1576,7 +1576,7 @@ int aac_scsi_cmd(struct scsi_cmnd * scsi
- 		 *	see: <vendor>.c i.e. aac.c
- 		 */
- 		if (scmd_id(scsicmd) == host->this_id) {
--			setinqstr(dev, (void *) (inq_data.inqd_vid), (sizeof(container_types)/sizeof(char *)));
-+			setinqstr(dev, (void *) (inq_data.inqd_vid), ARRAY_SIZE(container_types));
- 			inq_data.inqd_pdt = INQD_PDT_PROC;	/* Processor device */
- 			aac_internal_transfer(scsicmd, &inq_data, 0, sizeof(inq_data));
- 			scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8 | SAM_STAT_GOOD;
-@@ -2381,7 +2381,7 @@ static struct aac_srb_status_info srb_st
- 	{ SRB_STATUS_SUCCESS,		"Success"},
- 	{ SRB_STATUS_ABORTED,		"Aborted Command"},
- 	{ SRB_STATUS_ABORT_FAILED,	"Abort Failed"},
--	{ SRB_STATUS_ERROR,		"Error Event"}, 
-+	{ SRB_STATUS_ERROR,		"Error Event"},
- 	{ SRB_STATUS_BUSY,		"Device Busy"},
- 	{ SRB_STATUS_INVALID_REQUEST,	"Invalid Request"},
- 	{ SRB_STATUS_INVALID_PATH_ID,	"Invalid Path ID"},
-@@ -2400,7 +2400,7 @@ static struct aac_srb_status_info srb_st
- 	{ SRB_STATUS_BAD_SRB_BLOCK_LENGTH,"Bad Srb Block Length"},
- 	{ SRB_STATUS_REQUEST_FLUSHED,	"Request Flushed"},
- 	{ SRB_STATUS_DELAYED_RETRY,	"Delayed Retry"},
--	{ SRB_STATUS_INVALID_LUN,	"Invalid LUN"}, 
-+	{ SRB_STATUS_INVALID_LUN,	"Invalid LUN"},
- 	{ SRB_STATUS_INVALID_TARGET_ID,	"Invalid TARGET ID"},
- 	{ SRB_STATUS_BAD_FUNCTION,	"Bad Function"},
- 	{ SRB_STATUS_ERROR_RECOVERY,	"Error Recovery"},
-@@ -2415,11 +2415,9 @@ char *aac_get_status_string(u32 status)
- {
- 	int i;
- 
--	for(i=0; i < (sizeof(srb_status_info)/sizeof(struct aac_srb_status_info)); i++ ){
--		if(srb_status_info[i].status == status){
-+	for (i = 0; i < ARRAY_SIZE(srb_status_info); i++)
-+		if (srb_status_info[i].status == status)
- 			return srb_status_info[i].str;
--		}
--	}
- 
- 	return "Bad Status Code";
- }
-diff -puN drivers/scsi/aacraid/commctrl.c~drivers-scsi-use-array_size-macro drivers/scsi/aacraid/commctrl.c
---- devel/drivers/scsi/aacraid/commctrl.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/aacraid/commctrl.c	2006-06-01 20:41:51.000000000 -0700
-@@ -535,7 +535,7 @@ static int aac_send_raw_srb(struct aac_d
- 	default:
- 		data_dir = DMA_NONE;
- 	}
--	if (user_srbcmd->sg.count > (sizeof(sg_list)/sizeof(sg_list[0]))) {
-+	if (user_srbcmd->sg.count > ARRAY_SIZE(sg_list)) {
- 		dprintk((KERN_DEBUG"aacraid: too many sg entries %d\n",
- 		  le32_to_cpu(srbcmd->sg.count)));
- 		rcode = -EINVAL;
-diff -puN drivers/scsi/aha1542.c~drivers-scsi-use-array_size-macro drivers/scsi/aha1542.c
---- devel/drivers/scsi/aha1542.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/aha1542.c	2006-06-01 20:41:51.000000000 -0700
-@@ -1011,7 +1011,7 @@ static int __init do_setup(char *str)
- 
- 	int count=setup_idx;
- 
--	get_options(str, sizeof(ints)/sizeof(int), ints);
-+	get_options(str, ARRAY_SIZE(ints), ints);
- 	aha1542_setup(str,ints);
- 
- 	return count<setup_idx;
-@@ -1072,8 +1072,7 @@ static int __init aha1542_detect(struct 
- 		int slot = 0;
- 		int pos = 0;
- 
--		for (indx = 0; (slot !=  MCA_NOTFOUND) && 
--			     (indx < sizeof(bases)/sizeof(bases[0])); indx++) {
-+		for (indx = 0; (slot != MCA_NOTFOUND) && (indx < ARRAY_SIZE(bases)); indx++) {
- 
- 			if (bases[indx])
- 				continue;
-@@ -1083,10 +1082,9 @@ static int __init aha1542_detect(struct 
- 			if (slot == MCA_NOTFOUND)
- 				break;
- 
--			
- 			/* Found one */
- 			pos = mca_read_stored_pos(slot, 3);
--			
++/***************************** Low Level I/O **********************************/
++uint8_t
++ahd_inb(struct ahd_softc * ahd, long port)
++{
++	uint8_t x;
 +
- 			/* Decode address */
- 			if (pos & 0x80) {
- 				if (pos & 0x02) {
-@@ -1118,23 +1116,22 @@ static int __init aha1542_detect(struct 
- 			mca_set_adapter_name(slot, "Adapter AHA-1640");
- 			mca_set_adapter_procfn(slot, NULL, NULL);
- 			mca_mark_as_used(slot);
--			
++	if (ahd->tags[0] == BUS_SPACE_MEMIO) {
++		x = readb(ahd->bshs[0].maddr + port);
++	} else {
++		x = inb(ahd->bshs[(port) >> 8].ioport + ((port) & 0xFF));
++	}
++	mb();
++	return (x);
++}
 +
- 			/* Go on */
- 			slot++;
- 		}
--		
++uint16_t
++ahd_inw_atomic(struct ahd_softc * ahd, long port)
++{
++	uint8_t x;
 +
- 	}
- #endif
- 
- 	/*
- 	 *	Hunt for ISA Plug'n'Pray Adaptecs (AHA1535)
- 	 */
--	 
++	if (ahd->tags[0] == BUS_SPACE_MEMIO) {
++		x = readw(ahd->bshs[0].maddr + port);
++	} else {
++		x = inw(ahd->bshs[(port) >> 8].ioport + ((port) & 0xFF));
++	}
++	mb();
++	return (x);
++}
 +
- 	if(isapnp)
- 	{
- 		struct pnp_dev *pdev = NULL;
--		for(indx = 0; indx <sizeof(bases)/sizeof(bases[0]);indx++)
--		{
-+		for(indx = 0; indx < ARRAY_SIZE(bases); indx++) {
- 			if(bases[indx])
- 				continue;
- 			pdev = pnp_find_dev(NULL, ISAPNP_VENDOR('A', 'D', 'P'), 
-@@ -1144,29 +1141,29 @@ static int __init aha1542_detect(struct 
- 			/*
- 			 *	Activate the PnP card
- 			 */
--			 
++void
++ahd_outb(struct ahd_softc * ahd, long port, uint8_t val)
++{
++	if (ahd->tags[0] == BUS_SPACE_MEMIO) {
++		writeb(val, ahd->bshs[0].maddr + port);
++	} else {
++		outb(val, ahd->bshs[(port) >> 8].ioport + (port & 0xFF));
++	}
++	mb();
++}
 +
- 			if(pnp_device_attach(pdev)<0)
- 				continue;
--			
++void
++ahd_outw_atomic(struct ahd_softc * ahd, long port, uint16_t val)
++{
++	if (ahd->tags[0] == BUS_SPACE_MEMIO) {
++		writew(val, ahd->bshs[0].maddr + port);
++	} else {
++		outw(val, ahd->bshs[(port) >> 8].ioport + (port & 0xFF));
++	}
++	mb();
++}
 +
- 			if(pnp_activate_dev(pdev)<0) {
- 				pnp_device_detach(pdev);
- 				continue;
- 			}
--			
-+
- 			if(!pnp_port_valid(pdev, 0)) {
- 				pnp_device_detach(pdev);
- 				continue;
- 			}
--				
-+
- 			bases[indx] = pnp_port_start(pdev, 0);
--			
-+
- 			/* The card can be queried for its DMA, we have 
- 			   the DMA set up that is enough */
--			   
-+
- 			printk(KERN_INFO "ISAPnP found an AHA1535 at I/O 0x%03X\n", bases[indx]);
- 		}
- 	}
--	for (indx = 0; indx < sizeof(bases) / sizeof(bases[0]); indx++)
-+	for (indx = 0; indx < ARRAY_SIZE(bases); indx++)
- 		if (bases[indx] != 0 && request_region(bases[indx], 4, "aha1542")) {
- 			shpnt = scsi_register(tpnt,
- 					sizeof(struct aha1542_hostdata));
-diff -puN drivers/scsi/aic7xxx/aic7770.c~drivers-scsi-use-array_size-macro drivers/scsi/aic7xxx/aic7770.c
---- devel/drivers/scsi/aic7xxx/aic7770.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/aic7xxx/aic7770.c	2006-06-01 20:41:51.000000000 -0700
-@@ -107,7 +107,7 @@ struct aic7770_identity aic7770_ident_ta
- 		ahc_aic7770_EISA_setup
- 	}
- };
--const int ahc_num_aic7770_devs = NUM_ELEMENTS(aic7770_ident_table);
-+const int ahc_num_aic7770_devs = ARRAY_SIZE(aic7770_ident_table);
- 
- struct aic7770_identity *
- aic7770_find_device(uint32_t id)
-diff -puN drivers/scsi/aic7xxx/aic79xx_core.c~drivers-scsi-use-array_size-macro drivers/scsi/aic7xxx/aic79xx_core.c
---- devel/drivers/scsi/aic7xxx/aic79xx_core.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/aic7xxx/aic79xx_core.c	2006-06-01 20:41:51.000000000 -0700
-@@ -662,7 +662,7 @@ static char *ahd_chip_names[] =
- 	"aic7902",
- 	"aic7901A"
- };
--static const u_int num_chip_names = NUM_ELEMENTS(ahd_chip_names);
-+static const u_int num_chip_names = ARRAY_SIZE(ahd_chip_names);
- 
- /*
-  * Hardware error codes.
-@@ -680,7 +680,7 @@ static struct ahd_hard_error_entry ahd_h
- 	{ MPARERR,	"Scratch or SCB Memory Parity Error" },
- 	{ CIOPARERR,	"CIOBUS Parity Error" },
- };
--static const u_int num_errors = NUM_ELEMENTS(ahd_hard_errors);
-+static const u_int num_errors = ARRAY_SIZE(ahd_hard_errors);
- 
- static struct ahd_phase_table_entry ahd_phase_table[] =
- {
-@@ -700,7 +700,7 @@ static struct ahd_phase_table_entry ahd_
-  * In most cases we only wish to itterate over real phases, so
-  * exclude the last element from the count.
-  */
--static const u_int num_phases = NUM_ELEMENTS(ahd_phase_table) - 1;
-+static const u_int num_phases = ARRAY_SIZE(ahd_phase_table) - 1;
- 
- /* Our Sequencer Program */
- #include "aic79xx_seq.h"
-@@ -7930,7 +7930,7 @@ ahd_qinfifo_count(struct ahd_softc *ahd)
- 		return (wrap_qinfifonext - wrap_qinpos);
- 	else
- 		return (wrap_qinfifonext
--		      + NUM_ELEMENTS(ahd->qinfifo) - wrap_qinpos);
-+		      + ARRAY_SIZE(ahd->qinfifo) - wrap_qinpos);
- }
- 
- static void
-@@ -9291,7 +9291,7 @@ ahd_check_patch(struct ahd_softc *ahd, s
- 	struct	patch *last_patch;
- 	u_int	num_patches;
- 
--	num_patches = sizeof(patches)/sizeof(struct patch);
-+	num_patches = ARRAY_SIZE(patches);
- 	last_patch = &patches[num_patches];
- 	cur_patch = *start_patch;
- 
-diff -puN drivers/scsi/aic7xxx/aic79xx.h~drivers-scsi-use-array_size-macro drivers/scsi/aic7xxx/aic79xx.h
---- devel/drivers/scsi/aic7xxx/aic79xx.h~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/aic7xxx/aic79xx.h	2006-06-01 20:41:51.000000000 -0700
-@@ -68,8 +68,6 @@ struct scb_platform_data;
- #define FALSE 0
- #endif
- 
--#define NUM_ELEMENTS(array) (sizeof(array) / sizeof(*array))
--
- #define ALL_CHANNELS '\0'
- #define ALL_TARGETS_MASK 0xFFFF
- #define INITIATOR_WILDCARD	(~0)
-diff -puN drivers/scsi/aic7xxx/aic79xx_osm.c~drivers-scsi-use-array_size-macro drivers/scsi/aic7xxx/aic79xx_osm.c
---- devel/drivers/scsi/aic7xxx/aic79xx_osm.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/aic7xxx/aic79xx_osm.c	2006-06-01 20:41:51.000000000 -0700
-@@ -918,7 +918,7 @@ ahd_linux_setup_iocell_info(u_long index
- {
- 
- 	if ((instance >= 0)
--	 && (instance < NUM_ELEMENTS(aic79xx_iocell_info))) {
-+	 && (instance < ARRAY_SIZE(aic79xx_iocell_info))) {
- 		uint8_t *iocell_info;
- 
- 		iocell_info = (uint8_t*)&aic79xx_iocell_info[instance];
-@@ -936,7 +936,7 @@ ahd_linux_setup_tag_info_global(char *p)
- 	tags = simple_strtoul(p + 1, NULL, 0) & 0xff;
- 	printf("Setting Global Tags= %d\n", tags);
- 
--	for (i = 0; i < NUM_ELEMENTS(aic79xx_tag_info); i++) {
-+	for (i = 0; i < ARRAY_SIZE(aic79xx_tag_info); i++) {
- 		for (j = 0; j < AHD_NUM_TARGETS; j++) {
- 			aic79xx_tag_info[i].tag_commands[j] = tags;
- 		}
-@@ -948,7 +948,7 @@ ahd_linux_setup_tag_info(u_long arg, int
- {
- 
- 	if ((instance >= 0) && (targ >= 0)
--	 && (instance < NUM_ELEMENTS(aic79xx_tag_info))
-+	 && (instance < ARRAY_SIZE(aic79xx_tag_info))
- 	 && (targ < AHD_NUM_TARGETS)) {
- 		aic79xx_tag_info[instance].tag_commands[targ] = value & 0x1FF;
- 		if (bootverbose)
-@@ -1074,21 +1074,21 @@ aic79xx_setup(char *s)
- 	end = strchr(s, '\0');
- 
- 	/*
--	 * XXX ia64 gcc isn't smart enough to know that NUM_ELEMENTS
-+	 * XXX ia64 gcc isn't smart enough to know that ARRAY_SIZE
- 	 * will never be 0 in this case.
--	 */      
--	n = 0;  
-+	 */
-+	n = 0;
- 
- 	while ((p = strsep(&s, ",.")) != NULL) {
- 		if (*p == '\0')
- 			continue;
--		for (i = 0; i < NUM_ELEMENTS(options); i++) {
-+		for (i = 0; i < ARRAY_SIZE(options); i++) {
- 
- 			n = strlen(options[i].name);
- 			if (strncmp(options[i].name, p, n) == 0)
- 				break;
- 		}
--		if (i == NUM_ELEMENTS(options))
-+		if (i == ARRAY_SIZE(options))
- 			continue;
- 
- 		if (strncmp(p, "global_tag_depth", n) == 0) {
-@@ -1296,7 +1296,7 @@ ahd_platform_init(struct ahd_softc *ahd)
- 	/*
- 	 * Lookup and commit any modified IO Cell options.
- 	 */
--	if (ahd->unit < NUM_ELEMENTS(aic79xx_iocell_info)) {
-+	if (ahd->unit < ARRAY_SIZE(aic79xx_iocell_info)) {
- 		struct ahd_linux_iocell_opts *iocell_opts;
- 
- 		iocell_opts = &aic79xx_iocell_info[ahd->unit];
-@@ -1428,7 +1428,7 @@ ahd_linux_user_tagdepth(struct ahd_softc
- 
- 	tags = 0;
- 	if ((ahd->user_discenable & devinfo->target_mask) != 0) {
--		if (ahd->unit >= NUM_ELEMENTS(aic79xx_tag_info)) {
-+		if (ahd->unit >= ARRAY_SIZE(aic79xx_tag_info)) {
- 
- 			if (warned_user == 0) {
- 				printf(KERN_WARNING
-diff -puN drivers/scsi/aic7xxx/aic79xx_pci.c~drivers-scsi-use-array_size-macro drivers/scsi/aic7xxx/aic79xx_pci.c
---- devel/drivers/scsi/aic7xxx/aic79xx_pci.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/aic7xxx/aic79xx_pci.c	2006-06-01 20:41:51.000000000 -0700
-@@ -201,7 +201,7 @@ static struct ahd_pci_identity ahd_pci_i
- 	}
- };
- 
--static const u_int ahd_num_pci_devs = NUM_ELEMENTS(ahd_pci_ident_table);
-+static const u_int ahd_num_pci_devs = ARRAY_SIZE(ahd_pci_ident_table);
- 		
- #define	DEVCONFIG		0x40
- #define		PCIXINITPAT	0x0000E000ul
-diff -puN drivers/scsi/aic7xxx/aic79xx_proc.c~drivers-scsi-use-array_size-macro drivers/scsi/aic7xxx/aic79xx_proc.c
---- devel/drivers/scsi/aic7xxx/aic79xx_proc.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/aic7xxx/aic79xx_proc.c	2006-06-01 20:41:51.000000000 -0700
-@@ -76,11 +76,9 @@ static u_int
- ahd_calc_syncsrate(u_int period_factor)
- {
- 	int i;
--	int num_syncrates;
- 
--	num_syncrates = sizeof(scsi_syncrates) / sizeof(scsi_syncrates[0]);
- 	/* See if the period is in the "exception" table */
--	for (i = 0; i < num_syncrates; i++) {
-+	for (i = 0; i < ARRAY_SIZE(scsi_syncrates); i++) {
- 
- 		if (period_factor == scsi_syncrates[i].period_factor) {
- 			/* Period in kHz */
-diff -puN drivers/scsi/aic7xxx/aic7xxx_core.c~drivers-scsi-use-array_size-macro drivers/scsi/aic7xxx/aic7xxx_core.c
---- devel/drivers/scsi/aic7xxx/aic7xxx_core.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/aic7xxx/aic7xxx_core.c	2006-06-01 20:41:51.000000000 -0700
-@@ -439,7 +439,7 @@ char *ahc_chip_names[] =
- 	"aic7892",
- 	"aic7899"
- };
--static const u_int num_chip_names = NUM_ELEMENTS(ahc_chip_names);
-+static const u_int num_chip_names = ARRAY_SIZE(ahc_chip_names);
- 
- /*
-  * Hardware error codes.
-@@ -459,7 +459,7 @@ static struct ahc_hard_error_entry ahc_h
- 	{ PCIERRSTAT,	"PCI Error detected" },
- 	{ CIOPARERR,	"CIOBUS Parity Error" },
- };
--static const u_int num_errors = NUM_ELEMENTS(ahc_hard_errors);
-+static const u_int num_errors = ARRAY_SIZE(ahc_hard_errors);
- 
- static struct ahc_phase_table_entry ahc_phase_table[] =
- {
-@@ -479,7 +479,7 @@ static struct ahc_phase_table_entry ahc_
-  * In most cases we only wish to itterate over real phases, so
-  * exclude the last element from the count.
-  */
--static const u_int num_phases = NUM_ELEMENTS(ahc_phase_table) - 1;
-+static const u_int num_phases = ARRAY_SIZE(ahc_phase_table) - 1;
- 
- /*
-  * Valid SCSIRATE values.  (p. 3-17)
-@@ -6738,7 +6738,7 @@ ahc_check_patch(struct ahc_softc *ahc, s
- 	struct	patch *last_patch;
- 	u_int	num_patches;
- 
--	num_patches = sizeof(patches)/sizeof(struct patch);
-+	num_patches = ARRAY_SIZE(patches);
- 	last_patch = &patches[num_patches];
- 	cur_patch = *start_patch;
- 
-diff -puN drivers/scsi/aic7xxx/aic7xxx.h~drivers-scsi-use-array_size-macro drivers/scsi/aic7xxx/aic7xxx.h
---- devel/drivers/scsi/aic7xxx/aic7xxx.h~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/aic7xxx/aic7xxx.h	2006-06-01 20:41:51.000000000 -0700
-@@ -69,8 +69,6 @@ struct seeprom_descriptor;
- #define FALSE 0
- #endif
- 
--#define NUM_ELEMENTS(array) (sizeof(array) / sizeof(*array))
--
- #define ALL_CHANNELS '\0'
- #define ALL_TARGETS_MASK 0xFFFF
- #define INITIATOR_WILDCARD	(~0)
-diff -puN drivers/scsi/aic7xxx/aic7xxx_osm.c~drivers-scsi-use-array_size-macro drivers/scsi/aic7xxx/aic7xxx_osm.c
---- devel/drivers/scsi/aic7xxx/aic7xxx_osm.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/aic7xxx/aic7xxx_osm.c	2006-06-01 20:41:51.000000000 -0700
-@@ -886,7 +886,7 @@ ahc_linux_setup_tag_info_global(char *p)
- 	tags = simple_strtoul(p + 1, NULL, 0) & 0xff;
- 	printf("Setting Global Tags= %d\n", tags);
- 
--	for (i = 0; i < NUM_ELEMENTS(aic7xxx_tag_info); i++) {
-+	for (i = 0; i < ARRAY_SIZE(aic7xxx_tag_info); i++) {
- 		for (j = 0; j < AHC_NUM_TARGETS; j++) {
- 			aic7xxx_tag_info[i].tag_commands[j] = tags;
- 		}
-@@ -898,7 +898,7 @@ ahc_linux_setup_tag_info(u_long arg, int
- {
- 
- 	if ((instance >= 0) && (targ >= 0)
--	 && (instance < NUM_ELEMENTS(aic7xxx_tag_info))
-+	 && (instance < ARRAY_SIZE(aic7xxx_tag_info))
- 	 && (targ < AHC_NUM_TARGETS)) {
- 		aic7xxx_tag_info[instance].tag_commands[targ] = value & 0xff;
- 		if (bootverbose)
-@@ -1020,7 +1020,7 @@ aic7xxx_setup(char *s)
- 	end = strchr(s, '\0');
- 
- 	/*
--	 * XXX ia64 gcc isn't smart enough to know that NUM_ELEMENTS
-+	 * XXX ia64 gcc isn't smart enough to know that ARRAY_SIZE
- 	 * will never be 0 in this case.
- 	 */
- 	n = 0;
-@@ -1028,13 +1028,13 @@ aic7xxx_setup(char *s)
- 	while ((p = strsep(&s, ",.")) != NULL) {
- 		if (*p == '\0')
- 			continue;
--		for (i = 0; i < NUM_ELEMENTS(options); i++) {
-+		for (i = 0; i < ARRAY_SIZE(options); i++) {
- 
- 			n = strlen(options[i].name);
- 			if (strncmp(options[i].name, p, n) == 0)
- 				break;
- 		}
--		if (i == NUM_ELEMENTS(options))
-+		if (i == ARRAY_SIZE(options))
- 			continue;
- 
- 		if (strncmp(p, "global_tag_depth", n) == 0) {
-@@ -1360,7 +1360,7 @@ ahc_linux_user_tagdepth(struct ahc_softc
- 
- 	tags = 0;
- 	if ((ahc->user_discenable & devinfo->target_mask) != 0) {
--		if (ahc->unit >= NUM_ELEMENTS(aic7xxx_tag_info)) {
-+		if (ahc->unit >= ARRAY_SIZE(aic7xxx_tag_info)) {
- 			if (warned_user == 0) {
- 
- 				printf(KERN_WARNING
-diff -puN drivers/scsi/aic7xxx/aic7xxx_pci.c~drivers-scsi-use-array_size-macro drivers/scsi/aic7xxx/aic7xxx_pci.c
---- devel/drivers/scsi/aic7xxx/aic7xxx_pci.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/aic7xxx/aic7xxx_pci.c	2006-06-01 20:41:51.000000000 -0700
-@@ -553,7 +553,7 @@ static struct ahc_pci_identity ahc_pci_i
- 	}
- };
- 
--static const u_int ahc_num_pci_devs = NUM_ELEMENTS(ahc_pci_ident_table);
-+static const u_int ahc_num_pci_devs = ARRAY_SIZE(ahc_pci_ident_table);
- 		
- #define AHC_394X_SLOT_CHANNEL_A	4
- #define AHC_394X_SLOT_CHANNEL_B	5
-diff -puN drivers/scsi/aic7xxx/aic7xxx_proc.c~drivers-scsi-use-array_size-macro drivers/scsi/aic7xxx/aic7xxx_proc.c
---- devel/drivers/scsi/aic7xxx/aic7xxx_proc.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/aic7xxx/aic7xxx_proc.c	2006-06-01 20:41:51.000000000 -0700
-@@ -77,11 +77,9 @@ static u_int
- ahc_calc_syncsrate(u_int period_factor)
- {
- 	int i;
--	int num_syncrates;
- 
--	num_syncrates = sizeof(scsi_syncrates) / sizeof(scsi_syncrates[0]);
- 	/* See if the period is in the "exception" table */
--	for (i = 0; i < num_syncrates; i++) {
-+	for (i = 0; i < ARRAY_SIZE(scsi_syncrates); i++) {
- 
- 		if (period_factor == scsi_syncrates[i].period_factor) {
- 			/* Period in kHz */
-diff -puN drivers/scsi/aic7xxx_old.c~drivers-scsi-use-array_size-macro drivers/scsi/aic7xxx_old.c
---- devel/drivers/scsi/aic7xxx_old.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/aic7xxx_old.c	2006-06-01 20:41:51.000000000 -0700
-@@ -1565,7 +1565,7 @@ aic7xxx_check_patch(struct aic7xxx_host 
-   struct sequencer_patch *last_patch;
-   int num_patches;
- 
--  num_patches = sizeof(sequencer_patches)/sizeof(struct sequencer_patch);
-+  num_patches = ARRAY_SIZE(sequencer_patches);
-   last_patch = &sequencer_patches[num_patches];
-   cur_patch = *start_patch;
- 
-diff -puN drivers/scsi/constants.c~drivers-scsi-use-array_size-macro drivers/scsi/constants.c
---- devel/drivers/scsi/constants.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/constants.c	2006-06-01 20:41:51.000000000 -0700
-@@ -114,8 +114,7 @@ static const struct value_name_pair main
- 	{0xd, "Report supported task management functions"},
- 	{0xe, "Report priority"},
- };
--#define MAINT_IN_SZ \
--        (int)(sizeof(maint_in_arr) / sizeof(maint_in_arr[0]))
-+#define MAINT_IN_SZ ARRAY_SIZE(maint_in_arr)
- 
- static const struct value_name_pair maint_out_arr[] = {
- 	{0x6, "Set device identifier"},
-@@ -123,34 +122,29 @@ static const struct value_name_pair main
- 	{0xb, "Change aliases"},
- 	{0xe, "Set priority"},
- };
--#define MAINT_OUT_SZ \
--        (int)(sizeof(maint_out_arr) / sizeof(maint_out_arr[0]))
-+#define MAINT_OUT_SZ ARRAY_SIZE(maint_out_arr)
- 
- static const struct value_name_pair serv_in12_arr[] = {
- 	{0x1, "Read media serial number"},
- };
--#define SERV_IN12_SZ  \
--        (int)(sizeof(serv_in12_arr) / sizeof(serv_in12_arr[0]))
-+#define SERV_IN12_SZ ARRAY_SIZE(serv_in12_arr)
- 
- static const struct value_name_pair serv_out12_arr[] = {
- 	{-1, "dummy entry"},
- };
--#define SERV_OUT12_SZ \
--        (int)(sizeof(serv_out12_arr) / sizeof(serv_in12_arr[0]))
-+#define SERV_OUT12_SZ ARRAY_SIZE(serv_out12_arr)
- 
- static const struct value_name_pair serv_in16_arr[] = {
- 	{0x10, "Read capacity(16)"},
- 	{0x11, "Read long(16)"},
- };
--#define SERV_IN16_SZ  \
--        (int)(sizeof(serv_in16_arr) / sizeof(serv_in16_arr[0]))
-+#define SERV_IN16_SZ ARRAY_SIZE(serv_in16_arr)
- 
- static const struct value_name_pair serv_out16_arr[] = {
- 	{0x11, "Write long(16)"},
- 	{0x1f, "Notify data transfer device(16)"},
- };
--#define SERV_OUT16_SZ \
--        (int)(sizeof(serv_out16_arr) / sizeof(serv_in16_arr[0]))
-+#define SERV_OUT16_SZ ARRAY_SIZE(serv_out16_arr)
- 
- static const struct value_name_pair variable_length_arr[] = {
- 	{0x1, "Rebuild(32)"},
-@@ -190,8 +184,7 @@ static const struct value_name_pair vari
- 	{0x8f7e, "Perform SCSI command (osd)"},
- 	{0x8f7f, "Perform task management function (osd)"},
- };
--#define VARIABLE_LENGTH_SZ \
--        (int)(sizeof(variable_length_arr) / sizeof(variable_length_arr[0]))
-+#define VARIABLE_LENGTH_SZ ARRAY_SIZE(variable_length_arr)
- 
- static const char * get_sa_name(const struct value_name_pair * arr,
- 			        int arr_sz, int service_action)
-@@ -1280,10 +1273,10 @@ EXPORT_SYMBOL(scsi_print_command);
- #ifdef CONFIG_SCSI_CONSTANTS
- 
- static const char * const hostbyte_table[]={
--"DID_OK", "DID_NO_CONNECT", "DID_BUS_BUSY", "DID_TIME_OUT", "DID_BAD_TARGET", 
-+"DID_OK", "DID_NO_CONNECT", "DID_BUS_BUSY", "DID_TIME_OUT", "DID_BAD_TARGET",
- "DID_ABORT", "DID_PARITY", "DID_ERROR", "DID_RESET", "DID_BAD_INTR",
- "DID_PASSTHROUGH", "DID_SOFT_ERROR", "DID_IMM_RETRY"};
--#define NUM_HOSTBYTE_STRS (sizeof(hostbyte_table) / sizeof(const char *))
-+#define NUM_HOSTBYTE_STRS ARRAY_SIZE(hostbyte_table)
- 
- void scsi_print_hostbyte(int scsiresult)
- {
-@@ -1293,7 +1286,7 @@ void scsi_print_hostbyte(int scsiresult)
- 	if (hb < NUM_HOSTBYTE_STRS)
- 		printk("(%s) ", hostbyte_table[hb]);
- 	else
--		printk("is invalid "); 
-+		printk("is invalid ");
- }
- #else
- void scsi_print_hostbyte(int scsiresult)
-@@ -1305,14 +1298,14 @@ void scsi_print_hostbyte(int scsiresult)
- #ifdef CONFIG_SCSI_CONSTANTS
- 
- static const char * const driverbyte_table[]={
--"DRIVER_OK", "DRIVER_BUSY", "DRIVER_SOFT",  "DRIVER_MEDIA", "DRIVER_ERROR", 
-+"DRIVER_OK", "DRIVER_BUSY", "DRIVER_SOFT",  "DRIVER_MEDIA", "DRIVER_ERROR",
- "DRIVER_INVALID", "DRIVER_TIMEOUT", "DRIVER_HARD", "DRIVER_SENSE"};
--#define NUM_DRIVERBYTE_STRS (sizeof(driverbyte_table) / sizeof(const char *))
-+#define NUM_DRIVERBYTE_STRS ARRAY_SIZE(driverbyte_table)
- 
- static const char * const driversuggest_table[]={"SUGGEST_OK",
- "SUGGEST_RETRY", "SUGGEST_ABORT", "SUGGEST_REMAP", "SUGGEST_DIE",
- "SUGGEST_5", "SUGGEST_6", "SUGGEST_7", "SUGGEST_SENSE"};
--#define NUM_SUGGEST_STRS (sizeof(driversuggest_table) / sizeof(const char *))
-+#define NUM_SUGGEST_STRS ARRAY_SIZE(driversuggest_table)
- 
- void scsi_print_driverbyte(int scsiresult)
- {
-diff -puN drivers/scsi/dtc.c~drivers-scsi-use-array_size-macro drivers/scsi/dtc.c
---- devel/drivers/scsi/dtc.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/dtc.c	2006-06-01 20:41:51.000000000 -0700
-@@ -145,35 +145,35 @@ static struct override {
- 0, IRQ_AUTO}};
- #endif
- 
--#define NO_OVERRIDES (sizeof(overrides) / sizeof(struct override))
-+#define NO_OVERRIDES ARRAY_SIZE(overrides)
- 
- static struct base {
- 	unsigned long address;
- 	int noauto;
--} bases[] __initdata = { 
--	{ 0xcc000, 0 }, 
--	{ 0xc8000, 0 }, 
--	{ 0xdc000, 0 }, 
-+} bases[] __initdata = {
-+	{ 0xcc000, 0 },
-+	{ 0xc8000, 0 },
-+	{ 0xdc000, 0 },
- 	{ 0xd8000, 0 }
- };
- 
--#define NO_BASES (sizeof (bases) / sizeof (struct base))
-+#define NO_BASES ARRAY_SIZE(bases)
- 
- static const struct signature {
- 	const char *string;
- 	int offset;
--} signatures[] = { 
-+} signatures[] = {
- 	{"DATA TECHNOLOGY CORPORATION BIOS", 0x25},
- };
- 
--#define NO_SIGNATURES (sizeof (signatures) /  sizeof (struct signature))
-+#define NO_SIGNATURES ARRAY_SIZE(signatures)
- 
- #ifndef MODULE
- /*
-  * Function : dtc_setup(char *str, int *ints)
-  *
-  * Purpose : LILO command line initialization of the overrides array,
-- * 
-+ *
-  * Inputs : str - unused, ints - array of integer parameters with ints[0]
-  *	equal to the number of ints.
-  *
-diff -puN drivers/scsi/fd_mcs.c~drivers-scsi-use-array_size-macro drivers/scsi/fd_mcs.c
---- devel/drivers/scsi/fd_mcs.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/fd_mcs.c	2006-06-01 20:41:51.000000000 -0700
-@@ -279,7 +279,7 @@ static struct fd_mcs_adapters_struct fd_
- 	 2},
- };
- 
--#define FD_BRDS sizeof(fd_mcs_adapters)/sizeof(struct fd_mcs_adapters_struct)
-+#define FD_BRDS ARRAY_SIZE(fd_mcs_adapters)
- 
- static irqreturn_t fd_mcs_intr(int irq, void *dev_id, struct pt_regs *regs);
- 
-diff -puN drivers/scsi/fdomain.c~drivers-scsi-use-array_size-macro drivers/scsi/fdomain.c
---- devel/drivers/scsi/fdomain.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/fdomain.c	2006-06-01 20:41:51.000000000 -0700
-@@ -420,10 +420,10 @@ static unsigned long addresses[] = {
-    0xd0000,
-    0xe0000,
- };
--#define ADDRESS_COUNT (sizeof( addresses ) / sizeof( unsigned ))
--		       
-+#define ADDRESS_COUNT ARRAY_SIZE(addresses)
-+
- static unsigned short ports[] = { 0x140, 0x150, 0x160, 0x170 };
--#define PORT_COUNT (sizeof( ports ) / sizeof( unsigned short ))
-+#define PORT_COUNT ARRAY_SIZE(ports)
- 
- static unsigned short ints[] = { 3, 5, 10, 11, 12, 14, 15, 0 };
- 
-@@ -502,7 +502,7 @@ static struct signature {
-     geometry location are verified). */
- };
- 
--#define SIGNATURE_COUNT (sizeof( signatures ) / sizeof( struct signature ))
-+#define SIGNATURE_COUNT ARRAY_SIZE(signatures)
- 
- static void print_banner( struct Scsi_Host *shpnt )
- {
-@@ -519,7 +519,7 @@ static void print_banner( struct Scsi_Ho
- 
-       if (bios_minor >= 0) printk("%d", bios_minor);
-       else                 printk("?.");
--   
-+
-       printk( " at 0x%lx using scsi id %d\n",
- 	      bios_base, shpnt->this_id );
-    }
-diff -puN drivers/scsi/gdth.c~drivers-scsi-use-array_size-macro drivers/scsi/gdth.c
---- devel/drivers/scsi/gdth.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/gdth.c	2006-06-01 20:41:51.000000000 -0700
-@@ -556,8 +556,8 @@ static struct timer_list gdth_timer;
- #endif
- 
- #define PTR2USHORT(a)   (ushort)(ulong)(a)
--#define GDTOFFSOF(a,b)  (size_t)&(((a*)0)->b)   
--#define INDEX_OK(i,t)   ((i)<sizeof(t)/sizeof((t)[0]))
-+#define GDTOFFSOF(a,b)  (size_t)&(((a*)0)->b)
-+#define INDEX_OK(i,t)   ((i)<ARRAY_SIZE(t))
- 
- #define NUMDATA(a)      ( (gdth_num_str  *)((a)->hostdata))
- #define HADATA(a)       (&((gdth_ext_str *)((a)->hostdata))->haext)
-diff -puN drivers/scsi/g_NCR5380.c~drivers-scsi-use-array_size-macro drivers/scsi/g_NCR5380.c
---- devel/drivers/scsi/g_NCR5380.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/g_NCR5380.c	2006-06-01 20:41:51.000000000 -0700
-@@ -138,10 +138,9 @@ static struct override {
- [1] __initdata = { { 0,},};
- #endif
- 
-+#define NO_OVERRIDES ARRAY_SIZE(overrides)
- 
--#define NO_OVERRIDES (sizeof(overrides) / sizeof(struct override))
--
--#ifndef MODULE 
-+#ifndef MODULE
- 
- /**
-  *	internal_setup		-	handle lilo command string override
-@@ -210,7 +209,7 @@ static int __init do_NCR5380_setup(char 
- {
- 	int ints[10];
- 
--	get_options(str, sizeof(ints) / sizeof(int), ints);
-+	get_options(str, ARRAY_SIZE(ints), ints);
- 	internal_setup(BOARD_NCR5380, str, ints);
- 	return 1;
- }
-@@ -218,7 +217,7 @@ static int __init do_NCR5380_setup(char 
- /**
-  * 	do_NCR53C400_setup		-	set up entry point
-  *	@str: unused
-- *	@ints: integer parameters from kernel setup code 
-+ *	@ints: integer parameters from kernel setup code
-  *
-  *	Setup function invoked at boot to parse the ncr53c400= command
-  *	line.
-@@ -228,7 +227,7 @@ static int __init do_NCR53C400_setup(cha
- {
- 	int ints[10];
- 
--	get_options(str, sizeof(ints) / sizeof(int), ints);
-+	get_options(str, ARRAY_SIZE(ints), ints);
- 	internal_setup(BOARD_NCR53C400, str, ints);
- 	return 1;
- }
-@@ -236,7 +235,7 @@ static int __init do_NCR53C400_setup(cha
- /**
-  * 	do_NCR53C400A_setup	-	set up entry point
-  *	@str: unused
-- *	@ints: integer parameters from kernel setup code 
-+ *	@ints: integer parameters from kernel setup code
-  *
-  *	Setup function invoked at boot to parse the ncr53c400a= command
-  *	line.
-@@ -246,7 +245,7 @@ static int __init do_NCR53C400A_setup(ch
- {
- 	int ints[10];
- 
--	get_options(str, sizeof(ints) / sizeof(int), ints);
-+	get_options(str, ARRAY_SIZE(ints), ints);
- 	internal_setup(BOARD_NCR53C400A, str, ints);
- 	return 1;
- }
-@@ -254,7 +253,7 @@ static int __init do_NCR53C400A_setup(ch
- /**
-  * 	do_DTC3181E_setup	-	set up entry point
-  *	@str: unused
-- *	@ints: integer parameters from kernel setup code 
-+ *	@ints: integer parameters from kernel setup code
-  *
-  *	Setup function invoked at boot to parse the dtc3181e= command
-  *	line.
-@@ -264,7 +263,7 @@ static int __init do_DTC3181E_setup(char
- {
- 	int ints[10];
- 
--	get_options(str, sizeof(ints) / sizeof(int), ints);
-+	get_options(str, ARRAY_SIZE(ints), ints);
- 	internal_setup(BOARD_DTC3181E, str, ints);
- 	return 1;
- }
-diff -puN drivers/scsi/ibmmca.c~drivers-scsi-use-array_size-macro drivers/scsi/ibmmca.c
---- devel/drivers/scsi/ibmmca.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/ibmmca.c	2006-06-01 20:41:51.000000000 -0700
-@@ -1441,7 +1441,7 @@ static int ibmmca_getinfo(char *buf, int
- 	struct Scsi_Host *dev = dev_id;
- 
- 	spin_lock_irqsave(dev->host_lock, flags);
--	
-+
- 	shpnt = dev;		/* assign host-structure to local pointer */
- 	len = 0;		/* set filled text-buffer index to 0 */
- 	/* get the _special contents of the hostdata structure */
-@@ -1456,7 +1456,7 @@ static int ibmmca_getinfo(char *buf, int
- 		/* if the integrated subsystem has been found automatically: */
- 		len += sprintf(buf + len,
- 			       "Adapter category: integrated\n" "Chip revision level: %d\n" "Chip status: %s\n" "8 kByte NVRAM status: %s\n", ((pos[2] & 0xf0) >> 4), (pos[2] & 1) ? "enabled" : "disabled", (pos[2] & 2) ? "locked" : "accessible");
--	} else if ((speciale >= 0) && (speciale < (sizeof(subsys_list) / sizeof(struct subsys_list_struct)))) {
-+	} else if ((speciale >= 0) && (speciale < ARRAY_SIZE(subsys_list))) {
- 		/* if the subsystem is a slot adapter */
- 		len += sprintf(buf + len, "Adapter category: slot-card\n" "ROM Segment Address: ");
- 		if ((pos[2] & 0xf0) == 0xf0)
-@@ -1477,16 +1477,16 @@ static int ibmmca_getinfo(char *buf, int
- 	while (len % sizeof(int) != (sizeof(int) - 1))
- 		len += sprintf(buf + len, " ");
- 	len += sprintf(buf + len, "\n");
--	
-+
- 	spin_unlock_irqrestore(shpnt->host_lock, flags);
--	
-+
- 	return len;
- }
- 
- int ibmmca_detect(struct scsi_host_template * scsi_template)
- {
- 	struct Scsi_Host *shpnt;
--	int port, id, i, j, k, list_size, slot;
-+	int port, id, i, j, k, slot;
- 	int devices_on_irq_11 = 0;
- 	int devices_on_irq_14 = 0;
- 	int IRQ14_registered = 0;
-@@ -1603,8 +1603,7 @@ int ibmmca_detect(struct scsi_host_templ
- 	/* now look for other adapters in MCA slots, */
- 	/* determine the number of known IBM-SCSI-subsystem types */
- 	/* see the pos[2] dependence to get the adapter port-offset. */
--	list_size = sizeof(subsys_list) / sizeof(struct subsys_list_struct);
--	for (i = 0; i < list_size; i++) {
-+	for (i = 0; i < ARRAY_SIZE(subsys_list); i++) {
- 		/* scan each slot for a fitting adapter id */
- 		slot = 0;	/* start at slot 0 */
- 		while ((slot = mca_find_adapter(subsys_list[i].mca_id, slot))
-@@ -1669,8 +1668,7 @@ int ibmmca_detect(struct scsi_host_templ
- 	/* now check for SCSI-adapters, mapped to the integrated SCSI
- 	 * area. E.g. a W/Cache in MCA-slot 9(!). Do the check correct here,
- 	 * as this is a known effect on some models 95xx. */
--	list_size = sizeof(subsys_list) / sizeof(struct subsys_list_struct);
--	for (i = 0; i < list_size; i++) {
-+	for (i = 0; i < ARRAY_SIZE(subsys_list); i++) {
- 		/* scan each slot for a fitting adapter id */
- 		slot = mca_find_adapter(subsys_list[i].mca_id, MCA_INTEGSCSI);
- 		if (slot != MCA_NOTFOUND) {	/* scan through all slots */
-diff -puN drivers/scsi/in2000.c~drivers-scsi-use-array_size-macro drivers/scsi/in2000.c
---- devel/drivers/scsi/in2000.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/in2000.c	2006-06-01 20:41:51.000000000 -0700
-@@ -1809,7 +1809,7 @@ static int in2000_abort(Scsi_Cmnd * cmd)
- 
- 
- #define MAX_IN2000_HOSTS 3
--#define MAX_SETUP_ARGS (sizeof(setup_args) / sizeof(char *))
-+#define MAX_SETUP_ARGS ARRAY_SIZE(setup_args)
- #define SETUP_BUFFER_SIZE 200
- static char setup_buffer[SETUP_BUFFER_SIZE];
- static char setup_used[MAX_SETUP_ARGS];
-diff -puN drivers/scsi/initio.c~drivers-scsi-use-array_size-macro drivers/scsi/initio.c
---- devel/drivers/scsi/initio.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/initio.c	2006-06-01 20:41:51.000000000 -0700
-@@ -154,7 +154,6 @@
- static unsigned int i91u_debug = DEBUG_DEFAULT;
- #endif
- 
--#define TULSZ(sz)     (sizeof(sz) / sizeof(sz[0]))
- #define TUL_RDWORD(x,y)         (short)(inl((int)((ULONG)((ULONG)x+(UCHAR)y)) ))
- 
- typedef struct PCI_ID_Struc {
-@@ -2771,7 +2770,7 @@ static int tul_NewReturnNumberOfAdapters
- 
- 	init_i91uAdapter_table();
- 
--	for (i = 0; i < TULSZ(i91u_pci_devices); i++)
-+	for (i = 0; i < ARRAY_SIZE(i91u_pci_devices); i++)
- 	{
- 		while ((pDev = pci_find_device(i91u_pci_devices[i].vendor_id, i91u_pci_devices[i].device_id, pDev)) != NULL) {
- 			if (pci_enable_device(pDev))
-diff -puN drivers/scsi/ips.c~drivers-scsi-use-array_size-macro drivers/scsi/ips.c
---- devel/drivers/scsi/ips.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/ips.c	2006-06-01 20:41:51.000000000 -0700
-@@ -556,7 +556,7 @@ ips_setup(char *ips_str)
- 		 * We now have key/value pairs.
- 		 * Update the variables
- 		 */
--		for (i = 0; i < (sizeof (options) / sizeof (options[0])); i++) {
-+		for (i = 0; i < ARRAY_SIZE(options); i++) {
- 			if (strnicmp
- 			    (key, options[i].option_name,
- 			     strlen(options[i].option_name)) == 0) {
-diff -puN drivers/scsi/NCR53c406a.c~drivers-scsi-use-array_size-macro drivers/scsi/NCR53c406a.c
---- devel/drivers/scsi/NCR53c406a.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/NCR53c406a.c	2006-06-01 20:41:51.000000000 -0700
-@@ -213,16 +213,16 @@ static void *addresses[] = {
- 	(void *) 0xd8000,
- 	(void *) 0xc8000
- };
--#define ADDRESS_COUNT (sizeof( addresses ) / sizeof( unsigned ))
-+#define ADDRESS_COUNT ARRAY_SIZE(addresses)
- #endif				/* USE_BIOS */
- 
- /* possible i/o port addresses */
- static unsigned short ports[] = { 0x230, 0x330, 0x280, 0x290, 0x330, 0x340, 0x300, 0x310, 0x348, 0x350 };
--#define PORT_COUNT (sizeof( ports ) / sizeof( unsigned short ))
-+#define PORT_COUNT ARRAY_SIZE(ports)
- 
- /* possible interrupt channels */
- static unsigned short intrs[] = { 10, 11, 12, 15 };
--#define INTR_COUNT (sizeof( intrs ) / sizeof( unsigned short ))
-+#define INTR_COUNT ARRAY_SIZE(intrs)
- 
- /* signatures for NCR 53c406a based controllers */
- #if USE_BIOS
-@@ -236,7 +236,7 @@ struct signature {
- 	{
- "Copyright (C) Acculogic, Inc.\r\n2.8M Diskette Extension Bios ver 4.04.03 03/01/1993", 61, 82},};
- 
--#define SIGNATURE_COUNT (sizeof( signatures ) / sizeof( struct signature ))
-+#define SIGNATURE_COUNT ARRAY_SIZE(signatures)
- #endif				/* USE_BIOS */
- 
- /* ============================================================ */
-diff -puN drivers/scsi/osst.c~drivers-scsi-use-array_size-macro drivers/scsi/osst.c
---- devel/drivers/scsi/osst.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/osst.c	2006-06-01 20:41:51.000000000 -0700
-@@ -5492,7 +5492,7 @@ static int __init osst_setup (char *str)
-   char *stp;
- 
-   stp = get_options(str, ARRAY_SIZE(ints), ints);
--	
-+
-   if (ints[0] > 0) {
- 	for (i = 0; i < ints[0] && i < ARRAY_SIZE(parms); i++)
- 		  *parms[i].val = ints[i + 1];
-@@ -5507,7 +5507,7 @@ static int __init osst_setup (char *str)
- 				break;
- 			}
- 		}
--		if (i >= sizeof(parms) / sizeof(struct osst_dev_parm))
-+		if (i >= ARRAY_SIZE(parms))
- 			printk(KERN_INFO "osst :I: Illegal parameter in '%s'\n",
- 			       stp);
- 		stp = strchr(stp, ',');
-diff -puN drivers/scsi/pas16.c~drivers-scsi-use-array_size-macro drivers/scsi/pas16.c
---- devel/drivers/scsi/pas16.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/pas16.c	2006-06-01 20:41:51.000000000 -0700
-@@ -156,7 +156,7 @@ static int default_irqs[] __initdata =
- static struct override {
-     unsigned short io_port;
-     int  irq;
--} overrides 
-+} overrides
- #ifdef PAS16_OVERRIDE
-     [] __initdata = PAS16_OVERRIDE;
- #else
-@@ -164,19 +164,19 @@ static struct override {
- 	{0,IRQ_AUTO}};
- #endif
- 
--#define NO_OVERRIDES (sizeof(overrides) / sizeof(struct override))
-+#define NO_OVERRIDES ARRAY_SIZE(overrides)
- 
- static struct base {
-     unsigned short io_port;
-     int noauto;
--} bases[] __initdata = 
-+} bases[] __initdata =
- 	{ {PAS16_DEFAULT_BASE_1, 0},
- 	  {PAS16_DEFAULT_BASE_2, 0},
- 	  {PAS16_DEFAULT_BASE_3, 0},
- 	  {PAS16_DEFAULT_BASE_4, 0}
- 	};
- 
--#define NO_BASES (sizeof (bases) / sizeof (struct base))
-+#define NO_BASES ARRAY_SIZE(bases)
- 
- static const unsigned short  pas16_offset[ 8 ] =
-     {
-diff -puN drivers/scsi/qla1280.c~drivers-scsi-use-array_size-macro drivers/scsi/qla1280.c
---- devel/drivers/scsi/qla1280.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/qla1280.c	2006-06-01 20:41:51.000000000 -0700
-@@ -4215,15 +4215,12 @@ qla1280_get_token(char *str)
- {
- 	char *sep;
- 	long ret = -1;
--	int i, len;
--
--	len = sizeof(setup_token)/sizeof(struct setup_tokens);
++void
++ahd_outsb(struct ahd_softc * ahd, long port, uint8_t *array, int count)
++{
 +	int i;
++
++	/*
++	 * There is probably a more efficient way to do this on Linux
++	 * but we don't use this for anything speed critical and this
++	 * should work.
++	 */
++	for (i = 0; i < count; i++)
++		ahd_outb(ahd, port, *array++);
++}
++
++void
++ahd_insb(struct ahd_softc * ahd, long port, uint8_t *array, int count)
++{
++	int i;
++
++	/*
++	 * There is probably a more efficient way to do this on Linux
++	 * but we don't use this for anything speed critical and this
++	 * should work.
++	 */
++	for (i = 0; i < count; i++)
++		*array++ = ahd_inb(ahd, port);
++}
++
++/************************ Sequencer Execution Control *************************/
++void
++ahd_set_modes(struct ahd_softc *ahd, ahd_mode src, ahd_mode dst)
++{
++	if (ahd->src_mode == src && ahd->dst_mode == dst)
++		return;
++#ifdef AHD_DEBUG
++	if (ahd->src_mode == AHD_MODE_UNKNOWN
++	 || ahd->dst_mode == AHD_MODE_UNKNOWN)
++		panic("Setting mode prior to saving it.\n");
++	if ((ahd_debug & AHD_SHOW_MODEPTR) != 0)
++		printf("%s: Setting mode 0x%x\n", ahd_name(ahd),
++		       ahd_build_mode_state(ahd, src, dst));
++#endif
++	ahd_outb(ahd, MODE_PTR, ahd_build_mode_state(ahd, src, dst));
++	ahd->src_mode = src;
++	ahd->dst_mode = dst;
++}
++
++void
++ahd_update_modes(struct ahd_softc *ahd)
++{
++	ahd_mode_state mode_ptr;
++	ahd_mode src;
++	ahd_mode dst;
++
++	mode_ptr = ahd_inb(ahd, MODE_PTR);
++#ifdef AHD_DEBUG
++	if ((ahd_debug & AHD_SHOW_MODEPTR) != 0)
++		printf("Reading mode 0x%x\n", mode_ptr);
++#endif
++	ahd_extract_mode_state(ahd, mode_ptr, &src, &dst);
++	ahd_known_modes(ahd, src, dst);
++}
++
++ahd_mode_state
++ahd_save_modes(struct ahd_softc *ahd)
++{
++	if (ahd->src_mode == AHD_MODE_UNKNOWN
++	 || ahd->dst_mode == AHD_MODE_UNKNOWN)
++		ahd_update_modes(ahd);
++
++	return (ahd_build_mode_state(ahd, ahd->src_mode, ahd->dst_mode));
++}
++
++void
++ahd_restore_modes(struct ahd_softc *ahd, ahd_mode_state state)
++{
++	ahd_mode src;
++	ahd_mode dst;
++
++	ahd_extract_mode_state(ahd, state, &src, &dst);
++	ahd_set_modes(ahd, src, dst);
++}
++
++/*
++ * Allow the sequencer to continue program execution.
++ * We check here to ensure that no additional interrupt
++ * sources that would cause the sequencer to halt have been
++ * asserted.  If, for example, a SCSI bus reset is detected
++ * while we are fielding a different, pausing, interrupt type,
++ * we don't want to release the sequencer before going back
++ * into our interrupt handler and dealing with this new
++ * condition.
++ */
++void
++ahd_unpause(struct ahd_softc *ahd)
++{
++	/*
++	 * Automatically restore our modes to those saved
++	 * prior to the first change of the mode.
++	 */
++	if (ahd->saved_src_mode != AHD_MODE_UNKNOWN
++	 && ahd->saved_dst_mode != AHD_MODE_UNKNOWN) {
++		if ((ahd->flags & AHD_UPDATE_PEND_CMDS) != 0)
++			ahd_reset_cmds_pending(ahd);
++		ahd_set_modes(ahd, ahd->saved_src_mode, ahd->saved_dst_mode);
++	}
++
++	if ((ahd_inb(ahd, INTSTAT) & ~CMDCMPLT) == 0)
++		ahd_outb(ahd, HCNTRL, ahd->unpause);
++
++	ahd_known_modes(ahd, AHD_MODE_UNKNOWN, AHD_MODE_UNKNOWN);
++}
++
++/*********************** Scatter Gather List Handling *************************/
++void *
++ahd_sg_setup(struct ahd_softc *ahd, struct scb *scb,
++	     void *sgptr, dma_addr_t addr, bus_size_t len, int last)
++{
++	scb->sg_count++;
++	if (sizeof(dma_addr_t) > 4
++	 && (ahd->flags & AHD_64BIT_ADDRESSING) != 0) {
++		struct ahd_dma64_seg *sg;
++
++		sg = (struct ahd_dma64_seg *)sgptr;
++		sg->addr = ahd_htole64(addr);
++		sg->len = ahd_htole32(len | (last ? AHD_DMA_LAST_SEG : 0));
++		return (sg + 1);
++	} else {
++		struct ahd_dma_seg *sg;
++
++		sg = (struct ahd_dma_seg *)sgptr;
++		sg->addr = ahd_htole32(addr & 0xFFFFFFFF);
++		sg->len = ahd_htole32(len | ((addr >> 8) & 0x7F000000)
++				    | (last ? AHD_DMA_LAST_SEG : 0));
++		return (sg + 1);
++	}
++}
++
++static void
++ahd_setup_scb_common(struct ahd_softc *ahd, struct scb *scb)
++{
++	/* XXX Handle target mode SCBs. */
++	scb->crc_retry_count = 0;
++	if ((scb->flags & SCB_PACKETIZED) != 0) {
++		/* XXX what about ACA??  It is type 4, but TAG_TYPE == 0x3. */
++		scb->hscb->task_attribute = scb->hscb->control & SCB_TAG_TYPE;
++	} else {
++		if (ahd_get_transfer_length(scb) & 0x01)
++			scb->hscb->task_attribute = SCB_XFERLEN_ODD;
++		else
++			scb->hscb->task_attribute = 0;
++	}
++
++	if (scb->hscb->cdb_len <= MAX_CDB_LEN_WITH_SENSE_ADDR
++	 || (scb->hscb->cdb_len & SCB_CDB_LEN_PTR) != 0)
++		scb->hscb->shared_data.idata.cdb_plus_saddr.sense_addr =
++		    ahd_htole32(scb->sense_busaddr);
++}
++
++static void
++ahd_setup_data_scb(struct ahd_softc *ahd, struct scb *scb)
++{
++	/*
++	 * Copy the first SG into the "current" data ponter area.
++	 */
++	if ((ahd->flags & AHD_64BIT_ADDRESSING) != 0) {
++		struct ahd_dma64_seg *sg;
++
++		sg = (struct ahd_dma64_seg *)scb->sg_list;
++		scb->hscb->dataptr = sg->addr;
++		scb->hscb->datacnt = sg->len;
++	} else {
++		struct ahd_dma_seg *sg;
++		uint32_t *dataptr_words;
++
++		sg = (struct ahd_dma_seg *)scb->sg_list;
++		dataptr_words = (uint32_t*)&scb->hscb->dataptr;
++		dataptr_words[0] = sg->addr;
++		dataptr_words[1] = 0;
++		if ((ahd->flags & AHD_39BIT_ADDRESSING) != 0) {
++			uint64_t high_addr;
++
++			high_addr = ahd_le32toh(sg->len) & 0x7F000000;
++			scb->hscb->dataptr |= ahd_htole64(high_addr << 8);
++		}
++		scb->hscb->datacnt = sg->len;
++	}
++	/*
++	 * Note where to find the SG entries in bus space.
++	 * We also set the full residual flag which the
++	 * sequencer will clear as soon as a data transfer
++	 * occurs.
++	 */
++	scb->hscb->sgptr = ahd_htole32(scb->sg_list_busaddr|SG_FULL_RESID);
++}
++
++/*********************** Miscelaneous Support Functions ***********************/
++uint16_t
++ahd_inw(struct ahd_softc *ahd, u_int port)
++{
++	/*
++	 * Read high byte first as some registers increment
++	 * or have other side effects when the low byte is
++	 * read.
++	 */
++	return ((ahd_inb(ahd, port+1) << 8) | ahd_inb(ahd, port));
++}
++
++void
++ahd_outw(struct ahd_softc *ahd, u_int port, u_int value)
++{
++	/*
++	 * Write low byte first to accomodate registers
++	 * such as PRGMCNT where the order maters.
++	 */
++	ahd_outb(ahd, port, value & 0xFF);
++	ahd_outb(ahd, port+1, (value >> 8) & 0xFF);
++}
++
++uint32_t
++ahd_inl(struct ahd_softc *ahd, u_int port)
++{
++	return ((ahd_inb(ahd, port))
++	      | (ahd_inb(ahd, port+1) << 8)
++	      | (ahd_inb(ahd, port+2) << 16)
++	      | (ahd_inb(ahd, port+3) << 24));
++}
++
++void
++ahd_outl(struct ahd_softc *ahd, u_int port, uint32_t value)
++{
++	ahd_outb(ahd, port, (value) & 0xFF);
++	ahd_outb(ahd, port+1, ((value) >> 8) & 0xFF);
++	ahd_outb(ahd, port+2, ((value) >> 16) & 0xFF);
++	ahd_outb(ahd, port+3, ((value) >> 24) & 0xFF);
++}
++
++uint64_t
++ahd_inq(struct ahd_softc *ahd, u_int port)
++{
++	return ((ahd_inb(ahd, port))
++	      | (ahd_inb(ahd, port+1) << 8)
++	      | (ahd_inb(ahd, port+2) << 16)
++	      | (ahd_inb(ahd, port+3) << 24)
++	      | (((uint64_t)ahd_inb(ahd, port+4)) << 32)
++	      | (((uint64_t)ahd_inb(ahd, port+5)) << 40)
++	      | (((uint64_t)ahd_inb(ahd, port+6)) << 48)
++	      | (((uint64_t)ahd_inb(ahd, port+7)) << 56));
++}
++
++void
++ahd_outq(struct ahd_softc *ahd, u_int port, uint64_t value)
++{
++	ahd_outb(ahd, port, value & 0xFF);
++	ahd_outb(ahd, port+1, (value >> 8) & 0xFF);
++	ahd_outb(ahd, port+2, (value >> 16) & 0xFF);
++	ahd_outb(ahd, port+3, (value >> 24) & 0xFF);
++	ahd_outb(ahd, port+4, (value >> 32) & 0xFF);
++	ahd_outb(ahd, port+5, (value >> 40) & 0xFF);
++	ahd_outb(ahd, port+6, (value >> 48) & 0xFF);
++	ahd_outb(ahd, port+7, (value >> 56) & 0xFF);
++}
++
++u_int
++ahd_inb_scbram(struct ahd_softc *ahd, u_int offset)
++{
++	u_int value;
++
++	/*
++	 * Workaround PCI-X Rev A. hardware bug.
++	 * After a host read of SCB memory, the chip
++	 * may become confused into thinking prefetch
++	 * was required.  This starts the discard timer
++	 * running and can cause an unexpected discard
++	 * timer interrupt.  The work around is to read
++	 * a normal register prior to the exhaustion of
++	 * the discard timer.  The mode pointer register
++	 * has no side effects and so serves well for
++	 * this purpose.
++	 *
++	 * Razor #528
++	 */
++	value = ahd_inb(ahd, offset);
++	if ((ahd->bugs & AHD_PCIX_SCBRAM_RD_BUG) != 0)
++		ahd_inb(ahd, MODE_PTR);
++	return (value);
++}
++
++u_int
++ahd_inw_scbram(struct ahd_softc *ahd, u_int offset)
++{
++	return (ahd_inb_scbram(ahd, offset)
++	      | (ahd_inb_scbram(ahd, offset+1) << 8));
++}
++
++uint32_t
++ahd_inl_scbram(struct ahd_softc *ahd, u_int offset)
++{
++	return (ahd_inw_scbram(ahd, offset)
++	      | (ahd_inw_scbram(ahd, offset+2) << 16));
++}
++
++uint64_t
++ahd_inq_scbram(struct ahd_softc *ahd, u_int offset)
++{
++	return (ahd_inl_scbram(ahd, offset)
++	      | ((uint64_t)ahd_inl_scbram(ahd, offset+4)) << 32);
++}
++
++struct scb *
++ahd_lookup_scb(struct ahd_softc *ahd, u_int tag)
++{
++	struct scb* scb;
++
++	if (tag >= AHD_SCB_MAX)
++		return (NULL);
++	scb = ahd->scb_data.scbindex[tag];
++	if (scb != NULL)
++		ahd_sync_scb(ahd, scb,
++			     BUS_DMASYNC_POSTREAD|BUS_DMASYNC_POSTWRITE);
++	return (scb);
++}
++
++static void
++ahd_swap_with_next_hscb(struct ahd_softc *ahd, struct scb *scb)
++{
++	struct	 hardware_scb *q_hscb;
++	struct	 map_node *q_hscb_map;
++	uint32_t saved_hscb_busaddr;
++
++	/*
++	 * Our queuing method is a bit tricky.  The card
++	 * knows in advance which HSCB (by address) to download,
++	 * and we can't disappoint it.  To achieve this, the next
++	 * HSCB to download is saved off in ahd->next_queued_hscb.
++	 * When we are called to queue "an arbitrary scb",
++	 * we copy the contents of the incoming HSCB to the one
++	 * the sequencer knows about, swap HSCB pointers and
++	 * finally assign the SCB to the tag indexed location
++	 * in the scb_array.  This makes sure that we can still
++	 * locate the correct SCB by SCB_TAG.
++	 */
++	q_hscb = ahd->next_queued_hscb;
++	q_hscb_map = ahd->next_queued_hscb_map;
++	saved_hscb_busaddr = q_hscb->hscb_busaddr;
++	memcpy(q_hscb, scb->hscb, sizeof(*scb->hscb));
++	q_hscb->hscb_busaddr = saved_hscb_busaddr;
++	q_hscb->next_hscb_busaddr = scb->hscb->hscb_busaddr;
++
++	/* Now swap HSCB pointers. */
++	ahd->next_queued_hscb = scb->hscb;
++	ahd->next_queued_hscb_map = scb->hscb_map;
++	scb->hscb = q_hscb;
++	scb->hscb_map = q_hscb_map;
++
++	/* Now define the mapping from tag to SCB in the scbindex */
++	ahd->scb_data.scbindex[SCB_GET_TAG(scb)] = scb;
++}
++
++/*
++ * Tell the sequencer about a new transaction to execute.
++ */
++void
++ahd_queue_scb(struct ahd_softc *ahd, struct scb *scb)
++{
++	ahd_swap_with_next_hscb(ahd, scb);
++
++	if (SCBID_IS_NULL(SCB_GET_TAG(scb)))
++		panic("Attempt to queue invalid SCB tag %x\n",
++		      SCB_GET_TAG(scb));
++
++	/*
++	 * Keep a history of SCBs we've downloaded in the qinfifo.
++	 */
++	ahd->qinfifo[AHD_QIN_WRAP(ahd->qinfifonext)] = SCB_GET_TAG(scb);
++	ahd->qinfifonext++;
++
++	if (scb->sg_count != 0)
++		ahd_setup_data_scb(ahd, scb);
++	else
++		ahd_setup_noxfer_scb(ahd, scb);
++	ahd_setup_scb_common(ahd, scb);
++
++	/*
++	 * Make sure our data is consistent from the
++	 * perspective of the adapter.
++	 */
++	ahd_sync_scb(ahd, scb, BUS_DMASYNC_PREREAD|BUS_DMASYNC_PREWRITE);
++
++#ifdef AHD_DEBUG
++	if ((ahd_debug & AHD_SHOW_QUEUE) != 0) {
++		uint64_t host_dataptr;
++
++		host_dataptr = ahd_le64toh(scb->hscb->dataptr);
++		printf("%s: Queueing SCB %d:0x%x bus addr 0x%x - 0x%x%x/0x%x\n",
++		       ahd_name(ahd),
++		       SCB_GET_TAG(scb), scb->hscb->scsiid,
++		       ahd_le32toh(scb->hscb->hscb_busaddr),
++		       (u_int)((host_dataptr >> 32) & 0xFFFFFFFF),
++		       (u_int)(host_dataptr & 0xFFFFFFFF),
++		       ahd_le32toh(scb->hscb->datacnt));
++	}
++#endif
++	/* Tell the adapter about the newly queued SCB */
++	ahd_set_hnscb_qoff(ahd, ahd->qinfifonext);
++}
++
++/************************** Interrupt Processing ******************************/
++/*
++ * See if the firmware has posted any completed commands
++ * into our in-core command complete fifos.
++ */
++#define AHD_RUN_QOUTFIFO 0x1
++#define AHD_RUN_TQINFIFO 0x2
++static u_int
++ahd_check_cmdcmpltqueues(struct ahd_softc *ahd)
++{
++	u_int retval;
++
++	retval = 0;
++	ahd_dmamap_sync(ahd, ahd->shared_data_dmat, ahd->shared_data_map.dmamap,
++			/*offset*/ahd->qoutfifonext * sizeof(*ahd->qoutfifo),
++			/*len*/sizeof(*ahd->qoutfifo), BUS_DMASYNC_POSTREAD);
++	if (ahd->qoutfifo[ahd->qoutfifonext].valid_tag
++	  == ahd->qoutfifonext_valid_tag)
++		retval |= AHD_RUN_QOUTFIFO;
++#ifdef AHD_TARGET_MODE
++	if ((ahd->flags & AHD_TARGETROLE) != 0
++	 && (ahd->flags & AHD_TQINFIFO_BLOCKED) == 0) {
++		ahd_dmamap_sync(ahd, ahd->shared_data_dmat,
++				ahd->shared_data_map.dmamap,
++				ahd_targetcmd_offset(ahd, ahd->tqinfifofnext),
++				/*len*/sizeof(struct target_cmd),
++				BUS_DMASYNC_POSTREAD);
++		if (ahd->targetcmds[ahd->tqinfifonext].cmd_valid != 0)
++			retval |= AHD_RUN_TQINFIFO;
++	}
++#endif
++	return (retval);
++}
++
++/*
++ * Catch an interrupt from the adapter
++ */
++int
++ahd_intr(struct ahd_softc *ahd)
++{
++	u_int	intstat;
++
++	if ((ahd->pause & INTEN) == 0) {
++		/*
++		 * Our interrupt is not enabled on the chip
++		 * and may be disabled for re-entrancy reasons,
++		 * so just return.  This is likely just a shared
++		 * interrupt.
++		 */
++		return (0);
++	}
++
++	/*
++	 * Instead of directly reading the interrupt status register,
++	 * infer the cause of the interrupt by checking our in-core
++	 * completion queues.  This avoids a costly PCI bus read in
++	 * most cases.
++	 */
++	if ((ahd->flags & AHD_ALL_INTERRUPTS) == 0
++	 && (ahd_check_cmdcmpltqueues(ahd) != 0))
++		intstat = CMDCMPLT;
++	else
++		intstat = ahd_inb(ahd, INTSTAT);
++
++	if ((intstat & INT_PEND) == 0)
++		return (0);
++
++	if (intstat & CMDCMPLT) {
++		ahd_outb(ahd, CLRINT, CLRCMDINT);
++
++		/*
++		 * Ensure that the chip sees that we've cleared
++		 * this interrupt before we walk the output fifo.
++		 * Otherwise, we may, due to posted bus writes,
++		 * clear the interrupt after we finish the scan,
++		 * and after the sequencer has added new entries
++		 * and asserted the interrupt again.
++		 */
++		if ((ahd->bugs & AHD_INTCOLLISION_BUG) != 0) {
++			if (ahd_is_paused(ahd)) {
++				/*
++				 * Potentially lost SEQINT.
++				 * If SEQINTCODE is non-zero,
++				 * simulate the SEQINT.
++				 */
++				if (ahd_inb(ahd, SEQINTCODE) != NO_SEQINT)
++					intstat |= SEQINT;
++			}
++		} else {
++			ahd_flush_device_writes(ahd);
++		}
++		ahd_run_qoutfifo(ahd);
++		ahd->cmdcmplt_counts[ahd->cmdcmplt_bucket]++;
++		ahd->cmdcmplt_total++;
++#ifdef AHD_TARGET_MODE
++		if ((ahd->flags & AHD_TARGETROLE) != 0)
++			ahd_run_tqinfifo(ahd, /*paused*/FALSE);
++#endif
++	}
++
++	/*
++	 * Handle statuses that may invalidate our cached
++	 * copy of INTSTAT separately.
++	 */
++	if (intstat == 0xFF && (ahd->features & AHD_REMOVABLE) != 0) {
++		/* Hot eject.  Do nothing */
++	} else if (intstat & HWERRINT) {
++		ahd_handle_hwerrint(ahd);
++	} else if ((intstat & (PCIINT|SPLTINT)) != 0) {
++		ahd->bus_intr(ahd);
++	} else {
++
++		if ((intstat & SEQINT) != 0)
++			ahd_handle_seqint(ahd, intstat);
++
++		if ((intstat & SCSIINT) != 0)
++			ahd_handle_scsiint(ahd, intstat);
++	}
++	return (1);
++}
  
- 	sep = strchr(str, ':');
- 
- 	if (sep) {
--		for (i = 0; i < len; i++){
--
-+		for (i = 0; i < ARRAY_SIZE(setup_token); i++) {
- 			if (!strncmp(setup_token[i].token, str, (sep - str))) {
- 				ret =  setup_token[i].val;
- 				break;
-diff -puN drivers/scsi/qlogicpti.c~drivers-scsi-use-array_size-macro drivers/scsi/qlogicpti.c
---- devel/drivers/scsi/qlogicpti.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/qlogicpti.c	2006-06-01 20:41:51.000000000 -0700
-@@ -132,7 +132,7 @@ static const u_char mbox_param[] = {
- 	PACKB(0, 0)	/* 0x0042 */
- };
- 
--#define MAX_MBOX_COMMAND	(sizeof(mbox_param)/sizeof(u_short))
-+#define MAX_MBOX_COMMAND	ARRAY_SIZE(mbox_param)
- 
- /* queue length's _must_ be power of two: */
- #define QUEUE_DEPTH(in, out, ql)	((in - out) & (ql))
-diff -puN drivers/scsi/raid_class.c~drivers-scsi-use-array_size-macro drivers/scsi/raid_class.c
---- devel/drivers/scsi/raid_class.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/raid_class.c	2006-06-01 20:41:51.000000000 -0700
-@@ -131,7 +131,7 @@ static const char *raid_state_name(enum 
- 	int i;
- 	char *name = NULL;
- 
--	for (i = 0; i < sizeof(raid_states)/sizeof(raid_states[0]); i++) {
-+	for (i = 0; i < ARRAY_SIZE(raid_states); i++) {
- 		if (raid_states[i].value == state) {
- 			name = raid_states[i].name;
- 			break;
-@@ -161,7 +161,7 @@ static const char *raid_level_name(enum 
- 	int i;
- 	char *name = NULL;
- 
--	for (i = 0; i < sizeof(raid_levels)/sizeof(raid_levels[0]); i++) {
-+	for (i = 0; i < ARRAY_SIZE(raid_levels); i++) {
- 		if (raid_levels[i].value == level) {
- 			name = raid_levels[i].name;
- 			break;
-diff -puN drivers/scsi/scsi_lib.c~drivers-scsi-use-array_size-macro drivers/scsi/scsi_lib.c
---- devel/drivers/scsi/scsi_lib.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/scsi_lib.c	2006-06-01 20:41:51.000000000 -0700
-@@ -30,7 +30,7 @@
- #include "scsi_logging.h"
- 
- 
--#define SG_MEMPOOL_NR		(sizeof(scsi_sg_pools)/sizeof(struct scsi_host_sg_pool))
-+#define SG_MEMPOOL_NR		ARRAY_SIZE(scsi_sg_pools)
- #define SG_MEMPOOL_SIZE		32
- 
- struct scsi_host_sg_pool {
-diff -puN drivers/scsi/scsi_sysfs.c~drivers-scsi-use-array_size-macro drivers/scsi/scsi_sysfs.c
---- devel/drivers/scsi/scsi_sysfs.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/scsi_sysfs.c	2006-06-01 20:41:51.000000000 -0700
-@@ -40,7 +40,7 @@ const char *scsi_device_state_name(enum 
- 	int i;
- 	char *name = NULL;
- 
--	for (i = 0; i < sizeof(sdev_states)/sizeof(sdev_states[0]); i++) {
-+	for (i = 0; i < ARRAY_SIZE(sdev_states); i++) {
- 		if (sdev_states[i].value == state) {
- 			name = sdev_states[i].name;
- 			break;
-@@ -66,7 +66,7 @@ const char *scsi_host_state_name(enum sc
- 	int i;
- 	char *name = NULL;
- 
--	for (i = 0; i < sizeof(shost_states)/sizeof(shost_states[0]); i++) {
-+	for (i = 0; i < ARRAY_SIZE(shost_states); i++) {
- 		if (shost_states[i].value == state) {
- 			name = shost_states[i].name;
- 			break;
-@@ -161,7 +161,7 @@ store_shost_state(struct class_device *c
- 	struct Scsi_Host *shost = class_to_shost(class_dev);
- 	enum scsi_host_state state = 0;
- 
--	for (i = 0; i < sizeof(shost_states)/sizeof(shost_states[0]); i++) {
-+	for (i = 0; i < ARRAY_SIZE(shost_states); i++) {
- 		const int len = strlen(shost_states[i].name);
- 		if (strncmp(shost_states[i].name, buf, len) == 0 &&
- 		   buf[len] == '\n') {
-@@ -467,7 +467,7 @@ store_state_field(struct device *dev, st
- 	struct scsi_device *sdev = to_scsi_device(dev);
- 	enum scsi_device_state state = 0;
- 
--	for (i = 0; i < sizeof(sdev_states)/sizeof(sdev_states[0]); i++) {
-+	for (i = 0; i < ARRAY_SIZE(sdev_states); i++) {
- 		const int len = strlen(sdev_states[i].name);
- 		if (strncmp(sdev_states[i].name, buf, len) == 0 &&
- 		   buf[len] == '\n') {
-diff -puN drivers/scsi/scsi_transport_fc.c~drivers-scsi-use-array_size-macro drivers/scsi/scsi_transport_fc.c
---- devel/drivers/scsi/scsi_transport_fc.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/scsi_transport_fc.c	2006-06-01 20:41:51.000000000 -0700
-@@ -50,7 +50,7 @@ static const char *get_fc_##title##_name
- 	int i;								\
- 	char *name = NULL;						\
- 									\
--	for (i = 0; i < sizeof(table)/sizeof(table[0]); i++) {		\
-+	for (i = 0; i < ARRAY_SIZE(table); i++) {			\
- 		if (table[i].value == table_key) {			\
- 			name = table[i].name;				\
- 			break;						\
-@@ -65,7 +65,7 @@ static int get_fc_##title##_match(const 
- {									\
- 	int i;								\
- 									\
--	for (i = 0; i < sizeof(table)/sizeof(table[0]); i++) {		\
-+	for (i = 0; i < ARRAY_SIZE(table); i++) {			\
- 		if (strncmp(table_key, table[i].name,			\
- 				table[i].matchlen) == 0) {		\
- 			*value = table[i].value;			\
-@@ -140,7 +140,7 @@ get_fc_##title##_names(u32 table_key, ch
- 	ssize_t len = 0;					\
- 	int i;							\
- 								\
--	for (i = 0; i < sizeof(table)/sizeof(table[0]); i++) {	\
-+	for (i = 0; i < ARRAY_SIZE(table); i++) {		\
- 		if (table[i].value & table_key) {		\
- 			len += sprintf(buf + len, "%s%s",	\
- 				prefix, table[i].name);		\
-diff -puN drivers/scsi/scsi_transport_sas.c~drivers-scsi-use-array_size-macro drivers/scsi/scsi_transport_sas.c
---- devel/drivers/scsi/scsi_transport_sas.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/scsi_transport_sas.c	2006-06-01 20:41:51.000000000 -0700
-@@ -65,7 +65,7 @@ get_sas_##title##_names(u32 table_key, c
- 	ssize_t len = 0;					\
- 	int i;							\
- 								\
--	for (i = 0; i < sizeof(table)/sizeof(table[0]); i++) {	\
-+	for (i = 0; i < ARRAY_SIZE(table); i++) {		\
- 		if (table[i].value & table_key) {		\
- 			len += sprintf(buf + len, "%s%s",	\
- 				prefix, table[i].name);		\
-@@ -83,7 +83,7 @@ get_sas_##title##_names(u32 table_key, c
- 	ssize_t len = 0;					\
- 	int i;							\
- 								\
--	for (i = 0; i < sizeof(table)/sizeof(table[0]); i++) {	\
-+	for (i = 0; i < ARRAY_SIZE(table); i++) {		\
- 		if (table[i].value == table_key) {		\
- 			len += sprintf(buf + len, "%s",		\
- 				table[i].name);			\
-diff -puN drivers/scsi/scsi_transport_spi.c~drivers-scsi-use-array_size-macro drivers/scsi/scsi_transport_spi.c
---- devel/drivers/scsi/scsi_transport_spi.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/scsi_transport_spi.c	2006-06-01 20:41:51.000000000 -0700
-@@ -146,7 +146,7 @@ static inline const char *spi_signal_to_
- {
- 	int i;
- 
--	for (i = 0; i < sizeof(signal_types)/sizeof(signal_types[0]); i++) {
-+	for (i = 0; i < ARRAY_SIZE(signal_types); i++) {
- 		if (type == signal_types[i].value)
- 			return signal_types[i].name;
- 	}
-@@ -156,7 +156,7 @@ static inline enum spi_signal_type spi_s
- {
- 	int i, len;
- 
--	for (i = 0; i < sizeof(signal_types)/sizeof(signal_types[0]); i++) {
-+	for (i = 0; i < ARRAY_SIZE(signal_types); i++) {
- 		len =  strlen(signal_types[i].name);
- 		if (strncmp(name, signal_types[i].name, len) == 0 &&
- 		    (name[len] == '\n' || name[len] == '\0'))
-diff -puN drivers/scsi/sd.c~drivers-scsi-use-array_size-macro drivers/scsi/sd.c
---- devel/drivers/scsi/sd.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/sd.c	2006-06-01 20:41:51.000000000 -0700
-@@ -175,7 +175,7 @@ static ssize_t sd_store_cache_type(struc
- 		 * it's not worth the risk */
- 		return -EINVAL;
- 
--	for (i = 0; i < sizeof(sd_cache_types)/sizeof(sd_cache_types[0]); i++) {
-+	for (i = 0; i < ARRAY_SIZE(sd_cache_types); i++) {
- 		const int len = strlen(sd_cache_types[i]);
- 		if (strncmp(sd_cache_types[i], buf, len) == 0 &&
- 		    buf[len] == '\n') {
-diff -puN drivers/scsi/seagate.c~drivers-scsi-use-array_size-macro drivers/scsi/seagate.c
---- devel/drivers/scsi/seagate.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/seagate.c	2006-06-01 20:41:51.000000000 -0700
-@@ -312,7 +312,7 @@ static Signature __initdata signatures[]
- 	{"IBM F1 V1.2009/22/93", 5, 25, FD},
- };
- 
--#define NUM_SIGNATURES (sizeof(signatures) / sizeof(Signature))
-+#define NUM_SIGNATURES ARRAY_SIZE(signatures)
- #endif				/* n OVERRIDE */
- 
- /*
-@@ -457,7 +457,7 @@ int __init seagate_st0x_detect (struct s
-  * space for the on-board RAM instead.
-  */
- 
--		for (i = 0; i < (sizeof (seagate_bases) / sizeof (unsigned int)); ++i) {
-+		for (i = 0; i < ARRAY_SIZE(seagate_bases); ++i) {
- 			void __iomem *p = ioremap(seagate_bases[i], 0x2000);
- 			if (!p)
- 				continue;
-diff -puN drivers/scsi/sg.c~drivers-scsi-use-array_size-macro drivers/scsi/sg.c
---- devel/drivers/scsi/sg.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/sg.c	2006-06-01 20:41:51.000000000 -0700
-@@ -2635,8 +2635,7 @@ static int
- sg_proc_init(void)
- {
- 	int k, mask;
--	int num_leaves =
--	    sizeof (sg_proc_leaf_arr) / sizeof (sg_proc_leaf_arr[0]);
-+	int num_leaves = ARRAY_SIZE(sg_proc_leaf_arr);
- 	struct proc_dir_entry *pdep;
- 	struct sg_proc_leaf * leaf;
- 
-@@ -2661,8 +2660,7 @@ static void
- sg_proc_cleanup(void)
- {
- 	int k;
--	int num_leaves =
--	    sizeof (sg_proc_leaf_arr) / sizeof (sg_proc_leaf_arr[0]);
-+	int num_leaves = ARRAY_SIZE(sg_proc_leaf_arr);
- 
- 	if (!sg_proc_sgp)
- 		return;
-diff -puN drivers/scsi/st.c~drivers-scsi-use-array_size-macro drivers/scsi/st.c
---- devel/drivers/scsi/st.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/st.c	2006-06-01 20:41:51.000000000 -0700
-@@ -3839,7 +3839,7 @@ static int __init st_setup(char *str)
- 					break;
- 				}
- 			}
--			if (i >= sizeof(parms) / sizeof(struct st_dev_parm))
-+			if (i >= ARRAY_SIZE(parms))
- 				 printk(KERN_WARNING "st: invalid parameter in '%s'\n",
- 					stp);
- 			stp = strchr(stp, ',');
-diff -puN drivers/scsi/sym53c8xx_2/sym_hipd.c~drivers-scsi-use-array_size-macro drivers/scsi/sym53c8xx_2/sym_hipd.c
---- devel/drivers/scsi/sym53c8xx_2/sym_hipd.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/sym53c8xx_2/sym_hipd.c	2006-06-01 20:41:51.000000000 -0700
-@@ -1276,8 +1276,7 @@ static struct sym_chip sym_dev_table[] =
-  FE_RAM|FE_IO256|FE_LEDC}
- };
- 
--#define sym_num_devs \
--	(sizeof(sym_dev_table) / sizeof(sym_dev_table[0]))
-+#define sym_num_devs (ARRAY_SIZE(sym_dev_table))
- 
- /*
-  *  Look up the chip table.
-diff -puN drivers/scsi/t128.c~drivers-scsi-use-array_size-macro drivers/scsi/t128.c
---- devel/drivers/scsi/t128.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/t128.c	2006-06-01 20:41:51.000000000 -0700
-@@ -126,15 +126,15 @@
- static struct override {
-     unsigned long address;
-     int irq;
--} overrides 
-+} overrides
- #ifdef T128_OVERRIDE
-     [] __initdata = T128_OVERRIDE;
- #else
--    [4] __initdata = {{0, IRQ_AUTO}, {0, IRQ_AUTO}, 
-+    [4] __initdata = {{0, IRQ_AUTO}, {0, IRQ_AUTO},
-         {0 ,IRQ_AUTO}, {0, IRQ_AUTO}};
- #endif
- 
--#define NO_OVERRIDES (sizeof(overrides) / sizeof(struct override))
-+#define NO_OVERRIDES ARRAY_SIZE(overrides)
- 
- static struct base {
-     unsigned int address;
-@@ -143,7 +143,7 @@ static struct base {
-     { 0xcc000, 0}, { 0xc8000, 0}, { 0xdc000, 0}, { 0xd8000, 0}
- };
- 
--#define NO_BASES (sizeof (bases) / sizeof (struct base))
-+#define NO_BASES ARRAY_SIZE(bases)
- 
- static struct signature {
-     const char *string;
-@@ -152,7 +152,7 @@ static struct signature {
- {"TSROM: SCSI BIOS, Version 1.12", 0x36},
- };
- 
--#define NO_SIGNATURES (sizeof (signatures) /  sizeof (struct signature))
-+#define NO_SIGNATURES ARRAY_SIZE(signatures)
- 
- /*
-  * Function : t128_setup(char *str, int *ints)
-diff -puN drivers/scsi/wd33c93.c~drivers-scsi-use-array_size-macro drivers/scsi/wd33c93.c
---- devel/drivers/scsi/wd33c93.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/wd33c93.c	2006-06-01 20:41:51.000000000 -0700
-@@ -1701,7 +1701,7 @@ wd33c93_abort(struct scsi_cmnd * cmd)
+ /***************************** Lookup Tables **********************************/
+ static char *ahd_chip_names[] =
+@@ -303,7 +898,7 @@ ahd_currently_packetized(struct ahd_soft
+ 	return (packetized);
  }
  
- #define MAX_WD33C93_HOSTS 4
--#define MAX_SETUP_ARGS ((int)(sizeof(setup_args) / sizeof(char *)))
-+#define MAX_SETUP_ARGS ARRAY_SIZE(setup_args)
- #define SETUP_BUFFER_SIZE 200
- static char setup_buffer[SETUP_BUFFER_SIZE];
- static char setup_used[MAX_SETUP_ARGS];
-diff -puN drivers/scsi/wd7000.c~drivers-scsi-use-array_size-macro drivers/scsi/wd7000.c
---- devel/drivers/scsi/wd7000.c~drivers-scsi-use-array_size-macro	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/wd7000.c	2006-06-01 20:41:51.000000000 -0700
-@@ -267,7 +267,7 @@ static const long wd7000_biosaddr[] = {
- 	0xc0000, 0xc2000, 0xc4000, 0xc6000, 0xc8000, 0xca000, 0xcc000, 0xce000,
- 	0xd0000, 0xd2000, 0xd4000, 0xd6000, 0xd8000, 0xda000, 0xdc000, 0xde000
- };
--#define NUM_ADDRS (sizeof(wd7000_biosaddr)/sizeof(long))
-+#define NUM_ADDRS ARRAY_SIZE(wd7000_biosaddr)
+-static __inline int
++static int
+ ahd_set_active_fifo(struct ahd_softc *ahd)
+ {
+ 	u_int active_fifo;
+@@ -7169,7 +7764,7 @@ ahd_resume(struct ahd_softc *ahd)
+  * scbid that should be restored once manipualtion
+  * of the TCL entry is complete.
+  */
+-static __inline u_int
++static u_int
+ ahd_index_busy_tcl(struct ahd_softc *ahd, u_int *saved_scbid, u_int tcl)
+ {
+ 	/*
+@@ -8285,7 +8880,7 @@ ahd_handle_scsi_status(struct ahd_softc 
+ 		break;
+ 	}
+ 	case SCSI_STATUS_OK:
+-		printf("%s: Interrupted for staus of 0???\n",
++		printf("%s: Interrupted for status of 0???\n",
+ 		       ahd_name(ahd));
+ 		/* FALLTHROUGH */
+ 	default:
+diff -puN drivers/scsi/aic7xxx/aic79xx_inline.h~aic7xxx-deinline-large-functions-save-80k-of-text drivers/scsi/aic7xxx/aic79xx_inline.h
+--- devel/drivers/scsi/aic7xxx/aic79xx_inline.h~aic7xxx-deinline-large-functions-save-80k-of-text	2006-06-01 20:41:50.000000000 -0700
++++ devel-akpm/drivers/scsi/aic7xxx/aic79xx_inline.h	2006-06-01 20:41:50.000000000 -0700
+@@ -63,18 +63,18 @@ static __inline ahd_mode_state ahd_build
+ static __inline void ahd_extract_mode_state(struct ahd_softc *ahd,
+ 					    ahd_mode_state state,
+ 					    ahd_mode *src, ahd_mode *dst);
+-static __inline void ahd_set_modes(struct ahd_softc *ahd, ahd_mode src,
++void ahd_set_modes(struct ahd_softc *ahd, ahd_mode src,
+ 				   ahd_mode dst);
+-static __inline void ahd_update_modes(struct ahd_softc *ahd);
++void ahd_update_modes(struct ahd_softc *ahd);
+ static __inline void ahd_assert_modes(struct ahd_softc *ahd, ahd_mode srcmode,
+ 				      ahd_mode dstmode, const char *file,
+ 				      int line);
+-static __inline ahd_mode_state ahd_save_modes(struct ahd_softc *ahd);
+-static __inline void ahd_restore_modes(struct ahd_softc *ahd,
++ahd_mode_state ahd_save_modes(struct ahd_softc *ahd);
++void ahd_restore_modes(struct ahd_softc *ahd,
+ 				       ahd_mode_state state);
+ static __inline int  ahd_is_paused(struct ahd_softc *ahd);
+ static __inline void ahd_pause(struct ahd_softc *ahd);
+-static __inline void ahd_unpause(struct ahd_softc *ahd);
++void ahd_unpause(struct ahd_softc *ahd);
  
- static const unsigned short wd7000_iobase[] = {
- 	0x0300, 0x0308, 0x0310, 0x0318, 0x0320, 0x0328, 0x0330, 0x0338,
-@@ -275,13 +275,13 @@ static const unsigned short wd7000_iobas
- 	0x0380, 0x0388, 0x0390, 0x0398, 0x03a0, 0x03a8, 0x03b0, 0x03b8,
- 	0x03c0, 0x03c8, 0x03d0, 0x03d8, 0x03e0, 0x03e8, 0x03f0, 0x03f8
- };
--#define NUM_IOPORTS (sizeof(wd7000_iobase)/sizeof(unsigned short))
-+#define NUM_IOPORTS ARRAY_SIZE(wd7000_iobase)
+ static __inline void
+ ahd_known_modes(struct ahd_softc *ahd, ahd_mode src, ahd_mode dst)
+@@ -100,40 +100,6 @@ ahd_extract_mode_state(struct ahd_softc 
+ }
  
- static const short wd7000_irq[] = { 3, 4, 5, 7, 9, 10, 11, 12, 14, 15 };
--#define NUM_IRQS (sizeof(wd7000_irq)/sizeof(short))
-+#define NUM_IRQS ARRAY_SIZE(wd7000_irq)
+ static __inline void
+-ahd_set_modes(struct ahd_softc *ahd, ahd_mode src, ahd_mode dst)
+-{
+-	if (ahd->src_mode == src && ahd->dst_mode == dst)
+-		return;
+-#ifdef AHD_DEBUG
+-	if (ahd->src_mode == AHD_MODE_UNKNOWN
+-	 || ahd->dst_mode == AHD_MODE_UNKNOWN)
+-		panic("Setting mode prior to saving it.\n");
+-	if ((ahd_debug & AHD_SHOW_MODEPTR) != 0)
+-		printf("%s: Setting mode 0x%x\n", ahd_name(ahd),
+-		       ahd_build_mode_state(ahd, src, dst));
+-#endif
+-	ahd_outb(ahd, MODE_PTR, ahd_build_mode_state(ahd, src, dst));
+-	ahd->src_mode = src;
+-	ahd->dst_mode = dst;
+-}
+-
+-static __inline void
+-ahd_update_modes(struct ahd_softc *ahd)
+-{
+-	ahd_mode_state mode_ptr;
+-	ahd_mode src;
+-	ahd_mode dst;
+-
+-	mode_ptr = ahd_inb(ahd, MODE_PTR);
+-#ifdef AHD_DEBUG
+-	if ((ahd_debug & AHD_SHOW_MODEPTR) != 0)
+-		printf("Reading mode 0x%x\n", mode_ptr);
+-#endif
+-	ahd_extract_mode_state(ahd, mode_ptr, &src, &dst);
+-	ahd_known_modes(ahd, src, dst);
+-}
+-
+-static __inline void
+ ahd_assert_modes(struct ahd_softc *ahd, ahd_mode srcmode,
+ 		 ahd_mode dstmode, const char *file, int line)
+ {
+@@ -146,26 +112,6 @@ ahd_assert_modes(struct ahd_softc *ahd, 
+ #endif
+ }
  
- static const short wd7000_dma[] = { 5, 6, 7 };
--#define NUM_DMAS (sizeof(wd7000_dma)/sizeof(short))
-+#define NUM_DMAS ARRAY_SIZE(wd7000_dma)
+-static __inline ahd_mode_state
+-ahd_save_modes(struct ahd_softc *ahd)
+-{
+-	if (ahd->src_mode == AHD_MODE_UNKNOWN
+-	 || ahd->dst_mode == AHD_MODE_UNKNOWN)
+-		ahd_update_modes(ahd);
+-
+-	return (ahd_build_mode_state(ahd, ahd->src_mode, ahd->dst_mode));
+-}
+-
+-static __inline void
+-ahd_restore_modes(struct ahd_softc *ahd, ahd_mode_state state)
+-{
+-	ahd_mode src;
+-	ahd_mode dst;
+-
+-	ahd_extract_mode_state(ahd, state, &src, &dst);
+-	ahd_set_modes(ahd, src, dst);
+-}
+-
+ #define AHD_ASSERT_MODES(ahd, source, dest) \
+ 	ahd_assert_modes(ahd, source, dest, __FILE__, __LINE__);
  
- /*
-  * The following is set up by wd7000_detect, and used thereafter for
-@@ -317,7 +317,7 @@ static Config configs[] = {
- 	{7, 6, 0x350, BUS_ON, BUS_OFF},	/* My configuration (Zaga)     */
- 	{-1, -1, 0x0, BUS_ON, BUS_OFF}	/* Empty slot                  */
- };
--#define NUM_CONFIGS (sizeof(configs)/sizeof(Config))
-+#define NUM_CONFIGS ARRAY_SIZE(configs)
+@@ -199,129 +145,13 @@ ahd_pause(struct ahd_softc *ahd)
+ 		;
+ }
  
- /*
-  *  The following list defines strings to look for in the BIOS that identify
-@@ -333,7 +333,7 @@ typedef struct signature {
- static const Signature signatures[] = {
- 	{"SSTBIOS", 0x0000d, 7}	/* "SSTBIOS" @ offset 0x0000d */
- };
--#define NUM_SIGNATURES (sizeof(signatures)/sizeof(Signature))
-+#define NUM_SIGNATURES ARRAY_SIZE(signatures)
+-/*
+- * Allow the sequencer to continue program execution.
+- * We check here to ensure that no additional interrupt
+- * sources that would cause the sequencer to halt have been
+- * asserted.  If, for example, a SCSI bus reset is detected
+- * while we are fielding a different, pausing, interrupt type,
+- * we don't want to release the sequencer before going back
+- * into our interrupt handler and dealing with this new
+- * condition.
+- */
+-static __inline void
+-ahd_unpause(struct ahd_softc *ahd)
+-{
+-	/*
+-	 * Automatically restore our modes to those saved
+-	 * prior to the first change of the mode.
+-	 */
+-	if (ahd->saved_src_mode != AHD_MODE_UNKNOWN
+-	 && ahd->saved_dst_mode != AHD_MODE_UNKNOWN) {
+-		if ((ahd->flags & AHD_UPDATE_PEND_CMDS) != 0)
+-			ahd_reset_cmds_pending(ahd);
+-		ahd_set_modes(ahd, ahd->saved_src_mode, ahd->saved_dst_mode);
+-	}
+-
+-	if ((ahd_inb(ahd, INTSTAT) & ~CMDCMPLT) == 0)
+-		ahd_outb(ahd, HCNTRL, ahd->unpause);
+-
+-	ahd_known_modes(ahd, AHD_MODE_UNKNOWN, AHD_MODE_UNKNOWN);
+-}
+-
+ /*********************** Scatter Gather List Handling *************************/
+-static __inline void	*ahd_sg_setup(struct ahd_softc *ahd, struct scb *scb,
++void	*ahd_sg_setup(struct ahd_softc *ahd, struct scb *scb,
+ 				      void *sgptr, dma_addr_t addr,
+ 				      bus_size_t len, int last);
+-static __inline void	 ahd_setup_scb_common(struct ahd_softc *ahd,
+-					      struct scb *scb);
+-static __inline void	 ahd_setup_data_scb(struct ahd_softc *ahd,
+-					    struct scb *scb);
+ static __inline void	 ahd_setup_noxfer_scb(struct ahd_softc *ahd,
+ 					      struct scb *scb);
  
+-static __inline void *
+-ahd_sg_setup(struct ahd_softc *ahd, struct scb *scb,
+-	     void *sgptr, dma_addr_t addr, bus_size_t len, int last)
+-{
+-	scb->sg_count++;
+-	if (sizeof(dma_addr_t) > 4
+-	 && (ahd->flags & AHD_64BIT_ADDRESSING) != 0) {
+-		struct ahd_dma64_seg *sg;
+-
+-		sg = (struct ahd_dma64_seg *)sgptr;
+-		sg->addr = ahd_htole64(addr);
+-		sg->len = ahd_htole32(len | (last ? AHD_DMA_LAST_SEG : 0));
+-		return (sg + 1);
+-	} else {
+-		struct ahd_dma_seg *sg;
+-
+-		sg = (struct ahd_dma_seg *)sgptr;
+-		sg->addr = ahd_htole32(addr & 0xFFFFFFFF);
+-		sg->len = ahd_htole32(len | ((addr >> 8) & 0x7F000000)
+-				    | (last ? AHD_DMA_LAST_SEG : 0));
+-		return (sg + 1);
+-	}
+-}
+-
+-static __inline void
+-ahd_setup_scb_common(struct ahd_softc *ahd, struct scb *scb)
+-{
+-	/* XXX Handle target mode SCBs. */
+-	scb->crc_retry_count = 0;
+-	if ((scb->flags & SCB_PACKETIZED) != 0) {
+-		/* XXX what about ACA??  It is type 4, but TAG_TYPE == 0x3. */
+-		scb->hscb->task_attribute = scb->hscb->control & SCB_TAG_TYPE;
+-	} else {
+-		if (ahd_get_transfer_length(scb) & 0x01)
+-			scb->hscb->task_attribute = SCB_XFERLEN_ODD;
+-		else
+-			scb->hscb->task_attribute = 0;
+-	}
+-
+-	if (scb->hscb->cdb_len <= MAX_CDB_LEN_WITH_SENSE_ADDR
+-	 || (scb->hscb->cdb_len & SCB_CDB_LEN_PTR) != 0)
+-		scb->hscb->shared_data.idata.cdb_plus_saddr.sense_addr =
+-		    ahd_htole32(scb->sense_busaddr);
+-}
+-
+-static __inline void
+-ahd_setup_data_scb(struct ahd_softc *ahd, struct scb *scb)
+-{
+-	/*
+-	 * Copy the first SG into the "current" data ponter area.
+-	 */
+-	if ((ahd->flags & AHD_64BIT_ADDRESSING) != 0) {
+-		struct ahd_dma64_seg *sg;
+-
+-		sg = (struct ahd_dma64_seg *)scb->sg_list;
+-		scb->hscb->dataptr = sg->addr;
+-		scb->hscb->datacnt = sg->len;
+-	} else {
+-		struct ahd_dma_seg *sg;
+-		uint32_t *dataptr_words;
+-
+-		sg = (struct ahd_dma_seg *)scb->sg_list;
+-		dataptr_words = (uint32_t*)&scb->hscb->dataptr;
+-		dataptr_words[0] = sg->addr;
+-		dataptr_words[1] = 0;
+-		if ((ahd->flags & AHD_39BIT_ADDRESSING) != 0) {
+-			uint64_t high_addr;
+-
+-			high_addr = ahd_le32toh(sg->len) & 0x7F000000;
+-			scb->hscb->dataptr |= ahd_htole64(high_addr << 8);
+-		}
+-		scb->hscb->datacnt = sg->len;
+-	}
+-	/*
+-	 * Note where to find the SG entries in bus space.
+-	 * We also set the full residual flag which the 
+-	 * sequencer will clear as soon as a data transfer
+-	 * occurs.
+-	 */
+-	scb->hscb->sgptr = ahd_htole32(scb->sg_list_busaddr|SG_FULL_RESID);
+-}
+-
+ static __inline void
+ ahd_setup_noxfer_scb(struct ahd_softc *ahd, struct scb *scb)
+ {
+@@ -423,18 +253,12 @@ static __inline struct ahd_initiator_tin
+ 					    char channel, u_int our_id,
+ 					    u_int remote_id,
+ 					    struct ahd_tmode_tstate **tstate);
+-static __inline uint16_t
+-			ahd_inw(struct ahd_softc *ahd, u_int port);
+-static __inline void	ahd_outw(struct ahd_softc *ahd, u_int port,
+-				 u_int value);
+-static __inline uint32_t
+-			ahd_inl(struct ahd_softc *ahd, u_int port);
+-static __inline void	ahd_outl(struct ahd_softc *ahd, u_int port,
+-				 uint32_t value);
+-static __inline uint64_t
+-			ahd_inq(struct ahd_softc *ahd, u_int port);
+-static __inline void	ahd_outq(struct ahd_softc *ahd, u_int port,
+-				 uint64_t value);
++uint16_t ahd_inw(struct ahd_softc *ahd, u_int port);
++void	ahd_outw(struct ahd_softc *ahd, u_int port, u_int value);
++uint32_t ahd_inl(struct ahd_softc *ahd, u_int port);
++void	ahd_outl(struct ahd_softc *ahd, u_int port, uint32_t value);
++uint64_t ahd_inq(struct ahd_softc *ahd, u_int port);
++void	ahd_outq(struct ahd_softc *ahd, u_int port, uint64_t value);
+ static __inline u_int	ahd_get_scbptr(struct ahd_softc *ahd);
+ static __inline void	ahd_set_scbptr(struct ahd_softc *ahd, u_int scbptr);
+ static __inline u_int	ahd_get_hnscb_qoff(struct ahd_softc *ahd);
+@@ -447,15 +271,12 @@ static __inline u_int	ahd_get_sescb_qoff
+ static __inline void	ahd_set_sescb_qoff(struct ahd_softc *ahd, u_int value);
+ static __inline u_int	ahd_get_sdscb_qoff(struct ahd_softc *ahd);
+ static __inline void	ahd_set_sdscb_qoff(struct ahd_softc *ahd, u_int value);
+-static __inline u_int	ahd_inb_scbram(struct ahd_softc *ahd, u_int offset);
+-static __inline u_int	ahd_inw_scbram(struct ahd_softc *ahd, u_int offset);
+-static __inline uint32_t
+-			ahd_inl_scbram(struct ahd_softc *ahd, u_int offset);
+-static __inline uint64_t
+-			ahd_inq_scbram(struct ahd_softc *ahd, u_int offset);
+-static __inline void	ahd_swap_with_next_hscb(struct ahd_softc *ahd,
+-						struct scb *scb);
+-static __inline void	ahd_queue_scb(struct ahd_softc *ahd, struct scb *scb);
++u_int	ahd_inb_scbram(struct ahd_softc *ahd, u_int offset);
++u_int	ahd_inw_scbram(struct ahd_softc *ahd, u_int offset);
++uint32_t ahd_inl_scbram(struct ahd_softc *ahd, u_int offset);
++uint64_t ahd_inq_scbram(struct ahd_softc *ahd, u_int offset);
++struct scb *ahd_lookup_scb(struct ahd_softc *ahd, u_int tag);
++void	ahd_queue_scb(struct ahd_softc *ahd, struct scb *scb);
+ static __inline uint8_t *
+ 			ahd_get_sense_buf(struct ahd_softc *ahd,
+ 					  struct scb *scb);
+@@ -489,72 +310,6 @@ do {								\
+ 	dst->hscb->lun = src->hscb->lun;			\
+ } while (0)
  
- /*
+-static __inline uint16_t
+-ahd_inw(struct ahd_softc *ahd, u_int port)
+-{
+-	/*
+-	 * Read high byte first as some registers increment
+-	 * or have other side effects when the low byte is
+-	 * read.
+-	 */
+-	return ((ahd_inb(ahd, port+1) << 8) | ahd_inb(ahd, port));
+-}
+-
+-static __inline void
+-ahd_outw(struct ahd_softc *ahd, u_int port, u_int value)
+-{
+-	/*
+-	 * Write low byte first to accomodate registers
+-	 * such as PRGMCNT where the order maters.
+-	 */
+-	ahd_outb(ahd, port, value & 0xFF);
+-	ahd_outb(ahd, port+1, (value >> 8) & 0xFF);
+-}
+-
+-static __inline uint32_t
+-ahd_inl(struct ahd_softc *ahd, u_int port)
+-{
+-	return ((ahd_inb(ahd, port))
+-	      | (ahd_inb(ahd, port+1) << 8)
+-	      | (ahd_inb(ahd, port+2) << 16)
+-	      | (ahd_inb(ahd, port+3) << 24));
+-}
+-
+-static __inline void
+-ahd_outl(struct ahd_softc *ahd, u_int port, uint32_t value)
+-{
+-	ahd_outb(ahd, port, (value) & 0xFF);
+-	ahd_outb(ahd, port+1, ((value) >> 8) & 0xFF);
+-	ahd_outb(ahd, port+2, ((value) >> 16) & 0xFF);
+-	ahd_outb(ahd, port+3, ((value) >> 24) & 0xFF);
+-}
+-
+-static __inline uint64_t
+-ahd_inq(struct ahd_softc *ahd, u_int port)
+-{
+-	return ((ahd_inb(ahd, port))
+-	      | (ahd_inb(ahd, port+1) << 8)
+-	      | (ahd_inb(ahd, port+2) << 16)
+-	      | (ahd_inb(ahd, port+3) << 24)
+-	      | (((uint64_t)ahd_inb(ahd, port+4)) << 32)
+-	      | (((uint64_t)ahd_inb(ahd, port+5)) << 40)
+-	      | (((uint64_t)ahd_inb(ahd, port+6)) << 48)
+-	      | (((uint64_t)ahd_inb(ahd, port+7)) << 56));
+-}
+-
+-static __inline void
+-ahd_outq(struct ahd_softc *ahd, u_int port, uint64_t value)
+-{
+-	ahd_outb(ahd, port, value & 0xFF);
+-	ahd_outb(ahd, port+1, (value >> 8) & 0xFF);
+-	ahd_outb(ahd, port+2, (value >> 16) & 0xFF);
+-	ahd_outb(ahd, port+3, (value >> 24) & 0xFF);
+-	ahd_outb(ahd, port+4, (value >> 32) & 0xFF);
+-	ahd_outb(ahd, port+5, (value >> 40) & 0xFF);
+-	ahd_outb(ahd, port+6, (value >> 48) & 0xFF);
+-	ahd_outb(ahd, port+7, (value >> 56) & 0xFF);
+-}
+-
+ static __inline u_int
+ ahd_get_scbptr(struct ahd_softc *ahd)
+ {
+@@ -643,150 +398,6 @@ ahd_set_sdscb_qoff(struct ahd_softc *ahd
+ 	ahd_outb(ahd, SDSCB_QOFF+1, (value >> 8) & 0xFF);
+ }
+ 
+-static __inline u_int
+-ahd_inb_scbram(struct ahd_softc *ahd, u_int offset)
+-{
+-	u_int value;
+-
+-	/*
+-	 * Workaround PCI-X Rev A. hardware bug.
+-	 * After a host read of SCB memory, the chip
+-	 * may become confused into thinking prefetch
+-	 * was required.  This starts the discard timer
+-	 * running and can cause an unexpected discard
+-	 * timer interrupt.  The work around is to read
+-	 * a normal register prior to the exhaustion of
+-	 * the discard timer.  The mode pointer register
+-	 * has no side effects and so serves well for
+-	 * this purpose.
+-	 *
+-	 * Razor #528
+-	 */
+-	value = ahd_inb(ahd, offset);
+-	if ((ahd->bugs & AHD_PCIX_SCBRAM_RD_BUG) != 0)
+-		ahd_inb(ahd, MODE_PTR);
+-	return (value);
+-}
+-
+-static __inline u_int
+-ahd_inw_scbram(struct ahd_softc *ahd, u_int offset)
+-{
+-	return (ahd_inb_scbram(ahd, offset)
+-	      | (ahd_inb_scbram(ahd, offset+1) << 8));
+-}
+-
+-static __inline uint32_t
+-ahd_inl_scbram(struct ahd_softc *ahd, u_int offset)
+-{
+-	return (ahd_inw_scbram(ahd, offset)
+-	      | (ahd_inw_scbram(ahd, offset+2) << 16));
+-}
+-
+-static __inline uint64_t
+-ahd_inq_scbram(struct ahd_softc *ahd, u_int offset)
+-{
+-	return (ahd_inl_scbram(ahd, offset)
+-	      | ((uint64_t)ahd_inl_scbram(ahd, offset+4)) << 32);
+-}
+-
+-static __inline struct scb *
+-ahd_lookup_scb(struct ahd_softc *ahd, u_int tag)
+-{
+-	struct scb* scb;
+-
+-	if (tag >= AHD_SCB_MAX)
+-		return (NULL);
+-	scb = ahd->scb_data.scbindex[tag];
+-	if (scb != NULL)
+-		ahd_sync_scb(ahd, scb,
+-			     BUS_DMASYNC_POSTREAD|BUS_DMASYNC_POSTWRITE);
+-	return (scb);
+-}
+-
+-static __inline void
+-ahd_swap_with_next_hscb(struct ahd_softc *ahd, struct scb *scb)
+-{
+-	struct	 hardware_scb *q_hscb;
+-	struct	 map_node *q_hscb_map;
+-	uint32_t saved_hscb_busaddr;
+-
+-	/*
+-	 * Our queuing method is a bit tricky.  The card
+-	 * knows in advance which HSCB (by address) to download,
+-	 * and we can't disappoint it.  To achieve this, the next
+-	 * HSCB to download is saved off in ahd->next_queued_hscb.
+-	 * When we are called to queue "an arbitrary scb",
+-	 * we copy the contents of the incoming HSCB to the one
+-	 * the sequencer knows about, swap HSCB pointers and
+-	 * finally assign the SCB to the tag indexed location
+-	 * in the scb_array.  This makes sure that we can still
+-	 * locate the correct SCB by SCB_TAG.
+-	 */
+-	q_hscb = ahd->next_queued_hscb;
+-	q_hscb_map = ahd->next_queued_hscb_map;
+-	saved_hscb_busaddr = q_hscb->hscb_busaddr;
+-	memcpy(q_hscb, scb->hscb, sizeof(*scb->hscb));
+-	q_hscb->hscb_busaddr = saved_hscb_busaddr;
+-	q_hscb->next_hscb_busaddr = scb->hscb->hscb_busaddr;
+-
+-	/* Now swap HSCB pointers. */
+-	ahd->next_queued_hscb = scb->hscb;
+-	ahd->next_queued_hscb_map = scb->hscb_map;
+-	scb->hscb = q_hscb;
+-	scb->hscb_map = q_hscb_map;
+-
+-	/* Now define the mapping from tag to SCB in the scbindex */
+-	ahd->scb_data.scbindex[SCB_GET_TAG(scb)] = scb;
+-}
+-
+-/*
+- * Tell the sequencer about a new transaction to execute.
+- */
+-static __inline void
+-ahd_queue_scb(struct ahd_softc *ahd, struct scb *scb)
+-{
+-	ahd_swap_with_next_hscb(ahd, scb);
+-
+-	if (SCBID_IS_NULL(SCB_GET_TAG(scb)))
+-		panic("Attempt to queue invalid SCB tag %x\n",
+-		      SCB_GET_TAG(scb));
+-
+-	/*
+-	 * Keep a history of SCBs we've downloaded in the qinfifo.
+-	 */
+-	ahd->qinfifo[AHD_QIN_WRAP(ahd->qinfifonext)] = SCB_GET_TAG(scb);
+-	ahd->qinfifonext++;
+-
+-	if (scb->sg_count != 0)
+-		ahd_setup_data_scb(ahd, scb);
+-	else
+-		ahd_setup_noxfer_scb(ahd, scb);
+-	ahd_setup_scb_common(ahd, scb);
+-
+-	/*
+-	 * Make sure our data is consistent from the
+-	 * perspective of the adapter.
+-	 */
+-	ahd_sync_scb(ahd, scb, BUS_DMASYNC_PREREAD|BUS_DMASYNC_PREWRITE);
+-
+-#ifdef AHD_DEBUG
+-	if ((ahd_debug & AHD_SHOW_QUEUE) != 0) {
+-		uint64_t host_dataptr;
+-
+-		host_dataptr = ahd_le64toh(scb->hscb->dataptr);
+-		printf("%s: Queueing SCB %d:0x%x bus addr 0x%x - 0x%x%x/0x%x\n",
+-		       ahd_name(ahd),
+-		       SCB_GET_TAG(scb), scb->hscb->scsiid,
+-		       ahd_le32toh(scb->hscb->hscb_busaddr),
+-		       (u_int)((host_dataptr >> 32) & 0xFFFFFFFF),
+-		       (u_int)(host_dataptr & 0xFFFFFFFF),
+-		       ahd_le32toh(scb->hscb->datacnt));
+-	}
+-#endif
+-	/* Tell the adapter about the newly queued SCB */
+-	ahd_set_hnscb_qoff(ahd, ahd->qinfifonext);
+-}
+-
+ static __inline uint8_t *
+ ahd_get_sense_buf(struct ahd_softc *ahd, struct scb *scb)
+ {
+@@ -802,8 +413,7 @@ ahd_get_sense_bufaddr(struct ahd_softc *
+ /************************** Interrupt Processing ******************************/
+ static __inline void	ahd_sync_qoutfifo(struct ahd_softc *ahd, int op);
+ static __inline void	ahd_sync_tqinfifo(struct ahd_softc *ahd, int op);
+-static __inline u_int	ahd_check_cmdcmpltqueues(struct ahd_softc *ahd);
+-static __inline int	ahd_intr(struct ahd_softc *ahd);
++int	ahd_intr(struct ahd_softc *ahd);
+ 
+ static __inline void
+ ahd_sync_qoutfifo(struct ahd_softc *ahd, int op)
+@@ -827,124 +437,4 @@ ahd_sync_tqinfifo(struct ahd_softc *ahd,
+ #endif
+ }
+ 
+-/*
+- * See if the firmware has posted any completed commands
+- * into our in-core command complete fifos.
+- */
+-#define AHD_RUN_QOUTFIFO 0x1
+-#define AHD_RUN_TQINFIFO 0x2
+-static __inline u_int
+-ahd_check_cmdcmpltqueues(struct ahd_softc *ahd)
+-{
+-	u_int retval;
+-
+-	retval = 0;
+-	ahd_dmamap_sync(ahd, ahd->shared_data_dmat, ahd->shared_data_map.dmamap,
+-			/*offset*/ahd->qoutfifonext * sizeof(*ahd->qoutfifo),
+-			/*len*/sizeof(*ahd->qoutfifo), BUS_DMASYNC_POSTREAD);
+-	if (ahd->qoutfifo[ahd->qoutfifonext].valid_tag
+-	  == ahd->qoutfifonext_valid_tag)
+-		retval |= AHD_RUN_QOUTFIFO;
+-#ifdef AHD_TARGET_MODE
+-	if ((ahd->flags & AHD_TARGETROLE) != 0
+-	 && (ahd->flags & AHD_TQINFIFO_BLOCKED) == 0) {
+-		ahd_dmamap_sync(ahd, ahd->shared_data_dmat,
+-				ahd->shared_data_map.dmamap,
+-				ahd_targetcmd_offset(ahd, ahd->tqinfifofnext),
+-				/*len*/sizeof(struct target_cmd),
+-				BUS_DMASYNC_POSTREAD);
+-		if (ahd->targetcmds[ahd->tqinfifonext].cmd_valid != 0)
+-			retval |= AHD_RUN_TQINFIFO;
+-	}
+-#endif
+-	return (retval);
+-}
+-
+-/*
+- * Catch an interrupt from the adapter
+- */
+-static __inline int
+-ahd_intr(struct ahd_softc *ahd)
+-{
+-	u_int	intstat;
+-
+-	if ((ahd->pause & INTEN) == 0) {
+-		/*
+-		 * Our interrupt is not enabled on the chip
+-		 * and may be disabled for re-entrancy reasons,
+-		 * so just return.  This is likely just a shared
+-		 * interrupt.
+-		 */
+-		return (0);
+-	}
+-
+-	/*
+-	 * Instead of directly reading the interrupt status register,
+-	 * infer the cause of the interrupt by checking our in-core
+-	 * completion queues.  This avoids a costly PCI bus read in
+-	 * most cases.
+-	 */
+-	if ((ahd->flags & AHD_ALL_INTERRUPTS) == 0
+-	 && (ahd_check_cmdcmpltqueues(ahd) != 0))
+-		intstat = CMDCMPLT;
+-	else
+-		intstat = ahd_inb(ahd, INTSTAT);
+-
+-	if ((intstat & INT_PEND) == 0)
+-		return (0);
+-
+-	if (intstat & CMDCMPLT) {
+-		ahd_outb(ahd, CLRINT, CLRCMDINT);
+-
+-		/*
+-		 * Ensure that the chip sees that we've cleared
+-		 * this interrupt before we walk the output fifo.
+-		 * Otherwise, we may, due to posted bus writes,
+-		 * clear the interrupt after we finish the scan,
+-		 * and after the sequencer has added new entries
+-		 * and asserted the interrupt again.
+-		 */
+-		if ((ahd->bugs & AHD_INTCOLLISION_BUG) != 0) {
+-			if (ahd_is_paused(ahd)) {
+-				/*
+-				 * Potentially lost SEQINT.
+-				 * If SEQINTCODE is non-zero,
+-				 * simulate the SEQINT.
+-				 */
+-				if (ahd_inb(ahd, SEQINTCODE) != NO_SEQINT)
+-					intstat |= SEQINT;
+-			}
+-		} else {
+-			ahd_flush_device_writes(ahd);
+-		}
+-		ahd_run_qoutfifo(ahd);
+-		ahd->cmdcmplt_counts[ahd->cmdcmplt_bucket]++;
+-		ahd->cmdcmplt_total++;
+-#ifdef AHD_TARGET_MODE
+-		if ((ahd->flags & AHD_TARGETROLE) != 0)
+-			ahd_run_tqinfifo(ahd, /*paused*/FALSE);
+-#endif
+-	}
+-
+-	/*
+-	 * Handle statuses that may invalidate our cached
+-	 * copy of INTSTAT separately.
+-	 */
+-	if (intstat == 0xFF && (ahd->features & AHD_REMOVABLE) != 0) {
+-		/* Hot eject.  Do nothing */
+-	} else if (intstat & HWERRINT) {
+-		ahd_handle_hwerrint(ahd);
+-	} else if ((intstat & (PCIINT|SPLTINT)) != 0) {
+-		ahd->bus_intr(ahd);
+-	} else {
+-
+-		if ((intstat & SEQINT) != 0)
+-			ahd_handle_seqint(ahd, intstat);
+-
+-		if ((intstat & SCSIINT) != 0)
+-			ahd_handle_scsiint(ahd, intstat);
+-	}
+-	return (1);
+-}
+-
+ #endif  /* _AIC79XX_INLINE_H_ */
+diff -puN drivers/scsi/aic7xxx/aic79xx_osm.c~aic7xxx-deinline-large-functions-save-80k-of-text drivers/scsi/aic7xxx/aic79xx_osm.c
+--- devel/drivers/scsi/aic7xxx/aic79xx_osm.c~aic7xxx-deinline-large-functions-save-80k-of-text	2006-06-01 20:41:50.000000000 -0700
++++ devel-akpm/drivers/scsi/aic7xxx/aic79xx_osm.c	2006-06-01 20:41:50.000000000 -0700
+@@ -462,7 +462,7 @@ ahd_linux_queue(struct scsi_cmnd * cmd, 
+ 	return rtn;
+ }
+ 
+-static inline struct scsi_target **
++static struct scsi_target **
+ ahd_linux_target_in_softc(struct scsi_target *starget)
+ {
+ 	struct	ahd_softc *ahd =
+diff -puN drivers/scsi/aic7xxx/aic79xx_osm.h~aic7xxx-deinline-large-functions-save-80k-of-text drivers/scsi/aic7xxx/aic79xx_osm.h
+--- devel/drivers/scsi/aic7xxx/aic79xx_osm.h~aic7xxx-deinline-large-functions-save-80k-of-text	2006-06-01 20:41:50.000000000 -0700
++++ devel-akpm/drivers/scsi/aic7xxx/aic79xx_osm.h	2006-06-01 20:41:50.000000000 -0700
+@@ -222,26 +222,6 @@ typedef struct timer_list ahd_timer_t;
+ #endif
+ #include "aic79xx.h"
+ 
+-/***************************** Timer Facilities *******************************/
+-#define ahd_timer_init init_timer
+-#define ahd_timer_stop del_timer_sync
+-typedef void ahd_linux_callback_t (u_long);  
+-static __inline void ahd_timer_reset(ahd_timer_t *timer, int usec,
+-				     ahd_callback_t *func, void *arg);
+-
+-static __inline void
+-ahd_timer_reset(ahd_timer_t *timer, int usec, ahd_callback_t *func, void *arg)
+-{
+-	struct ahd_softc *ahd;
+-
+-	ahd = (struct ahd_softc *)arg;
+-	del_timer(timer);
+-	timer->data = (u_long)arg;
+-	timer->expires = jiffies + (usec * HZ)/1000000;
+-	timer->function = (ahd_linux_callback_t*)func;
+-	add_timer(timer);
+-}
+-
+ /***************************** SMP support ************************************/
+ #include <linux/spinlock.h>
+ 
+@@ -396,111 +376,22 @@ struct ahd_platform_data {
+ #define malloc(size, type, flags) kmalloc(size, flags)
+ #define free(ptr, type) kfree(ptr)
+ 
+-static __inline void ahd_delay(long);
+-static __inline void
+-ahd_delay(long usec)
++static inline void ahd_delay(int usec)
+ {
+-	/*
+-	 * udelay on Linux can have problems for
+-	 * multi-millisecond waits.  Wait at most
+-	 * 1024us per call.
+-	 */
+-	while (usec > 0) {
+-		udelay(usec % 1024);
+-		usec -= 1024;
+-	}
++	udelay(usec);
+ }
+ 
+-
+ /***************************** Low Level I/O **********************************/
+-static __inline uint8_t ahd_inb(struct ahd_softc * ahd, long port);
+-static __inline uint16_t ahd_inw_atomic(struct ahd_softc * ahd, long port);
+-static __inline void ahd_outb(struct ahd_softc * ahd, long port, uint8_t val);
+-static __inline void ahd_outw_atomic(struct ahd_softc * ahd,
++uint8_t ahd_inb(struct ahd_softc * ahd, long port);
++uint16_t ahd_inw_atomic(struct ahd_softc * ahd, long port);
++void ahd_outb(struct ahd_softc * ahd, long port, uint8_t val);
++void ahd_outw_atomic(struct ahd_softc * ahd,
+ 				     long port, uint16_t val);
+-static __inline void ahd_outsb(struct ahd_softc * ahd, long port,
++void ahd_outsb(struct ahd_softc * ahd, long port,
+ 			       uint8_t *, int count);
+-static __inline void ahd_insb(struct ahd_softc * ahd, long port,
++void ahd_insb(struct ahd_softc * ahd, long port,
+ 			       uint8_t *, int count);
+ 
+-static __inline uint8_t
+-ahd_inb(struct ahd_softc * ahd, long port)
+-{
+-	uint8_t x;
+-
+-	if (ahd->tags[0] == BUS_SPACE_MEMIO) {
+-		x = readb(ahd->bshs[0].maddr + port);
+-	} else {
+-		x = inb(ahd->bshs[(port) >> 8].ioport + ((port) & 0xFF));
+-	}
+-	mb();
+-	return (x);
+-}
+-
+-static __inline uint16_t
+-ahd_inw_atomic(struct ahd_softc * ahd, long port)
+-{
+-	uint8_t x;
+-
+-	if (ahd->tags[0] == BUS_SPACE_MEMIO) {
+-		x = readw(ahd->bshs[0].maddr + port);
+-	} else {
+-		x = inw(ahd->bshs[(port) >> 8].ioport + ((port) & 0xFF));
+-	}
+-	mb();
+-	return (x);
+-}
+-
+-static __inline void
+-ahd_outb(struct ahd_softc * ahd, long port, uint8_t val)
+-{
+-	if (ahd->tags[0] == BUS_SPACE_MEMIO) {
+-		writeb(val, ahd->bshs[0].maddr + port);
+-	} else {
+-		outb(val, ahd->bshs[(port) >> 8].ioport + (port & 0xFF));
+-	}
+-	mb();
+-}
+-
+-static __inline void
+-ahd_outw_atomic(struct ahd_softc * ahd, long port, uint16_t val)
+-{
+-	if (ahd->tags[0] == BUS_SPACE_MEMIO) {
+-		writew(val, ahd->bshs[0].maddr + port);
+-	} else {
+-		outw(val, ahd->bshs[(port) >> 8].ioport + (port & 0xFF));
+-	}
+-	mb();
+-}
+-
+-static __inline void
+-ahd_outsb(struct ahd_softc * ahd, long port, uint8_t *array, int count)
+-{
+-	int i;
+-
+-	/*
+-	 * There is probably a more efficient way to do this on Linux
+-	 * but we don't use this for anything speed critical and this
+-	 * should work.
+-	 */
+-	for (i = 0; i < count; i++)
+-		ahd_outb(ahd, port, *array++);
+-}
+-
+-static __inline void
+-ahd_insb(struct ahd_softc * ahd, long port, uint8_t *array, int count)
+-{
+-	int i;
+-
+-	/*
+-	 * There is probably a more efficient way to do this on Linux
+-	 * but we don't use this for anything speed critical and this
+-	 * should work.
+-	 */
+-	for (i = 0; i < count; i++)
+-		*array++ = ahd_inb(ahd, port);
+-}
+-
+ /**************************** Initialization **********************************/
+ int		ahd_linux_register_host(struct ahd_softc *,
+ 					struct scsi_host_template *);
+@@ -605,6 +496,7 @@ void			 ahd_linux_pci_exit(void);
+ int			 ahd_pci_map_registers(struct ahd_softc *ahd);
+ int			 ahd_pci_map_int(struct ahd_softc *ahd);
+ 
++void ahd_BUG_bad_pci_rw_size(void);
+ static __inline uint32_t ahd_pci_read_config(ahd_dev_softc_t pci,
+ 					     int reg, int width);
+ 
+@@ -632,7 +524,7 @@ ahd_pci_read_config(ahd_dev_softc_t pci,
+ 		return (retval);
+ 	}
+ 	default:
+-		panic("ahd_pci_read_config: Read size too big");
++		ahd_BUG_bad_pci_rw_size();
+ 		/* NOTREACHED */
+ 		return (0);
+ 	}
+@@ -656,7 +548,7 @@ ahd_pci_write_config(ahd_dev_softc_t pci
+ 		pci_write_config_dword(pci, reg, value);
+ 		break;
+ 	default:
+-		panic("ahd_pci_write_config: Write size too big");
++		ahd_BUG_bad_pci_rw_size();
+ 		/* NOTREACHED */
+ 	}
+ }
+diff -puN drivers/scsi/aic7xxx/aic7xxx_core.c~aic7xxx-deinline-large-functions-save-80k-of-text drivers/scsi/aic7xxx/aic7xxx_core.c
+--- devel/drivers/scsi/aic7xxx/aic7xxx_core.c~aic7xxx-deinline-large-functions-save-80k-of-text	2006-06-01 20:41:50.000000000 -0700
++++ devel-akpm/drivers/scsi/aic7xxx/aic7xxx_core.c	2006-06-01 20:41:50.000000000 -0700
+@@ -50,6 +50,365 @@
+ #include <dev/aic7xxx/aicasm/aicasm_insformat.h>
+ #endif
+ 
++/***************************** Low Level I/O **********************************/
++uint8_t
++ahc_inb(struct ahc_softc * ahc, long port)
++{
++	uint8_t x;
++
++	if (ahc->tag == BUS_SPACE_MEMIO) {
++		x = readb(ahc->bsh.maddr + port);
++	} else {
++		x = inb(ahc->bsh.ioport + port);
++	}
++	mb();
++	return (x);
++}
++
++void
++ahc_outb(struct ahc_softc * ahc, long port, uint8_t val)
++{
++	if (ahc->tag == BUS_SPACE_MEMIO) {
++		writeb(val, ahc->bsh.maddr + port);
++	} else {
++		outb(val, ahc->bsh.ioport + port);
++	}
++	mb();
++}
++
++void
++ahc_outsb(struct ahc_softc * ahc, long port, uint8_t *array, int count)
++{
++	int i;
++
++	/*
++	 * There is probably a more efficient way to do this on Linux
++	 * but we don't use this for anything speed critical and this
++	 * should work.
++	 */
++	for (i = 0; i < count; i++)
++		ahc_outb(ahc, port, *array++);
++}
++
++void
++ahc_insb(struct ahc_softc * ahc, long port, uint8_t *array, int count)
++{
++	int i;
++
++	/*
++	 * There is probably a more efficient way to do this on Linux
++	 * but we don't use this for anything speed critical and this
++	 * should work.
++	 */
++	for (i = 0; i < count; i++)
++		*array++ = ahc_inb(ahc, port);
++}
++
++/*********************** Miscelaneous Support Functions ***********************/
++uint16_t
++ahc_inw(struct ahc_softc *ahc, u_int port)
++{
++	return ((ahc_inb(ahc, port+1) << 8) | ahc_inb(ahc, port));
++}
++
++void
++ahc_outw(struct ahc_softc *ahc, u_int port, u_int value)
++{
++	ahc_outb(ahc, port, value & 0xFF);
++	ahc_outb(ahc, port+1, (value >> 8) & 0xFF);
++}
++
++uint32_t
++ahc_inl(struct ahc_softc *ahc, u_int port)
++{
++	return ((ahc_inb(ahc, port))
++	      | (ahc_inb(ahc, port+1) << 8)
++	      | (ahc_inb(ahc, port+2) << 16)
++	      | (ahc_inb(ahc, port+3) << 24));
++}
++
++void
++ahc_outl(struct ahc_softc *ahc, u_int port, uint32_t value)
++{
++	ahc_outb(ahc, port, (value) & 0xFF);
++	ahc_outb(ahc, port+1, ((value) >> 8) & 0xFF);
++	ahc_outb(ahc, port+2, ((value) >> 16) & 0xFF);
++	ahc_outb(ahc, port+3, ((value) >> 24) & 0xFF);
++}
++
++uint64_t
++ahc_inq(struct ahc_softc *ahc, u_int port)
++{
++	return ((ahc_inb(ahc, port))
++	      | (ahc_inb(ahc, port+1) << 8)
++	      | (ahc_inb(ahc, port+2) << 16)
++	      | (ahc_inb(ahc, port+3) << 24)
++	      | (((uint64_t)ahc_inb(ahc, port+4)) << 32)
++	      | (((uint64_t)ahc_inb(ahc, port+5)) << 40)
++	      | (((uint64_t)ahc_inb(ahc, port+6)) << 48)
++	      | (((uint64_t)ahc_inb(ahc, port+7)) << 56));
++}
++
++void
++ahc_outq(struct ahc_softc *ahc, u_int port, uint64_t value)
++{
++	ahc_outb(ahc, port, value & 0xFF);
++	ahc_outb(ahc, port+1, (value >> 8) & 0xFF);
++	ahc_outb(ahc, port+2, (value >> 16) & 0xFF);
++	ahc_outb(ahc, port+3, (value >> 24) & 0xFF);
++	ahc_outb(ahc, port+4, (value >> 32) & 0xFF);
++	ahc_outb(ahc, port+5, (value >> 40) & 0xFF);
++	ahc_outb(ahc, port+6, (value >> 48) & 0xFF);
++	ahc_outb(ahc, port+7, (value >> 56) & 0xFF);
++}
++
++/*
++ * Get a free scb. If there are none, see if we can allocate a new SCB.
++ */
++struct scb *
++ahc_get_scb(struct ahc_softc *ahc)
++{
++	struct scb *scb;
++
++	if ((scb = SLIST_FIRST(&ahc->scb_data->free_scbs)) == NULL) {
++		ahc_alloc_scbs(ahc);
++		scb = SLIST_FIRST(&ahc->scb_data->free_scbs);
++		if (scb == NULL)
++			return (NULL);
++	}
++	SLIST_REMOVE_HEAD(&ahc->scb_data->free_scbs, links.sle);
++	return (scb);
++}
++
++/*
++ * Return an SCB resource to the free list.
++ */
++void
++ahc_free_scb(struct ahc_softc *ahc, struct scb *scb)
++{
++	struct hardware_scb *hscb;
++
++	hscb = scb->hscb;
++	/* Clean up for the next user */
++	ahc->scb_data->scbindex[hscb->tag] = NULL;
++	scb->flags = SCB_FREE;
++	hscb->control = 0;
++
++	SLIST_INSERT_HEAD(&ahc->scb_data->free_scbs, scb, links.sle);
++
++	/* Notify the OSM that a resource is now available. */
++	ahc_platform_scb_free(ahc, scb);
++}
++
++struct scb *
++ahc_lookup_scb(struct ahc_softc *ahc, u_int tag)
++{
++	struct scb* scb;
++
++	scb = ahc->scb_data->scbindex[tag];
++	if (scb != NULL)
++		ahc_sync_scb(ahc, scb,
++			     BUS_DMASYNC_POSTREAD|BUS_DMASYNC_POSTWRITE);
++	return (scb);
++}
++
++static void
++ahc_swap_with_next_hscb(struct ahc_softc *ahc, struct scb *scb)
++{
++	struct hardware_scb *q_hscb;
++	u_int  saved_tag;
++
++	/*
++	 * Our queuing method is a bit tricky.  The card
++	 * knows in advance which HSCB to download, and we
++	 * can't disappoint it.  To achieve this, the next
++	 * SCB to download is saved off in ahc->next_queued_scb.
++	 * When we are called to queue "an arbitrary scb",
++	 * we copy the contents of the incoming HSCB to the one
++	 * the sequencer knows about, swap HSCB pointers and
++	 * finally assign the SCB to the tag indexed location
++	 * in the scb_array.  This makes sure that we can still
++	 * locate the correct SCB by SCB_TAG.
++	 */
++	q_hscb = ahc->next_queued_scb->hscb;
++	saved_tag = q_hscb->tag;
++	memcpy(q_hscb, scb->hscb, sizeof(*scb->hscb));
++	if ((scb->flags & SCB_CDB32_PTR) != 0) {
++		q_hscb->shared_data.cdb_ptr =
++		    ahc_htole32(ahc_hscb_busaddr(ahc, q_hscb->tag)
++			      + offsetof(struct hardware_scb, cdb32));
++	}
++	q_hscb->tag = saved_tag;
++	q_hscb->next = scb->hscb->tag;
++
++	/* Now swap HSCB pointers. */
++	ahc->next_queued_scb->hscb = scb->hscb;
++	scb->hscb = q_hscb;
++
++	/* Now define the mapping from tag to SCB in the scbindex */
++	ahc->scb_data->scbindex[scb->hscb->tag] = scb;
++}
++
++/*
++ * Tell the sequencer about a new transaction to execute.
++ */
++void
++ahc_queue_scb(struct ahc_softc *ahc, struct scb *scb)
++{
++	ahc_swap_with_next_hscb(ahc, scb);
++
++	if (scb->hscb->tag == SCB_LIST_NULL
++	 || scb->hscb->next == SCB_LIST_NULL)
++		panic("Attempt to queue invalid SCB tag %x:%x\n",
++		      scb->hscb->tag, scb->hscb->next);
++
++	/*
++	 * Setup data "oddness".
++	 */
++	scb->hscb->lun &= LID;
++	if (ahc_get_transfer_length(scb) & 0x1)
++		scb->hscb->lun |= SCB_XFERLEN_ODD;
++
++	/*
++	 * Keep a history of SCBs we've downloaded in the qinfifo.
++	 */
++	ahc->qinfifo[ahc->qinfifonext++] = scb->hscb->tag;
++
++	/*
++	 * Make sure our data is consistent from the
++	 * perspective of the adapter.
++	 */
++	ahc_sync_scb(ahc, scb, BUS_DMASYNC_PREREAD|BUS_DMASYNC_PREWRITE);
++
++	/* Tell the adapter about the newly queued SCB */
++	if ((ahc->features & AHC_QUEUE_REGS) != 0) {
++		ahc_outb(ahc, HNSCB_QOFF, ahc->qinfifonext);
++	} else {
++		if ((ahc->features & AHC_AUTOPAUSE) == 0)
++			ahc_pause(ahc);
++		ahc_outb(ahc, KERNEL_QINPOS, ahc->qinfifonext);
++		if ((ahc->features & AHC_AUTOPAUSE) == 0)
++			ahc_unpause(ahc);
++	}
++}
++
++/************************** Interrupt Processing ******************************/
++/*
++ * See if the firmware has posted any completed commands
++ * into our in-core command complete fifos.
++ */
++#define AHC_RUN_QOUTFIFO 0x1
++#define AHC_RUN_TQINFIFO 0x2
++static u_int
++ahc_check_cmdcmpltqueues(struct ahc_softc *ahc)
++{
++	u_int retval;
++
++	retval = 0;
++	ahc_dmamap_sync(ahc, ahc->shared_data_dmat, ahc->shared_data_dmamap,
++			/*offset*/ahc->qoutfifonext, /*len*/1,
++			BUS_DMASYNC_POSTREAD);
++	if (ahc->qoutfifo[ahc->qoutfifonext] != SCB_LIST_NULL)
++		retval |= AHC_RUN_QOUTFIFO;
++#ifdef AHC_TARGET_MODE
++	if ((ahc->flags & AHC_TARGETROLE) != 0
++	 && (ahc->flags & AHC_TQINFIFO_BLOCKED) == 0) {
++		ahc_dmamap_sync(ahc, ahc->shared_data_dmat,
++				ahc->shared_data_dmamap,
++				ahc_targetcmd_offset(ahc, ahc->tqinfifofnext),
++				/*len*/sizeof(struct target_cmd),
++				BUS_DMASYNC_POSTREAD);
++		if (ahc->targetcmds[ahc->tqinfifonext].cmd_valid != 0)
++			retval |= AHC_RUN_TQINFIFO;
++	}
++#endif
++	return (retval);
++}
++
++/*
++ * Catch an interrupt from the adapter
++ */
++int
++ahc_intr(struct ahc_softc *ahc)
++{
++	u_int	intstat;
++
++	if ((ahc->pause & INTEN) == 0) {
++		/*
++		 * Our interrupt is not enabled on the chip
++		 * and may be disabled for re-entrancy reasons,
++		 * so just return.  This is likely just a shared
++		 * interrupt.
++		 */
++		return (0);
++	}
++	/*
++	 * Instead of directly reading the interrupt status register,
++	 * infer the cause of the interrupt by checking our in-core
++	 * completion queues.  This avoids a costly PCI bus read in
++	 * most cases.
++	 */
++	if ((ahc->flags & (AHC_ALL_INTERRUPTS|AHC_EDGE_INTERRUPT)) == 0
++	 && (ahc_check_cmdcmpltqueues(ahc) != 0))
++		intstat = CMDCMPLT;
++	else {
++		intstat = ahc_inb(ahc, INTSTAT);
++	}
++
++	if ((intstat & INT_PEND) == 0) {
++#if AHC_PCI_CONFIG > 0
++		if (ahc->unsolicited_ints > 500) {
++			ahc->unsolicited_ints = 0;
++			if ((ahc->chip & AHC_PCI) != 0
++			 && (ahc_inb(ahc, ERROR) & PCIERRSTAT) != 0)
++				ahc->bus_intr(ahc);
++		}
++#endif
++		ahc->unsolicited_ints++;
++		return (0);
++	}
++	ahc->unsolicited_ints = 0;
++
++	if (intstat & CMDCMPLT) {
++		ahc_outb(ahc, CLRINT, CLRCMDINT);
++
++		/*
++		 * Ensure that the chip sees that we've cleared
++		 * this interrupt before we walk the output fifo.
++		 * Otherwise, we may, due to posted bus writes,
++		 * clear the interrupt after we finish the scan,
++		 * and after the sequencer has added new entries
++		 * and asserted the interrupt again.
++		 */
++		ahc_flush_device_writes(ahc);
++		ahc_run_qoutfifo(ahc);
++#ifdef AHC_TARGET_MODE
++		if ((ahc->flags & AHC_TARGETROLE) != 0)
++			ahc_run_tqinfifo(ahc, /*paused*/FALSE);
++#endif
++	}
++
++	/*
++	 * Handle statuses that may invalidate our cached
++	 * copy of INTSTAT separately.
++	 */
++	if (intstat == 0xFF && (ahc->features & AHC_REMOVABLE) != 0) {
++		/* Hot eject.  Do nothing */
++	} else if (intstat & BRKADRINT) {
++		ahc_handle_brkadrint(ahc);
++	} else if ((intstat & (SEQINT|SCSIINT)) != 0) {
++
++		ahc_pause_bug_fix(ahc);
++
++		if ((intstat & SEQINT) != 0)
++			ahc_handle_seqint(ahc, intstat);
++
++		if ((intstat & SCSIINT) != 0)
++			ahc_handle_scsiint(ahc, intstat);
++	}
++	return (1);
++}
++
+ /***************************** Lookup Tables **********************************/
+ char *ahc_chip_names[] =
+ {
+diff -puN drivers/scsi/aic7xxx/aic7xxx_inline.h~aic7xxx-deinline-large-functions-save-80k-of-text drivers/scsi/aic7xxx/aic7xxx_inline.h
+--- devel/drivers/scsi/aic7xxx/aic7xxx_inline.h~aic7xxx-deinline-large-functions-save-80k-of-text	2006-06-01 20:41:50.000000000 -0700
++++ devel-akpm/drivers/scsi/aic7xxx/aic7xxx_inline.h	2006-06-01 20:41:50.000000000 -0700
+@@ -238,24 +238,18 @@ static __inline struct ahc_initiator_tin
+ 					    char channel, u_int our_id,
+ 					    u_int remote_id,
+ 					    struct ahc_tmode_tstate **tstate);
+-static __inline uint16_t
+-			ahc_inw(struct ahc_softc *ahc, u_int port);
+-static __inline void	ahc_outw(struct ahc_softc *ahc, u_int port,
+-				 u_int value);
+-static __inline uint32_t
+-			ahc_inl(struct ahc_softc *ahc, u_int port);
+-static __inline void	ahc_outl(struct ahc_softc *ahc, u_int port,
+-				 uint32_t value);
+-static __inline uint64_t
+-			ahc_inq(struct ahc_softc *ahc, u_int port);
+-static __inline void	ahc_outq(struct ahc_softc *ahc, u_int port,
+-				 uint64_t value);
+-static __inline struct scb*
+-			ahc_get_scb(struct ahc_softc *ahc);
+-static __inline void	ahc_free_scb(struct ahc_softc *ahc, struct scb *scb);
+-static __inline void	ahc_swap_with_next_hscb(struct ahc_softc *ahc,
+-						struct scb *scb);
+-static __inline void	ahc_queue_scb(struct ahc_softc *ahc, struct scb *scb);
++uint16_t ahc_inw(struct ahc_softc *ahc, u_int port);
++void	ahc_outw(struct ahc_softc *ahc, u_int port, u_int value);
++uint32_t ahc_inl(struct ahc_softc *ahc, u_int port);
++void	ahc_outl(struct ahc_softc *ahc, u_int port, uint32_t value);
++uint64_t ahc_inq(struct ahc_softc *ahc, u_int port);
++void	ahc_outq(struct ahc_softc *ahc, u_int port, uint64_t value);
++struct scb*
++	ahc_get_scb(struct ahc_softc *ahc);
++void	ahc_free_scb(struct ahc_softc *ahc, struct scb *scb);
++struct scb *
++	ahc_lookup_scb(struct ahc_softc *ahc, u_int tag);
++void	ahc_queue_scb(struct ahc_softc *ahc, struct scb *scb);
+ static __inline struct scsi_sense_data *
+ 			ahc_get_sense_buf(struct ahc_softc *ahc,
+ 					  struct scb *scb);
+@@ -297,193 +291,6 @@ ahc_fetch_transinfo(struct ahc_softc *ah
+ 	return (&(*tstate)->transinfo[remote_id]);
+ }
+ 
+-static __inline uint16_t
+-ahc_inw(struct ahc_softc *ahc, u_int port)
+-{
+-	return ((ahc_inb(ahc, port+1) << 8) | ahc_inb(ahc, port));
+-}
+-
+-static __inline void
+-ahc_outw(struct ahc_softc *ahc, u_int port, u_int value)
+-{
+-	ahc_outb(ahc, port, value & 0xFF);
+-	ahc_outb(ahc, port+1, (value >> 8) & 0xFF);
+-}
+-
+-static __inline uint32_t
+-ahc_inl(struct ahc_softc *ahc, u_int port)
+-{
+-	return ((ahc_inb(ahc, port))
+-	      | (ahc_inb(ahc, port+1) << 8)
+-	      | (ahc_inb(ahc, port+2) << 16)
+-	      | (ahc_inb(ahc, port+3) << 24));
+-}
+-
+-static __inline void
+-ahc_outl(struct ahc_softc *ahc, u_int port, uint32_t value)
+-{
+-	ahc_outb(ahc, port, (value) & 0xFF);
+-	ahc_outb(ahc, port+1, ((value) >> 8) & 0xFF);
+-	ahc_outb(ahc, port+2, ((value) >> 16) & 0xFF);
+-	ahc_outb(ahc, port+3, ((value) >> 24) & 0xFF);
+-}
+-
+-static __inline uint64_t
+-ahc_inq(struct ahc_softc *ahc, u_int port)
+-{
+-	return ((ahc_inb(ahc, port))
+-	      | (ahc_inb(ahc, port+1) << 8)
+-	      | (ahc_inb(ahc, port+2) << 16)
+-	      | (ahc_inb(ahc, port+3) << 24)
+-	      | (((uint64_t)ahc_inb(ahc, port+4)) << 32)
+-	      | (((uint64_t)ahc_inb(ahc, port+5)) << 40)
+-	      | (((uint64_t)ahc_inb(ahc, port+6)) << 48)
+-	      | (((uint64_t)ahc_inb(ahc, port+7)) << 56));
+-}
+-
+-static __inline void
+-ahc_outq(struct ahc_softc *ahc, u_int port, uint64_t value)
+-{
+-	ahc_outb(ahc, port, value & 0xFF);
+-	ahc_outb(ahc, port+1, (value >> 8) & 0xFF);
+-	ahc_outb(ahc, port+2, (value >> 16) & 0xFF);
+-	ahc_outb(ahc, port+3, (value >> 24) & 0xFF);
+-	ahc_outb(ahc, port+4, (value >> 32) & 0xFF);
+-	ahc_outb(ahc, port+5, (value >> 40) & 0xFF);
+-	ahc_outb(ahc, port+6, (value >> 48) & 0xFF);
+-	ahc_outb(ahc, port+7, (value >> 56) & 0xFF);
+-}
+-
+-/*
+- * Get a free scb. If there are none, see if we can allocate a new SCB.
+- */
+-static __inline struct scb *
+-ahc_get_scb(struct ahc_softc *ahc)
+-{
+-	struct scb *scb;
+-
+-	if ((scb = SLIST_FIRST(&ahc->scb_data->free_scbs)) == NULL) {
+-		ahc_alloc_scbs(ahc);
+-		scb = SLIST_FIRST(&ahc->scb_data->free_scbs);
+-		if (scb == NULL)
+-			return (NULL);
+-	}
+-	SLIST_REMOVE_HEAD(&ahc->scb_data->free_scbs, links.sle);
+-	return (scb);
+-}
+-
+-/*
+- * Return an SCB resource to the free list.
+- */
+-static __inline void
+-ahc_free_scb(struct ahc_softc *ahc, struct scb *scb)
+-{       
+-	struct hardware_scb *hscb;
+-
+-	hscb = scb->hscb;
+-	/* Clean up for the next user */
+-	ahc->scb_data->scbindex[hscb->tag] = NULL;
+-	scb->flags = SCB_FREE;
+-	hscb->control = 0;
+-
+-	SLIST_INSERT_HEAD(&ahc->scb_data->free_scbs, scb, links.sle);
+-
+-	/* Notify the OSM that a resource is now available. */
+-	ahc_platform_scb_free(ahc, scb);
+-}
+-
+-static __inline struct scb *
+-ahc_lookup_scb(struct ahc_softc *ahc, u_int tag)
+-{
+-	struct scb* scb;
+-
+-	scb = ahc->scb_data->scbindex[tag];
+-	if (scb != NULL)
+-		ahc_sync_scb(ahc, scb,
+-			     BUS_DMASYNC_POSTREAD|BUS_DMASYNC_POSTWRITE);
+-	return (scb);
+-}
+-
+-static __inline void
+-ahc_swap_with_next_hscb(struct ahc_softc *ahc, struct scb *scb)
+-{
+-	struct hardware_scb *q_hscb;
+-	u_int  saved_tag;
+-
+-	/*
+-	 * Our queuing method is a bit tricky.  The card
+-	 * knows in advance which HSCB to download, and we
+-	 * can't disappoint it.  To achieve this, the next
+-	 * SCB to download is saved off in ahc->next_queued_scb.
+-	 * When we are called to queue "an arbitrary scb",
+-	 * we copy the contents of the incoming HSCB to the one
+-	 * the sequencer knows about, swap HSCB pointers and
+-	 * finally assign the SCB to the tag indexed location
+-	 * in the scb_array.  This makes sure that we can still
+-	 * locate the correct SCB by SCB_TAG.
+-	 */
+-	q_hscb = ahc->next_queued_scb->hscb;
+-	saved_tag = q_hscb->tag;
+-	memcpy(q_hscb, scb->hscb, sizeof(*scb->hscb));
+-	if ((scb->flags & SCB_CDB32_PTR) != 0) {
+-		q_hscb->shared_data.cdb_ptr =
+-		    ahc_htole32(ahc_hscb_busaddr(ahc, q_hscb->tag)
+-			      + offsetof(struct hardware_scb, cdb32));
+-	}
+-	q_hscb->tag = saved_tag;
+-	q_hscb->next = scb->hscb->tag;
+-
+-	/* Now swap HSCB pointers. */
+-	ahc->next_queued_scb->hscb = scb->hscb;
+-	scb->hscb = q_hscb;
+-
+-	/* Now define the mapping from tag to SCB in the scbindex */
+-	ahc->scb_data->scbindex[scb->hscb->tag] = scb;
+-}
+-
+-/*
+- * Tell the sequencer about a new transaction to execute.
+- */
+-static __inline void
+-ahc_queue_scb(struct ahc_softc *ahc, struct scb *scb)
+-{
+-	ahc_swap_with_next_hscb(ahc, scb);
+-
+-	if (scb->hscb->tag == SCB_LIST_NULL
+-	 || scb->hscb->next == SCB_LIST_NULL)
+-		panic("Attempt to queue invalid SCB tag %x:%x\n",
+-		      scb->hscb->tag, scb->hscb->next);
+-
+-	/*
+-	 * Setup data "oddness".
+-	 */
+-	scb->hscb->lun &= LID;
+-	if (ahc_get_transfer_length(scb) & 0x1)
+-		scb->hscb->lun |= SCB_XFERLEN_ODD;
+-
+-	/*
+-	 * Keep a history of SCBs we've downloaded in the qinfifo.
+-	 */
+-	ahc->qinfifo[ahc->qinfifonext++] = scb->hscb->tag;
+-
+-	/*
+-	 * Make sure our data is consistent from the
+-	 * perspective of the adapter.
+-	 */
+-	ahc_sync_scb(ahc, scb, BUS_DMASYNC_PREREAD|BUS_DMASYNC_PREWRITE);
+-
+-	/* Tell the adapter about the newly queued SCB */
+-	if ((ahc->features & AHC_QUEUE_REGS) != 0) {
+-		ahc_outb(ahc, HNSCB_QOFF, ahc->qinfifonext);
+-	} else {
+-		if ((ahc->features & AHC_AUTOPAUSE) == 0)
+-			ahc_pause(ahc);
+-		ahc_outb(ahc, KERNEL_QINPOS, ahc->qinfifonext);
+-		if ((ahc->features & AHC_AUTOPAUSE) == 0)
+-			ahc_unpause(ahc);
+-	}
+-}
+-
+ static __inline struct scsi_sense_data *
+ ahc_get_sense_buf(struct ahc_softc *ahc, struct scb *scb)
+ {
+@@ -506,8 +313,7 @@ ahc_get_sense_bufaddr(struct ahc_softc *
+ /************************** Interrupt Processing ******************************/
+ static __inline void	ahc_sync_qoutfifo(struct ahc_softc *ahc, int op);
+ static __inline void	ahc_sync_tqinfifo(struct ahc_softc *ahc, int op);
+-static __inline u_int	ahc_check_cmdcmpltqueues(struct ahc_softc *ahc);
+-static __inline int	ahc_intr(struct ahc_softc *ahc);
++int	ahc_intr(struct ahc_softc *ahc);
+ 
+ static __inline void
+ ahc_sync_qoutfifo(struct ahc_softc *ahc, int op)
+@@ -530,120 +336,4 @@ ahc_sync_tqinfifo(struct ahc_softc *ahc,
+ #endif
+ }
+ 
+-/*
+- * See if the firmware has posted any completed commands
+- * into our in-core command complete fifos.
+- */
+-#define AHC_RUN_QOUTFIFO 0x1
+-#define AHC_RUN_TQINFIFO 0x2
+-static __inline u_int
+-ahc_check_cmdcmpltqueues(struct ahc_softc *ahc)
+-{
+-	u_int retval;
+-
+-	retval = 0;
+-	ahc_dmamap_sync(ahc, ahc->shared_data_dmat, ahc->shared_data_dmamap,
+-			/*offset*/ahc->qoutfifonext, /*len*/1,
+-			BUS_DMASYNC_POSTREAD);
+-	if (ahc->qoutfifo[ahc->qoutfifonext] != SCB_LIST_NULL)
+-		retval |= AHC_RUN_QOUTFIFO;
+-#ifdef AHC_TARGET_MODE
+-	if ((ahc->flags & AHC_TARGETROLE) != 0
+-	 && (ahc->flags & AHC_TQINFIFO_BLOCKED) == 0) {
+-		ahc_dmamap_sync(ahc, ahc->shared_data_dmat,
+-				ahc->shared_data_dmamap,
+-				ahc_targetcmd_offset(ahc, ahc->tqinfifofnext),
+-				/*len*/sizeof(struct target_cmd),
+-				BUS_DMASYNC_POSTREAD);
+-		if (ahc->targetcmds[ahc->tqinfifonext].cmd_valid != 0)
+-			retval |= AHC_RUN_TQINFIFO;
+-	}
+-#endif
+-	return (retval);
+-}
+-
+-/*
+- * Catch an interrupt from the adapter
+- */
+-static __inline int
+-ahc_intr(struct ahc_softc *ahc)
+-{
+-	u_int	intstat;
+-
+-	if ((ahc->pause & INTEN) == 0) {
+-		/*
+-		 * Our interrupt is not enabled on the chip
+-		 * and may be disabled for re-entrancy reasons,
+-		 * so just return.  This is likely just a shared
+-		 * interrupt.
+-		 */
+-		return (0);
+-	}
+-	/*
+-	 * Instead of directly reading the interrupt status register,
+-	 * infer the cause of the interrupt by checking our in-core
+-	 * completion queues.  This avoids a costly PCI bus read in
+-	 * most cases.
+-	 */
+-	if ((ahc->flags & (AHC_ALL_INTERRUPTS|AHC_EDGE_INTERRUPT)) == 0
+-	 && (ahc_check_cmdcmpltqueues(ahc) != 0))
+-		intstat = CMDCMPLT;
+-	else {
+-		intstat = ahc_inb(ahc, INTSTAT);
+-	}
+-
+-	if ((intstat & INT_PEND) == 0) {
+-#if AHC_PCI_CONFIG > 0
+-		if (ahc->unsolicited_ints > 500) {
+-			ahc->unsolicited_ints = 0;
+-			if ((ahc->chip & AHC_PCI) != 0
+-			 && (ahc_inb(ahc, ERROR) & PCIERRSTAT) != 0)
+-				ahc->bus_intr(ahc);
+-		}
+-#endif
+-		ahc->unsolicited_ints++;
+-		return (0);
+-	}
+-	ahc->unsolicited_ints = 0;
+-
+-	if (intstat & CMDCMPLT) {
+-		ahc_outb(ahc, CLRINT, CLRCMDINT);
+-
+-		/*
+-		 * Ensure that the chip sees that we've cleared
+-		 * this interrupt before we walk the output fifo.
+-		 * Otherwise, we may, due to posted bus writes,
+-		 * clear the interrupt after we finish the scan,
+-		 * and after the sequencer has added new entries
+-		 * and asserted the interrupt again.
+-		 */
+-		ahc_flush_device_writes(ahc);
+-		ahc_run_qoutfifo(ahc);
+-#ifdef AHC_TARGET_MODE
+-		if ((ahc->flags & AHC_TARGETROLE) != 0)
+-			ahc_run_tqinfifo(ahc, /*paused*/FALSE);
+-#endif
+-	}
+-
+-	/*
+-	 * Handle statuses that may invalidate our cached
+-	 * copy of INTSTAT separately.
+-	 */
+-	if (intstat == 0xFF && (ahc->features & AHC_REMOVABLE) != 0) {
+-		/* Hot eject.  Do nothing */
+-	} else if (intstat & BRKADRINT) {
+-		ahc_handle_brkadrint(ahc);
+-	} else if ((intstat & (SEQINT|SCSIINT)) != 0) {
+-
+-		ahc_pause_bug_fix(ahc);
+-
+-		if ((intstat & SEQINT) != 0)
+-			ahc_handle_seqint(ahc, intstat);
+-
+-		if ((intstat & SCSIINT) != 0)
+-			ahc_handle_scsiint(ahc, intstat);
+-	}
+-	return (1);
+-}
+-
+ #endif  /* _AIC7XXX_INLINE_H_ */
+diff -puN drivers/scsi/aic7xxx/aic7xxx_osm.c~aic7xxx-deinline-large-functions-save-80k-of-text drivers/scsi/aic7xxx/aic7xxx_osm.c
+--- devel/drivers/scsi/aic7xxx/aic7xxx_osm.c~aic7xxx-deinline-large-functions-save-80k-of-text	2006-06-01 20:41:50.000000000 -0700
++++ devel-akpm/drivers/scsi/aic7xxx/aic7xxx_osm.c	2006-06-01 20:41:50.000000000 -0700
+@@ -392,7 +392,7 @@ static int ahc_linux_unit;
+ /********************************* Inlines ************************************/
+ static __inline void ahc_linux_unmap_scb(struct ahc_softc*, struct scb*);
+ 
+-static __inline int ahc_linux_map_seg(struct ahc_softc *ahc, struct scb *scb,
++static int ahc_linux_map_seg(struct ahc_softc *ahc, struct scb *scb,
+ 		 		      struct ahc_dma_seg *sg,
+ 				      dma_addr_t addr, bus_size_t len);
+ 
+@@ -417,7 +417,7 @@ ahc_linux_unmap_scb(struct ahc_softc *ah
+ 	}
+ }
+ 
+-static __inline int
++static int
+ ahc_linux_map_seg(struct ahc_softc *ahc, struct scb *scb,
+ 		  struct ahc_dma_seg *sg, dma_addr_t addr, bus_size_t len)
+ {
+@@ -491,7 +491,7 @@ ahc_linux_queue(struct scsi_cmnd * cmd, 
+ 	return rtn;
+ }
+ 
+-static inline struct scsi_target **
++static struct scsi_target **
+ ahc_linux_target_in_softc(struct scsi_target *starget)
+ {
+ 	struct	ahc_softc *ahc =
+diff -puN drivers/scsi/aic7xxx/aic7xxx_osm.h~aic7xxx-deinline-large-functions-save-80k-of-text drivers/scsi/aic7xxx/aic7xxx_osm.h
+--- devel/drivers/scsi/aic7xxx/aic7xxx_osm.h~aic7xxx-deinline-large-functions-save-80k-of-text	2006-06-01 20:41:50.000000000 -0700
++++ devel-akpm/drivers/scsi/aic7xxx/aic7xxx_osm.h	2006-06-01 20:41:50.000000000 -0700
+@@ -384,82 +384,18 @@ struct ahc_platform_data {
+ #define malloc(size, type, flags) kmalloc(size, flags)
+ #define free(ptr, type) kfree(ptr)
+ 
+-static __inline void ahc_delay(long);
+-static __inline void
+-ahc_delay(long usec)
++static inline void ahc_delay(int usec)
+ {
+-	/*
+-	 * udelay on Linux can have problems for
+-	 * multi-millisecond waits.  Wait at most
+-	 * 1024us per call.
+-	 */
+-	while (usec > 0) {
+-		udelay(usec % 1024);
+-		usec -= 1024;
+-	}
++	udelay(usec);
+ }
+ 
+-
+ /***************************** Low Level I/O **********************************/
+-static __inline uint8_t ahc_inb(struct ahc_softc * ahc, long port);
+-static __inline void ahc_outb(struct ahc_softc * ahc, long port, uint8_t val);
+-static __inline void ahc_outsb(struct ahc_softc * ahc, long port,
+-			       uint8_t *, int count);
+-static __inline void ahc_insb(struct ahc_softc * ahc, long port,
+-			       uint8_t *, int count);
+-
+-static __inline uint8_t
+-ahc_inb(struct ahc_softc * ahc, long port)
+-{
+-	uint8_t x;
+-
+-	if (ahc->tag == BUS_SPACE_MEMIO) {
+-		x = readb(ahc->bsh.maddr + port);
+-	} else {
+-		x = inb(ahc->bsh.ioport + port);
+-	}
+-	mb();
+-	return (x);
+-}
+-
+-static __inline void
+-ahc_outb(struct ahc_softc * ahc, long port, uint8_t val)
+-{
+-	if (ahc->tag == BUS_SPACE_MEMIO) {
+-		writeb(val, ahc->bsh.maddr + port);
+-	} else {
+-		outb(val, ahc->bsh.ioport + port);
+-	}
+-	mb();
+-}
+-
+-static __inline void
+-ahc_outsb(struct ahc_softc * ahc, long port, uint8_t *array, int count)
+-{
+-	int i;
+-
+-	/*
+-	 * There is probably a more efficient way to do this on Linux
+-	 * but we don't use this for anything speed critical and this
+-	 * should work.
+-	 */
+-	for (i = 0; i < count; i++)
+-		ahc_outb(ahc, port, *array++);
+-}
+-
+-static __inline void
+-ahc_insb(struct ahc_softc * ahc, long port, uint8_t *array, int count)
+-{
+-	int i;
+-
+-	/*
+-	 * There is probably a more efficient way to do this on Linux
+-	 * but we don't use this for anything speed critical and this
+-	 * should work.
+-	 */
+-	for (i = 0; i < count; i++)
+-		*array++ = ahc_inb(ahc, port);
+-}
++uint8_t ahc_inb(struct ahc_softc * ahc, long port);
++void ahc_outb(struct ahc_softc * ahc, long port, uint8_t val);
++void ahc_outsb(struct ahc_softc * ahc, long port,
++	       uint8_t *, int count);
++void ahc_insb(struct ahc_softc * ahc, long port,
++	       uint8_t *, int count);
+ 
+ /**************************** Initialization **********************************/
+ int		ahc_linux_register_host(struct ahc_softc *,
+@@ -564,6 +500,7 @@ void			 ahc_linux_pci_exit(void);
+ int			 ahc_pci_map_registers(struct ahc_softc *ahc);
+ int			 ahc_pci_map_int(struct ahc_softc *ahc);
+ 
++void ahc_BUG_bad_pci_rw_size(void);
+ static __inline uint32_t ahc_pci_read_config(ahc_dev_softc_t pci,
+ 					     int reg, int width);
+ 
+@@ -591,7 +528,7 @@ ahc_pci_read_config(ahc_dev_softc_t pci,
+ 		return (retval);
+ 	}
+ 	default:
+-		panic("ahc_pci_read_config: Read size too big");
++		ahc_BUG_bad_pci_rw_size();
+ 		/* NOTREACHED */
+ 		return (0);
+ 	}
+@@ -615,7 +552,7 @@ ahc_pci_write_config(ahc_dev_softc_t pci
+ 		pci_write_config_dword(pci, reg, value);
+ 		break;
+ 	default:
+-		panic("ahc_pci_write_config: Write size too big");
++		ahc_BUG_bad_pci_rw_size();
+ 		/* NOTREACHED */
+ 	}
+ }
 _
