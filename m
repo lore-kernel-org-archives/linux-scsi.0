@@ -1,45 +1,59 @@
 From: akpm@osdl.org
-Subject: [patch 02/25] drivers/scsi/sd.c: fix uninitialized variable in handling medium errors
-Date: Thu, 01 Jun 2006 20:42:29 -0700
-Message-ID: <200606020338.k523cAbw029209@shell0.pdx.osdl.net>
+Subject: [patch 09/25] remove drivers/scsi/constants.c:scsi_print_req_sense()
+Date: Thu, 01 Jun 2006 20:42:34 -0700
+Message-ID: <200606020338.k523cF7C029231@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:3511 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751214AbWFBDiO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2006 23:38:14 -0400
+Received: from smtp.osdl.org ([65.172.181.4]:11447 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751218AbWFBDiX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2006 23:38:23 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, lkml@rtr.ca
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, bunk@stusta.de
 
 
-From: Mark Lord <lkml@rtr.ca>
+From: Adrian Bunk <bunk@stusta.de>
 
-When scsi_get_sense_info_fld() fails (returns 0), it does NOT update the
-value of first_err_block.  But sd_rw_intr() merrily continues to use that
-variable regardless, possibly making incorrect decisions about retries and
-the like.
+This function is no longer used anywhere.
 
-This patch removes the randomness there, by using the first sector of the
-request (SCpnt->request->sector) in such cases, instead of first_err_block.
-
-Signed-off-by: Mark Lord <lkml@rtr.ca>
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/sd.c |    2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/constants.c |   10 ----------
+ include/scsi/scsi_dbg.h  |    1 -
+ 2 files changed, 11 deletions(-)
 
-diff -puN drivers/scsi/sd.c~drivers-scsi-sdc-fix-uninitialized-variable-in-handling-medium-errors drivers/scsi/sd.c
---- devel/drivers/scsi/sd.c~drivers-scsi-sdc-fix-uninitialized-variable-in-handling-medium-errors	2006-06-01 20:41:49.000000000 -0700
-+++ devel-akpm/drivers/scsi/sd.c	2006-06-01 20:41:49.000000000 -0700
-@@ -959,6 +959,8 @@ static void sd_rw_intr(struct scsi_cmnd 
- 			default:
- 				break;
- 			}
-+			if (!info_valid)
-+				error_sector = SCpnt->request->sector;
+diff -puN drivers/scsi/constants.c~remove-drivers-scsi-constantscscsi_print_req_sense drivers/scsi/constants.c
+--- devel/drivers/scsi/constants.c~remove-drivers-scsi-constantscscsi_print_req_sense	2006-06-01 20:41:50.000000000 -0700
++++ devel-akpm/drivers/scsi/constants.c	2006-06-01 20:41:50.000000000 -0700
+@@ -1268,16 +1268,6 @@ void scsi_print_sense(const char *devcla
+ }
+ EXPORT_SYMBOL(scsi_print_sense);
  
- 			error_sector &= ~(block_sectors - 1);
- 			good_bytes = (error_sector - SCpnt->request->sector) << 9;
+-void scsi_print_req_sense(const char *devclass, struct scsi_request *sreq)
+-{
+-	const char *name = devclass;
+-
+-	if (sreq->sr_request->rq_disk)
+-		name = sreq->sr_request->rq_disk->disk_name;
+-	__scsi_print_sense(name, sreq->sr_sense_buffer, SCSI_SENSE_BUFFERSIZE);
+-}
+-EXPORT_SYMBOL(scsi_print_req_sense);
+-
+ void scsi_print_command(struct scsi_cmnd *cmd)
+ {
+ 	/* Assume appended output (i.e. not at start of line) */
+diff -puN include/scsi/scsi_dbg.h~remove-drivers-scsi-constantscscsi_print_req_sense include/scsi/scsi_dbg.h
+--- devel/include/scsi/scsi_dbg.h~remove-drivers-scsi-constantscscsi_print_req_sense	2006-06-01 20:41:50.000000000 -0700
++++ devel-akpm/include/scsi/scsi_dbg.h	2006-06-01 20:41:50.000000000 -0700
+@@ -9,7 +9,6 @@ extern void scsi_print_command(struct sc
+ extern void scsi_print_sense_hdr(const char *, struct scsi_sense_hdr *);
+ extern void __scsi_print_command(unsigned char *);
+ extern void scsi_print_sense(const char *, struct scsi_cmnd *);
+-extern void scsi_print_req_sense(const char *, struct scsi_request *);
+ extern void __scsi_print_sense(const char *name,
+ 			       const unsigned char *sense_buffer,
+ 			       int sense_len);
 _
