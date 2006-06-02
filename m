@@ -1,36 +1,46 @@
-From: "Pedro Kinney" <artilleryibalskk@polknc.org>
-Subject: Spend more when you want and less when you need to
-Date: Fri, 2 Jun 2006 02:29:13 +0000
-Message-ID: <060101c685ec$56656720$1d01a8c0@dzshcompouter>
-Mime-Version: 1.0
-Content-Type: text/plain;
-     format=flowed;
-     charset="iso-8859-1";
-     reply-type=original
-Content-Transfer-Encoding: 7bit
+From: akpm@osdl.org
+Subject: [patch 01/25] drivers/scsi: fix proc_scsi_write to return "length" on success with remove-single-device case
+Date: Thu, 01 Jun 2006 20:42:28 -0700
+Message-ID: <200606020338.k523c9I2029206@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [61.191.114.134] ([61.191.114.134]:38447 "EHLO
-	dzshcompouter.polknc.org") by vger.kernel.org with ESMTP
-	id S1751138AbWFBC0f (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Jun 2006 22:26:35 -0400
+Received: from smtp.osdl.org ([65.172.181.4]:5559 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751215AbWFBDiP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2006 23:38:15 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, suzuki@in.ibm.com
 
-Life Should be Full of Luxuries....
 
-http://blessthathomepleasee.com/
+From: Suzuki <suzuki@in.ibm.com>
 
-Yet, only a handful of people can afford the finest products, the luxuries of the elite.
-But, here at "Luxury Replica" we are committed to bringing you the finest products, at prices incomparably lower.
-All of the top designer brands for Watches, Ties, Handbags and even Mont Blanc.
+proc_scsi_write doesn't return the "length" upon successfully removing a
+device; instead it returns 0.  This causes commands like "echo" to redo the
+write(), which ends up in something like,
 
-http://blessthathomepleasee.com/
+$ echo "scsi remove-single-device 0 0 3 0" > /proc/scsi/scsi
+"-bash: echo: write error: No such device or address"
 
-The finest of products, at the lowest of prices, only a click away:
+, even though the device was removed.
 
-http://newgunforsalejoke.com/
+Signed-off-by: Suzuki K P <suzuki@in.ibm.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
+Signed-off-by: Andrew Morton <akpm@osdl.org>
+---
 
-Regards,
-Pedro Kinney
+ drivers/scsi/scsi_proc.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
+diff -puN drivers/scsi/scsi_proc.c~drivers-scsi-fix-proc_scsi_write-to-return-length-on drivers/scsi/scsi_proc.c
+--- devel/drivers/scsi/scsi_proc.c~drivers-scsi-fix-proc_scsi_write-to-return-length-on	2006-06-01 20:41:49.000000000 -0700
++++ devel-akpm/drivers/scsi/scsi_proc.c	2006-06-01 20:41:49.000000000 -0700
+@@ -280,6 +280,8 @@ static ssize_t proc_scsi_write(struct fi
+ 		lun = simple_strtoul(p + 1, &p, 0);
+ 
+ 		err = scsi_remove_single_device(host, channel, id, lun);
++		if (!err)
++			err = length;
+ 	}
+ 
+ 	/*
+_
