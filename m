@@ -1,59 +1,60 @@
 From: akpm@osdl.org
-Subject: [patch 09/25] remove drivers/scsi/constants.c:scsi_print_req_sense()
-Date: Thu, 01 Jun 2006 20:42:34 -0700
-Message-ID: <200606020338.k523cF7C029231@shell0.pdx.osdl.net>
+Subject: [patch 19/25] aic7*: cleanup MODULE_PARM_DESC strings
+Date: Thu, 01 Jun 2006 20:42:44 -0700
+Message-ID: <200606020338.k523cQ4g029261@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:11447 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751218AbWFBDiX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2006 23:38:23 -0400
+Received: from smtp.osdl.org ([65.172.181.4]:17847 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751223AbWFBDi3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2006 23:38:29 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, bunk@stusta.de
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, rdunlap@xenotime.net
 
 
-From: Adrian Bunk <bunk@stusta.de>
+From: Randy Dunlap <rdunlap@xenotime.net>
 
-This function is no longer used anywhere.
+Modify beginning string to be more readable.  Remove one trailing newline.
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
+Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/constants.c |   10 ----------
- include/scsi/scsi_dbg.h  |    1 -
- 2 files changed, 11 deletions(-)
+ drivers/scsi/aic7xxx/aic79xx_osm.c |    4 ++--
+ drivers/scsi/aic7xxx/aic7xxx_osm.c |    2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff -puN drivers/scsi/constants.c~remove-drivers-scsi-constantscscsi_print_req_sense drivers/scsi/constants.c
---- devel/drivers/scsi/constants.c~remove-drivers-scsi-constantscscsi_print_req_sense	2006-06-01 20:41:50.000000000 -0700
-+++ devel-akpm/drivers/scsi/constants.c	2006-06-01 20:41:50.000000000 -0700
-@@ -1268,16 +1268,6 @@ void scsi_print_sense(const char *devcla
- }
- EXPORT_SYMBOL(scsi_print_sense);
+diff -puN drivers/scsi/aic7xxx/aic79xx_osm.c~aic7-cleanup-module_parm_desc-strings drivers/scsi/aic7xxx/aic79xx_osm.c
+--- devel/drivers/scsi/aic7xxx/aic79xx_osm.c~aic7-cleanup-module_parm_desc-strings	2006-06-01 20:41:51.000000000 -0700
++++ devel-akpm/drivers/scsi/aic7xxx/aic79xx_osm.c	2006-06-01 20:41:51.000000000 -0700
+@@ -340,7 +340,7 @@ MODULE_LICENSE("Dual BSD/GPL");
+ MODULE_VERSION(AIC79XX_DRIVER_VERSION);
+ module_param(aic79xx, charp, 0444);
+ MODULE_PARM_DESC(aic79xx,
+-"period delimited, options string.\n"
++"period-delimited options string:\n"
+ "	verbose			Enable verbose/diagnostic logging\n"
+ "	allow_memio		Allow device registers to be memory mapped\n"
+ "	debug			Bitmask of debug values to enable\n"
+@@ -366,7 +366,7 @@ MODULE_PARM_DESC(aic79xx,
+ "		Shorten the selection timeout to 128ms\n"
+ "\n"
+ "	options aic79xx 'aic79xx=verbose.tag_info:{{}.{}.{..10}}.seltime:1'\n"
+-"\n");
++);
  
--void scsi_print_req_sense(const char *devclass, struct scsi_request *sreq)
--{
--	const char *name = devclass;
--
--	if (sreq->sr_request->rq_disk)
--		name = sreq->sr_request->rq_disk->disk_name;
--	__scsi_print_sense(name, sreq->sr_sense_buffer, SCSI_SENSE_BUFFERSIZE);
--}
--EXPORT_SYMBOL(scsi_print_req_sense);
--
- void scsi_print_command(struct scsi_cmnd *cmd)
- {
- 	/* Assume appended output (i.e. not at start of line) */
-diff -puN include/scsi/scsi_dbg.h~remove-drivers-scsi-constantscscsi_print_req_sense include/scsi/scsi_dbg.h
---- devel/include/scsi/scsi_dbg.h~remove-drivers-scsi-constantscscsi_print_req_sense	2006-06-01 20:41:50.000000000 -0700
-+++ devel-akpm/include/scsi/scsi_dbg.h	2006-06-01 20:41:50.000000000 -0700
-@@ -9,7 +9,6 @@ extern void scsi_print_command(struct sc
- extern void scsi_print_sense_hdr(const char *, struct scsi_sense_hdr *);
- extern void __scsi_print_command(unsigned char *);
- extern void scsi_print_sense(const char *, struct scsi_cmnd *);
--extern void scsi_print_req_sense(const char *, struct scsi_request *);
- extern void __scsi_print_sense(const char *name,
- 			       const unsigned char *sense_buffer,
- 			       int sense_len);
+ static void ahd_linux_handle_scsi_status(struct ahd_softc *,
+ 					 struct scsi_device *,
+diff -puN drivers/scsi/aic7xxx/aic7xxx_osm.c~aic7-cleanup-module_parm_desc-strings drivers/scsi/aic7xxx/aic7xxx_osm.c
+--- devel/drivers/scsi/aic7xxx/aic7xxx_osm.c~aic7-cleanup-module_parm_desc-strings	2006-06-01 20:41:51.000000000 -0700
++++ devel-akpm/drivers/scsi/aic7xxx/aic7xxx_osm.c	2006-06-01 20:41:51.000000000 -0700
+@@ -341,7 +341,7 @@ MODULE_LICENSE("Dual BSD/GPL");
+ MODULE_VERSION(AIC7XXX_DRIVER_VERSION);
+ module_param(aic7xxx, charp, 0444);
+ MODULE_PARM_DESC(aic7xxx,
+-"period delimited, options string.\n"
++"period-delimited options string:\n"
+ "	verbose			Enable verbose/diagnostic logging\n"
+ "	allow_memio		Allow device registers to be memory mapped\n"
+ "	debug			Bitmask of debug values to enable\n"
 _
