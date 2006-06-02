@@ -1,46 +1,45 @@
 From: akpm@osdl.org
-Subject: [patch 01/25] drivers/scsi: fix proc_scsi_write to return "length" on success with remove-single-device case
-Date: Thu, 01 Jun 2006 20:42:28 -0700
-Message-ID: <200606020338.k523c9I2029206@shell0.pdx.osdl.net>
+Subject: [patch 02/25] drivers/scsi/sd.c: fix uninitialized variable in handling medium errors
+Date: Thu, 01 Jun 2006 20:42:29 -0700
+Message-ID: <200606020338.k523cAbw029209@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:5559 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751215AbWFBDiP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2006 23:38:15 -0400
+Received: from smtp.osdl.org ([65.172.181.4]:3511 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751214AbWFBDiO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2006 23:38:14 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, suzuki@in.ibm.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, lkml@rtr.ca
 
 
-From: Suzuki <suzuki@in.ibm.com>
+From: Mark Lord <lkml@rtr.ca>
 
-proc_scsi_write doesn't return the "length" upon successfully removing a
-device; instead it returns 0.  This causes commands like "echo" to redo the
-write(), which ends up in something like,
+When scsi_get_sense_info_fld() fails (returns 0), it does NOT update the
+value of first_err_block.  But sd_rw_intr() merrily continues to use that
+variable regardless, possibly making incorrect decisions about retries and
+the like.
 
-$ echo "scsi remove-single-device 0 0 3 0" > /proc/scsi/scsi
-"-bash: echo: write error: No such device or address"
+This patch removes the randomness there, by using the first sector of the
+request (SCpnt->request->sector) in such cases, instead of first_err_block.
 
-, even though the device was removed.
-
-Signed-off-by: Suzuki K P <suzuki@in.ibm.com>
+Signed-off-by: Mark Lord <lkml@rtr.ca>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/scsi_proc.c |    2 ++
+ drivers/scsi/sd.c |    2 ++
  1 file changed, 2 insertions(+)
 
-diff -puN drivers/scsi/scsi_proc.c~drivers-scsi-fix-proc_scsi_write-to-return-length-on drivers/scsi/scsi_proc.c
---- devel/drivers/scsi/scsi_proc.c~drivers-scsi-fix-proc_scsi_write-to-return-length-on	2006-06-01 20:41:49.000000000 -0700
-+++ devel-akpm/drivers/scsi/scsi_proc.c	2006-06-01 20:41:49.000000000 -0700
-@@ -280,6 +280,8 @@ static ssize_t proc_scsi_write(struct fi
- 		lun = simple_strtoul(p + 1, &p, 0);
+diff -puN drivers/scsi/sd.c~drivers-scsi-sdc-fix-uninitialized-variable-in-handling-medium-errors drivers/scsi/sd.c
+--- devel/drivers/scsi/sd.c~drivers-scsi-sdc-fix-uninitialized-variable-in-handling-medium-errors	2006-06-01 20:41:49.000000000 -0700
++++ devel-akpm/drivers/scsi/sd.c	2006-06-01 20:41:49.000000000 -0700
+@@ -959,6 +959,8 @@ static void sd_rw_intr(struct scsi_cmnd 
+ 			default:
+ 				break;
+ 			}
++			if (!info_valid)
++				error_sector = SCpnt->request->sector;
  
- 		err = scsi_remove_single_device(host, channel, id, lun);
-+		if (!err)
-+			err = length;
- 	}
- 
- 	/*
+ 			error_sector &= ~(block_sectors - 1);
+ 			good_bytes = (error_sector - SCpnt->request->sector) << 9;
 _
