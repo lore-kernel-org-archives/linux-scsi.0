@@ -1,23 +1,29 @@
 From: "John Treubig" <jtreubig@hotmail.com>
 Subject: Re: Controlling PATA access speeds
-Date: Fri, 02 Jun 2006 10:31:15 -0500
-Message-ID: <BAY113-F26703295C8881F7AA93A79DF910@phx.gbl>
+Date: Fri, 02 Jun 2006 15:37:51 -0500
+Message-ID: <BAY113-F20C5E81293FCD88D28597DDF910@phx.gbl>
 References: <200606012121.k51LLwCa009141@falcon10.austin.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bay113-f26.bay113.hotmail.com ([65.54.168.36]:52660 "EHLO
-	hotmail.com") by vger.kernel.org with ESMTP id S932216AbWFBPbT
+Received: from bay113-f20.bay113.hotmail.com ([65.54.168.30]:34995 "EHLO
+	hotmail.com") by vger.kernel.org with ESMTP id S932566AbWFBUhw
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 Jun 2006 11:31:19 -0400
+	Fri, 2 Jun 2006 16:37:52 -0400
 In-Reply-To: <200606012121.k51LLwCa009141@falcon10.austin.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: dwm@austin.ibm.com
 Cc: jeff@garzik.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-The 40 wire detect (forcing the host to DMA2) is a good start.  I am 
-researching the implications to our setup.  Thanks for the help
+Because of my setup, I have had to pull pin 34 (PDIAG) high at the Promise 
+to make the Promise think I have a 40 pin cable.  At boot, the Promise 
+thinks I have a 40 wire cable installed and gives me a warning, yet when I 
+run my program that measures transfer rate in Linux, I still see the same 
+data rates as with an 80 wire cable (pin 34 shorted).  Is there any other 
+item that I'm missing besides having Pin 34 pulled high?  Does the drive's 
+echoing that it is UDMA5 capable have anything to do with it?  Is the fact 
+that I'm not carrying pin 34 all the way to the drive causing my problem?
 
 Best wishes,
 John
