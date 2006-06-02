@@ -1,34 +1,36 @@
-From: Doug Maxey <dwm@austin.ibm.com>
-Subject: Re: Controlling PATA access speeds
-Date: Thu, 01 Jun 2006 16:21:58 -0500
-Message-ID: <200606012121.k51LLwCa009141@falcon10.austin.ibm.com>
-References: <BAY113-F2199B8BEE31723E17D24CCDF900@phx.gbl>
+From: "Pedro Kinney" <artilleryibalskk@polknc.org>
+Subject: Spend more when you want and less when you need to
+Date: Fri, 2 Jun 2006 02:29:13 +0000
+Message-ID: <060101c685ec$56656720$1d01a8c0@dzshcompouter>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-reply-to: <BAY113-F2199B8BEE31723E17D24CCDF900@phx.gbl> 
-Sender: linux-ide-owner@vger.kernel.org
-To: John Treubig <jtreubig@hotmail.com>
-Cc: jeff@garzik.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain;
+     format=flowed;
+     charset="iso-8859-1";
+     reply-type=original
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from [61.191.114.134] ([61.191.114.134]:38447 "EHLO
+	dzshcompouter.polknc.org") by vger.kernel.org with ESMTP
+	id S1751138AbWFBC0f (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 1 Jun 2006 22:26:35 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
+Life Should be Full of Luxuries....
 
-On Thu, 01 Jun 2006 15:35:23 CDT, "John Treubig" wrote:
->Jeff,
->
->You bring up a good point in the fact that I believe your refering to 
->detecting 80 wire vs. 40 wire.  We've not tried to use this to our 
->advantage, but it could have some merrit.  What does the driver do if it 
->encounters a 40 wire cable and the drive says it's capable of DMA5?
->
+http://blessthathomepleasee.com/
 
-The presence of a 40 wire cable limits the device to UDMA2 - 33mhz.  
-See the ATA6 or later on t13.org.
+Yet, only a handful of people can afford the finest products, the luxuries of the elite.
+But, here at "Luxury Replica" we are committed to bringing you the finest products, at prices incomparably lower.
+All of the top designer brands for Watches, Ties, Handbags and even Mont Blanc.
 
-JS20 blades are lackinging the strapping to indicate the devices hanging 
-off the amd8111 are on the equivalent of 80 wire - 4 inch trace on mb.
-In the JS20 case, a quirk will be necessary to run at speeds higher than UDMA2.
+http://blessthathomepleasee.com/
 
-++doug
+The finest of products, at the lowest of prices, only a click away:
 
+http://newgunforsalejoke.com/
+
+Regards,
+Pedro Kinney
 
