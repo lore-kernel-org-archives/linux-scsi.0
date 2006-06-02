@@ -1,36 +1,25 @@
-From: "Rose Kirk" <westboundkldjbip@python.org>
-Subject: Rejoice with lower rates
-Date: Fri, 2 Jun 2006 12:34:55 +0000
-Message-ID: <009201c68640$f41e1940$5f000a0a@cuma>
+From: "Mun Hamlet" <hamletmun@hotmail.com>
+Subject: SCSI problem
+Date: Fri, 02 Jun 2006 09:41:15 -0300
+Message-ID: <BAY112-F248D459F07921745E672CA0910@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-     format=flowed;
-     charset="iso-8859-1";
-     reply-type=original
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ks_c_5601-1987; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [193.140.14.50] ([193.140.14.50]:25864 "EHLO cuma.python.org")
-	by vger.kernel.org with ESMTP id S1751312AbWFBMfB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Jun 2006 08:35:01 -0400
+Received: from bay112-f2.bay112.hotmail.com ([64.4.26.12]:25422 "EHLO
+	hotmail.com") by vger.kernel.org with ESMTP id S1751407AbWFBMlS
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 2 Jun 2006 08:41:18 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
 
-Life Should be Full of Luxuries....
+Today I did some tests
 
-http://blessthathomepleasee.com/
+linux-2.6.14-rc3 and linux-2.6.14-rc1 had the same error, but 
+linux-2.6.13.5
+was fine.
+So I guess this bug was introduced between 2.6.13.5 and 2.6.14-rc1
 
-Yet, only a handful of people can afford the finest products, the luxuries of the elite.
-But, here at "Luxury Replica" we are committed to bringing you the finest products, at prices incomparably lower.
-All of the top designer brands for Watches, Ties, Handbags and even Mont Blanc.
-
-http://blessthathomepleasee.com/
-
-The finest of products, at the lowest of prices, only a click away:
-
-http://newgunforsalejoke.com/
-
-Regards,
-Rose Kirk
+http://bugs.gentoo.org/show_bug.cgi?id=127991
 
 
