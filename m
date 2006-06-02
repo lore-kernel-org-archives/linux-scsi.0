@@ -1,73 +1,48 @@
 From: akpm@osdl.org
-Subject: [patch 17/25] lpfc: sparse NULL warnings
-Date: Thu, 01 Jun 2006 20:42:43 -0700
-Message-ID: <200606020338.k523cOKl029255@shell0.pdx.osdl.net>
+Subject: [patch 08/25] small whitespace cleanup for qlogic driver
+Date: Thu, 01 Jun 2006 20:42:33 -0700
+Message-ID: <200606020338.k523cEkg029227@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:16311 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751221AbWFBDi2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2006 23:38:28 -0400
+Received: from smtp.osdl.org ([65.172.181.4]:26807 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751219AbWFBDid (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2006 23:38:33 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, rdunlap@xenotime.net
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, jesper.juhl@gmail.com, andrew.vasquez@qlogic.com
 
 
-From: Randy Dunlap <rdunlap@xenotime.net>
+From: Jesper Juhl <jesper.juhl@gmail.com>
 
-Fix sparse warnings: use NULL instead of 0 for pointers:
-drivers/scsi/lpfc/lpfc_els.c:827:56: warning: Using plain integer as NULL pointer
-drivers/scsi/lpfc/lpfc_els.c:2781:18: warning: Using plain integer as NULL pointer
-drivers/scsi/lpfc/lpfc_els.c:2782:18: warning: Using plain integer as NULL pointer
-drivers/scsi/lpfc/lpfc_init.c:951:21: warning: Using plain integer as NULL pointer
-drivers/scsi/lpfc/lpfc_init.c:956:20: warning: Using plain integer as NULL pointer
+Add a few spaces to MODULE_PARM_DESC() text for qla2xxx. Without these
+spaces text runs together when modinfo prints the text.
 
-Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+Signed-off-by: Jesper Juhl <jesper.juhl@gmail.com>
+Acked-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/lpfc/lpfc_els.c  |    6 +++---
- drivers/scsi/lpfc/lpfc_init.c |    4 ++--
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/scsi/qla2xxx/qla_os.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff -puN drivers/scsi/lpfc/lpfc_els.c~lpfc-sparse-null-warnings drivers/scsi/lpfc/lpfc_els.c
---- devel/drivers/scsi/lpfc/lpfc_els.c~lpfc-sparse-null-warnings	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/lpfc/lpfc_els.c	2006-06-01 20:41:51.000000000 -0700
-@@ -821,7 +821,7 @@ lpfc_issue_els_plogi(struct lpfc_hba * p
- 	pring = &psli->ring[LPFC_ELS_RING];	/* ELS ring */
+diff -puN drivers/scsi/qla2xxx/qla_os.c~small-whitespace-cleanup-for-qlogic-driver drivers/scsi/qla2xxx/qla_os.c
+--- devel/drivers/scsi/qla2xxx/qla_os.c~small-whitespace-cleanup-for-qlogic-driver	2006-06-01 20:41:50.000000000 -0700
++++ devel-akpm/drivers/scsi/qla2xxx/qla_os.c	2006-06-01 20:41:50.000000000 -0700
+@@ -39,14 +39,14 @@ MODULE_PARM_DESC(ql2xlogintimeout,
+ int qlport_down_retry = 30;
+ module_param(qlport_down_retry, int, S_IRUGO|S_IRUSR);
+ MODULE_PARM_DESC(qlport_down_retry,
+-		"Maximum number of command retries to a port that returns"
++		"Maximum number of command retries to a port that returns "
+ 		"a PORT-DOWN status.");
  
- 	cmdsize = (sizeof (uint32_t) + sizeof (struct serv_parm));
--	elsiocb = lpfc_prep_els_iocb(phba, 1, cmdsize, retry, 0, did,
-+	elsiocb = lpfc_prep_els_iocb(phba, 1, cmdsize, retry, NULL, did,
- 								ELS_CMD_PLOGI);
- 	if (!elsiocb)
- 		return 1;
-@@ -2791,8 +2791,8 @@ lpfc_els_rsp_rps_acc(struct lpfc_hba * p
+ int ql2xplogiabsentdevice;
+ module_param(ql2xplogiabsentdevice, int, S_IRUGO|S_IWUSR);
+ MODULE_PARM_DESC(ql2xplogiabsentdevice,
+ 		"Option to enable PLOGI to devices that are not present after "
+-		"a Fabric scan.  This is needed for several broken switches."
++		"a Fabric scan.  This is needed for several broken switches. "
+ 		"Default is 0 - no PLOGI. 1 - perfom PLOGI.");
  
- 	ndlp = (struct lpfc_nodelist *) pmb->context2;
- 	xri = (uint16_t) ((unsigned long)(pmb->context1));
--	pmb->context1 = 0;
--	pmb->context2 = 0;
-+	pmb->context1 = NULL;
-+	pmb->context2 = NULL;
- 
- 	if (mb->mbxStatus) {
- 		mempool_free( pmb, phba->mbox_mem_pool);
-diff -puN drivers/scsi/lpfc/lpfc_init.c~lpfc-sparse-null-warnings drivers/scsi/lpfc/lpfc_init.c
---- devel/drivers/scsi/lpfc/lpfc_init.c~lpfc-sparse-null-warnings	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/lpfc/lpfc_init.c	2006-06-01 20:41:51.000000000 -0700
-@@ -939,12 +939,12 @@ lpfc_get_hba_model_desc(struct lpfc_hba 
- 					"10-port ", "PCIe"};
- 			break;
- 		default:
--			m = (typeof(m)){ 0 };
-+			m = (typeof(m)){ NULL };
- 			break;
- 		}
- 		break;
- 	default:
--		m = (typeof(m)){ 0 };
-+		m = (typeof(m)){ NULL };
- 		break;
- 	}
- 
+ int ql2xloginretrycount = 0;
 _
