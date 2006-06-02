@@ -1,1388 +1,318 @@
 From: akpm@osdl.org
-Subject: [patch 12/25] aic7xxx: s/__inline/inline
-Date: Thu, 01 Jun 2006 20:42:37 -0700
-Message-ID: <200606020338.k523cIjj029240@shell0.pdx.osdl.net>
+Subject: [patch 14/25] scsi: remove Documentation/scsi/cpqfc.txt
+Date: Thu, 01 Jun 2006 20:42:38 -0700
+Message-ID: <200606020338.k523cKeD029246@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:43447 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751233AbWFBDij (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2006 23:38:39 -0400
+Received: from smtp.osdl.org ([65.172.181.4]:53431 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751239AbWFBDip (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jun 2006 23:38:45 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, vda@ilport.com.ua
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, apgo@patchbomb.org, James.Bottomley@steeleye.com, mkp@mkp.net
 
 
-From: Denis Vlasenko <vda@ilport.com.ua>
+From: apgo@patchbomb.org (Arthur Othieno)
 
-Global s/__inline/inline/ in aic7xxx driver
+cpqfc driver flushed out with: [SCSI] remove broken driver cpqfc (commit
+ca61f10ab2b874b889e89d14ea09fae2dcccdca6) but somehow
+Documentation/scsi/cpqfc.txt managed to survive the blast.
 
-Signed-off-by: Denis Vlasenko <vda@ilport.com.ua>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
+Signed-off-by: Arthur Othieno <apgo@patchbomb.org>
+Cc: Martin K. Petersen <mkp@mkp.net>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/aic7xxx/aic79xx_core.c   |   10 -
- drivers/scsi/aic7xxx/aic79xx_inline.h |  128 ++++++++++++------------
- drivers/scsi/aic7xxx/aic79xx_osm.c    |    4 
- drivers/scsi/aic7xxx/aic79xx_osm.h    |  110 ++++++++++----------
- drivers/scsi/aic7xxx/aic79xx_pci.c    |    2 
- drivers/scsi/aic7xxx/aic7xxx_inline.h |   76 +++++++-------
- drivers/scsi/aic7xxx/aic7xxx_osm.c    |    4 
- drivers/scsi/aic7xxx/aic7xxx_osm.h    |  112 ++++++++++-----------
- drivers/scsi/aic7xxx/aic7xxx_pci.c    |    2 
- drivers/scsi/aic7xxx/aiclib.h         |    4 
- 10 files changed, 226 insertions(+), 226 deletions(-)
+ Documentation/scsi/00-INDEX  |    2 
+ Documentation/scsi/cpqfc.txt |  272 ---------------------------------
+ 2 files changed, 274 deletions(-)
 
-diff -puN drivers/scsi/aic7xxx/aic79xx_core.c~aic7xxx-s-__inline-inline drivers/scsi/aic7xxx/aic79xx_core.c
---- devel/drivers/scsi/aic7xxx/aic79xx_core.c~aic7xxx-s-__inline-inline	2006-06-01 20:41:50.000000000 -0700
-+++ devel-akpm/drivers/scsi/aic7xxx/aic79xx_core.c	2006-06-01 20:41:50.000000000 -0700
-@@ -863,7 +863,7 @@ static int		ahd_match_scb(struct ahd_sof
- 
- /******************************** Private Inlines *****************************/
- 
--static __inline void
-+static inline void
- ahd_assert_atn(struct ahd_softc *ahd)
- {
- 	ahd_outb(ahd, SCSISIGO, ATNO);
-@@ -875,7 +875,7 @@ ahd_assert_atn(struct ahd_softc *ahd)
-  * are currently in a packetized transfer.  We could
-  * just as easily be sending or receiving a message.
-  */
--static __inline int
-+static inline int
- ahd_currently_packetized(struct ahd_softc *ahd)
- {
- 	ahd_mode_state	 saved_modes;
-@@ -915,7 +915,7 @@ ahd_set_active_fifo(struct ahd_softc *ah
- 	}
- }
- 
--static __inline void
-+static inline void
- ahd_unbusy_tcl(struct ahd_softc *ahd, u_int tcl)
- {
- 	ahd_busy_tcl(ahd, tcl, SCB_LIST_NULL);
-@@ -925,7 +925,7 @@ ahd_unbusy_tcl(struct ahd_softc *ahd, u_
-  * Determine whether the sequencer reported a residual
-  * for this SCB/transaction.
-  */
--static __inline void
-+static inline void
- ahd_update_residual(struct ahd_softc *ahd, struct scb *scb)
- {
- 	uint32_t sgptr;
-@@ -935,7 +935,7 @@ ahd_update_residual(struct ahd_softc *ah
- 		ahd_calc_residual(ahd, scb);
- }
- 
--static __inline void
-+static inline void
- ahd_complete_scb(struct ahd_softc *ahd, struct scb *scb)
- {
- 	uint32_t sgptr;
-diff -puN drivers/scsi/aic7xxx/aic79xx_inline.h~aic7xxx-s-__inline-inline drivers/scsi/aic7xxx/aic79xx_inline.h
---- devel/drivers/scsi/aic7xxx/aic79xx_inline.h~aic7xxx-s-__inline-inline	2006-06-01 20:41:50.000000000 -0700
-+++ devel-akpm/drivers/scsi/aic7xxx/aic79xx_inline.h	2006-06-01 20:41:50.000000000 -0700
-@@ -46,37 +46,37 @@
- #define _AIC79XX_INLINE_H_
- 
- /******************************** Debugging ***********************************/
--static __inline char *ahd_name(struct ahd_softc *ahd);
-+static inline char *ahd_name(struct ahd_softc *ahd);
- 
--static __inline char *
-+static inline char *
- ahd_name(struct ahd_softc *ahd)
- {
- 	return (ahd->name);
- }
- 
- /************************ Sequencer Execution Control *************************/
--static __inline void ahd_known_modes(struct ahd_softc *ahd,
-+static inline void ahd_known_modes(struct ahd_softc *ahd,
- 				     ahd_mode src, ahd_mode dst);
--static __inline ahd_mode_state ahd_build_mode_state(struct ahd_softc *ahd,
-+static inline ahd_mode_state ahd_build_mode_state(struct ahd_softc *ahd,
- 						    ahd_mode src,
- 						    ahd_mode dst);
--static __inline void ahd_extract_mode_state(struct ahd_softc *ahd,
-+static inline void ahd_extract_mode_state(struct ahd_softc *ahd,
- 					    ahd_mode_state state,
- 					    ahd_mode *src, ahd_mode *dst);
- void ahd_set_modes(struct ahd_softc *ahd, ahd_mode src,
- 				   ahd_mode dst);
- void ahd_update_modes(struct ahd_softc *ahd);
--static __inline void ahd_assert_modes(struct ahd_softc *ahd, ahd_mode srcmode,
-+static inline void ahd_assert_modes(struct ahd_softc *ahd, ahd_mode srcmode,
- 				      ahd_mode dstmode, const char *file,
- 				      int line);
- ahd_mode_state ahd_save_modes(struct ahd_softc *ahd);
- void ahd_restore_modes(struct ahd_softc *ahd,
- 				       ahd_mode_state state);
--static __inline int  ahd_is_paused(struct ahd_softc *ahd);
--static __inline void ahd_pause(struct ahd_softc *ahd);
-+static inline int  ahd_is_paused(struct ahd_softc *ahd);
-+static inline void ahd_pause(struct ahd_softc *ahd);
- void ahd_unpause(struct ahd_softc *ahd);
- 
--static __inline void
-+static inline void
- ahd_known_modes(struct ahd_softc *ahd, ahd_mode src, ahd_mode dst)
- {
- 	ahd->src_mode = src;
-@@ -85,13 +85,13 @@ ahd_known_modes(struct ahd_softc *ahd, a
- 	ahd->saved_dst_mode = dst;
- }
- 
--static __inline ahd_mode_state
-+static inline ahd_mode_state
- ahd_build_mode_state(struct ahd_softc *ahd, ahd_mode src, ahd_mode dst)
- {
- 	return ((src << SRC_MODE_SHIFT) | (dst << DST_MODE_SHIFT));
- }
- 
--static __inline void
-+static inline void
- ahd_extract_mode_state(struct ahd_softc *ahd, ahd_mode_state state,
- 		       ahd_mode *src, ahd_mode *dst)
- {
-@@ -99,7 +99,7 @@ ahd_extract_mode_state(struct ahd_softc 
- 	*dst = (state & DST_MODE) >> DST_MODE_SHIFT;
- }
- 
--static __inline void
-+static inline void
- ahd_assert_modes(struct ahd_softc *ahd, ahd_mode srcmode,
- 		 ahd_mode dstmode, const char *file, int line)
- {
-@@ -119,7 +119,7 @@ ahd_assert_modes(struct ahd_softc *ahd, 
-  * Determine whether the sequencer has halted code execution.
-  * Returns non-zero status if the sequencer is stopped.
-  */
--static __inline int
-+static inline int
- ahd_is_paused(struct ahd_softc *ahd)
- {
- 	return ((ahd_inb(ahd, HCNTRL) & PAUSE) != 0);
-@@ -132,7 +132,7 @@ ahd_is_paused(struct ahd_softc *ahd)
-  * cleared in the SEQCTL register.  The sequencer may use PAUSEDIS
-  * for critical sections.
-  */
--static __inline void
-+static inline void
- ahd_pause(struct ahd_softc *ahd)
- {
- 	ahd_outb(ahd, HCNTRL, ahd->pause);
-@@ -149,10 +149,10 @@ ahd_pause(struct ahd_softc *ahd)
- void	*ahd_sg_setup(struct ahd_softc *ahd, struct scb *scb,
- 				      void *sgptr, dma_addr_t addr,
- 				      bus_size_t len, int last);
--static __inline void	 ahd_setup_noxfer_scb(struct ahd_softc *ahd,
-+static inline void	 ahd_setup_noxfer_scb(struct ahd_softc *ahd,
- 					      struct scb *scb);
- 
--static __inline void
-+static inline void
- ahd_setup_noxfer_scb(struct ahd_softc *ahd, struct scb *scb)
- {
- 	scb->hscb->sgptr = ahd_htole32(SG_LIST_NULL);
-@@ -161,26 +161,26 @@ ahd_setup_noxfer_scb(struct ahd_softc *a
- }
- 
- /************************** Memory mapping routines ***************************/
--static __inline size_t	ahd_sg_size(struct ahd_softc *ahd);
--static __inline void *
-+static inline size_t	ahd_sg_size(struct ahd_softc *ahd);
-+static inline void *
- 			ahd_sg_bus_to_virt(struct ahd_softc *ahd,
- 					   struct scb *scb,
- 					   uint32_t sg_busaddr);
--static __inline uint32_t
-+static inline uint32_t
- 			ahd_sg_virt_to_bus(struct ahd_softc *ahd,
- 					   struct scb *scb,
- 					   void *sg);
--static __inline void	ahd_sync_scb(struct ahd_softc *ahd,
-+static inline void	ahd_sync_scb(struct ahd_softc *ahd,
- 				     struct scb *scb, int op);
--static __inline void	ahd_sync_sglist(struct ahd_softc *ahd,
-+static inline void	ahd_sync_sglist(struct ahd_softc *ahd,
- 					struct scb *scb, int op);
--static __inline void	ahd_sync_sense(struct ahd_softc *ahd,
-+static inline void	ahd_sync_sense(struct ahd_softc *ahd,
- 				       struct scb *scb, int op);
--static __inline uint32_t
-+static inline uint32_t
- 			ahd_targetcmd_offset(struct ahd_softc *ahd,
- 					     u_int index);
- 
--static __inline size_t
-+static inline size_t
- ahd_sg_size(struct ahd_softc *ahd)
- {
- 	if ((ahd->flags & AHD_64BIT_ADDRESSING) != 0)
-@@ -188,7 +188,7 @@ ahd_sg_size(struct ahd_softc *ahd)
- 	return (sizeof(struct ahd_dma_seg));
- }
- 
--static __inline void *
-+static inline void *
- ahd_sg_bus_to_virt(struct ahd_softc *ahd, struct scb *scb, uint32_t sg_busaddr)
- {
- 	dma_addr_t sg_offset;
-@@ -198,7 +198,7 @@ ahd_sg_bus_to_virt(struct ahd_softc *ahd
- 	return ((uint8_t *)scb->sg_list + sg_offset);
- }
- 
--static __inline uint32_t
-+static inline uint32_t
- ahd_sg_virt_to_bus(struct ahd_softc *ahd, struct scb *scb, void *sg)
- {
- 	dma_addr_t sg_offset;
-@@ -210,7 +210,7 @@ ahd_sg_virt_to_bus(struct ahd_softc *ahd
- 	return (scb->sg_list_busaddr + sg_offset);
- }
- 
--static __inline void
-+static inline void
- ahd_sync_scb(struct ahd_softc *ahd, struct scb *scb, int op)
- {
- 	ahd_dmamap_sync(ahd, ahd->scb_data.hscb_dmat,
-@@ -219,7 +219,7 @@ ahd_sync_scb(struct ahd_softc *ahd, stru
- 			/*len*/sizeof(*scb->hscb), op);
- }
- 
--static __inline void
-+static inline void
- ahd_sync_sglist(struct ahd_softc *ahd, struct scb *scb, int op)
- {
- 	if (scb->sg_count == 0)
-@@ -231,7 +231,7 @@ ahd_sync_sglist(struct ahd_softc *ahd, s
- 			/*len*/ahd_sg_size(ahd) * scb->sg_count, op);
- }
- 
--static __inline void
-+static inline void
- ahd_sync_sense(struct ahd_softc *ahd, struct scb *scb, int op)
- {
- 	ahd_dmamap_sync(ahd, ahd->scb_data.sense_dmat,
-@@ -240,7 +240,7 @@ ahd_sync_sense(struct ahd_softc *ahd, st
- 			/*len*/AHD_SENSE_BUFSIZE, op);
- }
- 
--static __inline uint32_t
-+static inline uint32_t
- ahd_targetcmd_offset(struct ahd_softc *ahd, u_int index)
- {
- 	return (((uint8_t *)&ahd->targetcmds[index])
-@@ -248,7 +248,7 @@ ahd_targetcmd_offset(struct ahd_softc *a
- }
- 
- /*********************** Miscelaneous Support Functions ***********************/
--static __inline struct ahd_initiator_tinfo *
-+static inline struct ahd_initiator_tinfo *
- 			ahd_fetch_transinfo(struct ahd_softc *ahd,
- 					    char channel, u_int our_id,
- 					    u_int remote_id,
-@@ -259,28 +259,28 @@ uint32_t ahd_inl(struct ahd_softc *ahd, 
- void	ahd_outl(struct ahd_softc *ahd, u_int port, uint32_t value);
- uint64_t ahd_inq(struct ahd_softc *ahd, u_int port);
- void	ahd_outq(struct ahd_softc *ahd, u_int port, uint64_t value);
--static __inline u_int	ahd_get_scbptr(struct ahd_softc *ahd);
--static __inline void	ahd_set_scbptr(struct ahd_softc *ahd, u_int scbptr);
--static __inline u_int	ahd_get_hnscb_qoff(struct ahd_softc *ahd);
--static __inline void	ahd_set_hnscb_qoff(struct ahd_softc *ahd, u_int value);
--static __inline u_int	ahd_get_hescb_qoff(struct ahd_softc *ahd);
--static __inline void	ahd_set_hescb_qoff(struct ahd_softc *ahd, u_int value);
--static __inline u_int	ahd_get_snscb_qoff(struct ahd_softc *ahd);
--static __inline void	ahd_set_snscb_qoff(struct ahd_softc *ahd, u_int value);
--static __inline u_int	ahd_get_sescb_qoff(struct ahd_softc *ahd);
--static __inline void	ahd_set_sescb_qoff(struct ahd_softc *ahd, u_int value);
--static __inline u_int	ahd_get_sdscb_qoff(struct ahd_softc *ahd);
--static __inline void	ahd_set_sdscb_qoff(struct ahd_softc *ahd, u_int value);
-+static inline u_int	ahd_get_scbptr(struct ahd_softc *ahd);
-+static inline void	ahd_set_scbptr(struct ahd_softc *ahd, u_int scbptr);
-+static inline u_int	ahd_get_hnscb_qoff(struct ahd_softc *ahd);
-+static inline void	ahd_set_hnscb_qoff(struct ahd_softc *ahd, u_int value);
-+static inline u_int	ahd_get_hescb_qoff(struct ahd_softc *ahd);
-+static inline void	ahd_set_hescb_qoff(struct ahd_softc *ahd, u_int value);
-+static inline u_int	ahd_get_snscb_qoff(struct ahd_softc *ahd);
-+static inline void	ahd_set_snscb_qoff(struct ahd_softc *ahd, u_int value);
-+static inline u_int	ahd_get_sescb_qoff(struct ahd_softc *ahd);
-+static inline void	ahd_set_sescb_qoff(struct ahd_softc *ahd, u_int value);
-+static inline u_int	ahd_get_sdscb_qoff(struct ahd_softc *ahd);
-+static inline void	ahd_set_sdscb_qoff(struct ahd_softc *ahd, u_int value);
- u_int	ahd_inb_scbram(struct ahd_softc *ahd, u_int offset);
- u_int	ahd_inw_scbram(struct ahd_softc *ahd, u_int offset);
- uint32_t ahd_inl_scbram(struct ahd_softc *ahd, u_int offset);
- uint64_t ahd_inq_scbram(struct ahd_softc *ahd, u_int offset);
- struct scb *ahd_lookup_scb(struct ahd_softc *ahd, u_int tag);
- void	ahd_queue_scb(struct ahd_softc *ahd, struct scb *scb);
--static __inline uint8_t *
-+static inline uint8_t *
- 			ahd_get_sense_buf(struct ahd_softc *ahd,
- 					  struct scb *scb);
--static __inline uint32_t
-+static inline uint32_t
- 			ahd_get_sense_bufaddr(struct ahd_softc *ahd,
- 					      struct scb *scb);
- 
-@@ -288,7 +288,7 @@ static __inline uint32_t
-  * Return pointers to the transfer negotiation information
-  * for the specified our_id/remote_id pair.
-  */
--static __inline struct ahd_initiator_tinfo *
-+static inline struct ahd_initiator_tinfo *
- ahd_fetch_transinfo(struct ahd_softc *ahd, char channel, u_int our_id,
- 		    u_int remote_id, struct ahd_tmode_tstate **tstate)
- {
-@@ -310,7 +310,7 @@ do {								\
- 	dst->hscb->lun = src->hscb->lun;			\
- } while (0)
- 
--static __inline u_int
-+static inline u_int
- ahd_get_scbptr(struct ahd_softc *ahd)
- {
- 	AHD_ASSERT_MODES(ahd, ~(AHD_MODE_UNKNOWN_MSK|AHD_MODE_CFG_MSK),
-@@ -318,7 +318,7 @@ ahd_get_scbptr(struct ahd_softc *ahd)
- 	return (ahd_inb(ahd, SCBPTR) | (ahd_inb(ahd, SCBPTR + 1) << 8));
- }
- 
--static __inline void
-+static inline void
- ahd_set_scbptr(struct ahd_softc *ahd, u_int scbptr)
- {
- 	AHD_ASSERT_MODES(ahd, ~(AHD_MODE_UNKNOWN_MSK|AHD_MODE_CFG_MSK),
-@@ -327,31 +327,31 @@ ahd_set_scbptr(struct ahd_softc *ahd, u_
- 	ahd_outb(ahd, SCBPTR+1, (scbptr >> 8) & 0xFF);
- }
- 
--static __inline u_int
-+static inline u_int
- ahd_get_hnscb_qoff(struct ahd_softc *ahd)
- {
- 	return (ahd_inw_atomic(ahd, HNSCB_QOFF));
- }
- 
--static __inline void
-+static inline void
- ahd_set_hnscb_qoff(struct ahd_softc *ahd, u_int value)
- {
- 	ahd_outw_atomic(ahd, HNSCB_QOFF, value);
- }
- 
--static __inline u_int
-+static inline u_int
- ahd_get_hescb_qoff(struct ahd_softc *ahd)
- {
- 	return (ahd_inb(ahd, HESCB_QOFF));
- }
- 
--static __inline void
-+static inline void
- ahd_set_hescb_qoff(struct ahd_softc *ahd, u_int value)
- {
- 	ahd_outb(ahd, HESCB_QOFF, value);
- }
- 
--static __inline u_int
-+static inline u_int
- ahd_get_snscb_qoff(struct ahd_softc *ahd)
- {
- 	u_int oldvalue;
-@@ -362,35 +362,35 @@ ahd_get_snscb_qoff(struct ahd_softc *ahd
- 	return (oldvalue);
- }
- 
--static __inline void
-+static inline void
- ahd_set_snscb_qoff(struct ahd_softc *ahd, u_int value)
- {
- 	AHD_ASSERT_MODES(ahd, AHD_MODE_CCHAN_MSK, AHD_MODE_CCHAN_MSK);
- 	ahd_outw(ahd, SNSCB_QOFF, value);
- }
- 
--static __inline u_int
-+static inline u_int
- ahd_get_sescb_qoff(struct ahd_softc *ahd)
- {
- 	AHD_ASSERT_MODES(ahd, AHD_MODE_CCHAN_MSK, AHD_MODE_CCHAN_MSK);
- 	return (ahd_inb(ahd, SESCB_QOFF));
- }
- 
--static __inline void
-+static inline void
- ahd_set_sescb_qoff(struct ahd_softc *ahd, u_int value)
- {
- 	AHD_ASSERT_MODES(ahd, AHD_MODE_CCHAN_MSK, AHD_MODE_CCHAN_MSK);
- 	ahd_outb(ahd, SESCB_QOFF, value);
- }
- 
--static __inline u_int
-+static inline u_int
- ahd_get_sdscb_qoff(struct ahd_softc *ahd)
- {
- 	AHD_ASSERT_MODES(ahd, AHD_MODE_CCHAN_MSK, AHD_MODE_CCHAN_MSK);
- 	return (ahd_inb(ahd, SDSCB_QOFF) | (ahd_inb(ahd, SDSCB_QOFF + 1) << 8));
- }
- 
--static __inline void
-+static inline void
- ahd_set_sdscb_qoff(struct ahd_softc *ahd, u_int value)
- {
- 	AHD_ASSERT_MODES(ahd, AHD_MODE_CCHAN_MSK, AHD_MODE_CCHAN_MSK);
-@@ -398,24 +398,24 @@ ahd_set_sdscb_qoff(struct ahd_softc *ahd
- 	ahd_outb(ahd, SDSCB_QOFF+1, (value >> 8) & 0xFF);
- }
- 
--static __inline uint8_t *
-+static inline uint8_t *
- ahd_get_sense_buf(struct ahd_softc *ahd, struct scb *scb)
- {
- 	return (scb->sense_data);
- }
- 
--static __inline uint32_t
-+static inline uint32_t
- ahd_get_sense_bufaddr(struct ahd_softc *ahd, struct scb *scb)
- {
- 	return (scb->sense_busaddr);
- }
- 
- /************************** Interrupt Processing ******************************/
--static __inline void	ahd_sync_qoutfifo(struct ahd_softc *ahd, int op);
--static __inline void	ahd_sync_tqinfifo(struct ahd_softc *ahd, int op);
-+static inline void	ahd_sync_qoutfifo(struct ahd_softc *ahd, int op);
-+static inline void	ahd_sync_tqinfifo(struct ahd_softc *ahd, int op);
- int	ahd_intr(struct ahd_softc *ahd);
- 
--static __inline void
-+static inline void
- ahd_sync_qoutfifo(struct ahd_softc *ahd, int op)
- {
- 	ahd_dmamap_sync(ahd, ahd->shared_data_dmat, ahd->shared_data_map.dmamap,
-@@ -423,7 +423,7 @@ ahd_sync_qoutfifo(struct ahd_softc *ahd,
- 			/*len*/AHD_SCB_MAX * sizeof(struct ahd_completion), op);
- }
- 
--static __inline void
-+static inline void
- ahd_sync_tqinfifo(struct ahd_softc *ahd, int op)
- {
- #ifdef AHD_TARGET_MODE
-diff -puN drivers/scsi/aic7xxx/aic79xx_osm.c~aic7xxx-s-__inline-inline drivers/scsi/aic7xxx/aic79xx_osm.c
---- devel/drivers/scsi/aic7xxx/aic79xx_osm.c~aic7xxx-s-__inline-inline	2006-06-01 20:41:50.000000000 -0700
-+++ devel-akpm/drivers/scsi/aic7xxx/aic79xx_osm.c	2006-06-01 20:41:50.000000000 -0700
-@@ -388,9 +388,9 @@ static int ahd_linux_unit;
- 
- 
- /****************************** Inlines ***************************************/
--static __inline void ahd_linux_unmap_scb(struct ahd_softc*, struct scb*);
-+static inline void ahd_linux_unmap_scb(struct ahd_softc*, struct scb*);
- 
--static __inline void
-+static inline void
- ahd_linux_unmap_scb(struct ahd_softc *ahd, struct scb *scb)
- {
- 	struct scsi_cmnd *cmd;
-diff -puN drivers/scsi/aic7xxx/aic79xx_osm.h~aic7xxx-s-__inline-inline drivers/scsi/aic7xxx/aic79xx_osm.h
---- devel/drivers/scsi/aic7xxx/aic79xx_osm.h~aic7xxx-s-__inline-inline	2006-06-01 20:41:50.000000000 -0700
-+++ devel-akpm/drivers/scsi/aic7xxx/aic79xx_osm.h	2006-06-01 20:41:50.000000000 -0700
-@@ -407,19 +407,19 @@ struct info_str {
- };
- 
- /******************************** Locking *************************************/
--static __inline void
-+static inline void
- ahd_lockinit(struct ahd_softc *ahd)
- {
- 	spin_lock_init(&ahd->platform_data->spin_lock);
- }
- 
--static __inline void
-+static inline void
- ahd_lock(struct ahd_softc *ahd, unsigned long *flags)
- {
- 	spin_lock_irqsave(&ahd->platform_data->spin_lock, *flags);
- }
- 
--static __inline void
-+static inline void
- ahd_unlock(struct ahd_softc *ahd, unsigned long *flags)
- {
- 	spin_unlock_irqrestore(&ahd->platform_data->spin_lock, *flags);
-@@ -497,10 +497,10 @@ int			 ahd_pci_map_registers(struct ahd_
- int			 ahd_pci_map_int(struct ahd_softc *ahd);
- 
- void ahd_BUG_bad_pci_rw_size(void);
--static __inline uint32_t ahd_pci_read_config(ahd_dev_softc_t pci,
-+static inline uint32_t ahd_pci_read_config(ahd_dev_softc_t pci,
- 					     int reg, int width);
- 
--static __inline uint32_t
-+static inline uint32_t
- ahd_pci_read_config(ahd_dev_softc_t pci, int reg, int width)
- {
- 	switch (width) {
-@@ -530,11 +530,11 @@ ahd_pci_read_config(ahd_dev_softc_t pci,
- 	}
- }
- 
--static __inline void ahd_pci_write_config(ahd_dev_softc_t pci,
-+static inline void ahd_pci_write_config(ahd_dev_softc_t pci,
- 					  int reg, uint32_t value,
- 					  int width);
- 
--static __inline void
-+static inline void
- ahd_pci_write_config(ahd_dev_softc_t pci, int reg, uint32_t value, int width)
- {
- 	switch (width) {
-@@ -553,29 +553,29 @@ ahd_pci_write_config(ahd_dev_softc_t pci
- 	}
- }
- 
--static __inline int ahd_get_pci_function(ahd_dev_softc_t);
--static __inline int
-+static inline int ahd_get_pci_function(ahd_dev_softc_t);
-+static inline int
- ahd_get_pci_function(ahd_dev_softc_t pci)
- {
- 	return (PCI_FUNC(pci->devfn));
- }
- 
--static __inline int ahd_get_pci_slot(ahd_dev_softc_t);
--static __inline int
-+static inline int ahd_get_pci_slot(ahd_dev_softc_t);
-+static inline int
- ahd_get_pci_slot(ahd_dev_softc_t pci)
- {
- 	return (PCI_SLOT(pci->devfn));
- }
- 
--static __inline int ahd_get_pci_bus(ahd_dev_softc_t);
--static __inline int
-+static inline int ahd_get_pci_bus(ahd_dev_softc_t);
-+static inline int
- ahd_get_pci_bus(ahd_dev_softc_t pci)
- {
- 	return (pci->bus->number);
- }
- 
--static __inline void ahd_flush_device_writes(struct ahd_softc *);
--static __inline void
-+static inline void ahd_flush_device_writes(struct ahd_softc *);
-+static inline void
- ahd_flush_device_writes(struct ahd_softc *ahd)
- {
- 	/* XXX Is this sufficient for all architectures??? */
-@@ -587,81 +587,81 @@ int	ahd_linux_proc_info(struct Scsi_Host
- 			    off_t, int, int);
- 
- /*********************** Transaction Access Wrappers **************************/
--static __inline void ahd_cmd_set_transaction_status(struct scsi_cmnd *, uint32_t);
--static __inline void ahd_set_transaction_status(struct scb *, uint32_t);
--static __inline void ahd_cmd_set_scsi_status(struct scsi_cmnd *, uint32_t);
--static __inline void ahd_set_scsi_status(struct scb *, uint32_t);
--static __inline uint32_t ahd_cmd_get_transaction_status(struct scsi_cmnd *cmd);
--static __inline uint32_t ahd_get_transaction_status(struct scb *);
--static __inline uint32_t ahd_cmd_get_scsi_status(struct scsi_cmnd *cmd);
--static __inline uint32_t ahd_get_scsi_status(struct scb *);
--static __inline void ahd_set_transaction_tag(struct scb *, int, u_int);
--static __inline u_long ahd_get_transfer_length(struct scb *);
--static __inline int ahd_get_transfer_dir(struct scb *);
--static __inline void ahd_set_residual(struct scb *, u_long);
--static __inline void ahd_set_sense_residual(struct scb *scb, u_long resid);
--static __inline u_long ahd_get_residual(struct scb *);
--static __inline u_long ahd_get_sense_residual(struct scb *);
--static __inline int ahd_perform_autosense(struct scb *);
--static __inline uint32_t ahd_get_sense_bufsize(struct ahd_softc *,
-+static inline void ahd_cmd_set_transaction_status(struct scsi_cmnd *, uint32_t);
-+static inline void ahd_set_transaction_status(struct scb *, uint32_t);
-+static inline void ahd_cmd_set_scsi_status(struct scsi_cmnd *, uint32_t);
-+static inline void ahd_set_scsi_status(struct scb *, uint32_t);
-+static inline uint32_t ahd_cmd_get_transaction_status(struct scsi_cmnd *cmd);
-+static inline uint32_t ahd_get_transaction_status(struct scb *);
-+static inline uint32_t ahd_cmd_get_scsi_status(struct scsi_cmnd *cmd);
-+static inline uint32_t ahd_get_scsi_status(struct scb *);
-+static inline void ahd_set_transaction_tag(struct scb *, int, u_int);
-+static inline u_long ahd_get_transfer_length(struct scb *);
-+static inline int ahd_get_transfer_dir(struct scb *);
-+static inline void ahd_set_residual(struct scb *, u_long);
-+static inline void ahd_set_sense_residual(struct scb *scb, u_long resid);
-+static inline u_long ahd_get_residual(struct scb *);
-+static inline u_long ahd_get_sense_residual(struct scb *);
-+static inline int ahd_perform_autosense(struct scb *);
-+static inline uint32_t ahd_get_sense_bufsize(struct ahd_softc *,
- 					       struct scb *);
--static __inline void ahd_notify_xfer_settings_change(struct ahd_softc *,
-+static inline void ahd_notify_xfer_settings_change(struct ahd_softc *,
- 						     struct ahd_devinfo *);
--static __inline void ahd_platform_scb_free(struct ahd_softc *ahd,
-+static inline void ahd_platform_scb_free(struct ahd_softc *ahd,
- 					   struct scb *scb);
--static __inline void ahd_freeze_scb(struct scb *scb);
-+static inline void ahd_freeze_scb(struct scb *scb);
- 
--static __inline
-+static inline
- void ahd_cmd_set_transaction_status(struct scsi_cmnd *cmd, uint32_t status)
- {
- 	cmd->result &= ~(CAM_STATUS_MASK << 16);
- 	cmd->result |= status << 16;
- }
- 
--static __inline
-+static inline
- void ahd_set_transaction_status(struct scb *scb, uint32_t status)
- {
- 	ahd_cmd_set_transaction_status(scb->io_ctx,status);
- }
- 
--static __inline
-+static inline
- void ahd_cmd_set_scsi_status(struct scsi_cmnd *cmd, uint32_t status)
- {
- 	cmd->result &= ~0xFFFF;
- 	cmd->result |= status;
- }
- 
--static __inline
-+static inline
- void ahd_set_scsi_status(struct scb *scb, uint32_t status)
- {
- 	ahd_cmd_set_scsi_status(scb->io_ctx, status);
- }
- 
--static __inline
-+static inline
- uint32_t ahd_cmd_get_transaction_status(struct scsi_cmnd *cmd)
- {
- 	return ((cmd->result >> 16) & CAM_STATUS_MASK);
- }
- 
--static __inline
-+static inline
- uint32_t ahd_get_transaction_status(struct scb *scb)
- {
- 	return (ahd_cmd_get_transaction_status(scb->io_ctx));
- }
- 
--static __inline
-+static inline
- uint32_t ahd_cmd_get_scsi_status(struct scsi_cmnd *cmd)
- {
- 	return (cmd->result & 0xFFFF);
- }
- 
--static __inline
-+static inline
- uint32_t ahd_get_scsi_status(struct scb *scb)
- {
- 	return (ahd_cmd_get_scsi_status(scb->io_ctx));
- }
- 
--static __inline
-+static inline
- void ahd_set_transaction_tag(struct scb *scb, int enabled, u_int type)
- {
- 	/*
-@@ -670,43 +670,43 @@ void ahd_set_transaction_tag(struct scb 
- 	 */
- }
- 
--static __inline
-+static inline
- u_long ahd_get_transfer_length(struct scb *scb)
- {
- 	return (scb->platform_data->xfer_len);
- }
- 
--static __inline
-+static inline
- int ahd_get_transfer_dir(struct scb *scb)
- {
- 	return (scb->io_ctx->sc_data_direction);
- }
- 
--static __inline
-+static inline
- void ahd_set_residual(struct scb *scb, u_long resid)
- {
- 	scb->io_ctx->resid = resid;
- }
- 
--static __inline
-+static inline
- void ahd_set_sense_residual(struct scb *scb, u_long resid)
- {
- 	scb->platform_data->sense_resid = resid;
- }
- 
--static __inline
-+static inline
- u_long ahd_get_residual(struct scb *scb)
- {
- 	return (scb->io_ctx->resid);
- }
- 
--static __inline
-+static inline
- u_long ahd_get_sense_residual(struct scb *scb)
- {
- 	return (scb->platform_data->sense_resid);
- }
- 
--static __inline
-+static inline
- int ahd_perform_autosense(struct scb *scb)
- {
- 	/*
-@@ -717,20 +717,20 @@ int ahd_perform_autosense(struct scb *sc
- 	return (1);
- }
- 
--static __inline uint32_t
-+static inline uint32_t
- ahd_get_sense_bufsize(struct ahd_softc *ahd, struct scb *scb)
- {
- 	return (sizeof(struct scsi_sense_data));
- }
- 
--static __inline void
-+static inline void
- ahd_notify_xfer_settings_change(struct ahd_softc *ahd,
- 				struct ahd_devinfo *devinfo)
- {
- 	/* Nothing to do here for linux */
- }
- 
--static __inline void
-+static inline void
- ahd_platform_scb_free(struct ahd_softc *ahd, struct scb *scb)
- {
- 	ahd->flags &= ~AHD_RESOURCE_SHORTAGE;
-@@ -743,7 +743,7 @@ void	ahd_platform_freeze_devq(struct ahd
- void	ahd_freeze_simq(struct ahd_softc *ahd);
- void	ahd_release_simq(struct ahd_softc *ahd);
- 
--static __inline void
-+static inline void
- ahd_freeze_scb(struct scb *scb)
- {
- 	if ((scb->io_ctx->result & (CAM_DEV_QFRZN << 16)) == 0) {
-diff -puN drivers/scsi/aic7xxx/aic79xx_pci.c~aic7xxx-s-__inline-inline drivers/scsi/aic7xxx/aic79xx_pci.c
---- devel/drivers/scsi/aic7xxx/aic79xx_pci.c~aic7xxx-s-__inline-inline	2006-06-01 20:41:50.000000000 -0700
-+++ devel-akpm/drivers/scsi/aic7xxx/aic79xx_pci.c	2006-06-01 20:41:50.000000000 -0700
-@@ -51,7 +51,7 @@
- 
- #include "aic79xx_pci.h"
- 
--static __inline uint64_t
-+static inline uint64_t
- ahd_compose_id(u_int device, u_int vendor, u_int subdevice, u_int subvendor)
- {
- 	uint64_t id;
-diff -puN drivers/scsi/aic7xxx/aic7xxx_inline.h~aic7xxx-s-__inline-inline drivers/scsi/aic7xxx/aic7xxx_inline.h
---- devel/drivers/scsi/aic7xxx/aic7xxx_inline.h~aic7xxx-s-__inline-inline	2006-06-01 20:41:50.000000000 -0700
-+++ devel-akpm/drivers/scsi/aic7xxx/aic7xxx_inline.h	2006-06-01 20:41:50.000000000 -0700
-@@ -46,10 +46,10 @@
- #define _AIC7XXX_INLINE_H_
- 
- /************************* Sequencer Execution Control ************************/
--static __inline void ahc_pause_bug_fix(struct ahc_softc *ahc);
--static __inline int  ahc_is_paused(struct ahc_softc *ahc);
--static __inline void ahc_pause(struct ahc_softc *ahc);
--static __inline void ahc_unpause(struct ahc_softc *ahc);
-+static inline void ahc_pause_bug_fix(struct ahc_softc *ahc);
-+static inline int  ahc_is_paused(struct ahc_softc *ahc);
-+static inline void ahc_pause(struct ahc_softc *ahc);
-+static inline void ahc_unpause(struct ahc_softc *ahc);
- 
- /*
-  * Work around any chip bugs related to halting sequencer execution.
-@@ -59,7 +59,7 @@ static __inline void ahc_unpause(struct 
-  * manual pause while accessing scb ram, accesses to certain registers
-  * will hang the system (infinite pci retries).
-  */
--static __inline void
-+static inline void
- ahc_pause_bug_fix(struct ahc_softc *ahc)
- {
- 	if ((ahc->features & AHC_ULTRA2) != 0)
-@@ -70,7 +70,7 @@ ahc_pause_bug_fix(struct ahc_softc *ahc)
-  * Determine whether the sequencer has halted code execution.
-  * Returns non-zero status if the sequencer is stopped.
-  */
--static __inline int
-+static inline int
- ahc_is_paused(struct ahc_softc *ahc)
- {
- 	return ((ahc_inb(ahc, HCNTRL) & PAUSE) != 0);
-@@ -83,7 +83,7 @@ ahc_is_paused(struct ahc_softc *ahc)
-  * cleared in the SEQCTL register.  The sequencer may use PAUSEDIS
-  * for critical sections.
-  */
--static __inline void
-+static inline void
- ahc_pause(struct ahc_softc *ahc)
- {
- 	ahc_outb(ahc, HCNTRL, ahc->pause);
-@@ -108,7 +108,7 @@ ahc_pause(struct ahc_softc *ahc)
-  * into our interrupt handler and dealing with this new
-  * condition.
-  */
--static __inline void
-+static inline void
- ahc_unpause(struct ahc_softc *ahc)
- {
- 	if ((ahc_inb(ahc, INTSTAT) & (SCSIINT | SEQINT | BRKADRINT)) == 0)
-@@ -116,14 +116,14 @@ ahc_unpause(struct ahc_softc *ahc)
- }
- 
- /*********************** Untagged Transaction Routines ************************/
--static __inline void	ahc_freeze_untagged_queues(struct ahc_softc *ahc);
--static __inline void	ahc_release_untagged_queues(struct ahc_softc *ahc);
-+static inline void	ahc_freeze_untagged_queues(struct ahc_softc *ahc);
-+static inline void	ahc_release_untagged_queues(struct ahc_softc *ahc);
- 
- /*
-  * Block our completion routine from starting the next untagged
-  * transaction for this target or target lun.
-  */
--static __inline void
-+static inline void
- ahc_freeze_untagged_queues(struct ahc_softc *ahc)
- {
- 	if ((ahc->flags & AHC_SCB_BTT) == 0)
-@@ -136,7 +136,7 @@ ahc_freeze_untagged_queues(struct ahc_so
-  * to be acquired recursively.  Once the count drops to zero, the
-  * transaction queues will be run.
-  */
--static __inline void
-+static inline void
- ahc_release_untagged_queues(struct ahc_softc *ahc)
- {
- 	if ((ahc->flags & AHC_SCB_BTT) == 0) {
-@@ -147,23 +147,23 @@ ahc_release_untagged_queues(struct ahc_s
- }
- 
- /************************** Memory mapping routines ***************************/
--static __inline struct ahc_dma_seg *
-+static inline struct ahc_dma_seg *
- 			ahc_sg_bus_to_virt(struct scb *scb,
- 					   uint32_t sg_busaddr);
--static __inline uint32_t
-+static inline uint32_t
- 			ahc_sg_virt_to_bus(struct scb *scb,
- 					   struct ahc_dma_seg *sg);
--static __inline uint32_t
-+static inline uint32_t
- 			ahc_hscb_busaddr(struct ahc_softc *ahc, u_int index);
--static __inline void	ahc_sync_scb(struct ahc_softc *ahc,
-+static inline void	ahc_sync_scb(struct ahc_softc *ahc,
- 				     struct scb *scb, int op);
--static __inline void	ahc_sync_sglist(struct ahc_softc *ahc,
-+static inline void	ahc_sync_sglist(struct ahc_softc *ahc,
- 					struct scb *scb, int op);
--static __inline uint32_t
-+static inline uint32_t
- 			ahc_targetcmd_offset(struct ahc_softc *ahc,
- 					     u_int index);
- 
--static __inline struct ahc_dma_seg *
-+static inline struct ahc_dma_seg *
- ahc_sg_bus_to_virt(struct scb *scb, uint32_t sg_busaddr)
- {
- 	int sg_index;
-@@ -175,7 +175,7 @@ ahc_sg_bus_to_virt(struct scb *scb, uint
- 	return (&scb->sg_list[sg_index]);
- }
- 
--static __inline uint32_t
-+static inline uint32_t
- ahc_sg_virt_to_bus(struct scb *scb, struct ahc_dma_seg *sg)
- {
- 	int sg_index;
-@@ -186,14 +186,14 @@ ahc_sg_virt_to_bus(struct scb *scb, stru
- 	return (scb->sg_list_phys + (sg_index * sizeof(*scb->sg_list)));
- }
- 
--static __inline uint32_t
-+static inline uint32_t
- ahc_hscb_busaddr(struct ahc_softc *ahc, u_int index)
- {
- 	return (ahc->scb_data->hscb_busaddr
- 		+ (sizeof(struct hardware_scb) * index));
- }
- 
--static __inline void
-+static inline void
- ahc_sync_scb(struct ahc_softc *ahc, struct scb *scb, int op)
- {
- 	ahc_dmamap_sync(ahc, ahc->scb_data->hscb_dmat,
-@@ -202,7 +202,7 @@ ahc_sync_scb(struct ahc_softc *ahc, stru
- 			/*len*/sizeof(*scb->hscb), op);
- }
- 
--static __inline void
-+static inline void
- ahc_sync_sglist(struct ahc_softc *ahc, struct scb *scb, int op)
- {
- 	if (scb->sg_count == 0)
-@@ -214,16 +214,16 @@ ahc_sync_sglist(struct ahc_softc *ahc, s
- 			/*len*/sizeof(struct ahc_dma_seg) * scb->sg_count, op);
- }
- 
--static __inline uint32_t
-+static inline uint32_t
- ahc_targetcmd_offset(struct ahc_softc *ahc, u_int index)
- {
- 	return (((uint8_t *)&ahc->targetcmds[index]) - ahc->qoutfifo);
- }
- 
- /******************************** Debugging ***********************************/
--static __inline char *ahc_name(struct ahc_softc *ahc);
-+static inline char *ahc_name(struct ahc_softc *ahc);
- 
--static __inline char *
-+static inline char *
- ahc_name(struct ahc_softc *ahc)
- {
- 	return (ahc->name);
-@@ -231,9 +231,9 @@ ahc_name(struct ahc_softc *ahc)
- 
- /*********************** Miscelaneous Support Functions ***********************/
- 
--static __inline void	ahc_update_residual(struct ahc_softc *ahc,
-+static inline void	ahc_update_residual(struct ahc_softc *ahc,
- 					    struct scb *scb);
--static __inline struct ahc_initiator_tinfo *
-+static inline struct ahc_initiator_tinfo *
- 			ahc_fetch_transinfo(struct ahc_softc *ahc,
- 					    char channel, u_int our_id,
- 					    u_int remote_id,
-@@ -250,10 +250,10 @@ void	ahc_free_scb(struct ahc_softc *ahc,
- struct scb *
- 	ahc_lookup_scb(struct ahc_softc *ahc, u_int tag);
- void	ahc_queue_scb(struct ahc_softc *ahc, struct scb *scb);
--static __inline struct scsi_sense_data *
-+static inline struct scsi_sense_data *
- 			ahc_get_sense_buf(struct ahc_softc *ahc,
- 					  struct scb *scb);
--static __inline uint32_t
-+static inline uint32_t
- 			ahc_get_sense_bufaddr(struct ahc_softc *ahc,
- 					      struct scb *scb);
- 
-@@ -261,7 +261,7 @@ static __inline uint32_t
-  * Determine whether the sequencer reported a residual
-  * for this SCB/transaction.
-  */
--static __inline void
-+static inline void
- ahc_update_residual(struct ahc_softc *ahc, struct scb *scb)
- {
- 	uint32_t sgptr;
-@@ -275,7 +275,7 @@ ahc_update_residual(struct ahc_softc *ah
-  * Return pointers to the transfer negotiation information
-  * for the specified our_id/remote_id pair.
-  */
--static __inline struct ahc_initiator_tinfo *
-+static inline struct ahc_initiator_tinfo *
- ahc_fetch_transinfo(struct ahc_softc *ahc, char channel, u_int our_id,
- 		    u_int remote_id, struct ahc_tmode_tstate **tstate)
- {
-@@ -291,7 +291,7 @@ ahc_fetch_transinfo(struct ahc_softc *ah
- 	return (&(*tstate)->transinfo[remote_id]);
- }
- 
--static __inline struct scsi_sense_data *
-+static inline struct scsi_sense_data *
- ahc_get_sense_buf(struct ahc_softc *ahc, struct scb *scb)
- {
- 	int offset;
-@@ -300,7 +300,7 @@ ahc_get_sense_buf(struct ahc_softc *ahc,
- 	return (&ahc->scb_data->sense[offset]);
- }
- 
--static __inline uint32_t
-+static inline uint32_t
- ahc_get_sense_bufaddr(struct ahc_softc *ahc, struct scb *scb)
- {
- 	int offset;
-@@ -311,18 +311,18 @@ ahc_get_sense_bufaddr(struct ahc_softc *
- }
- 
- /************************** Interrupt Processing ******************************/
--static __inline void	ahc_sync_qoutfifo(struct ahc_softc *ahc, int op);
--static __inline void	ahc_sync_tqinfifo(struct ahc_softc *ahc, int op);
-+static inline void	ahc_sync_qoutfifo(struct ahc_softc *ahc, int op);
-+static inline void	ahc_sync_tqinfifo(struct ahc_softc *ahc, int op);
- int	ahc_intr(struct ahc_softc *ahc);
- 
--static __inline void
-+static inline void
- ahc_sync_qoutfifo(struct ahc_softc *ahc, int op)
- {
- 	ahc_dmamap_sync(ahc, ahc->shared_data_dmat, ahc->shared_data_dmamap,
- 			/*offset*/0, /*len*/256, op);
- }
- 
--static __inline void
-+static inline void
- ahc_sync_tqinfifo(struct ahc_softc *ahc, int op)
- {
- #ifdef AHC_TARGET_MODE
-diff -puN drivers/scsi/aic7xxx/aic7xxx_osm.c~aic7xxx-s-__inline-inline drivers/scsi/aic7xxx/aic7xxx_osm.c
---- devel/drivers/scsi/aic7xxx/aic7xxx_osm.c~aic7xxx-s-__inline-inline	2006-06-01 20:41:50.000000000 -0700
-+++ devel-akpm/drivers/scsi/aic7xxx/aic7xxx_osm.c	2006-06-01 20:41:50.000000000 -0700
-@@ -390,13 +390,13 @@ static int ahc_linux_unit;
- 
- 
- /********************************* Inlines ************************************/
--static __inline void ahc_linux_unmap_scb(struct ahc_softc*, struct scb*);
-+static inline void ahc_linux_unmap_scb(struct ahc_softc*, struct scb*);
- 
- static int ahc_linux_map_seg(struct ahc_softc *ahc, struct scb *scb,
- 		 		      struct ahc_dma_seg *sg,
- 				      dma_addr_t addr, bus_size_t len);
- 
--static __inline void
-+static inline void
- ahc_linux_unmap_scb(struct ahc_softc *ahc, struct scb *scb)
- {
- 	struct scsi_cmnd *cmd;
-diff -puN drivers/scsi/aic7xxx/aic7xxx_osm.h~aic7xxx-s-__inline-inline drivers/scsi/aic7xxx/aic7xxx_osm.h
---- devel/drivers/scsi/aic7xxx/aic7xxx_osm.h~aic7xxx-s-__inline-inline	2006-06-01 20:41:50.000000000 -0700
-+++ devel-akpm/drivers/scsi/aic7xxx/aic7xxx_osm.h	2006-06-01 20:41:50.000000000 -0700
-@@ -232,7 +232,7 @@ int	ahc_dmamap_unload(struct ahc_softc *
- #include "aic7xxx.h"
- 
- /***************************** Timer Facilities *******************************/
--static __inline void
-+static inline void
- ahc_scb_timer_reset(struct scb *scb, u_int usec)
- {
- }
-@@ -415,19 +415,19 @@ void	ahc_format_transinfo(struct info_st
- /******************************** Locking *************************************/
- /* Lock protecting internal data structures */
- 
--static __inline void
-+static inline void
- ahc_lockinit(struct ahc_softc *ahc)
- {
- 	spin_lock_init(&ahc->platform_data->spin_lock);
- }
- 
--static __inline void
-+static inline void
- ahc_lock(struct ahc_softc *ahc, unsigned long *flags)
- {
- 	spin_lock_irqsave(&ahc->platform_data->spin_lock, *flags);
- }
- 
--static __inline void
-+static inline void
- ahc_unlock(struct ahc_softc *ahc, unsigned long *flags)
- {
- 	spin_unlock_irqrestore(&ahc->platform_data->spin_lock, *flags);
-@@ -501,10 +501,10 @@ int			 ahc_pci_map_registers(struct ahc_
- int			 ahc_pci_map_int(struct ahc_softc *ahc);
- 
- void ahc_BUG_bad_pci_rw_size(void);
--static __inline uint32_t ahc_pci_read_config(ahc_dev_softc_t pci,
-+static inline uint32_t ahc_pci_read_config(ahc_dev_softc_t pci,
- 					     int reg, int width);
- 
--static __inline uint32_t
-+static inline uint32_t
- ahc_pci_read_config(ahc_dev_softc_t pci, int reg, int width)
- {
- 	switch (width) {
-@@ -534,11 +534,11 @@ ahc_pci_read_config(ahc_dev_softc_t pci,
- 	}
- }
- 
--static __inline void ahc_pci_write_config(ahc_dev_softc_t pci,
-+static inline void ahc_pci_write_config(ahc_dev_softc_t pci,
- 					  int reg, uint32_t value,
- 					  int width);
- 
--static __inline void
-+static inline void
- ahc_pci_write_config(ahc_dev_softc_t pci, int reg, uint32_t value, int width)
- {
- 	switch (width) {
-@@ -557,22 +557,22 @@ ahc_pci_write_config(ahc_dev_softc_t pci
- 	}
- }
- 
--static __inline int ahc_get_pci_function(ahc_dev_softc_t);
--static __inline int
-+static inline int ahc_get_pci_function(ahc_dev_softc_t);
-+static inline int
- ahc_get_pci_function(ahc_dev_softc_t pci)
- {
- 	return (PCI_FUNC(pci->devfn));
- }
- 
--static __inline int ahc_get_pci_slot(ahc_dev_softc_t);
--static __inline int
-+static inline int ahc_get_pci_slot(ahc_dev_softc_t);
-+static inline int
- ahc_get_pci_slot(ahc_dev_softc_t pci)
- {
- 	return (PCI_SLOT(pci->devfn));
- }
- 
--static __inline int ahc_get_pci_bus(ahc_dev_softc_t);
--static __inline int
-+static inline int ahc_get_pci_bus(ahc_dev_softc_t);
-+static inline int
- ahc_get_pci_bus(ahc_dev_softc_t pci)
- {
- 	return (pci->bus->number);
-@@ -585,8 +585,8 @@ static inline void ahc_linux_pci_exit(vo
- }
- #endif
- 
--static __inline void ahc_flush_device_writes(struct ahc_softc *);
--static __inline void
-+static inline void ahc_flush_device_writes(struct ahc_softc *);
-+static inline void
- ahc_flush_device_writes(struct ahc_softc *ahc)
- {
- 	/* XXX Is this sufficient for all architectures??? */
-@@ -599,81 +599,81 @@ int	ahc_linux_proc_info(struct Scsi_Host
- 
- /*************************** Domain Validation ********************************/
- /*********************** Transaction Access Wrappers *************************/
--static __inline void ahc_cmd_set_transaction_status(struct scsi_cmnd *, uint32_t);
--static __inline void ahc_set_transaction_status(struct scb *, uint32_t);
--static __inline void ahc_cmd_set_scsi_status(struct scsi_cmnd *, uint32_t);
--static __inline void ahc_set_scsi_status(struct scb *, uint32_t);
--static __inline uint32_t ahc_cmd_get_transaction_status(struct scsi_cmnd *cmd);
--static __inline uint32_t ahc_get_transaction_status(struct scb *);
--static __inline uint32_t ahc_cmd_get_scsi_status(struct scsi_cmnd *cmd);
--static __inline uint32_t ahc_get_scsi_status(struct scb *);
--static __inline void ahc_set_transaction_tag(struct scb *, int, u_int);
--static __inline u_long ahc_get_transfer_length(struct scb *);
--static __inline int ahc_get_transfer_dir(struct scb *);
--static __inline void ahc_set_residual(struct scb *, u_long);
--static __inline void ahc_set_sense_residual(struct scb *scb, u_long resid);
--static __inline u_long ahc_get_residual(struct scb *);
--static __inline u_long ahc_get_sense_residual(struct scb *);
--static __inline int ahc_perform_autosense(struct scb *);
--static __inline uint32_t ahc_get_sense_bufsize(struct ahc_softc *,
-+static inline void ahc_cmd_set_transaction_status(struct scsi_cmnd *, uint32_t);
-+static inline void ahc_set_transaction_status(struct scb *, uint32_t);
-+static inline void ahc_cmd_set_scsi_status(struct scsi_cmnd *, uint32_t);
-+static inline void ahc_set_scsi_status(struct scb *, uint32_t);
-+static inline uint32_t ahc_cmd_get_transaction_status(struct scsi_cmnd *cmd);
-+static inline uint32_t ahc_get_transaction_status(struct scb *);
-+static inline uint32_t ahc_cmd_get_scsi_status(struct scsi_cmnd *cmd);
-+static inline uint32_t ahc_get_scsi_status(struct scb *);
-+static inline void ahc_set_transaction_tag(struct scb *, int, u_int);
-+static inline u_long ahc_get_transfer_length(struct scb *);
-+static inline int ahc_get_transfer_dir(struct scb *);
-+static inline void ahc_set_residual(struct scb *, u_long);
-+static inline void ahc_set_sense_residual(struct scb *scb, u_long resid);
-+static inline u_long ahc_get_residual(struct scb *);
-+static inline u_long ahc_get_sense_residual(struct scb *);
-+static inline int ahc_perform_autosense(struct scb *);
-+static inline uint32_t ahc_get_sense_bufsize(struct ahc_softc *,
- 					       struct scb *);
--static __inline void ahc_notify_xfer_settings_change(struct ahc_softc *,
-+static inline void ahc_notify_xfer_settings_change(struct ahc_softc *,
- 						     struct ahc_devinfo *);
--static __inline void ahc_platform_scb_free(struct ahc_softc *ahc,
-+static inline void ahc_platform_scb_free(struct ahc_softc *ahc,
- 					   struct scb *scb);
--static __inline void ahc_freeze_scb(struct scb *scb);
-+static inline void ahc_freeze_scb(struct scb *scb);
- 
--static __inline
-+static inline
- void ahc_cmd_set_transaction_status(struct scsi_cmnd *cmd, uint32_t status)
- {
- 	cmd->result &= ~(CAM_STATUS_MASK << 16);
- 	cmd->result |= status << 16;
- }
- 
--static __inline
-+static inline
- void ahc_set_transaction_status(struct scb *scb, uint32_t status)
- {
- 	ahc_cmd_set_transaction_status(scb->io_ctx,status);
- }
- 
--static __inline
-+static inline
- void ahc_cmd_set_scsi_status(struct scsi_cmnd *cmd, uint32_t status)
- {
- 	cmd->result &= ~0xFFFF;
- 	cmd->result |= status;
- }
- 
--static __inline
-+static inline
- void ahc_set_scsi_status(struct scb *scb, uint32_t status)
- {
- 	ahc_cmd_set_scsi_status(scb->io_ctx, status);
- }
- 
--static __inline
-+static inline
- uint32_t ahc_cmd_get_transaction_status(struct scsi_cmnd *cmd)
- {
- 	return ((cmd->result >> 16) & CAM_STATUS_MASK);
- }
- 
--static __inline
-+static inline
- uint32_t ahc_get_transaction_status(struct scb *scb)
- {
- 	return (ahc_cmd_get_transaction_status(scb->io_ctx));
- }
- 
--static __inline
-+static inline
- uint32_t ahc_cmd_get_scsi_status(struct scsi_cmnd *cmd)
- {
- 	return (cmd->result & 0xFFFF);
- }
- 
--static __inline
-+static inline
- uint32_t ahc_get_scsi_status(struct scb *scb)
- {
- 	return (ahc_cmd_get_scsi_status(scb->io_ctx));
- }
- 
--static __inline
-+static inline
- void ahc_set_transaction_tag(struct scb *scb, int enabled, u_int type)
- {
- 	/*
-@@ -682,43 +682,43 @@ void ahc_set_transaction_tag(struct scb 
- 	 */
- }
- 
--static __inline
-+static inline
- u_long ahc_get_transfer_length(struct scb *scb)
- {
- 	return (scb->platform_data->xfer_len);
- }
- 
--static __inline
-+static inline
- int ahc_get_transfer_dir(struct scb *scb)
- {
- 	return (scb->io_ctx->sc_data_direction);
- }
- 
--static __inline
-+static inline
- void ahc_set_residual(struct scb *scb, u_long resid)
- {
- 	scb->io_ctx->resid = resid;
- }
- 
--static __inline
-+static inline
- void ahc_set_sense_residual(struct scb *scb, u_long resid)
- {
- 	scb->platform_data->sense_resid = resid;
- }
- 
--static __inline
-+static inline
- u_long ahc_get_residual(struct scb *scb)
- {
- 	return (scb->io_ctx->resid);
- }
- 
--static __inline
-+static inline
- u_long ahc_get_sense_residual(struct scb *scb)
- {
- 	return (scb->platform_data->sense_resid);
- }
- 
--static __inline
-+static inline
- int ahc_perform_autosense(struct scb *scb)
- {
- 	/*
-@@ -729,20 +729,20 @@ int ahc_perform_autosense(struct scb *sc
- 	return (1);
- }
- 
--static __inline uint32_t
-+static inline uint32_t
- ahc_get_sense_bufsize(struct ahc_softc *ahc, struct scb *scb)
- {
- 	return (sizeof(struct scsi_sense_data));
- }
- 
--static __inline void
-+static inline void
- ahc_notify_xfer_settings_change(struct ahc_softc *ahc,
- 				struct ahc_devinfo *devinfo)
- {
- 	/* Nothing to do here for linux */
- }
- 
--static __inline void
-+static inline void
- ahc_platform_scb_free(struct ahc_softc *ahc, struct scb *scb)
- {
- }
-@@ -751,7 +751,7 @@ int	ahc_platform_alloc(struct ahc_softc 
- void	ahc_platform_free(struct ahc_softc *ahc);
- void	ahc_platform_freeze_devq(struct ahc_softc *ahc, struct scb *scb);
- 
--static __inline void
-+static inline void
- ahc_freeze_scb(struct scb *scb)
- {
- 	if ((scb->io_ctx->result & (CAM_DEV_QFRZN << 16)) == 0) {
-diff -puN drivers/scsi/aic7xxx/aic7xxx_pci.c~aic7xxx-s-__inline-inline drivers/scsi/aic7xxx/aic7xxx_pci.c
---- devel/drivers/scsi/aic7xxx/aic7xxx_pci.c~aic7xxx-s-__inline-inline	2006-06-01 20:41:50.000000000 -0700
-+++ devel-akpm/drivers/scsi/aic7xxx/aic7xxx_pci.c	2006-06-01 20:41:50.000000000 -0700
-@@ -54,7 +54,7 @@
- 
- #include "aic7xxx_pci.h"
- 
--static __inline uint64_t
-+static inline uint64_t
- ahc_compose_id(u_int device, u_int vendor, u_int subdevice, u_int subvendor)
- {
- 	uint64_t id;
-diff -puN drivers/scsi/aic7xxx/aiclib.h~aic7xxx-s-__inline-inline drivers/scsi/aic7xxx/aiclib.h
---- devel/drivers/scsi/aic7xxx/aiclib.h~aic7xxx-s-__inline-inline	2006-06-01 20:41:50.000000000 -0700
-+++ devel-akpm/drivers/scsi/aic7xxx/aiclib.h	2006-06-01 20:41:50.000000000 -0700
-@@ -133,7 +133,7 @@ struct scsi_sense_data
- #define SCSI_STATUS_TASK_ABORTED	0x40
- 
- /************************* Large Disk Handling ********************************/
--static __inline int
-+static inline int
- aic_sector_div(sector_t capacity, int heads, int sectors)
- {
- 	/* ugly, ugly sector_div calling convention.. */
-@@ -141,7 +141,7 @@ aic_sector_div(sector_t capacity, int he
- 	return (int)capacity;
- }
- 
--static __inline uint32_t
-+static inline uint32_t
- scsi_4btoul(uint8_t *bytes)
- {
- 	uint32_t rv;
+diff -puN Documentation/scsi/00-INDEX~scsi-remove-documentation-scsi-cpqfctxt Documentation/scsi/00-INDEX
+--- devel/Documentation/scsi/00-INDEX~scsi-remove-documentation-scsi-cpqfctxt	2006-06-01 20:41:50.000000000 -0700
++++ devel-akpm/Documentation/scsi/00-INDEX	2006-06-01 20:41:50.000000000 -0700
+@@ -30,8 +30,6 @@ aic7xxx.txt
+ 	- info on driver for Adaptec controllers
+ aic7xxx_old.txt
+ 	- info on driver for Adaptec controllers, old generation
+-cpqfc.txt
+-	- info on driver for Compaq Tachyon TS adapters
+ dpti.txt
+ 	- info on driver for DPT SmartRAID and Adaptec I2O RAID based adapters
+ dtc3x80.txt
+diff -L Documentation/scsi/cpqfc.txt -puN Documentation/scsi/cpqfc.txt~scsi-remove-documentation-scsi-cpqfctxt /dev/null
+--- devel/Documentation/scsi/cpqfc.txt
++++ /dev/null	2006-06-01 17:04:03.273681250 -0700
+@@ -1,272 +0,0 @@
+-Notes for CPQFCTS driver for Compaq Tachyon TS
+-Fibre Channel Host Bus Adapter, PCI 64-bit, 66MHz
+-for Linux (RH 6.1, 6.2 kernel 2.2.12-32, 2.2.14-5)
+-SMP tested
+-Tested in single and dual HBA configuration, 32 and 64bit busses,
+-33 and 66MHz.  Only supports FC-AL.
+-SEST size 512 Exchanges (simultaneous I/Os) limited by module kmalloc() 
+-	max of 128k bytes contiguous.
+-
+-Ver 2.5.4  Oct 03, 2002
+-   * fixed memcpy of sense buffer in ioctl to copy the smaller defined size
+-Ver 2.5.3  Aug 01, 2002
+-   * fix the passthru ioctl to handle the Scsi_Cmnd->request being a pointer
+-Ver 2.5.1  Jul 30, 2002
+-   * fix ioctl to pay attention to the specified LUN.
+-Ver 2.5.0  Nov 29, 2001
+-   * eliminated io_request_lock.  This change makes the driver specific
+-     to the 2.5.x kernels.
+-   * silenced excessively noisy printks.
+-
+-Ver 2.1.2  July 23, 2002
+-   * initialize DumCmnd->lun in cpqfcTS_ioctl (used in fcFindLoggedInPorts as LUN index)
+-
+-Ver 2.1.1  Oct 18, 2001
+-   * reinitialize Cmnd->SCp.sent_command (used to identify commands as
+-     passthrus) on calling scsi_done, since the scsi mid layer does not
+-     use (or reinitialize) this field to prevent subsequent comands from
+-     having it set incorrectly. 
+-
+-Ver 2.1.0  Aug 27, 2001
+-   * Revise driver to use new kernel 2.4.x PCI DMA API, instead of 
+-     virt_to_bus().  (enables driver to work w/ ia64 systems with >2Gb RAM.)
+-     Rework main scatter-gather code to handle cases where SG element
+-     lengths are larger than 0x7FFFF bytes and use as many scatter 
+-     gather pages as necessary. (Steve Cameron)
+-   * Makefile changes to bring cpqfc into line w/ rest of SCSI drivers
+-     (thanks to Keith Owens)
+-
+-Ver 2.0.5  Aug 06, 2001
+-   * Reject non-existent luns in the driver rather than letting the 
+-     hardware do it.  (some HW behaves differently than others in this area.)
+-   * Changed Makefile to rely on "make dep" instead of explicit dependencies
+-   * ifdef'ed out fibre channel analyzer triggering debug code
+-   * fixed a jiffies wrapping issue
+-
+-Ver 2.0.4  Aug 01, 2001
+-   * Incorporated fix for target device reset from Steeleye
+-   * Fixed passthrough ioctl so it doesn't hang.
+-   * Fixed hang in launch_FCworker_thread() that occurred on some machines.
+-   * Avoid problem when number of volumes in a single cabinet > 8
+-
+-Ver 2.0.2  July 23, 2001
+-   Changed the semiphore changes so the driver would compile in 2.4.7. 
+-   This version is for 2.4.7 and beyond. 
+- 
+-Ver 2.0.1  May 	7, 2001
+-   Merged version 1.3.6 fixes into version 2.0.0.   
+-
+-Ver 2.0.0  May   7, 2001
+-  Fixed problem so spinlock is being initialized to UNLOCKED. 
+-  Fixed updated driver so it compiles in the 2.4 tree. 
+- 
+- Ver 1.3.6  Feb  27, 2001
+-   Added Target_Device_Reset function for SCSI error handling
+-   Fixed problem with not reseting addressing mode after implicit logout
+- 
+-
+-Ver 1.3.4  Sep   7, 2000
+-  Added Modinfo information
+-  Fixed problem with statically linking the driver
+-
+-Ver 1.3.3, Aug  23, 2000
+-  Fixed device/function number in ioctl
+-
+-Ver 1.3.2, July 27, 2000
+-  Add include for Alpha compile on 2.2.14 kernel (cpq*i2c.c)
+-  Change logic for different FCP-RSP sense_buffer location for HSG80 target
+-  And search for Agilent Tachyon XL2 HBAs (not finished! - in test)
+-
+-Tested with 
+-(storage):
+-           Compaq RA-4x000, RAID firmware ver 2.40 - 2.54
+-           Seagate FC drives model ST39102FC, rev 0006
+-           Hitachi DK31CJ-72FC rev J8A8
+-           IBM DDYF-T18350R rev F60K
+-           Compaq FC-SCSI bridge w/ DLT 35/70 Gb DLT (tape)
+-(servers):
+-           Compaq PL-1850R
+-           Compaq PL-6500 Xeon (400MHz)
+-	   Compaq PL-8500 (500MHz, 66MHz, 64bit PCI)
+-           Compaq Alpha DS20 (RH 6.1)
+-(hubs):
+-           Vixel Rapport 1000 (7-port "dumb")
+-	   Gadzoox Gibralter (12-port "dumb")
+-	   Gadzoox Capellix 2000, 3000 
+-(switches):
+-           Brocade 2010, 2400, 2800, rev 2.0.3a (& later)
+-           Gadzoox 3210 (Fabric blade beta)
+-           Vixel 7100 (Fabric beta firmare - known hot plug issues)
+-using "qa_test" (esp. io_test script) suite modified from Unix tests.
+-	
+-Installation:
+-make menuconfig
+-  (select SCSI low-level, Compaq FC HBA)
+-make modules
+-make modules_install
+-
+-e.g. insmod -f cpqfc
+-
+-Due to Fabric/switch delays, driver requires 4 seconds 
+-to initialize.  If adapters are found, there will be a entries at
+-/proc/scsi/cpqfcTS/*
+-
+-sample contents of startup messages
+-
+-*************************
+- scsi_register allocating 3596 bytes for CPQFCHBA
+- ioremap'd Membase: c887e600
+-  HBA Tachyon RevId 1.2
+-Allocating 119808 for 576 Exchanges @ c0dc0000
+-Allocating 112904 for LinkQ @ c0c20000 (576 elements)
+-Allocating 110600 for TachSEST for 512 Exchanges
+-  cpqfcTS: writing IMQ BASE 7C0000h    PI 7C4000h
+-  cpqfcTS: SEST c0e40000(virt): Wrote base E40000h @ c887e740
+-cpqfcTS: New FC port 0000E8h WWN: 500507650642499D SCSI Chan/Trgt 0/0
+-cpqfcTS: New FC port 0000EFh WWN: 50000E100000D5A6 SCSI Chan/Trgt 0/1
+-cpqfcTS: New FC port 0000E4h WWN: 21000020370097BB SCSI Chan/Trgt 0/2
+-cpqfcTS: New FC port 0000E2h WWN: 2100002037009946 SCSI Chan/Trgt 0/3
+-cpqfcTS: New FC port 0000E1h WWN: 21000020370098FE SCSI Chan/Trgt 0/4
+-cpqfcTS: New FC port 0000E0h WWN: 21000020370097B2 SCSI Chan/Trgt 0/5
+-cpqfcTS: New FC port 0000DCh WWN: 2100002037006CC1 SCSI Chan/Trgt 0/6
+-cpqfcTS: New FC port 0000DAh WWN: 21000020370059F6 SCSI Chan/Trgt 0/7
+-cpqfcTS: New FC port 00000Fh WWN: 500805F1FADB0E20 SCSI Chan/Trgt 0/8
+-cpqfcTS: New FC port 000008h WWN: 500805F1FADB0EBA SCSI Chan/Trgt 0/9
+-cpqfcTS: New FC port 000004h WWN: 500805F1FADB1EB9 SCSI Chan/Trgt 0/10
+-cpqfcTS: New FC port 000002h WWN: 500805F1FADB1ADE SCSI Chan/Trgt 0/11
+-cpqfcTS: New FC port 000001h WWN: 500805F1FADBA2CA SCSI Chan/Trgt 0/12
+-scsi4 : Compaq FibreChannel HBA Tachyon TS HPFC-5166A/1.2: WWN 500508B200193F50
+- on PCI bus 0 device 0xa0fc irq 5 IObaseL 0x3400, MEMBASE 0xc6ef8600
+-PCI bus width 32 bits, bus speed 33 MHz
+-FCP-SCSI Driver v1.3.0
+-GBIC detected: Short-wave.  LPSM 0h Monitor
+-scsi : 5 hosts.
+-  Vendor: IBM       Model: DDYF-T18350R      Rev: F60K
+-  Type:   Direct-Access                      ANSI SCSI revision: 03
+-Detected scsi disk sdb at scsi4, channel 0, id 0, lun 0
+-  Vendor: HITACHI   Model: DK31CJ-72FC       Rev: J8A8
+-  Type:   Direct-Access                      ANSI SCSI revision: 02
+-Detected scsi disk sdc at scsi4, channel 0, id 1, lun 0
+-  Vendor: SEAGATE   Model: ST39102FC         Rev: 0006
+-  Type:   Direct-Access                      ANSI SCSI revision: 02
+-Detected scsi disk sdd at scsi4, channel 0, id 2, lun 0
+-  Vendor: SEAGATE   Model: ST39102FC         Rev: 0006
+-  Type:   Direct-Access                      ANSI SCSI revision: 02
+-Detected scsi disk sde at scsi4, channel 0, id 3, lun 0
+-  Vendor: SEAGATE   Model: ST39102FC         Rev: 0006
+-  Type:   Direct-Access                      ANSI SCSI revision: 02
+-Detected scsi disk sdf at scsi4, channel 0, id 4, lun 0
+-  Vendor: SEAGATE   Model: ST39102FC         Rev: 0006
+-  Type:   Direct-Access                      ANSI SCSI revision: 02
+-Detected scsi disk sdg at scsi4, channel 0, id 5, lun 0
+-  Vendor: SEAGATE   Model: ST39102FC         Rev: 0006
+-  Type:   Direct-Access                      ANSI SCSI revision: 02
+-Detected scsi disk sdh at scsi4, channel 0, id 6, lun 0
+-  Vendor: SEAGATE   Model: ST39102FC         Rev: 0006
+-  Type:   Direct-Access                      ANSI SCSI revision: 02
+-Detected scsi disk sdi at scsi4, channel 0, id 7, lun 0
+-  Vendor: COMPAQ    Model: LOGICAL VOLUME    Rev: 2.48
+-  Type:   Direct-Access                      ANSI SCSI revision: 02
+-Detected scsi disk sdj at scsi4, channel 0, id 8, lun 0
+-  Vendor: COMPAQ    Model: LOGICAL VOLUME    Rev: 2.48
+-  Type:   Direct-Access                      ANSI SCSI revision: 02
+-Detected scsi disk sdk at scsi4, channel 0, id 8, lun 1
+-  Vendor: COMPAQ    Model: LOGICAL VOLUME    Rev: 2.40
+-  Type:   Direct-Access                      ANSI SCSI revision: 02
+-Detected scsi disk sdl at scsi4, channel 0, id 9, lun 0
+-  Vendor: COMPAQ    Model: LOGICAL VOLUME    Rev: 2.40
+-  Type:   Direct-Access                      ANSI SCSI revision: 02
+-Detected scsi disk sdm at scsi4, channel 0, id 9, lun 1
+-  Vendor: COMPAQ    Model: LOGICAL VOLUME    Rev: 2.54
+-  Type:   Direct-Access                      ANSI SCSI revision: 02
+-Detected scsi disk sdn at scsi4, channel 0, id 10, lun 0
+-  Vendor: COMPAQ    Model: LOGICAL VOLUME    Rev: 2.54
+-  Type:   Direct-Access                      ANSI SCSI revision: 02
+-Detected scsi disk sdo at scsi4, channel 0, id 11, lun 0
+-  Vendor: COMPAQ    Model: LOGICAL VOLUME    Rev: 2.54
+-  Type:   Direct-Access                      ANSI SCSI revision: 02
+-Detected scsi disk sdp at scsi4, channel 0, id 11, lun 1
+-  Vendor: COMPAQ    Model: LOGICAL VOLUME    Rev: 2.54
+-  Type:   Direct-Access                      ANSI SCSI revision: 02
+-Detected scsi disk sdq at scsi4, channel 0, id 12, lun 0
+-  Vendor: COMPAQ    Model: LOGICAL VOLUME    Rev: 2.54
+-  Type:   Direct-Access                      ANSI SCSI revision: 02
+-Detected scsi disk sdr at scsi4, channel 0, id 12, lun 1
+-resize_dma_pool: unknown device type 12
+-resize_dma_pool: unknown device type 12
+-SCSI device sdb: hdwr sector= 512 bytes. Sectors= 35843670 [17501 MB] [17.5 GB]
+- sdb: sdb1
+-SCSI device sdc: hdwr sector= 512 bytes. Sectors= 144410880 [70513 MB] [70.5 GB]
+- sdc: sdc1
+-SCSI device sdd: hdwr sector= 512 bytes. Sectors= 17783240 [8683 MB] [8.7 GB]
+- sdd: sdd1
+-SCSI device sde: hdwr sector= 512 bytes. Sectors= 17783240 [8683 MB] [8.7 GB]
+- sde: sde1
+-SCSI device sdf: hdwr sector= 512 bytes. Sectors= 17783240 [8683 MB] [8.7 GB]
+- sdf: sdf1
+-SCSI device sdg: hdwr sector= 512 bytes. Sectors= 17783240 [8683 MB] [8.7 GB]
+- sdg: sdg1
+-SCSI device sdh: hdwr sector= 512 bytes. Sectors= 17783240 [8683 MB] [8.7 GB]
+- sdh: sdh1
+-SCSI device sdi: hdwr sector= 512 bytes. Sectors= 17783240 [8683 MB] [8.7 GB]
+- sdi: sdi1
+-SCSI device sdj: hdwr sector= 512 bytes. Sectors= 2056160 [1003 MB] [1.0 GB]
+- sdj: sdj1
+-SCSI device sdk: hdwr sector= 512 bytes. Sectors= 2052736 [1002 MB] [1.0 GB]
+- sdk: sdk1
+-SCSI device sdl: hdwr sector= 512 bytes. Sectors= 17764320 [8673 MB] [8.7 GB]
+- sdl: sdl1
+-SCSI device sdm: hdwr sector= 512 bytes. Sectors= 8380320 [4091 MB] [4.1 GB]
+- sdm: sdm1
+-SCSI device sdn: hdwr sector= 512 bytes. Sectors= 17764320 [8673 MB] [8.7 GB]
+- sdn: sdn1
+-SCSI device sdo: hdwr sector= 512 bytes. Sectors= 17764320 [8673 MB] [8.7 GB]
+- sdo: sdo1
+-SCSI device sdp: hdwr sector= 512 bytes. Sectors= 17764320 [8673 MB] [8.7 GB]
+- sdp: sdp1
+-SCSI device sdq: hdwr sector= 512 bytes. Sectors= 2056160 [1003 MB] [1.0 GB]
+- sdq: sdq1
+-SCSI device sdr: hdwr sector= 512 bytes. Sectors= 2052736 [1002 MB] [1.0 GB]
+- sdr: sdr1
+-
+-*************************
+-
+-If a GBIC of type Short-wave, Long-wave, or Copper is detected, it will
+-print out; otherwise, "none" is displayed.  If the cabling is correct
+-and a loop circuit is completed, you should see "Monitor"; otherwise, 
+-"LoopFail" (on open circuit) or some LPSM number/state with bit 3 set.
+-
+-
+-ERRATA:
+-1. Normally, Linux Scsi queries FC devices with INQUIRY strings.  All LUNs
+-found according to INQUIRY should get READ commands at sector 0 to find
+-partition table, etc.  Older kernels only query the first 4 devices.  Some
+-Linux kernels only look for one LUN per target (i.e. FC device).
+-
+-2. Physically removing a device, or a malfunctioning system which hides a
+-device, leads to a 30-second timeout and subsequent _abort call.  
+-In some process contexts, this will hang the kernel (crashing the system).
+-Single bit errors in frames and virtually all hot plugging events are 
+-gracefully handled with internal driver timer and Abort processing.
+-
+-3. Some SCSI drives with error conditions will not handle the 7 second timeout
+-in this software driver, leading to infinite retries on timed out SCSI commands.
+-The 7 secs balances the need to quickly recover from lost frames (esp. on sequence
+-initiatives) and time needed by older/slower/error-state drives in responding.
+-This can be easily changed in "Exchanges[].timeOut".
+-
+-4. Due to the nature of FC soft addressing, there is no assurance that the 
+-same LUNs (drives) will have the same path (e.g. /dev/sdb1) from one boot to
+-next.  Dynamic soft address changes (i.e. 24-bit FC port_id) are
+-supported during run time (e.g. due to hot plug event) by the use of WWN to
+-SCSI Nexus (channel/target/LUN) mapping.
+-
+-5. Compaq RA4x00 firmware version 2.54 and later supports SSP (Selective 
+-Storage Presentation), which maps LUNs to a WWN.  If RA4x00 firmware prior
+-2.54 (e.g. older controller) is used, or the FC HBA is replaced (another WWN
+-is used), logical volumes on the RA4x00 will no longer be visible.
+-
+-
+-Send questions/comments to:
+-Amy Vanzant-Hodge (fibrechannel@compaq.com)
+-
 _
