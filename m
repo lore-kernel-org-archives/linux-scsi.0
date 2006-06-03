@@ -1,26 +1,35 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: Controlling PATA access speeds
-Date: Fri, 02 Jun 2006 18:33:06 -0400
-Message-ID: <4480BCA2.1050707@rtr.ca>
-References: <BAY113-F20C5E81293FCD88D28597DDF910@phx.gbl>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: scsi layer differences between 2.4 and 2.6
+Date: Sat, 03 Jun 2006 02:19:35 +0200
+Message-ID: <1149293976.3109.2.camel@laptopd505.fenrus.org>
+References: <20060602212347.9796.qmail@web30306.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <BAY113-F20C5E81293FCD88D28597DDF910@phx.gbl>
-Sender: linux-ide-owner@vger.kernel.org
-To: John Treubig <jtreubig@hotmail.com>
-Cc: dwm@austin.ibm.com, jeff@garzik.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from pentafluge.infradead.org ([213.146.154.40]:30142 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S932587AbWFCATi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 2 Jun 2006 20:19:38 -0400
+In-Reply-To: <20060602212347.9796.qmail@web30306.mail.mud.yahoo.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tim Cullen <timcullen2001@yahoo.com>
+Cc: linux-scsi@vger.kernel.org
 
-John Treubig wrote:
-> Because of my setup, I have had to pull pin 34 (PDIAG) high at the 
-> Promise to make the Promise think I have a 40 pin cable.  At boot, the 
-> Promise thinks I have a 40 wire cable installed and gives me a warning, 
-> yet when I run my program that measures transfer rate in Linux, I still 
-> see the same data rates as with an 80 wire cable (pin 34 shorted). 
+On Fri, 2006-06-02 at 14:23 -0700, Tim Cullen wrote:
+> Several of our customers as well as those of our
+> partners have been inquiring about a performance
+> regression that looks like its being caused by the
+> scsi layer in the 2.6 kernel. Compared to the
+> performance that can been seen using the same hardware
+> with a 2.4 kernel.
+> 
+> Can somebody give me a summary of the changes that
+> were made to the scsi layer between 2.4 and 2.6?
 
-What data rate is that?  If it's less than 25MB/sec (or so),
-then the udma mode won't make much of a difference either way.
+"it got rewritten".
 
-Cheers
+Can you provide more information on what is happening? Like which
+hardware, which drivers, what kind of workloads etc ?
+
