@@ -1,50 +1,60 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: Fw: SCSI device not spinning up on rw
-Date: Sun, 04 Jun 2006 17:11:46 -0500
-Message-ID: <44835AA2.1070809@us.ibm.com>
-References: <20060603182302.7136831f.akpm@osdl.org> <44825D9F.9070305@torque.net>
+From: Russell King <rmk+lkml@arm.linux.org.uk>
+Subject: Re: [PATCHSET] block: fix PIO cache coherency bug, take 2
+Date: Sun, 4 Jun 2006 23:23:48 +0100
+Message-ID: <20060604222347.GG4484@flint.arm.linux.org.uk>
+References: <1149392479501-git-send-email-htejun@gmail.com> <20060604204444.GF4484@flint.arm.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:9107 "EHLO e36.co.us.ibm.com")
-	by vger.kernel.org with ESMTP id S932283AbWFDWLw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 4 Jun 2006 18:11:52 -0400
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e36.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k54MBpob031850
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-scsi@vger.kernel.org>; Sun, 4 Jun 2006 18:11:51 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by westrelay02.boulder.ibm.com (8.13.6/NCO/VER7.0) with ESMTP id k54MBp5S046716
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Sun, 4 Jun 2006 16:11:51 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k54MBoXs028059
-	for <linux-scsi@vger.kernel.org>; Sun, 4 Jun 2006 16:11:51 -0600
-In-Reply-To: <44825D9F.9070305@torque.net>
+Received: from caramon.arm.linux.org.uk ([212.18.232.186]:64265 "EHLO
+	caramon.arm.linux.org.uk") by vger.kernel.org with ESMTP
+	id S932294AbWFDWYO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 4 Jun 2006 18:24:14 -0400
+Content-Disposition: inline
+In-Reply-To: <20060604204444.GF4484@flint.arm.linux.org.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, Ruben Faelens <parasietje@gmail.com>
+To: Tejun Heo <htejun@gmail.com>, Jens Axboe <axboe@suse.de>, James Bottomley <James.Bottomley@SteelEye.com>, Dave Miller <davem@redhat.com>, bzolnier@gmail.com, james.steward@dynamicratings.com, jgarzik@pobox.com, mattjreimer@gmail.com, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Douglas Gilbert wrote:
->> I have a SCSI disk, which I want to spin down when the system is not in
->> use. I do this by using sdparm, scsi-spin or sg-utils. These tools all
->> spin down the SCSI drive by using an IOCTL.
->>
->> Problem is that the kernel doesn't spin the drive back up. When a
->> process requests data from the disk (a simple ls), the kernel responds
->> with an I/O error. After some of these errors, reiserfs marks the drive
->> read-only.
+On Sun, Jun 04, 2006 at 09:44:44PM +0100, Russell King wrote:
+> On Sun, Jun 04, 2006 at 12:41:19PM +0900, Tejun Heo wrote:
+> > Russell, can you please verify arm's flush_kernel_dcache_page()?
+> 
+> That should be fine from a theoretical standpoint
 
-Setting sdev->allow_restart in struct scsi_device will cause sense
-key/code/qual of 02/04/02 (not ready, initialization command required)
-to wake up the scsi error handler and will force scsi core to issue
-a start unit command to the disk. I added this a while back to handle
-ipr raid arrays which need a start unit command each time the adapter
-gets reset. It would be easy enough for sd to use this, either
-all the time, or only when directed to, or we could add a sysfs attribute
-to the disk to enable/disable this behavior.
+I'll add to this statement that the cache flushing on ARM is only
+ever required when the page ends up in userspace - if we're reading
+a page into the page cache to throw it out via NFS or sendfile then
+the cache flush is a complete waste of time.
 
-Brian
+Why is this?  Well, if the data has been written to the kernel mapping
+by the CPU, it may be contained in the cache lines corresponding to
+that mapping.  When that memory is passed to a network interface to
+send, the network interface either reads data from the kernel mapping
+via PIO (in which case it reads the data from the cache), or it
+performs DMA.  In the case of DMA, the DMA API handles the cache
+coherency issues with respect to dirty data in the kernel mapping.
 
+Moreover, there's the problem of read-ahead.  When data is read from
+a block device, more data than that which is required is usually read
+in case it's required a short time later.  If the data is not required,
+it is thrown away during an eviction cycle.  However, any cache flushing
+that you've performed for uses "other than kernel space" is then a waste
+of resources - the only time that such handling is needed is when the
+data is actually used for these other uses - which in the case of ARM
+means userspace.
+
+Given the above, I believe that the method being proposed will be
+_far_ too expensive, maybe to the point where (eg) disabling read-
+ahead _entirely_ on ARM makes the system overall more efficient.
+
+In this respect, I continue to believe that the way ARM (in principle)
+does flush_dcache_page() is what is required here - if the page has
+not been mapped into userspace, it merely marks the page as containing
+dirty cache lines, and the resulting cache maintainence will only
+happen when (and if) the page really does get mapped into userspace.
+
+-- 
+Russell King
+ Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
+ maintainer of:  2.6 Serial core
