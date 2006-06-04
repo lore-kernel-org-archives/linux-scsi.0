@@ -1,55 +1,55 @@
-From: Tim Cullen <timcullen2001@yahoo.com>
-Subject: Re: scsi layer differences between 2.4 and 2.6
-Date: Sun, 4 Jun 2006 11:56:31 -0700 (PDT)
-Message-ID: <20060604185631.75203.qmail@web30307.mail.mud.yahoo.com>
-References: <1149442944.3109.124.camel@laptopd505.fenrus.org>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: [PATCH 4/5] SCSI: add cpu cache flushes after kmapping and
+ modifying a page
+Date: Sun, 4 Jun 2006 22:24:44 +0200 (CEST)
+Message-ID: <Pine.LNX.4.60.0606042151070.24306@poirot.grange>
+References: <1149392479501-git-send-email-htejun@gmail.com>
+ <11493924803460-git-send-email-htejun@gmail.com> <20060604082035.GB29696@infradead.org>
+ <4482A436.8000703@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web30307.mail.mud.yahoo.com ([68.142.200.100]:45924 "HELO
-	web30307.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S1750971AbWFDS4c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 4 Jun 2006 14:56:32 -0400
-In-Reply-To: <1149442944.3109.124.camel@laptopd505.fenrus.org>
+Received: from mail.gmx.de ([213.165.64.20]:687 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S932121AbWFDUYv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 4 Jun 2006 16:24:51 -0400
+In-Reply-To: <4482A436.8000703@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: linux-scsi@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@suse.de>, James Bottomley <James.Bottomley@SteelEye.com>, Dave Miller <davem@redhat.com>, bzolnier@gmail.com, james.steward@dynamicratings.com, jgarzik@pobox.com, mattjreimer@gmail.com, rmk@arm.linux.org.uk, lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Its a Qlogic ISP23xx. Sorry I can't provide more
-details about the HBAs configuration. I don't
-currently have access to the test machine.
+On Sun, 4 Jun 2006, Tejun Heo wrote:
 
-tim
-
---- Arjan van de Ven <arjan@infradead.org> wrote:
-
-> On Sun, 2006-06-04 at 10:31 -0700, Tim Cullen wrote:
-> > What is happening is that read and write
-> performance
-> > are lower on a 2.6 (SLES9 SP2) based kernel than
-> on a
-> > 2.4 based kernel.
+> Christoph Hellwig wrote:
+> > On Sun, Jun 04, 2006 at 12:41:20PM +0900, Tejun Heo wrote:
+> > >  			local_irq_save(flags);
+> > >  			buf = kmap_atomic(sg->page, KM_IRQ0) + sg->offset;
+> > >  			memcpy(buf, tw_dev->generic_buffer_virt[request_id],
+> > > sg->length);
+> > > +			flush_kernel_dcache_page(kmap_atomic_to_page(buf -
+> > > sg->offset));
+> > >  			kunmap_atomic(buf - sg->offset, KM_IRQ0);
+> > >  			local_irq_restore(flags);
 > > 
-> > The test hardware is a Cray XT3 connected to a DDN
-> > S2A8500 RAID array. The test is sequential reads
-> and
-> > writes from programs like sgp_dd and ior.
+> > all these should switch to scsi_kmap_atomic_sg which should do the
+> > flush_kernel_dcache_page call for you.
+> > 
 > 
-> what is the HBA in use? (eg which driver?)
-> 
-> 
-> -
-> To unsubscribe from this list: send the line
-> "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at 
-> http://vger.kernel.org/majordomo-info.html
-> 
+> This is not specific to scsi or block.  This is a common problem for all kmap
+> users.  As I wrote in the other mail, I think this should be mandated at the
+> kmap/kunmap() interface.
 
+Right. As I wrote scsi_k(un)map_atomic_sg I did mention that they, 
+probably, should go to a higher layer as they were not scsi-specific, but 
+as I didn't have a good idea of where exactly to put them, I called them
+scsi_* and put in scsi_lib.c. Suggestions for a better place and namespace 
+for them very welcome. Or just feel free to move / rename them as you see 
+appropriate. See, e.g., 
+http://marc.theaimsgroup.com/?l=linux-scsi&m=112345886816099&w=2 and the 
+related thread from August last year for possible other potential users of 
+this API.
 
-__________________________________________________
-Do You Yahoo!?
-Tired of spam?  Yahoo! Mail has the best spam protection around 
-http://mail.yahoo.com 
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
