@@ -1,55 +1,65 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: [PATCH 4/5] SCSI: add cpu cache flushes after kmapping and
- modifying a page
-Date: Sun, 4 Jun 2006 22:24:44 +0200 (CEST)
-Message-ID: <Pine.LNX.4.60.0606042151070.24306@poirot.grange>
+From: Russell King <rmk+lkml@arm.linux.org.uk>
+Subject: Re: [PATCHSET] block: fix PIO cache coherency bug, take 2
+Date: Sun, 4 Jun 2006 21:44:44 +0100
+Message-ID: <20060604204444.GF4484@flint.arm.linux.org.uk>
 References: <1149392479501-git-send-email-htejun@gmail.com>
- <11493924803460-git-send-email-htejun@gmail.com> <20060604082035.GB29696@infradead.org>
- <4482A436.8000703@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.de ([213.165.64.20]:687 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S932121AbWFDUYv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 4 Jun 2006 16:24:51 -0400
-In-Reply-To: <4482A436.8000703@gmail.com>
+Received: from caramon.arm.linux.org.uk ([212.18.232.186]:776 "EHLO
+	caramon.arm.linux.org.uk") by vger.kernel.org with ESMTP
+	id S932238AbWFDUpK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 4 Jun 2006 16:45:10 -0400
+Content-Disposition: inline
+In-Reply-To: <1149392479501-git-send-email-htejun@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@suse.de>, James Bottomley <James.Bottomley@SteelEye.com>, Dave Miller <davem@redhat.com>, bzolnier@gmail.com, james.steward@dynamicratings.com, jgarzik@pobox.com, mattjreimer@gmail.com, rmk@arm.linux.org.uk, lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Jens Axboe <axboe@suse.de>, James Bottomley <James.Bottomley@SteelEye.com>, Dave Miller <davem@redhat.com>, bzolnier@gmail.com, james.steward@dynamicratings.com, jgarzik@pobox.com, mattjreimer@gmail.com, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Sun, 4 Jun 2006, Tejun Heo wrote:
+On Sun, Jun 04, 2006 at 12:41:19PM +0900, Tejun Heo wrote:
+> Russell, can you please verify arm's flush_kernel_dcache_page()?
 
-> Christoph Hellwig wrote:
-> > On Sun, Jun 04, 2006 at 12:41:20PM +0900, Tejun Heo wrote:
-> > >  			local_irq_save(flags);
-> > >  			buf = kmap_atomic(sg->page, KM_IRQ0) + sg->offset;
-> > >  			memcpy(buf, tw_dev->generic_buffer_virt[request_id],
-> > > sg->length);
-> > > +			flush_kernel_dcache_page(kmap_atomic_to_page(buf -
-> > > sg->offset));
-> > >  			kunmap_atomic(buf - sg->offset, KM_IRQ0);
-> > >  			local_irq_restore(flags);
-> > 
-> > all these should switch to scsi_kmap_atomic_sg which should do the
-> > flush_kernel_dcache_page call for you.
-> > 
-> 
-> This is not specific to scsi or block.  This is a common problem for all kmap
-> users.  As I wrote in the other mail, I think this should be mandated at the
-> kmap/kunmap() interface.
+That should be fine from a theoretical standpoint, but I can't say much
+more than that - I have _great_ difficulty in reproducing the problem
+with IDE and as such I consider myself out of the game of testing for
+this problem:
 
-Right. As I wrote scsi_k(un)map_atomic_sg I did mention that they, 
-probably, should go to a higher layer as they were not scsi-specific, but 
-as I didn't have a good idea of where exactly to put them, I called them
-scsi_* and put in scsi_lib.c. Suggestions for a better place and namespace 
-for them very welcome. Or just feel free to move / rename them as you see 
-appropriate. See, e.g., 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=112345886816099&w=2 and the 
-related thread from August last year for possible other potential users of 
-this API.
+| Date:   Fri, 13 Jan 2006 22:02:15 +0000
+| From:   Russell King <rmk+lkml@arm.linux.org.uk>
+| To:     Tejun Heo <htejun@gmail.com>
+| Subject: Re: [PATCHSET] block: fix PIO cache coherency bug
+|
+| On Sat, Jan 14, 2006 at 12:24:16AM +0900, Tejun Heo wrote:
+| > Russell, can you please test whether this fixes the bug on arm?  If
+| > this fixes the bug and people agree with the approach, I'll follow up
+| > with patches for yet unconverted drivers and documentation update.
+|
+| Unfortunately, as I previously explained, I'm not able to test this.
+| The reason is that in order to reproduce the bug, you need a system
+| with a VIVT write-back write-allocate cache.
+|
+| Unfortunately, the few systems I have which have such a cache do not
+| have IDE, SCSI nor SATA (not even PCMCIA.)  I suggest contacting the
+| folk who reported the bug in the first instance.
 
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
+You need to approach other members of the ARM community to test these
+patches.  Unfortunately I don't have a list of who has found the problem
+and who is in a state to be able to reproduce it - since most members
+are embedded engineers, they tend to move on to other projects quite
+rapidly.
+
+What I suggest is that we just throw _something_ which looks right into
+the kernel and see what happens.  I can't see any other possible way to
+proceed, _especially_ as we've had 6 months of very little progress on
+this issue.
+
+> I tried to implement flush_anon_page() too but didn't know what to do
+> with anon_vma object.
+
+I'm not sure what this is about...
+
+-- 
+Russell King
+ Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
+ maintainer of:  2.6 Serial core
