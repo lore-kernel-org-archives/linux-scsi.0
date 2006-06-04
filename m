@@ -1,23 +1,29 @@
-From: "Kristine Hooks" <FONLGVZLQJGALL@yahoo.com>
-Subject: Woww..8o-% 0ff Linux-scsi
-Date: Sun, 04 Jun 2006 12:17:15 +0600
-Message-ID: <LAW16.OE649yfB4mvo666653d5__26240.6304631897$1149398734$gmane$org@motmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [221.15.181.164] ([221.15.181.164]:55822 "HELO 4C4521F8")
-	by vger.kernel.org with SMTP id S1750945AbWFDFZV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 4 Jun 2006 01:25:21 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH 1/5] arm: implement flush_kernel_dcache_page()
+Date: Sat, 03 Jun 2006 23:45:17 -0700 (PDT)
+Message-ID: <20060603.234517.104035250.davem@davemloft.net>
+References: <1149392479501-git-send-email-htejun@gmail.com>
+	<1149392479281-git-send-email-htejun@gmail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1149392479281-git-send-email-htejun@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: htejun@gmail.com
+Cc: axboe@suse.de, James.Bottomley@SteelEye.com, davem@redhat.com, bzolnier@gmail.com, james.steward@dynamicratings.com, jgarzik@pobox.com, mattjreimer@gmail.com, g.liakhovetski@gmx.de, rmk@arm.linux.org.uk, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
+From: Tejun Heo <htejun@gmail.com>
+Date: Sun, 4 Jun 2006 12:41:19 +0900
 
-Huge selection of me ds available
-at attrac tive prices. 
-Highest qualiity assured.
+>  arch/sparc64/kernel/head.S            |   30 -------------------
+>  arch/sparc64/kernel/setup.c           |   23 ++++++++-------
+>  arch/sparc64/kernel/smp.c             |   16 ++++++++--
 
-Try us out today..
+You're reverting a totally unrelated sparc64 bug fix
+in Linus's tree.
 
-http://bestsourcenow.com/1/
+Be careful in how you generate your patches.
 
-
-5qeGM
+Thanks :)
