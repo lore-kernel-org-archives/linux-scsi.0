@@ -1,60 +1,58 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCHSET] block: fix PIO cache coherency bug, take 2
-Date: Sun, 4 Jun 2006 12:41:19 +0900
-Message-ID: <1149392479501-git-send-email-htejun@gmail.com>
+Subject: [PATCH 2/5] ide: add cpu cache flushes after kmapping and modifying a page
+Date: Sun, 4 Jun 2006 12:41:20 +0900
+Message-ID: <1149392480987-git-send-email-htejun@gmail.com>
+References: <1149392479501-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: 
+In-Reply-To: <1149392479501-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>, James Bottomley <James.Bottomley@SteelEye.com>, Dave Miller <davem@redhat.com>, bzolnier@gmail.com, james.steward@dynamicratings.com, jgarzik@pobox.com, mattjreimer@gmail.com, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, rmk@arm.linux.org.uk, lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, htejun@gmail.com
+To: Jens Axboe <axboe@suse.de>, James Bottomley <James.Bottomley@SteelEye.com>, Dave Miller <davem@redhat.com>, bzolnier@gmail.com, james.steward@dynamicratings.com, jgarzik@pobox.com, mattjreimer@gmail.com, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, rmk@arm.linux.org.uk, lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Tejun Heo <htejun@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hello, all.
+Add calls to flush_kernel_dcache_page() after CPU has kmapped and
+modified a page.  This fixes PIO cache coherency bugs on architectures
+with aliased caches.
 
-Here's another round of block PIO cache coherency fix patchset.  The
-previous try[1] was rejected because flush_dcache_page() was excessive
-and couldn't be called from irq context.  A new cachetlb interface has
-been introduced - flush_kernel_dcache_page(), which is only
-responsible for flushing the kernel mapping and safe to call from irq
-context.  The function is implemented only for parisc.  This patchset
-adds implementation for arm.
+Signed-off-by: Tejun Heo <htejun@gmail.com>
 
-blk kmap wrappers have been dropped and calls to
-flush_kernel_dcache_page() have been directly added.  Because
-flush_kernel_dcache_page() hasn't been implemented on many
-architectures, converting to such wrappers breaks cache coherency for
-such architectures.  kmap should be updated after all archtectures
-with aliasing caches implement flush_kernel_dcache_page().
+---
 
-Russell, can you please verify arm's flush_kernel_dcache_page()?  I
-tried to implement flush_anon_page() too but didn't know what to do
-with anon_vma object.  It seems that a call to
-__cpuc_flush_user_range() should do the job but it requires
-vma->vm_flags to see whether it's an executable page.  To access vma
-from anon mapped page, page->mapping:anon_vma->lock should be grabbed
-and probably the first vma on the list can be used, which is kind of
-complex.  I think the options here are...
+ drivers/ide/ide-floppy.c   |    1 +
+ drivers/ide/ide-taskfile.c |    2 ++
+ 2 files changed, 3 insertions(+), 0 deletions(-)
 
-* adding vma argument to flush_anon_page()
-* always flush for the worst vm_flags
-
-I have only compile tested.  Please verify this fixes the coherency
-problem on arm.
-
-Jens, if everyone is happy with this, can you push this patchset
-through blk tree?  As this change only adds calls to
-flush_kernel_dcache_page() which is currently implement only on parisc
-and arm, I think including this fix into 2.6.17 shouldn't cause too
-much trouble.
-
-Thanks.
-
---
-tejun
-
-[1] http://article.gmane.org/gmane.linux.kernel/367509
+861367f65bbbbc5c9f5d3a27aab91c587a3a9049
+diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
+index a53e3ce..5be22c2 100644
+--- a/drivers/ide/ide-floppy.c
++++ b/drivers/ide/ide-floppy.c
+@@ -618,6 +618,7 @@ static void idefloppy_input_buffers (ide
+ 
+ 			data = bvec_kmap_irq(bvec, &flags);
+ 			drive->hwif->atapi_input_bytes(drive, data, count);
++			flush_kernel_dcache_page(kmap_atomic_to_page(data));
+ 			bvec_kunmap_irq(data, &flags);
+ 
+ 			bcount -= count;
+diff --git a/drivers/ide/ide-taskfile.c b/drivers/ide/ide-taskfile.c
+index 9233b81..c183c07 100644
+--- a/drivers/ide/ide-taskfile.c
++++ b/drivers/ide/ide-taskfile.c
+@@ -294,6 +294,8 @@ #endif
+ 	else
+ 		taskfile_input_data(drive, buf, SECTOR_WORDS);
+ 
++	if (!write)
++		flush_kernel_dcache_page(kmap_atomic_to_page(buf));
+ 	kunmap_atomic(buf, KM_BIO_SRC_IRQ);
+ #ifdef CONFIG_HIGHMEM
+ 	local_irq_restore(flags);
+-- 
+1.3.2
 
 
