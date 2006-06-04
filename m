@@ -1,75 +1,60 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH 3/5] libata: add cpu cache flushes after kmapping and modifying a page
-Date: Sun, 4 Jun 2006 12:41:20 +0900
-Message-ID: <11493924801664-git-send-email-htejun@gmail.com>
-References: <1149392479501-git-send-email-htejun@gmail.com>
+Subject: [PATCHSET] block: fix PIO cache coherency bug, take 2
+Date: Sun, 4 Jun 2006 12:41:19 +0900
+Message-ID: <1149392479501-git-send-email-htejun@gmail.com>
 Reply-To: Tejun Heo <htejun@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1149392479501-git-send-email-htejun@gmail.com>
+In-Reply-To: 
 Sender: linux-ide-owner@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>, James Bottomley <James.Bottomley@SteelEye.com>, Dave Miller <davem@redhat.com>, bzolnier@gmail.com, james.steward@dynamicratings.com, jgarzik@pobox.com, mattjreimer@gmail.com, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, rmk@arm.linux.org.uk, lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: Tejun Heo <htejun@gmail.com>
+To: Jens Axboe <axboe@suse.de>, James Bottomley <James.Bottomley@SteelEye.com>, Dave Miller <davem@redhat.com>, bzolnier@gmail.com, james.steward@dynamicratings.com, jgarzik@pobox.com, mattjreimer@gmail.com, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, rmk@arm.linux.org.uk, lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, htejun@gmail.com
 List-Id: linux-scsi@vger.kernel.org
 
-Add calls to flush_kernel_dcache_page() after CPU has kmapped and
-modified a page.  This fixes PIO cache coherency bugs on architectures
-with aliased caches.
+Hello, all.
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
+Here's another round of block PIO cache coherency fix patchset.  The
+previous try[1] was rejected because flush_dcache_page() was excessive
+and couldn't be called from irq context.  A new cachetlb interface has
+been introduced - flush_kernel_dcache_page(), which is only
+responsible for flushing the kernel mapping and safe to call from irq
+context.  The function is implemented only for parisc.  This patchset
+adds implementation for arm.
 
----
+blk kmap wrappers have been dropped and calls to
+flush_kernel_dcache_page() have been directly added.  Because
+flush_kernel_dcache_page() hasn't been implemented on many
+architectures, converting to such wrappers breaks cache coherency for
+such architectures.  kmap should be updated after all archtectures
+with aliasing caches implement flush_kernel_dcache_page().
 
- drivers/scsi/libata-core.c |    5 +++++
- drivers/scsi/libata-scsi.c |    1 +
- 2 files changed, 6 insertions(+), 0 deletions(-)
+Russell, can you please verify arm's flush_kernel_dcache_page()?  I
+tried to implement flush_anon_page() too but didn't know what to do
+with anon_vma object.  It seems that a call to
+__cpuc_flush_user_range() should do the job but it requires
+vma->vm_flags to see whether it's an executable page.  To access vma
+from anon mapped page, page->mapping:anon_vma->lock should be grabbed
+and probably the first vma on the list can be used, which is kind of
+complex.  I think the options here are...
 
-cc874e5080d87eff23a1576df11ddaaeae9575ec
-diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
-index b046ffa..47eb263 100644
---- a/drivers/scsi/libata-core.c
-+++ b/drivers/scsi/libata-core.c
-@@ -2821,6 +2821,7 @@ static void ata_sg_clean(struct ata_queu
- 			struct scatterlist *psg = &qc->pad_sgent;
- 			void *addr = kmap_atomic(psg->page, KM_IRQ0);
- 			memcpy(addr + psg->offset, pad_buf, qc->pad_len);
-+			flush_kernel_dcache_page(kmap_atomic_to_page(addr));
- 			kunmap_atomic(addr, KM_IRQ0);
- 		}
- 	} else {
-@@ -3451,6 +3452,8 @@ static void ata_pio_sector(struct ata_qu
- 	do_write = (qc->tf.flags & ATA_TFLAG_WRITE);
- 	ata_data_xfer(ap, buf, ATA_SECT_SIZE, do_write);
- 
-+	if (!do_write)
-+		flush_kernel_dcache_page(page);
- 	kunmap(page);
- }
- 
-@@ -3533,6 +3536,8 @@ next_sg:
- 	/* do the actual data transfer */
- 	ata_data_xfer(ap, buf, count, do_write);
- 
-+	if (!do_write)
-+		flush_kernel_dcache_page(page);
- 	kunmap(page);
- 
- 	if (bytes)
-diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
-index a0289ec..b65d7f5 100644
---- a/drivers/scsi/libata-scsi.c
-+++ b/drivers/scsi/libata-scsi.c
-@@ -1500,6 +1500,7 @@ static inline void ata_scsi_rbuf_put(str
- 		struct scatterlist *sg;
- 
- 		sg = (struct scatterlist *) cmd->request_buffer;
-+		flush_kernel_dcache_page(kmap_atomic_to_page(buf - sg->offset));
- 		kunmap_atomic(buf - sg->offset, KM_USER0);
- 	}
- }
--- 
-1.3.2
+* adding vma argument to flush_anon_page()
+* always flush for the worst vm_flags
+
+I have only compile tested.  Please verify this fixes the coherency
+problem on arm.
+
+Jens, if everyone is happy with this, can you push this patchset
+through blk tree?  As this change only adds calls to
+flush_kernel_dcache_page() which is currently implement only on parisc
+and arm, I think including this fix into 2.6.17 shouldn't cause too
+much trouble.
+
+Thanks.
+
+--
+tejun
+
+[1] http://article.gmane.org/gmane.linux.kernel/367509
 
 
