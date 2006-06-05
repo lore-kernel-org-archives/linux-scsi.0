@@ -1,100 +1,38 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: Error using DC315U to drive ScanJet 4c
-Date: Mon, 5 Jun 2006 12:58:05 +0200 (CEST)
-Message-ID: <Pine.LNX.4.60.0606051242150.4149@poirot.grange>
-References: <Pine.LNX.4.64.0606042013200.14649@nev.ubzr>
- <Pine.LNX.4.60.0606041850090.13574@poirot.grange> <Pine.LNX.4.64.0606042201460.14649@nev.ubzr>
- <Pine.LNX.4.60.0606042022540.24306@poirot.grange> <Pine.LNX.4.64.0606051150440.4038@nev.ubzr>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCHSET] block: fix PIO cache coherency bug, take 2
+Date: Mon, 05 Jun 2006 08:43:52 -0500
+Message-ID: <1149515032.3489.4.camel@mulgrave.il.steeleye.com>
+References: <1149392479501-git-send-email-htejun@gmail.com>
+	 <20060604204444.GF4484@flint.arm.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:28075 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S1750954AbWFEK6I (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jun 2006 06:58:08 -0400
-In-Reply-To: <Pine.LNX.4.64.0606051150440.4038@nev.ubzr>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20060604204444.GF4484@flint.arm.linux.org.uk>
+Sender: linux-ide-owner@vger.kernel.org
+To: Russell King <rmk+lkml@arm.linux.org.uk>
+Cc: Tejun Heo <htejun@gmail.com>, Jens Axboe <axboe@suse.de>, Dave Miller <davem@redhat.com>, bzolnier@gmail.com, james.steward@dynamicratings.com, jgarzik@pobox.com, mattjreimer@gmail.com, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Lev A. Melnikovsky" <leva@hotmail.com>
-Cc: linux-scsi@vger.kernel.org, Jamie Lenehan <lenehan@twibble.org>
 
-On Mon, 5 Jun 2006, Lev A. Melnikovsky wrote:
-
-> I'm (also) having problems with my dc395x and HP C6270A scanner. The log
-> contains multiple "Unexpected reselection" messages, so I assume this has
-> something to do with the earlier report. Sorry, if my assumption is wrong.
-
-I'm afraid your assumption is correct:-)
-
-> I'm using [x]sane[d] (FC5 official rpm) to control the scanner. The problem is
-> ~50% reproducible. Sometimes the scanning is successful, but sometimes it
-> hangs for several minutes and reports and I/O Error (earlier sane versions
-> segfaulted here, but the modern one does not).
+On Sun, 2006-06-04 at 21:44 +0100, Russell King wrote:
+> > I tried to implement flush_anon_page() too but didn't know what to
+> do
+> > with anon_vma object.
 > 
-> I have tried the patch from
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=114400790021967&w=2
-> but it did not really change anything observable.
+> I'm not sure what this is about...
 
-Same as with other 2 (I think) reporters.
+This was for fuse on parisc.  It should have no bearing on the current
+IDE problem.  What it's trying to solve is the fact that
+flush_dcache_page() doesn't necessarily flush anonymous pages (because
+of the way the mappings list works).  However, in order to make an
+anonymous page in user space visible via the kernel address, we have to
+have it flushed (this is what fuse does to transfer data into pages).
+So this API was introduced into the right places to permit that to
+happen.   Most VIPT architectures are CAM based, so flush_dcache_page()
+actually sweeps up all the anon pages as well.  However, if the
+implementation (like parisc's) has to loop over page_mapping(page) then
+it will likely need to implement flush_anon_page() for fuse to work.
 
-> The log (scsi_mod scsi_logging_level=15) follows:
+James
 
-Well, 15 is a little too small. As you've probably seen in 
-drivers/scsi/scsi_logging.h logging is a bitfield with 3 bits allocated 
-for every event-type (error, timer, etc.). Actually, if you have no other 
-SCSI devices in the system (including USB storage), I would try raising it 
-to the maximum ((1 << 30) - 1). The goal would be to try to see which 
-command exactly leads to unexpected reselect. Apart from that I have 
-little idea on how to debug it. If the log gets too big to be sent to the 
-list, please upload it somewhere and provide a link.
 
-> This scanner is the only device on the bus. My understanding is that I don't
-> need to manually terminate anything, please correct me if I'm wrong. I can not
-
-The bus has to be terminated on both ends. The HBA is, probably, 
-terminating automatically, but the external end has to be terminated. 
-Either with an external terminator or with a switch / jumper on your 
-scanner.
-
-> guarantee that this is not a hardware problem, but, as far as I remember, it
-> did not show (this often) under 2.4 kernel (with the same hardware setup).
-
-But it did show sometimes? On the same hardware?
-
-> My configuration follows:
-> 
-> Linux 2.6.16.19 #9 Sun Jun 4 22:30:07 MSD 2006 i686 i686 i386 GNU/Linux
-> 
-> $ cat /proc/cpuinfo
-> 
-> processor       : 0
-> vendor_id       : GenuineIntel
-> cpu family      : 6
-> model           : 11
-> model name      : Intel(R) Celeron(TM) CPU                1300MHz
-> stepping        : 1
-> cpu MHz         : 1303.107
-> cache size      : 256 KB
-> fdiv_bug        : no
-> hlt_bug         : no
-> f00f_bug        : no
-> coma_bug        : no
-> fpu             : yes
-> fpu_exception   : yes
-> cpuid level     : 2
-> wp              : yes
-> flags           : fpu vme de pse tsc msr pae mce cx8 sep mtrr pge mca cmov pat
-> pse36 mmx fxsr sse
-> bogomips        : 2608.88
-> 
-> $ free
->              total       used       free     shared    buffers     cached
-> Mem:        256164     242876      13288          0      13456     176828
-> -/+ buffers/cache:      52592     203572
-> Swap:       530136          0     530136
-
-Which confirms that this problem is not 64 bit or highmem specific.
-
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
