@@ -1,56 +1,76 @@
-From: Vasily Averin <vvs@sw.ru>
-Subject: Re: [SCSI] 3w-9xxx: kmap_atomic in twa_scsiop_execute_scsi
-Date: Tue, 06 Jun 2006 23:28:27 +0400
-Message-ID: <4485D75B.7070902@sw.ru>
-References: <DB599F406D04E34389140B7D99C71B1B0203D625@SDCEXCHANGE01.ad.amcc.com>	 <44851778.7010107@sw.ru> <b1bc6a000606061146p7a26aca9o62f9a8c22ffb0c63@mail.gmail.com>
+From: Jiri Slaby <jirislaby@gmail.com>
+Subject: Re: usb device problem
+Date: Tue, 06 Jun 2006 23:36:57 +0159
+Message-ID: <4485F590.8000304@gmail.com>
+References: <44859A9B.6080202@gmail.com> <4485A299.7070007@rtr.ca> <4485A855.1020602@gmail.com> <4485C446.2040203@rtr.ca> <4485C5D8.5070907@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhub.sw.ru ([195.214.233.200]:27216 "EHLO relay.sw.ru")
-	by vger.kernel.org with ESMTP id S1750983AbWFFTZM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jun 2006 15:25:12 -0400
-In-Reply-To: <b1bc6a000606061146p7a26aca9o62f9a8c22ffb0c63@mail.gmail.com>
+Received: from nf-out-0910.google.com ([64.233.182.184]:52087 "EHLO
+	nf-out-0910.google.com") by vger.kernel.org with ESMTP
+	id S1750897AbWFFVhL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Jun 2006 17:37:11 -0400
+Received: by nf-out-0910.google.com with SMTP id k27so9065nfc
+        for <linux-scsi@vger.kernel.org>; Tue, 06 Jun 2006 14:37:10 -0700 (PDT)
+In-Reply-To: <4485C5D8.5070907@rtr.ca>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: adam radford <aradford@gmail.com>
-Cc: Adam Radford <aradford@amcc.com>, linuxraid <linuxraid@amcc.com>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org, devel@openvz.org, Andrew Morton <akpm@osdl.org>
+To: Mark Lord <lkml@rtr.ca>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net
 
-Adam,
+Mark Lord napsal(a):
+> Mmm.. okay, a quick glance at the USB storage code revealed one instance:
+> 
+>        /* Did we transfer less than the minimum amount required? */
+>        if (srb->result == SAM_STAT_GOOD &&
+>                        srb->request_bufflen - srb->resid < srb->underflow)
+>                srb->result = (DID_ERROR << 16) | (SUGGEST_RETRY << 24);
+> 
+>        return;
+> 
+> So I suppose this *could* be the driver thinking it had a bad sector,
+> but it really looks like it's guessing.  The code also appears to be
+> instrumented for some kind of USB tracing.. If you can figure out how
+> to turn that on, then the trace will probably tell us what is really
+> going on there.
+> Look for a file called "usbmon.txt" in the Documentation/usb/ subdir
+> of your kernel source tree.  It describes how to do the tracing.
 
-adam radford wrote:
-> Vasily,
-> 
-> On 6/5/06, Vasily Averin <vvs@sw.ru> wrote:
-> 
->> I'm agree that queuecommand() executed with disabled interrupts. However
->> twa_scsiop_execute_scsi() can be called not only from queuecommand.
->> For example,
->>
->> twa_interrupts (note: with _enabled_ interrupts)
->>    twa_aen_read_queue
->>      twa_scsiop_execute_scsi
->>
-> 
-> twa_scsiop_execute_scsi() will not perform the
-> kmap_atomic()/kunmap_atomic()
-> calls here because it is being used for an internal AEN drain  (cdb
-> post), i.e. "sglistarg" is non NULL.  See below:
-> 
-> if (!sglistarg) {
-> 
->  ....
->   kmap_atomc()
->   kunmap_atomic()
-> 
-> } else {
->   /* Internal cdb post */
-> 
-> }
+Did you want me to do something like this:
+http://www.fi.muni.cz/~xslaby/sklad/usbmon/?M=A
 
-Ok, I'm agree.
+usb2 means usb bus 2.
 
-Thank you for your explanation,
-	Vasily Averin
+without "a"s commands was:
 
-SWsoft Virtuozzo/OpenVZ Linux kernel team
+[connect the device]
+mount /dev/sdb usb/ [filesystem is vfat]
+dd if=/dev/zero of=usb/zero1 bs=1k count=3
+[wait some time to let system syncing automagically]
+umount usb/
+[disconnect the device]
+
+
+
+with "a" there is only difference in dd command:
+...
+dd if=/dev/zero of=usb/zero2 bs=1k count=5
+...
+
+The first serie is without the error in the latter one appeared (some time after
+`dd', when system syncs):
+sd 6:0:0:0: SCSI error: return code = 0x10070000
+end_request: I/O error, dev sdb, sector 8223
+[same as before]
+
+
+
+I have i386 arch, so 4096 is PAGE_SIZE, when it syncs only one dirty page, it
+seems to be OK, otherwise it's not, if this helps in any way.
+
+thanks,
+-- 
+Jiri Slaby         www.fi.muni.cz/~xslaby
+\_.-^-._   jirislaby@gmail.com   _.-^-._/
+B67499670407CE62ACC8 22A032CC55C339D47A7E
