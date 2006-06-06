@@ -1,391 +1,58 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] scsi tgt: move scsi_host_get_command and
- scsi_host_put_command to scsi_tgt_lib.c
-Date: Wed, 07 Jun 2006 00:41:49 +0900
-Message-ID: <20060607004149Q.fujita.tomonori@lab.ntt.co.jp>
+From: Mark Lord <lkml@rtr.ca>
+Subject: Re: usb device problem
+Date: Tue, 06 Jun 2006 11:43:21 -0400
+Message-ID: <4485A299.7070007@rtr.ca>
+References: <44859A9B.6080202@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:50940 "EHLO
-	tama5.ecl.ntt.co.jp") by vger.kernel.org with ESMTP
-	id S1751306AbWFFPll (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Jun 2006 11:41:41 -0400
+Received: from rtr.ca ([64.26.128.89]:18098 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S1751316AbWFFPn1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jun 2006 11:43:27 -0400
+In-Reply-To: <44859A9B.6080202@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net
 
-This patch moves scsi_get_host_command and scsi_put_host_command to
-scsi_tgt_lib.c from scsi.c
+Jiri Slaby wrote:
+> Hello,
+> 
+> I get this with 2.6.17-rc5-mm3 kernel:
+..
+> usb-storage: device found at 10
+> usb-storage: waiting for device to settle before scanning
+>   Vendor:           Model:                   Rev:
+>   Type:   Direct-Access                      ANSI SCSI revision: 00
+> SCSI device sdb: 245920 512-byte hdwr sectors (126 MB)
+..
+> now read and write and sync or umount, then:
+> ---
+> sd 10:0:0:0: SCSI error: return code = 0x10070000
+> end_request: I/O error, dev sdb, sector 1575
+> sd 10:0:0:0: SCSI error: return code = 0x10070000
+> end_request: I/O error, dev sdb, sector 1583
+> sd 10:0:0:0: SCSI error: return code = 0x10070000
+> end_request: I/O error, dev sdb, sector 1591
+> sd 10:0:0:0: SCSI error: return code = 0x10070000
+> end_request: I/O error, dev sdb, sector 1599
+> sd 10:0:0:0: SCSI error: return code = 0x10070000
+> end_request: I/O error, dev sdb, sector 1607
+> sd 10:0:0:0: SCSI error: return code = 0x10070000
+> end_request: I/O error, dev sdb, sector 1615
+> ... and so on. data are maybe there, but it takes so long to write a meg file.
+> sometimes
+..
 
-A target driver allocates scsi_cmnd structure via
-scsi_get_host_command, then pass it to tgt core via
-scsi_tgt_queue_command. scsi_tgt_queue_command could fail because it
-needs to allocate scsi_tgt_cmd structure (for tgt specific data).
-Allocating scsi_tgt_cmd structure in scsi_host_get_command simplifies
-target drivers.
+This *looks* like maybe the drive reported a sector read error,
+and the standard "fail the whole request one block at a time"
+error mechanism from sd.c has kicked in.
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+I have a patch to fix this behaviour (in sd.c), but it has not yet
+been decided whether to go upstream with it or not.
 
----
+The same behaviour bites anything from libata as well,
+and possibly also (not verified) firewire drives.
 
- drivers/scsi/scsi.c         |  102 ++++------------------------------------
- drivers/scsi/scsi_tgt_lib.c |  109 +++++++++++++++++++++++++++++++++++++------
- include/scsi/scsi_cmnd.h    |    6 +-
- include/scsi/scsi_tgt.h     |    4 ++
- 4 files changed, 112 insertions(+), 109 deletions(-)
-
-da608da5bd0b59864bf552f31ff3676d866eb3b5
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 9c22465..1d2fbe0 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -212,8 +212,7 @@ static struct scsi_host_cmd_pool scsi_cm
- 
- static DEFINE_MUTEX(host_cmd_pool_mutex);
- 
--static struct scsi_cmnd *__scsi_get_command(struct Scsi_Host *shost,
--					    gfp_t gfp_mask)
-+struct scsi_cmnd *__scsi_get_command(struct Scsi_Host *shost, gfp_t gfp_mask)
- {
- 	struct scsi_cmnd *cmd;
- 
-@@ -234,58 +233,7 @@ static struct scsi_cmnd *__scsi_get_comm
- 
- 	return cmd;
- }
--
--/*
-- * Function:	scsi_host_get_command()
-- *
-- * Purpose:	Allocate and setup a scsi command block and blk request
-- *
-- * Arguments:	shost	- scsi host
-- *		data_dir - dma data dir
-- *		gfp_mask- allocator flags
-- *
-- * Returns:	The allocated scsi command structure.
-- *
-- * This should be called by target LLDs to get a command.
-- */
--struct scsi_cmnd *scsi_host_get_command(struct Scsi_Host *shost,
--					enum dma_data_direction data_dir,
--					gfp_t gfp_mask)
--{
--	int write = (data_dir == DMA_TO_DEVICE);
--	struct request *rq;
--	struct scsi_cmnd *cmd;
--
--	/* Bail if we can't get a reference to the device */
--	if (!get_device(&shost->shost_gendev))
--		return NULL;
--
--	rq = blk_get_request(shost->uspace_req_q, write, gfp_mask);
--	if (!rq)
--		goto put_dev;
--
--	cmd = __scsi_get_command(shost, gfp_mask);
--	if (!cmd)
--		goto release_rq;
--
--	memset(cmd, 0, sizeof(*cmd));
--	cmd->sc_data_direction = data_dir;
--	cmd->jiffies_at_alloc = jiffies;
--	cmd->request = rq;
--
--	rq->special = cmd;
--	rq->flags |= REQ_SPECIAL | REQ_BLOCK_PC;
--
--	return cmd;
--
--release_rq:
--	blk_put_request(rq);
--put_dev:
--	put_device(&shost->shost_gendev);
--	return NULL;
--
--}
--EXPORT_SYMBOL_GPL(scsi_host_get_command);
-+EXPORT_SYMBOL_GPL(__scsi_get_command);
- 
- /*
-  * Function:	scsi_get_command()
-@@ -322,25 +270,12 @@ struct scsi_cmnd *scsi_get_command(struc
- 		put_device(&dev->sdev_gendev);
- 
- 	return cmd;
--}				
-+}
- EXPORT_SYMBOL(scsi_get_command);
- 
--/*
-- * Function:	scsi_host_put_command()
-- *
-- * Purpose:	Free a scsi command block
-- *
-- * Arguments:	shost	- scsi host
-- * 		cmd	- command block to free
-- *
-- * Returns:	Nothing.
-- *
-- * Notes:	The command must not belong to any lists.
-- */
--void scsi_host_put_command(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
-+void __scsi_put_command(struct Scsi_Host *shost, struct scsi_cmnd *cmd,
-+			struct device *dev)
- {
--	struct request_queue *q = shost->uspace_req_q;
--	struct request *rq = cmd->request;
- 	unsigned long flags;
- 
- 	/* changing locks here, don't need to restore the irq state */
-@@ -349,18 +284,14 @@ void scsi_host_put_command(struct Scsi_H
- 		list_add(&cmd->list, &shost->free_list);
- 		cmd = NULL;
- 	}
--	spin_unlock(&shost->free_list_lock);
--
--	spin_lock(q->queue_lock);
--	__blk_put_request(q, rq);
--	spin_unlock_irqrestore(q->queue_lock, flags);
-+	spin_unlock_irqrestore(&shost->free_list_lock, flags);
- 
- 	if (likely(cmd != NULL))
- 		kmem_cache_free(shost->cmd_pool->slab, cmd);
- 
--	put_device(&shost->shost_gendev);
-+	put_device(dev);
- }
--EXPORT_SYMBOL_GPL(scsi_host_put_command);
-+EXPORT_SYMBOL(__scsi_put_command);
- 
- /*
-  * Function:	scsi_put_command()
-@@ -376,26 +307,15 @@ EXPORT_SYMBOL_GPL(scsi_host_put_command)
- void scsi_put_command(struct scsi_cmnd *cmd)
- {
- 	struct scsi_device *sdev = cmd->device;
--	struct Scsi_Host *shost = sdev->host;
- 	unsigned long flags;
--	
-+
- 	/* serious error if the command hasn't come from a device list */
- 	spin_lock_irqsave(&cmd->device->list_lock, flags);
- 	BUG_ON(list_empty(&cmd->list));
- 	list_del_init(&cmd->list);
--	spin_unlock(&cmd->device->list_lock);
--	/* changing locks here, don't need to restore the irq state */
--	spin_lock(&shost->free_list_lock);
--	if (unlikely(list_empty(&shost->free_list))) {
--		list_add(&cmd->list, &shost->free_list);
--		cmd = NULL;
--	}
--	spin_unlock_irqrestore(&shost->free_list_lock, flags);
--
--	if (likely(cmd != NULL))
--		kmem_cache_free(shost->cmd_pool->slab, cmd);
-+	spin_unlock_irqrestore(&cmd->device->list_lock, flags);
- 
--	put_device(&sdev->sdev_gendev);
-+	__scsi_put_command(cmd->device->host, cmd, &sdev->sdev_gendev);
- }
- EXPORT_SYMBOL(scsi_put_command);
- 
-diff --git a/drivers/scsi/scsi_tgt_lib.c b/drivers/scsi/scsi_tgt_lib.c
-index 5a98fc4..2385db0 100644
---- a/drivers/scsi/scsi_tgt_lib.c
-+++ b/drivers/scsi/scsi_tgt_lib.c
-@@ -67,6 +67,95 @@ struct scsi_tgt_queuedata {
- 	struct list_head cmd_req;
- };
- 
-+/*
-+ * Function:	scsi_host_get_command()
-+ *
-+ * Purpose:	Allocate and setup a scsi command block and blk request
-+ *
-+ * Arguments:	shost	- scsi host
-+ *		data_dir - dma data dir
-+ *		gfp_mask- allocator flags
-+ *
-+ * Returns:	The allocated scsi command structure.
-+ *
-+ * This should be called by target LLDs to get a command.
-+ */
-+struct scsi_cmnd *scsi_host_get_command(struct Scsi_Host *shost,
-+					enum dma_data_direction data_dir,
-+					gfp_t gfp_mask)
-+{
-+	int write = (data_dir == DMA_TO_DEVICE);
-+	struct request *rq;
-+	struct scsi_cmnd *cmd;
-+	struct scsi_tgt_cmd *tcmd;
-+
-+	/* Bail if we can't get a reference to the device */
-+	if (!get_device(&shost->shost_gendev))
-+		return NULL;
-+
-+	tcmd = kmem_cache_alloc(scsi_tgt_cmd_cache, GFP_ATOMIC);
-+	if (!tcmd)
-+		goto put_dev;
-+
-+	rq = blk_get_request(shost->uspace_req_q, write, gfp_mask);
-+	if (!rq)
-+		goto free_tcmd;
-+
-+	cmd = __scsi_get_command(shost, gfp_mask);
-+	if (!cmd)
-+		goto release_rq;
-+
-+	memset(cmd, 0, sizeof(*cmd));
-+	cmd->sc_data_direction = data_dir;
-+	cmd->jiffies_at_alloc = jiffies;
-+	cmd->request = rq;
-+
-+	rq->special = cmd;
-+	rq->flags |= REQ_SPECIAL | REQ_BLOCK_PC;
-+	rq->end_io_data = tcmd;
-+
-+	return cmd;
-+
-+release_rq:
-+	blk_put_request(rq);
-+free_tcmd:
-+	kmem_cache_free(scsi_tgt_cmd_cache, tcmd);
-+put_dev:
-+	put_device(&shost->shost_gendev);
-+	return NULL;
-+
-+}
-+EXPORT_SYMBOL_GPL(scsi_host_get_command);
-+
-+/*
-+ * Function:	scsi_host_put_command()
-+ *
-+ * Purpose:	Free a scsi command block
-+ *
-+ * Arguments:	shost	- scsi host
-+ * 		cmd	- command block to free
-+ *
-+ * Returns:	Nothing.
-+ *
-+ * Notes:	The command must not belong to any lists.
-+ */
-+static void scsi_host_put_command(struct Scsi_Host *shost,
-+				  struct scsi_cmnd *cmd)
-+{
-+	struct request_queue *q = shost->uspace_req_q;
-+	struct request *rq = cmd->request;
-+	struct scsi_tgt_cmd *tcmd = rq->end_io_data;
-+	unsigned long flags;
-+
-+	kmem_cache_free(scsi_tgt_cmd_cache, tcmd);
-+
-+	spin_lock_irqsave(q->queue_lock, flags);
-+	__blk_put_request(q, rq);
-+	spin_unlock_irqrestore(q->queue_lock, flags);
-+
-+	__scsi_put_command(shost, cmd, &shost->shost_gendev);
-+}
-+
- static void scsi_unmap_user_pages(struct scsi_tgt_cmd *tcmd)
- {
- 	struct bio *bio;
-@@ -107,7 +196,6 @@ static void scsi_tgt_cmd_destroy(void *d
- 		cmd->request->flags &= ~1UL;
- 
- 	scsi_unmap_user_pages(tcmd);
--	kmem_cache_free(scsi_tgt_cmd_cache, tcmd);
- 	scsi_host_put_command(scsi_tgt_cmd_to_host(cmd), cmd);
- }
- 
-@@ -174,13 +262,13 @@ out:
- 		goto retry;
- }
- 
--/**
-+/*
-  * scsi_tgt_alloc_queue - setup queue used for message passing
-  * shost: scsi host
-  *
-  * This should be called by the LLD after host allocation.
-  * And will be released when the host is released.
-- **/
-+ */
- int scsi_tgt_alloc_queue(struct Scsi_Host *shost)
- {
- 	struct scsi_tgt_queuedata *queuedata;
-@@ -241,28 +329,19 @@ struct Scsi_Host *scsi_tgt_cmd_to_host(s
- }
- EXPORT_SYMBOL_GPL(scsi_tgt_cmd_to_host);
- 
--/**
-+/*
-  * scsi_tgt_queue_command - queue command for userspace processing
-  * @cmd:	scsi command
-  * @scsilun:	scsi lun
-  * @noblock:	set to nonzero if the command should be queued
-- **/
-+ */
- int scsi_tgt_queue_command(struct scsi_cmnd *cmd, struct scsi_lun *scsilun,
- 			   u64 tag)
- {
- 	struct request_queue *q = cmd->request->q;
- 	struct scsi_tgt_queuedata *qdata = q->queuedata;
- 	unsigned long flags;
--	struct scsi_tgt_cmd *tcmd;
--
--	/*
--	 * It would be better to allocate scsi_tgt_cmd structure in
--	 * scsi_host_get_command and not to fail due to OOM.
--	 */
--	tcmd = kmem_cache_alloc(scsi_tgt_cmd_cache, GFP_ATOMIC);
--	if (!tcmd)
--		return -ENOMEM;
--	cmd->request->end_io_data = tcmd;
-+	struct scsi_tgt_cmd *tcmd = cmd->request->end_io_data;
- 
- 	bio_list_init(&tcmd->xfer_list);
- 	bio_list_init(&tcmd->xfer_done_list);
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index 51156c7..c822bc2 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -150,11 +150,11 @@ struct scsi_cmnd {
- #define SCSI_STATE_MLQUEUE         0x100b
- 
- 
--extern struct scsi_cmnd *scsi_host_get_command(struct Scsi_Host *,
--					       enum dma_data_direction, gfp_t);
- extern struct scsi_cmnd *scsi_get_command(struct scsi_device *, gfp_t);
--extern void scsi_host_put_command(struct Scsi_Host *, struct scsi_cmnd *);
-+extern struct scsi_cmnd *__scsi_get_command(struct Scsi_Host *, gfp_t);
- extern void scsi_put_command(struct scsi_cmnd *);
-+extern void __scsi_put_command(struct Scsi_Host *, struct scsi_cmnd *,
-+			       struct device *);
- extern void scsi_io_completion(struct scsi_cmnd *, unsigned int, unsigned int);
- extern void scsi_finish_command(struct scsi_cmnd *cmd);
- extern struct scatterlist *scsi_alloc_sgtable(struct scsi_cmnd *, gfp_t);
-diff --git a/include/scsi/scsi_tgt.h b/include/scsi/scsi_tgt.h
-index 2d65be7..61e8ee9 100644
---- a/include/scsi/scsi_tgt.h
-+++ b/include/scsi/scsi_tgt.h
-@@ -2,6 +2,8 @@
-  * SCSI target definitions
-  */
- 
-+#include <linux/dma-mapping.h>
-+
- struct Scsi_Host;
- struct scsi_cmnd;
- struct scsi_lun;
-@@ -11,3 +13,5 @@ extern int scsi_tgt_alloc_queue(struct S
- extern int scsi_tgt_queue_command(struct scsi_cmnd *, struct scsi_lun *, u64);
- extern int scsi_tgt_tsk_mgmt_request(struct Scsi_Host *, int, u64, struct scsi_lun *,
- 				     void *);
-+extern struct scsi_cmnd *scsi_host_get_command(struct Scsi_Host *,
-+					       enum dma_data_direction,	gfp_t);
--- 
-1.1.5
+Cheers
