@@ -1,63 +1,96 @@
-From: Mark Lord <lkml@rtr.ca>
-Subject: Re: usb device problem
-Date: Tue, 06 Jun 2006 14:13:44 -0400
-Message-ID: <4485C5D8.5070907@rtr.ca>
-References: <44859A9B.6080202@gmail.com> <4485A299.7070007@rtr.ca> <4485A855.1020602@gmail.com> <4485C446.2040203@rtr.ca>
+From: "adam radford" <aradford@gmail.com>
+Subject: Re: [SCSI] 3w-9xxx: kmap_atomic in twa_scsiop_execute_scsi
+Date: Tue, 6 Jun 2006 11:46:56 -0700
+Message-ID: <b1bc6a000606061146p7a26aca9o62f9a8c22ffb0c63@mail.gmail.com>
+References: <DB599F406D04E34389140B7D99C71B1B0203D625@SDCEXCHANGE01.ad.amcc.com>
+	 <44851778.7010107@sw.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:60387 "EHLO mail.rtr.ca")
-	by vger.kernel.org with ESMTP id S1750729AbWFFSNv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jun 2006 14:13:51 -0400
-In-Reply-To: <4485C446.2040203@rtr.ca>
+Received: from wr-out-0506.google.com ([64.233.184.228]:30342 "EHLO
+	wr-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S1750947AbWFFSq5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Jun 2006 14:46:57 -0400
+Received: by wr-out-0506.google.com with SMTP id 55so240270wri
+        for <linux-scsi@vger.kernel.org>; Tue, 06 Jun 2006 11:46:56 -0700 (PDT)
+In-Reply-To: <44851778.7010107@sw.ru>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net
+To: Vasily Averin <vvs@sw.ru>
+Cc: Adam Radford <aradford@amcc.com>, linuxraid <linuxraid@amcc.com>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org, devel@openvz.org, Andrew Morton <akpm@osdl.org>
 
-Mark Lord wrote:
-> Jiri Slaby wrote:
->> Mark Lord napsal(a):
->>> Jiri Slaby wrote:
-..
->>>> ---
->>>> sd 10:0:0:0: SCSI error: return code = 0x10070000
->>>> end_request: I/O error, dev sdb, sector 1575
-..
-> The 0x1007000 is broken down as:
-> 
-> 07 == "host byte"   = DID_ERROR = "internal error"
-> 10 == "driver byte" = SUGGEST_RETRY
-..
->>> I have a patch to fix this behaviour (in sd.c), but it has not yet
->>> been decided whether to go upstream with it or not.
->>
->> Could you post me a copy, please?
-> 
-> Probably tomorrow.  I haven't ported it forward yet (from a much older 
-> kernel).
-> But I don't think it will help here now, as these errors
-> don't really look like bad media -- gotta look inside the usb-storage 
+Vasily,
 
-Mmm.. okay, a quick glance at the USB storage code revealed one instance:
+On 6/5/06, Vasily Averin <vvs@sw.ru> wrote:
 
-        /* Did we transfer less than the minimum amount required? */
-        if (srb->result == SAM_STAT_GOOD &&
-                        srb->request_bufflen - srb->resid < srb->underflow)
-                srb->result = (DID_ERROR << 16) | (SUGGEST_RETRY << 24);
+> I'm agree that queuecommand() executed with disabled interrupts. However
+> twa_scsiop_execute_scsi() can be called not only from queuecommand. For example,
+>
+> twa_interrupts (note: with _enabled_ interrupts)
+>    twa_aen_read_queue
+>      twa_scsiop_execute_scsi
+>
 
-        return;
+twa_scsiop_execute_scsi() will not perform the kmap_atomic()/kunmap_atomic()
+calls here because it is being used for an internal AEN drain  (cdb
+post), i.e. "sglistarg" is non NULL.  See below:
 
-So I suppose this *could* be the driver thinking it had a bad sector,
-but it really looks like it's guessing.  The code also appears to be
-instrumented for some kind of USB tracing.. If you can figure out how
-to turn that on, then the trace will probably tell us what is really
-going on there. 
+if (!sglistarg) {
 
-Look for a file called "usbmon.txt" in the Documentation/usb/ subdir
-of your kernel source tree.  It describes how to do the tracing.
+  ....
+   kmap_atomc()
+   kunmap_atomic()
 
-I'll also CC: you when I send out the SCSI error-recovery draft patch.
+} else {
+   /* Internal cdb post */
 
-Cheers
+}
+
+> or
+>
+> twa_chrdev_ioctl
+>    twa_reset_device_extension
+>       twa_reset_sequence
+>          twa_aen_drain_queue
+>             twa_scsiop_execute_scsi
+
+ditto for this location as well.
+
+Thanks for looking over this code.  If you see anything else suspect,
+feel free to let me know.
+
+-Adam
+
+>
+> Thank you,
+>         Vasily Averin
+>
+> SWsoft Virtuozzo/OpenVZ Linux kernel team
+>
+> > -----Original Message-----
+> > From: Vasily Averin [mailto:vvs@sw.ru]
+> > Sent: Sunday, June 04, 2006 1:49 AM
+> > To: adam radford; linuxraid
+> > Cc: James Bottomley; Linux Kernel Mailing List;
+> > linux-scsi@vger.kernel.org; devel@openvz.org; Andrew Morton
+> > Subject: [SCSI] 3w-9xxx: kmap_atomic in twa_scsiop_execute_scsi
+> >
+> > Hello Adam,
+> >
+> > you have fixed recently potential memory corruption, kmap_atomic issue
+> > in 3w-9xxx driver, however it seems for me you have forgotten to fix the
+> > same issue in yet another similar place, in twa_scsiop_execute_scsi()
+> > function.
+> >
+> > Signed-off-by: Vasily Averin <vvs@sw.ru>
+> >
+> > Thank you,
+> >       Vasily Averin
+> >
+> > SWsoft Virtuozzo/OpenVZ Linux kernel team
+> >
+> >
+>
+>
