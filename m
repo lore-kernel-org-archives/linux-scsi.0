@@ -1,31 +1,23 @@
 From: Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH 1/3] block layer: early detection of medium not present
-Date: Tue, 6 Jun 2006 11:26:53 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0606061113040.9182-100000@iolanthe.rowland.org>
+Subject: [PATCH 2/3] SCSI core and sd: early detection of medium not present
+Date: Tue, 6 Jun 2006 11:31:00 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0606061126540.9182-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:3083 "HELO
-	iolanthe.rowland.org") by vger.kernel.org with SMTP id S932205AbWFFP0y
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Jun 2006 11:26:54 -0400
+Received: from iolanthe.rowland.org ([192.131.102.54]:5643 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP
+	id S1751054AbWFFPbB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Jun 2006 11:31:01 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Andrew Morton <akpm@osdl.org>, Jens Axboe <axboe@suse.de>, James Bottomley <James.Bottomley@SteelEye.com>
 Cc: Kernel development list <linux-kernel@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-When the block layer checks for new media in a drive, it uses a two-step 
-procedure: First it checks for media change and then it revalidates the 
-disk.  When no medium is present the second step fails.
-
-However some drivers (such as the SCSI disk driver) are capable of
-detecting medium-not-present as part of the media-changed check.  Doing so
-will reduce by a factor of 2 or more the amount of work done by tasks
-which, like hald, constantly poll empty drives.
-
-This patch (as694) changes the block layer core to make it recognize a 
--ENOMEDIUM error return from the media_changed method.  A follow-on patch 
-makes the sd driver return this code when no medium is present.
+This patch (as695) changes the scsi_test_unit_ready() routine in the SCSI 
+core to set a new flag when no medium is present.  The sd driver is 
+changed to use this new flag for reporting -ENOMEDIUM in from the 
+sd_media_changed method.
 
 
 
@@ -33,36 +25,62 @@ Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
 
 ---
 
-In fact, each sd poll by hald ends up sending 8 (!) SCSI commands: 4 pairs
-of TEST UNIT READY plus REQUEST SENSE.  These patches will reduce it to
-two commands.
-
-As far as I can see, drivers don't return anything other than 0 or 1 for 
-media_changed, so recognizing this error code shouldn't cause any new 
-problems.
-
-Index: usb-2.6/fs/block_dev.c
+Index: usb-2.6/drivers/scsi/sd.c
 ===================================================================
---- usb-2.6.orig/fs/block_dev.c
-+++ usb-2.6/fs/block_dev.c
-@@ -818,14 +818,18 @@ int check_disk_change(struct block_devic
- {
- 	struct gendisk *disk = bdev->bd_disk;
- 	struct block_device_operations * bdops = disk->fops;
-+	int rc;
+--- usb-2.6.orig/drivers/scsi/sd.c
++++ usb-2.6/drivers/scsi/sd.c
+@@ -744,9 +744,8 @@ static int sd_media_changed(struct gendi
+ 	 * and we will figure it out later once the drive is
+ 	 * available again.
+ 	 */
+-	if (retval)
++	if (retval || sdp->medium_not_present)
+ 		 goto not_present;
+-
+ 	/*
+ 	 * For removable scsi disk we have to recognise the presence
+ 	 * of a disk in the drive. This is kept in the struct scsi_disk
+@@ -761,7 +760,7 @@ static int sd_media_changed(struct gendi
  
- 	if (!bdops->media_changed)
- 		return 0;
--	if (!bdops->media_changed(bdev->bd_disk))
-+	rc = bdops->media_changed(bdev->bd_disk);
-+	if (!rc)
- 		return 0;
+ not_present:
+ 	set_media_not_present(sdkp);
+-	return 1;
++	return -ENOMEDIUM;
+ }
  
- 	if (__invalidate_device(bdev))
- 		printk("VFS: busy inodes on changed media.\n");
-+	if (rc == -ENOMEDIUM)
-+		return 1;
+ static int sd_sync_cache(struct scsi_device *sdp)
+Index: usb-2.6/include/scsi/scsi_device.h
+===================================================================
+--- usb-2.6.orig/include/scsi/scsi_device.h
++++ usb-2.6/include/scsi/scsi_device.h
+@@ -92,6 +92,7 @@ struct scsi_device {
+ 	unsigned writeable:1;
+ 	unsigned removable:1;
+ 	unsigned changed:1;	/* Data invalid due to media change */
++	unsigned medium_not_present:1;	/* Set by scsi_test_unit_ready() */
+ 	unsigned busy:1;	/* Used to prevent races */
+ 	unsigned lockable:1;	/* Able to prevent media removal */
+ 	unsigned locked:1;      /* Media removal disabled */
+Index: usb-2.6/drivers/scsi/scsi_lib.c
+===================================================================
+--- usb-2.6.orig/drivers/scsi/scsi_lib.c
++++ usb-2.6/drivers/scsi/scsi_lib.c
+@@ -2026,6 +2026,7 @@ scsi_test_unit_ready(struct scsi_device 
+ 	result = scsi_execute_req(sdev, cmd, DMA_NONE, NULL, 0, &sshdr,
+ 				  timeout, retries);
  
- 	if (bdops->revalidate_disk)
- 		bdops->revalidate_disk(bdev->bd_disk);
++	sdev->medium_not_present = 0;
+ 	if ((driver_byte(result) & DRIVER_SENSE) && sdev->removable) {
+ 
+ 		if ((scsi_sense_valid(&sshdr)) &&
+@@ -2033,6 +2034,9 @@ scsi_test_unit_ready(struct scsi_device 
+ 		     (sshdr.sense_key == NOT_READY))) {
+ 			sdev->changed = 1;
+ 			result = 0;
++
++			if (sshdr.asc == 0x3A)
++				sdev->medium_not_present = 1;
+ 		}
+ 	}
+ 	return result;
 
