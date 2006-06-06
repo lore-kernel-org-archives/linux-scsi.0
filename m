@@ -1,82 +1,44 @@
-From: Jiri Slaby <jirislaby@gmail.com>
-Subject: Re: usb device problem
-Date: Wed, 07 Jun 2006 00:45:03 +0159
-Message-ID: <44860586.5080308@gmail.com>
-References: <44859A9B.6080202@gmail.com> <4485A299.7070007@rtr.ca> <4485A855.1020602@gmail.com> <4485C446.2040203@rtr.ca> <4485C5D8.5070907@rtr.ca> <4485F590.8000304@gmail.com>
+From: "Lev A. Melnikovsky" <leva@hotmail.com>
+Subject: Re: Error using DC315U to drive ScanJet 4c
+Date: Wed, 7 Jun 2006 02:57:05 +0400 (MSD)
+Message-ID: <Pine.LNX.4.64.0606070253580.14004@nev.ubzr>
+References: <Pine.LNX.4.64.0606042013200.14649@nev.ubzr>
+ <Pine.LNX.4.60.0606041850090.13574@poirot.grange> <Pine.LNX.4.64.0606042201460.14649@nev.ubzr>
+ <Pine.LNX.4.60.0606042022540.24306@poirot.grange> <Pine.LNX.4.64.0606051150440.4038@nev.ubzr>
+ <Pine.LNX.4.60.0606051242150.4149@poirot.grange> <Pine.LNX.4.64.0606060050360.7237@nev.ubzr>
+ <Pine.LNX.4.60.0606060008330.22057@poirot.grange>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.191]:21514 "EHLO
-	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S1751126AbWFFWp4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Jun 2006 18:45:56 -0400
-Received: by nf-out-0910.google.com with SMTP id k27so17747nfc
-        for <linux-scsi@vger.kernel.org>; Tue, 06 Jun 2006 15:45:54 -0700 (PDT)
-In-Reply-To: <4485F590.8000304@gmail.com>
+Received: from [212.45.14.9] ([212.45.14.9]:45021 "EHLO ari.home")
+	by vger.kernel.org with ESMTP id S1751293AbWFFW5A (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jun 2006 18:57:00 -0400
+In-Reply-To: <Pine.LNX.4.60.0606060008330.22057@poirot.grange>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: Mark Lord <lkml@rtr.ca>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: linux-scsi@vger.kernel.org
 
-Jiri Slaby napsal(a):
-> Mark Lord napsal(a):
->> Mmm.. okay, a quick glance at the USB storage code revealed one instance:
->>
->>        /* Did we transfer less than the minimum amount required? */
->>        if (srb->result == SAM_STAT_GOOD &&
->>                        srb->request_bufflen - srb->resid < srb->underflow)
->>                srb->result = (DID_ERROR << 16) | (SUGGEST_RETRY << 24);
->>
->>        return;
->>
->> So I suppose this *could* be the driver thinking it had a bad sector,
->> but it really looks like it's guessing.  The code also appears to be
->> instrumented for some kind of USB tracing.. If you can figure out how
->> to turn that on, then the trace will probably tell us what is really
->> going on there.
->> Look for a file called "usbmon.txt" in the Documentation/usb/ subdir
->> of your kernel source tree.  It describes how to do the tracing.
-> 
-> Did you want me to do something like this:
-> http://www.fi.muni.cz/~xslaby/sklad/usbmon/?M=A
-> 
-> usb2 means usb bus 2.
-> 
-> without "a"s commands was:
-> 
-> [connect the device]
-> mount /dev/sdb usb/ [filesystem is vfat]
-> dd if=/dev/zero of=usb/zero1 bs=1k count=3
-> [wait some time to let system syncing automagically]
-> umount usb/
-> [disconnect the device]
-> 
-> 
-> 
-> with "a" there is only difference in dd command:
-> ...
-> dd if=/dev/zero of=usb/zero2 bs=1k count=5
-> ...
-> 
-> The first serie is without the error in the latter one appeared (some time after
-> `dd', when system syncs):
-> sd 6:0:0:0: SCSI error: return code = 0x10070000
-> end_request: I/O error, dev sdb, sector 8223
-> [same as before]
-> 
-> 
-> 
-> I have i386 arch, so 4096 is PAGE_SIZE, when it syncs only one dirty page, it
-> seems to be OK, otherwise it's not, if this helps in any way.
-> 
+Dear Guennadi,
 
-Just a notice, I've just returned from the big w*ows system and it's working
-there ... huh ... better to say, it doesn't complain ... hum ... it means almost
-nothing ... But seems to work.
+   On Tue, 6 Jun 2006 at 12:14am, Guennadi Liakhovetski wrote:
 
-regards,
--- 
-Jiri Slaby         www.fi.muni.cz/~xslaby
-\_.-^-._   jirislaby@gmail.com   _.-^-._/
-B67499670407CE62ACC8 22A032CC55C339D47A7E
+>>>> This scanner is the only device on the bus. My understanding is that 
+>>>> I don't need to manually terminate anything, please correct me if I'm 
+>>>> wrong.
+>>> The bus has to be terminated on both ends. The HBA is, probably,
+>>> terminating automatically, but the external end has to be terminated.
+>>> Either with an external terminator or with a switch / jumper on your
+>>> scanner.
+>> OK, let's put it in the following way: I can find neither switches nor jumpers
+>> in it.
+> Do you have the manual for the scanner?
+No, I don't. And I can't find it at HP's site.
+
+> I don't know, maybe it has an automatic internal terminator. If not, you 
+> need an external one. It has 2 SCSI connectors, right?
+No. It has only one SCSI connector and this is why I assumed that I 
+shouldn't care about terminators.
+
+Thanks
+-L.
