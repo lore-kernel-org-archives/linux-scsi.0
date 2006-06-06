@@ -1,75 +1,33 @@
-From: Vasily Averin <vvs@sw.ru>
-Subject: Re: [SCSI] 3w-9xxx: kmap_atomic in twa_scsiop_execute_scsi
-Date: Tue, 06 Jun 2006 09:49:44 +0400
-Message-ID: <44851778.7010107@sw.ru>
-References: <DB599F406D04E34389140B7D99C71B1B0203D625@SDCEXCHANGE01.ad.amcc.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: Miklos Szeredi <miklos@szeredi.hu>
+Subject: Re: [PATCHSET] block: fix PIO cache coherency bug, take 2
+Date: Tue, 06 Jun 2006 13:00:08 +0200
+Message-ID: <E1FnZI8-0003u0-00@dorka.pomaz.szeredi.hu>
+References: <1149392479501-git-send-email-htejun@gmail.com>
+	 <20060604204444.GF4484@flint.arm.linux.org.uk> <1149515032.3489.4.camel@mulgrave.il.steeleye.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhub.sw.ru ([195.214.233.200]:18219 "EHLO relay.sw.ru")
-	by vger.kernel.org with ESMTP id S932106AbWFFFq1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jun 2006 01:46:27 -0400
-In-Reply-To: <DB599F406D04E34389140B7D99C71B1B0203D625@SDCEXCHANGE01.ad.amcc.com>
+Received: from mail-gw2.sa.eol.hu ([212.108.200.109]:62852 "EHLO
+	mail-gw2.sa.eol.hu") by vger.kernel.org with ESMTP id S1751151AbWFFLBH
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Jun 2006 07:01:07 -0400
+In-reply-to: <1149515032.3489.4.camel@mulgrave.il.steeleye.com> (message from
+	James Bottomley on Mon, 05 Jun 2006 08:43:52 -0500)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adam Radford <aradford@amcc.com>
-Cc: adam radford <aradford@gmail.com>, linuxraid <linuxraid@amcc.com>, James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, devel@openvz.org, Andrew Morton <akpm@osdl.org>
+To: James.Bottomley@steeleye.com
+Cc: rmk+lkml@arm.linux.org.uk, htejun@gmail.com, axboe@suse.de, davem@redhat.com, bzolnier@gmail.com, james.steward@dynamicratings.com, jgarzik@pobox.com, mattjreimer@gmail.com, g.liakhovetski@gmx.de, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Adam Radford wrote:
-> Vasily,
+> > > I tried to implement flush_anon_page() too but didn't know what to
+> > do
+> > > with anon_vma object.
+> > 
+> > I'm not sure what this is about...
 > 
-> I actually didn't forget this.  I think it isn't needed.  The reason
-> being
-> that in scsi.c: scsi_dispatch_command(), where hostt->queuecommand() is
-> called,
-> there is a spin_lock_irqsave()/spin_unlock_irqrestore() wrapper in
-> there, disabling
-> interrupts.
+> This was for fuse on parisc.
 
-Adam,
+I have reports that this effects some ARM architectures as well.
 
-I'm agree that queuecommand() executed with disabled interrupts. However
-twa_scsiop_execute_scsi() can be called not only from queuecommand. For example,
+And direct I/O over NFS and a couple other things which also use the
+get_user_pages() mechanism will also not work properly without
+flush_anon_page().
 
-twa_interrupts (note: with _enabled_ interrupts)
-   twa_aen_read_queue
-     twa_scsiop_execute_scsi
-
-or
-
-twa_chrdev_ioctl
-   twa_reset_device_extension
-      twa_reset_sequence
-         twa_aen_drain_queue
-            twa_scsiop_execute_scsi
-
-Thank you,
-	Vasily Averin
-
-SWsoft Virtuozzo/OpenVZ Linux kernel team
-
-> -----Original Message-----
-> From: Vasily Averin [mailto:vvs@sw.ru] 
-> Sent: Sunday, June 04, 2006 1:49 AM
-> To: adam radford; linuxraid
-> Cc: James Bottomley; Linux Kernel Mailing List;
-> linux-scsi@vger.kernel.org; devel@openvz.org; Andrew Morton
-> Subject: [SCSI] 3w-9xxx: kmap_atomic in twa_scsiop_execute_scsi
-> 
-> Hello Adam,
-> 
-> you have fixed recently potential memory corruption, kmap_atomic issue
-> in 3w-9xxx driver, however it seems for me you have forgotten to fix the
-> same issue in yet another similar place, in twa_scsiop_execute_scsi()
-> function.
-> 
-> Signed-off-by: Vasily Averin <vvs@sw.ru>
-> 
-> Thank you,
-> 	Vasily Averin
-> 
-> SWsoft Virtuozzo/OpenVZ Linux kernel team
-> 
-> 
-
+Miklos
