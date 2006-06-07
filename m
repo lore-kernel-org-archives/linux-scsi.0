@@ -1,47 +1,61 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH 0/6] libata: Support SATA attached via SAS
-Date: Wed, 07 Jun 2006 13:09:34 -0400
-Message-ID: <4487084E.7090307@torque.net>
-References: <4486FDBD.9030200@us.ibm.com>
-Reply-To: dougg@torque.net
+From: "Quat Le" <Quat.Le@dothill.com>
+Subject: RE: ATA Pass-Through support
+Date: Wed, 7 Jun 2006 10:15:19 -0700
+Message-ID: <DF9C50EF9E8CDA45A06FE8735C68F85EEB6319@earthex2.power.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:40641 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S932348AbWFGRJu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Jun 2006 13:09:50 -0400
-In-Reply-To: <4486FDBD.9030200@us.ibm.com>
+Received: from artecon.dothill.com ([155.254.128.254]:52884 "EHLO dothill.com")
+	by vger.kernel.org with ESMTP id S932342AbWFGRPY convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 7 Jun 2006 13:15:24 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: brking@us.ibm.com
-Cc: jgarzik@pobox.com, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, 'SCSI Mailing List' <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>
+To: dougg@torque.net
+Cc: linux-scsi@vger.kernel.org
 
-Brian King wrote:
-> Jeff,
-> 
-> Here is a refresh of my patchset to allow SAS HBAs to use libata to
-> control attached SATA devices. It should apply cleanly to #upstream.
-> 
-> James,
-> 
-> After our discussion at the storage summit I think I have
-> a better idea what you are looking for with a SATA transport class.
-> Unfortunately, the problem I am facing is that I am dealing with a
-> firmware stack (ipr) which does not expose the physical transport
-> to the host. The ipr firmware does all the device discovery and reports
-> a configuration table describing the attached devices, but does not
-> export any physical topology information. At some point in the future
-> I hope to be able to extract this information from the ipr firmware
-> stack and convert ipr to be able to utilize the sas/sata transport class,
-> but, unfortunately, the firmware interfaces to accomplish this
-> aren't available at this time.
+Doug,
+Thanks for the info. I thought LSI SAS HBA is not using libata.  What
+SAS HBA were you using?
 
-Brian,
-Does that mean that it doesn't have an SMP pass through?
-SMP and the SAS addresses attached to the phys on the HBA
-is enough to do discovery in the user space.
+Best regards,
+Quat Le
+
+-----Original Message-----
+From: Douglas Gilbert [mailto:dougg@torque.net] 
+Sent: Saturday, June 03, 2006 12:32 PM
+To: Quat Le
+Cc: linux-scsi@vger.kernel.org
+Subject: Re: ATA Pass-Through support
+
+Quat Le wrote:
+> Sorry if this is not the right place to ask this question.
+> 
+> I wrote some application code to send ATA Pass-Through SCSI commands
+via
+> SG_IO ioctl to SATA drives connected to a LSI Logic SAS HBA. What I
+got
+> was ILLEGAL REQUEST (INVALID COMAND OPERATION CODE) for both SCSI
+> OPCODE's A1H and 85H. I tried some other SCSI commands and saw that
+they
+> were translated to ATA commands correctly. I am running Linux kernel
+> 2.6.15 and am under the impression that it supports ATA Pass-Through.
+
+Quat,
+I just did some testing in lk 2.6.17-rc5 and the ATA
+PASS THROUGH (16) SCSI command in libata (defined by SAT)
+worked in my tests.
+
+At http://www.torque.net/sg in the news sections the
+sg3_utils-1.21 beta has in its examples subdirectory:
+sg_sat_identify and sg_sat_chk_power. The latter one
+is interesting because it needs to read back the sector
+count register after the command is complete. That
+involves decoding the extended ATA status return
+(sense data) descriptor.
 
 Doug Gilbert
 
