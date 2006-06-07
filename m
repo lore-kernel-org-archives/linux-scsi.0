@@ -1,42 +1,33 @@
 From: Brian King <brking@us.ibm.com>
-Subject: [PATCH 0/6] libata: Support SATA attached via SAS
-Date: Wed, 07 Jun 2006 11:24:29 -0500
-Message-ID: <4486FDBD.9030200@us.ibm.com>
-Reply-To: brking@us.ibm.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:56297 "EHLO e1.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S932294AbWFGQYk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jun 2006 12:24:40 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [PATCH 1/6] libata: Setup nbytes in ata_sg_init_one
+Date: Wed, 07 Jun 2006 11:25:31 -0500
+Message-ID: <200606071625.k57GPXRp013683@d01av01.pok.ibm.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
 To: jgarzik@pobox.com
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, 'SCSI Mailing List' <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, brking@us.ibm.com
+List-Id: linux-scsi@vger.kernel.org
 
-Jeff,
 
-Here is a refresh of my patchset to allow SAS HBAs to use libata to
-control attached SATA devices. It should apply cleanly to #upstream.
+Setup nbytes in ata_sg_init_one to the total transfer length
+of the command. This is needed by some HBAs that need to know
+the total transfer length of each command.
 
-James,
+Signed-off-by: Brian King <brking@us.ibm.com>
+---
 
-After our discussion at the storage summit I think I have
-a better idea what you are looking for with a SATA transport class.
-Unfortunately, the problem I am facing is that I am dealing with a
-firmware stack (ipr) which does not expose the physical transport
-to the host. The ipr firmware does all the device discovery and reports
-a configuration table describing the attached devices, but does not
-export any physical topology information. At some point in the future
-I hope to be able to extract this information from the ipr firmware
-stack and convert ipr to be able to utilize the sas/sata transport class,
-but, unfortunately, the firmware interfaces to accomplish this
-aren't available at this time.
+ libata-dev-bjking1/drivers/scsi/libata-core.c |    1 +
+ 1 files changed, 1 insertion(+)
 
-Brian
-
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+diff -puN drivers/scsi/libata-core.c~libata_setup_nbytes drivers/scsi/libata-core.c
+--- libata-dev/drivers/scsi/libata-core.c~libata_setup_nbytes	2006-06-05 12:52:22.000000000 -0500
++++ libata-dev-bjking1/drivers/scsi/libata-core.c	2006-06-06 08:55:34.000000000 -0500
+@@ -3321,6 +3321,7 @@ void ata_sg_init_one(struct ata_queued_c
+ 	qc->n_elem = 1;
+ 	qc->orig_n_elem = 1;
+ 	qc->buf_virt = buf;
++	qc->nbytes = buflen;
+ 
+ 	sg = qc->__sg;
+ 	sg_init_one(sg, buf, buflen);
+_
