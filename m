@@ -1,96 +1,42 @@
-From: Mark Lord <lkml@rtr.ca>
-Subject: Re: usb device problem
-Date: Wed, 07 Jun 2006 09:14:55 -0400
-Message-ID: <4486D14F.50607@rtr.ca>
-References: <44859A9B.6080202@gmail.com> <4485A299.7070007@rtr.ca>
-	<4485A855.1020602@gmail.com> <4485C446.2040203@rtr.ca>
-	<4485C5D8.5070907@rtr.ca> <4485F590.8000304@gmail.com>
-	<44860586.5080308@gmail.com>
+From: Brian King <brking@us.ibm.com>
+Subject: [PATCH 0/6] libata: Support SATA attached via SAS
+Date: Wed, 07 Jun 2006 11:24:29 -0500
+Message-ID: <4486FDBD.9030200@us.ibm.com>
+Reply-To: brking@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <44860586.5080308@gmail.com>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
-List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux-usb-devel-bounces@lists.sourceforge.net
-Errors-To: linux-usb-devel-bounces@lists.sourceforge.net
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: usb-storage@lists.one-eyed-alien.net, mdharm-usb@one-eyed-alien.net, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e1.ny.us.ibm.com ([32.97.182.141]:56297 "EHLO e1.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S932294AbWFGQYk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jun 2006 12:24:40 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, 'SCSI Mailing List' <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>
 
-Jiri Slaby wrote:
-> Jiri Slaby napsal(a):
->> Mark Lord napsal(a):
->>> Mmm.. okay, a quick glance at the USB storage code revealed one instance:
->>>
->>>        /* Did we transfer less than the minimum amount required? */
->>>        if (srb->result == SAM_STAT_GOOD &&
->>>                        srb->request_bufflen - srb->resid < srb->underflow)
->>>                srb->result = (DID_ERROR << 16) | (SUGGEST_RETRY << 24);
->>>
->>>        return;
->>>
->>> So I suppose this *could* be the driver thinking it had a bad sector,
->>> but it really looks like it's guessing.  The code also appears to be
->>> instrumented for some kind of USB tracing.. If you can figure out how
->>> to turn that on, then the trace will probably tell us what is really
->>> going on there.
->>> Look for a file called "usbmon.txt" in the Documentation/usb/ subdir
->>> of your kernel source tree.  It describes how to do the tracing.
->> Did you want me to do something like this:
->> http://www.fi.muni.cz/~xslaby/sklad/usbmon/?M=A
->>
->> usb2 means usb bus 2.
->>
->> without "a"s commands was:
->>
->> [connect the device]
->> mount /dev/sdb usb/ [filesystem is vfat]
->> dd if=/dev/zero of=usb/zero1 bs=1k count=3
->> [wait some time to let system syncing automagically]
->> umount usb/
->> [disconnect the device]
->>
->>
->>
->> with "a" there is only difference in dd command:
->> ...
->> dd if=/dev/zero of=usb/zero2 bs=1k count=5
->> ...
->>
->> The first serie is without the error in the latter one appeared (some time after
->> `dd', when system syncs):
->> sd 6:0:0:0: SCSI error: return code = 0x10070000
->> end_request: I/O error, dev sdb, sector 8223
->> [same as before]
->>
->>
->>
->> I have i386 arch, so 4096 is PAGE_SIZE, when it syncs only one dirty page, it
->> seems to be OK, otherwise it's not, if this helps in any way.
->>
-> 
-> Just a notice, I've just returned from the big w*ows system and it's working
-> there ... huh ... better to say, it doesn't complain ... hum ... it means almost
-> nothing ... But seems to work.
+Jeff,
 
-I think it's time for you to try the USB Storage maintainer(s).
+Here is a refresh of my patchset to allow SAS HBAs to use libata to
+control attached SATA devices. It should apply cleanly to #upstream.
 
-I've CC'd their mailing list on this note, but you should probably
-repost the earlier descriptions to their lists.
+James,
 
-Cheers
+After our discussion at the storage summit I think I have
+a better idea what you are looking for with a SATA transport class.
+Unfortunately, the problem I am facing is that I am dealing with a
+firmware stack (ipr) which does not expose the physical transport
+to the host. The ipr firmware does all the device discovery and reports
+a configuration table describing the attached devices, but does not
+export any physical topology information. At some point in the future
+I hope to be able to extract this information from the ipr firmware
+stack and convert ipr to be able to utilize the sas/sata transport class,
+but, unfortunately, the firmware interfaces to accomplish this
+aren't available at this time.
 
+Brian
 
-
-
-_______________________________________________
-linux-usb-devel@lists.sourceforge.net
-To unsubscribe, use the last form field at:
-https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
