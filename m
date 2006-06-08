@@ -1,27 +1,37 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/3] aacraid: small misc. cleanups
-Date: Thu, 8 Jun 2006 21:12:23 +0100
-Message-ID: <20060608201223.GB21996@infradead.org>
-References: <1149785480.22364.18.camel@markh3.pdx.osdl.net>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: fc transport creates second set of targets for devices in an
+ "md"
+Date: Thu, 08 Jun 2006 15:19:26 -0500
+Message-ID: <4488864E.2000009@cs.wisc.edu>
+References: <448876C8.3090303@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:7886 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S964975AbWFHUMY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Jun 2006 16:12:24 -0400
-Content-Disposition: inline
-In-Reply-To: <1149785480.22364.18.camel@markh3.pdx.osdl.net>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:13441 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S964981AbWFHUWI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jun 2006 16:22:08 -0400
+In-Reply-To: <448876C8.3090303@sgi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Haverkamp <markh@osdl.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>
+To: Michael Reed <mdr@sgi.com>
+Cc: James.Smart@Emulex.Com, Jeremy Higdon <jeremy@sgi.com>, Gary Hagensen <gwh@sgi.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, Jun 08, 2006 at 09:51:20AM -0700, Mark Haverkamp wrote:
-> Received from Mark Salyzyn
+Michael Reed wrote:
+> I created an md device on two fibre channel disks, sde and sdf.
+> I then disabled the switch port to which the hba is connected.
+> After the remote port time out messages, I re-enabled the switch
+> port.  Three things happen that are weird.  First, two unexpected
+> responses while scanning.  Second, the creation of sdm and
+> sdn.  Third, the md device remains inaccessible.
 > 
-> Spelling correction, orphaned comment removal & warning suppression.
+> I don't think this is working the way it's intended to.  I
+> suspect it will cause big problems for multi-path volume managers
+> in a fail back situation.
+> 
 
-the = 0 initializations shouldn't go in.  They hack around bugs in recent
-gcc versions that should be fixed in gcc instead.
-
+Even if the rport is removed and the devices under it are removed, md
+can still have a reference to the device so the memory does not
+disappear on it (MD still thinks the device is there but scsi says it is
+gone basically). Because of this, when you plug in the cable again and a
+new rport is created sd.c can end up allocating another sdX value.
