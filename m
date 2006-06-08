@@ -1,115 +1,46 @@
-From: Mark Haverkamp <markh@osdl.org>
-Subject: [PATCH 3/3] aacraid: small misc. cleanups
-Date: Thu, 08 Jun 2006 09:51:20 -0700
-Message-ID: <1149785480.22364.18.camel@markh3.pdx.osdl.net>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] fix up request buffer reference in various scsi drivers
+Date: Thu, 08 Jun 2006 13:40:01 -0400
+Message-ID: <1149788401.3436.22.camel@mulgrave.il.steeleye.com>
+References: <20060603112113.GA17018@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:3300 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S964903AbWFHQvW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jun 2006 12:51:22 -0400
+Received: from stat9.steeleye.com ([209.192.50.41]:8896 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S964921AbWFHRkS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Jun 2006 13:40:18 -0400
+In-Reply-To: <20060603112113.GA17018@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: jejb@SteelEye.com, linux-scsi@vger.kernel.org
 
-Received from Mark Salyzyn
+On Sat, 2006-06-03 at 13:21 +0200, Christoph Hellwig wrote:
+> Various scsi drivers use scsi_cmnd.buffer and scsi_cmnd.bufflen in their
+> queuecommand functions.  Those fields are internal storage for the
+> midlayer only and are used to restore the original payload after
+> request_buffer and request_bufflen have been overwritten for EH.  Using
+> the buffer and bufflen fields means they do very broken things in error
+> handling.
 
-Spelling correction, orphaned comment removal & warning suppression.
+We probably need this too, don't we?
 
-Signed-off-by: Mark Haverkamp <markh@osdl.org>
----
-Applies to the scsi-misc-2.6 git tree.
+James
 
-
---- scsi-misc-aac.orig/drivers/scsi/aacraid/aacraid.h	2006-06-08 09:37:38.000000000 -0700
-+++ scsi-misc-aac/drivers/scsi/aacraid/aacraid.h	2006-06-08 09:38:47.000000000 -0700
-@@ -12,7 +12,7 @@
- 
- #ifndef AAC_DRIVER_BUILD
- # define AAC_DRIVER_BUILD 2409
--# define AAC_DRIVER_BRANCH "-mh1"
-+# define AAC_DRIVER_BRANCH "-mh2"
- #endif
- #define MAXIMUM_NUM_CONTAINERS	32
- 
-@@ -822,10 +822,6 @@
- 	void 			*callback_data;
- 	u32			flags; // u32 dmb was ulong
- 	/*
--	 *	The following is used to put this fib context onto the 
--	 *	Outstanding I/O queue.
--	 */
--	/*
- 	 *	And for the internal issue/reply queues (we may be able
- 	 *	to merge these two)
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index f47538d..56665ae 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1235,7 +1235,7 @@ static void scsi_blk_pc_done(struct scsi
+ 	 * successfully. Since this is a REQ_BLOCK_PC command the
+ 	 * caller should check the request's errors value
  	 */
---- scsi-misc-aac.orig/drivers/scsi/aacraid/comminit.c	2006-06-08 09:37:38.000000000 -0700
-+++ scsi-misc-aac/drivers/scsi/aacraid/comminit.c	2006-06-08 09:38:47.000000000 -0700
-@@ -55,7 +55,7 @@
- 	const unsigned long fibsize = 4096;
- 	const unsigned long printfbufsiz = 256;
- 	struct aac_init *init;
--	dma_addr_t phys;
-+	dma_addr_t phys = 0;
+-	scsi_io_completion(cmd, cmd->bufflen, 0);
++	scsi_io_completion(cmd, cmd->request_bufflen, 0);
+ }
  
- 	size = fibsize + sizeof(struct aac_init) + commsize + commalign + printfbufsiz;
- 
-@@ -103,7 +103,7 @@
- 	 * This assumes the memory is mapped zero->n, which isnt
- 	 * always true on real computers. It also has some slight problems
- 	 * with the GART on x86-64. I've btw never tried DMA from PCI space
--	 * on this platform but don't be suprised if its problematic.
-+	 * on this platform but don't be surprised if its problematic.
- 	 */
- #ifndef CONFIG_GART_IOMMU
- 	if ((num_physpages << (PAGE_SHIFT - 12)) <= AAC_MAX_HOSTPHYSMEMPAGES) {
---- scsi-misc-aac.orig/drivers/scsi/aacraid/dpcsup.c	2006-06-08 09:37:38.000000000 -0700
-+++ scsi-misc-aac/drivers/scsi/aacraid/dpcsup.c	2006-06-08 09:38:47.000000000 -0700
-@@ -85,9 +85,9 @@
- 		 *	continue. The caller has already been notified that
- 		 *	the fib timed out.
- 		 */
--		if (!(fib->flags & FIB_CONTEXT_FLAG_TIMED_OUT)) {
-+		if (!(fib->flags & FIB_CONTEXT_FLAG_TIMED_OUT))
- 			dev->queues->queue[AdapNormCmdQueue].numpending--;
--		} else {
-+		else {
- 			printk(KERN_WARNING "aacraid: FIB timeout (%x).\n", fib->flags);
- 			printk(KERN_DEBUG"aacraid: hwfib=%p fib index=%i fib=%p\n",hwfib, hwfib->header.SenderData,fib);
- 			continue;
---- scsi-misc-aac.orig/drivers/scsi/aacraid/rkt.c	2006-06-08 09:37:38.000000000 -0700
-+++ scsi-misc-aac/drivers/scsi/aacraid/rkt.c	2006-06-08 09:38:47.000000000 -0700
-@@ -325,10 +325,12 @@
- 
- 		if ((status & 0xFF000000L) == 0xBC000000L)
- 			return (status >> 16) & 0xFF;
-+		baddr = 0;
- 		buffer = pci_alloc_consistent(dev->pdev, 512, &baddr);
- 		ret = -2;
- 		if (buffer == NULL)
- 			return ret;
-+		paddr = 0;
- 		post = pci_alloc_consistent(dev->pdev,
- 		  sizeof(struct POSTSTATUS), &paddr);
- 		if (post == NULL) {
---- scsi-misc-aac.orig/drivers/scsi/aacraid/rx.c	2006-06-08 09:37:38.000000000 -0700
-+++ scsi-misc-aac/drivers/scsi/aacraid/rx.c	2006-06-08 09:38:47.000000000 -0700
-@@ -324,10 +324,12 @@
- 
- 		if ((status & 0xFF000000L) == 0xBC000000L)
- 			return (status >> 16) & 0xFF;
-+		baddr = 0;
- 		buffer = pci_alloc_consistent(dev->pdev, 512, &baddr);
- 		ret = -2;
- 		if (buffer == NULL)
- 			return ret;
-+		paddr = 0;
- 		post = pci_alloc_consistent(dev->pdev,
- 		  sizeof(struct POSTSTATUS), &paddr);
- 		if (post == NULL) {
+ static void scsi_setup_blk_pc_cmnd(struct scsi_cmnd *cmd)
 
--- 
-Mark Haverkamp <markh@osdl.org>
 
