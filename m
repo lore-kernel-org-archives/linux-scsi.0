@@ -1,37 +1,31 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: fc transport creates second set of targets for devices in an
- "md"
-Date: Thu, 08 Jun 2006 15:19:26 -0500
-Message-ID: <4488864E.2000009@cs.wisc.edu>
-References: <448876C8.3090303@sgi.com>
+From: Mark Haverkamp <markh@osdl.org>
+Subject: [PATCH 0/3] aacraid: Driver updates (update)
+Date: Thu, 08 Jun 2006 13:55:08 -0700
+Message-ID: <1149800108.22364.34.camel@markh3.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:13441 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S964981AbWFHUWI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jun 2006 16:22:08 -0400
-In-Reply-To: <448876C8.3090303@sgi.com>
+Received: from smtp.osdl.org ([65.172.181.4]:63181 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S965003AbWFHUzP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jun 2006 16:55:15 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Reed <mdr@sgi.com>
-Cc: James.Smart@Emulex.Com, Jeremy Higdon <jeremy@sgi.com>, Gary Hagensen <gwh@sgi.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>
 
-Michael Reed wrote:
-> I created an md device on two fibre channel disks, sde and sdf.
-> I then disabled the switch port to which the hba is connected.
-> After the remote port time out messages, I re-enabled the switch
-> port.  Three things happen that are weird.  First, two unexpected
-> responses while scanning.  Second, the creation of sdm and
-> sdn.  Third, the md device remains inaccessible.
-> 
-> I don't think this is working the way it's intended to.  I
-> suspect it will cause big problems for multi-path volume managers
-> in a fail back situation.
-> 
+The following 3 patches contain various updates described in each mail.
+Patch 1 and 3 updated based on comments.  Patch 2 is just a re-send.
 
-Even if the rport is removed and the devices under it are removed, md
-can still have a reference to the device so the memory does not
-disappear on it (MD still thinks the device is there but scsi says it is
-gone basically). Because of this, when you plug in the cable again and a
-new rport is created sd.c can end up allocating another sdX value.
+Patches apply to the scsi-misc-2.6 tree.
+
+ Documentation/scsi/aacraid.txt  |    8 ++++----
+ drivers/scsi/aacraid/aacraid.h  |    6 +-----
+ drivers/scsi/aacraid/comminit.c |    2 +-
+ drivers/scsi/aacraid/dpcsup.c   |    4 ++--
+ drivers/scsi/aacraid/linit.c    |   10 ++++------
+ 5 files changed, 12 insertions(+), 18 deletions(-)
+
+-- 
+Mark Haverkamp <markh@osdl.org>
+
