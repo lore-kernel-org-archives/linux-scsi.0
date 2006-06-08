@@ -1,33 +1,34 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH 0/6] libata: Support SATA attached via SAS
-Date: Wed, 07 Jun 2006 23:49:06 -0400
-Message-ID: <44879E32.1020500@torque.net>
-References: <4486FDBD.9030200@us.ibm.com>
-Reply-To: dougg@torque.net
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] fix up request buffer reference in various scsi drivers
+Date: Thu, 08 Jun 2006 07:37:14 -0400
+Message-ID: <44880BEA.90707@garzik.org>
+References: <20060603112113.GA17018@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:60906 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S932480AbWFHDtJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Jun 2006 23:49:09 -0400
-In-Reply-To: <4486FDBD.9030200@us.ibm.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:56255 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S964788AbWFHLhS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jun 2006 07:37:18 -0400
+In-Reply-To: <20060603112113.GA17018@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: brking@us.ibm.com
-Cc: jgarzik@pobox.com, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, 'SCSI Mailing List' <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: jejb@steeleye.com, linux-scsi@vger.kernel.org
 
-Brian King wrote:
-> Jeff,
-> 
-> Here is a refresh of my patchset to allow SAS HBAs to use libata to
-> control attached SATA devices. It should apply cleanly to #upstream.
+Christoph Hellwig wrote:
+> Various scsi drivers use scsi_cmnd.buffer and scsi_cmnd.bufflen in their
+> queuecommand functions.  Those fields are internal storage for the
+> midlayer only and are used to restore the original payload after
+> request_buffer and request_bufflen have been overwritten for EH.  Using
+> the buffer and bufflen fields means they do very broken things in error
+> handling.
 
-Brian,
-I hope that libata's ATA PASS THROUGH (16) SCSI command
-is wired up as I just checked a new device type '-d sat'
-into smartmontools cvs.
+False statement, for libata.
 
-Doug Gilbert
+Please CC the author (me) or linux-ide, at least, when you touch libata.
+
+	Jeff
+
+
 
