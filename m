@@ -1,40 +1,70 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: [PATCH 0/6] libata: Support SATA attached via SAS
-Date: Thu, 08 Jun 2006 08:32:33 -0500
-Message-ID: <448826F1.6050606@us.ibm.com>
-References: <4486FDBD.9030200@us.ibm.com> <44879E32.1020500@torque.net>
-Reply-To: brking@us.ibm.com
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] fix up request buffer reference in various scsi drivers
+Date: Thu, 08 Jun 2006 09:54:07 -0400
+Message-ID: <1149774847.3436.11.camel@mulgrave.il.steeleye.com>
+References: <20060603112113.GA17018@lst.de>  <44880BEA.90707@garzik.org>
+	 <1149771978.3436.4.camel@mulgrave.il.steeleye.com>
+	 <44882592.5090701@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.144]:34481 "EHLO e4.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S964823AbWFHNcw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jun 2006 09:32:52 -0400
-In-Reply-To: <44879E32.1020500@torque.net>
+Received: from stat9.steeleye.com ([209.192.50.41]:50087 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S964844AbWFHNyU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Jun 2006 09:54:20 -0400
+In-Reply-To: <44882592.5090701@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: jgarzik@pobox.com, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, 'SCSI Mailing List' <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Christoph Hellwig <hch@lst.de>, jejb@SteelEye.com, linux-scsi@vger.kernel.org
 
-Douglas Gilbert wrote:
-> Brian King wrote:
->> Jeff,
->>
->> Here is a refresh of my patchset to allow SAS HBAs to use libata to
->> control attached SATA devices. It should apply cleanly to #upstream.
+On Thu, 2006-06-08 at 09:26 -0400, Jeff Garzik wrote:
+> James Bottomley wrote:
+> > On Thu, 2006-06-08 at 07:37 -0400, Jeff Garzik wrote:
+> >> False statement, for libata.
+> > 
+> > Could you amplify this statement, please ... I looked through the head
+> > of libata-dev and it seems that these are still the only two bufflen
+> > uses, which still do look obviously wrong ... I don't see where the
+> > problem in libata with this is?
 > 
-> Brian,
-> I hope that libata's ATA PASS THROUGH (16) SCSI command
-> is wired up as I just checked a new device type '-d sat'
-> into smartmontools cvs.
+> Christoph's false statement is:  "Using the buffer and bufflen fields 
+> means they do very broken things in error handling."
+> 
+> libata does not do "very broken things in error handling."
 
-Yes. Any command supported by libata today should also be supported
-with this patchset.
+OK ... let me explain what we're doing a bit.  One of the things that
+has been going on for quite a while is that Intel (Ken Chen) has
+analyses showing that allocation clearing and freeing of the scsi_cmnd
+structure is a drag on the fast path.  This is part of the drive to slim
+it down (i.e. get rid of a lot of the fields that are only used in eh).
 
-Brian
+> >> Please CC the author (me) or linux-ide, at least, when you touch
+> >> libata.
+> > 
+> > The tradition is that for infrastructure changes like this, particularly
+> > ones that are trivial, as this appears to be, you simply copy the scsi
+> > list and don't have to sweep up the individual maintainers of each
+> > driver.
+> 
+> This is apparently an EH-related patch, and libata uses SCSI EH very 
+> differently from all other drivers.  In this case, Christoph's "very 
+> broken" justification is clearly inaccurate, and thus a CC is obviously 
+> warranted.
+> 
+> Also, I remind people constantly of this, so I'm sure you and Christoph 
+> have heard the request before.
+> 
+> 	Jeff, the one who forwards to linux-scsi when others forget
 
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+I appreciate that for changes you want to make to SCSI.  However, this
+particular patch touches seventeen separately maintained pieces of code
+within the SCSI subsystem, only one of which is libata.  I'm really
+reluctant to change the policy in this regard ... it's a policy we
+copied from lkml ... that for sweeping infrastructure changes we only
+send it to the list and don't have to work out who all the maintainers
+are.
+
+James
+
