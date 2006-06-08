@@ -1,76 +1,55 @@
-From: Mark Haverkamp <markh@osdl.org>
-Subject: [PATCH 3/3] aacraid: small misc. cleanups (update)
-Date: Thu, 08 Jun 2006 13:55:57 -0700
-Message-ID: <1149800157.22364.38.camel@markh3.pdx.osdl.net>
+From: "Lev A. Melnikovsky" <leva@hotmail.com>
+Subject: Re: Error using DC315U to drive ScanJet 4c
+Date: Fri, 9 Jun 2006 01:13:41 +0400 (MSD)
+Message-ID: <Pine.LNX.4.64.0606090054530.20041@nev.ubzr>
+References: <Pine.LNX.4.64.0606042013200.14649@nev.ubzr>
+ <Pine.LNX.4.60.0606041850090.13574@poirot.grange> <Pine.LNX.4.64.0606042201460.14649@nev.ubzr>
+ <Pine.LNX.4.60.0606042022540.24306@poirot.grange> <Pine.LNX.4.64.0606051150440.4038@nev.ubzr>
+ <Pine.LNX.4.60.0606051242150.4149@poirot.grange> <Pine.LNX.4.64.0606060050360.7237@nev.ubzr>
+ <Pine.LNX.4.60.0606060008330.22057@poirot.grange> <Pine.LNX.4.64.0606070253580.14004@nev.ubzr>
+ <Pine.LNX.4.60.0606072312410.9588@poirot.grange>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:10446 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S965007AbWFHU4A (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jun 2006 16:56:00 -0400
+Received: from [212.45.14.9] ([212.45.14.9]:25288 "EHLO ari.home")
+	by vger.kernel.org with ESMTP id S964980AbWFHVNf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jun 2006 17:13:35 -0400
+In-Reply-To: <Pine.LNX.4.60.0606072312410.9588@poirot.grange>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: linux-scsi@vger.kernel.org
 
-Received from Mark Salyzyn
+Dear Guennadi,
 
-Spelling correction, orphaned comment removal & update branch name.
+> Return the active request for retry to the upper layer in case of
+> "reselect without disconnect" instead of just losing it.
+Oh, thank you for the patch. Now the scan is finished even if several 
+"reselect: w/o disconnected cmds <02-0> with active srb" happened during 
+the operation. A funny artifact though can be seen at the picture (this is 
+a ~800KB map of Japan http://kapitza.ras.ru/~leva/Japan.jpg ). It looks 
+like during each reselect a chunk of data is lost (or maybe transferred 
+twice?) and the data stream gets an offset. My understanding is that the 
+scan data are 8bits per color component which gives 24bits/pixel.
 
-Signed-off-by: Mark Haverkamp <markh@osdl.org>
----
-Applies to the scsi-misc-2.6 git tree.
+Any idea why it happens and how to fix it?
 
+   On Wed, 7 Jun 2006 at 11:28pm, Guennadi Liakhovetski wrote:
 
---- scsi-misc-aac.orig/drivers/scsi/aacraid/aacraid.h	2006-06-08 13:32:20.000000000 -0700
-+++ scsi-misc-aac/drivers/scsi/aacraid/aacraid.h	2006-06-08 13:36:40.000000000 -0700
-@@ -12,7 +12,7 @@
- 
- #ifndef AAC_DRIVER_BUILD
- # define AAC_DRIVER_BUILD 2409
--# define AAC_DRIVER_BRANCH "-mh1"
-+# define AAC_DRIVER_BRANCH "-mh2"
- #endif
- #define MAXIMUM_NUM_CONTAINERS	32
- 
-@@ -822,10 +822,6 @@
- 	void 			*callback_data;
- 	u32			flags; // u32 dmb was ulong
- 	/*
--	 *	The following is used to put this fib context onto the 
--	 *	Outstanding I/O queue.
--	 */
--	/*
- 	 *	And for the internal issue/reply queues (we may be able
- 	 *	to merge these two)
- 	 */
---- scsi-misc-aac.orig/drivers/scsi/aacraid/comminit.c	2006-06-08 13:32:20.000000000 -0700
-+++ scsi-misc-aac/drivers/scsi/aacraid/comminit.c	2006-06-08 13:36:40.000000000 -0700
-@@ -103,7 +103,7 @@
- 	 * This assumes the memory is mapped zero->n, which isnt
- 	 * always true on real computers. It also has some slight problems
- 	 * with the GART on x86-64. I've btw never tried DMA from PCI space
--	 * on this platform but don't be suprised if its problematic.
-+	 * on this platform but don't be surprised if its problematic.
- 	 */
- #ifndef CONFIG_GART_IOMMU
- 	if ((num_physpages << (PAGE_SHIFT - 12)) <= AAC_MAX_HOSTPHYSMEMPAGES) {
---- scsi-misc-aac.orig/drivers/scsi/aacraid/dpcsup.c	2006-06-08 13:32:20.000000000 -0700
-+++ scsi-misc-aac/drivers/scsi/aacraid/dpcsup.c	2006-06-08 13:36:40.000000000 -0700
-@@ -85,9 +85,9 @@
- 		 *	continue. The caller has already been notified that
- 		 *	the fib timed out.
- 		 */
--		if (!(fib->flags & FIB_CONTEXT_FLAG_TIMED_OUT)) {
-+		if (!(fib->flags & FIB_CONTEXT_FLAG_TIMED_OUT))
- 			dev->queues->queue[AdapNormCmdQueue].numpending--;
--		} else {
-+		else {
- 			printk(KERN_WARNING "aacraid: FIB timeout (%x).\n", fib->flags);
- 			printk(KERN_DEBUG"aacraid: hwfib=%p fib index=%i fib=%p\n",hwfib, hwfib->header.SenderData,fib);
- 			continue;
+> Now, below is a patch... That's about all I can say about it:-) The
+> reselect routine didn't seem right to me, specifically, it checks for "no
+> active request-block or active request-block is not disconnected" and then
+> sends an abort to the device, but if there was indeed an active srb, it
+> gets lost, AFAICS. FWIW, tmscsim does the same... The patch below tries to
+> complete the command before dropping it on the floor... Any reviews
+> appreciated.
+>
+> And there's one more page_address there in dc395x...
+>
+> Warning, Lev - this patch may explode your scanner, or upload your bank
+> account info to p2p servers, or send your gpg keys to microsoft, or...
+> You've been warned:-) You might want to wait for some comments to the
+> patch...
+Thanks for the warning :-)
 
--- 
-Mark Haverkamp <markh@osdl.org>
-
+-L.
