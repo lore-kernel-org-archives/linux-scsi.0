@@ -1,30 +1,37 @@
 From: Mark Haverkamp <markh@osdl.org>
-Subject: [PATCH 0/3] aacraid: Driver updates (update)
-Date: Thu, 08 Jun 2006 13:55:08 -0700
-Message-ID: <1149800108.22364.34.camel@markh3.pdx.osdl.net>
+Subject: [PATCH 1/3] aacraid: Cleanup clear_user usage (update)
+Date: Thu, 08 Jun 2006 13:55:24 -0700
+Message-ID: <1149800124.22364.36.camel@markh3.pdx.osdl.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:63181 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S965003AbWFHUzP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jun 2006 16:55:15 -0400
+Received: from smtp.osdl.org ([65.172.181.4]:3278 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S965006AbWFHUz1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jun 2006 16:55:27 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>
 
-The following 3 patches contain various updates described in each mail.
-Patch 1 and 3 updated based on comments.  Patch 2 is just a re-send.
 
-Patches apply to the scsi-misc-2.6 tree.
+Remove the clear_user call.  Not needed.
 
- Documentation/scsi/aacraid.txt  |    8 ++++----
- drivers/scsi/aacraid/aacraid.h  |    6 +-----
- drivers/scsi/aacraid/comminit.c |    2 +-
- drivers/scsi/aacraid/dpcsup.c   |    4 ++--
- drivers/scsi/aacraid/linit.c    |   10 ++++------
- 5 files changed, 12 insertions(+), 18 deletions(-)
+Signed-off-by: Mark Haverkamp <markh@osdl.org>
+---
+Applies to the scsi-misc-2.6 git tree.
+
+--- scsi-misc-aac.orig/drivers/scsi/aacraid/linit.c	2006-06-08 09:37:43.000000000 -0700
++++ scsi-misc-aac/drivers/scsi/aacraid/linit.c	2006-06-08 13:33:07.000000000 -0700
+@@ -564,8 +564,6 @@
+ 		
+ 		f = compat_alloc_user_space(sizeof(*f));
+ 		ret = 0;
+-		if (clear_user(f, sizeof(*f)) != sizeof(*f))
+-			ret = -EFAULT;
+ 		if (copy_in_user(f, (void __user *)arg, sizeof(struct fib_ioctl) - sizeof(u32)))
+ 			ret = -EFAULT;
+ 		if (!ret)
 
 -- 
 Mark Haverkamp <markh@osdl.org>
