@@ -1,60 +1,53 @@
 From: akpm@osdl.org
-Subject: [patch 19/31] aic7*: cleanup MODULE_PARM_DESC strings
-Date: Thu, 08 Jun 2006 22:23:51 -0700
-Message-ID: <200606090523.k595NpUC032310@shell0.pdx.osdl.net>
+Subject: [patch 23/31] Add scsi_add_host() failure handling for nsp32
+Date: Thu, 08 Jun 2006 22:23:54 -0700
+Message-ID: <200606090523.k595Ntpp032334@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:29149 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S965173AbWFIFYP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jun 2006 01:24:15 -0400
+Received: from smtp.osdl.org ([65.172.181.4]:43997 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S965204AbWFIFY0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jun 2006 01:24:26 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, rdunlap@xenotime.net
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, gotom@sanori.org, jesper.juhl@gmail.com
 
 
-From: Randy Dunlap <rdunlap@xenotime.net>
+From: GOTO Masanori <gotom@sanori.org>
 
-Modify beginning string to be more readable.  Remove one trailing newline.
+Add scsi_add_host() failure handling for nsp32
+and silence warning.
+  drivers/scsi/nsp32.c:2888: warning: ignoring return value of 'Scsi_add_host', declared with attribute warn_unused_result
 
-Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+Signed-off-by: Jesper Juhl <jesper.juhl@gmail.com>
+Signed-off-by: GOTO Masanori <gotom@sanori.org>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/aic7xxx/aic79xx_osm.c |    4 ++--
- drivers/scsi/aic7xxx/aic7xxx_osm.c |    2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/nsp32.c |    9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-diff -puN drivers/scsi/aic7xxx/aic79xx_osm.c~aic7-cleanup-module_parm_desc-strings drivers/scsi/aic7xxx/aic79xx_osm.c
---- devel/drivers/scsi/aic7xxx/aic79xx_osm.c~aic7-cleanup-module_parm_desc-strings	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/aic7xxx/aic79xx_osm.c	2006-06-01 20:41:51.000000000 -0700
-@@ -340,7 +340,7 @@ MODULE_LICENSE("Dual BSD/GPL");
- MODULE_VERSION(AIC79XX_DRIVER_VERSION);
- module_param(aic79xx, charp, 0444);
- MODULE_PARM_DESC(aic79xx,
--"period delimited, options string.\n"
-+"period-delimited options string:\n"
- "	verbose			Enable verbose/diagnostic logging\n"
- "	allow_memio		Allow device registers to be memory mapped\n"
- "	debug			Bitmask of debug values to enable\n"
-@@ -366,7 +366,7 @@ MODULE_PARM_DESC(aic79xx,
- "		Shorten the selection timeout to 128ms\n"
- "\n"
- "	options aic79xx 'aic79xx=verbose.tag_info:{{}.{}.{..10}}.seltime:1'\n"
--"\n");
-+);
+diff -puN drivers/scsi/nsp32.c~add-scsi_add_host-failure-handling-for-nsp32 drivers/scsi/nsp32.c
+--- devel/drivers/scsi/nsp32.c~add-scsi_add_host-failure-handling-for-nsp32	2006-06-01 20:41:52.000000000 -0700
++++ devel-akpm/drivers/scsi/nsp32.c	2006-06-01 20:41:52.000000000 -0700
+@@ -2885,12 +2885,19 @@ static int nsp32_detect(struct scsi_host
+         }
  
- static void ahd_linux_handle_scsi_status(struct ahd_softc *,
- 					 struct scsi_device *,
-diff -puN drivers/scsi/aic7xxx/aic7xxx_osm.c~aic7-cleanup-module_parm_desc-strings drivers/scsi/aic7xxx/aic7xxx_osm.c
---- devel/drivers/scsi/aic7xxx/aic7xxx_osm.c~aic7-cleanup-module_parm_desc-strings	2006-06-01 20:41:51.000000000 -0700
-+++ devel-akpm/drivers/scsi/aic7xxx/aic7xxx_osm.c	2006-06-01 20:41:51.000000000 -0700
-@@ -341,7 +341,7 @@ MODULE_LICENSE("Dual BSD/GPL");
- MODULE_VERSION(AIC7XXX_DRIVER_VERSION);
- module_param(aic7xxx, charp, 0444);
- MODULE_PARM_DESC(aic7xxx,
--"period delimited, options string.\n"
-+"period-delimited options string:\n"
- "	verbose			Enable verbose/diagnostic logging\n"
- "	allow_memio		Allow device registers to be memory mapped\n"
- "	debug			Bitmask of debug values to enable\n"
+ #if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73))
+-	scsi_add_host (host, &PCIDEV->dev);
++	ret = scsi_add_host(host, &PCIDEV->dev);
++	if (ret) {
++		nsp32_msg(KERN_ERR, "failed to add scsi host");
++		goto free_region;
++	}
+ 	scsi_scan_host(host);
+ #endif
+ 	pci_set_drvdata(PCIDEV, host);
+ 	return DETECT_OK;
+ 
++ free_region:
++	release_region(host->io_port, host->n_io_port);
++
+  free_irq:
+ 	free_irq(host->irq, data);
+ 
 _
