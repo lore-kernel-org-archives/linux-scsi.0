@@ -1,58 +1,37 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: qlogic qla2312f-v2 (hp oem?)
-Date: Fri, 9 Jun 2006 06:08:53 -0600
-Message-ID: <20060609120853.GL1651@parisc-linux.org>
-References: <7.0.1.0.0.20060609132026.025d7098@elexis.nl>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [patch 01/31] drivers/scsi: fix proc_scsi_write to return
+	"length" on success with remove-single-device case
+Date: Fri, 09 Jun 2006 09:07:46 -0500
+Message-ID: <1149862066.3480.0.camel@mulgrave.il.steeleye.com>
+References: <200606090523.k595NSAb032228@shell0.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:29662 "EHLO
-	palinux.external.hp.com") by vger.kernel.org with ESMTP
-	id S965243AbWFIMIy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 Jun 2006 08:08:54 -0400
-Content-Disposition: inline
-In-Reply-To: <7.0.1.0.0.20060609132026.025d7098@elexis.nl>
+Received: from stat9.steeleye.com ([209.192.50.41]:20185 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S965194AbWFIOHz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 9 Jun 2006 10:07:55 -0400
+In-Reply-To: <200606090523.k595NSAb032228@shell0.pdx.osdl.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sander van Beek - Elexis <sander@elexis.nl>
-Cc: linux-scsi@vger.kernel.org
+To: akpm@osdl.org
+Cc: linux-scsi@vger.kernel.org, suzuki@in.ibm.com
 
-On Fri, Jun 09, 2006 at 01:20:57PM +0200, Sander van Beek - Elexis wrote:
-> I recently got two qla2312f-v2 cards from ebay. These are dual 2gbit 
-> fibre channel hba's for a pci-x bus. The qlogic site says this type 
-> is a HP OEM card and it is not sold directly by qlogic.
-> I tried to get them working on a slackware 10.2 system with the 
-> latest stable 2.6 kernel. However, the qla2xxx driver does not see 
-> the card. My dmesg only shows this line:
+On Thu, 2006-06-08 at 22:23 -0700, akpm@osdl.org wrote:
+> From: Suzuki <suzuki@in.ibm.com>
 > 
-> Jun  9 11:09:27 clust1 kernel: QLogic Fibre Channel HBA Driver
+> proc_scsi_write doesn't return the "length" upon successfully removing a
+> device; instead it returns 0.  This causes commands like "echo" to redo the
+> write(), which ends up in something like,
 > 
-> This is how the card shows up in my /proc/pci:
+> $ echo "scsi remove-single-device 0 0 3 0" > /proc/scsi/scsi
+> "-bash: echo: write error: No such device or address"
 > 
->   Bus  2, device   1, function  1:
->     Class 0c04: PCI device 1077:8000 (rev 1).
->       IRQ 255.
->       Prefetchable 32 bit memory at 0x40000000 [0x403fffff].
-> 
-> Can anyone supply me with some hints what could be wrong, or what I 
-> should do to get them working?
+> , even though the device was removed.
 
-I'd try adding the PCI IDs to the driver and see what happened next.
-Something like:
+A better version of this fix is already in SCSI misc.
 
-+++ drivers/scsi/qla2xxx/ql2300.c       9 Jun 2006 12:08:21 -0000
-@@ -64,6 +64,13 @@ static struct pci_device_id qla2300_pci_
-        },
-        {
-                .vendor         = PCI_VENDOR_ID_QLOGIC,
-+               .device         = 0x8000,
-+               .subvendor      = PCI_ANY_ID,
-+               .subdevice      = PCI_ANY_ID,
-+               .driver_data    = (unsigned long)&qla_board_tbl[1],
-+       },
-+       {
-+               .vendor         = PCI_VENDOR_ID_QLOGIC,
-                .device         = PCI_DEVICE_ID_QLOGIC_ISP6312,
-                .subvendor      = PCI_ANY_ID,
-                .subdevice      = PCI_ANY_ID,
+James
+
 
