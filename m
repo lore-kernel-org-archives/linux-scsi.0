@@ -1,47 +1,58 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [PATCH 1/3] aacraid: Fix return code interpretation
-Date: Fri, 9 Jun 2006 08:00:31 -0400
-Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F02855F6F@otce2k03.adaptec.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: qlogic qla2312f-v2 (hp oem?)
+Date: Fri, 9 Jun 2006 06:08:53 -0600
+Message-ID: <20060609120853.GL1651@parisc-linux.org>
+References: <7.0.1.0.0.20060609132026.025d7098@elexis.nl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([216.52.22.36]:35223 "EHLO
-	mail-gw3.adaptec.com") by vger.kernel.org with ESMTP
-	id S965237AbWFIMAe convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jun 2006 08:00:34 -0400
-Content-class: urn:content-classes:message
+Received: from palinux.external.hp.com ([192.25.206.14]:29662 "EHLO
+	palinux.external.hp.com") by vger.kernel.org with ESMTP
+	id S965243AbWFIMIy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 9 Jun 2006 08:08:54 -0400
+Content-Disposition: inline
+In-Reply-To: <7.0.1.0.0.20060609132026.025d7098@elexis.nl>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Mark Haverkamp <markh@osdl.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Sander van Beek - Elexis <sander@elexis.nl>
+Cc: linux-scsi@vger.kernel.org
 
-Are you sure of this? The code that follows expects the end of the
-structure to be cleared.
+On Fri, Jun 09, 2006 at 01:20:57PM +0200, Sander van Beek - Elexis wrote:
+> I recently got two qla2312f-v2 cards from ebay. These are dual 2gbit 
+> fibre channel hba's for a pci-x bus. The qlogic site says this type 
+> is a HP OEM card and it is not sold directly by qlogic.
+> I tried to get them working on a slackware 10.2 system with the 
+> latest stable 2.6 kernel. However, the qla2xxx driver does not see 
+> the card. My dmesg only shows this line:
+> 
+> Jun  9 11:09:27 clust1 kernel: QLogic Fibre Channel HBA Driver
+> 
+> This is how the card shows up in my /proc/pci:
+> 
+>   Bus  2, device   1, function  1:
+>     Class 0c04: PCI device 1077:8000 (rev 1).
+>       IRQ 255.
+>       Prefetchable 32 bit memory at 0x40000000 [0x403fffff].
+> 
+> Can anyone supply me with some hints what could be wrong, or what I 
+> should do to get them working?
 
-Sincerely -- Mark Salyzyn
+I'd try adding the PCI IDs to the driver and see what happened next.
+Something like:
 
-> -----Original Message-----
-> From: Christoph Hellwig [mailto:hch@infradead.org] 
-> Sent: Thursday, June 08, 2006 4:11 PM
-> To: Mark Haverkamp
-> Cc: James Bottomley; linux-scsi; Salyzyn, Mark
-> Subject: Re: [PATCH 1/3] aacraid: Fix return code interpretation
-> 
-> 
-> > @@ -564,7 +564,7 @@
-> >  		
-> >  		f = compat_alloc_user_space(sizeof(*f));
-> >  		ret = 0;
-> > -		if (clear_user(f, sizeof(*f)) != sizeof(*f))
-> > +		if (clear_user(f, sizeof(*f)))
-> >  			ret = -EFAULT;
-> >  		if (copy_in_user(f, (void __user *)arg, 
-> sizeof(struct fib_ioctl) - sizeof(u32)))
-> >  			ret = -EFAULT;
-> > 
-> 
-> just remove the clear_user call completely, it's not needed.
-> 
-> 
++++ drivers/scsi/qla2xxx/ql2300.c       9 Jun 2006 12:08:21 -0000
+@@ -64,6 +64,13 @@ static struct pci_device_id qla2300_pci_
+        },
+        {
+                .vendor         = PCI_VENDOR_ID_QLOGIC,
++               .device         = 0x8000,
++               .subvendor      = PCI_ANY_ID,
++               .subdevice      = PCI_ANY_ID,
++               .driver_data    = (unsigned long)&qla_board_tbl[1],
++       },
++       {
++               .vendor         = PCI_VENDOR_ID_QLOGIC,
+                .device         = PCI_DEVICE_ID_QLOGIC_ISP6312,
+                .subvendor      = PCI_ANY_ID,
+                .subdevice      = PCI_ANY_ID,
+
