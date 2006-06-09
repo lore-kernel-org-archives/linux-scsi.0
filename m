@@ -1,78 +1,37 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: [PATCH] advansys section fixes
-Date: Thu, 8 Jun 2006 20:46:35 -0700
-Message-ID: <20060608204635.376e0641.rdunlap@xenotime.net>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH 2/3] SCSI core and sd: early detection of medium not
+	present
+Date: Thu, 08 Jun 2006 19:57:46 -0500
+Message-ID: <1149814666.3276.16.camel@mulgrave.il.steeleye.com>
+References: <Pine.LNX.4.44L0.0606061126540.9182-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:64711 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S965126AbWFIDuY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jun 2006 23:50:24 -0400
-Received: from midway.site ([71.245.102.105]) by xenotime.net for <linux-scsi@vger.kernel.org>; Thu, 8 Jun 2006 20:50:23 -0700
+Received: from stat9.steeleye.com ([209.192.50.41]:7316 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S965129AbWFIDvu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Jun 2006 23:51:50 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0606061126540.9182-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: scsi <linux-scsi@vger.kernel.org>
-Cc: jejb <james.bottomley@steeleye.com>, akpm <akpm@osdl.org>, bobf@advansys.com
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Andrew Morton <akpm@osdl.org>, Jens Axboe <axboe@suse.de>, Kernel development list <linux-kernel@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-From: Randy Dunlap <rdunlap@xenotime.net>
+On Tue, 2006-06-06 at 11:31 -0400, Alan Stern wrote:
+> This patch (as695) changes the scsi_test_unit_ready() routine in the
+> SCSI 
+> core to set a new flag when no medium is present.  The sd driver is 
+> changed to use this new flag for reporting -ENOMEDIUM in from the 
+> sd_media_changed method.
 
-Priority: not critical.
-Mark 3 functions __init.  Saves a little memory.
-This makes these functions' calls to AdvWaitEEPCmd() (which is __init)
-be clean (i.e., eliminates text -> init -> text call chain).
+This would appear to be duplicating the struct scsi_disk media_present
+flag.  Moving the media_present flag from scsi_disk to scsi_device may
+make a bit of sense long term ... however, there's also dupication with
+the sr driver and the cdrom layer now (that stores media change at the
+cdrom level), so is there an argument why it's better in scsi_device
+than scsi_disk?
 
-Fix multiple section mismatch warnings:
-WARNING: drivers/scsi/advansys.o - Section mismatch: reference to .init.text: from .text between 'AdvSet3550EEPConfig' (at offset 0x7a22) and 'AdvSet38C0800EEPConfig'
-WARNING: drivers/scsi/advansys.o - Section mismatch: reference to .init.text: from .text between 'AdvSet3550EEPConfig' (at offset 0x7a4e) and 'AdvSet38C0800EEPConfig'
-WARNING: drivers/scsi/advansys.o - Section mismatch: reference to .init.text: from .text between 'AdvSet3550EEPConfig' (at offset 0x7a79) and 'AdvSet38C0800EEPConfig'
-WARNING: drivers/scsi/advansys.o - Section mismatch: reference to .init.text: from .text between 'AdvSet3550EEPConfig' (at offset 0x7aa2) and 'AdvSet38C0800EEPConfig'
-WARNING: drivers/scsi/advansys.o - Section mismatch: reference to .init.text: from .text between 'AdvSet3550EEPConfig' (at offset 0x7abb) and 'AdvSet38C0800EEPConfig'
-WARNING: drivers/scsi/advansys.o - Section mismatch: reference to .init.text: from .text between 'AdvSet38C0800EEPConfig' (at offset 0x7ae0) and 'AdvSet38C1600EEPConfig'
-WARNING: drivers/scsi/advansys.o - Section mismatch: reference to .init.text: from .text between 'AdvSet38C0800EEPConfig' (at offset 0x7b0c) and 'AdvSet38C1600EEPConfig'
-WARNING: drivers/scsi/advansys.o - Section mismatch: reference to .init.text: from .text between 'AdvSet38C0800EEPConfig' (at offset 0x7b37) and 'AdvSet38C1600EEPConfig'
-WARNING: drivers/scsi/advansys.o - Section mismatch: reference to .init.text: from .text between 'AdvSet38C0800EEPConfig' (at offset 0x7b60) and 'AdvSet38C1600EEPConfig'
-WARNING: drivers/scsi/advansys.o - Section mismatch: reference to .init.text: from .text between 'AdvSet38C0800EEPConfig' (at offset 0x7b79) and 'AdvSet38C1600EEPConfig'
-WARNING: drivers/scsi/advansys.o - Section mismatch: reference to .init.text: from .text between 'AdvSet38C1600EEPConfig' (at offset 0x7b9e) and 'AdvExeScsiQueue'
-WARNING: drivers/scsi/advansys.o - Section mismatch: reference to .init.text: from .text between 'AdvSet38C1600EEPConfig' (at offset 0x7bca) and 'AdvExeScsiQueue'
-WARNING: drivers/scsi/advansys.o - Section mismatch: reference to .init.text: from .text between 'AdvSet38C1600EEPConfig' (at offset 0x7bf5) and 'AdvExeScsiQueue'
-WARNING: drivers/scsi/advansys.o - Section mismatch: reference to .init.text: from .text between 'AdvSet38C1600EEPConfig' (at offset 0x7c1e) and 'AdvExeScsiQueue'
-WARNING: drivers/scsi/advansys.o - Section mismatch: reference to .init.text: from .text between 'AdvSet38C1600EEPConfig' (at offset 0x7c37) and 'AdvExeScsiQueue'
-
-Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
----
- drivers/scsi/advansys.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
---- linux-2617-rc6.orig/drivers/scsi/advansys.c
-+++ linux-2617-rc6/drivers/scsi/advansys.c
-@@ -17316,7 +17316,7 @@ AdvWaitEEPCmd(AdvPortAddr iop_base)
- /*
-  * Write the EEPROM from 'cfg_buf'.
-  */
--void
-+void __init
- AdvSet3550EEPConfig(AdvPortAddr iop_base, ADVEEP_3550_CONFIG *cfg_buf)
- {
-     ushort *wbuf;
-@@ -17383,7 +17383,7 @@ AdvSet3550EEPConfig(AdvPortAddr iop_base
- /*
-  * Write the EEPROM from 'cfg_buf'.
-  */
--void
-+void __init
- AdvSet38C0800EEPConfig(AdvPortAddr iop_base,
-                        ADVEEP_38C0800_CONFIG *cfg_buf)
- {
-@@ -17451,7 +17451,7 @@ AdvSet38C0800EEPConfig(AdvPortAddr iop_b
- /*
-  * Write the EEPROM from 'cfg_buf'.
-  */
--void
-+void __init
- AdvSet38C1600EEPConfig(AdvPortAddr iop_base,
-                        ADVEEP_38C1600_CONFIG *cfg_buf)
- {
+James
 
 
----
