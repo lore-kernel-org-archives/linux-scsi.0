@@ -1,46 +1,48 @@
 From: akpm@osdl.org
-Subject: [patch 01/31] drivers/scsi: fix proc_scsi_write to return "length" on success with remove-single-device case
-Date: Thu, 08 Jun 2006 22:23:28 -0700
-Message-ID: <200606090523.k595NSAb032228@shell0.pdx.osdl.net>
+Subject: [patch 08/31] small whitespace cleanup for qlogic driver
+Date: Thu, 08 Jun 2006 22:23:34 -0700
+Message-ID: <200606090523.k595NY8g032249@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:61404 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S965165AbWFIFXf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jun 2006 01:23:35 -0400
+Received: from smtp.osdl.org ([65.172.181.4]:5085 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S965160AbWFIFXu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jun 2006 01:23:50 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, suzuki@in.ibm.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, jesper.juhl@gmail.com, andrew.vasquez@qlogic.com
 
 
-From: Suzuki <suzuki@in.ibm.com>
+From: Jesper Juhl <jesper.juhl@gmail.com>
 
-proc_scsi_write doesn't return the "length" upon successfully removing a
-device; instead it returns 0.  This causes commands like "echo" to redo the
-write(), which ends up in something like,
+Add a few spaces to MODULE_PARM_DESC() text for qla2xxx. Without these
+spaces text runs together when modinfo prints the text.
 
-$ echo "scsi remove-single-device 0 0 3 0" > /proc/scsi/scsi
-"-bash: echo: write error: No such device or address"
-
-, even though the device was removed.
-
-Signed-off-by: Suzuki K P <suzuki@in.ibm.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
+Signed-off-by: Jesper Juhl <jesper.juhl@gmail.com>
+Acked-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/scsi_proc.c |    2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/qla2xxx/qla_os.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff -puN drivers/scsi/scsi_proc.c~drivers-scsi-fix-proc_scsi_write-to-return-length-on drivers/scsi/scsi_proc.c
---- devel/drivers/scsi/scsi_proc.c~drivers-scsi-fix-proc_scsi_write-to-return-length-on	2006-06-08 02:28:14.000000000 -0700
-+++ devel-akpm/drivers/scsi/scsi_proc.c	2006-06-08 02:28:14.000000000 -0700
-@@ -280,6 +280,8 @@ static ssize_t proc_scsi_write(struct fi
- 		lun = simple_strtoul(p + 1, &p, 0);
+diff -puN drivers/scsi/qla2xxx/qla_os.c~small-whitespace-cleanup-for-qlogic-driver drivers/scsi/qla2xxx/qla_os.c
+--- devel/drivers/scsi/qla2xxx/qla_os.c~small-whitespace-cleanup-for-qlogic-driver	2006-06-01 20:41:50.000000000 -0700
++++ devel-akpm/drivers/scsi/qla2xxx/qla_os.c	2006-06-01 20:41:50.000000000 -0700
+@@ -39,14 +39,14 @@ MODULE_PARM_DESC(ql2xlogintimeout,
+ int qlport_down_retry = 30;
+ module_param(qlport_down_retry, int, S_IRUGO|S_IRUSR);
+ MODULE_PARM_DESC(qlport_down_retry,
+-		"Maximum number of command retries to a port that returns"
++		"Maximum number of command retries to a port that returns "
+ 		"a PORT-DOWN status.");
  
- 		err = scsi_remove_single_device(host, channel, id, lun);
-+		if (!err)
-+			err = length;
- 	}
+ int ql2xplogiabsentdevice;
+ module_param(ql2xplogiabsentdevice, int, S_IRUGO|S_IWUSR);
+ MODULE_PARM_DESC(ql2xplogiabsentdevice,
+ 		"Option to enable PLOGI to devices that are not present after "
+-		"a Fabric scan.  This is needed for several broken switches."
++		"a Fabric scan.  This is needed for several broken switches. "
+ 		"Default is 0 - no PLOGI. 1 - perfom PLOGI.");
  
- 	/*
+ int ql2xloginretrycount = 0;
 _
