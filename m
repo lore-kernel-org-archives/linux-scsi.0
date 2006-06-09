@@ -1,73 +1,131 @@
 From: akpm@osdl.org
-Subject: [patch 30/31] scsi: clean up warnings in Advansys driver
-Date: Thu, 08 Jun 2006 22:24:05 -0700
-Message-ID: <200606090524.k595O5dX032361@shell0.pdx.osdl.net>
+Subject: [patch 22/31] BusLogic gcc 4.1 warning fixes
+Date: Thu, 08 Jun 2006 22:23:54 -0700
+Message-ID: <200606090523.k595Nsq7032323@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:26077 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S965175AbWFIFYO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jun 2006 01:24:14 -0400
+Received: from smtp.osdl.org ([65.172.181.4]:20701 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S965177AbWFIFYI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jun 2006 01:24:08 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, ken@krwtech.com, jeffreyfreeman@syncleus.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, dwalker@mvista.com
 
 
-From: Ken Witherow <ken@krwtech.com>
+From: Daniel Walker <dwalker@mvista.com>
 
-Fix typecast warnings and switch from check_region to request_region
+- Reworked all the very long lines in that block (this drivers full of
+  them though)
 
-(akpm: Ken and Jeffrey Phillips Freeman <jeffreyfreeman@syncleus.com> are
-possible advansys testers)
+- Returns an error in three places that it didn't before.
 
-Signed-off-by: Ken Witherow <ken@krwtech.com>
+- Properly clean up after a scsi_add_host() failure.
+
+Signed-off-by: Daniel Walker <dwalker@mvista.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/advansys.c |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
+ drivers/scsi/BusLogic.c |   46 ++++++++++++++++++++++++++++++--------
+ 1 file changed, 37 insertions(+), 9 deletions(-)
 
-diff -puN drivers/scsi/advansys.c~scsi-clean-up-warnings-in-advansys-driver drivers/scsi/advansys.c
---- devel/drivers/scsi/advansys.c~scsi-clean-up-warnings-in-advansys-driver	2006-04-30 00:13:25.000000000 -0700
-+++ devel-akpm/drivers/scsi/advansys.c	2006-04-30 00:13:25.000000000 -0700
-@@ -4415,7 +4415,7 @@ advansys_detect(struct scsi_host_templat
-                         ASC_DBG1(1,
-                                 "advansys_detect: probing I/O port 0x%x...\n",
-                             iop);
--                        if (check_region(iop, ASC_IOADR_GAP) != 0) {
-+			if (!request_region(iop, ASC_IOADR_GAP, "advansys")){
-                             printk(
- "AdvanSys SCSI: specified I/O Port 0x%X is busy\n", iop);
-                             /* Don't try this I/O port twice. */
-@@ -4425,6 +4425,7 @@ advansys_detect(struct scsi_host_templat
-                             printk(
- "AdvanSys SCSI: specified I/O Port 0x%X has no adapter\n", iop);
-                             /* Don't try this I/O port twice. */
-+			    release_region(iop, ASC_IOADR_GAP);
-                             asc_ioport[ioport] = 0;
-                             goto ioport_try_again;
-                         } else {
-@@ -4443,6 +4444,7 @@ advansys_detect(struct scsi_host_templat
-                                   * 'ioport' past this board.
-                                   */
-                                  ioport++;
-+				 release_region(iop, ASC_IOADR_GAP);
-                                  goto ioport_try_again;
-                             }
-                         }
-@@ -9752,13 +9754,14 @@ AscSearchIOPortAddr11(
-     }
-     for (; i < ASC_IOADR_TABLE_MAX_IX; i++) {
-         iop_base = _asc_def_iop_base[i];
--        if (check_region(iop_base, ASC_IOADR_GAP) != 0) {
-+	if (!request_region(iop_base, ASC_IOADR_GAP, "advansys")){
-             ASC_DBG1(1,
-                "AscSearchIOPortAddr11: check_region() failed I/O port 0x%x\n",
-                      iop_base);
-             continue;
-         }
-         ASC_DBG1(1, "AscSearchIOPortAddr11: probing I/O port 0x%x\n", iop_base);
-+	release_region(iop_base, ASC_IOADR_GAP);
-         if (AscFindSignature(iop_base)) {
-             return (iop_base);
-         }
+diff -puN drivers/scsi/BusLogic.c~buslogic-gcc-41-warning-fixes drivers/scsi/BusLogic.c
+--- devel/drivers/scsi/BusLogic.c~buslogic-gcc-41-warning-fixes	2006-06-01 20:41:52.000000000 -0700
++++ devel-akpm/drivers/scsi/BusLogic.c	2006-06-01 20:41:52.000000000 -0700
+@@ -2177,6 +2177,7 @@ static int __init BusLogic_init(void)
+ {
+ 	int BusLogicHostAdapterCount = 0, DriverOptionsIndex = 0, ProbeIndex;
+ 	struct BusLogic_HostAdapter *PrototypeHostAdapter;
++	int ret = 0;
+ 
+ #ifdef MODULE
+ 	if (BusLogic)
+@@ -2283,25 +2284,49 @@ static int __init BusLogic_init(void)
+ 		   perform Target Device Inquiry.
+ 		 */
+ 		if (BusLogic_ReadHostAdapterConfiguration(HostAdapter) &&
+-		    BusLogic_ReportHostAdapterConfiguration(HostAdapter) && BusLogic_AcquireResources(HostAdapter) && BusLogic_CreateInitialCCBs(HostAdapter) && BusLogic_InitializeHostAdapter(HostAdapter) && BusLogic_TargetDeviceInquiry(HostAdapter)) {
++		    BusLogic_ReportHostAdapterConfiguration(HostAdapter) &&
++		    BusLogic_AcquireResources(HostAdapter) &&
++		    BusLogic_CreateInitialCCBs(HostAdapter) &&
++		    BusLogic_InitializeHostAdapter(HostAdapter) &&
++		    BusLogic_TargetDeviceInquiry(HostAdapter)) {
+ 			/*
+ 			   Initialization has been completed successfully.  Release and
+ 			   re-register usage of the I/O Address range so that the Model
+ 			   Name of the Host Adapter will appear, and initialize the SCSI
+ 			   Host structure.
+ 			 */
+-			release_region(HostAdapter->IO_Address, HostAdapter->AddressCount);
+-			if (!request_region(HostAdapter->IO_Address, HostAdapter->AddressCount, HostAdapter->FullModelName)) {
+-				printk(KERN_WARNING "BusLogic: Release and re-register of " "port 0x%04lx failed \n", (unsigned long) HostAdapter->IO_Address);
++			release_region(HostAdapter->IO_Address,
++				       HostAdapter->AddressCount);
++			if (!request_region(HostAdapter->IO_Address,
++					    HostAdapter->AddressCount,
++					    HostAdapter->FullModelName)) {
++				printk(KERN_WARNING
++					"BusLogic: Release and re-register of "
++					"port 0x%04lx failed \n",
++					(unsigned long)HostAdapter->IO_Address);
+ 				BusLogic_DestroyCCBs(HostAdapter);
+ 				BusLogic_ReleaseResources(HostAdapter);
+ 				list_del(&HostAdapter->host_list);
+ 				scsi_host_put(Host);
++				ret = -ENOMEM;
+ 			} else {
+-				BusLogic_InitializeHostStructure(HostAdapter, Host);
+-				scsi_add_host(Host, HostAdapter->PCI_Device ? &HostAdapter->PCI_Device->dev : NULL);
+-				scsi_scan_host(Host);
+-				BusLogicHostAdapterCount++;
++				BusLogic_InitializeHostStructure(HostAdapter,
++								 Host);
++				if (scsi_add_host(Host, HostAdapter->PCI_Device
++						? &HostAdapter->PCI_Device->dev
++						  : NULL)) {
++					printk(KERN_WARNING
++					       "BusLogic: scsi_add_host()"
++					       "failed!\n");
++					BusLogic_DestroyCCBs(HostAdapter);
++					BusLogic_ReleaseResources(HostAdapter);
++					list_del(&HostAdapter->host_list);
++					scsi_host_put(Host);
++					ret = -ENODEV;
++				} else {
++					scsi_scan_host(Host);
++					BusLogicHostAdapterCount++;
++				}
+ 			}
+ 		} else {
+ 			/*
+@@ -2316,12 +2341,13 @@ static int __init BusLogic_init(void)
+ 			BusLogic_ReleaseResources(HostAdapter);
+ 			list_del(&HostAdapter->host_list);
+ 			scsi_host_put(Host);
++			ret = -ENODEV;
+ 		}
+ 	}
+ 	kfree(PrototypeHostAdapter);
+ 	kfree(BusLogic_ProbeInfoList);
+ 	BusLogic_ProbeInfoList = NULL;
+-	return 0;
++	return ret;
+ }
+ 
+ 
+@@ -2955,6 +2981,7 @@ static int BusLogic_QueueCommand(struct 
+ }
+ 
+ 
++#if 0
+ /*
+   BusLogic_AbortCommand aborts Command if possible.
+ */
+@@ -3025,6 +3052,7 @@ static int BusLogic_AbortCommand(struct 
+ 	return SUCCESS;
+ }
+ 
++#endif
+ /*
+   BusLogic_ResetHostAdapter resets Host Adapter if possible, marking all
+   currently executing SCSI Commands as having been Reset.
 _
