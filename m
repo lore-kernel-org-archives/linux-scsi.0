@@ -1,39 +1,56 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [Achim_Leubner@adaptec.com: RE: HEADS UP for gdth driver users]
-Date: Fri, 09 Jun 2006 09:16:41 -0500
-Message-ID: <1149862601.3480.4.camel@mulgrave.il.steeleye.com>
-References: <20060609113609.GA19388@infradead.org>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH 1/3] block layer: early detection of medium not present
+Date: Fri, 9 Jun 2006 10:17:42 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0606091013470.16847-100000@netrider.rowland.org>
+References: <1149815229.3276.20.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:25306 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S965190AbWFIOQv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 Jun 2006 10:16:51 -0400
-In-Reply-To: <20060609113609.GA19388@infradead.org>
+Received: from mx2.rowland.org ([192.131.102.7]:36368 "HELO mx2.rowland.org")
+	by vger.kernel.org with SMTP id S965198AbWFIORn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jun 2006 10:17:43 -0400
+In-Reply-To: <1149815229.3276.20.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Achim_Leubner@adaptec.com, Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Andrew Morton <akpm@osdl.org>, Jens Axboe <axboe@suse.de>, Kernel development list <linux-kernel@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Fri, 2006-06-09 at 12:36 +0100, Christoph Hellwig wrote:
-> ----- Forwarded message from "Leubner, Achim" <Achim_Leubner@adaptec.com> -----
+On Thu, 8 Jun 2006, James Bottomley wrote:
+
+> On Tue, 2006-06-06 at 11:26 -0400, Alan Stern wrote:
+> > When the block layer checks for new media in a drive, it uses a two-step 
+> > procedure: First it checks for media change and then it revalidates the 
+> > disk.  When no medium is present the second step fails.
+> > 
+> > However some drivers (such as the SCSI disk driver) are capable of
+> > detecting medium-not-present as part of the media-changed check.  Doing so
+> > will reduce by a factor of 2 or more the amount of work done by tasks
+> > which, like hald, constantly poll empty drives.
+> > 
+> > This patch (as694) changes the block layer core to make it recognize a 
+> > -ENOMEDIUM error return from the media_changed method.  A follow-on patch 
+> > makes the sd driver return this code when no medium is present.
 > 
-> Date:	Fri, 9 Jun 2006 13:03:08 +0200
-> From:	"Leubner, Achim" <Achim_Leubner@adaptec.com>
-> Subject: RE: HEADS UP for gdth driver users
-> To:	"Christoph Hellwig" <hch@lst.de>
-> Cc:	<linux-kernel@vger.kernel.org>
+> I'm not sure there's enough buy in to make this change yet ... our media
+> change handling is incredibly (and quite possibly far too) complex.
 > 
-> Hi Christoph,
-> 
-> Attached you find a patch to remove the scsi_request interface from the
-> gdth driver. The patch contains your first patch, the changes for
+> As documented in Documentation/cdrom/cdrom-standard.tex, the return
+> codes for media change are either 0 or 1.
 
-Er, there was no patch contained in this forwarded message ... could you
-send it to linux-scsi, please.
+I can change the documentation, if necessary.  On the other hand, I don't 
+want to embark on a global alteration of the media-change handling 
+throughout the entire kernel!  :-)
 
-James
+> Personally, I can't see a problem with overloading the true return to
+> have more information that the error codes provide, but before we do
+> this we need the buy in of the cdrom layer, since that's where this
+> handling came from, and we need to update the documents to reflect the
+> new behaviour ... someone also needs to consider what changes should be
+> made in the cdrom layer for this (and whether this is actually the
+> correct way to do this from the point of view of CDs).
 
+Agreed.  That's why I cc'ed Jens.  Is there anyone else I should also ask
+about this change?
+
+Alan Stern
 
