@@ -1,63 +1,85 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: Re: fc transport creates second set of targets for devices in an
- "md"
-Date: Fri, 09 Jun 2006 11:35:52 -0500
-Message-ID: <4489A368.3080105@sgi.com>
-References: <448876C8.3090303@sgi.com> <1149813836.3276.3.camel@mulgrave.il.steeleye.com>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: [PATCH 1/3] aacraid: Fix return code interpretation
+Date: Fri, 9 Jun 2006 13:10:54 -0400
+Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F028560BD@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:10221 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S1030275AbWFIQfz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jun 2006 12:35:55 -0400
-In-Reply-To: <1149813836.3276.3.camel@mulgrave.il.steeleye.com>
+Received: from mail-gw3.adaptec.com ([216.52.22.36]:2008 "EHLO
+	mail-gw3.adaptec.com") by vger.kernel.org with ESMTP
+	id S1030246AbWFIRK4 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jun 2006 13:10:56 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: James.Smart@Emulex.Com, Jeremy Higdon <jeremy@sgi.com>, Gary Hagensen <gwh@sgi.com>, linux-scsi <linux-scsi@vger.kernel.org>, Jim Nead <jnead@sgi.com>
+To: Mark Haverkamp <markh@osdl.org>
+Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>
+
+Yes, that is the intent. A 32 bit application is calling a 64 bit
+driver. The pointers in the 32 bit application merely need the virtual
+address upper word zero'd to pass themselves off as 64 bit virtual
+pointers. Yes, the clear_user call could be replaced with an =0 on the
+last element, but it was more generic to clear it out completely before
+copying in the subset. copy_[in|out]_user works with the constructed 64
+bit virtual pointer.
+
+Sincerely -- Mark Salyzyn
 
 
-
-James Bottomley wrote:
-> On Thu, 2006-06-08 at 14:13 -0500, Michael Reed wrote:
->> I created an md device on two fibre channel disks, sde and sdf.
->> I then disabled the switch port to which the hba is connected.
->> After the remote port time out messages, I re-enabled the switch
->> port.  Three things happen that are weird.  First, two unexpected
->> responses while scanning.  Second, the creation of sdm and
->> sdn.  Third, the md device remains inaccessible.
+> -----Original Message-----
+> From: Mark Haverkamp [mailto:markh@osdl.org] 
+> Sent: Friday, June 09, 2006 12:22 PM
+> To: Salyzyn, Mark
+> Cc: Christoph Hellwig; James Bottomley; linux-scsi
+> Subject: RE: [PATCH 1/3] aacraid: Fix return code interpretation
 > 
-> This is sort of as expected.  What you did was wait out the reconnection
-> timer, so the mid layer failed and offlined the devices.  Thus, when
-> they come back, they get new instances.  If you'd done a remove-device
-> after they went offline, they'd have come back to the same location (as
-> long as nothing had them open).  But this is user level stuff.
-
-In this instance, there was no i/o in progress so the mid-layer didn't
-take the device off line.  It was simply removed by the transport.
-
-> Basically, when a path goes dead it's up to the multi-path user level to
-> remove it an wait for udev to inform it that another SCSI node has
-> appeared and has the correct signature to be another path to the device.
-
-Are there notification mechanisms in place such that a driver which has
-the device opened (claimed?) will be notified upon it's removal?  Should
-there be?  Could it happen via a driver callback?  Udev?  Both?
-I like the idea of a callback so that the removal has a chance of being
-complete.
-
-Is it possible to do a better job of reconnecting a removed target
-to an open sd?
-
-Thanks,
- Mike
-
 > 
->> I don't think this is working the way it's intended to.  I
->> suspect it will cause big problems for multi-path volume managers
->> in a fail back situation.
+> On Fri, 2006-06-09 at 08:00 -0400, Salyzyn, Mark wrote:
+> > Are you sure of this? The code that follows expects the end of the
+> > structure to be cleared.
 > 
-> James
+> Could you clarify?  It looks like copy_in_user copies one u32 
+> less than
+> the structure size and leaves that last word uninitialized?  The last
+> element of fib_ioctl (fib) is a char pointer though.
+> 
+> I can't see where f.fib is initialized in next_adapter_fib even though
+> copy_to_user is called.  Even if clear_user is  called, doesn't that
+> mean that f.fib in next_adapter_fib will be only partially NULL, 
+> 
+> Mark.
+> 
+> 
+> > 
+> > Sincerely -- Mark Salyzyn
+> > 
+> > > -----Original Message-----
+> > > From: Christoph Hellwig [mailto:hch@infradead.org] 
+> > > Sent: Thursday, June 08, 2006 4:11 PM
+> > > To: Mark Haverkamp
+> > > Cc: James Bottomley; linux-scsi; Salyzyn, Mark
+> > > Subject: Re: [PATCH 1/3] aacraid: Fix return code interpretation
+> > > 
+> > > 
+> > > > @@ -564,7 +564,7 @@
+> > > >  		
+> > > >  		f = compat_alloc_user_space(sizeof(*f));
+> > > >  		ret = 0;
+> > > > -		if (clear_user(f, sizeof(*f)) != sizeof(*f))
+> > > > +		if (clear_user(f, sizeof(*f)))
+> > > >  			ret = -EFAULT;
+> > > >  		if (copy_in_user(f, (void __user *)arg, 
+> > > sizeof(struct fib_ioctl) - sizeof(u32)))
+> > > >  			ret = -EFAULT;
+> > > > 
+> > > 
+> > > just remove the clear_user call completely, it's not needed.
+> > > 
+> > > 
+> > 
+> -- 
+> Mark Haverkamp <markh@osdl.org>
 > 
 > 
