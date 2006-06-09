@@ -1,50 +1,47 @@
-From: Vivek Goyal <vgoyal@in.ibm.com>
-Subject: Re: [patch 15/31] kdump: mpt fusion driver initialization failure fix
-Date: Fri, 9 Jun 2006 10:23:29 -0400
-Message-ID: <20060609142329.GA13620@in.ibm.com>
-References: <200606090523.k595Nlcs032294@shell0.pdx.osdl.net> <1149862359.3480.2.camel@mulgrave.il.steeleye.com>
-Reply-To: vgoyal@in.ibm.com
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH 2/3] SCSI core and sd: early detection of medium not
+	present
+Date: Fri, 09 Jun 2006 09:28:10 -0500
+Message-ID: <1149863290.3480.10.camel@mulgrave.il.steeleye.com>
+References: <Pine.LNX.4.44L0.0606091007370.16847-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:48263 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S965267AbWFIOXi
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 Jun 2006 10:23:38 -0400
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e35.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k59ENY83021782
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-scsi@vger.kernel.org>; Fri, 9 Jun 2006 10:23:34 -0400
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by westrelay02.boulder.ibm.com (8.13.6/NCO/VER7.0) with ESMTP id k59ENRHV279722
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Fri, 9 Jun 2006 08:23:27 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k59ENXq0006221
-	for <linux-scsi@vger.kernel.org>; Fri, 9 Jun 2006 08:23:33 -0600
-Content-Disposition: inline
-In-Reply-To: <1149862359.3480.2.camel@mulgrave.il.steeleye.com>
+Received: from stat9.steeleye.com ([209.192.50.41]:52699 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S965262AbWFIO23 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 9 Jun 2006 10:28:29 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0606091007370.16847-100000@netrider.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: akpm@osdl.org, linux-scsi@vger.kernel.org, Eric.Moore@lsil.com
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Andrew Morton <akpm@osdl.org>, Jens Axboe <axboe@suse.de>, Kernel development list <linux-kernel@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Fri, Jun 09, 2006 at 09:12:39AM -0500, James Bottomley wrote:
-> On Thu, 2006-06-08 at 22:23 -0700, akpm@osdl.org wrote:
-> > From: Vivek Goyal <vgoyal@in.ibm.com>
-> > 
-> > MPT fusion driver initialization fails while second kernel is booting,
-> > after a system crash (if kdump kernel is configured).  Oops message is
-> > pasted below.  I have attached a patch to fix the issue.  Your suggestions
-> > are welcome.
+On Fri, 2006-06-09 at 10:13 -0400, Alan Stern wrote:
+> I did it that way in the patch because it was the only simple choice.  The 
+> scsi_test_unit_ready() routine is part of the SCSI core and can be called 
+> for devices that aren't disks.  Hence any flag it sets cannot be part of 
+> the scsi_disk structure.
+
+The slightly more complex choice that would be to extend
+scsi_test_unit_ready() to allow the sending of a sense header pointer.
+Then any user could use the sense return data for setting local
+flags ... and thus, they could be kept local.
+
+> In principle the information could be conveyed in the return value from 
+> scsi_test_unit_ready() rather than in a static flag.  But the routine has 
+> several callers and I didn't want to change all of them to recognize a 
+> -ENOMEDIUM return code.  Now in the long run, perhaps that would be a good 
+> thing to do.  Or perhaps moving the flag to scsi_device would be better, I 
+> don't know...
 > 
-> This one's been in scsi-misc for quite a while ... is there some reason
-> the normal processes didn't drop this?
->
+> Ultimately this boils down to how you want to represent "No medium 
+> present" in the SCSI core.  What do you think is the bets way?
 
-Is a notification like email is generated upon inclusion of patch in
-scsi-misc tree? I did not receive one and I was confused for quite some
-time if patch is included or not.
+Well ... that's where I think we follow the CD people, since they're the
+ones who have this occurring the most often.
 
-Thanks
-Vivek 
+James
+
+
