@@ -1,156 +1,73 @@
 From: akpm@osdl.org
-Subject: [patch 26/31] megaraid_sas: switch fw_outstanding to an atomic_t
-Date: Thu, 08 Jun 2006 22:23:57 -0700
-Message-ID: <200606090523.k595Nv6d032348@shell0.pdx.osdl.net>
+Subject: [patch 30/31] scsi: clean up warnings in Advansys driver
+Date: Thu, 08 Jun 2006 22:24:05 -0700
+Message-ID: <200606090524.k595O5dX032361@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:18397 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S965172AbWFIFYG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jun 2006 01:24:06 -0400
+Received: from smtp.osdl.org ([65.172.181.4]:26077 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S965175AbWFIFYO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jun 2006 01:24:14 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, sumantp@lsil.com, hch@lst.de, Sumant.Patro@lsil.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, ken@krwtech.com, jeffreyfreeman@syncleus.com
 
 
-From: Sumant Patro <sumantp@lsil.com>
+From: Ken Witherow <ken@krwtech.com>
 
-This patch( originally submitted by Christoph Hellwig) removes
-instance_lock and changes fw_outstanding variable data type to atomic_t.
+Fix typecast warnings and switch from check_region to request_region
 
-Signed-off-by: Sumant Patro <Sumant.Patro@lsil.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Christoph Hellwig <hch@lst.de>
+(akpm: Ken and Jeffrey Phillips Freeman <jeffreyfreeman@syncleus.com> are
+possible advansys testers)
+
+Signed-off-by: Ken Witherow <ken@krwtech.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- Documentation/scsi/ChangeLog.megaraid_sas |   13 ++++++++++
- drivers/scsi/megaraid/megaraid_sas.c      |   26 +++++++-------------
- drivers/scsi/megaraid/megaraid_sas.h      |    3 --
- 3 files changed, 24 insertions(+), 18 deletions(-)
+ drivers/scsi/advansys.c |    7 +++++--
+ 1 files changed, 5 insertions(+), 2 deletions(-)
 
-diff -puN Documentation/scsi/ChangeLog.megaraid_sas~megaraid_sas-switch-fw_outstanding-to-an-atomic_t Documentation/scsi/ChangeLog.megaraid_sas
---- devel/Documentation/scsi/ChangeLog.megaraid_sas~megaraid_sas-switch-fw_outstanding-to-an-atomic_t	2006-05-30 17:51:39.000000000 -0700
-+++ devel-akpm/Documentation/scsi/ChangeLog.megaraid_sas	2006-05-30 17:51:39.000000000 -0700
-@@ -1,3 +1,16 @@
-+
-+1 Release Date    : Wed Feb 03 14:31:44 PST 2006 - Sumant Patro <Sumant.Patro@lsil.com>
-+2 Current Version : 00.00.02.04
-+3 Older Version   : 00.00.02.04
-+
-+i.	Remove superflous instance_lock
-+
-+	gets rid of the otherwise superflous instance_lock and avoids an unsave
-+	unsynchronized access in the error handler.
-+
-+		- Christoph Hellwig <hch@lst.de>
-+
-+
- 1 Release Date    : Wed Feb 03 14:31:44 PST 2006 - Sumant Patro <Sumant.Patro@lsil.com>
- 2 Current Version : 00.00.02.04
- 3 Older Version   : 00.00.02.04 
-diff -puN drivers/scsi/megaraid/megaraid_sas.c~megaraid_sas-switch-fw_outstanding-to-an-atomic_t drivers/scsi/megaraid/megaraid_sas.c
---- devel/drivers/scsi/megaraid/megaraid_sas.c~megaraid_sas-switch-fw_outstanding-to-an-atomic_t	2006-05-30 17:51:39.000000000 -0700
-+++ devel-akpm/drivers/scsi/megaraid/megaraid_sas.c	2006-05-30 17:51:39.000000000 -0700
-@@ -741,7 +741,6 @@ static int
- megasas_queue_command(struct scsi_cmnd *scmd, void (*done) (struct scsi_cmnd *))
- {
- 	u32 frame_count;
--	unsigned long flags;
- 	struct megasas_cmd *cmd;
- 	struct megasas_instance *instance;
- 
-@@ -776,9 +775,7 @@ megasas_queue_command(struct scsi_cmnd *
- 	/*
- 	 * Issue the command to the FW
- 	 */
--	spin_lock_irqsave(&instance->instance_lock, flags);
--	instance->fw_outstanding++;
--	spin_unlock_irqrestore(&instance->instance_lock, flags);
-+	atomic_inc(&instance->fw_outstanding);
- 
- 	instance->instancet->fire_cmd(cmd->frame_phys_addr ,cmd->frame_count-1,instance->reg_set);
- 
-@@ -826,19 +823,20 @@ static int megasas_wait_for_outstanding(
- 
- 	for (i = 0; i < wait_time; i++) {
- 
--		if (!instance->fw_outstanding)
-+		int outstanding = atomic_read(&instance->fw_outstanding);
-+
-+		if (!outstanding)
- 			break;
- 
- 		if (!(i % MEGASAS_RESET_NOTICE_INTERVAL)) {
- 			printk(KERN_NOTICE "megasas: [%2d]waiting for %d "
--			       "commands to complete\n", i,
--			       instance->fw_outstanding);
-+			       "commands to complete\n",i,outstanding);
- 		}
- 
- 		msleep(1000);
- 	}
- 
--	if (instance->fw_outstanding) {
-+	if (atomic_read(&instance->fw_outstanding)) {
- 		instance->hw_crit_error = 1;
- 		return FAILED;
- 	}
-@@ -1050,7 +1048,6 @@ megasas_complete_cmd(struct megasas_inst
- {
- 	int exception = 0;
- 	struct megasas_header *hdr = &cmd->frame->hdr;
--	unsigned long flags;
- 
- 	if (cmd->scmd) {
- 		cmd->scmd->SCp.ptr = (char *)0;
-@@ -1082,9 +1079,7 @@ megasas_complete_cmd(struct megasas_inst
- 
- 		if (exception) {
- 
--			spin_lock_irqsave(&instance->instance_lock, flags);
--			instance->fw_outstanding--;
--			spin_unlock_irqrestore(&instance->instance_lock, flags);
-+			atomic_dec(&instance->fw_outstanding);
- 
- 			megasas_unmap_sgbuf(instance, cmd);
- 			cmd->scmd->scsi_done(cmd->scmd);
-@@ -1132,9 +1127,7 @@ megasas_complete_cmd(struct megasas_inst
- 			break;
- 		}
- 
--		spin_lock_irqsave(&instance->instance_lock, flags);
--		instance->fw_outstanding--;
--		spin_unlock_irqrestore(&instance->instance_lock, flags);
-+		atomic_dec(&instance->fw_outstanding);
- 
- 		megasas_unmap_sgbuf(instance, cmd);
- 		cmd->scmd->scsi_done(cmd->scmd);
-@@ -2171,11 +2164,12 @@ megasas_probe_one(struct pci_dev *pdev, 
- 	 */
- 	INIT_LIST_HEAD(&instance->cmd_pool);
- 
-+	atomic_set(&instance->fw_outstanding,0);
-+
- 	init_waitqueue_head(&instance->int_cmd_wait_q);
- 	init_waitqueue_head(&instance->abort_cmd_wait_q);
- 
- 	spin_lock_init(&instance->cmd_pool_lock);
--	spin_lock_init(&instance->instance_lock);
- 
- 	sema_init(&instance->aen_mutex, 1);
- 	sema_init(&instance->ioctl_sem, MEGASAS_INT_CMDS);
-diff -puN drivers/scsi/megaraid/megaraid_sas.h~megaraid_sas-switch-fw_outstanding-to-an-atomic_t drivers/scsi/megaraid/megaraid_sas.h
---- devel/drivers/scsi/megaraid/megaraid_sas.h~megaraid_sas-switch-fw_outstanding-to-an-atomic_t	2006-05-30 17:51:39.000000000 -0700
-+++ devel-akpm/drivers/scsi/megaraid/megaraid_sas.h	2006-05-30 17:51:39.000000000 -0700
-@@ -1077,9 +1077,8 @@ struct megasas_instance {
- 	struct pci_dev *pdev;
- 	u32 unique_id;
- 
--	u32 fw_outstanding;
-+	atomic_t fw_outstanding;
- 	u32 hw_crit_error;
--	spinlock_t instance_lock;
- 
- 	struct megasas_instance_template *instancet;
- };
+diff -puN drivers/scsi/advansys.c~scsi-clean-up-warnings-in-advansys-driver drivers/scsi/advansys.c
+--- devel/drivers/scsi/advansys.c~scsi-clean-up-warnings-in-advansys-driver	2006-04-30 00:13:25.000000000 -0700
++++ devel-akpm/drivers/scsi/advansys.c	2006-04-30 00:13:25.000000000 -0700
+@@ -4415,7 +4415,7 @@ advansys_detect(struct scsi_host_templat
+                         ASC_DBG1(1,
+                                 "advansys_detect: probing I/O port 0x%x...\n",
+                             iop);
+-                        if (check_region(iop, ASC_IOADR_GAP) != 0) {
++			if (!request_region(iop, ASC_IOADR_GAP, "advansys")){
+                             printk(
+ "AdvanSys SCSI: specified I/O Port 0x%X is busy\n", iop);
+                             /* Don't try this I/O port twice. */
+@@ -4425,6 +4425,7 @@ advansys_detect(struct scsi_host_templat
+                             printk(
+ "AdvanSys SCSI: specified I/O Port 0x%X has no adapter\n", iop);
+                             /* Don't try this I/O port twice. */
++			    release_region(iop, ASC_IOADR_GAP);
+                             asc_ioport[ioport] = 0;
+                             goto ioport_try_again;
+                         } else {
+@@ -4443,6 +4444,7 @@ advansys_detect(struct scsi_host_templat
+                                   * 'ioport' past this board.
+                                   */
+                                  ioport++;
++				 release_region(iop, ASC_IOADR_GAP);
+                                  goto ioport_try_again;
+                             }
+                         }
+@@ -9752,13 +9754,14 @@ AscSearchIOPortAddr11(
+     }
+     for (; i < ASC_IOADR_TABLE_MAX_IX; i++) {
+         iop_base = _asc_def_iop_base[i];
+-        if (check_region(iop_base, ASC_IOADR_GAP) != 0) {
++	if (!request_region(iop_base, ASC_IOADR_GAP, "advansys")){
+             ASC_DBG1(1,
+                "AscSearchIOPortAddr11: check_region() failed I/O port 0x%x\n",
+                      iop_base);
+             continue;
+         }
+         ASC_DBG1(1, "AscSearchIOPortAddr11: probing I/O port 0x%x\n", iop_base);
++	release_region(iop_base, ASC_IOADR_GAP);
+         if (AscFindSignature(iop_base)) {
+             return (iop_base);
+         }
 _
