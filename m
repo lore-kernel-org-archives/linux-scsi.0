@@ -1,34 +1,55 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [patch 15/31] kdump: mpt fusion driver initialization failure
-	fix
-Date: Fri, 09 Jun 2006 09:12:39 -0500
-Message-ID: <1149862359.3480.2.camel@mulgrave.il.steeleye.com>
-References: <200606090523.k595Nlcs032294@shell0.pdx.osdl.net>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH 2/3] SCSI core and sd: early detection of medium not
+ present
+Date: Fri, 9 Jun 2006 10:13:40 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0606091007370.16847-100000@netrider.rowland.org>
+References: <1149814666.3276.16.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:57305 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S965195AbWFIOMr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 Jun 2006 10:12:47 -0400
-In-Reply-To: <200606090523.k595Nlcs032294@shell0.pdx.osdl.net>
+Received: from mx2.rowland.org ([192.131.102.7]:30736 "HELO mx2.rowland.org")
+	by vger.kernel.org with SMTP id S965197AbWFIONn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jun 2006 10:13:43 -0400
+In-Reply-To: <1149814666.3276.16.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@osdl.org
-Cc: linux-scsi@vger.kernel.org, vgoyal@in.ibm.com, Eric.Moore@lsil.com
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Andrew Morton <akpm@osdl.org>, Jens Axboe <axboe@suse.de>, Kernel development list <linux-kernel@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Thu, 2006-06-08 at 22:23 -0700, akpm@osdl.org wrote:
-> From: Vivek Goyal <vgoyal@in.ibm.com>
+On Thu, 8 Jun 2006, James Bottomley wrote:
+
+> On Tue, 2006-06-06 at 11:31 -0400, Alan Stern wrote:
+> > This patch (as695) changes the scsi_test_unit_ready() routine in the
+> > SCSI 
+> > core to set a new flag when no medium is present.  The sd driver is 
+> > changed to use this new flag for reporting -ENOMEDIUM in from the 
+> > sd_media_changed method.
 > 
-> MPT fusion driver initialization fails while second kernel is booting,
-> after a system crash (if kdump kernel is configured).  Oops message is
-> pasted below.  I have attached a patch to fix the issue.  Your suggestions
-> are welcome.
+> This would appear to be duplicating the struct scsi_disk media_present
+> flag.
 
-This one's been in scsi-misc for quite a while ... is there some reason
-the normal processes didn't drop this?
+Correct, although the semantics of the two flags aren't exactly the same.
 
-James
+>  Moving the media_present flag from scsi_disk to scsi_device may
+> make a bit of sense long term ... however, there's also dupication with
+> the sr driver and the cdrom layer now (that stores media change at the
+> cdrom level), so is there an argument why it's better in scsi_device
+> than scsi_disk?
 
+I did it that way in the patch because it was the only simple choice.  The 
+scsi_test_unit_ready() routine is part of the SCSI core and can be called 
+for devices that aren't disks.  Hence any flag it sets cannot be part of 
+the scsi_disk structure.
+
+In principle the information could be conveyed in the return value from 
+scsi_test_unit_ready() rather than in a static flag.  But the routine has 
+several callers and I didn't want to change all of them to recognize a 
+-ENOMEDIUM return code.  Now in the long run, perhaps that would be a good 
+thing to do.  Or perhaps moving the flag to scsi_device would be better, I 
+don't know...
+
+Ultimately this boils down to how you want to represent "No medium 
+present" in the SCSI core.  What do you think is the bets way?
+
+Alan Stern
 
