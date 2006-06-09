@@ -1,61 +1,50 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH 1/3] block layer: early detection of medium not present
-Date: Fri, 9 Jun 2006 16:19:16 +0200
-Message-ID: <20060609141916.GO31913@suse.de>
-References: <1149815229.3276.20.camel@mulgrave.il.steeleye.com> <Pine.LNX.4.44L0.0606091013470.16847-100000@netrider.rowland.org>
+From: Vivek Goyal <vgoyal@in.ibm.com>
+Subject: Re: [patch 15/31] kdump: mpt fusion driver initialization failure fix
+Date: Fri, 9 Jun 2006 10:23:29 -0400
+Message-ID: <20060609142329.GA13620@in.ibm.com>
+References: <200606090523.k595Nlcs032294@shell0.pdx.osdl.net> <1149862359.3480.2.camel@mulgrave.il.steeleye.com>
+Reply-To: vgoyal@in.ibm.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:14607 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S965189AbWFIOTR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jun 2006 10:19:17 -0400
+Received: from e35.co.us.ibm.com ([32.97.110.153]:48263 "EHLO
+	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S965267AbWFIOXi
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 9 Jun 2006 10:23:38 -0400
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e35.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k59ENY83021782
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-scsi@vger.kernel.org>; Fri, 9 Jun 2006 10:23:34 -0400
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by westrelay02.boulder.ibm.com (8.13.6/NCO/VER7.0) with ESMTP id k59ENRHV279722
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Fri, 9 Jun 2006 08:23:27 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k59ENXq0006221
+	for <linux-scsi@vger.kernel.org>; Fri, 9 Jun 2006 08:23:33 -0600
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0606091013470.16847-100000@netrider.rowland.org>
+In-Reply-To: <1149862359.3480.2.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@osdl.org>, Kernel development list <linux-kernel@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: akpm@osdl.org, linux-scsi@vger.kernel.org, Eric.Moore@lsil.com
 
-On Fri, Jun 09 2006, Alan Stern wrote:
-> On Thu, 8 Jun 2006, James Bottomley wrote:
-> 
-> > On Tue, 2006-06-06 at 11:26 -0400, Alan Stern wrote:
-> > > When the block layer checks for new media in a drive, it uses a two-step 
-> > > procedure: First it checks for media change and then it revalidates the 
-> > > disk.  When no medium is present the second step fails.
-> > > 
-> > > However some drivers (such as the SCSI disk driver) are capable of
-> > > detecting medium-not-present as part of the media-changed check.  Doing so
-> > > will reduce by a factor of 2 or more the amount of work done by tasks
-> > > which, like hald, constantly poll empty drives.
-> > > 
-> > > This patch (as694) changes the block layer core to make it recognize a 
-> > > -ENOMEDIUM error return from the media_changed method.  A follow-on patch 
-> > > makes the sd driver return this code when no medium is present.
+On Fri, Jun 09, 2006 at 09:12:39AM -0500, James Bottomley wrote:
+> On Thu, 2006-06-08 at 22:23 -0700, akpm@osdl.org wrote:
+> > From: Vivek Goyal <vgoyal@in.ibm.com>
 > > 
-> > I'm not sure there's enough buy in to make this change yet ... our media
-> > change handling is incredibly (and quite possibly far too) complex.
-> > 
-> > As documented in Documentation/cdrom/cdrom-standard.tex, the return
-> > codes for media change are either 0 or 1.
+> > MPT fusion driver initialization fails while second kernel is booting,
+> > after a system crash (if kdump kernel is configured).  Oops message is
+> > pasted below.  I have attached a patch to fix the issue.  Your suggestions
+> > are welcome.
 > 
-> I can change the documentation, if necessary.  On the other hand, I don't 
-> want to embark on a global alteration of the media-change handling 
-> throughout the entire kernel!  :-)
-> 
-> > Personally, I can't see a problem with overloading the true return to
-> > have more information that the error codes provide, but before we do
-> > this we need the buy in of the cdrom layer, since that's where this
-> > handling came from, and we need to update the documents to reflect the
-> > new behaviour ... someone also needs to consider what changes should be
-> > made in the cdrom layer for this (and whether this is actually the
-> > correct way to do this from the point of view of CDs).
-> 
-> Agreed.  That's why I cc'ed Jens.  Is there anyone else I should also ask
-> about this change?
+> This one's been in scsi-misc for quite a while ... is there some reason
+> the normal processes didn't drop this?
+>
 
-I'll be gone over the weekend, I can take a look next week.
+Is a notification like email is generated upon inclusion of patch in
+scsi-misc tree? I did not receive one and I was confused for quite some
+time if patch is included or not.
 
--- 
-Jens Axboe
-
+Thanks
+Vivek 
