@@ -1,44 +1,78 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: fc transport creates second set of targets for devices in an
-	"md"
-Date: Thu, 08 Jun 2006 19:43:56 -0500
-Message-ID: <1149813836.3276.3.camel@mulgrave.il.steeleye.com>
-References: <448876C8.3090303@sgi.com>
+From: "Randy.Dunlap" <rdunlap@xenotime.net>
+Subject: [PATCH] advansys section fixes
+Date: Thu, 8 Jun 2006 20:46:35 -0700
+Message-ID: <20060608204635.376e0641.rdunlap@xenotime.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:55699 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S965119AbWFIDtd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Jun 2006 23:49:33 -0400
-In-Reply-To: <448876C8.3090303@sgi.com>
+Received: from xenotime.net ([66.160.160.81]:64711 "HELO xenotime.net")
+	by vger.kernel.org with SMTP id S965126AbWFIDuY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jun 2006 23:50:24 -0400
+Received: from midway.site ([71.245.102.105]) by xenotime.net for <linux-scsi@vger.kernel.org>; Thu, 8 Jun 2006 20:50:23 -0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Reed <mdr@sgi.com>
-Cc: James.Smart@Emulex.Com, Jeremy Higdon <jeremy@sgi.com>, Gary Hagensen <gwh@sgi.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: scsi <linux-scsi@vger.kernel.org>
+Cc: jejb <james.bottomley@steeleye.com>, akpm <akpm@osdl.org>, bobf@advansys.com
 
-On Thu, 2006-06-08 at 14:13 -0500, Michael Reed wrote:
-> I created an md device on two fibre channel disks, sde and sdf.
-> I then disabled the switch port to which the hba is connected.
-> After the remote port time out messages, I re-enabled the switch
-> port.  Three things happen that are weird.  First, two unexpected
-> responses while scanning.  Second, the creation of sdm and
-> sdn.  Third, the md device remains inaccessible.
+From: Randy Dunlap <rdunlap@xenotime.net>
 
-This is sort of as expected.  What you did was wait out the reconnection
-timer, so the mid layer failed and offlined the devices.  Thus, when
-they come back, they get new instances.  If you'd done a remove-device
-after they went offline, they'd have come back to the same location (as
-long as nothing had them open).  But this is user level stuff.
-Basically, when a path goes dead it's up to the multi-path user level to
-remove it an wait for udev to inform it that another SCSI node has
-appeared and has the correct signature to be another path to the device.
+Priority: not critical.
+Mark 3 functions __init.  Saves a little memory.
+This makes these functions' calls to AdvWaitEEPCmd() (which is __init)
+be clean (i.e., eliminates text -> init -> text call chain).
 
-> I don't think this is working the way it's intended to.  I
-> suspect it will cause big problems for multi-path volume managers
-> in a fail back situation.
+Fix multiple section mismatch warnings:
+WARNING: drivers/scsi/advansys.o - Section mismatch: reference to .init.text: from .text between 'AdvSet3550EEPConfig' (at offset 0x7a22) and 'AdvSet38C0800EEPConfig'
+WARNING: drivers/scsi/advansys.o - Section mismatch: reference to .init.text: from .text between 'AdvSet3550EEPConfig' (at offset 0x7a4e) and 'AdvSet38C0800EEPConfig'
+WARNING: drivers/scsi/advansys.o - Section mismatch: reference to .init.text: from .text between 'AdvSet3550EEPConfig' (at offset 0x7a79) and 'AdvSet38C0800EEPConfig'
+WARNING: drivers/scsi/advansys.o - Section mismatch: reference to .init.text: from .text between 'AdvSet3550EEPConfig' (at offset 0x7aa2) and 'AdvSet38C0800EEPConfig'
+WARNING: drivers/scsi/advansys.o - Section mismatch: reference to .init.text: from .text between 'AdvSet3550EEPConfig' (at offset 0x7abb) and 'AdvSet38C0800EEPConfig'
+WARNING: drivers/scsi/advansys.o - Section mismatch: reference to .init.text: from .text between 'AdvSet38C0800EEPConfig' (at offset 0x7ae0) and 'AdvSet38C1600EEPConfig'
+WARNING: drivers/scsi/advansys.o - Section mismatch: reference to .init.text: from .text between 'AdvSet38C0800EEPConfig' (at offset 0x7b0c) and 'AdvSet38C1600EEPConfig'
+WARNING: drivers/scsi/advansys.o - Section mismatch: reference to .init.text: from .text between 'AdvSet38C0800EEPConfig' (at offset 0x7b37) and 'AdvSet38C1600EEPConfig'
+WARNING: drivers/scsi/advansys.o - Section mismatch: reference to .init.text: from .text between 'AdvSet38C0800EEPConfig' (at offset 0x7b60) and 'AdvSet38C1600EEPConfig'
+WARNING: drivers/scsi/advansys.o - Section mismatch: reference to .init.text: from .text between 'AdvSet38C0800EEPConfig' (at offset 0x7b79) and 'AdvSet38C1600EEPConfig'
+WARNING: drivers/scsi/advansys.o - Section mismatch: reference to .init.text: from .text between 'AdvSet38C1600EEPConfig' (at offset 0x7b9e) and 'AdvExeScsiQueue'
+WARNING: drivers/scsi/advansys.o - Section mismatch: reference to .init.text: from .text between 'AdvSet38C1600EEPConfig' (at offset 0x7bca) and 'AdvExeScsiQueue'
+WARNING: drivers/scsi/advansys.o - Section mismatch: reference to .init.text: from .text between 'AdvSet38C1600EEPConfig' (at offset 0x7bf5) and 'AdvExeScsiQueue'
+WARNING: drivers/scsi/advansys.o - Section mismatch: reference to .init.text: from .text between 'AdvSet38C1600EEPConfig' (at offset 0x7c1e) and 'AdvExeScsiQueue'
+WARNING: drivers/scsi/advansys.o - Section mismatch: reference to .init.text: from .text between 'AdvSet38C1600EEPConfig' (at offset 0x7c37) and 'AdvExeScsiQueue'
 
-James
+Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+---
+ drivers/scsi/advansys.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+--- linux-2617-rc6.orig/drivers/scsi/advansys.c
++++ linux-2617-rc6/drivers/scsi/advansys.c
+@@ -17316,7 +17316,7 @@ AdvWaitEEPCmd(AdvPortAddr iop_base)
+ /*
+  * Write the EEPROM from 'cfg_buf'.
+  */
+-void
++void __init
+ AdvSet3550EEPConfig(AdvPortAddr iop_base, ADVEEP_3550_CONFIG *cfg_buf)
+ {
+     ushort *wbuf;
+@@ -17383,7 +17383,7 @@ AdvSet3550EEPConfig(AdvPortAddr iop_base
+ /*
+  * Write the EEPROM from 'cfg_buf'.
+  */
+-void
++void __init
+ AdvSet38C0800EEPConfig(AdvPortAddr iop_base,
+                        ADVEEP_38C0800_CONFIG *cfg_buf)
+ {
+@@ -17451,7 +17451,7 @@ AdvSet38C0800EEPConfig(AdvPortAddr iop_b
+ /*
+  * Write the EEPROM from 'cfg_buf'.
+  */
+-void
++void __init
+ AdvSet38C1600EEPConfig(AdvPortAddr iop_base,
+                        ADVEEP_38C1600_CONFIG *cfg_buf)
+ {
 
 
+---
