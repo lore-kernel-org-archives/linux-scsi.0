@@ -1,44 +1,45 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 1/3] block layer: early detection of medium not present
-Date: Thu, 08 Jun 2006 20:07:09 -0500
-Message-ID: <1149815229.3276.20.camel@mulgrave.il.steeleye.com>
-References: <Pine.LNX.4.44L0.0606061113040.9182-100000@iolanthe.rowland.org>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965126AbWFIDvy@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.0606061113040.9182-100000@iolanthe.rowland.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Andrew Morton <akpm@osdl.org>, Jens Axboe <axboe@suse.de>, Kernel development list <linux-kernel@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>
+From: akpm@osdl.org
+Subject: [patch 02/31] drivers/scsi/sd.c: fix uninitialized variable in handling medium errors
+Date: Thu, 08 Jun 2006 22:23:29 -0700
+Message-ID: <200606090523.k595NTB3032231@shell0.pdx.osdl.net>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.osdl.org ([65.172.181.4]:60636 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S965152AbWFIFXe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jun 2006 01:23:34 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, lkml@rtr.ca
 
-On Tue, 2006-06-06 at 11:26 -0400, Alan Stern wrote:
-> When the block layer checks for new media in a drive, it uses a two-step 
-> procedure: First it checks for media change and then it revalidates the 
-> disk.  When no medium is present the second step fails.
-> 
-> However some drivers (such as the SCSI disk driver) are capable of
-> detecting medium-not-present as part of the media-changed check.  Doing so
-> will reduce by a factor of 2 or more the amount of work done by tasks
-> which, like hald, constantly poll empty drives.
-> 
-> This patch (as694) changes the block layer core to make it recognize a 
-> -ENOMEDIUM error return from the media_changed method.  A follow-on patch 
-> makes the sd driver return this code when no medium is present.
 
-I'm not sure there's enough buy in to make this change yet ... our media
-change handling is incredibly (and quite possibly far too) complex.
+From: Mark Lord <lkml@rtr.ca>
 
-As documented in Documentation/cdrom/cdrom-standard.tex, the return
-codes for media change are either 0 or 1.
+When scsi_get_sense_info_fld() fails (returns 0), it does NOT update the
+value of first_err_block.  But sd_rw_intr() merrily continues to use that
+variable regardless, possibly making incorrect decisions about retries and
+the like.
 
-Personally, I can't see a problem with overloading the true return to
-have more information that the error codes provide, but before we do
-this we need the buy in of the cdrom layer, since that's where this
-handling came from, and we need to update the documents to reflect the
-new behaviour ... someone also needs to consider what changes should be
-made in the cdrom layer for this (and whether this is actually the
-correct way to do this from the point of view of CDs).
+This patch removes the randomness there, by using the first sector of the
+request (SCpnt->request->sector) in such cases, instead of first_err_block.
 
-James
+Signed-off-by: Mark Lord <lkml@rtr.ca>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
+Signed-off-by: Andrew Morton <akpm@osdl.org>
+---
+
+ drivers/scsi/sd.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+diff -puN drivers/scsi/sd.c~drivers-scsi-sdc-fix-uninitialized-variable-in-handling-medium-errors drivers/scsi/sd.c
+--- devel/drivers/scsi/sd.c~drivers-scsi-sdc-fix-uninitialized-variable-in-handling-medium-errors	2006-06-01 20:41:49.000000000 -0700
++++ devel-akpm/drivers/scsi/sd.c	2006-06-01 20:41:49.000000000 -0700
+@@ -959,6 +959,8 @@ static void sd_rw_intr(struct scsi_cmnd 
+ 			default:
+ 				break;
+ 			}
++			if (!info_valid)
++				error_sector = SCpnt->request->sector;
+ 
+ 			error_sector &= ~(block_sectors - 1);
+ 			good_bytes = (error_sector - SCpnt->request->sector) << 9;
+_
