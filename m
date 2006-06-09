@@ -1,44 +1,56 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [patch 30/31] scsi: clean up warnings in Advansys driver
-Date: Fri, 9 Jun 2006 00:04:29 -0700
-Message-ID: <20060609000429.51cf4e46.akpm@osdl.org>
-References: <200606090524.k595O5dX032361@shell0.pdx.osdl.net>
-	<44891AF5.30406@syncleus.com>
+From: Sander van Beek - Elexis <sander@elexis.nl>
+Subject: qlogic qla2312f-v2 (hp oem?)
+Date: Fri, 09 Jun 2006 13:20:57 +0200
+Message-ID: <7.0.1.0.0.20060609132026.025d7098@elexis.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:35720 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751390AbWFIHEh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jun 2006 03:04:37 -0400
-In-Reply-To: <44891AF5.30406@syncleus.com>
+Received: from smtp18.wxs.nl ([195.121.247.9]:14782 "EHLO smtp18.wxs.nl")
+	by vger.kernel.org with ESMTP id S965066AbWFILTC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jun 2006 07:19:02 -0400
+Received: from ws-sander.elexis.nl (ip5457f222.direct-adsl.nl [84.87.242.34])
+ by smtp18.wxs.nl (iPlanet Messaging Server 5.2 Patch 2 (built Jul 14 2004))
+ with ESMTP id <0J0L005XPBFPV9@smtp18.wxs.nl> for linux-scsi@vger.kernel.org;
+ Fri, 09 Jun 2006 13:19:01 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeffrey Phillips Freeman <jeffreyfreeman@syncleus.com>
-Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, ken@krwtech.com
+To: linux-scsi@vger.kernel.org
 
-On Fri, 09 Jun 2006 02:53:41 -0400
-Jeffrey Phillips Freeman <jeffreyfreeman@syncleus.com> wrote:
+Hi all,
 
-> Oh, its great to see my name on the advansys list as a tester. You 
-> almost got filed away with the rest of my spam. I would love to test 
-> this patch but before i do is there some howto or overview document to 
-> help familarize me as a tester. I am comfortable with linuc and the 
-> kernel as well as patching. But i wasnt sure if there was a perticular 
-> version of the kernal i should try this patch on or a procedure i should 
-> follow. Any information that can be provided to go about this properly 
-> would be apprecaited. I would love to contribute, and if im going to 
-> contribute it should be done right!
+I recently got two qla2312f-v2 cards from ebay. These are dual 2gbit 
+fibre channel hba's for a pci-x bus. The qlogic site says this type 
+is a HP OEM card and it is not sold directly by qlogic.
+I tried to get them working on a slackware 10.2 system with the 
+latest stable 2.6 kernel. However, the qla2xxx driver does not see 
+the card. My dmesg only shows this line:
 
-Thanks.
+Jun  9 11:09:27 clust1 kernel: QLogic Fibre Channel HBA Driver
 
-Nothing fancy is needed - it would be sufficient to use the most recentl
-major release (2.6.15, 2.6.16, 2.6.17, etc) in your daily operations and
-report any problems.
+This is how the card shows up in my /proc/pci:
 
-I made a note of this in the changelog because with some of these drivers
-nobody has the hardware - if someone decided to do some maintenance work on
-this driver it could be useful for them to ask you to regression test their
-changes.  They'd ask something like "please install 2.6.18-rc2 and let us
-know if it breaks".
+   Bus  2, device   1, function  1:
+     Class 0c04: PCI device 1077:8000 (rev 1).
+       IRQ 255.
+       Prefetchable 32 bit memory at 0x40000000 [0x403fffff].
+
+Can anyone supply me with some hints what could be wrong, or what I 
+should do to get them working?
+
+With best regards,
+Sander van Beek
+
+---------------------------------------
+
+Ing. S. van Beek
+Elexis
+Marketing 9
+6921 RE Duiven
+
+Tel: 	+31 (0)26 7110329
+Mob: 	+31 (0)6 28395109
+Fax: 	+31 (0)318 611112
+Email: sander@elexis.nl
+Web: 	http://www.elexis.nl
 
