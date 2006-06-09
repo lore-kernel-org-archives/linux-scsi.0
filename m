@@ -1,56 +1,60 @@
 From: akpm@osdl.org
-Subject: [patch 21/31] megaraid gcc 4.1 warning fix
-Date: Thu, 08 Jun 2006 22:23:53 -0700
-Message-ID: <200606090523.k595Nrk9032316@shell0.pdx.osdl.net>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Subject: [patch 19/31] aic7*: cleanup MODULE_PARM_DESC strings
+Date: Thu, 08 Jun 2006 22:23:51 -0700
+Message-ID: <200606090523.k595NpUC032310@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:34525 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S965186AbWFIFYT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jun 2006 01:24:19 -0400
+Received: from smtp.osdl.org ([65.172.181.4]:29149 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S965173AbWFIFYP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jun 2006 01:24:15 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, dwalker@mvista.com, alan@lxorguk.ukuu.org.uk, Neela.Kolli@engenio.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, rdunlap@xenotime.net
 
 
-=46rom: Daniel Walker <dwalker@mvista.com>
+From: Randy Dunlap <rdunlap@xenotime.net>
 
-drivers/scsi/megaraid.c: In function =E2=80=98megadev_ioctl=E2=80=99:
-drivers/scsi/megaraid.c:3665: warning: ignoring return value of =E2=80=98=
-copy_to_user=E2=80=99, declared with attribute warn_unused_result
+Modify beginning string to be more readable.  Remove one trailing newline.
 
-Signed-off-by: Daniel Walker <dwalker@mvista.com>
-Acked-by: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: <Neela.Kolli@engenio.com>
+Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/megaraid.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/scsi/aic7xxx/aic79xx_osm.c |    4 ++--
+ drivers/scsi/aic7xxx/aic7xxx_osm.c |    2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff -puN drivers/scsi/megaraid.c~megaraid-gcc-41-warning-fix drivers/s=
-csi/megaraid.c
---- devel/drivers/scsi/megaraid.c~megaraid-gcc-41-warning-fix	2006-06-0=
-1 20:41:52.000000000 -0700
-+++ devel-akpm/drivers/scsi/megaraid.c	2006-06-01 20:41:52.000000000 -0=
-700
-@@ -3662,8 +3662,9 @@ megadev_ioctl(struct inode *inode, struc
- 			 * Send the request sense data also, irrespective of
- 			 * whether the user has asked for it or not.
- 			 */
--			copy_to_user(upthru->reqsensearea,
--					pthru->reqsensearea, 14);
-+			if (copy_to_user(upthru->reqsensearea,
-+					pthru->reqsensearea, 14))
-+				rval =3D (-EFAULT);
-=20
- freemem_and_return:
- 			if( pthru->dataxferlen ) {
+diff -puN drivers/scsi/aic7xxx/aic79xx_osm.c~aic7-cleanup-module_parm_desc-strings drivers/scsi/aic7xxx/aic79xx_osm.c
+--- devel/drivers/scsi/aic7xxx/aic79xx_osm.c~aic7-cleanup-module_parm_desc-strings	2006-06-01 20:41:51.000000000 -0700
++++ devel-akpm/drivers/scsi/aic7xxx/aic79xx_osm.c	2006-06-01 20:41:51.000000000 -0700
+@@ -340,7 +340,7 @@ MODULE_LICENSE("Dual BSD/GPL");
+ MODULE_VERSION(AIC79XX_DRIVER_VERSION);
+ module_param(aic79xx, charp, 0444);
+ MODULE_PARM_DESC(aic79xx,
+-"period delimited, options string.\n"
++"period-delimited options string:\n"
+ "	verbose			Enable verbose/diagnostic logging\n"
+ "	allow_memio		Allow device registers to be memory mapped\n"
+ "	debug			Bitmask of debug values to enable\n"
+@@ -366,7 +366,7 @@ MODULE_PARM_DESC(aic79xx,
+ "		Shorten the selection timeout to 128ms\n"
+ "\n"
+ "	options aic79xx 'aic79xx=verbose.tag_info:{{}.{}.{..10}}.seltime:1'\n"
+-"\n");
++);
+ 
+ static void ahd_linux_handle_scsi_status(struct ahd_softc *,
+ 					 struct scsi_device *,
+diff -puN drivers/scsi/aic7xxx/aic7xxx_osm.c~aic7-cleanup-module_parm_desc-strings drivers/scsi/aic7xxx/aic7xxx_osm.c
+--- devel/drivers/scsi/aic7xxx/aic7xxx_osm.c~aic7-cleanup-module_parm_desc-strings	2006-06-01 20:41:51.000000000 -0700
++++ devel-akpm/drivers/scsi/aic7xxx/aic7xxx_osm.c	2006-06-01 20:41:51.000000000 -0700
+@@ -341,7 +341,7 @@ MODULE_LICENSE("Dual BSD/GPL");
+ MODULE_VERSION(AIC7XXX_DRIVER_VERSION);
+ module_param(aic7xxx, charp, 0444);
+ MODULE_PARM_DESC(aic7xxx,
+-"period delimited, options string.\n"
++"period-delimited options string:\n"
+ "	verbose			Enable verbose/diagnostic logging\n"
+ "	allow_memio		Allow device registers to be memory mapped\n"
+ "	debug			Bitmask of debug values to enable\n"
 _
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
