@@ -1,24 +1,23 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCH] Remove last page_address from dc395x.c
-Date: Sat, 10 Jun 2006 11:21:31 +0200 (CEST)
-Message-ID: <Pine.LNX.4.60.0606101044390.3998@poirot.grange>
-References: <Pine.LNX.4.60.0606092216460.5256@poirot.grange>
- <1149904465.3131.19.camel@laptopd505.fenrus.org>
+Date: Sat, 10 Jun 2006 10:50:38 +0100
+Message-ID: <20060610095038.GA20526@infradead.org>
+References: <Pine.LNX.4.60.0606092216460.5256@poirot.grange> <1149904465.3131.19.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:16542 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S1751443AbWFJJVe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 10 Jun 2006 05:21:34 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:29677 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1750832AbWFJJul (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 10 Jun 2006 05:50:41 -0400
+Content-Disposition: inline
 In-Reply-To: <1149904465.3131.19.camel@laptopd505.fenrus.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Arjan van de Ven <arjan@infradead.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Jamie Lenehan <lenehan@twibble.org>, linux-scsi@vger.kernel.org
+Cc: Guennadi Liakhovetski <g.liakhovetski@gmx.de>, James Bottomley <James.Bottomley@steeleye.com>, Jamie Lenehan <lenehan@twibble.org>, linux-scsi@vger.kernel.org
 
-On Sat, 10 Jun 2006, Arjan van de Ven wrote:
-
+On Sat, Jun 10, 2006 at 03:54:25AM +0200, Arjan van de Ven wrote:
 > On Fri, 2006-06-09 at 22:25 +0200, Guennadi Liakhovetski wrote:
 > > +
 > > +		if (cmd->use_sg) {
@@ -32,15 +31,8 @@ On Sat, 10 Jun 2006, Arjan van de Ven wrote:
 > > +			ptr = (struct ScsiInqData *)(cmd->request_buffer);
 > 
 > hmm I wonder if the non-use-sg case can ever happen?
-
-Good question. I thought it would be better to be on the safe side.
-
 > (and if that irq_save isn't leaking here)
 
-AFAICS, no. Looks like use_sg is constant throughout scsi_cmnd's 
-life-cycle, apart from error-handling.
+It can still happen in when invoked through the EH code, but I plan to fix
+that for 2.6.18.
 
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
