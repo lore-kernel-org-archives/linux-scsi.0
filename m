@@ -1,37 +1,49 @@
-From: Jeff Garzik <jeff@garzik.org>
+From: Alexey Dobriyan <adobriyan@gmail.com>
 Subject: Re: [PATCH] Promise 'stex' driver
-Date: Sat, 10 Jun 2006 13:37:38 -0400
-Message-ID: <448B0362.8030901@garzik.org>
-References: <20060610160852.GA15316@havoc.gtf.org> <20060610170640.GA25118@infradead.org>
+Date: Sat, 10 Jun 2006 21:47:57 +0400
+Message-ID: <20060610174757.GB7268@martell.zuzino.mipt.ru>
+References: <20060610160852.GA15316@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:29376 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751664AbWFJRhk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 10 Jun 2006 13:37:40 -0400
-In-Reply-To: <20060610170640.GA25118@infradead.org>
+Received: from nf-out-0910.google.com ([64.233.182.187]:20613 "EHLO
+	nf-out-0910.google.com") by vger.kernel.org with ESMTP
+	id S1030457AbWFJRrs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 10 Jun 2006 13:47:48 -0400
+Received: by nf-out-0910.google.com with SMTP id y38so662867nfb
+        for <linux-scsi@vger.kernel.org>; Sat, 10 Jun 2006 10:47:43 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <20060610160852.GA15316@havoc.gtf.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@osdl.org, promise_linux@promise.com
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@osdl.org, promise_linux@promise.com
 
-Thanks, just did several of these and checked it into 'stex' branch.
+On Sat, Jun 10, 2006 at 12:08:52PM -0400, Jeff Garzik wrote:
+> --- /dev/null
+> +++ b/drivers/scsi/stex.c
 
-commit 1b6f2a81e789ebef27107765656d425ab44a2f44
-Author: Jeff Garzik <jeff@garzik.org>
-Date:   Sat Jun 10 13:36:54 2006 -0400
+> +static inline void stex_gettime(u32 *time)
 
-     [SCSI] stex: minor cleanups
+__le32 *time
 
-     - fix endian bug found in s/g code (used a fixed-endian value
-       as a loop-terminating variable)
+> +{
+> +	struct timeval tv;
+> +	do_gettimeofday(&tv);
+> +
+> +	*time = cpu_to_le32(tv.tv_sec & 0xffffffff);
+> +	*(time + 1) = cpu_to_le32((tv.tv_sec >> 16) >> 16);
+> +}
 
-     From a list of changes suggested by Christoph:
+> +static void
+> +stex_send_cmd(struct st_hba *hba, struct req_msg *req, u16 tag)
+> +{
+> +	req->tag = cpu_to_le16(tag);
+> +	req->task_attr = TASK_ATTRIBUTE_SIMPLE;
+> +	req->task_manage = 0; /* not supported yet */
+> +	req->payload_sz = (u8)(sizeof(struct req_msg)/sizeof(u32));
 
-     - don't include linux/config.h
-     - whitespace fix
-     - let compiler choose whether or not to inline
-     - eliminate unnecessary NULL test on hba->dma_mem
-     - handle pci_map_sg() error
+sparse warns here. Is this OK?
+
+drivers/scsi/stex.c:442:47: warning: cast truncates bits from constant value (106 becomes 6)
 
