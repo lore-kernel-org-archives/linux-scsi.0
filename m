@@ -1,33 +1,35 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [PATCH] hptiop: HighPoint RocketRAID 3xxx controller driver
-Date: Sat, 10 Jun 2006 09:47:26 -0700
-Message-ID: <20060610094726.daa174c8.akpm@osdl.org>
-References: <200605101704.27491.linux@highpoint-tech.com>
-	<200605121107.48597.linux@highpoint-tech.com>
-	<200605161438.09717.linux@highpoint-tech.com>
-	<1149953782.3335.7.camel@mulgrave.il.steeleye.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] Promise 'stex' driver
+Date: Sat, 10 Jun 2006 12:50:18 -0400
+Message-ID: <448AF84A.6050107@garzik.org>
+References: <20060610160852.GA15316@havoc.gtf.org> <20060610161036.GA21454@infradead.org> <1149956952.3335.22.camel@mulgrave.il.steeleye.com> <20060610163420.GA23699@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:11942 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1750724AbWFJQr2 (ORCPT
+Received: from srv5.dvmed.net ([207.36.208.214]:49342 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751216AbWFJQuV (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 10 Jun 2006 12:47:28 -0400
-In-Reply-To: <1149953782.3335.7.camel@mulgrave.il.steeleye.com>
+	Sat, 10 Jun 2006 12:50:21 -0400
+In-Reply-To: <20060610163420.GA23699@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux@highpoint-tech.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@osdl.org, promise_linux@promise.com
 
-On Sat, 10 Jun 2006 10:36:22 -0500
-James Bottomley <James.Bottomley@SteelEye.com> wrote:
+Christoph Hellwig wrote:
+> So removing the READ/WRITE6 emulation and setting the flag so the midlayer
+> only uses READ/WRITE10+ is on top of the TODO list.  Right after that is
 
-> I'll put the driver in and you can
-> fix them up later.
+Done and checked into 'stex' branch at URL given.  I also removed 6-byte 
+MODE SENSE.
 
-um, which driver?  I think this email is a reply to one of the
-hoghpoint.com submissions?  Please merge the patch I sent - it is the
-latest version and has fixes, I think.
 
-I'll resend.
+> using the scsi_kmap_atomic_sg/scsi_kunmap_atomic_sg for the remaining
+> emulated commands.  More comments later.
+
+These functions don't appear to be in upstream yet.
+
+	Jeff
+
+
