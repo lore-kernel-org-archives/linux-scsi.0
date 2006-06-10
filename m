@@ -1,30 +1,35 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] Build mptspi.c on architectures where CONFIG_PM is
- unset
-Date: Fri, 09 Jun 2006 17:00:53 -0700 (PDT)
-Message-ID: <20060609.170053.107254117.davem@davemloft.net>
-References: <1149345407.14611.49.camel@localhost.localdomain>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [PATCH] Remove last page_address from dc395x.c
+Date: Sat, 10 Jun 2006 03:54:25 +0200
+Message-ID: <1149904465.3131.19.camel@laptopd505.fenrus.org>
+References: <Pine.LNX.4.60.0606092216460.5256@poirot.grange>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <sparclinux-owner@vger.kernel.org>
-In-Reply-To: <1149345407.14611.49.camel@localhost.localdomain>
-Sender: sparclinux-owner@vger.kernel.org
-To: tcallawa@redhat.com
-Cc: linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from vbn.0050556.lodgenet.net ([216.142.194.234]:7334 "EHLO
+	vbn.0050556.lodgenet.net") by vger.kernel.org with ESMTP
+	id S1751320AbWFJByd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 9 Jun 2006 21:54:33 -0400
+In-Reply-To: <Pine.LNX.4.60.0606092216460.5256@poirot.grange>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, Jamie Lenehan <lenehan@twibble.org>, linux-scsi@vger.kernel.org
 
-From: "Tom 'spot' Callaway" <tcallawa@redhat.com>
-Date: Sat, 03 Jun 2006 09:36:47 -0500
+On Fri, 2006-06-09 at 22:25 +0200, Guennadi Liakhovetski wrote:
+> +
+> +		if (cmd->use_sg) {
+> +			struct scatterlist* sg = (struct scatterlist *)cmd->request_buffer;
+> +			size_t offset = 0, len = sizeof(struct ScsiInqData);
+> +
+> +			local_irq_save(flags);
+> +			base = scsi_kmap_atomic_sg(sg, cmd->use_sg, &offset, &len);
+> +			ptr = (struct ScsiInqData *)(base + offset);
+> +		} else
+> +			ptr = (struct ScsiInqData *)(cmd->request_buffer);
 
-> sparc64 does not have CONFIG_PM defined, and mptscsih_resume is wrapped
-> in an #ifdef CONFIG_PM in mptscsih.h. mptscsih_resume is only used in
-> the mptspi_resume function in mptspi.c, and its only call is in the
-> pci_driver struct (and that call is also #ifdef CONFIG_PM). In order to
-> get the code to compile, I just needed to wrap the actual function in
-> #ifdef CONFIG_PM, which is what this patch does. I can confirm that it
-> gets the module building again without errors.
-> 
-> Signed-off-by: Tom "spot" Callaway <tcallawa@redhat.com>
+hmm I wonder if the non-use-sg case can ever happen?
+(and if that irq_save isn't leaking here)
 
-Thanks Tom I'll apply this.
+
