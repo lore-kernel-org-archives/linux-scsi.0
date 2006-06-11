@@ -1,86 +1,55 @@
-From: HighPoint Linux Team <linux@highpoint-tech.com>
-Subject: Re: [PATCH] hptiop: HighPoint RocketRAID 3xxx controller driver
-Date: Sun, 11 Jun 2006 17:07:31 +0800
-Message-ID: <200606111706.52930.linux@highpoint-tech.com>
-Mime-Version: 1.0
+From: "Angelia Shook" <xicvzvg@tactician.com>
+Subject: get the better job - buy a diploma today
+Date: Sun, 11 Jun 2006 05:41:33 -0600
+Message-ID: <05447916.5300572837566.JavaMail.nfsnobody@www.choicetohide.com>
 Content-Type: text/plain;
-  charset="us-ascii"
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stats.hypersurf.com ([209.237.0.12]:12555 "EHLO
-	stats.hypersurf.com") by vger.kernel.org with ESMTP
-	id S1750820AbWFKIxR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 11 Jun 2006 04:53:17 -0400
-Content-Disposition: inline
+Received: from cpgr01-204-8-190-168.bigrivertel.net ([204.8.190.168]:57860
+	"HELO cpgr01-204-8-190-168.bigrivertel.net") by vger.kernel.org
+	with SMTP id S1750757AbWFKKmW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 11 Jun 2006 06:42:22 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, akpm@osdl.org
+To: linux-scsi@vger.kernel.org
 
-On Saturday, June 10, 2006 11:36 PM, James Bottomley wrote: 
->	_req = get_req(hba);
->	if (_req == NULL) {
->		dprintk("hptiop_queuecmd : no free req\n");
->		scp->result = DID_BUS_BUSY << 16;
->		goto cmd_done;
->	}
-> 
-> This should be doing a return SCSI_MLQUEUE_HOST_BUSY.  DID_BUS_BUSY
-> doesn't do the resource contention counting that you want
-> (MLQUEUE_HOST_BUSY will wait until a command returns ... presumably
-> freeing up resources before trying another).
+F A S T    T R A C K   D I P L O M A   P L A N 
 
-Right, this should be modified.
+      Achieve it now! 
+     
+      Dear Candidate:
 
->	/*
->	 * hptiop_shutdown will flash controller cache.
->	 */
->	if (scp->cmnd[0] == SYNCHRONIZE_CACHE)  {
->		scp->result = DID_OK<<16;
->		goto cmd_done;
->	}
->
-> Are you really sure you want to do this?  It looks like we'll be doing
-> this in cases where shutdown won't be called (like suspend). 
+      We've been helping people since 1957 obtain the recognition they deserve for their life experience. Through established relationships with distinguished non-accredited Universities and Colleges, we can help you too.
 
-These lines should be removed. The controller firmware will response to
-SYNCHRONIZE_CACHE command.
+      We grant non-accredited recognition for your knowledge and life experience - 
 
->	host->can_queue = le32_to_cpu(iop_config.max_requests);
->	host->cmd_per_lun = le32_to_cpu(iop_config.max_requests);
-> 
-> You might want to think about adjusting this.  For the single LUN case,
-> it's fine.  For the multi-lun case it may allow commands to a single LUN
-> to starve everything else.
+      Obtain the Diploma or Degree you deserve. If you're too busy to sit in a classroom, the fast track provides a Bachelor's, Master's or Doctorate that shows what you really can do, truly "a higher education certificate what you ALREADY know" - 
+     
 
-There will be no multi-lun support for the controller so this is not
-an issue.
 
-Signed-off-by: HighPoint Linux Team <linux@highpoint-tech.com>
----
+     :: No Books
+     :: No Courses!
+     :: No Tests!
+     :: No Hassles! 
+     
 
-diff --git a/drivers/scsi/hptiop.c b/drivers/scsi/hptiop.c
-index 8302f3b..7806c45 100644
---- a/drivers/scsi/hptiop.c
-+++ b/drivers/scsi/hptiop.c
-@@ -504,18 +504,10 @@ static int hptiop_queuecommand(struct sc
- 	BUG_ON(!done);
- 	scp->scsi_done = done;
- 
--	/*
--	 * hptiop_shutdown will flash controller cache.
--	 */
--	if (scp->cmnd[0] == SYNCHRONIZE_CACHE)  {
--		scp->result = DID_OK<<16;
--		goto cmd_done;
--	}
--
- 	_req = get_req(hba);
- 	if (_req == NULL) {
- 		dprintk("hptiop_queuecmd : no free req\n");
--		scp->result = DID_BUS_BUSY << 16;
-+		scp->result = SCSI_MLQUEUE_HOST_BUSY;
- 		goto cmd_done;
- 	}
+     
+      To help us determine the right program for you, tell us about your
+
+        a.. Previous experience or training in the field
+        for which you are seeking recognition. 
+
+        b.. Your self-assessment and self-evaluation. 
+
+        c.. Previous course work. 
+
+        d.. Personal goals and career path. 
+
+      NOTE: You must be 27 years of age or older, and must have at least five years of experience or training in the field for which you are seeking recognition. Help us to help you by providing an accurate self-assessment when filling out the form.
+     
+      Complete as many details as possible. Note that your contact telephone numbers are very important and that both a daytime and evening number should be provided for quick response.	
+
+      http://www.choicetohide.com/mba.asp
 
 
