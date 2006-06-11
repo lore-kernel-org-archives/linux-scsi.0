@@ -1,34 +1,23 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] remove RQ_SCSI_* flags
-Date: Sun, 11 Jun 2006 20:58:48 +0200
-Message-ID: <20060611185848.GE13556@suse.de>
-References: <20060610163719.GA12421@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: "Penny Turner" <LEZWCY@msn.com>
+Subject: Woww..8o-% 0ff Linux-scsi
+Date: Sun, 11 Jun 2006 22:43:27 -0100
+Message-ID: <131.79e558d5.2a9WIH44__7754.66929558224$1150066238$gmane$org@sol.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:12398 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S1750791AbWFKS6z (ORCPT
+Received: from zeus2.kernel.org ([204.152.191.36]:25737 "EHLO zeus2.kernel.org")
+	by vger.kernel.org with ESMTP id S1751133AbWFKWu0 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 11 Jun 2006 14:58:55 -0400
-Content-Disposition: inline
-In-Reply-To: <20060610163719.GA12421@lst.de>
+	Sun, 11 Jun 2006 18:50:26 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: jejb@steeleye.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org, linux-sound@vger.kernel.org, linux-tape@vger.kernel.org, linux-x25@vger.kernel.org
 
-On Sat, Jun 10 2006, Christoph Hellwig wrote:
-> The RQ_SCSI_* flags are a vestiage of a long past history.  The EH code
-> still sets them but we never make use of that information.  The other
-> users is pluto.c which never had a chance to work but needs to be kept
-> compiling to keep Davem happy, so copy over the definition there.
-> 
-> We could probably get rid of RQ_ACTIVE/RQ_INACTIVE aswell with some
-> work, there's only two more or less bogus looking uses in ubd and scsi.
 
-Wonderful! Please continue with the rest of the rq_status usage when you
-have the time, it's been on the to-kill list since 2001.
+Looking for quality me ds at affordable price?
+We have widest range of me ds at very
+competitive price.
+Money baack gauaranteesss...
 
--- 
-Jens Axboe
+http://www.archstuff.com/1/
 
+
+aVNcd
