@@ -1,55 +1,36 @@
-From: "Angelia Shook" <xicvzvg@tactician.com>
-Subject: get the better job - buy a diploma today
-Date: Sun, 11 Jun 2006 05:41:33 -0600
-Message-ID: <05447916.5300572837566.JavaMail.nfsnobody@www.choicetohide.com>
+From: HighPoint Linux Team <linux@highpoint-tech.com>
+Subject: Re: [PATCH] hptiop: HighPoint RocketRAID 3xxx controller driver
+Date: Sun, 11 Jun 2006 19:18:08 +0800
+Message-ID: <200606111918.08529.linux@highpoint-tech.com>
+References: <200606111706.52930.linux@highpoint-tech.com>
+Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cpgr01-204-8-190-168.bigrivertel.net ([204.8.190.168]:57860
-	"HELO cpgr01-204-8-190-168.bigrivertel.net") by vger.kernel.org
-	with SMTP id S1750757AbWFKKmW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 11 Jun 2006 06:42:22 -0400
+Received: from stats.hypersurf.com ([209.237.0.12]:4883 "EHLO
+	stats.hypersurf.com") by vger.kernel.org with ESMTP
+	id S1750771AbWFKLDw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 11 Jun 2006 07:03:52 -0400
+In-Reply-To: <200606111706.52930.linux@highpoint-tech.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James.Bottomley@SteelEye.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, akpm@osdl.org
 
-F A S T    T R A C K   D I P L O M A   P L A N 
+On Sunday 11 June 2006 05:07 pm, HighPoint Linux Team wrote:
+>>
+>>	host->can_queue = le32_to_cpu(iop_config.max_requests);
+>>	host->cmd_per_lun = le32_to_cpu(iop_config.max_requests);
+>> 
+>> You might want to think about adjusting this.  For the single LUN case,
+>> it's fine.  For the multi-lun case it may allow commands to a single LUN
+>> to starve everything else.
+>
+>There will be no multi-lun support for the controller so this is not
+>an issue.
 
-      Achieve it now! 
-     
-      Dear Candidate:
-
-      We've been helping people since 1957 obtain the recognition they deserve for their life experience. Through established relationships with distinguished non-accredited Universities and Colleges, we can help you too.
-
-      We grant non-accredited recognition for your knowledge and life experience - 
-
-      Obtain the Diploma or Degree you deserve. If you're too busy to sit in a classroom, the fast track provides a Bachelor's, Master's or Doctorate that shows what you really can do, truly "a higher education certificate what you ALREADY know" - 
-     
-
-
-     :: No Books
-     :: No Courses!
-     :: No Tests!
-     :: No Hassles! 
-     
-
-     
-      To help us determine the right program for you, tell us about your
-
-        a.. Previous experience or training in the field
-        for which you are seeking recognition. 
-
-        b.. Your self-assessment and self-evaluation. 
-
-        c.. Previous course work. 
-
-        d.. Personal goals and career path. 
-
-      NOTE: You must be 27 years of age or older, and must have at least five years of experience or training in the field for which you are seeking recognition. Help us to help you by providing an accurate self-assessment when filling out the form.
-     
-      Complete as many details as possible. Note that your contact telephone numbers are very important and that both a daytime and evening number should be provided for quick response.	
-
-      http://www.choicetohide.com/mba.asp
-
+Sorry, a mistake. Multi-lun is supported.
+Should host->can_queue be set to (cmd_per_lun * max_lun) ?
 
