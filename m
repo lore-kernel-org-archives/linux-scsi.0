@@ -1,62 +1,34 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] hptiop: HighPoint RocketRAID 3xxx controller driver
-Date: Sun, 11 Jun 2006 10:00:42 -0500
-Message-ID: <1150038042.4128.11.camel@mulgrave.il.steeleye.com>
-References: <200606111706.52930.linux@highpoint-tech.com>
-	 <200606111918.08529.linux@highpoint-tech.com>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH] remove RQ_SCSI_* flags
+Date: Sun, 11 Jun 2006 20:58:48 +0200
+Message-ID: <20060611185848.GE13556@suse.de>
+References: <20060610163719.GA12421@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:20687 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751619AbWFKPAr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 11 Jun 2006 11:00:47 -0400
-In-Reply-To: <200606111918.08529.linux@highpoint-tech.com>
+Received: from ns.virtualhost.dk ([195.184.98.160]:12398 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S1750791AbWFKS6z (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 11 Jun 2006 14:58:55 -0400
+Content-Disposition: inline
+In-Reply-To: <20060610163719.GA12421@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: HighPoint Linux Team <linux@highpoint-tech.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, akpm@osdl.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: jejb@steeleye.com, linux-scsi@vger.kernel.org
 
-On Sun, 2006-06-11 at 19:18 +0800, HighPoint Linux Team wrote:
->                 dprintk("hptiop_queuecmd : no free req\n");
-> -               scp->result = DID_BUS_BUSY << 16;
-> +               scp->result = SCSI_MLQUEUE_HOST_BUSY;
->                 goto cmd_done;
-
-As jeff said, this needs to become a return SCSI_MLQUEUE_HOST_BUSY.
-
-> On Sunday 11 June 2006 05:07 pm, HighPoint Linux Team wrote:
-> >>
-> >>	host->can_queue = le32_to_cpu(iop_config.max_requests);
-> >>	host->cmd_per_lun = le32_to_cpu(iop_config.max_requests);
-> >> 
-> >> You might want to think about adjusting this.  For the single LUN case,
-> >> it's fine.  For the multi-lun case it may allow commands to a single LUN
-> >> to starve everything else.
-> >
-> >There will be no multi-lun support for the controller so this is not
-> >an issue.
+On Sat, Jun 10 2006, Christoph Hellwig wrote:
+> The RQ_SCSI_* flags are a vestiage of a long past history.  The EH code
+> still sets them but we never make use of that information.  The other
+> users is pluto.c which never had a chance to work but needs to be kept
+> compiling to keep Davem happy, so copy over the definition there.
 > 
-> Sorry, a mistake. Multi-lun is supported.
-> Should host->can_queue be set to (cmd_per_lun * max_lun) ?
+> We could probably get rid of RQ_ACTIVE/RQ_INACTIVE aswell with some
+> work, there's only two more or less bogus looking uses in ubd and scsi.
 
-It depends on how the controller behaves.  Setting can_queue and
-cmd_per_lun tends to work for most SCSI controllers because the actual
-scsi devices have queue depths << this number.  If your controller will
-behave like this (i.e. will not allow the internal queue for a single
-lun to fill up to this depth) then you can keep this setting (although,
-again, since this is probably fixed by the firmware, you want to set
-cmd_per_lun to this value to avoid excessive QUEUE_FULL returns).  If
-the controller will happily load all the available slots up for a single
-lun, then you might want to think about reducing cmd_per_lun to some
-fraction of can_queue (you could even set it to can_queue - 2 like the
-3ware controller).
+Wonderful! Please continue with the rest of the rq_status usage when you
+have the time, it's been on the to-kill list since 2001.
 
-Most of the other actual raid controllers seem to have much smaller
-per-lun queues, so they mainly set smaller, fixed size values for
-cmd_per_lun.
-
-James
-
+-- 
+Jens Axboe
 
