@@ -1,43 +1,62 @@
-From: Jeff Garzik <jeff@garzik.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: [PATCH] hptiop: HighPoint RocketRAID 3xxx controller driver
-Date: Sun, 11 Jun 2006 09:14:26 -0400
-Message-ID: <448C1732.3060809@garzik.org>
+Date: Sun, 11 Jun 2006 10:00:42 -0500
+Message-ID: <1150038042.4128.11.camel@mulgrave.il.steeleye.com>
 References: <200606111706.52930.linux@highpoint-tech.com>
+	 <200606111918.08529.linux@highpoint-tech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751273AbWFKNOf@vger.kernel.org>
-In-Reply-To: <200606111706.52930.linux@highpoint-tech.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: HighPoint Linux Team <linux@highpoint-tech.com>
-Cc: James.Bottomley@SteelEye.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, akpm@osdl.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stat9.steeleye.com ([209.192.50.41]:20687 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1751619AbWFKPAr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 11 Jun 2006 11:00:47 -0400
+In-Reply-To: <200606111918.08529.linux@highpoint-tech.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: HighPoint Linux Team <linux@highpoint-tech.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, akpm@osdl.org
 
-HighPoint Linux Team wrote:
-> --- a/drivers/scsi/hptiop.c
-> +++ b/drivers/scsi/hptiop.c
-> @@ -504,18 +504,10 @@ static int hptiop_queuecommand(struct sc
->  	BUG_ON(!done);
->  	scp->scsi_done = done;
->  
-> -	/*
-> -	 * hptiop_shutdown will flash controller cache.
-> -	 */
-> -	if (scp->cmnd[0] == SYNCHRONIZE_CACHE)  {
-> -		scp->result = DID_OK<<16;
-> -		goto cmd_done;
-> -	}
-> -
->  	_req = get_req(hba);
->  	if (_req == NULL) {
->  		dprintk("hptiop_queuecmd : no free req\n");
-> -		scp->result = DID_BUS_BUSY << 16;
-> +		scp->result = SCSI_MLQUEUE_HOST_BUSY;
->  		goto cmd_done;
->  	}
+On Sun, 2006-06-11 at 19:18 +0800, HighPoint Linux Team wrote:
+>                 dprintk("hptiop_queuecmd : no free req\n");
+> -               scp->result = DID_BUS_BUSY << 16;
+> +               scp->result = SCSI_MLQUEUE_HOST_BUSY;
+>                 goto cmd_done;
 
-Close.  For the last bit of code quoted above, you should return 
-SCSI_MLQUEUE_HOST_BUSY as your ->queuecommand() return code, rather than 
-setting scp->result and calling the done() hook.
+As jeff said, this needs to become a return SCSI_MLQUEUE_HOST_BUSY.
 
-	Jeff
+> On Sunday 11 June 2006 05:07 pm, HighPoint Linux Team wrote:
+> >>
+> >>	host->can_queue = le32_to_cpu(iop_config.max_requests);
+> >>	host->cmd_per_lun = le32_to_cpu(iop_config.max_requests);
+> >> 
+> >> You might want to think about adjusting this.  For the single LUN case,
+> >> it's fine.  For the multi-lun case it may allow commands to a single LUN
+> >> to starve everything else.
+> >
+> >There will be no multi-lun support for the controller so this is not
+> >an issue.
+> 
+> Sorry, a mistake. Multi-lun is supported.
+> Should host->can_queue be set to (cmd_per_lun * max_lun) ?
+
+It depends on how the controller behaves.  Setting can_queue and
+cmd_per_lun tends to work for most SCSI controllers because the actual
+scsi devices have queue depths << this number.  If your controller will
+behave like this (i.e. will not allow the internal queue for a single
+lun to fill up to this depth) then you can keep this setting (although,
+again, since this is probably fixed by the firmware, you want to set
+cmd_per_lun to this value to avoid excessive QUEUE_FULL returns).  If
+the controller will happily load all the available slots up for a single
+lun, then you might want to think about reducing cmd_per_lun to some
+fraction of can_queue (you could even set it to can_queue - 2 like the
+3ware controller).
+
+Most of the other actual raid controllers seem to have much smaller
+per-lun queues, so they mainly set smaller, fixed size values for
+cmd_per_lun.
+
+James
+
+
