@@ -1,78 +1,69 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 5/6] libata: Per device max command length checking
-Date: Sun, 11 Jun 2006 23:29:03 -0400
-Message-ID: <448CDF7F.2090609@pobox.com>
-References: <200606071625.k57GPxAB009587@d01av03.pok.ibm.com>
+Subject: Re: [PATCH 6/6] libata: Add support for SATA attachment to SAS adapters
+Date: Sun, 11 Jun 2006 23:33:49 -0400
+Message-ID: <448CE09D.4060104@pobox.com>
+References: <200606071626.k57GQ7ZS015584@d01av01.pok.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <200606071625.k57GPxAB009587@d01av03.pok.ibm.com>
+In-Reply-To: <200606071626.k57GQ7ZS015584@d01av01.pok.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 To: Brian King <brking@us.ibm.com>
 Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 Brian King wrote:
-> Currently, libata sets the scsi_host's max_cmd_len to
-> be the minimum of the max command lengths of all devices
-> attached to the same ATA port. This patch moves this checking
-> into libata so libata can check this on a per device
-> basis and still allows an ATA host to implement its
-> own host limit.
+> The following patch enhances libata to allow SAS device drivers
+> to utilize libata to talk to SATA devices. It introduces some
+> new APIs which allow libata to be used without allocating a
+> virtual scsi host.
+> 
+> New APIs:
+> 
+> ata_sas_port_alloc - Allocate an ata_port 
+> ata_sas_port_init - Initialize an ata_port (probe device, etc)
+> ata_sas_port_destroy - Free an ata_port allocated by ata_sas_port_alloc
+> ata_sas_slave_configure - configure scsi device
+> ata_sas_queuecmd - queue a scsi command, similar to ata_scsi_queuecomand
+> 
+> These new APIs can be used either directly by a SAS LLDD or could be used
+> by the SAS transport class. 
+> 
+> Possible usage for a SAS LLDD would be:
+> 
+> scsi_scan_host
+> 	target_alloc
+> 		ata_sas_port_alloc
+> 	slave_alloc
+> 		ata_sas_port_init
+> 	slave_configure
+> 		ata_sas_slave_configure
+> 
+> Commands received by the LLDD for SATA devices would call ata_sas_queuecmd.
+> 
+> Device teardown would occur with:
+> 
+> slave_destroy
+> 	port_disable
+> target_destroy
+> 	ata_sas_port_destroy
 > 
 > Signed-off-by: Brian King <brking@us.ibm.com>
-> ---
-> 
->  libata-dev-bjking1/drivers/scsi/libata-core.c |    8 +-------
->  libata-dev-bjking1/drivers/scsi/libata-scsi.c |    6 ++++++
->  2 files changed, 7 insertions(+), 7 deletions(-)
-> 
-> diff -puN drivers/scsi/libata-core.c~libata_max_cmd_len drivers/scsi/libata-core.c
-> --- libata-dev/drivers/scsi/libata-core.c~libata_max_cmd_len	2006-06-07 10:54:09.000000000 -0500
-> +++ libata-dev-bjking1/drivers/scsi/libata-core.c	2006-06-07 10:54:09.000000000 -0500
-> @@ -1415,12 +1415,6 @@ static int ata_dev_configure(struct ata_
->  				       cdb_intr_string);
->  	}
->  
-> -	ap->host->max_cmd_len = 0;
-> -	for (i = 0; i < ATA_MAX_DEVICES; i++)
-> -		ap->host->max_cmd_len = max_t(unsigned int,
-> -					      ap->host->max_cmd_len,
-> -					      ap->device[i].cdb_len);
-> -
->  	/* limit bridge transfers to udma5, 200 sectors */
->  	if (ata_dev_knobble(dev)) {
->  		if (print_info)
-> @@ -5166,7 +5160,7 @@ static void ata_host_init(struct ata_por
->  	host->max_lun = 1;
->  	host->max_channel = 1;
->  	host->unique_id = ata_unique_id++;
-> -	host->max_cmd_len = 12;
-> +	host->max_cmd_len = ATAPI_CDB_LEN;
->  
->  	ap->lock = &host_set->lock;
->  	ap->flags = ATA_FLAG_DISABLED;
-> diff -puN drivers/scsi/libata-scsi.c~libata_max_cmd_len drivers/scsi/libata-scsi.c
-> --- libata-dev/drivers/scsi/libata-scsi.c~libata_max_cmd_len	2006-06-07 10:54:09.000000000 -0500
-> +++ libata-dev-bjking1/drivers/scsi/libata-scsi.c	2006-06-07 10:54:09.000000000 -0500
-> @@ -2607,6 +2607,12 @@ static inline int __ata_scsi_queuecmd(st
->  {
->  	int rc = 0;
->  
-> +	if (unlikely(cmd->cmd_len > dev->cdb_len)) {
-> +		cmd->result = (DID_ABORT << 16);
-> +		done(cmd);
-> +		return 0;
-> +	}
 
-:(  do we really need to be adding this to the hot path, for such an 
-unlikely case?
+Overall, I am very wary of this patch.  Not for patch content reasons, 
+but because we don't yet know how aic94xx or Broadcom SAS (both 
+"software stack" SAS adapters) will interface to libata.
 
-Further, I wonder why this matters?  Doesn't ipr present devices as one 
-per port?
+So, this is a reluctant ACK, because I fear that this may become an 
+ipr-only API.  I'll ACK it, because we won't have any other SAS support 
+for a while...   but this API must be revisited with more SAS+SATA 
+controllers are supported.
+
+In particular, we may need to make this API more generic:  remove all 
+mention of "SAS", and simply create a libata API that supports 
+situations where ata_host_set is not the toplevel object.
 
 	Jeff
-
 
 
