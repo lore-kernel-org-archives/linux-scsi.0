@@ -1,37 +1,36 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Fw: [Bugme-new] [Bug 6657] New: Domain validation failures on
-	aic7xxx
-Date: Mon, 12 Jun 2006 11:54:12 -0500
-Message-ID: <1150131252.3413.25.camel@mulgrave.il.steeleye.com>
-References: <20060606091840.a39afe5a.akpm@osdl.org>
-	 <1149956760.3335.18.camel@mulgrave.il.steeleye.com>
-	 <448D9A92.1050406@mbligh.org>
+From: Ravi Anand <ravi.anand@qlogic.com>
+Subject: Re: [RFC] qla4xxx: TODO for re-submission
+Date: Mon, 12 Jun 2006 09:57:21 -0700
+Message-ID: <20060612165721.GB7576@ranandlinuxbox.oc.cox.net>
+References: <8889.1149988615@bebe.enoyolf.org> <20060612164934.GA7576@ranandlinuxbox.oc.cox.net> <448D9BC0.5080203@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:38304 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1750989AbWFLQy5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Jun 2006 12:54:57 -0400
-In-Reply-To: <448D9A92.1050406@mbligh.org>
+Received: from pat.qlogic.com ([198.70.193.2]:23967 "EHLO avexch1.qlogic.com")
+	by vger.kernel.org with ESMTP id S1751160AbWFLQ5J (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Jun 2006 12:57:09 -0400
+Content-Disposition: inline
+In-Reply-To: <448D9BC0.5080203@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Martin Bligh <mbligh@mbligh.org>
-Cc: william@brodie-tyrrell.org, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Doug Maxey <dwm@bebe.enoyolf.org>, David Somayajulu <davidcs2005@gmail.com>, Duane Grigsby <duane.grigsby@qlogic.com>, linux-scsi@vger.kernel.org, dwm@austin.ibm.com
 
-On Mon, 2006-06-12 at 09:47 -0700, Martin Bligh wrote:
-> It's not going to auto-forward, otherwise every update to bugs owned
-> by
-> the virtual alias will come through. What I was planning was to cc
-> linux-scsi on emails to bugme-new (ie one email per new bug only) for
-> that category only. I'll try to get that going this morning ...
+>On Mon, 12 Jun 2006, Mike Christie wrote:
+> Ravi Anand wrote:
+> >> 4) add the iscsi transport code.
+> >> 5) add the block layer code.
+> > 
+> >      In my mind item 4 & 5 are the important one's that we need to accomplish.
+> >      Mike I believe has done some of the modifications in the latest patch
+> >      set which he send out recently on open-iscsi reflector.
+> 
+> Doug, could you post a link to the git tree for Ravi and them if it is
+> ready so we can all sync up our patches?
 
-Yes ... that's what we want.  An email that can be replied to and will
-go to the submitter and linux-scsi and be captured by bugzilla.
+That would be great. Internally we are also rolling those patches.
+Just want to make sure that we are in sync.
 
-Thanks,
-
-James
-
-
+Thanx
+Ravi
