@@ -1,73 +1,44 @@
 From: Brian King <brking@us.ibm.com>
-Subject: [PATCH 3/6] libata: Add ata_host_flags
-Date: Mon, 12 Jun 2006 14:54:25 -0500
-Message-ID: <200606121954.k5CJsPX5018967@d01av04.pok.ibm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e2.ny.us.ibm.com ([32.97.182.142]:26850 "EHLO e2.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S932168AbWFLTy1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Jun 2006 15:54:27 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [PATCH 6/6] libata: Check per device max cdb length for SAS
+Date: Mon, 12 Jun 2006 14:54:51 -0500
+Message-ID: <200606121954.k5CJsqQI032124@d01av02.pok.ibm.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
 To: jgarzik@pobox.com
 Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, brking@us.ibm.com
+List-Id: linux-scsi@vger.kernel.org
 
 
-Since SATA devices attached to SAS HBAs will not have
-a host_set, add a helper function to retrieve the host_set
-flags which can check for the existence of a host_set.
+Since libata does not own any scsi_host struct for
+SAS attached SATA devices, libata cannot rely on scsi
+core checking the max_cmd_len. This patch adds additional
+checking into the SAS queuecommand path to prevent
+too large of a cdb from being issued to an ATA or ATAPI device.
 
 Signed-off-by: Brian King <brking@us.ibm.com>
 ---
 
- libata-dev-bjking1/drivers/scsi/libata-core.c |    7 +++----
- libata-dev-bjking1/include/linux/libata.h     |    7 +++++++
- 2 files changed, 10 insertions(+), 4 deletions(-)
+ libata-dev-bjking1/drivers/scsi/libata-scsi.c |   10 +++++++---
+ 1 files changed, 7 insertions(+), 3 deletions(-)
 
-diff -puN drivers/scsi/libata-core.c~libata_sas_no_simplex drivers/scsi/libata-core.c
---- libata-dev/drivers/scsi/libata-core.c~libata_sas_no_simplex	2006-06-12 11:23:57.000000000 -0500
-+++ libata-dev-bjking1/drivers/scsi/libata-core.c	2006-06-12 11:23:57.000000000 -0500
-@@ -2160,7 +2160,7 @@ int ata_set_mode(struct ata_port *ap, st
- 	/* Record simplex status. If we selected DMA then the other
- 	 * host channels are not permitted to do so.
- 	 */
--	if (used_dma && (ap->host_set->flags & ATA_HOST_SIMPLEX))
-+	if (used_dma && (ata_host_flags(ap) & ATA_HOST_SIMPLEX))
- 		ap->host_set->simplex_claimed = 1;
- 
- 	/* step5: chip specific finalisation */
-@@ -2980,7 +2980,6 @@ static int ata_dma_blacklisted(const str
- static void ata_dev_xfermask(struct ata_device *dev)
+diff -puN drivers/scsi/libata-scsi.c~libata_sas_cdb_len drivers/scsi/libata-scsi.c
+--- libata-dev/drivers/scsi/libata-scsi.c~libata_sas_cdb_len	2006-06-12 14:19:39.000000000 -0500
++++ libata-dev-bjking1/drivers/scsi/libata-scsi.c	2006-06-12 14:20:34.000000000 -0500
+@@ -3206,9 +3206,13 @@ int ata_sas_queuecmd(struct scsi_cmnd *c
  {
- 	struct ata_port *ap = dev->ap;
--	struct ata_host_set *hs = ap->host_set;
- 	unsigned long xfer_mask;
- 	int i;
+ 	ata_scsi_dump_cdb(ap, cmd);
  
-@@ -3018,8 +3017,8 @@ static void ata_dev_xfermask(struct ata_
- 		ata_dev_printk(dev, KERN_WARNING,
- 			       "device is on DMA blacklist, disabling DMA\n");
- 
--	if (hs->flags & ATA_HOST_SIMPLEX) {
--		if (hs->simplex_claimed)
-+	if (ata_host_flags(ap) & ATA_HOST_SIMPLEX) {
-+		if (ap->host_set->simplex_claimed)
- 			xfer_mask &= ~(ATA_MASK_MWDMA | ATA_MASK_UDMA);
+-	if (likely(ata_scsi_dev_enabled(ap->device)))
+-		__ata_scsi_queuecmd(cmd, done, ap->device);
+-	else {
++	if (likely(ata_scsi_dev_enabled(ap->device))) {
++		if (unlikely(cmd->cmd_len > ap->device->cdb_len)) {
++			cmd->result = (DID_ABORT << 16);
++			done(cmd);
++		} else
++			__ata_scsi_queuecmd(cmd, done, ap->device);
++	} else {
+ 		cmd->result = (DID_BAD_TARGET << 16);
+ 		done(cmd);
  	}
- 
-diff -puN include/linux/libata.h~libata_sas_no_simplex include/linux/libata.h
---- libata-dev/include/linux/libata.h~libata_sas_no_simplex	2006-06-12 11:23:57.000000000 -0500
-+++ libata-dev-bjking1/include/linux/libata.h	2006-06-12 11:23:57.000000000 -0500
-@@ -1161,4 +1161,11 @@ static inline struct ata_port *ata_shost
- 	return (struct ata_port *) &host->hostdata[0];
- }
- 
-+static inline unsigned int ata_host_flags(struct ata_port *ap)
-+{
-+	if (ap->host_set)
-+		return ap->host_set->flags;
-+	return 0;
-+}
-+
- #endif /* __LINUX_LIBATA_H__ */
 _
