@@ -1,65 +1,182 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [RFC] qla4xxx: TODO for re-submission
-Date: Mon, 12 Jun 2006 12:44:30 -0500
-Message-ID: <448DA7FE.3010901@cs.wisc.edu>
-References: <8889.1149988615@bebe.enoyolf.org> <448DA7AD.4010203@cs.wisc.edu>
+From: Michael Reed <mdr@sgi.com>
+Subject: Re: [PATCH] fc transport: resolve scan vs delete deadlocks
+Date: Mon, 12 Jun 2006 12:50:20 -0500
+Message-ID: <448DA95C.70802@sgi.com>
+References: <1147368429.18517.3.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:6034 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S1750780AbWFLRr6 (ORCPT
+Received: from omx2-ext.sgi.com ([192.48.171.19]:35477 "EHLO omx2.sgi.com")
+	by vger.kernel.org with ESMTP id S1750870AbWFLRue (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Jun 2006 13:47:58 -0400
-In-Reply-To: <448DA7AD.4010203@cs.wisc.edu>
+	Mon, 12 Jun 2006 13:50:34 -0400
+In-Reply-To: <1147368429.18517.3.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Maxey <dwm@bebe.enoyolf.org>
-Cc: Ravi Anand <ravi.anand@qlogic.com>, David Somayajulu <davidcs2005@gmail.com>, Duane Grigsby <duane.grigsby@qlogic.com>, linux-scsi@vger.kernel.org, dwm@austin.ibm.com
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: James.Smart@Emulex.Com, linux-scsi <linux-scsi@vger.kernel.org>
 
-Mike Christie wrote:
-> Doug Maxey wrote:
->> Subject: [RFC] qla4xxx: TODO for re-submission
->>
->> Howdy!
->>
->> The qla4xxx driver for the QLogic ISP4XXX chipset will be getting a
->> little janitorial love along the lines of:
->>
->> A) a rework of the 2006-06-06 Qlogic submitted qla4xxx code to get the
->>    driver to be in line with the kernel coding style.
->> B) being made more compliant with the scsi_mid_low_api.txt.  Being
->>    compiled for M$ does not count as an alternative OS. :)  In
->>    particular, move all the code to single .c file.  If and when
->>    another chipset comes along that can utilize some of the bits, look
->>    into splitting it back up.
->> C) removal of unreachable or unused code.
->> D) a rework of the function layout and size, including linewidth adjustments
->> E) fixups to printk formatting, and moving to dev_printk().  For the
->>    first pass, just remove the debug printk()'s
->>
->> This will not be a re-write of the driver per se, just a refactoring
->> going on in parallel to the work of the QLogic folks and mike, in an
->> effort to get this driver into mainline.
->>
->> The plan is to:
->> 1) submit the Documentation/LICENSE.qla4xxx.txt file and check
->>    the provenance with the original submitters..
->> 2) pull all the data structs into the file, swizzle the types to be
->>    kernel compliant.
->> 3) pull the core driver initialization (module_init(), pci init et al)
->>    into the file drivers/scsi/qla4xxx.c
->> 4) add the iscsi transport code.
->> 5) add the block layer code.
->> 6) add the device firmware access.
->> 7) add the hooks for the Kconfig and Makefile
->>
->> Does this appear to be a workable plan?  Should the struct cleanup
->> wait and come in on an as needed basis?
->>
+Will this patch be integrated into scsi-misc or other tree at some point?
+
+Thanks,
+ Mike
+
+
+James Smart wrote:
+> In a prior posting to linux-scsi on the fc transport and workq
+> deadlocks, we noted a second error that did not have a patch:
+>   http://marc.theaimsgroup.com/?l=linux-scsi&m=114467847711383&w=2
+>   - There's a deadlock where scsi_remove_target() has to sit behind 
+>     scsi_scan_target() due to contention over the scan_lock().
 > 
-> I think I am fine with what I have already said needs to be done + all
-> the cleanup issues where the coding style got mixed up during driver
-> writer transitions.
-
-The removing of the dead/unused code should of course be done too.
+> Subsequently we posted a request for comments about the deadlock:
+>   http://marc.theaimsgroup.com/?l=linux-scsi&m=114469358829500&w=2
+> 
+> This posting resolves the second error. Here's what we now understand,
+> and are implementing:
+> 
+>   If the lldd deletes the rport while a scan is active, the sdev's queue
+>   is blocked which stops the issuing of commands associated with the scan.
+>   At this point, the scan stalls, and does so with the shost->scan_mutex held.
+>   If, at this point, if any scan or delete request is made on the host, it
+>   will stall waiting for the scan_mutex.
+>   
+>   For the FC transport, we queue all delete work to a single workq.
+>   So, things worked fine when competing with the scan, as long as the
+>   target blocking the scan was the same target at the top of our delete
+>   workq, as the delete workq routine always unblocked just prior to
+>   requesting the delete.  Unfortunately, if the top of our delete workq
+>   was for a different target, we deadlock.  Additionally, if the target
+>   blocking scan returned, we were unblocking it in the scan workq routine,
+>   which really won't execute until the existing stalled scan workq
+>   completes (e.g. we're re-scheduling it while it is in the midst of its
+>   execution).
+> 
+>   This patch moves the unblock out of the workq routines and moves it to
+>   the context that is scheduling the work. This ensures that at some point,
+>   we will unblock the target that is blocking scan.  Please note, however,
+>   that the deadlock condition may still occur while it waits for the
+>   transport to timeout an unblock on a target.  Worst case, this is bounded
+>   by the transport dev_loss_tmo (default: 30 seconds).
+> 
+> 
+> Finally, Michael Reed deserves the credit for the bulk of this patch,
+> analysis, and it's testing. Thank you for your help.
+> 
+> -- james s
+> 
+> Note: this patch supercedes a previous preliminary post by Michael Reed
+>   http://marc.theaimsgroup.com/?l=linux-scsi&m=114675967824701&w=2
+> 
+> Note: The request for comments statements about the gross-ness of the
+>   scan_mutex still stand.
+> 
+> 
+> 
+> Signed-off-by: Michael Reed <mdr@sgi.com>
+> Signed-off-by: James Smart <james.smart@emulex.com>
+> 
+> 
+> diff -upNr a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+> --- a/drivers/scsi/scsi_transport_fc.c	2006-05-11 10:43:31.000000000 -0400
+> +++ b/drivers/scsi/scsi_transport_fc.c	2006-05-11 12:04:36.000000000 -0400
+> @@ -1284,7 +1284,9 @@ EXPORT_SYMBOL(fc_release_transport);
+>   * @work:	Work to queue for execution.
+>   *
+>   * Return value:
+> - * 	0 on success / != 0 for error
+> + * 	1 - work queued for execution
+> + *	0 - work is already queued
+> + *	-EINVAL - work queue doesn't exist
+>   **/
+>  static int
+>  fc_queue_work(struct Scsi_Host *shost, struct work_struct *work)
+> @@ -1434,8 +1436,6 @@ fc_starget_delete(void *data)
+>  	struct Scsi_Host *shost = rport_to_shost(rport);
+>  	unsigned long flags;
+>  
+> -	scsi_target_unblock(&rport->dev);
+> -
+>  	spin_lock_irqsave(shost->host_lock, flags);
+>  	if (rport->flags & FC_RPORT_DEVLOSS_PENDING) {
+>  		spin_unlock_irqrestore(shost->host_lock, flags);
+> @@ -1707,6 +1707,8 @@ fc_remote_port_add(struct Scsi_Host *sho
+>  
+>  				spin_unlock_irqrestore(shost->host_lock, flags);
+>  
+> +				scsi_target_unblock(&rport->dev);
+> +
+>  				return rport;
+>  			}
+>  		}
+> @@ -1762,9 +1764,10 @@ fc_remote_port_add(struct Scsi_Host *sho
+>  				/* initiate a scan of the target */
+>  				rport->flags |= FC_RPORT_SCAN_PENDING;
+>  				scsi_queue_work(shost, &rport->scan_work);
+> -			}
+> -
+> -			spin_unlock_irqrestore(shost->host_lock, flags);
+> +				spin_unlock_irqrestore(shost->host_lock, flags);
+> +				scsi_target_unblock(&rport->dev);
+> +			} else
+> +				spin_unlock_irqrestore(shost->host_lock, flags);
+>  
+>  			return rport;
+>  		}
+> @@ -1938,6 +1941,7 @@ fc_remote_port_rolechg(struct fc_rport  
+>  		rport->flags |= FC_RPORT_SCAN_PENDING;
+>  		scsi_queue_work(shost, &rport->scan_work);
+>  		spin_unlock_irqrestore(shost->host_lock, flags);
+> +		scsi_target_unblock(&rport->dev);
+>  	}
+>  }
+>  EXPORT_SYMBOL(fc_remote_port_rolechg);
+> @@ -1970,8 +1974,9 @@ fc_timeout_deleted_rport(void  *data)
+>  		dev_printk(KERN_ERR, &rport->dev,
+>  			"blocked FC remote port time out: no longer"
+>  			" a FCP target, removing starget\n");
+> -		fc_queue_work(shost, &rport->stgt_delete_work);
+>  		spin_unlock_irqrestore(shost->host_lock, flags);
+> +		scsi_target_unblock(&rport->dev);
+> +		fc_queue_work(shost, &rport->stgt_delete_work);
+>  		return;
+>  	}
+>  
+> @@ -2035,17 +2040,15 @@ fc_timeout_deleted_rport(void  *data)
+>  	 * went away and didn't come back - we'll remove
+>  	 * all attached scsi devices.
+>  	 */
+> -	fc_queue_work(shost, &rport->stgt_delete_work);
+> -
+>  	spin_unlock_irqrestore(shost->host_lock, flags);
+> +
+> +	scsi_target_unblock(&rport->dev);
+> +	fc_queue_work(shost, &rport->stgt_delete_work);
+>  }
+>  
+>  /**
+>   * fc_scsi_scan_rport - called to perform a scsi scan on a remote port.
+>   *
+> - * Will unblock the target (in case it went away and has now come back),
+> - * then invoke a scan.
+> - *
+>   * @data:	remote port to be scanned.
+>   **/
+>  static void
+> @@ -2057,7 +2060,6 @@ fc_scsi_scan_rport(void *data)
+>  
+>  	if ((rport->port_state == FC_PORTSTATE_ONLINE) &&
+>  	    (rport->roles & FC_RPORT_ROLE_FCP_TARGET)) {
+> -		scsi_target_unblock(&rport->dev);
+>  		scsi_scan_target(&rport->dev, rport->channel,
+>  			rport->scsi_target_id, SCAN_WILD_CARD, 1);
+>  	}
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
