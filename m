@@ -1,47 +1,68 @@
-From: Martin Bligh <mbligh@mbligh.org>
-Subject: Re: Fw: [Bugme-new] [Bug 6657] New: Domain validation failures on
- aic7xxx
-Date: Mon, 12 Jun 2006 10:06:23 -0700
-Message-ID: <448D9F0F.4080106@mbligh.org>
-References: <20060606091840.a39afe5a.akpm@osdl.org>	 <1149956760.3335.18.camel@mulgrave.il.steeleye.com>	 <448D9A92.1050406@mbligh.org> <1150131252.3413.25.camel@mulgrave.il.steeleye.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [RFC] qla4xxx: TODO for re-submission
+Date: Mon, 12 Jun 2006 12:43:09 -0500
+Message-ID: <448DA7AD.4010203@cs.wisc.edu>
+References: <8889.1149988615@bebe.enoyolf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dvhart.com ([64.146.134.43]:43162 "EHLO dvhart.com")
-	by vger.kernel.org with ESMTP id S1750968AbWFLRG0 (ORCPT
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:2194 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S1750750AbWFLRnX (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Jun 2006 13:06:26 -0400
-In-Reply-To: <1150131252.3413.25.camel@mulgrave.il.steeleye.com>
+	Mon, 12 Jun 2006 13:43:23 -0400
+In-Reply-To: <8889.1149988615@bebe.enoyolf.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: william@brodie-tyrrell.org, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org
+To: Doug Maxey <dwm@bebe.enoyolf.org>
+Cc: Ravi Anand <ravi.anand@qlogic.com>, David Somayajulu <davidcs2005@gmail.com>, Duane Grigsby <duane.grigsby@qlogic.com>, linux-scsi@vger.kernel.org, dwm@austin.ibm.com
 
-James Bottomley wrote:
-> On Mon, 2006-06-12 at 09:47 -0700, Martin Bligh wrote:
+Doug Maxey wrote:
+> Subject: [RFC] qla4xxx: TODO for re-submission
 > 
->>It's not going to auto-forward, otherwise every update to bugs owned
->>by
->>the virtual alias will come through. What I was planning was to cc
->>linux-scsi on emails to bugme-new (ie one email per new bug only) for
->>that category only. I'll try to get that going this morning ...
+> Howdy!
 > 
+> The qla4xxx driver for the QLogic ISP4XXX chipset will be getting a
+> little janitorial love along the lines of:
 > 
-> Yes ... that's what we want.  An email that can be replied to and will
-> go to the submitter and linux-scsi and be captured by bugzilla.
+> A) a rework of the 2006-06-06 Qlogic submitted qla4xxx code to get the
+>    driver to be in line with the kernel coding style.
+> B) being made more compliant with the scsi_mid_low_api.txt.  Being
+>    compiled for M$ does not count as an alternative OS. :)  In
+>    particular, move all the code to single .c file.  If and when
+>    another chipset comes along that can utilize some of the bits, look
+>    into splitting it back up.
+> C) removal of unreachable or unused code.
+> D) a rework of the function layout and size, including linewidth adjustments
+> E) fixups to printk formatting, and moving to dev_printk().  For the
+>    first pass, just remove the debug printk()'s
+> 
+> This will not be a re-write of the driver per se, just a refactoring
+> going on in parallel to the work of the QLogic folks and mike, in an
+> effort to get this driver into mainline.
+> 
+> The plan is to:
+> 1) submit the Documentation/LICENSE.qla4xxx.txt file and check
+>    the provenance with the original submitters..
+> 2) pull all the data structs into the file, swizzle the types to be
+>    kernel compliant.
+> 3) pull the core driver initialization (module_init(), pci init et al)
+>    into the file drivers/scsi/qla4xxx.c
+> 4) add the iscsi transport code.
+> 5) add the block layer code.
+> 6) add the device firmware access.
+> 7) add the hooks for the Kconfig and Makefile
+> 
+> Does this appear to be a workable plan?  Should the struct cleanup
+> wait and come in on an as needed basis?
+> 
 
-OK, set up. It should reply to bugme-daemon, which should result up
-being back in the DB ... all emails should be tagged with [bugme-new]
-in them, so its easy to filter if need be.
+I think I am fine with what I have already said needs to be done + all
+the cleanup issues where the coding style got mixed up during driver
+writer transitions.
 
-I cc'ed IO/storage-SCSI, and all the SCSI drivers ones. If that's not
-correct, or you have other problems with it, let me know.
+I don't think putting everything in one file is very nice. There will be
+code that will want the seperation that is being worked on right now
+like the target code.
 
-Hitting reply-all may result in mail to bugme-new as well as 
-bugme-daemon ... a mild pain, but should get caught by the list
-filtration, so no big deal, I think.
-
-M.
-
-
+What is the struct cleanup though? typedef->just struct usage?
