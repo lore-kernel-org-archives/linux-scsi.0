@@ -1,182 +1,60 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: Re: [PATCH] fc transport: resolve scan vs delete deadlocks
-Date: Mon, 12 Jun 2006 12:50:20 -0500
-Message-ID: <448DA95C.70802@sgi.com>
-References: <1147368429.18517.3.camel@localhost.localdomain>
+From: Mark Haverkamp <markh@osdl.org>
+Subject: RE: [PATCH 1/3] aacraid: Fix return code interpretation (re-update)
+Date: Mon, 12 Jun 2006 10:53:58 -0700
+Message-ID: <1150134838.5661.7.camel@markh3.pdx.osdl.net>
+References: <547AF3BD0F3F0B4CBDC379BAC7E4189F028560BD@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:35477 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S1750870AbWFLRue (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:65497 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1750715AbWFLRyH (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Jun 2006 13:50:34 -0400
-In-Reply-To: <1147368429.18517.3.camel@localhost.localdomain>
+	Mon, 12 Jun 2006 13:54:07 -0400
+In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189F028560BD@otce2k03.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: James.Smart@Emulex.Com, linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Mark Salyzyn <mark_salyzyn@adaptec.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Will this patch be integrated into scsi-misc or other tree at some point?
+On Fri, 2006-06-09 at 13:10 -0400, Salyzyn, Mark wrote:
+> Yes, that is the intent. A 32 bit application is calling a 64 bit
+> driver. The pointers in the 32 bit application merely need the virtual
+> address upper word zero'd to pass themselves off as 64 bit virtual
+> pointers. Yes, the clear_user call could be replaced with an =0 on the
+> last element, but it was more generic to clear it out completely before
+> copying in the subset. copy_[in|out]_user works with the constructed 64
+> bit virtual pointer.
+> 
+> Sincerely -- Mark Salyzyn
 
-Thanks,
- Mike
+Given Mark's explanation, here is the original patch from last week.
+Unless there is a better way to do this.
+
+---
+
+Received from Mark Salyzyn
+
+clear_user return is 0 for success, the code fragment is written to
+assume that it is the count of the number of bytes zero'd.
+
+Signed-off-by: Mark Haverkamp <markh@osdl.org>
+---
+Applies to the scsi-misc-2.6 git tree.
+
+--- scsi-misc-aac.orig/drivers/scsi/aacraid/linit.c	2006-06-08 09:37:43.000000000 -0700
++++ scsi-misc-aac/drivers/scsi/aacraid/linit.c	2006-06-12 10:44:33.000000000 -0700
+@@ -564,7 +564,7 @@
+ 		
+ 		f = compat_alloc_user_space(sizeof(*f));
+ 		ret = 0;
+-		if (clear_user(f, sizeof(*f)) != sizeof(*f))
++		if (clear_user(f, sizeof(*f)))
+ 			ret = -EFAULT;
+ 		if (copy_in_user(f, (void __user *)arg, sizeof(struct fib_ioctl) - sizeof(u32)))
+ 			ret = -EFAULT;
 
 
-James Smart wrote:
-> In a prior posting to linux-scsi on the fc transport and workq
-> deadlocks, we noted a second error that did not have a patch:
->   http://marc.theaimsgroup.com/?l=linux-scsi&m=114467847711383&w=2
->   - There's a deadlock where scsi_remove_target() has to sit behind 
->     scsi_scan_target() due to contention over the scan_lock().
-> 
-> Subsequently we posted a request for comments about the deadlock:
->   http://marc.theaimsgroup.com/?l=linux-scsi&m=114469358829500&w=2
-> 
-> This posting resolves the second error. Here's what we now understand,
-> and are implementing:
-> 
->   If the lldd deletes the rport while a scan is active, the sdev's queue
->   is blocked which stops the issuing of commands associated with the scan.
->   At this point, the scan stalls, and does so with the shost->scan_mutex held.
->   If, at this point, if any scan or delete request is made on the host, it
->   will stall waiting for the scan_mutex.
->   
->   For the FC transport, we queue all delete work to a single workq.
->   So, things worked fine when competing with the scan, as long as the
->   target blocking the scan was the same target at the top of our delete
->   workq, as the delete workq routine always unblocked just prior to
->   requesting the delete.  Unfortunately, if the top of our delete workq
->   was for a different target, we deadlock.  Additionally, if the target
->   blocking scan returned, we were unblocking it in the scan workq routine,
->   which really won't execute until the existing stalled scan workq
->   completes (e.g. we're re-scheduling it while it is in the midst of its
->   execution).
-> 
->   This patch moves the unblock out of the workq routines and moves it to
->   the context that is scheduling the work. This ensures that at some point,
->   we will unblock the target that is blocking scan.  Please note, however,
->   that the deadlock condition may still occur while it waits for the
->   transport to timeout an unblock on a target.  Worst case, this is bounded
->   by the transport dev_loss_tmo (default: 30 seconds).
-> 
-> 
-> Finally, Michael Reed deserves the credit for the bulk of this patch,
-> analysis, and it's testing. Thank you for your help.
-> 
-> -- james s
-> 
-> Note: this patch supercedes a previous preliminary post by Michael Reed
->   http://marc.theaimsgroup.com/?l=linux-scsi&m=114675967824701&w=2
-> 
-> Note: The request for comments statements about the gross-ness of the
->   scan_mutex still stand.
-> 
-> 
-> 
-> Signed-off-by: Michael Reed <mdr@sgi.com>
-> Signed-off-by: James Smart <james.smart@emulex.com>
-> 
-> 
-> diff -upNr a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-> --- a/drivers/scsi/scsi_transport_fc.c	2006-05-11 10:43:31.000000000 -0400
-> +++ b/drivers/scsi/scsi_transport_fc.c	2006-05-11 12:04:36.000000000 -0400
-> @@ -1284,7 +1284,9 @@ EXPORT_SYMBOL(fc_release_transport);
->   * @work:	Work to queue for execution.
->   *
->   * Return value:
-> - * 	0 on success / != 0 for error
-> + * 	1 - work queued for execution
-> + *	0 - work is already queued
-> + *	-EINVAL - work queue doesn't exist
->   **/
->  static int
->  fc_queue_work(struct Scsi_Host *shost, struct work_struct *work)
-> @@ -1434,8 +1436,6 @@ fc_starget_delete(void *data)
->  	struct Scsi_Host *shost = rport_to_shost(rport);
->  	unsigned long flags;
->  
-> -	scsi_target_unblock(&rport->dev);
-> -
->  	spin_lock_irqsave(shost->host_lock, flags);
->  	if (rport->flags & FC_RPORT_DEVLOSS_PENDING) {
->  		spin_unlock_irqrestore(shost->host_lock, flags);
-> @@ -1707,6 +1707,8 @@ fc_remote_port_add(struct Scsi_Host *sho
->  
->  				spin_unlock_irqrestore(shost->host_lock, flags);
->  
-> +				scsi_target_unblock(&rport->dev);
-> +
->  				return rport;
->  			}
->  		}
-> @@ -1762,9 +1764,10 @@ fc_remote_port_add(struct Scsi_Host *sho
->  				/* initiate a scan of the target */
->  				rport->flags |= FC_RPORT_SCAN_PENDING;
->  				scsi_queue_work(shost, &rport->scan_work);
-> -			}
-> -
-> -			spin_unlock_irqrestore(shost->host_lock, flags);
-> +				spin_unlock_irqrestore(shost->host_lock, flags);
-> +				scsi_target_unblock(&rport->dev);
-> +			} else
-> +				spin_unlock_irqrestore(shost->host_lock, flags);
->  
->  			return rport;
->  		}
-> @@ -1938,6 +1941,7 @@ fc_remote_port_rolechg(struct fc_rport  
->  		rport->flags |= FC_RPORT_SCAN_PENDING;
->  		scsi_queue_work(shost, &rport->scan_work);
->  		spin_unlock_irqrestore(shost->host_lock, flags);
-> +		scsi_target_unblock(&rport->dev);
->  	}
->  }
->  EXPORT_SYMBOL(fc_remote_port_rolechg);
-> @@ -1970,8 +1974,9 @@ fc_timeout_deleted_rport(void  *data)
->  		dev_printk(KERN_ERR, &rport->dev,
->  			"blocked FC remote port time out: no longer"
->  			" a FCP target, removing starget\n");
-> -		fc_queue_work(shost, &rport->stgt_delete_work);
->  		spin_unlock_irqrestore(shost->host_lock, flags);
-> +		scsi_target_unblock(&rport->dev);
-> +		fc_queue_work(shost, &rport->stgt_delete_work);
->  		return;
->  	}
->  
-> @@ -2035,17 +2040,15 @@ fc_timeout_deleted_rport(void  *data)
->  	 * went away and didn't come back - we'll remove
->  	 * all attached scsi devices.
->  	 */
-> -	fc_queue_work(shost, &rport->stgt_delete_work);
-> -
->  	spin_unlock_irqrestore(shost->host_lock, flags);
-> +
-> +	scsi_target_unblock(&rport->dev);
-> +	fc_queue_work(shost, &rport->stgt_delete_work);
->  }
->  
->  /**
->   * fc_scsi_scan_rport - called to perform a scsi scan on a remote port.
->   *
-> - * Will unblock the target (in case it went away and has now come back),
-> - * then invoke a scan.
-> - *
->   * @data:	remote port to be scanned.
->   **/
->  static void
-> @@ -2057,7 +2060,6 @@ fc_scsi_scan_rport(void *data)
->  
->  	if ((rport->port_state == FC_PORTSTATE_ONLINE) &&
->  	    (rport->roles & FC_RPORT_ROLE_FCP_TARGET)) {
-> -		scsi_target_unblock(&rport->dev);
->  		scsi_scan_target(&rport->dev, rport->channel,
->  			rport->scsi_target_id, SCAN_WILD_CARD, 1);
->  	}
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+-- 
+Mark Haverkamp <markh@osdl.org>
+
