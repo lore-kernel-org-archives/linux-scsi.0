@@ -1,34 +1,70 @@
-From: "Galina" <zakaz@1piter.ru>
-Subject: Re[2]:Ave !
-Date: Mon, 12 Jun 2006 13:06:30 +0300
-Message-ID: <004b01c68e07$c2c14880$4600000a__7354.50890283591$1150106820$gmane$org@202.159.224.35>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [PATCH] scsi_transport_sas: fix panic in sas_free_rphy
+Date: Mon, 12 Jun 2006 09:09:18 -0500
+Message-ID: <1150121358.3413.3.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1251
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [202.159.224.35] ([202.159.224.35]:1289 "EHLO 202.159.224.35")
-	by vger.kernel.org with ESMTP id S1751750AbWFLKF4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Jun 2006 06:05:56 -0400
+Received: from stat9.steeleye.com ([209.192.50.41]:38029 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1751987AbWFLOJT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Jun 2006 10:09:19 -0400
+Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
+	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id k5CE9Ia20988
+	for <linux-scsi@vger.kernel.org>; Mon, 12 Jun 2006 10:09:18 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-newbie <linux-newbie@vger.kernel.org>
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-Ave =85.=09
+This is a hold over from the end device/expander conversion.  Apparently
+the rphy list pointer is never initialised, so list_del() on the
+uninitialised pointer can panic the system
 
-I am a lovely and lonely Lady who is looking for the man who will make =
-me happy and whom I want to feel like in paradise with!
-If you want to be my beautiful Hero who will save me from this loneline=
-ss find me=20
-http://www.BngDniT2Fm.im-waiting-4you.net/
-and wake me up with a warm kiss.
+Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
 
-see you later
-Galina
+---
+
+James
+
+Index: BUILD-2.6/drivers/scsi/scsi_transport_sas.c
+===================================================================
+--- BUILD-2.6.orig/drivers/scsi/scsi_transport_sas.c	2006-06-12 08:58:19.000000000 -0500
++++ BUILD-2.6/drivers/scsi/scsi_transport_sas.c	2006-06-12 09:05:18.000000000 -0500
+@@ -1004,6 +1004,18 @@
+ }
+ 
+ /**
++ * sas_rphy_initialize - common rphy intialization
++ * @rphy:	rphy to initialise
++ *
++ * Used by both sas_end_device_alloc() and sas_expander_alloc() to
++ * initialise the common rphy component of each.
++ */
++static void sas_rphy_initialize(struct sas_rphy *rphy)
++{
++	INIT_LIST_HEAD(&rphy->list);
++}
++
++/**
+  * sas_end_device_alloc - allocate an rphy for an end device
+  *
+  * Allocates an SAS remote PHY structure, connected to @parent.
+@@ -1027,6 +1039,7 @@
+ 	sprintf(rdev->rphy.dev.bus_id, "end_device-%d:%d-%d",
+ 		shost->host_no, parent->port_identifier, parent->port_identifier);
+ 	rdev->rphy.identify.device_type = SAS_END_DEVICE;
++	sas_rphy_initialize(&rdev->rphy);
+ 	transport_setup_device(&rdev->rphy.dev);
+ 
+ 	return &rdev->rphy;
+@@ -1065,6 +1078,7 @@
+ 	sprintf(rdev->rphy.dev.bus_id, "expander-%d:%d",
+ 		shost->host_no, rdev->rphy.scsi_target_id);
+ 	rdev->rphy.identify.device_type = type;
++	sas_rphy_initialize(&rdev->rphy);
+ 	transport_setup_device(&rdev->rphy.dev);
+ 
+ 	return &rdev->rphy;
 
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
