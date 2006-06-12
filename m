@@ -1,51 +1,43 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: [PATCH 4/6] libata: Add ata_host_flags
-Date: Mon, 12 Jun 2006 13:33:04 -0500
-Message-ID: <448DB360.8010504@us.ibm.com>
-References: <200606071625.k57GPrit014721@d01av01.pok.ibm.com> <448CDEF3.1000703@pobox.com>
-Reply-To: brking@us.ibm.com
+From: "Vicki Ramsey" <VickiRamsey@0451.com>
+Subject: :), moose fly
+Date: Mon, 12 Jun 2006 18:42:12 +0000 (UTC)
+Message-ID: <662161c806048x9jbel3in41el528xd65i6z9u10adhtyp__5315.79549792713$1150137732$gmane$org@mail.0451.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <448CDEF3.1000703@pobox.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 53531F06.cable.casema.nl ([83.83.31.6]:14093 "EHLO home")
+	by vger.kernel.org with ESMTP id S1752147AbWFLSlg convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Jun 2006 14:41:36 -0400
+Date: Mon, 12 Jun 2006 18:41:35 -0060
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-assembly@vger.kernel.org
 
-Jeff Garzik wrote:
-> Brian King wrote:
->> Since SATA devices attached to SAS HBAs will not have
->> a host_set, add a helper function to retrieve the host_set
->> flags which can check for the existence of a host_set.
->>
->> Signed-off-by: Brian King <brking@us.ibm.com>
->> ---
->>
->>  libata-dev-bjking1/drivers/scsi/libata-core.c |    7 +++----
->>  libata-dev-bjking1/include/linux/libata.h     |    7 +++++++
->>  2 files changed, 10 insertions(+), 4 deletions(-)
->>
->> diff -puN drivers/scsi/libata-core.c~libata_sas_no_simplex drivers/scsi/libata-core.c
->> --- libata-dev/drivers/scsi/libata-core.c~libata_sas_no_simplex	2006-06-06 08:55:43.000000000 -0500
->> +++ libata-dev-bjking1/drivers/scsi/libata-core.c	2006-06-06 08:55:43.000000000 -0500
->> @@ -2161,7 +2161,7 @@ int ata_set_mode(struct ata_port *ap, st
->>  	/* Record simplex status. If we selected DMA then the other
->>  	 * host channels are not permitted to do so.
->>  	 */
->> -	if (used_dma && (ap->host_set->flags & ATA_HOST_SIMPLEX))
->> +	if (used_dma && (ata_host_flags(ap) & ATA_HOST_SIMPLEX))
-> 
-> I'm not sure I like this one.  Will have to think a bit more on this -- 
-> there might be a need for ipr to carry some cross-port libata state.
+Even if you have no erectin problems SOFT CIAzLIS 
+would help you to make BETTER SE  X MORE OFTEN!
+and to bring  unimagnable plesure to her.
 
-I can't think of any need at this point. Would it be reasonable to go ahead
-with this change and add in the support for a cross-port libata state
-if and when such a need comes along? 
+Just disolve half a pil under your tongue 
+and get ready for action in 15 minutes. 
 
+The tests showed that the majority of men 
+after taking this medic ation were able to have 
+PERFECT ER ECTI ON during 36 hours!
 
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+VISIT US, AND GET OUR SPECIAL 70% DISC OUNT OFER!
+
+http://nrlvtl.snowsurely.com/?88326351
+
+=====
+     "They are saying in the Flock that if you are  not  the  Son  of  the
+the Zone  and there  is  no  need  to fear things like that in the Zone. And
+     "I want to go back to the Flock, of course. I've  barely  begun  with
+order you to start walking on your hands you will immediately hoist your fat
+     He pushed wearily away from the dark water and flew toward the  land,
+the way, no one else heard the thunder at all.
+
+possible  tribute  to the authors'  versatility. How much you  like  it will
+     "Mr. Schuhart! Mr. Schuhart! A few words about the garage!"
