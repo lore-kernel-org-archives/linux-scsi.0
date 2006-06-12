@@ -1,83 +1,48 @@
 From: Brian King <brking@us.ibm.com>
-Subject: [PATCH 2/6] libata: Add ata_scsi_dev_disabled
-Date: Mon, 12 Jun 2006 14:54:17 -0500
-Message-ID: <200606121954.k5CJsJxv027844@d01av03.pok.ibm.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
+Subject: [PATCH 4/6] libata: Conditionally set host->max_cmd_len
+Date: Mon, 12 Jun 2006 14:54:33 -0500
+Message-ID: <200606121954.k5CJsXjL011968@d03av02.boulder.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e33.co.us.ibm.com ([32.97.110.151]:157 "EHLO e33.co.us.ibm.com")
+	by vger.kernel.org with ESMTP id S932170AbWFLTyg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Jun 2006 15:54:36 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: jgarzik@pobox.com
 Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, brking@us.ibm.com
-List-Id: linux-scsi@vger.kernel.org
 
 
-Separate out parts of ata_scsi_find_dev to be reused in
-future SAS/SATA patches.
-
-Acked-by: Jeff Garzik <jgarzik@pobox.com>
+In preparation for SAS attached SATA devices, which will
+not have a libata scsi_host, only setup host->max_cmd_len
+if ap->host exists.
 
 Signed-off-by: Brian King <brking@us.ibm.com>
 ---
 
- libata-dev-bjking1/drivers/scsi/libata-scsi.c |   41 +++++++++++++++++++-------
- 1 files changed, 31 insertions(+), 10 deletions(-)
+ libata-dev-bjking1/drivers/scsi/libata-core.c |   12 +++++++-----
+ 1 files changed, 7 insertions(+), 5 deletions(-)
 
-diff -puN drivers/scsi/libata-scsi.c~libata_scsi_enabled drivers/scsi/libata-scsi.c
---- libata-dev/drivers/scsi/libata-scsi.c~libata_scsi_enabled	2006-06-12 14:40:16.000000000 -0500
-+++ libata-dev-bjking1/drivers/scsi/libata-scsi.c	2006-06-12 14:40:16.000000000 -0500
-@@ -2374,6 +2374,36 @@ static struct ata_device * __ata_scsi_fi
- }
+diff -puN drivers/scsi/libata-core.c~libata_cdb_len drivers/scsi/libata-core.c
+--- libata-dev/drivers/scsi/libata-core.c~libata_cdb_len	2006-06-12 14:11:11.000000000 -0500
++++ libata-dev-bjking1/drivers/scsi/libata-core.c	2006-06-12 14:11:11.000000000 -0500
+@@ -1424,11 +1424,13 @@ int ata_dev_configure(struct ata_device 
+ 				       cdb_intr_string);
+ 	}
  
- /**
-+ *	ata_scsi_dev_enabled - determine if device is enabled
-+ *	@dev: ATA device
-+ *
-+ *	Determine if commands should be sent to the specified device.
-+ *
-+ *	LOCKING:
-+ *	spin_lock_irqsave(host_set lock)
-+ *
-+ *	RETURNS:
-+ *	0 if commands are not allowed / 1 if commands are allowed
-+ */
-+
-+static int ata_scsi_dev_enabled(struct ata_device *dev)
-+{
-+	if (unlikely(!ata_dev_enabled(dev)))
-+		return 0;
-+
-+	if (!atapi_enabled || (dev->ap->flags & ATA_FLAG_NO_ATAPI)) {
-+		if (unlikely(dev->class == ATA_DEV_ATAPI)) {
-+			ata_dev_printk(dev, KERN_WARNING,
-+				       "WARNING: ATAPI is %s, device ignored.\n",
-+				       atapi_enabled ? "not supported with this driver" : "disabled");
-+			return 0;
-+		}
+-	ap->host->max_cmd_len = 0;
+-	for (i = 0; i < ATA_MAX_DEVICES; i++)
+-		ap->host->max_cmd_len = max_t(unsigned int,
+-					      ap->host->max_cmd_len,
+-					      ap->device[i].cdb_len);
++	if (ap->host) {
++		ap->host->max_cmd_len = 0;
++		for (i = 0; i < ATA_MAX_DEVICES; i++)
++			ap->host->max_cmd_len = max_t(unsigned int,
++						      ap->host->max_cmd_len,
++						      ap->device[i].cdb_len);
 +	}
-+
-+	return 1;
-+}
-+
-+/**
-  *	ata_scsi_find_dev - lookup ata_device from scsi_cmnd
-  *	@ap: ATA port to which the device is attached
-  *	@scsidev: SCSI device from which we derive the ATA device
-@@ -2394,18 +2424,9 @@ ata_scsi_find_dev(struct ata_port *ap, c
- {
- 	struct ata_device *dev = __ata_scsi_find_dev(ap, scsidev);
  
--	if (unlikely(!dev || !ata_dev_enabled(dev)))
-+	if (unlikely(!dev || !ata_scsi_dev_enabled(dev)))
- 		return NULL;
- 
--	if (!atapi_enabled || (ap->flags & ATA_FLAG_NO_ATAPI)) {
--		if (unlikely(dev->class == ATA_DEV_ATAPI)) {
--			ata_dev_printk(dev, KERN_WARNING,
--				"WARNING: ATAPI is %s, device ignored.\n",
--				atapi_enabled ? "not supported with this driver" : "disabled");
--			return NULL;
--		}
--	}
--
- 	return dev;
- }
- 
+ 	/* limit bridge transfers to udma5, 200 sectors */
+ 	if (ata_dev_knobble(dev)) {
 _
