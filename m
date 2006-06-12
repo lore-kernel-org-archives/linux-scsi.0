@@ -1,54 +1,43 @@
-From: "HighPoint Linux Team" <linux@highpoint-tech.com>
-Subject: Re: [PATCH] hptiop: HighPoint RocketRAID 3xxx controller driver
-Date: Mon, 12 Jun 2006 12:03:01 +0800
-Message-ID: <029801c68dd5$1e8ee6f0$1200a8c0@GMM>
-References: <200606111706.52930.linux@highpoint-tech.com> <200606111918.08529.linux@highpoint-tech.com> <1150038042.4128.11.camel@mulgrave.il.steeleye.com>
+From: "Kris Keenan" <KrisKeenan@0451.com>
+Subject: :), pair-oared
+Date: Mon, 12 Jun 2006 06:09:12 +0000 (UTC)
+Message-ID: <7151718579.20070612060924@0451.com>
+Reply-To: "Kris Keenan" <KrisKeenan@0451.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stats.hypersurf.com ([209.237.0.12]:19716 "EHLO
-	stats.hypersurf.com") by vger.kernel.org with ESMTP
-	id S1751270AbWFLECO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Jun 2006 00:02:14 -0400
+Received: from [220.77.209.65] ([220.77.209.65]:31760 "EHLO your-797e8c7f5b")
+	by vger.kernel.org with ESMTP id S1751353AbWFLGIf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Jun 2006 02:08:35 -0400
+Date: Tue, 12 Jun 2007 06:09:24 -0540
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, akpm@osdl.org
+To: linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
->> Should host->can_queue be set to (cmd_per_lun * max_lun) ?
->
-> It depends on how the controller behaves.  Setting can_queue and
-> cmd_per_lun tends to work for most SCSI controllers because the 
-> actual scsi devices have queue depths << this number.  If your 
-> controller will behave like this (i.e. will not allow the internal
-> queue for a single lun to fill up to this depth) then you can keep
-> this setting (although, again, since this is probably fixed by the
-> firmware, you want to set cmd_per_lun to this value to avoid
-> excessive QUEUE_FULL returns). If the controller will happily load
-> all the available slots up for a single lun, then you might want
-> to think about reducing cmd_per_lun to some fraction of can_queue
-> (you could even set it to can_queue - 2 like the 3ware controller).
+Even if you have no erectin problems SOFT CIAzLIS 
+would help you to make BETTER SE  X MORE OFTEN!
+and to bring  unimagnable plesure to her.
 
-The hptiop firmware works as the latter case. Should it be modified
-like this:
-  host->can_queue = le32_to_cpu(iop_config.max_requests);
-- host->cmd_per_lun = le32_to_cpu(iop_config.max_requests);
-+ host->cmd_per_lun = host->can_queue - 2;
+Just disolve half a pil under your tongue 
+and get ready for action in 15 minutes. 
 
-While the 3ware driver sets both can_queue and cmd_per_lun to 254:
+The tests showed that the majority of men 
+after taking this medic ation were able to have 
+PERFECT ER ECTI ON during 36 hours!
 
-(3w-9xxx.h)
-#define TW_Q_LENGTH           256
-#define TW_MAX_CMDS_PER_LUN   254
+VISIT US, AND GET OUR SPECIAL 70% DISC OUNT OFER!
 
-(3w-9xxx.c)
-.can_queue   = TW_Q_LENGTH-2,
-.cmd_per_lun = TW_MAX_CMDS_PER_LUN
+http://qdvile.feastlegend.com/?18596350
 
-Should can_queue be set to TW_Q_LENGTH ?
+==========
+science fiction. Not since the invention of poetry.
+     In  short,  we got  out  of  the  Zone,  and  we  were  sent  into  the
+     "We're not ready!" said Henry Calvin Gull. "We're not welcome!  We're
+imagination? It would be nice to  have a smoke now  and sit for a spell  and
+with the two brilliant gulls, he saw that his  own  body  was  growing  as
+>From the thirteenth Boor it looks like  it could  fit  in  the palm  of your
 
-HighPoint Linux Team
-
+     "Come along then." said  Jonathan.  "Climb  with  me  away  from  the
+there were plenty  of explosions; they said they  were blinded from  a  loud
