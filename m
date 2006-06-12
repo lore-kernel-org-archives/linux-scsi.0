@@ -1,79 +1,102 @@
-From: Ravi Anand <ravi.anand@qlogic.com>
-Subject: Re: [RFC] qla4xxx: TODO for re-submission
-Date: Mon, 12 Jun 2006 15:50:26 -0700
-Message-ID: <20060612225026.GL7555@ranandlinuxbox.qlogic.org>
-References: <8889.1149988615@bebe.enoyolf.org> <448DACD5.6090205@cs.wisc.edu> <20060612211038.GB7555@ranandlinuxbox.qlogic.org> <448DDE31.2090300@cs.wisc.edu> <448DEC46.8090408@cs.wisc.edu>
+From: Michael Reed <mdr@sgi.com>
+Subject: [PATCH] make fc transport removal of target configurable
+Date: Mon, 12 Jun 2006 18:16:42 -0500
+Message-ID: <448DF5DA.3070800@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------000703050709090102040005"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:21539 "EHLO avexch2.qlogic.com")
-	by vger.kernel.org with ESMTP id S1750929AbWFLWuL (ORCPT
+Received: from omx2-ext.sgi.com ([192.48.171.19]:27583 "EHLO omx2.sgi.com")
+	by vger.kernel.org with ESMTP id S932225AbWFLXQq (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Jun 2006 18:50:11 -0400
-Content-Disposition: inline
-In-Reply-To: <448DEC46.8090408@cs.wisc.edu>
+	Mon, 12 Jun 2006 19:16:46 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Doug Maxey <dwm@bebe.enoyolf.org>, David Somayajulu <davidcs2005@gmail.com>, Duane Grigsby <duane.grigsby@qlogic.com>, linux-scsi@vger.kernel.org, dwm@austin.ibm.com
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: James.Smart@Emulex.Com, Jim Nead <jnead@sgi.com>, Jeremy Higdon <jeremy@sgi.com>, Michael Reed <mdr@sgi.com>, Gary Hagensen <gwh@sgi.com>
 
->On Mon, 12 Jun 2006, Mike Christie wrote:
-> Mike Christie wrote:
-> > Ravi Anand wrote:
-> >>> On Mon, 12 Jun 2006, Mike Christie wrote:
-> >>> Doug Maxey wrote:
-> >>>> 5) add the block layer code.
-> >>> Some related issues that we have discussed offlist about this and should
-> >>> probably be discussed here are:
-> >>>
-> >>> - Are we supposed to follow FC's lead and remove the devices (rport,
-> >>> session, target, scsi_device, etc) if the dev_loss_tmo fires. Currently
-> >>> for software iscsi, we leave the devices/session. This was to reduce
-> >>> memory allocations and because software iscsi has to basically poll the
-> >>> connection during connect as part of the relogin process. So unlike FC
-> >>> or hw iscsi, if we remove the devices/structs we have to end up
-> >>> rebuilding some of them right away anyways.
-> >>>
-> >>> Removing the devices has the benefit of simplifying the scsi/iscsi code.
-> >>>
-> >>> - Scanning. We currently do scanning for open-iscsi in userspace. For
-> >>> iscsi root this requires distro support. SUSE has it. Fedora is working
-> >>> on it. There is also Debian and Gentoo users or maintainers posting
-> >>> about working on it. For qla4xxx, we could stick the scanning in the
-> >>> kernel like FC and distros would not have to worry about it, but since
-> >>> they have to get this working for software iscsi do we just keep the
-> >>> scanning in userspace?
-> >> Our preference is also to have the scanning for all the HBA's which
-> >> does the discovery of the tgt's in the kernel space. This way we are
-> >> consistent with all the HBA's which does the port discovery like 
-> >> the FC HBA's. Our iSCSI HBA's is similar in that regard.
-> > 
-> > Yeah, but your HBA can also function in connection mode and just use
-> > open-iscsi's login code too. I am not saying that is that way to go. I
-> > am just saying that there are alternatives.
-> > 
-> >> As you have already stated, it simplies support from distro perspective 
-> >> as well.
-> >>
-> > 
-> > It does for qla4xxx, but I think you then have to go and fix it so
-> > iscsi_tcp and iscsi_iser sync up with userspace correctly if you convert
-> > them. Either that or we maintain two ways of scanning for iscsi drivers.
-> > For iscsi_tcp/iser we have some sync code to avoid the async scanning
-> > root disk problem, but that code is in userspace.
-> 
-> 
-> Oh yeah for install, do all your cards have the ability to be able to
-> set values like a discovery address from a bios or open firmware screen?
+This is a multi-part message in MIME format.
+--------------000703050709090102040005
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-Yes. On x86 system you have to use Ctrl+Q to enter the HBA bios and you 
-can set it from there.
+If the fc transport removes the scsi infrastructure for a
+disconnected target and that target subsequently returns,
+those subsystems layered upon scsi which don't understand
+the implications of this disconnection / reconnection may
+be unable to access the reconnected scsi target.  This patch
+makes the target removal configurable.
 
-> Is this ability on the card when you first get it or do you have to
-> download it or do you just have to download it for older cards?
+Signed-off-by: Michael Reed <mdr@sgi.com>
 
-Thats correct. Its built in when you first get it. In case its not
-there, you can download the flashuitl to update it or better
-just use SANSufer for iSCSI HBA's to udpate it.
 
-Ravi
+
+--------------000703050709090102040005
+Content-Type: text/x-patch;
+ name="fc_transport_optional_remove.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="fc_transport_optional_remove.patch"
+
+--- rc6u/drivers/scsi/scsi_transport_fc.c	2006-06-07 12:21:31.000000000 -0500
++++ rc6/drivers/scsi/scsi_transport_fc.c	2006-06-12 17:23:34.135974222 -0500
+@@ -374,9 +374,29 @@
+ MODULE_PARM_DESC(dev_loss_tmo,
+ 		 "Maximum number of seconds that the FC transport should"
+ 		 " insulate the loss of a remote port. Once this value is"
+-		 " exceeded, the scsi target is removed. Value should be"
++		 " exceeded, the scsi target may be removed. Reference the
++		 " remove_on_dev_loss module parameter.  Value should be"
+ 		 " between 1 and SCSI_DEVICE_BLOCK_MAX_TIMEOUT.");
+ 
++/*
++ * remove_on_dev_loss: controls whether the transport will
++ *   remove a scsi target after the device loss timer expires.
++ *   Removal on disconnect is modeled after the USB subsystem
++ *   and expects subsystems layered on SCSI to be aware of
++ *   potential device loss and handle it appropriately. However,
++ *   many subsystems do not support device removal, leaving situations
++ *   where structure references may remain, causing new device
++ *   name assignments, etc., if the target returns.
++ */
++static unsigned int fc_remove_on_dev_loss = 0;
++module_param_named(remove_on_dev_loss, fc_remove_on_dev_loss,
++		   int, S_IRUGO|S_IWUSR);
++MODULE_PARM_DESC(remove_on_dev_loss,
++    		"Boolean.  When the device loss timer fires, this variable"
++		" controls whether the scsi infrastructure for the target"
++		" device is removed.  Values: zero means do not remove,"
++		" non-zero means remove.  Default is zero.");
++
+ 
+ static __init int fc_transport_init(void)
+ {
+@@ -1446,7 +1466,8 @@
+ 	}
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+ 
+-	scsi_remove_target(&rport->dev);
++	if (fc_remove_on_dev_loss)
++		scsi_remove_target(&rport->dev);
+ }
+ 
+ 
+@@ -1992,9 +2013,13 @@
+ 		return;
+ 	}
+ 
+-	dev_printk(KERN_ERR, &rport->dev,
+-		"blocked FC remote port time out: removing target and "
+-		"saving binding\n");
++	if (fc_remove_on_dev_loss)
++		dev_printk(KERN_ERR, &rport->dev,
++			"blocked FC remote port time out: removing target and "
++			"saving binding\n");
++	else
++		dev_printk(KERN_ERR, &rport->dev,
++			"blocked FC remote port time out: saving binding\n");
+ 
+ 	list_move_tail(&rport->peers, &fc_host->rport_bindings);
+ 
+
+--------------000703050709090102040005--
