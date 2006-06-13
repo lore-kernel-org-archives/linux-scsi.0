@@ -1,29 +1,52 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] make fc transport removal of target configurable
-Date: Tue, 13 Jun 2006 08:07:14 +0100
-Message-ID: <20060613070714.GA16358@infradead.org>
-References: <448DF5DA.3070800@sgi.com>
+From: "dezheng shen" <dzshen@winbond.com>
+Subject: Re: Winbond flash memory reader SCSI device drivers
+Date: Tue, 13 Jun 2006 15:12:28 +0800
+Message-ID: <448E655C.3000509@winbond.com>
+References: <448D0ADE.8070303@winbond.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII;
+	format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:24011 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S932941AbWFMHHQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Jun 2006 03:07:16 -0400
-Content-Disposition: inline
-In-Reply-To: <448DF5DA.3070800@sgi.com>
+Received: from wehq.winbond.com.tw ([202.39.229.15]:31374 "EHLO
+	wehq.winbond.com.tw") by vger.kernel.org with ESMTP id S932930AbWFMHNq convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Jun 2006 03:13:46 -0400
+Content-Class: urn:content-classes:message
+In-Reply-To: <448D0ADE.8070303@winbond.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Reed <mdr@sgi.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James.Smart@Emulex.Com, Jim Nead <jnead@sgi.com>, Jeremy Higdon <jeremy@sgi.com>, Gary Hagensen <gwh@sgi.com>
+To: dezheng shen <dzshen@winbond.com>, linux-scsi@vger.kernel.org
+Cc: sjin@winbond.com, James Bottomley <James.Bottomley@SteelEye.com>, Russell King <rmk@arm.linux.org.uk>
 
-On Mon, Jun 12, 2006 at 06:16:42PM -0500, Michael Reed wrote:
-> If the fc transport removes the scsi infrastructure for a
-> disconnected target and that target subsequently returns,
-> those subsystems layered upon scsi which don't understand
-> the implications of this disconnection / reconnection may
-> be unable to access the reconnected scsi target.  This patch
-> makes the target removal configurable.
+Dear all:
+   Send it again.
 
-NACK, we don't want to keep dead targets around.
+thank you,
 
+dz
+
+> Dear all:
+>  We would like to contribute our flash memory device drivers to Linux 
+> community and would like to post to a public list for review first.
+>
+>  Since our drivers are implemented using SCSI subsystem so that our 
+> driver sources should go to ./drivers/scsi. If possible, can we create 
+> a subdirectory in ./drivers/scsi named "winbond" because we have 
+> drivers for SD/MMC/MS/MSPRO/xD/SM for various Winbond chips. It might 
+> be easier for us to maintain our own subdirectory.
+>
+>  This is the first we send this request to this mailing list and we 
+> are not sure this is the right way to do. If any of you is interested 
+> in reviewing our sources for Memory Stick driver for Winbond w518 
+> chip, please let me know so that we can post our sources.
+>
+> thank you,
+>
+> dz
+>
+
+
+
+===========================================================================================
+The privileged confidential information contained in this email is intended for use only by the addressees as indicated by the original sender of this email. If you are not the addressee indicated in this email or are not responsible for delivery of the email to such  a person, please kindly reply to the sender indicating this fact and delete all copies of it from your computer and network server immediately. Your cooperation is highly appreciated. It is advised that any unauthorized use of confidential information of Winbond is strictly prohibited; and any information in this email irrelevant to the official business of Winbond shall be deemed as neither given nor endorsed by Winbond.
