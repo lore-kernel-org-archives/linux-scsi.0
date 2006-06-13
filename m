@@ -1,86 +1,31 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [RFC] qla4xxx: TODO for re-submission
-Date: Mon, 12 Jun 2006 22:30:22 -0500
-Message-ID: <448E314E.1040702@cs.wisc.edu>
-References: <8889.1149988615@bebe.enoyolf.org> <448DACD5.6090205@cs.wisc.edu> <20060612211038.GB7555@ranandlinuxbox.qlogic.org> <448DDE31.2090300@cs.wisc.edu> <20060612224325.GK7555@ranandlinuxbox.qlogic.org>
+From: "Stephanie Mead" <kngyfln@hotmail.com>
+Subject: We Guuaranteees Bigger Pen-nis Vkdka
+Date: Tue, 13 Jun 2006 11:58:37 +0100
+Message-ID: <9A287EE3.7684.5215C2D5__49393.3658035987$1150169596$gmane$org@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:1942 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S932818AbWFMDaa (ORCPT
+Received: from [211.189.208.84] ([211.189.208.84]:14611 "HELO 42C40B58")
+	by vger.kernel.org with SMTP id S932800AbWFMDdA (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Jun 2006 23:30:30 -0400
-In-Reply-To: <20060612224325.GK7555@ranandlinuxbox.qlogic.org>
+	Mon, 12 Jun 2006 23:33:00 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ravi Anand <ravi.anand@qlogic.com>
-Cc: Doug Maxey <dwm@bebe.enoyolf.org>, David Somayajulu <davidcs2005@gmail.com>, Duane Grigsby <duane.grigsby@qlogic.com>, linux-scsi@vger.kernel.org, dwm@austin.ibm.com
-
-Ravi Anand wrote:
->> On Mon, 12 Jun 2006, Mike Christie wrote:
-> 
->> Date: Mon, 12 Jun 2006 16:35:45 -0500
->> From: Mike Christie <michaelc@cs.wisc.edu>
->> To: Ravi Anand <ravi.anand@qlogic.com>
->> CC: Doug Maxey <dwm@bebe.enoyolf.org>,
->> 	David Somayajulu <davidcs2005@gmail.com>,
->> 	Duane Grigsby <duane.grigsby@qlogic.com>,
->> 	linux-scsi@vger.kernel.org, dwm@austin.ibm.com
->> Subject: Re: [RFC] qla4xxx: TODO for re-submission
->> User-Agent: Thunderbird 1.5 (X11/20060313)
->>
->> Ravi Anand wrote:
->>>> On Mon, 12 Jun 2006, Mike Christie wrote:
->>>> Doug Maxey wrote:
->>>>> 5) add the block layer code.
->>>> Some related issues that we have discussed offlist about this and should
->>>> probably be discussed here are:
->>>>
->>>> - Are we supposed to follow FC's lead and remove the devices (rport,
->>>> session, target, scsi_device, etc) if the dev_loss_tmo fires. Currently
->>>> for software iscsi, we leave the devices/session. This was to reduce
->>>> memory allocations and because software iscsi has to basically poll the
->>>> connection during connect as part of the relogin process. So unlike FC
->>>> or hw iscsi, if we remove the devices/structs we have to end up
->>>> rebuilding some of them right away anyways.
->>>>
->>>> Removing the devices has the benefit of simplifying the scsi/iscsi code.
->>>>
->>>> - Scanning. We currently do scanning for open-iscsi in userspace. For
->>>> iscsi root this requires distro support. SUSE has it. Fedora is working
->>>> on it. There is also Debian and Gentoo users or maintainers posting
->>>> about working on it. For qla4xxx, we could stick the scanning in the
->>>> kernel like FC and distros would not have to worry about it, but since
->>>> they have to get this working for software iscsi do we just keep the
->>>> scanning in userspace?
->>> Our preference is also to have the scanning for all the HBA's which
->>> does the discovery of the tgt's in the kernel space. This way we are
->>> consistent with all the HBA's which does the port discovery like 
->>> the FC HBA's. Our iSCSI HBA's is similar in that regard.
->> Yeah, but your HBA can also function in connection mode and just use
->> open-iscsi's login code too. I am not saying that is that way to go. I
->> am just saying that there are alternatives.
-> 
-> Agreed. But it was added later on. So the driver always used the session mode.
+To: linux-net@vger.kernel.org
+Cc: linux-newbie@vger.kernel.org, linux-ppp@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org, linux-sound@vger.kernel.org
 
 
-And we never redo iscsi drivers right ;)
 
 
->>> As you have already stated, it simplies support from distro perspective 
->>> as well.
->>>
->> It does for qla4xxx, but I think you then have to go and fix it so
->> iscsi_tcp and iscsi_iser sync up with userspace correctly if you convert
->> them. Either that or we maintain two ways of scanning for iscsi drivers.
-> 
-> I like the later part. Keeping it seperate.
-> 
+Here's latest "Longz" formula has been proven
+to add inches to the sizes while multiplying
+orgasms like never had before. 
+Our products is light years ahead of our competitors
+which has millions of happy users.
 
-I think I was only kidding about that option. But now we have votes for
-every possible solution :)
+Check us out..You won't regret.
 
-You also still have the iSNS issue. That will be in userspace, so one
-day you will have to modify the distros to do iscsi root when using iSNS
-and use iSNS for installer targets.
+http://maxx14.coolhb.biz
+
+
+EN8W
