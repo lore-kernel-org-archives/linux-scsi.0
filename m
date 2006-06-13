@@ -1,48 +1,58 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [PATCH] make fc transport removal of target configurable
-Date: Tue, 13 Jun 2006 07:06:28 -0400
-Message-ID: <448E9C34.6070707@emulex.com>
-References: <448DF5DA.3070800@sgi.com> <20060613070714.GA16358@infradead.org>
-Reply-To: James.Smart@Emulex.Com
+From: berthiaume_wayne@emc.com
+Subject: RE: [RFC] qla4xxx: TODO for re-submission
+Date: Tue, 13 Jun 2006 08:16:46 -0400
+Message-ID: <D364D39DAD21D444BAE2C70919B62809A0B573@CORPUSMX40A.corp.emc.com>
+References: <448E3FA8.4050309@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:35814 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S1750936AbWFMLGu
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Jun 2006 07:06:50 -0400
-In-Reply-To: <20060613070714.GA16358@infradead.org>
+Received: from mexforward.lss.emc.com ([128.222.32.20]:26250 "EHLO
+	mexforward.lss.emc.com") by vger.kernel.org with ESMTP
+	id S932083AbWFMMRg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Jun 2006 08:17:36 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <448E3FA8.4050309@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Michael Reed <mdr@sgi.com>, linux-scsi <linux-scsi@vger.kernel.org>, Jim Nead <jnead@sgi.com>, Jeremy Higdon <jeremy@sgi.com>, Gary Hagensen <gwh@sgi.com>
+To: jeff@garzik.org, dwm@bebe.enoyolf.org
+Cc: michaelc@cs.wisc.edu, ravi.anand@qlogic.com, davidcs2005@gmail.com, duane.grigsby@qlogic.com, linux-scsi@vger.kernel.org
 
-We are seriously in trouble if the subsystems above us don't know how
-to deal with dead targets. We are encountering scenarios in which the
-data structures are staying around due to references, but for all other
-intents they're gone.  I know that DM has yet to fully account for this.
-md - it's dead. Applications... they have no clue.
+A one tool fits all is the best solution if your interest is to get
+iSCSI and Linux accepted in the enterprise and, especially, the SMB
+markets. This should be the goal.  
 
-I think we should seriously reconsider this position. FC is the only major
-storage transport that does this (USB doesn't count). Parallel SCSI
-doesn't, iSCSI doesn't, SAS doesn't.  If the device was truly gone, ok.
-But, if we expect the device to come alive again sometime in the future,
-why not keep the tree in place ?
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Jeff Garzik
+Sent: Tuesday, June 13, 2006 12:32 AM
+To: Doug Maxey
+Cc: Mike Christie; Ravi Anand; David Somayajulu; Duane Grigsby;
+linux-scsi@vger.kernel.org
+Subject: Re: [RFC] qla4xxx: TODO for re-submission
 
--- james s
+Doug Maxey wrote:
+> Having a common solution (ala ethtool) for the user/admin, across all
+> SWI, all HBAs, and all distros would be optimal in my view.  Although
+> the QLogic tools are out there, they only work AFAIK, for the other,
+> non-mainline drivers.   It is enough pain to manage the targets,  
+> making one end of the configuration common would be a big bonus.
 
 
+Why, in fact...  that's the purpose of blktool :)
 
-Christoph Hellwig wrote:
-> On Mon, Jun 12, 2006 at 06:16:42PM -0500, Michael Reed wrote:
->> If the fc transport removes the scsi infrastructure for a
->> disconnected target and that target subsequently returns,
->> those subsystems layered upon scsi which don't understand
->> the implications of this disconnection / reconnection may
->> be unable to access the reconnected scsi target.  This patch
->> makes the target removal configurable.
-> 
-> NACK, we don't want to keep dead targets around.
-> 
-> 
+Vendor-specific code in blktool is quite welcome.  The general idea is 
+to manage various vendor-specific capabilities which fit common
+patterns.
+
+git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/blktool.git
+http://sourceforge.net/projects/gkernel/
+
+	Jeff
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
