@@ -1,40 +1,118 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: Error using DC315U to drive ScanJet 4c
-Date: Tue, 13 Jun 2006 18:10:56 +0200 (CEST)
-Message-ID: <Pine.LNX.4.60.0606131808030.4412@poirot.grange>
-References: <Pine.LNX.4.64.0606042013200.14649@nev.ubzr>
- <Pine.LNX.4.60.0606041850090.13574@poirot.grange> <Pine.LNX.4.64.0606042201460.14649@nev.ubzr>
- <Pine.LNX.4.60.0606042022540.24306@poirot.grange> <Pine.LNX.4.64.0606051150440.4038@nev.ubzr>
- <Pine.LNX.4.60.0606051242150.4149@poirot.grange> <Pine.LNX.4.64.0606060050360.7237@nev.ubzr>
- <Pine.LNX.4.60.0606060008330.22057@poirot.grange> <Pine.LNX.4.64.0606070253580.14004@nev.ubzr>
- <Pine.LNX.4.60.0606072312410.9588@poirot.grange> <Pine.LNX.4.64.0606090054530.20041@nev.ubzr>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH] make fc transport removal of target configurable
+Date: Tue, 13 Jun 2006 19:24:36 +0200
+Message-ID: <448EF4D4.4090402@s5r6.in-berlin.de>
+References: <448DF5DA.3070800@sgi.com> <20060613070714.GA16358@infradead.org> <448E9C34.6070707@emulex.com> <448EDCEB.50702@sgi.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.21]:13530 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S932163AbWFMQK5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Jun 2006 12:10:57 -0400
-In-Reply-To: <Pine.LNX.4.64.0606090054530.20041@nev.ubzr>
+Received: from hp3.statik.TU-Cottbus.De ([141.43.120.68]:22949 "EHLO
+	hp3.statik.tu-cottbus.de") by vger.kernel.org with ESMTP
+	id S932198AbWFMR1D (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Jun 2006 13:27:03 -0400
+In-Reply-To: <448EDCEB.50702@sgi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Lev A. Melnikovsky" <leva@hotmail.com>
-Cc: Guennadi Liakhovetski <g.liakhovetski@gmx.de>, linux-scsi@vger.kernel.org
+To: Michael Reed <mdr@sgi.com>
+Cc: James.Smart@Emulex.Com, Christoph Hellwig <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>, Jim Nead <jnead@sgi.com>, Jeremy Higdon <jeremy@sgi.com>, Gary Hagensen <gwh@sgi.com>
 
-On Fri, 9 Jun 2006, Lev A. Melnikovsky wrote:
+Michael Reed wrote:
+> James Smart wrote:
+>> We are seriously in trouble if the subsystems above us don't know how
+>> to deal with dead targets. We are encountering scenarios in which the
+>> data structures are staying around due to references, but for all other
+>> intents they're gone.  I know that DM has yet to fully account for this.
+>> md - it's dead. Applications... they have no clue.
+> 
+> Mounted file systems have no clue either.  Even with no activity on the
+> fs, if the target stays missing beyond the device loss timeout and then
+> returns, the file system cannot be accessed without intervention.
+> 
+> When the target does return, the file system has to be unmounted and
+> remounted on a new "sd" device.  This is even if there was no activity
+> on the file system while its target was absent, i.e., it wouldn't otherwise
+> require an unmount/remount.
 
-> operation. A funny artifact though can be seen at the picture (this is a
-> ~800KB map of Japan http://kapitza.ras.ru/~leva/Japan.jpg ). It looks like
-> during each reselect a chunk of data is lost (or maybe transferred twice?) and
-> the data stream gets an offset. My understanding is that the scan data are
-> 8bits per color component which gives 24bits/pixel.
+Michael, I don't understand how your patch fits into this picture.
 
-Lev, an easier possibility to test if bytes are lost or repeated: just 
-scan an image several times, saving it in an UNcompressed format, then, I 
-think, the size should always be the same, right? Then you can just 
-compare which file is bigger - the correct or the damaged one.
+There is presently the FC transport parameter 'dev_loss_tmo', which is
+    "Maximum number of seconds that the FC transport should"
+    " insulate the loss of a remote port. Once this value is"
+    " exceeded, the scsi target {is|may be} removed. {%|Reference"
+    " the remove_on_dev_loss module parameter.} Value should be"
+    " between 1 and SCSI_DEVICE_BLOCK_MAX_TIMEOUT.");
 
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
+Then you are adding the parameter 'remove_on_dev_loss', which is
+    "Boolean.  When the device loss timer fires, this variable"
+    " controls whether the scsi infrastructure for the target"
+    " device is removed.  Values: zero means do not remove,"
+    " non-zero means remove.  Default is zero.");
+
+I think the 2nd parameter does not help anyone. What you rather seem to
+need is
+ a) the existing dev_loss_tmo parameter but without the kernel
+    enforcing an upper limit for it [the admin sets the policy, not
+    the kernel], and
+ b) the transport layer or the SCSI core taking care that no SCSI
+    command times out during the tolerated absence of a target.
+
+So, for every layer above the transport layer or of SCSI core (SCSI
+command set drivers and sg driver, block layer, filesystem...),
+everything becomes fully transparent. These layers do not notice absence
+of the target. If anything at all, they merely notice that commands take
+unusually long to complete.
+
+Of course there are practical limits to this:
+ - We don't want to wait ages for commands to complete or to fail.
+ - The device's state may have changed arbitrarily during its absence
+   due to an external influence, leading to corruption when it comes
+   back.
+But again, the decision about the limit for such tolerated absence
+should be a decision by the admin, not one by the kernel. The driver
+software and the involved kernel infrastructure should merely provide
+mechanisms but not enforce a policy, at least not to unnecessary extent.
+
+Anyhow. My point is: It seems what you want is 1. to let the admin set
+an arbitrary dev_loss_tmo and 2. the transport or the SCSI core taking
+care that no commands time out during that period.
+
+Where to implement this? The transport layer has the benefit to have a
+better notion of target states because it is closer to the interconnect
+layer than the SCSI core. On the other hand, the SCSI core is rather the
+place where mechanisms to handle the lifecycle of targets and especially
+of commands exist.
+
+The SCSI core seems appropriate for another reason: The issue at hand is
+not really specific to the FC transport. Maybe we want dev_loss_tmo to
+be independently configurable for different transports or on a
+per-host-adapter basis, or on a per target basis. But generally,
+temporary absence of a target is a *natural and common state* for some
+other transports besides FC. (Example: Bus reset phase and rescanning of
+FireWire interconnect == connection loss and subsequent reconnect or
+re-login of SBP-2 transport. This is a rather short period, but I
+already thought about implementing a prolongued state of absence in sbp2
+for two other specific purposes.)
+
+If it was decided to implement this "tolerated temporary absence of a
+target" in SCSI core, then the SCSI core's state machine would "simply"
+have to handle another target state.
+
+I put "simply" into quotes because the existing state model seems not to
+be exactly at a point where you could immediately proceed to add such
+additional state. In particular, the SCSI core does not yet support the
+state "device temporarily not accessible". The state "device blocked" is
+similar but ultimately not the same. Besides, the SCSI core does also
+not distinguish the state transitions "device operational -> device
+removal requested" versus "device operational -> device hot unplugged".
+(The latter transition does not exist for SCSI core; transport layers or
+low-level drivers have to initiate the transition to "device removal
+requested" and work around the subsequent problems when it was actually
+a hot unplug.)
+
+Side note to everything above: Yes, I may have missed something, so
+correct me.
+-- 
+Stefan Richter
+-=====-=-==- -==- -==-=
+http://arcgraph.de/sr/
