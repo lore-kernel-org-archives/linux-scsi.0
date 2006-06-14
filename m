@@ -1,74 +1,42 @@
-From: HighPoint Linux Team <linux@highpoint-tech.com>
-Subject: Re: [PATCH] hptiop: HighPoint RocketRAID 3xxx controller driver
-Date: Wed, 14 Jun 2006 16:50:57 +0800
-Message-ID: <200606141650.57740.linux@highpoint-tech.com>
-References: <200606111706.52930.linux@highpoint-tech.com>
+From: "Juanita Plummer" <JuanitaPlummer@004.com>
+Subject: Your future, outlet box
+Date: Wed, 14 Jun 2006 09:34:08 -0120
+Message-ID: <662161c80604y9404nt2oi0bzms0v6h3n0yrhj0jmjcel__29107.0467130796$1150277671$gmane$org@mx1.004.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stats.hypersurf.com ([209.237.0.12]:34317 "EHLO
-	stats.hypersurf.com") by vger.kernel.org with ESMTP
-	id S1751247AbWFNIgY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Jun 2006 04:36:24 -0400
-In-Reply-To: <200606111706.52930.linux@highpoint-tech.com>
+Received: from kvl-itt.tsua.net ([212.40.39.58]:56071 "EHLO kvl-itt.tsua.net")
+	by vger.kernel.org with ESMTP id S964783AbWFNJeI convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Jun 2006 05:34:08 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, akpm@osdl.org
+To: linux-assembly@vger.kernel.org
 
-Updates:
-- don't bypass SYNCHRONIZE_CACHE command
-- return SCSI_MLQUEUE_HOST_BUSY when no free request slots
-- move scsi_remove_host() to the begin of hpt_remove(), or it will
-  not work after resources being released.
+Even if you have no erectin problems SOFT CIAzLIS 
+would help you to make BETTER SE  X MORE OFTEN!
+and to bring  unimagnable plesure to her.
 
+Just disolve half a pil under your tongue 
+and get ready for action in 15 minutes. 
 
-Signed-off-by: HighPoint Linux Team <linux@highpoint-tech.com>
----
+The tests showed that the majority of men 
+after taking this medic ation were able to have 
+PERFECT ER ECTI ON during 36 hours!
 
-diff --git a/drivers/scsi/hptiop.c b/drivers/scsi/hptiop.c
-index 8302f3b..a96751c 100644
---- a/drivers/scsi/hptiop.c
-+++ b/drivers/scsi/hptiop.c
-@@ -504,19 +504,10 @@ static int hptiop_queuecommand(struct sc
- 	BUG_ON(!done);
- 	scp->scsi_done = done;
- 
--	/*
--	 * hptiop_shutdown will flash controller cache.
--	 */
--	if (scp->cmnd[0] == SYNCHRONIZE_CACHE)  {
--		scp->result = DID_OK<<16;
--		goto cmd_done;
--	}
--
- 	_req = get_req(hba);
- 	if (_req == NULL) {
- 		dprintk("hptiop_queuecmd : no free req\n");
--		scp->result = DID_BUS_BUSY << 16;
--		goto cmd_done;
-+		return SCSI_MLQUEUE_HOST_BUSY;
- 	}
- 
- 	_req->scp = scp;
-@@ -1429,6 +1420,8 @@ static void hptiop_remove(struct pci_dev
- 
- 	dprintk("scsi%d: hptiop_remove\n", hba->host->host_no);
- 
-+	scsi_remove_host(host);
-+
- 	spin_lock(&hptiop_hba_list_lock);
- 	list_del_init(&hba->link);
- 	spin_unlock(&hptiop_hba_list_lock);
-@@ -1448,7 +1441,6 @@ static void hptiop_remove(struct pci_dev
- 	pci_set_drvdata(hba->pcidev, NULL);
- 	pci_disable_device(hba->pcidev);
- 
--	scsi_remove_host(host);
- 	scsi_host_put(host);
- }
- 
+VISIT US, AND GET OUR SPECIAL 70% DISC OUNT OFER!
 
+http://vtdklh.shoutflat.com/?23595033
+
+=====
+     "To begin with " he said heavily, "you've got to  understand  that  a
+would be in  the way as far as he was concerned. We would run down, just the
+there's a fight we'll be a lot more help there than here."'
+     "Hello," I said.  "You called  for me?" Willy looked  right through me,
+     "Couldn't I? Don't you think that there might be other flocks,  other
+standing at  attention out of respect,  the  lieutenant at  the door  of the
+
+but he didn't appear to notice. He held  his  practice  sessions  directly
+be afraid,  nothing  will happen as long as you're with me,  and if it does,
