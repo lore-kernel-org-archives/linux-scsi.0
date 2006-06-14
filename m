@@ -1,33 +1,74 @@
-From: Kirill Korotaev <dev@sw.ru>
-Subject: MPT fusion driver doesn't work when compiled into kernel
-Date: Wed, 14 Jun 2006 11:49:20 +0400
-Message-ID: <448FBF80.9090305@sw.ru>
+From: HighPoint Linux Team <linux@highpoint-tech.com>
+Subject: Re: [PATCH] hptiop: HighPoint RocketRAID 3xxx controller driver
+Date: Wed, 14 Jun 2006 16:50:57 +0800
+Message-ID: <200606141650.57740.linux@highpoint-tech.com>
+References: <200606111706.52930.linux@highpoint-tech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhub.sw.ru ([195.214.233.200]:26526 "EHLO relay.sw.ru")
-	by vger.kernel.org with ESMTP id S1751200AbWFNHt1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Jun 2006 03:49:27 -0400
+Received: from stats.hypersurf.com ([209.237.0.12]:34317 "EHLO
+	stats.hypersurf.com") by vger.kernel.org with ESMTP
+	id S1751247AbWFNIgY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Jun 2006 04:36:24 -0400
+In-Reply-To: <200606111706.52930.linux@highpoint-tech.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: mpt_linux_developer@lsil.com, Eric.Moore@lsil.com, linux-scsi@vger.kernel.org, Vasily Averin <vvs@sw.ru>, Andrey Mirkin <amirkin@sw.ru>
+To: James.Bottomley@SteelEye.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, akpm@osdl.org
 
-Hello,
+Updates:
+- don't bypass SYNCHRONIZE_CACHE command
+- return SCSI_MLQUEUE_HOST_BUSY when no free request slots
+- move scsi_remove_host() to the begin of hpt_remove(), or it will
+  not work after resources being released.
 
-FYI, there is a bug in all(?) 3.x fusion drivers, which prevents it from 
-working when all the fusion config options are set to 'y'.
 
-It looks like the driver uses schedule_timeout() for delays inside, 
-which can return immediately on the boot stage and thus drives are not 
-detected properly.
+Signed-off-by: HighPoint Linux Team <linux@highpoint-tech.com>
+---
 
-At least the following verions are affected:
-3.03.07
-3.02.62.01rh
+diff --git a/drivers/scsi/hptiop.c b/drivers/scsi/hptiop.c
+index 8302f3b..a96751c 100644
+--- a/drivers/scsi/hptiop.c
++++ b/drivers/scsi/hptiop.c
+@@ -504,19 +504,10 @@ static int hptiop_queuecommand(struct sc
+ 	BUG_ON(!done);
+ 	scp->scsi_done = done;
+ 
+-	/*
+-	 * hptiop_shutdown will flash controller cache.
+-	 */
+-	if (scp->cmnd[0] == SYNCHRONIZE_CACHE)  {
+-		scp->result = DID_OK<<16;
+-		goto cmd_done;
+-	}
+-
+ 	_req = get_req(hba);
+ 	if (_req == NULL) {
+ 		dprintk("hptiop_queuecmd : no free req\n");
+-		scp->result = DID_BUS_BUSY << 16;
+-		goto cmd_done;
++		return SCSI_MLQUEUE_HOST_BUSY;
+ 	}
+ 
+ 	_req->scp = scp;
+@@ -1429,6 +1420,8 @@ static void hptiop_remove(struct pci_dev
+ 
+ 	dprintk("scsi%d: hptiop_remove\n", hba->host->host_no);
+ 
++	scsi_remove_host(host);
++
+ 	spin_lock(&hptiop_hba_list_lock);
+ 	list_del_init(&hba->link);
+ 	spin_unlock(&hptiop_hba_list_lock);
+@@ -1448,7 +1441,6 @@ static void hptiop_remove(struct pci_dev
+ 	pci_set_drvdata(hba->pcidev, NULL);
+ 	pci_disable_device(hba->pcidev);
+ 
+-	scsi_remove_host(host);
+ 	scsi_host_put(host);
+ }
+ 
 
-And according to recent commits it was not fixed since then.
-
-Thanks,
-Kirill
