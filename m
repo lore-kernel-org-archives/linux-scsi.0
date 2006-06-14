@@ -1,41 +1,41 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: qlogic qla2312f-v2 (hp oem?)
-Date: Wed, 14 Jun 2006 15:48:26 -0700
-Message-ID: <20060614224826.GS879@andrew-vasquezs-powerbook-g4-15.local>
-References: <7.0.1.0.0.20060609132026.025d7098@elexis.nl>
+From: "Moore, Eric" <Eric.Moore@lsil.com>
+Subject: RE: [PATCH] Optionally disable QAS in MPT Fusion spi driver
+Date: Wed, 14 Jun 2006 17:16:23 -0600
+Message-ID: <664A4EBB07F29743873A87CF62C26D70199768@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:50917 "EHLO avexch2.qlogic.com")
-	by vger.kernel.org with ESMTP id S964922AbWFNWs2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Jun 2006 18:48:28 -0400
-Content-Disposition: inline
-In-Reply-To: <7.0.1.0.0.20060609132026.025d7098@elexis.nl>
+Received: from mail0.lsil.com ([147.145.40.20]:13549 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S965017AbWFNXQ1 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Jun 2006 19:16:27 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sander van Beek - Elexis <sander@elexis.nl>
-Cc: linux-scsi@vger.kernel.org
+To: Andrew Patterson <andrew.patterson@hp.com>, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
 
-On Fri, 09 Jun 2006, Sander van Beek - Elexis wrote:
-
-> I recently got two qla2312f-v2 cards from ebay. These are dual 2gbit 
-> fibre channel hba's for a pci-x bus. The qlogic site says this type 
-> is a HP OEM card and it is not sold directly by qlogic.
-> I tried to get them working on a slackware 10.2 system with the 
-> latest stable 2.6 kernel. However, the qla2xxx driver does not see 
-> the card. My dmesg only shows this line:
+On Friday, June 02, 2006 3:14 PM, Andrew Patterson wrote: 
 > 
-> Jun  9 11:09:27 clust1 kernel: QLogic Fibre Channel HBA Driver
+> Certain drives report that they support QAS, but it some 
+> cases can have
+> trouble with it causing bus resets.  This patch optionally 
+> disables QAS
+> for the MPT Fusion spi driver.  QAS is disabled using the 
+> mpt_qas module
+> parameter.
 > 
-> This is how the card shows up in my /proc/pci:
+> Andrew
 > 
->   Bus  2, device   1, function  1:
->     Class 0c04: PCI device 1077:8000 (rev 1).
->       IRQ 255.
->       Prefetchable 32 bit memory at 0x40000000 [0x403fffff].
+> Signed-off-by: Andrew Patterson <andrew.patterson@hp.com>
+> 
 
-btw: can you send the output of 'lspci -vvv' on your machine.
+ACK, James pls apply to your scsi-misc tree.   I validated
+the patch here in the labs.
 
---
-av
+Sorry for the delay. I've been mostly out of the office the
+past three weeks.
+
+Eric Moore
+LSI Logic
