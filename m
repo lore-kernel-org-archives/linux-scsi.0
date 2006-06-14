@@ -1,64 +1,54 @@
-From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: RE: [REPOST][PATCH 1/6] mpt fusion - fibre channel target discovery prematurely terminates
-Date: Wed, 14 Jun 2006 16:27:52 -0600
-Message-ID: <664A4EBB07F29743873A87CF62C26D70199735@NAMAIL4.ad.lsil.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: qlogic qla2312f-v2 (hp oem?)
+Date: Wed, 14 Jun 2006 15:45:52 -0700
+Message-ID: <20060614224551.GR879@andrew-vasquezs-powerbook-g4-15.local>
+References: <7.0.1.0.0.20060609132026.025d7098@elexis.nl> <20060609120853.GL1651@parisc-linux.org> <7.0.1.0.0.20060614095006.041f7cf0@elexis.nl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:36838 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S964881AbWFNW14 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Jun 2006 18:27:56 -0400
-Content-class: urn:content-classes:message
+Received: from pat.qlogic.com ([198.70.193.2]:23004 "EHLO avexch1.qlogic.com")
+	by vger.kernel.org with ESMTP id S964910AbWFNWpy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Jun 2006 18:45:54 -0400
+Content-Disposition: inline
+In-Reply-To: <7.0.1.0.0.20060614095006.041f7cf0@elexis.nl>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Reed <mdr@sgi.com>, James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Sander van Beek - Elexis <sander@elexis.nl>
+Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org
 
-On Wednesday, June 14, 2006 1:00 PM, Mike Reed wrote: 
-> 
-> James Bottomley wrote:
-> > 
-> > I was still thinking of something that made mpt_config() 
-> never return
-> > -EAGAIN.  How does the following work out?  It's my first pass at
-> > sorting out the frame and active logic in mptbase:
-> 
-> 
-> pCfg->wait_done needs to be initialized to zero before sleeping.
-> 
+On Wed, 14 Jun 2006, Sander van Beek - Elexis wrote:
 
-agreed
+> Thanks for your reply.
+> I've tried this, but the driver still does not seem to recognize the 
+> card. Any other idea's?
 
-> It takes seven to ten seconds for the ioc->active value to become
-> non-zero and the wake up to occur.
-> 
-> It appears that the order of execution during "lsiutil 99" testing
-> has changed.  Once the driver marks the fibre targets missing, they
-> never return.  Hmmm....  Until this is resolved, this patch cannot
-> be applied.  I'll see if I can sort out how the execution order
-> has changed.
+I'd suggest you contact QLogic's tech-support:
 
-not clear what you mean by "they never return"
+http://support.qlogic.com/support/report_problem.asp
 
-> 
-> Another comment, for every i/o, this patch introduces overhead.
-> spinlock and checking a list which is empty 99.99[...]% of the time.
-> I'll have to perform an iop measurement to see if there is a
-> measurable impact on system performance.
-> 
 
-What overhead?  We don't read config pages on every I/O.  James
-patch only effects the reading of config pages when there is
-a host reset.
+I'm unaware of any DID of 0x8000:
 
-One concern on this patch.  A possible deadlock situation could
-occur if we run out of message frames.  Meaning there is another way
-that  mpt_get_msg_frame() could return NULL, and that is becuase
-the ioc->FreeQ list is empty.  This patch only addresses the case
-when there is a host reset.   Utimatley we need to address both
-cases when NULL is returned.  Id rather try to come  up with a
-solution where the fix is isolated inside of mpt_get_msg_frame().
+> At 14:08 9-6-2006, Matthew Wilcox wrote:
+> >On Fri, Jun 09, 2006 at 01:20:57PM +0200, Sander van Beek - Elexis wrote:
+> >> I recently got two qla2312f-v2 cards from ebay. These are dual 2gbit
+> >> fibre channel hba's for a pci-x bus. The qlogic site says this type
+> >> is a HP OEM card and it is not sold directly by qlogic.
+> >> I tried to get them working on a slackware 10.2 system with the
+> >> latest stable 2.6 kernel. However, the qla2xxx driver does not see
+> >> the card. My dmesg only shows this line:
+> >>
+> >> Jun  9 11:09:27 clust1 kernel: QLogic Fibre Channel HBA Driver
+> >>
+> >> This is how the card shows up in my /proc/pci:
+> >>
+> >>   Bus  2, device   1, function  1:
+> >>     Class 0c04: PCI device 1077:8000 (rev 1).
+> >>       IRQ 255.
+> >>       Prefetchable 32 bit memory at 0x40000000 [0x403fffff].
 
-Eric Moore
+weird...
+
+--
+Andrew
