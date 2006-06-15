@@ -1,57 +1,31 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: Re: [REPOST][PATCH 1/6] mpt fusion - fibre channel target discovery
- prematurely terminates
-Date: Thu, 15 Jun 2006 10:41:45 -0500
-Message-ID: <44917FB9.3010604@sgi.com>
-References: <664A4EBB07F29743873A87CF62C26D70199836@NAMAIL4.ad.lsil.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: PATCH: Quieten sparse on lpfc driver
+Date: Thu, 15 Jun 2006 09:17:27 -0700
+Message-ID: <1150388248.3143.45.camel@mulgrave.il.steeleye.com>
+References: <1150386046.3490.94.camel@localhost.localdomain>
+	 <20060615152754.GS27946@ftp.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:48777 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S1030700AbWFOPlt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Jun 2006 11:41:49 -0400
-In-Reply-To: <664A4EBB07F29743873A87CF62C26D70199836@NAMAIL4.ad.lsil.com>
+Received: from stat9.steeleye.com ([209.192.50.41]:54220 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1030754AbWFOQR5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Jun 2006 12:17:57 -0400
+In-Reply-To: <20060615152754.GS27946@ftp.linux.org.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric" <Eric.Moore@lsil.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Al Viro <viro@ftp.linux.org.uk>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-scsi@vger.kernel.org
 
-Thanks for finding the problem.  I'll rework James' patch to take
-into account your comments and give it a try.
+On Thu, 2006-06-15 at 16:27 +0100, Al Viro wrote:
+> Al, sitting on ~200 patches of such kind, including
 
-Mike
+Well .. scsi-misc is collecting for the next cycle.  Additionally the
+patches that affect maintained drivers, like lpfc, need to go through
+the maintainers of those drivers, so now would be a good time to begin
+preparing this for that cycle.
+
+James
 
 
-Moore, Eric wrote:
-> On Thursday, June 15, 2006 8:51 AM, Michael Reed wrote: 
-> 
->>> What overhead?  We don't read config pages on every I/O.  James
->>> patch only effects the reading of config pages when there is
->>> a host reset.
->> I think you're mistaken about James' patch.
->>
->> Doesn't every i/o use a message frame?  James' patch to sleep on frame
->> exhaustion requires a wakeup every time a msg frame is released,
->> which is performed at the end of mpt_put_msg_frame().  Am I missing
->> something?
->>
->>
-> 
-> Ok, my mistake.  I overlooked the wake_up() at the end of
-> mpt_put_msg_frame().
-> 
-> BTW, this is incorrect.  The wake_up() should been in
-> mpt_free_msg_frame(), 
-> instead of mpt_put_msg_frame().   The _put_ function is sending the mf
-> to 
-> the firmware.   The mf is not freed untill the command is completd by
-> firmware,
-> and the _free_function is called.  Meaning this issue can be solved by
-> moving 
-> wake_up() to mpt_free_msg_frame(), and only calling wake_up() when the
-> list_empty(&ioc->FreeQ) was empty going into this call.
-> 
-> Eric Moore
-> 
