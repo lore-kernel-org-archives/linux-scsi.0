@@ -1,114 +1,67 @@
-From: Ravi Anand <ravi.anand@qlogic.com>
-Subject: Re: [RFC] qla4xxx: TODO for re-submission
-Date: Wed, 14 Jun 2006 17:43:52 -0700
-Message-ID: <20060615004352.GA3216@ranandlinuxbox.qlogic.org>
-References: <8889.1149988615@bebe.enoyolf.org> <448DACD5.6090205@cs.wisc.edu> <20060612211038.GB7555@ranandlinuxbox.qlogic.org> <448DDE31.2090300@cs.wisc.edu> <20060612224325.GK7555@ranandlinuxbox.qlogic.org> <448E314E.1040702@cs.wisc.edu>
+From: <SJin@winbond.com>
+Subject: RE: Winbond flash memory reader SCSI device drivers
+Date: Thu, 15 Jun 2006 12:55:21 +0800
+Message-ID: <FF9D611BFCDB1E42B37FAA148096BECE801719@weshml03.winbond.com.tw>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=GB2312
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:14710 "EHLO avexch2.qlogic.com")
-	by vger.kernel.org with ESMTP id S1751252AbWFOAnj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Jun 2006 20:43:39 -0400
-Content-Disposition: inline
-In-Reply-To: <448E314E.1040702@cs.wisc.edu>
+Received: from wehq.winbond.com.tw ([202.39.229.15]:47807 "EHLO
+	wehq.winbond.com.tw") by vger.kernel.org with ESMTP
+	id S1751044AbWFOEzy convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Jun 2006 00:55:54 -0400
+Content-Class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Doug Maxey <dwm@bebe.enoyolf.org>, David Somayajulu <davidcs2005@gmail.com>, Duane Grigsby <duane.grigsby@qlogic.com>, linux-scsi@vger.kernel.org, dwm@austin.ibm.com, David Wagner <david.wagner@qlogic.com>
+To: James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org
 
->On Mon, 12 Jun 2006, Mike Christie wrote:
-> Ravi Anand wrote:
-> >> On Mon, 12 Jun 2006, Mike Christie wrote:
-> > 
-> >> Date: Mon, 12 Jun 2006 16:35:45 -0500
-> >> From: Mike Christie <michaelc@cs.wisc.edu>
-> >> To: Ravi Anand <ravi.anand@qlogic.com>
-> >> CC: Doug Maxey <dwm@bebe.enoyolf.org>,
-> >> 	David Somayajulu <davidcs2005@gmail.com>,
-> >> 	Duane Grigsby <duane.grigsby@qlogic.com>,
-> >> 	linux-scsi@vger.kernel.org, dwm@austin.ibm.com
-> >> Subject: Re: [RFC] qla4xxx: TODO for re-submission
-> >> User-Agent: Thunderbird 1.5 (X11/20060313)
-> >>
-> >> Ravi Anand wrote:
-> >>>> On Mon, 12 Jun 2006, Mike Christie wrote:
-> >>>> Doug Maxey wrote:
-> >>>>> 5) add the block layer code.
-> >>>> Some related issues that we have discussed offlist about this and should
-> >>>> probably be discussed here are:
-> >>>>
-> >>>> - Are we supposed to follow FC's lead and remove the devices (rport,
-> >>>> session, target, scsi_device, etc) if the dev_loss_tmo fires. Currently
-> >>>> for software iscsi, we leave the devices/session. This was to reduce
-> >>>> memory allocations and because software iscsi has to basically poll the
-> >>>> connection during connect as part of the relogin process. So unlike FC
-> >>>> or hw iscsi, if we remove the devices/structs we have to end up
-> >>>> rebuilding some of them right away anyways.
-> >>>>
-> >>>> Removing the devices has the benefit of simplifying the scsi/iscsi code.
-> >>>>
-> >>>> - Scanning. We currently do scanning for open-iscsi in userspace. For
-> >>>> iscsi root this requires distro support. SUSE has it. Fedora is working
-> >>>> on it. There is also Debian and Gentoo users or maintainers posting
-> >>>> about working on it. For qla4xxx, we could stick the scanning in the
-> >>>> kernel like FC and distros would not have to worry about it, but since
-> >>>> they have to get this working for software iscsi do we just keep the
-> >>>> scanning in userspace?
-> >>> Our preference is also to have the scanning for all the HBA's which
-> >>> does the discovery of the tgt's in the kernel space. This way we are
-> >>> consistent with all the HBA's which does the port discovery like 
-> >>> the FC HBA's. Our iSCSI HBA's is similar in that regard.
-> >> Yeah, but your HBA can also function in connection mode and just use
-> >> open-iscsi's login code too. I am not saying that is that way to go. I
-> >> am just saying that there are alternatives.
-> > 
-> > Agreed. But it was added later on. So the driver always used the session mode.
-> And we never redo iscsi drivers right ;)
+Hi James:
+  Not sure if we are able to send emails to linux-scsi list. Did you ge=
+t my previous email with 518 Memory Stick sources?
 
-This is the one which I wanted to send out. Please discard the previous one.
+Thanks
 
-We really want to fit in with the open-iscsi model. But at this point of time
-we will have to live with this for the existing products. Reason being we are
-so far down the road with the session mode support in the driver that's it not
-possible to revert back to connection mode.
+Dz
 
-For the future products we are definitely committed to be using connection
-mode which fits in very well with the open-iscsi.
-
-And since in the session mode, all the targets has already been discovered
-and logged in, it make more sense for  HW iscsi driver to initiate tgt port
-scan in the kernel space like we do for FC-rport. I dont think in that
-regard iSCSI/FC is any different.
-
-For open-iscsi if I am not mistaken it really initiates the scanning from
-userspace thru sysfs, but still tgt/lun scanning happens in the kernel space.
-
-This really simplifies for HW iscsi from booting perspective as well.
+> -----Original Message-----
+> From: James Bottomley [mailto:James.Bottomley@SteelEye.com]
+> Sent: 2006=C4=EA6=D4=C213=C8=D5 22:28
+> To: PI14 DZSHEN
+> Cc: linux-scsi@vger.kernel.org; PI14 SJIN; Russell King
+> Subject: Re: Winbond flash memory reader SCSI device drivers
+>=20
+> On Tue, 2006-06-13 at 15:12 +0800, dezheng shen wrote:
+> > Dear all:
+> >    Send it again.
+>=20
+> I think this might be too big for the list ... you'll need to split i=
+t
+> up into diff chunks of under 100k each.
+>=20
+> Thanks,
+>=20
+> James
+>=20
 
 
-> 
-> >>> As you have already stated, it simplies support from distro perspective 
-> >>> as well.
-> >>>
-> >> It does for qla4xxx, but I think you then have to go and fix it so
-> >> iscsi_tcp and iscsi_iser sync up with userspace correctly if you convert
-> >> them. Either that or we maintain two ways of scanning for iscsi drivers.
-> > 
-> > I like the later part. Keeping it seperate.
-> > 
-> 
-> I think I was only kidding about that option. But now we have votes for
-> every possible solution :)
-> 
-> You also still have the iSNS issue. That will be in userspace, so one
-> day you will have to modify the distros to do iscsi root when using iSNS
-> and use iSNS for installer targets.
 
-For iSNS in our case, the App's just present the targets, but it still need
-to be saved in the flash for it to persistently bound and automatically logged in.
-So again its pretty much the same in terms of behaviour from driver perspective
-even for non iSNS scenario.
-
-
-Ravi
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+The privileged confidential information contained in this email is inte=
+nded for use only by the addressees as indicated by the original sender=
+ of this email. If you are not the addressee indicated in this email or=
+ are not responsible for delivery of the email to such  a person, pleas=
+e kindly reply to the sender indicating this fact and delete all copies=
+ of it from your computer and network server immediately. Your cooperat=
+ion is highly appreciated. It is advised that any unauthorized use of c=
+onfidential information of Winbond is strictly prohibited; and any info=
+rmation in this email irrelevant to the official business of Winbond sh=
+all be deemed as neither given nor endorsed by Winbond.
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
