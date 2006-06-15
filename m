@@ -1,30 +1,34 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: PATCH: Quieten sparse on lpfc driver
-Date: Thu, 15 Jun 2006 09:17:27 -0700
-Message-ID: <1150388248.3143.45.camel@mulgrave.il.steeleye.com>
-References: <1150386046.3490.94.camel@localhost.localdomain>
-	 <20060615152754.GS27946@ftp.linux.org.uk>
+Subject: RE: [PATCH] Optionally disable QAS in MPT Fusion spi driver
+Date: Thu, 15 Jun 2006 09:21:02 -0700
+Message-ID: <1150388463.3143.47.camel@mulgrave.il.steeleye.com>
+References: <664A4EBB07F29743873A87CF62C26D70199848@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:54220 "EHLO
+Received: from stat9.steeleye.com ([209.192.50.41]:12749 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1030754AbWFOQR5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Jun 2006 12:17:57 -0400
-In-Reply-To: <20060615152754.GS27946@ftp.linux.org.uk>
+	id S1030788AbWFOQVe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Jun 2006 12:21:34 -0400
+In-Reply-To: <664A4EBB07F29743873A87CF62C26D70199848@NAMAIL4.ad.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Al Viro <viro@ftp.linux.org.uk>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-scsi@vger.kernel.org
+To: "Moore, Eric" <Eric.Moore@lsil.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Andrew Patterson <andrew.patterson@hp.com>, linux-scsi@vger.kernel.org
 
-On Thu, 2006-06-15 at 16:27 +0100, Al Viro wrote:
-> Al, sitting on ~200 patches of such kind, including
+On Thu, 2006-06-15 at 09:31 -0600, Moore, Eric wrote:
+> James said it was okay for having this done in lld, instead
+> of transport.  I'm sure both me and Andrew would be happy 
+> the same if the transport handled this.  
+> Is that possible for you to look into this, or James?
 
-Well .. scsi-misc is collecting for the next cycle.  Additionally the
-patches that affect maintained drivers, like lpfc, need to go through
-the maintainers of those drivers, so now would be a good time to begin
-preparing this for that cycle.
+Before we go the lld route, could someone just assure me this is a
+fusion specific problem.  Andrew, could you attach the same drives to
+another QAS LLD, like aic79xx and verify the problem doesn't recur?
+
+If it's something drive specific, we probably need more of a blacklist
+in the spi transport class.
 
 James
 
