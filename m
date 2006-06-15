@@ -1,41 +1,30 @@
-From: "Galina S." <step@74.ru>
-Subject: Re[1]:hi from Galia
-Date: Thu, 15 Jun 2006 21:24:10 +0300
-Message-ID: <006601c690a8$e2c36700$4c0e000a__48018.3540414602$1150395844$gmane$org@WsCxqq>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: IO blocks are limited to 512KBytes (blk_queue_max_sectors)
+Date: Thu, 15 Jun 2006 20:57:46 +0200
+Message-ID: <20060615185746.GG3456@suse.de>
+References: <44917313.9040800@ext.bull.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="windows-1251"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dsl-201-137-95-162.prod-infinitum.com.mx ([201.137.95.162]:47373
-	"EHLO dsl-201-137-95-162.prod-infinitum.com.mx") by vger.kernel.org
-	with ESMTP id S1030950AbWFOSX2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Jun 2006 14:23:28 -0400
+Received: from ns.virtualhost.dk ([195.184.98.160]:39997 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S1030788AbWFOS5F (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Jun 2006 14:57:05 -0400
+Content-Disposition: inline
+In-Reply-To: <44917313.9040800@ext.bull.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: Frederic TEMPORELLI <frederic.temporelli@ext.bull.net>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-Hello !	
+On Thu, Jun 15 2006, Frederic TEMPORELLI wrote:
+> So, what is the nice way to change the block layer for getting large IO 
+> blocks (> 1024 sectors) ?
 
-I want to start my first letter from a question: "Is it possible to be happy without LOVE?"
-I think that you will agree with me if the answer will be "NO WAY". Love is the most beautiful and exciting thing
-that may happen between man and woman! It inspires us only for doing positive things towards each other.
-One very famous writer said: "The beauty will rescue the world" i agree with his words but still i would add :
-" LOVE and Beauty will rescure the world". 
-I hope you agree with me that Love is a big notion.
-There's love to  God, to Mother, to a child to the country where you were born, and there's love that joins a man
-and woman for all their life. That is the LOVE i'm looking for! And i'm seeking for the man who is also eager to have
-this life long adventure full of surprises and new experience we can share together! Will you join me for this trip?
-I do realise that it should be very difficult to say "Yes" from the first letter having no idea about me.
-That's why i just offer to get to know each other better though correspondence that will help us to reveal many things
-about each other whether we mach perfectly or not. In addition you can look at my pictures and read some info about me here
-http://31UTsXQhLjF7mv6PTP.im-waiting-4you.net/
-I hope you'll like what you see and read there.
-Well closing my first letter to you i just want to thank you for reading it and i really hope that you'll share
-my point of view on what i said above. I do really hope that you'll answer me soon.
+# echo large_value > /sys/block/<dev>/queue/max_sectors_kb
 
-goodbye
+where large_value <= max_hw_sectors_kb
 
-Galina S.
-
+-- 
+Jens Axboe
 
