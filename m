@@ -1,56 +1,68 @@
-From: sander@elexis.nl
-Subject: Re: qlogic qla2312f-v2 (hp oem?)
-Date: Thu, 15 Jun 2006 13:20:38 +0200 (CEST)
-Message-ID: <17053.82.92.29.80.1150370438.squirrel@webmail.elexis.nl>
-References: <7.0.1.0.0.20060609132026.025d7098@elexis.nl>
-    <20060614224826.GS879@andrew-vasquezs-powerbook-g4-15.local>
+From: Frederic TEMPORELLI <frederic.temporelli@ext.bull.net>
+Subject: IO blocks are limited to 512KBytes (blk_queue_max_sectors)
+Date: Thu, 15 Jun 2006 16:47:47 +0200
+Message-ID: <44917313.9040800@ext.bull.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [83.98.146.225] ([83.98.146.225]:60897 "HELO mx1.elexis.nl")
-	by vger.kernel.org with SMTP id S1030217AbWFOLUm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Jun 2006 07:20:42 -0400
-In-Reply-To: <20060614224826.GS879@andrew-vasquezs-powerbook-g4-15.local>
+Received: from ecfrec.frec.bull.fr ([129.183.4.8]:3761 "EHLO
+	ecfrec.frec.bull.fr") by vger.kernel.org with ESMTP
+	id S1030487AbWFOOr4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Jun 2006 10:47:56 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: Sander van Beek - Elexis <sander@elexis.nl>, linux-scsi@vger.kernel.org
+To: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-The FAQ section on the qlogic website says this card is only sold as an
-oem product, and that I should contact HP for drivers. However, the driver
-packages HP has made available just seem to contain the original qla2xxx
-drivers included in the kernel.
-
-Ill post my lspci output somewhere in the next few days, Im not at the
-office right now.
-
-Thanks,
-Sander
-
-> On Fri, 09 Jun 2006, Sander van Beek - Elexis wrote:
->
->> I recently got two qla2312f-v2 cards from ebay. These are dual 2gbit
->> fibre channel hba's for a pci-x bus. The qlogic site says this type
->> is a HP OEM card and it is not sold directly by qlogic.
->> I tried to get them working on a slackware 10.2 system with the
->> latest stable 2.6 kernel. However, the qla2xxx driver does not see
->> the card. My dmesg only shows this line:
->>
->> Jun  9 11:09:27 clust1 kernel: QLogic Fibre Channel HBA Driver
->>
->> This is how the card shows up in my /proc/pci:
->>
->>   Bus  2, device   1, function  1:
->>     Class 0c04: PCI device 1077:8000 (rev 1).
->>       IRQ 255.
->>       Prefetchable 32 bit memory at 0x40000000 [0x403fffff].
->
-> btw: can you send the output of 'lspci -vvv' on your machine.
->
-> --
-> av
->
+Hello,
 
 
+Using 2.6.16.20 with lpfc and scsi_debug, I wasn't able to get blocks larger 
+than 512KBytes.
+(should be the same with 2.6.17-rc6)
+
+My test:
+writting 10000 blocks, block size is 1MByte (=> 10 GBytes):
+
+[root@iotiger2 ~]# cat /proc/diskstats | grep sdk
+8 160 sdk 3 3 768 28 0 0 0 0 0 28 28
+[root@iotiger2 ~]# dd if=/dev/zero of=/dev/sdk bs=1M count=10000
+10000+0 records in
+10000+0 records out
+[root@iotiger2 ~]# cat /proc/diskstats | grep sdk
+8 160 sdk 3 3 768 28 20007 139993 20480000 11271532 0 77680 11271556
+
+=> there have been ~20000 ops (which means that block size is 512KBytes)
+
+The 512KBytes size is also reported on the storage array side when using lpfc 
+driver with a NEC 2400 system.
+
+
+Then, I try to change BLK_DEF_MAX_SECTORS in include/linux/blkdev.h.
+
+=> Using a value of 4096, IO blocks where 2MBytes large.
+
+
+Now, locking at the block layer implementations, seems that there may be 
+something wrong with blk_queue_max_sectors.
+I know that max_sectors is set to 0xFFFF in the lpfc driver, and I was expecting 
+to get the block layer queue max_sectors sized according to the low level driver 
+max_sector.
+but we have the following affectations:
+
+q->max_hw_sectors = max_sectors
+q->max_sectors = BLK_DEF_MAX_SECTORS
+
+why q->max_sectors isn't set to max_sectors too ?
+I've did a try with q->max_sectors=max_sectors and I was able to use 8MBytes 
+blocks (measured from diskstat and from the NEC storage system too)
+
+So, what is the nice way to change the block layer for getting large IO blocks 
+(> 1024 sectors) ?
+
+
+Best regards
+
+
+-- 
+Frederic TEMPORELLI
