@@ -1,52 +1,49 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: PATCH: atari sleep_on noise
-Date: Thu, 15 Jun 2006 16:35:49 +0100
-Message-ID: <1150385750.3490.88.camel@localhost.localdomain>
+From: "Moore, Eric" <Eric.Moore@lsil.com>
+Subject: RE: [REPOST][PATCH 1/6] mpt fusion - fibre channel target discovery prematurely terminates
+Date: Thu, 15 Jun 2006 09:22:43 -0600
+Message-ID: <664A4EBB07F29743873A87CF62C26D70199836@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:31376 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1030647AbWFOPTY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Jun 2006 11:19:24 -0400
-Received: from localhost.localdomain (localhost.localdomain [127.0.0.1])
-	by lxorguk.ukuu.org.uk (8.13.6/8.13.4) with ESMTP id k5FFZomT006342
-	for <linux-scsi@vger.kernel.org>; Thu, 15 Jun 2006 16:35:50 +0100
-Received: (from alan@localhost)
-	by localhost.localdomain (8.13.6/8.13.6/Submit) id k5FFZoxL006341
-	for linux-scsi@vger.kernel.org; Thu, 15 Jun 2006 16:35:50 +0100
+Received: from mail0.lsil.com ([147.145.40.20]:39880 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1030648AbWFOPWq convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Jun 2006 11:22:46 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Michael Reed <mdr@sgi.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Dunno if anyone cares, dunno if its actually neccessary given the
-local_irq_save but it cuts down on the noise when removing deprecated
-bits and it seems trivial ...
+On Thursday, June 15, 2006 8:51 AM, Michael Reed wrote: 
 
-Signed-off-by: Alan Cox <alan@redhat.com>
+> > What overhead?  We don't read config pages on every I/O.  James
+> > patch only effects the reading of config pages when there is
+> > a host reset.
+> 
+> I think you're mistaken about James' patch.
+> 
+> Doesn't every i/o use a message frame?  James' patch to sleep on frame
+> exhaustion requires a wakeup every time a msg frame is released,
+> which is performed at the end of mpt_put_msg_frame().  Am I missing
+> something?
+> 
+> 
 
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.17-rc6/drivers/scsi/atari_scsi.c linux-2.6.17-rc6/drivers/scsi/atari_scsi.c
---- linux.vanilla-2.6.17-rc6/drivers/scsi/atari_scsi.c	2006-06-06 14:01:13.000000000 +0100
-+++ linux-2.6.17-rc6/drivers/scsi/atari_scsi.c	2006-06-14 18:03:03.000000000 +0100
-@@ -559,8 +559,8 @@
- 
- 	local_irq_save(flags);
- 
--	while( !in_interrupt() && falcon_got_lock && stdma_others_waiting() )
--		sleep_on( &falcon_fairness_wait );
-+	if( !in_interrupt())
-+		wait_event(&falcon_fairness_wait, falcon_got_lock && stdma_others_waiting());
- 
- 	while (!falcon_got_lock) {
- 		if (in_interrupt())
-@@ -573,7 +573,7 @@
- 			wake_up( &falcon_try_wait );
- 		}
- 		else {
--			sleep_on( &falcon_try_wait );
-+			wait_event(&falcon_try_wait, !falcon_trying_lock );
- 		}
- 	}	
- 
+Ok, my mistake.  I overlooked the wake_up() at the end of
+mpt_put_msg_frame().
 
+BTW, this is incorrect.  The wake_up() should been in
+mpt_free_msg_frame(), 
+instead of mpt_put_msg_frame().   The _put_ function is sending the mf
+to 
+the firmware.   The mf is not freed untill the command is completd by
+firmware,
+and the _free_function is called.  Meaning this issue can be solved by
+moving 
+wake_up() to mpt_free_msg_frame(), and only calling wake_up() when the
+list_empty(&ioc->FreeQ) was empty going into this call.
+
+Eric Moore
