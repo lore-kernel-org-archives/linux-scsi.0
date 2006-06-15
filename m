@@ -1,21 +1,21 @@
 From: Ravi Anand <ravi.anand@qlogic.com>
 Subject: Re: [RFC] qla4xxx: TODO for re-submission
-Date: Wed, 14 Jun 2006 17:35:18 -0700
-Message-ID: <20060615003518.GD32516@ranandlinuxbox.qlogic.org>
+Date: Wed, 14 Jun 2006 17:43:52 -0700
+Message-ID: <20060615004352.GA3216@ranandlinuxbox.qlogic.org>
 References: <8889.1149988615@bebe.enoyolf.org> <448DACD5.6090205@cs.wisc.edu> <20060612211038.GB7555@ranandlinuxbox.qlogic.org> <448DDE31.2090300@cs.wisc.edu> <20060612224325.GK7555@ranandlinuxbox.qlogic.org> <448E314E.1040702@cs.wisc.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:23638 "EHLO avexch1.qlogic.com")
-	by vger.kernel.org with ESMTP id S1751202AbWFOAfD (ORCPT
+Received: from pat.qlogic.com ([198.70.193.2]:14710 "EHLO avexch2.qlogic.com")
+	by vger.kernel.org with ESMTP id S1751252AbWFOAnj (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Jun 2006 20:35:03 -0400
+	Wed, 14 Jun 2006 20:43:39 -0400
 Content-Disposition: inline
 In-Reply-To: <448E314E.1040702@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Doug Maxey <dwm@bebe.enoyolf.org>, David Somayajulu <davidcs2005@gmail.com>, Duane Grigsby <duane.grigsby@qlogic.com>, linux-scsi@vger.kernel.org, dwm@austin.ibm.com
+Cc: Doug Maxey <dwm@bebe.enoyolf.org>, David Somayajulu <davidcs2005@gmail.com>, Duane Grigsby <duane.grigsby@qlogic.com>, linux-scsi@vger.kernel.org, dwm@austin.ibm.com, David Wagner <david.wagner@qlogic.com>
 
 >On Mon, 12 Jun 2006, Mike Christie wrote:
 > Ravi Anand wrote:
@@ -64,10 +64,29 @@ Cc: Doug Maxey <dwm@bebe.enoyolf.org>, David Somayajulu <davidcs2005@gmail.com>,
 > >> am just saying that there are alternatives.
 > > 
 > > Agreed. But it was added later on. So the driver always used the session mode.
-> 
-> 
 > And we never redo iscsi drivers right ;)
-> 
+
+This is the one which I wanted to send out. Please discard the previous one.
+
+We really want to fit in with the open-iscsi model. But at this point of time
+we will have to live with this for the existing products. Reason being we are
+so far down the road with the session mode support in the driver that's it not
+possible to revert back to connection mode.
+
+For the future products we are definitely committed to be using connection
+mode which fits in very well with the open-iscsi.
+
+And since in the session mode, all the targets has already been discovered
+and logged in, it make more sense for  HW iscsi driver to initiate tgt port
+scan in the kernel space like we do for FC-rport. I dont think in that
+regard iSCSI/FC is any different.
+
+For open-iscsi if I am not mistaken it really initiates the scanning from
+userspace thru sysfs, but still tgt/lun scanning happens in the kernel space.
+
+This really simplifies for HW iscsi from booting perspective as well.
+
+
 > 
 > >>> As you have already stated, it simplies support from distro perspective 
 > >>> as well.
@@ -85,3 +104,11 @@ Cc: Doug Maxey <dwm@bebe.enoyolf.org>, David Somayajulu <davidcs2005@gmail.com>,
 > You also still have the iSNS issue. That will be in userspace, so one
 > day you will have to modify the distros to do iscsi root when using iSNS
 > and use iSNS for installer targets.
+
+For iSNS in our case, the App's just present the targets, but it still need
+to be saved in the flash for it to persistently bound and automatically logged in.
+So again its pretty much the same in terms of behaviour from driver perspective
+even for non iSNS scenario.
+
+
+Ravi
