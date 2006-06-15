@@ -1,68 +1,67 @@
-From: Frederic TEMPORELLI <frederic.temporelli@ext.bull.net>
-Subject: IO blocks are limited to 512KBytes (blk_queue_max_sectors)
-Date: Thu, 15 Jun 2006 16:47:47 +0200
-Message-ID: <44917313.9040800@ext.bull.net>
+From: Michael Reed <mdr@sgi.com>
+Subject: Re: [REPOST][PATCH 1/6] mpt fusion - fibre channel target discovery
+ prematurely terminates
+Date: Thu, 15 Jun 2006 09:51:19 -0500
+Message-ID: <449173E7.5000108@sgi.com>
+References: <664A4EBB07F29743873A87CF62C26D70199735@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ecfrec.frec.bull.fr ([129.183.4.8]:3761 "EHLO
-	ecfrec.frec.bull.fr") by vger.kernel.org with ESMTP
-	id S1030487AbWFOOr4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Jun 2006 10:47:56 -0400
+Received: from omx2-ext.sgi.com ([192.48.171.19]:33409 "EHLO omx2.sgi.com")
+	by vger.kernel.org with ESMTP id S1030496AbWFOOvY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Jun 2006 10:51:24 -0400
+In-Reply-To: <664A4EBB07F29743873A87CF62C26D70199735@NAMAIL4.ad.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: "Moore, Eric" <Eric.Moore@lsil.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Hello,
+Moore, Eric wrote:
+> On Wednesday, June 14, 2006 1:00 PM, Mike Reed wrote: 
+>> James Bottomley wrote:
+>>> I was still thinking of something that made mpt_config() 
+>> never return
+>>> -EAGAIN.  How does the following work out?  It's my first pass at
+>>> sorting out the frame and active logic in mptbase:
+> 
+...snip...
+> 
+>> Another comment, for every i/o, this patch introduces overhead.
+>> spinlock and checking a list which is empty 99.99[...]% of the time.
+>> I'll have to perform an iop measurement to see if there is a
+>> measurable impact on system performance.
+>>
+> 
+> What overhead?  We don't read config pages on every I/O.  James
+> patch only effects the reading of config pages when there is
+> a host reset.
 
+I think you're mistaken about James' patch.
 
-Using 2.6.16.20 with lpfc and scsi_debug, I wasn't able to get blocks larger 
-than 512KBytes.
-(should be the same with 2.6.17-rc6)
-
-My test:
-writting 10000 blocks, block size is 1MByte (=> 10 GBytes):
-
-[root@iotiger2 ~]# cat /proc/diskstats | grep sdk
-8 160 sdk 3 3 768 28 0 0 0 0 0 28 28
-[root@iotiger2 ~]# dd if=/dev/zero of=/dev/sdk bs=1M count=10000
-10000+0 records in
-10000+0 records out
-[root@iotiger2 ~]# cat /proc/diskstats | grep sdk
-8 160 sdk 3 3 768 28 20007 139993 20480000 11271532 0 77680 11271556
-
-=> there have been ~20000 ops (which means that block size is 512KBytes)
-
-The 512KBytes size is also reported on the storage array side when using lpfc 
-driver with a NEC 2400 system.
-
-
-Then, I try to change BLK_DEF_MAX_SECTORS in include/linux/blkdev.h.
-
-=> Using a value of 4096, IO blocks where 2MBytes large.
-
-
-Now, locking at the block layer implementations, seems that there may be 
-something wrong with blk_queue_max_sectors.
-I know that max_sectors is set to 0xFFFF in the lpfc driver, and I was expecting 
-to get the block layer queue max_sectors sized according to the low level driver 
-max_sector.
-but we have the following affectations:
-
-q->max_hw_sectors = max_sectors
-q->max_sectors = BLK_DEF_MAX_SECTORS
-
-why q->max_sectors isn't set to max_sectors too ?
-I've did a try with q->max_sectors=max_sectors and I was able to use 8MBytes 
-blocks (measured from diskstat and from the NEC storage system too)
-
-So, what is the nice way to change the block layer for getting large IO blocks 
-(> 1024 sectors) ?
+Doesn't every i/o use a message frame?  James' patch to sleep on frame
+exhaustion requires a wakeup every time a msg frame is released,
+which is performed at the end of mpt_put_msg_frame().  Am I missing
+something?
 
 
-Best regards
+> 
+> One concern on this patch.  A possible deadlock situation could
+> occur if we run out of message frames.  Meaning there is another way
+> that  mpt_get_msg_frame() could return NULL, and that is becuase
+> the ioc->FreeQ list is empty.  This patch only addresses the case
+> when there is a host reset.   Utimatley we need to address both
+> cases when NULL is returned.  Id rather try to come  up with a
+> solution where the fix is isolated inside of mpt_get_msg_frame().
+
+James' code handles both frame exhaustion and ioc->active == 0.
+But, the only caller to mpt_get_msg_frame() that now sleeps is
+mpt_config().
+
+Mike
 
 
--- 
-Frederic TEMPORELLI
+> 
+> Eric Moore
+> 
