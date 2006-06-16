@@ -1,28 +1,26 @@
-From: "Luisa" <LuisaCalvert@repairman.com>
-Subject: Hot and new Surely you only dream of it Relax with
-Date: Fri, 16 Jun 2006 17:27:26 +0700
-Message-ID: <83882073109422.4D4CC46F44@YWIYJ54>
+From: "Josef" <JosefRobertson@doctor.com>
+Subject: Never-seen I am sure it was Take pleasure from
+Date: Fri, 16 Jun 2006 13:31:35 +0300
+Message-ID: <75355095647434.14CE703469@MB62G>
 Mime-Version: 1.0
 Content-Type: text/plain;
         charset="Windows-1252"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [125.234.205.68] ([125.234.205.68]:8615 "EHLO MAY12.wcsgxp1.org")
-	by vger.kernel.org with ESMTP id S1751237AbWFPK2A (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Jun 2006 06:28:00 -0400
+Received: from dsl.dynamic85996586.ttnet.net.tr ([85.99.65.86]:2835 "EHLO
+	01oxpog.eui92e0.aol.com") by vger.kernel.org with ESMTP
+	id S1751336AbWFPKcJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Jun 2006 06:32:09 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Hello bro,
-
-Most quality products for anyone who wants to become a champion in bed 
-
+Dear customer.
+Make your girlfriend or wife speechless with increased hardness, richer orgsms and more power in bed 
 Our customers enjoy saving on most popular goods, and we deliver them fast and inexpensive
- Unique offers on most recognized and famous brands on Earth.
- Find what you need here: http://www.diomedeacb.com
+ These brands keep thousands and thousands of their customers pleased worldwide
 
- Come on in and get it all very cheap!
+ See our offer: http://www.diomedeacb.com
+ Just check yourself!
 
 
