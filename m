@@ -1,42 +1,28 @@
-From: "Alfredo Stallings" <AlfredoStallings@0451.com>
-Subject: Hi, orange wine
-Date: Fri, 16 Jun 2006 07:38:16 -0540
-Message-ID: <466522747.20060616073816__7434.58415749973$1150443421$gmane$org@0451.com>
-Reply-To: "Alfredo Stallings" <AlfredoStallings@0451.com>
+From: "Luisa" <LuisaCalvert@repairman.com>
+Subject: Hot and new Surely you only dream of it Relax with
+Date: Fri, 16 Jun 2006 17:27:26 +0700
+Message-ID: <83882073109422.4D4CC46F44@YWIYJ54>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+        charset="Windows-1252"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [211.246.133.68] ([211.246.133.68]:38922 "EHLO mxs.mail.ru")
-	by vger.kernel.org with ESMTP id S1751151AbWFPHgs (ORCPT
+Received: from [125.234.205.68] ([125.234.205.68]:8615 "EHLO MAY12.wcsgxp1.org")
+	by vger.kernel.org with ESMTP id S1751237AbWFPK2A (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Jun 2006 03:36:48 -0400
+	Fri, 16 Jun 2006 06:28:00 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-assembly@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Even if you have no erectin problems SOFT CIAzLIS 
-would help you to make BETTER SE  X MORE OFTEN!
-and to bring  unimagnable plesure to her.
+Hello bro,
 
-Just disolve half a pil under your tongue 
-and get ready for action in 15 minutes. 
+Most quality products for anyone who wants to become a champion in bed 
 
-The tests showed that the majority of men 
-after taking this medic ation were able to have 
-PERFECT ER ECTI ON during 36 hours!
+Our customers enjoy saving on most popular goods, and we deliver them fast and inexpensive
+ Unique offers on most recognized and famous brands on Earth.
+ Find what you need here: http://www.diomedeacb.com
 
-VISIT US, AND GET OUR SPECIAL 70% DISC OUNT OFER!
+ Come on in and get it all very cheap!
 
-http://gpdrsc.nosedesk.com/?67964477
 
-==========
-attaining  new  peaks  in  Germany  and  the  Netherlands. New  writers  are
-choice.
-his sixteen point vertical slow roll and the next day topped it off with a
-bars on the windows  just like  a police station. Willy was  sitting  at his
-tasty fish that schooled ten feet below the surface of the  ocean:  he  no
-right down  the middle of the street. It had been ages since  the  last time
-
-     The gulls were flocked into the Council Gathering when he landed, and
-     "I'm alone," I said. "An orphan."
