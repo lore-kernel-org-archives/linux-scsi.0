@@ -1,43 +1,53 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Winbond Flash memory device drivers
-Date: Fri, 16 Jun 2006 08:14:50 -0700
-Message-ID: <1150470891.25358.26.camel@mulgrave.il.steeleye.com>
-References: <448639A5.7060304@winbond.com.tw>
-	 <4486E0B1.9050709@interlog.com>  <4487740F.5070004@winbond.com>
-	 <1149817321.3276.31.camel@mulgrave.il.steeleye.com>
-	 <449207FF.1020905@winbond.com>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: dc395x: "Please contact" message received in syslog
+Date: Fri, 16 Jun 2006 20:22:53 +0200 (CEST)
+Message-ID: <Pine.LNX.4.60.0606162003500.4068@poirot.grange>
+References: <646765f40606160438v7f10f390jc7804aac1d47c721@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:43411 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751446AbWFPPPl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Jun 2006 11:15:41 -0400
-In-Reply-To: <449207FF.1020905@winbond.com>
+Received: from mail.gmx.net ([213.165.64.21]:39583 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S1751289AbWFPSWz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Jun 2006 14:22:55 -0400
+In-Reply-To: <646765f40606160438v7f10f390jc7804aac1d47c721@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, PI14 SJIN <SJin@winbond.com>, dzshen@winbond.com.tw
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, 2006-06-16 at 09:23 +0800, dezheng shen wrote:
->    We are from Winbond Electronics and there is something weird we would 
-> like to confirm.
+On Fri, 16 Jun 2006, Julian Calaby wrote:
+
+> I received the following message in my log:
 > 
->    We already subscribed to linux-kernel and linux-scsi lists and we are 
-> able to receive emails from both of them. However, we couldn't send 
-> email to either list. Could you figure it our where went wrong? For 
-> example, when I sent emails using dzshen@winbond.com but my memeber 
-> couldn't receive my email his account sjin@winbond.com.
+> drivers/scsi/dc395x.c: Please, contact <linux-scsi@vger.kernel.org> to
+> help improve support for your system.
+> 
+> Umm, so here I am =)
 
-The code went to the list, but the email was 124k in size, so the list
-dropped it (I think it has a size limit of around 100k).  If you look at
-how people submit drivers on the mailing list archive:
+Thanks for writing.
 
-http://marc.theaimsgroup.com/?l=linux-scsi
+> I received this whilst burning a CD, and can attempt to re-produce it if
+> needed.
 
-You'll see that people tend to submit patches in multiple chunks to get
-around this.
+First I'd like to ask you for some more information about your system: CPU 
+(32/64 bit), amount of RAM, and if you get any other messages in your log 
+around this one. Was it the first time you burned a CD on this system with 
+this kernel? If not, maybe you could look in your logs if this message has 
+come before, and, possibly, under which circumstances? Do you have other 
+devices on this SCSI bus? Did the operation (CD-burning) succeed and was 
+the CD burned correctly (maybe, read back and compare)?
 
-James
+If indeed the message is pretty reproducible (I don't want to ask you to 
+burn 10 CDs to reproduce it once more:-)), maybe you could try to apply 
+the following two patches:
 
+http://marc.theaimsgroup.com/?l=linux-scsi&m=114400790021967&w=2
+http://marc.theaimsgroup.com/?l=linux-scsi&m=114565338708969&w=2
 
+in this order and re-test?
+
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
