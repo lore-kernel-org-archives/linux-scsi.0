@@ -1,53 +1,46 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: dc395x: "Please contact" message received in syslog
-Date: Fri, 16 Jun 2006 20:22:53 +0200 (CEST)
-Message-ID: <Pine.LNX.4.60.0606162003500.4068@poirot.grange>
-References: <646765f40606160438v7f10f390jc7804aac1d47c721@mail.gmail.com>
+From: "David Somayajulu" <david.somayajulu@qlogic.com>
+Subject: RE: [RFC] qla4xxx: TODO for re-submission
+Date: Fri, 16 Jun 2006 15:32:02 -0700
+Message-ID: <0BB3E5E7462EEA4295BC02D49691DC07176502@AVEXCH1.qlogic.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.21]:39583 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S1751289AbWFPSWz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Jun 2006 14:22:55 -0400
-In-Reply-To: <646765f40606160438v7f10f390jc7804aac1d47c721@mail.gmail.com>
+Received: from pat.qlogic.com ([198.70.193.2]:12636 "EHLO avexch1.qlogic.com")
+	by vger.kernel.org with ESMTP id S1751526AbWFPWcF convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Jun 2006 18:32:05 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>, Ravi Anand <ravi.anand@qlogic.com>
+Cc: Doug Maxey <dwm@bebe.enoyolf.org>, Duane Grigsby <duane.grigsby@qlogic.com>, linux-scsi@vger.kernel.org, dwm@austin.ibm.com, David Wagner <david.wagner@qlogic.com>
 
-On Fri, 16 Jun 2006, Julian Calaby wrote:
-
-> I received the following message in my log:
 > 
-> drivers/scsi/dc395x.c: Please, contact <linux-scsi@vger.kernel.org> to
-> help improve support for your system.
+> So normally when you say target you mean portal. I mean for
+sendtargets
+iSCSI Target when there is an iSCSI Name associated with it, otherwise a
+portal. I guess it would be clear to say Target Portal and Node instead.
+
+> we set a portals as persistent not a whole target right (this is from
+> jsut using iscli)? For iSNS, can't we get updates that there are new
+> portals popping in the san? You are not saying that normally we want
+to
+> handle this by starting up a config app and setting them as
+persistent.
+That is correct we should field SCN (state change notification) and ESI
+(entity status inquiry) events.
+> I thought we would want to dyncallically add them to the system.
+That is correct.
 > 
-> Umm, so here I am =)
+> What is the point of using iSNS and setting the targets as persistent
+in
+> the initiator DB anyways? I thought one of the benefits of iSNS is
+that
+> we would manage all the targets and initiator access from a central
+> location?
+The HBA architecture allows any iSCSI Target Node or Portal (in case of
+Send targets) to be made persistent. It is up to the user to determine
+which ones need to be persistent.
 
-Thanks for writing.
-
-> I received this whilst burning a CD, and can attempt to re-produce it if
-> needed.
-
-First I'd like to ask you for some more information about your system: CPU 
-(32/64 bit), amount of RAM, and if you get any other messages in your log 
-around this one. Was it the first time you burned a CD on this system with 
-this kernel? If not, maybe you could look in your logs if this message has 
-come before, and, possibly, under which circumstances? Do you have other 
-devices on this SCSI bus? Did the operation (CD-burning) succeed and was 
-the CD burned correctly (maybe, read back and compare)?
-
-If indeed the message is pretty reproducible (I don't want to ask you to 
-burn 10 CDs to reproduce it once more:-)), maybe you could try to apply 
-the following two patches:
-
-http://marc.theaimsgroup.com/?l=linux-scsi&m=114400790021967&w=2
-http://marc.theaimsgroup.com/?l=linux-scsi&m=114565338708969&w=2
-
-in this order and re-test?
-
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
