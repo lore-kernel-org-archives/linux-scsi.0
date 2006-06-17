@@ -1,244 +1,121 @@
-From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: RE: [PATCH] scsi_transport_sas: introduce a sas_port entity
-Date: Fri, 16 Jun 2006 18:16:19 -0600
-Message-ID: <664A4EBB07F29743873A87CF62C26D70199C24@NAMAIL4.ad.lsil.com>
+From: "Julian Calaby" <julian.calaby@gmail.com>
+Subject: Re: dc395x: "Please contact" message received in syslog
+Date: Sat, 17 Jun 2006 10:39:47 +1000
+Message-ID: <646765f40606161739i641c0f8cwe1b39dd31caf27e8@mail.gmail.com>
+References: <646765f40606160438v7f10f390jc7804aac1d47c721@mail.gmail.com>
+	 <Pine.LNX.4.60.0606162003500.4068@poirot.grange>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:9412 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1751560AbWFQAQ1 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Jun 2006 20:16:27 -0400
-Content-class: urn:content-classes:message
+Received: from py-out-1112.google.com ([64.233.166.181]:48495 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S932491AbWFQAjs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Jun 2006 20:39:48 -0400
+Received: by py-out-1112.google.com with SMTP id i49so758928pye
+        for <linux-scsi@vger.kernel.org>; Fri, 16 Jun 2006 17:39:47 -0700 (PDT)
+In-Reply-To: <Pine.LNX.4.60.0606162003500.4068@poirot.grange>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: linux-scsi@vger.kernel.org
 
-On Monday, June 12, 2006 8:18 AM, James Bottomley wrote:  
+On 6/17/06, Guennadi Liakhovetski <g.liakhovetski@gmx.de> wrote:
+> On Fri, 16 Jun 2006, Julian Calaby wrote:
+>
+> > I received the following message in my log:
+> >
+> > drivers/scsi/dc395x.c: Please, contact <linux-scsi@vger.kernel.org> to
+> > help improve support for your system.
+> >
+> > Umm, so here I am =)
+>
+> Thanks for writing.
 
-> Actually, since the patch was over 100k and I've been running around a
-> bit, I didn't really have time to look at it.  What I have 
-> managed to do
-> is to wedge the port object into the existing mptsas driver.  
-> This means
-> that it will still compile and run, and there's now more time 
-> for you to
-> sort out wide ports.
+Not a problem - I was going to poke around in this driver, but haven't as yet.
 
-Sorry for the delay, due to me being out for the past three weeks.
-I finally got to start looking at this patch late yesterday.
-I notice you've already put this in your scsi-misc tree.
-I wished you had looked at the source I sent. I realize it was
-over 100K, but most of that was mpi updated headers.
+> > I received this whilst burning a CD, and can attempt to re-produce it if
+> > needed.
+>
+> First I'd like to ask you for some more information about your system: CPU
+> (32/64 bit), amount of RAM
 
-How much testing was done on this patch?  I see sever regression
-with the driver.  Hotplug it busted.  Hot adding any device will
-panic.  Also, if you load the driver with devices, then unload the
-driver, disconnect device, and reload, the driver panics. Also see 
-some various panics just load/unload/load the driver stack, 
-with no change of the topology.
+CPU is a P4 class Celeron running at 2.4 GHz
 
-> 
-> What I did discover is that the actual firmware has no 
-> concept of a port
-> below the adapter
+I have 256 MB RAM.
 
-Yes it does.  The port_id field is valid when you've formed
-a port by adding attached devices. This is found in phy_info[]->port_id.
-The driver retrieves this in sas_io_unit_pg0, device_pg0, and
-expander_pg1.
-The port_id is formed at the top level of the hba, and all the devices
-downstream
-will all be on the same port_id, forming a sas domain.
+I'm running kernel version 2.6.16
 
+> and if you get any other messages in your log
+> around this one.
 
-, so I actually had to rejig 
-> mptsas_probe_one_phy() to
-> recognise ports.  I also noticed that on an expander device, 
-> we allocate
-> and end device for the port that's connected to the HBA.  I didn't do
-> anything about this, since that was the behaviour of the old driver
-> (even if incorrect), so I assume the wide port update will fix this.
+That's hard to say - I'm used to random SCSI related messages popping
+up from time to time - I'll burn a CD before and after applying your
+patches below and send you the results.
 
-You must be refering to the rphy parent/child relationship.  I never
-understand why this concept was added, actually implemented by
-Christoph.
+As for log messages, I get:
+dc395x: Target 03:  Sync: 100ns Offset 8 (10.0 MB/s)
+dc395x: eh_abort: (pid#171551) target=<03-0> cmd=cf1d1c80
+dc395x: eh_abort: Command in progress<6>dc395x: eh_bus_reset:
+(pid#171551) target=<03-0> cmd=cf1d1c80
+dc395x: doing_srb_done: pids G:171551(03-0)
+appearing from time to time, before and after receiving the "help us
+improve support" message. I put these down to a flaky burner.
 
-Also, I thought you were removing all the concepts of remote phys when
-you were
-adding the port API.  I notice the driver still has rphy_add and
-rphy_delete.
-Can't the rphy concepts die?
+> Was it the first time you burned a CD on this system with
+> this kernel? If not, maybe you could look in your logs if this message has
+> come before, and, possibly, under which circumstances? Do you have other
+> devices on this SCSI bus? Did the operation (CD-burning) succeed and was
+> the CD burned correctly (maybe, read back and compare)?
 
-> @@ -1270,8 +1274,43 @@
->  		phy_info->phy = phy;
->  	}
->  
-> +	if (phy_info->attached.handle) {
-> +		port_index = -1;
-> +		for (i = 0; i < index; i++) {
-> +			struct mptsas_phyinfo *tmp = 
-> &phy_info[i - index];
-> +			if (!tmp->attached.handle)
-> +				continue;
-> +			if (phy_info->attached.handle == 
-> tmp->attached.handle) {
-> +				port_index = tmp->port_num;
-> +				phy_info->port_num = port_index;
-> +				break;
-> +			}
-> +		}
-> +		if (port_index == -1) {
-> +			for (i = 0; ; i++) {
-> +				struct mptsas_phyinfo *tmp = 
-> &phy_info[i - index];
-> +				if (!tmp->port) {
-> +					port_index = i;
-> +					phy_info->port_num = i;
-> +					break;
-> +				}
-> +			}
-> +		}
-> +
-> +		port = phy_info[port_index - index].port;
+This was the first time I've burned a CD with this kernel.
 
-I'm not very confortable with this crude method of calulating where
-the port object is placed in the the mptsas topology.  Here is
-an dump of the data structure, where I have two wide ports, one
-starts at phy_id=0, and the other at phy_id=4.  The port object
-is phy in phy_info[0], and phy_info[1] respectively.  I'd rather
-see the port object placed under the phy_info[] it belongs to, and
-have the same object pointer in the place holder for all its phys
-that form a wide port.
+A bit of history: I have a spindle of CDs which I couldn't burn with
+my previous drive, and digging through a dumpster I came across my
+current one, which is the next model up from my previous one. This was
+my first attempt to see if it would burn a CD.
 
-Current driver is:
+As such, I have no other logs for when I've burnt CDs.
 
-phy_id=0 port_id=0 port_num=0 rphy=ffff81000af70430
-port=ffff81000aa60400
-phy_id=1 port_id=0 port_num=0 rphy=0000000000000000
-port=ffff81000d14bc00
-phy_id=2 port_id=0 port_num=0 rphy=0000000000000000
-port=0000000000000000
-phy_id=3 port_id=0 port_num=0 rphy=0000000000000000
-port=0000000000000000
-phy_id=4 port_id=4 port_num=1 rphy=ffff810005c81800
-port=0000000000000000
-phy_id=5 port_id=4 port_num=1 rphy=0000000000000000
-port=0000000000000000
-phy_id=6 port_id=4 port_num=1 rphy=0000000000000000
-port=0000000000000000
-phy_id=7 port_id=4 port_num=1 rphy=0000000000000000
-port=0000000000000000
+However, I used to get my logs spammed with:
+dc395x: sg_update_list: sg_to_virt failed
+lines, however this has stopped with kernel 2.6.16 (it started back
+before 2.6.12)
 
-Id rather see:
+This is also, the first time I've really played with the CD writer
+under this kernel. If there are other messages, then they're lost in
+the spam mentioned above.
 
-phy_id=0 port_id=0 port_num=0 rphy=ffff81000af70430
-port=ffff81000aa60400
-phy_id=1 port_id=0 port_num=0 rphy=0000000000000000
-port=ffff81000aa60400
-phy_id=2 port_id=0 port_num=0 rphy=0000000000000000
-port=ffff81000aa60400
-phy_id=3 port_id=0 port_num=0 rphy=0000000000000000
-port=ffff81000aa60400
-phy_id=4 port_id=4 port_num=1 rphy=ffff810005c81800
-port=ffff81000d14bc00
-phy_id=5 port_id=4 port_num=1 rphy=0000000000000000
-port=ffff81000d14bc00
-phy_id=6 port_id=4 port_num=1 rphy=0000000000000000
-port=ffff81000d14bc00
-phy_id=7 port_id=4 port_num=1 rphy=0000000000000000
-port=ffff81000d14bc00
+As for the SCSI bus configuration, the CD drive is ID #3, and it is
+alone on the bus, (and terminating it)
 
+As for the CD burning itself, this did succeed. The CD read back
+correctly on my IDE DVD drive.
 
+After this had happened, I burnt another CD which, whilst appearing to
+be read on a visual inspection, could not actually be read by another
+CD drive.
 
-> +
-> +		if (!port) {
-> +			port = phy_info[port_index - index].port =
-> +				sas_port_alloc(dev, port_index);
-> +			if (!port)
-> +				return -ENOMEM;
-> +			sas_port_add(port);
-> +		}
-> +		sas_port_add_phy(port, phy);
-> +	}
+> If indeed the message is pretty reproducible (I don't want to ask you to
+> burn 10 CDs to reproduce it once more:-)), maybe you could try to apply
+> the following two patches:
+>
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=114400790021967&w=2
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=114565338708969&w=2
+>
+> in this order and re-test?
 
-Id rather you be sending the port identifier that our firmware provides
-in
-phy_info[].port_id, rather then an arbitrary calculated value.
+Ok, I can't do that right now, (exams) however, I will do this either
+Monday night, or Tuesday. I'll get back to you with full results then.
 
+> Thanks
+> Guennadi
 
->  		phy_info->starget = NULL;
-> @@ -1822,14 +1866,16 @@
->  		       "attaching %s device, channel %d, id %d, 
-> phy %d\n",
->  		       ioc->name, ds, ev->channel, ev->id, ev->phy_id);
->  
-> +		port = phy_info[phy_info->port_id - 
-> phy_info->phy_id].port;
-> +
+Thanks,
 
-This is sole reason for panic in the ADD_DEVICE case.  The problem
-is the port has not be set up by this point.  Usually the fw event
-saying a device has been added occurs prior to the discovery event
-that refreshes the topology.  Thus we will need to refresh the
-topology prior to the time we pull the port, as well as adding a sanity
-check to insure the port pointer is non-zero.
+-- 
 
+Julian Calaby
 
->  		mptsas_parse_device_info(&identify, 
-> &phy_info->attached);
->  		switch (identify.device_type) {
->  		case SAS_END_DEVICE:
-> -			rphy = sas_end_device_alloc(phy_info->phy);
-> +			rphy = sas_end_device_alloc(port);
->  			break;
->  		case SAS_EDGE_EXPANDER_DEVICE:
->  		case SAS_FANOUT_EXPANDER_DEVICE:
-> -			rphy = 
-> sas_expander_alloc(phy_info->phy, identify.device_type);
-> +			rphy = sas_expander_alloc(port, 
-> identify.device_type);
->  			break;
->  		default:
->  			rphy = NULL;
-> 
-
-This switch case for edge and fanout expanders in the hotplug thread
-needs
-to be removed. Only end devices apply here.  The SAS_DEVICE_ADDED and 
-SAS_DEVICE_NOT_RESPONDING events only apply to end devices, not
-expanders.
-We handle the adding of deleting of expanders when we get a discovery
-event.
-
-Also - I would like to point out that when I have a disk device that is
-a wide port,
-when its hot added containing, I will get the sas_device_added event on
-the first 
-phy that was added.  The handling of the other phys come later, called
-from
-a different instance of the hotplug tread.  We will need to call the
-transport layer 
-API sometime later to notify about the other phys added to the port.
-The current code is not handling that case.
-
-BTW: - James, do you have the equipment to create a disk device that is
-a wide port?
-The way I'm doing it is by connecting two 1068 SAS controller to
-another.
-On controller is running in initiator mode, and the other running in
-target mode.
-We have a target mode driver that creates ramdisk images to simulate
-disk devices.  
-Every disk device on each phy containing the same sas address, thus
-forming a wide port.
-Connect both controller with a quad crossover cable containing four
-phys. 
-That is how I'm testing here in our labs. Do you have two 1068s so you
-can simulate this? 
-If not, allow me to assit you with this setup.
-
-Eric Moore 
+Email: julian.calaby@gmail.com
