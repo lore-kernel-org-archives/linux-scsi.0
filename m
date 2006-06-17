@@ -1,29 +1,58 @@
-From: "Anita" <AnitaRichardson@priest.com>
-Subject: Brand new I think, yes. Feel Pleasure from
-Date: Sat, 17 Jun 2006 09:39:31 +0200
-Message-ID: <55165610580999.D6C92A8012__48648.8014845692$1150530036$gmane$org@T6RH9IYW>
+From: "Shelton Bacon" <yaviudpfen@barre.com>
+Subject: University diploma today
+Date: Sat, 17 Jun 2006 05:02:32 -0600
+Message-ID: <088d779q.1833710@www5.jointhips.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-        charset="Windows-1252"
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat-II-B.bsk.vectranet.pl ([194.246.108.12]:58639 "EHLO
-	O7L9B6.owr85aew.com") by vger.kernel.org with ESMTP id S932519AbWFQHkU
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 17 Jun 2006 03:40:20 -0400
+Received: from [59.61.72.123] ([59.61.72.123]:35598 "HELO 209.132.176.167")
+	by vger.kernel.org with SMTP id S1751336AbWFQKCb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 17 Jun 2006 06:02:31 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Hi Bro!
+F A S T    T R A C K   D I P L O M A   P L A N 
 
-Impress your girl with prolonged hardness, plentiful explosions and increased duration 
+      Achieve it now! 
+     
+      Dear Candidate:
 
-You are just a couple of clicks away from our great prices and handy shipment
+      We've been helping people since 1957 obtain the recognition they deserve for their life experience. Through established relationships with distinguished non-accredited Universities and Colleges, we can help you too.
 
- Many people worldwide have been enjoying goods from these top brands for many years
- Come on in here: http://www.unpraiselk.com 
+      We grant non-accredited recognition for your knowledge and life experience - 
 
- The quality is realt high and the prices are the cheapest on the market!
+      Obtain the Diploma or Degree you deserve. If you're too busy to sit in a classroom, the fast track provides a Bachelor's, Master's or Doctorate that shows what you really can do, truly "a higher education certificate what you ALREADY know" - 
+     
+
+
+     :: No Books
+     :: No Courses!
+     :: No Tests!
+     :: No Hassles! 
+     
+
+     
+      To help us determine the right program for you, tell us about your
+
+        a.. Previous experience or training in the field
+        for which you are seeking recognition. 
+
+        b.. Your self-assessment and self-evaluation. 
+
+        c.. Previous course work. 
+
+        d.. Personal goals and career path. 
+
+      NOTE: You must be 27 years of age or older, and must have at least five years of experience or training in the field for which you are seeking recognition. Help us to help you by providing an accurate self-assessment when filling out the form.
+     
+      Complete as many details as possible. Note that your contact telephone numbers are very important and that both a daytime and evening number should be provided for quick response.	
+
+      http://www5.jointhips.com/grad
+
+
 
 
