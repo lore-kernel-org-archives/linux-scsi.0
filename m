@@ -1,58 +1,40 @@
-From: "Shelton Bacon" <yaviudpfen@barre.com>
-Subject: University diploma today
-Date: Sat, 17 Jun 2006 05:02:32 -0600
-Message-ID: <088d779q.1833710@www5.jointhips.com>
+From: "Harvey Hatfield" <blnugttuzbla@planetwave.net>
+Subject: pens rule
+Date: Sun, 18 Jun 2006 06:21:20 -0800 (PDT)
+Message-ID: <865329582110873fat0fff3vs4.8223044880857.Mail.news__36402.601193595$1150636902$gmane$org@observation.artgallery1.every1.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [59.61.72.123] ([59.61.72.123]:35598 "HELO 209.132.176.167")
-	by vger.kernel.org with SMTP id S1751336AbWFQKCb (ORCPT
+Received: from zeus1.kernel.org ([204.152.191.4]:51399 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S932215AbWFRNVa (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 17 Jun 2006 06:02:31 -0400
+	Sun, 18 Jun 2006 09:21:30 -0400
+From: "Harvey Hatfield" <blnugttuzbla@planetwave.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-net@vger.kernel.org
+Cc: linux-newbie@vger.kernel.org, linux-ppp@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org
 
-F A S T    T R A C K   D I P L O M A   P L A N 
+AMAZING QUALITY REPLICAS - MADE TO LAST A LIFETIME
 
-      Achieve it now! 
-     
-      Dear Candidate:
+Pens • Watches • Handbags • Jewelry • Neckties • Clutches
 
-      We've been helping people since 1957 obtain the recognition they deserve for their life experience. Through established relationships with distinguished non-accredited Universities and Colleges, we can help you too.
+All our products are guaranteed to be free from manufacturer's defects,
+and are made with extreme care and attention to detail. You will be pleasantly
+surprised by the craftsmanship and strength of every product we carry.
 
-      We grant non-accredited recognition for your knowledge and life experience - 
+Visit Now to See our Current Specials!
 
-      Obtain the Diploma or Degree you deserve. If you're too busy to sit in a classroom, the fast track provides a Bachelor's, Master's or Doctorate that shows what you really can do, truly "a higher education certificate what you ALREADY know" - 
-     
-
-
-     :: No Books
-     :: No Courses!
-     :: No Tests!
-     :: No Hassles! 
-     
-
-     
-      To help us determine the right program for you, tell us about your
-
-        a.. Previous experience or training in the field
-        for which you are seeking recognition. 
-
-        b.. Your self-assessment and self-evaluation. 
-
-        c.. Previous course work. 
-
-        d.. Personal goals and career path. 
-
-      NOTE: You must be 27 years of age or older, and must have at least five years of experience or training in the field for which you are seeking recognition. Help us to help you by providing an accurate self-assessment when filling out the form.
-     
-      Complete as many details as possible. Note that your contact telephone numbers are very important and that both a daytime and evening number should be provided for quick response.	
-
-      http://www5.jointhips.com/grad
+http://051.soupofdayys.com
 
 
 
 
+
+
+
+
+
+mouth rail
+http://051.soupofdayys.com/rm
