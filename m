@@ -1,49 +1,39 @@
-From: Chuck Ebbert <76306.1226@compuserve.com>
-Subject: Re: Kernel panic when re-inserting Adaptec PCMCIA card
-Date: Mon, 19 Jun 2006 05:57:40 -0400
-Message-ID: <200606190600_MC3-1-C2D8-23E6@compuserve.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	 charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932332AbWFSKDx@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alex Davis <alex14641@yahoo.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+From: "Lenore Villalobos" <XYOVLWEKCMG@twinserve.co.uk>
+Subject: Fwd: change
+Date: Mon, 19 Jun 2006 17:03:54 +0500
+Message-ID: <33731002160636.GI32841__17484.2566288591$1150715527$gmane$org@baghdad.tech.sitadelle.com>
+References: <XYOVLWEKCMG@twinserve.co.uk> <E1A4npj-0002ZF-00XYOVLWEKCMG@twinserve.co.uk>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from i58-94-79-192.s02.a026.ap.plala.or.jp ([58.94.79.192]:57611
+	"HELO i58-94-79-192.s02.a026.ap.plala.or.jp") by vger.kernel.org
+	with SMTP id S932385AbWFSLLs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Jun 2006 07:11:48 -0400
+In-Reply-To: <E1A4npj-0002ZF-00XYOVLWEKCMG@twinserve.co.uk>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-msdos@vger.kernel.org
 
-In-Reply-To: <20060614022139.21737.qmail@web50208.mail.yahoo.com>
+-S''ensationall r'evoolution in m''edicine!
 
-On Tue, 13 Jun 2006 19:21:39 -0700, Alex Davis wrote:
+-E'n'l'a'r'g'e your p''e'n'i's up to 10 cm or up to 4 i'nches!
 
-Same panic occurs in 2.6.17rc6:
+-It's h'e'r'b'a'l solution what hasn't side e'ffect, but has 100% g'uaranted results!
 
-> Jun 13 17:50:36 siafu kernel: [4295220.230000] pccard: PCMCIA card inserted into slot 0
-> Jun 13 17:50:36 siafu kernel: [4295220.230000] pcmcia: registering new device pcmcia0.0
-> Jun 13 17:50:37 siafu kernel: [4295220.281000] aha152x: resetting bus...
-> Jun 13 17:50:37 siafu kernel: [4295220.637000] aha152x13: vital data: rev=1, io=0xd340
-> (0xd340/0xd340), irq=3, scsiid=7, reconnect=enabled,
->  parity=enabled, synchronous=enabled, delay=100, extended translation=disabled
-> Jun 13 17:50:37 siafu kernel: [4295220.637000] aha152x13: trying software interrupt, ok.
-> Jun 13 17:50:37 siafu kernel: [4295221.638000] scsi13 : Adaptec 152x SCSI driver; $Revision: 2.7 $
-> Jun 13 17:50:37 siafu kernel: [4295221.650000]
-> Jun 13 17:50:37 siafu kernel: [4295221.650000] aha152x22856: bottom-half already running!?
-> Jun 13 17:50:37 siafu kernel: [4295221.650000]
-> Jun 13 17:50:37 siafu kernel: [4295221.650000] queue status:
-> Jun 13 17:50:37 siafu kernel: [4295221.650000] issue_SC:
-> Jun 13 17:50:37 siafu kernel: [4295221.650000] current_SC:
-> Jun 13 17:50:37 siafu kernel: [4295221.650000] BUG: unable to handle kernel paging request at
-> virtual address 00020016
+-Don't lose your chance and but know wihtout d'oubts, you will be i'mpressed with results!
 
-Something is going very wrong here.  At time .637 it says it is
-adapter number 13 (aha152x13.)  Then at .650 it thinks it's
-adapter nr. 22856 (!)  Looks like some kind of pointer to the
-hostdata is corrupted.
+ Clisk here: http://chicagolandhomesales.info
 
-Can you rmmod the driver after removing the card and see if that
-helps?
 
--- 
-Chuck
- "You can't read a newspaper if you can't read."  --George W. Bush
+
+
+
+
+
+
+
+swanlike realm bernadine insipid roommate fanout chevalier malfunction exalt efficacy
+coppery coot curve flick eleazar prizewinning cocaine invite guardia
+exchange formate frederick calcutta loaf electric pervade clear abc dopant kraut
+jeremy resort allotted cheater vitriol highland shirtmake contend
+blinn analytic imposture hannah piston hill kaplan dreamboat
+beadle deluge uterus catenate lever climatic bistate downright
