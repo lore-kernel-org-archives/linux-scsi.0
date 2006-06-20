@@ -1,38 +1,47 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [GIT PATCH] SCSI updates for 2.6.17
-Date: Tue, 20 Jun 2006 15:56:15 -0600
-Message-ID: <20060620215615.GN1630@parisc-linux.org>
-References: <1150837947.2531.27.camel@mulgrave.il.steeleye.com> <449866E3.8010200@garzik.org> <449867D2.3020909@garzik.org>
+From: "Moore, Eric" <Eric.Moore@lsil.com>
+Subject: RE: [PATCH] scsi_transport_sas: introduce a sas_port entity
+Date: Tue, 20 Jun 2006 16:09:14 -0600
+Message-ID: <664A4EBB07F29743873A87CF62C26D7019A108@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:44758 "EHLO
-	palinux.external.hp.com") by vger.kernel.org with ESMTP
-	id S1751221AbWFTV4Q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Jun 2006 17:56:16 -0400
-Content-Disposition: inline
-In-Reply-To: <449867D2.3020909@garzik.org>
+Received: from mail0.lsil.com ([147.145.40.20]:24014 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1751244AbWFTWJR convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Jun 2006 18:09:17 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Tue, Jun 20, 2006 at 05:25:38PM -0400, Jeff Garzik wrote:
-> Jeff Garzik wrote:
-> >James Bottomley wrote:
-> >>This represents the almost complete SCSI pending list apart from a SAS
-> >>port update which we're still trying to beat into shape.  The patch can
-> >>be pulled from here:
-> >
-> >When will aic94xx head upstream?  Even though it is seeing changes in 
-> >your repo, I would rather not hide the driver for another six months.
-> >
-> >aic94xx is the only all-software-stack SAS user at present, so I think 
-> >its reasonable to get it into the tree, and make changes upstream.
+On Tuesday, June 20, 2006 3:44 PM, James Bottomley wrote:  
+
+> Oh, this one's actually quite simple: the phys aren't being 
+> deleted from
+> the expander.  Try this fix:
 > 
-> I should have also mentioned the "it works" characteristic that aic94xx 
-> continues to have.
+> James
+> 
+> diff --git a/drivers/scsi/scsi_transport_sas.c 
+> b/drivers/scsi/scsi_transport_sas.c
+> index 2a5899d..e79d6d3 100644
+> --- a/drivers/scsi/scsi_transport_sas.c
+> +++ b/drivers/scsi/scsi_transport_sas.c
+> @@ -1176,7 +1176,7 @@ sas_rphy_delete(struct sas_rphy *rphy)
+>  		break;
+>  	case SAS_EDGE_EXPANDER_DEVICE:
+>  	case SAS_FANOUT_EXPANDER_DEVICE:
+> -		device_for_each_child(dev, NULL, do_sas_phy_delete);
+> +		sas_remove_children(dev);
+>  		break;
+>  	default:
+>  		break;
 
-Like the parisc patches to Tulip, you mean?  Glad to know they finally
-have the Jeff Garzik Seal of Approval.
 
+Yes, that solves that issue.
+
+Thanks,
+Eric
