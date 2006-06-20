@@ -1,44 +1,92 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: Status of SAS ability to attach SATA devices
-Date: Tue, 20 Jun 2006 07:55:45 -0500
-Message-ID: <4497F051.2050601@us.ibm.com>
-References: <6ac07bf90606191047o131ec37eq6e1bcaf6205ea8ea@mail.gmail.com>
-Reply-To: brking@us.ibm.com
+From: Vasily Averin <vvs@sw.ru>
+Subject: Re: [PATCH 1/1] scsi : megaraid_{mm,mbox}: a fix on 64-bit DMA capability
+ check
+Date: Tue, 20 Jun 2006 17:53:03 +0400
+Message-ID: <4497FDBF.8010500@sw.ru>
+References: <890BF3111FB9484E9526987D912B261901BD91@NAMAIL3.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <6ac07bf90606191047o131ec37eq6e1bcaf6205ea8ea@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Ilia Sotnikov <hostcc@gmail.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jgarzik@pobox.com, James.Bottomley@steeleye.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mailhub.sw.ru ([195.214.233.200]:21693 "EHLO relay.sw.ru")
+	by vger.kernel.org with ESMTP id S1750974AbWFTNxH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Jun 2006 09:53:07 -0400
+In-Reply-To: <890BF3111FB9484E9526987D912B261901BD91@NAMAIL3.ad.lsil.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, devel@openvz.org
 
-Ilia Sotnikov wrote:
-> Hardware: IBM 206m, AIC 9405 SAS/SATA controller, 2 SATA drives.
+Hello Seokmann,
+
+I would like to tell you that your patch is wrong, at least for
+ MegaRAID SATA 150-4 RAID Controller
+
+06:02.0 RAID bus controller: LSI Logic / Symbios Logic MegaRAID (rev 01)
+        Subsystem: LSI Logic / Symbios Logic MegaRAID SATA 150-4 RAID Controller
+00: 00 10 60 19 16 03 b0 04 01 00 04 01 08 20 00 00
+10: 08 00 20 df 00 00 00 00 00 00 00 00 00 00 00 00
+20: 00 00 00 00 00 00 00 00 00 00 00 00 00 10 23 45
+30: 00 00 00 00 80 00 00 00 00 00 00 00 0a 01 00 00
+40: 00 00 ff ff 00 00 00 d0 08 00 00 fc 00 00 00 fc
+50: 00 00 00 d0 00 00 00 00 00 00 00 00 00 00 00 00
+60: 00 00 00 00 88 1f 00 00 00 00 00 f8 00 00 00 00
+70: 00 00 00 00 00 00 ff ff 00 00 f4 fe 00 00 00 00
+80: 01 00 02 00 00 00 00 00 06 01 38 00 00 00 00 00
+90: 00 00 00 00 00 00 00 00 06 01 00 20 9c 00 00 00
+a0: cc cc 00 00 99 02 00 00 00 06 00 80 00 00 00 00
+b0: 00 00 00 6e 00 00 00 00 00 00 00 00 fd 01 00 00
+c0: fd 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+As far as I see the 64-bit magic is set, pci(0xA4) == 0x0299 and driver tries to
+enable 64-bit DMA. However the controller is not supported 64-bit DMA, and I
+still have the same error messages.
+
+Could you please check this issue and update your patch properly.
+
+Thank you,
+	Vasily Averin
+
+SWsoft Virtuozzo/OpenVZ Linux kernel team
+
+Ju, Seokmann wrote:
+> Hi,
 > 
-> Having read several threads about SAS ability to attach SATA devices
-> (what's needed in my case), I found that this is work-in-progress.
+> This patch contains a fix for 64-bit DMA capability check in
+> megaraid_{mm,mbox} driver. With patch, the driver access PCI
+> configuration space with dedicated offset to read a signature. If the
+> signature read, it means that the controller has capability to handle
+> 64-bit DMA. Before this patch, the driver blindly claimed the capability
+> without checking with controller.
+> The issue has been reported by Vasily Averin [vvs@sw.ru]. Thank you
+> Vasily for the reporting.
 
-I have a patchset to libata to enable the ipr driver to attach
-SATA devices. My hope was that other drivers would be able to use this
-as well.
-
-> I've tried all three of above mentioned versions - PHYs are discovered
-> correctly (as far as I can tell) but no disk devices are registered.
-> According to comments in sources that's predictable.
-> 
-> Questions are:
-> - what tree is recommended to work on;
-
-I'm not sure if there is a single tree right now. scsi-misc-2.6 has all
-the latest SAS transport updates and libata-dev#upstream has all the latest
-libata changes. 
-
-
-Brian
-
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+> +#define HBA_SIGNATURE_64BIT		0x0299
+> +#define PCI_CONF_AMISIG64		0xa4
+...
+> -	if (pci_set_dma_mask(adapter->pdev, DMA_64BIT_MASK) != 0) {
+> +	pci_read_config_dword(adapter->pdev, PCI_CONF_AMISIG64,
+> &magic64);
+>  
+> -		con_log(CL_ANN, (KERN_WARNING
+> -			"megaraid: could not set DMA mask for
+> 64-bit.\n"));
+> +	if ((magic64 == HBA_SIGNATURE_64BIT) || 
+> +		(adapter->pdev->vendor == PCI_VENDOR_ID_DELL &&
+> +		adapter->pdev->device ==
+> PCI_DEVICE_ID_PERC4_DI_EVERGLADES) ||
+> +		(adapter->pdev->vendor == PCI_VENDOR_ID_LSI_LOGIC &&
+> +		adapter->pdev->device == PCI_DEVICE_ID_VERDE) ||
+> +		(adapter->pdev->vendor == PCI_VENDOR_ID_LSI_LOGIC &&
+> +		adapter->pdev->device == PCI_DEVICE_ID_DOBSON) ||
+> +		(adapter->pdev->vendor == PCI_VENDOR_ID_DELL &&
+> +		adapter->pdev->device == PCI_DEVICE_ID_PERC4E_DI_KOBUK)
+> ||
+> +		(adapter->pdev->vendor == PCI_VENDOR_ID_LSI_LOGIC &&
+> +		adapter->pdev->device == PCI_DEVICE_ID_LINDSAY)) {
+> +		if (pci_set_dma_mask(adapter->pdev, DMA_64BIT_MASK) !=
+> 0) {
