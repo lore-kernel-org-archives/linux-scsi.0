@@ -1,56 +1,64 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH, RFC] hide EH backup data outside the scsi_cmnd
-Date: Tue, 20 Jun 2006 16:49:34 +0900
-Message-ID: <20060620164934S.fujita.tomonori@lab.ntt.co.jp>
-References: <20060612191948.GA8926@lst.de>
-	<1150253029.22961.4.camel@mulgrave.il.steeleye.com>
-	<200606141843.k5EIhVks023235@r-dd.iij4u.or.jp>
+From: "Tharindu Rukshan Bamunuarachchi" <tharindunix@gmail.com>
+Subject: Linux disk write latencey
+Date: Tue, 20 Jun 2006 15:42:47 +0530
+Message-ID: <c49434130606200312j49477b9ck89df6c857c43405c@mail.gmail.com>
+References: <010701c6944d$8b791a00$160a19ac@mitd77449ea6e5>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:7348 "EHLO
-	tama5.ecl.ntt.co.jp") by vger.kernel.org with ESMTP id S965132AbWFTHtq
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Jun 2006 03:49:46 -0400
-In-Reply-To: <200606141843.k5EIhVks023235@r-dd.iij4u.or.jp>
+Received: from nz-out-0102.google.com ([64.233.162.200]:34248 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S932572AbWFTKMs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Jun 2006 06:12:48 -0400
+Received: by nz-out-0102.google.com with SMTP id 18so1194295nzp
+        for <linux-scsi@vger.kernel.org>; Tue, 20 Jun 2006 03:12:47 -0700 (PDT)
+In-Reply-To: <010701c6944d$8b791a00$160a19ac@mitd77449ea6e5>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: fujita.tomonori@lab.ntt.co.jp
-Cc: James.Bottomley@SteelEye.com, hch@lst.de, linux-scsi@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH, RFC] hide EH backup data outside the scsi_cmnd
-Date: Thu, 15 Jun 2006 03:43:26 +0900
+Dear All,
 
-> From: James Bottomley <James.Bottomley@SteelEye.com>
-> Subject: Re: [PATCH, RFC] hide EH backup data outside the scsi_cmnd
-> Date: Tue, 13 Jun 2006 21:43:49 -0500
-> 
-> > On Mon, 2006-06-12 at 21:19 +0200, Christoph Hellwig wrote:
-> > > looks like no one but James looked at it as I attached a completely
-> > > different patch that has been merged long ago.  Here's the real one:
-> > 
-> > And finally, the scsi-target-2.6 tree likewise needs converting.  This
-> > one I'm not sure about, since they appear to need the copy from
-> > cmnd_data to cmnd which I just killed.  Can someone who knows this tree
-> > look this over?
-> 
-> Thanks for the patch.
-> 
-> tgt uses request_bufflen, bufflen, request_buffer, buffer to handle
-> very large requests (that involves multiple bios). We can add
-> substitutes into tgt specific data structure (scsi_tgt_cmd structure).
-> 
-> I sent a patch related with scsi_tgt_cmd structure last week.
-> 
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=114960851929878&w=2
-> 
-> Will this patch be merged? I like to send a new patch on the top of
-> it.
+I could see serious time latency with disk cache flush. Usually it takes
+about 2-10 s to flush disk cache with a SCSI disk.I have tested this
+with ide disk controller, and could not see big latency compared to
+scsi.
 
-Hi James,
+This is the scenario;
 
-The 'update for cmnd field removal' patch got merged but the patch
-refereed to in this mail did not. Did you just forget or you don't
-like it?
+1. using cp command; copying of large (500MB) file set in background.
+Continuously copying.
+
+2. Using my own small programme, i am writing 50 bytes of data blocks to
+same disk PARTITION for 60 - 200 seconds.
+
+    Usually it takes less than 1ms to return write() method. But in
+that loop, there could be one or more write() method instances which
+would take around 2-15s for return.
+
+
+
+Exceptions:
+
+If I use direct copy "cp", instead of  standard "cp". Result is normal.
+If i use different partitions for two operations. Result is normal.
+I have tried with three I/O schedulers and preemtible kernel options.
+But no luck.
+
+Up to my knowledge I hope, that 1-15s are taken for Disk Cache flush  or some
+thing in kernel space.
+
+Can there be such latency in disk write in SCSI or in Linux disk caching.
+
+Thank You!
+
+Best regards,
+
+Tharindu R
+
+-- 
+Tharindu Rukshan Bamunuarachchi
+all fabrications are subject to decay
