@@ -1,52 +1,56 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: Status of SAS ability to attach SATA devices
-Date: Mon, 19 Jun 2006 20:31:06 -0700 (PDT)
-Message-ID: <20060620033106.22886.qmail@web31807.mail.mud.yahoo.com>
-References: <6ac07bf90606191047o131ec37eq6e1bcaf6205ea8ea@mail.gmail.com>
-Reply-To: ltuikov@yahoo.com
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH, RFC] hide EH backup data outside the scsi_cmnd
+Date: Tue, 20 Jun 2006 16:49:34 +0900
+Message-ID: <20060620164934S.fujita.tomonori@lab.ntt.co.jp>
+References: <20060612191948.GA8926@lst.de>
+	<1150253029.22961.4.camel@mulgrave.il.steeleye.com>
+	<200606141843.k5EIhVks023235@r-dd.iij4u.or.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31807.mail.mud.yahoo.com ([68.142.207.70]:17313 "HELO
-	web31807.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S965448AbWFTDbH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 19 Jun 2006 23:31:07 -0400
-In-Reply-To: <6ac07bf90606191047o131ec37eq6e1bcaf6205ea8ea@mail.gmail.com>
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:7348 "EHLO
+	tama5.ecl.ntt.co.jp") by vger.kernel.org with ESMTP id S965132AbWFTHtq
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Jun 2006 03:49:46 -0400
+In-Reply-To: <200606141843.k5EIhVks023235@r-dd.iij4u.or.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ilia Sotnikov <hostcc@gmail.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jgarzik@pobox.com, James.Bottomley@steeleye.com
+To: fujita.tomonori@lab.ntt.co.jp
+Cc: James.Bottomley@SteelEye.com, hch@lst.de, linux-scsi@vger.kernel.org
 
---- Ilia Sotnikov <hostcc@gmail.com> wrote:
-> Hardware: IBM 206m, AIC 9405 SAS/SATA controller, 2 SATA drives.
-> 
-> Having read several threads about SAS ability to attach SATA devices
-> (what's needed in my case), I found that this is work-in-progress.
-> 
-> Also during the investigation I've found that there are exist several
-> GIT trees with different SAS / AIC94xx versions: maintained by James
-> Bottomley, Jeff Garzik and Luben Tuikov.
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH, RFC] hide EH backup data outside the scsi_cmnd
+Date: Thu, 15 Jun 2006 03:43:26 +0900
 
-One of my GIT trees, has a spec complient SATL (with NCQ, etc) which
-integrates with the aforementioned driver (the version I maintain,
-not Bottomley's/Garzik's version).
-
-    Luben
-
-> I've tried all three of above mentioned versions - PHYs are discovered
-> correctly (as far as I can tell) but no disk devices are registered.
-> According to comments in sources that's predictable.
+> From: James Bottomley <James.Bottomley@SteelEye.com>
+> Subject: Re: [PATCH, RFC] hide EH backup data outside the scsi_cmnd
+> Date: Tue, 13 Jun 2006 21:43:49 -0500
 > 
-> Questions are:
-> - what tree is recommended to work on;
-> - how could I help (if could) to improve the situation.
+> > On Mon, 2006-06-12 at 21:19 +0200, Christoph Hellwig wrote:
+> > > looks like no one but James looked at it as I attached a completely
+> > > different patch that has been merged long ago.  Here's the real one:
+> > 
+> > And finally, the scsi-target-2.6 tree likewise needs converting.  This
+> > one I'm not sure about, since they appear to need the copy from
+> > cmnd_data to cmnd which I just killed.  Can someone who knows this tree
+> > look this over?
 > 
-> Thanks in advance,
-> -- 
->  Ilia Sotnikov
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Thanks for the patch.
 > 
+> tgt uses request_bufflen, bufflen, request_buffer, buffer to handle
+> very large requests (that involves multiple bios). We can add
+> substitutes into tgt specific data structure (scsi_tgt_cmd structure).
+> 
+> I sent a patch related with scsi_tgt_cmd structure last week.
+> 
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=114960851929878&w=2
+> 
+> Will this patch be merged? I like to send a new patch on the top of
+> it.
 
+Hi James,
+
+The 'update for cmnd field removal' patch got merged but the patch
+refereed to in this mail did not. Did you just forget or you don't
+like it?
