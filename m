@@ -1,135 +1,143 @@
-From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: RE: [PATCH] scsi_transport_sas: introduce a sas_port entity
-Date: Tue, 20 Jun 2006 13:11:41 -0600
-Message-ID: <664A4EBB07F29743873A87CF62C26D7019A05F@NAMAIL4.ad.lsil.com>
+From: Christian Iversen <chrivers@iversen-net.dk>
+Subject: Controller failing, driver not behaving nicely
+Date: Tue, 20 Jun 2006 23:02:19 +0200
+Message-ID: <200606202302.19858.chrivers@iversen-net.dk>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:10933 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1750807AbWFTTLo convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Jun 2006 15:11:44 -0400
-Content-class: urn:content-classes:message
+Received: from port741.ds1-noe.adsl.cybercity.dk ([212.242.204.118]:2869 "EHLO
+	boreas.iversen-net.dk") by vger.kernel.org with ESMTP
+	id S1751069AbWFTVCN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Jun 2006 17:02:13 -0400
+Received: from zephyr.iversen-net.dk (zephyr.iversen-net.dk [10.0.0.2])
+	by boreas.iversen-net.dk (Postfix) with ESMTP id 110B65025C
+	for <linux-scsi@vger.kernel.org>; Tue, 20 Jun 2006 23:02:14 +0200 (CEST)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Tuesday, June 20, 2006 11:45 AM, James Bottomley wrote:
 
-> 
-> On Tue, 2006-06-20 at 11:37 -0600, Moore, Eric wrote:
-> > The scsi-misc-2.6 patch with todays date in your kernel.org
-> > home folder has all the wide port API changes backed out?  
-> > Is that on purpose, and what is your plans for your 2.6.18
-> > push to Linus having this?
-> 
-> I plan to push the current SCSI misc and hopefully follow on with the
-> wide port API before the 2.6.18 merge window closes.  I 
-> suspect the next
-> round of kernel releases will be Andrew's requested stability ones, so
-> if we don't get something in before 1 July, it will likely be 
-> 2.6.20 (or
-> four to six months) before we can get this API in.
+Hello all. 
 
-Well, lets not rush this in till all the panics are fix'd.
+I have a 3Ware 5800 8-port ATA controller running on the 3w-xxxx driver, which  
+works nicely for the most part.
 
-Here's one of the issues:
-Try compile the driver as a module.  Load -> unload -> load -> panic.
-I suspect that in the scsi_transport_sas.c, the sas_remove_host is
-not cleaning up the wide ports. My setup is one controller
-with one expander attached. No end devices.
+However, recently the controller has been flaky - it keeps losing all sync 
+with the machine, then coughs and dies. After a hard reset it works for some 
+time again.
 
-Here is my trace:
+I was hoping you could tell me if there is anything I should check? Also, I'm 
+wondering is the driver is behaving correctly? Shouldn't it try to reset the 
+card?
 
-< LOAD DRIVER >
+Anyway, here are the details:
 
-Jun 20 12:41:29 emoore-test6 kernel: Fusion MPT base driver 3.03.10
-Jun 20 12:41:29 emoore-test6 kernel: Copyright (c) 1999-2005 LSI Logic
-Corporation
-Jun 20 12:41:29 emoore-test6 kernel: Fusion MPT SAS Host driver 3.03.10
-Jun 20 12:41:29 emoore-test6 kernel: GSI 20 sharing vector 0xC9 and IRQ
-20
-Jun 20 12:41:29 emoore-test6 kernel: ACPI: PCI Interrupt 0000:09:02.0[A]
--> GSI 72 (level, low) -> IRQ 201
-Jun 20 12:41:29 emoore-test6 kernel: mptbase: Initiating ioc0 bringup
-Jun 20 12:41:30 emoore-test6 kernel: ioc0: SAS1068:
-Capabilities={Initiator}
-Jun 20 12:41:36 emoore-test6 kernel: mptbase: ioc0: MPT event:(0Ah) :
-Events(ON) Change
-Jun 20 12:41:36 emoore-test6 kernel: scsi2 : ioc0: LSISAS1068,
-FwRev=00070f00h, Ports=1, MaxQ=511, IRQ=201
+Kernel: anything from 2.6.10-custom to 2.6.15-debian-sarge-stock
+Arch: tested on AMD x86 SMP and UP, with and without highmem
 
-< UNLOAD DRIVER >
+Here's the log output just before the thing goes "boink":
 
-< LOAD DRIVER >
+<LOG>
+Jun 20 07:34:00 [kernel] 3w-xxxx: scsi2: WARNING: Unit #4: Command (0x28) 
+timed out, resetting card.
+Jun 20 07:34:30 [kernel] 3w-xxxx: scsi2: AEN drain failed, retrying.
+                - Last output repeated 2 times -
+Jun 20 07:35:30 [kernel] RAID5 conf printout:
+                - Last output repeated 7 times -
+Jun 20 07:35:30 [kernel] Buffer I/O error on device md1, logical block 
+56274327
+Jun 20 07:35:35 [kernel] Buffer I/O error on device md1, logical block 
+56859486
+Jun 20 07:35:37 [kernel] Buffer I/O error on device md1, logical block 
+117796200
+Jun 20 07:35:42 [kernel] printk: 1 messages suppressed.
+Jun 20 07:35:46 [kernel] printk: 7 messages suppressed.
+Jun 20 08:41:37 [kernel] ReiserFS: md1: warning: vs-13070: 
+reiserfs_read_locked_inode: i/o failure occurred trying to find stat data of 
+[2 84475 0x0 SD]
+Jun 20 08:41:38 [kernel] ReiserFS: md1: warning: vs-13070: 
+reiserfs_read_locked_inode: i/o failure occurred trying to find stat data of 
+[25743 118119 0x0 SD]
+[lots of reiserfs faileurs]
+</LOG>
 
-Jun 20 12:42:28 emoore-test6 kernel: Fusion MPT base driver 3.03.10
-Jun 20 12:42:28 emoore-test6 kernel: Copyright (c) 1999-2005 LSI Logic
-Corporation
-Jun 20 12:42:28 emoore-test6 kernel: Fusion MPT SAS Host driver 3.03.10
-Jun 20 12:42:28 emoore-test6 kernel: PCI: Enabling device 0000:09:02.0
-(0156 -> 0157)
-Jun 20 12:42:28 emoore-test6 kernel: ACPI: PCI Interrupt 0000:09:02.0[A]
--> GSI 72 (level, low) -> IRQ 201
-Jun 20 12:42:28 emoore-test6 kernel: mptbase: Initiating ioc0 bringup
-Jun 20 12:42:28 emoore-test6 kernel: ioc0: SAS1068:
-Capabilities={Initiator}
-Jun 20 12:42:35 emoore-test6 kergeneral protection fault: 0000 [1] Snel:
-mptbase: ioMP c0: MPT event:(0
-Ah) : Events(ON)last sysfs file: /class/scsi_host/host3/proc_name
- C
-Entering kdb (current=0xffff81001e111040, pid 7313) on processor 1 Oops:
-<NULL>
-due to oops @ 0xffffffff802645cc
-     r15 = 0x0000000000000000      r14 = 0xffff8100041c1450 
-     r13 = 0xffffffff802647b1      r12 = 0xffff8100041c11d8 
-     rbp = 0xffff8100041c1000      rbx = 0xffff81001f182700 
-     r11 = 0x00000000000081a4      r10 = 0xffff81000e06c488 
-      r9 = 0xffff81001fddccd0       r8 = 0xffff81000e06c488 
-     rax = 0xffff81000927b000      rcx = 0xffff81000e06c488 
-     rdx = 0x0000000000000000      rsi = 0xffff8100041c11d8 
-     rdi = 0xffff81001f182700 orig_rax = 0xffffffffffffffff 
-     rip = 0xffffffff802645cc       cs = 0x0000000000000010 
-  eflags = 0x0000000000010283      rsp = 0xffff810006e61b60 
-      ss = 0xffff810006e60000 &regs = 0xffff810006e61ac8
-[1]kdb> b[1]kdb> bt[1]kdb> bt
+Does anybody know what command 0x28 is? Maybe it's one of the 8 drives that is 
+broken, and the controller is not telling me?
 
-Stack traceback for pid 7313
-0xffff81001e111040     7313     7300  1    1   R  0xffff81001e111370
-*insmod
-RSP           RIP                Function (args)
-0xffff810006e61b60 0xffffffff802645cc
-attribute_container_device_trigger+0x49 (0xffff81000e06c488,
-0xffff81000927b8c0, 0xffff81000e06c4e0)
-0xffff810006e61b78 0xffffffff802645cf
-attribute_container_device_trigger+0x4c (0xffff8100041c11d8,
-0xffff8100041c11d8, 0xffff8100041c1000, 0x0, 0xffff8100041c11d8)
-0xffff810006e61b98 0xffffffff802643a0
-attribute_container_add_device+0x57 (0xffffffffffffffff,
-0xffffffffffffffff, 0xffff81001e4f1090, 0xffff81001e4f0ed0,
-0xffffffff88279238)
-0xffff810006e61cb8 0xffffffff80203e87 pci_device_probe+0xf7
-(0xffff81001e4f1090, 0xffff81001e4f0ed0, 0xffff81001e4fc638)
-0xffff810006e61cf8 0xffffffff802614c0 driver_probe_device+0x52 (0x0,
-0x0, 0xffffffff88279238, 0xffffffff80261593, 0xffffffff88279238)
-0xffff810006e61d18 0xffffffff80261621 __driver_attach+0x8e
-(0xffffffff80385ac8, 0xffffffff80385ae0, 0xffff81001e4f0fa8,
-0xffffffff803858e0, 0xffffffff88279680)
-0xffff810006e61d48 0xffffffff80260ea2 bus_for_each_dev+0x43
-(0xffffffff88279238)
-0xffff810006e61d98 0xffffffff802613fb driver_attach+0x1c (0xd0,
-0xffffffff88279238, 0xffffffff88279680, 0xffffffff80370fa0,
-0xffffffff88279680)
-0xffff810006e61da8 0xffffffff80260b15 bus_add_driver+0x7e
-(0xdead4ead00000001, 0xffffffff, 0xffffffffffffffff, 0xffffffff)
-0xffff810006e61de8 0xffffffff80261927 driver_register+0xae
-(0xdead4ead00000001, 0xffffffff, 0xffffffffffffffff, 0xffffffff8823b794,
-0xffffffff8014a56e)
-0xffff810006e61e18 0xffffffff8020409d __pci_register_driver+0x8e
-(0xffffffff80370fa0)
-0xffff810006e61e58 0xffffffff880970d4 [mptsas]mptsas_init+0xd4
-0xffff810006e61e68 0xffffffff8014ce34 sys_init_module+0x162f
-[1]kdb>
+Here's /proc/scsi/scsi
+Attached devices:
+Host: scsi0 Channel: 00 Id: 03 Lun: 00
+  Vendor: SEAGATE  Model: ST336607LW       Rev: 0007
+  Type:   Direct-Access                    ANSI SCSI revision: 03
+Host: scsi0 Channel: 00 Id: 04 Lun: 00
+  Vendor: SEAGATE  Model: ST336607LW       Rev: 0007
+  Type:   Direct-Access                    ANSI SCSI revision: 03
+Host: scsi2 Channel: 00 Id: 00 Lun: 00
+  Vendor: 3ware    Model: Logical Disk 0   Rev: 1.2
+  Type:   Direct-Access                    ANSI SCSI revision: ffffffff
+Host: scsi2 Channel: 00 Id: 01 Lun: 00
+  Vendor: 3ware    Model: Logical Disk 1   Rev: 1.2
+  Type:   Direct-Access                    ANSI SCSI revision: ffffffff
+Host: scsi2 Channel: 00 Id: 02 Lun: 00
+  Vendor: 3ware    Model: Logical Disk 2   Rev: 1.2
+  Type:   Direct-Access                    ANSI SCSI revision: ffffffff
+Host: scsi2 Channel: 00 Id: 03 Lun: 00
+  Vendor: 3ware    Model: Logical Disk 3   Rev: 1.2
+  Type:   Direct-Access                    ANSI SCSI revision: ffffffff
+Host: scsi2 Channel: 00 Id: 04 Lun: 00
+  Vendor: 3ware    Model: Logical Disk 4   Rev: 1.2
+  Type:   Direct-Access                    ANSI SCSI revision: ffffffff
+Host: scsi2 Channel: 00 Id: 05 Lun: 00
+  Vendor: 3ware    Model: Logical Disk 5   Rev: 1.2
+  Type:   Direct-Access                    ANSI SCSI revision: ffffffff
+Host: scsi2 Channel: 00 Id: 06 Lun: 00
+  Vendor: 3ware    Model: Logical Disk 6   Rev: 1.2
+  Type:   Direct-Access                    ANSI SCSI revision: ffffffff
+Host: scsi2 Channel: 00 Id: 07 Lun: 00
+  Vendor: 3ware    Model: Logical Disk 7   Rev: 1.2
+  Type:   Direct-Access                    ANSI SCSI revision: ffffffff
+
+The two first entries are real SCSI-disks. the last 8 are the 3ware-controlled 
+disks, of course. The SCSI subsystem still seems to think they're connected? 
+I've tried the scsi-rescan-bus.sh-script, but it just agrees with /proc/scsi, 
+in that it thinks the drives are still connected - and so it does nothing. Is 
+there a utility that can kick && reconnect a scsi-device?
+
+I'd be really interested in _any_ comments. I've ordered a couple of cheap 
+2-port ATA133 controllers in the meantime, which I'm going to have to use in 
+master-slave configuration. Oh the horror :-/
+
+I'd be willing to test almost anything that doesn't involve erasing data on 
+the drives.
+
+
+P.S: (recently), things often fail with this card. But not always with command 
+0x28:
+
+
+zcat /var/log/kernel/* | grep 3w
+Jun  8 08:53:42 [kernel] 3w-xxxx: scsi2: WARNING: Unit #2: Command (0x28) 
+timed out, resetting card.
+Jun  8 08:54:12 [kernel] 3w-xxxx: scsi2: AEN drain failed, retrying.
+Jun  8 08:55:42 [kernel] 3w-xxxx: scsi2: WARNING: Unit #7: Command (0x2a) 
+timed out, resetting card.
+Jun  8 08:56:12 [kernel] 3w-xxxx: scsi2: AEN drain failed, retrying.
+Jun  8 08:57:12 [kernel] 3w-xxxx: scsi2: Controller errors, card not 
+responding, check all cabling.
+Jun  8 21:15:13 [kernel] 3w-xxxx: scsi2: WARNING: Unit #0: Command (0x12) 
+timed out, resetting card.
+Jun  8 21:15:43 [kernel] 3w-xxxx: scsi2: AEN drain failed, retrying.
+Jun 17 23:09:22 [kernel] 3w-xxxx: scsi2: AEN drain failed, retrying.
+Jun 18 17:33:03 [kernel] 3w-xxxx: scsi2: AEN drain failed, retrying.
+Jun 19 21:16:51 [kernel] 3w-xxxx: scsi2: AEN drain failed, retrying.
+Jun 20 00:29:29 [kernel] 3w-xxxx: scsi2: AEN drain failed, retrying.
+Jun 20 07:34:00 [kernel] 3w-xxxx: scsi2: WARNING: Unit #4: Command (0x28) 
+timed out, resetting card.
+Jun 20 07:34:30 [kernel] 3w-xxxx: scsi2: AEN drain failed, retrying.
+
+-- 
+Regards,
+Christian Iversen
