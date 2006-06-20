@@ -1,26 +1,44 @@
-From: Or Gerlitz <ogerlitz@voltaire.com>
-Subject: IB/iser upstream push for 2.6.18 awaiting for the SCSI/iscsi updates
-Date: Tue, 20 Jun 2006 13:25:23 +0300
-Message-ID: <4497CD13.6080200@voltaire.com>
+From: Brian King <brking@us.ibm.com>
+Subject: Re: Status of SAS ability to attach SATA devices
+Date: Tue, 20 Jun 2006 07:55:45 -0500
+Message-ID: <4497F051.2050601@us.ibm.com>
+References: <6ac07bf90606191047o131ec37eq6e1bcaf6205ea8ea@mail.gmail.com>
+Reply-To: brking@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from taurus.voltaire.com ([193.47.165.240]:16355 "EHLO
-	taurus.voltaire.com") by vger.kernel.org with ESMTP id S932564AbWFTKZ1
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Jun 2006 06:25:27 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <6ac07bf90606191047o131ec37eq6e1bcaf6205ea8ea@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Ilia Sotnikov <hostcc@gmail.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jgarzik@pobox.com, James.Bottomley@steeleye.com
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Roland Dreier <rdreier@cisco.com>, linux-scsi@vger.kernel.org, openib <openib-general@openib.org>
 
-Hi James,
+Ilia Sotnikov wrote:
+> Hardware: IBM 206m, AIC 9405 SAS/SATA controller, 2 SATA drives.
+> 
+> Having read several threads about SAS ability to attach SATA devices
+> (what's needed in my case), I found that this is work-in-progress.
 
-Roland is ready to push iSER for 2.6.18 through his tree but it can't be 
-done before the 2.6.18 iscsi updates on which iSER is dependent upon 
-(libiscsi etc) are pushed (and pulled by Linus), so ... just wondering 
-when do you plan to push the iscsi updates?
+I have a patchset to libata to enable the ipr driver to attach
+SATA devices. My hope was that other drivers would be able to use this
+as well.
 
-Or.
+> I've tried all three of above mentioned versions - PHYs are discovered
+> correctly (as far as I can tell) but no disk devices are registered.
+> According to comments in sources that's predictable.
+> 
+> Questions are:
+> - what tree is recommended to work on;
 
+I'm not sure if there is a single tree right now. scsi-misc-2.6 has all
+the latest SAS transport updates and libata-dev#upstream has all the latest
+libata changes. 
+
+
+Brian
+
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
