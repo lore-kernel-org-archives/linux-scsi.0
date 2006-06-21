@@ -1,39 +1,41 @@
-From: "Lina" <tdcwtvndiuwdu@travelingnepal.com>
-Subject: top notch replicas credit
-Date: Wed, 21 Jun 2006 08:19:27 -0800
-Message-ID: <1-4110204-20BTxmUHXh1A80iSAspcFGM__35888.1253902384$1150903235$gmane$org@bzt.surfwedding.com>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: [PATCH] Print SCSI Inquiry data more compactly
+Date: Wed, 21 Jun 2006 11:42:53 -0400
+Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F0290B5BB@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:35773 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S1751664AbWFUPTd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Jun 2006 11:19:33 -0400
+Received: from mail-gw3.adaptec.com ([216.52.22.36]:56556 "EHLO
+	mail-gw3.adaptec.com") by vger.kernel.org with ESMTP
+	id S1751208AbWFUPmy convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Jun 2006 11:42:54 -0400
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-net@vger.kernel.org
+To: dougg@torque.net, Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org
 
-FABULOUS REPLICAS - AMAZING PRICES
+What about:
 
-Handbags • Jewelry • Pens • Watches • Neckties • Clutches • and More
+    scsi 2:0:1:0: Device: DASD HP 18.2G ATLAS10K3_18_SCA HP05 ANSI ver:
+02
 
-All our products are made with the finest leather and silks, and come
-with certificate, tags and all the extras, just as you would find in a 
-boutique. Extreme care is taken to pay special attention to detail. 
+Or is such SCSI nomenclature like DASD falling from grace?
 
-You will be immediately surprised by the craftsmanship and strength of 
-our fine, high-quality luxury items, whether it be a watch, handbag, or tie.
+Sincerely -- Mark Salyzyn
 
-Visit Now to See our Current Specials! 
+Douglas Gilbert writes:
 
-http://051.qurertymonsterr.com
-
-
-
-
-
-
-
-window example
-http://051.qurertymonsterr.com/rm
+> > Sample output:
+> >   Vendor: HP 18.2G  Model: ATLAS10K3_18_SCA  Rev: HP05
+> >   Type:   Direct-Access                      ANSI SCSI revision: 02
+> > 
+> > becomes:
+> > 
+> > scsi 2:0:1:0: Device: HP 18.2G ATLAS10K3_18_SCA HP05 ANSI 
+> ver: 02               
+> 
+> The peripheral device type is useful information, especially
+> when it is other than "Direct Access".
