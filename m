@@ -1,55 +1,122 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [PATCH] Print SCSI Inquiry data more compactly
-Date: Thu, 22 Jun 2006 00:36:02 +0200
-Message-ID: <4499C9D2.5090103@s5r6.in-berlin.de>
-References: <547AF3BD0F3F0B4CBDC379BAC7E4189F0290B5BB@otce2k03.adaptec.com> <20060621164150.GM31472@vienna.egenera.com> <20060621165057.GW1630@parisc-linux.org> <1150909340.20655.37.camel@gator.sc.steeleye.com> <44997F73.7040903@emulex.com> <20060621173329.GZ1630@parisc-linux.org> <44998A34.20202@s5r6.in-berlin.de> <20060621190327.GB1630@parisc-linux.org>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [-mm patch] drivers/scsi/qla2xxx/: make some functions static
+Date: Thu, 22 Jun 2006 00:54:58 +0200
+Message-ID: <20060621225458.GQ9111@stusta.de>
+References: <20060621034857.35cfe36f.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:1749 "EHLO
-	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
-	id S1030334AbWFUWgp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Jun 2006 18:36:45 -0400
-In-Reply-To: <20060621190327.GB1630@parisc-linux.org>
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:25355 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S1751521AbWFUWzB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Jun 2006 18:55:01 -0400
+Content-Disposition: inline
+In-Reply-To: <20060621034857.35cfe36f.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: James Smart <James.Smart@Emulex.Com>, Eddie Williams <Eddie.Williams@steeleye.com>, linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>, rolandd@cisco.com, linux-driver@qlogic.com
+Cc: linux-kernel@vger.kernel.org, openib-general@openib.org, linux-scsi@vger.kernel.org
 
-Matthew Wilcox wrote:
-> On Wed, Jun 21, 2006 at 08:04:36PM +0200, Stefan Richter wrote:
->> What is wrong with the current two-line format?
-> 
-> Several things.  The way that it's printed means that simultaneous scans
-> lead to the output getting garbled.
+On Wed, Jun 21, 2006 at 03:48:57AM -0700, Andrew Morton wrote:
+>...
+> Changes since 2.6.17-rc6-mm2:
+>...
+>  git-infiniband.patch
+>...
+>  git trees
+>...
 
-That's true, but it could be implemented as an atomic operation with 
-multiple printks nonetheless. However you are right, layout should not 
-be a reason to add locks. Make it one printk, but please keep it 
-readable. The inquiry printout is one of the few that people actually 
-care for.
+This patch makes some needlessly global functions static.
 
-> You're exaggerating.
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
-On purpose. :-)
+---
 
-> BTW, here's what a line would look like from sbp2 ...
-> 
-> scsi 9:0:0:0: CD-ROM            MATSHITA  UJDA730 DVD/CDRW  1.00 Level: 0 
+ drivers/scsi/qla2xxx/qla_gbl.h  |    6 ------
+ drivers/scsi/qla2xxx/qla_init.c |    8 +++++---
+ drivers/scsi/qla2xxx/qla_iocb.c |    3 ++-
+ 3 files changed, 7 insertions(+), 10 deletions(-)
 
-Here is another SBP-2 device:
-    Vendor: ST340083  Model: 2A                Rev: 3.01
-    Type:   Direct-Access-RBC                  ANSI SCSI revision: 04
+--- linux-2.6.17-mm1-full/drivers/scsi/qla2xxx/qla_gbl.h.old	2006-06-22 00:48:35.000000000 +0200
++++ linux-2.6.17-mm1-full/drivers/scsi/qla2xxx/qla_gbl.h	2006-06-22 00:50:32.000000000 +0200
+@@ -31,13 +31,9 @@
+ extern void qla24xx_update_fw_options(scsi_qla_host_t *);
+ extern int qla2x00_load_risc(struct scsi_qla_host *, uint32_t *);
+ extern int qla24xx_load_risc(scsi_qla_host_t *, uint32_t *);
+-extern int qla24xx_load_risc_flash(scsi_qla_host_t *, uint32_t *);
+-
+-extern fc_port_t *qla2x00_alloc_fcport(scsi_qla_host_t *, gfp_t);
+ 
+ extern int qla2x00_loop_resync(scsi_qla_host_t *);
+ 
+-extern int qla2x00_find_new_loop_id(scsi_qla_host_t *, fc_port_t *);
+ extern int qla2x00_fabric_login(scsi_qla_host_t *, fc_port_t *, uint16_t *);
+ extern int qla2x00_local_device_login(scsi_qla_host_t *, fc_port_t *);
+ 
+@@ -80,8 +76,6 @@
+ /*
+  * Global Function Prototypes in qla_iocb.c source file.
+  */
+-extern void qla2x00_isp_cmd(scsi_qla_host_t *);
+-
+ extern uint16_t qla2x00_calc_iocbs_32(uint16_t);
+ extern uint16_t qla2x00_calc_iocbs_64(uint16_t);
+ extern void qla2x00_build_scsi_iocbs_32(srb_t *, cmd_entry_t *, uint16_t);
+--- linux-2.6.17-mm1-full/drivers/scsi/qla2xxx/qla_init.c.old	2006-06-22 00:48:58.000000000 +0200
++++ linux-2.6.17-mm1-full/drivers/scsi/qla2xxx/qla_init.c	2006-06-22 00:49:50.000000000 +0200
+@@ -39,6 +39,8 @@
+ 
+ static int qla2x00_restart_isp(scsi_qla_host_t *);
+ 
++static int qla2x00_find_new_loop_id(scsi_qla_host_t *ha, fc_port_t *dev);
++
+ /****************************************************************************/
+ /*                QLogic ISP2x00 Hardware Support Functions.                */
+ /****************************************************************************/
+@@ -1701,7 +1703,7 @@
+  *
+  * Returns a pointer to the allocated fcport, or NULL, if none available.
+  */
+-fc_port_t *
++static fc_port_t *
+ qla2x00_alloc_fcport(scsi_qla_host_t *ha, gfp_t flags)
+ {
+ 	fc_port_t *fcport;
+@@ -2497,7 +2499,7 @@
+  * Context:
+  *	Kernel context.
+  */
+-int
++static int
+ qla2x00_find_new_loop_id(scsi_qla_host_t *ha, fc_port_t *dev)
+ {
+ 	int	rval;
+@@ -3472,7 +3474,7 @@
+ 	return (rval);
+ }
+ 
+-int
++static int
+ qla24xx_load_risc_flash(scsi_qla_host_t *ha, uint32_t *srisc_addr)
+ {
+ 	int	rval;
+--- linux-2.6.17-mm1-full/drivers/scsi/qla2xxx/qla_iocb.c.old	2006-06-22 00:50:42.000000000 +0200
++++ linux-2.6.17-mm1-full/drivers/scsi/qla2xxx/qla_iocb.c	2006-06-22 00:51:00.000000000 +0200
+@@ -15,6 +15,7 @@
+ static inline cont_entry_t *qla2x00_prep_cont_type0_iocb(scsi_qla_host_t *);
+ static inline cont_a64_entry_t *qla2x00_prep_cont_type1_iocb(scsi_qla_host_t *);
+ static request_t *qla2x00_req_pkt(scsi_qla_host_t *ha);
++static void qla2x00_isp_cmd(scsi_qla_host_t *ha);
+ 
+ /**
+  * qla2x00_get_cmd_direction() - Determine control_flag data direction.
+@@ -574,7 +575,7 @@
+  *
+  * Note: The caller must hold the hardware lock before calling this routine.
+  */
+-void
++static void
+ qla2x00_isp_cmd(scsi_qla_host_t *ha)
+ {
+ 	device_reg_t __iomem *reg = ha->iobase;
 
-This may be misleading if "Vendor:" and "Model:" prefixes are stripped.
-
-> btw, I've always found that "CD-ROM" a little confusing; considering
-> that SPC4 says "CD/DVD device", any objections to changing that string
-> to say "CD/DVD" instead of "CD-ROM"?
-
-Seems reasonable.
--- 
-Stefan Richter
--=====-=-==- -==- =-==-
-http://arcgraph.de/sr/
