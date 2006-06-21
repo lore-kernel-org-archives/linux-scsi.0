@@ -1,62 +1,103 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] Print SCSI Inquiry data more compactly
-Date: Wed, 21 Jun 2006 13:03:27 -0600
-Message-ID: <20060621190327.GB1630@parisc-linux.org>
-References: <547AF3BD0F3F0B4CBDC379BAC7E4189F0290B5BB@otce2k03.adaptec.com> <20060621164150.GM31472@vienna.egenera.com> <20060621165057.GW1630@parisc-linux.org> <1150909340.20655.37.camel@gator.sc.steeleye.com> <44997F73.7040903@emulex.com> <20060621173329.GZ1630@parisc-linux.org> <44998A34.20202@s5r6.in-berlin.de>
+From: "=?iso-8859-9?B?T0RBSyBURVJD3E1FICBI3VpNRVRMRVLd?="
+	<info@odaktercume.com>
+Subject: =?iso-8859-9?B?VEVSQ9xNRURFICBQUk9GRVNZT05FTCBI3VpNRVQgQU5MQVlJ3kk=?=
+Date: Wed, 21 Jun 2006 22:34:55 +0300
+Message-ID: <5708abc073a3b4dbdf0ca3de32e500ec@odaktercume.com>
+Reply-To: info@odaktercume.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-9
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:33169 "EHLO
-	palinux.external.hp.com") by vger.kernel.org with ESMTP
-	id S932666AbWFUTD2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Jun 2006 15:03:28 -0400
-Content-Disposition: inline
-In-Reply-To: <44998A34.20202@s5r6.in-berlin.de>
+Received: from dsl85-105-20386.ttnet.net.tr ([85.105.79.162]:14 "HELO
+	user.local") by vger.kernel.org with SMTP id S932704AbWFUTfr convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Jun 2006 15:35:47 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: James Smart <James.Smart@Emulex.Com>, Eddie Williams <Eddie.Williams@steeleye.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Wed, Jun 21, 2006 at 08:04:36PM +0200, Stefan Richter wrote:
-> Matthew Wilcox wrote:
-> >On Wed, Jun 21, 2006 at 01:18:43PM -0400, James Smart wrote:
-> >>scsi <2:0:1:0> x00:HP 18.2G:ATLAS10K3_18_SCA:HP05:02:
-> >>Eddie Williams wrote:
-> >>>scsi 2:0:1:0:DASD:HP 18.2G:ATLAS10K3_18_SCA:HP05:02:
-> >scsi 2:0:1:0: Direct-Access     HP 18.2G ATLAS10K3_18_SCA HP05 ANSI ver: 
-> >01 CCS
-> >scsi 2:0:1:0: Direct-Access     xAB HP 18.2G ATLAS10K3_18_SCA HP05 Level: 
-> >03
-> >scsi 2:0:1:0: Direct-Access     7 HP 18.2G ATLAS10K3_18_SCA HP05 Level: 03
-> 
-> All of these hurt eyes. What is wrong with the current two-line format?
+ODAK  TERC=DCME H=DDZMETLER=DD -  =20
+Avc=FDlar / =DDstanbul  Tel:0212 590 96 50   Faks 0212-5935222  GSM: 05=
+33-375 49 80
+***********************  PROFESYONEL B=DDR ANLAYI=DELA*****************=
+************
+****************KAL=DDTEL=DD , HIZLI VE EKONOM=DDK  TERC=DCME H=DDZMET=DD=
+  **************
 
-Several things.  The way that it's printed means that simultaneous scans
-lead to the output getting garbled.  Also, when doing simultaneous scans,
-it's no longer clear (was it ever?) which device a particular scan message
-belongs to.  That argues for attaching the scsi bus ID to the printk, and
-making it all one line, and as atomic as possible.  James tells me that
-having the PQ number included helps determine problems with multipathing.
 
-> One line too many? What about silencing protocol drivers first? sd puts 
-> out a lot of lines right after those inquiry data. What's more, sd is 
-> forced by some upper layer to go through the initialization twice, 
-> therefore sd sees fit to print its stuff out twice. This is where I see 
-> potential to reduce log noise.
+1 Sayfa  =DDngilizce  =3D 10 YTL+KDV
+1 Sayfa Frans=FDzca  =3D 13 YTL+KDV
+1 Sayfa Almanca  =3D 13 YTL+KDV
 
-There's a lot of places SCSI is too verbose.  I intend to address all of
-them eventually; having hundreds of SCSI devices is really no fun right
-now.  That cause isn't helped by people placing spurious roadblocks in
-the way.
+Hakk=FDm=FDzda  detayl=FD bilgi i=E7in  l=FCtfen  sitemizi ( odaktercum=
+e.com) ziyaret ediniz !!!!!!!!!!!!!!
 
-> Highly cryptic log messages on the other hand are about as valuable as 
-> _no_ log messages at all. The lines I quoted above are not far from 
-> white noise.
+-Belgelerinizin terc=FCmesi; alanlar=FDnda uzman ve deneyimli terc=FCma=
+nlar taraf=FDndan  yap=FDl=FDr.
 
-You're exaggerating.  BTW, here's what a line would look like from sbp2 ...
+-Terc=FCme Politikam=FDz ; kaliteli, h=FDzl=FD, profesyonel ,do=F0ru ve=
+ ak=FDc=FD terc=FCme yapmakt=FDr.=20
+Bu do=F0rultuda, terc=FCmelerimizde kusur, hata, yanl=FD=FEl=FDk, dizgi=
+ bozuklu=F0u, imla kural=FD ve gramer hatas=FD ve anlat=FDm bozuklu=F0u=
+na kar=FE=FD derin bir hassasiyet g=F6sterilir.
 
-scsi 9:0:0:0: CD-ROM            MATSHITA  UJDA730 DVD/CDRW  1.00 Level: 0 
+-Terc=FCme hizmetimiz size s=F6ylenen zaman dilimi i=E7inde  ger=E7ekle=
+=FEtirilir.
 
-btw, I've always found that "CD-ROM" a little confusing; considering
-that SPC4 says "CD/DVD device", any objections to changing that string
-to say "CD/DVD" instead of "CD-ROM"?
+-	Ve bu hizmet, mutlaka uygun fiyata verilir.
+
+=46=DDYATLARIMIZ
+    =20
+
+
+	Sayfa =FCcretlerimiz; 1 sayfan=FDn 1000 karakter ( bo=FEluksuz ) i=E7e=
+rdi=F0i d=FC=FE=FCn=FClerek verilmi=FEtir.
+
+
+	Fiyatlar=FDm=FDza  KDV dahil de=F0ildir.
+
+
+	Fiyatlar=FDm=FDz genel konulu terc=FCmeler i=E7indir. Uzmanl=FDk gerek=
+tiren terc=FCmeler i=E7in  dosya incelendikten sonra =F6zel bir fiyat v=
+erilecektir.
+
+
+	Listede bulunmayan diller ve  =E7apraz dil terc=FCmeleri  hakk=FDnda f=
+iyat almak i=E7in l=FCtfen bizimle temasa ge=E7iniz !
+
+
+	Tasdik gerektiren  terc=FCmelerde ( Noter, Konsolosluk, Kaymakaml=FDk =
+vs)  tasdik =FCcretleri m=FC=FEteriye aittir.
+   Dil  / Sayfa =DCcreti
+=DDngilizce	10 YTL
+Almanca	13 YTL
+Rus=E7a	15 YTL
+=46rans=FDzca	13 YTL
+Bulgarca	15YTL
+=DDtalyanca	15 YTL
+Romence	20 YTL
+Arap=E7a	25 YTL
+=DDspanyolca  20 YTL
+Yunanca	50 YTL
+Ukraynaca 20 YTL
+=D6zbek=E7e	20 YTL
+Kazak=E7a	25 YTL
+=46ars=E7a	31 YTL
+Portekizce 50 YTL
+=DDngilizce-Frans=FDzca	15 YTL
+=46rans=FDzca-=DDngilizce   15 YTL
+Uluslararas=FD ili=FEkilere ait anla=FEmalar=FDn ( Ticari S=F6zle=FEme,=
+ distrib=FCt=F6rl=FCk anla=FEmas=FD, D=FCnya Bankas=FD Tip Anla=FEmas=FD=
+, Ortak Yat=FDr=FDm ( Joint-Venture ) Anla=FEmas=FD, Acentelik ve Temsi=
+lcilik Anla=FEmas=FD ) terc=FCmesi;  Uluslararas=FD Ticaret ve Hukuk al=
+an=FDnda e=F0itim g=F6rm=FC=FE uzmanlar gerektirir.Biz bu konuda da kad=
+romuzdaki uzman terc=FCmanlara  hizmetinizdeyiz.
+
+
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
