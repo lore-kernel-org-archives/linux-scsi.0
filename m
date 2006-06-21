@@ -1,51 +1,66 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: Re: [GIT PATCH] SCSI updates for 2.6.17
-Date: Wed, 21 Jun 2006 13:07:45 -0700
-Message-ID: <20060621130745.aed5d1c9.rdunlap@xenotime.net>
-References: <1150837947.2531.27.camel@mulgrave.il.steeleye.com>
-	<4498A050.8080403@torque.net>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: [Ubuntu PATCH] 3w-9xyz: add proc_name
+Date: Wed, 21 Jun 2006 13:50:08 -0700
+Message-ID: <4499B100.6010309@oracle.com>
+References: <4498D9EA.5090909@oracle.com> <b1bc6a000606211123h598ff564i5b8a25bb92e19a00@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:64187 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S1751324AbWFUUE6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Jun 2006 16:04:58 -0400
-Received: from midway.site ([71.245.102.105]) by xenotime.net for <linux-scsi@vger.kernel.org>; Wed, 21 Jun 2006 13:04:57 -0700
-In-Reply-To: <4498A050.8080403@torque.net>
+Received: from rgminet01.oracle.com ([148.87.113.118]:36833 "EHLO
+	rgminet01.oracle.com") by vger.kernel.org with ESMTP
+	id S932278AbWFUUsu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Jun 2006 16:48:50 -0400
+In-Reply-To: <b1bc6a000606211123h598ff564i5b8a25bb92e19a00@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
+To: adam radford <aradford@gmail.com>
+Cc: scsi <linux-scsi@vger.kernel.org>, akpm <akpm@osdl.org>, jejb <James.Bottomley@steeleye.com>, linuxraid@amcc.com
 
-On Tue, 20 Jun 2006 21:26:40 -0400 Douglas Gilbert wrote:
-
-> James Bottomley wrote:
-> > This represents the almost complete SCSI pending list apart from a SAS
-> > port update which we're still trying to beat into shape.  The patch can
-> > be pulled from here:
-> > 
-> > master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git
-> > 
-> > The short changelog is:
+adam radford wrote:
+> Randy,
 > 
-> <snip>
-> 
-> James,
-> I was hoping to see my scsi_debug update in there:
->   "[PATCH] scsi_debug version 1.79 against 2.6.17-rc5"
-> 
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=114956710925458&w=2
+> Is there any reason why any of these proc_name patches need to
+> go in after James Smart's explanation:
 
-Similarly, my patches for:
+Nope.  Thanks for your comments.
 
-wd7000: fix section mismatches
-  http://marc.theaimsgroup.com/?l=linux-scsi&m=114857569131744&w=2
-qla1280: fix section mismatches
-  http://marc.theaimsgroup.com/?l=linux-scsi&m=114857863523008&w=2
-advansys: fix section mismatches
-  http://marc.theaimsgroup.com/?l=linux-scsi&m=114982511005563&w=2
-
----
 ~Randy
+
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=115040210406375&w=2
+> 
+> in particular, the part about:
+> 
+> "- scsi_proc_hostdir_add() validates that sht->proc_info is non-null before
+>   attempting to use sht->proc_name."
+> 
+> proc_info is null for the 3w-9xxx driver.
+> 
+> -Adam
+> 
+> On 6/20/06, Randy Dunlap <randy.dunlap@oracle.com> wrote:
+>> Add .proc_name member to scsi_host_template for 3w-9xxx.
+>>
+>> http://www.kernel.org/git/?p=linux/kernel/git/bcollins/ubuntu-dapper.git;a=commitdiff;h=12fdf64086335ed596848cf17602e7a71e15ae9b
+>>
+>>
+>>
+>> ---
+>>  drivers/scsi/3w-9xxx.c |    1 +
+>>  1 file changed, 1 insertion(+)
+>>
+>> --- linux-2617-pv.orig/drivers/scsi/3w-9xxx.c
+>> +++ linux-2617-pv/drivers/scsi/3w-9xxx.c
+>> @@ -2011,6 +2011,7 @@ static void twa_unmap_scsi_data(TW_Devic
+>>  /* scsi_host_template initializer */
+>>  static struct scsi_host_template driver_template = {
+>>         .module                 = THIS_MODULE,
+>> +       .proc_name              = "3w-9xxx",
+>>         .name                   = "3ware 9000 Storage Controller",
+>>         .queuecommand           = twa_scsi_queue,
+>>         .eh_host_reset_handler  = twa_scsi_eh_reset,
+>>
+>>
+>>
+>> -
+
