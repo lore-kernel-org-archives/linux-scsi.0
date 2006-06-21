@@ -1,63 +1,62 @@
-From: Matthew Wilcox <matthew@wil.cx>
+From: "Philip R. Auld" <pauld@egenera.com>
 Subject: Re: [PATCH] Print SCSI Inquiry data more compactly
-Date: Wed, 21 Jun 2006 11:33:29 -0600
-Message-ID: <20060621173329.GZ1630@parisc-linux.org>
-References: <547AF3BD0F3F0B4CBDC379BAC7E4189F0290B5BB@otce2k03.adaptec.com> <20060621164150.GM31472@vienna.egenera.com> <20060621165057.GW1630@parisc-linux.org> <1150909340.20655.37.camel@gator.sc.steeleye.com> <44997F73.7040903@emulex.com>
+Date: Wed, 21 Jun 2006 13:47:39 -0400
+Message-ID: <20060621174739.GN31472@vienna.egenera.com>
+References: <547AF3BD0F3F0B4CBDC379BAC7E4189F0290B5BB@otce2k03.adaptec.com> <20060621164150.GM31472@vienna.egenera.com> <20060621165057.GW1630@parisc-linux.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:42882 "EHLO
-	palinux.external.hp.com") by vger.kernel.org with ESMTP
-	id S1750962AbWFURdb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Jun 2006 13:33:31 -0400
+Received: from roadrunner-base.egenera.com ([63.160.166.46]:15553 "EHLO
+	roadrunner-base.egenera.com") by vger.kernel.org with ESMTP
+	id S1751046AbWFURuH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Jun 2006 13:50:07 -0400
 Content-Disposition: inline
-In-Reply-To: <44997F73.7040903@emulex.com>
+In-Reply-To: <20060621165057.GW1630@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <James.Smart@Emulex.Com>
-Cc: Eddie Williams <Eddie.Williams@steeleye.com>, linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, dougg@torque.net, linux-scsi@vger.kernel.org
 
-On Wed, Jun 21, 2006 at 01:18:43PM -0400, James Smart wrote:
-> I agree with Eddie's points, with another small recommendation:
+Rumor has it that on Wed, Jun 21, 2006 at 10:50:57AM -0600 Matthew Wilcox said:
+> On Wed, Jun 21, 2006 at 12:41:50PM -0400, Philip R. Auld wrote:
+> > >     scsi 2:0:1:0: Device: DASD HP 18.2G ATLAS10K3_18_SCA HP05 ANSI ver: 02
+> > 
+> > Parsing this, (and the Matt's earlier version), there are 5 tokens
+> > there in the middle for 4 fields. How does one know what the vendor
+> > string is for example?
 > 
-> scsi <2:0:1:0> x00:HP 18.2G:ATLAS10K3_18_SCA:HP05:02:
-
-If you want to get brackets around the 2:0:1:0, you need to talk to
-jejb about getting sdev_printk changed.
-
-> where x00 is byte 1 of the inquiry data - device type and qualifier.
-> Clarifies the H:C:T:L as well.
+> 1) This is not for parsing, it's informational for users.  Do tools
+> really still parse through /var/log/dmesg?
 > 
-> Eddie Williams wrote:
-> >Do you need the labels?  How about
-> >scsi 2:0:1:0:DASD:HP 18.2G:ATLAS10K3_18_SCA:HP05:02:
-> >
-> >This keeps it short.  For those that are probably looking at this data
-> >the labels are not needed anyway.  It is easy to parse if someone wants.
-> >I used "DASD" just because that is what was referenced before.  I think
-> >I would prefer the number or "direct access" but either way I would not
-> >lose any sleep.
 
-I used scsi_device_type to get the string, so "Direct Access" it is.
+You don't read var/log/dmesgs when you are looking at a scsi issue?
+I really meant eye ball parsing mostly.
 
-Worst case, we get:
 
-scsi 2:0:1:0: Direct-Access     HP 18.2G ATLAS10K3_18_SCA HP05 ANSI ver: 01 CCS
+> 2) This information is available other ways, such as through sysfs and
+> procfs.
 
-so we're out of room unless we do one or both of:
- - ditch the "ANSI ver:"
- - print the scsi_level instead of "01 CCS"
+Why put it here at all then? ;)
 
-Using colons instead of spaces to improve parsing is misleading at best;
-there's nothing to stop vendors putting colons in their descriptions.
-And as I said earlier, there's no need to parse this data anyway.
+> 
+> 3) I know it's not obvious from the above example (damn HP firmware),
+> but these are actually fixed-size fields.  The first is 8 bytes, "HP 18.2G"
+> the second 16 bytes are "ATLAS10K3_18_SCA", the third is "HP05" and then
+> the ANSI ver is at the end.
 
-So we could do:
+I know they're fixed size fields. I'm not good at counting spaces 
+that's why I offered the suggestion of some sort of field sep character.
 
-scsi 2:0:1:0: Direct-Access     xAB HP 18.2G ATLAS10K3_18_SCA HP05 Level: 03
+I wouldn't have thought about it if you didn't use an example with
+white spaces :)
 
-if we really want to see the PQ.  We could even just print the PQ:
 
-scsi 2:0:1:0: Direct-Access     7 HP 18.2G ATLAS10K3_18_SCA HP05 Level: 03
+Cheers,
 
-clocking in at a svelte 74 columns.
+Phil
+
+
+-- 
+Philip R. Auld, Ph.D.  	        	       Egenera, Inc.    
+Software Architect                            165 Forest St.
+(508) 858-2628                            Marlboro, MA 01752
