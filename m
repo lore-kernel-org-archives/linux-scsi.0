@@ -1,55 +1,66 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [PATCH] Print SCSI Inquiry data more compactly
-Date: Wed, 21 Jun 2006 20:04:36 +0200
-Message-ID: <44998A34.20202@s5r6.in-berlin.de>
-References: <547AF3BD0F3F0B4CBDC379BAC7E4189F0290B5BB@otce2k03.adaptec.com> <20060621164150.GM31472@vienna.egenera.com> <20060621165057.GW1630@parisc-linux.org> <1150909340.20655.37.camel@gator.sc.steeleye.com> <44997F73.7040903@emulex.com> <20060621173329.GZ1630@parisc-linux.org>
+From: "adam radford" <aradford@gmail.com>
+Subject: Re: [Ubuntu PATCH] 3w-9xyz: add proc_name
+Date: Wed, 21 Jun 2006 11:23:25 -0700
+Message-ID: <b1bc6a000606211123h598ff564i5b8a25bb92e19a00@mail.gmail.com>
+References: <4498D9EA.5090909@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:30402 "EHLO
-	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
-	id S1751131AbWFUSFW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Jun 2006 14:05:22 -0400
-In-Reply-To: <20060621173329.GZ1630@parisc-linux.org>
+Received: from nf-out-0910.google.com ([64.233.182.186]:38296 "EHLO
+	nf-out-0910.google.com") by vger.kernel.org with ESMTP
+	id S932295AbWFUSX0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Jun 2006 14:23:26 -0400
+Received: by nf-out-0910.google.com with SMTP id o60so146295nfa
+        for <linux-scsi@vger.kernel.org>; Wed, 21 Jun 2006 11:23:25 -0700 (PDT)
+In-Reply-To: <4498D9EA.5090909@oracle.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: James Smart <James.Smart@Emulex.Com>, Eddie Williams <Eddie.Williams@steeleye.com>, linux-scsi@vger.kernel.org
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: scsi <linux-scsi@vger.kernel.org>, akpm <akpm@osdl.org>, jejb <James.Bottomley@steeleye.com>, linuxraid@amcc.com
 
-Matthew Wilcox wrote:
-> On Wed, Jun 21, 2006 at 01:18:43PM -0400, James Smart wrote:
->>scsi <2:0:1:0> x00:HP 18.2G:ATLAS10K3_18_SCA:HP05:02:
->>Eddie Williams wrote:
->>>scsi 2:0:1:0:DASD:HP 18.2G:ATLAS10K3_18_SCA:HP05:02:
-> scsi 2:0:1:0: Direct-Access     HP 18.2G ATLAS10K3_18_SCA HP05 ANSI ver: 01 CCS
-> scsi 2:0:1:0: Direct-Access     xAB HP 18.2G ATLAS10K3_18_SCA HP05 Level: 03
-> scsi 2:0:1:0: Direct-Access     7 HP 18.2G ATLAS10K3_18_SCA HP05 Level: 03
+Randy,
 
-All of these hurt eyes. What is wrong with the current two-line format?
+Is there any reason why any of these proc_name patches need to
+go in after James Smart's explanation:
 
-One line too many? What about silencing protocol drivers first? sd puts 
-out a lot of lines right after those inquiry data. What's more, sd is 
-forced by some upper layer to go through the initialization twice, 
-therefore sd sees fit to print its stuff out twice. This is where I see 
-potential to reduce log noise.
+http://marc.theaimsgroup.com/?l=linux-scsi&m=115040210406375&w=2
 
-Also keep in mind, the inquiry data in the syslog has been a source for 
-users to feed the parameter scsi_mod.dev_flags. I.e. keep the vendor and 
-model strings distinguishable.
+in particular, the part about:
 
-And a beautiful layout of syslog messages is good for the mental peace 
-of users.
+"- scsi_proc_hostdir_add() validates that sht->proc_info is non-null before
+   attempting to use sht->proc_name."
 
-Highly cryptic log messages on the other hand are about as valuable as 
-_no_ log messages at all. The lines I quoted above are not far from 
-white noise.
+proc_info is null for the 3w-9xxx driver.
 
-Again, what exactly is the gain from one log line less? The size of 
-syslog files is taken care of by logrotate + gzip.
+-Adam
 
-End of rant. :-)
--- 
-Stefan Richter
--=====-=-==- -==- =-=-=
-http://arcgraph.de/sr/
+On 6/20/06, Randy Dunlap <randy.dunlap@oracle.com> wrote:
+> Add .proc_name member to scsi_host_template for 3w-9xxx.
+>
+> http://www.kernel.org/git/?p=linux/kernel/git/bcollins/ubuntu-dapper.git;a=commitdiff;h=12fdf64086335ed596848cf17602e7a71e15ae9b
+>
+>
+> ---
+>  drivers/scsi/3w-9xxx.c |    1 +
+>  1 file changed, 1 insertion(+)
+>
+> --- linux-2617-pv.orig/drivers/scsi/3w-9xxx.c
+> +++ linux-2617-pv/drivers/scsi/3w-9xxx.c
+> @@ -2011,6 +2011,7 @@ static void twa_unmap_scsi_data(TW_Devic
+>  /* scsi_host_template initializer */
+>  static struct scsi_host_template driver_template = {
+>         .module                 = THIS_MODULE,
+> +       .proc_name              = "3w-9xxx",
+>         .name                   = "3ware 9000 Storage Controller",
+>         .queuecommand           = twa_scsi_queue,
+>         .eh_host_reset_handler  = twa_scsi_eh_reset,
+>
+>
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
