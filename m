@@ -1,38 +1,66 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: [Ubuntu PATCH] 3w-9xyz: add proc_name
-Date: Tue, 20 Jun 2006 22:32:26 -0700
-Message-ID: <4498D9EA.5090909@oracle.com>
+From: Arild Jensen <ml-linux-scsi@counter-attack.com>
+Subject: Re: Always seeing 36 LUNs from qla2xxx HBA
+Date: Tue, 20 Jun 2006 23:01:32 -0700
+Message-ID: <20060621060132.GA17417@wiggle.dreamhost.com>
+References: <20060620235940.GC10957@wiggle.dreamhost.com> <1150850434.3057.3.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rgminet01.oracle.com ([148.87.113.118]:18641 "EHLO
-	rgminet01.oracle.com") by vger.kernel.org with ESMTP
-	id S1751082AbWFUFbT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Jun 2006 01:31:19 -0400
+Received: from smarty.dreamhost.com ([66.33.216.24]:3531 "EHLO
+	smarty.dreamhost.com") by vger.kernel.org with ESMTP
+	id S1751135AbWFUGBc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Jun 2006 02:01:32 -0400
+Received: from wiggle.dreamhost.com (wiggle.dreamhost.com [66.33.197.206])
+	by smarty.dreamhost.com (Postfix) with ESMTP id 15B7BEE2BA
+	for <linux-scsi@vger.kernel.org>; Tue, 20 Jun 2006 23:01:32 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <1150850434.3057.3.camel@laptopd505.fenrus.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: scsi <linux-scsi@vger.kernel.org>, akpm <akpm@osdl.org>, jejb <James.Bottomley@SteelEye.com>, linuxraid@amcc.com
+To: linux-scsi@vger.kernel.org
 
-Add .proc_name member to scsi_host_template for 3w-9xxx.
+On Wed, Jun 21, 2006 at 02:40:34AM +0200, Arjan van de Ven wrote:
+> On Tue, 2006-06-20 at 16:59 -0700, Arild Jensen wrote:
+> > I have an interesting problem on my Linux box:
+> > 
+> > Setup:
+> > IBM x445 server
+> > 2 x QLA2340 fiber HBAs
+> > Brocade Director 12000 switch
+> > Hitachi HDS 9960 RAID array
+> > SLES 9 OS, kernel-bigsmp-2.6.5-7.201
+> > 
+> > Problem:
+> > The qla2xxx driver *always* reports 36 SCSI2 LUNs, regardless of what I
+> > configure on the RAID array. It should report 17 SCSI3 LUNs. 
+> 
+> why should it report 17?
 
-http://www.kernel.org/git/?p=linux/kernel/git/bcollins/ubuntu-dapper.git;a=commitdiff;h=12fdf64086335ed596848cf17602e7a71e15ae9b
+Because I configured our RAID array to assign that box 17 LUNs.
+
+> if you have set up 17 luns, showing up as 36 devices is not that
+> strange; first you have the management lun, so the kernel should see18
+> if you configure 17 real disk ones, and then you have 2 paths to the
+> device, so that is times 2 ==> 36. Now the multipathing in the linux
+> kernel then should bundle those into multipathing devices, after the
+> kernel sees them. If that's not happening you should configure the dm
+> multipathing component....
+
+>From each HBA I am seeing 36 LUNs. Since they are SCSI2, the OS only
+sees the first 8, though when I dig deeper, such as looking at
+/proc/scsi/qla2xxx/*, I see that each HBA reports 35 LUNs.
+
+However, you might be right about something regarding the multipathing.
+Your math certainly adds up.  I'll try to boot the box with only one
+HBA and see what the OS+HBA are reporting.
+
+> was the machine that is working also using multipathing?
+
+Yes.
 
 
----
- drivers/scsi/3w-9xxx.c |    1 +
- 1 file changed, 1 insertion(+)
-
---- linux-2617-pv.orig/drivers/scsi/3w-9xxx.c
-+++ linux-2617-pv/drivers/scsi/3w-9xxx.c
-@@ -2011,6 +2011,7 @@ static void twa_unmap_scsi_data(TW_Devic
- /* scsi_host_template initializer */
- static struct scsi_host_template driver_template = {
- 	.module			= THIS_MODULE,
-+	.proc_name		= "3w-9xxx",
- 	.name			= "3ware 9000 Storage Controller",
- 	.queuecommand		= twa_scsi_queue,
- 	.eh_host_reset_handler	= twa_scsi_eh_reset,
+Thanks for the reply, Arjan!
 
 
-
+-- 
+Arild Jensen
