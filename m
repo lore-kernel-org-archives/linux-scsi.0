@@ -1,36 +1,72 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Areca driver recap + status
-Date: Thu, 22 Jun 2006 02:35:47 -0400
-Message-ID: <449A3A43.6060009@garzik.org>
-References: <09be01c695b3$2ed8c2c0$c100a8c0@robm> <20060621222826.ff080422.akpm@osdl.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: HP XP devinfo update
+Date: Thu, 22 Jun 2006 09:19:51 +0200
+Message-ID: <449A4497.8000106@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------060405080303080307010808"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:53697 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1030616AbWFVGf4 (ORCPT
+Received: from mx2.suse.de ([195.135.220.15]:29912 "EHLO mx2.suse.de")
+	by vger.kernel.org with ESMTP id S1751068AbWFVHTw (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Jun 2006 02:35:56 -0400
-In-Reply-To: <20060621222826.ff080422.akpm@osdl.org>
+	Thu, 22 Jun 2006 03:19:52 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: Robert Mueller <robm@fastmail.fm>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, dax@gurulabs.com, James.Bottomley@SteelEye.com, brong@fastmail.fm, erich@areca.com.tw, hch@infradead.org, rdunlap@xenotime.net
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: Anthony Cheung <anthony.cheung@hp.com>
 
-Andrew Morton wrote:
-> On Thu, 22 Jun 2006 14:18:23 +1000
-> "Robert Mueller" <robm@fastmail.fm> wrote:
-> 
->> The driver went into 2.6.11-rc3-mm1 here:
->> http://marc.theaimsgroup.com/?l=linux-kernel&m=110754432622498&w=2
-> 
-> One and a half years.
-> 
-> Would the world end if we just merged the dang thing?
+This is a multi-part message in MIME format.
+--------------060405080303080307010808
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 8bit
 
-No.  Please do...
+Hi all,
 
-	Jeff
+we've had some bug reports that the sequential scanning fails with HP XP
+arrays. Fancy, though, as (according to HP) those boxes support REPORT_LUN.
 
+This patch updates the blacklist to always use REPORT_LUN scan on HP XP
+arrays.
 
+Please apply.
 
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke			hare@suse.de
+SuSE Linux Products GmbH		S390 & zSeries
+Maxfeldstraße 5				+49 911 74053 688
+90409 Nürnberg				http://www.suse.de
+
+--------------060405080303080307010808
+Content-Type: text/plain;
+ name="scsi-update-hp-xp-devinfo"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="scsi-update-hp-xp-devinfo"
+
+HP XP array devinfo update
+
+According to Anthony Cheung all HP XP arrays with "OPEN-" 
+types support REPORT_LUN. So there is no reason why we
+shouldn't use it.
+
+Signed-off-by: Anthony Cheung <anthony.cheung@hp.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index ae13e4a..83d30ee 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -160,7 +160,7 @@ static struct {
+ 	{"HITACHI", "DISK-SUBSYSTEM", "*", BLIST_ATTACH_PQ3 | BLIST_SPARSELUN | BLIST_LARGELUN},
+ 	{"HITACHI", "OPEN-E", "*", BLIST_ATTACH_PQ3 | BLIST_SPARSELUN | BLIST_LARGELUN},
+ 	{"HP", "A6189A", NULL, BLIST_SPARSELUN | BLIST_LARGELUN},	/* HP VA7400 */
+-	{"HP", "OPEN-", "*", BLIST_SPARSELUN | BLIST_LARGELUN}, /* HP XP Arrays */
++	{"HP", "OPEN-", "*", BLIST_REPORTLUN2}, /* HP XP Arrays */
+ 	{"HP", "NetRAID-4M", NULL, BLIST_FORCELUN},
+ 	{"HP", "HSV100", NULL, BLIST_REPORTLUN2 | BLIST_NOSTARTONADD},
+ 	{"HP", "C1557A", NULL, BLIST_FORCELUN},
+
+--------------060405080303080307010808--
