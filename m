@@ -1,106 +1,63 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH] Print SCSI Inquiry data more compactly
-Date: Wed, 21 Jun 2006 22:55:19 -0400
-Message-ID: <449A0697.3090702@torque.net>
-References: <547AF3BD0F3F0B4CBDC379BAC7E4189F0290B5BB@otce2k03.adaptec.com> <20060621164150.GM31472@vienna.egenera.com> <20060621165057.GW1630@parisc-linux.org> <1150909340.20655.37.camel@gator.sc.steeleye.com> <44997F73.7040903@emulex.com> <20060621173329.GZ1630@parisc-linux.org> <44998A34.20202@s5r6.in-berlin.de> <20060621190327.GB1630@parisc-linux.org> <4499C9D2.5090103@s5r6.in-berlin.de>
-Reply-To: dougg@torque.net
+From: "Robert Mueller" <robm@fastmail.fm>
+Subject: Areca driver recap + status
+Date: Thu, 22 Jun 2006 14:18:23 +1000
+Message-ID: <09be01c695b3$2ed8c2c0$c100a8c0@robm>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=original
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:6300 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1030545AbWFVC4W (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Jun 2006 22:56:22 -0400
-In-Reply-To: <4499C9D2.5090103@s5r6.in-berlin.de>
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:19654 "EHLO
+	out3.smtp.messagingengine.com") by vger.kernel.org with ESMTP
+	id S932781AbWFVEUN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Jun 2006 00:20:13 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: Matthew Wilcox <matthew@wil.cx>, James Smart <James.Smart@Emulex.Com>, Eddie Williams <Eddie.Williams@steeleye.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Andrew Morton <akpm@digeo.com>, Dax Kelson <dax@gurulabs.com>, James Bottomley <James.Bottomley@SteelEye.com>, Bron Gondwana <brong@fastmail.fm>, erich <erich@areca.com.tw>, Christoph Hellwig <hch@infradead.org>, "Randy.Dunlap" <rdunlap@xenotime.net>
 
-Stefan Richter wrote:
-> Matthew Wilcox wrote:
-> 
->> On Wed, Jun 21, 2006 at 08:04:36PM +0200, Stefan Richter wrote:
->>
->>> What is wrong with the current two-line format?
->>
->>
->> Several things.  The way that it's printed means that simultaneous scans
->> lead to the output getting garbled.
-> 
-> 
-> That's true, but it could be implemented as an atomic operation with
-> multiple printks nonetheless. However you are right, layout should not
-> be a reason to add locks. Make it one printk, but please keep it
-> readable. The inquiry printout is one of the few that people actually
-> care for.
-> 
->> You're exaggerating.
-> 
-> 
-> On purpose. :-)
-> 
->> BTW, here's what a line would look like from sbp2 ...
->>
->> scsi 9:0:0:0: CD-ROM            MATSHITA  UJDA730 DVD/CDRW  1.00 Level: 0 
-> 
-> 
-> Here is another SBP-2 device:
->    Vendor: ST340083  Model: 2A                Rev: 3.01
->    Type:   Direct-Access-RBC                  ANSI SCSI revision: 04
-> 
-> This may be misleading if "Vendor:" and "Model:" prefixes are stripped.
-> 
->> btw, I've always found that "CD-ROM" a little confusing; considering
->> that SPC4 says "CD/DVD device", any objections to changing that string
->> to say "CD/DVD" instead of "CD-ROM"?
-> 
-> 
-> Seems reasonable.
+Hi
 
-Matthew,
-Here are short and long lists that I dug up from
-sg3_utils and lsscsi. The long list should adhere
-to the SPC-4 pdt names more closely:
+As happy users of areca raid cards, we're keen to see a stable driver make 
+it into the next kernel release. I thought I might quickly recap what's 
+happened with the driver over the last 6 months to see where things are at:
 
-static const char * scsi_pdt_strs[] = {
-    /* 0 */ "disk",
-    "tape",
-    "printer",
-    "processor",        /* often SAF-TE (seldom scanner) device */
-    "write once optical disk",
-    /* 5 */ "cd/dvd",
-    "scanner",
-    "optical memory device",
-    "medium changer",
-    "communications",
-    /* 0xa */ "graphics [0xa]",
-    "graphics [0xb]",
-    "storage array controller",
-    "enclosure services device",
-    "simplified direct access device",
-    "optical card reader/writer device",
-    /* 0x10 */ "bridge controller commands",
-    "object based storage",
-    "automation/driver interface",
-    "0x13", "0x14", "0x15", "0x16", "0x17", "0x18",
-    "0x19", "0x1a", "0x1b", "0x1c", "0x1d",
-    "well known logical unit",
-    "no physical device on this lu",
-};
+The driver went into 2.6.11-rc3-mm1 here:
+http://marc.theaimsgroup.com/?l=linux-kernel&m=110754432622498&w=2
 
-static const char * scsi_short_device_types[] =
-{
-        "disk   ", "tape   ", "printer", "process", "worm   ", "cd/dvd ",
-        "scanner", "optical", "mediumx", "comms  ", "(0xa)  ", "(0xb)  ",
-        "storage", "enclosu", "sim dsk", "opti rd", "bridge ", "osd    ",
-        "adi    ", "(0x13) ", "(0x14) ", "(0x15) ", "(0x16) ", "(0x17) ",
-        "(0x18) ", "(0x19) ", "(0x1a) ", "(0x1b) ", "(0x1c) ", "(0x1e) ",
-        "wlun   ", "no dev ",
-};
+A thread about overall style + api problems here:
+http://marc.theaimsgroup.com/?l=linux-kernel&m=113525798005993&w=2
 
-There are no known unknowns ...
+Some specific comments + patches from Randy and Chris about problems:
+http://marc.theaimsgroup.com/?l=linux-scsi&m=113597128115672&w=2
+http://marc.theaimsgroup.com/?l=linux-kernel&m=114045972531035&w=2
 
-Doug Gilbert
+An update from erich went into 2.6.16-rc6-mm2 to address a number of the 
+problems:
+http://marc.theaimsgroup.com/?l=linux-kernel&m=114282535310724&w=2
+
+End of thread about problem ARCMSR_MAX_XFER_SECTORS of 4096 vs 512:
+http://marc.theaimsgroup.com/?l=linux-kernel&m=114602195422443&w=2
+
+Comment from Andrew about helping to get the driver in:
+http://marc.theaimsgroup.com/?l=linux-kernel&m=114945466405532&w=2
+
+Though there did still seem to be quite a few things missing:
+http://marc.theaimsgroup.com/?l=linux-scsi&m=114556263632510&w=2
+
+General comment on areca driver is "improving", we seem to need a sound 
+"todo" list:
+http://marc.theaimsgroup.com/?l=linux-kernel&m=114949920416720&w=2
+
+Some of those remaining problems seem pretty serious concerns, though I 
+don't really know any of the technical details. The latest driver from -mm 
+seems to be working well for us at the moment. Is the general concensus that 
+the driver should go in despite these issues, and they can be fixed over 
+time? Or are these still show stoppers?
+
+Thanks
+
+Rob
 
