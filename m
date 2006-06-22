@@ -1,32 +1,30 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: HP XP devinfo update
-Date: Thu, 22 Jun 2006 09:19:51 +0200
-Message-ID: <449A4497.8000106@suse.de>
+Subject: [PATCH] aic79xx: remove slave_destroy
+Date: Thu, 22 Jun 2006 11:45:00 +0200
+Message-ID: <449A669C.5020304@suse.de>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------060405080303080307010808"
+ boundary="------------050906040604070208050306"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:29912 "EHLO mx2.suse.de")
-	by vger.kernel.org with ESMTP id S1751068AbWFVHTw (ORCPT
+Received: from mx2.suse.de ([195.135.220.15]:8939 "EHLO mx2.suse.de")
+	by vger.kernel.org with ESMTP id S932470AbWFVJpL (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Jun 2006 03:19:52 -0400
+	Thu, 22 Jun 2006 05:45:11 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
-Cc: Anthony Cheung <anthony.cheung@hp.com>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
 This is a multi-part message in MIME format.
---------------060405080303080307010808
+--------------050906040604070208050306
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 8bit
 
-Hi all,
+Hi James,
 
-we've had some bug reports that the sequential scanning fails with HP XP
-arrays. Fancy, though, as (according to HP) those boxes support REPORT_LUN.
-
-This patch updates the blacklist to always use REPORT_LUN scan on HP XP
-arrays.
+this patch removes the need for a slave_destroy callback in aic79xx.
+We've been troubles again even with the latest scanning fixes so I
+decided it has to go. Especially as it's not really required anyway.
 
 Please apply.
 
@@ -39,34 +37,417 @@ SuSE Linux Products GmbH		S390 & zSeries
 Maxfeldstraße 5				+49 911 74053 688
 90409 Nürnberg				http://www.suse.de
 
---------------060405080303080307010808
+--------------050906040604070208050306
 Content-Type: text/plain;
- name="scsi-update-hp-xp-devinfo"
+ name="aic79xx-remove-slave-alloc"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline;
- filename="scsi-update-hp-xp-devinfo"
+ filename="aic79xx-remove-slave-alloc"
 
-HP XP array devinfo update
+aic79xx: Remove slave_destroy
 
-According to Anthony Cheung all HP XP arrays with "OPEN-" 
-types support REPORT_LUN. So there is no reason why we
-shouldn't use it.
+Even with the latest fixes aic79xx still occasionally triggers the
+BUG_ON in slave_destroy. Rather than trying to figure out the various
+levels of interaction here I've decided to remove the callback altogether.
 
-Signed-off-by: Anthony Cheung <anthony.cheung@hp.com>
+The primary reason for the slave_alloc / slave_destroy is to keep an
+index of pointers to the sdevs associated with a given target.
+However, by changing the arguments to the affected functions slightly
+it's possible to avoid the use of that index entirely.
+The only performance penalty we'll incur is in writing the
+information for /proc/scsi/XXX, as we'll have to recurse over all
+available sdevs to find the correct ones. But I doubt that reading
+from /proc is in any way time-critical.
+
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 
-diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-index ae13e4a..83d30ee 100644
---- a/drivers/scsi/scsi_devinfo.c
-+++ b/drivers/scsi/scsi_devinfo.c
-@@ -160,7 +160,7 @@ static struct {
- 	{"HITACHI", "DISK-SUBSYSTEM", "*", BLIST_ATTACH_PQ3 | BLIST_SPARSELUN | BLIST_LARGELUN},
- 	{"HITACHI", "OPEN-E", "*", BLIST_ATTACH_PQ3 | BLIST_SPARSELUN | BLIST_LARGELUN},
- 	{"HP", "A6189A", NULL, BLIST_SPARSELUN | BLIST_LARGELUN},	/* HP VA7400 */
--	{"HP", "OPEN-", "*", BLIST_SPARSELUN | BLIST_LARGELUN}, /* HP XP Arrays */
-+	{"HP", "OPEN-", "*", BLIST_REPORTLUN2}, /* HP XP Arrays */
- 	{"HP", "NetRAID-4M", NULL, BLIST_FORCELUN},
- 	{"HP", "HSV100", NULL, BLIST_REPORTLUN2 | BLIST_NOSTARTONADD},
- 	{"HP", "C1557A", NULL, BLIST_FORCELUN},
+diff --git a/drivers/scsi/aic7xxx/aic79xx.h b/drivers/scsi/aic7xxx/aic79xx.h
+index eb77456..df3346b 100644
+--- a/drivers/scsi/aic7xxx/aic79xx.h
++++ b/drivers/scsi/aic7xxx/aic79xx.h
+@@ -1487,6 +1487,7 @@ typedef enum {
+ } ahd_queue_alg;
+ 
+ void			ahd_set_tags(struct ahd_softc *ahd,
++				     struct scsi_cmnd *cmd,
+ 				     struct ahd_devinfo *devinfo,
+ 				     ahd_queue_alg alg);
+ 
+diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_core.c
+index 801fc81..a1e8ca7 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_core.c
++++ b/drivers/scsi/aic7xxx/aic79xx_core.c
+@@ -1090,7 +1090,7 @@ #endif
+ 
+ 			/* Notify XPT */
+ 			ahd_send_async(ahd, devinfo.channel, devinfo.target,
+-				       CAM_LUN_WILDCARD, AC_SENT_BDR, NULL);
++				       CAM_LUN_WILDCARD, AC_SENT_BDR);
+ 
+ 			/*
+ 			 * Allow the sequencer to continue with
+@@ -3062,7 +3062,7 @@ ahd_set_syncrate(struct ahd_softc *ahd, 
+ 		tinfo->curr.ppr_options = ppr_options;
+ 
+ 		ahd_send_async(ahd, devinfo->channel, devinfo->target,
+-			       CAM_LUN_WILDCARD, AC_TRANSFER_NEG, NULL);
++			       CAM_LUN_WILDCARD, AC_TRANSFER_NEG);
+ 		if (bootverbose) {
+ 			if (offset != 0) {
+ 				int options;
+@@ -3184,7 +3184,7 @@ ahd_set_width(struct ahd_softc *ahd, str
+ 
+ 		tinfo->curr.width = width;
+ 		ahd_send_async(ahd, devinfo->channel, devinfo->target,
+-			       CAM_LUN_WILDCARD, AC_TRANSFER_NEG, NULL);
++			       CAM_LUN_WILDCARD, AC_TRANSFER_NEG);
+ 		if (bootverbose) {
+ 			printf("%s: target %d using %dbit transfers\n",
+ 			       ahd_name(ahd), devinfo->target,
+@@ -3211,12 +3211,14 @@ ahd_set_width(struct ahd_softc *ahd, str
+  * Update the current state of tagged queuing for a given target.
+  */
+ void
+-ahd_set_tags(struct ahd_softc *ahd, struct ahd_devinfo *devinfo,
+-	     ahd_queue_alg alg)
++ahd_set_tags(struct ahd_softc *ahd, struct scsi_cmnd *cmd,
++	     struct ahd_devinfo *devinfo, ahd_queue_alg alg)
+ {
+-	ahd_platform_set_tags(ahd, devinfo, alg);
++	struct scsi_device *sdev = cmd->device;
++
++	ahd_platform_set_tags(ahd, sdev, devinfo, alg);
+ 	ahd_send_async(ahd, devinfo->channel, devinfo->target,
+-		       devinfo->lun, AC_TRANSFER_NEG, &alg);
++		       devinfo->lun, AC_TRANSFER_NEG);
+ }
+ 
+ static void
+@@ -4746,7 +4748,7 @@ ahd_handle_msg_reject(struct ahd_softc *
+ 			printf("(%s:%c:%d:%d): refuses tagged commands.  "
+ 			       "Performing non-tagged I/O\n", ahd_name(ahd),
+ 			       devinfo->channel, devinfo->target, devinfo->lun);
+-			ahd_set_tags(ahd, devinfo, AHD_QUEUE_NONE);
++			ahd_set_tags(ahd, scb->io_ctx, devinfo, AHD_QUEUE_NONE);
+ 			mask = ~0x23;
+ 		} else {
+ 			printf("(%s:%c:%d:%d): refuses %s tagged commands.  "
+@@ -4754,7 +4756,7 @@ ahd_handle_msg_reject(struct ahd_softc *
+ 			       ahd_name(ahd), devinfo->channel, devinfo->target,
+ 			       devinfo->lun, tag_type == MSG_ORDERED_TASK
+ 			       ? "ordered" : "head of queue");
+-			ahd_set_tags(ahd, devinfo, AHD_QUEUE_BASIC);
++			ahd_set_tags(ahd, scb->io_ctx, devinfo, AHD_QUEUE_BASIC);
+ 			mask = ~0x03;
+ 		}
+ 
+@@ -5098,7 +5100,7 @@ #endif
+ 	
+ 	if (status != CAM_SEL_TIMEOUT)
+ 		ahd_send_async(ahd, devinfo->channel, devinfo->target,
+-			       CAM_LUN_WILDCARD, AC_SENT_BDR, NULL);
++			       CAM_LUN_WILDCARD, AC_SENT_BDR);
+ 
+ 	if (message != NULL && bootverbose)
+ 		printf("%s: %s on %c:%d. %d SCBs aborted\n", ahd_name(ahd),
+@@ -7952,7 +7954,7 @@ #ifdef AHD_TARGET_MODE
+ #endif
+ 	/* Notify the XPT that a bus reset occurred */
+ 	ahd_send_async(ahd, devinfo.channel, CAM_TARGET_WILDCARD,
+-		       CAM_LUN_WILDCARD, AC_BUS_RESET, NULL);
++		       CAM_LUN_WILDCARD, AC_BUS_RESET);
+ 
+ 	/*
+ 	 * Revert to async/narrow transfers until we renegotiate.
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
+index e0ccdf3..8bba043 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.c
++++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
+@@ -484,7 +484,6 @@ ahd_linux_target_alloc(struct scsi_targe
+ 	struct seeprom_config *sc = ahd->seep_config;
+ 	unsigned long flags;
+ 	struct scsi_target **ahd_targp = ahd_linux_target_in_softc(starget);
+-	struct ahd_linux_target *targ = scsi_transport_target_data(starget);
+ 	struct ahd_devinfo devinfo;
+ 	struct ahd_initiator_tinfo *tinfo;
+ 	struct ahd_tmode_tstate *tstate;
+@@ -495,7 +494,6 @@ ahd_linux_target_alloc(struct scsi_targe
+ 	BUG_ON(*ahd_targp != NULL);
+ 
+ 	*ahd_targp = starget;
+-	memset(targ, 0, sizeof(*targ));
+ 
+ 	if (sc) {
+ 		int flags = sc->device_flags[starget->id];
+@@ -551,15 +549,11 @@ ahd_linux_slave_alloc(struct scsi_device
+ {
+ 	struct	ahd_softc *ahd =
+ 		*((struct ahd_softc **)sdev->host->hostdata);
+-	struct scsi_target *starget = sdev->sdev_target;
+-	struct ahd_linux_target *targ = scsi_transport_target_data(starget);
+ 	struct ahd_linux_device *dev;
+ 
+ 	if (bootverbose)
+ 		printf("%s: Slave Alloc %d\n", ahd_name(ahd), sdev->id);
+ 
+-	BUG_ON(targ->sdev[sdev->lun] != NULL);
+-
+ 	dev = scsi_transport_device_data(sdev);
+ 	memset(dev, 0, sizeof(*dev));
+ 
+@@ -576,8 +570,6 @@ ahd_linux_slave_alloc(struct scsi_device
+ 	 */
+ 	dev->maxtags = 0;
+ 	
+-	targ->sdev[sdev->lun] = sdev;
+-
+ 	return (0);
+ }
+ 
+@@ -599,23 +591,6 @@ ahd_linux_slave_configure(struct scsi_de
+ 	return 0;
+ }
+ 
+-static void
+-ahd_linux_slave_destroy(struct scsi_device *sdev)
+-{
+-	struct	ahd_softc *ahd;
+-	struct	ahd_linux_device *dev = scsi_transport_device_data(sdev);
+-	struct  ahd_linux_target *targ = scsi_transport_target_data(sdev->sdev_target);
+-
+-	ahd = *((struct ahd_softc **)sdev->host->hostdata);
+-	if (bootverbose)
+-		printf("%s: Slave Destroy %d\n", ahd_name(ahd), sdev->id);
+-
+-	BUG_ON(dev->active);
+-
+-	targ->sdev[sdev->lun] = NULL;
+-
+-}
+-
+ #if defined(__i386__)
+ /*
+  * Return the disk geometry for the given SCSI device.
+@@ -822,7 +797,6 @@ #endif
+ 	.use_clustering		= ENABLE_CLUSTERING,
+ 	.slave_alloc		= ahd_linux_slave_alloc,
+ 	.slave_configure	= ahd_linux_slave_configure,
+-	.slave_destroy		= ahd_linux_slave_destroy,
+ 	.target_alloc		= ahd_linux_target_alloc,
+ 	.target_destroy		= ahd_linux_target_destroy,
+ };
+@@ -1249,20 +1223,13 @@ void
+ ahd_platform_free(struct ahd_softc *ahd)
+ {
+ 	struct scsi_target *starget;
+-	int i, j;
++	int i;
+ 
+ 	if (ahd->platform_data != NULL) {
+ 		/* destroy all of the device and target objects */
+ 		for (i = 0; i < AHD_NUM_TARGETS; i++) {
+ 			starget = ahd->platform_data->starget[i];
+ 			if (starget != NULL) {
+-				for (j = 0; j < AHD_NUM_LUNS; j++) {
+-					struct ahd_linux_target *targ =
+-						scsi_transport_target_data(starget);
+-					if (targ->sdev[j] == NULL)
+-						continue;
+-					targ->sdev[j] = NULL;
+-				}
+ 				ahd->platform_data->starget[i] = NULL;
+ 			}
+ 		}
+@@ -1318,20 +1285,13 @@ ahd_platform_freeze_devq(struct ahd_soft
+ }
+ 
+ void
+-ahd_platform_set_tags(struct ahd_softc *ahd, struct ahd_devinfo *devinfo,
+-		      ahd_queue_alg alg)
++ahd_platform_set_tags(struct ahd_softc *ahd, struct scsi_device *sdev, 
++		      struct ahd_devinfo *devinfo, ahd_queue_alg alg)
+ {
+-	struct scsi_target *starget;
+-	struct ahd_linux_target *targ;
+ 	struct ahd_linux_device *dev;
+-	struct scsi_device *sdev;
+ 	int was_queuing;
+ 	int now_queuing;
+ 
+-	starget = ahd->platform_data->starget[devinfo->target];
+-	targ = scsi_transport_target_data(starget);
+-	BUG_ON(targ == NULL);
+-	sdev = targ->sdev[devinfo->lun];
+ 	if (sdev == NULL)
+ 		return;
+ 
+@@ -1467,11 +1427,15 @@ ahd_linux_device_queue_depth(struct scsi
+ 	tags = ahd_linux_user_tagdepth(ahd, &devinfo);
+ 	if (tags != 0 && sdev->tagged_supported != 0) {
+ 
+-		ahd_set_tags(ahd, &devinfo, AHD_QUEUE_TAGGED);
++		ahd_platform_set_tags(ahd, sdev, &devinfo, AHD_QUEUE_TAGGED);
++		ahd_send_async(ahd, devinfo.channel, devinfo.target,
++			       devinfo.lun, AC_TRANSFER_NEG);
+ 		ahd_print_devinfo(ahd, &devinfo);
+ 		printf("Tagged Queuing enabled.  Depth %d\n", tags);
+ 	} else {
+-		ahd_set_tags(ahd, &devinfo, AHD_QUEUE_NONE);
++		ahd_platform_set_tags(ahd, sdev, &devinfo, AHD_QUEUE_NONE);
++		ahd_send_async(ahd, devinfo.channel, devinfo.target,
++			       devinfo.lun, AC_TRANSFER_NEG);
+ 	}
+ }
+ 
+@@ -1629,7 +1593,7 @@ ahd_linux_isr(int irq, void *dev_id, str
+ 
+ void
+ ahd_send_async(struct ahd_softc *ahd, char channel,
+-	       u_int target, u_int lun, ac_code code, void *arg)
++	       u_int target, u_int lun, ac_code code)
+ {
+ 	switch (code) {
+ 	case AC_TRANSFER_NEG:
+@@ -1956,7 +1920,7 @@ #endif
+ 			}
+ 			ahd_set_transaction_status(scb, CAM_REQUEUE_REQ);
+ 			ahd_set_scsi_status(scb, SCSI_STATUS_OK);
+-			ahd_platform_set_tags(ahd, &devinfo,
++			ahd_platform_set_tags(ahd, sdev, &devinfo,
+ 				     (dev->flags & AHD_DEV_Q_BASIC)
+ 				   ? AHD_QUEUE_BASIC : AHD_QUEUE_TAGGED);
+ 			break;
+@@ -1966,7 +1930,7 @@ #endif
+ 		 * as if the target returned BUSY SCSI status.
+ 		 */
+ 		dev->openings = 1;
+-		ahd_platform_set_tags(ahd, &devinfo,
++		ahd_platform_set_tags(ahd, sdev, &devinfo,
+ 			     (dev->flags & AHD_DEV_Q_BASIC)
+ 			   ? AHD_QUEUE_BASIC : AHD_QUEUE_TAGGED);
+ 		ahd_set_scsi_status(scb, SCSI_STATUS_BUSY);
+@@ -2778,8 +2742,6 @@ ahd_linux_init(void)
+ 	if (!ahd_linux_transport_template)
+ 		return -ENODEV;
+ 
+-	scsi_transport_reserve_target(ahd_linux_transport_template,
+-				      sizeof(struct ahd_linux_target));
+ 	scsi_transport_reserve_device(ahd_linux_transport_template,
+ 				      sizeof(struct ahd_linux_device));
+ 
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.h b/drivers/scsi/aic7xxx/aic79xx_osm.h
+index 2b83316..b2e65e1 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.h
++++ b/drivers/scsi/aic7xxx/aic79xx_osm.h
+@@ -263,7 +263,6 @@ typedef enum {
+ 	AHD_DEV_PERIODIC_OTAG	 = 0x40, /* Send OTAG to prevent starvation */
+ } ahd_linux_dev_flags;
+ 
+-struct ahd_linux_target;
+ struct ahd_linux_device {
+ 	TAILQ_ENTRY(ahd_linux_device) links;
+ 
+@@ -343,12 +342,6 @@ #define AHD_LOCK_TAGS_COUNT 50
+ #define AHD_OTAG_THRESH	500
+ };
+ 
+-struct ahd_linux_target {
+-	struct scsi_device	 *sdev[AHD_NUM_LUNS];
+-	struct ahd_transinfo	  last_tinfo;
+-	struct ahd_softc	 *ahd;
+-};
+-
+ /********************* Definitions Required by the Core ***********************/
+ /*
+  * Number of SG segments we require.  So long as the S/G segments for
+@@ -865,7 +858,7 @@ ahd_freeze_scb(struct scb *scb)
+         }
+ }
+ 
+-void	ahd_platform_set_tags(struct ahd_softc *ahd,
++void	ahd_platform_set_tags(struct ahd_softc *ahd, struct scsi_device *sdev,
+ 			      struct ahd_devinfo *devinfo, ahd_queue_alg);
+ int	ahd_platform_abort_scbs(struct ahd_softc *ahd, int target,
+ 				char channel, int lun, u_int tag,
+@@ -874,7 +867,7 @@ irqreturn_t
+ 	ahd_linux_isr(int irq, void *dev_id, struct pt_regs * regs);
+ void	ahd_done(struct ahd_softc*, struct scb*);
+ void	ahd_send_async(struct ahd_softc *, char channel,
+-		       u_int target, u_int lun, ac_code, void *);
++		       u_int target, u_int lun, ac_code);
+ void	ahd_print_path(struct ahd_softc *, struct scb *);
+ 
+ #ifdef CONFIG_PCI
+diff --git a/drivers/scsi/aic7xxx/aic79xx_proc.c b/drivers/scsi/aic7xxx/aic79xx_proc.c
+index 24fd59a..c5f0ee5 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_proc.c
++++ b/drivers/scsi/aic7xxx/aic79xx_proc.c
+@@ -47,7 +47,7 @@ static int	copy_info(struct info_str *in
+ static void	ahd_dump_target_state(struct ahd_softc *ahd,
+ 				      struct info_str *info,
+ 				      u_int our_id, char channel,
+-				      u_int target_id, u_int target_offset);
++				      u_int target_id);
+ static void	ahd_dump_device_state(struct info_str *info,
+ 				      struct scsi_device *sdev);
+ static int	ahd_proc_write_seeprom(struct ahd_softc *ahd,
+@@ -204,10 +204,8 @@ ahd_format_transinfo(struct info_str *in
+ 
+ static void
+ ahd_dump_target_state(struct ahd_softc *ahd, struct info_str *info,
+-		      u_int our_id, char channel, u_int target_id,
+-		      u_int target_offset)
++		      u_int our_id, char channel, u_int target_id)
+ {
+-	struct	ahd_linux_target *targ;
+ 	struct  scsi_target *starget;
+ 	struct	ahd_initiator_tinfo *tinfo;
+ 	struct	ahd_tmode_tstate *tstate;
+@@ -218,10 +216,9 @@ ahd_dump_target_state(struct ahd_softc *
+ 	copy_info(info, "Target %d Negotiation Settings\n", target_id);
+ 	copy_info(info, "\tUser: ");
+ 	ahd_format_transinfo(info, &tinfo->user);
+-	starget = ahd->platform_data->starget[target_offset];
++	starget = ahd->platform_data->starget[target_id];
+ 	if (starget == NULL)
+ 		return;
+-	targ = scsi_transport_target_data(starget);
+ 
+ 	copy_info(info, "\tGoal: ");
+ 	ahd_format_transinfo(info, &tinfo->goal);
+@@ -231,7 +228,7 @@ ahd_dump_target_state(struct ahd_softc *
+ 	for (lun = 0; lun < AHD_NUM_LUNS; lun++) {
+ 		struct scsi_device *dev;
+ 
+-		dev = targ->sdev[lun];
++		dev = scsi_device_lookup_by_target(starget, lun);
+ 
+ 		if (dev == NULL)
+ 			continue;
+@@ -355,7 +352,7 @@ ahd_linux_proc_info(struct Scsi_Host *sh
+ 	copy_info(&info, "Allocated SCBs: %d, SG List Length: %d\n\n",
+ 		  ahd->scb_data.numscbs, AHD_NSEG);
+ 
+-	max_targ = 15;
++	max_targ = 16;
+ 
+ 	if (ahd->seep_config == NULL)
+ 		copy_info(&info, "No Serial EEPROM\n");
+@@ -373,12 +370,12 @@ ahd_linux_proc_info(struct Scsi_Host *sh
+ 	copy_info(&info, "\n");
+ 
+ 	if ((ahd->features & AHD_WIDE) == 0)
+-		max_targ = 7;
++		max_targ = 8;
+ 
+-	for (i = 0; i <= max_targ; i++) {
++	for (i = 0; i < max_targ; i++) {
+ 
+ 		ahd_dump_target_state(ahd, &info, ahd->our_id, 'A',
+-				      /*target_id*/i, /*target_offset*/i);
++				      /*target_id*/i);
+ 	}
+ 	retval = info.pos > info.offset ? info.pos - info.offset : 0;
+ done:
 
---------------060405080303080307010808--
+--------------050906040604070208050306--
