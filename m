@@ -1,105 +1,89 @@
 From: Vivek Goyal <vgoyal@in.ibm.com>
-Subject: [RFC] [PATCH 1/2] introduce crashboot kernel command line parameter
-Date: Fri, 23 Jun 2006 17:01:21 -0400
-Message-ID: <20060623210121.GA18384@in.ibm.com>
+Subject: [RFC] [PATCH 2/2] kdump: cciss driver initialization issue fix
+Date: Fri, 23 Jun 2006 17:04:24 -0400
+Message-ID: <20060623210424.GB18384@in.ibm.com>
+References: <20060623210121.GA18384@in.ibm.com>
 Reply-To: vgoyal@in.ibm.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751905AbWFWVBp@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e35.co.us.ibm.com ([32.97.110.153]:28844 "EHLO
+	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S1752055AbWFWVEq
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 23 Jun 2006 17:04:46 -0400
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20060623210121.GA18384@in.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: linux kernel mailing list <linux-kernel@vger.kernel.org>
 Cc: Fastboot mailing list <fastboot@lists.osdl.org>, Linux SCSI Mailing list <linux-scsi@vger.kernel.org>, "Eric W. Biederman" <ebiederm@xmission.com>, Morton Andrew Morton <akpm@osdl.org>, mike.miller@hp.com
-List-Id: linux-scsi@vger.kernel.org
 
 
-o Add kernel command line option "crashboot"
+o cciss driver initialization fails and hits BUG() if underlying device
+  was active during the driver initialization. Device might be active
+  if previous kernel crashed and this kernel is booting after that using
+  kdump.
 
-o This option is an indication to the kernel that kernel is booting in an
-  unreliable environment where possibly BIOS execution has been skipped
-  and devices are left operational or in unknown state.
+kernel BUG at drivers/block/cciss.c:2141!
+invalid opcode: 0000 [#1]
+last sysfs file: /class/sound/timer/dev
+CPU:    0
+EIP:    0060:[<c59b9ab1>]    Not tainted VLI
+EFLAGS: 00010296   (2.6.16-1.2122_FC5kdump #1)
+EIP is at sendcmd+0x261/0x29c [cciss]
+eax: 00000045   ebx: c3300000   ecx: c36b1cf8   edx: c59bd5c5
+esi: 00000000   edi: 00001388   ebp: c3ad1400   esp: c36b1d00
+ds: 007b   es: 007b   ss: 0068
+Process modprobe (pid: 687, threadinfo=c36b1000 task=c3760aa0)
+Stack: <0>00246dc0 c14aef40 00000012 00000000 c4f00480 00000000 c4f00508
+c14aef40
+       c59b9da0 00000024 00000000 00000000 00000000 00000000 00000000 c1006ece
+       00000246 c35e2c20 000000d0 c4fddc00 c36b1db0 c3ad1400 c12b2570 c4fddc00
+Call Trace:
+ [<c59b9da0>] cciss_getgeometry+0xa9/0x24a [cciss]
+ [<c1006ece>] dma_alloc_coherent+0xb1/0xec     [<c12b2570>]
+setup_IO_APIC+0x23/0xcb5
+ [<c59bc07e>] cciss_init_one+0x5cd/0x9e7 [cciss]     [<c10cdd6b>]
+pci_match_device+0x13/0xb3
+ [<c11284ec>] __driver_attach+0x0/0x8b     [<c10cde57>]
+pci_device_probe+0x36/0x57
+ [<c1128439>] driver_probe_device+0x42/0x8b     [<c112854f>]
+__driver_attach+0x63/0x8b
+ [<c1127f35>] bus_for_each_dev+0x33/0x55     [<c112839d>]
+driver_attach+0x11/0x13
+ [<c11284ec>] __driver_attach+0x0/0x8b     [<c1127c56>]
+bus_add_driver+0x64/0xfd [<c10cdfe6>] __pci_register_driver+0x7f/0xa1
+[<c1031ab2>] sys_init_module+0x1382/0x1514
+ [<c11e0316>] do_page_fault+0x17d/0x5db     [<c1002be9>] syscall_call+0x7/0xb
+Code: 00 8b b8 d4 03 00 00 81 ff 81 01 00 00 7e 0f 56 68 0d d6 9b c5 e8 53 28
+66 fb 58 5a eb 0d 8b 42 04 89 0c b8 ff 02 e9 72 fe ff ff <0f> 0b 5d 08 a0 d2
+9b c5 e9 65 fe ff ff 83
+bd d4 03 00 00 00 7e
 
-o Kernel, especially device drivers can use this option to take special
-  actions like soft-resetting the device, relaxing some of the rules
-  to make sure kernel can boot/device driver can initiliaze in this
-  environment.
-
-o As of today this option is useful to Kdump. Kdump will pass this option
-  to second kernel to improve the reliability of successful kenrel boot/
-  device driver initializatoin. 
+o If crash_boot parameter is set, then ignore the completed command messages
+  sent by device which have not been issued in the context of this kernel.
 
 Signed-off-by: Vivek Goyal <vgoyal@in.ibm.com>
 ---
 
- linux-2.6.17-1M-vivek/Documentation/kernel-parameters.txt |    9 ++++++
- linux-2.6.17-1M-vivek/include/linux/init.h                |    1 
- linux-2.6.17-1M-vivek/init/main.c                         |   19 ++++++++++++++
- 3 files changed, 29 insertions(+)
+ linux-2.6.17-1M-vivek/drivers/block/cciss.c |    7 +++++++
+ 1 files changed, 7 insertions(+)
 
-diff -puN Documentation/kernel-parameters.txt~introduce-crash-boot-command-line-parameter Documentation/kernel-parameters.txt
---- linux-2.6.17-1M/Documentation/kernel-parameters.txt~introduce-crash-boot-command-line-parameter	2006-06-23 10:54:39.000000000 -0400
-+++ linux-2.6.17-1M-vivek/Documentation/kernel-parameters.txt	2006-06-23 13:47:28.000000000 -0400
-@@ -405,6 +405,15 @@ running once the system is up.
- 			[KNL] Reserve a chunk of physical memory to
- 			hold a kernel to switch to with kexec on panic.
+diff -puN drivers/block/cciss.c~cciss-initialization-issue-over-kdump-fix drivers/block/cciss.c
+--- linux-2.6.17-1M/drivers/block/cciss.c~cciss-initialization-issue-over-kdump-fix	2006-06-23 14:04:55.000000000 -0400
++++ linux-2.6.17-1M-vivek/drivers/block/cciss.c	2006-06-23 14:08:12.000000000 -0400
+@@ -1976,6 +1976,13 @@ static int add_sendcmd_reject(__u8 cmd, 
+ 			ctlr, complete);
+ 		/* not much we can do. */
+ #ifdef CONFIG_CISS_SCSI_TAPE
++		/* We might get notification of completion of commands
++		 * which we never issued in this kernel if this boot is
++		 * taking place after previous kernel's crash. Simply
++		 * ignore the commands in this case.
++		 */
++		if (crash_boot)
++			return 0;
+ 		return 1;
+ 	}
  
-+	crashboot	[KNL] Use this if kernel is booting in a potentially
-+			unreliable environement. For ex. kdump, where new
-+			kernel is booting after the first kernel crash and
-+			BIOS has been skipped and devices are in unknown
-+			state.
-+
-+			Device drivers might soft reset the devices before
-+			doing further device initialization.
-+
- 	cs4232=		[HW,OSS]
- 			Format: <io>,<irq>,<dma>,<dma2>,<mpuio>,<mpuirq>
- 
-diff -puN init/main.c~introduce-crash-boot-command-line-parameter init/main.c
---- linux-2.6.17-1M/init/main.c~introduce-crash-boot-command-line-parameter	2006-06-23 13:14:49.000000000 -0400
-+++ linux-2.6.17-1M-vivek/init/main.c	2006-06-23 13:34:34.000000000 -0400
-@@ -121,6 +121,17 @@ char saved_command_line[COMMAND_LINE_SIZ
- static char *execute_command;
- static char *ramdisk_execute_command;
- 
-+/*
-+ * If set, indicates that kernel is booting in an unreliable environment.
-+ * For ex. kdump situaiton where previous kernel has crashed, BIOS has been
-+ * skipped and devices will be in unknown state.
-+ *
-+ * Device drivers can use it to know that underlying device is in unknown
-+ * state and might even be finishing commands issued from previous kernel's
-+ * context.
-+ */
-+unsigned int crash_boot;
-+
- /* Setup configured maximum number of CPUs to activate */
- static unsigned int max_cpus = NR_CPUS;
- 
-@@ -150,6 +161,14 @@ static int __init maxcpus(char *str)
- 
- __setup("maxcpus=", maxcpus);
- 
-+static int __init set_crash_boot(char *str)
-+{
-+	crash_boot = 1;
-+	return 1;
-+}
-+
-+__setup("crashboot", set_crash_boot);
-+
- static char * argv_init[MAX_INIT_ARGS+2] = { "init", NULL, };
- char * envp_init[MAX_INIT_ENVS+2] = { "HOME=/", "TERM=linux", NULL, };
- static const char *panic_later, *panic_param;
-diff -puN include/linux/init.h~introduce-crash-boot-command-line-parameter include/linux/init.h
---- linux-2.6.17-1M/include/linux/init.h~introduce-crash-boot-command-line-parameter	2006-06-23 15:00:25.000000000 -0400
-+++ linux-2.6.17-1M-vivek/include/linux/init.h	2006-06-23 15:00:41.000000000 -0400
-@@ -69,6 +69,7 @@ extern initcall_t __security_initcall_st
- 
- /* Defined in init/main.c */
- extern char saved_command_line[];
-+extern unsigned int crash_boot;
- 
- /* used by init/main.c */
- extern void setup_arch(char **);
 _
