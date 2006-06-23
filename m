@@ -1,18 +1,43 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 2/6] libata: Add ata_scsi_dev_disabled
-Date: Thu, 22 Jun 2006 23:46:52 -0400
-Message-ID: <449B642C.9040004@pobox.com>
-References: <200606121954.k5CJsJxv027844@d01av03.pok.ibm.com>
+From: Linus Torvalds <torvalds@osdl.org>
+Subject: Re: [PATCH] kmalloc arguments in wrong order (53c700)
+Date: Thu, 22 Jun 2006 21:55:57 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0606222153280.6483@g5.osdl.org>
+References: <20060622204813.GY27946@ftp.linux.org.uk> <449B39E7.6040701@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <200606121954.k5CJsJxv027844@d01av03.pok.ibm.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Brian King <brking@us.ibm.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.osdl.org ([65.172.181.4]:17349 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932301AbWFWE4L (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 23 Jun 2006 00:56:11 -0400
+In-Reply-To: <449B39E7.6040701@torque.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Douglas Gilbert <dougg@torque.net>
+Cc: Al Viro <viro@ftp.linux.org.uk>, linux-scsi@vger.kernel.org
 
-applied
 
 
+On Thu, 22 Jun 2006, Douglas Gilbert wrote:
+
+> Al Viro wrote:
+> > Could people please run make C=2 at some point?
+> 
+> Is "sparse" packaged somewhere?
+
+I don't think it is, but it is easy enough to build.
+
+	git clone git://git.kernel.org/pub/scm/devel/sparse/sparse.git
+	cd sparse
+	make
+	make install
+
+should do it.
+
+Modern gcc's give a ton of
+
+	warning: value computed is not used
+
+warnings, but quite frankly, that's a gcc bug, not a a sparse problem. 
+
+			Linus
