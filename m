@@ -1,43 +1,26 @@
-From: Al Viro <viro@ftp.linux.org.uk>
-Subject: [PATCH] kmalloc arguments in wrong order (53c700)
-Date: Thu, 22 Jun 2006 21:48:13 +0100
-Message-ID: <20060622204813.GY27946@ftp.linux.org.uk>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH] kmalloc arguments in wrong order (53c700)
+Date: Thu, 22 Jun 2006 20:46:31 -0400
+Message-ID: <449B39E7.6040701@torque.net>
+References: <20060622204813.GY27946@ftp.linux.org.uk>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:44687 "EHLO
-	ZenIV.linux.org.uk") by vger.kernel.org with ESMTP id S1161348AbWFVUsO
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Jun 2006 16:48:14 -0400
-Content-Disposition: inline
+Received: from pentafluge.infradead.org ([213.146.154.40]:26264 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1751685AbWFWArd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Jun 2006 20:47:33 -0400
+In-Reply-To: <20060622204813.GY27946@ftp.linux.org.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: linux-scsi@vger.kernel.org
+To: Al Viro <viro@ftp.linux.org.uk>
+Cc: Linus Torvalds <torvalds@osdl.org>, linux-scsi@vger.kernel.org
 
-Could people please run make C=2 at some point?
+Al Viro wrote:
+> Could people please run make C=2 at some point?
 
-Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+Is "sparse" packaged somewhere?
 
----
-
- drivers/scsi/53c700.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-c14b0d0f9f7df1aeb96e1651927ea902368e3175
-diff --git a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
-index 3c683dc..bff0479 100644
---- a/drivers/scsi/53c700.c
-+++ b/drivers/scsi/53c700.c
-@@ -2044,7 +2044,7 @@ NCR_700_slave_configure(struct scsi_devi
- 	struct NCR_700_Host_Parameters *hostdata = 
- 		(struct NCR_700_Host_Parameters *)SDp->host->hostdata[0];
- 
--	SDp->hostdata = kmalloc(GFP_KERNEL, sizeof(struct NCR_700_sense));
-+	SDp->hostdata = kmalloc(sizeof(struct NCR_700_sense), GFP_KERNEL);
- 
- 	if (!SDp->hostdata)
- 		return -ENOMEM;
--- 
-1.3.GIT
-
+Doug Gilbert
