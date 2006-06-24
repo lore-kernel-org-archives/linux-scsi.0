@@ -1,30 +1,41 @@
-From: "Seth Oakley" <FIKWKKINAHMKTA@yes.optus.com.au>
-Subject: Hosting plans information
-Date: Sat, 24 Jun 2006 02:53:38 -0200
-Message-ID: <65431002160787.GI32714__35923.2780560434$1151121795$gmane$org@tasteful.tech.sitadelle.com>
-References: <FIKWKKINAHMKTA@yes.optus.com.au> <E1A4npj-0002ZF-00FIKWKKINAHMKTA@yes.optus.com.au>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [RFC] [PATCH 1/2] introduce crashboot kernel command line
+ parameter
+Date: Fri, 23 Jun 2006 23:55:14 -0700
+Message-ID: <20060623235514.48ea9578.akpm@osdl.org>
+References: <20060623210121.GA18384@in.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [61.178.162.84] ([61.178.162.84]:24581 "HELO 209.132.176.167")
-	by vger.kernel.org with SMTP id S932177AbWFXEC4 (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:62436 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1750879AbWFXGzV (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 24 Jun 2006 00:02:56 -0400
-In-Reply-To: <E1A4npj-0002ZF-00FIKWKKINAHMKTA@yes.optus.com.au>
+	Sat, 24 Jun 2006 02:55:21 -0400
+In-Reply-To: <20060623210121.GA18384@in.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
+To: vgoyal@in.ibm.com
+Cc: linux-kernel@vger.kernel.org, fastboot@lists.osdl.org, linux-scsi@vger.kernel.org, ebiederm@xmission.com, mike.miller@hp.com
 
-Sensationall revoolution in medicine!
+On Fri, 23 Jun 2006 17:01:21 -0400
+Vivek Goyal <vgoyal@in.ibm.com> wrote:
 
-E''nlarge your p''enis up to 10 cm or up to 4 inches!
+> o Add kernel command line option "crashboot"
+> 
+> o This option is an indication to the kernel that kernel is booting in an
+>   unreliable environment where possibly BIOS execution has been skipped
+>   and devices are left operational or in unknown state.
+> 
+> o Kernel, especially device drivers can use this option to take special
+>   actions like soft-resetting the device, relaxing some of the rules
+>   to make sure kernel can boot/device driver can initiliaze in this
+>   environment.
+> 
+> o As of today this option is useful to Kdump. Kdump will pass this option
+>   to second kernel to improve the reliability of successful kenrel boot/
+>   device driver initializatoin. 
 
-Its h'erbal solution what hasnt side effect, but has 100% guaranted results!
+It worries me that this will be used to work around driver problems rather
+than fixing them properly.
 
-Dont lose your chance and but know wihtout doubts, you will be impressed with results!
-
-Clisk here: http://xhdc.net
-
-
-
-
-camelopard allure pattern figurine eveready backstitch nervous syllabi
-bonaparte clam bleeker hampton sprig duffel cornerstone decouple
