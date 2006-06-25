@@ -1,12 +1,12 @@
 From: akpm@osdl.org
-Subject: [patch 12/26] drivers/scsi/aic7xxx/: possible cleanups
-Date: Sun, 25 Jun 2006 01:58:51 -0700
-Message-ID: <200606250858.k5P8wpb7021211@shell0.pdx.osdl.net>
+Subject: [patch 26/26] drivers/scsi/advansys.c: cleanups
+Date: Sun, 25 Jun 2006 01:59:13 -0700
+Message-ID: <200606250859.k5P8xDFt021300@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:10646 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932138AbWFYJCS (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:19094 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932132AbWFYJC3 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 25 Jun 2006 05:02:18 -0400
+	Sun, 25 Jun 2006 05:02:29 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
@@ -15,420 +15,244 @@ Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, bunk@stusta.de
 
 From: Adrian Bunk <bunk@stusta.de>
 
+- remove the unneeded advansys.h
+- remove the unused advansys_setup()
 - make needlessly global functions static
-
-- #if 0 the following unused global functions:
-  - aic7xxx_core.c: ahc_inq()
-  - aic7xxx_core.c: ahc_outq()
 
 Signed-off-by: Adrian Bunk <bunk@stusta.de>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/aic7xxx/aic79xx.h        |    6 ----
- drivers/scsi/aic7xxx/aic79xx_core.c   |   32 +++++++++++++++---------
- drivers/scsi/aic7xxx/aic79xx_inline.h |    5 ---
- drivers/scsi/aic7xxx/aic79xx_osm.c    |    6 +++-
- drivers/scsi/aic7xxx/aic79xx_osm.h    |    6 ----
- drivers/scsi/aic7xxx/aic7xxx.h        |    6 ----
- drivers/scsi/aic7xxx/aic7xxx_core.c   |   26 ++++++++++++++-----
- drivers/scsi/aic7xxx/aic7xxx_inline.h |    2 -
- drivers/scsi/aic7xxx/aic7xxx_osm.h    |    4 ---
- 9 files changed, 43 insertions(+), 50 deletions(-)
+ drivers/scsi/advansys.c |  101 +++-----------------------------------
+ drivers/scsi/advansys.h |   36 -------------
+ 2 files changed, 8 insertions(+), 129 deletions(-)
 
-diff -puN drivers/scsi/aic7xxx/aic79xx_core.c~drivers-scsi-aic7xxx-possible-cleanups-2 drivers/scsi/aic7xxx/aic79xx_core.c
---- a/drivers/scsi/aic7xxx/aic79xx_core.c~drivers-scsi-aic7xxx-possible-cleanups-2
-+++ a/drivers/scsi/aic7xxx/aic79xx_core.c
-@@ -50,6 +50,12 @@
- #include <dev/aic7xxx/aicasm/aicasm_insformat.h>
- #endif
+diff -puN drivers/scsi/advansys.c~drivers-scsi-advansysc-cleanups drivers/scsi/advansys.c
+--- a/drivers/scsi/advansys.c~drivers-scsi-advansysc-cleanups
++++ a/drivers/scsi/advansys.c
+@@ -799,7 +799,6 @@
+ #include <scsi/scsi_tcq.h>
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_host.h>
+-#include "advansys.h"
+ #ifdef CONFIG_PCI
+ #include <linux/pci.h>
+ #endif /* CONFIG_PCI */
+@@ -2013,7 +2012,7 @@ STATIC int       AscSgListToQueue(int);
+ STATIC void      AscEnableIsaDma(uchar);
+ #endif /* CONFIG_ISA */
+ STATIC ASC_DCNT  AscGetMaxDmaCount(ushort);
+-
++static const char *advansys_info(struct Scsi_Host *shp);
  
-+static void ahd_handle_hwerrint(struct ahd_softc *ahd);
-+static void ahd_handle_scsiint(struct ahd_softc *ahd, u_int intstat);
-+static void ahd_handle_seqint(struct ahd_softc *ahd, u_int intstat);
-+static void ahd_reset_cmds_pending(struct ahd_softc *ahd);
-+static void ahd_run_qoutfifo(struct ahd_softc *ahd);
-+
- /***************************** Timer Facilities *******************************/
- #define ahd_timer_init init_timer
- #define ahd_timer_stop del_timer_sync
-@@ -118,7 +124,7 @@ ahd_outw_atomic(struct ahd_softc * ahd, 
- 	mb();
- }
- 
--void
-+static void
- ahd_outsb(struct ahd_softc * ahd, long port, uint8_t *array, int count)
- {
- 	int i;
-@@ -132,7 +138,8 @@ ahd_outsb(struct ahd_softc * ahd, long p
- 		ahd_outb(ahd, port, *array++);
- }
- 
--void
-+#ifdef AHD_DUMP_SEQ
-+static void
- ahd_insb(struct ahd_softc * ahd, long port, uint8_t *array, int count)
- {
- 	int i;
-@@ -145,6 +152,7 @@ ahd_insb(struct ahd_softc * ahd, long po
- 	for (i = 0; i < count; i++)
- 		*array++ = ahd_inb(ahd, port);
- }
-+#endif  /*  AHD_DUMP_SEQ  */
- 
- /************************ Sequencer Execution Control *************************/
- void
-@@ -165,7 +173,7 @@ ahd_set_modes(struct ahd_softc *ahd, ahd
- 	ahd->dst_mode = dst;
- }
- 
--void
-+static void
- ahd_update_modes(struct ahd_softc *ahd)
- {
- 	ahd_mode_state mode_ptr;
-@@ -355,7 +363,7 @@ ahd_outl(struct ahd_softc *ahd, u_int po
- 	ahd_outb(ahd, port+3, ((value) >> 24) & 0xFF);
- }
- 
--uint64_t
-+static uint64_t
- ahd_inq(struct ahd_softc *ahd, u_int port)
- {
- 	return ((ahd_inb(ahd, port))
-@@ -368,7 +376,7 @@ ahd_inq(struct ahd_softc *ahd, u_int por
- 	      | (((uint64_t)ahd_inb(ahd, port+7)) << 56));
- }
- 
--void
-+static void
- ahd_outq(struct ahd_softc *ahd, u_int port, uint64_t value)
- {
- 	ahd_outb(ahd, port, value & 0xFF);
-@@ -413,14 +421,14 @@ ahd_inw_scbram(struct ahd_softc *ahd, u_
- 	      | (ahd_inb_scbram(ahd, offset+1) << 8));
- }
- 
--uint32_t
-+static uint32_t
- ahd_inl_scbram(struct ahd_softc *ahd, u_int offset)
- {
- 	return (ahd_inw_scbram(ahd, offset)
- 	      | (ahd_inw_scbram(ahd, offset+2) << 16));
- }
- 
--uint64_t
-+static uint64_t
- ahd_inq_scbram(struct ahd_softc *ahd, u_int offset)
- {
- 	return (ahd_inl_scbram(ahd, offset)
-@@ -1491,7 +1499,7 @@ clrchn:
-  * a copy of the first byte (little endian) of the sgptr
-  * hscb field.
-  */
--void
-+static void
- ahd_run_qoutfifo(struct ahd_softc *ahd)
- {
- 	struct ahd_completion *completion;
-@@ -1530,7 +1538,7 @@ ahd_run_qoutfifo(struct ahd_softc *ahd)
- }
- 
- /************************* Interrupt Handling *********************************/
--void
-+static void
- ahd_handle_hwerrint(struct ahd_softc *ahd)
- {
- 	/*
-@@ -1604,7 +1612,7 @@ ahd_dump_sglist(struct scb *scb)
- }
- #endif  /*  AHD_DEBUG  */
- 
--void
-+static void
- ahd_handle_seqint(struct ahd_softc *ahd, u_int intstat)
- {
- 	u_int seqintcode;
-@@ -2193,7 +2201,7 @@ ahd_handle_seqint(struct ahd_softc *ahd,
- 	ahd_unpause(ahd);
- }
- 
--void
-+static void
- ahd_handle_scsiint(struct ahd_softc *ahd, u_int intstat)
- {
- 	struct scb	*scb;
-@@ -7925,7 +7933,7 @@ ahd_qinfifo_count(struct ahd_softc *ahd)
- 		      + ARRAY_SIZE(ahd->qinfifo) - wrap_qinpos);
- }
- 
--void
-+static void
- ahd_reset_cmds_pending(struct ahd_softc *ahd)
- {
- 	struct		scb *scb;
-diff -puN drivers/scsi/aic7xxx/aic79xx.h~drivers-scsi-aic7xxx-possible-cleanups-2 drivers/scsi/aic7xxx/aic79xx.h
---- a/drivers/scsi/aic7xxx/aic79xx.h~drivers-scsi-aic7xxx-possible-cleanups-2
-+++ a/drivers/scsi/aic7xxx/aic79xx.h
-@@ -1334,7 +1334,6 @@ extern const int ahd_num_aic7770_devs;
- 
- /*************************** Function Declarations ****************************/
- /******************************************************************************/
--void			ahd_reset_cmds_pending(struct ahd_softc *ahd);
- 
- /***************************** PCI Front End *********************************/
- struct	ahd_pci_identity *ahd_find_pci_device(ahd_dev_softc_t);
-@@ -1371,14 +1370,9 @@ int			 ahd_read_flexport(struct ahd_soft
- 					   uint8_t *value);
- 
- /*************************** Interrupt Services *******************************/
--void			ahd_run_qoutfifo(struct ahd_softc *ahd);
- #ifdef AHD_TARGET_MODE
- void			ahd_run_tqinfifo(struct ahd_softc *ahd, int paused);
- #endif
--void			ahd_handle_hwerrint(struct ahd_softc *ahd);
--void			ahd_handle_seqint(struct ahd_softc *ahd, u_int intstat);
--void			ahd_handle_scsiint(struct ahd_softc *ahd,
--					   u_int intstat);
- 
- /***************************** Error Recovery *********************************/
- typedef enum {
-diff -puN drivers/scsi/aic7xxx/aic79xx_inline.h~drivers-scsi-aic7xxx-possible-cleanups-2 drivers/scsi/aic7xxx/aic79xx_inline.h
---- a/drivers/scsi/aic7xxx/aic79xx_inline.h~drivers-scsi-aic7xxx-possible-cleanups-2
-+++ a/drivers/scsi/aic7xxx/aic79xx_inline.h
-@@ -65,7 +65,6 @@ static inline void ahd_extract_mode_stat
- 					    ahd_mode *src, ahd_mode *dst);
- void ahd_set_modes(struct ahd_softc *ahd, ahd_mode src,
- 				   ahd_mode dst);
--void ahd_update_modes(struct ahd_softc *ahd);
- static inline void ahd_assert_modes(struct ahd_softc *ahd, ahd_mode srcmode,
- 				      ahd_mode dstmode, const char *file,
- 				      int line);
-@@ -257,8 +256,6 @@ uint16_t ahd_inw(struct ahd_softc *ahd, 
- void	ahd_outw(struct ahd_softc *ahd, u_int port, u_int value);
- uint32_t ahd_inl(struct ahd_softc *ahd, u_int port);
- void	ahd_outl(struct ahd_softc *ahd, u_int port, uint32_t value);
--uint64_t ahd_inq(struct ahd_softc *ahd, u_int port);
--void	ahd_outq(struct ahd_softc *ahd, u_int port, uint64_t value);
- static inline u_int	ahd_get_scbptr(struct ahd_softc *ahd);
- static inline void	ahd_set_scbptr(struct ahd_softc *ahd, u_int scbptr);
- static inline u_int	ahd_get_hnscb_qoff(struct ahd_softc *ahd);
-@@ -273,8 +270,6 @@ static inline u_int	ahd_get_sdscb_qoff(s
- static inline void	ahd_set_sdscb_qoff(struct ahd_softc *ahd, u_int value);
- u_int	ahd_inb_scbram(struct ahd_softc *ahd, u_int offset);
- u_int	ahd_inw_scbram(struct ahd_softc *ahd, u_int offset);
--uint32_t ahd_inl_scbram(struct ahd_softc *ahd, u_int offset);
--uint64_t ahd_inq_scbram(struct ahd_softc *ahd, u_int offset);
- struct scb *ahd_lookup_scb(struct ahd_softc *ahd, u_int tag);
- void	ahd_queue_scb(struct ahd_softc *ahd, struct scb *scb);
- static inline uint8_t *
-diff -puN drivers/scsi/aic7xxx/aic79xx_osm.c~drivers-scsi-aic7xxx-possible-cleanups-2 drivers/scsi/aic7xxx/aic79xx_osm.c
---- a/drivers/scsi/aic7xxx/aic79xx_osm.c~drivers-scsi-aic7xxx-possible-cleanups-2
-+++ a/drivers/scsi/aic7xxx/aic79xx_osm.c
-@@ -383,6 +383,8 @@ static int ahd_linux_run_command(struct 
- 				 struct scsi_cmnd *);
- static void ahd_linux_setup_tag_info_global(char *p);
- static int  aic79xx_setup(char *c);
-+static void ahd_freeze_simq(struct ahd_softc *ahd);
-+static void ahd_release_simq(struct ahd_softc *ahd);
- 
- static int ahd_linux_unit;
- 
-@@ -2081,13 +2083,13 @@ ahd_linux_queue_cmd_complete(struct ahd_
- 	cmd->scsi_done(cmd);
- }
- 
--void
-+static void
- ahd_freeze_simq(struct ahd_softc *ahd)
- {
- 	scsi_block_requests(ahd->platform_data->host);
- }
- 
--void
-+static void
- ahd_release_simq(struct ahd_softc *ahd)
- {
- 	scsi_unblock_requests(ahd->platform_data->host);
-diff -puN drivers/scsi/aic7xxx/aic79xx_osm.h~drivers-scsi-aic7xxx-possible-cleanups-2 drivers/scsi/aic7xxx/aic79xx_osm.h
---- a/drivers/scsi/aic7xxx/aic79xx_osm.h~drivers-scsi-aic7xxx-possible-cleanups-2
-+++ a/drivers/scsi/aic7xxx/aic79xx_osm.h
-@@ -387,10 +387,6 @@ uint16_t ahd_inw_atomic(struct ahd_softc
- void ahd_outb(struct ahd_softc * ahd, long port, uint8_t val);
- void ahd_outw_atomic(struct ahd_softc * ahd,
- 				     long port, uint16_t val);
--void ahd_outsb(struct ahd_softc * ahd, long port,
--			       uint8_t *, int count);
--void ahd_insb(struct ahd_softc * ahd, long port,
--			       uint8_t *, int count);
- 
- /**************************** Initialization **********************************/
- int		ahd_linux_register_host(struct ahd_softc *,
-@@ -740,8 +736,6 @@ int	ahd_platform_alloc(struct ahd_softc 
- void	ahd_platform_free(struct ahd_softc *ahd);
- void	ahd_platform_init(struct ahd_softc *ahd);
- void	ahd_platform_freeze_devq(struct ahd_softc *ahd, struct scb *scb);
--void	ahd_freeze_simq(struct ahd_softc *ahd);
--void	ahd_release_simq(struct ahd_softc *ahd);
- 
- static inline void
- ahd_freeze_scb(struct scb *scb)
-diff -puN drivers/scsi/aic7xxx/aic7xxx_core.c~drivers-scsi-aic7xxx-possible-cleanups-2 drivers/scsi/aic7xxx/aic7xxx_core.c
---- a/drivers/scsi/aic7xxx/aic7xxx_core.c~drivers-scsi-aic7xxx-possible-cleanups-2
-+++ a/drivers/scsi/aic7xxx/aic7xxx_core.c
-@@ -50,6 +50,12 @@
- #include <dev/aic7xxx/aicasm/aicasm_insformat.h>
- #endif
- 
-+static void ahc_alloc_scbs(struct ahc_softc *ahc);
-+static void ahc_handle_brkadrint(struct ahc_softc *ahc);
-+static void ahc_handle_scsiint(struct ahc_softc *ahc, u_int intstat);
-+static void ahc_handle_seqint(struct ahc_softc *ahc, u_int intstat);
-+static void ahc_run_qoutfifo(struct ahc_softc *ahc);
-+
- /***************************** Low Level I/O **********************************/
- uint8_t
- ahc_inb(struct ahc_softc * ahc, long port)
-@@ -76,7 +82,7 @@ ahc_outb(struct ahc_softc * ahc, long po
- 	mb();
- }
- 
--void
-+static void
- ahc_outsb(struct ahc_softc * ahc, long port, uint8_t *array, int count)
- {
- 	int i;
-@@ -90,7 +96,8 @@ ahc_outsb(struct ahc_softc * ahc, long p
- 		ahc_outb(ahc, port, *array++);
- }
- 
--void
-+#ifdef AHC_DUMP_SEQ
-+static void
- ahc_insb(struct ahc_softc * ahc, long port, uint8_t *array, int count)
- {
- 	int i;
-@@ -103,6 +110,7 @@ ahc_insb(struct ahc_softc * ahc, long po
- 	for (i = 0; i < count; i++)
- 		*array++ = ahc_inb(ahc, port);
- }
-+#endif  /*  AHC_DUMP_SEQ  */
- 
- /*********************** Miscelaneous Support Functions ***********************/
- uint16_t
-@@ -136,6 +144,8 @@ ahc_outl(struct ahc_softc *ahc, u_int po
- 	ahc_outb(ahc, port+3, ((value) >> 24) & 0xFF);
- }
- 
-+#if 0
-+
- uint64_t
- ahc_inq(struct ahc_softc *ahc, u_int port)
- {
-@@ -162,6 +172,8 @@ ahc_outq(struct ahc_softc *ahc, u_int po
- 	ahc_outb(ahc, port+7, (value >> 56) & 0xFF);
- }
- 
-+#endif  /*  0  */
-+
  /*
-  * Get a free scb. If there are none, see if we can allocate a new SCB.
+  * --- Adv Library Constants and Macros
+@@ -3982,10 +3981,6 @@ STATIC ushort asc_bus[ASC_NUM_BUS] __ini
+     ASC_IS_PCI,
+ };
+ 
+-/*
+- * Used with the LILO 'advansys' option to eliminate or
+- * limit I/O port probing at boot time, cf. advansys_setup().
+- */
+ STATIC int asc_iopflag = ASC_FALSE;
+ STATIC int asc_ioport[ASC_NUM_IOPORT_PROBE] = { 0, 0, 0, 0 };
+ 
+@@ -4067,10 +4062,6 @@ STATIC void         asc_prt_hex(char *f,
+ #endif /* ADVANSYS_DEBUG */
+ 
+ 
+-/*
+- * --- Linux 'struct scsi_host_template' and advansys_setup() Functions
+- */
+-
+ #ifdef CONFIG_PROC_FS
+ /*
+  * advansys_proc_info() - /proc/scsi/advansys/[0-(ASC_NUM_BOARD_SUPPORTED-1)]
+@@ -4092,7 +4083,7 @@ STATIC void         asc_prt_hex(char *f,
+  * if 'prtbuf' is too small it will not be overwritten. Instead the
+  * user just won't get all the available statistics.
   */
-@@ -661,7 +673,7 @@ ahc_restart(struct ahc_softc *ahc)
+-int
++static int
+ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
+ 		off_t offset, int length, int inout)
+ {
+@@ -4308,7 +4299,7 @@ advansys_proc_info(struct Scsi_Host *sho
+  * it must not call SCSI mid-level functions including scsi_malloc()
+  * and scsi_free().
+  */
+-int __init
++static int __init
+ advansys_detect(struct scsi_host_template *tpnt)
+ {
+     static int          detect_called = ASC_FALSE;
+@@ -5440,7 +5431,7 @@ advansys_detect(struct scsi_host_templat
+  *
+  * Release resources allocated for a single AdvanSys adapter.
+  */
+-int
++static int
+ advansys_release(struct Scsi_Host *shp)
+ {
+     asc_board_t    *boardp;
+@@ -5487,7 +5478,7 @@ advansys_release(struct Scsi_Host *shp)
+  * Note: The information line should not exceed ASC_INFO_SIZE bytes,
+  * otherwise the static 'info' array will be overrun.
+  */
+-const char *
++static const char *
+ advansys_info(struct Scsi_Host *shp)
+ {
+     static char     info[ASC_INFO_SIZE];
+@@ -5580,7 +5571,7 @@ advansys_info(struct Scsi_Host *shp)
+  * This function always returns 0. Command return status is saved
+  * in the 'scp' result field.
+  */
+-int
++static int
+ advansys_queuecommand(struct scsi_cmnd *scp, void (*done)(struct scsi_cmnd *))
+ {
+     struct Scsi_Host    *shp;
+@@ -5668,7 +5659,7 @@ advansys_queuecommand(struct scsi_cmnd *
+  * sleeping is allowed and no locking other than for host structures is
+  * required. Returns SUCCESS or FAILED.
+  */
+-int
++static int
+ advansys_reset(struct scsi_cmnd *scp)
+ {
+     struct Scsi_Host     *shp;
+@@ -5853,7 +5844,7 @@ advansys_reset(struct scsi_cmnd *scp)
+  * ip[1]: sectors
+  * ip[2]: cylinders
+  */
+-int
++static int
+ advansys_biosparam(struct scsi_device *sdev, struct block_device *bdev,
+ 		sector_t capacity, int ip[])
+ {
+@@ -5887,82 +5878,6 @@ advansys_biosparam(struct scsi_device *s
  }
  
- /************************* Input/Output Queues ********************************/
--void
-+static void
- ahc_run_qoutfifo(struct ahc_softc *ahc)
- {
- 	struct scb *scb;
-@@ -733,7 +745,7 @@ ahc_run_untagged_queue(struct ahc_softc 
- }
+ /*
+- * advansys_setup()
+- *
+- * This function is called from init/main.c at boot time.
+- * It it passed LILO parameters that can be set from the
+- * LILO command line or in /etc/lilo.conf.
+- *
+- * It is used by the AdvanSys driver to either disable I/O
+- * port scanning or to limit scanning to 1 - 4 I/O ports.
+- * Regardless of the option setting EISA and PCI boards
+- * will still be searched for and detected. This option
+- * only affects searching for ISA and VL boards.
+- *
+- * If ADVANSYS_DEBUG is defined the driver debug level may
+- * be set using the 5th (ASC_NUM_IOPORT_PROBE + 1) I/O Port.
+- *
+- * Examples:
+- * 1. Eliminate I/O port scanning:
+- *         boot: linux advansys=
+- *       or
+- *         boot: linux advansys=0x0
+- * 2. Limit I/O port scanning to one I/O port:
+- *        boot: linux advansys=0x110
+- * 3. Limit I/O port scanning to four I/O ports:
+- *        boot: linux advansys=0x110,0x210,0x230,0x330
+- * 4. If ADVANSYS_DEBUG, limit I/O port scanning to four I/O ports and
+- *    set the driver debug level to 2.
+- *        boot: linux advansys=0x110,0x210,0x230,0x330,0xdeb2
+- *
+- * ints[0] - number of arguments
+- * ints[1] - first argument
+- * ints[2] - second argument
+- * ...
+- */
+-void __init
+-advansys_setup(char *str, int *ints)
+-{
+-    int    i;
+-
+-    if (asc_iopflag == ASC_TRUE) {
+-        printk("AdvanSys SCSI: 'advansys' LILO option may appear only once\n");
+-        return;
+-    }
+-
+-    asc_iopflag = ASC_TRUE;
+-
+-    if (ints[0] > ASC_NUM_IOPORT_PROBE) {
+-#ifdef ADVANSYS_DEBUG
+-        if ((ints[0] == ASC_NUM_IOPORT_PROBE + 1) &&
+-            (ints[ASC_NUM_IOPORT_PROBE + 1] >> 4 == 0xdeb)) {
+-            asc_dbglvl = ints[ASC_NUM_IOPORT_PROBE + 1] & 0xf;
+-        } else {
+-#endif /* ADVANSYS_DEBUG */
+-            printk("AdvanSys SCSI: only %d I/O ports accepted\n",
+-                ASC_NUM_IOPORT_PROBE);
+-#ifdef ADVANSYS_DEBUG
+-        }
+-#endif /* ADVANSYS_DEBUG */
+-    }
+-
+-#ifdef ADVANSYS_DEBUG
+-    ASC_DBG1(1, "advansys_setup: ints[0] %d\n", ints[0]);
+-    for (i = 1; i < ints[0]; i++) {
+-        ASC_DBG2(1, " ints[%d] 0x%x", i, ints[i]);
+-    }
+-    ASC_DBG(1, "\n");
+-#endif /* ADVANSYS_DEBUG */
+-
+-    for (i = 1; i <= ints[0] && i <= ASC_NUM_IOPORT_PROBE; i++) {
+-        asc_ioport[i-1] = ints[i];
+-        ASC_DBG2(1, "advansys_setup: asc_ioport[%d] 0x%x\n",
+-            i - 1, asc_ioport[i-1]);
+-    }
+-}
+-
+-
+-/*
+  * --- Loadable Driver Support
+  */
  
- /************************* Interrupt Handling *********************************/
--void
-+static void
- ahc_handle_brkadrint(struct ahc_softc *ahc)
- {
- 	/*
-@@ -762,7 +774,7 @@ ahc_handle_brkadrint(struct ahc_softc *a
- 	ahc_shutdown(ahc);
- }
- 
--void
-+static void
- ahc_handle_seqint(struct ahc_softc *ahc, u_int intstat)
- {
- 	struct scb *scb;
-@@ -1312,7 +1324,7 @@ unpause:
- 	ahc_unpause(ahc);
- }
- 
--void
-+static void
- ahc_handle_scsiint(struct ahc_softc *ahc, u_int intstat)
- {
- 	u_int	scb_index;
-@@ -4724,7 +4736,7 @@ ahc_fini_scbdata(struct ahc_softc *ahc)
- 		free(scb_data->scbarray, M_DEVBUF);
- }
- 
--void
-+static void
- ahc_alloc_scbs(struct ahc_softc *ahc)
- {
- 	struct scb_data *scb_data;
-diff -puN drivers/scsi/aic7xxx/aic7xxx.h~drivers-scsi-aic7xxx-possible-cleanups-2 drivers/scsi/aic7xxx/aic7xxx.h
---- a/drivers/scsi/aic7xxx/aic7xxx.h~drivers-scsi-aic7xxx-possible-cleanups-2
-+++ a/drivers/scsi/aic7xxx/aic7xxx.h
-@@ -1191,21 +1191,15 @@ int			 ahc_suspend(struct ahc_softc *ahc
- int			 ahc_resume(struct ahc_softc *ahc);
- void			 ahc_set_unit(struct ahc_softc *, int);
- void			 ahc_set_name(struct ahc_softc *, char *);
--void			 ahc_alloc_scbs(struct ahc_softc *ahc);
- void			 ahc_free(struct ahc_softc *ahc);
- int			 ahc_reset(struct ahc_softc *ahc, int reinit);
- void			 ahc_shutdown(void *arg);
- 
- /*************************** Interrupt Services *******************************/
- void			ahc_clear_intstat(struct ahc_softc *ahc);
--void			ahc_run_qoutfifo(struct ahc_softc *ahc);
- #ifdef AHC_TARGET_MODE
- void			ahc_run_tqinfifo(struct ahc_softc *ahc, int paused);
- #endif
--void			ahc_handle_brkadrint(struct ahc_softc *ahc);
--void			ahc_handle_seqint(struct ahc_softc *ahc, u_int intstat);
--void			ahc_handle_scsiint(struct ahc_softc *ahc,
--					   u_int intstat);
- void			ahc_clear_critical_section(struct ahc_softc *ahc);
- 
- /***************************** Error Recovery *********************************/
-diff -puN drivers/scsi/aic7xxx/aic7xxx_inline.h~drivers-scsi-aic7xxx-possible-cleanups-2 drivers/scsi/aic7xxx/aic7xxx_inline.h
---- a/drivers/scsi/aic7xxx/aic7xxx_inline.h~drivers-scsi-aic7xxx-possible-cleanups-2
-+++ a/drivers/scsi/aic7xxx/aic7xxx_inline.h
-@@ -242,8 +242,6 @@ uint16_t ahc_inw(struct ahc_softc *ahc, 
- void	ahc_outw(struct ahc_softc *ahc, u_int port, u_int value);
- uint32_t ahc_inl(struct ahc_softc *ahc, u_int port);
- void	ahc_outl(struct ahc_softc *ahc, u_int port, uint32_t value);
--uint64_t ahc_inq(struct ahc_softc *ahc, u_int port);
--void	ahc_outq(struct ahc_softc *ahc, u_int port, uint64_t value);
- struct scb*
- 	ahc_get_scb(struct ahc_softc *ahc);
- void	ahc_free_scb(struct ahc_softc *ahc, struct scb *scb);
-diff -puN drivers/scsi/aic7xxx/aic7xxx_osm.h~drivers-scsi-aic7xxx-possible-cleanups-2 drivers/scsi/aic7xxx/aic7xxx_osm.h
---- a/drivers/scsi/aic7xxx/aic7xxx_osm.h~drivers-scsi-aic7xxx-possible-cleanups-2
-+++ a/drivers/scsi/aic7xxx/aic7xxx_osm.h
-@@ -392,10 +392,6 @@ static inline void ahc_delay(int usec)
- /***************************** Low Level I/O **********************************/
- uint8_t ahc_inb(struct ahc_softc * ahc, long port);
- void ahc_outb(struct ahc_softc * ahc, long port, uint8_t val);
--void ahc_outsb(struct ahc_softc * ahc, long port,
--	       uint8_t *, int count);
--void ahc_insb(struct ahc_softc * ahc, long port,
--	       uint8_t *, int count);
- 
- /**************************** Initialization **********************************/
- int		ahc_linux_register_host(struct ahc_softc *,
+diff -puN drivers/scsi/advansys.h~drivers-scsi-advansysc-cleanups /dev/null
+--- a/drivers/scsi/advansys.h
++++ /dev/null
+@@ -1,36 +0,0 @@
+-/*
+- * advansys.h - Linux Host Driver for AdvanSys SCSI Adapters
+- * 
+- * Copyright (c) 1995-2000 Advanced System Products, Inc.
+- * Copyright (c) 2000-2001 ConnectCom Solutions, Inc.
+- * All Rights Reserved.
+- *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that redistributions of source
+- * code retain the above copyright notice and this comment without
+- * modification.
+- *
+- * As of March 8, 2000 Advanced System Products, Inc. (AdvanSys)
+- * changed its name to ConnectCom Solutions, Inc.
+- *
+- */
+-
+-#ifndef _ADVANSYS_H
+-#define _ADVANSYS_H
+-
+-/*
+- * struct scsi_host_template function prototypes.
+- */
+-int advansys_detect(struct scsi_host_template *);
+-int advansys_release(struct Scsi_Host *);
+-const char *advansys_info(struct Scsi_Host *);
+-int advansys_queuecommand(struct scsi_cmnd *, void (* done)(struct scsi_cmnd *));
+-int advansys_reset(struct scsi_cmnd *);
+-int advansys_biosparam(struct scsi_device *, struct block_device *,
+-		sector_t, int[]);
+-static int advansys_slave_configure(struct scsi_device *);
+-
+-/* init/main.c setup function */
+-void advansys_setup(char *, int *);
+-
+-#endif /* _ADVANSYS_H */
 _
