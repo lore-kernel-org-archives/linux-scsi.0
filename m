@@ -1,42 +1,35 @@
-From: Andi Kleen <ak@suse.de>
+From: Alan Cox <alan@redhat.com>
 Subject: Re: [PATCH] [29/82] x86_64: Rename IOMMU option, fix help and mark option embedded.
-Date: Sun, 25 Jun 2006 17:22:23 +0200
-Message-ID: <200606251722.23294.ak@suse.de>
-References: <449C852C.mailCZT11F9YB@suse.de> <20060624231433.GA24862@devserv.devel.redhat.com>
+Date: Sun, 25 Jun 2006 15:00:54 -0400
+Message-ID: <20060625190054.GA6570@devserv.devel.redhat.com>
+References: <449C852C.mailCZT11F9YB@suse.de> <20060624231433.GA24862@devserv.devel.redhat.com> <200606251722.23294.ak@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns2.suse.de ([195.135.220.15]:51344 "EHLO mx2.suse.de")
-	by vger.kernel.org with ESMTP id S1751432AbWFYPWf (ORCPT
+Received: from mx1.redhat.com ([66.187.233.31]:44425 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S965319AbWFYTBM (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 25 Jun 2006 11:22:35 -0400
-In-Reply-To: <20060624231433.GA24862@devserv.devel.redhat.com>
+	Sun, 25 Jun 2006 15:01:12 -0400
 Content-Disposition: inline
+In-Reply-To: <200606251722.23294.ak@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@redhat.com>
-Cc: torvalds@osdl.org, discuss@x86-64.org, akpm@osdl.org, markh@osdl.org, linux-scsi@vger.kernel.org, axboe@suse.de
+To: Andi Kleen <ak@suse.de>
+Cc: Alan Cox <alan@redhat.com>, torvalds@osdl.org, discuss@x86-64.org, akpm@osdl.org, markh@osdl.org, linux-scsi@vger.kernel.org, axboe@suse.de
 
-On Sunday 25 June 2006 01:14, Alan Cox wrote:
-> On Sat, Jun 24, 2006 at 02:19:56AM +0200, Andi Kleen wrote:
-> > To my astonishment I discovered the aacraid driver tests this
-> > symbol directly. This looks quite broken to me - it's an internal
-> > implementation detail of the PCI DMA API. Can the maintainer
-> > please clarify what this test was intended to do? 
+On Sun, Jun 25, 2006 at 05:22:23PM +0200, Andi Kleen wrote:
+> > Older aacraid hardware cannot address the 3-4GB range where the iommu
+> > remaps pages. As the PCI DMA implementation for the x86-64 is flawed and
+> > doesn't support any nice way to deal with this via swiotlb instead the
+> > driver handles it internally.
 > 
-> Shouldn't be to your astonishment, you were involved in the process
+> Then you should just force a low bounce pfn < 0xfffffff for the block device - 
+> then the block layer  should use GFP_DMA bouncing.
 
-Can't remember sorry.
+>From a tiny 16MB DMA pool that can't sustain the required load ? Or has that
+bit changed.
 
-> Older aacraid hardware cannot address the 3-4GB range where the iommu
-> remaps pages. As the PCI DMA implementation for the x86-64 is flawed and
-> doesn't support any nice way to deal with this via swiotlb instead the
-> driver handles it internally.
+Alan
 
-Then you should just force a low bounce pfn < 0xfffffff for the block device - 
-then the block layer  should use GFP_DMA bouncing.
 
--Andi
 
