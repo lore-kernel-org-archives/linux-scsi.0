@@ -1,52 +1,62 @@
 From: akpm@osdl.org
-Subject: [patch 21/26] Bogus disk geometry on large disks
-Date: Sun, 25 Jun 2006 01:58:58 -0700
-Message-ID: <200606250858.k5P8wwHw021243@shell0.pdx.osdl.net>
+Subject: [patch 14/26] mpt_interrupt() should return IRQ_NONE when appropriate
+Date: Sun, 25 Jun 2006 01:58:52 -0700
+Message-ID: <200606250858.k5P8wqIA021217@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:42645 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932116AbWFYI71 (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:44437 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932117AbWFYI73 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 25 Jun 2006 04:59:27 -0400
+	Sun, 25 Jun 2006 04:59:29 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, alan@lxorguk.ukuu.org.uk, alan@redhat.com, willy@debian.org
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, jbeulich@novell.com, Eric.Moore@lsil.com
 
 
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: "Jan Beulich" <jbeulich@novell.com>
 
-We currently stuff a truncated size into the geometry logic and return the
-result which can produce bizarre reports for a 4Tb array.  Since that
-mapping logic isn't useful for disks that big don't try and map this way at
-all.
+The way mpt_interrupt() was coded, it was impossible for the unhandled
+interrupt detection logic to ever trigger. All interrupt handlers should
+return IRQ_NONE when they have nothing to do.
 
-Signed-off-by: Alan Cox <alan@redhat.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Matthew Wilcox <willy@debian.org>
+Signed-off-by: Jan Beulich <jbeulich@novell.com>
+Cc: "Moore, Eric Dean" <Eric.Moore@lsil.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/scsicam.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/message/fusion/mptbase.c |   15 ++++++++-------
+ 1 file changed, 8 insertions(+), 7 deletions(-)
 
-diff -puN drivers/scsi/scsicam.c~bogus-disk-geometry-on-large-disks drivers/scsi/scsicam.c
---- a/drivers/scsi/scsicam.c~bogus-disk-geometry-on-large-disks
-+++ a/drivers/scsi/scsicam.c
-@@ -57,6 +57,7 @@ EXPORT_SYMBOL(scsi_bios_ptable);
- int scsicam_bios_param(struct block_device *bdev, sector_t capacity, int *ip)
+diff -puN drivers/message/fusion/mptbase.c~mpt_interrupt-should-return-irq_none-when drivers/message/fusion/mptbase.c
+--- a/drivers/message/fusion/mptbase.c~mpt_interrupt-should-return-irq_none-when
++++ a/drivers/message/fusion/mptbase.c
+@@ -369,20 +369,21 @@ static irqreturn_t
+ mpt_interrupt(int irq, void *bus_id, struct pt_regs *r)
  {
- 	unsigned char *p;
-+	u64 capacity64 = capacity;	/* Suppress gcc warning */
- 	int ret;
+ 	MPT_ADAPTER *ioc = bus_id;
+-	u32 pa;
++	u32 pa = CHIPREG_READ32_dmasync(&ioc->chip->ReplyFifo);
++
++	if (pa == 0xFFFFFFFF)
++		return IRQ_NONE;
  
- 	p = scsi_bios_ptable(bdev);
-@@ -68,7 +69,7 @@ int scsicam_bios_param(struct block_devi
- 			       (unsigned int *)ip + 0, (unsigned int *)ip + 1);
- 	kfree(p);
+ 	/*
+ 	 *  Drain the reply FIFO!
+ 	 */
+-	while (1) {
+-		pa = CHIPREG_READ32_dmasync(&ioc->chip->ReplyFifo);
+-		if (pa == 0xFFFFFFFF)
+-			return IRQ_HANDLED;
+-		else if (pa & MPI_ADDRESS_REPLY_A_BIT)
++	do {
++		if (pa & MPI_ADDRESS_REPLY_A_BIT)
+ 			mpt_reply(ioc, pa);
+ 		else
+ 			mpt_turbo_reply(ioc, pa);
+-	}
++		pa = CHIPREG_READ32_dmasync(&ioc->chip->ReplyFifo);
++	} while (pa != 0xFFFFFFFF);
  
--	if (ret == -1) {
-+	if (ret == -1 && capacity64 < (1ULL << 32)) {
- 		/* pick some standard mapping with at most 1024 cylinders,
- 		   and at most 62 sectors per track - this works up to
- 		   7905 MB */
+ 	return IRQ_HANDLED;
+ }
 _
