@@ -1,10 +1,10 @@
 From: akpm@osdl.org
-Subject: [patch 03/26] drivers/scsi/: small cleanups
-Date: Sun, 25 Jun 2006 01:58:43 -0700
-Message-ID: <200606250858.k5P8wh4e021181@shell0.pdx.osdl.net>
+Subject: [patch 05/26] drivers/scsi/qla2xxx/: make some functions static
+Date: Sun, 25 Jun 2006 01:58:44 -0700
+Message-ID: <200606250858.k5P8wibx021187@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:5014 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932121AbWFYJCA (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:5270 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932123AbWFYJCA (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Sun, 25 Jun 2006 05:02:00 -0400
 Sender: linux-scsi-owner@vger.kernel.org
@@ -15,75 +15,111 @@ Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, bunk@stusta.de
 
 From: Adrian Bunk <bunk@stusta.de>
 
-This patch contains the following cleanups:
-- make needlessly global functions static
-- every file should #include the headers containing the prototypes for
-  it's global functions
+This patch makes some needlessly global functions static.
 
 Signed-off-by: Adrian Bunk <bunk@stusta.de>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/scsi_sysctl.c       |    1 +
- drivers/scsi/scsi_sysfs.c        |    3 ++-
- drivers/scsi/scsi_transport_fc.c |    2 +-
- drivers/scsi/sr.c                |    2 +-
- 4 files changed, 5 insertions(+), 3 deletions(-)
+ drivers/scsi/qla2xxx/qla_os.c  |   12 ++++++------
+ drivers/scsi/qla2xxx/qla_sup.c |    8 ++++----
+ 2 files changed, 10 insertions(+), 10 deletions(-)
 
-diff -puN drivers/scsi/scsi_sysctl.c~drivers-scsi-small-cleanups drivers/scsi/scsi_sysctl.c
---- a/drivers/scsi/scsi_sysctl.c~drivers-scsi-small-cleanups
-+++ a/drivers/scsi/scsi_sysctl.c
-@@ -9,6 +9,7 @@
- #include <linux/sysctl.h>
- 
- #include "scsi_logging.h"
-+#include "scsi_priv.h"
- 
- 
- static ctl_table scsi_table[] = {
-diff -puN drivers/scsi/scsi_sysfs.c~drivers-scsi-small-cleanups drivers/scsi/scsi_sysfs.c
---- a/drivers/scsi/scsi_sysfs.c~drivers-scsi-small-cleanups
-+++ a/drivers/scsi/scsi_sysfs.c
-@@ -17,6 +17,7 @@
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_tcq.h>
- #include <scsi/scsi_transport.h>
-+#include <scsi/scsi_driver.h>
- 
- #include "scsi_priv.h"
- #include "scsi_logging.h"
-@@ -763,7 +764,7 @@ void scsi_remove_device(struct scsi_devi
+diff -puN drivers/scsi/qla2xxx/qla_os.c~drivers-scsi-qla2xxx-make-some-functions-static drivers/scsi/qla2xxx/qla_os.c
+--- a/drivers/scsi/qla2xxx/qla_os.c~drivers-scsi-qla2xxx-make-some-functions-static
++++ a/drivers/scsi/qla2xxx/qla_os.c
+@@ -261,7 +261,7 @@ qla24xx_pci_info_str(struct scsi_qla_hos
+ 	return str;
  }
- EXPORT_SYMBOL(scsi_remove_device);
  
--void __scsi_remove_target(struct scsi_target *starget)
-+static void __scsi_remove_target(struct scsi_target *starget)
+-char *
++static char *
+ qla2x00_fw_version_str(struct scsi_qla_host *ha, char *str)
  {
- 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
- 	unsigned long flags;
-diff -puN drivers/scsi/scsi_transport_fc.c~drivers-scsi-small-cleanups drivers/scsi/scsi_transport_fc.c
---- a/drivers/scsi/scsi_transport_fc.c~drivers-scsi-small-cleanups
-+++ a/drivers/scsi/scsi_transport_fc.c
-@@ -1493,7 +1493,7 @@ fc_rport_final_delete(void *data)
-  * Notes:
-  *	This routine assumes no locks are held on entry.
-  **/
--struct fc_rport *
-+static struct fc_rport *
- fc_rport_create(struct Scsi_Host *shost, int channel,
- 	struct fc_rport_identifiers  *ids)
- {
-diff -puN drivers/scsi/sr.c~drivers-scsi-small-cleanups drivers/scsi/sr.c
---- a/drivers/scsi/sr.c~drivers-scsi-small-cleanups
-+++ a/drivers/scsi/sr.c
-@@ -174,7 +174,7 @@ static void scsi_cd_put(struct scsi_cd *
-  * an inode for that to work, and we do not always have one.
-  */
+ 	char un_str[10];
+@@ -299,7 +299,7 @@ qla2x00_fw_version_str(struct scsi_qla_h
+ 	return (str);
+ }
  
--int sr_media_change(struct cdrom_device_info *cdi, int slot)
-+static int sr_media_change(struct cdrom_device_info *cdi, int slot)
+-char *
++static char *
+ qla24xx_fw_version_str(struct scsi_qla_host *ha, char *str)
  {
- 	struct scsi_cd *cd = cdi->handle;
- 	int retval;
+ 	sprintf(str, "%d.%02d.%02d ", ha->fw_major_version,
+@@ -591,7 +591,7 @@ qla2x00_wait_for_loop_ready(scsi_qla_hos
+ * Note:
+ *    Only return FAILED if command not returned by firmware.
+ **************************************************************************/
+-int
++static int
+ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
+ {
+ 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
+@@ -726,7 +726,7 @@ qla2x00_eh_wait_for_pending_target_comma
+ *    SUCCESS/FAILURE (defined as macro in scsi.h).
+ *
+ **************************************************************************/
+-int
++static int
+ qla2xxx_eh_device_reset(struct scsi_cmnd *cmd)
+ {
+ 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
+@@ -857,7 +857,7 @@ qla2x00_eh_wait_for_pending_commands(scs
+ *    SUCCESS/FAILURE (defined as macro in scsi.h).
+ *
+ **************************************************************************/
+-int
++static int
+ qla2xxx_eh_bus_reset(struct scsi_cmnd *cmd)
+ {
+ 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
+@@ -918,7 +918,7 @@ eh_bus_reset_done:
+ *
+ * Note:
+ **************************************************************************/
+-int
++static int
+ qla2xxx_eh_host_reset(struct scsi_cmnd *cmd)
+ {
+ 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
+diff -puN drivers/scsi/qla2xxx/qla_sup.c~drivers-scsi-qla2xxx-make-some-functions-static drivers/scsi/qla2xxx/qla_sup.c
+--- a/drivers/scsi/qla2xxx/qla_sup.c~drivers-scsi-qla2xxx-make-some-functions-static
++++ a/drivers/scsi/qla2xxx/qla_sup.c
+@@ -449,7 +449,7 @@ nvram_data_to_access_addr(uint32_t naddr
+ 	return FARX_ACCESS_NVRAM_DATA | naddr;
+ }
+ 
+-uint32_t
++static uint32_t
+ qla24xx_read_flash_dword(scsi_qla_host_t *ha, uint32_t addr)
+ {
+ 	int rval;
+@@ -490,7 +490,7 @@ qla24xx_read_flash_data(scsi_qla_host_t 
+ 	return dwptr;
+ }
+ 
+-int
++static int
+ qla24xx_write_flash_dword(scsi_qla_host_t *ha, uint32_t addr, uint32_t data)
+ {
+ 	int rval;
+@@ -512,7 +512,7 @@ qla24xx_write_flash_dword(scsi_qla_host_
+ 	return rval;
+ }
+ 
+-void
++static void
+ qla24xx_get_flash_manufacturer(scsi_qla_host_t *ha, uint8_t *man_id,
+     uint8_t *flash_id)
+ {
+@@ -537,7 +537,7 @@ qla24xx_get_flash_manufacturer(scsi_qla_
+ 	}
+ }
+ 
+-int
++static int
+ qla24xx_write_flash_data(scsi_qla_host_t *ha, uint32_t *dwptr, uint32_t faddr,
+     uint32_t dwords)
+ {
 _
