@@ -1,12 +1,12 @@
 From: akpm@osdl.org
-Subject: [patch 15/26] aic7*: cleanup MODULE_PARM_DESC strings
-Date: Sun, 25 Jun 2006 01:58:53 -0700
-Message-ID: <200606250858.k5P8wrpL021225@shell0.pdx.osdl.net>
+Subject: [patch 13/26] lpfc: sparse NULL warnings
+Date: Sun, 25 Jun 2006 01:58:51 -0700
+Message-ID: <200606250858.k5P8wpO3021214@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:22421 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932094AbWFYI7B (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:17813 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932090AbWFYI65 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 25 Jun 2006 04:59:01 -0400
+	Sun, 25 Jun 2006 04:58:57 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
@@ -15,47 +15,60 @@ Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, rdunlap@xenotime.net
 
 From: Randy Dunlap <rdunlap@xenotime.net>
 
-Modify beginning string to be more readable.  Remove one trailing newline.
+Fix sparse warnings: use NULL instead of 0 for pointers:
+drivers/scsi/lpfc/lpfc_els.c:827:56: warning: Using plain integer as NULL pointer
+drivers/scsi/lpfc/lpfc_els.c:2781:18: warning: Using plain integer as NULL pointer
+drivers/scsi/lpfc/lpfc_els.c:2782:18: warning: Using plain integer as NULL pointer
+drivers/scsi/lpfc/lpfc_init.c:951:21: warning: Using plain integer as NULL pointer
+drivers/scsi/lpfc/lpfc_init.c:956:20: warning: Using plain integer as NULL pointer
 
 Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/aic7xxx/aic79xx_osm.c |    4 ++--
- drivers/scsi/aic7xxx/aic7xxx_osm.c |    2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/lpfc/lpfc_els.c  |    6 +++---
+ drivers/scsi/lpfc/lpfc_init.c |    4 ++--
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-diff -puN drivers/scsi/aic7xxx/aic79xx_osm.c~aic7-cleanup-module_parm_desc-strings drivers/scsi/aic7xxx/aic79xx_osm.c
---- a/drivers/scsi/aic7xxx/aic79xx_osm.c~aic7-cleanup-module_parm_desc-strings
-+++ a/drivers/scsi/aic7xxx/aic79xx_osm.c
-@@ -340,7 +340,7 @@ MODULE_LICENSE("Dual BSD/GPL");
- MODULE_VERSION(AIC79XX_DRIVER_VERSION);
- module_param(aic79xx, charp, 0444);
- MODULE_PARM_DESC(aic79xx,
--"period delimited, options string.\n"
-+"period-delimited options string:\n"
- "	verbose			Enable verbose/diagnostic logging\n"
- "	allow_memio		Allow device registers to be memory mapped\n"
- "	debug			Bitmask of debug values to enable\n"
-@@ -366,7 +366,7 @@ MODULE_PARM_DESC(aic79xx,
- "		Shorten the selection timeout to 128ms\n"
- "\n"
- "	options aic79xx 'aic79xx=verbose.tag_info:{{}.{}.{..10}}.seltime:1'\n"
--"\n");
-+);
+diff -puN drivers/scsi/lpfc/lpfc_els.c~lpfc-sparse-null-warnings drivers/scsi/lpfc/lpfc_els.c
+--- a/drivers/scsi/lpfc/lpfc_els.c~lpfc-sparse-null-warnings
++++ a/drivers/scsi/lpfc/lpfc_els.c
+@@ -821,7 +821,7 @@ lpfc_issue_els_plogi(struct lpfc_hba * p
+ 	pring = &psli->ring[LPFC_ELS_RING];	/* ELS ring */
  
- static void ahd_linux_handle_scsi_status(struct ahd_softc *,
- 					 struct scsi_device *,
-diff -puN drivers/scsi/aic7xxx/aic7xxx_osm.c~aic7-cleanup-module_parm_desc-strings drivers/scsi/aic7xxx/aic7xxx_osm.c
---- a/drivers/scsi/aic7xxx/aic7xxx_osm.c~aic7-cleanup-module_parm_desc-strings
-+++ a/drivers/scsi/aic7xxx/aic7xxx_osm.c
-@@ -341,7 +341,7 @@ MODULE_LICENSE("Dual BSD/GPL");
- MODULE_VERSION(AIC7XXX_DRIVER_VERSION);
- module_param(aic7xxx, charp, 0444);
- MODULE_PARM_DESC(aic7xxx,
--"period delimited, options string.\n"
-+"period-delimited options string:\n"
- "	verbose			Enable verbose/diagnostic logging\n"
- "	allow_memio		Allow device registers to be memory mapped\n"
- "	debug			Bitmask of debug values to enable\n"
+ 	cmdsize = (sizeof (uint32_t) + sizeof (struct serv_parm));
+-	elsiocb = lpfc_prep_els_iocb(phba, 1, cmdsize, retry, 0, did,
++	elsiocb = lpfc_prep_els_iocb(phba, 1, cmdsize, retry, NULL, did,
+ 								ELS_CMD_PLOGI);
+ 	if (!elsiocb)
+ 		return 1;
+@@ -2791,8 +2791,8 @@ lpfc_els_rsp_rps_acc(struct lpfc_hba * p
+ 
+ 	ndlp = (struct lpfc_nodelist *) pmb->context2;
+ 	xri = (uint16_t) ((unsigned long)(pmb->context1));
+-	pmb->context1 = 0;
+-	pmb->context2 = 0;
++	pmb->context1 = NULL;
++	pmb->context2 = NULL;
+ 
+ 	if (mb->mbxStatus) {
+ 		mempool_free( pmb, phba->mbox_mem_pool);
+diff -puN drivers/scsi/lpfc/lpfc_init.c~lpfc-sparse-null-warnings drivers/scsi/lpfc/lpfc_init.c
+--- a/drivers/scsi/lpfc/lpfc_init.c~lpfc-sparse-null-warnings
++++ a/drivers/scsi/lpfc/lpfc_init.c
+@@ -939,12 +939,12 @@ lpfc_get_hba_model_desc(struct lpfc_hba 
+ 					"10-port ", "PCIe"};
+ 			break;
+ 		default:
+-			m = (typeof(m)){ 0 };
++			m = (typeof(m)){ NULL };
+ 			break;
+ 		}
+ 		break;
+ 	default:
+-		m = (typeof(m)){ 0 };
++		m = (typeof(m)){ NULL };
+ 		break;
+ 	}
+ 
 _
