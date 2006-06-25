@@ -1,258 +1,87 @@
-From: akpm@osdl.org
-Subject: [patch 26/26] drivers/scsi/advansys.c: cleanups
-Date: Sun, 25 Jun 2006 01:59:13 -0700
-Message-ID: <200606250859.k5P8xDFt021300@shell0.pdx.osdl.net>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [patch 13/26] lpfc: sparse NULL warnings
+Date: Sun, 25 Jun 2006 09:46:26 -0400
+Message-ID: <449E93B2.7060405@emulex.com>
+References: <200606250858.k5P8wpO3021214@shell0.pdx.osdl.net>
+Reply-To: James.Smart@Emulex.Com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:19094 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932132AbWFYJC3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 25 Jun 2006 05:02:29 -0400
+Received: from emulex.emulex.com ([138.239.112.1]:23225 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S1750944AbWFYNqj
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 25 Jun 2006 09:46:39 -0400
+In-Reply-To: <200606250858.k5P8wpO3021214@shell0.pdx.osdl.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, bunk@stusta.de
+To: akpm@osdl.org
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, rdunlap@xenotime.net
 
+ACK
 
-From: Adrian Bunk <bunk@stusta.de>
-
-- remove the unneeded advansys.h
-- remove the unused advansys_setup()
-- make needlessly global functions static
-
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
-Signed-off-by: Andrew Morton <akpm@osdl.org>
----
-
- drivers/scsi/advansys.c |  101 +++-----------------------------------
- drivers/scsi/advansys.h |   36 -------------
- 2 files changed, 8 insertions(+), 129 deletions(-)
-
-diff -puN drivers/scsi/advansys.c~drivers-scsi-advansysc-cleanups drivers/scsi/advansys.c
---- a/drivers/scsi/advansys.c~drivers-scsi-advansysc-cleanups
-+++ a/drivers/scsi/advansys.c
-@@ -799,7 +799,6 @@
- #include <scsi/scsi_tcq.h>
- #include <scsi/scsi.h>
- #include <scsi/scsi_host.h>
--#include "advansys.h"
- #ifdef CONFIG_PCI
- #include <linux/pci.h>
- #endif /* CONFIG_PCI */
-@@ -2013,7 +2012,7 @@ STATIC int       AscSgListToQueue(int);
- STATIC void      AscEnableIsaDma(uchar);
- #endif /* CONFIG_ISA */
- STATIC ASC_DCNT  AscGetMaxDmaCount(ushort);
--
-+static const char *advansys_info(struct Scsi_Host *shp);
- 
- /*
-  * --- Adv Library Constants and Macros
-@@ -3982,10 +3981,6 @@ STATIC ushort asc_bus[ASC_NUM_BUS] __ini
-     ASC_IS_PCI,
- };
- 
--/*
-- * Used with the LILO 'advansys' option to eliminate or
-- * limit I/O port probing at boot time, cf. advansys_setup().
-- */
- STATIC int asc_iopflag = ASC_FALSE;
- STATIC int asc_ioport[ASC_NUM_IOPORT_PROBE] = { 0, 0, 0, 0 };
- 
-@@ -4067,10 +4062,6 @@ STATIC void         asc_prt_hex(char *f,
- #endif /* ADVANSYS_DEBUG */
- 
- 
--/*
-- * --- Linux 'struct scsi_host_template' and advansys_setup() Functions
-- */
--
- #ifdef CONFIG_PROC_FS
- /*
-  * advansys_proc_info() - /proc/scsi/advansys/[0-(ASC_NUM_BOARD_SUPPORTED-1)]
-@@ -4092,7 +4083,7 @@ STATIC void         asc_prt_hex(char *f,
-  * if 'prtbuf' is too small it will not be overwritten. Instead the
-  * user just won't get all the available statistics.
-  */
--int
-+static int
- advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
- 		off_t offset, int length, int inout)
- {
-@@ -4308,7 +4299,7 @@ advansys_proc_info(struct Scsi_Host *sho
-  * it must not call SCSI mid-level functions including scsi_malloc()
-  * and scsi_free().
-  */
--int __init
-+static int __init
- advansys_detect(struct scsi_host_template *tpnt)
- {
-     static int          detect_called = ASC_FALSE;
-@@ -5440,7 +5431,7 @@ advansys_detect(struct scsi_host_templat
-  *
-  * Release resources allocated for a single AdvanSys adapter.
-  */
--int
-+static int
- advansys_release(struct Scsi_Host *shp)
- {
-     asc_board_t    *boardp;
-@@ -5487,7 +5478,7 @@ advansys_release(struct Scsi_Host *shp)
-  * Note: The information line should not exceed ASC_INFO_SIZE bytes,
-  * otherwise the static 'info' array will be overrun.
-  */
--const char *
-+static const char *
- advansys_info(struct Scsi_Host *shp)
- {
-     static char     info[ASC_INFO_SIZE];
-@@ -5580,7 +5571,7 @@ advansys_info(struct Scsi_Host *shp)
-  * This function always returns 0. Command return status is saved
-  * in the 'scp' result field.
-  */
--int
-+static int
- advansys_queuecommand(struct scsi_cmnd *scp, void (*done)(struct scsi_cmnd *))
- {
-     struct Scsi_Host    *shp;
-@@ -5668,7 +5659,7 @@ advansys_queuecommand(struct scsi_cmnd *
-  * sleeping is allowed and no locking other than for host structures is
-  * required. Returns SUCCESS or FAILED.
-  */
--int
-+static int
- advansys_reset(struct scsi_cmnd *scp)
- {
-     struct Scsi_Host     *shp;
-@@ -5853,7 +5844,7 @@ advansys_reset(struct scsi_cmnd *scp)
-  * ip[1]: sectors
-  * ip[2]: cylinders
-  */
--int
-+static int
- advansys_biosparam(struct scsi_device *sdev, struct block_device *bdev,
- 		sector_t capacity, int ip[])
- {
-@@ -5887,82 +5878,6 @@ advansys_biosparam(struct scsi_device *s
- }
- 
- /*
-- * advansys_setup()
-- *
-- * This function is called from init/main.c at boot time.
-- * It it passed LILO parameters that can be set from the
-- * LILO command line or in /etc/lilo.conf.
-- *
-- * It is used by the AdvanSys driver to either disable I/O
-- * port scanning or to limit scanning to 1 - 4 I/O ports.
-- * Regardless of the option setting EISA and PCI boards
-- * will still be searched for and detected. This option
-- * only affects searching for ISA and VL boards.
-- *
-- * If ADVANSYS_DEBUG is defined the driver debug level may
-- * be set using the 5th (ASC_NUM_IOPORT_PROBE + 1) I/O Port.
-- *
-- * Examples:
-- * 1. Eliminate I/O port scanning:
-- *         boot: linux advansys=
-- *       or
-- *         boot: linux advansys=0x0
-- * 2. Limit I/O port scanning to one I/O port:
-- *        boot: linux advansys=0x110
-- * 3. Limit I/O port scanning to four I/O ports:
-- *        boot: linux advansys=0x110,0x210,0x230,0x330
-- * 4. If ADVANSYS_DEBUG, limit I/O port scanning to four I/O ports and
-- *    set the driver debug level to 2.
-- *        boot: linux advansys=0x110,0x210,0x230,0x330,0xdeb2
-- *
-- * ints[0] - number of arguments
-- * ints[1] - first argument
-- * ints[2] - second argument
-- * ...
-- */
--void __init
--advansys_setup(char *str, int *ints)
--{
--    int    i;
--
--    if (asc_iopflag == ASC_TRUE) {
--        printk("AdvanSys SCSI: 'advansys' LILO option may appear only once\n");
--        return;
--    }
--
--    asc_iopflag = ASC_TRUE;
--
--    if (ints[0] > ASC_NUM_IOPORT_PROBE) {
--#ifdef ADVANSYS_DEBUG
--        if ((ints[0] == ASC_NUM_IOPORT_PROBE + 1) &&
--            (ints[ASC_NUM_IOPORT_PROBE + 1] >> 4 == 0xdeb)) {
--            asc_dbglvl = ints[ASC_NUM_IOPORT_PROBE + 1] & 0xf;
--        } else {
--#endif /* ADVANSYS_DEBUG */
--            printk("AdvanSys SCSI: only %d I/O ports accepted\n",
--                ASC_NUM_IOPORT_PROBE);
--#ifdef ADVANSYS_DEBUG
--        }
--#endif /* ADVANSYS_DEBUG */
--    }
--
--#ifdef ADVANSYS_DEBUG
--    ASC_DBG1(1, "advansys_setup: ints[0] %d\n", ints[0]);
--    for (i = 1; i < ints[0]; i++) {
--        ASC_DBG2(1, " ints[%d] 0x%x", i, ints[i]);
--    }
--    ASC_DBG(1, "\n");
--#endif /* ADVANSYS_DEBUG */
--
--    for (i = 1; i <= ints[0] && i <= ASC_NUM_IOPORT_PROBE; i++) {
--        asc_ioport[i-1] = ints[i];
--        ASC_DBG2(1, "advansys_setup: asc_ioport[%d] 0x%x\n",
--            i - 1, asc_ioport[i-1]);
--    }
--}
--
--
--/*
-  * --- Loadable Driver Support
-  */
- 
-diff -puN drivers/scsi/advansys.h~drivers-scsi-advansysc-cleanups /dev/null
---- a/drivers/scsi/advansys.h
-+++ /dev/null
-@@ -1,36 +0,0 @@
--/*
-- * advansys.h - Linux Host Driver for AdvanSys SCSI Adapters
-- * 
-- * Copyright (c) 1995-2000 Advanced System Products, Inc.
-- * Copyright (c) 2000-2001 ConnectCom Solutions, Inc.
-- * All Rights Reserved.
-- *
-- * Redistribution and use in source and binary forms, with or without
-- * modification, are permitted provided that redistributions of source
-- * code retain the above copyright notice and this comment without
-- * modification.
-- *
-- * As of March 8, 2000 Advanced System Products, Inc. (AdvanSys)
-- * changed its name to ConnectCom Solutions, Inc.
-- *
-- */
--
--#ifndef _ADVANSYS_H
--#define _ADVANSYS_H
--
--/*
-- * struct scsi_host_template function prototypes.
-- */
--int advansys_detect(struct scsi_host_template *);
--int advansys_release(struct Scsi_Host *);
--const char *advansys_info(struct Scsi_Host *);
--int advansys_queuecommand(struct scsi_cmnd *, void (* done)(struct scsi_cmnd *));
--int advansys_reset(struct scsi_cmnd *);
--int advansys_biosparam(struct scsi_device *, struct block_device *,
--		sector_t, int[]);
--static int advansys_slave_configure(struct scsi_device *);
--
--/* init/main.c setup function */
--void advansys_setup(char *, int *);
--
--#endif /* _ADVANSYS_H */
-_
+akpm@osdl.org wrote:
+> From: Randy Dunlap <rdunlap@xenotime.net>
+> 
+> Fix sparse warnings: use NULL instead of 0 for pointers:
+> drivers/scsi/lpfc/lpfc_els.c:827:56: warning: Using plain integer as NULL pointer
+> drivers/scsi/lpfc/lpfc_els.c:2781:18: warning: Using plain integer as NULL pointer
+> drivers/scsi/lpfc/lpfc_els.c:2782:18: warning: Using plain integer as NULL pointer
+> drivers/scsi/lpfc/lpfc_init.c:951:21: warning: Using plain integer as NULL pointer
+> drivers/scsi/lpfc/lpfc_init.c:956:20: warning: Using plain integer as NULL pointer
+> 
+> Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+> Signed-off-by: Andrew Morton <akpm@osdl.org>
+> ---
+> 
+>  drivers/scsi/lpfc/lpfc_els.c  |    6 +++---
+>  drivers/scsi/lpfc/lpfc_init.c |    4 ++--
+>  2 files changed, 5 insertions(+), 5 deletions(-)
+> 
+> diff -puN drivers/scsi/lpfc/lpfc_els.c~lpfc-sparse-null-warnings drivers/scsi/lpfc/lpfc_els.c
+> --- a/drivers/scsi/lpfc/lpfc_els.c~lpfc-sparse-null-warnings
+> +++ a/drivers/scsi/lpfc/lpfc_els.c
+> @@ -821,7 +821,7 @@ lpfc_issue_els_plogi(struct lpfc_hba * p
+>  	pring = &psli->ring[LPFC_ELS_RING];	/* ELS ring */
+>  
+>  	cmdsize = (sizeof (uint32_t) + sizeof (struct serv_parm));
+> -	elsiocb = lpfc_prep_els_iocb(phba, 1, cmdsize, retry, 0, did,
+> +	elsiocb = lpfc_prep_els_iocb(phba, 1, cmdsize, retry, NULL, did,
+>  								ELS_CMD_PLOGI);
+>  	if (!elsiocb)
+>  		return 1;
+> @@ -2791,8 +2791,8 @@ lpfc_els_rsp_rps_acc(struct lpfc_hba * p
+>  
+>  	ndlp = (struct lpfc_nodelist *) pmb->context2;
+>  	xri = (uint16_t) ((unsigned long)(pmb->context1));
+> -	pmb->context1 = 0;
+> -	pmb->context2 = 0;
+> +	pmb->context1 = NULL;
+> +	pmb->context2 = NULL;
+>  
+>  	if (mb->mbxStatus) {
+>  		mempool_free( pmb, phba->mbox_mem_pool);
+> diff -puN drivers/scsi/lpfc/lpfc_init.c~lpfc-sparse-null-warnings drivers/scsi/lpfc/lpfc_init.c
+> --- a/drivers/scsi/lpfc/lpfc_init.c~lpfc-sparse-null-warnings
+> +++ a/drivers/scsi/lpfc/lpfc_init.c
+> @@ -939,12 +939,12 @@ lpfc_get_hba_model_desc(struct lpfc_hba 
+>  					"10-port ", "PCIe"};
+>  			break;
+>  		default:
+> -			m = (typeof(m)){ 0 };
+> +			m = (typeof(m)){ NULL };
+>  			break;
+>  		}
+>  		break;
+>  	default:
+> -		m = (typeof(m)){ 0 };
+> +		m = (typeof(m)){ NULL };
+>  		break;
+>  	}
+>  
+> _
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
