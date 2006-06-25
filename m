@@ -1,105 +1,83 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: Asynchronous scsi scanning, version 9
-Date: Sun, 25 Jun 2006 16:46:31 -0600
-Message-ID: <20060625224631.GD1608@parisc-linux.org>
-References: <20060511143352.GI12272@parisc-linux.org>
-	<20060518172258.GL1604@parisc-linux.org>
-	<20060529031915.GB23405@parisc-linux.org>
-	<447AB2F5.2000700@s5r6.in-berlin.de>
-	<20060529130515.GE23405@parisc-linux.org>
-	<20060531232139.GA3202@us.ibm.com> <447EE81D.2050906@ums.usu.ru>
-	<20060601132315.GD32143@parisc-linux.org>
-	<1151270127.3617.26.camel@mulgrave.il.steeleye.com>
+From: Alex Davis <alex14641@yahoo.com>
+Subject: Re: Kernel panic when re-inserting Adaptec PCMCIA card
+Date: Sun, 25 Jun 2006 15:55:56 -0700 (PDT)
+Message-ID: <20060625225557.76929.qmail@web50406.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-hotplug-devel-bounces@lists.sourceforge.net>
-Content-Disposition: inline
-In-Reply-To: <1151270127.3617.26.camel@mulgrave.il.steeleye.com>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
-	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-hotplug-devel>
-List-Post: <mailto:linux-hotplug-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
-	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux-hotplug-devel-bounces@lists.sourceforge.net
-Errors-To: linux-hotplug-devel-bounces@lists.sourceforge.net
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-hotplug-devel@lists.sourceforge.net, Stefan Richter <stefanr@s5r6.in-berlin.de>, "Alexander E. Patrakov" <patrakov@ums.usu.ru>, linux-scsi@vger.kernel.org, Patrick Mansfield <patmans@us.ibm.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from web50406.mail.yahoo.com ([206.190.38.71]:37031 "HELO
+	web50406.mail.yahoo.com") by vger.kernel.org with SMTP
+	id S932414AbWFYW4D (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 25 Jun 2006 18:56:03 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Chuck Ebbert <76306.1226@compuserve.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Sun, Jun 25, 2006 at 04:15:26PM -0500, James Bottomley wrote:
-> Actually, the first problem is that SCSI doesn't compile as a module at
-> all:  late_initcalls are defined to be module_init calls for modules.
-> Your adding this to scsi_scan.c now gives us two module_init calls,
-> which won't build.  I fixed this by putting an #ifdef MODULE around the
-> late_initcall.
+--- Alex Davis <alex14641@yahoo.com> wrote:
 
-I think that's a good idea (well, I would, I suggested it to you ;-)
-
-> > There's a potential solution to this.  If we add a hook to sys_module_init
-> > such that it'll call a specified function before returning, we can make
-> > it wait until all scans are done.  This way, userspace never sees the
-> > asynchronous scanning behaviour.  But if you have devices of different
-> > types, you won't get the overlapping scans.
+> --- Alex Davis <alex14641@yahoo.com> wrote:
 > 
-> How about this solution which works for me with debian on a huge 6 bus
-> scsi machine:  it introduces a new module scsi_wait_scan.ko whose sole
-> job is to wait for the scans to complete in its init function.  The
-> initrd/initramfs sequence now becomes:
-> 
-> insert all other modules
-> modprobe scsi_wait_scan
+> > --- Chuck Ebbert <76306.1226@compuserve.com> wrote:
+> > 
+> > > In-Reply-To: <20060614022139.21737.qmail@web50208.mail.yahoo.com>
+> > > 
+> > > On Tue, 13 Jun 2006 19:21:39 -0700, Alex Davis wrote:
+> > > 
+> > > Same panic occurs in 2.6.17rc6:
+> > > 
+> > > > Jun 13 17:50:36 siafu kernel: [4295220.230000] pccard: PCMCIA card inserted into slot 0
+> > > > Jun 13 17:50:36 siafu kernel: [4295220.230000] pcmcia: registering new device pcmcia0.0
+> > > > Jun 13 17:50:37 siafu kernel: [4295220.281000] aha152x: resetting bus...
+> > > > Jun 13 17:50:37 siafu kernel: [4295220.637000] aha152x13: vital data: rev=1, io=0xd340
+> > > > (0xd340/0xd340), irq=3, scsiid=7, reconnect=enabled,
+> > > >  parity=enabled, synchronous=enabled, delay=100, extended translation=disabled
+> > > > Jun 13 17:50:37 siafu kernel: [4295220.637000] aha152x13: trying software interrupt, ok.
+> > > > Jun 13 17:50:37 siafu kernel: [4295221.638000] scsi13 : Adaptec 152x SCSI driver;
+> $Revision:
+> > > 2.7 $
+> > > > Jun 13 17:50:37 siafu kernel: [4295221.650000]
+> > > > Jun 13 17:50:37 siafu kernel: [4295221.650000] aha152x22856: bottom-half already running!?
+> > > > Jun 13 17:50:37 siafu kernel: [4295221.650000]
+> > > > Jun 13 17:50:37 siafu kernel: [4295221.650000] queue status:
+> > > > Jun 13 17:50:37 siafu kernel: [4295221.650000] issue_SC:
+> > > > Jun 13 17:50:37 siafu kernel: [4295221.650000] current_SC:
+> > > > Jun 13 17:50:37 siafu kernel: [4295221.650000] BUG: unable to handle kernel paging request
+> > at
+> > > > virtual address 00020016
+> > > 
+> > > Something is going very wrong here.  At time .637 it says it is
+> > > adapter number 13 (aha152x13.)  Then at .650 it thinks it's
+> > > adapter nr. 22856 (!)  Looks like some kind of pointer to the
+> > > hostdata is corrupted.
+> > > 
+> > > Can you rmmod the driver after removing the card and see if that
+> > > helps?
+> > > 
+> > It turns out I was trying to remove the driver before doing 'pccardctl eject'.
+> > 
+> > It seems that removing the driver after ejecting make the problem go away:
+> > I ejected and re-inserted the card six times with no crash.
+> > 
+> > I'll continue testing just to make sure.
 
-I think that's a great idea.  I wonder about making it always fail
-initialisation, since then it can be loaded multiple times without being
-unloaded.  I think Arjan was suggesting some proc or sysfs file that
-would cause scsi_complete_async_scans() to be called, but I couldn't
-figure out where a good place to put such a file would be. 
+I now know what the problem is.
 
-> @@ -22,6 +22,10 @@
->  
->  obj-$(CONFIG_SCSI)		+= scsi_mod.o
->  
-> +ifeq ("$(CONFIG_SCSI)", "m")
-> +	obj-m			+= scsi_wait_scan.o
-> +endif
+In drivers/scsi/aha152x.c, there is an array of two scsi hosts:
+        static struct Scsi_Host *aha152x_host[2];
+There is also the aha152x_probe_one method.
 
-We seem to have a bit of an allergy to conditionals in Makefiles these
-days; how about:
+The problem is that each re-insert of the card creates a new 'host' via aha152x_probe_one,
+which increments the registered_count variable. This variable is used as an index into the afore-
+mentioned 2-element host array. When registered_count is 2 or greater we're in no-man's land,
+hence the crashes. I'm currently testing a fix for this, which I hope to post soon.
 
-tmp-$(CONFIG_SCSI)	:= scsi_wait_scan.o
-obj-m 			+= $(tmp-m)
+-Alex
 
->  
-> -static int scsi_complete_async_scans(void)
-> +int scsi_complete_async_scans(void)
->  {
->  	struct async_scan_data *data;
->  
-> @@ -157,8 +157,10 @@
->  	kfree(data);
->  	return 0;
->  }
+I code, therefore I am
 
-Do you think it's worth putting in something like:
-
-/* Only exported for the benefit of scsi_wait_scan */
-
-And maybe ...
-
-#ifdef MODULE
-/* Only exported for the benefit of scsi_wait_scan */
-EXPORT_SYMBOL_GPL(scsi_complete_async_scans);
-#else
-late_initcall(scsi_complete_async_scans);
-#endif
-
-I really don't want to see driver authors calling it -- if they are,
-something's gone pretty horribly wrong.
-
-Using Tomcat but need to do more? Need to support web services, security?
-Get stuff done quickly with pre-integrated technology to make your job easier
-Download IBM WebSphere Application Server v.1.0.1 based on Apache Geronimo
-http://sel.as-us.falkag.net/sel?cmd=lnk&kid=120709&bid=263057&dat=121642
+__________________________________________________
+Do You Yahoo!?
+Tired of spam?  Yahoo! Mail has the best spam protection around 
+http://mail.yahoo.com 
