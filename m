@@ -1,52 +1,89 @@
 From: akpm@osdl.org
-Subject: [patch 25/26] megaraid: Dell CERC ATA100/4ch support
-Date: Sun, 25 Jun 2006 01:59:07 -0700
-Message-ID: <200606250859.k5P8x7eW021267@shell0.pdx.osdl.net>
+Subject: [patch 03/26] drivers/scsi/: small cleanups
+Date: Sun, 25 Jun 2006 01:58:43 -0700
+Message-ID: <200606250858.k5P8wh4e021181@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:45717 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932116AbWFYI7d (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:5014 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932121AbWFYJCA (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 25 Jun 2006 04:59:33 -0400
+	Sun, 25 Jun 2006 05:02:00 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, jkrzyszt@tis.icnet.pl
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, bunk@stusta.de
 
 
-From: Janusz Krzysztofik <jkrzyszt@tis.icnet.pl>
+From: Adrian Bunk <bunk@stusta.de>
 
-Add CERC subsystem ids to the old megaraid driver.  Tested, works.
+This patch contains the following cleanups:
+- make needlessly global functions static
+- every file should #include the headers containing the prototypes for
+  it's global functions
 
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/megaraid.c |    2 ++
- drivers/scsi/megaraid.h |    2 ++
- 2 files changed, 4 insertions(+)
+ drivers/scsi/scsi_sysctl.c       |    1 +
+ drivers/scsi/scsi_sysfs.c        |    3 ++-
+ drivers/scsi/scsi_transport_fc.c |    2 +-
+ drivers/scsi/sr.c                |    2 +-
+ 4 files changed, 5 insertions(+), 3 deletions(-)
 
-diff -puN drivers/scsi/megaraid.c~megaraid-dell-cerc-ata100-4ch-support drivers/scsi/megaraid.c
---- a/drivers/scsi/megaraid.c~megaraid-dell-cerc-ata100-4ch-support
-+++ a/drivers/scsi/megaraid.c
-@@ -5047,6 +5047,8 @@ static struct pci_device_id megaraid_pci
- 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
- 	{PCI_VENDOR_ID_AMI, PCI_DEVICE_ID_AMI_MEGARAID2,
- 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-+	{PCI_VENDOR_ID_AMI, PCI_DEVICE_ID_AMI_MEGARAID3,
-+		PCI_VENDOR_ID_DELL, PCI_SUBSYS_ID_CERC_ATA100, 0, 0, 0},
- 	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_AMI_MEGARAID3,
- 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
- 	{0,}
-diff -puN drivers/scsi/megaraid.h~megaraid-dell-cerc-ata100-4ch-support drivers/scsi/megaraid.h
---- a/drivers/scsi/megaraid.h~megaraid-dell-cerc-ata100-4ch-support
-+++ a/drivers/scsi/megaraid.h
-@@ -84,6 +84,8 @@
- #define LSI_SUBSYS_VID			0x1000
- #define INTEL_SUBSYS_VID		0x8086
+diff -puN drivers/scsi/scsi_sysctl.c~drivers-scsi-small-cleanups drivers/scsi/scsi_sysctl.c
+--- a/drivers/scsi/scsi_sysctl.c~drivers-scsi-small-cleanups
++++ a/drivers/scsi/scsi_sysctl.c
+@@ -9,6 +9,7 @@
+ #include <linux/sysctl.h>
  
-+#define PCI_SUBSYS_ID_CERC_ATA100	0x0511
-+
- #define HBA_SIGNATURE	      		0x3344
- #define HBA_SIGNATURE_471	  	0xCCCC
- #define HBA_SIGNATURE_64BIT		0x0299
+ #include "scsi_logging.h"
++#include "scsi_priv.h"
+ 
+ 
+ static ctl_table scsi_table[] = {
+diff -puN drivers/scsi/scsi_sysfs.c~drivers-scsi-small-cleanups drivers/scsi/scsi_sysfs.c
+--- a/drivers/scsi/scsi_sysfs.c~drivers-scsi-small-cleanups
++++ a/drivers/scsi/scsi_sysfs.c
+@@ -17,6 +17,7 @@
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_tcq.h>
+ #include <scsi/scsi_transport.h>
++#include <scsi/scsi_driver.h>
+ 
+ #include "scsi_priv.h"
+ #include "scsi_logging.h"
+@@ -763,7 +764,7 @@ void scsi_remove_device(struct scsi_devi
+ }
+ EXPORT_SYMBOL(scsi_remove_device);
+ 
+-void __scsi_remove_target(struct scsi_target *starget)
++static void __scsi_remove_target(struct scsi_target *starget)
+ {
+ 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+ 	unsigned long flags;
+diff -puN drivers/scsi/scsi_transport_fc.c~drivers-scsi-small-cleanups drivers/scsi/scsi_transport_fc.c
+--- a/drivers/scsi/scsi_transport_fc.c~drivers-scsi-small-cleanups
++++ a/drivers/scsi/scsi_transport_fc.c
+@@ -1493,7 +1493,7 @@ fc_rport_final_delete(void *data)
+  * Notes:
+  *	This routine assumes no locks are held on entry.
+  **/
+-struct fc_rport *
++static struct fc_rport *
+ fc_rport_create(struct Scsi_Host *shost, int channel,
+ 	struct fc_rport_identifiers  *ids)
+ {
+diff -puN drivers/scsi/sr.c~drivers-scsi-small-cleanups drivers/scsi/sr.c
+--- a/drivers/scsi/sr.c~drivers-scsi-small-cleanups
++++ a/drivers/scsi/sr.c
+@@ -174,7 +174,7 @@ static void scsi_cd_put(struct scsi_cd *
+  * an inode for that to work, and we do not always have one.
+  */
+ 
+-int sr_media_change(struct cdrom_device_info *cdi, int slot)
++static int sr_media_change(struct cdrom_device_info *cdi, int slot)
+ {
+ 	struct scsi_cd *cd = cdi->handle;
+ 	int retval;
 _
