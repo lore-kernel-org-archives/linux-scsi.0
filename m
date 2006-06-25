@@ -1,35 +1,28 @@
-From: Alan Cox <alan@redhat.com>
-Subject: Re: [PATCH] [29/82] x86_64: Rename IOMMU option, fix help and mark option embedded.
-Date: Sat, 24 Jun 2006 19:14:33 -0400
-Message-ID: <20060624231433.GA24862@devserv.devel.redhat.com>
-References: <449C852C.mailCZT11F9YB@suse.de>
+From: "Olen" <OlenDennison@graphic-designer.com>
+Subject: Brand new Surely you only dream of it Revel in
+Date: Sat, 24 Jun 2006 23:26:59 -0400
+Message-ID: <58996804313317.E0B566C5EB@QPHJWX>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+        charset="Windows-1252"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:60082 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S1751165AbWFXXOm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 24 Jun 2006 19:14:42 -0400
-Content-Disposition: inline
-In-Reply-To: <449C852C.mailCZT11F9YB@suse.de>
+Received: from cpe-24-59-112-45.twcny.res.rr.com ([24.59.112.45]:62988 "EHLO
+	u4fa7w.cn70x.adelphia.net") by vger.kernel.org with ESMTP
+	id S1751375AbWFYD0o (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 24 Jun 2006 23:26:44 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andi Kleen <ak@suse.de>
-Cc: torvalds@osdl.org, discuss@x86-64.org, akpm@osdl.org, markh@osdl.org, alan@redhat.com, linux-scsi@vger.kernel.org
+To: linux-serial@vger.kernel.org
 
-On Sat, Jun 24, 2006 at 02:19:56AM +0200, Andi Kleen wrote:
-> To my astonishment I discovered the aacraid driver tests this
-> symbol directly. This looks quite broken to me - it's an internal
-> implementation detail of the PCI DMA API. Can the maintainer
-> please clarify what this test was intended to do? 
+Dear user.
+Impress your girl with prolonged hardness, plentiful explosions and increased duration 
+Order our magical stuff now for the amazing prices, and we will dispatch it right away
 
-Shouldn't be to your astonishment, you were involved in the process
+ Unique offers on most recognized and famous brands on Earth.
 
-Older aacraid hardware cannot address the 3-4GB range where the iommu
-remaps pages. As the PCI DMA implementation for the x86-64 is flawed and
-doesn't support any nice way to deal with this via swiotlb instead the
-driver handles it internally.
+ Come in here: http://www.sluggishcl.com 
 
-Yeah its ugly, but its old hw and its a one off that can do without tangling
-the core code. At least thats what you decided last time around ;)
+ We offer reliable service and 5 years expirience on the marcket!
+
 
