@@ -1,55 +1,54 @@
 From: akpm@osdl.org
-Subject: [patch 16/26] random: remove redundant SA_SAMPLE_RANDOM from NinjaSCSI
-Date: Sun, 25 Jun 2006 01:58:54 -0700
-Message-ID: <200606250858.k5P8wsYt021228@shell0.pdx.osdl.net>
+Subject: [patch 19/26] Add scsi_add_host() failure handling for nsp32
+Date: Sun, 25 Jun 2006 01:58:56 -0700
+Message-ID: <200606250858.k5P8wusC021237@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:21653 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932093AbWFYI7B (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:25237 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932094AbWFYI7F (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 25 Jun 2006 04:59:01 -0400
+	Sun, 25 Jun 2006 04:59:05 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, mpm@selenic.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, gotom@sanori.org, jesper.juhl@gmail.com
 
 
-From: Matt Mackall <mpm@selenic.com>
+From: GOTO Masanori <gotom@sanori.org>
 
-The scsi layer is already calling add_disk_randomness in scsi_end_request.
+Add scsi_add_host() failure handling for nsp32
+and silence warning.
+  drivers/scsi/nsp32.c:2888: warning: ignoring return value of 'Scsi_add_host', declared with attribute warn_unused_result
 
-ps: ninjas rule!
-
-Signed-off-by: Matt Mackall <mpm@selenic.com>
+Signed-off-by: Jesper Juhl <jesper.juhl@gmail.com>
+Signed-off-by: GOTO Masanori <gotom@sanori.org>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/nsp32.c         |    3 +--
- drivers/scsi/pcmcia/nsp_cs.c |    2 +-
- 2 files changed, 2 insertions(+), 3 deletions(-)
+ drivers/scsi/nsp32.c |    9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-diff -puN drivers/scsi/nsp32.c~random-remove-redundant-sa_sample_random-from-ninjascsi drivers/scsi/nsp32.c
---- a/drivers/scsi/nsp32.c~random-remove-redundant-sa_sample_random-from-ninjascsi
+diff -puN drivers/scsi/nsp32.c~add-scsi_add_host-failure-handling-for-nsp32 drivers/scsi/nsp32.c
+--- a/drivers/scsi/nsp32.c~add-scsi_add_host-failure-handling-for-nsp32
 +++ a/drivers/scsi/nsp32.c
-@@ -2866,8 +2866,7 @@ static int nsp32_detect(struct scsi_host
- 	 */
- 	nsp32_do_bus_reset(data);
+@@ -2885,12 +2885,19 @@ static int nsp32_detect(struct scsi_host
+         }
  
--	ret = request_irq(host->irq, do_nsp32_isr,
--			  SA_SHIRQ | SA_SAMPLE_RANDOM, "nsp32", data);
-+	ret = request_irq(host->irq, do_nsp32_isr, SA_SHIRQ, "nsp32", data);
- 	if (ret < 0) {
- 		nsp32_msg(KERN_ERR, "Unable to allocate IRQ for NinjaSCSI32 "
- 			  "SCSI PCI controller. Interrupt: %d", host->irq);
-diff -puN drivers/scsi/pcmcia/nsp_cs.c~random-remove-redundant-sa_sample_random-from-ninjascsi drivers/scsi/pcmcia/nsp_cs.c
---- a/drivers/scsi/pcmcia/nsp_cs.c~random-remove-redundant-sa_sample_random-from-ninjascsi
-+++ a/drivers/scsi/pcmcia/nsp_cs.c
-@@ -1623,7 +1623,7 @@ static int nsp_cs_probe(struct pcmcia_de
- 	/* Interrupt handler */
- 	link->irq.Handler	 = &nspintr;
- 	link->irq.Instance       = info;
--	link->irq.Attributes     |= (SA_SHIRQ | SA_SAMPLE_RANDOM);
-+	link->irq.Attributes     |= SA_SHIRQ;
+ #if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73))
+-	scsi_add_host (host, &PCIDEV->dev);
++	ret = scsi_add_host(host, &PCIDEV->dev);
++	if (ret) {
++		nsp32_msg(KERN_ERR, "failed to add scsi host");
++		goto free_region;
++	}
+ 	scsi_scan_host(host);
+ #endif
+ 	pci_set_drvdata(PCIDEV, host);
+ 	return DETECT_OK;
  
- 	/* General socket configuration */
- 	link->conf.Attributes	 = CONF_ENABLE_IRQ;
++ free_region:
++	release_region(host->io_port, host->n_io_port);
++
+  free_irq:
+ 	free_irq(host->irq, data);
+ 
 _
