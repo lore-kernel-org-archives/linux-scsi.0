@@ -1,46 +1,61 @@
 From: akpm@osdl.org
-Subject: [patch 01/26] drivers/scsi/sd.c: fix uninitialized variable in handling medium errors
-Date: Sun, 25 Jun 2006 01:58:41 -0700
-Message-ID: <200606250858.k5P8wf0b021175@shell0.pdx.osdl.net>
+Subject: [patch 15/26] aic7*: cleanup MODULE_PARM_DESC strings
+Date: Sun, 25 Jun 2006 01:58:53 -0700
+Message-ID: <200606250858.k5P8wrpL021225@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:9109 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751217AbWFYI6s (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:22421 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932094AbWFYI7B (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 25 Jun 2006 04:58:48 -0400
+	Sun, 25 Jun 2006 04:59:01 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, lkml@rtr.ca
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, rdunlap@xenotime.net
 
 
-From: Mark Lord <lkml@rtr.ca>
+From: Randy Dunlap <rdunlap@xenotime.net>
 
-When scsi_get_sense_info_fld() fails (returns 0), it does NOT update the
-value of first_err_block.  But sd_rw_intr() merrily continues to use that
-variable regardless, possibly making incorrect decisions about retries and
-the like.
+Modify beginning string to be more readable.  Remove one trailing newline.
 
-This patch removes the randomness there, by using the first sector of the
-request (SCpnt->request->sector) in such cases, instead of first_err_block.
-
-Signed-off-by: Mark Lord <lkml@rtr.ca>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
+Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/sd.c |    2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/aic7xxx/aic79xx_osm.c |    4 ++--
+ drivers/scsi/aic7xxx/aic7xxx_osm.c |    2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff -puN drivers/scsi/sd.c~drivers-scsi-sdc-fix-uninitialized-variable-in-handling-medium-errors drivers/scsi/sd.c
---- a/drivers/scsi/sd.c~drivers-scsi-sdc-fix-uninitialized-variable-in-handling-medium-errors
-+++ a/drivers/scsi/sd.c
-@@ -959,6 +959,8 @@ static void sd_rw_intr(struct scsi_cmnd 
- 			default:
- 				break;
- 			}
-+			if (!info_valid)
-+				error_sector = SCpnt->request->sector;
+diff -puN drivers/scsi/aic7xxx/aic79xx_osm.c~aic7-cleanup-module_parm_desc-strings drivers/scsi/aic7xxx/aic79xx_osm.c
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.c~aic7-cleanup-module_parm_desc-strings
++++ a/drivers/scsi/aic7xxx/aic79xx_osm.c
+@@ -340,7 +340,7 @@ MODULE_LICENSE("Dual BSD/GPL");
+ MODULE_VERSION(AIC79XX_DRIVER_VERSION);
+ module_param(aic79xx, charp, 0444);
+ MODULE_PARM_DESC(aic79xx,
+-"period delimited, options string.\n"
++"period-delimited options string:\n"
+ "	verbose			Enable verbose/diagnostic logging\n"
+ "	allow_memio		Allow device registers to be memory mapped\n"
+ "	debug			Bitmask of debug values to enable\n"
+@@ -366,7 +366,7 @@ MODULE_PARM_DESC(aic79xx,
+ "		Shorten the selection timeout to 128ms\n"
+ "\n"
+ "	options aic79xx 'aic79xx=verbose.tag_info:{{}.{}.{..10}}.seltime:1'\n"
+-"\n");
++);
  
- 			error_sector &= ~(block_sectors - 1);
- 			good_bytes = (error_sector - SCpnt->request->sector) << 9;
+ static void ahd_linux_handle_scsi_status(struct ahd_softc *,
+ 					 struct scsi_device *,
+diff -puN drivers/scsi/aic7xxx/aic7xxx_osm.c~aic7-cleanup-module_parm_desc-strings drivers/scsi/aic7xxx/aic7xxx_osm.c
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm.c~aic7-cleanup-module_parm_desc-strings
++++ a/drivers/scsi/aic7xxx/aic7xxx_osm.c
+@@ -341,7 +341,7 @@ MODULE_LICENSE("Dual BSD/GPL");
+ MODULE_VERSION(AIC7XXX_DRIVER_VERSION);
+ module_param(aic7xxx, charp, 0444);
+ MODULE_PARM_DESC(aic7xxx,
+-"period delimited, options string.\n"
++"period-delimited options string:\n"
+ "	verbose			Enable verbose/diagnostic logging\n"
+ "	allow_memio		Allow device registers to be memory mapped\n"
+ "	debug			Bitmask of debug values to enable\n"
 _
