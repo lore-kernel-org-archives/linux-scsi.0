@@ -1,83 +1,58 @@
-From: Alex Davis <alex14641@yahoo.com>
-Subject: Re: Kernel panic when re-inserting Adaptec PCMCIA card
-Date: Sun, 25 Jun 2006 15:55:56 -0700 (PDT)
-Message-ID: <20060625225557.76929.qmail@web50406.mail.yahoo.com>
+From: Maneesh Soni <maneesh@in.ibm.com>
+Subject: Re: [Fastboot] [RFC] [PATCH 2/2] kdump: cciss driver initialization issue fix
+Date: Mon, 26 Jun 2006 07:41:00 +0530
+Message-ID: <20060626021100.GA12824@in.ibm.com>
+References: <20060623210121.GA18384@in.ibm.com> <20060623210424.GB18384@in.ibm.com> <20060623235553.2892f21a.akpm@osdl.org> <20060624111954.GA7313@in.ibm.com> <20060624043046.4e4985be.akpm@osdl.org> <20060624120836.GB7313@in.ibm.com> <m1veqqxyrb.fsf@ebiederm.dsl.xmission.com>
+Reply-To: maneesh@in.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web50406.mail.yahoo.com ([206.190.38.71]:37031 "HELO
-	web50406.mail.yahoo.com") by vger.kernel.org with SMTP
-	id S932414AbWFYW4D (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 25 Jun 2006 18:56:03 -0400
+Received: from e1.ny.us.ibm.com ([32.97.182.141]:5067 "EHLO e1.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1751374AbWFZCLR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 25 Jun 2006 22:11:17 -0400
+Content-Disposition: inline
+In-Reply-To: <m1veqqxyrb.fsf@ebiederm.dsl.xmission.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chuck Ebbert <76306.1226@compuserve.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: "Eric W. Biederman" <ebiederm@xmission.com>
+Cc: vgoyal@in.ibm.com, Andrew Morton <akpm@osdl.org>, Neela.Kolli@engenio.com, linux-scsi@vger.kernel.org, mike.miller@hp.com, fastboot@lists.osdl.org, linux-kernel@vger.kernel.org
 
---- Alex Davis <alex14641@yahoo.com> wrote:
-
-> --- Alex Davis <alex14641@yahoo.com> wrote:
+On Sat, Jun 24, 2006 at 11:13:44AM -0600, Eric W. Biederman wrote:
+> Vivek Goyal <vgoyal@in.ibm.com> writes:
 > 
-> > --- Chuck Ebbert <76306.1226@compuserve.com> wrote:
-> > 
-> > > In-Reply-To: <20060614022139.21737.qmail@web50208.mail.yahoo.com>
-> > > 
-> > > On Tue, 13 Jun 2006 19:21:39 -0700, Alex Davis wrote:
-> > > 
-> > > Same panic occurs in 2.6.17rc6:
-> > > 
-> > > > Jun 13 17:50:36 siafu kernel: [4295220.230000] pccard: PCMCIA card inserted into slot 0
-> > > > Jun 13 17:50:36 siafu kernel: [4295220.230000] pcmcia: registering new device pcmcia0.0
-> > > > Jun 13 17:50:37 siafu kernel: [4295220.281000] aha152x: resetting bus...
-> > > > Jun 13 17:50:37 siafu kernel: [4295220.637000] aha152x13: vital data: rev=1, io=0xd340
-> > > > (0xd340/0xd340), irq=3, scsiid=7, reconnect=enabled,
-> > > >  parity=enabled, synchronous=enabled, delay=100, extended translation=disabled
-> > > > Jun 13 17:50:37 siafu kernel: [4295220.637000] aha152x13: trying software interrupt, ok.
-> > > > Jun 13 17:50:37 siafu kernel: [4295221.638000] scsi13 : Adaptec 152x SCSI driver;
-> $Revision:
-> > > 2.7 $
-> > > > Jun 13 17:50:37 siafu kernel: [4295221.650000]
-> > > > Jun 13 17:50:37 siafu kernel: [4295221.650000] aha152x22856: bottom-half already running!?
-> > > > Jun 13 17:50:37 siafu kernel: [4295221.650000]
-> > > > Jun 13 17:50:37 siafu kernel: [4295221.650000] queue status:
-> > > > Jun 13 17:50:37 siafu kernel: [4295221.650000] issue_SC:
-> > > > Jun 13 17:50:37 siafu kernel: [4295221.650000] current_SC:
-> > > > Jun 13 17:50:37 siafu kernel: [4295221.650000] BUG: unable to handle kernel paging request
-> > at
-> > > > virtual address 00020016
-> > > 
-> > > Something is going very wrong here.  At time .637 it says it is
-> > > adapter number 13 (aha152x13.)  Then at .650 it thinks it's
-> > > adapter nr. 22856 (!)  Looks like some kind of pointer to the
-> > > hostdata is corrupted.
-> > > 
-> > > Can you rmmod the driver after removing the card and see if that
-> > > helps?
-> > > 
-> > It turns out I was trying to remove the driver before doing 'pccardctl eject'.
-> > 
-> > It seems that removing the driver after ejecting make the problem go away:
-> > I ejected and re-inserted the card six times with no crash.
-> > 
-> > I'll continue testing just to make sure.
+> > On Sat, Jun 24, 2006 at 04:30:46AM -0700, Andrew Morton wrote:
+> >
+> >> > Or is there a generic way to handle these situations? Fixing them driver
+> >> > by driver is a long painful process. 
+> >> 
+> >> Some generic way of whacking a PCI device via the standard PCI registers? 
+> >> Not that I know of.
+> >
+> > Somebody hinted that think of PCI bus reset. But I think PCI bus reset will
+> > require firware/BIOS to export a hook to software to so initiate PCI bus
+> > reset and I don't think many platforms do that. Infact I am not even aware
+> > of one platform who does that.
+> 
+> Not all pci busses support it but there is a standard pci bus reset bit
+> in pci bridges.
+> 
+> I don't know if it would help but it might make sense to have a config
+> option that can be used to mark drivers that are known to have problems,
+> in these scenarios.
+> 
+> CONFIG_BRITTLE_INIT perhaps?
+> 
+> It would at least make it easier for people to see which drivers
+> they don't want to use, and give people some incentive to fix things.
+> 
 
-I now know what the problem is.
+Vivek, 
 
-In drivers/scsi/aha152x.c, there is an array of two scsi hosts:
-        static struct Scsi_Host *aha152x_host[2];
-There is also the aha152x_probe_one method.
+I think having something as Eric suggested instead of crashboot= is better.
+We can hve this config option set for kernel like dump capture
+kernel. (CONFIG_CRASH_DUMP=y). This should save some bytes on already longish
+kdump kernel boot paramenters.
 
-The problem is that each re-insert of the card creates a new 'host' via aha152x_probe_one,
-which increments the registered_count variable. This variable is used as an index into the afore-
-mentioned 2-element host array. When registered_count is 2 or greater we're in no-man's land,
-hence the crashes. I'm currently testing a fix for this, which I hope to post soon.
-
--Alex
-
-I code, therefore I am
-
-__________________________________________________
-Do You Yahoo!?
-Tired of spam?  Yahoo! Mail has the best spam protection around 
-http://mail.yahoo.com 
+Thanks
+Maneesh
