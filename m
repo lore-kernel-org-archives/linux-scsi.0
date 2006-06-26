@@ -1,34 +1,61 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 4/6] libata: Add ata_host_flags
-Date: Mon, 26 Jun 2006 21:54:26 +0100
-Message-ID: <1151355266.27147.78.camel@localhost.localdomain>
-References: <200606071625.k57GPrit014721@d01av01.pok.ibm.com>
-	 <448CDEF3.1000703@pobox.com> <448DB360.8010504@us.ibm.com>
-	 <44A02DD5.1030405@us.ibm.com>
+From: linas@austin.ibm.com (Linas Vepstas)
+Subject: Re: Asynchronous scsi scanning, version 9
+Date: Mon, 26 Jun 2006 15:58:32 -0500
+Message-ID: <20060626205832.GC10505@austin.ibm.com>
+References: <20060511143352.GI12272@parisc-linux.org> <20060518172258.GL1604@parisc-linux.org> <20060529031915.GB23405@parisc-linux.org> <447AB2F5.2000700@s5r6.in-berlin.de> <20060529130515.GE23405@parisc-linux.org> <20060531232139.GA3202@us.ibm.com> <447EE81D.2050906@ums.usu.ru> <20060601132315.GD32143@parisc-linux.org> <1151270127.3617.26.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:19373 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S932103AbWFZUiZ
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Jun 2006 16:38:25 -0400
-In-Reply-To: <44A02DD5.1030405@us.ibm.com>
+Received: from e4.ny.us.ibm.com ([32.97.182.144]:58046 "EHLO e4.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S932119AbWFZU6f (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 26 Jun 2006 16:58:35 -0400
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e4.ny.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k5QKwYVW031845
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
+	for <linux-scsi@vger.kernel.org>; Mon, 26 Jun 2006 16:58:34 -0400
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by d01relay02.pok.ibm.com (8.13.6/NCO/VER7.0) with ESMTP id k5QKwYp7278994
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Mon, 26 Jun 2006 16:58:34 -0400
+Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
+	by d01av03.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k5QKwWBr028704
+	for <linux-scsi@vger.kernel.org>; Mon, 26 Jun 2006 16:58:33 -0400
+Content-Disposition: inline
+In-Reply-To: <1151270127.3617.26.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: brking@us.ibm.com
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, linux-hotplug-devel@lists.sourceforge.net, Stefan Richter <stefanr@s5r6.in-berlin.de>, "Alexander E. Patrakov" <patrakov@ums.usu.ru>, linux-scsi@vger.kernel.org, Patrick Mansfield <patmans@us.ibm.com>
 
-Ar Llu, 2006-06-26 am 13:56 -0500, ysgrifennodd Brian King:
-> Jeff, any further thoughts about this? I had been trying to avoid having
-> any host_set type of data for the SAS usage of libata in part due to
-> not seeing a need and also due to a comment Bartlomiej made a while back:
+On Sun, Jun 25, 2006 at 04:15:26PM -0500, James Bottomley wrote:
+> On Thu, 2006-06-01 at 07:23 -0600, Matthew Wilcox wrote:
 > 
-> http://marc.theaimsgroup.com/?l=linux-ide&m=112842136431977&w=2
+> > There's a potential solution to this.  If we add a hook to sys_module_init
+> > such that it'll call a specified function before returning, we can make
+> > it wait until all scans are done.  This way, userspace never sees the
+> > asynchronous scanning behaviour.  But if you have devices of different
+> > types, you won't get the overlapping scans.
+> 
+> How about this solution which works for me with debian on a huge 6 bus
+> scsi machine:  it introduces a new module scsi_wait_scan.ko whose sole
+> job is to wait for the scans to complete in its init function.  The
+> initrd/initramfs sequence now becomes:
+> 
+> insert all other modules
+> modprobe scsi_wait_scan
 
-Well if anything we seem to be going the other way, in order to get
-things like Simplex working with legacy mode the legacy setup needs the
-two ports on the same host_set with differing IRQ/ports.
+I guess there's no way of figuring out where the root disk is, and
+waiting only for that? 
 
-Alan
+On large servers, there may be hundreds of attached disks. Anything which 
+can parallelize and perform an async scan will help boot times; however, 
+waiting for all disks to come on-line when only one is actually needed can 
+cause trouble.
+
+In particular, some of the attached disks/scsi chains may be bad, 
+in which case one has to wait for a tediously long device/bus/host reset
+sequence to complete, and off-line the broken disk.
+
+--linas
 
