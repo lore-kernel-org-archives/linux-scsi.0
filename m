@@ -1,59 +1,54 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: [PATCH 4/6] libata: Add ata_host_flags
-Date: Mon, 26 Jun 2006 13:56:21 -0500
-Message-ID: <44A02DD5.1030405@us.ibm.com>
-References: <200606071625.k57GPrit014721@d01av01.pok.ibm.com> <448CDEF3.1000703@pobox.com> <448DB360.8010504@us.ibm.com>
-Reply-To: brking@us.ibm.com
+From: Doug Ledford <dledford@xsintricity.com>
+Subject: Re: [SPAM] Re: Asynchronous scsi scanning, version 9
+Date: Mon, 26 Jun 2006 14:55:50 -0400
+Message-ID: <1151348151.4936.8.camel@fc5.xsintricity.com>
+References: <20060529031915.GB23405@parisc-linux.org>
+	<447AB2F5.2000700@s5r6.in-berlin.de>
+	<20060529130515.GE23405@parisc-linux.org>
+	<20060531232139.GA3202@us.ibm.com> <447EE81D.2050906@ums.usu.ru>
+	<20060601132315.GD32143@parisc-linux.org>
+	<1151270127.3617.26.camel@mulgrave.il.steeleye.com>
+	<20060625224631.GD1608@parisc-linux.org>
+	<1151310285.3185.16.camel@laptopd505.fenrus.org>
+	<20060626124001.GG1608@parisc-linux.org>
+	<20060626144442.GA13319@one-eyed-alien.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <448DB360.8010504@us.ibm.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: brking@us.ibm.com
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Return-path: <linux-hotplug-devel-bounces@lists.sourceforge.net>
+In-Reply-To: <20060626144442.GA13319@one-eyed-alien.net>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
+	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-hotplug-devel>
+List-Post: <mailto:linux-hotplug-devel@lists.sourceforge.net>
+List-Help: <mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
+	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: linux-hotplug-devel-bounces@lists.sourceforge.net
+Errors-To: linux-hotplug-devel-bounces@lists.sourceforge.net
+To: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>, Patrick Mansfield <patmans@us.ibm.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, "Alexander E. Patrakov" <patrakov@ums.usu.ru>, Arjan van de Ven <arjan@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Brian King wrote:
-> Jeff Garzik wrote:
->> Brian King wrote:
->>> Since SATA devices attached to SAS HBAs will not have
->>> a host_set, add a helper function to retrieve the host_set
->>> flags which can check for the existence of a host_set.
->>>
->>> Signed-off-by: Brian King <brking@us.ibm.com>
->>> ---
->>>
->>>  libata-dev-bjking1/drivers/scsi/libata-core.c |    7 +++----
->>>  libata-dev-bjking1/include/linux/libata.h     |    7 +++++++
->>>  2 files changed, 10 insertions(+), 4 deletions(-)
->>>
->>> diff -puN drivers/scsi/libata-core.c~libata_sas_no_simplex drivers/scsi/libata-core.c
->>> --- libata-dev/drivers/scsi/libata-core.c~libata_sas_no_simplex	2006-06-06 08:55:43.000000000 -0500
->>> +++ libata-dev-bjking1/drivers/scsi/libata-core.c	2006-06-06 08:55:43.000000000 -0500
->>> @@ -2161,7 +2161,7 @@ int ata_set_mode(struct ata_port *ap, st
->>>  	/* Record simplex status. If we selected DMA then the other
->>>  	 * host channels are not permitted to do so.
->>>  	 */
->>> -	if (used_dma && (ap->host_set->flags & ATA_HOST_SIMPLEX))
->>> +	if (used_dma && (ata_host_flags(ap) & ATA_HOST_SIMPLEX))
->> I'm not sure I like this one.  Will have to think a bit more on this -- 
->> there might be a need for ipr to carry some cross-port libata state.
-> 
-> I can't think of any need at this point. Would it be reasonable to go ahead
-> with this change and add in the support for a cross-port libata state
-> if and when such a need comes along? 
+On Mon, 2006-06-26 at 07:44 -0700, Matthew Dharm wrote:
 
-Jeff, any further thoughts about this? I had been trying to avoid having
-any host_set type of data for the SAS usage of libata in part due to
-not seeing a need and also due to a comment Bartlomiej made a while back:
+> As for using one Scsi_Host... there are several usb-storage devices which
+> attach to an entire SCSI bus (not just a single target), so can't make each
+> device it's own target.
 
-http://marc.theaimsgroup.com/?l=linux-ide&m=112842136431977&w=2
-
-
-Brian
+This makes no sense to me at all.  The USB devices attach to a USB bus,
+the whole notion of a SCSI bus for USB devices is as nothing more than
+an abstraction, and should be able to be arbitrarily changed in the USB
+stack any time you wish.  In short, you aren't doing SCSI selections
+over a USB bus, so why should SCSI target IDs vs. host IDs matter?
+Aren't they just all mapped in the driver to the USB device anyway?
 
 -- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+Doug Ledford <dledford@xsintricity.com>
+
+
+
+Using Tomcat but need to do more? Need to support web services, security?
+Get stuff done quickly with pre-integrated technology to make your job easier
+Download IBM WebSphere Application Server v.1.0.1 based on Apache Geronimo
+http://sel.as-us.falkag.net/sel?cmd=lnk&kid=120709&bid=263057&dat=121642
