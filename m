@@ -1,42 +1,56 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: [PATCH] dc395x: fix printk format warning
-Date: Sun, 25 Jun 2006 22:28:20 -0700
-Message-ID: <20060625222820.00239893.rdunlap@xenotime.net>
+From: Andi Kleen <ak@suse.de>
+Subject: Re: [PATCH] [29/82] x86_64: Rename IOMMU option, fix help and mark option embedded.
+Date: Mon, 26 Jun 2006 08:24:45 +0200
+Message-ID: <200606260824.45506.ak@suse.de>
+References: <449C852C.mailCZT11F9YB@suse.de> <200606252132.41121.ak@suse.de> <20060625222115.GA17213@devserv.devel.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:17886 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S964790AbWFZF3s (ORCPT
+Received: from ns2.suse.de ([195.135.220.15]:58329 "EHLO mx2.suse.de")
+	by vger.kernel.org with ESMTP id S964832AbWFZGY6 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Jun 2006 01:29:48 -0400
-Received: from midway.site ([71.245.108.25]) by xenotime.net for <linux-scsi@vger.kernel.org>; Sun, 25 Jun 2006 22:29:46 -0700
+	Mon, 26 Jun 2006 02:24:58 -0400
+In-Reply-To: <20060625222115.GA17213@devserv.devel.redhat.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: scsi <linux-scsi@vger.kernel.org>
-Cc: jejb <james.bottomley@steeleye.com>, akpm <akpm@osdl.org>, oliver@neukum.name, aliakc@web.de, lenehan@twibble.org
+To: Alan Cox <alan@redhat.com>
+Cc: torvalds@osdl.org, discuss@x86-64.org, akpm@osdl.org, markh@osdl.org, linux-scsi@vger.kernel.org, axboe@suse.de
 
-From: Randy Dunlap <rdunlap@xenotime.net>
+On Monday 26 June 2006 00:21, Alan Cox wrote:
+> On Sun, Jun 25, 2006 at 09:32:41PM +0200, Andi Kleen wrote:
+> > > From a tiny 16MB DMA pool that can't sustain the required load ? Or has that
+> > > bit changed.
+> > 
+> > It should be ok because it blocks. It will be slow, but what else do you expect
+> > from broken hardware like this? 
+> 
+> Sustained 80Mbyte/second I/O rates. At least thats what it gets in other OS
+> products. This is one of the reasons (broadcomm 4400 was another) that a 30
+> or 31 bit DMA zone not a 32bit one was called for, which also didn't happen
+> it seems.
 
-Fix printk format warning:
-drivers/scsi/dc395x.c:1224: warning: format '%i' expects type 'int', but argument 5 has type 'size_t'
+Should we hurt everybody for two terminally broken devices?
 
-Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
----
- drivers/scsi/dc395x.c |    2 +-
- 1 files changed, 1 insertion(+), 1 deletion(-)
+BCM4400 and its wireless brethen is fine with GFP_DMA btw and mostly only 
+exists in low end machines where most/all of the memory is below 2GB anyways
+(so the check first approach works quite well) 
 
---- linux-2617-g9.orig/drivers/scsi/dc395x.c
-+++ linux-2617-g9/drivers/scsi/dc395x.c
-@@ -1219,7 +1219,7 @@ static void dump_register_info(struct Ad
- 			    	srb, srb->cmd, srb->cmd->pid,
- 				srb->cmd->cmnd[0], srb->cmd->device->id,
- 			       	srb->cmd->device->lun);
--		printk("  sglist=%p cnt=%i idx=%i len=%i\n",
-+		printk("  sglist=%p cnt=%i idx=%i len=%Zd\n",
- 		       srb->segment_x, srb->sg_count, srb->sg_index,
- 		       srb->total_xfer_length);
- 		printk("  state=0x%04x status=0x%02x phase=0x%02x (%sconn.)\n",
+> 
+> The ifdef approach isnt perfect but it essentially means you get good
+> performance on x86-32 and only x86-64 has problems which seems fine to me,
+> because its an old card.
 
+Blk-bounce would have the same effect.
 
----
+If you set blk-bounce then the block layer will only bounce if the
+address is < limit and it knows about the different zones on 32bit
+and will use GFP_NORMAL there.
+
+If you have upto 6GB you have a 50:50% chance of not bouncing at least.
+
+The ifdef approach is just broken. Please fix it.
+
+-Andi
