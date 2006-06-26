@@ -1,94 +1,106 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [PATCH] [29/82] x86_64: Rename IOMMU option, fix help and mark option embedded.
-Date: Mon, 26 Jun 2006 08:37:39 -0400
-Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F0290BDEC@otce2k03.adaptec.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: Asynchronous scsi scanning, version 9
+Date: Mon, 26 Jun 2006 06:40:01 -0600
+Message-ID: <20060626124001.GG1608@parisc-linux.org>
+References: <20060518172258.GL1604@parisc-linux.org> <20060529031915.GB23405@parisc-linux.org> <447AB2F5.2000700@s5r6.in-berlin.de> <20060529130515.GE23405@parisc-linux.org> <20060531232139.GA3202@us.ibm.com> <447EE81D.2050906@ums.usu.ru> <20060601132315.GD32143@parisc-linux.org> <1151270127.3617.26.camel@mulgrave.il.steeleye.com> <20060625224631.GD1608@parisc-linux.org> <1151310285.3185.16.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C6991D.4FA8EE9F"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([216.52.22.36]:30354 "EHLO
-	mail-gw3.adaptec.com") by vger.kernel.org with ESMTP
-	id S1751108AbWFZMhm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Jun 2006 08:37:42 -0400
-content-class: urn:content-classes:message
+Received: from palinux.external.hp.com ([192.25.206.14]:14521 "EHLO
+	palinux.external.hp.com") by vger.kernel.org with ESMTP
+	id S1751115AbWFZMkE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 26 Jun 2006 08:40:04 -0400
+Content-Disposition: inline
+In-Reply-To: <1151310285.3185.16.camel@laptopd505.fenrus.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andi Kleen <ak@suse.de>, Alan Cox <alan@redhat.com>
-Cc: torvalds@osdl.org, discuss@x86-64.org, akpm@osdl.org, markh@osdl.org, linux-scsi@vger.kernel.org, axboe@suse.de
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: linux-scsi@vger.kernel.org, Stefan Richter <stefanr@s5r6.in-berlin.de>, linux-hotplug-devel@lists.sourceforge.net, Patrick Mansfield <patmans@us.ibm.com>, "Alexander E. Patrakov" <patrakov@ums.usu.ru>, James Bottomley <James.Bottomley@SteelEye.com>
 
-This is a multi-part message in MIME format.
+On Mon, Jun 26, 2006 at 10:24:45AM +0200, Arjan van de Ven wrote:
+> just to expand on this: The reason I am suggesting this is to allow the
+> initrd to have a way to wait for device scans before (re)trying to mount
+> the root filesystem. One of the interesting challenges today for the
+> initrd with USB is that you don't know when the devices are visible; now
+> I know this won't fix USB, but it at least introduces a proper method
+> for ensuring that for scsi; I suppose we should make it a generic thing
+> with a notifier chain so that all subsystems that want to can get a
+> callback and finalize their initialization... I can imagine fiber
+> channel cards wanting to use this to wait for LIP etc...
 
-------_=_NextPart_001_01C6991D.4FA8EE9F
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Fortunately, USB is SCSI, so we can actually use this code to solve that
+problem too.  I wasn't thinking of USB when I wrote the code (because I
+didn't know there was a problem).  But really, it's very generic stuff;
+there's a list_head, a pointer to a Scsi_Host and a completion.
 
-MarkH is out on Vacation for a few weeks.
+I'm not 100% sure what the problem is with USB.  If it's that we may not
+have discovered all the USB devices currently plugged in, then I think
+we need to change the way USB works to use one Scsi_Host for all USB
+storage devices, and then make each device either its own target or its
+own channel (probably the former; the latter is less well-tested code).
 
-This may seem like a DILLIGAF, but after chatting with the F/W folks,
-there is no harm in dropping the page calculation as denoted in the
-enclosed patch for these older adapters in this new age of 4GB+ memory
-sticks. Any resource optimization within the old-old-old adapters for
-systems with less than 4G of memory is of little consequence. The
-existing AAC_QUIRK_31BIT flag in linit.c should look after the rest of
-the legacy hardware DMA limitations.
+If it's simply the chunk of code beginning with:
+        /* Wait for the timeout to expire or for a disconnect */
+that's causing the problem, then this is easily fixable in the current
+scheme:
 
-Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
----
-Applies to the scsi-misc-2.6 git tree.
-<enclosed aacraid-GART.patch>
+Index: drivers/usb/storage/usb.c
+===================================================================
+RCS file: /var/cvs/linux-2.6/drivers/usb/storage/usb.c,v
+retrieving revision 1.22
+diff -u -p -r1.22 usb.c
+--- drivers/usb/storage/usb.c	3 Apr 2006 13:45:11 -0000	1.22
++++ drivers/usb/storage/usb.c	26 Jun 2006 12:34:45 -0000
+@@ -849,10 +849,13 @@ static void release_everything(struct us
+ static int usb_stor_scan_thread(void * __us)
+ {
+ 	struct us_data *us = (struct us_data *)__us;
++	struct async_scan_data *data;
+ 
+ 	printk(KERN_DEBUG
+ 		"usb-storage: device found at %d\n", us->pusb_dev->devnum);
+ 
++	data = scsi_prep_async_scan(us_to_host(us));
++
+ 	/* Wait for the timeout to expire or for a disconnect */
+ 	if (delay_use > 0) {
+ 		printk(KERN_DEBUG "usb-storage: waiting for device "
+@@ -875,12 +878,14 @@ retry:
+ 			us->max_lun = usb_stor_Bulk_max_lun(us);
+ 			mutex_unlock(&us->dev_mutex);
+ 		}
+-		scsi_scan_host(us_to_host(us));
++		scsi_scan_target(&us_to_host(us)->shost_gendev, 0, 0,
++				SCAN_WILD_CARD, 0);
+ 		printk(KERN_DEBUG "usb-storage: device scan complete\n");
+ 
+ 		/* Should we unbind if no devices were detected? */
+ 	}
+ 
++	scsi_finish_async_scan(data);
+ 	scsi_host_put(us_to_host(us));
+ 	complete_and_exit(&threads_gone, 0);
+ }
 
-Andi Kleen sez:
-> On Sunday 25 June 2006 21:00, Alan Cox wrote:
->> On Sun, Jun 25, 2006 at 05:22:23PM +0200, Andi Kleen wrote:
->>>> Older aacraid hardware cannot address the 3-4GB range where the
-iommu
->>>> remaps pages. As the PCI DMA implementation for the x86-64 is
-flawed and
->>>> doesn't support any nice way to deal with this via swiotlb instead
-the
->>>> driver handles it internally.
->>> Then you should just force a low bounce pfn < 0xfffffff for the
-block device -=20
->>> then the block layer  should use GFP_DMA bouncing.
->> From a tiny 16MB DMA pool that can't sustain the required load ? Or
-has that
->> bit changed.
-> It should be ok because it blocks. It will be slow, but what=20
-> else do you expect from broken hardware like this?=20
+By the way, if USB intends to stick to its one-host-per-device scheme,
+it would do well to set host->max_id to 1, rather than failing targets
+in queuecommand.
 
-------_=_NextPart_001_01C6991D.4FA8EE9F
-Content-Type: application/octet-stream;
-	name="aacraid-GART.patch"
-Content-Transfer-Encoding: base64
-Content-Description: aacraid-GART.patch
-Content-Disposition: attachment;
-	filename="aacraid-GART.patch"
+> One question is if this should get a timeout parameter or if that should
+> be left up to the devices...
 
-LS0tIGEvZHJpdmVycy9zY3NpL2FhY3JhaWQvY29tbWluaXQuYwkyMDA2LTA2LTE0IDA5OjI2OjE5
-LjAwMDAwMDAwMCAtMDQwMAorKysgYi9kcml2ZXJzL3Njc2kvYWFjcmFpZC9jb21taW5pdC5jCTIw
-MDYtMDYtMjYgMDg6MTk6MjkuMTg2Nzk1NzEwIC0wNDAwCkBAIC05MiwyOCArOTIsNyBAQAogCWlu
-aXQtPkFkYXB0ZXJGaWJzUGh5c2ljYWxBZGRyZXNzID0gY3B1X3RvX2xlMzIoKHUzMilwaHlzKTsK
-IAlpbml0LT5BZGFwdGVyRmlic1NpemUgPSBjcHVfdG9fbGUzMihmaWJzaXplKTsKIAlpbml0LT5B
-ZGFwdGVyRmliQWxpZ24gPSBjcHVfdG9fbGUzMihzaXplb2Yoc3RydWN0IGh3X2ZpYikpOwotCS8q
-IAotCSAqIG51bWJlciBvZiA0ayBwYWdlcyBvZiBob3N0IHBoeXNpY2FsIG1lbW9yeS4gVGhlIGFh
-Y3JhaWQgZncgbmVlZHMKLQkgKiB0aGlzIG51bWJlciB0byBiZSBsZXNzIHRoYW4gNGdiIHdvcnRo
-IG9mIHBhZ2VzLiBudW1fcGh5c3BhZ2VzIGlzIGluCi0JICogc3lzdGVtIHBhZ2UgdW5pdHMuIE5l
-dyBmaXJtd2FyZSBkb2Vzbid0IGhhdmUgYW55IGlzc3VlcyB3aXRoIHRoZQotCSAqIG1hcHBpbmcg
-c3lzdGVtLCBidXQgb2xkZXIgRmlybXdhcmUgZGlkLCBhbmQgaGFkICp0cm91YmxlcyogZGVhbGlu
-ZwotCSAqIHdpdGggdGhlIG1hdGggb3ZlcmxvYWRpbmcgcGFzdCAzMiBiaXRzLCB0aHVzIHdlIG11
-c3QgbGltaXQgdGhpcwotCSAqIGZpZWxkLgotCSAqCi0JICogVGhpcyBhc3N1bWVzIHRoZSBtZW1v
-cnkgaXMgbWFwcGVkIHplcm8tPm4sIHdoaWNoIGlzbnQKLQkgKiBhbHdheXMgdHJ1ZSBvbiByZWFs
-IGNvbXB1dGVycy4gSXQgYWxzbyBoYXMgc29tZSBzbGlnaHQgcHJvYmxlbXMKLQkgKiB3aXRoIHRo
-ZSBHQVJUIG9uIHg4Ni02NC4gSSd2ZSBidHcgbmV2ZXIgdHJpZWQgRE1BIGZyb20gUENJIHNwYWNl
-Ci0JICogb24gdGhpcyBwbGF0Zm9ybSBidXQgZG9uJ3QgYmUgc3VycHJpc2VkIGlmIGl0cyBwcm9i
-bGVtYXRpYy4KLQkgKi8KLSNpZm5kZWYgQ09ORklHX0dBUlRfSU9NTVUKLQlpZiAoKG51bV9waHlz
-cGFnZXMgPDwgKFBBR0VfU0hJRlQgLSAxMikpIDw9IEFBQ19NQVhfSE9TVFBIWVNNRU1QQUdFUykg
-ewotCQlpbml0LT5Ib3N0UGh5c01lbVBhZ2VzID0gCi0JCQljcHVfdG9fbGUzMihudW1fcGh5c3Bh
-Z2VzIDw8IChQQUdFX1NISUZULTEyKSk7Ci0JfSBlbHNlIAotI2VuZGlmCQotCXsKLQkJaW5pdC0+
-SG9zdFBoeXNNZW1QYWdlcyA9IGNwdV90b19sZTMyKEFBQ19NQVhfSE9TVFBIWVNNRU1QQUdFUyk7
-Ci0JfQorCWluaXQtPkhvc3RQaHlzTWVtUGFnZXMgPSBjcHVfdG9fbGUzMihBQUNfTUFYX0hPU1RQ
-SFlTTUVNUEFHRVMpOwogCiAJaW5pdC0+SW5pdEZsYWdzID0gMDsKIAlpZiAoZGV2LT5uZXdfY29t
-bV9pbnRlcmZhY2UpIHsK
+No timeout.  It's up to the scanners to say they're done.
 
-------_=_NextPart_001_01C6991D.4FA8EE9F--
+> (and I think the initrd needs to try to find the rootfs at least once
+> without waiting, or there should be 2 levels of expensiveness to the
+> wait, so that it'll first try the asynchronous way, but that it can do
+> the more expensive wait rather than causing an outright panic() as
+> happens today when the rootfs cannot be found..)
+
+It's not just root, it's swap and all the other bits of fstab too.
+No point in being able to reliably mount root if the sysadmin has to
+manually intervene to mount /home on every boot.  Or worse, occasionally
+intervene ...
+
+All the waiting is done in parallel anyway, so you're really trying to
+squeeze the last 0.0001% out of it; better to wait and be safe.
