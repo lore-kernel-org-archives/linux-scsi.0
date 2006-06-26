@@ -1,123 +1,26 @@
-From: ebiederm@xmission.com (Eric W. Biederman)
-Subject: Re: [RFC] [PATCH 2/2] kdump: cciss driver initialization
-	issue fix
-Date: Mon, 26 Jun 2006 13:21:04 -0600
-Message-ID: <m1veqnrae7.fsf@ebiederm.dsl.xmission.com>
-References: <E717642AF17E744CA95C070CA815AE550E163F@cceexc23.americas.cpqcorp.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <fastboot-bounces@lists.osdl.org>
-In-Reply-To: <E717642AF17E744CA95C070CA815AE550E163F@cceexc23.americas.cpqcorp.net>
-	(Mike Miller's message of "Mon, 26 Jun 2006 13:51:43 -0500")
-List-Unsubscribe: <https://lists.osdl.org/mailman/listinfo/fastboot>,
-	<mailto:fastboot-request@lists.osdl.org?subject=unsubscribe>
-List-Archive: <http://lists.osdl.org/pipermail/fastboot>
-List-Post: <mailto:fastboot@lists.osdl.org>
-List-Help: <mailto:fastboot-request@lists.osdl.org?subject=help>
-List-Subscribe: <https://lists.osdl.org/mailman/listinfo/fastboot>,
-	<mailto:fastboot-request@lists.osdl.org?subject=subscribe>
-Sender: fastboot-bounces@lists.osdl.org
-Errors-To: fastboot-bounces@lists.osdl.org
-To: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
-Cc: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, Neela.Kolli@engenio.com, fastboot@lists.osdl.org, linux-kernel@vger.kernel.org
+From: "Spencer Varner" <lycswciyf@yahoo.com>
+Subject: Your spouse will love this
+Date: Mon, 26 Jun 2006 14:28:06 -0600
+Message-ID: <171.12e558d5.2a9UZN44@sol.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from [218.78.232.143] ([218.78.232.143]:1037 "HELO 4C2D5D98")
+	by vger.kernel.org with SMTP id S932949AbWFZTdB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 26 Jun 2006 15:33:01 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
-"Miller, Mike (OS Dev)" <Mike.Miller@hp.com> writes:
-
->> -----Original Message-----
->> From: Eric W. Biederman [mailto:ebiederm@xmission.com] =
-
->> Sent: Monday, June 26, 2006 12:52 PM
->> To: Miller, Mike (OS Dev)
->> Cc: vgoyal@in.ibm.com; Maneesh Soni; Andrew Morton; =
-
->> Neela.Kolli@engenio.com; linux-scsi@vger.kernel.org; =
-
->> fastboot@lists.osdl.org; linux-kernel@vger.kernel.org
->> Subject: Re: [Fastboot] [RFC] [PATCH 2/2] kdump: cciss driver =
-
->> initialization issue fix
->> =
-
->> "Miller, Mike (OS Dev)" <Mike.Miller@hp.com> writes:
->> =
-
->> > Thanks Eric, that helps me understand. Section 8.2.2 of the =
-
->> open cciss =
-
->> > spec supports a reset message. Target 0x00 is the =
-
->> controller. We could =
-
->> > add this to the init routine to ensure the board is made sane again =
-
->> > but this would drastically increase init time under normal =
-
->> circumstances.
->> =
-
->> Where does the init time penalty come from? How large is the =
-
->> init penalty?  I suspect it is from waiting for the scsi =
-
->> disks to spin up.
->> But I am just guessing in the dark.
->
-> The penalty is in the firmware and self-test operations.
-
-Ok.  Reasonable. Roughly long does that take? 1 millisecond? 1 second?
-1 minute? 1 hour? =
+To: linux-net@vger.kernel.org, linux-newbie@vger.kernel.org, linux-ppp@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org
 
 
->> > And I suspect this is a hard reset, also. Not sure if that would =
+Perfect Gift for your spouse and family
 
->> > negatively impact kdump. If there were some condition we could test =
+- Luxury Watches, Handbags and Mont Blanc accs.
+- Finest quality assured
+- 101% like original
 
->> > against and perform the reset when that condition is met it =
+You Name It, We have It
+all at 8o-% Price Reduction
 
->> would not =
+You'll be amazzeddd
+http://043.qqualitytiimes.com
 
->> > impact 99.9% of users.
->> =
-
->> I am wondering if it is possible to look at the controller =
-
->> and see if it is in a bad state, (i.e. in some state besides =
-
->> just coming out of reset) and if so issue a reset.  If this =
-
->> really is a long operation that would be the ideal way to handle it.
->
-> It's not really in a bad state at this time, is it? Maybe some commands
-> hanging around.
-
-Not bad as in broken.  But bad as in unexpected.  If it is just a matter
-of outstanding commands we might even be able to just ask the adapter
-to cancel all of the at initialization time.
-
->> If the amount of time is really user noticeable and testing =
-
->> for it is impossible then it is probably time to talk kernel =
-
->> command line options.
->
-> I was informed of the crashboot command line parameter. I can implement
-> that as a test.
-
-Sounds like a start.
-
->> Although it might simply be appropriate to handle commands =
-
->> completing you didn't start.  I am not at all familiar with =
-
->> that particular piece of hardware so I can't make a good =
-
->> guess on what needs to happen there.
->
-> Not sure about doing this.
-
-Well I would certainly print a warning.
-
-Eric
