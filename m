@@ -1,57 +1,42 @@
-From: Alex Davis <alex14641@yahoo.com>
-Subject: Re: [PATCH] Fix bug: accessing past end of array.
-Date: Sun, 25 Jun 2006 20:18:05 -0700 (PDT)
-Message-ID: <20060626031805.41634.qmail@web50412.mail.yahoo.com>
-References: <20060625192827.730f1a8d.rdunlap@xenotime.net>
+From: "Randy.Dunlap" <rdunlap@xenotime.net>
+Subject: [PATCH] dc395x: fix printk format warning
+Date: Sun, 25 Jun 2006 22:28:20 -0700
+Message-ID: <20060625222820.00239893.rdunlap@xenotime.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web50412.mail.yahoo.com ([206.190.38.155]:45705 "HELO
-	web50412.mail.yahoo.com") by vger.kernel.org with SMTP
-	id S1751412AbWFZDSG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 25 Jun 2006 23:18:06 -0400
-In-Reply-To: <20060625192827.730f1a8d.rdunlap@xenotime.net>
+Received: from xenotime.net ([66.160.160.81]:17886 "HELO xenotime.net")
+	by vger.kernel.org with SMTP id S964790AbWFZF3s (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 26 Jun 2006 01:29:48 -0400
+Received: from midway.site ([71.245.108.25]) by xenotime.net for <linux-scsi@vger.kernel.org>; Sun, 25 Jun 2006 22:29:46 -0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Randy.Dunlap" <rdunlap@xenotime.net>
-Cc: linux-kernel@vger.kernel.org, scsi <linux-scsi@vger.kernel.org>
+To: scsi <linux-scsi@vger.kernel.org>
+Cc: jejb <james.bottomley@steeleye.com>, akpm <akpm@osdl.org>, oliver@neukum.name, aliakc@web.de, lenehan@twibble.org
 
---- "Randy.Dunlap" <rdunlap@xenotime.net> wrote:
+From: Randy Dunlap <rdunlap@xenotime.net>
 
-> [adding linux-scsi]
-> 
-> On Sun, 25 Jun 2006 19:06:46 -0700 (PDT) Alex Davis wrote:
-> 
-> > If the card is re-inserted 2 or more times, we access elements
-> > past the end of the aha152x_host array.
-> 
-> When I was testing/reproducing this, I observed that removing
-> the card did not cause the aha152x_detach() function to be called
-> (in drivers/scsi/pcmcia/aha152x_stub.c).  However, I didn't
-> find out why that doesn't happen.  I think fixing this would
-> be a big help.
-> 
-Strange. I'm not having that problem. I even added a printk to verify.
-I get the following in my logs:
+Fix printk format warning:
+drivers/scsi/dc395x.c:1224: warning: format '%i' expects type 'int', but argument 5 has type 'size_t'
 
-[4295091.671000] pccard: card ejected from slot 0
-[4295091.671000] aha152x_detach(0xd8877600)       <-----added printk.
+Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+---
+ drivers/scsi/dc395x.c |    2 +-
+ 1 files changed, 1 insertion(+), 1 deletion(-)
+
+--- linux-2617-g9.orig/drivers/scsi/dc395x.c
++++ linux-2617-g9/drivers/scsi/dc395x.c
+@@ -1219,7 +1219,7 @@ static void dump_register_info(struct Ad
+ 			    	srb, srb->cmd, srb->cmd->pid,
+ 				srb->cmd->cmnd[0], srb->cmd->device->id,
+ 			       	srb->cmd->device->lun);
+-		printk("  sglist=%p cnt=%i idx=%i len=%i\n",
++		printk("  sglist=%p cnt=%i idx=%i len=%Zd\n",
+ 		       srb->segment_x, srb->sg_count, srb->sg_index,
+ 		       srb->total_xfer_length);
+ 		printk("  state=0x%04x status=0x%02x phase=0x%02x (%sconn.)\n",
 
 
-
-> > Also correct spelling errors.
-> > 
-> > This is for 2.6.17.
-> > 
-> > Signed-off-by Alex Davis <alex14641 at yahoo dot com>
-> > =========================================================================
-> > diff -u linux-2.6.17.1-orig/drivers/scsi/aha152x.c linux-2.6.17.1/drivers/scsi/aha152x.c
-[snip]
-
-I code, therefore I am
-
-__________________________________________________
-Do You Yahoo!?
-Tired of spam?  Yahoo! Mail has the best spam protection around 
-http://mail.yahoo.com 
+---
