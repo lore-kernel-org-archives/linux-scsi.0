@@ -1,39 +1,25 @@
 From: Vivek Goyal <vgoyal@in.ibm.com>
-Subject: Re: [Fastboot] [RFC] [PATCH 2/2] kdump: cciss driver initialization issue fix
-Date: Mon, 26 Jun 2006 09:35:04 -0400
-Message-ID: <20060626133504.GA8985@in.ibm.com>
-References: <20060623210121.GA18384@in.ibm.com> <20060623210424.GB18384@in.ibm.com> <20060623235553.2892f21a.akpm@osdl.org> <20060624111954.GA7313@in.ibm.com> <20060624043046.4e4985be.akpm@osdl.org> <20060624120836.GB7313@in.ibm.com> <m1veqqxyrb.fsf@ebiederm.dsl.xmission.com> <20060626021100.GA12824@in.ibm.com>
+Subject: Re: [Fastboot] [RFC] [PATCH 2/2] kdump: cciss driver initialization?issue fix
+Date: Mon, 26 Jun 2006 09:45:36 -0400
+Message-ID: <20060626134536.GB8985@in.ibm.com>
+References: <m1veqqxyrb.fsf@ebiederm.dsl.xmission.com> <20060626090915.CA8333402A@koto.vergenet.net>
 Reply-To: vgoyal@in.ibm.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:23008 "EHLO
-	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S964817AbWFZNfg
+Received: from e32.co.us.ibm.com ([32.97.110.150]:56461 "EHLO
+	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S1030200AbWFZNqC
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Jun 2006 09:35:36 -0400
+	Mon, 26 Jun 2006 09:46:02 -0400
 Content-Disposition: inline
-In-Reply-To: <20060626021100.GA12824@in.ibm.com>
+In-Reply-To: <20060626090915.CA8333402A@koto.vergenet.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Maneesh Soni <maneesh@in.ibm.com>
-Cc: "Eric W. Biederman" <ebiederm@xmission.com>, Andrew Morton <akpm@osdl.org>, Neela.Kolli@engenio.com, linux-scsi@vger.kernel.org, mike.miller@hp.com, fastboot@lists.osdl.org, linux-kernel@vger.kernel.org
+To: Horms <horms@verge.net.au>
+Cc: "Eric W. Biederman" <ebiederm@xmission.com>, Andrew Morton <akpm@osdl.org>, Neela.Kolli@engenio.com, linux-scsi@vger.kernel.org, mike.miller@hp.com, "Zou, Nanhai" <nanhai.zou@intel.com>, fastboot@lists.osdl.org, linux-kernel@vger.kernel.org
 
-On Mon, Jun 26, 2006 at 07:41:00AM +0530, Maneesh Soni wrote:
-> On Sat, Jun 24, 2006 at 11:13:44AM -0600, Eric W. Biederman wrote:
-> > Vivek Goyal <vgoyal@in.ibm.com> writes:
-> > 
-> > > On Sat, Jun 24, 2006 at 04:30:46AM -0700, Andrew Morton wrote:
-> > >
-> > >> > Or is there a generic way to handle these situations? Fixing them driver
-> > >> > by driver is a long painful process. 
-> > >> 
-> > >> Some generic way of whacking a PCI device via the standard PCI registers? 
-> > >> Not that I know of.
-> > >
-> > > Somebody hinted that think of PCI bus reset. But I think PCI bus reset will
-> > > require firware/BIOS to export a hook to software to so initiate PCI bus
-> > > reset and I don't think many platforms do that. Infact I am not even aware
-> > > of one platform who does that.
+On Mon, Jun 26, 2006 at 06:09:15PM +0900, Horms wrote:
+> In article <m1veqqxyrb.fsf@ebiederm.dsl.xmission.com> you wrote:
 > > 
 > > Not all pci busses support it but there is a standard pci bus reset bit
 > > in pci bridges.
@@ -46,25 +32,20 @@ On Mon, Jun 26, 2006 at 07:41:00AM +0530, Maneesh Soni wrote:
 > > 
 > > It would at least make it easier for people to see which drivers
 > > they don't want to use, and give people some incentive to fix things.
-> > 
 > 
-> Vivek, 
+> I believe that MPT Fusion could go on that list.
 > 
-> I think having something as Eric suggested instead of crashboot= is better.
-> We can hve this config option set for kernel like dump capture
-> kernel. (CONFIG_CRASH_DUMP=y). This should save some bytes on already longish
-> kdump kernel boot paramenters.
+> http://permalink.gmane.org/gmane.linux.ports.ia64/14451
 > 
+>
 
-Maneesh, Keeping this code under a config option becomes a problem when we
-will have a relocatable kernel. At some point of time we got to have
-relocatable kernel so that people don't have to build two kernels. In fact
-this is becoming a pain area for distros. That's the reason I thought
-of making it a command line parameter.
+Above link does not give details of exact MPT fusion initialization 
+problems faced on IA64. I faced MPT fusion initialization issues on
+i386/x86_64 and posted a fix.
 
-I remember few months back, Eric had mentioned that he has got patches for
-relocatable kernel ready for review for i386 and x86_64. Eric, do you have
-any plans to post the patches for review?
+http://kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=9bf0a28c9a24e2cee5deecf89d118254374c75ba
+
+You might want to download and check.
 
 Thanks
-Vivek 
+Vivek
