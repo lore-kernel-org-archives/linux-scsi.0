@@ -1,60 +1,92 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [-mm patch] drivers/scsi/arcmsr/: cleanups
-Date: Mon, 26 Jun 2006 17:17:19 +0200
-Message-ID: <20060626151719.GS23314@stusta.de>
-References: <20060624061914.202fbfb5.akpm@osdl.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: Asynchronous scsi scanning, version 9
+Date: Mon, 26 Jun 2006 09:18:28 -0600
+Message-ID: <20060626151828.GH1608@parisc-linux.org>
+References: <447AB2F5.2000700@s5r6.in-berlin.de>
+	<20060529130515.GE23405@parisc-linux.org>
+	<20060531232139.GA3202@us.ibm.com> <447EE81D.2050906@ums.usu.ru>
+	<20060601132315.GD32143@parisc-linux.org>
+	<1151270127.3617.26.camel@mulgrave.il.steeleye.com>
+	<20060625224631.GD1608@parisc-linux.org>
+	<1151310285.3185.16.camel@laptopd505.fenrus.org>
+	<20060626124001.GG1608@parisc-linux.org>
+	<20060626144442.GA13319@one-eyed-alien.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:60937 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S932470AbWFZPRV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Jun 2006 11:17:21 -0400
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-hotplug-devel-bounces@lists.sourceforge.net>
 Content-Disposition: inline
-In-Reply-To: <20060624061914.202fbfb5.akpm@osdl.org>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20060626144442.GA13319@one-eyed-alien.net>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
+	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-hotplug-devel>
+List-Post: <mailto:linux-hotplug-devel@lists.sourceforge.net>
+List-Help: <mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
+	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: linux-hotplug-devel-bounces@lists.sourceforge.net
+Errors-To: linux-hotplug-devel-bounces@lists.sourceforge.net
+To: Arjan van de Ven <arjan@infradead.org>, linux-scsi@vger.kernel.org, Stefan Richter <stefanr@s5r6.in-berlin.de>, linux-hotplug-devel@lists.sourceforge.net, Patrick Mansfield <patmans@us.ibm.com>, "Alexander E. Patrakov" <patrakov@ums.usu.ru>, James Bottomley <James.Bottomley@SteelEye.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Erich Chen <erich@areca.com.tw>
-Cc: linux-kernel@vger.kernel.org, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
 
-This patch contains the following cleanups:
-- arcmsr_attr.c: #if 0 the unused arcmsr_free_sysfs_attr()
-- arcmsr_hba.c: make the needlessly global arcmsr_iop_reset() static
+On Mon, Jun 26, 2006 at 07:44:42AM -0700, Matthew Dharm wrote:
+> On Mon, Jun 26, 2006 at 06:40:01AM -0600, Matthew Wilcox wrote:
+> > I'm not 100% sure what the problem is with USB.  If it's that we may not
+> > have discovered all the USB devices currently plugged in, then I think
+> > we need to change the way USB works to use one Scsi_Host for all USB
+> > storage devices, and then make each device either its own target or its
+> > own channel (probably the former; the latter is less well-tested code).
+> 
+> There are a couple of things which make this difficult for USB.
+> 
+> First, some (many?) USB devices need to be left alone for several seconds
+> after attachment in order to allow them to initialize to the point where
+> they are usable.
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+That's OK.  Once we know they're there, we can reserve their place
+and delay until they're ready to go.
 
----
+> Second, depending on how many hubs are between the host and target, the
+> time-to-discover the device is highly variable.
 
- drivers/scsi/arcmsr/arcmsr_attr.c |    2 ++
- drivers/scsi/arcmsr/arcmsr_hba.c  |    2 +-
- 2 files changed, 3 insertions(+), 1 deletion(-)
+Can, or does, USB keep track of hub discovery, and hence know whether
+or not it's completed USB discovery?
 
---- linux-2.6.17-mm2-full/drivers/scsi/arcmsr/arcmsr_attr.c.old	2006-06-26 01:43:40.000000000 +0200
-+++ linux-2.6.17-mm2-full/drivers/scsi/arcmsr/arcmsr_attr.c	2006-06-26 01:44:00.000000000 +0200
-@@ -171,12 +171,14 @@
- 							&arcmsr_sysfs_message_transfer_attr);
- }
- 
-+#if 0
- void
- arcmsr_free_sysfs_attr(struct AdapterControlBlock *acb) {
- 	struct Scsi_Host *host = acb->host;
- 
- 	sysfs_remove_bin_file(&host->shost_gendev.kobj, &arcmsr_sysfs_message_transfer_attr);
- }
-+#endif  /*  0  */
- 
- static ssize_t
- arcmsr_attr_host_driver_version(struct class_device *cdev, char *buf) {
---- linux-2.6.17-mm2-full/drivers/scsi/arcmsr/arcmsr_hba.c.old	2006-06-26 01:44:09.000000000 +0200
-+++ linux-2.6.17-mm2-full/drivers/scsi/arcmsr/arcmsr_hba.c	2006-06-26 01:44:19.000000000 +0200
-@@ -1357,7 +1357,7 @@
- 	acb->acb_flags |= ACB_F_IOP_INITED;
- }
- 
--void arcmsr_iop_reset(struct AdapterControlBlock *acb)
-+static void arcmsr_iop_reset(struct AdapterControlBlock *acb)
- {
- 	struct MessageUnit __iomem *reg = acb->pmu;
- 	struct CommandControlBlock *ccb;
+> Third, once discovered the device may still take a long time to be "ready".
+> Think of this as a slow spin-up time.  This is different from my first
+> point in that the device can actually accept commands, but all commands
+> will fail with some sort of not-ready type error.
 
+That's OK too.
+
+> As for using one Scsi_Host... there are several usb-storage devices which
+> attach to an entire SCSI bus (not just a single target), so can't make each
+> device it's own target.
+
+Oh.  My fault for reading the comment rather than the code.
+
+                /* reject if target != 0 or if LUN is higher than
+                 * the maximum known LUN
+                 */
+                else if (us->srb->device->id && 
+                                !(us->flags & US_FL_SCM_MULT_TARG)) {
+
+Do these devices stick to occupying only target IDs from 0-7?  If not,
+you may wish to increase ->max_id for those devices.  I think it'd be worth
+exporting scsi_scan_channel() from the midlayer (and rearranging it to have
+__scsi_scan_channel() as was done with __scsi_scan_target) for USB's benefit.
+
+> Also, at the time this was all written it wasn't
+> possible to dynamically remove (with any stability) individual targets or
+> channels.  Perhaps that has changed?
+
+It's definitely possible to remove individual targets dynamically now;
+Fibre Channel has sorted that out (and will complain loudly if it breaks).
+The scsi core doesn't really have a channel object; channel is just an integer 
+that describes a path to a target.  So I think there should be no problem in
+converting USB to have one host and many channels.
+
+Using Tomcat but need to do more? Need to support web services, security?
+Get stuff done quickly with pre-integrated technology to make your job easier
+Download IBM WebSphere Application Server v.1.0.1 based on Apache Geronimo
+http://sel.as-us.falkag.net/sel?cmd=lnk&kid=120709&bid=263057&dat=121642
