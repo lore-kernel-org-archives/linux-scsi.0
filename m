@@ -1,54 +1,123 @@
-From: Doug Ledford <dledford@xsintricity.com>
-Subject: Re: [SPAM] Re: Asynchronous scsi scanning, version 9
-Date: Mon, 26 Jun 2006 14:55:50 -0400
-Message-ID: <1151348151.4936.8.camel@fc5.xsintricity.com>
-References: <20060529031915.GB23405@parisc-linux.org>
-	<447AB2F5.2000700@s5r6.in-berlin.de>
-	<20060529130515.GE23405@parisc-linux.org>
-	<20060531232139.GA3202@us.ibm.com> <447EE81D.2050906@ums.usu.ru>
-	<20060601132315.GD32143@parisc-linux.org>
-	<1151270127.3617.26.camel@mulgrave.il.steeleye.com>
-	<20060625224631.GD1608@parisc-linux.org>
-	<1151310285.3185.16.camel@laptopd505.fenrus.org>
-	<20060626124001.GG1608@parisc-linux.org>
-	<20060626144442.GA13319@one-eyed-alien.net>
+From: ebiederm@xmission.com (Eric W. Biederman)
+Subject: Re: [RFC] [PATCH 2/2] kdump: cciss driver initialization
+	issue fix
+Date: Mon, 26 Jun 2006 13:21:04 -0600
+Message-ID: <m1veqnrae7.fsf@ebiederm.dsl.xmission.com>
+References: <E717642AF17E744CA95C070CA815AE550E163F@cceexc23.americas.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-hotplug-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <20060626144442.GA13319@one-eyed-alien.net>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
-	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-hotplug-devel>
-List-Post: <mailto:linux-hotplug-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
-	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux-hotplug-devel-bounces@lists.sourceforge.net
-Errors-To: linux-hotplug-devel-bounces@lists.sourceforge.net
-To: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>, Patrick Mansfield <patmans@us.ibm.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, "Alexander E. Patrakov" <patrakov@ums.usu.ru>, Arjan van de Ven <arjan@infradead.org>
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <fastboot-bounces@lists.osdl.org>
+In-Reply-To: <E717642AF17E744CA95C070CA815AE550E163F@cceexc23.americas.cpqcorp.net>
+	(Mike Miller's message of "Mon, 26 Jun 2006 13:51:43 -0500")
+List-Unsubscribe: <https://lists.osdl.org/mailman/listinfo/fastboot>,
+	<mailto:fastboot-request@lists.osdl.org?subject=unsubscribe>
+List-Archive: <http://lists.osdl.org/pipermail/fastboot>
+List-Post: <mailto:fastboot@lists.osdl.org>
+List-Help: <mailto:fastboot-request@lists.osdl.org?subject=help>
+List-Subscribe: <https://lists.osdl.org/mailman/listinfo/fastboot>,
+	<mailto:fastboot-request@lists.osdl.org?subject=subscribe>
+Sender: fastboot-bounces@lists.osdl.org
+Errors-To: fastboot-bounces@lists.osdl.org
+To: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+Cc: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, Neela.Kolli@engenio.com, fastboot@lists.osdl.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2006-06-26 at 07:44 -0700, Matthew Dharm wrote:
+"Miller, Mike (OS Dev)" <Mike.Miller@hp.com> writes:
 
-> As for using one Scsi_Host... there are several usb-storage devices which
-> attach to an entire SCSI bus (not just a single target), so can't make each
-> device it's own target.
+>> -----Original Message-----
+>> From: Eric W. Biederman [mailto:ebiederm@xmission.com] =
 
-This makes no sense to me at all.  The USB devices attach to a USB bus,
-the whole notion of a SCSI bus for USB devices is as nothing more than
-an abstraction, and should be able to be arbitrarily changed in the USB
-stack any time you wish.  In short, you aren't doing SCSI selections
-over a USB bus, so why should SCSI target IDs vs. host IDs matter?
-Aren't they just all mapped in the driver to the USB device anyway?
+>> Sent: Monday, June 26, 2006 12:52 PM
+>> To: Miller, Mike (OS Dev)
+>> Cc: vgoyal@in.ibm.com; Maneesh Soni; Andrew Morton; =
 
--- 
-Doug Ledford <dledford@xsintricity.com>
+>> Neela.Kolli@engenio.com; linux-scsi@vger.kernel.org; =
+
+>> fastboot@lists.osdl.org; linux-kernel@vger.kernel.org
+>> Subject: Re: [Fastboot] [RFC] [PATCH 2/2] kdump: cciss driver =
+
+>> initialization issue fix
+>> =
+
+>> "Miller, Mike (OS Dev)" <Mike.Miller@hp.com> writes:
+>> =
+
+>> > Thanks Eric, that helps me understand. Section 8.2.2 of the =
+
+>> open cciss =
+
+>> > spec supports a reset message. Target 0x00 is the =
+
+>> controller. We could =
+
+>> > add this to the init routine to ensure the board is made sane again =
+
+>> > but this would drastically increase init time under normal =
+
+>> circumstances.
+>> =
+
+>> Where does the init time penalty come from? How large is the =
+
+>> init penalty?  I suspect it is from waiting for the scsi =
+
+>> disks to spin up.
+>> But I am just guessing in the dark.
+>
+> The penalty is in the firmware and self-test operations.
+
+Ok.  Reasonable. Roughly long does that take? 1 millisecond? 1 second?
+1 minute? 1 hour? =
 
 
+>> > And I suspect this is a hard reset, also. Not sure if that would =
 
-Using Tomcat but need to do more? Need to support web services, security?
-Get stuff done quickly with pre-integrated technology to make your job easier
-Download IBM WebSphere Application Server v.1.0.1 based on Apache Geronimo
-http://sel.as-us.falkag.net/sel?cmd=lnk&kid=120709&bid=263057&dat=121642
+>> > negatively impact kdump. If there were some condition we could test =
+
+>> > against and perform the reset when that condition is met it =
+
+>> would not =
+
+>> > impact 99.9% of users.
+>> =
+
+>> I am wondering if it is possible to look at the controller =
+
+>> and see if it is in a bad state, (i.e. in some state besides =
+
+>> just coming out of reset) and if so issue a reset.  If this =
+
+>> really is a long operation that would be the ideal way to handle it.
+>
+> It's not really in a bad state at this time, is it? Maybe some commands
+> hanging around.
+
+Not bad as in broken.  But bad as in unexpected.  If it is just a matter
+of outstanding commands we might even be able to just ask the adapter
+to cancel all of the at initialization time.
+
+>> If the amount of time is really user noticeable and testing =
+
+>> for it is impossible then it is probably time to talk kernel =
+
+>> command line options.
+>
+> I was informed of the crashboot command line parameter. I can implement
+> that as a test.
+
+Sounds like a start.
+
+>> Although it might simply be appropriate to handle commands =
+
+>> completing you didn't start.  I am not at all familiar with =
+
+>> that particular piece of hardware so I can't make a good =
+
+>> guess on what needs to happen there.
+>
+> Not sure about doing this.
+
+Well I would certainly print a warning.
+
+Eric
