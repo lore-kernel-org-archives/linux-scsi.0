@@ -1,115 +1,47 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: [SPAM] Re: Asynchronous scsi scanning, version 9
-Date: Mon, 26 Jun 2006 14:04:03 -0700
-Message-ID: <20060626210403.GA31085@one-eyed-alien.net>
-References: <20060529130515.GE23405@parisc-linux.org>
-	<20060531232139.GA3202@us.ibm.com> <447EE81D.2050906@ums.usu.ru>
-	<20060601132315.GD32143@parisc-linux.org>
-	<1151270127.3617.26.camel@mulgrave.il.steeleye.com>
-	<20060625224631.GD1608@parisc-linux.org>
-	<1151310285.3185.16.camel@laptopd505.fenrus.org>
-	<20060626124001.GG1608@parisc-linux.org>
-	<20060626144442.GA13319@one-eyed-alien.net>
-	<1151348151.4936.8.camel@fc5.xsintricity.com>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Missing Patches - please pull these in....
+Date: Mon, 26 Jun 2006 17:07:25 -0400
+Message-ID: <44A04C8D.3070008@emulex.com>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============1776464104=="
-Return-path: <linux-hotplug-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <1151348151.4936.8.camel@fc5.xsintricity.com>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
-	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-hotplug-devel>
-List-Post: <mailto:linux-hotplug-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
-	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux-hotplug-devel-bounces@lists.sourceforge.net
-Errors-To: linux-hotplug-devel-bounces@lists.sourceforge.net
-To: Doug Ledford <dledford@xsintricity.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>, Patrick Mansfield <patmans@us.ibm.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, "Alexander E. Patrakov" <patrakov@ums.usu.ru>, Arjan van de Ven <arjan@infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from emulex.emulex.com ([138.239.112.1]:21247 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S933034AbWFZVHi
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 26 Jun 2006 17:07:38 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>, Greg KH <greg@kroah.com>, Andrew Morton <akpm@osdl.org>
 
+James,
 
---===============1776464104==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="HlL+5n6rz5pIUxbD"
-Content-Disposition: inline
+I looked at your 2.6.17 drop as well as the latest scsi-misc-2.6 tree,
+and the following patches have not yet been applied.  Can you please
+do so as soon as possible (especially on the one posted in March).
 
+-- james s
 
---HlL+5n6rz5pIUxbD
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+3/8/06: [PATCH Repost 0/2] Block I/O while SG reset operation in progress
+http://marc.theaimsgroup.com/?l=linux-scsi&m=114184745819730&w=2
+http://marc.theaimsgroup.com/?l=linux-scsi&m=114184745830216&w=2
+http://marc.theaimsgroup.com/?l=linux-scsi&m=114184745819007&w=2
 
-On Mon, Jun 26, 2006 at 02:55:50PM -0400, Doug Ledford wrote:
-> On Mon, 2006-06-26 at 07:44 -0700, Matthew Dharm wrote:
->=20
-> > As for using one Scsi_Host... there are several usb-storage devices whi=
-ch
-> > attach to an entire SCSI bus (not just a single target), so can't make =
-each
-> > device it's own target.
->=20
-> This makes no sense to me at all.  The USB devices attach to a USB bus,
-> the whole notion of a SCSI bus for USB devices is as nothing more than
-> an abstraction, and should be able to be arbitrarily changed in the USB
-> stack any time you wish.  In short, you aren't doing SCSI selections
-> over a USB bus, so why should SCSI target IDs vs. host IDs matter?
-> Aren't they just all mapped in the driver to the USB device anyway?
+5/11/06: [PATCH] fc transport: resolve scan vs delete deadlocks  (CRITICAL)
+http://marc.theaimsgroup.com/?l=linux-scsi&m=114736846214310&w=2
 
-I guess my point is that there are some devices for which the concept of a
-'bus' is -not- an abstraction.  These devices have a USB connector at one
-end and a SCSI HD-68 connector on the other, and can be attached to 15
-devices in a SCSI chain.
+5/16/06: [REPOST #2][PATCH] update max sdev block limit
+http://marc.theaimsgroup.com/?l=linux-scsi&m=114781033210150&w=2
 
-Perhaps I misunderstand your objection?
+6/15/06: [PATCH] scsi_scan.c: bug fix: starget use after free issue  (CRITICAL)
+http://marc.theaimsgroup.com/?l=linux-scsi&m=115039057504409&w=2
 
-Matt
+And these new ones are critical as well:
 
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
+6/26/06: [REPOST][PATCH] fc transport: bug fix: correct references  (CRITICAL)
+http://marc.theaimsgroup.com/?l=linux-scsi&m=115134614426385&w=2
 
-E:  You run this ship with Windows?!  YOU IDIOT!
-L:  Give me a break, it came bundled with the computer!
-					-- ESR and Lan Solaris
-User Friendly, 12/8/1998
+6/26/06: [PATCH] scsi midlayer: fix sdev reuse after free   (CRITICAL)
+http://marc.theaimsgroup.com/?l=linux-scsi&m=115134812215106&w=2
 
---HlL+5n6rz5pIUxbD
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.2.2 (GNU/Linux)
-
-iD8DBQFEoEvDHL9iwnUZqnkRAkaQAKCdOPIXYYkA4gZ7SOZTuxXgL9WC1ACfVA3t
-yDk6vIe21mDjn+YmY3tAmss=
-=vmS7
------END PGP SIGNATURE-----
-
---HlL+5n6rz5pIUxbD--
-
-
---===============1776464104==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-Using Tomcat but need to do more? Need to support web services, security?
-Get stuff done quickly with pre-integrated technology to make your job easier
-Download IBM WebSphere Application Server v.1.0.1 based on Apache Geronimo
-http://sel.as-us.falkag.net/sel?cmd=lnk&kid=120709&bid=263057&dat=121642
-
---===============1776464104==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-Linux-hotplug-devel mailing list  http://linux-hotplug.sourceforge.net
-Linux-hotplug-devel@lists.sourceforge.net
-https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel
-
---===============1776464104==--
