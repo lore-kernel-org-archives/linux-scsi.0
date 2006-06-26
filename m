@@ -1,118 +1,60 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: Asynchronous scsi scanning, version 9
-Date: Mon, 26 Jun 2006 07:44:42 -0700
-Message-ID: <20060626144442.GA13319@one-eyed-alien.net>
-References: <20060529031915.GB23405@parisc-linux.org>
-	<447AB2F5.2000700@s5r6.in-berlin.de>
-	<20060529130515.GE23405@parisc-linux.org>
-	<20060531232139.GA3202@us.ibm.com> <447EE81D.2050906@ums.usu.ru>
-	<20060601132315.GD32143@parisc-linux.org>
-	<1151270127.3617.26.camel@mulgrave.il.steeleye.com>
-	<20060625224631.GD1608@parisc-linux.org>
-	<1151310285.3185.16.camel@laptopd505.fenrus.org>
-	<20060626124001.GG1608@parisc-linux.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Areca driver recap + status
+Date: Mon, 26 Jun 2006 09:48:58 -0500
+Message-ID: <1151333338.2673.4.camel@mulgrave.il.steeleye.com>
+References: <09be01c695b3$2ed8c2c0$c100a8c0@robm>
+	 <20060621222826.ff080422.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============0076182148=="
-Return-path: <linux-hotplug-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <20060626124001.GG1608@parisc-linux.org>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
-	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-hotplug-devel>
-List-Post: <mailto:linux-hotplug-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
-	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux-hotplug-devel-bounces@lists.sourceforge.net
-Errors-To: linux-hotplug-devel-bounces@lists.sourceforge.net
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, Patrick Mansfield <patmans@us.ibm.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, "Alexander E. Patrakov" <patrakov@ums.usu.ru>, Arjan van de Ven <arjan@infradead.org>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stat9.steeleye.com ([209.192.50.41]:30661 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1751252AbWFZOuF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 26 Jun 2006 10:50:05 -0400
+In-Reply-To: <20060621222826.ff080422.akpm@osdl.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: rdunlap@xenotime.net, hch@infradead.org, erich@areca.com.tw, brong@fastmail.fm, dax@gurulabs.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Robert Mueller <robm@fastmail.fm>
+
+On Wed, 2006-06-21 at 22:28 -0700, Andrew Morton wrote: 
+> On Thu, 22 Jun 2006 14:18:23 +1000
+> "Robert Mueller" <robm@fastmail.fm> wrote:
+> 
+> > The driver went into 2.6.11-rc3-mm1 here:
+> > http://marc.theaimsgroup.com/?l=linux-kernel&m=110754432622498&w=2
+> 
+> One and a half years.
+> 
+> Would the world end if we just merged the dang thing?
+
+Not the world perhaps, but I'm unwilling to concede that if a driver
+author is given a list of major issues and does nothing, then the driver
+should go in after everyone gets impatient.
+
+The rules for inclusion are elastic and include broad leeway for good
+behaviour, but this would stretch the elasticity way beyond breaking
+point.
+
+The list of issues is here:
+
+http://marc.theaimsgroup.com/?l=linux-scsi&m=114556263632510
+
+Most of the serious stuff is fixed with the exception of:
+
+- sysfs has more than one value per file
+- BE platform support
+- PAE (cast of dma_addr_t to unsigned long) issues.
+- SYNCHRONIZE_CACHE is ignored.  This is wrong.  The sync cache in the
+shutdown notifier isn't sufficient.
+
+At least the sysfs files have to be fixed before it goes in ... unless
+you want to be lynched by Greg?
+
+What I could do is set up a holding tree for all the fixed ... but -mm
+is doing a good job of that at the moment.
+
+James
 
 
---===============0076182148==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="sm4nu43k4a2Rpi4c"
-Content-Disposition: inline
-
-
---sm4nu43k4a2Rpi4c
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, Jun 26, 2006 at 06:40:01AM -0600, Matthew Wilcox wrote:
-> I'm not 100% sure what the problem is with USB.  If it's that we may not
-> have discovered all the USB devices currently plugged in, then I think
-> we need to change the way USB works to use one Scsi_Host for all USB
-> storage devices, and then make each device either its own target or its
-> own channel (probably the former; the latter is less well-tested code).
-
-There are a couple of things which make this difficult for USB.
-
-First, some (many?) USB devices need to be left alone for several seconds
-after attachment in order to allow them to initialize to the point where
-they are usable.
-
-Second, depending on how many hubs are between the host and target, the
-time-to-discover the device is highly variable.
-
-Third, once discovered the device may still take a long time to be "ready".
-Think of this as a slow spin-up time.  This is different from my first
-point in that the device can actually accept commands, but all commands
-will fail with some sort of not-ready type error.
-
-As for using one Scsi_Host... there are several usb-storage devices which
-attach to an entire SCSI bus (not just a single target), so can't make each
-device it's own target.  Also, at the time this was all written it wasn't
-possible to dynamically remove (with any stability) individual targets or
-channels.  Perhaps that has changed?
-
-Matt
-
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
-
-You suck Stef.
-					-- Greg=20
-User Friendly, 11/29/97
-
---sm4nu43k4a2Rpi4c
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.2.2 (GNU/Linux)
-
-iD8DBQFEn/LaHL9iwnUZqnkRAkOQAJ4zpVMYzAFf6kQfWcyxU//v6QMNKgCgl0/Y
-8+Ox6L++ZbNQc1vU+t7Cb10=
-=M0vO
------END PGP SIGNATURE-----
-
---sm4nu43k4a2Rpi4c--
-
-
---===============0076182148==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-Using Tomcat but need to do more? Need to support web services, security?
-Get stuff done quickly with pre-integrated technology to make your job easier
-Download IBM WebSphere Application Server v.1.0.1 based on Apache Geronimo
-http://sel.as-us.falkag.net/sel?cmd=lnk&kid=120709&bid=263057&dat=121642
-
---===============0076182148==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-Linux-hotplug-devel mailing list  http://linux-hotplug.sourceforge.net
-Linux-hotplug-devel@lists.sourceforge.net
-https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel
-
---===============0076182148==--
