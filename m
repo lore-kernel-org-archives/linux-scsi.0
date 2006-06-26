@@ -1,58 +1,137 @@
-From: Maneesh Soni <maneesh@in.ibm.com>
-Subject: Re: [Fastboot] [RFC] [PATCH 2/2] kdump: cciss driver initialization issue fix
-Date: Mon, 26 Jun 2006 07:41:00 +0530
-Message-ID: <20060626021100.GA12824@in.ibm.com>
-References: <20060623210121.GA18384@in.ibm.com> <20060623210424.GB18384@in.ibm.com> <20060623235553.2892f21a.akpm@osdl.org> <20060624111954.GA7313@in.ibm.com> <20060624043046.4e4985be.akpm@osdl.org> <20060624120836.GB7313@in.ibm.com> <m1veqqxyrb.fsf@ebiederm.dsl.xmission.com>
-Reply-To: maneesh@in.ibm.com
+From: "Randy.Dunlap" <rdunlap@xenotime.net>
+Subject: Re: [PATCH] Fix bug: accessing past end of array.
+Date: Sun, 25 Jun 2006 19:28:27 -0700
+Message-ID: <20060625192827.730f1a8d.rdunlap@xenotime.net>
+References: <20060626020646.49093.qmail@web50406.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:5067 "EHLO e1.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1751374AbWFZCLR (ORCPT
+Received: from xenotime.net ([66.160.160.81]:47503 "HELO xenotime.net")
+	by vger.kernel.org with SMTP id S1751381AbWFZCZl (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 25 Jun 2006 22:11:17 -0400
-Content-Disposition: inline
-In-Reply-To: <m1veqqxyrb.fsf@ebiederm.dsl.xmission.com>
+	Sun, 25 Jun 2006 22:25:41 -0400
+Received: from midway.site ([71.245.108.25]) by xenotime.net for <linux-scsi@vger.kernel.org>; Sun, 25 Jun 2006 19:25:40 -0700
+In-Reply-To: <20060626020646.49093.qmail@web50406.mail.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Eric W. Biederman" <ebiederm@xmission.com>
-Cc: vgoyal@in.ibm.com, Andrew Morton <akpm@osdl.org>, Neela.Kolli@engenio.com, linux-scsi@vger.kernel.org, mike.miller@hp.com, fastboot@lists.osdl.org, linux-kernel@vger.kernel.org
+To: Alex Davis <alex14641@yahoo.com>
+Cc: linux-kernel@vger.kernel.org, scsi <linux-scsi@vger.kernel.org>
 
-On Sat, Jun 24, 2006 at 11:13:44AM -0600, Eric W. Biederman wrote:
-> Vivek Goyal <vgoyal@in.ibm.com> writes:
+[adding linux-scsi]
+
+On Sun, 25 Jun 2006 19:06:46 -0700 (PDT) Alex Davis wrote:
+
+> If the card is re-inserted 2 or more times, we access elements
+> past the end of the aha152x_host array.
+
+When I was testing/reproducing this, I observed that removing
+the card did not cause the aha152x_detach() function to be called
+(in drivers/scsi/pcmcia/aha152x_stub.c).  However, I didn't
+find out why that doesn't happen.  I think fixing this would
+be a big help.
+
+
+> Also correct spelling errors.
 > 
-> > On Sat, Jun 24, 2006 at 04:30:46AM -0700, Andrew Morton wrote:
-> >
-> >> > Or is there a generic way to handle these situations? Fixing them driver
-> >> > by driver is a long painful process. 
-> >> 
-> >> Some generic way of whacking a PCI device via the standard PCI registers? 
-> >> Not that I know of.
-> >
-> > Somebody hinted that think of PCI bus reset. But I think PCI bus reset will
-> > require firware/BIOS to export a hook to software to so initiate PCI bus
-> > reset and I don't think many platforms do that. Infact I am not even aware
-> > of one platform who does that.
+> This is for 2.6.17.
 > 
-> Not all pci busses support it but there is a standard pci bus reset bit
-> in pci bridges.
-> 
-> I don't know if it would help but it might make sense to have a config
-> option that can be used to mark drivers that are known to have problems,
-> in these scenarios.
-> 
-> CONFIG_BRITTLE_INIT perhaps?
-> 
-> It would at least make it easier for people to see which drivers
-> they don't want to use, and give people some incentive to fix things.
+> Signed-off-by Alex Davis <alex14641 at yahoo dot com>
+> =========================================================================
+> diff -u linux-2.6.17.1-orig/drivers/scsi/aha152x.c linux-2.6.17.1/drivers/scsi/aha152x.c
+> --- linux-2.6.17.1-orig/drivers/scsi/aha152x.c	2006-06-17 21:49:35.000000000 -0400
+> +++ linux-2.6.17.1/drivers/scsi/aha152x.c	2006-06-25 20:06:05.000000000 -0400
+> @@ -766,7 +766,7 @@
+>  	struct Scsi_Host *shpnt = lookup_irq(irqno);
+>  
+>  	if (!shpnt) {
+> -        	printk(KERN_ERR "aha152x: catched software interrupt %d for unknown controller.\n",
+> irqno);
+> +        	printk(KERN_ERR "aha152x: caught software interrupt %d for unknown controller.\n",
+> irqno);
+>  		return IRQ_NONE;
+>  	}
+>  
+> @@ -779,6 +779,7 @@
+>  struct Scsi_Host *aha152x_probe_one(struct aha152x_setup *setup)
+>  {
+>  	struct Scsi_Host *shpnt;
+> +	int i;
+>  
+>  	shpnt = scsi_host_alloc(&aha152x_driver_template, sizeof(struct aha152x_hostdata));
+>  	if (!shpnt) {
+> @@ -787,6 +788,22 @@
+>  	}
+>  
+>  	/* need to have host registered before triggering any interrupt */
+> +
+> +	/* find an empty slot. */
+> +	for ( i = 0; i < ARRAY_SIZE(aha152x_host); ++i ) {
+> +		if ( aha152x_host[i] == NULL ) {
+> +			break;
+> +		}
+> +	}
+> +
+> +	/* no empty slots? */
+> +	if ( i >= ARRAY_SIZE(aha152x_host) ) {
+> +		printk(KERN_ERR "aha152x: too many hosts: %d\n", i + 1);
+> +		return NULL;
+> +	}
+> +
+> +	registered_count = i;
+> +
+>  	aha152x_host[registered_count] = shpnt;
+>  
+>  	memset(HOSTDATA(shpnt), 0, sizeof *HOSTDATA(shpnt));
+> @@ -915,6 +932,8 @@
+>  
+>  void aha152x_release(struct Scsi_Host *shpnt)
+>  {
+> +	int i;
+> +
+>  	if(!shpnt)
+>  		return;
+>  
+> @@ -933,6 +952,12 @@
+>  
+>  	scsi_remove_host(shpnt);
+>  	scsi_host_put(shpnt);
+> +	for ( i = 0; i < ARRAY_SIZE(aha152x_host); ++i ) {
+> +		if ( aha152x_host[i] == shpnt ) {
+> +			aha152x_host[i] = NULL;
+> +			break;
+> +		}
+> +	}
+>  }
+>  
+>  
+> @@ -1458,7 +1483,7 @@
+>  	unsigned char rev, dmacntrl0;
+>  
+>  	if (!shpnt) {
+> -		printk(KERN_ERR "aha152x: catched interrupt %d for unknown controller.\n", irqno);
+> +		printk(KERN_ERR "aha152x: caught interrupt %d for unknown controller.\n", irqno);
+>  		return IRQ_NONE;
+>  	}
+>  
+> @@ -2976,6 +3001,9 @@
+>  	Scsi_Cmnd *ptr;
+>  	unsigned long flags;
+>  
+> +	if(!shpnt)
+> +		return;
+> +
+>  	DO_LOCK(flags);
+>  	printk(KERN_DEBUG "\nqueue status:\nissue_SC:\n");
+>  	for (ptr = ISSUE_SC; ptr; ptr = SCNEXT(ptr))
+> @@ -3941,7 +3969,6 @@
+>  
+>  	for(i=0; i<ARRAY_SIZE(setup); i++) {
+>  		aha152x_release(aha152x_host[i]);
+> -		aha152x_host[i]=NULL;
+>  	}
+>  }
 > 
 
-Vivek, 
-
-I think having something as Eric suggested instead of crashboot= is better.
-We can hve this config option set for kernel like dump capture
-kernel. (CONFIG_CRASH_DUMP=y). This should save some bytes on already longish
-kdump kernel boot paramenters.
-
-Thanks
-Maneesh
+---
+~Randy
