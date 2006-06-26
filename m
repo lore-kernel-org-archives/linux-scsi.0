@@ -1,83 +1,93 @@
 From: Vivek Goyal <vgoyal@in.ibm.com>
-Subject: Re: [RFC] [PATCH 2/2] kdump: cciss driver initialization
-	issue fix
-Date: Mon, 26 Jun 2006 13:04:40 -0400
-Message-ID: <20060626170440.GF8985@in.ibm.com>
-References: <m1lkrjub2m.fsf@ebiederm.dsl.xmission.com>
-	<E717642AF17E744CA95C070CA815AE550E1555@cceexc23.americas.cpqcorp.net>
+Subject: Re: [Fastboot] [RFC] [PATCH 2/2] kdump: cciss driver initialization issue fix
+Date: Mon, 26 Jun 2006 13:16:59 -0400
+Message-ID: <20060626171659.GG8985@in.ibm.com>
+References: <20060623235553.2892f21a.akpm@osdl.org> <20060624111954.GA7313@in.ibm.com> <20060624043046.4e4985be.akpm@osdl.org> <20060624120836.GB7313@in.ibm.com> <m1veqqxyrb.fsf@ebiederm.dsl.xmission.com> <20060626021100.GA12824@in.ibm.com> <20060626133504.GA8985@in.ibm.com> <m11wtcvw5k.fsf@ebiederm.dsl.xmission.com> <20060626153239.GD8985@in.ibm.com> <m13bdrvrd4.fsf@ebiederm.dsl.xmission.com>
 Reply-To: vgoyal@in.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <fastboot-bounces@lists.osdl.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e34.co.us.ibm.com ([32.97.110.152]:58257 "EHLO
+	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751132AbWFZRRY
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 26 Jun 2006 13:17:24 -0400
 Content-Disposition: inline
-In-Reply-To: <E717642AF17E744CA95C070CA815AE550E1555@cceexc23.americas.cpqcorp.net>
-List-Unsubscribe: <https://lists.osdl.org/mailman/listinfo/fastboot>,
-	<mailto:fastboot-request@lists.osdl.org?subject=unsubscribe>
-List-Archive: <http://lists.osdl.org/pipermail/fastboot>
-List-Post: <mailto:fastboot@lists.osdl.org>
-List-Help: <mailto:fastboot-request@lists.osdl.org?subject=help>
-List-Subscribe: <https://lists.osdl.org/mailman/listinfo/fastboot>,
-	<mailto:fastboot-request@lists.osdl.org?subject=subscribe>
-Sender: fastboot-bounces@lists.osdl.org
-Errors-To: fastboot-bounces@lists.osdl.org
-To: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
-Cc: Andrew Morton <akpm@osdl.org>, Neela.Kolli@engenio.com, "Eric W. Biederman" <ebiederm@xmission.com>, linux-scsi@vger.kernel.org, fastboot@lists.osdl.org, linux-kernel@vger.kernel.org
+In-Reply-To: <m13bdrvrd4.fsf@ebiederm.dsl.xmission.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Eric W. Biederman" <ebiederm@xmission.com>
+Cc: Maneesh Soni <maneesh@in.ibm.com>, Andrew Morton <akpm@osdl.org>, Neela.Kolli@engenio.com, linux-scsi@vger.kernel.org, mike.miller@hp.com, fastboot@lists.osdl.org, linux-kernel@vger.kernel.org
 
-On Mon, Jun 26, 2006 at 11:51:52AM -0500, Miller, Mike (OS Dev) wrote:
+On Mon, Jun 26, 2006 at 10:00:55AM -0600, Eric W. Biederman wrote:
+
 [..]
-> > kdump or taking crash dumps using the kexec on panic =
+> >
+> > Looks like there are two problems to be solved.
+> >
+> > - Framework/capability to mark and isolate the drivers, either at compile
+> >   time or run time, which are not hardened enough to initialize properly
+> >   when the underlying device is in operational or in unknown state.
+> >
+> > - Actually hardening a driver to be able to initialize in a potentially
+> >   unreliable environment.  
+> >
+> >
+> > Solving first problem will help more in terms of people knowing in advance
+> > that certain drivers are known to have problems in specific environemnt and
+> > a user has got the option of skipping the execution/compilation of those
+> > drivers. (This is something close to what CONFIG_EXPERIMENTAL does)
+> >
+> > Second problem deals more with actually hardening the driver and not
+> > skipping its compilation/execution.
+> >
+> > I think people would like to change a driver's behaviour at run time.
+> > For example if they are booting in a unreliable environment they would
+> > like to reset the device otherwise they would skip that as BIOS has
+> > already done that for them. 
+> 
+> In the general case the device reset does not hurt.
 
-> > mechanism could be called a drivers worst nightmare.  In the =
+I think it does hurt.
 
-> > latest distros this is becoming the way crash dump style =
+- I have seen the case of MPT fusion drvier. It takes significantly more
+  time to come up if we choose to reset the device during initialization.
+  One of the reasons that we wait in a tight loop for the controller to 
+  come up after a reset message.
 
-> > information is captured.
-> > =
+- Long back we fixed ips driver and I remember that the maintainer had
+  a similar issue with the reset of device. He did not want to reset the
+  device in normal boot because otherwise it took significantly longer
+  for the driver to initialize.
 
-> > Because the initial kernel is broken we do a jump into =
+- Just now Mike also confirmed that resetting the device definitely
+  hurts in terms of time.
 
-> > another kernel that is sufficient to record a crash dump.  =
+>  Yes there
+> is the case of the slow scsi probe.  But a lot of that appears
+> to be a poor implementation of the scsi probe.  So I can see a kernel
+> command line option to play fast and loose but we should be safe
+> and thorough by default.
+> 
+> The more code paths you introduce the harder code is to maintain
+> and test.  The earlier discussion suggested you cannot harden
+> some drivers.  We can take action against drivers like that simply
+> and easily.
+> 
+> Hacks in the driver initialization are a completely different story.
+> 
 
-> > That second kernel initializes the hardware from whatever =
+So it is matter of making a choice in case the device does not have a
+software reset capability.
 
-> > random state the first kernel left the drivers in.  That =
+- Either try to make driver work through some hacks based on crashboot
+  option.
 
-> > first kernel is not permitted to do any device shutdown activities.
-> > =
+- Or mark the driver unusable in kdump scenarios.
 
-> > The problem is that a command the running instance of the =
-
-> > driver did not initiate completes.  At least if I read Vivek =
-
-> > patch 2/2 correctly.
-> > =
-
-> > So we have three options.
-> > - reset the card during initialization.
-> > - handle the case of a command we did not initiate completing.
-> > - mark the driver/card as impossibly hopeless for use in a crash
-> >   dump scenario.
-> > =
-
-> > =
-
-> > Eric
-> =
-
-> Thanks Eric, that helps me understand. Section 8.2.2 of the open cciss
-> spec supports a reset message. Target 0x00 is the controller. We could
-> add this to the init routine to ensure the board is made sane again but
-> this would drastically increase init time under normal circumstances.
-> And I suspect this is a hard reset, also. Not sure if that would
-> negatively impact kdump. If there were some condition we could test
-> against and perform the reset when that condition is met it would not
-> impact 99.9% of users.
-
-That's the precise reason of introducing the "crashboot" command line
-parameter. Driver authors can check against this condition and reset
-the device and 99.9% of the users are not impacted.
+Even if one decides to go for second option, at least "crashboot" or
+similar parameter will be required so that driver can choose whether
+to reset the device or not during initialization due to significant
+time penalty. 
 
 Thanks
 Vivek
