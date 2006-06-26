@@ -1,92 +1,112 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: Asynchronous scsi scanning, version 9
-Date: Mon, 26 Jun 2006 09:18:28 -0600
-Message-ID: <20060626151828.GH1608@parisc-linux.org>
-References: <447AB2F5.2000700@s5r6.in-berlin.de>
-	<20060529130515.GE23405@parisc-linux.org>
-	<20060531232139.GA3202@us.ibm.com> <447EE81D.2050906@ums.usu.ru>
-	<20060601132315.GD32143@parisc-linux.org>
-	<1151270127.3617.26.camel@mulgrave.il.steeleye.com>
-	<20060625224631.GD1608@parisc-linux.org>
-	<1151310285.3185.16.camel@laptopd505.fenrus.org>
-	<20060626124001.GG1608@parisc-linux.org>
-	<20060626144442.GA13319@one-eyed-alien.net>
+From: Vivek Goyal <vgoyal@in.ibm.com>
+Subject: Re: [Fastboot] [RFC] [PATCH 2/2] kdump: cciss driver initialization issue fix
+Date: Mon, 26 Jun 2006 11:32:39 -0400
+Message-ID: <20060626153239.GD8985@in.ibm.com>
+References: <20060623210121.GA18384@in.ibm.com> <20060623210424.GB18384@in.ibm.com> <20060623235553.2892f21a.akpm@osdl.org> <20060624111954.GA7313@in.ibm.com> <20060624043046.4e4985be.akpm@osdl.org> <20060624120836.GB7313@in.ibm.com> <m1veqqxyrb.fsf@ebiederm.dsl.xmission.com> <20060626021100.GA12824@in.ibm.com> <20060626133504.GA8985@in.ibm.com> <m11wtcvw5k.fsf@ebiederm.dsl.xmission.com>
+Reply-To: vgoyal@in.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-hotplug-devel-bounces@lists.sourceforge.net>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e2.ny.us.ibm.com ([32.97.182.142]:16843 "EHLO e2.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S932484AbWFZPdF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 26 Jun 2006 11:33:05 -0400
 Content-Disposition: inline
-In-Reply-To: <20060626144442.GA13319@one-eyed-alien.net>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
-	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-hotplug-devel>
-List-Post: <mailto:linux-hotplug-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
-	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux-hotplug-devel-bounces@lists.sourceforge.net
-Errors-To: linux-hotplug-devel-bounces@lists.sourceforge.net
-To: Arjan van de Ven <arjan@infradead.org>, linux-scsi@vger.kernel.org, Stefan Richter <stefanr@s5r6.in-berlin.de>, linux-hotplug-devel@lists.sourceforge.net, Patrick Mansfield <patmans@us.ibm.com>, "Alexander E. Patrakov" <patrakov@ums.usu.ru>, James Bottomley <James.Bottomley@SteelEye.com>
+In-Reply-To: <m11wtcvw5k.fsf@ebiederm.dsl.xmission.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Eric W. Biederman" <ebiederm@xmission.com>
+Cc: Maneesh Soni <maneesh@in.ibm.com>, Andrew Morton <akpm@osdl.org>, Neela.Kolli@engenio.com, linux-scsi@vger.kernel.org, mike.miller@hp.com, fastboot@lists.osdl.org, linux-kernel@vger.kernel.org
 
-On Mon, Jun 26, 2006 at 07:44:42AM -0700, Matthew Dharm wrote:
-> On Mon, Jun 26, 2006 at 06:40:01AM -0600, Matthew Wilcox wrote:
-> > I'm not 100% sure what the problem is with USB.  If it's that we may not
-> > have discovered all the USB devices currently plugged in, then I think
-> > we need to change the way USB works to use one Scsi_Host for all USB
-> > storage devices, and then make each device either its own target or its
-> > own channel (probably the former; the latter is less well-tested code).
+On Mon, Jun 26, 2006 at 08:17:27AM -0600, Eric W. Biederman wrote:
+> Vivek Goyal <vgoyal@in.ibm.com> writes:
 > 
-> There are a couple of things which make this difficult for USB.
+> > On Mon, Jun 26, 2006 at 07:41:00AM +0530, Maneesh Soni wrote:
+> >
+> > Maneesh, Keeping this code under a config option becomes a problem when we
+> > will have a relocatable kernel. At some point of time we got to have
+> > relocatable kernel so that people don't have to build two kernels. In fact
+> > this is becoming a pain area for distros. That's the reason I thought
+> > of making it a command line parameter.
 > 
-> First, some (many?) USB devices need to be left alone for several seconds
-> after attachment in order to allow them to initialize to the point where
-> they are usable.
+> Ok. Even if we do this with a command line, we need to have a clean concept.
+> If the concept is ignore devices with a brittle init routine that is comprehensible
+> and potentially useful for other reasons than crash dumps.
+> 
 
-That's OK.  Once we know they're there, we can reserve their place
-and delay until they're ready to go.
+Looks like there are two problems to be solved.
 
-> Second, depending on how many hubs are between the host and target, the
-> time-to-discover the device is highly variable.
+- Framework/capability to mark and isolate the drivers, either at compile
+  time or run time, which are not hardened enough to initialize properly
+  when the underlying device is in operational or in unknown state.
 
-Can, or does, USB keep track of hub discovery, and hence know whether
-or not it's completed USB discovery?
+- Actually hardening a driver to be able to initialize in a potentially
+  unreliable environment.  
 
-> Third, once discovered the device may still take a long time to be "ready".
-> Think of this as a slow spin-up time.  This is different from my first
-> point in that the device can actually accept commands, but all commands
-> will fail with some sort of not-ready type error.
 
-That's OK too.
+Solving first problem will help more in terms of people knowing in advance
+that certain drivers are known to have problems in specific environemnt and
+a user has got the option of skipping the execution/compilation of those
+drivers. (This is something close to what CONFIG_EXPERIMENTAL does)
 
-> As for using one Scsi_Host... there are several usb-storage devices which
-> attach to an entire SCSI bus (not just a single target), so can't make each
-> device it's own target.
+Second problem deals more with actually hardening the driver and not
+skipping its compilation/execution.
 
-Oh.  My fault for reading the comment rather than the code.
+I think people would like to change a driver's behaviour at run time.
+For example if they are booting in a unreliable environment they would
+like to reset the device otherwise they would skip that as BIOS has
+already done that for them. 
 
-                /* reject if target != 0 or if LUN is higher than
-                 * the maximum known LUN
-                 */
-                else if (us->srb->device->id && 
-                                !(us->flags & US_FL_SCM_MULT_TARG)) {
+But looks like not all devices have got the capablity to be reset from
+software. In those cases probably one need to put some hooks, relax
+driver's consistency checks etc in special boot environment.
 
-Do these devices stick to occupying only target IDs from 0-7?  If not,
-you may wish to increase ->max_id for those devices.  I think it'd be worth
-exporting scsi_scan_channel() from the midlayer (and rearranging it to have
-__scsi_scan_channel() as was done with __scsi_scan_target) for USB's benefit.
+Here I am trying to solve the second problem so that a driver comes to 
+know that it is initializing in a special boot environment and it can
+modify its behavior at run time. 
 
-> Also, at the time this was all written it wasn't
-> possible to dynamically remove (with any stability) individual targets or
-> channels.  Perhaps that has changed?
+> If the concept is crashdump it is a poorly defined concept and all of Andrews
+> objections apply.
+> 
 
-It's definitely possible to remove individual targets dynamically now;
-Fibre Channel has sorted that out (and will complain loudly if it breaks).
-The scsi core doesn't really have a channel object; channel is just an integer 
-that describes a path to a target.  So I think there should be no problem in
-converting USB to have one host and many channels.
+I think this parameter is generic enough and not limited to crashdumps.
+If a user decides to implement a different scheme than kdump in kexec
+on panic and boot a customized kernel, he can very well use this
+parameter to make sure that next kernel is able to at least boot and not
+panic in between.
 
-Using Tomcat but need to do more? Need to support web services, security?
-Get stuff done quickly with pre-integrated technology to make your job easier
-Download IBM WebSphere Application Server v.1.0.1 based on Apache Geronimo
-http://sel.as-us.falkag.net/sel?cmd=lnk&kid=120709&bid=263057&dat=121642
+Solving first problem will help in doing a plain kexec. We can simply
+mark the drivers known to have problems and slowly people can fix those
+drivers. Fixing the driver in this case is different because most likely
+driver authors will provide a shutdown routine in the driver so that
+device can be shutdown and then one can boot into the second kernel.  
+Till then a user can happily skip the drivers known to have problems.
+
+In summary, we got two problems to solve. Currently I am focussed on
+solving second problem which enables boot a kernel in an unreliable
+environment and do some minimal specific operation and then boot back to
+regular kernela. So I think just introducing a command line parameter
+which drivers can use to determine that they are initializing in an
+special environement, solves it and is generic enough.
+
+Options like COFIG_BRITTLE_INIT or sikkping execution of brittle driver
+based on a command line option seems to be the solution for the first
+problem.
+
+Please correct me if I am wrong. I know little about drivers.
+
+
+> > I remember few months back, Eric had mentioned that he has got patches for
+> > relocatable kernel ready for review for i386 and x86_64. Eric, do you have
+> > any plans to post the patches for review?
+> 
+> I have some code that I keep intending to get to.  It has probably bit rotted
+> since I wrote it, but it shouldn't be too bad to clean up.
+> Unfortunately the whole crashdump thing is fairly low on my priority list.
+> 
+
+I am willing to work on it. Building from scratch always takes more time.
+If you are willing, I will more than happy to build on top of your patches.
+
+Thanks
+Vivek
