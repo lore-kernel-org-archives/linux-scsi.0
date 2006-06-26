@@ -1,50 +1,32 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: Asynchronous scsi scanning, version 9
-Date: Mon, 26 Jun 2006 16:15:36 -0600
-Message-ID: <20060626221536.GA1592@parisc-linux.org>
-References: <20060531232139.GA3202@us.ibm.com> <447EE81D.2050906@ums.usu.ru> <20060601132315.GD32143@parisc-linux.org> <1151270127.3617.26.camel@mulgrave.il.steeleye.com> <20060625224631.GD1608@parisc-linux.org> <1151310285.3185.16.camel@laptopd505.fenrus.org> <20060626124001.GG1608@parisc-linux.org> <20060626144442.GA13319@one-eyed-alien.net> <20060626151828.GH1608@parisc-linux.org> <20060626210825.GB31085@one-eyed-alien.net>
+From: "Robert Mueller" <robm@fastmail.fm>
+Subject: Re: Areca driver recap + status
+Date: Tue, 27 Jun 2006 08:32:19 +1000
+Message-ID: <057801c69970$70b45090$0e00cb0a@robm>
+References: <09be01c695b3$2ed8c2c0$c100a8c0@robm> <20060621222826.ff080422.akpm@osdl.org> <1151333338.2673.4.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	format=flowed;
+	charset="Windows-1252";
+	reply-type=original
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:49610 "EHLO
-	palinux.external.hp.com") by vger.kernel.org with ESMTP
-	id S933089AbWFZWPi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Jun 2006 18:15:38 -0400
-Content-Disposition: inline
-In-Reply-To: <20060626210825.GB31085@one-eyed-alien.net>
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:35793 "EHLO
+	out3.smtp.messagingengine.com") by vger.kernel.org with ESMTP
+	id S933114AbWFZWcZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 26 Jun 2006 18:32:25 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>, linux-scsi@vger.kernel.org, Stefan Richter <stefanr@s5r6.in-berlin.de>, linux-hotplug-devel@lists.sourceforge.net, Patrick Mansfield <patmans@us.ibm.com>, "Alexander E. Patrakov" <patrakov@ums.usu.ru>, James Bottomley <James.Bottomley@SteelEye.com>
+To: James Bottomley <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@osdl.org>
+Cc: rdunlap@xenotime.net, hch@infradead.org, erich@areca.com.tw, brong@fastmail.fm, dax@gurulabs.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Mon, Jun 26, 2006 at 02:08:25PM -0700, Matthew Dharm wrote:
-> On Mon, Jun 26, 2006 at 09:18:28AM -0600, Matthew Wilcox wrote:
-> > Do these devices stick to occupying only target IDs from 0-7?  If not,
-> > you may wish to increase ->max_id for those devices.  I think it'd be worth
-> > exporting scsi_scan_channel() from the midlayer (and rearranging it to have
-> > __scsi_scan_channel() as was done with __scsi_scan_target) for USB's benefit.
-> 
-> These support target IDs to up 15.  But I see the point of limiting
-> ->max_id for devices which do not have the SCM_MULT_TARG flag set.
 
-Ever tried that?  ;-)
+> - PAE (cast of dma_addr_t to unsigned long) issues.
 
-drivers/scsi/hosts.c sets max_id to 8 in scsi_host_alloc().  I don't see
-anything in USB setting max_id to 16.
+Can you explain a bit what this is about and what the effect is? It's just 
+that we've been using the driver (older version from the areca website) in a 
+PAE kernel on machines with 8G of memory and haven't had a problem yet 
+(running high IO load for several weeks) but this sounds like it 
+might/should cause corruption or crashing in this situation?
 
-> > It's definitely possible to remove individual targets dynamically now;
-> > Fibre Channel has sorted that out (and will complain loudly if it breaks).
-> > The scsi core doesn't really have a channel object; channel is just an integer 
-> > that describes a path to a target.  So I think there should be no problem in
-> > converting USB to have one host and many channels.
-> 
-> Interesting.
-> 
-> What's the limit on the number of channels you can have?
-
-Just an unsigned int, I think.
-
-> How do I set up multiple channels in code?
-
-Increase shost->max_channel each time you want to create a new one.
-Then pass it to scsi_scan_target().
+Rob
 
