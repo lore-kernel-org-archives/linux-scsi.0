@@ -1,34 +1,40 @@
 From: Greg KH <greg@kroah.com>
 Subject: Re: Asynchronous scsi scanning, version 9
-Date: Mon, 26 Jun 2006 09:02:50 -0700
-Message-ID: <20060626160250.GA3456@kroah.com>
-References: <20060529130515.GE23405@parisc-linux.org> <20060531232139.GA3202@us.ibm.com> <447EE81D.2050906@ums.usu.ru> <20060601132315.GD32143@parisc-linux.org> <1151270127.3617.26.camel@mulgrave.il.steeleye.com> <20060625224631.GD1608@parisc-linux.org> <1151310285.3185.16.camel@laptopd505.fenrus.org> <20060626124001.GG1608@parisc-linux.org> <20060626144442.GA13319@one-eyed-alien.net> <20060626151828.GH1608@parisc-linux.org>
+Date: Mon, 26 Jun 2006 09:03:53 -0700
+Message-ID: <20060626160353.GB3456@kroah.com>
+References: <447AB2F5.2000700@s5r6.in-berlin.de> <20060529130515.GE23405@parisc-linux.org> <20060531232139.GA3202@us.ibm.com> <447EE81D.2050906@ums.usu.ru> <20060601132315.GD32143@parisc-linux.org> <1151270127.3617.26.camel@mulgrave.il.steeleye.com> <20060625224631.GD1608@parisc-linux.org> <1151310285.3185.16.camel@laptopd505.fenrus.org> <20060626124001.GG1608@parisc-linux.org> <1151326751.3185.37.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns2.suse.de ([195.135.220.15]:56238 "EHLO mx2.suse.de")
-	by vger.kernel.org with ESMTP id S1750732AbWFZQGt (ORCPT
+Received: from ns2.suse.de ([195.135.220.15]:60078 "EHLO mx2.suse.de")
+	by vger.kernel.org with ESMTP id S1750721AbWFZQHE (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Jun 2006 12:06:49 -0400
+	Mon, 26 Jun 2006 12:07:04 -0400
 Content-Disposition: inline
-In-Reply-To: <20060626151828.GH1608@parisc-linux.org>
+In-Reply-To: <1151326751.3185.37.camel@laptopd505.fenrus.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Arjan van de Ven <arjan@infradead.org>, linux-scsi@vger.kernel.org, Stefan Richter <stefanr@s5r6.in-berlin.de>, linux-hotplug-devel@lists.sourceforge.net, Patrick Mansfield <patmans@us.ibm.com>, "Alexander E. Patrakov" <patrakov@ums.usu.ru>, James Bottomley <James.Bottomley@SteelEye.com>
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: Matthew Wilcox <matthew@wil.cx>, James Bottomley <James.Bottomley@SteelEye.com>, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, Patrick Mansfield <patmans@us.ibm.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, "Alexander E. Patrakov" <patrakov@ums.usu.ru>
 
-On Mon, Jun 26, 2006 at 09:18:28AM -0600, Matthew Wilcox wrote:
-> On Mon, Jun 26, 2006 at 07:44:42AM -0700, Matthew Dharm wrote:
-> > Second, depending on how many hubs are between the host and target, the
-> > time-to-discover the device is highly variable.
+On Mon, Jun 26, 2006 at 02:59:11PM +0200, Arjan van de Ven wrote:
 > 
-> Can, or does, USB keep track of hub discovery, and hence know whether
-> or not it's completed USB discovery?
+> > Fortunately, USB is SCSI, so we can actually use this code to solve that
+> > problem too.  I wasn't thinking of USB when I wrote the code (because I
+> > didn't know there was a problem).  But really, it's very generic stuff;
+> > there's a list_head, a pointer to a Scsi_Host and a completion.
+> > 
+> > I'm not 100% sure what the problem is with USB. 
+> 
+> I seem to remember that the problem with USB was that you can't even
+> know how many things are still outstanding; devices are free to appear
+> on the bus at any time after bus power on, without specified timeout...
+> If the kernel can't know what's out there, it can't wait until it has a
+> complete picture either, just by virtue of not being able to know when
+> that is achieved ;-)
 
-Nope, it never knows this.  So that is why you can't have any type of
-"just wait until USB is done scanning all devices before continuing"
-behavior, because there is no such thing to trigger off of.
+This is true.
 
-sorry,
+thanks,
 
 greg k-h
