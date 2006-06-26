@@ -1,56 +1,75 @@
-From: Andi Kleen <ak@suse.de>
-Subject: Re: [PATCH] [29/82] x86_64: Rename IOMMU option, fix help and mark option embedded.
-Date: Mon, 26 Jun 2006 08:24:45 +0200
-Message-ID: <200606260824.45506.ak@suse.de>
-References: <449C852C.mailCZT11F9YB@suse.de> <200606252132.41121.ak@suse.de> <20060625222115.GA17213@devserv.devel.redhat.com>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: Asynchronous scsi scanning, version 9
+Date: Mon, 26 Jun 2006 10:24:45 +0200
+Message-ID: <1151310285.3185.16.camel@laptopd505.fenrus.org>
+References: <20060511143352.GI12272@parisc-linux.org>
+	<20060518172258.GL1604@parisc-linux.org>
+	<20060529031915.GB23405@parisc-linux.org>
+	<447AB2F5.2000700@s5r6.in-berlin.de>
+	<20060529130515.GE23405@parisc-linux.org>
+	<20060531232139.GA3202@us.ibm.com> <447EE81D.2050906@ums.usu.ru>
+	<20060601132315.GD32143@parisc-linux.org>
+	<1151270127.3617.26.camel@mulgrave.il.steeleye.com>
+	<20060625224631.GD1608@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns2.suse.de ([195.135.220.15]:58329 "EHLO mx2.suse.de")
-	by vger.kernel.org with ESMTP id S964832AbWFZGY6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Jun 2006 02:24:58 -0400
-In-Reply-To: <20060625222115.GA17213@devserv.devel.redhat.com>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-hotplug-devel-bounces@lists.sourceforge.net>
+In-Reply-To: <20060625224631.GD1608@parisc-linux.org>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
+	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-hotplug-devel>
+List-Post: <mailto:linux-hotplug-devel@lists.sourceforge.net>
+List-Help: <mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
+	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: linux-hotplug-devel-bounces@lists.sourceforge.net
+Errors-To: linux-hotplug-devel-bounces@lists.sourceforge.net
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, Patrick Mansfield <patmans@us.ibm.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, "Alexander E. Patrakov" <patrakov@ums.usu.ru>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@redhat.com>
-Cc: torvalds@osdl.org, discuss@x86-64.org, akpm@osdl.org, markh@osdl.org, linux-scsi@vger.kernel.org, axboe@suse.de
 
-On Monday 26 June 2006 00:21, Alan Cox wrote:
-> On Sun, Jun 25, 2006 at 09:32:41PM +0200, Andi Kleen wrote:
-> > > From a tiny 16MB DMA pool that can't sustain the required load ? Or has that
-> > > bit changed.
+
+> > How about this solution which works for me with debian on a huge 6 bus
+> > scsi machine:  it introduces a new module scsi_wait_scan.ko whose sole
+> > job is to wait for the scans to complete in its init function.  The
+> > initrd/initramfs sequence now becomes:
 > > 
-> > It should be ok because it blocks. It will be slow, but what else do you expect
-> > from broken hardware like this? 
+> > insert all other modules
+> > modprobe scsi_wait_scan
 > 
-> Sustained 80Mbyte/second I/O rates. At least thats what it gets in other OS
-> products. This is one of the reasons (broadcomm 4400 was another) that a 30
-> or 31 bit DMA zone not a 32bit one was called for, which also didn't happen
-> it seems.
+> I think that's a great idea.  I wonder about making it always fail
+> initialisation, since then it can be loaded multiple times without being
+> unloaded.  I think Arjan was suggesting some proc or sysfs file that
+> would cause scsi_complete_async_scans() to be called, but I couldn't
+> figure out where a good place to put such a file would be. 
 
-Should we hurt everybody for two terminally broken devices?
+Hi,
 
-BCM4400 and its wireless brethen is fine with GFP_DMA btw and mostly only 
-exists in low end machines where most/all of the memory is below 2GB anyways
-(so the check first approach works quite well) 
+just to expand on this: The reason I am suggesting this is to allow the
+initrd to have a way to wait for device scans before (re)trying to mount
+the root filesystem. One of the interesting challenges today for the
+initrd with USB is that you don't know when the devices are visible; now
+I know this won't fix USB, but it at least introduces a proper method
+for ensuring that for scsi; I suppose we should make it a generic thing
+with a notifier chain so that all subsystems that want to can get a
+callback and finalize their initialization... I can imagine fiber
+channel cards wanting to use this to wait for LIP etc...
 
-> 
-> The ifdef approach isnt perfect but it essentially means you get good
-> performance on x86-32 and only x86-64 has problems which seems fine to me,
-> because its an old card.
+One question is if this should get a timeout parameter or if that should
+be left up to the devices...
 
-Blk-bounce would have the same effect.
+(and I think the initrd needs to try to find the rootfs at least once
+without waiting, or there should be 2 levels of expensiveness to the
+wait, so that it'll first try the asynchronous way, but that it can do
+the more expensive wait rather than causing an outright panic() as
+happens today when the rootfs cannot be found..)
 
-If you set blk-bounce then the block layer will only bounce if the
-address is < limit and it knows about the different zones on 32bit
-and will use GFP_NORMAL there.
+Greetings,
+    Arjan van de Ven
 
-If you have upto 6GB you have a 50:50% chance of not bouncing at least.
 
-The ifdef approach is just broken. Please fix it.
-
--Andi
+Using Tomcat but need to do more? Need to support web services, security?
+Get stuff done quickly with pre-integrated technology to make your job easier
+Download IBM WebSphere Application Server v.1.0.1 based on Apache Geronimo
+http://sel.as-us.falkag.net/sel?cmd=lnk&kid=120709&bid=263057&dat=121642
