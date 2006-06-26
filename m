@@ -1,61 +1,115 @@
-From: linas@austin.ibm.com (Linas Vepstas)
-Subject: Re: Asynchronous scsi scanning, version 9
-Date: Mon, 26 Jun 2006 15:58:32 -0500
-Message-ID: <20060626205832.GC10505@austin.ibm.com>
-References: <20060511143352.GI12272@parisc-linux.org> <20060518172258.GL1604@parisc-linux.org> <20060529031915.GB23405@parisc-linux.org> <447AB2F5.2000700@s5r6.in-berlin.de> <20060529130515.GE23405@parisc-linux.org> <20060531232139.GA3202@us.ibm.com> <447EE81D.2050906@ums.usu.ru> <20060601132315.GD32143@parisc-linux.org> <1151270127.3617.26.camel@mulgrave.il.steeleye.com>
+From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+Subject: Re: [SPAM] Re: Asynchronous scsi scanning, version 9
+Date: Mon, 26 Jun 2006 14:04:03 -0700
+Message-ID: <20060626210403.GA31085@one-eyed-alien.net>
+References: <20060529130515.GE23405@parisc-linux.org>
+	<20060531232139.GA3202@us.ibm.com> <447EE81D.2050906@ums.usu.ru>
+	<20060601132315.GD32143@parisc-linux.org>
+	<1151270127.3617.26.camel@mulgrave.il.steeleye.com>
+	<20060625224631.GD1608@parisc-linux.org>
+	<1151310285.3185.16.camel@laptopd505.fenrus.org>
+	<20060626124001.GG1608@parisc-linux.org>
+	<20060626144442.GA13319@one-eyed-alien.net>
+	<1151348151.4936.8.camel@fc5.xsintricity.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.144]:58046 "EHLO e4.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S932119AbWFZU6f (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Jun 2006 16:58:35 -0400
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e4.ny.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k5QKwYVW031845
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
-	for <linux-scsi@vger.kernel.org>; Mon, 26 Jun 2006 16:58:34 -0400
-Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by d01relay02.pok.ibm.com (8.13.6/NCO/VER7.0) with ESMTP id k5QKwYp7278994
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Mon, 26 Jun 2006 16:58:34 -0400
-Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
-	by d01av03.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k5QKwWBr028704
-	for <linux-scsi@vger.kernel.org>; Mon, 26 Jun 2006 16:58:33 -0400
-Content-Disposition: inline
-In-Reply-To: <1151270127.3617.26.camel@mulgrave.il.steeleye.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/mixed; boundary="===============1776464104=="
+Return-path: <linux-hotplug-devel-bounces@lists.sourceforge.net>
+In-Reply-To: <1151348151.4936.8.camel@fc5.xsintricity.com>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
+	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-hotplug-devel>
+List-Post: <mailto:linux-hotplug-devel@lists.sourceforge.net>
+List-Help: <mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
+	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: linux-hotplug-devel-bounces@lists.sourceforge.net
+Errors-To: linux-hotplug-devel-bounces@lists.sourceforge.net
+To: Doug Ledford <dledford@xsintricity.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>, Patrick Mansfield <patmans@us.ibm.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, "Alexander E. Patrakov" <patrakov@ums.usu.ru>, Arjan van de Ven <arjan@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, linux-hotplug-devel@lists.sourceforge.net, Stefan Richter <stefanr@s5r6.in-berlin.de>, "Alexander E. Patrakov" <patrakov@ums.usu.ru>, linux-scsi@vger.kernel.org, Patrick Mansfield <patmans@us.ibm.com>
 
-On Sun, Jun 25, 2006 at 04:15:26PM -0500, James Bottomley wrote:
-> On Thu, 2006-06-01 at 07:23 -0600, Matthew Wilcox wrote:
-> 
-> > There's a potential solution to this.  If we add a hook to sys_module_init
-> > such that it'll call a specified function before returning, we can make
-> > it wait until all scans are done.  This way, userspace never sees the
-> > asynchronous scanning behaviour.  But if you have devices of different
-> > types, you won't get the overlapping scans.
-> 
-> How about this solution which works for me with debian on a huge 6 bus
-> scsi machine:  it introduces a new module scsi_wait_scan.ko whose sole
-> job is to wait for the scans to complete in its init function.  The
-> initrd/initramfs sequence now becomes:
-> 
-> insert all other modules
-> modprobe scsi_wait_scan
 
-I guess there's no way of figuring out where the root disk is, and
-waiting only for that? 
+--===============1776464104==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="HlL+5n6rz5pIUxbD"
+Content-Disposition: inline
 
-On large servers, there may be hundreds of attached disks. Anything which 
-can parallelize and perform an async scan will help boot times; however, 
-waiting for all disks to come on-line when only one is actually needed can 
-cause trouble.
 
-In particular, some of the attached disks/scsi chains may be bad, 
-in which case one has to wait for a tediously long device/bus/host reset
-sequence to complete, and off-line the broken disk.
+--HlL+5n6rz5pIUxbD
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
---linas
+On Mon, Jun 26, 2006 at 02:55:50PM -0400, Doug Ledford wrote:
+> On Mon, 2006-06-26 at 07:44 -0700, Matthew Dharm wrote:
+>=20
+> > As for using one Scsi_Host... there are several usb-storage devices whi=
+ch
+> > attach to an entire SCSI bus (not just a single target), so can't make =
+each
+> > device it's own target.
+>=20
+> This makes no sense to me at all.  The USB devices attach to a USB bus,
+> the whole notion of a SCSI bus for USB devices is as nothing more than
+> an abstraction, and should be able to be arbitrarily changed in the USB
+> stack any time you wish.  In short, you aren't doing SCSI selections
+> over a USB bus, so why should SCSI target IDs vs. host IDs matter?
+> Aren't they just all mapped in the driver to the USB device anyway?
 
+I guess my point is that there are some devices for which the concept of a
+'bus' is -not- an abstraction.  These devices have a USB connector at one
+end and a SCSI HD-68 connector on the other, and can be attached to 15
+devices in a SCSI chain.
+
+Perhaps I misunderstand your objection?
+
+Matt
+
+--=20
+Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
+net=20
+Maintainer, Linux USB Mass Storage Driver
+
+E:  You run this ship with Windows?!  YOU IDIOT!
+L:  Give me a break, it came bundled with the computer!
+					-- ESR and Lan Solaris
+User Friendly, 12/8/1998
+
+--HlL+5n6rz5pIUxbD
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2.2 (GNU/Linux)
+
+iD8DBQFEoEvDHL9iwnUZqnkRAkaQAKCdOPIXYYkA4gZ7SOZTuxXgL9WC1ACfVA3t
+yDk6vIe21mDjn+YmY3tAmss=
+=vmS7
+-----END PGP SIGNATURE-----
+
+--HlL+5n6rz5pIUxbD--
+
+
+--===============1776464104==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+Using Tomcat but need to do more? Need to support web services, security?
+Get stuff done quickly with pre-integrated technology to make your job easier
+Download IBM WebSphere Application Server v.1.0.1 based on Apache Geronimo
+http://sel.as-us.falkag.net/sel?cmd=lnk&kid=120709&bid=263057&dat=121642
+
+--===============1776464104==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+Linux-hotplug-devel mailing list  http://linux-hotplug.sourceforge.net
+Linux-hotplug-devel@lists.sourceforge.net
+https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel
+
+--===============1776464104==--
