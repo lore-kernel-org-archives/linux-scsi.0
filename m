@@ -1,22 +1,22 @@
-From: Doug Ledford <dledford@xsintricity.com>
-Subject: Re: [SPAM] Re: Asynchronous scsi scanning, version 9
-Date: Mon, 26 Jun 2006 17:20:09 -0400
-Message-ID: <1151356809.4936.10.camel@fc5.xsintricity.com>
-References: <20060529130515.GE23405@parisc-linux.org>
+From: linas@austin.ibm.com (Linas Vepstas)
+Subject: Re: Asynchronous scsi scanning, version 9
+Date: Mon, 26 Jun 2006 16:21:55 -0500
+Message-ID: <20060626212155.GD10505@austin.ibm.com>
+References: <20060518172258.GL1604@parisc-linux.org>
+	<20060529031915.GB23405@parisc-linux.org>
+	<447AB2F5.2000700@s5r6.in-berlin.de>
+	<20060529130515.GE23405@parisc-linux.org>
 	<20060531232139.GA3202@us.ibm.com> <447EE81D.2050906@ums.usu.ru>
 	<20060601132315.GD32143@parisc-linux.org>
 	<1151270127.3617.26.camel@mulgrave.il.steeleye.com>
-	<20060625224631.GD1608@parisc-linux.org>
-	<1151310285.3185.16.camel@laptopd505.fenrus.org>
-	<20060626124001.GG1608@parisc-linux.org>
-	<20060626144442.GA13319@one-eyed-alien.net>
-	<1151348151.4936.8.camel@fc5.xsintricity.com>
-	<20060626210403.GA31085@one-eyed-alien.net>
+	<20060626205832.GC10505@austin.ibm.com>
+	<1151356477.2673.41.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-hotplug-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <20060626210403.GA31085@one-eyed-alien.net>
+Content-Disposition: inline
+In-Reply-To: <1151356477.2673.41.camel@mulgrave.il.steeleye.com>
 List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
 	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=unsubscribe>
 List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-hotplug-devel>
@@ -26,41 +26,26 @@ List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-deve
 	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=subscribe>
 Sender: linux-hotplug-devel-bounces@lists.sourceforge.net
 Errors-To: linux-hotplug-devel-bounces@lists.sourceforge.net
-To: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>, Patrick Mansfield <patmans@us.ibm.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, "Alexander E. Patrakov" <patrakov@ums.usu.ru>, Arjan van de Ven <arjan@infradead.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>, Patrick Mansfield <patmans@us.ibm.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, "Alexander E. Patrakov" <patrakov@ums.usu.ru>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2006-06-26 at 14:04 -0700, Matthew Dharm wrote:
-> On Mon, Jun 26, 2006 at 02:55:50PM -0400, Doug Ledford wrote:
-> > On Mon, 2006-06-26 at 07:44 -0700, Matthew Dharm wrote:
-> > 
-> > > As for using one Scsi_Host... there are several usb-storage devices which
-> > > attach to an entire SCSI bus (not just a single target), so can't make each
-> > > device it's own target.
-> > 
-> > This makes no sense to me at all.  The USB devices attach to a USB bus,
-> > the whole notion of a SCSI bus for USB devices is as nothing more than
-> > an abstraction, and should be able to be arbitrarily changed in the USB
-> > stack any time you wish.  In short, you aren't doing SCSI selections
-> > over a USB bus, so why should SCSI target IDs vs. host IDs matter?
-> > Aren't they just all mapped in the driver to the USB device anyway?
+On Mon, Jun 26, 2006 at 04:14:37PM -0500, James Bottomley wrote:
+> On Mon, 2006-06-26 at 15:58 -0500, Linas Vepstas wrote:
+> > I guess there's no way of figuring out where the root disk is, and
+> > waiting only for that? 
 > 
-> I guess my point is that there are some devices for which the concept of a
-> 'bus' is -not- an abstraction.  These devices have a USB connector at one
-> end and a SCSI HD-68 connector on the other, and can be attached to 15
-> devices in a SCSI chain.
+> Well, sure, but you'd do that at user level:  you know what the root
+> disk is, so you just wait on the udev event announcing its arrival.
 
-Yuk!  OK, so such a nasty beast exists, but that just means
-realistically you should treat such a device as a scsi host instead of a
-scsi device.  For all other normal target devices, the issue of scsi bus
-vs. scsi target shouldn't matter.
+Its possible that I'm making a confused commont based on my
+mis-understanding a conversation I'm not following closely, but ... 
 
-> Perhaps I misunderstand your objection?
-> 
-> Matt
-> 
--- 
-Doug Ledford <dledford@xsintricity.com>
+Didn't the last patch result in the boot process hanging until
+all scsi devices were discovered? I was concerned that this might 
+take too long. But if there's no hang, then no problem.
+
+--linas
 
 
 
