@@ -1,100 +1,54 @@
-From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
-Subject: RE: [Fastboot] [RFC] [PATCH 2/2] kdump: cciss driver initialization issue fix
-Date: Mon, 26 Jun 2006 16:24:41 -0500
-Message-ID: <E717642AF17E744CA95C070CA815AE550E17E1@cceexc23.americas.cpqcorp.net>
-References: <m1veqnrae7.fsf@ebiederm.dsl.xmission.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Asynchronous scsi scanning, version 9
+Date: Mon, 26 Jun 2006 16:41:37 -0500
+Message-ID: <1151358097.2673.43.camel@mulgrave.il.steeleye.com>
+References: <20060518172258.GL1604@parisc-linux.org>
+	<20060529031915.GB23405@parisc-linux.org>
+	<447AB2F5.2000700@s5r6.in-berlin.de>
+	<20060529130515.GE23405@parisc-linux.org>
+	<20060531232139.GA3202@us.ibm.com> <447EE81D.2050906@ums.usu.ru>
+	<20060601132315.GD32143@parisc-linux.org>
+	<1151270127.3617.26.camel@mulgrave.il.steeleye.com>
+	<20060626205832.GC10505@austin.ibm.com>
+	<1151356477.2673.41.camel@mulgrave.il.steeleye.com>
+	<20060626212155.GD10505@austin.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ccerelbas02.cce.hp.com ([161.114.21.105]:52198 "EHLO
-	ccerelbas02.cce.hp.com") by vger.kernel.org with ESMTP
-	id S933053AbWFZVYm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jun 2006 17:24:42 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <m1veqnrae7.fsf@ebiederm.dsl.xmission.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-hotplug-devel-bounces@lists.sourceforge.net>
+In-Reply-To: <20060626212155.GD10505@austin.ibm.com>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
+	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-hotplug-devel>
+List-Post: <mailto:linux-hotplug-devel@lists.sourceforge.net>
+List-Help: <mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
+	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: linux-hotplug-devel-bounces@lists.sourceforge.net
+Errors-To: linux-hotplug-devel-bounces@lists.sourceforge.net
+To: Linas Vepstas <linas@austin.ibm.com>
+Cc: linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>, Patrick Mansfield <patmans@us.ibm.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, "Alexander E. Patrakov" <patrakov@ums.usu.ru>
 List-Id: linux-scsi@vger.kernel.org
-To: "Eric W. Biederman" <ebiederm@xmission.com>
-Cc: vgoyal@in.ibm.com, Maneesh Soni <maneesh@in.ibm.com>, Andrew Morton <akpm@osdl.org>, Neela.Kolli@engenio.com, linux-scsi@vger.kernel.org, fastboot@lists.osdl.org, linux-kernel@vger.kernel.org
 
-> -----Original Message-----
-> From: Eric W. Biederman [mailto:ebiederm@xmission.com] 
-> Sent: Monday, June 26, 2006 2:21 PM
-> To: Miller, Mike (OS Dev)
-> Cc: vgoyal@in.ibm.com; Maneesh Soni; Andrew Morton; 
-> Neela.Kolli@engenio.com; linux-scsi@vger.kernel.org; 
-> fastboot@lists.osdl.org; linux-kernel@vger.kernel.org
-> Subject: Re: [Fastboot] [RFC] [PATCH 2/2] kdump: cciss driver 
-> initialization issue fix
+On Mon, 2006-06-26 at 16:21 -0500, Linas Vepstas wrote:
+> Its possible that I'm making a confused commont based on my
+> mis-understanding a conversation I'm not following closely, but ... 
 > 
-> >> "Miller, Mike (OS Dev)" <Mike.Miller@hp.com> writes:
-> >> 
-> >> > Thanks Eric, that helps me understand. Section 8.2.2 of the
-> >> open cciss
-> >> > spec supports a reset message. Target 0x00 is the
-> >> controller. We could
-> >> > add this to the init routine to ensure the board is made 
-> sane again 
-> >> > but this would drastically increase init time under normal
-> >> circumstances.
-> >> 
-> >> Where does the init time penalty come from? How large is the init 
-> >> penalty?  I suspect it is from waiting for the scsi disks 
-> to spin up.
-> >> But I am just guessing in the dark.
-> >
-> > The penalty is in the firmware and self-test operations.
-> 
-> Ok.  Reasonable. Roughly long does that take? 1 millisecond? 1 second?
-> 1 minute? 1 hour? 
+> Didn't the last patch result in the boot process hanging until
+> all scsi devices were discovered? I was concerned that this might 
+> take too long. But if there's no hang, then no problem.
 
-Sorry, roughly 30 to 40 seconds. Maybe longer if the controller thinks
-there's something wrong with the disks. Typically the disks are always
-spinning so that delay is not an issue.
+The last patch was a module distros could use to wait for all bus scans
+to complete.
 
-> 
-> >> > And I suspect this is a hard reset, also. Not sure if that would 
-> >> > negatively impact kdump. If there were some condition we 
-> could test 
-> >> > against and perform the reset when that condition is met it
-> >> would not
-> >> > impact 99.9% of users.
-> >> 
-> >> I am wondering if it is possible to look at the controller 
-> and see if 
-> >> it is in a bad state, (i.e. in some state besides just 
-> coming out of 
-> >> reset) and if so issue a reset.  If this really is a long 
-> operation 
-> >> that would be the ideal way to handle it.
-> >
-> > It's not really in a bad state at this time, is it? Maybe some 
-> > commands hanging around.
-> 
-> Not bad as in broken.  But bad as in unexpected.  If it is 
-> just a matter of outstanding commands we might even be able 
-> to just ask the adapter to cancel all of the at initialization time.
+If you simply want the behaviour where you launch aync scans and wait
+for root to show up before proceeding, then you code that in udev.
 
-We can't detect unexpected but we can discard everything at init.
+James
 
-> >
-> > I was informed of the crashboot command line parameter. I can 
-> > implement that as a test.
-> 
-> Sounds like a start.
-> 
-> >> Although it might simply be appropriate to handle commands 
-> completing 
-> >> you didn't start.  I am not at all familiar with that particular 
-> >> piece of hardware so I can't make a good guess on what needs to 
-> >> happen there.
-> >
-> > Not sure about doing this.
-> 
-> Well I would certainly print a warning.
-> 
-> Eric
-> 
-> 
+
+
+Using Tomcat but need to do more? Need to support web services, security?
+Get stuff done quickly with pre-integrated technology to make your job easier
+Download IBM WebSphere Application Server v.1.0.1 based on Apache Geronimo
+http://sel.as-us.falkag.net/sel?cmd=lnk&kid=120709&bid=263057&dat=121642
