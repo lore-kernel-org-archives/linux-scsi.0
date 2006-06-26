@@ -1,69 +1,80 @@
-From: ebiederm@xmission.com (Eric W. Biederman)
-Subject: Re: [RFC] [PATCH 2/2] kdump: cciss driver initialization
-	issue fix
-Date: Mon, 26 Jun 2006 12:23:22 -0600
-Message-ID: <m1mzbzsrmt.fsf@ebiederm.dsl.xmission.com>
-References: <20060623235553.2892f21a.akpm@osdl.org>
-	<20060624111954.GA7313@in.ibm.com>
-	<20060624043046.4e4985be.akpm@osdl.org>
-	<20060624120836.GB7313@in.ibm.com>
-	<m1veqqxyrb.fsf@ebiederm.dsl.xmission.com>
-	<20060626021100.GA12824@in.ibm.com> <20060626133504.GA8985@in.ibm.com>
-	<m11wtcvw5k.fsf@ebiederm.dsl.xmission.com>
-	<20060626153239.GD8985@in.ibm.com>
-	<m13bdrvrd4.fsf@ebiederm.dsl.xmission.com>
-	<20060626171659.GG8985@in.ibm.com>
-	<m14py7u88m.fsf@ebiederm.dsl.xmission.com>
-	<1151344607.2673.14.camel@mulgrave.il.steeleye.com>
+From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+Subject: RE: [Fastboot] [RFC] [PATCH 2/2] kdump: cciss driver initialization issue fix
+Date: Mon, 26 Jun 2006 13:51:43 -0500
+Message-ID: <E717642AF17E744CA95C070CA815AE550E163F@cceexc23.americas.cpqcorp.net>
+References: <m1veqnst2b.fsf@ebiederm.dsl.xmission.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <fastboot-bounces@lists.osdl.org>
-In-Reply-To: <1151344607.2673.14.camel@mulgrave.il.steeleye.com> (James
-	Bottomley's message of "Mon, 26 Jun 2006 12:56:47 -0500")
-List-Unsubscribe: <https://lists.osdl.org/mailman/listinfo/fastboot>,
-	<mailto:fastboot-request@lists.osdl.org?subject=unsubscribe>
-List-Archive: <http://lists.osdl.org/pipermail/fastboot>
-List-Post: <mailto:fastboot@lists.osdl.org>
-List-Help: <mailto:fastboot-request@lists.osdl.org?subject=help>
-List-Subscribe: <https://lists.osdl.org/mailman/listinfo/fastboot>,
-	<mailto:fastboot-request@lists.osdl.org?subject=subscribe>
-Sender: fastboot-bounces@lists.osdl.org
-Errors-To: fastboot-bounces@lists.osdl.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, mike.miller@hp.com, Neela.Kolli@engenio.com, fastboot@lists.osdl.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ccerelbas01.cce.hp.com ([161.114.21.104]:24554 "EHLO
+	ccerelbas01.cce.hp.com") by vger.kernel.org with ESMTP
+	id S932649AbWFZSvr convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jun 2006 14:51:47 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <m1veqnst2b.fsf@ebiederm.dsl.xmission.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Eric W. Biederman" <ebiederm@xmission.com>
+Cc: vgoyal@in.ibm.com, Maneesh Soni <maneesh@in.ibm.com>, Andrew Morton <akpm@osdl.org>, Neela.Kolli@engenio.com, linux-scsi@vger.kernel.org, fastboot@lists.osdl.org, linux-kernel@vger.kernel.org
 
-James Bottomley <James.Bottomley@SteelEye.com> writes:
+> -----Original Message-----
+> From: Eric W. Biederman [mailto:ebiederm@xmission.com] 
+> Sent: Monday, June 26, 2006 12:52 PM
+> To: Miller, Mike (OS Dev)
+> Cc: vgoyal@in.ibm.com; Maneesh Soni; Andrew Morton; 
+> Neela.Kolli@engenio.com; linux-scsi@vger.kernel.org; 
+> fastboot@lists.osdl.org; linux-kernel@vger.kernel.org
+> Subject: Re: [Fastboot] [RFC] [PATCH 2/2] kdump: cciss driver 
+> initialization issue fix
+> 
+> "Miller, Mike (OS Dev)" <Mike.Miller@hp.com> writes:
+> 
+> > Thanks Eric, that helps me understand. Section 8.2.2 of the 
+> open cciss 
+> > spec supports a reset message. Target 0x00 is the 
+> controller. We could 
+> > add this to the init routine to ensure the board is made sane again 
+> > but this would drastically increase init time under normal 
+> circumstances.
+> 
+> Where does the init time penalty come from? How large is the 
+> init penalty?  I suspect it is from waiting for the scsi 
+> disks to spin up.
+> But I am just guessing in the dark.
 
-> On Mon, 2006-06-26 at 11:39 -0600, Eric W. Biederman wrote:
->> In the general case resets are trivial operations.  In scsi land =
+The penalty is in the firmware and self-test operations.
 
->> things are different.  So a solution appropriate to that domain may
->> be appropriate.
->
-> That's not necessarily true. You're talking about board level resets
-> here.  Some devices take quite a while to reboot after being reset ...
-> particularly the complex ones with internal operating system type
-> firmware ..
+> 
+> > And I suspect this is a hard reset, also. Not sure if that would 
+> > negatively impact kdump. If there were some condition we could test 
+> > against and perform the reset when that condition is met it 
+> would not 
+> > impact 99.9% of users.
+> 
+> I am wondering if it is possible to look at the controller 
+> and see if it is in a bad state, (i.e. in some state besides 
+> just coming out of reset) and if so issue a reset.  If this 
+> really is a long operation that would be the ideal way to handle it.
 
-Agreed.  I had forgotten about the firmware case as opposed to the device
-case.  It is still true that we are mostly talking the scsi domain, when
-we are talking about boards with their own OS's.
+It's not really in a bad state at this time, is it? Maybe some commands
+hanging around.
 
-The important point is to find a way to harden drivers so the driver can
-initialize when the device is in a fairly random state and work.  Resets are
-the obvious way to get there.  There may be other cheaper ways, like
-forcefully setting all of the registers into a know good state.
+> 
+> If the amount of time is really user noticeable and testing 
+> for it is impossible then it is probably time to talk kernel 
+> command line options.
 
-But I still stand behind the fact that for most devices a reset is a trivial
-operation, that takes an insignificant amount of time.  Devices with slow
-firmware and devices with big slow disks attached to them are not most devi=
-ces.
+I was informed of the crashboot command line parameter. I can implement
+that as a test.
 
-So for most devices the advice can really be just reset it already.  For
-scsi devices where we frequently have the weird slow reset case after a
-little more experience of what has to be done we can give better domain
-specific advice.
+> 
+> Although it might simply be appropriate to handle commands 
+> completing you didn't start.  I am not at all familiar with 
+> that particular piece of hardware so I can't make a good 
+> guess on what needs to happen there.
 
-Eric
+Not sure about doing this.
+
+mikem
