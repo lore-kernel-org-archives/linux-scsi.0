@@ -1,57 +1,222 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: [RFT PATCH] ieee1394: sbp2: enable auto spin-up for Maxtor disks
-Date: Tue, 27 Jun 2006 22:54:12 +0200 (CEST)
-Message-ID: <tkrat.4b47e93f15c0a533@s5r6.in-berlin.de>
+From: Eric Moore <eric.moore@lsil.com>
+Subject: [PATCH] mptsas: Adding 1078 ROC support
+Date: Tue, 27 Jun 2006 16:09:26 -0600
+Message-ID: <20060627220925.GA29350@lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-Content-Disposition: INLINE
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux1394-devel-bounces@lists.sourceforge.net
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: linux1394-devel@lists.sourceforge.net
-Cc: linux1394-user@lists.sourceforge.net, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail0.lsil.com ([147.145.40.20]:703 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1422676AbWF0WUK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Jun 2006 18:20:10 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
 
-At least Maxtor OneTouch III require a "start stop unit" command after
-auto spin-down before the next access can proceed.  This patch activates
-the responsible code in scsi_mod for all Maxtor SBP-2 disks.
-https://bugzilla.novell.com/show_bug.cgi?id=183011
+* Adding 1078 ROC (Raid On Chip) Support - New host adapter
 
-Maybe that should be done for all SBP-2 disks, but better be cautious.
+* Moving all PCI Vendor/Device ids to using internal defines; a request
+from Christoph/James B. some time ago for when the next chip was added.
 
-Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
----
-Applicable to Linux 2.6.17 and 2.6.17-mm2,  can be easily adapted to
-older kernels.  Sorry for the cross-post but I need testers.  I don't
-have Maxtor enclosures (affected or unaffected) and none of my
-FireWire disks needs this patch.
+* Removing SAS 1066/1066E Vendor/Device IDs, as there are no plans to
+manufacture that controller.
 
-Index: linux/drivers/ieee1394/sbp2.c
-===================================================================
---- linux.orig/drivers/ieee1394/sbp2.c	2006-06-27 22:13:23.000000000 +0200
-+++ linux/drivers/ieee1394/sbp2.c	2006-06-27 22:20:48.000000000 +0200
-@@ -2516,6 +2516,9 @@ static int sbp2scsi_slave_configure(stru
- 		sdev->skip_ms_page_8 = 1;
- 	if (scsi_id->workarounds & SBP2_WORKAROUND_FIX_CAPACITY)
- 		sdev->fix_capacity = 1;
-+	if (scsi_id->ne->guid_vendor_id == 0x0010b9 && /* Maxtor's OUI */
-+	    (sdev->type == TYPE_DISK || sdev->type == TYPE_RBC))
-+		sdev->allow_restart = 1;
- 	return 0;
+Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
+
+diff -uarN b/drivers/message/fusion/mptbase.c a/drivers/message/fusion/mptbase.c
+--- b/drivers/message/fusion/mptbase.c	2006-06-27 12:17:25.000000000 -0600
++++ a/drivers/message/fusion/mptbase.c	2006-06-27 15:22:26.000000000 -0600
+@@ -1220,31 +1220,25 @@
+ 	port = psize = 0;
+ 	for (ii=0; ii < DEVICE_COUNT_RESOURCE; ii++) {
+ 		if (pci_resource_flags(pdev, ii) & PCI_BASE_ADDRESS_SPACE_IO) {
++			if (psize)
++				continue;
+ 			/* Get I/O space! */
+ 			port = pci_resource_start(pdev, ii);
+ 			psize = pci_resource_len(pdev,ii);
+ 		} else {
++			if (msize)
++				continue;
+ 			/* Get memmap */
+ 			mem_phys = pci_resource_start(pdev, ii);
+ 			msize = pci_resource_len(pdev,ii);
+-			break;
+ 		}
+ 	}
+ 	ioc->mem_size = msize;
+ 
+-	if (ii == DEVICE_COUNT_RESOURCE) {
+-		printk(KERN_ERR MYNAM ": ERROR - MPT adapter has no memory regions defined!\n");
+-		kfree(ioc);
+-		return -EINVAL;
+-	}
+-
+-	dinitprintk((KERN_INFO MYNAM ": MPT adapter @ %lx, msize=%dd bytes\n", mem_phys, msize));
+-	dinitprintk((KERN_INFO MYNAM ": (port i/o @ %lx, psize=%dd bytes)\n", port, psize));
+-
+ 	mem = NULL;
+ 	/* Get logical ptr for PciMem0 space */
+ 	/*mem = ioremap(mem_phys, msize);*/
+-	mem = ioremap(mem_phys, 0x100);
++	mem = ioremap(mem_phys, msize);
+ 	if (mem == NULL) {
+ 		printk(KERN_ERR MYNAM ": ERROR - Unable to map adapter memory!\n");
+ 		kfree(ioc);
+@@ -1344,11 +1338,6 @@
+ 		ioc->bus_type = SAS;
+ 		ioc->errata_flag_1064 = 1;
+ 	}
+-	else if (pdev->device == MPI_MANUFACTPAGE_DEVID_SAS1066) {
+-		ioc->prod_name = "LSISAS1066";
+-		ioc->bus_type = SAS;
+-		ioc->errata_flag_1064 = 1;
+-	}
+ 	else if (pdev->device == MPI_MANUFACTPAGE_DEVID_SAS1068) {
+ 		ioc->prod_name = "LSISAS1068";
+ 		ioc->bus_type = SAS;
+@@ -1358,14 +1347,14 @@
+ 		ioc->prod_name = "LSISAS1064E";
+ 		ioc->bus_type = SAS;
+ 	}
+-	else if (pdev->device == MPI_MANUFACTPAGE_DEVID_SAS1066E) {
+-		ioc->prod_name = "LSISAS1066E";
+-		ioc->bus_type = SAS;
+-	}
+ 	else if (pdev->device == MPI_MANUFACTPAGE_DEVID_SAS1068E) {
+ 		ioc->prod_name = "LSISAS1068E";
+ 		ioc->bus_type = SAS;
+ 	}
++	else if (pdev->device == MPI_MANUFACTPAGE_DEVID_SAS1078) {
++		ioc->prod_name = "LSISAS1078";
++		ioc->bus_type = SAS;
++	}
+ 
+ 	if (ioc->errata_flag_1064)
+ 		pci_disable_io_access(pdev);
+@@ -3185,6 +3174,37 @@
+ 	u32 diag1val = 0;
+ #endif
+ 
++	if (ioc->pcidev->device == MPI_MANUFACTPAGE_DEVID_SAS1078) {
++		drsprintk((MYIOC_s_WARN_FMT "%s: Doorbell=%p; 1078 reset "
++			"address=%p\n",  ioc->name, __FUNCTION__,
++			&ioc->chip->Doorbell, &ioc->chip->Reset_1078));
++		CHIPREG_WRITE32(&ioc->chip->Reset_1078, 0x07);
++		if (sleepFlag == CAN_SLEEP)
++			msleep(1);
++		else
++			mdelay(1);
++
++		for (count = 0; count < 60; count ++) {
++			doorbell = CHIPREG_READ32(&ioc->chip->Doorbell);
++			doorbell &= MPI_IOC_STATE_MASK;
++
++			drsprintk((MYIOC_s_INFO_FMT
++				"looking for READY STATE: doorbell=%x"
++			        " count=%d\n",
++				ioc->name, doorbell, count));
++			if (doorbell == MPI_IOC_STATE_READY) {
++				return 0;
++			}
++
++			/* wait 1 sec */
++			if (sleepFlag == CAN_SLEEP)
++				msleep(1000);
++			else
++				mdelay(1000);
++		}
++		return -1;
++	}
++
+ 	/* Clear any existing interrupts */
+ 	CHIPREG_WRITE32(&ioc->chip->IntStatus, 0);
+ 
+diff -uarN b/drivers/message/fusion/mptbase.h a/drivers/message/fusion/mptbase.h
+--- b/drivers/message/fusion/mptbase.h	2006-06-27 12:22:45.000000000 -0600
++++ a/drivers/message/fusion/mptbase.h	2006-06-27 15:24:01.000000000 -0600
+@@ -308,7 +308,8 @@
+ 	u32	HostIndex;	/* 50     Host Index register        */
+ 	u32	Reserved4[15];	/* 54-8F                             */
+ 	u32	Fubar;		/* 90     For Fubar usage            */
+-	u32	Reserved5[27];	/* 94-FF                             */
++	u32     Reserved5[1050];/* 94-10F8                           */
++	u32     Reset_1078;     /* 10FC   Reset 1078                 */
+ } SYSIF_REGS;
+ 
+ /*
+diff -uarN b/drivers/message/fusion/mptfc.c a/drivers/message/fusion/mptfc.c
+--- b/drivers/message/fusion/mptfc.c	2006-06-15 15:16:10.000000000 -0600
++++ a/drivers/message/fusion/mptfc.c	2006-06-27 15:14:15.000000000 -0600
+@@ -132,21 +132,21 @@
+  */
+ 
+ static struct pci_device_id mptfc_pci_table[] = {
+-	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_FC909,
++	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC909,
+ 		PCI_ANY_ID, PCI_ANY_ID },
+-	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_FC919,
++	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC919,
+ 		PCI_ANY_ID, PCI_ANY_ID },
+-	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_FC929,
++	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC929,
+ 		PCI_ANY_ID, PCI_ANY_ID },
+-	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_FC919X,
++	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC919X,
+ 		PCI_ANY_ID, PCI_ANY_ID },
+-	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_FC929X,
++	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC929X,
+ 		PCI_ANY_ID, PCI_ANY_ID },
+-	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_FC939X,
++	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC939X,
+ 		PCI_ANY_ID, PCI_ANY_ID },
+-	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_FC949X,
++	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC949X,
+ 		PCI_ANY_ID, PCI_ANY_ID },
+-	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_FC949ES,
++	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC949E,
+ 		PCI_ANY_ID, PCI_ANY_ID },
+ 	{0}	/* Terminating entry */
+ };
+diff -uarN b/drivers/message/fusion/mptsas.c a/drivers/message/fusion/mptsas.c
+--- b/drivers/message/fusion/mptsas.c	2006-06-27 12:25:28.000000000 -0600
++++ a/drivers/message/fusion/mptsas.c	2006-06-27 15:17:03.000000000 -0600
+@@ -2757,17 +2757,15 @@
  }
  
-
-
-
-Using Tomcat but need to do more? Need to support web services, security?
-Get stuff done quickly with pre-integrated technology to make your job easier
-Download IBM WebSphere Application Server v.1.0.1 based on Apache Geronimo
-http://sel.as-us.falkag.net/sel?cmd=lnk&kid=120709&bid=263057&dat=121642
+ static struct pci_device_id mptsas_pci_table[] = {
+-	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_SAS1064,
++	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVID_SAS1064,
+ 		PCI_ANY_ID, PCI_ANY_ID },
+-	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_SAS1066,
++	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVID_SAS1068,
+ 		PCI_ANY_ID, PCI_ANY_ID },
+-	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_SAS1068,
++	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVID_SAS1064E,
+ 		PCI_ANY_ID, PCI_ANY_ID },
+-	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_SAS1064E,
++	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVID_SAS1068E,
+ 		PCI_ANY_ID, PCI_ANY_ID },
+-	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_SAS1066E,
+-		PCI_ANY_ID, PCI_ANY_ID },
+-	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_SAS1068E,
++	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVID_SAS1078,
+ 		PCI_ANY_ID, PCI_ANY_ID },
+ 	{0}	/* Terminating entry */
+ };
+diff -uarN b/drivers/message/fusion/mptspi.c a/drivers/message/fusion/mptspi.c
+--- b/drivers/message/fusion/mptspi.c	2006-06-17 19:49:35.000000000 -0600
++++ a/drivers/message/fusion/mptspi.c	2006-06-27 15:12:53.000000000 -0600
+@@ -775,9 +775,9 @@
+  */
+ 
+ static struct pci_device_id mptspi_pci_table[] = {
+-	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_53C1030,
++	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVID_53C1030,
+ 		PCI_ANY_ID, PCI_ANY_ID },
+-	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_1030_53C1035,
++	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVID_53C1035,
+ 		PCI_ANY_ID, PCI_ANY_ID },
+ 	{0}	/* Terminating entry */
+ };
