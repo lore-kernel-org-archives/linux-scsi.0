@@ -1,54 +1,50 @@
 From: Horms <horms@verge.net.au>
-Subject: Re: [RFC] [PATCH 2/2] kdump: cciss driver initialization?issue fix
-Date: Tue, 27 Jun 2006 11:42:45 +0900 (JST)
-Message-ID: <20060627024245.9B2E634053@koto.vergenet.net>
-References: <m11wtcvw5k.fsf@ebiederm.dsl.xmission.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from koto.vergenet.net ([210.128.90.7]:17858 "EHLO koto.vergenet.net")
-	by vger.kernel.org with ESMTP id S933329AbWF0Cmr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Jun 2006 22:42:47 -0400
-In-Reply-To: <m11wtcvw5k.fsf@ebiederm.dsl.xmission.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Subject: Re: [Fastboot] [RFC] [PATCH 2/2] kdump: cciss driver initialization?issue fix
+Date: Tue, 27 Jun 2006 11:30:48 +0900
+Message-ID: <20060627023048.GJ2956@verge.net.au>
+References: <m1veqqxyrb.fsf@ebiederm.dsl.xmission.com> <20060626090915.CA8333402A@koto.vergenet.net> <20060626134536.GB8985@in.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030611AbWF0Cmv@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20060626134536.GB8985@in.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Vivek Goyal <vgoyal@in.ibm.com>
+Cc: "Eric W. Biederman" <ebiederm@xmission.com>, Andrew Morton <akpm@osdl.org>, Neela.Kolli@engenio.com, linux-scsi@vger.kernel.org, mike.miller@hp.com, "Zou, Nanhai" <nanhai.zou@intel.com>, fastboot@lists.osdl.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Eric W. Biederman" <ebiederm@xmission.com>
-Cc: Andrew Morton <akpm@osdl.org>, Neela.Kolli@engenio.com, linux-scsi@vger.kernel.org, mike.miller@hp.com, fastboot@lists.osdl.org, linux-kernel@vger.kernel.org, Vivek Goyal <vgoyal@in.ibm.com>
 
-In article <m11wtcvw5k.fsf@ebiederm.dsl.xmission.com> you wrote:
-> Vivek Goyal <vgoyal@in.ibm.com> writes:
+On Mon, Jun 26, 2006 at 09:45:36AM -0400, Vivek Goyal wrote:
+> On Mon, Jun 26, 2006 at 06:09:15PM +0900, Horms wrote:
+> > In article <m1veqqxyrb.fsf@ebiederm.dsl.xmission.com> you wrote:
+> > > 
+> > > Not all pci busses support it but there is a standard pci bus reset bit
+> > > in pci bridges.
+> > > 
+> > > I don't know if it would help but it might make sense to have a config
+> > > option that can be used to mark drivers that are known to have problems,
+> > > in these scenarios.
+> > > 
+> > > CONFIG_BRITTLE_INIT perhaps?
+> > > 
+> > > It would at least make it easier for people to see which drivers
+> > > they don't want to use, and give people some incentive to fix things.
+> > 
+> > I believe that MPT Fusion could go on that list.
+> > 
+> > http://permalink.gmane.org/gmane.linux.ports.ia64/14451
+> > 
+> >
 > 
->> On Mon, Jun 26, 2006 at 07:41:00AM +0530, Maneesh Soni wrote:
->>
->> Maneesh, Keeping this code under a config option becomes a problem when we
->> will have a relocatable kernel. At some point of time we got to have
->> relocatable kernel so that people don't have to build two kernels. In fact
->> this is becoming a pain area for distros. That's the reason I thought
->> of making it a command line parameter.
+> Above link does not give details of exact MPT fusion initialization 
+> problems faced on IA64. I faced MPT fusion initialization issues on
+> i386/x86_64 and posted a fix.
 > 
-> Ok. Even if we do this with a command line, we need to have a clean concept.
-> If the concept is ignore devices with a brittle init routine that is compre=
-> hensible
-> and potentially useful for other reasons than crash dumps.
+> http://kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=9bf0a28c9a24e2cee5deecf89d118254374c75ba
 > 
-> If the concept is crashdump it is a poorly defined concept and all of Andre=
-> ws
-> objections apply.
-> 
->> I remember few months back, Eric had mentioned that he has got patches for
->> relocatable kernel ready for review for i386 and x86_64. Eric, do you have
->> any plans to post the patches for review?
-> 
-> I have some code that I keep intending to get to.  It has probably bit
-> rotted since I wrote it, but it shouldn't be too bad to clean up.
-> Unfortunately the whole crashdump thing is fairly low on my priority
-> list.
+> You might want to download and check.
 
-Hi Eric,
-
-If you have some code to relocate the i386 and x86_64 kernels then I for
-one would really like a chance to look over it.
+Thanks, I wasn't aware of that. I'll see if that helps on ia64.
 
 -- 
 Horms                                           
 H: http://www.vergenet.net/~horms/          W: http://www.valinux.co.jp/en/
-
