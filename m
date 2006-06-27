@@ -1,89 +1,131 @@
 From: Brian King <brking@us.ibm.com>
-Subject: [PATCH 1/1] scsi: Add allow_restart sysfs class attribute
-Date: Tue, 27 Jun 2006 11:10:31 -0500
-Message-ID: <200606271610.k5RGAXcT005333@d03av04.boulder.ibm.com>
+Subject: [PATCH 1/1] scsi: Device scanning oops for offlined devices (resend)
+Date: Tue, 27 Jun 2006 11:10:43 -0500
+Message-ID: <200606271610.k5RGAiHW032065@d01av02.pok.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.150]:50851 "EHLO
-	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S1161139AbWF0QKf
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Jun 2006 12:10:35 -0400
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e32.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k5RGAYBE024865
+Received: from e5.ny.us.ibm.com ([32.97.182.145]:5272 "EHLO e5.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1161140AbWF0QKq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Jun 2006 12:10:46 -0400
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e5.ny.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k5RGAjvG014922
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
-	for <linux-scsi@vger.kernel.org>; Tue, 27 Jun 2006 12:10:34 -0400
-Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
-	by westrelay02.boulder.ibm.com (8.13.6/NCO/VER7.0) with ESMTP id k5RGA3dh291712
+	for <linux-scsi@vger.kernel.org>; Tue, 27 Jun 2006 12:10:45 -0400
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay02.pok.ibm.com (8.13.6/NCO/VER7.0) with ESMTP id k5RGAjBh275992
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Tue, 27 Jun 2006 10:10:03 -0600
-Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av04.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k5RGAXHN005362
-	for <linux-scsi@vger.kernel.org>; Tue, 27 Jun 2006 10:10:34 -0600
+	for <linux-scsi@vger.kernel.org>; Tue, 27 Jun 2006 12:10:45 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k5RGAiCh032125
+	for <linux-scsi@vger.kernel.org>; Tue, 27 Jun 2006 12:10:44 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, parasietje@gmail.com, brking@us.ibm.com
+Cc: linux-scsi@vger.kernel.org, brking@us.ibm.com
 
 
-This is a resend of a patch I generated in response to an email sent
-by Ruben Faelens <parasietje@gmail.com>. His original email to
-linux-scsi requested a method in which he could spin down a scsi disk
-when not in use and have the kernel automatically spin it back up when
-an I/O was generated to the disk. The infrastructure to automatically
-spin a disk up has been in the scsi error handler for some time now,
-but it is not enabled by default. This patch adds an sd sysfs attribute
-which allows userspace to enable this behavior.
+If a device gets offlined as a result of the Inquiry sent
+during scanning, the following oops can occur. After the
+disk gets put into the SDEV_OFFLINE state, the error handler
+sends back the failed inquiry, which wakes the thread doing
+the scan. This starts a race between the scanning thread
+freeing the scsi device and the error handler calling
+scsi_run_host_queues to restart the host. Since the disk
+is in the SDEV_OFFLINE state, scsi_device_get will still
+work, which results in __scsi_iterate_devices getting
+a reference to the scsi disk when it shouldn't.
+
+The following execution thread causes the oops:
+
+CPU 0 (scan)				CPU 1 (eh)
+---------------------------------------------------------
+scsi_probe_and_add_lun
+			....
+					scsi_eh_offline_sdevs
+					scsi_eh_flush_done_q
+scsi_destroy_sdev
+scsi_device_dev_release
+					scsi_restart_operations
+					 scsi_run_host_queues
+					  __scsi_iterate_devices
+					   get_device
+scsi_device_dev_release_usercontext
+					  scsi_run_queue
+					    <---OOPS--->
+
+The patch fixes this by changing the state of the sdev to SDEV_DEL
+before doing the final put_device, which should prevent the race
+from occurring.
+
+Original oops follows:
+
+Badness in kref_get at lib/kref.c:32
+Call Trace:
+[C00000002F4476D0] [C00000000000EE20] .show_stack+0x68/0x1b0 (unreliable)
+[C00000002F447770] [C00000000037515C] .program_check_exception+0x1cc/0x5a8
+[C00000002F447840] [C00000000000446C] program_check_common+0xec/0x100
+ Exception: 700 at .kref_get+0x10/0x28
+    LR = .kobject_get+0x20/0x3c
+[C00000002F447B30] [C00000002F447BC0] 0xc00000002f447bc0 (unreliable)
+[C00000002F447BB0] [C000000000254BDC] .get_device+0x20/0x3c
+[C00000002F447C30] [D000000000063188] .scsi_device_get+0x34/0xdc [scsi_mod]
+[C00000002F447CC0] [D0000000000633EC] .__scsi_iterate_devices+0x50/0xbc [scsi_mod]
+[C00000002F447D60] [D00000000006A910] .scsi_run_host_queues+0x34/0x5c [scsi_mod]
+[C00000002F447DF0] [D000000000069054] .scsi_error_handler+0xdb4/0xe44 [scsi_mod]
+[C00000002F447EE0] [C00000000007B4E0] .kthread+0x128/0x178
+[C00000002F447F90] [C000000000025E84] .kernel_thread+0x4c/0x68
+Unable to handle kernel paging request for <7>PCI: Enabling device: (0002:41:01.1), cmd 143
+data at address 0x000001b8
+Faulting instruction address: 0xd0000000000698e4
+sym1: <1010-66> rev 0x1 at pci 0002:41:01.1 irq 216
+sym1: No NVRAM, ID 7, Fast-80, LVD, parity checking
+sym1: SCSI BUS has been reset.
+scsi2 : sym-2.2.2
+cpu 0x0: Vector: 300 (Data Access) at [c00000002f447a30]
+    pc: d0000000000698e4: .scsi_run_queue+0x2c/0x218 [scsi_mod]
+    lr: d00000000006a904: .scsi_run_host_queues+0x28/0x5c [scsi_mod]
+    sp: c00000002f447cb0
+   msr: 9000000000009032
+   dar: 1b8
+ dsisr: 40000000
+  current = 0xc0000000045fecd0
+  paca    = 0xc00000000048ee80
+    pid   = 1123, comm = scsi_eh_1
+enter ? for help
+[c00000002f447d60] d00000000006a904 .scsi_run_host_queues+0x28/0x5c [scsi_mod]
+[c00000002f447df0] d000000000069054 .scsi_error_handler+0xdb4/0xe44 [scsi_mod]
+[c00000002f447ee0] c00000000007b4e0 .kthread+0x128/0x178
+[c00000002f447f90] c000000000025e84 .kernel_thread+0x4c/0x68
 
 Signed-off-by: Brian King <brking@us.ibm.com>
 ---
 
- linux-2.6-bjking1/drivers/scsi/sd.c |   26 ++++++++++++++++++++++++++
- 1 files changed, 26 insertions(+)
+ linux-2.6-bjking1/drivers/scsi/scsi_lib.c  |    3 +++
+ linux-2.6-bjking1/drivers/scsi/scsi_scan.c |    1 +
+ 2 files changed, 4 insertions(+)
 
-diff -puN drivers/scsi/sd.c~sd_allow_restart_sysfs_attr drivers/scsi/sd.c
---- linux-2.6/drivers/scsi/sd.c~sd_allow_restart_sysfs_attr	2006-06-26 14:07:59.000000000 -0500
-+++ linux-2.6-bjking1/drivers/scsi/sd.c	2006-06-26 14:07:59.000000000 -0500
-@@ -208,6 +208,23 @@ static ssize_t sd_store_cache_type(struc
- 	return count;
- }
+diff -puN drivers/scsi/scsi_lib.c~scsi_fix_scan_offline drivers/scsi/scsi_lib.c
+--- linux-2.6/drivers/scsi/scsi_lib.c~scsi_fix_scan_offline	2006-06-26 14:11:27.000000000 -0500
++++ linux-2.6-bjking1/drivers/scsi/scsi_lib.c	2006-06-26 14:11:27.000000000 -0500
+@@ -2060,6 +2060,9 @@ scsi_device_set_state(struct scsi_device
  
-+static ssize_t sd_store_allow_restart(struct class_device *cdev, const char *buf,
-+				      size_t count)
-+{
-+	struct scsi_disk *sdkp = to_scsi_disk(cdev);
-+	struct scsi_device *sdp = sdkp->device;
-+
-+	if (!capable(CAP_SYS_ADMIN))
-+		return -EACCES;
-+
-+	if (sdp->type != TYPE_DISK)
-+		return -EINVAL;
-+
-+	sdp->allow_restart = simple_strtoul(buf, NULL, 10);
-+
-+	return count;
-+}
-+
- static ssize_t sd_show_cache_type(struct class_device *cdev, char *buf)
+ 	case SDEV_DEL:
+ 		switch (oldstate) {
++		case SDEV_CREATED:
++		case SDEV_RUNNING:
++		case SDEV_OFFLINE:
+ 		case SDEV_CANCEL:
+ 			break;
+ 		default:
+diff -puN drivers/scsi/scsi_scan.c~scsi_fix_scan_offline drivers/scsi/scsi_scan.c
+--- linux-2.6/drivers/scsi/scsi_scan.c~scsi_fix_scan_offline	2006-06-26 14:11:27.000000000 -0500
++++ linux-2.6-bjking1/drivers/scsi/scsi_scan.c	2006-06-26 14:11:27.000000000 -0500
+@@ -810,6 +810,7 @@ static int scsi_add_lun(struct scsi_devi
+ 
+ static inline void scsi_destroy_sdev(struct scsi_device *sdev)
  {
- 	struct scsi_disk *sdkp = to_scsi_disk(cdev);
-@@ -223,10 +240,19 @@ static ssize_t sd_show_fua(struct class_
- 	return snprintf(buf, 20, "%u\n", sdkp->DPOFUA);
- }
- 
-+static ssize_t sd_show_allow_restart(struct class_device *cdev, char *buf)
-+{
-+	struct scsi_disk *sdkp = to_scsi_disk(cdev);
-+
-+	return snprintf(buf, 40, "%d\n", sdkp->device->allow_restart);
-+}
-+
- static struct class_device_attribute sd_disk_attrs[] = {
- 	__ATTR(cache_type, S_IRUGO|S_IWUSR, sd_show_cache_type,
- 	       sd_store_cache_type),
- 	__ATTR(FUA, S_IRUGO, sd_show_fua, NULL),
-+	__ATTR(allow_restart, S_IRUGO|S_IWUSR, sd_show_allow_restart,
-+	       sd_store_allow_restart),
- 	__ATTR_NULL,
- };
- 
++	scsi_device_set_state(sdev, SDEV_DEL);
+ 	if (sdev->host->hostt->slave_destroy)
+ 		sdev->host->hostt->slave_destroy(sdev);
+ 	transport_destroy_device(&sdev->sdev_gendev);
 _
