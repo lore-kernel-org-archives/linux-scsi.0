@@ -1,39 +1,51 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Areca driver recap + status
-Date: Tue, 27 Jun 2006 17:36:59 +0100
-Message-ID: <1151426219.32186.49.camel@localhost.localdomain>
-References: <09be01c695b3$2ed8c2c0$c100a8c0@robm>
-	 <20060621222826.ff080422.akpm@osdl.org>
-	 <1151333338.2673.4.camel@mulgrave.il.steeleye.com>
-	 <057801c69970$70b45090$0e00cb0a@robm>
-	 <1151422074.3340.25.camel@mulgrave.il.steeleye.com>
-	 <1151423500.32186.39.camel@localhost.localdomain>
-	 <1151422767.3340.29.camel@mulgrave.il.steeleye.com>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [PATCH] scsi_scan.c: bug fix: starget use after free issue
+Date: Tue, 27 Jun 2006 12:39:02 -0400
+Message-ID: <44A15F26.3070608@emulex.com>
+References: <1150390560.29774.32.camel@localhost.localdomain> <1151423925.3340.32.camel@mulgrave.il.steeleye.com>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:28292 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1161153AbWF0QV1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Jun 2006 12:21:27 -0400
-In-Reply-To: <1151422767.3340.29.camel@mulgrave.il.steeleye.com>
+Received: from emulex.emulex.com ([138.239.112.1]:50834 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S1161180AbWF0QjH
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Jun 2006 12:39:07 -0400
+In-Reply-To: <1151423925.3340.32.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Robert Mueller <robm@fastmail.fm>, Andrew Morton <akpm@osdl.org>, rdunlap@xenotime.net, hch@infradead.org, erich@areca.com.tw, brong@fastmail.fm, dax@gurulabs.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-Ar Maw, 2006-06-27 am 10:39 -0500, ysgrifennodd James Bottomley:
-> On Tue, 2006-06-27 at 16:51 +0100, Alan Cox wrote:
-> > On x86_64 the dma_addr_t and the ulong are both 64bit so the problem
-> > doesn't arise. 
+And we've already seen this, even without this change - e.g. the target was
+2/3's torn down when we created a new one....
+
+what this really sounds like then is that we need to stop the teardown and
+reuse the structure - or - figure out a way to make the kobj teardown happen
+sooner so that we reuse the namespace (or disconnect the namespace and the
+structures).
+
+-- james
+
+James Bottomley wrote:
+> On Thu, 2006-06-15 at 12:55 -0400, James Smart wrote:
+>> When reaping the starget, after all sdev's have been removed, the starget
+>> was queued for deletion via usercontext, but was left on the shost's
+>> __targets list. Another scanning thread can match the starget and use it, 
+>> causing reference after free problems.
+>>
+>> This patch unlinks the starget at the same time it is scheduled for deletion.
+>>
+> This cannot be done this way.  The problem it will introduce is that
+> we'll think the target has gone and possibly reallocate its name before
+> device_del is called on it (which means if the new device gets added, it
+> will return -EEXIST and everything will go wrong).
 > 
-> Yes it does ... apparently 32 bit kernel on x86_64 is a lot more common
-> than people suppose.  In > 4GB this is exactly PAE.
-
-In your original mail you stated
-
-"It probably is only significant on x86_64 with the gart iommu enabled."
-
-IOMMU is only in the 64bit kernel that I can see.
-
+> Where is the actual reference coming from ... perhaps the using place
+> should simply be checking the state.
+> 
+> James
+> 
+> 
+> 
