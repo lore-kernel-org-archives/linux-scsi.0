@@ -1,37 +1,43 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] scsi_scan.c: bug fix: starget use after free issue
-Date: Tue, 27 Jun 2006 10:58:45 -0500
-Message-ID: <1151423925.3340.32.camel@mulgrave.il.steeleye.com>
-References: <1150390560.29774.32.camel@localhost.localdomain>
+Subject: Re: [PATCH] scsi midlayer: fix sdev reuse after free
+Date: Tue, 27 Jun 2006 11:03:31 -0500
+Message-ID: <1151424211.3340.35.camel@mulgrave.il.steeleye.com>
+References: <1151348028.5883.16.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:52165 "EHLO
+Received: from stat9.steeleye.com ([209.192.50.41]:6342 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1161125AbWF0P6t (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Jun 2006 11:58:49 -0400
-In-Reply-To: <1150390560.29774.32.camel@localhost.localdomain>
+	id S932493AbWF0QDh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Jun 2006 12:03:37 -0400
+In-Reply-To: <1151348028.5883.16.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Smart@Emulex.Com
 Cc: linux-scsi@vger.kernel.org
 
-On Thu, 2006-06-15 at 12:55 -0400, James Smart wrote:
-> When reaping the starget, after all sdev's have been removed, the starget
-> was queued for deletion via usercontext, but was left on the shost's
-> __targets list. Another scanning thread can match the starget and use it, 
-> causing reference after free problems.
-> 
-> This patch unlinks the starget at the same time it is scheduled for deletion.
-> 
-This cannot be done this way.  The problem it will introduce is that
-we'll think the target has gone and possibly reallocate its name before
-device_del is called on it (which means if the new device gets added, it
-will return -EEXIST and everything will go wrong).
+On Mon, 2006-06-26 at 14:53 -0400, James Smart wrote:
+>  void __scsi_remove_device(struct scsi_device *sdev)
+>  {
+>  	struct device *dev = &sdev->sdev_gendev;
+> +	unsigned long flags;
+>  
+>  	if (scsi_device_set_state(sdev, SDEV_CANCEL) != 0)
+>  		return;
+>  
+> +	spin_lock_irqsave(sdev->host->host_lock, flags);
+> +	list_del(&sdev->siblings);
+> +	list_del(&sdev->same_target_siblings);
+> +	spin_unlock_irqrestore(sdev->host->host_lock, flags);
+>  	class_device_unregister(&sdev->sdev_classdev);
+>  	transport_remove_device(dev);
+>  	device_del(dev);
 
-Where is the actual reference coming from ... perhaps the using place
-should simply be checking the state.
+Not quite ... we cannot physically remove the device from the list until
+after device_del has been called otherwise we could get namespace reuse
+before it is really free (that's quite a small race window in this case,
+but it does exist).
 
 James
 
