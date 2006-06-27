@@ -1,73 +1,86 @@
-From: "dezheng shen" <dzshen@winbond.com>
-Subject: [Winbond] MS/MS Pro driver for Winbond 528 PCI reader for public review
-Date: Tue, 27 Jun 2006 16:07:59 +0800
-Message-ID: <44A0E75F.4090800@winbond.com>
+From: "erich" <erich@areca.com.tw>
+Subject: Re: Areca driver recap + status
+Date: Tue, 27 Jun 2006 17:47:47 +0800
+Message-ID: <003701c699ce$c126b550$b100a8c0@erich2003>
+References: <09be01c695b3$2ed8c2c0$c100a8c0@robm> <20060621222826.ff080422.akpm@osdl.org> <1151333338.2673.4.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	format=flowed;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+	charset="big5";
+	reply-type=original
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wehq.winbond.com.tw ([202.39.229.15]:44231 "EHLO
-	wehq.winbond.com.tw") by vger.kernel.org with ESMTP
-	id S1030738AbWF0II0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Jun 2006 04:08:26 -0400
-Received: from wemlg.winbond.com.tw (wemlg [10.2.6.199])
-	by wehq.winbond.com.tw (8.12.6/8.12.6) with ESMTP id k5R88OmS001284
-	for <linux-scsi@vger.kernel.org>; Tue, 27 Jun 2006 16:08:24 +0800 (CST)
-Received: from wehqims01.winbond.com.tw (wehqims01 [10.2.6.99])
-	by wemlg.winbond.com.tw (8.12.10/8.12.10) with ESMTP id k5R881U5024107
-	for <linux-scsi@vger.kernel.org>; Tue, 27 Jun 2006 16:08:01 +0800 (CST)
-Content-Class: urn:content-classes:message
+Received: from 220-130-178-143.HINET-IP.hinet.net ([220.130.178.143]:54777
+	"EHLO areca.com.tw") by vger.kernel.org with ESMTP id S1751070AbWF0Jr6
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Jun 2006 05:47:58 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Andrew Morton <akpm@osdl.org>, "\"Robert Mueller\"" <robm@fastmail.fm>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, dax@gurulabs.com, brong@fastmail.fm, hch@infradead.org, rdunlap@xenotime.net
 
-Dear all:
-   This email was originally posted on linux-kernel but I didn't get any 
-response yet so that I post it to this linux-scsi again. Hope that we 
-can get reply soon.
+Dear Robert Mueller,
 
-thank you,
+Does arcmsr still has more than one value per file issue on it?
+Maybe I am miss-understand the means of one value per file.
+Please tell me the issue, thanks.
+About the BE platform, Areca's user on linux sparc platform had ran this 
+driver successfuly.
+But I attempt to install linux system on ppc platform and run this driver 
+for more long time testing this day.
+I will patch PAE issue on pci_map_single again and handle SYNCHRONIZE_CACHE 
+for your request.
 
-dz
-
-Dear all:
-   Eventually, we found a place to place our sources for public review.
-
-   Files are located in
-
-http://zeniv.linux.org.uk/~winbond/
-
-and they have been tested on Intel/AMD single/dual processors and Redhat 
-9/Fedora 5 and Redhat workstation 4. We ran a stress test on multiple 
-platforms overnight to read/write/format MS/MSPro cards via Winbond 528 
-readers.
-
-   Our customers, motherboard manufactures like ASUS, purchase Winbond 
-528 then mount their motherboards. Winbond 528 itself provides many 
-reader functions like MS/MSPro/SM/xD/SD/MMC and Winbond also vendors 
-many other different chips for various buses. For example, Winbond 518 
-is for LPC bus and 488 is for embedded hooked up to data bus directly. 
-Our team is to derive a simple and unified architecture so that we don't 
-have to write redudant codes for each chip, like 518/528/528DA and 488. 
-Another example is, wbtable.c and wbtable.h are also used on xD/SM drivers.
-
-   Someone might wonder why we use SCSI subsystem to implement those 
-device drivers? When we are assigned this job in 2004, the previous 
-engineer has been working on this device driver for over a year and 
-he/she was using SCSI subsystem and we don't know why and we simply 
-follow her/his trace to deliver this driver to our customers as soon as 
-we can. Also, when we plug similar USB flash memory readers, it shows 
-sda/sdb so that we took the same approach as SCSI devices.
-
-   Don't hesitate to ask if you have any questions.
-
-best regards,
-
-dz
+Best Regards
+Erich Chen
+----- Original Message ----- 
+From: "James Bottomley" <James.Bottomley@SteelEye.com>
+To: "Andrew Morton" <akpm@osdl.org>
+Cc: <rdunlap@xenotime.net>; <hch@infradead.org>; <erich@areca.com.tw>; 
+<brong@fastmail.fm>; <dax@gurulabs.com>; <linux-kernel@vger.kernel.org>; 
+<linux-scsi@vger.kernel.org>; "Robert Mueller" <robm@fastmail.fm>
+Sent: Monday, June 26, 2006 10:48 PM
+Subject: Re: Areca driver recap + status
 
 
+> On Wed, 2006-06-21 at 22:28 -0700, Andrew Morton wrote:
+>> On Thu, 22 Jun 2006 14:18:23 +1000
+>> "Robert Mueller" <robm@fastmail.fm> wrote:
+>>
+>> > The driver went into 2.6.11-rc3-mm1 here:
+>> > http://marc.theaimsgroup.com/?l=linux-kernel&m=110754432622498&w=2
+>>
+>> One and a half years.
+>>
+>> Would the world end if we just merged the dang thing?
+>
+> Not the world perhaps, but I'm unwilling to concede that if a driver
+> author is given a list of major issues and does nothing, then the driver
+> should go in after everyone gets impatient.
+>
+> The rules for inclusion are elastic and include broad leeway for good
+> behaviour, but this would stretch the elasticity way beyond breaking
+> point.
+>
+> The list of issues is here:
+>
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=114556263632510
+>
+> Most of the serious stuff is fixed with the exception of:
+>
+> - sysfs has more than one value per file
+> - BE platform support
+> - PAE (cast of dma_addr_t to unsigned long) issues.
+> - SYNCHRONIZE_CACHE is ignored.  This is wrong.  The sync cache in the
+> shutdown notifier isn't sufficient.
+>
+> At least the sysfs files have to be fixed before it goes in ... unless
+> you want to be lynched by Greg?
+>
+> What I could do is set up a holding tree for all the fixed ... but -mm
+> is doing a good job of that at the moment.
+>
+> James
+>
+> 
 
-===========================================================================================
-The privileged confidential information contained in this email is intended for use only by the addressees as indicated by the original sender of this email. If you are not the addressee indicated in this email or are not responsible for delivery of the email to such  a person, please kindly reply to the sender indicating this fact and delete all copies of it from your computer and network server immediately. Your cooperation is highly appreciated. It is advised that any unauthorized use of confidential information of Winbond is strictly prohibited; and any information in this email irrelevant to the official business of Winbond shall be deemed as neither given nor endorsed by Winbond.
