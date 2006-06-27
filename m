@@ -1,58 +1,45 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [PATCH] scsi midlayer: fix sdev reuse after free
-Date: Tue, 27 Jun 2006 12:42:08 -0400
-Message-ID: <44A15FE0.7000508@emulex.com>
-References: <1151348028.5883.16.camel@localhost.localdomain> <1151424211.3340.35.camel@mulgrave.il.steeleye.com>
-Reply-To: James.Smart@Emulex.Com
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH 1/1] scsi: Add allow_restart sysfs class attribute
+Date: Tue, 27 Jun 2006 21:45:59 +0200
+Message-ID: <44A18AF7.7000504@s5r6.in-berlin.de>
+References: <200606271610.k5RGAXcT005333@d03av04.boulder.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:23955 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S1161165AbWF0QmQ
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Jun 2006 12:42:16 -0400
-In-Reply-To: <1151424211.3340.35.camel@mulgrave.il.steeleye.com>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:56196 "EHLO
+	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
+	id S932546AbWF0Tr5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Jun 2006 15:47:57 -0400
+In-Reply-To: <200606271610.k5RGAXcT005333@d03av04.boulder.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi@vger.kernel.org
+To: Brian King <brking@us.ibm.com>
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, parasietje@gmail.com
 
-Yes - same issue as with the starget - and with the same call for
-actions....
+Brian King wrote:
+> This is a resend of a patch I generated in response to an email sent
+> by Ruben Faelens <parasietje@gmail.com>. His original email to
+> linux-scsi requested a method in which he could spin down a scsi disk
+> when not in use and have the kernel automatically spin it back up when
+> an I/O was generated to the disk. The infrastructure to automatically
+> spin a disk up has been in the scsi error handler for some time now,
 
-What is says is all of this is very broken right now for dynamic
-teardown and re-add. Perhaps you want to reconsider the patch that
-made it configurable as to whether to tear down the starget tree ?
-Granted, you still have to do so on module unload or LLDD detach,
-but the common use models usually doesn't make this an issue.
+I am positively surprised that this code is actually already there --- I 
+didn't notice...
 
--- james s
+> but it is not enabled by default. This patch adds an sd sysfs attribute
+> which allows userspace to enable this behavior.
 
-James Bottomley wrote:
-> On Mon, 2006-06-26 at 14:53 -0400, James Smart wrote:
->>  void __scsi_remove_device(struct scsi_device *sdev)
->>  {
->>  	struct device *dev = &sdev->sdev_gendev;
->> +	unsigned long flags;
->>  
->>  	if (scsi_device_set_state(sdev, SDEV_CANCEL) != 0)
->>  		return;
->>  
->> +	spin_lock_irqsave(sdev->host->host_lock, flags);
->> +	list_del(&sdev->siblings);
->> +	list_del(&sdev->same_target_siblings);
->> +	spin_unlock_irqrestore(sdev->host->host_lock, flags);
->>  	class_device_unregister(&sdev->sdev_classdev);
->>  	transport_remove_device(dev);
->>  	device_del(dev);
-> 
-> Not quite ... we cannot physically remove the device from the list until
-> after device_del has been called otherwise we could get namespace reuse
-> before it is really free (that's quite a small race window in this case,
-> but it does exist).
-> 
-> James
-> 
-> 
-> 
+What is the reason that the code is not enabled by default? Are there 
+dependencies on command set or transport, or firmwares which won't react 
+properly?
+
+There were a few requests for auto-spinup for SBP-2 HDDs during the last 
+months, e.g. https://bugzilla.novell.com/show_bug.cgi?id=183011 . Maybe 
+sbp2 should switch on sdev->allow_restart for all SBP-2 direct access 
+and RBC devices, or at least for those that are known to require it.
+-- 
+Stefan Richter
+-=====-=-==- -==- ==-==
+http://arcgraph.de/sr/
