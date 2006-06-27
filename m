@@ -1,1612 +1,1007 @@
 From: Eric Moore <eric.moore@lsil.com>
-Subject: [PATCH 1/2] mptsas: wide port support
-Date: Tue, 27 Jun 2006 14:37:43 -0600
-Message-ID: <20060627203742.GA24983@lsil.com>
+Subject: [PATCH 2/2] fusion : mpi header update
+Date: Tue, 27 Jun 2006 14:39:06 -0600
+Message-ID: <20060627203905.GB24983@lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:33458 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1161289AbWF0Us3 (ORCPT
+Received: from mail0.lsil.com ([147.145.40.20]:46258 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1161286AbWF0Utu (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Jun 2006 16:48:29 -0400
+	Tue, 27 Jun 2006 16:49:50 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
 
-* Wide port support added - using James Bottomleys new SAS wide port API.
-(There is a known problem in sas transport layer reported yesterday to
-James. The Kobject dev.bus_ids for end devices are not unique across
-expanders. I have added a work around in this patch, where I asigning
-an unique port identifier for every port within the host - this solves
-the problem, but I expect a fix from James in the transport).
+MPI Header Update
 
-* Adding target_alloc and target_destroy entry points, and moving code over
-from the slave entry points.
+Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
 
-* The renaming of some mptscsih_xxx functions declared in mptsas.c,
-to mptsas_xxx.
 
-* Target Reset moved from slave_destroy to hotplug work thread
-handling (with regard to device removal). Also inhibit IO to end device
-while device is being broken down . Talked to James Smart about this
-at Linux Expo (with questions of how the fc transport handles this).
-
-* Cleaing up the kzalloc's, and kfree's
-
-diff -uarN b/drivers/message/fusion/Makefile a/drivers/message/fusion/Makefile
---- b/drivers/message/fusion/Makefile	2006-06-17 19:49:35.000000000 -0600
-+++ a/drivers/message/fusion/Makefile	2006-06-27 12:22:03.000000000 -0600
-@@ -33,6 +33,11 @@
- #  For mptfc:
- #CFLAGS_mptfc.o += -DMPT_DEBUG_FC
- 
-+#  For mptsas:
-+#CFLAGS_mptsas.o += -DMPT_DEBUG_SAS
-+#CFLAGS_mptsas.o += -DMPT_DEBUG_SAS_WIDE
-+
-+
- #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-} LSI_LOGIC
- 
- obj-$(CONFIG_FUSION_SPI)	+= mptbase.o mptscsih.o mptspi.o
-diff -uarN b/drivers/message/fusion/mptbase.h a/drivers/message/fusion/mptbase.h
---- b/drivers/message/fusion/mptbase.h	2006-06-27 12:17:25.000000000 -0600
-+++ a/drivers/message/fusion/mptbase.h	2006-06-27 12:22:45.000000000 -0600
-@@ -76,8 +76,8 @@
- #define COPYRIGHT	"Copyright (c) 1999-2005 " MODULEAUTHOR
- #endif
- 
--#define MPT_LINUX_VERSION_COMMON	"3.03.10"
--#define MPT_LINUX_PACKAGE_NAME		"@(#)mptlinux-3.03.10"
-+#define MPT_LINUX_VERSION_COMMON	"3.04.00"
-+#define MPT_LINUX_PACKAGE_NAME		"@(#)mptlinux-3.04.00"
- #define WHAT_MAGIC_STRING		"@" "(" "#" ")"
- 
- #define show_mptmod_ver(s,ver)  \
-@@ -342,6 +342,7 @@
- 	u8			 negoFlags;	/* bit field, see above */
- 	u8			 raidVolume;	/* set, if RAID Volume */
- 	u8			 type;		/* byte 0 of Inquiry data */
-+	u8			 deleted;	/* target in process of being removed */
- 	u32			 num_luns;
- 	u32			 luns[8];		/* Max LUNs is 256 */
- } VirtTarget;
-@@ -633,7 +634,7 @@
- 	int			 sas_index; /* index refrencing */
- 	MPT_SAS_MGMT		 sas_mgmt;
- 	int			 num_ports;
--	struct work_struct	 mptscsih_persistTask;
-+	struct work_struct	 sas_persist_task;
- 
- 	struct work_struct	 fc_setup_reset_work;
- 	struct list_head	 fc_rports;
-@@ -642,6 +643,7 @@
- 	struct work_struct	 fc_rescan_work;
- 	char			 fc_rescan_work_q_name[KOBJ_NAME_LEN];
- 	struct workqueue_struct *fc_rescan_work_q;
-+	u8		port_serial_number;
- } MPT_ADAPTER;
- 
- /*
-@@ -893,6 +895,13 @@
- #define DBG_DUMP_REQUEST_FRAME_HDR(mfp)
- #endif
- 
-+// debug sas wide ports
-+#ifdef MPT_DEBUG_SAS_WIDE
-+#define dsaswideprintk(x) printk x
-+#else
-+#define dsaswideprintk(x)
-+#endif
-+
- 
- /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
- 
-diff -uarN b/drivers/message/fusion/mptsas.c a/drivers/message/fusion/mptsas.c
---- b/drivers/message/fusion/mptsas.c	2006-06-17 19:49:35.000000000 -0600
-+++ a/drivers/message/fusion/mptsas.c	2006-06-27 12:25:28.000000000 -0600
-@@ -50,11 +50,14 @@
- #include <linux/errno.h>
- #include <linux/sched.h>
- #include <linux/workqueue.h>
-+#include <linux/delay.h>	/* for mdelay */
- 
-+#include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_transport_sas.h>
-+#include <scsi/scsi_dbg.h>
- 
- #include "mptbase.h"
- #include "mptscsih.h"
-@@ -137,23 +140,37 @@
- 	u32	device_info;	/* bitfield detailed info about this device */
- };
- 
-+/*
-+ * Specific details on ports, wide/narrow
-+ */
-+struct mptsas_portinfo_details{
-+	u8	port_id; 	/* port number provided to transport */
-+	u16	num_phys;	/* number of phys belong to this port */
-+	u64	phy_bitmask; 	/* TODO, extend support for 255 phys */
-+	struct sas_rphy *rphy;	/* transport layer rphy object */
-+	struct sas_port *port;	/* transport layer port object */
-+	struct scsi_target *starget;
-+	struct mptsas_portinfo *port_info;
-+};
-+
- struct mptsas_phyinfo {
- 	u8	phy_id; 		/* phy index */
--	u8	port_id; 		/* port number this phy is part of */
-+	u8	port_id; 		/* firmware port identifier */
- 	u8	negotiated_link_rate;	/* nego'd link rate for this phy */
- 	u8	hw_link_rate; 		/* hardware max/min phys link rate */
- 	u8	programmed_link_rate;	/* programmed max/min phy link rate */
-+	u8	sas_port_add_phy;	/* flag to request sas_port_add_phy*/
- 	struct mptsas_devinfo identify;	/* point to phy device info */
- 	struct mptsas_devinfo attached;	/* point to attached device info */
--	struct sas_phy *phy;
--	struct sas_rphy *rphy;
--	struct scsi_target *starget;
-+	struct sas_phy *phy;		/* transport layer phy object */
-+	struct mptsas_portinfo *portinfo;
-+	struct mptsas_portinfo_details * port_details;
- };
- 
- struct mptsas_portinfo {
- 	struct list_head list;
- 	u16		handle;		/* unique id to address this */
--	u8		num_phys;	/* number of phys */
-+	u16		num_phys;	/* number of phys */
- 	struct mptsas_phyinfo *phy_info;
- };
- 
-@@ -169,7 +186,7 @@
- 	u8	sep_channel;		/* SEP channel logical channel id */
- };
- 
--#ifdef SASDEBUG
-+#ifdef MPT_DEBUG_SAS
- static void mptsas_print_phy_data(MPI_SAS_IO_UNIT0_PHY_DATA *phy_data)
- {
- 	printk("---- IO UNIT PAGE 0 ------------\n");
-@@ -305,7 +322,7 @@
- static inline int
- mptsas_is_end_device(struct mptsas_devinfo * attached)
- {
--	if ((attached->handle) &&
-+	if ((attached->sas_address) &&
- 	    (attached->device_info &
- 	    MPI_SAS_DEVICE_INFO_END_DEVICE) &&
- 	    ((attached->device_info &
-@@ -319,6 +336,253 @@
- 		return 0;
- }
- 
-+/* no mutex */
-+void
-+mptsas_port_delete(struct mptsas_portinfo_details * port_details)
-+{
-+	struct mptsas_portinfo *port_info;
-+	struct mptsas_phyinfo *phy_info;
-+	u8	i;
-+
-+	if (!port_details)
-+		return;
-+
-+	port_info = port_details->port_info;
-+	phy_info = port_info->phy_info;
-+
-+	dsaswideprintk((KERN_DEBUG "%s: [%p]: port=%02d num_phys=%02d "
-+	    	"bitmask=0x%016llX\n",
-+		__FUNCTION__, port_details, port_details->port_id,
-+		port_details->num_phys, port_details->phy_bitmask));
-+
-+	for (i = 0; i < port_info->num_phys; i++, phy_info++) {
-+		if(phy_info->port_details != port_details)
-+			continue;
-+		memset(&phy_info->attached, 0, sizeof(struct mptsas_devinfo));
-+		phy_info->port_details = NULL;
-+	}
-+	kfree(port_details);
-+}
-+
-+static inline struct sas_rphy *
-+mptsas_get_rphy(struct mptsas_phyinfo *phy_info)
-+{
-+	if (phy_info->port_details)
-+		return phy_info->port_details->rphy;
-+	else
-+		return NULL;
-+}
-+
-+static inline void
-+mptsas_set_rphy(struct mptsas_phyinfo *phy_info, struct sas_rphy *rphy)
-+{
-+	if (phy_info->port_details) {
-+		phy_info->port_details->rphy = rphy;
-+		dsaswideprintk((KERN_DEBUG "sas_rphy_add: rphy=%p\n", rphy));
-+	}
-+
-+#ifdef MPT_DEBUG_SAS_WIDE
-+	if (rphy) {
-+		dev_printk(KERN_DEBUG, &rphy->dev, "add:");
-+		printk("rphy=%p release=%p\n",
-+			rphy, rphy->dev.release);
-+	}
-+#endif
-+}
-+
-+static inline struct sas_port *
-+mptsas_get_port(struct mptsas_phyinfo *phy_info)
-+{
-+	if (phy_info->port_details)
-+		return phy_info->port_details->port;
-+	else
-+		return NULL;
-+}
-+
-+static inline void
-+mptsas_set_port(struct mptsas_phyinfo *phy_info, struct sas_port *port)
-+{
-+	if (phy_info->port_details)
-+		phy_info->port_details->port = port;
-+
-+#ifdef MPT_DEBUG_SAS_WIDE
-+	if (port) {
-+		dev_printk(KERN_DEBUG, &port->dev, "add: ");
-+		printk("port=%p release=%p\n",
-+			port, port->dev.release);
-+	}
-+#endif
-+}
-+
-+static inline struct scsi_target *
-+mptsas_get_starget(struct mptsas_phyinfo *phy_info)
-+{
-+	if (phy_info->port_details)
-+		return phy_info->port_details->starget;
-+	else
-+		return NULL;
-+}
-+
-+static inline void
-+mptsas_set_starget(struct mptsas_phyinfo *phy_info, struct scsi_target *
-+starget)
-+{
-+	if (phy_info->port_details)
-+		phy_info->port_details->starget = starget;
-+}
-+
-+
-+/*
-+ * mptsas_setup_wide_ports
-+ *
-+ * Updates for new and existing narrow/wide port configuration
-+ * in the sas_topology
-+ */
-+void
-+mptsas_setup_wide_ports(MPT_ADAPTER *ioc, struct mptsas_portinfo *port_info)
-+{
-+	struct mptsas_portinfo_details * port_details;
-+	struct mptsas_phyinfo *phy_info, *phy_info_cmp;
-+	u64	sas_address;
-+	int	i, j;
-+
-+	mutex_lock(&ioc->sas_topology_mutex);
-+
-+	phy_info = port_info->phy_info;
-+	for (i = 0 ; i < port_info->num_phys ; i++, phy_info++) {
-+		if (phy_info->attached.handle)
-+			continue;
-+		port_details = phy_info->port_details;
-+		if (!port_details)
-+			continue;
-+		if (port_details->num_phys < 2)
-+			continue;
-+		/*
-+		 * Removing a phy from a port, letting the last
-+		 * phy be removed by firmware events.
-+		 */
-+		dsaswideprintk((KERN_DEBUG
-+			"%s: [%p]: port=%d deleting phy = %d\n",
-+			__FUNCTION__, port_details,
-+			port_details->port_id, i));
-+		port_details->num_phys--;
-+		port_details->phy_bitmask &= ~ (1 << phy_info->phy_id);
-+		memset(&phy_info->attached, 0, sizeof(struct mptsas_devinfo));
-+		sas_port_delete_phy(port_details->port, phy_info->phy);
-+		phy_info->port_details = NULL;
-+	}
-+
-+	/*
-+	 * Populate and refresh the tree
-+	 */
-+	phy_info = port_info->phy_info;
-+	for (i = 0 ; i < port_info->num_phys ; i++, phy_info++) {
-+		sas_address = phy_info->attached.sas_address;
-+		dsaswideprintk((KERN_DEBUG "phy_id=%d sas_address=0x%018llX\n",
-+			i, sas_address));
-+		if (!sas_address)
-+			continue;
-+		port_details = phy_info->port_details;
-+		/*
-+		 * Forming a port
-+		 */
-+		if (!port_details) {
-+			port_details = kzalloc(sizeof(*port_details),
-+				GFP_KERNEL);
-+			if (!port_details)
-+				goto out;
-+			port_details->num_phys = 1;
-+			port_details->port_info = port_info;
-+			port_details->port_id = ioc->port_serial_number++;
-+			if (phy_info->phy_id < 64 )
-+				port_details->phy_bitmask |=
-+				    (1 << phy_info->phy_id);
-+			phy_info->sas_port_add_phy=1;
-+			dsaswideprintk((KERN_DEBUG "\t\tForming port\n\t\t"
-+				"phy_id=%d sas_address=0x%018llX\n",
-+				i, sas_address));
-+			phy_info->port_details = port_details;
-+		}
-+
-+		if (i == port_info->num_phys - 1)
-+			continue;
-+		phy_info_cmp = &port_info->phy_info[i + 1];
-+		for (j = i + 1 ; j < port_info->num_phys ; j++,
-+		    phy_info_cmp++) {
-+			if (!phy_info_cmp->attached.sas_address)
-+				continue;
-+			if (sas_address != phy_info_cmp->attached.sas_address)
-+				continue;
-+			if (phy_info_cmp->port_details == port_details )
-+				continue;
-+			dsaswideprintk((KERN_DEBUG
-+				"\t\tphy_id=%d sas_address=0x%018llX\n",
-+				j, phy_info_cmp->attached.sas_address));
-+			if (phy_info_cmp->port_details) {
-+				port_details->rphy =
-+				    mptsas_get_rphy(phy_info_cmp);
-+				port_details->port =
-+				    mptsas_get_port(phy_info_cmp);
-+				port_details->starget =
-+				    mptsas_get_starget(phy_info_cmp);
-+				port_details->port_id =
-+					phy_info_cmp->port_details->port_id;
-+				port_details->num_phys =
-+					phy_info_cmp->port_details->num_phys;
-+//				port_info->port_serial_number--;
-+				ioc->port_serial_number--;
-+				if (!phy_info_cmp->port_details->num_phys)
-+					kfree(phy_info_cmp->port_details);
-+			} else
-+				phy_info_cmp->sas_port_add_phy=1;
-+			/*
-+			 * Adding a phy to a port
-+			 */
-+			phy_info_cmp->port_details = port_details;
-+			if (phy_info_cmp->phy_id < 64 )
-+				port_details->phy_bitmask |=
-+				(1 << phy_info_cmp->phy_id);
-+			port_details->num_phys++;
-+		}
-+	}
-+
-+ out:
-+
-+#ifdef MPT_DEBUG_SAS_WIDE
-+	for (i = 0; i < port_info->num_phys; i++) {
-+		port_details = port_info->phy_info[i].port_details;
-+		if (!port_details)
-+			continue;
-+		dsaswideprintk((KERN_DEBUG
-+			"%s: [%p]: phy_id=%02d port_id=%02d num_phys=%02d "
-+		    	"bitmask=0x%016llX\n",
-+			__FUNCTION__,
-+			port_details, i, port_details->port_id,
-+			port_details->num_phys, port_details->phy_bitmask));
-+		dsaswideprintk((KERN_DEBUG"\t\tport = %p rphy=%p\n",
-+			port_details->port, port_details->rphy));
-+	}
-+	dsaswideprintk((KERN_DEBUG"\n"));
-+#endif
-+	mutex_unlock(&ioc->sas_topology_mutex);
-+}
-+
-+static void
-+mptsas_target_reset(MPT_ADAPTER *ioc, VirtTarget * vtarget)
-+{
-+	MPT_SCSI_HOST		*hd = (MPT_SCSI_HOST *)ioc->sh->hostdata;
-+
-+	if (mptscsih_TMHandler(hd,
-+	     MPI_SCSITASKMGMT_TASKTYPE_TARGET_RESET,
-+	     vtarget->bus_id, vtarget->target_id, 0, 0, 5) < 0) {
-+		hd->tmPending = 0;
-+		hd->tmState = TM_STATE_NONE;
-+		printk(MYIOC_s_WARN_FMT
-+	       "Error processing TaskMgmt id=%d TARGET_RESET\n",
-+			ioc->name, vtarget->target_id);
-+	}
-+}
-+
- static int
- mptsas_sas_enclosure_pg0(MPT_ADAPTER *ioc, struct mptsas_enclosure *enclosure,
- 		u32 form, u32 form_specific)
-@@ -400,11 +664,105 @@
- 	return mptscsih_slave_configure(sdev);
- }
- 
+diff -uarN b/drivers/message/fusion/lsi/fc_log.h a/drivers/message/fusion/lsi/fc_log.h
+--- b/drivers/message/fusion/lsi/fc_log.h	2006-06-17 19:49:35.000000000 -0600
++++ a/drivers/message/fusion/lsi/fc_log.h	1969-12-31 17:00:00.000000000 -0700
+@@ -1,89 +0,0 @@
 -/*
-- * This is pretty ugly.  We will be able to seriously clean it up
-- * once the DV code in mptscsih goes away and we can properly
-- * implement ->target_alloc.
+- *  Copyright (c) 2000-2001 LSI Logic Corporation. All rights reserved.
+- *
+- *  NAME:           fc_log.h
+- *  SUMMARY:        MPI IocLogInfo definitions for the SYMFC9xx chips
+- *  DESCRIPTION:    Contains the enumerated list of values that may be returned
+- *                  in the IOCLogInfo field of a MPI Default Reply Message.
+- *
+- *  CREATION DATE:  6/02/2000
+- *  ID:             $Id: fc_log.h,v 4.6 2001/07/26 14:41:33 sschremm Exp $
 - */
-+static int
-+mptsas_target_alloc(struct scsi_target *starget)
-+{
-+	struct Scsi_Host *host = dev_to_shost(&starget->dev);
-+	MPT_SCSI_HOST		*hd = (MPT_SCSI_HOST *)host->hostdata;
-+	VirtTarget		*vtarget;
-+	u32			target_id;
-+	u32			channel;
-+	struct sas_rphy		*rphy;
-+	struct mptsas_portinfo	*p;
-+	int 			 i;
-+
-+	vtarget = kzalloc(sizeof(VirtTarget), GFP_KERNEL);
-+	if (!vtarget)
-+		return -ENOMEM;
-+
-+	vtarget->starget = starget;
-+	vtarget->ioc_id = hd->ioc->id;
-+	vtarget->tflags = MPT_TARGET_FLAGS_Q_YES|MPT_TARGET_FLAGS_VALID_INQUIRY;
-+
-+	target_id = starget->id;
-+	channel = 0;
-+
-+	hd->Targets[target_id] = vtarget;
-+
-+	/*
-+	 * RAID volumes placed beyond the last expected port.
-+	 */
-+	if (starget->channel == hd->ioc->num_ports)
-+		goto out;
-+
-+	rphy = dev_to_rphy(starget->dev.parent);
-+	mutex_lock(&hd->ioc->sas_topology_mutex);
-+	list_for_each_entry(p, &hd->ioc->sas_topology, list) {
-+		for (i = 0; i < p->num_phys; i++) {
-+			if (p->phy_info[i].attached.sas_address !=
-+					rphy->identify.sas_address)
-+				continue;
-+			target_id = p->phy_info[i].attached.id;
-+			channel = p->phy_info[i].attached.channel;
-+			mptsas_set_starget(&p->phy_info[i], starget);
-+
-+			/*
-+			 * Exposing hidden raid components
-+			 */
-+			if (mptscsih_is_phys_disk(hd->ioc, target_id)) {
-+				target_id = mptscsih_raid_id_to_num(hd,
-+						target_id);
-+				vtarget->tflags |=
-+				    MPT_TARGET_FLAGS_RAID_COMPONENT;
-+			}
-+			mutex_unlock(&hd->ioc->sas_topology_mutex);
-+			goto out;
-+		}
-+	}
-+	mutex_unlock(&hd->ioc->sas_topology_mutex);
-+
-+	kfree(vtarget);
-+	return -ENXIO;
-+
-+ out:
-+	vtarget->target_id = target_id;
-+	vtarget->bus_id = channel;
-+	starget->hostdata = vtarget;
-+	return 0;
-+}
-+
-+static void
-+mptsas_target_destroy(struct scsi_target *starget)
-+{
-+	struct Scsi_Host *host = dev_to_shost(&starget->dev);
-+	MPT_SCSI_HOST		*hd = (MPT_SCSI_HOST *)host->hostdata;
-+	struct sas_rphy		*rphy;
-+	struct mptsas_portinfo	*p;
-+	int 			 i;
-+
-+	if (!starget->hostdata)
-+		return;
-+
-+	if (starget->channel == hd->ioc->num_ports)
-+		goto out;
-+
-+	rphy = dev_to_rphy(starget->dev.parent);
-+	list_for_each_entry(p, &hd->ioc->sas_topology, list) {
-+		for (i = 0; i < p->num_phys; i++) {
-+			if (p->phy_info[i].attached.sas_address !=
-+					rphy->identify.sas_address)
-+				continue;
-+			mptsas_set_starget(&p->phy_info[i], NULL);
-+			goto out;
-+		}
-+	}
-+
-+ out:
-+	kfree(starget->hostdata);
-+	starget->hostdata = NULL;
-+}
-+
-+
- static int
- mptsas_slave_alloc(struct scsi_device *sdev)
- {
-@@ -412,61 +770,41 @@
- 	MPT_SCSI_HOST		*hd = (MPT_SCSI_HOST *)host->hostdata;
- 	struct sas_rphy		*rphy;
- 	struct mptsas_portinfo	*p;
--	VirtTarget		*vtarget;
- 	VirtDevice		*vdev;
- 	struct scsi_target 	*starget;
--	u32			target_id;
--	int i;
-+	int 			i;
- 
- 	vdev = kzalloc(sizeof(VirtDevice), GFP_KERNEL);
- 	if (!vdev) {
--		printk(MYIOC_s_ERR_FMT "slave_alloc kmalloc(%zd) FAILED!\n",
-+		printk(MYIOC_s_ERR_FMT "slave_alloc kzalloc(%zd) FAILED!\n",
- 				hd->ioc->name, sizeof(VirtDevice));
- 		return -ENOMEM;
- 	}
--	sdev->hostdata = vdev;
- 	starget = scsi_target(sdev);
--	vtarget = starget->hostdata;
--	vtarget->ioc_id = hd->ioc->id;
--	vdev->vtarget = vtarget;
--	if (vtarget->num_luns == 0) {
--		vtarget->tflags = MPT_TARGET_FLAGS_Q_YES|MPT_TARGET_FLAGS_VALID_INQUIRY;
--		hd->Targets[sdev->id] = vtarget;
--	}
-+	vdev->vtarget = starget->hostdata;
- 
- 	/*
--	  RAID volumes placed beyond the last expected port.
--	*/
--	if (sdev->channel == hd->ioc->num_ports) {
--		target_id = sdev->id;
--		vtarget->bus_id = 0;
--		vdev->lun = 0;
-+	 * RAID volumes placed beyond the last expected port.
-+	 */
-+	if (sdev->channel == hd->ioc->num_ports)
- 		goto out;
--	}
- 
- 	rphy = dev_to_rphy(sdev->sdev_target->dev.parent);
- 	mutex_lock(&hd->ioc->sas_topology_mutex);
- 	list_for_each_entry(p, &hd->ioc->sas_topology, list) {
- 		for (i = 0; i < p->num_phys; i++) {
--			if (p->phy_info[i].attached.sas_address ==
--					rphy->identify.sas_address) {
--				target_id = p->phy_info[i].attached.id;
--				vtarget->bus_id = p->phy_info[i].attached.channel;
--				vdev->lun = sdev->lun;
--				p->phy_info[i].starget = sdev->sdev_target;
--				/*
--				 * Exposing hidden disk (RAID)
--				 */
--				if (mptscsih_is_phys_disk(hd->ioc, target_id)) {
--					target_id = mptscsih_raid_id_to_num(hd,
--							target_id);
--					vdev->vtarget->tflags |=
--					    MPT_TARGET_FLAGS_RAID_COMPONENT;
--					sdev->no_uld_attach = 1;
--				}
--				mutex_unlock(&hd->ioc->sas_topology_mutex);
--				goto out;
--			}
-+			if (p->phy_info[i].attached.sas_address !=
-+					rphy->identify.sas_address)
-+				continue;
-+			vdev->lun = sdev->lun;
-+			/*
-+			 * Exposing hidden raid components
-+			 */
-+			if (mptscsih_is_phys_disk(hd->ioc,
-+					p->phy_info[i].attached.id))
-+				sdev->no_uld_attach = 1;
-+			mutex_unlock(&hd->ioc->sas_topology_mutex);
-+			goto out;
- 		}
- 	}
- 	mutex_unlock(&hd->ioc->sas_topology_mutex);
-@@ -475,57 +813,39 @@
- 	return -ENXIO;
- 
-  out:
--	vtarget->target_id = target_id;
--	vtarget->num_luns++;
-+	vdev->vtarget->num_luns++;
-+	sdev->hostdata = vdev;
- 	return 0;
- }
- 
--static void
--mptsas_slave_destroy(struct scsi_device *sdev)
-+static int
-+mptsas_qcmd(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_cmnd *))
- {
--	struct Scsi_Host *host = sdev->host;
--	MPT_SCSI_HOST *hd = (MPT_SCSI_HOST *)host->hostdata;
--	VirtDevice *vdev;
 -
--	/*
--	 * Issue target reset to flush firmware outstanding commands.
--	 */
--	vdev = sdev->hostdata;
--	if (vdev->configured_lun){
--		if (mptscsih_TMHandler(hd,
--		     MPI_SCSITASKMGMT_TASKTYPE_TARGET_RESET,
--		     vdev->vtarget->bus_id,
--		     vdev->vtarget->target_id,
--		     0, 0, 5 /* 5 second timeout */)
--		     < 0){
-+	VirtDevice	*vdev = SCpnt->device->hostdata;
- 
--			/* The TM request failed!
--			 * Fatal error case.
--			 */
--			printk(MYIOC_s_WARN_FMT
--		       "Error processing TaskMgmt id=%d TARGET_RESET\n",
--				hd->ioc->name,
--				vdev->vtarget->target_id);
 -
--			hd->tmPending = 0;
--			hd->tmState = TM_STATE_NONE;
--		}
-+//	scsi_print_command(SCpnt);
-+	if (vdev->vtarget->deleted) {
-+		SCpnt->result = DID_NO_CONNECT << 16;
-+		done(SCpnt);
-+		return 0;
- 	}
--	mptscsih_slave_destroy(sdev);
-+
-+	return mptscsih_qcmd(SCpnt,done);
- }
- 
-+
- static struct scsi_host_template mptsas_driver_template = {
- 	.module				= THIS_MODULE,
- 	.proc_name			= "mptsas",
- 	.proc_info			= mptscsih_proc_info,
- 	.name				= "MPT SPI Host",
- 	.info				= mptscsih_info,
--	.queuecommand			= mptscsih_qcmd,
--	.target_alloc			= mptscsih_target_alloc,
-+	.queuecommand			= mptsas_qcmd,
-+	.target_alloc			= mptsas_target_alloc,
- 	.slave_alloc			= mptsas_slave_alloc,
- 	.slave_configure		= mptsas_slave_configure,
--	.target_destroy			= mptscsih_target_destroy,
--	.slave_destroy			= mptsas_slave_destroy,
-+	.target_destroy			= mptsas_target_destroy,
-+	.slave_destroy			= mptscsih_slave_destroy,
- 	.change_queue_depth 		= mptscsih_change_queue_depth,
- 	.eh_abort_handler		= mptscsih_abort,
- 	.eh_device_reset_handler	= mptscsih_dev_reset,
-@@ -795,7 +1115,7 @@
- 
- 	port_info->num_phys = buffer->NumPhys;
- 	port_info->phy_info = kcalloc(port_info->num_phys,
--		sizeof(struct mptsas_phyinfo),GFP_KERNEL);
-+		sizeof(*port_info->phy_info),GFP_KERNEL);
- 	if (!port_info->phy_info) {
- 		error = -ENOMEM;
- 		goto out_free_consistent;
-@@ -811,6 +1131,7 @@
- 		    buffer->PhyData[i].Port;
- 		port_info->phy_info[i].negotiated_link_rate =
- 		    buffer->PhyData[i].NegotiatedLinkRate;
-+		port_info->phy_info[i].portinfo = port_info;
- 	}
- 
-  out_free_consistent:
-@@ -968,7 +1289,7 @@
- 	CONFIGPARMS cfg;
- 	SasExpanderPage0_t *buffer;
- 	dma_addr_t dma_handle;
--	int error;
-+	int i, error;
- 
- 	hdr.PageVersion = MPI_SASEXPANDER0_PAGEVERSION;
- 	hdr.ExtPageLength = 0;
-@@ -1013,12 +1334,15 @@
- 	port_info->num_phys = buffer->NumPhys;
- 	port_info->handle = le16_to_cpu(buffer->DevHandle);
- 	port_info->phy_info = kcalloc(port_info->num_phys,
--		sizeof(struct mptsas_phyinfo),GFP_KERNEL);
-+		sizeof(*port_info->phy_info),GFP_KERNEL);
- 	if (!port_info->phy_info) {
- 		error = -ENOMEM;
- 		goto out_free_consistent;
- 	}
- 
-+	for (i = 0; i < port_info->num_phys; i++)
-+		port_info->phy_info[i].portinfo = port_info;
-+
-  out_free_consistent:
- 	pci_free_consistent(ioc->pcidev, hdr.ExtPageLength * 4,
- 			    buffer, dma_handle);
-@@ -1161,19 +1485,23 @@
- {
- 	MPT_ADAPTER *ioc;
- 	struct sas_phy *phy;
--	int error;
-+	struct sas_port *port;
-+	int error = 0;
- 
--	if (!dev)
--		return -ENODEV;
-+	if (!dev) {
-+		error = -ENODEV;
-+		goto out;
-+	}
- 
- 	if (!phy_info->phy) {
- 		phy = sas_phy_alloc(dev, index);
--		if (!phy)
--			return -ENOMEM;
-+		if (!phy) {
-+			error = -ENOMEM;
-+			goto out;
-+		}
- 	} else
- 		phy = phy_info->phy;
- 
--	phy->port_identifier = phy_info->port_id;
- 	mptsas_parse_device_info(&phy->identify, &phy_info->identify);
- 
- 	/*
-@@ -1265,19 +1593,50 @@
- 		error = sas_phy_add(phy);
- 		if (error) {
- 			sas_phy_free(phy);
--			return error;
-+			goto out;
- 		}
- 		phy_info->phy = phy;
- 	}
- 
--	if ((phy_info->attached.handle) &&
--	    (!phy_info->rphy)) {
-+	if (!phy_info->attached.handle ||
-+			!phy_info->port_details)
-+		goto out;
-+
-+	port = mptsas_get_port(phy_info);
-+	ioc = phy_to_ioc(phy_info->phy);
-+
-+	if (phy_info->sas_port_add_phy) {
-+
-+		if (!port) {
-+			port = sas_port_alloc(dev,
-+			    phy_info->port_details->port_id);
-+			dsaswideprintk((KERN_DEBUG
-+			    "sas_port_alloc: port=%p dev=%p port_id=%d\n",
-+			    port, dev, phy_info->port_details->port_id));
-+			if (!port) {
-+				error = -ENOMEM;
-+				goto out;
-+			}
-+			error = sas_port_add(port);
-+			if (error) {
-+				dfailprintk((MYIOC_s_ERR_FMT
-+					"%s: exit at line=%d\n", ioc->name,
-+					__FUNCTION__, __LINE__));
-+				goto out;
-+			}
-+			mptsas_set_port(phy_info, port);
-+		}
-+		dsaswideprintk((KERN_DEBUG "sas_port_add_phy: phy_id=%d\n",
-+		    phy_info->phy_id));
-+		sas_port_add_phy(port, phy_info->phy);
-+		phy_info->sas_port_add_phy = 0;
-+	}
-+
-+	if (!mptsas_get_rphy(phy_info) && port && !port->rphy) {
- 
- 		struct sas_rphy *rphy;
- 		struct sas_identify identify;
- 
--		ioc = phy_to_ioc(phy_info->phy);
+-/*
+- * MpiIocLogInfo_t enum
+- *
+- * These 32 bit values are used in the IOCLogInfo field of the MPI reply
+- * messages.
+- * The value is 0xabcccccc where
+- *          a = The type of log info as per the MPI spec. Since these codes are
+- *              all for Fibre Channel this value will always be 2.
+- *          b = Specifies a subclass of the firmware where
+- *                  0 = FCP Initiator
+- *                  1 = FCP Target
+- *                  2 = LAN
+- *                  3 = MPI Message Layer
+- *                  4 = FC Link
+- *                  5 = Context Manager
+- *                  6 = Invalid Field Offset
+- *                  7 = State Change Info
+- *                  all others are reserved for future use
+- *          c = A specific value within the subclass.
+- *
+- * NOTE: Any new values should be added to the end of each subclass so that the
+- *       codes remain consistent across firmware releases.
+- */
+-typedef enum _MpiIocLogInfoFc
+-{
+-    MPI_IOCLOGINFO_FC_INIT_BASE                     = 0x20000000,
+-    MPI_IOCLOGINFO_FC_INIT_ERROR_OUT_OF_ORDER_FRAME = 0x20000001, /* received an out of order frame - unsupported */
+-    MPI_IOCLOGINFO_FC_INIT_ERROR_BAD_START_OF_FRAME = 0x20000002, /* Bad Rx Frame, bad start of frame primative */
+-    MPI_IOCLOGINFO_FC_INIT_ERROR_BAD_END_OF_FRAME   = 0x20000003, /* Bad Rx Frame, bad end of frame primative */
+-    MPI_IOCLOGINFO_FC_INIT_ERROR_OVER_RUN           = 0x20000004, /* Bad Rx Frame, overrun */
+-    MPI_IOCLOGINFO_FC_INIT_ERROR_RX_OTHER           = 0x20000005, /* Other errors caught by IOC which require retries */
+-    MPI_IOCLOGINFO_FC_INIT_ERROR_SUBPROC_DEAD       = 0x20000006, /* Main processor could not initialize sub-processor */
+-    MPI_IOCLOGINFO_FC_INIT_ERROR_RX_OVERRUN         = 0x20000007, /* Scatter Gather overrun  */
+-    MPI_IOCLOGINFO_FC_INIT_ERROR_RX_BAD_STATUS      = 0x20000008, /* Receiver detected context mismatch via invalid header */
+-    MPI_IOCLOGINFO_FC_INIT_ERROR_RX_UNEXPECTED_FRAME= 0x20000009, /* CtxMgr detected unsupported frame type  */
+-    MPI_IOCLOGINFO_FC_INIT_ERROR_LINK_FAILURE       = 0x2000000A, /* Link failure occurred  */
+-    MPI_IOCLOGINFO_FC_INIT_ERROR_TX_TIMEOUT         = 0x2000000B, /* Transmitter timeout error */
 -
- 		/*
- 		 * Let the hotplug_work thread handle processing
- 		 * the adding/removing of devices that occur
-@@ -1285,36 +1644,42 @@
- 		 */
- 		if (ioc->sas_discovery_runtime &&
- 			mptsas_is_end_device(&phy_info->attached))
--			return 0;
-+				goto out;
- 
- 		mptsas_parse_device_info(&identify, &phy_info->attached);
- 		switch (identify.device_type) {
- 		case SAS_END_DEVICE:
--			rphy = sas_end_device_alloc(phy);
-+			rphy = sas_end_device_alloc(port);
- 			break;
- 		case SAS_EDGE_EXPANDER_DEVICE:
- 		case SAS_FANOUT_EXPANDER_DEVICE:
--			rphy = sas_expander_alloc(phy, identify.device_type);
-+			rphy = sas_expander_alloc(port, identify.device_type);
- 			break;
- 		default:
- 			rphy = NULL;
- 			break;
- 		}
--		if (!rphy)
--			return 0; /* non-fatal: an rphy can be added later */
-+		if (!rphy) {
-+			dfailprintk((MYIOC_s_ERR_FMT
-+				"%s: exit at line=%d\n", ioc->name,
-+				__FUNCTION__, __LINE__));
-+			goto out;
-+		}
- 
- 		rphy->identify = identify;
+-    MPI_IOCLOGINFO_FC_TARGET_BASE                   = 0x21000000,
+-    MPI_IOCLOGINFO_FC_TARGET_NO_PDISC               = 0x21000001, /* not sent because we are waiting for a PDISC from the initiator */
+-    MPI_IOCLOGINFO_FC_TARGET_NO_LOGIN               = 0x21000002, /* not sent because we are not logged in to the remote node */
+-    MPI_IOCLOGINFO_FC_TARGET_DOAR_KILLED_BY_LIP     = 0x21000003, /* Data Out, Auto Response, not sent due to a LIP */
+-    MPI_IOCLOGINFO_FC_TARGET_DIAR_KILLED_BY_LIP     = 0x21000004, /* Data In, Auto Response, not sent due to a LIP */
+-    MPI_IOCLOGINFO_FC_TARGET_DIAR_MISSING_DATA      = 0x21000005, /* Data In, Auto Response, missing data frames */
+-    MPI_IOCLOGINFO_FC_TARGET_DONR_KILLED_BY_LIP     = 0x21000006, /* Data Out, No Response, not sent due to a LIP */
+-    MPI_IOCLOGINFO_FC_TARGET_WRSP_KILLED_BY_LIP     = 0x21000007, /* Auto-response after a write not sent due to a LIP */
+-    MPI_IOCLOGINFO_FC_TARGET_DINR_KILLED_BY_LIP     = 0x21000008, /* Data In, No Response, not completed due to a LIP */
+-    MPI_IOCLOGINFO_FC_TARGET_DINR_MISSING_DATA      = 0x21000009, /* Data In, No Response, missing data frames */
+-    MPI_IOCLOGINFO_FC_TARGET_MRSP_KILLED_BY_LIP     = 0x2100000a, /* Manual Response not sent due to a LIP */
+-    MPI_IOCLOGINFO_FC_TARGET_NO_CLASS_3             = 0x2100000b, /* not sent because remote node does not support Class 3 */
+-    MPI_IOCLOGINFO_FC_TARGET_LOGIN_NOT_VALID        = 0x2100000c, /* not sent because login to remote node not validated */
+-    MPI_IOCLOGINFO_FC_TARGET_FROM_OUTBOUND          = 0x2100000e, /* cleared from the outbound queue after a logout */
+-    MPI_IOCLOGINFO_FC_TARGET_WAITING_FOR_DATA_IN    = 0x2100000f, /* cleared waiting for data after a logout */
 -
- 		error = sas_rphy_add(rphy);
- 		if (error) {
-+			dfailprintk((MYIOC_s_ERR_FMT
-+				"%s: exit at line=%d\n", ioc->name,
-+				__FUNCTION__, __LINE__));
- 			sas_rphy_free(rphy);
--			return error;
-+			goto out;
- 		}
+-    MPI_IOCLOGINFO_FC_LAN_BASE                      = 0x22000000,
+-    MPI_IOCLOGINFO_FC_LAN_TRANS_SGL_MISSING         = 0x22000001, /* Transaction Context Sgl Missing */
+-    MPI_IOCLOGINFO_FC_LAN_TRANS_WRONG_PLACE         = 0x22000002, /* Transaction Context found before an EOB */
+-    MPI_IOCLOGINFO_FC_LAN_TRANS_RES_BITS_SET        = 0x22000003, /* Transaction Context value has reserved bits set */
+-    MPI_IOCLOGINFO_FC_LAN_WRONG_SGL_FLAG            = 0x22000004, /* Invalid SGL Flags */
 -
--		phy_info->rphy = rphy;
-+		mptsas_set_rphy(phy_info, rphy);
- 	}
- 
--	return 0;
-+ out:
-+	return error;
- }
- 
- static int
-@@ -1342,8 +1707,7 @@
- 		for (i = 0; i < hba->num_phys; i++)
- 			port_info->phy_info[i].negotiated_link_rate =
- 				hba->phy_info[i].negotiated_link_rate;
--		if (hba->phy_info)
--			kfree(hba->phy_info);
-+		kfree(hba->phy_info);
- 		kfree(hba);
- 		hba = NULL;
- 	}
-@@ -1362,24 +1726,24 @@
- 		    port_info->phy_info[i].phy_id;
- 		handle = port_info->phy_info[i].identify.handle;
- 
--		if (port_info->phy_info[i].attached.handle) {
-+		if (port_info->phy_info[i].attached.handle)
- 			mptsas_sas_device_pg0(ioc,
- 				&port_info->phy_info[i].attached,
- 				(MPI_SAS_DEVICE_PGAD_FORM_HANDLE <<
- 				 MPI_SAS_DEVICE_PGAD_FORM_SHIFT),
- 				port_info->phy_info[i].attached.handle);
--		}
-+	}
-+
-+	mptsas_setup_wide_ports(ioc, port_info);
- 
-+	for (i = 0; i < port_info->num_phys; i++, ioc->sas_index++)
- 		mptsas_probe_one_phy(&ioc->sh->shost_gendev,
- 		    &port_info->phy_info[i], ioc->sas_index, 1);
--		ioc->sas_index++;
--	}
- 
- 	return 0;
- 
-  out_free_port_info:
--	if (hba)
--		kfree(hba);
-+	kfree(hba);
-  out:
- 	return error;
- }
-@@ -1388,6 +1752,8 @@
- mptsas_probe_expander_phys(MPT_ADAPTER *ioc, u32 *handle)
- {
- 	struct mptsas_portinfo *port_info, *p, *ex;
-+	struct device *parent;
-+	struct sas_rphy *rphy;
- 	int error = -ENOMEM, i, j;
- 
- 	ex = kzalloc(sizeof(*port_info), GFP_KERNEL);
-@@ -1409,16 +1775,13 @@
- 		list_add_tail(&port_info->list, &ioc->sas_topology);
- 	} else {
- 		port_info->handle = ex->handle;
--		if (ex->phy_info)
--			kfree(ex->phy_info);
-+		kfree(ex->phy_info);
- 		kfree(ex);
- 		ex = NULL;
- 	}
- 	mutex_unlock(&ioc->sas_topology_mutex);
- 
- 	for (i = 0; i < port_info->num_phys; i++) {
--		struct device *parent;
+-    MPI_IOCLOGINFO_FC_MSG_BASE                      = 0x23000000,
 -
- 		mptsas_sas_expander_pg1(ioc, &port_info->phy_info[i],
- 			(MPI_SAS_EXPAND_PGAD_FORM_HANDLE_PHY_NUM <<
- 			 MPI_SAS_EXPAND_PGAD_FORM_SHIFT), (i << 16) + *handle);
-@@ -1442,34 +1805,34 @@
- 			port_info->phy_info[i].attached.phy_id =
- 			    port_info->phy_info[i].phy_id;
- 		}
-+	}
- 
--		/*
--		 * If we find a parent port handle this expander is
--		 * attached to another expander, else it hangs of the
--		 * HBA phys.
--		 */
--		parent = &ioc->sh->shost_gendev;
-+	parent = &ioc->sh->shost_gendev;
-+	for (i = 0; i < port_info->num_phys; i++) {
- 		mutex_lock(&ioc->sas_topology_mutex);
- 		list_for_each_entry(p, &ioc->sas_topology, list) {
- 			for (j = 0; j < p->num_phys; j++) {
--				if (port_info->phy_info[i].identify.handle ==
-+				if (port_info->phy_info[i].identify.handle !=
- 						p->phy_info[j].attached.handle)
--					parent = &p->phy_info[j].rphy->dev;
-+					continue;
-+				rphy = mptsas_get_rphy(&p->phy_info[j]);
-+				parent = &rphy->dev;
- 			}
- 		}
- 		mutex_unlock(&ioc->sas_topology_mutex);
-+	}
-+
-+	mptsas_setup_wide_ports(ioc, port_info);
- 
-+	for (i = 0; i < port_info->num_phys; i++, ioc->sas_index++)
- 		mptsas_probe_one_phy(parent, &port_info->phy_info[i],
- 		    ioc->sas_index, 0);
--		ioc->sas_index++;
--	}
- 
- 	return 0;
- 
-  out_free_port_info:
- 	if (ex) {
--		if (ex->phy_info)
--			kfree(ex->phy_info);
-+		kfree(ex->phy_info);
- 		kfree(ex);
- 	}
-  out:
-@@ -1488,7 +1851,12 @@
- {
- 	struct mptsas_portinfo buffer;
- 	struct mptsas_portinfo *port_info, *n, *parent;
-+	struct mptsas_phyinfo *phy_info;
-+	struct scsi_target * starget;
-+	VirtTarget * vtarget;
-+	struct sas_port * port;
- 	int i;
-+	u64	expander_sas_address;
- 
- 	mutex_lock(&ioc->sas_topology_mutex);
- 	list_for_each_entry_safe(port_info, n, &ioc->sas_topology, list) {
-@@ -1503,6 +1871,25 @@
- 		     MPI_SAS_EXPAND_PGAD_FORM_SHIFT), port_info->handle)) {
- 
- 			/*
-+			 * Issue target reset to all child end devices
-+			 * then mark them deleted to prevent further
-+			 * IO going to them.
-+			 */
-+			phy_info = port_info->phy_info;
-+			for (i = 0; i < port_info->num_phys; i++, phy_info++) {
-+				starget = mptsas_get_starget(phy_info);
-+				if (!starget)
-+					continue;
-+				vtarget = starget->hostdata;
-+				if(vtarget->deleted)
-+					continue;
-+				vtarget->deleted = 1;
-+				mptsas_target_reset(ioc, vtarget);
-+				sas_port_delete(mptsas_get_port(phy_info));
-+				mptsas_port_delete(phy_info->port_details);
-+			}
-+
-+			/*
- 			 * Obtain the port_info instance to the parent port
- 			 */
- 			parent = mptsas_find_portinfo_by_handle(ioc,
-@@ -1511,34 +1898,43 @@
- 			if (!parent)
- 				goto next_port;
- 
-+			expander_sas_address =
-+				port_info->phy_info[0].identify.sas_address;
-+
- 			/*
- 			 * Delete rphys in the parent that point
- 			 * to this expander.  The transport layer will
- 			 * cleanup all the children.
- 			 */
--			for (i = 0; i < parent->num_phys; i++) {
--				if ((!parent->phy_info[i].rphy) ||
--				    (parent->phy_info[i].attached.sas_address !=
--				   port_info->phy_info[i].identify.sas_address))
-+			phy_info = parent->phy_info;
-+			for (i = 0; i < parent->num_phys; i++, phy_info++) {
-+				port = mptsas_get_port(phy_info);
-+				if (!port)
-+					continue;
-+				if (phy_info->attached.sas_address !=
-+					expander_sas_address)
- 					continue;
--				sas_rphy_delete(parent->phy_info[i].rphy);
--				memset(&parent->phy_info[i].attached, 0,
--				    sizeof(struct mptsas_devinfo));
--				parent->phy_info[i].rphy = NULL;
--				parent->phy_info[i].starget = NULL;
-+#ifdef MPT_DEBUG_SAS_WIDE
-+				dev_printk(KERN_DEBUG, &port->dev, "delete\n");
-+#endif
-+				sas_port_delete(port);
-+				mptsas_port_delete(phy_info->port_details);
- 			}
-  next_port:
-+
-+			phy_info = port_info->phy_info;
-+			for (i = 0; i < port_info->num_phys; i++, phy_info++)
-+				mptsas_port_delete(phy_info->port_details);
-+
- 			list_del(&port_info->list);
--			if (port_info->phy_info)
--				kfree(port_info->phy_info);
-+			kfree(port_info->phy_info);
- 			kfree(port_info);
- 		}
- 		/*
- 		* Free this memory allocated from inside
- 		* mptsas_sas_expander_pg0
- 		*/
--		if (buffer.phy_info)
--			kfree(buffer.phy_info);
-+		kfree(buffer.phy_info);
- 	}
- 	mutex_unlock(&ioc->sas_topology_mutex);
- }
-@@ -1574,60 +1970,59 @@
- /*
-  * Work queue thread to handle Runtime discovery
-  * Mere purpose is the hot add/delete of expanders
-+ *(Mutex UNLOCKED)
+-    MPI_IOCLOGINFO_FC_LINK_BASE                     = 0x24000000,
+-    MPI_IOCLOGINFO_FC_LINK_LOOP_INIT_TIMEOUT        = 0x24000001, /* Loop initialization timed out */
+-    MPI_IOCLOGINFO_FC_LINK_ALREADY_INITIALIZED      = 0x24000002, /* Another system controller already initialized the loop */
+-    MPI_IOCLOGINFO_FC_LINK_LINK_NOT_ESTABLISHED     = 0x24000003, /* Not synchronized to signal or still negotiating (possible cable problem) */
+-    MPI_IOCLOGINFO_FC_LINK_CRC_ERROR                = 0x24000004, /* CRC check detected error on received frame */
+-
+-    MPI_IOCLOGINFO_FC_CTX_BASE                      = 0x25000000,
+-
+-    MPI_IOCLOGINFO_FC_INVALID_FIELD_BYTE_OFFSET     = 0x26000000, /* The lower 24 bits give the byte offset of the field in the request message that is invalid */
+-    MPI_IOCLOGINFO_FC_INVALID_FIELD_MAX_OFFSET      = 0x26ffffff,
+-
+-    MPI_IOCLOGINFO_FC_STATE_CHANGE                  = 0x27000000  /* The lower 24 bits give additional information concerning state change */
+-
+-} MpiIocLogInfoFc_t;
+diff -uarN b/drivers/message/fusion/lsi/mpi.h a/drivers/message/fusion/lsi/mpi.h
+--- b/drivers/message/fusion/lsi/mpi.h	2006-06-17 19:49:35.000000000 -0600
++++ a/drivers/message/fusion/lsi/mpi.h	2006-05-08 11:20:02.000000000 -0600
+@@ -6,7 +6,7 @@
+  *          Title:  MPI Message independent structures and definitions
+  *  Creation Date:  July 27, 2000
+  *
+- *    mpi.h Version:  01.05.10
++ *    mpi.h Version:  01.05.11
+  *
+  *  Version History
+  *  ---------------
+@@ -76,6 +76,7 @@
+  *                      Added EEDP IOCStatus codes.
+  *  08-03-05  01.05.09  Bumped MPI_HEADER_VERSION_UNIT.
+  *  08-30-05  01.05.10  Added 2 new IOCStatus codes for Target.
++ *  03-27-06  01.05.11  Bumped MPI_HEADER_VERSION_UNIT.
+  *  --------------------------------------------------------------------------
   */
- static void
--mptscsih_discovery_work(void * arg)
-+__mptsas_discovery_work(MPT_ADAPTER *ioc)
- {
--	struct mptsas_discovery_event *ev = arg;
--	MPT_ADAPTER *ioc = ev->ioc;
- 	u32 handle = 0xFFFF;
  
--	mutex_lock(&ioc->sas_discovery_mutex);
- 	ioc->sas_discovery_runtime=1;
- 	mptsas_delete_expander_phys(ioc);
- 	mptsas_probe_hba_phys(ioc);
- 	while (!mptsas_probe_expander_phys(ioc, &handle))
- 		;
--	kfree(ev);
- 	ioc->sas_discovery_runtime=0;
-+}
+@@ -106,7 +107,7 @@
+ /* Note: The major versions of 0xe0 through 0xff are reserved */
+ 
+ /* versioning for this MPI header set */
+-#define MPI_HEADER_VERSION_UNIT             (0x0C)
++#define MPI_HEADER_VERSION_UNIT             (0x0D)
+ #define MPI_HEADER_VERSION_DEV              (0x00)
+ #define MPI_HEADER_VERSION_UNIT_MASK        (0xFF00)
+ #define MPI_HEADER_VERSION_UNIT_SHIFT       (8)
+diff -uarN b/drivers/message/fusion/lsi/mpi_cnfg.h a/drivers/message/fusion/lsi/mpi_cnfg.h
+--- b/drivers/message/fusion/lsi/mpi_cnfg.h	2006-06-17 19:49:35.000000000 -0600
++++ a/drivers/message/fusion/lsi/mpi_cnfg.h	2006-05-08 11:20:02.000000000 -0600
+@@ -6,7 +6,7 @@
+  *          Title:  MPI Config message, structures, and Pages
+  *  Creation Date:  July 27, 2000
+  *
+- *    mpi_cnfg.h Version:  01.05.11
++ *    mpi_cnfg.h Version:  01.05.12
+  *
+  *  Version History
+  *  ---------------
+@@ -266,6 +266,16 @@
+  *                      Added postpone SATA Init bit to SAS IO Unit Page 1
+  *                      ControlFlags.
+  *                      Changed LogEntry format for Log Page 0.
++ *  03-27-06  01.05.12  Added two new Flags defines for Manufacturing Page 4.
++ *                      Added Manufacturing Page 7.
++ *                      Added MPI_IOCPAGE2_CAP_FLAGS_RAID_64_BIT_ADDRESSING.
++ *                      Added IOC Page 6.
++ *                      Added PrevBootDeviceForm field to CONFIG_PAGE_BIOS_2.
++ *                      Added MaxLBAHigh field to RAID Volume Page 0.
++ *                      Added Nvdata version fields to SAS IO Unit Page 0.
++ *                      Added AdditionalControlFlags, MaxTargetPortConnectTime,
++ *                      ReportDeviceMissingDelay, and IODeviceMissingDelay
++ *                      fields to SAS IO Unit Page 1.
+  *  --------------------------------------------------------------------------
+  */
+ 
+@@ -631,9 +641,11 @@
+ } CONFIG_PAGE_MANUFACTURING_4, MPI_POINTER PTR_CONFIG_PAGE_MANUFACTURING_4,
+   ManufacturingPage4_t, MPI_POINTER pManufacturingPage4_t;
+ 
+-#define MPI_MANUFACTURING4_PAGEVERSION                  (0x03)
++#define MPI_MANUFACTURING4_PAGEVERSION                  (0x04)
+ 
+ /* defines for the Flags field */
++#define MPI_MANPAGE4_FORCE_BAD_BLOCK_TABLE              (0x80)
++#define MPI_MANPAGE4_FORCE_OFFLINE_FAILOVER             (0x40)
+ #define MPI_MANPAGE4_IME_DISABLE                        (0x20)
+ #define MPI_MANPAGE4_IM_DISABLE                         (0x10)
+ #define MPI_MANPAGE4_IS_DISABLE                         (0x08)
+@@ -668,6 +680,66 @@
+ #define MPI_MANUFACTURING6_PAGEVERSION                  (0x00)
+ 
+ 
++typedef struct _MPI_MANPAGE7_CONNECTOR_INFO
++{
++    U32                         Pinout;                 /* 00h */
++    U8                          Connector[16];          /* 04h */
++    U8                          Location;               /* 14h */
++    U8                          Reserved1;              /* 15h */
++    U16                         Slot;                   /* 16h */
++    U32                         Reserved2;              /* 18h */
++} MPI_MANPAGE7_CONNECTOR_INFO, MPI_POINTER PTR_MPI_MANPAGE7_CONNECTOR_INFO,
++  MpiManPage7ConnectorInfo_t, MPI_POINTER pMpiManPage7ConnectorInfo_t;
++
++/* defines for the Pinout field */
++#define MPI_MANPAGE7_PINOUT_SFF_8484_L4                 (0x00080000)
++#define MPI_MANPAGE7_PINOUT_SFF_8484_L3                 (0x00040000)
++#define MPI_MANPAGE7_PINOUT_SFF_8484_L2                 (0x00020000)
++#define MPI_MANPAGE7_PINOUT_SFF_8484_L1                 (0x00010000)
++#define MPI_MANPAGE7_PINOUT_SFF_8470_L4                 (0x00000800)
++#define MPI_MANPAGE7_PINOUT_SFF_8470_L3                 (0x00000400)
++#define MPI_MANPAGE7_PINOUT_SFF_8470_L2                 (0x00000200)
++#define MPI_MANPAGE7_PINOUT_SFF_8470_L1                 (0x00000100)
++#define MPI_MANPAGE7_PINOUT_SFF_8482                    (0x00000002)
++#define MPI_MANPAGE7_PINOUT_CONNECTION_UNKNOWN          (0x00000001)
++
++/* defines for the Location field */
++#define MPI_MANPAGE7_LOCATION_UNKNOWN                   (0x01)
++#define MPI_MANPAGE7_LOCATION_INTERNAL                  (0x02)
++#define MPI_MANPAGE7_LOCATION_EXTERNAL                  (0x04)
++#define MPI_MANPAGE7_LOCATION_SWITCHABLE                (0x08)
++#define MPI_MANPAGE7_LOCATION_AUTO                      (0x10)
++#define MPI_MANPAGE7_LOCATION_NOT_PRESENT               (0x20)
++#define MPI_MANPAGE7_LOCATION_NOT_CONNECTED             (0x80)
 +
 +/*
-+ * Work queue thread to handle Runtime discovery
-+ * Mere purpose is the hot add/delete of expanders
-+ *(Mutex LOCKED)
++ * Host code (drivers, BIOS, utilities, etc.) should leave this define set to
++ * one and check NumPhys at runtime.
 + */
-+static void
-+mptsas_discovery_work(void * arg)
-+{
-+	struct mptsas_discovery_event *ev = arg;
-+	MPT_ADAPTER *ioc = ev->ioc;
-+
-+	mutex_lock(&ioc->sas_discovery_mutex);
-+	__mptsas_discovery_work(ioc);
- 	mutex_unlock(&ioc->sas_discovery_mutex);
-+	kfree(ev);
- }
- 
- static struct mptsas_phyinfo *
--mptsas_find_phyinfo_by_parent(MPT_ADAPTER *ioc, u16 parent_handle, u8 phy_id)
-+mptsas_find_phyinfo_by_sas_address(MPT_ADAPTER *ioc, u64 sas_address)
- {
- 	struct mptsas_portinfo *port_info;
--	struct mptsas_devinfo device_info;
- 	struct mptsas_phyinfo *phy_info = NULL;
--	int i, error;
--
--	/*
--	 * Retrieve the parent sas_address
--	 */
--	error = mptsas_sas_device_pg0(ioc, &device_info,
--		(MPI_SAS_DEVICE_PGAD_FORM_HANDLE <<
--		 MPI_SAS_DEVICE_PGAD_FORM_SHIFT),
--		parent_handle);
--	if (error)
--		return NULL;
-+	int i;
- 
--	/*
--	 * The phy_info structures are never deallocated during lifetime of
--	 * a host, so the code below is safe without additional refcounting.
--	 */
- 	mutex_lock(&ioc->sas_topology_mutex);
- 	list_for_each_entry(port_info, &ioc->sas_topology, list) {
- 		for (i = 0; i < port_info->num_phys; i++) {
--			if (port_info->phy_info[i].identify.sas_address ==
--			    device_info.sas_address &&
--			    port_info->phy_info[i].phy_id == phy_id) {
--				phy_info = &port_info->phy_info[i];
--				break;
--			}
-+			if (port_info->phy_info[i].attached.sas_address
-+			    != sas_address)
-+				continue;
-+			if (!mptsas_is_end_device(
-+				&port_info->phy_info[i].attached))
-+				continue;
-+			phy_info = &port_info->phy_info[i];
-+			break;
- 		}
- 	}
- 	mutex_unlock(&ioc->sas_topology_mutex);
--
- 	return phy_info;
- }
- 
-@@ -1638,21 +2033,19 @@
- 	struct mptsas_phyinfo *phy_info = NULL;
- 	int i;
- 
--	/*
--	 * The phy_info structures are never deallocated during lifetime of
--	 * a host, so the code below is safe without additional refcounting.
--	 */
- 	mutex_lock(&ioc->sas_topology_mutex);
- 	list_for_each_entry(port_info, &ioc->sas_topology, list) {
--		for (i = 0; i < port_info->num_phys; i++)
--			if (mptsas_is_end_device(&port_info->phy_info[i].attached))
--				if (port_info->phy_info[i].attached.id == id) {
--					phy_info = &port_info->phy_info[i];
--					break;
--				}
-+		for (i = 0; i < port_info->num_phys; i++) {
-+			if (port_info->phy_info[i].attached.id != id)
-+				continue;
-+			if (!mptsas_is_end_device(
-+				&port_info->phy_info[i].attached))
-+				continue;
-+			phy_info = &port_info->phy_info[i];
-+			break;
-+		}
- 	}
- 	mutex_unlock(&ioc->sas_topology_mutex);
--
- 	return phy_info;
- }
- 
-@@ -1660,7 +2053,7 @@
-  * Work queue thread to clear the persitency table
-  */
- static void
--mptscsih_sas_persist_clear_table(void * arg)
-+mptsas_persist_clear_table(void * arg)
- {
- 	MPT_ADAPTER *ioc = (MPT_ADAPTER *)arg;
- 
-@@ -1681,7 +2074,6 @@
- 			mptsas_reprobe_lun);
- }
- 
--
- /*
-  * Work queue thread to handle SAS hotplug events
-  */
-@@ -1692,14 +2084,17 @@
- 	MPT_ADAPTER *ioc = ev->ioc;
- 	struct mptsas_phyinfo *phy_info;
- 	struct sas_rphy *rphy;
-+	struct sas_port *port;
- 	struct scsi_device *sdev;
-+	struct scsi_target * starget;
- 	struct sas_identify identify;
- 	char *ds = NULL;
- 	struct mptsas_devinfo sas_device;
- 	VirtTarget *vtarget;
-+	VirtDevice *vdevice;
- 
--	mutex_lock(&ioc->sas_discovery_mutex);
- 
-+	mutex_lock(&ioc->sas_discovery_mutex);
- 	switch (ev->event_type) {
- 	case MPTSAS_DEL_DEVICE:
- 
-@@ -1708,24 +2103,50 @@
- 		/*
- 		 * Sanity checks, for non-existing phys and remote rphys.
- 		 */
--		if (!phy_info)
-+		if (!phy_info || !phy_info->port_details) {
-+			dfailprintk((MYIOC_s_ERR_FMT
-+				"%s: exit at line=%d\n", ioc->name,
-+			       	__FUNCTION__, __LINE__));
- 			break;
--		if (!phy_info->rphy)
-+		}
-+		rphy = mptsas_get_rphy(phy_info);
-+		if (!rphy) {
-+			dfailprintk((MYIOC_s_ERR_FMT
-+				"%s: exit at line=%d\n", ioc->name,
-+			       	__FUNCTION__, __LINE__));
-+			break;
-+		}
-+		port = mptsas_get_port(phy_info);
-+		if (!port) {
-+			dfailprintk((MYIOC_s_ERR_FMT
-+				"%s: exit at line=%d\n", ioc->name,
-+			       	__FUNCTION__, __LINE__));
- 			break;
--		if (phy_info->starget) {
--			vtarget = phy_info->starget->hostdata;
-+		}
-+
-+		starget = mptsas_get_starget(phy_info);
-+		if (starget) {
-+			vtarget = starget->hostdata;
- 
--			if (!vtarget)
-+			if (!vtarget) {
-+				dfailprintk((MYIOC_s_ERR_FMT
-+					"%s: exit at line=%d\n", ioc->name,
-+					__FUNCTION__, __LINE__));
- 				break;
-+			}
-+
- 			/*
- 			 * Handling  RAID components
- 			 */
- 			if (ev->phys_disk_num_valid) {
- 				vtarget->target_id = ev->phys_disk_num;
- 				vtarget->tflags |= MPT_TARGET_FLAGS_RAID_COMPONENT;
--				mptsas_reprobe_target(vtarget->starget, 1);
-+				mptsas_reprobe_target(starget, 1);
- 				break;
- 			}
-+
-+			vtarget->deleted = 1;
-+			mptsas_target_reset(ioc, vtarget);
- 		}
- 
- 		if (phy_info->attached.device_info & MPI_SAS_DEVICE_INFO_SSP_TARGET)
-@@ -1739,10 +2160,11 @@
- 		       "removing %s device, channel %d, id %d, phy %d\n",
- 		       ioc->name, ds, ev->channel, ev->id, phy_info->phy_id);
- 
--		sas_rphy_delete(phy_info->rphy);
--		memset(&phy_info->attached, 0, sizeof(struct mptsas_devinfo));
--		phy_info->rphy = NULL;
--		phy_info->starget = NULL;
-+#ifdef MPT_DEBUG_SAS_WIDE
-+		dev_printk(KERN_DEBUG, &port->dev, "delete\n");
++#ifndef MPI_MANPAGE7_CONNECTOR_INFO_MAX
++#define MPI_MANPAGE7_CONNECTOR_INFO_MAX   (1)
 +#endif
-+		sas_port_delete(port);
-+		mptsas_port_delete(phy_info->port_details);
- 		break;
- 	case MPTSAS_ADD_DEVICE:
- 
-@@ -1754,59 +2176,60 @@
- 		 */
- 		if (mptsas_sas_device_pg0(ioc, &sas_device,
- 		    (MPI_SAS_DEVICE_PGAD_FORM_BUS_TARGET_ID <<
--		     MPI_SAS_DEVICE_PGAD_FORM_SHIFT), ev->id))
-+		     MPI_SAS_DEVICE_PGAD_FORM_SHIFT), ev->id)) {
-+				dfailprintk((MYIOC_s_ERR_FMT
-+					"%s: exit at line=%d\n", ioc->name,
-+					__FUNCTION__, __LINE__));
- 			break;
-+		}
- 
--		phy_info = mptsas_find_phyinfo_by_parent(ioc,
--				sas_device.handle_parent, sas_device.phy_id);
-+		ssleep(2);
-+		__mptsas_discovery_work(ioc);
- 
--		if (!phy_info) {
--			u32 handle = 0xFFFF;
-+		phy_info = mptsas_find_phyinfo_by_sas_address(ioc,
-+				sas_device.sas_address);
- 
--			/*
--			* Its possible when an expander has been hot added
--			* containing attached devices, the sas firmware
--			* may send a RC_ADDED event prior to the
--			* DISCOVERY STOP event. If that occurs, our
--			* view of the topology in the driver in respect to this
--			* expander might of not been setup, and we hit this
--			* condition.
--			* Therefore, this code kicks off discovery to
--			* refresh the data.
--			* Then again, we check whether the parent phy has
--			* been created.
--			*/
--			ioc->sas_discovery_runtime=1;
--			mptsas_delete_expander_phys(ioc);
--			mptsas_probe_hba_phys(ioc);
--			while (!mptsas_probe_expander_phys(ioc, &handle))
--				;
--			ioc->sas_discovery_runtime=0;
--
--			phy_info = mptsas_find_phyinfo_by_parent(ioc,
--				sas_device.handle_parent, sas_device.phy_id);
--			if (!phy_info)
--				break;
-+		if (!phy_info || !phy_info->port_details) {
-+			dfailprintk((MYIOC_s_ERR_FMT
-+				"%s: exit at line=%d\n", ioc->name,
-+			       	__FUNCTION__, __LINE__));
-+			break;
- 		}
- 
--		if (phy_info->starget) {
--			vtarget = phy_info->starget->hostdata;
-+		starget = mptsas_get_starget(phy_info);
-+		if (starget) {
-+			vtarget = starget->hostdata;
- 
--			if (!vtarget)
-+			if (!vtarget) {
-+				dfailprintk((MYIOC_s_ERR_FMT
-+					"%s: exit at line=%d\n", ioc->name,
-+				       	__FUNCTION__, __LINE__));
- 				break;
-+			}
- 			/*
- 			 * Handling  RAID components
- 			 */
- 			if (vtarget->tflags & MPT_TARGET_FLAGS_RAID_COMPONENT) {
- 				vtarget->tflags &= ~MPT_TARGET_FLAGS_RAID_COMPONENT;
- 				vtarget->target_id = ev->id;
--				mptsas_reprobe_target(phy_info->starget, 0);
-+				mptsas_reprobe_target(starget, 0);
- 			}
- 			break;
- 		}
- 
--		if (phy_info->rphy)
-+		if (mptsas_get_rphy(phy_info)) {
-+			dfailprintk((MYIOC_s_ERR_FMT
-+				"%s: exit at line=%d\n", ioc->name,
-+			       	__FUNCTION__, __LINE__));
- 			break;
-+		}
-+		port = mptsas_get_port(phy_info);
-+		if (!port) {
-+			dfailprintk((MYIOC_s_ERR_FMT
-+				"%s: exit at line=%d\n", ioc->name,
-+			       	__FUNCTION__, __LINE__));
-+			break;
-+		}
- 
- 		memcpy(&phy_info->attached, &sas_device,
- 		    sizeof(struct mptsas_devinfo));
-@@ -1823,28 +2246,23 @@
- 		       ioc->name, ds, ev->channel, ev->id, ev->phy_id);
- 
- 		mptsas_parse_device_info(&identify, &phy_info->attached);
--		switch (identify.device_type) {
--		case SAS_END_DEVICE:
--			rphy = sas_end_device_alloc(phy_info->phy);
--			break;
--		case SAS_EDGE_EXPANDER_DEVICE:
--		case SAS_FANOUT_EXPANDER_DEVICE:
--			rphy = sas_expander_alloc(phy_info->phy, identify.device_type);
--			break;
--		default:
--			rphy = NULL;
--			break;
--		}
--		if (!rphy)
-+		rphy = sas_end_device_alloc(port);
-+		if (!rphy) {
-+			dfailprintk((MYIOC_s_ERR_FMT
-+				"%s: exit at line=%d\n", ioc->name,
-+			       	__FUNCTION__, __LINE__));
- 			break; /* non-fatal: an rphy can be added later */
-+		}
- 
- 		rphy->identify = identify;
- 		if (sas_rphy_add(rphy)) {
-+			dfailprintk((MYIOC_s_ERR_FMT
-+				"%s: exit at line=%d\n", ioc->name,
-+			       	__FUNCTION__, __LINE__));
- 			sas_rphy_free(rphy);
- 			break;
- 		}
--
--		phy_info->rphy = rphy;
-+		mptsas_set_rphy(phy_info, rphy);
- 		break;
- 	case MPTSAS_ADD_RAID:
- 		sdev = scsi_device_lookup(
-@@ -1876,6 +2294,9 @@
- 		printk(MYIOC_s_INFO_FMT
- 		       "removing raid volume, channel %d, id %d\n",
- 		       ioc->name, ioc->num_ports, ev->id);
-+		vdevice = sdev->hostdata;
-+		vdevice->vtarget->deleted = 1;
-+		mptsas_target_reset(ioc, vdevice->vtarget);
- 		scsi_remove_device(sdev);
- 		scsi_device_put(sdev);
- 		mpt_findImVolumes(ioc);
-@@ -1885,12 +2306,13 @@
- 		break;
- 	}
- 
--	kfree(ev);
- 	mutex_unlock(&ioc->sas_discovery_mutex);
-+	kfree(ev);
 +
- }
++typedef struct _CONFIG_PAGE_MANUFACTURING_7
++{
++    CONFIG_PAGE_HEADER          Header;                 /* 00h */
++    U32                         Reserved1;              /* 04h */
++    U32                         Reserved2;              /* 08h */
++    U32                         Flags;                  /* 0Ch */
++    U8                          EnclosureName[16];      /* 10h */
++    U8                          NumPhys;                /* 20h */
++    U8                          Reserved3;              /* 21h */
++    U16                         Reserved4;              /* 22h */
++    MPI_MANPAGE7_CONNECTOR_INFO ConnectorInfo[MPI_MANPAGE7_CONNECTOR_INFO_MAX]; /* 24h */
++} CONFIG_PAGE_MANUFACTURING_7, MPI_POINTER PTR_CONFIG_PAGE_MANUFACTURING_7,
++  ManufacturingPage7_t, MPI_POINTER pManufacturingPage7_t;
++
++#define MPI_MANUFACTURING7_PAGEVERSION                  (0x00)
++
++/* defines for the Flags field */
++#define MPI_MANPAGE7_FLAG_USE_SLOT_INFO                 (0x00000001)
++
++
+ /****************************************************************************
+ *   IO Unit Config Pages
+ ****************************************************************************/
+@@ -867,7 +939,7 @@
+ } CONFIG_PAGE_IOC_2, MPI_POINTER PTR_CONFIG_PAGE_IOC_2,
+   IOCPage2_t, MPI_POINTER pIOCPage2_t;
  
- static void
--mptscsih_send_sas_event(MPT_ADAPTER *ioc,
-+mptsas_send_sas_event(MPT_ADAPTER *ioc,
- 		EVENT_DATA_SAS_DEVICE_STATUS_CHANGE *sas_event_data)
+-#define MPI_IOCPAGE2_PAGEVERSION                        (0x03)
++#define MPI_IOCPAGE2_PAGEVERSION                        (0x04)
+ 
+ /* IOC Page 2 Capabilities flags */
+ 
+@@ -878,6 +950,7 @@
+ #define MPI_IOCPAGE2_CAP_FLAGS_RAID_6_SUPPORT           (0x00000010)
+ #define MPI_IOCPAGE2_CAP_FLAGS_RAID_10_SUPPORT          (0x00000020)
+ #define MPI_IOCPAGE2_CAP_FLAGS_RAID_50_SUPPORT          (0x00000040)
++#define MPI_IOCPAGE2_CAP_FLAGS_RAID_64_BIT_ADDRESSING   (0x10000000)
+ #define MPI_IOCPAGE2_CAP_FLAGS_SES_SUPPORT              (0x20000000)
+ #define MPI_IOCPAGE2_CAP_FLAGS_SAFTE_SUPPORT            (0x40000000)
+ #define MPI_IOCPAGE2_CAP_FLAGS_CROSS_CHANNEL_SUPPORT    (0x80000000)
+@@ -975,6 +1048,44 @@
+ 
+ #define MPI_IOCPAGE5_PAGEVERSION                        (0x00)
+ 
++typedef struct _CONFIG_PAGE_IOC_6
++{
++    CONFIG_PAGE_HEADER          Header;                         /* 00h */
++    U32                         CapabilitiesFlags;              /* 04h */
++    U8                          MaxDrivesIS;                    /* 08h */
++    U8                          MaxDrivesIM;                    /* 09h */
++    U8                          MaxDrivesIME;                   /* 0Ah */
++    U8                          Reserved1;                      /* 0Bh */
++    U8                          MinDrivesIS;                    /* 0Ch */
++    U8                          MinDrivesIM;                    /* 0Dh */
++    U8                          MinDrivesIME;                   /* 0Eh */
++    U8                          Reserved2;                      /* 0Fh */
++    U8                          MaxGlobalHotSpares;             /* 10h */
++    U8                          Reserved3;                      /* 11h */
++    U16                         Reserved4;                      /* 12h */
++    U32                         Reserved5;                      /* 14h */
++    U32                         SupportedStripeSizeMapIS;       /* 18h */
++    U32                         SupportedStripeSizeMapIME;      /* 1Ch */
++    U32                         Reserved6;                      /* 20h */
++    U8                          MetadataSize;                   /* 24h */
++    U8                          Reserved7;                      /* 25h */
++    U16                         Reserved8;                      /* 26h */
++    U16                         MaxBadBlockTableEntries;        /* 28h */
++    U16                         Reserved9;                      /* 2Ah */
++    U16                         IRNvsramUsage;                  /* 2Ch */
++    U16                         Reserved10;                     /* 2Eh */
++    U32                         IRNvsramVersion;                /* 30h */
++    U32                         Reserved11;                     /* 34h */
++    U32                         Reserved12;                     /* 38h */
++} CONFIG_PAGE_IOC_6, MPI_POINTER PTR_CONFIG_PAGE_IOC_6,
++  IOCPage6_t, MPI_POINTER pIOCPage6_t;
++
++#define MPI_IOCPAGE6_PAGEVERSION                        (0x00)
++
++/* IOC Page 6 Capabilities Flags */
++
++#define MPI_IOCPAGE6_CAP_FLAGS_GLOBAL_HOT_SPARE         (0x00000001)
++
+ 
+ /****************************************************************************
+ *   BIOS Config Pages
+@@ -1218,13 +1329,13 @@
+     U32                         Reserved5;              /* 14h */
+     U32                         Reserved6;              /* 18h */
+     U8                          BootDeviceForm;         /* 1Ch */
+-    U8                          Reserved7;              /* 1Dh */
++    U8                          PrevBootDeviceForm;     /* 1Ch */
+     U16                         Reserved8;              /* 1Eh */
+     MPI_BIOSPAGE2_BOOT_DEVICE   BootDevice;             /* 20h */
+ } CONFIG_PAGE_BIOS_2, MPI_POINTER PTR_CONFIG_PAGE_BIOS_2,
+   BIOSPage2_t, MPI_POINTER pBIOSPage2_t;
+ 
+-#define MPI_BIOSPAGE2_PAGEVERSION                       (0x01)
++#define MPI_BIOSPAGE2_PAGEVERSION                       (0x02)
+ 
+ #define MPI_BIOSPAGE2_FORM_MASK                         (0x0F)
+ #define MPI_BIOSPAGE2_FORM_ADAPTER_ORDER                (0x00)
+@@ -2080,7 +2191,7 @@
+     RAID_VOL0_STATUS        VolumeStatus;   /* 08h */
+     RAID_VOL0_SETTINGS      VolumeSettings; /* 0Ch */
+     U32                     MaxLBA;         /* 10h */
+-    U32                     Reserved1;      /* 14h */
++    U32                     MaxLBAHigh;     /* 14h */
+     U32                     StripeSize;     /* 18h */
+     U32                     Reserved2;      /* 1Ch */
+     U32                     Reserved3;      /* 20h */
+@@ -2092,7 +2203,7 @@
+ } CONFIG_PAGE_RAID_VOL_0, MPI_POINTER PTR_CONFIG_PAGE_RAID_VOL_0,
+   RaidVolumePage0_t, MPI_POINTER pRaidVolumePage0_t;
+ 
+-#define MPI_RAIDVOLPAGE0_PAGEVERSION                    (0x05)
++#define MPI_RAIDVOLPAGE0_PAGEVERSION                    (0x06)
+ 
+ /* values for RAID Volume Page 0 InactiveStatus field */
+ #define MPI_RAIDVOLPAGE0_UNKNOWN_INACTIVE               (0x00)
+@@ -2324,7 +2435,8 @@
+ typedef struct _CONFIG_PAGE_SAS_IO_UNIT_0
  {
- 	struct mptsas_hotplug_event *ev;
-@@ -1906,7 +2328,7 @@
- 	switch (sas_event_data->ReasonCode) {
- 	case MPI_EVENT_SAS_DEV_STAT_RC_ADDED:
- 	case MPI_EVENT_SAS_DEV_STAT_RC_NOT_RESPONDING:
--		ev = kmalloc(sizeof(*ev), GFP_ATOMIC);
-+		ev = kzalloc(sizeof(*ev), GFP_ATOMIC);
- 		if (!ev) {
- 			printk(KERN_WARNING "mptsas: lost hotplug event\n");
- 			break;
-@@ -1936,10 +2358,9 @@
- 	/*
- 	 * Persistent table is full.
- 	 */
--		INIT_WORK(&ioc->mptscsih_persistTask,
--		    mptscsih_sas_persist_clear_table,
--		    (void *)ioc);
--		schedule_work(&ioc->mptscsih_persistTask);
-+		INIT_WORK(&ioc->sas_persist_task,
-+		    mptsas_persist_clear_table, (void *)ioc);
-+		schedule_work(&ioc->sas_persist_task);
- 		break;
- 	case MPI_EVENT_SAS_DEV_STAT_RC_SMART_DATA:
- 	/* TODO */
-@@ -1951,7 +2372,7 @@
- }
+     CONFIG_EXTENDED_PAGE_HEADER     Header;                             /* 00h */
+-    U32                             Reserved1;                          /* 08h */
++    U16                             NvdataVersionDefault;               /* 08h */
++    U16                             NvdataVersionPersistent;            /* 0Ah */
+     U8                              NumPhys;                            /* 0Ch */
+     U8                              Reserved2;                          /* 0Dh */
+     U16                             Reserved3;                          /* 0Eh */
+@@ -2332,7 +2444,7 @@
+ } CONFIG_PAGE_SAS_IO_UNIT_0, MPI_POINTER PTR_CONFIG_PAGE_SAS_IO_UNIT_0,
+   SasIOUnitPage0_t, MPI_POINTER pSasIOUnitPage0_t;
  
- static void
--mptscsih_send_raid_event(MPT_ADAPTER *ioc,
-+mptsas_send_raid_event(MPT_ADAPTER *ioc,
- 		EVENT_DATA_RAID *raid_event_data)
+-#define MPI_SASIOUNITPAGE0_PAGEVERSION      (0x03)
++#define MPI_SASIOUNITPAGE0_PAGEVERSION      (0x04)
+ 
+ /* values for SAS IO Unit Page 0 PortFlags */
+ #define MPI_SAS_IOUNIT0_PORT_FLAGS_DISCOVERY_IN_PROGRESS    (0x08)
+@@ -2373,12 +2485,13 @@
+ 
+ typedef struct _MPI_SAS_IO_UNIT1_PHY_DATA
  {
- 	struct mptsas_hotplug_event *ev;
-@@ -1961,13 +2382,12 @@
- 	if (ioc->bus_type != SAS)
- 		return;
+-    U8          Port;                   /* 00h */
+-    U8          PortFlags;              /* 01h */
+-    U8          PhyFlags;               /* 02h */
+-    U8          MaxMinLinkRate;         /* 03h */
+-    U32         ControllerPhyDeviceInfo;/* 04h */
+-    U32         Reserved1;              /* 08h */
++    U8          Port;                       /* 00h */
++    U8          PortFlags;                  /* 01h */
++    U8          PhyFlags;                   /* 02h */
++    U8          MaxMinLinkRate;             /* 03h */
++    U32         ControllerPhyDeviceInfo;    /* 04h */
++    U16         MaxTargetPortConnectTime;   /* 08h */
++    U16         Reserved1;                  /* 0Ah */
+ } MPI_SAS_IO_UNIT1_PHY_DATA, MPI_POINTER PTR_MPI_SAS_IO_UNIT1_PHY_DATA,
+   SasIOUnit1PhyData, MPI_POINTER pSasIOUnit1PhyData;
  
--	ev = kmalloc(sizeof(*ev), GFP_ATOMIC);
-+	ev = kzalloc(sizeof(*ev), GFP_ATOMIC);
- 	if (!ev) {
- 		printk(KERN_WARNING "mptsas: lost hotplug event\n");
- 		return;
- 	}
+@@ -2395,15 +2508,17 @@
+     CONFIG_EXTENDED_PAGE_HEADER Header;                             /* 00h */
+     U16                         ControlFlags;                       /* 08h */
+     U16                         MaxNumSATATargets;                  /* 0Ah */
+-    U32                         Reserved1;                          /* 0Ch */
++    U16                         AdditionalControlFlags;             /* 0Ch */
++    U16                         Reserved1;                          /* 0Eh */
+     U8                          NumPhys;                            /* 10h */
+     U8                          SATAMaxQDepth;                      /* 11h */
+-    U16                         Reserved2;                          /* 12h */
++    U8                          ReportDeviceMissingDelay;           /* 12h */
++    U8                          IODeviceMissingDelay;               /* 13h */
+     MPI_SAS_IO_UNIT1_PHY_DATA   PhyData[MPI_SAS_IOUNIT1_PHY_MAX];   /* 14h */
+ } CONFIG_PAGE_SAS_IO_UNIT_1, MPI_POINTER PTR_CONFIG_PAGE_SAS_IO_UNIT_1,
+   SasIOUnitPage1_t, MPI_POINTER pSasIOUnitPage1_t;
  
--	memset(ev,0,sizeof(struct mptsas_hotplug_event));
- 	INIT_WORK(&ev->work, mptsas_hotplug_work, ev);
- 	ev->ioc = ioc;
- 	ev->id = raid_event_data->VolumeID;
-@@ -2029,7 +2449,7 @@
- }
+-#define MPI_SASIOUNITPAGE1_PAGEVERSION      (0x05)
++#define MPI_SASIOUNITPAGE1_PAGEVERSION      (0x06)
  
- static void
--mptscsih_send_discovery(MPT_ADAPTER *ioc,
-+mptsas_send_discovery_event(MPT_ADAPTER *ioc,
- 	EVENT_DATA_SAS_DISCOVERY *discovery_data)
+ /* values for SAS IO Unit Page 1 ControlFlags */
+ #define MPI_SAS_IOUNIT1_CONTROL_DEVICE_SELF_TEST            (0x8000)
+@@ -2428,6 +2543,13 @@
+ #define MPI_SAS_IOUNIT1_CONTROL_FIRST_LVL_DISC_ONLY         (0x0002)
+ #define MPI_SAS_IOUNIT1_CONTROL_CLEAR_AFFILIATION           (0x0001)
+ 
++/* values for SAS IO Unit Page 1 AdditionalControlFlags */
++#define MPI_SAS_IOUNIT1_ACONTROL_ALLOW_TABLE_TO_TABLE       (0x0001)
++
++/* defines for SAS IO Unit Page 1 ReportDeviceMissingDelay */
++#define MPI_SAS_IOUNIT1_REPORT_MISSING_TIMEOUT_MASK         (0x7F)
++#define MPI_SAS_IOUNIT1_REPORT_MISSING_UNIT_16              (0x80)
++
+ /* values for SAS IO Unit Page 1 PortFlags */
+ #define MPI_SAS_IOUNIT1_PORT_FLAGS_0_TARGET_IOC_NUM         (0x00)
+ #define MPI_SAS_IOUNIT1_PORT_FLAGS_1_TARGET_IOC_NUM         (0x04)
+diff -uarN b/drivers/message/fusion/lsi/mpi_history.txt a/drivers/message/fusion/lsi/mpi_history.txt
+--- b/drivers/message/fusion/lsi/mpi_history.txt	2006-06-17 19:49:35.000000000 -0600
++++ a/drivers/message/fusion/lsi/mpi_history.txt	2006-05-08 11:20:02.000000000 -0600
+@@ -6,25 +6,25 @@
+  Copyright (c) 2000-2005 LSI Logic Corporation.
+ 
+  ---------------------------------------
+- Header Set Release Version:    01.05.12
+- Header Set Release Date:       08-30-05
++ Header Set Release Version:    01.05.13
++ Header Set Release Date:       03-27-06
+  ---------------------------------------
+ 
+  Filename               Current version     Prior version
+  ----------             ---------------     -------------
+- mpi.h                  01.05.10            01.05.09
+- mpi_ioc.h              01.05.10            01.05.09
+- mpi_cnfg.h             01.05.11            01.05.10
+- mpi_init.h             01.05.06            01.05.06
+- mpi_targ.h             01.05.05            01.05.05
++ mpi.h                  01.05.11            01.05.10
++ mpi_ioc.h              01.05.11            01.05.10
++ mpi_cnfg.h             01.05.12            01.05.11
++ mpi_init.h             01.05.07            01.05.06
++ mpi_targ.h             01.05.06            01.05.05
+  mpi_fc.h               01.05.01            01.05.01
+  mpi_lan.h              01.05.01            01.05.01
+  mpi_raid.h             01.05.02            01.05.02
+  mpi_tool.h             01.05.03            01.05.03
+  mpi_inb.h              01.05.01            01.05.01
+- mpi_sas.h              01.05.02            01.05.01
+- mpi_type.h             01.05.02            01.05.01
+- mpi_history.txt        01.05.12            01.05.11
++ mpi_sas.h              01.05.03            01.05.02
++ mpi_type.h             01.05.02            01.05.02
++ mpi_history.txt        01.05.13            01.05.12
+ 
+ 
+  *  Date      Version   Description
+@@ -93,6 +93,7 @@
+  *                      Added EEDP IOCStatus codes.
+  *  08-03-05  01.05.09  Bumped MPI_HEADER_VERSION_UNIT.
+  *  08-30-05  01.05.10  Added 2 new IOCStatus codes for Target.
++ *  03-27-06  01.05.11  Bumped MPI_HEADER_VERSION_UNIT.
+  *  --------------------------------------------------------------------------
+ 
+ mpi_ioc.h
+@@ -170,6 +171,17 @@
+  *                      Added new ReasonCode value for SAS Device Status Change
+  *                      event.
+  *                      Added new family code for FC949E.
++ *  03-27-06  01.05.11  Added MPI_IOCFACTS_CAPABILITY_TLR.
++ *                      Added additional Reason Codes and more event data fields
++ *                      to EVENT_DATA_SAS_DEVICE_STATUS_CHANGE.
++ *                      Added EVENT_DATA_SAS_BROADCAST_PRIMITIVE structure and
++ *                      new event.
++ *                      Added MPI_EVENT_SAS_SMP_ERROR and event data structure.
++ *                      Added MPI_EVENT_SAS_INIT_DEVICE_STATUS_CHANGE and event
++ *                      data structure.
++ *                      Added MPI_EVENT_SAS_INIT_TABLE_OVERFLOW and event
++ *                      data structure.
++ *                      Added MPI_EXT_IMAGE_TYPE_INITIALIZATION.
+  *  --------------------------------------------------------------------------
+ 
+ mpi_cnfg.h
+@@ -425,6 +437,16 @@
+  *                      Added postpone SATA Init bit to SAS IO Unit Page 1
+  *                      ControlFlags.
+  *                      Changed LogEntry format for Log Page 0.
++ *  03-27-06  01.05.12  Added two new Flags defines for Manufacturing Page 4.
++ *                      Added Manufacturing Page 7.
++ *                      Added MPI_IOCPAGE2_CAP_FLAGS_RAID_64_BIT_ADDRESSING.
++ *                      Added IOC Page 6.
++ *                      Added PrevBootDeviceForm field to CONFIG_PAGE_BIOS_2.
++ *                      Added MaxLBAHigh field to RAID Volume Page 0.
++ *                      Added Nvdata version fields to SAS IO Unit Page 0.
++ *                      Added AdditionalControlFlags, MaxTargetPortConnectTime,
++ *                      ReportDeviceMissingDelay, and IODeviceMissingDelay
++ *                      fields to SAS IO Unit Page 1.
+  *  --------------------------------------------------------------------------
+ 
+ mpi_init.h
+@@ -467,6 +489,7 @@
+  *                      Added four new defines for SEP SlotStatus.
+  *  08-03-05  01.05.06  Fixed some MPI_SCSIIO32_MSGFLGS_ defines to make them
+  *                      unique in the first 32 characters.
++ *  03-27-06  01.05.07  Added Task Management type of Clear ACA.
+  *  --------------------------------------------------------------------------
+ 
+ mpi_targ.h
+@@ -511,6 +534,7 @@
+  *  02-22-05  01.05.03  Changed a comment.
+  *  03-11-05  01.05.04  Removed TargetAssistExtended Request.
+  *  06-24-05  01.05.05  Added TargetAssistExtended structures and defines.
++ *  03-27-06  01.05.06  Added a comment.
+  *  --------------------------------------------------------------------------
+ 
+ mpi_fc.h
+@@ -610,6 +634,10 @@
+  *  08-30-05  01.05.02  Added DeviceInfo bit for SEP.
+  *                      Added PrimFlags and Primitive field to SAS IO Unit
+  *                      Control request, and added a new operation code.
++ *  03-27-06  01.05.03  Added Force Full Discovery, Transmit Port Select Signal,
++ *                      and Remove Device operations to SAS IO Unit Control.
++ *                      Added DevHandle field to SAS IO Unit Control request and
++ *                      reply.
+  *  --------------------------------------------------------------------------
+ 
+ mpi_type.h
+@@ -625,20 +653,20 @@
+ 
+ mpi_history.txt         Parts list history
+ 
+-Filename    01.05.12  01.05.11  01.05.10  01.05.09
+-----------  --------  --------  --------  --------
+-mpi.h       01.05.10  01.05.09  01.05.08  01.05.07
+-mpi_ioc.h   01.05.10  01.05.09  01.05.09  01.05.08
+-mpi_cnfg.h  01.05.11  01.05.10  01.05.09  01.05.08
+-mpi_init.h  01.05.06  01.05.06  01.05.05  01.05.04
+-mpi_targ.h  01.05.05  01.05.05  01.05.05  01.05.04
+-mpi_fc.h    01.05.01  01.05.01  01.05.01  01.05.01
+-mpi_lan.h   01.05.01  01.05.01  01.05.01  01.05.01
+-mpi_raid.h  01.05.02  01.05.02  01.05.02  01.05.02
+-mpi_tool.h  01.05.03  01.05.03  01.05.03  01.05.03
+-mpi_inb.h   01.05.01  01.05.01  01.05.01  01.05.01
+-mpi_sas.h   01.05.02  01.05.01  01.05.01  01.05.01
+-mpi_type.h  01.05.02  01.05.01  01.05.01  01.05.01
++Filename    01.05.13  01.05.12  01.05.11  01.05.10  01.05.09
++----------  --------  --------  --------  --------  --------
++mpi.h       01.05.11  01.05.10  01.05.09  01.05.08  01.05.07
++mpi_ioc.h   01.05.11  01.05.10  01.05.09  01.05.09  01.05.08
++mpi_cnfg.h  01.05.12  01.05.11  01.05.10  01.05.09  01.05.08
++mpi_init.h  01.05.07  01.05.06  01.05.06  01.05.05  01.05.04
++mpi_targ.h  01.05.06  01.05.05  01.05.05  01.05.05  01.05.04
++mpi_fc.h    01.05.01  01.05.01  01.05.01  01.05.01  01.05.01
++mpi_lan.h   01.05.01  01.05.01  01.05.01  01.05.01  01.05.01
++mpi_raid.h  01.05.02  01.05.02  01.05.02  01.05.02  01.05.02
++mpi_tool.h  01.05.03  01.05.03  01.05.03  01.05.03  01.05.03
++mpi_inb.h   01.05.01  01.05.01  01.05.01  01.05.01  01.05.01
++mpi_sas.h   01.05.03  01.05.02  01.05.01  01.05.01  01.05.01
++mpi_type.h  01.05.02  01.05.02  01.05.01  01.05.01  01.05.01
+ 
+ Filename    01.05.08   01.05.07   01.05.06   01.05.05   01.05.04   01.05.03
+ ----------  --------   --------   --------   --------   --------   --------
+diff -uarN b/drivers/message/fusion/lsi/mpi_init.h a/drivers/message/fusion/lsi/mpi_init.h
+--- b/drivers/message/fusion/lsi/mpi_init.h	2006-06-17 19:49:35.000000000 -0600
++++ a/drivers/message/fusion/lsi/mpi_init.h	2006-05-08 11:20:02.000000000 -0600
+@@ -6,7 +6,7 @@
+  *          Title:  MPI initiator mode messages and structures
+  *  Creation Date:  June 8, 2000
+  *
+- *    mpi_init.h Version:  01.05.06
++ *    mpi_init.h Version:  01.05.07
+  *
+  *  Version History
+  *  ---------------
+@@ -52,6 +52,7 @@
+  *                      Added four new defines for SEP SlotStatus.
+  *  08-03-05  01.05.06  Fixed some MPI_SCSIIO32_MSGFLGS_ defines to make them
+  *                      unique in the first 32 characters.
++ *  03-27-06  01.05.07  Added Task Management type of Clear ACA.
+  *  --------------------------------------------------------------------------
+  */
+ 
+@@ -427,6 +428,7 @@
+ #define MPI_SCSITASKMGMT_TASKTYPE_LOGICAL_UNIT_RESET    (0x05)
+ #define MPI_SCSITASKMGMT_TASKTYPE_CLEAR_TASK_SET        (0x06)
+ #define MPI_SCSITASKMGMT_TASKTYPE_QUERY_TASK            (0x07)
++#define MPI_SCSITASKMGMT_TASKTYPE_CLEAR_ACA             (0x08)
+ 
+ /* MsgFlags bits */
+ #define MPI_SCSITASKMGMT_MSGFLAGS_TARGET_RESET_OPTION   (0x00)
+diff -uarN b/drivers/message/fusion/lsi/mpi_ioc.h a/drivers/message/fusion/lsi/mpi_ioc.h
+--- b/drivers/message/fusion/lsi/mpi_ioc.h	2006-06-17 19:49:35.000000000 -0600
++++ a/drivers/message/fusion/lsi/mpi_ioc.h	2006-05-08 11:20:02.000000000 -0600
+@@ -6,7 +6,7 @@
+  *          Title:  MPI IOC, Port, Event, FW Download, and FW Upload messages
+  *  Creation Date:  August 11, 2000
+  *
+- *    mpi_ioc.h Version:  01.05.10
++ *    mpi_ioc.h Version:  01.05.11
+  *
+  *  Version History
+  *  ---------------
+@@ -87,6 +87,17 @@
+  *                      Added new ReasonCode value for SAS Device Status Change
+  *                      event.
+  *                      Added new family code for FC949E.
++ *  03-27-06  01.05.11  Added MPI_IOCFACTS_CAPABILITY_TLR.
++ *                      Added additional Reason Codes and more event data fields
++ *                      to EVENT_DATA_SAS_DEVICE_STATUS_CHANGE.
++ *                      Added EVENT_DATA_SAS_BROADCAST_PRIMITIVE structure and
++ *                      new event.
++ *                      Added MPI_EVENT_SAS_SMP_ERROR and event data structure.
++ *                      Added MPI_EVENT_SAS_INIT_DEVICE_STATUS_CHANGE and event
++ *                      data structure.
++ *                      Added MPI_EVENT_SAS_INIT_TABLE_OVERFLOW and event
++ *                      data structure.
++ *                      Added MPI_EXT_IMAGE_TYPE_INITIALIZATION.
+  *  --------------------------------------------------------------------------
+  */
+ 
+@@ -272,6 +283,7 @@
+ #define MPI_IOCFACTS_CAPABILITY_MULTICAST               (0x00000100)
+ #define MPI_IOCFACTS_CAPABILITY_SCSIIO32                (0x00000200)
+ #define MPI_IOCFACTS_CAPABILITY_NO_SCSIIO16             (0x00000400)
++#define MPI_IOCFACTS_CAPABILITY_TLR                     (0x00000800)
+ 
+ 
+ /*****************************************************************************
+@@ -448,30 +460,34 @@
+ 
+ /* Event */
+ 
+-#define MPI_EVENT_NONE                      (0x00000000)
+-#define MPI_EVENT_LOG_DATA                  (0x00000001)
+-#define MPI_EVENT_STATE_CHANGE              (0x00000002)
+-#define MPI_EVENT_UNIT_ATTENTION            (0x00000003)
+-#define MPI_EVENT_IOC_BUS_RESET             (0x00000004)
+-#define MPI_EVENT_EXT_BUS_RESET             (0x00000005)
+-#define MPI_EVENT_RESCAN                    (0x00000006)
+-#define MPI_EVENT_LINK_STATUS_CHANGE        (0x00000007)
+-#define MPI_EVENT_LOOP_STATE_CHANGE         (0x00000008)
+-#define MPI_EVENT_LOGOUT                    (0x00000009)
+-#define MPI_EVENT_EVENT_CHANGE              (0x0000000A)
+-#define MPI_EVENT_INTEGRATED_RAID           (0x0000000B)
+-#define MPI_EVENT_SCSI_DEVICE_STATUS_CHANGE (0x0000000C)
+-#define MPI_EVENT_ON_BUS_TIMER_EXPIRED      (0x0000000D)
+-#define MPI_EVENT_QUEUE_FULL                (0x0000000E)
+-#define MPI_EVENT_SAS_DEVICE_STATUS_CHANGE  (0x0000000F)
+-#define MPI_EVENT_SAS_SES                   (0x00000010)
+-#define MPI_EVENT_PERSISTENT_TABLE_FULL     (0x00000011)
+-#define MPI_EVENT_SAS_PHY_LINK_STATUS       (0x00000012)
+-#define MPI_EVENT_SAS_DISCOVERY_ERROR       (0x00000013)
+-#define MPI_EVENT_IR_RESYNC_UPDATE          (0x00000014)
+-#define MPI_EVENT_IR2                       (0x00000015)
+-#define MPI_EVENT_SAS_DISCOVERY             (0x00000016)
+-#define MPI_EVENT_LOG_ENTRY_ADDED           (0x00000021)
++#define MPI_EVENT_NONE                          (0x00000000)
++#define MPI_EVENT_LOG_DATA                      (0x00000001)
++#define MPI_EVENT_STATE_CHANGE                  (0x00000002)
++#define MPI_EVENT_UNIT_ATTENTION                (0x00000003)
++#define MPI_EVENT_IOC_BUS_RESET                 (0x00000004)
++#define MPI_EVENT_EXT_BUS_RESET                 (0x00000005)
++#define MPI_EVENT_RESCAN                        (0x00000006)
++#define MPI_EVENT_LINK_STATUS_CHANGE            (0x00000007)
++#define MPI_EVENT_LOOP_STATE_CHANGE             (0x00000008)
++#define MPI_EVENT_LOGOUT                        (0x00000009)
++#define MPI_EVENT_EVENT_CHANGE                  (0x0000000A)
++#define MPI_EVENT_INTEGRATED_RAID               (0x0000000B)
++#define MPI_EVENT_SCSI_DEVICE_STATUS_CHANGE     (0x0000000C)
++#define MPI_EVENT_ON_BUS_TIMER_EXPIRED          (0x0000000D)
++#define MPI_EVENT_QUEUE_FULL                    (0x0000000E)
++#define MPI_EVENT_SAS_DEVICE_STATUS_CHANGE      (0x0000000F)
++#define MPI_EVENT_SAS_SES                       (0x00000010)
++#define MPI_EVENT_PERSISTENT_TABLE_FULL         (0x00000011)
++#define MPI_EVENT_SAS_PHY_LINK_STATUS           (0x00000012)
++#define MPI_EVENT_SAS_DISCOVERY_ERROR           (0x00000013)
++#define MPI_EVENT_IR_RESYNC_UPDATE              (0x00000014)
++#define MPI_EVENT_IR2                           (0x00000015)
++#define MPI_EVENT_SAS_DISCOVERY                 (0x00000016)
++#define MPI_EVENT_SAS_BROADCAST_PRIMITIVE       (0x00000017)
++#define MPI_EVENT_SAS_INIT_DEVICE_STATUS_CHANGE (0x00000018)
++#define MPI_EVENT_SAS_INIT_TABLE_OVERFLOW       (0x00000019)
++#define MPI_EVENT_SAS_SMP_ERROR                 (0x0000001A)
++#define MPI_EVENT_LOG_ENTRY_ADDED               (0x00000021)
+ 
+ /* AckRequired field values */
+ 
+@@ -558,18 +574,25 @@
+     U8                      PhyNum;                     /* 0Eh */
+     U8                      Reserved1;                  /* 0Fh */
+     U64                     SASAddress;                 /* 10h */
++    U8                      LUN[8];                     /* 18h */
++    U16                     TaskTag;                    /* 20h */
++    U16                     Reserved2;                  /* 22h */
+ } EVENT_DATA_SAS_DEVICE_STATUS_CHANGE,
+   MPI_POINTER PTR_EVENT_DATA_SAS_DEVICE_STATUS_CHANGE,
+   MpiEventDataSasDeviceStatusChange_t,
+   MPI_POINTER pMpiEventDataSasDeviceStatusChange_t;
+ 
+ /* MPI SAS Device Status Change Event data ReasonCode values */
+-#define MPI_EVENT_SAS_DEV_STAT_RC_ADDED                 (0x03)
+-#define MPI_EVENT_SAS_DEV_STAT_RC_NOT_RESPONDING        (0x04)
+-#define MPI_EVENT_SAS_DEV_STAT_RC_SMART_DATA            (0x05)
+-#define MPI_EVENT_SAS_DEV_STAT_RC_NO_PERSIST_ADDED      (0x06)
+-#define MPI_EVENT_SAS_DEV_STAT_RC_UNSUPPORTED           (0x07)
+-#define MPI_EVENT_SAS_DEV_STAT_RC_INTERNAL_DEVICE_RESET (0x08)
++#define MPI_EVENT_SAS_DEV_STAT_RC_ADDED                     (0x03)
++#define MPI_EVENT_SAS_DEV_STAT_RC_NOT_RESPONDING            (0x04)
++#define MPI_EVENT_SAS_DEV_STAT_RC_SMART_DATA                (0x05)
++#define MPI_EVENT_SAS_DEV_STAT_RC_NO_PERSIST_ADDED          (0x06)
++#define MPI_EVENT_SAS_DEV_STAT_RC_UNSUPPORTED               (0x07)
++#define MPI_EVENT_SAS_DEV_STAT_RC_INTERNAL_DEVICE_RESET     (0x08)
++#define MPI_EVENT_SAS_DEV_STAT_RC_TASK_ABORT_INTERNAL       (0x09)
++#define MPI_EVENT_SAS_DEV_STAT_RC_ABORT_TASK_SET_INTERNAL   (0x0A)
++#define MPI_EVENT_SAS_DEV_STAT_RC_CLEAR_TASK_SET_INTERNAL   (0x0B)
++#define MPI_EVENT_SAS_DEV_STAT_RC_QUERY_TASK_INTERNAL       (0x0C)
+ 
+ 
+ /* SCSI Event data for Queue Full event */
+@@ -742,6 +765,27 @@
+ } EVENT_DATA_SAS_SES, MPI_POINTER PTR_EVENT_DATA_SAS_SES,
+   MpiEventDataSasSes_t, MPI_POINTER pMpiEventDataSasSes_t;
+ 
++/* SAS Broadcast Primitive Event data */
++
++typedef struct _EVENT_DATA_SAS_BROADCAST_PRIMITIVE
++{
++    U8                      PhyNum;                     /* 00h */
++    U8                      Port;                       /* 01h */
++    U8                      PortWidth;                  /* 02h */
++    U8                      Primitive;                  /* 04h */
++} EVENT_DATA_SAS_BROADCAST_PRIMITIVE,
++  MPI_POINTER PTR_EVENT_DATA_SAS_BROADCAST_PRIMITIVE,
++  MpiEventDataSasBroadcastPrimitive_t,
++  MPI_POINTER pMpiEventDataSasBroadcastPrimitive_t;
++
++#define MPI_EVENT_PRIMITIVE_CHANGE              (0x01)
++#define MPI_EVENT_PRIMITIVE_EXPANDER            (0x03)
++#define MPI_EVENT_PRIMITIVE_RESERVED2           (0x04)
++#define MPI_EVENT_PRIMITIVE_RESERVED3           (0x05)
++#define MPI_EVENT_PRIMITIVE_RESERVED4           (0x06)
++#define MPI_EVENT_PRIMITIVE_CHANGE0_RESERVED    (0x07)
++#define MPI_EVENT_PRIMITIVE_CHANGE1_RESERVED    (0x08)
++
+ /* SAS Phy Link Status Event data */
+ 
+ typedef struct _EVENT_DATA_SAS_PHY_LINK_STATUS
+@@ -804,6 +848,53 @@
+ #define MPI_EVENT_DSCVRY_ERR_DS_MULTPL_PATHS                (0x00000800)
+ #define MPI_EVENT_DSCVRY_ERR_DS_MAX_SATA_TARGETS            (0x00001000)
+ 
++/* SAS SMP Error Event data */
++
++typedef struct _EVENT_DATA_SAS_SMP_ERROR
++{
++    U8                      Status;                     /* 00h */
++    U8                      Port;                       /* 01h */
++    U8                      SMPFunctionResult;          /* 02h */
++    U8                      Reserved1;                  /* 03h */
++    U64                     SASAddress;                 /* 04h */
++} EVENT_DATA_SAS_SMP_ERROR, MPI_POINTER PTR_EVENT_DATA_SAS_SMP_ERROR,
++  MpiEventDataSasSmpError_t, MPI_POINTER pMpiEventDataSasSmpError_t;
++
++/* defines for the Status field of the SAS SMP Error event */
++#define MPI_EVENT_SAS_SMP_FUNCTION_RESULT_VALID         (0x00)
++#define MPI_EVENT_SAS_SMP_CRC_ERROR                     (0x01)
++#define MPI_EVENT_SAS_SMP_TIMEOUT                       (0x02)
++#define MPI_EVENT_SAS_SMP_NO_DESTINATION                (0x03)
++#define MPI_EVENT_SAS_SMP_BAD_DESTINATION               (0x04)
++
++/* SAS Initiator Device Status Change Event data */
++
++typedef struct _EVENT_DATA_SAS_INIT_DEV_STATUS_CHANGE
++{
++    U8                      ReasonCode;                 /* 00h */
++    U8                      Port;                       /* 01h */
++    U16                     DevHandle;                  /* 02h */
++    U64                     SASAddress;                 /* 04h */
++} EVENT_DATA_SAS_INIT_DEV_STATUS_CHANGE,
++  MPI_POINTER PTR_EVENT_DATA_SAS_INIT_DEV_STATUS_CHANGE,
++  MpiEventDataSasInitDevStatusChange_t,
++  MPI_POINTER pMpiEventDataSasInitDevStatusChange_t;
++
++/* defines for the ReasonCode field of the SAS Initiator Device Status Change event */
++#define MPI_EVENT_SAS_INIT_RC_ADDED                 (0x01)
++
++/* SAS Initiator Device Table Overflow Event data */
++
++typedef struct _EVENT_DATA_SAS_INIT_TABLE_OVERFLOW
++{
++    U8                      MaxInit;                    /* 00h */
++    U8                      CurrentInit;                /* 01h */
++    U16                     Reserved1;                  /* 02h */
++} EVENT_DATA_SAS_INIT_TABLE_OVERFLOW,
++  MPI_POINTER PTR_EVENT_DATA_SAS_INIT_TABLE_OVERFLOW,
++  MpiEventDataSasInitTableOverflow_t,
++  MPI_POINTER pMpiEventDataSasInitTableOverflow_t;
++
+ 
+ /*****************************************************************************
+ *
+@@ -1013,5 +1104,6 @@
+ #define MPI_EXT_IMAGE_TYPE_FW                   (0x01)
+ #define MPI_EXT_IMAGE_TYPE_NVDATA               (0x03)
+ #define MPI_EXT_IMAGE_TYPE_BOOTLOADER           (0x04)
++#define MPI_EXT_IMAGE_TYPE_INITIALIZATION       (0x05)
+ 
+ #endif
+diff -uarN b/drivers/message/fusion/lsi/mpi_log_sas.h a/drivers/message/fusion/lsi/mpi_log_sas.h
+--- b/drivers/message/fusion/lsi/mpi_log_sas.h	2006-06-17 19:49:35.000000000 -0600
++++ a/drivers/message/fusion/lsi/mpi_log_sas.h	2006-05-22 17:15:25.000000000 -0600
+@@ -13,6 +13,8 @@
+ #ifndef IOPI_IOCLOGINFO_H_INCLUDED
+ #define IOPI_IOCLOGINFO_H_INCLUDED
+ 
++#define SAS_LOGINFO_NEXUS_LOSS		0x31170000
++#define SAS_LOGINFO_MASK			0xFFFF0000
+ 
+ /****************************************************************************/
+ /*  IOC LOGINFO defines, 0x00000000 - 0x0FFFFFFF                            */
+@@ -51,6 +53,9 @@
+ #define IOP_LOGINFO_CODE_CONFIG_INVALID_PAGE_DNM        (0x00030500) /* Device Not Mapped */
+ #define IOP_LOGINFO_CODE_CONFIG_INVALID_PAGE_PERSIST    (0x00030600) /* Persistent Page not found */
+ #define IOP_LOGINFO_CODE_CONFIG_INVALID_PAGE_DEFAULT    (0x00030700) /* Default Page not found */
++
++#define IOP_LOGINFO_CODE_DIAG_MSG_ERROR                 (0x00040000) /* Error handling diag msg - or'd with diag status */
++
+ #define IOP_LOGINFO_CODE_TASK_TERMINATED                (0x00050000)
+ 
+ #define IOP_LOGINFO_CODE_ENCL_MGMT_READ_ACTION_ERR0R    (0x00060001) /* Read Action not supported for SEP msg */
+@@ -103,6 +108,7 @@
+ #define PL_LOGINFO_CODE_IO_EXECUTED                         (0x00140000)
+ #define PL_LOGINFO_CODE_PERS_RESV_OUT_NOT_AFFIL_OWNER       (0x00150000)
+ #define PL_LOGINFO_CODE_OPEN_TXDMA_ABORT                    (0x00160000)
++#define PL_LOGINFO_CODE_IO_DEVICE_MISSING_DELAY_RETRY       (0x00170000)
+ #define PL_LOGINFO_SUB_CODE_OPEN_FAILURE                    (0x00000100)
+ #define PL_LOGINFO_SUB_CODE_OPEN_FAILURE_NO_DEST_TIMEOUT    (0x00000101)
+ #define PL_LOGINFO_SUB_CODE_OPEN_FAILURE_ORR_TIMEOUT        (0x0000011A) /* Open Reject (Retry) Timeout */
+@@ -165,11 +171,81 @@
+ /****************************************************************************/
+ /* IR LOGINFO_CODE defines, valid if IOC_LOGINFO_ORIGINATOR = IR            */
+ /****************************************************************************/
+-#define IR_LOGINFO_CODE_UNUSED1                         (0x00010000)
+-#define IR_LOGINFO_CODE_UNUSED2                         (0x00020000)
++#define IR_LOGINFO_RAID_ACTION_ERROR                           (0x00010000)
++#define IR_LOGINFO_CODE_UNUSED2                                (0x00020000)
++
++/* Amount of information passed down for Create Volume is too large */
++#define IR_LOGINFO_VOLUME_CREATE_INVALID_LENGTH                (0x00010001)
++/* Creation of duplicate volume attempted (Bus/Target ID checked) */
++#define IR_LOGINFO_VOLUME_CREATE_DUPLICATE                     (0x00010002)
++/* Creation failed due to maximum number of supported volumes exceeded */
++#define IR_LOGINFO_VOLUME_CREATE_NO_SLOTS                      (0x00010003)
++/* Creation failed due to DMA error in trying to read from host */
++#define IR_LOGINFO_VOLUME_CREATE_DMA_ERROR                     (0x00010004)
++/* Creation failed due to invalid volume type passed down */
++#define IR_LOGINFO_VOLUME_CREATE_INVALID_VOLUME_TYPE           (0x00010005)
++/* Creation failed due to error reading MFG Page 4 */
++#define IR_LOGINFO_VOLUME_MFG_PAGE4_ERROR                      (0x00010006)
++/* Creation failed when trying to create internal structures */
++#define IR_LOGINFO_VOLUME_INTERNAL_CONFIG_STRUCTURE_ERROR      (0x00010007)
++
++/* Activation failed due to trying to activate an already active volume */
++#define IR_LOGINFO_VOLUME_ACTIVATING_AN_ACTIVE_VOLUME          (0x00010010)
++/* Activation failed due to trying to active unsupported volume type  */
++#define IR_LOGINFO_VOLUME_ACTIVATING_INVALID_VOLUME_TYPE       (0x00010011)
++/* Activation failed due to trying to active too many volumes  */
++#define IR_LOGINFO_VOLUME_ACTIVATING_TOO_MANY_VOLUMES          (0x00010012)
++/* Activation failed due to Volume ID in use already */
++#define IR_LOGINFO_VOLUME_ACTIVATING_VOLUME_ID_IN_USE          (0x00010013)
++/* Activation failed call to activateVolume returned failure */
++#define IR_LOGINFO_VOLUME_ACTIVATE_VOLUME_FAILED               (0x00010014)
++/* Activation failed trying to import the volume */
++#define IR_LOGINFO_VOLUME_ACTIVATING_IMPORT_VOLUME_FAILED      (0x00010015)
++
++/* Phys Disk failed, too many phys disks */
++#define IR_LOGINFO_PHYSDISK_CREATE_TOO_MANY_DISKS              (0x00010020)
++/* Amount of information passed down for Create Pnysdisk is too large */
++#define IR_LOGINFO_PHYSDISK_CREATE_INVALID_LENGTH              (0x00010021)
++/* Creation failed due to DMA error in trying to read from host */
++#define IR_LOGINFO_PHYSDISK_CREATE_DMA_ERROR                   (0x00010022)
++/* Creation failed due to invalid Bus TargetID passed down */
++#define IR_LOGINFO_PHYSDISK_CREATE_BUS_TID_INVALID             (0x00010023)
++/* Creation failed due to error in creating RAID Phys Disk Config Page */
++#define IR_LOGINFO_PHYSDISK_CREATE_CONFIG_PAGE_ERROR           (0x00010024)
++
++
++/* Compatibility Error : IR Disabled */
++#define IR_LOGINFO_COMPAT_ERROR_RAID_DISABLED                  (0x00010030)
++/* Compatibility Error : Inquiry Comand failed */
++#define IR_LOGINFO_COMPAT_ERROR_INQUIRY_FAILED                 (0x00010031)
++/* Compatibility Error : Device not direct access device */
++#define IR_LOGINFO_COMPAT_ERROR_NOT_DIRECT_ACCESS              (0x00010032)
++/* Compatibility Error : Removable device found */
++#define IR_LOGINFO_COMPAT_ERROR_REMOVABLE_FOUND                (0x00010033)
++/* Compatibility Error : Device SCSI Version not 2 or higher */
++#define IR_LOGINFO_COMPAT_ERROR_NEED_SCSI_2_OR_HIGHER          (0x00010034)
++/* Compatibility Error : SATA device, 48 BIT LBA not supported */
++#define IR_LOGINFO_COMPAT_ERROR_SATA_48BIT_LBA_NOT_SUPPORTED   (0x00010035)
++/* Compatibility Error : Device does not have 512 byte block sizes */
++#define IR_LOGINFO_COMPAT_ERROR_DEVICE_NOT_512_BYTE_BLOCK      (0x00010036)
++/* Compatibility Error : Volume Type check failed */
++#define IR_LOGINFO_COMPAT_ERROR_VOLUME_TYPE_CHECK_FAILED       (0x00010037)
++/* Compatibility Error : Volume Type is unsupported by FW */
++#define IR_LOGINFO_COMPAT_ERROR_UNSUPPORTED_VOLUME_TYPE        (0x00010038)
++/* Compatibility Error : Disk drive too small for use in volume */
++#define IR_LOGINFO_COMPAT_ERROR_DISK_TOO_SMALL                 (0x00010039)
++/* Compatibility Error : Phys disk for Create Volume not found */
++#define IR_LOGINFO_COMPAT_ERROR_PHYS_DISK_NOT_FOUND            (0x0001003A)
++/* Compatibility Error : membership count error, too many or too few disks for volume type */
++#define IR_LOGINFO_COMPAT_ERROR_MEMBERSHIP_COUNT               (0x0001003B)
++/* Compatibility Error : Disk stripe sizes must be 64KB */
++#define IR_LOGINFO_COMPAT_ERROR_NON_64K_STRIPE_SIZE            (0x0001003C)
++/* Compatibility Error : IME size limited to < 2TB */
++#define IR_LOGINFO_COMPAT_ERROR_IME_VOL_NOT_CURRENTLY_SUPPORTED (0x0001003D)
++
+ 
+ /****************************************************************************/
+-/* Defines for convienence                                                  */
++/* Defines for convenience                                                  */
+ /****************************************************************************/
+ #define IOC_LOGINFO_PREFIX_IOP                          ((MPI_IOCLOGINFO_TYPE_SAS << MPI_IOCLOGINFO_TYPE_SHIFT) | IOC_LOGINFO_ORIGINATOR_IOP)
+ #define IOC_LOGINFO_PREFIX_PL                           ((MPI_IOCLOGINFO_TYPE_SAS << MPI_IOCLOGINFO_TYPE_SHIFT) | IOC_LOGINFO_ORIGINATOR_PL)
+diff -uarN b/drivers/message/fusion/lsi/mpi_sas.h a/drivers/message/fusion/lsi/mpi_sas.h
+--- b/drivers/message/fusion/lsi/mpi_sas.h	2006-06-17 19:49:35.000000000 -0600
++++ a/drivers/message/fusion/lsi/mpi_sas.h	2006-05-08 11:20:02.000000000 -0600
+@@ -6,7 +6,7 @@
+  *          Title:  MPI Serial Attached SCSI structures and definitions
+  *  Creation Date:  August 19, 2004
+  *
+- *    mpi_sas.h Version:  01.05.02
++ *    mpi_sas.h Version:  01.05.03
+  *
+  *  Version History
+  *  ---------------
+@@ -17,6 +17,10 @@
+  *  08-30-05  01.05.02  Added DeviceInfo bit for SEP.
+  *                      Added PrimFlags and Primitive field to SAS IO Unit
+  *                      Control request, and added a new operation code.
++ *  03-27-06  01.05.03  Added Force Full Discovery, Transmit Port Select Signal,
++ *                      and Remove Device operations to SAS IO Unit Control.
++ *                      Added DevHandle field to SAS IO Unit Control request and
++ *                      reply.
+  *  --------------------------------------------------------------------------
+  */
+ 
+@@ -209,7 +213,7 @@
+     U8                      Reserved1;          /* 01h */
+     U8                      ChainOffset;        /* 02h */
+     U8                      Function;           /* 03h */
+-    U16                     Reserved2;          /* 04h */
++    U16                     DevHandle;          /* 04h */
+     U8                      Reserved3;          /* 06h */
+     U8                      MsgFlags;           /* 07h */
+     U32                     MsgContext;         /* 08h */
+@@ -231,6 +235,9 @@
+ #define MPI_SAS_OP_PHY_CLEAR_ERROR_LOG          (0x08)
+ #define MPI_SAS_OP_MAP_CURRENT                  (0x09)
+ #define MPI_SAS_OP_SEND_PRIMITIVE               (0x0A)
++#define MPI_SAS_OP_FORCE_FULL_DISCOVERY         (0x0B)
++#define MPI_SAS_OP_TRANSMIT_PORT_SELECT_SIGNAL  (0x0C)
++#define MPI_SAS_OP_TRANSMIT_REMOVE_DEVICE       (0x0D)
+ 
+ /* values for the PrimFlags field */
+ #define MPI_SAS_PRIMFLAGS_SINGLE                (0x08)
+@@ -245,7 +252,7 @@
+     U8                      Reserved1;          /* 01h */
+     U8                      MsgLength;          /* 02h */
+     U8                      Function;           /* 03h */
+-    U16                     Reserved2;          /* 04h */
++    U16                     DevHandle;          /* 04h */
+     U8                      Reserved3;          /* 06h */
+     U8                      MsgFlags;           /* 07h */
+     U32                     MsgContext;         /* 08h */
+diff -uarN b/drivers/message/fusion/lsi/mpi_targ.h a/drivers/message/fusion/lsi/mpi_targ.h
+--- b/drivers/message/fusion/lsi/mpi_targ.h	2006-06-17 19:49:35.000000000 -0600
++++ a/drivers/message/fusion/lsi/mpi_targ.h	2006-05-08 11:20:02.000000000 -0600
+@@ -6,7 +6,7 @@
+  *          Title:  MPI Target mode messages and structures
+  *  Creation Date:  June 22, 2000
+  *
+- *    mpi_targ.h Version:  01.05.05
++ *    mpi_targ.h Version:  01.05.06
+  *
+  *  Version History
+  *  ---------------
+@@ -54,6 +54,7 @@
+  *  02-22-05  01.05.03  Changed a comment.
+  *  03-11-05  01.05.04  Removed TargetAssistExtended Request.
+  *  06-24-05  01.05.05  Added TargetAssistExtended structures and defines.
++ *  03-27-06  01.05.06  Added a comment.
+  *  --------------------------------------------------------------------------
+  */
+ 
+@@ -351,7 +352,7 @@
+ #define TARGET_ASSIST_FLAGS_CONFIRMED               (0x08)
+ #define TARGET_ASSIST_FLAGS_REPOST_CMD_BUFFER       (0x80)
+ 
+-
++/* Standard Target Mode Reply message */
+ typedef struct _MSG_TARGET_ERROR_REPLY
  {
- 	struct mptsas_discovery_event *ev;
-@@ -2044,11 +2464,10 @@
- 	if (discovery_data->DiscoveryStatus)
- 		return;
- 
--	ev = kmalloc(sizeof(*ev), GFP_ATOMIC);
-+	ev = kzalloc(sizeof(*ev), GFP_ATOMIC);
- 	if (!ev)
- 		return;
--	memset(ev,0,sizeof(struct mptsas_discovery_event));
--	INIT_WORK(&ev->work, mptscsih_discovery_work, ev);
-+	INIT_WORK(&ev->work, mptsas_discovery_work, ev);
- 	ev->ioc = ioc;
- 	schedule_work(&ev->work);
- };
-@@ -2076,21 +2495,21 @@
- 
- 	switch (event) {
- 	case MPI_EVENT_SAS_DEVICE_STATUS_CHANGE:
--		mptscsih_send_sas_event(ioc,
-+		mptsas_send_sas_event(ioc,
- 			(EVENT_DATA_SAS_DEVICE_STATUS_CHANGE *)reply->Data);
- 		break;
- 	case MPI_EVENT_INTEGRATED_RAID:
--		mptscsih_send_raid_event(ioc,
-+		mptsas_send_raid_event(ioc,
- 			(EVENT_DATA_RAID *)reply->Data);
- 		break;
- 	case MPI_EVENT_PERSISTENT_TABLE_FULL:
--		INIT_WORK(&ioc->mptscsih_persistTask,
--		    mptscsih_sas_persist_clear_table,
-+		INIT_WORK(&ioc->sas_persist_task,
-+		    mptsas_persist_clear_table,
- 		    (void *)ioc);
--		schedule_work(&ioc->mptscsih_persistTask);
-+		schedule_work(&ioc->sas_persist_task);
- 		break;
- 	 case MPI_EVENT_SAS_DISCOVERY:
--		mptscsih_send_discovery(ioc,
-+		mptsas_send_discovery_event(ioc,
- 			(EVENT_DATA_SAS_DISCOVERY *)reply->Data);
- 		break;
- 	default:
-@@ -2309,7 +2728,7 @@
- 
- 	return 0;
- 
--out_mptsas_probe:
-+ out_mptsas_probe:
- 
- 	mptscsih_remove(pdev);
- 	return error;
-@@ -2319,6 +2738,7 @@
- {
- 	MPT_ADAPTER *ioc = pci_get_drvdata(pdev);
- 	struct mptsas_portinfo *p, *n;
-+	int i;
- 
- 	ioc->sas_discovery_ignore_events=1;
- 	sas_remove_host(ioc->sh);
-@@ -2326,8 +2746,9 @@
- 	mutex_lock(&ioc->sas_topology_mutex);
- 	list_for_each_entry_safe(p, n, &ioc->sas_topology, list) {
- 		list_del(&p->list);
--		if (p->phy_info)
--			kfree(p->phy_info);
-+		for (i = 0 ; i < p->num_phys ; i++)
-+			mptsas_port_delete(p->phy_info[i].port_details);
-+		kfree(p->phy_info);
- 		kfree(p);
- 	}
- 	mutex_unlock(&ioc->sas_topology_mutex);
+     U16                     Reserved;                   /* 00h */
