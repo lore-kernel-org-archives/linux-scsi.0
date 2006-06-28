@@ -1,277 +1,101 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: [PATCH 4/9] iscsi: convert iscsi_tcp to new set/get param fns
-Date: Wed, 28 Jun 2006 12:00:26 -0500
-Message-ID: <1151514026.11553.50.camel@madmax>
+Subject: [PATCH 6/9] iscsi: rm channel usage from iscsi
+Date: Wed, 28 Jun 2006 12:00:29 -0500
+Message-ID: <1151514029.11553.52.camel@madmax>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:29875 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S1751426AbWF1RDJ (ORCPT
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:30899 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S1751426AbWF1REC (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Jun 2006 13:03:09 -0400
+	Wed, 28 Jun 2006 13:04:02 -0400
 Received: from [192.168.0.7] (c-69-180-139-167.hsd1.mn.comcast.net [69.180.139.167])
 	(authenticated bits=0)
-	by sabe.cs.wisc.edu (8.13.6/8.13.6) with ESMTP id k5SH2mHp019943
+	by sabe.cs.wisc.edu (8.13.6/8.13.6) with ESMTP id k5SH3fEN019951
 	(version=TLSv1/SSLv3 cipher=RC4-MD5 bits=128 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Jun 2006 12:03:08 -0500
+	for <linux-scsi@vger.kernel.org>; Wed, 28 Jun 2006 12:04:01 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Convert iscsi_tcp to new lib functions.
+I do not remember what I was thinking when we added the channel
+as a argument to the session create function. It was probably
+due to too much cut and paste work from the FC transport class.
+
+The channel is meaningless for iscsi drivers so this patch drops
+its usage everywhere in the iscsi related code.
+
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index b4743a9..848fb2a 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -2130,19 +2130,21 @@ iscsi_r2tpool_free(struct iscsi_session 
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 7e6e031..499e79f 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -1290,7 +1290,7 @@ iscsi_session_setup(struct iscsi_transpo
+ 	if (!try_module_get(iscsit->owner))
+ 		goto cls_session_fail;
  
- static int
- iscsi_conn_set_param(struct iscsi_cls_conn *cls_conn, enum iscsi_param param,
--		     uint32_t value)
-+		     char *buf, int buflen)
- {
- 	struct iscsi_conn *conn = cls_conn->dd_data;
- 	struct iscsi_session *session = conn->session;
- 	struct iscsi_tcp_conn *tcp_conn = conn->dd_data;
-+	int value;
+-	cls_session = iscsi_create_session(shost, iscsit, 0);
++	cls_session = iscsi_create_session(shost, iscsit);
+ 	if (!cls_session)
+ 		goto module_put;
+ 	*(unsigned long*)shost->hostdata = (unsigned long)cls_session;
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index 8717ff5..bebeb7d 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -248,10 +248,9 @@ static int iscsi_user_scan(struct Scsi_H
  
- 	switch(param) {
- 	case ISCSI_PARAM_MAX_RECV_DLENGTH: {
- 		char *saveptr = tcp_conn->data;
- 		gfp_t flags = GFP_KERNEL;
- 
-+		sscanf(buf, "%d", &value);
- 		if (tcp_conn->data_size >= value) {
--			conn->max_recv_dlength = value;
-+			iscsi_set_param(cls_conn, param, buf, buflen);
- 			break;
- 		}
- 
-@@ -2165,15 +2167,12 @@ iscsi_conn_set_param(struct iscsi_cls_co
- 		else
- 			free_pages((unsigned long)saveptr,
- 				   get_order(tcp_conn->data_size));
--		conn->max_recv_dlength = value;
-+		iscsi_set_param(cls_conn, param, buf, buflen);
- 		tcp_conn->data_size = value;
--		}
--		break;
--	case ISCSI_PARAM_MAX_XMIT_DLENGTH:
--		conn->max_xmit_dlength =  value;
- 		break;
-+		}
- 	case ISCSI_PARAM_HDRDGST_EN:
--		conn->hdrdgst_en = value;
-+		iscsi_set_param(cls_conn, param, buf, buflen);
- 		tcp_conn->hdr_size = sizeof(struct iscsi_hdr);
- 		if (conn->hdrdgst_en) {
- 			tcp_conn->hdr_size += sizeof(__u32);
-@@ -2197,7 +2196,7 @@ iscsi_conn_set_param(struct iscsi_cls_co
- 		}
- 		break;
- 	case ISCSI_PARAM_DATADGST_EN:
--		conn->datadgst_en = value;
-+		iscsi_set_param(cls_conn, param, buf, buflen);
- 		if (conn->datadgst_en) {
- 			if (!tcp_conn->data_tx_tfm)
- 				tcp_conn->data_tx_tfm =
-@@ -2220,121 +2219,36 @@ iscsi_conn_set_param(struct iscsi_cls_co
- 		tcp_conn->sendpage = conn->datadgst_en ?
- 			sock_no_sendpage : tcp_conn->sock->ops->sendpage;
- 		break;
--	case ISCSI_PARAM_INITIAL_R2T_EN:
--		session->initial_r2t_en = value;
--		break;
- 	case ISCSI_PARAM_MAX_R2T:
-+		sscanf(buf, "%d", &value);
- 		if (session->max_r2t == roundup_pow_of_two(value))
- 			break;
- 		iscsi_r2tpool_free(session);
--		session->max_r2t = value;
-+		iscsi_set_param(cls_conn, param, buf, buflen);
- 		if (session->max_r2t & (session->max_r2t - 1))
- 			session->max_r2t = roundup_pow_of_two(session->max_r2t);
- 		if (iscsi_r2tpool_alloc(session))
- 			return -ENOMEM;
- 		break;
--	case ISCSI_PARAM_IMM_DATA_EN:
--		session->imm_data_en = value;
--		break;
--	case ISCSI_PARAM_FIRST_BURST:
--		session->first_burst = value;
--		break;
--	case ISCSI_PARAM_MAX_BURST:
--		session->max_burst = value;
--		break;
--	case ISCSI_PARAM_PDU_INORDER_EN:
--		session->pdu_inorder_en = value;
--		break;
--	case ISCSI_PARAM_DATASEQ_INORDER_EN:
--		session->dataseq_inorder_en = value;
--		break;
--	case ISCSI_PARAM_ERL:
--		session->erl = value;
--		break;
--	case ISCSI_PARAM_IFMARKER_EN:
--		BUG_ON(value);
--		session->ifmarker_en = value;
--		break;
--	case ISCSI_PARAM_OFMARKER_EN:
--		BUG_ON(value);
--		session->ofmarker_en = value;
--		break;
--	case ISCSI_PARAM_EXP_STATSN:
--		conn->exp_statsn = value;
--		break;
--	default:
--		break;
--	}
--
--	return 0;
--}
--
--static int
--iscsi_session_get_param(struct iscsi_cls_session *cls_session,
--			enum iscsi_param param, uint32_t *value)
--{
--	struct Scsi_Host *shost = iscsi_session_to_shost(cls_session);
--	struct iscsi_session *session = iscsi_hostdata(shost->hostdata);
--
--	switch(param) {
--	case ISCSI_PARAM_INITIAL_R2T_EN:
--		*value = session->initial_r2t_en;
--		break;
--	case ISCSI_PARAM_MAX_R2T:
--		*value = session->max_r2t;
--		break;
--	case ISCSI_PARAM_IMM_DATA_EN:
--		*value = session->imm_data_en;
--		break;
--	case ISCSI_PARAM_FIRST_BURST:
--		*value = session->first_burst;
--		break;
--	case ISCSI_PARAM_MAX_BURST:
--		*value = session->max_burst;
--		break;
--	case ISCSI_PARAM_PDU_INORDER_EN:
--		*value = session->pdu_inorder_en;
--		break;
--	case ISCSI_PARAM_DATASEQ_INORDER_EN:
--		*value = session->dataseq_inorder_en;
--		break;
--	case ISCSI_PARAM_ERL:
--		*value = session->erl;
--		break;
--	case ISCSI_PARAM_IFMARKER_EN:
--		*value = session->ifmarker_en;
--		break;
--	case ISCSI_PARAM_OFMARKER_EN:
--		*value = session->ofmarker_en;
--		break;
- 	default:
--		return -EINVAL;
-+		return iscsi_set_param(cls_conn, param, buf, buflen);
+ 	mutex_lock(&ihost->mutex);
+ 	list_for_each_entry(session, &ihost->sessions, host_list) {
+-		if ((channel == SCAN_WILD_CARD ||
+-		     channel == session->channel) &&
++		if ((channel == SCAN_WILD_CARD || channel == 0) &&
+ 		    (id == SCAN_WILD_CARD || id == session->target_id))
+-			scsi_scan_target(&session->dev, session->channel,
++			scsi_scan_target(&session->dev, 0,
+ 					 session->target_id, lun, 1);
  	}
- 
- 	return 0;
- }
- 
- static int
--iscsi_conn_get_param(struct iscsi_cls_conn *cls_conn,
--		     enum iscsi_param param, uint32_t *value)
-+iscsi_tcp_conn_get_param(struct iscsi_cls_conn *cls_conn,
-+			 enum iscsi_param param, char *buf)
+ 	mutex_unlock(&ihost->mutex);
+@@ -297,7 +296,7 @@ EXPORT_SYMBOL_GPL(iscsi_block_session);
+  **/
+ struct iscsi_cls_session *
+ iscsi_create_session(struct Scsi_Host *shost,
+-		     struct iscsi_transport *transport, int channel)
++		     struct iscsi_transport *transport)
  {
- 	struct iscsi_conn *conn = cls_conn->dd_data;
- 	struct iscsi_tcp_conn *tcp_conn = conn->dd_data;
- 	struct inet_sock *inet;
-+	struct ipv6_pinfo *np;
-+	struct sock *sk;
-+	int len;
+ 	struct iscsi_host *ihost;
+ 	struct iscsi_cls_session *session;
+@@ -322,7 +321,6 @@ iscsi_create_session(struct Scsi_Host *s
+ 	ihost = shost->shost_data;
  
- 	switch(param) {
--	case ISCSI_PARAM_MAX_RECV_DLENGTH:
--		*value = conn->max_recv_dlength;
--		break;
--	case ISCSI_PARAM_MAX_XMIT_DLENGTH:
--		*value = conn->max_xmit_dlength;
--		break;
--	case ISCSI_PARAM_HDRDGST_EN:
--		*value = conn->hdrdgst_en;
--		break;
--	case ISCSI_PARAM_DATADGST_EN:
--		*value = conn->datadgst_en;
--		break;
- 	case ISCSI_PARAM_CONN_PORT:
- 		mutex_lock(&conn->xmitmutex);
- 		if (!tcp_conn->sock) {
-@@ -2343,30 +2257,9 @@ iscsi_conn_get_param(struct iscsi_cls_co
- 		}
+ 	session->sid = iscsi_session_nr++;
+-	session->channel = channel;
+ 	session->target_id = ihost->next_target_id++;
  
- 		inet = inet_sk(tcp_conn->sock->sk);
--		*value = be16_to_cpu(inet->dport);
-+		len = sprintf(buf, "%hu\n", be16_to_cpu(inet->dport));
- 		mutex_unlock(&conn->xmitmutex);
--	case ISCSI_PARAM_EXP_STATSN:
--		*value = conn->exp_statsn;
- 		break;
--	default:
--		return -EINVAL;
--	}
--
--	return 0;
--}
--
--static int
--iscsi_conn_get_str_param(struct iscsi_cls_conn *cls_conn,
--			 enum iscsi_param param, char *buf)
--{
--	struct iscsi_conn *conn = cls_conn->dd_data;
--	struct iscsi_tcp_conn *tcp_conn = conn->dd_data;
--	struct sock *sk;
--	struct inet_sock *inet;
--	struct ipv6_pinfo *np;
--	int len = 0;
--
--	switch (param) {
- 	case ISCSI_PARAM_CONN_ADDRESS:
- 		mutex_lock(&conn->xmitmutex);
- 		if (!tcp_conn->sock) {
-@@ -2388,7 +2281,7 @@ iscsi_conn_get_str_param(struct iscsi_cl
- 		mutex_unlock(&conn->xmitmutex);
- 		break;
- 	default:
--		return -EINVAL;
-+		return iscsi_conn_get_param(cls_conn, param, buf);
- 	}
+ 	snprintf(session->dev.bus_id, BUS_ID_SIZE, "session%u",
+diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
+index 0539705..2e3cb37 100644
+--- a/include/scsi/scsi_transport_iscsi.h
++++ b/include/scsi/scsi_transport_iscsi.h
+@@ -187,7 +187,6 @@ struct iscsi_cls_session {
+ 	struct work_struct recovery_work;
  
- 	return len;
-@@ -2501,7 +2394,11 @@ static struct iscsi_transport iscsi_tcp_
- 				  ISCSI_ERL |
- 				  ISCSI_CONN_PORT |
- 				  ISCSI_CONN_ADDRESS |
--				  ISCSI_EXP_STATSN,
-+				  ISCSI_EXP_STATSN |
-+				  ISCSI_PERSISTENT_PORT |
-+				  ISCSI_PERSISTENT_ADDRESS |
-+				  ISCSI_TARGET_NAME |
-+				  ISCSI_TPGT,
- 	.host_template		= &iscsi_sht,
- 	.conndata_size		= sizeof(struct iscsi_conn),
- 	.max_conn		= 1,
-@@ -2514,8 +2411,7 @@ static struct iscsi_transport iscsi_tcp_
- 	.bind_conn		= iscsi_tcp_conn_bind,
- 	.destroy_conn		= iscsi_tcp_conn_destroy,
- 	.set_param		= iscsi_conn_set_param,
--	.get_conn_param		= iscsi_conn_get_param,
--	.get_conn_str_param	= iscsi_conn_get_str_param,
-+	.get_conn_param		= iscsi_tcp_conn_get_param,
- 	.get_session_param	= iscsi_session_get_param,
- 	.start_conn		= iscsi_conn_start,
- 	.stop_conn		= iscsi_conn_stop,
+ 	int target_id;
+-	int channel;
+ 
+ 	int sid;				/* session id */
+ 	void *dd_data;				/* LLD private data */
+@@ -210,7 +209,7 @@ struct iscsi_host {
+  * session and connection functions that can be used by HW iSCSI LLDs
+  */
+ extern struct iscsi_cls_session *iscsi_create_session(struct Scsi_Host *shost,
+-				struct iscsi_transport *t, int channel);
++						struct iscsi_transport *t);
+ extern int iscsi_destroy_session(struct iscsi_cls_session *session);
+ extern struct iscsi_cls_conn *iscsi_create_conn(struct iscsi_cls_session *sess,
+ 					    uint32_t cid);
 
 
