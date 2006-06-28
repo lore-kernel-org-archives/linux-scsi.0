@@ -1,7 +1,7 @@
 From: Brian King <brking@us.ibm.com>
-Subject: [PATCH 1/3] ipr: Add some hardware defined types for SATA
-Date: Wed, 28 Jun 2006 08:46:34 -0500
-Message-ID: <200606281346.k5SDkYOk008115@d01av04.pok.ibm.com>
+Subject: [PATCH 2/3] ipr: Handle new SAS error codes
+Date: Wed, 28 Jun 2006 08:46:41 -0500
+Message-ID: <200606281346.k5SDkgx0023359@d01av03.pok.ibm.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 To: James.Bottomley@steeleye.com
@@ -9,178 +9,77 @@ Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jgarzik@pobox.com, br
 List-Id: linux-scsi@vger.kernel.org
 
 
-Add some hardware defined types for SATA. This is required
-by future patches to add SATA support to ipr.
+Add definitions for some SAS error codes that can be
+logged by ipr SAS adapters.
 
 Signed-off-by: Brian King <brking@us.ibm.com>
 ---
 
- libata-dev-bjking1/drivers/scsi/ipr.h |   78 ++++++++++++++++++++++++++++++++--
- 1 files changed, 75 insertions(+), 3 deletions(-)
+ libata-dev-bjking1/drivers/scsi/ipr.c |   26 ++++++++++++++++++++++++++
+ 1 files changed, 26 insertions(+)
 
-diff -puN drivers/scsi/ipr.h~ipr_sata_types drivers/scsi/ipr.h
---- libata-dev/drivers/scsi/ipr.h~ipr_sata_types	2006-06-07 11:03:10.000000000 -0500
-+++ libata-dev-bjking1/drivers/scsi/ipr.h	2006-06-07 11:03:10.000000000 -0500
-@@ -45,6 +45,7 @@
-  *	This can be adjusted at runtime through sysfs device attributes.
-  */
- #define IPR_MAX_CMD_PER_LUN				6
-+#define IPR_MAX_CMD_PER_ATA_LUN			1
- 
- /*
-  * IPR_NUM_BASE_CMD_BLKS: This defines the maximum number of
-@@ -106,7 +107,7 @@
- #define IPR_IOA_BUS						0xff
- #define IPR_IOA_TARGET					0xff
- #define IPR_IOA_LUN						0xff
--#define IPR_MAX_NUM_BUSES				8
-+#define IPR_MAX_NUM_BUSES				16
- #define IPR_MAX_BUS_TO_SCAN				IPR_MAX_NUM_BUSES
- 
- #define IPR_NUM_RESET_RELOAD_RETRIES		3
-@@ -145,6 +146,7 @@
- #define	IPR_LUN_RESET					0x40
- #define	IPR_TARGET_RESET					0x20
- #define	IPR_BUS_RESET					0x10
-+#define	IPR_ATA_PHY_RESET					0x80
- #define IPR_ID_HOST_RR_Q				0xC4
- #define IPR_QUERY_IOA_CONFIG				0xC5
- #define IPR_CANCEL_ALL_REQUESTS			0xCE
-@@ -295,7 +297,11 @@ struct ipr_std_inq_data {
- }__attribute__ ((packed));
- 
- struct ipr_config_table_entry {
--	u8 service_level;
-+	u8 proto;
-+#define IPR_PROTO_SATA			0x02
-+#define IPR_PROTO_SATA_ATAPI		0x03
-+#define IPR_PROTO_SAS_STP		0x06
-+#define IPR_PROTO_SAS_STP_ATAPI	0x07
- 	u8 array_id;
- 	u8 flags;
- #define IPR_IS_IOA_RESOURCE	0x80
-@@ -307,6 +313,7 @@ struct ipr_config_table_entry {
- #define IPR_SUBTYPE_AF_DASD			0
- #define IPR_SUBTYPE_GENERIC_SCSI	1
- #define IPR_SUBTYPE_VOLUME_SET		2
-+#define IPR_SUBTYPE_GENERIC_ATA	4
- 
- #define IPR_QUEUEING_MODEL(res)	((((res)->cfgte.flags) & 0x70) >> 4)
- #define IPR_QUEUE_FROZEN_MODEL	0
-@@ -350,6 +357,7 @@ struct ipr_cmd_pkt {
- #define IPR_RQTYPE_SCSICDB		0x00
- #define IPR_RQTYPE_IOACMD		0x01
- #define IPR_RQTYPE_HCAM			0x02
-+#define IPR_RQTYPE_ATA_PASSTHRU	0x04
- 
- 	u8 luntar_luntrn;
- 
-@@ -373,6 +381,37 @@ struct ipr_cmd_pkt {
- 	__be16 timeout;
- }__attribute__ ((packed, aligned(4)));
- 
-+struct ipr_ioarcb_ata_regs {
-+	u8 flags;
-+#define IPR_ATA_FLAG_PACKET_CMD			0x80
-+#define IPR_ATA_FLAG_XFER_TYPE_DMA			0x40
-+#define IPR_ATA_FLAG_STATUS_ON_GOOD_COMPLETION	0x20
-+	u8 reserved[3];
-+
-+	__be16 data;
-+	u8 feature;
-+	u8 nsect;
-+	u8 lbal;
-+	u8 lbam;
-+	u8 lbah;
-+	u8 device;
-+	u8 command;
-+	u8 reserved2[3];
-+	u8 hob_feature;
-+	u8 hob_nsect;
-+	u8 hob_lbal;
-+	u8 hob_lbam;
-+	u8 hob_lbah;
-+	u8 ctl;
-+}__attribute__ ((packed, aligned(4)));
-+
-+struct ipr_ioarcb_add_data {
-+	union {
-+		struct ipr_ioarcb_ata_regs regs;
-+		__be32 add_cmd_parms[10];
-+	}u;
-+}__attribute__ ((packed, aligned(4)));
-+
- /* IOA Request Control Block    128 bytes  */
- struct ipr_ioarcb {
- 	__be32 ioarcb_host_pci_addr;
-@@ -397,7 +436,7 @@ struct ipr_ioarcb {
- 	struct ipr_cmd_pkt cmd_pkt;
- 
- 	__be32 add_cmd_parms_len;
--	__be32 add_cmd_parms[10];
-+	struct ipr_ioarcb_add_data add_data;
- }__attribute__((packed, aligned (4)));
- 
- struct ipr_ioadl_desc {
-@@ -433,6 +472,21 @@ struct ipr_ioasa_gpdd {
- 	__be32 ioa_data[2];
- }__attribute__((packed, aligned (4)));
- 
-+struct ipr_ioasa_gata {
-+	u8 error;
-+	u8 nsect;		/* Interrupt reason */
-+	u8 lbal;
-+	u8 lbam;
-+	u8 lbah;
-+	u8 device;
-+	u8 status;
-+	u8 alt_status;	/* ATA CTL */
-+	u8 hob_nsect;
-+	u8 hob_lbal;
-+	u8 hob_lbam;
-+	u8 hob_lbah;
-+}__attribute__((packed, aligned (4)));
-+
- struct ipr_auto_sense {
- 	__be16 auto_sense_len;
- 	__be16 ioa_data_len;
-@@ -466,6 +520,7 @@ struct ipr_ioasa {
- 	__be32 ioasc_specific;	/* status code specific field */
- #define IPR_ADDITIONAL_STATUS_FMT		0x80000000
- #define IPR_AUTOSENSE_VALID			0x40000000
-+#define IPR_ATA_DEVICE_WAS_RESET		0x20000000
- #define IPR_IOASC_SPECIFIC_MASK		0x00ffffff
- #define IPR_FIELD_POINTER_VALID		(0x80000000 >> 8)
- #define IPR_FIELD_POINTER_MASK		0x0000ffff
-@@ -474,6 +529,7 @@ struct ipr_ioasa {
- 		struct ipr_ioasa_vset vset;
- 		struct ipr_ioasa_af_dasd dasd;
- 		struct ipr_ioasa_gpdd gpdd;
-+		struct ipr_ioasa_gata gata;
- 	} u;
- 
- 	struct ipr_auto_sense auto_sense;
-@@ -1308,6 +1364,22 @@ static inline int ipr_is_scsi_disk(struc
- }
- 
- /**
-+ * ipr_is_gata - Determine if a resource is a generic ATA resource
-+ * @res:	resource entry struct
-+ *
-+ * Return value:
-+ * 	1 if GATA / 0 if not GATA
-+ **/
-+static inline int ipr_is_gata(struct ipr_resource_entry *res)
-+{
-+	if (!ipr_is_ioa_resource(res) &&
-+	    IPR_RES_SUBTYPE(res) == IPR_SUBTYPE_GENERIC_ATA)
-+		return 1;
-+	else
-+		return 0;
-+}
-+
-+/**
-  * ipr_is_naca_model - Determine if a resource is using NACA queueing model
-  * @res:	resource entry struct
-  *
+diff -puN drivers/scsi/ipr.c~ipr_sas_errors drivers/scsi/ipr.c
+--- libata-dev/drivers/scsi/ipr.c~ipr_sas_errors	2006-06-27 14:49:10.000000000 -0500
++++ libata-dev-bjking1/drivers/scsi/ipr.c	2006-06-27 14:49:10.000000000 -0500
+@@ -176,6 +176,8 @@ struct ipr_error_table_t ipr_error_table
+ 	"Qualified success"},
+ 	{0x01080000, 1, 1,
+ 	"FFFE: Soft device bus error recovered by the IOA"},
++	{0x01088100, 0, 1,
++	"4101: Soft device bus fabric error"},
+ 	{0x01170600, 0, 1,
+ 	"FFF9: Device sector reassign successful"},
+ 	{0x01170900, 0, 1,
+@@ -226,6 +228,8 @@ struct ipr_error_table_t ipr_error_table
+ 	"3109: IOA timed out a device command"},
+ 	{0x04088000, 0, 0,
+ 	"3120: SCSI bus is not operational"},
++	{0x04088100, 0, 1,
++	"4100: Hard device bus fabric error"},
+ 	{0x04118000, 0, 1,
+ 	"9000: IOA reserved area data check"},
+ 	{0x04118100, 0, 1,
+@@ -274,6 +278,14 @@ struct ipr_error_table_t ipr_error_table
+ 	"9091: Incorrect hardware configuration change has been detected"},
+ 	{0x04678000, 0, 1,
+ 	"9073: Invalid multi-adapter configuration"},
++	{0x04678100, 0, 1,
++	"4010: Incorrect connection between cascaded expanders"},
++	{0x04678200, 0, 1,
++	"4020: Connections exceed IOA design limits"},
++	{0x04678300, 0, 1,
++	"4030: Incorrect multipath connection"},
++	{0x04679000, 0, 1,
++	"4110: Unsupported enclosure function"},
+ 	{0x046E0000, 0, 1,
+ 	"FFF4: Command to logical unit failed"},
+ 	{0x05240000, 1, 0,
+@@ -320,6 +332,16 @@ struct ipr_error_table_t ipr_error_table
+ 	"3150: SCSI bus configuration error"},
+ 	{0x06678100, 0, 1,
+ 	"9074: Asymmetric advanced function disk configuration"},
++	{0x06678300, 0, 1,
++	"4040: Incomplete multipath connection between IOA and enclosure"},
++	{0x06678400, 0, 1,
++	"4041: Incomplete multipath connection between enclosure and device"},
++	{0x06678500, 0, 1,
++	"Incomplete multipath connection between IOA and remote IOA"},
++	{0x06678600, 0, 1,
++	"9076: Configuration error, missing remote IOA"},
++	{0x06679100, 0, 1,
++	"4050: Enclosure does not support a required multipath function"},
+ 	{0x06690200, 0, 1,
+ 	"9041: Array protection temporarily suspended"},
+ 	{0x06698200, 0, 1,
+@@ -332,6 +354,10 @@ struct ipr_error_table_t ipr_error_table
+ 	"9072: Link not operational transition"},
+ 	{0x066B8200, 0, 1,
+ 	"9032: Array exposed but still protected"},
++	{0x066B9100, 0, 1,
++	"4061: Multipath redundancy level got better"},
++	{0x066B9200, 0, 1,
++	"4060: Multipath redundancy level got worse"},
+ 	{0x07270000, 0, 0,
+ 	"Failure due to other device"},
+ 	{0x07278000, 0, 1,
 _
