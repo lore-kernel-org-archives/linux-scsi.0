@@ -1,54 +1,714 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Asynchronous scsi scanning, version 9
-Date: Wed, 28 Jun 2006 12:03:29 -0400
-Message-ID: <1151510609.3377.26.camel@mulgrave.il.steeleye.com>
-References: <20060511143352.GI12272@parisc-linux.org>
-	<20060518172258.GL1604@parisc-linux.org>
-	<20060529031915.GB23405@parisc-linux.org>
-	<447AB2F5.2000700@s5r6.in-berlin.de>
-	<20060529130515.GE23405@parisc-linux.org>
-	<20060531232139.GA3202@us.ibm.com> <447EE81D.2050906@ums.usu.ru>
-	<20060601132315.GD32143@parisc-linux.org>
-	<1151270127.3617.26.camel@mulgrave.il.steeleye.com>
-	<20060626205832.GC10505@austin.ibm.com>
-	<1151356477.2673.41.camel@mulgrave.il.steeleye.com>
-	<44A2353B.1080105@suse.de>
+Subject: [PATCH] reroll of sas ports patch
+Date: Wed, 28 Jun 2006 12:22:50 -0400
+Message-ID: <1151511770.3377.30.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-hotplug-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <44A2353B.1080105@suse.de>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
-	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-hotplug-devel>
-List-Post: <mailto:linux-hotplug-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
-	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux-hotplug-devel-bounces@lists.sourceforge.net
-Errors-To: linux-hotplug-devel-bounces@lists.sourceforge.net
-To: Hannes Reinecke <hare@suse.de>
-Cc: linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>, Linas Vepstas <linas@austin.ibm.com>, Patrick Mansfield <patmans@us.ibm.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, "Alexander E. Patrakov" <patrakov@ums.usu.ru>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stat9.steeleye.com ([209.192.50.41]:52117 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1751342AbWF1QWx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 Jun 2006 12:22:53 -0400
+Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
+	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id k5SGMpa27155
+	for <linux-scsi@vger.kernel.org>; Wed, 28 Jun 2006 12:22:51 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, 2006-06-28 at 09:52 +0200, Hannes Reinecke wrote:
-> The only point left addressing is that you never know how long you 
-> should be waiting. It would be nice if the transport class / SCSI ML 
-> could give some hint somewhere to the effect 'scanning in progress'.
-> Otherwise you'll end up using arbitrary timeouts and you'll always
-> find 
-> machines where this timeout doesn't work :-(
+This one corrects a few errors in the prior version several of which
+caused panics (missing remove children) and updates the port add phy api
+(now it's legal to add a phy that's already part of the port).  I've
+also fixed the naming scheme.
 
-Well ... about 20s for a parallel bus is usual.  All the other modern
-busses (FC, SAS etc.) are unscanned, so there's nothing to wait for at
-the mid-layer.  Each does, however, have an internal discovery type
-process which it might be possible to expose via a new API.
+expanders are now expander-<h>:<e>
+
+where <h> host is the host number and <e> is a unique expander number
+(one per host).
+
+ports are port-<h>:<n> for ports on the hba or port-<h>:<e>:<n> for
+ports on an expander (and phys follow the same naming pattern).
 
 James
 
+--
+
+[SCSI] scsi_transport_sas: introduce a sas_port entity
+
+this patch introduces a port object, separates out ports and phys,
+with ports becoming the primary objects of the tree.
+
+Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
+
+Index: BUILD-2.6/drivers/scsi/scsi_sas_internal.h
+===================================================================
+--- BUILD-2.6.orig/drivers/scsi/scsi_sas_internal.h	2006-06-26 10:50:54.000000000 -0500
++++ BUILD-2.6/drivers/scsi/scsi_sas_internal.h	2006-06-26 11:25:10.000000000 -0500
+@@ -2,7 +2,8 @@
+ #define _SCSI_SAS_INTERNAL_H
+ 
+ #define SAS_HOST_ATTRS		0
+-#define SAS_PORT_ATTRS		17
++#define SAS_PHY_ATTRS		17
++#define SAS_PORT_ATTRS		1
+ #define SAS_RPORT_ATTRS		7
+ #define SAS_END_DEV_ATTRS	3
+ #define SAS_EXPANDER_ATTRS	7
+@@ -13,12 +14,14 @@
+ 	struct sas_domain_function_template *dft;
+ 
+ 	struct class_device_attribute private_host_attrs[SAS_HOST_ATTRS];
+-	struct class_device_attribute private_phy_attrs[SAS_PORT_ATTRS];
++	struct class_device_attribute private_phy_attrs[SAS_PHY_ATTRS];
++	struct class_device_attribute private_port_attrs[SAS_PORT_ATTRS];
+ 	struct class_device_attribute private_rphy_attrs[SAS_RPORT_ATTRS];
+ 	struct class_device_attribute private_end_dev_attrs[SAS_END_DEV_ATTRS];
+ 	struct class_device_attribute private_expander_attrs[SAS_EXPANDER_ATTRS];
+ 
+ 	struct transport_container phy_attr_cont;
++	struct transport_container port_attr_cont;
+ 	struct transport_container rphy_attr_cont;
+ 	struct transport_container end_dev_attr_cont;
+ 	struct transport_container expander_attr_cont;
+@@ -28,7 +31,8 @@
+ 	 * needed by scsi_sysfs.c
+ 	 */
+ 	struct class_device_attribute *host_attrs[SAS_HOST_ATTRS + 1];
+-	struct class_device_attribute *phy_attrs[SAS_PORT_ATTRS + 1];
++	struct class_device_attribute *phy_attrs[SAS_PHY_ATTRS + 1];
++	struct class_device_attribute *port_attrs[SAS_PORT_ATTRS + 1];
+ 	struct class_device_attribute *rphy_attrs[SAS_RPORT_ATTRS + 1];
+ 	struct class_device_attribute *end_dev_attrs[SAS_END_DEV_ATTRS + 1];
+ 	struct class_device_attribute *expander_attrs[SAS_EXPANDER_ATTRS + 1];
+Index: BUILD-2.6/drivers/scsi/scsi_transport_sas.c
+===================================================================
+--- BUILD-2.6.orig/drivers/scsi/scsi_transport_sas.c	2006-06-26 10:50:54.000000000 -0500
++++ BUILD-2.6/drivers/scsi/scsi_transport_sas.c	2006-06-28 11:19:03.000000000 -0500
+@@ -174,12 +174,29 @@
+ 
+ static int do_sas_phy_delete(struct device *dev, void *data)
+ {
+-	if (scsi_is_sas_phy(dev))
++	int pass = (int)(unsigned long)data;
++
++	if (pass == 0 && scsi_is_sas_port(dev))
++		sas_port_delete(dev_to_sas_port(dev));
++	else if (pass == 1 && scsi_is_sas_phy(dev))
+ 		sas_phy_delete(dev_to_phy(dev));
+ 	return 0;
+ }
+ 
+ /**
++ * sas_remove_children  --  tear down a devices SAS data structures
++ * @dev:	device belonging to the sas object
++ *
++ * Removes all SAS PHYs and remote PHYs for a given object
++ */
++void sas_remove_children(struct device *dev)
++{
++	device_for_each_child(dev, (void *)0, do_sas_phy_delete);
++	device_for_each_child(dev, (void *)1, do_sas_phy_delete);
++}
++EXPORT_SYMBOL(sas_remove_children);
++
++/**
+  * sas_remove_host  --  tear down a Scsi_Host's SAS data structures
+  * @shost:	Scsi Host that is torn down
+  *
+@@ -188,13 +205,13 @@
+  */
+ void sas_remove_host(struct Scsi_Host *shost)
+ {
+-	device_for_each_child(&shost->shost_gendev, NULL, do_sas_phy_delete);
++	sas_remove_children(&shost->shost_gendev);
+ }
+ EXPORT_SYMBOL(sas_remove_host);
+ 
+ 
+ /*
+- * SAS Port attributes
++ * SAS Phy attributes
+  */
+ 
+ #define sas_phy_show_simple(field, name, format_string, cast)		\
+@@ -310,7 +327,7 @@
+ sas_phy_simple_attr(identify.sas_address, sas_address, "0x%016llx\n",
+ 		unsigned long long);
+ sas_phy_simple_attr(identify.phy_identifier, phy_identifier, "%d\n", u8);
+-sas_phy_simple_attr(port_identifier, port_identifier, "%d\n", u8);
++//sas_phy_simple_attr(port_identifier, port_identifier, "%d\n", u8);
+ sas_phy_linkspeed_attr(negotiated_linkrate);
+ sas_phy_linkspeed_attr(minimum_linkrate_hw);
+ sas_phy_linkspeed_attr(minimum_linkrate);
+@@ -378,9 +395,10 @@
+ 	device_initialize(&phy->dev);
+ 	phy->dev.parent = get_device(parent);
+ 	phy->dev.release = sas_phy_release;
++	INIT_LIST_HEAD(&phy->port_siblings);
+ 	if (scsi_is_sas_expander_device(parent)) {
+ 		struct sas_rphy *rphy = dev_to_rphy(parent);
+-		sprintf(phy->dev.bus_id, "phy-%d-%d:%d", shost->host_no,
++		sprintf(phy->dev.bus_id, "phy-%d:%d:%d", shost->host_no,
+ 			rphy->scsi_target_id, number);
+ 	} else
+ 		sprintf(phy->dev.bus_id, "phy-%d:%d", shost->host_no, number);
+@@ -440,8 +458,8 @@
+ {
+ 	struct device *dev = &phy->dev;
+ 
+-	if (phy->rphy)
+-		sas_rphy_delete(phy->rphy);
++	/* this happens if the phy is still part of a port when deleted */
++	BUG_ON(!list_empty(&phy->port_siblings));
+ 
+ 	transport_remove_device(dev);
+ 	device_del(dev);
+@@ -464,6 +482,258 @@
+ EXPORT_SYMBOL(scsi_is_sas_phy);
+ 
+ /*
++ * SAS Port attributes
++ */
++#define sas_port_show_simple(field, name, format_string, cast)		\
++static ssize_t								\
++show_sas_port_##name(struct class_device *cdev, char *buf)		\
++{									\
++	struct sas_port *port = transport_class_to_sas_port(cdev);	\
++									\
++	return snprintf(buf, 20, format_string, cast port->field);	\
++}
++
++#define sas_port_simple_attr(field, name, format_string, type)		\
++	sas_port_show_simple(field, name, format_string, (type))	\
++static CLASS_DEVICE_ATTR(name, S_IRUGO, show_sas_port_##name, NULL)
++
++sas_port_simple_attr(num_phys, num_phys, "%d\n", int);
++
++static DECLARE_TRANSPORT_CLASS(sas_port_class,
++			       "sas_port", NULL, NULL, NULL);
++
++static int sas_port_match(struct attribute_container *cont, struct device *dev)
++{
++	struct Scsi_Host *shost;
++	struct sas_internal *i;
++
++	if (!scsi_is_sas_port(dev))
++		return 0;
++	shost = dev_to_shost(dev->parent);
++
++	if (!shost->transportt)
++		return 0;
++	if (shost->transportt->host_attrs.ac.class !=
++			&sas_host_class.class)
++		return 0;
++
++	i = to_sas_internal(shost->transportt);
++	return &i->port_attr_cont.ac == cont;
++}
++
++
++static void sas_port_release(struct device *dev)
++{
++	struct sas_port *port = dev_to_sas_port(dev);
++
++	BUG_ON(!list_empty(&port->phy_list));
++
++	put_device(dev->parent);
++	kfree(port);
++}
++
++static void sas_port_create_link(struct sas_port *port,
++				 struct sas_phy *phy)
++{
++	sysfs_create_link(&port->dev.kobj, &phy->dev.kobj, phy->dev.bus_id);
++	sysfs_create_link(&phy->dev.kobj, &port->dev.kobj, "port");
++}
++
++static void sas_port_delete_link(struct sas_port *port,
++				 struct sas_phy *phy)
++{
++	sysfs_remove_link(&port->dev.kobj, phy->dev.bus_id);
++	sysfs_remove_link(&phy->dev.kobj, "port");
++}
++
++/** sas_port_alloc - allocate and initialize a SAS port structure
++ *
++ * @parent:	parent device
++ * @port_id:	port number
++ *
++ * Allocates a SAS port structure.  It will be added to the device tree
++ * below the device specified by @parent which must be either a Scsi_Host
++ * or a sas_expander_device.
++ *
++ * Returns %NULL on error
++ */
++struct sas_port *sas_port_alloc(struct device *parent, int port_id)
++{
++	struct Scsi_Host *shost = dev_to_shost(parent);
++	struct sas_port *port;
++
++	port = kzalloc(sizeof(*port), GFP_KERNEL);
++	if (!port)
++		return NULL;
++
++	port->port_identifier = port_id;
++
++	device_initialize(&port->dev);
++
++	port->dev.parent = get_device(parent);
++	port->dev.release = sas_port_release;
++
++	mutex_init(&port->phy_list_mutex);
++	INIT_LIST_HEAD(&port->phy_list);
++
++	if (scsi_is_sas_expander_device(parent)) {
++		struct sas_rphy *rphy = dev_to_rphy(parent);
++		sprintf(port->dev.bus_id, "port-%d:%d:%d", shost->host_no,
++			rphy->scsi_target_id, port->port_identifier);
++	} else
++		sprintf(port->dev.bus_id, "port-%d:%d", shost->host_no,
++			port->port_identifier);
++
++	transport_setup_device(&port->dev);
++
++	return port;
++}
++EXPORT_SYMBOL(sas_port_alloc);
++
++/**
++ * sas_port_add - add a SAS port to the device hierarchy
++ *
++ * @port:	port to be added
++ *
++ * publishes a port to the rest of the system
++ */
++int sas_port_add(struct sas_port *port)
++{
++	int error;
++
++	/* No phys should be added until this is made visible */
++	BUG_ON(!list_empty(&port->phy_list));
++
++	error = device_add(&port->dev);
++
++	if (error)
++		return error;
++
++	transport_add_device(&port->dev);
++	transport_configure_device(&port->dev);
++
++	return 0;
++}
++EXPORT_SYMBOL(sas_port_add);
++
++/**
++ * sas_port_free  --  free a SAS PORT
++ * @port:	SAS PORT to free
++ *
++ * Frees the specified SAS PORT.
++ *
++ * Note:
++ *   This function must only be called on a PORT that has not
++ *   sucessfully been added using sas_port_add().
++ */
++void sas_port_free(struct sas_port *port)
++{
++	transport_destroy_device(&port->dev);
++	put_device(&port->dev);
++}
++EXPORT_SYMBOL(sas_port_free);
++
++/**
++ * sas_port_delete  --  remove SAS PORT
++ * @port:	SAS PORT to remove
++ *
++ * Removes the specified SAS PORT.  If the SAS PORT has an
++ * associated phys, unlink them from the port as well.
++ */
++void sas_port_delete(struct sas_port *port)
++{
++	struct device *dev = &port->dev;
++	struct sas_phy *phy, *tmp_phy;
++
++	if (port->rphy) {
++		sas_rphy_delete(port->rphy);
++		port->rphy = NULL;
++	}
++
++	mutex_lock(&port->phy_list_mutex);
++	list_for_each_entry_safe(phy, tmp_phy, &port->phy_list,
++				 port_siblings) {
++		sas_port_delete_link(port, phy);
++		list_del_init(&phy->port_siblings);
++	}
++	mutex_unlock(&port->phy_list_mutex);
++
++	transport_remove_device(dev);
++	device_del(dev);
++	transport_destroy_device(dev);
++	put_device(dev);
++}
++EXPORT_SYMBOL(sas_port_delete);
++
++/**
++ * scsi_is_sas_port --  check if a struct device represents a SAS port
++ * @dev:	device to check
++ *
++ * Returns:
++ *	%1 if the device represents a SAS Port, %0 else
++ */
++int scsi_is_sas_port(const struct device *dev)
++{
++	return dev->release == sas_port_release;
++}
++EXPORT_SYMBOL(scsi_is_sas_port);
++
++/**
++ * sas_port_add_phy - add another phy to a port to form a wide port
++ * @port:	port to add the phy to
++ * @phy:	phy to add
++ *
++ * When a port is initially created, it is empty (has no phys).  All
++ * ports must have at least one phy to operated, and all wide ports
++ * must have at least two.  The current code makes no difference
++ * between ports and wide ports, but the only object that can be
++ * connected to a remote device is a port, so ports must be formed on
++ * all devices with phys if they're connected to anything.
++ */
++void sas_port_add_phy(struct sas_port *port, struct sas_phy *phy)
++{
++	mutex_lock(&port->phy_list_mutex);
++	if (unlikely(!list_empty(&phy->port_siblings))) {
++		/* make sure we're already on this port */
++		struct sas_phy *tmp;
++
++		list_for_each_entry(tmp, &port->phy_list, port_siblings)
++			if (tmp == phy)
++				break;
++		/* If this trips, you added a phy that was already
++		 * part of a different port */
++		if (unlikely(tmp != phy)) {
++			dev_printk(KERN_ERR, &port->dev, "trying to add phy %s fails: it's already part of another port\n", phy->dev.bus_id);
++			BUG();
++		}
++	} else {
++		sas_port_create_link(port, phy);
++		list_add_tail(&phy->port_siblings, &port->phy_list);
++		port->num_phys++;
++	}
++	mutex_unlock(&port->phy_list_mutex);
++}
++EXPORT_SYMBOL(sas_port_add_phy);
++
++/**
++ * sas_port_delete_phy - remove a phy from a port or wide port
++ * @port:	port to remove the phy from
++ * @phy:	phy to remove
++ *
++ * This operation is used for tearing down ports again.  It must be
++ * done to every port or wide port before calling sas_port_delete.
++ */
++void sas_port_delete_phy(struct sas_port *port, struct sas_phy *phy)
++{
++	mutex_lock(&port->phy_list_mutex);
++	sas_port_delete_link(port, phy);
++	list_del_init(&phy->port_siblings);
++	port->num_phys--;
++	mutex_unlock(&port->phy_list_mutex);
++}
++EXPORT_SYMBOL(sas_port_delete_phy);
++
++/*
+  * SAS remote PHY attributes.
+  */
+ 
+@@ -767,7 +1037,7 @@
+  * Returns:
+  *	SAS PHY allocated or %NULL if the allocation failed.
+  */
+-struct sas_rphy *sas_end_device_alloc(struct sas_phy *parent)
++struct sas_rphy *sas_end_device_alloc(struct sas_port *parent)
+ {
+ 	struct Scsi_Host *shost = dev_to_shost(&parent->dev);
+ 	struct sas_end_device *rdev;
+@@ -780,8 +1050,13 @@
+ 	device_initialize(&rdev->rphy.dev);
+ 	rdev->rphy.dev.parent = get_device(&parent->dev);
+ 	rdev->rphy.dev.release = sas_end_device_release;
+-	sprintf(rdev->rphy.dev.bus_id, "end_device-%d:%d-%d",
+-		shost->host_no, parent->port_identifier, parent->number);
++	if (scsi_is_sas_expander_device(parent->dev.parent)) {
++		struct sas_rphy *rphy = dev_to_rphy(parent->dev.parent);
++		sprintf(rdev->rphy.dev.bus_id, "end_device-%d:%d:%d",
++			shost->host_no, rphy->scsi_target_id, parent->port_identifier);
++	} else
++		sprintf(rdev->rphy.dev.bus_id, "end_device-%d:%d",
++			shost->host_no, parent->port_identifier);
+ 	rdev->rphy.identify.device_type = SAS_END_DEVICE;
+ 	sas_rphy_initialize(&rdev->rphy);
+ 	transport_setup_device(&rdev->rphy.dev);
+@@ -798,7 +1073,7 @@
+  * Returns:
+  *	SAS PHY allocated or %NULL if the allocation failed.
+  */
+-struct sas_rphy *sas_expander_alloc(struct sas_phy *parent,
++struct sas_rphy *sas_expander_alloc(struct sas_port *parent,
+ 				    enum sas_device_type type)
+ {
+ 	struct Scsi_Host *shost = dev_to_shost(&parent->dev);
+@@ -837,7 +1112,7 @@
+  */
+ int sas_rphy_add(struct sas_rphy *rphy)
+ {
+-	struct sas_phy *parent = dev_to_phy(rphy->dev.parent);
++	struct sas_port *parent = dev_to_sas_port(rphy->dev.parent);
+ 	struct Scsi_Host *shost = dev_to_shost(parent->dev.parent);
+ 	struct sas_host_attrs *sas_host = to_sas_host_attrs(shost);
+ 	struct sas_identify *identify = &rphy->identify;
+@@ -910,7 +1185,7 @@
+ sas_rphy_delete(struct sas_rphy *rphy)
+ {
+ 	struct device *dev = &rphy->dev;
+-	struct sas_phy *parent = dev_to_phy(dev->parent);
++	struct sas_port *parent = dev_to_sas_port(dev->parent);
+ 	struct Scsi_Host *shost = dev_to_shost(parent->dev.parent);
+ 	struct sas_host_attrs *sas_host = to_sas_host_attrs(shost);
+ 
+@@ -920,7 +1195,7 @@
+ 		break;
+ 	case SAS_EDGE_EXPANDER_DEVICE:
+ 	case SAS_FANOUT_EXPANDER_DEVICE:
+-		device_for_each_child(dev, NULL, do_sas_phy_delete);
++		sas_remove_children(dev);
+ 		break;
+ 	default:
+ 		break;
+@@ -967,7 +1242,7 @@
+ 
+ 	mutex_lock(&sas_host->lock);
+ 	list_for_each_entry(rphy, &sas_host->rphy_list, list) {
+-		struct sas_phy *parent = dev_to_phy(rphy->dev.parent);
++		struct sas_port *parent = dev_to_sas_port(rphy->dev.parent);
+ 
+ 		if (rphy->identify.device_type != SAS_END_DEVICE ||
+ 		    rphy->scsi_target_id == -1)
+@@ -1003,16 +1278,19 @@
+ #define SETUP_OPTIONAL_RPORT_ATTRIBUTE(field, func)			\
+ 	SETUP_TEMPLATE(rphy_attrs, field, S_IRUGO, i->f->func)
+ 
+-#define SETUP_PORT_ATTRIBUTE(field)					\
++#define SETUP_PHY_ATTRIBUTE(field)					\
+ 	SETUP_TEMPLATE(phy_attrs, field, S_IRUGO, 1)
+ 
+-#define SETUP_OPTIONAL_PORT_ATTRIBUTE(field, func)			\
++#define SETUP_PORT_ATTRIBUTE(field)					\
++	SETUP_TEMPLATE(port_attrs, field, S_IRUGO, 1)
++
++#define SETUP_OPTIONAL_PHY_ATTRIBUTE(field, func)			\
+ 	SETUP_TEMPLATE(phy_attrs, field, S_IRUGO, i->f->func)
+ 
+-#define SETUP_PORT_ATTRIBUTE_WRONLY(field)				\
++#define SETUP_PHY_ATTRIBUTE_WRONLY(field)				\
+ 	SETUP_TEMPLATE(phy_attrs, field, S_IWUGO, 1)
+ 
+-#define SETUP_OPTIONAL_PORT_ATTRIBUTE_WRONLY(field, func)		\
++#define SETUP_OPTIONAL_PHY_ATTRIBUTE_WRONLY(field, func)		\
+ 	SETUP_TEMPLATE(phy_attrs, field, S_IWUGO, i->f->func)
+ 
+ #define SETUP_END_DEV_ATTRIBUTE(field)					\
+@@ -1048,6 +1326,11 @@
+ 	i->phy_attr_cont.ac.match = sas_phy_match;
+ 	transport_container_register(&i->phy_attr_cont);
+ 
++	i->port_attr_cont.ac.class = &sas_port_class.class;
++	i->port_attr_cont.ac.attrs = &i->port_attrs[0];
++	i->port_attr_cont.ac.match = sas_port_match;
++	transport_container_register(&i->port_attr_cont);
++
+ 	i->rphy_attr_cont.ac.class = &sas_rphy_class.class;
+ 	i->rphy_attr_cont.ac.attrs = &i->rphy_attrs[0];
+ 	i->rphy_attr_cont.ac.match = sas_rphy_match;
+@@ -1066,30 +1349,35 @@
+ 	i->f = ft;
+ 
+ 	count = 0;
++	SETUP_PORT_ATTRIBUTE(num_phys);
+ 	i->host_attrs[count] = NULL;
+ 
+ 	count = 0;
+-	SETUP_PORT_ATTRIBUTE(initiator_port_protocols);
+-	SETUP_PORT_ATTRIBUTE(target_port_protocols);
+-	SETUP_PORT_ATTRIBUTE(device_type);
+-	SETUP_PORT_ATTRIBUTE(sas_address);
+-	SETUP_PORT_ATTRIBUTE(phy_identifier);
+-	SETUP_PORT_ATTRIBUTE(port_identifier);
+-	SETUP_PORT_ATTRIBUTE(negotiated_linkrate);
+-	SETUP_PORT_ATTRIBUTE(minimum_linkrate_hw);
+-	SETUP_PORT_ATTRIBUTE(minimum_linkrate);
+-	SETUP_PORT_ATTRIBUTE(maximum_linkrate_hw);
+-	SETUP_PORT_ATTRIBUTE(maximum_linkrate);
+-
+-	SETUP_PORT_ATTRIBUTE(invalid_dword_count);
+-	SETUP_PORT_ATTRIBUTE(running_disparity_error_count);
+-	SETUP_PORT_ATTRIBUTE(loss_of_dword_sync_count);
+-	SETUP_PORT_ATTRIBUTE(phy_reset_problem_count);
+-	SETUP_OPTIONAL_PORT_ATTRIBUTE_WRONLY(link_reset, phy_reset);
+-	SETUP_OPTIONAL_PORT_ATTRIBUTE_WRONLY(hard_reset, phy_reset);
++	SETUP_PHY_ATTRIBUTE(initiator_port_protocols);
++	SETUP_PHY_ATTRIBUTE(target_port_protocols);
++	SETUP_PHY_ATTRIBUTE(device_type);
++	SETUP_PHY_ATTRIBUTE(sas_address);
++	SETUP_PHY_ATTRIBUTE(phy_identifier);
++	//SETUP_PHY_ATTRIBUTE(port_identifier);
++	SETUP_PHY_ATTRIBUTE(negotiated_linkrate);
++	SETUP_PHY_ATTRIBUTE(minimum_linkrate_hw);
++	SETUP_PHY_ATTRIBUTE(minimum_linkrate);
++	SETUP_PHY_ATTRIBUTE(maximum_linkrate_hw);
++	SETUP_PHY_ATTRIBUTE(maximum_linkrate);
++
++	SETUP_PHY_ATTRIBUTE(invalid_dword_count);
++	SETUP_PHY_ATTRIBUTE(running_disparity_error_count);
++	SETUP_PHY_ATTRIBUTE(loss_of_dword_sync_count);
++	SETUP_PHY_ATTRIBUTE(phy_reset_problem_count);
++	SETUP_OPTIONAL_PHY_ATTRIBUTE_WRONLY(link_reset, phy_reset);
++	SETUP_OPTIONAL_PHY_ATTRIBUTE_WRONLY(hard_reset, phy_reset);
+ 	i->phy_attrs[count] = NULL;
+ 
+ 	count = 0;
++	SETUP_PORT_ATTRIBUTE(num_phys);
++	i->port_attrs[count] = NULL;
++
++	count = 0;
+ 	SETUP_RPORT_ATTRIBUTE(rphy_initiator_port_protocols);
+ 	SETUP_RPORT_ATTRIBUTE(rphy_target_port_protocols);
+ 	SETUP_RPORT_ATTRIBUTE(rphy_device_type);
+@@ -1131,6 +1419,7 @@
+ 
+ 	transport_container_unregister(&i->t.host_attrs);
+ 	transport_container_unregister(&i->phy_attr_cont);
++	transport_container_unregister(&i->port_attr_cont);
+ 	transport_container_unregister(&i->rphy_attr_cont);
+ 	transport_container_unregister(&i->end_dev_attr_cont);
+ 	transport_container_unregister(&i->expander_attr_cont);
+@@ -1149,9 +1438,12 @@
+ 	error = transport_class_register(&sas_phy_class);
+ 	if (error)
+ 		goto out_unregister_transport;
+-	error = transport_class_register(&sas_rphy_class);
++	error = transport_class_register(&sas_port_class);
+ 	if (error)
+ 		goto out_unregister_phy;
++	error = transport_class_register(&sas_rphy_class);
++	if (error)
++		goto out_unregister_port;
+ 	error = transport_class_register(&sas_end_dev_class);
+ 	if (error)
+ 		goto out_unregister_rphy;
+@@ -1165,6 +1457,8 @@
+ 	transport_class_unregister(&sas_end_dev_class);
+  out_unregister_rphy:
+ 	transport_class_unregister(&sas_rphy_class);
++ out_unregister_port:
++	transport_class_unregister(&sas_port_class);
+  out_unregister_phy:
+ 	transport_class_unregister(&sas_phy_class);
+  out_unregister_transport:
+@@ -1178,6 +1472,7 @@
+ {
+ 	transport_class_unregister(&sas_host_class);
+ 	transport_class_unregister(&sas_phy_class);
++	transport_class_unregister(&sas_port_class);
+ 	transport_class_unregister(&sas_rphy_class);
+ 	transport_class_unregister(&sas_end_dev_class);
+ 	transport_class_unregister(&sas_expander_class);
+Index: BUILD-2.6/include/scsi/scsi_transport_sas.h
+===================================================================
+--- BUILD-2.6.orig/include/scsi/scsi_transport_sas.h	2006-06-26 10:50:58.000000000 -0500
++++ BUILD-2.6/include/scsi/scsi_transport_sas.h	2006-06-26 11:25:10.000000000 -0500
+@@ -3,6 +3,7 @@
+ 
+ #include <linux/transport_class.h>
+ #include <linux/types.h>
++#include <linux/mutex.h>
+ 
+ struct scsi_transport_template;
+ struct sas_rphy;
+@@ -55,7 +56,6 @@
+ 	enum sas_linkrate	minimum_linkrate;
+ 	enum sas_linkrate	maximum_linkrate_hw;
+ 	enum sas_linkrate	maximum_linkrate;
+-	u8			port_identifier;
+ 
+ 	/* internal state */
+ 	unsigned int		local_attached : 1;
+@@ -66,8 +66,8 @@
+ 	u32			loss_of_dword_sync_count;
+ 	u32			phy_reset_problem_count;
+ 
+-	/* the other end of the link */
+-	struct sas_rphy		*rphy;
++	/* for the list of phys belonging to a port */
++	struct list_head	port_siblings;
+ };
+ 
+ #define dev_to_phy(d) \
+@@ -124,6 +124,24 @@
+ #define rphy_to_expander_device(r) \
+ 	container_of((r), struct sas_expander_device, rphy)
+ 
++struct sas_port {
++	struct device		dev;
++
++	u8			port_identifier;
++	int			num_phys;
++
++	/* the other end of the link */
++	struct sas_rphy		*rphy;
++
++	struct mutex		phy_list_mutex;
++	struct list_head	phy_list;
++};
++
++#define dev_to_sas_port(d) \
++	container_of((d), struct sas_port, dev)
++#define transport_class_to_sas_port(cdev) \
++	dev_to_sas_port((cdev)->dev)
++
+ /* The functions by which the transport class and the driver communicate */
+ struct sas_function_template {
+ 	int (*get_linkerrors)(struct sas_phy *);
+@@ -133,6 +151,7 @@
+ };
+ 
+ 
++void sas_remove_children(struct device *);
+ extern void sas_remove_host(struct Scsi_Host *);
+ 
+ extern struct sas_phy *sas_phy_alloc(struct device *, int);
+@@ -141,13 +160,21 @@
+ extern void sas_phy_delete(struct sas_phy *);
+ extern int scsi_is_sas_phy(const struct device *);
+ 
+-extern struct sas_rphy *sas_end_device_alloc(struct sas_phy *);
+-extern struct sas_rphy *sas_expander_alloc(struct sas_phy *, enum sas_device_type);
++extern struct sas_rphy *sas_end_device_alloc(struct sas_port *);
++extern struct sas_rphy *sas_expander_alloc(struct sas_port *, enum sas_device_type);
+ void sas_rphy_free(struct sas_rphy *);
+ extern int sas_rphy_add(struct sas_rphy *);
+ extern void sas_rphy_delete(struct sas_rphy *);
+ extern int scsi_is_sas_rphy(const struct device *);
+ 
++struct sas_port *sas_port_alloc(struct device *, int);
++int sas_port_add(struct sas_port *);
++void sas_port_free(struct sas_port *);
++void sas_port_delete(struct sas_port *);
++void sas_port_add_phy(struct sas_port *, struct sas_phy *);
++void sas_port_delete_phy(struct sas_port *, struct sas_phy *);
++int scsi_is_sas_port(const struct device *);
++
+ extern struct scsi_transport_template *
+ sas_attach_transport(struct sas_function_template *);
+ extern void sas_release_transport(struct scsi_transport_template *);
 
 
-Using Tomcat but need to do more? Need to support web services, security?
-Get stuff done quickly with pre-integrated technology to make your job easier
-Download IBM WebSphere Application Server v.1.0.1 based on Apache Geronimo
-http://sel.as-us.falkag.net/sel?cmd=lnk&kid=120709&bid=263057&dat=121642
