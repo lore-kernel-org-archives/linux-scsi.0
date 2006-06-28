@@ -1,50 +1,54 @@
-From: Martin Habets <errandir_news@mph.eclipse.co.uk>
-Subject: [PATCH] st: remove unused st_buffer.in_use
-Date: Wed, 28 Jun 2006 15:40:36 +0100
-Message-ID: <20060628144036.GC31139@palantir8>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Asynchronous scsi scanning, version 9
+Date: Wed, 28 Jun 2006 12:03:29 -0400
+Message-ID: <1151510609.3377.26.camel@mulgrave.il.steeleye.com>
+References: <20060511143352.GI12272@parisc-linux.org>
+	<20060518172258.GL1604@parisc-linux.org>
+	<20060529031915.GB23405@parisc-linux.org>
+	<447AB2F5.2000700@s5r6.in-berlin.de>
+	<20060529130515.GE23405@parisc-linux.org>
+	<20060531232139.GA3202@us.ibm.com> <447EE81D.2050906@ums.usu.ru>
+	<20060601132315.GD32143@parisc-linux.org>
+	<1151270127.3617.26.camel@mulgrave.il.steeleye.com>
+	<20060626205832.GC10505@austin.ibm.com>
+	<1151356477.2673.41.camel@mulgrave.il.steeleye.com>
+	<44A2353B.1080105@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mra01.ch.as12513.net ([82.153.254.69]:30342 "EHLO
-	mra01.ch.as12513.net") by vger.kernel.org with ESMTP
-	id S1030379AbWF1Okw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Jun 2006 10:40:52 -0400
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-hotplug-devel-bounces@lists.sourceforge.net>
+In-Reply-To: <44A2353B.1080105@suse.de>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
+	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-hotplug-devel>
+List-Post: <mailto:linux-hotplug-devel@lists.sourceforge.net>
+List-Help: <mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-hotplug-devel>,
+	<mailto:linux-hotplug-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: linux-hotplug-devel-bounces@lists.sourceforge.net
+Errors-To: linux-hotplug-devel-bounces@lists.sourceforge.net
+To: Hannes Reinecke <hare@suse.de>
+Cc: linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>, Linas Vepstas <linas@austin.ibm.com>, Patrick Mansfield <patmans@us.ibm.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, "Alexander E. Patrakov" <patrakov@ums.usu.ru>
 List-Id: linux-scsi@vger.kernel.org
-To: Kai.Makisara@kolumbus.fi
-Cc: linux-scsi@vger.kernel.org
 
-Hi,
+On Wed, 2006-06-28 at 09:52 +0200, Hannes Reinecke wrote:
+> The only point left addressing is that you never know how long you 
+> should be waiting. It would be nice if the transport class / SCSI ML 
+> could give some hint somewhere to the effect 'scanning in progress'.
+> Otherwise you'll end up using arbitrary timeouts and you'll always
+> find 
+> machines where this timeout doesn't work :-(
 
-I noticed that in_use in st_buffer is not used. The patch below
-against 2.6.17-rc3 removes it, assuming there is no future use for it.
-It was tested in a sparc SS20 with a DLT4000.
+Well ... about 20s for a parallel bus is usual.  All the other modern
+busses (FC, SAS etc.) are unscanned, so there's nothing to wait for at
+the mid-layer.  Each does, however, have an internal discovery type
+process which it might be possible to expose via a new API.
 
-Please CC me as I'm not subscribed to the list.
+James
 
-Thanks,
-Martin
 
-	Signed-off-by: Martin Habets <errandir_news@mph.eclipse.co.uk>
----
---- 2.6.17-rc3/drivers/scsi/st.h.orig	2006-05-01 10:30:53.000000000 +0100
-+++ 2.6.17-rc3/drivers/scsi/st.h	2006-06-28 15:17:11.000000000 +0100
-@@ -31,7 +31,6 @@
- 
- /* The tape buffer descriptor. */
- struct st_buffer {
--	unsigned char in_use;
- 	unsigned char dma;	/* DMA-able buffer */
- 	unsigned char do_dio;   /* direct i/o set up? */
- 	int buffer_size;
---- 2.6.17-rc3/drivers/scsi/st.c.orig	2006-05-01 11:04:24.000000000 +0100
-+++ 2.6.17-rc3/drivers/scsi/st.c	2006-06-28 15:17:57.000000000 +0100
-@@ -3599,7 +3599,6 @@
- 	tb->use_sg = max_sg;
- 	tb->frp = (struct st_buf_fragment *)(&(tb->sg[0]) + max_sg);
- 
--	tb->in_use = 1;
- 	tb->dma = need_dma;
- 	tb->buffer_size = got;
- 
+
+Using Tomcat but need to do more? Need to support web services, security?
+Get stuff done quickly with pre-integrated technology to make your job easier
+Download IBM WebSphere Application Server v.1.0.1 based on Apache Geronimo
+http://sel.as-us.falkag.net/sel?cmd=lnk&kid=120709&bid=263057&dat=121642
