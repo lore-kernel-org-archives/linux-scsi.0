@@ -1,58 +1,53 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [-mm patch] drivers/message/fusion/mptsas.c: make 2 functions static
-Date: Thu, 29 Jun 2006 21:20:10 +0200
-Message-ID: <20060629192010.GP19712@stusta.de>
-References: <20060629013643.4b47e8bd.akpm@osdl.org>
+From: Doug Maxey <dwm@enoyolf.org>
+Subject: Re: [RFC] [PATCH 1/7] requested for qla4xxx!!!
+Date: Thu, 29 Jun 2006 15:20:17 -0500
+Message-ID: <20060629202017.103393@bebe.enoyolf.org>
+References: <20060628042436.274455@bebe.enoyolf.org> <44A2C187.8030801@cs.wisc.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [141.84.69.5] ([141.84.69.5]:27408 "HELO mailout.stusta.mhn.de")
-	by vger.kernel.org with SMTP id S932275AbWF2TUr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Jun 2006 15:20:47 -0400
-Content-Disposition: inline
-In-Reply-To: <20060629013643.4b47e8bd.akpm@osdl.org>
+Received: from falcon30.maxeymade.com ([24.173.215.190]:55500 "EHLO
+	bebe.enoyolf.org") by vger.kernel.org with ESMTP id S932376AbWF2UU3
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 Jun 2006 16:20:29 -0400
+In-reply-to: <20060629064924.GB7220@ranandlinuxbox.oc.cox.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Eric.Moore@lsil.com
-Cc: linux-kernel@vger.kernel.org, mpt_linux_developer@lsil.com, linux-scsi@vger.kernel.org
+To: Ravi Anand <ravi.anand@qlogic.com>
+Cc: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, open-iscsi <open-iscsi@googlegroups.com>
 
-On Thu, Jun 29, 2006 at 01:36:43AM -0700, Andrew Morton wrote:
->...
-> Changes since 2.6.17-mm3:
->...
->  git-scsi-misc.patch
->...
->  git trees.
->...
 
-This patch makes two needlessly global functions static.
+On Wed, 28 Jun 2006 23:49:24 PDT, Ravi Anand wrote:
+> ISP4xxx driver definitions.
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+I missed a #include in ql4_def.h.
 
+>From 655dd4a50f40edbbd48f02fc8cfa5c79d451e10d Mon Sep 17 00:00:00 2001
+From: Doug Maxey <dwm@enoyolf.org>
+Date: Thu, 29 Jun 2006 15:16:52 -0500
+Subject: [PATCH] qla4xxx: remove deprecated #include
+
+Remove the #include ql4_netlnk.h as the file no longer exists.
+Should build now. :)
+
+Signed-off-by: Doug Maxey <dwm@enoyolf.org>
 ---
+ drivers/scsi/qla4xxx/ql4_def.h |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
- drivers/message/fusion/mptsas.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
---- linux-2.6.17-mm4-full/drivers/message/fusion/mptsas.c.old	2006-06-29 14:54:36.000000000 +0200
-+++ linux-2.6.17-mm4-full/drivers/message/fusion/mptsas.c	2006-06-29 14:54:51.000000000 +0200
-@@ -337,7 +337,7 @@
- }
+diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
+index 7e7dc1f..876875b 100644
+--- a/drivers/scsi/qla4xxx/ql4_def.h
++++ b/drivers/scsi/qla4xxx/ql4_def.h
+@@ -614,6 +614,5 @@ #include "ql4_version.h"
+ #include "ql4_glbl.h"
+ #include "ql4_dbg.h"
+ #include "ql4_inline.h"
+-#include "ql4_netlnk.h"
  
- /* no mutex */
--void
-+static void
- mptsas_port_delete(struct mptsas_portinfo_details * port_details)
- {
- 	struct mptsas_portinfo *port_info;
-@@ -438,7 +438,7 @@
-  * Updates for new and existing narrow/wide port configuration
-  * in the sas_topology
-  */
--void
-+static void
- mptsas_setup_wide_ports(MPT_ADAPTER *ioc, struct mptsas_portinfo *port_info)
- {
- 	struct mptsas_portinfo_details * port_details;
+ #endif	/*_QLA4XXX_H */
+-- 
+1.4.0
+
+
 
