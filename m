@@ -1,52 +1,61 @@
 From: akpm@osdl.org
-Subject: [patch 18/22] megaraid: Dell CERC ATA100/4ch support
-Date: Fri, 30 Jun 2006 02:33:16 -0700
-Message-ID: <200606300933.k5U9XGhF001736@shell0.pdx.osdl.net>
+Subject: [patch 12/22] mpt_interrupt() should return IRQ_NONE when appropriate
+Date: Fri, 30 Jun 2006 02:33:11 -0700
+Message-ID: <200606300933.k5U9XBiC001714@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:63122 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1750890AbWF3Jes (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:1427 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751743AbWF3Jew (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Jun 2006 05:34:48 -0400
+	Fri, 30 Jun 2006 05:34:52 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, jkrzyszt@tis.icnet.pl
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, jbeulich@novell.com, Eric.Moore@lsil.com
 
+From: "Jan Beulich" <jbeulich@novell.com>
 
-From: Janusz Krzysztofik <jkrzyszt@tis.icnet.pl>
+The way mpt_interrupt() was coded, it was impossible for the unhandled
+interrupt detection logic to ever trigger. All interrupt handlers should
+return IRQ_NONE when they have nothing to do.
 
-Add CERC subsystem ids to the old megaraid driver.  Tested, works.
-
-Cc: James Bottomley <James.Bottomley@steeleye.com>
+Signed-off-by: Jan Beulich <jbeulich@novell.com>
+Cc: "Moore, Eric Dean" <Eric.Moore@lsil.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/megaraid.c |    2 ++
- drivers/scsi/megaraid.h |    2 ++
- 2 files changed, 4 insertions(+)
+ drivers/message/fusion/mptbase.c |   15 ++++++++-------
+ 1 file changed, 8 insertions(+), 7 deletions(-)
 
-diff -puN drivers/scsi/megaraid.c~megaraid-dell-cerc-ata100-4ch-support drivers/scsi/megaraid.c
---- a/drivers/scsi/megaraid.c~megaraid-dell-cerc-ata100-4ch-support
-+++ a/drivers/scsi/megaraid.c
-@@ -5047,6 +5047,8 @@ static struct pci_device_id megaraid_pci
- 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
- 	{PCI_VENDOR_ID_AMI, PCI_DEVICE_ID_AMI_MEGARAID2,
- 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-+	{PCI_VENDOR_ID_AMI, PCI_DEVICE_ID_AMI_MEGARAID3,
-+		PCI_VENDOR_ID_DELL, PCI_SUBSYS_ID_CERC_ATA100, 0, 0, 0},
- 	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_AMI_MEGARAID3,
- 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
- 	{0,}
-diff -puN drivers/scsi/megaraid.h~megaraid-dell-cerc-ata100-4ch-support drivers/scsi/megaraid.h
---- a/drivers/scsi/megaraid.h~megaraid-dell-cerc-ata100-4ch-support
-+++ a/drivers/scsi/megaraid.h
-@@ -84,6 +84,8 @@
- #define LSI_SUBSYS_VID			0x1000
- #define INTEL_SUBSYS_VID		0x8086
- 
-+#define PCI_SUBSYS_ID_CERC_ATA100	0x0511
+diff -puN drivers/message/fusion/mptbase.c~mpt_interrupt-should-return-irq_none-when drivers/message/fusion/mptbase.c
+--- a/drivers/message/fusion/mptbase.c~mpt_interrupt-should-return-irq_none-when
++++ a/drivers/message/fusion/mptbase.c
+@@ -369,20 +369,21 @@ static irqreturn_t
+ mpt_interrupt(int irq, void *bus_id, struct pt_regs *r)
+ {
+ 	MPT_ADAPTER *ioc = bus_id;
+-	u32 pa;
++	u32 pa = CHIPREG_READ32_dmasync(&ioc->chip->ReplyFifo);
 +
- #define HBA_SIGNATURE	      		0x3344
- #define HBA_SIGNATURE_471	  	0xCCCC
- #define HBA_SIGNATURE_64BIT		0x0299
++	if (pa == 0xFFFFFFFF)
++		return IRQ_NONE;
+ 
+ 	/*
+ 	 *  Drain the reply FIFO!
+ 	 */
+-	while (1) {
+-		pa = CHIPREG_READ32_dmasync(&ioc->chip->ReplyFifo);
+-		if (pa == 0xFFFFFFFF)
+-			return IRQ_HANDLED;
+-		else if (pa & MPI_ADDRESS_REPLY_A_BIT)
++	do {
++		if (pa & MPI_ADDRESS_REPLY_A_BIT)
+ 			mpt_reply(ioc, pa);
+ 		else
+ 			mpt_turbo_reply(ioc, pa);
+-	}
++		pa = CHIPREG_READ32_dmasync(&ioc->chip->ReplyFifo);
++	} while (pa != 0xFFFFFFFF);
+ 
+ 	return IRQ_HANDLED;
+ }
 _
