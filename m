@@ -1,905 +1,2376 @@
 From: akpm@osdl.org
-Subject: [patch 01/22] drivers/scsi/aic7xxx/: possible cleanups
-Date: Fri, 30 Jun 2006 02:33:03 -0700
-Message-ID: <200606300933.k5U9X3rt001677@shell0.pdx.osdl.net>
+Subject: [patch 09/22] aic7xxx: deinline large functions, save 80k of text
+Date: Fri, 30 Jun 2006 02:33:09 -0700
+Message-ID: <200606300933.k5U9X9ak001705@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:49299 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932184AbWF3Jg5 (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:50579 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932187AbWF3JhD (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Jun 2006 05:36:57 -0400
+	Fri, 30 Jun 2006 05:37:03 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, bunk@stusta.de
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, vda@ilport.com.ua
 
-From: Adrian Bunk <bunk@stusta.de>
+From: Denis Vlasenko <vda@ilport.com.ua>
 
-- make needlessly global code static
+- move big inlines into aic79xx_core.c and aic7xxx_core.c
 
-- #if 0 the following unused global functions:
-  - aic79xx_core.c: ahd_print_scb
-  - aic79xx_core.c: ahd_suspend
-  - aic79xx_core.c: ahd_resume
-  - aic79xx_core.c: ahd_dump_scbs
-  - aic79xx_osm.c: ahd_softc_comp
+- make ahd_delay just a wrapper around udelay
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+- mark a few functions static
+
+- fix spelling fix in error message
+
+Signed-off-by: Denis Vlasenko <vda@ilport.com.ua>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/aic7xxx/aic79xx.h         |   53 ----
- drivers/scsi/aic7xxx/aic79xx_core.c    |  260 ++++++++++++++---------
- drivers/scsi/aic7xxx/aic79xx_inline.h  |   30 --
- drivers/scsi/aic7xxx/aic79xx_osm.c     |    2 
- drivers/scsi/aic7xxx/aic79xx_osm.h     |    5 
- drivers/scsi/aic7xxx/aic79xx_osm_pci.c |    2 
- drivers/scsi/aic7xxx/aic79xx_pci.c     |    7 
- drivers/scsi/aic7xxx/aic79xx_proc.c    |    2 
- drivers/scsi/aic7xxx/aic7xxx.h         |    2 
- drivers/scsi/aic7xxx/aic7xxx_osm.c     |    2 
- drivers/scsi/aic7xxx/aic7xxx_osm.h     |    2 
- drivers/scsi/aic7xxx/aic7xxx_osm_pci.c |    2 
- drivers/scsi/aic7xxx/aic7xxx_pci.c     |    4 
- 13 files changed, 175 insertions(+), 198 deletions(-)
+ drivers/scsi/aic7xxx/aic79xx_core.c   |  601 +++++++++++++++++++++++-
+ drivers/scsi/aic7xxx/aic79xx_inline.h |  548 ---------------------
+ drivers/scsi/aic7xxx/aic79xx_osm.c    |    2 
+ drivers/scsi/aic7xxx/aic79xx_osm.h    |  130 -----
+ drivers/scsi/aic7xxx/aic7xxx_core.c   |  359 ++++++++++++++
+ drivers/scsi/aic7xxx/aic7xxx_inline.h |  336 -------------
+ drivers/scsi/aic7xxx/aic7xxx_osm.c    |    6 
+ drivers/scsi/aic7xxx/aic7xxx_osm.h    |   85 ---
+ 8 files changed, 1015 insertions(+), 1052 deletions(-)
 
-diff -puN drivers/scsi/aic7xxx/aic79xx_core.c~drivers-scsi-aic7xxx-possible-cleanups drivers/scsi/aic7xxx/aic79xx_core.c
---- a/drivers/scsi/aic7xxx/aic79xx_core.c~drivers-scsi-aic7xxx-possible-cleanups
+diff -puN drivers/scsi/aic7xxx/aic79xx_core.c~aic7xxx-deinline-large-functions-save-80k-of-text drivers/scsi/aic7xxx/aic79xx_core.c
+--- a/drivers/scsi/aic7xxx/aic79xx_core.c~aic7xxx-deinline-large-functions-save-80k-of-text
 +++ a/drivers/scsi/aic7xxx/aic79xx_core.c
-@@ -52,7 +52,7 @@
- 
- 
- /***************************** Lookup Tables **********************************/
--char *ahd_chip_names[] =
-+static char *ahd_chip_names[] =
- {
- 	"NONE",
- 	"aic7901",
-@@ -237,10 +237,33 @@ static int		ahd_handle_target_cmd(struct
- 					      struct target_cmd *cmd);
+@@ -50,6 +50,601 @@
+ #include <dev/aic7xxx/aicasm/aicasm_insformat.h>
  #endif
  
-+static int		ahd_abort_scbs(struct ahd_softc *ahd, int target,
-+				       char channel, int lun, u_int tag,
-+				       role_t role, uint32_t status);
-+static void		ahd_alloc_scbs(struct ahd_softc *ahd);
-+static void		ahd_busy_tcl(struct ahd_softc *ahd, u_int tcl,
-+				     u_int scbid);
-+static void		ahd_calc_residual(struct ahd_softc *ahd,
-+					  struct scb *scb);
-+static void		ahd_clear_critical_section(struct ahd_softc *ahd);
-+static void		ahd_clear_intstat(struct ahd_softc *ahd);
-+static void		ahd_enable_coalescing(struct ahd_softc *ahd,
-+					      int enable);
-+static u_int		ahd_find_busy_tcl(struct ahd_softc *ahd, u_int tcl);
-+static void		ahd_freeze_devq(struct ahd_softc *ahd,
-+					struct scb *scb);
-+static void		ahd_handle_scb_status(struct ahd_softc *ahd,
-+					      struct scb *scb);
-+static struct ahd_phase_table_entry* ahd_lookup_phase_entry(int phase);
-+static void		ahd_shutdown(void *arg);
-+static void		ahd_update_coalescing_values(struct ahd_softc *ahd,
-+						     u_int timer,
-+						     u_int maxcmds,
-+						     u_int mincmds);
-+static int		ahd_verify_vpd_cksum(struct vpd_config *vpd);
-+static int		ahd_wait_seeprom(struct ahd_softc *ahd);
-+
- /******************************** Private Inlines *****************************/
--static __inline void	ahd_assert_atn(struct ahd_softc *ahd);
--static __inline int	ahd_currently_packetized(struct ahd_softc *ahd);
--static __inline int	ahd_set_active_fifo(struct ahd_softc *ahd);
- 
- static __inline void
- ahd_assert_atn(struct ahd_softc *ahd)
-@@ -294,11 +317,44 @@ ahd_set_active_fifo(struct ahd_softc *ah
- 	}
- }
- 
-+static __inline void
-+ahd_unbusy_tcl(struct ahd_softc *ahd, u_int tcl)
++/***************************** Timer Facilities *******************************/
++#define ahd_timer_init init_timer
++#define ahd_timer_stop del_timer_sync
++typedef void ahd_linux_callback_t (u_long);
++static void
++ahd_timer_reset(ahd_timer_t *timer, int usec, ahd_callback_t *func, void *arg)
 +{
-+	ahd_busy_tcl(ahd, tcl, SCB_LIST_NULL);
++	struct ahd_softc *ahd;
++
++	ahd = (struct ahd_softc *)arg;
++	del_timer(timer);
++	timer->data = (u_long)arg;
++	timer->expires = jiffies + (usec * HZ)/1000000;
++	timer->function = (ahd_linux_callback_t*)func;
++	add_timer(timer);
 +}
 +
-+/*
-+ * Determine whether the sequencer reported a residual
-+ * for this SCB/transaction.
-+ */
-+static __inline void
-+ahd_update_residual(struct ahd_softc *ahd, struct scb *scb)
++/***************************** Low Level I/O **********************************/
++uint8_t
++ahd_inb(struct ahd_softc * ahd, long port)
 +{
-+	uint32_t sgptr;
++	uint8_t x;
 +
-+	sgptr = ahd_le32toh(scb->hscb->sgptr);
-+	if ((sgptr & SG_STATUS_VALID) != 0)
-+		ahd_calc_residual(ahd, scb);
++	if (ahd->tags[0] == BUS_SPACE_MEMIO) {
++		x = readb(ahd->bshs[0].maddr + port);
++	} else {
++		x = inb(ahd->bshs[(port) >> 8].ioport + ((port) & 0xFF));
++	}
++	mb();
++	return (x);
 +}
 +
-+static __inline void
-+ahd_complete_scb(struct ahd_softc *ahd, struct scb *scb)
++uint16_t
++ahd_inw_atomic(struct ahd_softc * ahd, long port)
 +{
-+	uint32_t sgptr;
++	uint8_t x;
 +
-+	sgptr = ahd_le32toh(scb->hscb->sgptr);
-+	if ((sgptr & SG_STATUS_VALID) != 0)
-+		ahd_handle_scb_status(ahd, scb);
-+	else
-+		ahd_done(ahd, scb);
++	if (ahd->tags[0] == BUS_SPACE_MEMIO) {
++		x = readw(ahd->bshs[0].maddr + port);
++	} else {
++		x = inw(ahd->bshs[(port) >> 8].ioport + ((port) & 0xFF));
++	}
++	mb();
++	return (x);
 +}
 +
++void
++ahd_outb(struct ahd_softc * ahd, long port, uint8_t val)
++{
++	if (ahd->tags[0] == BUS_SPACE_MEMIO) {
++		writeb(val, ahd->bshs[0].maddr + port);
++	} else {
++		outb(val, ahd->bshs[(port) >> 8].ioport + (port & 0xFF));
++	}
++	mb();
++}
 +
- /************************* Sequencer Execution Control ************************/
- /*
-  * Restart the sequencer program from address zero
-  */
--void
-+static void
- ahd_restart(struct ahd_softc *ahd)
- {
- 
-@@ -342,7 +398,7 @@ ahd_restart(struct ahd_softc *ahd)
- 	ahd_unpause(ahd);
- }
- 
--void
-+static void
- ahd_clear_fifo(struct ahd_softc *ahd, u_int fifo)
- {
- 	ahd_mode_state	 saved_modes;
-@@ -366,7 +422,7 @@ ahd_clear_fifo(struct ahd_softc *ahd, u_
-  * Flush and completed commands that are sitting in the command
-  * complete queues down on the chip but have yet to be dma'ed back up.
-  */
--void
-+static void
- ahd_flush_qoutfifo(struct ahd_softc *ahd)
- {
- 	struct		scb *scb;
-@@ -905,6 +961,51 @@ ahd_handle_hwerrint(struct ahd_softc *ah
- 	ahd_free(ahd);
- }
- 
-+#ifdef AHD_DEBUG
-+static void
-+ahd_dump_sglist(struct scb *scb)
++void
++ahd_outw_atomic(struct ahd_softc * ahd, long port, uint16_t val)
++{
++	if (ahd->tags[0] == BUS_SPACE_MEMIO) {
++		writew(val, ahd->bshs[0].maddr + port);
++	} else {
++		outw(val, ahd->bshs[(port) >> 8].ioport + (port & 0xFF));
++	}
++	mb();
++}
++
++void
++ahd_outsb(struct ahd_softc * ahd, long port, uint8_t *array, int count)
 +{
 +	int i;
 +
-+	if (scb->sg_count > 0) {
-+		if ((scb->ahd_softc->flags & AHD_64BIT_ADDRESSING) != 0) {
-+			struct ahd_dma64_seg *sg_list;
++	/*
++	 * There is probably a more efficient way to do this on Linux
++	 * but we don't use this for anything speed critical and this
++	 * should work.
++	 */
++	for (i = 0; i < count; i++)
++		ahd_outb(ahd, port, *array++);
++}
 +
-+			sg_list = (struct ahd_dma64_seg*)scb->sg_list;
-+			for (i = 0; i < scb->sg_count; i++) {
-+				uint64_t addr;
-+				uint32_t len;
++void
++ahd_insb(struct ahd_softc * ahd, long port, uint8_t *array, int count)
++{
++	int i;
 +
-+				addr = ahd_le64toh(sg_list[i].addr);
-+				len = ahd_le32toh(sg_list[i].len);
-+				printf("sg[%d] - Addr 0x%x%x : Length %d%s\n",
-+				       i,
-+				       (uint32_t)((addr >> 32) & 0xFFFFFFFF),
-+				       (uint32_t)(addr & 0xFFFFFFFF),
-+				       sg_list[i].len & AHD_SG_LEN_MASK,
-+				       (sg_list[i].len & AHD_DMA_LAST_SEG)
-+				     ? " Last" : "");
-+			}
-+		} else {
-+			struct ahd_dma_seg *sg_list;
++	/*
++	 * There is probably a more efficient way to do this on Linux
++	 * but we don't use this for anything speed critical and this
++	 * should work.
++	 */
++	for (i = 0; i < count; i++)
++		*array++ = ahd_inb(ahd, port);
++}
 +
-+			sg_list = (struct ahd_dma_seg*)scb->sg_list;
-+			for (i = 0; i < scb->sg_count; i++) {
-+				uint32_t len;
++/************************ Sequencer Execution Control *************************/
++void
++ahd_set_modes(struct ahd_softc *ahd, ahd_mode src, ahd_mode dst)
++{
++	if (ahd->src_mode == src && ahd->dst_mode == dst)
++		return;
++#ifdef AHD_DEBUG
++	if (ahd->src_mode == AHD_MODE_UNKNOWN
++	 || ahd->dst_mode == AHD_MODE_UNKNOWN)
++		panic("Setting mode prior to saving it.\n");
++	if ((ahd_debug & AHD_SHOW_MODEPTR) != 0)
++		printf("%s: Setting mode 0x%x\n", ahd_name(ahd),
++		       ahd_build_mode_state(ahd, src, dst));
++#endif
++	ahd_outb(ahd, MODE_PTR, ahd_build_mode_state(ahd, src, dst));
++	ahd->src_mode = src;
++	ahd->dst_mode = dst;
++}
 +
-+				len = ahd_le32toh(sg_list[i].len);
-+				printf("sg[%d] - Addr 0x%x%x : Length %d%s\n",
-+				       i,
-+				       (len & AHD_SG_HIGH_ADDR_MASK) >> 24,
-+				       ahd_le32toh(sg_list[i].addr),
-+				       len & AHD_SG_LEN_MASK,
-+				       len & AHD_DMA_LAST_SEG ? " Last" : "");
-+			}
-+		}
++void
++ahd_update_modes(struct ahd_softc *ahd)
++{
++	ahd_mode_state mode_ptr;
++	ahd_mode src;
++	ahd_mode dst;
++
++	mode_ptr = ahd_inb(ahd, MODE_PTR);
++#ifdef AHD_DEBUG
++	if ((ahd_debug & AHD_SHOW_MODEPTR) != 0)
++		printf("Reading mode 0x%x\n", mode_ptr);
++#endif
++	ahd_extract_mode_state(ahd, mode_ptr, &src, &dst);
++	ahd_known_modes(ahd, src, dst);
++}
++
++ahd_mode_state
++ahd_save_modes(struct ahd_softc *ahd)
++{
++	if (ahd->src_mode == AHD_MODE_UNKNOWN
++	 || ahd->dst_mode == AHD_MODE_UNKNOWN)
++		ahd_update_modes(ahd);
++
++	return (ahd_build_mode_state(ahd, ahd->src_mode, ahd->dst_mode));
++}
++
++void
++ahd_restore_modes(struct ahd_softc *ahd, ahd_mode_state state)
++{
++	ahd_mode src;
++	ahd_mode dst;
++
++	ahd_extract_mode_state(ahd, state, &src, &dst);
++	ahd_set_modes(ahd, src, dst);
++}
++
++/*
++ * Allow the sequencer to continue program execution.
++ * We check here to ensure that no additional interrupt
++ * sources that would cause the sequencer to halt have been
++ * asserted.  If, for example, a SCSI bus reset is detected
++ * while we are fielding a different, pausing, interrupt type,
++ * we don't want to release the sequencer before going back
++ * into our interrupt handler and dealing with this new
++ * condition.
++ */
++void
++ahd_unpause(struct ahd_softc *ahd)
++{
++	/*
++	 * Automatically restore our modes to those saved
++	 * prior to the first change of the mode.
++	 */
++	if (ahd->saved_src_mode != AHD_MODE_UNKNOWN
++	 && ahd->saved_dst_mode != AHD_MODE_UNKNOWN) {
++		if ((ahd->flags & AHD_UPDATE_PEND_CMDS) != 0)
++			ahd_reset_cmds_pending(ahd);
++		ahd_set_modes(ahd, ahd->saved_src_mode, ahd->saved_dst_mode);
++	}
++
++	if ((ahd_inb(ahd, INTSTAT) & ~CMDCMPLT) == 0)
++		ahd_outb(ahd, HCNTRL, ahd->unpause);
++
++	ahd_known_modes(ahd, AHD_MODE_UNKNOWN, AHD_MODE_UNKNOWN);
++}
++
++/*********************** Scatter Gather List Handling *************************/
++void *
++ahd_sg_setup(struct ahd_softc *ahd, struct scb *scb,
++	     void *sgptr, dma_addr_t addr, bus_size_t len, int last)
++{
++	scb->sg_count++;
++	if (sizeof(dma_addr_t) > 4
++	 && (ahd->flags & AHD_64BIT_ADDRESSING) != 0) {
++		struct ahd_dma64_seg *sg;
++
++		sg = (struct ahd_dma64_seg *)sgptr;
++		sg->addr = ahd_htole64(addr);
++		sg->len = ahd_htole32(len | (last ? AHD_DMA_LAST_SEG : 0));
++		return (sg + 1);
++	} else {
++		struct ahd_dma_seg *sg;
++
++		sg = (struct ahd_dma_seg *)sgptr;
++		sg->addr = ahd_htole32(addr & 0xFFFFFFFF);
++		sg->len = ahd_htole32(len | ((addr >> 8) & 0x7F000000)
++				    | (last ? AHD_DMA_LAST_SEG : 0));
++		return (sg + 1);
 +	}
 +}
-+#endif  /*  AHD_DEBUG  */
 +
- void
- ahd_handle_seqint(struct ahd_softc *ahd, u_int intstat)
- {
-@@ -2523,7 +2624,7 @@ ahd_force_renegotiation(struct ahd_softc
++static void
++ahd_setup_scb_common(struct ahd_softc *ahd, struct scb *scb)
++{
++	/* XXX Handle target mode SCBs. */
++	scb->crc_retry_count = 0;
++	if ((scb->flags & SCB_PACKETIZED) != 0) {
++		/* XXX what about ACA??  It is type 4, but TAG_TYPE == 0x3. */
++		scb->hscb->task_attribute = scb->hscb->control & SCB_TAG_TYPE;
++	} else {
++		if (ahd_get_transfer_length(scb) & 0x01)
++			scb->hscb->task_attribute = SCB_XFERLEN_ODD;
++		else
++			scb->hscb->task_attribute = 0;
++	}
++
++	if (scb->hscb->cdb_len <= MAX_CDB_LEN_WITH_SENSE_ADDR
++	 || (scb->hscb->cdb_len & SCB_CDB_LEN_PTR) != 0)
++		scb->hscb->shared_data.idata.cdb_plus_saddr.sense_addr =
++		    ahd_htole32(scb->sense_busaddr);
++}
++
++static void
++ahd_setup_data_scb(struct ahd_softc *ahd, struct scb *scb)
++{
++	/*
++	 * Copy the first SG into the "current" data ponter area.
++	 */
++	if ((ahd->flags & AHD_64BIT_ADDRESSING) != 0) {
++		struct ahd_dma64_seg *sg;
++
++		sg = (struct ahd_dma64_seg *)scb->sg_list;
++		scb->hscb->dataptr = sg->addr;
++		scb->hscb->datacnt = sg->len;
++	} else {
++		struct ahd_dma_seg *sg;
++		uint32_t *dataptr_words;
++
++		sg = (struct ahd_dma_seg *)scb->sg_list;
++		dataptr_words = (uint32_t*)&scb->hscb->dataptr;
++		dataptr_words[0] = sg->addr;
++		dataptr_words[1] = 0;
++		if ((ahd->flags & AHD_39BIT_ADDRESSING) != 0) {
++			uint64_t high_addr;
++
++			high_addr = ahd_le32toh(sg->len) & 0x7F000000;
++			scb->hscb->dataptr |= ahd_htole64(high_addr << 8);
++		}
++		scb->hscb->datacnt = sg->len;
++	}
++	/*
++	 * Note where to find the SG entries in bus space.
++	 * We also set the full residual flag which the
++	 * sequencer will clear as soon as a data transfer
++	 * occurs.
++	 */
++	scb->hscb->sgptr = ahd_htole32(scb->sg_list_busaddr|SG_FULL_RESID);
++}
++
++/*********************** Miscelaneous Support Functions ***********************/
++uint16_t
++ahd_inw(struct ahd_softc *ahd, u_int port)
++{
++	/*
++	 * Read high byte first as some registers increment
++	 * or have other side effects when the low byte is
++	 * read.
++	 */
++	return ((ahd_inb(ahd, port+1) << 8) | ahd_inb(ahd, port));
++}
++
++void
++ahd_outw(struct ahd_softc *ahd, u_int port, u_int value)
++{
++	/*
++	 * Write low byte first to accomodate registers
++	 * such as PRGMCNT where the order maters.
++	 */
++	ahd_outb(ahd, port, value & 0xFF);
++	ahd_outb(ahd, port+1, (value >> 8) & 0xFF);
++}
++
++uint32_t
++ahd_inl(struct ahd_softc *ahd, u_int port)
++{
++	return ((ahd_inb(ahd, port))
++	      | (ahd_inb(ahd, port+1) << 8)
++	      | (ahd_inb(ahd, port+2) << 16)
++	      | (ahd_inb(ahd, port+3) << 24));
++}
++
++void
++ahd_outl(struct ahd_softc *ahd, u_int port, uint32_t value)
++{
++	ahd_outb(ahd, port, (value) & 0xFF);
++	ahd_outb(ahd, port+1, ((value) >> 8) & 0xFF);
++	ahd_outb(ahd, port+2, ((value) >> 16) & 0xFF);
++	ahd_outb(ahd, port+3, ((value) >> 24) & 0xFF);
++}
++
++uint64_t
++ahd_inq(struct ahd_softc *ahd, u_int port)
++{
++	return ((ahd_inb(ahd, port))
++	      | (ahd_inb(ahd, port+1) << 8)
++	      | (ahd_inb(ahd, port+2) << 16)
++	      | (ahd_inb(ahd, port+3) << 24)
++	      | (((uint64_t)ahd_inb(ahd, port+4)) << 32)
++	      | (((uint64_t)ahd_inb(ahd, port+5)) << 40)
++	      | (((uint64_t)ahd_inb(ahd, port+6)) << 48)
++	      | (((uint64_t)ahd_inb(ahd, port+7)) << 56));
++}
++
++void
++ahd_outq(struct ahd_softc *ahd, u_int port, uint64_t value)
++{
++	ahd_outb(ahd, port, value & 0xFF);
++	ahd_outb(ahd, port+1, (value >> 8) & 0xFF);
++	ahd_outb(ahd, port+2, (value >> 16) & 0xFF);
++	ahd_outb(ahd, port+3, (value >> 24) & 0xFF);
++	ahd_outb(ahd, port+4, (value >> 32) & 0xFF);
++	ahd_outb(ahd, port+5, (value >> 40) & 0xFF);
++	ahd_outb(ahd, port+6, (value >> 48) & 0xFF);
++	ahd_outb(ahd, port+7, (value >> 56) & 0xFF);
++}
++
++u_int
++ahd_inb_scbram(struct ahd_softc *ahd, u_int offset)
++{
++	u_int value;
++
++	/*
++	 * Workaround PCI-X Rev A. hardware bug.
++	 * After a host read of SCB memory, the chip
++	 * may become confused into thinking prefetch
++	 * was required.  This starts the discard timer
++	 * running and can cause an unexpected discard
++	 * timer interrupt.  The work around is to read
++	 * a normal register prior to the exhaustion of
++	 * the discard timer.  The mode pointer register
++	 * has no side effects and so serves well for
++	 * this purpose.
++	 *
++	 * Razor #528
++	 */
++	value = ahd_inb(ahd, offset);
++	if ((ahd->bugs & AHD_PCIX_SCBRAM_RD_BUG) != 0)
++		ahd_inb(ahd, MODE_PTR);
++	return (value);
++}
++
++u_int
++ahd_inw_scbram(struct ahd_softc *ahd, u_int offset)
++{
++	return (ahd_inb_scbram(ahd, offset)
++	      | (ahd_inb_scbram(ahd, offset+1) << 8));
++}
++
++uint32_t
++ahd_inl_scbram(struct ahd_softc *ahd, u_int offset)
++{
++	return (ahd_inw_scbram(ahd, offset)
++	      | (ahd_inw_scbram(ahd, offset+2) << 16));
++}
++
++uint64_t
++ahd_inq_scbram(struct ahd_softc *ahd, u_int offset)
++{
++	return (ahd_inl_scbram(ahd, offset)
++	      | ((uint64_t)ahd_inl_scbram(ahd, offset+4)) << 32);
++}
++
++struct scb *
++ahd_lookup_scb(struct ahd_softc *ahd, u_int tag)
++{
++	struct scb* scb;
++
++	if (tag >= AHD_SCB_MAX)
++		return (NULL);
++	scb = ahd->scb_data.scbindex[tag];
++	if (scb != NULL)
++		ahd_sync_scb(ahd, scb,
++			     BUS_DMASYNC_POSTREAD|BUS_DMASYNC_POSTWRITE);
++	return (scb);
++}
++
++static void
++ahd_swap_with_next_hscb(struct ahd_softc *ahd, struct scb *scb)
++{
++	struct	 hardware_scb *q_hscb;
++	struct	 map_node *q_hscb_map;
++	uint32_t saved_hscb_busaddr;
++
++	/*
++	 * Our queuing method is a bit tricky.  The card
++	 * knows in advance which HSCB (by address) to download,
++	 * and we can't disappoint it.  To achieve this, the next
++	 * HSCB to download is saved off in ahd->next_queued_hscb.
++	 * When we are called to queue "an arbitrary scb",
++	 * we copy the contents of the incoming HSCB to the one
++	 * the sequencer knows about, swap HSCB pointers and
++	 * finally assign the SCB to the tag indexed location
++	 * in the scb_array.  This makes sure that we can still
++	 * locate the correct SCB by SCB_TAG.
++	 */
++	q_hscb = ahd->next_queued_hscb;
++	q_hscb_map = ahd->next_queued_hscb_map;
++	saved_hscb_busaddr = q_hscb->hscb_busaddr;
++	memcpy(q_hscb, scb->hscb, sizeof(*scb->hscb));
++	q_hscb->hscb_busaddr = saved_hscb_busaddr;
++	q_hscb->next_hscb_busaddr = scb->hscb->hscb_busaddr;
++
++	/* Now swap HSCB pointers. */
++	ahd->next_queued_hscb = scb->hscb;
++	ahd->next_queued_hscb_map = scb->hscb_map;
++	scb->hscb = q_hscb;
++	scb->hscb_map = q_hscb_map;
++
++	/* Now define the mapping from tag to SCB in the scbindex */
++	ahd->scb_data.scbindex[SCB_GET_TAG(scb)] = scb;
++}
++
++/*
++ * Tell the sequencer about a new transaction to execute.
++ */
++void
++ahd_queue_scb(struct ahd_softc *ahd, struct scb *scb)
++{
++	ahd_swap_with_next_hscb(ahd, scb);
++
++	if (SCBID_IS_NULL(SCB_GET_TAG(scb)))
++		panic("Attempt to queue invalid SCB tag %x\n",
++		      SCB_GET_TAG(scb));
++
++	/*
++	 * Keep a history of SCBs we've downloaded in the qinfifo.
++	 */
++	ahd->qinfifo[AHD_QIN_WRAP(ahd->qinfifonext)] = SCB_GET_TAG(scb);
++	ahd->qinfifonext++;
++
++	if (scb->sg_count != 0)
++		ahd_setup_data_scb(ahd, scb);
++	else
++		ahd_setup_noxfer_scb(ahd, scb);
++	ahd_setup_scb_common(ahd, scb);
++
++	/*
++	 * Make sure our data is consistent from the
++	 * perspective of the adapter.
++	 */
++	ahd_sync_scb(ahd, scb, BUS_DMASYNC_PREREAD|BUS_DMASYNC_PREWRITE);
++
++#ifdef AHD_DEBUG
++	if ((ahd_debug & AHD_SHOW_QUEUE) != 0) {
++		uint64_t host_dataptr;
++
++		host_dataptr = ahd_le64toh(scb->hscb->dataptr);
++		printf("%s: Queueing SCB %d:0x%x bus addr 0x%x - 0x%x%x/0x%x\n",
++		       ahd_name(ahd),
++		       SCB_GET_TAG(scb), scb->hscb->scsiid,
++		       ahd_le32toh(scb->hscb->hscb_busaddr),
++		       (u_int)((host_dataptr >> 32) & 0xFFFFFFFF),
++		       (u_int)(host_dataptr & 0xFFFFFFFF),
++		       ahd_le32toh(scb->hscb->datacnt));
++	}
++#endif
++	/* Tell the adapter about the newly queued SCB */
++	ahd_set_hnscb_qoff(ahd, ahd->qinfifonext);
++}
++
++/************************** Interrupt Processing ******************************/
++/*
++ * See if the firmware has posted any completed commands
++ * into our in-core command complete fifos.
++ */
++#define AHD_RUN_QOUTFIFO 0x1
++#define AHD_RUN_TQINFIFO 0x2
++static u_int
++ahd_check_cmdcmpltqueues(struct ahd_softc *ahd)
++{
++	u_int retval;
++
++	retval = 0;
++	ahd_dmamap_sync(ahd, ahd->shared_data_dmat, ahd->shared_data_map.dmamap,
++			/*offset*/ahd->qoutfifonext * sizeof(*ahd->qoutfifo),
++			/*len*/sizeof(*ahd->qoutfifo), BUS_DMASYNC_POSTREAD);
++	if (ahd->qoutfifo[ahd->qoutfifonext].valid_tag
++	  == ahd->qoutfifonext_valid_tag)
++		retval |= AHD_RUN_QOUTFIFO;
++#ifdef AHD_TARGET_MODE
++	if ((ahd->flags & AHD_TARGETROLE) != 0
++	 && (ahd->flags & AHD_TQINFIFO_BLOCKED) == 0) {
++		ahd_dmamap_sync(ahd, ahd->shared_data_dmat,
++				ahd->shared_data_map.dmamap,
++				ahd_targetcmd_offset(ahd, ahd->tqinfifofnext),
++				/*len*/sizeof(struct target_cmd),
++				BUS_DMASYNC_POSTREAD);
++		if (ahd->targetcmds[ahd->tqinfifonext].cmd_valid != 0)
++			retval |= AHD_RUN_TQINFIFO;
++	}
++#endif
++	return (retval);
++}
++
++/*
++ * Catch an interrupt from the adapter
++ */
++int
++ahd_intr(struct ahd_softc *ahd)
++{
++	u_int	intstat;
++
++	if ((ahd->pause & INTEN) == 0) {
++		/*
++		 * Our interrupt is not enabled on the chip
++		 * and may be disabled for re-entrancy reasons,
++		 * so just return.  This is likely just a shared
++		 * interrupt.
++		 */
++		return (0);
++	}
++
++	/*
++	 * Instead of directly reading the interrupt status register,
++	 * infer the cause of the interrupt by checking our in-core
++	 * completion queues.  This avoids a costly PCI bus read in
++	 * most cases.
++	 */
++	if ((ahd->flags & AHD_ALL_INTERRUPTS) == 0
++	 && (ahd_check_cmdcmpltqueues(ahd) != 0))
++		intstat = CMDCMPLT;
++	else
++		intstat = ahd_inb(ahd, INTSTAT);
++
++	if ((intstat & INT_PEND) == 0)
++		return (0);
++
++	if (intstat & CMDCMPLT) {
++		ahd_outb(ahd, CLRINT, CLRCMDINT);
++
++		/*
++		 * Ensure that the chip sees that we've cleared
++		 * this interrupt before we walk the output fifo.
++		 * Otherwise, we may, due to posted bus writes,
++		 * clear the interrupt after we finish the scan,
++		 * and after the sequencer has added new entries
++		 * and asserted the interrupt again.
++		 */
++		if ((ahd->bugs & AHD_INTCOLLISION_BUG) != 0) {
++			if (ahd_is_paused(ahd)) {
++				/*
++				 * Potentially lost SEQINT.
++				 * If SEQINTCODE is non-zero,
++				 * simulate the SEQINT.
++				 */
++				if (ahd_inb(ahd, SEQINTCODE) != NO_SEQINT)
++					intstat |= SEQINT;
++			}
++		} else {
++			ahd_flush_device_writes(ahd);
++		}
++		ahd_run_qoutfifo(ahd);
++		ahd->cmdcmplt_counts[ahd->cmdcmplt_bucket]++;
++		ahd->cmdcmplt_total++;
++#ifdef AHD_TARGET_MODE
++		if ((ahd->flags & AHD_TARGETROLE) != 0)
++			ahd_run_tqinfifo(ahd, /*paused*/FALSE);
++#endif
++	}
++
++	/*
++	 * Handle statuses that may invalidate our cached
++	 * copy of INTSTAT separately.
++	 */
++	if (intstat == 0xFF && (ahd->features & AHD_REMOVABLE) != 0) {
++		/* Hot eject.  Do nothing */
++	} else if (intstat & HWERRINT) {
++		ahd_handle_hwerrint(ahd);
++	} else if ((intstat & (PCIINT|SPLTINT)) != 0) {
++		ahd->bus_intr(ahd);
++	} else {
++
++		if ((intstat & SEQINT) != 0)
++			ahd_handle_seqint(ahd, intstat);
++
++		if ((intstat & SCSIINT) != 0)
++			ahd_handle_scsiint(ahd, intstat);
++	}
++	return (1);
++}
+ 
+ /***************************** Lookup Tables **********************************/
+ static char *ahd_chip_names[] =
+@@ -303,7 +898,7 @@ ahd_currently_packetized(struct ahd_soft
+ 	return (packetized);
  }
  
- #define AHD_MAX_STEPS 2000
--void
-+static void
- ahd_clear_critical_section(struct ahd_softc *ahd)
+-static __inline int
++static int
+ ahd_set_active_fifo(struct ahd_softc *ahd)
  {
- 	ahd_mode_state	saved_modes;
-@@ -2646,7 +2747,7 @@ ahd_clear_critical_section(struct ahd_so
- /*
-  * Clear any pending interrupt status.
+ 	u_int active_fifo;
+@@ -7171,7 +7766,7 @@ ahd_resume(struct ahd_softc *ahd)
+  * scbid that should be restored once manipualtion
+  * of the TCL entry is complete.
   */
--void
-+static void
- ahd_clear_intstat(struct ahd_softc *ahd)
+-static __inline u_int
++static u_int
+ ahd_index_busy_tcl(struct ahd_softc *ahd, u_int *saved_scbid, u_int tcl)
  {
- 	AHD_ASSERT_MODES(ahd, ~(AHD_MODE_UNKNOWN_MSK|AHD_MODE_CFG_MSK),
-@@ -2677,6 +2778,8 @@ ahd_clear_intstat(struct ahd_softc *ahd)
- #ifdef AHD_DEBUG
- uint32_t ahd_debug = AHD_DEBUG_OPTS;
- #endif
-+
-+#if 0
- void
- ahd_print_scb(struct scb *scb)
- {
-@@ -2701,49 +2804,7 @@ ahd_print_scb(struct scb *scb)
- 	       SCB_GET_TAG(scb));
- 	ahd_dump_sglist(scb);
+ 	/*
+@@ -8287,7 +8882,7 @@ ahd_handle_scsi_status(struct ahd_softc 
+ 		break;
+ 	}
+ 	case SCSI_STATUS_OK:
+-		printf("%s: Interrupted for staus of 0???\n",
++		printf("%s: Interrupted for status of 0???\n",
+ 		       ahd_name(ahd));
+ 		/* FALLTHROUGH */
+ 	default:
+diff -puN drivers/scsi/aic7xxx/aic79xx_inline.h~aic7xxx-deinline-large-functions-save-80k-of-text drivers/scsi/aic7xxx/aic79xx_inline.h
+--- a/drivers/scsi/aic7xxx/aic79xx_inline.h~aic7xxx-deinline-large-functions-save-80k-of-text
++++ a/drivers/scsi/aic7xxx/aic79xx_inline.h
+@@ -63,18 +63,18 @@ static __inline ahd_mode_state ahd_build
+ static __inline void ahd_extract_mode_state(struct ahd_softc *ahd,
+ 					    ahd_mode_state state,
+ 					    ahd_mode *src, ahd_mode *dst);
+-static __inline void ahd_set_modes(struct ahd_softc *ahd, ahd_mode src,
++void ahd_set_modes(struct ahd_softc *ahd, ahd_mode src,
+ 				   ahd_mode dst);
+-static __inline void ahd_update_modes(struct ahd_softc *ahd);
++void ahd_update_modes(struct ahd_softc *ahd);
+ static __inline void ahd_assert_modes(struct ahd_softc *ahd, ahd_mode srcmode,
+ 				      ahd_mode dstmode, const char *file,
+ 				      int line);
+-static __inline ahd_mode_state ahd_save_modes(struct ahd_softc *ahd);
+-static __inline void ahd_restore_modes(struct ahd_softc *ahd,
++ahd_mode_state ahd_save_modes(struct ahd_softc *ahd);
++void ahd_restore_modes(struct ahd_softc *ahd,
+ 				       ahd_mode_state state);
+ static __inline int  ahd_is_paused(struct ahd_softc *ahd);
+ static __inline void ahd_pause(struct ahd_softc *ahd);
+-static __inline void ahd_unpause(struct ahd_softc *ahd);
++void ahd_unpause(struct ahd_softc *ahd);
+ 
+ static __inline void
+ ahd_known_modes(struct ahd_softc *ahd, ahd_mode src, ahd_mode dst)
+@@ -100,40 +100,6 @@ ahd_extract_mode_state(struct ahd_softc 
  }
+ 
+ static __inline void
+-ahd_set_modes(struct ahd_softc *ahd, ahd_mode src, ahd_mode dst)
+-{
+-	if (ahd->src_mode == src && ahd->dst_mode == dst)
+-		return;
+-#ifdef AHD_DEBUG
+-	if (ahd->src_mode == AHD_MODE_UNKNOWN
+-	 || ahd->dst_mode == AHD_MODE_UNKNOWN)
+-		panic("Setting mode prior to saving it.\n");
+-	if ((ahd_debug & AHD_SHOW_MODEPTR) != 0)
+-		printf("%s: Setting mode 0x%x\n", ahd_name(ahd),
+-		       ahd_build_mode_state(ahd, src, dst));
+-#endif
+-	ahd_outb(ahd, MODE_PTR, ahd_build_mode_state(ahd, src, dst));
+-	ahd->src_mode = src;
+-	ahd->dst_mode = dst;
+-}
 -
--void
--ahd_dump_sglist(struct scb *scb)
+-static __inline void
+-ahd_update_modes(struct ahd_softc *ahd)
+-{
+-	ahd_mode_state mode_ptr;
+-	ahd_mode src;
+-	ahd_mode dst;
+-
+-	mode_ptr = ahd_inb(ahd, MODE_PTR);
+-#ifdef AHD_DEBUG
+-	if ((ahd_debug & AHD_SHOW_MODEPTR) != 0)
+-		printf("Reading mode 0x%x\n", mode_ptr);
+-#endif
+-	ahd_extract_mode_state(ahd, mode_ptr, &src, &dst);
+-	ahd_known_modes(ahd, src, dst);
+-}
+-
+-static __inline void
+ ahd_assert_modes(struct ahd_softc *ahd, ahd_mode srcmode,
+ 		 ahd_mode dstmode, const char *file, int line)
+ {
+@@ -146,26 +112,6 @@ ahd_assert_modes(struct ahd_softc *ahd, 
+ #endif
+ }
+ 
+-static __inline ahd_mode_state
+-ahd_save_modes(struct ahd_softc *ahd)
+-{
+-	if (ahd->src_mode == AHD_MODE_UNKNOWN
+-	 || ahd->dst_mode == AHD_MODE_UNKNOWN)
+-		ahd_update_modes(ahd);
+-
+-	return (ahd_build_mode_state(ahd, ahd->src_mode, ahd->dst_mode));
+-}
+-
+-static __inline void
+-ahd_restore_modes(struct ahd_softc *ahd, ahd_mode_state state)
+-{
+-	ahd_mode src;
+-	ahd_mode dst;
+-
+-	ahd_extract_mode_state(ahd, state, &src, &dst);
+-	ahd_set_modes(ahd, src, dst);
+-}
+-
+ #define AHD_ASSERT_MODES(ahd, source, dest) \
+ 	ahd_assert_modes(ahd, source, dest, __FILE__, __LINE__);
+ 
+@@ -199,129 +145,13 @@ ahd_pause(struct ahd_softc *ahd)
+ 		;
+ }
+ 
+-/*
+- * Allow the sequencer to continue program execution.
+- * We check here to ensure that no additional interrupt
+- * sources that would cause the sequencer to halt have been
+- * asserted.  If, for example, a SCSI bus reset is detected
+- * while we are fielding a different, pausing, interrupt type,
+- * we don't want to release the sequencer before going back
+- * into our interrupt handler and dealing with this new
+- * condition.
+- */
+-static __inline void
+-ahd_unpause(struct ahd_softc *ahd)
+-{
+-	/*
+-	 * Automatically restore our modes to those saved
+-	 * prior to the first change of the mode.
+-	 */
+-	if (ahd->saved_src_mode != AHD_MODE_UNKNOWN
+-	 && ahd->saved_dst_mode != AHD_MODE_UNKNOWN) {
+-		if ((ahd->flags & AHD_UPDATE_PEND_CMDS) != 0)
+-			ahd_reset_cmds_pending(ahd);
+-		ahd_set_modes(ahd, ahd->saved_src_mode, ahd->saved_dst_mode);
+-	}
+-
+-	if ((ahd_inb(ahd, INTSTAT) & ~CMDCMPLT) == 0)
+-		ahd_outb(ahd, HCNTRL, ahd->unpause);
+-
+-	ahd_known_modes(ahd, AHD_MODE_UNKNOWN, AHD_MODE_UNKNOWN);
+-}
+-
+ /*********************** Scatter Gather List Handling *************************/
+-static __inline void	*ahd_sg_setup(struct ahd_softc *ahd, struct scb *scb,
++void	*ahd_sg_setup(struct ahd_softc *ahd, struct scb *scb,
+ 				      void *sgptr, dma_addr_t addr,
+ 				      bus_size_t len, int last);
+-static __inline void	 ahd_setup_scb_common(struct ahd_softc *ahd,
+-					      struct scb *scb);
+-static __inline void	 ahd_setup_data_scb(struct ahd_softc *ahd,
+-					    struct scb *scb);
+ static __inline void	 ahd_setup_noxfer_scb(struct ahd_softc *ahd,
+ 					      struct scb *scb);
+ 
+-static __inline void *
+-ahd_sg_setup(struct ahd_softc *ahd, struct scb *scb,
+-	     void *sgptr, dma_addr_t addr, bus_size_t len, int last)
+-{
+-	scb->sg_count++;
+-	if (sizeof(dma_addr_t) > 4
+-	 && (ahd->flags & AHD_64BIT_ADDRESSING) != 0) {
+-		struct ahd_dma64_seg *sg;
+-
+-		sg = (struct ahd_dma64_seg *)sgptr;
+-		sg->addr = ahd_htole64(addr);
+-		sg->len = ahd_htole32(len | (last ? AHD_DMA_LAST_SEG : 0));
+-		return (sg + 1);
+-	} else {
+-		struct ahd_dma_seg *sg;
+-
+-		sg = (struct ahd_dma_seg *)sgptr;
+-		sg->addr = ahd_htole32(addr & 0xFFFFFFFF);
+-		sg->len = ahd_htole32(len | ((addr >> 8) & 0x7F000000)
+-				    | (last ? AHD_DMA_LAST_SEG : 0));
+-		return (sg + 1);
+-	}
+-}
+-
+-static __inline void
+-ahd_setup_scb_common(struct ahd_softc *ahd, struct scb *scb)
+-{
+-	/* XXX Handle target mode SCBs. */
+-	scb->crc_retry_count = 0;
+-	if ((scb->flags & SCB_PACKETIZED) != 0) {
+-		/* XXX what about ACA??  It is type 4, but TAG_TYPE == 0x3. */
+-		scb->hscb->task_attribute = scb->hscb->control & SCB_TAG_TYPE;
+-	} else {
+-		if (ahd_get_transfer_length(scb) & 0x01)
+-			scb->hscb->task_attribute = SCB_XFERLEN_ODD;
+-		else
+-			scb->hscb->task_attribute = 0;
+-	}
+-
+-	if (scb->hscb->cdb_len <= MAX_CDB_LEN_WITH_SENSE_ADDR
+-	 || (scb->hscb->cdb_len & SCB_CDB_LEN_PTR) != 0)
+-		scb->hscb->shared_data.idata.cdb_plus_saddr.sense_addr =
+-		    ahd_htole32(scb->sense_busaddr);
+-}
+-
+-static __inline void
+-ahd_setup_data_scb(struct ahd_softc *ahd, struct scb *scb)
+-{
+-	/*
+-	 * Copy the first SG into the "current" data ponter area.
+-	 */
+-	if ((ahd->flags & AHD_64BIT_ADDRESSING) != 0) {
+-		struct ahd_dma64_seg *sg;
+-
+-		sg = (struct ahd_dma64_seg *)scb->sg_list;
+-		scb->hscb->dataptr = sg->addr;
+-		scb->hscb->datacnt = sg->len;
+-	} else {
+-		struct ahd_dma_seg *sg;
+-		uint32_t *dataptr_words;
+-
+-		sg = (struct ahd_dma_seg *)scb->sg_list;
+-		dataptr_words = (uint32_t*)&scb->hscb->dataptr;
+-		dataptr_words[0] = sg->addr;
+-		dataptr_words[1] = 0;
+-		if ((ahd->flags & AHD_39BIT_ADDRESSING) != 0) {
+-			uint64_t high_addr;
+-
+-			high_addr = ahd_le32toh(sg->len) & 0x7F000000;
+-			scb->hscb->dataptr |= ahd_htole64(high_addr << 8);
+-		}
+-		scb->hscb->datacnt = sg->len;
+-	}
+-	/*
+-	 * Note where to find the SG entries in bus space.
+-	 * We also set the full residual flag which the 
+-	 * sequencer will clear as soon as a data transfer
+-	 * occurs.
+-	 */
+-	scb->hscb->sgptr = ahd_htole32(scb->sg_list_busaddr|SG_FULL_RESID);
+-}
+-
+ static __inline void
+ ahd_setup_noxfer_scb(struct ahd_softc *ahd, struct scb *scb)
+ {
+@@ -423,18 +253,12 @@ static __inline struct ahd_initiator_tin
+ 					    char channel, u_int our_id,
+ 					    u_int remote_id,
+ 					    struct ahd_tmode_tstate **tstate);
+-static __inline uint16_t
+-			ahd_inw(struct ahd_softc *ahd, u_int port);
+-static __inline void	ahd_outw(struct ahd_softc *ahd, u_int port,
+-				 u_int value);
+-static __inline uint32_t
+-			ahd_inl(struct ahd_softc *ahd, u_int port);
+-static __inline void	ahd_outl(struct ahd_softc *ahd, u_int port,
+-				 uint32_t value);
+-static __inline uint64_t
+-			ahd_inq(struct ahd_softc *ahd, u_int port);
+-static __inline void	ahd_outq(struct ahd_softc *ahd, u_int port,
+-				 uint64_t value);
++uint16_t ahd_inw(struct ahd_softc *ahd, u_int port);
++void	ahd_outw(struct ahd_softc *ahd, u_int port, u_int value);
++uint32_t ahd_inl(struct ahd_softc *ahd, u_int port);
++void	ahd_outl(struct ahd_softc *ahd, u_int port, uint32_t value);
++uint64_t ahd_inq(struct ahd_softc *ahd, u_int port);
++void	ahd_outq(struct ahd_softc *ahd, u_int port, uint64_t value);
+ static __inline u_int	ahd_get_scbptr(struct ahd_softc *ahd);
+ static __inline void	ahd_set_scbptr(struct ahd_softc *ahd, u_int scbptr);
+ static __inline u_int	ahd_get_hnscb_qoff(struct ahd_softc *ahd);
+@@ -447,15 +271,12 @@ static __inline u_int	ahd_get_sescb_qoff
+ static __inline void	ahd_set_sescb_qoff(struct ahd_softc *ahd, u_int value);
+ static __inline u_int	ahd_get_sdscb_qoff(struct ahd_softc *ahd);
+ static __inline void	ahd_set_sdscb_qoff(struct ahd_softc *ahd, u_int value);
+-static __inline u_int	ahd_inb_scbram(struct ahd_softc *ahd, u_int offset);
+-static __inline u_int	ahd_inw_scbram(struct ahd_softc *ahd, u_int offset);
+-static __inline uint32_t
+-			ahd_inl_scbram(struct ahd_softc *ahd, u_int offset);
+-static __inline uint64_t
+-			ahd_inq_scbram(struct ahd_softc *ahd, u_int offset);
+-static __inline void	ahd_swap_with_next_hscb(struct ahd_softc *ahd,
+-						struct scb *scb);
+-static __inline void	ahd_queue_scb(struct ahd_softc *ahd, struct scb *scb);
++u_int	ahd_inb_scbram(struct ahd_softc *ahd, u_int offset);
++u_int	ahd_inw_scbram(struct ahd_softc *ahd, u_int offset);
++uint32_t ahd_inl_scbram(struct ahd_softc *ahd, u_int offset);
++uint64_t ahd_inq_scbram(struct ahd_softc *ahd, u_int offset);
++struct scb *ahd_lookup_scb(struct ahd_softc *ahd, u_int tag);
++void	ahd_queue_scb(struct ahd_softc *ahd, struct scb *scb);
+ static __inline uint8_t *
+ 			ahd_get_sense_buf(struct ahd_softc *ahd,
+ 					  struct scb *scb);
+@@ -489,72 +310,6 @@ do {								\
+ 	dst->hscb->lun = src->hscb->lun;			\
+ } while (0)
+ 
+-static __inline uint16_t
+-ahd_inw(struct ahd_softc *ahd, u_int port)
+-{
+-	/*
+-	 * Read high byte first as some registers increment
+-	 * or have other side effects when the low byte is
+-	 * read.
+-	 */
+-	return ((ahd_inb(ahd, port+1) << 8) | ahd_inb(ahd, port));
+-}
+-
+-static __inline void
+-ahd_outw(struct ahd_softc *ahd, u_int port, u_int value)
+-{
+-	/*
+-	 * Write low byte first to accomodate registers
+-	 * such as PRGMCNT where the order maters.
+-	 */
+-	ahd_outb(ahd, port, value & 0xFF);
+-	ahd_outb(ahd, port+1, (value >> 8) & 0xFF);
+-}
+-
+-static __inline uint32_t
+-ahd_inl(struct ahd_softc *ahd, u_int port)
+-{
+-	return ((ahd_inb(ahd, port))
+-	      | (ahd_inb(ahd, port+1) << 8)
+-	      | (ahd_inb(ahd, port+2) << 16)
+-	      | (ahd_inb(ahd, port+3) << 24));
+-}
+-
+-static __inline void
+-ahd_outl(struct ahd_softc *ahd, u_int port, uint32_t value)
+-{
+-	ahd_outb(ahd, port, (value) & 0xFF);
+-	ahd_outb(ahd, port+1, ((value) >> 8) & 0xFF);
+-	ahd_outb(ahd, port+2, ((value) >> 16) & 0xFF);
+-	ahd_outb(ahd, port+3, ((value) >> 24) & 0xFF);
+-}
+-
+-static __inline uint64_t
+-ahd_inq(struct ahd_softc *ahd, u_int port)
+-{
+-	return ((ahd_inb(ahd, port))
+-	      | (ahd_inb(ahd, port+1) << 8)
+-	      | (ahd_inb(ahd, port+2) << 16)
+-	      | (ahd_inb(ahd, port+3) << 24)
+-	      | (((uint64_t)ahd_inb(ahd, port+4)) << 32)
+-	      | (((uint64_t)ahd_inb(ahd, port+5)) << 40)
+-	      | (((uint64_t)ahd_inb(ahd, port+6)) << 48)
+-	      | (((uint64_t)ahd_inb(ahd, port+7)) << 56));
+-}
+-
+-static __inline void
+-ahd_outq(struct ahd_softc *ahd, u_int port, uint64_t value)
+-{
+-	ahd_outb(ahd, port, value & 0xFF);
+-	ahd_outb(ahd, port+1, (value >> 8) & 0xFF);
+-	ahd_outb(ahd, port+2, (value >> 16) & 0xFF);
+-	ahd_outb(ahd, port+3, (value >> 24) & 0xFF);
+-	ahd_outb(ahd, port+4, (value >> 32) & 0xFF);
+-	ahd_outb(ahd, port+5, (value >> 40) & 0xFF);
+-	ahd_outb(ahd, port+6, (value >> 48) & 0xFF);
+-	ahd_outb(ahd, port+7, (value >> 56) & 0xFF);
+-}
+-
+ static __inline u_int
+ ahd_get_scbptr(struct ahd_softc *ahd)
+ {
+@@ -643,150 +398,6 @@ ahd_set_sdscb_qoff(struct ahd_softc *ahd
+ 	ahd_outb(ahd, SDSCB_QOFF+1, (value >> 8) & 0xFF);
+ }
+ 
+-static __inline u_int
+-ahd_inb_scbram(struct ahd_softc *ahd, u_int offset)
+-{
+-	u_int value;
+-
+-	/*
+-	 * Workaround PCI-X Rev A. hardware bug.
+-	 * After a host read of SCB memory, the chip
+-	 * may become confused into thinking prefetch
+-	 * was required.  This starts the discard timer
+-	 * running and can cause an unexpected discard
+-	 * timer interrupt.  The work around is to read
+-	 * a normal register prior to the exhaustion of
+-	 * the discard timer.  The mode pointer register
+-	 * has no side effects and so serves well for
+-	 * this purpose.
+-	 *
+-	 * Razor #528
+-	 */
+-	value = ahd_inb(ahd, offset);
+-	if ((ahd->bugs & AHD_PCIX_SCBRAM_RD_BUG) != 0)
+-		ahd_inb(ahd, MODE_PTR);
+-	return (value);
+-}
+-
+-static __inline u_int
+-ahd_inw_scbram(struct ahd_softc *ahd, u_int offset)
+-{
+-	return (ahd_inb_scbram(ahd, offset)
+-	      | (ahd_inb_scbram(ahd, offset+1) << 8));
+-}
+-
+-static __inline uint32_t
+-ahd_inl_scbram(struct ahd_softc *ahd, u_int offset)
+-{
+-	return (ahd_inw_scbram(ahd, offset)
+-	      | (ahd_inw_scbram(ahd, offset+2) << 16));
+-}
+-
+-static __inline uint64_t
+-ahd_inq_scbram(struct ahd_softc *ahd, u_int offset)
+-{
+-	return (ahd_inl_scbram(ahd, offset)
+-	      | ((uint64_t)ahd_inl_scbram(ahd, offset+4)) << 32);
+-}
+-
+-static __inline struct scb *
+-ahd_lookup_scb(struct ahd_softc *ahd, u_int tag)
+-{
+-	struct scb* scb;
+-
+-	if (tag >= AHD_SCB_MAX)
+-		return (NULL);
+-	scb = ahd->scb_data.scbindex[tag];
+-	if (scb != NULL)
+-		ahd_sync_scb(ahd, scb,
+-			     BUS_DMASYNC_POSTREAD|BUS_DMASYNC_POSTWRITE);
+-	return (scb);
+-}
+-
+-static __inline void
+-ahd_swap_with_next_hscb(struct ahd_softc *ahd, struct scb *scb)
+-{
+-	struct	 hardware_scb *q_hscb;
+-	struct	 map_node *q_hscb_map;
+-	uint32_t saved_hscb_busaddr;
+-
+-	/*
+-	 * Our queuing method is a bit tricky.  The card
+-	 * knows in advance which HSCB (by address) to download,
+-	 * and we can't disappoint it.  To achieve this, the next
+-	 * HSCB to download is saved off in ahd->next_queued_hscb.
+-	 * When we are called to queue "an arbitrary scb",
+-	 * we copy the contents of the incoming HSCB to the one
+-	 * the sequencer knows about, swap HSCB pointers and
+-	 * finally assign the SCB to the tag indexed location
+-	 * in the scb_array.  This makes sure that we can still
+-	 * locate the correct SCB by SCB_TAG.
+-	 */
+-	q_hscb = ahd->next_queued_hscb;
+-	q_hscb_map = ahd->next_queued_hscb_map;
+-	saved_hscb_busaddr = q_hscb->hscb_busaddr;
+-	memcpy(q_hscb, scb->hscb, sizeof(*scb->hscb));
+-	q_hscb->hscb_busaddr = saved_hscb_busaddr;
+-	q_hscb->next_hscb_busaddr = scb->hscb->hscb_busaddr;
+-
+-	/* Now swap HSCB pointers. */
+-	ahd->next_queued_hscb = scb->hscb;
+-	ahd->next_queued_hscb_map = scb->hscb_map;
+-	scb->hscb = q_hscb;
+-	scb->hscb_map = q_hscb_map;
+-
+-	/* Now define the mapping from tag to SCB in the scbindex */
+-	ahd->scb_data.scbindex[SCB_GET_TAG(scb)] = scb;
+-}
+-
+-/*
+- * Tell the sequencer about a new transaction to execute.
+- */
+-static __inline void
+-ahd_queue_scb(struct ahd_softc *ahd, struct scb *scb)
+-{
+-	ahd_swap_with_next_hscb(ahd, scb);
+-
+-	if (SCBID_IS_NULL(SCB_GET_TAG(scb)))
+-		panic("Attempt to queue invalid SCB tag %x\n",
+-		      SCB_GET_TAG(scb));
+-
+-	/*
+-	 * Keep a history of SCBs we've downloaded in the qinfifo.
+-	 */
+-	ahd->qinfifo[AHD_QIN_WRAP(ahd->qinfifonext)] = SCB_GET_TAG(scb);
+-	ahd->qinfifonext++;
+-
+-	if (scb->sg_count != 0)
+-		ahd_setup_data_scb(ahd, scb);
+-	else
+-		ahd_setup_noxfer_scb(ahd, scb);
+-	ahd_setup_scb_common(ahd, scb);
+-
+-	/*
+-	 * Make sure our data is consistent from the
+-	 * perspective of the adapter.
+-	 */
+-	ahd_sync_scb(ahd, scb, BUS_DMASYNC_PREREAD|BUS_DMASYNC_PREWRITE);
+-
+-#ifdef AHD_DEBUG
+-	if ((ahd_debug & AHD_SHOW_QUEUE) != 0) {
+-		uint64_t host_dataptr;
+-
+-		host_dataptr = ahd_le64toh(scb->hscb->dataptr);
+-		printf("%s: Queueing SCB %d:0x%x bus addr 0x%x - 0x%x%x/0x%x\n",
+-		       ahd_name(ahd),
+-		       SCB_GET_TAG(scb), scb->hscb->scsiid,
+-		       ahd_le32toh(scb->hscb->hscb_busaddr),
+-		       (u_int)((host_dataptr >> 32) & 0xFFFFFFFF),
+-		       (u_int)(host_dataptr & 0xFFFFFFFF),
+-		       ahd_le32toh(scb->hscb->datacnt));
+-	}
+-#endif
+-	/* Tell the adapter about the newly queued SCB */
+-	ahd_set_hnscb_qoff(ahd, ahd->qinfifonext);
+-}
+-
+ static __inline uint8_t *
+ ahd_get_sense_buf(struct ahd_softc *ahd, struct scb *scb)
+ {
+@@ -802,8 +413,7 @@ ahd_get_sense_bufaddr(struct ahd_softc *
+ /************************** Interrupt Processing ******************************/
+ static __inline void	ahd_sync_qoutfifo(struct ahd_softc *ahd, int op);
+ static __inline void	ahd_sync_tqinfifo(struct ahd_softc *ahd, int op);
+-static __inline u_int	ahd_check_cmdcmpltqueues(struct ahd_softc *ahd);
+-static __inline int	ahd_intr(struct ahd_softc *ahd);
++int	ahd_intr(struct ahd_softc *ahd);
+ 
+ static __inline void
+ ahd_sync_qoutfifo(struct ahd_softc *ahd, int op)
+@@ -827,124 +437,4 @@ ahd_sync_tqinfifo(struct ahd_softc *ahd,
+ #endif
+ }
+ 
+-/*
+- * See if the firmware has posted any completed commands
+- * into our in-core command complete fifos.
+- */
+-#define AHD_RUN_QOUTFIFO 0x1
+-#define AHD_RUN_TQINFIFO 0x2
+-static __inline u_int
+-ahd_check_cmdcmpltqueues(struct ahd_softc *ahd)
+-{
+-	u_int retval;
+-
+-	retval = 0;
+-	ahd_dmamap_sync(ahd, ahd->shared_data_dmat, ahd->shared_data_map.dmamap,
+-			/*offset*/ahd->qoutfifonext * sizeof(*ahd->qoutfifo),
+-			/*len*/sizeof(*ahd->qoutfifo), BUS_DMASYNC_POSTREAD);
+-	if (ahd->qoutfifo[ahd->qoutfifonext].valid_tag
+-	  == ahd->qoutfifonext_valid_tag)
+-		retval |= AHD_RUN_QOUTFIFO;
+-#ifdef AHD_TARGET_MODE
+-	if ((ahd->flags & AHD_TARGETROLE) != 0
+-	 && (ahd->flags & AHD_TQINFIFO_BLOCKED) == 0) {
+-		ahd_dmamap_sync(ahd, ahd->shared_data_dmat,
+-				ahd->shared_data_map.dmamap,
+-				ahd_targetcmd_offset(ahd, ahd->tqinfifofnext),
+-				/*len*/sizeof(struct target_cmd),
+-				BUS_DMASYNC_POSTREAD);
+-		if (ahd->targetcmds[ahd->tqinfifonext].cmd_valid != 0)
+-			retval |= AHD_RUN_TQINFIFO;
+-	}
+-#endif
+-	return (retval);
+-}
+-
+-/*
+- * Catch an interrupt from the adapter
+- */
+-static __inline int
+-ahd_intr(struct ahd_softc *ahd)
+-{
+-	u_int	intstat;
+-
+-	if ((ahd->pause & INTEN) == 0) {
+-		/*
+-		 * Our interrupt is not enabled on the chip
+-		 * and may be disabled for re-entrancy reasons,
+-		 * so just return.  This is likely just a shared
+-		 * interrupt.
+-		 */
+-		return (0);
+-	}
+-
+-	/*
+-	 * Instead of directly reading the interrupt status register,
+-	 * infer the cause of the interrupt by checking our in-core
+-	 * completion queues.  This avoids a costly PCI bus read in
+-	 * most cases.
+-	 */
+-	if ((ahd->flags & AHD_ALL_INTERRUPTS) == 0
+-	 && (ahd_check_cmdcmpltqueues(ahd) != 0))
+-		intstat = CMDCMPLT;
+-	else
+-		intstat = ahd_inb(ahd, INTSTAT);
+-
+-	if ((intstat & INT_PEND) == 0)
+-		return (0);
+-
+-	if (intstat & CMDCMPLT) {
+-		ahd_outb(ahd, CLRINT, CLRCMDINT);
+-
+-		/*
+-		 * Ensure that the chip sees that we've cleared
+-		 * this interrupt before we walk the output fifo.
+-		 * Otherwise, we may, due to posted bus writes,
+-		 * clear the interrupt after we finish the scan,
+-		 * and after the sequencer has added new entries
+-		 * and asserted the interrupt again.
+-		 */
+-		if ((ahd->bugs & AHD_INTCOLLISION_BUG) != 0) {
+-			if (ahd_is_paused(ahd)) {
+-				/*
+-				 * Potentially lost SEQINT.
+-				 * If SEQINTCODE is non-zero,
+-				 * simulate the SEQINT.
+-				 */
+-				if (ahd_inb(ahd, SEQINTCODE) != NO_SEQINT)
+-					intstat |= SEQINT;
+-			}
+-		} else {
+-			ahd_flush_device_writes(ahd);
+-		}
+-		ahd_run_qoutfifo(ahd);
+-		ahd->cmdcmplt_counts[ahd->cmdcmplt_bucket]++;
+-		ahd->cmdcmplt_total++;
+-#ifdef AHD_TARGET_MODE
+-		if ((ahd->flags & AHD_TARGETROLE) != 0)
+-			ahd_run_tqinfifo(ahd, /*paused*/FALSE);
+-#endif
+-	}
+-
+-	/*
+-	 * Handle statuses that may invalidate our cached
+-	 * copy of INTSTAT separately.
+-	 */
+-	if (intstat == 0xFF && (ahd->features & AHD_REMOVABLE) != 0) {
+-		/* Hot eject.  Do nothing */
+-	} else if (intstat & HWERRINT) {
+-		ahd_handle_hwerrint(ahd);
+-	} else if ((intstat & (PCIINT|SPLTINT)) != 0) {
+-		ahd->bus_intr(ahd);
+-	} else {
+-
+-		if ((intstat & SEQINT) != 0)
+-			ahd_handle_seqint(ahd, intstat);
+-
+-		if ((intstat & SCSIINT) != 0)
+-			ahd_handle_scsiint(ahd, intstat);
+-	}
+-	return (1);
+-}
+-
+ #endif  /* _AIC79XX_INLINE_H_ */
+diff -puN drivers/scsi/aic7xxx/aic79xx_osm.c~aic7xxx-deinline-large-functions-save-80k-of-text drivers/scsi/aic7xxx/aic79xx_osm.c
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.c~aic7xxx-deinline-large-functions-save-80k-of-text
++++ a/drivers/scsi/aic7xxx/aic79xx_osm.c
+@@ -462,7 +462,7 @@ ahd_linux_queue(struct scsi_cmnd * cmd, 
+ 	return rtn;
+ }
+ 
+-static inline struct scsi_target **
++static struct scsi_target **
+ ahd_linux_target_in_softc(struct scsi_target *starget)
+ {
+ 	struct	ahd_softc *ahd =
+diff -puN drivers/scsi/aic7xxx/aic79xx_osm.h~aic7xxx-deinline-large-functions-save-80k-of-text drivers/scsi/aic7xxx/aic79xx_osm.h
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.h~aic7xxx-deinline-large-functions-save-80k-of-text
++++ a/drivers/scsi/aic7xxx/aic79xx_osm.h
+@@ -222,26 +222,6 @@ typedef struct timer_list ahd_timer_t;
+ #endif
+ #include "aic79xx.h"
+ 
+-/***************************** Timer Facilities *******************************/
+-#define ahd_timer_init init_timer
+-#define ahd_timer_stop del_timer_sync
+-typedef void ahd_linux_callback_t (u_long);  
+-static __inline void ahd_timer_reset(ahd_timer_t *timer, int usec,
+-				     ahd_callback_t *func, void *arg);
+-
+-static __inline void
+-ahd_timer_reset(ahd_timer_t *timer, int usec, ahd_callback_t *func, void *arg)
+-{
+-	struct ahd_softc *ahd;
+-
+-	ahd = (struct ahd_softc *)arg;
+-	del_timer(timer);
+-	timer->data = (u_long)arg;
+-	timer->expires = jiffies + (usec * HZ)/1000000;
+-	timer->function = (ahd_linux_callback_t*)func;
+-	add_timer(timer);
+-}
+-
+ /***************************** SMP support ************************************/
+ #include <linux/spinlock.h>
+ 
+@@ -389,111 +369,22 @@ struct ahd_platform_data {
+ #define malloc(size, type, flags) kmalloc(size, flags)
+ #define free(ptr, type) kfree(ptr)
+ 
+-static __inline void ahd_delay(long);
+-static __inline void
+-ahd_delay(long usec)
++static inline void ahd_delay(int usec)
+ {
+-	/*
+-	 * udelay on Linux can have problems for
+-	 * multi-millisecond waits.  Wait at most
+-	 * 1024us per call.
+-	 */
+-	while (usec > 0) {
+-		udelay(usec % 1024);
+-		usec -= 1024;
+-	}
++	udelay(usec);
+ }
+ 
+-
+ /***************************** Low Level I/O **********************************/
+-static __inline uint8_t ahd_inb(struct ahd_softc * ahd, long port);
+-static __inline uint16_t ahd_inw_atomic(struct ahd_softc * ahd, long port);
+-static __inline void ahd_outb(struct ahd_softc * ahd, long port, uint8_t val);
+-static __inline void ahd_outw_atomic(struct ahd_softc * ahd,
++uint8_t ahd_inb(struct ahd_softc * ahd, long port);
++uint16_t ahd_inw_atomic(struct ahd_softc * ahd, long port);
++void ahd_outb(struct ahd_softc * ahd, long port, uint8_t val);
++void ahd_outw_atomic(struct ahd_softc * ahd,
+ 				     long port, uint16_t val);
+-static __inline void ahd_outsb(struct ahd_softc * ahd, long port,
++void ahd_outsb(struct ahd_softc * ahd, long port,
+ 			       uint8_t *, int count);
+-static __inline void ahd_insb(struct ahd_softc * ahd, long port,
++void ahd_insb(struct ahd_softc * ahd, long port,
+ 			       uint8_t *, int count);
+ 
+-static __inline uint8_t
+-ahd_inb(struct ahd_softc * ahd, long port)
+-{
+-	uint8_t x;
+-
+-	if (ahd->tags[0] == BUS_SPACE_MEMIO) {
+-		x = readb(ahd->bshs[0].maddr + port);
+-	} else {
+-		x = inb(ahd->bshs[(port) >> 8].ioport + ((port) & 0xFF));
+-	}
+-	mb();
+-	return (x);
+-}
+-
+-static __inline uint16_t
+-ahd_inw_atomic(struct ahd_softc * ahd, long port)
+-{
+-	uint8_t x;
+-
+-	if (ahd->tags[0] == BUS_SPACE_MEMIO) {
+-		x = readw(ahd->bshs[0].maddr + port);
+-	} else {
+-		x = inw(ahd->bshs[(port) >> 8].ioport + ((port) & 0xFF));
+-	}
+-	mb();
+-	return (x);
+-}
+-
+-static __inline void
+-ahd_outb(struct ahd_softc * ahd, long port, uint8_t val)
+-{
+-	if (ahd->tags[0] == BUS_SPACE_MEMIO) {
+-		writeb(val, ahd->bshs[0].maddr + port);
+-	} else {
+-		outb(val, ahd->bshs[(port) >> 8].ioport + (port & 0xFF));
+-	}
+-	mb();
+-}
+-
+-static __inline void
+-ahd_outw_atomic(struct ahd_softc * ahd, long port, uint16_t val)
+-{
+-	if (ahd->tags[0] == BUS_SPACE_MEMIO) {
+-		writew(val, ahd->bshs[0].maddr + port);
+-	} else {
+-		outw(val, ahd->bshs[(port) >> 8].ioport + (port & 0xFF));
+-	}
+-	mb();
+-}
+-
+-static __inline void
+-ahd_outsb(struct ahd_softc * ahd, long port, uint8_t *array, int count)
 -{
 -	int i;
 -
--	if (scb->sg_count > 0) {
--		if ((scb->ahd_softc->flags & AHD_64BIT_ADDRESSING) != 0) {
--			struct ahd_dma64_seg *sg_list;
--
--			sg_list = (struct ahd_dma64_seg*)scb->sg_list;
--			for (i = 0; i < scb->sg_count; i++) {
--				uint64_t addr;
--				uint32_t len;
--
--				addr = ahd_le64toh(sg_list[i].addr);
--				len = ahd_le32toh(sg_list[i].len);
--				printf("sg[%d] - Addr 0x%x%x : Length %d%s\n",
--				       i,
--				       (uint32_t)((addr >> 32) & 0xFFFFFFFF),
--				       (uint32_t)(addr & 0xFFFFFFFF),
--				       sg_list[i].len & AHD_SG_LEN_MASK,
--				       (sg_list[i].len & AHD_DMA_LAST_SEG)
--				     ? " Last" : "");
--			}
--		} else {
--			struct ahd_dma_seg *sg_list;
--
--			sg_list = (struct ahd_dma_seg*)scb->sg_list;
--			for (i = 0; i < scb->sg_count; i++) {
--				uint32_t len;
--
--				len = ahd_le32toh(sg_list[i].len);
--				printf("sg[%d] - Addr 0x%x%x : Length %d%s\n",
--				       i,
--				       (len & AHD_SG_HIGH_ADDR_MASK) >> 24,
--				       ahd_le32toh(sg_list[i].addr),
--				       len & AHD_SG_LEN_MASK,
--				       len & AHD_DMA_LAST_SEG ? " Last" : "");
--			}
--		}
--	}
+-	/*
+-	 * There is probably a more efficient way to do this on Linux
+-	 * but we don't use this for anything speed critical and this
+-	 * should work.
+-	 */
+-	for (i = 0; i < count; i++)
+-		ahd_outb(ahd, port, *array++);
 -}
-+#endif  /*  0  */
- 
- /************************* Transfer Negotiation *******************************/
- /*
-@@ -2906,7 +2967,7 @@ ahd_find_syncrate(struct ahd_softc *ahd,
-  * Truncate the given synchronous offset to a value the
-  * current adapter type and syncrate are capable of.
-  */
--void
-+static void
- ahd_validate_offset(struct ahd_softc *ahd,
- 		    struct ahd_initiator_tinfo *tinfo,
- 		    u_int period, u_int *offset, int wide,
-@@ -2937,7 +2998,7 @@ ahd_validate_offset(struct ahd_softc *ah
-  * Truncate the given transfer width parameter to a value the
-  * current adapter type is capable of.
-  */
--void
-+static void
- ahd_validate_width(struct ahd_softc *ahd, struct ahd_initiator_tinfo *tinfo,
- 		   u_int *bus_width, role_t role)
- {
-@@ -3466,7 +3527,7 @@ ahd_print_devinfo(struct ahd_softc *ahd,
- 	       devinfo->target, devinfo->lun);
- }
- 
--struct ahd_phase_table_entry*
-+static struct ahd_phase_table_entry*
- ahd_lookup_phase_entry(int phase)
- {
- 	struct ahd_phase_table_entry *entry;
-@@ -5351,7 +5412,7 @@ ahd_free(struct ahd_softc *ahd)
- 	return;
- }
- 
--void
-+static void
- ahd_shutdown(void *arg)
- {
- 	struct	ahd_softc *ahd;
-@@ -5480,7 +5541,7 @@ ahd_reset(struct ahd_softc *ahd, int rei
- /*
-  * Determine the number of SCBs available on the controller
-  */
--int
-+static int
- ahd_probe_scbs(struct ahd_softc *ahd) {
- 	int i;
- 
-@@ -5929,7 +5990,7 @@ ahd_free_scb(struct ahd_softc *ahd, stru
- 	ahd_platform_scb_free(ahd, scb);
- }
- 
--void
-+static void
- ahd_alloc_scbs(struct ahd_softc *ahd)
- {
- 	struct scb_data *scb_data;
-@@ -6982,7 +7043,7 @@ ahd_intr_enable(struct ahd_softc *ahd, i
- 	ahd_outb(ahd, HCNTRL, hcntrl);
- }
- 
--void
-+static void
- ahd_update_coalescing_values(struct ahd_softc *ahd, u_int timer, u_int maxcmds,
- 			     u_int mincmds)
- {
-@@ -7000,7 +7061,7 @@ ahd_update_coalescing_values(struct ahd_
- 	ahd_outb(ahd, INT_COALESCING_MINCMDS, -mincmds);
- }
- 
--void
-+static void
- ahd_enable_coalescing(struct ahd_softc *ahd, int enable)
- {
- 
-@@ -7070,6 +7131,7 @@ ahd_pause_and_flushwork(struct ahd_softc
- 	ahd->flags &= ~AHD_ALL_INTERRUPTS;
- }
- 
-+#if 0
- int
- ahd_suspend(struct ahd_softc *ahd)
- {
-@@ -7083,7 +7145,9 @@ ahd_suspend(struct ahd_softc *ahd)
- 	ahd_shutdown(ahd);
- 	return (0);
- }
-+#endif  /*  0  */
- 
-+#if 0
- int
- ahd_resume(struct ahd_softc *ahd)
- {
-@@ -7093,6 +7157,7 @@ ahd_resume(struct ahd_softc *ahd)
- 	ahd_restart(ahd);
- 	return (0);
- }
-+#endif  /*  0  */
- 
- /************************** Busy Target Table *********************************/
- /*
-@@ -7125,7 +7190,7 @@ ahd_index_busy_tcl(struct ahd_softc *ahd
- /*
-  * Return the untagged transaction id for a given target/channel lun.
-  */
--u_int
-+static u_int
- ahd_find_busy_tcl(struct ahd_softc *ahd, u_int tcl)
- {
- 	u_int scbid;
-@@ -7138,7 +7203,7 @@ ahd_find_busy_tcl(struct ahd_softc *ahd,
- 	return (scbid);
- }
- 
--void
-+static void
- ahd_busy_tcl(struct ahd_softc *ahd, u_int tcl, u_int scbid)
- {
- 	u_int scb_offset;
-@@ -7186,7 +7251,7 @@ ahd_match_scb(struct ahd_softc *ahd, str
- 	return match;
- }
- 
--void
-+static void
- ahd_freeze_devq(struct ahd_softc *ahd, struct scb *scb)
- {
- 	int	target;
-@@ -7690,7 +7755,7 @@ ahd_add_scb_to_free_list(struct ahd_soft
-  * been modified from CAM_REQ_INPROG.  This routine assumes that the sequencer
-  * is paused before it is called.
-  */
--int
-+static int
- ahd_abort_scbs(struct ahd_softc *ahd, int target, char channel,
- 	       int lun, u_int tag, role_t role, uint32_t status)
- {
-@@ -8019,18 +8084,8 @@ ahd_stat_timer(void *arg)
- }
- 
- /****************************** Status Processing *****************************/
--void
--ahd_handle_scb_status(struct ahd_softc *ahd, struct scb *scb)
+-
+-static __inline void
+-ahd_insb(struct ahd_softc * ahd, long port, uint8_t *array, int count)
 -{
--	if (scb->hscb->shared_data.istatus.scsi_status != 0) {
--		ahd_handle_scsi_status(ahd, scb);
--	} else {
--		ahd_calc_residual(ahd, scb);
--		ahd_done(ahd, scb);
--	}
+-	int i;
+-
+-	/*
+-	 * There is probably a more efficient way to do this on Linux
+-	 * but we don't use this for anything speed critical and this
+-	 * should work.
+-	 */
+-	for (i = 0; i < count; i++)
+-		*array++ = ahd_inb(ahd, port);
 -}
+-
+ /**************************** Initialization **********************************/
+ int		ahd_linux_register_host(struct ahd_softc *,
+ 					struct scsi_host_template *);
+@@ -598,6 +489,7 @@ void			 ahd_linux_pci_exit(void);
+ int			 ahd_pci_map_registers(struct ahd_softc *ahd);
+ int			 ahd_pci_map_int(struct ahd_softc *ahd);
  
--void
-+static void
- ahd_handle_scsi_status(struct ahd_softc *ahd, struct scb *scb)
- {
- 	struct	hardware_scb *hscb;
-@@ -8238,10 +8293,21 @@ ahd_handle_scsi_status(struct ahd_softc 
++void ahd_BUG_bad_pci_rw_size(void);
+ static __inline uint32_t ahd_pci_read_config(ahd_dev_softc_t pci,
+ 					     int reg, int width);
+ 
+@@ -625,7 +517,7 @@ ahd_pci_read_config(ahd_dev_softc_t pci,
+ 		return (retval);
+ 	}
+ 	default:
+-		panic("ahd_pci_read_config: Read size too big");
++		ahd_BUG_bad_pci_rw_size();
+ 		/* NOTREACHED */
+ 		return (0);
+ 	}
+@@ -649,7 +541,7 @@ ahd_pci_write_config(ahd_dev_softc_t pci
+ 		pci_write_config_dword(pci, reg, value);
+ 		break;
+ 	default:
+-		panic("ahd_pci_write_config: Write size too big");
++		ahd_BUG_bad_pci_rw_size();
+ 		/* NOTREACHED */
  	}
  }
+diff -puN drivers/scsi/aic7xxx/aic7xxx_core.c~aic7xxx-deinline-large-functions-save-80k-of-text drivers/scsi/aic7xxx/aic7xxx_core.c
+--- a/drivers/scsi/aic7xxx/aic7xxx_core.c~aic7xxx-deinline-large-functions-save-80k-of-text
++++ a/drivers/scsi/aic7xxx/aic7xxx_core.c
+@@ -50,6 +50,365 @@
+ #include <dev/aic7xxx/aicasm/aicasm_insformat.h>
+ #endif
  
-+static void
-+ahd_handle_scb_status(struct ahd_softc *ahd, struct scb *scb)
++/***************************** Low Level I/O **********************************/
++uint8_t
++ahc_inb(struct ahc_softc * ahc, long port)
 +{
-+	if (scb->hscb->shared_data.istatus.scsi_status != 0) {
-+		ahd_handle_scsi_status(ahd, scb);
++	uint8_t x;
++
++	if (ahc->tag == BUS_SPACE_MEMIO) {
++		x = readb(ahc->bsh.maddr + port);
 +	} else {
-+		ahd_calc_residual(ahd, scb);
-+		ahd_done(ahd, scb);
++		x = inb(ahc->bsh.ioport + port);
++	}
++	mb();
++	return (x);
++}
++
++void
++ahc_outb(struct ahc_softc * ahc, long port, uint8_t val)
++{
++	if (ahc->tag == BUS_SPACE_MEMIO) {
++		writeb(val, ahc->bsh.maddr + port);
++	} else {
++		outb(val, ahc->bsh.ioport + port);
++	}
++	mb();
++}
++
++void
++ahc_outsb(struct ahc_softc * ahc, long port, uint8_t *array, int count)
++{
++	int i;
++
++	/*
++	 * There is probably a more efficient way to do this on Linux
++	 * but we don't use this for anything speed critical and this
++	 * should work.
++	 */
++	for (i = 0; i < count; i++)
++		ahc_outb(ahc, port, *array++);
++}
++
++void
++ahc_insb(struct ahc_softc * ahc, long port, uint8_t *array, int count)
++{
++	int i;
++
++	/*
++	 * There is probably a more efficient way to do this on Linux
++	 * but we don't use this for anything speed critical and this
++	 * should work.
++	 */
++	for (i = 0; i < count; i++)
++		*array++ = ahc_inb(ahc, port);
++}
++
++/*********************** Miscelaneous Support Functions ***********************/
++uint16_t
++ahc_inw(struct ahc_softc *ahc, u_int port)
++{
++	return ((ahc_inb(ahc, port+1) << 8) | ahc_inb(ahc, port));
++}
++
++void
++ahc_outw(struct ahc_softc *ahc, u_int port, u_int value)
++{
++	ahc_outb(ahc, port, value & 0xFF);
++	ahc_outb(ahc, port+1, (value >> 8) & 0xFF);
++}
++
++uint32_t
++ahc_inl(struct ahc_softc *ahc, u_int port)
++{
++	return ((ahc_inb(ahc, port))
++	      | (ahc_inb(ahc, port+1) << 8)
++	      | (ahc_inb(ahc, port+2) << 16)
++	      | (ahc_inb(ahc, port+3) << 24));
++}
++
++void
++ahc_outl(struct ahc_softc *ahc, u_int port, uint32_t value)
++{
++	ahc_outb(ahc, port, (value) & 0xFF);
++	ahc_outb(ahc, port+1, ((value) >> 8) & 0xFF);
++	ahc_outb(ahc, port+2, ((value) >> 16) & 0xFF);
++	ahc_outb(ahc, port+3, ((value) >> 24) & 0xFF);
++}
++
++uint64_t
++ahc_inq(struct ahc_softc *ahc, u_int port)
++{
++	return ((ahc_inb(ahc, port))
++	      | (ahc_inb(ahc, port+1) << 8)
++	      | (ahc_inb(ahc, port+2) << 16)
++	      | (ahc_inb(ahc, port+3) << 24)
++	      | (((uint64_t)ahc_inb(ahc, port+4)) << 32)
++	      | (((uint64_t)ahc_inb(ahc, port+5)) << 40)
++	      | (((uint64_t)ahc_inb(ahc, port+6)) << 48)
++	      | (((uint64_t)ahc_inb(ahc, port+7)) << 56));
++}
++
++void
++ahc_outq(struct ahc_softc *ahc, u_int port, uint64_t value)
++{
++	ahc_outb(ahc, port, value & 0xFF);
++	ahc_outb(ahc, port+1, (value >> 8) & 0xFF);
++	ahc_outb(ahc, port+2, (value >> 16) & 0xFF);
++	ahc_outb(ahc, port+3, (value >> 24) & 0xFF);
++	ahc_outb(ahc, port+4, (value >> 32) & 0xFF);
++	ahc_outb(ahc, port+5, (value >> 40) & 0xFF);
++	ahc_outb(ahc, port+6, (value >> 48) & 0xFF);
++	ahc_outb(ahc, port+7, (value >> 56) & 0xFF);
++}
++
++/*
++ * Get a free scb. If there are none, see if we can allocate a new SCB.
++ */
++struct scb *
++ahc_get_scb(struct ahc_softc *ahc)
++{
++	struct scb *scb;
++
++	if ((scb = SLIST_FIRST(&ahc->scb_data->free_scbs)) == NULL) {
++		ahc_alloc_scbs(ahc);
++		scb = SLIST_FIRST(&ahc->scb_data->free_scbs);
++		if (scb == NULL)
++			return (NULL);
++	}
++	SLIST_REMOVE_HEAD(&ahc->scb_data->free_scbs, links.sle);
++	return (scb);
++}
++
++/*
++ * Return an SCB resource to the free list.
++ */
++void
++ahc_free_scb(struct ahc_softc *ahc, struct scb *scb)
++{
++	struct hardware_scb *hscb;
++
++	hscb = scb->hscb;
++	/* Clean up for the next user */
++	ahc->scb_data->scbindex[hscb->tag] = NULL;
++	scb->flags = SCB_FREE;
++	hscb->control = 0;
++
++	SLIST_INSERT_HEAD(&ahc->scb_data->free_scbs, scb, links.sle);
++
++	/* Notify the OSM that a resource is now available. */
++	ahc_platform_scb_free(ahc, scb);
++}
++
++struct scb *
++ahc_lookup_scb(struct ahc_softc *ahc, u_int tag)
++{
++	struct scb* scb;
++
++	scb = ahc->scb_data->scbindex[tag];
++	if (scb != NULL)
++		ahc_sync_scb(ahc, scb,
++			     BUS_DMASYNC_POSTREAD|BUS_DMASYNC_POSTWRITE);
++	return (scb);
++}
++
++static void
++ahc_swap_with_next_hscb(struct ahc_softc *ahc, struct scb *scb)
++{
++	struct hardware_scb *q_hscb;
++	u_int  saved_tag;
++
++	/*
++	 * Our queuing method is a bit tricky.  The card
++	 * knows in advance which HSCB to download, and we
++	 * can't disappoint it.  To achieve this, the next
++	 * SCB to download is saved off in ahc->next_queued_scb.
++	 * When we are called to queue "an arbitrary scb",
++	 * we copy the contents of the incoming HSCB to the one
++	 * the sequencer knows about, swap HSCB pointers and
++	 * finally assign the SCB to the tag indexed location
++	 * in the scb_array.  This makes sure that we can still
++	 * locate the correct SCB by SCB_TAG.
++	 */
++	q_hscb = ahc->next_queued_scb->hscb;
++	saved_tag = q_hscb->tag;
++	memcpy(q_hscb, scb->hscb, sizeof(*scb->hscb));
++	if ((scb->flags & SCB_CDB32_PTR) != 0) {
++		q_hscb->shared_data.cdb_ptr =
++		    ahc_htole32(ahc_hscb_busaddr(ahc, q_hscb->tag)
++			      + offsetof(struct hardware_scb, cdb32));
++	}
++	q_hscb->tag = saved_tag;
++	q_hscb->next = scb->hscb->tag;
++
++	/* Now swap HSCB pointers. */
++	ahc->next_queued_scb->hscb = scb->hscb;
++	scb->hscb = q_hscb;
++
++	/* Now define the mapping from tag to SCB in the scbindex */
++	ahc->scb_data->scbindex[scb->hscb->tag] = scb;
++}
++
++/*
++ * Tell the sequencer about a new transaction to execute.
++ */
++void
++ahc_queue_scb(struct ahc_softc *ahc, struct scb *scb)
++{
++	ahc_swap_with_next_hscb(ahc, scb);
++
++	if (scb->hscb->tag == SCB_LIST_NULL
++	 || scb->hscb->next == SCB_LIST_NULL)
++		panic("Attempt to queue invalid SCB tag %x:%x\n",
++		      scb->hscb->tag, scb->hscb->next);
++
++	/*
++	 * Setup data "oddness".
++	 */
++	scb->hscb->lun &= LID;
++	if (ahc_get_transfer_length(scb) & 0x1)
++		scb->hscb->lun |= SCB_XFERLEN_ODD;
++
++	/*
++	 * Keep a history of SCBs we've downloaded in the qinfifo.
++	 */
++	ahc->qinfifo[ahc->qinfifonext++] = scb->hscb->tag;
++
++	/*
++	 * Make sure our data is consistent from the
++	 * perspective of the adapter.
++	 */
++	ahc_sync_scb(ahc, scb, BUS_DMASYNC_PREREAD|BUS_DMASYNC_PREWRITE);
++
++	/* Tell the adapter about the newly queued SCB */
++	if ((ahc->features & AHC_QUEUE_REGS) != 0) {
++		ahc_outb(ahc, HNSCB_QOFF, ahc->qinfifonext);
++	} else {
++		if ((ahc->features & AHC_AUTOPAUSE) == 0)
++			ahc_pause(ahc);
++		ahc_outb(ahc, KERNEL_QINPOS, ahc->qinfifonext);
++		if ((ahc->features & AHC_AUTOPAUSE) == 0)
++			ahc_unpause(ahc);
 +	}
 +}
 +
- /*
-  * Calculate the residual for a just completed SCB.
-  */
--void
-+static void
- ahd_calc_residual(struct ahd_softc *ahd, struct scb *scb)
- {
- 	struct hardware_scb *hscb;
-@@ -9092,6 +9158,7 @@ ahd_dump_card_state(struct ahd_softc *ah
- 		ahd_unpause(ahd);
- }
- 
-+#if 0
- void
- ahd_dump_scbs(struct ahd_softc *ahd)
- {
-@@ -9117,6 +9184,7 @@ ahd_dump_scbs(struct ahd_softc *ahd)
- 	ahd_set_scbptr(ahd, saved_scb_index);
- 	ahd_restore_modes(ahd, saved_modes);
- }
-+#endif  /*  0  */
- 
- /**************************** Flexport Logic **********************************/
- /*
-@@ -9219,7 +9287,7 @@ ahd_write_seeprom(struct ahd_softc *ahd,
- /*
-  * Wait ~100us for the serial eeprom to satisfy our request.
-  */
--int
-+static int
- ahd_wait_seeprom(struct ahd_softc *ahd)
- {
- 	int cnt;
-@@ -9237,7 +9305,7 @@ ahd_wait_seeprom(struct ahd_softc *ahd)
-  * Validate the two checksums in the per_channel
-  * vital product data struct.
-  */
--int
-+static int
- ahd_verify_vpd_cksum(struct vpd_config *vpd)
- {
- 	int i;
-@@ -9316,6 +9384,24 @@ ahd_release_seeprom(struct ahd_softc *ah
- 	/* Currently a no-op */
- }
- 
++/************************** Interrupt Processing ******************************/
 +/*
-+ * Wait at most 2 seconds for flexport arbitration to succeed.
++ * See if the firmware has posted any completed commands
++ * into our in-core command complete fifos.
 + */
-+static int
-+ahd_wait_flexport(struct ahd_softc *ahd)
++#define AHC_RUN_QOUTFIFO 0x1
++#define AHC_RUN_TQINFIFO 0x2
++static u_int
++ahc_check_cmdcmpltqueues(struct ahc_softc *ahc)
 +{
-+	int cnt;
++	u_int retval;
 +
-+	AHD_ASSERT_MODES(ahd, AHD_MODE_SCSI_MSK, AHD_MODE_SCSI_MSK);
-+	cnt = 1000000 * 2 / 5;
-+	while ((ahd_inb(ahd, BRDCTL) & FLXARBACK) == 0 && --cnt)
-+		ahd_delay(5);
-+
-+	if (cnt == 0)
-+		return (ETIMEDOUT);
-+	return (0);
++	retval = 0;
++	ahc_dmamap_sync(ahc, ahc->shared_data_dmat, ahc->shared_data_dmamap,
++			/*offset*/ahc->qoutfifonext, /*len*/1,
++			BUS_DMASYNC_POSTREAD);
++	if (ahc->qoutfifo[ahc->qoutfifonext] != SCB_LIST_NULL)
++		retval |= AHC_RUN_QOUTFIFO;
++#ifdef AHC_TARGET_MODE
++	if ((ahc->flags & AHC_TARGETROLE) != 0
++	 && (ahc->flags & AHC_TQINFIFO_BLOCKED) == 0) {
++		ahc_dmamap_sync(ahc, ahc->shared_data_dmat,
++				ahc->shared_data_dmamap,
++				ahc_targetcmd_offset(ahc, ahc->tqinfifofnext),
++				/*len*/sizeof(struct target_cmd),
++				BUS_DMASYNC_POSTREAD);
++		if (ahc->targetcmds[ahc->tqinfifonext].cmd_valid != 0)
++			retval |= AHC_RUN_TQINFIFO;
++	}
++#endif
++	return (retval);
 +}
 +
- int
- ahd_write_flexport(struct ahd_softc *ahd, u_int addr, u_int value)
++/*
++ * Catch an interrupt from the adapter
++ */
++int
++ahc_intr(struct ahc_softc *ahc)
++{
++	u_int	intstat;
++
++	if ((ahc->pause & INTEN) == 0) {
++		/*
++		 * Our interrupt is not enabled on the chip
++		 * and may be disabled for re-entrancy reasons,
++		 * so just return.  This is likely just a shared
++		 * interrupt.
++		 */
++		return (0);
++	}
++	/*
++	 * Instead of directly reading the interrupt status register,
++	 * infer the cause of the interrupt by checking our in-core
++	 * completion queues.  This avoids a costly PCI bus read in
++	 * most cases.
++	 */
++	if ((ahc->flags & (AHC_ALL_INTERRUPTS|AHC_EDGE_INTERRUPT)) == 0
++	 && (ahc_check_cmdcmpltqueues(ahc) != 0))
++		intstat = CMDCMPLT;
++	else {
++		intstat = ahc_inb(ahc, INTSTAT);
++	}
++
++	if ((intstat & INT_PEND) == 0) {
++#if AHC_PCI_CONFIG > 0
++		if (ahc->unsolicited_ints > 500) {
++			ahc->unsolicited_ints = 0;
++			if ((ahc->chip & AHC_PCI) != 0
++			 && (ahc_inb(ahc, ERROR) & PCIERRSTAT) != 0)
++				ahc->bus_intr(ahc);
++		}
++#endif
++		ahc->unsolicited_ints++;
++		return (0);
++	}
++	ahc->unsolicited_ints = 0;
++
++	if (intstat & CMDCMPLT) {
++		ahc_outb(ahc, CLRINT, CLRCMDINT);
++
++		/*
++		 * Ensure that the chip sees that we've cleared
++		 * this interrupt before we walk the output fifo.
++		 * Otherwise, we may, due to posted bus writes,
++		 * clear the interrupt after we finish the scan,
++		 * and after the sequencer has added new entries
++		 * and asserted the interrupt again.
++		 */
++		ahc_flush_device_writes(ahc);
++		ahc_run_qoutfifo(ahc);
++#ifdef AHC_TARGET_MODE
++		if ((ahc->flags & AHC_TARGETROLE) != 0)
++			ahc_run_tqinfifo(ahc, /*paused*/FALSE);
++#endif
++	}
++
++	/*
++	 * Handle statuses that may invalidate our cached
++	 * copy of INTSTAT separately.
++	 */
++	if (intstat == 0xFF && (ahc->features & AHC_REMOVABLE) != 0) {
++		/* Hot eject.  Do nothing */
++	} else if (intstat & BRKADRINT) {
++		ahc_handle_brkadrint(ahc);
++	} else if ((intstat & (SEQINT|SCSIINT)) != 0) {
++
++		ahc_pause_bug_fix(ahc);
++
++		if ((intstat & SEQINT) != 0)
++			ahc_handle_seqint(ahc, intstat);
++
++		if ((intstat & SCSIINT) != 0)
++			ahc_handle_scsiint(ahc, intstat);
++	}
++	return (1);
++}
++
+ /***************************** Lookup Tables **********************************/
+ char *ahc_chip_names[] =
  {
-@@ -9357,24 +9443,6 @@ ahd_read_flexport(struct ahd_softc *ahd,
- 	return (0);
- }
- 
--/*
-- * Wait at most 2 seconds for flexport arbitration to succeed.
-- */
--int
--ahd_wait_flexport(struct ahd_softc *ahd)
--{
--	int cnt;
--
--	AHD_ASSERT_MODES(ahd, AHD_MODE_SCSI_MSK, AHD_MODE_SCSI_MSK);
--	cnt = 1000000 * 2 / 5;
--	while ((ahd_inb(ahd, BRDCTL) & FLXARBACK) == 0 && --cnt)
--		ahd_delay(5);
--
--	if (cnt == 0)
--		return (ETIMEDOUT);
--	return (0);
--}
--
- /************************* Target Mode ****************************************/
- #ifdef AHD_TARGET_MODE
- cam_status
-diff -puN drivers/scsi/aic7xxx/aic79xx.h~drivers-scsi-aic7xxx-possible-cleanups drivers/scsi/aic7xxx/aic79xx.h
---- a/drivers/scsi/aic7xxx/aic79xx.h~drivers-scsi-aic7xxx-possible-cleanups
-+++ a/drivers/scsi/aic7xxx/aic79xx.h
-@@ -972,8 +972,6 @@ int		ahd_read_seeprom(struct ahd_softc *
- 
- int		ahd_write_seeprom(struct ahd_softc *ahd, uint16_t *buf,
- 				  u_int start_addr, u_int count);
--int		ahd_wait_seeprom(struct ahd_softc *ahd);
--int		ahd_verify_vpd_cksum(struct vpd_config *vpd);
- int		ahd_verify_cksum(struct seeprom_config *sc);
- int		ahd_acquire_seeprom(struct ahd_softc *ahd);
- void		ahd_release_seeprom(struct ahd_softc *ahd);
-@@ -1320,8 +1318,6 @@ struct ahd_pci_identity {
- 	char			*name;
- 	ahd_device_setup_t	*setup;
- };
--extern struct ahd_pci_identity ahd_pci_ident_table [];
--extern const u_int ahd_num_pci_devs;
- 
- /***************************** VL/EISA Declarations ***************************/
- struct aic7770_identity {
-@@ -1339,15 +1335,6 @@ extern const int ahd_num_aic7770_devs;
- /*************************** Function Declarations ****************************/
- /******************************************************************************/
- void			ahd_reset_cmds_pending(struct ahd_softc *ahd);
--u_int			ahd_find_busy_tcl(struct ahd_softc *ahd, u_int tcl);
--void			ahd_busy_tcl(struct ahd_softc *ahd,
--				     u_int tcl, u_int busyid);
--static __inline void	ahd_unbusy_tcl(struct ahd_softc *ahd, u_int tcl);
--static __inline void
--ahd_unbusy_tcl(struct ahd_softc *ahd, u_int tcl)
--{
--	ahd_busy_tcl(ahd, tcl, SCB_LIST_NULL);
--}
- 
- /***************************** PCI Front End *********************************/
- struct	ahd_pci_identity *ahd_find_pci_device(ahd_dev_softc_t);
-@@ -1356,7 +1343,6 @@ int			  ahd_pci_config(struct ahd_softc 
- int	ahd_pci_test_register_access(struct ahd_softc *);
- 
- /************************** SCB and SCB queue management **********************/
--int		ahd_probe_scbs(struct ahd_softc *);
- void		ahd_qinfifo_requeue_tail(struct ahd_softc *ahd,
- 					 struct scb *scb);
- int		ahd_match_scb(struct ahd_softc *ahd, struct scb *scb,
-@@ -1374,33 +1360,20 @@ int			 ahd_parse_vpddata(struct ahd_soft
- int			 ahd_parse_cfgdata(struct ahd_softc *ahd,
- 					   struct seeprom_config *sc);
- void			 ahd_intr_enable(struct ahd_softc *ahd, int enable);
--void			 ahd_update_coalescing_values(struct ahd_softc *ahd,
--						      u_int timer,
--						      u_int maxcmds,
--						      u_int mincmds);
--void			 ahd_enable_coalescing(struct ahd_softc *ahd,
--					       int enable);
- void			 ahd_pause_and_flushwork(struct ahd_softc *ahd);
- int			 ahd_suspend(struct ahd_softc *ahd); 
--int			 ahd_resume(struct ahd_softc *ahd);
- void			 ahd_set_unit(struct ahd_softc *, int);
- void			 ahd_set_name(struct ahd_softc *, char *);
- struct scb		*ahd_get_scb(struct ahd_softc *ahd, u_int col_idx);
- void			 ahd_free_scb(struct ahd_softc *ahd, struct scb *scb);
--void			 ahd_alloc_scbs(struct ahd_softc *ahd);
- void			 ahd_free(struct ahd_softc *ahd);
- int			 ahd_reset(struct ahd_softc *ahd, int reinit);
--void			 ahd_shutdown(void *arg);
- int			 ahd_write_flexport(struct ahd_softc *ahd,
- 					    u_int addr, u_int value);
- int			 ahd_read_flexport(struct ahd_softc *ahd, u_int addr,
- 					   uint8_t *value);
--int			 ahd_wait_flexport(struct ahd_softc *ahd);
- 
- /*************************** Interrupt Services *******************************/
--void			ahd_pci_intr(struct ahd_softc *ahd);
--void			ahd_clear_intstat(struct ahd_softc *ahd);
--void			ahd_flush_qoutfifo(struct ahd_softc *ahd);
- void			ahd_run_qoutfifo(struct ahd_softc *ahd);
- #ifdef AHD_TARGET_MODE
- void			ahd_run_tqinfifo(struct ahd_softc *ahd, int paused);
-@@ -1409,7 +1382,6 @@ void			ahd_handle_hwerrint(struct ahd_so
- void			ahd_handle_seqint(struct ahd_softc *ahd, u_int intstat);
- void			ahd_handle_scsiint(struct ahd_softc *ahd,
- 					   u_int intstat);
--void			ahd_clear_critical_section(struct ahd_softc *ahd);
- 
- /***************************** Error Recovery *********************************/
- typedef enum {
-@@ -1426,23 +1398,9 @@ int			ahd_search_disc_list(struct ahd_so
- 					     char channel, int lun, u_int tag,
- 					     int stop_on_first, int remove,
- 					     int save_state);
--void			ahd_freeze_devq(struct ahd_softc *ahd, struct scb *scb);
- int			ahd_reset_channel(struct ahd_softc *ahd, char channel,
- 					  int initiate_reset);
--int			ahd_abort_scbs(struct ahd_softc *ahd, int target,
--				       char channel, int lun, u_int tag,
--				       role_t role, uint32_t status);
--void			ahd_restart(struct ahd_softc *ahd);
--void			ahd_clear_fifo(struct ahd_softc *ahd, u_int fifo);
--void			ahd_handle_scb_status(struct ahd_softc *ahd,
--					      struct scb *scb);
--void			ahd_handle_scsi_status(struct ahd_softc *ahd,
--					       struct scb *scb);
--void			ahd_calc_residual(struct ahd_softc *ahd,
--					  struct scb *scb);
- /*************************** Utility Functions ********************************/
--struct ahd_phase_table_entry*
--			ahd_lookup_phase_entry(int phase);
- void			ahd_compile_devinfo(struct ahd_devinfo *devinfo,
- 					    u_int our_id, u_int target,
- 					    u_int lun, char channel,
-@@ -1450,14 +1408,6 @@ void			ahd_compile_devinfo(struct ahd_de
- /************************** Transfer Negotiation ******************************/
- void			ahd_find_syncrate(struct ahd_softc *ahd, u_int *period,
- 					  u_int *ppr_options, u_int maxsync);
--void			ahd_validate_offset(struct ahd_softc *ahd,
--					    struct ahd_initiator_tinfo *tinfo,
--					    u_int period, u_int *offset,
--					    int wide, role_t role);
--void			ahd_validate_width(struct ahd_softc *ahd,
--					   struct ahd_initiator_tinfo *tinfo,
--					   u_int *bus_width,
--					   role_t role);
- /*
-  * Negotiation types.  These are used to qualify if we should renegotiate
-  * even if our goal and current transport parameters are identical.
-@@ -1528,10 +1478,8 @@ extern uint32_t ahd_debug;
- #define AHD_SHOW_INT_COALESCING	0x10000
- #define AHD_DEBUG_SEQUENCER	0x20000
- #endif
--void			ahd_print_scb(struct scb *scb);
- void			ahd_print_devinfo(struct ahd_softc *ahd,
- 					  struct ahd_devinfo *devinfo);
--void			ahd_dump_sglist(struct scb *scb);
- void			ahd_dump_card_state(struct ahd_softc *ahd);
- int			ahd_print_register(ahd_reg_parse_entry_t *table,
- 					   u_int num_entries,
-@@ -1540,5 +1488,4 @@ int			ahd_print_register(ahd_reg_parse_e
- 					   u_int value,
- 					   u_int *cur_column,
- 					   u_int wrap_point);
--void			ahd_dump_scbs(struct ahd_softc *ahd);
- #endif /* _AIC79XX_H_ */
-diff -puN drivers/scsi/aic7xxx/aic79xx_inline.h~drivers-scsi-aic7xxx-possible-cleanups drivers/scsi/aic7xxx/aic79xx_inline.h
---- a/drivers/scsi/aic7xxx/aic79xx_inline.h~drivers-scsi-aic7xxx-possible-cleanups
-+++ a/drivers/scsi/aic7xxx/aic79xx_inline.h
-@@ -418,10 +418,6 @@ ahd_targetcmd_offset(struct ahd_softc *a
- }
- 
- /*********************** Miscelaneous Support Functions ***********************/
--static __inline void	ahd_complete_scb(struct ahd_softc *ahd,
--					 struct scb *scb);
--static __inline void	ahd_update_residual(struct ahd_softc *ahd,
--					    struct scb *scb);
- static __inline struct ahd_initiator_tinfo *
- 			ahd_fetch_transinfo(struct ahd_softc *ahd,
+diff -puN drivers/scsi/aic7xxx/aic7xxx_inline.h~aic7xxx-deinline-large-functions-save-80k-of-text drivers/scsi/aic7xxx/aic7xxx_inline.h
+--- a/drivers/scsi/aic7xxx/aic7xxx_inline.h~aic7xxx-deinline-large-functions-save-80k-of-text
++++ a/drivers/scsi/aic7xxx/aic7xxx_inline.h
+@@ -238,24 +238,18 @@ static __inline struct ahc_initiator_tin
  					    char channel, u_int our_id,
-@@ -467,32 +463,6 @@ static __inline uint32_t
- 			ahd_get_sense_bufaddr(struct ahd_softc *ahd,
- 					      struct scb *scb);
+ 					    u_int remote_id,
+ 					    struct ahc_tmode_tstate **tstate);
+-static __inline uint16_t
+-			ahc_inw(struct ahc_softc *ahc, u_int port);
+-static __inline void	ahc_outw(struct ahc_softc *ahc, u_int port,
+-				 u_int value);
+-static __inline uint32_t
+-			ahc_inl(struct ahc_softc *ahc, u_int port);
+-static __inline void	ahc_outl(struct ahc_softc *ahc, u_int port,
+-				 uint32_t value);
+-static __inline uint64_t
+-			ahc_inq(struct ahc_softc *ahc, u_int port);
+-static __inline void	ahc_outq(struct ahc_softc *ahc, u_int port,
+-				 uint64_t value);
+-static __inline struct scb*
+-			ahc_get_scb(struct ahc_softc *ahc);
+-static __inline void	ahc_free_scb(struct ahc_softc *ahc, struct scb *scb);
+-static __inline void	ahc_swap_with_next_hscb(struct ahc_softc *ahc,
+-						struct scb *scb);
+-static __inline void	ahc_queue_scb(struct ahc_softc *ahc, struct scb *scb);
++uint16_t ahc_inw(struct ahc_softc *ahc, u_int port);
++void	ahc_outw(struct ahc_softc *ahc, u_int port, u_int value);
++uint32_t ahc_inl(struct ahc_softc *ahc, u_int port);
++void	ahc_outl(struct ahc_softc *ahc, u_int port, uint32_t value);
++uint64_t ahc_inq(struct ahc_softc *ahc, u_int port);
++void	ahc_outq(struct ahc_softc *ahc, u_int port, uint64_t value);
++struct scb*
++	ahc_get_scb(struct ahc_softc *ahc);
++void	ahc_free_scb(struct ahc_softc *ahc, struct scb *scb);
++struct scb *
++	ahc_lookup_scb(struct ahc_softc *ahc, u_int tag);
++void	ahc_queue_scb(struct ahc_softc *ahc, struct scb *scb);
+ static __inline struct scsi_sense_data *
+ 			ahc_get_sense_buf(struct ahc_softc *ahc,
+ 					  struct scb *scb);
+@@ -297,193 +291,6 @@ ahc_fetch_transinfo(struct ahc_softc *ah
+ 	return (&(*tstate)->transinfo[remote_id]);
+ }
  
--static __inline void
--ahd_complete_scb(struct ahd_softc *ahd, struct scb *scb)
+-static __inline uint16_t
+-ahc_inw(struct ahc_softc *ahc, u_int port)
 -{
--	uint32_t sgptr;
+-	return ((ahc_inb(ahc, port+1) << 8) | ahc_inb(ahc, port));
+-}
 -
--	sgptr = ahd_le32toh(scb->hscb->sgptr);
--	if ((sgptr & SG_STATUS_VALID) != 0)
--		ahd_handle_scb_status(ahd, scb);
--	else
--		ahd_done(ahd, scb);
+-static __inline void
+-ahc_outw(struct ahc_softc *ahc, u_int port, u_int value)
+-{
+-	ahc_outb(ahc, port, value & 0xFF);
+-	ahc_outb(ahc, port+1, (value >> 8) & 0xFF);
+-}
+-
+-static __inline uint32_t
+-ahc_inl(struct ahc_softc *ahc, u_int port)
+-{
+-	return ((ahc_inb(ahc, port))
+-	      | (ahc_inb(ahc, port+1) << 8)
+-	      | (ahc_inb(ahc, port+2) << 16)
+-	      | (ahc_inb(ahc, port+3) << 24));
+-}
+-
+-static __inline void
+-ahc_outl(struct ahc_softc *ahc, u_int port, uint32_t value)
+-{
+-	ahc_outb(ahc, port, (value) & 0xFF);
+-	ahc_outb(ahc, port+1, ((value) >> 8) & 0xFF);
+-	ahc_outb(ahc, port+2, ((value) >> 16) & 0xFF);
+-	ahc_outb(ahc, port+3, ((value) >> 24) & 0xFF);
+-}
+-
+-static __inline uint64_t
+-ahc_inq(struct ahc_softc *ahc, u_int port)
+-{
+-	return ((ahc_inb(ahc, port))
+-	      | (ahc_inb(ahc, port+1) << 8)
+-	      | (ahc_inb(ahc, port+2) << 16)
+-	      | (ahc_inb(ahc, port+3) << 24)
+-	      | (((uint64_t)ahc_inb(ahc, port+4)) << 32)
+-	      | (((uint64_t)ahc_inb(ahc, port+5)) << 40)
+-	      | (((uint64_t)ahc_inb(ahc, port+6)) << 48)
+-	      | (((uint64_t)ahc_inb(ahc, port+7)) << 56));
+-}
+-
+-static __inline void
+-ahc_outq(struct ahc_softc *ahc, u_int port, uint64_t value)
+-{
+-	ahc_outb(ahc, port, value & 0xFF);
+-	ahc_outb(ahc, port+1, (value >> 8) & 0xFF);
+-	ahc_outb(ahc, port+2, (value >> 16) & 0xFF);
+-	ahc_outb(ahc, port+3, (value >> 24) & 0xFF);
+-	ahc_outb(ahc, port+4, (value >> 32) & 0xFF);
+-	ahc_outb(ahc, port+5, (value >> 40) & 0xFF);
+-	ahc_outb(ahc, port+6, (value >> 48) & 0xFF);
+-	ahc_outb(ahc, port+7, (value >> 56) & 0xFF);
 -}
 -
 -/*
-- * Determine whether the sequencer reported a residual
-- * for this SCB/transaction.
+- * Get a free scb. If there are none, see if we can allocate a new SCB.
 - */
--static __inline void
--ahd_update_residual(struct ahd_softc *ahd, struct scb *scb)
+-static __inline struct scb *
+-ahc_get_scb(struct ahc_softc *ahc)
 -{
--	uint32_t sgptr;
+-	struct scb *scb;
 -
--	sgptr = ahd_le32toh(scb->hscb->sgptr);
--	if ((sgptr & SG_STATUS_VALID) != 0)
--		ahd_calc_residual(ahd, scb);
+-	if ((scb = SLIST_FIRST(&ahc->scb_data->free_scbs)) == NULL) {
+-		ahc_alloc_scbs(ahc);
+-		scb = SLIST_FIRST(&ahc->scb_data->free_scbs);
+-		if (scb == NULL)
+-			return (NULL);
+-	}
+-	SLIST_REMOVE_HEAD(&ahc->scb_data->free_scbs, links.sle);
+-	return (scb);
 -}
 -
- /*
-  * Return pointers to the transfer negotiation information
-  * for the specified our_id/remote_id pair.
-diff -puN drivers/scsi/aic7xxx/aic79xx_osm.c~drivers-scsi-aic7xxx-possible-cleanups drivers/scsi/aic7xxx/aic79xx_osm.c
---- a/drivers/scsi/aic7xxx/aic79xx_osm.c~drivers-scsi-aic7xxx-possible-cleanups
-+++ a/drivers/scsi/aic7xxx/aic79xx_osm.c
-@@ -312,7 +312,7 @@ static uint32_t aic79xx_seltime;
-  * force all outstanding transactions to be serviced prior to a new
-  * transaction.
-  */
--uint32_t aic79xx_periodic_otag;
-+static uint32_t aic79xx_periodic_otag;
- 
- /* Some storage boxes are using an LSI chip which has a bug making it
-  * impossible to use aic79xx Rev B chip in 320 speeds.  The following
-diff -puN drivers/scsi/aic7xxx/aic79xx_osm.h~drivers-scsi-aic7xxx-possible-cleanups drivers/scsi/aic7xxx/aic79xx_osm.h
---- a/drivers/scsi/aic7xxx/aic79xx_osm.h~drivers-scsi-aic7xxx-possible-cleanups
-+++ a/drivers/scsi/aic7xxx/aic79xx_osm.h
-@@ -508,9 +508,6 @@ struct info_str {
- 	int pos;
- };
- 
--void	ahd_format_transinfo(struct info_str *info,
--			     struct ahd_transinfo *tinfo);
+-/*
+- * Return an SCB resource to the free list.
+- */
+-static __inline void
+-ahc_free_scb(struct ahc_softc *ahc, struct scb *scb)
+-{       
+-	struct hardware_scb *hscb;
 -
- /******************************** Locking *************************************/
+-	hscb = scb->hscb;
+-	/* Clean up for the next user */
+-	ahc->scb_data->scbindex[hscb->tag] = NULL;
+-	scb->flags = SCB_FREE;
+-	hscb->control = 0;
+-
+-	SLIST_INSERT_HEAD(&ahc->scb_data->free_scbs, scb, links.sle);
+-
+-	/* Notify the OSM that a resource is now available. */
+-	ahc_platform_scb_free(ahc, scb);
+-}
+-
+-static __inline struct scb *
+-ahc_lookup_scb(struct ahc_softc *ahc, u_int tag)
+-{
+-	struct scb* scb;
+-
+-	scb = ahc->scb_data->scbindex[tag];
+-	if (scb != NULL)
+-		ahc_sync_scb(ahc, scb,
+-			     BUS_DMASYNC_POSTREAD|BUS_DMASYNC_POSTWRITE);
+-	return (scb);
+-}
+-
+-static __inline void
+-ahc_swap_with_next_hscb(struct ahc_softc *ahc, struct scb *scb)
+-{
+-	struct hardware_scb *q_hscb;
+-	u_int  saved_tag;
+-
+-	/*
+-	 * Our queuing method is a bit tricky.  The card
+-	 * knows in advance which HSCB to download, and we
+-	 * can't disappoint it.  To achieve this, the next
+-	 * SCB to download is saved off in ahc->next_queued_scb.
+-	 * When we are called to queue "an arbitrary scb",
+-	 * we copy the contents of the incoming HSCB to the one
+-	 * the sequencer knows about, swap HSCB pointers and
+-	 * finally assign the SCB to the tag indexed location
+-	 * in the scb_array.  This makes sure that we can still
+-	 * locate the correct SCB by SCB_TAG.
+-	 */
+-	q_hscb = ahc->next_queued_scb->hscb;
+-	saved_tag = q_hscb->tag;
+-	memcpy(q_hscb, scb->hscb, sizeof(*scb->hscb));
+-	if ((scb->flags & SCB_CDB32_PTR) != 0) {
+-		q_hscb->shared_data.cdb_ptr =
+-		    ahc_htole32(ahc_hscb_busaddr(ahc, q_hscb->tag)
+-			      + offsetof(struct hardware_scb, cdb32));
+-	}
+-	q_hscb->tag = saved_tag;
+-	q_hscb->next = scb->hscb->tag;
+-
+-	/* Now swap HSCB pointers. */
+-	ahc->next_queued_scb->hscb = scb->hscb;
+-	scb->hscb = q_hscb;
+-
+-	/* Now define the mapping from tag to SCB in the scbindex */
+-	ahc->scb_data->scbindex[scb->hscb->tag] = scb;
+-}
+-
+-/*
+- * Tell the sequencer about a new transaction to execute.
+- */
+-static __inline void
+-ahc_queue_scb(struct ahc_softc *ahc, struct scb *scb)
+-{
+-	ahc_swap_with_next_hscb(ahc, scb);
+-
+-	if (scb->hscb->tag == SCB_LIST_NULL
+-	 || scb->hscb->next == SCB_LIST_NULL)
+-		panic("Attempt to queue invalid SCB tag %x:%x\n",
+-		      scb->hscb->tag, scb->hscb->next);
+-
+-	/*
+-	 * Setup data "oddness".
+-	 */
+-	scb->hscb->lun &= LID;
+-	if (ahc_get_transfer_length(scb) & 0x1)
+-		scb->hscb->lun |= SCB_XFERLEN_ODD;
+-
+-	/*
+-	 * Keep a history of SCBs we've downloaded in the qinfifo.
+-	 */
+-	ahc->qinfifo[ahc->qinfifonext++] = scb->hscb->tag;
+-
+-	/*
+-	 * Make sure our data is consistent from the
+-	 * perspective of the adapter.
+-	 */
+-	ahc_sync_scb(ahc, scb, BUS_DMASYNC_PREREAD|BUS_DMASYNC_PREWRITE);
+-
+-	/* Tell the adapter about the newly queued SCB */
+-	if ((ahc->features & AHC_QUEUE_REGS) != 0) {
+-		ahc_outb(ahc, HNSCB_QOFF, ahc->qinfifonext);
+-	} else {
+-		if ((ahc->features & AHC_AUTOPAUSE) == 0)
+-			ahc_pause(ahc);
+-		ahc_outb(ahc, KERNEL_QINPOS, ahc->qinfifonext);
+-		if ((ahc->features & AHC_AUTOPAUSE) == 0)
+-			ahc_unpause(ahc);
+-	}
+-}
+-
+ static __inline struct scsi_sense_data *
+ ahc_get_sense_buf(struct ahc_softc *ahc, struct scb *scb)
+ {
+@@ -506,8 +313,7 @@ ahc_get_sense_bufaddr(struct ahc_softc *
+ /************************** Interrupt Processing ******************************/
+ static __inline void	ahc_sync_qoutfifo(struct ahc_softc *ahc, int op);
+ static __inline void	ahc_sync_tqinfifo(struct ahc_softc *ahc, int op);
+-static __inline u_int	ahc_check_cmdcmpltqueues(struct ahc_softc *ahc);
+-static __inline int	ahc_intr(struct ahc_softc *ahc);
++int	ahc_intr(struct ahc_softc *ahc);
+ 
  static __inline void
- ahd_lockinit(struct ahd_softc *ahd)
-@@ -584,8 +581,6 @@ ahd_unlock(struct ahd_softc *ahd, unsign
- #define PCIXM_STATUS_MAXCRDS	0x1C00	/* Maximum Cumulative Read Size */
- #define PCIXM_STATUS_RCVDSCEM	0x2000	/* Received a Split Comp w/Error msg */
- 
--extern struct pci_driver aic79xx_pci_driver;
--
- typedef enum
- {
- 	AHD_POWER_STATE_D0,
-diff -puN drivers/scsi/aic7xxx/aic79xx_osm_pci.c~drivers-scsi-aic7xxx-possible-cleanups drivers/scsi/aic7xxx/aic79xx_osm_pci.c
---- a/drivers/scsi/aic7xxx/aic79xx_osm_pci.c~drivers-scsi-aic7xxx-possible-cleanups
-+++ a/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
-@@ -82,7 +82,7 @@ static struct pci_device_id ahd_linux_pc
- 
- MODULE_DEVICE_TABLE(pci, ahd_linux_pci_id_table);
- 
--struct pci_driver aic79xx_pci_driver = {
-+static struct pci_driver aic79xx_pci_driver = {
- 	.name		= "aic79xx",
- 	.probe		= ahd_linux_pci_dev_probe,
- 	.remove		= ahd_linux_pci_dev_remove,
-diff -puN drivers/scsi/aic7xxx/aic79xx_pci.c~drivers-scsi-aic7xxx-possible-cleanups drivers/scsi/aic7xxx/aic79xx_pci.c
---- a/drivers/scsi/aic7xxx/aic79xx_pci.c~drivers-scsi-aic7xxx-possible-cleanups
-+++ a/drivers/scsi/aic7xxx/aic79xx_pci.c
-@@ -97,7 +97,7 @@ static ahd_device_setup_t ahd_aic7901A_s
- static ahd_device_setup_t ahd_aic7902_setup;
- static ahd_device_setup_t ahd_aic790X_setup;
- 
--struct ahd_pci_identity ahd_pci_ident_table [] =
-+static struct ahd_pci_identity ahd_pci_ident_table [] =
- {
- 	/* aic7901 based controllers */
- 	{
-@@ -201,7 +201,7 @@ struct ahd_pci_identity ahd_pci_ident_ta
- 	}
- };
- 
--const u_int ahd_num_pci_devs = ARRAY_SIZE(ahd_pci_ident_table);
-+static const u_int ahd_num_pci_devs = ARRAY_SIZE(ahd_pci_ident_table);
- 		
- #define	DEVCONFIG		0x40
- #define		PCIXINITPAT	0x0000E000ul
-@@ -245,6 +245,7 @@ static int	ahd_check_extport(struct ahd_
- static void	ahd_configure_termination(struct ahd_softc *ahd,
- 					  u_int adapter_control);
- static void	ahd_pci_split_intr(struct ahd_softc *ahd, u_int intstat);
-+static void	ahd_pci_intr(struct ahd_softc *ahd);
- 
- struct ahd_pci_identity *
- ahd_find_pci_device(ahd_dev_softc_t pci)
-@@ -757,7 +758,7 @@ static const char *pci_status_strings[] 
- 	"%s: Address or Write Phase Parity Error Detected in %s.\n"
- };
- 
--void
-+static void
- ahd_pci_intr(struct ahd_softc *ahd)
- {
- 	uint8_t		pci_status[8];
-diff -puN drivers/scsi/aic7xxx/aic79xx_proc.c~drivers-scsi-aic7xxx-possible-cleanups drivers/scsi/aic7xxx/aic79xx_proc.c
---- a/drivers/scsi/aic7xxx/aic79xx_proc.c~drivers-scsi-aic7xxx-possible-cleanups
-+++ a/drivers/scsi/aic7xxx/aic79xx_proc.c
-@@ -136,7 +136,7 @@ copy_info(struct info_str *info, char *f
- 	return (len);
+ ahc_sync_qoutfifo(struct ahc_softc *ahc, int op)
+@@ -530,120 +336,4 @@ ahc_sync_tqinfifo(struct ahc_softc *ahc,
+ #endif
  }
  
--void
-+static void
- ahd_format_transinfo(struct info_str *info, struct ahd_transinfo *tinfo)
- {
- 	u_int speed;
-diff -puN drivers/scsi/aic7xxx/aic7xxx.h~drivers-scsi-aic7xxx-possible-cleanups drivers/scsi/aic7xxx/aic7xxx.h
---- a/drivers/scsi/aic7xxx/aic7xxx.h~drivers-scsi-aic7xxx-possible-cleanups
-+++ a/drivers/scsi/aic7xxx/aic7xxx.h
-@@ -1135,8 +1135,6 @@ struct ahc_pci_identity {
- 	char			*name;
- 	ahc_device_setup_t	*setup;
- };
--extern struct ahc_pci_identity ahc_pci_ident_table[];
--extern const u_int ahc_num_pci_devs;
- 
- /***************************** VL/EISA Declarations ***************************/
- struct aic7770_identity {
-diff -puN drivers/scsi/aic7xxx/aic7xxx_osm.c~drivers-scsi-aic7xxx-possible-cleanups drivers/scsi/aic7xxx/aic7xxx_osm.c
---- a/drivers/scsi/aic7xxx/aic7xxx_osm.c~drivers-scsi-aic7xxx-possible-cleanups
-+++ a/drivers/scsi/aic7xxx/aic7xxx_osm.c
-@@ -328,7 +328,7 @@ static uint32_t aic7xxx_seltime;
-  * force all outstanding transactions to be serviced prior to a new
-  * transaction.
-  */
--uint32_t aic7xxx_periodic_otag;
-+static uint32_t aic7xxx_periodic_otag;
- 
- /*
-  * Module information and settable options.
-diff -puN drivers/scsi/aic7xxx/aic7xxx_osm.h~drivers-scsi-aic7xxx-possible-cleanups drivers/scsi/aic7xxx/aic7xxx_osm.h
---- a/drivers/scsi/aic7xxx/aic7xxx_osm.h~drivers-scsi-aic7xxx-possible-cleanups
-+++ a/drivers/scsi/aic7xxx/aic7xxx_osm.h
-@@ -534,8 +534,6 @@ ahc_unlock(struct ahc_softc *ahc, unsign
- #define PCIR_SUBVEND_0	0x2c
- #define PCIR_SUBDEV_0	0x2e
- 
--extern struct pci_driver aic7xxx_pci_driver;
+-/*
+- * See if the firmware has posted any completed commands
+- * into our in-core command complete fifos.
+- */
+-#define AHC_RUN_QOUTFIFO 0x1
+-#define AHC_RUN_TQINFIFO 0x2
+-static __inline u_int
+-ahc_check_cmdcmpltqueues(struct ahc_softc *ahc)
+-{
+-	u_int retval;
 -
- typedef enum
- {
- 	AHC_POWER_STATE_D0,
-diff -puN drivers/scsi/aic7xxx/aic7xxx_osm_pci.c~drivers-scsi-aic7xxx-possible-cleanups drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
---- a/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c~drivers-scsi-aic7xxx-possible-cleanups
-+++ a/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
-@@ -130,7 +130,7 @@ static struct pci_device_id ahc_linux_pc
+-	retval = 0;
+-	ahc_dmamap_sync(ahc, ahc->shared_data_dmat, ahc->shared_data_dmamap,
+-			/*offset*/ahc->qoutfifonext, /*len*/1,
+-			BUS_DMASYNC_POSTREAD);
+-	if (ahc->qoutfifo[ahc->qoutfifonext] != SCB_LIST_NULL)
+-		retval |= AHC_RUN_QOUTFIFO;
+-#ifdef AHC_TARGET_MODE
+-	if ((ahc->flags & AHC_TARGETROLE) != 0
+-	 && (ahc->flags & AHC_TQINFIFO_BLOCKED) == 0) {
+-		ahc_dmamap_sync(ahc, ahc->shared_data_dmat,
+-				ahc->shared_data_dmamap,
+-				ahc_targetcmd_offset(ahc, ahc->tqinfifofnext),
+-				/*len*/sizeof(struct target_cmd),
+-				BUS_DMASYNC_POSTREAD);
+-		if (ahc->targetcmds[ahc->tqinfifonext].cmd_valid != 0)
+-			retval |= AHC_RUN_TQINFIFO;
+-	}
+-#endif
+-	return (retval);
+-}
+-
+-/*
+- * Catch an interrupt from the adapter
+- */
+-static __inline int
+-ahc_intr(struct ahc_softc *ahc)
+-{
+-	u_int	intstat;
+-
+-	if ((ahc->pause & INTEN) == 0) {
+-		/*
+-		 * Our interrupt is not enabled on the chip
+-		 * and may be disabled for re-entrancy reasons,
+-		 * so just return.  This is likely just a shared
+-		 * interrupt.
+-		 */
+-		return (0);
+-	}
+-	/*
+-	 * Instead of directly reading the interrupt status register,
+-	 * infer the cause of the interrupt by checking our in-core
+-	 * completion queues.  This avoids a costly PCI bus read in
+-	 * most cases.
+-	 */
+-	if ((ahc->flags & (AHC_ALL_INTERRUPTS|AHC_EDGE_INTERRUPT)) == 0
+-	 && (ahc_check_cmdcmpltqueues(ahc) != 0))
+-		intstat = CMDCMPLT;
+-	else {
+-		intstat = ahc_inb(ahc, INTSTAT);
+-	}
+-
+-	if ((intstat & INT_PEND) == 0) {
+-#if AHC_PCI_CONFIG > 0
+-		if (ahc->unsolicited_ints > 500) {
+-			ahc->unsolicited_ints = 0;
+-			if ((ahc->chip & AHC_PCI) != 0
+-			 && (ahc_inb(ahc, ERROR) & PCIERRSTAT) != 0)
+-				ahc->bus_intr(ahc);
+-		}
+-#endif
+-		ahc->unsolicited_ints++;
+-		return (0);
+-	}
+-	ahc->unsolicited_ints = 0;
+-
+-	if (intstat & CMDCMPLT) {
+-		ahc_outb(ahc, CLRINT, CLRCMDINT);
+-
+-		/*
+-		 * Ensure that the chip sees that we've cleared
+-		 * this interrupt before we walk the output fifo.
+-		 * Otherwise, we may, due to posted bus writes,
+-		 * clear the interrupt after we finish the scan,
+-		 * and after the sequencer has added new entries
+-		 * and asserted the interrupt again.
+-		 */
+-		ahc_flush_device_writes(ahc);
+-		ahc_run_qoutfifo(ahc);
+-#ifdef AHC_TARGET_MODE
+-		if ((ahc->flags & AHC_TARGETROLE) != 0)
+-			ahc_run_tqinfifo(ahc, /*paused*/FALSE);
+-#endif
+-	}
+-
+-	/*
+-	 * Handle statuses that may invalidate our cached
+-	 * copy of INTSTAT separately.
+-	 */
+-	if (intstat == 0xFF && (ahc->features & AHC_REMOVABLE) != 0) {
+-		/* Hot eject.  Do nothing */
+-	} else if (intstat & BRKADRINT) {
+-		ahc_handle_brkadrint(ahc);
+-	} else if ((intstat & (SEQINT|SCSIINT)) != 0) {
+-
+-		ahc_pause_bug_fix(ahc);
+-
+-		if ((intstat & SEQINT) != 0)
+-			ahc_handle_seqint(ahc, intstat);
+-
+-		if ((intstat & SCSIINT) != 0)
+-			ahc_handle_scsiint(ahc, intstat);
+-	}
+-	return (1);
+-}
+-
+ #endif  /* _AIC7XXX_INLINE_H_ */
+diff -puN drivers/scsi/aic7xxx/aic7xxx_osm.c~aic7xxx-deinline-large-functions-save-80k-of-text drivers/scsi/aic7xxx/aic7xxx_osm.c
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm.c~aic7xxx-deinline-large-functions-save-80k-of-text
++++ a/drivers/scsi/aic7xxx/aic7xxx_osm.c
+@@ -392,7 +392,7 @@ static int ahc_linux_unit;
+ /********************************* Inlines ************************************/
+ static __inline void ahc_linux_unmap_scb(struct ahc_softc*, struct scb*);
  
- MODULE_DEVICE_TABLE(pci, ahc_linux_pci_id_table);
+-static __inline int ahc_linux_map_seg(struct ahc_softc *ahc, struct scb *scb,
++static int ahc_linux_map_seg(struct ahc_softc *ahc, struct scb *scb,
+ 		 		      struct ahc_dma_seg *sg,
+ 				      dma_addr_t addr, bus_size_t len);
  
--struct pci_driver aic7xxx_pci_driver = {
-+static struct pci_driver aic7xxx_pci_driver = {
- 	.name		= "aic7xxx",
- 	.probe		= ahc_linux_pci_dev_probe,
- 	.remove		= ahc_linux_pci_dev_remove,
-diff -puN drivers/scsi/aic7xxx/aic7xxx_pci.c~drivers-scsi-aic7xxx-possible-cleanups drivers/scsi/aic7xxx/aic7xxx_pci.c
---- a/drivers/scsi/aic7xxx/aic7xxx_pci.c~drivers-scsi-aic7xxx-possible-cleanups
-+++ a/drivers/scsi/aic7xxx/aic7xxx_pci.c
-@@ -168,7 +168,7 @@ static ahc_device_setup_t ahc_aha394XX_s
- static ahc_device_setup_t ahc_aha494XX_setup;
- static ahc_device_setup_t ahc_aha398XX_setup;
- 
--struct ahc_pci_identity ahc_pci_ident_table [] =
-+static struct ahc_pci_identity ahc_pci_ident_table [] =
- {
- 	/* aic7850 based controllers */
- 	{
-@@ -559,7 +559,7 @@ struct ahc_pci_identity ahc_pci_ident_ta
+@@ -417,7 +417,7 @@ ahc_linux_unmap_scb(struct ahc_softc *ah
  	}
- };
+ }
  
--const u_int ahc_num_pci_devs = ARRAY_SIZE(ahc_pci_ident_table);
-+static const u_int ahc_num_pci_devs = ARRAY_SIZE(ahc_pci_ident_table);
- 		
- #define AHC_394X_SLOT_CHANNEL_A	4
- #define AHC_394X_SLOT_CHANNEL_B	5
+-static __inline int
++static int
+ ahc_linux_map_seg(struct ahc_softc *ahc, struct scb *scb,
+ 		  struct ahc_dma_seg *sg, dma_addr_t addr, bus_size_t len)
+ {
+@@ -491,7 +491,7 @@ ahc_linux_queue(struct scsi_cmnd * cmd, 
+ 	return rtn;
+ }
+ 
+-static inline struct scsi_target **
++static struct scsi_target **
+ ahc_linux_target_in_softc(struct scsi_target *starget)
+ {
+ 	struct	ahc_softc *ahc =
+diff -puN drivers/scsi/aic7xxx/aic7xxx_osm.h~aic7xxx-deinline-large-functions-save-80k-of-text drivers/scsi/aic7xxx/aic7xxx_osm.h
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm.h~aic7xxx-deinline-large-functions-save-80k-of-text
++++ a/drivers/scsi/aic7xxx/aic7xxx_osm.h
+@@ -384,82 +384,18 @@ struct ahc_platform_data {
+ #define malloc(size, type, flags) kmalloc(size, flags)
+ #define free(ptr, type) kfree(ptr)
+ 
+-static __inline void ahc_delay(long);
+-static __inline void
+-ahc_delay(long usec)
++static inline void ahc_delay(int usec)
+ {
+-	/*
+-	 * udelay on Linux can have problems for
+-	 * multi-millisecond waits.  Wait at most
+-	 * 1024us per call.
+-	 */
+-	while (usec > 0) {
+-		udelay(usec % 1024);
+-		usec -= 1024;
+-	}
++	udelay(usec);
+ }
+ 
+-
+ /***************************** Low Level I/O **********************************/
+-static __inline uint8_t ahc_inb(struct ahc_softc * ahc, long port);
+-static __inline void ahc_outb(struct ahc_softc * ahc, long port, uint8_t val);
+-static __inline void ahc_outsb(struct ahc_softc * ahc, long port,
+-			       uint8_t *, int count);
+-static __inline void ahc_insb(struct ahc_softc * ahc, long port,
+-			       uint8_t *, int count);
+-
+-static __inline uint8_t
+-ahc_inb(struct ahc_softc * ahc, long port)
+-{
+-	uint8_t x;
+-
+-	if (ahc->tag == BUS_SPACE_MEMIO) {
+-		x = readb(ahc->bsh.maddr + port);
+-	} else {
+-		x = inb(ahc->bsh.ioport + port);
+-	}
+-	mb();
+-	return (x);
+-}
+-
+-static __inline void
+-ahc_outb(struct ahc_softc * ahc, long port, uint8_t val)
+-{
+-	if (ahc->tag == BUS_SPACE_MEMIO) {
+-		writeb(val, ahc->bsh.maddr + port);
+-	} else {
+-		outb(val, ahc->bsh.ioport + port);
+-	}
+-	mb();
+-}
+-
+-static __inline void
+-ahc_outsb(struct ahc_softc * ahc, long port, uint8_t *array, int count)
+-{
+-	int i;
+-
+-	/*
+-	 * There is probably a more efficient way to do this on Linux
+-	 * but we don't use this for anything speed critical and this
+-	 * should work.
+-	 */
+-	for (i = 0; i < count; i++)
+-		ahc_outb(ahc, port, *array++);
+-}
+-
+-static __inline void
+-ahc_insb(struct ahc_softc * ahc, long port, uint8_t *array, int count)
+-{
+-	int i;
+-
+-	/*
+-	 * There is probably a more efficient way to do this on Linux
+-	 * but we don't use this for anything speed critical and this
+-	 * should work.
+-	 */
+-	for (i = 0; i < count; i++)
+-		*array++ = ahc_inb(ahc, port);
+-}
++uint8_t ahc_inb(struct ahc_softc * ahc, long port);
++void ahc_outb(struct ahc_softc * ahc, long port, uint8_t val);
++void ahc_outsb(struct ahc_softc * ahc, long port,
++	       uint8_t *, int count);
++void ahc_insb(struct ahc_softc * ahc, long port,
++	       uint8_t *, int count);
+ 
+ /**************************** Initialization **********************************/
+ int		ahc_linux_register_host(struct ahc_softc *,
+@@ -564,6 +500,7 @@ void			 ahc_linux_pci_exit(void);
+ int			 ahc_pci_map_registers(struct ahc_softc *ahc);
+ int			 ahc_pci_map_int(struct ahc_softc *ahc);
+ 
++void ahc_BUG_bad_pci_rw_size(void);
+ static __inline uint32_t ahc_pci_read_config(ahc_dev_softc_t pci,
+ 					     int reg, int width);
+ 
+@@ -591,7 +528,7 @@ ahc_pci_read_config(ahc_dev_softc_t pci,
+ 		return (retval);
+ 	}
+ 	default:
+-		panic("ahc_pci_read_config: Read size too big");
++		ahc_BUG_bad_pci_rw_size();
+ 		/* NOTREACHED */
+ 		return (0);
+ 	}
+@@ -615,7 +552,7 @@ ahc_pci_write_config(ahc_dev_softc_t pci
+ 		pci_write_config_dword(pci, reg, value);
+ 		break;
+ 	default:
+-		panic("ahc_pci_write_config: Write size too big");
++		ahc_BUG_bad_pci_rw_size();
+ 		/* NOTREACHED */
+ 	}
+ }
 _
