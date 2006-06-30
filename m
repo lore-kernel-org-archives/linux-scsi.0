@@ -1,58 +1,56 @@
-From: Eric Moore <eric.moore@lsil.com>
-Subject: [PATCH] mptbase: mpt_interrupt should return IRQ_NONE
-Date: Thu, 29 Jun 2006 17:38:43 -0600
-Message-ID: <20060629233842.GB22380@lsil.com>
+From: "Keith Baker" <krbaker@metacarta.com>
+Subject: MegaSAS Hang on Smart Query
+Date: Thu, 29 Jun 2006 20:29:45 -0400 (EDT)
+Message-ID: <3541.10.0.0.113.1151627385.squirrel@webmail.metacarta.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:5772 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1750779AbWF2XvQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Jun 2006 19:51:16 -0400
-Content-Disposition: inline
+Received: from silene.metacarta.com ([65.77.47.18]:47809 "EHLO
+	silene.metacarta.com") by vger.kernel.org with ESMTP
+	id S964825AbWF3A3r (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 Jun 2006 20:29:47 -0400
+Received: from localhost (silene.metacarta.com [65.77.47.18])
+	by silene.metacarta.com (Postfix) with ESMTP id B8E0F9F8B6
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Jun 2006 20:29:46 -0400 (EDT)
+Received: from silene.metacarta.com ([65.77.47.18])
+	by localhost (silene.metacarta.com [65.77.47.18]) (amavisd-new, port 10024)
+	with ESMTP id 28565-09 for <linux-scsi@vger.kernel.org>;
+	Thu, 29 Jun 2006 20:29:45 -0400 (EDT)
+Received: from webmail.metacarta.com (cone-peak.metacarta.com [65.77.47.8])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by silene.metacarta.com (Postfix) with ESMTP id D57D69F8B7
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Jun 2006 20:29:45 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
-Cc: akpm@osdl.com
+To: linux-scsi@vger.kernel.org
 
-The way mpt_interrupt() was coded, it was impossible for the unhandled
-interrupt detection logic to ever trigger. All interrupt handlers should
-return IRQ_NONE when they have nothing to do.
+I've been having a hang with 2.6.16.22 and the megasas driver.  I'm pretty
+sure it has to do with a smartctl -a <logical drive>.  The SCSI layer gets
+all sorts of in a twist.
 
-Signed-off-by: Jan Beulich <jbeulich@novell.com>
-Signed-off-by: Andrew Morton <akpm@osdl.com>
-Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
+megasas: waiting for 2 commands to complete
+- repeats a bunch of times then -
+sd 0:2:0:0: rejecting I/O to offline device
 
+Given a bit of wisdom in a driver distributed by dell which mentioned the
+controller not responding to a cache inqury...  isn't the correct thing to
+do respond with some sort of unsupported response?  not just ignore the
+query?
 
-diff -uarpN b/drivers/message/fusion/mptbase.c a/drivers/message/fusion/mptbase.c
---- b/drivers/message/fusion/mptbase.c	2006-06-29 15:57:54.000000000 -0600
-+++ a/drivers/message/fusion/mptbase.c	2006-06-29 15:59:46.000000000 -0600
-@@ -369,20 +369,21 @@ static irqreturn_t
- mpt_interrupt(int irq, void *bus_id, struct pt_regs *r)
- {
- 	MPT_ADAPTER *ioc = bus_id;
--	u32 pa;
-+	u32 pa = CHIPREG_READ32_dmasync(&ioc->chip->ReplyFifo);
-+
-+	if (pa == 0xFFFFFFFF)
-+		return IRQ_NONE;
- 
- 	/*
- 	 *  Drain the reply FIFO!
- 	 */
--	while (1) {
--		pa = CHIPREG_READ32_dmasync(&ioc->chip->ReplyFifo);
--		if (pa == 0xFFFFFFFF)
--			return IRQ_HANDLED;
--		else if (pa & MPI_ADDRESS_REPLY_A_BIT)
-+	do {
-+		if (pa & MPI_ADDRESS_REPLY_A_BIT)
- 			mpt_reply(ioc, pa);
- 		else
- 			mpt_turbo_reply(ioc, pa);
--	}
-+		pa = CHIPREG_READ32_dmasync(&ioc->chip->ReplyFifo);
-+	} while (pa != 0xFFFFFFFF);
- 
- 	return IRQ_HANDLED;
- }
+I've hunted around for patches around this problem but haven't found any,
+of course "don't use smart against a logical drive" works, but I'm not the
+only one using these boxes and it does cause the system to go down.
+
+-- 
+Keith Baker
+
+MetaCarta, Inc
+
+350 Massachusetts Ave, 4th Floor
+
+Cambridge, MA 02139 USA
+
+www.metacarta.com <http://www.metacarta.com>
+
