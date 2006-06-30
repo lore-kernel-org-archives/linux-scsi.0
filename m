@@ -1,48 +1,79 @@
 From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: MegaSAS Hang on Smart Query
-Date: Thu, 29 Jun 2006 23:03:26 -0400
-Message-ID: <44A4947E.2090802@torque.net>
-References: <3541.10.0.0.113.1151627385.squirrel@webmail.metacarta.com>
+Subject: Re: [PATCH] Fix bad error handling in sg.c
+Date: Thu, 29 Jun 2006 23:40:16 -0400
+Message-ID: <44A49D20.5050003@torque.net>
+References: <20060629133954.GA7834@mellanox.co.il>
 Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:14495 "EHLO
+Received: from pentafluge.infradead.org ([213.146.154.40]:65238 "EHLO
 	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S964935AbWF3DDk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Jun 2006 23:03:40 -0400
-In-Reply-To: <3541.10.0.0.113.1151627385.squirrel@webmail.metacarta.com>
+	id S1750767AbWF3DkV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 Jun 2006 23:40:21 -0400
+In-Reply-To: <20060629133954.GA7834@mellanox.co.il>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Keith Baker <krbaker@metacarta.com>
+To: Ishai Rabinovitz <ishai@mellanox.co.il>
 Cc: linux-scsi@vger.kernel.org
 
-Keith Baker wrote:
-> I've been having a hang with 2.6.16.22 and the megasas driver.  I'm pretty
-> sure it has to do with a smartctl -a <logical drive>.  The SCSI layer gets
-> all sorts of in a twist.
-
-Keith,
-Could you add '-r ioctl,3' to the smartctl command line
-to get a full debug output. Then we can see which SCSI
-commands the megasas driver or hardware doesn't like.
-
-> megasas: waiting for 2 commands to complete
-> - repeats a bunch of times then -
-> sd 0:2:0:0: rejecting I/O to offline device
+Ishai Rabinovitz wrote:
+> Hi,
 > 
-> Given a bit of wisdom in a driver distributed by dell which mentioned the
-> controller not responding to a cache inqury...  isn't the correct thing to
-> do respond with some sort of unsupported response?  not just ignore the
-> query?
+> I'm taking a part in the development of SRP (Scsi RDMA Protocol).
+> While running tests on SRP, I think I found a bug in the scsi layer.
+> 
+> I got a NULL derefrence in cdev_del+1 when called from sg_remove. By looking at
+> the code of sg_add, sg_alloc and sg_remove (all in drivers/scsi/sg.c) I found
+> out that sg_add is calling sg_alloc but if it fails afterwards it does not
+> deallocate the space that was allocated in sg_alloc and the redundant entry has
+> NULL in cdev. When sg_remove is being called, it tries to perform cdev_del to
+> this NULL cdev and fails.
+> 
+> I think that the following patch solves this problem.
 
-Correct. I'm sure the vendor knows what should be done.
+Ishai,
+Both the analysis and the patch look correct. Thanks.
 
-> I've hunted around for patches around this problem but haven't found any,
-> of course "don't use smart against a logical drive" works, but I'm not the
-> only one using these boxes and it does cause the system to go down.
+> Signed-off-by: Ishai Rabinovitz <ishai@mellanox.co.il>
 
-Doug Gilbert
+Signed-off-by: Douglas Gilbert <dougg@torque.net>
 
+> 
+> Index: ishai/linux-2.6.17/drivers/scsi/sg.c
+> ===================================================================
+> --- linux-2.6.17.orig/drivers/scsi/sg.c	2006-06-15 17:08:11.659864000 +0300
+> +++ linux-2.6.17/drivers/scsi/sg.c	2006-06-16 00:32:26.676638000 +0300
+> @@ -1402,6 +1402,7 @@ sg_add(struct class_device *cl_dev, stru
+>  	Sg_device *sdp = NULL;
+>  	struct cdev * cdev = NULL;
+>  	int error, k;
+> +	unsigned long iflags;
+>  
+>  	disk = alloc_disk(1);
+>  	if (!disk) {
+> @@ -1429,7 +1430,7 @@ sg_add(struct class_device *cl_dev, stru
+>  
+>  	error = cdev_add(cdev, MKDEV(SCSI_GENERIC_MAJOR, k), 1);
+>  	if (error)
+> -		goto out;
+> +		goto cdev_add_err;
+>  
+>  	sdp->cdev = cdev;
+>  	if (sg_sysfs_valid) {
+> @@ -1456,6 +1457,13 @@ sg_add(struct class_device *cl_dev, stru
+>  
+>  	return 0;
+>  
+> +cdev_add_err:
+> +	write_lock_irqsave(&sg_dev_arr_lock, iflags);
+> +	kfree(sg_dev_arr[k]);
+> +	sg_dev_arr[k] = NULL;
+> +	sg_nr_dev--;
+> +	write_unlock_irqrestore(&sg_dev_arr_lock, iflags);
+> +
+>  out:
+>  	put_disk(disk);
+>  	if (cdev)
 
