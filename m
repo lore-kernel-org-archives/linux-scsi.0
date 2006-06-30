@@ -1,54 +1,46 @@
 From: akpm@osdl.org
-Subject: [patch 14/22] megaraid gcc 4.1 warning fix
-Date: Fri, 30 Jun 2006 02:33:13 -0700
-Message-ID: <200606300933.k5U9XDUN001720@shell0.pdx.osdl.net>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Subject: [patch 16/22] qla1280: fix section mismatch warnings
+Date: Fri, 30 Jun 2006 02:33:14 -0700
+Message-ID: <200606300933.k5U9XEsN001729@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:56466 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932156AbWF3JeX (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:57234 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932116AbWF3Je0 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Jun 2006 05:34:23 -0400
+	Fri, 30 Jun 2006 05:34:26 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, dwalker@mvista.com, alan@lxorguk.ukuu.org.uk, Neela.Kolli@engenio.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, rdunlap@xenotime.net, andrew.vasquez@qlogic.com
 
-=46rom: Daniel Walker <dwalker@mvista.com>
+From: Randy Dunlap <rdunlap@xenotime.net>
 
-drivers/scsi/megaraid.c: In function =E2=80=98megadev_ioctl=E2=80=99:
-drivers/scsi/megaraid.c:3665: warning: ignoring return value of =E2=80=98=
-copy_to_user=E2=80=99, declared with attribute warn_unused_result
+Fix section mismatch warnings:
+WARNING: drivers/scsi/qla1280.o - Section mismatch: reference to
+.init.data: from .text between 'qla1280_get_token' (at offset 0x2a16)
+and 'qla1280_probe_one'
+WARNING: drivers/scsi/qla1280.o - Section mismatch: reference to
+.init.data: from .text between 'qla1280_get_token' (at offset 0x2a3c)
+and 'qla1280_probe_one'
 
-Signed-off-by: Daniel Walker <dwalker@mvista.com>
-Acked-by: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: <Neela.Kolli@engenio.com>
+Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/megaraid.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/scsi/qla1280.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/megaraid.c~megaraid-gcc-41-warning-fix drivers/s=
-csi/megaraid.c
---- a/drivers/scsi/megaraid.c~megaraid-gcc-41-warning-fix
-+++ a/drivers/scsi/megaraid.c
-@@ -3662,8 +3662,9 @@ megadev_ioctl(struct inode *inode, struc
- 			 * Send the request sense data also, irrespective of
- 			 * whether the user has asked for it or not.
- 			 */
--			copy_to_user(upthru->reqsensearea,
--					pthru->reqsensearea, 14);
-+			if (copy_to_user(upthru->reqsensearea,
-+					pthru->reqsensearea, 14))
-+				rval =3D (-EFAULT);
-=20
- freemem_and_return:
- 			if( pthru->dataxferlen ) {
+diff -puN drivers/scsi/qla1280.c~qla1280-fix-section-mismatch-warnings drivers/scsi/qla1280.c
+--- a/drivers/scsi/qla1280.c~qla1280-fix-section-mismatch-warnings
++++ a/drivers/scsi/qla1280.c
+@@ -4210,7 +4210,7 @@ qla1280_setup(char *s)
+ }
+ 
+ 
+-static int
++static int __init
+ qla1280_get_token(char *str)
+ {
+ 	char *sep;
 _
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
