@@ -1,49 +1,35 @@
-From: akpm@osdl.org
-Subject: [patch 22/22] drivers/message/fusion/mptsas.c: make 2 functions static
-Date: Fri, 30 Jun 2006 02:33:19 -0700
-Message-ID: <200606300933.k5U9XJJX001748@shell0.pdx.osdl.net>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: [patch 05/22] drivers/scsi/qla2xxx/: make some more functions static
+Date: Fri, 30 Jun 2006 09:29:27 -0700
+Message-ID: <20060630162927.GF2482@andrew-vasquezs-powerbook-g4-15.local>
+References: <200606300933.k5U9X6Fq001689@shell0.pdx.osdl.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:51094 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932225AbWF3JsE (ORCPT
+Received: from pat.qlogic.com ([198.70.193.2]:46878 "EHLO avexch1.qlogic.com")
+	by vger.kernel.org with ESMTP id S932092AbWF3Q33 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Jun 2006 05:48:04 -0400
+	Fri, 30 Jun 2006 12:29:29 -0400
+Content-Disposition: inline
+In-Reply-To: <200606300933.k5U9X6Fq001689@shell0.pdx.osdl.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, bunk@stusta.de, Eric.Moore@lsil.com
+To: akpm@osdl.org
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, bunk@stusta.de
 
-From: Adrian Bunk <bunk@stusta.de>
+On Fri, 30 Jun 2006, akpm@osdl.org wrote:
 
-Make two needlessly global functions static.
+> From: Adrian Bunk <bunk@stusta.de>
+> 
+> Make some needlessly global functions static.
+> 
+> Signed-off-by: Adrian Bunk <bunk@stusta.de>
+> Cc: James Bottomley <James.Bottomley@steeleye.com>
+> Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
+> Signed-off-by: Andrew Morton <akpm@osdl.org>
+> ---
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
-Cc: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
-Signed-off-by: Andrew Morton <akpm@osdl.org>
----
+Ack-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
- drivers/message/fusion/mptsas.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff -puN drivers/message/fusion/mptsas.c~drivers-message-fusion-mptsasc-make-2-functions-static drivers/message/fusion/mptsas.c
---- a/drivers/message/fusion/mptsas.c~drivers-message-fusion-mptsasc-make-2-functions-static
-+++ a/drivers/message/fusion/mptsas.c
-@@ -337,7 +337,7 @@ mptsas_is_end_device(struct mptsas_devin
- }
- 
- /* no mutex */
--void
-+static void
- mptsas_port_delete(struct mptsas_portinfo_details * port_details)
- {
- 	struct mptsas_portinfo *port_info;
-@@ -438,7 +438,7 @@ starget)
-  * Updates for new and existing narrow/wide port configuration
-  * in the sas_topology
-  */
--void
-+static void
- mptsas_setup_wide_ports(MPT_ADAPTER *ioc, struct mptsas_portinfo *port_info)
- {
- 	struct mptsas_portinfo_details * port_details;
-_
+--
+av
