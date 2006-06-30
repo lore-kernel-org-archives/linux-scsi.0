@@ -1,29 +1,33 @@
-From: Arjan van de Ven <arjan@fenrus.demon.nl>
-Subject: Re: [PATCH] aic94xx: disable split completion timer/setting by
-	default
-Date: Fri, 30 Jun 2006 23:24:34 +0200
-Message-ID: <1151702674.11434.59.camel@laptopd505.fenrus.org>
-References: <1151702230.16075.61.camel@localhost.localdomain>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] mptsas: eliminate ghost devices
+Date: Fri, 30 Jun 2006 16:25:26 -0500
+Message-ID: <1151702726.8921.48.camel@mulgrave.il.steeleye.com>
+References: <20060630210720.GA10260@lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from a222036.upc-a.chello.nl ([62.163.222.36]:5303 "EHLO
-	laptopd505.fenrus.org") by vger.kernel.org with ESMTP
-	id S932196AbWF3VYj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Jun 2006 17:24:39 -0400
-In-Reply-To: <1151702230.16075.61.camel@localhost.localdomain>
+Received: from stat9.steeleye.com ([209.192.50.41]:28333 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S932564AbWF3VZk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 30 Jun 2006 17:25:40 -0400
+In-Reply-To: <20060630210720.GA10260@lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alexis Bruemmer <alexisb@us.ibm.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: Eric Moore <eric.moore@lsil.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, 2006-06-30 at 14:17 -0700, Alexis Bruemmer wrote:
-> The aic94xx driver will lock up under heavy load with a split completion
-> error.  There is a split completion timer/setting which should be
-> disabled by default but is not.  This patch fixes this problem.
-> 
-> Signed-off-by: Adaptec
+On Fri, 2006-06-30 at 15:07 -0600, Eric Moore wrote:
+> +               if (scsi_is_host_device(parent)) {
+> +                       if (!identify.target_port_protocols &&
+> +                               (identify.device_type ==
+> SAS_END_DEVICE))
+> +                               goto out;
 
-please always put an email address in the Signed-off-by line...
+Won't this happen for any initiator, rather than just the parent (i.e.
+in a multi-initiator environment we won't see anything even for remote
+initiators)?
+
+James
+
 
