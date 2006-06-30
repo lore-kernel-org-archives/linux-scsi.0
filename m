@@ -1,39 +1,131 @@
 From: akpm@osdl.org
-Subject: [patch 20/22] dc395x: fix printk format warning
-Date: Fri, 30 Jun 2006 02:33:18 -0700
-Message-ID: <200606300933.k5U9XI2q001742@shell0.pdx.osdl.net>
+Subject: [patch 15/22] BusLogic gcc 4.1 warning fixes
+Date: Fri, 30 Jun 2006 02:33:14 -0700
+Message-ID: <200606300933.k5U9XEMb001724@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:45458 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751696AbWF3Jdt (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:55442 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751736AbWF3JeV (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Jun 2006 05:33:49 -0400
+	Fri, 30 Jun 2006 05:34:21 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, rdunlap@xenotime.net
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, dwalker@mvista.com
 
+From: Daniel Walker <dwalker@mvista.com>
 
-From: Randy Dunlap <rdunlap@xenotime.net>
+- Reworked all the very long lines in that block (this drivers full of
+  them though)
 
-drivers/scsi/dc395x.c:1224: warning: format '%i' expects type 'int', but argument 5 has type 'size_t'
+- Returns an error in three places that it didn't before.
 
-Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+- Properly clean up after a scsi_add_host() failure.
+
+Signed-off-by: Daniel Walker <dwalker@mvista.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/dc395x.c |    2 +-
- 1 files changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/BusLogic.c |   46 ++++++++++++++++++++++++++++++--------
+ 1 file changed, 37 insertions(+), 9 deletions(-)
 
-diff -puN drivers/scsi/dc395x.c~dc395x-fix-printk-format-warning drivers/scsi/dc395x.c
---- 25/drivers/scsi/dc395x.c~dc395x-fix-printk-format-warning	Tue Jun 27 14:44:10 2006
-+++ 25-akpm/drivers/scsi/dc395x.c	Tue Jun 27 14:44:10 2006
-@@ -1219,7 +1219,7 @@ static void dump_register_info(struct Ad
- 			    	srb, srb->cmd, srb->cmd->pid,
- 				srb->cmd->cmnd[0], srb->cmd->device->id,
- 			       	srb->cmd->device->lun);
--		printk("  sglist=%p cnt=%i idx=%i len=%i\n",
-+		printk("  sglist=%p cnt=%i idx=%i len=%Zd\n",
- 		       srb->segment_x, srb->sg_count, srb->sg_index,
- 		       srb->total_xfer_length);
- 		printk("  state=0x%04x status=0x%02x phase=0x%02x (%sconn.)\n",
+diff -puN drivers/scsi/BusLogic.c~buslogic-gcc-41-warning-fixes drivers/scsi/BusLogic.c
+--- a/drivers/scsi/BusLogic.c~buslogic-gcc-41-warning-fixes
++++ a/drivers/scsi/BusLogic.c
+@@ -2177,6 +2177,7 @@ static int __init BusLogic_init(void)
+ {
+ 	int BusLogicHostAdapterCount = 0, DriverOptionsIndex = 0, ProbeIndex;
+ 	struct BusLogic_HostAdapter *PrototypeHostAdapter;
++	int ret = 0;
+ 
+ #ifdef MODULE
+ 	if (BusLogic)
+@@ -2283,25 +2284,49 @@ static int __init BusLogic_init(void)
+ 		   perform Target Device Inquiry.
+ 		 */
+ 		if (BusLogic_ReadHostAdapterConfiguration(HostAdapter) &&
+-		    BusLogic_ReportHostAdapterConfiguration(HostAdapter) && BusLogic_AcquireResources(HostAdapter) && BusLogic_CreateInitialCCBs(HostAdapter) && BusLogic_InitializeHostAdapter(HostAdapter) && BusLogic_TargetDeviceInquiry(HostAdapter)) {
++		    BusLogic_ReportHostAdapterConfiguration(HostAdapter) &&
++		    BusLogic_AcquireResources(HostAdapter) &&
++		    BusLogic_CreateInitialCCBs(HostAdapter) &&
++		    BusLogic_InitializeHostAdapter(HostAdapter) &&
++		    BusLogic_TargetDeviceInquiry(HostAdapter)) {
+ 			/*
+ 			   Initialization has been completed successfully.  Release and
+ 			   re-register usage of the I/O Address range so that the Model
+ 			   Name of the Host Adapter will appear, and initialize the SCSI
+ 			   Host structure.
+ 			 */
+-			release_region(HostAdapter->IO_Address, HostAdapter->AddressCount);
+-			if (!request_region(HostAdapter->IO_Address, HostAdapter->AddressCount, HostAdapter->FullModelName)) {
+-				printk(KERN_WARNING "BusLogic: Release and re-register of " "port 0x%04lx failed \n", (unsigned long) HostAdapter->IO_Address);
++			release_region(HostAdapter->IO_Address,
++				       HostAdapter->AddressCount);
++			if (!request_region(HostAdapter->IO_Address,
++					    HostAdapter->AddressCount,
++					    HostAdapter->FullModelName)) {
++				printk(KERN_WARNING
++					"BusLogic: Release and re-register of "
++					"port 0x%04lx failed \n",
++					(unsigned long)HostAdapter->IO_Address);
+ 				BusLogic_DestroyCCBs(HostAdapter);
+ 				BusLogic_ReleaseResources(HostAdapter);
+ 				list_del(&HostAdapter->host_list);
+ 				scsi_host_put(Host);
++				ret = -ENOMEM;
+ 			} else {
+-				BusLogic_InitializeHostStructure(HostAdapter, Host);
+-				scsi_add_host(Host, HostAdapter->PCI_Device ? &HostAdapter->PCI_Device->dev : NULL);
+-				scsi_scan_host(Host);
+-				BusLogicHostAdapterCount++;
++				BusLogic_InitializeHostStructure(HostAdapter,
++								 Host);
++				if (scsi_add_host(Host, HostAdapter->PCI_Device
++						? &HostAdapter->PCI_Device->dev
++						  : NULL)) {
++					printk(KERN_WARNING
++					       "BusLogic: scsi_add_host()"
++					       "failed!\n");
++					BusLogic_DestroyCCBs(HostAdapter);
++					BusLogic_ReleaseResources(HostAdapter);
++					list_del(&HostAdapter->host_list);
++					scsi_host_put(Host);
++					ret = -ENODEV;
++				} else {
++					scsi_scan_host(Host);
++					BusLogicHostAdapterCount++;
++				}
+ 			}
+ 		} else {
+ 			/*
+@@ -2316,12 +2341,13 @@ static int __init BusLogic_init(void)
+ 			BusLogic_ReleaseResources(HostAdapter);
+ 			list_del(&HostAdapter->host_list);
+ 			scsi_host_put(Host);
++			ret = -ENODEV;
+ 		}
+ 	}
+ 	kfree(PrototypeHostAdapter);
+ 	kfree(BusLogic_ProbeInfoList);
+ 	BusLogic_ProbeInfoList = NULL;
+-	return 0;
++	return ret;
+ }
+ 
+ 
+@@ -2955,6 +2981,7 @@ static int BusLogic_QueueCommand(struct 
+ }
+ 
+ 
++#if 0
+ /*
+   BusLogic_AbortCommand aborts Command if possible.
+ */
+@@ -3025,6 +3052,7 @@ static int BusLogic_AbortCommand(struct 
+ 	return SUCCESS;
+ }
+ 
++#endif
+ /*
+   BusLogic_ResetHostAdapter resets Host Adapter if possible, marking all
+   currently executing SCSI Commands as having been Reset.
 _
