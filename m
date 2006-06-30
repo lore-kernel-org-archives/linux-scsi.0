@@ -1,79 +1,39 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH] Fix bad error handling in sg.c
-Date: Thu, 29 Jun 2006 23:40:16 -0400
-Message-ID: <44A49D20.5050003@torque.net>
-References: <20060629133954.GA7834@mellanox.co.il>
-Reply-To: dougg@torque.net
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: akpm@osdl.org
+Subject: [patch 20/22] dc395x: fix printk format warning
+Date: Fri, 30 Jun 2006 02:33:18 -0700
+Message-ID: <200606300933.k5U9XI2q001742@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:65238 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1750767AbWF3DkV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Jun 2006 23:40:21 -0400
-In-Reply-To: <20060629133954.GA7834@mellanox.co.il>
+Received: from smtp.osdl.org ([65.172.181.4]:45458 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751696AbWF3Jdt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 30 Jun 2006 05:33:49 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ishai Rabinovitz <ishai@mellanox.co.il>
-Cc: linux-scsi@vger.kernel.org
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, rdunlap@xenotime.net
 
-Ishai Rabinovitz wrote:
-> Hi,
-> 
-> I'm taking a part in the development of SRP (Scsi RDMA Protocol).
-> While running tests on SRP, I think I found a bug in the scsi layer.
-> 
-> I got a NULL derefrence in cdev_del+1 when called from sg_remove. By looking at
-> the code of sg_add, sg_alloc and sg_remove (all in drivers/scsi/sg.c) I found
-> out that sg_add is calling sg_alloc but if it fails afterwards it does not
-> deallocate the space that was allocated in sg_alloc and the redundant entry has
-> NULL in cdev. When sg_remove is being called, it tries to perform cdev_del to
-> this NULL cdev and fails.
-> 
-> I think that the following patch solves this problem.
 
-Ishai,
-Both the analysis and the patch look correct. Thanks.
+From: Randy Dunlap <rdunlap@xenotime.net>
 
-> Signed-off-by: Ishai Rabinovitz <ishai@mellanox.co.il>
+drivers/scsi/dc395x.c:1224: warning: format '%i' expects type 'int', but argument 5 has type 'size_t'
 
-Signed-off-by: Douglas Gilbert <dougg@torque.net>
+Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+Signed-off-by: Andrew Morton <akpm@osdl.org>
+---
 
-> 
-> Index: ishai/linux-2.6.17/drivers/scsi/sg.c
-> ===================================================================
-> --- linux-2.6.17.orig/drivers/scsi/sg.c	2006-06-15 17:08:11.659864000 +0300
-> +++ linux-2.6.17/drivers/scsi/sg.c	2006-06-16 00:32:26.676638000 +0300
-> @@ -1402,6 +1402,7 @@ sg_add(struct class_device *cl_dev, stru
->  	Sg_device *sdp = NULL;
->  	struct cdev * cdev = NULL;
->  	int error, k;
-> +	unsigned long iflags;
->  
->  	disk = alloc_disk(1);
->  	if (!disk) {
-> @@ -1429,7 +1430,7 @@ sg_add(struct class_device *cl_dev, stru
->  
->  	error = cdev_add(cdev, MKDEV(SCSI_GENERIC_MAJOR, k), 1);
->  	if (error)
-> -		goto out;
-> +		goto cdev_add_err;
->  
->  	sdp->cdev = cdev;
->  	if (sg_sysfs_valid) {
-> @@ -1456,6 +1457,13 @@ sg_add(struct class_device *cl_dev, stru
->  
->  	return 0;
->  
-> +cdev_add_err:
-> +	write_lock_irqsave(&sg_dev_arr_lock, iflags);
-> +	kfree(sg_dev_arr[k]);
-> +	sg_dev_arr[k] = NULL;
-> +	sg_nr_dev--;
-> +	write_unlock_irqrestore(&sg_dev_arr_lock, iflags);
-> +
->  out:
->  	put_disk(disk);
->  	if (cdev)
+ drivers/scsi/dc395x.c |    2 +-
+ 1 files changed, 1 insertion(+), 1 deletion(-)
 
+diff -puN drivers/scsi/dc395x.c~dc395x-fix-printk-format-warning drivers/scsi/dc395x.c
+--- 25/drivers/scsi/dc395x.c~dc395x-fix-printk-format-warning	Tue Jun 27 14:44:10 2006
++++ 25-akpm/drivers/scsi/dc395x.c	Tue Jun 27 14:44:10 2006
+@@ -1219,7 +1219,7 @@ static void dump_register_info(struct Ad
+ 			    	srb, srb->cmd, srb->cmd->pid,
+ 				srb->cmd->cmnd[0], srb->cmd->device->id,
+ 			       	srb->cmd->device->lun);
+-		printk("  sglist=%p cnt=%i idx=%i len=%i\n",
++		printk("  sglist=%p cnt=%i idx=%i len=%Zd\n",
+ 		       srb->segment_x, srb->sg_count, srb->sg_index,
+ 		       srb->total_xfer_length);
+ 		printk("  state=0x%04x status=0x%02x phase=0x%02x (%sconn.)\n",
+_
