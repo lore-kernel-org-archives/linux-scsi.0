@@ -1,46 +1,52 @@
 From: akpm@osdl.org
-Subject: [patch 16/22] qla1280: fix section mismatch warnings
-Date: Fri, 30 Jun 2006 02:33:14 -0700
-Message-ID: <200606300933.k5U9XEsN001729@shell0.pdx.osdl.net>
+Subject: [patch 18/22] megaraid: Dell CERC ATA100/4ch support
+Date: Fri, 30 Jun 2006 02:33:16 -0700
+Message-ID: <200606300933.k5U9XGhF001736@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:57234 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932116AbWF3Je0 (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:63122 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1750890AbWF3Jes (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Jun 2006 05:34:26 -0400
+	Fri, 30 Jun 2006 05:34:48 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, rdunlap@xenotime.net, andrew.vasquez@qlogic.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, jkrzyszt@tis.icnet.pl
 
-From: Randy Dunlap <rdunlap@xenotime.net>
 
-Fix section mismatch warnings:
-WARNING: drivers/scsi/qla1280.o - Section mismatch: reference to
-.init.data: from .text between 'qla1280_get_token' (at offset 0x2a16)
-and 'qla1280_probe_one'
-WARNING: drivers/scsi/qla1280.o - Section mismatch: reference to
-.init.data: from .text between 'qla1280_get_token' (at offset 0x2a3c)
-and 'qla1280_probe_one'
+From: Janusz Krzysztofik <jkrzyszt@tis.icnet.pl>
 
-Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Add CERC subsystem ids to the old megaraid driver.  Tested, works.
+
 Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/qla1280.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/megaraid.c |    2 ++
+ drivers/scsi/megaraid.h |    2 ++
+ 2 files changed, 4 insertions(+)
 
-diff -puN drivers/scsi/qla1280.c~qla1280-fix-section-mismatch-warnings drivers/scsi/qla1280.c
---- a/drivers/scsi/qla1280.c~qla1280-fix-section-mismatch-warnings
-+++ a/drivers/scsi/qla1280.c
-@@ -4210,7 +4210,7 @@ qla1280_setup(char *s)
- }
+diff -puN drivers/scsi/megaraid.c~megaraid-dell-cerc-ata100-4ch-support drivers/scsi/megaraid.c
+--- a/drivers/scsi/megaraid.c~megaraid-dell-cerc-ata100-4ch-support
++++ a/drivers/scsi/megaraid.c
+@@ -5047,6 +5047,8 @@ static struct pci_device_id megaraid_pci
+ 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+ 	{PCI_VENDOR_ID_AMI, PCI_DEVICE_ID_AMI_MEGARAID2,
+ 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
++	{PCI_VENDOR_ID_AMI, PCI_DEVICE_ID_AMI_MEGARAID3,
++		PCI_VENDOR_ID_DELL, PCI_SUBSYS_ID_CERC_ATA100, 0, 0, 0},
+ 	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_AMI_MEGARAID3,
+ 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+ 	{0,}
+diff -puN drivers/scsi/megaraid.h~megaraid-dell-cerc-ata100-4ch-support drivers/scsi/megaraid.h
+--- a/drivers/scsi/megaraid.h~megaraid-dell-cerc-ata100-4ch-support
++++ a/drivers/scsi/megaraid.h
+@@ -84,6 +84,8 @@
+ #define LSI_SUBSYS_VID			0x1000
+ #define INTEL_SUBSYS_VID		0x8086
  
- 
--static int
-+static int __init
- qla1280_get_token(char *str)
- {
- 	char *sep;
++#define PCI_SUBSYS_ID_CERC_ATA100	0x0511
++
+ #define HBA_SIGNATURE	      		0x3344
+ #define HBA_SIGNATURE_471	  	0xCCCC
+ #define HBA_SIGNATURE_64BIT		0x0299
 _
