@@ -1,60 +1,74 @@
 From: akpm@osdl.org
-Subject: [patch 13/22] aic7*: cleanup MODULE_PARM_DESC strings
-Date: Fri, 30 Jun 2006 02:33:12 -0700
-Message-ID: <200606300933.k5U9XC85001717@shell0.pdx.osdl.net>
+Subject: [patch 17/22] scsi: clean up warnings in Advansys driver
+Date: Fri, 30 Jun 2006 02:33:15 -0700
+Message-ID: <200606300933.k5U9XFNT001733@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:52626 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751727AbWF3JeR (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:55698 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751743AbWF3JeV (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Jun 2006 05:34:17 -0400
+	Fri, 30 Jun 2006 05:34:21 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, rdunlap@xenotime.net
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, ken@krwtech.com, jeffreyfreeman@syncleus.com
 
-From: Randy Dunlap <rdunlap@xenotime.net>
 
-Modify beginning string to be more readable.  Remove one trailing newline.
+From: Ken Witherow <ken@krwtech.com>
 
-Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+Fix typecast warnings and switch from check_region to request_region
+
+(akpm: Ken and Jeffrey Phillips Freeman <jeffreyfreeman@syncleus.com> are
+possible advansys testers)
+
+Signed-off-by: Ken Witherow <ken@krwtech.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/aic7xxx/aic79xx_osm.c |    4 ++--
- drivers/scsi/aic7xxx/aic7xxx_osm.c |    2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/advansys.c |    7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff -puN drivers/scsi/aic7xxx/aic79xx_osm.c~aic7-cleanup-module_parm_desc-strings drivers/scsi/aic7xxx/aic79xx_osm.c
---- a/drivers/scsi/aic7xxx/aic79xx_osm.c~aic7-cleanup-module_parm_desc-strings
-+++ a/drivers/scsi/aic7xxx/aic79xx_osm.c
-@@ -340,7 +340,7 @@ MODULE_LICENSE("Dual BSD/GPL");
- MODULE_VERSION(AIC79XX_DRIVER_VERSION);
- module_param(aic79xx, charp, 0444);
- MODULE_PARM_DESC(aic79xx,
--"period delimited, options string.\n"
-+"period-delimited options string:\n"
- "	verbose			Enable verbose/diagnostic logging\n"
- "	allow_memio		Allow device registers to be memory mapped\n"
- "	debug			Bitmask of debug values to enable\n"
-@@ -366,7 +366,7 @@ MODULE_PARM_DESC(aic79xx,
- "		Shorten the selection timeout to 128ms\n"
- "\n"
- "	options aic79xx 'aic79xx=verbose.tag_info:{{}.{}.{..10}}.seltime:1'\n"
--"\n");
-+);
- 
- static void ahd_linux_handle_scsi_status(struct ahd_softc *,
- 					 struct scsi_device *,
-diff -puN drivers/scsi/aic7xxx/aic7xxx_osm.c~aic7-cleanup-module_parm_desc-strings drivers/scsi/aic7xxx/aic7xxx_osm.c
---- a/drivers/scsi/aic7xxx/aic7xxx_osm.c~aic7-cleanup-module_parm_desc-strings
-+++ a/drivers/scsi/aic7xxx/aic7xxx_osm.c
-@@ -341,7 +341,7 @@ MODULE_LICENSE("Dual BSD/GPL");
- MODULE_VERSION(AIC7XXX_DRIVER_VERSION);
- module_param(aic7xxx, charp, 0444);
- MODULE_PARM_DESC(aic7xxx,
--"period delimited, options string.\n"
-+"period-delimited options string:\n"
- "	verbose			Enable verbose/diagnostic logging\n"
- "	allow_memio		Allow device registers to be memory mapped\n"
- "	debug			Bitmask of debug values to enable\n"
+diff -puN drivers/scsi/advansys.c~scsi-clean-up-warnings-in-advansys-driver drivers/scsi/advansys.c
+--- a/drivers/scsi/advansys.c~scsi-clean-up-warnings-in-advansys-driver
++++ a/drivers/scsi/advansys.c
+@@ -4415,7 +4415,7 @@ advansys_detect(struct scsi_host_templat
+                         ASC_DBG1(1,
+                                 "advansys_detect: probing I/O port 0x%x...\n",
+                             iop);
+-                        if (check_region(iop, ASC_IOADR_GAP) != 0) {
++			if (!request_region(iop, ASC_IOADR_GAP, "advansys")){
+                             printk(
+ "AdvanSys SCSI: specified I/O Port 0x%X is busy\n", iop);
+                             /* Don't try this I/O port twice. */
+@@ -4425,6 +4425,7 @@ advansys_detect(struct scsi_host_templat
+                             printk(
+ "AdvanSys SCSI: specified I/O Port 0x%X has no adapter\n", iop);
+                             /* Don't try this I/O port twice. */
++			    release_region(iop, ASC_IOADR_GAP);
+                             asc_ioport[ioport] = 0;
+                             goto ioport_try_again;
+                         } else {
+@@ -4443,6 +4444,7 @@ advansys_detect(struct scsi_host_templat
+                                   * 'ioport' past this board.
+                                   */
+                                  ioport++;
++				 release_region(iop, ASC_IOADR_GAP);
+                                  goto ioport_try_again;
+                             }
+                         }
+@@ -9752,13 +9754,14 @@ AscSearchIOPortAddr11(
+     }
+     for (; i < ASC_IOADR_TABLE_MAX_IX; i++) {
+         iop_base = _asc_def_iop_base[i];
+-        if (check_region(iop_base, ASC_IOADR_GAP) != 0) {
++	if (!request_region(iop_base, ASC_IOADR_GAP, "advansys")){
+             ASC_DBG1(1,
+                "AscSearchIOPortAddr11: check_region() failed I/O port 0x%x\n",
+                      iop_base);
+             continue;
+         }
+         ASC_DBG1(1, "AscSearchIOPortAddr11: probing I/O port 0x%x\n", iop_base);
++	release_region(iop_base, ASC_IOADR_GAP);
+         if (AscFindSignature(iop_base)) {
+             return (iop_base);
+         }
 _
