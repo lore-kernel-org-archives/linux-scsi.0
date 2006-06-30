@@ -1,42 +1,124 @@
 From: akpm@osdl.org
-Subject: [patch 03/22] drivers/scsi/megaraid.c: add a dummy mega_create_proc_entry() for PROC_FS=y
-Date: Fri, 30 Jun 2006 02:33:04 -0700
-Message-ID: <200606300933.k5U9X4O5001683@shell0.pdx.osdl.net>
+Subject: [patch 04/22] drivers/scsi/qla2xxx/: make some functions static
+Date: Fri, 30 Jun 2006 02:33:05 -0700
+Message-ID: <200606300933.k5U9X585001686@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:29075 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932168AbWF3JgW (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:28819 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932165AbWF3JgU (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Jun 2006 05:36:22 -0400
+	Fri, 30 Jun 2006 05:36:20 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, bunk@stusta.de, Neela.Kolli@engenio.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, bunk@stusta.de
 
 From: Adrian Bunk <bunk@stusta.de>
 
-Add a dummy mega_create_proc_entry() for CONFIG_PROC_FS=n.
+This patch makes some needlessly global functions static.
 
 Signed-off-by: Adrian Bunk <bunk@stusta.de>
-Cc: Neela Syam Kolli <Neela.Kolli@engenio.com>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/megaraid.c |    4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/scsi/qla2xxx/qla_os.c  |   12 ++++++------
+ drivers/scsi/qla2xxx/qla_sup.c |    8 ++++----
+ 2 files changed, 10 insertions(+), 10 deletions(-)
 
-diff -puN drivers/scsi/megaraid.c~drivers-scsi-megaraidc-add-a-dummy-mega_create_proc_entry-for-proc_fs=y drivers/scsi/megaraid.c
---- a/drivers/scsi/megaraid.c~drivers-scsi-megaraidc-add-a-dummy-mega_create_proc_entry-for-proc_fs=y
-+++ a/drivers/scsi/megaraid.c
-@@ -3180,6 +3180,10 @@ proc_rdrv(adapter_t *adapter, char *page
- 
- 	return len;
+diff -puN drivers/scsi/qla2xxx/qla_os.c~drivers-scsi-qla2xxx-make-some-functions-static drivers/scsi/qla2xxx/qla_os.c
+--- a/drivers/scsi/qla2xxx/qla_os.c~drivers-scsi-qla2xxx-make-some-functions-static
++++ a/drivers/scsi/qla2xxx/qla_os.c
+@@ -274,7 +274,7 @@ qla24xx_pci_info_str(struct scsi_qla_hos
+ 	return str;
  }
-+#else  /*  CONFIG_PROC_FS  */
-+
-+static inline void
-+mega_create_proc_entry(int index, struct proc_dir_entry *parent) {}
  
- #endif
+-char *
++static char *
+ qla2x00_fw_version_str(struct scsi_qla_host *ha, char *str)
+ {
+ 	char un_str[10];
+@@ -312,7 +312,7 @@ qla2x00_fw_version_str(struct scsi_qla_h
+ 	return (str);
+ }
  
+-char *
++static char *
+ qla24xx_fw_version_str(struct scsi_qla_host *ha, char *str)
+ {
+ 	sprintf(str, "%d.%02d.%02d ", ha->fw_major_version,
+@@ -604,7 +604,7 @@ qla2x00_wait_for_loop_ready(scsi_qla_hos
+ * Note:
+ *    Only return FAILED if command not returned by firmware.
+ **************************************************************************/
+-int
++static int
+ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
+ {
+ 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
+@@ -739,7 +739,7 @@ qla2x00_eh_wait_for_pending_target_comma
+ *    SUCCESS/FAILURE (defined as macro in scsi.h).
+ *
+ **************************************************************************/
+-int
++static int
+ qla2xxx_eh_device_reset(struct scsi_cmnd *cmd)
+ {
+ 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
+@@ -870,7 +870,7 @@ qla2x00_eh_wait_for_pending_commands(scs
+ *    SUCCESS/FAILURE (defined as macro in scsi.h).
+ *
+ **************************************************************************/
+-int
++static int
+ qla2xxx_eh_bus_reset(struct scsi_cmnd *cmd)
+ {
+ 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
+@@ -931,7 +931,7 @@ eh_bus_reset_done:
+ *
+ * Note:
+ **************************************************************************/
+-int
++static int
+ qla2xxx_eh_host_reset(struct scsi_cmnd *cmd)
+ {
+ 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
+diff -puN drivers/scsi/qla2xxx/qla_sup.c~drivers-scsi-qla2xxx-make-some-functions-static drivers/scsi/qla2xxx/qla_sup.c
+--- a/drivers/scsi/qla2xxx/qla_sup.c~drivers-scsi-qla2xxx-make-some-functions-static
++++ a/drivers/scsi/qla2xxx/qla_sup.c
+@@ -449,7 +449,7 @@ nvram_data_to_access_addr(uint32_t naddr
+ 	return FARX_ACCESS_NVRAM_DATA | naddr;
+ }
+ 
+-uint32_t
++static uint32_t
+ qla24xx_read_flash_dword(scsi_qla_host_t *ha, uint32_t addr)
+ {
+ 	int rval;
+@@ -490,7 +490,7 @@ qla24xx_read_flash_data(scsi_qla_host_t 
+ 	return dwptr;
+ }
+ 
+-int
++static int
+ qla24xx_write_flash_dword(scsi_qla_host_t *ha, uint32_t addr, uint32_t data)
+ {
+ 	int rval;
+@@ -512,7 +512,7 @@ qla24xx_write_flash_dword(scsi_qla_host_
+ 	return rval;
+ }
+ 
+-void
++static void
+ qla24xx_get_flash_manufacturer(scsi_qla_host_t *ha, uint8_t *man_id,
+     uint8_t *flash_id)
+ {
+@@ -537,7 +537,7 @@ qla24xx_get_flash_manufacturer(scsi_qla_
+ 	}
+ }
+ 
+-int
++static int
+ qla24xx_write_flash_data(scsi_qla_host_t *ha, uint32_t *dwptr, uint32_t faddr,
+     uint32_t dwords)
+ {
 _
