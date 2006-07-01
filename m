@@ -1,90 +1,154 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: 2.6.17-mm5 dislikes raid-1, just like mm4
-Date: Sat, 1 Jul 2006 15:22:58 -0700
-Message-ID: <20060701152258.bea091a6.akpm@osdl.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: 2.6.17-mm5
+Date: Sat, 01 Jul 2006 17:26:05 -0500
+Message-ID: <1151792765.3438.30.camel@mulgrave.il.steeleye.com>
 References: <20060701033524.3c478698.akpm@osdl.org>
-	<20060701181455.GA16412@aitel.hist.no>
+	 <20060701142419.GB28750@tlg.swandive.local>
+	 <20060701143047.b3975472.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:9104 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1750891AbWGAWXO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 1 Jul 2006 18:23:14 -0400
-In-Reply-To: <20060701181455.GA16412@aitel.hist.no>
+Received: from stat9.steeleye.com ([209.192.50.41]:60864 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1751191AbWGAW0S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 1 Jul 2006 18:26:18 -0400
+In-Reply-To: <20060701143047.b3975472.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Helge Hafting <helgehaf@aitel.hist.no>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Neil Brown <neilb@suse.de>, Reuben Farrelly <reuben-lkml@reub.net>, Grant Wilson <grant.wilson@zen.co.uk>
+To: Andrew Morton <akpm@osdl.org>
+Cc: Grant Wilson <grant.wilson@zen.co.uk>, linux-kernel@vger.kernel.org, Neil Brown <neilb@suse.de>, linux-scsi@vger.kernel.org
 
-On Sat, 1 Jul 2006 20:14:55 +0200
-Helge Hafting <helgehaf@aitel.hist.no> wrote:
-
-> I  just got mm5 up, and it has the same problem as mm4.
-> Raid-1 does not work. I used 2.6.16 to resync my raids,
-> and booted into 2.6.17-mm5.
+On Sat, 2006-07-01 at 14:30 -0700, Andrew Morton wrote:
+> On Sat, 1 Jul 2006 15:24:19 +0100
+> Grant Wilson <grant.wilson@zen.co.uk> wrote:
 > 
-> [...]
-> md:  adding sda2 ...
-> md: created md0
-> md: bind<sda2>
-> md: bind<sdb1>
-> md: running: <sdb1><sda2>
-> raid1: raid set md0 active with 2 out of 2 mirrors
-> md: ... autorun DONE.
-> kjournald starting.  Commit interval 5 seconds
-> EXT3-fs: mounted filesystem with ordered data mode.
->   Vendor: USB2.0    Model:       HS-CF       Rev: 1.64
->   Type:   Direct-Access                      ANSI SCSI revision: 00
-> sd 3:0:0:0: Attached scsi removable disk sdf
-> sd 3:0:0:0: Attached scsi generic sg5 type 0
->   Vendor: USB2.0    Model:       HS-MS       Rev: 1.64
->   Type:   Direct-Access                      ANSI SCSI revision: 00
-> sd 3:0:0:1: Attached scsi removable disk sdg
-> sd 3:0:0:1: Attached scsi generic sg6 type 0
->   Vendor: USB2.0    Model:       HS-SM       Rev: 1.64
->   Type:   Direct-Access                      ANSI SCSI revision: 00
-> sd 3:0:0:2: Attached scsi removable disk sdh
-> sd 3:0:0:2: Attached scsi generic sg7 type 0
->   Vendor: USB2.0    Model:       HS-SD/MMC   Rev: 1.64
->   Type:   Direct-Access                      ANSI SCSI revision: 00
-> sd 3:0:0:3: Attached scsi removable disk sdi
-> sd 3:0:0:3: Attached scsi generic sg8 type 0
-> usb-storage: device scan complete
-> loadkeys[2214]: segfault at 00000000000005a0 rip 00002b22e169feea rsp 00007fffc973c478 error 4
-> Adding 1000424k swap on /dev/sda6.  Priority:1 extents:1 across:1000424k
-> EXT3 FS on sdd1, internal journal
-> raid1: Disk failure on sda2, disabling device. 
->         Operation continuing on 1 devices
-> RAID1 conf printout:
->  --- wd:1 rd:2
->  disk 0, wo:1, o:0, dev:sda2
->  disk 1, wo:0, o:1, dev:sdb1
-> RAID1 conf printout:
->  --- wd:1 rd:2
+> > More RAID1 problems - OOPS on shutdown.
+
+Actually, is there any more of the trace, like what was going on just
+before the oops?
+
+It looks very like a lifetime issue (i.e. md thinks the array is dead
+and has torn it down, but there's still an outstanding command).  It
+would be nice to know what the outstanding command might have been.
+
+James
+
+
+> Thanks.  Please copy the mailing lists on these reports - I'm not an MD,
+> SCSI or SATA developer, and this is in their area.
 > 
-> ...
->
-> As we see, the md devices are assembled, then the filesystems are
-> mounted and swap turned on.  Then all three md devices fail a 
-> partition at the same time.  Somehow, I don't believe that
-> is correct. ;-)
+> > [   37.482699] md: Autodetecting RAID arrays.
+> > [   37.547908] md: autorun ...
+> > [   37.566449] md: considering sdb2 ...
+> > [   37.589664] md:  adding sdb2 ...
+> > [   37.610757] md:  adding sda2 ...
+> > [   37.632116] md: created md1
+> > [   37.650587] md: bind<sda2>
+> > [   37.668571] md: bind<sdb2>
+> > [   37.686541] md: running: <sdb2><sda2>
+> > [   37.710807] raid1: raid set md1 active with 2 out of 2 mirrors
+> > [   37.747557] md: ... autorun DONE.
+> > [   37.784444] EXT3-fs: INFO: recovery required on readonly filesystem.
+> > [   37.824275] EXT3-fs: write access will be enabled during recovery.
+> > [   38.814113] kjournald starting.  Commit interval 5 seconds
+> > [   38.848761] EXT3-fs: sdc1: orphan cleanup on readonly fs
+> > [   38.985436] EXT3-fs: sdc1: 7 orphan inodes deleted
+> > [   39.015845] EXT3-fs: recovery complete.
+> > [   39.072168] EXT3-fs: mounted filesystem with ordered data mode.
+> > [   44.693986] Adding 995988k swap on /dev/sda1.  Priority:-1 extents:1 across:995988k
+> > [   44.744558] Adding 995988k swap on /dev/sdb1.  Priority:-2 extents:1 across:995988k
+> > [   44.966034] EXT3 FS on sdc1, internal journal
+> > [   49.305350] device-mapper: ioctl: 4.8.0-ioctl (2006-06-24) initialised: dm-devel@redhat.com
+> > [   64.091331] raid1: Disk failure on sdb2, disabling device. 
+> > [   64.091333] 	Operation continuing on 1 devices
+> > [   64.212624] RAID1 conf printout:
+> > [   64.233951]  --- wd:1 rd:2
+> > [   64.252195]  disk 0, wo:0, o:1, dev:sda2
+> > [   64.277712]  disk 1, wo:1, o:0, dev:sdb2
+> > [   64.305627] RAID1 conf printout:
+> > [   64.326977]  --- wd:1 rd:2
+> > [   64.345220]  disk 0, wo:0, o:1, dev:sda2
+> > [
 > 
+> Which device drivers are being used for these disks?
+> 
+> > [  155.123022] Unable to handle kernel NULL pointer dereference at 0000000000000048 RIP: 
+> > [  155.155867]  [<ffffffff8047157a>] md_error+0x45/0x91
+> > [  155.200353] PGD 77954067 PUD 726e5067 PMD 0 
+> > [  155.226233] Oops: 0000 [1] PREEMPT SMP 
+> > [  155.249516] last sysfs file: /devices/system/cpu/cpu0/cpufreq/scaling_setspeed
+> > [  155.292808] CPU 0 
+> > [  155.304968] Modules linked in: dm_mod evdev
+> > [  155.330331] Pid: 0, comm: swapper Not tainted 2.6.17-mm5 #1
+> > [  155.363697] RIP: 0010:[<ffffffff8047157a>]  [<ffffffff8047157a>] md_error+0x45/0x91
+> > [  155.409638] RSP: 0018:ffffffff807a0c50  EFLAGS: 00010046
+> > [  155.441445] RAX: 0000000000000000 RBX: ffff81007aa34708 RCX: 000000000000003f
+> > [  155.484216] RDX: 00000000fffffffb RSI: ffff81007a821d28 RDI: ffff81007aa34708
+> > [  155.526989] RBP: ffffffff807a0c60 R08: 0000000000000000 R09: ffff81007aac43b0
+> > [  155.569759] R10: ffffffff804221e5 R11: 0000000000000058 R12: ffff81007aac4ab0
+> > [  155.612533] R13: ffff81007aac43b0 R14: ffff81007aac4ab0 R15: 00000000fffffffb
+> > [  155.655303] FS:  00002aeb361606d0(0000) GS:ffffffff80a46000(0000) knlGS:0000000000000000
+> > [  155.703791] CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
+> > [  155.738195] CR2: 0000000000000048 CR3: 0000000070997000 CR4: 00000000000006e0
+> > [  155.780969] Process swapper (pid: 0, threadinfo ffffffff80a64000, task ffffffff80696a00)
+> > [  155.829404] Stack:  ffff81007a821d28 ffff81007aa34708 ffffffff807a0c80 ffffffff804728d9
+> > [  155.877840]  ffff81007a821d28 ffff81007aa34708 ffffffff807a0cc0 ffffffff8047409c
+> > [  155.922535]  00001000807a0d00 ffff81007aac4ab0 00000000fffffffb ffff81007aac4ab0
+> > [  155.966085] Call Trace:
+> > [  155.982416]  [<ffffffff804728d9>] super_written+0x30/0x65
+> > [  156.015292]  [<ffffffff8047409c>] super_written_barrier+0xc4/0xd1
+> > [  156.052297]  [<ffffffff8023a5a5>] bio_endio+0x56/0x5b
+> > [  156.082688]  [<ffffffff8022d21b>] __end_that_request_first+0x1c9/0x4c9
+> > [  156.122068]  [<ffffffff8024a0d6>] end_that_request_first+0xc/0xe
+> > [  156.158343]  [<ffffffff8036a692>] blk_ordered_complete_seq+0x7c/0x8b
+> > [  156.196705]  [<ffffffff8036a6d1>] post_flush_end_io+0x30/0x35
+> > [  156.231419]  [<ffffffff8036a5b5>] end_that_request_last+0xd9/0xf6
+> > [  156.268215]  [<ffffffff80422204>] scsi_end_request+0xad/0xd7
+> > [  156.302573]  [<ffffffff80422637>] scsi_io_completion+0x3e1/0x3f0
+> > [  156.339004]  [<ffffffff8042266c>] scsi_blk_pc_done+0x26/0x28
+> > [  156.373357]  [<ffffffff8041d11e>] scsi_finish_command+0xa9/0xb2
+> > [  156.409264]  [<ffffffff804229f9>] scsi_softirq_done+0xf4/0xfd
+> > [  156.444143]  [<ffffffff80237f66>] blk_done_softirq+0x70/0x7f
+> > [  156.478323]  [<ffffffff80211366>] __do_softirq+0x67/0xf4
+> > [  156.510224]  [<ffffffff8025f95e>] call_softirq+0x1e/0x28
+> > [  156.542083] 
+> > [  156.542083] Code: 48 8b 40 48 48 85 c0 74 3f ff d0 f0 0f ba ab e0 01 00 00 03 
+> 
+> The barrier code is in there again.
+> 
+> mddev->pers is NULL in md_error(), so the test of
+> !mddev->pers->error_handler oopsed.  Perhaps this is a real MD bug which is
+> now being exposed by the new barrier-handling problem.
+> 
+> 
+> This should get you further, but...
+> 
+> From: Andrew Morton <akpm@osdl.org>
+> 
+> Cc: Neil Brown <neilb@suse.de>
+> Signed-off-by: Andrew Morton <akpm@osdl.org>
+> ---
+> 
+>  drivers/md/md.c |    2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff -puN drivers/md/md.c~md-oops-workaround drivers/md/md.c
+> --- a/drivers/md/md.c~md-oops-workaround
+> +++ a/drivers/md/md.c
+> @@ -4586,6 +4586,8 @@ void md_error(mddev_t *mddev, mdk_rdev_t
+>  		__builtin_return_address(0),__builtin_return_address(1),
+>  		__builtin_return_address(2),__builtin_return_address(3));
+>  */
+> +	if (!mddev->pers)
+> +		return;
+>  	if (!mddev->pers->error_handler)
+>  		return;
+>  	mddev->pers->error_handler(mddev,rdev);
+> _
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-I assume this is still the broken-barriers bug.  Thanks for all the help on
-this, guys.  More is to be asked for, I'm afraid.
-
-I've prepared a tree which is basically 2.6.17-mm5, only the git-scsi-misc
-and git-libata-all trees have been omitted.  It's at 
-
-http://www.zip.com.au/~akpm/linux/patches/stuff/2.6.17-mm5-no-sata-scsi.bz2
-
-(That's a diff against 2.6.17)
-
-If that kernel works, then the next step is to test
-
-http://www.zip.com.au/~akpm/linux/patches/stuff/2.6.17-mm5-no-scsi.bz2
-
-which is 2.6.17-mm5 without git-scsi-misc, but with git-libata-all.
-
-Thanks.
