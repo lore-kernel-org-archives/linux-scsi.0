@@ -1,42 +1,49 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: 2.6.17-mm5
-Date: Sun, 2 Jul 2006 08:32:28 +1000
-Message-ID: <17574.63484.261979.866512@cse.unsw.edu.au>
-References: <20060701033524.3c478698.akpm@osdl.org>
-	<20060701142419.GB28750@tlg.swandive.local>
-	<20060701143047.b3975472.akpm@osdl.org>
-	<1151792765.3438.30.camel@mulgrave.il.steeleye.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: 2.6.17-mm5 dislikes raid-1, just like mm4
+Date: Sat, 1 Jul 2006 18:52:12 -0400
+Message-ID: <20060701225212.GA12703@havoc.gtf.org>
+References: <20060701033524.3c478698.akpm@osdl.org> <20060701181455.GA16412@aitel.hist.no> <20060701152258.bea091a6.akpm@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns2.suse.de ([195.135.220.15]:17582 "EHLO mx2.suse.de")
-	by vger.kernel.org with ESMTP id S1751201AbWGAWcp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 1 Jul 2006 18:32:45 -0400
-In-Reply-To: message from James Bottomley on Saturday July 1
+Received: from havoc.gtf.org ([69.61.125.42]:13525 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S1751346AbWGAWwX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 1 Jul 2006 18:52:23 -0400
+Content-Disposition: inline
+In-Reply-To: <20060701152258.bea091a6.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Andrew Morton <akpm@osdl.org>, Grant Wilson <grant.wilson@zen.co.uk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: Helge Hafting <helgehaf@aitel.hist.no>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Neil Brown <neilb@suse.de>, Reuben Farrelly <reuben-lkml@reub.net>, Grant Wilson <grant.wilson@zen.co.uk>
 
-On Saturday July 1, James.Bottomley@SteelEye.com wrote:
-> On Sat, 2006-07-01 at 14:30 -0700, Andrew Morton wrote:
-> > On Sat, 1 Jul 2006 15:24:19 +0100
-> > Grant Wilson <grant.wilson@zen.co.uk> wrote:
-> > 
-> > > More RAID1 problems - OOPS on shutdown.
+On Sat, Jul 01, 2006 at 03:22:58PM -0700, Andrew Morton wrote:
+> Helge Hafting <helgehaf@aitel.hist.no> wrote:
+> > kjournald starting.  Commit interval 5 seconds
+> > EXT3-fs: mounted filesystem with ordered data mode.
+> >   Vendor: USB2.0    Model:       HS-CF       Rev: 1.64
+> >   Type:   Direct-Access                      ANSI SCSI revision: 00
+> > sd 3:0:0:0: Attached scsi removable disk sdf
+> > sd 3:0:0:0: Attached scsi generic sg5 type 0
+> >   Vendor: USB2.0    Model:       HS-MS       Rev: 1.64
+> >   Type:   Direct-Access                      ANSI SCSI revision: 00
+> > sd 3:0:0:1: Attached scsi removable disk sdg
+> > sd 3:0:0:1: Attached scsi generic sg6 type 0
+> >   Vendor: USB2.0    Model:       HS-SM       Rev: 1.64
+> >   Type:   Direct-Access                      ANSI SCSI revision: 00
+> > sd 3:0:0:2: Attached scsi removable disk sdh
+> > sd 3:0:0:2: Attached scsi generic sg7 type 0
+> >   Vendor: USB2.0    Model:       HS-SD/MMC   Rev: 1.64
+> >   Type:   Direct-Access                      ANSI SCSI revision: 00
+
+> I assume this is still the broken-barriers bug.  Thanks for all the help on
+> this, guys.  More is to be asked for, I'm afraid.
 > 
-> Actually, is there any more of the trace, like what was going on just
-> before the oops?
-> 
-> It looks very like a lifetime issue (i.e. md thinks the array is dead
-> and has torn it down, but there's still an outstanding command).  It
-> would be nice to know what the outstanding command might have been.
+> I've prepared a tree which is basically 2.6.17-mm5, only the git-scsi-misc
+> and git-libata-all trees have been omitted.  It's at 
 
-md writes the superblock after tearing down the array, which is
-admittedly a bit careless.
+What does USB storage have to do with SATA?
 
-The problem seems to be simply that on some hardware at least,
-BIO_RW_BARRIER writes result in an EIO.  Don't know why yet.
+	Jeff
 
-NeilBrown
+
+
