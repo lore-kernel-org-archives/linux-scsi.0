@@ -1,43 +1,42 @@
 From: Neil Brown <neilb@suse.de>
-Subject: More RAID / SATA / barrier problems [ Re: 2.6.17-mm5 ]
-Date: Sun, 2 Jul 2006 08:29:04 +1000
-Message-ID: <17574.63280.655747.111167@cse.unsw.edu.au>
+Subject: Re: 2.6.17-mm5
+Date: Sun, 2 Jul 2006 08:32:28 +1000
+Message-ID: <17574.63484.261979.866512@cse.unsw.edu.au>
 References: <20060701033524.3c478698.akpm@osdl.org>
 	<20060701142419.GB28750@tlg.swandive.local>
 	<20060701143047.b3975472.akpm@osdl.org>
+	<1151792765.3438.30.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53677 "EHLO mx2.suse.de")
-	by vger.kernel.org with ESMTP id S1751195AbWGAW3Q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 1 Jul 2006 18:29:16 -0400
-In-Reply-To: message from Andrew Morton on Saturday July 1
+Received: from ns2.suse.de ([195.135.220.15]:17582 "EHLO mx2.suse.de")
+	by vger.kernel.org with ESMTP id S1751201AbWGAWcp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 1 Jul 2006 18:32:45 -0400
+In-Reply-To: message from James Bottomley on Saturday July 1
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: Grant Wilson <grant.wilson@zen.co.uk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Andrew Morton <akpm@osdl.org>, Grant Wilson <grant.wilson@zen.co.uk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Saturday July 1, akpm@osdl.org wrote:
+On Saturday July 1, James.Bottomley@SteelEye.com wrote:
+> On Sat, 2006-07-01 at 14:30 -0700, Andrew Morton wrote:
+> > On Sat, 1 Jul 2006 15:24:19 +0100
+> > Grant Wilson <grant.wilson@zen.co.uk> wrote:
+> > 
+> > > More RAID1 problems - OOPS on shutdown.
 > 
-> mddev->pers is NULL in md_error(), so the test of
-> !mddev->pers->error_handler oopsed.  Perhaps this is a real MD bug which is
-> now being exposed by the new barrier-handling problem.
+> Actually, is there any more of the trace, like what was going on just
+> before the oops?
 > 
+> It looks very like a lifetime issue (i.e. md thinks the array is dead
+> and has torn it down, but there's still an outstanding command).  It
+> would be nice to know what the outstanding command might have been.
 
-Yes, this is a real MD bug which would hit whenever writing a
-superblock fails during array-shutdown.  I guess that has never
-happened before!  The work around you propose is probably as good as
-any, but I'll think through it some more and see.
+md writes the superblock after tearing down the array, which is
+admittedly a bit careless.
 
-It seems that super block writes are always failing in some
-configurations at the moment!
-
-I wonder what we *should* do when writing to the superblock on the
-last device of a raid1 faills... maybe switch the array to read-only?
-I'll have a think about that too.
-
-But we need to find out why barrier-writes are returning EIO.
-Hopefully Reuben's testing will shed some light.
+The problem seems to be simply that on some hardware at least,
+BIO_RW_BARRIER writes result in an EIO.  Don't know why yet.
 
 NeilBrown
