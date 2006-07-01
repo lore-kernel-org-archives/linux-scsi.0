@@ -1,101 +1,77 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: additional sense codes need update
-Date: Sat, 01 Jul 2006 00:54:54 -0400
-Message-ID: <44A6001E.2040803@torque.net>
-Reply-To: dougg@torque.net
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: [RFC] [PATCH 0/7] requested for qla4xxx!!!
+Date: Sat, 01 Jul 2006 23:27:56 +0400
+Message-ID: <44A6CCBC.7000603@tls.msk.ru>
+References: <20060629064812.GA7220@ranandlinuxbox.oc.cox.net>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------070307030409070402070302"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:37762 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S964883AbWGAEzH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 1 Jul 2006 00:55:07 -0400
-Received: from hse-london-ppp195890.sympatico.ca ([64.229.18.207] helo=[192.168.1.100])
-	by pentafluge.infradead.org with esmtpsa (Exim 4.62 #1 (Red Hat Linux))
-	id 1FwXVX-0006bz-PV
-	for linux-scsi@vger.kernel.org; Sat, 01 Jul 2006 05:55:04 +0100
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-
-This is a multi-part message in MIME format.
---------------070307030409070402070302
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hobbit.corpit.ru ([81.13.94.6]:17243 "EHLO hobbit.corpit.ru")
+	by vger.kernel.org with ESMTP id S1750978AbWGAT2B (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 1 Jul 2006 15:28:01 -0400
+In-Reply-To: <20060629064812.GA7220@ranandlinuxbox.oc.cox.net>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
+To: Ravi Anand <ravi.anand@qlogic.com>
+Cc: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, open-iscsi <open-iscsi@googlegroups.com>
 
-At http://www.t10.org/lists/asc-num.txt is a list
-of SCSI additional sense codes and their qualifiers
-with the corresponding text messages.
+[Sorry for repost: was typo in linux-scsi@vger
+ email, and open-iscsi@ didn't accept email
+ either, as it says "i'm not subscribed" (which
+ isn't _entirely_ true ;)]
 
-Comparing the latest list at that site (2006/06/10)
-with what we have in constants.c in the scsi
-subsystem my program came up with the following list
-of discrepancies. Probably time for an update.
+Ravi Anand wrote:
+> All,
+> 
+> Today in the following email thread , Mike Christie outlined the 
+> modifications that has been done to qla4xx driver from the last submission: 
+> 
+>> http://marc.theaimsgroup.com/?l=linux-scsi&m=115151443814051&w=2
+[...]
+> All the patches has been uploaded at the following URL:
+>
+> 	ftp://ftp.qlogic.com/outgoing/linux/iSCSI/upstream/5.00.05b6-k/
+>
+> Complete driver package and the diff from previous submission for review
+> has also been uploaded at the above mentioned link.
+[...]
 
-Doug Gilbert
+Hi.
 
+I'm not of much help in reviewing the code and/or making code
+suggestions.  Instead, I'm trying to build the driver as we've
+several new servers with ISP4010 adapters, which should work
+somehow... ;)
 
---------------070307030409070402070302
-Content-Type: text/plain;
- name="asc_diff.txt"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="asc_diff.txt"
+Except of the obvious prob wrt ql4_netlink.h file which you
+already fixed by subsequent patch.. well....
 
-no entry for 0,1d : ATA PASS THROUGH INFORMATION AVAILABLE
-4,2 differ; ref: LOGICAL UNIT NOT READY, INITIALIZING COMMAND REQUIRED, kern: LOGICAL UNIT NOT READY, INITIALIZING CMD. REQUIRED
-no entry for b,3 : WARNING - BACKGROUND SELF-TEST FAILED
-no entry for b,4 : WARNING - BACKGROUND PRE-SCAN DETECTED MEDIUM ERROR
-no entry for b,5 : WARNING - BACKGROUND MEDIUM SCAN DETECTED MEDIUM ERROR
-no entry for c,f : DEFECTS IN ERROR WINDOW
-no entry for e,3 : INVALID FIELD IN COMMAND INFORMATION UNIT
-10,1 differ; ref: LOGICAL BLOCK GUARD CHECK FAILED, kern: DATA BLOCK GUARD CHECK FAILED
-10,2 differ; ref: LOGICAL BLOCK APPLICATION TAG CHECK FAILED, kern: DATA BLOCK APPLICATION TAG CHECK FAILED
-10,3 differ; ref: LOGICAL BLOCK REFERENCE TAG CHECK FAILED, kern: DATA BLOCK REFERENCE TAG CHECK FAILED
-no entry for 11,14 : READ ERROR - LBA MARKED BAD BY APPLICATION CLIENT
-no entry for 21,3 : INVALID WRITE CROSSING LAYER JUMP
-no entry for 24,2 : OBSOLETE
-no entry for 24,3 : OBSOLETE
-26,f differ; ref: INVALID DATA-OUT BUFFER INTEGRITY CHECK VALUE, kern: INVALID DATA-OUT BUFFER INTEGRITY
-no entry for 26,10 : DATA DECRYPTION KEY FAIL LIMIT REACHED
-no entry for 26,11 : INCOMPLETE KEY-ASSOCIATED DATA SET
-no entry for 26,12 : VENDOR SPECIFIC KEY REFERENCE NOT FOUND
-no entry for 28,2 : FORMAT-LAYER MAY HAVE CHANGED
-no entry for 2a,10 : TIMESTAMP CHANGED
-no entry for 2a,11 : DATA ENCRYPTION PARAMETERS CHANGED BY ANOTHER I_T NEXUS
-no entry for 2a,12 : DATA ENCRYPTION PARAMETERS CHANGED BY VENDOR SPECIFIC EVENT
-no entry for 2a,13 : DATA ENCRYPTION KEY INSTANCE COUNTER HAS CHANGED
-no entry for 2f,1 : COMMANDS CLEARED BY POWER LOSS NOTIFICATION
-30,c differ; ref: WORM MEDIUM - OVERWRITE ATTEMPTED, kern: WORM MEDIUM, OVERWRITE ATTEMPTED
-no entry for 30,d : WORM MEDIUM - INTEGRITY CHECK
-no entry for 3f,12 : ISCSI IP ADDRESS ADDED
-no entry for 3f,13 : ISCSI IP ADDRESS REMOVED
-no entry for 3f,14 : ISCSI IP ADDRESS CHANGED
-no entry for 40,0 : RAM FAILURE (SHOULD USE 40 NN)
-no entry for 41,0 : DATA PATH FAILURE (SHOULD USE 40 NN)
-no entry for 42,0 : POWER-ON OR SELF-TEST FAILURE (SHOULD USE 40 NN)
-no entry for 44,71 : ATA DEVICE FAILED SET FEATURES
-47,3 differ; ref: INFORMATION UNIT IUCRC ERROR DETECTED, kern: INFORMATION UNIT CRC ERROR DETECTED
-no entry for 47,6 : PHY TEST FUNCTION IN PROGRESS
-no entry for 53,3 : MEDIUM REMOVAL PREVENTED BY DATA TRANSFER ELEMENT
-no entry for 53,4 : MEDIUM THREAD OR UNTHREAD FAILURE
-no entry for 55,8 : MAXIMUM NUMBER OF SUPPLEMENTAL DECRYPTION KEYS EXCEEDED
-no entry for 67,b : ATA DEVICE FEATURE NOT ENABLED
-no entry for 6f,6 : INSUFFICIENT BLOCK COUNT FOR BINDING NONCE RECORDING
-no entry for 6f,7 : CONFLICT IN BINDING NONCE RECORDING
-no entry for 72,6 : RMZ EXTENSION IS NOT ALLOWED
-no entry for 72,7 : NO MORE TEST ZONE EXTENSIONS ARE ALLOWED
-no entry for 73,10 : CURRENT POWER CALIBRATION AREA ALMOST FULL
-no entry for 73,11 : CURRENT POWER CALIBRATION AREA IS FULL
-no entry for 73,17 : RDZ IS FULL
-no entry for 74,0 : SECURITY ERROR
-no entry for 74,1 : UNABLE TO DECRYPT DATA
-no entry for 74,2 : UNENCRYPTED DATA ENCOUNTERED WHILE DECRYPTING
-no entry for 74,3 : INCORRECT DATA ENCRYPTION KEY
-no entry for 74,4 : CRYPTOGRAPHIC INTEGRITY VALIDATION FAILED
-no entry for 74,5 : ERROR DECRYPTING DATA
-no entry for 74,71 : LOGICAL UNIT ACCESS NOT AUTHORIZED
+....Ok.  I'm new in this area (just joined open-iscsi list).
+And my first question is: which [i]scsi implementation you
+were used as a base for this driver?
 
+I've tried against curren open-iscsi svn repo, against
+scsi-misc kernel git tree, and against open-iscsi-1.0-485
+tarball.  Whch all are mostly similar (in API anyway).
+ql4 driver does not compile - even after "fixing" some
+"missing" #includes (like iscsi_if.h defining most of
+the ISCSI_* constants used in ql4_os.c), there are alot
+of functions missing (iscsi_{add,remove,free}_session()
+etc), undeclared structures used (*dscvr*) etc.
 
---------------070307030409070402070302--
+What was used as a base for the work?
+
+And also -- how ql3 driver is related to this ql4 one?
+Does it (ql4) require ql3 to be compiled/loaded as well?
+(The question is because, as it seems, the card represents
+as two PCI (sub)devices - one is ethernet controller and
+another is "network controller", like this:
+
+04:04.0 Ethernet controller: QLogic Corp. QLA3010 Network Adapter (rev 05)
+04:04.1 Network controller: QLogic Corp. QLA4010 iSCSI TOE Adapter (rev 05)
+)
+
+Thanks.
+
+/mjt
