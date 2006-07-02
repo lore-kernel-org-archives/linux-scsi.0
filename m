@@ -1,74 +1,60 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: 2.6.17-mm5
-Date: Sat, 01 Jul 2006 19:10:42 -0500
-Message-ID: <1151799042.3438.40.camel@mulgrave.il.steeleye.com>
-References: <20060701033524.3c478698.akpm@osdl.org>
-	 <20060701142419.GB28750@tlg.swandive.local>
-	 <20060701143047.b3975472.akpm@osdl.org>
-	 <1151792765.3438.30.camel@mulgrave.il.steeleye.com>
-	 <17574.63484.261979.866512@cse.unsw.edu.au>
-	 <20060701225639.GC12703@havoc.gtf.org>
+From: Reuben Farrelly <reuben-lkml@reub.net>
+Subject: Re: 2.6.17-mm5 dislikes raid-1, just like mm4
+Date: Sun, 02 Jul 2006 16:43:56 +1200
+Message-ID: <44A74F0C.6040904@reub.net>
+References: <20060701033524.3c478698.akpm@osdl.org>	<20060701181455.GA16412@aitel.hist.no> <20060701152258.bea091a6.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:6850 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751500AbWGBALO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 1 Jul 2006 20:11:14 -0400
-In-Reply-To: <20060701225639.GC12703@havoc.gtf.org>
+Received: from tornado.reub.net ([202.89.145.182]:33492 "EHLO tornado.reub.net")
+	by vger.kernel.org with ESMTP id S1751248AbWGBEnz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Jul 2006 00:43:55 -0400
+In-Reply-To: <20060701152258.bea091a6.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Neil Brown <neilb@suse.de>, Andrew Morton <akpm@osdl.org>, Grant Wilson <grant.wilson@zen.co.uk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: Helge Hafting <helgehaf@aitel.hist.no>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Neil Brown <neilb@suse.de>, Grant Wilson <grant.wilson@zen.co.uk>
 
-On Sat, 2006-07-01 at 18:56 -0400, Jeff Garzik wrote:
-> On Sun, Jul 02, 2006 at 08:32:28AM +1000, Neil Brown wrote:
-> > The problem seems to be simply that on some hardware at least,
-> > BIO_RW_BARRIER writes result in an EIO.  Don't know why yet.
+
+
+On 2/07/2006 10:22 a.m., Andrew Morton wrote:
+> On Sat, 1 Jul 2006 20:14:55 +0200
+> Helge Hafting <helgehaf@aitel.hist.no> wrote:
 > 
-> Could be that <whatever device> is choking on FLUSH CACHE (ATA)
-> or SYNCHRONIZE CACHE (SCSI).
+>> I  just got mm5 up, and it has the same problem as mm4.
+>> Raid-1 does not work. I used 2.6.16 to resync my raids,
+>> and booted into 2.6.17-mm5.
+<snip>
+>> As we see, the md devices are assembled, then the filesystems are
+>> mounted and swap turned on.  Then all three md devices fail a 
+>> partition at the same time.  Somehow, I don't believe that
+>> is correct. ;-)
+>>
 > 
-> That's one possible reason why EIO may result from a barrier...
+> I assume this is still the broken-barriers bug.  Thanks for all the help on
+> this, guys.  More is to be asked for, I'm afraid.
+> 
+> I've prepared a tree which is basically 2.6.17-mm5, only the git-scsi-misc
+> and git-libata-all trees have been omitted.  It's at 
+> 
+> http://www.zip.com.au/~akpm/linux/patches/stuff/2.6.17-mm5-no-sata-scsi.bz2
+> 
+> (That's a diff against 2.6.17)
 
-There is no barrier implementation on SCSI (basically you can't maintain
-barriers in the face of TCQ, so only depth one devices can do it and
-hence all the scsi drivers turn it off), so it must be a FLUSH CACHE.
+Works.
 
-This one looks like it went down via prepare_flush rather than
-issue_flush, so the normal error printing case that issue flush has is
-skipped.  This patch should tell us what the error was on the command.
+> If that kernel works, then the next step is to test
+> 
+> http://www.zip.com.au/~akpm/linux/patches/stuff/2.6.17-mm5-no-scsi.bz2
+> 
+> which is 2.6.17-mm5 without git-scsi-misc, but with git-libata-all.
 
-James
+Works.  I'm running it now and it looks to be all fine (including the 
+workaround/fix for MSI)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 3d04a9f..3e3e3b7 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1162,7 +1162,20 @@ static int scsi_issue_flush_fn(request_q
- 
- static void scsi_blk_pc_done(struct scsi_cmnd *cmd)
- {
-+	int res = cmd->result;
-+	struct scsi_sense_hdr sshdr;
-+
- 	BUG_ON(!blk_pc_request(cmd->request));
-+	if (!res) {
-+		printk(KERN_ERR "REQ_BLOCK_PC FAILED for ");
-+		__scsi_print_command(cmd->cmnd);
-+		printk(KERN_ERR "FAILED\n  status = %x, message = %02x, "
-+		       "host = %d, driver = %02x\n  ",
-+		       status_byte(res), msg_byte(res),
-+		       host_byte(res), driver_byte(res));
-+		if (scsi_command_normalize_sense(cmd, &sshdr))
-+			scsi_print_sense_hdr("sd", &sshdr);
-+	}
- 	/*
- 	 * This will complete the whole command with uptodate=1 so
- 	 * as far as the block layer is concerned the command completed
+In both cases I rebooted twice with each kernel to be sure it wasn't a one-off.
 
+This then must point to git-scsi-misc being implicated, if not the source.......
 
-James
-
-
+Reuben
