@@ -1,130 +1,112 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [PATCH] scsi_transport_sas: add unindexed ports
-Date: Sun, 02 Jul 2006 11:10:18 -0500
-Message-ID: <1151856619.3558.24.camel@mulgrave.il.steeleye.com>
+Subject: [PATCH] mptsas: use unnumbered port API and remove driver port
+	tracking
+Date: Sun, 02 Jul 2006 11:12:30 -0500
+Message-ID: <1151856750.3558.28.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:14797 "EHLO
+Received: from stat9.steeleye.com ([209.192.50.41]:16589 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S932511AbWGBQKU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 2 Jul 2006 12:10:20 -0400
-Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
-	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id k62GAJY02985
-	for <linux-scsi@vger.kernel.org>; Sun, 2 Jul 2006 12:10:19 -0400
+	id S932536AbWGBQMe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 2 Jul 2006 12:12:34 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: "Moore, Eric" <Eric.Moore@lsil.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Some SAS HBAs don't want to go to the trouble of tracking port numbers,
-so they'd simply like to say "add this port and give it a number".
-This is especially beneficial from the hotplug point of view, since
-tracking ports and the available number space can be a real pain.
-
-The current implementation uses an incrementing number per expander to
-add the port on.  However, since there can never be more ports than
-there are phys, a later implementation will try to be more intelligent
-about this.
+This allows us to be rid of the machinery in mptsas for creating and
+tracking port numbers.  Since mptsas is merely inventing the numbers,
+the SAS transport class may as well do it instead.
 
 James
 
-Index: BUILD-2.6/drivers/scsi/scsi_transport_sas.c
+Index: BUILD-2.6/drivers/message/fusion/mptbase.h
 ===================================================================
---- BUILD-2.6.orig/drivers/scsi/scsi_transport_sas.c	2006-06-30 21:40:34.000000000 -0500
-+++ BUILD-2.6/drivers/scsi/scsi_transport_sas.c	2006-07-01 08:52:35.000000000 -0500
-@@ -41,6 +41,7 @@
- 	struct mutex lock;
- 	u32 next_target_id;
- 	u32 next_expander_id;
-+	int next_port_id;
- };
- #define to_sas_host_attrs(host)	((struct sas_host_attrs *)(host)->shost_data)
+--- BUILD-2.6.orig/drivers/message/fusion/mptbase.h	2006-07-01 08:52:38.000000000 -0500
++++ BUILD-2.6/drivers/message/fusion/mptbase.h	2006-07-01 08:52:43.000000000 -0500
+@@ -644,7 +644,6 @@
+ 	struct work_struct	 fc_rescan_work;
+ 	char			 fc_rescan_work_q_name[KOBJ_NAME_LEN];
+ 	struct workqueue_struct *fc_rescan_work_q;
+-	u8		port_serial_number;
+ } MPT_ADAPTER;
  
-@@ -146,6 +147,7 @@
- 	mutex_init(&sas_host->lock);
- 	sas_host->next_target_id = 0;
- 	sas_host->next_expander_id = 0;
-+	sas_host->next_port_id = 0;
- 	return 0;
- }
- 
-@@ -327,7 +329,7 @@
- sas_phy_simple_attr(identify.sas_address, sas_address, "0x%016llx\n",
- 		unsigned long long);
- sas_phy_simple_attr(identify.phy_identifier, phy_identifier, "%d\n", u8);
--//sas_phy_simple_attr(port_identifier, port_identifier, "%d\n", u8);
-+//sas_phy_simple_attr(port_identifier, port_identifier, "%d\n", int);
- sas_phy_linkspeed_attr(negotiated_linkrate);
- sas_phy_linkspeed_attr(minimum_linkrate_hw);
- sas_phy_linkspeed_attr(minimum_linkrate);
-@@ -590,6 +592,38 @@
- }
- EXPORT_SYMBOL(sas_port_alloc);
- 
-+/** sas_port_alloc_num - allocate and initialize a SAS port structure
-+ *
-+ * @parent:	parent device
-+ *
-+ * Allocates a SAS port structure and a number to go with it.  This
-+ * interface is really for adapters where the port number has no
-+ * meansing, so the sas class should manage them.  It will be added to
-+ * the device tree below the device specified by @parent which must be
-+ * either a Scsi_Host or a sas_expander_device.
-+ *
-+ * Returns %NULL on error
-+ */
-+struct sas_port *sas_port_alloc_num(struct device *parent)
-+{
-+	int index;
-+	struct Scsi_Host *shost = dev_to_shost(parent);
-+	struct sas_host_attrs *sas_host = to_sas_host_attrs(shost);
-+
-+	/* FIXME: use idr for this eventually */
-+	mutex_lock(&sas_host->lock);
-+	if (scsi_is_sas_expander_device(parent)) {
-+		struct sas_rphy *rphy = dev_to_rphy(parent);
-+		struct sas_expander_device *exp = rphy_to_expander_device(rphy);
-+
-+		index = exp->next_port_id++;
-+	} else
-+		index = sas_host->next_port_id++;
-+	mutex_unlock(&sas_host->lock);
-+	return sas_port_alloc(parent, index);
-+}
-+EXPORT_SYMBOL(sas_port_alloc_num);
-+
- /**
-  * sas_port_add - add a SAS port to the device hierarchy
-  *
-Index: BUILD-2.6/include/scsi/scsi_transport_sas.h
+ /*
+Index: BUILD-2.6/drivers/message/fusion/mptsas.c
 ===================================================================
---- BUILD-2.6.orig/include/scsi/scsi_transport_sas.h	2006-06-30 21:40:34.000000000 -0500
-+++ BUILD-2.6/include/scsi/scsi_transport_sas.h	2006-07-01 08:39:30.000000000 -0500
-@@ -106,6 +106,7 @@
+--- BUILD-2.6.orig/drivers/message/fusion/mptsas.c	2006-07-01 08:52:38.000000000 -0500
++++ BUILD-2.6/drivers/message/fusion/mptsas.c	2006-07-01 08:59:09.000000000 -0500
+@@ -144,7 +144,6 @@
+  * Specific details on ports, wide/narrow
+  */
+ struct mptsas_portinfo_details{
+-	u8	port_id; 	/* port number provided to transport */
+ 	u16	num_phys;	/* number of phys belong to this port */
+ 	u64	phy_bitmask; 	/* TODO, extend support for 255 phys */
+ 	struct sas_rphy *rphy;	/* transport layer rphy object */
+@@ -352,7 +351,7 @@
  
- struct sas_expander_device {
- 	int    level;
-+	int    next_port_id;
+ 	dsaswideprintk((KERN_DEBUG "%s: [%p]: port=%02d num_phys=%02d "
+ 	    	"bitmask=0x%016llX\n",
+-		__FUNCTION__, port_details, port_details->port_id,
++		__FUNCTION__, port_details, port_details->port->port_identifier,
+ 		port_details->num_phys, port_details->phy_bitmask));
  
- 	#define SAS_EXPANDER_VENDOR_ID_LEN	8
- 	char   vendor_id[SAS_EXPANDER_VENDOR_ID_LEN+1];
-@@ -127,7 +128,7 @@
- struct sas_port {
- 	struct device		dev;
+ 	for (i = 0; i < port_info->num_phys; i++, phy_info++) {
+@@ -464,7 +463,7 @@
+ 		dsaswideprintk((KERN_DEBUG
+ 			"%s: [%p]: port=%d deleting phy = %d\n",
+ 			__FUNCTION__, port_details,
+-			port_details->port_id, i));
++			port_details->port->port_identifier, i));
+ 		port_details->num_phys--;
+ 		port_details->phy_bitmask &= ~ (1 << phy_info->phy_id);
+ 		memset(&phy_info->attached, 0, sizeof(struct mptsas_devinfo));
+@@ -493,7 +492,6 @@
+ 				goto out;
+ 			port_details->num_phys = 1;
+ 			port_details->port_info = port_info;
+-			port_details->port_id = ioc->port_serial_number++;
+ 			if (phy_info->phy_id < 64 )
+ 				port_details->phy_bitmask |=
+ 				    (1 << phy_info->phy_id);
+@@ -525,12 +523,8 @@
+ 				    mptsas_get_port(phy_info_cmp);
+ 				port_details->starget =
+ 				    mptsas_get_starget(phy_info_cmp);
+-				port_details->port_id =
+-					phy_info_cmp->port_details->port_id;
+ 				port_details->num_phys =
+ 					phy_info_cmp->port_details->num_phys;
+-//				port_info->port_serial_number--;
+-				ioc->port_serial_number--;
+ 				if (!phy_info_cmp->port_details->num_phys)
+ 					kfree(phy_info_cmp->port_details);
+ 			} else
+@@ -557,7 +551,7 @@
+ 			"%s: [%p]: phy_id=%02d port_id=%02d num_phys=%02d "
+ 		    	"bitmask=0x%016llX\n",
+ 			__FUNCTION__,
+-			port_details, i, port_details->port_id,
++			port_details, i, port_details->port->port_identifier,
+ 			port_details->num_phys, port_details->phy_bitmask));
+ 		dsaswideprintk((KERN_DEBUG"\t\tport = %p rphy=%p\n",
+ 			port_details->port, port_details->rphy));
+@@ -1608,11 +1602,10 @@
+ 	if (phy_info->sas_port_add_phy) {
  
--	u8			port_identifier;
-+	int			port_identifier;
- 	int			num_phys;
- 
- 	/* the other end of the link */
-@@ -168,6 +169,7 @@
- extern int scsi_is_sas_rphy(const struct device *);
- 
- struct sas_port *sas_port_alloc(struct device *, int);
-+struct sas_port *sas_port_alloc_num(struct device *);
- int sas_port_add(struct sas_port *);
- void sas_port_free(struct sas_port *);
- void sas_port_delete(struct sas_port *);
+ 		if (!port) {
+-			port = sas_port_alloc(dev,
+-			    phy_info->port_details->port_id);
++			port = sas_port_alloc_num(dev);
+ 			dsaswideprintk((KERN_DEBUG
+ 			    "sas_port_alloc: port=%p dev=%p port_id=%d\n",
+-			    port, dev, phy_info->port_details->port_id));
++			    port, dev, port->port_identifier));
+ 			if (!port) {
+ 				error = -ENOMEM;
+ 				goto out;
 
 
