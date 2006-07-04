@@ -1,103 +1,101 @@
-From: Jeremy Kerr <jk@ozlabs.org>
-Subject: [PATCH 14/20] [powerpc,scsi] Constify & voidify get_property()
-Date: Tue,  4 Jul 2006 16:47:17 +1000 (EST)
-Message-ID: <48562.6546237201$1151995857@news.gmane.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] Limit max_luns to 16k
+Date: Tue, 04 Jul 2006 10:18:31 +0200
+Message-ID: <44AA2457.1000805@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
-List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
-List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
-List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
-Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-To: linuxppc-dev@ozlabs.org
-Cc: linux-scsi@vger.kernel.org
+Content-Type: multipart/mixed;
+ boundary="------------060803020002060503000406"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.suse.de ([195.135.220.2]:46018 "EHLO mx1.suse.de")
+	by vger.kernel.org with ESMTP id S1750984AbWGDISh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Jul 2006 04:18:37 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: David Wagner <david.wagner@qlogic.com>, James Smart <James.Smart@Emulex.Com>
 
-Now that get_property() returns a void *, there's no need to cast its
-return value. Also, treat the return value as const, so we can
-constify get_property later.
+This is a multi-part message in MIME format.
+--------------060803020002060503000406
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 8bit
 
-powerpc-specific scsi driver changes.
+Hi all,
 
-Signed-off-by: Jeremy Kerr <jk@ozlabs.org>
----
+I have encountered a really nice aliasing error in the SCSI stack.
+(I only hope Luben is not reading this, it'll be just the thing he'd 
+want to hear :-)
 
- ibmvscsi/rpa_vscsi.c |   11 ++++-------
- mac53c94.c           |    2 +-
- mesh.c               |    5 +++--
- 3 files changed, 8 insertions(+), 10 deletions(-)
+Some device allow for a max lun number larger than 16k.
+Eg qla2xxx has this:
 
-Index: linux-2.6/drivers/scsi/mesh.c
-===================================================================
---- linux-2.6.orig/drivers/scsi/mesh.c
-+++ linux-2.6/drivers/scsi/mesh.c
-@@ -1850,7 +1850,8 @@ static int mesh_probe(struct macio_dev *
- {
- 	struct device_node *mesh = macio_get_of_node(mdev);
- 	struct pci_dev* pdev = macio_get_pci_dev(mdev);
--	int tgt, *cfp, minper;
-+	int tgt, minper;
-+	const int *cfp;
- 	struct mesh_state *ms;
- 	struct Scsi_Host *mesh_host;
- 	void *dma_cmd_space;
-@@ -1939,7 +1940,7 @@ static int mesh_probe(struct macio_dev *
- 	       	ms->tgts[tgt].current_req = NULL;
-        	}
+#define MAX_FIBRE_LUNS         0xFFFF
+
+If we encounter a SCSI-2 device with has
+BLIST_SPARSELUN | BLIST_LARGELUN
+set we'll end up doing a sequential scan of all 64k luns.
+
+However, according to SAM the top two bits are reserved for hierarchical 
+addressing. So if we're using a lun _number_ larger than 16k we'll 
+infact are using the flat addressing model of the LUN with mask 0xC000.
+
+So essentially a device at LUN 0x0 will be aliased to LUN 0xC000 et al 
+and hence will be seen detected several times from SCSI ML.
+
+The easy way out here is to _not_ scan past 16k; this will 'fix' this 
+issue. Affected drivers are qla2xxx and lpfc.
+
+However, I feel in the long run we should at least detect hierarchical 
+luns and issue a warning there. Just think of hierarchical LUNs being 
+returned from REPORT_LUNS ...
+
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+
+Cheers,
+
+Hannes
+
+-- 
+Dr. Hannes Reinecke			hare@suse.de
+SuSE Linux Products GmbH		S390 & zSeries
+Maxfeldstraße 5				+49 911 74053 688
+90409 Nürnberg				http://www.suse.de
+
+--------------060803020002060503000406
+Content-Type: text/plain;
+ name="limit-luns-to-16k"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="limit-luns-to-16k"
+
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index b62a72d..af4dd6f 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -696,10 +696,10 @@ LPFC_ATTR(discovery_threads, 32, 1, 64, 
  
--	if ((cfp = (int *) get_property(mesh, "clock-frequency", NULL)))
-+	if ((cfp = get_property(mesh, "clock-frequency", NULL)))
-        		ms->clk_freq = *cfp;
- 	else {
-        		printk(KERN_INFO "mesh: assuming 50MHz clock frequency\n");
-Index: linux-2.6/drivers/scsi/mac53c94.c
-===================================================================
---- linux-2.6.orig/drivers/scsi/mac53c94.c
-+++ linux-2.6/drivers/scsi/mac53c94.c
-@@ -431,7 +431,7 @@ static int mac53c94_probe(struct macio_d
- 	struct fsc_state *state;
- 	struct Scsi_Host *host;
- 	void *dma_cmd_space;
--	unsigned char *clkprop;
-+	const unsigned char *clkprop;
- 	int proplen, rc = -ENODEV;
+ /*
+ # lpfc_max_luns: maximum number of LUNs per target driver will support
+-# Value range is [1,32768]. Default value is 256.
++# Value range is [1,16384]. Default value is 256.
+ # NOTE: The SCSI layer will scan each target for this many luns
+ */
+-LPFC_ATTR_R(max_luns, 256, 1, 32768,
++LPFC_ATTR_R(max_luns, 256, 1, 16384,
+ 	     "Maximum number of LUNs per target driver will support");
  
- 	if (macio_resource_count(mdev) != 2 || macio_irq_count(mdev) != 2) {
-Index: linux-2.6/drivers/scsi/ibmvscsi/rpa_vscsi.c
-===================================================================
---- linux-2.6.orig/drivers/scsi/ibmvscsi/rpa_vscsi.c
-+++ linux-2.6/drivers/scsi/ibmvscsi/rpa_vscsi.c
-@@ -156,8 +156,8 @@ static void gather_partition_info(void)
- {
- 	struct device_node *rootdn;
+ /*
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 139ea0e..3183ad7 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -119,7 +119,7 @@ #define WRT_REG_WORD_PIO(addr, data)	(ou
+  */
+ #define WWN_SIZE		8	/* Size of WWPN, WWN & WWNN */
+ #define MAX_FIBRE_DEVICES	512
+-#define MAX_FIBRE_LUNS  	0xFFFF
++#define MAX_FIBRE_LUNS  	0x3FFF
+ #define	MAX_RSCN_COUNT		32
+ #define	MAX_HOST_COUNT		16
  
--	char *ppartition_name;
--	unsigned int *p_number_ptr;
-+	const char *ppartition_name;
-+	const unsigned int *p_number_ptr;
- 
- 	/* Retrieve information about this partition */
- 	rootdn = find_path_device("/");
-@@ -165,14 +165,11 @@ static void gather_partition_info(void)
- 		return;
- 	}
- 
--	ppartition_name =
--		get_property(rootdn, "ibm,partition-name", NULL);
-+	ppartition_name = get_property(rootdn, "ibm,partition-name", NULL);
- 	if (ppartition_name)
- 		strncpy(partition_name, ppartition_name,
- 				sizeof(partition_name));
--	p_number_ptr =
--		(unsigned int *)get_property(rootdn, "ibm,partition-no",
--					     NULL);
-+	p_number_ptr = get_property(rootdn, "ibm,partition-no", NULL);
- 	if (p_number_ptr)
- 		partition_number = *p_number_ptr;
- }
+
+--------------060803020002060503000406--
