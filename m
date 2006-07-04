@@ -1,361 +1,183 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH] Improve inquiry printing, take 3
-Date: Tue, 4 Jul 2006 12:15:20 -0600
-Message-ID: <20060704181520.GJ1605@parisc-linux.org>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: [RFC] MODALIAS support for SCSI devices (try 1)
+Date: Wed,  5 Jul 2006 00:34:10 +0400 (MSD)
+Message-ID: <20060704203410.5B70391F1@gandalf.tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:54953 "EHLO
-	palinux.external.hp.com") by vger.kernel.org with ESMTP
-	id S932324AbWGDSPV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 4 Jul 2006 14:15:21 -0400
-Content-Disposition: inline
+Received: from hobbit.corpit.ru ([81.13.94.6]:55125 "EHLO hobbit.corpit.ru")
+	by vger.kernel.org with ESMTP id S932382AbWGDUeQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Jul 2006 16:34:16 -0400
+Content-Disposition: inline; filename="scsi-modalias-1.patch"
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Linux-kernel <linux-kernel@vger.kernel.org>
+Cc: Linus-SCSI <linux-scsi@vger.kernel.org>
 
+The following patch adds support for sysfs/uevent modalias
+attribute for scsi devices (like disks, tapes, cdroms etc),
+based on whatever current sd.c, sr.c, st.c and osst.c drivers
+supports.
 
- - Replace scsi_device_types array API with scsi_device_type function API.
-   Gets rid of a lot of common code, as well as being easier to use.
- - Add the new device types in SPC4 r05a, and rename some of the older ones.
- - Reformat the printing of inquiry data; now fits on one line and
-   includes PQ.
+The modalias format is like this:
 
-I think I've addressed all the feedback from the previous versions.  My
-current test box prints:
+ scsi:type-0x04
 
-scsi 2:0:1:0: Direct access     HP 18.2G ATLAS10K3_18_SCA HP05 PQ: 0 ANSI: 2
+(for TYPE_WORM, handled by sr.c now).
 
-Signed-off-by: Matthew Wilcox <matthew@wil.cx>
+Several comments.
 
-Index: ./drivers/block/cciss_scsi.c
-===================================================================
-RCS file: /var/cvs/linux-2.6/drivers/block/cciss_scsi.c,v
-retrieving revision 1.16
-diff -u -p -r1.16 cciss_scsi.c
---- ./drivers/block/cciss_scsi.c	3 Apr 2006 13:44:03 -0000	1.16
-+++ ./drivers/block/cciss_scsi.c	4 Jul 2006 17:15:11 -0000
-@@ -251,10 +251,6 @@ scsi_cmd_stack_free(int ctlr)
- 	stk->pool = NULL;
+o This hexadecimal type value is because all TYPE_XXX constants
+  in include/scsi/scsi.h are given in hex, but __stringify() will
+  not convert them to decimal (so it will NOT be scsi:type-4).
+  Since it does not really matter in which format it is, while
+  both modalias in module and modalias attribute match each other,
+  I descided to go for that 0x%02x format (and added a comment in
+  include/scsi/scsi.h to keep them that way), instead of changing
+  them all to decimal.
+
+o There was no .uevent routine for SCSI bus.  It might be a good
+  idea to add some more ueven environment variables in there.
+
+o osst.c driver handles tapes too, like st.c, but only SOME tapes.
+  With this setup, hotplug scripts (or whatever is used by the
+  user) will try to load both st and osst modules for all SCSI
+  tapes found, because both modules have scsi:type-0x01 alias).
+  It is not harmful, but one extra module is no good either.
+  It is possible to solve this, by exporting more info in
+  modalias attribute, including vendor and device identification
+  strings, so that modalias becomes something like
+    scsi:type-0x12:vendor-Adaptec LTD:device-OnStream Tape Drive
+  and having that, match for all 3 attributes, not only device
+  type.  But oh well, vendor and device strings may be large,
+  and they do contain spaces and whatnot.
+  So I left them for now, awaiting for comments first.
+
+The patch is against 2.6.17, but should apply to more recent
+versions as well.
+
+And oh, almost forget:
+
+Signed-Off-By: Michael Tokarev <mjt@tls.msk.ru>
+
+Thanks.
+
+--- linux-2.6.17.orig/drivers/scsi/osst.c	2006-06-18 05:49:35.000000000 +0400
++++ linux-2.6.17/drivers/scsi/osst.c	2006-07-04 22:59:18.000000000 +0400
+@@ -87,6 +87,7 @@ MODULE_AUTHOR("Willem Riede");
+ MODULE_DESCRIPTION("OnStream {DI-|FW-|SC-|USB}{30|50} Tape Driver");
+ MODULE_LICENSE("GPL");
+ MODULE_ALIAS_CHARDEV_MAJOR(OSST_MAJOR);
++MODULE_ALIAS_SCSI_DEVICE(TYPE_TAPE);
+ 
+ module_param(max_dev, int, 0444);
+ MODULE_PARM_DESC(max_dev, "Maximum number of OnStream Tape Drives to attach (4)");
+--- linux-2.6.17.orig/drivers/scsi/scsi_sysfs.c	2006-06-18 05:49:35.000000000 +0400
++++ linux-2.6.17/drivers/scsi/scsi_sysfs.c	2006-07-05 00:16:17.000000000 +0400
+@@ -275,6 +275,19 @@ static int scsi_bus_match(struct device 
+ 	return (sdp->inq_periph_qual == SCSI_INQ_PQ_CON)? 1: 0;
  }
  
--/* scsi_device_types comes from scsi.h */
--#define DEVICETYPE(n) (n<0 || n>MAX_SCSI_DEVICE_CODE) ? \
--	"Unknown" : scsi_device_types[n]
--
- #if 0
- static int xmargin=8;
- static int amargin=60;
-@@ -389,7 +385,7 @@ cciss_scsi_add_entry(int ctlr, int hostn
- 	   time anyway (the scsi layer's inquiries will show that info) */
- 	if (hostno != -1)
- 		printk("cciss%d: %s device c%db%dt%dl%d added.\n", 
--			ctlr, DEVICETYPE(sd->devtype), hostno, 
-+			ctlr, scsi_device_type(sd->devtype), hostno, 
- 			sd->bus, sd->target, sd->lun);
- 	return 0;
- }
-@@ -407,7 +403,7 @@ cciss_scsi_remove_entry(int ctlr, int ho
- 		ccissscsi[ctlr].dev[i] = ccissscsi[ctlr].dev[i+1];
- 	ccissscsi[ctlr].ndevices--;
- 	printk("cciss%d: %s device c%db%dt%dl%d removed.\n",
--		ctlr, DEVICETYPE(sd.devtype), hostno, 
-+		ctlr, scsi_device_type(sd.devtype), hostno, 
- 			sd.bus, sd.target, sd.lun);
- }
- 
-@@ -458,7 +454,7 @@ adjust_cciss_scsi_table(int ctlr, int ho
- 		if (found == 0) { /* device no longer present. */ 
- 			changes++;
- 			/* printk("cciss%d: %s device c%db%dt%dl%d removed.\n",
--				ctlr, DEVICETYPE(csd->devtype), hostno, 
-+				ctlr, scsi_device_type(csd->devtype), hostno, 
- 					csd->bus, csd->target, csd->lun); */
- 			cciss_scsi_remove_entry(ctlr, hostno, i);
- 			/* note, i not incremented */
-@@ -468,7 +464,7 @@ adjust_cciss_scsi_table(int ctlr, int ho
- 			printk("cciss%d: device c%db%dt%dl%d type changed "
- 				"(device type now %s).\n",
- 				ctlr, hostno, csd->bus, csd->target, csd->lun,
--					DEVICETYPE(csd->devtype));
-+					scsi_device_type(csd->devtype));
- 			csd->devtype = sd[j].devtype;
- 			i++;	/* so just move along. */
- 		} else 		/* device is same as it ever was, */
-@@ -1098,7 +1094,7 @@ cciss_update_non_disk_devices(int cntl_n
- 			if (ncurrent >= CCISS_MAX_SCSI_DEVS_PER_HBA) {
- 				printk(KERN_INFO "cciss%d: %s ignored, "
- 					"too many devices.\n", cntl_num,
--					DEVICETYPE(devtype));
-+					scsi_device_type(devtype));
- 				break;
- 			}
- 			memcpy(&currentsd[ncurrent].scsi3addr[0], 
-Index: ./drivers/scsi/fcal.c
-===================================================================
-RCS file: /var/cvs/linux-2.6/drivers/scsi/fcal.c,v
-retrieving revision 1.8
-diff -u -p -r1.8 fcal.c
---- ./drivers/scsi/fcal.c	12 Nov 2005 04:08:10 -0000	1.8
-+++ ./drivers/scsi/fcal.c	4 Jul 2006 17:15:12 -0000
-@@ -249,8 +249,7 @@ int fcal_proc_info (struct Scsi_Host *ho
- 				if (scd->id == target) {
- 					SPRINTF ("  [AL-PA: %02x, Id: %02d, Port WWN: %08x%08x, Node WWN: %08x%08x]  ",
- 						alpa, target, u1[0], u1[1], u2[0], u2[1]);
--					SPRINTF ("%s ", (scd->type < MAX_SCSI_DEVICE_CODE) ?
--						scsi_device_types[(short) scd->type] : "Unknown device");
-+					SPRINTF ("%s ", scsi_device_type(scd->type));
- 
- 					for (j = 0; (j < 8) && (scd->vendor[j] >= 0x20); j++)
- 						SPRINTF ("%c", scd->vendor[j]);
-Index: ./drivers/scsi/g_NCR5380.c
-===================================================================
-RCS file: /var/cvs/linux-2.6/drivers/scsi/g_NCR5380.c,v
-retrieving revision 1.14
-diff -u -p -r1.14 g_NCR5380.c
---- ./drivers/scsi/g_NCR5380.c	3 Apr 2006 13:44:54 -0000	1.14
-+++ ./drivers/scsi/g_NCR5380.c	4 Jul 2006 17:15:12 -0000
-@@ -813,7 +813,6 @@ static int generic_NCR5380_proc_info(str
- 	struct NCR5380_hostdata *hostdata;
- #ifdef NCR5380_STATS
- 	struct scsi_device *dev;
--	extern const char *const scsi_device_types[MAX_SCSI_DEVICE_CODE];
- #endif
- 
- 	NCR5380_setup(scsi_ptr);
-@@ -853,7 +852,7 @@ static int generic_NCR5380_proc_info(str
- 		long tr = hostdata->time_read[dev->id] / HZ;
- 		long tw = hostdata->time_write[dev->id] / HZ;
- 
--		PRINTP("  T:%d %s " ANDP dev->id ANDP(dev->type < MAX_SCSI_DEVICE_CODE) ? scsi_device_types[(int) dev->type] : "Unknown");
-+		PRINTP("  T:%d %s " ANDP dev->id ANDP scsi_device_type(dev->type));
- 		for (i = 0; i < 8; i++)
- 			if (dev->vendor[i] >= 0x20)
- 				*(buffer + (len++)) = dev->vendor[i];
-Index: ./drivers/scsi/megaraid.c
-===================================================================
-RCS file: /var/cvs/linux-2.6/drivers/scsi/megaraid.c,v
-retrieving revision 1.26
-diff -u -p -r1.26 megaraid.c
---- ./drivers/scsi/megaraid.c	13 May 2006 04:12:19 -0000	1.26
-+++ ./drivers/scsi/megaraid.c	4 Jul 2006 17:15:12 -0000
-@@ -2822,9 +2822,7 @@ mega_print_inquiry(char *page, char *scs
- 
- 	i = scsi_inq[0] & 0x1f;
- 
--	len += sprintf(page+len, "  Type:   %s ",
--		i < MAX_SCSI_DEVICE_CODE ? scsi_device_types[i] :
--		   "Unknown          ");
-+	len += sprintf(page+len, "  Type:   %s ", scsi_device_type(i));
- 
- 	len += sprintf(page+len,
- 	"                 ANSI SCSI revision: %02x", scsi_inq[2] & 0x07);
-Index: ./drivers/scsi/scsi.c
-===================================================================
-RCS file: /var/cvs/linux-2.6/drivers/scsi/scsi.c,v
-retrieving revision 1.34
-diff -u -p -r1.34 scsi.c
---- ./drivers/scsi/scsi.c	19 Apr 2006 04:55:59 -0000	1.34
-+++ ./drivers/scsi/scsi.c	4 Jul 2006 17:15:12 -0000
-@@ -97,24 +97,40 @@ unsigned int scsi_logging_level;
- EXPORT_SYMBOL(scsi_logging_level);
- #endif
- 
--const char *const scsi_device_types[MAX_SCSI_DEVICE_CODE] = {
--	"Direct-Access    ",
--	"Sequential-Access",
-+static const char *const scsi_device_types[] = {
-+	"Direct access    ",
-+	"Sequential access",
- 	"Printer          ",
- 	"Processor        ",
- 	"WORM             ",
--	"CD-ROM           ",
-+	"CD/DVD           ",
- 	"Scanner          ",
--	"Optical Device   ",
--	"Medium Changer   ",
-+	"Optical memory   ",
-+	"Media changer    ",
- 	"Communications   ",
--	"Unknown          ",
--	"Unknown          ",
-+	"ASC IT8          ",
-+	"ASC IT8          ",
- 	"RAID             ",
- 	"Enclosure        ",
--	"Direct-Access-RBC",
-+	"Direct access RBC",
-+	"Optical card     ",
-+	"Bridge controller",
-+	"Object storage   ",
-+	"Automation/Drive ",
- };
--EXPORT_SYMBOL(scsi_device_types);
-+
-+const char * scsi_device_type(unsigned type)
++static int scsi_bus_uevent(struct device *dev, char **envp, int num_envp,
++		           char *buffer, int buffer_size)
 +{
-+	if (type == 0x1e)
-+		return "Well-known LUN   ";
-+	if (type == 0x1f)
-+		return "No Device        ";
-+	if (type > ARRAY_SIZE(scsi_device_types))
-+		return "Unknown          ";
-+	return scsi_device_types[type];
++	struct scsi_device *sdev = to_scsi_device(dev);
++	int i = 0;
++	int length = 0;
++
++	add_uevent_var(envp, num_envp, &i, buffer, buffer_size, &length,
++		       "MODALIAS=" SCSI_DEVICE_MODALIAS_FMT, sdev->type);
++	envp[i] = NULL;
++	return 0;
 +}
 +
-+EXPORT_SYMBOL(scsi_device_type);
+ static int scsi_bus_suspend(struct device * dev, pm_message_t state)
+ {
+ 	struct scsi_device *sdev = to_scsi_device(dev);
+@@ -307,6 +320,7 @@ static int scsi_bus_resume(struct device
+ struct bus_type scsi_bus_type = {
+         .name		= "scsi",
+         .match		= scsi_bus_match,
++	.uevent		= scsi_bus_uevent,
+ 	.suspend	= scsi_bus_suspend,
+ 	.resume		= scsi_bus_resume,
+ };
+@@ -534,6 +548,14 @@ show_sdev_iostat(iorequest_cnt);
+ show_sdev_iostat(iodone_cnt);
+ show_sdev_iostat(ioerr_cnt);
+ 
++static ssize_t
++sdev_show_modalias(struct device *dev, struct device_attribute *attr, char *buf)
++{
++	struct scsi_device *sdev;
++	sdev = to_scsi_device(dev);
++	return snprintf (buf, 20, SCSI_DEVICE_MODALIAS_FMT "\n", sdev->type);
++}
++static DEVICE_ATTR(modalias, S_IRUGO, sdev_show_modalias, NULL);
+ 
+ /* Default template for device attributes.  May NOT be modified */
+ static struct device_attribute *scsi_sysfs_sdev_attrs[] = {
+@@ -553,6 +575,7 @@ static struct device_attribute *scsi_sys
+ 	&dev_attr_iorequest_cnt,
+ 	&dev_attr_iodone_cnt,
+ 	&dev_attr_ioerr_cnt,
++	&dev_attr_modalias,
+ 	NULL
+ };
+ 
+--- linux-2.6.17.orig/drivers/scsi/sd.c	2006-06-18 05:49:35.000000000 +0400
++++ linux-2.6.17/drivers/scsi/sd.c	2006-07-04 22:53:29.000000000 +0400
+@@ -90,6 +90,9 @@ MODULE_ALIAS_BLOCKDEV_MAJOR(SCSI_DISK12_
+ MODULE_ALIAS_BLOCKDEV_MAJOR(SCSI_DISK13_MAJOR);
+ MODULE_ALIAS_BLOCKDEV_MAJOR(SCSI_DISK14_MAJOR);
+ MODULE_ALIAS_BLOCKDEV_MAJOR(SCSI_DISK15_MAJOR);
++MODULE_ALIAS_SCSI_DEVICE(TYPE_DISK);
++MODULE_ALIAS_SCSI_DEVICE(TYPE_MOD);
++MODULE_ALIAS_SCSI_DEVICE(TYPE_RBC);
  
  /*
-  * Function:    scsi_allocate_request
-Index: ./drivers/scsi/scsi_proc.c
-===================================================================
-RCS file: /var/cvs/linux-2.6/drivers/scsi/scsi_proc.c,v
-retrieving revision 1.9
-diff -u -p -r1.9 scsi_proc.c
---- ./drivers/scsi/scsi_proc.c	17 Jan 2006 14:51:49 -0000	1.9
-+++ ./drivers/scsi/scsi_proc.c	4 Jul 2006 17:15:12 -0000
-@@ -178,9 +178,7 @@ static int proc_print_scsidevice(struct 
+  * This is limited by the naming scheme enforced in sd_probe,
+--- linux-2.6.17.orig/drivers/scsi/sr.c	2006-06-18 05:49:35.000000000 +0400
++++ linux-2.6.17/drivers/scsi/sr.c	2006-07-04 22:54:49.000000000 +0400
+@@ -63,6 +63,8 @@
+ MODULE_DESCRIPTION("SCSI cdrom (sr) driver");
+ MODULE_LICENSE("GPL");
+ MODULE_ALIAS_BLOCKDEV_MAJOR(SCSI_CDROM_MAJOR);
++MODULE_ALIAS_SCSI_DEVICE(TYPE_ROM);
++MODULE_ALIAS_SCSI_DEVICE(TYPE_WORM);
  
- 	seq_printf(s, "\n");
+ #define SR_DISKS	256
  
--	seq_printf(s, "  Type:   %s ",
--		     sdev->type < MAX_SCSI_DEVICE_CODE ?
--	       scsi_device_types[(int) sdev->type] : "Unknown          ");
-+	seq_printf(s, "  Type:   %s ", scsi_device_type(sdev->type));
- 	seq_printf(s, "               ANSI"
- 		     " SCSI revision: %02x", (sdev->scsi_level - 1) ?
- 		     sdev->scsi_level - 1 : 1);
-Index: ./drivers/scsi/scsi_scan.c
-===================================================================
-RCS file: /var/cvs/linux-2.6/drivers/scsi/scsi_scan.c,v
-retrieving revision 1.41
-diff -u -p -r1.41 scsi_scan.c
---- ./drivers/scsi/scsi_scan.c	29 May 2006 02:51:18 -0000	1.41
-+++ ./drivers/scsi/scsi_scan.c	4 Jul 2006 17:15:13 -0000
-@@ -186,59 +186,6 @@ static void scsi_unlock_floptical(struct
+--- linux-2.6.17.orig/drivers/scsi/st.c	2006-06-18 05:49:35.000000000 +0400
++++ linux-2.6.17/drivers/scsi/st.c	2006-07-04 22:56:02.000000000 +0400
+@@ -89,6 +89,7 @@ MODULE_AUTHOR("Kai Makisara");
+ MODULE_DESCRIPTION("SCSI tape (st) driver");
+ MODULE_LICENSE("GPL");
+ MODULE_ALIAS_CHARDEV_MAJOR(SCSI_TAPE_MAJOR);
++MODULE_ALIAS_SCSI_DEVICE(TYPE_TAPE);
+ 
+ /* Set 'perm' (4th argument) to 0 to disable module_param's definition
+  * of sysfs parameters (which module_param doesn't yet support).
+--- linux-2.6.17.orig/include/scsi/scsi_device.h	2006-06-18 05:49:35.000000000 +0400
++++ linux-2.6.17/include/scsi/scsi_device.h	2006-07-05 00:16:40.000000000 +0400
+@@ -352,4 +352,9 @@ static inline int scsi_device_qas(struct
+ 		return 0;
+ 	return sdev->inquiry[56] & 0x02;
  }
- 
- /**
-- * print_inquiry - printk the inquiry information
-- * @inq_result:	printk this SCSI INQUIRY
-- *
-- * Description:
-- *     printk the vendor, model, and other information found in the
-- *     INQUIRY data in @inq_result.
-- *
-- * Notes:
-- *     Remove this, and replace with a hotplug event that logs any
-- *     relevant information.
-- **/
--static void print_inquiry(unsigned char *inq_result)
--{
--	int i;
--
--	printk(KERN_NOTICE "  Vendor: ");
--	for (i = 8; i < 16; i++)
--		if (inq_result[i] >= 0x20 && i < inq_result[4] + 5)
--			printk("%c", inq_result[i]);
--		else
--			printk(" ");
--
--	printk("  Model: ");
--	for (i = 16; i < 32; i++)
--		if (inq_result[i] >= 0x20 && i < inq_result[4] + 5)
--			printk("%c", inq_result[i]);
--		else
--			printk(" ");
--
--	printk("  Rev: ");
--	for (i = 32; i < 36; i++)
--		if (inq_result[i] >= 0x20 && i < inq_result[4] + 5)
--			printk("%c", inq_result[i]);
--		else
--			printk(" ");
--
--	printk("\n");
--
--	i = inq_result[0] & 0x1f;
--
--	printk(KERN_NOTICE "  Type:   %s ",
--	       i <
--	       MAX_SCSI_DEVICE_CODE ? scsi_device_types[i] :
--	       "Unknown          ");
--	printk("                 ANSI SCSI revision: %02x",
--	       inq_result[2] & 0x07);
--	if ((inq_result[2] & 0x07) == 1 && (inq_result[3] & 0x0f) == 1)
--		printk(" CCS\n");
--	else
--		printk("\n");
--}
--
--/**
-  * scsi_alloc_sdev - allocate and setup a scsi_Device
-  *
-  * Description:
-@@ -706,9 +653,8 @@ static int scsi_add_lun(struct scsi_devi
- 	if (*bflags & BLIST_ISROM) {
- 		/*
- 		 * It would be better to modify sdev->type, and set
--		 * sdev->removable, but then the print_inquiry() output
--		 * would not show TYPE_ROM; if print_inquiry() is removed
--		 * the issue goes away.
-+		 * sdev->removable; this can now be done since
-+		 * print_inquiry has gone away.
- 		 */
- 		inq_result[0] = TYPE_ROM;
- 		inq_result[1] |= 0x80;	/* removable */
-@@ -737,8 +683,6 @@ static int scsi_add_lun(struct scsi_devi
- 		printk(KERN_INFO "scsi: unknown device type %d\n", sdev->type);
- 	}
- 
--	print_inquiry(inq_result);
--
- 	/*
- 	 * For a peripheral qualifier (PQ) value of 1 (001b), the SCSI
- 	 * spec says: The device server is capable of supporting the
-@@ -767,6 +711,12 @@ static int scsi_add_lun(struct scsi_devi
- 		sdev->wdtr = 1;
- 	if (inq_result[7] & 0x10)
- 		sdev->sdtr = 1;
 +
-+	sdev_printk(KERN_NOTICE "scsi", sdev, "%s %.8s %.16s %.4s PQ: %d "
-+			"ANSI: %d%s\n", scsi_device_type(sdev->type),
-+			sdev->vendor, sdev->model, sdev->rev,
-+			sdev->inq_periph_qual, inq_result[2] & 0x07,
-+			(inq_result[3] & 0x0f) == 1 ? " CCS" : "");
- 
- 	/*
- 	 * End sysfs code.
-Index: ./include/scsi/scsi.h
-===================================================================
-RCS file: /var/cvs/linux-2.6/include/scsi/scsi.h,v
-retrieving revision 1.19
-diff -u -p -r1.19 scsi.h
---- ./include/scsi/scsi.h	3 Apr 2006 13:46:08 -0000	1.19
-+++ ./include/scsi/scsi.h	4 Jul 2006 17:15:14 -0000
-@@ -25,13 +25,6 @@ extern const unsigned char scsi_command_
- #define COMMAND_SIZE(opcode) scsi_command_size[((opcode) >> 5) & 7]
++#define MODULE_ALIAS_SCSI_DEVICE(type) \
++	MODULE_ALIAS("scsi:t-" __stringify(type) "*")
++#define SCSI_DEVICE_MODALIAS_FMT "scsi:t-0x%02x"
++
+ #endif /* _SCSI_SCSI_DEVICE_H */
+--- linux-2.6.17.orig/include/scsi/scsi.h	2006-06-18 05:49:35.000000000 +0400
++++ linux-2.6.17/include/scsi/scsi.h	2006-07-04 22:35:53.000000000 +0400
+@@ -207,6 +207,7 @@ static inline int scsi_status_is_good(in
  
  /*
-- *	SCSI device types
-- */
--
--#define MAX_SCSI_DEVICE_CODE 15
--extern const char *const scsi_device_types[MAX_SCSI_DEVICE_CODE];
--
--/*
-  * Special value for scanning to specify scanning or rescanning of all
-  * possible channels, (target) ids, or luns on a given shost.
+  *  DEVICE TYPES
++ *  Please keep them in 0x%02x format for $MODALIAS to work
   */
-@@ -224,6 +217,9 @@ static inline int scsi_status_is_good(in
- #define TYPE_ENCLOSURE      0x0d    /* Enclosure Services Device */
- #define TYPE_RBC	    0x0e
- #define TYPE_NO_LUN         0x7f
-+
-+/* Returns a human-readable name for the device */
-+extern const char * scsi_device_type(unsigned type);
  
- /*
-  * standard mode-select header prepended to all mode-select commands
-
+ #define TYPE_DISK           0x00
