@@ -1,227 +1,69 @@
-From: Frederic TEMPORELLI <frederic.temporelli@ext.bull.net>
-Subject: scan error after FC link recovery when device was in use
-Date: Tue, 04 Jul 2006 13:22:01 +0200
-Message-ID: <44AA4F59.3040800@ext.bull.net>
+From: Daniel Walker <dwalker@mvista.com>
+Subject: [BUG] scsi/io-elevator held lock freed.
+Date: Tue, 04 Jul 2006 07:54:14 -0700
+Message-ID: <1152024854.29262.5.camel@c-67-180-134-207.hsd1.ca.comcast.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ecfrec.frec.bull.fr ([129.183.4.8]:60885 "EHLO
-	ecfrec.frec.bull.fr") by vger.kernel.org with ESMTP
-	id S1751287AbWGDLWO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 4 Jul 2006 07:22:14 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by ecfrec.frec.bull.fr (Postfix) with ESMTP id 0F3E319D922
-	for <linux-scsi@vger.kernel.org>; Tue,  4 Jul 2006 13:22:12 +0200 (CEST)
-Received: from ecfrec.frec.bull.fr ([127.0.0.1])
- by localhost (ecfrec.frec.bull.fr [127.0.0.1]) (amavisd-new, port 10024)
- with ESMTP id 14871-04 for <linux-scsi@vger.kernel.org>;
- Tue,  4 Jul 2006 13:22:05 +0200 (CEST)
-Received: from ecn002.frec.bull.fr (ecn002.frec.bull.fr [129.183.4.6])
-	by ecfrec.frec.bull.fr (Postfix) with ESMTP id 32FC219D930
-	for <linux-scsi@vger.kernel.org>; Tue,  4 Jul 2006 13:22:04 +0200 (CEST)
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-	by openx3.frec.bull.fr (Postfix) with ESMTP id 9B8F62B179
-	for <linux-scsi@vger.kernel.org>; Tue,  4 Jul 2006 13:22:01 +0200 (CEST)
+Received: from homer.mvista.com ([63.81.120.158]:13737 "EHLO
+	gateway-1237.mvista.com") by vger.kernel.org with ESMTP
+	id S1751037AbWGDOyT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 4 Jul 2006 10:54:19 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-Hi,
-
-
-With 2.6.17.2, if a FC device is in use (mounted FS), a scan error is reported 
-when recovering after a 'long' link down period (>30s, 'no device timeout'). 
-Then, devices aren't detected again (and oops are generated when reloading HBA 
-drivers, but this may be a side effect).
-
-We have this issue with point to point configuration using:
-- Emulex + DDN
-- Emulex + NEC
-- QLogic + DDN
-- QLogic + NEC
-
-In all cases, we got the message "Unexpected response from lun 0 while scanning, 
-scan aborted" in the scsi_report_lun_scan function (scsi_scan.c) and I'm 
-thinking there's something wrong when calling scsi_probe_and_add_lun.
-We don't have such error if devices aren't used (not mounted) when link failure 
-occurs.
-
-Do you know if such issue has already been encountered ?
-May be an already existing patch ? (I look for scsi_probe_and_add_lun in the 
-mailling list but didn't find any revelant message)
-
-Here are the extracts from syslog about these errors:
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
 
-lpfc + DDN:
-===========
-...
-Jul  3 09:15:30 s_kernel@iotiger2 kernel: lpfc 0000:06:02.0: 0:1305 Link Down 
-Event x2 received Data: x2 x20 x0
-Jul  3 09:16:00 s_kernel@iotiger2 kernel: lpfc 0000:06:02.0: 0:0203 Nodev 
-timeout on WWPN 23:0:0:1:ff:3:2:a8 NPort xef Data: x8 x7 x0
-Jul  3 09:16:05 s_kernel@iotiger2 kernel: rport-2:0-0: blocked FC remote port 
-time out: removing target and saving binding
-Jul  3 09:17:01 s_kernel@iotiger2 kernel: lpfc 0000:06:02.0: 0:1303 Link Up 
-Event x3 received Data: x3 x1 x8 x2
-Jul  3 09:17:01 s_kernel@iotiger2 kernel: Vendor: DDN       Model: S2A 8500 
-      Rev: 5.22
-Jul  3 09:17:01 s_kernel@iotiger2 kernel: Type:   Direct-Access 
-      ANSI SCSI revision: 03
-Jul  3 09:17:01 s_kernel@iotiger2 kernel: SCSI device sdd: 571416576 512-byte 
-hdwr sectors (292565 MB)
-Jul  3 09:17:01 s_kernel@iotiger2 kernel: sdd: Write Protect is off
-Jul  3 09:17:01 s_kernel@iotiger2 kernel: sdd: Mode Sense: a7 00 10 08
-Jul  3 09:17:01 s_kernel@iotiger2 kernel: SCSI device sdd: drive cache: write 
-back w/ FUA
-Jul  3 09:17:01 s_kernel@iotiger2 kernel: SCSI device sdd: 571416576 512-byte 
-hdwr sectors (292565 MB)
-Jul  3 09:17:01 s_kernel@iotiger2 kernel: sdd: Write Protect is off
-Jul  3 09:17:01 s_kernel@iotiger2 kernel: sdd: Mode Sense: a7 00 10 08
-Jul  3 09:17:01 s_kernel@iotiger2 kernel: SCSI device sdd: drive cache: write 
-back w/ FUA
-Jul  3 09:17:01 s_kernel@iotiger2 kernel: sdd: unknown partition table
-Jul  3 09:17:01 s_kernel@iotiger2 kernel: sd 2:0:0:0: Attached scsi disk sdd
-Jul  3 09:17:01 s_kernel@iotiger2 kernel: sd 2:0:0:0: Attached scsi generic sg4 
-type 0
-Jul  3 09:17:01 s_kernel@iotiger2 kernel: Vendor: DDN       Model: S2A 8500 
-      Rev: 5.22
-Jul  3 09:17:01 s_kernel@iotiger2 kernel: Type:   Direct-Access 
-      ANSI SCSI revision: 03
-Jul  3 09:17:01 s_kernel@iotiger2 kernel: error 1
-Jul  3 09:17:01 s_kernel@iotiger2 kernel: 2:0:0:0: Unexpected response from lun 
-0 while scanning, scan aborted
-...
+I got this during boot. I booted the same kernel several times, and only
+saw it once. The kernel was 2.6.17-mm5 .
+
+Daniel
 
 
-lpfc + NEC:
-===========
-...
-Jul  4 06:11:44 s_kernel@iotiger2 kernel: EXT3 FS on sdg, internal journal
-Jul  4 06:11:44 s_kernel@iotiger2 kernel: EXT3-fs: recovery complete.
-Jul  4 06:11:44 s_kernel@iotiger2 kernel: EXT3-fs: mounted filesystem with 
-ordered data mode.
-Jul  4 06:12:03 s_kernel@iotiger2 kernel: lpfc 0000:06:02.1: 1:1305 Link Down 
-Event x2 received Data: x2 x20 x0
-Jul  4 06:12:33 s_kernel@iotiger2 kernel: lpfc 0000:06:02.1: 1:0203 Nodev 
-timeout on WWPN 20:6:0:0:13:84:0:35 NPort xdc Data: x8 x7 x0
-Jul  4 06:12:38 s_kernel@iotiger2 kernel: rport-3:0-0: blocked FC remote port 
-time out: removing target and saving binding
-Jul  4 06:12:42 s_kernel@iotiger2 kernel: lpfc 0000:06:02.1: 1:1303 Link Up 
-Event x3 received Data: x3 x1 x8 x2
-Jul  4 06:12:42 s_kernel@iotiger2 kernel: Vendor: NEC       Model: iStorage 2000 
-     Rev: 2800
-Jul  4 06:12:42 s_kernel@iotiger2 kernel: Type:   Direct-Access 
-      ANSI SCSI revision: 04
-Jul  4 06:12:42 s_kernel@iotiger2 kernel: SCSI device sdh: 138412032 512-byte 
-hdwr sectors (70867 MB)
-Jul  4 06:12:42 s_kernel@iotiger2 kernel: sdh: Write Protect is off
-Jul  4 06:12:42 s_kernel@iotiger2 kernel: sdh: Mode Sense: 97 00 00 08
-Jul  4 06:12:42 s_kernel@iotiger2 kernel: SCSI device sdh: drive cache: write back
-Jul  4 06:12:42 s_kernel@iotiger2 kernel: SCSI device sdh: 138412032 512-byte 
-hdwr sectors (70867 MB)
-Jul  4 06:12:42 s_kernel@iotiger2 kernel: sdh: Write Protect is off
-Jul  4 06:12:42 s_kernel@iotiger2 kernel: sdh: Mode Sense: 97 00 00 08
-Jul  4 06:12:42 s_kernel@iotiger2 kernel: SCSI device sdh: drive cache: write back
-Jul  4 06:12:42 s_kernel@iotiger2 kernel: sdh: unknown partition table
-Jul  4 06:12:42 s_kernel@iotiger2 kernel: sd 3:0:0:0: Attached scsi disk sdh
-Jul  4 06:12:42 s_kernel@iotiger2 kernel: sd 3:0:0:0: Attached scsi generic sg12 
-type 0
-Jul  4 06:12:42 s_kernel@iotiger2 kernel: Vendor: NEC       Model: iStorage 2000 
-     Rev: 2800
-Jul  4 06:12:42 s_kernel@iotiger2 kernel: Type:   Direct-Access 
-      ANSI SCSI revision: 04
-Jul  4 06:12:42 s_kernel@iotiger2 kernel: error 1
-Jul  4 06:12:42 s_kernel@iotiger2 kernel: 3:0:0:0: Unexpected response from lun 
-0 while scanning, scan aborted
-...
+=========================
+[ BUG: held lock freed! ]
+-------------------------
+swapper/1 is freeing memory f73a8580-f73a867f, with a lock still held there!
+2 locks held by swapper/1:
+ #0:  (&shost->scan_mutex){--..}, at: [<c0419098>] mutex_lock+0x8/0x10
+ #1:  (&eq->sysfs_lock){--..}, at: [<c0419098>] mutex_lock+0x8/0x10
 
-QLogic+NEC
-==========
-...
-Jul  4 09:47:10 s_kernel@iotiger2 kernel: qla2400 0000:07:01.1: LIP reset 
-occured (f8ef).
-Jul  4 09:47:10 s_kernel@iotiger2 kernel: qla2400 0000:07:01.1: LOOP DOWN 
-detected (2).
-Jul  4 09:47:14 s_kernel@iotiger2 kernel: qla2400 0000:07:01.0: LOOP DOWN 
-detected (2).
-Jul  4 09:47:45 s_kernel@iotiger2 kernel: rport-9:0-0: blocked FC remote port 
-time out: removing target and saving binding
-Jul  4 09:47:50 s_kernel@iotiger2 kernel: rport-8:0-0: blocked FC remote port 
-time out: removing target and saving binding
-Jul  4 09:48:11 s_kernel@iotiger2 kernel: qla2400 0000:07:01.0: LIP reset 
-occured (f7f7).
-Jul  4 09:48:11 s_kernel@iotiger2 kernel: qla2400 0000:07:01.0: LIP occured (f7f7).
-Jul  4 09:48:11 s_kernel@iotiger2 kernel: qla2400 0000:07:01.0: LOOP UP detected 
-(2 Gbps).
-Jul  4 09:48:11 s_kernel@iotiger2 kernel: Vendor: NEC       Model: iStorage 2000 
-     Rev: 2800
-Jul  4 09:48:11 s_kernel@iotiger2 kernel: Type:   Direct-Access 
-      ANSI SCSI revision: 04
-Jul  4 09:48:11 s_kernel@iotiger2 kernel: SCSI device sdi: 138412032 512-byte 
-hdwr sectors (70867 MB)
-Jul  4 09:48:11 s_kernel@iotiger2 kernel: sdi: Write Protect is off
-Jul  4 09:48:11 s_kernel@iotiger2 kernel: sdi: Mode Sense: 97 00 00 08
-Jul  4 09:48:11 s_kernel@iotiger2 kernel: SCSI device sdi: drive cache: write back
-Jul  4 09:48:11 s_kernel@iotiger2 kernel: SCSI device sdi: 138412032 512-byte 
-hdwr sectors (70867 MB)
-Jul  4 09:48:11 s_kernel@iotiger2 kernel: sdi: Write Protect is off
-Jul  4 09:48:11 s_kernel@iotiger2 kernel: sdi: Mode Sense: 97 00 00 08
-Jul  4 09:48:11 s_kernel@iotiger2 kernel: SCSI device sdi: drive cache: write back
-Jul  4 09:48:11 s_kernel@iotiger2 kernel: sdi: unknown partition table
-Jul  4 09:48:11 s_kernel@iotiger2 kernel: sd 8:0:0:0: Attached scsi disk sdi
-Jul  4 09:48:11 s_kernel@iotiger2 kernel: sd 8:0:0:0: Attached scsi generic sg14 
-type 0
-Jul  4 09:48:11 s_kernel@iotiger2 kernel: Vendor: NEC       Model: iStorage 2000 
-     Rev: 2800
-Jul  4 09:48:11 s_kernel@iotiger2 kernel: Type:   Direct-Access 
-      ANSI SCSI revision: 04
-Jul  4 09:48:11 s_kernel@iotiger2 kernel: error 1
-Jul  4 09:48:11 s_kernel@iotiger2 kernel: 8:0:0:0: Unexpected response from lun 
-0 while scanning, scan aborted
-...
+stack backtrace:
+ [<c010546b>] show_trace+0x1b/0x20
+ [<c0105494>] dump_stack+0x24/0x30
+ [<c013c234>] debug_check_no_locks_freed+0x154/0x190
+ [<c016be44>] kfree+0x54/0xb0
+ [<c022c0f3>] cfq_exit_queue+0xe3/0x100
+ [<c021f6ea>] elevator_exit+0x2a/0x50
+ [<c022180b>] blk_cleanup_queue+0x3b/0x50
+ [<c02c7ff1>] scsi_free_queue+0x11/0x20
+ [<c02cd5ff>] scsi_device_dev_release_usercontext+0xff/0x1a0
+ [<c0130975>] execute_in_process_context+0x25/0x60
+ [<c02cc433>] scsi_device_dev_release+0x23/0x30
+ [<c0298bdd>] device_release+0x1d/0x80
+ [<c0230c6c>] kobject_cleanup+0x4c/0x90
+ [<c0230cc4>] kobject_release+0x14/0x20
+ [<c02312ea>] kref_put+0x3a/0xb0
+ [<c0230451>] kobject_put+0x21/0x30
+ [<c0298fca>] put_device+0x1a/0x20
+ [<c02cae17>] scsi_probe_and_add_lun+0x637/0x9a0
+ [<c02cb75f>] __scsi_scan_target+0xef/0x600
+ [<c02cbce8>] scsi_scan_channel+0x78/0x90
+ [<c02cbd67>] scsi_scan_host_selected+0x67/0xe0
+ [<c02cbe12>] scsi_scan_host+0x32/0x40
+ [<c02d2d84>] sym2_probe+0x9d4/0xa20
+ [<c023c871>] pci_device_probe+0x61/0x80
+ [<c029b4be>] driver_probe_device+0x4e/0xe0
+ [<c029b653>] __driver_attach+0x73/0x80
+ [<c029ada7>] bus_for_each_dev+0x57/0x80
+ [<c029b337>] driver_attach+0x27/0x30
+ [<c029a916>] bus_add_driver+0x86/0x180
+ [<c029b91d>] driver_register+0xad/0xf0
+ [<c023c3a5>] __pci_register_driver+0x65/0x90
+ [<c05693dc>] sym2_init+0x6c/0x120
+ [<c01003e0>] init+0xf0/0x320
+ [<c01008e5>] kernel_thread_helper+0x5/0x10
 
-QLogic+DDN
-==========
-...
-Jul  4 10:01:31 s_kernel@iotiger2 kernel: qla2400 0000:07:01.1: LOOP DOWN 
-detected (2).
-Jul  4 10:02:06 s_kernel@iotiger2 kernel: rport-9:0-0: blocked FC remote port 
-time out: removing target and saving binding
-Jul  4 10:03:05 s_kernel@iotiger2 kernel: qla2400 0000:07:01.1: LIP reset 
-occured (f7f7).
-Jul  4 10:03:05 s_kernel@iotiger2 kernel: qla2400 0000:07:01.1: LIP occured (f7f7).
-Jul  4 10:03:05 s_kernel@iotiger2 kernel: qla2400 0000:07:01.1: LOOP UP detected 
-(2 Gbps).
-Jul  4 10:03:05 s_kernel@iotiger2 kernel: Vendor: DDN       Model: S2A 8500 
-      Rev: 5.22
-Jul  4 10:03:05 s_kernel@iotiger2 kernel: Type:   Direct-Access 
-      ANSI SCSI revision: 03
-Jul  4 10:03:05 s_kernel@iotiger2 kernel: SCSI device sdl: 571416576 512-byte 
-hdwr sectors (292565 MB)
-Jul  4 10:03:05 s_kernel@iotiger2 kernel: sdl: Write Protect is off
-Jul  4 10:03:05 s_kernel@iotiger2 kernel: sdl: Mode Sense: a7 00 10 08
-Jul  4 10:03:05 s_kernel@iotiger2 kernel: SCSI device sdl: drive cache: write 
-back w/ FUA
-Jul  4 10:03:05 s_kernel@iotiger2 kernel: SCSI device sdl: 571416576 512-byte 
-hdwr sectors (292565 MB)
-Jul  4 10:03:05 s_kernel@iotiger2 kernel: sdl: Write Protect is off
-Jul  4 10:03:05 s_kernel@iotiger2 kernel: sdl: Mode Sense: a7 00 10 08
-Jul  4 10:03:05 s_kernel@iotiger2 kernel: SCSI device sdl: drive cache: write 
-back w/ FUA
-Jul  4 10:03:05 s_kernel@iotiger2 kernel: sdl: unknown partition table
-Jul  4 10:03:05 s_kernel@iotiger2 kernel: sd 9:0:0:0: Attached scsi disk sdl
-Jul  4 10:03:05 s_kernel@iotiger2 kernel: sd 9:0:0:0: Attached scsi generic sg15 
-type 0
-Jul  4 10:03:05 s_kernel@iotiger2 kernel: Vendor: DDN       Model: S2A 8500 
-      Rev: 5.22
-Jul  4 10:03:05 s_kernel@iotiger2 kernel: Type:   Direct-Access 
-      ANSI SCSI revision: 03
-Jul  4 10:03:05 s_kernel@iotiger2 kernel: error 1
-Jul  4 10:03:05 s_kernel@iotiger2 kernel: 9:0:0:0: Unexpected response from lun 
-0 while scanning, scan aborted
-...
 
--- 
-Frederic TEMPORELLI
