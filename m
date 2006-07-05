@@ -1,102 +1,32 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Re: [RFC] MODALIAS support for SCSI devices (try 1)
-Date: Wed, 05 Jul 2006 11:06:50 +0400
-Message-ID: <44AB650A.7070807@tls.msk.ru>
-References: <20060704203410.5B70391F1@gandalf.tls.msk.ru> <20060704214427.5CB9248B8F4@tzec.mtu.ru>
+From: "Galinka S." <interzone@74.ru>
+Subject: hey from Galia
+Date: Wed, 05 Jul 2006 12:39:34 +0300
+Message-ID: <001c01c6a016$e8143180$4200000a__16860.2567086511$1152092382$gmane$org@202.137.212.151>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="windows-1251"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hobbit.corpit.ru ([81.13.94.6]:24921 "EHLO hobbit.corpit.ru")
-	by vger.kernel.org with ESMTP id S1751053AbWGEHGy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jul 2006 03:06:54 -0400
-In-Reply-To: <20060704214427.5CB9248B8F4@tzec.mtu.ru>
+Received: from [202.137.212.151] ([202.137.212.151]:51208 "EHLO
+	202.137.212.151") by vger.kernel.org with ESMTP id S932419AbWGEJi5
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 5 Jul 2006 05:38:57 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrey Borzenkov <arvidjaar@mail.ru>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Alfred <linux-scsi@vger.kernel.org>
 
-Andrey Borzenkov wrote:
-[]
->> The modalias format is like this:
->>
->>  scsi:type-0x04
+Hallo .	
 
-That's actually scsi:t-0x04 in the patch.  But it makes no real
-difference and is trivial to adjust.
+I'm a very young and energetic lady! I have very positive attitude to life and people. I do enjoy new experience life can offer me: to see new interesting places, to meet new people.
+I do try to enjoy every moment of life and accept everything the way it comes without complaining.
+Though my life seems to be quite enjoyable there's one important thing missing. It's LOVE!
+Without my beloved one, my soul mate, my King my life is not completed.
+I wish i coud find him very soon so that we could share together every momement of the life-time romance! 
+What about you? Could you be my King? If answer is "yes" - you can find more about me 
+http://foryou-mydestiny.com/
 
->> (for TYPE_WORM, handled by sr.c now).
->>
->> Several comments.
->>
->> o This hexadecimal type value is because all TYPE_XXX constants
->>   in include/scsi/scsi.h are given in hex, but __stringify() will
->>   not convert them to decimal (so it will NOT be scsi:type-4).
->>   Since it does not really matter in which format it is, while
->>   both modalias in module and modalias attribute match each other,
->>   I descided to go for that 0x%02x format (and added a comment in
->>   include/scsi/scsi.h to keep them that way), instead of changing
->>   them all to decimal.
-> 
-> well, I started with the same but then changed my mind.
-> 
-> - is it possible that in future some more information may be added? Like
-> vendor ID, product ID or whatever? At least in one case SCSI type is not
-> enough to distinguish between drivers (st vs. osst Onstream tapes).
+Yourth faithfully,
 
-Yeah, as mentioned in my second comment - it's the same as 8139cp vs
-8139too drivers.
+Galechka S.
 
-But sure it's possible to change the things in the future, since it's
-all internal to kernel - the only requirement is that modalias device
-attribute should match module alias attributes.
 
-> - it makes sense to redo bus matching then; which requires some sort of
-> explicit ID table anyway.
-
-Oh well.  I don't think it's worth the effort really.  Only 4 drivers so
-far (sd, sr, st and osst).  The only reason to try harder is to avoid
-loading of osst for non-osst tapes.  But I don't think it's a big deal
-to load osst module -- it's harmless, and after all, it's always possible
-to "blacklist" it on a particular machine, just like some people do with
-8139cp module.
-
-> Unfortunately I do not have the patch ready as yet; may be end of week.
-> 
->> o There was no .uevent routine for SCSI bus.  It might be a good
->>   idea to add some more ueven environment variables in there.
->>
->> o osst.c driver handles tapes too, like st.c, but only SOME tapes.
->>   With this setup, hotplug scripts (or whatever is used by the
->>   user) will try to load both st and osst modules for all SCSI
->>   tapes found, because both modules have scsi:type-0x01 alias).
->>   It is not harmful, but one extra module is no good either.
->>   It is possible to solve this, by exporting more info in
->>   modalias attribute, including vendor and device identification
->>   strings, so that modalias becomes something like
->>     scsi:type-0x12:vendor-Adaptec LTD:device-OnStream Tape Drive
->>   and having that, match for all 3 attributes, not only device
->>   type.  But oh well, vendor and device strings may be large,
->>   and they do contain spaces and whatnot.
->>   So I left them for now, awaiting for comments first.
-> 
-> We can go the PCMCIA way that stores string hashes; like in
-> 
->         Identification: manf_id: 0x0156 card_id: 0x0002
->                         function: 6 (network)
->                         prod_id(1): "TOSHIBA" (0xb4585a1a)
->                         prod_id(2): "Wireless LAN Card" (0x0b537c13)
->                         prod_id(3): "Version 01.01" (0xd27deb1a)
->                         prod_id(4): --- (---)
-
-BTW, a question for osst folks (Willem Riede?) -- why osst checks for
-both vendor and device strings, isn't it sufficient to just check vendor
-for "OnStream" ?  Just curious maybe...
-
-> strictly speaking, modalias real value is not relevant, we are going to
-> do "modprobe $modalias" anyway without even looking at it.
-
-Sure thing - that's why I said it makes no difference whenever to use
-hex or dec values.
-
-/mjt
