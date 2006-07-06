@@ -1,114 +1,38 @@
-From: Alexey Dobriyan <adobriyan@gmail.com>
-Subject: [PATCH] megaraid: fix warnings when CONFIG_PROC_FS=n
-Date: Thu, 6 Jul 2006 18:23:04 +0400
-Message-ID: <20060706142304.GB7514@martell.zuzino.mipt.ru>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [RFC] [PATCH 0/7] requested for qla4xxx!!!
+Date: Thu, 06 Jul 2006 10:15:32 -0500
+Message-ID: <44AD2914.5020407@cs.wisc.edu>
+References: <20060629064812.GA7220@ranandlinuxbox.oc.cox.net> <44A6CCBC.7000603@tls.msk.ru> <44ABF71F.4060206@cs.wisc.edu> <44AC9B31.9040201@voltaire.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.171]:7149 "EHLO
-	ug-out-1314.google.com") by vger.kernel.org with ESMTP
-	id S1030288AbWGFOXE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 6 Jul 2006 10:23:04 -0400
-Received: by ug-out-1314.google.com with SMTP id a2so2686352ugf
-        for <linux-scsi@vger.kernel.org>; Thu, 06 Jul 2006 07:23:03 -0700 (PDT)
-Content-Disposition: inline
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:43478 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S1030244AbWGFPPd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Jul 2006 11:15:33 -0400
+In-Reply-To: <44AC9B31.9040201@voltaire.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Neela Syam Kolli <Neela.Kolli@engenio.com>
-Cc: walter harms <wharms@bfs.de>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@osdl.org>
+To: open-iscsi@googlegroups.com
+Cc: Michael Tokarev <mjt@tls.msk.ru>, Ravi Anand <ravi.anand@qlogic.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-From: walter harms <wharms@bfs.de>
+Or Gerlitz wrote:
+> Mike Christie wrote:
+>> For the kernel code you need to get the scsi-misc tree (see
+>> kernel.org/git for details). For the userspace tools you need the
+>> open-iscsi.org svn tree with this patch
+> 
+> 
+>> http://www.cs.wisc.edu/~michaelc/iscsi/open-iscsi/linux-scsi/tmp-qla4xxx-hook-into-userpace3.patch
+> 
+> Mike,
+> 
+> This URL gives me access denied error, i guess its not personal...
+> 
+> Or.
+> 
 
-Signed-off-by: walter harms <wharms@bfs.de>
-Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
----
+I can access it fine and have got reports others have as well. Are you
+still having troubles? I sent the patch to the open-iscsi list
 
- drivers/scsi/megaraid.c |   17 +++++++++++------
- drivers/scsi/megaraid.h |    4 ++--
- 2 files changed, 13 insertions(+), 8 deletions(-)
-
---- a/drivers/scsi/megaraid.c
-+++ b/drivers/scsi/megaraid.c
-@@ -3180,7 +3180,10 @@ proc_rdrv(adapter_t *adapter, char *page
- 
- 	return len;
- }
--
-+#else
-+static inline void mega_create_proc_entry(int index, struct proc_dir_entry *parent)
-+{
-+}
- #endif
- 
- 
-@@ -4344,7 +4347,7 @@ mega_support_cluster(adapter_t *adapter)
- 	return 0;
- }
- 
--
-+#ifdef CONFIG_PROC_FS
- /**
-  * mega_adapinq()
-  * @adapter - pointer to our soft state
-@@ -4449,7 +4452,7 @@ mega_internal_dev_inquiry(adapter_t *ada
- 
- 	return rval;
- }
--
-+#endif
- 
- /**
-  * mega_internal_command()
-@@ -4965,7 +4968,6 @@ megaraid_remove_one(struct pci_dev *pdev
- {
- 	struct Scsi_Host *host = pci_get_drvdata(pdev);
- 	adapter_t *adapter = (adapter_t *)host->hostdata;
--	char	buf[12] = { 0 };
- 
- 	scsi_remove_host(host);
- 
-@@ -5011,8 +5013,11 @@ #if MEGA_HAVE_ENH_PROC
- 		remove_proc_entry("raiddrives-30-39",
- 				adapter->controller_proc_dir_entry);
- #endif
--		sprintf(buf, "hba%d", adapter->host->host_no);
--		remove_proc_entry(buf, mega_proc_dir_entry);
-+		{
-+			char	buf[12] = { 0 };
-+			sprintf(buf, "hba%d", adapter->host->host_no);
-+			remove_proc_entry(buf, mega_proc_dir_entry);
-+		}
- 	}
- #endif
- 
---- a/drivers/scsi/megaraid.h
-+++ b/drivers/scsi/megaraid.h
-@@ -1001,7 +1001,6 @@ static int megaraid_reset(Scsi_Cmnd *);
- static int megaraid_abort_and_reset(adapter_t *, Scsi_Cmnd *, int);
- static int megaraid_biosparam(struct scsi_device *, struct block_device *,
- 		sector_t, int []);
--static int mega_print_inquiry(char *, char *);
- 
- static int mega_build_sglist (adapter_t *adapter, scb_t *scb,
- 			      u32 *buffer, u32 *length);
-@@ -1023,6 +1022,7 @@ static int mega_init_scb (adapter_t *);
- static int mega_is_bios_enabled (adapter_t *);
- 
- #ifdef CONFIG_PROC_FS
-+static int mega_print_inquiry(char *, char *);
- static void mega_create_proc_entry(int, struct proc_dir_entry *);
- static int proc_read_config(char *, char **, off_t, int, int *, void *);
- static int proc_read_stat(char *, char **, off_t, int, int *, void *);
-@@ -1039,10 +1039,10 @@ static int proc_rdrv_20(char *, char **,
- static int proc_rdrv_30(char *, char **, off_t, int, int *, void *);
- static int proc_rdrv_40(char *, char **, off_t, int, int *, void *);
- static int proc_rdrv(adapter_t *, char *, int, int);
--#endif
- 
- static int mega_adapinq(adapter_t *, dma_addr_t);
- static int mega_internal_dev_inquiry(adapter_t *, u8, u8, dma_addr_t);
-+#endif
- 
- static int mega_support_ext_cdb(adapter_t *);
- static mega_passthru* mega_prepare_passthru(adapter_t *, scb_t *,
-
+http://groups.google.com/group/open-iscsi/browse_frm/thread/193fe9037f3127da/5184ed1e2ba961b2#5184ed1e2ba961b2
