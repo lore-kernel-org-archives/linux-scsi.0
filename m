@@ -1,38 +1,46 @@
-From: Alexey Dobriyan <adobriyan@gmail.com>
+From: Andrew Morton <akpm@osdl.org>
 Subject: Re: [PATCH] megaraid: fix warnings when CONFIG_PROC_FS=n
-Date: Fri, 7 Jul 2006 02:19:50 +0400
-Message-ID: <20060706221950.GA7502@martell.zuzino.mipt.ru>
-References: <20060706142304.GB7514@martell.zuzino.mipt.ru> <20060706151033.1f338489.akpm@osdl.org>
+Date: Thu, 6 Jul 2006 15:30:12 -0700
+Message-ID: <20060706153012.53436336.akpm@osdl.org>
+References: <20060706142304.GB7514@martell.zuzino.mipt.ru>
+	<20060706151033.1f338489.akpm@osdl.org>
+	<20060706221950.GA7502@martell.zuzino.mipt.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.174]:54826 "EHLO
-	ug-out-1314.google.com") by vger.kernel.org with ESMTP
-	id S1750916AbWGFWTv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 6 Jul 2006 18:19:51 -0400
-Received: by ug-out-1314.google.com with SMTP id a2so2863570ugf
-        for <linux-scsi@vger.kernel.org>; Thu, 06 Jul 2006 15:19:50 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <20060706151033.1f338489.akpm@osdl.org>
+Received: from smtp.osdl.org ([65.172.181.4]:19384 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1750933AbWGFW04 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Jul 2006 18:26:56 -0400
+In-Reply-To: <20060706221950.GA7502@martell.zuzino.mipt.ru>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: Neela.Kolli@engenio.com, wharms@bfs.de, linux-scsi@vger.kernel.org
+To: Alexey Dobriyan <adobriyan@gmail.com>
+Cc: Neela.Kolli@engenio.com, wharms@bfs.de, linux-scsi@vger.kernel.org, Adrian Bunk <bunk@stusta.de>
 
-On Thu, Jul 06, 2006 at 03:10:33PM -0700, Andrew Morton wrote:
-> Alexey Dobriyan <adobriyan@gmail.com> wrote:
-> >
-> > +#else
-> > +static inline void mega_create_proc_entry(int index, struct proc_dir_entry *parent)
-> > +{
-> > +}
+Alexey Dobriyan <adobriyan@gmail.com> wrote:
+>
+> On Thu, Jul 06, 2006 at 03:10:33PM -0700, Andrew Morton wrote:
+> > Alexey Dobriyan <adobriyan@gmail.com> wrote:
+> > >
+> > > +#else
+> > > +static inline void mega_create_proc_entry(int index, struct proc_dir_entry *parent)
+> > > +{
+> > > +}
+> > 
+> > Thanks.  But this is already fixed in -mm.  Was submitted to James 25 June
+> > and 30 June and is on autorepeat.
 > 
-> Thanks.  But this is already fixed in -mm.  Was submitted to James 25 June
-> and 30 June and is on autorepeat.
+> drivers-scsi-megaraidc-add-a-dummy-mega_create_proc_entry-for-proc_fs\=y.patch
+> 
+> 	from Adrian?
 
-drivers-scsi-megaraidc-add-a-dummy-mega_create_proc_entry-for-proc_fs\=y.patch
+Yes, that.
 
-	from Adrian?
+> This patch also fixes all other PROC=n warnings not just adds dummy function.
 
-This patch also fixes all other PROC=n warnings not just adds dummy function.
+Well I still don't know what the patch does really - I'd need to compile
+the driver with PROC_FS=n to find out.
 
+In future for all warning and build error patches please include the
+compiler stderr in the changelog, thanks.
