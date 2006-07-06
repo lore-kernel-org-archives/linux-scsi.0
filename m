@@ -1,38 +1,87 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [RFC] [PATCH 0/7] requested for qla4xxx!!!
-Date: Thu, 06 Jul 2006 10:15:32 -0500
-Message-ID: <44AD2914.5020407@cs.wisc.edu>
-References: <20060629064812.GA7220@ranandlinuxbox.oc.cox.net> <44A6CCBC.7000603@tls.msk.ru> <44ABF71F.4060206@cs.wisc.edu> <44AC9B31.9040201@voltaire.com>
+From: "Moore, Eric" <Eric.Moore@lsil.com>
+Subject: RE: [PATCH] mptsas: use unnumbered port API and remove driver porttracking
+Date: Thu, 6 Jul 2006 11:10:36 -0600
+Message-ID: <664A4EBB07F29743873A87CF62C26D701F5CCB@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:43478 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S1030244AbWGFPPd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Jul 2006 11:15:33 -0400
-In-Reply-To: <44AC9B31.9040201@voltaire.com>
+Received: from mail0.lsil.com ([147.145.40.20]:5803 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S965200AbWGFRKm convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 6 Jul 2006 13:10:42 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: open-iscsi@googlegroups.com
-Cc: Michael Tokarev <mjt@tls.msk.ru>, Ravi Anand <ravi.anand@qlogic.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Or Gerlitz wrote:
-> Mike Christie wrote:
->> For the kernel code you need to get the scsi-misc tree (see
->> kernel.org/git for details). For the userspace tools you need the
->> open-iscsi.org svn tree with this patch
-> 
-> 
->> http://www.cs.wisc.edu/~michaelc/iscsi/open-iscsi/linux-scsi/tmp-qla4xxx-hook-into-userpace3.patch
-> 
-> Mike,
-> 
-> This URL gives me access denied error, i guess its not personal...
-> 
-> Or.
+On Sunday, July 02, 2006 10:13 AM, James Bottomley wrote:  
+
+> This allows us to be rid of the machinery in mptsas for creating and
+> tracking port numbers.  Since mptsas is merely inventing the numbers,
+> the SAS transport class may as well do it instead.
+
+Thanks for doing this.
+
+Can you remove the displaying of the port_id's from all 
+the dsaswideprintk's, except for the one in mptsas_probe_one_phy?
+The reasons are embedded below.
+
+
+> @@ -352,7 +351,7 @@
+>  
+>  	dsaswideprintk((KERN_DEBUG "%s: [%p]: port=%02d num_phys=%02d "
+>  	    	"bitmask=0x%016llX\n",
+> -		__FUNCTION__, port_details, port_details->port_id,
+> +		__FUNCTION__, port_details, 
+> port_details->port->port_identifier,
+>  		port_details->num_phys, port_details->phy_bitmask));
+>  
+>  	for (i = 0; i < port_info->num_phys; i++, phy_info++) {
+
+
+This function is called after sas_port_delete, thus I 
+can't expect any of the data in the port object to be valid.
+
+
+> @@ -557,7 +551,7 @@
+>  			"%s: [%p]: phy_id=%02d port_id=%02d 
+> num_phys=%02d "
+>  		    	"bitmask=0x%016llX\n",
+>  			__FUNCTION__,
+> -			port_details, i, port_details->port_id,
+> +			port_details, i, 
+> port_details->port->port_identifier,
+>  			port_details->num_phys, 
+> port_details->phy_bitmask));
+>  		dsaswideprintk((KERN_DEBUG"\t\tport = %p rphy=%p\n",
+>  			port_details->port, port_details->rphy));
+
+This function can be called prior to the creation 
+of the port object, thus may be pointing to an
+invalid or NULL pointer.   This case would happen
+during driver load, or hot adding devices.
+
+
+> @@ -1608,11 +1602,10 @@
+>  	if (phy_info->sas_port_add_phy) {
+>  
+>  		if (!port) {
+> -			port = sas_port_alloc(dev,
+> -			    phy_info->port_details->port_id);
+> +			port = sas_port_alloc_num(dev);
+>  			dsaswideprintk((KERN_DEBUG
+>  			    "sas_port_alloc: port=%p dev=%p 
+> port_id=%d\n",
+> -			    port, dev, 
+> phy_info->port_details->port_id));
+> +			    port, dev, port->port_identifier));
+>  			if (!port) {
+>  				error = -ENOMEM;
+>  				goto out;
 > 
 
-I can access it fine and have got reports others have as well. Are you
-still having troubles? I sent the patch to the open-iscsi list
-
-http://groups.google.com/group/open-iscsi/browse_frm/thread/193fe9037f3127da/5184ed1e2ba961b2#5184ed1e2ba961b2
+We need to move this dsaswideprintk to after the NULL pointer
+check.  I would like to only display the port identifier here.
