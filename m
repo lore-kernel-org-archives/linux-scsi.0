@@ -1,27 +1,23 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: Re: [KJ] [PATCH] fix legacy megaraid-driver to compile without
- CONFIG_PROC_FS
-Date: Thu, 6 Jul 2006 13:39:25 -0700
-Message-ID: <20060706133925.e5fe6782.rdunlap@xenotime.net>
-References: <44AD6A5A.5060403@nachtwindheim.de>
-	<20060706131447.ed46c3cb.rdunlap@xenotime.net>
-	<44AD73AD.5080402@nachtwindheim.de>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: Re: [KJ] [PATCH] fix legacy megaraid-driver to compile without CONFIG_PROC_FS
+Date: Thu, 6 Jul 2006 22:42:52 +0200
+Message-ID: <20060706204252.GV26941@stusta.de>
+References: <44AD6A5A.5060403@nachtwindheim.de> <20060706131447.ed46c3cb.rdunlap@xenotime.net> <44AD73AD.5080402@nachtwindheim.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:28599 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S1750821AbWGFUgp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Jul 2006 16:36:45 -0400
-Received: from midway.site ([71.117.253.75]) by xenotime.net for <linux-scsi@vger.kernel.org>; Thu, 6 Jul 2006 13:36:38 -0700
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:26885 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S1750825AbWGFUmw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 6 Jul 2006 16:42:52 -0400
+Content-Disposition: inline
 In-Reply-To: <44AD73AD.5080402@nachtwindheim.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Henne <henne@nachtwindheim.de>
-Cc: Neela.Kolli@engenio.com, kernel-janitors@lists.osdl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: "Randy.Dunlap" <rdunlap@xenotime.net>, Neela.Kolli@engenio.com, kernel-janitors@lists.osdl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Thu, 06 Jul 2006 22:33:49 +0200 Henne wrote:
-
+On Thu, Jul 06, 2006 at 10:33:49PM +0200, Henne wrote:
 > >> From: Henrik Kretzschmar <henne@nachtwindheim.de>
 > >>
 > >> Create an empty inline function to make the legacy megaraid-driver compile
@@ -46,7 +42,21 @@ On Thu, 06 Jul 2006 22:33:49 +0200 Henne wrote:
 > > http://www.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.17/2.6.17-mm6/broken-out/drivers-scsi-megaraidc-add-a-dummy-mega_create_proc_entry-for-proc_fs=y.patch
 > Great, but isn't it better to put that define stuff into the headers?
 
-Sure it is.
+No - the function itself is static (and has therefore itself no 
+prototype in any header).
 
----
-~Randy
+If the function was global, I'd agree with you.
+
+> Thanks and Greets,
+> Henne
+
+cu
+Adrian
+
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
