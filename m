@@ -1,33 +1,75 @@
-From: Or Gerlitz <ogerlitz@voltaire.com>
-Subject: Re: [RFC] [PATCH 0/7] requested for qla4xxx!!!
-Date: Thu, 06 Jul 2006 08:10:09 +0300
-Message-ID: <44AC9B31.9040201@voltaire.com>
-References: <20060629064812.GA7220@ranandlinuxbox.oc.cox.net> <44A6CCBC.7000603@tls.msk.ru> <44ABF71F.4060206@cs.wisc.edu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: Andrey Borzenkov <arvidjaar@mail.ru>
+Subject: CDROMEJECT (or START_STOP(2)) completely disables USB flash stick
+Date: Thu, 6 Jul 2006 13:10:04 +0400
+Message-ID: <200607061310.14526.arvidjaar@mail.ru>
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from taurus.voltaire.com ([193.47.165.240]:61313 "EHLO
-	taurus.voltaire.com") by vger.kernel.org with ESMTP id S965174AbWGFFKS
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 6 Jul 2006 01:10:18 -0400
-In-Reply-To: <44ABF71F.4060206@cs.wisc.edu>
+Received: from mx2.mail.ru ([194.67.23.122]:52852 "EHLO mx2.mail.ru")
+	by vger.kernel.org with ESMTP id S965118AbWGFJKS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Jul 2006 05:10:18 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: open-iscsi@googlegroups.com
-Cc: Michael Tokarev <mjt@tls.msk.ru>, Ravi Anand <ravi.anand@qlogic.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-Mike Christie wrote:
-> For the kernel code you need to get the scsi-misc tree (see
-> kernel.org/git for details). For the userspace tools you need the
-> open-iscsi.org svn tree with this patch
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+While working on some HAL issues I hit some not clear - to me at least - 
+behavior. I was testing HAL Eject method that under Linux effectively 
+calls 'eject /dev/block'. Now for USB stick - at least, that I have, this 
+results in "ejecting medium" without apparently any way to get it back (the 
+only way is to replug stick).
+
+UEVENT[1152175788.114199] remove@/block/sda/sda1
+ACTION=remove
+DEVPATH=/block/sda/sda1
+SUBSYSTEM=block
+SEQNUM=1332
+MINOR=1
+MAJOR=8
+PHYSDEVPATH=/devices/pci0000:00/0000:00:02.0/usb1/1-1/1-1:1.0/host1/target1:0:0/1:0:0:0
+PHYSDEVBUS=scsi
+PHYSDEVDRIVER=sd
+
+In this state I do see device:
+
+{pts/0}% sudo sdparm -a /dev/sda
+    /dev/sda:           128MB             2.00
+{pts/0}% cat /proc/scsi/scsi
+Attached devices:
+Host: scsi1 Channel: 00 Id: 00 Lun: 00
+  Vendor:          Model: 128MB            Rev: 2.00
+  Type:   Direct-Access                    ANSI SCSI revision: 02
+
+but any attempt to get partition back results in
+
+{pts/0}% LC_ALL=C sudo blockdev --rereadpt /dev/sda
+/dev/sda: No medium found
+
+I tried 'sdparm -C start' without much success as well:
+
+{pts/0}% LC_ALL=C sudo sdparm -v -C start /dev/sda
+    /dev/sda:           128MB             2.00
+    Start stop unit command: 1b 00 00 00 01 00
+{pts/0}% LC_ALL=C sudo blockdev --rereadpt /dev/sda
+/dev/sda: No medium found
+
+Well, I just try to understand if this is a expected (and reasonable) 
+behaviour or a bug in hardware or possibly software?
+
+Thank you
+
+- -andrey
 
 
-> http://www.cs.wisc.edu/~michaelc/iscsi/open-iscsi/linux-scsi/tmp-qla4xxx-hook-into-userpace3.patch
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.3 (GNU/Linux)
 
-Mike,
-
-This URL gives me access denied error, i guess its not personal...
-
-Or.
-
+iD8DBQFErNN2R6LMutpd94wRAg1DAJ9EITRTZCm/ej5PXzxAK71s7sUCVACgiNFx
+KXOuNAwwhPKYcogaK6LgMZM=
+=MHVX
+-----END PGP SIGNATURE-----
