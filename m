@@ -1,51 +1,48 @@
 From: James Smart <James.Smart@Emulex.Com>
-Subject: [PATCH 0/15] lpfc 8.1.7 patches
-Date: Thu, 06 Jul 2006 15:48:59 -0400
-Message-ID: <1152215339.23158.17.camel@localhost.localdomain>
+Subject: [PATCH 1/15] lpfc 8.1.7 : Use mod_timer instead of add_timer in
+	lpfc_els_timeout_handler
+Date: Thu, 06 Jul 2006 15:49:16 -0400
+Message-ID: <1152215356.23158.18.camel@localhost.localdomain>
 Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:12684 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S1750757AbWGFTst
+Received: from emulex.emulex.com ([138.239.112.1]:15756 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S1750766AbWGFTtB
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 6 Jul 2006 15:48:49 -0400
+	Thu, 6 Jul 2006 15:49:01 -0400
 Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
-	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id k66JmmHh006899
-	for <linux-scsi@vger.kernel.org>; Thu, 6 Jul 2006 12:48:48 -0700 (PDT)
+	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id k66Jmxkq006909
+	for <linux-scsi@vger.kernel.org>; Thu, 6 Jul 2006 12:49:00 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
+Use mod_timer instead of add_timer in lpfc_els_timeout_handler
 
-This patch set updates the lpfc driver to revision 8.1.7, which includes
-the following changes:
+This patch was formerly posted by Mark Haverkamp.
+http://marc.theaimsgroup.com/?l=linux-scsi&m=114246089015681&w=2
 
- - Use mod_timer instead of add_timer in lpfc_els_timeout_handler
- - Standardize the driver on a single define for the maximum supported targets
- - Fix memory leak and cleanup code related to per ring lookup array.
- - Fixed infinite retry of REG_LOGIN mailbox failed due to MBXERR_RPI_FULL
- - Issue DOWN_LINK prior to INIT_LINK to work around link failure issue
- - Fix txcmplq related panics on heavy IO while downloading firmware
- - Correct bogus nodev_tmo message on NPort that changes its NPort Id
- - Consolidate dma buf cleanup into a separate function
- - Fix panic in lpfc_sli_validate_fcp_iocb due to access of scsi_cmnd after
-   returning it to the midlayer
- - Adding new issue_reset sysfs attribute 
- - Remove depricated sysfs attribute board_online, as it's replaced by the new
-   issue_reset attribute
- - Correct the wait in attachment that delays for topology discovery
- - Add lpfc_sli_flush_mbox_queue() function and use it in lpfc_offline() call
-   to avoid deadlock on thread block.
- - Misc Fixes:
-     - Fix some sparse warnings - casts of address space
-     - Fix handling of the adapter registration string. Each invocation
-       was byteswapping, so every other adapter init attempt failed.
-     - Correct comments and default value for the lpfc_max_luns parameter
- - Change version number to 8.1.7
+Signed-off-by: Mark Haverkamp <markh@osdl.org>
+Signed-off-by: James Smart <James.Smart@emulex.com>
 
--- james s
-
+diff -upNr a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+--- a/drivers/scsi/lpfc/lpfc_els.c	2006-07-05 14:49:02.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_els.c	2006-07-06 12:14:54.000000000 -0400
+@@ -3282,10 +3282,9 @@ lpfc_els_timeout_handler(struct lpfc_hba
+ 		} else
+ 			lpfc_sli_release_iocbq(phba, piocb);
+ 	}
+-	if (phba->sli.ring[LPFC_ELS_RING].txcmplq_cnt) {
+-		phba->els_tmofunc.expires = jiffies + HZ * timeout;
+-		add_timer(&phba->els_tmofunc);
+-	}
++	if (phba->sli.ring[LPFC_ELS_RING].txcmplq_cnt)
++		mod_timer(&phba->els_tmofunc, jiffies + HZ * timeout);
++
+ 	spin_unlock_irq(phba->host->host_lock);
+ }
+ 
 
 
