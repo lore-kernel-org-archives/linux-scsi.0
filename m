@@ -1,70 +1,64 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: Areca driver recap + status
-Date: Fri, 7 Jul 2006 02:04:37 -0700
-Message-ID: <20060707020437.0f3532e4.akpm@osdl.org>
-References: <09be01c695b3$2ed8c2c0$c100a8c0@robm>
-	<20060621222826.ff080422.akpm@osdl.org>
-	<1151333338.2673.4.camel@mulgrave.il.steeleye.com>
-	<20060626080122.894de905.akpm@osdl.org>
-	<001601c6a1a1$34a17180$0132a8c0@erich2003>
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: [patch 17/19] st.c: Improve sense output
+Date: Fri, 7 Jul 2006 12:26:06 +0300 (EEST)
+Message-ID: <Pine.LNX.4.63.0607071224560.7137@kai.makisara.local>
+References: <200607070702.k6772IZ6030654@shell0.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:51176 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932072AbWGGJFg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Jul 2006 05:05:36 -0400
-In-Reply-To: <001601c6a1a1$34a17180$0132a8c0@erich2003>
+Received: from fep32-0.kolumbus.fi ([193.229.0.63]:36334 "EHLO
+	fep32-app.kolumbus.fi") by vger.kernel.org with ESMTP
+	id S932072AbWGGJ0S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 Jul 2006 05:26:18 -0400
+In-Reply-To: <200607070702.k6772IZ6030654@shell0.pdx.osdl.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: erich <erich@areca.com.tw>
-Cc: James.Bottomley@SteelEye.com, rdunlap@xenotime.net, hch@infradead.org, brong@fastmail.fm, dax@gurulabs.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, robm@fastmail.fm
+To: Andrew Morton <akpm@osdl.org>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org, ltuikov@yahoo.com
 
-On Fri, 7 Jul 2006 16:41:53 +0800
-"erich" <erich@areca.com.tw> wrote:
+On Fri, 7 Jul 2006, akpm@osdl.org wrote:
 
-> From: Erich Chen <erich@areca.com.tw>
+> From: Luben Tuikov <ltuikov@yahoo.com>
 > 
->   1- fix sysfs has more than one value per file
->   2- PAE issues (cast of dma_addr_t to unsigned long)
->   3- unblock SYNCHRONIZE_CACHE
+> Convert this:
+> st0: Error with sense data: <6>st: Current: sense key: Illegal Request
+>     Additional sense: Invalid field in cdb
 > 
-> Signed-off-by: Erich Chen <erich@areca.com.tw>
+> To this:
+> st0: Current: sense key: Illegal Request
+>     Additional sense: Invalid field in cdb
 > 
-> Areca had tested its arcmsr linux raid driver on ppc machines G5 and it 
-> worked fine.
+> Signed-off-by: Luben Tuikov <ltuikov@yahoo.com>
+> Signed-off-by: Andrew Morton <akpm@osdl.org>
 
-Thanks.
+Acked-by: Kai Makisara <kai.makisara@kolumbus.fi>
 
-> +static ssize_t
-> +arcmsr_sysfs_iop_message_clear(struct kobject *kobj, char *buf, loff_t off,
-> +    size_t count)
-> +{
-> +	struct class_device *cdev = container_of(kobj,struct class_device,kobj);
-> +	struct Scsi_Host *host = class_to_shost(cdev);
-> +	struct AdapterControlBlock *acb = (struct AdapterControlBlock *) host->hostdata;
-> +	struct MessageUnit __iomem *reg = acb->pmu;
-> +	uint8_t *pQbuffer;
+> ---
+> 
+>  drivers/scsi/st.c |    7 +++----
+>  1 files changed, 3 insertions(+), 4 deletions(-)
+> 
+> diff -puN drivers/scsi/st.c~stc-improve-sense-output drivers/scsi/st.c
+> --- a/drivers/scsi/st.c~stc-improve-sense-output
+> +++ a/drivers/scsi/st.c
+> @@ -368,7 +368,7 @@ static int st_chk_result(struct scsi_tap
+>  		       SRpnt->cmd[0], SRpnt->cmd[1], SRpnt->cmd[2],
+>  		       SRpnt->cmd[3], SRpnt->cmd[4], SRpnt->cmd[5]);
+>  		if (cmdstatp->have_sense)
+> -			 __scsi_print_sense("st", SRpnt->sense, SCSI_SENSE_BUFFERSIZE);
+> +			 __scsi_print_sense(name, SRpnt->sense, SCSI_SENSE_BUFFERSIZE);
+>  	} ) /* end DEB */
+>  	if (!debugging) { /* Abnormal conditions for tape */
+>  		if (!cmdstatp->have_sense)
+> @@ -384,9 +384,8 @@ static int st_chk_result(struct scsi_tap
+>  			 scode != VOLUME_OVERFLOW &&
+>  			 SRpnt->cmd[0] != MODE_SENSE &&
+>  			 SRpnt->cmd[0] != TEST_UNIT_READY) {
+> -				printk(KERN_WARNING "%s: Error with sense data: ", name);
+> -				__scsi_print_sense("st", SRpnt->sense,
+> -						   SCSI_SENSE_BUFFERSIZE);
 > +
-> +	if (!capable(CAP_SYS_ADMIN) || (count && off) == 0)
-> +		return 0;
-
-That (count && off) == 0 looks odd.  Are you sure that's what you meant to
-do?
-
-Also, a write() handler shouldn't return zero if it didn't write anything. 
-Some applications will see that the write() returned less than expected and
-didn't return an error so they'll just loop around and try to write more
-data.  They'll hang up when writing to your sysfs file.
-
-http://www.opengroup.org/onlinepubs/009695399/functions/write.html says
-
-RETURN VALUE
-
-    Upon successful completion, write() and pwrite() shall return the
-    number of bytes actually written to the file associated with fildes. 
-    This number shall never be greater than nbyte.  Otherwise, -1 shall be
-    returned and errno set to indicate the error.
-
-So you should return -EINVAL here, and perhaps -EACCES or -EPERM.  Because
-nothing was written.
+> +			__scsi_print_sense(name, SRpnt->sense, SCSI_SENSE_BUFFERSIZE);
+>  		}
+>  	}
+>  
