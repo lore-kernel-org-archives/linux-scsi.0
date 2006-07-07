@@ -1,46 +1,31 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [PATCH] megaraid: fix warnings when CONFIG_PROC_FS=n
-Date: Thu, 6 Jul 2006 15:30:12 -0700
-Message-ID: <20060706153012.53436336.akpm@osdl.org>
-References: <20060706142304.GB7514@martell.zuzino.mipt.ru>
-	<20060706151033.1f338489.akpm@osdl.org>
-	<20060706221950.GA7502@martell.zuzino.mipt.ru>
+From: boutcher@cs.umn.edu (Dave C Boutcher)
+Subject: [PATCH 0/2] ibmvscsi: two small fixes
+Date: Thu, 6 Jul 2006 21:59:57 -0500
+Message-ID: <17581.52781.675644.492909@hound.rchland.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:19384 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1750933AbWGFW04 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Jul 2006 18:26:56 -0400
-In-Reply-To: <20060706221950.GA7502@martell.zuzino.mipt.ru>
+Received: from mail.cs.umn.edu ([128.101.32.202]:63887 "EHLO mail.cs.umn.edu")
+	by vger.kernel.org with ESMTP id S1751153AbWGGDAL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Jul 2006 23:00:11 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by augustus.cs.umn.edu (Postfix) with ESMTP id B65C85C441
+	for <linux-scsi@vger.kernel.org>; Thu,  6 Jul 2006 22:00:10 -0500 (CDT)
+Received: from mail.cs.umn.edu ([127.0.0.1])
+ by localhost (mail.cs.umn.edu [127.0.0.1]) (amavisd-new, port 10024)
+ with LMTP id 02017-02-4 for <linux-scsi@vger.kernel.org>;
+ Thu,  6 Jul 2006 22:00:09 -0500 (CDT)
+Received: from tera.cs.umn.edu (tera.cs.umn.edu [128.101.35.163])
+	by mail.cs.umn.edu (Postfix) with ESMTP id 9095B5C300
+	for <linux-scsi@vger.kernel.org>; Thu,  6 Jul 2006 22:00:09 -0500 (CDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alexey Dobriyan <adobriyan@gmail.com>
-Cc: Neela.Kolli@engenio.com, wharms@bfs.de, linux-scsi@vger.kernel.org, Adrian Bunk <bunk@stusta.de>
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-Alexey Dobriyan <adobriyan@gmail.com> wrote:
->
-> On Thu, Jul 06, 2006 at 03:10:33PM -0700, Andrew Morton wrote:
-> > Alexey Dobriyan <adobriyan@gmail.com> wrote:
-> > >
-> > > +#else
-> > > +static inline void mega_create_proc_entry(int index, struct proc_dir_entry *parent)
-> > > +{
-> > > +}
-> > 
-> > Thanks.  But this is already fixed in -mm.  Was submitted to James 25 June
-> > and 30 June and is on autorepeat.
-> 
-> drivers-scsi-megaraidc-add-a-dummy-mega_create_proc_entry-for-proc_fs\=y.patch
-> 
-> 	from Adrian?
 
-Yes, that.
+James,
 
-> This patch also fixes all other PROC=n warnings not just adds dummy function.
+Two small ibmvscsi fixes for 2.6.18.
 
-Well I still don't know what the patch does really - I'd need to compile
-the driver with PROC_FS=n to find out.
-
-In future for all warning and build error patches please include the
-compiler stderr in the changelog, thanks.
+Signed-off-by: Dave Boutcher <sleddog@us.ibm.com>
