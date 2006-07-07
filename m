@@ -1,130 +1,53 @@
 From: akpm@osdl.org
-Subject: [patch 11/19] BusLogic gcc 4.1 warning fixes
-Date: Fri, 07 Jul 2006 00:01:03 -0700
-Message-ID: <200607070701.k677139k030572@shell0.pdx.osdl.net>
+Subject: [patch 10/19] megaraid gcc 4.1 warning fix
+Date: Fri, 07 Jul 2006 00:01:02 -0700
+Message-ID: <200607070701.k67712lv030569@shell0.pdx.osdl.net>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:55746 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751231AbWGGHBK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Jul 2006 03:01:10 -0400
+Received: from smtp.osdl.org ([65.172.181.4]:58050 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751232AbWGGHBO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Jul 2006 03:01:14 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, dwalker@mvista.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, dwalker@mvista.com, alan@lxorguk.ukuu.org.uk, Neela.Kolli@engenio.com
 
-From: Daniel Walker <dwalker@mvista.com>
+=46rom: Daniel Walker <dwalker@mvista.com>
 
-- Reworked all the very long lines in that block (this drivers full of
-  them though)
-
-- Returns an error in three places that it didn't before.
-
-- Properly clean up after a scsi_add_host() failure.
+drivers/scsi/megaraid.c: In function =E2=80=98megadev_ioctl=E2=80=99:
+drivers/scsi/megaraid.c:3665: warning: ignoring return value of =E2=80=98=
+copy_to_user=E2=80=99, declared with attribute warn_unused_result
 
 Signed-off-by: Daniel Walker <dwalker@mvista.com>
+Acked-by: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: <Neela.Kolli@engenio.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/BusLogic.c |   46 ++++++++++++++++++++++++++++++--------
- 1 file changed, 37 insertions(+), 9 deletions(-)
+ drivers/scsi/megaraid.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff -puN drivers/scsi/BusLogic.c~buslogic-gcc-41-warning-fixes drivers/scsi/BusLogic.c
---- a/drivers/scsi/BusLogic.c~buslogic-gcc-41-warning-fixes
-+++ a/drivers/scsi/BusLogic.c
-@@ -2176,6 +2176,7 @@ static int __init BusLogic_init(void)
- {
- 	int BusLogicHostAdapterCount = 0, DriverOptionsIndex = 0, ProbeIndex;
- 	struct BusLogic_HostAdapter *PrototypeHostAdapter;
-+	int ret = 0;
- 
- #ifdef MODULE
- 	if (BusLogic)
-@@ -2282,25 +2283,49 @@ static int __init BusLogic_init(void)
- 		   perform Target Device Inquiry.
- 		 */
- 		if (BusLogic_ReadHostAdapterConfiguration(HostAdapter) &&
--		    BusLogic_ReportHostAdapterConfiguration(HostAdapter) && BusLogic_AcquireResources(HostAdapter) && BusLogic_CreateInitialCCBs(HostAdapter) && BusLogic_InitializeHostAdapter(HostAdapter) && BusLogic_TargetDeviceInquiry(HostAdapter)) {
-+		    BusLogic_ReportHostAdapterConfiguration(HostAdapter) &&
-+		    BusLogic_AcquireResources(HostAdapter) &&
-+		    BusLogic_CreateInitialCCBs(HostAdapter) &&
-+		    BusLogic_InitializeHostAdapter(HostAdapter) &&
-+		    BusLogic_TargetDeviceInquiry(HostAdapter)) {
- 			/*
- 			   Initialization has been completed successfully.  Release and
- 			   re-register usage of the I/O Address range so that the Model
- 			   Name of the Host Adapter will appear, and initialize the SCSI
- 			   Host structure.
+diff -puN drivers/scsi/megaraid.c~megaraid-gcc-41-warning-fix drivers/s=
+csi/megaraid.c
+--- a/drivers/scsi/megaraid.c~megaraid-gcc-41-warning-fix
++++ a/drivers/scsi/megaraid.c
+@@ -3662,8 +3662,9 @@ megadev_ioctl(struct inode *inode, struc
+ 			 * Send the request sense data also, irrespective of
+ 			 * whether the user has asked for it or not.
  			 */
--			release_region(HostAdapter->IO_Address, HostAdapter->AddressCount);
--			if (!request_region(HostAdapter->IO_Address, HostAdapter->AddressCount, HostAdapter->FullModelName)) {
--				printk(KERN_WARNING "BusLogic: Release and re-register of " "port 0x%04lx failed \n", (unsigned long) HostAdapter->IO_Address);
-+			release_region(HostAdapter->IO_Address,
-+				       HostAdapter->AddressCount);
-+			if (!request_region(HostAdapter->IO_Address,
-+					    HostAdapter->AddressCount,
-+					    HostAdapter->FullModelName)) {
-+				printk(KERN_WARNING
-+					"BusLogic: Release and re-register of "
-+					"port 0x%04lx failed \n",
-+					(unsigned long)HostAdapter->IO_Address);
- 				BusLogic_DestroyCCBs(HostAdapter);
- 				BusLogic_ReleaseResources(HostAdapter);
- 				list_del(&HostAdapter->host_list);
- 				scsi_host_put(Host);
-+				ret = -ENOMEM;
- 			} else {
--				BusLogic_InitializeHostStructure(HostAdapter, Host);
--				scsi_add_host(Host, HostAdapter->PCI_Device ? &HostAdapter->PCI_Device->dev : NULL);
--				scsi_scan_host(Host);
--				BusLogicHostAdapterCount++;
-+				BusLogic_InitializeHostStructure(HostAdapter,
-+								 Host);
-+				if (scsi_add_host(Host, HostAdapter->PCI_Device
-+						? &HostAdapter->PCI_Device->dev
-+						  : NULL)) {
-+					printk(KERN_WARNING
-+					       "BusLogic: scsi_add_host()"
-+					       "failed!\n");
-+					BusLogic_DestroyCCBs(HostAdapter);
-+					BusLogic_ReleaseResources(HostAdapter);
-+					list_del(&HostAdapter->host_list);
-+					scsi_host_put(Host);
-+					ret = -ENODEV;
-+				} else {
-+					scsi_scan_host(Host);
-+					BusLogicHostAdapterCount++;
-+				}
- 			}
- 		} else {
- 			/*
-@@ -2315,12 +2340,13 @@ static int __init BusLogic_init(void)
- 			BusLogic_ReleaseResources(HostAdapter);
- 			list_del(&HostAdapter->host_list);
- 			scsi_host_put(Host);
-+			ret = -ENODEV;
- 		}
- 	}
- 	kfree(PrototypeHostAdapter);
- 	kfree(BusLogic_ProbeInfoList);
- 	BusLogic_ProbeInfoList = NULL;
--	return 0;
-+	return ret;
- }
- 
- 
-@@ -2954,6 +2980,7 @@ static int BusLogic_QueueCommand(struct 
- }
- 
- 
-+#if 0
- /*
-   BusLogic_AbortCommand aborts Command if possible.
- */
-@@ -3024,6 +3051,7 @@ static int BusLogic_AbortCommand(struct 
- 	return SUCCESS;
- }
- 
-+#endif
- /*
-   BusLogic_ResetHostAdapter resets Host Adapter if possible, marking all
-   currently executing SCSI Commands as having been Reset.
+-			copy_to_user(upthru->reqsensearea,
+-					pthru->reqsensearea, 14);
++			if (copy_to_user(upthru->reqsensearea,
++					pthru->reqsensearea, 14))
++				rval =3D (-EFAULT);
+=20
+ freemem_and_return:
+ 			if( pthru->dataxferlen ) {
 _
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
