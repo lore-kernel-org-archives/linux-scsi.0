@@ -1,53 +1,42 @@
 From: akpm@osdl.org
-Subject: [patch 10/19] megaraid gcc 4.1 warning fix
-Date: Fri, 07 Jul 2006 00:01:02 -0700
-Message-ID: <200607070701.k67712lv030569@shell0.pdx.osdl.net>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Subject: [patch 18/19] NCR_D700 section fix
+Date: Fri, 07 Jul 2006 00:02:18 -0700
+Message-ID: <200607070702.k6772Ir6030657@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:58050 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751232AbWGGHBO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Jul 2006 03:01:14 -0400
+Received: from smtp.osdl.org ([65.172.181.4]:11715 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751235AbWGGHCW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Jul 2006 03:02:22 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, dwalker@mvista.com, alan@lxorguk.ukuu.org.uk, Neela.Kolli@engenio.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org
 
-=46rom: Daniel Walker <dwalker@mvista.com>
+From: Andrew Morton <akpm@osdl.org>
 
-drivers/scsi/megaraid.c: In function =E2=80=98megadev_ioctl=E2=80=99:
-drivers/scsi/megaraid.c:3665: warning: ignoring return value of =E2=80=98=
-copy_to_user=E2=80=99, declared with attribute warn_unused_result
+WARNING: drivers/scsi/NCR_D700.o - Section mismatch: reference to .init.data:id_array from .text after 'NCR_D700_probe' (at offset 0x2c1)
 
-Signed-off-by: Daniel Walker <dwalker@mvista.com>
-Acked-by: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: <Neela.Kolli@engenio.com>
+Not the right fix, really.  But the right fix isn't really feasible because
+`struct mca_driver' contains pointers to probe functions (which want to be
+__init) as well as containing things which need to live after initcall() time.
+ Seems to be a general problem with struct device_driver.
+
+Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/megaraid.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/scsi/NCR_D700.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/megaraid.c~megaraid-gcc-41-warning-fix drivers/s=
-csi/megaraid.c
---- a/drivers/scsi/megaraid.c~megaraid-gcc-41-warning-fix
-+++ a/drivers/scsi/megaraid.c
-@@ -3662,8 +3662,9 @@ megadev_ioctl(struct inode *inode, struc
- 			 * Send the request sense data also, irrespective of
- 			 * whether the user has asked for it or not.
- 			 */
--			copy_to_user(upthru->reqsensearea,
--					pthru->reqsensearea, 14);
-+			if (copy_to_user(upthru->reqsensearea,
-+					pthru->reqsensearea, 14))
-+				rval =3D (-EFAULT);
-=20
- freemem_and_return:
- 			if( pthru->dataxferlen ) {
+diff -puN drivers/scsi/NCR_D700.c~NCR_D700-section-fix drivers/scsi/NCR_D700.c
+--- a/drivers/scsi/NCR_D700.c~NCR_D700-section-fix
++++ a/drivers/scsi/NCR_D700.c
+@@ -114,7 +114,7 @@ MODULE_DESCRIPTION("NCR Dual700 SCSI Dri
+ MODULE_LICENSE("GPL");
+ module_param(NCR_D700, charp, 0);
+ 
+-static __u8 __initdata id_array[2*(MCA_MAX_SLOT_NR + 1)] =
++static __u8 id_array[2*(MCA_MAX_SLOT_NR + 1)] =
+ 	{ [0 ... 2*(MCA_MAX_SLOT_NR + 1)-1] = 7 };
+ 
+ #ifdef MODULE
 _
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
