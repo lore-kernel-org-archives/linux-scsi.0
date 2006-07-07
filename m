@@ -1,37 +1,59 @@
-From: Henne <henne@nachtwindheim.de>
-Subject: Re: [KJ] [PATCH] fix legacy megaraid-driver to compile without CONFIG_PROC_FS
-Date: Fri, 07 Jul 2006 08:32:10 +0200
-Message-ID: <44ADFFEA.1060508@nachtwindheim.de>
-References: <44AD6A5A.5060403@nachtwindheim.de> <20060706131447.ed46c3cb.rdunlap@xenotime.net> <44AD73AD.5080402@nachtwindheim.de> <20060706204252.GV26941@stusta.de> <44AD78A1.5010708@nachtwindheim.de> <20060706215957.GX26941@stusta.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: akpm@osdl.org
+Subject: [patch 09/19] aic7*: cleanup MODULE_PARM_DESC strings
+Date: Fri, 07 Jul 2006 00:01:01 -0700
+Message-ID: <200607070701.k67711sS030566@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from server6.greatnet.de ([83.133.96.26]:38046 "EHLO
-	server6.greatnet.de") by vger.kernel.org with ESMTP
-	id S1751058AbWGGGao (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 7 Jul 2006 02:30:44 -0400
-In-Reply-To: <20060706215957.GX26941@stusta.de>
+Received: from smtp.osdl.org ([65.172.181.4]:53442 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751230AbWGGHBH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Jul 2006 03:01:07 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: "Randy.Dunlap" <rdunlap@xenotime.net>, Neela.Kolli@engenio.com, kernel-janitors@lists.osdl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, rdunlap@xenotime.net
 
->> The header I mean is /drivers/scsi/megaraid.h and is only used by megaraid.c.
->> And there are the prototypes, in dependency of CONFIG_PROC_FS, for all these other proc-related functions.
->> Thats why I decided to make the change there and not in megaraid.c .
-> 
-> Prototypes for static functions don't belong into header files.
-> 
-> That this has been done in megaraid.h in the past is something that 
-> should be cleaned up, not a good example.
-> 
-> cu
-> Adrian
-Allright,
-thats that kind of answer I wanted to hear. :)
+From: Randy Dunlap <rdunlap@xenotime.net>
 
-Thanks and Greets,
-Henne
+Modify beginning string to be more readable.  Remove one trailing newline.
 
+Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+Signed-off-by: Andrew Morton <akpm@osdl.org>
+---
 
+ drivers/scsi/aic7xxx/aic79xx_osm.c |    4 ++--
+ drivers/scsi/aic7xxx/aic7xxx_osm.c |    2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff -puN drivers/scsi/aic7xxx/aic79xx_osm.c~aic7-cleanup-module_parm_desc-strings drivers/scsi/aic7xxx/aic79xx_osm.c
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.c~aic7-cleanup-module_parm_desc-strings
++++ a/drivers/scsi/aic7xxx/aic79xx_osm.c
+@@ -340,7 +340,7 @@ MODULE_LICENSE("Dual BSD/GPL");
+ MODULE_VERSION(AIC79XX_DRIVER_VERSION);
+ module_param(aic79xx, charp, 0444);
+ MODULE_PARM_DESC(aic79xx,
+-"period delimited, options string.\n"
++"period-delimited options string:\n"
+ "	verbose			Enable verbose/diagnostic logging\n"
+ "	allow_memio		Allow device registers to be memory mapped\n"
+ "	debug			Bitmask of debug values to enable\n"
+@@ -366,7 +366,7 @@ MODULE_PARM_DESC(aic79xx,
+ "		Shorten the selection timeout to 128ms\n"
+ "\n"
+ "	options aic79xx 'aic79xx=verbose.tag_info:{{}.{}.{..10}}.seltime:1'\n"
+-"\n");
++);
+ 
+ static void ahd_linux_handle_scsi_status(struct ahd_softc *,
+ 					 struct scsi_device *,
+diff -puN drivers/scsi/aic7xxx/aic7xxx_osm.c~aic7-cleanup-module_parm_desc-strings drivers/scsi/aic7xxx/aic7xxx_osm.c
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm.c~aic7-cleanup-module_parm_desc-strings
++++ a/drivers/scsi/aic7xxx/aic7xxx_osm.c
+@@ -341,7 +341,7 @@ MODULE_LICENSE("Dual BSD/GPL");
+ MODULE_VERSION(AIC7XXX_DRIVER_VERSION);
+ module_param(aic7xxx, charp, 0444);
+ MODULE_PARM_DESC(aic7xxx,
+-"period delimited, options string.\n"
++"period-delimited options string:\n"
+ "	verbose			Enable verbose/diagnostic logging\n"
+ "	allow_memio		Allow device registers to be memory mapped\n"
+ "	debug			Bitmask of debug values to enable\n"
+_
