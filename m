@@ -1,45 +1,31 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: [Announce] sg3_utils-1.21 available
-Date: Fri, 07 Jul 2006 08:27:46 -0400
-Message-ID: <44AE5342.90408@torque.net>
-Reply-To: dougg@torque.net
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Removing BROKEN scsi drivers
+Date: Fri, 7 Jul 2006 13:44:44 +0100
+Message-ID: <20060707124444.GA11199@infradead.org>
+References: <20051005113925.GA11202@infradead.org> <20051005123220.GB6490@levanta.com> <1128519034.5063.10.camel@laptop-lcs.localdomain> <Pine.LNX.4.62.0510071024370.26010@numbat.sonytel.be> <20051007134232.GA6490@levanta.com> <1128693232.5041.7.camel@laptop-lcs.localdomain> <20051115095152.GA23470@infradead.org> <20051115101709.GK7031@2004.bluespice.org> <20051115103034.GA24352@infradead.org> <20051115113225.GS5252@levanta.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:43751 "EHLO
+Received: from pentafluge.infradead.org ([213.146.154.40]:31959 "EHLO
 	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S932122AbWGGM1u (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 7 Jul 2006 08:27:50 -0400
+	id S932157AbWGGMov (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 Jul 2006 08:44:51 -0400
+Content-Disposition: inline
+In-Reply-To: <20051115113225.GS5252@levanta.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, emschwar@debian.org, robbat2@gentoo.org
+To: Richard Hirst <rhirst@levanta.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Ingo Juergensmann <ij@2005.bluespice.org>, Kars de Jong <jongk@linux-m68k.org>, Matthew Wilcox <matthew@wil.cx>, Andi Kleen <ak@suse.de>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>
 
-sg3_utils is a package of command line utilities for sending
-SCSI (and some ATA) commands to devices. This package targets
-the linux kernel (lk) 2.6 and lk 2.4 series. In the lk 2.6
-series these utilities (except sgp_dd) can be used with any
-devices that support the SG_IO ioctl.
-A subset of the utilities in this package will build on FreeBSD
-and Tru64.
+On Tue, Nov 15, 2005 at 11:32:25AM +0000, Richard Hirst wrote:
+> Between us it seems Kars and I have this driver working on Amiga, MVME,
+> and BVME boards.  That is everything that used the old 53c7xx driver.  I
+> don't believe there is a combined set of patches yet (at least, I havn't
+> seen the patches for Amiga).  One complication is that we're relying on
+> some m68k-specific dma support patches from Roman Zippel that are not
+> yet integrated.
 
-This version adds the sg_vpd and sg_rdac utilities. There are
-examples of using the SAT ATA pass through SCSI command.
-Exit status values have been expanded and made more consistent.
-See the CHANGELOG for more information.
+After only half a year of waiting the m68k dma api bits finally made it in..
 
-A tarball, rpm and deb can be found at (see table 2):
-http://www.torque.net/sg
-For an overview of sg3_utils see this page:
-http://www.torque.net/sg/sg3_utils.html
-The sg_dd utility has its own page at:
-http://www.torque.net/sg/sg_dd.html
-The SG_IO ioctl is discussed at:
-http://www.torque.net/sg/sg_io.html
-A changelog can be found at:
-http://www.torque.net/sg/p/sg3_utils.CHANGELOG
-
-A release announcement has been sent to freshmeat.net .
-
-Doug Gilbert
+Could you please submit your patches again now that everything should be
+in place?
