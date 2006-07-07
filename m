@@ -1,42 +1,38 @@
 From: akpm@osdl.org
-Subject: [patch 18/19] NCR_D700 section fix
-Date: Fri, 07 Jul 2006 00:02:18 -0700
-Message-ID: <200607070702.k6772Ir6030657@shell0.pdx.osdl.net>
+Subject: [patch 15/19] dc395x: fix printk format warning
+Date: Fri, 07 Jul 2006 00:02:16 -0700
+Message-ID: <200607070702.k6772Ggv030645@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:11715 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751235AbWGGHCW (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:11459 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751234AbWGGHCW (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Jul 2006 03:02:22 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, rdunlap@xenotime.net
 
-From: Andrew Morton <akpm@osdl.org>
 
-WARNING: drivers/scsi/NCR_D700.o - Section mismatch: reference to .init.data:id_array from .text after 'NCR_D700_probe' (at offset 0x2c1)
+From: Randy Dunlap <rdunlap@xenotime.net>
 
-Not the right fix, really.  But the right fix isn't really feasible because
-`struct mca_driver' contains pointers to probe functions (which want to be
-__init) as well as containing things which need to live after initcall() time.
- Seems to be a general problem with struct device_driver.
+drivers/scsi/dc395x.c:1224: warning: format '%i' expects type 'int', but argument 5 has type 'size_t'
 
-Cc: James Bottomley <James.Bottomley@steeleye.com>
+Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/NCR_D700.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/dc395x.c |    2 +-
+ 1 files changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/NCR_D700.c~NCR_D700-section-fix drivers/scsi/NCR_D700.c
---- a/drivers/scsi/NCR_D700.c~NCR_D700-section-fix
-+++ a/drivers/scsi/NCR_D700.c
-@@ -114,7 +114,7 @@ MODULE_DESCRIPTION("NCR Dual700 SCSI Dri
- MODULE_LICENSE("GPL");
- module_param(NCR_D700, charp, 0);
- 
--static __u8 __initdata id_array[2*(MCA_MAX_SLOT_NR + 1)] =
-+static __u8 id_array[2*(MCA_MAX_SLOT_NR + 1)] =
- 	{ [0 ... 2*(MCA_MAX_SLOT_NR + 1)-1] = 7 };
- 
- #ifdef MODULE
+diff -puN drivers/scsi/dc395x.c~dc395x-fix-printk-format-warning drivers/scsi/dc395x.c
+--- 25/drivers/scsi/dc395x.c~dc395x-fix-printk-format-warning	Tue Jun 27 14:44:10 2006
++++ 25-akpm/drivers/scsi/dc395x.c	Tue Jun 27 14:44:10 2006
+@@ -1219,7 +1219,7 @@ static void dump_register_info(struct Ad
+ 			    	srb, srb->cmd, srb->cmd->pid,
+ 				srb->cmd->cmnd[0], srb->cmd->device->id,
+ 			       	srb->cmd->device->lun);
+-		printk("  sglist=%p cnt=%i idx=%i len=%i\n",
++		printk("  sglist=%p cnt=%i idx=%i len=%Zd\n",
+ 		       srb->segment_x, srb->sg_count, srb->sg_index,
+ 		       srb->total_xfer_length);
+ 		printk("  state=0x%04x status=0x%02x phase=0x%02x (%sconn.)\n",
 _
