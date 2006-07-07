@@ -1,38 +1,55 @@
 From: akpm@osdl.org
-Subject: [patch 15/19] dc395x: fix printk format warning
-Date: Fri, 07 Jul 2006 00:02:16 -0700
-Message-ID: <200607070702.k6772Ggv030645@shell0.pdx.osdl.net>
+Subject: [patch 17/19] st.c: Improve sense output
+Date: Fri, 07 Jul 2006 00:02:18 -0700
+Message-ID: <200607070702.k6772IZ6030654@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:11459 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751234AbWGGHCW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Jul 2006 03:02:22 -0400
+Received: from smtp.osdl.org ([65.172.181.4]:11203 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751200AbWGGHCV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Jul 2006 03:02:21 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, rdunlap@xenotime.net
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, ltuikov@yahoo.com
 
+From: Luben Tuikov <ltuikov@yahoo.com>
 
-From: Randy Dunlap <rdunlap@xenotime.net>
+Convert this:
+st0: Error with sense data: <6>st: Current: sense key: Illegal Request
+    Additional sense: Invalid field in cdb
 
-drivers/scsi/dc395x.c:1224: warning: format '%i' expects type 'int', but argument 5 has type 'size_t'
+To this:
+st0: Current: sense key: Illegal Request
+    Additional sense: Invalid field in cdb
 
-Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+Signed-off-by: Luben Tuikov <ltuikov@yahoo.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/dc395x.c |    2 +-
- 1 files changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/st.c |    7 +++----
+ 1 files changed, 3 insertions(+), 4 deletions(-)
 
-diff -puN drivers/scsi/dc395x.c~dc395x-fix-printk-format-warning drivers/scsi/dc395x.c
---- 25/drivers/scsi/dc395x.c~dc395x-fix-printk-format-warning	Tue Jun 27 14:44:10 2006
-+++ 25-akpm/drivers/scsi/dc395x.c	Tue Jun 27 14:44:10 2006
-@@ -1219,7 +1219,7 @@ static void dump_register_info(struct Ad
- 			    	srb, srb->cmd, srb->cmd->pid,
- 				srb->cmd->cmnd[0], srb->cmd->device->id,
- 			       	srb->cmd->device->lun);
--		printk("  sglist=%p cnt=%i idx=%i len=%i\n",
-+		printk("  sglist=%p cnt=%i idx=%i len=%Zd\n",
- 		       srb->segment_x, srb->sg_count, srb->sg_index,
- 		       srb->total_xfer_length);
- 		printk("  state=0x%04x status=0x%02x phase=0x%02x (%sconn.)\n",
+diff -puN drivers/scsi/st.c~stc-improve-sense-output drivers/scsi/st.c
+--- a/drivers/scsi/st.c~stc-improve-sense-output
++++ a/drivers/scsi/st.c
+@@ -368,7 +368,7 @@ static int st_chk_result(struct scsi_tap
+ 		       SRpnt->cmd[0], SRpnt->cmd[1], SRpnt->cmd[2],
+ 		       SRpnt->cmd[3], SRpnt->cmd[4], SRpnt->cmd[5]);
+ 		if (cmdstatp->have_sense)
+-			 __scsi_print_sense("st", SRpnt->sense, SCSI_SENSE_BUFFERSIZE);
++			 __scsi_print_sense(name, SRpnt->sense, SCSI_SENSE_BUFFERSIZE);
+ 	} ) /* end DEB */
+ 	if (!debugging) { /* Abnormal conditions for tape */
+ 		if (!cmdstatp->have_sense)
+@@ -384,9 +384,8 @@ static int st_chk_result(struct scsi_tap
+ 			 scode != VOLUME_OVERFLOW &&
+ 			 SRpnt->cmd[0] != MODE_SENSE &&
+ 			 SRpnt->cmd[0] != TEST_UNIT_READY) {
+-				printk(KERN_WARNING "%s: Error with sense data: ", name);
+-				__scsi_print_sense("st", SRpnt->sense,
+-						   SCSI_SENSE_BUFFERSIZE);
++
++			__scsi_print_sense(name, SRpnt->sense, SCSI_SENSE_BUFFERSIZE);
+ 		}
+ 	}
+ 
 _
