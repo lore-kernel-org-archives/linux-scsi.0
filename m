@@ -1,51 +1,40 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: aic94xx status
-Date: Sat, 08 Jul 2006 11:27:47 -0500
-Message-ID: <1152376067.12020.26.camel@mulgrave.il.steeleye.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: broken reverse_scan in aic7xxx
+Date: Sat, 8 Jul 2006 18:48:44 +0100
+Message-ID: <20060708174844.GB29602@infradead.org>
+References: <Pine.GSO.3.95.1060708171547.28320A-100000@rcs52.urz.tu-dresden.de> <20060708154449.GE1605@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:46245 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S964888AbWGHQ1t (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 8 Jul 2006 12:27:49 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:51369 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S964919AbWGHRsq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 8 Jul 2006 13:48:46 -0400
+Content-Disposition: inline
+In-Reply-To: <20060708154449.GE1605@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Alexis Bruemmer <alexisb@us.ibm.com>, Mike Anderson <andmike@us.ibm.com>, "Tarte, Robert" <Robert_Tarte@adaptec.com>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Stephan Seidl <stephan.seidl@tu-dresden.de>, linux-scsi@vger.kernel.org
 
-The current status is this:
+On Sat, Jul 08, 2006 at 09:44:49AM -0600, Matthew Wilcox wrote:
+> On Sat, Jul 08, 2006 at 05:21:59PM +0200, Stephan Seidl wrote:
+> > A victim of the cleaning operation is the option `aic7xxx=reverse_scan'
+> > which is still documented, but, which does no longer work. Here is some
+> > output.
+> > 
+> > Since `aic7xxx=reverse_scan' is part of my disaster recovery concept,
+> > I would like to ask whether anybody has the resources to reactivate
+> > this driver option as it was before ?
+> 
+> The documentation should be removed ;-)
+> 
+> It's a simple choice between reverse_scan and supporting PCI hotplug.
+> You can't have both, and we chose the latter.  The same choice has been
+> made in virtually every other device driver.
+> 
+> I'm afraid you're going to have to change your concept.
 
-The biggest problem I've been pursuing all week was the hangs and
-softlockups on driver insertion.  This actually turns out to be all
-caused by the generic timer code and have nothing to do with the actual
-aic94xx (the pitfalls of working in Linus' git head, I'm afraid).
-
-The only two remaining serious issues I can now find that need to be
-fixed before it can go into scsi-misc are:
-
-1) SATA support.  We at least need this stubbed out so seeing a SATA
-device won't cause nasty things to happen (IBM is working on this).
-Ideally, we need to integrate this driver with Brian King's SATA/SAS
-code, but no-one who has this board has a sata device and vice versa.
-
-2) Error handling.  I seem to have a somewhat flakey connection on my
-SAS cage that seems to cause intermittent transport errors.  The current
-behaviour is for this driver to find the transport problem, clear the
-nexus and then complete the command (i.e. fail it).  So if this happens
-at boot time in the initial INQUIRY (and it does for me about 25% of the
-time) it never brings up my root disk, so the box panics.  The error
-handler needs to be taught to retry the commands for transport failures.
-(I can look into doing this unless there are ready volunteers).
-
-3) The wide port formation and deformation issues, which I've described
-in a separate email.
-
-Other than this, most of the remaining work is code refactoring, which I
-think can be done in-tree, unless anyone else has critical issues to add
-to the list.
-
-James
-
+Or you could submit a patch to implement a reverse scanning option in
+the core PCI code..
 
