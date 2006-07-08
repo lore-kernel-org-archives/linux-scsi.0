@@ -1,60 +1,63 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] scsi_lib.c: do not requeue on success
-Date: Sat, 08 Jul 2006 00:15:08 -0500
-Message-ID: <1152335708.3866.97.camel@mulgrave.il.steeleye.com>
-References: <20060708040909.60001.qmail@web31815.mail.mud.yahoo.com>
+From: Stephan Seidl <stephan.seidl@tu-dresden.de>
+Subject: broken reverse_scan in aic7xxx
+Date: Sat, 8 Jul 2006 17:21:59 +0200 (MEST)
+Message-ID: <Pine.GSO.3.95.1060708171547.28320A-100000@rcs52.urz.tu-dresden.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:61582 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751193AbWGHFPL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 8 Jul 2006 01:15:11 -0400
-In-Reply-To: <20060708040909.60001.qmail@web31815.mail.mud.yahoo.com>
+Received: from RKS36.urz.tu-dresden.de ([141.30.66.166]:9625 "EHLO
+	mailgate.urz.tu-dresden.de") by vger.kernel.org with ESMTP
+	id S964861AbWGHPWB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 8 Jul 2006 11:22:01 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: ltuikov@yahoo.com
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
-
-On Fri, 2006-07-07 at 21:09 -0700, Luben Tuikov wrote:
-> -       if (scsi_end_request(cmd, 1, good_bytes, result == 0) == NULL)
-> +       if (scsi_end_request(cmd, 1, good_bytes, !!result) == NULL)
+To: linux-scsi@vger.kernel.org
+Cc: stephan.seidl@tu-dresden.de
 
 
-Um, why?
+Hallo,
+between the Linux versions 2.6.8 and 2.6.14, anybody cleaned up
+the code of `linux/drivers/scsi/aic7xxx/aic7xxx_osm.c'.
+The Kernel 2.6.8 I refer to came with Debian Sarge.
 
-I merely reverted this hunk back to the original code to fix the SATA
-flushing problem.  The requeue code in scsi_end_request() is
+$ ls -al linux-2.6.8-16s/drivers/scsi/aic7xxx/aic7xxx_osm.c
+-rw-r--r--  1 seidl seidl 143292 May 19  2005 linux-2.6.8-16s/drivers/scsi/aic7xxx/aic7xxx_osm.c
+$ ls -al linux-2.6.14.3/drivers/scsi/aic7xxx/aic7xxx_osm.c
+-rw-r--r--  1 seidl seidl 74505 Nov 24  2005 linux-2.6.14.3/drivers/scsi/aic7xxx/aic7xxx_osm.c
 
-	if (end_that_request_chunk(req, uptodate, bytes)) {
-[...]
-		/* kill remainder if no retrys */
-		if (!uptodate && blk_noretry_request(req))
-			end_that_request_chunk(req, 0, leftover);
-		else {
-			if (requeue) {
-				/*
-				 * Bleah.  Leftovers again.  Stick the
-				 * leftovers in the front of the
-				 * queue, and goose the queue again.
-				 */
-				scsi_requeue_command(q, cmd);
-				cmd = NULL;
-			}
-			return cmd;
-		}
+A victim of the cleaning operation is the option `aic7xxx=reverse_scan'
+which is still documented, but, which does no longer work. Here is some
+output.
 
-however, since we go into scsi_end_request() with uptodate == 1, we
-always hit the else code if good_bytes is less than the actual request
-size.  Now, if we have an actual error, i.e. result != 0 it looks to me
-like we want to continue on in scsi_io_completion and process it (i.e.
-return and don't requeue).  I think if good_bytes is less than the
-request size and result == 0 we want to requeue (this is for the case
-where we had to process the request with a SCSI command that couldn't
-contain the entire request length, so we have to keep going around until
-we complete it---realistically only READ/WRITE(6), I think).
+$ (cd linux-2.6.8-16s/drivers/scsi/aic7xxx && grep reverse_scan *)
+aic79xx_osm.c:static uint32_t aic79xx_reverse_scan;
+aic79xx_osm.c:" reverse_scan            Sort PCI devices highest Bus/Slot
+to lowest\n"
+aic79xx_osm.c:  if (aic79xx_reverse_scan != 0)
+aic79xx_osm.c:  if (aic79xx_reverse_scan != 0)
+aic79xx_osm.c:          { "reverse_scan", &aic79xx_reverse_scan },
+aic7xxx_osm.c:static uint32_t aic7xxx_reverse_scan;
+aic7xxx_osm.c:" reverse_scan            Sort PCI devices highest Bus/Slot
+to lowest\n"
+aic7xxx_osm.c:          if (aic7xxx_reverse_scan != 0)
+aic7xxx_osm.c:          if (aic7xxx_reverse_scan != 0)
+aic7xxx_osm.c:          { "reverse_scan", &aic7xxx_reverse_scan },
 
-James
+$ (cd linux-2.6.14.3/drivers/scsi/aic7xxx && grep reverse_scan *)
+aic79xx_osm.c:static uint32_t aic79xx_reverse_scan;
+aic79xx_osm.c:" reverse_scan            Sort PCI devices highest Bus/Slot
+to lowest\n"
+aic79xx_osm.c:  if (aic79xx_reverse_scan != 0)
+aic79xx_osm.c:  if (aic79xx_reverse_scan != 0)
+aic79xx_osm.c:          { "reverse_scan", &aic79xx_reverse_scan },
+aic7xxx_osm.c:" reverse_scan            Sort PCI devices highest Bus/Slot
+to lowest\n"
+
+Since `aic7xxx=reverse_scan' is part of my disaster recovery concept,
+I would like to ask whether anybody has the resources to reactivate
+this driver option as it was before ?
+
+Kind regards,
+Stephan Seidl
 
 
