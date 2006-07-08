@@ -1,39 +1,50 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Need insight into aic94xx driver code
-Date: Sat, 08 Jul 2006 11:19:51 -0500
-Message-ID: <1152375591.12020.18.camel@mulgrave.il.steeleye.com>
+Subject: aic94xx status
+Date: Sat, 08 Jul 2006 11:27:47 -0500
+Message-ID: <1152376067.12020.26.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:26789 "EHLO
+Received: from stat9.steeleye.com ([209.192.50.41]:46245 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S964889AbWGHQTy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 8 Jul 2006 12:19:54 -0400
+	id S964888AbWGHQ1t (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 8 Jul 2006 12:27:49 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Tarte, Robert" <Robert_Tarte@adaptec.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Alexis Bruemmer <alexisb@us.ibm.com>, Mike Anderson <andmike@us.ibm.com>, "Tarte, Robert" <Robert_Tarte@adaptec.com>
 
-One of the things I discovered while debugging the code is that there's
-a race condition setting the per connection DDB phy mask for a wide
-port.  If the wide port forms after discover, then the DDB phy mask is
-set to a single port and always remains so.  If the wide port forms
-before discovery, then the DDB phy mask is correctly set to all phys in
-the port.
+The current status is this:
 
-When the wide port forms after discovery, what happens is that the DDB
-sequencer code adds the phy in asd_update_port_links.  However, the
-initial per connection DDBs never get updated ... is this correct? (I
-can't really tell, because the DDB code is deep magic within the
-driver).
+The biggest problem I've been pursuing all week was the hangs and
+softlockups on driver insertion.  This actually turns out to be all
+caused by the generic timer code and have nothing to do with the actual
+aic94xx (the pitfalls of working in Linus' git head, I'm afraid).
 
-The driver doesn't even have a port_deform callback, so it never acts on
-phys being removed from the port, so I think someone needs to add phy
-removal from a port functionality to the driver (unless it's lurking
-somewhere I didn't find).
+The only two remaining serious issues I can now find that need to be
+fixed before it can go into scsi-misc are:
 
-Thanks,
+1) SATA support.  We at least need this stubbed out so seeing a SATA
+device won't cause nasty things to happen (IBM is working on this).
+Ideally, we need to integrate this driver with Brian King's SATA/SAS
+code, but no-one who has this board has a sata device and vice versa.
+
+2) Error handling.  I seem to have a somewhat flakey connection on my
+SAS cage that seems to cause intermittent transport errors.  The current
+behaviour is for this driver to find the transport problem, clear the
+nexus and then complete the command (i.e. fail it).  So if this happens
+at boot time in the initial INQUIRY (and it does for me about 25% of the
+time) it never brings up my root disk, so the box panics.  The error
+handler needs to be taught to retry the commands for transport failures.
+(I can look into doing this unless there are ready volunteers).
+
+3) The wide port formation and deformation issues, which I've described
+in a separate email.
+
+Other than this, most of the remaining work is code refactoring, which I
+think can be done in-tree, unless anyone else has critical issues to add
+to the list.
 
 James
 
