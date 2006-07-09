@@ -1,44 +1,45 @@
-From: Arjan van de Ven <arjan@fenrus.demon.nl>
-Subject: Re: broken reverse_scan in aic7xxx
-Date: Sun, 09 Jul 2006 10:44:43 +0200
-Message-ID: <1152434683.3255.36.camel@laptopd505.fenrus.org>
-References: <Pine.GSO.3.95.1060708171547.28320A-100000@rcs52.urz.tu-dresden.de>
-	 <20060708154449.GE1605@parisc-linux.org>
-	 <20060708174844.GB29602@infradead.org>
-	 <20060708183752.GF1605@parisc-linux.org>
+From: Richard Hirst <rhirst@levanta.com>
+Subject: Re: Removing BROKEN scsi drivers
+Date: Sun, 9 Jul 2006 12:16:48 +0100
+Message-ID: <20060709111648.GR15414@levanta.com>
+References: <20051005123220.GB6490@levanta.com> <1128519034.5063.10.camel@laptop-lcs.localdomain> <Pine.LNX.4.62.0510071024370.26010@numbat.sonytel.be> <20051007134232.GA6490@levanta.com> <1128693232.5041.7.camel@laptop-lcs.localdomain> <20051115095152.GA23470@infradead.org> <20051115101709.GK7031@2004.bluespice.org> <20051115103034.GA24352@infradead.org> <20051115113225.GS5252@levanta.com> <20060707124444.GA11199@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from a222036.upc-a.chello.nl ([62.163.222.36]:51138 "EHLO
-	laptopd505.fenrus.org") by vger.kernel.org with ESMTP
-	id S932404AbWGIIos (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 9 Jul 2006 04:44:48 -0400
-In-Reply-To: <20060708183752.GF1605@parisc-linux.org>
+Received: from sleepie-adsl.demon.co.uk ([83.104.228.241]:56022 "EHLO
+	sleepie.demon.co.uk") by vger.kernel.org with ESMTP
+	id S1030199AbWGILQy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 9 Jul 2006 07:16:54 -0400
+Content-Disposition: inline
+In-Reply-To: <20060707124444.GA11199@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Christoph Hellwig <hch@infradead.org>, Stephan Seidl <stephan.seidl@tu-dresden.de>, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Ingo Juergensmann <ij@2005.bluespice.org>, Kars de Jong <jongk@linux-m68k.org>, Matthew Wilcox <matthew@wil.cx>, Andi Kleen <ak@suse.de>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>
 
-On Sat, 2006-07-08 at 12:37 -0600, Matthew Wilcox wrote:
-> On Sat, Jul 08, 2006 at 06:48:44PM +0100, Christoph Hellwig wrote:
-> > On Sat, Jul 08, 2006 at 09:44:49AM -0600, Matthew Wilcox wrote:
-> > > It's a simple choice between reverse_scan and supporting PCI hotplug.
-> > > You can't have both, and we chose the latter.  The same choice has been
-> > > made in virtually every other device driver.
-> > 
-> > Or you could submit a patch to implement a reverse scanning option in
-> > the core PCI code..
+On Fri, Jul 07, 2006 at 01:44:44PM +0100, Christoph Hellwig wrote:
+> On Tue, Nov 15, 2005 at 11:32:25AM +0000, Richard Hirst wrote:
+> > Between us it seems Kars and I have this driver working on Amiga, MVME,
+> > and BVME boards.  That is everything that used the old 53c7xx driver.  I
+> > don't believe there is a combined set of patches yet (at least, I havn't
+> > seen the patches for Amiga).  One complication is that we're relying on
+> > some m68k-specific dma support patches from Roman Zippel that are not
+> > yet integrated.
 > 
-> You'd want to specify that on a per-driver basis, though, surely.  Or
-> all your ethernet cards would get reversed too.  Oh, but it wouldn't be
-> enough for sym2 (iterate through card types instead of through pci ids),
-> so you'd want another option for that.
+> After only half a year of waiting the m68k dma api bits finally made it in..
 > 
-> In the end it becomes a hideous mess and it's just easier to adapt
-> userspace.
-> 
-> Hey, anyone want to implement SIOCSIFNAME for scsi devices?  ;-)
+> Could you please submit your patches again now that everything should be
+> in place?
 
-it's called udev, and it sets device names by UUID already ;-)
+I'm trying to figure out where we got to with this, but my problem is I
+never saw a patch from Kars that included Amiga and [BM]VME changes in
+one patch, and I only generated the [BM]VME parts.  Also  Kars changed
+things to work with the new "bEBus" option James added to the 53c700
+driver.
+
+Kars, do you have such a patch handy as a starting point, or even
+better, do you have a current patch that can go to liunx-scsi ?
+
+Thanks,
+  Richard
 
