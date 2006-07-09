@@ -1,44 +1,130 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: broken reverse_scan in aic7xxx
-Date: Sat, 8 Jul 2006 19:29:25 -0600
-Message-ID: <20060709012925.GH1605@parisc-linux.org>
-References: <Pine.GSO.3.95.1060708171547.28320A-100000@rcs52.urz.tu-dresden.de> <20060708154449.GE1605@parisc-linux.org> <20060708174844.GB29602@infradead.org> <20060708183752.GF1605@parisc-linux.org>
+From: Alex Davis <alex14641@yahoo.com>
+Subject: [REPOST: PATCH] Fix panic when reinserting Adaptec PCMCIA SCSI card.
+Date: Sat, 8 Jul 2006 23:49:32 -0700 (PDT)
+Message-ID: <20060709064932.77080.qmail@web50204.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:31374 "EHLO
-	palinux.external.hp.com") by vger.kernel.org with ESMTP
-	id S1161034AbWGIB30 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 8 Jul 2006 21:29:26 -0400
-Content-Disposition: inline
-In-Reply-To: <20060708183752.GF1605@parisc-linux.org>
+Received: from web50204.mail.yahoo.com ([206.190.38.45]:36264 "HELO
+	web50204.mail.yahoo.com") by vger.kernel.org with SMTP
+	id S1161100AbWGIGtd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 9 Jul 2006 02:49:33 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Stephan Seidl <stephan.seidl@tu-dresden.de>, linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Sat, Jul 08, 2006 at 12:37:52PM -0600, Matthew Wilcox wrote:
-> On Sat, Jul 08, 2006 at 06:48:44PM +0100, Christoph Hellwig wrote:
-> > Or you could submit a patch to implement a reverse scanning option in
-> > the core PCI code..
-> 
-> You'd want to specify that on a per-driver basis, though, surely.  Or
-> all your ethernet cards would get reversed too.  Oh, but it wouldn't be
-> enough for sym2 (iterate through card types instead of through pci ids),
-> so you'd want another option for that.
+This is a resubmit of a patch that was submitted 2 weeks ago. To date, no feedback
+has been received.
 
-Actually, it's even worse.  PCI doesn't do its own matching any more;
-it's now part of the driver core ... so the flag/alternate
-implementation has to go all through the callchain:
+Please cc: me as I am not subscribed.
 
-pci_register_driver
-  __pci_register_driver
-    driver_register
-      bus_add_driver
-        driver_attach
+===========================================================================
+If the card is re-inserted 2 or more times, we access elements
+past the end of the aha152x_host array.
 
-At this point, you'd want to change/replace the bus_for_each_dev()
-macro.  Wouldn't be too hard to have a bus_for_each_dev_rev() to give
-aic7xxx backward compatibility, but sym2 is completely SOL.  The real
-pain is passing the information that we want to do this in reverse
-all the way down the call chain.
+Also correct spelling errors.
+
+Signed-off-by Alex Davis <alex14641 at yahoo dot com>
+=========================================================================
+diff -u linux-2.6.17.1-orig/drivers/scsi/aha152x.c linux-2.6.17.1/drivers/scsi/aha152x.c
+--- linux-2.6.17.1-orig/drivers/scsi/aha152x.c	2006-06-17 21:49:35.000000000 -0400
++++ linux-2.6.17.1/drivers/scsi/aha152x.c	2006-06-25 20:06:05.000000000 -0400
+@@ -766,7 +766,7 @@
+ 	struct Scsi_Host *shpnt = lookup_irq(irqno);
+ 
+ 	if (!shpnt) {
+-        	printk(KERN_ERR "aha152x: catched software interrupt %d for unknown controller.\n",
+irqno);
++        	printk(KERN_ERR "aha152x: caught software interrupt %d for unknown controller.\n",
+irqno);
+ 		return IRQ_NONE;
+ 	}
+ 
+@@ -779,6 +779,7 @@
+ struct Scsi_Host *aha152x_probe_one(struct aha152x_setup *setup)
+ {
+ 	struct Scsi_Host *shpnt;
++	int i;
+ 
+ 	shpnt = scsi_host_alloc(&aha152x_driver_template, sizeof(struct aha152x_hostdata));
+ 	if (!shpnt) {
+@@ -787,6 +788,22 @@
+ 	}
+ 
+ 	/* need to have host registered before triggering any interrupt */
++
++	/* find an empty slot. */
++	for ( i = 0; i < ARRAY_SIZE(aha152x_host); ++i ) {
++		if ( aha152x_host[i] == NULL ) {
++			break;
++		}
++	}
++
++	/* no empty slots? */
++	if ( i >= ARRAY_SIZE(aha152x_host) ) {
++		printk(KERN_ERR "aha152x: too many hosts: %d\n", i + 1);
++		return NULL;
++	}
++
++	registered_count = i;
++
+ 	aha152x_host[registered_count] = shpnt;
+ 
+ 	memset(HOSTDATA(shpnt), 0, sizeof *HOSTDATA(shpnt));
+@@ -915,6 +932,8 @@
+ 
+ void aha152x_release(struct Scsi_Host *shpnt)
+ {
++	int i;
++
+ 	if(!shpnt)
+ 		return;
+ 
+@@ -933,6 +952,12 @@
+ 
+ 	scsi_remove_host(shpnt);
+ 	scsi_host_put(shpnt);
++	for ( i = 0; i < ARRAY_SIZE(aha152x_host); ++i ) {
++		if ( aha152x_host[i] == shpnt ) {
++			aha152x_host[i] = NULL;
++			break;
++		}
++	}
+ }
+ 
+ 
+@@ -1458,7 +1483,7 @@
+ 	unsigned char rev, dmacntrl0;
+ 
+ 	if (!shpnt) {
+-		printk(KERN_ERR "aha152x: catched interrupt %d for unknown controller.\n", irqno);
++		printk(KERN_ERR "aha152x: caught interrupt %d for unknown controller.\n", irqno);
+ 		return IRQ_NONE;
+ 	}
+ 
+@@ -2976,6 +3001,9 @@
+ 	Scsi_Cmnd *ptr;
+ 	unsigned long flags;
+ 
++	if(!shpnt)
++		return;
++
+ 	DO_LOCK(flags);
+ 	printk(KERN_DEBUG "\nqueue status:\nissue_SC:\n");
+ 	for (ptr = ISSUE_SC; ptr; ptr = SCNEXT(ptr))
+@@ -3941,7 +3969,6 @@
+ 
+ 	for(i=0; i<ARRAY_SIZE(setup); i++) {
+ 		aha152x_release(aha152x_host[i]);
+-		aha152x_host[i]=NULL;
+ 	}
+ }
+
+
+I code, therefore I am
+
+__________________________________________________
+Do You Yahoo!?
+Tired of spam?  Yahoo! Mail has the best spam protection around 
+http://mail.yahoo.com 
