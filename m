@@ -1,60 +1,86 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [-mm patch] proper prototype for drivers/scsi/arcmsr/arcmsr_attr.c:arcmsr_free_sysfs_attr()
-Date: Sun, 9 Jul 2006 16:28:56 +0200
-Message-ID: <20060709142856.GI13938@stusta.de>
-References: <20060709021106.9310d4d1.akpm@osdl.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [PATCH] scsi_transport_sas: add expander backlink
+Date: Sun, 09 Jul 2006 12:38:19 -0500
+Message-ID: <1152466699.784.9.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:64525 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S932456AbWGIO25 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 9 Jul 2006 10:28:57 -0400
-Content-Disposition: inline
-In-Reply-To: <20060709021106.9310d4d1.akpm@osdl.org>
+Received: from stat9.steeleye.com ([209.192.50.41]:42967 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S964863AbWGIRiV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 9 Jul 2006 13:38:21 -0400
+Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
+	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id k69HcKY11401
+	for <linux-scsi@vger.kernel.org>; Sun, 9 Jul 2006 13:38:20 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Erich Chen <erich@areca.com.tw>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Sun, Jul 09, 2006 at 02:11:06AM -0700, Andrew Morton wrote:
->...
-> Changes since 2.6.17-mm6:
->...
-> +areca-raid-linux-scsi-driver-update7.patch
->...
->  Update drivers-scsi-arcmsr-cleanups.patch
->...
+This patch adds the ability to add a backlink to a particular port.  The
+idea is to represent properly ports on expanders that are used
+specifically for linking to the parent device in the topology.
 
-<--  snip  -->
+James
 
-=2E..
-  CC      drivers/scsi/arcmsr/arcmsr_hba.o
-drivers/scsi/arcmsr/arcmsr_hba.c: In function =E2=80=98arcmsr_remove=E2=
-=80=99:
-drivers/scsi/arcmsr/arcmsr_hba.c:410: error: implicit declaration of fu=
-nction =E2=80=98arcmsr_free_sysfs_attr=E2=80=99
-
-<--  snip  -->
-
-Let's add a proper prototype for arcmsr_free_sysfs_attr().
-
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
-
---- linux-2.6.18-rc1-mm1-full/drivers/scsi/arcmsr/arcmsr.h.old	2006-07-=
-09 12:29:42.000000000 +0200
-+++ linux-2.6.18-rc1-mm1-full/drivers/scsi/arcmsr/arcmsr.h	2006-07-09 1=
-2:33:29.000000000 +0200
-@@ -468,3 +468,5 @@
- extern void arcmsr_post_Qbuffer(struct AdapterControlBlock *acb);
- extern struct class_device_attribute *arcmsr_host_attrs[];
- extern int arcmsr_alloc_sysfs_attr(struct AdapterControlBlock *acb);
-+void arcmsr_free_sysfs_attr(struct AdapterControlBlock *acb);
+Index: BUILD-2.6/drivers/scsi/scsi_transport_sas.c
+===================================================================
+--- BUILD-2.6.orig/drivers/scsi/scsi_transport_sas.c	2006-07-09 12:30:04.000000000 -0500
++++ BUILD-2.6/drivers/scsi/scsi_transport_sas.c	2006-07-09 12:31:37.000000000 -0500
+@@ -692,6 +692,13 @@
+ 	}
+ 	mutex_unlock(&port->phy_list_mutex);
+ 
++	if (port->is_backlink) {
++		struct device *parent = port->dev.parent;
 +
++		sysfs_remove_link(&port->dev.kobj, parent->bus_id);
++		port->is_backlink = 0;
++	}
++
+ 	transport_remove_device(dev);
+ 	device_del(dev);
+ 	transport_destroy_device(dev);
+@@ -776,6 +783,19 @@
+ }
+ EXPORT_SYMBOL(sas_port_delete_phy);
+ 
++void sas_port_mark_backlink(struct sas_port *port)
++{
++	struct device *parent = port->dev.parent->parent->parent;
++
++	if (port->is_backlink)
++		return;
++	port->is_backlink = 1;
++	sysfs_create_link(&port->dev.kobj, &parent->kobj,
++			  parent->bus_id);
++
++}
++EXPORT_SYMBOL(sas_port_mark_backlink);
++
+ /*
+  * SAS remote PHY attributes.
+  */
+Index: BUILD-2.6/include/scsi/scsi_transport_sas.h
+===================================================================
+--- BUILD-2.6.orig/include/scsi/scsi_transport_sas.h	2006-07-09 12:30:04.000000000 -0500
++++ BUILD-2.6/include/scsi/scsi_transport_sas.h	2006-07-09 12:32:53.000000000 -0500
+@@ -130,6 +130,8 @@
+ 
+ 	int			port_identifier;
+ 	int			num_phys;
++	/* port flags */
++	unsigned int		is_backlink:1;
+ 
+ 	/* the other end of the link */
+ 	struct sas_rphy		*rphy;
+@@ -175,6 +177,7 @@
+ void sas_port_delete(struct sas_port *);
+ void sas_port_add_phy(struct sas_port *, struct sas_phy *);
+ void sas_port_delete_phy(struct sas_port *, struct sas_phy *);
++void sas_port_mark_backlink(struct sas_port *);
+ int scsi_is_sas_port(const struct device *);
+ 
+ extern struct scsi_transport_template *
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
