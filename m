@@ -1,44 +1,51 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: [ANNOUNCE] sdparm 0.99
-Date: Mon, 10 Jul 2006 13:02:44 -0400
-Message-ID: <44B28834.4060302@torque.net>
-Reply-To: dougg@torque.net
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: aic94xx panic on module insertion
+Date: Mon, 10 Jul 2006 10:08:15 -0700
+Message-ID: <20060710170815.GD30179@us.ibm.com>
+References: <1152541373.7275.11.camel@mulgrave.il.steeleye.com> <44B27F74.9000806@torque.net> <1152549628.7275.24.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:9370 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1422704AbWGJRDP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Jul 2006 13:03:15 -0400
+Received: from e36.co.us.ibm.com ([32.97.110.154]:6361 "EHLO e36.co.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1422710AbWGJRIN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 Jul 2006 13:08:13 -0400
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e36.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k6AH8DZV012126
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
+	for <linux-scsi@vger.kernel.org>; Mon, 10 Jul 2006 13:08:13 -0400
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
+	by westrelay02.boulder.ibm.com (8.13.6/NCO/VER7.0) with ESMTP id k6AH7NRN312104
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Mon, 10 Jul 2006 11:07:23 -0600
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k6AH8CQc015013
+	for <linux-scsi@vger.kernel.org>; Mon, 10 Jul 2006 11:08:12 -0600
+Content-Disposition: inline
+In-Reply-To: <1152549628.7275.24.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, tomfa@debian.org, kumba@gentoo.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: dougg@torque.net, linux-scsi <linux-scsi@vger.kernel.org>
 
-sdparm is a command line utility designed to get and set
-SCSI device parameters (cf hdparm for ATA disks). The
-parameters are held in mode pages. Apart from SCSI devices
-(e.g. disks, tapes and enclosures) sdparm can be used on
-any device that uses a SCSI command set. Virtually all CD/DVD
-drives use the SCSI MMC set irrespective of the transport.
-sdparm also can decode VPD pages including the device
-identification page. Commands to start and stop the media;
-load and unload removable media and some other housekeeping
-functions are supported. sdparm supports both the lk 2.4 and
-2.6 series.
+James Bottomley <James.Bottomley@SteelEye.com> wrote:
+> On Mon, 2006-07-10 at 12:25 -0400, Douglas Gilbert wrote:
+> > aic94xx driver is loaded, it replaces the running version
+> > of the sequencer code with its own copy. If the reader
+> > sees numerous "tmf timeout" messages in their log then
+> > there is a good chance old sequencer code is the cause.
+> 
+> And really, this driver needs to use the firmware loader, so this
+> no-longer becomes an issue.
 
-This version fixes a problem that appeared in version 0.98:
-A Request Sense command was added to clear down any pending
-Unit Attention conditions but libata doesn't support
-Request Sense. This version expands the exit status values
-which are the same as those found in the recently released
-sg3_utils version 1.21 .
+Well as I mentioned before it would be good if the distro support was more
+widespread before we cutoff the old method. I received a lot of questions
+recently from qla2xxx users who where use to doing kernel testing with not
+the latest distro version. They ran into issues when trying
+linux-2.6.18-rc1 (or git tree versions) along with trying to get the
+firmware loading support to work on there distro. 
 
-For more information and downloads see:
-http://www.torque.net/sg/sdparm.html
-
-Changelog:
-http://www.torque.net/sg/p/sdparm.ChangeLog
-
-Doug Gilbert
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
