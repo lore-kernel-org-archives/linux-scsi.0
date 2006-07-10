@@ -1,75 +1,57 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: aic94xx status
-Date: Mon, 10 Jul 2006 09:09:15 -0700
-Message-ID: <20060710160915.GA30179@us.ibm.com>
-References: <1152376067.12020.26.camel@mulgrave.il.steeleye.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: aic94xx panic on module insertion
+Date: Mon, 10 Jul 2006 12:25:24 -0400
+Message-ID: <44B27F74.9000806@torque.net>
+References: <1152541373.7275.11.camel@mulgrave.il.steeleye.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:51386 "EHLO e1.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1422673AbWGJQJO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Jul 2006 12:09:14 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e1.ny.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k6AG9DoT020464
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
-	for <linux-scsi@vger.kernel.org>; Mon, 10 Jul 2006 12:09:14 -0400
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay04.pok.ibm.com (8.13.6/NCO/VER7.0) with ESMTP id k6AG9Dmm270494
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Mon, 10 Jul 2006 12:09:13 -0400
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k6AG9C78017227
-	for <linux-scsi@vger.kernel.org>; Mon, 10 Jul 2006 12:09:13 -0400
-Content-Disposition: inline
-In-Reply-To: <1152376067.12020.26.camel@mulgrave.il.steeleye.com>
+Received: from pentafluge.infradead.org ([213.146.154.40]:16589 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1422682AbWGJQZx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 Jul 2006 12:25:53 -0400
+Received: from toronto-hse-ppp4083475.sympatico.ca ([70.50.95.111] helo=[192.168.1.100])
+	by pentafluge.infradead.org with esmtpsa (Exim 4.62 #1 (Red Hat Linux))
+	id 1Fzya0-0002oG-BH
+	for linux-scsi@vger.kernel.org; Mon, 10 Jul 2006 17:25:52 +0100
+In-Reply-To: <1152541373.7275.11.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>, "Tarte, Robert" <Robert_Tarte@adaptec.com>
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-James Bottomley <James.Bottomley@SteelEye.com> wrote:
-> 1) SATA support.  We at least need this stubbed out so seeing a SATA
-> device won't cause nasty things to happen (IBM is working on this).
-> Ideally, we need to integrate this driver with Brian King's SATA/SAS
-> code, but no-one who has this board has a sata device and vice versa.
+James Bottomley wrote:
+> I got this one again over the weekend:
 > 
+> aic94xx: max_scbs:512, max_ddbs:128
+> aic94xx: setting phy0 addr to 50000d100001cae0
+> aic94xx: setting phy1 addr to 50000d100001cae0
+> aic94xx: setting phy2 addr to 50000d100001cae0
+> aic94xx: setting phy3 addr to 50000d100001cae0
+> aic94xx: setting phy4 addr to 50000d100001cae0
+> aic94xx: setting phy5 addr to 50000d100001cae0
+> aic94xx: setting phy6 addr to 50000d100001cae0
+> aic94xx: setting phy7 addr to 50000d100001cae0
+> aic94xx: num_edbs:21
+> aic94xx: num_escbs:3
+> aic94xx: using sequencer Razor_10a1
 
-Currently I am running a loaned SATA drive with the patch below. It just
-generates the "Unidentified device type" type message when it detects a
-SATA device and appears in my configuration to not cause any bad things to
-happen.
+These comments have no direct bearing on the panic that
+James is reporting, but ... that sequencer version:
+"Razor_10a1" is old and should be updated.
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+With a 48300 adapter I needed to do two things:
+  [a] update the board's BIOS firmware from build 1618
+      to 1705 (20060421) [See adaptec's site]
+  [b] update the linux driver's copy of the sequencer
+      code (in my case from Razor_10c2 to Razor_10c5b)
 
- Do not drop phy_list_lock is we have not taken it. Also added a SATA_DEV
- case as marker for future calls.
+My card needed [a] to stabilize the POST and device scan
+that the 48300 does prior to the OS loading. Once the
+aic94xx driver is loaded, it replaces the running version
+of the sequencer code with its own copy. If the reader
+sees numerous "tmf timeout" messages in their log then
+there is a good chance old sequencer code is the cause.
 
- Signed-off-by: Mike Anderson <andmike@us.ibm.com>
-
- drivers/scsi/sas/sas_discover.c |    2 +-
- 1 files changed, 1 insertion(+), 1 deletion(-)
-
-Index: aic94xx-sas-2.6-patched/drivers/scsi/sas/sas_discover.c
-===================================================================
---- aic94xx-sas-2.6-patched.orig/drivers/scsi/sas/sas_discover.c	2006-06-23 11:12:01.000000000 -0700
-+++ aic94xx-sas-2.6-patched/drivers/scsi/sas/sas_discover.c	2006-07-05 13:19:20.000000000 -0700
-@@ -265,6 +265,7 @@ static int sas_get_port_device(struct as
- 		rphy = sas_expander_alloc(port->port,
- 					  SAS_FANOUT_EXPANDER_DEVICE);
- 		break;
-+	case SATA_DEV:
- 	default:
- 		printk("ERROR: Unidentified device type %d\n", dev->dev_type);
- 		rphy = NULL;
-@@ -272,7 +273,6 @@ static int sas_get_port_device(struct as
- 	}
- 
- 	if (!rphy) {
--		spin_unlock_irqrestore(&port->phy_list_lock, flags);
- 		kfree(dev);
- 		return -ENODEV;
- 	}
+Doug Gilbert
