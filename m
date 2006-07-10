@@ -1,193 +1,109 @@
-From: Andrea Carpani <andrea.carpani@criticalpath.net>
-Subject: Re: scsi0: Transmission error detected with SCSI Adaptec AIC-7902
-	U320
-Date: Mon, 10 Jul 2006 12:11:43 +0200
-Message-ID: <1152526303.10512.10.camel@cronos.criticalpath.it>
-References: <1151572430.676.76.camel@cronos.criticalpath.it>
-Reply-To: andrea.carpani@criticalpath.net
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: aic94xx panic on module insertion
+Date: Mon, 10 Jul 2006 09:22:53 -0500
+Message-ID: <1152541373.7275.11.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from plutone.criticalpath.it ([192.92.105.11]:1173 "EHLO
-	mail.criticalpath.it") by vger.kernel.org with ESMTP
-	id S1751387AbWGJKLq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Jul 2006 06:11:46 -0400
-Received: from cronos.criticalpath.it (192.92.105.117) by mail.criticalpath.it (7.2.056.2)
-        id 44B1FAC30000011A for linux-scsi@vger.kernel.org; Mon, 10 Jul 2006 11:51:57 +0200
-In-Reply-To: <1151572430.676.76.camel@cronos.criticalpath.it>
+Received: from stat9.steeleye.com ([209.192.50.41]:39062 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1030385AbWGJOWy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 Jul 2006 10:22:54 -0400
+Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
+	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id k6AEMsY04518
+	for <linux-scsi@vger.kernel.org>; Mon, 10 Jul 2006 10:22:54 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, 2006-06-29 at 11:13 +0200, Andrea Carpani wrote:
+I got this one again over the weekend:
 
-Hello everybody.
+aic94xx: max_scbs:512, max_ddbs:128
+aic94xx: setting phy0 addr to 50000d100001cae0
+aic94xx: setting phy1 addr to 50000d100001cae0
+aic94xx: setting phy2 addr to 50000d100001cae0
+aic94xx: setting phy3 addr to 50000d100001cae0
+aic94xx: setting phy4 addr to 50000d100001cae0
+aic94xx: setting phy5 addr to 50000d100001cae0
+aic94xx: setting phy6 addr to 50000d100001cae0
+aic94xx: setting phy7 addr to 50000d100001cae0
+aic94xx: num_edbs:21
+aic94xx: num_escbs:3
+aic94xx: using sequencer Razor_10a1
+aic94xx: downloading CSEQ...
+aic94xx: dma-ing 8192 bytes
+aic94xx: verified 8192 bytes, passed
+aic94xx: downloading LSEQs...
+aic94xx: dma-ing 14336 bytes
+aic94xx: LSEQ0 verified 14336 bytes, passed
+aic94xx: LSEQ1 verified 14336 bytes, passed
+aic94xx: LSEQ2 verified 14336 bytes, passed
+aic94xx: LSEQ3 verified 14336 bytes, passed
+aic94xx: LSEQ4 verified 14336 bytes, passed
+aic94xx: LSEQ5 verified 14336 bytes, passed
+aic94xx: LSEQ6 verified 14336 bytes, passed
+aic94xx: LSEQ7 verified 14336 bytes, passed
+aic94xx: max_scbs:446
+aic94xx: first_scb_site_no:0x20
+aic94xx: last_scb_site_no:0x1fe
+aic94xx: First SCB dma_handle: 0x1ed97000
+aic94xx: device 0000:03:03.0: SAS addr 50000d100001cae0, PCBA SN , 8 phys, 8 enabled phys, flash present, BIOS not present0
+aic94xx: posting 3 escbs
+aic94xx: escbs posted
+aic94xx: posting 8 control phy scbs
+aic94xx: enabled phys
+aic94xx: control_phy_tasklet_complete: phy0, lrate:0x9, proto:0xe
+aic94xx: control_phy_tasklet_complete: phy1, lrate:0x9, proto:0xe
+aic94xx: escb_tasklet_complete: phy0: BYTES_DMAED
+aic94xx: SAS proto IDENTIFY:
+aic94xx: 00: 20 00 00 02
+aic94xx: 04: 00 00 00 00
+aic94xx: 08: 00 00 00 00
+aic94xx: 0c: 50 06 05 b0
+aic94xx: 10: 00 00 11 10
+aic94xx: 14: 07 00 00 00
+aic94xx: 18: 00 00 00 00
+aic94xx: escb_tasklet_complete: phy1: PRIMITIVE_RECVD
+sas: phy0 added to port0, phy_mask:0x1
+aic94xx: phy1: BROADCAST change received:256
+aic94xx: control_phy_tasklet_complete: phy2, lrate:0x9, proto:0xe
+sas: broadcast received: 9
+BUG: unable to handle kernel NULL pointer dereference at virtual address 00000214
+ printing eip:
+f88f14cd
+*pde = 00000000
+Oops: 0000 [#1]
+SMP 
+Modules linked in: aic94xx scsi_transport_sas_domain scsi_transport_sas uhci_hcd usbcore tg3 ext3 jbd mbcache sr_mod cdrom sd_mod aic79xx scsi_transport_spi scsi_mod
+CPU:    1
+EIP:    0060:[<f88f14cd>]    Not tainted VLI
+EFLAGS: 00010297   (2.6.18-rc1 #10) 
+EIP is at sas_discover_event+0x1d/0xa0 [scsi_transport_sas_domain]
+eax: 00000000   ebx: 00000000   ecx: c011de75   edx: 00000000
+esi: 00000001   edi: 00000044   ebp: f7019f18   esp: f7019efc
+ds: 007b   es: 007b   ss: 0068
+Process scsi_wq_2 (pid: 2256, ti=f7018000 task=f7052aa0 task.ti=f7018000)
+Stack: de7c0c04 00000009 f7019f18 c011e02b 00000001 de7c0c04 00000009 f7019f34 
+       f88f0e83 00000000 00000001 de7c0a04 de7c0a08 dff71118 f7019f68 c012ef4c 
+       de7c09d4 dff71160 00000001 dff71158 dff711a0 00000286 f88f0e10 de7c09d4 
+Call Trace:
+ [<f88f0e83>] sas_porte_broadcast_rcvd+0x73/0x80 [scsi_transport_sas_domain]
+ [<c012ef4c>] run_workqueue+0x7c/0x100
+ [<c012f1a5>] worker_thread+0x115/0x150
+ [<c0132a9d>] kthread+0xfd/0x110
+ [<c0100ea5>] kernel_thread_helper+0x5/0x10
+Code: 5e 5f 5d c3 8d 76 00 8d bc 27 00 00 00 00 55 89 e5 83 ec 1c 89 75 f8 8b 75 0c 89 5d f4 8b 5d 08 89 7d fc 83 fe 02 8d 7b 44 77 74 <8b> 83 14 02 00 00 8b 40 6c 89 45 ec 8d 04 76 c1 e0 04 8d 44 03 
+EIP: [<f88f14cd>] sas_discover_event+0x1d/0xa0 [scsi_transport_sas_domain] SS:ESP 0068:f7019efc
+ <5>aic94xx: escb_tasklet_complete: phy2: PRIMITIVE_RECVD
 
-Anyone can take a look at this and give me some hints?
-Thanks.
+I think what happens is that the broadcast comes in before the aic94xx
+has allocated a port to the phy (so phy->port is null in
+sas_porte_boradcast_rcvd).
 
-> Hello,
-> 
-> I have a server with a weird trashing problem and while investigating on
-> this issue I've found a SCSI error happening 1 hour before the trashng
-> occours.
-> 
-> Can someone give me info on this kind of problem (I'm not able to
-> understand Card State Dump). The server has 2 72Gb disks with one
-> partition each mirrored between them with software raid.
-> 
-> Thanks,
-> 
-> The server is 
-> http://www.tyan.com/products/html/gx28b2881.html
-> with B2881G28U4H (Hot-swap U320 SCSI bays)
-> 
-> ======
-> root # uname -a
-> Linux cp3a 2.6.16.19 #2 SMP Mon Jun 5 19:26:39 CEST 2006 i686 AMD
-> Opteron(tm) Processor 244 AuthenticAMD GNU/Linux
-> 
-> ======
-> root # cat /proc/scsi/aic79xx/0
-> Adaptec AIC79xx driver version: 3.0
-> Adaptec AIC7902 Ultra320 SCSI adapter
-> aic7902: Ultra320 Wide Channel A, SCSI Id=7, PCI-X 67-100Mhz, 512 SCBs
-> Allocated SCBs: 64, SG List Length: 128
-> 
-> Serial EEPROM:
-> 0x17c8 0x17c8 0x17c8 0x17c8 0x17c8 0x17c8 0x17c8 0x17c8
-> 0x17c8 0x17c8 0x17c8 0x17c8 0x17c8 0x17c8 0x17c8 0x17c8
-> 0x09f4 0x0146 0x2807 0x0010 0xffff 0xffff 0xffff 0xffff
-> 0xffff 0xffff 0xffff 0xffff 0xffff 0xffff 0x0430 0xb3f7
-> 
-> Target 0 Negotiation Settings
->         User: 320.000MB/s transfers (160.000MHz RDSTRM|DT|IU|RTI|QAS, 16bit)
->         Goal: 320.000MB/s transfers (160.000MHz RDSTRM|DT|IU|RTI|QAS, 16bit)
->         Curr: 320.000MB/s transfers (160.000MHz RDSTRM|DT|IU|RTI|QAS, 16bit)
->         Channel A Target 0 Lun 0 Settings
->                 Commands Queued 3281550
->                 Commands Active 0
->                 Command Openings 32
->                 Max Tagged Openings 32
->                 Device Queue Frozen Count 0
-> Target 1 Negotiation Settings
->         User: 320.000MB/s transfers (160.000MHz RDSTRM|DT|IU|RTI|QAS, 16bit)
->         Goal: 320.000MB/s transfers (160.000MHz RDSTRM|DT|IU|RTI|QAS, 16bit)
->         Curr: 320.000MB/s transfers (160.000MHz RDSTRM|DT|IU|RTI|QAS, 16bit)
->         Channel A Target 1 Lun 0 Settings
->                 Commands Queued 3280158
->                 Commands Active 0
->                 Command Openings 32
->                 Max Tagged Openings 32
->                 Device Queue Frozen Count 0
-> Target 2 Negotiation Settings
->         User: 320.000MB/s transfers (160.000MHz RDSTRM|DT|IU|RTI|QAS, 16bit)
-> Target 3 Negotiation Settings
->         User: 320.000MB/s transfers (160.000MHz RDSTRM|DT|IU|RTI|QAS, 16bit)
-> Target 4 Negotiation Settings
->         User: 320.000MB/s transfers (160.000MHz RDSTRM|DT|IU|RTI|QAS, 16bit)
-> Target 5 Negotiation Settings
->         User: 320.000MB/s transfers (160.000MHz RDSTRM|DT|IU|RTI|QAS, 16bit)
-> Target 6 Negotiation Settings
->         User: 320.000MB/s transfers (160.000MHz RDSTRM|DT|IU|RTI|QAS, 16bit)
-> Target 7 Negotiation Settings
->         User: 320.000MB/s transfers (160.000MHz RDSTRM|DT|IU|RTI|QAS, 16bit)
-> Target 8 Negotiation Settings
->         User: 320.000MB/s transfers (160.000MHz RDSTRM|DT|IU|RTI|QAS, 16bit)
-> Target 9 Negotiation Settings
->         User: 320.000MB/s transfers (160.000MHz RDSTRM|DT|IU|RTI|QAS, 16bit)
-> Target 10 Negotiation Settings
->         User: 320.000MB/s transfers (160.000MHz RDSTRM|DT|IU|RTI|QAS, 16bit)
-> Target 11 Negotiation Settings
->         User: 320.000MB/s transfers (160.000MHz RDSTRM|DT|IU|RTI|QAS, 16bit)
-> Target 12 Negotiation Settings
->         User: 320.000MB/s transfers (160.000MHz RDSTRM|DT|IU|RTI|QAS, 16bit)
-> Target 13 Negotiation Settings
->         User: 320.000MB/s transfers (160.000MHz RDSTRM|DT|IU|RTI|QAS, 16bit)
-> Target 14 Negotiation Settings
->         User: 320.000MB/s transfers (160.000MHz RDSTRM|DT|IU|RTI|QAS, 16bit)
-> Target 15 Negotiation Settings
->         User: 320.000MB/s transfers (160.000MHz RDSTRM|DT|IU|RTI|QAS, 16bit)
-> 
-> Here is the error:
-> 
-> Jun 28 12:00:01 localhost kernel: scsi0: Transmission error detected
-> Jun 28 12:00:01 localhost kernel: LQISTAT1[0x8]:(LQICRCI_NLQ) LASTPHASE[0x1]:(P_DATAOUT|P_BUSFREE)
-> Jun 28 12:00:01 localhost kernel: SCSISIGI[0x60]:(P_DATAIN_DT) PERRDIAG[0x4]:(CRCERR)
-> Jun 28 12:00:01 localhost kernel: >>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
-> Jun 28 12:00:01 localhost kernel: scsi0: Dumping Card State at program address 0x21 Mode 0x33
-> Jun 28 12:00:01 localhost kernel: Card was paused
-> Jun 28 12:00:01 localhost kernel: INTSTAT[0x8]:(SCSIINT) SELOID[0x1] SELID[0x0] HS_MAILBOX[0x0]
-> Jun 28 12:00:01 localhost kernel: INTCTL[0xc0]:(SWTMINTEN|SWTMINTMASK) SEQINTSTAT[0x0]
-> Jun 28 12:00:01 localhost kernel: SAVED_MODE[0x11] DFFSTAT[0x24]:(CURRFIFO_0|FIFO1FREE)
-> Jun 28 12:00:01 localhost kernel: SCSISIGI[0x76]:(P_DATAIN_DT|REQI|BSYI|ATNI) SCSIPHASE[0x0]
-> Jun 28 12:00:01 localhost kernel: SCSIBUS[0x0] LASTPHASE[0x1]:(P_DATAOUT|P_BUSFREE)
-> Jun 28 12:00:01 localhost kernel: SCSISEQ0[0x0] SCSISEQ1[0x12]:(ENAUTOATNP|ENRSELI)
-> Jun 28 12:00:01 localhost kernel: SEQCTL0[0x0] SEQINTCTL[0x0] SEQ_FLAGS[0x0] SEQ_FLAGS2[0x0]
-> Jun 28 12:00:01 localhost kernel: QFREEZE_COUNT[0x2] KERNEL_QFREEZE_COUNT[0x2] MK_MESSAGE_SCB[0xff00]
-> Jun 28 12:00:01 localhost kernel: MK_MESSAGE_SCSIID[0xff] SSTAT0[0x2]:(SPIORDY) SSTAT1[0x19]:(REQINIT|BUSFREE|P
-> HASEMIS)
-> Jun 28 12:00:01 localhost kernel: SSTAT2[0x20]:(NONPACKREQ) SSTAT3[0x0] PERRDIAG[0x0]
-> Jun 28 12:00:01 localhost kernel: SIMODE1[0xa4]:(ENSCSIPERR|ENSCSIRST|ENSELTIMO)
-> Jun 28 12:00:01 localhost kernel: LQISTAT0[0x0] LQISTAT1[0x0] LQISTAT2[0xc0]:(LQIPHASE_OUTPKT|PACKETIZED)
-> Jun 28 12:00:01 localhost kernel: LQOSTAT0[0x0] LQOSTAT1[0x0] LQOSTAT2[0xe1]:(LQOSTOP0|LQOPKT)
-> Jun 28 12:00:01 localhost kernel:
-> Jun 28 12:00:01 localhost kernel: SCB Count = 64 CMDS_PENDING = 2 LASTSCB 0x1e CURRSCB 0x25 NEXTSCB 0xff80
-> Jun 28 12:00:01 localhost kernel: qinstart = 25641 qinfifonext = 25641
-> Jun 28 12:00:01 localhost kernel: QINFIFO:
-> Jun 28 12:00:01 localhost kernel: WAITING_TID_QUEUES:
-> Jun 28 12:00:01 localhost kernel: Pending list:
-> Jun 28 12:00:01 localhost kernel:  37 FIFO_USE[0x0] SCB_CONTROL[0x60]:(TAG_ENB|DISCENB) SCB_SCSIID[0x17]
-> Jun 28 12:00:01 localhost kernel:  49 FIFO_USE[0x0] SCB_CONTROL[0x60]:(TAG_ENB|DISCENB) SCB_SCSIID[0x7]
-> Jun 28 12:00:01 localhost kernel: Total 2
-> Jun 28 12:00:01 localhost kernel: Kernel Free SCB list: 30 0 47 6 20 5 28 23 48 61 22 16 62 58 50 9 43 21 52 51
->  4 63 32 10 36 2 11 40 60 31 12 42 35 8 46 19 54 57 3 34 55 39 38 24 33 41 14 15 25 26 29 1 18 44 59 53 45 56 2
-> 7 17 13 7
-> Jun 28 12:00:01 localhost kernel: Sequencer Complete DMA-inprog list:
-> Jun 28 12:00:01 localhost kernel: Sequencer Complete list:
-> Jun 28 12:00:01 localhost kernel: Sequencer DMA-Up and Complete list:
-> Jun 28 12:00:01 localhost kernel: Sequencer On QFreeze and Complete list:
-> Jun 28 12:00:01 localhost kernel:
-> Jun 28 12:00:01 localhost kernel:
-> Jun 28 12:00:01 localhost kernel: scsi0: FIFO0 Active, LONGJMP == 0x252, SCB 0x31
-> Jun 28 12:00:01 localhost kernel: SEQIMODE[0x3f]:(ENCFG4TCMD|ENCFG4ICMD|ENCFG4TSTAT|ENCFG4ISTAT|ENCFG4DATA|ENSA
-> VEPTRS)
-> Jun 28 12:00:01 localhost kernel: SEQINTSRC[0x60]:(SAVEPTRS|CTXTDONE) DFCNTRL[0x8]:(HDMAEN)
-> Jun 28 12:00:01 localhost kernel: DFSTATUS[0x81]:(FIFOEMP|PRELOAD_AVAIL) SG_CACHE_SHADOW[0x20]
-> Jun 28 12:00:01 localhost kernel: SG_STATE[0x3]:(SEGS_AVAIL|LOADING_NEEDED) DFFSXFRCTL[0x0]
-> Jun 28 12:00:01 localhost kernel: SOFFCNT[0x0] MDFFSTAT[0xe]:(DATAINFIFO|DLZERO|SHVALID)
-> Jun 28 12:00:01 localhost kernel: SHADDR = 0x0b8731000, SHCNT = 0x1000 HADDR = 0x0b8731000, HCNT = 0x1000
-> Jun 28 12:00:01 localhost kernel: CCSGCTL[0x10]:(SG_CACHE_AVAIL)
-> Jun 28 12:00:01 localhost kernel:
-> Jun 28 12:00:01 localhost kernel: scsi0: FIFO1 Free, LONGJMP == 0x8252, SCB 0x5
-> Jun 28 12:00:01 localhost kernel: SEQIMODE[0x3f]:(ENCFG4TCMD|ENCFG4ICMD|ENCFG4TSTAT|ENCFG4ISTAT|ENCFG4DATA|ENSA
-> VEPTRS)
-> Jun 28 12:00:01 localhost kernel: SEQINTSRC[0x0] DFCNTRL[0x4]:(DIRECTION) DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD
-> _AVAIL)
-> Jun 28 12:00:01 localhost kernel: SG_CACHE_SHADOW[0x2]:(LAST_SEG) SG_STATE[0x0] DFFSXFRCTL[0x0]
-> Jun 28 12:00:01 localhost kernel: SOFFCNT[0x0] MDFFSTAT[0x5]:(FIFOFREE|DLZERO) SHADDR = 0x00, SHCNT = 0x0
-> Jun 28 12:00:01 localhost kernel: HADDR = 0x00, HCNT = 0x0 CCSGCTL[0x10]:(SG_CACHE_AVAIL)
-> Jun 28 12:00:01 localhost kernel: LQIN: 0x5 0x0 0x0 0x31 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x2 0x0 0x0 0x
-> 0 0x2 0x0
-> Jun 28 12:00:01 localhost kernel: scsi0: LQISTATE = 0x2b, LQOSTATE = 0x0, OPTIONMODE = 0x52
-> Jun 28 12:00:01 localhost kernel: scsi0: OS_SPACE_CNT = 0x20 MAXCMDCNT = 0x1
-> Jun 28 12:00:01 localhost kernel: scsi0: SAVED_SCSIID = 0x0 SAVED_LUN = 0x0
-> Jun 28 12:00:01 localhost kernel:
-> Jun 28 12:00:01 localhost kernel: SIMODE0[0xc]:(ENOVERRUN|ENIOERR)
-> Jun 28 12:00:01 localhost kernel: CCSCBCTL[0x4]:(CCSCBDIR)
-> Jun 28 12:00:01 localhost kernel: scsi0: REG0 == 0x1e, SINDEX = 0x128, DINDEX = 0x104
-> Jun 28 12:00:01 localhost kernel: scsi0: SCBPTR == 0x25, SCB_NEXT == 0xff80, SCB_NEXT2 == 0xff35
-> Jun 28 12:00:01 localhost kernel: CDB 28 0 7 76 d4 b9
-> Jun 28 12:00:01 localhost kernel: STACK: 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
-> Jun 28 12:00:01 localhost kernel: <<<<<<<<<<<<<<<<< Dump Card State Ends >>>>>>>>>>>>>>>>>>
-> Jun 28 12:00:01 localhost kernel: LQICRC_NLQ
-> Jun 28 12:00:01 localhost kernel: LQIRETRY for LQIPHASE_OUTPKT
-> Jun 28 12:00:01 localhost kernel: scsi0: Returning to Idle Loop
-> 
-> 
-> 
--- 
-Andrea Carpani <andrea.carpani@criticalpath.net>
-Critical Path
+I'll investigate fixing this, but I might not have time for the rest of
+this week if someone else wants to take a look.
+
+James
+
 
