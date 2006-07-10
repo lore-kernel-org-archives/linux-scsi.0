@@ -1,109 +1,75 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: aic94xx panic on module insertion
-Date: Mon, 10 Jul 2006 09:22:53 -0500
-Message-ID: <1152541373.7275.11.camel@mulgrave.il.steeleye.com>
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: aic94xx status
+Date: Mon, 10 Jul 2006 09:09:15 -0700
+Message-ID: <20060710160915.GA30179@us.ibm.com>
+References: <1152376067.12020.26.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:39062 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1030385AbWGJOWy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Jul 2006 10:22:54 -0400
-Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
-	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id k6AEMsY04518
-	for <linux-scsi@vger.kernel.org>; Mon, 10 Jul 2006 10:22:54 -0400
+Received: from e1.ny.us.ibm.com ([32.97.182.141]:51386 "EHLO e1.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1422673AbWGJQJO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 Jul 2006 12:09:14 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e1.ny.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k6AG9DoT020464
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
+	for <linux-scsi@vger.kernel.org>; Mon, 10 Jul 2006 12:09:14 -0400
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay04.pok.ibm.com (8.13.6/NCO/VER7.0) with ESMTP id k6AG9Dmm270494
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Mon, 10 Jul 2006 12:09:13 -0400
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k6AG9C78017227
+	for <linux-scsi@vger.kernel.org>; Mon, 10 Jul 2006 12:09:13 -0400
+Content-Disposition: inline
+In-Reply-To: <1152376067.12020.26.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>, "Tarte, Robert" <Robert_Tarte@adaptec.com>
 
-I got this one again over the weekend:
+James Bottomley <James.Bottomley@SteelEye.com> wrote:
+> 1) SATA support.  We at least need this stubbed out so seeing a SATA
+> device won't cause nasty things to happen (IBM is working on this).
+> Ideally, we need to integrate this driver with Brian King's SATA/SAS
+> code, but no-one who has this board has a sata device and vice versa.
+> 
 
-aic94xx: max_scbs:512, max_ddbs:128
-aic94xx: setting phy0 addr to 50000d100001cae0
-aic94xx: setting phy1 addr to 50000d100001cae0
-aic94xx: setting phy2 addr to 50000d100001cae0
-aic94xx: setting phy3 addr to 50000d100001cae0
-aic94xx: setting phy4 addr to 50000d100001cae0
-aic94xx: setting phy5 addr to 50000d100001cae0
-aic94xx: setting phy6 addr to 50000d100001cae0
-aic94xx: setting phy7 addr to 50000d100001cae0
-aic94xx: num_edbs:21
-aic94xx: num_escbs:3
-aic94xx: using sequencer Razor_10a1
-aic94xx: downloading CSEQ...
-aic94xx: dma-ing 8192 bytes
-aic94xx: verified 8192 bytes, passed
-aic94xx: downloading LSEQs...
-aic94xx: dma-ing 14336 bytes
-aic94xx: LSEQ0 verified 14336 bytes, passed
-aic94xx: LSEQ1 verified 14336 bytes, passed
-aic94xx: LSEQ2 verified 14336 bytes, passed
-aic94xx: LSEQ3 verified 14336 bytes, passed
-aic94xx: LSEQ4 verified 14336 bytes, passed
-aic94xx: LSEQ5 verified 14336 bytes, passed
-aic94xx: LSEQ6 verified 14336 bytes, passed
-aic94xx: LSEQ7 verified 14336 bytes, passed
-aic94xx: max_scbs:446
-aic94xx: first_scb_site_no:0x20
-aic94xx: last_scb_site_no:0x1fe
-aic94xx: First SCB dma_handle: 0x1ed97000
-aic94xx: device 0000:03:03.0: SAS addr 50000d100001cae0, PCBA SN , 8 phys, 8 enabled phys, flash present, BIOS not present0
-aic94xx: posting 3 escbs
-aic94xx: escbs posted
-aic94xx: posting 8 control phy scbs
-aic94xx: enabled phys
-aic94xx: control_phy_tasklet_complete: phy0, lrate:0x9, proto:0xe
-aic94xx: control_phy_tasklet_complete: phy1, lrate:0x9, proto:0xe
-aic94xx: escb_tasklet_complete: phy0: BYTES_DMAED
-aic94xx: SAS proto IDENTIFY:
-aic94xx: 00: 20 00 00 02
-aic94xx: 04: 00 00 00 00
-aic94xx: 08: 00 00 00 00
-aic94xx: 0c: 50 06 05 b0
-aic94xx: 10: 00 00 11 10
-aic94xx: 14: 07 00 00 00
-aic94xx: 18: 00 00 00 00
-aic94xx: escb_tasklet_complete: phy1: PRIMITIVE_RECVD
-sas: phy0 added to port0, phy_mask:0x1
-aic94xx: phy1: BROADCAST change received:256
-aic94xx: control_phy_tasklet_complete: phy2, lrate:0x9, proto:0xe
-sas: broadcast received: 9
-BUG: unable to handle kernel NULL pointer dereference at virtual address 00000214
- printing eip:
-f88f14cd
-*pde = 00000000
-Oops: 0000 [#1]
-SMP 
-Modules linked in: aic94xx scsi_transport_sas_domain scsi_transport_sas uhci_hcd usbcore tg3 ext3 jbd mbcache sr_mod cdrom sd_mod aic79xx scsi_transport_spi scsi_mod
-CPU:    1
-EIP:    0060:[<f88f14cd>]    Not tainted VLI
-EFLAGS: 00010297   (2.6.18-rc1 #10) 
-EIP is at sas_discover_event+0x1d/0xa0 [scsi_transport_sas_domain]
-eax: 00000000   ebx: 00000000   ecx: c011de75   edx: 00000000
-esi: 00000001   edi: 00000044   ebp: f7019f18   esp: f7019efc
-ds: 007b   es: 007b   ss: 0068
-Process scsi_wq_2 (pid: 2256, ti=f7018000 task=f7052aa0 task.ti=f7018000)
-Stack: de7c0c04 00000009 f7019f18 c011e02b 00000001 de7c0c04 00000009 f7019f34 
-       f88f0e83 00000000 00000001 de7c0a04 de7c0a08 dff71118 f7019f68 c012ef4c 
-       de7c09d4 dff71160 00000001 dff71158 dff711a0 00000286 f88f0e10 de7c09d4 
-Call Trace:
- [<f88f0e83>] sas_porte_broadcast_rcvd+0x73/0x80 [scsi_transport_sas_domain]
- [<c012ef4c>] run_workqueue+0x7c/0x100
- [<c012f1a5>] worker_thread+0x115/0x150
- [<c0132a9d>] kthread+0xfd/0x110
- [<c0100ea5>] kernel_thread_helper+0x5/0x10
-Code: 5e 5f 5d c3 8d 76 00 8d bc 27 00 00 00 00 55 89 e5 83 ec 1c 89 75 f8 8b 75 0c 89 5d f4 8b 5d 08 89 7d fc 83 fe 02 8d 7b 44 77 74 <8b> 83 14 02 00 00 8b 40 6c 89 45 ec 8d 04 76 c1 e0 04 8d 44 03 
-EIP: [<f88f14cd>] sas_discover_event+0x1d/0xa0 [scsi_transport_sas_domain] SS:ESP 0068:f7019efc
- <5>aic94xx: escb_tasklet_complete: phy2: PRIMITIVE_RECVD
+Currently I am running a loaned SATA drive with the patch below. It just
+generates the "Unidentified device type" type message when it detects a
+SATA device and appears in my configuration to not cause any bad things to
+happen.
 
-I think what happens is that the broadcast comes in before the aic94xx
-has allocated a port to the phy (so phy->port is null in
-sas_porte_boradcast_rcvd).
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
-I'll investigate fixing this, but I might not have time for the rest of
-this week if someone else wants to take a look.
+ Do not drop phy_list_lock is we have not taken it. Also added a SATA_DEV
+ case as marker for future calls.
 
-James
+ Signed-off-by: Mike Anderson <andmike@us.ibm.com>
 
+ drivers/scsi/sas/sas_discover.c |    2 +-
+ 1 files changed, 1 insertion(+), 1 deletion(-)
 
+Index: aic94xx-sas-2.6-patched/drivers/scsi/sas/sas_discover.c
+===================================================================
+--- aic94xx-sas-2.6-patched.orig/drivers/scsi/sas/sas_discover.c	2006-06-23 11:12:01.000000000 -0700
++++ aic94xx-sas-2.6-patched/drivers/scsi/sas/sas_discover.c	2006-07-05 13:19:20.000000000 -0700
+@@ -265,6 +265,7 @@ static int sas_get_port_device(struct as
+ 		rphy = sas_expander_alloc(port->port,
+ 					  SAS_FANOUT_EXPANDER_DEVICE);
+ 		break;
++	case SATA_DEV:
+ 	default:
+ 		printk("ERROR: Unidentified device type %d\n", dev->dev_type);
+ 		rphy = NULL;
+@@ -272,7 +273,6 @@ static int sas_get_port_device(struct as
+ 	}
+ 
+ 	if (!rphy) {
+-		spin_unlock_irqrestore(&port->phy_list_lock, flags);
+ 		kfree(dev);
+ 		return -ENODEV;
+ 	}
