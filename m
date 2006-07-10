@@ -1,54 +1,75 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [PATCH] aic94xx: fix routing algorithms
-Date: Sun, 09 Jul 2006 15:41:23 -0500
-Message-ID: <1152477683.784.14.camel@mulgrave.il.steeleye.com>
+From: "David Somayajulu" <david.somayajulu@qlogic.com>
+Subject: [RFC] [PATCH 0/7] qla4xxx: new driver -- request for review.
+Date: Mon, 10 Jul 2006 01:53:28 -0700
+Message-ID: <0BB3E5E7462EEA4295BC02D49691DC072235CF@AVEXCH1.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:50909 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1161134AbWGIUlZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 9 Jul 2006 16:41:25 -0400
-Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
-	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id k69KfOY19616
-	for <linux-scsi@vger.kernel.org>; Sun, 9 Jul 2006 16:41:24 -0400
+Received: from pat.qlogic.com ([198.70.193.2]:31103 "EHLO avexch1.qlogic.com")
+	by vger.kernel.org with ESMTP id S1751378AbWGJIxa convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 Jul 2006 04:53:30 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: open-iscsi@googlegroups.com, David Wagner <david.wagner@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>, Duane Grigsby <duane.grigsby@qlogic.com>, David Somayajulu <david.somayajulu@qlogic.com>
 
-I've been trying to work out for a while why certain cascaded expander
-configurations work with the mptsas, but don't with the aic94xx.
-Eventually I discovered that the non-functional configurations are the
-ones where the cascaded expander is connected to the parent on table
-routed ports.  The problem is that the aic94xx routing algorithms never
-seem to consider the necessity of a route back to the HBA.  This patch
-adds such a routing configuration, and now (at least for all my
-configurations) the hitherto unseen disks become visible.
 
-James
 
-diff --git a/drivers/scsi/sas/sas_expander.c b/drivers/scsi/sas/sas_expander.c
-index 10e0879..0dbeca5 100644
---- a/drivers/scsi/sas/sas_expander.c
-+++ b/drivers/scsi/sas/sas_expander.c
-@@ -33,6 +33,8 @@ #include "../scsi_sas_internal.h"
+All,
+This is a re-submission of the qla4xxx driver for Qlogic Corporation's
+iSCSI HBAs. Ravi Anand had previously submitted it under the subject
+"[RFC] [PATCH 0/7] requested for qla4xxx!!!". It also incorporates a
+subsequent patch posted by Doug Maxey under the subject "[PATCH]
+qla4xxx: remove deprecated #include"
  
- static int sas_discover_expander(struct domain_device *dev);
- static int sas_configure_routing(struct domain_device *dev, u8 *sas_addr);
-+static int sas_configure_phy(struct domain_device *dev, int phy_id,
-+			     u8 *sas_addr, int include);
- static int sas_disable_routing(struct domain_device *dev,  u8 *sas_addr);
- 
- #if 0
-@@ -723,6 +725,8 @@ static int sas_ex_discover_dev(struct do
- 	if (dev->parent && (SAS_ADDR(ex_phy->attached_sas_addr) ==
- 			    SAS_ADDR(dev->parent->sas_addr))) {
- 		sas_add_parent_port(dev, phy_id);
-+		if (ex_phy->routing_attr == TABLE_ROUTING)
-+			sas_configure_phy(dev, phy_id, dev->port->sas_addr, 1);
- 		return 0;
- 	}
- 
+To recap Mike Christie has outlined the modifications done from the last
+submission at
+http://marc.theaimsgroup.com/?l=linux-scsi&m=115151443814051&w=2
 
+Major Changes from the last release are as follows :
 
+ o Removal of the unused cruft ie unused structs/macros/functions/file
+etc.
+ o All the typedef usage has been removed.
+ o Fixed coding style.
+ o Hook's into iscsi-transport class.
+ o Added support for session block/unblock.
+ o Hook's into open-iscsi framework: 
+  	-Support tgt discovery's from iscsiadm using send targets.
+	- Exposes the persistent targets.
+ o Lun scanning in user space.
+ o Bug fixes and other trivial changes.
+
+The patchset has been broken down as follows :
+
+ o Driver definitions
+ o Initialization routines
+ o OS integration 
+ o ISR routines
+ o Mailbox routines
+ o Support routines
+ o Driver Version
+
+There are other stuff that need to be done :
+
+ o Add support for sysfs attributes.
+ o Userspace support for session creation/deletion for iscsi HBAs.
+ o Add support for other discovery mode ie iSNS/SLP.
+
+All the patches along with the driver package have been uploaded at the
+following URL:
+
+	ftp://ftp.qlogic.com/outgoing/linux/iSCSI/upstream/5.00.05b7-k/
+
+Once again we really appreciate all the efforts of Mike Christie and
+Doug Maxey in this release.
+
+Looking forward to comment's/feedback.
+
+Regards,
+David Somayajulu
+Qlogic Corporation.
