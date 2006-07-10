@@ -1,55 +1,48 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [-mm patch] include/scsi/libsas.h should #include <linux/scatterlist.h>
-Date: Mon, 10 Jul 2006 20:33:02 +0200
-Message-ID: <20060710183302.GE13938@stusta.de>
-References: <20060709021106.9310d4d1.akpm@osdl.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: aic94xx panic on module insertion
+Date: Mon, 10 Jul 2006 16:07:31 -0500
+Message-ID: <1152565651.4027.11.camel@mulgrave.il.steeleye.com>
+References: <1152541373.7275.11.camel@mulgrave.il.steeleye.com>
+	 <20060710172950.GE30179@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:30473 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S965124AbWGJSdD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Jul 2006 14:33:03 -0400
-Content-Disposition: inline
-In-Reply-To: <20060709021106.9310d4d1.akpm@osdl.org>
+Received: from stat9.steeleye.com ([209.192.50.41]:54189 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S965308AbWGJWvI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 Jul 2006 18:51:08 -0400
+In-Reply-To: <20060710172950.GE30179@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: linux-kernel@vger.kernel.org, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Sun, Jul 09, 2006 at 02:11:06AM -0700, Andrew Morton wrote:
->...
-> Changes since 2.6.17-mm6:
->...
->  git-sas.patch
->...
->  git trees
->...
+On Mon, 2006-07-10 at 10:29 -0700, Mike Anderson wrote:
+> Yes, since we have not formed a port yet on phy1 it would appear that we
+> could just drop this event if port is null as we are going to do discovery
+> post port forming the port anyway.
 
-This patch fixes the following compile error (on s390):
+OK, so this is the fix?
 
-<--  snip  -->
+James
 
-...
-  CC      drivers/scsi/sas/sas_init.o
-In file included from drivers/scsi/sas/sas_internal.h:31,
-                 from drivers/scsi/sas/sas_init.c:35:
-include/scsi/libsas.h:479: error: field 'smp_req' has incomplete type
-include/scsi/libsas.h:480: error: field 'smp_resp' has incomplete type
-make[3]: *** [drivers/scsi/sas/sas_init.o] Error 1
+diff --git a/drivers/scsi/sas/sas_port.c b/drivers/scsi/sas/sas_port.c
+index 07415e9..d931478 100644
+--- a/drivers/scsi/sas/sas_port.c
++++ b/drivers/scsi/sas/sas_port.c
+@@ -199,6 +199,12 @@ void sas_porte_broadcast_rcvd(void *data
+ 	u32 prim;
+ 	struct asd_sas_phy *phy = data;
+ 
++	/* Broadcast received before port forms.  This is fine, since
++	 * port formation will trigger a domain discovery (rather than
++	 * revalidation) */
++	if (!sas->port)
++		return;
++
+ 	sas_begin_event(PORTE_BROADCAST_RCVD, &phy->ha->event_lock,
+ 			&phy->port_events_pending);
+ 
 
-<--  snip  -->
-
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
-
---- linux-2.6.18-rc1-mm1-full/include/scsi/libsas.h.old	2006-07-10 18:19:10.000000000 +0200
-+++ linux-2.6.18-rc1-mm1-full/include/scsi/libsas.h	2006-07-10 18:19:53.000000000 +0200
-@@ -31,6 +31,7 @@
- #include <linux/pci.h>
- #include <scsi/sas.h>
- #include <linux/list.h>
-+#include <linux/scatterlist.h>
- #include <asm/semaphore.h>
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_cmnd.h>
 
