@@ -1,48 +1,44 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: aic94xx panic on module insertion
-Date: Mon, 10 Jul 2006 11:40:28 -0500
-Message-ID: <1152549628.7275.24.camel@mulgrave.il.steeleye.com>
-References: <1152541373.7275.11.camel@mulgrave.il.steeleye.com>
-	 <44B27F74.9000806@torque.net>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: [ANNOUNCE] sdparm 0.99
+Date: Mon, 10 Jul 2006 13:02:44 -0400
+Message-ID: <44B28834.4060302@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:63132 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1422684AbWGJQkd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Jul 2006 12:40:33 -0400
-In-Reply-To: <44B27F74.9000806@torque.net>
+Received: from pentafluge.infradead.org ([213.146.154.40]:9370 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1422704AbWGJRDP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 Jul 2006 13:03:15 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, tomfa@debian.org, kumba@gentoo.org
 
-On Mon, 2006-07-10 at 12:25 -0400, Douglas Gilbert wrote:
-> These comments have no direct bearing on the panic that
-> James is reporting, but ... that sequencer version:
-> "Razor_10a1" is old and should be updated.
-> 
-> With a 48300 adapter I needed to do two things:
->   [a] update the board's BIOS firmware from build 1618
->       to 1705 (20060421) [See adaptec's site]
->   [b] update the linux driver's copy of the sequencer
->       code (in my case from Razor_10c2 to Razor_10c5b)
-> 
-> My card needed [a] to stabilize the POST and device scan
-> that the 48300 does prior to the OS loading. Once the
+sdparm is a command line utility designed to get and set
+SCSI device parameters (cf hdparm for ATA disks). The
+parameters are held in mode pages. Apart from SCSI devices
+(e.g. disks, tapes and enclosures) sdparm can be used on
+any device that uses a SCSI command set. Virtually all CD/DVD
+drives use the SCSI MMC set irrespective of the transport.
+sdparm also can decode VPD pages including the device
+identification page. Commands to start and stop the media;
+load and unload removable media and some other housekeeping
+functions are supported. sdparm supports both the lk 2.4 and
+2.6 series.
 
-Actually, mine runs with the bios disabled (So I can boot from an SPI
-device to , so I won't see this anyway ...
+This version fixes a problem that appeared in version 0.98:
+A Request Sense command was added to clear down any pending
+Unit Attention conditions but libata doesn't support
+Request Sense. This version expands the exit status values
+which are the same as those found in the recently released
+sg3_utils version 1.21 .
 
-> aic94xx driver is loaded, it replaces the running version
-> of the sequencer code with its own copy. If the reader
-> sees numerous "tmf timeout" messages in their log then
-> there is a good chance old sequencer code is the cause.
+For more information and downloads see:
+http://www.torque.net/sg/sdparm.html
 
-And really, this driver needs to use the firmware loader, so this
-no-longer becomes an issue.
+Changelog:
+http://www.torque.net/sg/p/sdparm.ChangeLog
 
-James
-
-
+Doug Gilbert
