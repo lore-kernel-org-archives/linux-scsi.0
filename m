@@ -1,48 +1,40 @@
-From: Olaf Hering <olh@suse.de>
-Subject: Re: Fw: SCSI device not spinning up on rw
-Date: Tue, 11 Jul 2006 08:20:49 +0200
-Message-ID: <20060711062049.GA12266@suse.de>
-References: <20060603182302.7136831f.akpm@osdl.org> <44825D9F.9070305@torque.net> <44835AA2.1070809@us.ibm.com> <4484723E.7060906@us.ibm.com>
+From: "Robert Tarte" <robt@PacificCodeWorks.com>
+Subject: RE: aic94xx panic on module insertion
+Date: Tue, 11 Jul 2006 01:05:06 -0700
+Message-ID: <16C8363E16D7234AB844FDB52D4AEA650C2DB5@ntserv.PacificCodeWorks.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.suse.de ([195.135.220.2]:60847 "EHLO mx1.suse.de")
-	by vger.kernel.org with ESMTP id S965210AbWGKGUz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Jul 2006 02:20:55 -0400
-Content-Disposition: inline
-In-Reply-To: <4484723E.7060906@us.ibm.com>
+Received: from h-67-101-118-101.snfccasy.covad.net ([67.101.118.101]:407 "EHLO
+	PacificCodeWorks.com") by vger.kernel.org with ESMTP
+	id S1750711AbWGKIAj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Jul 2006 04:00:39 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@us.ibm.com>
-Cc: dougg@torque.net, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, Ruben Faelens <parasietje@gmail.com>
+To: dougg@torque.net, linux-scsi <linux-scsi@vger.kernel.org>
 
- On Mon, Jun 05, Brian King wrote:
 
-> Brian King wrote:
-> > Douglas Gilbert wrote:
-> >>> I have a SCSI disk, which I want to spin down when the system is not in
-> >>> use. I do this by using sdparm, scsi-spin or sg-utils. These tools all
-> >>> spin down the SCSI drive by using an IOCTL.
-> >>>
-> >>> Problem is that the kernel doesn't spin the drive back up. When a
-> >>> process requests data from the disk (a simple ls), the kernel responds
-> >>> with an I/O error. After some of these errors, reiserfs marks the drive
-> >>> read-only.
-> > 
-> > Setting sdev->allow_restart in struct scsi_device will cause sense
-> > key/code/qual of 02/04/02 (not ready, initialization command required)
-> > to wake up the scsi error handler and will force scsi core to issue
-> > a start unit command to the disk. I added this a while back to handle
-> > ipr raid arrays which need a start unit command each time the adapter
-> > gets reset. It would be easy enough for sd to use this, either
-> > all the time, or only when directed to, or we could add a sysfs attribute
-> > to the disk to enable/disable this behavior.
+> These comments have no direct bearing on the panic that
+> James is reporting, but ... that sequencer version:
+> "Razor_10a1" is old and should be updated.
+
+[Tarte, Robert] I apologize for posting from this account, but my VPN
+access is down.  There is patch available the updates the sequencer in
+aic94xx to the latest version.  It is fairly ugly, because it is full of
+sequencer hex.  I don't believe that this is related to James' problem.
+Mike and Alexis have tried it out and it seems to running fine.  Doug,
+Are you just developing on Luben's kernel, or would you like me to send
+you the patch?
+
 > 
-> Please try the attached patch. It adds a sysfs device attribute "allow_restart".
-> If you set it to 1, then scsi core will issue a start unit when it sees 02/04/02
-> sense data. The attribute is in the same place as the FUA and cache_type
-> attributes (eg. /sys/block/sdc/device/scsi_disk:1:1:9:0/allow_restart). 
+> With a 48300 adapter I needed to do two things:
+>   [a] update the board's BIOS firmware from build 1618
+>       to 1705 (20060421) [See adaptec's site]
+>   [b] update the linux driver's copy of the sequencer
+>       code (in my case from Razor_10c2 to Razor_10c5b)
+> 
 
-Is it safe to have this attribute be 1 per default, and let the user
-disable it for problematic drives? The IO errors bother me alot...
+
