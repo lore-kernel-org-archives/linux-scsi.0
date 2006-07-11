@@ -1,50 +1,83 @@
-From: "eBay" <aw-confirm@ebay.com>
-Subject: eBay New Unpaid Item Message from bbsq63: #300005830966
-Date: Tue, 11 Jul 2006 07:32:06 +0300
-Message-ID: <200607110431.k6B4Vsr21778@teamkorea.com>
-Reply-To: <aw-confirm@ebay.com>
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: aic94xx panic on module insertion
+Date: Mon, 10 Jul 2006 21:52:06 -0700
+Message-ID: <20060711045206.GA7552@us.ibm.com>
+References: <1152541373.7275.11.camel@mulgrave.il.steeleye.com> <20060710172950.GE30179@us.ibm.com> <1152565651.4027.11.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="Windows-1251"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [222.122.43.15] ([222.122.43.15]:42958 "EHLO teamkorea.com")
-	by vger.kernel.org with ESMTP id S965143AbWGKEgC (ORCPT
+Received: from e2.ny.us.ibm.com ([32.97.182.142]:6350 "EHLO e2.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S965147AbWGKEwI (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Jul 2006 00:36:02 -0400
+	Tue, 11 Jul 2006 00:52:08 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e2.ny.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k6B4q7Wo026949
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
+	for <linux-scsi@vger.kernel.org>; Tue, 11 Jul 2006 00:52:07 -0400
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay04.pok.ibm.com (8.13.6/NCO/VER7.0) with ESMTP id k6B4q7If269900
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Tue, 11 Jul 2006 00:52:07 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k6B4q7Sx011342
+	for <linux-scsi@vger.kernel.org>; Tue, 11 Jul 2006 00:52:07 -0400
+Content-Disposition: inline
+In-Reply-To: <1152565651.4027.11.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-<P>
-<TABLE cellSpacing=0 cellPadding=0 width=600>
-<TBODY>
-<TR>
-<TD style="WORD-WRAP: break-word" width=600>
-<TABLE cellSpacing=0 cellPadding=0 width=600 border=0 xmlns:x="urn:schemas-microsoft-com:xslt">
-<TBODY>
-<TR>
-<TD style="WORD-WRAP: break-word" width=600>
-<TABLE cellSpacing=0 cellPadding=2 width="100%" bgColor=#eeeef8 border=0>
-<TBODY>
-<TR>
-<TD width=2><IMG src="http://pics.ebaystatic.com/aw/pics/spacer.gif" width=2></TD>
-<TD><FONT face=Arial size=4>eBay New Unpaid Item Message from bbsq63: #300005830966
+James Bottomley <James.Bottomley@SteelEye.com> wrote:
+> On Mon, 2006-07-10 at 10:29 -0700, Mike Anderson wrote:
+> > Yes, since we have not formed a port yet on phy1 it would appear that we
+> > could just drop this event if port is null as we are going to do discovery
+> > post port forming the port anyway.
+> 
+> OK, so this is the fix?
+> 
+> James
+> 
+> diff --git a/drivers/scsi/sas/sas_port.c b/drivers/scsi/sas/sas_port.c
+> index 07415e9..d931478 100644
+> --- a/drivers/scsi/sas/sas_port.c
+> +++ b/drivers/scsi/sas/sas_port.c
+> @@ -199,6 +199,12 @@ void sas_porte_broadcast_rcvd(void *data
+>  	u32 prim;
+>  	struct asd_sas_phy *phy = data;
+>  
+> +	/* Broadcast received before port forms.  This is fine, since
+> +	 * port formation will trigger a domain discovery (rather than
+> +	 * revalidation) */
+> +	if (!sas->port)
+> +		return;
+> +
+>  	sas_begin_event(PORTE_BROADCAST_RCVD, &phy->ha->event_lock,
+>  			&phy->port_events_pending);
+>  
 
- -- response required</FONT> </TD>
-<TD vAlign=center><A href="http://www.ebay.com/" target=_blank><IMG src="http://pics.ebaystatic.com/aw/pics/email/eBayLogo.gif" align=right border=0></A></TD></TR>
-<TR bgColor=#9999cc height=2>
-<TD colSpan=3></TD></TR></TBODY></TABLE></TD></TR>
-<TR>
-<TD>
-<TABLE style="FONT-SIZE: x-small; FONT-FAMILY: arial, sans-serif" cellSpacing=0 cellPadding=0 width="94%" align=center border=0>
-<TBODY>
-<TR>
-<TD><BR><BR>
-Dear member, <BR>
-<BR></TD></TR>
-<TR>
-<TD>eBay member bbsq63 has left you a message regarding item #300005830966<BR>
-  <BR><A href="http://cpe-065-190-152-094.nc.res.rr.com/crm/ws/signin.ebay/eBayISAPI.dl/SignIn&pUserId/index.html?SignIn&co_partnerId=2&pUserId=&siteid=0&pageType=&pa1=&i1=&bshowgif=&UsingSSL=&ru=http%3A%2F%2Fwww.ebay.com&pp=&pa2=&errmsg=&runame=&ruparams=&ruproduct=&sid=&favoritenav=&confirm=&ebxPageType=&existingEmail=&isCheckout=&migrateVisitor=" target=_blank><FONT color=#003399>View the dispute thread to respond</FONT></A>. <BR>
-  <BR></TD></TR>
-<TR>
-<TD>Regards, <BR><BR>eBay </TD></TR></TBODY></TABLE></TD></TR></TBODY></TABLE></TD></TR></TBODY></TABLE></P>
+or this is the one I was trying, but I cannot generate the events you
+where seeing. I was trying to create fake ones but have not been
+successful. Either seems like it would address this event.
+
+Index: aic94xx-sas-2.6-patched/drivers/scsi/sas/sas_discover.c
+===================================================================
+--- aic94xx-sas-2.6-patched.orig/drivers/scsi/sas/sas_discover.c	2006-07-10 11:56:43.000000000 -0700
++++ aic94xx-sas-2.6-patched/drivers/scsi/sas/sas_discover.c	2006-07-10 15:58:44.000000000 -0700
+@@ -717,7 +717,11 @@ static void sas_revalidate_domain(void *
+ 
+ int sas_discover_event(struct asd_sas_port *port, enum discover_event ev)
+ {
+-	struct sas_discovery *disc = &port->disc;
++	struct sas_discovery *disc;
++
++	if (!port)
++		return;
++	disc = &port->disc;
+ 
+ 	BUG_ON(ev >= DISC_NUM_EVENTS);
+ 
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
