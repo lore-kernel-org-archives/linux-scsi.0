@@ -1,53 +1,48 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: aic94xx status
-Date: Mon, 10 Jul 2006 22:07:39 -0700
-Message-ID: <20060711050739.GB7552@us.ibm.com>
-References: <1152376067.12020.26.camel@mulgrave.il.steeleye.com> <20060710160915.GA30179@us.ibm.com> <1152548827.7275.20.camel@mulgrave.il.steeleye.com>
+From: Olaf Hering <olh@suse.de>
+Subject: Re: Fw: SCSI device not spinning up on rw
+Date: Tue, 11 Jul 2006 08:20:49 +0200
+Message-ID: <20060711062049.GA12266@suse.de>
+References: <20060603182302.7136831f.akpm@osdl.org> <44825D9F.9070305@torque.net> <44835AA2.1070809@us.ibm.com> <4484723E.7060906@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:23767 "EHLO
-	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S965042AbWGKFHg
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Jul 2006 01:07:36 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e31.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k6B57aJe025449
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Jul 2006 01:07:36 -0400
-Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
-	by d03relay04.boulder.ibm.com (8.13.6/NCO/VER7.0) with ESMTP id k6B57ZvM188410
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Mon, 10 Jul 2006 23:07:35 -0600
-Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av01.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k6B57ZJV022248
-	for <linux-scsi@vger.kernel.org>; Mon, 10 Jul 2006 23:07:35 -0600
+Received: from mail.suse.de ([195.135.220.2]:60847 "EHLO mx1.suse.de")
+	by vger.kernel.org with ESMTP id S965210AbWGKGUz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Jul 2006 02:20:55 -0400
 Content-Disposition: inline
-In-Reply-To: <1152548827.7275.20.camel@mulgrave.il.steeleye.com>
+In-Reply-To: <4484723E.7060906@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>, "Tarte, Robert" <Robert_Tarte@adaptec.com>
+To: Brian King <brking@us.ibm.com>
+Cc: dougg@torque.net, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, Ruben Faelens <parasietje@gmail.com>
 
-James Bottomley <James.Bottomley@SteelEye.com> wrote:
-> On Mon, 2006-07-10 at 09:09 -0700, Mike Anderson wrote:
-> > Currently I am running a loaned SATA drive with the patch below. It
-> > just
-> > generates the "Unidentified device type" type message when it detects
-> > a
-> > SATA device and appears in my configuration to not cause any bad
-> > things to
-> > happen.
+ On Mon, Jun 05, Brian King wrote:
+
+> Brian King wrote:
+> > Douglas Gilbert wrote:
+> >>> I have a SCSI disk, which I want to spin down when the system is not in
+> >>> use. I do this by using sdparm, scsi-spin or sg-utils. These tools all
+> >>> spin down the SCSI drive by using an IOCTL.
+> >>>
+> >>> Problem is that the kernel doesn't spin the drive back up. When a
+> >>> process requests data from the disk (a simple ls), the kernel responds
+> >>> with an I/O error. After some of these errors, reiserfs marks the drive
+> >>> read-only.
+> > 
+> > Setting sdev->allow_restart in struct scsi_device will cause sense
+> > key/code/qual of 02/04/02 (not ready, initialization command required)
+> > to wake up the scsi error handler and will force scsi core to issue
+> > a start unit command to the disk. I added this a while back to handle
+> > ipr raid arrays which need a start unit command each time the adapter
+> > gets reset. It would be easy enough for sd to use this, either
+> > all the time, or only when directed to, or we could add a sysfs attribute
+> > to the disk to enable/disable this behavior.
 > 
-> That seems to cover the directly attached case, thanks.
-> 
-> What happens if the SATA device is remote over an expander using STP?
-> That seems to have a separate case in sas_ex_discover_end_dev.
+> Please try the attached patch. It adds a sysfs device attribute "allow_restart".
+> If you set it to 1, then scsi core will issue a start unit when it sees 02/04/02
+> sense data. The attribute is in the same place as the FUA and cache_type
+> attributes (eg. /sys/block/sdc/device/scsi_disk:1:1:9:0/allow_restart). 
 
-I tried the SATA drive connected off a edge device prior to having to
-return the device. I saw the devices address in the attached message, but
-nothing else was printed. At least it did not cause any other issues.
-
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+Is it safe to have this attribute be 1 per default, and let the user
+disable it for problematic drives? The IO errors bother me alot...
