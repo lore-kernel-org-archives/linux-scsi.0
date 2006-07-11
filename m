@@ -1,27 +1,32 @@
-From: "Robert Tarte" <robt@PacificCodeWorks.com>
-Subject: RE: aic94xx status
-Date: Tue, 11 Jul 2006 01:32:40 -0700
-Message-ID: <16C8363E16D7234AB844FDB52D4AEA650C2DB7@ntserv.PacificCodeWorks.local>
+From: "Amado" <Amadodiscussion@dr.com>
+Subject: Make other men envy you and girls worship you Most efficient products for men
+Date: Tue, 11 Jul 2006 17:20:29 +0800
+Message-ID: <37854171805893.33F47C267D@WYBM27>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+        charset="Windows-1252"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from h-67-101-118-101.snfccasy.covad.net ([67.101.118.101]:17816
-	"EHLO PacificCodeWorks.com") by vger.kernel.org with ESMTP
-	id S1750744AbWGKI2M convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Jul 2006 04:28:12 -0400
-Content-class: urn:content-classes:message
+Received: from zeus1.kernel.org ([204.152.191.4]:41878 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S1750826AbWGKJVz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Jul 2006 05:21:55 -0400
+Received: from USER-9428F58201 ([58.51.125.134])
+	by zeus1.kernel.org (8.13.1/8.13.1) with ESMTP id k6B9LeV9024635
+	for <linux-scsi@vger.kernel.org>; Tue, 11 Jul 2006 09:21:54 GMT
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Alexis Bruemmer <alexisb@us.ibm.com>, Mike Anderson <andmike@us.ibm.com>, "Tarte, Robert" <Robert_Tarte@adaptec.com>
+To: linux-scsi@vger.kernel.org
 
-> 1) SATA support.  We at least need this stubbed out so seeing a SATA
-> device won't cause nasty things to happen (IBM is working on this).
-> Ideally, we need to integrate this driver with Brian King's SATA/SAS
-> code, but no-one who has this board has a sata device and vice versa.
+Happy day!
 
-[Tarte, Robert] I'm not sure what Brian King's SATA/SA code is, but I do
-have boards that use the razor chip and I have SATA devices.
+Make your girlfriend or wife speechless with increased hardness, richer orgsms and more power in bed
+Rock hard manhood, multiple explosions and several times more semen volume
+
+ http://www.bartoned.com
+
+
+Silence is the fence around wisdom Happy the bride who.. gets all the presents. Children should be seen and not heard
+ Fight truth decay, read the bible 
+
 
