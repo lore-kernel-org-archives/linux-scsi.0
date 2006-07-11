@@ -1,252 +1,152 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: Re: scan error after FC link recovery when device was in use
-Date: Tue, 11 Jul 2006 14:34:47 -0500
-Message-ID: <44B3FD57.6090900@sgi.com>
-References: <44AA4F59.3040800@ext.bull.net>
+From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Subject: [PATCH] scsi_debug: add evpd83_use_hostno option to
+ generate multipath-like device ID
+Date: Tue, 11 Jul 2006 17:41:54 -0400 (EDT)
+Message-ID: <20060711.174154.41627690.k-ueda@ct.jp.nec.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:16777 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S1751209AbWGKTey (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Jul 2006 15:34:54 -0400
-In-Reply-To: <44AA4F59.3040800@ext.bull.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <dm-devel-bounces@redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: linux-scsi@vger.kernel.org
+Cc: dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
-To: Frederic TEMPORELLI <frederic.temporelli@ext.bull.net>
-Cc: linux-scsi@vger.kernel.org
 
-This is a known side effect of removing a fibre target which
-has references.  There is a crude workaround available.  Essentially,
-it modifies the fc transport to not delete the target when the
-timer expires.
+Hello,
 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=115015423722568&w=2
+This patch adds evpd83_use_hostno option to scsi_debug to generate
+multipath-like device ID for the debug devices.
+This option is useful for multipath testing, especially
+device-mapper multipath, because the user-space tool of
+device-mapper multipath uses storage device ID for auto-detection
+of multipath devices.
 
-Root cause is being investigated by various interested parties.
+scsi_debug generates the device ID by given host_no, target number
+and lun by default (evpd83_use_hostno=1).
+If the option is set to '0', it ignores host_no value so the resulting
+device ID will be identical for the devices which has same target number
+and lun.
 
-Be sure to read the entire thread.  This patch is not going to be
-accepted into the kernel.
+The patch is for 2.6.18-rc1 (scsi_debug 1.79).
+Please consider to apply.
 
-More interesting threads:
-
-http://marc.theaimsgroup.com/?l=linux-scsi&m=114979410315677&w=2
-http://marc.theaimsgroup.com/?l=linux-scsi&m=115039021604020&w=2
-http://marc.theaimsgroup.com/?l=linux-scsi&m=115039057504409&w=2
-http://marc.theaimsgroup.com/?l=linux-scsi&m=115134812215106&w=2
-
-Be sure to read the complete thread before applying any of the
-patches....
-
-Mike
+Regards,
+Kiyoshi Ueda
 
 
-Frederic TEMPORELLI wrote:
-> Hi,
-> 
-> 
-> With 2.6.17.2, if a FC device is in use (mounted FS), a scan error is
-> reported when recovering after a 'long' link down period (>30s, 'no
-> device timeout'). Then, devices aren't detected again (and oops are
-> generated when reloading HBA drivers, but this may be a side effect).
-> 
-> We have this issue with point to point configuration using:
-> - Emulex + DDN
-> - Emulex + NEC
-> - QLogic + DDN
-> - QLogic + NEC
-> 
-> In all cases, we got the message "Unexpected response from lun 0 while
-> scanning, scan aborted" in the scsi_report_lun_scan function
-> (scsi_scan.c) and I'm thinking there's something wrong when calling
-> scsi_probe_and_add_lun.
-> We don't have such error if devices aren't used (not mounted) when link
-> failure occurs.
-> 
-> Do you know if such issue has already been encountered ?
-> May be an already existing patch ? (I look for scsi_probe_and_add_lun in
-> the mailling list but didn't find any revelant message)
-> 
-> Here are the extracts from syslog about these errors:
-> 
-> 
-> lpfc + DDN:
-> ===========
-> ...
-> Jul  3 09:15:30 s_kernel@iotiger2 kernel: lpfc 0000:06:02.0: 0:1305 Link
-> Down Event x2 received Data: x2 x20 x0
-> Jul  3 09:16:00 s_kernel@iotiger2 kernel: lpfc 0000:06:02.0: 0:0203
-> Nodev timeout on WWPN 23:0:0:1:ff:3:2:a8 NPort xef Data: x8 x7 x0
-> Jul  3 09:16:05 s_kernel@iotiger2 kernel: rport-2:0-0: blocked FC remote
-> port time out: removing target and saving binding
-> Jul  3 09:17:01 s_kernel@iotiger2 kernel: lpfc 0000:06:02.0: 0:1303 Link
-> Up Event x3 received Data: x3 x1 x8 x2
-> Jul  3 09:17:01 s_kernel@iotiger2 kernel: Vendor: DDN       Model: S2A
-> 8500      Rev: 5.22
-> Jul  3 09:17:01 s_kernel@iotiger2 kernel: Type:   Direct-Access     
-> ANSI SCSI revision: 03
-> Jul  3 09:17:01 s_kernel@iotiger2 kernel: SCSI device sdd: 571416576
-> 512-byte hdwr sectors (292565 MB)
-> Jul  3 09:17:01 s_kernel@iotiger2 kernel: sdd: Write Protect is off
-> Jul  3 09:17:01 s_kernel@iotiger2 kernel: sdd: Mode Sense: a7 00 10 08
-> Jul  3 09:17:01 s_kernel@iotiger2 kernel: SCSI device sdd: drive cache:
-> write back w/ FUA
-> Jul  3 09:17:01 s_kernel@iotiger2 kernel: SCSI device sdd: 571416576
-> 512-byte hdwr sectors (292565 MB)
-> Jul  3 09:17:01 s_kernel@iotiger2 kernel: sdd: Write Protect is off
-> Jul  3 09:17:01 s_kernel@iotiger2 kernel: sdd: Mode Sense: a7 00 10 08
-> Jul  3 09:17:01 s_kernel@iotiger2 kernel: SCSI device sdd: drive cache:
-> write back w/ FUA
-> Jul  3 09:17:01 s_kernel@iotiger2 kernel: sdd: unknown partition table
-> Jul  3 09:17:01 s_kernel@iotiger2 kernel: sd 2:0:0:0: Attached scsi disk
-> sdd
-> Jul  3 09:17:01 s_kernel@iotiger2 kernel: sd 2:0:0:0: Attached scsi
-> generic sg4 type 0
-> Jul  3 09:17:01 s_kernel@iotiger2 kernel: Vendor: DDN       Model: S2A
-> 8500      Rev: 5.22
-> Jul  3 09:17:01 s_kernel@iotiger2 kernel: Type:   Direct-Access     
-> ANSI SCSI revision: 03
-> Jul  3 09:17:01 s_kernel@iotiger2 kernel: error 1
-> Jul  3 09:17:01 s_kernel@iotiger2 kernel: 2:0:0:0: Unexpected response
-> from lun 0 while scanning, scan aborted
-> ...
-> 
-> 
-> lpfc + NEC:
-> ===========
-> ...
-> Jul  4 06:11:44 s_kernel@iotiger2 kernel: EXT3 FS on sdg, internal journal
-> Jul  4 06:11:44 s_kernel@iotiger2 kernel: EXT3-fs: recovery complete.
-> Jul  4 06:11:44 s_kernel@iotiger2 kernel: EXT3-fs: mounted filesystem
-> with ordered data mode.
-> Jul  4 06:12:03 s_kernel@iotiger2 kernel: lpfc 0000:06:02.1: 1:1305 Link
-> Down Event x2 received Data: x2 x20 x0
-> Jul  4 06:12:33 s_kernel@iotiger2 kernel: lpfc 0000:06:02.1: 1:0203
-> Nodev timeout on WWPN 20:6:0:0:13:84:0:35 NPort xdc Data: x8 x7 x0
-> Jul  4 06:12:38 s_kernel@iotiger2 kernel: rport-3:0-0: blocked FC remote
-> port time out: removing target and saving binding
-> Jul  4 06:12:42 s_kernel@iotiger2 kernel: lpfc 0000:06:02.1: 1:1303 Link
-> Up Event x3 received Data: x3 x1 x8 x2
-> Jul  4 06:12:42 s_kernel@iotiger2 kernel: Vendor: NEC       Model:
-> iStorage 2000     Rev: 2800
-> Jul  4 06:12:42 s_kernel@iotiger2 kernel: Type:   Direct-Access     
-> ANSI SCSI revision: 04
-> Jul  4 06:12:42 s_kernel@iotiger2 kernel: SCSI device sdh: 138412032
-> 512-byte hdwr sectors (70867 MB)
-> Jul  4 06:12:42 s_kernel@iotiger2 kernel: sdh: Write Protect is off
-> Jul  4 06:12:42 s_kernel@iotiger2 kernel: sdh: Mode Sense: 97 00 00 08
-> Jul  4 06:12:42 s_kernel@iotiger2 kernel: SCSI device sdh: drive cache:
-> write back
-> Jul  4 06:12:42 s_kernel@iotiger2 kernel: SCSI device sdh: 138412032
-> 512-byte hdwr sectors (70867 MB)
-> Jul  4 06:12:42 s_kernel@iotiger2 kernel: sdh: Write Protect is off
-> Jul  4 06:12:42 s_kernel@iotiger2 kernel: sdh: Mode Sense: 97 00 00 08
-> Jul  4 06:12:42 s_kernel@iotiger2 kernel: SCSI device sdh: drive cache:
-> write back
-> Jul  4 06:12:42 s_kernel@iotiger2 kernel: sdh: unknown partition table
-> Jul  4 06:12:42 s_kernel@iotiger2 kernel: sd 3:0:0:0: Attached scsi disk
-> sdh
-> Jul  4 06:12:42 s_kernel@iotiger2 kernel: sd 3:0:0:0: Attached scsi
-> generic sg12 type 0
-> Jul  4 06:12:42 s_kernel@iotiger2 kernel: Vendor: NEC       Model:
-> iStorage 2000     Rev: 2800
-> Jul  4 06:12:42 s_kernel@iotiger2 kernel: Type:   Direct-Access     
-> ANSI SCSI revision: 04
-> Jul  4 06:12:42 s_kernel@iotiger2 kernel: error 1
-> Jul  4 06:12:42 s_kernel@iotiger2 kernel: 3:0:0:0: Unexpected response
-> from lun 0 while scanning, scan aborted
-> ...
-> 
-> QLogic+NEC
-> ==========
-> ...
-> Jul  4 09:47:10 s_kernel@iotiger2 kernel: qla2400 0000:07:01.1: LIP
-> reset occured (f8ef).
-> Jul  4 09:47:10 s_kernel@iotiger2 kernel: qla2400 0000:07:01.1: LOOP
-> DOWN detected (2).
-> Jul  4 09:47:14 s_kernel@iotiger2 kernel: qla2400 0000:07:01.0: LOOP
-> DOWN detected (2).
-> Jul  4 09:47:45 s_kernel@iotiger2 kernel: rport-9:0-0: blocked FC remote
-> port time out: removing target and saving binding
-> Jul  4 09:47:50 s_kernel@iotiger2 kernel: rport-8:0-0: blocked FC remote
-> port time out: removing target and saving binding
-> Jul  4 09:48:11 s_kernel@iotiger2 kernel: qla2400 0000:07:01.0: LIP
-> reset occured (f7f7).
-> Jul  4 09:48:11 s_kernel@iotiger2 kernel: qla2400 0000:07:01.0: LIP
-> occured (f7f7).
-> Jul  4 09:48:11 s_kernel@iotiger2 kernel: qla2400 0000:07:01.0: LOOP UP
-> detected (2 Gbps).
-> Jul  4 09:48:11 s_kernel@iotiger2 kernel: Vendor: NEC       Model:
-> iStorage 2000     Rev: 2800
-> Jul  4 09:48:11 s_kernel@iotiger2 kernel: Type:   Direct-Access     
-> ANSI SCSI revision: 04
-> Jul  4 09:48:11 s_kernel@iotiger2 kernel: SCSI device sdi: 138412032
-> 512-byte hdwr sectors (70867 MB)
-> Jul  4 09:48:11 s_kernel@iotiger2 kernel: sdi: Write Protect is off
-> Jul  4 09:48:11 s_kernel@iotiger2 kernel: sdi: Mode Sense: 97 00 00 08
-> Jul  4 09:48:11 s_kernel@iotiger2 kernel: SCSI device sdi: drive cache:
-> write back
-> Jul  4 09:48:11 s_kernel@iotiger2 kernel: SCSI device sdi: 138412032
-> 512-byte hdwr sectors (70867 MB)
-> Jul  4 09:48:11 s_kernel@iotiger2 kernel: sdi: Write Protect is off
-> Jul  4 09:48:11 s_kernel@iotiger2 kernel: sdi: Mode Sense: 97 00 00 08
-> Jul  4 09:48:11 s_kernel@iotiger2 kernel: SCSI device sdi: drive cache:
-> write back
-> Jul  4 09:48:11 s_kernel@iotiger2 kernel: sdi: unknown partition table
-> Jul  4 09:48:11 s_kernel@iotiger2 kernel: sd 8:0:0:0: Attached scsi disk
-> sdi
-> Jul  4 09:48:11 s_kernel@iotiger2 kernel: sd 8:0:0:0: Attached scsi
-> generic sg14 type 0
-> Jul  4 09:48:11 s_kernel@iotiger2 kernel: Vendor: NEC       Model:
-> iStorage 2000     Rev: 2800
-> Jul  4 09:48:11 s_kernel@iotiger2 kernel: Type:   Direct-Access     
-> ANSI SCSI revision: 04
-> Jul  4 09:48:11 s_kernel@iotiger2 kernel: error 1
-> Jul  4 09:48:11 s_kernel@iotiger2 kernel: 8:0:0:0: Unexpected response
-> from lun 0 while scanning, scan aborted
-> ...
-> 
-> QLogic+DDN
-> ==========
-> ...
-> Jul  4 10:01:31 s_kernel@iotiger2 kernel: qla2400 0000:07:01.1: LOOP
-> DOWN detected (2).
-> Jul  4 10:02:06 s_kernel@iotiger2 kernel: rport-9:0-0: blocked FC remote
-> port time out: removing target and saving binding
-> Jul  4 10:03:05 s_kernel@iotiger2 kernel: qla2400 0000:07:01.1: LIP
-> reset occured (f7f7).
-> Jul  4 10:03:05 s_kernel@iotiger2 kernel: qla2400 0000:07:01.1: LIP
-> occured (f7f7).
-> Jul  4 10:03:05 s_kernel@iotiger2 kernel: qla2400 0000:07:01.1: LOOP UP
-> detected (2 Gbps).
-> Jul  4 10:03:05 s_kernel@iotiger2 kernel: Vendor: DDN       Model: S2A
-> 8500      Rev: 5.22
-> Jul  4 10:03:05 s_kernel@iotiger2 kernel: Type:   Direct-Access     
-> ANSI SCSI revision: 03
-> Jul  4 10:03:05 s_kernel@iotiger2 kernel: SCSI device sdl: 571416576
-> 512-byte hdwr sectors (292565 MB)
-> Jul  4 10:03:05 s_kernel@iotiger2 kernel: sdl: Write Protect is off
-> Jul  4 10:03:05 s_kernel@iotiger2 kernel: sdl: Mode Sense: a7 00 10 08
-> Jul  4 10:03:05 s_kernel@iotiger2 kernel: SCSI device sdl: drive cache:
-> write back w/ FUA
-> Jul  4 10:03:05 s_kernel@iotiger2 kernel: SCSI device sdl: 571416576
-> 512-byte hdwr sectors (292565 MB)
-> Jul  4 10:03:05 s_kernel@iotiger2 kernel: sdl: Write Protect is off
-> Jul  4 10:03:05 s_kernel@iotiger2 kernel: sdl: Mode Sense: a7 00 10 08
-> Jul  4 10:03:05 s_kernel@iotiger2 kernel: SCSI device sdl: drive cache:
-> write back w/ FUA
-> Jul  4 10:03:05 s_kernel@iotiger2 kernel: sdl: unknown partition table
-> Jul  4 10:03:05 s_kernel@iotiger2 kernel: sd 9:0:0:0: Attached scsi disk
-> sdl
-> Jul  4 10:03:05 s_kernel@iotiger2 kernel: sd 9:0:0:0: Attached scsi
-> generic sg15 type 0
-> Jul  4 10:03:05 s_kernel@iotiger2 kernel: Vendor: DDN       Model: S2A
-> 8500      Rev: 5.22
-> Jul  4 10:03:05 s_kernel@iotiger2 kernel: Type:   Direct-Access     
-> ANSI SCSI revision: 03
-> Jul  4 10:03:05 s_kernel@iotiger2 kernel: error 1
-> Jul  4 10:03:05 s_kernel@iotiger2 kernel: 9:0:0:0: Unexpected response
-> from lun 0 while scanning, scan aborted
-> ...
-> 
+Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+
+diff -rup 2.6.18-rc1/drivers/scsi/scsi_debug.c 2.6.18-rc1.evpd83/drivers/scsi/scsi_debug.c
+--- 2.6.18-rc1/drivers/scsi/scsi_debug.c	2006-07-11 15:57:32.000000000 -0400
++++ 2.6.18-rc1.evpd83/drivers/scsi/scsi_debug.c	2006-07-11 15:57:24.000000000 -0400
+@@ -86,6 +86,7 @@ static const char * scsi_debug_version_d
+ #define DEF_D_SENSE   0
+ #define DEF_NO_LUN_0   0
+ #define DEF_VIRTUAL_GB   0
++#define DEF_EVPD83_USE_HOSTNO 1
+ 
+ /* bit mask values for scsi_debug_opts */
+ #define SCSI_DEBUG_OPT_NOISE   1
+@@ -127,6 +128,7 @@ static int scsi_debug_ptype = DEF_PTYPE;
+ static int scsi_debug_dsense = DEF_D_SENSE;
+ static int scsi_debug_no_lun_0 = DEF_NO_LUN_0;
+ static int scsi_debug_virtual_gb = DEF_VIRTUAL_GB;
++static int scsi_debug_evpd83_use_hostno = DEF_EVPD83_USE_HOSTNO;
+ 
+ static int scsi_debug_cmnd_count = 0;
+ 
+@@ -940,7 +942,10 @@ static int resp_inquiry(struct scsi_cmnd
+ 		int lu_id_num, target_dev_id, len;
+ 		char lu_id_str[6];
+ 		int host_no = devip->sdbg_host->shost->host_no;
+-		
++
++		if (cmd[2] == 0x83 && !scsi_debug_evpd83_use_hostno)
++			host_no = 0;
++
+ 		lu_id_num = devip->wlun ? -1 : (((host_no + 1) * 2000) +
+ 			    (devip->target * 1000) + devip->lun);
+ 		target_dev_id = ((host_no + 1) * 2000) +
+@@ -2164,6 +2169,8 @@ module_param_named(opts, scsi_debug_opts
+ module_param_named(ptype, scsi_debug_ptype, int, S_IRUGO | S_IWUSR);
+ module_param_named(scsi_level, scsi_debug_scsi_level, int, S_IRUGO);
+ module_param_named(virtual_gb, scsi_debug_virtual_gb, int, S_IRUGO | S_IWUSR);
++module_param_named(evpd83_use_hostno, scsi_debug_evpd83_use_hostno, int,
++		   S_IRUGO | S_IWUSR);
+ 
+ MODULE_AUTHOR("Eric Youngdale + Douglas Gilbert");
+ MODULE_DESCRIPTION("SCSI debug adapter driver");
+@@ -2183,6 +2190,7 @@ MODULE_PARM_DESC(opts, "1->noise, 2->med
+ MODULE_PARM_DESC(ptype, "SCSI peripheral type(def=0[disk])");
+ MODULE_PARM_DESC(scsi_level, "SCSI level to simulate(def=5[SPC-3])");
+ MODULE_PARM_DESC(virtual_gb, "virtual gigabyte size (def=0 -> use dev_size_mb)");
++MODULE_PARM_DESC(evpd83_use_hostno, "include host_no in device id (def=1 -> include)");
+ 
+ 
+ static char sdebug_info[256];
+@@ -2227,7 +2235,7 @@ static int scsi_debug_proc_info(struct S
+ 	    "%s [%s]\n"
+ 	    "num_tgts=%d, shared (ram) size=%d MB, opts=0x%x, "
+ 	    "every_nth=%d(curr:%d)\n"
+-	    "delay=%d, max_luns=%d, scsi_level=%d\n"
++	    "delay=%d, max_luns=%d, scsi_level=%d, evpd83_use_hostno=%d\n"
+ 	    "sector_size=%d bytes, cylinders=%d, heads=%d, sectors=%d\n"
+ 	    "number of aborts=%d, device_reset=%d, bus_resets=%d, "
+ 	    "host_resets=%d\n",
+@@ -2235,6 +2243,7 @@ static int scsi_debug_proc_info(struct S
+ 	    scsi_debug_dev_size_mb, scsi_debug_opts, scsi_debug_every_nth,
+ 	    scsi_debug_cmnd_count, scsi_debug_delay,
+ 	    scsi_debug_max_luns, scsi_debug_scsi_level,
++	    scsi_debug_evpd83_use_hostno,
+ 	    SECT_SIZE, sdebug_cylinders_per, sdebug_heads, sdebug_sectors_per,
+ 	    num_aborts, num_dev_resets, num_bus_resets, num_host_resets);
+ 	if (pos < offset) {
+@@ -2487,6 +2496,25 @@ static ssize_t sdebug_add_host_store(str
+ DRIVER_ATTR(add_host, S_IRUGO | S_IWUSR, sdebug_add_host_show, 
+ 	    sdebug_add_host_store);
+ 
++static ssize_t sdebug_evpd83_use_hostno_show(struct device_driver * ddp,
++					       char * buf)
++{
++	return scnprintf(buf, PAGE_SIZE, "%d\n", scsi_debug_evpd83_use_hostno);
++}
++static ssize_t sdebug_evpd83_use_hostno_store(struct device_driver * ddp,
++					      const char * buf, size_t count)
++{
++	int n;
++
++	if ((count > 0) && (1 == sscanf(buf, "%d", &n)) && (n >= 0)) {
++		scsi_debug_evpd83_use_hostno = n;
++		return count;
++	}
++	return -EINVAL;
++}
++DRIVER_ATTR(evpd83_use_hostno, S_IRUGO | S_IWUSR, sdebug_evpd83_use_hostno_show,
++	    sdebug_evpd83_use_hostno_store);
++
+ static void do_create_driverfs_files(void)
+ {
+ 	driver_create_file(&sdebug_driverfs_driver, &driver_attr_add_host);
+@@ -2500,10 +2528,12 @@ static void do_create_driverfs_files(voi
+ 	driver_create_file(&sdebug_driverfs_driver, &driver_attr_ptype);
+ 	driver_create_file(&sdebug_driverfs_driver, &driver_attr_opts);
+ 	driver_create_file(&sdebug_driverfs_driver, &driver_attr_scsi_level);
++	driver_create_file(&sdebug_driverfs_driver, &driver_attr_evpd83_use_hostno);
+ }
+ 
+ static void do_remove_driverfs_files(void)
+ {
++	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_evpd83_use_hostno);
+ 	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_scsi_level);
+ 	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_opts);
+ 	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_ptype);
