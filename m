@@ -1,63 +1,42 @@
-From: Eric Moore <eric.moore@lsil.com>
-Subject: [PATCH 5/9] mptfusion: sas nexus loss support
-Date: Tue, 11 Jul 2006 17:39:37 -0600
-Message-ID: <20060711233937.GC8640@lsil.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: question about sd_sync_cache and shutdown
+Date: Tue, 11 Jul 2006 19:57:45 -0500
+Message-ID: <44B44909.1000703@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:56019 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S932267AbWGKXw1 (ORCPT
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:37251 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S932322AbWGLA5l (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Jul 2006 19:52:27 -0400
-Received: from milmhbs0.lsil.com (mhbs.lsil.com [147.145.1.30])
-	by mail0.lsil.com (8.12.8/8.12.8) with ESMTP id k6BNjqXu004980
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Jul 2006 16:45:52 -0700 (PDT)
-Received: from localhost (emoore-test1.co.lsil.com [172.21.48.27])
-	by milmhbs0.lsil.com (8.12.11/8.12.11) with ESMTP id k6BNqQA8012865
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Jul 2006 16:52:26 -0700
-Content-Disposition: inline
+	Tue, 11 Jul 2006 20:57:41 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: open-iscsi@googlegroups.com, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-sas nexus loss support for systems that suport failover.
+Currently, if we remove a host, target, transport object like session or
+rport or scsi_device sd_shutdown will get called but
+scsi_disk_get_from_dev will return NULL and we hit this return statement
 
-Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
+static void sd_shutdown(struct device *dev)
+{
+        struct scsi_device *sdp = to_scsi_device(dev);
+        struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
 
-diff -uarpN b/drivers/message/fusion/mptscsih.c a/drivers/message/fusion/mptscsih.c
---- b/drivers/message/fusion/mptscsih.c	2006-07-11 12:42:53.000000000 -0600
-+++ a/drivers/message/fusion/mptscsih.c	2006-07-11 12:58:55.000000000 -0600
-@@ -66,6 +66,7 @@
- 
- #include "mptbase.h"
- #include "mptscsih.h"
-+#include "lsi/mpi_log_sas.h"
- 
- /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
- #define my_NAME		"Fusion MPT SCSI Host driver"
-@@ -667,8 +668,24 @@ mptscsih_io_done(MPT_ADAPTER *ioc, MPT_F
- 			}
- 			break;
- 
--		case MPI_IOCSTATUS_SCSI_TASK_TERMINATED:	/* 0x0048 */
- 		case MPI_IOCSTATUS_SCSI_IOC_TERMINATED:		/* 0x004B */
-+			if ( ioc->bus_type == SAS ) {
-+				u16 ioc_status = le16_to_cpu(pScsiReply->IOCStatus);
-+				if (ioc_status & MPI_IOCSTATUS_FLAG_LOG_INFO_AVAILABLE) {
-+					u32 log_info = le32_to_cpu(mr->u.reply.IOCLogInfo);
-+					log_info &=SAS_LOGINFO_MASK;
-+					if (log_info == SAS_LOGINFO_NEXUS_LOSS) {
-+						sc->result = (DID_BUS_BUSY << 16);
-+						break;
-+					}
-+				}
-+			}
-+
-+			/*
-+			 * Allow non-SAS & non-NEXUS_LOSS to drop into below code
-+			 */
-+
-+		case MPI_IOCSTATUS_SCSI_TASK_TERMINATED:	/* 0x0048 */
- 		case MPI_IOCSTATUS_SCSI_EXT_TERMINATED:		/* 0x004C */
- 			/* Linux handles an unsolicited DID_RESET better
- 			 * than an unsolicited DID_ABORT.
+        if (!sdkp)
+                return;         /* this can happen */
+
+The reason is that __scsi_remove_device calls scsi_device_set_state and
+sets the state to SDEV_CANCEL then it calls device_del. then when
+scsi_disk_get_from_dev is called in sd.c it eventually calls
+scsi_device_get which checks if the state is SDEV_CANCEL and it so
+returns NULL.
+
+My question is if this a bug or expected behavior? It seems like a bug
+because for a orderly removal of some object, like someone shutting down
+a iscsi session, we are going to hit that path, but the command will not
+get sent. However, for unorderly removal, like ripping out a usb device
+or FC rport or iSCSI session being removed due to dev_loss_tmp expiring
+then we do not want the command sent. So it seems like it may be
+intended behavior.
+
