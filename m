@@ -1,48 +1,49 @@
-From: Arjan van de Ven <arjan@fenrus.demon.nl>
-Subject: Re: Help: strange messages from kernel on IA64 platform
-Date: Wed, 12 Jul 2006 15:07:11 +0200
-Message-ID: <1152709632.3217.39.camel@laptopd505.fenrus.org>
-References: <20060712081614.765261C013@mail2-sv.soft.fujitsu.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [PATCH] mptsas: add parent port backlink
+Date: Wed, 12 Jul 2006 09:51:04 -0400
+Message-ID: <1152712265.3728.4.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from a222036.upc-a.chello.nl ([62.163.222.36]:59300 "EHLO
-	laptopd505.fenrus.org") by vger.kernel.org with ESMTP
-	id S1750799AbWGLNHS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Jul 2006 09:07:18 -0400
-In-Reply-To: <20060712081614.765261C013@mail2-sv.soft.fujitsu.com>
+Received: from stat9.steeleye.com ([209.192.50.41]:11419 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1751369AbWGLNvN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 12 Jul 2006 09:51:13 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sakurai Hiroomi <sakurai_hiro@soft.fujitsu.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Moore, Eric" <Eric.Moore@lsil.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, 2006-07-12 at 17:19 +0900, Sakurai Hiroomi wrote:
-> Hi,
-> 
-> I saw same message.
-> 
-> When GAM(Global Array Manager) is started, The following message output.
-> kernel: kernel unaligned access to 0xe0000001fe1080d4, ip=0xa000000200053371
+This takes advantage of the sas class backlink function to show which
+port on an expander is used to communicate with the parent.
 
-first of all you should file a bug against this kernel; the kernel
-should not printk about unaligned accesses by default!
+James
 
-> 
-> The uioc structure used by ioctl is defined by packed,
-> the allignment of each member are disturbed.
-> In a 64 bit structure, the allignment of member doesn't fit 64 bit
-> boundary. this causes this messages.
-> In a 32 bit structure, we don't see the message because the allinment
-> of member fit 32 bit boundary even if packed is specified. 
-> 
-> patch
-> I Add 32 bit dummy member to fit 64 bit boundary. I tested.
-> We confirmed this patch fix the problem by IA64 server.
+Index: BUILD-2.6/drivers/message/fusion/mptsas.c
+===================================================================
+--- BUILD-2.6.orig/drivers/message/fusion/mptsas.c	2006-07-09 12:05:55.000000000 -0500
++++ BUILD-2.6/drivers/message/fusion/mptsas.c	2006-07-09 12:12:28.000000000 -0500
+@@ -1652,14 +1652,18 @@
+ 
+ 			for (i = 0; i < port_info->num_phys; i++)
+ 				if (port_info->phy_info[i].identify.sas_address ==
+-				    identify.sas_address)
++				    identify.sas_address) {
++					sas_port_mark_backlink(port);
+ 					goto out;
++				}
+ 
+ 		} else if (scsi_is_sas_rphy(parent)) {
+ 			struct sas_rphy *parent_rphy = dev_to_rphy(parent);
+ 			if (identify.sas_address ==
+-			    parent_rphy->identify.sas_address)
++			    parent_rphy->identify.sas_address) {
++				sas_port_mark_backlink(port);
+ 				goto out;
++			}
+ 		}
+ 
+ 		switch (identify.device_type) {
 
 
-this changes the calling convention of this structure!
-If there is no strict calling convention, then the packed can be
-removed, but if there is your patch changes the ABI!!
-(and you could then fix it by using get_unaligned() in the places that
-use this field)
