@@ -1,56 +1,31 @@
-From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: RE: [PATCH 1/10] mptfusion : Transport Layer Retry support
-Date: Wed, 12 Jul 2006 13:18:15 -0600
-Message-ID: <664A4EBB07F29743873A87CF62C26D701F667B@NAMAIL4.ad.lsil.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: question about sd_sync_cache and shutdown
+Date: Wed, 12 Jul 2006 21:18:35 +0200
+Message-ID: <44B54B0B.5040504@s5r6.in-berlin.de>
+References: <44B44909.1000703@cs.wisc.edu> <44B5227C.5080707@s5r6.in-berlin.de> <44B52639.4040609@cs.wisc.edu> <44B54441.1030300@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:57059 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1750827AbWGLTSw convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Jul 2006 15:18:52 -0400
-Content-class: urn:content-classes:message
+Received: from einhorn.in-berlin.de ([192.109.42.8]:17884 "EHLO
+	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
+	id S1750810AbWGLTT3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 12 Jul 2006 15:19:29 -0400
+In-Reply-To: <44B54441.1030300@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi@vger.kernel.org, dougg@torque.net
+To: linux-scsi@vger.kernel.org
+Cc: Mike Christie <michaelc@cs.wisc.edu>
 
---  Wednesday, July 12, 2006 11:40 AM, James Bottomley wrote:
+I wrote:
+> Indeed, 2.6.16 does not call sd_sync_cache anymore when the driver 
+> called scsi_remove_device.
 
-> 
-> I haven't objected to the vendor specific CDB yet ... although if
-> everyone implemented one of these the first time they found a 
-> difficulty
-> with one of the SCSI standards, the storage world would be in 
-> a bit of a
-> mess.
-
-If the mode pages method worked properly, they wouldn't had to go this
-other route.  
-
-> 
-> What I did say is that you can't do this in the driver ... it 
-> has to be
-> in the transport layer because it's not a driver problem.  
-> Any other SAS
-> driver would have the same issue.
-> 
-
-Ok, since this patch was the head of the queue, will you need
-a respin of all the other patchs I posted yesterday?
-
-
-> > The usage of Mode Sense and Mode Select will still work with the HP
-> > tape drives, if you can find a way around the above issues.  But I
-> > would suggest discussing any solution with the HP-Bristol tape drive
-> > folks.
-> 
-> Yes ... someone at HP is asking them about this ...
-> 
-
-Are they aware of the problems we faced?
-
-
-
+PS:
+When will the middle and upper layers of Linux' SCSI stack stop changing 
+their behavior WRT hot unpluggable hardware? There were once plans to 
+support that kind of hardware in the 2.6 series.
+-- 
+Stefan Richter
+-=====-=-==- -=== -==--
+http://arcgraph.de/sr/
