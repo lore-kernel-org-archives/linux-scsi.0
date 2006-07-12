@@ -1,156 +1,90 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH -mm] scsi_debug: must_check fixes
-Date: Wed, 12 Jul 2006 07:22:34 -0400
-Message-ID: <44B4DB7A.8040200@torque.net>
-References: <20060711205322.4f258729.rdunlap@xenotime.net>
-Reply-To: dougg@torque.net
+From: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
+Subject: RE: Help: strange messages from kernel on IA64 platform
+Date: Wed, 12 Jul 2006 06:25:40 -0600
+Message-ID: <890BF3111FB9484E9526987D912B261901BE6C@NAMAIL3.ad.lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:55001 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1751263AbWGLLXF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Jul 2006 07:23:05 -0400
-In-Reply-To: <20060711205322.4f258729.rdunlap@xenotime.net>
+Received: from mail0.lsil.com ([147.145.40.20]:47263 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1750747AbWGLMZo convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 12 Jul 2006 08:25:44 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Randy.Dunlap" <rdunlap@xenotime.net>
-Cc: lkml <linux-kernel@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>, jejb <james.bottomley@steeleye.com>, akpm <akpm@osdl.org>
+To: Sakurai Hiroomi <sakurai_hiro@soft.fujitsu.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Randy.Dunlap wrote:
-> From: Randy Dunlap <rdunlap@xenotime.net>
+On Wednesday, July 12, 2006 4:20 AM, Sakurai Hiroomi wrote:
+> When GAM(Global Array Manager) is started, The following 
+> message output.
+> kernel: kernel unaligned access to 0xe0000001fe1080d4, 
+> ip=0xa000000200053371
+This is a patch required to address  the issue.
+Thank you for the patch.
+
+Seokmann
+
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org 
+> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Sakurai Hiroomi
+> Sent: Wednesday, July 12, 2006 4:20 AM
+> To: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org
+> Subject: Re: Help: strange messages from kernel on IA64 platform
 > 
-> Check all __must_check warnings in scsi_debug.
-
-Randy,
-Thanks for the patch.
-
-> Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
-
-Signed-off-by: Douglas Gilbert <dougg@torque.net>
-
-> ---
->  drivers/scsi/scsi_debug.c |   72 ++++++++++++++++++++++++++++++++++------------
->  1 files changed, 54 insertions(+), 18 deletions(-)
+> Hi,
 > 
-> --- linux-2618-rc1mm1.orig/drivers/scsi/scsi_debug.c
-> +++ linux-2618-rc1mm1/drivers/scsi/scsi_debug.c
-> @@ -286,7 +286,7 @@ static int inquiry_evpd_83(unsigned char
->  			   int dev_id_num, const char * dev_id_str,
->  			   int dev_id_str_len);
->  static int inquiry_evpd_88(unsigned char * arr, int target_dev_id);
-> -static void do_create_driverfs_files(void);
-> +static int do_create_driverfs_files(void);
->  static void do_remove_driverfs_files(void);
->  
->  static int sdebug_add_adapter(void);
-> @@ -2487,19 +2487,22 @@ static ssize_t sdebug_add_host_store(str
->  DRIVER_ATTR(add_host, S_IRUGO | S_IWUSR, sdebug_add_host_show, 
->  	    sdebug_add_host_store);
->  
-> -static void do_create_driverfs_files(void)
-> +static int do_create_driverfs_files(void)
->  {
-> -	driver_create_file(&sdebug_driverfs_driver, &driver_attr_add_host);
-> -	driver_create_file(&sdebug_driverfs_driver, &driver_attr_delay);
-> -	driver_create_file(&sdebug_driverfs_driver, &driver_attr_dev_size_mb);
-> -	driver_create_file(&sdebug_driverfs_driver, &driver_attr_dsense);
-> -	driver_create_file(&sdebug_driverfs_driver, &driver_attr_every_nth);
-> -	driver_create_file(&sdebug_driverfs_driver, &driver_attr_max_luns);
-> -	driver_create_file(&sdebug_driverfs_driver, &driver_attr_num_tgts);
-> -	driver_create_file(&sdebug_driverfs_driver, &driver_attr_num_parts);
-> -	driver_create_file(&sdebug_driverfs_driver, &driver_attr_ptype);
-> -	driver_create_file(&sdebug_driverfs_driver, &driver_attr_opts);
-> -	driver_create_file(&sdebug_driverfs_driver, &driver_attr_scsi_level);
-> +	int ret;
+> I saw same message.
+> 
+> When GAM(Global Array Manager) is started, The following 
+> message output.
+> kernel: kernel unaligned access to 0xe0000001fe1080d4, 
+> ip=0xa000000200053371
+> 
+> The uioc structure used by ioctl is defined by packed,
+> the allignment of each member are disturbed.
+> In a 64 bit structure, the allignment of member doesn't fit 64 bit
+> boundary. this causes this messages.
+> In a 32 bit structure, we don't see the message because the allinment
+> of member fit 32 bit boundary even if packed is specified. 
+> 
+> patch
+> I Add 32 bit dummy member to fit 64 bit boundary. I tested.
+> We confirmed this patch fix the problem by IA64 server.
+> 
+> **************************************************************
+> ****************
+> --- linux-2.6.9/drivers/scsi/megaraid/megaraid_ioctl.h.orig	
+> 2006-04-03 17:13:03.000000000 +0900
+> +++ linux-2.6.9/drivers/scsi/megaraid/megaraid_ioctl.h	
+> 2006-04-03 17:14:09.000000000 +0900
+> @@ -132,6 +132,10 @@
+>  /* Driver Data: */
+>          void __user *           user_data;
+>          uint32_t                user_data_len;
 > +
-> +	ret = driver_create_file(&sdebug_driverfs_driver, &driver_attr_add_host);
-> +	ret |= driver_create_file(&sdebug_driverfs_driver, &driver_attr_delay);
-> +	ret |= driver_create_file(&sdebug_driverfs_driver, &driver_attr_dev_size_mb);
-> +	ret |= driver_create_file(&sdebug_driverfs_driver, &driver_attr_dsense);
-> +	ret |= driver_create_file(&sdebug_driverfs_driver, &driver_attr_every_nth);
-> +	ret |= driver_create_file(&sdebug_driverfs_driver, &driver_attr_max_luns);
-> +	ret |= driver_create_file(&sdebug_driverfs_driver, &driver_attr_num_tgts);
-> +	ret |= driver_create_file(&sdebug_driverfs_driver, &driver_attr_num_parts);
-> +	ret |= driver_create_file(&sdebug_driverfs_driver, &driver_attr_ptype);
-> +	ret |= driver_create_file(&sdebug_driverfs_driver, &driver_attr_opts);
-> +	ret |= driver_create_file(&sdebug_driverfs_driver, &driver_attr_scsi_level);
-> +	return ret;
->  }
->  
->  static void do_remove_driverfs_files(void)
-> @@ -2522,6 +2525,7 @@ static int __init scsi_debug_init(void)
->  	unsigned int sz;
->  	int host_to_add;
->  	int k;
-> +	int ret;
->  
->  	if (scsi_debug_dev_size_mb < 1)
->  		scsi_debug_dev_size_mb = 1;  /* force minimum 1 MB ramdisk */
-> @@ -2560,12 +2564,32 @@ static int __init scsi_debug_init(void)
->  	if (scsi_debug_num_parts > 0)
->  		sdebug_build_parts(fake_storep);
->  
-> -	init_all_queued();
-> +	ret = device_register(&pseudo_primary);
-> +	if (ret < 0) {
-> +		printk(KERN_WARNING "scsi_debug: device_register error: %d\n",
-> +			ret);
-> +		goto free_vm;
-> +	}
-> +	ret = bus_register(&pseudo_lld_bus);
-> +	if (ret < 0) {
-> +		printk(KERN_WARNING "scsi_debug: bus_register error: %d\n",
-> +			ret);
-> +		goto dev_unreg;
-> +	}
-> +	ret = driver_register(&sdebug_driverfs_driver);
-> +	if (ret < 0) {
-> +		printk(KERN_WARNING "scsi_debug: driver_register error: %d\n",
-> +			ret);
-> +		goto bus_unreg;
-> +	}
-> +	ret = do_create_driverfs_files();
-> +	if (ret < 0) {
-> +		printk(KERN_WARNING "scsi_debug: driver_create_file error: %d\n",
-> +			ret);
-> +		goto del_files;
-> +	}
->  
-> -	device_register(&pseudo_primary);
-> -	bus_register(&pseudo_lld_bus);
-> -	driver_register(&sdebug_driverfs_driver);
-> -	do_create_driverfs_files();
-> +	init_all_queued();
->  
->  	sdebug_driver_template.proc_name = (char *)sdebug_proc_name;
->  
-> @@ -2585,6 +2609,18 @@ static int __init scsi_debug_init(void)
->  		       scsi_debug_add_host);
->  	}
->  	return 0;
+> +        /* 64bit alignment */
+> +        uint32_t                pad_0xBC;
 > +
-> +del_files:
-> +	do_remove_driverfs_files();
-> +	driver_unregister(&sdebug_driverfs_driver);
-> +bus_unreg:
-> +	bus_unregister(&pseudo_lld_bus);
-> +dev_unreg:
-> +	device_unregister(&pseudo_primary);
-> +free_vm:
-> +	vfree(fake_storep);
-> +
-> +	return ret;
->  }
+>          mraid_passthru_t        __user *user_pthru;
 >  
->  static void __exit scsi_debug_exit(void)
+>          mraid_passthru_t        *pthru32;
+> **************************************************************
+> ****************
+> 
+> I'm not participated in the linux-scsi mailing list.
+> Please reply to the following addresses. 
+> 
+>     E-Mail : sakurai_hiro@soft.fujitsu.com
 > 
 > 
-> ---
+> Best regards,
+> Hiroomi Sakurai
+> 
+> 
 > -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-scsi" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
-
