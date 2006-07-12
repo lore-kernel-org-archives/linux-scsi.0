@@ -1,42 +1,40 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: question about sd_sync_cache and shutdown
-Date: Tue, 11 Jul 2006 19:57:45 -0500
-Message-ID: <44B44909.1000703@cs.wisc.edu>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH 1/10] mptfusion : Transport Layer Retry support
+Date: Tue, 11 Jul 2006 21:20:30 -0400
+Message-ID: <44B44E5E.2040101@torque.net>
+References: <20060711232109.GA12249@lsil.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:37251 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S932322AbWGLA5l (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Jul 2006 20:57:41 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:65171 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S932338AbWGLBVG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Jul 2006 21:21:06 -0400
+In-Reply-To: <20060711232109.GA12249@lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: open-iscsi@googlegroups.com, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Eric Moore <eric.moore@lsil.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
 
-Currently, if we remove a host, target, transport object like session or
-rport or scsi_device sd_shutdown will get called but
-scsi_disk_get_from_dev will return NULL and we hit this return statement
+Eric Moore wrote:
+> Transport Layer Retry support for SAS Tapes.
+> Detects whether firmware supports TLR, then
+> issues special scsi opcode to enable TLR in
+> the end device.
 
-static void sd_shutdown(struct device *dev)
-{
-        struct scsi_device *sdp = to_scsi_device(dev);
-        struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
+Eric,
+The "protocol specific logical unit mode page for SAS
+SSP - short format" has a 'transport layer retries'
+bit. I thought that SAS tape drives would implement
+that mode page (0x18,0x0) and allow that bit to be
+changeable.
 
-        if (!sdkp)
-                return;         /* this can happen */
+The "special scsi opcode to enable TLR" seems to imply
+another technique.
 
-The reason is that __scsi_remove_device calls scsi_device_set_state and
-sets the state to SDEV_CANCEL then it calls device_del. then when
-scsi_disk_get_from_dev is called in sd.c it eventually calls
-scsi_device_get which checks if the state is SDEV_CANCEL and it so
-returns NULL.
+Doug Gilbert
 
-My question is if this a bug or expected behavior? It seems like a bug
-because for a orderly removal of some object, like someone shutting down
-a iscsi session, we are going to hit that path, but the command will not
-get sent. However, for unorderly removal, like ripping out a usb device
-or FC rport or iSCSI session being removed due to dev_loss_tmp expiring
-then we do not want the command sent. So it seems like it may be
-intended behavior.
+
 
