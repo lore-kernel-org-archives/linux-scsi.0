@@ -1,45 +1,33 @@
-From: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
-Subject: RE: Help: strange messages from kernel on IA64 platform
-Date: Wed, 12 Jul 2006 06:25:40 -0600
-Message-ID: <890BF3111FB9484E9526987D912B261901BE6C@NAMAIL3.ad.lsil.com>
+From: Arjan van de Ven <arjan@fenrus.demon.nl>
+Subject: Re: Help: strange messages from kernel on IA64 platform
+Date: Wed, 12 Jul 2006 15:07:11 +0200
+Message-ID: <1152709632.3217.39.camel@laptopd505.fenrus.org>
+References: <20060712081614.765261C013@mail2-sv.soft.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:47263 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1750747AbWGLMZo convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Jul 2006 08:25:44 -0400
-Content-class: urn:content-classes:message
+Received: from a222036.upc-a.chello.nl ([62.163.222.36]:59300 "EHLO
+	laptopd505.fenrus.org") by vger.kernel.org with ESMTP
+	id S1750799AbWGLNHS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 12 Jul 2006 09:07:18 -0400
+In-Reply-To: <20060712081614.765261C013@mail2-sv.soft.fujitsu.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sakurai Hiroomi <sakurai_hiro@soft.fujitsu.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Sakurai Hiroomi <sakurai_hiro@soft.fujitsu.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wednesday, July 12, 2006 4:20 AM, Sakurai Hiroomi wrote:
-> When GAM(Global Array Manager) is started, The following 
-> message output.
-> kernel: kernel unaligned access to 0xe0000001fe1080d4, 
-> ip=0xa000000200053371
-This is a patch required to address  the issue.
-Thank you for the patch.
-
-Seokmann
-
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org 
-> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Sakurai Hiroomi
-> Sent: Wednesday, July 12, 2006 4:20 AM
-> To: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org
-> Subject: Re: Help: strange messages from kernel on IA64 platform
-> 
+On Wed, 2006-07-12 at 17:19 +0900, Sakurai Hiroomi wrote:
 > Hi,
 > 
 > I saw same message.
 > 
-> When GAM(Global Array Manager) is started, The following 
-> message output.
-> kernel: kernel unaligned access to 0xe0000001fe1080d4, 
-> ip=0xa000000200053371
+> When GAM(Global Array Manager) is started, The following message output.
+> kernel: kernel unaligned access to 0xe0000001fe1080d4, ip=0xa000000200053371
+
+first of all you should file a bug against this kernel; the kernel
+should not printk about unaligned accesses by default!
+
 > 
 > The uioc structure used by ioctl is defined by packed,
 > the allignment of each member are disturbed.
@@ -51,40 +39,10 @@ Seokmann
 > patch
 > I Add 32 bit dummy member to fit 64 bit boundary. I tested.
 > We confirmed this patch fix the problem by IA64 server.
-> 
-> **************************************************************
-> ****************
-> --- linux-2.6.9/drivers/scsi/megaraid/megaraid_ioctl.h.orig	
-> 2006-04-03 17:13:03.000000000 +0900
-> +++ linux-2.6.9/drivers/scsi/megaraid/megaraid_ioctl.h	
-> 2006-04-03 17:14:09.000000000 +0900
-> @@ -132,6 +132,10 @@
->  /* Driver Data: */
->          void __user *           user_data;
->          uint32_t                user_data_len;
-> +
-> +        /* 64bit alignment */
-> +        uint32_t                pad_0xBC;
-> +
->          mraid_passthru_t        __user *user_pthru;
->  
->          mraid_passthru_t        *pthru32;
-> **************************************************************
-> ****************
-> 
-> I'm not participated in the linux-scsi mailing list.
-> Please reply to the following addresses. 
-> 
->     E-Mail : sakurai_hiro@soft.fujitsu.com
-> 
-> 
-> Best regards,
-> Hiroomi Sakurai
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+
+
+this changes the calling convention of this structure!
+If there is no strict calling convention, then the packed can be
+removed, but if there is your patch changes the ABI!!
+(and you could then fix it by using get_unaligned() in the places that
+use this field)
