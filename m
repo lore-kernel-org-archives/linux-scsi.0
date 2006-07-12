@@ -1,40 +1,19 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH 1/10] mptfusion : Transport Layer Retry support
-Date: Tue, 11 Jul 2006 21:20:30 -0400
-Message-ID: <44B44E5E.2040101@torque.net>
-References: <20060711232109.GA12249@lsil.com>
-Reply-To: dougg@torque.net
+From: "James" <Jamesauspicious@inorbit.com>
+Subject: Oh, you are not able to control your feelings!
+Date: Tue, 11 Jul 2006 20:34:11 -0700
+Message-ID: <88677825395802.9119A96F76__44295.3187776313$1152675205$gmane$org@3H5N>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+        charset="Windows-1252"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:65171 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S932338AbWGLBVG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Jul 2006 21:21:06 -0400
-In-Reply-To: <20060711232109.GA12249@lsil.com>
+Received: from [200.12.228.63] ([200.12.228.63]:11793 "EHLO
+	YOUR-L1RAOPVJJM.w36os.org") by vger.kernel.org with ESMTP
+	id S932376AbWGLDdO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Jul 2006 23:33:14 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Eric Moore <eric.moore@lsil.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
+To: linux-serial@vger.kernel.org
 
-Eric Moore wrote:
-> Transport Layer Retry support for SAS Tapes.
-> Detects whether firmware supports TLR, then
-> issues special scsi opcode to enable TLR in
-> the end device.
-
-Eric,
-The "protocol specific logical unit mode page for SAS
-SSP - short format" has a 'transport layer retries'
-bit. I thought that SAS tape drives would implement
-that mode page (0x18,0x0) and allow that bit to be
-changeable.
-
-The "special scsi opcode to enable TLR" seems to imply
-another technique.
-
-Doug Gilbert
-
-
+Hi, Eliminate this problem and all the anxiety it causes! Become a better male! Extra-Time gives you not only extra time, but extra pleasure and extra confidence as well. Ever thought your relationship is about to break up because you finish within a few minutes from penetration? See our offer: http://justcallterry.com/dll/get/ You won't hear another word of reproach from her! She'll just keep you a secret from her friends!
 
