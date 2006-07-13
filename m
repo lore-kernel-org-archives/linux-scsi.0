@@ -1,77 +1,38 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH 1/10] mptfusion : Transport Layer Retry support
-Date: Wed, 12 Jul 2006 22:33:28 -0400
-Message-ID: <44B5B0F8.8080806@torque.net>
-References: <20060712170507.GA10308@lsil.com>
-Reply-To: dougg@torque.net
+From: Kokachev Oleksiy <o.kokachev@samsung.com>
+Subject: rescan_partitions() in SCSI disk driver
+Date: Thu, 13 Jul 2006 12:27:51 +0900
+Message-ID: <004001c6a62c$5290c8f0$73a5580a@swcenter.sec.samsung.co.kr>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:35991 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S932099AbWGMCeO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Jul 2006 22:34:14 -0400
-In-Reply-To: <20060712170507.GA10308@lsil.com>
+Received: from mailout3.samsung.com ([203.254.224.33]:40817 "EHLO
+	mailout3.samsung.com") by vger.kernel.org with ESMTP
+	id S932336AbWGMD2Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 12 Jul 2006 23:28:25 -0400
+Received: from ep_mmp1 (mailout3.samsung.com [203.254.224.33])
+ by mailout3.samsung.com
+ (iPlanet Messaging Server 5.2 Patch 2 (built Jul 14 2004))
+ with ESMTP id <0J2B00JIAOAGIC@mailout3.samsung.com> for
+ linux-scsi@vger.kernel.org; Thu, 13 Jul 2006 12:27:52 +0900 (KST)
+Received: from KOKACHEV ([10.88.165.115])
+ by mmp1.samsung.com (iPlanet Messaging Server 5.2 Patch 2 (built Jul 14 2004))
+ with ESMTPA id <0J2B00JEGOAF9N@mmp1.samsung.com> for
+ linux-scsi@vger.kernel.org; Thu, 13 Jul 2006 12:27:51 +0900 (KST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Eric Moore <eric.moore@lsil.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, elliott@hp.com
+To: linux-scsi@vger.kernel.org
 
-Eric Moore wrote:
-> --  Wednesday, July 12, 2006 9:32 AM, James Bottomley wrote:
-> 
-> 
->>If I understand what this does correctly, you snoop the 
->>inquiry field in
->>slave configure and then send a vendor specific opcode that the tape
->>understands (in the event that it reports TLR in its PSLU page)?
->>
->>Really, no, this isn't appropriate for code in a driver, 
->>since I assume
->>enabling TLR via this command on these things should be independent of
->>the particular SAS HBA, so it should probably be a transport specific
->>blacklist.
->>
-> 
-> 
-> Response from co-worker that implemented this:
-> 
-> --
-> 
-> The reason HP switched from using a standard Mode Page setting to using a vendor unique CDB is due to SCSI protocol problems.
-> 
-> The primary issue is that with standard Mode Sense and Mode Select commands, these commands are blocked when either the device has reservations against it or if the device is busy.  TLR needs to be enabled when the device is discovered, which is done using an Inquiry command.  But, let's look at this example:
-> 
-> The tape cartridge was read previously then the drive turned off (so the tape device is removed from the SAS domain and all device objects are deleted).  Later on, the tape drive is turned back on.  It will be discovered and an event sent to the host driver.  This will kick off an enumeration (Inquiry commands).  With the Inquiry, we detect that this is an HP SAS tape drive and TLR needs to be enabled.  The host driver then sends a Mode Sense to read the SAS protocol page so we can enable TLR.  However, the tape cartridge is rewinding.  The Inquriy commands completed because they are "immediate" commands that the drive can service at any time.  But, the Mode Sense (and Mode Select) commands are blocked (pended) while the tape drive is busy.  I can take more than 5 minutes for a tape cartridge to rewind and become ready, at which time the Mode Sense would be completed.  It isn't that th
- e Mode Sense is returned with Busy, it is pended so it remains outstanding and no other co
-mmands can be sent to the drive.
-> 
-> A similar problem occurs with reservations.  The Inquiry will always complete no matter who has reservations on the drive.  But, a Mode Sense (and Mode Select) will fail if another initiator has reservations.
-> 
-> I found the long Busy problem (just because the drive takes up to and even longer than 30 seconds to come Ready after a power on, no matter where the tape is).  I was trying to piggy-back on the OS Inquiry command (which has a timeout of 4 seconds) and this was failing.  I modified my driver to perform the Mode Sense outside of the OS Inquiry command, but HP came back with the above scenarios (tape rewind and reservations) and that's when they wanted to switch to a vendor-unique CDB (much easier for them F/W wise).
-> 
-> The usage of Mode Sense and Mode Select will still work with the HP tape drives, if you can find a way around the above issues.  But I would suggest discussing any solution with the HP-Bristol tape drive folks.
-
-Eric,
-Slightly off topic but this reminded me of the LOG SENSE
-behaviour I have noticed with a SAS ST336754SS disk.
-When the disk is spun down all requests for log pages
-apart from the protocol specific port log page (0x18)
-fail with a sense key of NOT READY. The protocol specific
-port log page works irrespective of the power condition
-state. Strangely Seagate reject the port specific _mode_
-pages (0x18 and 0x19) when the disk is spun down.
-
-I can't see anything in SPC-4 or SBC-3 that says MODE
-SENSE/SELECT and LOG SENSE/SELECT shall not work if
-the power condition state is STOPPED. Transport related
-mode and log pages are good examples of why the power
-condition state should be ignored.
-
-The unit attention delivery and reservations are thorny issues.
-Perhaps the HP-Bristol tape drive folks should be talking
-to Rob Elliott (also from HP) who is the SAS t10 techical editor.
-
-Doug Gilbert
+Dear all.
+I'm trying to make some modifications to SCSI driver to correctly sync
+/proc/partitions when new disk is inserted.
+To revalidate disk I used sd_revalidate_disk(), but this function revalidate
+only disk info, but do not rescan partition table. How can I tell the driver
+to correctly rescan part/ table? I've tried to use rescan_partitions()
+function like below, but failed:
+	struct scsi_disk *sdkp;
+      bdev = bdget_disk(sdkp->disk, 0);
+	rescan_partitions(sdkp->disk, bdev);
+But in this case bdev->bd_disk is NULL. Why? What did I do not correct?
+Thank for help.
 
