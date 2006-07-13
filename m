@@ -1,44 +1,43 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: PCI ID table in DAC960
-Date: Thu, 13 Jul 2006 20:42:00 +0100
-Message-ID: <20060713194200.GA4122@infradead.org>
-References: <44B6A0E6.90500@us.ibm.com>
+From: "Moore, Eric" <Eric.Moore@lsil.com>
+Subject: RE: [PATCH 1/10] mptfusion : Transport Layer Retry support
+Date: Thu, 13 Jul 2006 14:45:27 -0600
+Message-ID: <664A4EBB07F29743873A87CF62C26D701F693B@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:56289 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1030330AbWGMTmB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Jul 2006 15:42:01 -0400
-Content-Disposition: inline
-In-Reply-To: <44B6A0E6.90500@us.ibm.com>
+Received: from mail0.lsil.com ([147.145.40.20]:51884 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1030377AbWGMUpl convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 13 Jul 2006 16:45:41 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@us.ibm.com>
-Cc: Christoph Hellwig <hch@infradead.org>, 'SCSI Mailing List' <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi@vger.kernel.org, dougg@torque.net
 
-On Thu, Jul 13, 2006 at 02:37:10PM -0500, Brian King wrote:
-> Christoph,
-> 
-> You added support for the "GEM series" of DAC960 controllers
-> sometime last year. These controllers use the same PCI chip
-> as some ipr adapters. The pci id table that got added to DAC960
-> was:
-> 
->  .vendor = PCI_VENDOR_ID_MYLEX,
->  .device = PCI_DEVICE_ID_MYLEX_DAC960_GEM,
->  .subvendor = PCI_ANY_ID,
->  .subdevice = PCI_ANY_ID,
-> 
-> which collides with several ipr adapters.
-> The chip is a common chip that was used by both Mylex and IBM.
-> Do you, or anyone else on this list, have the list of subvendor/subdevice
-> entries for this adapter so we could update the pci id table appropriately? 
+-- Wednesday, July 12, 2006 1:26 PM, James Bottomley: 
 
-I just ported over support for that chip variant from a forked and renamed
-version of the DAC960 driver that IBM released.  I've never actually seen
-the hardware.  The best thing would be to try to find if any person involved
-with it is still at IBM.
 
-Otherwise I could ask the person I ported the changes for what subdevice/vendor
-his card has, but there might be more.
+> On Wed, 2006-07-12 at 13:18 -0600, Moore, Eric wrote:
+> > If the mode pages method worked properly, they wouldn't had 
+> to go this
+> > other route.  
+> 
+> Well .. yes ... however, it does look like they should be 
+> able to get at
+> this via the mode pages of the Report Luns W-LUN, which 
+> wouldn't suffer
+> either the reservations issue and should be immune from the busy
+> wait ...
+> 
+
+
+SPC-3 Section 8, of spc3r23.pdf, says W-LUN only covers
+inquiry, report luns, request sense, and test unit ready.
+
+I couldn't find where it says it worked for mode page 18h,
+protocol-specfic lu page.
+
+Eric
