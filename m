@@ -1,92 +1,39 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Fw: MegaRaid 8408E goes out to lunch with nr_requests > 8
-Date: Thu, 13 Jul 2006 03:25:14 -0700
-Message-ID: <20060713032514.9b6eb098.akpm@osdl.org>
+From: Erik Mouw <erik@harddisk-recovery.com>
+Subject: Re: rescan_partitions() in SCSI disk driver
+Date: Thu, 13 Jul 2006 13:06:22 +0200
+Message-ID: <20060713110622.GF31644@harddisk-recovery.com>
+References: <004001c6a62c$5290c8f0$73a5580a@swcenter.sec.samsung.co.kr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:10446 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751509AbWGMKZc (ORCPT
+Received: from dtp.xs4all.nl ([80.126.206.180]:3961 "HELO abra2.bitwizard.nl")
+	by vger.kernel.org with SMTP id S1751521AbWGMLGY (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Jul 2006 06:25:32 -0400
+	Thu, 13 Jul 2006 07:06:24 -0400
+Content-Disposition: inline
+In-Reply-To: <004001c6a62c$5290c8f0$73a5580a@swcenter.sec.samsung.co.kr>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Neela.Kolli@engenio.com
-Cc: linux-scsi@vger.kernel.org, Dave Lloyd <dlloyd@exegy.com>, Berkley Shands <bshands@exegy.com>
+To: Kokachev Oleksiy <o.kokachev@samsung.com>
+Cc: linux-scsi@vger.kernel.org
+
+On Thu, Jul 13, 2006 at 12:27:51PM +0900, Kokachev Oleksiy wrote:
+> I'm trying to make some modifications to SCSI driver to correctly sync
+> /proc/partitions when new disk is inserted.
+> To revalidate disk I used sd_revalidate_disk(), but this function revalidate
+> only disk info, but do not rescan partition table. How can I tell the driver
+> to correctly rescan part/ table? I've tried to use rescan_partitions()
+> function like below, but failed:
+> 	struct scsi_disk *sdkp;
+>       bdev = bdget_disk(sdkp->disk, 0);
+> 	rescan_partitions(sdkp->disk, bdev);
+> But in this case bdev->bd_disk is NULL. Why? What did I do not correct?
+
+Can be done from userland: blockdev --rereadpt /dev/whatever .
 
 
-
-Begin forwarded message:
-
-Date: Wed, 12 Jul 2006 09:46:52 -0500
-From: Dave Lloyd <dlloyd@exegy.com>
-To: linux-kernel@vger.kernel.org, Berkley Shands <bshands@exegy.com>
-Subject: MegaRaid 8408E goes out to lunch with nr_requests > 8
-
-
-This happens both on 2.6.17 and 2.6.18rc1 using the megaraid, mptsas and
-mptscsih drivers supplied with the kernel.
-
-While writing data to raid0 devs on a LSI MegaRaid 8408E controller, the
-devices will hang after somewhere between 4-7gb of data written.  If I
-dial the nr_requests back from the default down to 8, the hang will not
-occur.  The hang does occur at 16.  I haven't tested values between the
-two, but I'm not too optimistic.  From what I can see, it looks like 8
-should be a magic number to make the queue look congested more often
-than not.
-
-Here are the messages I get when the devices go out to lunch:
-Jul 11 14:13:34 systemname kernel: sd 4:2:0:0: megasas: RESET -40213 cmd=2a
-Jul 11 14:13:34 systemname kernel: megasas: [ 0]waiting for 256 commands
-to complete
-Jul 11 14:13:39 systemname kernel: megasas: [ 5]waiting for 256 commands
-to complete
-Jul 11 14:13:44 systemname kernel: megasas: [10]waiting for 256 commands
-to complete
-Jul 11 14:13:49 systemname kernel: megasas: [15]waiting for 256 commands
-to complete
-
-[...]
-
-Jul 11 14:16:35 systemname kernel: megasas: [175]waiting for 256
-commands to complete
-Jul 11 14:16:35 systemname kernel: megasas: failed to do reset
-Jul 11 14:16:35 systemname kernel: sd 4:2:1:0: megasas: RESET -40216 cmd=2a
-Jul 11 14:16:35 systemname kernel: megasas: cannot recover from previous
-reset failures
-Jul 11 14:16:35 systemname kernel: sd 4:2:0:0: megasas: RESET -40213 cmd=2a
-Jul 11 14:16:35 systemname kernel: megasas: cannot recover from previous
-reset failures
-Jul 11 14:16:35 systemname kernel: sd 4:2:0:0: megasas: RESET -40213 cmd=2a
-Jul 11 14:16:35 systemname kernel: megasas: cannot recover from previous
-reset failures
-Jul 11 14:16:35 systemname kernel: sd 4:2:0:0: scsi: Device offlined -
-not ready after error recovery
-Jul 11 14:16:36 systemname last message repeated 13 times
-
-Interestingly, the machine will hang on shutdown and requires a hard
-reset to reboot.  Bummer!
-
-My next step is to try and reproduce and dig into this some in KDB.
-
-Has anyone else seen this and/or does anyone have some suggestions for
-further debugging info?
+Erik
 
 -- 
-Dave Lloyd
-Test Engineer, Exegy, Inc.
-314.450.5342
-dlloyd@exegy.com
-
-
--- 
-Dave Lloyd
-Test Engineer, Exegy, Inc.
-314.450.5342
-dlloyd@exegy.com
--
-To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-Please read the FAQ at  http://www.tux.org/lkml/
++-- Erik Mouw -- www.harddisk-recovery.com -- +31 70 370 12 90 --
+| Lab address: Delftechpark 26, 2628 XH, Delft, The Netherlands
