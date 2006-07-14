@@ -1,28 +1,30 @@
-From: "Millard" <Millardcroix@artlover.com>
-Subject: Most quality products for anyone who wants to become a champion in bed
-Date: Fri, 14 Jul 2006 10:21:11 +0800
-Message-ID: <99886836357144.57D6C3827E__30114.5046869808$1152843776$gmane$org@P2PG0>
+From: Adam Turner <turnerac@spawar.navy.mil>
+Subject: lsi new megaraid driver working but not finding drives
+Date: Fri, 14 Jul 2006 11:02:46 -0400
+Message-ID: <44B7B216.4030300@spawar.navy.mil>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="Windows-1252"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus2.kernel.org ([204.152.191.36]:10696 "EHLO zeus2.kernel.org")
-	by vger.kernel.org with ESMTP id S1161194AbWGNCWe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Jul 2006 22:22:34 -0400
+Received: from smtp2.spawar.navy.mil ([128.49.4.3]:4044 "EHLO
+	smtp2.spawar.navy.mil") by vger.kernel.org with ESMTP
+	id S932408AbWGNPRN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Jul 2006 11:17:13 -0400
+Received: from [150.125.32.41] (bradleyj.chs.spawar.navy.mil [150.125.32.41])
+	by smtp2.spawar.navy.mil (8.12.11.20060308/8.12.11) with ESMTP id k6EFH4JF013478
+	for <linux-scsi@vger.kernel.org>; Fri, 14 Jul 2006 08:17:04 -0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-sound@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Hi!
-Masculine performance has never been so easy to increase with these products
-Masculine performance has never been so easy to increase with these products
+hi, me and dsd have been trying to figure this out in the gentoo forums
+for a while now and we finally figured out which driver i needed to work
+on this dell 650
 
- http://www.icicledid.com
+here's the thread
 
+http://forums.gentoo.org/viewtopic-p-3447914.html#3447914
 
-A man is judged by his deeds, not by his words. All good things must come to an end The early bird may get the worm, but the second mouse gets the cheese. Home is where you hang your hat
- Knowing is not enough; We must Apply Willing is not enough; We must Do One mans loss is another mans gain
-
-
+dsd told me to email this list to see if the problem could be resolved.
+ i'm pretty brain dead from working on this so i dont know what else i
+can add to the topic, but hopefully we can get it resolved.
