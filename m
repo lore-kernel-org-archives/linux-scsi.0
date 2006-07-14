@@ -1,30 +1,63 @@
-From: Adam Turner <turnerac@spawar.navy.mil>
-Subject: lsi new megaraid driver working but not finding drives
-Date: Fri, 14 Jul 2006 11:02:46 -0400
-Message-ID: <44B7B216.4030300@spawar.navy.mil>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: 2.6.18-rc1-mm2: drivers/scsi/NCR53C9x.c compile error
+Date: Fri, 14 Jul 2006 21:08:13 +0200
+Message-ID: <20060714190813.GC3633@stusta.de>
+References: <20060713224800.6cbdbf5d.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.spawar.navy.mil ([128.49.4.3]:4044 "EHLO
-	smtp2.spawar.navy.mil") by vger.kernel.org with ESMTP
-	id S932408AbWGNPRN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Jul 2006 11:17:13 -0400
-Received: from [150.125.32.41] (bradleyj.chs.spawar.navy.mil [150.125.32.41])
-	by smtp2.spawar.navy.mil (8.12.11.20060308/8.12.11) with ESMTP id k6EFH4JF013478
-	for <linux-scsi@vger.kernel.org>; Fri, 14 Jul 2006 08:17:04 -0700
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:44295 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S1422716AbWGNTIO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Jul 2006 15:08:14 -0400
+Content-Disposition: inline
+In-Reply-To: <20060713224800.6cbdbf5d.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>, Christoph Hellwig <hch@lst.de>
+Cc: linux-kernel@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
 
-hi, me and dsd have been trying to figure this out in the gentoo forums
-for a while now and we finally figured out which driver i needed to work
-on this dell 650
+On Thu, Jul 13, 2006 at 10:48:00PM -0700, Andrew Morton wrote:
+>...
+> Changes since 2.6.18-rc1-mm1:
+>...
+>  git-scsi-rc-fixes.patch
+>...
+>  git trees.
+>...
 
-here's the thread
+Christoph, this is caused by your "hide EH backup data outside the scsi=
+_cmnd"=20
+patch:
 
-http://forums.gentoo.org/viewtopic-p-3447914.html#3447914
+<--  snip  -->
 
-dsd told me to email this list to see if the problem could be resolved.
- i'm pretty brain dead from working on this so i dont know what else i
-can add to the topic, but hopefully we can get it resolved.
+=2E..
+  CC      drivers/scsi/NCR53C9x.o
+drivers/scsi/NCR53C9x.c: In function =E2=80=98esp_get_dmabufs=E2=80=99:
+drivers/scsi/NCR53C9x.c:914: error: =E2=80=98Scsi_Cmnd=E2=80=99 has no =
+member named =E2=80=98buffer=E2=80=99
+drivers/scsi/NCR53C9x.c: In function =E2=80=98esp_should_clear_sync=E2=80=
+=99:
+drivers/scsi/NCR53C9x.c:2156: error: =E2=80=98Scsi_Cmnd=E2=80=99 has no=
+ member named =E2=80=98data_cmnd=E2=80=99
+make[2]: *** [drivers/scsi/NCR53C9x.o] Error 1
+
+<--  snip  -->
+=20
+cu
+Adrian
+
+--=20
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
