@@ -1,23 +1,37 @@
-From: "Jerrold" <Jerroldantioch@mail.com>
-Subject: Brand new Online Caasino. Go and Play Itt
-Date: Sun, 16 Jul 2006 23:18:30 -0200
-Message-ID: <34865434526146.C148A71C12__41783.3948544741$1153102550$gmane$org@M95CXX>
+From: Pieter Steyn <pieter@clue.co.za>
+Subject: Megaraid
+Date: Mon, 17 Jul 2006 12:29:53 +0200
+Message-ID: <200607171229.53383.pieter@clue.co.za>
 Mime-Version: 1.0
 Content-Type: text/plain;
-        charset="Windows-1252"
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:42175 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S932253AbWGQCP0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 16 Jul 2006 22:15:26 -0400
+Received: from munchkin.clue.co.za ([66.219.59.160]:26834 "EHLO
+	munchkin.clue.co.za") by vger.kernel.org with ESMTP
+	id S1750708AbWGQKaT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 17 Jul 2006 06:30:19 -0400
+Received: from uucp by munchkin.clue.co.za with local (Exim 4.60)
+	(envelope-from <pieter@clue.co.za>)
+	id 1G2QMi-0004ox-Gz
+	for linux-scsi@vger.kernel.org; Mon, 17 Jul 2006 10:30:16 +0000
+Received: from paradox.clue.co.za ([10.0.0.4])
+	by urchin.clue.co.za with esmtpa (Exim 4.62)
+	id 1G2QMQ-00072C-3Q
+	for linux-scsi@vger.kernel.org; Mon, 17 Jul 2006 12:30:03 +0200
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-sound@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Good day! 
+Hi guys,
 
-  Online Casino with 85+ games. PPlay It Now!  http://wegast.com/d1/check/ 
+I'd like to monitor the status of some hosts with Megaraid controllers, but 
+the MegaCt32 doesn't seem to have a way to just output the current status?
 
- Its too late to shut the stable door after the horse has bolted Have you ever noticed? anybody going slower than you is an idiot, and anyone going faster than you is a maniac
+Is there a way to do that? / A different aproach I can take toward monitoring 
+the arrays?
+
+Thanks alot.
+Pieter.
 
