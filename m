@@ -1,33 +1,23 @@
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: Fw: gdth SCSI driver(?) fails with more than 4GB of memory
-Date: Tue, 18 Jul 2006 08:40:11 +0200
-Message-ID: <200607180840.11877.eike-kernel@sf-tec.de>
+Date: Tue, 18 Jul 2006 09:30:19 -0400
+Message-ID: <1153229420.3704.17.camel@mulgrave.il.steeleye.com>
 References: <20060717184659.04ae83e7.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:17811 "EHLO mail.sf-mail.de")
-	by vger.kernel.org with ESMTP id S932071AbWGRGjN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Jul 2006 02:39:13 -0400
+Received: from stat9.steeleye.com ([209.192.50.41]:34260 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S932198AbWGRNav (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Jul 2006 09:30:51 -0400
 In-Reply-To: <20060717184659.04ae83e7.akpm@osdl.org>
-Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Andrew Morton <akpm@osdl.org>
 Cc: linux-scsi@vger.kernel.org, Andreas Barth <aba@not.so.argh.org>
 
-Andreas Barth wrote:
-
-> [please Cc me, I'm currently not subscribed.]
-
-> I have noticed that one of my boxes stopped to boot correctly after
-> adding more memory (in total 6 GB) and loading an adjusted kernel for
-> that.  After some testing around, we noticed that it is enough for the
-> kernel to boot correctly if we limit the kernel to use 4GB of memory.
->
+On Mon, 2006-07-17 at 18:46 -0700, Andrew Morton wrote:
 > If the kernel has 6GB, I directly get error messages like:
 > SCSI device sda: 143299800 512-byte hdwr sectors (73369 MB)
 > sda: Write Protect is off
@@ -36,21 +26,35 @@ Andreas Barth wrote:
 > SCSI device sda: 143299800 512-byte hdwr sectors (73369 MB)
 > sda: Write Protect is off
 > sda: got wrong page
+> 
+> The disk array controller is of type GDT8114RZ and has the most current
+> firmware version. The box has 4 Xeon CPUs, and physical 6 GB of memory.
+> The /-device is on the controller in question.
+> 
+> The full log (for 4 and for 6 GB) is put up on
+> http://neualius.turmzimmer.net/~aba/6GB
 
-This is from sd.c::sd_read_cache_type
+My strongest suspicion here is that the device is lying when it claims
+to support 64 bit DMA. Can you try this?  It will turn off 64 bit DMA
+and only allow 32 bit DMA on your 6GB platform.  If that works, we'll
+beed help from the gdth people to understand the issue.
 
-> Any hints for me how I can use the full 6 GB of memory (and/or what I
-> should try out to find the bug)?
+Thanks,
 
-Please change the printk in sd.c around 1482 that is
+James
 
-printk(KERN_ERR "%s: got wrong page\n", diskname);
+diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
+index 43afd47..83cf3ca 100644
+--- a/drivers/scsi/gdth.c
++++ b/drivers/scsi/gdth.c
+@@ -1543,7 +1543,7 @@ static int __init gdth_init_pci(gdth_pci
+         if (prot_ver < 0x2b)      /* FW < x.43: no 64-bit DMA support */
+             ha->dma64_support = 0;
+         else 
+-            ha->dma64_support = 1;
++            ha->dma64_support = 0;
+     }
+ 
+     return 1;
 
-to
 
-printk(KERN_ERR "%s: got wrong page (expect: 0x%x, got 0x%x)\n",
-diskname, modepage, buffer[offset]);
-
-so we can see at least the reason that made it finally fail.
-
-Eike
