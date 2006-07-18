@@ -1,60 +1,50 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Fw: gdth SCSI driver(?) fails with more than 4GB of memory
-Date: Tue, 18 Jul 2006 09:30:19 -0400
-Message-ID: <1153229420.3704.17.camel@mulgrave.il.steeleye.com>
-References: <20060717184659.04ae83e7.akpm@osdl.org>
+From: "Patrice Hines" <PatriceHines@mail.ru>
+Subject: Success, word-charged
+Date: Tue, 18 Jul 2006 14:38:33 +0300
+Message-ID: <7485024536.20060718143833__11371.3661245585$1153233585$gmane$org@mail.ru>
+Reply-To: "Patrice Hines" <PatriceHines@mail.ru>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:34260 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S932198AbWGRNav (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Jul 2006 09:30:51 -0400
-In-Reply-To: <20060717184659.04ae83e7.akpm@osdl.org>
+Received: from zeus1.kernel.org ([204.152.191.4]:57246 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S932222AbWGROie (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Jul 2006 10:38:34 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-scsi@vger.kernel.org, Andreas Barth <aba@not.so.argh.org>
+To: linux-8086@vger.kernel.org
 
-On Mon, 2006-07-17 at 18:46 -0700, Andrew Morton wrote:
-> If the kernel has 6GB, I directly get error messages like:
-> SCSI device sda: 143299800 512-byte hdwr sectors (73369 MB)
-> sda: Write Protect is off
-> sda: got wrong page
-> sda: assuming drive cache: write through
-> SCSI device sda: 143299800 512-byte hdwr sectors (73369 MB)
-> sda: Write Protect is off
-> sda: got wrong page
-> 
-> The disk array controller is of type GDT8114RZ and has the most current
-> firmware version. The box has 4 Xeon CPUs, and physical 6 GB of memory.
-> The /-device is on the controller in question.
-> 
-> The full log (for 4 and for 6 GB) is put up on
-> http://neualius.turmzimmer.net/~aba/6GB
+Your cre dit doesn't matter to us! If you OWN real est ate
+and want IMMEDIATER cash to spend ANY way you like, or simply wish 
+to LOWER your monthly paym ents by a third or more, here are the dea ls
+we have TODAY (hurry, these ofers will expre TONIGHT):
 
-My strongest suspicion here is that the device is lying when it claims
-to support 64 bit DMA. Can you try this?  It will turn off 64 bit DMA
-and only allow 32 bit DMA on your 6GB platform.  If that works, we'll
-beed help from the gdth people to understand the issue.
+$488,000.00 at a 3.67,% fixed-rate0
+$372,000.00 at a 3.90,% variable-rateO
+$492,000.00 at a 3.21,% interest-only1
+$248,000.00 at a 3.36,% fixed-rateK
+$198,000.00 at a 3.55,% variable-rateD
 
-Thanks,
+Hurry, when these deals are gone, they are gone Simply fill out this one-min ute form... 
 
-James
+Don't worry about approval, your cre dit will not disqualify you! 
 
-diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
-index 43afd47..83cf3ca 100644
---- a/drivers/scsi/gdth.c
-+++ b/drivers/scsi/gdth.c
-@@ -1543,7 +1543,7 @@ static int __init gdth_init_pci(gdth_pci
-         if (prot_ver < 0x2b)      /* FW < x.43: no 64-bit DMA support */
-             ha->dma64_support = 0;
-         else 
--            ha->dma64_support = 1;
-+            ha->dma64_support = 0;
-     }
- 
-     return 1;
+http://F68XNP.jokip.com
 
 
+
+sores--yellow with black dots--and I said "Let me have it." And that was it.
+under a bad one, you're not happy under a good one. It's people like you who
+
+     "If we get some water," Arthur said. "At least wash our faces.
+     "Put the backpack on my back. We'll go  like before," he said, shifting
+much out of it."
+
+and well, they would have gotten by with a lot of sweat, but Arthur couldn't
+clumps of dirt flew  in all directions. And only then did Redrick look up at
+it."
+with  sandwiches and a thermos of coffee. While Arthur set up the sandwiches
+
+many of our boys fell there? But I found it! I was saving it for myself. And
+wanted to complain but that he  didn't  dare.  He  only said  in a strangled
