@@ -1,67 +1,56 @@
-From: Grahame Bowland <grahame@ucs.uwa.edu.au>
-Subject: Megaraid slowdowns on 2850
-Date: Tue, 18 Jul 2006 13:45:57 +0800
-Message-ID: <C0E29695.3704A%grahame@ucs.uwa.edu.au>
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Subject: Re: Fw: gdth SCSI driver(?) fails with more than 4GB of memory
+Date: Tue, 18 Jul 2006 08:40:11 +0200
+Message-ID: <200607180840.11877.eike-kernel@sf-tec.de>
+References: <20060717184659.04ae83e7.akpm@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="US-ASCII"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from asclepius.uwa.edu.au ([130.95.128.56]:61130 "EHLO
-	asclepius.uwa.edu.au") by vger.kernel.org with ESMTP
-	id S1750714AbWGRFp6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Jul 2006 01:45:58 -0400
-Received: from asclepius.kas (localhost.localdomain [127.0.0.1])
-	by asclepius.uwa.edu.au (Postfix) with SMTP id B06BB1836C8
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Jul 2006 13:45:56 +0800 (WST)
-Received: from asclepius (localhost.localdomain [127.0.0.1])
-	by asclepius.prekas (Postfix) with SMTP id 9EC621852A9
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Jul 2006 13:45:56 +0800 (WST)
-Received: from [130.95.86.174] (unknown [130.95.86.174])
-	by asclepius.input (Postfix) with ESMTP id 87A9B1847C7
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Jul 2006 13:45:56 +0800 (WST)
+Received: from mail.sf-mail.de ([62.27.20.61]:17811 "EHLO mail.sf-mail.de")
+	by vger.kernel.org with ESMTP id S932071AbWGRGjN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Jul 2006 02:39:13 -0400
+In-Reply-To: <20060717184659.04ae83e7.akpm@osdl.org>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-scsi@vger.kernel.org, Andreas Barth <aba@not.so.argh.org>
 
+Andreas Barth wrote:
 
-Hi all
+> [please Cc me, I'm currently not subscribed.]
 
-We're having an odd problem running 2.6.17.6 on two of our Dell 2850
-machines. They work fine at first, but then suddenly it seems that the IO
-locks up. Using hdparm to get some rough numbers, we see < 200KB/sec
-throughput.
+> I have noticed that one of my boxes stopped to boot correctly after
+> adding more memory (in total 6 GB) and loading an adjusted kernel for
+> that.  After some testing around, we noticed that it is enough for the
+> kernel to boot correctly if we limit the kernel to use 4GB of memory.
+>
+> If the kernel has 6GB, I directly get error messages like:
+> SCSI device sda: 143299800 512-byte hdwr sectors (73369 MB)
+> sda: Write Protect is off
+> sda: got wrong page
+> sda: assuming drive cache: write through
+> SCSI device sda: 143299800 512-byte hdwr sectors (73369 MB)
+> sda: Write Protect is off
+> sda: got wrong page
 
-Both the machines work fine with 2.4.30 (CONFIG_MEGARAID2) and we're running
-the new megaraid (CONFIG_MEGARAID_MM) on 2.6.17.6 now. I saw this in the
-list archives and it seemed to help:
-  echo 8 > /sys/block/sda/queue/nr_requests
+This is from sd.c::sd_read_cache_type
 
-Here's the dmesg lines for megaraid - we're not seeing anything logged when
-the machine slows right down.
-megaraid cmm: 2.20.2.6 (Release Date: Mon Mar 7 00:01:03 EST 2005)
-megaraid: 2.20.4.8 (Release Date: Mon Apr 11 12:27:22 EST 2006)
-megaraid: probe new device 0x1028:0x0013:0x1028:0x016d: bus 2:slot 14:func 0
-megaraid: fw version:[521S] bios version:[H430]
+> Any hints for me how I can use the full 6 GB of memory (and/or what I
+> should try out to find the bug)?
 
-Some graphs of what happens:
-http://lethe.uwa.edu.au/lrrd/Servers/cyllene.uwa.edu.au.html
-(the spike in eth0 connections and number of processes seems to be related
-to a lot of pop/imap processes stuck in iowait)
+Please change the printk in sd.c around 1482 that is
 
-It's an odd problem, is there anything we can try? Any suggestions would be
-really appreciated - if any more info would help debugging this, just let me
-know..
+printk(KERN_ERR "%s: got wrong page\n", diskname);
 
-Cheers
-Grahame
+to
 
--- 
-Grahame Bowland                       Email: grahame.bowland@uwa.edu.au
-Information Technology Services       Phone: +61 8 6488 1175
-The University of Western Australia     Fax: +61 8 6488 1109
-                                     CRICOS: 00126G
+printk(KERN_ERR "%s: got wrong page (expect: 0x%x, got 0x%x)\n",
+diskname, modepage, buffer[offset]);
 
+so we can see at least the reason that made it finally fail.
 
-
-
+Eike
