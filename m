@@ -1,66 +1,67 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Fw: gdth SCSI driver(?) fails with more than 4GB of memory
-Date: Mon, 17 Jul 2006 18:46:59 -0700
-Message-ID: <20060717184659.04ae83e7.akpm@osdl.org>
+From: Grahame Bowland <grahame@ucs.uwa.edu.au>
+Subject: Megaraid slowdowns on 2850
+Date: Tue, 18 Jul 2006 13:45:57 +0800
+Message-ID: <C0E29695.3704A%grahame@ucs.uwa.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+	charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:25827 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1750742AbWGRBrb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 17 Jul 2006 21:47:31 -0400
+Received: from asclepius.uwa.edu.au ([130.95.128.56]:61130 "EHLO
+	asclepius.uwa.edu.au") by vger.kernel.org with ESMTP
+	id S1750714AbWGRFp6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Jul 2006 01:45:58 -0400
+Received: from asclepius.kas (localhost.localdomain [127.0.0.1])
+	by asclepius.uwa.edu.au (Postfix) with SMTP id B06BB1836C8
+	for <linux-scsi@vger.kernel.org>; Tue, 18 Jul 2006 13:45:56 +0800 (WST)
+Received: from asclepius (localhost.localdomain [127.0.0.1])
+	by asclepius.prekas (Postfix) with SMTP id 9EC621852A9
+	for <linux-scsi@vger.kernel.org>; Tue, 18 Jul 2006 13:45:56 +0800 (WST)
+Received: from [130.95.86.174] (unknown [130.95.86.174])
+	by asclepius.input (Postfix) with ESMTP id 87A9B1847C7
+	for <linux-scsi@vger.kernel.org>; Tue, 18 Jul 2006 13:45:56 +0800 (WST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Andreas Barth <aba@not.so.argh.org>
 
 
+Hi all
 
-Begin forwarded message:
+We're having an odd problem running 2.6.17.6 on two of our Dell 2850
+machines. They work fine at first, but then suddenly it seems that the IO
+locks up. Using hdparm to get some rough numbers, we see < 200KB/sec
+throughput.
 
-Date: Mon, 17 Jul 2006 13:00:56 +0200
-From: Andreas Barth <aba@not.so.argh.org>
-To: linux-kernel@vger.kernel.org
-Subject: gdth SCSI driver(?) fails with more than 4GB of memory
+Both the machines work fine with 2.4.30 (CONFIG_MEGARAID2) and we're running
+the new megaraid (CONFIG_MEGARAID_MM) on 2.6.17.6 now. I saw this in the
+list archives and it seemed to help:
+  echo 8 > /sys/block/sda/queue/nr_requests
 
+Here's the dmesg lines for megaraid - we're not seeing anything logged when
+the machine slows right down.
+megaraid cmm: 2.20.2.6 (Release Date: Mon Mar 7 00:01:03 EST 2005)
+megaraid: 2.20.4.8 (Release Date: Mon Apr 11 12:27:22 EST 2006)
+megaraid: probe new device 0x1028:0x0013:0x1028:0x016d: bus 2:slot 14:func 0
+megaraid: fw version:[521S] bios version:[H430]
 
-[please Cc me, I'm currently not subscribed.]
+Some graphs of what happens:
+http://lethe.uwa.edu.au/lrrd/Servers/cyllene.uwa.edu.au.html
+(the spike in eth0 connections and number of processes seems to be related
+to a lot of pop/imap processes stuck in iowait)
 
-Hi,
+It's an odd problem, is there anything we can try? Any suggestions would be
+really appreciated - if any more info would help debugging this, just let me
+know..
 
-I have noticed that one of my boxes stopped to boot correctly after
-adding more memory (in total 6 GB) and loading an adjusted kernel for
-that.  After some testing around, we noticed that it is enough for the
-kernel to boot correctly if we limit the kernel to use 4GB of memory.
+Cheers
+Grahame
 
-If the kernel has 6GB, I directly get error messages like:
-SCSI device sda: 143299800 512-byte hdwr sectors (73369 MB)
-sda: Write Protect is off
-sda: got wrong page
-sda: assuming drive cache: write through
-SCSI device sda: 143299800 512-byte hdwr sectors (73369 MB)
-sda: Write Protect is off
-sda: got wrong page
-
-The disk array controller is of type GDT8114RZ and has the most current
-firmware version. The box has 4 Xeon CPUs, and physical 6 GB of memory.
-The /-device is on the controller in question.
-
-The full log (for 4 and for 6 GB) is put up on
-http://neualius.turmzimmer.net/~aba/6GB
-
-
-Any hints for me how I can use the full 6 GB of memory (and/or what I
-should try out to find the bug)?
-
-
-Cheers,
-Andi
 -- 
-  http://home.arcor.de/andreas-barth/
--
-To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-Please read the FAQ at  http://www.tux.org/lkml/
+Grahame Bowland                       Email: grahame.bowland@uwa.edu.au
+Information Technology Services       Phone: +61 8 6488 1175
+The University of Western Australia     Fax: +61 8 6488 1109
+                                     CRICOS: 00126G
+
+
+
+
