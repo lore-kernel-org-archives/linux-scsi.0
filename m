@@ -1,50 +1,35 @@
-From: "Tommy Laird" <TommyLaird@0ol.com>
-Subject: Life, winter-wasted
-Date: Wed, 19 Jul 2006 02:44:41 -0120
-Message-ID: <59453637.20060719024441__44462.3751486235$1153277111$gmane$org@0ol.com>
-Reply-To: "Tommy Laird" <TommyLaird@0ol.com>
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Subject: Re: [PATCH 1/2] Conversions from kmalloc+memset to k(z|c)alloc
+Date: Wed, 19 Jul 2006 08:23:39 +0200
+Message-ID: <200607190823.39571.eike-kernel@sf-tec.de>
+References: <20060719013113.GF30823@lumumba.uhasselt.be>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [85.103.36.114] ([85.103.36.114]:61451 "EHLO mail.mycommail.com")
-	by vger.kernel.org with ESMTP id S932464AbWGSCot (ORCPT
+Received: from mail.sf-mail.de ([62.27.20.61]:9155 "EHLO mail.sf-mail.de")
+	by vger.kernel.org with ESMTP id S932413AbWGSGWd (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Jul 2006 22:44:49 -0400
+	Wed, 19 Jul 2006 02:22:33 -0400
+In-Reply-To: <20060719013113.GF30823@lumumba.uhasselt.be>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-8086@vger.kernel.org
+To: Panagiotis Issaris <takis@lumumba.uhasselt.be>, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-eata@i-connect.net
 
-Your cre dit doesn't matter to us! If you OWN real est ate
-and want IMMEDIATEC cash to spend ANY way you like, or simply wish 
-to LOWER your monthly paym ents by a third or more, here are the dea ls
-we have TODAY (hurry, these ofers will expre TONIGHT):
+Added linux-scsi to CC as it touches drivers/scsi/
 
-$488,000.00 at a 3.67,% fixed-rateA
-$372,000.00 at a 3.90,% variable-rateO
-$492,000.00 at a 3.21,% interest-onlyX
-$248,000.00 at a 3.36,% fixed-rateV
-$198,000.00 at a 3.55,% variable-rateD
+>  	/* stuff a sense request in front of our current request */
+> -	pc = kmalloc (sizeof (idescsi_pc_t), GFP_ATOMIC);
+> +	pc = kzalloc (sizeof (idescsi_pc_t), GFP_ATOMIC);
 
-Hurry, when these deals are gone, they are gone Simply fill out this one-min ute form... 
+Please remove the space before the arguments.
 
-Don't worry about approval, your cre dit will not disqualify you! 
+>  	rq = kmalloc (sizeof (struct request), GFP_ATOMIC);
 
-http://SZYKM9.jokip.com
+This and the one before should be "rq = kzalloc(sizeof(*rq),...);" This way 
+you will always get the correct buffer size even if the type of rq changes.
 
-
-
-up and Arthur jumped up too. But it was quiet  again, and the only sound was
-to  take  somebody  with  you.  I  can  give you  one  of  my  people  who's
-
-this! He had  a  fleeting thought: who do I mean? I don't know. But somebody
-     "Nonsense!"  Redrick muttered distractedly and froze over the cup  near
-to  take  somebody  with  you.  I  can  give you  one  of  my  people  who's
-
-much out of it."
-place. Redrick's  parboiled hands ached, and the backpack  kept bumping into
-he had  caught something from  Buzzard, not some disgusting  disease, but on
-     He shuddered. He could hear a long sad sound through the fog. He jumped
-
-go anyway. He had nowhere  else to go. He'd go. And Arthur went. He wandered
-taken care of. "What's that in your back pocket?" he asked casually.
+Eike
