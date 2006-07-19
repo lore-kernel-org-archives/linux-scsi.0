@@ -1,41 +1,27 @@
-From: Joseph <Matthew@skynet.be>
-Subject: Trabajo en tiempo libre con salario digno
-Date: Thu, 20 Jul 2006 03:45:56 -0700
-Message-ID: <9056410C.9765245@skynet.be>
+From: "Rudolph" <RudolphKeen@accountant.com>
+Subject: Just out Now you have chance to do it Be delighted with
+Date: Wed, 19 Jul 2006 20:51:32 +0200
+Message-ID: <01884670214590.C6CC9902B2@FZ82T>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1251; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain;
+        charset="Windows-1252"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cm80.sigma177.maxonline.com.sg ([218.212.177.80]:45069 "HELO
-	cm80.sigma177.maxonline.com.sg") by vger.kernel.org with SMTP
-	id S1030214AbWGSSof (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Jul 2006 14:44:35 -0400
+Received: from pD9E58990.dip0.t-ipconnect.de ([217.229.137.144]:20722 "EHLO
+	VK38") by vger.kernel.org with ESMTP id S1030239AbWGSSwX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Jul 2006 14:52:23 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-serial@vger.kernel.org
 
- Necesita ganancias extra?
+Hello my friend,
 
-Nuevas oportunidades para Usted - hoy!
+Rock hard manhood, multiple explosions and several times more semen volume 
+Low prices, handy delivery, everything for your convenience.
+ World’s greatest brands produce these goods in top class labs with latest technologies.
+ Take a look: http://www.hanchbi.com 
 
-Getting Assisted le invita a cooperar.
-
-
-Es responsable y ordenado
-
-Tiene de 18 a 60 anos de edad
-
-Es residente de Espana (preferiblemente)
-
-Tiene tiempo libre (2-4 horas al dia)
-
-
-Es su oporunidad:
-
-Ningun riesgo financiero!
-
-Contactenos, su trabajo le esta esperando!
-
-Para comsideracion inmediata y confidencial, por favor, envie su info a apply@getassisted.biz
+ We offer reliable service and 5 years expirience on the marcket!
 
 
