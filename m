@@ -1,27 +1,21 @@
-From: "Rudolph" <RudolphKeen@accountant.com>
-Subject: Just out Now you have chance to do it Be delighted with
-Date: Wed, 19 Jul 2006 20:51:32 +0200
-Message-ID: <01884670214590.C6CC9902B2@FZ82T>
+From: "Jaime" <Jaime.Edwards@earthlink.net>
+Subject: World famous brands which keep men happy all over the world
+Date: Thu, 20 Jul 2006 03:29:19 +0700
+Message-ID: <93268949029509.EDCD07EFBE__29743.7238893055$1153341070$gmane$org@1D8IFO>
 Mime-Version: 1.0
 Content-Type: text/plain;
         charset="Windows-1252"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pD9E58990.dip0.t-ipconnect.de ([217.229.137.144]:20722 "EHLO
-	VK38") by vger.kernel.org with ESMTP id S1030239AbWGSSwX (ORCPT
+Received: from zeus2.kernel.org ([204.152.191.36]:26768 "EHLO zeus2.kernel.org")
+	by vger.kernel.org with ESMTP id S1030282AbWGSUal (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Jul 2006 14:52:23 -0400
+	Wed, 19 Jul 2006 16:30:41 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-serial@vger.kernel.org
 
-Hello my friend,
+Masculine performance has never been so easy to increase with these products Low prices, handy delivery, everything for your convenience. Hot deals on stuff produced by well-known brands from worldwide. http://www.ultraelaba.com 
 
-Rock hard manhood, multiple explosions and several times more semen volume 
-Low prices, handy delivery, everything for your convenience.
- World’s greatest brands produce these goods in top class labs with latest technologies.
- Take a look: http://www.hanchbi.com 
-
- We offer reliable service and 5 years expirience on the marcket!
-
+ If the cap fits, wear it Never play leapfrog with a unicorn  Due to the presence of fools, wise people stand out  Good people are scarce
 
