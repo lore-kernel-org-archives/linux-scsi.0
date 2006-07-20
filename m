@@ -1,51 +1,148 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: aic94xx status
-Date: Thu, 20 Jul 2006 09:39:28 -0500
-Message-ID: <44BF95A0.1090703@us.ibm.com>
-References: <16C8363E16D7234AB844FDB52D4AEA650C2DB7@ntserv.PacificCodeWorks.local>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [GIT PATCH] SCSI bug fixes and updates for 2.6.18-rc2
+Date: Thu, 20 Jul 2006 11:16:44 -0400
+Message-ID: <1153408604.4754.7.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e2.ny.us.ibm.com ([32.97.182.142]:61916 "EHLO e2.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S932582AbWGTOod (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Jul 2006 10:44:33 -0400
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e2.ny.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k6KEiVHG032749
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
-	for <linux-scsi@vger.kernel.org>; Thu, 20 Jul 2006 10:44:32 -0400
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay02.pok.ibm.com (8.13.6/NCO/VER7.0) with ESMTP id k6KEiT5n198368
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Thu, 20 Jul 2006 10:44:32 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k6KEiTgO006128
-	for <linux-scsi@vger.kernel.org>; Thu, 20 Jul 2006 10:44:29 -0400
-In-Reply-To: <16C8363E16D7234AB844FDB52D4AEA650C2DB7@ntserv.PacificCodeWorks.local>
+Received: from stat9.steeleye.com ([209.192.50.41]:48549 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1030333AbWGTPQ5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Jul 2006 11:16:57 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Robert Tarte <robt@PacificCodeWorks.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>, Mike Anderson <andmike@us.ibm.com>, "Tarte, Robert" <Robert_Tarte@adaptec.com>
+To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Robert Tarte wrote:
->> 1) SATA support.  We at least need this stubbed out so seeing a SATA
->> device won't cause nasty things to happen (IBM is working on this).
->> Ideally, we need to integrate this driver with Brian King's SATA/SAS
->> code, but no-one who has this board has a sata device and vice versa.
-> 
-> [Tarte, Robert] I'm not sure what Brian King's SATA/SA code is, but I do
-> have boards that use the razor chip and I have SATA devices.
+This is mainly bug fixes, but also a few driver updates (which are also
+primarily bug fixes).  The main non bug fix change is that the final set
+of updates to remove some obsolete command fields from the driver (which
+is the end point begun in several prior sets of changes) is in this.
 
-The patch referred to here is a patch to libata that adds a set of APIs
-that allows a SAS HBA to hook into libata to control SATA devices. It
-was written so that I could get ipr to hook into libata, and the hope
-is that it could be used by other SAS drivers as well. Unfortunately,
-no other SAS drivers that support SATA passthrough have really tried
-using it yet.
+The patch is here:
 
-http://marc.theaimsgroup.com/?l=linux-ide&m=115279779219927&w=2
+master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
 
-Brian
+The short changelog is:
+
+Adrian Bunk:
+  o aic79xx: make ahd_done_with_status() static
+
+Christoph Hellwig:
+  o More buffer->request_buffer changes
+  o hide EH backup data outside the scsi_cmnd
+  o aha152x: stop poking at saved scsi_cmnd members
+
+Dave C Boutcher:
+  o ibmvscsi: handle inactive SCSI target during probe
+  o ibmvscsi: allocate lpevents for ibmvscsi on iseries
+
+Douglas Gilbert:
+  o update additional sense codes and some opcode names
+
+Eric Moore:
+  o mptfusion: bump version to 3.04.01
+  o mptfusion: misc fix's
+  o mptfusion: firmware download boot fix's
+  o mptfusion: task abort fix's
+  o mptfusion: sas nexus loss support
+  o mptfusion: sas loginfo update
+  o mptfusion: mptctl panic when loading
+  o mptfusion: sas enclosures with smart drive
+  o mptsas: use unnumbered port API and remove driver porttracking
+
+James Bottomley:
+  o NCR_D700: misc fixes (section and argument ordering)
+  o scsi_transport_sas: kill the use of channel
+  o scsi_transport_sas: add expander backlink
+  o scsi_transport_sas: add unindexed ports
+
+James Smart:
+  o lpfc 8.1.7: Change version number to 8.1.7
+  o lpfc 8.1.7: Misc Fixes
+  o lpfc 8.1.7: Add lpfc_sli_flush_mbox_queue() function
+  o lpfc 8.1.7: Correct the wait in attachment that delays for topology discovery
+  o lpfc 8.1.7: Remove depricated sysfs attribute board_online
+  o lpfc 8.1.7: Adding new issue_reset sysfs attribute
+  o lpfc 8.1.7: Fix panic in lpfc_sli_validate_fcp_iocb
+  o lpfc 8.1.7: Consolidate dma buf cleanup into a separate function
+  o lpfc 8.1.7: Correct bogus nodev_tmo message on NPort that changes its NPort Id
+  o lpfc 8.1.7: Fix txcmplq related panics on heavy IO while downloading firmware
+  o lpfc 8.1.7: Issue DOWN_LINK prior to INIT_LINK to work around link failure issue
+  o lpfc 8.1.7: Fixed infinite retry of REG_LOGIN mailbox failed due to MBXERR_RPI_FULL
+  o lpfc 8.1.7: Fix memory leak and cleanup code related to per ring lookup array
+  o lpfc 8.1.7: Standardize the driver on a single define for the maximum supported targets
+  o lpfc 8.1.7: Use mod_timer instead of add_timer in lpfc_els_timeout_handler
+
+Luben Tuikov:
+  o st.c: Improve sense output
+
+Matthew Wilcox:
+  o aic7[9x]xx: Remove last vestiges of reverse_scan
+
+Randy Dunlap:
+  o scsi_debug: must_check fixes
+
+And the diffstat:
+
+ drivers/fc4/fc.c                      |    4 
+ drivers/message/fusion/Kconfig        |    2 
+ drivers/message/fusion/Makefile       |    1 
+ drivers/message/fusion/mptbase.c      |   99 ++++++++++------
+ drivers/message/fusion/mptbase.h      |   13 --
+ drivers/message/fusion/mptctl.c       |    4 
+ drivers/message/fusion/mptctl.h       |    5 
+ drivers/message/fusion/mptfc.c        |   14 --
+ drivers/message/fusion/mptsas.c       |  109 ++++++-----------
+ drivers/message/fusion/mptscsih.c     |  118 ++++++++++++++++---
+ drivers/message/fusion/mptspi.c       |   10 -
+ drivers/scsi/53c7xx.c                 |    8 -
+ drivers/scsi/NCR53C9x.c               |    2 
+ drivers/scsi/NCR_D700.c               |   14 +-
+ drivers/scsi/aha152x.c                |   43 +++++-
+ drivers/scsi/aic7xxx/aic79xx_core.c   |    2 
+ drivers/scsi/aic7xxx/aic79xx_osm.c    |   21 ---
+ drivers/scsi/aic7xxx/aic7xxx_osm.c    |    1 
+ drivers/scsi/atari_NCR5380.c          |    2 
+ drivers/scsi/constants.c              |  126 ++++++++++++++------
+ drivers/scsi/esp.c                    |    4 
+ drivers/scsi/ibmvscsi/iseries_vscsi.c |    2 
+ drivers/scsi/ibmvscsi/rpa_vscsi.c     |    1 
+ drivers/scsi/jazz_esp.c               |    2 
+ drivers/scsi/lpfc/lpfc.h              |    9 -
+ drivers/scsi/lpfc/lpfc_attr.c         |   89 ++++++++------
+ drivers/scsi/lpfc/lpfc_crtn.h         |    1 
+ drivers/scsi/lpfc/lpfc_els.c          |   65 +++++-----
+ drivers/scsi/lpfc/lpfc_hbadisc.c      |    4 
+ drivers/scsi/lpfc/lpfc_init.c         |   59 ++++++---
+ drivers/scsi/lpfc/lpfc_mem.c          |    5 
+ drivers/scsi/lpfc/lpfc_nportdisc.c    |   11 +
+ drivers/scsi/lpfc/lpfc_scsi.c         |   64 +++++-----
+ drivers/scsi/lpfc/lpfc_sli.c          |   55 +++-----
+ drivers/scsi/lpfc/lpfc_sli.h          |    2 
+ drivers/scsi/lpfc/lpfc_version.h      |    2 
+ drivers/scsi/mac53c94.c               |    2 
+ drivers/scsi/mesh.c                   |    2 
+ drivers/scsi/pluto.c                  |    2 
+ drivers/scsi/qlogicpti.c              |    4 
+ drivers/scsi/scsi.c                   |   11 -
+ drivers/scsi/scsi_debug.c             |   72 ++++++++---
+ drivers/scsi/scsi_error.c             |  210 ++++++++++++++--------------------
+ drivers/scsi/scsi_lib.c               |   88 --------------
+ drivers/scsi/scsi_priv.h              |    1 
+ drivers/scsi/scsi_transport_sas.c     |   64 +++++++++-
+ drivers/scsi/sd.c                     |    3 
+ drivers/scsi/seagate.c                |    2 
+ drivers/scsi/sr.c                     |    5 
+ drivers/scsi/st.c                     |    7 -
+ drivers/scsi/sun3_NCR5380.c           |    2 
+ drivers/scsi/sun3x_esp.c              |    2 
+ drivers/scsi/wd33c93.c                |    2 
+ include/scsi/scsi_cmnd.h              |    9 -
+ include/scsi/scsi_transport_sas.h     |    7 -
+ 55 files changed, 796 insertions(+), 672 deletions(-)
+
+James
 
 
