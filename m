@@ -1,21 +1,46 @@
-From: "Jaime" <Jaime.Edwards@earthlink.net>
-Subject: World famous brands which keep men happy all over the world
-Date: Thu, 20 Jul 2006 03:29:19 +0700
-Message-ID: <93268949029509.EDCD07EFBE__29743.7238893055$1153341070$gmane$org@1D8IFO>
+From: "Margo" <andy@2sun.ru>
+Subject: Ave...
+Date: Thu, 20 Jul 2006 10:59:09 +0300
+Message-ID: <002501c6abd2$5d186700$0100a8c0__5134.03424197367$1153382346$gmane$org@218.19.82.143>
 Mime-Version: 1.0
 Content-Type: text/plain;
-        charset="Windows-1252"
-Content-Transfer-Encoding: 7bit
+	charset="windows-1251"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus2.kernel.org ([204.152.191.36]:26768 "EHLO zeus2.kernel.org")
-	by vger.kernel.org with ESMTP id S1030282AbWGSUal (ORCPT
+Received: from [218.19.82.143] ([218.19.82.143]:33804 "EHLO 218.19.82.143")
+	by vger.kernel.org with ESMTP id S932576AbWGTH6d (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Jul 2006 16:30:41 -0400
+	Thu, 20 Jul 2006 03:58:33 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-serial@vger.kernel.org
+To: Kurt <linux-scsi@vger.kernel.org>
 
-Masculine performance has never been so easy to increase with these products Low prices, handy delivery, everything for your convenience. Hot deals on stuff produced by well-known brands from worldwide. http://www.ultraelaba.com 
+Hello,	
 
- If the cap fits, wear it Never play leapfrog with a unicorn  Due to the presence of fools, wise people stand out  Good people are scarce
+I think we had correspondence a long time ago if it was not you I am sorry.
+If it was I could not answer you because my Mozilla mail manager was down for a 
+long time and I could not fix it only with my friend's help I got the emails 
+address out for me ..:)
+I hope it was whom we were corresponded with you are still interested, as I am, 
+though I realize much time has passed since then...
+I really don't know where to start ....
+Maybe you could tell me a little about yourself since I lost our early letters, 
+your appearance,age , hobbies, and are you still in the search?
+If it was you I wrote to and you are interested to get to know me better, I have 
+a profile at :
+http://www.iamsearching-forlove.com/
+
+Don't really know what else to say for now I hope this is the right address
+
+Let me know if you are interested, And I hope
+you won't run when you see my picture :-)
+
+a rivederci
+
+Maria
+
+If you think that you were subscribed by mistake for this mail
+delivery or if your email has been added without your permission,
+please, visit http://iamsearching-forlove.com/ and unsubscribe from our mails.
+
 
