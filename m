@@ -1,52 +1,82 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: aic94xx status
-Date: Thu, 20 Jul 2006 11:39:06 -0700 (PDT)
-Message-ID: <20060720183906.87217.qmail@web31813.mail.mud.yahoo.com>
-References: <44BF95A0.1090703@us.ibm.com>
-Reply-To: ltuikov@yahoo.com
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] Promise 'stex' driver
+Date: Thu, 20 Jul 2006 17:27:21 -0400
+Message-ID: <44BFF539.4000700@garzik.org>
+References: <NONAMEBMcvsq9IcVux1000001f9@nonameb.ptu.promise.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31813.mail.mud.yahoo.com ([68.142.207.76]:13487 "HELO
-	web31813.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S1750861AbWGTSjH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Jul 2006 14:39:07 -0400
-In-Reply-To: <44BF95A0.1090703@us.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=GB2312
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030380AbWGTV10@vger.kernel.org>
+In-Reply-To: <NONAMEBMcvsq9IcVux1000001f9@nonameb.ptu.promise.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ed Lin <ed.lin@promise.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley" <James.Bottomley@SteelEye.com>, hch <hch@infradead.org>, linux-kernel <linux-kernel@vger.kernel.org>, akpm <akpm@osdl.org>, promise_linux <promise_linux@promise.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@us.ibm.com>, Robert Tarte <robt@PacificCodeWorks.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>, Mike Anderson <andmike@us.ibm.com>, "Tarte, Robert" <Robert_Tarte@adaptec.com>
 
---- Brian King <brking@us.ibm.com> wrote:
-> Robert Tarte wrote:
-> >> 1) SATA support.  We at least need this stubbed out so seeing a SATA
-> >> device won't cause nasty things to happen (IBM is working on this).
-> >> Ideally, we need to integrate this driver with Brian King's SATA/SAS
-> >> code, but no-one who has this board has a sata device and vice versa.
-> > 
-> > [Tarte, Robert] I'm not sure what Brian King's SATA/SA code is, but I do
-> > have boards that use the razor chip and I have SATA devices.
+Ed Lin wrote:
+> Please review following patch based on the 'stex' branch of
+> git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/misc-2.6.git
 > 
-> The patch referred to here is a patch to libata that adds a set of APIs
-> that allows a SAS HBA to hook into libata to control SATA devices. It
-> was written so that I could get ipr to hook into libata, and the hope
-> is that it could be used by other SAS drivers as well. Unfortunately,
-> no other SAS drivers that support SATA passthrough have really tried
-> using it yet.
+> Jeff Garzik already finished some changes, and these are the rest.
+> 
+>>From Christoph Hellwig's comments:
+> 	use scsi_kmap_atomic_sg/scsi_kunmap_atomic_sg
+>     callback argument to ->queuecommand changed to 'done'
+> 	merge init functions into .probe
+> 
+>>From Alexey Dobriyan's comments:
+> 	__le32 *time
+> 
+> Promise code changes:
+> 	add hard reset function
+> 	extend reset wait time
+> 	add new device ids
+> 	white space/ minor fix(INQUIRY, max_channel)
+> 
+> Block layer tag: 
+> 	It is not implemented because here tag is adapter wide,
+> 	not for single device.
+> Non-sg codepath:
+> 	It can be eliminated when Christoph Hellwig's patch
+> 	upstream.
+> Firmware lun issue:
+> 	Firmware uses an id/lun pair for a logical drive. But
+> 	lun could be always 0 in Linux(when you do not config
+> 	CONFIG_SCSI_MULTI_LUN).I use channel to map lun,
+> 	otherwise max_id will be 256.
+> INQUIRY, passthru command:
+> 	Needed by management software. The special handling of
+> 	INQUIRY is for management software to have a sg device
+> 	to issue commands.
 
-Maybe this is because they have SATL a la proper.
+Overall, the patch looks good.  My quick review finds a couple nits, though:
 
-   Luben
- 
-> http://marc.theaimsgroup.com/?l=linux-ide&m=115279779219927&w=2
-> 
-> Brian
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+1) [major] The Intel bridge code ("pci_get_device(0x8086, 0x0370, bus0),
+...") is not the type of thing we normally put into a driver.  If there
+is a problem with a specific bridge, we would prefer to patch
+drivers/pci/quirks.c.
 
+Touching _another_ piece of hardware, other than your own, is a big deal
+and generally unwise.
+
+2) [minor] Adding "magic numbers" in stex_hard_reset().  Easy to fix:
+convert "0x3e", "0x84", "1 << 5" etc. to named constants.  The named
+constants should have sufficiently good names to understand their
+purpose, without being overly long C symbols.
+
+3) [minor] For sleeping longer than one second, ssleep() is preferred to
+msleep().
+
+4) [minor] 'void *scratch' in struct st_hba tells us nothing about its
+usage.  At the very least, a comment, if not a better name, would be good.
+
+5) [agreement/correction]  The block tagging API supports adapter-wide
+tags just fine.  HOWEVER, I nonetheless feel that block tagging API use
+should be considered post-merge.  The 'stex' driver is working and
+tested today.  Since _no individual SCSI driver_ uses the block layer
+tagging, it is likely that some instability and core kernel development
+will occur, in order to make that work.
+
+All your other changes look good to me.
+
+	Jeff
