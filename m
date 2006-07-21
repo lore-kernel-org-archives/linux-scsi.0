@@ -1,12 +1,20 @@
-From: egoggin@emc.com
-Subject: RE: Re: [PATCH RFC] move scsi parts of dm hw handlerst
-	o	scsi layer
-Date: Fri, 21 Jul 2006 15:48:40 -0400
-Message-ID: <6CCEAEDF4D06984A83F427424F47D6E41491BF@CORPUSMX40A.corp.emc.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: Re: [PATCH RFC] move scsi parts of dm hw
+	handlers	to	scsi layer
+Date: Fri, 21 Jul 2006 22:38:34 +0200 (CEST)
+Message-ID: <2236943.1153514314265.SLOX.WebMail.wwwrun@imap-dhs.suse.de>
+References: <1153480817.8030.15.camel@max>
+	<581472.1153482088210.SLOX.WebMail.wwwrun@imap-dhs.suse.de>
+	<44C0BF4C.5060102@cs.wisc.edu> <44C0C0BA.90006@cs.wisc.edu>
+	<4880914.1153483821524.SLOX.WebMail.wwwrun@imap-dhs.suse.de>
+	<44C0C548.4080806@cs.wisc.edu> <20060721151656.GA10239@us.ibm.com>
+	<44C10848.3080509@cs.wisc.edu>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <44C10848.3080509@cs.wisc.edu>
 List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
 List-Archive: <https://www.redhat.com/archives/dm-devel>
@@ -16,127 +24,97 @@ List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=subscribe>
 Sender: dm-devel-bounces@redhat.com
 Errors-To: dm-devel-bounces@redhat.com
-To: dm-devel@redhat.com
-Cc: agk@redhat.com, linux-scsi@vger.kernel.org
+To: device-mapper development <dm-devel@redhat.com>
+Cc: Mike Anderson <andmike@us.ibm.com>, agk@redhat.com, linux-scsi@vger.kernel.org, Patrick Mansfield <patmans@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-> -----Original Message-----
-> From: dm-devel-bounces@redhat.com 
-> [mailto:dm-devel-bounces@redhat.com] On Behalf Of Mike Christie
-> Sent: Friday, July 21, 2006 7:50 AM
-> To: device-mapper development
-> Cc: linux-scsi@vger.kernel.org; agk@redhat.com
-> Subject: Re: [dm-devel] Re: [PATCH RFC] move scsi parts of dm 
-> hw handlersto scsi layer
-> 
-> Hannes Reinecke wrote:
-> >> The patch below begins to push the scsi hw handler code down to the
-> >> scsi
-> >> layer. I only began to covert dm-emc.c and it only hooks in at the
-> >> sense
-> >> decoding in scsi_error.c. I wanted to make sure I was 
-> going about the
-> >> module loading and binding correctly. With a new target 
-> bus we could
-> >> do
-> >> some driver model stuff instead, but I was not sure if that was
-> >> appropriate for this?
+Am Fr 21.07.2006 19:00 schrieb Mike Christie <michaelc@cs.wisc.edu>:
+
+> Mike Anderson wrote:
+> > Mike Christie <michaelc@cs.wisc.edu> wrote:
+> >> He He fun :)
 > >>
-> > Why don't we use scsi_devinfo for this?
-> 
-> I was adding my fields when I noticed this comment:
-> 
-> 
->  * Do not add to this list, use the command line or proc 
-> interface to add
->  * to the scsi_dev_info_list. This table will eventually go away.
-> 
-> 
-> > We have to have some sort of device table anyway as these 
-> handlers are
-> > far from being generic, so any sense code which triggers 
-> action on one
-> > device might be perfectly ok for others.
-> 
-> When I was looking for the history of that commet, I thought 
-> I read that
-> we are supposed to be moving to some userspace approach that 
-> pushes that
-> info down via some magic interface.
-> 
+> >> Sticking what we need in devinfo is a lot easier. And I think it
+> >> makes
+> >> sense since the devices info we want to bind with is in there
+> >> already.
+> >> If nobody says anything, I will send the next version of the path
+> >> with
+> >> devinfo integration.
 > > 
-> > Easiest way would be to have one BLIST flag for each 
-> hardware handler
-> > and merge the respective hardware handler into that target if the
-> > blacklist entry matches.
+> > I think Patrick added the comment and the interface so he can add
+> > the
+> > history. One can use the module or proc interface to pass update
+> > devinfo
+> > information in (the sysfs migration never was done). Well it has the
+> > drawback stated above it can address the issue that certain devices
+> > can be
+> > supported without a kernel recompile.
 > > 
-> >> Next up would be to get Jens's cmd type tree and work on 
-> the message
-> >> passing code.
-> >>
-> >> And this patch currently does not work since I do not have 
-> a Clariion
-> >> box and I do not know what to match for the {vendor, 
-> model} tuple. I
-> >> think it was something like DCG or DGC and the model had different
-> >> RAID
-> >> strings depending on how it was setup and could have some 
-> other string
-> >> if it did not use RAID. If you have a Clariion or you work 
-> for EMC and
-> >> happen to know this info could you pass those strings to me?
-> >>
-> > IIRC this is
+> > Post storage summit I started creating a hardware handler in SCSI,
+> > but for
+> > some reason that I do not recall I started working on SDEV state
+> > model
+> > change integrated into devinfo. The thought being that devices would
+> > come
+> > up in a standby state and then all the varied commands to determine
+> > path
+> > state could be executed from user space.
 > > 
-> > 'DGC' 'DISK'
-> > 'DGC' 'RAID 10'
-> > 'DGC' 'RAID 5'
-> 
-> Thanks.
-> 
+> > Well it did solve the issue I was trying to address (passive paths
+> > generating errors on startup), it would need user space assistance
+> > with all
+> > the plus / minus issues that brings.
 > > 
-> > Hrmph. There is one bit which doesn't quite work out.
-> > While the hardware handler knows how to handle error codes 
-> and how to
-> > switch
-> > paths for a specific device, it doesn't know _when_ to switch it.
-> > I don't think it's a clever idea to switch paths whenever 
-> you encounter
-> > an
-> > passive path. Seems like you could do a nice ping-pong that way ...
 > 
+> Yeah, I am fine with all that and have no complaints. How can I
+> complain
+> when I always pop up with the do it in userspace comment :)
 > 
-> This is what we talked about at the bof. It is what the 
-> message passing
-> cmd type stuff is for.
+Actually I talked to hch; he was fine with modifying / updating
+scsi_devinfo.
+He doesn't see any way of getting rid of scsi_devinfo.c in the near
+future,
+too. So go for it.
 
-How would this work?
-
-> The reason I could not do it yet is 
-> that I could
-> not get Jens's git tree from my hotel.
+> My main focus for this was not really the startup. That was a side
+> benefit to having the sense and that info in the kernel for failover
+> requests and IO that is executed when the path is passive or active.
 > 
-> dm-multipath still decide when to switch like before, but scsi hw
-> handlers will execute the low level details now.
-
-Seems like there is no way to pass to other modules any information
-learned by the sense parsing code in the scsi hw handler.  Any code
-which must act upon the contents of the sense hdr must be located
-in the scsi hw handler.  This can't be desirable.
-
-What about parsing the sense errors into generic error classes and
-having the end request stuff making these error classes available
-via struct request?
-
-We do need to be more clever about when to activate a target
-... and I think doing so requires multipath specific knowledge which
-may be better placed in a dm-multipath hw handler than a generic scsi hw
-handler.  This code would need to be able to be able to discern a
-failure from a retry-later (bypass) case.
-
+> So today, we could use your userspace start up for bring up but we
+> still
+> need something to do failover and process those results and possibly
+> process the results of other IO (similar to the emc first IO to the
+> path
+> case in the patch). For the latter, I think the EMC check_sense tests
+> I
+> am doing in my patch are already handled by other checks in scsi-ml so
+> the sense stuff in scsi_emc_clariion.c is not exactly needed. So maybe
+> we do not need hw handlers for that. As I have said before, I keep
+> running into this problem where vendors say yes we need it but we do
+> not
+> have many good examples.
 > 
-> --
-> dm-devel mailing list
-> dm-devel@redhat.com
-> https://www.redhat.com/mailman/listinfo/dm-devel
+> But if scsi-ml's sense decoding is ok by default and we do not need to
+> override it, this just leaves explicit/manual failover. If we throw
+> that
+> to userspace along with your strart up code then I guess we do not
+> need
+> kernel hw handlers at all.
 > 
+> Did you guys end up doing a hw handler that runs in userspace for xdr
+> or
+> something? Has it worked out? Is there some common code that can be
+> reused today by any chance? Or is this one of those cases where we are
+> going too far with putting stuff in userspace do you think?
+> 
+Argl. No, I wouldn't put that one in userspace. The thing I really liked
+about this approach is that the hardware handler are indeed decoupled
+from
+the multipath tools, so they would even work without multipathing
+active.
+Eg during boot. Which would rid us of the boot errors.
+
+Cheers,
+
+Hannes
