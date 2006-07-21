@@ -1,88 +1,61 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: Re: [PATCH RFC] move scsi parts of dm hw handlers
-	to	scsi layer
-Date: Fri, 21 Jul 2006 14:10:21 +0200 (CEST)
-Message-ID: <4880914.1153483821524.SLOX.WebMail.wwwrun@imap-dhs.suse.de>
-References: <1153480817.8030.15.camel@max>
-	<581472.1153482088210.SLOX.WebMail.wwwrun@imap-dhs.suse.de>
-	<44C0BF4C.5060102@cs.wisc.edu> <44C0C0BA.90006@cs.wisc.edu>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH] Promise 'stex' driver
+Date: Fri, 21 Jul 2006 14:13:06 +0200
+Message-ID: <20060721121306.GA25045@suse.de>
+References: <1153439728.4754.19.camel@mulgrave> <44C01CD7.4030308@garzik.org> <20060721010724.GB24176@suse.de> <44C02D1E.4090206@garzik.org> <20060721013822.GA25504@suse.de> <44C037B3.4080707@garzik.org> <20060721023647.GA29220@suse.de> <44C0436E.306@garzik.org> <20060721031855.GA31187@suse.de> <44C04F6F.2000906@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <44C0C0BA.90006@cs.wisc.edu>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: device-mapper development <dm-devel@redhat.com>, agk@redhat.com, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ns.virtualhost.dk ([195.184.98.160]:34341 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S1161060AbWGUMNc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 Jul 2006 08:13:32 -0400
+Content-Disposition: inline
+In-Reply-To: <44C04F6F.2000906@garzik.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Ed Lin <ed.lin@promise.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, hch <hch@infradead.org>, linux-kernel <linux-kernel@vger.kernel.org>, akpm <akpm@osdl.org>, promise_linux <promise_linux@promise.com>
 
-Am Fr 21.07.2006 13:55 schrieb Mike Christie <michaelc@cs.wisc.edu>:
-
-> Mike Christie wrote:
-> > Hannes Reinecke wrote:
-> >>> The patch below begins to push the scsi hw handler code down to
-> >>> the
-> >>> scsi
-> >>> layer. I only began to covert dm-emc.c and it only hooks in at the
-> >>> sense
-> >>> decoding in scsi_error.c. I wanted to make sure I was going about
-> >>> the
-> >>> module loading and binding correctly. With a new target bus we
-> >>> could
-> >>> do
-> >>> some driver model stuff instead, but I was not sure if that was
-> >>> appropriate for this?
+On Thu, Jul 20 2006, Jeff Garzik wrote:
+> Jens Axboe wrote:
+> >On Thu, Jul 20 2006, Jeff Garzik wrote:
+> >>Jens Axboe wrote:
+> >>>If I thought that it would ever be updated to use block tagging, I would
+> >>>not care at all. The motivation to add it from the Promise end would be
+> >>>zero, as it doesn't really bring any immediate improvements for them. So
+> >>>it would have to be done by someone else, which means me or you. I don't
+> >>>have the hardware to actually test it, so unless you do and would want
+> >>>to do it, chances are looking slim :-)
 > >>>
-> >> Why don't we use scsi_devinfo for this?
-> > 
-> > I was adding my fields when I noticed this comment:
-> > 
-> > 
-> > * Do not add to this list, use the command line or proc interface to
-> >  add
-> >  * to the scsi_dev_info_list. This table will eventually go away.
-> > 
-> > 
-> >> We have to have some sort of device table anyway as these handlers
-> >> are
-> >> far from being generic, so any sense code which triggers action on
-> >> one
-> >> device might be perfectly ok for others.
-> > 
-> > When I was looking for the history of that commet, I thought I read
-> > that
-> > we are supposed to be moving to some userspace approach that pushes
-> > that
-> > info down via some magic interface.
-> > 
+> >>>It's a bit of a chicken and egg problem, unfortunately. The block layer
+> >>>tagging _should_ be _the_ way to do it, and as such could be labelled a
+> >>>requirement. I know that's a bit harsh for the Promise folks, but
+> >>>unfortunately someone has to pay the price...
+> >>I think it's highly rude to presume that someone who has so-far been 
+> >>responsive, and responsible, will suddenly not be so.  That is not the 
+> >>way to encourage vendors to join the Linux process.
+> >>
+> >>They set up an alias for Linux maintainer stuff and have been acting 
+> >>like a maintainer that will stick around.  Why punish them for good 
+> >>behavior?
+> >>
+> >
+> >I'm not trying to be rude to annyone, sorry if that is the impression
+> >you got. I'm just looking at things realistically - the fact is that
+> >moving to block layer tagging is not something that will benefit
+> >Promise, so it'd be fairly low on their agenda of things to do. I don't
+> >mean that in any rude sense, I can completely understand that position.
+> >Why would you want to change something that works?  Hence it's
+> >reasonable to assume that eg you or I would eventually have to convert
+> >it.
 > 
-> I added this comment at the wrong place. I meant to say I thought we
-> are
-> supposed to be moving away from the kernel devinfo list to some
-> userspace one that gets sent down via the module_param or some new
-> magic
-> interface.
+> Did you read the patch that started this thread?  Promise has already 
+> demonstrated they are willing to add changes requested by the community, 
+> on top of an already-working driver.
 
-Or so they claim. I seem to remember some discussion about it; the net
-result was the scsi_devinfo will stay with us for the time being.
+Alright, then lets just get it merged and hope it works out.
 
-Otherwise you'll end up having to configure your kernel / module during
-startup. With parameters which are static anyway. Can't say I like it.
-And the tricky bit is that these information has to be present prior
-to any initialisation, so you basically have to feed it during
-modprobe time. Not really clever.
+-- 
+Jens Axboe
 
-But we can always ask James B. :-)
-
-Cheers,
-
-Hannes
