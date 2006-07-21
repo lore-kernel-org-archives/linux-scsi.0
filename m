@@ -1,62 +1,142 @@
 From: egoggin@emc.com
-Subject: RE: [PATCH RFC] move scsi parts of dm hw handlers to scsi layer
-Date: Fri, 21 Jul 2006 15:33:31 -0400
-Message-ID: <6CCEAEDF4D06984A83F427424F47D6E41491BE@CORPUSMX40A.corp.emc.com>
+Subject: RE: Re: [PATCH RFC] move scsi parts of dm hw handlerst
+	o	scsi layer
+Date: Fri, 21 Jul 2006 15:48:40 -0400
+Message-ID: <6CCEAEDF4D06984A83F427424F47D6E41491BF@CORPUSMX40A.corp.emc.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mexforward.lss.emc.com ([128.222.32.20]:44766 "EHLO
-	mexforward.lss.emc.com") by vger.kernel.org with ESMTP
-	id S1751119AbWGUTla (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Jul 2006 15:41:30 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <dm-devel-bounces@redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: dm-devel@redhat.com
+Cc: agk@redhat.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: hare@suse.de
-Cc: michaelc@cs.wisc.edu, dm-devel@redhat.com, linux-scsi@vger.kernel.org, agk@redhat.com
-
- 
 
 > -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org 
-> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Hannes Reinecke
-> Sent: Friday, July 21, 2006 3:31 PM
-> To: goggin, edward
-> Cc: michaelc@cs.wisc.edu; dm-devel@redhat.com; 
-> linux-scsi@vger.kernel.org; agk@redhat.com
-> Subject: RE: [PATCH RFC] move scsi parts of dm hw handlers to 
-> scsi layer
+> From: dm-devel-bounces@redhat.com 
+> [mailto:dm-devel-bounces@redhat.com] On Behalf Of Mike Christie
+> Sent: Friday, July 21, 2006 7:50 AM
+> To: device-mapper development
+> Cc: linux-scsi@vger.kernel.org; agk@redhat.com
+> Subject: Re: [dm-devel] Re: [PATCH RFC] move scsi parts of dm 
+> hw handlersto scsi layer
 > 
-> Am Fr 21.07.2006 21:10 schrieb Edward Goggin <egoggin@emc.com>:
+> Hannes Reinecke wrote:
+> >> The patch below begins to push the scsi hw handler code down to the
+> >> scsi
+> >> layer. I only began to covert dm-emc.c and it only hooks in at the
+> >> sense
+> >> decoding in scsi_error.c. I wanted to make sure I was 
+> going about the
+> >> module loading and binding correctly. With a new target 
+> bus we could
+> >> do
+> >> some driver model stuff instead, but I was not sure if that was
+> >> appropriate for this?
+> >>
+> > Why don't we use scsi_devinfo for this?
 > 
-> > > IIRC this is
-> > > 
-> > > 'DGC' 'DISK'
-> > > 'DGC' 'RAID 10'
-> > > 'DGC' 'RAID 5'
+> I was adding my fields when I noticed this comment:
+> 
+> 
+>  * Do not add to this list, use the command line or proc 
+> interface to add
+>  * to the scsi_dev_info_list. This table will eventually go away.
+> 
+> 
+> > We have to have some sort of device table anyway as these 
+> handlers are
+> > far from being generic, so any sense code which triggers 
+> action on one
+> > device might be perfectly ok for others.
+> 
+> When I was looking for the history of that commet, I thought 
+> I read that
+> we are supposed to be moving to some userspace approach that 
+> pushes that
+> info down via some magic interface.
+> 
 > > 
-> > And 'DGC' 'LUNZ'
+> > Easiest way would be to have one BLIST flag for each 
+> hardware handler
+> > and merge the respective hardware handler into that target if the
+> > blacklist entry matches.
 > > 
-> Yeah. But I left that one out as there is no device attached to it
-> so we're unlikely to require a hw handler, or?
+> >> Next up would be to get Jens's cmd type tree and work on 
+> the message
+> >> passing code.
+> >>
+> >> And this patch currently does not work since I do not have 
+> a Clariion
+> >> box and I do not know what to match for the {vendor, 
+> model} tuple. I
+> >> think it was something like DCG or DGC and the model had different
+> >> RAID
+> >> strings depending on how it was setup and could have some 
+> other string
+> >> if it did not use RAID. If you have a Clariion or you work 
+> for EMC and
+> >> happen to know this info could you pass those strings to me?
+> >>
+> > IIRC this is
+> > 
+> > 'DGC' 'DISK'
+> > 'DGC' 'RAID 10'
+> > 'DGC' 'RAID 5'
+> 
+> Thanks.
+> 
+> > 
+> > Hrmph. There is one bit which doesn't quite work out.
+> > While the hardware handler knows how to handle error codes 
+> and how to
+> > switch
+> > paths for a specific device, it doesn't know _when_ to switch it.
+> > I don't think it's a clever idea to switch paths whenever 
+> you encounter
+> > an
+> > passive path. Seems like you could do a nice ping-pong that way ...
+> 
+> 
+> This is what we talked about at the bof. It is what the 
+> message passing
+> cmd type stuff is for.
 
-Isn't the scsi hw handler independent of DM though?  Also, even in
-the DM case, it is useful to be able to parse sense codes associated
-with failed IO to a LUNZ CLARiiON logical unit.
+How would this work?
+
+> The reason I could not do it yet is 
+> that I could
+> not get Jens's git tree from my hotel.
+> 
+> dm-multipath still decide when to switch like before, but scsi hw
+> handlers will execute the low level details now.
+
+Seems like there is no way to pass to other modules any information
+learned by the sense parsing code in the scsi hw handler.  Any code
+which must act upon the contents of the sense hdr must be located
+in the scsi hw handler.  This can't be desirable.
+
+What about parsing the sense errors into generic error classes and
+having the end request stuff making these error classes available
+via struct request?
+
+We do need to be more clever about when to activate a target
+... and I think doing so requires multipath specific knowledge which
+may be better placed in a dm-multipath hw handler than a generic scsi hw
+handler.  This code would need to be able to be able to discern a
+failure from a retry-later (bypass) case.
 
 > 
-> > What about supporting a wildcard model string?
-> > 
-> Well, we're having that.
-> So 'DGC' 'DISK' and
-> 'DGC' 'RAID*' should be okay.
-> 
-> Cheers,
-> 
-> Hannes
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> dm-devel mailing list
+> dm-devel@redhat.com
+> https://www.redhat.com/mailman/listinfo/dm-devel
 > 
