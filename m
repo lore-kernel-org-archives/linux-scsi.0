@@ -1,29 +1,36 @@
-From: "Steve Hendricks" <OTGHO@shortnsweetdonkeys.com>
-Subject: Wellcome
-Date: Sun, 23 Jul 2006 07:34:00 -0700
-Message-ID: <50531002160296.GI32190__12240.773443091$1153661697$gmane$org@lie.tech.sitadelle.com>
-References: <OTGHO@shortnsweetdonkeys.com> <E1A4npj-0002ZF-00OTGHO@shortnsweetdonkeys.com>
+From: hch <hch@infradead.org>
+Subject: Re: [PATCH] Promise 'stex' driver
+Date: Sun, 23 Jul 2006 20:44:03 +0100
+Message-ID: <20060723194403.GA25789@infradead.org>
+References: <NONAMEBMcvsq9IcVux1000001f9@nonameb.ptu.promise.com> <44BFF539.4000700@garzik.org> <1153439728.4754.19.camel@mulgrave> <44C01CD7.4030308@garzik.org> <20060721010724.GB24176@suse.de> <44C02D1E.4090206@garzik.org> <20060721013822.GA25504@suse.de> <44C037B3.4080707@garzik.org> <20060721023647.GA29220@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [125.92.55.146] ([125.92.55.146]:23567 "HELO 209.132.176.167")
-	by vger.kernel.org with SMTP id S1750790AbWGWNeV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 23 Jul 2006 09:34:21 -0400
-In-Reply-To: <E1A4npj-0002ZF-00OTGHO@shortnsweetdonkeys.com>
+Received: from pentafluge.infradead.org ([213.146.154.40]:45030 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1751279AbWGWTpA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 23 Jul 2006 15:45:00 -0400
+Content-Disposition: inline
+In-Reply-To: <20060721023647.GA29220@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: Jeff Garzik <jeff@garzik.org>, James Bottomley <James.Bottomley@SteelEye.com>, Ed Lin <ed.lin@promise.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, hch <hch@infradead.org>, linux-kernel <linux-kernel@vger.kernel.org>, akpm <akpm@osdl.org>, promise_linux <promise_linux@promise.com>
 
-Icrease Your S''exual Desire and S''perm volume by 500%
-L'onger o''rgasms - The longest most intense o''rgasms of your life
-Multiple o''rgasms - Cum again and again
-S'PUR-M is The Newest and The Safest Way
-100% N''atural and No Side Effects - in contrast to well-known brands.
-Experience three times longer o''rgasms
-World Wide shipping within 24 hours
- 
- Clisk here http://www.arjya.info
+On Fri, Jul 21, 2006 at 04:36:47AM +0200, Jens Axboe wrote:
+> If I thought that it would ever be updated to use block tagging, I would
+> not care at all. The motivation to add it from the Promise end would be
+> zero, as it doesn't really bring any immediate improvements for them. So
+> it would have to be done by someone else, which means me or you. I don't
+> have the hardware to actually test it, so unless you do and would want
+> to do it, chances are looking slim :-)
+> 
+> It's a bit of a chicken and egg problem, unfortunately. The block layer
+> tagging _should_ be _the_ way to do it, and as such could be labelled a
+> requirement. I know that's a bit harsh for the Promise folks, but
+> unfortunately someone has to pay the price...
 
-
-
-adenosine rake hemosiderin kulak incorporable muskrat triable elves
-muskrat pear gear hickey virtuosity gimpy brian denebola
+Exactly.  And the only way to get folks to use shared infrastructure is to
+force new users to use it.  Helped for FC, helps for filesystem infrastructure.
+It's a community model, everyone has to suffer a little upfront so that the
+whole community benefits in the end.
