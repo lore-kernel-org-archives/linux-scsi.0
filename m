@@ -1,19 +1,41 @@
-From: "Hendrickson" <Hendricksonaborning@geologist.com>
-Subject: Even when the cute babe drives you, it occurs before or shortly after penetration.
-Date: Sun, 23 Jul 2006 18:51:59 -0200
-Message-ID: <80514753270164.25AF4B66E9__26671.3144178086$1153691597$gmane$org@VQINU>
+From: HighPoint Linux Team <linux@highpoint-tech.com>
+Subject: [PATCH] hptiop: wrong register used in hptiop_reset_hba()
+Date: Mon, 24 Jul 2006 15:48:54 +0800
+Message-ID: <200607241548.54593.linux@highpoint-tech.com>
+References: <200606111706.52930.linux@highpoint-tech.com> <200606141650.57740.linux@highpoint-tech.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-        charset="Windows-1252"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [201.47.16.199] ([201.47.16.199]:4363 "EHLO CASA")
-	by vger.kernel.org with ESMTP id S1751351AbWGWVwY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 23 Jul 2006 17:52:24 -0400
+Received: from stats.hypersurf.com ([209.237.0.12]:3854 "EHLO
+	stats.hypersurf.com") by vger.kernel.org with ESMTP
+	id S1751435AbWGXHbu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Jul 2006 03:31:50 -0400
+In-Reply-To: <200606141650.57740.linux@highpoint-tech.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James.Bottomley@SteelEye.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, akpm@osdl.org
 
-Good Day! Every day thousands of guys have this problem. You can stand out from the crowd. Extra-Time - the name says it. It gives you extra time of pleasure and extra confidence. It starts great but you feel like finishing within very first minutes? This is a common thing. Check up: http://florexx.com/gall/get/ You won't forget your eyes after you finally gave her the long-lasting love. She'll go crazy about you!
+IOP reset message should be posted to inbound message register
+instead of outbound message register.
+
+Signed-off-by: HighPoint Linux Team <linux@highpoint-tech.com>
+---
+
+diff --git a/drivers/scsi/hptiop.c b/drivers/scsi/hptiop.c
+index ab2f8b2..74d4d22 100644
+--- a/drivers/scsi/hptiop.c
++++ b/drivers/scsi/hptiop.c
+@@ -577,7 +577,7 @@ static int hptiop_reset_hba(struct hptio
+ 	if (atomic_xchg(&hba->resetting, 1) == 0) {
+ 		atomic_inc(&hba->reset_count);
+ 		writel(IOPMU_INBOUND_MSG0_RESET,
+-				&hba->iop->outbound_msgaddr0);
++				&hba->iop->inbound_msgaddr0);
+ 		hptiop_pci_posting_flush(hba->iop);
+ 	}
+ 
 
