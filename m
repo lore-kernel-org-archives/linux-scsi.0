@@ -1,42 +1,36 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH, RFC] hide EH backup data outside the scsi_cmnd
-Date: Mon, 24 Jul 2006 21:29:54 +0200
-Message-ID: <20060724192954.GA10475@lst.de>
-References: <20060603112610.GB17018@lst.de> <12c511ca0607241027y39498f37le4e5f2b320e01e4a@mail.gmail.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: [PATCH 0/11] iscsi bugfixes
+Date: Mon, 24 Jul 2006 15:47:07 -0500
+Message-ID: <1153774027.1040.31.camel@madmax>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:39854 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S1751352AbWGXTaK (ORCPT
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:13248 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S1751432AbWGXUqs (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Jul 2006 15:30:10 -0400
-Content-Disposition: inline
-In-Reply-To: <12c511ca0607241027y39498f37le4e5f2b320e01e4a@mail.gmail.com>
+	Mon, 24 Jul 2006 16:46:48 -0400
+Received: from [192.168.0.7] (c-24-118-221-159.hsd1.mn.comcast.net [24.118.221.159])
+	(authenticated bits=0)
+	by sabe.cs.wisc.edu (8.13.6/8.13.6) with ESMTP id k6OKkRxd012522
+	(version=TLSv1/SSLv3 cipher=RC4-MD5 bits=128 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Mon, 24 Jul 2006 15:46:47 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tony Luck <tony.luck@intel.com>
-Cc: Christoph Hellwig <hch@lst.de>, jejb@steeleye.com, fischer@norbit.de, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Mon, Jul 24, 2006 at 10:27:55AM -0700, Tony Luck wrote:
-> On 6/3/06, Christoph Hellwig <hch@lst.de> wrote:
-> >Currently struct scsi_cmnd has various fields that are used to backup
-> >original data after the corresponding fields have been overridden for
-> >EH commands.  This means drivers can easily get at it and misuse it.
-> >Due to the old_ naming this doesn't happen for most of them, but two
-> >that have different names have been used wrong a lot (see previous
-> >patch).
-> 
-> I guess that I'm an abuser  :-(
-> 
-> >Index: scsi-misc-2.6/include/scsi/scsi_cmnd.h
-> 
-> >-       void *buffer;           /* Data buffer */
-> 
-> arch/ia64/hp/sim/simscsi.c is still using this (and so doesn't compile
-> now that this change has hit mainline).  It seems that simscsi.c is
-> expecting to find a "scatterlist" there ... but looking at the rest of
-> the patch that removed this element, it isn't obvious where it went.
+The following patches fixes some regressions and bugs we have had since
+the driver was created. The bugs include:
 
-Just change it to access the request_buffer member instead.  buffer
-and request_buffer have been synonymous 99% of the time, and a driver
-never even wants to access buffer.
+1. Sending the wrong error values to userspace.
+2. r2t list problems. We should not hit the BUG_ONs anymore.
+3. Many abort fixes including handling the case where the session drops
+in the middle of an abort or if a command finishes and then we get the
+status.
+4. Fix iser oops during session recovery.
+5. More memory reduction patches. We should not be able to negotiate for
+larger maxrecvdatalength values and not be limited by how much memory we
+can allocate.
+6. Fix id leaks
+7. Fix allocation from soft irq context bug.
+
