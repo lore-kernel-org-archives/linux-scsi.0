@@ -1,51 +1,51 @@
-From: "Patti Jeffries" <PattiJeffries@10-4.com>
-Subject: Better Life, weeping-ripe
-Date: Mon, 24 Jul 2006 07:36:29 +0000 (UTC)
-Message-ID: <662161c80604jqa70qmo32by0zqzeljs30dxoelpsg10ki@mail.10-4.com>
+From: Vasily Averin <vvs@sw.ru>
+Subject: Re: [PATCH 1/3] scsi : megaraid_{mm,mbox}: 64-bit DMA capability
+ checker
+Date: Mon, 24 Jul 2006 12:08:48 +0400
+Message-ID: <44C48010.40603@sw.ru>
+References: <890BF3111FB9484E9526987D912B261902CDA9@NAMAIL3.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [203.87.191.26] ([203.87.191.26]:43527 "EHLO 61.187.98.10")
-	by vger.kernel.org with ESMTP id S1751435AbWGXHgM convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Jul 2006 03:36:12 -0400
-Date: Mon, 24 Jul 2006 22:43:40 +0480
-Content-Disposition: inline
+Received: from mailhub.sw.ru ([195.214.233.200]:18617 "EHLO relay.sw.ru")
+	by vger.kernel.org with ESMTP id S932093AbWGXIJU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Jul 2006 04:09:20 -0400
+In-Reply-To: <890BF3111FB9484E9526987D912B261902CDA9@NAMAIL3.ad.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-8086@vger.kernel.org
+To: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
+Cc: James.Bottomley@SteelEye.com, akpm@osdl.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Patro, Sumant" <Sumant.Patro@lsil.com>, yang.bo@lsil.com
 
-Your cre dit doesn't matter to us! If you OWN real est ate
-and want IMMEDIATE6 cash to spend ANY way you like, or simply wish 
-to LOWER your monthly paym ents by a third or more, here are the dea ls
-we have TODAY (hurry, these ofers will expre TONIGHT):
+Ju, Seokmann wrote:
+> Hi,
+> With patch, the driver access PCIconfiguration space with dedicated 
+> offset to read a signature. If the signature read, it means that the 
+> controller has capability to handle 64-bit DMA. 
+> Without this patch, the driver blindly claimed 64-bit DMA capability
+> without checking with controller.
+> The issue has been reported by Vasily Averin. 
 
-$488,000.00 at a 3.67,% fixed-rate6
-$372,000.00 at a 3.90,% variable-rate4
-$492,000.00 at a 3.21,% interest-only1
-$248,000.00 at a 3.36,% fixed-rateG
-$198,000.00 at a 3.55,% variable-rateI
+> +	if (((magic64 == HBA_SIGNATURE_64_BIT) &&
+> +		(adapter->pdev->subsystem_device !=
+> +		PCI_SUBSYS_ID_MEGARAID_SATA_150_6)) ||
 
-Hurry, when these deals are gone, they are gone Simply fill out this one-min ute form... 
+I would note that I've reported about issue on SATA_150_4 device. I can also
+accept that similar patch fixes this issue.
 
-Don't worry about approval, your cre dit will not disqualify you! 
+> +		(adapter->pdev->vendor == PCI_VENDOR_ID_LSI_LOGIC && 
+> +		adapter->pdev->device == PCI_DEVICE_ID_VERDE) || 
+> +		(adapter->pdev->vendor == PCI_VENDOR_ID_LSI_LOGIC && 
+> +		adapter->pdev->device == PCI_DEVICE_ID_DOBSON) || 
+> +		(adapter->pdev->vendor == PCI_VENDOR_ID_LSI_LOGIC && 
+> +		adapter->pdev->device == PCI_DEVICE_ID_LINDSAY) || 
+> +		(adapter->pdev->vendor == PCI_VENDOR_ID_DELL && 
+> +		adapter->pdev->device == PCI_DEVICE_ID_PERC4_DI_EVERGLADES) || 
+> +		(adapter->pdev->vendor == PCI_VENDOR_ID_DELL && 
+> +		adapter->pdev->device == PCI_DEVICE_ID_PERC4E_DI_KOBUK)) {
 
-http://FPDE8VH.fortessed.com
+Thank you,
+	Vasily Averin
 
-
-
-but one  doesn't necessarily rule out  the  other. Only  I don't get to feel
-with  two  orderlies, tough  and  rough  burly  guys  used to  lugging heavy
-
-wanted to complain but that he  didn't  dare.  He  only said  in a strangled
-Redrick, ears clogged by the noise, turned and saw a bright red spot quickly
-the gravel tumbling down the incline under their feet.
-
-far wall,  cozily ensconced amid  the piles  of  accumulated rocks, and even
-the  boy stepped over two  ties at a  time, broad-shouldered, narrow-hipped.
-to do, don't  suddenly be afraid of the  dirt. If I tell  you  to, drop your
-seen one in many years  and had almost  forgotten  what the  insignia looked
-
-legs  numb. I don't care what you say, Dick, I'm going to treat you  royally
-     "I see it," Arthur said and shuddered.
+SWsoft Virtuozzo/OpenVZ Linux kernel team
