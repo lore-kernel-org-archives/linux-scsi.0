@@ -1,32 +1,40 @@
-From: hch <hch@infradead.org>
-Subject: Re: [PATCH] Promise 'stex' driver
-Date: Tue, 25 Jul 2006 10:26:56 +0100
-Message-ID: <20060725092656.GA28195@infradead.org>
-References: <NONAMEBFJ3sl3xbYiMC000000d4@nonameb.ptu.promise.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: [PATCH 0/2] blk request timeout handler: mv scsi timer code to
+	block layer
+Date: Tue, 25 Jul 2006 05:39:37 -0400
+Message-ID: <1153820377.4166.22.camel@max>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:20122 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1751526AbWGYJ1F (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Jul 2006 05:27:05 -0400
-Content-Disposition: inline
-In-Reply-To: <NONAMEBFJ3sl3xbYiMC000000d4@nonameb.ptu.promise.com>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:53186 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S932248AbWGYJj1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Jul 2006 05:39:27 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ed Lin <ed.lin@promise.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, "James.Bottomley" <James.Bottomley@SteelEye.com>, hch <hch@infradead.org>, linux-kernel <linux-kernel@vger.kernel.org>, akpm <akpm@osdl.org>, promise_linux <promise_linux@promise.com>, jeff <jeff@garzik.org>
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, axboe@suse.de
 
-On Tue, Jul 25, 2006 at 12:41:11PM +0800, Ed Lin wrote:
-> 
-> So it seems there are several possibilities here(regarding no.1 comment):
-> 1.The bridge code is kept unchanged. And, as this is a violation to
-> Linux tradition and requirement, it could not be admitted upstream.
+For the request based multipath I thought I would need to run some code
+when a command times out. I did not want to duplicate the scsi code, so
+I did the following patches which move the scsi timer code to the block
+layer then convert scsi.
 
-We have more than enough precedence for poking the bridge that comes as
-part of addon cards.  As long as the code makes sure it never pokes a bridge
-of the same type that is not on the card (and I don't have the code in front
-of me right now to check whether it's true) we can keep this code.  Please
-make sure to add a big comment that explains what is going on in detail
-and why it's okay in this special case.
+I have tested the scsi_error.c and normal paths with iscsi. And, I have
+tested the normal IO paths with libata. Since libata uses the strategy
+handler it needs to be tested a lot more. Some of the drivers that were
+touching the timeout_per_command field need to be compile tested still
+too. I converted them, but I think some still need a "#include
+blkdev.h".
+
+The patches only move the scsi timer code to the block layer and hook it
+in so others can use it. I have not started on the abort, reset and
+quiesce code since it is not really needed for multipath. I wanted to
+see if the timer code move was ok on its own without the rest of the
+scsi eh move because I do not want to manage the patches out of tree
+with the other request multipath patches. I also wanted to check if the
+scsi timer code was ok in general. Maybe scsi got it wrong and needed to
+be rewritten :)
+
+Both patches were made over 2.6.18-rc2.
 
