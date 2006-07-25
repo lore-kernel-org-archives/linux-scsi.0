@@ -1,40 +1,38 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: fibre channel sync cache question
-Date: Tue, 25 Jul 2006 17:22:28 -0500
-Message-ID: <44C699A4.3030409@sgi.com>
+From: "Moore, Eric" <Eric.Moore@lsil.com>
+Subject: RE: fibre channel sync cache question
+Date: Tue, 25 Jul 2006 16:28:19 -0600
+Message-ID: <664A4EBB07F29743873A87CF62C26D70248ED4@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:45236 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S932484AbWGYWWd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Jul 2006 18:22:33 -0400
+Received: from mail0.lsil.com ([147.145.40.20]:63469 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S932503AbWGYW22 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Jul 2006 18:28:28 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James Smart <James.Smart@Emulex.Com>, "Moore, Eric Dean" <Eric.Moore@lsil.com>, Michael Reed <mdr@sgi.com>
+To: Michael Reed <mdr@sgi.com>, linux-scsi@vger.kernel.org
+Cc: James Smart <James.Smart@Emulex.Com>, dougg@torque.net
 
-Hello All,
+-- Tuesday, July 25, 2006 4:22 PM, Michael Reed wrote: 
 
-Using fibre channel disks, I've noticed that when the system shuts down
-that the sd_driver issues a sync cache command to the device.  I've also
-noticed that when the lldd is removed via rmmod that this sync cache is
-not executed.  I would think that the sync cache would be desirable
-under this circumstance.
+> Using fibre channel disks, I've noticed that when the system 
+> shuts down
+> that the sd_driver issues a sync cache command to the device. 
+>  I've also
+> noticed that when the lldd is removed via rmmod that this 
+> sync cache is
+> not executed.  I would think that the sync cache would be desirable
+> under this circumstance.
+> 
 
-Was it a conscious decision to not have sync cache executed during
-module unload?
+This is not handled from sg path as well.  Meaning if you
+use sdparm, and enable the caching page WCE bit, then reboot,
+there is no SYNC cache issued from above. 
 
-Is it desirable?
+We handle this in fusion drivers due to short coming from above.
 
-(There are various reasons why it doesn't work.  The rport port_state
-is not ONLINE, the module is being unloaded so that a reference cannot
-be acquired, the sdev state is SDEV_CANCEL.  Three strikes and you're
-out?)
-
-
-Mike
-
-
-
+Eric
