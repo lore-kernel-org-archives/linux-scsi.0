@@ -1,27 +1,40 @@
-From: "Gagnon" <bodeacid@mail.com>
-Subject: This means you can still eat all the burgers, pizza you want without and gains in weight, infact you will lose weight.
-Date: Tue, 25 Jul 2006 17:58:37 -0400
-Message-ID: <18140428028739.451510DA83@VPUJFI8>
+From: Michael Reed <mdr@sgi.com>
+Subject: fibre channel sync cache question
+Date: Tue, 25 Jul 2006 17:22:28 -0500
+Message-ID: <44C699A4.3030409@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="Windows-1252"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cpe-69-204-205-148.stny.res.rr.com ([69.204.205.148]:15884 "EHLO
-	DENNIS-0JSN9Z77.uzhi.net") by vger.kernel.org with ESMTP
-	id S1030213AbWGYV6i (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Jul 2006 17:58:38 -0400
+Received: from omx2-ext.sgi.com ([192.48.171.19]:45236 "EHLO omx2.sgi.com")
+	by vger.kernel.org with ESMTP id S932484AbWGYWWd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Jul 2006 18:22:33 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: James Smart <James.Smart@Emulex.Com>, "Moore, Eric Dean" <Eric.Moore@lsil.com>, Michael Reed <mdr@sgi.com>
 
-Good day to you bro! 
+Hello All,
+
+Using fibre channel disks, I've noticed that when the system shuts down
+that the sd_driver issues a sync cache command to the device.  I've also
+noticed that when the lldd is removed via rmmod that this sync cache is
+not executed.  I would think that the sync cache would be desirable
+under this circumstance.
+
+Was it a conscious decision to not have sync cache executed during
+module unload?
+
+Is it desirable?
+
+(There are various reasons why it doesn't work.  The rport port_state
+is not ONLINE, the module is being unloaded so that a reference cannot
+be acquired, the sdev state is SDEV_CANCEL.  Three strikes and you're
+out?)
 
 
- It assists in the bodies ability to absorb food and expend energy, resulting in safe and effective weight loss. It assists in the bodies ability to absorb food and expend energy, resulting in safe and effective weight loss. Fatblaster is a thermogenic weight loss formula designed to naturally assist the body in burning more calories by efficiently using stored body fat for energy. Enter here:  http://ufonulun.com/gall/fb/ 
-
- Art has no enemy but ignorance A dog who attends a flea circus most likely will steal the whole show. Keep your mouth shut and your ears open. A fool and his money are soon parted.
+Mike
 
 
- A cat has nine lives. It takes one day to destroy a house but to build a new one will take months, perhaps years  Pain is temporary, victory is forever 
 
