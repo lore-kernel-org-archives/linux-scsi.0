@@ -1,36 +1,53 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: [PATCH 1/3] scsi : megaraid_{mm,mbox}: 64-bit DMA capability
-	checker
-Date: Tue, 25 Jul 2006 17:10:42 +0200
-Message-ID: <1153840242.8932.33.camel@laptopd505.fenrus.org>
-References: <890BF3111FB9484E9526987D912B261932E2CF@NAMAIL3.ad.lsil.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 0/11] iscsi bugfixes
+Date: Tue, 25 Jul 2006 11:24:29 -0500
+Message-ID: <44C645BD.3050901@cs.wisc.edu>
+References: <1153774027.1040.31.camel@madmax>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932419AbWGYPKx@vger.kernel.org>
-In-Reply-To: <890BF3111FB9484E9526987D912B261932E2CF@NAMAIL3.ad.lsil.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
-Cc: vvs@sw.ru, James.Bottomley@SteelEye.com, akpm@osdl.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Patro, Sumant" <Sumant.Patro@engenio.com>, "Yang, Bo" <Bo.Yang@engenio.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:31428 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S932168AbWGYQXq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Jul 2006 12:23:46 -0400
+Received: from [192.168.0.7] (c-24-118-221-159.hsd1.mn.comcast.net [24.118.221.159])
+	(authenticated bits=0)
+	by sabe.cs.wisc.edu (8.13.6/8.13.6) with ESMTP id k6PGNj91018087
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Tue, 25 Jul 2006 11:23:45 -0500
+In-Reply-To: <1153774027.1040.31.camel@madmax>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+Oops, oh yeah James,
+
+I forgot to add that the patches, if possible, should go into 2.6.18. We
+finally have all the major data path bugs, we know about at least, fixed
+with this patchset. The #2 patch, fixes a nasty bug we were hitting with
+writes and SMP boxes.
 
 
-> +1.	Fixed a bug in megaraid_init_mbox().
-> +	Customer reported "garbage in file on x86_64 platform".
-> +	Root Cause: the driver registered controllers as 64-bit DMA
-> capable
-> +	for those which are not support it.
-> +	Fix: Made change in the function inserting identification
-> machanism
-> +	identifying 64-bit DMA capable controllers.
-> +
 
-Hi,
+Mike Christie wrote:
+> The following patches fixes some regressions and bugs we have had since
+> the driver was created. The bugs include:
+> 
+> 1. Sending the wrong error values to userspace.
+> 2. r2t list problems. We should not hit the BUG_ONs anymore.
+> 3. Many abort fixes including handling the case where the session drops
+> in the middle of an abort or if a command finishes and then we get the
+> status.
+> 4. Fix iser oops during session recovery.
+> 5. More memory reduction patches. We should not be able to negotiate for
+> larger maxrecvdatalength values and not be limited by how much memory we
+> can allocate.
+> 6. Fix id leaks
+> 7. Fix allocation from soft irq context bug.
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-unfortunately your patch has been corrupted by your email program,
-and as such can't be applied by the scsi maintainer. It might be 
-a good idea to fix your email program and then resend quickly before 
-James notices ;)
-
-Greetings,
-   Arjan van de Ven
