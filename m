@@ -1,71 +1,32 @@
-From: "Burl Powell" <266ade@chocofan.com>
-Subject: Hola, ofrecemos ganancias con nuestro programa unico
-Date: Tue, 25 Jul 2006 01:40:40 -0700
-Message-ID: <200607250841.k6P8efZe003066@zeus1.kernel.org>
+From: hch <hch@infradead.org>
+Subject: Re: [PATCH] Promise 'stex' driver
+Date: Tue, 25 Jul 2006 10:26:56 +0100
+Message-ID: <20060725092656.GA28195@infradead.org>
+References: <NONAMEBFJ3sl3xbYiMC000000d4@nonameb.ptu.promise.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=Windows-1251
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:3215 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S932238AbWGYIlB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Jul 2006 04:41:01 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:20122 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1751526AbWGYJ1F (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Jul 2006 05:27:05 -0400
+Content-Disposition: inline
+In-Reply-To: <NONAMEBFJ3sl3xbYiMC000000d4@nonameb.ptu.promise.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: Ed Lin <ed.lin@promise.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, "James.Bottomley" <James.Bottomley@SteelEye.com>, hch <hch@infradead.org>, linux-kernel <linux-kernel@vger.kernel.org>, akpm <akpm@osdl.org>, promise_linux <promise_linux@promise.com>, jeff <jeff@garzik.org>
 
-Es usted una persona responsable y esta buscando un trabajo de medio ti=
-empo  muy bien pagado?=20
-=20
-Somos una compania familiar especializados en varias operaciones con an=
-tiguedades y joyeria Antigua, somos =93Tollis Ltd=94 , y estamos buscan=
-do gente honesta y responsable para que se nos una..  =20
+On Tue, Jul 25, 2006 at 12:41:11PM +0800, Ed Lin wrote:
+> 
+> So it seems there are several possibilities here(regarding no.1 comment):
+> 1.The bridge code is kept unchanged. And, as this is a violation to
+> Linux tradition and requirement, it could not be admitted upstream.
 
+We have more than enough precedence for poking the bridge that comes as
+part of addon cards.  As long as the code makes sure it never pokes a bridge
+of the same type that is not on the card (and I don't have the code in front
+of me right now to check whether it's true) we can keep this code.  Please
+make sure to add a big comment that explains what is going on in detail
+and why it's okay in this special case.
 
-=20
-No te pierdas esta oportunidad =96 somos exactamente lo que estas busca=
-ndo!
-Ganaras mas de EUR 1500 por mes,  utilizando solo 3-4 horas de tu tiemp=
-o. Es real con nosotros!.=20
-=20
-
-Nosotros no hacemos conversacion de venta que requiera que pagues cargo=
-s de inscripcion o inscribirte a una lista de correo. No queremos que i=
-nviertas dinero. Este trabajo requiere solo un monto limitado de tu tie=
-mpo.. =20
-=20
-
-
-Te pagaremos en la primera semana de trabajo  =20
-=20
-
-
-No requerimos ninguna experiencia ni habilidad especial. Trabajaras com=
-o un contratado independiente desde tu hogar.=20
- =20
-
-
-Si estas interesado, por  favor sientete libre de pedir informacion adi=
-cional y las provisiones generales.  =20
-=20
-
-Escribenos ahora, te responderemos al instante.=20
-Por favor responde a este mail: support@t-antiquesupport.com
-
-
-
-
-
-
-
-
-
-cashmere=20
-cavort bastard=20
-buck
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
