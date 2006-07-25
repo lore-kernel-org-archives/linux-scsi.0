@@ -1,72 +1,61 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] Promise 'stex' driver
-Date: Tue, 25 Jul 2006 13:30:32 -0400
-Message-ID: <44C65538.7050809@garzik.org>
-References: <NONAMEBFJ3sl3xbYiMC000000d4@nonameb.ptu.promise.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 0/2] blk request timeout handler: mv scsi timer code to
+  block layer
+Date: Tue, 25 Jul 2006 13:15:08 -0500
+Message-ID: <44C65FAC.6040505@cs.wisc.edu>
+References: <1153820377.4166.22.camel@max> <20060725092400.GK4044@suse.de> <44C646E5.30608@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=GB2312
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:56294 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1750785AbWGYRag (ORCPT
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:8901 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S964796AbWGYSO1 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Jul 2006 13:30:36 -0400
-In-Reply-To: <NONAMEBFJ3sl3xbYiMC000000d4@nonameb.ptu.promise.com>
+	Tue, 25 Jul 2006 14:14:27 -0400
+In-Reply-To: <44C646E5.30608@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ed Lin <ed.lin@promise.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, "James.Bottomley" <James.Bottomley@SteelEye.com>, hch <hch@infradead.org>, linux-kernel <linux-kernel@vger.kernel.org>, akpm <akpm@osdl.org>, promise_linux <promise_linux@promise.com>
+To: Jens Axboe <axboe@suse.de>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Ed Lin wrote:
-> So it seems there are several possibilities here(regarding no.1 comment):
-> 1.The bridge code is kept unchanged. And, as this is a violation to
-> Linux tradition and requirement, it could not be admitted upstream.
-> 2.The code could be modified to be conforming to Linux standard. But,
-> we are new to Linux. Maybe we need some specific instructions to know
-> how to do it. Sorry if this request becomes annoying.
-> 3.Remove the code.
+Mike Christie wrote:
+> Jens Axboe wrote:
+>> On Tue, Jul 25 2006, Mike Christie wrote:
+>>> For the request based multipath I thought I would need to run some code
+>>> when a command times out. I did not want to duplicate the scsi code, so
+>>> I did the following patches which move the scsi timer code to the block
+>>> layer then convert scsi.
+>>>
+>>> I have tested the scsi_error.c and normal paths with iscsi. And, I have
+>>> tested the normal IO paths with libata. Since libata uses the strategy
+>>> handler it needs to be tested a lot more. Some of the drivers that were
+>>> touching the timeout_per_command field need to be compile tested still
+>>> too. I converted them, but I think some still need a "#include
+>>> blkdev.h".
+>>>
+>>> The patches only move the scsi timer code to the block layer and hook it
+>>> in so others can use it. I have not started on the abort, reset and
+>>> quiesce code since it is not really needed for multipath. I wanted to
+>>> see if the timer code move was ok on its own without the rest of the
+>>> scsi eh move because I do not want to manage the patches out of tree
+>>> with the other request multipath patches. I also wanted to check if the
+>>> scsi timer code was ok in general. Maybe scsi got it wrong and needed to
+>>> be rewritten :)
+>> Excellent, one item off my TODO list :-). I had pending code, but not
+>> completed yet.
+>>
+>> I had intended to make the timer addition/deletion implicit from the
+>> activate/deactive rq paths, both to have it happen automatically and
+>> from a cleanliness POV. That makes the timer only active when the
+>> request is in the driver, and should also make the deletion implicit for
+>> when the request gets requeued.
+>>
 > 
-> We are wondering what should we do next. We are seeking the community's 
-> help, and advice, something we definitely need.
+> Ok I did that, almost. For the normal request_fn/dequeue, requeue, and
+> blk softiriq completion paths the block layer handles all the timer
+> addition, deletion and restarting. There is one nasty path in the scsi,
 
-The normal process for submitting changes to the Linux kernel is by
-submitting a series of patches, each containing a single logical set of
-changes.  For example:
-
-[PATCH 1/4] stex: white space/ minor fix(INQUIRY, max_channel)
-[PATCH 2/4] stex: add new device ids
-[PATCH 3/4] stex: update internal copy code path
-[PATCH 4/4] stex: add hard reset function
-
-Each patch may be dependent on prior patches.  Each patch should produce
-a usable driver, e.g.
-
-patch #1 must produce a usable driver.
-patch #1 + #2 must produce a usable driver.
-patch #1 + #2 + #3 must produce a usable driver.
-patch #2 + #3 (missing patch #1) need not produce a usable driver.
-
-This is analogous to a mathematical proof:  each step in the proof
-describes a complete equation.
-
-Therefore, to move forward, I would suggest that you break up your
-submitted patch into multiple patches, ordered such that the PCI
-bridge-related code is in the final patch.  This permits me to
-immediately merge patches not related to PCI bridge stuff, while
-simultaneously discussing the hard reset/bridge change.
-
-Note that this is standard iterative development:
-
-	1. 'stex' driver development, testing.
-	2. Post a set of 'stex' patches.
-	3. Community reviews patches.
-	4. Upstream maintainer merges some or all of the patches.
-	5. Go to step #1, perhaps to resend (changed or unchanged)
-	   the patches that were not merged.
-
-Regards,
-
-	Jeff
-
-
-
+Oops, during testing and my own code review I noticed there was also
+some places in the hotplug removal error paths that I used the wrong
+block layer function and did not delete the timer. I will fix those up
+as well.
