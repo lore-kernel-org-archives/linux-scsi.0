@@ -1,109 +1,27 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: Re: [RFC] fc transport: extensions for fast fail and dev loss
-Date: Tue, 25 Jul 2006 16:15:13 -0500
-Message-ID: <44C689E1.7030709@sgi.com>
-References: <1150829123.16981.1.camel@localhost.localdomain> <44C65116.3030503@cs.wisc.edu> <44C667AD.8090604@emulex.com>
+From: "Gagnon" <bodeacid@mail.com>
+Subject: This means you can still eat all the burgers, pizza you want without and gains in weight, infact you will lose weight.
+Date: Tue, 25 Jul 2006 17:58:37 -0400
+Message-ID: <18140428028739.451510DA83@VPUJFI8>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+        charset="Windows-1252"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:50094 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S964857AbWGYVPg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Jul 2006 17:15:36 -0400
-In-Reply-To: <44C667AD.8090604@emulex.com>
+Received: from cpe-69-204-205-148.stny.res.rr.com ([69.204.205.148]:15884 "EHLO
+	DENNIS-0JSN9Z77.uzhi.net") by vger.kernel.org with ESMTP
+	id S1030213AbWGYV6i (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Jul 2006 17:58:38 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>, aherrman@de.ibm.com, Christoph Hellwig <hch@infradead.org>, duane.grigsby@qlogic.com, "Moore, Eric Dean" <Eric.Moore@lsil.com>, "Shirron, Stephen" <Stephen.Shirron@lsil.com>, Jeremy Higdon <jeremy@sgi.com>
+To: linux-scsi@vger.kernel.org
+
+Good day to you bro! 
 
 
+ It assists in the bodies ability to absorb food and expend energy, resulting in safe and effective weight loss. It assists in the bodies ability to absorb food and expend energy, resulting in safe and effective weight loss. Fatblaster is a thermogenic weight loss formula designed to naturally assist the body in burning more calories by efficiently using stored body fat for energy. Enter here:  http://ufonulun.com/gall/fb/ 
 
-James Smart wrote:
-> 
-> 
-> Mike Christie wrote:
->>
->> So is the fast_io_fail_tmo callback the terminate_rport_io callback?
-> 
-> Yes.
-> When fast_io_fail_tmo expires, it calls the terminate_rport_io() callback.
-> 
->> If
->> so, are we supposed to unblock the rport/session/target from
->> fc_timeout_fail_rport_io
-> 
-> No... don't unblock.
-> 
->> and call into the LLD and the LLD will set some
->> bit (or maybe check some rport/session/target/scsi_device bit) so that
->> incoming IO and IO sitting in the driver will be failed with something
->> like DID_BUS_BUSY so it goes to the upper layers?
-> 
-> The way this is managed in the fc transport is - the LLD calls the
-> transport when it establishes connectivity (an "add" call), and when it
-> loses connectivity (a "delete" call). When the transport receives the
-> delete call, it changes the rport state, blocks the rport, and starts the
-> dev_loss timeout (and potentially the fast_io_fail_tmo if < dev_loss).
-> If the LLD makes the add call prior to dev_loss expiring, then updates
-> the state, and unblocks the rport.  If dev_loss expires, it updates
-> state again (essentially the true deleted state) and tears down the
-> target tree.
-> 
-> To deal with requests being received while blocked, etc - the LLD's use
-> a helper routine (fc_remote_port_chkready()), which validates the rport
-> state, and if not valid (e.g. blocked or removed) returns the appropriate
-> status to return to the midlayer. If blocked, it returns DID_IMM_RETRY.
-> If deleted, it returns DID_NO_CONNECT.
-> 
-> What the above never dealt with was the i/o already in the driver. The
-> driver always had the option to terminate the active i/o when the loss
-> of connectivity occurred, or it could just wait for it to timeout, etc
-> and be killed that way. This patch added the callback at dev_loss_tmo
-> to guarantee i/o is killed, and added the fast_io_fail_tmo if you
-> wanted a faster guarantee. If fast_io_fail_tmo expires and the callback
-> is called - it just kills the outstanding i/o and does nothing to the
-> rport's blocked state.
+ Art has no enemy but ignorance A dog who attends a flea circus most likely will steal the whole show. Keep your mouth shut and your ears open. A fool and his money are soon parted.
 
-Haven't most drivers / board firmware generally cleaned up any outstanding
-i/o at the time (or shortly thereafter) of the fc_remote_port_delete()
-call?  I would think it reasonable to just require that the driver clean
-up the i/o after calling fc_remote_port_delete().  Is there a significant
-reason to keep the i/o alive in the driver?  The rport has just been
-deleted....  Would this eliminate the need for the callback?  If the
-driver implements this, could it just have a NULL callback routine?
 
-Mike
+ A cat has nine lives. It takes one day to destroy a house but to build a new one will take months, perhaps years  Pain is temporary, victory is forever 
 
-> 
->> I think I only the
->> unblock happen on success or fc_starget_delete, so IO in the driver
->> looks like it can get failed upwards but IO sitting in the queue sits
->> there until fc_rport_final_delete or success.
-> 
-> Yeah - essentially this is correct. I hope the above read that way.
-> I'm also hoping the iSER folks are reading this to get the general
-> feel of what's happening with block, dev_loss, etc.
-> 
->>
->> If that is correct, what about a new device state? When the fail fast
->> tmo expires we can set the device to the new state, run the queue and
->> incoming IO or IO in the request_queue marked with FAILFAST can be
->> failed upwards by scsi-ml.
->>
->> I just woke up though :)
-> 
-> Sounds reasonable. It is adding a new semantic to what was meant by
-> fast_fail - but it's in line with our goal.  The goal was to terminate
-> i/o so that they could be quick rescheduled on a different path rather
-> than wait (what may be a long time) for the dev_loss connectivity
-> timer to fire.  Makes sense you would want to make new i/o requests
-> bound by that same window.
-> 
-> -- james s
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
