@@ -1,61 +1,90 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 0/2] blk request timeout handler: mv scsi timer code to
-  block layer
-Date: Tue, 25 Jul 2006 13:15:08 -0500
-Message-ID: <44C65FAC.6040505@cs.wisc.edu>
-References: <1153820377.4166.22.camel@max> <20060725092400.GK4044@suse.de> <44C646E5.30608@cs.wisc.edu>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [RFC] fc transport: extensions for fast fail and dev loss
+Date: Tue, 25 Jul 2006 14:49:17 -0400
+Message-ID: <44C667AD.8090604@emulex.com>
+References: <1150829123.16981.1.camel@localhost.localdomain> <44C65116.3030503@cs.wisc.edu>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:8901 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S964796AbWGYSO1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Jul 2006 14:14:27 -0400
-In-Reply-To: <44C646E5.30608@cs.wisc.edu>
+Received: from emulex.emulex.com ([138.239.112.1]:63462 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S1751491AbWGYS5O
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Jul 2006 14:57:14 -0400
+In-Reply-To: <44C65116.3030503@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: linux-scsi@vger.kernel.org
+
+
 
 Mike Christie wrote:
-> Jens Axboe wrote:
->> On Tue, Jul 25 2006, Mike Christie wrote:
->>> For the request based multipath I thought I would need to run some code
->>> when a command times out. I did not want to duplicate the scsi code, so
->>> I did the following patches which move the scsi timer code to the block
->>> layer then convert scsi.
->>>
->>> I have tested the scsi_error.c and normal paths with iscsi. And, I have
->>> tested the normal IO paths with libata. Since libata uses the strategy
->>> handler it needs to be tested a lot more. Some of the drivers that were
->>> touching the timeout_per_command field need to be compile tested still
->>> too. I converted them, but I think some still need a "#include
->>> blkdev.h".
->>>
->>> The patches only move the scsi timer code to the block layer and hook it
->>> in so others can use it. I have not started on the abort, reset and
->>> quiesce code since it is not really needed for multipath. I wanted to
->>> see if the timer code move was ok on its own without the rest of the
->>> scsi eh move because I do not want to manage the patches out of tree
->>> with the other request multipath patches. I also wanted to check if the
->>> scsi timer code was ok in general. Maybe scsi got it wrong and needed to
->>> be rewritten :)
->> Excellent, one item off my TODO list :-). I had pending code, but not
->> completed yet.
->>
->> I had intended to make the timer addition/deletion implicit from the
->> activate/deactive rq paths, both to have it happen automatically and
->> from a cleanliness POV. That makes the timer only active when the
->> request is in the driver, and should also make the deletion implicit for
->> when the request gets requeued.
->>
 > 
-> Ok I did that, almost. For the normal request_fn/dequeue, requeue, and
-> blk softiriq completion paths the block layer handles all the timer
-> addition, deletion and restarting. There is one nasty path in the scsi,
+> So is the fast_io_fail_tmo callback the terminate_rport_io callback?
 
-Oops, during testing and my own code review I noticed there was also
-some places in the hotplug removal error paths that I used the wrong
-block layer function and did not delete the timer. I will fix those up
-as well.
+Yes.
+When fast_io_fail_tmo expires, it calls the terminate_rport_io() callback.
+
+ > If
+> so, are we supposed to unblock the rport/session/target from
+> fc_timeout_fail_rport_io
+
+No... don't unblock.
+
+ > and call into the LLD and the LLD will set some
+> bit (or maybe check some rport/session/target/scsi_device bit) so that
+> incoming IO and IO sitting in the driver will be failed with something
+> like DID_BUS_BUSY so it goes to the upper layers?
+
+The way this is managed in the fc transport is - the LLD calls the
+transport when it establishes connectivity (an "add" call), and when it
+loses connectivity (a "delete" call). When the transport receives the
+delete call, it changs the rport state, blocks the rport, and starts the
+dev_loss timeout (and potentially the fast_io_fail_tmo if < dev_loss).
+If the LLD makes the add call prior to dev_loss expiring, then updates
+the state, and unblocks the rport.  If dev_loss expires, it updates
+state again (essentially the true deleted state) and tears down the
+target tree.
+
+To deal with requests being received while blocked, etc - the LLD's use
+a helper routine (fc_remote_port_chkready()), which validates the rport
+state, and if not valid (e.g. blocked or removed) returns the appropriate
+status to return to the midlayer. If blocked, it returns DID_IMM_RETRY.
+If deleted, it returns DID_NO_CONNECT.
+
+What the above never dealt with was the i/o already in the driver. The
+driver always had the option to terminate the active i/o when the loss
+of connectivity occured, or it could just wait for it to timeout, etc
+and be killed that way. This patch added the callback at dev_loss_tmo
+to guarantee i/o is killed, and added the fast_io_fail_tmo if you
+wanted a faster guarantee. If fast_io_fail_tmo expires and the callback
+is called - it just kills the outstanding i/o and does nothing to the
+rport's blocked state.
+
+ > I think I only the
+> unblock happen on success or fc_starget_delete, so IO in the driver
+> looks like it can get failed upwards but IO sitting in the queue sits
+> there until fc_rport_final_delete or success.
+
+Yeah - essentially this is correct. I hope the above read that way.
+I'm also hoping the iSER folks are reading this to get the general
+feel of what's happening with block, dev_loss, etc.
+
+> 
+> If that is correct, what about a new device state? When the fail fast
+> tmo expires we can set the device to the new state, run the queue and
+> incoming IO or IO in the request_queue marked with FAILFAST can be
+> failed upwards by scsi-ml.
+> 
+> I just woke up though :)
+
+Sounds reasonable. It is adding a new semantic to what was meant by
+fast_fail - but it's in line with our goal.  The goal was to terminate
+i/o so that they could be quick rescheduled on a different path rather
+than wait (what may be a long time) for the dev_loss connectivity
+timer to fire.  Makes sense you would want to make new i/o requests
+bound by that same window.
+
+-- james s
