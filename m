@@ -1,58 +1,68 @@
-From: Beraldo Leal <uid0@beraldoleal.org>
-Subject: Re: Adaptec 9405w in debian - HELP
-Date: Mon, 24 Jul 2006 23:31:36 -0200
-Message-ID: <20060725013135.GA29497@beraldoleal.org>
-References: <20060723141934.GA12721@beraldoleal.org> <20060724140708.046490ba.akpm@osdl.org> <20060724223017.GA11296@us.ibm.com>
+From: "Burl Powell" <266ade@chocofan.com>
+Subject: Hola, ofrecemos ganancias con nuestro programa unico
+Date: Tue, 25 Jul 2006 01:40:40 -0700
+Message-ID: <200607250841.k6P8efZe003066@zeus1.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=Windows-1251
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 200199045101.user.veloxzone.com.br ([200.199.45.101]:33749 "EHLO
-	debian.rn.gov.br") by vger.kernel.org with ESMTP id S932405AbWGYCZy
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Jul 2006 22:25:54 -0400
-Content-Disposition: inline
-In-Reply-To: <20060724223017.GA11296@us.ibm.com>
+Received: from zeus1.kernel.org ([204.152.191.4]:3215 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S932238AbWGYIlB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Jul 2006 04:41:01 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
+To: linux-raid@vger.kernel.org
 
-This email left me confused, forgives my ignorance, but if I understood
-I do not have as or adaptec 9405w SATA to working in debian? But in the
-Red Hat? And if I to catch this to driver adp94xx in the place of
-aic94xx can work in debian?=20
+Es usted una persona responsable y esta buscando un trabajo de medio ti=
+empo  muy bien pagado?=20
+=20
+Somos una compania familiar especializados en varias operaciones con an=
+tiguedades y joyeria Antigua, somos =93Tollis Ltd=94 , y estamos buscan=
+do gente honesta y responsable para que se nos una..  =20
 
 
-More one time, forgives for my ignrance.
-On Mon, Jul 24, 2006 at 03:30:17PM -0700, Mike Anderson wrote:
-> Andrew Morton <akpm@osdl.org> wrote:
-> >=20
-> > > Hi Andrew, I see your page in wikipedia about the Adaptec 9405w, =
-I
-> > > follow the steps, but I don't see my SATA disk.
->=20
-> The version of the aic94xx driver in James aic94xx-sas-2.6 git tree, =
-which
-> I assume the patch previously mentioned is derived from, does not con=
-tain
-> SATA support. Currently it is only supporting SAS.
->=20
-> -andmike
-> --
-> Michael Anderson
-> andmike@us.ibm.com
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+=20
+No te pierdas esta oportunidad =96 somos exactamente lo que estas busca=
+ndo!
+Ganaras mas de EUR 1500 por mes,  utilizando solo 3-4 horas de tu tiemp=
+o. Es real con nosotros!.=20
+=20
 
---=20
-Abra=E7os,
-Beraldo Leal
-uid0@beraldoleal.org
-www.beraldoleal.org
+Nosotros no hacemos conversacion de venta que requiera que pagues cargo=
+s de inscripcion o inscribirte a una lista de correo. No queremos que i=
+nviertas dinero. Este trabajo requiere solo un monto limitado de tu tie=
+mpo.. =20
+=20
+
+
+Te pagaremos en la primera semana de trabajo  =20
+=20
+
+
+No requerimos ninguna experiencia ni habilidad especial. Trabajaras com=
+o un contratado independiente desde tu hogar.=20
+ =20
+
+
+Si estas interesado, por  favor sientete libre de pedir informacion adi=
+cional y las provisiones generales.  =20
+=20
+
+Escribenos ahora, te responderemos al instante.=20
+Por favor responde a este mail: support@t-antiquesupport.com
+
+
+
+
+
+
+
+
+
+cashmere=20
+cavort bastard=20
+buck
 
 -
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
