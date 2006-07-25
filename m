@@ -1,53 +1,63 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 0/11] iscsi bugfixes
-Date: Tue, 25 Jul 2006 11:24:29 -0500
-Message-ID: <44C645BD.3050901@cs.wisc.edu>
-References: <1153774027.1040.31.camel@madmax>
+Subject: Re: [PATCH 0/2] blk request timeout handler: mv scsi timer code to
+  block layer
+Date: Tue, 25 Jul 2006 11:29:25 -0500
+Message-ID: <44C646E5.30608@cs.wisc.edu>
+References: <1153820377.4166.22.camel@max> <20060725092400.GK4044@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:31428 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S932168AbWGYQXq (ORCPT
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:32964 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S964785AbWGYQ2o (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Jul 2006 12:23:46 -0400
-Received: from [192.168.0.7] (c-24-118-221-159.hsd1.mn.comcast.net [24.118.221.159])
-	(authenticated bits=0)
-	by sabe.cs.wisc.edu (8.13.6/8.13.6) with ESMTP id k6PGNj91018087
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Tue, 25 Jul 2006 11:23:45 -0500
-In-Reply-To: <1153774027.1040.31.camel@madmax>
+	Tue, 25 Jul 2006 12:28:44 -0400
+In-Reply-To: <20060725092400.GK4044@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Oops, oh yeah James,
-
-I forgot to add that the patches, if possible, should go into 2.6.18. We
-finally have all the major data path bugs, we know about at least, fixed
-with this patchset. The #2 patch, fixes a nasty bug we were hitting with
-writes and SMP boxes.
-
-
-
-Mike Christie wrote:
-> The following patches fixes some regressions and bugs we have had since
-> the driver was created. The bugs include:
+Jens Axboe wrote:
+> On Tue, Jul 25 2006, Mike Christie wrote:
+>> For the request based multipath I thought I would need to run some code
+>> when a command times out. I did not want to duplicate the scsi code, so
+>> I did the following patches which move the scsi timer code to the block
+>> layer then convert scsi.
+>>
+>> I have tested the scsi_error.c and normal paths with iscsi. And, I have
+>> tested the normal IO paths with libata. Since libata uses the strategy
+>> handler it needs to be tested a lot more. Some of the drivers that were
+>> touching the timeout_per_command field need to be compile tested still
+>> too. I converted them, but I think some still need a "#include
+>> blkdev.h".
+>>
+>> The patches only move the scsi timer code to the block layer and hook it
+>> in so others can use it. I have not started on the abort, reset and
+>> quiesce code since it is not really needed for multipath. I wanted to
+>> see if the timer code move was ok on its own without the rest of the
+>> scsi eh move because I do not want to manage the patches out of tree
+>> with the other request multipath patches. I also wanted to check if the
+>> scsi timer code was ok in general. Maybe scsi got it wrong and needed to
+>> be rewritten :)
 > 
-> 1. Sending the wrong error values to userspace.
-> 2. r2t list problems. We should not hit the BUG_ONs anymore.
-> 3. Many abort fixes including handling the case where the session drops
-> in the middle of an abort or if a command finishes and then we get the
-> status.
-> 4. Fix iser oops during session recovery.
-> 5. More memory reduction patches. We should not be able to negotiate for
-> larger maxrecvdatalength values and not be limited by how much memory we
-> can allocate.
-> 6. Fix id leaks
-> 7. Fix allocation from soft irq context bug.
+> Excellent, one item off my TODO list :-). I had pending code, but not
+> completed yet.
 > 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I had intended to make the timer addition/deletion implicit from the
+> activate/deactive rq paths, both to have it happen automatically and
+> from a cleanliness POV. That makes the timer only active when the
+> request is in the driver, and should also make the deletion implicit for
+> when the request gets requeued.
+> 
+
+Ok I did that, almost. For the normal request_fn/dequeue, requeue, and
+blk softiriq completion paths the block layer handles all the timer
+addition, deletion and restarting. There is one nasty path in the scsi,
+where we need to requeue the command only if the timer has not expired
+and for that I cheated and allowed scsi to do the blk_delete_timer() so
+it could check the return value. I will work on fixing that case for the
+next resend of the patches.
+
+
 
