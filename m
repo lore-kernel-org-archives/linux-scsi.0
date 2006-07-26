@@ -1,74 +1,87 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [RFC] fc transport: extensions for fast fail and dev loss
-Date: Wed, 26 Jul 2006 12:35:07 -0400
-Message-ID: <44C799BB.40407@emulex.com>
-References: <1150829123.16981.1.camel@localhost.localdomain> <20060726092053.GA4155@infradead.org>
-Reply-To: James.Smart@Emulex.Com
+From: Michael Reed <mdr@sgi.com>
+Subject: Re: fibre channel sync cache question
+Date: Wed, 26 Jul 2006 13:20:25 -0500
+Message-ID: <44C7B269.4070505@sgi.com>
+References: <664A4EBB07F29743873A87CF62C26D70248ED4@NAMAIL4.ad.lsil.com> <1153867194.8932.66.camel@laptopd505.fenrus.org> <44C6E6C7.8090606@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:26623 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S1751671AbWGZQfT
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Jul 2006 12:35:19 -0400
-In-Reply-To: <20060726092053.GA4155@infradead.org>
+Received: from omx2-ext.sgi.com ([192.48.171.19]:44481 "EHLO omx2.sgi.com")
+	by vger.kernel.org with ESMTP id S1751737AbWGZSUo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 26 Jul 2006 14:20:44 -0400
+In-Reply-To: <44C6E6C7.8090606@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org
+To: dougg@torque.net
+Cc: Arjan van de Ven <arjan@infradead.org>, "Moore, Eric" <Eric.Moore@lsil.com>, James Smart <James.Smart@Emulex.Com>, linux-scsi@vger.kernel.org
 
-
-Christoph Hellwig wrote:
->> - fast_io_fail_tmo and LLD callback:
->>   There are some cases where it may take a long while to truly determine
->>   device loss, but the system is in a multipathing configuration that if
->>   the i/o was failed quickly (faster than dev_loss_tmo), it could be
->>   redirected to a different path and completed sooner (assuming the 
->>   multipath thing knew that the sdev was blocked).
+Douglas Gilbert wrote:
+> Arjan van de Ven wrote:
+>> On Tue, 2006-07-25 at 16:28 -0600, Moore, Eric wrote:
+>>> -- Tuesday, July 25, 2006 4:22 PM, Michael Reed wrote:
+>>>> Using fibre channel disks, I've noticed that when the system shuts down
+>>>> that the sd_driver issues a sync cache command to the device.  I've
+>>>> also
+>>>> noticed that when the lldd is removed via rmmod that this sync cache is
+>>>> not executed.  I would think that the sync cache would be desirable
+>>>> under this circumstance.
+>>>>
+>>> This is not handled from sg path as well.  Meaning if you
+>>> use sdparm, and enable the caching page WCE bit, then reboot,
+>>> there is no SYNC cache issued from above.
+>>> We handle this in fusion drivers due to short coming from above.
+>>
+>>
+>> Hi,
+>>
+>> that sounds sooo like the wrong approach... wouldn't it be better to fix
+>> sg instead?
 > 
-> shouldn't we just always fail REQ_FAILFAST requests ASAP and totally
-> ignore any kind of devloss timeout for them?
-
-A couple of questions....
-- This implies 1 by 1 implicit i/o aborts. Keep in mind that the
-   connectivity to the device/target has been lost, so you can't send
-   transport-level single-io abort requests, nor Target-level TMF's.
-   So.. how much are you trying to guarantee this behavior to the upper
-   layers ?
-
-   Please note that you may get differing behavior from different
-   adapter/driver's. Some may support cancelling the i/o within the adapter
-   (and properly protect against later link-side references), thus it works
-   as desired. Others may not, and would then have to resort to implicit
-   logouts - which will abort non-REQ_FAILFAST i/o's as well. This is ok
-   if those i/o's are retryable (like on disks), but bad if they aren't
-   (what if one of the luns were a tape?). Instead of implicit logouts,
-   the driver may just ignore the REQ_FAILFAST flags all together and wait
-   for dev_loss_tmo to kill things.
-
-- Do you want a SCSI LLD looking at more than the scsi_cmnd ? (e.g. is it
-   proper for it to be looking at the block request structure ?) Would this
-   mean we want to reflect the block flag via a scsi_cmnd flag ?
-
-- There's an argument on whether we're FC-DA compliant. Yes, Linux doesn't
-   care and the above would be good for the system, but vendor selection
-   still grades based on OS-ignorant transport standard compliance.
-
-- Are we sure all the meaningful i/o will have REQ_FAILFAST set ?
-
->>   This attribute is an exported "recommendation" by the LLDD and transport
->>   on what the lowest setting for dev_loss_tmo should be for a multipathing
->>   environment. Thus, the admin only needs to cat this attribute to obtain
->>   the value to echo into dev_loss_tmo.
+> Uh? sg is just a pass through. As such it can subvert
+> policy decisions of the kernel. That isn't always a
+> bad thing :-)
 > 
-> This kind of policy really doesn't belong into the kernel.  I'd rather
-> see a nice userspace command to get this right for the user as part of
-> sg_utils or Jeffs infamous blktool.
+> The design flaw is any driver that tries to maintain a
+> state variable associated with a device (logical unit)
+> and can't cope with situations when it gets out of sync.
+> If you managed to neuter the pass through, how would you
+> cope with another initiator?
 
-Makes sense. However, the tool may still need to get input from the
-transport/LLD - so something like this may still be needed. Actually, it
-would probably be this - we'd just change it to "a recommendation to a
-tool" instead of the admin.
+Perhaps the best policy for sd is to assume that WCE is enabled
+and just issue the sync cache.
 
--- james s
+--
+
+I'm wondering about the policy of issuing a sync cache.  There
+are target removal paths which result in it not being issued.
+
+So, the real question is: when a scsi target is removed, is it
+policy that sync cache will be issued?
+
+In fibre channel, here are two code paths in which sync cache
+is not issued.
+
+	- removal of LLDD (rmmod)
+	- removal of target via sysfs device/delete
+
+In a closer look at the target removal via sysfs device/delete,
+I observe that portions of the sysfs fc_remote_ports/rport-*
+remain in place.
+
+Do we need to tie the device/delete to the transport?
+
+Can of worms?  Close eyes, run screaming?
+
+Mike
+
+
+> 
+> Doug Gilbert
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
