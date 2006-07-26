@@ -1,35 +1,50 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] Promise 'stex' driver
-Date: Wed, 26 Jul 2006 02:20:06 +0100
-Message-ID: <1153876807.7559.39.camel@localhost>
-References: <NONAMEBFJ3sl3xbYiMC000000d4@nonameb.ptu.promise.com>
-	 <20060725092656.GA28195@infradead.org>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [RFC] fc transport: extensions for fast fail and dev loss
+Date: Tue, 25 Jul 2006 23:33:53 -0400
+Message-ID: <44C6E2A1.7070609@emulex.com>
+References: <1150829123.16981.1.camel@localhost.localdomain> <44C65116.3030503@cs.wisc.edu> <44C667AD.8090604@emulex.com> <44C689E1.7030709@sgi.com>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:29831 "EHLO
-	out.lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1030294AbWGZAS7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Jul 2006 20:18:59 -0400
-In-Reply-To: <20060725092656.GA28195@infradead.org>
+Received: from emulex.emulex.com ([138.239.112.1]:65195 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S932514AbWGZDmA
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Jul 2006 23:42:00 -0400
+In-Reply-To: <44C689E1.7030709@sgi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: hch <hch@infradead.org>
-Cc: Ed Lin <ed.lin@promise.com>, linux-scsi <linux-scsi@vger.kernel.org>, "James.Bottomley" <James.Bottomley@SteelEye.com>, linux-kernel <linux-kernel@vger.kernel.org>, akpm <akpm@osdl.org>, promise_linux <promise_linux@promise.com>, jeff <jeff@garzik.org>
+To: Michael Reed <mdr@sgi.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>, aherrman@de.ibm.com, Christoph Hellwig <hch@infradead.org>, duane.grigsby@qlogic.com, "Moore, Eric Dean" <Eric.Moore@lsil.com>, "Shirron, Stephen" <Stephen.Shirron@lsil.com>, Jeremy Higdon <jeremy@sgi.com>
 
-On Maw, 2006-07-25 at 10:26 +0100, hch wrote:
-> We have more than enough precedence for poking the bridge that comes as
-> part of addon cards.  As long as the code makes sure it never pokes a bridge
-> of the same type that is not on the card (and I don't have the code in front
-> of me right now to check whether it's true) we can keep this code.  Please
-> make sure to add a big comment that explains what is going on in detail
-> and why it's okay in this special case.
+Michael Reed wrote:
 
-It does check the basic layout so looks robust. Checking subvendor stuff
-is normally a good back-up. We do similar plumbing work in the Promise
-IDE and I2O code to handle the old SuperTrak/SX6000 cards and it work
-solidly.
+> Haven't most drivers / board firmware generally cleaned up any outstanding
+> i/o at the time (or shortly thereafter) of the fc_remote_port_delete()
+> call?  I would think it reasonable to just require that the driver clean
+> up the i/o after calling fc_remote_port_delete().  Is there a significant
+> reason to keep the i/o alive in the driver?  The rport has just been
+> deleted....  Would this eliminate the need for the callback?  If the
+> driver implements this, could it just have a NULL callback routine?
 
-Alan
+You don't want to kill i/o at the time that the rport loses
+connectivity (e.g. when we call delete). The biggest reason is for devices
+that support FCP Recovery (Tape being a prime example, but it's not limited
+to them). There are also several topology glitches, which can be seconds
+in length, which are abberant, and really didn't reflect true device loss.
+Why kill and reissue these io's as well ? it really just adds more load to
+the system to abort and retry the i/o's.  Also, FC-DA compliance is
+recommending that the login and the exchanges stay around as long as
+possible (you could argue the diagram mandates it). So, for the best
+"FC behavior" you really shouldn't kill the i/o until dev_loss_tmo fires.
 
+-- james s
+
+PS: I think you're highlighting my complaint with the patch. I should
+  be renaming the "delete" function as it really isn't delete. The rport
+  isn't truly "deleted" until dev_loss_tmo fires.  We didn't consider
+  this when we dropped the block/unblock_rport routines in favor of the
+  more straight-forward add/delete calls. At this point, I'd rather
+  document the lifetime in the api/header than deal with namechanges and
+  its affects on drivers/distros.
