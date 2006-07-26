@@ -1,127 +1,66 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] fix compile regression for a few scsi drivers
-Date: Wed, 26 Jul 2006 09:53:23 +0200
-Message-ID: <20060726075323.GA28526@lst.de>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [RFC] fc transport: extensions for fast fail and dev loss
+Date: Wed, 26 Jul 2006 10:20:53 +0100
+Message-ID: <20060726092053.GA4155@infradead.org>
+References: <1150829123.16981.1.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:46490 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S964789AbWGZHyA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Jul 2006 03:54:00 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:22210 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1750719AbWGZJUz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 26 Jul 2006 05:20:55 -0400
 Content-Disposition: inline
+In-Reply-To: <1150829123.16981.1.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: torvalds@osdl.org, jejb@steeleye.com, davem@davemloft.net
+To: James Smart <James.Smart@Emulex.Com>
 Cc: linux-scsi@vger.kernel.org
 
-This fixes three drivers to compile again after my patch that removes
-the data_cmnd member from struct scsi_cmnd.
+On Tue, Jun 20, 2006 at 02:45:23PM -0400, James Smart wrote:
+> Folks,
+> 
+> The following addresses some long standing todo items I've had in the
+> FC transport. They primarily arise when considering multipathing, or
+> trying to marry driver internal state to transport state. It is intended
+> that this same type of functionality would be usable in other transports
+> as well.
+> 
+> Here's what is contained:
+> 
+> - dev_loss_tmo LLDD callback :
+>   Currently, there is no notification to the LLDD of when the transport
+>   gives up on the device returning and starts to return DID_NO_CONNECT
+>   in the queuecommand helper function. This callback notifies the LLDD
+>   that the transport has now given up on the rport, thereby acknowledging
+>   the prior fc_remote_port_delete() call. The callback also expects the
+>   LLDD to initiate the termination of any outstanding i/o on the rport.
 
-The fas216 change is trivial, it should have been using ->cmnd all the
-time.
+I think this is fine.
 
-esp and NCR53C9 which seem to be mostly duplicate drivers (!) are doing
-something odd, they should only have looked at ->cmnd before not the
-saved copy that is kept for the error handlers sake.   Note that they
-really should deal with the sync setting themselves but use the generic
-domain validation code that get this right - but that's for later let's
-push this simple compile fix for now.
+> - fast_io_fail_tmo and LLD callback:
+>   There are some cases where it may take a long while to truly determine
+>   device loss, but the system is in a multipathing configuration that if
+>   the i/o was failed quickly (faster than dev_loss_tmo), it could be
+>   redirected to a different path and completed sooner (assuming the 
+>   multipath thing knew that the sdev was blocked).
 
-And sorrt for the late fix for this, I have been busy with OLS and
-associated activities last week.
+shouldn't we just always fail REQ_FAILFAST requests ASAP and totally
+ignore any kind of devloss timeout for them?
 
+>   This attribute is an exported "recommendation" by the LLDD and transport
+>   on what the lowest setting for dev_loss_tmo should be for a multipathing
+>   environment. Thus, the admin only needs to cat this attribute to obtain
+>   the value to echo into dev_loss_tmo.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+This kind of policy really doesn't belong into the kernel.  I'd rather
+see a nice userspace command to get this right for the user as part of
+sg_utils or Jeffs infamous blktool.
 
-diff --git a/drivers/scsi/NCR53C9x.c b/drivers/scsi/NCR53C9x.c
-index 085db48..bdc6bb2 100644
---- a/drivers/scsi/NCR53C9x.c
-+++ b/drivers/scsi/NCR53C9x.c
-@@ -2152,29 +2152,23 @@ static int esp_do_data_finale(struct NCR
-  */
- static int esp_should_clear_sync(Scsi_Cmnd *sp)
- {
--	unchar cmd1 = sp->cmnd[0];
--	unchar cmd2 = sp->data_cmnd[0];
-+	unchar cmd = sp->cmnd[0];
- 
- 	/* These cases are for spinning up a disk and
- 	 * waiting for that spinup to complete.
- 	 */
--	if(cmd1 == START_STOP ||
--	   cmd2 == START_STOP)
-+	if(cmd == START_STOP)
- 		return 0;
- 
--	if(cmd1 == TEST_UNIT_READY ||
--	   cmd2 == TEST_UNIT_READY)
-+	if(cmd == TEST_UNIT_READY)
- 		return 0;
- 
- 	/* One more special case for SCSI tape drives,
- 	 * this is what is used to probe the device for
- 	 * completion of a rewind or tape load operation.
- 	 */
--	if(sp->device->type == TYPE_TAPE) {
--		if(cmd1 == MODE_SENSE ||
--		   cmd2 == MODE_SENSE)
--			return 0;
--	}
-+	if(sp->device->type == TYPE_TAPE && cmd == MODE_SENSE)
-+		return 0;
- 
- 	return 1;
- }
-diff --git a/drivers/scsi/arm/fas216.c b/drivers/scsi/arm/fas216.c
-index 3e1053f..4cf7afc 100644
---- a/drivers/scsi/arm/fas216.c
-+++ b/drivers/scsi/arm/fas216.c
-@@ -2427,7 +2427,7 @@ int fas216_eh_abort(Scsi_Cmnd *SCpnt)
- 	info->stats.aborts += 1;
- 
- 	printk(KERN_WARNING "scsi%d: abort command ", info->host->host_no);
--	__scsi_print_command(SCpnt->data_cmnd);
-+	__scsi_print_command(SCpnt->cmnd);
- 
- 	print_debug_list();
- 	fas216_dumpstate(info);
-diff --git a/drivers/scsi/esp.c b/drivers/scsi/esp.c
-index eaf64c7..c5a8760 100644
---- a/drivers/scsi/esp.c
-+++ b/drivers/scsi/esp.c
-@@ -2754,29 +2754,22 @@ static int esp_do_data_finale(struct esp
-  */
- static int esp_should_clear_sync(struct scsi_cmnd *sp)
- {
--	u8 cmd1 = sp->cmnd[0];
--	u8 cmd2 = sp->data_cmnd[0];
-+	u8 cmd = sp->cmnd[0];
- 
- 	/* These cases are for spinning up a disk and
- 	 * waiting for that spinup to complete.
- 	 */
--	if (cmd1 == START_STOP ||
--	    cmd2 == START_STOP)
-+	if (cmd == START_STOP)
- 		return 0;
--
--	if (cmd1 == TEST_UNIT_READY ||
--	    cmd2 == TEST_UNIT_READY)
-+	if (cmd == TEST_UNIT_READY)
- 		return 0;
- 
- 	/* One more special case for SCSI tape drives,
- 	 * this is what is used to probe the device for
- 	 * completion of a rewind or tape load operation.
- 	 */
--	if (sp->device->type == TYPE_TAPE) {
--		if (cmd1 == MODE_SENSE ||
--		    cmd2 == MODE_SENSE)
--			return 0;
--	}
-+	if (sp->device->type == TYPE_TAPE && cmd == MODE_SENSE)
-+		return 0;
- 
- 	return 1;
- }
+> I have one criticism of these changes. The callbacks are calling into
+> the LLDD with an rport post the driver's rport_delete call. What it means
+> is that we are essentially extending the lifetime of an rport until the
+> dev_loss_tmo call occurs.
+
+Which is okay as long as it's documented well enough.
+
