@@ -1,63 +1,80 @@
-From: David C Somayajulu <david.somayajulu@qlogic.com>
-Subject: Re: [RFC] [PATCH] qla4xxx driver resubmission
-Date: Thu, 27 Jul 2006 12:11:23 -0700
-Message-ID: <1154027483.3997.7.camel@dcslnxpc.site>
-References: <0BB3E5E7462EEA4295BC02D49691DC072C6051@AVEXCH1.qlogic.org>
+From: Dave Wysochanski <davidw@netapp.com>
+Subject: [PATCH] Don't add scsi_device for devices that return PQ=1, PDT=0x1f
+Date: Thu, 27 Jul 2006 16:30:36 -0400
+Message-ID: <44C9226C.6030309@netapp.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------050902030406070202040000"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:51652 "EHLO avexch1.qlogic.com")
-	by vger.kernel.org with ESMTP id S1751055AbWG0TLY (ORCPT
+Received: from mx2.netapp.com ([216.240.18.37]:37700 "EHLO mx2.netapp.com")
+	by vger.kernel.org with ESMTP id S1750729AbWG0Uak (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Jul 2006 15:11:24 -0400
-In-Reply-To: <0BB3E5E7462EEA4295BC02D49691DC072C6051@AVEXCH1.qlogic.org>
+	Thu, 27 Jul 2006 16:30:40 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: open-iscsi@googlegroups.com
+To: hch@lst.de, James.Bottomley@steeleye.com
+Cc: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, hare@suse.de, "Kraft, Claire" <Claire.Kraft@netapp.com>, "Shenoy, Raghavendra" <Raghavendra.Shenoy@netapp.com>, "George, Martin" <marting@netapp.com>, nvinod@netapp.com
 
-On Thu, 2006-07-27 at 11:30 -0700, David Somayajulu wrote:
-> This is a resubmission of the qla4xxx driver for QLogic Corporation's
-> iSCSI HBAs. Changes from the previous submission are:
-> 
-> - fixed driver initialization issues during insmod
-> - removed all references to iSNS
-> - changed comments for function to doc style
-> - removed potential infinite loop in ql4xxx_sem_spinlock()
-> 
-> The complete patch for the driver is at
-> ftp://ftp.qlogic.com/outgoing/linux/iSCSI/upstream/5.00.05b8-k/0000-Init
-> ial-commit-of-qla4xxx.txt
-> 
-Sorry, my mailer screwed up the above link. Here it is again
-ftp://ftp.qlogic.com/outgoing/linux/iSCSI/upstream/5.00.05b8-k/0000-Initial-commit-of-qla4xxx.txt
+This is a multi-part message in MIME format.
+--------------050902030406070202040000
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-> 
-> For ease of comprehension the above patch has been broken down into the
-> following smaller patches:
-> - 0001-ISP4xxx-driver-definitions.diff
-> - 0002-ISP4xxx-driver-initialization-routines.diff
-> - 0003-ISP4xxx-driver-OS-files.diff
-> - 0004-ISP4xxx-driver-ISR-routines.diff
-> - 0005-ISP4xxx-driver-Mailbox-routines.diff
-> - 0006-ISP4xxx-driver-support-routines.diff 
-> - 0007-ISP4xxx-driver-version.diff
-> These are located at
-> ftp://ftp.qlogic.com/outgoing/linux/iSCSI/upstream/5.00.05b8-k/
-> 
-> Other items which needs to be done are
->  - Add support for sysfs attributes.
->  - Userspace support for session creation/deletion for iscsi HBAs.
->  - Add support for other discovery mode ie iSNS/SLP.
->  - block layer tagging 
->  Patches for these would be submitted once the driver is merged
-> upstream.
-> 
-> Looking forward to comment's/feedback.
+Some targets may return PQ=1 and PDT=0x1f to indicate no LUN is mapped
+(Netapp targets do this).  This seems like a valid way to indicate no
+LUN mapped according to SPC-3.
 
-I appologize for the inconvenience.
+However, the current scsi_probe_and_add_lun() code adds a scsi_device
+for targets that return PQ=1 and PDT=0x1f.  This causes LUNs of type
+"UNKNOWN" to show up in /proc/scsi/scsi when no LUNs are mapped.
+In addition, subsequent rescans fail to recognize LUNs that may be
+added on the target, unless preceded by a write to the delete attribute
+of the "UNKNOWN" LUN.
 
-Cheers
-David Somayajulu
-qLogic Corporation.
+This patch addresses this problem by skipping over the scsi_add_lun()
+when PQ=1,PDT=0x1f is encountered, and just returns
+SCSI_SCAN_TARGET_PRESENT.
+
+If there are objections to this patch, I can add a BLIST flag and entry
+for Netapp targets but would like to avoid that if possible, since it
+seems like the current code might be closer to SPC-3 with this patch.
+
+Signed-off-by: Dave Wysochanski <davidw@netapp.com>
+
+
+--------------050902030406070202040000
+Content-Type: text/x-patch;
+ name="scsi_scan_fix_pq_1_pdt_1f.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="scsi_scan_fix_pq_1_pdt_1f.patch"
+
+--- linux-2.6.18-rc2/drivers/scsi/scsi_scan.c	2006-07-15 17:53:08.000000000 -0400
++++ linux-2.6.18-rc2-lun0/drivers/scsi/scsi_scan.c	2006-07-27 15:18:59.000000000 -0400
+@@ -955,6 +955,24 @@ static int scsi_probe_and_add_lun(struct
+ 		goto out_free_result;
+ 	}
+ 
++	/*
++	 * Some targets may set PQ=1 and PDT=0x1f to signal that no LUN
++	 * is attached, so don't add device.  From SCSI SPC-3, PQ=1:
++	 * "A peripheral device having the specified peripheral device 
++	 * type is not connected to this logical unit. However, the 
++	 * device server is capable of supporting the specified peripheral
++	 * device type on this logical unit."
++	 * Also, from SCSI SPC-3, PDT=0x1f:
++	 * "Unknown or no device type" 
++	 */
++	if ((result[0] >> 5) == 1 && (result[0] & 0x1f) == 0x1f) {
++		SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO
++					"scsi scan: PQ=1, PDT=0x1f,"
++					" no device added\n"));
++		res = SCSI_SCAN_TARGET_PRESENT;
++		goto out_free_result;
++	}
++
+ 	res = scsi_add_lun(sdev, result, &bflags);
+ 	if (res == SCSI_SCAN_LUN_PRESENT) {
+ 		if (bflags & BLIST_KEY) {
+
+--------------050902030406070202040000--
