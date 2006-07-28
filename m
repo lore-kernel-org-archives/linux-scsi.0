@@ -1,80 +1,49 @@
-From: "Ed Lin" <ed.lin@promise.com>
-Subject: [PATCH 4/4] stex: add hard reset function
-Date: Sat, 29 Jul 2006 01:33:22 +0800
-Message-ID: <NONAMEBzdfTVSxzW234000002b8@nonameb.ptu.promise.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH 1/3] scsi : megaraid_{mm,mbox}: 64-bit DMA capability
+	checker
+Date: Fri, 28 Jul 2006 13:20:54 -0500
+Message-ID: <1154110854.9447.41.camel@mulgrave.il.steeleye.com>
+References: <890BF3111FB9484E9526987D912B261932E2CF@NAMAIL3.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1161197AbWG1Rdf@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "James.Bottomley" <James.Bottomley@SteelEye.com>, jeff <jeff@garzik.org>, linux-kernel <linux-kernel@vger.kernel.org>, akpm <akpm@osdl.org>, promise_linux <promise_linux@promise.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stat9.steeleye.com ([209.192.50.41]:57743 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1161219AbWG1SVI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Jul 2006 14:21:08 -0400
+In-Reply-To: <890BF3111FB9484E9526987D912B261932E2CF@NAMAIL3.ad.lsil.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
+Cc: vvs@sw.ru, akpm@osdl.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Patro, Sumant" <Sumant.Patro@engenio.com>, "Yang, Bo" <Bo.Yang@engenio.com>
+
+On Tue, 2006-07-25 at 08:44 -0600, Ju, Seokmann wrote:
+> This patch contains 
+> - a fix for 64-bit DMA capability check in megaraid_{mm,mbox} driver.
+> - includes changes (going back to 32-bit DMA mask if 64-bit DMA mask
+> failes) suggested by James with previous patch.
+> - addition of SATA 150-4/6 as commented by Vasily Averin.
+
+Warning: trailing whitespace in lines 885,889 of
+drivers/scsi/megaraid/megaraid_mbox.c
+Warning: trailing whitespace in lines
+13,15,16,19,21,22,26,27,29,31,33,37,39,46 of
+Documentation/scsi/ChangeLog.megaraid
+
+I'll fix it up this time, but in future could you trailing whitespace
+check your patches? (git will do this for you).
+
+Also, when you do a git workflow, the body of the email becomes the
+commit message, so things like this
+
+> This is a third patch which follows prevous two patches ([PATCH 1/3]
+> and
+> [PATCH 2/3]).
+
+while no doubt being useful to the members of linux-scsi who are
+actually unable to count aren't actually useful in commit messages.
+
+James
 
 
-For 'shasta' type controller there are at least one P2P bridge in it
-and MU/ATU on the secondary bus under the bridge. When there is a
-hardware/firmware hang, use the reset secondary bus function of P2P
-bridge to actually reset and recover the hardware. As our MU/ATU is
-the only device on this secondary bus, this reset action would not
-affect other devices.
-
-Signed-off-by: Ed Lin <ed.lin@promise.com>
----
- stex.c |   37 +++++++++++++++++++++++++++++++++++++
- 1 files changed, 37 insertions(+)
-diff -urN a/drivers/scsi/stex.c b/drivers/scsi/stex.c
---- a/drivers/scsi/stex.c	2006-07-28 05:59:16.000000000 -0400
-+++ b/drivers/scsi/stex.c	2006-07-28 06:02:04.000000000 -0400
-@@ -882,6 +882,40 @@
- 	return result;
- }
- 
-+static void stex_hard_reset(struct st_hba *hba)
-+{
-+	struct pci_bus *bus;
-+	int i;
-+	u16 pci_cmd;
-+	u8 pci_bctl;
-+
-+	for (i = 0; i < 16; i++)
-+		pci_read_config_dword(hba->pdev, i * 4,
-+			&hba->pdev->saved_config_space[i]);
-+
-+	/* Reset secondary bus. Our controller(MU/ATU) is the only device on
-+	   secondary bus. Consult Intel 80331/3 developer's manual for detail */
-+	bus = hba->pdev->bus;
-+	pci_read_config_byte(bus->self, PCI_BRIDGE_CONTROL, &pci_bctl);
-+	pci_bctl |= PCI_BRIDGE_CTL_BUS_RESET;
-+	pci_write_config_byte(bus->self, PCI_BRIDGE_CONTROL, pci_bctl);
-+	msleep(1);
-+	pci_bctl &= ~PCI_BRIDGE_CTL_BUS_RESET;
-+	pci_write_config_byte(bus->self, PCI_BRIDGE_CONTROL, pci_bctl);
-+
-+	for (i = 0; i < MU_MAX_DELAY_TIME; i++) {
-+		pci_read_config_word(hba->pdev, PCI_COMMAND, &pci_cmd);
-+		if (pci_cmd & PCI_COMMAND_MASTER)
-+			break;
-+		msleep(1);
-+	}
-+
-+	ssleep(5);
-+	for (i = 0; i < 16; i++)
-+		pci_write_config_dword(hba->pdev, i * 4,
-+			hba->pdev->saved_config_space[i]);
-+}
-+
- static int stex_reset(struct scsi_cmnd *cmd)
- {
- 	struct st_hba *hba;
-@@ -916,6 +950,9 @@
- 
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
- 
-+	if (hba->cardtype == st_shasta)
-+		stex_hard_reset(hba);
-+
- 	if (stex_handshake(hba)) {
- 		printk(KERN_WARNING DRV_NAME
- 			"(%s): resetting: handshake failed\n",
