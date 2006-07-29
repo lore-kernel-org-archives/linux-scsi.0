@@ -1,68 +1,60 @@
-From: Linus Torvalds <torvalds@osdl.org>
+From: Christer Weinigel <christer@weinigel.se>
 Subject: Re: cd burning with plextor drives.
-Date: Sat, 29 Jul 2006 13:53:53 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0607291338530.4168@g5.osdl.org>
-References: <20060729045249.GA23398@redhat.com>  <20060729111240.GG13095@suse.de>
- <1154180419.9447.61.camel@mulgrave.il.steeleye.com>
- <Pine.LNX.4.64.0607291005200.4168@g5.osdl.org> <44CBAB4B.7050308@torque.net>
- <Pine.LNX.4.64.0607291145250.4168@g5.osdl.org> <44CBC115.2080401@torque.net>
- <Pine.LNX.4.64.0607291314500.4168@g5.osdl.org>
+Date: 29 Jul 2006 23:40:41 +0200
+Message-ID: <m3wt9w3x9i.fsf@zoo.weinigel.se>
+References: <20060729045249.GA23398@redhat.com>
+	<20060729111240.GG13095@suse.de>
+	<1154180419.9447.61.camel@mulgrave.il.steeleye.com>
+	<Pine.LNX.4.64.0607291005200.4168@g5.osdl.org>
+	<44CBAB4B.7050308@torque.net>
+	<Pine.LNX.4.64.0607291145250.4168@g5.osdl.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:61624 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932240AbWG2UyO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 29 Jul 2006 16:54:14 -0400
-In-Reply-To: <Pine.LNX.4.64.0607291314500.4168@g5.osdl.org>
+Received: from 2-1-3-15a.ens.sth.bostream.se ([82.182.31.214]:45517 "EHLO
+	zoo.weinigel.se") by vger.kernel.org with ESMTP id S932229AbWG2Vkn convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 29 Jul 2006 17:40:43 -0400
+In-Reply-To: <Pine.LNX.4.64.0607291145250.4168@g5.osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <axboe@suse.de>, Dave Jones <davej@redhat.com>, linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: Douglas Gilbert <dougg@torque.net>, James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <axboe@suse.de>, Dave Jones <davej@redhat.com>, linux-scsi@vger.kernel.org
 
+Linus Torvalds <torvalds@osdl.org> writes:
 
+> But you can try to _improve_ the filtering. We've certainly done that=
+=20
+> before. Quite frankly, I don't think there's a lot there that can be=20
+> improved upon any more, but it's certainly an option that we could ch=
+ange=20
+> that filtering to be (a) per-device and (b) allow root to explicitly=20
+> change it on a per-machine and per-device setting, with the current=20
+> filtering rules being just the "default rules".
 
-On Sat, 29 Jul 2006, Linus Torvalds wrote:
->
-> Are you _really_ suggesting that people who happen to log in to the 
-> console should automatically also be allowed to rewrite the CD-ROM drive 
-> firmware, just because they are supposed to be able to write to the CD-ROM 
-> media in that drive? Or do other random things that the kernel really 
-> doesn't know what they do?
+The filtering can definitely be improved.  Today sg_io filters on SCSI
+commands only, but it really ought to have a filter for mode pages[1]
+too.  The burn proof setting for a drive could be in a vendor specific
+mode page and cdrecord should be able to write to it.  Another page
+controls the SCSI bus timings and shold definitely not be writable by
+cdrecord.
 
-Btw, in the name of full disclosure, I should probably admit that when I 
-did some of the block/scsi_ioctl.c reorganizations and tried to push 
-people to realize that it was much better to do "cdrecord dev=/dev/hda" 
-than by going through sg.c and the ide-scsi emulation thing, the code not 
-only only first missed the CAP_SYS_RAWIO check entirely, I also then made 
-the decision that only root could do any SCSI command ioctl's, and that I 
-thought it was reasonable.
+Or we could just do as J=F6rg Schilling says: trust him and just make
+cdrecord suid root.
 
-I was disabused of that notion fairly quickly. People _really_ didn't like 
-the "if (!capable(CAP_SYS_RAWIO)) return -EPERM;" approach, and 
-"verify_command()" was written pretty quickly.
+  /Christer
 
-So I have been disabused of that notion myself, the same way I now hope to 
-pass on that wisdom to the next generation of abusees ;)
+[1] http://en.wikipedia.org/wiki/SCSI_mode_pages
 
-Anyway, the kernel _has_ gone both ways in the past - not having any 
-access checks at all, and only allowing root. We tried it, and neither 
-really worked.
+--=20
+"Just how much can I get away with and still go to heaven?"
 
-And no, to my knowledge, nobody _actually_ ever fried their CD-ROM by a 
-bad user overwriting the firmware, but quite frankly, I don't want to risk 
-it.
-
-(As a historical oddity - there _was_ this bug in some drive that would 
-corrupt the firmware by mistake, though - I think we _did_ actually fry 
-some drives by sending it a "cache flush" command that it wasn't 
-expecting, and that it turned into firmware reload thing or something. I 
-think Alan Cox knows all the gruesome details, but that we could 
-definitely blame on bad hardware..
-
-I think that actually happened to be a CD-ROM drive, but it wasn't even a 
-user-generated command at all, it was the kernel doing the cache-flush all 
-on its sorry own.. Somebody who remembers the exact details can fill us 
-in just for completeness)
-
-		Linus
+=46reelance consultant specializing in device driver programming for Li=
+nux=20
+Christer Weinigel <christer@weinigel.se>  http://www.weinigel.se
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
