@@ -1,69 +1,56 @@
-From: Dave Jones <davej@redhat.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: cd burning with plextor drives.
-Date: Sat, 29 Jul 2006 13:22:05 -0400
-Message-ID: <20060729172205.GG16946@redhat.com>
-References: <20060729045249.GA23398@redhat.com> <20060729111240.GG13095@suse.de> <Pine.LNX.4.64.0607290953220.4168@g5.osdl.org>
+Date: Sat, 29 Jul 2006 12:30:39 -0500
+Message-ID: <1154194239.9447.89.camel@mulgrave.il.steeleye.com>
+References: <20060729045249.GA23398@redhat.com>
+	 <20060729111240.GG13095@suse.de>
+	 <1154180419.9447.61.camel@mulgrave.il.steeleye.com>
+	 <Pine.LNX.4.64.0607291005200.4168@g5.osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:13745 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S932183AbWG2RW0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 29 Jul 2006 13:22:26 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0607290953220.4168@g5.osdl.org>
+Received: from stat9.steeleye.com ([209.192.50.41]:29603 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1751394AbWG2RbO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 29 Jul 2006 13:31:14 -0400
+In-Reply-To: <Pine.LNX.4.64.0607291005200.4168@g5.osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Linus Torvalds <torvalds@osdl.org>
-Cc: Jens Axboe <axboe@suse.de>, linux-scsi@vger.kernel.org
+Cc: Jens Axboe <axboe@suse.de>, Dave Jones <davej@redhat.com>, linux-scsi@vger.kernel.org
 
-On Sat, Jul 29, 2006 at 10:04:46AM -0700, Linus Torvalds wrote:
+On Sat, 2006-07-29 at 10:06 -0700, Linus Torvalds wrote:
+> Not so. I can (and have) written tons of CD's as a normal user, with 
+> perfect security.
 
- > We do it _correctly_ in the sane paths (ie we really have the "same table" 
- > in "verify_command()" in block/scsi_ioctl.c), and the thing is, when done 
- > correctly, the command access table is a perfectly fine idea.
+But not for every CD burner ... that's the point.  The heuristics we
+have now work for a large subset.  For the rest, we get a stream of "my
+CD won't burn as a user like it's supposed to" bug reports.
 
-Ah, that's what I was hunting for.  I must have poked through every
-file in drivers/scsi/ looking for that ioctl. It never occured to me
-to even look in block/
+In the old days, the gnome/kde stuff simply gave the user ownership of
+the cd device and we allowed any command through and so all CDs worked,
+if not very safely.  Suddenly with the new "are you root, if not I
+consult my allowed tables" method we get this list of CDs that can't
+burn as a user.
 
-I've not looked too closely at exactly which method cdrecord was using
-in the numerous bug reports we've had on this, but ..
+> No, the kernel shouldn't allow device-specific commands. That goes without 
+> saying. Whether this is a sg.c problem, or a cdrecord problem is
+> unclear, 
+> I suspect it's the latter. 
 
- > Btw, it's entirely possible that you might hit the same problem with 
- > /dev/hdc too.
+There are certain CDs that just require vendor specific magic to
+work ... even cdrecord has no choice but to do this.
 
-This may be the case.
+In general, this allowed command list is solidifying policy in the
+kernel, which is the problem.  If we merely put the ability to enforce
+policy in the kernel (without actually having any by default and allow
+the distros to set it via sysfs as we do now for the SCSI blacklist)
+then we'll go back to the old days (of every CD just works) and if
+there's a problem it will be a distro issue because they got their
+policy wrong (they're the ones who can scan a computer, see a plextor
+on /dev/sdc and allow certain vendor specific commands to /dev/sdc only)
 
- >  - only root can ever be allowed to generate commands that the kernel has 
- >    no clue what they are doing. NO WAY can we allow a user to generate 
- >    postentially hardware-changing special commands just because he can 
- >    access the CD-ROM (ie how would the kernel know that it's not a command 
- >    that says "rewrite the firmware with something that always reads goatse 
- >    off the disk"?)
+James
 
-I had visions of extending verify_command() to be of the form..
 
-	if (devicevendor==PLEXTOR) {
-		safe_for_write(ENABLE_BURN_PROOF);
-		safe_for_write(ENABLE_FROBNICATOR);
-	}
-	etc..
-
- >  - if cdrecord tries to do some device-specific setup, and is upset that 
- >    it can't do it because the user isn't root, then it's obviously a 
- >    cdrecord bug. Which wouldn't surprise me at all
-
-I concur it shouldn't fail completely. But at the same time, if a user
-splashed out his pennies to get a modern writer with shiny features, it's
-a bit crappy of us to make him be root to use them.
-
- > - can we _please_ not 
- >    rely on code that has been written by a certified nut-case?
-
-It's a mystery to me why nothing better has come along over the years.
-
-		Dave
-
--- 
-http://www.codemonkey.org.uk
