@@ -1,55 +1,44 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH 0/2] target : replace netlink
-Date: Fri, 28 Jul 2006 22:34:28 -0400
-Message-ID: <44CAC934.9030409@torque.net>
-References: <20060730030304U.fujita.tomonori@lab.ntt.co.jp>
-Reply-To: dougg@torque.net
+From: Dave Jones <davej@redhat.com>
+Subject: cd burning with plextor drives.
+Date: Sat, 29 Jul 2006 00:52:50 -0400
+Message-ID: <20060729045249.GA23398@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:17828 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S932579AbWG2Cen (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Jul 2006 22:34:43 -0400
-In-Reply-To: <20060730030304U.fujita.tomonori@lab.ntt.co.jp>
+Received: from mx1.redhat.com ([66.187.233.31]:54212 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S1161379AbWG2Ewy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 29 Jul 2006 00:52:54 -0400
+Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
+	by mx1.redhat.com (8.12.11.20060308/8.12.11) with ESMTP id k6T4qrBc027027
+	for <linux-scsi@vger.kernel.org>; Sat, 29 Jul 2006 00:52:53 -0400
+Received: from nwo.kernelslacker.org (vpn-248-9.boston.redhat.com [10.13.248.9])
+	by int-mx1.corp.redhat.com (8.12.11.20060308/8.12.11) with ESMTP id k6T4qrW2019153
+	for <linux-scsi@vger.kernel.org>; Sat, 29 Jul 2006 00:52:53 -0400
+Received: from nwo.kernelslacker.org (localhost.localdomain [127.0.0.1])
+	by nwo.kernelslacker.org (8.13.7/8.13.5) with ESMTP id k6T4qqag028268
+	for <linux-scsi@vger.kernel.org>; Sat, 29 Jul 2006 00:52:52 -0400
+Received: (from davej@localhost)
+	by nwo.kernelslacker.org (8.13.7/8.13.7/Submit) id k6T4qp8l028267
+	for linux-scsi@vger.kernel.org; Sat, 29 Jul 2006 00:52:51 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
+To: linux-scsi@vger.kernel.org
 
-FUJITA Tomonori wrote:
-> The target code wrongly uses netlink to pass user-space buffer
-> pointers. The kernel module sends SCSI commands to user space and
-> receives responses from user-space daemon. So we need bi-directional,
-> high-speed interface between user and kernel space. Currently, there
-> isn't such interface in mainline. For example, mmapped packet and
-> relayfs move data only from kernel to user space.
+AFAICT, this has been broken since the code to sanitise scsi commands
+was added circa 2.6.8 or so.
 
-Good-bye netlink, another ioctl (or char driver)
-replacement bites the dust. It looks like your
-netlink replacement char driver has a lot in common
-with the sg driver ...
+It seems cdrecord tries to send some vendor specific commands to Plextor
+drives, and fails miserably as can be seen here..
+https://bugzilla.redhat.com/bugzilla/attachment.cgi?id=124267
 
-I hope to present soon a version 4 of the SCSI generic
-interface structure that will address some of
-these concerns. [Basically an expanded version of
-'struct sg_io_hdr' that includes bidirectional data
-transfers and multi-protocol support.]
+I'm not that familiar with this code, but would adding exceptions
+on a per-vendor basis in sg_allow_access() be the way forward here?
 
-Doug Gilbert
+If not, what is the right answer ?
 
-> This patchset replaces netlink shared memory between kernel and user
-> spaces. The user-space daemon and the kernel module create shared
-> memory via mmap and use it like ring buffer (like mmapped packet
-> does). The poll system call is used for notification from kernel to
-> user space and the write system call is used for notification from
-> user to kernel space. We use a simple approach so that we easily
-> replace it if we find something better later on (or we implement a
-> generic interface if necessary).
-> 
-> This patchset is against the scsi-target git tree and on the top of
-> the following patch:
-> 
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=114960851929878&w=2
+		Dave
 
+-- 
+http://www.codemonkey.org.uk
