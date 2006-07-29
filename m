@@ -1,60 +1,51 @@
-From: Christer Weinigel <christer@weinigel.se>
+From: Arjan van de Ven <arjan@infradead.org>
 Subject: Re: cd burning with plextor drives.
-Date: 29 Jul 2006 23:40:41 +0200
-Message-ID: <m3wt9w3x9i.fsf@zoo.weinigel.se>
+Date: Sun, 30 Jul 2006 00:13:06 +0200
+Message-ID: <1154211186.2903.66.camel@laptopd505.fenrus.org>
 References: <20060729045249.GA23398@redhat.com>
-	<20060729111240.GG13095@suse.de>
-	<1154180419.9447.61.camel@mulgrave.il.steeleye.com>
-	<Pine.LNX.4.64.0607291005200.4168@g5.osdl.org>
-	<44CBAB4B.7050308@torque.net>
-	<Pine.LNX.4.64.0607291145250.4168@g5.osdl.org>
+	 <20060729111240.GG13095@suse.de>
+	 <1154180419.9447.61.camel@mulgrave.il.steeleye.com>
+	 <Pine.LNX.4.64.0607291005200.4168@g5.osdl.org>
+	 <44CBAB4B.7050308@torque.net>
+	 <Pine.LNX.4.64.0607291145250.4168@g5.osdl.org>
+	 <44CBC115.2080401@torque.net>
+	 <Pine.LNX.4.64.0607291314500.4168@g5.osdl.org>
+	 <Pine.LNX.4.64.0607291338530.4168@g5.osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 2-1-3-15a.ens.sth.bostream.se ([82.182.31.214]:45517 "EHLO
-	zoo.weinigel.se") by vger.kernel.org with ESMTP id S932229AbWG2Vkn convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 29 Jul 2006 17:40:43 -0400
-In-Reply-To: <Pine.LNX.4.64.0607291145250.4168@g5.osdl.org>
+Received: from pentafluge.infradead.org ([213.146.154.40]:24030 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1750861AbWG2WNK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 29 Jul 2006 18:13:10 -0400
+In-Reply-To: <Pine.LNX.4.64.0607291338530.4168@g5.osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Linus Torvalds <torvalds@osdl.org>
-Cc: Douglas Gilbert <dougg@torque.net>, James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <axboe@suse.de>, Dave Jones <davej@redhat.com>, linux-scsi@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, Dave Jones <davej@redhat.com>, Jens Axboe <axboe@suse.de>, James Bottomley <James.Bottomley@SteelEye.com>, Douglas Gilbert <dougg@torque.net>
 
-Linus Torvalds <torvalds@osdl.org> writes:
 
-> But you can try to _improve_ the filtering. We've certainly done that=
-=20
-> before. Quite frankly, I don't think there's a lot there that can be=20
-> improved upon any more, but it's certainly an option that we could ch=
-ange=20
-> that filtering to be (a) per-device and (b) allow root to explicitly=20
-> change it on a per-machine and per-device setting, with the current=20
-> filtering rules being just the "default rules".
+> (As a historical oddity - there _was_ this bug in some drive that would 
+> corrupt the firmware by mistake, though - I think we _did_ actually fry 
+> some drives by sending it a "cache flush" command that it wasn't 
+> expecting, and that it turned into firmware reload thing or something. I 
+> think Alan Cox knows all the gruesome details, but that we could 
+> definitely blame on bad hardware..
 
-The filtering can definitely be improved.  Today sg_io filters on SCSI
-commands only, but it really ought to have a filter for mode pages[1]
-too.  The burn proof setting for a drive could be in a vendor specific
-mode page and cdrecord should be able to write to it.  Another page
-controls the SCSI bus timings and shold definitely not be writable by
-cdrecord.
+since you asked for it...
 
-Or we could just do as J=F6rg Schilling says: trust him and just make
-cdrecord suid root.
+a certain distribution shipped a preproduction version of a packet
+writing patch or it was some barrier thing, I forgot, which would end up
+sending an *ATA* "cache flush" command to ATAPI drives that didn't claim
+to understand that command range. A certain model of cdrom drive (LG?)
+actually had that same command byte code as "flash firmware". 
 
-  /Christer
+Arguably it's a very stupid value to pick, but it's also not technically
+a drive bug; the drive explicitly claimed to not understand the command
+set in question, and that distro kernel sent it anyway. 
 
-[1] http://en.wikipedia.org/wiki/SCSI_mode_pages
 
---=20
-"Just how much can I get away with and still go to heaven?"
+-- 
+if you want to mail me at work (you don't), use arjan (at) linux.intel.com
 
-=46reelance consultant specializing in device driver programming for Li=
-nux=20
-Christer Weinigel <christer@weinigel.se>  http://www.weinigel.se
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
