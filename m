@@ -1,139 +1,104 @@
-From: Douglas Gilbert <dougg@torque.net>
+From: Linus Torvalds <torvalds@osdl.org>
 Subject: Re: cd burning with plextor drives.
-Date: Sat, 29 Jul 2006 16:12:05 -0400
-Message-ID: <44CBC115.2080401@torque.net>
-References: <20060729045249.GA23398@redhat.com>  <20060729111240.GG13095@suse.de> <1154180419.9447.61.camel@mulgrave.il.steeleye.com> <Pine.LNX.4.64.0607291005200.4168@g5.osdl.org> <44CBAB4B.7050308@torque.net> <Pine.LNX.4.64.0607291145250.4168@g5.osdl.org>
-Reply-To: dougg@torque.net
+Date: Sat, 29 Jul 2006 13:33:42 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0607291314500.4168@g5.osdl.org>
+References: <20060729045249.GA23398@redhat.com>  <20060729111240.GG13095@suse.de>
+ <1154180419.9447.61.camel@mulgrave.il.steeleye.com>
+ <Pine.LNX.4.64.0607291005200.4168@g5.osdl.org> <44CBAB4B.7050308@torque.net>
+ <Pine.LNX.4.64.0607291145250.4168@g5.osdl.org> <44CBC115.2080401@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:28852 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1751346AbWG2UMR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 29 Jul 2006 16:12:17 -0400
-In-Reply-To: <Pine.LNX.4.64.0607291145250.4168@g5.osdl.org>
+Received: from smtp.osdl.org ([65.172.181.4]:15796 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932191AbWG2Ud6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 29 Jul 2006 16:33:58 -0400
+In-Reply-To: <44CBC115.2080401@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
+To: Douglas Gilbert <dougg@torque.net>
 Cc: James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <axboe@suse.de>, Dave Jones <davej@redhat.com>, linux-scsi@vger.kernel.org
 
-Linus Torvalds wrote:
+
+
+On Sat, 29 Jul 2006, Douglas Gilbert wrote:
 > 
-> On Sat, 29 Jul 2006, Douglas Gilbert wrote:
->> Command filtering has always been dubious.
-> 
-> No it has not.
-> 
-> Command filtering falls under the _very_ non-dubious heading of "of 
-> _course_ we have to do it". There is absolutely zero doubt about it at 
-> all. 
-> 
-> You literally have two choices:
->  - you can filter commands
->  - you can disallow all command access for non-specific-capability users.
-> 
-> Those are the two choices. There really is no third choice. The only 
-> question is the details of _how_ you do the filtering and/or disallowing.
-> 
->> If a user has read write permissions on
->> a full device (not just a partition in it) why shouldn't
->> they be able to send any (SCSI/ATA/...) pass through
->> command to it?
-> 
-> They have read-write access to the PLATTER. 
-> 
-> The fact that you may have access to write data to a disk does _not_ mean 
-> that you must necessarily be able to set the password on the disk so that 
-> nobody else can ever read or write data to that disk without your 
-> permission.
+> See below. Non-root users do not usually have read
+> or write permissions to a _disk_. We were talking
+> about a different class of devices: cd/dvd drives.
 
-See below. Non-root users do not usually have read
-or write permissions to a _disk_. We were talking
-about a different class of devices: cd/dvd drives.
+What has that got to do with _anything_?
 
-> Quite frankly, if you don't see that as an "obvious", and that I'm 100% 
-> right when I say that you have the above _two_ choices, and that your 
-> choice simply is not a choice at all, but total idiocy, then I don't know 
-> what to say.
+What do you think is the difference between a disk and a CD drive?
 
-Well if you want to filter, I'll be happy to find
-flaws, both over and under filtering. Are you sure
-SCSI commands are being sent through the pass through?
-How about ATA commands tunnelled in SCSI commands
-(already supported by libata). There was recent talk
-of tunnelling SAS SMP functions through SCSI (SSP)
-to name another (ab)use.
+And do you really think that it's the _medium_ that looks at the commands? 
+I don't think so. Regardless of whether it's a disk or a CD-ROM, it's the 
+controller in the _drive_ that looks and acts on those commands.
 
-> Put another way: you will remove that command filtering in 
-> block/scsi_ioctl.c only in a kernel that I don't maintain, or by disabling 
-> it in some way that is so hidden that I won't notice. Because I'm not so 
-> stupid as to think that it's ok for normal users to set driver passwords 
-> or rewrite the disk firmware just because they have write permissions to 
-> the device. That's pretty damn final.
+And that CD drive (that you have write access to) also has things like 
+firmware. And how do you think that firmware is updated? By magic? Or by 
+SCSI commands sent to the drive?
 
-You weren't at the storage summit. As stated in other
-posts to this thread it was concluded that command
-filtering is a flawed strategy. With that consensus
-that leaves the "disallow all command access for
-non-specific-capability users" option.
+(Yeah, I realize that it's also possible that the firmware update could 
+happen by the drive just reading a disk, since the controller will do 
+various things on its own anyway. I don't actually know if that is ever 
+the case, or possibly even the _common_ case, but my wild guess would be 
+that it's a lot more common to have a firmware update SCSI command than to 
+have the drive able to update its own firmware).
 
-> But you can try to _improve_ the filtering. We've certainly done that 
-> before. Quite frankly, I don't think there's a lot there that can be 
-> improved upon any more, but it's certainly an option that we could change 
-> that filtering to be (a) per-device and (b) allow root to explicitly 
-> change it on a per-machine and per-device setting, with the current 
-> filtering rules being just the "default rules".
+Are you _really_ suggesting that people who happen to log in to the 
+console should automatically also be allowed to rewrite the CD-ROM drive 
+firmware, just because they are supposed to be able to write to the CD-ROM 
+media in that drive? Or do other random things that the kernel really 
+doesn't know what they do?
 
-By current rules I suppose you mean the block SG_IO rules. Do you really
-mean "per-device" as in /dev/hdc or "per-device-type" as in disk versus
-cd/dvd drive? The current rules are skewed towards MMC so far that
-they are broken in that some SBC (i.e. hard disk) modifying commands
-can slip through in the guise of innocent MMC commands.
+For all we know, every single vendor-specific command might be a "please 
+self-descruct now" command. That would be a pretty stupid vendor, but hey, 
+nothing is impossible.
 
-> Then you could encode any additional rules you want in a /sbin/hotplug 
-> script or something. But the filtering isn't going _anywhere_, and what 
-> you suggest is just totally and utterly insane.
+If you really think that normal people should be able to send arbitrary 
+SCSI commands to their CD-ROM unit, just because they should be able to 
+write to the _platter_ that happens to have been inserted into that unit, 
+then you really are crazy.
 
-Sounds like you are playing the man and not the ball.
-Why didn't you jump on either of these posts:
-http://marc.theaimsgroup.com/?l=linux-scsi&m=115417174425242&w=2
-http://marc.theaimsgroup.com/?l=linux-scsi&m=115418046812126&w=2
-Hmm?
+By updating the firmware on the CD-ROM drive, you can basically make it be 
+nonfunctional.
 
+Or do you know what all those vendor-specific commands do? In that case, 
+we could just say "ok, for this particular device, we know this command is 
+safe, so we can let it through".
 
-As you are no doubt aware, disk permissions and cd/dvd drive
-permissions are set up differently:
+> You weren't at the storage summit. As stated in other
+> posts to this thread it was concluded that command
+> filtering is a flawed strategy. With that consensus
+> that leaves the "disallow all command access for
+> non-specific-capability users" option.
 
-$ df -hT
-Filesystem    Type    Size  Used Avail Use% Mounted on
-/dev/hda2     ext3     19G   15G  3.4G  82% /
+Apparently it was good that I wasn't at that storage summit, because you 
+guys clearly don't care about users or sanity, and I'd just have been 
+frustrated.
 
-$ ls -l /dev/hda /dev/hda2
-brw-r----- 1 root disk 3, 0 Jul 29 05:14 /dev/hda
-brw-r----- 1 root disk 3, 2 Jul 29 09:14 /dev/hda2
+We _do_ want to allow users to write their own disks without SUID programs 
+if at all possible, and if for no other reason than the fact that people 
+expect it to work, and so far every SUID program to do so has been a 
+disaster (I'm not saying that it necessarily _always_ is a disaster, and 
+I'm not saying it's wrong, but at least historically it has been).
 
-This email has been saved on /dev/hda2 but I don't have
-permissions on it. I can't send any pass through commands
-to /dev/hda or /dev/hda2 as a non-root user (unless
-my user is in group 'disk' and the command only needs
-O_RDONLY which rules out the SCSI WRITE command).
+And that BY DEFINITION means that we need to do filtering. No ifs, buts or 
+maybes about it.
 
-Here is my cd/dvd combo drive:
+> By current rules I suppose you mean the block SG_IO rules. Do you really
+> mean "per-device" as in /dev/hdc or "per-device-type" as in disk versus
+> cd/dvd drive?
 
-$ ls -l /dev/hdc
-brw------- 1 dougg disk 22, 0 Jul 29 09:14 /dev/hdc
+Per-device as in /dev/hdc. Every device node would need to have its own 
+filtering rule.
 
-The GUI (kde of FC5) was started as user 'dougg' but
-I'm writing this email as user 'torque' so I can't
-access that cd/dvd drive at the pass through level.
+> Why didn't you jump on either of these posts:
 
+Because I don't read linux-scsi? I replied when I was Cc'd and noticed 
+(and hey, I sometimes get too much personal email too, so that "and 
+noticed" is actually important. The fact that I don't reply to everything 
+doesn't mean that I read it, understood it, and agreed with it).
 
-There is another class of commands that the sg driver does
-require CAP_SYS_RAW_IO capability for. Those are the ones
-that do collateral damage. A bus reset command comes to
-mind (also ATA soft resets on PATA can take out the other
-device on the cable). IMO collateral damage is something
-the OS should take special care with.
-
-Doug Gilbert
+			Linus
