@@ -1,54 +1,74 @@
-From: Linus Torvalds <torvalds@osdl.org>
+From: Douglas Gilbert <dougg@torque.net>
 Subject: Re: cd burning with plextor drives.
-Date: Sat, 29 Jul 2006 10:49:48 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0607291045540.4168@g5.osdl.org>
-References: <20060729045249.GA23398@redhat.com>  <20060729111240.GG13095@suse.de>
-  <1154180419.9447.61.camel@mulgrave.il.steeleye.com>
- <Pine.LNX.4.64.0607291005200.4168@g5.osdl.org> <1154194239.9447.89.camel@mulgrave.il.steeleye.com>
+Date: Sat, 29 Jul 2006 14:39:07 -0400
+Message-ID: <44CBAB4B.7050308@torque.net>
+References: <20060729045249.GA23398@redhat.com>  <20060729111240.GG13095@suse.de> <1154180419.9447.61.camel@mulgrave.il.steeleye.com> <Pine.LNX.4.64.0607291005200.4168@g5.osdl.org>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:33415 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932199AbWG2RuG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 29 Jul 2006 13:50:06 -0400
-In-Reply-To: <1154194239.9447.89.camel@mulgrave.il.steeleye.com>
+Received: from pentafluge.infradead.org ([213.146.154.40]:43161 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S932199AbWG2SjW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 29 Jul 2006 14:39:22 -0400
+In-Reply-To: <Pine.LNX.4.64.0607291005200.4168@g5.osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Jens Axboe <axboe@suse.de>, Dave Jones <davej@redhat.com>, linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <axboe@suse.de>, Dave Jones <davej@redhat.com>, linux-scsi@vger.kernel.org
 
-
-
-On Sat, 29 Jul 2006, James Bottomley wrote:
+Linus Torvalds wrote:
 > 
-> But not for every CD burner ... that's the point.  The heuristics we
-> have now work for a large subset.  For the rest, we get a stream of "my
-> CD won't burn as a user like it's supposed to" bug reports.
+> On Sat, 29 Jul 2006, James Bottomley wrote:
+>> I concur.  If we're going to allow users access to burn CDs, it's
+>> impossible to police them with certainty as this case indicates.
+> 
+> Not so. I can (and have) written tons of CD's as a normal user, with 
+> perfect security.
+> 
+> No, the kernel shouldn't allow device-specific commands. That goes without 
+> saying. Whether this is a sg.c problem, or a cdrecord problem is unclear, 
+> I suspect it's the latter. 
 
-That's not _our_ problem. That's likely the problem of "cdrecord" 
-_thinking_ that it needs to do something smart, when it really really 
-doesn't need to.
+Command filtering has always been dubious. The sg driver
+takes the approach of allowing through a small number of
+"safe" (often mandatory) SCSI _Primary_ Commands (SPC). It
+takes no special account of the Multimedia Commands (MMC),
+cdrecord or the SCSI Block Commands (SBC). The sg driver
+filter does lean a little towards SBC by allowing the
+READ CAPACITY command to be accessed O_RDONLY.
 
-I have yet to hear anything that implies anything else than "cdrecord is 
-just buggy".
+The block layer SG_IO filter bends over backwards to
+support MMC and hence cdrecord. So it supports one
+device _type_ specific class. Due to vendor specific
+commands (e.g. from plextor) it cannot keep cdrecord
+completely happy.
 
-> There are certain CDs that just require vendor specific magic to
-> work ... even cdrecord has no choice but to do this.
+For a comparison of the two filters see table 3 in:
+http://www.torque.net/sg/sg_io.html
+That table highlights another difference between the
+two filters:
+  - sg: allow some commands to be accessed O_RDONLY
+    and let all commands to be accessed O_RDWR
+  - block SG_IO: has three states: allow some commands
+    to be accessed O_RDONLY, a larger set O_RDWR and
+    the rest with CAP_SYS_RAW_IO
 
-IF that is actually true (and if you were told this by Joerg, I would 
-double- and triple-check it from some other source), then in the end you 
-do end up having to have a per-device translation table, and it probably 
-shouldn't be in the kernel.
+The latter approach is harder to keep correct. Two glaring
+faults are REPORT LUNS (mandatory since SPC-3) and
+READ CAPACITY(16); both are "safe" but need CAP_SYS_RAW_IO
+capability (usually root permissions). This may not annoy
+cdrecord but it would peeve other pass through users.
 
-It probably _should_ be in a suid-root thing that validates the commands. 
-People used to make cdrecord suid, but that thing really isn't written to 
-be done that way. That doesn't mean that something else couldn't be done 
-properly.
 
-There's no way the kernel should do this. In a hotplug environment in 
-particular (which is not _that_ common with CD-ROM's but certainly not 
-unheard of), you don't want to have the kernel know about every quirk of 
-every device anyway.
+If a user has read write permissions on
+a full device (not just a partition in it) why shouldn't
+they be able to send any (SCSI/ATA/...) pass through
+command to it? When the sg driver was used to burn cd
+and dvds in lk 2.4 series the window manager needed to
+arrange for the GUI owner to have write permissions
+on cd and dvd writing devices. No root permissions or
+CAP_SYS_RAW_IO capability was needed.
 
-			Linus
+Doug Gilbert
