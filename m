@@ -1,47 +1,49 @@
-From: "Simon Matthews" <simon.d.matthews@gmail.com>
-Subject: Re: RedHat EL4 install does not find RAID set with 3WARE 9550SX
-Date: Sun, 30 Jul 2006 00:10:49 -0700
-Message-ID: <40b437200607300010g206dd46fv9b531f0ed21a89c8@mail.gmail.com>
-References: <40b437200607292340n1fa9a219q74b7ad34853f829a@mail.gmail.com>
-	 <20060730064910.GC4442@parisc-linux.org>
+From: Rogier Wolff <R.E.Wolff@BitWizard.nl>
+Subject: Re: cd burning with plextor drives.
+Date: Sun, 30 Jul 2006 11:38:49 +0200
+Message-ID: <20060730093848.GC8910@bitwizard.nl>
+References: <20060729045249.GA23398@redhat.com> <20060729111240.GG13095@suse.de> <1154180419.9447.61.camel@mulgrave.il.steeleye.com> <Pine.LNX.4.64.0607291005200.4168@g5.osdl.org> <44CBAB4B.7050308@torque.net> <Pine.LNX.4.64.0607291145250.4168@g5.osdl.org> <44CBC115.2080401@torque.net> <Pine.LNX.4.64.0607291314500.4168@g5.osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.183]:10579 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1751210AbWG3HKu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 30 Jul 2006 03:10:50 -0400
-Received: by py-out-1112.google.com with SMTP id t32so304098pyc
-        for <linux-scsi@vger.kernel.org>; Sun, 30 Jul 2006 00:10:49 -0700 (PDT)
-In-Reply-To: <20060730064910.GC4442@parisc-linux.org>
+Received: from dtp.xs4all.nl ([80.126.206.180]:636 "HELO abra2.bitwizard.nl")
+	by vger.kernel.org with SMTP id S932096AbWG3Jiu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 30 Jul 2006 05:38:50 -0400
 Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0607291314500.4168@g5.osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: Douglas Gilbert <dougg@torque.net>, James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <axboe@suse.de>, Dave Jones <davej@redhat.com>, linux-scsi@vger.kernel.org
 
-Matthew,
+On Sat, Jul 29, 2006 at 01:33:42PM -0700, Linus Torvalds wrote:
+> (Yeah, I realize that it's also possible that the firmware update
+> could happen by the drive just reading a disk, since the controller
+> will do various things on its own anyway. I don't actually know if
+> that is ever the case, or possibly even the _common_ case, but my
+> wild guess would be that it's a lot more common to have a firmware
+> update SCSI command than to have the drive able to update its own
+> firmware).
 
-On 7/29/06, Matthew Wilcox <matthew@wil.cx> wrote:
-> On Sat, Jul 29, 2006 at 11:40:23PM -0700, Simon Matthews wrote:
-> > I have been attempting to install RHEL4 (update 3) on a dual-Opteron
-> > system with a 3WARE 9550SX RAID controller and 4 disks.
-> >
-> [...]
-> >
-> > Does anyone have any suggestions?
->
-> Contact Red Hat support -- that's the point of buying the EL product.
+Just for the record: we've upgraded CD burner firmware, and it works
+by running some silly little program on DOS. No media involved.
 
-Good point.  I am so used to working with the free (beer as well as
-speech) distros (gentoo, debian), that I forget that  there is vendor
-support with Red Hat.
+We've updated/modified harddisk drive firmware. Same procedure: vendor
+specific commands, and voila! (We're currently banging the hardware to
+do this, possibly we might port to some passtrhough thingy later on)
 
-Anyway, problem solved (sort of): I downloaded RHEL4 Update 2, and
-installed using 3WARE's driver disk. It seems to be working.
+I have vendor confirmation that turning on some consumer electronics
+while holding a specific key combo will make the device boot (some
+stage-2 boot) from the inserted CD instead of the firmware inside.
+They use this to boot the "diagnostics" CD, but an "update firmware"
+CD could obviously be made. 
 
-Regards and thanks!
+	Roger. 
 
-
->
+-- 
+** R.E.Wolff@BitWizard.nl ** http://www.BitWizard.nl/ ** +31-15-2600998 **
+*-- BitWizard writes Linux device drivers for any device you may have! --*
+Q: It doesn't work. A: Look buddy, doesn't work is an ambiguous statement. 
+Does it sit on the couch all day? Is it unemployed? Please be specific! 
+Define 'it' and what it isn't doing. --------- Adapted from lxrbot FAQ
