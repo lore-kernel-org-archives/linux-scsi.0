@@ -1,45 +1,67 @@
 From: Rogier Wolff <R.E.Wolff@BitWizard.nl>
 Subject: Re: cd burning with plextor drives.
-Date: Sun, 30 Jul 2006 11:38:49 +0200
-Message-ID: <20060730093848.GC8910@bitwizard.nl>
-References: <20060729045249.GA23398@redhat.com> <20060729111240.GG13095@suse.de> <1154180419.9447.61.camel@mulgrave.il.steeleye.com> <Pine.LNX.4.64.0607291005200.4168@g5.osdl.org> <44CBAB4B.7050308@torque.net> <Pine.LNX.4.64.0607291145250.4168@g5.osdl.org> <44CBC115.2080401@torque.net> <Pine.LNX.4.64.0607291314500.4168@g5.osdl.org>
+Date: Sun, 30 Jul 2006 12:21:16 +0200
+Message-ID: <20060730102115.GD8910@bitwizard.nl>
+References: <20060729045249.GA23398@redhat.com> <20060729111240.GG13095@suse.de> <Pine.LNX.4.64.0607290953220.4168@g5.osdl.org> <20060729172205.GG16946@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dtp.xs4all.nl ([80.126.206.180]:636 "HELO abra2.bitwizard.nl")
-	by vger.kernel.org with SMTP id S932096AbWG3Jiu (ORCPT
+Received: from dtp.xs4all.nl ([80.126.206.180]:65416 "HELO abra2.bitwizard.nl")
+	by vger.kernel.org with SMTP id S932211AbWG3KVR (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 30 Jul 2006 05:38:50 -0400
+	Sun, 30 Jul 2006 06:21:17 -0400
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0607291314500.4168@g5.osdl.org>
+In-Reply-To: <20060729172205.GG16946@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: Douglas Gilbert <dougg@torque.net>, James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <axboe@suse.de>, Dave Jones <davej@redhat.com>, linux-scsi@vger.kernel.org
+To: Dave Jones <davej@redhat.com>
+Cc: Linus Torvalds <torvalds@osdl.org>, Jens Axboe <axboe@suse.de>, linux-scsi@vger.kernel.org
 
-On Sat, Jul 29, 2006 at 01:33:42PM -0700, Linus Torvalds wrote:
-> (Yeah, I realize that it's also possible that the firmware update
-> could happen by the drive just reading a disk, since the controller
-> will do various things on its own anyway. I don't actually know if
-> that is ever the case, or possibly even the _common_ case, but my
-> wild guess would be that it's a lot more common to have a firmware
-> update SCSI command than to have the drive able to update its own
-> firmware).
+On Sat, Jul 29, 2006 at 01:22:05PM -0400, Dave Jones wrote:
+> I had visions of extending verify_command() to be of the form..
+> 
+> 	if (devicevendor==PLEXTOR) {
+> 		safe_for_write(ENABLE_BURN_PROOF);
+> 		safe_for_write(ENABLE_FROBNICATOR);
+> 	}
+> 	etc..
 
-Just for the record: we've upgraded CD burner firmware, and it works
-by running some silly little program on DOS. No media involved.
+Almost there.... 
 
-We've updated/modified harddisk drive firmware. Same procedure: vendor
-specific commands, and voila! (We're currently banging the hardware to
-do this, possibly we might port to some passtrhough thingy later on)
+Instead it should walk a (device-specific (*)) table, that specifies
+what is "safe". The table has masks to specify which bits are
+important and what values are expected and allowed etc etc.
 
-I have vendor confirmation that turning on some consumer electronics
-while holding a specific key combo will make the device boot (some
-stage-2 boot) from the inserted CD instead of the firmware inside.
-They use this to boot the "diagnostics" CD, but an "update firmware"
-CD could obviously be made. 
+This table could be initialized "empty". 
+
+Next a simple interface should allow root to modify the table. 
+
+
+I expect that after doing this, the code above the suggestion could be
+deleted, and that the currently-hardcoded policy could move into the
+default table, instead of having the table start out empty. This might
+be a performance tradeoff (i.e. even though it reduces code size, the
+hardcoded version may be much quicker than walking the table every
+time).
+
+Now distributions/users/sysadmins can chose: 
+
+A) leave as is: The ACME DVDwriter's new SuperDVDProof feature
+   will only work as root once implemented in cdrecord. 
+
+B) insert a table entry: "everything allowed". This will allow
+   users to shoot themselves in the foot. 
+
+C) Be smart about it, and provide a mechanism to detect ACME
+   drives with the feature, select the appropriate config file
+   and upload the corresponding table.
+
+Everybody happy?
 
 	Roger. 
+
+
+(*) /dev/hdc, not "Plextor". 
 
 -- 
 ** R.E.Wolff@BitWizard.nl ** http://www.BitWizard.nl/ ** +31-15-2600998 **
