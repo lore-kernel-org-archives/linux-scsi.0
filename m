@@ -1,42 +1,43 @@
-From: "Parker Schwartz" <89U05TA@allsaintsfan.com>
-Subject: Re: Re: Re:
-Date: Sun, 30 Jul 2006 05:47:33 -0420
-Message-ID: <662161c80604dvjru4ttn4z0gw2ujvgttayqv1yoingw__1489.3104359091$1154238487$gmane$org@mxs.mail.ru>
+From: Linus Torvalds <torvalds@osdl.org>
+Subject: Re: cd burning with plextor drives.
+Date: Sat, 29 Jul 2006 22:56:27 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0607292255370.4168@g5.osdl.org>
+References: <20060729045249.GA23398@redhat.com> <20060729111240.GG13095@suse.de>
+ <1154180419.9447.61.camel@mulgrave.il.steeleye.com>
+ <Pine.LNX.4.64.0607291005200.4168@g5.osdl.org> <44CBAB4B.7050308@torque.net>
+ <Pine.LNX.4.64.0607291145250.4168@g5.osdl.org> <m3wt9w3x9i.fsf@zoo.weinigel.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: MULTIPART/MIXED; BOUNDARY="21872808-1854061615-1154238987=:4168"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [124.157.225.175] ([124.157.225.175]:48973 "EHLO
-	adsl-124.157.225-175.tttmaxnet.com") by vger.kernel.org with ESMTP
-	id S1751111AbWG3Frg convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 30 Jul 2006 01:47:36 -0400
-Content-Disposition: inline
+Received: from smtp.osdl.org ([65.172.181.4]:54971 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751135AbWG3F4r (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 30 Jul 2006 01:56:47 -0400
+In-Reply-To: <m3wt9w3x9i.fsf@zoo.weinigel.se>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-admin@vger.kernel.org
+To: Christer Weinigel <christer@weinigel.se>
+Cc: Douglas Gilbert <dougg@torque.net>, James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <axboe@suse.de>, Dave Jones <davej@redhat.com>, linux-scsi@vger.kernel.org
 
-N 0 w    the   L 0 W E S T   P R l C Es   ON:                                        
-            
-C l A L l S                             
-C l A L l S   S 0 F T                           
-V l A G R A                 
-V l A G R A   S 0 F T                           
-V l A G R A    P R 0 F E S S l 0 N A L           
-L E V l T R A        
-         
-also:                             
-V A L l U M, H u m a n   G R 0 W T H   H 0 r m 0 n e, H 0 0 D IA, L l P 0 S A F E, Z 0 V l R A X, N Y M P H 0 M A X, D l F L U C A N, A V A N D l A   and   many many others...                                     
-  
-check all   P r l C E s   by  C L l K l  N G   the   L l N K:                        
-                     
-http://vcufrl.litevison.com/?12495475
-    
-                              
-          
-                                                              
-                 
-                                  
-                                      
-                                  
-                                       
-      
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
+
+--21872808-1854061615-1154238987=:4168
+Content-Type: TEXT/PLAIN; charset=iso-8859-1
+Content-Transfer-Encoding: 8BIT
+
+
+
+On Sat, 29 Jul 2006, Christer Weinigel wrote:
+> 
+> Or we could just do as Jörg Schilling says: trust him and just make
+> cdrecord suid root.
+
+Mwhahhahhaaah.. 
+
+[ Wiping tears of laughter off my face ]
+
+That was funny.
+
+		Linus
+--21872808-1854061615-1154238987=:4168--
