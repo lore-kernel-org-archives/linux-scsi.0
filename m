@@ -1,43 +1,81 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: cd burning with plextor drives.
-Date: Mon, 31 Jul 2006 11:33:58 +0200
-Message-ID: <20060731093358.GO14748@suse.de>
-References: <20060729045249.GA23398@redhat.com> <20060729111240.GG13095@suse.de> <Pine.LNX.4.64.0607290953220.4168@g5.osdl.org> <20060729172205.GG16946@redhat.com>
+From: Arkadiusz Miskiewicz <arekm@pld-linux.org>
+Subject: Re: intel srcu42e, megaraid_mbox, 2.6.16.23, x86_64 - megaraid mbox: critical hardware error!
+Date: Mon, 31 Jul 2006 14:15:12 +0200
+Message-ID: <200607311415.12162.arekm@pld-linux.org>
+References: <200607311107.36681.arekm@pld-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-2
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:50276 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S932076AbWGaJdq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 31 Jul 2006 05:33:46 -0400
+Received: from outgoing3.smtp.agnat.pl ([193.239.44.85]:55180 "EHLO
+	outgoing3.smtp.agnat.pl") by vger.kernel.org with ESMTP
+	id S1750962AbWGaMPS convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Jul 2006 08:15:18 -0400
+Received: from [83.18.80.218] (helo=[192.168.1.157] ident=matrix157)
+	by tekla.agnat.pl with esmtpsa (TLSv1:DHE-RSA-AES256-SHA:256)
+	(Exim 4.62)
+	(envelope-from <arekm@pld-linux.org>)
+	id 1G7Wg1-00014x-Je
+	for linux-scsi@vger.kernel.org; Mon, 31 Jul 2006 14:15:17 +0200
+In-Reply-To: <200607311107.36681.arekm@pld-linux.org>
 Content-Disposition: inline
-In-Reply-To: <20060729172205.GG16946@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dave Jones <davej@redhat.com>
-Cc: Linus Torvalds <torvalds@osdl.org>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Sat, Jul 29 2006, Dave Jones wrote:
->  >  - only root can ever be allowed to generate commands that the kernel has 
->  >    no clue what they are doing. NO WAY can we allow a user to generate 
->  >    postentially hardware-changing special commands just because he can 
->  >    access the CD-ROM (ie how would the kernel know that it's not a command 
->  >    that says "rewrite the firmware with something that always reads goatse 
->  >    off the disk"?)
-> 
-> I had visions of extending verify_command() to be of the form..
-> 
-> 	if (devicevendor==PLEXTOR) {
-> 		safe_for_write(ENABLE_BURN_PROOF);
-> 		safe_for_write(ENABLE_FROBNICATOR);
-> 	}
-> 	etc..
+On Monday 31 July 2006 11:07, Arkadiusz Miskiewicz wrote:
+> Hi,
+>
+> I have Tyan Thunder K8SRE S2891 mainboard, Transport GT24 B2891 1U
+> barebone system - 2 x dual core opteron 270, 6GB ram and Intel SRCU42=
+E
+> (PCI-E one) controller.
+>
+> The system has been set up (with kernel 2.6.16.23 SMP) and while comp=
+iling
+> kernel on it I got controller lockup. The problem is repeatable.
+>
+> I'm trying to compile 2.6.18rc3 + megaraid patches from mm kernel but=
+ from
+> changelog it doesn't seem that there is some important fix for this c=
+ase.
+>
+> Any ideas?
 
-God Dave, that's horrible and completely unmaintanable! The main problem
-with the device table right now is that it's completely kernel
-controlled, thus burdening everybody with this policy. Lets get it fixed
-instead of adding more warts to it.
+It's seems that the problem is solved now. The problem was due to broke=
+n=20
+memory chip attached to intel srcu42e. Details here:
+http://www.intel.com/support/motherboards/server/srcu42e/sb/CS-023123.h=
+tm
 
--- 
-Jens Axboe
+We got another srcu42e with memory from another manufacturer and it see=
+ms to=20
+work properly.
 
+> megaraid driver, firmware and bios versions below:
+>
+> megaraid cmm: 2.20.2.6 (Release Date: Mon Mar 7 00:01:03 EST 2005)
+> megaraid: 2.20.4.7 (Release Date: Mon Nov 14 12:27:22 EST 2005)
+> megaraid: probe new device 0x1000:0x0408:0x8086:0x0002: bus 3:slot 14=
+:func
+> 0 ACPI: PCI Interrupt Link [LNK1] enabled at IRQ 19
+> GSI 16 sharing vector 0xB1 and IRQ 16
+> ACPI: PCI Interrupt 0000:03:0e.0[A] -> Link [LNK1] -> GSI 19 (level, =
+high)
+> -> IRQ 177 megaraid: fw version:[514P] bios version:[H431]
+> Losing some ticks... checking if CPU frequency changed.
+> scsi0 : LSI Logic MegaRAID driver
+> scsi[0]: scanning scsi channel 0 [Phy 0] for non-raid devices
+> scsi[0]: scanning scsi channel 1 [Phy 1] for non-raid devices
+> scsi[0]: scanning scsi channel 2 [virtual] for logical drives
+>   Vendor: MegaRAID  Model: LD 0 RAID5  280G  Rev: 514P
+>   Type:   Direct-Access                      ANSI SCSI revision: 02
+
+--=20
+Arkadiusz Mi=B6kiewicz        PLD/Linux Team
+arekm / maven.pl            http://ftp.pld-linux.org/
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
