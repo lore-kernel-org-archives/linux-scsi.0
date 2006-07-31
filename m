@@ -1,40 +1,19 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH] hptiop: backout ioctl mess
-Date: Sun, 30 Jul 2006 23:19:31 -0400
-Message-ID: <44CD76C3.2060103@torque.net>
-References: <20060730171336.GA31646@lst.de> <08ce01c6b44c$82b8ef70$1200a8c0@gmm>
-Reply-To: dougg@torque.net
+From: "aeolus@rqa.sony.co.jp" <aeolus@rqa.sony.co.jp>
+Subject: Nobody can give it cheaper than us
+Date: Mon, 31 Jul 2006 00:56:29 -0500 (PDT)
+Message-ID: <22953109.8J407IU5@rqa.sony.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain;
+        charset="windows-1250"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:35810 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S932512AbWGaDTn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 30 Jul 2006 23:19:43 -0400
-In-Reply-To: <08ce01c6b44c$82b8ef70$1200a8c0@gmm>
+Received: from zeus1.kernel.org ([204.152.191.4]:45804 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S1751476AbWGaE4h (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 31 Jul 2006 00:56:37 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: HighPoint Linux Team <linux@highpoint-tech.com>
-Cc: Christoph Hellwig <hch@lst.de>, jejb@steeleye.com, linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-raid-owner@vger.kernel.org, linux-newbie-owner@vger.kernel.org, linux-net-owner@vger.kernel.org, linux-scsi@vger.kernel.org
 
-HighPoint Linux Team wrote:
-> Christoph Hellwig wrote:
->> The hptiop just got merged with a horrible amount of really bad ioctl
->> code that is against the standards for new scsi drivers.  This patch
->> backs it out (and fixes a small bug where scsi_add_host is called to
->> early).  We can re-add proper APIs once we agree on them.
-> 
-> What is the standard implemetation of private ioctls for scsi drivers?
-
-Don't get caught.
-
-You might try something creative like:
-#define foo ioctl
-
-More seriously see:
-http://lwn.net/Articles/191653/
-for a recent discussion.
-
-Doug Gilbert
-
+We got them all, check it
+http://www.google.nl/url?q=%68%74%74%70%3A%2F%2Fazyofly6g4xqsasdgssvyasa.%73%79%6D%70%6F%64%69%61%62%6D%2E%63%6F%6D
