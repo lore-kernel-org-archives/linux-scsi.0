@@ -1,39 +1,44 @@
-From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: RE: [PATCH 0/4] fusion: fibre channel: misc. fixes
-Date: Mon, 31 Jul 2006 13:04:13 -0600
-Message-ID: <664A4EBB07F29743873A87CF62C26D70249734@NAMAIL4.ad.lsil.com>
+From: Linus Torvalds <torvalds@osdl.org>
+Subject: Re: cd burning with plextor drives.
+Date: Mon, 31 Jul 2006 13:32:53 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0607311328541.4168@g5.osdl.org>
+References: <20060729045249.GA23398@redhat.com> <20060729111240.GG13095@suse.de>
+ <1154180419.9447.61.camel@mulgrave.il.steeleye.com>
+ <Pine.LNX.4.64.0607291005200.4168@g5.osdl.org> <1154194239.9447.89.camel@mulgrave.il.steeleye.com>
+ <Pine.LNX.4.64.0607291045540.4168@g5.osdl.org> <m3y7ubqdwg.fsf@zoo.weinigel.se>
+ <Pine.LNX.4.64.0607301245500.4168@g5.osdl.org> <m3u04yr5s5.fsf@zoo.weinigel.se>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:13039 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1030330AbWGaTEY convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 31 Jul 2006 15:04:24 -0400
-Content-class: urn:content-classes:message
+Received: from smtp.osdl.org ([65.172.181.4]:38371 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1030206AbWGaUdm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 31 Jul 2006 16:33:42 -0400
+In-Reply-To: <m3u04yr5s5.fsf@zoo.weinigel.se>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
-Cc: Michael Reed <mdr@sgi.com>
+To: Christer Weinigel <christer@weinigel.se>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <axboe@suse.de>, Dave Jones <davej@redhat.com>, linux-scsi@vger.kernel.org
 
--- Monday, July 31, 2006 11:19 AM,  Michael Reed wrote:
+
+
+On Sun, 31 Jul 2006, Christer Weinigel wrote:
 > 
-> [PATCH 1/4] fusion: fibre channel: add additional fc 
-> transport attributes
-> [PATCH 2/4] fusion: fibre channel: properly wait for firmware 
-> target discovery to complete
-> [PATCH 3/4] fusion: fibre channel: correct out of order event 
-> processing
-> [PATCH 4/4] fusion: fibre channel: don't sync cache if remote 
-> port deleted
-> 
-> Generated against 2.6.18-rc2-scsi-rc-fixes.
-> 
+> Yes, a lot of those CD burners are ancient.  But I like the fact that
+> Linux supports a lot of ancient hardware. :-)
 
-ACK, and the four associated patch's from Mike.
+Sure. But I don't think we should necessarily design any new code for it. 
+It's not like this has _ever_ worked differently from what it does now, so 
+if you have one of the pre-MMC drives, the right answer right now (and 
+always has been, I think) is that you need to be root to burn them.
 
-These patch's have been in review and test for the 
-past 2 to 3 weeks.
+I seriously doubt anybody _really_ cares.
 
-Eric
+That said, I don't think Peter Jones' patch is wrong.  I don't have any 
+strong feelings about it - if people actually want this adn feels it 
+improves the situation, why not? Although to actually make _sense_, we'd 
+want to have distros that actually want to use the interface to 
+auto-populate the command things or something.. In the absense of interest 
+from distros, I don't think it is worth it.
+
+		Linus
