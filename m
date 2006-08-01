@@ -1,48 +1,43 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: cd burning with plextor drives.
-Date: Tue, 1 Aug 2006 08:54:56 +0200
-Message-ID: <20060801065456.GF31908@suse.de>
-References: <1154180419.9447.61.camel@mulgrave.il.steeleye.com> <Pine.LNX.4.64.0607291005200.4168@g5.osdl.org> <1154194239.9447.89.camel@mulgrave.il.steeleye.com> <Pine.LNX.4.64.0607291045540.4168@g5.osdl.org> <m3y7ubqdwg.fsf@zoo.weinigel.se> <Pine.LNX.4.64.0607301245500.4168@g5.osdl.org> <m3u04yr5s5.fsf@zoo.weinigel.se> <Pine.LNX.4.64.0607311328541.4168@g5.osdl.org> <20060731204109.GB31908@suse.de> <Pine.LNX.4.64.0607311344470.4168@g5.osdl.org>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: [PATCH 0/6] lpfc 8.1.7 patches
+Date: Tue, 01 Aug 2006 07:32:52 -0400
+Message-ID: <1154431972.18162.10.camel@localhost.localdomain>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:22875 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S1161309AbWHAGyq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Aug 2006 02:54:46 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0607311344470.4168@g5.osdl.org>
+Received: from emulex.emulex.com ([138.239.112.1]:60616 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S932647AbWHALdC
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 1 Aug 2006 07:33:02 -0400
+Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
+	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id k71BX1k8000863
+	for <linux-scsi@vger.kernel.org>; Tue, 1 Aug 2006 04:33:01 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: Christer Weinigel <christer@weinigel.se>, James Bottomley <James.Bottomley@SteelEye.com>, Dave Jones <davej@redhat.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Mon, Jul 31 2006, Linus Torvalds wrote:
-> 
-> 
-> On Mon, 31 Jul 2006, Jens Axboe wrote:
-> > 
-> > There are, however, new uses of vendor specific commands that you need
-> > access to for fully utilizing your drive. As mentioned, Plextor is one
-> > of these. And they do make current and very good burners, yet we cannot
-> > add their opcodes to the table because they (sanely) used the vendor
-> > specific range for that.
-> 
-> However, before we do that, can somebody actially just FIX that stupid 
-> cdrecord bug. It shouldn't say it can't write the drive, if it's just that 
-> it's not allowed to use one of the vendor-specific extensions.
-> 
-> As mentioned, I bet burning _does_ actually work.
 
-Oh yeah, I think so too. It's for other features on the Plextor, like
-disc quality scans. So it's not critical as such for burning, but it is
-something that we do want to work.
+This patch set updates the lpfc driver to revision 8.1.8, which includes
+the following changes:
 
-I don't think you disagree that we need to support the vendor unique
-range of opcodes. And I don't think you disagree that we cannot safely
-put these in the global table. So that leaves one sane option - per
-device cmd filter table. I've kept Peter's original patch somewhat
-uptodate, I'll bring it to 2.6.18-rc3 and test+submit for 2.6.19.
+ - Adding statistics reset callback for FC transport
+ - Fix failing firmware download due to mailbox delays needing to be longer.
+ - Fix race condition between lpfc_sli_issue_mbox and lpfc_online
+ - Short bug fixes:
+    - Fix iocbq list corruption due to missing list_del's in ct handling
+    - Missing unlock in lpfc_sli_next_iotag()
+    - Fix initialization of can_queue value
+    - Differentiate sysfs mailbox errors with different codes.
+ - ID String and Message fixes
+    - Fix switch symbolic name registration to match cross-OS values
+    - Replace printk's with more standard lpfc_printf_log calls
+    - Make all lpfc_printf_log message numbers unique
+ - Change version number to 8.1.8
 
--- 
-Jens Axboe
+-- james s
+
+
+
 
