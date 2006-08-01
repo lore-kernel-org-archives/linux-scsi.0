@@ -1,33 +1,55 @@
-From: "Mae" <decadentcouncilwomen@pediatrician.com>
-Subject: New New Most quality products for anyone who wants to become a champion in bed
-Date: Mon, 31 Jul 2006 20:08:32 -0300
-Message-ID: <00114028877863.A1D3169B4F@00S9WVV>
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Subject: Re: [PATCH] Fix scsi/scsi_transport.h compile error
+Date: Tue, 1 Aug 2006 08:10:04 +0200
+Message-ID: <200608010810.15315.eike-kernel@sf-tec.de>
+References: <200607310943.25384.eike-kernel@sf-tec.de> <44CE07AA.9030202@s5r6.in-berlin.de> <20060731143839.GC6087@athena.road.mcmartin.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="Windows-1252"
+Content-Type: multipart/signed;
+  boundary="nextPart1770470.RcqhWilLLD";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 200-96-128-60.cpece705.dsl.brasiltelecom.net.br ([200.96.128.60]:62403
-	"EHLO MICRO-07.ajg7gpn.net") by vger.kernel.org with ESMTP
-	id S1751452AbWGaXJ5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 31 Jul 2006 19:09:57 -0400
+Received: from mail.sf-mail.de ([62.27.20.61]:44430 "EHLO mail.sf-mail.de")
+	by vger.kernel.org with ESMTP id S1161130AbWHAGHp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Aug 2006 02:07:45 -0400
+In-Reply-To: <20060731143839.GC6087@athena.road.mcmartin.ca>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-serial@vger.kernel.org
+To: Kyle McMartin <kyle@parisc-linux.org>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
 
-Nice to see you!
- Have more success with women and impress them with your power and stamina in bedAchieve astounding results in bed with these products designed to make any man a winner
+--nextPart1770470.RcqhWilLLD
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
+Am Montag, 31. Juli 2006 16:38 schrieb Kyle McMartin:
+> On Mon, Jul 31, 2006 at 03:37:46PM +0200, Stefan Richter wrote:
+> > > This should be solved with a "struct scsi_device;" decl, instead of
+> > > Yet More Header Dependancies...
+> >
+> > That function accesses members of the struct, i.e. the compiler needs to
+> > know offsets into struct scsi_device at this point. Therefore it needs
+> > the definition, not a declaration.
+>
+> Odd, ISTR that it only needed to be defined at the point the inline was
+> used. Oh well, my bad.
 
-Make your girlfriend or wife speechless with increased hardness, richer orgsms and more power in bed
+That would be expected behaviour on a define.
 
+Eike
 
- Find what you need here: http://www.isohyetab.com
+--nextPart1770470.RcqhWilLLD
+Content-Type: application/pgp-signature
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2 (GNU/Linux)
 
-Mae Brand
+iD8DBQBEzvBHXKSJPmm5/E4RAvsYAJ9uyuF8qsB+4cJ8U1fYwoQmBYkG/QCfa2Cx
+n+Z9amt6owc1QaA3505Togw=
+=8CSr
+-----END PGP SIGNATURE-----
 
-Beggars and borrowers cannot be choosersBetter to have loved and lost, than never have loved at all 
-
-Vex nah gat plaster fuh passion.
-
+--nextPart1770470.RcqhWilLLD--
