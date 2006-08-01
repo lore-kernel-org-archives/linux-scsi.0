@@ -1,50 +1,39 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: Re: [PATCH 4/4] fusion: fibre channel: don't sync cache if remote
- port deleted
-Date: Tue, 01 Aug 2006 10:37:26 -0500
-Message-ID: <44CF7536.5030006@sgi.com>
-References: <44CE3BC0.8020901@sgi.com> <1154444303.3446.11.camel@mulgrave.il.steeleye.com>
+From: Warren Volz <wvolz@lsil.com>
+Subject: Re: Fusion MPT Modules for Linux 2.6.11 and LSI Logic 53c1030?
+Date: Tue, 01 Aug 2006 10:49:43 -0600
+Message-ID: <44CF8627.40207@lsil.com>
+References: <8812D8156467224C9E9739E513037EF101297C8B@moe.nextone.local>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:62109 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S1030285AbWHAPhc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Aug 2006 11:37:32 -0400
-In-Reply-To: <1154444303.3446.11.camel@mulgrave.il.steeleye.com>
+Received: from mail0.lsil.com ([147.145.40.20]:13194 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1750819AbWHAQtv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Aug 2006 12:49:51 -0400
+In-Reply-To: <8812D8156467224C9E9739E513037EF101297C8B@moe.nextone.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
+To: Scott Lowrey <slowrey@nextone.com>
 Cc: linux-scsi@vger.kernel.org
 
-The mid-layer appears to be inconsistent with regard to sync cache.
-I agree the sync should not be in the lldd.  It's been in fusion for
-a long time and I'm just fixing the implementation for fibre channel.
-This isn't a new feature, just a fix to an existing one.
+On 8/1/2006 8:38 AM, Scott Lowrey wrote:
+> Thanks, Warren.  We've updated to 3.02.60 and so far things appear to be
+> working.
 
-I refer you to two threads which discussed the issue.
+Good to hear.
 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=115386616817044&w=2
-http://marc.theaimsgroup.com/?l=linux-scsi&m=115266599732078&w=2
+> You're right, the Downloads page is confusing.  There are two SAS
+> selections (neither of which is 3442X) and they lead to pages with no
+> matching results.  If I simply select "LSI53C1030" from the Specific
+> Product menu, I get a page that offers 3.02.52 for SuSE 9.1.   There are
+> no SAS products in the Specific Product menu.
+> 
+> Am I looking in the wrong place?
 
-Mike
+Hmm strange. To get to the SAS drivers I click "Downloads" at the top,
+use the "Select a specific product" dropdown and find "LSISAS3442X", and
+finally hit "Go". That should bring up the correct versions. Sorry it's
+such a mess!
 
+-Warren
 
-James Bottomley wrote:
-> On Mon, 2006-07-31 at 12:20 -0500, Michael Reed wrote:
->> mptscsih_slave_destroy issues an unconditional synchronize cache.
-> 
-> A) mptscsih_slave_destroy shouldn't be doing this ... it should be
-> relying on the functionality in the mid-layer.
-> 
->> It is not necessary for fibre channel devices for which the rport
->> has been deleted.  This patch creates a new function,
->> mptfc_slave_destroy(), which implements the appropriate test.
-> 
-> So, this is really code that shouldn't be in a driver, it should be
-> higher up.
-> 
-> The other three patches look fine.
-> 
-> James
-> 
