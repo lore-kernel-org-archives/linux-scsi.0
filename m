@@ -1,193 +1,135 @@
 From: James Smart <James.Smart@Emulex.Com>
-Subject: [PATCH 1/6] lpfc 8.1.7 : Adding statistics reset callback for FC
-	transport
-Date: Tue, 01 Aug 2006 07:33:29 -0400
-Message-ID: <1154432009.18162.12.camel@localhost.localdomain>
+Subject: [PATCH 2/6] lpfc 8.1.7 : Fix failing firmware download due to
+	mailbox delays needing to be longer
+Date: Tue, 01 Aug 2006 07:33:43 -0400
+Message-ID: <1154432023.18162.13.camel@localhost.localdomain>
 Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:63176 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S932648AbWHALdc
+Received: from emulex.emulex.com ([138.239.112.1]:64456 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S932661AbWHALdq
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Aug 2006 07:33:32 -0400
+	Tue, 1 Aug 2006 07:33:46 -0400
 Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
-	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id k71BXVfn000874
-	for <linux-scsi@vger.kernel.org>; Tue, 1 Aug 2006 04:33:31 -0700 (PDT)
+	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id k71BXjWT000880
+	for <linux-scsi@vger.kernel.org>; Tue, 1 Aug 2006 04:33:45 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Adding statistics reset callback for FC transport
+
+Fix failing firmware download due to mailbox delays needing to be longer.
 
 Signed-off-by: James Smart <James.Smart@emulex.com>
 
 
 diff -upNr a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
---- a/drivers/scsi/lpfc/lpfc_attr.c	2006-07-31 10:41:15.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_attr.c	2006-08-01 07:06:21.000000000 -0400
-@@ -1210,6 +1210,7 @@ lpfc_get_stats(struct Scsi_Host *shost)
- 	struct lpfc_hba *phba = (struct lpfc_hba *)shost->hostdata;
- 	struct lpfc_sli *psli = &phba->sli;
- 	struct fc_host_statistics *hs = &phba->link_stats;
-+	struct lpfc_lnk_stat * lso = &psli->lnk_stat_offsets;
- 	LPFC_MBOXQ_t *pmboxq;
- 	MAILBOX_t *pmb;
- 	int rc = 0;
-@@ -1272,22 +1273,97 @@ lpfc_get_stats(struct Scsi_Host *shost)
- 	hs->invalid_crc_count = pmb->un.varRdLnk.crcCnt;
- 	hs->error_frames = pmb->un.varRdLnk.crcCnt;
+--- a/drivers/scsi/lpfc/lpfc_attr.c	2006-08-01 07:07:38.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_attr.c	2006-08-01 07:08:50.000000000 -0400
+@@ -1000,7 +1000,8 @@ sysfs_mbox_read(struct kobject *kobj, ch
+ 			spin_unlock_irq(phba->host->host_lock);
+ 			rc = lpfc_sli_issue_mbox_wait (phba,
+ 						       phba->sysfs_mbox.mbox,
+-						       phba->fc_ratov * 2);
++				lpfc_mbox_tmo_val(phba,
++				    phba->sysfs_mbox.mbox->mb.mbxCommand) * HZ);
+ 			spin_lock_irq(phba->host->host_lock);
+ 		}
  
-+	hs->link_failure_count -= lso->link_failure_count;
-+	hs->loss_of_sync_count -= lso->loss_of_sync_count;
-+	hs->loss_of_signal_count -= lso->loss_of_signal_count;
-+	hs->prim_seq_protocol_err_count -= lso->prim_seq_protocol_err_count;
-+	hs->invalid_tx_word_count -= lso->invalid_tx_word_count;
-+	hs->invalid_crc_count -= lso->invalid_crc_count;
-+	hs->error_frames -= lso->error_frames;
+diff -upNr a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
+--- a/drivers/scsi/lpfc/lpfc_crtn.h	2006-07-31 10:41:15.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_crtn.h	2006-08-01 07:08:50.000000000 -0400
+@@ -127,6 +127,7 @@ void lpfc_config_port(struct lpfc_hba *,
+ void lpfc_kill_board(struct lpfc_hba *, LPFC_MBOXQ_t *);
+ void lpfc_mbox_put(struct lpfc_hba *, LPFC_MBOXQ_t *);
+ LPFC_MBOXQ_t *lpfc_mbox_get(struct lpfc_hba *);
++int lpfc_mbox_tmo_val(struct lpfc_hba *, int);
+ 
+ int lpfc_mem_alloc(struct lpfc_hba *);
+ void lpfc_mem_free(struct lpfc_hba *);
+diff -upNr a/drivers/scsi/lpfc/lpfc_mbox.c b/drivers/scsi/lpfc/lpfc_mbox.c
+--- a/drivers/scsi/lpfc/lpfc_mbox.c	2006-07-31 10:41:15.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_mbox.c	2006-08-01 07:08:50.000000000 -0400
+@@ -651,3 +651,19 @@ lpfc_mbox_get(struct lpfc_hba * phba)
+ 
+ 	return mbq;
+ }
 +
- 	if (phba->fc_topology == TOPOLOGY_LOOP) {
- 		hs->lip_count = (phba->fc_eventTag >> 1);
-+		hs->lip_count -= lso->link_events;
- 		hs->nos_count = -1;
- 	} else {
- 		hs->lip_count = -1;
- 		hs->nos_count = (phba->fc_eventTag >> 1);
-+		hs->nos_count -= lso->link_events;
++int
++lpfc_mbox_tmo_val(struct lpfc_hba *phba, int cmd)
++{
++	switch (cmd) {
++	case MBX_WRITE_NV:	/* 0x03 */
++	case MBX_UPDATE_CFG:	/* 0x1B */
++	case MBX_DOWN_LOAD:	/* 0x1C */
++	case MBX_DEL_LD_ENTRY:	/* 0x1D */
++	case MBX_LOAD_AREA:	/* 0x81 */
++	case MBX_FLASH_WR_ULA:  /* 0x98 */
++	case MBX_LOAD_EXP_ROM:	/* 0x9C */
++		return LPFC_MBOX_TMO_FLASH_CMD;
++	}
++	return LPFC_MBOX_TMO;
++}
+diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+--- a/drivers/scsi/lpfc/lpfc_sli.c	2006-08-01 07:07:38.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_sli.c	2006-08-01 07:08:50.000000000 -0400
+@@ -2197,7 +2197,8 @@ lpfc_sli_issue_mbox(struct lpfc_hba * ph
+ 			return (MBX_NOT_FINISHED);
+ 		}
+ 		/* timeout active mbox command */
+-		mod_timer(&psli->mbox_tmo, jiffies + HZ * LPFC_MBOX_TMO);
++		mod_timer(&psli->mbox_tmo, (jiffies +
++			       (HZ * lpfc_mbox_tmo_val(phba, mb->mbxCommand))));
  	}
  
- 	hs->dumped_frames = -1;
+ 	/* Mailbox cmd <cmd> issue */
+@@ -2257,7 +2258,6 @@ lpfc_sli_issue_mbox(struct lpfc_hba * ph
+ 		break;
  
--/* FIX ME */
--	/*hs->SecondsSinceLastReset = (jiffies - lpfc_loadtime) / HZ;*/
-+	hs->seconds_since_last_reset = (jiffies - psli->stats_start) / HZ;
+ 	case MBX_POLL:
+-		i = 0;
+ 		psli->mbox_active = NULL;
+ 		if (psli->sli_flag & LPFC_SLI2_ACTIVE) {
+ 			/* First read mbox status word */
+@@ -2271,11 +2271,14 @@ lpfc_sli_issue_mbox(struct lpfc_hba * ph
+ 		/* Read the HBA Host Attention Register */
+ 		ha_copy = readl(phba->HAregaddr);
  
- 	return hs;
- }
++		i = lpfc_mbox_tmo_val(phba, mb->mbxCommand);
++		i *= 1000; /* Convert to ms */
++
+ 		/* Wait for command to complete */
+ 		while (((word0 & OWN_CHIP) == OWN_CHIP) ||
+ 		       (!(ha_copy & HA_MBATT) &&
+ 			(phba->hba_state > LPFC_WARM_START))) {
+-			if (i++ >= 100) {
++			if (i-- <= 0) {
+ 				psli->sli_flag &= ~LPFC_SLI_MBOX_ACTIVE;
+ 				spin_unlock_irqrestore(phba->host->host_lock,
+ 						       drvr_flag);
+@@ -2293,7 +2296,7 @@ lpfc_sli_issue_mbox(struct lpfc_hba * ph
  
-+void  lpfc_reset_stats(struct Scsi_Host *shost)
-+{
-+	struct lpfc_hba *phba = (struct lpfc_hba *)shost->hostdata;
-+	struct lpfc_sli *psli = &phba->sli;
-+	struct lpfc_lnk_stat * lso = &psli->lnk_stat_offsets;
-+	LPFC_MBOXQ_t *pmboxq;
-+	MAILBOX_t *pmb;
-+	int rc = 0;
-+
-+	pmboxq = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
-+	if (!pmboxq)
-+		return;
-+	memset(pmboxq, 0, sizeof (LPFC_MBOXQ_t));
-+
-+	pmb = &pmboxq->mb;
-+	pmb->mbxCommand = MBX_READ_STATUS;
-+	pmb->mbxOwner = OWN_HOST;
-+	pmb->un.varWords[0] = 0x1; /* reset request */
-+	pmboxq->context1 = NULL;
-+
-+	if ((phba->fc_flag & FC_OFFLINE_MODE) ||
-+		(!(psli->sli_flag & LPFC_SLI2_ACTIVE)))
-+		rc = lpfc_sli_issue_mbox(phba, pmboxq, MBX_POLL);
-+	else
-+		rc = lpfc_sli_issue_mbox_wait(phba, pmboxq, phba->fc_ratov * 2);
-+
-+	if (rc != MBX_SUCCESS) {
-+		if (rc == MBX_TIMEOUT)
-+			pmboxq->mbox_cmpl = lpfc_sli_def_mbox_cmpl;
-+		else
-+			mempool_free(pmboxq, phba->mbox_mem_pool);
-+		return;
-+	}
-+
-+	memset(pmboxq, 0, sizeof (LPFC_MBOXQ_t));
-+	pmb->mbxCommand = MBX_READ_LNK_STAT;
-+	pmb->mbxOwner = OWN_HOST;
-+	pmboxq->context1 = NULL;
-+
-+	if ((phba->fc_flag & FC_OFFLINE_MODE) ||
-+	    (!(psli->sli_flag & LPFC_SLI2_ACTIVE)))
-+		rc = lpfc_sli_issue_mbox(phba, pmboxq, MBX_POLL);
-+	else
-+		rc = lpfc_sli_issue_mbox_wait(phba, pmboxq, phba->fc_ratov * 2);
-+
-+	if (rc != MBX_SUCCESS) {
-+		if (rc == MBX_TIMEOUT)
-+			pmboxq->mbox_cmpl = lpfc_sli_def_mbox_cmpl;
-+		else
-+			mempool_free( pmboxq, phba->mbox_mem_pool);
-+		return;
-+	}
-+
-+	lso->link_failure_count = pmb->un.varRdLnk.linkFailureCnt;
-+	lso->loss_of_sync_count = pmb->un.varRdLnk.lossSyncCnt;
-+	lso->loss_of_signal_count = pmb->un.varRdLnk.lossSignalCnt;
-+	lso->prim_seq_protocol_err_count = pmb->un.varRdLnk.primSeqErrCnt;
-+	lso->invalid_tx_word_count = pmb->un.varRdLnk.invalidXmitWord;
-+	lso->invalid_crc_count = pmb->un.varRdLnk.crcCnt;
-+	lso->error_frames = pmb->un.varRdLnk.crcCnt;
-+	lso->link_events = (phba->fc_eventTag >> 1);
-+
-+	psli->stats_start = jiffies;
-+
-+	return;
-+}
+ 			/* Can be in interrupt context, do not sleep */
+ 			/* (or might be called with interrupts disabled) */
+-			mdelay(i);
++			mdelay(1);
  
- /*
-  * The LPFC driver treats linkdown handling as target loss events so there
-@@ -1431,8 +1507,7 @@ struct fc_function_template lpfc_transpo
- 	 */
+ 			spin_lock_irqsave(phba->host->host_lock, drvr_flag);
  
- 	.get_fc_host_stats = lpfc_get_stats,
--
--	/* the LPFC driver doesn't support resetting stats yet */
-+	.reset_fc_host_stats = lpfc_reset_stats,
- 
- 	.dd_fcrport_size = sizeof(struct lpfc_rport_data),
- 	.show_rport_maxframe_size = 1,
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
---- a/drivers/scsi/lpfc/lpfc_sli.c	2006-07-31 10:41:15.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_sli.c	2006-08-01 07:06:21.000000000 -0400
-@@ -1792,6 +1792,9 @@ lpfc_sli_brdrestart(struct lpfc_hba * ph
- 
- 	spin_unlock_irq(phba->host->host_lock);
- 
-+	memset(&psli->lnk_stat_offsets, 0, sizeof(psli->lnk_stat_offsets));
-+	psli->stats_start = jiffies;
-+
- 	if (skip_post)
- 		mdelay(100);
- 	else
 diff -upNr a/drivers/scsi/lpfc/lpfc_sli.h b/drivers/scsi/lpfc/lpfc_sli.h
---- a/drivers/scsi/lpfc/lpfc_sli.h	2006-07-31 10:41:15.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_sli.h	2006-08-01 07:06:21.000000000 -0400
-@@ -172,6 +172,18 @@ struct lpfc_sli_stat {
- 	uint32_t mbox_busy;	 /* Mailbox cmd busy */
- };
+--- a/drivers/scsi/lpfc/lpfc_sli.h	2006-08-01 07:07:38.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_sli.h	2006-08-01 07:08:50.000000000 -0400
+@@ -225,3 +225,9 @@ struct lpfc_sli {
  
-+/* Structure to store link status values when port stats are reset */
-+struct lpfc_lnk_stat {
-+	uint32_t link_failure_count;
-+	uint32_t loss_of_sync_count;
-+	uint32_t loss_of_signal_count;
-+	uint32_t prim_seq_protocol_err_count;
-+	uint32_t invalid_tx_word_count;
-+	uint32_t invalid_crc_count;
-+	uint32_t error_frames;
-+	uint32_t link_events;
-+};
-+
- /* Structure used to hold SLI information */
- struct lpfc_sli {
- 	uint32_t num_rings;
-@@ -201,6 +213,8 @@ struct lpfc_sli {
- 	struct lpfc_iocbq ** iocbq_lookup; /* array to lookup IOCB by IOTAG */
- 	size_t iocbq_lookup_len;           /* current lengs of the array */
- 	uint16_t  last_iotag;              /* last allocated IOTAG */
-+	unsigned long  stats_start;        /* in jiffies */
-+	struct lpfc_lnk_stat lnk_stat_offsets;
- };
- 
- /* Given a pointer to the start of the ring, and the slot number of
+ #define LPFC_MBOX_TMO           30	/* Sec tmo for outstanding mbox
+ 					   command */
++#define LPFC_MBOX_TMO_FLASH_CMD 300     /* Sec tmo for outstanding FLASH write
++					 * or erase cmds. This is especially
++					 * long because of the potential of
++					 * multiple flash erases that can be
++					 * spawned.
++					 */
 
 
