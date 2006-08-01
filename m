@@ -1,55 +1,48 @@
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Re: [PATCH] Fix scsi/scsi_transport.h compile error
-Date: Tue, 1 Aug 2006 08:10:04 +0200
-Message-ID: <200608010810.15315.eike-kernel@sf-tec.de>
-References: <200607310943.25384.eike-kernel@sf-tec.de> <44CE07AA.9030202@s5r6.in-berlin.de> <20060731143839.GC6087@athena.road.mcmartin.ca>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: cd burning with plextor drives.
+Date: Tue, 1 Aug 2006 08:54:56 +0200
+Message-ID: <20060801065456.GF31908@suse.de>
+References: <1154180419.9447.61.camel@mulgrave.il.steeleye.com> <Pine.LNX.4.64.0607291005200.4168@g5.osdl.org> <1154194239.9447.89.camel@mulgrave.il.steeleye.com> <Pine.LNX.4.64.0607291045540.4168@g5.osdl.org> <m3y7ubqdwg.fsf@zoo.weinigel.se> <Pine.LNX.4.64.0607301245500.4168@g5.osdl.org> <m3u04yr5s5.fsf@zoo.weinigel.se> <Pine.LNX.4.64.0607311328541.4168@g5.osdl.org> <20060731204109.GB31908@suse.de> <Pine.LNX.4.64.0607311344470.4168@g5.osdl.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1770470.RcqhWilLLD";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:44430 "EHLO mail.sf-mail.de")
-	by vger.kernel.org with ESMTP id S1161130AbWHAGHp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Aug 2006 02:07:45 -0400
-In-Reply-To: <20060731143839.GC6087@athena.road.mcmartin.ca>
+Received: from ns.virtualhost.dk ([195.184.98.160]:22875 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S1161309AbWHAGyq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Aug 2006 02:54:46 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0607311344470.4168@g5.osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kyle McMartin <kyle@parisc-linux.org>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: Christer Weinigel <christer@weinigel.se>, James Bottomley <James.Bottomley@SteelEye.com>, Dave Jones <davej@redhat.com>, linux-scsi@vger.kernel.org
 
---nextPart1770470.RcqhWilLLD
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+On Mon, Jul 31 2006, Linus Torvalds wrote:
+> 
+> 
+> On Mon, 31 Jul 2006, Jens Axboe wrote:
+> > 
+> > There are, however, new uses of vendor specific commands that you need
+> > access to for fully utilizing your drive. As mentioned, Plextor is one
+> > of these. And they do make current and very good burners, yet we cannot
+> > add their opcodes to the table because they (sanely) used the vendor
+> > specific range for that.
+> 
+> However, before we do that, can somebody actially just FIX that stupid 
+> cdrecord bug. It shouldn't say it can't write the drive, if it's just that 
+> it's not allowed to use one of the vendor-specific extensions.
+> 
+> As mentioned, I bet burning _does_ actually work.
 
-Am Montag, 31. Juli 2006 16:38 schrieb Kyle McMartin:
-> On Mon, Jul 31, 2006 at 03:37:46PM +0200, Stefan Richter wrote:
-> > > This should be solved with a "struct scsi_device;" decl, instead of
-> > > Yet More Header Dependancies...
-> >
-> > That function accesses members of the struct, i.e. the compiler needs to
-> > know offsets into struct scsi_device at this point. Therefore it needs
-> > the definition, not a declaration.
->
-> Odd, ISTR that it only needed to be defined at the point the inline was
-> used. Oh well, my bad.
+Oh yeah, I think so too. It's for other features on the Plextor, like
+disc quality scans. So it's not critical as such for burning, but it is
+something that we do want to work.
 
-That would be expected behaviour on a define.
+I don't think you disagree that we need to support the vendor unique
+range of opcodes. And I don't think you disagree that we cannot safely
+put these in the global table. So that leaves one sane option - per
+device cmd filter table. I've kept Peter's original patch somewhat
+uptodate, I'll bring it to 2.6.18-rc3 and test+submit for 2.6.19.
 
-Eike
+-- 
+Jens Axboe
 
---nextPart1770470.RcqhWilLLD
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.2 (GNU/Linux)
-
-iD8DBQBEzvBHXKSJPmm5/E4RAvsYAJ9uyuF8qsB+4cJ8U1fYwoQmBYkG/QCfa2Cx
-n+Z9amt6owc1QaA3505Togw=
-=8CSr
------END PGP SIGNATURE-----
-
---nextPart1770470.RcqhWilLLD--
