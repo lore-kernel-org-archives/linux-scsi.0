@@ -1,38 +1,39 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 4/4] fusion: fibre channel: don't sync cache if remote
-	port deleted
-Date: Tue, 01 Aug 2006 09:58:23 -0500
-Message-ID: <1154444303.3446.11.camel@mulgrave.il.steeleye.com>
-References: <44CE3BC0.8020901@sgi.com>
+From: "Caro" <N.Balina@248.ru>
+Subject: Re[4]: Ave...
+Date: Tue, 01 Aug 2006 18:23:24 +0300
+Message-ID: <006401c6b57e$63b5bf80$1a15000a__11625.5949055359$1154445824$gmane$org@KIMBL>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1251
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:30939 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1750727AbWHAO63 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Aug 2006 10:58:29 -0400
-In-Reply-To: <44CE3BC0.8020901@sgi.com>
+Received: from 201-27-29-40.dsl.telesp.net.br ([201.27.29.40]:55056 "EHLO
+	201-27-29-40.dsl.telesp.net.br") by vger.kernel.org with ESMTP
+	id S1751666AbWHAPWm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 1 Aug 2006 11:22:42 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Reed <mdr@sgi.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-userfs <linux-userfs@vger.kernel.org>
 
-On Mon, 2006-07-31 at 12:20 -0500, Michael Reed wrote:
-> mptscsih_slave_destroy issues an unconditional synchronize cache.
+Hello=85=09
 
-A) mptscsih_slave_destroy shouldn't be doing this ... it should be
-relying on the functionality in the mid-layer.
+I am a lovely and lonely Lady who is looking for the man who will make =
+me happy and whom I want to feel like in paradise with!
+If you want to be my beautiful Hero who will save me from this loneline=
+ss find me=20
+http://www.dating-foryou.com/passion/
+and wake me up with a warm kiss.
 
-> It is not necessary for fibre channel devices for which the rport
-> has been deleted.  This patch creates a new function,
-> mptfc_slave_destroy(), which implements the appropriate test.
+Best regards,
+Caro
 
-So, this is really code that shouldn't be in a driver, it should be
-higher up.
-
-The other three patches look fine.
-
-James
+If you think that you were subscribed by mistake for this mail
+delivery or if your email has been added without your permission,
+please, visit http://dating-foryou.com/passion/ and unsubscribe from ou=
+r mails.
 
 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
