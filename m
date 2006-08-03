@@ -1,57 +1,52 @@
-From: "Scott Lowrey" <slowrey@nextone.com>
+From: "Moore, Eric" <Eric.Moore@lsil.com>
 Subject: RE: Performance Problem with LSI Logic 53c1030 RAID
-Date: Thu, 3 Aug 2006 14:37:13 -0400
-Message-ID: <8812D8156467224C9E9739E513037EF1013028C7@moe.nextone.local>
-References: <664A4EBB07F29743873A87CF62C26D7026B967@NAMAIL4.ad.lsil.com>
+Date: Thu, 3 Aug 2006 12:43:12 -0600
+Message-ID: <664A4EBB07F29743873A87CF62C26D7026B98E@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail1.nextone.com ([209.125.86.104]:37859 "EHLO
-	mail1.nextone.com") by vger.kernel.org with ESMTP id S1030187AbWHCShP convert rfc822-to-8bit
+Received: from mail0.lsil.com ([147.145.40.20]:7815 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1030193AbWHCSnP convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Aug 2006 14:37:15 -0400
+	Thu, 3 Aug 2006 14:43:15 -0400
 Content-class: urn:content-classes:message
-In-Reply-To: <664A4EBB07F29743873A87CF62C26D7026B967@NAMAIL4.ad.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric" <Eric.Moore@lsil.com>, linux-scsi@vger.kernel.org
+To: Scott Lowrey <slowrey@nextone.com>, linux-scsi@vger.kernel.org
 
-> From: Moore, Eric [mailto:Eric.Moore@lsil.com]
-> Sent: Thursday, August 03, 2006 2:07 PM
-> To: Scott Lowrey; linux-scsi@vger.kernel.org
-> Subject: RE: Performance Problem with LSI Logic 53c1030 RAID
+-- Thursday, August 03, 2006 12:37 PM, Scott Lowrey wrote:
+
+> I'm confused.  Are you saying the driver has a bug?  If so, 
+> we're using
+> the latest MPT drivers from LSI -- 3.02.68.
+
+I'm confused, I didn't know you pulled drivers from LSI website,
+I thought you were using the built-n drivers in 2.6.11 kernel.
+There was a bug in the upstream drivers back around that time
+with new split drivers were introduced.  I can't remember
+exactly which kernel it was, but it was around that time.
+
+We have a tool called getspeed, I can send you to see what
+speed your devices are negotiated at.  Let me know which arch
+your running, and I will send in private email.
+
 > 
-> -- On Thursday, August 03, 2006 11:50 AM, Scott Lowrey wrote:
-> >
-> > Problem:
-> >       Deteriorating disk write performance with large files.
-> >
-> >       The problem *disappears* completely if RAID is disabled
-> > or if the
-> > array
-> >       is put into a degraded state by pulling the secondary
-> > array drive.
-> > The
-> >       problem *remains* if the primary array drive is pulled.
-> >
+> Or are you saying that the newer kernel interacts with the driver in a
+> different way?
+
+Yes, in 2.6.17 kernel, domain validation was moved our of mptspi,
+and moved to generic layer in the spi transport.
+
 > 
-> 
-> Is it possible for you to upgrade to the latest stable kernel on
-> www.kernel.org, such as 2.6.17, or even 2.6.18-rc3.  This issue would
-> be solved.  I believe one of your disks in your integrated volume
-> is running asyn narrow, due to a bug in the driver.  From 2.6.17
-kernel,
-> the mptspi driver is using the spi transport layer.
+> We could update the kernel, but time is a factor and we'd have to do a
+> lot of testing before release.... hmm... probably worth doing a quick
+> build-and-test to see if it works.
 > 
 
-I'm confused.  Are you saying the driver has a bug?  If so, we're using
-the latest MPT drivers from LSI -- 3.02.68.
+It would be nice to know whether your seeing it in the newer kernel or
+not.
 
-Or are you saying that the newer kernel interacts with the driver in a
-different way?
+Eric
 
-We could update the kernel, but time is a factor and we'd have to do a
-lot of testing before release.... hmm... probably worth doing a quick
-build-and-test to see if it works.
