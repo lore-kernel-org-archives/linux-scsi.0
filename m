@@ -1,52 +1,49 @@
-From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: RE: Performance Problem with LSI Logic 53c1030 RAID
-Date: Thu, 3 Aug 2006 12:43:12 -0600
-Message-ID: <664A4EBB07F29743873A87CF62C26D7026B98E@NAMAIL4.ad.lsil.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: Brian King <brking@us.ibm.com>
+Subject: [PATCH 1/1] DAC960: PCI id table fixup
+Date: Thu, 03 Aug 2006 13:54:59 -0500
+Message-ID: <200608031855.k73It1tI018162@d01av03.pok.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:7815 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1030193AbWHCSnP convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Aug 2006 14:43:15 -0400
-Content-class: urn:content-classes:message
+Received: from e2.ny.us.ibm.com ([32.97.182.142]:7651 "EHLO e2.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S964809AbWHCSzD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Aug 2006 14:55:03 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e2.ny.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k73It2Vm030924
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
+	for <linux-scsi@vger.kernel.org>; Thu, 3 Aug 2006 14:55:03 -0400
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by d01relay04.pok.ibm.com (8.13.6/NCO/VER7.0) with ESMTP id k73It2L0294860
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Thu, 3 Aug 2006 14:55:02 -0400
+Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
+	by d01av03.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k73It1sK018207
+	for <linux-scsi@vger.kernel.org>; Thu, 3 Aug 2006 14:55:02 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Scott Lowrey <slowrey@nextone.com>, linux-scsi@vger.kernel.org
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, brking@us.ibm.com
 
--- Thursday, August 03, 2006 12:37 PM, Scott Lowrey wrote:
 
-> I'm confused.  Are you saying the driver has a bug?  If so, 
-> we're using
-> the latest MPT drivers from LSI -- 3.02.68.
+The PCI ID table in the DAC960 driver conflicts with some devices
+that use the ipr driver. All ipr adapters that use this chip
+have an IBM subvendor ID and all DAC960 adapters that use this
+chip have a Mylex subvendor id.
 
-I'm confused, I didn't know you pulled drivers from LSI website,
-I thought you were using the built-n drivers in 2.6.11 kernel.
-There was a bug in the upstream drivers back around that time
-with new split drivers were introduced.  I can't remember
-exactly which kernel it was, but it was around that time.
+Signed-off-by: Brian King <brking@us.ibm.com>
+---
 
-We have a tool called getspeed, I can send you to see what
-speed your devices are negotiated at.  Let me know which arch
-your running, and I will send in private email.
+ linux-2.6-bjking1/drivers/block/DAC960.c |    2 +-
+ 1 files changed, 1 insertion(+), 1 deletion(-)
 
-> 
-> Or are you saying that the newer kernel interacts with the driver in a
-> different way?
-
-Yes, in 2.6.17 kernel, domain validation was moved our of mptspi,
-and moved to generic layer in the spi transport.
-
-> 
-> We could update the kernel, but time is a factor and we'd have to do a
-> lot of testing before release.... hmm... probably worth doing a quick
-> build-and-test to see if it works.
-> 
-
-It would be nice to know whether your seeing it in the newer kernel or
-not.
-
-Eric
-
+diff -puN drivers/block/DAC960.c~dac960_id_table_fixup drivers/block/DAC960.c
+--- linux-2.6/drivers/block/DAC960.c~dac960_id_table_fixup	2006-08-03 13:53:13.000000000 -0500
++++ linux-2.6-bjking1/drivers/block/DAC960.c	2006-08-03 13:53:13.000000000 -0500
+@@ -7115,7 +7115,7 @@ static struct pci_device_id DAC960_id_ta
+ 	{
+ 		.vendor 	= PCI_VENDOR_ID_MYLEX,
+ 		.device		= PCI_DEVICE_ID_MYLEX_DAC960_GEM,
+-		.subvendor	= PCI_ANY_ID,
++		.subvendor	= PCI_VENDOR_ID_MYLEX,
+ 		.subdevice	= PCI_ANY_ID,
+ 		.driver_data	= (unsigned long) &DAC960_GEM_privdata,
+ 	},
+_
