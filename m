@@ -1,495 +1,111 @@
-From: Mark Haverkamp <markh@osdl.org>
-Subject: [PATCH 4/4] aacraid: Reset adapter in recovery timeout
-Date: Thu, 03 Aug 2006 08:03:30 -0700
-Message-ID: <1154617410.31319.23.camel@markh3.pdx.osdl.net>
+From: "Scott Lowrey" <slowrey@nextone.com>
+Subject: Performance Problem with LSI Logic 53c1030 RAID
+Date: Thu, 3 Aug 2006 13:49:50 -0400
+Message-ID: <8812D8156467224C9E9739E513037EF101302868@moe.nextone.local>
+References: <44CF9EDD.7070309@lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:2021 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932362AbWHCPDe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Aug 2006 11:03:34 -0400
+Received: from mail2.nextone.com ([209.125.86.105]:8104 "EHLO
+	mail2.nextone.com") by vger.kernel.org with ESMTP id S932561AbWHCRt5 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 3 Aug 2006 13:49:57 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <44CF9EDD.7070309@lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Mark Salyzyn <mark_salyzyn@adaptec.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-Received from Mark Salyzyn
+Problem: 
+      Deteriorating disk write performance with large files.  
+      
+      The problem *disappears* completely if RAID is disabled or if the
+array
+      is put into a degraded state by pulling the secondary array drive.
+The
+      problem *remains* if the primary array drive is pulled.
 
-If the adapter is in blinkled (Firmware Assert) when error recovery
-timeout actions have been triggered, perform an adapter warm reset and
-restart the initialization. 
+Setup: 
+     Intel TIGI2U Chassis (carrier grade)
+     Intel SE7520JR2 server board
+     Dual 3.2 GHz Xeons, 800MHz FSB, 4GB RAM
+     No PCI cards, 2 builtin E1000 NICs
+     Integrated LSI 53c1030 Dual Channel SCSI HBA with integrated RAID
+     Two 72GB Fujitsu drives in RAID 1 Configuration
 
-Signed-off-by: Mark Haverkamp <markh@osdl.org>
----
+     RAID array state optimal
 
---- scsi-misc-aac.orig/drivers/scsi/aacraid/aachba.c	2006-07-31 14:33:51.000000000 -0700
-+++ scsi-misc-aac/drivers/scsi/aacraid/aachba.c	2006-07-31 14:39:09.000000000 -0700
-@@ -175,7 +175,7 @@
-  *
-  *	Query config status, and commit the configuration if needed.
-  */
--int aac_get_config_status(struct aac_dev *dev)
-+int aac_get_config_status(struct aac_dev *dev, int commit_flag)
- {
- 	int status = 0;
- 	struct fib * fibptr;
-@@ -219,7 +219,7 @@
- 	aac_fib_complete(fibptr);
- 	/* Send a CT_COMMIT_CONFIG to enable discovery of devices */
- 	if (status >= 0) {
--		if (commit == 1) {
-+		if ((commit == 1) || commit_flag) {
- 			struct aac_commit_config * dinfo;
- 			aac_fib_init(fibptr);
- 			dinfo = (struct aac_commit_config *) fib_data(fibptr);
-@@ -784,8 +784,9 @@
- 		dev->maximum_num_channels = le32_to_cpu(bus_info->BusCount);
- 	}
- 
--	tmp = le32_to_cpu(dev->adapter_info.kernelrev);
--	printk(KERN_INFO "%s%d: kernel %d.%d-%d[%d] %.*s\n", 
-+	if (!dev->in_reset) {
-+		tmp = le32_to_cpu(dev->adapter_info.kernelrev);
-+		printk(KERN_INFO "%s%d: kernel %d.%d-%d[%d] %.*s\n",
- 			dev->name, 
- 			dev->id,
- 			tmp>>24,
-@@ -794,20 +795,21 @@
- 			le32_to_cpu(dev->adapter_info.kernelbuild),
- 			(int)sizeof(dev->supplement_adapter_info.BuildDate),
- 			dev->supplement_adapter_info.BuildDate);
--	tmp = le32_to_cpu(dev->adapter_info.monitorrev);
--	printk(KERN_INFO "%s%d: monitor %d.%d-%d[%d]\n", 
-+		tmp = le32_to_cpu(dev->adapter_info.monitorrev);
-+		printk(KERN_INFO "%s%d: monitor %d.%d-%d[%d]\n",
- 			dev->name, dev->id,
- 			tmp>>24,(tmp>>16)&0xff,tmp&0xff,
- 			le32_to_cpu(dev->adapter_info.monitorbuild));
--	tmp = le32_to_cpu(dev->adapter_info.biosrev);
--	printk(KERN_INFO "%s%d: bios %d.%d-%d[%d]\n", 
-+		tmp = le32_to_cpu(dev->adapter_info.biosrev);
-+		printk(KERN_INFO "%s%d: bios %d.%d-%d[%d]\n",
- 			dev->name, dev->id,
- 			tmp>>24,(tmp>>16)&0xff,tmp&0xff,
- 			le32_to_cpu(dev->adapter_info.biosbuild));
--	if (le32_to_cpu(dev->adapter_info.serial[0]) != 0xBAD0)
--		printk(KERN_INFO "%s%d: serial %x\n",
--			dev->name, dev->id,
--			le32_to_cpu(dev->adapter_info.serial[0]));
-+		if (le32_to_cpu(dev->adapter_info.serial[0]) != 0xBAD0)
-+			printk(KERN_INFO "%s%d: serial %x\n",
-+				dev->name, dev->id,
-+				le32_to_cpu(dev->adapter_info.serial[0]));
-+	}
- 
- 	dev->nondasd_support = 0;
- 	dev->raid_scsi_mode = 0;
-@@ -1417,6 +1419,9 @@
- 		return SCSI_MLQUEUE_DEVICE_BUSY;
- 
- 	aac = (struct aac_dev *)scsicmd->device->host->hostdata;
-+	if (aac->in_reset)
-+		return SCSI_MLQUEUE_HOST_BUSY;
-+
- 	/*
- 	 *	Allocate and initialize a Fib
- 	 */
-@@ -1504,6 +1509,8 @@
- 				case INQUIRY:
- 				case READ_CAPACITY:
- 				case TEST_UNIT_READY:
-+					if (dev->in_reset)
-+						return -1;
- 					spin_unlock_irq(host->host_lock);
- 					aac_probe_container(dev, cid);
- 					if ((fsa_dev_ptr[cid].valid & 1) == 0)
-@@ -1529,6 +1536,8 @@
- 			}
- 		} else {  /* check for physical non-dasd devices */
- 			if(dev->nondasd_support == 1){
-+				if (dev->in_reset)
-+					return -1;
- 				return aac_send_srb_fib(scsicmd);
- 			} else {
- 				scsicmd->result = DID_NO_CONNECT << 16;
-@@ -1584,6 +1593,8 @@
- 			scsicmd->scsi_done(scsicmd);
- 			return 0;
- 		}
-+		if (dev->in_reset)
-+			return -1;
- 		setinqstr(dev, (void *) (inq_data.inqd_vid), fsa_dev_ptr[cid].type);
- 		inq_data.inqd_pdt = INQD_PDT_DA;	/* Direct/random access device */
- 		aac_internal_transfer(scsicmd, &inq_data, 0, sizeof(inq_data));
-@@ -1739,6 +1750,8 @@
- 		case READ_10:
- 		case READ_12:
- 		case READ_16:
-+			if (dev->in_reset)
-+				return -1;
- 			/*
- 			 *	Hack to keep track of ordinal number of the device that
- 			 *	corresponds to a container. Needed to convert
-@@ -1757,6 +1770,8 @@
- 		case WRITE_10:
- 		case WRITE_12:
- 		case WRITE_16:
-+			if (dev->in_reset)
-+				return -1;
- 			return aac_write(scsicmd, cid);
- 
- 		case SYNCHRONIZE_CACHE:
---- scsi-misc-aac.orig/drivers/scsi/aacraid/aacraid.h	2006-07-31 14:33:47.000000000 -0700
-+++ scsi-misc-aac/drivers/scsi/aacraid/aacraid.h	2006-07-31 14:37:38.000000000 -0700
-@@ -1029,6 +1029,7 @@
- 	  init->InitStructRevision==cpu_to_le32(ADAPTER_INIT_STRUCT_REVISION_4)
- 	u8			raw_io_64;
- 	u8			printf_enabled;
-+	u8			in_reset;
- };
- 
- #define aac_adapter_interrupt(dev) \
-@@ -1789,7 +1790,7 @@
- int aac_fib_complete(struct fib * context);
- #define fib_data(fibctx) ((void *)(fibctx)->hw_fib->data)
- struct aac_dev *aac_init_adapter(struct aac_dev *dev);
--int aac_get_config_status(struct aac_dev *dev);
-+int aac_get_config_status(struct aac_dev *dev, int commit_flag);
- int aac_get_containers(struct aac_dev *dev);
- int aac_scsi_cmd(struct scsi_cmnd *cmd);
- int aac_dev_ioctl(struct aac_dev *dev, int cmd, void __user *arg);
-@@ -1800,6 +1801,7 @@
- unsigned int aac_response_normal(struct aac_queue * q);
- unsigned int aac_command_normal(struct aac_queue * q);
- unsigned int aac_intr_normal(struct aac_dev * dev, u32 Index);
-+int aac_check_health(struct aac_dev * dev);
- int aac_command_thread(void *data);
- int aac_close_fib_context(struct aac_dev * dev, struct aac_fib_context *fibctx);
- int aac_fib_adapter_complete(struct fib * fibptr, unsigned short size);
---- scsi-misc-aac.orig/drivers/scsi/aacraid/commctrl.c	2006-07-31 14:33:19.000000000 -0700
-+++ scsi-misc-aac/drivers/scsi/aacraid/commctrl.c	2006-07-31 14:37:38.000000000 -0700
-@@ -298,7 +298,7 @@
- 		spin_unlock_irqrestore(&dev->fib_lock, flags);
- 		/* If someone killed the AIF aacraid thread, restart it */
- 		status = !dev->aif_thread;
--		if (status && dev->queues && dev->fsa_dev) {
-+		if (status && !dev->in_reset && dev->queues && dev->fsa_dev) {
- 			/* Be paranoid, be very paranoid! */
- 			kthread_stop(dev->thread);
- 			ssleep(1);
---- scsi-misc-aac.orig/drivers/scsi/aacraid/commsup.c	2006-07-31 14:33:19.000000000 -0700
-+++ scsi-misc-aac/drivers/scsi/aacraid/commsup.c	2006-07-31 14:37:38.000000000 -0700
-@@ -40,8 +40,10 @@
- #include <linux/blkdev.h>
- #include <linux/delay.h>
- #include <linux/kthread.h>
-+#include <scsi/scsi.h>
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_device.h>
-+#include <scsi/scsi_cmnd.h>
- #include <asm/semaphore.h>
- 
- #include "aacraid.h"
-@@ -1054,6 +1056,262 @@
- 
- }
- 
-+static int _aac_reset_adapter(struct aac_dev *aac)
-+{
-+	int index, quirks;
-+	u32 ret;
-+	int retval;
-+	struct Scsi_Host *host;
-+	struct scsi_device *dev;
-+	struct scsi_cmnd *command;
-+	struct scsi_cmnd *command_list;
-+
-+	/*
-+	 * Assumptions:
-+	 *	- host is locked.
-+	 *	- in_reset is asserted, so no new i/o is getting to the
-+	 *	  card.
-+	 *	- The card is dead.
-+	 */
-+	host = aac->scsi_host_ptr;
-+	scsi_block_requests(host);
-+	aac_adapter_disable_int(aac);
-+	spin_unlock_irq(host->host_lock);
-+	kthread_stop(aac->thread);
-+
-+	/*
-+	 *	If a positive health, means in a known DEAD PANIC
-+	 * state and the adapter could be reset to `try again'.
-+	 */
-+	retval = aac_adapter_check_health(aac);
-+	if (retval == 0)
-+		retval = aac_adapter_sync_cmd(aac, IOP_RESET_ALWAYS,
-+		  0, 0, 0, 0, 0, 0, &ret, NULL, NULL, NULL, NULL);
-+	if (retval)
-+		retval = aac_adapter_sync_cmd(aac, IOP_RESET,
-+		  0, 0, 0, 0, 0, 0, &ret, NULL, NULL, NULL, NULL);
-+
-+	if (retval)
-+		goto out;
-+	if (ret != 0x00000001) {
-+		retval = -ENODEV;
-+		goto out;
-+	}
-+
-+	index = aac->cardtype;
-+
-+	/*
-+	 * Re-initialize the adapter, first free resources, then carefully
-+	 * apply the initialization sequence to come back again. Only risk
-+	 * is a change in Firmware dropping cache, it is assumed the caller
-+	 * will ensure that i/o is queisced and the card is flushed in that
-+	 * case.
-+	 */
-+	aac_fib_map_free(aac);
-+	aac->hw_fib_va = NULL;
-+	aac->hw_fib_pa = 0;
-+	pci_free_consistent(aac->pdev, aac->comm_size, aac->comm_addr, aac->comm_phys);
-+	aac->comm_addr = NULL;
-+	aac->comm_phys = 0;
-+	kfree(aac->queues);
-+	aac->queues = NULL;
-+	free_irq(aac->pdev->irq, aac);
-+	kfree(aac->fsa_dev);
-+	aac->fsa_dev = NULL;
-+	if (aac_get_driver_ident(index)->quirks & AAC_QUIRK_31BIT) {
-+		if (((retval = pci_set_dma_mask(aac->pdev, DMA_32BIT_MASK))) ||
-+		  ((retval = pci_set_consistent_dma_mask(aac->pdev, DMA_32BIT_MASK))))
-+			goto out;
-+	} else {
-+		if (((retval = pci_set_dma_mask(aac->pdev, 0x7FFFFFFFULL))) ||
-+		  ((retval = pci_set_consistent_dma_mask(aac->pdev, 0x7FFFFFFFULL))))
-+			goto out;
-+	}
-+	if ((retval = (*(aac_get_driver_ident(index)->init))(aac)))
-+		goto out;
-+	if (aac_get_driver_ident(index)->quirks & AAC_QUIRK_31BIT)
-+		if ((retval = pci_set_dma_mask(aac->pdev, DMA_32BIT_MASK)))
-+			goto out;
-+	aac->thread = kthread_run(aac_command_thread, aac, aac->name);
-+	if (IS_ERR(aac->thread)) {
-+		retval = PTR_ERR(aac->thread);
-+		goto out;
-+	}
-+	(void)aac_get_adapter_info(aac);
-+	quirks = aac_get_driver_ident(index)->quirks;
-+	if ((quirks & AAC_QUIRK_34SG) && (host->sg_tablesize > 34)) {
-+ 		host->sg_tablesize = 34;
-+ 		host->max_sectors = (host->sg_tablesize * 8) + 112;
-+ 	}
-+ 	if ((quirks & AAC_QUIRK_17SG) && (host->sg_tablesize > 17)) {
-+ 		host->sg_tablesize = 17;
-+ 		host->max_sectors = (host->sg_tablesize * 8) + 112;
-+ 	}
-+	aac_get_config_status(aac, 1);
-+	aac_get_containers(aac);
-+	/*
-+	 * This is where the assumption that the Adapter is quiesced
-+	 * is important.
-+	 */
-+	command_list = NULL;
-+	__shost_for_each_device(dev, host) {
-+		unsigned long flags;
-+		spin_lock_irqsave(&dev->list_lock, flags);
-+		list_for_each_entry(command, &dev->cmd_list, list)
-+			if (command->SCp.phase == AAC_OWNER_FIRMWARE) {
-+				command->SCp.buffer = (struct scatterlist *)command_list;
-+				command_list = command;
-+			}
-+		spin_unlock_irqrestore(&dev->list_lock, flags);
-+	}
-+	while ((command = command_list)) {
-+		command_list = (struct scsi_cmnd *)command->SCp.buffer;
-+		command->SCp.buffer = NULL;
-+		command->result = DID_OK << 16
-+		  | COMMAND_COMPLETE << 8
-+		  | SAM_STAT_TASK_SET_FULL;
-+		command->SCp.phase = AAC_OWNER_ERROR_HANDLER;
-+		command->scsi_done(command);
-+	}
-+	retval = 0;
-+
-+out:
-+	aac->in_reset = 0;
-+	scsi_unblock_requests(host);
-+	spin_lock_irq(host->host_lock);
-+	return retval;
-+}
-+
-+int aac_check_health(struct aac_dev * aac)
-+{
-+	int BlinkLED;
-+	unsigned long time_now, flagv = 0;
-+	struct list_head * entry;
-+	struct Scsi_Host * host;
-+
-+	/* Extending the scope of fib_lock slightly to protect aac->in_reset */
-+	if (spin_trylock_irqsave(&aac->fib_lock, flagv) == 0)
-+		return 0;
-+
-+	if (aac->in_reset || !(BlinkLED = aac_adapter_check_health(aac))) {
-+		spin_unlock_irqrestore(&aac->fib_lock, flagv);
-+		return 0; /* OK */
-+	}
-+
-+	aac->in_reset = 1;
-+
-+	/* Fake up an AIF:
-+	 *	aac_aifcmd.command = AifCmdEventNotify = 1
-+	 *	aac_aifcmd.seqnum = 0xFFFFFFFF
-+	 *	aac_aifcmd.data[0] = AifEnExpEvent = 23
-+	 *	aac_aifcmd.data[1] = AifExeFirmwarePanic = 3
-+	 *	aac.aifcmd.data[2] = AifHighPriority = 3
-+	 *	aac.aifcmd.data[3] = BlinkLED
-+	 */
-+
-+	time_now = jiffies/HZ;
-+	entry = aac->fib_list.next;
-+
-+	/*
-+	 * For each Context that is on the
-+	 * fibctxList, make a copy of the
-+	 * fib, and then set the event to wake up the
-+	 * thread that is waiting for it.
-+	 */
-+	while (entry != &aac->fib_list) {
-+		/*
-+		 * Extract the fibctx
-+		 */
-+		struct aac_fib_context *fibctx = list_entry(entry, struct aac_fib_context, next);
-+		struct hw_fib * hw_fib;
-+		struct fib * fib;
-+		/*
-+		 * Check if the queue is getting
-+		 * backlogged
-+		 */
-+		if (fibctx->count > 20) {
-+			/*
-+			 * It's *not* jiffies folks,
-+			 * but jiffies / HZ, so do not
-+			 * panic ...
-+			 */
-+			u32 time_last = fibctx->jiffies;
-+			/*
-+			 * Has it been > 2 minutes
-+			 * since the last read off
-+			 * the queue?
-+			 */
-+			if ((time_now - time_last) > aif_timeout) {
-+				entry = entry->next;
-+				aac_close_fib_context(aac, fibctx);
-+				continue;
-+			}
-+		}
-+		/*
-+		 * Warning: no sleep allowed while
-+		 * holding spinlock
-+		 */
-+		hw_fib = kmalloc(sizeof(struct hw_fib), GFP_ATOMIC);
-+		fib = kmalloc(sizeof(struct fib), GFP_ATOMIC);
-+		if (fib && hw_fib) {
-+			struct aac_aifcmd * aif;
-+
-+			memset(hw_fib, 0, sizeof(struct hw_fib));
-+			memset(fib, 0, sizeof(struct fib));
-+			fib->hw_fib = hw_fib;
-+			fib->dev = aac;
-+			aac_fib_init(fib);
-+			fib->type = FSAFS_NTC_FIB_CONTEXT;
-+			fib->size = sizeof (struct fib);
-+			fib->data = hw_fib->data;
-+			aif = (struct aac_aifcmd *)hw_fib->data;
-+			aif->command = cpu_to_le32(AifCmdEventNotify);
-+		 	aif->seqnum = cpu_to_le32(0xFFFFFFFF);
-+		 	aif->data[0] = cpu_to_le32(AifEnExpEvent);
-+			aif->data[1] = cpu_to_le32(AifExeFirmwarePanic);
-+		 	aif->data[2] = cpu_to_le32(AifHighPriority);
-+			aif->data[3] = cpu_to_le32(BlinkLED);
-+
-+			/*
-+			 * Put the FIB onto the
-+			 * fibctx's fibs
-+			 */
-+			list_add_tail(&fib->fiblink, &fibctx->fib_list);
-+			fibctx->count++;
-+			/*
-+			 * Set the event to wake up the
-+			 * thread that will waiting.
-+			 */
-+			up(&fibctx->wait_sem);
-+		} else {
-+			printk(KERN_WARNING "aifd: didn't allocate NewFib.\n");
-+			kfree(fib);
-+			kfree(hw_fib);
-+		}
-+		entry = entry->next;
-+	}
-+
-+	spin_unlock_irqrestore(&aac->fib_lock, flagv);
-+
-+	if (BlinkLED < 0) {
-+		printk(KERN_ERR "%s: Host adapter dead %d\n", aac->name, BlinkLED);
-+		goto out;
-+	}
-+
-+	printk(KERN_ERR "%s: Host adapter BLINK LED 0x%x\n", aac->name, BlinkLED);
-+
-+	host = aac->scsi_host_ptr;
-+	spin_lock_irqsave(host->host_lock, flagv);
-+	BlinkLED = _aac_reset_adapter(aac);
-+	spin_unlock_irqrestore(host->host_lock, flagv);
-+	return BlinkLED;
-+
-+out:
-+	aac->in_reset = 0;
-+	return BlinkLED;
-+}
-+
-+
- /**
-  *	aac_command_thread	-	command processing thread
-  *	@dev: Adapter to monitor
---- scsi-misc-aac.orig/drivers/scsi/aacraid/linit.c	2006-07-31 14:33:51.000000000 -0700
-+++ scsi-misc-aac/drivers/scsi/aacraid/linit.c	2006-07-31 14:37:38.000000000 -0700
-@@ -454,17 +454,17 @@
- 	printk(KERN_ERR "%s: Host adapter reset request. SCSI hang ?\n", 
- 					AAC_DRIVERNAME);
- 	aac = (struct aac_dev *)host->hostdata;
--	if (aac_adapter_check_health(aac)) {
--		printk(KERN_ERR "%s: Host adapter appears dead\n", 
--				AAC_DRIVERNAME);
--		return -ENODEV;
--	}
-+
-+	if ((count = aac_check_health(aac)))
-+		return count;
- 	/*
- 	 * Wait for all commands to complete to this specific
- 	 * target (block maximum 60 seconds).
- 	 */
- 	for (count = 60; count; --count) {
--		int active = 0;
-+		int active = aac->in_reset;
-+
-+		if (active == 0)
- 		__shost_for_each_device(dev, host) {
- 			spin_lock_irqsave(&dev->list_lock, flags);
- 			list_for_each_entry(command, &dev->cmd_list, list) {
-@@ -933,7 +933,7 @@
- 	else
- 		shost->max_channel = 0;
- 
--	aac_get_config_status(aac);
-+	aac_get_config_status(aac, 0);
- 	aac_get_containers(aac);
- 	list_add(&aac->entry, insert);
- 
+     SUSE 2.6.11.4-21.11-bigsmp kernel with mods:
+	  LSI MPT 3.02.68 SCSI modules
+	  Fix to include shared memory in core dumps
 
--- 
-Mark Haverkamp <markh@osdl.org>
+     test command:    cat /dev/urandom > junk
+     iostat command:  iostat -d 2 -x -t
 
+The condensed report below shows what happens:  the test command was
+executed
+shortly after the report begins.  The average wait time (await) jumps
+around
+erratically as does the write speed (wkB/s).
+
+Then the weirdness occurs.  The test command was stopped with Ctrl-C
+just
+before 12:34:00.  A few seconds later, the CPU pegs and average wait
+time goes
+through the roof.  The activity LED on the secondary array drive is on
+solid;
+the primary drive appears to be quiet.  The entire system becomes
+sluggish and
+seems to hang.  After about 40 seconds, all returns to normal.
+
+Does anyone know what's wrong?  Is there any other data I can post that
+would be useful?
+
+
+  Time      CPU  wrqm/s  w/s   wkB/s  avgrq-sz  await  svctm
+12:33:20   18.85   72.7  1.6   297.2      8.7  2498.9   54.0
+12:33:22    5.30    8.0  9.5    70.0      0.3    29.9    5.6
+12:33:24    0.00    0.0  0.0     0.0      0.0     0.0    0.0
+12:33:26    0.00    0.0  0.0     0.0      0.0     0.0    0.0
+12:33:28   59.45 1766.0  0.5  7138.0     21.5   240.0 1189.0
+12:33:30  100.05    0.0  0.0     0.0     36.0     0.0    0.0
+12:33:32  100.05    0.0  0.0     0.0     36.0     0.0    0.0
+12:33:34   72.30   10.0 24.0    64.0     18.7  4669.8   30.1
+12:33:36    0.00    0.0  0.0     0.0      0.0     0.0    0.0
+12:33:38    0.00    0.0  0.0     0.0      0.0     0.0    0.0
+12:33:40   80.00 6151.2  0.0 24817.9     85.3     0.0    0.0
+12:33:42  100.55    0.0  8.0     0.0     99.4  2590.4  125.1
+12:33:44   99.55    0.0  0.0     0.0     90.6     0.0    0.0
+12:33:46  100.05    0.0  0.0     0.0     91.0     0.0    0.0
+12:33:48  100.50    0.0  7.0     0.0     88.7  9213.2  142.9
+12:33:50  100.05    0.0  8.0     0.0     69.1 10613.7  125.1
+12:33:52  100.05    0.0  1.0     0.0     59.1 11652.0 1000.5
+12:33:54  100.05    0.0  0.0     0.0     59.0     0.0    0.0
+12:33:56  100.05    0.0  9.5     0.0     51.9 16857.8  105.3
+12:33:58   99.55    0.0  6.5     0.0     32.3 18442.2  153.9
+12:34:00  100.05    0.0  0.0     0.0     27.0     0.0    0.0
+12:34:02   66.78   15.1 17.6    76.4     16.5 17605.2   38.0
+12:34:04    0.00    0.0  0.0     0.0      0.0     0.0    0.0
+12:34:06    0.00    0.0  0.0     0.0      0.0     0.0    0.0
+12:34:08   84.63 7825.4  2.0 31568.2    110.1   358.2  425.2
+12:34:10  100.05    0.0  0.0     0.0    130.1     0.0    0.0
+12:34:12  100.05    0.0  0.0     0.0    130.1     0.0    0.0
+12:34:14  100.05    0.0 10.0     0.0    121.3  6831.0  100.0
+12:34:16  100.05    0.0  6.0     0.0    102.1  8369.8  166.8
+12:34:18  100.05    0.0  0.0     0.0     98.0     0.0    0.0
+12:34:20  100.05    0.0  0.0     0.0     98.0     0.0    0.0
+12:34:22   99.55    0.0 14.9     0.0     85.6 14898.2   66.7
+12:34:24  100.00    0.0  2.0     0.0     65.2 16302.0  500.0
+12:34:26  100.05    0.0  2.0     0.0     61.0 18192.8  500.2
+12:34:28  100.05    0.0  4.0     0.0     55.7 20619.6  250.1
+12:34:30  100.05    0.0  4.0     0.0     47.2 22506.1  250.1
+12:34:32  100.05    0.0  4.5     0.0     39.0 24579.6  222.3
+12:34:34  100.05    0.0  2.5     0.0     31.9 26468.8  400.2
+12:34:36   77.79   21.1 27.1   132.7     19.2 16093.9   28.7
+12:34:38    0.00    0.0  0.0     0.0      0.0     0.0    0.0
+12:34:40    0.00    0.0  0.0     0.0      0.0     0.0    0.0
+
+--
+Scott Lowrey
