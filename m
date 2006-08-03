@@ -1,14 +1,14 @@
 From: Mark Haverkamp <markh@osdl.org>
-Subject: [PATCH 1/4] aacraid:  interruptible ioctl
-Date: Thu, 03 Aug 2006 08:02:24 -0700
-Message-ID: <1154617344.31319.20.camel@markh3.pdx.osdl.net>
+Subject: [PATCH 2/4] aacraid: Restart adapter on firmware assert
+Date: Thu, 03 Aug 2006 08:02:51 -0700
+Message-ID: <1154617371.31319.21.camel@markh3.pdx.osdl.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:36580 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932419AbWHCPC2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Aug 2006 11:02:28 -0400
+Received: from smtp.osdl.org ([65.172.181.4]:62180 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932085AbWHCPCx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Aug 2006 11:02:53 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@steeleye.com>
@@ -16,144 +16,96 @@ Cc: Mark Salyzyn <mark_salyzyn@adaptec.com>, linux-scsi <linux-scsi@vger.kernel.
 
 Received from Mark Salyzyn
 
-This patch allows the FSACTL_SEND_LARGE_FIB, FSACTL_SENDFIB and
-FSACTL_SEND_RAW_SRB ioctl calls into the aacraid driver to be
-interruptible. Only necessary if the adapter and/or the management
-software has gone into some sort of misbehavior and the system is being
-rebooted, thus permitting the user management software applications to
-be killed relatively cleanly. The FIB queue resource is held out of the
-free queue until the adapter finally, if ever, completes the command.
+If the adapter should be in a blinkled (Firmware Assert) state when the
+driver loads, we will perform a warm restart of the Adapter Firmware to
+see if we can rescue the adapter. Possible causes of a blinkled can
+occur on some early release motherboard BIOSes, transitory PCI bus
+problems on embedded systems or non-x86 based architectures, transitory
+startup failures of early release drives or transitory hardware
+failures; some of which can bite the adapter later at runtime. Future
+enhancements will include recovery during runtime.
 
 Signed-off-by: Mark Haverkamp <markh@osdl.org>
 ---
 
---- scsi-misc-aac.orig/drivers/scsi/aacraid/commctrl.c	2006-07-31 11:00:22.000000000 -0700
-+++ scsi-misc-aac/drivers/scsi/aacraid/commctrl.c	2006-07-31 14:33:19.000000000 -0700
-@@ -38,7 +38,7 @@
- #include <linux/completion.h>
- #include <linux/dma-mapping.h>
- #include <linux/blkdev.h>
--#include <linux/delay.h>
-+#include <linux/delay.h> /* ssleep prototype */
- #include <linux/kthread.h>
- #include <asm/semaphore.h>
- #include <asm/uaccess.h>
-@@ -140,7 +140,8 @@
- 		fibptr->hw_fib_pa = hw_fib_pa;
- 		fibptr->hw_fib = hw_fib;
- 	}
--	aac_fib_free(fibptr);
-+	if (retval != -EINTR)
-+		aac_fib_free(fibptr);
- 	return retval;
- }
+--- scsi-misc-aac.orig/drivers/scsi/aacraid/aacraid.h	2006-07-31 14:33:25.000000000 -0700
++++ scsi-misc-aac/drivers/scsi/aacraid/aacraid.h	2006-07-31 14:33:47.000000000 -0700
+@@ -1670,6 +1670,7 @@
+ #define RCV_TEMP_READINGS		0x00000025
+ #define GET_COMM_PREFERRED_SETTINGS	0x00000026
+ #define IOP_RESET			0x00001000
++#define IOP_RESET_ALWAYS		0x00001001
+ #define RE_INIT_ADAPTER			0x000000ee
  
-@@ -621,7 +622,13 @@
- 
- 		actual_fibsize = sizeof (struct aac_srb) + (((user_srbcmd->sg.count & 0xff) - 1) * sizeof (struct sgentry));
- 		if(actual_fibsize != fibsize){ // User made a mistake - should not continue
--			dprintk((KERN_DEBUG"aacraid: Bad Size specified in Raw SRB command\n"));
-+			dprintk((KERN_DEBUG"aacraid: Bad Size specified in "
-+			  "Raw SRB command calculated fibsize=%d "
-+			  "user_srbcmd->sg.count=%d aac_srb=%d sgentry=%d "
-+			  "issued fibsize=%d\n",
-+			  actual_fibsize, user_srbcmd->sg.count,
-+			  sizeof(struct aac_srb), sizeof(struct sgentry),
-+			  fibsize));
- 			rcode = -EINVAL;
- 			goto cleanup;
- 		}
-@@ -663,6 +670,10 @@
- 		psg->count = cpu_to_le32(sg_indx+1);
- 		status = aac_fib_send(ScsiPortCommand, srbfib, actual_fibsize, FsaNormal, 1, 1, NULL, NULL);
- 	}
-+	if (status == -EINTR) {
-+		rcode = -EINTR;
-+		goto cleanup;
+ /*
+--- scsi-misc-aac.orig/drivers/scsi/aacraid/rkt.c	2006-07-31 14:33:25.000000000 -0700
++++ scsi-misc-aac/drivers/scsi/aacraid/rkt.c	2006-07-31 14:33:47.000000000 -0700
+@@ -417,6 +417,17 @@
+ 	/*
+ 	 *	Check to see if the board panic'd while booting.
+ 	 */
++	if (rkt_readl(dev, MUnit.OMRx[0]) & KERNEL_PANIC) {
++		u32 var;
++		printk(KERN_ERR "%s%d: adapter kernel panic'd.\n", dev->name, instance);
++		var = 0;
++		if ((aac_rkt_check_health(dev) <= 0)
++		 || rkt_sync_cmd(dev, IOP_RESET, 0, 0, 0, 0, 0, 0,
++		  &var, NULL, NULL, NULL, NULL)
++		 || (var != 0x00000001)
++		 || (rkt_readl(dev, MUnit.OMRx[0]) & KERNEL_PANIC))
++			goto error_iounmap;
 +	}
- 
- 	if (status != 0){
- 		dprintk((KERN_DEBUG"aacraid: Could not send raw srb fib to hba\n")); 
-@@ -696,8 +707,10 @@
- 	for(i=0; i <= sg_indx; i++){
- 		kfree(sg_list[i]);
+ 	/*
+ 	 *	Check to see if the board failed any self tests.
+ 	 */
+@@ -431,13 +442,6 @@
+ 		printk(KERN_ERR "%s%d: adapter monitor panic.\n", dev->name, instance);
+ 		goto error_iounmap;
  	}
--	aac_fib_complete(srbfib);
--	aac_fib_free(srbfib);
-+	if (rcode != -EINTR) {
-+		aac_fib_complete(srbfib);
-+		aac_fib_free(srbfib);
+-	/*
+-	 *	Check to see if the board panic'd while booting.
+-	 */
+-	if (rkt_readl(dev, MUnit.OMRx[0]) & KERNEL_PANIC) {
+-		printk(KERN_ERR "%s%d: adapter kernel panic'd.\n", dev->name, instance);
+-		goto error_iounmap;
+-	}
+ 	start = jiffies;
+ 	/*
+ 	 *	Wait for the adapter to be up and running. Wait up to 3 minutes
+--- scsi-misc-aac.orig/drivers/scsi/aacraid/rx.c	2006-07-31 14:33:25.000000000 -0700
++++ scsi-misc-aac/drivers/scsi/aacraid/rx.c	2006-07-31 14:33:47.000000000 -0700
+@@ -416,6 +416,17 @@
+ 	/*
+ 	 *	Check to see if the board panic'd while booting.
+ 	 */
++	if (rx_readl(dev, MUnit.OMRx[0]) & KERNEL_PANIC) {
++		u32 var;
++		printk(KERN_ERR "%s%d: adapter kernel panic.\n", dev->name, instance);
++		var = 0;
++		if ((aac_rx_check_health(dev) <= 0)
++		 || rx_sync_cmd(dev, IOP_RESET, 0, 0, 0, 0, 0, 0,
++		  &var, NULL, NULL, NULL, NULL)
++		 || (var != 0x00000001)
++		 || (rx_readl(dev, MUnit.OMRx[0]) & KERNEL_PANIC))
++			goto error_iounmap;
 +	}
- 
- 	return rcode;
- }
---- scsi-misc-aac.orig/drivers/scsi/aacraid/commsup.c	2006-07-31 11:00:22.000000000 -0700
-+++ scsi-misc-aac/drivers/scsi/aacraid/commsup.c	2006-07-31 14:33:19.000000000 -0700
-@@ -464,6 +464,8 @@
- 	dprintk((KERN_DEBUG "  hw_fib pa being sent=%lx\n",(ulong)fibptr->hw_fib_pa));
- 	dprintk((KERN_DEBUG "  fib being sent=%p\n",fibptr));
- 
-+	if (!dev->queues)
-+		return -ENODEV;
- 	q = &dev->queues->queue[AdapNormCmdQueue];
- 
- 	if(wait)
-@@ -527,8 +529,15 @@
- 				}
- 				udelay(5);
- 			}
--		} else
--			down(&fibptr->event_wait);
-+		} else if (down_interruptible(&fibptr->event_wait)) {
-+			spin_lock_irqsave(&fibptr->event_lock, flags);
-+			if (fibptr->done == 0) {
-+				fibptr->done = 2; /* Tell interrupt we aborted */
-+				spin_unlock_irqrestore(&fibptr->event_lock, flags);
-+				return -EINTR;
-+			}
-+			spin_unlock_irqrestore(&fibptr->event_lock, flags);
-+		}
- 		BUG_ON(fibptr->done == 0);
- 			
- 		if((fibptr->flags & FIB_CONTEXT_FLAG_TIMED_OUT)){
-@@ -795,7 +804,7 @@
- 
- 	/* Sniff for container changes */
- 
--	if (!dev)
-+	if (!dev || !dev->fsa_dev)
- 		return;
- 	container = (u32)-1;
- 
---- scsi-misc-aac.orig/drivers/scsi/aacraid/dpcsup.c	2006-07-31 11:00:22.000000000 -0700
-+++ scsi-misc-aac/drivers/scsi/aacraid/dpcsup.c	2006-07-31 11:29:51.000000000 -0700
-@@ -124,10 +124,15 @@
- 		} else {
- 			unsigned long flagv;
- 			spin_lock_irqsave(&fib->event_lock, flagv);
--			fib->done = 1;
-+			if (!fib->done)
-+				fib->done = 1;
- 			up(&fib->event_wait);
- 			spin_unlock_irqrestore(&fib->event_lock, flagv);
- 			FIB_COUNTER_INCREMENT(aac_config.NormalRecved);
-+			if (fib->done == 2) {
-+				aac_fib_complete(fib);
-+				aac_fib_free(fib);
-+			}
- 		}
- 		consumed++;
- 		spin_lock_irqsave(q->lock, flags);
-@@ -316,7 +321,8 @@
- 			unsigned long flagv;
- 	  		dprintk((KERN_INFO "event_wait up\n"));
- 			spin_lock_irqsave(&fib->event_lock, flagv);
--			fib->done = 1;
-+			if (!fib->done)
-+				fib->done = 1;
- 			up(&fib->event_wait);
- 			spin_unlock_irqrestore(&fib->event_lock, flagv);
- 			FIB_COUNTER_INCREMENT(aac_config.NormalRecved);
+ 	/*
+ 	 *	Check to see if the board failed any self tests.
+ 	 */
+@@ -424,13 +435,6 @@
+ 		goto error_iounmap;
+ 	}
+ 	/*
+-	 *	Check to see if the board panic'd while booting.
+-	 */
+-	if (rx_readl(dev, MUnit.OMRx[0]) & KERNEL_PANIC) {
+-		printk(KERN_ERR "%s%d: adapter kernel panic.\n", dev->name, instance);
+-		goto error_iounmap;
+-	}
+-	/*
+ 	 *	Check to see if the monitor panic'd while booting.
+ 	 */
+ 	if (rx_readl(dev, MUnit.OMRx[0]) & MONITOR_PANIC) {
 
 -- 
 Mark Haverkamp <markh@osdl.org>
