@@ -1,33 +1,36 @@
-From: "Chase" <anaheimbushy@nycmail.com>
-Subject: Never-seen Impress your girl with prolonged hardness, plentiful explosions and increased duration
-Date: Thu, 3 Aug 2006 21:19:05 +0800
-Message-ID: <85831923314869.FA8BC18348__47755.89249698$1154611186$gmane$org@E06B>
+From: "Sue" <chenavionic@chemist.com>
+Subject: Fill up your supplies with our secure ordering, cost saving and fast delivery. Feel Pleasure from
+Date: Thu, 3 Aug 2006 21:37:38 +0800
+Message-ID: <04974544435932.8BEB630884@R267G>
 Mime-Version: 1.0
 Content-Type: text/plain;
         charset="Windows-1252"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [222.46.52.231] ([222.46.52.231]:10193 "EHLO S-FCEA62EE28764")
-	by vger.kernel.org with ESMTP id S932424AbWHCNTB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Aug 2006 09:19:01 -0400
+Received: from zeus2.kernel.org ([204.152.191.36]:29154 "EHLO zeus2.kernel.org")
+	by vger.kernel.org with ESMTP id S932477AbWHCNgY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Aug 2006 09:36:24 -0400
+Received: from kieedei.iiom6qai.cox.net ([125.77.234.105])
+	by zeus2.kernel.org (8.13.1/8.13.1) with ESMTP id k73DZhSb003277
+	for <linux-scsi@vger.kernel.org>; Thu, 3 Aug 2006 13:36:22 GMT
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-serial@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Dear member,
- Most quality products for anyone who wants to become a champion in bedBoost your manhood to astonishing levels Everything a real man would ever need.
+Hello bro, 
 
+ Have you ever dreamt to have a very hard peenis during all process? I am sure it was 
 
-Enhanced male power and unlimited prowess with your girl The best products for the winning guys
-
-
- Come in: http://www.seelygd.com
+ Low prices, handy delivery, everything for your convenience. Boost your manhood to astonishing levels Everything a real man would ever need. 
 
 
-Chase Hickman
+ See our offer: http://www.wangheeni.com
 
+ Many people worldwide have been enjoying goods from these top brands for many years 
 
+Sue Rollins
 
-The faintest ink is more powerful than the strongest memory  A bad penny always turns up.A banker is a fellow who lends you his umbrella when the sun is shining, but wants it back the minute it begins to rain.
-Once in a blue moon Lest strangers be filled with thy wealth; and thy labours be in the house of a stranger.
+Don't count your chickens before they're hatched . When water throw away ah ground yuh can't pick am up. The West Wind Always Brings Wet Weather, The East Wind Wet and Cold Together, the South Wind Surely Brings Us Rain, the North Wind Blows It Back Again
+A bad workman blames his tools. Tis better to get things for free, than to work up a sweat  Patience is a virtue You catch more flies with honey than with vinegar
+Good friends are hard to find, harder to leave, and impossible to forget Don't cross your bridges before you get to them.
 
