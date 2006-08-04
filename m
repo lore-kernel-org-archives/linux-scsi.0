@@ -1,43 +1,57 @@
-From: "Marcia Mayo" <MarciaMayo@0451.com>
-Subject: Order status, orange lily
-Date: Fri, 4 Aug 2006 18:13:43 +0000 (UTC)
-Message-ID: <662161c80604pnvb15u3c7helc975ynu3zpqc0ymaskmz@mail.0451.com>
+From: maximilian attems <maks@sternwelten.at>
+Subject: Re: Bug#380272: kernel-image-2.6-686-smp: cpqarray module fails to detect arrays
+Date: Fri, 4 Aug 2006 20:21:03 +0200
+Message-ID: <20060804182102.GD19325@nancy>
+References: <200607281800.59516.joshua@rubixlinux.org> <200607301140.25691.joshua@rubixlinux.org> <20060730200559.GO10814@baikonur.stro.at> <200607301433.02983.joshua@rubixlinux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:55523 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S932357AbWHDSN2 convert rfc822-to-8bit
+Received: from baikonur.stro.at ([213.239.196.228]:37309 "EHLO
+	baikonur.stro.at") by vger.kernel.org with ESMTP id S932613AbWHDSVe
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 4 Aug 2006 14:13:28 -0400
-Date: Fri, 4 Aug 2006 18:13:42 -0480
+	Fri, 4 Aug 2006 14:21:34 -0400
 Content-Disposition: inline
+In-Reply-To: <200607301433.02983.joshua@rubixlinux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-8086@vger.kernel.org
+To: Joshua Rubin <joshua@rubixlinux.org>
+Cc: 380272@bugs.debian.org, Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org
 
-Even if you have no erectin problems SOFT CIAFLIS 
-would help you to make BETTER SE4X MORE OFTEN!
-and to bring  unimagnable plesure to her.
+hello joshua,
 
-Just disolve half a pil under your tongue 
-and get ready for action in 15 minutes. 
+thanks for your followups,
+had time again to look at your bug report.
 
-The tests showed that the majority of men 
-after taking this medic ation were able to have 
-PERFECT ERXECTION during 36 hours!
+the trouble is quite shown in the troublesome dmesg and
+in the working cat /proc/modules.
 
-VISIT US, AND GET OUR SPECIAL 70% DISCROUNT OFER!
+On Sun, 30 Jul 2006, Joshua Rubin wrote:
 
-http://wkmbdd.markerbeach.com/?99591414
+> I just tried installing etch with the beta2 installer. This system loaded the 
+> floppy module before the cpqarray module, yet could not find the arrays 
+> either. Still, the sarge system upgraded to etch works fine with the floppy 
+> module loaded in the initramfs.
 
-=====
-but he didn't appear to notice. He held  his  practice  sessions  directly
-stupid map?
-through the night, and all so peaceful and still...
-looks  of those  two hillocks!  A  straight line to  the  asphalt led  right
-startled that you obliged them so well."
-But  what  was  the  silvery thing  shining  back  there?  Was  it  just  my
+adding the floppy seems to kick sym53c8xx at loading later:
 
-     "I don't think  so.  The Pilman  Radiant wasn't the first, nor  was  it
-order you to start walking on your hands you will immediately hoist your fat
+> ACPI: PCI Interrupt 0000:00:01.0[A] -> GSI 19 (level, low) -> IRQ 177
+> sym53c8xx 0000:00:01.0: device not supported
+> ACPI: PCI interrupt for device 0000:00:01.0 disabled
+> Compaq SMART2 Driver (v 2.6.0)
+> cpqarray: Device 0x10 has been found at bus 0 dev 1 func 0
+> ACPI: PCI Interrupt 0000:00:01.0[A] -> GSI 19 (level, low) -> IRQ 177
+> cpqarray: Finding drives on ida0<4>cpqarray ida0: idaSendPciCmd Timeout out,
+
+see sym53c8xx disables your interrupt for cpqarray.
+try my theory and use instead of floppy:
+echo cpqarray > /etc/initramfs-tools/modules
+regenerate initramfs with update-initramfs -u.
+plese post the resulting dmesg.
+
+adding linux-scsi and Matthew Wilcox to cc.
+
+
+best regards
+
+-- 
+maks
