@@ -1,24 +1,26 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 2/2] libata: Add support for SATA attachment to SAS adapters
-Date: Thu, 03 Aug 2006 17:25:27 -0400
-Message-ID: <44D269C7.1050208@pobox.com>
-References: <200607131335.k6DDZpMD004925@d03av03.boulder.ibm.com>
+From: "Angelita" <coagulablebloodstain@iname.com>
+Subject: =?ISO-8859-1?Q?=20New=92n=92hot?= Now you could grant your wish Feel Pleasure from
+Date: Fri, 4 Aug 2006 11:47:54 +0100
+Message-ID: <58904403022227.9E3750E44C@2LF51>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+        charset="Windows-1252"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <200607131335.k6DDZpMD004925@d03av03.boulder.ibm.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Brian King <brking@us.ibm.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from i-83-67-116-188.freedom2surf.net ([83.67.116.188]:5905 "EHLO
+	JFHOME.t3ber.org") by vger.kernel.org with ESMTP id S1161163AbWHDKrz
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 4 Aug 2006 06:47:55 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-You shouldn't be duplicating all that init code from ata_host_init().
+How are you Guys?!
+Have you ever wished to have more intense final? 
+It’s absolutely true – just take one before start
 
-Fix that issue (presumably by factoring out common code), and I'll apply 
-this SAS<->SATA attachment API patchset.
+ Worried it won't work?
 
-	Jeff
-
-
+ Come on in: http://hterdfs.com/gall/gsm/ 
+ The prices are really low and the quality it truly very high!
 
