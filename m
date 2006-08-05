@@ -1,19 +1,40 @@
-From: "Boyce" <Boycedoberman@allergist.com>
-Subject: Trust me - it will be a great surprise for your girl!
-Date: Sat, 5 Aug 2006 05:45:33 +0900
-Message-ID: <44200884901633.44D6F38A5F@2CU1S1W>
-Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="Windows-1252"
-Content-Transfer-Encoding: 7bit
+From: Doug Maxey <dwm@enoyolf.org>
+Subject: [PATCHSET] qla4xxx: miscellanous clean-ups
+Date: Sat, 05 Aug 2006 01:54:42 -0500
+Message-ID: <20060805065442.21282.17412.stgit@bebe.enoyolf.org>
+Content-Type: text/plain; charset=utf-8; format=fixed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [211.225.122.164] ([211.225.122.164]:58885 "EHLO
-	eq8j8u.i1pe0y2.ameritech.net") by vger.kernel.org with ESMTP
-	id S1161423AbWHDUnP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 4 Aug 2006 16:43:15 -0400
+Received: from falcon30.maxeymade.com ([24.173.215.190]:32706 "EHLO
+	bebe.enoyolf.org") by vger.kernel.org with ESMTP id S1161590AbWHEHHX
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 5 Aug 2006 03:07:23 -0400
+In-Reply-To: 1154027483.3997.7.camel@dcslnxpc.site
+References: 1154027483.3997.7.camel@dcslnxpc.site
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, Ravi Anand <ravi.anand@qlogic.com>, David Somayajulu <david.somayajulu@qlogic.com>, dwm@austin.ibm.com
 
-Hello my friend! You have a unique chance to forget this distress forever. Stop being a two pump chump. There is a good reason for Extra-Time being ranked the number one solution. Don't let your partner leave you because of being unhappy with the duration of your acts. Come in: http://jopinots.com/gal/get/ You will become her best partner ever - she just won't be able to leave! No anguish, just adoration.
+The following series of three patches implements a set of fixes for
+the qla4xxx driver.  These patches are on top of the 7-27 submission.
 
+-1 remove-unused-init-code
+
+ drivers/scsi/qla4xxx/ql4_init.c |   26 ++++++++++++++--------
+ drivers/scsi/qla4xxx/ql4_os.c   |   46 ++++++++++++++-------------------------
+ 2 files changed, 33 insertions(+), 39 deletions(-)
+
+-2 return-status-ql4xxx_lock_drvr_wait
+
+ drivers/scsi/qla4xxx/ql4_os.c |   46 +++++++++++++++--------------------------
+ 1 files changed, 17 insertions(+), 29 deletions(-)
+
+-3 rework-some-printks-to-dev_xxx
+
+ drivers/scsi/qla4xxx/ql4_os.c |   46 +++++++++++++++--------------------------
+ 1 files changed, 17 insertions(+), 29 deletions(-)
+
+
+--
+++doug
