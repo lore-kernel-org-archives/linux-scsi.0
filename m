@@ -1,40 +1,91 @@
 From: Doug Maxey <dwm@enoyolf.org>
-Subject: [PATCHSET] qla4xxx: miscellanous clean-ups
-Date: Sat, 05 Aug 2006 01:54:42 -0500
-Message-ID: <20060805065442.21282.17412.stgit@bebe.enoyolf.org>
+Subject: [PATCH 2/3] qla4xxx: qla4xxx: Add a timeout period and return status from ql4xxx_lock_drvr_wait()
+Date: Sat, 05 Aug 2006 02:05:35 -0500
+Message-ID: <20060805070535.23332.49867.stgit@bebe.enoyolf.org>
+References: <20060805070514.23332.36344.stgit@bebe.enoyolf.org>
 Content-Type: text/plain; charset=utf-8; format=fixed
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from falcon30.maxeymade.com ([24.173.215.190]:32706 "EHLO
-	bebe.enoyolf.org") by vger.kernel.org with ESMTP id S1161590AbWHEHHX
+Received: from falcon30.maxeymade.com ([24.173.215.190]:34754 "EHLO
+	bebe.enoyolf.org") by vger.kernel.org with ESMTP id S1422673AbWHEHHm
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 5 Aug 2006 03:07:23 -0400
-In-Reply-To: 1154027483.3997.7.camel@dcslnxpc.site
-References: 1154027483.3997.7.camel@dcslnxpc.site
+	Sat, 5 Aug 2006 03:07:42 -0400
+In-Reply-To: <20060805070514.23332.36344.stgit@bebe.enoyolf.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Mike Christie <michaelc@cs.wisc.edu>
 Cc: open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, Ravi Anand <ravi.anand@qlogic.com>, David Somayajulu <david.somayajulu@qlogic.com>, dwm@austin.ibm.com
 
-The following series of three patches implements a set of fixes for
-the qla4xxx driver.  These patches are on top of the 7-27 submission.
+From: Doug Maxey <dwm@enoyolf.org>
 
--1 remove-unused-init-code
+Change the func to only wait for QL4_LOCK_DRVR_WAIT ms.
+Fix callers to use the return status.
 
- drivers/scsi/qla4xxx/ql4_init.c |   26 ++++++++++++++--------
- drivers/scsi/qla4xxx/ql4_os.c   |   46 ++++++++++++++-------------------------
- 2 files changed, 33 insertions(+), 39 deletions(-)
+Signed-off-by: Doug Maxey <dwm@enoyolf.org>
+---
 
--2 return-status-ql4xxx_lock_drvr_wait
+ drivers/scsi/qla4xxx/ql4_init.c |   26 ++++++++++++++++----------
+ 1 files changed, 16 insertions(+), 10 deletions(-)
 
- drivers/scsi/qla4xxx/ql4_os.c |   46 +++++++++++++++--------------------------
- 1 files changed, 17 insertions(+), 29 deletions(-)
-
--3 rework-some-printks-to-dev_xxx
-
- drivers/scsi/qla4xxx/ql4_os.c |   46 +++++++++++++++--------------------------
- 1 files changed, 17 insertions(+), 29 deletions(-)
-
-
---
-++doug
+diff --git a/drivers/scsi/qla4xxx/ql4_init.c b/drivers/scsi/qla4xxx/ql4_init.c
+index 8608106..8fb39b5 100644
+--- a/drivers/scsi/qla4xxx/ql4_init.c
++++ b/drivers/scsi/qla4xxx/ql4_init.c
+@@ -988,25 +988,29 @@ static int qla4xxx_start_firmware_from_f
+ 	return status;
+ }
+ 
+-static void ql4xxx_lock_drvr_wait(struct scsi_qla_host *a)
++static int ql4xxx_lock_drvr_wait(struct scsi_qla_host *a)
+ {
+-	int i = 0;
+-	while (1) {
++#define QL4_LOCK_DRVR_WAIT (20000)
++#define QL4_LOCK_DRVR_SLEEP (10)
++	int i = QL4_LOCK_DRVR_WAIT;
++
++	while (i > 0) {
+ 		if (ql4xxx_lock_drvr(a) == 0) {
+-			msleep(10);
+-			if (!i) {
++			msleep(QL4_LOCK_DRVR_SLEEP);
++			if (i == QL4_LOCK_DRVR_WAIT) {
+ 				DEBUG2(printk("scsi%ld: %s: Waiting for "
+ 					      "Global Init Semaphore...n",
+ 					      a->host_no,
+ 					      __func__));
+-				i++;
+ 			}
++			i -= QL4_LOCK_DRVR_SLEEP;
+ 		} else {
+ 			DEBUG2(printk("scsi%ld: %s: Global Init Semaphore "
+-				      "acquired.n", a->host_no, __func__));
+-			break;
++				      "acquired\n", a->host_no, __func__));
++			return QLA_SUCCESS;
+ 		}
+ 	}
++	return QLA_ERROR;
+ }
+ 
+ /**
+@@ -1030,7 +1034,8 @@ static int qla4xxx_start_firmware(struct
+ 	if (is_qla4022(ha))
+ 		ql4xxx_set_mac_number(ha);
+ 
+-	ql4xxx_lock_drvr_wait(ha);
++	if (ql4xxx_lock_drvr_wait(ha))
++		return QLA_ERROR;
+ 
+ 	spin_lock_irqsave(&ha->hardware_lock, flags);
+ 
+@@ -1107,7 +1112,8 @@ static int qla4xxx_start_firmware(struct
+ 		config_chip = 1;
+ 
+ 		/* Reset clears the semaphore, so aquire again */
+-		ql4xxx_lock_drvr_wait(ha);
++		if (ql4xxx_lock_drvr_wait(ha))
++			return QLA_ERROR;
+ 	}
+ 
+ 	if (config_chip) {
