@@ -1,37 +1,56 @@
-From: "Cody" <jerrydouhi@agribrands.ca>
-Subject: Cheap pharmacy online, introduces online pharmacy service really
-Date: Sat, 5 Aug 2006 12:03:25 -0500
-Message-ID: <8337070168.336145680500@agribrands.ca>
-Reply-To: "Cody Cabrera" <jerrydouhi@agribrands.ca>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+From: Doug Maxey <dwm@enoyolf.org>
+Subject: [PATCHSET ver3] qla4xxx: miscellanous clean-ups
+Date: Sat, 05 Aug 2006 17:19:37 -0500
+Message-ID: <20060805221937.3349.73409.stgit@bebe.enoyolf.org>
+References: <20060805065442.21282.17412.stgit@bebe.enoyolf.org 1154027483.3997.7.camel@dcslnxpc.site>
+Content-Type: text/plain; charset=utf-8; format=fixed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 160.red-82-158-2.user.auna.net ([82.158.2.160]:42244 "HELO
-	82.158.2.160") by vger.kernel.org with SMTP id S1030218AbWHEWDO
+Received: from falcon30.maxeymade.com ([24.173.215.190]:925 "EHLO
+	bebe.enoyolf.org") by vger.kernel.org with ESMTP id S1751401AbWHEWyR
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 5 Aug 2006 18:03:14 -0400
-Received: from mail1.cargill.com (mail1.cargill.com [167.136.35.148])
-	by 82.158.2.160 (8.12.11/8.12.11) with ESMTP id tBLIZ0HLJAYToj
-	for <linux-scsi@vger.kernel.org>; Sat, 5 Aug 2006 12:03:25 -0500
-Received: from [172.237.112.84]
-	by mail1.cargill.com with SMTP id Cvnf8KhGpkwT
-	for <linux-scsi@vger.kernel.org>; Sat, 5 Aug 2006 12:03:25 -0500
+	Sat, 5 Aug 2006 18:54:17 -0400
+In-Reply-To: <20060805065442.21282.17412.stgit@bebe.enoyolf.org 1154027483.3997.7.camel@dcslnxpc.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Ravi Anand <ravi.anand@qlogic.com>, David Somayajulu <david.somayajulu@qlogic.com>, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org
+
+Mike,
+
+The following 4 patch series replaces the 2 previous patchsets
+Subject: [PATCHSET] qla4xxx: miscellanous clean-ups
+Message-ID: 20060805065442.21282.17412.stgit@bebe.enoyolf.org
+and
+Subject: [PATCHSET ver2] qla4xxx: miscellanous clean-ups
+
+Please drop both previous series.  The patches themselves did not
+change, but mail addressing stuff was thoroughly borken.
+
+Apparently the stgit mailer does not like continuation lines in CC
+lists, some of the cc'd folks got silently dropped. :-/  One address
+per line, please.  Actually, I think as long as all the addrs were on
+one line woud be ok.  So many MUA's, so many.  Oh well.
+
+The duplicate qla4xxx: in the subject line of the individual patches
+has been fixed.  This series has also been compile tested.  More
+extensive testing is in progress on x86-64 and powerpc64.
+
+As with the previous patchset, these patches are on top of the 7-27
+submission.
+
+Shortlog:
+Doug Maxey:
+      qla4xxx: Remove funcs with no callers in ql4_init.c
+      qla4xxx: Add a timeout period and return status from ql4xxx_lock_drvr_wait()
+      qla4xxx: use dev_xxx on some pci/dma resource alloc warning and error printks
+      qla4xxx: improve symmetry in buffer codepaths
 
 
+Diffstats:
+ drivers/scsi/qla4xxx/ql4_init.c |  189 ++++-----------------------------------
+ drivers/scsi/qla4xxx/ql4_os.c   |   50 ++++------
+ 2 files changed, 40 insertions(+), 199 deletions(-)
 
-"You guys are great! Enjoy working with you. Your efforts are always 100%. Thanks."
-Sandy Baum
-Johns Hopkins Pharmaquip
-Baltimore, MD
-When man to man shall be friend and brother.
-Free shipping on all orders.
-Brand and generic drugs.
-It is easier to rob by setting up a bank than by holding up a bank clerk.
-View the site
- http://zawasedince.com/
-Let us choose to believe something good can happen.
-
+--
+++doug
