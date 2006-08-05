@@ -1,15 +1,15 @@
 From: Doug Maxey <dwm@enoyolf.org>
-Subject: [PATCH 1/3] qla4xxx: qla4xxx: Remove funcs with no callers in ql4_init.c
-Date: Sat, 05 Aug 2006 02:05:25 -0500
-Message-ID: <20060805070525.23332.67301.stgit@bebe.enoyolf.org>
+Subject: [PATCH 3/3] qla4xxx: qla4xxx: use dev_xxx on some pci dma resource path warning and error printks
+Date: Sat, 05 Aug 2006 02:05:45 -0500
+Message-ID: <20060805070545.23332.27242.stgit@bebe.enoyolf.org>
 References: <20060805070514.23332.36344.stgit@bebe.enoyolf.org>
 Content-Type: text/plain; charset=utf-8; format=fixed
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from falcon30.maxeymade.com ([24.173.215.190]:33730 "EHLO
-	bebe.enoyolf.org") by vger.kernel.org with ESMTP id S1161593AbWHEHHf
+Received: from falcon30.maxeymade.com ([24.173.215.190]:35778 "EHLO
+	bebe.enoyolf.org") by vger.kernel.org with ESMTP id S1422648AbWHEHHw
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 5 Aug 2006 03:07:35 -0400
+	Sat, 5 Aug 2006 03:07:52 -0400
 In-Reply-To: <20060805070514.23332.36344.stgit@bebe.enoyolf.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,220 +18,129 @@ Cc: open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, Ravi Anand <ravi.an
 
 From: Doug Maxey <dwm@enoyolf.org>
 
-These can be added later when a caller exists.
-    qla4xxx_login_device()
-    qla4xxx_logout_device()
-    qla4xxx_delete_device()
+Rework some of the printk's in the pci and dma resource allocations to
+- use the appropriate dev_xxx macro.
+- be non conditional
 
-Signed-off-by: Doug Maxey <dwm@enoyolf.org>
+Signed-off-by: Doug Maxey <dwm@austin.ibm.com>
 ---
 
- drivers/scsi/qla4xxx/ql4_init.c |  163 +--------------------------------------
- 1 files changed, 5 insertions(+), 158 deletions(-)
+ drivers/scsi/qla4xxx/ql4_os.c |   46 +++++++++++++++--------------------------
+ 1 files changed, 17 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_init.c b/drivers/scsi/qla4xxx/ql4_init.c
-index 1e55e42..8608106 100644
---- a/drivers/scsi/qla4xxx/ql4_init.c
-+++ b/drivers/scsi/qla4xxx/ql4_init.c
-@@ -41,7 +41,7 @@ static void ql4xxx_set_mac_number(struct
- }
- 
- /**
-- * qla4xxx_free_ddb - deallocate ddb	
-+ * qla4xxx_free_ddb - deallocate ddb
-  * @ha: pointer to host adapter structure.
-  * @ddb_entry: pointer to device database entry
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 1da7cf8..3e440fb 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -688,7 +688,7 @@ static void qla4xxx_free_adapter(struct 
+  * @ha: pointer to adapter structure
   *
-@@ -376,7 +376,7 @@ static struct ddb_entry* qla4xxx_get_ddb
-  *
-  * This routine updates the driver's internal device database entry
-  * with information retrieved from the firmware's device database
-- * entry for the specified device. The ddb_entry->fw_ddb_index field 
-+ * entry for the specified device. The ddb_entry->fw_ddb_index field
-  * must be initialized prior to	calling this routine
-  *
+  * This routines maps HBA's registers from the pci address space
+- * into the kernel virtual address space for memory mapped i/o. 
++ * into the kernel virtual address space for memory mapped i/o.
   **/
-@@ -494,7 +494,7 @@ struct ddb_entry * qla4xxx_alloc_ddb(str
-  * @ha: Pointer to host adapter structure.
-  *
-  * This routine searches for all valid firmware ddb entries and builds
-- * an internal ddb list. Ddbs that are considered valid are those with 
-+ * an internal ddb list. Ddbs that are considered valid are those with
-  * a device state of SESSION_ACTIVE.
-  **/
- static int qla4xxx_build_ddb_list(struct scsi_qla_host *ha)
-@@ -540,7 +540,7 @@ static int qla4xxx_build_ddb_list(struct
- 				qla4xxx_set_ddb_entry(ha, fw_ddb_index, 0);
+ static int qla4xxx_iospace_config(struct scsi_qla_host *ha)
+ {
+@@ -700,15 +700,12 @@ static int qla4xxx_iospace_config(struct
+ 	pio_flags = pci_resource_flags(ha->pdev, 0);
+ 	if (pio_flags & IORESOURCE_IO) {
+ 		if (pio_len < MIN_IOBASE_LEN) {
+-			ql4_printk(KERN_WARNING, ha,
+-				   "Invalid PCI I/O region size (%s)...\n",
+-				   pci_name(ha->pdev));
++			dev_warn(ha->pdev->dev,
++				   "Invalid PCI I/O region size\n");
+ 			pio = 0;
  		}
+ 	} else {
+-		ql4_printk(KERN_WARNING, ha,
+-			   "region #0 not a PIO resource (%s)...\n",
+-			   pci_name(ha->pdev));
++		dev_warn(ha->pdev->dev, "region #0 not a PIO resource\n");
+ 		pio = 0;
+ 	}
  
--		if (ddb_state != DDB_DS_SESSION_ACTIVE) 
-+		if (ddb_state != DDB_DS_SESSION_ACTIVE)
- 			goto next_one;
- 		/*
- 		 * if fw_ddb with session active state found,
-@@ -1134,7 +1134,7 @@ static int qla4xxx_start_firmware(struct
-  * @renew_ddb_list: Indicates what to do with the adapter's ddb list
-  *	after adapter recovery has completed.
-  *	0=preserve ddb list, 1=destroy and rebuild ddb list
+@@ -718,23 +715,19 @@ static int qla4xxx_iospace_config(struct
+ 	mmio_flags = pci_resource_flags(ha->pdev, 1);
+ 
+ 	if (!(mmio_flags & IORESOURCE_MEM)) {
+-		ql4_printk(KERN_ERR, ha,
+-			   "region #0 not an MMIO resource (%s), aborting\n",
+-			   pci_name(ha->pdev));
++		dev_err(ha->pdev->dev,
++			   "region #0 not an MMIO resource, aborting\n");
+ 		goto iospace_error_exit;
+ 	}
+ 	if (mmio_len < MIN_IOBASE_LEN) {
+-		ql4_printk(KERN_ERR, ha,
+-			   "Invalid PCI mem region size (%s), aborting\n",
+-			   pci_name(ha->pdev));
++		dev_err(ha-pdev->dev,
++			   "Invalid PCI mem region size, aborting\n");
+ 		goto iospace_error_exit;
+ 	}
+ 
+ 	if (pci_request_regions(ha->pdev, DRIVER_NAME)) {
+-		ql4_printk(KERN_WARNING, ha,
+-			   "Failed to reserve PIO/MMIO regions (%s)\n",
+-			   pci_name(ha->pdev));
+-
++		dev_warn(ha->pdev->dev,
++			 "Failed to reserve PIO/MMIO regions\n");
+ 		goto iospace_error_exit;
+ 	}
+ 
+@@ -742,10 +735,7 @@ static int qla4xxx_iospace_config(struct
+ 	ha->pio_length = pio_len;
+ 	ha->reg = ioremap(mmio, MIN_IOBASE_LEN);
+ 	if (!ha->reg) {
+-		ql4_printk(KERN_ERR, ha,
+-			   "cannot remap MMIO (%s), aborting\n",
+-			   pci_name(ha->pdev));
+-
++		dev_err(ha->pdev->dev, "cannot remap MMIO, aborting\n");
+ 		goto iospace_error_exit;
+ 	}
+ 
+@@ -782,7 +772,7 @@ void qla4xxx_config_dma_addressing(struc
+ /**
+  * qla4xxx_mem_alloc - allocates memory for use by adapter.
+  * @ha: Pointer to host adapter structure
 - * 
 + *
-  * This routine parforms all of the steps necessary to initialize the adapter.
+  * Allocates DMA memory for request and response queues. Also allocates memory
+  * for srbs.
+  **/
+@@ -799,9 +789,8 @@ static int qla4xxx_mem_alloc(struct scsi
+ 	ha->queues = dma_alloc_coherent(&ha->pdev->dev, ha->queues_len,
+ 					&ha->queues_dma, GFP_KERNEL);
+ 	if (ha->queues == NULL) {
+-		ql4_printk(KERN_WARNING, ha,
+-			   "Memory Allocation failed - queues.\n");
+-
++		dev_warn(ha->pdev->dev,
++			 "Memory Allocation failed - queues.\n");
+ 		goto mem_alloc_error_exit;
+ 	}
+ 	memset(ha->queues, 0, ha->queues_len);
+@@ -836,9 +825,8 @@ static int qla4xxx_mem_alloc(struct scsi
+ 	ha->srb_mempool = mempool_create(SRB_MIN_REQ, mempool_alloc_slab,
+ 					 mempool_free_slab, srb_cachep);
+ 	if (ha->srb_mempool == NULL) {
+-		ql4_printk(KERN_WARNING, ha,
+-			   "Memory Allocation failed - SRB Pool.\n");
+-
++		dev_warn(ha->pdev->dev,
++			 "Memory Allocation failed - SRB Pool.\n");
+ 		goto mem_alloc_error_exit;
+ 	}
+ 
+@@ -1709,7 +1697,7 @@ static int qla4xxx_eh_bus_reset(struct s
+  * @ddb_entry: Pointer to device database entry
+  *
+  * This routine issues either a warm or cold target reset to the
+- * specified device. The caller must ensure that the ddb_entry pointer 
++ * specified device. The caller must ensure that the ddb_entry pointer
+  * is valid before calling this routine.
   *
   **/
-@@ -1340,156 +1340,3 @@ int qla4xxx_process_ddb_changed(struct s
- 	return QLA_SUCCESS;
- }
- 
--/**
-- * qla4xxx_login_device - login to target device
-- * @ha: Pointer to host adapter structure.
-- * @fw_ddb_index: Index of the device to login
-- * @connection_id: Connection ID of the device to login
-- *
-- * This routine is called by the login IOCTL to log in the specified device.
-- **/
--int qla4xxx_login_device(struct scsi_qla_host *ha, uint16_t fw_ddb_index,
--			 uint16_t connection_id)
--{
--	struct ddb_entry * ddb_entry;
--	int status = QLA_ERROR;
--
--	ddb_entry = qla4xxx_lookup_ddb_by_fw_index(ha, fw_ddb_index);
--	if (ddb_entry == NULL)
--		goto exit_login_device;
--
--	if (qla4xxx_get_fwddb_entry(ha, fw_ddb_index, NULL, 0, NULL, NULL,
--				    &ddb_entry->fw_ddb_device_state, NULL,
--				    NULL, NULL) == QLA_ERROR)
--		goto exit_login_device;
--
--	if (ddb_entry->fw_ddb_device_state == DDB_DS_SESSION_ACTIVE) {
--		status = QLA_SUCCESS;
--		goto exit_login_device;
--	}
--
--	if (qla4xxx_conn_close_sess_logout(ha, fw_ddb_index, connection_id,
--					   LOGOUT_OPTION_RELOGIN)
--	    != QLA_SUCCESS)
--		goto exit_login_device;
--
--	status = QLA_SUCCESS;
--
--exit_login_device:
--	return status;
--}
--
--/**
-- * qla4xxx_logout_device - logout target device
-- * @ha: Pointer to host adapter structure.
-- * @fw_ddb_index: Index of the device to logout
-- * @connection_id: Connection ID of the device to logout
-- *
-- * This support routine is called by the logout IOCTL to log out
-- * the specified device.
-- **/
--int qla4xxx_logout_device(struct scsi_qla_host *ha, uint16_t fw_ddb_index,
--			  uint16_t connection_id)
--{
--	int status = QLA_ERROR;
--	struct ddb_entry * ddb_entry;
--	uint32_t old_fw_ddb_device_state;
--
--	ddb_entry = qla4xxx_lookup_ddb_by_fw_index(ha, fw_ddb_index);
--	if (ddb_entry == NULL)
--		goto exit_logout_device;
--
--	if (qla4xxx_get_fwddb_entry(ha, fw_ddb_index, NULL, 0, NULL, NULL,
--				    &old_fw_ddb_device_state, NULL, NULL,
--				    NULL) != QLA_SUCCESS)
--		goto exit_logout_device;
--
--	set_bit(DF_NO_RELOGIN, &ddb_entry->flags);
--	if (qla4xxx_conn_close_sess_logout(ha, fw_ddb_index, connection_id,
--					   LOGOUT_OPTION_CLOSE_SESSION)
--	    != QLA_SUCCESS)
--		goto exit_logout_device;
--
--	status = QLA_SUCCESS;
--
--exit_logout_device:
--	return status;
--}
--
--/**
-- * qla4xxx_delete_device - delete specified ddb entry
-- * @ha: Pointer to host adapter structure.
-- * @fw_ddb_index: Index of the device to delete
-- * @connection_id: Connection ID of the device to delete
-- *
-- * This routine is called by the logout IOCTL to delete the specified
-- * device. Send the LOGOUT and DELETE_DDB commands for the specified
-- * target, even if it's not in our internal database.
-- **/
--int qla4xxx_delete_device(struct scsi_qla_host *ha, uint16_t fw_ddb_index,
--			  uint16_t connection_id)
--{
--	int status = QLA_ERROR;
--	uint32_t fw_ddb_device_state = 0xFFFF;
--	u_long wait_count;
--	struct ddb_entry * ddb_entry;
--
--	/* If the device is in our internal tables, set the NO_RELOGIN bit. */
--	ddb_entry = qla4xxx_lookup_ddb_by_fw_index(ha, fw_ddb_index);
--	if (ddb_entry != NULL)
--		set_bit(DF_NO_RELOGIN, &ddb_entry->flags);
--
--	/*
--	 * If the device state is already one that we can delete, bypass the
--	 * logout command.
--	 */
--	qla4xxx_get_fwddb_entry(ha, fw_ddb_index, NULL, 0, NULL, NULL,
--				&fw_ddb_device_state, NULL, NULL, NULL);
--	if (fw_ddb_device_state == DDB_DS_UNASSIGNED ||
--	    fw_ddb_device_state == DDB_DS_NO_CONNECTION_ACTIVE ||
--	    fw_ddb_device_state == DDB_DS_SESSION_FAILED)
--		goto delete_ddb;
--
--	/* First logout index */
--	if (qla4xxx_conn_close_sess_logout(ha, fw_ddb_index, connection_id,
--					   LOGOUT_OPTION_CLOSE_SESSION) !=
--	    QLA_SUCCESS) {
--		DEBUG2(printk("scsi%ld: %s: LOGOUT_OPTION_CLOSE_SESSION "
--			      "failed index [%d]\n", ha->host_no, __func__,
--			      fw_ddb_index));
--		goto exit_delete_ddb;
--	}
--
--	/* Wait enough time to complete logout */
--	wait_count = jiffies + LOGOUT_TOV * HZ;
--	while (qla4xxx_get_fwddb_entry(ha, fw_ddb_index, NULL, 0, NULL, NULL,
--				       &fw_ddb_device_state, NULL, NULL, NULL)
--	       == QLA_SUCCESS) {
--		if (time_after_eq(jiffies, wait_count))
--			goto exit_delete_ddb;
--		if (fw_ddb_device_state == DDB_DS_UNASSIGNED ||
--		    fw_ddb_device_state == DDB_DS_NO_CONNECTION_ACTIVE ||
--		    fw_ddb_device_state == DDB_DS_SESSION_FAILED)
--			break;
--		udelay(50);
--	}
--
--delete_ddb:
--	/* Now delete index */
--	if (qla4xxx_clear_database_entry(ha, fw_ddb_index) == QLA_SUCCESS) {
--		status = QLA_SUCCESS;
--
--		if (!ddb_entry)
--			goto exit_delete_ddb;
--
--		atomic_set(&ddb_entry->state, DDB_STATE_DEAD);
--		DEBUG(printk("scsi%ld: %s: removing index %d.\n", ha->host_no,
--			     __func__, fw_ddb_index));
--		ha->fw_ddb_index_map[fw_ddb_index] =
--			(struct ddb_entry *)INVALID_ENTRY;
--	}
--
--exit_delete_ddb:
--	return status;
--
--}
