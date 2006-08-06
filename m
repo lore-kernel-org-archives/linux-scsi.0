@@ -1,37 +1,45 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] hptiop: backout ioctl mess
-Date: Sun, 06 Aug 2006 13:18:52 -0500
-Message-ID: <1154888332.3683.231.camel@mulgrave.il.steeleye.com>
-References: <20060730171336.GA31646@lst.de>
+Subject: [PATCH] fix up short inquiry printing
+Date: Sun, 06 Aug 2006 18:15:22 -0500
+Message-ID: <1154906122.3683.244.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:32972 "EHLO
+Received: from stat9.steeleye.com ([209.192.50.41]:55504 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751669AbWHFSTO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 6 Aug 2006 14:19:14 -0400
-In-Reply-To: <20060730171336.GA31646@lst.de>
+	id S1750763AbWHFXPa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 6 Aug 2006 19:15:30 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: jejb@SteelEye.com, linux@highpoint-tech.com, linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Matthew Wilcox <matthew@wil.cx>
 
-On Sun, 2006-07-30 at 19:13 +0200, Christoph Hellwig wrote:
-> The hptiop just got merged with a horrible amount of really bad ioctl
-> code that is against the standards for new scsi drivers.  This patch
-> backs it out (and fixes a small bug where scsi_add_host is called to
-> early).  We can re-add proper APIs once we agree on them.
+A recent drivers base commit:
 
-I'm assuming the model you want to use is megaraid_sas, which only has a
-couple of defined ioctls?
+3e95637a48820ff8bedb33e6439def96ccff1de5
 
-> Please send this to Linus for 2.6.19 so that the ioctls don't make it
-> into a release.
+Caused the bus to be added to dev_printk, so now our SCSI inquiry short
+messages print like this:
 
-OK, provided you take the lead in sorting out the ioctl infrastructure
-for this driver ...
+scsiscsi 2:0:0:0: Direct access     IBM-ESXS ST973401SS       B519 PQ: 0 ANSI: 5
+
+Just remove the "scsi" from the sdev_printk to compensate.
 
 James
+
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 1803994..114e206 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -659,7 +659,7 @@ static int scsi_add_lun(struct scsi_devi
+ 	if (inq_result[7] & 0x10)
+ 		sdev->sdtr = 1;
+ 
+-	sdev_printk(KERN_NOTICE "scsi", sdev, "%s %.8s %.16s %.4s PQ: %d "
++	sdev_printk(KERN_NOTICE, sdev, "%s %.8s %.16s %.4s PQ: %d "
+ 			"ANSI: %d%s\n", scsi_device_type(sdev->type),
+ 			sdev->vendor, sdev->model, sdev->rev,
+ 			sdev->inq_periph_qual, inq_result[2] & 0x07,
 
 
