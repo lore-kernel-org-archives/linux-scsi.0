@@ -1,83 +1,127 @@
-From: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
-Subject: RE: [PATCH] megaraid: Use the proper type to hold the irq number.
-Date: Mon, 7 Aug 2006 15:19:39 -0600
-Message-ID: <890BF3111FB9484E9526987D912B261932E31D@NAMAIL3.ad.lsil.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [sbp2] external hard disk shutdown timer
+Date: Mon, 07 Aug 2006 19:55:13 -0400
+Message-ID: <44D7D2E1.9010104@torque.net>
+References: <E1GACIH-00043x-00.olecom-mail-ru@f58.mail.ru>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:36808 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S932384AbWHGVTr convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 7 Aug 2006 17:19:47 -0400
-Content-class: urn:content-classes:message
+Received: from pentafluge.infradead.org ([213.146.154.40]:44205 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S932428AbWHGXzS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 Aug 2006 19:55:18 -0400
+In-Reply-To: <E1GACIH-00043x-00.olecom-mail-ru@f58.mail.ru>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Eric W. Biederman" <ebiederm@xmission.com>, Andrew Morton <akpm@osdl.org>
-Cc: "Kolli, Neela" <Neela.Kolli@engenio.com>, linux-scsi@vger.kernel.org, "Protasevich, Natalie" <Natalie.Protasevich@UNISYS.com>, linux-kernel@vger.kernel.org
+To: olecom@mail.ru
+Cc: Linux SCSI <linux-scsi@vger.kernel.org>
 
-Hi
-> This patches fixes that problem and the driver now appears
-> to work.
+olecom@mail.ru wrote:
+> Hallo ! Let me ask a question.
 > 
-> The ioctl interface appears fundamentally broken as it exports
-> the irq number to user space in an unsigned char.
-Thank you for your findings.
-As you mentioned above, driver needs more changes besides your patch.
-I will submit a patch covers all required changes, soon.
+> I couldn't change some values (f.e IDLE or ICT), while its
+> "changing" flag is "y".
 
-Thank you again,
+I would be surprised if you could change IDLE or
+ICT on a SCSI disk and even more surprised if
+that could be done through a bridge to an ATA
+disk (as is happening in your case).
 
-Seokmann
+What the SAT draft is doing is instructive here. It
+maps the SBC "stop" state (as in when START STOP UNIT
+with start=0 is sent to a disk) to the ATA "standby"
+state. Further, the SAT layer bounces subsequent media
+access command (e.g. READ) and sends back a NOT READY
+sense key with a asc of "initializing command required ...".
+Actually if that READ had got through to the ATA disk
+(e.g. sent as an ATA READ via the ATA PASS THROUGH SCSI
+command) then the ATA disk would have spun up! However
+a design goal of SAT is to make an ATA disk look like
+a SCSI disk which once spun down need a START STOP UNIT
+(start=1) command prior to subsequent media access.
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org 
-> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Eric 
-> W. Biederman
-> Sent: Monday, August 07, 2006 11:29 AM
-> To: Andrew Morton
-> Cc: Kolli, Neela; linux-scsi@vger.kernel.org; Protasevich, 
-> Natalie; linux-kernel@vger.kernel.org
-> Subject: [PATCH] megaraid: Use the proper type to hold the irq number.
-> 
-> 
-> When testing on a Unisys machine it was discovered that
-> the megaraid driver would not initialize as it was
-> requesting irq 162 instead of irq 1442 it was assigned.
-> The problem was the irq number had been truncated by being
-> stored in an unsigned char.
-> 
-> This patches fixes that problem and the driver now appears
-> to work.
-> 
-> The ioctl interface appears fundamentally broken as it exports
-> the irq number to user space in an unsigned char. 
-> 
-> Signed-off-by: Eric W. Biederman <ebiederm@xmission.com>
-> ---
->  drivers/scsi/megaraid/mega_common.h |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/scsi/megaraid/mega_common.h 
-> b/drivers/scsi/megaraid/mega_common.h
-> index 8cd0bd1..b50e27e 100644
-> --- a/drivers/scsi/megaraid/mega_common.h
-> +++ b/drivers/scsi/megaraid/mega_common.h
-> @@ -175,7 +175,7 @@ typedef struct {
->  	uint8_t			max_lun;
+And that is about it. Does anyone know of SCSI disks
+that implement the power condition mode page with real
+changeable fields? Also what does "idle" state mean for
+a disk? [Heads parked, media spinning?]
+
+Further, the SAT draft only outlines the partial
+translation of 4 mode pages:
+  - caching
+  - control
+  - informational exceptions control
+  - read write error recovery
+
+Notice no power condition mode page. I'm not familiar
+enough with the SBP-2 standard and the corresponding
+sbp2 driver but I doubt whether that mode page is
+really supported. Alternatively it could be the SCSI
+to ATA protocol bridge software being unhelpful.
+
+> Would you like to explain meaning of that flag and, possibly,
+> why change doesn't apply ? Maybe i'm doing or understanding
+> something wrong ?
+
+I just think trying to manipulate mode pages
+for ATA devices via the current and previous
+generations of USB mass storage and 1392 sbp2
+chips is a lost cause. Hopefully the next
+generation will have a SAT standard to guide them.
+
+> All i want is to switch off timers (AFAIR from spcecs i've found t10.org),
+> that shutdown ieee1394/usb-storage external HDD.
 >  
->  	uint32_t		unique_id;
-> -	uint8_t			irq;
-> +	int			irq;
->  	uint8_t			ito;
->  	caddr_t			ibuf;
->  	dma_addr_t		ibuf_dma_h;
-> -- 
-> 1.4.2.rc3.g7e18e
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> TIA.
+>  
+>  deen:/home/olecom# sdparm --set=IDLE=0 -6 /dev/sda
+>     /dev/sda: WD        2500JB External   2.23  [simplified direct access device]
+>  Request sense detected:  Sense key: Blank Check
+>   ASC=55, ASCQ=55
+>     continuing ...
+
+Not a good start. The REQUEST SENSE ** seems to get a wild
+sense key and an unknown asc/ascq combination.
+
+>  deen:/home/olecom# sdparm -p po -6 /dev/sda
+>     /dev/sda: WD        2500JB External   2.23  [simplified direct access device]
+>  Request sense detected:  Sense key: Medium Error
+>   ASC=55, ASCQ=55
+
+It is not normal to get a Medium Error when accessing mode
+pages. [If the disk did store mode information on the media
+and could not read it, then it would probably fail its
+initial self test.]
+
+>     continuing ...
+>  Power condition mode page:
+>  >>> warning: mode page seems malformed, try '--flexible'
+
+hmm, 'malformed'
+
+>   IDLE        1  [cha: y, def:  1, sav:  1]
+>   STANDBY     0  [cha: n, def:  0, sav:  0]
+>   ICT       4095  [cha: y, def:4095, sav:4095]
+>   SCT       4278190080  [cha: y, def:4278190080, sav:4278190080]
+
+the SCT is 0xff000000 .
+
+>  deen:/home/olecom#
+
+Looks like garbage in, garbage out.
+
+Lots of error paths were checked and nothing
+died badly which indicates various drivers
+are working well, so that is good.
+
+
+** the initial REQUEST SENSE command used in
+sdparm-0.98 has been removed in sdparm-0.99
+because it broke broken software. Sadly the
+major problem was with libata which doesn't
+support REQUEST SENSE. If other see sdparm
+version 0.98 failing on a REQUEST SENSE, please
+upgrade to version 0.99 .
+
+Doug Gilbert
