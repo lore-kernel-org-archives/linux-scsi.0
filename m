@@ -1,118 +1,57 @@
-From: Brian King <brking@us.ibm.com>
-Subject: [PATCH 2/4] libata: Add ata_port_init
-Date: Mon, 07 Aug 2006 14:27:17 -0500
-Message-ID: <200608071927.k77JRIxc020735@d03av02.boulder.ibm.com>
+From: olecom@mail.ru
+Subject: [sbp2] external hard disk shutdown timer
+Date: Tue, 08 Aug 2006 01:05:49 +0400
+Message-ID: <E1GACIH-00043x-00.olecom-mail-ru@f58.mail.ru>
+Reply-To: olecom@mail.ru
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:61118 "EHLO
-	e36.co.us.ibm.com") by vger.kernel.org with ESMTP id S1750838AbWHGT1u
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 7 Aug 2006 15:27:50 -0400
+Received: from f58.mail.ru ([194.67.57.92]:49156 "EHLO f58.mail.ru")
+	by vger.kernel.org with ESMTP id S932289AbWHGVFu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Aug 2006 17:05:50 -0400
+Received: from mail by f58.mail.ru with local
+	id 1GACIH-00043x-00
+	for linux-scsi@vger.kernel.org; Tue, 08 Aug 2006 01:05:49 +0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, brking@us.ibm.com
+To: Linux SCSI <linux-scsi@vger.kernel.org>
 
+Hallo ! Let me ask a question.
 
-Separate out the ata_port initialization from ata_host_init
-so that it can be used in future SAS patches.
+I couldn't change some values (f.e IDLE or ICT), while its
+"changing" flag is "y".
 
-Signed-off-by: Brian King <brking@us.ibm.com>
----
+Would you like to explain meaning of that flag and, possibly,
+why change doesn't apply ? Maybe i'm doing or understanding
+something wrong ?
 
- libata-dev-bjking1/drivers/scsi/libata-core.c |   49 ++++++++++++++++++--------
- libata-dev-bjking1/drivers/scsi/libata.h      |    2 +
- 2 files changed, 36 insertions(+), 15 deletions(-)
+All i want is to switch off timers (AFAIR from spcecs i've found t10.org),
+that shutdown ieee1394/usb-storage external HDD.
+ 
+TIA.
+ 
+ deen:/home/olecom# sdparm --set=IDLE=0 -6 /dev/sda
+    /dev/sda: WD        2500JB External   2.23  [simplified direct access device]
+ Request sense detected:  Sense key: Blank Check
+  ASC=55, ASCQ=55
+    continuing ...
+ deen:/home/olecom# sdparm -p po -6 /dev/sda
+    /dev/sda: WD        2500JB External   2.23  [simplified direct access device]
+ Request sense detected:  Sense key: Medium Error
+  ASC=55, ASCQ=55
+    continuing ...
+ Power condition mode page:
+ >>> warning: mode page seems malformed, try '--flexible'
+  IDLE        1  [cha: y, def:  1, sav:  1]
+  STANDBY     0  [cha: n, def:  0, sav:  0]
+  ICT       4095  [cha: y, def:4095, sav:4095]
+  SCT       4278190080  [cha: y, def:4278190080, sav:4278190080]
+ deen:/home/olecom#
+ 
+--
+-o--=O`C
+ #oo'L O
+<___=E M
+ 
 
-diff -puN drivers/scsi/libata-core.c~libata_port_init drivers/scsi/libata-core.c
---- libata-dev/drivers/scsi/libata-core.c~libata_port_init	2006-08-07 09:06:37.000000000 -0500
-+++ libata-dev-bjking1/drivers/scsi/libata-core.c	2006-08-07 12:39:34.000000000 -0500
-@@ -5240,35 +5240,25 @@ void ata_dev_init(struct ata_device *dev
- }
- 
- /**
-- *	ata_host_init - Initialize an ata_port structure
-+ *	ata_port_init - Initialize an ata_port structure
-  *	@ap: Structure to initialize
-- *	@host: associated SCSI mid-layer structure
-  *	@host_set: Collection of hosts to which @ap belongs
-  *	@ent: Probe information provided by low-level driver
-  *	@port_no: Port number associated with this ata_port
-  *
-- *	Initialize a new ata_port structure, and its associated
-- *	scsi_host.
-+ *	Initialize a new ata_port structure.
-  *
-  *	LOCKING:
-  *	Inherited from caller.
-  */
--static void ata_host_init(struct ata_port *ap, struct Scsi_Host *host,
--			  struct ata_host_set *host_set,
--			  const struct ata_probe_ent *ent, unsigned int port_no)
-+void ata_port_init(struct ata_port *ap, struct ata_host_set *host_set,
-+		   const struct ata_probe_ent *ent, unsigned int port_no)
- {
- 	unsigned int i;
- 
--	host->max_id = 16;
--	host->max_lun = 1;
--	host->max_channel = 1;
--	host->unique_id = ata_unique_id++;
--	host->max_cmd_len = 12;
--
- 	ap->lock = &host_set->lock;
- 	ap->flags = ATA_FLAG_DISABLED;
--	ap->id = host->unique_id;
--	ap->host = host;
-+	ap->id = ata_unique_id++;
- 	ap->ctl = ATA_DEVCTL_OBS;
- 	ap->host_set = host_set;
- 	ap->dev = ent->dev;
-@@ -5320,6 +5310,35 @@ static void ata_host_init(struct ata_por
- }
- 
- /**
-+ *	ata_host_init - Initialize an ata_port structure
-+ *	@ap: Structure to initialize
-+ *	@host: associated SCSI mid-layer structure
-+ *	@host_set: Collection of hosts to which @ap belongs
-+ *	@ent: Probe information provided by low-level driver
-+ *	@port_no: Port number associated with this ata_port
-+ *
-+ *	Initialize a new ata_port structure, and its associated
-+ *	scsi_host.
-+ *
-+ *	LOCKING:
-+ *	Inherited from caller.
-+ */
-+
-+static void ata_host_init(struct ata_port *ap, struct Scsi_Host *host,
-+			  struct ata_host_set *host_set,
-+			  const struct ata_probe_ent *ent, unsigned int port_no)
-+{
-+	ata_port_init(ap, host_set, ent, port_no);
-+	ap->host = host;
-+
-+	host->unique_id = ap->id;
-+	host->max_id = 16;
-+	host->max_lun = 1;
-+	host->max_channel = 1;
-+	host->max_cmd_len = 12;
-+}
-+
-+/**
-  *	ata_host_add - Attach low-level ATA driver to system
-  *	@ent: Information provided by low-level driver
-  *	@host_set: Collections of ports to which we add
-diff -puN drivers/scsi/libata.h~libata_port_init drivers/scsi/libata.h
---- libata-dev/drivers/scsi/libata.h~libata_port_init	2006-08-07 09:06:37.000000000 -0500
-+++ libata-dev-bjking1/drivers/scsi/libata.h	2006-08-07 12:37:58.000000000 -0500
-@@ -69,6 +69,8 @@ extern int ata_flush_cache(struct ata_de
- extern void ata_dev_init(struct ata_device *dev);
- extern int ata_task_ioctl(struct scsi_device *scsidev, void __user *arg);
- extern int ata_cmd_ioctl(struct scsi_device *scsidev, void __user *arg);
-+extern void ata_port_init(struct ata_port *ap, struct ata_host_set *host_set,
-+			  const struct ata_probe_ent *ent, unsigned int port_no);
- 
- 
- /* libata-scsi.c */
-_
