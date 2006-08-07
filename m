@@ -1,37 +1,53 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] fix up short inquiry printing
-Date: Mon, 07 Aug 2006 12:03:14 -0500
-Message-ID: <1154970194.3683.305.camel@mulgrave.il.steeleye.com>
-References: <1154906122.3683.244.camel@mulgrave.il.steeleye.com>
-	 <20060807024612.GJ4379@parisc-linux.org>
+From: "Randy.Dunlap" <rdunlap@xenotime.net>
+Subject: [PATCH -mm] libsas: externs not needed
+Date: Mon, 7 Aug 2006 11:38:25 -0700
+Message-ID: <20060807113825.518488f6.rdunlap@xenotime.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:51938 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S932226AbWHGRDY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 7 Aug 2006 13:03:24 -0400
-In-Reply-To: <20060807024612.GJ4379@parisc-linux.org>
+Received: from xenotime.net ([66.160.160.81]:26550 "HELO xenotime.net")
+	by vger.kernel.org with SMTP id S932302AbWHGSfr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Aug 2006 14:35:47 -0400
+Received: from midway.site ([71.117.253.75]) by xenotime.net for <linux-scsi@vger.kernel.org>; Mon, 7 Aug 2006 11:35:41 -0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: scsi <linux-scsi@vger.kernel.org>
+Cc: jejb <james.bottomley@steeleye.com>, akpm <akpm@osdl.org>
 
-On Sun, 2006-08-06 at 20:46 -0600, Matthew Wilcox wrote:
-> I think we should probably switch sdev_printk() to its own custom
-> implementation rather than just calling dev_printk().  Greg didn't seem
-> to be interested in fixing the problem that we have with dev_printk();
-> presumably he has some other users in mind for which the current
-> dev_printk behaviour is useful.
-> 
-> How does something like the following look (compile tested):
+From: Randy Dunlap <rdunlap@xenotime.net>
 
-What issues with dev_printk?  It does make a lot of sense to have a
-single tap for errors, just in case someone decides to resurrect the
-enterprise logging patches, which would use something like dev_printk as
-the discriminator.
+These functions shouldn't be 'extern'.  That's not needed for
+exports in Linux.  Also, sparse complains, so fix them.
 
-James
+drivers/scsi/libsas/sas_init.c:138:39: warning: function 'sas_domain_attach_transport' with external linkage has definition
+drivers/scsi/libsas/sas_init.c:158:13: warning: function 'sas_domain_release_transport' with external linkage has definitio
+
+Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+---
+ drivers/scsi/libsas/sas_init.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+--- linux-2618-rc3mm2.orig/drivers/scsi/libsas/sas_init.c
++++ linux-2618-rc3mm2/drivers/scsi/libsas/sas_init.c
+@@ -135,7 +135,7 @@ int sas_unregister_ha(struct sas_ha_stru
+ static struct sas_function_template sft = {
+ };
+ 
+-extern struct scsi_transport_template *
++struct scsi_transport_template *
+ sas_domain_attach_transport(struct sas_domain_function_template *dft)
+ {
+ 	struct scsi_transport_template *stt = sas_attach_transport(&sft);
+@@ -155,7 +155,7 @@ sas_domain_attach_transport(struct sas_d
+ EXPORT_SYMBOL_GPL(sas_domain_attach_transport);
+ 
+ 
+-extern void sas_domain_release_transport(struct scsi_transport_template *stt)
++void sas_domain_release_transport(struct scsi_transport_template *stt)
+ {
+ 	sas_release_transport(stt);
+ }
 
 
+---
