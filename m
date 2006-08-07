@@ -1,109 +1,93 @@
 From: Brian King <brking@us.ibm.com>
-Subject: [PATCH 3/4] libata: Move ata_probe_ent_alloc to libata_core
-Date: Mon, 07 Aug 2006 14:27:24 -0500
-Message-ID: <200608071927.k77JROkb008546@d01av03.pok.ibm.com>
+Subject: [PATCH 1/4] libata: Add ata_host_set_init
+Date: Mon, 07 Aug 2006 14:27:10 -0500
+Message-ID: <200608071927.k77JRBke008109@d01av03.pok.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:54999 "EHLO e1.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1750835AbWHGT10 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Aug 2006 15:27:26 -0400
+Received: from e2.ny.us.ibm.com ([32.97.182.142]:18308 "EHLO e2.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1750829AbWHGT1P (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Aug 2006 15:27:15 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jgarzik@pobox.com
 Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, brking@us.ibm.com
 
 
-Move ata_probe_ent_alloc to libata-core. It will also be used by
-future SAS/SATA integration patches.
+Add ata_host_set_init in preparation for SAS attached SATA.
 
 Signed-off-by: Brian King <brking@us.ibm.com>
 ---
 
- libata-dev-bjking1/drivers/scsi/libata-bmdma.c |   26 -------------------------
- libata-dev-bjking1/drivers/scsi/libata-core.c  |   25 ++++++++++++++++++++++++
- libata-dev-bjking1/drivers/scsi/libata.h       |    2 +
- 3 files changed, 27 insertions(+), 26 deletions(-)
+ libata-dev-bjking1/drivers/scsi/libata-core.c |   28 ++++++++++++++++++++++----
+ libata-dev-bjking1/include/linux/libata.h     |    2 +
+ 2 files changed, 26 insertions(+), 4 deletions(-)
 
-diff -puN drivers/scsi/libata-bmdma.c~libata_move_probe_ent_alloc drivers/scsi/libata-bmdma.c
---- libata-dev/drivers/scsi/libata-bmdma.c~libata_move_probe_ent_alloc	2006-08-07 12:40:50.000000000 -0500
-+++ libata-dev-bjking1/drivers/scsi/libata-bmdma.c	2006-08-07 12:40:50.000000000 -0500
-@@ -797,32 +797,6 @@ void ata_bmdma_post_internal_cmd(struct 
+diff -puN include/linux/libata.h~libata_host_set_init include/linux/libata.h
+--- libata-dev/include/linux/libata.h~libata_host_set_init	2006-07-28 08:43:21.000000000 -0500
++++ libata-dev-bjking1/include/linux/libata.h	2006-07-28 08:43:21.000000000 -0500
+@@ -684,6 +684,8 @@ extern int ata_pci_clear_simplex(struct 
+ #endif /* CONFIG_PCI */
+ extern int ata_device_add(const struct ata_probe_ent *ent);
+ extern void ata_port_detach(struct ata_port *ap);
++extern void ata_host_set_init(struct ata_host_set *, struct device *,
++			      unsigned long, const struct ata_port_operations *);
+ extern void ata_host_set_remove(struct ata_host_set *host_set);
+ extern int ata_scsi_detect(struct scsi_host_template *sht);
+ extern int ata_scsi_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
+diff -puN drivers/scsi/libata-core.c~libata_host_set_init drivers/scsi/libata-core.c
+--- libata-dev/drivers/scsi/libata-core.c~libata_host_set_init	2006-07-28 08:43:21.000000000 -0500
++++ libata-dev-bjking1/drivers/scsi/libata-core.c	2006-07-28 08:43:21.000000000 -0500
+@@ -5373,6 +5373,28 @@ err_out:
  }
  
- #ifdef CONFIG_PCI
--static struct ata_probe_ent *
--ata_probe_ent_alloc(struct device *dev, const struct ata_port_info *port)
--{
--	struct ata_probe_ent *probe_ent;
--
--	probe_ent = kzalloc(sizeof(*probe_ent), GFP_KERNEL);
--	if (!probe_ent) {
--		printk(KERN_ERR DRV_NAME "(%s): out of memory\n",
--		       kobject_name(&(dev->kobj)));
--		return NULL;
--	}
--
--	INIT_LIST_HEAD(&probe_ent->node);
--	probe_ent->dev = dev;
--
--	probe_ent->sht = port->sht;
--	probe_ent->host_flags = port->host_flags;
--	probe_ent->pio_mask = port->pio_mask;
--	probe_ent->mwdma_mask = port->mwdma_mask;
--	probe_ent->udma_mask = port->udma_mask;
--	probe_ent->port_ops = port->port_ops;
--
--	return probe_ent;
--}
--
--
  /**
-  *	ata_pci_init_native_mode - Initialize native-mode driver
-  *	@pdev:  pci device to be initialized
-diff -puN drivers/scsi/libata-core.c~libata_move_probe_ent_alloc drivers/scsi/libata-core.c
---- libata-dev/drivers/scsi/libata-core.c~libata_move_probe_ent_alloc	2006-08-07 12:40:50.000000000 -0500
-+++ libata-dev-bjking1/drivers/scsi/libata-core.c	2006-08-07 12:40:50.000000000 -0500
-@@ -5706,6 +5706,31 @@ int ata_scsi_release(struct Scsi_Host *h
- 	return 1;
- }
- 
-+struct ata_probe_ent *
-+ata_probe_ent_alloc(struct device *dev, const struct ata_port_info *port)
++ *	ata_sas_host_init - Initialize a host_set struct
++ *	@host_set:	host_set to initialize
++ *	@dev:		device host_set is attached to
++ *	@flags:	host_set flags
++ *	@ops:		port_ops
++ *
++ *	LOCKING:
++ *	PCI/etc. bus probe sem.
++ *
++ */
++
++void ata_host_set_init(struct ata_host_set *host_set,
++		       struct device *dev, unsigned long flags,
++		       const struct ata_port_operations *ops)
 +{
-+	struct ata_probe_ent *probe_ent;
-+
-+	probe_ent = kzalloc(sizeof(*probe_ent), GFP_KERNEL);
-+	if (!probe_ent) {
-+		printk(KERN_ERR DRV_NAME "(%s): out of memory\n",
-+		       kobject_name(&(dev->kobj)));
-+		return NULL;
-+	}
-+
-+	INIT_LIST_HEAD(&probe_ent->node);
-+	probe_ent->dev = dev;
-+
-+	probe_ent->sht = port->sht;
-+	probe_ent->host_flags = port->host_flags;
-+	probe_ent->pio_mask = port->pio_mask;
-+	probe_ent->mwdma_mask = port->mwdma_mask;
-+	probe_ent->udma_mask = port->udma_mask;
-+	probe_ent->port_ops = port->port_ops;
-+
-+	return probe_ent;
++	spin_lock_init(&host_set->lock);
++	host_set->dev = dev;
++	host_set->flags = flags;
++	host_set->ops = ops;
 +}
 +
- /**
-  *	ata_std_ports - initialize ioaddr with standard port offsets.
-  *	@ioaddr: IO address structure to be initialized
-diff -puN drivers/scsi/libata.h~libata_move_probe_ent_alloc drivers/scsi/libata.h
---- libata-dev/drivers/scsi/libata.h~libata_move_probe_ent_alloc	2006-08-07 12:40:50.000000000 -0500
-+++ libata-dev-bjking1/drivers/scsi/libata.h	2006-08-07 12:40:50.000000000 -0500
-@@ -71,6 +71,8 @@ extern int ata_task_ioctl(struct scsi_de
- extern int ata_cmd_ioctl(struct scsi_device *scsidev, void __user *arg);
- extern void ata_port_init(struct ata_port *ap, struct ata_host_set *host_set,
- 			  const struct ata_probe_ent *ent, unsigned int port_no);
-+extern struct ata_probe_ent *ata_probe_ent_alloc(struct device *dev,
-+						 const struct ata_port_info *port);
++/**
+  *	ata_device_add - Register hardware device with ATA and SCSI layers
+  *	@ent: Probe information describing hardware device to be registered
+  *
+@@ -5403,15 +5425,12 @@ int ata_device_add(const struct ata_prob
+ 			   (ent->n_ports * sizeof(void *)), GFP_KERNEL);
+ 	if (!host_set)
+ 		return 0;
+-	spin_lock_init(&host_set->lock);
  
+-	host_set->dev = dev;
++	ata_host_set_init(host_set, dev, ent->host_set_flags, ent->port_ops);
+ 	host_set->n_ports = ent->n_ports;
+ 	host_set->irq = ent->irq;
+ 	host_set->mmio_base = ent->mmio_base;
+ 	host_set->private_data = ent->private_data;
+-	host_set->ops = ent->port_ops;
+-	host_set->flags = ent->host_set_flags;
  
- /* libata-scsi.c */
+ 	/* register each port bound to this device */
+ 	for (i = 0; i < ent->n_ports; i++) {
+@@ -5926,6 +5945,7 @@ EXPORT_SYMBOL_GPL(sata_deb_timing_hotplu
+ EXPORT_SYMBOL_GPL(sata_deb_timing_long);
+ EXPORT_SYMBOL_GPL(ata_std_bios_param);
+ EXPORT_SYMBOL_GPL(ata_std_ports);
++EXPORT_SYMBOL_GPL(ata_host_set_init);
+ EXPORT_SYMBOL_GPL(ata_device_add);
+ EXPORT_SYMBOL_GPL(ata_port_detach);
+ EXPORT_SYMBOL_GPL(ata_host_set_remove);
 _
