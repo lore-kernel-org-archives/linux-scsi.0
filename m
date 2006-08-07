@@ -1,47 +1,50 @@
-From: Andreas Barth <aba@not.so.argh.org>
-Subject: Re: Fw: gdth SCSI driver(?) fails with more than 4GB of memory
-Date: Mon, 7 Aug 2006 17:27:29 +0200
-Message-ID: <20060807152729.GS18390@mails.so.argh.org>
-References: <20060717184659.04ae83e7.akpm@osdl.org> <1153229420.3704.17.camel@mulgrave.il.steeleye.com>
+From: ebiederm@xmission.com (Eric W. Biederman)
+Subject: [PATCH] megaraid: Use the proper type to hold the irq number.
+Date: Mon, 07 Aug 2006 09:28:58 -0600
+Message-ID: <m1ejvsfttx.fsf@ebiederm.dsl.xmission.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from neualius.turmzimmer.net ([217.160.169.58]:47294 "EHLO
-	neualius.turmzimmer.net") by vger.kernel.org with ESMTP
-	id S932160AbWHGP2P (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 7 Aug 2006 11:28:15 -0400
-Content-Disposition: inline
-In-Reply-To: <1153229420.3704.17.camel@mulgrave.il.steeleye.com>
+Received: from ebiederm.dsl.xmission.com ([166.70.28.69]:16260 "EHLO
+	ebiederm.dsl.xmission.com") by vger.kernel.org with ESMTP
+	id S932158AbWHGPaT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 Aug 2006 11:30:19 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org
-
-* James Bottomley (James.Bottomley@SteelEye.com) [060718 15:37]:
-> My strongest suspicion here is that the device is lying when it claims
-> to support 64 bit DMA. Can you try this?  It will turn off 64 bit DMA
-> and only allow 32 bit DMA on your 6GB platform.  If that works, we'll
-> beed help from the gdth people to understand the issue.
-
-> diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
-> index 43afd47..83cf3ca 100644
-> --- a/drivers/scsi/gdth.c
-> +++ b/drivers/scsi/gdth.c
-> @@ -1543,7 +1543,7 @@ static int __init gdth_init_pci(gdth_pci
->          if (prot_ver < 0x2b)      /* FW < x.43: no 64-bit DMA support */
->              ha->dma64_support = 0;
->          else 
-> -            ha->dma64_support = 1;
-> +            ha->dma64_support = 0;
->      }
->  
->      return 1;
+To: Andrew Morton <akpm@osdl.org>
+Cc: Neela Syam Kolli <Neela.Kolli@engenio.com>, linux-scsi@vger.kernel.org, "Protasevich, Natalie" <Natalie.Protasevich@UNISYS.com>, linux-kernel@vger.kernel.org
 
 
-Sorry, this patch didn't help me.
+When testing on a Unisys machine it was discovered that
+the megaraid driver would not initialize as it was
+requesting irq 162 instead of irq 1442 it was assigned.
+The problem was the irq number had been truncated by being
+stored in an unsigned char.
 
+This patches fixes that problem and the driver now appears
+to work.
 
-Cheers,
-Andi
+The ioctl interface appears fundamentally broken as it exports
+the irq number to user space in an unsigned char. 
+
+Signed-off-by: Eric W. Biederman <ebiederm@xmission.com>
+---
+ drivers/scsi/megaraid/mega_common.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/scsi/megaraid/mega_common.h b/drivers/scsi/megaraid/mega_common.h
+index 8cd0bd1..b50e27e 100644
+--- a/drivers/scsi/megaraid/mega_common.h
++++ b/drivers/scsi/megaraid/mega_common.h
+@@ -175,7 +175,7 @@ typedef struct {
+ 	uint8_t			max_lun;
+ 
+ 	uint32_t		unique_id;
+-	uint8_t			irq;
++	int			irq;
+ 	uint8_t			ito;
+ 	caddr_t			ibuf;
+ 	dma_addr_t		ibuf_dma_h;
 -- 
-  http://home.arcor.de/andreas-barth/
+1.4.2.rc3.g7e18e
+
