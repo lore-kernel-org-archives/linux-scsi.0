@@ -1,50 +1,58 @@
-From: ebiederm@xmission.com (Eric W. Biederman)
-Subject: [PATCH] megaraid: Use the proper type to hold the irq number.
-Date: Mon, 07 Aug 2006 09:28:58 -0600
-Message-ID: <m1ejvsfttx.fsf@ebiederm.dsl.xmission.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Doug Maxey <dwm@enoyolf.org>
+Subject: [PATCH 01/10] qla4xxx: use pci_register_driver
+Date: Mon, 07 Aug 2006 10:36:53 -0500
+Message-ID: <20060807153652.31019.2518.stgit@bebe.enoyolf.org>
+References: <20060807153640.31019.50863.stgit@bebe.enoyolf.org>
+Content-Type: text/plain; charset=utf-8; format=fixed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ebiederm.dsl.xmission.com ([166.70.28.69]:16260 "EHLO
-	ebiederm.dsl.xmission.com") by vger.kernel.org with ESMTP
-	id S932158AbWHGPaT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 7 Aug 2006 11:30:19 -0400
+Received: from falcon30.maxeymade.com ([24.173.215.190]:31650 "EHLO
+	bebe.enoyolf.org") by vger.kernel.org with ESMTP id S932162AbWHGPjW
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 Aug 2006 11:39:22 -0400
+In-Reply-To: <20060807153640.31019.50863.stgit@bebe.enoyolf.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: Neela Syam Kolli <Neela.Kolli@engenio.com>, linux-scsi@vger.kernel.org, "Protasevich, Natalie" <Natalie.Protasevich@UNISYS.com>, linux-kernel@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Ravi Anand <ravi.anand@qlogic.com>, David Somayajulu <david.somayajulu@qlogic.com>, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org
 
+From: Doug Maxey <dwm@enoyolf.org>
 
-When testing on a Unisys machine it was discovered that
-the megaraid driver would not initialize as it was
-requesting irq 162 instead of irq 1442 it was assigned.
-The problem was the irq number had been truncated by being
-stored in an unsigned char.
+- use the current pci_register_driver().
 
-This patches fixes that problem and the driver now appears
-to work.
+- change order of calls in module_exit().
 
-The ioctl interface appears fundamentally broken as it exports
-the irq number to user space in an unsigned char. 
-
-Signed-off-by: Eric W. Biederman <ebiederm@xmission.com>
+Signed-off-by: Doug Maxey <dwm@enoyolf.org>
 ---
- drivers/scsi/megaraid/mega_common.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/mega_common.h b/drivers/scsi/megaraid/mega_common.h
-index 8cd0bd1..b50e27e 100644
---- a/drivers/scsi/megaraid/mega_common.h
-+++ b/drivers/scsi/megaraid/mega_common.h
-@@ -175,7 +175,7 @@ typedef struct {
- 	uint8_t			max_lun;
+ drivers/scsi/qla4xxx/ql4_os.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index fdba30a..087944a 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -1821,11 +1821,11 @@ static int __init qla4xxx_module_init(vo
+ 		goto release_srb_cache;
+ 	}
  
- 	uint32_t		unique_id;
--	uint8_t			irq;
-+	int			irq;
- 	uint8_t			ito;
- 	caddr_t			ibuf;
- 	dma_addr_t		ibuf_dma_h;
--- 
-1.4.2.rc3.g7e18e
-
+-	printk(KERN_INFO "QLogic iSCSI HBA Driver\n");
+-	ret = pci_module_init(&qla4xxx_pci_driver);
++	ret = pci_register_driver(&qla4xxx_pci_driver);
+ 	if (ret)
+ 		goto unregister_transport;
+ 
++	printk(KERN_INFO "QLogic iSCSI HBA Driver\n");
+ 	return 0;
+ 
+ unregister_transport:
+@@ -1839,8 +1839,8 @@ no_srp_cache:
+ static void __exit qla4xxx_module_exit(void)
+ {
+ 	pci_unregister_driver(&qla4xxx_pci_driver);
+-	kmem_cache_destroy(srb_cachep);
+ 	iscsi_unregister_transport(&qla4xxx_iscsi_transport);
++	kmem_cache_destroy(srb_cachep);
+ }
+ 
+ module_init(qla4xxx_module_init);
