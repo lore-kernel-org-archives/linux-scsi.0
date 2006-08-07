@@ -1,57 +1,83 @@
-From: olecom@mail.ru
-Subject: [sbp2] external hard disk shutdown timer
-Date: Tue, 08 Aug 2006 01:05:49 +0400
-Message-ID: <E1GACIH-00043x-00.olecom-mail-ru@f58.mail.ru>
-Reply-To: olecom@mail.ru
+From: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
+Subject: RE: [PATCH] megaraid: Use the proper type to hold the irq number.
+Date: Mon, 7 Aug 2006 15:19:39 -0600
+Message-ID: <890BF3111FB9484E9526987D912B261932E31D@NAMAIL3.ad.lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from f58.mail.ru ([194.67.57.92]:49156 "EHLO f58.mail.ru")
-	by vger.kernel.org with ESMTP id S932289AbWHGVFu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Aug 2006 17:05:50 -0400
-Received: from mail by f58.mail.ru with local
-	id 1GACIH-00043x-00
-	for linux-scsi@vger.kernel.org; Tue, 08 Aug 2006 01:05:49 +0400
+Received: from mail0.lsil.com ([147.145.40.20]:36808 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S932384AbWHGVTr convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 Aug 2006 17:19:47 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux SCSI <linux-scsi@vger.kernel.org>
+To: "Eric W. Biederman" <ebiederm@xmission.com>, Andrew Morton <akpm@osdl.org>
+Cc: "Kolli, Neela" <Neela.Kolli@engenio.com>, linux-scsi@vger.kernel.org, "Protasevich, Natalie" <Natalie.Protasevich@UNISYS.com>, linux-kernel@vger.kernel.org
 
-Hallo ! Let me ask a question.
+Hi
+> This patches fixes that problem and the driver now appears
+> to work.
+> 
+> The ioctl interface appears fundamentally broken as it exports
+> the irq number to user space in an unsigned char.
+Thank you for your findings.
+As you mentioned above, driver needs more changes besides your patch.
+I will submit a patch covers all required changes, soon.
 
-I couldn't change some values (f.e IDLE or ICT), while its
-"changing" flag is "y".
+Thank you again,
 
-Would you like to explain meaning of that flag and, possibly,
-why change doesn't apply ? Maybe i'm doing or understanding
-something wrong ?
+Seokmann
 
-All i want is to switch off timers (AFAIR from spcecs i've found t10.org),
-that shutdown ieee1394/usb-storage external HDD.
- 
-TIA.
- 
- deen:/home/olecom# sdparm --set=IDLE=0 -6 /dev/sda
-    /dev/sda: WD        2500JB External   2.23  [simplified direct access device]
- Request sense detected:  Sense key: Blank Check
-  ASC=55, ASCQ=55
-    continuing ...
- deen:/home/olecom# sdparm -p po -6 /dev/sda
-    /dev/sda: WD        2500JB External   2.23  [simplified direct access device]
- Request sense detected:  Sense key: Medium Error
-  ASC=55, ASCQ=55
-    continuing ...
- Power condition mode page:
- >>> warning: mode page seems malformed, try '--flexible'
-  IDLE        1  [cha: y, def:  1, sav:  1]
-  STANDBY     0  [cha: n, def:  0, sav:  0]
-  ICT       4095  [cha: y, def:4095, sav:4095]
-  SCT       4278190080  [cha: y, def:4278190080, sav:4278190080]
- deen:/home/olecom#
- 
---
--o--=O`C
- #oo'L O
-<___=E M
- 
-
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org 
+> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Eric 
+> W. Biederman
+> Sent: Monday, August 07, 2006 11:29 AM
+> To: Andrew Morton
+> Cc: Kolli, Neela; linux-scsi@vger.kernel.org; Protasevich, 
+> Natalie; linux-kernel@vger.kernel.org
+> Subject: [PATCH] megaraid: Use the proper type to hold the irq number.
+> 
+> 
+> When testing on a Unisys machine it was discovered that
+> the megaraid driver would not initialize as it was
+> requesting irq 162 instead of irq 1442 it was assigned.
+> The problem was the irq number had been truncated by being
+> stored in an unsigned char.
+> 
+> This patches fixes that problem and the driver now appears
+> to work.
+> 
+> The ioctl interface appears fundamentally broken as it exports
+> the irq number to user space in an unsigned char. 
+> 
+> Signed-off-by: Eric W. Biederman <ebiederm@xmission.com>
+> ---
+>  drivers/scsi/megaraid/mega_common.h |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/scsi/megaraid/mega_common.h 
+> b/drivers/scsi/megaraid/mega_common.h
+> index 8cd0bd1..b50e27e 100644
+> --- a/drivers/scsi/megaraid/mega_common.h
+> +++ b/drivers/scsi/megaraid/mega_common.h
+> @@ -175,7 +175,7 @@ typedef struct {
+>  	uint8_t			max_lun;
+>  
+>  	uint32_t		unique_id;
+> -	uint8_t			irq;
+> +	int			irq;
+>  	uint8_t			ito;
+>  	caddr_t			ibuf;
+>  	dma_addr_t		ibuf_dma_h;
+> -- 
+> 1.4.2.rc3.g7e18e
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
