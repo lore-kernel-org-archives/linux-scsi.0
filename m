@@ -1,53 +1,66 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: [PATCH -mm] libsas: externs not needed
-Date: Mon, 7 Aug 2006 11:38:25 -0700
-Message-ID: <20060807113825.518488f6.rdunlap@xenotime.net>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: [RFC PATCH] ieee1394: sbp2: enable auto spin-up for all SBP-2 devices
+Date: Mon, 7 Aug 2006 20:49:25 +0200 (CEST)
+Message-ID: <tkrat.db366d887faf2254@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:26550 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S932302AbWHGSfr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Aug 2006 14:35:47 -0400
-Received: from midway.site ([71.117.253.75]) by xenotime.net for <linux-scsi@vger.kernel.org>; Mon, 7 Aug 2006 11:35:41 -0700
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
+Content-Disposition: INLINE
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux1394-devel>
+List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
+List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: linux1394-devel-bounces@lists.sourceforge.net
+Errors-To: linux1394-devel-bounces@lists.sourceforge.net
+To: linux1394-devel@lists.sourceforge.net
+Cc: linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: scsi <linux-scsi@vger.kernel.org>
-Cc: jejb <james.bottomley@steeleye.com>, akpm <akpm@osdl.org>
 
-From: Randy Dunlap <rdunlap@xenotime.net>
+This is a follow-up to patch "ieee1394: sbp2: enable auto spin-up for
+Maxtor disks".  When I 'ejected' an OXUF922 based HDD from a Mac OS X
+box, it was spun down by the Mac and did not spin up by itself when
+attached to a Linux box right after that.  The first SCSI command that
+required the bridge to access the drive ended in
+sda:<6>sd 18:0:0:0: Device not ready: <6>: Current: sense key: Not Ready
+    Additional sense: Logical unit not ready, initializing cmd. required
 
-These functions shouldn't be 'extern'.  That's not needed for
-exports in Linux.  Also, sparse complains, so fix them.
+Therefore the flag which instructs scsi_mod to send START STOP UNIT with
+START=1 ("make medium ready") after such a condition is now enabled
+unconditionally for all FireWire storage devices.
 
-drivers/scsi/libsas/sas_init.c:138:39: warning: function 'sas_domain_attach_transport' with external linkage has definition
-drivers/scsi/libsas/sas_init.c:158:13: warning: function 'sas_domain_release_transport' with external linkage has definitio
-
-Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
 ---
- drivers/scsi/libsas/sas_init.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
---- linux-2618-rc3mm2.orig/drivers/scsi/libsas/sas_init.c
-+++ linux-2618-rc3mm2/drivers/scsi/libsas/sas_init.c
-@@ -135,7 +135,7 @@ int sas_unregister_ha(struct sas_ha_stru
- static struct sas_function_template sft = {
- };
+Index: linux/drivers/ieee1394/sbp2.c
+===================================================================
+--- linux.orig/drivers/ieee1394/sbp2.c	2006-08-05 16:58:30.000000000 +0200
++++ linux/drivers/ieee1394/sbp2.c	2006-08-07 20:13:59.000000000 +0200
+@@ -2451,6 +2451,7 @@ static int sbp2scsi_slave_alloc(struct s
+ 		(struct scsi_id_instance_data *)sdev->host->hostdata[0];
  
--extern struct scsi_transport_template *
-+struct scsi_transport_template *
- sas_domain_attach_transport(struct sas_domain_function_template *dft)
- {
- 	struct scsi_transport_template *stt = sas_attach_transport(&sft);
-@@ -155,7 +155,7 @@ sas_domain_attach_transport(struct sas_d
- EXPORT_SYMBOL_GPL(sas_domain_attach_transport);
+ 	scsi_id->sdev = sdev;
++	sdev->allow_restart = 1;
  
- 
--extern void sas_domain_release_transport(struct scsi_transport_template *stt)
-+void sas_domain_release_transport(struct scsi_transport_template *stt)
- {
- 	sas_release_transport(stt);
+ 	if (scsi_id->workarounds & SBP2_WORKAROUND_INQUIRY_36)
+ 		sdev->inquiry_len = 36;
+@@ -2473,9 +2474,6 @@ static int sbp2scsi_slave_configure(stru
+ 		sdev->fix_capacity = 1;
+ 	if (scsi_id->workarounds & SBP2_WORKAROUND_MODE_SENSE_6)
+ 		sdev->use_10_for_ms = 0;
+-	if (scsi_id->ne->guid_vendor_id == 0x0010b9 && /* Maxtor's OUI */
+-	    (sdev->type == TYPE_DISK || sdev->type == TYPE_RBC))
+-		sdev->allow_restart = 1;
+ 	return 0;
  }
+ 
 
 
----
+
+-------------------------------------------------------------------------
+Using Tomcat but need to do more? Need to support web services, security?
+Get stuff done quickly with pre-integrated technology to make your job easier
+Download IBM WebSphere Application Server v.1.0.1 based on Apache Geronimo
+http://sel.as-us.falkag.net/sel?cmd=lnk&kid=120709&bid=263057&dat=121642
