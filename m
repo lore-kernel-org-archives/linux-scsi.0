@@ -1,37 +1,155 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] Don't add scsi_device for devices that return PQ=1, PDT=0x1f
-Date: Tue, 8 Aug 2006 17:34:17 +0200
-Message-ID: <20060808153417.GA1542@lst.de>
-References: <44C9226C.6030309@netapp.com> <20060805120103.GA22356@lst.de> <44D6D79E.3020304@netapp.com>
+From: Mark Haverkamp <markh@osdl.org>
+Subject: [PATCH 2/4] aacraid: Restart adapter on firmware assert (Update 2)
+Date: Tue, 08 Aug 2006 08:52:14 -0700
+Message-ID: <1155052334.4060.3.camel@markh3.pdx.osdl.net>
+References: <1154617371.31319.21.camel@markh3.pdx.osdl.net>
+	 <20060804152411.GB6224@infradead.org>
+	 <1154961299.19279.5.camel@markh3.pdx.osdl.net>
+	 <20060808152730.GA29067@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:29414 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S964959AbWHHPeu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Aug 2006 11:34:50 -0400
-Content-Disposition: inline
-In-Reply-To: <44D6D79E.3020304@netapp.com>
+Received: from smtp.osdl.org ([65.172.181.4]:35215 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S964973AbWHHPwY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Aug 2006 11:52:24 -0400
+In-Reply-To: <20060808152730.GA29067@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dave Wysochanski <davidw@netapp.com>
-Cc: Christoph Hellwig <hch@lst.de>, usb-storage@lists.one-eyed-alien.net, stern@rowland.harvard.edu, James.Bottomley@steeleye.com, michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, hare@suse.de, "Kraft, Claire" <Claire.Kraft@netapp.com>, "Shenoy, Raghavendra" <Raghavendra.Shenoy@netapp.com>, "George, Martin" <marting@netapp.com>, "Nair, Vinod K" <nvinod@netapp.com>
+To: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@steeleye.com>
+Cc: Mark Salyzyn <mark_salyzyn@adaptec.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, Aug 07, 2006 at 02:03:10AM -0400, Dave Wysochanski wrote:
-> I'm not sure Alan's pdt_1f_for_no_lun flag should be used in my case,
-> since I would want to set it based on vid/pid
+Received from Mark Salyzyn
 
-I don't think we should set any flag for the netapp behaviour.  It might
-be stretching the standard a little, but it's not completely odd and I
-can't think of anything bad that could hapen if we do it unconditonally.
+If the adapter should be in a blinkled (Firmware Assert) state when the
+driver loads, we will perform a warm restart of the Adapter Firmware to
+see if we can rescue the adapter. Possible causes of a blinkled can
+occur on some early release motherboard BIOSes, transitory PCI bus
+problems on embedded systems or non-x86 based architectures, transitory
+startup failures of early release drives or transitory hardware
+failures; some of which can bite the adapter later at runtime. Future
+enhancements will include recovery during runtime.
 
-Something like:
+Fixed extra whitespace space issue.
 
-	if ((result[0] >> 5) == 1 || starget->some_flag) &&
-	    (result[0] & 0x1f) == 0x1f) {
-	    	SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO
-			"scsi scan: peripheral device type"
-			" of 31, no device added\n"));
-		res = SCSI_SCAN_TARGET_PRESENT;
-		goto out_free_result;
-	}
+Signed-off-by: Mark Haverkamp <markh@osdl.org>
+---
+
+--- scsi-misc-aac.orig/drivers/scsi/aacraid/aacraid.h	2006-07-31 14:33:25.000000000 -0700
++++ scsi-misc-aac/drivers/scsi/aacraid/aacraid.h	2006-08-08 08:44:04.000000000 -0700
+@@ -1670,6 +1670,7 @@
+ #define RCV_TEMP_READINGS		0x00000025
+ #define GET_COMM_PREFERRED_SETTINGS	0x00000026
+ #define IOP_RESET			0x00001000
++#define IOP_RESET_ALWAYS		0x00001001
+ #define RE_INIT_ADAPTER			0x000000ee
+ 
+ /*
+--- scsi-misc-aac.orig/drivers/scsi/aacraid/rkt.c	2006-07-31 14:33:25.000000000 -0700
++++ scsi-misc-aac/drivers/scsi/aacraid/rkt.c	2006-08-08 08:46:50.000000000 -0700
+@@ -395,6 +395,25 @@
+ 	return 0;
+ }
+ 
++static int aac_rkt_restart_adapter(struct aac_dev *dev)
++{
++	u32 var;
++
++	printk(KERN_ERR "%s%d: adapter kernel panic'd.\n",
++			dev->name, dev->id);
++
++	if (aac_rkt_check_health(dev) <= 0)
++		return 1;
++	if (rkt_sync_cmd(dev, IOP_RESET, 0, 0, 0, 0, 0, 0,
++			&var, NULL, NULL, NULL, NULL))
++		return 1;
++	if (var != 0x00000001)
++		 return 1;
++	if (rkt_readl(dev, MUnit.OMRx[0]) & KERNEL_PANIC)
++		return 1;
++	return 0;
++}
++
+ /**
+  *	aac_rkt_init	-	initialize an i960 based AAC card
+  *	@dev: device to configure
+@@ -417,6 +436,9 @@
+ 	/*
+ 	 *	Check to see if the board panic'd while booting.
+ 	 */
++	if (rkt_readl(dev, MUnit.OMRx[0]) & KERNEL_PANIC)
++		if (aac_rkt_restart_adapter(dev))
++			goto error_iounmap;
+ 	/*
+ 	 *	Check to see if the board failed any self tests.
+ 	 */
+@@ -431,13 +453,6 @@
+ 		printk(KERN_ERR "%s%d: adapter monitor panic.\n", dev->name, instance);
+ 		goto error_iounmap;
+ 	}
+-	/*
+-	 *	Check to see if the board panic'd while booting.
+-	 */
+-	if (rkt_readl(dev, MUnit.OMRx[0]) & KERNEL_PANIC) {
+-		printk(KERN_ERR "%s%d: adapter kernel panic'd.\n", dev->name, instance);
+-		goto error_iounmap;
+-	}
+ 	start = jiffies;
+ 	/*
+ 	 *	Wait for the adapter to be up and running. Wait up to 3 minutes
+--- scsi-misc-aac.orig/drivers/scsi/aacraid/rx.c	2006-07-31 14:33:25.000000000 -0700
++++ scsi-misc-aac/drivers/scsi/aacraid/rx.c	2006-08-08 08:46:16.000000000 -0700
+@@ -394,6 +394,25 @@
+ 	return 0;
+ }
+ 
++static int aac_rx_restart_adapter(struct aac_dev *dev)
++{
++	u32 var;
++
++	printk(KERN_ERR "%s%d: adapter kernel panic'd.\n",
++			dev->name, dev->id);
++
++	if (aac_rx_check_health(dev) <= 0)
++		return 1;
++	if (rx_sync_cmd(dev, IOP_RESET, 0, 0, 0, 0, 0, 0,
++			&var, NULL, NULL, NULL, NULL))
++		return 1;
++	if (var != 0x00000001)
++		 return 1;
++	if (rx_readl(dev, MUnit.OMRx[0]) & KERNEL_PANIC)
++		return 1;
++	return 0;
++}
++
+ /**
+  *	aac_rx_init	-	initialize an i960 based AAC card
+  *	@dev: device to configure
+@@ -416,6 +435,9 @@
+ 	/*
+ 	 *	Check to see if the board panic'd while booting.
+ 	 */
++	if (rx_readl(dev, MUnit.OMRx[0]) & KERNEL_PANIC)
++		if (aac_rx_restart_adapter(dev))
++			goto error_iounmap;
+ 	/*
+ 	 *	Check to see if the board failed any self tests.
+ 	 */
+@@ -424,13 +446,6 @@
+ 		goto error_iounmap;
+ 	}
+ 	/*
+-	 *	Check to see if the board panic'd while booting.
+-	 */
+-	if (rx_readl(dev, MUnit.OMRx[0]) & KERNEL_PANIC) {
+-		printk(KERN_ERR "%s%d: adapter kernel panic.\n", dev->name, instance);
+-		goto error_iounmap;
+-	}
+-	/*
+ 	 *	Check to see if the monitor panic'd while booting.
+ 	 */
+ 	if (rx_readl(dev, MUnit.OMRx[0]) & MONITOR_PANIC) {
+
+-- 
+Mark Haverkamp <markh@osdl.org>
 
