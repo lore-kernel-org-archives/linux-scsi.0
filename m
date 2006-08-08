@@ -1,213 +1,205 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: Re: [RFC] [Last Rites] fc transport: extensions for fast fail and
- dev loss
-Date: Tue, 08 Aug 2006 17:15:04 -0500
-Message-ID: <44D90CE8.70006@sgi.com>
-References: <1150829123.16981.1.camel@localhost.localdomain> <44D8CFD3.9050408@emulex.com> <44D90878.7000903@sgi.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] Add Promise SuperTrak EX 'stex' driver
+Date: Tue, 08 Aug 2006 18:55:35 -0400
+Message-ID: <44D91667.8030000@garzik.org>
+References: <20060808120507.GA20032@havoc.gtf.org> <1155053479.26517.20.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------020804020708050601030104"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:45768 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S1030306AbWHHWPJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Aug 2006 18:15:09 -0400
-In-Reply-To: <44D90878.7000903@sgi.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:17295 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S965066AbWHHWzj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Aug 2006 18:55:39 -0400
+In-Reply-To: <1155053479.26517.20.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Reed <mdr@sgi.com>
-Cc: James.Smart@Emulex.Com, linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi@vger.kernel.org, promise_linux@promise.com, akpm@osdl.org
+
+This is a multi-part message in MIME format.
+--------------020804020708050601030104
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+
+James Bottomley wrote:
+> On Tue, 2006-08-08 at 08:05 -0400, Jeff Garzik wrote:
+>> Adds the 'stex' driver for Promise SuperTrak EX storage controllers.
+>> These controllers present themselves as SCSI, though like 3ware,
+>> megaraid and others, the underlying storage may or may not be SCSI.
+>>
+>> As discussed, the block tagging stuff is a post-merge todo item.
+> 
+> That's not exactly my recollection of the discussion:  I thought we were
+> still discussing the chicken and egg issue (which is we have APIs to do
+> this per host tagging which stex duplicates on the grounds no-one's
+> using the current APIs).  Jens and I seem to be in agreement that stex
+> should try the API's and well make any changes that become necessary to
+> block or SCSI happen.
+
+Please re-read the end of the thread.  The last word was "ok, let's go 
+ahead and get this merged."
+
+It is unreasonable to require use of an API that no-one else uses, for 
+initial merge.  That has higher potential to take a working driver to a 
+non-working state.
+
+If you use the API _after_ the initial merge, then you can easily debug 
+the problem with 'git bisect' should the driver stop working.  With your 
+suggested path, it causes needless delay and reduces the useful 
+information a tester can give us to "it works" or "it doesn't work." 
+With my way, the tester can give us "<this> change broke the driver" 
+information.
+
+>> +	switch (cmd->cmnd[0]) {
+>> > +	case MODE_SENSE_10:
+>> > +	{
+>> > +		static char mode_sense10[8] = { 0, 6, 0, 0, 0, 0, 0, 0 };
+>> > +
+>> > +		stex_direct_copy(cmd, mode_sense10, sizeof(mode_sense10));
+>> > +		cmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
+>> > +		done(cmd);
+>> > +		return 0;
+>> > +	}
+> 
+> This looks like it will trick the sd driver into reading uninitialised
+> data for the drive caching parameters ... there are obviously faults on
+> both sides, but I think when you ask for a mode page and you get a
+> success return, you're entitled to think you got it ...
+
+Agreed.
+
+
+>> +	case INQUIRY:
+>> > +		if (id != ST_MAX_ARRAY_SUPPORTED)
+>> > +			break;
+>> > +		if (lun == 0 && (cmd->cmnd[1] & INQUIRY_EVPD) == 0) {
+>> > +			stex_direct_copy(cmd, console_inq_page,
+>> > +				sizeof(console_inq_page));
+>> > +			cmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
+>> > +		} else
+>> > +			cmd->result = DID_ERROR << 16 | COMMAND_COMPLETE << 8;
+>> > +		done(cmd);
+> 
+> The error return isn't correct you should never use DID_ERROR for an
+> uncorrectable error because it will cause a retry (which you'll fail
+> again).  For an unsupported inquiry the correct return should be Check
+> Condition/Illegal Request/Invalid Field in CDB
+
+Fixed.
+
+
+>> > +	case INQUIRY:
+>> > +		if (id != ST_MAX_ARRAY_SUPPORTED)
+>> > +			break;
+>> > +		if (lun == 0 && (cmd->cmnd[1] & INQUIRY_EVPD) == 0) {
+>> > +			stex_direct_copy(cmd, console_inq_page,
+>> > +				sizeof(console_inq_page));
+>> > +			cmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
+>> > +		} else
+>> > +			cmd->result = DID_ERROR << 16 | COMMAND_COMPLETE << 8;
+>> > +		done(cmd);
+> 
+> The error return here looks like it shouldn't be DID_ERROR either.  I
+> assume the error is a format one and uncorrectable by a retry?
+
+There is only one 'case INQUIRY' in the entire driver, so I assume you 
+accidentally responded to the same code segment twice.
+
+
+>> +	}
+>> +
+>> +	hba->dma_mem = pci_alloc_consistent(pdev,
+>> +		STEX_BUFFER_SIZE, &hba->dma_handle);
+>> +	if (!hba->dma_mem) {
+>> +		err = -ENOMEM;
+>> +		printk(KERN_ERR DRV_NAME "(%s): dma mem alloc failed\n",
+>> +			pci_name(pdev));
+>> +		goto out_iounmap;
+>> +	}
+> 
+> This should be dma_alloc_coherent, not pci_alloc_consistent.
+
+This is perfectly normal and proper in a PCI-only driver.  pci_xxx is 
+not a deprecated API, it is a convenience API.
+
+Using dma_xxx only causes needless work.
+
+For the INQUIRY and irq flags fix, I checked in the attached patch to 
+'stex' branch of 
+git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/netdev-2.6.git
+
+	Jeff
 
 
 
-Michael Reed wrote:
-> 
-> James Smart wrote:
->> Closing Statements:
->>
->> I've attached the original RFC below. See
->>   http://marc.theaimsgroup.com/?l=linux-scsi&m=115082917628466&w=2
->>
->> I've updated it with what I perceive to be the position and resolution
->> based on comments.  Keep in mind that we're trying to lay the groundwork
->> for common behavior and tunables between the transports.
->>
->> Please let me know if I've mis-represented anything, or if there is
->> a dissention in the resolution. I'd like to close on this.
->>
->> James Smart wrote:
->>> Folks,
->>>
->>> The following addresses some long standing todo items I've had in the
->>> FC transport. They primarily arise when considering multipathing, or
->>> trying to marry driver internal state to transport state. It is intended
->>> that this same type of functionality would be usable in other transports
->>> as well.
->>>
->>> Here's what is contained:
->>>
->>> - dev_loss_tmo LLDD callback :
->>>   Currently, there is no notification to the LLDD of when the transport
->>>   gives up on the device returning and starts to return DID_NO_CONNECT
->>>   in the queuecommand helper function. This callback notifies the LLDD
->>>   that the transport has now given up on the rport, thereby acknowledging
->>>   the prior fc_remote_port_delete() call. The callback also expects the
->>>   LLDD to initiate the termination of any outstanding i/o on the rport.
->> I believe there is no dissention on this change.
->> Please note: this is essentially a confirmation from the transport to the
->>   LLD that the rport is fully deleted. Thus, the LLD must expect to see
->>   these callbacks as a normal part of the rport being terminated (even if
->>   it is not blocked).
->>
->> I'll move forward with this.
-> 
-> Concur.
-> 
->>> - fast_io_fail_tmo and LLD callback:
->>>   There are some cases where it may take a long while to truly determine
->>>   device loss, but the system is in a multipathing configuration that if
->>>   the i/o was failed quickly (faster than dev_loss_tmo), it could be
->>>   redirected to a different path and completed sooner (assuming the  
->>> multipath thing knew that the sdev was blocked).
->>>     iSCSI is one of the transports that may vary dev_loss_tmo values
->>>   per session, and you would like fast io failure.
->>
->> The current transport implementation did not specify what happened to
->>   active i/o (given to the driver, in the adapter, but not yet completed
->>   back to the midlayer) when a device was blocked, nor during the
->>   block-to->dev_loss transition period. It was up to the driver.  Many
->>   assumed active i/o was immediately terminated, which is semi-consistent
->>   with the behavior of most drivers for most "connectivity loss" scenarios.
->>
->> The conversations then started to jump around, considering what i/o's you
->>   may want to have fail quickly, etc.
->>
->> Here's my opinion:
->>   We have the following points in time to look at:
->>    (a) the device is blocked by the transport
->>    (b) there is a time T, usually in a multipathing environment, where it
->>        would be useful to error the i/o early rather than wait for dev_loss
->>        It is assumed that any such i/o request would be marked REQ_FASTFAIL
->>    (c) the dev_loss_tmo fires - we're to assume the device is gone
->>   and at any time post (a), the device may return, unblock and never
->>   encounter points (b) and (c).
-> 
-> REQ_FAILFAST is stored in the request structure.  Are there "issues"
-> with using scsi_cmnd.request in the lldd?
-> 
->>   As for what happens to active i/o :
->>
->>   always: the driver can fail an i/o at any point in time if it deems
->>           it appropriate.
->>
->>   at (a): There are scenarios where a short link perturbation may occur,
->>           which may not disrupt the i/o. Therefore, we should not force
->>           io to be terminated.
->>
->>   at (b): Minimally, we should terminate all active i/o requests marked
->>           as type REQ_FASTFAIL. From an api perspective, driver support
->>           for this is optional. And we must also assume that there will
->>           be implementations which have to abort all i/o in order to
->>           terminate those marked REQ_FASTFAIL. Is this acceptable ?
->>           (it meets the "always" condition above)
->>
->>           Q: so far we've limited the io to those w/ REQ_FASTFAIL.
->>             Would we ever want to allow a user to fast fail all i/o
->>             regardless of the request flags ? (in case they flags
->>             weren't getting set on all the i/o the user wanted to
->>             see fail ?)
-> 
-> REQ_FAILFAST appears to influence retries during error recovery so
-> there may be unexpected side effects of doing this.  But, that said,
-> I'd say yes.  From my perspective, I'd make this the default behavior.
-> 
-> In talking with our volume manager people, the question raised was
-> "Why would you want some i/o to fail quickly and some not?"
-> They even considered non-i/o scsi commands.
-> 
-> I think that if the default behavior is to have fast_io_fail_tmo
-> enabled, then it should be controlled by REQ_FAILFAST in the
-> request.  If the default is to have the timer disabled, i.e.,
-> an admin has to enable it (or define when it's enabled) then
-> when enabled it should apply to every i/o.  In examining the
-> patch, it appears to be disabled by default, so our conclusion
-> is that all i/o should fast fail when enabled.  We also concur
-> with having fast_io_fail_tmo disabled by default.
+--------------020804020708050601030104
+Content-Type: text/plain;
+ name="patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch"
 
-I think this also implies that our volume manager guys would be
-just as happy setting dev_loss_tmo to a small value and not use
-fast_io_fail_tmo.
 
-Mike
+commit 43ebb4ccf4bf705e7963b8b7162812a8ebd64e22
+Author: Jeff Garzik <jeff@garzik.org>
+Date:   Tue Aug 8 18:41:31 2006 -0400
 
-> 
-> I guess this implies leave REQ_FAILFAST to error recovery.  :)
-> 
-> Mike
-> 
-> 
-> 
->>           There's a desire to address pending i/o (those on the block
->>           request queue or new requests going there) so that if we've
->>           crossed point (b) that we also fail them.  The proposal is
->>           to add a new state (device ? or queue ?), which would occur
->>           as of point (b). All REQ_FASTFAIL io on the queue, as well
->>           as on a new io, will be failed with a new i/o status if in
->>           this state. Non-REQ_FASTFAIL i/o would continue to enter/sit
->>           on the request queue until dev_loss_tmo fires.
->>
->>   at (c): per the dev_loss_tmo callback, all i/o should be terminated.
->>           Their completions do not have to be synchronous to the return
->>           from the callback - they can occur afterward.
->>
->>
->> Comments ?
->>
->> Assuming that folks agree, I'd like to do this in 2 patches:
->>  - one that puts in the transport fast_io_fail_tmo and LLD callback
->>  - another that adds the new state, io completion status, and does the
->>    handling of the request queue REQ_FASTFAIL i/o.
->>
->>> - fast_loss_time recommendation:
->>>   In discussing how a admin should set dev_loss_tmo in a multipathing
->>>   environment, it became apparent that we expected the admin to know
->>>   a lot. They had to know the transport type, what the minimum setting
->>>   can be that still survives normal link bouncing, and they may even
->>>   have to know about device specifics.  For iSCSI, the proper loss time
->>>   may vary widely from session to session.
->>>
->>>   This attribute is an exported "recommendation" by the LLDD and
->>> transport
->>>   on what the lowest setting for dev_loss_tmo should be for a
->>> multipathing
->>>   environment. Thus, the admin only needs to cat this attribute to obtain
->>>   the value to echo into dev_loss_tmo.
->> The only objection was from Christoph - wanting a utility to get/set this
->> stuff. However, the counter was this attribute was still meaningful, as it
->> was the conduit to obtain a recommendation from the transport/LLD.
->>
->> So - I assume this proceeds as is - with a change in it's description.
->>
->>>  
->>> I have one criticism of these changes. The callbacks are calling into
->>> the LLDD with an rport post the driver's rport_delete call. What it means
->>> is that we are essentially extending the lifetime of an rport until the
->>> dev_loss_tmo call occurs.
->> It's ok - and adding the appropriate comments are fine.
->>
->>
->> Thanks.
->>
->> -- james s
->>
->> -
->> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+    [SCSI] stex: minor fixes: irq flag, error return value
+
+    - Don't use deprecated SA_SHIRQ irq flag.
+    - Return CHECK CONDITION (invalid field in CDB) where warranted.
+
+43ebb4ccf4bf705e7963b8b7162812a8ebd64e22
+diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
+index acf626f..f35833a 100644
+--- a/drivers/scsi/stex.c
++++ b/drivers/scsi/stex.c
+@@ -334,6 +334,25 @@ static struct status_msg *stex_get_statu
+ 	return status;
+ }
+ 
++static void stex_set_sense(struct scsi_cmnd *cmd, u8 sk, u8 asc, u8 ascq)
++{
++	cmd->result = (DRIVER_SENSE << 24) | SAM_STAT_CHECK_CONDITION;
++
++	cmd->sense_buffer[0] = 0x70;    /* fixed format, current */
++	cmd->sense_buffer[2] = sk;
++	cmd->sense_buffer[7] = 18 - 8;  /* additional sense length */
++	cmd->sense_buffer[12] = asc;
++	cmd->sense_buffer[13] = ascq;
++}
++
++static void stex_invalid_field(struct scsi_cmnd *cmd,
++			       void (*done)(struct scsi_cmnd *))
++{
++	/* "Invalid field in cbd" */
++	stex_set_sense(cmd, ILLEGAL_REQUEST, 0x24, 0x0);
++	done(cmd);
++}
++
+ static struct req_msg *stex_alloc_req(struct st_hba *hba)
+ {
+ 	struct req_msg *req = ((struct req_msg *)hba->dma_mem) +
+@@ -533,9 +552,9 @@ stex_queuecommand(struct scsi_cmnd *cmd,
+ 			stex_direct_copy(cmd, console_inq_page,
+ 				sizeof(console_inq_page));
+ 			cmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
++			done(cmd);
+ 		} else
+-			cmd->result = DID_ERROR << 16 | COMMAND_COMPLETE << 8;
+-		done(cmd);
++			stex_invalid_field(cmd, done);
+ 		return 0;
+ 	case PASSTHRU_CMD:
+ 		if (cmd->cmnd[1] == PASSTHRU_GET_DRVVER) {
+@@ -1122,7 +1141,7 @@ stex_probe(struct pci_dev *pdev, const s
+ 	hba->pdev = pdev;
+ 	init_waitqueue_head(&hba->waitq);
+ 
+-	err = request_irq(pdev->irq, stex_intr, SA_SHIRQ, DRV_NAME, hba);
++	err = request_irq(pdev->irq, stex_intr, IRQF_SHARED, DRV_NAME, hba);
+ 	if (err) {
+ 		printk(KERN_ERR DRV_NAME "(%s): request irq failed\n",
+ 			pci_name(pdev));
+
+--------------020804020708050601030104--
