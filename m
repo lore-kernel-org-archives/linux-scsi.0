@@ -1,87 +1,97 @@
-From: Andreas Herrmann <aherrman@de.ibm.com>
-Subject: stack overflow: scsi_request_fn/blk_run_queue ping-pong
-Date: Tue, 8 Aug 2006 18:05:08 +0200
-Message-ID: <20060808160508.GA19011@lion28.ibm.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] Add Promise SuperTrak EX 'stex' driver
+Date: Tue, 08 Aug 2006 11:11:19 -0500
+Message-ID: <1155053479.26517.20.camel@mulgrave.il.steeleye.com>
+References: <20060808120507.GA20032@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate3.de.ibm.com ([195.212.29.152]:60355 "EHLO
-	mtagate3.de.ibm.com") by vger.kernel.org with ESMTP id S932441AbWHHQJL
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 8 Aug 2006 12:09:11 -0400
-Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
-	by mtagate3.de.ibm.com (8.13.7/8.13.7) with ESMTP id k78G9AFG027044
-	for <linux-scsi@vger.kernel.org>; Tue, 8 Aug 2006 16:09:10 GMT
-Received: from d12av02.megacenter.de.ibm.com (d12av02.megacenter.de.ibm.com [9.149.165.228])
-	by d12nrmr1607.megacenter.de.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id k78GCmdh086030
-	for <linux-scsi@vger.kernel.org>; Tue, 8 Aug 2006 18:12:48 +0200
-Received: from d12av02.megacenter.de.ibm.com (loopback [127.0.0.1])
-	by d12av02.megacenter.de.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k78G99Pr019443
-	for <linux-scsi@vger.kernel.org>; Tue, 8 Aug 2006 18:09:09 +0200
-Received: from lion28.boeblingen.de.ibm.com (lion28.boeblingen.de.ibm.com [9.152.198.37])
-	by d12av02.megacenter.de.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k78G99mH019438
-	for <linux-scsi@vger.kernel.org>; Tue, 8 Aug 2006 18:09:09 +0200
-Content-Disposition: inline
+Received: from stat9.steeleye.com ([209.192.50.41]:11917 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S964924AbWHHQMd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 8 Aug 2006 12:12:33 -0400
+In-Reply-To: <20060808120507.GA20032@havoc.gtf.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux SCSI <linux-scsi@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-scsi@vger.kernel.org, promise_linux@promise.com, akpm@osdl.org
 
-Hi,
+On Tue, 2006-08-08 at 08:05 -0400, Jeff Garzik wrote:
+> Adds the 'stex' driver for Promise SuperTrak EX storage controllers.
+> These controllers present themselves as SCSI, though like 3ware,
+> megaraid and others, the underlying storage may or may not be SCSI.
+> 
+> As discussed, the block tagging stuff is a post-merge todo item.
 
-Recently I observed a kernel stack overflow due to a 
-recursion between scsi_request_fn and blk_run_queue.
-(We did error injection tests on s390 with zfcp using 32 LUNs and multiple
-paths.)
-
-Calling sequence was:
-  scsi_request_fn->scsi_dispatch_cmd->scsi_queue_insert->
-  scsi_run_queue->blk_run_queue->scsi_request_fn
-Recursion depth was about 18.
-
-On each iteration the request_queue passed to blk_run_queue/scsi_request_fn
-was different. This is due to the fact that blk_run_queue was called
-iterating shost->starved_list in scsi_run_queue:
-
-        while (!list_empty(&shost->starved_list) &&
-               !shost->host_blocked && !shost->host_self_blocked &&
-                !((shost->can_queue > 0) &&
-                  (shost->host_busy >= shost->can_queue))) {
-
-...
-                sdev = list_entry(shost->starved_list.next,
-                                          struct scsi_device, starved_entry);
-
-...
-                blk_run_queue(sdev->request_queue);
-...
-	}
-
-Because a different request_queue was passed to blk_run_queue the
-check for QUEUE_FLAG_REENTER in blk_run_queue did not help to avoid
-the recursion.
-
-My explanation for this situation is as follows:
-The shost was blocked temporary and the starved_list was filled.
-Following some remote port was deleted which caused that sdev_state
-for some scsi device was SDEV_BLOCK. And this in turn led to the above
-recursion. (At time when recursion started shost was not blocked anymore.)
-
-Of course this recursion ends if the starved_list is empty.
-But always a stack overflow is imminent depending on the number of
-entries in starved_list.
-
-A quick hack would be to do the following before calling
-blk_run_queue in scsi_run_queue:
-
-	if (test_bit(QUEUE_FLAG_REENTER, &q->queue_flags))
-		set_bit(QUEUE_FLAG_REENTER, &sdev->request_queue->queue_flags);
-
-	blk_run_queue(sdev->request_queue);
-
-Any opinion regarding the problem and the suggestion to fix the problem?
-If there are no objections I will make a patch containing this fix.
+That's not exactly my recollection of the discussion:  I thought we were
+still discussing the chicken and egg issue (which is we have APIs to do
+this per host tagging which stex duplicates on the grounds no-one's
+using the current APIs).  Jens and I seem to be in agreement that stex
+should try the API's and well make any changes that become necessary to
+block or SCSI happen.
 
 
-Regards,
+> +	switch (cmd->cmnd[0]) {
+> +	case MODE_SENSE_10:
+> +	{
+> +		static char mode_sense10[8] = { 0, 6, 0, 0, 0, 0, 0, 0 };
+> +
+> +		stex_direct_copy(cmd, mode_sense10, sizeof(mode_sense10));
+> +		cmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
+> +		done(cmd);
+> +		return 0;
+> +	}
 
-Andreas
+This looks like it will trick the sd driver into reading uninitialised
+data for the drive caching parameters ... there are obviously faults on
+both sides, but I think when you ask for a mode page and you get a
+success return, you're entitled to think you got it ...
+
+
+> +	case INQUIRY:
+> +		if (id != ST_MAX_ARRAY_SUPPORTED)
+> +			break;
+> +		if (lun == 0 && (cmd->cmnd[1] & INQUIRY_EVPD) == 0) {
+> +			stex_direct_copy(cmd, console_inq_page,
+> +				sizeof(console_inq_page));
+> +			cmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
+> +		} else
+> +			cmd->result = DID_ERROR << 16 | COMMAND_COMPLETE << 8;
+> +		done(cmd);
+
+The error return isn't correct you should never use DID_ERROR for an
+uncorrectable error because it will cause a retry (which you'll fail
+again).  For an unsupported inquiry the correct return should be Check
+Condition/Illegal Request/Invalid Field in CDB
+
+> +	case INQUIRY:
+> +		if (id != ST_MAX_ARRAY_SUPPORTED)
+> +			break;
+> +		if (lun == 0 && (cmd->cmnd[1] & INQUIRY_EVPD) == 0) {
+> +			stex_direct_copy(cmd, console_inq_page,
+> +				sizeof(console_inq_page));
+> +			cmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
+> +		} else
+> +			cmd->result = DID_ERROR << 16 | COMMAND_COMPLETE << 8;
+> +		done(cmd);
+
+The error return here looks like it shouldn't be DID_ERROR either.  I
+assume the error is a format one and uncorrectable by a retry?
+
+> +	}
+> +
+> +	hba->dma_mem = pci_alloc_consistent(pdev,
+> +		STEX_BUFFER_SIZE, &hba->dma_handle);
+> +	if (!hba->dma_mem) {
+> +		err = -ENOMEM;
+> +		printk(KERN_ERR DRV_NAME "(%s): dma mem alloc failed\n",
+> +			pci_name(pdev));
+> +		goto out_iounmap;
+> +	}
+
+This should be dma_alloc_coherent, not pci_alloc_consistent.
+
+James
+
+
