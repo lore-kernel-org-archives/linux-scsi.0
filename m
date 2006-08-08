@@ -1,97 +1,73 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] Add Promise SuperTrak EX 'stex' driver
-Date: Tue, 08 Aug 2006 11:11:19 -0500
-Message-ID: <1155053479.26517.20.camel@mulgrave.il.steeleye.com>
-References: <20060808120507.GA20032@havoc.gtf.org>
+From: olecom@mail.ru
+Subject: =?koi8-r?Q?Re=3A_[sbp2]_external_hard_disk_shutdown_timer?=
+Date: Tue, 08 Aug 2006 21:31:38 +0400
+Message-ID: <E1GAVQY-0003ck-00.olecom-mail-ru@f41.mail.ru>
+Reply-To: olecom@mail.ru
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:11917 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S964924AbWHHQMd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 8 Aug 2006 12:12:33 -0400
-In-Reply-To: <20060808120507.GA20032@havoc.gtf.org>
+Received: from f41.mail.ru ([194.67.57.79]:19467 "EHLO f41.mail.ru")
+	by vger.kernel.org with ESMTP id S965012AbWHHRbk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Aug 2006 13:31:40 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-scsi@vger.kernel.org, promise_linux@promise.com, akpm@osdl.org
+To: Douglas Gilbert <dougg@torque.net>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, Linux SCSI <linux-scsi@vger.kernel.org>
 
-On Tue, 2006-08-08 at 08:05 -0400, Jeff Garzik wrote:
-> Adds the 'stex' driver for Promise SuperTrak EX storage controllers.
-> These controllers present themselves as SCSI, though like 3ware,
-> megaraid and others, the underlying storage may or may not be SCSI.
-> 
-> As discussed, the block tagging stuff is a post-merge todo item.
+Date: Tue, 08 Aug 2006 11:27:12 -0400
+Subject: Re: [sbp2] external hard disk shutdown timer
+>
+> Stefan Richter wrote:
+> > Douglas Gilbert wrote:
+> >> olecom@mail.ru wrote:
+> >>> Hallo ! Let me ask a question.
+> >>>
+> >>> I couldn't change some values (f.e IDLE or ICT), while its
+> >>> "changing" flag is "y".
+> >> I would be surprised if you could change IDLE or
+> >> ICT on a SCSI disk and even more surprised if
+> >> that could be done through a bridge to an ATA
+> >> disk (as is happening in your case).
+>
+> It seems that <olecom@mail.ru> hopes the the SCSI "idle"
+> power condition will map to the ATA STANDBY command
+> (as the ATA IDLE command action looks pretty vague).
+>
+I didn't hope on anything, actually, but wanted to find in t10's specs,
+what i saw in sdparm output.
 
-That's not exactly my recollection of the discussion:  I thought we were
-still discussing the chicken and egg issue (which is we have APIs to do
-this per host tagging which stex duplicates on the grounds no-one's
-using the current APIs).  Jens and I seem to be in agreement that stex
-should try the API's and well make any changes that become necessary to
-block or SCSI happen.
+In "SCSI Primary Commands - 2 (SPC-2): 8.3.9 Power condition page"
+<http://t10.org/ftp/t10/drafts/spc2/spc2r20.pdf> page 204
+i've found that matched what i wanted: IDLE and STANDBY timers in 1Ah table.
+It seemed OK to me with that i saw in sdparm.
 
+Anyway thank you, guys, i wish you keep good work done well !
 
-> +	switch (cmd->cmnd[0]) {
-> +	case MODE_SENSE_10:
-> +	{
-> +		static char mode_sense10[8] = { 0, 6, 0, 0, 0, 0, 0, 0 };
-> +
-> +		stex_direct_copy(cmd, mode_sense10, sizeof(mode_sense10));
-> +		cmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
-> +		done(cmd);
-> +		return 0;
-> +	}
+P.S.
 
-This looks like it will trick the sd driver into reading uninitialised
-data for the drive caching parameters ... there are obviously faults on
-both sides, but I think when you ask for a mode page and you get a
-success return, you're entitled to think you got it ...
+Finally it was like "wake up, Neo" for me. Why i don't use "standard flow"
+to do things ? I mean load wiXP, ask WD support ? From WD's FAQ:
+,-
+|- Question
+| Do Western Digital external hard drives spin down after a certain amount
+| of inactivity time? How can I disable this feature?
+|- Answer
+| The external hard drives listed below will spin down (enter into power saver mode)
+| after 10 minutes of drive inactivity. Once the drive is accessed again, the drive
+| will exit from the power saver mode and spin back up.
+|
+| Please Note: This is a permanent feature of the external hard drives and cannot
+| be disabled.
+`-
+Finita.
 
+So, Douglas, this one isn't for 24x7 at all. But i think 250GB just for backup isn't
+good, thus 10 minutes is a very short time interval. So, i need something like
+'dd count=1 </dev/ext-wd' every 9 minutes in cron :-)
 
-> +	case INQUIRY:
-> +		if (id != ST_MAX_ARRAY_SUPPORTED)
-> +			break;
-> +		if (lun == 0 && (cmd->cmnd[1] & INQUIRY_EVPD) == 0) {
-> +			stex_direct_copy(cmd, console_inq_page,
-> +				sizeof(console_inq_page));
-> +			cmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
-> +		} else
-> +			cmd->result = DID_ERROR << 16 | COMMAND_COMPLETE << 8;
-> +		done(cmd);
-
-The error return isn't correct you should never use DID_ERROR for an
-uncorrectable error because it will cause a retry (which you'll fail
-again).  For an unsupported inquiry the correct return should be Check
-Condition/Illegal Request/Invalid Field in CDB
-
-> +	case INQUIRY:
-> +		if (id != ST_MAX_ARRAY_SUPPORTED)
-> +			break;
-> +		if (lun == 0 && (cmd->cmnd[1] & INQUIRY_EVPD) == 0) {
-> +			stex_direct_copy(cmd, console_inq_page,
-> +				sizeof(console_inq_page));
-> +			cmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
-> +		} else
-> +			cmd->result = DID_ERROR << 16 | COMMAND_COMPLETE << 8;
-> +		done(cmd);
-
-The error return here looks like it shouldn't be DID_ERROR either.  I
-assume the error is a format one and uncorrectable by a retry?
-
-> +	}
-> +
-> +	hba->dma_mem = pci_alloc_consistent(pdev,
-> +		STEX_BUFFER_SIZE, &hba->dma_handle);
-> +	if (!hba->dma_mem) {
-> +		err = -ENOMEM;
-> +		printk(KERN_ERR DRV_NAME "(%s): dma mem alloc failed\n",
-> +			pci_name(pdev));
-> +		goto out_iounmap;
-> +	}
-
-This should be dma_alloc_coherent, not pci_alloc_consistent.
-
-James
-
+--
+-o--=O`C
+ #oo'L O
+<___=E M
 
