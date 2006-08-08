@@ -1,170 +1,103 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [RFC] [Last Rites] fc transport: extensions for fast fail and
- dev loss
-Date: Tue, 08 Aug 2006 13:54:27 -0400
-Message-ID: <44D8CFD3.9050408@emulex.com>
-References: <1150829123.16981.1.camel@localhost.localdomain>
-Reply-To: James.Smart@Emulex.Com
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] Add Promise SuperTrak EX 'stex' driver
+Date: Tue, 08 Aug 2006 13:09:18 -0500
+Message-ID: <1155060558.26517.48.camel@mulgrave.il.steeleye.com>
+References: <20060808120507.GA20032@havoc.gtf.org>
+	 <1155053479.26517.20.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:48073 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S1030212AbWHHRyb
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 8 Aug 2006 13:54:31 -0400
-Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
-	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id k78HsSw8011655
-	for <linux-scsi@vger.kernel.org>; Tue, 8 Aug 2006 10:54:29 -0700 (PDT)
-In-Reply-To: <1150829123.16981.1.camel@localhost.localdomain>
+Received: from stat9.steeleye.com ([209.192.50.41]:30863 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S964960AbWHHSJg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 8 Aug 2006 14:09:36 -0400
+In-Reply-To: <1155053479.26517.20.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-scsi@vger.kernel.org, promise_linux@promise.com, akpm@osdl.org
 
-Closing Statements:
-
-I've attached the original RFC below. See
-   http://marc.theaimsgroup.com/?l=linux-scsi&m=115082917628466&w=2
-
-I've updated it with what I perceive to be the position and resolution
-based on comments.  Keep in mind that we're trying to lay the groundwork
-for common behavior and tunables between the transports.
-
-Please let me know if I've mis-represented anything, or if there is
-a dissention in the resolution. I'd like to close on this.
-
-James Smart wrote:
-> Folks,
-> 
-> The following addresses some long standing todo items I've had in the
-> FC transport. They primarily arise when considering multipathing, or
-> trying to marry driver internal state to transport state. It is intended
-> that this same type of functionality would be usable in other transports
-> as well.
-> 
-> Here's what is contained:
-> 
-> - dev_loss_tmo LLDD callback :
->   Currently, there is no notification to the LLDD of when the transport
->   gives up on the device returning and starts to return DID_NO_CONNECT
->   in the queuecommand helper function. This callback notifies the LLDD
->   that the transport has now given up on the rport, thereby acknowledging
->   the prior fc_remote_port_delete() call. The callback also expects the
->   LLDD to initiate the termination of any outstanding i/o on the rport.
-
-I believe there is no dissention on this change.
-Please note: this is essentially a confirmation from the transport to the
-   LLD that the rport is fully deleted. Thus, the LLD must expect to see
-   these callbacks as a normal part of the rport being terminated (even if
-   it is not blocked).
-
-I'll move forward with this.
-
-> 
-> - fast_io_fail_tmo and LLD callback:
->   There are some cases where it may take a long while to truly determine
->   device loss, but the system is in a multipathing configuration that if
->   the i/o was failed quickly (faster than dev_loss_tmo), it could be
->   redirected to a different path and completed sooner (assuming the 
->   multipath thing knew that the sdev was blocked).
->   
->   iSCSI is one of the transports that may vary dev_loss_tmo values
->   per session, and you would like fast io failure.
+Some more I missed in the first glance through:
 
 
-The current transport implementation did not specify what happened to
-   active i/o (given to the driver, in the adapter, but not yet completed
-   back to the midlayer) when a device was blocked, nor during the
-   block-to->dev_loss transition period. It was up to the driver.  Many
-   assumed active i/o was immediately terminated, which is semi-consistent
-   with the behavior of most drivers for most "connectivity loss" scenarios.
+> +	err = request_irq(pdev->irq, stex_intr, SA_SHIRQ, DRV_NAME, hba);
 
-The conversations then started to jump around, considering what i/o's you
-   may want to have fail quickly, etc.
+Needs to be IRQF_SHARED now.
 
-Here's my opinion:
-   We have the following points in time to look at:
-    (a) the device is blocked by the transport
-    (b) there is a time T, usually in a multipathing environment, where it
-        would be useful to error the i/o early rather than wait for dev_loss
-        It is assumed that any such i/o request would be marked REQ_FASTFAIL
-    (c) the dev_loss_tmo fires - we're to assume the device is gone
-   and at any time post (a), the device may return, unblock and never
-   encounter points (b) and (c).
+> +static int stex_reset(struct scsi_cmnd *cmd)
+> +{
+> +	struct st_hba *hba;
+> +	int tag;
+> +	int i = 0;
+> +	unsigned long flags;
+> +	hba = (struct st_hba *) &cmd->device->host->hostdata[0];
+> +
+> +wait_cmds:
+> +	spin_lock_irqsave(hba->host->host_lock, flags);
+> +	for (tag = 0; tag < MU_MAX_REQUEST; tag++)
+> +		if ((hba->tag & (1 << tag)) && hba->ccb[tag].req != NULL)
+> +			break;
+> +	spin_unlock_irqrestore(hba->host->host_lock, flags);
+> +	if (tag < MU_MAX_REQUEST) {
+> +		ssleep(1);
+> +		if (++i < 10)
+> +			goto wait_cmds;
+> +	}
 
-   As for what happens to active i/o :
+This implementation isn't correct.  Either a reset is triggered as part
+of error handling, in which case every command is guaranteed to be
+completed or timed out, or it's been done from sg in which case the user
+wants an immediate reset.  In either case, you shouldn't be waiting
+another 10 seconds for active commands.
 
-   always: the driver can fail an i/o at any point in time if it deems
-           it appropriate.
+> +	if (hba->cardtype == st_shasta)
+> +		stex_hard_reset(hba);
 
-   at (a): There are scenarios where a short link perturbation may occur,
-           which may not disrupt the i/o. Therefore, we should not force
-           io to be terminated.
+Don't you also want some type of processing for st_vsc?  Otherwise it
+looks like it will drop straight through the error handler and be
+offlined.
 
-   at (b): Minimally, we should terminate all active i/o requests marked
-           as type REQ_FASTFAIL. From an api perspective, driver support
-           for this is optional. And we must also assume that there will
-           be implementations which have to abort all i/o in order to
-           terminate those marked REQ_FASTFAIL. Is this acceptable ?
-           (it meets the "always" condition above)
-
-           Q: so far we've limited the io to those w/ REQ_FASTFAIL.
-             Would we ever want to allow a user to fast fail all i/o
-             regardless of the request flags ? (in case they flags
-             weren't getting set on all the i/o the user wanted to
-             see fail ?)
-
-           There's a desire to address pending i/o (those on the block
-           request queue or new requests going there) so that if we've
-           crossed point (b) that we also fail them.  The proposal is
-           to add a new state (device ? or queue ?), which would occur
-           as of point (b). All REQ_FASTFAIL io on the queue, as well
-           as on a new io, will be failed with a new i/o status if in
-           this state. Non-REQ_FASTFAIL i/o would continue to enter/sit
-           on the request queue until dev_loss_tmo fires.
-
-   at (c): per the dev_loss_tmo callback, all i/o should be terminated.
-           Their completions do not have to be synchronous to the return
-           from the callback - they can occur afterward.
+stex_handshake is touching the doorbell without locking, is that OK?  It
+looks like it might be since it only happens either at start of day or
+after reset, but what happens (as the kexec people will remind us) if
+the bios hasn't quesced the card (the handshake is done after the
+interrupt is added ... it could fire immediately)?
 
 
-Comments ?
+> +static void stex_hba_stop(struct st_hba *hba)
+> +{
+> +	unsigned long flags;
+> +	int i;
+> +	u16 tag;
+> +
+> +	spin_lock_irqsave(hba->host->host_lock, flags);
+> +	if ((tag = stex_alloc_tag((unsigned long *)&hba->tag))
+> +		== TAG_BITMAP_LENGTH) {
+> +		spin_unlock_irqrestore(hba->host->host_lock, flags);
+> +		printk(KERN_ERR DRV_NAME "(%s): unable to alloc tag\n",
+> +			pci_name(hba->pdev));
+> +		return;
+> +	}
+> +	for (i=0; i<(ST_MAX_ARRAY_SUPPORTED*ST_MAX_LUN_PER_TARGET*2); i++) {
+> +		stex_internal_flush(hba, i, tag);
+> +		spin_unlock_irqrestore(hba->host->host_lock, flags);
+> +
+> +		wait_event_timeout(hba->waitq,
+> +			!(hba->ccb[tag].req_type), ST_INTERNAL_TIMEOUT*HZ);
+> +		if (hba->ccb[tag].req_type & PASSTHRU_REQ_TYPE)
+> +			return;
+> +		spin_lock_irqsave(hba->host->host_lock, flags);
+> +	}
+> +
+> +	stex_free_tag((unsigned long *)&hba->tag, tag);
+> +	spin_unlock_irqrestore(hba->host->host_lock, flags);
+> +}
 
-Assuming that folks agree, I'd like to do this in 2 patches:
-  - one that puts in the transport fast_io_fail_tmo and LLD callback
-  - another that adds the new state, io completion status, and does the
-    handling of the request queue REQ_FASTFAIL i/o.
+This is really inefficient (looping over all targets whether present or
+not).  Just implement slave destroy, it will keep track of allocated
+in-use targets for you.
 
-> 
-> - fast_loss_time recommendation:
->   In discussing how a admin should set dev_loss_tmo in a multipathing
->   environment, it became apparent that we expected the admin to know
->   a lot. They had to know the transport type, what the minimum setting
->   can be that still survives normal link bouncing, and they may even
->   have to know about device specifics.  For iSCSI, the proper loss time
->   may vary widely from session to session.
-> 
->   This attribute is an exported "recommendation" by the LLDD and transport
->   on what the lowest setting for dev_loss_tmo should be for a multipathing
->   environment. Thus, the admin only needs to cat this attribute to obtain
->   the value to echo into dev_loss_tmo.
+James
 
-The only objection was from Christoph - wanting a utility to get/set this
-stuff. However, the counter was this attribute was still meaningful, as it
-was the conduit to obtain a recommendation from the transport/LLD.
-
-So - I assume this proceeds as is - with a change in it's description.
-
->  
-> I have one criticism of these changes. The callbacks are calling into
-> the LLDD with an rport post the driver's rport_delete call. What it means
-> is that we are essentially extending the lifetime of an rport until the
-> dev_loss_tmo call occurs.
-
-It's ok - and adding the appropriate comments are fine.
-
-
-Thanks.
-
--- james s
 
