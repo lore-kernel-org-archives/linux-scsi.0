@@ -1,73 +1,170 @@
-From: olecom@mail.ru
-Subject: =?koi8-r?Q?Re=3A_[sbp2]_external_hard_disk_shutdown_timer?=
-Date: Tue, 08 Aug 2006 21:31:38 +0400
-Message-ID: <E1GAVQY-0003ck-00.olecom-mail-ru@f41.mail.ru>
-Reply-To: olecom@mail.ru
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [RFC] [Last Rites] fc transport: extensions for fast fail and
+ dev loss
+Date: Tue, 08 Aug 2006 13:54:27 -0400
+Message-ID: <44D8CFD3.9050408@emulex.com>
+References: <1150829123.16981.1.camel@localhost.localdomain>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from f41.mail.ru ([194.67.57.79]:19467 "EHLO f41.mail.ru")
-	by vger.kernel.org with ESMTP id S965012AbWHHRbk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Aug 2006 13:31:40 -0400
+Received: from emulex.emulex.com ([138.239.112.1]:48073 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S1030212AbWHHRyb
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 8 Aug 2006 13:54:31 -0400
+Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
+	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id k78HsSw8011655
+	for <linux-scsi@vger.kernel.org>; Tue, 8 Aug 2006 10:54:29 -0700 (PDT)
+In-Reply-To: <1150829123.16981.1.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, Linux SCSI <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-Date: Tue, 08 Aug 2006 11:27:12 -0400
-Subject: Re: [sbp2] external hard disk shutdown timer
->
-> Stefan Richter wrote:
-> > Douglas Gilbert wrote:
-> >> olecom@mail.ru wrote:
-> >>> Hallo ! Let me ask a question.
-> >>>
-> >>> I couldn't change some values (f.e IDLE or ICT), while its
-> >>> "changing" flag is "y".
-> >> I would be surprised if you could change IDLE or
-> >> ICT on a SCSI disk and even more surprised if
-> >> that could be done through a bridge to an ATA
-> >> disk (as is happening in your case).
->
-> It seems that <olecom@mail.ru> hopes the the SCSI "idle"
-> power condition will map to the ATA STANDBY command
-> (as the ATA IDLE command action looks pretty vague).
->
-I didn't hope on anything, actually, but wanted to find in t10's specs,
-what i saw in sdparm output.
+Closing Statements:
 
-In "SCSI Primary Commands - 2 (SPC-2): 8.3.9 Power condition page"
-<http://t10.org/ftp/t10/drafts/spc2/spc2r20.pdf> page 204
-i've found that matched what i wanted: IDLE and STANDBY timers in 1Ah table.
-It seemed OK to me with that i saw in sdparm.
+I've attached the original RFC below. See
+   http://marc.theaimsgroup.com/?l=linux-scsi&m=115082917628466&w=2
 
-Anyway thank you, guys, i wish you keep good work done well !
+I've updated it with what I perceive to be the position and resolution
+based on comments.  Keep in mind that we're trying to lay the groundwork
+for common behavior and tunables between the transports.
 
-P.S.
+Please let me know if I've mis-represented anything, or if there is
+a dissention in the resolution. I'd like to close on this.
 
-Finally it was like "wake up, Neo" for me. Why i don't use "standard flow"
-to do things ? I mean load wiXP, ask WD support ? From WD's FAQ:
-,-
-|- Question
-| Do Western Digital external hard drives spin down after a certain amount
-| of inactivity time? How can I disable this feature?
-|- Answer
-| The external hard drives listed below will spin down (enter into power saver mode)
-| after 10 minutes of drive inactivity. Once the drive is accessed again, the drive
-| will exit from the power saver mode and spin back up.
-|
-| Please Note: This is a permanent feature of the external hard drives and cannot
-| be disabled.
-`-
-Finita.
+James Smart wrote:
+> Folks,
+> 
+> The following addresses some long standing todo items I've had in the
+> FC transport. They primarily arise when considering multipathing, or
+> trying to marry driver internal state to transport state. It is intended
+> that this same type of functionality would be usable in other transports
+> as well.
+> 
+> Here's what is contained:
+> 
+> - dev_loss_tmo LLDD callback :
+>   Currently, there is no notification to the LLDD of when the transport
+>   gives up on the device returning and starts to return DID_NO_CONNECT
+>   in the queuecommand helper function. This callback notifies the LLDD
+>   that the transport has now given up on the rport, thereby acknowledging
+>   the prior fc_remote_port_delete() call. The callback also expects the
+>   LLDD to initiate the termination of any outstanding i/o on the rport.
 
-So, Douglas, this one isn't for 24x7 at all. But i think 250GB just for backup isn't
-good, thus 10 minutes is a very short time interval. So, i need something like
-'dd count=1 </dev/ext-wd' every 9 minutes in cron :-)
+I believe there is no dissention on this change.
+Please note: this is essentially a confirmation from the transport to the
+   LLD that the rport is fully deleted. Thus, the LLD must expect to see
+   these callbacks as a normal part of the rport being terminated (even if
+   it is not blocked).
 
---
--o--=O`C
- #oo'L O
-<___=E M
+I'll move forward with this.
+
+> 
+> - fast_io_fail_tmo and LLD callback:
+>   There are some cases where it may take a long while to truly determine
+>   device loss, but the system is in a multipathing configuration that if
+>   the i/o was failed quickly (faster than dev_loss_tmo), it could be
+>   redirected to a different path and completed sooner (assuming the 
+>   multipath thing knew that the sdev was blocked).
+>   
+>   iSCSI is one of the transports that may vary dev_loss_tmo values
+>   per session, and you would like fast io failure.
+
+
+The current transport implementation did not specify what happened to
+   active i/o (given to the driver, in the adapter, but not yet completed
+   back to the midlayer) when a device was blocked, nor during the
+   block-to->dev_loss transition period. It was up to the driver.  Many
+   assumed active i/o was immediately terminated, which is semi-consistent
+   with the behavior of most drivers for most "connectivity loss" scenarios.
+
+The conversations then started to jump around, considering what i/o's you
+   may want to have fail quickly, etc.
+
+Here's my opinion:
+   We have the following points in time to look at:
+    (a) the device is blocked by the transport
+    (b) there is a time T, usually in a multipathing environment, where it
+        would be useful to error the i/o early rather than wait for dev_loss
+        It is assumed that any such i/o request would be marked REQ_FASTFAIL
+    (c) the dev_loss_tmo fires - we're to assume the device is gone
+   and at any time post (a), the device may return, unblock and never
+   encounter points (b) and (c).
+
+   As for what happens to active i/o :
+
+   always: the driver can fail an i/o at any point in time if it deems
+           it appropriate.
+
+   at (a): There are scenarios where a short link perturbation may occur,
+           which may not disrupt the i/o. Therefore, we should not force
+           io to be terminated.
+
+   at (b): Minimally, we should terminate all active i/o requests marked
+           as type REQ_FASTFAIL. From an api perspective, driver support
+           for this is optional. And we must also assume that there will
+           be implementations which have to abort all i/o in order to
+           terminate those marked REQ_FASTFAIL. Is this acceptable ?
+           (it meets the "always" condition above)
+
+           Q: so far we've limited the io to those w/ REQ_FASTFAIL.
+             Would we ever want to allow a user to fast fail all i/o
+             regardless of the request flags ? (in case they flags
+             weren't getting set on all the i/o the user wanted to
+             see fail ?)
+
+           There's a desire to address pending i/o (those on the block
+           request queue or new requests going there) so that if we've
+           crossed point (b) that we also fail them.  The proposal is
+           to add a new state (device ? or queue ?), which would occur
+           as of point (b). All REQ_FASTFAIL io on the queue, as well
+           as on a new io, will be failed with a new i/o status if in
+           this state. Non-REQ_FASTFAIL i/o would continue to enter/sit
+           on the request queue until dev_loss_tmo fires.
+
+   at (c): per the dev_loss_tmo callback, all i/o should be terminated.
+           Their completions do not have to be synchronous to the return
+           from the callback - they can occur afterward.
+
+
+Comments ?
+
+Assuming that folks agree, I'd like to do this in 2 patches:
+  - one that puts in the transport fast_io_fail_tmo and LLD callback
+  - another that adds the new state, io completion status, and does the
+    handling of the request queue REQ_FASTFAIL i/o.
+
+> 
+> - fast_loss_time recommendation:
+>   In discussing how a admin should set dev_loss_tmo in a multipathing
+>   environment, it became apparent that we expected the admin to know
+>   a lot. They had to know the transport type, what the minimum setting
+>   can be that still survives normal link bouncing, and they may even
+>   have to know about device specifics.  For iSCSI, the proper loss time
+>   may vary widely from session to session.
+> 
+>   This attribute is an exported "recommendation" by the LLDD and transport
+>   on what the lowest setting for dev_loss_tmo should be for a multipathing
+>   environment. Thus, the admin only needs to cat this attribute to obtain
+>   the value to echo into dev_loss_tmo.
+
+The only objection was from Christoph - wanting a utility to get/set this
+stuff. However, the counter was this attribute was still meaningful, as it
+was the conduit to obtain a recommendation from the transport/LLD.
+
+So - I assume this proceeds as is - with a change in it's description.
+
+>  
+> I have one criticism of these changes. The callbacks are calling into
+> the LLDD with an rport post the driver's rport_delete call. What it means
+> is that we are essentially extending the lifetime of an rport until the
+> dev_loss_tmo call occurs.
+
+It's ok - and adding the appropriate comments are fine.
+
+
+Thanks.
+
+-- james s
 
