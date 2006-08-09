@@ -1,17 +1,29 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 1/4] libata: Add ata_host_set_init
-Date: Wed, 09 Aug 2006 00:08:48 -0400
-Message-ID: <44D95FD0.1040804@pobox.com>
-References: <200608071927.k77JRBke008109@d01av03.pok.ibm.com>
+From: "Viola Montgomery" <497leon@myramstore.com>
+Subject: Fwd:  Need a University {}Degree to obtain the career you?ve always wanted?
+Date: Wed, 9 Aug 2006 09:12:05 +0300
+Message-ID: <200608090612.k796CNIC011427@zeus1.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <200608071927.k77JRBke008109@d01av03.pok.ibm.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Brian King <brking@us.ibm.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain;
+        charset="Windows-1251"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from zeus1.kernel.org ([204.152.191.4]:22695 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S1030514AbWHIGNA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Aug 2006 02:13:00 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-applied 1-4, thanks for your patience
+In just 2 years you can have a masters degree from a national university. 
+
+A better job, more income and a better life can all be yours in just 2 years. 
+No books to buy, no classes to go to, and no entrance exams. 
+Learn in your own home at your own pace. We supply all the study materials, all you have to do is study and complete 2 tests per month. 
+
+
+Reach Us Whenever +1           (831)   302      66 63
+Operators Live 24 hours
+
+-----------------------------
+demonstrable augustan belie alcove absentee dickens archaic backplate
 
