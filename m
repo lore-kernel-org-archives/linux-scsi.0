@@ -1,59 +1,39 @@
-From: Doug Maxey <dwm@enoyolf.org>
+From: David C Somayajulu <david.somayajulu@qlogic.com>
 Subject: Re: [PATCH 3/3] qla4xxx: iospace_config move defn
-Date: Wed, 09 Aug 2006 15:38:42 -0500
-Message-ID: <20060809203842.489939@bebe.enoyolf.org>
-References: <20060809182406.2021.90492.stgit@bebe.enoyolf.org> <20060809184243.2021.48891.stgit@bebe.enoyolf.org> <44DA21BE.3050506@cs.wisc.edu>
+Date: Wed, 09 Aug 2006 15:16:14 -0700
+Message-ID: <1155161774.3850.5.camel@dcslnxpc.site>
+References: <20060809182406.2021.90492.stgit@bebe.enoyolf.org>
+	 <20060809184243.2021.48891.stgit@bebe.enoyolf.org>
+	 <44DA21BE.3050506@cs.wisc.edu> <1155151384.3850.3.camel@dcslnxpc.site>
+	 <20060809201533.GI7185@andrew-vasquezs-computer.local>
+	 <1155154888.26517.172.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from falcon30.maxeymade.com ([24.173.215.190]:27850 "EHLO
-	bebe.enoyolf.org") by vger.kernel.org with ESMTP id S1751328AbWHIUps
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Aug 2006 16:45:48 -0400
-In-reply-to: <44DA236C.7050900@cs.wisc.edu>
+Received: from pat.qlogic.com ([198.70.193.2]:21339 "EHLO avexch1.qlogic.com")
+	by vger.kernel.org with ESMTP id S1750750AbWHIWQN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Aug 2006 18:16:13 -0400
+In-Reply-To: <1155154888.26517.172.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Ravi Anand <ravi.anand@qlogic.com>, David Somayajulu <david.somayajulu@qlogic.com>, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Mike Christie <michaelc@cs.wisc.edu>, Doug Maxey <dwm@enoyolf.org>, Ravi Anand <ravi.anand@qlogic.com>, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org
 
-
-On Wed, 09 Aug 2006 14:03:24 EDT, Mike Christie wrote:
-> Mike Christie wrote:
-> > 
-> > Is my mailer messing up the tabs or are you (maybe the original code was
-> > messed up and did not get fixed in the move)?
-> > 
-
-Wellll..
-
-Have not been commenting on the whitespace changes.  It appears that 
-some frobnication was happening, I have been silently editing leading 
-spaces to tabs and stripping trailing whitespace.
-
-Are you seeing tabs changed to spaces?  Or the other way around?  It is
-possible that emacs is getting involved some, but I can easily see the
-trailing whitespace. (nee '(show-trailing-whitespace t)).
-
-There is also a vi macro to do the same.  My vi experience is too
-ancient to comment about the placement in the rc of the following,
-but does work for me when I have to fall back to the ubiquitous editor. 
-YMMV.
-
-~/.vimrc
-...
-" Switch syntax highlighting on, when the terminal has colors
-" Also switch on highlighting the last used search pattern.
-if &t_Co > 2 || has("gui_running")
-  syntax on
-  set hlsearch
-  highlight WhitespaceEOL ctermbg=red guibg=red
-  match WhitespaceEOL /\s\+$/
-endif
-...
-
+On Wed, 2006-08-09 at 15:21 -0500, James Bottomley wrote:
+> On Wed, 2006-08-09 at 13:15 -0700, Andrew Vasquez wrote:
+> > So, would you folks (Mike/James) like the qla4xxx patches respun with
+> > Doug's changes?  Or will Dave S's original submission be added to
+> > scsi-misc-2.6.git with the fixup/cleanups on top?
 > 
-> Nevermind, I switch mailers and it looks ok now. Weird, some patches
-> looked ok and some did not before.
+> I'd rather someone provided me with a clean set of agreed upon diffs to
+> incorporate.
 > 
-
+> James
+> 
+> 
+Excellent. I am working on a comprehensive set of patches and will try
+to get it out by the end of the day.
+-david Somayajulu
+qLogic Corporation.
 
