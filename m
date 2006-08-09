@@ -1,90 +1,140 @@
-From: Andreas Herrmann <aherrman@de.ibm.com>
-Subject: [PATCH] limit recursion when flushing shost->starved_list
-Date: Wed, 9 Aug 2006 17:31:16 +0200
-Message-ID: <20060809153116.GA14043@lion28.ibm.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [RFC] [Last Rites] fc transport: extensions for fast fail and dev loss
+Date: Wed, 9 Aug 2006 18:36:43 +0100
+Message-ID: <20060809173643.GA22969@infradead.org>
+References: <1150829123.16981.1.camel@localhost.localdomain> <44D8CFD3.9050408@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate1.de.ibm.com ([195.212.29.150]:59517 "EHLO
-	mtagate1.de.ibm.com") by vger.kernel.org with ESMTP
-	id S1751020AbWHIPfV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Aug 2006 11:35:21 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:35781 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1751278AbWHIRgp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 9 Aug 2006 13:36:45 -0400
 Content-Disposition: inline
+In-Reply-To: <44D8CFD3.9050408@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jejb@steeleye.com>
-Cc: Linux SCSI <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: James Smart <James.Smart@Emulex.Com>
+Cc: linux-scsi@vger.kernel.org
 
-Hi,
+On Tue, Aug 08, 2006 at 01:54:27PM -0400, James Smart wrote:
+> >Here's what is contained:
+> >
+> >- dev_loss_tmo LLDD callback :
+> >  Currently, there is no notification to the LLDD of when the transport
+> >  gives up on the device returning and starts to return DID_NO_CONNECT
+> >  in the queuecommand helper function. This callback notifies the LLDD
+> >  that the transport has now given up on the rport, thereby acknowledging
+> >  the prior fc_remote_port_delete() call. The callback also expects the
+> >  LLDD to initiate the termination of any outstanding i/o on the rport.
+> 
+> I believe there is no dissention on this change.
+> Please note: this is essentially a confirmation from the transport to the
+>   LLD that the rport is fully deleted. Thus, the LLD must expect to see
+>   these callbacks as a normal part of the rport being terminated (even if
+>   it is not blocked).
+> 
+> I'll move forward with this.
 
-Attached is a patch that should limit a possible recursion that can
-lead to a stack overflow like follows:
+ACK.
 
-Kernel stack overflow.
-CPU:    3    Not tainted
-Process zfcperp0.0.d819
-(pid: 13897, task: 000000003e0d8cc8, ksp: 000000003499dbb8)
-Krnl PSW : 0404000180000000 000000000030f8b2 (get_device+0x12/0x48)
-Krnl GPRS: 00000000135a1980 000000000030f758 000000003ed6c1e8 0000000000000005
-           0000000000000000 000000000044a780 000000003dbf7000 0000000034e15800
-           000000003621c048 070000003499c108 000000003499c1a0 000000003ed6c000
-           0000000040895000 00000000408ab630 000000003499c0a0 000000003499c0a0
-Krnl Code: a7 fb ff e8 a7 19 00 00 b9 02 00 22 e3 e0 f0 98 00 24 a7 84 
-Call Trace:
-([<000000004089edc2>] scsi_request_fn+0x13e/0x650 [scsi_mod])
- [<00000000002c5ff4>] blk_run_queue+0xd4/0x1a4
- [<000000004089ff8c>] scsi_queue_insert+0x22c/0x2a4 [scsi_mod]
- [<000000004089779a>] scsi_dispatch_cmd+0x8a/0x3d0 [scsi_mod]
- [<000000004089f1ec>] scsi_request_fn+0x568/0x650 [scsi_mod]
-...
- [<000000004089f1ec>] scsi_request_fn+0x568/0x650 [scsi_mod]
- [<00000000002c5ff4>] blk_run_queue+0xd4/0x1a4
- [<000000004089ff8c>] scsi_queue_insert+0x22c/0x2a4 [scsi_mod]
- [<000000004089779a>] scsi_dispatch_cmd+0x8a/0x3d0 [scsi_mod]
- [<000000004089f1ec>] scsi_request_fn+0x568/0x650 [scsi_mod]
- [<00000000002c5ff4>] blk_run_queue+0xd4/0x1a4
- [<000000004089fa9e>] scsi_run_host_queues+0x196/0x230 [scsi_mod]
- [<00000000409eba28>] zfcp_erp_thread+0x2638/0x3080 [zfcp]
- [<0000000000107462>] kernel_thread_starter+0x6/0xc
- [<000000000010745c>] kernel_thread_starter+0x0/0xc
-<0>Kernel panic - not syncing: Corrupt kernel stack, can't continue.
+> >- fast_io_fail_tmo and LLD callback:
+> >  There are some cases where it may take a long while to truly determine
+> >  device loss, but the system is in a multipathing configuration that if
+> >  the i/o was failed quickly (faster than dev_loss_tmo), it could be
+> >  redirected to a different path and completed sooner (assuming the 
+> >  multipath thing knew that the sdev was blocked).
+> >  
+> >  iSCSI is one of the transports that may vary dev_loss_tmo values
+> >  per session, and you would like fast io failure.
+> 
+> 
+> The current transport implementation did not specify what happened to
+>   active i/o (given to the driver, in the adapter, but not yet completed
+>   back to the midlayer) when a device was blocked, nor during the
+>   block-to->dev_loss transition period. It was up to the driver.  Many
+>   assumed active i/o was immediately terminated, which is semi-consistent
+>   with the behavior of most drivers for most "connectivity loss" scenarios.
+> 
+> The conversations then started to jump around, considering what i/o's you
+>   may want to have fail quickly, etc.
+> 
+> Here's my opinion:
+>   We have the following points in time to look at:
+>    (a) the device is blocked by the transport
+>    (b) there is a time T, usually in a multipathing environment, where it
+>        would be useful to error the i/o early rather than wait for dev_loss
+>        It is assumed that any such i/o request would be marked REQ_FASTFAIL
+>    (c) the dev_loss_tmo fires - we're to assume the device is gone
+>   and at any time post (a), the device may return, unblock and never
+>   encounter points (b) and (c).
+> 
+>   As for what happens to active i/o :
+> 
+>   always: the driver can fail an i/o at any point in time if it deems
+>           it appropriate.
+> 
+>   at (a): There are scenarios where a short link perturbation may occur,
+>           which may not disrupt the i/o. Therefore, we should not force
+>           io to be terminated.
 
-This stack overflow occurred during tests on s390 using zfcp.
-Recursion depth for this panic was 19.
+Ok..
 
-Usually recursion between blk_run_queue and a request_fn is avoided
-using QUEUE_FLAG_REENTER. But this does not help if the scsi stack
-tries to flush the starved_list of a scsi_host.
+> 
+>   at (b): Minimally, we should terminate all active i/o requests marked
+>           as type REQ_FASTFAIL. From an api perspective, driver support
+>           for this is optional. And we must also assume that there will
+>           be implementations which have to abort all i/o in order to
+>           terminate those marked REQ_FASTFAIL. Is this acceptable ?
+>           (it meets the "always" condition above)
+> 
+>           Q: so far we've limited the io to those w/ REQ_FASTFAIL.
+>             Would we ever want to allow a user to fast fail all i/o
+>             regardless of the request flags ? (in case they flags
+>             weren't getting set on all the i/o the user wanted to
+>             see fail ?)
+
+I think we should fail all.  It's not like an unprivilegued process could
+request FASTFAIL.  The administrator should know what she/he is doing.
+
+>           There's a desire to address pending i/o (those on the block
+>           request queue or new requests going there) so that if we've
+>           crossed point (b) that we also fail them.  The proposal is
+>           to add a new state (device ? or queue ?), which would occur
+>           as of point (b). All REQ_FASTFAIL io on the queue, as well
+>           as on a new io, will be failed with a new i/o status if in
+>           this state. Non-REQ_FASTFAIL i/o would continue to enter/sit
+>           on the request queue until dev_loss_tmo fires.
+
+We have a queue per device, so adding another scsi_device state sound
+like the right way to go aheade.
+
+>   at (c): per the dev_loss_tmo callback, all i/o should be terminated.
+>           Their completions do not have to be synchronous to the return
+>           from the callback - they can occur afterward.
+
+ACK.
 
 
-Regards,
 
-Andreas
+> >- fast_loss_time recommendation:
+> >  In discussing how a admin should set dev_loss_tmo in a multipathing
+> >  environment, it became apparent that we expected the admin to know
+> >  a lot. They had to know the transport type, what the minimum setting
+> >  can be that still survives normal link bouncing, and they may even
+> >  have to know about device specifics.  For iSCSI, the proper loss time
+> >  may vary widely from session to session.
+> >
+> >  This attribute is an exported "recommendation" by the LLDD and transport
+> >  on what the lowest setting for dev_loss_tmo should be for a multipathing
+> >  environment. Thus, the admin only needs to cat this attribute to obtain
+> >  the value to echo into dev_loss_tmo.
+> 
+> The only objection was from Christoph - wanting a utility to get/set this
+> stuff. However, the counter was this attribute was still meaningful, as it
+> was the conduit to obtain a recommendation from the transport/LLD.
+> 
+> So - I assume this proceeds as is - with a change in it's description.
 
-
-Limit recursion depth when flushing the starved_list
-of a scsi_host.
-
-Signed-off-by: Andreas Herrmann <aherrman@de.ibm.com>
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 077c1c6..d6743b9 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -551,7 +551,15 @@ static void scsi_run_queue(struct reques
- 		list_del_init(&sdev->starved_entry);
- 		spin_unlock_irqrestore(shost->host_lock, flags);
- 
--		blk_run_queue(sdev->request_queue);
-+
-+		if (test_bit(QUEUE_FLAG_REENTER, &q->queue_flags) &&
-+		    !test_and_set_bit(QUEUE_FLAG_REENTER,
-+				      &sdev->request_queue->queue_flags)) {
-+			blk_run_queue(sdev->request_queue);
-+			clear_bit(QUEUE_FLAG_REENTER,
-+				  &sdev->request_queue->queue_flags);
-+		} else
-+			blk_run_queue(sdev->request_queue);
- 
- 		spin_lock_irqsave(shost->host_lock, flags);
- 		if (unlikely(!list_empty(&sdev->starved_entry)))
+I must say I'm still not happy with this.  It's really policy that we
+try to keep out of the kernel.
