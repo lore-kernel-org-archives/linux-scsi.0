@@ -1,67 +1,90 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: Re: [RFC] [Last Rites] fc transport: extensions for fast fail and
- dev loss
-Date: Wed, 09 Aug 2006 10:31:26 -0500
-Message-ID: <44D9FFCE.4040702@sgi.com>
-References: <1150829123.16981.1.camel@localhost.localdomain> <44D8CFD3.9050408@emulex.com> <44D90878.7000903@sgi.com> <44D90CE8.70006@sgi.com>
+From: Andreas Herrmann <aherrman@de.ibm.com>
+Subject: [PATCH] limit recursion when flushing shost->starved_list
+Date: Wed, 9 Aug 2006 17:31:16 +0200
+Message-ID: <20060809153116.GA14043@lion28.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:14476 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S1751017AbWHIPbe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Aug 2006 11:31:34 -0400
-In-Reply-To: <44D90CE8.70006@sgi.com>
+Received: from mtagate1.de.ibm.com ([195.212.29.150]:59517 "EHLO
+	mtagate1.de.ibm.com") by vger.kernel.org with ESMTP
+	id S1751020AbWHIPfV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 9 Aug 2006 11:35:21 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Michael Reed <mdr@sgi.com>, James.Smart@Emulex.Com
+To: James Bottomley <jejb@steeleye.com>
+Cc: Linux SCSI <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+
+Hi,
+
+Attached is a patch that should limit a possible recursion that can
+lead to a stack overflow like follows:
+
+Kernel stack overflow.
+CPU:    3    Not tainted
+Process zfcperp0.0.d819
+(pid: 13897, task: 000000003e0d8cc8, ksp: 000000003499dbb8)
+Krnl PSW : 0404000180000000 000000000030f8b2 (get_device+0x12/0x48)
+Krnl GPRS: 00000000135a1980 000000000030f758 000000003ed6c1e8 0000000000000005
+           0000000000000000 000000000044a780 000000003dbf7000 0000000034e15800
+           000000003621c048 070000003499c108 000000003499c1a0 000000003ed6c000
+           0000000040895000 00000000408ab630 000000003499c0a0 000000003499c0a0
+Krnl Code: a7 fb ff e8 a7 19 00 00 b9 02 00 22 e3 e0 f0 98 00 24 a7 84 
+Call Trace:
+([<000000004089edc2>] scsi_request_fn+0x13e/0x650 [scsi_mod])
+ [<00000000002c5ff4>] blk_run_queue+0xd4/0x1a4
+ [<000000004089ff8c>] scsi_queue_insert+0x22c/0x2a4 [scsi_mod]
+ [<000000004089779a>] scsi_dispatch_cmd+0x8a/0x3d0 [scsi_mod]
+ [<000000004089f1ec>] scsi_request_fn+0x568/0x650 [scsi_mod]
+...
+ [<000000004089f1ec>] scsi_request_fn+0x568/0x650 [scsi_mod]
+ [<00000000002c5ff4>] blk_run_queue+0xd4/0x1a4
+ [<000000004089ff8c>] scsi_queue_insert+0x22c/0x2a4 [scsi_mod]
+ [<000000004089779a>] scsi_dispatch_cmd+0x8a/0x3d0 [scsi_mod]
+ [<000000004089f1ec>] scsi_request_fn+0x568/0x650 [scsi_mod]
+ [<00000000002c5ff4>] blk_run_queue+0xd4/0x1a4
+ [<000000004089fa9e>] scsi_run_host_queues+0x196/0x230 [scsi_mod]
+ [<00000000409eba28>] zfcp_erp_thread+0x2638/0x3080 [zfcp]
+ [<0000000000107462>] kernel_thread_starter+0x6/0xc
+ [<000000000010745c>] kernel_thread_starter+0x0/0xc
+<0>Kernel panic - not syncing: Corrupt kernel stack, can't continue.
+
+This stack overflow occurred during tests on s390 using zfcp.
+Recursion depth for this panic was 19.
+
+Usually recursion between blk_run_queue and a request_fn is avoided
+using QUEUE_FLAG_REENTER. But this does not help if the scsi stack
+tries to flush the starved_list of a scsi_host.
 
 
+Regards,
 
-Michael Reed wrote:
+Andreas
 
-...snip...
 
->>>> - fast_io_fail_tmo and LLD callback:
+Limit recursion depth when flushing the starved_list
+of a scsi_host.
 
->>>
->>>   at (b): Minimally, we should terminate all active i/o requests marked
->>>           as type REQ_FASTFAIL. From an api perspective, driver support
->>>           for this is optional. And we must also assume that there will
->>>           be implementations which have to abort all i/o in order to
->>>           terminate those marked REQ_FASTFAIL. Is this acceptable ?
->>>           (it meets the "always" condition above)
->>>
->>>           Q: so far we've limited the io to those w/ REQ_FASTFAIL.
->>>             Would we ever want to allow a user to fast fail all i/o
->>>             regardless of the request flags ? (in case they flags
->>>             weren't getting set on all the i/o the user wanted to
->>>             see fail ?)
->> REQ_FAILFAST appears to influence retries during error recovery so
->> there may be unexpected side effects of doing this.  But, that said,
->> I'd say yes.  From my perspective, I'd make this the default behavior.
->>
->> In talking with our volume manager people, the question raised was
->> "Why would you want some i/o to fail quickly and some not?"
->> They even considered non-i/o scsi commands.
->>
-...snip...
+Signed-off-by: Andreas Herrmann <aherrman@de.ibm.com>
 
-> 
-
-In thinking about this over night, I would like to withdraw my previous
-comments.  (Hence the snip!)
-
-Let's take the case of real time capture from a device and
-post processing of that data.  The capture operation would
-likely want a fast fail to avoid dropping data.  The post
-processing of that data would like to wait for the device
-to return to avoid disruption and potential premature termination
-of the job.
-
-Under the above scenario, assuming it's a valid scenario, are there
-mechanisms in place to allow an application to tag an i/o stream
-for fast fail?
-
-Mike
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 077c1c6..d6743b9 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -551,7 +551,15 @@ static void scsi_run_queue(struct reques
+ 		list_del_init(&sdev->starved_entry);
+ 		spin_unlock_irqrestore(shost->host_lock, flags);
+ 
+-		blk_run_queue(sdev->request_queue);
++
++		if (test_bit(QUEUE_FLAG_REENTER, &q->queue_flags) &&
++		    !test_and_set_bit(QUEUE_FLAG_REENTER,
++				      &sdev->request_queue->queue_flags)) {
++			blk_run_queue(sdev->request_queue);
++			clear_bit(QUEUE_FLAG_REENTER,
++				  &sdev->request_queue->queue_flags);
++		} else
++			blk_run_queue(sdev->request_queue);
+ 
+ 		spin_lock_irqsave(shost->host_lock, flags);
+ 		if (unlikely(!list_empty(&sdev->starved_entry)))
