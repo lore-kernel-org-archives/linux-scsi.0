@@ -1,45 +1,35 @@
-From: Doug Maxey <dwm@enoyolf.org>
-Subject: Re: [PATCH ver3 3/4] qla4xxx: use dev_xxx on some pci/dma resource alloc warning and error printks
-Date: Wed, 09 Aug 2006 14:03:44 -0500
-Message-ID: <20060809190344.66598@bebe.enoyolf.org>
-References: <20060805225156.9557.99072.stgit@bebe.enoyolf.org> <20060805225227.9557.30796.stgit@bebe.enoyolf.org>
+From: David C Somayajulu <david.somayajulu@qlogic.com>
+Subject: Re: [PATCH 3/3] qla4xxx: iospace_config move defn
+Date: Wed, 09 Aug 2006 12:23:04 -0700
+Message-ID: <1155151384.3850.3.camel@dcslnxpc.site>
+References: <20060809182406.2021.90492.stgit@bebe.enoyolf.org>
+	 <20060809184243.2021.48891.stgit@bebe.enoyolf.org>
+	 <44DA21BE.3050506@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from falcon30.maxeymade.com ([24.173.215.190]:35983 "EHLO
-	bebe.enoyolf.org") by vger.kernel.org with ESMTP id S1751322AbWHITI3
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Aug 2006 15:08:29 -0400
-In-reply-to: <44DA20C7.7030302@cs.wisc.edu>
+Received: from pat.qlogic.com ([198.70.193.2]:41816 "EHLO avexch1.qlogic.com")
+	by vger.kernel.org with ESMTP id S1751326AbWHITXE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Aug 2006 15:23:04 -0400
+In-Reply-To: <44DA21BE.3050506@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Doug Maxey <dwm@enoyolf.org>, Ravi Anand <ravi.anand@qlogic.com>, David Somayajulu <david.somayajulu@qlogic.com>, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org
+Cc: Doug Maxey <dwm@enoyolf.org>, Ravi Anand <ravi.anand@qlogic.com>, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org
 
-
-On Wed, 09 Aug 2006 13:52:07 EDT, Mike Christie wrote:
-...
-> >  	if (ha->srb_mempool == NULL) {
-> > -		ql4_printk(KERN_WARNING, ha,
-> > -			   "Memory Allocation failed - SRB Pool.\n");
-> > -
-> > +		dev_warn(&ha->pdev->dev,
-> > +			 "Memory Allocation failed - SRB Pool.\n");
-> >  		goto mem_alloc_error_exit;
+On Wed, 2006-08-09 at 13:56 -0400, Mike Christie wrote:
+> Doug Maxey wrote:
+> > From: Doug Maxey <dwm@enoyolf.org>
+> > 
+> > Move the defn before the caller, and remove the decl.
+> > 
 > 
-> Sorry for the late response on this one. As you know I was out for a
-> while and I was waiting to get internet access yesterday.
-> 
-> For these host messages, do we want something like the sdev_printk and
-> starget_printk or does it really make more sense to use the pci bus id
-> for the message prefix? What about other scsi host messages, will they
-> always go with the pci bus id or some scsi-ml id? And even if we want to
-> print out the pci bus id as the prefix instead of some scsi info, should
-> we still have some scsi wrapper?
-> 
-
-Ha.  Just pre-replied to the this issue in the patchset just sent.
-
-Will spin up an RFC patch and see where this goes.
-
-
+> I think not doing the defn before the caller is nice, but I honestly
+> could care less either way as far as merging things goes (it seems like
+> Christoph hates then but people like Jeff let the driver writer do what
+> they want). Qlogic seems to love doing it, so are they ok with all these
+> patches?
+We have no problem with these patches since it makes the code cleaner
+and makes everyone happy.
+-david S.
