@@ -1,39 +1,64 @@
-From: David C Somayajulu <david.somayajulu@qlogic.com>
-Subject: Re: [PATCH 3/3] qla4xxx: iospace_config move defn
-Date: Wed, 09 Aug 2006 15:16:14 -0700
-Message-ID: <1155161774.3850.5.camel@dcslnxpc.site>
-References: <20060809182406.2021.90492.stgit@bebe.enoyolf.org>
-	 <20060809184243.2021.48891.stgit@bebe.enoyolf.org>
-	 <44DA21BE.3050506@cs.wisc.edu> <1155151384.3850.3.camel@dcslnxpc.site>
-	 <20060809201533.GI7185@andrew-vasquezs-computer.local>
-	 <1155154888.26517.172.camel@mulgrave.il.steeleye.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: Doug Maxey <dwm@enoyolf.org>
+Subject: Re: [PATCH ver3 3/4] qla4xxx: use dev_xxx on some pci/dma resource alloc warning and error printks
+Date: Wed, 09 Aug 2006 18:05:50 -0500
+Message-ID: <20060809230550.480743@bebe.enoyolf.org>
+References: <20060805225156.9557.99072.stgit@bebe.enoyolf.org> <20060805225227.9557.30796.stgit@bebe.enoyolf.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:21339 "EHLO avexch1.qlogic.com")
-	by vger.kernel.org with ESMTP id S1750750AbWHIWQN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Aug 2006 18:16:13 -0400
-In-Reply-To: <1155154888.26517.172.camel@mulgrave.il.steeleye.com>
+Received: from falcon30.maxeymade.com ([24.173.215.190]:35040 "EHLO
+	bebe.enoyolf.org") by vger.kernel.org with ESMTP id S1751440AbWHIXKY
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 9 Aug 2006 19:10:24 -0400
+In-reply-to: <44DA20C7.7030302@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Mike Christie <michaelc@cs.wisc.edu>, Doug Maxey <dwm@enoyolf.org>, Ravi Anand <ravi.anand@qlogic.com>, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Doug Maxey <dwm@enoyolf.org>, Ravi Anand <ravi.anand@qlogic.com>, David Somayajulu <david.somayajulu@qlogic.com>, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org
 
-On Wed, 2006-08-09 at 15:21 -0500, James Bottomley wrote:
-> On Wed, 2006-08-09 at 13:15 -0700, Andrew Vasquez wrote:
-> > So, would you folks (Mike/James) like the qla4xxx patches respun with
-> > Doug's changes?  Or will Dave S's original submission be added to
-> > scsi-misc-2.6.git with the fixup/cleanups on top?
+
+On Wed, 09 Aug 2006 13:52:07 EDT, Mike Christie wrote:
+...
+> > @@ -836,9 +825,8 @@ static int qla4xxx_mem_alloc(struct scsi
+> >  	ha->srb_mempool = mempool_create(SRB_MIN_REQ, mempool_alloc_slab,
+> >  					 mempool_free_slab, srb_cachep);
+> >  	if (ha->srb_mempool == NULL) {
+> > -		ql4_printk(KERN_WARNING, ha,
+> > -			   "Memory Allocation failed - SRB Pool.\n");
+> > -
+> > +		dev_warn(&ha->pdev->dev,
+> > +			 "Memory Allocation failed - SRB Pool.\n");
+> >  		goto mem_alloc_error_exit;
 > 
-> I'd rather someone provided me with a clean set of agreed upon diffs to
-> incorporate.
+> Sorry for the late response on this one. As you know I was out for a
+> while and I was waiting to get internet access yesterday.
 > 
-> James
+> For these host messages, do we want something like the sdev_printk and
+> starget_printk or does it really make more sense to use the pci bus id
+> for the message prefix? What about other scsi host messages, will they
+> always go with the pci bus id or some scsi-ml id? And even if we want to
+> print out the pci bus id as the prefix instead of some scsi info, should
+> we still have some scsi wrapper?
 > 
-> 
-Excellent. I am working on a comprehensive set of patches and will try
-to get it out by the end of the day.
--david Somayajulu
-qLogic Corporation.
+ 
+I do agree that iscsi_transport sessions could use a new macro.
+
+My intention in this instance was to go with the widely used idiom, and 
+to not have a driver specific one.  Was trying to replace
+ #define ql4_printk(level, ha, format, arg...)			\
+     dev_printk(level, &((ha)->pdev->dev), format, ## arg)
+
+But to follow on from irc, one more pass at this to help me clarify and
+understand what is need here.
+
+dev_xxx is a wrapper around dev_print(xxx ...).  
+
+In the specific instance above, this should print
+scsiN arg...
+
+Since qla4xxx_mem_alloc() is for the host, would an sdev_printk be
+the right thing?  I don't believe we have any context of a target.
+Of course that may be a misunderstanding on my part.
+
+For this driver, I don't see any instances of a scsi_target.  
+
+++doug
 
