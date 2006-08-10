@@ -1,43 +1,38 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: question on scsi_alloc_sdev()
-Date: Thu, 10 Aug 2006 10:03:13 -0500
-Message-ID: <1155222193.3670.23.camel@mulgrave.il.steeleye.com>
-References: <44DB44B7.9080708@de.ibm.com>
+Subject: RE: [PATCH 1/3] scsi : megaraid_{mm,mbox}: 64-bit DMA
+	capabilitychecker
+Date: Thu, 10 Aug 2006 10:09:19 -0500
+Message-ID: <1155222559.3670.26.camel@mulgrave.il.steeleye.com>
+References: <890BF3111FB9484E9526987D912B261932E331@NAMAIL3.ad.lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:48572 "EHLO
+Received: from stat9.steeleye.com ([209.192.50.41]:57020 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1161307AbWHJPDR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Aug 2006 11:03:17 -0400
-In-Reply-To: <44DB44B7.9080708@de.ibm.com>
+	id S1161314AbWHJPKD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Aug 2006 11:10:03 -0400
+In-Reply-To: <890BF3111FB9484E9526987D912B261932E331@NAMAIL3.ad.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Martin Peschke <mp3@de.ibm.com>
-Cc: linux-scsi@vger.kernel.org
+To: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
+Cc: vvs@sw.ru, akpm@osdl.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Patro, Sumant" <Sumant.Patro@engenio.com>, "Yang, Bo" <Bo.Yang@engenio.com>
 
-On Thu, 2006-08-10 at 16:37 +0200, Martin Peschke wrote:
-> Does anybody know for sure whether scsi_alloc_sdev() is guaranteed to
-> be called in process context or not?
+On Thu, 2006-08-10 at 08:55 -0600, Ju, Seokmann wrote:
+> Hi,
+> Friday, July 28, 2006 2:21 PM, James Bottomley wrote:
+> > I'll fix it up this time, but in future could you trailing whitespace
+> > check your patches? (git will do this for you).
+> I have one clarification.
+> When will be these patches merged into scsi-misc tree?
+> I've seen them merged into -mm tree.
+> I have another patch to create, which tree should I against for it?
 
-It's always called in the scan or setup path, so yes, process context is
-guaranteed.
+This posting:
 
-> There seem to be contradictory signs in scsi_scan.c:
-> scsi_alloc_sdev() uses GFP_ATOMIC, as related functions do.
-> It might be called in a section protected by a mutex.
+http://marc.theaimsgroup.com/?l=linux-scsi&m=115509502316547
 
-It is always protected by the scan mutex, but a mutex is a sleeping
-lock, so it could also be GFP_KERNEL.
-
-> I conducted a little experiment using might_sleep() in scsi_alloc_sdev()
-> - no backtrace on the console, hence process context.
-> 
-> Or, is the purpose of GFP_ATOMIC just (SCSI) I/O avoidance, and sleeping
-> isn't an issue?
-
-I'm guessing it's just historical.
+Should hopefully answer your questions.
 
 James
 
