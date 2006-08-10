@@ -1,90 +1,37 @@
-From: Seokmann Ju <sju@lsil.com>
-Subject: [PATCH 1/1] scsi : megaraid_{mm, mbox} : irq data type fix
-Date: Thu, 10 Aug 2006 12:54:47 -0400
-Message-ID: <1155228887.6698.7.camel@dhcp-65-957.se.lsil.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH 1/1] scsi : megaraid_{mm, mbox} : irq data type fix
+Date: Thu, 10 Aug 2006 12:32:51 -0500
+Message-ID: <1155231171.3670.32.camel@mulgrave.il.steeleye.com>
+References: <1155228887.6698.7.camel@dhcp-65-957.se.lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:48561 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1161467AbWHJRHA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Aug 2006 13:07:00 -0400
+Received: from stat9.steeleye.com ([209.192.50.41]:64959 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1422642AbWHJRdK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Aug 2006 13:33:10 -0400
+In-Reply-To: <1155228887.6698.7.camel@dhcp-65-957.se.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, James Bottomley <James.Bottomley@SteelEye.com>
-Cc: sju@lsil.com, ebiederm@xmission.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Seokmann Ju <sju@lsil.com>
+Cc: Andrew Morton <akpm@osdl.org>, ebiederm@xmission.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-This patch fixes incorrect irq data type in the driver which led driver initialization failure in some cases.
-The problem was reported by Eric @. Biederman <ebiederm@xmission.com>.
+On Thu, 2006-08-10 at 12:54 -0400, Seokmann Ju wrote:
+> This patch fixes incorrect irq data type in the driver which led driver initialization failure in some cases.
+> The problem was reported by Eric @. Biederman <ebiederm@xmission.com>.
+[...]
+> 	uint32_t		unique_id;
+> -	uint8_t			irq;
+> +	unsigned int		irq;
+>  	uint8_t			ito;
 
-Signed-off-by: Seokmann Ju <seokmann.ju@lsil.com>
----
-diff -Naur old/Documentation/scsi/ChangeLog.megaraid new/Documentation/scsi/ChangeLog.megaraid
---- old/Documentation/scsi/ChangeLog.megaraid	2006-08-08 15:52:49.000000000 -0400
-+++ new/Documentation/scsi/ChangeLog.megaraid	2006-08-09 08:39:18.000000000 -0400
-@@ -1,5 +1,5 @@
- Release Date	: Fri May 19 09:31:45 EST 2006 - Seokmann Ju <sju@lsil.com>
--Current Version : 2.20.4.9 (scsi module), 2.20.2.6 (cmm module)
-+Current Version : 2.20.4.9 (scsi module), 2.20.2.7 (cmm module)
- Older Version	: 2.20.4.8 (scsi module), 2.20.2.6 (cmm module)
- 
- 1.	Fixed a bug in megaraid_init_mbox().
-@@ -121,6 +121,23 @@
- 	> **************************************************************
- 	> ****************
- 
-+4.	Incorrect data type has been used for 'irq' variable in the driver
-+	as pointed out by Eric below.
-+
-+	> Sent: Monday, August 07, 2006 11:29 AM
-+	> Subject: [PATCH] megaraid: Use the proper type to hold the irq number.
-+	> 
-+	> When testing on a Unisys machine it was discovered that
-+	> the megaraid driver would not initialize as it was
-+	> requesting irq 162 instead of irq 1442 it was assigned.
-+	> The problem was the irq number had been truncated by being
-+	> stored in an unsigned char.
-+	> 
-+	> The ioctl interface appears fundamentally broken as it exports
-+	> the irq number to user space in an unsigned char. 
-+	> 
-+	> Signed-off-by: Eric W. Biederman <ebiederm@xmission.com>
-+
- Release Date	: Mon Apr 11 12:27:22 EST 2006 - Seokmann Ju <sju@lsil.com>
- Current Version : 2.20.4.8 (scsi module), 2.20.2.6 (cmm module)
- Older Version	: 2.20.4.7 (scsi module), 2.20.2.6 (cmm module)
-diff -Naur old/drivers/scsi/megaraid/mega_common.h new/drivers/scsi/megaraid/mega_common.h
---- old/drivers/scsi/megaraid/mega_common.h	2006-08-08 15:53:44.000000000 -0400
-+++ new/drivers/scsi/megaraid/mega_common.h	2006-08-08 15:56:03.000000000 -0400
-@@ -175,7 +175,7 @@
- 	uint8_t			max_lun;
- 
- 	uint32_t		unique_id;
--	uint8_t			irq;
-+	unsigned int		irq;
- 	uint8_t			ito;
- 	caddr_t			ibuf;
- 	dma_addr_t		ibuf_dma_h;
-diff -Naur old/drivers/scsi/megaraid/megaraid_ioctl.h new/drivers/scsi/megaraid/megaraid_ioctl.h
---- old/drivers/scsi/megaraid/megaraid_ioctl.h	2006-08-08 15:53:44.000000000 -0400
-+++ new/drivers/scsi/megaraid/megaraid_ioctl.h	2006-08-08 15:56:41.000000000 -0400
-@@ -183,7 +183,7 @@
- 	uint8_t		pci_bus;
- 	uint8_t		pci_dev_fn;
- 	uint8_t		pci_slot;
--	uint8_t		irq;
-+	unsigned int	irq;
- 
- 	uint32_t	unique_id;
- 	uint32_t	host_no;
-@@ -209,7 +209,7 @@
- typedef struct mcontroller {
- 
- 	uint64_t	base;
--	uint8_t		irq;
-+	unsigned int	irq;
- 	uint8_t		numldrv;
- 	uint8_t		pcibus;
- 	uint16_t	pcidev;
----
+This doesn't look right ... you're altering the size of a packed field
+within the ioctl body.  This will break the ioctl ABI (and thus all
+tools which use it) unless you employ versioning or some other mechanism
+to detect the breakage and compensate.  I really don't think you want to
+do this.
+
+James
+
+
