@@ -1,46 +1,69 @@
-From: Martin Peschke <mp3@de.ibm.com>
-Subject: question on scsi_alloc_sdev()
-Date: Thu, 10 Aug 2006 16:37:43 +0200
-Message-ID: <44DB44B7.9080708@de.ibm.com>
+From: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
+Subject: RE: [PATCH 1/3] scsi : megaraid_{mm,mbox}: 64-bit DMA capabilitychecker
+Date: Thu, 10 Aug 2006 08:55:19 -0600
+Message-ID: <890BF3111FB9484E9526987D912B261932E331@NAMAIL3.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate6.uk.ibm.com ([195.212.29.139]:65506 "EHLO
-	mtagate6.uk.ibm.com") by vger.kernel.org with ESMTP
-	id S1161279AbWHJOht (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Aug 2006 10:37:49 -0400
-Received: from d06nrmr1407.portsmouth.uk.ibm.com (d06nrmr1407.portsmouth.uk.ibm.com [9.149.38.185])
-	by mtagate6.uk.ibm.com (8.13.7/8.13.7) with ESMTP id k7AEbmbc047822
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
-	for <linux-scsi@vger.kernel.org>; Thu, 10 Aug 2006 14:37:48 GMT
-Received: from d06av03.portsmouth.uk.ibm.com (d06av03.portsmouth.uk.ibm.com [9.149.37.213])
-	by d06nrmr1407.portsmouth.uk.ibm.com (8.13.6/NCO/VER7.0) with ESMTP id k7AEdbtF140616
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Thu, 10 Aug 2006 15:39:37 +0100
-Received: from d06av03.portsmouth.uk.ibm.com (loopback [127.0.0.1])
-	by d06av03.portsmouth.uk.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k7AEblce007604
-	for <linux-scsi@vger.kernel.org>; Thu, 10 Aug 2006 15:37:47 +0100
-Received: from [127.0.0.1] (dyn-9-152-230-71.boeblingen.de.ibm.com [9.152.230.71])
-	by d06av03.portsmouth.uk.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k7AEbllL007593
-	for <linux-scsi@vger.kernel.org>; Thu, 10 Aug 2006 15:37:47 +0100
+Received: from mail0.lsil.com ([147.145.40.20]:14487 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1161289AbWHJO4E convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Aug 2006 10:56:04 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: vvs@sw.ru, akpm@osdl.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Patro, Sumant" <Sumant.Patro@engenio.com>, "Yang, Bo" <Bo.Yang@engenio.com>
 
-Does anybody know for sure whether scsi_alloc_sdev() is guaranteed to
-be called in process context or not?
+Hi,
+Friday, July 28, 2006 2:21 PM, James Bottomley wrote:
+> I'll fix it up this time, but in future could you trailing whitespace
+> check your patches? (git will do this for you).
+I have one clarification.
+When will be these patches merged into scsi-misc tree?
+I've seen them merged into -mm tree.
+I have another patch to create, which tree should I against for it?
 
-There seem to be contradictory signs in scsi_scan.c:
-scsi_alloc_sdev() uses GFP_ATOMIC, as related functions do.
-It might be called in a section protected by a mutex.
+Seokmann
 
-I conducted a little experiment using might_sleep() in scsi_alloc_sdev()
-- no backtrace on the console, hence process context.
-
-Or, is the purpose of GFP_ATOMIC just (SCSI) I/O avoidance, and sleeping
-isn't an issue?
-
-Thanks,
-Martin
-
+> -----Original Message-----
+> From: James Bottomley [mailto:James.Bottomley@SteelEye.com] 
+> Sent: Friday, July 28, 2006 2:21 PM
+> To: Ju, Seokmann
+> Cc: vvs@sw.ru; akpm@osdl.org; linux-scsi@vger.kernel.org; 
+> linux-kernel@vger.kernel.org; Patro, Sumant; Yang, Bo
+> Subject: Re: [PATCH 1/3] scsi : megaraid_{mm,mbox}: 64-bit 
+> DMA capabilitychecker
+> 
+> On Tue, 2006-07-25 at 08:44 -0600, Ju, Seokmann wrote:
+> > This patch contains 
+> > - a fix for 64-bit DMA capability check in 
+> megaraid_{mm,mbox} driver.
+> > - includes changes (going back to 32-bit DMA mask if 64-bit DMA mask
+> > failes) suggested by James with previous patch.
+> > - addition of SATA 150-4/6 as commented by Vasily Averin.
+> 
+> Warning: trailing whitespace in lines 885,889 of
+> drivers/scsi/megaraid/megaraid_mbox.c
+> Warning: trailing whitespace in lines
+> 13,15,16,19,21,22,26,27,29,31,33,37,39,46 of
+> Documentation/scsi/ChangeLog.megaraid
+> 
+> I'll fix it up this time, but in future could you trailing whitespace
+> check your patches? (git will do this for you).
+> 
+> Also, when you do a git workflow, the body of the email becomes the
+> commit message, so things like this
+> 
+> > This is a third patch which follows prevous two patches ([PATCH 1/3]
+> > and
+> > [PATCH 2/3]).
+> 
+> while no doubt being useful to the members of linux-scsi who are
+> actually unable to count aren't actually useful in commit messages.
+> 
+> James
+> 
+> 
+> 
