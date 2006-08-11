@@ -1,38 +1,32 @@
-From: Doug Maxey <dwm@enoyolf.org>
-Subject: [PATCH] qla4xxx: kconfig must select scsi_iscsi_attrs
-Date: Fri, 11 Aug 2006 01:36:46 -0500
-Message-ID: <20060811063646.11778.35090.stgit@bebe.enoyolf.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 1/2] Add SATA support to libsas
+Date: Fri, 11 Aug 2006 04:52:42 -0400
+Message-ID: <44DC455A.2090705@garzik.org>
+References: <44DBE943.4080303@us.ibm.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from falcon30.maxeymade.com ([24.173.215.190]:59547 "EHLO
-	bebe.enoyolf.org") by vger.kernel.org with ESMTP id S932277AbWHKGlg
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Aug 2006 02:41:36 -0400
+Received: from srv5.dvmed.net ([207.36.208.214]:53398 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1750914AbWHKIwq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Aug 2006 04:52:46 -0400
+In-Reply-To: <44DBE943.4080303@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Ravi Anand <ravi.anand@qlogic.com>, David Somayajulu <david.somayajulu@qlogic.com>, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org
+To: "Darrick J. Wong" <djwong@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>
 
-From: Doug Maxey <dwm@enoyolf.org>
+Darrick J. Wong wrote:
+> Hook the scsi_host_template functions in libsas to delegate
+> functionality to libata when appropriate.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
 
-The qla4xxx driver depends on scsi_transport_iscsi.o which needs
-SCSI_ISCSI_ATRS selected.  Make it so when building qla4xxx.
+One piece that seems to be distinctly absent is controlling the SATA 
+phy, rather than faking it...
 
-Signed-off-by: Doug Maxey <dwm@enoyolf.org>
----
+	Jeff
 
- drivers/scsi/qla4xxx/Kconfig |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/Kconfig b/drivers/scsi/qla4xxx/Kconfig
-index 6492798..e496042 100644
---- a/drivers/scsi/qla4xxx/Kconfig
-+++ b/drivers/scsi/qla4xxx/Kconfig
-@@ -1,5 +1,6 @@
- config SCSI_QLA_ISCSI
- 	tristate "QLogic ISP4XXX host adapter family support"
- 	depends on PCI && SCSI
-+	select SCSI_ISCSI_ATTRS
- 	---help---
- 	This driver supports the QLogic 40xx (ISP4XXX) host adapter family.
+
