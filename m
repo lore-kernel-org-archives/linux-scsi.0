@@ -1,53 +1,48 @@
-From: "Fajun Chen" <fajunchen@gmail.com>
-Subject: Bugs on Linux 2.6.18-rc2 sg code?
-Date: Thu, 10 Aug 2006 19:43:12 -0600
-Message-ID: <8202f4270608101843r7df002d2l40e03eca3271b050@mail.gmail.com>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: [PATCH 0/2] Add SATA support to libsas/aic94xx
+Date: Thu, 10 Aug 2006 19:19:43 -0700
+Message-ID: <44DBE93F.1040005@us.ibm.com>
+Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.176]:12851 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S932369AbWHKBnO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Aug 2006 21:43:14 -0400
-Received: by py-out-1112.google.com with SMTP id z74so1070856pyg
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Aug 2006 18:43:12 -0700 (PDT)
-Content-Disposition: inline
+Received: from e3.ny.us.ibm.com ([32.97.182.143]:19641 "EHLO e3.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1030669AbWHKCTq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Aug 2006 22:19:46 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: dgilbert@interlog.com
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>
 
-Hi Folks,
+Hi,
 
-I use ATA pass through via sg ioctl interface for data read/write.
-Linux 2.6.18-rc2 patched with Jeff Garzik's libata git patch was
-running on ARM IOP80321 board. The HBA Sil3124 was used.
+I've been working on a preliminary patch to enable SATA disk support in
+the SAS transport layer.  As it stands now, the patch hooks several
+scsi_host_template functions to delegate various port allocation and
+command processing functions to libata; this also requires the creation
+of a few more functions to ensure that all the scsi_host_template
+functions redirect to libata when necessary.  There are also some
+helpers so that the hooks don't unduly lengthen the existing functions.
+ I'm midway through the implementation and am looking for feedback and
+suggestions about how to tighten things up.
 
-Two problems were observed:
-1. sg mmap bug?
-    My test program could not write data correctly to the mmapped
-buffer in the user space.      The program did a read immediately
-after a write and the data mismatches.  Swapped the sg_vma_nopage()
-function with the one in 2.6.15.4 release fixed the problem. So this
-appears to be a wrong change to the sg mmap code in 2.6.18-rc2
-release.
+At the moment, I've been able to get an 80G Maxtor SATA disk to come up
+with the aic94xx driver in both PIO and UDMA modes.  I can do things
+like streaming read/write operations, run LTP/pounder stress tests, and
+programs like scsi-info and smartctl, and they seem to run ok.
 
-2. sg hangs or have really slow response
-   Under certain unknown conditions, sg will be busy with one
-read/write ioctl call for over half an hour.  From scsi proc
-interface, sg and scsi mid layer were processing requests as  states
-"act" or "rcv" was shown in /proc/scsi/sg/debug. My test program set
-the command timeout to be 30 seconds, but this timeout did not trigger
-the command abort.
+However, there are several sketchy aspects to this patch--I've written
+nothing in sas_expander.c to hook up to SATA disks attached to expanders
+(will ask Alexis about that one), and the code that tries to push ATA
+error codes at libata when SAS errors are seen is rather frightening.
+Alas, I don't know ATA error codes quite well enough to feel like I'm
+doing justice to the SAS errors.
 
-Are these problems genuine bugs in sg 2.6.18-rc2 release? Since the
-problem is reproducible in my test hardware, please let me know if any
-log/traces can be collected.
+These patches are based off 2.6.18-rc4 + jejb's scsi-misc, scsi-rc and
+aic94xx git trees + Brian King's libata SAS patches.
 
-BTW, scsi logging through proc FS seems to be broken as well even
-though SCSI logging and Proc FS are enabled in my 2.6.18-rc2 kernel
-config.
+Questions/comments?  Thanks in advance for feedback,
 
-Thanks,
-Fajun
+--Darrick
