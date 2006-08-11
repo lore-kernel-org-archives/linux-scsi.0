@@ -1,30 +1,71 @@
-From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: [PATCH 2/2] Add SATA support to aic94xx
-Date: Thu, 10 Aug 2006 19:19:49 -0700
-Message-ID: <44DBE945.7070206@us.ibm.com>
-Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: [PATCH] SCSI and FC Transport: add netlink support for posting of transport events
+Date: Thu, 10 Aug 2006 21:32:37 -0700
+Message-ID: <20060811043237.GA29551@us.ibm.com>
+References: <1155070439.6275.5.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030693AbWHKCUR@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e35.co.us.ibm.com ([32.97.110.153]:55529 "EHLO
+	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751176AbWHKEc3
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Aug 2006 00:32:29 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e35.co.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k7B4WSGL007660
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Aug 2006 00:32:28 -0400
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
+	by d03relay04.boulder.ibm.com (8.13.6/NCO/VER7.0) with ESMTP id k7B4WR8p201436
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Thu, 10 Aug 2006 22:32:27 -0600
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k7B4WRRM006697
+	for <linux-scsi@vger.kernel.org>; Thu, 10 Aug 2006 22:32:27 -0600
+Content-Disposition: inline
+In-Reply-To: <1155070439.6275.5.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Smart <James.Smart@Emulex.Com>
+Cc: linux-scsi@vger.kernel.org
 
-Make aic94xx call the functions that were added to libsas.
+James Smart <James.Smart@Emulex.Com> wrote:
+> +/*
+> + * FC Transport Broadcast Event Message :
+> + *   FC_NL_ASYNC_EVENT
+> + *
+> + *   Note: if Vendor Unique message, &event_data will be  start of
+> + * 	   vendor unique payload, and the length of the payload is
+> + *         per event_datalen
+> + */
+> +struct fc_nl_event {
+> +	struct scsi_nl_hdr snlh;		/* must be 1st element ! */
+> +	uint64_t seconds;
+> +	uint32_t vendor_id;
+> +	uint16_t host_no;
+> +	uint16_t event_datalen;
+> +	uint32_t event_num;
+> +	uint32_t event_code;
+> +	uint32_t event_data;
+> +} __attribute__((aligned(sizeof(uint64_t))));
+> +
+> .. snip ..
+> +
+> +/* SCSI_TRANSPORT_MSG event message header */
+> +struct scsi_nl_hdr {
+> +	uint8_t version;
+> +	uint8_t transport;
+> +	uint16_t magic;
+> +	uint16_t msgtype;
+> +	uint16_t msglen;
+> +} __attribute__((aligned(sizeof(uint64_t))));
+> +
 
-Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
+What about using netlink attributes? The attributes do have more overhead,
+but it would seem that using attributes instead of sending out a
+whole structure would make it easier on the user space side to support
+different kernel versions without syncing the tools with the kernel.
 
-diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
-index 3ec2e46..3a673fe 100644
---- a/drivers/scsi/aic94xx/aic94xx_init.c
-+++ b/drivers/scsi/aic94xx/aic94xx_init.c
-@@ -76,6 +77,9 @@ static struct scsi_host_template aic94xx
- 	.sg_tablesize		= SG_ALL,
- 	.max_sectors		= SCSI_DEFAULT_MAX_SECTORS,
- 	.use_clustering		= ENABLE_CLUSTERING,
-+	.slave_alloc		= sas_slave_alloc,
-+	.target_destroy		= sas_target_destroy,
-+	.ioctl			= sas_ioctl,
- };
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
