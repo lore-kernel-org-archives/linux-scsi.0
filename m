@@ -1,64 +1,87 @@
-From: "PIDA INC" <pidaincn15@hotmail.com>
-Subject: COMPLIMENT! PIDA INC LOAN.
-Date: Thu, 10 Aug 2006 22:58:58 +0000
-Message-ID: <BAY18-F16B740F5AF1D79D8108798DD4A0__42169.3711927675$1155250812$gmane$org@phx.gbl>
+From: Dave Jones <davej@redhat.com>
+Subject: remove unnecessary includes of linux/config.h from drivers/scsi/
+Date: Thu, 10 Aug 2006 21:41:13 -0400
+Message-ID: <20060811014113.GC16454@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bay0-omc1-s22.bay0.hotmail.com ([65.54.246.94]:45350 "EHLO
-	bay0-omc1-s22.bay0.hotmail.com") by vger.kernel.org with ESMTP
-	id S932122AbWHJW7C (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Aug 2006 18:59:02 -0400
+Received: from mx1.redhat.com ([66.187.233.31]:26093 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S932419AbWHKBlX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Aug 2006 21:41:23 -0400
+Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
+	by mx1.redhat.com (8.12.11.20060308/8.12.11) with ESMTP id k7B1fMR4010484
+	for <linux-scsi@vger.kernel.org>; Thu, 10 Aug 2006 21:41:22 -0400
+Received: from nwo.kernelslacker.org (vpn-248-3.boston.redhat.com [10.13.248.3])
+	by int-mx1.corp.redhat.com (8.12.11.20060308/8.12.11) with ESMTP id k7B1fHgx003074
+	for <linux-scsi@vger.kernel.org>; Thu, 10 Aug 2006 21:41:19 -0400
+Received: from nwo.kernelslacker.org (localhost.localdomain [127.0.0.1])
+	by nwo.kernelslacker.org (8.13.7/8.13.5) with ESMTP id k7B1fEZO018111
+	for <linux-scsi@vger.kernel.org>; Thu, 10 Aug 2006 21:41:14 -0400
+Received: (from davej@localhost)
+	by nwo.kernelslacker.org (8.13.7/8.13.7/Submit) id k7B1fD3C018110
+	for linux-scsi@vger.kernel.org; Thu, 10 Aug 2006 21:41:13 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-PRUDENT INDUSTRIAL DEVELOPMENT AGENCY(PIDA INC)
-Educating And Granting Of Loans.
-A symbol of entrepreneural relationship and growth.
+kbuild includes this automatically these days.
 
-Email: pidainc26@yahoo.co.nz
+Signed-off-by: Dave Jones <davej@redhat.com>
 
-Dear Sir/Madam,
+--- linux-2.6.17.noarch/drivers/scsi/scsi.h~	2006-08-10 21:29:08.000000000 -0400
++++ linux-2.6.17.noarch/drivers/scsi/scsi.h	2006-08-10 21:29:10.000000000 -0400
+@@ -20,8 +20,6 @@
+ #ifndef _SCSI_H
+ #define _SCSI_H
+ 
+-#include <linux/config.h>	    /* for CONFIG_SCSI_LOGGING */
+-
+ #include <scsi/scsi_cmnd.h>
+ #include <scsi/scsi_device.h>
+ #include <scsi/scsi_eh.h>
+--- linux-2.6.17.noarch/drivers/scsi/aic7xxx_old.c~	2006-08-10 21:37:46.000000000 -0400
++++ linux-2.6.17.noarch/drivers/scsi/aic7xxx_old.c	2006-08-10 21:37:49.000000000 -0400
+@@ -249,8 +249,6 @@
+ #include <linux/stat.h>
+ #include <linux/slab.h>        /* for kmalloc() */
+ 
+-#include <linux/config.h>        /* for CONFIG_PCI */
+-
+ #define AIC7XXX_C_VERSION  "5.2.6"
+ 
+ #define ALL_TARGETS -1
+--- linux-2.6.17.noarch/drivers/scsi/hptiop.c~	2006-08-10 21:37:53.000000000 -0400
++++ linux-2.6.17.noarch/drivers/scsi/hptiop.c	2006-08-10 21:37:54.000000000 -0400
+@@ -15,7 +15,6 @@
+  *
+  * For more information, visit http://www.highpoint-tech.com
+  */
+-#include <linux/config.h>
+ #include <linux/module.h>
+ #include <linux/types.h>
+ #include <linux/string.h>
+--- linux-2.6.17.noarch/drivers/scsi/dpt_i2o.c~	2006-08-10 21:37:58.000000000 -0400
++++ linux-2.6.17.noarch/drivers/scsi/dpt_i2o.c	2006-08-10 21:38:00.000000000 -0400
+@@ -46,7 +46,6 @@ MODULE_DESCRIPTION("Adaptec I2O RAID Dri
+ 
+ #include <linux/stat.h>
+ #include <linux/slab.h>		/* for kmalloc() */
+-#include <linux/config.h>	/* for CONFIG_PCI */
+ #include <linux/pci.h>		/* for PCI support */
+ #include <linux/proc_fs.h>
+ #include <linux/blkdev.h>
+--- linux-2.6.17.noarch/drivers/scsi/libata-eh.c~	2006-08-10 21:38:05.000000000 -0400
++++ linux-2.6.17.noarch/drivers/scsi/libata-eh.c	2006-08-10 21:38:07.000000000 -0400
+@@ -32,7 +32,6 @@
+  *
+  */
+ 
+-#include <linux/config.h>
+ #include <linux/kernel.h>
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_host.h>
 
-I write to you based on a request by an investor and his need for 
-investment/funding in your country. My name is MR LARRY GREEN, a financial 
-consultant with PRUDENT INDUSTRIAL DEVELOPMENT AGENCY (PIDA INC) which is a 
-reputable financial services firm. My company most times represents the 
-interests of very wealthy investors. Due to the sensitivity of the position 
-they hold in their society and the unstable investment environment of their 
-country, they evacuate majority of their funds into more stable economies 
-and developed nations where they can get good yield for their money.
-
-I was recently approached by a Reserved Client, whom I had personally worked 
-with a few years ago with a proposal. What he request is an individual such 
-as you, who will be willing to receive money on his behalf abroad, and put 
-it to good use for a period not exceeding 6 years for a start.
-
-The client has offered these terms: 1. 10% commission paid to me and my 
-foreign partner of the total funds successfully evacuated. The funds in 
-question are over 13.2Million US Dollars.
-
-2. The funds will be used by the foreign partner for six years as a loan 
-without any interest. That is, you do not pay any interest on the money but 
-you give the client 50% of all profits after tax that accrued from the use 
-of the funds.
-
-If these terms are agreeable to you, kindly let me know and I will provide 
-you with all necessary information and procedures involved.
-
-
-All reply should be sent to this Email: pidainc26@yahoo.co.nz    for urgent 
-attendance.
-
-Sincerely yours,
-MR. LARRY GREEN
-Consultant Officer PIDA INC. Belfast
-Email:pidainc26@yahoo.co.nz
-
-PS* The client is willing to make available the fund to your possession and 
-in your country within 7days of confirmation of your capabilities.
-
-_________________________________________________________________
-Don’t just search. Find. Check out the new MSN Search! 
-http://search.msn.click-url.com/go/onm00200636ave/direct/01/
-
+-- 
+http://www.codemonkey.org.uk
