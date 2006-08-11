@@ -1,112 +1,28 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Stoneridge Optac Download Tool
-Date: Fri, 11 Aug 2006 11:16:17 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0608111051560.6399-100000@iolanthe.rowland.org>
-References: <200608111055.06193.muth@hagos.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <200608111055.06193.muth@hagos.de>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
-List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux-usb-devel-bounces@lists.sourceforge.net
-Errors-To: linux-usb-devel-bounces@lists.sourceforge.net
-To: Klaus Muth <muth@hagos.de>
-Cc: USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
+From: "Antwan Vann" <pniejsrzlaj@solgraphic.com>
+Subject: anytime talk
+Date: Fri, 11 Aug 2006 22:02:52 +0500
+Message-ID: <E3A4nm6-7006Yt-00@mail.nitros8.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from [222.220.22.180] ([222.220.22.180]:24080 "HELO 209.132.176.167")
+	by vger.kernel.org with SMTP id S932228AbWHKQKn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Aug 2006 12:10:43 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-raid@vger.kernel.org
 
-On Fri, 11 Aug 2006, Klaus Muth wrote:
+C-i-a-l-l-i-s
+Guarantes 36 hours lasting
+Safe to take, no side effectts at all
+Boost and increase cexsual perfoormance
+Haarder Etections and quick recharge
+Proven and certified by experts and doctors
+only $1.56 per t-a-b-s
+Special offer! These prices 
+are valid until 31th of Avgust!
 
-> Ok. I patched scsi_scan.c and scsi_ioctl.c, recompiled the modules and 
-> replaced scsi_mod.ko; modprobe scsi_mod; cat "bla" > /proc/scsi/device_info; plugged in.
-> ----------------------------------
-> [...]
-> klaus scsi_get_device_flags: Vendor: >SRE<, Model: >OPTAC Tool      1.00<
-
-Look closely.  The Vendor string is only three characters long.  This
-means the device returned a NUL character in the fourth position.  That's
-an explicit violation of the SCSI-2 standard (and probably other versions
-of the SCSI standard as well).  However since the device doesn't claim to 
-be SCSI-2 compliant, you can't really complain.
-
-If the field had been properly padded with spaces to 8 characters, things
-would have worked.
-
-> klaus scsi_get_device_flags: devinfo->vendor: >SRE     OPTAC Tool      < (8), devinfo->model: >OPTAC Tool      < (16)
-> klaus scsi_probe_lun: bflags = 0
->   Vendor: SRE       Model: OPTAC Tool        Rev: 1.00
->   Type:   Direct-Access                      ANSI SCSI revision: 00
-> usb-storage: queuecommand called
-> [...]
-> ---------------------------------
-> This is disappointing. I modified the else part of scsi_get_device_flags:
->         else {
-> 			printk("klaus %s: Vendor: >%s<, Model: >%s<\n", __FUNCTION__, vendor, model);
-> 			printk("klaus %s: devinfo->vendor: >%s< (%u), devinfo->model: >%s< (%u)\n", __FUNCTION__, devinfo->vendor, sizeof(devinfo->vendor), devinfo->model, sizeof(devinfo->model));
-> 			if (!memcmp(devinfo->vendor, vendor,
-> 				     sizeof(devinfo->vendor)) &&
-> 			     !memcmp(devinfo->model, model,
-> 				      sizeof(devinfo->model))) {
-> 				printk("klaus %s: devinfo->bflags=%x", __FUNCTION__, devinfo->flags);
-> 				return devinfo->flags;
-> 			}
-> 		}
-> 
-> So it looks like the entries in /proc/scsi/devinfo are bad. GRRR. I'll patch
-> in the Vendor and Model into the static table and retry.
-
-No, it's the device's data that is bad.  The entry you added is correct -- 
-but since it doesn't match the device data, it doesn't help.
-
-> Ok, after stumbling over scsi_static_device_list[] __initdata in 
-> drivers/scsi/scsi_devinfo.c I just added the line 
-> 	{"SRE", "OPTAC Tool", NULL, BLIST_NOT_LOCKABLE},
-> to it and - pooof - this thin magically works.
-> 
-> This leads to my next question: Adding the entry dynamically yields
-> # echo 'SRE:OPTAC Tool:0x80000' >/proc/scsi/device_info
-> # cat /proc/scsi/device_info | grep OPTAC
-> 'SRE     ' 'OPTAC Tool      ' 0x80000
-> 
-> Adding it to the static list via patching scsi_devinfo.c (I don't want to do 
-> that on production servers) yields:
-> # cat /proc/scsi/device_info | grep OPTAC
-> 'SRE' 'OPTAC Tool' 0x80000
-> 
-> which is quite a difference! How do I get the SRE-entry 
-> into /proc/scsi/device_info without those )%$!(##'!-spaces?
-
-You can't, at least not through the usual methods.  You'll see why if you
-read scsi_dev_info_list_add_str(), scsi_dev_info_list_add(), and
-scsi_strcpy_devinfo().  The "compatible" flag is always set to 0 and hence
-short strings are always padded with spaces.
-
-In your case it would help to change the code in scsi_scan.c:
-scsi_probe_lun() to make it replace unprintable characters in the Vendor, 
-Model, and Revision strings with spaces.  But doing this might cause 
-problems for other devices or programs.
-
-Maybe someone on the SCSI development mailing list can suggest other
-approaches.
-
-By the way, after you added the entry to the static table, were you then 
-able to use the device?
-
-Alan Stern
+Clisk here: http://flykeywestair.info
 
 
--------------------------------------------------------------------------
-Using Tomcat but need to do more? Need to support web services, security?
-Get stuff done quickly with pre-integrated technology to make your job easier
-Download IBM WebSphere Application Server v.1.0.1 based on Apache Geronimo
-http://sel.as-us.falkag.net/sel?cmd=lnk&kid=120709&bid=263057&dat=121642
-_______________________________________________
-linux-usb-devel@lists.sourceforge.net
-To unsubscribe, use the last form field at:
-https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
+fe clonic flour quartile pee apex czerniak emerald
+botswana aficionado vivacity twigging tank distinct gimbel dragonhead
