@@ -1,67 +1,105 @@
-From: Daniel Ritz <daniel.ritz-ml@swissonline.ch>
-Subject: Re: aic7xxx broken in 2.6.18-rc3-mm2
-Date: Sat, 12 Aug 2006 20:05:00 +0200
-Message-ID: <200608122005.01929.daniel.ritz-ml@swissonline.ch>
-References: <1155334308.7574.50.camel@localhost.localdomain> <20060811173624.b60d8c47.akpm@osdl.org> <20060812010317.GB25689@kroah.com>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: dc395x: Report
+Date: Sat, 12 Aug 2006 20:06:46 +0200 (CEST)
+Message-ID: <Pine.LNX.4.60.0608092315060.3728@poirot.grange>
+References: <44CF40F2.3080401@annessi.at> <Pine.LNX.4.60.0608020046510.8659@poirot.grange>
+ <44D075A2.2080501@annessi.at> <Pine.LNX.4.60.0608021209310.5115@poirot.grange>
+ <44D0BC2F.3030700@annessi.at> <Pine.LNX.4.60.0608022348570.12263@poirot.grange>
+ <44D13418.2000005@annessi.at>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932585AbWHLSFe@vger.kernel.org>
-In-Reply-To: <20060812010317.GB25689@kroah.com>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: Andrew Morton <akpm@osdl.org>, Dave Hansen <haveblue@us.ibm.com>, James Bottomley <James.Bottomley@steeleye.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux scsi <linux-scsi@vger.kernel.org>, ak@suse.de
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.gmx.de ([213.165.64.20]:39634 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S932465AbWHLSGr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 12 Aug 2006 14:06:47 -0400
+In-Reply-To: <44D13418.2000005@annessi.at>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Robert Annessi <robert@annessi.at>
+Cc: linux-scsi@vger.kernel.org
 
-On Saturday 12 August 2006 03.03, Greg KH wrote:
-> On Fri, Aug 11, 2006 at 05:36:24PM -0700, Andrew Morton wrote:
-> > On Fri, 11 Aug 2006 17:17:15 -0700
-> > Dave Hansen <haveblue@us.ibm.com> wrote:
-> > 
-> > > Well, I have a new culprit of the hour:
-> > > 
-> > > 	gregkh-pci-pci-use-pci_bios-as-last-fallback
-> > 
-> > Thanks, I'll drop it.
-> > 
-> > > There was a previous patch that messed up a few of my machines and this
-> > > same driver a few months ago, which accounts for my sense of deja vu:
-> > > 
-> > > http://www.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.16-rc6/2.6.16-rc6-mm1/broken-out/gregkh-pci-pci-give-pci-config-access-initialization-a-defined-ordering.patch
+Sorry, was on a holiday...
+
+On Thu, 3 Aug 2006, Robert Annessi wrote:
+
+> dc395x: Tekram DC395(U/UW/F), DC315(U) - ASIC TRM-S1040 v2.05, 2004/03/08
+> PCI: setting IRQ 11 as level-triggered
+> PCI: Found IRQ 11 for device 0000:00:02.0
+> dc395x: Used settings: AdapterID=07, Speed=0(20.0MHz), dev_mode=0x37
+> dc395x:                AdaptMode=0x4e, Tags=0(01), DelayReset=1s
+> dc395x: (Wide) Connectors: int68  Termination: Auto Low High
+> dc395x: Performing initial SCSI bus reset
+> scsi0 : Tekram DC395(U/UW/F), DC315(U) - ASIC TRM-S1040 v2.05, 2004/03/08
+> dc395x: Target 00: Wide16 Sync: 48ns Offset 15 (41.7 MB/s)
+>   Vendor: SEAGATE   Model: ST3146807LC       Rev: 0007
+>   Type:   Direct-Access                      ANSI SCSI revision: 03
+> SCSI device sda: 286749488 512-byte hdwr sectors (146816 MB)
+> dc395x: inconsistent counters: FIFOCNT 64, left 16777215, wide
+
+Ok, "left 16777215" = 0xffffff, which means we have read 0x01000000 from 
+TRM_S1040_SCSI_COUNTER. There's a comment in the driver: 
+".....TRM_S1040_SCSI_COUNTER (24bits)"
+
+> > Well, this looks much better to me. So, I think, we may say for you the 
+> > problem is solved. Globally, I think, the reason why other drivers have no 
 > 
-> Ugh, this is a mess.  Daniel, why does your machine need this patch, yet
-> as per Dave's comments, it's wrong?
+> For me the problem is definetely solved. Thank you!
 
-it's not my machines. they work fine :) but there where bug reports on linux-pcmcia
-for this problem...only shows up with kernel >= 2.6.17. see also bug 6801.
+Great, maybe you still could test the patch below (applied on the top of 
+all my patches until now)?
 
-2.6.16 shows this:
-	  PCI: PCI BIOS revision 2.10 entry at 0xfb9a0, last bus=0
-	  PCI: Using configuration type 1
-while 2.6.17+ shows only
-	  PCI: PCI BIOS revision 2.10 entry at 0xfb9a0, last bus=0
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
 
-so accessing the cardbus cards is not possible with PCI BIOS but works
-just fine with direct access...
-
-> 
-> I think it might come down to the fact that the ordering before used to
-> not always happen in the same order (it depended on config options and
-> linker luck.)  Now it's "fixed" to be the same way all the time.
-> Daniel, can't you solve this with the proper pci boot option?
-
-sure, but the point is: it used to work on those boxes, but broke with 2.6.17
-
-ok, i had a look. the problem is not the patch itself. look at arch/i386/pci/legacy.c
-it's where those messages come from:
-	PCI: Probing PCI hardware
-	PCI: Discovered peer bus 02
-	PCI: Discovered peer bus 05
-
-now if pcibios probing never runs pcibios_last_bus is -1 and pcibios_fixup_peer_bridges()
-exits immediatley, the other busses are never found...but why legacy probing anyway?
-
-rgds
--daniel
+--- drivers/scsi/dc395x.c-20060811	2006-08-12 19:56:50.000000000 +0200
++++ drivers/scsi/dc395x.c	2006-08-12 20:01:42.000000000 +0200
+@@ -2123,7 +2123,7 @@
+ 		 */
+ 		if (srb->total_xfer_length > DC395x_LASTPIO)
+ 			d_left_counter +=
+-			    DC395x_read32(acb, TRM_S1040_SCSI_COUNTER);
++			    DC395x_read32(acb, TRM_S1040_SCSI_COUNTER) & ((1 << 24) - 1);
+ 
+ 		/* Is this a good idea? */
+ 		/*clear_fifo(acb, "DOP1"); */
+@@ -2253,7 +2253,7 @@
+ 				DC395x_read8(acb, TRM_S1040_DMA_FIFOSTAT));
+ 		}
+ 		/* Now: Check remainig data: The SCSI counters should tell us ... */
+-		sc = DC395x_read32(acb, TRM_S1040_SCSI_COUNTER);
++		sc = DC395x_read32(acb, TRM_S1040_SCSI_COUNTER) & ((1 << 24) - 1);
+ 		fc = DC395x_read8(acb, TRM_S1040_SCSI_FIFOCNT);
+ 		d_left_counter = sc + ((fc & 0x1f)
+ 		       << ((srb->dcb->sync_period & WIDE_SYNC) ? 1 :
+@@ -2307,6 +2307,14 @@
+ 
+ 				while (len) {
+ 					u8 byte;
++
++					fc = DC395x_read8(acb, TRM_S1040_SCSI_FIFOCNT);
++
++					if (fc == 0x40) {
++						left_io = 0;
++						break;
++					}
++
+ 					byte = DC395x_read8(acb, TRM_S1040_SCSI_FIFO);
+ 					*virt++ = byte;
+ 
+@@ -2317,13 +2325,6 @@
+ 					sg_subtract_one(srb);
+ 
+ 					len--;
+-
+-					fc = DC395x_read8(acb, TRM_S1040_SCSI_FIFOCNT);
+-
+-					if (fc == 0x40) {
+-						left_io = 0;
+-						break;
+-					}
+ 				}
+ 
+ 				if (((fc != 0x40) && !d_left_counter) ||
