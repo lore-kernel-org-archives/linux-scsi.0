@@ -1,31 +1,44 @@
-From: Chris Stromsoe <cbs@cts.ucla.edu>
-Subject: Re: Symbios Logic 53C876 detected as 53C875, then doesn't work
-Date: Sat, 12 Aug 2006 13:43:32 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0608121341470.5956@potato.cts.ucla.edu>
-References: <Pine.LNX.4.64.0608120108330.21468@potato.cts.ucla.edu>
- <20060812132213.GA789@parisc-linux.org> <Pine.LNX.4.64.0608121320530.5419@potato.cts.ucla.edu>
- <20060812203251.GB789@parisc-linux.org>
+From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Subject: [RFC] [PATCH 0/9] Removal of old scsi code
+Date: Sat, 12 Aug 2006 23:01:49 +0200
+Message-ID: <44DE41BD.4010203@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-2
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-4.smtp.ucla.edu ([169.232.46.137]:42122 "EHLO
-	smtp-4.smtp.ucla.edu") by vger.kernel.org with ESMTP
-	id S1422683AbWHLUnd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 12 Aug 2006 16:43:33 -0400
-In-Reply-To: <20060812203251.GB789@parisc-linux.org>
+Received: from nf-out-0910.google.com ([64.233.182.189]:28050 "EHLO
+	nf-out-0910.google.com") by vger.kernel.org with ESMTP
+	id S1422670AbWHLVBP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 12 Aug 2006 17:01:15 -0400
+Received: by nf-out-0910.google.com with SMTP id a4so1295188nfc
+        for <linux-scsi@vger.kernel.org>; Sat, 12 Aug 2006 14:01:14 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Achim Leubner <achim_leubner@adaptec.com>, ipslinux@adaptec.com, GOTO Masanori <gotom@debian.or.jp>
 
-On Sat, 12 Aug 2006, Matthew Wilcox wrote:
+This patch series removes old scsi code.
 
-> If there's dodgy connectors, then the card probably detected a PCI 
-> parity error and went fatal.  I think it'd be useful to leverage the PCI 
-> error recovery framework to at least display a useful error message to 
-> the user on systems with little or no support for error *recovery*.
+The patches are against latest -mm snapshot.
 
-It's definitely a PCI problem.  Moving all of the cards to a different 
-system detects them properly.  Thanks for the pointer.
+dpt/dpti_i2o.h  |   10 ----
+gdth.c          |  118 --------------------------------------------------------
+gdth.h          |   10 ----
+gdth_proc.c     |   27 ------------
+ips.c           |  104 -------------------------------------------------
+ips.h           |   28 -------------
+nsp32.c         |   75 +----------------------------------
+nsp32.h         |   42 -------------------
+pcmcia/nsp_cs.h |   66 -------------------------------
+9 files changed, 5 insertions(+), 475 deletions(-)
 
--Chris
+Regards,
+Michal
+
+-- 
+Michal K. K. Piotrowski
+LTG - Linux Testers Group
+(http://www.stardust.webpages.pl/ltg/wiki/)
+
+
+
+
