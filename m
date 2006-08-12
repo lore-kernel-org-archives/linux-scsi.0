@@ -1,27 +1,31 @@
-From: "Santiago" <SantiagoLink@allergist.com>
-Subject: Just published Every man wishes it.  Enjoy
-Date: Sat, 12 Aug 2006 16:39:38 -0400
-Message-ID: <35507797637975.3A229DA6C8__7403.76608814604$1155415310$gmane$org@OGGG5VU>
+From: Chris Stromsoe <cbs@cts.ucla.edu>
+Subject: Re: Symbios Logic 53C876 detected as 53C875, then doesn't work
+Date: Sat, 12 Aug 2006 13:43:32 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0608121341470.5956@potato.cts.ucla.edu>
+References: <Pine.LNX.4.64.0608120108330.21468@potato.cts.ucla.edu>
+ <20060812132213.GA789@parisc-linux.org> <Pine.LNX.4.64.0608121320530.5419@potato.cts.ucla.edu>
+ <20060812203251.GB789@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="Windows-1252"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pool-70-110-115-96.lyn.east.verizon.net ([70.110.115.96]:44049
-	"EHLO zoewuuun.ro5i8qi.aol.com") by vger.kernel.org with ESMTP
-	id S1422678AbWHLUlc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 12 Aug 2006 16:41:32 -0400
+Received: from smtp-4.smtp.ucla.edu ([169.232.46.137]:42122 "EHLO
+	smtp-4.smtp.ucla.edu") by vger.kernel.org with ESMTP
+	id S1422683AbWHLUnd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 12 Aug 2006 16:43:33 -0400
+In-Reply-To: <20060812203251.GB789@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-serial@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org
 
-Dear customer.
+On Sat, 12 Aug 2006, Matthew Wilcox wrote:
 
-You crave to shoot like a film star… 
+> If there's dodgy connectors, then the card probably detected a PCI 
+> parity error and went fatal.  I think it'd be useful to leverage the PCI 
+> error recovery framework to at least display a useful error message to 
+> the user on systems with little or no support for error *recovery*.
 
-This successful product is created especially for you, guys
+It's definitely a PCI problem.  Moving all of the cards to a different 
+system detects them properly.  Thanks for the pointer.
 
- Try it now!
- You may find what you need here: http://milokinter.com/gal/gsm/ 
- We thank you for being our customer!
-
+-Chris
