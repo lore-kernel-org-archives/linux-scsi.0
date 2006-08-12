@@ -1,105 +1,68 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: dc395x: Report
-Date: Sat, 12 Aug 2006 20:06:46 +0200 (CEST)
-Message-ID: <Pine.LNX.4.60.0608092315060.3728@poirot.grange>
-References: <44CF40F2.3080401@annessi.at> <Pine.LNX.4.60.0608020046510.8659@poirot.grange>
- <44D075A2.2080501@annessi.at> <Pine.LNX.4.60.0608021209310.5115@poirot.grange>
- <44D0BC2F.3030700@annessi.at> <Pine.LNX.4.60.0608022348570.12263@poirot.grange>
- <44D13418.2000005@annessi.at>
+From: Chris Stromsoe <cbs@cts.ucla.edu>
+Subject: Re: Symbios Logic 53C876 detected as 53C875, then doesn't work
+Date: Sat, 12 Aug 2006 13:24:15 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0608121320530.5419@potato.cts.ucla.edu>
+References: <Pine.LNX.4.64.0608120108330.21468@potato.cts.ucla.edu>
+ <20060812132213.GA789@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.de ([213.165.64.20]:39634 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S932465AbWHLSGr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 12 Aug 2006 14:06:47 -0400
-In-Reply-To: <44D13418.2000005@annessi.at>
+Received: from smtp-4.smtp.ucla.edu ([169.232.46.137]:25013 "EHLO
+	smtp-4.smtp.ucla.edu") by vger.kernel.org with ESMTP
+	id S932593AbWHLUYP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 12 Aug 2006 16:24:15 -0400
+In-Reply-To: <20060812132213.GA789@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Robert Annessi <robert@annessi.at>
+To: Matthew Wilcox <matthew@wil.cx>
 Cc: linux-scsi@vger.kernel.org
 
-Sorry, was on a holiday...
+On Sat, 12 Aug 2006, Matthew Wilcox wrote:
+> On Sat, Aug 12, 2006 at 01:17:53AM -0700, Chris Stromsoe wrote:
+>
+>> I have several Symbios Logic 53c875 cards that I'm trying to get 
+>> working with 2.6.17.8 i386.  The cards are all functional under Solaris 
+>> and were pulled from E450 within the last week.
+>>
+>> One of the cards is not recognized at all (PCI ID 1000:0007).  The 
+>> other cards are PCI ID 1000:000f.
+>
+> Can you try swapping the cards around?  I don't know of a device with ID 
+> 0007.  Being one bit different from 000f (which is the correct ID for 
+> both the 875 and 876 chips) makes me suspicious it may be in a defective 
+> PCI slot.  I had one of those recently with an Asus Nvidia board.
 
-On Thu, 3 Aug 2006, Robert Annessi wrote:
+I have two cards that detect as 0007 in the particular slot and one that 
+detects as 000f.  Moving a 0007 to a different slot detects it as 000f. 
+The slots are on a 64-bit pci riser card, so it's possible that there is a 
+bad connection on one of the fingers.  I'll try the boards in a different 
+machien and see it makes any difference.
 
-> dc395x: Tekram DC395(U/UW/F), DC315(U) - ASIC TRM-S1040 v2.05, 2004/03/08
-> PCI: setting IRQ 11 as level-triggered
-> PCI: Found IRQ 11 for device 0000:00:02.0
-> dc395x: Used settings: AdapterID=07, Speed=0(20.0MHz), dev_mode=0x37
-> dc395x:                AdaptMode=0x4e, Tags=0(01), DelayReset=1s
-> dc395x: (Wide) Connectors: int68  Termination: Auto Low High
-> dc395x: Performing initial SCSI bus reset
-> scsi0 : Tekram DC395(U/UW/F), DC315(U) - ASIC TRM-S1040 v2.05, 2004/03/08
-> dc395x: Target 00: Wide16 Sync: 48ns Offset 15 (41.7 MB/s)
->   Vendor: SEAGATE   Model: ST3146807LC       Rev: 0007
->   Type:   Direct-Access                      ANSI SCSI revision: 03
-> SCSI device sda: 286749488 512-byte hdwr sectors (146816 MB)
-> dc395x: inconsistent counters: FIFOCNT 64, left 16777215, wide
+>> Booting with with the 1000:000f cards and append="sym53c8xx.verb=2" 
+>> gives me:
+>>
+>> PCI: Enabling device 0000:01:02.0 (0000 -> 0003)
+>> PCI: Setting latency timer of device 0000:01:02.0 to 64
+>> sym0: <875> rev 0x14 at pci 0000:01:02.0 irq 0
+>> sym0: clock multiplier found
+>> sym0: No NVRAM, ID 7, Fast-20, HVD, parity checking
+>> sym0: open drain IRQ line driver, using on-chip SRAM
+>> sym0: using LOAD/STORE-based firmware.
+>> sym0: initial SCNTL3/DMODE/DCNTL/CTEST3/4/5 = (hex) 07/ce/a8/01/80/24
+>> sym0: final   SCNTL3/DMODE/DCNTL/CTEST3/4/5 = (hex) 05/46/80/01/08/24
+>> CACHE TEST FAILED: reg dstat-sstat2 readback ffffffff.
+>> sym0: CACHE INCORRECTLY CONFIGURED.
+>> sym0: giving up ...
+>
+> I don't like the look of this.  If you're getting ffffffff back from 
+> those particular registers, the chip has clearly gone fatal.  But I use 
+> 875 controllers *all the time*, so there's something odd going on here. 
+> I don't know what to suggest at this point, I'm afraid.
 
-Ok, "left 16777215" = 0xffffff, which means we have read 0x01000000 from 
-TRM_S1040_SCSI_COUNTER. There's a comment in the driver: 
-".....TRM_S1040_SCSI_COUNTER (24bits)"
+Whenever the cards are detected as 000f they have given me that error at 
+boot.  The cards came from Sun and are running Sun firmware if that makes 
+any difference at all.  Up until a week ago they were all functioning in a 
+couple of Sun E450 running Solaris 9 without any visible problems.
 
-> > Well, this looks much better to me. So, I think, we may say for you the 
-> > problem is solved. Globally, I think, the reason why other drivers have no 
-> 
-> For me the problem is definetely solved. Thank you!
 
-Great, maybe you still could test the patch below (applied on the top of 
-all my patches until now)?
-
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
-
---- drivers/scsi/dc395x.c-20060811	2006-08-12 19:56:50.000000000 +0200
-+++ drivers/scsi/dc395x.c	2006-08-12 20:01:42.000000000 +0200
-@@ -2123,7 +2123,7 @@
- 		 */
- 		if (srb->total_xfer_length > DC395x_LASTPIO)
- 			d_left_counter +=
--			    DC395x_read32(acb, TRM_S1040_SCSI_COUNTER);
-+			    DC395x_read32(acb, TRM_S1040_SCSI_COUNTER) & ((1 << 24) - 1);
- 
- 		/* Is this a good idea? */
- 		/*clear_fifo(acb, "DOP1"); */
-@@ -2253,7 +2253,7 @@
- 				DC395x_read8(acb, TRM_S1040_DMA_FIFOSTAT));
- 		}
- 		/* Now: Check remainig data: The SCSI counters should tell us ... */
--		sc = DC395x_read32(acb, TRM_S1040_SCSI_COUNTER);
-+		sc = DC395x_read32(acb, TRM_S1040_SCSI_COUNTER) & ((1 << 24) - 1);
- 		fc = DC395x_read8(acb, TRM_S1040_SCSI_FIFOCNT);
- 		d_left_counter = sc + ((fc & 0x1f)
- 		       << ((srb->dcb->sync_period & WIDE_SYNC) ? 1 :
-@@ -2307,6 +2307,14 @@
- 
- 				while (len) {
- 					u8 byte;
-+
-+					fc = DC395x_read8(acb, TRM_S1040_SCSI_FIFOCNT);
-+
-+					if (fc == 0x40) {
-+						left_io = 0;
-+						break;
-+					}
-+
- 					byte = DC395x_read8(acb, TRM_S1040_SCSI_FIFO);
- 					*virt++ = byte;
- 
-@@ -2317,13 +2325,6 @@
- 					sg_subtract_one(srb);
- 
- 					len--;
--
--					fc = DC395x_read8(acb, TRM_S1040_SCSI_FIFOCNT);
--
--					if (fc == 0x40) {
--						left_io = 0;
--						break;
--					}
- 				}
- 
- 				if (((fc != 0x40) && !d_left_counter) ||
+-Chris
