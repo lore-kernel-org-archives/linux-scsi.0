@@ -1,75 +1,109 @@
-From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
-Subject: Re: [RFC] [PATCH 8/9] drivers/scsi/nsp32.h Removal of old scsi code
-Date: Sat, 12 Aug 2006 23:03:13 +0200
-Message-ID: <44DE4211.2000802@gmail.com>
-References: <44DE3E5E.3020605@gmail.com>
+From: Daniel Ritz <daniel.ritz-ml@swissonline.ch>
+Subject: Re: aic7xxx broken in 2.6.18-rc3-mm2
+Date: Sun, 13 Aug 2006 00:02:38 +0200
+Message-ID: <200608130002.40223.daniel.ritz-ml@swissonline.ch>
+References: <1155334308.7574.50.camel@localhost.localdomain> <20060812010317.GB25689@kroah.com> <200608122005.01929.daniel.ritz-ml@swissonline.ch>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:28050 "EHLO
-	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S1422702AbWHLVCi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 12 Aug 2006 17:02:38 -0400
-Received: by nf-out-0910.google.com with SMTP id a4so1295188nfc
-        for <linux-scsi@vger.kernel.org>; Sat, 12 Aug 2006 14:02:37 -0700 (PDT)
-In-Reply-To: <44DE3E5E.3020605@gmail.com>
+Received: from mxout.hispeed.ch ([62.2.95.247]:15517 "EHLO smtp.hispeed.ch")
+	by vger.kernel.org with ESMTP id S932624AbWHLWEJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 12 Aug 2006 18:04:09 -0400
+In-Reply-To: <200608122005.01929.daniel.ritz-ml@swissonline.ch>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
-Cc: Andrew Morton <akpm@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, GOTO Masanori <gotom@debian.or.jp>
+To: Greg KH <greg@kroah.com>, Dave Hansen <haveblue@us.ibm.com>, Marcus Better <marcus@better.se>
+Cc: Andrew Morton <akpm@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux scsi <linux-scsi@vger.kernel.org>, ak@suse.de
 
-Signed-off-by: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+On Saturday 12 August 2006 20.05, Daniel Ritz wrote:
+> On Saturday 12 August 2006 03.03, Greg KH wrote:
+> > On Fri, Aug 11, 2006 at 05:36:24PM -0700, Andrew Morton wrote:
+> > > On Fri, 11 Aug 2006 17:17:15 -0700
+> > > Dave Hansen <haveblue@us.ibm.com> wrote:
+> > > 
+> > > > Well, I have a new culprit of the hour:
+> > > > 
+> > > > 	gregkh-pci-pci-use-pci_bios-as-last-fallback
+> > > 
+> > > Thanks, I'll drop it.
+> > > 
+> > > > There was a previous patch that messed up a few of my machines and this
+> > > > same driver a few months ago, which accounts for my sense of deja vu:
+> > > > 
+> > > > http://www.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.16-rc6/2.6.16-rc6-mm1/broken-out/gregkh-pci-pci-give-pci-config-access-initialization-a-defined-ordering.patch
+> > 
+> > Ugh, this is a mess.  Daniel, why does your machine need this patch, yet
+> > as per Dave's comments, it's wrong?
+> 
+> it's not my machines. they work fine :) but there where bug reports on linux-pcmcia
+> for this problem...only shows up with kernel >= 2.6.17. see also bug 6801.
+> 
+> 2.6.16 shows this:
+> 	  PCI: PCI BIOS revision 2.10 entry at 0xfb9a0, last bus=0
+> 	  PCI: Using configuration type 1
+> while 2.6.17+ shows only
+> 	  PCI: PCI BIOS revision 2.10 entry at 0xfb9a0, last bus=0
+> 
+> so accessing the cardbus cards is not possible with PCI BIOS but works
+> just fine with direct access...
+> 
+> > 
+> > I think it might come down to the fact that the ordering before used to
+> > not always happen in the same order (it depended on config options and
+> > linker luck.)  Now it's "fixed" to be the same way all the time.
+> > Daniel, can't you solve this with the proper pci boot option?
+> 
+> sure, but the point is: it used to work on those boxes, but broke with 2.6.17
+> 
+> ok, i had a look. the problem is not the patch itself. look at arch/i386/pci/legacy.c
+> it's where those messages come from:
+> 	PCI: Probing PCI hardware
+> 	PCI: Discovered peer bus 02
+> 	PCI: Discovered peer bus 05
+> 
+> now if pcibios probing never runs pcibios_last_bus is -1 and pcibios_fixup_peer_bridges()
+> exits immediatley, the other busses are never found...but why legacy probing anyway?
+> 
+anyway, this alternative patch should help. it should be more like the <= 2.6.16
+behavior.
 
-diff -uprN -X linux-work/Documentation/dontdiff linux-work-clean/drivers/scsi/nsp32.h linux-work/drivers/scsi/nsp32.h
---- linux-work-clean/drivers/scsi/nsp32.h	2006-03-20 06:53:29.000000000 +0100
-+++ linux-work/drivers/scsi/nsp32.h	2006-08-12 20:40:00.000000000 +0200
-@@ -619,47 +619,5 @@ typedef struct _nsp32_hw_data {
- #define REQSACK_TIMEOUT_TIME	10000	/* max wait time for REQ/SACK assertion
- 					   or negation, 10000us == 10ms */
+[ CC'ing Marcus Better as the tester of the original patch. ]
 
--/**************************************************************************
-- * Compatibility functions
-- */
--
--/* for Kernel 2.4 */
--#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0))
--# define scsi_register_host(template) 	scsi_register_module(MODULE_SCSI_HA, template)
--# define scsi_unregister_host(template) scsi_unregister_module(MODULE_SCSI_HA, template)
--# define scsi_host_put(host)            scsi_unregister(host)
--# define pci_name(pci_dev)              ((pci_dev)->slot_name)
--
--typedef void irqreturn_t;
--# define IRQ_NONE      /* */
--# define IRQ_HANDLED   /* */
--# define IRQ_RETVAL(x) /* */
--
--/* This is ad-hoc version of scsi_host_get_next() */
--static inline struct Scsi_Host *scsi_host_get_next(struct Scsi_Host *host)
--{
--	if (host == NULL) {
--		return scsi_hostlist;
--	} else {
--		return host->next;
--	}
--}
--
--/* This is ad-hoc version of scsi_host_hn_get() */
--static inline struct Scsi_Host *scsi_host_hn_get(unsigned short hostno)
--{
--	struct Scsi_Host *host;
--
--	for (host = scsi_host_get_next(NULL); host != NULL;
--	     host = scsi_host_get_next(host)) {
--		if (host->host_no == hostno) {
--			break;
--		}
--	}
--
--	return host;
--}
--#endif
--
- #endif /* _NSP32_H */
- /* end */
+Marcus, could you test this patch instead of the original one and see how your
+cardbus cards behave?
+
+Dave, your SCSI card should work with this as well :)
+
+with this patch my old toshiba laptop shows this in dmesg:
+	PCI: PCI BIOS revision 2.10 entry at 0xf1987, last bus=21
+	PCI: Using configuration type 1
+ie. like kernel 2.6.16 and earlier...2.6.17+ would only show the pci bios line,
+while with the earlier patch it only shows the type 1 line
+
+rgds
+-daniel
+
+diff --git a/arch/i386/pci/init.c b/arch/i386/pci/init.c
+index c7650a7..51087a9 100644
+--- a/arch/i386/pci/init.c
++++ b/arch/i386/pci/init.c
+@@ -14,8 +14,12 @@ #endif
+ #ifdef CONFIG_PCI_BIOS
+ 	pci_pcbios_init();
+ #endif
+-	if (raw_pci_ops)
+-		return 0;
++	/*
++	 * don't check for raw_pci_ops here because we want pcbios as last
++	 * fallback, yet it's needed to run first to set pcibios_last_bus
++	 * in case legacy PCI probing is used. otherwise detecting peer busses
++	 * fails.
++	 */
+ #ifdef CONFIG_PCI_DIRECT
+ 	pci_direct_init();
+ #endif
 
