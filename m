@@ -1,28 +1,52 @@
-From: Len Reed <1michelle@aaug.net>
-Subject: Buongiorno
-Date: Fri, 11 Aug 2006 01:24:01 +0300
-Message-ID: <118d01c6bccb$bbe0614a$8852343e@aaug.net>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: Symbios Logic 53C876 detected as 53C875, then doesn't work
+Date: Sat, 12 Aug 2006 07:22:13 -0600
+Message-ID: <20060812132213.GA789@parisc-linux.org>
+References: <Pine.LNX.4.64.0608120108330.21468@potato.cts.ucla.edu>
 Mime-Version: 1.0
-Content-Type: text/plain;
-    format=flowed;
-    charset="windows-1252";
-    reply-type=original
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [60.204.231.8] ([60.204.231.8]:4356 "HELO 60.204.231.8")
-	by vger.kernel.org with SMTP id S964846AbWHLMgZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 12 Aug 2006 08:36:25 -0400
+Received: from palinux.external.hp.com ([192.25.206.14]:42905 "EHLO
+	palinux.external.hp.com") by vger.kernel.org with ESMTP
+	id S932509AbWHLNWO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 12 Aug 2006 09:22:14 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0608120108330.21468@potato.cts.ucla.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Chris Stromsoe <cbs@cts.ucla.edu>
+Cc: linux-scsi@vger.kernel.org
 
-Buongiorno, 
-Siamo la compagnia d’investimento Porell Partners. 
-Vorremmo proporle il posto di corriere nella nostra compagnia.
-È il lavoro promettente e dinamico nel campo del business d’investimento. 
-La nostra compagnia non ha gli uffici in tutti gli Stati, per questo motivo noi cerchiamo i così detti corrieri regionali i quali potrebbero lavorare nelle proprie regioni.
-Lei può combinare questo lavoro con qualsiasi altro siccome per esecuzione degli incarichi nostri Le saranno sufficienti solo un paio d’ore al giorno.    
-La Sua mansione tipica sarà contenuta nella ricezione dei mezzi finanziari dai nostri partner e il loro trasferimento nel Dipartimento finanziario della nostra compagnia. 
-Inoltre, Lei dovrà probabilmente occuparsi dell’acquisto dei biglietti aerei dal nostro cliente.
-Lei può prendere conoscenza della discrezione più dettagliata del posto vacante e dei requisiti per i collaboratori nel nostro sito web http://porellpartnerscompany.com/it/contacts/information.php
+On Sat, Aug 12, 2006 at 01:17:53AM -0700, Chris Stromsoe wrote:
+> I have several Symbios Logic 53c875 cards that I'm trying to get working 
+> with 2.6.17.8 i386.  The cards are all functional under Solaris and were 
+> pulled from E450 within the last week.
+> 
+> One of the cards is not recognized at all (PCI ID 1000:0007).  The other 
+> cards are PCI ID 1000:000f.
+
+Can you try swapping the cards around?  I don't know of a device with ID
+0007.  Being one bit different from 000f (which is the correct ID for
+both the 875 and 876 chips) makes me suspicious it may be in a defective
+PCI slot.  I had one of those recently with an Asus Nvidia board.
+
+> Booting with with the 1000:000f cards and append="sym53c8xx.verb=2" gives 
+> me:
+> 
+> PCI: Enabling device 0000:01:02.0 (0000 -> 0003)
+> PCI: Setting latency timer of device 0000:01:02.0 to 64
+> sym0: <875> rev 0x14 at pci 0000:01:02.0 irq 0
+> sym0: clock multiplier found
+> sym0: No NVRAM, ID 7, Fast-20, HVD, parity checking
+> sym0: open drain IRQ line driver, using on-chip SRAM
+> sym0: using LOAD/STORE-based firmware.
+> sym0: initial SCNTL3/DMODE/DCNTL/CTEST3/4/5 = (hex) 07/ce/a8/01/80/24
+> sym0: final   SCNTL3/DMODE/DCNTL/CTEST3/4/5 = (hex) 05/46/80/01/08/24
+> CACHE TEST FAILED: reg dstat-sstat2 readback ffffffff.
+> sym0: CACHE INCORRECTLY CONFIGURED.
+> sym0: giving up ...
+
+I don't like the look of this.  If you're getting ffffffff back from
+those particular registers, the chip has clearly gone fatal.  But I use
+875 controllers *all the time*, so there's something odd going on here.
+I don't know what to suggest at this point, I'm afraid.
