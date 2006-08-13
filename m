@@ -1,27 +1,27 @@
-From: "Hurley" <bryantclaim@programmer.net>
-Subject: Thermogenesis is a term referring to the body's production of heat. Heat production is a normal part of the metabolic process.
-Date: Sun, 13 Aug 2006 02:15:48 +0100
-Message-ID: <41729489806480.2633C47DE2@1TZ98T0>
+From: "Mckinnon" <cookybullock@iname.com>
+Subject: Fatblaster remains a top seller among competitive brands, making it the #1 choice for those seeking safe and effective weight loss solution.
+Date: Sun, 13 Aug 2006 10:19:43 +0900
+Message-ID: <49457594854740.83965131B2__39220.3604606495$1155431968$gmane$org@C1LMJ8WE>
 Mime-Version: 1.0
 Content-Type: text/plain;
         charset="Windows-1252"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:24742 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S1030181AbWHMBPR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 12 Aug 2006 21:15:17 -0400
+Received: from softbank219061218158.bbtec.net ([219.61.218.158]:26123 "EHLO
+	HIROKI.vi6a.net") by vger.kernel.org with ESMTP id S1030212AbWHMBTV
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 12 Aug 2006 21:19:21 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-serial@vger.kernel.org
 
-How are you bro ? 
+Hi! 
+
+ Fatblaster is an all natural herbal formulated thermogenic weight loss supplement.  Our laboratory uses only the highest quality ingredients and manufacturing procedures to produce the finest and most effective formula.  With every order guaranteed, you have nothing to lose! (except weight) See our shop: http://erritans.com/gall/fb/ 
 
 
- There are two main possible ways of inducing a reduction in body fat.  With every order guaranteed, you have nothing to lose! (except weight) Supplement your life today! Join thousands of satisfied customers and experience for yourself the proven benefits of Fatblaster.  Take a look: http://erritans.com/gall/fb/ 
-
- It ain't over 'till it's over. If the wind will not serve, take to the oars Everyone stretches his legs according to the length of his coverlet Hunger is the best sauce
+ Curses, like chickens, come home to roost Doubt is the beginning of wisdom. Slow fire ah boil hard cow-heel. There but for the grace of God go I 
 
 
- Nah all who guh a church house ah guh fuh pray. History repeats itself You only live once
+ A bird can sing with a broken wing, but you cant pluck feathers off a frog. Little things please little minds My son, walk not thou in the way with them; refrain thy foot from their path. Know which side your bread is buttered 
 
