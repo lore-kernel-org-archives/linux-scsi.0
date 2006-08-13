@@ -1,47 +1,19 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: Linux 2.6.17.6 Kernel Oops: kmem_cache_create: duplicate cache
- scsi_cmd_cache
-Date: Sun, 13 Aug 2006 13:32:10 -0700
-Message-ID: <20060813133210.8a2fe10d.akpm@osdl.org>
-References: <Pine.LNX.4.64.0608131608460.20462@p34.internal.lan>
+From: "Lynn" <conjunctdear@paris.com>
+Subject: You could order it on-line and get immediately!
+Date: Sun, 13 Aug 2006 14:01:16 -0700
+Message-ID: <71863163236347.2194F96321__30395.8474928097$1155502989$gmane$org@J3FU70>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+        charset="Windows-1252"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:37545 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751416AbWHMUca (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 13 Aug 2006 16:32:30 -0400
-In-Reply-To: <Pine.LNX.4.64.0608131608460.20462@p34.internal.lan>
+Received: from pool-68-237-22-130.ny325.east.verizon.net ([68.237.22.130]:46533
+	"EHLO BURNETTSPC.egoae4.org") by vger.kernel.org with ESMTP
+	id S1751479AbWHMVBJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 13 Aug 2006 17:01:09 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, apiszcz@solarrain.com
+To: linux-smp@vger.kernel.org
 
-On Sun, 13 Aug 2006 16:12:26 -0400 (EDT)
-Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
-
-> Executing the following commands:
-> 
-> # --------------- #
-> 
-> rmmod sym53c8xx scsi_transport_spi st scsi_mod
-> 
-> modprobe scsi_mod
-> modprobe st
-> modprobe scsi_transport_spi
-> modprobe sym53c8xx
-> 
-> scsiadd -s
-> 
-> # --------------- #
-> 
-> Then I got this, see dmesg below:
-> 
-> ...
->
-> [4489213.171000] kmem_cache_create: duplicate cache scsi_cmd_cache
-
-google("duplicate cache scsi_cmd_cache") indicates that this bug has been
-present and known about for at least two and a half years.
+Hello my friend, Leave complaining to others. You deserve to get rid of this. Extra-Time gives you not only extra time, but extra pleasure and extra confidence as well. Any man wants to last longer and make his partner happy with that. Check up: http://baxeler.com/gal/get/ You won't forget your eyes after you finally gave her the long-lasting love. She'll go crazy about you!
 
