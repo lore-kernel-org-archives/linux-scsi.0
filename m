@@ -1,27 +1,42 @@
-From: "Mckinnon" <cookybullock@iname.com>
-Subject: Fatblaster remains a top seller among competitive brands, making it the #1 choice for those seeking safe and effective weight loss solution.
-Date: Sun, 13 Aug 2006 10:19:43 +0900
-Message-ID: <49457594854740.83965131B2__39220.3604606495$1155431968$gmane$org@C1LMJ8WE>
+From: Denis Vlasenko <vda.linux@googlemail.com>
+Subject: [PATCH 0/4] aic7xxx: remove excessive inlining
+Date: Sun, 13 Aug 2006 14:57:21 +0200
+Message-ID: <200608131457.21951.vda.linux@googlemail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-        charset="Windows-1252"
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from softbank219061218158.bbtec.net ([219.61.218.158]:26123 "EHLO
-	HIROKI.vi6a.net") by vger.kernel.org with ESMTP id S1030212AbWHMBTV
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 12 Aug 2006 21:19:21 -0400
+Received: from nf-out-0910.google.com ([64.233.182.190]:59046 "EHLO
+	nf-out-0910.google.com") by vger.kernel.org with ESMTP
+	id S1751162AbWHMM5b (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 13 Aug 2006 08:57:31 -0400
+Received: by nf-out-0910.google.com with SMTP id a4so1425254nfc
+        for <linux-scsi@vger.kernel.org>; Sun, 13 Aug 2006 05:57:29 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-serial@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi! 
+Hello,
 
- Fatblaster is an all natural herbal formulated thermogenic weight loss supplement.  Our laboratory uses only the highest quality ingredients and manufacturing procedures to produce the finest and most effective formula.  With every order guaranteed, you have nothing to lose! (except weight) See our shop: http://erritans.com/gall/fb/ 
+This is a resend. I had these patches run-tested
+at the time of first submission. Now I have no hardware
+to test them. I think that they are still fine, though.
 
+Basically, patches deinline some functions, mainly those
+which perform port I/O. They shave off ~55k on AMD64:
 
- Curses, like chickens, come home to roost Doubt is the beginning of wisdom. Slow fire ah boil hard cow-heel. There but for the grace of God go I 
+# x86_64-pc-linux-gnu-size linux-2.6.17.8_64*/vmlinux
+   text    data     bss     dec     hex filename
+4632627 1222698  468392 6323717  607e05 linux-2.6.17.8_64/vmlinux
+4571327 1223274  468392 6262993  5f90d1 linux-2.6.17.8_64aic/vmlinux
 
-
- A bird can sing with a broken wing, but you cant pluck feathers off a frog. Little things please little minds My son, walk not thou in the way with them; refrain thy foot from their path. Know which side your bread is buttered 
-
+# x86_64-pc-linux-gnu-size linux-2.6.17.8_64*/drivers/scsi/aic7xxx/aic7*xx.o
+   text    data     bss     dec     hex filename
+ 135543   13521     628  149692   248bc linux-2.6.17.8_64/drivers/scsi/aic7xxx/aic79xx.o
+ 103291   22289     560  126140   1ecbc linux-2.6.17.8_64/drivers/scsi/aic7xxx/aic7xxx.o
+  90083   13521     628  104232   19728 linux-2.6.17.8_64aic/drivers/scsi/aic7xxx/aic79xx.o
+  87231   22289     560  110080   1ae00 linux-2.6.17.8_64aic/drivers/scsi/aic7xxx/aic7xxx.o
+--
+vda
