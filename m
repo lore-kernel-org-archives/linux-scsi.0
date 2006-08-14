@@ -1,28 +1,53 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: Getting 'sync' to flush disk cache?
-Date: Mon, 14 Aug 2006 21:34:58 +0200
-Message-ID: <1155584098.2886.271.camel@laptopd505.fenrus.org>
-References: <44E0C373.6060008@garzik.org>
+From: Dave Hansen <haveblue@us.ibm.com>
+Subject: Re: aic7xxx broken in 2.6.18-rc3-mm2
+Date: Mon, 14 Aug 2006 12:56:43 -0700
+Message-ID: <1155585403.12700.10.camel@localhost.localdomain>
+References: <1155334308.7574.50.camel@localhost.localdomain>
+	 <200608141858.37465.daniel.ritz-ml@swissonline.ch>
+	 <1155575804.7574.166.camel@localhost.localdomain>
+	 <200608142021.18551.daniel.ritz-ml@swissonline.ch>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:32469 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1752053AbWHNTfz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Aug 2006 15:35:55 -0400
-In-Reply-To: <44E0C373.6060008@garzik.org>
+Received: from e1.ny.us.ibm.com ([32.97.182.141]:34229 "EHLO e1.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1751768AbWHNT5G (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Aug 2006 15:57:06 -0400
+In-Reply-To: <200608142021.18551.daniel.ritz-ml@swissonline.ch>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Jens Axboe <axboe@suse.de>, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Daniel Ritz <daniel.ritz-ml@swissonline.ch>
+Cc: Greg KH <greg@kroah.com>, Marcus Better <marcus@better.se>, Andrew Morton <akpm@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux scsi <linux-scsi@vger.kernel.org>, ak@suse.de
 
-On Mon, 2006-08-14 at 14:39 -0400, Jeff Garzik wrote:
-> So...  has anybody given any thought to enabling fsync(2), fdatasync(2), 
-> and sync_file_range(2) issuing a [FLUSH|SYNCHRONIZE] CACHE command?
+On Mon, 2006-08-14 at 20:21 +0200, Daniel Ritz wrote:
+> errm...sorry, i didn't mean that patch but the alternative i sent later. attached.
+> it should use direct access while not breaking legacy PCI probing. in theory..
 > 
-> This has bugged me for _years_, that Linux does not do this.  Looking at 
-> forums on the web, it bugs a lot of other people too.
+> thanks,
+> -daniel
+> 
+> diff --git a/arch/i386/pci/init.c b/arch/i386/pci/init.c
+> index c7650a7..51087a9 100644
+> --- a/arch/i386/pci/init.c
+> +++ b/arch/i386/pci/init.c
+> @@ -14,8 +14,12 @@ #endif
+>  #ifdef CONFIG_PCI_BIOS
+>  	pci_pcbios_init();
+>  #endif
+> -	if (raw_pci_ops)
+> -		return 0;
+> +	/*
+> +	 * don't check for raw_pci_ops here because we want pcbios as last
+> +	 * fallback, yet it's needed to run first to set pcibios_last_bus
+> +	 * in case legacy PCI probing is used. otherwise detecting peer busses
+> +	 * fails.
+> +	 */
+>  #ifdef CONFIG_PCI_DIRECT
+>  	pci_direct_init();
+>  #endif
 
-eh afaik 2.6.17 and such do this if you have barriers enabled...
+That one works on my box without any issues.  Thanks!
+
+-- Dave
 
