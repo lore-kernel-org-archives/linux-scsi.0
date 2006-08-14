@@ -1,53 +1,64 @@
-From: Dave Hansen <haveblue@us.ibm.com>
-Subject: Re: aic7xxx broken in 2.6.18-rc3-mm2
-Date: Mon, 14 Aug 2006 12:56:43 -0700
-Message-ID: <1155585403.12700.10.camel@localhost.localdomain>
-References: <1155334308.7574.50.camel@localhost.localdomain>
-	 <200608141858.37465.daniel.ritz-ml@swissonline.ch>
-	 <1155575804.7574.166.camel@localhost.localdomain>
-	 <200608142021.18551.daniel.ritz-ml@swissonline.ch>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [RFC] Sanitize INQUIRY vendor, product and revision strings
+Date: Mon, 14 Aug 2006 16:05:12 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0608141556520.7399-100000@iolanthe.rowland.org>
+References: <44E0C589.5080602@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:34229 "EHLO e1.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1751768AbWHNT5G (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Aug 2006 15:57:06 -0400
-In-Reply-To: <200608142021.18551.daniel.ritz-ml@swissonline.ch>
+Received: from iolanthe.rowland.org ([192.131.102.54]:6929 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP id S932692AbWHNUFN
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Aug 2006 16:05:13 -0400
+In-Reply-To: <44E0C589.5080602@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Daniel Ritz <daniel.ritz-ml@swissonline.ch>
-Cc: Greg KH <greg@kroah.com>, Marcus Better <marcus@better.se>, Andrew Morton <akpm@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux scsi <linux-scsi@vger.kernel.org>, ak@suse.de
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: "Philip R. Auld" <pauld@egenera.com>, Matthew Wilcox <matthew@wil.cx>, SCSI development list <linux-scsi@vger.kernel.org>, Klaus Muth <muth@hagos.de>
 
-On Mon, 2006-08-14 at 20:21 +0200, Daniel Ritz wrote:
-> errm...sorry, i didn't mean that patch but the alternative i sent later. attached.
-> it should use direct access while not breaking legacy PCI probing. in theory..
+On Mon, 14 Aug 2006, Stefan Richter wrote:
+
+> >> On Mon, Aug 14, 2006 at 12:34:56PM -0400, Alan Stern wrote:
+> >>> Does anyone object to the patch below?  It would help at least one person; 
+> >>> I'm concerned that it might cause trouble somewhere else.
+> >>> @@ -526,6 +519,12 @@ static int scsi_probe_lun(struct scsi_de
+> >>>  		if (response_len > 255)
+> >>>  			response_len = first_inquiry_len;	/* sanity */
+> >>>  
+> >>> +		/* Sanitize the Vendor, Product, and Revision fields. */
+> >>> +		for (i = 8; i < 36; ++i) {
+> >>> +			if (inq_result[i] < 0x20 || inq_result[i] > 0x7e)
+> >>> +				inq_result[i] = ' ';
+> >>> +		}
+> >>> +
+> >>>  		/*
 > 
-> thanks,
-> -daniel
-> 
-> diff --git a/arch/i386/pci/init.c b/arch/i386/pci/init.c
-> index c7650a7..51087a9 100644
-> --- a/arch/i386/pci/init.c
-> +++ b/arch/i386/pci/init.c
-> @@ -14,8 +14,12 @@ #endif
->  #ifdef CONFIG_PCI_BIOS
->  	pci_pcbios_init();
->  #endif
-> -	if (raw_pci_ops)
-> -		return 0;
-> +	/*
-> +	 * don't check for raw_pci_ops here because we want pcbios as last
-> +	 * fallback, yet it's needed to run first to set pcibios_last_bus
-> +	 * in case legacy PCI probing is used. otherwise detecting peer busses
-> +	 * fails.
-> +	 */
->  #ifdef CONFIG_PCI_DIRECT
->  	pci_direct_init();
->  #endif
+> This does affect all subsequent usage of the inquiry data, doesn't it? I.e.
+>   - comparison against blacklist entries for device flags,
+>   - readout in dmesg,
+>   - contents of sysfs attributes,
+>   - text in procfs?
 
-That one works on my box without any issues.  Thanks!
+Indeed it will.  In fact, the main purpose of the patch was to change the
+comparison against blacklist entries for device flags.  The device in
+question returns a NUL character in the Vendor string, making it
+impossible for a dynamic blacklist entry (which is always padded to 8
+characters) to match.
 
--- Dave
+For the blacklist, I think really is what we want.  For everything else, I
+think the change should be harmless -- expect perhaps that it replaces
+NULs with spaces.  This will cause text beyond the NUL to show up where it
+did not before; if it happens to contain garbage then the users will see
+that garbage.  At least the garbage won't include any weird unprintable or
+non-ASCII characters.
+
+Remember, the standard says that these fields must not contain any 
+non-graphic characters and must be padded with spaces.  Only non-compliant 
+devices would be affected, and for the most part the effect will be 
+minimal.
+
+In fact, I can't think up a scenario where this would cause unfixable 
+damage.  Of course that doesn't mean such scenarios don't exist.  :-)
+
+Alan Stern
 
