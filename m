@@ -1,104 +1,85 @@
-From: Marcus Better <marcus@better.se>
-Subject: Re: aic7xxx broken in 2.6.18-rc3-mm2
-Date: Mon, 14 Aug 2006 14:17:10 +0200
-Message-ID: <44E069C6.3030400@better.se>
-References: <1155334308.7574.50.camel@localhost.localdomain> <20060812010317.GB25689@kroah.com> <200608122005.01929.daniel.ritz-ml@swissonline.ch> <200608130002.40223.daniel.ritz-ml@swissonline.ch>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: [PATCH] fc transport: convert fc_host symbolic_name attribute to a
+	dynamic attribute
+Date: Mon, 14 Aug 2006 08:20:25 -0400
+Message-ID: <1155558025.3734.1.camel@localhost.localdomain>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/x-pkcs7-signature"; micalg=sha1; boundary="------------ms090802090003060307010800"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mxfep02.bredband.com ([195.54.107.73]:10957 "EHLO
-	mxfep02.bredband.com") by vger.kernel.org with ESMTP
-	id S1752022AbWHNMRe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Aug 2006 08:17:34 -0400
-In-Reply-To: <200608130002.40223.daniel.ritz-ml@swissonline.ch>
+Received: from emulex.emulex.com ([138.239.112.1]:53674 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S1752019AbWHNMUc
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Aug 2006 08:20:32 -0400
+Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
+	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id k7ECKUCQ005646
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Aug 2006 05:20:31 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Daniel Ritz <daniel.ritz-ml@swissonline.ch>
-Cc: Greg KH <greg@kroah.com>, Dave Hansen <haveblue@us.ibm.com>, Andrew Morton <akpm@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux scsi <linux-scsi@vger.kernel.org>, ak@suse.de
+To: linux-scsi@vger.kernel.org
 
-This is a cryptographically signed message in MIME format.
+diff -upNr a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+--- a/drivers/scsi/scsi_transport_fc.c	2006-08-08 10:11:53.000000000 -0400
++++ b/drivers/scsi/scsi_transport_fc.c	2006-08-14 08:13:09.000000000 -0400
+@@ -815,7 +815,6 @@ fc_private_host_rd_attr_cast(node_name, 
+ fc_private_host_rd_attr_cast(port_name, "0x%llx\n", 20, unsigned long long);
+ fc_private_host_rd_attr_cast(permanent_port_name, "0x%llx\n", 20,
+ 			     unsigned long long);
+-fc_private_host_rd_attr(symbolic_name, "%s\n", (FC_SYMBOLIC_NAME_SIZE +1));
+ fc_private_host_rd_attr(maxframe_size, "%u bytes\n", 20);
+ fc_private_host_rd_attr(serial_number, "%s\n", (FC_SERIAL_NUMBER_SIZE +1));
+ 
+@@ -858,6 +857,7 @@ fc_host_rd_attr(port_id, "0x%06x\n", 20)
+ fc_host_rd_enum_attr(port_type, FC_PORTTYPE_MAX_NAMELEN);
+ fc_host_rd_enum_attr(port_state, FC_PORTSTATE_MAX_NAMELEN);
+ fc_host_rd_attr_cast(fabric_name, "0x%llx\n", 20, unsigned long long);
++fc_host_rd_attr(symbolic_name, "%s\n", FC_SYMBOLIC_NAME_SIZE + 1);
+ 
+ 
+ /* Private Host Attributes */
+@@ -1223,7 +1223,6 @@ fc_attach_transport(struct fc_function_t
+ 	SETUP_HOST_ATTRIBUTE_RD(permanent_port_name);
+ 	SETUP_HOST_ATTRIBUTE_RD(supported_classes);
+ 	SETUP_HOST_ATTRIBUTE_RD(supported_fc4s);
+-	SETUP_HOST_ATTRIBUTE_RD(symbolic_name);
+ 	SETUP_HOST_ATTRIBUTE_RD(supported_speeds);
+ 	SETUP_HOST_ATTRIBUTE_RD(maxframe_size);
+ 	SETUP_HOST_ATTRIBUTE_RD(serial_number);
+@@ -1234,6 +1233,7 @@ fc_attach_transport(struct fc_function_t
+ 	SETUP_HOST_ATTRIBUTE_RD(active_fc4s);
+ 	SETUP_HOST_ATTRIBUTE_RD(speed);
+ 	SETUP_HOST_ATTRIBUTE_RD(fabric_name);
++	SETUP_HOST_ATTRIBUTE_RD(symbolic_name);
+ 
+ 	/* Transport-managed attributes */
+ 	SETUP_PRIVATE_HOST_ATTRIBUTE_RW(tgtid_bind_type);
+diff -upNr a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
+--- a/include/scsi/scsi_transport_fc.h	2006-08-08 10:12:16.000000000 -0400
++++ b/include/scsi/scsi_transport_fc.h	2006-08-14 08:13:09.000000000 -0400
+@@ -409,6 +409,7 @@ struct fc_function_template {
+ 	void	(*get_host_active_fc4s)(struct Scsi_Host *);
+ 	void	(*get_host_speed)(struct Scsi_Host *);
+ 	void	(*get_host_fabric_name)(struct Scsi_Host *);
++	void	(*get_host_symbolic_name)(struct Scsi_Host *);
+ 
+ 	struct fc_host_statistics * (*get_fc_host_stats)(struct Scsi_Host *);
+ 	void	(*reset_fc_host_stats)(struct Scsi_Host *);
+@@ -445,7 +446,6 @@ struct fc_function_template {
+ 	unsigned long	show_host_permanent_port_name:1;
+ 	unsigned long	show_host_supported_classes:1;
+ 	unsigned long	show_host_supported_fc4s:1;
+-	unsigned long	show_host_symbolic_name:1;
+ 	unsigned long	show_host_supported_speeds:1;
+ 	unsigned long	show_host_maxframe_size:1;
+ 	unsigned long	show_host_serial_number:1;
+@@ -456,6 +456,7 @@ struct fc_function_template {
+ 	unsigned long	show_host_active_fc4s:1;
+ 	unsigned long	show_host_speed:1;
+ 	unsigned long	show_host_fabric_name:1;
++	unsigned long	show_host_symbolic_name:1;
+ };
+ 
+ 
 
---------------ms090802090003060307010800
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 
-Daniel Ritz wrote:
-> Marcus, could you test this patch instead of the original one and see how your
-> cardbus cards behave?
-
-It seems to work, from a cursory check.
-
-Marcus
-
---------------ms090802090003060307010800
-Content-Type: application/x-pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIJ3DCC
-BOowggLSoAMCAQICAwJzxDANBgkqhkiG9w0BAQUFADB5MRAwDgYDVQQKEwdSb290IENBMR4w
-HAYDVQQLExVodHRwOi8vd3d3LmNhY2VydC5vcmcxIjAgBgNVBAMTGUNBIENlcnQgU2lnbmlu
-ZyBBdXRob3JpdHkxITAfBgkqhkiG9w0BCQEWEnN1cHBvcnRAY2FjZXJ0Lm9yZzAeFw0wNjA3
-MTIxNTU0MTFaFw0wNzA3MTIxNTU0MTFaMDkxFjAUBgNVBAMTDU1hcmN1cyBCZXR0ZXIxHzAd
-BgkqhkiG9w0BCQEWEG1hcmN1c0BiZXR0ZXIuc2UwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAw
-ggEKAoIBAQC/8HaMDsC4P8W0/jGAhVTkPgKcVWo/GkQUTTtUQmDBZ8dSEh/atndnDEz9bPn/
-X/lHMc5APm+q3kRsRnRMUIp2niNFWWpfQm1Q8ZKcLilq9OvEOEg8YCu7HAdaVW0x6+iSRfL9
-5rBxeODhi7UOGAvStmXgKjgtmiu8U1GJIwFa0U5Y/EAeuZLE453iBMz5j8DZKX4pojFoNJoq
-417ikRrLSgTUaJ2dJLtldG8w7QR5E1tDSPpWhUgcOYRKh+Z8540z8DSqaI1LmS5aP1CXnw5K
-UfdAfPsBzeglVMRNgm0lLgg6lQtwGN7AjYqIsDeRF22QaW5xcl/rZ+PH5LoL/8yVAgMBAAGj
-gbowgbcwDAYDVR0TAQH/BAIwADBWBglghkgBhvhCAQ0ESRZHVG8gZ2V0IHlvdXIgb3duIGNl
-cnRpZmljYXRlIGZvciBGUkVFIGhlYWQgb3ZlciB0byBodHRwOi8vd3d3LkNBY2VydC5vcmcw
-MgYIKwYBBQUHAQEEJjAkMCIGCCsGAQUFBzABhhZodHRwOi8vb2NzcC5jYWNlcnQub3JnMBsG
-A1UdEQQUMBKBEG1hcmN1c0BiZXR0ZXIuc2UwDQYJKoZIhvcNAQEFBQADggIBACX2xaPXtllb
-+5onZffQIfqv39JixHpxMVOxb9tXf05Unj5cKK85V2G6Va3me1wNCZMaeL1rNJmIDtOOiIlL
-RyyCZZRrTaDy1Z6W0Y2BzhAcmER3DLE8bJLcttVr3gY9HBSCR9Z7lYquo8BD+fP1l3KhvDgY
-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
---------------ms090802090003060307010800--
