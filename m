@@ -1,37 +1,38 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Getting 'sync' to flush disk cache?
-Date: Mon, 14 Aug 2006 17:04:28 -0400
-Message-ID: <44E0E55C.9010200@garzik.org>
-References: <44E0C373.6060008@garzik.org> <1155584098.2886.271.camel@laptopd505.fenrus.org> <20060814201545.GE16819@suse.de>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [PATCH 0/4] aic7xxx: remove excessive inlining
+Date: Mon, 14 Aug 2006 16:14:34 -0700
+Message-ID: <20060814161434.d643f568.akpm@osdl.org>
+References: <200608131457.21951.vda.linux@googlemail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20060814201545.GE16819@suse.de>
-Sender: linux-raid-owner@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Arjan van de Ven <arjan@infradead.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.osdl.org ([65.172.181.4]:9368 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S965050AbWHNXOh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Aug 2006 19:14:37 -0400
+In-Reply-To: <200608131457.21951.vda.linux@googlemail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Denis Vlasenko <vda.linux@googlemail.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Jens Axboe wrote:
-> On Mon, Aug 14 2006, Arjan van de Ven wrote:
->> On Mon, 2006-08-14 at 14:39 -0400, Jeff Garzik wrote:
->>> So...  has anybody given any thought to enabling fsync(2), fdatasync(2), 
->>> and sync_file_range(2) issuing a [FLUSH|SYNCHRONIZE] CACHE command?
->>>
->>> This has bugged me for _years_, that Linux does not do this.  Looking at 
->>> forums on the web, it bugs a lot of other people too.
->> eh afaik 2.6.17 and such do this if you have barriers enabled...
-> 
-> That is correct, but it only works on reiserfs and XFS and user space
-> really cannot tell whether it did the right thing or not. File system
-> developers really should take this more seriously...
+On Sun, 13 Aug 2006 14:57:21 +0200
+Denis Vlasenko <vda.linux@googlemail.com> wrote:
 
-IMO the non-journalling fs's should have some sort of common fsync 
-helper via sync_inode(), sync_mapping_buffers(), and similar paths... 
-Should be able get a bunch of fs's in one big swath that way.
+> This is a resend.
 
-	Jeff
+Please resend ;)
 
+- All these patches had the same Subject:, thus forcing me to invent
+  titles for you.  
 
+- The changelogs are weird - think what they'll look like once they hit
+  the git tree.  Someone will need to clean those changelogs up, and I'd
+  prefer that it not be me.
 
+- Missing Signed-off-by:'s.
+
+http://www.zip.com.au/~akpm/linux/patches/stuff/tpp.txt is here to help.
+
+Thanks.
