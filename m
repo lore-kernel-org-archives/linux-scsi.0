@@ -1,36 +1,96 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: Getting 'sync' to flush disk cache?
-Date: Mon, 14 Aug 2006 22:15:46 +0200
-Message-ID: <20060814201545.GE16819@suse.de>
-References: <44E0C373.6060008@garzik.org> <1155584098.2886.271.camel@laptopd505.fenrus.org>
+From: Daniel Ritz <daniel.ritz-ml@swissonline.ch>
+Subject: Re: aic7xxx broken in 2.6.18-rc3-mm2
+Date: Mon, 14 Aug 2006 22:19:26 +0200
+Message-ID: <200608142219.27950.daniel.ritz-ml@swissonline.ch>
+References: <1155334308.7574.50.camel@localhost.localdomain> <200608142021.18551.daniel.ritz-ml@swissonline.ch> <1155585403.12700.10.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([62.242.22.158]:3923 "EHLO kernel.dk")
-	by vger.kernel.org with ESMTP id S932693AbWHNUOF (ORCPT
+Received: from mxout.hispeed.ch ([62.2.95.247]:27785 "EHLO smtp.hispeed.ch")
+	by vger.kernel.org with ESMTP id S932709AbWHNUT5 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Aug 2006 16:14:05 -0400
+	Mon, 14 Aug 2006 16:19:57 -0400
+In-Reply-To: <1155585403.12700.10.camel@localhost.localdomain>
 Content-Disposition: inline
-In-Reply-To: <1155584098.2886.271.camel@laptopd505.fenrus.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: Jeff Garzik <jeff@garzik.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
+To: Dave Hansen <haveblue@us.ibm.com>, Greg KH <greg@kroah.com>, Andrew Morton <akpm@osdl.org>
+Cc: Marcus Better <marcus@better.se>, James Bottomley <James.Bottomley@steeleye.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux scsi <linux-scsi@vger.kernel.org>, ak@suse.de
 
-On Mon, Aug 14 2006, Arjan van de Ven wrote:
-> On Mon, 2006-08-14 at 14:39 -0400, Jeff Garzik wrote:
-> > So...  has anybody given any thought to enabling fsync(2), fdatasync(2), 
-> > and sync_file_range(2) issuing a [FLUSH|SYNCHRONIZE] CACHE command?
+On Monday 14 August 2006 21.56, Dave Hansen wrote:
+> On Mon, 2006-08-14 at 20:21 +0200, Daniel Ritz wrote:
+> > errm...sorry, i didn't mean that patch but the alternative i sent later. attached.
+> > it should use direct access while not breaking legacy PCI probing. in theory..
 > > 
-> > This has bugged me for _years_, that Linux does not do this.  Looking at 
-> > forums on the web, it bugs a lot of other people too.
+> > thanks,
+> > -daniel
+> > 
+> > diff --git a/arch/i386/pci/init.c b/arch/i386/pci/init.c
+> > index c7650a7..51087a9 100644
+> > --- a/arch/i386/pci/init.c
+> > +++ b/arch/i386/pci/init.c
+> > @@ -14,8 +14,12 @@ #endif
+> >  #ifdef CONFIG_PCI_BIOS
+> >  	pci_pcbios_init();
+> >  #endif
+> > -	if (raw_pci_ops)
+> > -		return 0;
+> > +	/*
+> > +	 * don't check for raw_pci_ops here because we want pcbios as last
+> > +	 * fallback, yet it's needed to run first to set pcibios_last_bus
+> > +	 * in case legacy PCI probing is used. otherwise detecting peer busses
+> > +	 * fails.
+> > +	 */
+> >  #ifdef CONFIG_PCI_DIRECT
+> >  	pci_direct_init();
+> >  #endif
 > 
-> eh afaik 2.6.17 and such do this if you have barriers enabled...
+> That one works on my box without any issues.  Thanks!
 
-That is correct, but it only works on reiserfs and XFS and user space
-really cannot tell whether it did the right thing or not. File system
-developers really should take this more seriously...
+nice! thanks for testing. 
 
--- 
-Jens Axboe
+Andrew/Greg could you add the patch to your trees? attached again with a better
+description.
+
+rgds
+-daniel
+
+-----
+
+[PATCH] PCI: use PCBIOS as last fallback
+
+there was a change in 2.6.17 which affected the order in which the PCI access
+methods are probed. this gives regressions on some machines with broken BIOS.
+the problem is that PCBIOS sometimes reports last bus wrong, leaving cardbus
+non-funcational. previously those system worked fine with direct access.
+
+the patch changes the PCI init code to have PCBIOS as last fallback, yet
+the PCBIOS code still has to run first to set pcibios_last_bus to the value
+reported by the BIOS. this is needed in case legacy PCI probing
+(arch/i386/pci/legacy.c) is used to detect peer busses. using direct access
+if available fixes the cardbus problems.
+
+Signed-off-by: Daniel Ritz <daniel.ritz@gmx.ch>
+
+diff --git a/arch/i386/pci/init.c b/arch/i386/pci/init.c
+index c7650a7..51087a9 100644
+--- a/arch/i386/pci/init.c
++++ b/arch/i386/pci/init.c
+@@ -14,8 +14,12 @@ #endif
+ #ifdef CONFIG_PCI_BIOS
+ 	pci_pcbios_init();
+ #endif
+-	if (raw_pci_ops)
+-		return 0;
++	/*
++	 * don't check for raw_pci_ops here because we want pcbios as last
++	 * fallback, yet it's needed to run first to set pcibios_last_bus
++	 * in case legacy PCI probing is used. otherwise detecting peer busses
++	 * fails.
++	 */
+ #ifdef CONFIG_PCI_DIRECT
+ 	pci_direct_init();
+ #endif
 
