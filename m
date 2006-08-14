@@ -1,74 +1,29 @@
-From: Daniel Ritz <daniel.ritz-ml@swissonline.ch>
-Subject: Re: aic7xxx broken in 2.6.18-rc3-mm2
-Date: Mon, 14 Aug 2006 20:21:17 +0200
-Message-ID: <200608142021.18551.daniel.ritz-ml@swissonline.ch>
-References: <1155334308.7574.50.camel@localhost.localdomain> <200608141858.37465.daniel.ritz-ml@swissonline.ch> <1155575804.7574.166.camel@localhost.localdomain>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Getting 'sync' to flush disk cache?
+Date: Mon, 14 Aug 2006 14:39:47 -0400
+Message-ID: <44E0C373.6060008@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mxout.hispeed.ch ([62.2.95.247]:43220 "EHLO smtp.hispeed.ch")
-	by vger.kernel.org with ESMTP id S1752042AbWHNSVy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Aug 2006 14:21:54 -0400
-In-Reply-To: <1155575804.7574.166.camel@localhost.localdomain>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>, Linux Kernel <linux-kernel@vger.kernel.org>
+Cc: Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux RAID Mailing List <linux-raid@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Dave Hansen <haveblue@us.ibm.com>
-Cc: Greg KH <greg@kroah.com>, Marcus Better <marcus@better.se>, Andrew Morton <akpm@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux scsi <linux-scsi@vger.kernel.org>, ak@suse.de
 
-On Monday 14 August 2006 19.16, Dave Hansen wrote:
-> On Mon, 2006-08-14 at 18:58 +0200, Daniel Ritz wrote:
-> > hmm..should be 2.6.16 behavior with this...
-> > what kind of box is this?
-> 
-> I know my earlier description was vague.  Please let me know if there
-> are any specifics you need.
+So...  has anybody given any thought to enabling fsync(2), fdatasync(2), 
+and sync_file_range(2) issuing a [FLUSH|SYNCHRONIZE] CACHE command?
 
-thanks, for the info.
+This has bugged me for _years_, that Linux does not do this.  Looking at 
+forums on the web, it bugs a lot of other people too.
 
-> 
-> > could you give me dmesg output of plain 2.6.18-rc4
-> 
-> http://sr71.net/~dave/linux/daniel.ritz/dmesg-elm3b82-2.6.18-rc4.txt
-> 
-> > and a 2.6.18-rc4 with the patch (not -mm if possible)?
-> 
-> http://sr71.net/~dave/linux/daniel.ritz/dmesg-elm3b82-2.6.18-rc4-with-gregkh-pci-pci-use-pci_bios-as-last-fallback.txt
-> 
-> > oh...and a lspci -vvv please
-> 
-> http://sr71.net/~dave/linux/daniel.ritz/lspci-vvv-elm3b82.txt
-> 
-> (A reversed copy of) the patch I applied to 2.6.18-rc4 is in that
-> directory, too:
-> 
-> http://sr71.net/~dave/linux/daniel.ritz/gregkh-pci-pci-use-pci_bios-as-last-fallback.patch
+My suggestion would be to add a FLUSH op alongside the existing READ and 
+WRITE[_SYNC] ops, rather than passing down WRITE_SYNC.  Why?  Doing so 
+maintains a 1-1 translation between requests and disk commands, and it 
+would allow MD and DM more flexibility in handling this operation.
 
-errm...sorry, i didn't mean that patch but the alternative i sent later. attached.
-it should use direct access while not breaking legacy PCI probing. in theory..
+But that's just a guess.  I'm open to suggestions.
 
-thanks,
--daniel
+	Jeff
 
-diff --git a/arch/i386/pci/init.c b/arch/i386/pci/init.c
-index c7650a7..51087a9 100644
---- a/arch/i386/pci/init.c
-+++ b/arch/i386/pci/init.c
-@@ -14,8 +14,12 @@ #endif
- #ifdef CONFIG_PCI_BIOS
- 	pci_pcbios_init();
- #endif
--	if (raw_pci_ops)
--		return 0;
-+	/*
-+	 * don't check for raw_pci_ops here because we want pcbios as last
-+	 * fallback, yet it's needed to run first to set pcibios_last_bus
-+	 * in case legacy PCI probing is used. otherwise detecting peer busses
-+	 * fails.
-+	 */
- #ifdef CONFIG_PCI_DIRECT
- 	pci_direct_init();
- #endif
+
