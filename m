@@ -1,96 +1,79 @@
-From: Dave Hansen <haveblue@us.ibm.com>
-Subject: Re: aic7xxx broken in 2.6.18-rc3-mm2
-Date: Mon, 14 Aug 2006 09:05:51 -0700
-Message-ID: <1155571551.7574.143.camel@localhost.localdomain>
-References: <1155334308.7574.50.camel@localhost.localdomain>
-	 <20060812010317.GB25689@kroah.com>
-	 <200608122005.01929.daniel.ritz-ml@swissonline.ch>
-	 <200608130002.40223.daniel.ritz-ml@swissonline.ch>
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: [PATCH] SCSI and FC Transport: add netlink support for posting of transport events
+Date: Mon, 14 Aug 2006 09:18:33 -0700
+Message-ID: <20060814161833.GA25026@us.ibm.com>
+References: <1155070439.6275.5.camel@localhost.localdomain> <20060811043237.GA29551@us.ibm.com> <44DC92EC.1020609@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:28105 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751333AbWHNQGN
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Aug 2006 12:06:13 -0400
-In-Reply-To: <200608130002.40223.daniel.ritz-ml@swissonline.ch>
+Received: from e2.ny.us.ibm.com ([32.97.182.142]:2527 "EHLO e2.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1751134AbWHNQRY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Aug 2006 12:17:24 -0400
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e2.ny.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k7EGHOsv011387
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Aug 2006 12:17:24 -0400
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by westrelay02.boulder.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id k7EGH2Th296788
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Aug 2006 10:17:02 -0600
+Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k7EGH21w015112
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Aug 2006 10:17:02 -0600
+Content-Disposition: inline
+In-Reply-To: <44DC92EC.1020609@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Daniel Ritz <daniel.ritz-ml@swissonline.ch>
-Cc: Greg KH <greg@kroah.com>, Marcus Better <marcus@better.se>, Andrew Morton <akpm@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux scsi <linux-scsi@vger.kernel.org>, ak@suse.de
+To: James Smart <James.Smart@Emulex.Com>
+Cc: linux-scsi@vger.kernel.org
 
-On Sun, 2006-08-13 at 00:02 +0200, Daniel Ritz wrote:
-> On Saturday 12 August 2006 20.05, Daniel Ritz wrote:
-> > On Saturday 12 August 2006 03.03, Greg KH wrote:
-> > > On Fri, Aug 11, 2006 at 05:36:24PM -0700, Andrew Morton wrote:
-> > > > On Fri, 11 Aug 2006 17:17:15 -0700
-> > > > Dave Hansen <haveblue@us.ibm.com> wrote:
-> > > > 
-> > > > > Well, I have a new culprit of the hour:
-> > > > > 
-> > > > > 	gregkh-pci-pci-use-pci_bios-as-last-fallback
-> > > > 
-> > > > Thanks, I'll drop it.
-> > > > 
-> > > > > There was a previous patch that messed up a few of my machines and this
-> > > > > same driver a few months ago, which accounts for my sense of deja vu:
-> > > > > 
-> > > > > http://www.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.16-rc6/2.6.16-rc6-mm1/broken-out/gregkh-pci-pci-give-pci-config-access-initialization-a-defined-ordering.patch
-> > > 
-> > > Ugh, this is a mess.  Daniel, why does your machine need this patch, yet
-> > > as per Dave's comments, it's wrong?
-> > 
-> > it's not my machines. they work fine :) but there where bug reports on linux-pcmcia
-> > for this problem...only shows up with kernel >= 2.6.17. see also bug 6801.
-> > 
-> > 2.6.16 shows this:
-> > 	  PCI: PCI BIOS revision 2.10 entry at 0xfb9a0, last bus=0
-> > 	  PCI: Using configuration type 1
-> > while 2.6.17+ shows only
-> > 	  PCI: PCI BIOS revision 2.10 entry at 0xfb9a0, last bus=0
-> > 
-> > so accessing the cardbus cards is not possible with PCI BIOS but works
-> > just fine with direct access...
-> > 
-> > > 
-> > > I think it might come down to the fact that the ordering before used to
-> > > not always happen in the same order (it depended on config options and
-> > > linker luck.)  Now it's "fixed" to be the same way all the time.
-> > > Daniel, can't you solve this with the proper pci boot option?
-> > 
-> > sure, but the point is: it used to work on those boxes, but broke with 2.6.17
-> > 
-> > ok, i had a look. the problem is not the patch itself. look at arch/i386/pci/legacy.c
-> > it's where those messages come from:
-> > 	PCI: Probing PCI hardware
-> > 	PCI: Discovered peer bus 02
-> > 	PCI: Discovered peer bus 05
-> > 
-> > now if pcibios probing never runs pcibios_last_bus is -1 and pcibios_fixup_peer_bridges()
-> > exits immediatley, the other busses are never found...but why legacy probing anyway?
-> > 
-> anyway, this alternative patch should help. it should be more like the <= 2.6.16
-> behavior.
+James Smart <James.Smart@Emulex.Com> wrote:
+> Mike Anderson wrote:
+> >What about using netlink attributes? The attributes do have more overhead,
+> >but it would seem that using attributes instead of sending out a
+> >whole structure would make it easier on the user space side to support
+> >different kernel versions without syncing the tools with the kernel.
 > 
-> [ CC'ing Marcus Better as the tester of the original patch. ]
+> Yeah, I guessed you were going to raise this.
 > 
-> Marcus, could you test this patch instead of the original one and see how your
-> cardbus cards behave?
+> I just didn't see any advantage to it. The macros really didn't help with
+> anything really interesting, such as endianness. I guess they do help with
+> some potential structure packing issues. I saw them as just ensuring that
+> you walked on the path right - which for most intents and purposes, you
+> will as you really are not self-discovering data. As long as you use
+> well-defined types and watch the structure alignments, it should be fine.
+> The overhead didn't seem worthit. Enlighten me if I'm taking them too 
+> lightly.
+
+Packing issue avoidance was a feature of attributes that got me to start
+using them.
+
+It also allows better organization of the data through nested attributes or
+even just straight attributes. Allowing for a single large allocation and
+then multiple users can add to the payload prior to the send.
+
+While attributes are not the only solution it appears right now in the
+patch that we could optimize the send sequence. Currently for an event we
+allocate an event only to allocate a skb shortly after to copy the event
+data into and then free the previous allocated event.
+
 > 
-> Dave, your SCSI card should work with this as well :)
+> I'm assuming your "syncing the tools with the kernel" statement infers the
+> use of a version element in place of the attributes above. I don't see how
+> you lose the version. It's the key for the later structure decode regardless
+> of whether it's attribute-ized or not. Am I missing something ? I'm also
+> (obviously) a proponent of the version so that a tool can provide backward
+> compatibility, or spot new un-recognized data.
 
-Sorry, it has the same behavior as without the patch.  If it matters,
-here is the relevant portion of my .config:
+Since an attribute is not exposing the data as a fixed structure it leads
+to more options in the future of reorganizing the data. An old program
+running on a new kernel would be able to pick up known attributes while
+ignoring others. One could never reorg the structure and always add to the
+end of the structure which would address the issue also without using
+attributes.
 
-CONFIG_PCI=y
-# CONFIG_PCI_GOBIOS is not set
-# CONFIG_PCI_GOMMCONFIG is not set
-# CONFIG_PCI_GODIRECT is not set
-CONFIG_PCI_GOANY=y
-CONFIG_PCI_BIOS=y
-CONFIG_PCI_DIRECT=y
-# CONFIG_PCIEPORTBUS is not set
 
--- Dave
 
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
