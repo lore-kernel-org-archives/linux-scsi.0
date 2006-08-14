@@ -1,76 +1,43 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [PATCH] SCSI and FC Transport: add netlink support for posting
- of transport events
-Date: Mon, 14 Aug 2006 14:40:59 -0400
-Message-ID: <44E0C3BB.4090609@emulex.com>
-References: <1155070439.6275.5.camel@localhost.localdomain> <20060811043237.GA29551@us.ibm.com> <44DC92EC.1020609@emulex.com> <20060814161833.GA25026@us.ibm.com>
-Reply-To: James.Smart@Emulex.Com
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [RFC] Sanitize INQUIRY vendor, product and revision strings
+Date: Mon, 14 Aug 2006 20:48:41 +0200
+Message-ID: <44E0C589.5080602@s5r6.in-berlin.de>
+References: <Pine.LNX.4.44L0.0608141221520.7399-100000@iolanthe.rowland.org> <20060814170730.GE4340@parisc-linux.org> <20060814173709.GJ32218@vienna.egenera.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:21740 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S1752055AbWHNSlg
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Aug 2006 14:41:36 -0400
-In-Reply-To: <20060814161833.GA25026@us.ibm.com>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:1218 "EHLO
+	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
+	id S1752053AbWHNSuB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Aug 2006 14:50:01 -0400
+In-Reply-To: <20060814173709.GJ32218@vienna.egenera.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org
+To: "Philip R. Auld" <pauld@egenera.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, Alan Stern <stern@rowland.harvard.edu>, SCSI development list <linux-scsi@vger.kernel.org>, Klaus Muth <muth@hagos.de>
 
-OK... I'll recut with the attributes and optimized data structure allocations.
+>> On Mon, Aug 14, 2006 at 12:34:56PM -0400, Alan Stern wrote:
+>>> Does anyone object to the patch below?  It would help at least one person; 
+>>> I'm concerned that it might cause trouble somewhere else.
+>>> @@ -526,6 +519,12 @@ static int scsi_probe_lun(struct scsi_de
+>>>  		if (response_len > 255)
+>>>  			response_len = first_inquiry_len;	/* sanity */
+>>>  
+>>> +		/* Sanitize the Vendor, Product, and Revision fields. */
+>>> +		for (i = 8; i < 36; ++i) {
+>>> +			if (inq_result[i] < 0x20 || inq_result[i] > 0x7e)
+>>> +				inq_result[i] = ' ';
+>>> +		}
+>>> +
+>>>  		/*
 
--- james s
-
-Mike Anderson wrote:
-> James Smart <James.Smart@Emulex.Com> wrote:
->> Mike Anderson wrote:
->>> What about using netlink attributes? The attributes do have more overhead,
->>> but it would seem that using attributes instead of sending out a
->>> whole structure would make it easier on the user space side to support
->>> different kernel versions without syncing the tools with the kernel.
->> Yeah, I guessed you were going to raise this.
->>
->> I just didn't see any advantage to it. The macros really didn't help with
->> anything really interesting, such as endianness. I guess they do help with
->> some potential structure packing issues. I saw them as just ensuring that
->> you walked on the path right - which for most intents and purposes, you
->> will as you really are not self-discovering data. As long as you use
->> well-defined types and watch the structure alignments, it should be fine.
->> The overhead didn't seem worthit. Enlighten me if I'm taking them too 
->> lightly.
-> 
-> Packing issue avoidance was a feature of attributes that got me to start
-> using them.
-> 
-> It also allows better organization of the data through nested attributes or
-> even just straight attributes. Allowing for a single large allocation and
-> then multiple users can add to the payload prior to the send.
-> 
-> While attributes are not the only solution it appears right now in the
-> patch that we could optimize the send sequence. Currently for an event we
-> allocate an event only to allocate a skb shortly after to copy the event
-> data into and then free the previous allocated event.
-> 
->> I'm assuming your "syncing the tools with the kernel" statement infers the
->> use of a version element in place of the attributes above. I don't see how
->> you lose the version. It's the key for the later structure decode regardless
->> of whether it's attribute-ized or not. Am I missing something ? I'm also
->> (obviously) a proponent of the version so that a tool can provide backward
->> compatibility, or spot new un-recognized data.
-> 
-> Since an attribute is not exposing the data as a fixed structure it leads
-> to more options in the future of reorganizing the data. An old program
-> running on a new kernel would be able to pick up known attributes while
-> ignoring others. One could never reorg the structure and always add to the
-> end of the structure which would address the issue also without using
-> attributes.
-> 
-> 
-> 
-> -andmike
-> --
-> Michael Anderson
-> andmike@us.ibm.com
-> 
+This does affect all subsequent usage of the inquiry data, doesn't it? I.e.
+  - comparison against blacklist entries for device flags,
+  - readout in dmesg,
+  - contents of sysfs attributes,
+  - text in procfs?
+-- 
+Stefan Richter
+-=====-=-==- =--- -===-
+http://arcgraph.de/sr/
