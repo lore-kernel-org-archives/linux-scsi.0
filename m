@@ -1,48 +1,69 @@
-From: Dave Hansen <haveblue@us.ibm.com>
-Subject: Re: aic7xxx broken in 2.6.18-rc3-mm2
-Date: Mon, 14 Aug 2006 10:16:44 -0700
-Message-ID: <1155575804.7574.166.camel@localhost.localdomain>
-References: <1155334308.7574.50.camel@localhost.localdomain>
-	 <200608130002.40223.daniel.ritz-ml@swissonline.ch>
-	 <1155571551.7574.143.camel@localhost.localdomain>
-	 <200608141858.37465.daniel.ritz-ml@swissonline.ch>
+From: "Philip R. Auld" <pauld@egenera.com>
+Subject: Re: [RFC] Sanitize INQUIRY vendor, product and revision strings
+Date: Mon, 14 Aug 2006 13:37:09 -0400
+Message-ID: <20060814173709.GJ32218@vienna.egenera.com>
+References: <Pine.LNX.4.44L0.0608141221520.7399-100000@iolanthe.rowland.org> <20060814170730.GE4340@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.144]:56193 "EHLO e4.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S932506AbWHNRRF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Aug 2006 13:17:05 -0400
-In-Reply-To: <200608141858.37465.daniel.ritz-ml@swissonline.ch>
+Received: from roadrunner-base.egenera.com ([63.160.166.46]:44978 "EHLO
+	roadrunner-base.egenera.com") by vger.kernel.org with ESMTP
+	id S932207AbWHNRhq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Aug 2006 13:37:46 -0400
+Content-Disposition: inline
+In-Reply-To: <20060814170730.GE4340@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Daniel Ritz <daniel.ritz-ml@swissonline.ch>
-Cc: Greg KH <greg@kroah.com>, Marcus Better <marcus@better.se>, Andrew Morton <akpm@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux scsi <linux-scsi@vger.kernel.org>, ak@suse.de
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Alan Stern <stern@rowland.harvard.edu>, SCSI development list <linux-scsi@vger.kernel.org>, Klaus Muth <muth@hagos.de>
 
-On Mon, 2006-08-14 at 18:58 +0200, Daniel Ritz wrote:
-> hmm..should be 2.6.16 behavior with this...
-> what kind of box is this?
 
-I know my earlier description was vague.  Please let me know if there
-are any specifics you need.
+Hi,
 
-> could you give me dmesg output of plain 2.6.18-rc4
+Rumor has it that on Mon, Aug 14, 2006 at 11:07:31AM -0600 Matthew Wilcox said:
+> On Mon, Aug 14, 2006 at 12:34:56PM -0400, Alan Stern wrote:
+> > Does anyone object to the patch below?  It would help at least one person; 
+> > I'm concerned that it might cause trouble somewhere else.
+> 
+> > @@ -526,6 +519,12 @@ static int scsi_probe_lun(struct scsi_de
+> >  		if (response_len > 255)
+> >  			response_len = first_inquiry_len;	/* sanity */
+> >  
+> > +		/* Sanitize the Vendor, Product, and Revision fields. */
+> > +		for (i = 8; i < 36; ++i) {
+> > +			if (inq_result[i] < 0x20 || inq_result[i] > 0x7e)
+> > +				inq_result[i] = ' ';
+> > +		}
+> > +
+> >  		/*
+> 
+> If we have one non-printable character, should we not overwrite all
+> subsequent characters with spaces?  I'm concerned that they may
+> NUL-terminate a string, then the remnants be garbage.  
 
-http://sr71.net/~dave/linux/daniel.ritz/dmesg-elm3b82-2.6.18-rc4.txt
+I wouldn't make an exception for NUL. Trying to guess that the device 
+vendor really meant to NUL-terminate does not seem right to me. 
+Plus it will hide out of spec devices more than "spacing" unprintable 
+characters.
 
-> and a 2.6.18-rc4 with the patch (not -mm if possible)?
+...
 
-http://sr71.net/~dave/linux/daniel.ritz/dmesg-elm3b82-2.6.18-rc4-with-gregkh-pci-pci-use-pci_bios-as-last-fallback.txt
+> This of course begs the questions:
+>  - Do we want to mangle the inquiry return like this?
+>  - Should we simply copy out the strings from the raw inquiry result, and
+>    fix them at copy time
 
-> oh...and a lspci -vvv please
+This is probably better, at the expense of some space though. 
 
-http://sr71.net/~dave/linux/daniel.ritz/lspci-vvv-elm3b82.txt
 
-(A reversed copy of) the patch I applied to 2.6.18-rc4 is in that
-directory, too:
+FWIW,
 
-http://sr71.net/~dave/linux/daniel.ritz/gregkh-pci-pci-use-pci_bios-as-last-fallback.patch
 
--- Dave
+Phil
 
+
+
+-- 
+Philip R. Auld, Ph.D.  	        	       Egenera, Inc.    
+Software Architect                            165 Forest St.
+(508) 858-2628                            Marlboro, MA 01752
