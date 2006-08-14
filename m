@@ -1,26 +1,34 @@
-From: "Spencer Ferguson" <darlene@rioting.com>
-Subject: shame of sex? we can change it
-Date: Sun, 13 Aug 2006 21:31:42 -0700
-Message-ID: <53371809355374.19869B61C5@BEIJV>
+From: <svetika@adachi.ne.jp>
+Subject: =?ISO-8859-1?Q?=20=CF=F0=EE=E4=E0=E5=F2=F1=FF?=  =?ISO-8859-1?Q?=20=EA=EE=F2=F2=E5=E4=E6?=
+Date: Mon, 14 Aug 2006 03:09:34 +0000
+Message-ID: <A928DC96.F68CB7A__15324.2801352919$1155524664$gmane$org@adachi.ne.jp>
 Mime-Version: 1.0
 Content-Type: text/plain;
-        charset="Windows-1252"
+	charset="windows-1251"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from c-69-244-42-28.hsd1.ar.comcast.net ([69.244.42.28]:53775 "EHLO
-	JTS-UT48MI1L92A") by vger.kernel.org with ESMTP id S1751817AbWHNC64
+Received: from mild7.adachi.ne.jp ([219.105.80.17]:53213 "EHLO
+	mild7.adachi.ne.jp") by vger.kernel.org with ESMTP id S1751826AbWHNDEO
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 13 Aug 2006 22:58:56 -0400
+	Sun, 13 Aug 2006 23:04:14 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-raid-owner@vger.kernel.org
+To: linux-admin@vger.kernel.org, linux-hams@vger.kernel.org, linux-kernel@vger.kernel.org, linux-net@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Cialis Soft Tabs is the new impotence treatment drug that everyone is talking about. It has benefits over Viagra and other ED treatment solutions. Here goes some reasons to choose Cialis Soft Tabs: 
-1. You can mix alcohol drinks with Cialis Soft Tabs without any undesired effects. 
-2.Cialis Soft Tabs does not make you feel dizzy or make vision blurred, so you can easily drive a car or operate heavy machinery. 
-3.Cialis soft tabs works much faster than any known ED treatment solution. Cialis Soft Tabs enters the bloodstream directly instead of going through the stomach, thus you need only 15 minutes till you feel the effect. Just look at the graph below 
-If you are interested ? Just click here and Read more about it 
-http://b9y.cancanwieldy.com/ct
-AND ALSO 
-Cialis Soft Tabs formula is effective for 95% of the patients. If this treatment is not effective for you, we will refund you for every unopened pack. All you have to do is send them back, and we will immediatley refund your account! 
+Продажа КОТТЕДЖА, Новорижское ш., 39 км от МКАД, Буньково
+БЕЗ КОМИССИОННЫХ
+
+ПМЖ. 
+Кирпичный 360 кв.м под чистовую отделку (отделано 2 этажа). 
+Каминный зал, 6 спален, 3 с/у, гараж на 2 а/м. 
+На участке 23 сотки: гостевой кирпичный дом 105 кв.м со всеми удобствами,
+гаражом и подвалом. 
+Все оформлено. 
+Свет, газ, вода центр. 
+Бассейн. 
+Вид на Новоерусалимский монастырь. 
+Стоимость $ 950 000  
+
+Контактные телефоны: 651-21-73, 8-909-914-33-88 Лариса
+
 
