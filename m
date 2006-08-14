@@ -1,44 +1,75 @@
-From: Dave Hansen <haveblue@us.ibm.com>
-Subject: Re: aic7xxx broken in 2.6.18-rc3-mm2
-Date: Mon, 14 Aug 2006 10:04:32 -0700
-Message-ID: <1155575073.7574.162.camel@localhost.localdomain>
-References: <1155334308.7574.50.camel@localhost.localdomain>
-	 <200608130002.40223.daniel.ritz-ml@swissonline.ch>
-	 <1155571551.7574.143.camel@localhost.localdomain>
-	 <200608141858.37465.daniel.ritz-ml@swissonline.ch>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [RFC] Sanitize INQUIRY vendor, product and revision strings
+Date: Mon, 14 Aug 2006 11:07:31 -0600
+Message-ID: <20060814170730.GE4340@parisc-linux.org>
+References: <Pine.LNX.4.44L0.0608141221520.7399-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:28299 "EHLO e1.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S932212AbWHNREy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Aug 2006 13:04:54 -0400
-In-Reply-To: <200608141858.37465.daniel.ritz-ml@swissonline.ch>
+Received: from palinux.external.hp.com ([192.25.206.14]:65487 "EHLO
+	palinux.external.hp.com") by vger.kernel.org with ESMTP
+	id S932268AbWHNRHd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Aug 2006 13:07:33 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.0608141221520.7399-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Daniel Ritz <daniel.ritz-ml@swissonline.ch>
-Cc: Greg KH <greg@kroah.com>, Marcus Better <marcus@better.se>, Andrew Morton <akpm@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux scsi <linux-scsi@vger.kernel.org>, ak@suse.de
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, Klaus Muth <muth@hagos.de>
 
-On Mon, 2006-08-14 at 18:58 +0200, Daniel Ritz wrote:
-> On Monday 14 August 2006 18.05, Dave Hansen wrote:
-> > On Sun, 2006-08-13 at 00:02 +0200, Daniel Ritz wrote:
-> > > Dave, your SCSI card should work with this as well :)
-> > 
-> > Sorry, it has the same behavior as without the patch.  If it matters,
-> > here is the relevant portion of my .config:
-> 
-> hmm..should be 2.6.16 behavior with this...
-> what kind of box is this?
+On Mon, Aug 14, 2006 at 12:34:56PM -0400, Alan Stern wrote:
+> Does anyone object to the patch below?  It would help at least one person; 
+> I'm concerned that it might cause trouble somewhere else.
 
-IBM 4-way PIII Xeon.  5 years old or so.
+> @@ -526,6 +519,12 @@ static int scsi_probe_lun(struct scsi_de
+>  		if (response_len > 255)
+>  			response_len = first_inquiry_len;	/* sanity */
+>  
+> +		/* Sanitize the Vendor, Product, and Revision fields. */
+> +		for (i = 8; i < 36; ++i) {
+> +			if (inq_result[i] < 0x20 || inq_result[i] > 0x7e)
+> +				inq_result[i] = ' ';
+> +		}
+> +
+>  		/*
 
-> could you give me dmesg output of plain 2.6.18-rc4
-> and a 2.6.18-rc4 with the patch (not -mm if possible)?
+If we have one non-printable character, should we not overwrite all
+subsequent characters with spaces?  I'm concerned that they may
+NUL-terminate a string, then the remnants be garbage.  So in other
+words, I'd like to see something like:
 
-The patch you just sent, or the original one that went into -mm?  (You
-could just attach whatever you want me to test to your reply, and that
-way I _can't_ screw it up ;)
+void scsi_inquiry_sanitise(unsigned char *inquiry, int start, int end)
+{
+	int i, unprintable = 0;
+	for (i = start; i < end; i++) {
+		unprintable |= (inq_result[i] < 0x20 || inq_result[i] > 0x7e)
+		if (unprintable)
+			inq_result[i] = ' ';
+	}
+}
 
--- Dave
+and then call it:
+
+	scsi_inquiry_sanitise(inq_result, 8, 16);
+	scsi_inquiry_sanitise(inq_result, 16, 32);
+	scsi_inquiry_sanitise(inq_result, 32, 36);
+
+This of course begs the questions:
+ - Do we want to mangle the inquiry return like this?
+ - Should we simply copy out the strings from the raw inquiry result, and
+   fix them at copy time
+ - What about someone who just put a tab in there and now gets
+   everything overwritten with spaces
+
+That last one could be fixed with a more complex function ...
+
+void scsi_inquiry_sanitise(unsigned char *inquiry, int start, int end)
+{
+	int i, terminated = 0;
+	for (i = start; i < end; i++) {
+		terminated |= (inq_result[i] == 0)
+		if (terminated || inq_result[i] < 0x20 || inq_result[i] > 0x7e)
+			inq_result[i] = ' ';
+	}
+}
 
