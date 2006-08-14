@@ -1,79 +1,103 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [PATCH] SCSI and FC Transport: add netlink support for posting of transport events
-Date: Mon, 14 Aug 2006 09:18:33 -0700
-Message-ID: <20060814161833.GA25026@us.ibm.com>
-References: <1155070439.6275.5.camel@localhost.localdomain> <20060811043237.GA29551@us.ibm.com> <44DC92EC.1020609@emulex.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: [RFC] Sanitize INQUIRY vendor, product and revision strings
+Date: Mon, 14 Aug 2006 12:34:56 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0608141221520.7399-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e2.ny.us.ibm.com ([32.97.182.142]:2527 "EHLO e2.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1751134AbWHNQRY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Aug 2006 12:17:24 -0400
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e2.ny.us.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k7EGHOsv011387
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Aug 2006 12:17:24 -0400
-Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
-	by westrelay02.boulder.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id k7EGH2Th296788
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Aug 2006 10:17:02 -0600
-Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av01.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k7EGH21w015112
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Aug 2006 10:17:02 -0600
-Content-Disposition: inline
-In-Reply-To: <44DC92EC.1020609@emulex.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:22801 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP
+	id S1751568AbWHNQe5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Aug 2006 12:34:57 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <James.Smart@Emulex.Com>
-Cc: linux-scsi@vger.kernel.org
+To: SCSI development list <linux-scsi@vger.kernel.org>
+Cc: Klaus Muth <muth@hagos.de>
 
-James Smart <James.Smart@Emulex.Com> wrote:
-> Mike Anderson wrote:
-> >What about using netlink attributes? The attributes do have more overhead,
-> >but it would seem that using attributes instead of sending out a
-> >whole structure would make it easier on the user space side to support
-> >different kernel versions without syncing the tools with the kernel.
-> 
-> Yeah, I guessed you were going to raise this.
-> 
-> I just didn't see any advantage to it. The macros really didn't help with
-> anything really interesting, such as endianness. I guess they do help with
-> some potential structure packing issues. I saw them as just ensuring that
-> you walked on the path right - which for most intents and purposes, you
-> will as you really are not self-discovering data. As long as you use
-> well-defined types and watch the structure alignments, it should be fine.
-> The overhead didn't seem worthit. Enlighten me if I'm taking them too 
-> lightly.
+Does anyone object to the patch below?  It would help at least one person; 
+I'm concerned that it might cause trouble somewhere else.
 
-Packing issue avoidance was a feature of attributes that got me to start
-using them.
+The idea is to replace all non-graphic characters in the INQUIRY ASCII 
+strings with ' '.  According to the SCSI spec these fields shouldn't 
+contain any non-graphic characters to begin with, but some non-compliant 
+devices have NUL characters and possibly others.
 
-It also allows better organization of the data through nested attributes or
-even just straight attributes. Allowing for a single large allocation and
-then multiple users can add to the payload prior to the send.
-
-While attributes are not the only solution it appears right now in the
-patch that we could optimize the send sequence. Currently for an event we
-allocate an event only to allocate a skb shortly after to copy the event
-data into and then free the previous allocated event.
-
-> 
-> I'm assuming your "syncing the tools with the kernel" statement infers the
-> use of a version element in place of the attributes above. I don't see how
-> you lose the version. It's the key for the later structure decode regardless
-> of whether it's attribute-ized or not. Am I missing something ? I'm also
-> (obviously) a proponent of the version so that a tool can provide backward
-> compatibility, or spot new un-recognized data.
-
-Since an attribute is not exposing the data as a fixed structure it leads
-to more options in the future of reorganizing the data. An old program
-running on a new kernel would be able to pick up known attributes while
-ignoring others. One could never reorg the structure and always add to the
-end of the structure which would address the issue also without using
-attributes.
+Alan Stern
 
 
+Index: usb-2.6/drivers/scsi/scsi_scan.c
+===================================================================
+--- usb-2.6.orig/drivers/scsi/scsi_scan.c
++++ usb-2.6/drivers/scsi/scsi_scan.c
+@@ -148,27 +148,19 @@ static void scsi_unlock_floptical(struct
+ static void print_inquiry(unsigned char *inq_result)
+ {
+ 	int i;
++	int n = inq_result[4] + 5;
+ 
+ 	printk(KERN_NOTICE "  Vendor: ");
+ 	for (i = 8; i < 16; i++)
+-		if (inq_result[i] >= 0x20 && i < inq_result[4] + 5)
+-			printk("%c", inq_result[i]);
+-		else
+-			printk(" ");
++		printk("%c", (i < n ? inq_result[i] : ' '));
+ 
+ 	printk("  Model: ");
+ 	for (i = 16; i < 32; i++)
+-		if (inq_result[i] >= 0x20 && i < inq_result[4] + 5)
+-			printk("%c", inq_result[i]);
+-		else
+-			printk(" ");
++		printk("%c", (i < n ? inq_result[i] : ' '));
+ 
+ 	printk("  Rev: ");
+ 	for (i = 32; i < 36; i++)
+-		if (inq_result[i] >= 0x20 && i < inq_result[4] + 5)
+-			printk("%c", inq_result[i]);
+-		else
+-			printk(" ");
++		printk("%c", (i < n ? inq_result[i] : ' '));
+ 
+ 	printk("\n");
+ 
+@@ -463,13 +455,14 @@ void scsi_target_reap(struct scsi_target
+  *     INQUIRY data is in @inq_result; the scsi_level and INQUIRY length
+  *     are copied to the scsi_device any flags value is stored in *@bflags.
+  **/
+-static int scsi_probe_lun(struct scsi_device *sdev, char *inq_result,
++static int scsi_probe_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 			  int result_len, int *bflags)
+ {
+ 	unsigned char scsi_cmd[MAX_COMMAND_SIZE];
+ 	int first_inquiry_len, try_inquiry_len, next_inquiry_len;
+ 	int response_len = 0;
+ 	int pass, count, result;
++	int i;
+ 	struct scsi_sense_hdr sshdr;
+ 
+ 	*bflags = 0;
+@@ -526,6 +519,12 @@ static int scsi_probe_lun(struct scsi_de
+ 		if (response_len > 255)
+ 			response_len = first_inquiry_len;	/* sanity */
+ 
++		/* Sanitize the Vendor, Product, and Revision fields. */
++		for (i = 8; i < 36; ++i) {
++			if (inq_result[i] < 0x20 || inq_result[i] > 0x7e)
++				inq_result[i] = ' ';
++		}
++
+ 		/*
+ 		 * Get any flags for this device.
+ 		 *
+@@ -628,7 +627,8 @@ static int scsi_probe_lun(struct scsi_de
+  *     SCSI_SCAN_NO_RESPONSE: could not allocate or setup a scsi_device
+  *     SCSI_SCAN_LUN_PRESENT: a new scsi_device was allocated and initialized
+  **/
+-static int scsi_add_lun(struct scsi_device *sdev, char *inq_result, int *bflags)
++static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
++		int *bflags)
+ {
+ 	/*
+ 	 * XXX do not save the inquiry, since it can change underneath us,
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
