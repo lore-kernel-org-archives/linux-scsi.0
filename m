@@ -1,82 +1,50 @@
-From: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
-Subject: RE: [patch 18/24] megaraid: Dell CERC ATA100/4ch support
-Date: Tue, 15 Aug 2006 08:19:19 -0600
-Message-ID: <890BF3111FB9484E9526987D912B261932E347@NAMAIL3.ad.lsil.com>
+From: Denis Vlasenko <vda.linux@googlemail.com>
+Subject: Re: [PATCH 0/4] aic7xxx: remove excessive inlining
+Date: Tue, 15 Aug 2006 18:20:21 +0200
+Message-ID: <200608151820.21929.vda.linux@googlemail.com>
+References: <200608131457.21951.vda.linux@googlemail.com> <20060814161434.d643f568.akpm@osdl.org> <20060814162516.1a458ff9.rdunlap@xenotime.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:15538 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S965377AbWHOOTn convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Aug 2006 10:19:43 -0400
-Content-class: urn:content-classes:message
+Received: from nf-out-0910.google.com ([64.233.182.190]:21470 "EHLO
+	nf-out-0910.google.com") by vger.kernel.org with ESMTP
+	id S1030370AbWHOQUb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 Aug 2006 12:20:31 -0400
+Received: by nf-out-0910.google.com with SMTP id x30so376584nfb
+        for <linux-scsi@vger.kernel.org>; Tue, 15 Aug 2006 09:20:30 -0700 (PDT)
+In-Reply-To: <20060814162516.1a458ff9.rdunlap@xenotime.net>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@osdl.org, James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, jkrzyszt@tis.icnet.pl
+To: "Randy.Dunlap" <rdunlap@xenotime.net>
+Cc: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi,
-On Tuesday, August 15, 2006 2:10 AM, Janusz Krzysztofik wrote:
-> Add CERC subsystem ids to the old megaraid driver.  Tested, works.
-NACK - This addition will create PCI ID overlapping with megaraid_{mbox,mm} module under driver/scsi/megaraid.
-Since 2.6.16, we have removed some IDs in the megaraid module under driver/scsi to address ID overlappijng issue.
-Please switch to megaraid_{mbox,mm} module for the controller support. megaraid module under driver/scsi is dedicated to very old products.
+On Tuesday 15 August 2006 01:25, Randy.Dunlap wrote:
+> On Mon, 14 Aug 2006 16:14:34 -0700 Andrew Morton wrote:
+> 
+> > On Sun, 13 Aug 2006 14:57:21 +0200
+> > Denis Vlasenko <vda.linux@googlemail.com> wrote:
+> > 
+> > > This is a resend.
+> > 
+> > Please resend ;)
+> > 
+> > - All these patches had the same Subject:, thus forcing me to invent
+> >   titles for you.  
+> > 
+> > - The changelogs are weird - think what they'll look like once they
+> > hit the git tree.  Someone will need to clean those changelogs up,
+> > and I'd prefer that it not be me.
+> > 
+> > - Missing Signed-off-by:'s.
+> > 
+> > http://www.zip.com.au/~akpm/linux/patches/stuff/tpp.txt is here to
+> > help.
+> 
+> Don't *zip them.
 
-Seokmann
-
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org 
-> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of akpm@osdl.org
-> Sent: Tuesday, August 15, 2006 2:10 AM
-> To: James.Bottomley@steeleye.com
-> Cc: linux-scsi@vger.kernel.org; akpm@osdl.org; jkrzyszt@tis.icnet.pl
-> Subject: [patch 18/24] megaraid: Dell CERC ATA100/4ch support
-> 
-> From: Janusz Krzysztofik <jkrzyszt@tis.icnet.pl>
-> 
-> Add CERC subsystem ids to the old megaraid driver.  Tested, works.
-> 
-> Cc: James Bottomley <James.Bottomley@steeleye.com>
-> Signed-off-by: Andrew Morton <akpm@osdl.org>
-> ---
-> 
->  drivers/scsi/megaraid.c |    2 ++
->  drivers/scsi/megaraid.h |    2 ++
->  2 files changed, 4 insertions(+)
-> 
-> diff -puN 
-> drivers/scsi/megaraid.c~megaraid-dell-cerc-ata100-4ch-support 
-> drivers/scsi/megaraid.c
-> --- a/drivers/scsi/megaraid.c~megaraid-dell-cerc-ata100-4ch-support
-> +++ a/drivers/scsi/megaraid.c
-> @@ -5046,6 +5046,8 @@ static struct pci_device_id megaraid_pci
->  		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
->  	{PCI_VENDOR_ID_AMI, PCI_DEVICE_ID_AMI_MEGARAID2,
->  		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-> +	{PCI_VENDOR_ID_AMI, PCI_DEVICE_ID_AMI_MEGARAID3,
-> +		PCI_VENDOR_ID_DELL, PCI_SUBSYS_ID_CERC_ATA100, 0, 0, 0},
->  	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_AMI_MEGARAID3,
->  		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
->  	{0,}
-> diff -puN 
-> drivers/scsi/megaraid.h~megaraid-dell-cerc-ata100-4ch-support 
-> drivers/scsi/megaraid.h
-> --- a/drivers/scsi/megaraid.h~megaraid-dell-cerc-ata100-4ch-support
-> +++ a/drivers/scsi/megaraid.h
-> @@ -84,6 +84,8 @@
->  #define LSI_SUBSYS_VID			0x1000
->  #define INTEL_SUBSYS_VID		0x8086
->  
-> +#define PCI_SUBSYS_ID_CERC_ATA100	0x0511
-> +
->  #define HBA_SIGNATURE	      		0x3344
->  #define HBA_SIGNATURE_471	  	0xCCCC
->  #define HBA_SIGNATURE_64BIT		0x0299
-> _
-> -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Ok, resending to Andrew off-list.
+--
+vda
