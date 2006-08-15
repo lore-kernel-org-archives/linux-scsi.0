@@ -1,33 +1,60 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [RFC] Sanitize INQUIRY vendor, product and revision strings
-Date: Tue, 15 Aug 2006 01:52:40 +0200
-Message-ID: <44E10CC8.5050501@s5r6.in-berlin.de>
-References: <Pine.LNX.4.44L0.0608141556520.7399-100000@iolanthe.rowland.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: akpm@osdl.org
+Subject: [patch 08/24] aic7*: cleanup MODULE_PARM_DESC strings
+Date: Mon, 14 Aug 2006 23:09:23 -0700
+Message-ID: <200608150609.k7F69N0A013220@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:15334 "EHLO
-	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
-	id S932739AbWHNXyO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Aug 2006 19:54:14 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0608141556520.7399-100000@iolanthe.rowland.org>
+Received: from smtp.osdl.org ([65.172.181.4]:51349 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S965179AbWHOGJ2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 Aug 2006 02:09:28 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: "Philip R. Auld" <pauld@egenera.com>, Matthew Wilcox <matthew@wil.cx>, SCSI development list <linux-scsi@vger.kernel.org>, Klaus Muth <muth@hagos.de>
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, rdunlap@xenotime.net
 
-Alan Stern wrote:
-...
-> In fact, the main purpose of the patch was to change the
-> comparison against blacklist entries for device flags.
-...
-> For everything else, I think the change should be harmless
-...
+From: Randy Dunlap <rdunlap@xenotime.net>
 
-Looks good to me. (However we in the SBP-2 corner rarely deal with the 
-inquiry's vendor/ model/ revision data, so I have no strong opinion.)
--- 
-Stefan Richter
--=====-=-==- =--- -====
-http://arcgraph.de/sr/
+Modify beginning string to be more readable.  Remove one trailing newline.
+
+Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+Signed-off-by: Andrew Morton <akpm@osdl.org>
+---
+
+ drivers/scsi/aic7xxx/aic79xx_osm.c |    4 ++--
+ drivers/scsi/aic7xxx/aic7xxx_osm.c |    2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff -puN drivers/scsi/aic7xxx/aic79xx_osm.c~aic7-cleanup-module_parm_desc-strings drivers/scsi/aic7xxx/aic79xx_osm.c
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.c~aic7-cleanup-module_parm_desc-strings
++++ a/drivers/scsi/aic7xxx/aic79xx_osm.c
+@@ -321,7 +321,7 @@ MODULE_LICENSE("Dual BSD/GPL");
+ MODULE_VERSION(AIC79XX_DRIVER_VERSION);
+ module_param(aic79xx, charp, 0444);
+ MODULE_PARM_DESC(aic79xx,
+-"period delimited, options string.\n"
++"period-delimited options string:\n"
+ "	verbose			Enable verbose/diagnostic logging\n"
+ "	allow_memio		Allow device registers to be memory mapped\n"
+ "	debug			Bitmask of debug values to enable\n"
+@@ -346,7 +346,7 @@ MODULE_PARM_DESC(aic79xx,
+ "		Shorten the selection timeout to 128ms\n"
+ "\n"
+ "	options aic79xx 'aic79xx=verbose.tag_info:{{}.{}.{..10}}.seltime:1'\n"
+-"\n");
++);
+ 
+ static void ahd_linux_handle_scsi_status(struct ahd_softc *,
+ 					 struct scsi_device *,
+diff -puN drivers/scsi/aic7xxx/aic7xxx_osm.c~aic7-cleanup-module_parm_desc-strings drivers/scsi/aic7xxx/aic7xxx_osm.c
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm.c~aic7-cleanup-module_parm_desc-strings
++++ a/drivers/scsi/aic7xxx/aic7xxx_osm.c
+@@ -341,7 +341,7 @@ MODULE_LICENSE("Dual BSD/GPL");
+ MODULE_VERSION(AIC7XXX_DRIVER_VERSION);
+ module_param(aic7xxx, charp, 0444);
+ MODULE_PARM_DESC(aic7xxx,
+-"period delimited, options string.\n"
++"period-delimited options string:\n"
+ "	verbose			Enable verbose/diagnostic logging\n"
+ "	allow_memio		Allow device registers to be memory mapped\n"
+ "	debug			Bitmask of debug values to enable\n"
+_
