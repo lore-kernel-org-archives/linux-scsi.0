@@ -1,73 +1,48 @@
 From: akpm@osdl.org
-Subject: [patch 10/24] scsi: clean up warnings in Advansys driver
-Date: Mon, 14 Aug 2006 23:09:24 -0700
-Message-ID: <200608150609.k7F69O8C013227@shell0.pdx.osdl.net>
+Subject: [patch 19/24] megaraid: Use the proper type to hold the irq number.
+Date: Mon, 14 Aug 2006 23:09:35 -0700
+Message-ID: <200608150609.k7F69ZTJ013264@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:59541 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S965181AbWHOGJj (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:63637 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S965183AbWHOGJn (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Aug 2006 02:09:39 -0400
+	Tue, 15 Aug 2006 02:09:43 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, ken@krwtech.com, jeffreyfreeman@syncleus.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, ebiederm@xmission.com, Neela.Kolli@engenio.com, Seokmann.Ju@lsil.com
 
-From: Ken Witherow <ken@krwtech.com>
+From: Eric W. Biederman <ebiederm@xmission.com>
 
-Fix typecast warnings and switch from check_region to request_region
+When testing on a Unisys machine it was discovered that the megaraid driver
+would not initialize as it was requesting irq 162 instead of irq 1442 it
+was assigned.  The problem was the irq number had been truncated by being
+stored in an unsigned char.
 
-(akpm: Ken and Jeffrey Phillips Freeman <jeffreyfreeman@syncleus.com> are
-possible advansys testers)
+This patches fixes that problem and the driver now appears to work.
 
-Signed-off-by: Ken Witherow <ken@krwtech.com>
+The ioctl interface appears fundamentally broken as it exports the irq
+number to user space in an unsigned char.
+
+Signed-off-by: Eric W. Biederman <ebiederm@xmission.com>
+Cc: Neela Syam Kolli<Neela.Kolli@engenio.com>
+Cc: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/advansys.c |    7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ drivers/scsi/megaraid/mega_common.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/advansys.c~scsi-clean-up-warnings-in-advansys-driver drivers/scsi/advansys.c
---- a/drivers/scsi/advansys.c~scsi-clean-up-warnings-in-advansys-driver
-+++ a/drivers/scsi/advansys.c
-@@ -4403,7 +4403,7 @@ advansys_detect(struct scsi_host_templat
-                         ASC_DBG1(1,
-                                 "advansys_detect: probing I/O port 0x%x...\n",
-                             iop);
--                        if (check_region(iop, ASC_IOADR_GAP) != 0) {
-+			if (!request_region(iop, ASC_IOADR_GAP, "advansys")){
-                             printk(
- "AdvanSys SCSI: specified I/O Port 0x%X is busy\n", iop);
-                             /* Don't try this I/O port twice. */
-@@ -4413,6 +4413,7 @@ advansys_detect(struct scsi_host_templat
-                             printk(
- "AdvanSys SCSI: specified I/O Port 0x%X has no adapter\n", iop);
-                             /* Don't try this I/O port twice. */
-+			    release_region(iop, ASC_IOADR_GAP);
-                             asc_ioport[ioport] = 0;
-                             goto ioport_try_again;
-                         } else {
-@@ -4431,6 +4432,7 @@ advansys_detect(struct scsi_host_templat
-                                   * 'ioport' past this board.
-                                   */
-                                  ioport++;
-+				 release_region(iop, ASC_IOADR_GAP);
-                                  goto ioport_try_again;
-                             }
-                         }
-@@ -9740,13 +9742,14 @@ AscSearchIOPortAddr11(
-     }
-     for (; i < ASC_IOADR_TABLE_MAX_IX; i++) {
-         iop_base = _asc_def_iop_base[i];
--        if (check_region(iop_base, ASC_IOADR_GAP) != 0) {
-+	if (!request_region(iop_base, ASC_IOADR_GAP, "advansys")){
-             ASC_DBG1(1,
-                "AscSearchIOPortAddr11: check_region() failed I/O port 0x%x\n",
-                      iop_base);
-             continue;
-         }
-         ASC_DBG1(1, "AscSearchIOPortAddr11: probing I/O port 0x%x\n", iop_base);
-+	release_region(iop_base, ASC_IOADR_GAP);
-         if (AscFindSignature(iop_base)) {
-             return (iop_base);
-         }
+diff -puN drivers/scsi/megaraid/mega_common.h~megaraid-use-the-proper-type-to-hold-the-irq-number drivers/scsi/megaraid/mega_common.h
+--- a/drivers/scsi/megaraid/mega_common.h~megaraid-use-the-proper-type-to-hold-the-irq-number
++++ a/drivers/scsi/megaraid/mega_common.h
+@@ -175,7 +175,7 @@ typedef struct {
+ 	uint8_t			max_lun;
+ 
+ 	uint32_t		unique_id;
+-	uint8_t			irq;
++	int			irq;
+ 	uint8_t			ito;
+ 	caddr_t			ibuf;
+ 	dma_addr_t		ibuf_dma_h;
 _
