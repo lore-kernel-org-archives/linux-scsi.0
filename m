@@ -1,50 +1,99 @@
-From: Denis Vlasenko <vda.linux@googlemail.com>
-Subject: Re: [PATCH 0/4] aic7xxx: remove excessive inlining
-Date: Tue, 15 Aug 2006 18:20:21 +0200
-Message-ID: <200608151820.21929.vda.linux@googlemail.com>
-References: <200608131457.21951.vda.linux@googlemail.com> <20060814161434.d643f568.akpm@osdl.org> <20060814162516.1a458ff9.rdunlap@xenotime.net>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: [PATCH] update some devinfo entries
+Date: Tue, 15 Aug 2006 17:00:28 -0400
+Message-ID: <1155675629.16063.9.camel@max>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.190]:21470 "EHLO
-	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S1030370AbWHOQUb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Aug 2006 12:20:31 -0400
-Received: by nf-out-0910.google.com with SMTP id x30so376584nfb
-        for <linux-scsi@vger.kernel.org>; Tue, 15 Aug 2006 09:20:30 -0700 (PDT)
-In-Reply-To: <20060814162516.1a458ff9.rdunlap@xenotime.net>
-Content-Disposition: inline
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:59330 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S1750746AbWHOWAK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 Aug 2006 18:00:10 -0400
+Received: from [192.168.0.5] (CPE-70-92-133-61.mn.res.rr.com [70.92.133.61])
+	(authenticated bits=0)
+	by sabe.cs.wisc.edu (8.13.6/8.13.6) with ESMTP id k7FM08gb028207
+	(version=TLSv1/SSLv3 cipher=RC4-MD5 bits=128 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Tue, 15 Aug 2006 17:00:09 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Randy.Dunlap" <rdunlap@xenotime.net>
-Cc: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tuesday 15 August 2006 01:25, Randy.Dunlap wrote:
-> On Mon, 14 Aug 2006 16:14:34 -0700 Andrew Morton wrote:
-> 
-> > On Sun, 13 Aug 2006 14:57:21 +0200
-> > Denis Vlasenko <vda.linux@googlemail.com> wrote:
-> > 
-> > > This is a resend.
-> > 
-> > Please resend ;)
-> > 
-> > - All these patches had the same Subject:, thus forcing me to invent
-> >   titles for you.  
-> > 
-> > - The changelogs are weird - think what they'll look like once they
-> > hit the git tree.  Someone will need to clean those changelogs up,
-> > and I'd prefer that it not be me.
-> > 
-> > - Missing Signed-off-by:'s.
-> > 
-> > http://www.zip.com.au/~akpm/linux/patches/stuff/tpp.txt is here to
-> > help.
-> 
-> Don't *zip them.
+The RHEL4 kernel contains some devinfo entries that
+upstream does not so I thought I should try and update
+upstream.
 
-Ok, resending to Andrew off-list.
---
-vda
+Most of them are new entries or pretty straight forward,
+except this one:
+
+-       {"HITACHI", "OPEN-E", "*", BLIST_ATTACH_PQ3 | BLIST_SPARSELUN | BLIST_LARGELUN},
++       {"HITACHI", "OPEN-", "*", BLIST_ATTACH_PQ3 | BLIST_SPARSELUN | BLIST_LARGELUN},
+
+In RHEL we used to have OPEN-V, OPEN-L and OPEN-V and those used
+BLIST_SPARSELUN | BLIST_LARGELUN. We consolidated those to just
+OPEN-.
+
+Upstream has "OPEN-E" with
+BLIST_ATTACH_PQ3 | BLIST_SPARSELUN | BLIST_LARGELUN
+
+So I am not sure if consolidating that one into OPEN- is ok
+since I am not adding BLIST_ATTACH_PQ3 for all OPEN-.
+
+I do not have any of this HW. I have only compile tested
+the patch. It was built over scsi-rc-fixes.
+
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index 3d0429b..54a3f3d 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -141,7 +141,9 @@ static struct {
+ 	{"COMPAQ", "MSA1000", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
+ 	{"COMPAQ", "MSA1000 VOLUME", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
+ 	{"COMPAQ", "HSV110", NULL, BLIST_REPORTLUN2 | BLIST_NOSTARTONADD},
+-	{"DDN", "SAN DataDirector", "*", BLIST_SPARSELUN},
++	{"DDN", "SAN DataDirector", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
++	{"DDN", "S2A 8400", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
++	{"DDN", "S2A 8500", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+ 	{"DEC", "HSG80", NULL, BLIST_REPORTLUN2 | BLIST_NOSTARTONADD},
+ 	{"DELL", "PV660F", NULL, BLIST_SPARSELUN},
+ 	{"DELL", "PV660F   PSEUDO", NULL, BLIST_SPARSELUN},
+@@ -150,6 +152,7 @@ static struct {
+ 	{"DELL", "PERCRAID", NULL, BLIST_FORCELUN},
+ 	{"DGC", "RAID", NULL, BLIST_SPARSELUN},	/* Dell PV 650F, storage on LUN 0 */
+ 	{"DGC", "DISK", NULL, BLIST_SPARSELUN},	/* Dell PV 650F, no storage on LUN 0 */
++	{"EMC",  "Invista", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+ 	{"EMC", "SYMMETRIX", NULL, BLIST_SPARSELUN | BLIST_LARGELUN | BLIST_FORCELUN},
+ 	{"EMULEX", "MD21/S2     ESDI", NULL, BLIST_SINGLELUN},
+ 	{"FSC", "CentricStor", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+@@ -160,9 +163,9 @@ static struct {
+ 	{"HITACHI", "DF500", "*", BLIST_SPARSELUN},
+ 	{"HITACHI", "DF600", "*", BLIST_SPARSELUN},
+ 	{"HITACHI", "DISK-SUBSYSTEM", "*", BLIST_ATTACH_PQ3 | BLIST_SPARSELUN | BLIST_LARGELUN},
+-	{"HITACHI", "OPEN-E", "*", BLIST_ATTACH_PQ3 | BLIST_SPARSELUN | BLIST_LARGELUN},
++	{"HITACHI", "OPEN-", "*", BLIST_ATTACH_PQ3 | BLIST_SPARSELUN | BLIST_LARGELUN},
+ 	{"HP", "A6189A", NULL, BLIST_SPARSELUN | BLIST_LARGELUN},	/* HP VA7400 */
+-	{"HP", "OPEN-", "*", BLIST_REPORTLUN2}, /* HP XP Arrays */
++	{"HP", "OPEN-", "*", BLIST_REPORTLUN2 | BLIST_SPARSELUN | BLIST_LARGELUN}, /* HP XP Arrays */
+ 	{"HP", "NetRAID-4M", NULL, BLIST_FORCELUN},
+ 	{"HP", "HSV100", NULL, BLIST_REPORTLUN2 | BLIST_NOSTARTONADD},
+ 	{"HP", "C1557A", NULL, BLIST_FORCELUN},
+@@ -188,6 +191,7 @@ static struct {
+ 	{"NAKAMICH", "MJ-4.8S", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+ 	{"NAKAMICH", "MJ-5.16S", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+ 	{"NEC", "PD-1 ODX654P", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
++	{"NEC", "iStorage", NULL, BLIST_REPORTLUN2},
+ 	{"NRC", "MBR-7", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+ 	{"NRC", "MBR-7.4", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+ 	{"PIONEER", "CD-ROM DRM-600", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+@@ -210,6 +214,7 @@ static struct {
+ 	{"SUN", "T300", "*", BLIST_SPARSELUN},
+ 	{"SUN", "T4", "*", BLIST_SPARSELUN},
+ 	{"TEXEL", "CD-ROM", "1.06", BLIST_BORKEN},
++	{"Tornado-", "F4", "*", BLIST_NOREPORTLUN},
+ 	{"TOSHIBA", "CDROM", NULL, BLIST_ISROM},
+ 	{"TOSHIBA", "CD-ROM", NULL, BLIST_ISROM},
+ 	{"USB2.0", "SMARTMEDIA/XD", NULL, BLIST_FORCELUN | BLIST_INQUIRY_36},
+
+
