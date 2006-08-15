@@ -1,34 +1,71 @@
-From: "Eloise" <aliascentenary@dublin.com>
-Subject: Get the freshest Make your girlfriend or wife speechless with increased hardness, richer orgsms and more power in bed
-Date: Tue, 15 Aug 2006 09:49:32 +0300
-Message-ID: <32095279467926.3168F6CA51__29555.4171935239$1155624698$gmane$org@4U71K6HV>
+From: Henne <henne@nachtwindheim.de>
+Subject: [PATCH] [MEGARAID] convert to PCI_DEVICE() macro
+Date: Tue, 15 Aug 2006 11:17:21 +0200
+Message-ID: <44E19121.2060200@nachtwindheim.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="Windows-1252"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dsl.static859922646.ttnet.net.tr ([85.99.226.46]:42833 "EHLO
-	t85ui7v.jfgizete.verizon.net") by vger.kernel.org with ESMTP
-	id S965241AbWHOGvY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Aug 2006 02:51:24 -0400
+Received: from server6.greatnet.de ([83.133.96.26]:47232 "EHLO
+	server6.greatnet.de") by vger.kernel.org with ESMTP id S965319AbWHOJSC
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 Aug 2006 05:18:02 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-serial@vger.kernel.org
+To: Neela.Kolli@engenio.com
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-How are you bro ?
+From: Henrik Kretzschmar <henne@nachtwidheim.de>
 
- Achieve astounding results in bed with these products designed to make any man a winnerAchieve astounding results in bed with these products designed to make any man a winner
+Convert the pci_device_id-table of the megaraid_sas-driver to
+the PCI_DEVICE-macro, to safe some lines.
 
+Signed-off-by: Henrik Kretzschmar <henne@nachtwindheim.de>
 
-Achieve astounding results in bed with these products designed to make any man a winner
+---
 
+--- linux-2.6.18-rc4/drivers/scsi/megaraid/megaraid_sas.c	2006-08-11 10:09:21.000000000 +0200
++++ linux/drivers/scsi/megaraid/megaraid_sas.c	2006-08-11 13:29:29.000000000 +0200
+@@ -53,31 +53,15 @@
+  */
+ static struct pci_device_id megasas_pci_table[] = {
+ 
+-	{
+-	 PCI_VENDOR_ID_LSI_LOGIC,
+-	 PCI_DEVICE_ID_LSI_SAS1064R, /* xscale IOP */
+-	 PCI_ANY_ID,
+-	 PCI_ANY_ID,
+-	 },
+-	{
+-	 PCI_VENDOR_ID_LSI_LOGIC,
+-	 PCI_DEVICE_ID_LSI_SAS1078R, /* ppc IOP */
+-	 PCI_ANY_ID,
+-	 PCI_ANY_ID,
+-	},
+-	{
+-	 PCI_VENDOR_ID_LSI_LOGIC,
+-	 PCI_DEVICE_ID_LSI_VERDE_ZCR,	/* xscale IOP, vega */
+-	 PCI_ANY_ID,
+-	 PCI_ANY_ID,
+-	 },
+-	{
+-	 PCI_VENDOR_ID_DELL,
+-	 PCI_DEVICE_ID_DELL_PERC5, /* xscale IOP */
+-	 PCI_ANY_ID,
+-	 PCI_ANY_ID,
+-	 },
+-	{0}			/* Terminating entry */
++	{PCI_DEVICE(PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_SAS1064R)},
++	/* xscale IOP */
++	{PCI_DEVICE(PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_SAS1078R)},
++	/* ppc IOP */
++	{PCI_DEVICE(PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_VERDE_ZCR)},
++	/* xscale IOP, vega */
++	{PCI_DEVICE(PCI_VENDOR_ID_DELL, PCI_DEVICE_ID_DELL_PERC5)},
++	/* xscale IOP */
++	{}
+ };
+ 
+ MODULE_DEVICE_TABLE(pci, megasas_pci_table);
 
- All you need is here: http://www.pianistme.com
-
-
-Eloise Leary
-
-It is better to love and lost than never to love at allMurder will out
-
-There is no jollity but hath a smack of folly
 
