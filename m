@@ -1,113 +1,54 @@
 From: akpm@osdl.org
-Subject: [patch 17/24] megaraid: fix warnings when CONFIG_PROC_FS=n
-Date: Mon, 14 Aug 2006 23:09:30 -0700
-Message-ID: <200608150609.k7F69U95013253@shell0.pdx.osdl.net>
+Subject: [patch 13/24] make drivers/scsi/aic7xxx/aic79xx_core.:ahd_set_tags() static
+Date: Mon, 14 Aug 2006 23:09:27 -0700
+Message-ID: <200608150609.k7F69RAJ013238@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:15511 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S965202AbWHOGM5 (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:26263 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S965166AbWHOGNj (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Aug 2006 02:12:57 -0400
+	Tue, 15 Aug 2006 02:13:39 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, wharms@bfs.de, adobriyan@gmail.com, bunk@stusta.de
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, bunk@stusta.de
 
-From: walter harms <wharms@bfs.de>
+From: Adrian Bunk <bunk@stusta.de>
 
-Signed-off-by: walter harms <wharms@bfs.de>
-Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
-Cc: Adrian Bunk <bunk@stusta.de>
+ahd_set_tags() can now become static.
+
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/megaraid.c |   17 +++++++++++------
- drivers/scsi/megaraid.h |    4 ++--
- 2 files changed, 13 insertions(+), 8 deletions(-)
+ drivers/scsi/aic7xxx/aic79xx.h      |    5 -----
+ drivers/scsi/aic7xxx/aic79xx_core.c |    2 +-
+ 2 files changed, 1 insertion(+), 6 deletions(-)
 
-diff -puN drivers/scsi/megaraid.c~megaraid-fix-warnings-when-config_proc_fs=n drivers/scsi/megaraid.c
---- a/drivers/scsi/megaraid.c~megaraid-fix-warnings-when-config_proc_fs=n
-+++ a/drivers/scsi/megaraid.c
-@@ -3178,7 +3178,10 @@ proc_rdrv(adapter_t *adapter, char *page
+diff -puN drivers/scsi/aic7xxx/aic79xx.h~make-drivers-scsi-aic7xxx-aic79xx_coreahd_set_tags-static drivers/scsi/aic7xxx/aic79xx.h
+--- a/drivers/scsi/aic7xxx/aic79xx.h~make-drivers-scsi-aic7xxx-aic79xx_coreahd_set_tags-static
++++ a/drivers/scsi/aic7xxx/aic79xx.h
+@@ -1427,11 +1427,6 @@ typedef enum {
+ 	AHD_QUEUE_TAGGED
+ } ahd_queue_alg;
  
- 	return len;
- }
+-void			ahd_set_tags(struct ahd_softc *ahd,
+-				     struct scsi_cmnd *cmd,
+-				     struct ahd_devinfo *devinfo,
+-				     ahd_queue_alg alg);
 -
-+#else
-+static inline void mega_create_proc_entry(int index, struct proc_dir_entry *parent)
-+{
-+}
- #endif
- 
- 
-@@ -4343,7 +4346,7 @@ mega_support_cluster(adapter_t *adapter)
- 	return 0;
- }
- 
--
-+#ifdef CONFIG_PROC_FS
- /**
-  * mega_adapinq()
-  * @adapter - pointer to our soft state
-@@ -4448,7 +4451,7 @@ mega_internal_dev_inquiry(adapter_t *ada
- 
- 	return rval;
- }
--
-+#endif
- 
- /**
-  * mega_internal_command()
-@@ -4964,7 +4967,6 @@ megaraid_remove_one(struct pci_dev *pdev
+ /**************************** Target Mode *************************************/
+ #ifdef AHD_TARGET_MODE
+ void		ahd_send_lstate_events(struct ahd_softc *,
+diff -puN drivers/scsi/aic7xxx/aic79xx_core.c~make-drivers-scsi-aic7xxx-aic79xx_coreahd_set_tags-static drivers/scsi/aic7xxx/aic79xx_core.c
+--- a/drivers/scsi/aic7xxx/aic79xx_core.c~make-drivers-scsi-aic7xxx-aic79xx_coreahd_set_tags-static
++++ a/drivers/scsi/aic7xxx/aic79xx_core.c
+@@ -3877,7 +3877,7 @@ ahd_set_width(struct ahd_softc *ahd, str
+ /*
+  * Update the current state of tagged queuing for a given target.
+  */
+-void
++static void
+ ahd_set_tags(struct ahd_softc *ahd, struct scsi_cmnd *cmd,
+ 	     struct ahd_devinfo *devinfo, ahd_queue_alg alg)
  {
- 	struct Scsi_Host *host = pci_get_drvdata(pdev);
- 	adapter_t *adapter = (adapter_t *)host->hostdata;
--	char	buf[12] = { 0 };
- 
- 	scsi_remove_host(host);
- 
-@@ -5010,8 +5012,11 @@ megaraid_remove_one(struct pci_dev *pdev
- 		remove_proc_entry("raiddrives-30-39",
- 				adapter->controller_proc_dir_entry);
- #endif
--		sprintf(buf, "hba%d", adapter->host->host_no);
--		remove_proc_entry(buf, mega_proc_dir_entry);
-+		{
-+			char	buf[12] = { 0 };
-+			sprintf(buf, "hba%d", adapter->host->host_no);
-+			remove_proc_entry(buf, mega_proc_dir_entry);
-+		}
- 	}
- #endif
- 
-diff -puN drivers/scsi/megaraid.h~megaraid-fix-warnings-when-config_proc_fs=n drivers/scsi/megaraid.h
---- a/drivers/scsi/megaraid.h~megaraid-fix-warnings-when-config_proc_fs=n
-+++ a/drivers/scsi/megaraid.h
-@@ -1001,7 +1001,6 @@ static int megaraid_reset(Scsi_Cmnd *);
- static int megaraid_abort_and_reset(adapter_t *, Scsi_Cmnd *, int);
- static int megaraid_biosparam(struct scsi_device *, struct block_device *,
- 		sector_t, int []);
--static int mega_print_inquiry(char *, char *);
- 
- static int mega_build_sglist (adapter_t *adapter, scb_t *scb,
- 			      u32 *buffer, u32 *length);
-@@ -1023,6 +1022,7 @@ static int mega_init_scb (adapter_t *);
- static int mega_is_bios_enabled (adapter_t *);
- 
- #ifdef CONFIG_PROC_FS
-+static int mega_print_inquiry(char *, char *);
- static void mega_create_proc_entry(int, struct proc_dir_entry *);
- static int proc_read_config(char *, char **, off_t, int, int *, void *);
- static int proc_read_stat(char *, char **, off_t, int, int *, void *);
-@@ -1039,10 +1039,10 @@ static int proc_rdrv_20(char *, char **,
- static int proc_rdrv_30(char *, char **, off_t, int, int *, void *);
- static int proc_rdrv_40(char *, char **, off_t, int, int *, void *);
- static int proc_rdrv(adapter_t *, char *, int, int);
--#endif
- 
- static int mega_adapinq(adapter_t *, dma_addr_t);
- static int mega_internal_dev_inquiry(adapter_t *, u8, u8, dma_addr_t);
-+#endif
- 
- static int mega_support_ext_cdb(adapter_t *);
- static mega_passthru* mega_prepare_passthru(adapter_t *, scb_t *,
 _
