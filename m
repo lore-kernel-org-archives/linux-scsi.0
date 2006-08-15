@@ -1,51 +1,49 @@
 From: akpm@osdl.org
-Subject: [patch 18/24] megaraid: Dell CERC ATA100/4ch support
-Date: Mon, 14 Aug 2006 23:09:32 -0700
-Message-ID: <200608150609.k7F69Wet013256@shell0.pdx.osdl.net>
+Subject: [patch 21/24] drivers/scsi/dpt/dpti_i2o.h: removal of old scsi code
+Date: Mon, 14 Aug 2006 23:09:37 -0700
+Message-ID: <200608150609.k7F69bXM013270@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:4502 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S965187AbWHOGKB (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:16534 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S965193AbWHOGK3 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Aug 2006 02:10:01 -0400
+	Tue, 15 Aug 2006 02:10:29 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, jkrzyszt@tis.icnet.pl
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, michal.k.k.piotrowski@gmail.com
 
-From: Janusz Krzysztofik <jkrzyszt@tis.icnet.pl>
+From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
 
-Add CERC subsystem ids to the old megaraid driver.  Tested, works.
-
-Cc: James Bottomley <James.Bottomley@steeleye.com>
+Signed-off-by: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/megaraid.c |    2 ++
- drivers/scsi/megaraid.h |    2 ++
- 2 files changed, 4 insertions(+)
+ drivers/scsi/dpt/dpti_i2o.h |   10 ----------
+ 1 file changed, 10 deletions(-)
 
-diff -puN drivers/scsi/megaraid.c~megaraid-dell-cerc-ata100-4ch-support drivers/scsi/megaraid.c
---- a/drivers/scsi/megaraid.c~megaraid-dell-cerc-ata100-4ch-support
-+++ a/drivers/scsi/megaraid.c
-@@ -5046,6 +5046,8 @@ static struct pci_device_id megaraid_pci
- 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
- 	{PCI_VENDOR_ID_AMI, PCI_DEVICE_ID_AMI_MEGARAID2,
- 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-+	{PCI_VENDOR_ID_AMI, PCI_DEVICE_ID_AMI_MEGARAID3,
-+		PCI_VENDOR_ID_DELL, PCI_SUBSYS_ID_CERC_ATA100, 0, 0, 0},
- 	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_AMI_MEGARAID3,
- 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
- 	{0,}
-diff -puN drivers/scsi/megaraid.h~megaraid-dell-cerc-ata100-4ch-support drivers/scsi/megaraid.h
---- a/drivers/scsi/megaraid.h~megaraid-dell-cerc-ata100-4ch-support
-+++ a/drivers/scsi/megaraid.h
-@@ -84,6 +84,8 @@
- #define LSI_SUBSYS_VID			0x1000
- #define INTEL_SUBSYS_VID		0x8086
+diff -puN drivers/scsi/dpt/dpti_i2o.h~drivers-scsi-dpt-dpti_i2oh-removal-of-old drivers/scsi/dpt/dpti_i2o.h
+--- a/drivers/scsi/dpt/dpti_i2o.h~drivers-scsi-dpt-dpti_i2oh-removal-of-old
++++ a/drivers/scsi/dpt/dpti_i2o.h
+@@ -47,21 +47,11 @@
+  *	I2O Interface Objects
+  */
  
-+#define PCI_SUBSYS_ID_CERC_ATA100	0x0511
-+
- #define HBA_SIGNATURE	      		0x3344
- #define HBA_SIGNATURE_471	  	0xCCCC
- #define HBA_SIGNATURE_64BIT		0x0299
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
+-
+-#define DECLARE_MUTEX(name) struct semaphore name=MUTEX
+-
+-typedef struct wait_queue *adpt_wait_queue_head_t;
+-#define ADPT_DECLARE_WAIT_QUEUE_HEAD(wait) adpt_wait_queue_head_t wait = NULL
+-typedef struct wait_queue adpt_wait_queue_t;
+-#else
+-
+ #include <linux/wait.h>
+ typedef wait_queue_head_t adpt_wait_queue_head_t;
+ #define ADPT_DECLARE_WAIT_QUEUE_HEAD(wait) DECLARE_WAIT_QUEUE_HEAD(wait)
+ typedef wait_queue_t adpt_wait_queue_t;
+ 
+-#endif
+ /*
+  * message structures
+  */
 _
