@@ -1,38 +1,33 @@
-From: "Noah Stevenson" <lesa@rmasales.com>
-Subject: Logo your Business Identity (ID6498911)
-Date: Thu, 17 Aug 2006 01:48:01 -0400
-Message-ID: <35882881826625.AB089C0083@58D0Y47>
+From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Subject: [RFC][PATCH 0/1] [RFC][PATCH 0/8] Removal of old code
+Date: Thu, 17 Aug 2006 04:48:01 +0000
+Message-ID: <20060817044801.0.bQKWyd2269.2265.michal@euridica.enternet.net.pl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="Windows-1252"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [65.23.245.108] ([65.23.245.108]:17774 "EHLO CAD.u3a4190.org")
-	by vger.kernel.org with ESMTP id S1751291AbWHQEOy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Aug 2006 00:14:54 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <netdev-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: netdev-owner@vger.kernel.org
+To: akpm@osdl.org
+Cc: linux-kernel@vger.kernel.org, jes@trained-monkey.org, netdev@vger.kernel.org, davem@davemloft.net, tglx@linutronix.de, Eric.Moore@lsil.com, linux-scsi@vger.kernel.org, mikep@linuxtr.net, xfs-masters@oss.sgi.com, nathans@sgi.com
 List-Id: linux-scsi@vger.kernel.org
-To: linux-ppp@vger.kernel.org
-
-p7n
-
-Our art team creates a custom logo for you, based on your needs.  Years of experience have taught us how to create a logo that makes a statement that is unique to you.
-
-In a professional manner we learn about your image and how you would like the world to perceive you and your company.  With this information we then create a logo that is not only unique but reflects the purpose of you and your company.
-
-For value and a logo that reflects your image, take a few minutes and visit Logo Maker!
-
-http://cominform.com.marklogo-ax.biz
-
-Sincerely,
-Logo Design Team
- 
 
 
+The patches have been tested with allmodconfig and allmodconfig.
 
+drivers/message/fusion/linux_compat.h |    9 -----
+drivers/mtd/nand/au1550nd.c           |   11 ------
+drivers/net/acenic.c                  |    4 --
+drivers/net/irda/vlsi_ir.h            |   17 ---------
+drivers/net/tokenring/lanstreamer.c   |   59 ----------------------------------
+drivers/net/tokenring/lanstreamer.h   |   12 ------
+drivers/net/typhoon.c                 |    4 --
+fs/xfs/xfs_dmapi.h                    |   17 ---------
+8 files changed, 1 insertion(+), 132 deletions(-)
 
+Regards,
+Michal
 
-
- absorb carrageen cordage
-
+-- 
+Michal K. K. Piotrowski
+LTG - Linux Testers Group
+(http://www.stardust.webpages.pl/ltg/wiki/)
