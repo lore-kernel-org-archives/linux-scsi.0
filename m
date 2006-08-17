@@ -1,76 +1,45 @@
-From: Matthew Wilcox <matthew@wil.cx>
+From: Michael Tokarev <mjt@tls.msk.ru>
 Subject: Re: Random scsi disk disappearing
-Date: Thu, 17 Aug 2006 05:35:37 -0600
-Message-ID: <20060817113537.GK4340@parisc-linux.org>
-References: <44E44B3E.10708@tls.msk.ru>
+Date: Thu, 17 Aug 2006 15:43:55 +0400
+Message-ID: <44E4567B.4080104@tls.msk.ru>
+References: <44E44B3E.10708@tls.msk.ru> <20060817113537.GK4340@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:57058 "EHLO
-	palinux.external.hp.com") by vger.kernel.org with ESMTP
-	id S964812AbWHQLfi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Aug 2006 07:35:38 -0400
-Content-Disposition: inline
-In-Reply-To: <44E44B3E.10708@tls.msk.ru>
+Received: from hobbit.corpit.ru ([81.13.94.6]:62547 "EHLO hobbit.corpit.ru")
+	by vger.kernel.org with ESMTP id S964819AbWHQLn7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Aug 2006 07:43:59 -0400
+In-Reply-To: <20060817113537.GK4340@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
+To: Matthew Wilcox <matthew@wil.cx>
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Thu, Aug 17, 2006 at 02:55:58PM +0400, Michael Tokarev wrote:
-> From time to time, an scsi disk just disappears from
-> the bus, without any [error] messages whatsoever.
-> The only relevant stuff in dmesg is logging from md
-> (softraid) layer, about "error updating superblock"
-> and later "giving up and removing the disk from the
-> array" - not even error number.
+Matthew Wilcox wrote:
+> On Thu, Aug 17, 2006 at 02:55:58PM +0400, Michael Tokarev wrote:
+[sporadic disk disappearing, no logging]
 > 
-> When I try to access such a disk (/dev/sdX device),
-> I got "No such device or address" error back.
+> I'd recommend turning on scsi logging; it might give you a clue about
+> which bit of scanning is failing to work properly.
 > 
-> It's still listed in /sys/block and /proc/scsi/scsi,
-> but any access to the device gives this error.
-> 
-> But the disk is here, I know it is.  Deleting it from
-> kernel:
-> 
->   echo y > /sys/block/sdX/device/delete
-> 
-> and adding it back:
-> 
->   echo scsi add-single-device x y z > /proc/scsi/scsi
-> 
-> works just fine, linux finds "new" scsi device and it
-> happily works again.
-> 
-> This happens on alot of different machines, with different
-> disk drives (ok, most of them are from Seagate, but not
-> all).  I can't say for sure that it happens on different
-> scsi controllers - at least majority of them are adaptecs,
-> using aic7xxx or aix79xx driver.
-> 
-> I suspected the disks are too hot - nope, according to
-> smartctrl, the themp is far from bad (typically about
-> 25..35 Celsius, and the themperature is not changing much).
-> Bad cables, bad power supply, bad anything else?  Not sure
-> either, at least I can't guess more: the machines are
-> really different, some has good, under-loaded power supplies
-> (and server chassis/motherboards/allthestuff) some has less
-> good ones - makes no difference.  And the thing is - having
-> in mind really sporadic disappearing, not depending on current
-> load, time of day (eg, during nights, there's no one on site
-> so no one to touch cables etc), ...  Well, I just can't think
-> of any reason, at all.
-> 
-> But one thing bothers me most: there's NO LOGGING from scsi
-> layer.  None, zero, not at all.
-> 
-> Has anyone else seen something similar?  Any pointers on how
-> to debug the issue?
+> Try booting with scsi_mod.scsi_logging_level = 448 (I think I have that
+> number right; 7 shifted left by 6) and then you can compare failing and
+> non-failing runs and see if there's any difference.
 
-I'd recommend turning on scsi logging; it might give you a clue about
-which bit of scanning is failing to work properly.
+It should be the same as
+   echo $((7<<6)) > /sys/module/scsi_mod/parameters/scsi_logging_level
+(which indeed is 448) at runtime, right?  (And yes, CONFIG_SCSI_LOGGING
+is set to y).
 
-Try booting with scsi_mod.scsi_logging_level = 448 (I think I have that
-number right; 7 shifted left by 6) and then you can compare failing and
-non-failing runs and see if there's any difference.
+Heh oh those magic numbers!.. ;)
+
+Ok, I've turned on the logging on a bunch of machines (using the sysfs
+method), let's see what will happen next.  Thank you!
+
+By the way, should kernel pefrorm at least *some* "minimal" logging of
+such a serious events by default?  Well ok, ok, it's not known yet what
+the event really is, so I'm shutting up now, at least for a while.. ;)
+
+/mjt
