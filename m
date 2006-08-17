@@ -1,34 +1,39 @@
-From: Steve Lord <lord@xfs.org>
-Subject: 3ware driver maximum request size
-Date: Thu, 17 Aug 2006 10:13:03 -0500
-Message-ID: <44E4877F.2070708@xfs.org>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: [PATCH 0/3] lpfc 8.1.9 : lpfc 8.1.9 patches
+Date: Thu, 17 Aug 2006 11:57:49 -0400
+Message-ID: <1155830269.24351.10.camel@localhost.localdomain>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail01hq.adic.com ([63.81.117.10]:38468 "EHLO MAIL01HQ.adic.com")
-	by vger.kernel.org with ESMTP id S965127AbWHQPNF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Aug 2006 11:13:05 -0400
+Received: from emulex.emulex.com ([138.239.112.1]:60589 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S932548AbWHQP5k
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Aug 2006 11:57:40 -0400
+Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
+	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id k7HFvd0p014542
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Aug 2006 08:57:39 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, aradford@gmail.com
+To: linux-scsi@vger.kernel.org
+
+This patch set updates the lpfc driver to revision 8.1.9. These patches
+are intended for scsi-rc-fixes-2.6 and should get pulled into 2.6.18.
+
+Changes include:
+- Misc Bug Fixes:
+  - Cap MBX_DOWN_LINK command timeout to 60 seconds
+  - Fix double free of ndlp object
+  - Don't free mbox structures on error. The completion handlers expect to
+    do so.
+  - Clear host attention work items when going offline
+  - Fixed discovery issues in multi-initiator environments.
+- Stall error handler if attempting resets/aborts while an rport is blocked.
+    This avoids device offline scenarios due to errors in the error handler.
+- Change version number to 8.1.9
+
+-- james s
 
 
-Does anyone know why the 3ware driver caps I/O at 128K bytes per scsi
-request? The driver defines a scatter gather array which will always
-cope with at least twice this.
-
-I am running with the TW_MAX_SECTORS constant at 512 and getting
-256K I/Os to a 6+1 raid5 lun on a 9550SX. By my calculations this
-does not exceed the defined sizes of the scatter gather arrays for
-this type of device (but would I guess for the escalade variant
-in the code).
-
-I know nothing about the hardware itself, but if this works it seems
-like a worthwhile change for the newer devices.
-
-Thanks
-
-   Steve Lord
 
