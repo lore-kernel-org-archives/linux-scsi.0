@@ -1,45 +1,72 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: Question about scsi_qla_host_t.fcports list protection (qla2xxx)
-Date: Thu, 17 Aug 2006 13:58:19 +0400
-Message-ID: <44E43DBB.3030705@vlnb.net>
-References: <44E19F93.2020305@vlnb.net> <20060816175739.GS3674@andrew-vasquezs-computer.local>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Random scsi disk disappearing
+Date: Thu, 17 Aug 2006 14:55:58 +0400
+Message-ID: <44E44B3E.10708@tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from out-relay-04.infobox.ru ([85.249.135.213]:30645 "EHLO
-	out-relay-04.mailcluster.net") by vger.kernel.org with ESMTP
-	id S932468AbWHQJ6m (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Aug 2006 05:58:42 -0400
-In-Reply-To: <20060816175739.GS3674@andrew-vasquezs-computer.local>
+Received: from hobbit.corpit.ru ([81.13.94.6]:23644 "EHLO hobbit.corpit.ru")
+	by vger.kernel.org with ESMTP id S932474AbWHQK4B (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Aug 2006 06:56:01 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: linux-driver@qlogic.com, linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-Andrew Vasquez wrote:
-> On Tue, 15 Aug 2006, Vladislav Bolkhovitin wrote:
-> 
-> 
->>Looking at the qla2xxx driver source code I noticed that 
->>scsi_qla_host_t.fcports is used without any protection. For instance, 
->>qla2x00_loop_reset() walks over this list. This function is called from 
->>qla2xxx_eh_bus_reset(), which could be called at any time. What does 
->>protect fcports from being changed, eg, by some async loop event during 
->>the walking and eventually oops'ing? Do I miss something? There are many 
->>such unprotected fcports list usages in the driver.
-> 
-> 
-> Nothing is ever removed from the fcports list during driver execution.
-> fcports are also only added from a single context (post init-time)
-> within the DPC thread.  We are safe here.
+An old problem, very annoying.
 
-Sorry, I don't think so. For lockless iterating over a list concurrently 
-with the addition to it you need to use *_rcu() list functions and do 
-some RCU locking or, at least, disable preemption. Otherwise it is not safe.
+>From time to time, an scsi disk just disappears from
+the bus, without any [error] messages whatsoever.
+The only relevant stuff in dmesg is logging from md
+(softraid) layer, about "error updating superblock"
+and later "giving up and removing the disk from the
+array" - not even error number.
 
-Also, I don't think that keeping dead FC ports entries forever is a good 
-idea. What does prevent you from deleting them, for instance, after 
-fc_remote_port_delete() call?
+When I try to access such a disk (/dev/sdX device),
+I got "No such device or address" error back.
 
-Vlad
+It's still listed in /sys/block and /proc/scsi/scsi,
+but any access to the device gives this error.
+
+But the disk is here, I know it is.  Deleting it from
+kernel:
+
+  echo y > /sys/block/sdX/device/delete
+
+and adding it back:
+
+  echo scsi add-single-device x y z > /proc/scsi/scsi
+
+works just fine, linux finds "new" scsi device and it
+happily works again.
+
+This happens on alot of different machines, with different
+disk drives (ok, most of them are from Seagate, but not
+all).  I can't say for sure that it happens on different
+scsi controllers - at least majority of them are adaptecs,
+using aic7xxx or aix79xx driver.
+
+I suspected the disks are too hot - nope, according to
+smartctrl, the themp is far from bad (typically about
+25..35 Celsius, and the themperature is not changing much).
+Bad cables, bad power supply, bad anything else?  Not sure
+either, at least I can't guess more: the machines are
+really different, some has good, under-loaded power supplies
+(and server chassis/motherboards/allthestuff) some has less
+good ones - makes no difference.  And the thing is - having
+in mind really sporadic disappearing, not depending on current
+load, time of day (eg, during nights, there's no one on site
+so no one to touch cables etc), ...  Well, I just can't think
+of any reason, at all.
+
+But one thing bothers me most: there's NO LOGGING from scsi
+layer.  None, zero, not at all.
+
+Has anyone else seen something similar?  Any pointers on how
+to debug the issue?
+
+Thanks.
+
+/mjt
