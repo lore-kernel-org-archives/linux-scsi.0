@@ -1,39 +1,50 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: TCQ depth of aic7xxx
-Date: Thu, 17 Aug 2006 08:55:28 +0200
-Message-ID: <1155797728.4494.25.camel@laptopd505.fenrus.org>
-References: <3a1eedb70608160501l1637a01ai97faadbe6ea5620f@mail.gmail.com>
-	 <1155730591.3023.31.camel@laptopd505.fenrus.org>
-	 <3a1eedb70608162030q44123f9csc3d51039c969bb8c@mail.gmail.com>
+From: Arkadiusz Miskiewicz <arekm@pld-linux.org>
+Subject: Re: qlogic 2312 problems on 2.6.16.22, 2.6.18rc4
+Date: Thu, 17 Aug 2006 11:15:35 +0200
+Message-ID: <200608171115.35522.arekm@pld-linux.org>
+References: <200608140946.50411.arekm@pld-linux.org> <20060816181445.GU3674@andrew-vasquezs-computer.local> <200608162310.26541.arekm@pld-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-2
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:61662 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S932066AbWHQGzu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Aug 2006 02:55:50 -0400
-In-Reply-To: <3a1eedb70608162030q44123f9csc3d51039c969bb8c@mail.gmail.com>
+Received: from outgoing3.smtp.agnat.pl ([193.239.44.85]:18854 "EHLO
+	outgoing3.smtp.agnat.pl") by vger.kernel.org with ESMTP
+	id S932367AbWHQJPn convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Aug 2006 05:15:43 -0400
+In-Reply-To: <200608162310.26541.arekm@pld-linux.org>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jassduec@gmail.com
-Cc: linux-scsi@vger.kernel.org
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, 2006-08-16 at 22:30 -0500, jassduec@gmail.com wrote:
-> Thanks for the reply.
-> 
-> Yeah, I have a raid array connected to the SCSI interface. There are
-> two raidgroups in the array using RAID 5. Each raidgroup consists of
-> 5-6 disks and one LUN over the entire raidgroup. The LUNs have been
-> partitioned at the OS level into different partitions. The storage
-> system has a battery protected cache of 16 MB. What range of values of
-> TCQ depth would be good enough in such a scenario? I want that the
-> SCSI HBA not be the bottleneck and get the maximum out of the storage
-> system.
+On Wednesday 16 August 2006 23:10, Arkadiusz Miskiewicz wrote:
 
-for a setup like this, especially due to the ram, I'd set it as high as
-you can, which probably is something like 253 or so.
+> Tyan manual ftp://ftp.tyan.com/manuals/m_s2891_100.pdf says on page 4
+> ,,One PCI-X 100MHz slot (PCI-X B)''.
+>
+> Hm, while looking at that manual I see that on page 13 it says ,,one =
+pci-x
+> 100MHz device''. Maybe that's the problem since I didn't remove Adapt=
+ec
+> TARO controller. I should be able to get this tested again without ad=
+aptec
+> sooner than several weeks. Maybe I misunderstand what documentation s=
+ays
+> here.
 
--- 
-if you want to mail me at work (you don't), use arjan (at) linux.intel.com
+The problem is solved now. Removing Adaptec controller from TARO slot m=
+akes=20
+system happy and there is no problem with qlogic card after that.
 
+Weird mainboard. There should be warning with big letters on it ...=20
+
+Thanks for help!
+--=20
+Arkadiusz Mi=B6kiewicz        PLD/Linux Team
+arekm / maven.pl            http://ftp.pld-linux.org/
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
