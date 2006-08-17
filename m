@@ -1,61 +1,39 @@
-From: Arkadiusz Miskiewicz <arekm@pld-linux.org>
-Subject: Re: qlogic 2312 problems on 2.6.16.22, 2.6.18rc4
-Date: Thu, 17 Aug 2006 07:58:19 +0200
-Message-ID: <200608170758.19344.arekm@pld-linux.org>
-References: <200608140946.50411.arekm@pld-linux.org> <200608162310.26541.arekm@pld-linux.org> <20060816221751.GW3674@andrew-vasquezs-computer.local>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: TCQ depth of aic7xxx
+Date: Thu, 17 Aug 2006 08:55:28 +0200
+Message-ID: <1155797728.4494.25.camel@laptopd505.fenrus.org>
+References: <3a1eedb70608160501l1637a01ai97faadbe6ea5620f@mail.gmail.com>
+	 <1155730591.3023.31.camel@laptopd505.fenrus.org>
+	 <3a1eedb70608162030q44123f9csc3d51039c969bb8c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from outgoing3.smtp.agnat.pl ([193.239.44.85]:37533 "EHLO
-	outgoing3.smtp.agnat.pl") by vger.kernel.org with ESMTP
-	id S1750792AbWHQF60 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Aug 2006 01:58:26 -0400
-In-Reply-To: <20060816221751.GW3674@andrew-vasquezs-computer.local>
-Content-Disposition: inline
+Received: from pentafluge.infradead.org ([213.146.154.40]:61662 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S932066AbWHQGzu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Aug 2006 02:55:50 -0400
+In-Reply-To: <3a1eedb70608162030q44123f9csc3d51039c969bb8c@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: jassduec@gmail.com
+Cc: linux-scsi@vger.kernel.org
 
-On Thursday 17 August 2006 00:17, Andrew Vasquez wrote:
+On Wed, 2006-08-16 at 22:30 -0500, jassduec@gmail.com wrote:
+> Thanks for the reply.
+> 
+> Yeah, I have a raid array connected to the SCSI interface. There are
+> two raidgroups in the array using RAID 5. Each raidgroup consists of
+> 5-6 disks and one LUN over the entire raidgroup. The LUNs have been
+> partitioned at the OS level into different partitions. The storage
+> system has a battery protected cache of 16 MB. What range of values of
+> TCQ depth would be good enough in such a scenario? I want that the
+> SCSI HBA not be the bottleneck and get the maximum out of the storage
+> system.
 
-> > I started dd'ing text file onto /dev/sda2, then back to tmpfs and d=
-iffing
-> > these. Corruption is one byte, several not corrupted bytes and agai=
-n one
-> > corrupted byte. Some regular pattern.
->
-> Could you send me the a snippet (2 to 4KB) of the good and bad data?
+for a setup like this, especially due to the ram, I'd set it as high as
+you can, which probably is something like 253 or so.
 
-The corruption doesn't happen so often. I need 1MB of data to see 5 byt=
-es=20
-corrupted.
+-- 
+if you want to mail me at work (you don't), use arjan (at) linux.intel.com
 
-[root@pldmachine ~]# dd if=3Dxok of=3D/dev/sda2 bs=3D1M count=3D1
-1+0 records in
-1+0 records out
-[root@pldmachine ~]# dd if=3D/dev/sda2 of=3Dtry1 bs=3D1M count=3D1
-1+0 records in
-1+0 records out
-[root@pldmachine ~]# dd if=3D/dev/sda2 of=3Dtry2 bs=3D1M count=3D1
-1+0 records in
-1+0 records out
-[root@pldmachine ~]# dd if=3D/dev/sda2 of=3Dtry3 bs=3D1M count=3D1
-1+0 records in
-1+0 records out
-
-results http://ep09.pld-linux.org/~arekm/qlogic/
-
->
-> Regards,
-> Andrew Vasquez
-
---=20
-Arkadiusz Mi=B6kiewicz        PLD/Linux Team
-arekm / maven.pl            http://ftp.pld-linux.org/
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
