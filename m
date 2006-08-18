@@ -1,357 +1,66 @@
-From: Andreas Herrmann <aherrman@de.ibm.com>
-Subject: Re: Random scsi disk disappearing
-Date: Fri, 18 Aug 2006 11:11:39 +0200
-Message-ID: <20060818091139.GA6120@lion28.ibm.com>
+From: "andorra" <algorithmicdiscussant@earthlink.net>
+Subject: convoke
+Date: Fri, 18 Aug 2006 13:07:22 +0200
+Message-ID: <69548452676561.A7D761CD27__9110.3940889754$1155899242$gmane$org@61U76>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+        charset="Windows-1252"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate6.de.ibm.com ([195.212.29.155]:365 "EHLO
-	mtagate6.de.ibm.com") by vger.kernel.org with ESMTP
-	id S1751051AbWHRJPw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Aug 2006 05:15:52 -0400
-Content-Disposition: inline
+Received: from acu240.neoplus.adsl.tpnet.pl ([83.25.72.240]:40716 "EHLO
+	eg1u.oie6b.optonline.net") by vger.kernel.org with ESMTP
+	id S1751377AbWHRLHG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Aug 2006 07:07:06 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>, Douglas Gilbert <dougg@torque.net>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, Linux SCSI <linux-scsi@vger.kernel.org>, berthiaume_wayne@emc.com
+To: linux-serial@vger.kernel.org
 
-On 18.08.2006 00:33 Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
-> Andreas Herrmann wrote:
-> > Anyone interested in a script to conveniently interpret or change the
-> > SCSI logging level? Such a script (scsi_logging_level) exists in the
-> > s390-tools package (version 1.5.3).
+18 August! Attention!
+ 
+Get on BCL C first thing on friday, this one !
 
-> That would be very welcome.
+Commpany: BICOASTAL COMMUNICAT
+Sybmol:  BCL C 
+Curreent PPrice: $0.0265
+Expectiing ppriceon Friday: $0.06-$0.08
 
-See script below. To set SCSI_LOG_SCAN as discussed in this thread you
-can use:
+The prcie is the minimum for last week and it will boom on friday!
+Worst Scenariio Target Pirce: $0.065
+Most Probable Scenraio Target Prrice: $0.099
+Best Scenario Target Prcie: $0.125
+Thursday's Volume: 8,725,600 (Heavy)
 
-# scsi_logging_level -s --scan 7
-New scsi logging level:
-dev.scsi.logging_level = 448
-SCSI_LOG_ERROR=0
-SCSI_LOG_TIMEOUT=0
-SCSI_LOG_SCAN=7
-SCSI_LOG_MLQUEUE=0
-SCSI_LOG_MLCOMPLETE=0
-SCSI_LOG_LLQUEUE=0
-SCSI_LOG_LLCOMPLETE=0
-SCSI_LOG_HLQUEUE=0
-SCSI_LOG_HLCOMPLETE=0
-SCSI_LOG_IOCTL=0
+Watch out for B CLC this friday, we see a great story in the making!
 
-> > If others show interest for this script, maybe a better place can be
-> > found than s390-tools (because it is not really s390-specific).
+Recommendation: "Sttrong BBuy" starting on Friday, August 18, 2006.
 
-> It could be put into linux/Documentation/scsi/. People who are 
-> confronted with a debugging problem probably look into Documentation/. 
-> Also, scripts which demonstrate usage of certain kernel interfaces do 
-> count as valuable documentation.
+Latest News
 
-I am not sure whehter this script should be added to
-Documentation/scsi. I think it would be better to just document the
-SCSI logging feature at all in Documentation/scsi and put the script
-somewhere else.
+Bicoastal Communications Inc. Announces E911 Service Agreement. Grand 
+Junction, Colo.--(Businesss Wirre)--Aug. 15, 2006--Bicoastal Communications Inc.(Pink Sheets: BC LC - News) announces it has reached an agreement with Dialpoint Voice Service Inc. of Nevada to provide E911 services for its National VoIP (Voice over Internet Protocol) rollout through Callingpoint Communications.
 
-Maybe Douglas Gilbert has a suggestion where such a script will best
-fit in? He knows best which packages with scripts and utilities for
-storage and SCSI are available.
+This will give Bicoastal the ability to provide E911 services to all of the lower 48 
+states via VoIP as required by the FCC. Upon successful testing of the system, Bicoastal will be in position to start offering Residential and Business VoIP 
+services through its Callingpoint Communications unit within the next two weeks. 
 
+About the Company:
 
-Regards,
+Bicoastal Communications Inc. is positioned to make substantial growth in the coming years. The company strategy is to deploy into non-primary cities with 
+population centers of less than one million people. Unlike the major metropolitan areas of the country, these cities have not seen the benefit of competitive product offerings. Bicoastal intends to address these deficiencies by encompassing its IP services, Traditional and VoIP Telephone services and Television (IPTV) services, securing revenues with the much-touted triple play.The strategic partnerships developed have already made it possible for Bicoastal to gain direct access to 25,000 fiber-connected homes throughout the United States.
 
-Andreas
+Members should pick up BC LC as early as possible on Friday.
 
---
-#! /bin/bash
-###############################################################################
-# Conveniently create and set scsi logging level, show SCSI_LOG fields in human
-# readable form.
-#
-# Copyright (C) IBM Corp. 2006
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or (at
-# your option) any later version.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-# 02110-1301, USA.
-###############################################################################
+This news is going to send BC LC off the charts!  
+
+We all know that in the this businses it's the big announcements that makes these stockks expldoe!!! 
+
+We see this as a hgue porfit taking a deal. Watch B CLC like a hawk!
+
+Watch this one Traade on the 18 OF August. Go B CLC! 
 
 
-SCRIPTNAME="scsi_logging_level"
 
-declare -i LOG_ERROR=0
-declare -i LOG_TIMEOUT=0
-declare -i LOG_SCAN=0
-declare -i LOG_MLQUEUE=0
-declare -i LOG_MLCOMPLETE=0
-declare -i LOG_LLQUEUE=0
-declare -i LOG_LLCOMPLETE=0
-declare -i LOG_HLQUEUE=0
-declare -i LOG_HLCOMPLETE=0
-declare -i LOG_IOCTL=0
+Red sky at night shepherds delight,red sky in the morning,shepherds warning
 
-declare -i LEVEL=0
+Dump husband in September, you have to get rid of the spiders Some pork-knockers does only clear track fuh monkey run race.. When two big bottle deh ah table lil one nah business deh.
 
-_ERROR_SHIFT=0
-_TIMEOUT_SHIFT=3
-_SCAN_SHIFT=6
-_MLQUEUE_SHIFT=9
-_MLCOMPLETE_SHIFT=12
-_LLQUEUE_SHIFT=15
-_LLCOMPLETE_SHIFT=18
-_HLQUEUE_SHIFT=21
-_HLCOMPLETE_SHIFT=24
-_IOCTL_SHIFT=27
-
-SET=0
-GET=0
-CREATE=0
-
-OPTS=`getopt -o hvcgsa:E:T:S:I:M:L:H: --long \
-help,version,create,get,set,all:,error:,timeout:,scan:,ioctl:,\
-midlevel:,mlqueue:,mlcomplete:,lowlevel:,llqueue:,llcomplete:,\
-highlevel:,hlqueue:,hlcomplete: -n \'$SCRIPTNAME\' -- "$@"`
-eval set -- "$OPTS"
-
-# print version info
-printversion()
-{
-    cat <<EOF
-$SCRIPTNAME (s390-tools) %S390_TOOLS_VERSION%
-(C) Copyright IBM Corp. 2006
-EOF
-}
-
-# print usage and help
-printhelp()
-{
-    cat <<EOF
-Usage: $SCRIPTNAME [OPTIONS]
-
-Create, get or set scsi logging level.
-
-Options:
-
-        -h, --help       print this help
-        -v, --version    print version information
-        -s, --set        create and set logging level as specified on
-                         command line
-        -g, --get        get current logging level and display it
-        -c, --create     create logging level as specified on command line
-        -a, --all        specify value for all SCSI_LOG fields
-        -E, --error      specify SCSI_LOG_ERROR
-        -T, --timeout    specify SCSI_LOG_TIMEOUT
-        -S, --scan       specify SCSI_LOG_SCAN
-        -M, --midlevel   specify SCSI_LOG_MLQUEUE and SCSI_LOG_MLCOMPLETE
-            --mlqueue    specify SCSI_LOG_MLQUEUE
-            --mlcomplete specify SCSI_LOG_MLCOMPLETE
-        -L, --lowlevel   specify SCSI_LOG_LLQUEUE and SCSI_LOG_LLCOMPLETE
-            --llqueue    specify SCSI_LOG_LLQUEUE
-            --llcomplete specify SCSI_LOG_LLCOMPLETE
-        -H, --highlevel  specify SCSI_LOG_HLQUEUE and SCSI_LOG_HLCOMPLETE
-            --hlqueue    specify SCSI_LOG_HLQUEUE
-            --hlcomplete specify SCSI_LOG_HLCOMPLETE
-        -I, --ioctl      specify SCSI_LOG_IOCTL
-
-Exactly one of the options "-c", "-g" and "-s" has to be specified.
-Valid values for SCSI_LOG fields are integers from 0 to 7.
-
-Note: Several SCSI_LOG fields can be specified using several options.
-When multiple options specify same SCSI_LOG field the most specific
-option has precedence.
-
-Example: "scsi_logging_level --hlqueue 3 --hlcomplete 2 --all 1 -s" sets
-SCSI_LOG_HLQUEUE=3, SCSI_LOG_HLCOMPLETE=2 and assigns all other SCSI_LOG
-fields the value 1.
-EOF
-}
-
-check_level()
-{
-    if [ `echo -n $1 | tr --complement [:digit:] 'a' | grep -s 'a'` ]
-    then
-	invalid_cmdline "log level '$1' out of range [0, 7]"
-    fi
-	
-    if [ $1 -lt 0 -o $1 -gt 7 ]
-    then
-	invalid_cmdline "log level '$1' out of range [0, 7]"
-    fi
-}
-
-# check cmd line arguments
-check_cmdline()
-{
-    while true ; do
-	case "$1" in
-	    -a|--all)	_ALL=$2; check_level $2
-			shift 2;;
-	    -c|--create) CREATE=1;
-			shift 1;;
-	    -g|--get)	GET=1
-			shift 1;;
-	    -h|--help) printhelp
-			exit 0;;
-	    -s|--set)	SET=1
-			shift 1;;
-	    -v|--version) printversion
-			exit 0;;
-	    -E|--error)	_ERROR=$2; check_level $2
-			shift 2;;
-	    -T|--timeout) _TIMEOUT=$2; check_level $2
-			shift 2;;
-	    -S|--scan)	_SCAN=$2; check_level $2
-			shift 2;;
-	    -M|--midlevel) _ML=$2; check_level $2
-			shift 2;;
-	    --mlqueue)	_MLQUEUE=$2; check_level $2
-			shift 2;;
-	    --mlcomplete) _MLCOMPLETE=$2; check_level $2
-			shift 2;;
-	    -L|--lowlevel) _LL=$2; check_level $2
-			shift 2;;
-	    --llqueue)	_LLQUEUE=$2; check_level $2
-			shift 2;;
-	    --llcomplete) _LLCOMPLETE=$2; check_level $2
-			shift 2;;
-	    -H|--highlevel) _HL=$2; check_level $2
-			shift 2;;
-	    --hlqueue)	_HLQUEUE=$2; check_level $2
-			shift 2;;
-	    --hlcomplete) _HLCOMPLETE=$2; check_level $2
-			shift 2;;
-	    -I|--ioctl) _IOCTL=$2; check_level $2
-			shift 2;;
-	    --) shift; break;;
-	    *) echo "Internal error!" ; exit 1;;
-	esac
-    done
-
-    if [ -n "$*" ]
-    then
-	invalid_cmdline invalid parameter $*
-    fi
-
-    if [ $GET = "1" -a $SET = "1" ]
-    then
-        invalid_cmdline options \'-c\', \'-g\' and \'-s\' are mutual exclusive
-    elif [ $GET = "1" -a $CREATE = "1" ]
-    then
-        invalid_cmdline options \'-c\', \'-g\' and \'-s\' are mutual exclusive
-    elif [ $SET = "1" -a $CREATE = "1" ]
-    then
-        invalid_cmdline options \'-c\', \'-g\' and \'-s\' are mutual exclusive
-    fi
-    
-    LOG_ERROR=${_ERROR:-${_ALL:-0}}
-    LOG_TIMEOUT=${_TIMEOUT:-${_ALL:-0}}
-    LOG_SCAN=${_SCAN:-${_ALL:-0}}
-    LOG_MLQUEUE=${_MLQUEUE:-${_ML:-${_ALL:-0}}}
-    LOG_MLCOMPLETE=${_MLCOMPLETE:-${_ML:-${_ALL:-0}}}
-    LOG_LLQUEUE=${_LLQUEUE:-${_LL:-${_ALL:-0}}}
-    LOG_LLCOMPLETE=${_LLCOMPLETE:-${_LL:-${_ALL:-0}}}
-    LOG_HLQUEUE=${_HLQUEUE:-${_HL:-${_ALL:-0}}}
-    LOG_HLCOMPLETE=${_HLCOMPLETE:-${_HL:-${_ALL:-0}}}
-    LOG_IOCTL=${_IOCTL:-${_ALL:-0}}
-}
-
-invalid_cmdline()
-{
-        echo "$SCRIPTNAME: $*"
-	echo "$SCRIPTNAME: Try '$SCRIPTNAME --help' for more information."
-	exit 1
-}
-
-get_logging_level()
-{
-    echo "Current scsi logging level:"
-    LEVEL=`sysctl -n dev.scsi.logging_level`
-    if [ $? != 0 ]
-    then
- 	echo "$SCRIPTNAME: could not read scsi logging level" \
-             "(kernel probably without SCSI_LOGGING support)"
- 	exit 1
-    fi
-}
-
-show_logging_level()
-{
-    echo "dev.scsi.logging_level = $LEVEL"
-
-    LOG_ERROR=$((($LEVEL>>$_ERROR_SHIFT) & 7))
-    LOG_TIMEOUT=$((($LEVEL>>$_TIMEOUT_SHIFT) & 7))
-    LOG_SCAN=$((($LEVEL>>$_SCAN_SHIFT) & 7))
-    LOG_MLQUEUE=$((($LEVEL>>$_MLQUEUE_SHIFT) & 7))
-    LOG_MLCOMPLETE=$((($LEVEL>>$_MLCOMPLETE_SHIFT) & 7))
-    LOG_LLQUEUE=$((($LEVEL>>$_LLQUEUE_SHIFT) & 7))
-    LOG_LLCOMPLETE=$((($LEVEL>>$_LLCOMPLETE_SHIFT) & 7))
-    LOG_HLQUEUE=$((($LEVEL>>$_HLQUEUE_SHIFT) & 7))
-    LOG_HLCOMPLETE=$((($LEVEL>>$_HLCOMPLETE_SHIFT) & 7))
-    LOG_IOCTL=$((($LEVEL>>$_IOCTL_SHIFT) & 7))
-
-    echo "SCSI_LOG_ERROR=$LOG_ERROR"
-    echo "SCSI_LOG_TIMEOUT=$LOG_TIMEOUT"
-    echo "SCSI_LOG_SCAN=$LOG_SCAN"
-    echo "SCSI_LOG_MLQUEUE=$LOG_MLQUEUE"
-    echo "SCSI_LOG_MLCOMPLETE=$LOG_MLCOMPLETE"
-    echo "SCSI_LOG_LLQUEUE=$LOG_LLQUEUE"
-    echo "SCSI_LOG_LLCOMPLETE=$LOG_LLCOMPLETE"
-    echo "SCSI_LOG_HLQUEUE=$LOG_HLQUEUE"
-    echo "SCSI_LOG_HLCOMPLETE=$LOG_HLCOMPLETE"
-    echo "SCSI_LOG_IOCTL=$LOG_IOCTL"
-}
-
-set_logging_level()
-{
-    echo "New scsi logging level:"
-    sysctl -q -w dev.scsi.logging_level=$LEVEL
-    if [ $? != 0 ]
-    then
- 	echo "$SCRIPTNAME: could not write scsi logging level" \
- 	     "(kernel probably without SCSI_LOGGING support)"
- 	exit 1
-    fi
-}
-
-create_logging_level()
-{
-    LEVEL=$((($LOG_ERROR & 7)<<$_ERROR_SHIFT))
-    LEVEL=$(($LEVEL|(($LOG_TIMEOUT & 7)<<$_TIMEOUT_SHIFT)))
-    LEVEL=$(($LEVEL|(($LOG_SCAN & 7)<<$_SCAN_SHIFT)))
-    LEVEL=$(($LEVEL|(($LOG_MLQUEUE & 7)<<$_MLQUEUE_SHIFT)))
-    LEVEL=$(($LEVEL|(($LOG_MLCOMPLETE & 7)<<$_MLCOMPLETE_SHIFT)))
-    LEVEL=$(($LEVEL|(($LOG_LLQUEUE & 7)<<$_LLQUEUE_SHIFT)))
-    LEVEL=$(($LEVEL|(($LOG_LLCOMPLETE & 7)<<$_LLCOMPLETE_SHIFT)))
-    LEVEL=$(($LEVEL|(($LOG_HLQUEUE & 7)<<$_HLQUEUE_SHIFT)))
-    LEVEL=$(($LEVEL|(($LOG_HLCOMPLETE & 7)<<$_HLCOMPLETE_SHIFT)))
-    LEVEL=$(($LEVEL|(($LOG_IOCTL & 7)<<$_IOCTL_SHIFT)))
-}
-
-check_cmdline $*
-
-if [ $SET = "1" ]
-then
-    create_logging_level
-    set_logging_level
-    show_logging_level
-elif [ $GET = "1" ]
-then
-    get_logging_level
-    show_logging_level
-elif [ $CREATE = "1" ]
-then
-    create_logging_level
-    show_logging_level
-else
-    invalid_cmdline missing option \'-g\', \'-s\' or \'-c\'
-fi
