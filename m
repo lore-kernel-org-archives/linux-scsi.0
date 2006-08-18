@@ -1,85 +1,31 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: Bugs on Linux 2.6.18-rc2 sg code?
-Date: Fri, 18 Aug 2006 18:00:45 -0400
-Message-ID: <44E6388D.1000206@torque.net>
-References: <8202f4270608101843r7df002d2l40e03eca3271b050@mail.gmail.com>
-Reply-To: dougg@torque.net
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Bug#380272: kernel-image-2.6-686-smp: cpqarray module fails to
+	detect arrays
+Date: Fri, 18 Aug 2006 16:18:58 -0700
+Message-ID: <1155943138.3766.9.camel@mulgrave.il.steeleye.com>
+References: <200608180959.16889.joshua@rubixlinux.org>
+	 <20060818163904.GC16593@athena.road.mcmartin.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:33702 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1751504AbWHRWAr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Aug 2006 18:00:47 -0400
-In-Reply-To: <8202f4270608101843r7df002d2l40e03eca3271b050@mail.gmail.com>
+Received: from stat9.steeleye.com ([209.192.50.41]:39372 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1751582AbWHRXVF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Aug 2006 19:21:05 -0400
+In-Reply-To: <20060818163904.GC16593@athena.road.mcmartin.ca>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Fajun Chen <fajunchen@gmail.com>
-Cc: linux-scsi@vger.kernel.org
+To: Kyle McMartin <kyle@parisc-linux.org>
+Cc: Joshua Rubin <joshua@rubixlinux.org>, 380272@bugs.debian.org, maximilian attems <maks@sternwelten.at>, Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org
 
-Fajun Chen wrote:
-> Hi Folks,
-> 
-> I use ATA pass through via sg ioctl interface for data read/write.
-> Linux 2.6.18-rc2 patched with Jeff Garzik's libata git patch was
-> running on ARM IOP80321 board. The HBA Sil3124 was used.
-> 
-> Two problems were observed:
-> 1. sg mmap bug?
->    My test program could not write data correctly to the mmapped
-> buffer in the user space.      The program did a read immediately
-> after a write and the data mismatches.  Swapped the sg_vma_nopage()
-> function with the one in 2.6.15.4 release fixed the problem. So this
-> appears to be a wrong change to the sg mmap code in 2.6.18-rc2
-> release.
+On Fri, 2006-08-18 at 12:39 -0400, Kyle McMartin wrote:
+> The problem is because they both claim support for the same PCI Ids:
 
-Thanks for the report. I can confirm that mmap-ed IO
-in the sg driver is broken. Simply reading 16 blocks
-from some arbitrary offset with sg_dd and sgm_dd
-and comparing the fetched data shows mismatches starting
-above the first page (i.e. above byte offset 4096 on
-i386).
+That's this fix, isn't it?
 
-Your point about the change to sg_vma_nopage() between
-lk 2.6.15 and lk 2.6.16 also seems to be correct.
-The most indented part of that function has been
-changed from incrementing the change count on the
-reported page (as indicated by 'offset') in a
-compound page allocation to ignoring the 'offset'
-and incrementing the page count on the first page
-in a compound page allocation.
+http://www.kernel.org/git/?p=linux/kernel/git/jejb/scsi-rc-fixes-2.6.git;a=commit;h=b2b3c121076961333977f485f0d54c22121df920
 
-> 2. sg hangs or have really slow response
->   Under certain unknown conditions, sg will be busy with one
-> read/write ioctl call for over half an hour.  From scsi proc
-> interface, sg and scsi mid layer were processing requests as  states
-> "act" or "rcv" was shown in /proc/scsi/sg/debug. My test program set
-> the command timeout to be 30 seconds, but this timeout did not trigger
-> the command abort.
+James
 
-Well yes, I have noticed on transport errors, the attempt
-to abort the command (or use a larger hammer) fails and
-the command just keeps on chugging. The "elapsed" time
-in the /proc/scsi/sg/debug just keeps on growing, typically
-to a value much larger than the given timeout.
-
-> Are these problems genuine bugs in sg 2.6.18-rc2 release? Since the
-> problem is reproducible in my test hardware, please let me know if any
-> log/traces can be collected.
-
-I was able to confirm the breakage in point 1)
-with a recent SATA disk with an old SIL 3112 controller
-and with a SAS disk with some pretty recent MPT Fusion
-hardware. That was enough for me.
-
-> BTW, scsi logging through proc FS seems to be broken as well even
-> though SCSI logging and Proc FS are enabled in my 2.6.18-rc2 kernel
-> config.
-
-Looks like we should be doing a lot more testing,
-especially when our friends from other kernel areas
-offer to clean up our code and remove cruft.
-
-Doug Gilbert
 
