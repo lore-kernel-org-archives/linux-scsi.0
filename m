@@ -1,37 +1,54 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: Random scsi disk disappearing
-Date: Fri, 18 Aug 2006 00:33:42 +0200
-Message-ID: <44E4EEC6.6040900@s5r6.in-berlin.de>
-References: <OF23DA8DB2.DFFECE8E-ON422571CD.005B6F56-422571CD.005BA03C@de.ibm.com>
+From: Joshua Rubin <joshua@rubixlinux.org>
+Subject: Bug#380272: kernel-image-2.6-686-smp: cpqarray module fails to detect arrays
+Date: Thu, 17 Aug 2006 18:12:24 -0600
+Message-ID: <200608171812.28727.joshua@rubixlinux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: multipart/signed;
+  boundary="nextPart5213783.hOqEPJCuk3";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:20713 "EHLO
-	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
-	id S1030277AbWHQWfr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Aug 2006 18:35:47 -0400
-In-Reply-To: <OF23DA8DB2.DFFECE8E-ON422571CD.005B6F56-422571CD.005BA03C@de.ibm.com>
+Received: from 70-89-161-115-Joshua-Rubin-co.hfc.comcastbusiness.net ([70.89.161.115]:60651
+	"EHLO smokescreen.cybertron.cc") by vger.kernel.org with ESMTP
+	id S932245AbWHRANL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Aug 2006 20:13:11 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andreas Herrmann <AHERRMAN@de.ibm.com>
-Cc: Jan Engelhardt <jengelh@linux01.gwdg.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>, Michael Tokarev <mjt@tls.msk.ru>
+To: 380272@bugs.debian.org
+Cc: maximilian attems <maks@sternwelten.at>, Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org
 
-Andreas Herrmann wrote:
-> Anyone interested in a script to conveniently interpret or change the
-> SCSI logging level? Such a script (scsi_logging_level) exists in the
-> s390-tools package (version 1.5.3).
+--nextPart5213783.hOqEPJCuk3
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-That would be very welcome.
+Hi Max,
 
-> If others show interest for this script, maybe a better place can be
-> found than s390-tools (because it is not really s390-specific).
+I just realized that I never tried your last suggestions. I will try them=20
+first thing when I get in to work tomorrow.
 
-It could be put into linux/Documentation/scsi/. People who are 
-confronted with a debugging problem probably look into Documentation/. 
-Also, scripts which demonstrate usage of certain kernel interfaces do 
-count as valuable documentation.
--- 
-Stefan Richter
--=====-=-==- =--- =--=-
-http://arcgraph.de/sr/
+I have received some more info about this bug. It appears to be a timing=20
+issue. Here is the link to the bug at kernel.org with an interesting=20
+suggestion (that I have not tried):=20
+http://bugzilla.kernel.org/show_bug.cgi?id=3D6921.
+
+My company has inherited 5 racks of these compaq servers and it is very=20
+important that debian etch work well on them :)
+
+Thanks for all the help,
+Joshua Rubin
+
+--nextPart5213783.hOqEPJCuk3
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.3 (GNU/Linux)
+
+iD8DBQBE5QXskKWMTL7MAq4RAjBIAKCOsmg7GctSCfA9vmCCtXpcmd0BPQCgoYJM
+CY3fJ2GleRVv/wmSFgW+yec=
+=LWFg
+-----END PGP SIGNATURE-----
+
+--nextPart5213783.hOqEPJCuk3--
