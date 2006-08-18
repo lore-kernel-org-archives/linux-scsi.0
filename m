@@ -1,64 +1,54 @@
 From: James Smart <James.Smart@Emulex.Com>
-Subject: [PATCH] [REPOST] SCSI and FC Transport: add netlink support for
-	posting of transport events
-Date: Fri, 18 Aug 2006 17:30:09 -0400
-Message-ID: <1155936609.12933.5.camel@localhost.localdomain>
+Subject: [PATCH] FC transport: Add dev_loss_tmo callbacks, and new
+	fast_io_fail_tmo w/ callback
+Date: Fri, 18 Aug 2006 17:33:29 -0400
+Message-ID: <1155936809.12933.10.camel@localhost.localdomain>
 Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:56515 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S1751486AbWHRVaL
+Received: from emulex.emulex.com ([138.239.112.1]:20420 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S1750799AbWHRVd0
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Aug 2006 17:30:11 -0400
+	Fri, 18 Aug 2006 17:33:26 -0400
 Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
-	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id k7ILUAFB023603
-	for <linux-scsi@vger.kernel.org>; Fri, 18 Aug 2006 14:30:10 -0700 (PDT)
+	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id k7ILXOZ4023697
+	for <linux-scsi@vger.kernel.org>; Fri, 18 Aug 2006 14:33:25 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-This patch formally adds support for the posting of FC events via netlink.
-It is a followup to the original RFC at:
-  http://marc.theaimsgroup.com/?l=linux-scsi&m=114530667923464&w=2
-and the initial posting at:
-  http://marc.theaimsgroup.com/?l=linux-scsi&m=115507374832500&w=2
 
-The patch has been updated to optimize the send path, per the discussions
-in the initial posting.
+This patch adds the following functionality to the FC transport:
 
-Per discussions at the Storage Summit and at OLS, we are to use netlink for
-async events from transports. Also per discussions, to avoid a netlink
-protocol per transport, I've create a single NETLINK_SCSITRANSPORT protocol,
-which can then be used by all transports.
+- dev_loss_tmo LLDD callback :
+  Called to essentially confirm the deletion of an rport. Thus, it is
+  called whenever the dev_loss_tmo fires, or when the rport is deleted
+  due to other circumstances (module unload, etc).  It is expected that
+  the callback will initiate the termination of any outstanding i/o on
+  the rport.
 
-This patch:
-- Creates new files scsi_netlink.c and scsi_netlink.h, which contains the
-  single and shared definitions for the SCSI Transport. It is tied into the
-  base SCSI subsystem intialization.
-  Contains a single interface routine, scsi_send_transport_event(), for a
-  transport to send an event (via multicast to a protocol specific group).
-- Creates a new scsi_netlink_fc.h file, which contains the FC netlink event
-  messages
-- Adds 3 new routines to the fc transport:
-   fc_get_event_number() -  to get a FC event #
-   fc_host_post_event()  -  to send a simple FC event (32 bits of data)
-   fc_host_post_vendor_event() - to send a Vendor unique event, with
-                                 arbitrary amounts of data.
+- fast_io_fail_tmo and LLD callback:
+  There are some cases where it may take a long while to truly determine
+  device loss, but the system is in a multipathing configuration that if
+  the i/o was failed quickly (faster than dev_loss_tmo), it could be
+  redirected to a different path and completed sooner.
 
-   Note: the separation of event number allows for a LLD to send a standard
-     event, followed by vendor-specific data for the event.
- 
+Many thanks to Mike Reed who cleaned up the initial RFC in support
+of this post.
 
-Note: This patch assumes 2 prior fc transport patches have been installed:
+The original RFC is at:
+http://marc.theaimsgroup.com/?l=linux-scsi&m=115505981027246&w=2
+
+Note: This patch assumes 3 prior fc transport patches have been installed:
    http://marc.theaimsgroup.com/?l=linux-scsi&m=115555807316329&w=2
    http://marc.theaimsgroup.com/?l=linux-scsi&m=115581614930261&w=2
+   http://marc.theaimsgroup.com/?l=linux-scsi&m=115593664816371&w=2
 
    Sorry - next time I'll do something like making these individual
    patches of the same posting when I know they'll be posted closely
    together.
-
 
 -- james s
 
@@ -66,735 +56,323 @@ Note: This patch assumes 2 prior fc transport patches have been installed:
 Signed-off-by: James Smart <James.Smart@emulex.com>
 
 
-diff -upNr a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
---- a/drivers/scsi/Kconfig	2006-08-08 10:11:52.000000000 -0400
-+++ b/drivers/scsi/Kconfig	2006-08-18 10:06:53.000000000 -0400
-@@ -8,6 +8,7 @@ config RAID_ATTRS
+diff -upNr a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+--- a/drivers/scsi/scsi_transport_fc.c	2006-08-18 10:35:16.000000000 -0400
++++ b/drivers/scsi/scsi_transport_fc.c	2006-08-18 17:04:54.000000000 -0400
+@@ -242,6 +242,7 @@ fc_bitfield_name_search(remote_port_role
  
- config SCSI
- 	tristate "SCSI device support"
-+	select NET
- 	---help---
- 	  If you want to use a SCSI hard disk, SCSI tape drive, SCSI CD-ROM or
- 	  any other SCSI device under Linux, say Y and make sure that you know
-diff -upNr a/drivers/scsi/Makefile b/drivers/scsi/Makefile
---- a/drivers/scsi/Makefile	2006-08-08 10:11:52.000000000 -0400
-+++ b/drivers/scsi/Makefile	2006-08-18 10:06:53.000000000 -0400
-@@ -155,7 +155,7 @@ obj-$(CONFIG_SCSI_DEBUG)	+= scsi_debug.o
- scsi_mod-y			+= scsi.o hosts.o scsi_ioctl.o constants.o \
- 				   scsicam.o scsi_error.o scsi_lib.o \
- 				   scsi_scan.o scsi_sysfs.o \
--				   scsi_devinfo.o
-+				   scsi_devinfo.o scsi_netlink.o
- scsi_mod-$(CONFIG_SYSCTL)	+= scsi_sysctl.o
- scsi_mod-$(CONFIG_SCSI_PROC_FS)	+= scsi_proc.o
  
-diff -upNr a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
---- a/drivers/scsi/scsi.c	2006-08-08 10:11:53.000000000 -0400
-+++ b/drivers/scsi/scsi.c	2006-08-18 10:06:53.000000000 -0400
-@@ -1115,6 +1115,8 @@ static int __init init_scsi(void)
- 	for_each_possible_cpu(i)
- 		INIT_LIST_HEAD(&per_cpu(scsi_done_q, i));
+ static void fc_timeout_deleted_rport(void *data);
++static void fc_timeout_fail_rport_io(void *data);
+ static void fc_scsi_scan_rport(void *data);
  
-+	scsi_netlink_init();
+ /*
+@@ -249,7 +250,7 @@ static void fc_scsi_scan_rport(void *dat
+  * Increase these values if you add attributes
+  */
+ #define FC_STARGET_NUM_ATTRS 	3
+-#define FC_RPORT_NUM_ATTRS	9
++#define FC_RPORT_NUM_ATTRS	10
+ #define FC_HOST_NUM_ATTRS	17
+ 
+ struct fc_internal {
+@@ -622,11 +623,14 @@ store_fc_rport_##field(struct class_devi
+ 	struct fc_rport *rport = transport_class_to_rport(cdev);	\
+ 	struct Scsi_Host *shost = rport_to_shost(rport);		\
+ 	struct fc_internal *i = to_fc_internal(shost->transportt);	\
++	char *cp;							\
+ 	if ((rport->port_state == FC_PORTSTATE_BLOCKED) ||		\
+ 	    (rport->port_state == FC_PORTSTATE_DELETED) ||		\
+ 	    (rport->port_state == FC_PORTSTATE_NOTPRESENT))		\
+ 		return -EBUSY;						\
+-	val = simple_strtoul(buf, NULL, 0);				\
++	val = simple_strtoul(buf, &cp, 0);				\
++	if (*cp && (*cp != '\n'))					\
++		return -EINVAL;						\
+ 	i->f->set_rport_##field(rport, val);				\
+ 	return count;							\
+ }
+@@ -708,6 +712,13 @@ static FC_CLASS_DEVICE_ATTR(rport, title
+ 	if (i->f->show_rport_##field)					\
+ 		count++
+ 
++#define SETUP_PRIVATE_RPORT_ATTRIBUTE_RW(field)				\
++{									\
++	i->private_rport_attrs[count] = class_device_attr_rport_##field; \
++	i->rport_attrs[count] = &i->private_rport_attrs[count];		\
++	count++;							\
++}
 +
- 	printk(KERN_NOTICE "SCSI subsystem initialized\n");
- 	return 0;
  
-@@ -1135,6 +1137,7 @@ cleanup_queue:
+ /* The FC Transport Remote Port Attributes: */
  
- static void __exit exit_scsi(void)
- {
-+	scsi_netlink_exit();
- 	scsi_sysfs_unregister();
- 	scsi_exit_sysctl();
- 	scsi_exit_hosts();
-diff -upNr a/drivers/scsi/scsi_netlink.c b/drivers/scsi/scsi_netlink.c
---- a/drivers/scsi/scsi_netlink.c	1969-12-31 19:00:00.000000000 -0500
-+++ b/drivers/scsi/scsi_netlink.c	2006-08-18 10:06:53.000000000 -0400
-@@ -0,0 +1,199 @@
-+/* 
-+ *  scsi_netlink.c  - SCSI Transport Netlink Interface
-+ *
-+ *  Copyright (C) 2006   James Smart, Emulex Corporation
-+ *
-+ *  This program is free software; you can redistribute it and/or modify
-+ *  it under the terms of the GNU General Public License as published by
-+ *  the Free Software Foundation; either version 2 of the License, or
-+ *  (at your option) any later version.
-+ *
-+ *  This program is distributed in the hope that it will be useful,
-+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ *  GNU General Public License for more details.
-+ *
-+ *  You should have received a copy of the GNU General Public License
-+ *  along with this program; if not, write to the Free Software
-+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-+ *
+@@ -740,12 +751,14 @@ store_fc_rport_dev_loss_tmo(struct class
+ 	struct fc_rport *rport = transport_class_to_rport(cdev);
+ 	struct Scsi_Host *shost = rport_to_shost(rport);
+ 	struct fc_internal *i = to_fc_internal(shost->transportt);
++	char *cp;
+ 	if ((rport->port_state == FC_PORTSTATE_BLOCKED) ||
+ 	    (rport->port_state == FC_PORTSTATE_DELETED) ||
+ 	    (rport->port_state == FC_PORTSTATE_NOTPRESENT))
+ 		return -EBUSY;
+-	val = simple_strtoul(buf, NULL, 0);
+-	if ((val < 0) || (val > SCSI_DEVICE_BLOCK_MAX_TIMEOUT))
++	val = simple_strtoul(buf, &cp, 0);
++	if ((*cp && (*cp != '\n')) ||
++	    (val < 0) || (val > SCSI_DEVICE_BLOCK_MAX_TIMEOUT))
+ 		return -EINVAL;
+ 	i->f->set_rport_dev_loss_tmo(rport, val);
+ 	return count;
+@@ -795,6 +808,44 @@ static FC_CLASS_DEVICE_ATTR(rport, roles
+ fc_private_rport_rd_enum_attr(port_state, FC_PORTSTATE_MAX_NAMELEN);
+ fc_private_rport_rd_attr(scsi_target_id, "%d\n", 20);
+ 
++/*
++ * fast_io_fail_tmo attribute
 + */
-+#include <linux/time.h>
-+#include <linux/jiffies.h>
-+#include <linux/security.h>
-+#include <net/sock.h>
-+#include <net/netlink.h>
-+
-+#include <scsi/scsi_netlink.h>
-+#include "scsi_priv.h"
-+
-+struct sock *scsi_nl_sock = NULL;
-+EXPORT_SYMBOL_GPL(scsi_nl_sock);
-+
-+
-+/**
-+ * scsi_nl_rcv_msg -
-+ *    Receive message handler. Extracts message from a receive buffer.
-+ *    Validates message header and calls appropriate transport message handler
-+ *
-+ * @skb:		socket receive buffer
-+ *
-+ **/
-+static void
-+scsi_nl_rcv_msg(struct sk_buff *skb)
++static ssize_t
++show_fc_rport_fast_io_fail_tmo (struct class_device *cdev, char *buf)
 +{
-+	struct nlmsghdr *nlh;
-+	struct scsi_nl_hdr *hdr;
-+	uint32_t rlen;
-+	int err;
++	struct fc_rport *rport = transport_class_to_rport(cdev);
 +
-+	while (skb->len >= NLMSG_SPACE(0)) {
-+		err = 0;
-+
-+		nlh = (struct nlmsghdr *) skb->data;
-+		if ((nlh->nlmsg_len < (sizeof(*nlh) + sizeof(*hdr))) ||
-+		    (skb->len < nlh->nlmsg_len)) {
-+			printk(KERN_WARNING "%s: discarding partial skb\n",
-+				 __FUNCTION__);
-+			return;
-+		}
-+
-+		rlen = NLMSG_ALIGN(nlh->nlmsg_len);
-+		if (rlen > skb->len)
-+			rlen = skb->len;
-+
-+		if (nlh->nlmsg_type != SCSI_TRANSPORT_MSG) {
-+			err = -EBADMSG;
-+			goto next_msg;
-+		}
-+
-+		hdr = NLMSG_DATA(nlh);
-+		if ((hdr->version != SCSI_NL_VERSION) ||
-+		    (hdr->magic != SCSI_NL_MAGIC)) {
-+			err = -EPROTOTYPE;
-+			goto next_msg;
-+		}
-+
-+		if (security_netlink_recv(skb, CAP_SYS_ADMIN)) {
-+			err = -EPERM;
-+			goto next_msg;
-+		}
-+
-+		if (nlh->nlmsg_len < (sizeof(*nlh) + hdr->msglen)) {
-+			printk(KERN_WARNING "%s: discarding partial message\n",
-+				 __FUNCTION__);
-+			return;
-+		}
-+
-+		/*
-+		 * We currently don't support anyone sending us a message
-+		 */
-+
-+next_msg:
-+		if ((err) || (nlh->nlmsg_flags & NLM_F_ACK))
-+			netlink_ack(skb, nlh, err);
-+
-+		skb_pull(skb, rlen);
-+	}
++	if (rport->fast_io_fail_tmo == -1)
++		return snprintf(buf, 5, "off\n");
++	return snprintf(buf, 20, "%d\n", rport->fast_io_fail_tmo);
 +}
 +
-+
-+/**
-+ * scsi_nl_rcv_msg - 
-+ *    Receive handler for a socket. Extracts a received message buffer from
-+ *    the socket, and starts message processing.
-+ *
-+ * @sk:		socket 
-+ * @len:	
-+ *
-+ **/
-+static void
-+scsi_nl_rcv(struct sock *sk, int len)
++static ssize_t
++store_fc_rport_fast_io_fail_tmo(struct class_device *cdev, const char *buf,
++			   size_t count)
 +{
-+	struct sk_buff *skb;
++	int val;
++	char *cp;
++	struct fc_rport *rport = transport_class_to_rport(cdev);
 +
-+	while ((skb = skb_dequeue(&sk->sk_receive_queue))) {
-+		scsi_nl_rcv_msg(skb);
-+		kfree_skb(skb);
++	if ((rport->port_state == FC_PORTSTATE_BLOCKED) ||
++	    (rport->port_state == FC_PORTSTATE_DELETED) ||
++	    (rport->port_state == FC_PORTSTATE_NOTPRESENT))
++		return -EBUSY;
++	if (strncmp(buf, "off", 3) == 0)
++		rport->fast_io_fail_tmo = -1;
++	else {
++		val = simple_strtoul(buf, &cp, 0);
++		if ((*cp && (*cp != '\n')) ||
++		    (val < 0) || (val >= rport->dev_loss_tmo))
++			return -EINVAL;
++		rport->fast_io_fail_tmo = val;
 +	}
++	return count;
 +}
++static FC_CLASS_DEVICE_ATTR(rport, fast_io_fail_tmo, S_IRUGO | S_IWUSR,
++	show_fc_rport_fast_io_fail_tmo, store_fc_rport_fast_io_fail_tmo);
+ 
+ 
+ /*
+@@ -880,8 +931,11 @@ store_fc_host_##field(struct class_devic
+ 	int val;							\
+ 	struct Scsi_Host *shost = transport_class_to_shost(cdev);	\
+ 	struct fc_internal *i = to_fc_internal(shost->transportt);	\
++	char *cp;							\
+ 									\
+-	val = simple_strtoul(buf, NULL, 0);				\
++	val = simple_strtoul(buf, &cp, 0);				\
++	if (*cp && (*cp != '\n'))					\
++		return -EINVAL;						\
+ 	i->f->set_host_##field(shost, val);				\
+ 	return count;							\
+ }
+@@ -1481,6 +1535,8 @@ fc_attach_transport(struct fc_function_t
+ 	SETUP_PRIVATE_RPORT_ATTRIBUTE_RD(roles);
+ 	SETUP_PRIVATE_RPORT_ATTRIBUTE_RD(port_state);
+ 	SETUP_PRIVATE_RPORT_ATTRIBUTE_RD(scsi_target_id);
++	if (ft->terminate_rport_io)
++		SETUP_PRIVATE_RPORT_ATTRIBUTE_RW(fast_io_fail_tmo);
+ 
+ 	BUG_ON(count > FC_RPORT_NUM_ATTRS);
+ 
+@@ -1552,7 +1608,7 @@ fc_flush_work(struct Scsi_Host *shost)
+  * @delay:	jiffies to delay the work queuing
+  *
+  * Return value:
+- * 	0 on success / != 0 for error
++ * 	1 on success / 0 already queued / < 0 for error
+  **/
+ static int
+ fc_queue_devloss_work(struct Scsi_Host *shost, struct work_struct *work,
+@@ -1567,6 +1623,9 @@ fc_queue_devloss_work(struct Scsi_Host *
+ 		return -EINVAL;
+ 	}
+ 
++	if (delay == 0)
++		return queue_work(fc_host_devloss_work_q(shost), work);
 +
-+
-+/**
-+ * scsi_nl_rcv_event - 
-+ *    Event handler for a netlink socket. 
-+ *
-+ * @this:		event notifier block 
-+ * @event:		event type 
-+ * @ptr:		event payload
-+ *
-+ **/
-+static int
-+scsi_nl_rcv_event(struct notifier_block *this, unsigned long event, void *ptr)
-+{
-+	struct netlink_notify *n = ptr;
-+
-+	if (n->protocol != NETLINK_SCSITRANSPORT)
-+		return NOTIFY_DONE;
+ 	return queue_delayed_work(fc_host_devloss_work_q(shost), work, delay);
+ }
+ 
+@@ -1659,10 +1718,23 @@ fc_starget_delete(void *data)
+ 	struct fc_rport *rport = (struct fc_rport *)data;
+ 	struct Scsi_Host *shost = rport_to_shost(rport);
+ 	unsigned long flags;
++	struct fc_internal *i = to_fc_internal(shost->transportt);
 +
 +	/*
-+	 * Currently, we are not tracking PID's, etc. There is nothing
-+	 * to handle.
++	 * Involve the LLDD if possible. All io on the rport is to
++	 * be terminated, either as part of the dev_loss_tmo callback
++	 * processing, or via the terminate_rport_io function.
 +	 */
-+
-+	return NOTIFY_DONE;
-+}
-+
-+static struct notifier_block scsi_netlink_notifier = {
-+	.notifier_call  = scsi_nl_rcv_event,
-+};
-+
-+
-+/**
-+ * scsi_netlink_init - 
-+ *    Called by SCSI subsystem to intialize the SCSI transport netlink
-+ *    interface
-+ *
-+ **/
-+void
-+scsi_netlink_init(void)
-+{
-+	int error;
-+
-+	error = netlink_register_notifier(&scsi_netlink_notifier);
-+	if (error) {
-+		printk(KERN_ERR "%s: register of event handler failed - %d\n",
-+				__FUNCTION__, error);
-+		return;
-+	}
-+
-+	scsi_nl_sock = netlink_kernel_create(NETLINK_SCSITRANSPORT,
-+				SCSI_NL_GRP_CNT, scsi_nl_rcv, THIS_MODULE);
-+	if (!scsi_nl_sock) {
-+		printk(KERN_ERR "%s: register of recieve handler failed\n",
-+				__FUNCTION__);
-+		netlink_unregister_notifier(&scsi_netlink_notifier);
-+	}
-+
-+	return;
-+}
-+
-+
-+/**
-+ * scsi_netlink_exit - 
-+ *    Called by SCSI subsystem to disable the SCSI transport netlink
-+ *    interface
-+ *
-+ **/
-+void
-+scsi_netlink_exit(void)
-+{
-+	if (scsi_nl_sock) {
-+		sock_release(scsi_nl_sock->sk_socket);
-+		netlink_unregister_notifier(&scsi_netlink_notifier);
-+	}
-+
-+	return;
-+}
-+
-+
-diff -upNr a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
---- a/drivers/scsi/scsi_priv.h	2006-08-08 10:11:53.000000000 -0400
-+++ b/drivers/scsi/scsi_priv.h	2006-08-18 10:06:53.000000000 -0400
-@@ -8,6 +8,7 @@ struct scsi_cmnd;
- struct scsi_device;
- struct scsi_host_template;
- struct Scsi_Host;
-+struct scsi_nl_hdr;
++	if (i->f->dev_loss_tmo_callbk)
++		i->f->dev_loss_tmo_callbk(rport);
++	else if (i->f->terminate_rport_io)
++		i->f->terminate_rport_io(rport);
  
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 	if (rport->flags & FC_RPORT_DEVLOSS_PENDING) {
+ 		spin_unlock_irqrestore(shost->host_lock, flags);
++		if (!cancel_delayed_work(&rport->fail_io_work))
++			fc_flush_devloss(shost);
+ 		if (!cancel_delayed_work(&rport->dev_loss_work))
+ 			fc_flush_devloss(shost);
+ 		spin_lock_irqsave(shost->host_lock, flags);
+@@ -1685,10 +1757,7 @@ fc_rport_final_delete(void *data)
+ 	struct fc_rport *rport = (struct fc_rport *)data;
+ 	struct device *dev = &rport->dev;
+ 	struct Scsi_Host *shost = rport_to_shost(rport);
+-
+-	/* Delete SCSI target and sdevs */
+-	if (rport->scsi_target_id != -1)
+-		fc_starget_delete(data);
++	struct fc_internal *i = to_fc_internal(shost->transportt);
  
- /*
-@@ -110,6 +111,11 @@ extern void __scsi_remove_device(struct 
+ 	/*
+ 	 * if a scan is pending, flush the SCSI Host work_q so that 
+@@ -1697,6 +1766,14 @@ fc_rport_final_delete(void *data)
+ 	if (rport->flags & FC_RPORT_SCAN_PENDING)
+ 		scsi_flush_work(shost);
  
- extern struct bus_type scsi_bus_type;
++	/* Delete SCSI target and sdevs */
++	if (rport->scsi_target_id != -1)
++		fc_starget_delete(data);
++	else if (i->f->dev_loss_tmo_callbk)
++		i->f->dev_loss_tmo_callbk(rport);
++	else if (i->f->terminate_rport_io)
++		i->f->terminate_rport_io(rport);
++
+ 	transport_remove_device(dev);
+ 	device_del(dev);
+ 	transport_destroy_device(dev);
+@@ -1748,8 +1825,10 @@ fc_rport_create(struct Scsi_Host *shost,
+ 	if (fci->f->dd_fcrport_size)
+ 		rport->dd_data = &rport[1];
+ 	rport->channel = channel;
++	rport->fast_io_fail_tmo = -1;
  
-+/* scsi_netlink.c */
-+extern void scsi_netlink_init(void);
-+extern void scsi_netlink_exit(void);
-+extern struct sock *scsi_nl_sock;
-+
- /* 
-  * internal scsi timeout functions: for use by mid-layer and transport
-  * classes.
-diff -upNr a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
---- a/drivers/scsi/scsi_transport_fc.c	2006-08-18 10:06:11.000000000 -0400
-+++ b/drivers/scsi/scsi_transport_fc.c	2006-08-18 10:19:37.000000000 -0400
-@@ -32,6 +32,9 @@
- #include <scsi/scsi_transport.h>
- #include <scsi/scsi_transport_fc.h>
- #include <scsi/scsi_cmnd.h>
-+#include <linux/netlink.h>
-+#include <net/netlink.h>
-+#include <scsi/scsi_netlink_fc.h>
- #include "scsi_priv.h"
+ 	INIT_WORK(&rport->dev_loss_work, fc_timeout_deleted_rport, rport);
++	INIT_WORK(&rport->fail_io_work, fc_timeout_fail_rport_io, rport);
+ 	INIT_WORK(&rport->scan_work, fc_scsi_scan_rport, rport);
+ 	INIT_WORK(&rport->stgt_delete_work, fc_starget_delete, rport);
+ 	INIT_WORK(&rport->rport_delete_work, fc_rport_final_delete, rport);
+@@ -1913,11 +1992,13 @@ fc_remote_port_add(struct Scsi_Host *sho
+ 				/* restart the target */
  
- static int fc_queue_work(struct Scsi_Host *, struct work_struct *);
-@@ -93,6 +96,29 @@ fc_enum_name_search(port_type, fc_port_t
- #define FC_PORTTYPE_MAX_NAMELEN		50
+ 				/*
+-				 * Stop the target timer first. Take no action
++				 * Stop the target timers first. Take no action
+ 				 * on the del_timer failure as the state
+ 				 * machine state change will validate the
+ 				 * transaction.
+ 				 */
++				if (!cancel_delayed_work(&rport->fail_io_work))
++					fc_flush_devloss(shost);
+ 				if (!cancel_delayed_work(work))
+ 					fc_flush_devloss(shost);
  
- 
-+/* Convert fc_host_event_code values to ascii string name */
-+static const struct {
-+	enum fc_host_event_code		value;
-+	char				*name;
-+} fc_host_event_code_names[] = {
-+	{ FCH_EVT_LIP,			"lip" },
-+	{ FCH_EVT_LINKUP,		"link_up" },
-+	{ FCH_EVT_LINKDOWN,		"link_down" },
-+	{ FCH_EVT_LIPRESET,		"lip_reset" },
-+	{ FCH_EVT_RSCN,			"rscn" },
-+	{ FCH_EVT_ADAPTER_CHANGE,	"adapter_chg" },
-+	{ FCH_EVT_PORT_UNKNOWN,		"port_unknown" },
-+	{ FCH_EVT_PORT_ONLINE,		"port_online" },
-+	{ FCH_EVT_PORT_OFFLINE,		"port_offline" },
-+	{ FCH_EVT_PORT_FABRIC,		"port_fabric" },
-+	{ FCH_EVT_LINK_UNKNOWN,		"link_unknown" },
-+	{ FCH_EVT_VENDOR_UNIQUE,	"vendor_unique" },
-+};
-+fc_enum_name_search(host_event_code, fc_host_event_code,
-+		fc_host_event_code_names)
-+#define FC_HOST_EVENT_CODE_MAX_NAMELEN	30
-+
-+
- /* Convert fc_port_state values to ascii string name */
- static struct {
- 	enum fc_port_state	value;
-@@ -377,10 +403,182 @@ MODULE_PARM_DESC(dev_loss_tmo,
- 		 " exceeded, the scsi target is removed. Value should be"
- 		 " between 1 and SCSI_DEVICE_BLOCK_MAX_TIMEOUT.");
- 
-+/**
-+ * Netlink Infrastructure
-+ **/
-+
-+static atomic_t fc_event_seq;
-+
-+/**
-+ * fc_get_event_number - Obtain the next sequential FC event number
-+ *
-+ * Notes:
-+ *   We could have inline'd this, but it would have required fc_event_seq to
-+ *   be exposed. For now, live with the subroutine call.
-+ *   Atomic used to avoid lock/unlock...
-+ **/
-+u32
-+fc_get_event_number(void)
-+{
-+	return atomic_add_return(1, &fc_event_seq);
-+}
-+EXPORT_SYMBOL(fc_get_event_number);
-+
-+
-+/**
-+ * fc_host_post_event - called to post an even on an fc_host.
-+ *
-+ * @shost:		host the event occurred on
-+ * @event_number:	fc event number obtained from get_fc_event_number()
-+ * @event_code:		fc_host event being posted
-+ * @event_data:		32bits of data for the event being posted
-+ *
-+ * Notes:
-+ *	This routine assumes no locks are held on entry.
-+ **/
-+void
-+fc_host_post_event(struct Scsi_Host *shost, u32 event_number,
-+		enum fc_host_event_code event_code, u32 event_data)
-+{
-+	struct sk_buff *skb;
-+	struct nlmsghdr	*nlh;
-+	struct fc_nl_event *event;
-+	const char *name;
-+	u32 len, skblen;
-+	int err;
-+
-+	if (!scsi_nl_sock) {
-+		err = -ENOENT;
-+		goto send_fail;
-+	}
-+
-+	len = FC_NL_MSGALIGN(sizeof(*event));
-+	skblen = NLMSG_SPACE(len);
-+
-+	skb = alloc_skb(skblen, GFP_KERNEL);
-+	if (!skb) {
-+		err = -ENOBUFS;
-+		goto send_fail;
-+	}
-+
-+	nlh = nlmsg_put(skb, 0, 0, SCSI_TRANSPORT_MSG,
-+				skblen - sizeof(*nlh), 0);
-+	if (!nlh) {
-+		err = -ENOBUFS;
-+		goto send_fail_skb;
-+	}
-+	event = NLMSG_DATA(nlh);
-+
-+	INIT_SCSI_NL_HDR(&event->snlh, SCSI_NL_TRANSPORT_FC,
-+				FC_NL_ASYNC_EVENT, len);
-+	event->seconds = get_seconds();
-+	event->vendor_id = 0;
-+	event->host_no = shost->host_no;
-+	event->event_datalen = sizeof(u32);	/* bytes */
-+	event->event_num = event_number;
-+	event->event_code = event_code;
-+	event->event_data = event_data;
-+
-+	err = nlmsg_multicast(scsi_nl_sock, skb, 0, SCSI_NL_GRP_FC_EVENTS);
-+	if (err && (err != -ESRCH))	/* filter no recipient errors */
-+		/* nlmsg_multicast already kfree_skb'd */
-+		goto send_fail;
-+	
-+	return;
-+
-+send_fail_skb:
-+	kfree_skb(skb);
-+send_fail:
-+	name = get_fc_host_event_code_name(event_code);
-+	printk(KERN_WARNING
-+		"%s: Dropped Event : host %d %s data 0x%08x - err %d\n",
-+		__FUNCTION__, shost->host_no,
-+		(name) ? name : "<unknown>", event_data, err);
-+	return;
-+}
-+EXPORT_SYMBOL(fc_host_post_event);
-+
-+
-+/**
-+ * fc_host_post_vendor_event - called to post a vendor unique event on
-+ *                             a fc_host
-+ *
-+ * @shost:		host the event occurred on
-+ * @event_number:	fc event number obtained from get_fc_event_number()
-+ * @data_len:		amount, in bytes, of vendor unique data
-+ * @data_buf:		pointer to vendor unique data
-+ *
-+ * Notes:
-+ *	This routine assumes no locks are held on entry.
-+ **/
-+void
-+fc_host_post_vendor_event(struct Scsi_Host *shost, u32 event_number,
-+		u32 data_len, char * data_buf, u32 vendor_id)
-+{
-+	struct sk_buff *skb;
-+	struct nlmsghdr	*nlh;
-+	struct fc_nl_event *event;
-+	u32 len, skblen;
-+	int err;
-+
-+	if (!scsi_nl_sock) {
-+		err = -ENOENT;
-+		goto send_vendor_fail;
-+	}
-+
-+	len = FC_NL_MSGALIGN(sizeof(*event) + data_len);
-+	skblen = NLMSG_SPACE(len);
-+
-+	skb = alloc_skb(skblen, GFP_KERNEL);
-+	if (!skb) {
-+		err = -ENOBUFS;
-+		goto send_vendor_fail;
-+	}
-+
-+	nlh = nlmsg_put(skb, 0, 0, SCSI_TRANSPORT_MSG,
-+				skblen - sizeof(*nlh), 0);
-+	if (!nlh) {
-+		err = -ENOBUFS;
-+		goto send_vendor_fail_skb;
-+	}
-+	event = NLMSG_DATA(nlh);
-+
-+	INIT_SCSI_NL_HDR(&event->snlh, SCSI_NL_TRANSPORT_FC,
-+				FC_NL_ASYNC_EVENT, len);
-+	event->seconds = get_seconds();
-+	event->vendor_id = vendor_id;
-+	event->host_no = shost->host_no;
-+	event->event_datalen = data_len;	/* bytes */
-+	event->event_num = event_number;
-+	event->event_code = FCH_EVT_VENDOR_UNIQUE;
-+	memcpy(&event->event_data, data_buf, data_len);
-+
-+	err = nlmsg_multicast(scsi_nl_sock, skb, 0, SCSI_NL_GRP_FC_EVENTS);
-+	if (err && (err != -ESRCH))	/* filter no recipient errors */
-+		/* nlmsg_multicast already kfree_skb'd */
-+		goto send_vendor_fail;
-+	
-+	return;
-+
-+send_vendor_fail_skb:
-+	kfree_skb(skb);
-+send_vendor_fail:
-+	printk(KERN_WARNING
-+		"%s: Dropped Event : host %d vendor_unique - err %d\n",
-+		__FUNCTION__, shost->host_no, err);
-+	return;
-+}
-+EXPORT_SYMBOL(fc_host_post_vendor_event);
-+
-+
- 
- static __init int fc_transport_init(void)
+@@ -2061,6 +2142,7 @@ void
+ fc_remote_port_delete(struct fc_rport  *rport)
  {
--	int error = transport_class_register(&fc_host_class);
-+	int error;
-+
-+	atomic_set(&fc_event_seq, 0);
-+
-+	error = transport_class_register(&fc_host_class);
- 	if (error)
- 		return error;
- 	error = transport_class_register(&fc_rport_class);
-diff -upNr a/include/linux/netlink.h b/include/linux/netlink.h
---- a/include/linux/netlink.h	2006-08-18 10:05:08.000000000 -0400
-+++ b/include/linux/netlink.h	2006-08-18 10:06:53.000000000 -0400
-@@ -21,6 +21,8 @@
- #define NETLINK_DNRTMSG		14	/* DECnet routing messages */
- #define NETLINK_KOBJECT_UEVENT	15	/* Kernel messages to userspace */
- #define NETLINK_GENERIC		16
-+/* leave room for NETLINK_DM (DM Events) */
-+#define NETLINK_SCSITRANSPORT	18	/* SCSI Transports */
+ 	struct Scsi_Host *shost = rport_to_shost(rport);
++	struct fc_internal *i = to_fc_internal(shost->transportt);
+ 	int timeout = rport->dev_loss_tmo;
+ 	unsigned long flags;
  
- #define MAX_LINKS 32		
+@@ -2091,6 +2173,12 @@ fc_remote_port_delete(struct fc_rport  *
  
-diff -upNr a/include/scsi/scsi_netlink_fc.h b/include/scsi/scsi_netlink_fc.h
---- a/include/scsi/scsi_netlink_fc.h	1969-12-31 19:00:00.000000000 -0500
-+++ b/include/scsi/scsi_netlink_fc.h	2006-08-18 10:06:53.000000000 -0400
-@@ -0,0 +1,71 @@
-+/* 
-+ *  FC Transport Netlink Interface
-+ *
-+ *  Copyright (C) 2006   James Smart, Emulex Corporation
-+ *
-+ *  This program is free software; you can redistribute it and/or modify
-+ *  it under the terms of the GNU General Public License as published by
-+ *  the Free Software Foundation; either version 2 of the License, or
-+ *  (at your option) any later version.
-+ *
-+ *  This program is distributed in the hope that it will be useful,
-+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ *  GNU General Public License for more details.
-+ *
-+ *  You should have received a copy of the GNU General Public License
-+ *  along with this program; if not, write to the Free Software
-+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-+ *
-+ */
-+#ifndef SCSI_NETLINK_FC_H
-+#define SCSI_NETLINK_FC_H
-+
-+#include <scsi/scsi_netlink.h>
-+
-+/*
-+ * This file intended to be included by both kernel and user space
-+ */
-+
-+/*
-+ * FC Transport Message Types
-+ */
-+	/* kernel -> user */
-+#define FC_NL_ASYNC_EVENT			0x0100
-+	/* user -> kernel */
-+/* none */
-+
-+
-+/*
-+ * Message Structures :
-+ */
-+
-+/* macro to round up message lengths to 8byte boundary */
-+#define FC_NL_MSGALIGN(len)		(((len) + 7) & ~7)
-+
-+
-+/*
-+ * FC Transport Broadcast Event Message :
-+ *   FC_NL_ASYNC_EVENT
-+ *
-+ * Note: if Vendor Unique message, &event_data will be  start of
-+ * 	 vendor unique payload, and the length of the payload is
-+ *       per event_datalen
-+ *
-+ * Note: When specifying vendor_id, be sure to read the Vendor Type and ID
-+ *   formatting requirements specified in scsi_netlink.h
-+ */
-+struct fc_nl_event {
-+	struct scsi_nl_hdr snlh;		/* must be 1st element ! */
-+	uint64_t seconds;
-+	uint32_t vendor_id;
-+	uint16_t host_no;
-+	uint16_t event_datalen;
-+	uint32_t event_num;
-+	uint32_t event_code;
-+	uint32_t event_data;
-+} __attribute__((aligned(sizeof(uint64_t))));
-+
-+
-+#endif /* SCSI_NETLINK_FC_H */
-+
-diff -upNr a/include/scsi/scsi_netlink.h b/include/scsi/scsi_netlink.h
---- a/include/scsi/scsi_netlink.h	1969-12-31 19:00:00.000000000 -0500
-+++ b/include/scsi/scsi_netlink.h	2006-08-18 10:06:53.000000000 -0400
-@@ -0,0 +1,86 @@
-+/* 
-+ *  SCSI Transport Netlink Interface
-+ *    Used for the posting of outbound SCSI transport events
-+ *
-+ *  Copyright (C) 2006   James Smart, Emulex Corporation
-+ *
-+ *  This program is free software; you can redistribute it and/or modify
-+ *  it under the terms of the GNU General Public License as published by
-+ *  the Free Software Foundation; either version 2 of the License, or
-+ *  (at your option) any later version.
-+ *
-+ *  This program is distributed in the hope that it will be useful,
-+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ *  GNU General Public License for more details.
-+ *
-+ *  You should have received a copy of the GNU General Public License
-+ *  along with this program; if not, write to the Free Software
-+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-+ *
-+ */
-+#ifndef SCSI_NETLINK_H
-+#define SCSI_NETLINK_H
-+
-+/*
-+ * This file intended to be included by both kernel and user space
-+ */
-+
-+/* Single Netlink Message type to send all SCSI Transport messages */
-+#define SCSI_TRANSPORT_MSG		NLMSG_MIN_TYPE + 1
-+
-+/* SCSI Transport Broadcast Groups */
-+	/* leaving groups 0 and 1 unassigned */
-+#define SCSI_NL_GRP_FC_EVENTS		(1<<2)		/* Group 2 */
-+#define SCSI_NL_GRP_CNT			3
-+
-+
-+/* SCSI_TRANSPORT_MSG event message header */
-+struct scsi_nl_hdr {
-+	uint8_t version;
-+	uint8_t transport;
-+	uint16_t magic;
-+	uint16_t msgtype;
-+	uint16_t msglen;
-+} __attribute__((aligned(sizeof(uint64_t))));
-+
-+/* scsi_nl_hdr->version value */
-+#define SCSI_NL_VERSION				1
-+
-+/* scsi_nl_hdr->magic value */
-+#define SCSI_NL_MAGIC				0xA1B2
-+
-+/* scsi_nl_hdr->transport value */
-+#define SCSI_NL_TRANSPORT			0
-+#define SCSI_NL_TRANSPORT_FC			1
-+#define SCSI_NL_MAX_TRANSPORTS			2
-+
-+/* scsi_nl_hdr->msgtype values are defined in each transport */
-+
-+
-+/*
-+ * Vendor ID:
-+ *   If transports post vendor-unique events, they must pass a well-known
-+ *   32-bit vendor identifier. This identifier consists of 8 bits indicating
-+ *   the "type" of identifier contained, and 24 bits of id data.
-+ *
-+ *   Identifiers for each type:
-+ *    PCI :  ID data is the 16 bit PCI Registered Vendor ID
-+ */
-+#define SCSI_NL_VID_ID_MASK			0x00FFFFFF
-+#define SCSI_NL_VID_TYPE_MASK			0xFF000000
-+#define SCSI_NL_VID_TYPE_PCI			0x01000000
-+
-+
-+#define INIT_SCSI_NL_HDR(hdr, t, mtype, mlen)			\
-+	{							\
-+	(hdr)->version = SCSI_NL_VERSION;			\
-+	(hdr)->transport = t;					\
-+	(hdr)->magic = SCSI_NL_MAGIC;				\
-+	(hdr)->msgtype = mtype;					\
-+	(hdr)->msglen = mlen;					\
-+	}
-+
-+
-+#endif /* SCSI_NETLINK_H */
-+
-diff -upNr a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
---- a/include/scsi/scsi_transport_fc.h	2006-08-18 10:06:11.000000000 -0400
-+++ b/include/scsi/scsi_transport_fc.h	2006-08-18 10:10:42.000000000 -0400
-@@ -29,6 +29,7 @@
+ 	scsi_target_block(&rport->dev);
  
- #include <linux/sched.h>
- #include <scsi/scsi.h>
-+#include <scsi/scsi_netlink.h>
- 
- struct scsi_transport_template;
- 
-@@ -284,6 +285,30 @@ struct fc_host_statistics {
- 
- 
- /*
-+ * FC Event Codes - Polled and Async, following FC HBAAPI v2.0 guidelines
-+ */
++	/* see if we need to kill io faster than waiting for device loss */
++	if ((rport->fast_io_fail_tmo != -1) &&
++	    (rport->fast_io_fail_tmo < timeout) && (i->f->terminate_rport_io))
++		fc_queue_devloss_work(shost, &rport->fail_io_work,
++					rport->fast_io_fail_tmo * HZ);
 +
-+/*
-+ * fc_host_event_code: If you alter this, you also need to alter
-+ * scsi_transport_fc.c (for the ascii descriptions).
-+ */
-+enum fc_host_event_code  {
-+	FCH_EVT_LIP			= 0x1,
-+	FCH_EVT_LINKUP			= 0x2,
-+	FCH_EVT_LINKDOWN		= 0x3,
-+	FCH_EVT_LIPRESET		= 0x4,
-+	FCH_EVT_RSCN			= 0x5,
-+	FCH_EVT_ADAPTER_CHANGE		= 0x103,
-+	FCH_EVT_PORT_UNKNOWN		= 0x200,
-+	FCH_EVT_PORT_OFFLINE		= 0x201,
-+	FCH_EVT_PORT_ONLINE		= 0x202,
-+	FCH_EVT_PORT_FABRIC		= 0x204,
-+	FCH_EVT_LINK_UNKNOWN		= 0x500,
-+	FCH_EVT_VENDOR_UNIQUE		= 0xffff,
-+};
+ 	/* cap the length the devices can be blocked until they are deleted */
+ 	fc_queue_devloss_work(shost, &rport->dev_loss_work, timeout * HZ);
+ }
+@@ -2150,6 +2238,8 @@ fc_remote_port_rolechg(struct fc_rport  
+ 		 * machine state change will validate the
+ 		 * transaction.
+ 		 */
++		if (!cancel_delayed_work(&rport->fail_io_work))
++			fc_flush_devloss(shost);
+ 		if (!cancel_delayed_work(&rport->dev_loss_work))
+ 			fc_flush_devloss(shost);
+ 
+@@ -2271,6 +2361,28 @@ fc_timeout_deleted_rport(void  *data)
+ }
+ 
+ /**
++ * fc_timeout_fail_rport_io - Timeout handler for a fast io failing on a
++ *                       disconnected SCSI target.
++ * 
++ * @data:	rport to terminate io on.
++ *
++ * Notes: Only requests the failure of the io, not that all are flushed
++ *    prior to returning.
++ **/
++static void
++fc_timeout_fail_rport_io(void  *data)
++{
++	struct fc_rport *rport = (struct fc_rport *)data;
++	struct Scsi_Host *shost = rport_to_shost(rport);
++	struct fc_internal *i = to_fc_internal(shost->transportt);
 +
++	if (rport->port_state != FC_PORTSTATE_BLOCKED)
++		return;
 +
-+/*
-  * FC Local Port (Host) Attributes
++	i->f->terminate_rport_io(rport);
++}
++
++/**
+  * fc_scsi_scan_rport - called to perform a scsi scan on a remote port.
   *
-  * Attributes are based on HBAAPI V2.0 definitions.
-@@ -526,5 +551,14 @@ struct fc_rport *fc_remote_port_add(stru
- void fc_remote_port_delete(struct fc_rport  *rport);
- void fc_remote_port_rolechg(struct fc_rport  *rport, u32 roles);
- int scsi_is_fc_rport(const struct device *);
-+u32 fc_get_event_number(void);
-+void fc_host_post_event(struct Scsi_Host *shost, u32 event_number,
-+		enum fc_host_event_code event_code, u32 event_data);
-+void fc_host_post_vendor_event(struct Scsi_Host *shost, u32 event_number,
-+		u32 data_len, char * data_buf, u32 vendor_id);
-+	/* Note: when specifying vendor_id to fc_host_post_vendor_event()
-+	 *   be sure to read the Vendor Type and ID formatting requirements
-+	 *   specified in scsi_netlink.h
-+	 */
+  * @data:	remote port to be scanned.
+diff -upNr a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
+--- a/include/scsi/scsi_transport_fc.h	2006-08-18 10:35:17.000000000 -0400
++++ b/include/scsi/scsi_transport_fc.h	2006-08-18 15:40:51.000000000 -0400
+@@ -195,6 +195,7 @@ struct fc_rport {	/* aka fc_starget_attr
+ 	u32 roles;
+ 	enum fc_port_state port_state;	/* Will only be ONLINE or UNKNOWN */
+ 	u32 scsi_target_id;
++	u32 fast_io_fail_tmo;
  
- #endif /* SCSI_TRANSPORT_FC_H */
+ 	/* exported data */
+ 	void *dd_data;			/* Used for driver-specific storage */
+@@ -207,6 +208,7 @@ struct fc_rport {	/* aka fc_starget_attr
+ 	struct device dev;
+  	struct work_struct dev_loss_work;
+  	struct work_struct scan_work;
++ 	struct work_struct fail_io_work;
+  	struct work_struct stgt_delete_work;
+ 	struct work_struct rport_delete_work;
+ } __attribute__((aligned(sizeof(unsigned long))));
+@@ -445,6 +447,9 @@ struct fc_function_template {
+ 
+ 	int	(*issue_fc_host_lip)(struct Scsi_Host *);
+ 
++	void    (*dev_loss_tmo_callbk)(struct fc_rport *);
++	void	(*terminate_rport_io)(struct fc_rport *);
++
+ 	/* allocation lengths for host-specific data */
+ 	u32	 			dd_fcrport_size;
+ 
 
 
