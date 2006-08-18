@@ -1,54 +1,97 @@
-From: Joshua Rubin <joshua@rubixlinux.org>
-Subject: Bug#380272: kernel-image-2.6-686-smp: cpqarray module fails to detect arrays
-Date: Thu, 17 Aug 2006 18:12:24 -0600
-Message-ID: <200608171812.28727.joshua@rubixlinux.org>
+From: "Patro, Sumant" <Sumant.Patro@lsil.com>
+Subject: RE: [PATCH] [MEGARAID] convert to PCI_DEVICE() macro
+Date: Thu, 17 Aug 2006 19:50:55 -0600
+Message-ID: <0631C836DBF79F42B5A60C8C8D4E8229674D30@NAMAIL2.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart5213783.hOqEPJCuk3";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 70-89-161-115-Joshua-Rubin-co.hfc.comcastbusiness.net ([70.89.161.115]:60651
-	"EHLO smokescreen.cybertron.cc") by vger.kernel.org with ESMTP
-	id S932245AbWHRANL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Aug 2006 20:13:11 -0400
+Received: from mail0.lsil.com ([147.145.40.20]:6111 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1030201AbWHRBvJ convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Aug 2006 21:51:09 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 380272@bugs.debian.org
-Cc: maximilian attems <maks@sternwelten.at>, Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org
+To: Henne <henne@nachtwindheim.de>, "Kolli, Neela" <Neela.Kolli@engenio.com>
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
---nextPart5213783.hOqEPJCuk3
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+ACK.
+Thanks for submitting the patch.
 
-Hi Max,
+Regards,
+Sumant
 
-I just realized that I never tried your last suggestions. I will try them=20
-first thing when I get in to work tomorrow.
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Henne
+Sent: Tuesday, August 15, 2006 2:17 AM
+To: Kolli, Neela
+Cc: James.Bottomley@SteelEye.com; linux-scsi@vger.kernel.org;
+linux-kernel@vger.kernel.org
+Subject: [PATCH] [MEGARAID] convert to PCI_DEVICE() macro
 
-I have received some more info about this bug. It appears to be a timing=20
-issue. Here is the link to the bug at kernel.org with an interesting=20
-suggestion (that I have not tried):=20
-http://bugzilla.kernel.org/show_bug.cgi?id=3D6921.
+From: Henrik Kretzschmar <henne@nachtwidheim.de>
 
-My company has inherited 5 racks of these compaq servers and it is very=20
-important that debian etch work well on them :)
+Convert the pci_device_id-table of the megaraid_sas-driver to
+the PCI_DEVICE-macro, to safe some lines.
 
-Thanks for all the help,
-Joshua Rubin
+Signed-off-by: Henrik Kretzschmar <henne@nachtwindheim.de>
 
---nextPart5213783.hOqEPJCuk3
-Content-Type: application/pgp-signature
+---
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.3 (GNU/Linux)
+--- linux-2.6.18-rc4/drivers/scsi/megaraid/megaraid_sas.c
+2006-08-11 10:09:21.000000000 +0200
++++ linux/drivers/scsi/megaraid/megaraid_sas.c	2006-08-11
+13:29:29.000000000 +0200
+@@ -53,31 +53,15 @@
+  */
+ static struct pci_device_id megasas_pci_table[] = {
+ 
+-	{
+-	 PCI_VENDOR_ID_LSI_LOGIC,
+-	 PCI_DEVICE_ID_LSI_SAS1064R, /* xscale IOP */
+-	 PCI_ANY_ID,
+-	 PCI_ANY_ID,
+-	 },
+-	{
+-	 PCI_VENDOR_ID_LSI_LOGIC,
+-	 PCI_DEVICE_ID_LSI_SAS1078R, /* ppc IOP */
+-	 PCI_ANY_ID,
+-	 PCI_ANY_ID,
+-	},
+-	{
+-	 PCI_VENDOR_ID_LSI_LOGIC,
+-	 PCI_DEVICE_ID_LSI_VERDE_ZCR,	/* xscale IOP, vega */
+-	 PCI_ANY_ID,
+-	 PCI_ANY_ID,
+-	 },
+-	{
+-	 PCI_VENDOR_ID_DELL,
+-	 PCI_DEVICE_ID_DELL_PERC5, /* xscale IOP */
+-	 PCI_ANY_ID,
+-	 PCI_ANY_ID,
+-	 },
+-	{0}			/* Terminating entry */
++	{PCI_DEVICE(PCI_VENDOR_ID_LSI_LOGIC,
+PCI_DEVICE_ID_LSI_SAS1064R)},
++	/* xscale IOP */
++	{PCI_DEVICE(PCI_VENDOR_ID_LSI_LOGIC,
+PCI_DEVICE_ID_LSI_SAS1078R)},
++	/* ppc IOP */
++	{PCI_DEVICE(PCI_VENDOR_ID_LSI_LOGIC,
+PCI_DEVICE_ID_LSI_VERDE_ZCR)},
++	/* xscale IOP, vega */
++	{PCI_DEVICE(PCI_VENDOR_ID_DELL, PCI_DEVICE_ID_DELL_PERC5)},
++	/* xscale IOP */
++	{}
+ };
+ 
+ MODULE_DEVICE_TABLE(pci, megasas_pci_table);
 
-iD8DBQBE5QXskKWMTL7MAq4RAjBIAKCOsmg7GctSCfA9vmCCtXpcmd0BPQCgoYJM
-CY3fJ2GleRVv/wmSFgW+yec=
-=LWFg
------END PGP SIGNATURE-----
 
---nextPart5213783.hOqEPJCuk3--
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
