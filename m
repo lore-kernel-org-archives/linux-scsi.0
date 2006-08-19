@@ -1,27 +1,27 @@
-From: "Frederic" <bedimmedadapt@rosvik.net>
-Subject: Take pleasure from Finally there is something that really gives you extra inches and extra confidence.
-Date: Sat, 19 Aug 2006 03:28:10 -0700
-Message-ID: <49231462305783.686BC7FF0C__42811.6743606099$1155983381$gmane$org@TVSKZ3PU>
+From: "Earline" <circumferentialdesolater@rozeboom.nl>
+Subject: Be delighted with  You don't need to spend huge money on luxury items - it all will be worthless without decent physical equipment.
+Date: Sat, 19 Aug 2006 16:33:46 +0600
+Message-ID: <41257136696366.2291B6C717__10344.9146649384$1155983710$gmane$org@JDGN617E>
 Mime-Version: 1.0
 Content-Type: text/plain;
         charset="Windows-1252"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ip-64-32-173-74.sjc.megapath.net ([64.32.173.74]:50188 "EHLO
-	SECONDARY") by vger.kernel.org with ESMTP id S964958AbWHSK31 (ORCPT
+Received: from [220.247.223.63] ([220.247.223.63]:47877 "EHLO CPU10.duiqys.com")
+	by vger.kernel.org with ESMTP id S1161104AbWHSKfE (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 19 Aug 2006 06:29:27 -0400
+	Sat, 19 Aug 2006 06:35:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-serial@vger.kernel.org
 
-New and hot
+Enjoy the newest
 
- Finally there is something that really gives you extra inches and extra confidence. You will be counting days before your rod will be almost reaching your knees.
+ You don't need to spend huge money on luxury items - it all will be worthless without decent physical equipment. You are about to gain inches in months or even less - get ready to have more fun!
 
- Give her an opportunity to spread rumors about your enormous size. Get ready to hear girls spreading gossip behind your back about your new size. You may find what you need here: http://www.ogoled.com/gal/ms/ 
-Introducing a great product which will make you a better, more confident man!
+ Some intimate experiences are available only to men with big equipment. Get ready to be stopped by women in the street. Your entire image will emanate increased size! Come on in here: http://www.posadroft.com/gal/ms/ 
+If you thought getting more size and girth was impossible, take a look at this.
 
 
- Happiness is wanting what you have - not having what you want A miss is as good as a mile. Wisdom crieth without; she uttereth her voice in the streets. Then shall they call upon me, but I will not answer; they shall seek me early, but they shall not find me.
+ Rain before seven, fine before eleven  Once in a while, right in the middle of an ordinary life, love gives us a fairy tale A scalded cat fears cold water. The older the fiddler, the sweeter the tune. Divide and rule
 
