@@ -1,52 +1,36 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [PATCH] [REPOST] SCSI and FC Transport: add netlink support for
- posting of transport events
-Date: Sat, 19 Aug 2006 07:56:07 -0400
-Message-ID: <44E6FC57.5050502@emulex.com>
-References: <1155936609.12933.5.camel@localhost.localdomain> <44E68F65.2000701@cs.wisc.edu>
-Reply-To: James.Smart@Emulex.Com
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: Bugs on Linux 2.6.18-rc2 sg code?
+Date: Sat, 19 Aug 2006 11:20:24 -0600
+Message-ID: <20060819172024.GS4340@parisc-linux.org>
+References: <8202f4270608101843r7df002d2l40e03eca3271b050@mail.gmail.com> <44E6388D.1000206@torque.net> <44E68F76.4010702@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:3745 "EHLO emulex.emulex.com")
-	by vger.kernel.org with ESMTP id S1751497AbWHSMLV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 19 Aug 2006 08:11:21 -0400
-In-Reply-To: <44E68F65.2000701@cs.wisc.edu>
+Received: from palinux.external.hp.com ([192.25.206.14]:45702 "EHLO
+	palinux.external.hp.com") by vger.kernel.org with ESMTP
+	id S1422721AbWHSRU0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 19 Aug 2006 13:20:26 -0400
+Content-Disposition: inline
+In-Reply-To: <44E68F76.4010702@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: linux-scsi@vger.kernel.org
+To: Douglas Gilbert <dougg@torque.net>
+Cc: Fajun Chen <fajunchen@gmail.com>, linux-scsi@vger.kernel.org, akpm@osdl.org
 
-How big of a number do you need ?  48 bits ?
-We can up to 64bits, but I'd reserve 8bits for a "type" field.
-(ugh, sounds like I'm redefining naming authorities...)
+On Sat, Aug 19, 2006 at 12:11:34AM -0400, Douglas Gilbert wrote:
+> > Your point about the change to sg_vma_nopage() between
+> > lk 2.6.15 and lk 2.6.16 also seems to be correct.
+> > The most indented part of that function has been
+> > changed from incrementing the change count on the
+> > reported page (as indicated by 'offset') in a
+> > compound page allocation to ignoring the 'offset'
+> > and incrementing the page count on the first page
+> > in a compound page allocation.
+>  		if (offset < len) {
+> -			page = sg->page;
+> +			page = virt_to_page(page_address(sg->page) + offset);
+>  			get_page(page);	/* increment page count */
 
-On a side thought - is the mac address really the right thing to
-use for a vendor id. Wouldn't you be extracting the vendor id from
-the mac address ?
+But page_address can return NULL on highmem machines.  Or are you
+guaranteed that these are lowmem pages?
 
--- james
-
-Mike Christie wrote:
-> James Smart wrote:
->> +/*
->> + * Vendor ID:
->> + *   If transports post vendor-unique events, they must pass a well-known
->> + *   32-bit vendor identifier. This identifier consists of 8 bits indicating
->> + *   the "type" of identifier contained, and 24 bits of id data.
->> + *
->> + *   Identifiers for each type:
->> + *    PCI :  ID data is the 16 bit PCI Registered Vendor ID
->> + */
->> +#define SCSI_NL_VID_ID_MASK			0x00FFFFFF
->> +#define SCSI_NL_VID_TYPE_MASK			0xFF000000
->> +#define SCSI_NL_VID_TYPE_PCI			0x01000000
->> +
-> 
-> Would it be possible to make this a little larger? For iscsi we wanted
-> to use the MAC address. It can wait. I do not care if it goes in now or
-> later. I just don't want to be the first one to break apps by changing
-> the number and seeing how many checked version numbers :)
-> 
