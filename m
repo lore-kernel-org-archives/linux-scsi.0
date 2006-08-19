@@ -1,55 +1,32 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: Bugs on Linux 2.6.18-rc2 sg code?
-Date: Sat, 19 Aug 2006 10:41:09 -0700
-Message-ID: <20060819104109.588604bd.akpm@osdl.org>
-References: <8202f4270608101843r7df002d2l40e03eca3271b050@mail.gmail.com>
-	<44E6388D.1000206@torque.net>
-	<44E68F76.4010702@torque.net>
-	<20060819172024.GS4340@parisc-linux.org>
-	<44E74C21.8040108@torque.net>
+From: jassduec@gmail.com
+Subject: RAID 5 throughputs
+Date: Sat, 19 Aug 2006 11:46:08 -0600
+Message-ID: <3a1eedb70608191046o7dd207bfp15f02e90b297b1a9@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:23459 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751764AbWHSRlO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 19 Aug 2006 13:41:14 -0400
-In-Reply-To: <44E74C21.8040108@torque.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-admin-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-admin-owner@vger.kernel.org
+To: linux-admin@vger.kernel.org, linux-config@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: Matthew Wilcox <matthew@wil.cx>, Fajun Chen <fajunchen@gmail.com>, linux-scsi@vger.kernel.org
 
-On Sat, 19 Aug 2006 13:36:33 -0400
-Douglas Gilbert <dougg@torque.net> wrote:
+Hi All,
 
-> Matthew Wilcox wrote:
-> > On Sat, Aug 19, 2006 at 12:11:34AM -0400, Douglas Gilbert wrote:
-> >>> Your point about the change to sg_vma_nopage() between
-> >>> lk 2.6.15 and lk 2.6.16 also seems to be correct.
-> >>> The most indented part of that function has been
-> >>> changed from incrementing the change count on the
-> >>> reported page (as indicated by 'offset') in a
-> >>> compound page allocation to ignoring the 'offset'
-> >>> and incrementing the page count on the first page
-> >>> in a compound page allocation.
-> >>  		if (offset < len) {
-> >> -			page = sg->page;
-> >> +			page = virt_to_page(page_address(sg->page) + offset);
-> >>  			get_page(page);	/* increment page count */
-> > 
-> > But page_address can return NULL on highmem machines.  Or are you
-> > guaranteed that these are lowmem pages?
-> 
-> Matthew,
-> The allocation is typically compound done with:
->   alloc_pages(GFP_ATOMIC|__GFP_COMP|__GFP_NOWARN, order)
-> where 'order' is 3 (hence 32 KB).
+I have a storage system with 12 Maxtor 7200 rpm 250GB hard drives in
+RAID 5 configuration with one hot spare. Maxtor claims that each drive
+is capable of providing 56 MB/s sustained throughput. My host system
+is connected to it using 64bit ultra320 Adaptec SCSI card. The host
+system has 3.0 GHz pentium 4 (with HT) processor and 4 GB of RAM
+running linux kernel 2.6.9. I was wondering what order of "maximum"
+sequential read/write, random read/write throughput should i expect
+using them. I am using some of the benchmarking tools like Bonnie,
+Bonnie++, tiobench, dd, iometer etc. However the results from them
+have been very depressing. Theoretically i should be able to achieve a
+read sequential throughput close to min(10*56 = 560, 320) = 320 MB/s.
+However my results are no way close to it. I was wondering if anybody
+can give me some insight of what order of practical throughputs i
+should expect using linux and what other factors may be creating
+bottlenecks.
 
-ow, GFP_ATOMIC is bad.  Can we avoid that?
-
-> The lack of a '__GFP_HIGHMEM' flag should mean these are
-> lowmem pages (?).
-
-Yup.
+TIA
