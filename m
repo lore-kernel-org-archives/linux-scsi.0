@@ -1,57 +1,39 @@
-From: "Patro, Sumant" <Sumant.Patro@lsil.com>
-Subject: RE: [RFC][PATCH 39/75] scsi: drivers/scsi/megaraid/megaraid_sas.c pci_module_init to pci_register_driver conversion
-Date: Fri, 18 Aug 2006 20:03:26 -0600
-Message-ID: <0631C836DBF79F42B5A60C8C8D4E8229674EA3@NAMAIL2.ad.lsil.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] [REPOST] SCSI and FC Transport: add netlink support for
+ posting of transport events
+Date: Fri, 18 Aug 2006 23:11:17 -0500
+Message-ID: <44E68F65.2000701@cs.wisc.edu>
+References: <1155936609.12933.5.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1422715AbWHSCD2@vger.kernel.org>
-Content-class: urn:content-classes:message
-Sender: linux-kernel-owner@vger.kernel.org
-To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, "Bagalkote, Sreenivas" <Sreenivas.Bagalkote@engenio.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:37012 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S932365AbWHSELZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 19 Aug 2006 00:11:25 -0400
+In-Reply-To: <1155936609.12933.5.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Smart@Emulex.Com
+Cc: linux-scsi@vger.kernel.org
 
-Ack.
+James Smart wrote:
+> +/*
+> + * Vendor ID:
+> + *   If transports post vendor-unique events, they must pass a well-known
+> + *   32-bit vendor identifier. This identifier consists of 8 bits indicating
+> + *   the "type" of identifier contained, and 24 bits of id data.
+> + *
+> + *   Identifiers for each type:
+> + *    PCI :  ID data is the 16 bit PCI Registered Vendor ID
+> + */
+> +#define SCSI_NL_VID_ID_MASK			0x00FFFFFF
+> +#define SCSI_NL_VID_TYPE_MASK			0xFF000000
+> +#define SCSI_NL_VID_TYPE_PCI			0x01000000
+> +
 
-Thank you.
-
---Sumant
-
------Original Message-----
-From: linux-kernel-owner@vger.kernel.org
-[mailto:linux-kernel-owner@vger.kernel.org] On Behalf Of Michal
-Piotrowski
-Sent: Thursday, August 17, 2006 6:28 AM
-To: Bagalkote, Sreenivas
-Cc: linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org
-Subject: [RFC][PATCH 39/75] scsi: drivers/scsi/megaraid/megaraid_sas.c
-pci_module_init to pci_register_driver conversion
-
-
-Signed-off-by: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
-
-diff -uprN -X linux-work/Documentation/dontdiff
-linux-work-clean/drivers/scsi/megaraid/megaraid_sas.c
-linux-work2/drivers/scsi/megaraid/megaraid_sas.c
---- linux-work-clean/drivers/scsi/megaraid/megaraid_sas.c
-2006-08-16 22:41:01.000000000 +0200
-+++ linux-work2/drivers/scsi/megaraid/megaraid_sas.c	2006-08-17
-05:21:09.000000000 +0200
-@@ -2854,7 +2854,7 @@ static int __init megasas_init(void)
- 	/*
- 	 * Register ourselves as PCI hotplug module
- 	 */
--	rval = pci_module_init(&megasas_pci_driver);
-+	rval = pci_register_driver(&megasas_pci_driver);
- 
- 	if (rval) {
- 		printk(KERN_DEBUG "megasas: PCI hotplug regisration
-failed \n");
--
-To unsubscribe from this list: send the line "unsubscribe linux-kernel"
-in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-Please read the FAQ at  http://www.tux.org/lkml/
+Would it be possible to make this a little larger? For iscsi we wanted
+to use the MAC address. It can wait. I do not care if it goes in now or
+later. I just don't want to be the first one to break apps by changing
+the number and seeing how many checked version numbers :)
