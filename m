@@ -1,49 +1,46 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
+From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: Bugs on Linux 2.6.18-rc2 sg code?
-Date: Sat, 19 Aug 2006 11:55:13 -0700
-Message-ID: <1156013713.3726.10.camel@mulgrave.il.steeleye.com>
-References: <8202f4270608101843r7df002d2l40e03eca3271b050@mail.gmail.com>
-	 <44E6388D.1000206@torque.net>  <44E68F76.4010702@torque.net>
+Date: Sat, 19 Aug 2006 14:23:23 -0600
+Message-ID: <20060819202323.GT4340@parisc-linux.org>
+References: <8202f4270608101843r7df002d2l40e03eca3271b050@mail.gmail.com> <44E6388D.1000206@torque.net> <44E68F76.4010702@torque.net> <20060819172024.GS4340@parisc-linux.org> <44E74C21.8040108@torque.net> <20060819104109.588604bd.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:40668 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751773AbWHSSz3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 19 Aug 2006 14:55:29 -0400
-In-Reply-To: <44E68F76.4010702@torque.net>
+Received: from palinux.external.hp.com ([192.25.206.14]:38050 "EHLO
+	palinux.external.hp.com") by vger.kernel.org with ESMTP
+	id S1422777AbWHSUXY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 19 Aug 2006 16:23:24 -0400
+Content-Disposition: inline
+In-Reply-To: <20060819104109.588604bd.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: Fajun Chen <fajunchen@gmail.com>, linux-scsi@vger.kernel.org, akpm@osdl.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: dougg@torque.net, Fajun Chen <fajunchen@gmail.com>, linux-scsi@vger.kernel.org
 
-On Sat, 2006-08-19 at 00:11 -0400, Douglas Gilbert wrote:
-> @@ -1164,7 +1164,7 @@
->                 len = vma->vm_end - sa;
->                 len = (len < sg->length) ? len : sg->length;
->                 if (offset < len) {
-> -                       page = sg->page;
-> +                       page = virt_to_page(page_address(sg->page) + offset);
->                         get_page(page); /* increment page count */
->                         break;
->                 }
+On Sat, Aug 19, 2006 at 10:41:09AM -0700, Andrew Morton wrote:
+> ow, GFP_ATOMIC is bad.  Can we avoid that?
 
-Doing something like this always frightens people in linux because
-page_address() on highmem returns NULL.  I know, having looked, that in
-this case it can't happen, but since sg->page is really an array of
-pages, how about something simpler like
+I believe all the GFP_ATOMIC calls in sg.c can be downgraded to
+GFP_KERNEL.
 
-page = &sg->page[offset >> PAGE_SHIFT]
+sg_add_sfp is only called from sg_open(), so the GFP_ATOMIC there can
+be downgraded to GFP_KERNEL.
 
-or (if you want to be more correct) something like the nth_page macro in
-linux/mm.h?
+There's one in sg_common_write that can be downgraded.  It's called
+from sg_write and sg_ioctl (via sg_new_write).  No locks are held at
+those points.
 
-It might also be worthwhile considering GFP_HIGHUSER for this allocation
-(in spite of all the kmap_atomic et al that would have to be added to
-the code), since that will increase the chance of a contiguous
-allocation on large memory machines.
+st_map_user_pages uses GFP_ATOMIC.  It's only called from
+sg_build_direct, which is only called from sg_start_req, which is only
+called from sg_new_write, which is safe per above.
 
-James
+sg_page_malloc uses GFP_ATOMIC.  It's only called from sg_build_indirect.
+sg_build_indirect is called from sg_start_req (previously shown safe),
+and sg_build_reserve.  sg_build_reserve is safe as it's only called from
+sg_ioctl and sg_add_sfp (previously shown safe).
 
+sg_build_sgat is called from sg_build_direct and sg_build_indirect,
+both of which have previously been shown safe.
 
+Please check my reasoning, but I'm pretty confident that none of these
+paths are called with any locks held.
