@@ -1,26 +1,57 @@
-From: "Abel" <citroenacquit@rotopacking.com>
-Subject: Be delighted with  This is what you always needed to lead a happier, more fulfilling life.
-Date: Sat, 19 Aug 2006 09:56:49 +0900
-Message-ID: <27276077581224.0FF7313BCC@PL2P2MG2>
+From: "Patro, Sumant" <Sumant.Patro@lsil.com>
+Subject: RE: [RFC][PATCH 39/75] scsi: drivers/scsi/megaraid/megaraid_sas.c pci_module_init to pci_register_driver conversion
+Date: Fri, 18 Aug 2006 20:03:26 -0600
+Message-ID: <0631C836DBF79F42B5A60C8C8D4E8229674EA3@NAMAIL2.ad.lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-        charset="Windows-1252"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ZE102069.ppp.dion.ne.jp ([220.217.102.69]:3078 "EHLO
-	FM-9594D04FB77F") by vger.kernel.org with ESMTP id S1751618AbWHSA4m
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Aug 2006 20:56:42 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1422715AbWHSCD2@vger.kernel.org>
+Content-class: urn:content-classes:message
+Sender: linux-kernel-owner@vger.kernel.org
+To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, "Bagalkote, Sreenivas" <Sreenivas.Bagalkote@engenio.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-smp@vger.kernel.org
 
-Hot'n'new
+Ack.
 
- Unlike other products, this one gives you permanent gains in size - and loads of pleasure! Up to 3-4 inches of extra length and more pleasure in bed in just a few days!
+Thank you.
 
- She certainly has fantasies about a large-sized man pleasing her to the full. Just imagine your new happy life with more size, more adoration from females and more self-assurance. Find what you need here: http://www.ilmestelv.com/gal/ms/ 
-You won't increase your most important muscle in gyms - so this is what you have to try!
+--Sumant
 
- A man is known by the company he keeps.  Many people know how to say nothing; few know when A proverb never lies, it is only its meaning which deceives. When Mumma dead family done. An apple a day keeps the doctor at bay The grass is always greener on the other side of the fence.
+-----Original Message-----
+From: linux-kernel-owner@vger.kernel.org
+[mailto:linux-kernel-owner@vger.kernel.org] On Behalf Of Michal
+Piotrowski
+Sent: Thursday, August 17, 2006 6:28 AM
+To: Bagalkote, Sreenivas
+Cc: linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org
+Subject: [RFC][PATCH 39/75] scsi: drivers/scsi/megaraid/megaraid_sas.c
+pci_module_init to pci_register_driver conversion
 
+
+Signed-off-by: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+
+diff -uprN -X linux-work/Documentation/dontdiff
+linux-work-clean/drivers/scsi/megaraid/megaraid_sas.c
+linux-work2/drivers/scsi/megaraid/megaraid_sas.c
+--- linux-work-clean/drivers/scsi/megaraid/megaraid_sas.c
+2006-08-16 22:41:01.000000000 +0200
++++ linux-work2/drivers/scsi/megaraid/megaraid_sas.c	2006-08-17
+05:21:09.000000000 +0200
+@@ -2854,7 +2854,7 @@ static int __init megasas_init(void)
+ 	/*
+ 	 * Register ourselves as PCI hotplug module
+ 	 */
+-	rval = pci_module_init(&megasas_pci_driver);
++	rval = pci_register_driver(&megasas_pci_driver);
+ 
+ 	if (rval) {
+ 		printk(KERN_DEBUG "megasas: PCI hotplug regisration
+failed \n");
+-
+To unsubscribe from this list: send the line "unsubscribe linux-kernel"
+in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Please read the FAQ at  http://www.tux.org/lkml/
