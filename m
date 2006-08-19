@@ -1,36 +1,49 @@
-From: maximilian attems <maks@sternwelten.at>
-Subject: Re: Bug#380272: kernel-image-2.6-686-smp: cpqarray module fails to detect arrays
-Date: Sat, 19 Aug 2006 20:27:26 +0200
-Message-ID: <20060819182726.GD4868@baikonur.stro.at>
-References: <200608180959.16889.joshua@rubixlinux.org> <20060818163904.GC16593@athena.road.mcmartin.ca> <1155943138.3766.9.camel@mulgrave.il.steeleye.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Bugs on Linux 2.6.18-rc2 sg code?
+Date: Sat, 19 Aug 2006 11:55:13 -0700
+Message-ID: <1156013713.3726.10.camel@mulgrave.il.steeleye.com>
+References: <8202f4270608101843r7df002d2l40e03eca3271b050@mail.gmail.com>
+	 <44E6388D.1000206@torque.net>  <44E68F76.4010702@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from baikonur.stro.at ([213.239.196.228]:32264 "EHLO
-	baikonur.stro.at") by vger.kernel.org with ESMTP id S1751498AbWHSS1e
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 19 Aug 2006 14:27:34 -0400
-Content-Disposition: inline
-In-Reply-To: <1155943138.3766.9.camel@mulgrave.il.steeleye.com>
+Received: from stat9.steeleye.com ([209.192.50.41]:40668 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1751773AbWHSSz3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 19 Aug 2006 14:55:29 -0400
+In-Reply-To: <44E68F76.4010702@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, 380272@bugs.debian.org
-Cc: Kyle McMartin <kyle@parisc-linux.org>, Joshua Rubin <joshua@rubixlinux.org>, Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org, stable@kernel.org
+To: dougg@torque.net
+Cc: Fajun Chen <fajunchen@gmail.com>, linux-scsi@vger.kernel.org, akpm@osdl.org
 
-On Fri, Aug 18, 2006 at 04:18:58PM -0700, James Bottomley wrote:
-> On Fri, 2006-08-18 at 12:39 -0400, Kyle McMartin wrote:
-> > The problem is because they both claim support for the same PCI Ids:
-> 
-> That's this fix, isn't it?
-> 
-> http://www.kernel.org/git/?p=linux/kernel/git/jejb/scsi-rc-fixes-2.6.git;a=commit;h=b2b3c121076961333977f485f0d54c22121df920
-> 
-> James
+On Sat, 2006-08-19 at 00:11 -0400, Douglas Gilbert wrote:
+> @@ -1164,7 +1164,7 @@
+>                 len = vma->vm_end - sa;
+>                 len = (len < sg->length) ? len : sg->length;
+>                 if (offset < len) {
+> -                       page = sg->page;
+> +                       page = virt_to_page(page_address(sg->page) + offset);
+>                         get_page(page); /* increment page count */
+>                         break;
+>                 }
 
-added the stable Maintainers to cc,
-please consider this patch for the next revision.
+Doing something like this always frightens people in linux because
+page_address() on highmem returns NULL.  I know, having looked, that in
+this case it can't happen, but since sg->page is really an array of
+pages, how about something simpler like
 
-thanks
+page = &sg->page[offset >> PAGE_SHIFT]
 
--- 
-maks
+or (if you want to be more correct) something like the nth_page macro in
+linux/mm.h?
+
+It might also be worthwhile considering GFP_HIGHUSER for this allocation
+(in spite of all the kmap_atomic et al that would have to be added to
+the code), since that will increase the chance of a contiguous
+allocation on large memory machines.
+
+James
+
+
