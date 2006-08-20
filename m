@@ -1,31 +1,36 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] limit recursion when flushing shost->starved_list
-Date: Sat, 19 Aug 2006 13:30:29 -0700
-Message-ID: <1156019429.3726.18.camel@mulgrave.il.steeleye.com>
-References: <20060809153116.GA14043@lion28.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: "Doug Shultz" <KAXKMEGPHVZDHG@starwaypictures.com>
+Subject: Re: HI!
+Date: Sun, 20 Aug 2006 14:48:28 -0300
+Message-ID: <25391130090241.CFB5502DE@impost.starnetusa.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:33759 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751558AbWHSWIo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 19 Aug 2006 18:08:44 -0400
-In-Reply-To: <20060809153116.GA14043@lion28.ibm.com>
+Received: from zeus1.kernel.org ([204.152.191.4]:26755 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S1751628AbWHTArF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 19 Aug 2006 20:47:05 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andreas Herrmann <aherrman@de.ibm.com>
-Cc: Jens Axboe <axboe@suse.de>, James Bottomley <jejb@SteelEye.com>, Linux SCSI <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: linux-net@vger.kernel.org
 
-On Wed, 2006-08-09 at 17:31 +0200, Andreas Herrmann wrote:
-> Attached is a patch that should limit a possible recursion that can
-> lead to a stack overflow like follows:
+Do you want a w-atch?
 
-Well, OK, initially I'll put this in scsi-misc, since I acknowledge its
-a problem.   However, it is one that block queue grouping should be able
-to get us out of ... and at that time, this code (and most of the
-starved list handling) should exit the scsi mid-layer.
+In our online store you can buy r e p l i c a s of R o l e x watches and
+other brands. They look and feel exactly like the real thing.
 
-James
+- We have 100+ different brands in our selection
+- Best prices on the market Just For You
+- Great Discount Live Support Extended Warranty
+- Free shipping if you order 2 or more
+- Save up to 85% compared to the cost of other r e p l i c a s
+- Standard Features:
+- Screw-in crown
+- Unidirectional turning bezel where appropriate
+- All the appropriate r o l e x logos, on crown and dial
+- Heavy weight
+
+Clisk here: http://huamaoshiye.info
 
 
+
+
+elena ahoy dublin wolfgang anonymous dallas dingy joe
+laud sextet wheat ejector arrear roosevelt cloak cathy
