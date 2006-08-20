@@ -1,49 +1,44 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: ybin on powerpc
-Date: Sat, 19 Aug 2006 20:12:15 -0700
-Message-ID: <20060819201215.fb0bc2d2.akpm@osdl.org>
-References: <20060819111919.a60dca49.akpm@osdl.org>
-	<1156024644.5803.73.camel@localhost.localdomain>
-	<20060819182818.bf3ff5bc.akpm@osdl.org>
-	<20060820015629.GU4340@parisc-linux.org>
-	<20060819192811.f7113147.akpm@osdl.org>
-	<20060820030559.GV4340@parisc-linux.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] [REPOST] SCSI and FC Transport: add netlink support for
+ posting of transport events
+Date: Sat, 19 Aug 2006 22:26:54 -0400
+Message-ID: <44E7C86E.1030302@cs.wisc.edu>
+References: <1155936609.12933.5.camel@localhost.localdomain> <44E68F65.2000701@cs.wisc.edu> <44E6FC57.5050502@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:59600 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751471AbWHTDMZ (ORCPT
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:27291 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S1751637AbWHTD1C (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 19 Aug 2006 23:12:25 -0400
-In-Reply-To: <20060820030559.GV4340@parisc-linux.org>
+	Sat, 19 Aug 2006 23:27:02 -0400
+In-Reply-To: <44E6FC57.5050502@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
+To: James.Smart@Emulex.Com
+Cc: linux-scsi@vger.kernel.org
 
-On Sat, 19 Aug 2006 21:05:59 -0600
-Matthew Wilcox <matthew@wil.cx> wrote:
-
-> On Sat, Aug 19, 2006 at 07:28:11PM -0700, Andrew Morton wrote:
-> > On Sat, 19 Aug 2006 19:56:30 -0600
-> > Matthew Wilcox <matthew@wil.cx> wrote:
-> > > BTW, the SCSI specs changed the name from CD-ROM to CD/DVD.  I'd like to
-> > > reflect that change in /proc/scsi/scsi; is there any userspace currently
-> > > relying on that spelling?
-> > 
-> > I think that's basically unknowable.  How does one grep all userspace?
+James Smart wrote:
+> How big of a number do you need ?  48 bits ?
+> We can up to 64bits, but I'd reserve 8bits for a "type" field.
+> (ugh, sounds like I'm redefining naming authorities...)
 > 
-> apt-cache search?  ;-)
-
-Well yeah.  Smiley noted, but let us remember that "userspace" includes
-non-published and non-open-source code.
-
-> > The only practical way to find out is to change it, see what breaks and
-> > hope that people report it in time.  That's a terribly blunt weapon.
-> > 
-> > It's better to get the interfaces right first time ;)
+> On a side thought - is the mac address really the right thing to
+> use for a vendor id. Wouldn't you be extracting the vendor id from
+> the mac address ?
 > 
-> Yeah; kind of hard to do when the SCSI committee changes the spec on you.
 
-I think people will continue to understand what we mean.
+I was looking for a persistent per hba value for some other long reason
+that we can work around in userspace so I take back that comment.
+
+Are you only sending the vendor id to match some vendor specific
+userspace code with the event? Currently, for iscsi we only send the
+host no then match the driver, host and some driver or vendor specific
+code by using the host no and proc_name attr. This is because for
+software iscsi and iser we do not know the pci device that will be used.
+For software iscsi it could be a bonded device or multiple devices
+depending on tables getting updated. What would we use for the vendor id
+in this case? Is there a null value or some special unused one we can
+abuse or why do you need the vendor id value if you can look that up in
+sysfs by just following the host no to the scsi host dir then going to
+the pci device?
