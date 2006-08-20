@@ -1,60 +1,56 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: RE: Error 1 & scsi_add_device()
-Date: Sun, 20 Aug 2006 11:38:17 -0500
-Message-ID: <1156091897.3726.54.camel@mulgrave.il.steeleye.com>
-References: <547AF3BD0F3F0B4CBDC379BAC7E4189F02B1CAAA@otce2k03.adaptec.com>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: Any known issues to cause data miscompares on sg read/write on
+ 2.6.15.4 and 2.6.18-rc2?
+Date: Sun, 20 Aug 2006 10:42:55 -0700
+Message-ID: <20060820104255.25c88623.akpm@osdl.org>
+References: <8202f4270608200230s34aa9505s2426f3f3b90fa7ec@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:14574 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1750897AbWHTQi0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 20 Aug 2006 12:38:26 -0400
-In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189F02B1CAAA@otce2k03.adaptec.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <8202f4270608200230s34aa9505s2426f3f3b90fa7ec@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Fajun Chen <fajunchen@gmail.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, dougg@torque.net, jgarzik@pobox.com, htejun@gmail.com, alan@lxorguk.ukuu.org.uk, rmk@arm.linux.org.uk
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: linux-scsi@vger.kernel.org, Mark Haverkamp <markh@osdl.org>
 
-On Thu, 2006-08-17 at 10:02 -0400, Salyzyn, Mark wrote:
-> None of this leads me to believe there is any kref node corruption,
-> but
-> code could expect that if a device existed at the nexus and the
-> subsystem acquired another reference to the node based on the nexus
-> rather than the scsi_device, thus using scsi_device_lookup, that they
-> would get an unexpected NULL pointer and choke. I have not inspected
-> the
-> code for such a path (yet), but feel we have risks in any case that
-> need
-> to be addressed.
+On Sun, 20 Aug 2006 03:30:56 -0600
+"Fajun Chen" <fajunchen@gmail.com> wrote:
+
+> Hi Folks,
 > 
-> The aacraid driver should stop calling scsi_remove_device when an
-> array
-> is deleted ... or ...
+> I use ATA pass through via sg ioctl interface for data read/write. Two
+> kernels were tested:
+> Linux 2.6.15.4 with Jeff Garzik's libata patch (pata support)
+> Linux 2.6.18-rc2 with Jeff Garzik's git libata patch (new EH, hotplug,
+> pata support)
+> Hardware: ARM IOP80321 with PCI-X
+> Host adapters: sata Sil3124 and pata Sil680
+> Test algorithm: random write-read-compare (same range)
 > 
-> I believe what needs to be added is a check for sdev->sdev_state ==
-> SDEV_DEL in __scsi_device_lookup_by_target and __scsi_device_lookup in
-> scsi.c:
+> I've tried sg mmap, direct and indirect IO on both 2.6.18-rc2 and
+> 2.6.15.4 release, none of the combinations survived data compare
+> overnight test.  I also tried to change cache policy to write through
+> on 2.6.15.4,  no luck either.  Several different symptoms were
+> observed among the failures:
+> 1. A few bytes in a data pattern were not written correctly to the
+> disc (low data miscompare rate)
+> 2. Pretty much none of the data were written correctly to the disc
+> (high data miscompare rate)
+> 3. Data were written to the disc correctly but miscompares when read
+> it back. What's weird is that when the read buffer was printed out
+> right after data miscompare , it contains the correct data!
+> Sg write failures (symptom #1 and #2) are more typical than read
+> failure (symptom #3).  This problem has been observed on many
+> different test machines with both pata and sata drives.
+> 
+> I don't know of a good way to trace and isolate the problem yet. Since
+> data miscompare issue can be caused by issues from different
+> subsystems, I cc'ed some subsystem maintainers here.  Any information
+> or suggestions are greatly appreciated.
+> 
 
-That would solve some of this... but that's not quite the whole of it,
-unfortunately.  The error 1 problem is caused by the external namespace
-visibility, which the SDEV_DEL check will prevent (the device only goes
-into DEL after the namespace entry has been removed, so its now safe to
-repopulate it with a new device).
-
-However, there's a race you probably haven't come across yet where you
-do the same thing and get a device in SDEV_CANCEL.  This means currently
-visible but dying (i.e. the only state it's going from CANCEL is DEL).
-
-To fix all of this, we probably need better state model checking in
-probe_and_add_lun() plus a parameter that says "wait and create a new
-device if this one is being removed" ... I suspect we can cannibalise
-the rescan parameter for that.
-
-James
-
-
-The three relevant states in the model are SDEV_CREATED (this means the
-device exists b
-
+Have you tested the same hardware to the same extent without using the SG
+interface?  Say, using read() and write()?  That'll help us determine
+whether the problem is related to the sg stuff, or to something else, like
+a hardware failure.
