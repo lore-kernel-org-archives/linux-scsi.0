@@ -1,44 +1,65 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] [REPOST] SCSI and FC Transport: add netlink support for
- posting of transport events
-Date: Sat, 19 Aug 2006 22:26:54 -0400
-Message-ID: <44E7C86E.1030302@cs.wisc.edu>
-References: <1155936609.12933.5.camel@localhost.localdomain> <44E68F65.2000701@cs.wisc.edu> <44E6FC57.5050502@emulex.com>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: RAID 5 throughputs
+Date: Sun, 20 Aug 2006 04:37:22 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0608200436010.13206@p34.internal.lan>
+References: <3a1eedb70608191046o7dd207bfp15f02e90b297b1a9@mail.gmail.com>
+ <Pine.LNX.4.64.0608191400080.17678@p34.internal.lan>
+ <3a1eedb70608191958u2a6af61er36e01ee7d233998a@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:27291 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S1751637AbWHTD1C (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 19 Aug 2006 23:27:02 -0400
-In-Reply-To: <44E6FC57.5050502@emulex.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-config-owner@vger.kernel.org>
+In-Reply-To: <3a1eedb70608191958u2a6af61er36e01ee7d233998a@mail.gmail.com>
+Sender: linux-config-owner@vger.kernel.org
+To: jassduec@gmail.com
+Cc: linux-admin@vger.kernel.org, linux-config@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: linux-scsi@vger.kernel.org
 
-James Smart wrote:
-> How big of a number do you need ?  48 bits ?
-> We can up to 64bits, but I'd reserve 8bits for a "type" field.
-> (ugh, sounds like I'm redefining naming authorities...)
-> 
-> On a side thought - is the mac address really the right thing to
-> use for a vendor id. Wouldn't you be extracting the vendor id from
-> the mac address ?
-> 
 
-I was looking for a persistent per hba value for some other long reason
-that we can work around in userspace so I take back that comment.
 
-Are you only sending the vendor id to match some vendor specific
-userspace code with the event? Currently, for iscsi we only send the
-host no then match the driver, host and some driver or vendor specific
-code by using the host no and proc_name attr. This is because for
-software iscsi and iser we do not know the pci device that will be used.
-For software iscsi it could be a bonded device or multiple devices
-depending on tables getting updated. What would we use for the vendor id
-in this case? Is there a null value or some special unused one we can
-abuse or why do you need the vendor id value if you can look that up in
-sysfs by just following the host no to the scsi host dir then going to
-the pci device?
+On Sat, 19 Aug 2006, jassduec@gmail.com wrote:
+
+> Yeah, infact it is in a PCI-X slot @66Mhz.
+>
+> On 8/19/06, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
+>> 
+>> 
+>> On Sat, 19 Aug 2006, jassduec@gmail.com wrote:
+>> 
+>> > Hi All,
+>> >
+>> > I have a storage system with 12 Maxtor 7200 rpm 250GB hard drives in
+>> > RAID 5 configuration with one hot spare. Maxtor claims that each drive
+>> > is capable of providing 56 MB/s sustained throughput. My host system
+>> > is connected to it using 64bit ultra320 Adaptec SCSI card. The host
+>> > system has 3.0 GHz pentium 4 (with HT) processor and 4 GB of RAM
+>> > running linux kernel 2.6.9. I was wondering what order of "maximum"
+>> > sequential read/write, random read/write throughput should i expect
+>> > using them. I am using some of the benchmarking tools like Bonnie,
+>> > Bonnie++, tiobench, dd, iometer etc. However the results from them
+>> > have been very depressing. Theoretically i should be able to achieve a
+>> > read sequential throughput close to min(10*56 = 560, 320) = 320 MB/s.
+>> > However my results are no way close to it. I was wondering if anybody
+>> > can give me some insight of what order of practical throughputs i
+>> > should expect using linux and what other factors may be creating
+>> > bottlenecks.
+>> >
+>> > TIA
+>> > -
+>> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>> > the body of a message to majordomo@vger.kernel.org
+>> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> >
+>> 
+>> Is your 64bit ultra320 card in a 64bit PCI + 66MHZ slot?
+>> 
+>> If not, you will be limited to 133mb/s.
+>> 
+>> 
+>
+
+What speeds are you currently seeing, r/w?
+
+Have you tried making a 3-drive raid5 and increasing it by 1 drive at a 
+time to see if there is any difference in speed?
+
+Justin.
