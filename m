@@ -1,43 +1,87 @@
-From: Arjan van de Ven <arjan@fenrus.demon.nl>
-Subject: Re: Bugs on Linux 2.6.18-rc2 sg code?
-Date: Sun, 20 Aug 2006 12:07:21 +0200
-Message-ID: <1156068441.23756.23.camel@laptopd505.fenrus.org>
-References: <8202f4270608101843r7df002d2l40e03eca3271b050@mail.gmail.com>
-	 <44E6388D.1000206@torque.net> <44E68F76.4010702@torque.net>
-	 <20060819172024.GS4340@parisc-linux.org> <44E74C21.8040108@torque.net>
-	 <20060819104109.588604bd.akpm@osdl.org>
-	 <20060819202323.GT4340@parisc-linux.org>  <44E7B439.2070602@torque.net>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [PATCH] [REPOST] SCSI and FC Transport: add netlink support for
+ posting of transport events
+Date: Sun, 20 Aug 2006 09:15:07 -0400
+Message-ID: <44E8605B.1070102@emulex.com>
+References: <1155936609.12933.5.camel@localhost.localdomain> <44E68F65.2000701@cs.wisc.edu> <44E6FC57.5050502@emulex.com> <44E7C86E.1030302@cs.wisc.edu>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from a222036.upc-a.chello.nl ([62.163.222.36]:5595 "EHLO
-	laptopd505.fenrus.org") by vger.kernel.org with ESMTP
-	id S1750708AbWHTKHj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 20 Aug 2006 06:07:39 -0400
-In-Reply-To: <44E7B439.2070602@torque.net>
+Received: from emulex.emulex.com ([138.239.112.1]:6830 "EHLO emulex.emulex.com")
+	by vger.kernel.org with ESMTP id S1750751AbWHTNaV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 20 Aug 2006 09:30:21 -0400
+In-Reply-To: <44E7C86E.1030302@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: Matthew Wilcox <matthew@wil.cx>, Andrew Morton <akpm@osdl.org>, Fajun Chen <fajunchen@gmail.com>, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: linux-scsi@vger.kernel.org
 
-On Sat, 2006-08-19 at 21:00 -0400, Douglas Gilbert wrote:
-> Matthew Wilcox wrote:
-> > On Sat, Aug 19, 2006 at 10:41:09AM -0700, Andrew Morton wrote:
-> >> ow, GFP_ATOMIC is bad.  Can we avoid that?
-> > 
-> > I believe all the GFP_ATOMIC calls in sg.c can be downgraded to
-> > GFP_KERNEL.
+Mike Christie wrote:
+> James Smart wrote:
+>> How big of a number do you need ?  48 bits ?
+>> We can up to 64bits, but I'd reserve 8bits for a "type" field.
+>> (ugh, sounds like I'm redefining naming authorities...)
+>>
+>> On a side thought - is the mac address really the right thing to
+>> use for a vendor id. Wouldn't you be extracting the vendor id from
+>> the mac address ?
+>>
 > 
-> Well, if memory serves, we have been around this loop
-> before. The GFP_ATOMIC flags were removed, users
-> complained about unexplained, unbounded waits unrelated
-> to the SCSI transport or device.
+> I was looking for a persistent per hba value for some other long reason
+> that we can work around in userspace so I take back that comment.
 
-this is not a fair answer... in a way GFP_ATOMIC is an antisocial
-behavior that should only be done when there is an absolute need. You'll
-dip into the VM reserves by using it after all!
+Ok - does that mean you want more than 24 bits for a vendor id ?
+Seems reasonable...
 
-And for normal allocations, people who get the kernel to ask for a lot
-of memory need to do their fair share of waiting for memory, just to
-have write throttling work correctly...
+> Are you only sending the vendor id to match some vendor specific
+> userspace code with the event?
+
+I'm only passing vendor id on events that are vendor specific. Thus, match
+on vendor id to decode the vendor event. All other events are "well-known"
+by the transport, so vendor id is irrelevant. For well-known events, host no
+should be all you need.
+
+If you need to find the vendor matched to the host no, then you follow the
+other sysfs links appropriately (and should eventually resolve this from
+the general driver framework attributes).
+
+The passing of the vendor id in the vendor messages is simply to make
+application code simpler - so it doesn't have to following all the sysfs
+links, or know the nuances of different i/o busses and their sysfs
+attributes if the vendor supports more than just pci.
+
+ > Currently, for iscsi we only send the
+> host no then match the driver, host and some driver or vendor specific
+> code by using the host no and proc_name attr.
+
+Yep this is what I would expect - except that proc_name won't always be
+there (it's deprecated).
+
+ > This is because for
+> software iscsi and iser we do not know the pci device that will be used.
+> For software iscsi it could be a bonded device or multiple devices
+> depending on tables getting updated. What would we use for the vendor id
+> in this case?
+
+Well - in this case, it's not a vendor-specific event being generated.
+It's an event by the iscsi/iser layer. This should fit the "well-known
+to the iscsi/iser transport" event definition and not require a vendor id.
+
+If we expected to have multiple iscsi/iser stacks present (vs the 1 and only
+1 implementation we have for the other transports), then either that gets
+built into the event message (as a stack identifier) or you could munge the
+same thing into the vendor id (e.g. define a "type" that indicates s/w
+assigned - and the vendor id is the stack identifier (but this method seems
+hoaky)).
+
+ > Is there a null value or some special unused one we can
+> abuse or why do you need the vendor id value if you can look that up in
+> sysfs by just following the host no to the scsi host dir then going to
+> the pci device?
+
+Hope above is clear.
+
+-- james s
