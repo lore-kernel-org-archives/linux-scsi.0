@@ -1,57 +1,73 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: ybin on powerpc
-Date: Sun, 20 Aug 2006 15:41:18 -0700
-Message-ID: <20060820154118.e489f445.akpm@osdl.org>
-References: <20060819111919.a60dca49.akpm@osdl.org>
-	<1156024644.5803.73.camel@localhost.localdomain>
-	<20060819182818.bf3ff5bc.akpm@osdl.org>
-	<1156088355.3726.39.camel@mulgrave.il.steeleye.com>
-	<1156110857.5803.82.camel@localhost.localdomain>
+From: "Fajun Chen" <fajunchen@gmail.com>
+Subject: Re: Any known issues to cause data miscompares on sg read/write on 2.6.15.4 and 2.6.18-rc2?
+Date: Sun, 20 Aug 2006 17:19:08 -0600
+Message-ID: <8202f4270608201619p7906c7b8yf3f9b6e311acd31c@mail.gmail.com>
+References: <8202f4270608200230s34aa9505s2426f3f3b90fa7ec@mail.gmail.com>
+	 <20060820104255.25c88623.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:50368 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751751AbWHTWlc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 20 Aug 2006 18:41:32 -0400
-In-Reply-To: <1156110857.5803.82.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20060820104255.25c88623.akpm@osdl.org>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, dougg@torque.net, jgarzik@pobox.com, htejun@gmail.com, alan@lxorguk.ukuu.org.uk, rmk@arm.linux.org.uk
 List-Id: linux-scsi@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Paul Mackerras <paulus@samba.org>, linux-scsi@vger.kernel.org, Paul Nasrat <pnasrat@redhat.com>
 
-On Mon, 21 Aug 2006 07:54:17 +1000
-Benjamin Herrenschmidt <benh@kernel.crashing.org> wrote:
+Hi Andrew,
 
-> 
-> > Well ... OK, we shouldn't break things gratuitously.  However,
-> > the /proc/scsi interface is deprecated and has been for a while now.
-> > 
-> > Secondly, as Matthew pointed out, the SCSI standards actually keep
-> > changing their minds about the names of these things ...
-> > 
-> > But, thirdly, in order to get around the issue, we provided the
-> > 
-> > /sys/class/scsi_disk/<x:y:z:i>/device/type
-> > 
-> > interface which supplies the numeric field value precisely so people
-> > shouldn't parse the translated strings.
-> > 
-> > So, it sounds like yaboot is also in need of modification.
-> 
-> CC'ed Paul Nasrat who is the current yaboot maintainer
-> 
-> (Paul, the problem is about a /proc/scsi change breaking ofpath. The
-> change will probably be reverted, but still, ofpath should be changed to
-> not rely on that crap anymore)
-> 
+The part of the puzzle is that I have not found a baseline where it
+works. I do need to do more controlled and comparative testing. One on
+my list is to test the same code on i386 hardware.  It's also a good
+idea to test without using SG as you suggested. But what are my
+alternatives to get both PATA and SATA support without sg? sd
+interface, sg read/write instead of sg ioctl (probably little code
+difference here).  For PATA, IDE path may be worthy of testing, but it
+would require quite extensive change to my test application.
 
-yup.
+Thanks,
+Fajun
 
-James, I think the best (only) way in which we can communicate with all
-users of the kernel is via the kernel.  So we add a once-per-boot printk on
-first access to /proc/scsi/scsi (it should include current->comm).
-
-That should get people migrating off /proc/scsi/scsi as quickly as we can
-reasonably expect.  Then in a year or four we can perhaps remove it.
+On 8/20/06, Andrew Morton <akpm@osdl.org> wrote:
+> On Sun, 20 Aug 2006 03:30:56 -0600
+> "Fajun Chen" <fajunchen@gmail.com> wrote:
+>
+> > Hi Folks,
+> >
+> > I use ATA pass through via sg ioctl interface for data read/write. Two
+> > kernels were tested:
+> > Linux 2.6.15.4 with Jeff Garzik's libata patch (pata support)
+> > Linux 2.6.18-rc2 with Jeff Garzik's git libata patch (new EH, hotplug,
+> > pata support)
+> > Hardware: ARM IOP80321 with PCI-X
+> > Host adapters: sata Sil3124 and pata Sil680
+> > Test algorithm: random write-read-compare (same range)
+> >
+> > I've tried sg mmap, direct and indirect IO on both 2.6.18-rc2 and
+> > 2.6.15.4 release, none of the combinations survived data compare
+> > overnight test.  I also tried to change cache policy to write through
+> > on 2.6.15.4,  no luck either.  Several different symptoms were
+> > observed among the failures:
+> > 1. A few bytes in a data pattern were not written correctly to the
+> > disc (low data miscompare rate)
+> > 2. Pretty much none of the data were written correctly to the disc
+> > (high data miscompare rate)
+> > 3. Data were written to the disc correctly but miscompares when read
+> > it back. What's weird is that when the read buffer was printed out
+> > right after data miscompare , it contains the correct data!
+> > Sg write failures (symptom #1 and #2) are more typical than read
+> > failure (symptom #3).  This problem has been observed on many
+> > different test machines with both pata and sata drives.
+> >
+> > I don't know of a good way to trace and isolate the problem yet. Since
+> > data miscompare issue can be caused by issues from different
+> > subsystems, I cc'ed some subsystem maintainers here.  Any information
+> > or suggestions are greatly appreciated.
+> >
+>
+> Have you tested the same hardware to the same extent without using the SG
+> interface?  Say, using read() and write()?  That'll help us determine
+> whether the problem is related to the sg stuff, or to something else, like
+> a hardware failure.
+>
