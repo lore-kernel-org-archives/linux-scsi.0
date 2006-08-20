@@ -1,73 +1,90 @@
-From: "Fajun Chen" <fajunchen@gmail.com>
-Subject: Re: Any known issues to cause data miscompares on sg read/write on 2.6.15.4 and 2.6.18-rc2?
-Date: Sun, 20 Aug 2006 17:19:08 -0600
-Message-ID: <8202f4270608201619p7906c7b8yf3f9b6e311acd31c@mail.gmail.com>
-References: <8202f4270608200230s34aa9505s2426f3f3b90fa7ec@mail.gmail.com>
-	 <20060820104255.25c88623.akpm@osdl.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] [REPOST] SCSI and FC Transport: add netlink support for
+ posting of transport events
+Date: Sun, 20 Aug 2006 18:35:04 -0400
+Message-ID: <44E8E398.8070904@cs.wisc.edu>
+References: <1155936609.12933.5.camel@localhost.localdomain> <44E68F65.2000701@cs.wisc.edu> <44E6FC57.5050502@emulex.com> <44E7C86E.1030302@cs.wisc.edu> <44E8605B.1070102@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20060820104255.25c88623.akpm@osdl.org>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, dougg@torque.net, jgarzik@pobox.com, htejun@gmail.com, alan@lxorguk.ukuu.org.uk, rmk@arm.linux.org.uk
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:6814 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S932092AbWHTXfN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 20 Aug 2006 19:35:13 -0400
+In-Reply-To: <44E8605B.1070102@emulex.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Smart@Emulex.Com
+Cc: linux-scsi@vger.kernel.org
 
-Hi Andrew,
+James Smart wrote:
+> Mike Christie wrote:
+>> James Smart wrote:
+>>> How big of a number do you need ?  48 bits ?
+>>> We can up to 64bits, but I'd reserve 8bits for a "type" field.
+>>> (ugh, sounds like I'm redefining naming authorities...)
+>>>
+>>> On a side thought - is the mac address really the right thing to
+>>> use for a vendor id. Wouldn't you be extracting the vendor id from
+>>> the mac address ?
+>>>
+>>
+>> I was looking for a persistent per hba value for some other long reason
+>> that we can work around in userspace so I take back that comment.
+> 
+> Ok - does that mean you want more than 24 bits for a vendor id ?
+> Seems reasonable...
 
-The part of the puzzle is that I have not found a baseline where it
-works. I do need to do more controlled and comparative testing. One on
-my list is to test the same code on i386 hardware.  It's also a good
-idea to test without using SG as you suggested. But what are my
-alternatives to get both PATA and SATA support without sg? sd
-interface, sg read/write instead of sg ioctl (probably little code
-difference here).  For PATA, IDE path may be worthy of testing, but it
-would require quite extensive change to my test application.
+No. I meant to say below I do not need it. I thought that is what you
+were telling me :) Given the host no I can find the mac address or pci
+vendor or device id in sysfs
 
-Thanks,
-Fajun
+> 
+>> Are you only sending the vendor id to match some vendor specific
+>> userspace code with the event?
+> 
+> I'm only passing vendor id on events that are vendor specific. Thus, match
+> on vendor id to decode the vendor event. All other events are "well-known"
+> by the transport, so vendor id is irrelevant. For well-known events,
+> host no
+> should be all you need.
+> 
+> If you need to find the vendor matched to the host no, then you follow the
+> other sysfs links appropriately (and should eventually resolve this from
+> the general driver framework attributes).
+> 
+> The passing of the vendor id in the vendor messages is simply to make
+> application code simpler - so it doesn't have to following all the sysfs
+> links, or know the nuances of different i/o busses and their sysfs
+> attributes if the vendor supports more than just pci.
+> 
+>> Currently, for iscsi we only send the
+>> host no then match the driver, host and some driver or vendor specific
+>> code by using the host no and proc_name attr.
+> 
+> Yep this is what I would expect - except that proc_name won't always be
+> there (it's deprecated).
 
-On 8/20/06, Andrew Morton <akpm@osdl.org> wrote:
-> On Sun, 20 Aug 2006 03:30:56 -0600
-> "Fajun Chen" <fajunchen@gmail.com> wrote:
->
-> > Hi Folks,
-> >
-> > I use ATA pass through via sg ioctl interface for data read/write. Two
-> > kernels were tested:
-> > Linux 2.6.15.4 with Jeff Garzik's libata patch (pata support)
-> > Linux 2.6.18-rc2 with Jeff Garzik's git libata patch (new EH, hotplug,
-> > pata support)
-> > Hardware: ARM IOP80321 with PCI-X
-> > Host adapters: sata Sil3124 and pata Sil680
-> > Test algorithm: random write-read-compare (same range)
-> >
-> > I've tried sg mmap, direct and indirect IO on both 2.6.18-rc2 and
-> > 2.6.15.4 release, none of the combinations survived data compare
-> > overnight test.  I also tried to change cache policy to write through
-> > on 2.6.15.4,  no luck either.  Several different symptoms were
-> > observed among the failures:
-> > 1. A few bytes in a data pattern were not written correctly to the
-> > disc (low data miscompare rate)
-> > 2. Pretty much none of the data were written correctly to the disc
-> > (high data miscompare rate)
-> > 3. Data were written to the disc correctly but miscompares when read
-> > it back. What's weird is that when the read buffer was printed out
-> > right after data miscompare , it contains the correct data!
-> > Sg write failures (symptom #1 and #2) are more typical than read
-> > failure (symptom #3).  This problem has been observed on many
-> > different test machines with both pata and sata drives.
-> >
-> > I don't know of a good way to trace and isolate the problem yet. Since
-> > data miscompare issue can be caused by issues from different
-> > subsystems, I cc'ed some subsystem maintainers here.  Any information
-> > or suggestions are greatly appreciated.
-> >
->
-> Have you tested the same hardware to the same extent without using the SG
-> interface?  Say, using read() and write()?  That'll help us determine
-> whether the problem is related to the sg stuff, or to something else, like
-> a hardware failure.
->
+Are you sure it is depreciated? I thought the proc name for proc was
+depreciated but then we added it to sysfs so we could figure out which
+module goes with which host or something didn't we?
+
+> 
+>> This is because for
+>> software iscsi and iser we do not know the pci device that will be used.
+>> For software iscsi it could be a bonded device or multiple devices
+>> depending on tables getting updated. What would we use for the vendor id
+>> in this case?
+> 
+> Well - in this case, it's not a vendor-specific event being generated.
+> It's an event by the iscsi/iser layer. This should fit the "well-known
+> to the iscsi/iser transport" event definition and not require a vendor id.
+> 
+
+It is not vendor specific but it is driver specific and so we need a way
+to route the message to the proper userspace handler for similar reasons
+you may need a vendor id? For example qlogic handling may be slightly
+different in userspace then broadcom. So what I am saying is I thought
+the driver and vendor ids are similar, but vendor id may not work for
+iscsi_tcp/iser?
