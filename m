@@ -1,35 +1,54 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: ybin on powerpc
-Date: Sat, 19 Aug 2006 19:28:11 -0700
-Message-ID: <20060819192811.f7113147.akpm@osdl.org>
-References: <20060819111919.a60dca49.akpm@osdl.org>
-	<1156024644.5803.73.camel@localhost.localdomain>
-	<20060819182818.bf3ff5bc.akpm@osdl.org>
-	<20060820015629.GU4340@parisc-linux.org>
+From: jassduec@gmail.com
+Subject: Re: RAID 5 throughputs
+Date: Sat, 19 Aug 2006 20:58:20 -0600
+Message-ID: <3a1eedb70608191958u2a6af61er36e01ee7d233998a@mail.gmail.com>
+References: <3a1eedb70608191046o7dd207bfp15f02e90b297b1a9@mail.gmail.com>
+	 <Pine.LNX.4.64.0608191400080.17678@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:38859 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751409AbWHTCr3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 19 Aug 2006 22:47:29 -0400
-In-Reply-To: <20060820015629.GU4340@parisc-linux.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-admin-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.64.0608191400080.17678@p34.internal.lan>
+Content-Disposition: inline
+Sender: linux-admin-owner@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-admin@vger.kernel.org, linux-config@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-On Sat, 19 Aug 2006 19:56:30 -0600
-Matthew Wilcox <matthew@wil.cx> wrote:
+Yeah, infact it is in a PCI-X slot @66Mhz.
 
-> BTW, the SCSI specs changed the name from CD-ROM to CD/DVD.  I'd like to
-> reflect that change in /proc/scsi/scsi; is there any userspace currently
-> relying on that spelling?
-
-I think that's basically unknowable.  How does one grep all userspace?
-
-The only practical way to find out is to change it, see what breaks and
-hope that people report it in time.  That's a terribly blunt weapon.
-
-It's better to get the interfaces right first time ;)
+On 8/19/06, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
+>
+>
+> On Sat, 19 Aug 2006, jassduec@gmail.com wrote:
+>
+> > Hi All,
+> >
+> > I have a storage system with 12 Maxtor 7200 rpm 250GB hard drives in
+> > RAID 5 configuration with one hot spare. Maxtor claims that each drive
+> > is capable of providing 56 MB/s sustained throughput. My host system
+> > is connected to it using 64bit ultra320 Adaptec SCSI card. The host
+> > system has 3.0 GHz pentium 4 (with HT) processor and 4 GB of RAM
+> > running linux kernel 2.6.9. I was wondering what order of "maximum"
+> > sequential read/write, random read/write throughput should i expect
+> > using them. I am using some of the benchmarking tools like Bonnie,
+> > Bonnie++, tiobench, dd, iometer etc. However the results from them
+> > have been very depressing. Theoretically i should be able to achieve a
+> > read sequential throughput close to min(10*56 = 560, 320) = 320 MB/s.
+> > However my results are no way close to it. I was wondering if anybody
+> > can give me some insight of what order of practical throughputs i
+> > should expect using linux and what other factors may be creating
+> > bottlenecks.
+> >
+> > TIA
+> > -
+> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+>
+> Is your 64bit ultra320 card in a 64bit PCI + 66MHZ slot?
+>
+> If not, you will be limited to 133mb/s.
+>
+>
