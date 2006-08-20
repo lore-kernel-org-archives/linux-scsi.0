@@ -1,34 +1,53 @@
-From: "www.muzikvideo.gen.ms" <muzik@video.gen.ms>
-Subject: www.muzikvideo.gen.ms   KLIP INDIRMEK ISTEYEN HEMEN GIRSIN!!!
-Date: Sun, 20 Aug 2006 17:18:58
-Message-ID: <200608201419.k7KEJbQi005520@zeus1.kernel.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: ybin on powerpc
+Date: Sun, 20 Aug 2006 10:39:15 -0500
+Message-ID: <1156088355.3726.39.camel@mulgrave.il.steeleye.com>
+References: <20060819111919.a60dca49.akpm@osdl.org>
+	 <1156024644.5803.73.camel@localhost.localdomain>
+	 <20060819182818.bf3ff5bc.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:4512 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S1750793AbWHTOTz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 20 Aug 2006 10:19:55 -0400
-Received: from grkm ([85.108.53.56])
-	by zeus1.kernel.org (8.13.7/8.13.1) with SMTP id k7KEJbQi005520
-	for <linux-scsi@vger.kernel.org>; Sun, 20 Aug 2006 14:19:54 GMT
+Received: from stat9.steeleye.com ([209.192.50.41]:16365 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1750827AbWHTPj0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 20 Aug 2006 11:39:26 -0400
+In-Reply-To: <20060819182818.bf3ff5bc.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, linux-scsi@vger.kernel.org
 
-www.muzikvideo.gen.ms   KLIP INDIRMEK ISTEYEN HEMEN GIRSIN!!!
+On Sat, 2006-08-19 at 18:28 -0700, Andrew Morton wrote:
+> Bisection shows that this brokenness is introduced by
+> git-scsi-misc.patch.
+> 
+> Someone has gone in and made some ill-advised "improvements" to
+> /proc/scsi/scsi.  The switch from "Direct-Access" to "Direct access"
+> broke
+> ofpath.  I fixed that (in ofpath) but it remains broken for other
+> reasons.
+> 
+> James, this is a non-compatible change to the kernel->userspace
+> interface.  Please
+> drop it like a hot potato.
 
-uzun süredir yayinda olan köklü ve ünlü klip sitesinden haberiniz yok mu? hemen 
-sizde klip indirmek istiyorsanýz, hemde zahmetsiz, hizli ve hemen sitemize buyrun.
-www.muzikvideo.gen.ms
+Well ... OK, we shouldn't break things gratuitously.  However,
+the /proc/scsi interface is deprecated and has been for a while now.
 
-bu maili tanidiklarýniza gönderirseniz seviniriz. klip indirmek herkesin hakki. her 
-dilden kaliteli klip isteyenler buyursun
-yeni cikan klipler aninda sitemize eklenmektedir. ayrica 500 den fazla kaliteli klipte sitemizde bulunmaktadir.
-en güncel klip sitesine sizi de bekleriz...
+Secondly, as Matthew pointed out, the SCSI standards actually keep
+changing their minds about the names of these things ...
+
+But, thirdly, in order to get around the issue, we provided the
+
+/sys/class/scsi_disk/<x:y:z:i>/device/type
+
+interface which supplies the numeric field value precisely so people
+shouldn't parse the translated strings.
+
+So, it sounds like yaboot is also in need of modification.
+
+James
 
 
-www.muzikvideo.gen.ms
-
-
-Bir Sorun Ya Da Istek Olursa MSN Ve Mail Adresi: muzikonlinetk@hotmail.com
