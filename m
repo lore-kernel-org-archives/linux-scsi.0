@@ -1,23 +1,34 @@
-From: "Marsha" <ffnhefuulbo@flyingwebsites.com>
-Subject: spending time with you
-Date: Mon, 21 Aug 2006 09:27:55 -0600
-Message-ID: <686BF25D.B19E65C@flyingwebsites.com>
+From: "John Treubig" <jtreubig@hotmail.com>
+Subject: Loading PATA_PDC2027x as a module
+Date: Mon, 21 Aug 2006 10:38:12 -0500
+Message-ID: <BAY113-F29FED2E57FBE3CF8195662DF410@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-assembly-owner@vger.kernel.org>
-Sender: linux-assembly-owner@vger.kernel.org
-To: linux-assembly@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
+Content-Type: text/plain; format=flowed
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hello my dear friend
-I was looking tbbahrough the web few weeks ago and found 
-ayour profile. Now I decided to email you ato get to know
-you better. I am coming to your country in few weeks
-and thought may be awe can meet each other. I am pretty
-looking girl. I am 25. Do not reply to this address 
-directly. Email me back at mfu@graduateday.com
+Can I load pata_pdc2027x as a module or must it be built as part of the 
+kernel?  I am using RedHat Fedora with 2.6.17.1 stock kernel.  LibATA has 
+been installed in the kernel with ATA_ENABLE_PATA undefined.  The 
+pata_pdc2027x driver is not part of the Fedora build, so I have been able to 
+build pata_pdc2027x as a module with ATA_ENABLE_PATA defined for the module. 
+  When I try to load the pata_pdc2027x module it will not displace the IDE 
+native driver.  What's the mechanism that is used to determine if the IDE 
+driver grabs the device or LibATA/pata_pdc_2027x?
+
+You may ask why I don't just live with the IDE driver.  This stems from 
+problems we saw in accessing the Promise PDC2027x drives under 2.6.10 where 
+the system lost time.  In discussions with Albert Lee, it was resolved that 
+the best approach was to convert our access to use LibATA.  After usage of 
+the LibATA access, the time loses issue has gone away.  I know that there 
+have been changes in both the IDE and LibATA structures, so I'm open to 
+additional advice.
+
+Best wishes,
+John Treubig
+VT Miltope
+Senior Test Engineer
 
 
