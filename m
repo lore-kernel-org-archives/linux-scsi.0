@@ -1,118 +1,79 @@
-From: Martin Peschke <mp3@de.ibm.com>
-Subject: [Patch] cleanup: GFP_ATOMIC to GFP_KERNEL in scsi_scan.c
-Date: Mon, 21 Aug 2006 21:07:53 +0200
-Message-ID: <1156187273.2924.12.camel@dyn-9-152-230-71.boeblingen.de.ibm.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH] SCSI: sanitize INQUIRY strings
+Date: Mon, 21 Aug 2006 15:08:17 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0608211455390.5767-100000@iolanthe.rowland.org>
+References: <20060821184244.GC24068@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate5.uk.ibm.com ([195.212.29.138]:51751 "EHLO
-	mtagate5.uk.ibm.com") by vger.kernel.org with ESMTP
-	id S1750736AbWHUTH4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Aug 2006 15:07:56 -0400
-Received: from d06nrmr1407.portsmouth.uk.ibm.com (d06nrmr1407.portsmouth.uk.ibm.com [9.149.38.185])
-	by mtagate5.uk.ibm.com (8.13.7/8.13.7) with ESMTP id k7LJ7tSE077176
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Aug 2006 19:07:55 GMT
-Received: from d06av03.portsmouth.uk.ibm.com (d06av03.portsmouth.uk.ibm.com [9.149.37.213])
-	by d06nrmr1407.portsmouth.uk.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id k7LJ9prC130670
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Aug 2006 20:09:51 +0100
-Received: from d06av03.portsmouth.uk.ibm.com (loopback [127.0.0.1])
-	by d06av03.portsmouth.uk.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k7LJ7t8V024465
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Aug 2006 20:07:55 +0100
-Received: from dyn-9-152-230-71.boeblingen.de.ibm.com (dyn-9-152-230-71.boeblingen.de.ibm.com [9.152.230.71])
-	by d06av03.portsmouth.uk.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k7LJ7t8R024462
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Aug 2006 20:07:55 +0100
+Received: from iolanthe.rowland.org ([192.131.102.54]:36365 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP
+	id S1750749AbWHUTIV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Aug 2006 15:08:21 -0400
+In-Reply-To: <20060821184244.GC24068@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-It seems to be safe to replace all 4 occurrences of GFP_ATOMIC in
-scsi_scan.c by GFP_KERNEL. I found that calling code always held a mutex
-(indicating process context) while not acquiring a spin_lock or such
-inside the mutex sections and when using GFP_ATOMIC (see details below).
+On Mon, 21 Aug 2006, Matthew Wilcox wrote:
 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=115522223917634&w=2
-indicates that these occurrences of GFP_ATOMIC are just there for
-historical reasons.
+> On Mon, Aug 21, 2006 at 02:31:18PM -0400, Alan Stern wrote:
+> > I assumed the point of those optimizations was obvious enough not to need 
+> > any comment.
+> 
+> Bad assumption.  When you say "This is what the patch does", then I
+> assume the whole patch does that.  When you say "The patch does X, and
+> by the way, does some other minor cleanups", then I know the bits which
+> make no sense are the cleanups and not needed for X.
 
-Patch ist against 2.6.18-rc4-mm2. Please consider applying this cleanup.
-It didn't break my test machine with 3 SCSI disks attached.
+Okay, fine.
 
-kzalloc(..., GFP_ATOMIC) in scsi_alloc_sdev()
-        scsi_get_host_dev()
-                => holds mutex
-        scsi_report_lun_scan()
-                __scsi_scan_target()
-                        scsi_scan_target()
-                                => holds mutex
-                        scsi_scan_channel()
-                                scsi_scan_host_selected()
-                                        => holds mutex
-        scsi_probe_and_add_lun()
-                scsi_sequential_lun_scan()
-                        __scsi_scan_target()
-                                ... => holds mutex (see above)
-                scsi_report_lun_scan()
-                        ... => holds mutex (see above)
-                __scsi_add_device()
-                        => holds mutex
-                __scsi_scan_target()
-                        ... => holds mutex (see above)
+> > (It is still present according to the web interface to the 
+> > scsi-misc repository on www.kernel.org, BTW.)
+> 
+> It's not ...
+> http://git.kernel.org/git/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=blob;h=a24d3461fc788b797f492cfff333fa419e9f3bc3;hb=d2afb3ae04e36dbc6e9eb2d8bd54406ff7b6b3bd;f=drivers/scsi/scsi_scan.c
 
-kmalloc(..., GFP_ATOMIC) in scsi_add_lun()
-        scsi_probe_and_add_lun()
-                ... => holds mutex (see above)
+Arghh...  My browser's bookmark is set to an old tree node (i.e.,
+drivers/scsi under scsi-misc-2.6), so whenever I pull it up I see only the
+files that were current at the time the bookmark was created!  A subtle
+user-interface problem made possible by GIT.
 
-kmalloc(..., GFP_ATOMIC) in scsi_probe_and_add_lun()
-        ... => holds mutex (see above)
+> I took it out with:
+> http://git.kernel.org/git/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commitdiff;h=4ff36718ede26ee2da73f2dae94d71e2b06845fc
+> 
+> > Besides, let's assume you're right and the vendor really did mean to 
+> > terminate the string by putting a NUL there.  The bytes following the 
+> > NUL could be anything, but most likely the vendor would set them to more 
+> > NULs or to spaces.  So the patch would change those NULs to spaces, and 
+> > the result is you end up with exactly the string the vendor intended, 
+> > except now it is padded with spaces to the correct length as required by 
+> > the spec.
+> 
+> My suggestion produced the same result as yours for these cases.
+> 
+> > On the other hand, if some of the characters following the NUL happen to 
+> > be printable then the patch does change the meaning of the string.  That's 
+> > inevitable; when vendors don't follow the rules then sometimes they will 
+> > be misunderstood.  Who's to say whether the pre-patch interpretation is 
+> > any better than the post-patch interpretation?
+> 
+> I say so.  I gave an example where my algorithm produces better results
+> than yours in my response to Philip Auld.  Do you have an example where
+> yours gives preferable results?
 
-kmalloc(..., GFP_ATOMIC) in scsi_report_lun_scan()
-        ... => holds mutex (see above)
+Well, yes.  Suppose the vendor's string was set to 'Abc\0Def\0'.  My 
+algorithm would set it to 'Abc Def ' as desired, whereas yours would 
+truncate it to 'Abc     '.
 
-Signed-off-by: Martin Peschke <mp3@de.ibm.com>
----
+Multiplying far-out examples doesn't prove anything, though.  What we need
+to do is decide which strategy works better, most of the time.  Up until
+now these NUL characters have been interpreted has string terminators, so
+it's probably best to keep that interpretation.  For non-NUL non-graphical 
+characters, it's best to continue replacing them with spaces.
 
- scsi_scan.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+I will rework the patch (based on the current scsi_scan.c).
 
-diff -ur a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
---- a/drivers/scsi/scsi_scan.c	2006-08-21 20:10:26.000000000 +0200
-+++ b/drivers/scsi/scsi_scan.c	2006-08-21 20:07:57.000000000 +0200
-@@ -205,7 +205,7 @@
- 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
- 
- 	sdev = kzalloc(sizeof(*sdev) + shost->transportt->device_size,
--		       GFP_ATOMIC);
-+		       GFP_KERNEL);
- 	if (!sdev)
- 		goto out;
- 
-@@ -640,7 +640,7 @@
- 	 * scanning run at their own risk, or supply a user level program
- 	 * that can correctly scan.
- 	 */
--	sdev->inquiry = kmalloc(sdev->inquiry_len, GFP_ATOMIC);
-+	sdev->inquiry = kmalloc(sdev->inquiry_len, GFP_KERNEL);
- 	if (sdev->inquiry == NULL) {
- 		return SCSI_SCAN_NO_RESPONSE;
- 	}
-@@ -898,7 +898,7 @@
- 	if (!sdev)
- 		goto out;
- 
--	result = kmalloc(result_len, GFP_ATOMIC |
-+	result = kmalloc(result_len, GFP_KERNEL |
- 			((shost->unchecked_isa_dma) ? __GFP_DMA : 0));
- 	if (!result)
- 		goto out_free_sdev;
-@@ -1194,7 +1194,7 @@
- 	 * prevent us from finding any LUNs on this target.
- 	 */
- 	length = (max_scsi_report_luns + 1) * sizeof(struct scsi_lun);
--	lun_data = kmalloc(length, GFP_ATOMIC |
-+	lun_data = kmalloc(length, GFP_KERNEL |
- 			   (sdev->host->unchecked_isa_dma ? __GFP_DMA : 0));
- 	if (!lun_data) {
- 		printk(ALLOC_FAILURE_MSG, __FUNCTION__);
-
+Alan Stern
 
