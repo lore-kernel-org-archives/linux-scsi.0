@@ -1,56 +1,283 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] SCSI: sanitize INQUIRY strings
-Date: Mon, 21 Aug 2006 12:42:44 -0600
-Message-ID: <20060821184244.GC24068@parisc-linux.org>
-References: <20060821173546.GA24068@parisc-linux.org> <Pine.LNX.4.44L0.0608211412010.8319-100000@iolanthe.rowland.org>
+From: Henne <henne@nachtwindheim.de>
+Subject: [PATCH] [DOC] ips.changelog 1/2 update and cleanup
+Date: Mon, 21 Aug 2006 20:50:31 +0200
+Message-ID: <44EA0077.3030205@nachtwindheim.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:22973 "EHLO
-	palinux.external.hp.com") by vger.kernel.org with ESMTP
-	id S1750718AbWHUSmp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Aug 2006 14:42:45 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0608211412010.8319-100000@iolanthe.rowland.org>
+Received: from server6.greatnet.de ([83.133.96.26]:18082 "EHLO
+	server6.greatnet.de") by vger.kernel.org with ESMTP
+	id S1750802AbWHUSu3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Aug 2006 14:50:29 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: ipslinux@adaptec.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Mon, Aug 21, 2006 at 02:31:18PM -0400, Alan Stern wrote:
-> I assumed the point of those optimizations was obvious enough not to need 
-> any comment.
+From: Henrik Kretzschmar <henne@nachtwindheim.de>
 
-Bad assumption.  When you say "This is what the patch does", then I
-assume the whole patch does that.  When you say "The patch does X, and
-by the way, does some other minor cleanups", then I know the bits which
-make no sense are the cleanups and not needed for X.
+Brings the changelog of the scsi ips.c up-to-date and replaces
+whitespaces with tabs.
+old filesize: 5304 Bytes
+new filesize: 4774 Bytes
+Signed-off-by: Henrik Kretzschmar <henne@achtwindheim.de>
+---
 
-> (It is still present according to the web interface to the 
-> scsi-misc repository on www.kernel.org, BTW.)
+--- linux-2.6.18-rc4/Documentation/scsi/ChangeLog.ips	2006-06-18 03:49:35.000000000 +0200
++++ linux/Documentation/scsi/ChangeLog.ips	2006-08-20 21:27:22.000000000 +0200
+@@ -1,122 +1,141 @@
+ IBM ServeRAID driver Change Log
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
++	7.12.05	- remove version matching per IBM request
+ 
+-        5.00.01  - Sarasota ( 5i ) adapters must always be scanned first  
+-                 - Get rid on IOCTL_NEW_COMMAND code  
+-                 - Add Extended DCDB Commands for Tape Support in 5I                  
+-        
+-        4.90.11  - Don't actually RESET unless it's physically required
+-                 - Remove unused compile options
+-        
+-        4.90.08  - Data Corruption if First Scatter Gather Element is > 64K
+-        
+-        4.90.08  - Increase Delays in Flashing ( Trombone Only - 4H )        
+-        
+-        4.90.05  - Use New PCI Architecture to facilitate Hot Plug Development
+-        
+-        4.90.01  - Add ServeRAID Version Checking
+-
+-        4.80.26  - Clean up potential code problems ( Arjan's recommendations )
+-        
+-        4.80.21  - Change memcpy() to copy_to_user() in NVRAM Page 5 IOCTL path   
+-        
+-        4.80.20  - Set max_sectors in Scsi_Host structure ( if >= 2.4.7 kernel )
+-                 - 5 second delay needed after resetting an i960 adapter
+-        
+-        4.80.14  - Take all semaphores off stack                    
+-                 - Clean Up New_IOCTL path
+-                   
+-        4.80.04  - Eliminate calls to strtok() if 2.4.x or greater 
+-                 - Adjustments to Device Queue Depth               
+-
+-        4.80.00  - Make ia64 Safe    
+-        
+-        4.72.01  - I/O Mapped Memory release ( so "insmod ips" does not Fail )    
+-                 - Don't Issue Internal FFDC Command if there are Active Commands 
+-                 - Close Window for getting too many IOCTL's active 
+-                   
+-        4.72.00  - Allow for a Scatter-Gather Element to exceed MAX_XFER Size     
+-        
+-        4.71.00  - Change all memory allocations to not use GFP_DMA flag 
+-                 - Code Clean-Up for 2.4.x kernel      
+-        
+-        4.70.15  - Fix Breakup for very large ( non-SG ) requests
+-        
+-        4.70.13  - Don't release HA Lock in ips_next() until SC taken off queue  
+-                 - Unregister SCSI device in ips_release()                        
+-                 - Don't Send CDB's if we already know the device is not present  
+-                 
+-        4.70.12  - Corrective actions for bad controller ( during initialization )
+-        
+-        4.70.09  - Use a Common ( Large Buffer ) for Flashing from the JCRM CD    
+-                 - Add IPSSEND Flash Support                                      
+-                 - Set Sense Data for Unknown SCSI Command                        
+-                 - Use Slot Number from NVRAM Page 5 
+-                 - Restore caller's DCDB Structure
+-                                       
+-        4.20.14  - Update patch files for kernel 2.4.0-test5
+-
+-        4.20.13  - Fix some failure cases / reset code
+-                 - Hook into the reboot_notifier to flush the controller
+-                   cache
+-
+-        4.20.03 - Rename version to coincide with new release schedules
+-                - Performance fixes
+-                - Fix truncation of /proc files with cat
+-                - Merge in changes through kernel 2.4.0test1ac21
+-
+-        4.10.13 - Fix for dynamic unload and proc file system
+-
+-        4.10.00 - Add support for ServeRAID 4M/4L
+-
+-        4.00.06 - Fix timeout with initial FFDC command
+-
+-        4.00.05 - Remove wish_block from init routine
+-                - Use linux/spinlock.h instead of asm/spinlock.h for kernels
+-                  2.3.18 and later
+-                - Sync with other changes from the 2.3 kernels
+-
+-        4.00.04 - Rename structures/constants to be prefixed with IPS_
+-
+-        4.00.03 - Add alternative passthru interface
+-                - Add ability to flash ServeRAID BIOS
+-
+-        4.00.02 - Fix problem with PT DCDB with no buffer
+-
+-        4.00.01 - Add support for First Failure Data Capture
+-
+-        4.00.00 - Add support for ServeRAID 4
+-
+-        3.60.02 - Make DCDB direction based on lookup table.
+-                - Only allow one DCDB command to a SCSI ID at a time.
+-
+-        3.60.01 - Remove bogus error check in passthru routine.
+-
+-        3.60.00 - Bump max commands to 128 for use with ServeRAID
+-                  firmware 3.60.
+-                - Change version to 3.60 to coincide with ServeRAID release
++	7.12.xx	- use STATIC functions whereever possible
++		- clean up deprecated MODULE_PARM calls
++
++	7.10.18	- add highmem_io flag in SCSI template for 2.4 kernels
++		- fix path/name for scsi_hosts.h include for 2.6 kernels
++		- fix sort order of 7k
++		- remove 3 unused inline functions
++
++	6.11.xx	- make logicial drive info structure safe for DMA DDTS 60639
++
++	6.11.xx	- get VersionInfo buffer off the stack! DDTS 60401
++
++	6.10.00	- remove 1G addressing limitations
++
++	6.00.00	- add 6x adapters and battery flash
++
++	5.30.00	- use devexit_p()
++
++	5.10.15	- remove unused code (sem, macros, etc.)
++
++	5.10.12	- use pci_dma interface, update for 2.5 kernel changes
++
++	5.00.01	- Sarasota ( 5i ) adapters must always be scanned first  
++		- Get rid on IOCTL_NEW_COMMAND code
++		- Add Extended DCDB Commands for Tape Support in 5I
++
++	4.90.11	- Don't actually RESET unless it's physically required
++		- Remove unused compile options
++
++	4.90.08	- Data Corruption if First Scatter Gather Element is > 64K
++
++	4.90.08	- Increase Delays in Flashing ( Trombone Only - 4H )
++
++	4.90.05	- Use New PCI Architecture to facilitate Hot Plug Development
++
++	4.90.01	- Add ServeRAID Version Checking
++
++	4.80.26	- Clean up potential code problems ( Arjan's recommendations )
++
++	4.80.21	- Change memcpy() to copy_to_user() in NVRAM Page 5 IOCTL path
++
++	4.80.20	- Set max_sectors in Scsi_Host structure ( if >= 2.4.7 kernel )
++		- 5 second delay needed after resetting an i960 adapter
++
++	4.80.14	- Take all semaphores off stack
++		- Clean Up New_IOCTL path
++
++	4.80.04	- Eliminate calls to strtok() if 2.4.x or greater
++		- Adjustments to Device Queue Depth
++
++	4.80.00	- Make ia64 Safe
++
++	4.72.01	- I/O Mapped Memory release ( so "insmod ips" does not Fail )
++		- Don't Issue Internal FFDC Command if there are Active	Commands
++		- Close Window for getting too many IOCTL's active
++
++	4.72.00	- Allow for a Scatter-Gather Element to exceed MAX_XFER Size
++
++	4.71.00	- Change all memory allocations to not use GFP_DMA flag
++		- Code Clean-Up for 2.4.x kernel
++
++	4.70.15	- Fix Breakup for very large ( non-SG ) requests
++
++	4.70.13	- Don't release HA Lock in ips_next() until SC taken off queue
++		- Unregister SCSI device in ips_release()
++		- Don't Send CDB's if we already know the device is not present
++
++	4.70.12	- Corrective actions for bad controller (during initialization)
++
++	4.70.09	- Use a Common (Large Buffer) for Flashing from the JCRM CD
++		- Add IPSSEND Flash Support
++		- Set Sense Data for Unknown SCSI Command
++		- Use Slot Number from NVRAM Page 5
++		- Restore caller's DCDB Structure
++
++	4.20.14	- Update patch files for kernel 2.4.0-test5
++
++	4.20.13	- Fix some failure cases / reset code
++		- Hook into the reboot_notifier to flush the controller cache
++
++	4.20.03	- Rename version to coincide with new release schedules
++		- Performance fixes
++		- Fix truncation of /proc files with cat
++		- Merge in changes through kernel 2.4.0test1ac21
++
++	4.10.13	- Fix for dynamic unload and proc file system
++
++	4.10.00	- Add support for ServeRAID 4M/4L
++
++	4.00.06	- Fix timeout with initial FFDC command
++
++	4.00.05	- Remove wish_block from init routine
++		- Use linux/spinlock.h instead of asm/spinlock.h for kernels
++		  2.3.18 and later
++		- Sync with other changes from the 2.3 kernels
++
++	4.00.04	- Rename structures/constants to be prefixed with IPS_
++
++	4.00.03	- Add alternative passthru interface
++		- Add ability to flash ServeRAID BIOS
++
++	4.00.02	- Fix problem with PT DCDB with no buffer
++
++	4.00.01	- Add support for First Failure Data Capture
++
++	4.00.00	- Add support for ServeRAID 4
++
++	3.60.02	- Make DCDB direction based on lookup table.
++		- Only allow one DCDB command to a SCSI ID at a time.
++
++	3.60.01	- Remove bogus error check in passthru routine.
++
++	3.60.00	- Bump max commands to 128 for use with ServeRAID firmware 3.60.
++		- Change version to 3.60 to coincide with ServeRAID release
+                   numbering.
+ 
+-        1.00.00 - Initial Public Release
+-                - Functionally equivalent to 0.99.05
++	1.00.00	- Initial Public Release
++		- Functionally equivalent to 0.99.05
+ 
+-        0.99.05 - Fix an oops on certain passthru commands
++	0.99.05	- Fix an oops on certain passthru commands
+ 
+-        0.99.04 - Fix race condition in the passthru mechanism
+-                  -- this required the interface to the utilities to change
+-                - Fix error recovery code
+-
+-        0.99.03 - Make interrupt routine handle all completed request on the
+-                  adapter not just the first one
+-                - Make sure passthru commands get woken up if we run out of
+-                  SCBs
+-                - Send all of the commands on the queue at once rather than
++	0.99.04	- Fix race condition in the passthru mechanism -- this required
++		  the interface to the utilities to change
++		- Fix error recovery code
++
++	0.99.03	- Make interrupt routine handle all completed request on the
++		  adapter not just the first one
++		- Make sure passthru commands get woken up if we run out of SCBs
++		- Send all of the commands on the queue at once rather than
+                   one at a time since the card will support it.
+ 
+-        0.99.02 - Added some additional debug statements to print out
+-                  errors if an error occurs while trying to read/write
+-                  to a logical drive (IPS_DEBUG).
++	0.99.02	- Added some additional debug statements to print out
++		  errors if an error occurs while trying to read/write
++		  to a logical drive (IPS_DEBUG).
+ 
+-                - Fixed read/write errors when the adapter is using an
++		- Fixed read/write errors when the adapter is using an
+                   8K stripe size.
+-
 
-It's not ...
-http://git.kernel.org/git/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=blob;h=a24d3461fc788b797f492cfff333fa419e9f3bc3;hb=d2afb3ae04e36dbc6e9eb2d8bd54406ff7b6b3bd;f=drivers/scsi/scsi_scan.c
 
-I took it out with:
-http://git.kernel.org/git/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commitdiff;h=4ff36718ede26ee2da73f2dae94d71e2b06845fc
-
-> Besides, let's assume you're right and the vendor really did mean to 
-> terminate the string by putting a NUL there.  The bytes following the 
-> NUL could be anything, but most likely the vendor would set them to more 
-> NULs or to spaces.  So the patch would change those NULs to spaces, and 
-> the result is you end up with exactly the string the vendor intended, 
-> except now it is padded with spaces to the correct length as required by 
-> the spec.
-
-My suggestion produced the same result as yours for these cases.
-
-> On the other hand, if some of the characters following the NUL happen to 
-> be printable then the patch does change the meaning of the string.  That's 
-> inevitable; when vendors don't follow the rules then sometimes they will 
-> be misunderstood.  Who's to say whether the pre-patch interpretation is 
-> any better than the post-patch interpretation?
-
-I say so.  I gave an example where my algorithm produces better results
-than yours in my response to Philip Auld.  Do you have an example where
-yours gives preferable results?
