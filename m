@@ -1,47 +1,43 @@
-From: Paul Nasrat <pnasrat@redhat.com>
-Subject: Re: ybin on powerpc
-Date: Mon, 21 Aug 2006 06:06:37 -0400
-Message-ID: <1156154797.3057.9.camel@enki.eridu>
-References: <20060819111919.a60dca49.akpm@osdl.org>
-	 <1156024644.5803.73.camel@localhost.localdomain>
-	 <20060819182818.bf3ff5bc.akpm@osdl.org>
-	 <1156088355.3726.39.camel@mulgrave.il.steeleye.com>
-	 <1156110857.5803.82.camel@localhost.localdomain>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [2.6 patch] drivers/scsi/wd33c93.c: cleanups
+Date: Mon, 21 Aug 2006 12:43:57 +0200
+Message-ID: <20060821104357.GH11651@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:55759 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S1751833AbWHUKGq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Aug 2006 06:06:46 -0400
-In-Reply-To: <1156110857.5803.82.camel@localhost.localdomain>
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:3079 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S1751854AbWHUKn5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Aug 2006 06:43:57 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@osdl.org>, Paul Mackerras <paulus@samba.org>, linux-scsi@vger.kernel.org
+To: James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, 2006-08-21 at 07:54 +1000, Benjamin Herrenschmidt wrote:
-> > Well ... OK, we shouldn't break things gratuitously.  However,
-> > the /proc/scsi interface is deprecated and has been for a while now.
-> > 
+This patch contains the following cleanups:
+- #include <linux/irq.h> for getting the prototypes of
+  {dis,en}able_irq()
+- make the needlessly global wd33c93_setup() static
 
-> > /sys/class/scsi_disk/<x:y:z:i>/device/type
-> > 
-> > interface which supplies the numeric field value precisely so people
-> > shouldn't parse the translated strings.
-> > 
-> > So, it sounds like yaboot is also in need of modification.
-> 
-> CC'ed Paul Nasrat who is the current yaboot maintainer
-> 
-> (Paul, the problem is about a /proc/scsi change breaking ofpath. The
-> change will probably be reverted, but still, ofpath should be changed to
-> not rely on that crap anymore)
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
-Thanks for the heads up.  I'll look into fixing up ofpath not to
-use /proc/scsi.  I'm just in the process of moving countries, so I might
-not get a chance to look at for a week or two.
-
-Paul
-
+--- linux-2.6.18-rc4-mm2/drivers/scsi/wd33c93.c.old	2006-08-21 03:16:42.000000000 +0200
++++ linux-2.6.18-rc4-mm2/drivers/scsi/wd33c93.c	2006-08-21 03:17:10.000000000 +0200
+@@ -79,6 +79,7 @@
+ #include <linux/init.h>
+ #include <linux/interrupt.h>
+ #include <linux/blkdev.h>
++#include <linux/irq.h>
+ 
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
+@@ -1710,7 +1711,7 @@
+ static char setup_used[MAX_SETUP_ARGS];
+ static int done_setup = 0;
+ 
+-int
++static int
+ wd33c93_setup(char *str)
+ {
+ 	int i;
