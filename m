@@ -1,30 +1,47 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] limit recursion when flushing shost->starved_list
-Date: Mon, 21 Aug 2006 09:04:29 +0200
-Message-ID: <20060821070429.GM4290@suse.de>
-References: <20060809153116.GA14043@lion28.ibm.com> <1156019429.3726.18.camel@mulgrave.il.steeleye.com>
+From: Paul Nasrat <pnasrat@redhat.com>
+Subject: Re: ybin on powerpc
+Date: Mon, 21 Aug 2006 06:06:37 -0400
+Message-ID: <1156154797.3057.9.camel@enki.eridu>
+References: <20060819111919.a60dca49.akpm@osdl.org>
+	 <1156024644.5803.73.camel@localhost.localdomain>
+	 <20060819182818.bf3ff5bc.akpm@osdl.org>
+	 <1156088355.3726.39.camel@mulgrave.il.steeleye.com>
+	 <1156110857.5803.82.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965064AbWHUHCU@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1156019429.3726.18.camel@mulgrave.il.steeleye.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Andreas Herrmann <aherrman@de.ibm.com>, James Bottomley <jejb@SteelEye.com>, Linux SCSI <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([66.187.233.31]:55759 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S1751833AbWHUKGq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Aug 2006 06:06:46 -0400
+In-Reply-To: <1156110857.5803.82.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@osdl.org>, Paul Mackerras <paulus@samba.org>, linux-scsi@vger.kernel.org
 
-On Sat, Aug 19 2006, James Bottomley wrote:
-> On Wed, 2006-08-09 at 17:31 +0200, Andreas Herrmann wrote:
-> > Attached is a patch that should limit a possible recursion that can
-> > lead to a stack overflow like follows:
+On Mon, 2006-08-21 at 07:54 +1000, Benjamin Herrenschmidt wrote:
+> > Well ... OK, we shouldn't break things gratuitously.  However,
+> > the /proc/scsi interface is deprecated and has been for a while now.
+> > 
+
+> > /sys/class/scsi_disk/<x:y:z:i>/device/type
+> > 
+> > interface which supplies the numeric field value precisely so people
+> > shouldn't parse the translated strings.
+> > 
+> > So, it sounds like yaboot is also in need of modification.
 > 
-> Well, OK, initially I'll put this in scsi-misc, since I acknowledge its
-> a problem.   However, it is one that block queue grouping should be able
-> to get us out of ... and at that time, this code (and most of the
-> starved list handling) should exit the scsi mid-layer.
+> CC'ed Paul Nasrat who is the current yaboot maintainer
+> 
+> (Paul, the problem is about a /proc/scsi change breaking ofpath. The
+> change will probably be reverted, but still, ofpath should be changed to
+> not rely on that crap anymore)
 
-Yep, the patch is a little nasty but I don't see a better way currently.
-So the above outline sounds good to me.
+Thanks for the heads up.  I'll look into fixing up ofpath not to
+use /proc/scsi.  I'm just in the process of moving countries, so I might
+not get a chance to look at for a week or two.
 
--- 
-Jens Axboe
+Paul
+
