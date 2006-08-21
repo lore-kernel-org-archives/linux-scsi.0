@@ -1,39 +1,30 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 0/2] Add SATA support to libsas/aic94xx
-Date: Sun, 20 Aug 2006 22:33:53 -0500
-Message-ID: <1156131233.3567.21.camel@mulgrave.il.steeleye.com>
-References: <44DBE93F.1040005@us.ibm.com>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH] limit recursion when flushing shost->starved_list
+Date: Mon, 21 Aug 2006 09:04:29 +0200
+Message-ID: <20060821070429.GM4290@suse.de>
+References: <20060809153116.GA14043@lion28.ibm.com> <1156019429.3726.18.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:10376 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S932306AbWHUDd4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 20 Aug 2006 23:33:56 -0400
-In-Reply-To: <44DBE93F.1040005@us.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965064AbWHUHCU@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1156019429.3726.18.camel@mulgrave.il.steeleye.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Andreas Herrmann <aherrman@de.ibm.com>, James Bottomley <jejb@SteelEye.com>, Linux SCSI <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Darrick J. Wong" <djwong@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>
 
-On Thu, 2006-08-10 at 19:19 -0700, Darrick J. Wong wrote:
-> These patches are based off 2.6.18-rc4 + jejb's scsi-misc, scsi-rc and
-> aic94xx git trees + Brian King's libata SAS patches.
+On Sat, Aug 19 2006, James Bottomley wrote:
+> On Wed, 2006-08-09 at 17:31 +0200, Andreas Herrmann wrote:
+> > Attached is a patch that should limit a possible recursion that can
+> > lead to a stack overflow like follows:
 > 
-> Questions/comments?  Thanks in advance for feedback,
+> Well, OK, initially I'll put this in scsi-misc, since I acknowledge its
+> a problem.   However, it is one that block queue grouping should be able
+> to get us out of ... and at that time, this code (and most of the
+> starved list handling) should exit the scsi mid-layer.
 
-Well, thanks to the generosity of Google, I too now have a SATA device.
-What I find is that your patches work perfectly for a directly attached
-SATA device.  However, they don't seem to work at all for a SATA device
-attached to an expander.  It looks like the SATA expander discovery
-process isn't working correctly (it also looks like the expander I have
-has to be specially programmed ... the SATA device shows a flashing
-orange light until the fusion sas card discovers it; with aic94xx it
-always shows a flashing orange light, even after discovery).
+Yep, the patch is a little nasty but I don't see a better way currently.
+So the above outline sounds good to me.
 
-I'll try to find time next week to dig into the discovery process.
-
-James
-
-
+-- 
+Jens Axboe
