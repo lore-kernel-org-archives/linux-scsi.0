@@ -1,40 +1,51 @@
-From: "Garrett Callahan" <DJQQBBUHWEC@getraenke.com>
-Subject: Info
-Date: Tue, 22 Aug 2006 03:32:05 -0500
-Message-ID: <E8A4nm6-8441Yt-00__4478.80808865211$1156232554$gmane$org@mail.nitros4.org>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [Patch] cleanup: GFP_ATOMIC to GFP_KERNEL in scsi_scan.c
+Date: Tue, 22 Aug 2006 11:43:19 +0200
+Message-ID: <44EAD1B7.1010505@s5r6.in-berlin.de>
+References: <1156187273.2924.12.camel@dyn-9-152-230-71.boeblingen.de.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dialup-4.155.251.28.Dial1.Baltimore1.Level3.net ([4.155.251.28]:56330
-	"HELO dialup-4.155.251.28.Dial1.Baltimore1.Level3.net")
-	by vger.kernel.org with SMTP id S932083AbWHVHlZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Aug 2006 03:41:25 -0400
+Received: from hp3.statik.TU-Cottbus.De ([141.43.120.68]:16783 "EHLO
+	hp3.statik.tu-cottbus.de") by vger.kernel.org with ESMTP
+	id S1751389AbWHVJrN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Aug 2006 05:47:13 -0400
+In-Reply-To: <1156187273.2924.12.camel@dyn-9-152-230-71.boeblingen.de.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-msdos@vger.kernel.org
+To: Martin Peschke <mp3@de.ibm.com>
+Cc: linux-scsi@vger.kernel.org
 
-Icrease Your S''exual Desire and S''perm volume by 500%
-L'onger o''rgasms - The longest most intense o''rgasms of your life
-Multiple o''rgasms - Cum again and again
-S'PUR-M is The Newest and The Safest Way
-100% N''atural and No Side Effects - in contrast to well-known brands.
-Experience three times longer o''rgasms
-World Wide shipping within 24 hours
- 
- Clisk here http://www.intouchstudios.info
+Martin Peschke wrote:
+> It seems to be safe to replace all 4 occurrences of GFP_ATOMIC in
+> scsi_scan.c by GFP_KERNEL. I found that calling code always held a mutex
+> (indicating process context) while not acquiring a spin_lock or such
+> inside the mutex sections and when using GFP_ATOMIC (see details below).
 
+Please use diff's -p option for postings like this.
 
+Did you check Documentation/scsi/scsi_mid_low_api.txt with respect to
+the detailed description of all exported functions which you modify? All
+of them should contain a remark like "Might block: yes" or something
+else in the way of "do not call in atomic context". Although I suppose
+that all or most of them do so already.
 
+If scsi_mid_low_api.txt does not fully reflect what your patch imposes,
+please modify scsi_mid_low_api.txt in the same patch.
 
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=115522223917634&w=2
+> indicates that these occurrences of GFP_ATOMIC are just there for
+> historical reasons.
+> 
+> Patch ist against 2.6.18-rc4-mm2. Please consider applying this cleanup.
+> It didn't break my test machine with 3 SCSI disks attached.
+[...]
 
-
-
-
-
-
-
-
-
-
-"Annie chopped her hand down hard.
-Ramage's mouth dropped open and she was halfway to the door before she remembered she was in her nightgown and cap.
-Enough so he had gone into what she called respiratory depression at least once.
+You need to make sure that it does not break _any_ caller. (SCSI is more
+than the bundle of interconnect drivers for SPI hardware.) Also take
+precautions for future callers or future changes to current callers.
+-- 
+Stefan Richter
+-=====-=-==- =--- =-==-
+http://arcgraph.de/sr/
