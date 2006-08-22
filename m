@@ -1,31 +1,40 @@
-From: "Jarrod" <jonaszfju@f.lst.se>
-Subject: Don't get left behind!
-Date: Mon, 21 Aug 2006 20:39:34 -0500
-Message-ID: <8468101942.20060821203934@ehvsbsxjimqrnf>
-Reply-To: "Jarrod Barnard" <jonaszfju@f.lst.se>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+From: "Garrett Callahan" <DJQQBBUHWEC@getraenke.com>
+Subject: Info
+Date: Tue, 22 Aug 2006 03:32:05 -0500
+Message-ID: <E8A4nm6-8441Yt-00__4478.80808865211$1156232554$gmane$org@mail.nitros4.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [218.104.226.82] ([218.104.226.82]:1053 "HELO 218.104.226.82")
-	by vger.kernel.org with SMTP id S1751032AbWHVGhX (ORCPT
+Received: from dialup-4.155.251.28.Dial1.Baltimore1.Level3.net ([4.155.251.28]:56330
+	"HELO dialup-4.155.251.28.Dial1.Baltimore1.Level3.net")
+	by vger.kernel.org with SMTP id S932083AbWHVHlZ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Aug 2006 02:37:23 -0400
-Received: from external-mx.lst.se
-	by 218.104.226.82 (Postfix) with ESMTP id FF3C4D46FD
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Aug 2006 20:39:34 -0500
-Received: from 227.88.97.118
-	by external-mx.lst.se (8.12.3 da nor stuldap/8.12.3) with SMTP id NzBD0mUbsBil
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Aug 2006 20:39:34 -0500
+	Tue, 22 Aug 2006 03:41:25 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-msdos@vger.kernel.org
 
-Hey man, try check out this sweet site I found, I wasn't sure if it was real at first, but it is! I tried them out and these patches are awesome surf!!!
-Check out only the special discounts they have too, I got a real good deal have.
-Natural ability without education has more often raised a man to glory and virtue than education without natural ability.
-hardLater!
+Icrease Your S''exual Desire and S''perm volume by 500%
+L'onger o''rgasms - The longest most intense o''rgasms of your life
+Multiple o''rgasms - Cum again and again
+S'PUR-M is The Newest and The Safest Way
+100% N''atural and No Side Effects - in contrast to well-known brands.
+Experience three times longer o''rgasms
+World Wide shipping within 24 hours
+ 
+ Clisk here http://www.intouchstudios.info
 
-http://www.neroplaresampit.com/
 
 
+
+
+
+
+
+
+
+
+
+
+
+"Annie chopped her hand down hard.
+Ramage's mouth dropped open and she was halfway to the door before she remembered she was in her nightgown and cap.
+Enough so he had gone into what she called respiratory depression at least once.
