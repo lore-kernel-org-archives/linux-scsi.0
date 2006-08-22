@@ -1,51 +1,87 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [Patch] cleanup: GFP_ATOMIC to GFP_KERNEL in scsi_scan.c
-Date: Tue, 22 Aug 2006 11:43:19 +0200
-Message-ID: <44EAD1B7.1010505@s5r6.in-berlin.de>
-References: <1156187273.2924.12.camel@dyn-9-152-230-71.boeblingen.de.ibm.com>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: [PATCH] SCSI & FC transport: extend event vendor id's to 64bits
+Date: Tue, 22 Aug 2006 09:55:23 -0400
+Message-ID: <1156254923.5607.5.camel@localhost.localdomain>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hp3.statik.TU-Cottbus.De ([141.43.120.68]:16783 "EHLO
-	hp3.statik.tu-cottbus.de") by vger.kernel.org with ESMTP
-	id S1751389AbWHVJrN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Aug 2006 05:47:13 -0400
-In-Reply-To: <1156187273.2924.12.camel@dyn-9-152-230-71.boeblingen.de.ibm.com>
+Received: from emulex.emulex.com ([138.239.112.1]:31417 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S932159AbWHVNza
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Aug 2006 09:55:30 -0400
+Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
+	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id k7MDtSUO020940
+	for <linux-scsi@vger.kernel.org>; Tue, 22 Aug 2006 06:55:29 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Martin Peschke <mp3@de.ibm.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Martin Peschke wrote:
-> It seems to be safe to replace all 4 occurrences of GFP_ATOMIC in
-> scsi_scan.c by GFP_KERNEL. I found that calling code always held a mutex
-> (indicating process context) while not acquiring a spin_lock or such
-> inside the mutex sections and when using GFP_ATOMIC (see details below).
+During discussions with Mike Christie, I became convinced that we needed
+a larger vendor id. This patch extends the id from 32 to 64 bits.
 
-Please use diff's -p option for postings like this.
+This applies on top of the prior patches that add SCSI transport events
+via netlink.
 
-Did you check Documentation/scsi/scsi_mid_low_api.txt with respect to
-the detailed description of all exported functions which you modify? All
-of them should contain a remark like "Might block: yes" or something
-else in the way of "do not call in atomic context". Although I suppose
-that all or most of them do so already.
+-- james s
 
-If scsi_mid_low_api.txt does not fully reflect what your patch imposes,
-please modify scsi_mid_low_api.txt in the same patch.
 
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=115522223917634&w=2
-> indicates that these occurrences of GFP_ATOMIC are just there for
-> historical reasons.
-> 
-> Patch ist against 2.6.18-rc4-mm2. Please consider applying this cleanup.
-> It didn't break my test machine with 3 SCSI disks attached.
-[...]
+Signed-off-by: James Smart <James.Smart@emulex.com>
 
-You need to make sure that it does not break _any_ caller. (SCSI is more
-than the bundle of interconnect drivers for SPI hardware.) Also take
-precautions for future callers or future changes to current callers.
--- 
-Stefan Richter
--=====-=-==- =--- =-==-
-http://arcgraph.de/sr/
+
+diff -upNr a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+--- a/drivers/scsi/scsi_transport_fc.c	2006-08-22 06:59:10.000000000 -0400
++++ b/drivers/scsi/scsi_transport_fc.c	2006-08-22 07:03:27.000000000 -0400
+@@ -514,7 +514,7 @@ EXPORT_SYMBOL(fc_host_post_event);
+  **/
+ void
+ fc_host_post_vendor_event(struct Scsi_Host *shost, u32 event_number,
+-		u32 data_len, char * data_buf, u32 vendor_id)
++		u32 data_len, char * data_buf, u64 vendor_id)
+ {
+ 	struct sk_buff *skb;
+ 	struct nlmsghdr	*nlh;
+diff -upNr a/include/scsi/scsi_netlink_fc.h b/include/scsi/scsi_netlink_fc.h
+--- a/include/scsi/scsi_netlink_fc.h	2006-08-22 06:58:44.000000000 -0400
++++ b/include/scsi/scsi_netlink_fc.h	2006-08-22 07:04:41.000000000 -0400
+@@ -58,7 +58,7 @@
+ struct fc_nl_event {
+ 	struct scsi_nl_hdr snlh;		/* must be 1st element ! */
+ 	uint64_t seconds;
+-	uint32_t vendor_id;
++	uint64_t vendor_id;
+ 	uint16_t host_no;
+ 	uint16_t event_datalen;
+ 	uint32_t event_num;
+diff -upNr a/include/scsi/scsi_netlink.h b/include/scsi/scsi_netlink.h
+--- a/include/scsi/scsi_netlink.h	2006-08-22 06:58:44.000000000 -0400
++++ b/include/scsi/scsi_netlink.h	2006-08-22 09:48:40.000000000 -0400
+@@ -67,9 +67,10 @@ struct scsi_nl_hdr {
+  *   Identifiers for each type:
+  *    PCI :  ID data is the 16 bit PCI Registered Vendor ID
+  */
+-#define SCSI_NL_VID_ID_MASK			0x00FFFFFF
+-#define SCSI_NL_VID_TYPE_MASK			0xFF000000
+-#define SCSI_NL_VID_TYPE_PCI			0x01000000
++#define SCSI_NL_VID_TYPE_SHIFT		56
++#define SCSI_NL_VID_TYPE_MASK		((u64)0xFF << SCSI_NL_VID_TYPE_SHIFT)
++#define SCSI_NL_VID_TYPE_PCI		((u64)0x01 << SCSI_NL_VID_TYPE_SHIFT)
++#define SCSI_NL_VID_ID_MASK		(~ SCSI_NL_VID_TYPE_MASK)
+ 
+
+ #define INIT_SCSI_NL_HDR(hdr, t, mtype, mlen)			\
+diff -upNr a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
+--- a/include/scsi/scsi_transport_fc.h	2006-08-22 06:59:10.000000000 -0400
++++ b/include/scsi/scsi_transport_fc.h	2006-08-22 07:06:43.000000000 -0400
+@@ -560,7 +560,7 @@ u32 fc_get_event_number(void);
+ void fc_host_post_event(struct Scsi_Host *shost, u32 event_number,
+ 		enum fc_host_event_code event_code, u32 event_data);
+ void fc_host_post_vendor_event(struct Scsi_Host *shost, u32 event_number,
+-		u32 data_len, char * data_buf, u32 vendor_id);
++		u32 data_len, char * data_buf, u64 vendor_id);
+ 	/* Note: when specifying vendor_id to fc_host_post_vendor_event()
+ 	 *   be sure to read the Vendor Type and ID formatting requirements
+ 	 *   specified in scsi_netlink.h
+
+
