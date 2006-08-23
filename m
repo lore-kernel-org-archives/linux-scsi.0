@@ -1,58 +1,63 @@
-From: "Archie Cotton" <vrmciwn@tanager.k12.ia.us>
-Subject: help
-Date: Wed, 23 Aug 2006 18:21:57 -0100
-Message-ID: <6.7.3.64.2.20031939263053.025b4b48@relaxation.starnetusa.net>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: [Announce] smp_utils-0.91 available
+Date: Wed, 23 Aug 2006 10:10:43 -0400
+Message-ID: <44EC61E3.30005@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 24-216-162-176.dhcp.stls.mo.charter.com ([24.216.162.176]:41993
-	"HELO 24-216-162-176.dhcp.stls.mo.charter.com") by vger.kernel.org
-	with SMTP id S932322AbWHWDWn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Aug 2006 23:22:43 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:34233 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S932324AbWHWOKx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 Aug 2006 10:10:53 -0400
+Received: from ip-155.57.99.216.dsl-cust.ca.inter.net ([216.99.57.155] helo=[192.168.48.80])
+	by pentafluge.infradead.org with esmtpsa (Exim 4.62 #1 (Red Hat Linux))
+	id 1GFtRU-0005Rj-CB
+	for linux-scsi@vger.kernel.org; Wed, 23 Aug 2006 15:10:52 +0100
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-net@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Do you want a w-atch?
+smp_utils is a package of command line utilities for invoking
+SMP functions to monitor and manage SAS expanders. SMP is the
+Serial Attached SCSI (SAS) Management Protocol (SMP). A SAS Host
+Bus Adapter (HBA) includes a SMP initiator (along with a SSP and
+STP initiator). A SAS expander contains a SMP target. Several
+SAS HBAs have a SMP pass through interface that can be used to
+send SMP requests and receive the responses. This package targets
+the linux kernel (lk) 2.6 and lk 2.4 series.
 
-In our online store you can buy r e p l i c a s of R o l e x watches an=
-d
-other brands. They look and feel exactly like the real thing.
+Two interfaces are available: the "mptctl" pass through used
+by MPT Fusion SAS HBAs and the "smp_portal" sysfs attribute
+pass through used by at least one aic94xx based Linux driver.
 
-- We have 100+ different brands in our selection
-- Best prices on the market Just For You
-- Great Discount Live Support Extended Warranty
-- Free shipping if you order 2 or more
-- Save up to 85% compared to the cost of other r e p l i c a s
-- Standard Features:
-- Screw-in crown
-- Unidirectional turning bezel where appropriate
-- All the appropriate r o l e x logos, on crown and dial
-- Heavy weight
+This version adds the smp_phy_test and smp_discover_list
+utilities. All SMP functions defined in SAS-1 and SAS-1.1
+are now supported with some support to SAS-2 extensions
+(see the COVERAGE file). See the CHANGELOG and README files
+for more information.
 
-Clisk here: http://superty.info
+One new feature, borrowed from Luben Tuikov's
+expander_conf.c, is to loop over consecutive phys in
+smp_discover to produce a summary of what is attached
+to an expander:
 
-
-
-
-
-
-
-
-
-
-
+# smp_discover --multiple --brief
+Device <500605b000000af0>, expander (only connected phys shown):
+  phy   2:S:attached:[5000c500005208ee:01  t(SSP)]  3 Gbps
+  phy   3:S:attached:[5000c500005208ed:00  t(SSP)]  3 Gbps
+  phy   4:T:attached:[500605b00006f260:02  i(SSP+STP+SMP)]  3 Gbps
+  phy   5:T:attached:[50000d10002dc000:01  i(SSP+STP+SMP)]  3 Gbps
+  phy   8:T:attached:[5000c50000520a29:00  t(SSP)]  3 Gbps
+  phy   9:T:attached:[5000c50000520a2a:01  t(SSP)]  3 Gbps
+  phy  10:T:attached:[500605b000000afa:00  t(SATA)]  1.5 Gbps
+  phy  11:T:attached:[500605b000000afb:00  t(SATA)]  1.5 Gbps
 
 
-"It's yours.
-That was the only way he could account for this bizarre behavior=A0=97 =
-she had seen the marks after all, and this was the beginning of some ne=
-w and spectacular punishment.
-As a result, hadn't his "serious fiction=BBbecome steadily more self-co=
-nscious, a sort of scream?
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+A tarball, rpm and deb can be found at (see table 2):
+http://www.torque.net/sg/smp_utils.html
+For an overview of smp_utils see the same page.
+
+
+Doug Gilbert
