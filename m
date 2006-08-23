@@ -1,56 +1,26 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: [PATCH 2/3] qla2xxx: Properly re-enable EFT support after an ISP abort.
-Date: Wed, 23 Aug 2006 14:54:55 -0700
-Message-ID: <11563700961130-git-send-email-andrew.vasquez@qlogic.com>
-References: <20060823215248.GG4069@andrew-vasquezs-computer.local>
+From: "Mari" <bandstopbetony@royalgazebo.com>
+Subject: Be delighted with  Put aside any doubts and stuff, this terrific product for smart males really does what you need!
+Date: Thu, 24 Aug 2006 07:30:04 +0900
+Message-ID: <33355764911125.C3D1C08A50__37933.2183780663$1156372032$gmane$org@3IES1>
+Mime-Version: 1.0
+Content-Type: text/plain;
+        charset="Windows-1252"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:45555 "EHLO avexch1.qlogic.com")
-	by vger.kernel.org with ESMTP id S965231AbWHWVzA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Aug 2006 17:55:00 -0400
-In-Reply-To: <20060823215248.GG4069@andrew-vasquezs-computer.local>
+Received: from pool-71-109-69-18.lsanca.dsl-w.verizon.net ([71.109.69.18]:29382
+	"EHLO v5uo7j.iijace1i.optonline.net") by vger.kernel.org with ESMTP
+	id S965262AbWHWW0s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 Aug 2006 18:26:48 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <james.bottomley@steeleye.com>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
+To: linux-serial@vger.kernel.org
 
-Software must explicitely re-enable extended firmware tracing
-after any ISP abort condition.
+The newest
+ Had doubts that these things really work? Check this out and join the thousands of happy men! You will love watching it, feeling it and of course using it - just several weeks to go!
 
-Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
----
- drivers/scsi/qla2xxx/qla_init.c |   11 +++++++++++
- 1 files changed, 11 insertions(+), 0 deletions(-)
+ She certainly has fantasies about a large-sized man pleasing her to the full. You can start thinking about the awesome fun you're about to have in bed. Come on in: http://www.sedeji.com/gal/xl/ 
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 9758dba..8596491 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -3063,6 +3063,7 @@ qla2x00_update_fcports(scsi_qla_host_t *
- int
- qla2x00_abort_isp(scsi_qla_host_t *ha)
- {
-+	int rval;
- 	unsigned long flags = 0;
- 	uint16_t       cnt;
- 	srb_t          *sp;
-@@ -3119,6 +3120,16 @@ qla2x00_abort_isp(scsi_qla_host_t *ha)
- 
- 			ha->isp_abort_cnt = 0;
- 			clear_bit(ISP_ABORT_RETRY, &ha->dpc_flags);
-+
-+			if (ha->eft) {
-+				rval = qla2x00_trace_control(ha, TC_ENABLE,
-+				    ha->eft_dma, EFT_NUM_BUFFERS);
-+				if (rval) {
-+					qla_printk(KERN_WARNING, ha,
-+					    "Unable to reinitialize EFT "
-+					    "(%d).\n", rval);
-+				}
-+			}
- 		} else {	/* failed the ISP abort */
- 			ha->flags.online = 1;
- 			if (test_bit(ISP_ABORT_RETRY, &ha->dpc_flags)) {
--- 
-1.4.2.g44c10
+Unlike other products, this one gives you permanent gains in size - and loads of pleasure!
+
+ To receive the instruction of wisdom, justice, and judgment, and equity. Too much sit down ah bruck trousers. Good friends are hard to find, harder to leave, and impossible to forget Work expands so as to fill the time available
 
