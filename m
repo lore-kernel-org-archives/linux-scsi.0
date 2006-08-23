@@ -1,7 +1,7 @@
-From: "Britney Morrison" <depcomercial@1000empresas.com>
+From: "Noreen Mccall" <dmin@000domains.com>
 Subject: re:Hi
-Date: Wed, 23 Aug 2006 16:40:37 +0000 (UTC)
-Message-ID: <200608231639.k7NGdhTK003155__37138.7616535232$1156351237$gmane$org@zeus1.kernel.org>
+Date: Wed, 23 Aug 2006 16:43:22 +0000 (UTC)
+Message-ID: <200608231642.k7NGgJON005337__38.8215565637395$1156351402$gmane$org@zeus1.kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	format=flowed;
@@ -9,11 +9,11 @@ Content-Type: text/plain;
 	reply-type=original
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:678 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S965022AbWHWQj4 (ORCPT
+Received: from zeus1.kernel.org ([204.152.191.4]:44252 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S965040AbWHWQmf (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Aug 2006 12:39:56 -0400
-Date: Wed, 23 Aug 2006 16:39:48 +0360
+	Wed, 23 Aug 2006 12:42:35 -0400
+Date: Wed, 23 Aug 2006 16:42:33 +0180
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-diald@vger.kernel.org
