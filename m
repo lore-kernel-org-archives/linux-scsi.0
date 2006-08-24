@@ -1,44 +1,37 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Need help with another aic94xx sequencer problem
-Date: Thu, 24 Aug 2006 09:22:49 -0500
-Message-ID: <1156429369.1024.14.camel@mulgrave.il.steeleye.com>
-References: <20060824085841.27630.qmail@web31810.mail.mud.yahoo.com>
+From: "Bailey, Scott" <scott.bailey@eds.com>
+Subject: qla1280 bugfix in limbo?
+Date: Thu, 24 Aug 2006 12:33:13 -0400
+Message-ID: <F3598542BAC24B4783B7A440D45522FF04B5D899@usahm236.amer.corp.eds.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([64.109.89.108]:4525 "EHLO
-	accolon.hansenpartnership.com") by vger.kernel.org with ESMTP
-	id S1751577AbWHXOWx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 24 Aug 2006 10:22:53 -0400
-In-Reply-To: <20060824085841.27630.qmail@web31810.mail.mud.yahoo.com>
+Received: from ahmler2.mail.eds.com ([192.85.154.72]:29153 "EHLO
+	ahmler2.mail.eds.com") by vger.kernel.org with ESMTP
+	id S1751613AbWHXQeG convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Aug 2006 12:34:06 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: ltuikov@yahoo.com
-Cc: "Tarte, Robert" <Robert_Tarte@adaptec.com>, "Hammer, Jack" <Jack_Hammer@adaptec.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: 366730@bugs.debian.org
+Cc: "Bailey, Scott" <scott.bailey@eds.com>, linux-scsi@vger.kernel.org
 
-On Thu, 2006-08-24 at 01:58 -0700, Luben Tuikov wrote:
-> The sequencer response is correct but incomplete.  The interpretation
-> is a bad compromize between SSP and STP.
-> 
-> TF_TMF_NO_CTX should be interpreted as TMF_RESP_FUNC_ESUPP to get
-> "best of both worlds", and then upper layers would do the proper
-> thing depending on the protocol.
+Just tuning in briefly to report:
 
-OK ... I can do that easily; that should cause the error handler to try
-with a bigger hammer.
+1. I have been running my 3-processor Alphaserver 4100 with Ian's patch
+http://bugzilla.kernel.org/show_bug.cgi?id=6275 for a little over a
+month now, first with 2.6.16 and now with 2.6.17, and it continues to
+work like a champ. I very much would like to see this fix incorporated
+into the Debian kernel or preferably upstream, since my DLT drive is
+pretty much useless without it.
 
-The next problem is that this actual issue is occurring in
-sas_execute_task() which takes no further action if an abort fails.  I
-can easily wire in a next level ... would you recommend CLEAR_TASK_SET,
-or move straight on to LOGICAL_UNIT_RESET?
+2. Unfortunately, I see no sign that anybody has looked at the kernel
+bugzilla report above.
 
-James
+Is there anything I can do to help move things along?
 
+Thanks,
 
-> Of course your version of my code and my version of my code differ
-> somewhat.
-> 
-> The fix in the sequencer is messy as is the fix in software.
-> 
-
+Scott Bailey
+scott.bailey@eds.com
