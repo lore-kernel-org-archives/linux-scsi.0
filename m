@@ -1,26 +1,32 @@
-From: "Mari" <bandstopbetony@royalgazebo.com>
-Subject: Be delighted with  Put aside any doubts and stuff, this terrific product for smart males really does what you need!
-Date: Thu, 24 Aug 2006 07:30:04 +0900
-Message-ID: <33355764911125.C3D1C08A50__37933.2183780663$1156372032$gmane$org@3IES1>
+From: "Allen" <cameron.longcsjz@williams.com>
+Subject: Hey buddy, whats up
+Date: Wed, 23 Aug 2006 20:09:06 -0400
+Message-ID: <0116920503.356178506178@williams.com>
+Reply-To: "Allen Hatfield" <cameron.longcsjz@williams.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="Windows-1252"
+Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pool-71-109-69-18.lsanca.dsl-w.verizon.net ([71.109.69.18]:29382
-	"EHLO v5uo7j.iijace1i.optonline.net") by vger.kernel.org with ESMTP
-	id S965262AbWHWW0s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Aug 2006 18:26:48 -0400
+Received: from [200.121.19.142] ([200.121.19.142]:11081 "HELO
+	client-200.121.19.142.speedy.net.pe") by vger.kernel.org with SMTP
+	id S965311AbWHWX7a (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 Aug 2006 19:59:30 -0400
+Received: from smtp1.williams.com (smtp1.williams.com [151.142.254.80])
+	by client-200.121.19.142.speedy.net.pe (8.12.11/8.12.11) with ESMTP id 54yNNqW9TlIWbq
+	for <linux-scsi@vger.kernel.org>; Wed, 23 Aug 2006 20:09:06 -0400
+Received: from unknown (13.53.241.92)
+	by smtp1.williams.com with ESMTP id 8Kvrm84kRbRS
+	for <linux-scsi@vger.kernel.org>; Wed, 23 Aug 2006 20:09:06 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-serial@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-The newest
- Had doubts that these things really work? Check this out and join the thousands of happy men! You will love watching it, feeling it and of course using it - just several weeks to go!
 
- She certainly has fantasies about a large-sized man pleasing her to the full. You can start thinking about the awesome fun you're about to have in bed. Come on in: http://www.sedeji.com/gal/xl/ 
+Hey man, will ok I had to send you this site, you I ordered a Gold package and these things work amazingly view!
+For real,  we I've tried a bunch of other ones but they don't work- these ones are the real deal though from.
+If there was no moral evil upon earth, there would be no physical evil.
+model Check out the site for yourself:
+http://www.keloparemazik.com/
+Behind every great fortune there is a crime.
 
-Unlike other products, this one gives you permanent gains in size - and loads of pleasure!
-
- To receive the instruction of wisdom, justice, and judgment, and equity. Too much sit down ah bruck trousers. Good friends are hard to find, harder to leave, and impossible to forget Work expands so as to fill the time available
 
