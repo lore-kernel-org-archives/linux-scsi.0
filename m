@@ -1,51 +1,35 @@
-From: "Bailey, Scott" <scott.bailey@eds.com>
-Subject: [SCSI] - eliminate hard-coded timeouts in qla1280.c
-Date: Thu, 24 Aug 2006 14:01:59 -0400
-Message-ID: <F3598542BAC24B4783B7A440D45522FF04B5D89B@usahm236.amer.corp.eds.com>
-References: <20060824172845.GC2887@networkno.de>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH 1/2] Add SATA support to libsas
+Date: Thu, 24 Aug 2006 17:18:15 -0500
+Message-ID: <1156457895.1024.59.camel@mulgrave.il.steeleye.com>
+References: <44DBE943.4080303@us.ibm.com>  <44DC455A.2090705@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ahmler7.mail.eds.com ([192.85.154.81]:9905 "EHLO
-	ahmler7.mail.eds.com") by vger.kernel.org with ESMTP
-	id S1751662AbWHXSCW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Aug 2006 14:02:22 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <20060824172845.GC2887@networkno.de>
+Received: from stat9.steeleye.com ([209.192.50.41]:43951 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1422762AbWHXWVU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 24 Aug 2006 18:21:20 -0400
+In-Reply-To: <44DC455A.2090705@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Thiemo Seufer <ths@networkno.de>, 366730@bugs.debian.org, "Bailey, Scott" <scott.bailey@eds.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: "Darrick J. Wong" <djwong@us.ibm.com>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>
 
-Thanks are due to Ian Dall for the following patch. It replaces
-hard-coded
-30-second timeouts in qla1280.c, enabling tape operations that take
-longer
-than 30 seconds to work again. :-)
+On Fri, 2006-08-11 at 04:52 -0400, Jeff Garzik wrote:
+> One piece that seems to be distinctly absent is controlling the SATA 
+> phy, rather than faking it...
 
-This patch applies cleanly to 2.6.17.11 with an offset of 1 line.
+Could you elaborate a bit more?  You mean this faking of the SATA
+Control Registers?  If so, this is a bit problematic ... SAS HBAs don't
+seem to come with SATA Control Registers (and certainly not when the
+device is remote over SAT).  We do, however, have reasonable control of
+the phys via the transport class.  Probably the best solution is to
+expand the ata transport class to abstract this phy control out into
+knobs users can twiddle and then put this back down to libata/libsas via
+callbacks they can each interpret.
 
-Signed-off-by: R. Scott Bailey <scott.bailey@eds.com>
+James
 
---- qla1280.c	2006-03-20 16:23:29.000000000 +1030
-+++ qla1280.c	2006-03-23 23:37:28.000000000 +1030
-@@ -2886,7 +2886,7 @@
- 	memset(((char *)pkt + 8), 0, (REQUEST_ENTRY_SIZE - 8));
- 
- 	/* Set ISP command timeout. */
--	pkt->timeout = cpu_to_le16(30);
-+	pkt->timeout = cpu_to_le16(cmd->timeout_per_command/HZ);
- 
- 	/* Set device target ID and LUN */
- 	pkt->lun = SCSI_LUN_32(cmd);
-@@ -3185,7 +3185,7 @@
- 	memset(((char *)pkt + 8), 0, (REQUEST_ENTRY_SIZE - 8));
- 
- 	/* Set ISP command timeout. */
--	pkt->timeout = cpu_to_le16(30);
-+	pkt->timeout = cpu_to_le16(cmd->timeout_per_command/HZ);
- 
- 	/* Set device target ID and LUN */
- 	pkt->lun = SCSI_LUN_32(cmd);
+
