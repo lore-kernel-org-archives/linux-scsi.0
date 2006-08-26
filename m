@@ -1,40 +1,39 @@
 From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [Announce] smp_utils-0.91 available
-Date: Fri, 25 Aug 2006 18:53:14 -0400
-Message-ID: <44EF7F5A.5050806@torque.net>
-References: <664A4EBB07F29743873A87CF62C26D702BD839@NAMAIL4.ad.lsil.com>
+Subject: Re: [PATCH] aic94xx: add transport class phy reset capability
+Date: Fri, 25 Aug 2006 21:09:55 -0400
+Message-ID: <44EF9F63.2030305@torque.net>
+References: <1156533974.3462.17.camel@mulgrave.il.steeleye.com>
 Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:30374 "EHLO
+Received: from pentafluge.infradead.org ([213.146.154.40]:13986 "EHLO
 	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1422742AbWHYWxW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Aug 2006 18:53:22 -0400
-In-Reply-To: <664A4EBB07F29743873A87CF62C26D702BD839@NAMAIL4.ad.lsil.com>
+	id S1751049AbWHZBKD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 25 Aug 2006 21:10:03 -0400
+In-Reply-To: <1156533974.3462.17.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric" <Eric.Moore@lsil.com>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Moore, Eric wrote:
-> On Wednesday, August 23, 2006 8:11 AM, Douglas Gilbert wrote:
-> 
->> Two interfaces are available: the "mptctl" pass through used
->> by MPT Fusion SAS HBAs and the "smp_portal" sysfs attribute
->> pass through used by at least one aic94xx based Linux driver.
->>
-> 
-> It doesn't seem to work when I have more than one fusion controller.
-> What is the command line option for passing the ioc number?
+James Bottomley wrote:
+> This wires in the transport class hard and link reset phy ability.  It
+> does local phy resets via the HBA callback functions, but it also does
+> expander phy resets vi the SMP PHY_CONTROL messages.
 
-Eric,
-Try '/dev/mptctl,<ioc_num>'. For example:
+James,
+The ability to disable a phy (on a HBA or on an expander)
+is also a very useful capability. Does the sas_transport
+give us that capability?
 
-# smp_rep_general /dev/mptctl,2
-
-If the ',<ioc_num>' is not given ioc_num 0 is assumed.
-
+There is a way to effectively disable a phy on a SAS disk
+as well: use SEND DIAGNOSTIC to send the SAS protocol
+specific diagnostic page to put the disk phy in CJTPAT
+(jitter pattern) generation mode. However unless another
+phy is accessible on that disk to clear that state, a
+power cycle is needed to re-enable a phy in jitter pattern
+generation mode.
 
 Doug Gilbert
