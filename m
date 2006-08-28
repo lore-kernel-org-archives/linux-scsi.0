@@ -1,239 +1,76 @@
-From: Mark Haverkamp <markh@osdl.org>
-Subject: Domain validation problems
-Date: Mon, 28 Aug 2006 09:42:06 -0700
-Message-ID: <1156783326.3380.16.camel@markh3.pdx.osdl.net>
+From: Joshua Schmidlkofer <joshua@dev.imr-net.com>
+Subject: MegaRAID Errors
+Date: Mon, 28 Aug 2006 11:40:03 -0700
+Message-ID: <44F33883.9010501@imr-net.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-fKqp9TFoVsNJJKlRnAtU"
+Content-Type: multipart/mixed;
+ boundary="------------090108080107040602050808"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:27843 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1750811AbWH1QmZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Aug 2006 12:42:25 -0400
+Received: from commie.imr-net.com ([65.182.241.242]:25306 "EHLO
+	commie.imr-net.com") by vger.kernel.org with ESMTP id S1751204AbWH1SkE
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Aug 2006 14:40:04 -0400
+Received: from commie.imr-net.com (localhost.localdomain [127.0.0.1])
+	by commie.imr-net.com (Postfix) with ESMTP id 5D8152002390F
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Aug 2006 11:40:02 -0700 (PDT)
+Received: from [10.11.11.142] (tortuga.imr-net.com [65.182.241.245])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by commie.imr-net.com (Postfix) with ESMTP id 08F492002390B
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Aug 2006 11:40:02 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric" <Eric.Moore@lsil.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-
---=-fKqp9TFoVsNJJKlRnAtU
-Content-Type: text/plain
+This is a multi-part message in MIME format.
+--------------090108080107040602050808
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 
-
-I am having some problems with domain validation with the mptspi driver.
-I have some older disks connected to the adapter and in the process of
-domain validation the drives are set to async mode.  I would have
-thought that it would drop back to U160.  In any case, it doesn't stop
-there.  The domain validation seems to be done over and over again.  I
-have included an excerpt from the log.  I have removed all but one disk
-so its easier to see what it is doing.  The kernel is the latest
-scsi-rc-fixes but it also happens in the latest mainline kernel tree as
-well.
-
-Mark.
+MegaRAID Team,
 
 
+ I have a Dell PERC4/DC.    It uses the MegaRAID driver, and appears to 
+be supported just fine.  However, I occasionally have had problems.
 
--- 
-Mark Haverkamp <markh@osdl.org>
 
---=-fKqp9TFoVsNJJKlRnAtU
-Content-Disposition: attachment; filename=mptspi.log
-Content-Type: text/x-log; name=mptspi.log; charset=UTF-8
+Recently I acquired a new card, new drives, and a new external array.  
+All of this has been in response to various problems.   However, now I 
+am having these errors again.  (note: All the filesystems are new as well.)
+
+I have seen various problems like this, but I am out of self-help 
+options, so far as I can tell.
+
+Errors attatched occured on August 21st, w/ similar errors on 22, 23 and 
+24th. 
+
+Kernel: 2.6.17.7, 
+Distro: Libranet
+
+Single Processor Dell PE1800, Xeon 2.8GHZ, in HT mode.
+2GB of RAM.
+
+
+Sincerely,
+
+ Joshua
+
+
+
+
+--------------090108080107040602050808
+Content-Type: text/plain; x-mac-type="0"; x-mac-creator="0";
+ name="opsis.config"
 Content-Transfer-Encoding: 7bit
-
-Aug 28 09:29:19 stp4-000 Fusion MPT base driver 3.04.01
-Aug 28 09:29:19 stp4-000 Copyright (c) 1999-2005 LSI Logic Corporation
-Aug 28 09:29:19 stp4-000 Fusion MPT SPI Host driver 3.04.01
-Aug 28 09:29:19 stp4-000 mptbase: Initiating ioc0 bringup
-Aug 28 09:29:20 stp4-000 ioc0: 53C1030: Capabilities={Initiator}
-Aug 28 09:29:21 stp4-000 scsi1 : ioc0: LSI53C1030, FwRev=01030a00h, Ports=1, MaxQ=222, IRQ=20
-Aug 28 09:29:23 stp4-000 Vendor: HP 18.2G  Model: MAP3367NC#HJ      Rev: HPC6
-Aug 28 09:29:23 stp4-000 Type:   Direct-Access                      ANSI SCSI revision: 03
-Aug 28 09:29:23 stp4-000 target1:0:0: Beginning Domain Validation
-Aug 28 09:29:33 stp4-000 mptscsih: ioc0: attempting task abort! (sc=f750a660)
-Aug 28 09:29:33 stp4-000 scsi 1:0:0:0:
-Aug 28 09:29:33 stp4-000 command: cdb[0]=0x12: 12 00 00 00 60 00
-Aug 28 09:29:35 stp4-000 mptbase: Initiating ioc0 recovery
-Aug 28 09:30:03 stp4-000 mptscsih: ioc0: task abort: SUCCESS (sc=f750a660)
-Aug 28 09:30:03 stp4-000 target1:0:0: Domain Validation detected failure, dropping back
-Aug 28 09:30:03 stp4-000 target1:0:0: Domain Validation skipping write tests
-Aug 28 09:30:03 stp4-000 target1:0:0: Ending Domain Validation
-Aug 28 09:30:03 stp4-000 target1:0:0: asynchronous
-Aug 28 09:30:03 stp4-000 SCSI device sdb: 35566480 512-byte hdwr sectors (18210 MB)
-Aug 28 09:30:03 stp4-000 sdb: Write Protect is off
-Aug 28 09:30:03 stp4-000 sdb: Mode Sense: cf 00 10 08
-Aug 28 09:30:03 stp4-000 SCSI device sdb: drive cache: write back w/ FUA
-Aug 28 09:30:03 stp4-000 SCSI device sdb: 35566480 512-byte hdwr sectors (18210 MB)
-Aug 28 09:30:03 stp4-000 sdb: Write Protect is off
-Aug 28 09:30:03 stp4-000 sdb: Mode Sense: cf 00 10 08
-Aug 28 09:30:03 stp4-000 SCSI device sdb: drive cache: write back w/ FUA
-Aug 28 09:30:03 stp4-000 sdb: sdb1
-Aug 28 09:30:03 stp4-000 sd 1:0:0:0: Attached scsi disk sdb
-Aug 28 09:30:04 stp4-000 target1:0:0: Beginning Domain Validation
-Aug 28 09:30:04 stp4-000 Vendor: HP        Model: D5989C            Rev: 1.06
-Aug 28 09:30:04 stp4-000 Type:   Processor                          ANSI SCSI revision: 02
-Aug 28 09:30:04 stp4-000 target1:0:5: Beginning Domain Validation
-Aug 28 09:30:14 stp4-000 mptscsih: ioc0: attempting task abort! (sc=f723c920)
-Aug 28 09:30:14 stp4-000 sd 1:0:0:0:
-Aug 28 09:30:14 stp4-000 command: cdb[0]=0x12: 12 00 00 00 60 00
-Aug 28 09:30:17 stp4-000 mptbase: Initiating ioc0 recovery
-Aug 28 09:30:45 stp4-000 mptscsih: ioc0: task abort: SUCCESS (sc=f723c920)
-Aug 28 09:30:45 stp4-000 target1:0:5: Domain Validation Initial Inquiry Failed
-Aug 28 09:30:45 stp4-000 target1:0:5: Ending Domain Validation
-Aug 28 09:30:45 stp4-000 target1:0:5: asynchronous
-Aug 28 09:30:45 stp4-000 target1:0:0: Domain Validation detected failure, dropping back
-Aug 28 09:30:45 stp4-000 target1:0:0: Domain Validation skipping write tests
-Aug 28 09:30:45 stp4-000 target1:0:0: Ending Domain Validation
-Aug 28 09:30:45 stp4-000 target1:0:0: asynchronous
-Aug 28 09:30:45 stp4-000 target1:0:5: Beginning Domain Validation
-Aug 28 09:30:46 stp4-000 target1:0:0: Beginning Domain Validation
-Aug 28 09:30:46 stp4-000 target1:0:5: Ending Domain Validation
-Aug 28 09:30:46 stp4-000 target1:0:5: asynchronous
-Aug 28 09:30:46 stp4-000 target1:0:13: asynchronous
-Aug 28 09:30:47 stp4-000 mptbase: Initiating ioc1 bringup
-Aug 28 09:30:48 stp4-000 ioc1: 53C1030: Capabilities={Initiator}
-Aug 28 09:30:49 stp4-000 scsi2 : ioc1: LSI53C1030, FwRev=01030a00h, Ports=1, MaxQ=222, IRQ=21
-Aug 28 09:30:57 stp4-000 mptscsih: ioc0: attempting task abort! (sc=f750a540)
-Aug 28 09:30:57 stp4-000 sd 1:0:0:0:
-Aug 28 09:30:57 stp4-000 command: cdb[0]=0x12: 12 00 00 00 60 00
-Aug 28 09:31:00 stp4-000 mptbase: Initiating ioc0 recovery
-Aug 28 09:31:29 stp4-000 mptscsih: ioc0: task abort: SUCCESS (sc=f750a540)
-Aug 28 09:31:29 stp4-000 target1:0:0: Domain Validation detected failure, dropping back
-Aug 28 09:31:29 stp4-000 target1:0:0: Domain Validation skipping write tests
-Aug 28 09:31:29 stp4-000 target1:0:0: Ending Domain Validation
-Aug 28 09:31:29 stp4-000 target1:0:0: asynchronous
-Aug 28 09:31:29 stp4-000 target1:0:5: Beginning Domain Validation
-Aug 28 09:31:29 stp4-000 target1:0:5: Ending Domain Validation
-Aug 28 09:31:29 stp4-000 target1:0:5: asynchronous
-Aug 28 09:31:29 stp4-000 target1:0:0: Beginning Domain Validation
-Aug 28 09:31:39 stp4-000 mptscsih: ioc0: attempting task abort! (sc=c2fa51a0)
-Aug 28 09:31:39 stp4-000 sd 1:0:0:0:
-Aug 28 09:31:39 stp4-000 command: cdb[0]=0x12: 12 00 00 00 60 00
-Aug 28 09:31:42 stp4-000 mptbase: Initiating ioc0 recovery
-Aug 28 09:32:11 stp4-000 mptscsih: ioc0: task abort: SUCCESS (sc=c2fa51a0)
-Aug 28 09:32:11 stp4-000 target1:0:0: Domain Validation detected failure, dropping back
-Aug 28 09:32:11 stp4-000 target1:0:0: Domain Validation skipping write tests
-Aug 28 09:32:11 stp4-000 target1:0:0: Ending Domain Validation
-Aug 28 09:32:11 stp4-000 target1:0:0: asynchronous
-Aug 28 09:32:11 stp4-000 target1:0:5: Beginning Domain Validation
-Aug 28 09:32:11 stp4-000 target1:0:5: Ending Domain Validation
-Aug 28 09:32:11 stp4-000 target1:0:5: asynchronous
-Aug 28 09:32:11 stp4-000 target1:0:0: Beginning Domain Validation
-Aug 28 09:32:21 stp4-000 mptscsih: ioc0: attempting task abort! (sc=f75c7960)
-Aug 28 09:32:21 stp4-000 sd 1:0:0:0:
-Aug 28 09:32:21 stp4-000 command: cdb[0]=0x12: 12 00 00 00 60 00
-Aug 28 09:32:24 stp4-000 mptbase: Initiating ioc0 recovery
-Aug 28 09:32:53 stp4-000 mptscsih: ioc0: task abort: SUCCESS (sc=f75c7960)
-Aug 28 09:32:53 stp4-000 target1:0:0: Domain Validation detected failure, dropping back
-Aug 28 09:32:53 stp4-000 target1:0:0: Domain Validation skipping write tests
-Aug 28 09:32:53 stp4-000 target1:0:0: Ending Domain Validation
-Aug 28 09:32:53 stp4-000 target1:0:0: asynchronous
-Aug 28 09:32:53 stp4-000 target1:0:5: Beginning Domain Validation
-Aug 28 09:32:53 stp4-000 target1:0:5: Ending Domain Validation
-Aug 28 09:32:53 stp4-000 target1:0:5: asynchronous
-Aug 28 09:32:54 stp4-000 target1:0:0: Beginning Domain Validation
-Aug 28 09:33:04 stp4-000 mptscsih: ioc0: attempting task abort! (sc=f75c7180)
-Aug 28 09:33:04 stp4-000 sd 1:0:0:0:
-Aug 28 09:33:04 stp4-000 command: cdb[0]=0x12: 12 00 00 00 60 00
-Aug 28 09:33:06 stp4-000 mptbase: Initiating ioc0 recovery
-Aug 28 09:33:36 stp4-000 mptscsih: ioc0: task abort: SUCCESS (sc=f75c7180)
-Aug 28 09:33:36 stp4-000 target1:0:0: Domain Validation detected failure, dropping back
-Aug 28 09:33:36 stp4-000 target1:0:0: Domain Validation skipping write tests
-Aug 28 09:33:36 stp4-000 target1:0:0: Ending Domain Validation
-Aug 28 09:33:36 stp4-000 target1:0:0: asynchronous
-Aug 28 09:33:36 stp4-000 target1:0:5: Beginning Domain Validation
-Aug 28 09:33:36 stp4-000 target1:0:5: Ending Domain Validation
-Aug 28 09:33:36 stp4-000 target1:0:5: asynchronous
-Aug 28 09:33:36 stp4-000 target1:0:0: Beginning Domain Validation
-Aug 28 09:33:46 stp4-000 mptscsih: ioc0: attempting task abort! (sc=f75c7180)
-Aug 28 09:33:46 stp4-000 sd 1:0:0:0:
-Aug 28 09:33:46 stp4-000 command: cdb[0]=0x12: 12 00 00 00 60 00
-Aug 28 09:33:48 stp4-000 mptbase: Initiating ioc0 recovery
-Aug 28 09:34:18 stp4-000 mptscsih: ioc0: task abort: SUCCESS (sc=f75c7180)
-Aug 28 09:34:18 stp4-000 target1:0:0: Domain Validation detected failure, dropping back
-Aug 28 09:34:18 stp4-000 target1:0:0: Domain Validation skipping write tests
-Aug 28 09:34:18 stp4-000 target1:0:0: Ending Domain Validation
-Aug 28 09:34:18 stp4-000 target1:0:0: asynchronous
-Aug 28 09:34:18 stp4-000 target1:0:5: Beginning Domain Validation
-Aug 28 09:34:18 stp4-000 target1:0:5: Ending Domain Validation
-Aug 28 09:34:18 stp4-000 target1:0:5: asynchronous
-Aug 28 09:34:18 stp4-000 target1:0:0: Beginning Domain Validation
-Aug 28 09:34:28 stp4-000 mptscsih: ioc0: attempting task abort! (sc=f75c7180)
-Aug 28 09:34:28 stp4-000 sd 1:0:0:0:
-Aug 28 09:34:28 stp4-000 command: cdb[0]=0x12: 12 00 00 00 60 00
-Aug 28 09:34:30 stp4-000 mptbase: Initiating ioc0 recovery
-Aug 28 09:35:00 stp4-000 mptscsih: ioc0: task abort: SUCCESS (sc=f75c7180)
-Aug 28 09:35:00 stp4-000 target1:0:0: Domain Validation detected failure, dropping back
-Aug 28 09:35:00 stp4-000 target1:0:0: Domain Validation skipping write tests
-Aug 28 09:35:00 stp4-000 target1:0:0: Ending Domain Validation
-Aug 28 09:35:00 stp4-000 target1:0:0: asynchronous
-Aug 28 09:35:00 stp4-000 target1:0:5: Beginning Domain Validation
-Aug 28 09:35:00 stp4-000 target1:0:5: Ending Domain Validation
-Aug 28 09:35:00 stp4-000 target1:0:5: asynchronous
-Aug 28 09:35:00 stp4-000 target1:0:0: Beginning Domain Validation
-Aug 28 09:35:10 stp4-000 mptscsih: ioc0: attempting task abort! (sc=f75c7180)
-Aug 28 09:35:10 stp4-000 sd 1:0:0:0:
-Aug 28 09:35:10 stp4-000 command: cdb[0]=0x12: 12 00 00 00 60 00
-Aug 28 09:35:12 stp4-000 mptbase: Initiating ioc0 recovery
-Aug 28 09:35:42 stp4-000 mptscsih: ioc0: task abort: SUCCESS (sc=f75c7180)
-Aug 28 09:35:42 stp4-000 target1:0:0: Domain Validation detected failure, dropping back
-Aug 28 09:35:42 stp4-000 target1:0:0: Domain Validation skipping write tests
-Aug 28 09:35:42 stp4-000 target1:0:0: Ending Domain Validation
-Aug 28 09:35:42 stp4-000 target1:0:0: asynchronous
-Aug 28 09:35:42 stp4-000 target1:0:5: Beginning Domain Validation
-Aug 28 09:35:42 stp4-000 target1:0:5: Ending Domain Validation
-Aug 28 09:35:42 stp4-000 target1:0:5: asynchronous
-Aug 28 09:35:42 stp4-000 target1:0:0: Beginning Domain Validation
-Aug 28 09:35:52 stp4-000 mptscsih: ioc0: attempting task abort! (sc=f75c7180)
-Aug 28 09:35:52 stp4-000 sd 1:0:0:0:
-Aug 28 09:35:52 stp4-000 command: cdb[0]=0x12: 12 00 00 00 60 00
-Aug 28 09:35:54 stp4-000 mptbase: Initiating ioc0 recovery
-Aug 28 09:36:24 stp4-000 mptscsih: ioc0: task abort: SUCCESS (sc=f75c7180)
-Aug 28 09:36:24 stp4-000 target1:0:0: Domain Validation detected failure, dropping back
-Aug 28 09:36:24 stp4-000 target1:0:0: Domain Validation skipping write tests
-Aug 28 09:36:24 stp4-000 target1:0:0: Ending Domain Validation
-Aug 28 09:36:24 stp4-000 target1:0:0: asynchronous
-Aug 28 09:36:24 stp4-000 target1:0:5: Beginning Domain Validation
-Aug 28 09:36:24 stp4-000 target1:0:5: Ending Domain Validation
-Aug 28 09:36:24 stp4-000 target1:0:5: asynchronous
-Aug 28 09:36:24 stp4-000 target1:0:0: Beginning Domain Validation
-Aug 28 09:36:34 stp4-000 mptscsih: ioc0: attempting task abort! (sc=f750ad20)
-Aug 28 09:36:34 stp4-000 sd 1:0:0:0:
-Aug 28 09:36:34 stp4-000 command: cdb[0]=0x12: 12 00 00 00 60 00
-Aug 28 09:36:37 stp4-000 mptbase: Initiating ioc0 recovery
-Aug 28 09:37:06 stp4-000 mptscsih: ioc0: task abort: SUCCESS (sc=f750ad20)
-Aug 28 09:37:06 stp4-000 target1:0:0: Domain Validation detected failure, dropping back
-Aug 28 09:37:06 stp4-000 target1:0:0: Domain Validation skipping write tests
-Aug 28 09:37:06 stp4-000 target1:0:0: Ending Domain Validation
-Aug 28 09:37:06 stp4-000 target1:0:0: asynchronous
-Aug 28 09:37:06 stp4-000 target1:0:5: Beginning Domain Validation
-Aug 28 09:37:06 stp4-000 target1:0:5: Ending Domain Validation
-Aug 28 09:37:06 stp4-000 target1:0:5: asynchronous
-Aug 28 09:37:06 stp4-000 target1:0:0: Beginning Domain Validation
-Aug 28 09:37:16 stp4-000 mptscsih: ioc0: attempting task abort! (sc=c2fa53e0)
-Aug 28 09:37:16 stp4-000 sd 1:0:0:0:
-Aug 28 09:37:16 stp4-000 command: cdb[0]=0x12: 12 00 00 00 60 00
-Aug 28 09:37:19 stp4-000 mptbase: Initiating ioc0 recovery
-
-[ ... ]
-
-
-
---=-fKqp9TFoVsNJJKlRnAtU
-Content-Disposition: attachment; filename=config
-Content-Type: text/plain; name=config; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="opsis.config"
 
 #
 # Automatically generated make config: don't edit
-# Linux kernel version: 2.6.18-rc3
-# Mon Aug 28 09:21:16 2006
+# Linux kernel version: 2.6.17.6
+# Tue Jul 18 23:27:23 2006
 #
 CONFIG_X86_32=y
-CONFIG_GENERIC_TIME=y
-CONFIG_LOCKDEP_SUPPORT=y
-CONFIG_STACKTRACE_SUPPORT=y
 CONFIG_SEMAPHORE_SLEEPERS=y
 CONFIG_X86=y
 CONFIG_MMU=y
@@ -242,7 +79,6 @@ CONFIG_GENERIC_IOMAP=y
 CONFIG_GENERIC_HWEIGHT=y
 CONFIG_ARCH_MAY_HAVE_PC_FDC=y
 CONFIG_DMI=y
-CONFIG_DEFCONFIG_LIST="/lib/modules/$UNAME_RELEASE/.config"
 
 #
 # Code maturity level options
@@ -254,13 +90,12 @@ CONFIG_INIT_ENV_ARG_LIMIT=32
 #
 # General setup
 #
-CONFIG_LOCALVERSION="-scsi-rc"
-# CONFIG_LOCALVERSION_AUTO is not set
+CONFIG_LOCALVERSION=""
+CONFIG_LOCALVERSION_AUTO=y
 CONFIG_SWAP=y
 CONFIG_SYSVIPC=y
 # CONFIG_POSIX_MQUEUE is not set
 # CONFIG_BSD_PROCESS_ACCT is not set
-# CONFIG_TASKSTATS is not set
 CONFIG_SYSCTL=y
 # CONFIG_AUDIT is not set
 CONFIG_IKCONFIG=y
@@ -269,7 +104,8 @@ CONFIG_IKCONFIG_PROC=y
 # CONFIG_RELAY is not set
 CONFIG_INITRAMFS_SOURCE=""
 CONFIG_UID16=y
-CONFIG_CC_OPTIMIZE_FOR_SIZE=y
+CONFIG_VM86=y
+# CONFIG_CC_OPTIMIZE_FOR_SIZE is not set
 # CONFIG_EMBEDDED is not set
 CONFIG_KALLSYMS=y
 # CONFIG_KALLSYMS_ALL is not set
@@ -279,12 +115,10 @@ CONFIG_PRINTK=y
 CONFIG_BUG=y
 CONFIG_ELF_CORE=y
 CONFIG_BASE_FULL=y
-CONFIG_RT_MUTEXES=y
 CONFIG_FUTEX=y
 CONFIG_EPOLL=y
 CONFIG_SHMEM=y
 CONFIG_SLAB=y
-CONFIG_VM_EVENT_COUNTERS=y
 # CONFIG_TINY_SHMEM is not set
 CONFIG_BASE_SMALL=0
 # CONFIG_SLOB is not set
@@ -294,18 +128,18 @@ CONFIG_BASE_SMALL=0
 #
 CONFIG_MODULES=y
 CONFIG_MODULE_UNLOAD=y
-CONFIG_MODULE_FORCE_UNLOAD=y
+# CONFIG_MODULE_FORCE_UNLOAD is not set
 # CONFIG_MODVERSIONS is not set
-# CONFIG_MODULE_SRCVERSION_ALL is not set
-# CONFIG_KMOD is not set
+CONFIG_MODULE_SRCVERSION_ALL=y
+CONFIG_KMOD=y
 CONFIG_STOP_MACHINE=y
 
 #
 # Block layer
 #
-# CONFIG_LBD is not set
+CONFIG_LBD=y
 # CONFIG_BLK_DEV_IO_TRACE is not set
-# CONFIG_LSF is not set
+CONFIG_LSF=y
 
 #
 # IO Schedulers
@@ -340,9 +174,9 @@ CONFIG_X86_PC=y
 # CONFIG_M586MMX is not set
 # CONFIG_M686 is not set
 # CONFIG_MPENTIUMII is not set
-CONFIG_MPENTIUMIII=y
+# CONFIG_MPENTIUMIII is not set
 # CONFIG_MPENTIUMM is not set
-# CONFIG_MPENTIUM4 is not set
+CONFIG_MPENTIUM4=y
 # CONFIG_MK6 is not set
 # CONFIG_MK7 is not set
 # CONFIG_MK8 is not set
@@ -358,7 +192,7 @@ CONFIG_MPENTIUMIII=y
 # CONFIG_X86_GENERIC is not set
 CONFIG_X86_CMPXCHG=y
 CONFIG_X86_XADD=y
-CONFIG_X86_L1_CACHE_SHIFT=5
+CONFIG_X86_L1_CACHE_SHIFT=7
 CONFIG_RWSEM_XCHGADD_ALGORITHM=y
 CONFIG_GENERIC_CALIBRATE_DELAY=y
 CONFIG_X86_WP_WORKS_OK=y
@@ -370,39 +204,38 @@ CONFIG_X86_GOOD_APIC=y
 CONFIG_X86_INTEL_USERCOPY=y
 CONFIG_X86_USE_PPRO_CHECKSUM=y
 CONFIG_X86_TSC=y
-# CONFIG_HPET_TIMER is not set
-CONFIG_NR_CPUS=8
-# CONFIG_SCHED_SMT is not set
-CONFIG_SCHED_MC=y
+CONFIG_HPET_TIMER=y
+CONFIG_HPET_EMULATE_RTC=y
+CONFIG_NR_CPUS=4
+CONFIG_SCHED_SMT=y
+# CONFIG_SCHED_MC is not set
 CONFIG_PREEMPT_NONE=y
 # CONFIG_PREEMPT_VOLUNTARY is not set
 # CONFIG_PREEMPT is not set
-CONFIG_PREEMPT_BKL=y
+# CONFIG_PREEMPT_BKL is not set
 CONFIG_X86_LOCAL_APIC=y
 CONFIG_X86_IO_APIC=y
 CONFIG_X86_MCE=y
 CONFIG_X86_MCE_NONFATAL=y
-# CONFIG_X86_MCE_P4THERMAL is not set
-CONFIG_VM86=y
-# CONFIG_TOSHIBA is not set
-# CONFIG_I8K is not set
+CONFIG_X86_MCE_P4THERMAL=y
+CONFIG_TOSHIBA=m
+CONFIG_I8K=m
 # CONFIG_X86_REBOOTFIXUPS is not set
-# CONFIG_MICROCODE is not set
-# CONFIG_X86_MSR is not set
-# CONFIG_X86_CPUID is not set
+CONFIG_MICROCODE=y
+CONFIG_X86_MSR=y
+CONFIG_X86_CPUID=y
 
 #
 # Firmware Drivers
 #
-# CONFIG_EDD is not set
-# CONFIG_DELL_RBU is not set
-# CONFIG_DCDBAS is not set
+CONFIG_EDD=y
+CONFIG_DELL_RBU=m
+CONFIG_DCDBAS=m
 # CONFIG_NOHIGHMEM is not set
-# CONFIG_HIGHMEM4G is not set
-CONFIG_HIGHMEM64G=y
+CONFIG_HIGHMEM4G=y
+# CONFIG_HIGHMEM64G is not set
 CONFIG_PAGE_OFFSET=0xC0000000
 CONFIG_HIGHMEM=y
-CONFIG_X86_PAE=y
 CONFIG_ARCH_FLATMEM_ENABLE=y
 CONFIG_ARCH_SPARSEMEM_ENABLE=y
 CONFIG_ARCH_SELECT_MEMORY_MODEL=y
@@ -414,23 +247,21 @@ CONFIG_FLATMEM=y
 CONFIG_FLAT_NODE_MEM_MAP=y
 CONFIG_SPARSEMEM_STATIC=y
 CONFIG_SPLIT_PTLOCK_CPUS=4
-CONFIG_RESOURCES_64BIT=y
-# CONFIG_HIGHPTE is not set
+CONFIG_HIGHPTE=y
 # CONFIG_MATH_EMULATION is not set
 CONFIG_MTRR=y
+# CONFIG_EFI is not set
 CONFIG_IRQBALANCE=y
-CONFIG_REGPARM=y
-# CONFIG_SECCOMP is not set
-CONFIG_HZ_100=y
-# CONFIG_HZ_250 is not set
+# CONFIG_REGPARM is not set
+CONFIG_SECCOMP=y
+# CONFIG_HZ_100 is not set
+CONFIG_HZ_250=y
 # CONFIG_HZ_1000 is not set
-CONFIG_HZ=100
-# CONFIG_KEXEC is not set
+CONFIG_HZ=250
+CONFIG_KEXEC=y
 # CONFIG_CRASH_DUMP is not set
 CONFIG_PHYSICAL_START=0x100000
 # CONFIG_HOTPLUG_CPU is not set
-CONFIG_COMPAT_VDSO=y
-CONFIG_ARCH_ENABLE_MEMORY_HOTPLUG=y
 
 #
 # Power management options (ACPI, APM)
@@ -442,7 +273,25 @@ CONFIG_PM=y
 #
 # ACPI (Advanced Configuration and Power Interface) Support
 #
-# CONFIG_ACPI is not set
+CONFIG_ACPI=y
+CONFIG_ACPI_AC=y
+CONFIG_ACPI_BATTERY=y
+CONFIG_ACPI_BUTTON=y
+CONFIG_ACPI_VIDEO=y
+CONFIG_ACPI_HOTKEY=y
+CONFIG_ACPI_FAN=y
+CONFIG_ACPI_PROCESSOR=y
+CONFIG_ACPI_THERMAL=y
+# CONFIG_ACPI_ASUS is not set
+# CONFIG_ACPI_IBM is not set
+# CONFIG_ACPI_TOSHIBA is not set
+CONFIG_ACPI_BLACKLIST_YEAR=0
+# CONFIG_ACPI_DEBUG is not set
+CONFIG_ACPI_EC=y
+CONFIG_ACPI_POWER=y
+CONFIG_ACPI_SYSTEM=y
+CONFIG_X86_PM_TIMER=y
+CONFIG_ACPI_CONTAINER=y
 
 #
 # APM (Advanced Power Management) BIOS Support
@@ -464,8 +313,10 @@ CONFIG_PCI=y
 CONFIG_PCI_GOANY=y
 CONFIG_PCI_BIOS=y
 CONFIG_PCI_DIRECT=y
-# CONFIG_PCIEPORTBUS is not set
-# CONFIG_PCI_MSI is not set
+CONFIG_PCI_MMCONFIG=y
+CONFIG_PCIEPORTBUS=y
+# CONFIG_HOTPLUG_PCI_PCIE is not set
+CONFIG_PCI_MSI=y
 # CONFIG_PCI_DEBUG is not set
 CONFIG_ISA_DMA_API=y
 # CONFIG_ISA is not set
@@ -480,14 +331,21 @@ CONFIG_ISA_DMA_API=y
 #
 # PCI Hotplug Support
 #
-# CONFIG_HOTPLUG_PCI is not set
+CONFIG_HOTPLUG_PCI=y
+# CONFIG_HOTPLUG_PCI_FAKE is not set
+# CONFIG_HOTPLUG_PCI_COMPAQ is not set
+# CONFIG_HOTPLUG_PCI_IBM is not set
+CONFIG_HOTPLUG_PCI_ACPI=y
+# CONFIG_HOTPLUG_PCI_ACPI_IBM is not set
+# CONFIG_HOTPLUG_PCI_CPCI is not set
+# CONFIG_HOTPLUG_PCI_SHPC is not set
 
 #
 # Executable file formats
 #
 CONFIG_BINFMT_ELF=y
 # CONFIG_BINFMT_AOUT is not set
-# CONFIG_BINFMT_MISC is not set
+CONFIG_BINFMT_MISC=y
 
 #
 # Networking
@@ -502,32 +360,128 @@ CONFIG_PACKET=y
 CONFIG_PACKET_MMAP=y
 CONFIG_UNIX=y
 CONFIG_XFRM=y
-# CONFIG_XFRM_USER is not set
-# CONFIG_NET_KEY is not set
+CONFIG_XFRM_USER=m
+CONFIG_NET_KEY=m
 CONFIG_INET=y
-# CONFIG_IP_MULTICAST is not set
+CONFIG_IP_MULTICAST=y
 # CONFIG_IP_ADVANCED_ROUTER is not set
 CONFIG_IP_FIB_HASH=y
 # CONFIG_IP_PNP is not set
-# CONFIG_NET_IPIP is not set
-# CONFIG_NET_IPGRE is not set
-# CONFIG_ARPD is not set
-# CONFIG_SYN_COOKIES is not set
-# CONFIG_INET_AH is not set
-# CONFIG_INET_ESP is not set
-# CONFIG_INET_IPCOMP is not set
-# CONFIG_INET_XFRM_TUNNEL is not set
-# CONFIG_INET_TUNNEL is not set
-CONFIG_INET_XFRM_MODE_TRANSPORT=y
-CONFIG_INET_XFRM_MODE_TUNNEL=y
-# CONFIG_INET_DIAG is not set
+CONFIG_NET_IPIP=m
+CONFIG_NET_IPGRE=m
+CONFIG_NET_IPGRE_BROADCAST=y
+CONFIG_IP_MROUTE=y
+CONFIG_IP_PIMSM_V1=y
+CONFIG_IP_PIMSM_V2=y
+CONFIG_ARPD=y
+CONFIG_SYN_COOKIES=y
+CONFIG_INET_AH=m
+CONFIG_INET_ESP=m
+CONFIG_INET_IPCOMP=m
+CONFIG_INET_XFRM_TUNNEL=m
+CONFIG_INET_TUNNEL=m
+CONFIG_INET_DIAG=m
+CONFIG_INET_TCP_DIAG=m
 # CONFIG_TCP_CONG_ADVANCED is not set
 CONFIG_TCP_CONG_BIC=y
+
+#
+# IP: Virtual Server Configuration
+#
+# CONFIG_IP_VS is not set
 # CONFIG_IPV6 is not set
 # CONFIG_INET6_XFRM_TUNNEL is not set
 # CONFIG_INET6_TUNNEL is not set
-# CONFIG_NETWORK_SECMARK is not set
-# CONFIG_NETFILTER is not set
+CONFIG_NETFILTER=y
+# CONFIG_NETFILTER_DEBUG is not set
+
+#
+# Core Netfilter Configuration
+#
+CONFIG_NETFILTER_NETLINK=y
+CONFIG_NETFILTER_NETLINK_QUEUE=m
+CONFIG_NETFILTER_NETLINK_LOG=m
+CONFIG_NETFILTER_XTABLES=m
+CONFIG_NETFILTER_XT_TARGET_CLASSIFY=m
+CONFIG_NETFILTER_XT_TARGET_CONNMARK=m
+CONFIG_NETFILTER_XT_TARGET_MARK=m
+CONFIG_NETFILTER_XT_TARGET_NFQUEUE=m
+CONFIG_NETFILTER_XT_TARGET_NOTRACK=m
+CONFIG_NETFILTER_XT_MATCH_COMMENT=m
+CONFIG_NETFILTER_XT_MATCH_CONNBYTES=m
+CONFIG_NETFILTER_XT_MATCH_CONNMARK=m
+CONFIG_NETFILTER_XT_MATCH_CONNTRACK=m
+CONFIG_NETFILTER_XT_MATCH_DCCP=m
+CONFIG_NETFILTER_XT_MATCH_ESP=m
+CONFIG_NETFILTER_XT_MATCH_HELPER=m
+CONFIG_NETFILTER_XT_MATCH_LENGTH=m
+CONFIG_NETFILTER_XT_MATCH_LIMIT=m
+CONFIG_NETFILTER_XT_MATCH_MAC=m
+CONFIG_NETFILTER_XT_MATCH_MARK=m
+CONFIG_NETFILTER_XT_MATCH_POLICY=m
+CONFIG_NETFILTER_XT_MATCH_MULTIPORT=m
+CONFIG_NETFILTER_XT_MATCH_PKTTYPE=m
+CONFIG_NETFILTER_XT_MATCH_REALM=m
+CONFIG_NETFILTER_XT_MATCH_SCTP=m
+CONFIG_NETFILTER_XT_MATCH_STATE=m
+CONFIG_NETFILTER_XT_MATCH_STRING=m
+CONFIG_NETFILTER_XT_MATCH_TCPMSS=m
+
+#
+# IP: Netfilter Configuration
+#
+CONFIG_IP_NF_CONNTRACK=m
+CONFIG_IP_NF_CT_ACCT=y
+CONFIG_IP_NF_CONNTRACK_MARK=y
+# CONFIG_IP_NF_CONNTRACK_EVENTS is not set
+CONFIG_IP_NF_CONNTRACK_NETLINK=m
+CONFIG_IP_NF_CT_PROTO_SCTP=m
+CONFIG_IP_NF_FTP=m
+CONFIG_IP_NF_IRC=m
+CONFIG_IP_NF_NETBIOS_NS=m
+CONFIG_IP_NF_TFTP=m
+CONFIG_IP_NF_AMANDA=m
+CONFIG_IP_NF_PPTP=m
+# CONFIG_IP_NF_H323 is not set
+CONFIG_IP_NF_QUEUE=m
+CONFIG_IP_NF_IPTABLES=m
+CONFIG_IP_NF_MATCH_IPRANGE=m
+CONFIG_IP_NF_MATCH_TOS=m
+CONFIG_IP_NF_MATCH_RECENT=m
+CONFIG_IP_NF_MATCH_ECN=m
+CONFIG_IP_NF_MATCH_DSCP=m
+CONFIG_IP_NF_MATCH_AH=m
+CONFIG_IP_NF_MATCH_TTL=m
+CONFIG_IP_NF_MATCH_OWNER=m
+CONFIG_IP_NF_MATCH_ADDRTYPE=m
+CONFIG_IP_NF_MATCH_HASHLIMIT=m
+CONFIG_IP_NF_FILTER=m
+CONFIG_IP_NF_TARGET_REJECT=m
+CONFIG_IP_NF_TARGET_LOG=m
+CONFIG_IP_NF_TARGET_ULOG=m
+CONFIG_IP_NF_TARGET_TCPMSS=m
+CONFIG_IP_NF_NAT=m
+CONFIG_IP_NF_NAT_NEEDED=y
+CONFIG_IP_NF_TARGET_MASQUERADE=m
+CONFIG_IP_NF_TARGET_REDIRECT=m
+CONFIG_IP_NF_TARGET_NETMAP=m
+CONFIG_IP_NF_TARGET_SAME=m
+CONFIG_IP_NF_NAT_SNMP_BASIC=m
+CONFIG_IP_NF_NAT_IRC=m
+CONFIG_IP_NF_NAT_FTP=m
+CONFIG_IP_NF_NAT_TFTP=m
+CONFIG_IP_NF_NAT_AMANDA=m
+CONFIG_IP_NF_NAT_PPTP=m
+CONFIG_IP_NF_MANGLE=m
+CONFIG_IP_NF_TARGET_TOS=m
+CONFIG_IP_NF_TARGET_ECN=m
+CONFIG_IP_NF_TARGET_DSCP=m
+CONFIG_IP_NF_TARGET_TTL=m
+CONFIG_IP_NF_TARGET_CLUSTERIP=m
+CONFIG_IP_NF_RAW=m
+CONFIG_IP_NF_ARPTABLES=m
+CONFIG_IP_NF_ARPFILTER=m
+CONFIG_IP_NF_ARP_MANGLE=m
 
 #
 # DCCP Configuration (EXPERIMENTAL)
@@ -545,10 +499,12 @@ CONFIG_TCP_CONG_BIC=y
 # CONFIG_TIPC is not set
 # CONFIG_ATM is not set
 # CONFIG_BRIDGE is not set
-# CONFIG_VLAN_8021Q is not set
+CONFIG_VLAN_8021Q=m
 # CONFIG_DECNET is not set
+CONFIG_LLC=m
 # CONFIG_LLC2 is not set
-# CONFIG_IPX is not set
+CONFIG_IPX=m
+CONFIG_IPX_INTERN=y
 # CONFIG_ATALK is not set
 # CONFIG_X25 is not set
 # CONFIG_LAPB is not set
@@ -559,7 +515,46 @@ CONFIG_TCP_CONG_BIC=y
 #
 # QoS and/or fair queueing
 #
-# CONFIG_NET_SCHED is not set
+CONFIG_NET_SCHED=y
+CONFIG_NET_SCH_CLK_JIFFIES=y
+# CONFIG_NET_SCH_CLK_GETTIMEOFDAY is not set
+# CONFIG_NET_SCH_CLK_CPU is not set
+
+#
+# Queueing/Scheduling
+#
+CONFIG_NET_SCH_CBQ=m
+CONFIG_NET_SCH_HTB=m
+CONFIG_NET_SCH_HFSC=m
+CONFIG_NET_SCH_PRIO=m
+CONFIG_NET_SCH_RED=m
+CONFIG_NET_SCH_SFQ=m
+CONFIG_NET_SCH_TEQL=m
+CONFIG_NET_SCH_TBF=m
+CONFIG_NET_SCH_GRED=m
+CONFIG_NET_SCH_DSMARK=m
+CONFIG_NET_SCH_NETEM=m
+CONFIG_NET_SCH_INGRESS=m
+
+#
+# Classification
+#
+CONFIG_NET_CLS=y
+# CONFIG_NET_CLS_BASIC is not set
+CONFIG_NET_CLS_TCINDEX=m
+CONFIG_NET_CLS_ROUTE4=m
+CONFIG_NET_CLS_ROUTE=y
+CONFIG_NET_CLS_FW=m
+CONFIG_NET_CLS_U32=m
+# CONFIG_CLS_U32_PERF is not set
+CONFIG_CLS_U32_MARK=y
+CONFIG_NET_CLS_RSVP=m
+CONFIG_NET_CLS_RSVP6=m
+# CONFIG_NET_EMATCH is not set
+# CONFIG_NET_CLS_ACT is not set
+CONFIG_NET_CLS_POLICE=y
+# CONFIG_NET_CLS_IND is not set
+CONFIG_NET_ESTIMATOR=y
 
 #
 # Network testing
@@ -579,14 +574,13 @@ CONFIG_TCP_CONG_BIC=y
 #
 CONFIG_STANDALONE=y
 CONFIG_PREVENT_FIRMWARE_BUILD=y
-# CONFIG_FW_LOADER is not set
+CONFIG_FW_LOADER=m
 # CONFIG_DEBUG_DRIVER is not set
-# CONFIG_SYS_HYPERVISOR is not set
 
 #
 # Connector - unified userspace <-> kernelspace linker
 #
-# CONFIG_CONNECTOR is not set
+CONFIG_CONNECTOR=m
 
 #
 # Memory Technology Devices (MTD)
@@ -596,23 +590,30 @@ CONFIG_PREVENT_FIRMWARE_BUILD=y
 #
 # Parallel port support
 #
-CONFIG_PARPORT=y
-CONFIG_PARPORT_PC=y
-# CONFIG_PARPORT_SERIAL is not set
+CONFIG_PARPORT=m
+CONFIG_PARPORT_PC=m
+CONFIG_PARPORT_SERIAL=m
 # CONFIG_PARPORT_PC_FIFO is not set
 # CONFIG_PARPORT_PC_SUPERIO is not set
+CONFIG_PARPORT_NOT_PC=y
 # CONFIG_PARPORT_GSC is not set
-# CONFIG_PARPORT_AX88796 is not set
 CONFIG_PARPORT_1284=y
 
 #
 # Plug and Play support
 #
+CONFIG_PNP=y
+# CONFIG_PNP_DEBUG is not set
+
+#
+# Protocols
+#
+CONFIG_PNPACPI=y
 
 #
 # Block devices
 #
-# CONFIG_BLK_DEV_FD is not set
+CONFIG_BLK_DEV_FD=y
 # CONFIG_PARIDE is not set
 # CONFIG_BLK_CPQ_DA is not set
 # CONFIG_BLK_CPQ_CISS_DA is not set
@@ -623,8 +624,11 @@ CONFIG_BLK_DEV_LOOP=y
 # CONFIG_BLK_DEV_CRYPTOLOOP is not set
 # CONFIG_BLK_DEV_NBD is not set
 # CONFIG_BLK_DEV_SX8 is not set
-# CONFIG_BLK_DEV_RAM is not set
-# CONFIG_BLK_DEV_INITRD is not set
+# CONFIG_BLK_DEV_UB is not set
+CONFIG_BLK_DEV_RAM=y
+CONFIG_BLK_DEV_RAM_COUNT=16
+CONFIG_BLK_DEV_RAM_SIZE=4096
+CONFIG_BLK_DEV_INITRD=y
 # CONFIG_CDROM_PKTCDVD is not set
 # CONFIG_ATA_OVER_ETH is not set
 
@@ -640,7 +644,7 @@ CONFIG_BLK_DEV_IDE=y
 # CONFIG_BLK_DEV_IDE_SATA is not set
 # CONFIG_BLK_DEV_HD_IDE is not set
 CONFIG_BLK_DEV_IDEDISK=y
-# CONFIG_IDEDISK_MULTI_MODE is not set
+CONFIG_IDEDISK_MULTI_MODE=y
 CONFIG_BLK_DEV_IDECD=y
 # CONFIG_BLK_DEV_IDETAPE is not set
 # CONFIG_BLK_DEV_IDEFLOPPY is not set
@@ -650,12 +654,14 @@ CONFIG_BLK_DEV_IDECD=y
 #
 # IDE chipset support/bugfixes
 #
-# CONFIG_IDE_GENERIC is not set
-# CONFIG_BLK_DEV_CMD640 is not set
+CONFIG_IDE_GENERIC=y
+CONFIG_BLK_DEV_CMD640=y
+# CONFIG_BLK_DEV_CMD640_ENHANCED is not set
+# CONFIG_BLK_DEV_IDEPNP is not set
 CONFIG_BLK_DEV_IDEPCI=y
 CONFIG_IDEPCI_SHARE_IRQ=y
 # CONFIG_BLK_DEV_OFFBOARD is not set
-# CONFIG_BLK_DEV_GENERIC is not set
+CONFIG_BLK_DEV_GENERIC=y
 # CONFIG_BLK_DEV_OPTI621 is not set
 # CONFIG_BLK_DEV_RZ1000 is not set
 CONFIG_BLK_DEV_IDEDMA_PCI=y
@@ -675,13 +681,13 @@ CONFIG_IDEDMA_PCI_AUTO=y
 # CONFIG_BLK_DEV_HPT34X is not set
 # CONFIG_BLK_DEV_HPT366 is not set
 # CONFIG_BLK_DEV_SC1200 is not set
-# CONFIG_BLK_DEV_PIIX is not set
+CONFIG_BLK_DEV_PIIX=y
 # CONFIG_BLK_DEV_IT821X is not set
 # CONFIG_BLK_DEV_NS87415 is not set
 # CONFIG_BLK_DEV_PDC202XX_OLD is not set
-# CONFIG_BLK_DEV_PDC202XX_NEW is not set
-# CONFIG_BLK_DEV_SVWKS is not set
-# CONFIG_BLK_DEV_SIIMAGE is not set
+CONFIG_BLK_DEV_PDC202XX_NEW=y
+CONFIG_BLK_DEV_SVWKS=y
+CONFIG_BLK_DEV_SIIMAGE=y
 # CONFIG_BLK_DEV_SIS5513 is not set
 # CONFIG_BLK_DEV_SLC90E66 is not set
 # CONFIG_BLK_DEV_TRM290 is not set
@@ -695,53 +701,55 @@ CONFIG_IDEDMA_AUTO=y
 #
 # SCSI device support
 #
-# CONFIG_RAID_ATTRS is not set
+CONFIG_RAID_ATTRS=y
 CONFIG_SCSI=y
-# CONFIG_SCSI_PROC_FS is not set
+CONFIG_SCSI_PROC_FS=y
 
 #
 # SCSI support type (disk, tape, CD-ROM)
 #
 CONFIG_BLK_DEV_SD=y
-# CONFIG_CHR_DEV_ST is not set
-# CONFIG_CHR_DEV_OSST is not set
-# CONFIG_BLK_DEV_SR is not set
-# CONFIG_CHR_DEV_SG is not set
-# CONFIG_CHR_DEV_SCH is not set
+CONFIG_CHR_DEV_ST=m
+CONFIG_CHR_DEV_OSST=m
+CONFIG_BLK_DEV_SR=m
+CONFIG_BLK_DEV_SR_VENDOR=y
+CONFIG_CHR_DEV_SG=m
+CONFIG_CHR_DEV_SCH=m
 
 #
 # Some SCSI devices (e.g. CD jukebox) support multiple LUNs
 #
-# CONFIG_SCSI_MULTI_LUN is not set
+CONFIG_SCSI_MULTI_LUN=y
 # CONFIG_SCSI_CONSTANTS is not set
-# CONFIG_SCSI_LOGGING is not set
+CONFIG_SCSI_LOGGING=y
 
 #
 # SCSI Transport Attributes
 #
-CONFIG_SCSI_SPI_ATTRS=m
-CONFIG_SCSI_FC_ATTRS=m
-# CONFIG_SCSI_ISCSI_ATTRS is not set
+CONFIG_SCSI_SPI_ATTRS=y
+# CONFIG_SCSI_FC_ATTRS is not set
+CONFIG_SCSI_ISCSI_ATTRS=m
 CONFIG_SCSI_SAS_ATTRS=m
 
 #
 # SCSI low-level drivers
 #
-# CONFIG_ISCSI_TCP is not set
-# CONFIG_BLK_DEV_3W_XXXX_RAID is not set
-# CONFIG_SCSI_3W_9XXX is not set
+CONFIG_ISCSI_TCP=m
+CONFIG_BLK_DEV_3W_XXXX_RAID=y
+CONFIG_SCSI_3W_9XXX=y
 # CONFIG_SCSI_ACARD is not set
-CONFIG_SCSI_AACRAID=m
+# CONFIG_SCSI_AACRAID is not set
 # CONFIG_SCSI_AIC7XXX is not set
 # CONFIG_SCSI_AIC7XXX_OLD is not set
 # CONFIG_SCSI_AIC79XX is not set
 # CONFIG_SCSI_DPT_I2O is not set
 # CONFIG_SCSI_ADVANSYS is not set
-# CONFIG_MEGARAID_NEWGEN is not set
-CONFIG_MEGARAID_LEGACY=y
+CONFIG_MEGARAID_NEWGEN=y
+CONFIG_MEGARAID_MM=y
+CONFIG_MEGARAID_MAILBOX=y
+# CONFIG_MEGARAID_LEGACY is not set
 # CONFIG_MEGARAID_SAS is not set
 # CONFIG_SCSI_SATA is not set
-# CONFIG_SCSI_HPTIOP is not set
 # CONFIG_SCSI_BUSLOGIC is not set
 # CONFIG_SCSI_DMX3191D is not set
 # CONFIG_SCSI_EATA is not set
@@ -752,7 +760,11 @@ CONFIG_MEGARAID_LEGACY=y
 # CONFIG_SCSI_INIA100 is not set
 # CONFIG_SCSI_PPA is not set
 # CONFIG_SCSI_IMM is not set
-# CONFIG_SCSI_SYM53C8XX_2 is not set
+CONFIG_SCSI_SYM53C8XX_2=y
+CONFIG_SCSI_SYM53C8XX_DMA_ADDRESSING_MODE=1
+CONFIG_SCSI_SYM53C8XX_DEFAULT_TAGS=16
+CONFIG_SCSI_SYM53C8XX_MAX_TAGS=64
+CONFIG_SCSI_SYM53C8XX_MMIO=y
 # CONFIG_SCSI_IPR is not set
 # CONFIG_SCSI_QLOGIC_1280 is not set
 # CONFIG_SCSI_QLA_FC is not set
@@ -768,26 +780,50 @@ CONFIG_MEGARAID_LEGACY=y
 CONFIG_MD=y
 # CONFIG_BLK_DEV_MD is not set
 CONFIG_BLK_DEV_DM=y
-# CONFIG_DM_CRYPT is not set
-# CONFIG_DM_SNAPSHOT is not set
-# CONFIG_DM_MIRROR is not set
-# CONFIG_DM_ZERO is not set
-# CONFIG_DM_MULTIPATH is not set
+CONFIG_DM_CRYPT=y
+CONFIG_DM_SNAPSHOT=y
+CONFIG_DM_MIRROR=y
+CONFIG_DM_ZERO=y
+CONFIG_DM_MULTIPATH=m
+CONFIG_DM_MULTIPATH_EMC=m
 
 #
 # Fusion MPT device support
 #
-CONFIG_FUSION=y
-CONFIG_FUSION_SPI=m
-CONFIG_FUSION_FC=m
-CONFIG_FUSION_SAS=m
-CONFIG_FUSION_MAX_SGE=40
-CONFIG_FUSION_CTL=m
+# CONFIG_FUSION is not set
+# CONFIG_FUSION_SPI is not set
+# CONFIG_FUSION_FC is not set
+# CONFIG_FUSION_SAS is not set
 
 #
 # IEEE 1394 (FireWire) support
 #
-# CONFIG_IEEE1394 is not set
+CONFIG_IEEE1394=m
+
+#
+# Subsystem Options
+#
+# CONFIG_IEEE1394_VERBOSEDEBUG is not set
+CONFIG_IEEE1394_OUI_DB=y
+CONFIG_IEEE1394_EXTRA_CONFIG_ROMS=y
+CONFIG_IEEE1394_CONFIG_ROM_IP1394=y
+# CONFIG_IEEE1394_EXPORT_FULL_API is not set
+
+#
+# Device Drivers
+#
+# CONFIG_IEEE1394_PCILYNX is not set
+CONFIG_IEEE1394_OHCI1394=m
+
+#
+# Protocol Drivers
+#
+CONFIG_IEEE1394_VIDEO1394=m
+CONFIG_IEEE1394_SBP2=m
+# CONFIG_IEEE1394_SBP2_PHYS_DMA is not set
+CONFIG_IEEE1394_ETH1394=m
+CONFIG_IEEE1394_DV1394=m
+CONFIG_IEEE1394_RAWIO=m
 
 #
 # I2O device support
@@ -798,10 +834,11 @@ CONFIG_FUSION_CTL=m
 # Network device support
 #
 CONFIG_NETDEVICES=y
-# CONFIG_DUMMY is not set
-# CONFIG_BONDING is not set
-# CONFIG_EQUALIZER is not set
-# CONFIG_TUN is not set
+CONFIG_DUMMY=m
+CONFIG_BONDING=m
+CONFIG_EQUALIZER=m
+CONFIG_TUN=m
+# CONFIG_NET_SB1000 is not set
 
 #
 # ARCnet devices
@@ -811,61 +848,92 @@ CONFIG_NETDEVICES=y
 #
 # PHY device support
 #
-# CONFIG_PHYLIB is not set
+CONFIG_PHYLIB=y
+
+#
+# MII PHY device drivers
+#
+CONFIG_MARVELL_PHY=y
+CONFIG_DAVICOM_PHY=y
+CONFIG_QSEMI_PHY=y
+CONFIG_LXT_PHY=y
+CONFIG_CICADA_PHY=y
 
 #
 # Ethernet (10 or 100Mbit)
 #
 CONFIG_NET_ETHERNET=y
-CONFIG_MII=y
-# CONFIG_HAPPYMEAL is not set
-# CONFIG_SUNGEM is not set
+CONFIG_MII=m
+CONFIG_HAPPYMEAL=m
+CONFIG_SUNGEM=m
 # CONFIG_CASSINI is not set
-# CONFIG_NET_VENDOR_3COM is not set
+CONFIG_NET_VENDOR_3COM=y
+CONFIG_VORTEX=m
+CONFIG_TYPHOON=m
 
 #
 # Tulip family network device support
 #
-# CONFIG_NET_TULIP is not set
+CONFIG_NET_TULIP=y
+CONFIG_DE2104X=m
+CONFIG_TULIP=m
+CONFIG_TULIP_MWI=y
+CONFIG_TULIP_MMIO=y
+CONFIG_TULIP_NAPI=y
+CONFIG_TULIP_NAPI_HW_MITIGATION=y
+CONFIG_DE4X5=m
+CONFIG_WINBOND_840=m
+CONFIG_DM9102=m
+CONFIG_ULI526X=m
 # CONFIG_HP100 is not set
 CONFIG_NET_PCI=y
-# CONFIG_PCNET32 is not set
+CONFIG_PCNET32=m
 # CONFIG_AMD8111_ETH is not set
 # CONFIG_ADAPTEC_STARFIRE is not set
-# CONFIG_B44 is not set
-# CONFIG_FORCEDETH is not set
+CONFIG_B44=m
+CONFIG_FORCEDETH=m
 # CONFIG_DGRS is not set
 # CONFIG_EEPRO100 is not set
-CONFIG_E100=y
+CONFIG_E100=m
 # CONFIG_FEALNX is not set
 # CONFIG_NATSEMI is not set
 # CONFIG_NE2K_PCI is not set
 # CONFIG_8139CP is not set
-# CONFIG_8139TOO is not set
+CONFIG_8139TOO=m
+# CONFIG_8139TOO_PIO is not set
+# CONFIG_8139TOO_TUNE_TWISTER is not set
+CONFIG_8139TOO_8129=y
+# CONFIG_8139_OLD_RX_RESET is not set
 # CONFIG_SIS900 is not set
 # CONFIG_EPIC100 is not set
 # CONFIG_SUNDANCE is not set
-# CONFIG_TLAN is not set
-# CONFIG_VIA_RHINE is not set
+CONFIG_TLAN=m
+CONFIG_VIA_RHINE=m
+# CONFIG_VIA_RHINE_MMIO is not set
 # CONFIG_NET_POCKET is not set
 
 #
 # Ethernet (1000 Mbit)
 #
-# CONFIG_ACENIC is not set
-# CONFIG_DL2K is not set
-# CONFIG_E1000 is not set
-# CONFIG_NS83820 is not set
-# CONFIG_HAMACHI is not set
-# CONFIG_YELLOWFIN is not set
-# CONFIG_R8169 is not set
-# CONFIG_SIS190 is not set
-# CONFIG_SKGE is not set
-# CONFIG_SKY2 is not set
-# CONFIG_SK98LIN is not set
-# CONFIG_VIA_VELOCITY is not set
-# CONFIG_TIGON3 is not set
-# CONFIG_BNX2 is not set
+CONFIG_ACENIC=m
+CONFIG_ACENIC_OMIT_TIGON_I=y
+CONFIG_DL2K=m
+CONFIG_E1000=m
+CONFIG_E1000_NAPI=y
+# CONFIG_E1000_DISABLE_PACKET_SPLIT is not set
+CONFIG_NS83820=m
+CONFIG_HAMACHI=m
+CONFIG_YELLOWFIN=m
+CONFIG_R8169=m
+CONFIG_R8169_NAPI=y
+CONFIG_R8169_VLAN=y
+CONFIG_SIS190=m
+CONFIG_SKGE=m
+CONFIG_SKY2=m
+CONFIG_SK98LIN=m
+CONFIG_VIA_VELOCITY=m
+CONFIG_TIGON3=m
+CONFIG_BNX2=m
 
 #
 # Ethernet (10000 Mbit)
@@ -873,7 +941,6 @@ CONFIG_E100=y
 # CONFIG_CHELSIO_T1 is not set
 # CONFIG_IXGB is not set
 # CONFIG_S2IO is not set
-# CONFIG_MYRI10GE is not set
 
 #
 # Token Ring devices
@@ -891,8 +958,16 @@ CONFIG_E100=y
 # CONFIG_WAN is not set
 # CONFIG_FDDI is not set
 # CONFIG_HIPPI is not set
-# CONFIG_PLIP is not set
-# CONFIG_PPP is not set
+CONFIG_PLIP=m
+CONFIG_PPP=m
+CONFIG_PPP_MULTILINK=y
+CONFIG_PPP_FILTER=y
+CONFIG_PPP_ASYNC=m
+CONFIG_PPP_SYNC_TTY=m
+CONFIG_PPP_DEFLATE=m
+CONFIG_PPP_BSDCOMP=m
+# CONFIG_PPP_MPPE is not set
+CONFIG_PPPOE=m
 # CONFIG_SLIP is not set
 # CONFIG_NET_FC is not set
 # CONFIG_SHAPER is not set
@@ -920,11 +995,11 @@ CONFIG_INPUT=y
 #
 CONFIG_INPUT_MOUSEDEV=y
 CONFIG_INPUT_MOUSEDEV_PSAUX=y
-CONFIG_INPUT_MOUSEDEV_SCREEN_X=1280
-CONFIG_INPUT_MOUSEDEV_SCREEN_Y=1024
-# CONFIG_INPUT_JOYDEV is not set
+CONFIG_INPUT_MOUSEDEV_SCREEN_X=1024
+CONFIG_INPUT_MOUSEDEV_SCREEN_Y=768
+CONFIG_INPUT_JOYDEV=m
 # CONFIG_INPUT_TSDEV is not set
-CONFIG_INPUT_EVDEV=y
+CONFIG_INPUT_EVDEV=m
 # CONFIG_INPUT_EVBUG is not set
 
 #
@@ -950,11 +1025,11 @@ CONFIG_MOUSE_SERIAL=y
 CONFIG_SERIO=y
 CONFIG_SERIO_I8042=y
 CONFIG_SERIO_SERPORT=y
-# CONFIG_SERIO_CT82C710 is not set
+CONFIG_SERIO_CT82C710=y
 # CONFIG_SERIO_PARKBD is not set
 # CONFIG_SERIO_PCIPS2 is not set
 CONFIG_SERIO_LIBPS2=y
-# CONFIG_SERIO_RAW is not set
+CONFIG_SERIO_RAW=m
 # CONFIG_GAMEPORT is not set
 
 #
@@ -963,7 +1038,6 @@ CONFIG_SERIO_LIBPS2=y
 CONFIG_VT=y
 CONFIG_VT_CONSOLE=y
 CONFIG_HW_CONSOLE=y
-# CONFIG_VT_HW_CONSOLE_BINDING is not set
 # CONFIG_SERIAL_NONSTANDARD is not set
 
 #
@@ -972,8 +1046,9 @@ CONFIG_HW_CONSOLE=y
 CONFIG_SERIAL_8250=y
 CONFIG_SERIAL_8250_CONSOLE=y
 CONFIG_SERIAL_8250_PCI=y
-CONFIG_SERIAL_8250_NR_UARTS=4
-CONFIG_SERIAL_8250_RUNTIME_UARTS=4
+CONFIG_SERIAL_8250_PNP=y
+CONFIG_SERIAL_8250_NR_UARTS=2
+CONFIG_SERIAL_8250_RUNTIME_UARTS=2
 # CONFIG_SERIAL_8250_EXTENDED is not set
 
 #
@@ -985,55 +1060,27 @@ CONFIG_SERIAL_CORE_CONSOLE=y
 CONFIG_UNIX98_PTYS=y
 CONFIG_LEGACY_PTYS=y
 CONFIG_LEGACY_PTY_COUNT=256
-CONFIG_PRINTER=y
-# CONFIG_LP_CONSOLE is not set
-# CONFIG_PPDEV is not set
+CONFIG_PRINTER=m
+CONFIG_LP_CONSOLE=y
+CONFIG_PPDEV=m
 # CONFIG_TIPAR is not set
 
 #
 # IPMI
 #
-# CONFIG_IPMI_HANDLER is not set
+CONFIG_IPMI_HANDLER=y
+# CONFIG_IPMI_PANIC_EVENT is not set
+CONFIG_IPMI_DEVICE_INTERFACE=y
+CONFIG_IPMI_SI=y
+CONFIG_IPMI_WATCHDOG=y
+CONFIG_IPMI_POWEROFF=y
 
 #
 # Watchdog Cards
 #
-CONFIG_WATCHDOG=y
-# CONFIG_WATCHDOG_NOWAYOUT is not set
-
-#
-# Watchdog Device Drivers
-#
-CONFIG_SOFT_WATCHDOG=y
-# CONFIG_ACQUIRE_WDT is not set
-# CONFIG_ADVANTECH_WDT is not set
-# CONFIG_ALIM1535_WDT is not set
-# CONFIG_ALIM7101_WDT is not set
-# CONFIG_SC520_WDT is not set
-# CONFIG_EUROTECH_WDT is not set
-# CONFIG_IB700_WDT is not set
-# CONFIG_IBMASR is not set
-# CONFIG_WAFER_WDT is not set
-# CONFIG_I6300ESB_WDT is not set
-# CONFIG_I8XX_TCO is not set
-# CONFIG_SC1200_WDT is not set
-# CONFIG_60XX_WDT is not set
-# CONFIG_SBC8360_WDT is not set
-# CONFIG_CPU5_WDT is not set
-# CONFIG_W83627HF_WDT is not set
-# CONFIG_W83877F_WDT is not set
-# CONFIG_W83977F_WDT is not set
-# CONFIG_MACHZ_WDT is not set
-# CONFIG_SBC_EPX_C3_WATCHDOG is not set
-
-#
-# PCI-based Watchdog Cards
-#
-# CONFIG_PCIPCWATCHDOG is not set
-CONFIG_WDTPCI=y
-# CONFIG_WDT_501_PCI is not set
-# CONFIG_HW_RANDOM is not set
-CONFIG_NVRAM=y
+# CONFIG_WATCHDOG is not set
+CONFIG_HW_RANDOM=y
+# CONFIG_NVRAM is not set
 CONFIG_RTC=y
 # CONFIG_DTLK is not set
 # CONFIG_R3964 is not set
@@ -1046,11 +1093,11 @@ CONFIG_RTC=y
 # CONFIG_AGP is not set
 # CONFIG_DRM is not set
 # CONFIG_MWAVE is not set
-# CONFIG_PC8736x_GPIO is not set
-# CONFIG_NSC_GPIO is not set
 # CONFIG_CS5535_GPIO is not set
-CONFIG_RAW_DRIVER=m
-CONFIG_MAX_RAW_DEVS=256
+# CONFIG_RAW_DRIVER is not set
+CONFIG_HPET=y
+# CONFIG_HPET_RTC_IRQ is not set
+CONFIG_HPET_MMAP=y
 # CONFIG_HANGCHECK_TIMER is not set
 
 #
@@ -1062,53 +1109,53 @@ CONFIG_MAX_RAW_DEVS=256
 #
 # I2C support
 #
-CONFIG_I2C=y
-CONFIG_I2C_CHARDEV=y
+CONFIG_I2C=m
+CONFIG_I2C_CHARDEV=m
 
 #
 # I2C Algorithms
 #
-CONFIG_I2C_ALGOBIT=y
-# CONFIG_I2C_ALGOPCF is not set
-# CONFIG_I2C_ALGOPCA is not set
+CONFIG_I2C_ALGOBIT=m
+CONFIG_I2C_ALGOPCF=m
+CONFIG_I2C_ALGOPCA=m
 
 #
 # I2C Hardware Bus support
 #
-# CONFIG_I2C_ALI1535 is not set
-# CONFIG_I2C_ALI1563 is not set
-# CONFIG_I2C_ALI15X3 is not set
-# CONFIG_I2C_AMD756 is not set
-# CONFIG_I2C_AMD8111 is not set
-# CONFIG_I2C_I801 is not set
-# CONFIG_I2C_I810 is not set
-# CONFIG_I2C_PIIX4 is not set
-CONFIG_I2C_ISA=y
-# CONFIG_I2C_NFORCE2 is not set
-# CONFIG_I2C_OCORES is not set
-# CONFIG_I2C_PARPORT is not set
-# CONFIG_I2C_PARPORT_LIGHT is not set
-# CONFIG_I2C_PROSAVAGE is not set
-# CONFIG_I2C_SAVAGE4 is not set
-# CONFIG_SCx200_ACB is not set
-# CONFIG_I2C_SIS5595 is not set
-# CONFIG_I2C_SIS630 is not set
-# CONFIG_I2C_SIS96X is not set
-# CONFIG_I2C_STUB is not set
-# CONFIG_I2C_VIA is not set
-CONFIG_I2C_VIAPRO=y
-# CONFIG_I2C_VOODOO3 is not set
-# CONFIG_I2C_PCA_ISA is not set
+CONFIG_I2C_ALI1535=m
+CONFIG_I2C_ALI1563=m
+CONFIG_I2C_ALI15X3=m
+CONFIG_I2C_AMD756=m
+CONFIG_I2C_AMD756_S4882=m
+CONFIG_I2C_AMD8111=m
+CONFIG_I2C_I801=m
+CONFIG_I2C_I810=m
+CONFIG_I2C_PIIX4=m
+CONFIG_I2C_ISA=m
+CONFIG_I2C_NFORCE2=m
+CONFIG_I2C_PARPORT=m
+CONFIG_I2C_PARPORT_LIGHT=m
+CONFIG_I2C_PROSAVAGE=m
+CONFIG_I2C_SAVAGE4=m
+CONFIG_SCx200_ACB=m
+CONFIG_I2C_SIS5595=m
+CONFIG_I2C_SIS630=m
+CONFIG_I2C_SIS96X=m
+CONFIG_I2C_STUB=m
+CONFIG_I2C_VIA=m
+CONFIG_I2C_VIAPRO=m
+CONFIG_I2C_VOODOO3=m
+CONFIG_I2C_PCA_ISA=m
 
 #
 # Miscellaneous I2C Chip support
 #
 # CONFIG_SENSORS_DS1337 is not set
 # CONFIG_SENSORS_DS1374 is not set
-# CONFIG_SENSORS_EEPROM is not set
-# CONFIG_SENSORS_PCF8574 is not set
+CONFIG_SENSORS_EEPROM=m
+CONFIG_SENSORS_PCF8574=m
 # CONFIG_SENSORS_PCA9539 is not set
-# CONFIG_SENSORS_PCF8591 is not set
+CONFIG_SENSORS_PCF8591=m
 # CONFIG_SENSORS_MAX6875 is not set
 # CONFIG_I2C_DEBUG_CORE is not set
 # CONFIG_I2C_DEBUG_ALGO is not set
@@ -1124,52 +1171,50 @@ CONFIG_I2C_VIAPRO=y
 #
 # Dallas's 1-wire bus
 #
+# CONFIG_W1 is not set
 
 #
 # Hardware Monitoring support
 #
 CONFIG_HWMON=y
-CONFIG_HWMON_VID=y
-# CONFIG_SENSORS_ABITUGURU is not set
-# CONFIG_SENSORS_ADM1021 is not set
-# CONFIG_SENSORS_ADM1025 is not set
-# CONFIG_SENSORS_ADM1026 is not set
-# CONFIG_SENSORS_ADM1031 is not set
-# CONFIG_SENSORS_ADM9240 is not set
-# CONFIG_SENSORS_ASB100 is not set
-# CONFIG_SENSORS_ATXP1 is not set
-# CONFIG_SENSORS_DS1621 is not set
-# CONFIG_SENSORS_F71805F is not set
-# CONFIG_SENSORS_FSCHER is not set
-# CONFIG_SENSORS_FSCPOS is not set
-# CONFIG_SENSORS_GL518SM is not set
-# CONFIG_SENSORS_GL520SM is not set
-CONFIG_SENSORS_IT87=y
-# CONFIG_SENSORS_LM63 is not set
-# CONFIG_SENSORS_LM75 is not set
-# CONFIG_SENSORS_LM77 is not set
-# CONFIG_SENSORS_LM78 is not set
-# CONFIG_SENSORS_LM80 is not set
-# CONFIG_SENSORS_LM83 is not set
-# CONFIG_SENSORS_LM85 is not set
-# CONFIG_SENSORS_LM87 is not set
-# CONFIG_SENSORS_LM90 is not set
-# CONFIG_SENSORS_LM92 is not set
-# CONFIG_SENSORS_MAX1619 is not set
-# CONFIG_SENSORS_PC87360 is not set
-# CONFIG_SENSORS_SIS5595 is not set
-# CONFIG_SENSORS_SMSC47M1 is not set
-# CONFIG_SENSORS_SMSC47M192 is not set
-# CONFIG_SENSORS_SMSC47B397 is not set
-# CONFIG_SENSORS_VIA686A is not set
-# CONFIG_SENSORS_VT8231 is not set
-# CONFIG_SENSORS_W83781D is not set
-# CONFIG_SENSORS_W83791D is not set
-# CONFIG_SENSORS_W83792D is not set
-# CONFIG_SENSORS_W83L785TS is not set
-# CONFIG_SENSORS_W83627HF is not set
-# CONFIG_SENSORS_W83627EHF is not set
-# CONFIG_SENSORS_HDAPS is not set
+CONFIG_HWMON_VID=m
+CONFIG_SENSORS_ADM1021=m
+CONFIG_SENSORS_ADM1025=m
+CONFIG_SENSORS_ADM1026=m
+CONFIG_SENSORS_ADM1031=m
+CONFIG_SENSORS_ADM9240=m
+CONFIG_SENSORS_ASB100=m
+CONFIG_SENSORS_ATXP1=m
+CONFIG_SENSORS_DS1621=m
+CONFIG_SENSORS_F71805F=m
+CONFIG_SENSORS_FSCHER=m
+CONFIG_SENSORS_FSCPOS=m
+CONFIG_SENSORS_GL518SM=m
+CONFIG_SENSORS_GL520SM=m
+CONFIG_SENSORS_IT87=m
+CONFIG_SENSORS_LM63=m
+CONFIG_SENSORS_LM75=m
+CONFIG_SENSORS_LM77=m
+CONFIG_SENSORS_LM78=m
+CONFIG_SENSORS_LM80=m
+CONFIG_SENSORS_LM83=m
+CONFIG_SENSORS_LM85=m
+CONFIG_SENSORS_LM87=m
+CONFIG_SENSORS_LM90=m
+CONFIG_SENSORS_LM92=m
+CONFIG_SENSORS_MAX1619=m
+CONFIG_SENSORS_PC87360=m
+CONFIG_SENSORS_SIS5595=m
+CONFIG_SENSORS_SMSC47M1=m
+CONFIG_SENSORS_SMSC47B397=m
+CONFIG_SENSORS_VIA686A=m
+CONFIG_SENSORS_VT8231=m
+CONFIG_SENSORS_W83781D=m
+CONFIG_SENSORS_W83792D=m
+CONFIG_SENSORS_W83L785TS=m
+CONFIG_SENSORS_W83627HF=m
+CONFIG_SENSORS_W83627EHF=m
+CONFIG_SENSORS_HDAPS=m
 # CONFIG_HWMON_DEBUG_CHIP is not set
 
 #
@@ -1187,28 +1232,28 @@ CONFIG_VIDEO_V4L2=y
 # Digital Video Broadcasting Devices
 #
 # CONFIG_DVB is not set
+# CONFIG_USB_DABUSB is not set
 
 #
 # Graphics support
 #
-CONFIG_FIRMWARE_EDID=y
 CONFIG_FB=y
 CONFIG_FB_CFB_FILLRECT=y
 CONFIG_FB_CFB_COPYAREA=y
 CONFIG_FB_CFB_IMAGEBLIT=y
 # CONFIG_FB_MACMODES is not set
-# CONFIG_FB_BACKLIGHT is not set
+CONFIG_FB_FIRMWARE_EDID=y
 CONFIG_FB_MODE_HELPERS=y
-# CONFIG_FB_TILEBLITTING is not set
+CONFIG_FB_TILEBLITTING=y
 # CONFIG_FB_CIRRUS is not set
 # CONFIG_FB_PM2 is not set
 # CONFIG_FB_CYBER2000 is not set
 # CONFIG_FB_ARC is not set
 # CONFIG_FB_ASILIANT is not set
 # CONFIG_FB_IMSTT is not set
-# CONFIG_FB_VGA16 is not set
-# CONFIG_FB_VESA is not set
-# CONFIG_FB_IMAC is not set
+CONFIG_FB_VGA16=y
+CONFIG_FB_VESA=y
+CONFIG_VIDEO_SELECT=y
 # CONFIG_FB_HGA is not set
 # CONFIG_FB_S1D13XXX is not set
 # CONFIG_FB_NVIDIA is not set
@@ -1216,10 +1261,8 @@ CONFIG_FB_MODE_HELPERS=y
 # CONFIG_FB_I810 is not set
 # CONFIG_FB_INTEL is not set
 # CONFIG_FB_MATROX is not set
-CONFIG_FB_RADEON=y
-CONFIG_FB_RADEON_I2C=y
-# CONFIG_FB_RADEON_DEBUG is not set
-# CONFIG_FB_ATY128 is not set
+# CONFIG_FB_RADEON is not set
+CONFIG_FB_ATY128=y
 # CONFIG_FB_ATY is not set
 # CONFIG_FB_SAVAGE is not set
 # CONFIG_FB_SIS is not set
@@ -1236,19 +1279,30 @@ CONFIG_FB_RADEON_I2C=y
 # Console display driver support
 #
 CONFIG_VGA_CONSOLE=y
-# CONFIG_VGACON_SOFT_SCROLLBACK is not set
-CONFIG_VIDEO_SELECT=y
+CONFIG_VGACON_SOFT_SCROLLBACK=y
+CONFIG_VGACON_SOFT_SCROLLBACK_SIZE=256
 CONFIG_DUMMY_CONSOLE=y
 CONFIG_FRAMEBUFFER_CONSOLE=y
 # CONFIG_FRAMEBUFFER_CONSOLE_ROTATION is not set
-# CONFIG_FONTS is not set
+CONFIG_FONTS=y
 CONFIG_FONT_8x8=y
 CONFIG_FONT_8x16=y
+CONFIG_FONT_6x11=y
+# CONFIG_FONT_7x14 is not set
+CONFIG_FONT_PEARL_8x8=y
+CONFIG_FONT_ACORN_8x8=y
+CONFIG_FONT_MINI_4x6=y
+CONFIG_FONT_SUN8x16=y
+CONFIG_FONT_SUN12x22=y
+# CONFIG_FONT_10x18 is not set
 
 #
 # Logo configuration
 #
-# CONFIG_LOGO is not set
+CONFIG_LOGO=y
+CONFIG_LOGO_LINUX_MONO=y
+CONFIG_LOGO_LINUX_VGA16=y
+CONFIG_LOGO_LINUX_CLUT224=y
 # CONFIG_BACKLIGHT_LCD_SUPPORT is not set
 
 #
@@ -1262,10 +1316,132 @@ CONFIG_FONT_8x16=y
 CONFIG_USB_ARCH_HAS_HCD=y
 CONFIG_USB_ARCH_HAS_OHCI=y
 CONFIG_USB_ARCH_HAS_EHCI=y
-# CONFIG_USB is not set
+CONFIG_USB=y
+# CONFIG_USB_DEBUG is not set
+
+#
+# Miscellaneous USB options
+#
+CONFIG_USB_DEVICEFS=y
+# CONFIG_USB_BANDWIDTH is not set
+# CONFIG_USB_DYNAMIC_MINORS is not set
+# CONFIG_USB_SUSPEND is not set
+# CONFIG_USB_OTG is not set
+
+#
+# USB Host Controller Drivers
+#
+CONFIG_USB_EHCI_HCD=y
+# CONFIG_USB_EHCI_SPLIT_ISO is not set
+# CONFIG_USB_EHCI_ROOT_HUB_TT is not set
+# CONFIG_USB_ISP116X_HCD is not set
+CONFIG_USB_OHCI_HCD=y
+# CONFIG_USB_OHCI_BIG_ENDIAN is not set
+CONFIG_USB_OHCI_LITTLE_ENDIAN=y
+CONFIG_USB_UHCI_HCD=y
+# CONFIG_USB_SL811_HCD is not set
+
+#
+# USB Device Class drivers
+#
+CONFIG_USB_ACM=m
+CONFIG_USB_PRINTER=m
 
 #
 # NOTE: USB_STORAGE enables SCSI, and 'SCSI disk support'
+#
+
+#
+# may also be needed; see USB_STORAGE Help for more information
+#
+CONFIG_USB_STORAGE=m
+# CONFIG_USB_STORAGE_DEBUG is not set
+CONFIG_USB_STORAGE_DATAFAB=y
+CONFIG_USB_STORAGE_FREECOM=y
+CONFIG_USB_STORAGE_ISD200=y
+CONFIG_USB_STORAGE_DPCM=y
+# CONFIG_USB_STORAGE_USBAT is not set
+CONFIG_USB_STORAGE_SDDR09=y
+CONFIG_USB_STORAGE_SDDR55=y
+CONFIG_USB_STORAGE_JUMPSHOT=y
+# CONFIG_USB_STORAGE_ALAUDA is not set
+# CONFIG_USB_LIBUSUAL is not set
+
+#
+# USB Input Devices
+#
+CONFIG_USB_HID=y
+CONFIG_USB_HIDINPUT=y
+# CONFIG_USB_HIDINPUT_POWERBOOK is not set
+# CONFIG_HID_FF is not set
+CONFIG_USB_HIDDEV=y
+CONFIG_USB_AIPTEK=m
+CONFIG_USB_WACOM=m
+# CONFIG_USB_ACECAD is not set
+CONFIG_USB_KBTAB=m
+CONFIG_USB_POWERMATE=m
+# CONFIG_USB_TOUCHSCREEN is not set
+# CONFIG_USB_YEALINK is not set
+# CONFIG_USB_XPAD is not set
+# CONFIG_USB_ATI_REMOTE is not set
+# CONFIG_USB_ATI_REMOTE2 is not set
+# CONFIG_USB_KEYSPAN_REMOTE is not set
+# CONFIG_USB_APPLETOUCH is not set
+
+#
+# USB Imaging devices
+#
+CONFIG_USB_MDC800=m
+CONFIG_USB_MICROTEK=m
+
+#
+# USB Network Adapters
+#
+CONFIG_USB_CATC=m
+CONFIG_USB_KAWETH=m
+CONFIG_USB_PEGASUS=m
+CONFIG_USB_RTL8150=m
+CONFIG_USB_USBNET=m
+CONFIG_USB_NET_AX8817X=m
+CONFIG_USB_NET_CDCETHER=m
+# CONFIG_USB_NET_GL620A is not set
+CONFIG_USB_NET_NET1080=m
+# CONFIG_USB_NET_PLUSB is not set
+# CONFIG_USB_NET_RNDIS_HOST is not set
+# CONFIG_USB_NET_CDC_SUBSET is not set
+CONFIG_USB_NET_ZAURUS=m
+CONFIG_USB_MON=y
+
+#
+# USB port drivers
+#
+CONFIG_USB_USS720=m
+
+#
+# USB Serial Converter support
+#
+# CONFIG_USB_SERIAL is not set
+
+#
+# USB Miscellaneous drivers
+#
+# CONFIG_USB_EMI62 is not set
+# CONFIG_USB_EMI26 is not set
+# CONFIG_USB_AUERSWALD is not set
+# CONFIG_USB_RIO500 is not set
+# CONFIG_USB_LEGOTOWER is not set
+# CONFIG_USB_LCD is not set
+# CONFIG_USB_LED is not set
+# CONFIG_USB_CYTHERM is not set
+# CONFIG_USB_PHIDGETKIT is not set
+# CONFIG_USB_PHIDGETSERVO is not set
+# CONFIG_USB_IDMOUSE is not set
+# CONFIG_USB_SISUSBVGA is not set
+# CONFIG_USB_LD is not set
+# CONFIG_USB_TEST is not set
+
+#
+# USB DSL modem support
 #
 
 #
@@ -1299,25 +1475,45 @@ CONFIG_USB_ARCH_HAS_EHCI=y
 #
 # EDAC - error detection and reporting (RAS) (EXPERIMENTAL)
 #
-# CONFIG_EDAC is not set
+CONFIG_EDAC=y
+
+#
+# Reporting subsystems
+#
+# CONFIG_EDAC_DEBUG is not set
+CONFIG_EDAC_MM_EDAC=y
+# CONFIG_EDAC_AMD76X is not set
+CONFIG_EDAC_E7XXX=y
+CONFIG_EDAC_E752X=y
+CONFIG_EDAC_I82875P=y
+CONFIG_EDAC_I82860=y
+# CONFIG_EDAC_R82600 is not set
+CONFIG_EDAC_POLL=y
 
 #
 # Real Time Clock
 #
-# CONFIG_RTC_CLASS is not set
+CONFIG_RTC_LIB=y
+CONFIG_RTC_CLASS=y
+CONFIG_RTC_HCTOSYS=y
+CONFIG_RTC_HCTOSYS_DEVICE="rtc0"
 
 #
-# DMA Engine support
+# RTC interfaces
 #
-# CONFIG_DMA_ENGINE is not set
+CONFIG_RTC_INTF_SYSFS=y
+CONFIG_RTC_INTF_PROC=y
+CONFIG_RTC_INTF_DEV=y
 
 #
-# DMA Clients
+# RTC drivers
 #
-
-#
-# DMA Devices
-#
+CONFIG_RTC_DRV_X1205=m
+CONFIG_RTC_DRV_DS1672=m
+CONFIG_RTC_DRV_PCF8563=m
+CONFIG_RTC_DRV_RS5C372=m
+CONFIG_RTC_DRV_M48T86=y
+CONFIG_RTC_DRV_TEST=y
 
 #
 # File systems
@@ -1325,56 +1521,62 @@ CONFIG_USB_ARCH_HAS_EHCI=y
 CONFIG_EXT2_FS=y
 # CONFIG_EXT2_FS_XATTR is not set
 # CONFIG_EXT2_FS_XIP is not set
-CONFIG_EXT3_FS=y
-CONFIG_EXT3_FS_XATTR=y
-# CONFIG_EXT3_FS_POSIX_ACL is not set
-# CONFIG_EXT3_FS_SECURITY is not set
-CONFIG_JBD=y
+CONFIG_EXT3_FS=m
+# CONFIG_EXT3_FS_XATTR is not set
+CONFIG_JBD=m
 # CONFIG_JBD_DEBUG is not set
-CONFIG_FS_MBCACHE=y
-CONFIG_REISERFS_FS=m
+CONFIG_REISERFS_FS=y
 # CONFIG_REISERFS_CHECK is not set
-# CONFIG_REISERFS_PROC_INFO is not set
-# CONFIG_REISERFS_FS_XATTR is not set
+CONFIG_REISERFS_PROC_INFO=y
+CONFIG_REISERFS_FS_XATTR=y
+CONFIG_REISERFS_FS_POSIX_ACL=y
+# CONFIG_REISERFS_FS_SECURITY is not set
 CONFIG_JFS_FS=m
-# CONFIG_JFS_POSIX_ACL is not set
+CONFIG_JFS_POSIX_ACL=y
 # CONFIG_JFS_SECURITY is not set
 # CONFIG_JFS_DEBUG is not set
-CONFIG_JFS_STATISTICS=y
-# CONFIG_FS_POSIX_ACL is not set
-CONFIG_XFS_FS=m
-# CONFIG_XFS_QUOTA is not set
+# CONFIG_JFS_STATISTICS is not set
+CONFIG_FS_POSIX_ACL=y
+CONFIG_XFS_FS=y
+CONFIG_XFS_EXPORT=y
+CONFIG_XFS_QUOTA=y
 # CONFIG_XFS_SECURITY is not set
-# CONFIG_XFS_POSIX_ACL is not set
+CONFIG_XFS_POSIX_ACL=y
 # CONFIG_XFS_RT is not set
 # CONFIG_OCFS2_FS is not set
 # CONFIG_MINIX_FS is not set
-# CONFIG_ROMFS_FS is not set
-# CONFIG_INOTIFY is not set
-# CONFIG_QUOTA is not set
+CONFIG_ROMFS_FS=y
+CONFIG_INOTIFY=y
+CONFIG_QUOTA=y
+# CONFIG_QFMT_V1 is not set
+CONFIG_QFMT_V2=y
+CONFIG_QUOTACTL=y
 CONFIG_DNOTIFY=y
 # CONFIG_AUTOFS_FS is not set
-# CONFIG_AUTOFS4_FS is not set
-# CONFIG_FUSE_FS is not set
+CONFIG_AUTOFS4_FS=y
+CONFIG_FUSE_FS=y
 
 #
 # CD-ROM/DVD Filesystems
 #
-CONFIG_ISO9660_FS=y
+CONFIG_ISO9660_FS=m
 CONFIG_JOLIET=y
 CONFIG_ZISOFS=y
-CONFIG_ZISOFS_FS=y
-# CONFIG_UDF_FS is not set
+CONFIG_ZISOFS_FS=m
+CONFIG_UDF_FS=m
+CONFIG_UDF_NLS=y
 
 #
 # DOS/FAT/NT Filesystems
 #
-CONFIG_FAT_FS=y
-# CONFIG_MSDOS_FS is not set
-CONFIG_VFAT_FS=y
-CONFIG_FAT_DEFAULT_CODEPAGE=850
+CONFIG_FAT_FS=m
+CONFIG_MSDOS_FS=m
+CONFIG_VFAT_FS=m
+CONFIG_FAT_DEFAULT_CODEPAGE=437
 CONFIG_FAT_DEFAULT_IOCHARSET="iso8859-1"
-# CONFIG_NTFS_FS is not set
+CONFIG_NTFS_FS=m
+# CONFIG_NTFS_DEBUG is not set
+CONFIG_NTFS_RW=y
 
 #
 # Pseudo filesystems
@@ -1383,10 +1585,10 @@ CONFIG_PROC_FS=y
 CONFIG_PROC_KCORE=y
 CONFIG_SYSFS=y
 CONFIG_TMPFS=y
-# CONFIG_HUGETLBFS is not set
-# CONFIG_HUGETLB_PAGE is not set
+CONFIG_HUGETLBFS=y
+CONFIG_HUGETLB_PAGE=y
 CONFIG_RAMFS=y
-# CONFIG_CONFIGFS_FS is not set
+CONFIG_CONFIGFS_FS=y
 
 #
 # Miscellaneous filesystems
@@ -1408,16 +1610,43 @@ CONFIG_RAMFS=y
 #
 # Network File Systems
 #
-# CONFIG_NFS_FS is not set
-# CONFIG_NFSD is not set
-# CONFIG_SMB_FS is not set
-CONFIG_CIFS=y
-# CONFIG_CIFS_STATS is not set
-# CONFIG_CIFS_WEAK_PW_HASH is not set
-# CONFIG_CIFS_XATTR is not set
-# CONFIG_CIFS_DEBUG2 is not set
+CONFIG_NFS_FS=m
+CONFIG_NFS_V3=y
+CONFIG_NFS_V3_ACL=y
+# CONFIG_NFS_V4 is not set
+# CONFIG_NFS_DIRECTIO is not set
+CONFIG_NFSD=y
+CONFIG_NFSD_V2_ACL=y
+CONFIG_NFSD_V3=y
+CONFIG_NFSD_V3_ACL=y
+# CONFIG_NFSD_V4 is not set
+CONFIG_NFSD_TCP=y
+CONFIG_LOCKD=y
+CONFIG_LOCKD_V4=y
+CONFIG_EXPORTFS=y
+CONFIG_NFS_ACL_SUPPORT=y
+CONFIG_NFS_COMMON=y
+CONFIG_SUNRPC=y
+# CONFIG_RPCSEC_GSS_KRB5 is not set
+# CONFIG_RPCSEC_GSS_SPKM3 is not set
+CONFIG_SMB_FS=m
+CONFIG_SMB_NLS_DEFAULT=y
+CONFIG_SMB_NLS_REMOTE="cp437"
+CONFIG_CIFS=m
+CONFIG_CIFS_STATS=y
+# CONFIG_CIFS_STATS2 is not set
+CONFIG_CIFS_XATTR=y
+CONFIG_CIFS_POSIX=y
 # CONFIG_CIFS_EXPERIMENTAL is not set
-# CONFIG_NCP_FS is not set
+CONFIG_NCP_FS=m
+CONFIG_NCPFS_PACKET_SIGNING=y
+CONFIG_NCPFS_IOCTL_LOCKING=y
+CONFIG_NCPFS_STRONG=y
+CONFIG_NCPFS_NFS_NS=y
+CONFIG_NCPFS_OS2_NS=y
+CONFIG_NCPFS_SMALLDOS=y
+CONFIG_NCPFS_NLS=y
+# CONFIG_NCPFS_EXTRAS is not set
 # CONFIG_CODA_FS is not set
 # CONFIG_AFS_FS is not set
 # CONFIG_9P_FS is not set
@@ -1436,7 +1665,8 @@ CONFIG_MSDOS_PARTITION=y
 # CONFIG_MINIX_SUBPARTITION is not set
 # CONFIG_SOLARIS_X86_PARTITION is not set
 # CONFIG_UNIXWARE_DISKLABEL is not set
-# CONFIG_LDM_PARTITION is not set
+CONFIG_LDM_PARTITION=y
+# CONFIG_LDM_DEBUG is not set
 # CONFIG_SGI_PARTITION is not set
 # CONFIG_ULTRIX_PARTITION is not set
 # CONFIG_SUN_PARTITION is not set
@@ -1446,79 +1676,70 @@ CONFIG_MSDOS_PARTITION=y
 #
 # Native Language Support
 #
-CONFIG_NLS=y
-CONFIG_NLS_DEFAULT="iso8859-15"
-# CONFIG_NLS_CODEPAGE_437 is not set
-# CONFIG_NLS_CODEPAGE_737 is not set
-# CONFIG_NLS_CODEPAGE_775 is not set
-CONFIG_NLS_CODEPAGE_850=y
-# CONFIG_NLS_CODEPAGE_852 is not set
-# CONFIG_NLS_CODEPAGE_855 is not set
-# CONFIG_NLS_CODEPAGE_857 is not set
-# CONFIG_NLS_CODEPAGE_860 is not set
-# CONFIG_NLS_CODEPAGE_861 is not set
-# CONFIG_NLS_CODEPAGE_862 is not set
-# CONFIG_NLS_CODEPAGE_863 is not set
-# CONFIG_NLS_CODEPAGE_864 is not set
-# CONFIG_NLS_CODEPAGE_865 is not set
-# CONFIG_NLS_CODEPAGE_866 is not set
-# CONFIG_NLS_CODEPAGE_869 is not set
-# CONFIG_NLS_CODEPAGE_936 is not set
-# CONFIG_NLS_CODEPAGE_950 is not set
-# CONFIG_NLS_CODEPAGE_932 is not set
-# CONFIG_NLS_CODEPAGE_949 is not set
-# CONFIG_NLS_CODEPAGE_874 is not set
-# CONFIG_NLS_ISO8859_8 is not set
-# CONFIG_NLS_CODEPAGE_1250 is not set
-# CONFIG_NLS_CODEPAGE_1251 is not set
-# CONFIG_NLS_ASCII is not set
-CONFIG_NLS_ISO8859_1=y
-# CONFIG_NLS_ISO8859_2 is not set
-# CONFIG_NLS_ISO8859_3 is not set
-# CONFIG_NLS_ISO8859_4 is not set
-# CONFIG_NLS_ISO8859_5 is not set
-# CONFIG_NLS_ISO8859_6 is not set
-# CONFIG_NLS_ISO8859_7 is not set
-# CONFIG_NLS_ISO8859_9 is not set
-# CONFIG_NLS_ISO8859_13 is not set
-# CONFIG_NLS_ISO8859_14 is not set
-CONFIG_NLS_ISO8859_15=y
-# CONFIG_NLS_KOI8_R is not set
-# CONFIG_NLS_KOI8_U is not set
-CONFIG_NLS_UTF8=y
+CONFIG_NLS=m
+CONFIG_NLS_DEFAULT="iso8859-1"
+CONFIG_NLS_CODEPAGE_437=m
+CONFIG_NLS_CODEPAGE_737=m
+CONFIG_NLS_CODEPAGE_775=m
+CONFIG_NLS_CODEPAGE_850=m
+CONFIG_NLS_CODEPAGE_852=m
+CONFIG_NLS_CODEPAGE_855=m
+CONFIG_NLS_CODEPAGE_857=m
+CONFIG_NLS_CODEPAGE_860=m
+CONFIG_NLS_CODEPAGE_861=m
+CONFIG_NLS_CODEPAGE_862=m
+CONFIG_NLS_CODEPAGE_863=m
+CONFIG_NLS_CODEPAGE_864=m
+CONFIG_NLS_CODEPAGE_865=m
+CONFIG_NLS_CODEPAGE_866=m
+CONFIG_NLS_CODEPAGE_869=m
+CONFIG_NLS_CODEPAGE_936=m
+CONFIG_NLS_CODEPAGE_950=m
+CONFIG_NLS_CODEPAGE_932=m
+CONFIG_NLS_CODEPAGE_949=m
+CONFIG_NLS_CODEPAGE_874=m
+CONFIG_NLS_ISO8859_8=m
+CONFIG_NLS_CODEPAGE_1250=m
+CONFIG_NLS_CODEPAGE_1251=m
+CONFIG_NLS_ASCII=m
+CONFIG_NLS_ISO8859_1=m
+CONFIG_NLS_ISO8859_2=m
+CONFIG_NLS_ISO8859_3=m
+CONFIG_NLS_ISO8859_4=m
+CONFIG_NLS_ISO8859_5=m
+CONFIG_NLS_ISO8859_6=m
+CONFIG_NLS_ISO8859_7=m
+CONFIG_NLS_ISO8859_9=m
+CONFIG_NLS_ISO8859_13=m
+CONFIG_NLS_ISO8859_14=m
+CONFIG_NLS_ISO8859_15=m
+CONFIG_NLS_KOI8_R=m
+CONFIG_NLS_KOI8_U=m
+CONFIG_NLS_UTF8=m
 
 #
 # Instrumentation Support
 #
-CONFIG_PROFILING=y
-CONFIG_OPROFILE=m
+# CONFIG_PROFILING is not set
 # CONFIG_KPROBES is not set
 
 #
 # Kernel hacking
 #
-CONFIG_TRACE_IRQFLAGS_SUPPORT=y
-# CONFIG_PRINTK_TIME is not set
+CONFIG_PRINTK_TIME=y
 CONFIG_MAGIC_SYSRQ=y
-CONFIG_UNUSED_SYMBOLS=y
 CONFIG_DEBUG_KERNEL=y
-CONFIG_LOG_BUF_SHIFT=14
-CONFIG_DETECT_SOFTLOCKUP=y
+CONFIG_LOG_BUF_SHIFT=17
+# CONFIG_DETECT_SOFTLOCKUP is not set
 # CONFIG_SCHEDSTATS is not set
 # CONFIG_DEBUG_SLAB is not set
-# CONFIG_DEBUG_RT_MUTEXES is not set
-# CONFIG_RT_MUTEX_TESTER is not set
-# CONFIG_DEBUG_SPINLOCK is not set
 # CONFIG_DEBUG_MUTEXES is not set
-# CONFIG_DEBUG_RWSEMS is not set
-# CONFIG_DEBUG_LOCK_ALLOC is not set
-# CONFIG_PROVE_LOCKING is not set
+# CONFIG_DEBUG_SPINLOCK is not set
 # CONFIG_DEBUG_SPINLOCK_SLEEP is not set
-# CONFIG_DEBUG_LOCKING_API_SELFTESTS is not set
 # CONFIG_DEBUG_KOBJECT is not set
 # CONFIG_DEBUG_HIGHMEM is not set
 CONFIG_DEBUG_BUGVERBOSE=y
-CONFIG_DEBUG_INFO=y
+# CONFIG_DEBUG_INFO is not set
 # CONFIG_DEBUG_FS is not set
 # CONFIG_DEBUG_VM is not set
 # CONFIG_FRAME_POINTER is not set
@@ -1528,7 +1749,7 @@ CONFIG_FORCED_INLINING=y
 CONFIG_EARLY_PRINTK=y
 # CONFIG_DEBUG_STACKOVERFLOW is not set
 # CONFIG_DEBUG_STACK_USAGE is not set
-# CONFIG_DEBUG_PAGEALLOC is not set
+CONFIG_STACK_BACKTRACE_COLS=2
 # CONFIG_DEBUG_RODATA is not set
 # CONFIG_4KSTACKS is not set
 CONFIG_X86_FIND_SMP_CONFIG=y
@@ -1539,26 +1760,62 @@ CONFIG_DOUBLEFAULT=y
 # Security options
 #
 # CONFIG_KEYS is not set
-# CONFIG_SECURITY is not set
+CONFIG_SECURITY=y
+CONFIG_SECURITY_NETWORK=y
+CONFIG_SECURITY_NETWORK_XFRM=y
+CONFIG_SECURITY_CAPABILITIES=y
+# CONFIG_SECURITY_ROOTPLUG is not set
+# CONFIG_SECURITY_SECLVL is not set
 
 #
 # Cryptographic options
 #
-# CONFIG_CRYPTO is not set
+CONFIG_CRYPTO=y
+CONFIG_CRYPTO_HMAC=y
+CONFIG_CRYPTO_NULL=m
+CONFIG_CRYPTO_MD4=m
+CONFIG_CRYPTO_MD5=m
+CONFIG_CRYPTO_SHA1=m
+CONFIG_CRYPTO_SHA256=m
+CONFIG_CRYPTO_SHA512=m
+CONFIG_CRYPTO_WP512=m
+CONFIG_CRYPTO_TGR192=m
+CONFIG_CRYPTO_DES=m
+CONFIG_CRYPTO_BLOWFISH=m
+CONFIG_CRYPTO_TWOFISH=m
+CONFIG_CRYPTO_SERPENT=m
+CONFIG_CRYPTO_AES=m
+CONFIG_CRYPTO_AES_586=m
+CONFIG_CRYPTO_CAST5=m
+CONFIG_CRYPTO_CAST6=m
+CONFIG_CRYPTO_TEA=m
+CONFIG_CRYPTO_ARC4=m
+CONFIG_CRYPTO_KHAZAD=m
+CONFIG_CRYPTO_ANUBIS=m
+CONFIG_CRYPTO_DEFLATE=m
+CONFIG_CRYPTO_MICHAEL_MIC=m
+CONFIG_CRYPTO_CRC32C=m
+CONFIG_CRYPTO_TEST=m
 
 #
 # Hardware crypto devices
 #
+CONFIG_CRYPTO_DEV_PADLOCK=m
+# CONFIG_CRYPTO_DEV_PADLOCK_AES is not set
 
 #
 # Library routines
 #
-# CONFIG_CRC_CCITT is not set
-# CONFIG_CRC16 is not set
+CONFIG_CRC_CCITT=m
+CONFIG_CRC16=m
 CONFIG_CRC32=y
-# CONFIG_LIBCRC32C is not set
-CONFIG_ZLIB_INFLATE=y
-CONFIG_PLIST=y
+CONFIG_LIBCRC32C=m
+CONFIG_ZLIB_INFLATE=m
+CONFIG_ZLIB_DEFLATE=m
+CONFIG_TEXTSEARCH=y
+CONFIG_TEXTSEARCH_KMP=m
+CONFIG_TEXTSEARCH_BM=m
+CONFIG_TEXTSEARCH_FSM=m
 CONFIG_GENERIC_HARDIRQS=y
 CONFIG_GENERIC_IRQ_PROBE=y
 CONFIG_GENERIC_PENDING_IRQ=y
@@ -1568,5 +1825,278 @@ CONFIG_X86_BIOS_REBOOT=y
 CONFIG_X86_TRAMPOLINE=y
 CONFIG_KTIME_SCALAR=y
 
---=-fKqp9TFoVsNJJKlRnAtU--
+--------------090108080107040602050808
+Content-Type: text/plain; x-mac-type="54455854"; x-mac-creator="21526368";
+ name="opsis-errors.log"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="opsis-errors.log"
 
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid: aborting-39100947 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid abort: scsi cmd:39100947, do now own
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid: aborting-39100948 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid abort: scsi cmd:39100948, do now own
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid: aborting-39100949 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid abort: scsi cmd:39100949, do now own
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid: aborting-39100950 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid abort: 39100950:50[255:129], fw owner
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid: aborting-39100951 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid abort: 39100951:65[255:129], fw owner
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid: aborting-39100952 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid abort: 39100952:72[255:129], fw owner
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid: aborting-39100953 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid abort: 39100953:51[255:129], fw owner
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid: aborting-39100954 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid abort: 39100954:42[255:129], fw owner
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid: aborting-39100955 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid abort: 39100955:57[255:129], fw owner
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid: aborting-39100956 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid abort: 39100956:112[255:129], fw owner
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid: aborting-39100957 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid abort: 39100957:88[255:129], fw owner
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid: aborting-39100958 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid abort: 39100958:92[255:129], fw owner
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid: aborting-39100959 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid abort: 39100959:21[255:129], fw owner
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid: aborting-39100960 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid abort: 39100960:27[255:129], fw owner
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid: aborting-39100961 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid abort: 39100961:22[255:129], fw owner
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid: aborting-39100962 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid abort: 39100962:71[255:129], fw owner
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid: aborting-39100963 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid abort: 39100963:127[255:129], fw owner
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid: aborting-39100964 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid abort: 39100964:17[255:129], fw owner
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid: aborting-39100965 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid abort: 39100965:62[255:129], fw owner
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid: aborting-39100966 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid abort: 39100966:61[255:129], fw owner
+Aug 21 10:30:01 zipper kernel: [18488589.944000] megaraid: 17 outstanding commands. Max wait 300 sec
+Aug 21 10:30:01 zipper kernel: [18488589.948000] megaraid mbox: Wait for 17 commands to complete:300
+Aug 21 10:30:06 zipper kernel: [18488594.968000] megaraid mbox: Wait for 12 commands to complete:295
+Aug 21 10:30:11 zipper kernel: [18488599.988000] megaraid mbox: Wait for 4 commands to complete:290
+Aug 21 10:30:14 zipper kernel: [18488603.000000] megaraid mbox: reset sequence completed sucessfully
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid: aborting-39101629 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid abort: scsi cmd:39101629, do now own
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid: aborting-39101630 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid abort: scsi cmd:39101630, do now own
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid: aborting-39101631 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid abort: scsi cmd:39101631, do now own
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid: aborting-39101632 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid abort: 39101632:110[255:129], fw owner
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid: aborting-39101633 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid abort: 39101633:56[255:129], fw owner
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid: aborting-39101634 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid abort: 39101634:54[255:129], fw owner
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid: aborting-39101635 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid abort: 39101635:106[255:129], fw owner
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid: aborting-39101636 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid abort: 39101636:1[255:129], fw owner
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid: aborting-39101637 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid abort: 39101637:32[255:129], fw owner
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid: aborting-39101638 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid abort: 39101638:115[255:129], fw owner
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid: aborting-39101639 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid abort: 39101639:12[255:129], fw owner
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid: aborting-39101640 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid abort: 39101640:126[255:129], fw owner
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid: aborting-39101641 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid abort: 39101641:91[255:129], fw owner
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid: aborting-39101642 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid abort: 39101642:60[255:129], fw owner
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid: aborting-39101643 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid abort: 39101643:16[255:129], fw owner
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid: aborting-39101644 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid abort: 39101644:121[255:129], fw owner
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid: aborting-39101645 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid abort: 39101645:123[255:129], fw owner
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid: aborting-39101646 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid abort: 39101646:124[255:129], fw owner
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid: aborting-39101647 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid abort: 39101647:102[255:129], fw owner
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid: aborting-39101648 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid abort: 39101648:78[255:129], fw owner
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid: aborting-39101649 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid abort: 39101649:19[255:129], fw owner
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid: aborting-39101650 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid abort: 39101650:120[255:129], fw owner
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid: aborting-39101651 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid abort: 39101651:10[255:129], fw owner
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid: aborting-39101652 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid abort: 39101652:105[255:129], fw owner
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid: aborting-39101653 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid abort: 39101653:73[255:129], fw owner
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid: aborting-39101654 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid abort: 39101654:36[255:129], fw owner
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid: aborting-39101655 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid abort: 39101655:84[255:129], fw owner
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid: aborting-39101656 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid abort: 39101656:97[255:129], fw owner
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid: aborting-39101662 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid abort: 39101662:17[255:129], fw owner
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid: aborting-39101663 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid abort: 39101663:127[255:129], fw owner
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid: aborting-39101664 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid abort: 39101664:61[255:129], fw owner
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid: aborting-39101674 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid abort: 39101674:71[255:129], fw owner
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid: 29 outstanding commands. Max wait 300 sec
+Aug 21 10:30:51 zipper kernel: [18488640.016000] megaraid mbox: Wait for 29 commands to complete:300
+Aug 21 10:30:56 zipper kernel: [18488645.036000] megaraid mbox: Wait for 23 commands to complete:295
+Aug 21 10:31:01 zipper kernel: [18488650.056000] megaraid mbox: Wait for 16 commands to complete:290
+Aug 21 10:31:06 zipper kernel: [18488655.076000] megaraid mbox: Wait for 11 commands to complete:285
+Aug 21 10:31:11 zipper kernel: [18488660.096000] megaraid mbox: Wait for 5 commands to complete:280
+Aug 21 10:31:15 zipper kernel: [18488664.112000] megaraid mbox: reset sequence completed sucessfully
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid: aborting-39101843 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid abort: scsi cmd:39101843, do now own
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid: aborting-39101844 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid abort: 39101844:121[255:129], fw owner
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid: aborting-39101845 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid abort: 39101845:72[255:129], fw owner
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid: aborting-39101846 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid abort: 39101846:67[255:129], fw owner
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid: aborting-39101847 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid abort: 39101847:69[255:129], fw owner
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid: aborting-39101848 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid abort: 39101848:85[255:129], fw owner
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid: aborting-39101849 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid abort: 39101849:23[255:129], fw owner
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid: aborting-39101850 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid abort: 39101850:113[255:129], fw owner
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid: aborting-39101851 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid abort: 39101851:22[255:129], fw owner
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid: aborting-39101852 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid abort: 39101852:27[255:129], fw owner
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid: aborting-39101853 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid abort: 39101853:25[255:129], fw owner
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid: aborting-39101854 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid abort: 39101854:42[255:129], fw owner
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid: aborting-39101855 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid abort: 39101855:57[255:129], fw owner
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid: aborting-39101856 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid abort: 39101856:4[255:129], fw owner
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid: aborting-39101857 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid abort: 39101857:52[255:129], fw owner
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid: aborting-39101858 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid abort: 39101858:7[255:129], fw owner
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid: aborting-39101859 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid abort: 39101859:81[255:129], fw owner
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid: aborting-39101860 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid abort: 39101860:75[255:129], fw owner
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid: aborting-39101861 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid abort: 39101861:68[255:129], fw owner
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid: aborting-39101862 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid abort: 39101862:116[255:129], fw owner
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid: aborting-39101863 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid abort: 39101863:107[255:129], fw owner
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid: aborting-39101864 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid abort: 39101864:100[255:129], fw owner
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid: aborting-39101865 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid abort: 39101865:111[255:129], fw owner
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid: aborting-39101866 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid abort: 39101866:83[255:129], fw owner
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid: aborting-39101867 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid abort: 39101867:30[255:129], fw owner
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid: aborting-39101868 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid abort: 39101868:29[255:129], fw owner
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid: aborting-39101869 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid abort: 39101869:51[255:129], fw owner
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid: aborting-39101870 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid abort: 39101870:82[255:129], fw owner
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid: aborting-39101885 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid abort: 39101885:17[255:129], fw owner
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid: aborting-39101886 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid abort: 39101886:61[255:129], fw owner
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid: aborting-39101887 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid abort: 39101887:127[255:129], fw owner
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid: aborting-39101888 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid abort: 39101888:84[255:129], fw owner
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid: 31 outstanding commands. Max wait 300 sec
+Aug 21 10:31:54 zipper kernel: [18488703.324000] megaraid mbox: Wait for 31 commands to complete:300
+Aug 21 10:31:59 zipper kernel: [18488708.344000] megaraid mbox: Wait for 22 commands to complete:295
+Aug 21 10:32:04 zipper kernel: [18488713.364000] megaraid mbox: Wait for 17 commands to complete:290
+Aug 21 10:32:09 zipper kernel: [18488718.384000] megaraid mbox: Wait for 11 commands to complete:285
+Aug 21 10:32:14 zipper kernel: [18488723.404000] megaraid mbox: Wait for 6 commands to complete:280
+Aug 21 10:32:19 zipper kernel: [18488728.424000] megaraid mbox: Wait for 0 commands to complete:275
+Aug 21 10:32:19 zipper kernel: [18488728.424000] megaraid mbox: reset sequence completed sucessfully
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid: aborting-39102060 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid abort: scsi cmd:39102060, do now own
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid: aborting-39102061 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid abort: scsi cmd:39102061, do now own
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid: aborting-39102062 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid abort: scsi cmd:39102062, do now own
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid: aborting-39102063 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid abort: scsi cmd:39102063, do now own
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid: aborting-39102064 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid abort: scsi cmd:39102064, do now own
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid: aborting-39102065 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid abort: scsi cmd:39102065, do now own
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid: aborting-39102066 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid abort: scsi cmd:39102066, do now own
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid: aborting-39102067 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid abort: scsi cmd:39102067, do now own
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid: aborting-39102068 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid abort: scsi cmd:39102068, do now own
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid: aborting-39102069 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid abort: scsi cmd:39102069, do now own
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid: aborting-39102070 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid abort: 39102070:16[255:129], fw owner
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid: aborting-39102071 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid abort: 39102071:53[255:129], fw owner
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid: aborting-39102072 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid abort: 39102072:40[255:129], fw owner
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid: aborting-39102073 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid abort: 39102073:70[255:129], fw owner
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid: aborting-39102074 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid abort: 39102074:19[255:129], fw owner
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid: aborting-39102075 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid abort: 39102075:9[255:129], fw owner
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid: aborting-39102076 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid abort: 39102076:110[255:129], fw owner
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid: aborting-39102077 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid abort: 39102077:92[255:129], fw owner
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid: aborting-39102078 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid abort: 39102078:59[255:129], fw owner
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid: aborting-39102079 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid abort: 39102079:93[255:129], fw owner
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid: aborting-39102080 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid abort: 39102080:35[255:129], fw owner
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid: aborting-39102081 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid abort: 39102081:41[255:129], fw owner
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid: aborting-39102082 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid abort: 39102082:36[255:129], fw owner
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid: aborting-39102083 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid abort: 39102083:47[255:129], fw owner
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid: aborting-39102087 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid abort: 39102087:100[255:129], fw owner
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid: aborting-39102088 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid abort: 39102088:111[255:129], fw owner
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid: aborting-39102090 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid abort: 39102090:83[255:129], fw owner
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid: aborting-39102091 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid abort: 39102091:30[255:129], fw owner
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid: aborting-39102095 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid abort: 39102095:17[255:129], fw owner
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid: aborting-39102096 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid abort: 39102096:84[255:129], fw owner
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid: aborting-39102097 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid abort: 39102097:61[255:129], fw owner
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid: aborting-39102098 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid abort: 39102098:116[255:129], fw owner
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid: aborting-39102099 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid abort: 39102099:29[255:129], fw owner
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid: aborting-39102100 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid abort: 39102100:68[255:129], fw owner
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid: aborting-39102101 cmd=2a <c=2 t=1 l=0>
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid abort: 39102101:82[255:129], fw owner
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid: 25 outstanding commands. Max wait 300 sec
+Aug 21 10:33:00 zipper kernel: [18488769.632000] megaraid mbox: Wait for 25 commands to complete:300
+Aug 21 10:33:05 zipper kernel: [18488774.652000] megaraid mbox: Wait for 20 commands to complete:295
+Aug 21 10:33:10 zipper kernel: [18488779.672000] megaraid mbox: Wait for 14 commands to complete:290
+Aug 21 10:33:15 zipper kernel: [18488784.692000] megaraid mbox: Wait for 8 commands to complete:285
+Aug 21 10:33:20 zipper kernel: [18488789.712000] megaraid mbox: Wait for 4 commands to complete:280
+Aug 21 10:33:21 zipper kernel: [18488790.716000] megaraid mbox: reset sequence completed sucessfully
+
+
+--------------090108080107040602050808--
