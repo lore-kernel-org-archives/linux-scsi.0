@@ -1,21 +1,21 @@
-From: Arjan van de Ven <arjan@fenrus.demon.nl>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: [PATCH] aic94xx: convert to request_firmware interface
-Date: Mon, 28 Aug 2006 17:58:48 +0200
-Message-ID: <1156780728.3034.209.camel@laptopd505.fenrus.org>
+Date: Mon, 28 Aug 2006 10:59:49 -0500
+Message-ID: <1156780789.3465.13.camel@mulgrave.il.steeleye.com>
 References: <20060828155254.64027.qmail@web31809.mail.mud.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from a222036.upc-a.chello.nl ([62.163.222.36]:21429 "EHLO
-	laptopd505.fenrus.org") by vger.kernel.org with ESMTP
-	id S1751107AbWH1P6w (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Aug 2006 11:58:52 -0400
+Received: from stat9.steeleye.com ([209.192.50.41]:61077 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1751133AbWH1P7w (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Aug 2006 11:59:52 -0400
 In-Reply-To: <20060828155254.64027.qmail@web31809.mail.mud.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: ltuikov@yahoo.com
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
 On Mon, 2006-08-28 at 08:52 -0700, Luben Tuikov wrote:
 > --- James Bottomley <James.Bottomley@SteelEye.com> wrote:
@@ -25,13 +25,11 @@ On Mon, 2006-08-28 at 08:52 -0700, Luben Tuikov wrote:
 > 
 > This will not work.
 
+It's currently working in my x86 system.
 
-Hi,
+I haven't managed to test on a BE system yet to make sure I got all the
+swaps correct, though.
 
-I think your mailer has started corrupting emails again, it cut off the
-"because ..." part of the sentence.... (or did you try to avoid getting
-hit by the spam traps?)
+James
 
-Greetings,
-   Arjan van de Ven
 
