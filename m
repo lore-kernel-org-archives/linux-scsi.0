@@ -1,62 +1,40 @@
-From: Richard Knutsson <ricknu-0@student.ltu.se>
-Subject: Re: Conversion to generic boolean
-Date: Mon, 28 Aug 2006 14:17:32 +0200
-Message-ID: <44F2DEDC.3020608@student.ltu.se>
-References: <44EFBEFA.2010707@student.ltu.se> <20060828093202.GC8980@infradead.org> <Pine.LNX.4.61.0608281255100.14305@yvahk01.tjqt.qr>
+From: Martin Zuziak <zuziak@math.ku.dk>
+Subject: aic79xx driver - hotswap error
+Date: Mon, 28 Aug 2006 14:15:46 +0200
+Message-ID: <20060828121542.GA13993@pc000ffe3ca343.math.ku.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gepetto.dc.ltu.se ([130.240.42.40]:39355 "EHLO
-	gepetto.dc.ltu.se") by vger.kernel.org with ESMTP id S964819AbWH1MKk
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Aug 2006 08:10:40 -0400
-In-Reply-To: <Pine.LNX.4.61.0608281255100.14305@yvahk01.tjqt.qr>
+Received: from imf.math.ku.dk ([130.225.103.32]:55943 "EHLO mail.math.ku.dk")
+	by vger.kernel.org with ESMTP id S932104AbWH1MPy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Aug 2006 08:15:54 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jan Engelhardt <jengelh@linux01.gwdg.de>
-Cc: Christoph Hellwig <hch@infradead.org>, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Jan Engelhardt wrote:
+Hello all
 
->>>Just would like to ask if you want patches for:
->>>      
->>>
->>Total NACK to any of this boolean ididocy.  I very much hope you didn't
->>get the impression you actually have a chance to get this merged.
->>
->>    
->>
->>>* (Most importent, may introduce bugs if left alone)
->>>Fixing boolean checking, ex:
->>>if (bool == FALSE)
->>>to
->>>if (!bool)
->>>      
->>>
->>this one of course makes sense, but please do it without introducing
->>any boolean type.  Getting rid of all the TRUE/FALSE defines and converting
->>all scsi drivers to classic C integer as boolean semantics would be
->>very welcome janitorial work.
->>    
->>
->
->I don't get it. You object to the 'idiocy' 
->(http://lkml.org/lkml/2006/7/27/281), but find the x==FALSE -> !x 
->a good thing?
->  
->
-That is error-prone. Not "==FALSE" but what happens if x is (for some 
-reason) not 1 and then "if (x==TRUE)". There has been suggestions of doing:
-if (x != FALSE)
-or
-if (!x == !TRUE)
-but a simple "if (x)" is (in my opinion) the correct way.
+Hot-swapping doesn't seem to work with the aic79xx driver in kernel
+2.6.17.9. Removing or adding a disk from/to a running system makes i/o
+to any disk on the bus fail.
 
-Then that there is some objections booleans not being the "classical 
-C"-way, is another story.
+The machine is an IBM x346 server with a x86_64 cpu and a aic7902 scsi
+controller.
 
->Jan Engelhardt
->  
->
-Richard Knutsson
+A copy of the system log is here:
+http://www.math.ku.dk/~zuziak/tmp/aic79xx_error_2.6.17.9.log
+
+It shows the result of removing the third disk: the first disk (the only
+one mounted) becomes inaccessible.
+
+Kernel 2.6.15.7 seems to work but I have had no luck with newer kernels.
+
+Has anyone seen hot-swapping work with the aic79xx driver in recent
+kernels?
+
+Sincerely,
+
+Martin Zuziak <zuziak@math.ku.dk>
+
