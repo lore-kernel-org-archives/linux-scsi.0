@@ -1,42 +1,91 @@
-From: "birdseed" <birdseed.configure@rossimarco.net>
-Subject: Express home credit
-Date: Mon, 28 Aug 2006 11:37:40 -0400
-Message-ID: <88956889545726.D30147CE7C__42735.1734288552$1156779495$gmane$org@MG06>
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: aic79xx driver - hotswap error
+Date: Mon, 28 Aug 2006 15:45:11 +0000
+Message-ID: <1156779911.28832.28.camel@fc6.xsintricity.com>
+References: <20060828121542.GA13993@pc000ffe3ca343.math.ku.dk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="Windows-1252"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-7qs6Gac20EMkDVkhlsSb"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 70-90-12-177-BusName-hershey.pa.panjde.hfc.comcastbusiness.net ([70.90.12.177]:15379 "EHLO o0cpce.iuuxn3ji.ameritech.net")
-	by vger.kernel.org with ESMTP id S1750903AbWH1Ph5 (ORCPT
+Received: from mx1.redhat.com ([66.187.233.31]:16079 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S1751099AbWH1PpX (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Aug 2006 11:37:57 -0400
+	Mon, 28 Aug 2006 11:45:23 -0400
+In-Reply-To: <20060828121542.GA13993@pc000ffe3ca343.math.ku.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-serial@vger.kernel.org
+To: Martin Zuziak <zuziak@math.ku.dk>
+Cc: linux-scsi@vger.kernel.org
 
-Good day to you Sir! 
 
-Your credit doesn't matter to us!
-If you OWN real estate and want IMMEDIATE cash to spend ANY way you 
-like, or simply wish to LOWER your monthly payments by a third or more, here are the deals we have TODAY:
+--=-7qs6Gac20EMkDVkhlsSb
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-$488,000.00 at a 3.67% fixed-rate
-$372,000.00 at a 3.90% variable-rate
-$492,000.00 at a 3.21% interest-only
-$248,000.00 at a 3.36% fixed-rate
-$198,000.00 at a 3.55% variable-rate
+On Mon, 2006-08-28 at 14:15 +0200, Martin Zuziak wrote:
+> Hello all
+>=20
+> Hot-swapping doesn't seem to work with the aic79xx driver in kernel
+> 2.6.17.9. Removing or adding a disk from/to a running system makes i/o
+> to any disk on the bus fail.
+>=20
+> The machine is an IBM x346 server with a x86_64 cpu and a aic7902 scsi
+> controller.
+>=20
+> A copy of the system log is here:
+> http://www.math.ku.dk/~zuziak/tmp/aic79xx_error_2.6.17.9.log
+>=20
+> It shows the result of removing the third disk: the first disk (the only
+> one mounted) becomes inaccessible.
+>=20
+> Kernel 2.6.15.7 seems to work but I have had no luck with newer kernels.
+>=20
+> Has anyone seen hot-swapping work with the aic79xx driver in recent
+> kernels?
 
-Hurry, we have requests limits, so when these deals are gone, they are 
-gone!
+Are you sure your system is hot swap safe?  The whole log mess begins
+with "someone reset channel A" which means the card detected a bus reset
+but it didn't initiate the reset.  That's either going to be because
+your system shouldn't be hot swap plugged and it triggered a spike on
+the reset pin, or because your hot swap drive setup resets the bus on
+unplug intentionally.  Knowing that would help.
 
-We have one-mimute form to apply the request,
-please CLICK HERE
+So, the driver managed to get into the ahd_pause_and_flushwork()
+function, probably while trying to queue the abort SCB, and while there
+it detected an infinite loop and printed out the "Infinite interrupt
+loop, INTSTAT =3D 8" message.  The INTSTAT value of 0x08 maps to SCSIINT,
+so next you would look at the SCSIINT1 and SCSIINT2 registers to see
+just *what* is causing the loop.  There you see SSTAT1[0x20]:(SCSIRSTI).
+This tells us the driver is *still* getting a SCSI Reset In interrupt
+from the card, even over 1 minute after you pulled the drive.  So, the
+reason your SCSI bus hung is because everything on the bus is being
+subjected to an infinite bus reset condition.  The cause of this
+happening is likely either A) your bus isn't hot swap safe and you hot
+swapped anyway, and in the process you disconnected the termination
+power source or termination itself or just plain flaked other devices on
+the bus out or B) something in your hot swap enclosure is broken and
+throws an infinite bus reset when the drive is removed.  Either way,
+this is not what I would call expected behavior from the aic79xx driver,
+I suspect that it is innocent here and that the hardware is to blame.
 
-http://KGHG1.yourcreditpartner.biz/?ncache=103920
+--=20
+Doug Ledford <dledford@redhat.com>
+              GPG KeyID: CFBFF194
+              http://people.redhat.com/dledford
 
-Don't worry about approval, your credit will not disqualify you!
+Infiniband specific RPMs available at
+              http://people.redhat.com/dledford/Infiniband
 
-Approval Manager.
+--=-7qs6Gac20EMkDVkhlsSb
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBE8w+Hg6WylM+/8ZQRArviAJ93tC+qnjDEUn+shQVG+96oyy+OmACdHj2a
+dFt5tnik6c0OthQnpEzO5cM=
+=sP3d
+-----END PGP SIGNATURE-----
+
+--=-7qs6Gac20EMkDVkhlsSb--
 
