@@ -1,58 +1,40 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [PATCH 0/4] Change return values from queue_work et al.
-Date: Tue, 29 Aug 2006 00:31:21 +0200
-Message-ID: <44F36EB9.4070204@s5r6.in-berlin.de>
-References: <Pine.LNX.4.44L0.0608281403330.5680-100000@iolanthe.rowland.org>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: Re: [PATCH] aic94xx: fix hotplug/unplug for expanderless systems
+Date: Mon, 28 Aug 2006 16:06:32 -0700
+Message-ID: <44F376F8.9090804@us.ibm.com>
+References: <1156803771.7420.23.camel@localhost.localdomain>
+Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:58754 "EHLO
-	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
-	id S964862AbWH1WfV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Aug 2006 18:35:21 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0608281403330.5680-100000@iolanthe.rowland.org>
+Received: from e1.ny.us.ibm.com ([32.97.182.141]:63369 "EHLO e1.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1751569AbWH1XGe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Aug 2006 19:06:34 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e1.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id k7SN6XRN026294
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Aug 2006 19:06:34 -0400
+Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by d01relay04.pok.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id k7SN6X2c297508
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Aug 2006 19:06:33 -0400
+Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
+	by d01av01.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k7SN6Xad001626
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Aug 2006 19:06:33 -0400
+In-Reply-To: <1156803771.7420.23.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Andrew Morton <akpm@osdl.org>, Ingo Molnar <mingo@redhat.com>, Kernel development list <linux-kernel@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@suse.de>
+To: Alexis Bruemmer <alexisb@us.ibm.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Alan Stern wrote:
-[...]
-> It turned out these functions were used in ~800 places, and in ~90% of
-> them the return value was ignored!  This is perhaps understandble, because
-> the only way these functions can fail is if their work_struct argument is
-> uninitialized or already in use.  (Whether it's robust for callers to
-> depend on this behavior remaining unchanged into the indefinite future is
-> more questionable.)
+Works quite nicely with my SATA/SAS disks/machines too.
 
-You are changing this behavior right now...
+--D
 
-> So I took a short cut which allowed most of the usages to remain as they
-> are.  queue_work(), schedule_work(), and their friends still exist and do
-> what they did before, but now they return void.  In addition, they call
-> WARN_ON if the submission fails; this seems safer than letting the failure
-> go silently unnoticed.  
-[...]
+Acked-by: Darrick J. Wong <djwong@us.ibm.com>
 
-...by adding a WARN_ON even though "work not enqueued because it is 
-already in queue" may not be a "failure" at all.
-
-It _is_ robust for callers to depend on the old behavior. This is 
-because /we/ who use these functions will remind /you/ who alters these 
-functions to first research what the actual usage is. So please check 
-every caller which ignores the return code for the actual intent of the 
-caller.
-
-Do not add WARN_ON to queue_work() etc.. Instead add WARN_ON or BUG_ON 
-or an actual failure handling to callers which _incorrectly_ expect they 
-could add the same instance of work_struct to queues more than once 
-before the work was executed.
-
-Furthermore, if you already change the type of widely-used exported 
-functions (i.e. you change the workqueue API), why don't you delete 
-these functions right away?
--- 
-Stefan Richter
--=====-=-==- =--- ===-=
-http://arcgraph.de/sr/
+Alexis Bruemmer wrote:
+> This patch fixes hotplug/unplug for expanderless systems by not queuing
+> an event just to do sas_unregister_domain_devices.
+> 
+> -Alexis
