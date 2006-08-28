@@ -1,48 +1,80 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH] aic94xx: convert to request_firmware interface
-Date: Mon, 28 Aug 2006 16:43:50 -0400
-Message-ID: <44F35586.1040505@torque.net>
-References: <1156733286.3460.26.camel@mulgrave.il.steeleye.com>	 <1156736843.3460.31.camel@mulgrave.il.steeleye.com>	 <44F2E6F2.2090706@torque.net> <1156773918.3465.7.camel@mulgrave.il.steeleye.com>
-Reply-To: dougg@torque.net
+From: Richard Knutsson <ricknu-0@student.ltu.se>
+Subject: Re: Conversion to generic boolean
+Date: Mon, 28 Aug 2006 22:55:07 +0200
+Message-ID: <44F3582B.3060000@student.ltu.se>
+References: <44EFBEFA.2010707@student.ltu.se>	 <20060828093202.GC8980@infradead.org>	 <Pine.LNX.4.61.0608281255100.14305@yvahk01.tjqt.qr>	 <44F2DEDC.3020608@student.ltu.se> <1156792540.2367.2.camel@entropy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:47068 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1751508AbWH1Un4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Aug 2006 16:43:56 -0400
-In-Reply-To: <1156773918.3465.7.camel@mulgrave.il.steeleye.com>
+Received: from gepetto.dc.ltu.se ([130.240.42.40]:39913 "EHLO
+	gepetto.dc.ltu.se") by vger.kernel.org with ESMTP id S932088AbWH1UsT
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Aug 2006 16:48:19 -0400
+In-Reply-To: <1156792540.2367.2.camel@entropy>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: Nicholas Miell <nmiell@comcast.net>
+Cc: Jan Engelhardt <jengelh@linux01.gwdg.de>, Christoph Hellwig <hch@infradead.org>, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-James Bottomley wrote:
-> On Mon, 2006-08-28 at 08:52 -0400, Douglas Gilbert wrote:
->> I presume that is a version of the infamous "razor"
->> code. How do I know which version it is (before trying
->> it)?
-> 
-> Well ... same way you do any binary blob with version text in it ... use
-> strings.
+Nicholas Miell wrote:
 
-James,
-What I'm angling at is a firmware file name like:
-   aic94xx-seq_10c6.req
+>On Mon, 2006-08-28 at 14:17 +0200, Richard Knutsson wrote:
+>  
+>
+>>Jan Engelhardt wrote:
+>>
+>>    
+>>
+>>>>>Just would like to ask if you want patches for:
+>>>>>     
+>>>>>
+>>>>>          
+>>>>>
+>>>>Total NACK to any of this boolean ididocy.  I very much hope you didn't
+>>>>get the impression you actually have a chance to get this merged.
+>>>>
+>>>>   
+>>>>
+>>>>        
+>>>>
+>>>>>* (Most importent, may introduce bugs if left alone)
+>>>>>Fixing boolean checking, ex:
+>>>>>if (bool == FALSE)
+>>>>>to
+>>>>>if (!bool)
+>>>>>     
+>>>>>
+>>>>>          
+>>>>>
+>>>>this one of course makes sense, but please do it without introducing
+>>>>any boolean type.  Getting rid of all the TRUE/FALSE defines and converting
+>>>>all scsi drivers to classic C integer as boolean semantics would be
+>>>>very welcome janitorial work.
+>>>>   
+>>>>
+>>>>        
+>>>>
+>>>I don't get it. You object to the 'idiocy' 
+>>>(http://lkml.org/lkml/2006/7/27/281), but find the x==FALSE -> !x 
+>>>a good thing?
+>>> 
+>>>
+>>>      
+>>>
+>>That is error-prone. Not "==FALSE" but what happens if x is (for some 
+>>reason) not 1 and then "if (x==TRUE)".
+>>    
+>>
+>
+>If you're using _Bool, that isn't possible. (Except at the boundaries
+>where you have to validate untrusted data -- and the compiler makes that
+>more difficult, because it "knows" that a _Bool can only be 0 or 1 and
+>therefore your check to see if it's not 0 or 1 can "safely" be
+>eliminated.)
+>  
+>
+Yes, true. But there is no _Bool's in the kernel (linus-git), only one 
+in script/.
 
-and the driver attempts to read:
-   aic94xx-seq*.req
-
-If there a multiple matches then it takes the one
-with the most recent date (reporting this in syslog).
-
-
-For the benefit of others: in my experience the
-stability of my adaptec 48300 SAS HBA is somewhat
-related to the firmware level it is running (both
-the card BIOS and when the linux driver has
-taken over).
-
-Doug Gilbert
-
+Richard Knutsson
