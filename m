@@ -1,48 +1,75 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [PATCH] aic94xx: convert to request_firmware interface
-Date: Mon, 28 Aug 2006 14:04:03 -0700
-Message-ID: <20060828210403.GA1445@us.ibm.com>
-References: <20060828155254.64027.qmail@web31809.mail.mud.yahoo.com> <1156780789.3465.13.camel@mulgrave.il.steeleye.com>
+From: "Fajun Chen" <fajunchen@gmail.com>
+Subject: Re: Bugs on Linux 2.6.18-rc2 sg code?
+Date: Mon, 28 Aug 2006 15:12:42 -0600
+Message-ID: <8202f4270608281412s2da23a52jfa0d2c4b73099587@mail.gmail.com>
+References: <8202f4270608101843r7df002d2l40e03eca3271b050@mail.gmail.com>
+	 <44E6388D.1000206@torque.net> <44E68F76.4010702@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:34008 "EHLO
-	e36.co.us.ibm.com") by vger.kernel.org with ESMTP id S932122AbWH1VGa
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Aug 2006 17:06:30 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e36.co.us.ibm.com (8.13.8/8.12.11) with ESMTP id k7SL6Tsx017513
-	for <linux-scsi@vger.kernel.org>; Mon, 28 Aug 2006 17:06:29 -0400
-Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
-	by d03relay04.boulder.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id k7SL6Tuj274982
-	for <linux-scsi@vger.kernel.org>; Mon, 28 Aug 2006 15:06:29 -0600
-Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av04.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k7SL6SJX023069
-	for <linux-scsi@vger.kernel.org>; Mon, 28 Aug 2006 15:06:28 -0600
+Received: from nz-out-0102.google.com ([64.233.162.197]:10111 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S932129AbWH1VMn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Aug 2006 17:12:43 -0400
+Received: by nz-out-0102.google.com with SMTP id n1so1119514nzf
+        for <linux-scsi@vger.kernel.org>; Mon, 28 Aug 2006 14:12:42 -0700 (PDT)
+In-Reply-To: <44E68F76.4010702@torque.net>
 Content-Disposition: inline
-In-Reply-To: <1156780789.3465.13.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: ltuikov@yahoo.com, linux-scsi <linux-scsi@vger.kernel.org>
+To: dougg@torque.net
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org
 
-James Bottomley <James.Bottomley@SteelEye.com> wrote:
-> On Mon, 2006-08-28 at 08:52 -0700, Luben Tuikov wrote:
-> > --- James Bottomley <James.Bottomley@SteelEye.com> wrote:
-> > 
-> > > Re: [PATCH] aic94xx: convert to request_firmware interface
-> > > This patch is too big to inline, so I attached it compressed.
-> > 
-> > This will not work.
-> 
-> It's currently working in my x86 system.
-> 
-> I haven't managed to test on a BE system yet to make sure I got all the
-> swaps correct, though.
+Hi Doug,
 
-The firmware loading is working on my ppc64 system.
+Forgot to report this. I've tested your patch and it works.
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+Thanks,
+Fajun
+
+On 8/18/06, Douglas Gilbert <dougg@torque.net> wrote:
+> Douglas Gilbert wrote:
+> > Fajun Chen wrote:
+> >> Hi Folks,
+> >>
+> >> I use ATA pass through via sg ioctl interface for data read/write.
+> >> Linux 2.6.18-rc2 patched with Jeff Garzik's libata git patch was
+> >> running on ARM IOP80321 board. The HBA Sil3124 was used.
+> >>
+> >> Two problems were observed:
+> >> 1. sg mmap bug?
+> >>    My test program could not write data correctly to the mmapped
+> >> buffer in the user space.      The program did a read immediately
+> >> after a write and the data mismatches.  Swapped the sg_vma_nopage()
+> >> function with the one in 2.6.15.4 release fixed the problem. So this
+> >> appears to be a wrong change to the sg mmap code in 2.6.18-rc2
+> >> release.
+> >
+> > Thanks for the report. I can confirm that mmap-ed IO
+> > in the sg driver is broken. Simply reading 16 blocks
+> > from some arbitrary offset with sg_dd and sgm_dd
+> > and comparing the fetched data shows mismatches starting
+> > above the first page (i.e. above byte offset 4096 on
+> > i386).
+> >
+> > Your point about the change to sg_vma_nopage() between
+> > lk 2.6.15 and lk 2.6.16 also seems to be correct.
+> > The most indented part of that function has been
+> > changed from incrementing the change count on the
+> > reported page (as indicated by 'offset') in a
+> > compound page allocation to ignoring the 'offset'
+> > and incrementing the page count on the first page
+> > in a compound page allocation.
+>
+> Fajun,
+> Could you please try the patch below and report if it fixes
+> your sg mmap problem. The patch is against lk 2.6.18-rc4
+> and I assume it will apply against "rc2" as well.
+> The patch re-instates the former logic and fixes the
+> problem in my tests.
+>
+> Doug Gilbert
+>
+>
+>
