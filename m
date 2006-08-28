@@ -1,142 +1,141 @@
 From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: [PATCH] scsi_transport_sas: remove local_attached flag
-Date: Mon, 28 Aug 2006 07:19:49 -0700 (PDT)
-Message-ID: <20060828141949.99418.qmail@web31815.mail.mud.yahoo.com>
-References: <1156531698.3462.11.camel@mulgrave.il.steeleye.com>
+Subject: Re: [PATCH] aic94xx: add link error counts to the expander phys
+Date: Mon, 28 Aug 2006 07:20:28 -0700 (PDT)
+Message-ID: <20060828142028.97355.qmail@web31803.mail.mud.yahoo.com>
+References: <1156546284.3462.23.camel@mulgrave.il.steeleye.com>
 Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31815.mail.mud.yahoo.com ([68.142.206.168]:42882 "HELO
-	web31815.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S1750936AbWH1OTu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Aug 2006 10:19:50 -0400
-In-Reply-To: <1156531698.3462.11.camel@mulgrave.il.steeleye.com>
+Received: from web31803.mail.mud.yahoo.com ([68.142.207.66]:59315 "HELO
+	web31803.mail.mud.yahoo.com") by vger.kernel.org with SMTP
+	id S1750947AbWH1OU3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Aug 2006 10:20:29 -0400
+In-Reply-To: <1156546284.3462.23.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: "Moore, Eric" <Eric.Moore@lsil.com>
 
 --- James Bottomley <James.Bottomley@SteelEye.com> wrote:
+> Unfortunately, the aic94xx seems to keep none of these mandatory error
+> counts for the HBA phys,
 
-> This flag denotes local attachment of the phy.  There are two problems
-> with it:
-> 
-> 1) It's actually redundant ... you can get the same information simply
-> by seeing whether a host is the phys parent
-> 2) we condition a lot of phy parameters on it on the false assumption
-> that we can only control local phys.  I'm wiring up phy resets in the
-> aic94xx now, and it will be able to reset non-local phys as well.
+That's not true.
 
-Of course, the actual SAS Stack, doesn't have this "local_attached".
-
-> 
-> I fixed 2) by moving the local check into the reset and stats function
-> of the mptsas, since that seems to be the only HBA that can't
-> (currently) control non-local phys.
+> but the transport class can still get them from
+> all the expanders using the REPORT_ERROR_LOG SMP function.
 > 
 > James
 > 
-> Index: BUILD-2.6/drivers/scsi/scsi_transport_sas.c
+> Index: BUILD-2.6/drivers/scsi/libsas/sas_init.c
 > ===================================================================
-> --- BUILD-2.6.orig/drivers/scsi/scsi_transport_sas.c	2006-08-25 13:22:46.000000000 -0500
-> +++ BUILD-2.6/drivers/scsi/scsi_transport_sas.c	2006-08-25 13:29:40.000000000 -0500
-> @@ -266,9 +266,6 @@
->  	struct sas_internal *i = to_sas_internal(shost->transportt);	\
->  	int error;							\
->  									\
-> -	if (!phy->local_attached)					\
-> -		return -EINVAL;						\
-> -									\
->  	error = i->f->get_linkerrors ? i->f->get_linkerrors(phy) : 0;	\
->  	if (error)							\
->  		return error;						\
-> @@ -299,9 +296,6 @@
->  	struct sas_internal *i = to_sas_internal(shost->transportt);
->  	int error;
->  
-> -	if (!phy->local_attached)
-> -		return -EINVAL;
-> -
->  	error = i->f->phy_reset(phy, hard_reset);
->  	if (error)
->  		return error;
-> @@ -849,7 +843,7 @@
->  	 * Only devices behind an expander are supported, because the
->  	 * enclosure identifier is a SMP feature.
->  	 */
-> -	if (phy->local_attached)
-> +	if (scsi_is_sas_phy_local(phy))
->  		return -EINVAL;
->  
->  	error = i->f->get_enclosure_identifier(rphy, &identifier);
-> @@ -870,7 +864,7 @@
->  	struct sas_internal *i = to_sas_internal(shost->transportt);
->  	int val;
->  
-> -	if (phy->local_attached)
-> +	if (scsi_is_sas_phy_local(phy))
->  		return -EINVAL;
->  
->  	val = i->f->get_bay_identifier(rphy);
-> Index: BUILD-2.6/include/scsi/scsi_transport_sas.h
-> ===================================================================
-> --- BUILD-2.6.orig/include/scsi/scsi_transport_sas.h	2006-08-25 13:23:08.000000000 -0500
-> +++ BUILD-2.6/include/scsi/scsi_transport_sas.h	2006-08-25 13:29:59.000000000 -0500
-> @@ -57,9 +57,6 @@
->  	enum sas_linkrate	maximum_linkrate_hw;
->  	enum sas_linkrate	maximum_linkrate;
->  
-> -	/* internal state */
-> -	unsigned int		local_attached : 1;
-> -
->  	/* link error statistics */
->  	u32			invalid_dword_count;
->  	u32			running_disparity_error_count;
-> @@ -196,4 +193,6 @@
->  		rphy->identify.device_type == SAS_EDGE_EXPANDER_DEVICE;
+> --- BUILD-2.6.orig/drivers/scsi/libsas/sas_init.c	2006-08-25 16:18:41.000000000 -0500
+> +++ BUILD-2.6/drivers/scsi/libsas/sas_init.c	2006-08-25 17:42:38.000000000 -0500
+> @@ -132,6 +132,16 @@
+>  	return 0;
 >  }
 >  
-> +#define scsi_is_sas_phy_local(phy)	scsi_is_host_device((phy)->dev.parent)
+> +static int sas_get_linkerrors(struct sas_phy *phy)
+> +{
+> +	if (scsi_is_sas_phy_local(phy))
+> +		/* FIXME: we have no local phy stats
+> +		 * gathering at this time */
+> +		return -EINVAL;
 > +
->  #endif /* SCSI_TRANSPORT_SAS_H */
-> Index: BUILD-2.6/drivers/message/fusion/mptsas.c
+> +	return sas_smp_get_phy_events(phy);
+> +}
+> +
+>  static int sas_phy_reset(struct sas_phy *phy, int hard_reset)
+>  {
+>  	int ret;
+> @@ -160,6 +170,7 @@
+>  
+>  static struct sas_function_template sft = {
+>  	.phy_reset = sas_phy_reset,
+> +	.get_linkerrors = sas_get_linkerrors,
+>  };
+>  
+>  extern struct scsi_transport_template *
+> Index: BUILD-2.6/drivers/scsi/libsas/sas_expander.c
 > ===================================================================
-> --- BUILD-2.6.orig/drivers/message/fusion/mptsas.c	2006-08-25 13:30:28.000000000 -0500
-> +++ BUILD-2.6/drivers/message/fusion/mptsas.c	2006-08-25 13:35:50.000000000 -0500
-> @@ -852,6 +852,10 @@
->  	dma_addr_t dma_handle;
->  	int error;
+> --- BUILD-2.6.orig/drivers/scsi/libsas/sas_expander.c	2006-08-25 16:23:05.000000000 -0500
+> +++ BUILD-2.6/drivers/scsi/libsas/sas_expander.c	2006-08-25 17:48:45.000000000 -0500
+> @@ -502,6 +502,39 @@
+>  	return 0;
+>  }
 >  
-> +	/* FIXME: only have link errors on local phys */
-> +	if (!scsi_is_sas_phy_local(phy))
-> +		return -EINVAL;
+> +#define RPEL_REQ_SIZE	16
+> +#define RPEL_RESP_SIZE	32
+> +int sas_smp_get_phy_events(struct sas_phy *phy)
+> +{
+> +	int res;
+> +	struct sas_rphy *rphy = dev_to_rphy(phy->dev.parent);
+> +	struct domain_device *dev = sas_find_dev_by_rphy(rphy);
+> +	u8 *req = alloc_smp_req(RPEL_REQ_SIZE);
+> +	u8 *resp = kzalloc(RPEL_RESP_SIZE, GFP_KERNEL);
 > +
->  	hdr.PageVersion = MPI_SASPHY1_PAGEVERSION;
->  	hdr.ExtPageLength = 0;
->  	hdr.PageNumber = 1 /* page number 1*/;
-> @@ -924,6 +928,10 @@
->  	unsigned long timeleft;
->  	int error = -ERESTARTSYS;
->  
-> +	/* FIXME: fusion doesn't allow non-local phy reset */
-> +	if (!scsi_is_sas_phy_local(phy))
-> +		return -EINVAL;
+> +	if (!resp)
+> +		return -ENOMEM;
 > +
->  	/* not implemented for expanders */
->  	if (phy->identify.target_port_protocols & SAS_PROTOCOL_SMP)
->  		return -ENXIO;
-> @@ -1570,9 +1578,6 @@
+> +	req[1] = SMP_REPORT_PHY_ERR_LOG;
+> +	req[9] = phy->number;
+> +
+> +	res = smp_execute_task(dev, req, RPEL_REQ_SIZE,
+> +			            resp, RPEL_RESP_SIZE);
+> +
+> +	if (!res)
+> +		goto out;
+> +
+> +	phy->invalid_dword_count = scsi_to_u32(&resp[12]);
+> +	phy->running_disparity_error_count = scsi_to_u32(&resp[16]);
+> +	phy->loss_of_dword_sync_count = scsi_to_u32(&resp[20]);
+> +	phy->phy_reset_problem_count = scsi_to_u32(&resp[24]);
+> +
+> + out:
+> +	kfree(resp);
+> +	return res;
+> +
+> +}
+> +
+>  #define RPS_REQ_SIZE  16
+>  #define RPS_RESP_SIZE 60
 >  
->  	if (!phy_info->phy) {
+> Index: BUILD-2.6/include/scsi/scsi.h
+> ===================================================================
+> --- BUILD-2.6.orig/include/scsi/scsi.h	2006-08-25 16:57:26.000000000 -0500
+> +++ BUILD-2.6/include/scsi/scsi.h	2006-08-25 16:59:32.000000000 -0500
+> @@ -429,4 +429,10 @@
+>  /* Used to obtain the PCI location of a device */
+>  #define SCSI_IOCTL_GET_PCI		0x5387
 >  
-> -		if (local)
-> -			phy->local_attached = 1;
-> -
->  		error = sas_phy_add(phy);
->  		if (error) {
->  			sas_phy_free(phy);
+> +/* Pull a u32 out of a SCSI message (using BE SCSI conventions) */
+> +static inline u32 scsi_to_u32(u8 *ptr)
+> +{
+> +	return (ptr[0]<<24) + (ptr[1]<<16) + (ptr[2]<<8) + ptr[3];
+> +}
+> +
+>  #endif /* _SCSI_SCSI_H */
+> Index: BUILD-2.6/drivers/scsi/libsas/sas_internal.h
+> ===================================================================
+> --- BUILD-2.6.orig/drivers/scsi/libsas/sas_internal.h	2006-08-25 17:02:42.000000000 -0500
+> +++ BUILD-2.6/drivers/scsi/libsas/sas_internal.h	2006-08-25 17:43:25.000000000 -0500
+> @@ -26,6 +26,7 @@
+>  #ifndef _SAS_INTERNAL_H_
+>  #define _SAS_INTERNAL_H_
+>  
+> +#include <scsi/scsi.h>
+>  #include <scsi/scsi_host.h>
+>  #include <scsi/scsi_transport_sas.h>
+>  #include <scsi/libsas.h>
+> @@ -70,6 +71,7 @@
+>  
+>  int sas_smp_phy_control(struct domain_device *dev, int phy_id,
+>  			enum phy_func phy_func);
+> +int sas_smp_get_phy_events(struct sas_phy *phy);
+>  
+>  struct domain_device *sas_find_dev_by_rphy(struct sas_rphy *rphy);
+>  
 > 
 > 
 > -
