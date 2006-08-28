@@ -1,80 +1,49 @@
-From: Richard Knutsson <ricknu-0@student.ltu.se>
-Subject: Re: Conversion to generic boolean
-Date: Mon, 28 Aug 2006 22:55:07 +0200
-Message-ID: <44F3582B.3060000@student.ltu.se>
-References: <44EFBEFA.2010707@student.ltu.se>	 <20060828093202.GC8980@infradead.org>	 <Pine.LNX.4.61.0608281255100.14305@yvahk01.tjqt.qr>	 <44F2DEDC.3020608@student.ltu.se> <1156792540.2367.2.camel@entropy>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] aic94xx: convert to request_firmware interface
+Date: Mon, 28 Aug 2006 15:59:54 -0500
+Message-ID: <1156798794.3465.27.camel@mulgrave.il.steeleye.com>
+References: <1156733286.3460.26.camel@mulgrave.il.steeleye.com>
+	 <1156736843.3460.31.camel@mulgrave.il.steeleye.com>
+	 <44F2E6F2.2090706@torque.net>
+	 <1156773918.3465.7.camel@mulgrave.il.steeleye.com>
+	 <44F35586.1040505@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gepetto.dc.ltu.se ([130.240.42.40]:39913 "EHLO
-	gepetto.dc.ltu.se") by vger.kernel.org with ESMTP id S932088AbWH1UsT
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Aug 2006 16:48:19 -0400
-In-Reply-To: <1156792540.2367.2.camel@entropy>
+Received: from stat9.steeleye.com ([209.192.50.41]:33179 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S932116AbWH1VAA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Aug 2006 17:00:00 -0400
+In-Reply-To: <44F35586.1040505@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Nicholas Miell <nmiell@comcast.net>
-Cc: Jan Engelhardt <jengelh@linux01.gwdg.de>, Christoph Hellwig <hch@infradead.org>, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: dougg@torque.net
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Nicholas Miell wrote:
+On Mon, 2006-08-28 at 16:43 -0400, Douglas Gilbert wrote:
+> What I'm angling at is a firmware file name like:
+>    aic94xx-seq_10c6.req
 
->On Mon, 2006-08-28 at 14:17 +0200, Richard Knutsson wrote:
->  
->
->>Jan Engelhardt wrote:
->>
->>    
->>
->>>>>Just would like to ask if you want patches for:
->>>>>     
->>>>>
->>>>>          
->>>>>
->>>>Total NACK to any of this boolean ididocy.  I very much hope you didn't
->>>>get the impression you actually have a chance to get this merged.
->>>>
->>>>   
->>>>
->>>>        
->>>>
->>>>>* (Most importent, may introduce bugs if left alone)
->>>>>Fixing boolean checking, ex:
->>>>>if (bool == FALSE)
->>>>>to
->>>>>if (!bool)
->>>>>     
->>>>>
->>>>>          
->>>>>
->>>>this one of course makes sense, but please do it without introducing
->>>>any boolean type.  Getting rid of all the TRUE/FALSE defines and converting
->>>>all scsi drivers to classic C integer as boolean semantics would be
->>>>very welcome janitorial work.
->>>>   
->>>>
->>>>        
->>>>
->>>I don't get it. You object to the 'idiocy' 
->>>(http://lkml.org/lkml/2006/7/27/281), but find the x==FALSE -> !x 
->>>a good thing?
->>> 
->>>
->>>      
->>>
->>That is error-prone. Not "==FALSE" but what happens if x is (for some 
->>reason) not 1 and then "if (x==TRUE)".
->>    
->>
->
->If you're using _Bool, that isn't possible. (Except at the boundaries
->where you have to validate untrusted data -- and the compiler makes that
->more difficult, because it "knows" that a _Bool can only be 0 or 1 and
->therefore your check to see if it's not 0 or 1 can "safely" be
->eliminated.)
->  
->
-Yes, true. But there is no _Bool's in the kernel (linus-git), only one 
-in script/.
+I don't think that's a good idea ... the current razor firmware is
+backwards compatible, so if I hard code a version into the file there'd
+be no upgrade ability.
 
-Richard Knutsson
+> and the driver attempts to read:
+>    aic94xx-seq*.req
+
+It can't do that from the kernel ... this is all conditioned on how the
+user level firmware loader actually works
+
+> If there a multiple matches then it takes the one
+> with the most recent date (reporting this in syslog).
+
+The way you do this is to have a generic name (aic94xx-seq.fw) and then
+symbolically link it to the versioned file.
+
+The firmware itself is versioned, so if the driver comes to require a
+particular version (or later), it can be programmed to complain.
+
+James
+
+
