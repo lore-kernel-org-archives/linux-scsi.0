@@ -1,79 +1,121 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: Bugs on Linux 2.6.18-rc2 sg code?
-Date: Mon, 28 Aug 2006 18:11:56 -0400
-Message-ID: <44F36A2C.7010806@torque.net>
-References: <8202f4270608101843r7df002d2l40e03eca3271b050@mail.gmail.com>	 <44E6388D.1000206@torque.net> <44E68F76.4010702@torque.net> <8202f4270608281412s2da23a52jfa0d2c4b73099587@mail.gmail.com>
-Reply-To: dougg@torque.net
+From: Alexis Bruemmer <alexisb@us.ibm.com>
+Subject: [PATCH] aic94xx: fix hotplug/unplug for expanderless systems
+Date: Mon, 28 Aug 2006 15:22:51 -0700
+Message-ID: <1156803771.7420.23.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:28806 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S964770AbWH1WMC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Aug 2006 18:12:02 -0400
-In-Reply-To: <8202f4270608281412s2da23a52jfa0d2c4b73099587@mail.gmail.com>
+Received: from e35.co.us.ibm.com ([32.97.110.153]:7910 "EHLO e35.co.us.ibm.com")
+	by vger.kernel.org with ESMTP id S964851AbWH1WWx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Aug 2006 18:22:53 -0400
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e35.co.us.ibm.com (8.13.8/8.12.11) with ESMTP id k7SMMrtZ025245
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Aug 2006 18:22:53 -0400
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by westrelay02.boulder.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id k7SMMrGw334348
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Aug 2006 16:22:53 -0600
+Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k7SMMrx3021630
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Aug 2006 16:22:53 -0600
+Received: from alexis.beaverton.ibm.com (alexis.beaverton.ibm.com [9.47.17.62])
+	by d03av01.boulder.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k7SMMqgL021612
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Aug 2006 16:22:52 -0600
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Fajun Chen <fajunchen@gmail.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-Fajun Chen wrote:
-> Hi Doug,
-> 
-> Forgot to report this. I've tested your patch and it works.
+This patch fixes hotplug/unplug for expanderless systems by not queuing
+an event just to do sas_unregister_domain_devices.
 
-Fajun,
-That is good to hear as that patch appeared in lk 2.6.18-rc5
-today.
-
-Doug Gilbert
+-Alexis
 
 
-> On 8/18/06, Douglas Gilbert <dougg@torque.net> wrote:
->> Douglas Gilbert wrote:
->> > Fajun Chen wrote:
->> >> Hi Folks,
->> >>
->> >> I use ATA pass through via sg ioctl interface for data read/write.
->> >> Linux 2.6.18-rc2 patched with Jeff Garzik's libata git patch was
->> >> running on ARM IOP80321 board. The HBA Sil3124 was used.
->> >>
->> >> Two problems were observed:
->> >> 1. sg mmap bug?
->> >>    My test program could not write data correctly to the mmapped
->> >> buffer in the user space.      The program did a read immediately
->> >> after a write and the data mismatches.  Swapped the sg_vma_nopage()
->> >> function with the one in 2.6.15.4 release fixed the problem. So this
->> >> appears to be a wrong change to the sg mmap code in 2.6.18-rc2
->> >> release.
->> >
->> > Thanks for the report. I can confirm that mmap-ed IO
->> > in the sg driver is broken. Simply reading 16 blocks
->> > from some arbitrary offset with sg_dd and sgm_dd
->> > and comparing the fetched data shows mismatches starting
->> > above the first page (i.e. above byte offset 4096 on
->> > i386).
->> >
->> > Your point about the change to sg_vma_nopage() between
->> > lk 2.6.15 and lk 2.6.16 also seems to be correct.
->> > The most indented part of that function has been
->> > changed from incrementing the change count on the
->> > reported page (as indicated by 'offset') in a
->> > compound page allocation to ignoring the 'offset'
->> > and incrementing the page count on the first page
->> > in a compound page allocation.
->>
->> Fajun,
->> Could you please try the patch below and report if it fixes
->> your sg mmap problem. The patch is against lk 2.6.18-rc4
->> and I assume it will apply against "rc2" as well.
->> The patch re-instates the former logic and fixes the
->> problem in my tests.
->>
->> Doug Gilbert
->>
->>
->>
-> 
+
+Signed-off-by: Alexis Bruemmer <alexisb@us.ibm.com>
+
+---
+
+diff -pNaur linux-2.6.18-rc5-aic94xx-orig/drivers/scsi/libsas/sas_discover.c linux-2.6.18-rc5-aic94xx-new/drivers/scsi/libsas/sas_discover.c
+--- linux-2.6.18-rc5-aic94xx-orig/drivers/scsi/libsas/sas_discover.c	2006-08-28 14:29:30.000000000 -0700
++++ linux-2.6.18-rc5-aic94xx-new/drivers/scsi/libsas/sas_discover.c	2006-08-28 14:18:19.000000000 -0700
+@@ -625,20 +625,15 @@ void sas_unregister_dev(struct domain_de
+ 	sas_unregister_common_dev(dev);
+ }
+ 
+-static void sas_unregister_domain_devices(void *data)
++void sas_unregister_domain_devices(struct asd_sas_port *port)
+ {
+ 	struct domain_device *dev, *n;
+-	struct asd_sas_port *port = data;
+-
+-	sas_begin_event(DISCE_PORT_GONE, &port->disc.disc_event_lock,
+-			&port->disc.pending);
+ 
+ 	list_for_each_entry_safe_reverse(dev,n,&port->dev_list,dev_list_node)
+ 		sas_unregister_dev(dev);
+ 
+ 	port->port->rphy = NULL;
+ 
+-	complete(&port->port_gone_completion);
+ }
+ 
+ /* ---------- Discovery and Revalidation ---------- */
+@@ -745,7 +740,6 @@ void sas_init_disc(struct sas_discovery 
+ 	static void (*sas_event_fns[DISC_NUM_EVENTS])(void *) = {
+ 		[DISCE_DISCOVER_DOMAIN] = sas_discover_domain,
+ 		[DISCE_REVALIDATE_DOMAIN] = sas_revalidate_domain,
+-		[DISCE_PORT_GONE] = sas_unregister_domain_devices,
+ 	};
+ 
+ 	spin_lock_init(&disc->disc_event_lock);
+@@ -753,11 +747,3 @@ void sas_init_disc(struct sas_discovery 
+ 	for (i = 0; i < DISC_NUM_EVENTS; i++)
+ 		INIT_WORK(&disc->disc_work[i], sas_event_fns[i], port);
+ }
+-
+-void sas_unregister_devices(struct sas_ha_struct *sas_ha)
+-{
+-	int i;
+-
+-	for (i = 0; i < sas_ha->num_phys; i++)
+-		sas_unregister_domain_devices(sas_ha->sas_port[i]);
+-}
+diff -pNaur linux-2.6.18-rc5-aic94xx-orig/drivers/scsi/libsas/sas_port.c linux-2.6.18-rc5-aic94xx-new/drivers/scsi/libsas/sas_port.c
+--- linux-2.6.18-rc5-aic94xx-orig/drivers/scsi/libsas/sas_port.c	2006-08-28 14:29:30.000000000 -0700
++++ linux-2.6.18-rc5-aic94xx-new/drivers/scsi/libsas/sas_port.c	2006-08-28 14:32:50.000000000 -0700
+@@ -145,9 +145,7 @@ void sas_deform_port(struct asd_sas_phy 
+ 		port->port_dev->pathways--;
+ 
+ 	if (port->num_phys == 1) {
+-		init_completion(&port->port_gone_completion);
+-		sas_discover_event(port, DISCE_PORT_GONE);
+-		wait_for_completion(&port->port_gone_completion);
++		sas_unregister_domain_devices(port);
+ 		sas_port_delete(port->port);
+ 		port->port = NULL;
+ 	} else
+diff -pNaur linux-2.6.18-rc5-aic94xx-orig/include/scsi/libsas.h linux-2.6.18-rc5-aic94xx-new/include/scsi/libsas.h
+--- linux-2.6.18-rc5-aic94xx-orig/include/scsi/libsas.h	2006-08-28 14:29:30.000000000 -0700
++++ linux-2.6.18-rc5-aic94xx-new/include/scsi/libsas.h	2006-08-28 14:18:20.000000000 -0700
+@@ -613,7 +613,7 @@ void sas_init_ex_attr(void);
+ 
+ int  sas_ex_revalidate_domain(struct domain_device *);
+ 
+-
++void sas_unregister_domain_devices(struct asd_sas_port *port);
+ void sas_init_disc(struct sas_discovery *disc, struct asd_sas_port *);
+ int  sas_discover_event(struct asd_sas_port *, enum discover_event ev);
+ 
+@@ -622,8 +622,6 @@ int  sas_discover_end_dev(struct domain_
+ 
+ void sas_unregister_dev(struct domain_device *);
+ 
+-void sas_unregister_devices(struct sas_ha_struct *);
+-
+ void sas_init_dev(struct domain_device *);
+ 
+ #endif /* _SASLIB_H_ */
+
 
