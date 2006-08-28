@@ -1,40 +1,39 @@
-From: Martin Zuziak <zuziak@math.ku.dk>
-Subject: aic79xx driver - hotswap error
-Date: Mon, 28 Aug 2006 14:15:46 +0200
-Message-ID: <20060828121542.GA13993@pc000ffe3ca343.math.ku.dk>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH] aic94xx: convert to request_firmware interface
+Date: Mon, 28 Aug 2006 08:52:02 -0400
+Message-ID: <44F2E6F2.2090706@torque.net>
+References: <1156733286.3460.26.camel@mulgrave.il.steeleye.com> <1156736843.3460.31.camel@mulgrave.il.steeleye.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from imf.math.ku.dk ([130.225.103.32]:55943 "EHLO mail.math.ku.dk")
-	by vger.kernel.org with ESMTP id S932104AbWH1MPy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Aug 2006 08:15:54 -0400
-Content-Disposition: inline
+Received: from pentafluge.infradead.org ([213.146.154.40]:32462 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1750765AbWH1MwO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Aug 2006 08:52:14 -0400
+In-Reply-To: <1156736843.3460.31.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Hello all
+James Bottomley wrote:
+> On Sun, 2006-08-27 at 21:48 -0500, James Bottomley wrote:
+>> This patch is too big to inline, so I attached it compressed.
+>>
+>> This, I think, concludes the work necessary to get this thing into
+>> scsi-misc and begin working on it upstream.
+> 
+> I forgot to say that the firmware file is here:
+> 
+> http://www.kernel.org/pub/linux/kernel/people/jejb/aic94xx-seq.fw
 
-Hot-swapping doesn't seem to work with the aic79xx driver in kernel
-2.6.17.9. Removing or adding a disk from/to a running system makes i/o
-to any disk on the bus fail.
+James,
+I presume that is a version of the infamous "razor"
+code. How do I know which version it is (before trying
+it)?
 
-The machine is an IBM x346 server with a x86_64 cpu and a aic7902 scsi
-controller.
+Doug Gilbert
 
-A copy of the system log is here:
-http://www.math.ku.dk/~zuziak/tmp/aic79xx_error_2.6.17.9.log
-
-It shows the result of removing the third disk: the first disk (the only
-one mounted) becomes inaccessible.
-
-Kernel 2.6.15.7 seems to work but I have had no luck with newer kernels.
-
-Has anyone seen hot-swapping work with the aic79xx driver in recent
-kernels?
-
-Sincerely,
-
-Martin Zuziak <zuziak@math.ku.dk>
 
