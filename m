@@ -1,49 +1,76 @@
-From: "dispersive" <bookendathenian@earthlink.net>
-Subject: dewitt
-Date: Mon, 28 Aug 2006 16:19:59 -0400
-Message-ID: <01311860236961.A16CDE07BA__25706.358618527$1156796355$gmane$org@7PLMN1>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: [PATCH 0/4] Change return values from queue_work et al.
+Date: Mon, 28 Aug 2006 16:26:31 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0608281403330.5680-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="Windows-1252"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pool-70-22-160-39.bos.east.verizon.net ([70.22.160.39]:25616
-	"EHLO YOUR-W04GTXLD67.msispb01.net") by vger.kernel.org with ESMTP
-	id S1751443AbWH1USw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Aug 2006 16:18:52 -0400
+Received: from iolanthe.rowland.org ([192.131.102.54]:45583 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP
+	id S1751467AbWH1U0e (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Aug 2006 16:26:34 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-serial@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>, Ingo Molnar <mingo@redhat.com>
+Cc: Kernel development list <linux-kernel@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@suse.de>
 
-W a t c h   o u t!
+Andrew and Ingo:
 
-ALILANCE ENTEPRRISE (A ETR)
-Current Pirce: 0.80
-Add this g e m to your watc h list, and w atch it tard closely!
+As discussed earlier, the following patches change the representation used 
+for the return values from queue_work(), schedule_work(), and related 
+routines.
 
-Nwes Reelase!
+It turned out these functions were used in ~800 places, and in ~90% of
+them the return value was ignored!  This is perhaps understandble, because
+the only way these functions can fail is if their work_struct argument is
+uninitialized or already in use.  (Whether it's robust for callers to
+depend on this behavior remaining unchanged into the indefinite future is
+more questionable.)
 
-Teacorp announces breackrough in removing deadly landmin es.
+So I took a short cut which allowed most of the usages to remain as they
+are.  queue_work(), schedule_work(), and their friends still exist and do
+what they did before, but now they return void.  In addition, they call
+WARN_ON if the submission fails; this seems safer than letting the failure
+go silently unnoticed.  
 
-Mill Valley, California August 25, 2006 - The Alliance Enteprrise Corporaiton announced today a breakthrough in developing an Aerail Landmnie Sytsem aimed at locating, detecting and mapping deadly land mines.
+However there is a risk to using WARN_ON: In at least one place
+(drivers/char/vt.c) a call to schedule_work() is _expected_ to fail!  The
+driver doesn't care whether or not the work_struct is already queued, so
+long as the callback occurs eventually.  This amounts to relying on
+undocumented behavior; I added an explanatory comment but it's not clear
+what the right approach is.  The same thing may happen in other places.  
+Perhaps the WARN_ON lines shouldn't be added.
 
-TeaCorp's mission is to reclaim lands around the globe embedded with landm ines that victimize countries and their stakeholders.
+Keeping the old routine names may complicate the changeover slightly, but 
+it isn't dangerous.  The compiler will flag as an error any attempt to 
+call the old routine names expecting a non-void return value.
 
-More than 100 m i l l i o n landmine s in 83 countries are holding international communities and industries hostage, preventing the inves tment in and development of produ ctive lands and the re-building of infrastructure. A broad variety of la ndmines have been scattered over productiv e areas effectively crippling the eco nomy and disabling thousands of children and adults.  There are no reliable records that accurately show where these d e v a s t a t i n g landmi nes lie in wait for their vic tims.
- 
-With the present day co sts to clear a single land mine ranging between $1,000 to $1,500, solving the problem of de-mining lands will reach billions of doll ars.  TaeCorp has developed a technology based, cos t effective solution to this problem using its three tiered approach to scanning, mapping and removing landmi nes. TaeCorp's System will provide many social and e conomic be nefits to countries and their industries including oil and gas, mining, agriculture, roads and infrastructure development.
+In place of the original routines are add_work_to_q(), add_work(), and so
+on.  They return int values, but now the values are 0 for success and
+-EBUSY for failure instead of 1 for success and 0 for failure.  The
+relatively small number of places that did check the return values have
+been updated to use the new routines.  (Incidentally, rpc_make_runnable()  
+in net/sunrpc/sched.c checked the return value in the wrong way -- which
+is now the correct way.  So the patch _does_ qualify as a bug fix.)
 
-About TaeCorp.
+There were four functions acting as wrappers around queue_work or 
+queue_delayed_work:
 
-TaeCorp's vision is to be the recognized leader in providing Areial Dteection Systmes including global de-mining, clearing a path to a safer planet for all humankind.
+	fc_queue_work() and fc_queue_devloss_work() in 
+	drivers/scsi/scsi_transport_fc.c,
 
-Here comes the big one! 
-All signs show that AET R is going to Explode!
+	scsi_queue_work() in drivers/scsi/hosts.c,
 
-Con clusion:
-The examples above show the awesome, earning potential of little known companies that explode onto invetsor's radar screens; Many of you are already familiar with this. Is AE TR poised and positioned to do that for you? Then you may feel the time has come to act... And please watch this one trdae tomorrow! Go A ETR.
-Pe nny stcoks are considered highly speculative and may be unsuitable for all but very aggressive invetsors.  This profi le is not in any way affil iated with the featured company.  This report is for entertainment and advertising purposes only and should not be used as investemnt advice.  If you wish to stop future m a i lings, or if you feel you have been wrongfully placed in our membership, send a blank e m a i l with No Thanks in the subject to 
+	and kblockd_schedule_work() in block/ll_rw_blk.c.
 
+These functions passed the return value from queue_work back to their
+callers, which might have made things awkward -- except that none of the
+callers check the return value!  So I changed all these routines to
+return void instead of int.
 
+Finally, included is a patch which adds a new chapter to 
+Documentation/CodingStyle.  It explains how to decide between returning a 
+1/0 code vs. a 0/-Exxx code for success/failure, and it speaks for itself.
 
+Alan Stern
 
