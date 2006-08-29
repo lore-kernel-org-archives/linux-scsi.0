@@ -1,40 +1,43 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: RE: [PATCH] scsi_transport_sas: remove local_attached flag
-Date: Tue, 29 Aug 2006 10:35:11 -0500
-Message-ID: <1156865712.3458.20.camel@mulgrave.il.steeleye.com>
-References: <664A4EBB07F29743873A87CF62C26D702E282F@NAMAIL4.ad.lsil.com>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: Conversion to generic boolean
+Date: Tue, 29 Aug 2006 08:47:14 -0700
+Message-ID: <20060829084714.9ae799a7.akpm@osdl.org>
+References: <44EFBEFA.2010707@student.ltu.se>
+	<20060828093202.GC8980@infradead.org>
+	<20060828171804.09c01846.akpm@osdl.org>
+	<20060829114502.GD4076@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:65450 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S965029AbWH2PfT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Aug 2006 11:35:19 -0400
-In-Reply-To: <664A4EBB07F29743873A87CF62C26D702E282F@NAMAIL4.ad.lsil.com>
+Received: from smtp.osdl.org ([65.172.181.4]:34772 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S964875AbWH2Pre (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Aug 2006 11:47:34 -0400
+In-Reply-To: <20060829114502.GD4076@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric" <Eric.Moore@lsil.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Richard Knutsson <ricknu-0@student.ltu.se>, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, 2006-08-29 at 09:24 -0600, Moore, Eric wrote:
-> If the tools are fine with you. Then nothing needs to be done.  I
-> could 
-> add support in fusion for sending internal smp passthru, or we can
-> export 
-> a smp portal for you.  The smp portal should still be in the future
-> plans 
-> for the bsg driver.
+On Tue, 29 Aug 2006 12:45:02 +0100
+Christoph Hellwig <hch@infradead.org> wrote:
 
-I think the object should be to have all the SAS cards display the same
-thing, so support for internal SMP passthrough looks to be the way to
-implement this.  Also, if the SAS transport class does this, then we can
-hook that up to BSG instead of having to have the drivers do it
-individually.
+> On Mon, Aug 28, 2006 at 05:18:04PM -0700, Andrew Morton wrote:
+> > At present we have >50 different definitions of TRUE and gawd knows how
+> > many private implementations of various flavours of bool.
+> > 
+> > In that context, Richard's approach of giving the kernel a single
+> > implementation of bool/true/false and then converting things over to use it
+> > makes sense.  The other approach would be to go through and nuke the lot,
+> > convert them to open-coded 0/1.
+> > 
+> > I'm not particularly fussed either way, really.  But the present situation
+> > is nuts.
+> 
+> Let's start to kill all those utterly silly if (x == true) and if (x == false)
+> into if (x) and if (!x) and pospone the type decision.  Adding a bool type
+> only makes sense if we have any kind of static typechecking that no one
+> ever assign an invalid type to it.
 
-I understood there was some architectural objection to doing SMP
-passthrough from the LSI architects ... does that still exist?
-
-James
-
-
+Not really.  bool/true/false have readability advantages over int/1/0.
