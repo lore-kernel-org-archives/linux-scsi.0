@@ -1,21 +1,21 @@
-From: "abe" <abe.bustle@roussel.as>
-Subject: Easy new home credit
-Date: Wed, 30 Aug 2006 05:42:33 +0900
-Message-ID: <32476694765620.016F681CBC@5PF6P>
+From: "cartel" <cartel.deliquesce@rpsbowling.com>
+Subject: New home its simple
+Date: Tue, 29 Aug 2006 23:11:38 +0200
+Message-ID: <57880155048866.6783AE55A1@BMVCR9H>
 Mime-Version: 1.0
 Content-Type: text/plain;
         charset="Windows-1252"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [61.254.20.193] ([61.254.20.193]:4363 "EHLO COMPUTER.f958ef.org")
-	by vger.kernel.org with ESMTP id S965290AbWH2Um2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Aug 2006 16:42:28 -0400
+Received: from 196.Red-81-34-48.dynamicIP.rima-tde.net ([81.34.48.196]:15877
+	"EHLO PC-MZ.6a2w1v0.com") by vger.kernel.org with ESMTP
+	id S965384AbWH2VKg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Aug 2006 17:10:36 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-serial@vger.kernel.org
 
-Good day to you Sir! 
+Hi Bro, 
 
 Your credit doesn't matter to us!
 If you OWN real estate and want IMMEDIATE cash to spend ANY way you 
@@ -33,7 +33,7 @@ gone!
 We have one-mimute form to apply the request,
 please CLICK HERE
 
-http://SJNL3.capitalpartnerusa.com/?ncache=103855
+http://KZP.yourcreditpartner.us/?ncache=10510736
 
 Don't worry about approval, your credit will not disqualify you!
 
