@@ -1,43 +1,57 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: Conversion to generic boolean
-Date: Tue, 29 Aug 2006 08:47:14 -0700
-Message-ID: <20060829084714.9ae799a7.akpm@osdl.org>
-References: <44EFBEFA.2010707@student.ltu.se>
-	<20060828093202.GC8980@infradead.org>
-	<20060828171804.09c01846.akpm@osdl.org>
-	<20060829114502.GD4076@infradead.org>
+From: "Moore, Eric" <Eric.Moore@lsil.com>
+Subject: RE: [PATCH] scsi_transport_sas: remove local_attached flag
+Date: Tue, 29 Aug 2006 10:03:39 -0600
+Message-ID: <664A4EBB07F29743873A87CF62C26D702E286B@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:34772 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S964875AbWH2Pre (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Aug 2006 11:47:34 -0400
-In-Reply-To: <20060829114502.GD4076@infradead.org>
+Received: from mail0.lsil.com ([147.145.40.20]:51654 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S965040AbWH2QDm convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Aug 2006 12:03:42 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Richard Knutsson <ricknu-0@student.ltu.se>, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Tue, 29 Aug 2006 12:45:02 +0100
-Christoph Hellwig <hch@infradead.org> wrote:
+On Tuesday, August 29, 2006 9:35 AM, James Bottomley wrote: 
 
-> On Mon, Aug 28, 2006 at 05:18:04PM -0700, Andrew Morton wrote:
-> > At present we have >50 different definitions of TRUE and gawd knows how
-> > many private implementations of various flavours of bool.
-> > 
-> > In that context, Richard's approach of giving the kernel a single
-> > implementation of bool/true/false and then converting things over to use it
-> > makes sense.  The other approach would be to go through and nuke the lot,
-> > convert them to open-coded 0/1.
-> > 
-> > I'm not particularly fussed either way, really.  But the present situation
-> > is nuts.
+> I think the object should be to have all the SAS cards 
+> display the same
+> thing, so support for internal SMP passthrough looks to be the way to
+> implement this.  Also, if the SAS transport class does this, 
+> then we can
+> hook that up to BSG instead of having to have the drivers do it
+> individually.
+
+Ok, I will look into passing internal smp request so link_errors
+and link/phy reset can work for expander phys.
+
+It maybe a couple weeks as sles10 activities have been keeping
+rather busy of late.
+
 > 
-> Let's start to kill all those utterly silly if (x == true) and if (x == false)
-> into if (x) and if (!x) and pospone the type decision.  Adding a bool type
-> only makes sense if we have any kind of static typechecking that no one
-> ever assign an invalid type to it.
+> I understood there was some architectural objection to doing SMP
+> passthrough from the LSI architects ... does that still exist?
+> 
 
-Not really.  bool/true/false have readability advantages over int/1/0.
+I think their main complaint was they didn't want transport layer doing
+discovery. Something that would be redundant as fusion fw already
+handles
+that, and that would introduce a performance hit with all the primitives
+bouncing around. What we currently do is reading config pages to
+determine
+what was setup by firmware, which is fine with them.  I believe you
+already 
+assured me that the transport layer wouldn't take over discovery if we 
+exported a portal.  My idea of the portal was for Doug Gilberts smputils
+to use generic interface, instead of the current mptctl interface.  To
+what
+extent would transport layer use the portal besides exporting it to
+userspace?
+
+Eric
+
