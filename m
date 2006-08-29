@@ -1,71 +1,62 @@
-From: Anton Altaparmakov <aia21@cam.ac.uk>
-Subject: Re: Conversion to generic boolean
-Date: Tue, 29 Aug 2006 08:29:38 +0100
-Message-ID: <1156836578.26009.6.camel@imp.csi.cam.ac.uk>
-References: <44EFBEFA.2010707@student.ltu.se>
-	 <20060828093202.GC8980@infradead.org>
-	 <20060828171804.09c01846.akpm@osdl.org>  <44F3952B.5000500@yahoo.com.au>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: Problem with Adaptec 39320A Ultra320 SCSI adapter driver
+Date: Tue, 29 Aug 2006 10:33:59 +0200
+Message-ID: <44F3FBF7.2050300@suse.de>
+References: <3a1eedb70608101101g16527d76ka1d088930a39f365@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ppsw-1.csi.cam.ac.uk ([131.111.8.131]:14263 "EHLO
-	ppsw-1.csi.cam.ac.uk") by vger.kernel.org with ESMTP
-	id S1750869AbWH2H3x (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Aug 2006 03:29:53 -0400
-In-Reply-To: <44F3952B.5000500@yahoo.com.au>
+Received: from mx2.suse.de ([195.135.220.15]:43495 "EHLO mx2.suse.de")
+	by vger.kernel.org with ESMTP id S1750834AbWH2IeA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Aug 2006 04:34:00 -0400
+In-Reply-To: <3a1eedb70608101101g16527d76ka1d088930a39f365@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Nick Piggin <nickpiggin@yahoo.com.au>
-Cc: Andrew Morton <akpm@osdl.org>, Christoph Hellwig <hch@infradead.org>, Richard Knutsson <ricknu-0@student.ltu.se>, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: jassduec@gmail.com
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, 2006-08-29 at 11:15 +1000, Nick Piggin wrote:
-> Andrew Morton wrote:
-> > On Mon, 28 Aug 2006 10:32:02 +0100
-> > Christoph Hellwig <hch@infradead.org> wrote:
-> > 
-> > 
-> >>On Sat, Aug 26, 2006 at 05:24:42AM +0200, Richard Knutsson wrote:
-> >>
-> >>>Hello
-> >>>
-> >>>Just would like to ask if you want patches for:
-> >>
-> >>Total NACK to any of this boolean ididocy.  I very much hope you didn't
-> >>get the impression you actually have a chance to get this merged.
-> > 
-> > 
-> > I was kinda planning on merging it ;)
-> > 
-> > I can't say that I'm in love with the patches, but they do improve the
-> > situation.
-> > 
-> > At present we have >50 different definitions of TRUE and gawd knows how
-> > many private implementations of various flavours of bool.
-> > 
-> > In that context, Richard's approach of giving the kernel a single
-> > implementation of bool/true/false and then converting things over to use it
-> > makes sense.  The other approach would be to go through and nuke the lot,
-> > convert them to open-coded 0/1.
-> 
-> Well... we are programming in C here, aren't we ;)
+jassduec@gmail.com wrote:
+> Hi All,
+>=20
+> I am running CentOS 4.3 with linux kernel 2.6.9-34.0.2.ELsmp. I am
+> using Adaptec 39320A Ultra320 SCSI adapter for connecting to 840 SATA
+> RAID Array from gateway. When the system boots, i am getting the
+> following errors. Though the kernel is able to identify the LUNs from
+> the array, i was wondering what is the cause of the error message. An=
+y
+> reply in this regard would be highly appreciated.
+>=20
+> Thanks in advance
+>=20
+> ########################Error Message########################
+>=20
+>=20
+> scsi2 : Adaptec AIC79XX PCI-X SCSI HBA DRIVER, Rev 1.3.11
+>        <Adaptec 39320A Ultra320 SCSI adapter>
+>        aic7902: Ultra320 Wide Channel A, SCSI Id=3D7, PCI-X 50-66Mhz,=
+ 512=20
+> SCBs
+>=20
+> (scsi2:A:4:0): Unexpected busfree in Message-out phase, 1 SCBs
+> aborted, PRGMCNT =3D=3D 0x19a
+This looks like a external bus-reset.
+Ie it might well be that the external box does it's own SCSI bus reset=20
+on startup, which will confuse the adapter.
+Nothing much we can do about here, but nothing to worry about, either.
 
-Not sure whether this is meant in favour of one or the other but we are
-not programming in C strictly speaking but in C99+gccisms and C99
-includes _Bool...
+Cheers,
 
-ps. I am definitely in favour of a kernel wide boolean type and will
-certainly refuse any patches that remove the NTFS boolean type and
-replace it with an open-coded 0/1...  I can only imagine that most other
-maintainers who presently define their own boolen types will do the
-same...
-
-Best regards,
-
-        Anton
--- 
-Anton Altaparmakov <aia21 at cam.ac.uk> (replace at with @)
-Unix Support, Computing Service, University of Cambridge, CB2 3QH, UK
-Linux NTFS maintainer / IRC: #ntfs on irc.freenode.net
-WWW: http://www.linux-ntfs.org/ & http://www-stu.christs.cam.ac.uk/~aia21/
-
+Hannes
+--=20
+Dr. Hannes Reinecke			hare@suse.de
+SuSE Linux Products GmbH		S390 & zSeries
+Maxfeldstra=DFe 5				+49 911 74053 688
+90409 N=FCrnberg				http://www.suse.de
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
