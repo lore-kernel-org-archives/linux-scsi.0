@@ -1,47 +1,96 @@
-From: Peter Williams <pwil3058@bigpond.net.au>
-Subject: Re: Conversion to generic boolean
-Date: Tue, 29 Aug 2006 23:26:10 +1000
-Message-ID: <44F44072.4020506@bigpond.net.au>
-References: <44EFBEFA.2010707@student.ltu.se> <20060828093202.GC8980@infradead.org> <Pine.LNX.4.61.0608281255100.14305@yvahk01.tjqt.qr> <44F2DEDC.3020608@student.ltu.se> <1156792540.2367.2.camel@entropy> <20060829114143.GB4076@infradead.org> <Pine.LNX.4.61.0608291416370.8031@yvahk01.tjqt.qr>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: timeout during sas discovery (aic94xx)
+Date: Tue, 29 Aug 2006 08:53:43 -0500
+Message-ID: <1156859623.3458.3.camel@mulgrave.il.steeleye.com>
+References: <20060828231832.GA1037@us.ibm.com>  <44F3D428.60705@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omta03ps.mx.bigpond.com ([144.140.82.155]:53475 "EHLO
-	omta03ps.mx.bigpond.com") by vger.kernel.org with ESMTP
-	id S964953AbWH2N0O (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Aug 2006 09:26:14 -0400
-In-Reply-To: <Pine.LNX.4.61.0608291416370.8031@yvahk01.tjqt.qr>
+Received: from stat9.steeleye.com ([209.192.50.41]:10409 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1750833AbWH2Nxt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Aug 2006 09:53:49 -0400
+In-Reply-To: <44F3D428.60705@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jan Engelhardt <jengelh@linux01.gwdg.de>
-Cc: Christoph Hellwig <hch@infradead.org>, Nicholas Miell <nmiell@comcast.net>, Richard Knutsson <ricknu-0@student.ltu.se>, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Darrick J. Wong" <djwong@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org, andmike@us.ibm.com, alexisb@us.ibm.com
 
-Jan Engelhardt wrote:
->>>> That is error-prone. Not "==FALSE" but what happens if x is (for some 
->>>> reason) not 1 and then "if (x==TRUE)".
->>> If you're using _Bool, that isn't possible. (Except at the boundaries
->>> where you have to validate untrusted data -- and the compiler makes that
->>> more difficult, because it "knows" that a _Bool can only be 0 or 1 and
->>> therefore your check to see if it's not 0 or 1 can "safely" be
->>> eliminated.)
->> gcc lets you happily assign any integer value to bool/_Bool, so unless
-> 
-> But, it coerces the rvalue into 0 or 1, which may be a gain.
+On Mon, 2006-08-28 at 22:44 -0700, Darrick J. Wong wrote:
+> Uh... I don't think that phy_reset function ever gets called.  My
+> ten-second grep of the libsas/aic94xx code doesn't yield and takers.
+> Maybe one of those functions that gets called after time index 575.791
+> should be doing that?
 
-Actually, it's not coercion.  It's the result of evaluating the value as 
-a boolean expression.
+I see the same thing occasionally in my sata on expanders setup.
 
-> 
->> you write sparse support for actually checking things there's not the
->> slightest advantage in value range checking.
-> 
-> 
-> Jan Engelhardt
+The problem is that the error handling in the SMP functions isn't
+robust.  Try this patch; it works for me(tm), but it's obviously wrong
+since it simply blasts a reset.
+
+James
+
+Index: BUILD-2.6/drivers/scsi/libsas/sas_discover.c
+===================================================================
+--- BUILD-2.6.orig/drivers/scsi/libsas/sas_discover.c	2006-08-28 11:46:47.000000000 -0500
++++ BUILD-2.6/drivers/scsi/libsas/sas_discover.c	2006-08-28 17:32:08.000000000 -0500
+@@ -136,10 +136,15 @@ static int sas_execute_task(struct sas_t
+ 			res2 = i->dft->lldd_abort_task(task);
+ 			SAS_DPRINTK("came back from abort task\n");
+ 			if (!(task->task_state_flags & SAS_TASK_STATE_DONE)) {
+-				if (res2 == TMF_RESP_FUNC_COMPLETE)
+-					continue; /* Retry the task */
+-				else
+-					goto ex_err;
++				if (res2 != TMF_RESP_FUNC_COMPLETE) {
++					/* bigger hammer */
++					SAS_DPRINTK("Resetting device\n");
++					sas_device_reset(task->dev, 1);
++					/* wait for things to settle */
++					msleep(500);
++					/* Retry the task */
++					continue;
++				}
+ 			}
+ 		}
+ 		if (task->task_status.stat == SAM_BUSY ||
+Index: BUILD-2.6/drivers/scsi/libsas/sas_init.c
+===================================================================
+--- BUILD-2.6.orig/drivers/scsi/libsas/sas_init.c	2006-08-28 11:55:32.000000000 -0500
++++ BUILD-2.6/drivers/scsi/libsas/sas_init.c	2006-08-28 17:33:10.000000000 -0500
+@@ -173,6 +173,19 @@ static struct sas_function_template sft 
+ 	.get_linkerrors = sas_get_linkerrors,
+ };
+ 
++int sas_device_reset(struct domain_device *dev, int hard_reset)
++{
++	struct sas_rphy *rphy = dev->rphy;
++	struct sas_port *port = dev_to_sas_port(rphy->dev.parent);
++	struct sas_phy *phy;
++
++	mutex_lock(&port->phy_list_mutex);
++	list_for_each_entry(phy, &port->phy_list, port_siblings)
++		sas_phy_reset(phy, hard_reset);
++	mutex_unlock(&port->phy_list_mutex);
++	return 0;
++}
++
+ struct scsi_transport_template *
+ sas_domain_attach_transport(struct sas_domain_function_template *dft)
+ {
+Index: BUILD-2.6/drivers/scsi/libsas/sas_internal.h
+===================================================================
+--- BUILD-2.6.orig/drivers/scsi/libsas/sas_internal.h	2006-08-28 12:00:43.000000000 -0500
++++ BUILD-2.6/drivers/scsi/libsas/sas_internal.h	2006-08-28 12:01:35.000000000 -0500
+@@ -75,6 +75,8 @@ int sas_smp_get_phy_events(struct sas_ph
+ 
+ struct domain_device *sas_find_dev_by_rphy(struct sas_rphy *rphy);
+ 
++int sas_device_reset(struct domain_device *dev, int hard_reset);
++
+ void sas_hae_reset(void *);
+ 
+ static inline void sas_queue_event(int event, spinlock_t *lock,
 
 
--- 
-Peter Williams                                   pwil3058@bigpond.net.au
-
-"Learning, n. The kind of ignorance distinguishing the studious."
-  -- Ambrose Bierce
