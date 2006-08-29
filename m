@@ -1,118 +1,42 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH] export the queue_work wrappers GPL-only
-Date: Tue, 29 Aug 2006 15:37:18 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0608291448380.3753-100000@iolanthe.rowland.org>
+From: "abe" <abe.bustle@roussel.as>
+Subject: Easy new home credit
+Date: Wed, 30 Aug 2006 05:42:33 +0900
+Message-ID: <32476694765620.016F681CBC@5PF6P>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+        charset="Windows-1252"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:48392 "HELO
-	iolanthe.rowland.org") by vger.kernel.org with SMTP
-	id S1751273AbWH2ThU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Aug 2006 15:37:20 -0400
+Received: from [61.254.20.193] ([61.254.20.193]:4363 "EHLO COMPUTER.f958ef.org")
+	by vger.kernel.org with ESMTP id S965290AbWH2Um2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Aug 2006 16:42:28 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jonathan Corbet <corbet@lwn.net>
-Cc: linux-kernel@vger.kernel.org, SCSI development list <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@suse.de>, Andrew Morton <akpm@osdl.org>, Ingo Molnar <mingo@redhat.com>
+To: linux-scsi@vger.kernel.org
 
-This patch (as777) fixes an oversight in a couple of earlier patches.  Now 
-the wrapper routines:
+Good day to you Sir! 
 
-	queue_work(), queue_delayed_work(), queue_delayed_work_on(),
-	schedule_work(), schedule_delayed_work(), and
-	schedule_delayed_work_on()
+Your credit doesn't matter to us!
+If you OWN real estate and want IMMEDIATE cash to spend ANY way you 
+like, or simply wish to LOWER your monthly payments by a third or more, here are the deals we have TODAY:
 
-are exported GPL-only, just as the originals used to be.
+$488,000.00 at a 3.67% fixed-rate
+$372,000.00 at a 3.90% variable-rate
+$492,000.00 at a 3.21% interest-only
+$248,000.00 at a 3.36% fixed-rate
+$198,000.00 at a 3.55% variable-rate
 
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+Hurry, we have requests limits, so when these deals are gone, they are 
+gone!
 
----
+We have one-mimute form to apply the request,
+please CLICK HERE
 
-On Tue, 29 Aug 2006, Jonathan Corbet wrote:
+http://SJNL3.capitalpartnerusa.com/?ncache=103855
 
-> One little thing I just noticed.  The old queue_work() functions were
-> exported GPL-only.  And the new ones are too:
-> 
-> > -EXPORT_SYMBOL_GPL(queue_work);
-> > +EXPORT_SYMBOL_GPL(add_work_to_q);
-> 
-> But the new wrappers are not:
-> 
-> > +EXPORT_SYMBOL(queue_work);
-> 
-> They should probably be exported in the same mode as before.
+Don't worry about approval, your credit will not disqualify you!
 
-You're right...  I don't know how I managed to miss that.
+Approval Manager.
 
-> Also, should there be an entry added to
-> Documentation/feature-removal-schedule.txt?
-
-It's a question of whether anyone feels the need to remove the legacy
-routines.
-
-Andrew, if you think that after (say) a year's time those WARN_ON()s no
-longer serve any useful purpose, I could do a big search-and-replace to
-get rid of those old functions entirely.  I assume there's no problem with
-accepting patches that change hundreds of files.
-
-Alan Stern
-
-
-Index: mm/kernel/workqueue.c
-===================================================================
---- mm.orig/kernel/workqueue.c
-+++ mm/kernel/workqueue.c
-@@ -501,7 +501,7 @@ void fastcall queue_work(struct workqueu
- 	rc = add_work_to_q(wq, work);
- 	WARN_ON(rc < 0);
- }
--EXPORT_SYMBOL(queue_work);
-+EXPORT_SYMBOL_GPL(queue_work);
- 
- void fastcall queue_delayed_work(struct workqueue_struct *wq,
- 		struct work_struct *work, unsigned long delay)
-@@ -511,7 +511,7 @@ void fastcall queue_delayed_work(struct 
- 	rc = add_delayed_work_to_q(wq, work, delay);
- 	WARN_ON(rc < 0);
- }
--EXPORT_SYMBOL(queue_delayed_work);
-+EXPORT_SYMBOL_GPL(queue_delayed_work);
- 
- void queue_delayed_work_on(int cpu, struct workqueue_struct *wq,
- 		struct work_struct *work, unsigned long delay)
-@@ -521,7 +521,7 @@ void queue_delayed_work_on(int cpu, stru
- 	rc = add_delayed_work_to_q_on(cpu, wq, work, delay);
- 	WARN_ON(rc < 0);
- }
--EXPORT_SYMBOL(queue_delayed_work_on);
-+EXPORT_SYMBOL_GPL(queue_delayed_work_on);
- 
- void fastcall schedule_work(struct work_struct *work)
- {
-@@ -530,7 +530,7 @@ void fastcall schedule_work(struct work_
- 	rc = add_work_to_q(keventd_wq, work);
- 	WARN_ON(rc < 0);
- }
--EXPORT_SYMBOL(schedule_work);
-+EXPORT_SYMBOL_GPL(schedule_work);
- 
- void fastcall schedule_delayed_work(struct work_struct *work,
- 		unsigned long delay)
-@@ -540,7 +540,7 @@ void fastcall schedule_delayed_work(stru
- 	rc = add_delayed_work_to_q(keventd_wq, work, delay);
- 	WARN_ON(rc < 0);
- }
--EXPORT_SYMBOL(schedule_delayed_work);
-+EXPORT_SYMBOL_GPL(schedule_delayed_work);
- 
- void schedule_delayed_work_on(int cpu, struct work_struct *work,
- 		unsigned long delay)
-@@ -550,7 +550,7 @@ void schedule_delayed_work_on(int cpu, s
- 	rc = add_delayed_work_to_q_on(cpu, keventd_wq, work, delay);
- 	WARN_ON(rc < 0);
- }
--EXPORT_SYMBOL(schedule_delayed_work_on);
-+EXPORT_SYMBOL_GPL(schedule_delayed_work_on);
- 
- /**
-  * schedule_on_each_cpu - call a function on each online CPU from keventd
 
