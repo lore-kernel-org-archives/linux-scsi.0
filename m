@@ -1,101 +1,99 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [SCSI] add shared tag map helpers
-Date: Wed, 30 Aug 2006 09:45:51 -0400
-Message-ID: <1156945551.3735.17.camel@mulgrave.il.steeleye.com>
+From: "Randy.Dunlap" <rdunlap@xenotime.net>
+Subject: Re: [PATCH] block: add support for shared tag maps
+Date: Wed, 30 Aug 2006 08:31:16 -0700
+Message-ID: <20060830083116.172069a2.rdunlap@xenotime.net>
+References: <1156945459.3735.14.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:60861 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751051AbWH3Npv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Aug 2006 09:45:51 -0400
+Received: from xenotime.net ([66.160.160.81]:55503 "HELO xenotime.net")
+	by vger.kernel.org with SMTP id S1750986AbWH3P16 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Aug 2006 11:27:58 -0400
+Received: from midway.site ([71.117.233.155]) by xenotime.net for <linux-scsi@vger.kernel.org>; Wed, 30 Aug 2006 08:27:52 -0700
+In-Reply-To: <1156945459.3735.14.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Ed Lin <ed.lin@promise.com>, Jens Axboe <axboe@suse.de>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Ed Lin <ed.lin@promise.com>, Jens Axboe <axboe@suse.de>
 
-This patch adds support for sharing tag maps at the host level
-(i.e. either every queue [LUN] has its own tag map or there's a single
-one for the entire host).  This formulation is primarily intended to
-help single issue queue hardware, like the aic7xxx
+On Wed, 30 Aug 2006 09:44:18 -0400 James Bottomley wrote:
 
+> [PATCH] block: add support for shared tag maps
+> 
+> The current block queue implementation already contains most of the
+> machinery for shared tag maps.  The only remaining pieces are a way to
+> allocate and destroy a tag map independently of the queues (so that
+> the maps can be managed on the life cycle of the overseeing entity)
+> 
 
-Index: BUILD-2.6/include/scsi/scsi_host.h
-===================================================================
---- BUILD-2.6.orig/include/scsi/scsi_host.h	2006-08-08 15:58:43.000000000 -0500
-+++ BUILD-2.6/include/scsi/scsi_host.h	2006-08-08 16:02:05.000000000 -0500
-@@ -16,6 +16,7 @@
- struct Scsi_Host;
- struct scsi_host_cmd_pool;
- struct scsi_transport_template;
-+struct blk_queue_tags;
- 
- 
- /*
-@@ -466,6 +467,12 @@
- 	struct scsi_transport_template *transportt;
- 
- 	/*
-+	 * area to keep a shared tag map (if needed, will be
-+	 * NULL if not)
-+	 */
-+	struct blk_queue_tag	*bqt;
-+
-+	/*
- 	 * The following two fields are protected with host_lock;
- 	 * however, eh routines can safely access during eh processing
- 	 * without acquiring the lock.
-Index: BUILD-2.6/include/scsi/scsi_tcq.h
-===================================================================
---- BUILD-2.6.orig/include/scsi/scsi_tcq.h	2006-08-08 15:58:48.000000000 -0500
-+++ BUILD-2.6/include/scsi/scsi_tcq.h	2006-08-08 16:03:37.000000000 -0500
-@@ -4,6 +4,7 @@
- #include <linux/blkdev.h>
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_device.h>
-+#include <scsi/scsi_host.h>
- 
- 
- #define MSG_SIMPLE_TAG	0x20
-@@ -66,7 +67,8 @@
- 		return;
- 
- 	if (!blk_queue_tagged(sdev->request_queue))
--		blk_queue_init_tags(sdev->request_queue, depth, NULL);
-+		blk_queue_init_tags(sdev->request_queue, depth,
-+				    sdev->host->bqt);
- 
- 	scsi_adjust_queue_depth(sdev, scsi_get_tag_type(sdev), depth);
- }
-@@ -131,4 +133,14 @@
- 	return sdev->current_cmnd;
- }
- 
-+/**
-+ * scsi_init_shared_tag_map - create a shared tag map
-+ * @shost:	the host to share the tag map among all devices
-+ * @depth:	the total depth of the map
-+ */
-+static inline void scsi_init_shared_tag_map(struct Scsi_Host *shost, int depth)
-+{
-+	shost->bqt = blk_init_tags(depth);
-+}
-+
- #endif /* _SCSI_SCSI_TCQ_H */
-Index: BUILD-2.6/drivers/scsi/hosts.c
-===================================================================
---- BUILD-2.6.orig/drivers/scsi/hosts.c	2006-08-08 15:59:47.000000000 -0500
-+++ BUILD-2.6/drivers/scsi/hosts.c	2006-08-08 16:00:33.000000000 -0500
-@@ -265,6 +265,9 @@
- 		destroy_workqueue(shost->work_q);
- 
- 	scsi_destroy_command_freelist(shost);
-+	if (shost->bqt)
-+		blk_free_tags(shost->bqt);
-+
- 	kfree(shost->shost_data);
- 
- 	if (parent)
+kernel-doc only:  no blank line between the function name
+and its parameter(s) list.
+
+> Index: linux-2.6/block/ll_rw_blk.c
+> ===================================================================
+> --- linux-2.6.orig/block/ll_rw_blk.c
+> +++ linux-2.6/block/ll_rw_blk.c
+> @@ -848,6 +848,34 @@ struct request *blk_queue_find_tag(reque
+>  EXPORT_SYMBOL(blk_queue_find_tag);
+>  
+>  /**
+> + * __blk_free_tags - release a given set of tag maintenance info
+> + *
+
+drop
+
+> + * @bqt:	the tag map to free
+> + *
+> + * Tries to free the specified @bqt@.  Returns true if it was
+> + * actually freed and false if there are still references using it
+> + */
+> +static int __blk_free_tags(struct blk_queue_tag *bqt)
+> +{
+> +}
+> +
+> @@ -862,23 +890,28 @@ static void __blk_queue_free_tags(reques
+>  
+> +
+> +/**
+> + * blk_free_tags - release a given set of tag maintenance info
+> + *
+
+drop
+
+> + * @bqt:	the tag map to free
+> + *
+> + * For externally managed @bqt@ frees the map.  Callers of this
+> + * function must guarantee to have released all the queues that
+> + * might have been using this tag map.
+> + */
+> +void blk_free_tags(struct blk_queue_tag *bqt)
+> +{
+> +	if (unlikely(!__blk_free_tags(bqt)))
+> +		BUG();
+> +}
+> +
+>  /**
+>   * blk_queue_free_tags - release tag maintenance info
+>   * @q:  the request queue for the device
+> @@ -927,6 +960,38 @@ fail:
+> +
+> +/**
+> + * blk_init_tags - initialize the tag info for an external tag map
+> + *
+
+drop
+
+> + * @depth:	the maximum queue depth supported
+> + * @tags: the tag to use
+> + **/
+> +struct blk_queue_tag *blk_init_tags(int depth)
+> +{
+> +	return __blk_queue_init_tags(NULL, depth);
+> +}
+> +EXPORT_SYMBOL(blk_init_tags);
 
 
+---
+~Randy
