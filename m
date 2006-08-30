@@ -1,139 +1,213 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Re: Random scsi disk disappearing
-Date: Wed, 30 Aug 2006 23:40:13 +0400
-Message-ID: <44F5E99D.2050902@tls.msk.ru>
-References: <44E44B3E.10708@tls.msk.ru> <20060817113537.GK4340@parisc-linux.org> <44E4567B.4080104@tls.msk.ru>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [PATCH, take2] block: add support for shared tag maps
+Date: Wed, 30 Aug 2006 15:48:45 -0400
+Message-ID: <1156967326.7701.17.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hobbit.corpit.ru ([81.13.94.6]:57940 "EHLO hobbit.corpit.ru")
-	by vger.kernel.org with ESMTP id S1751392AbWH3TkW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Aug 2006 15:40:22 -0400
-In-Reply-To: <44E4567B.4080104@tls.msk.ru>
+Received: from stat9.steeleye.com ([209.192.50.41]:38597 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1751431AbWH3Tss (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Aug 2006 15:48:48 -0400
+Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
+	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id k7UJmk514605
+	for <linux-scsi@vger.kernel.org>; Wed, 30 Aug 2006 15:48:46 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-Michael Tokarev wrote:
-> Matthew Wilcox wrote:
->> On Thu, Aug 17, 2006 at 02:55:58PM +0400, Michael Tokarev wrote:
-> [sporadic disk disappearing, no logging]
->> I'd recommend turning on scsi logging; it might give you a clue about
->> which bit of scanning is failing to work properly.
->>
->> Try booting with scsi_mod.scsi_logging_level = 448 (I think I have that
->> number right; 7 shifted left by 6) and then you can compare failing and
->> non-failing runs and see if there's any difference.
+This is redone with Randy's comments plus Jens' via IRC.  And I've added the missing header diffs.
 
-Ok, yesterday it happened again.  This machine is running 2.6.11 still
-(leftover - I'm updating it to current 2.6.17 now).
+James
 
-The controller is, according to lspci:
+----
 
-0000:04:04.0 SCSI storage controller: Adaptec AIC-7902 U320 (rev 03)
+[PATCH] block: add support for shared tag maps
 
-Here's the logging.  Too bad I don't understand most of this stuff ;)
+The current block queue implementation already contains most of the
+machinery for shared tag maps.  The only remaining pieces are a way to
+allocate and destroy a tag map independently of the queues (so that
+the maps can be managed on the life cycle of the overseeing entity)
 
-Is it possible to say something from this or should I try different
-log level or kernel version?
 
-Thanks.
+Index: linux-2.6/block/ll_rw_blk.c
+===================================================================
+--- linux-2.6.orig/block/ll_rw_blk.c
++++ linux-2.6/block/ll_rw_blk.c
+@@ -848,21 +848,18 @@ struct request *blk_queue_find_tag(reque
+ EXPORT_SYMBOL(blk_queue_find_tag);
+ 
+ /**
+- * __blk_queue_free_tags - release tag maintenance info
+- * @q:  the request queue for the device
++ * __blk_free_tags - release a given set of tag maintenance info
++ * @bqt:	the tag map to free
+  *
+- *  Notes:
+- *    blk_cleanup_queue() will take care of calling this function, if tagging
+- *    has been used. So there's no need to call this directly.
+- **/
+-static void __blk_queue_free_tags(request_queue_t *q)
++ * Tries to free the specified @bqt@.  Returns true if it was
++ * actually freed and false if there are still references using it
++ */
++static int __blk_free_tags(struct blk_queue_tag *bqt)
+ {
+-	struct blk_queue_tag *bqt = q->queue_tags;
+-
+-	if (!bqt)
+-		return;
++	int retval;
+ 
+-	if (atomic_dec_and_test(&bqt->refcnt)) {
++	retval = atomic_dec_and_test(&bqt->refcnt);
++	if (retval) {
+ 		BUG_ON(bqt->busy);
+ 		BUG_ON(!list_empty(&bqt->busy_list));
+ 
+@@ -873,12 +870,48 @@ static void __blk_queue_free_tags(reques
+ 		bqt->tag_map = NULL;
+ 
+ 		kfree(bqt);
++
+ 	}
+ 
++	return retval;
++}
++
++/**
++ * __blk_queue_free_tags - release tag maintenance info
++ * @q:  the request queue for the device
++ *
++ *  Notes:
++ *    blk_cleanup_queue() will take care of calling this function, if tagging
++ *    has been used. So there's no need to call this directly.
++ **/
++static void __blk_queue_free_tags(request_queue_t *q)
++{
++	struct blk_queue_tag *bqt = q->queue_tags;
++
++	if (!bqt)
++		return;
++
++	__blk_free_tags(bqt);
++
+ 	q->queue_tags = NULL;
+ 	q->queue_flags &= ~(1 << QUEUE_FLAG_QUEUED);
+ }
+ 
++
++/**
++ * blk_free_tags - release a given set of tag maintenance info
++ * @bqt:	the tag map to free
++ *
++ * For externally managed @bqt@ frees the map.  Callers of this
++ * function must guarantee to have released all the queues that
++ * might have been using this tag map.
++ */
++void blk_free_tags(struct blk_queue_tag *bqt)
++{
++	if (unlikely(!__blk_free_tags(bqt)))
++		BUG();
++}
++
+ /**
+  * blk_queue_free_tags - release tag maintenance info
+  * @q:  the request queue for the device
+@@ -901,7 +934,7 @@ init_tag_map(request_queue_t *q, struct 
+ 	unsigned long *tag_map;
+ 	int nr_ulongs;
+ 
+-	if (depth > q->nr_requests * 2) {
++	if (q && depth > q->nr_requests * 2) {
+ 		depth = q->nr_requests * 2;
+ 		printk(KERN_ERR "%s: adjusted depth to %d\n",
+ 				__FUNCTION__, depth);
+@@ -927,6 +960,38 @@ fail:
+ 	return -ENOMEM;
+ }
+ 
++static struct blk_queue_tag *__blk_queue_init_tags(struct request_queue *q,
++						   int depth)
++{
++	struct blk_queue_tag *tags;
++
++	tags = kmalloc(sizeof(struct blk_queue_tag), GFP_ATOMIC);
++	if (!tags)
++		goto fail;
++
++	if (init_tag_map(q, tags, depth))
++		goto fail;
++
++	INIT_LIST_HEAD(&tags->busy_list);
++	tags->busy = 0;
++	atomic_set(&tags->refcnt, 1);
++	return tags;
++fail:
++	kfree(tags);
++	return NULL;
++}
++
++/**
++ * blk_init_tags - initialize the tag info for an external tag map
++ * @depth:	the maximum queue depth supported
++ * @tags: the tag to use
++ **/
++struct blk_queue_tag *blk_init_tags(int depth)
++{
++	return __blk_queue_init_tags(NULL, depth);
++}
++EXPORT_SYMBOL(blk_init_tags);
++
+ /**
+  * blk_queue_init_tags - initialize the queue tag info
+  * @q:  the request queue for the device
+@@ -941,16 +1006,10 @@ int blk_queue_init_tags(request_queue_t 
+ 	BUG_ON(tags && q->queue_tags && tags != q->queue_tags);
+ 
+ 	if (!tags && !q->queue_tags) {
+-		tags = kmalloc(sizeof(struct blk_queue_tag), GFP_ATOMIC);
+-		if (!tags)
+-			goto fail;
++		tags = __blk_queue_init_tags(q, depth);
+ 
+-		if (init_tag_map(q, tags, depth))
++		if (!tags)
+ 			goto fail;
+-
+-		INIT_LIST_HEAD(&tags->busy_list);
+-		tags->busy = 0;
+-		atomic_set(&tags->refcnt, 1);
+ 	} else if (q->queue_tags) {
+ 		if ((rc = blk_queue_resize_tags(q, depth)))
+ 			return rc;
+@@ -1002,6 +1061,13 @@ int blk_queue_resize_tags(request_queue_
+ 	}
+ 
+ 	/*
++	 * Currently cannot replace a shared tag map with a new
++	 * one, so error out if this is the case
++	 */
++	if (atomic_read(&bqt->refcnt) != 1)
++		return -EBUSY;
++
++	/*
+ 	 * save the old state info, so we can copy it back
+ 	 */
+ 	tag_index = bqt->tag_index;
+Index: linux-2.6/include/linux/blkdev.h
+===================================================================
+--- linux-2.6.orig/include/linux/blkdev.h
++++ linux-2.6/include/linux/blkdev.h
+@@ -746,6 +746,8 @@ extern void blk_queue_free_tags(request_
+ extern int blk_queue_resize_tags(request_queue_t *, int);
+ extern void blk_queue_invalidate_tags(request_queue_t *);
+ extern long blk_congestion_wait(int rw, long timeout);
++extern struct blk_queue_tag *blk_init_tags(int);
++extern void blk_free_tags(struct blk_queue_tag *);
+ 
+ extern void blk_rq_bio_prep(request_queue_t *, struct request *, struct bio *);
+ extern int blkdev_issue_flush(struct block_device *, sector_t *);
 
-/mjt
-
-16:25:35 SCSI error : <0 0 0 0> return code = 0x10000
-16:25:36 end_request: I/O error, dev sda, sector 3003999
-16:25:36 md: write_disk_sb failed for device sda2
-16:25:36 SCSI error : <0 0 0 0> return code = 0x10000
-16:25:36 end_request: I/O error, dev sda, sector 6263238
-16:25:36 raid5: Disk failure on sda5, disabling device. Operation continuing on 3 devices
-16:25:36 md: errors occurred during superblock update, repeating
-16:25:36 SCSI error : <0 0 0 0> return code = 0x10000
-16:25:36 end_request: I/O error, dev sda, sector 3003999
-16:25:36 md: write_disk_sb failed for device sda2
-
-.....repeated sequence of the above lines, with different sectors...
-
-16:26:04 end_request: I/O error, dev sda, sector 3003999
-16:26:04 scsi0:0:0:0: Attempting to abort cmd dbc10680: 0x2a 0x0 0x4 0x0 0x29 0x49md: write_disk_sb failed for device sda2
-16:26:04  0x0 0x0 0x8 0x0
-
-BTW, this should go in one line.  The machine is SMP... ;)
-
-16:26:04 scsi0: At time of recovery, card was not paused
-16:26:04 >>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
-16:26:04 scsi0: Dumping Card State at program address 0x0 Mode 0x22
-16:26:04 Card was paused
-16:26:04 HS_MAILBOX[0x0] INTCTL[0xc0]:(SWTMINTEN|SWTMINTMASK)
-16:26:04 SEQINTSTAT[0x10]:(SEQ_SWTMRTO) SAVED_MODE[0x11] DFFSTAT[0x31]:(CURRFIFO_1|FIFO0FREE|FIFO1FREE)
-16:26:04 SCSISIGI[0x0]:(P_DATAOUT) SCSIPHASE[0x0] SCSIBUS[0x0]
-16:26:04 LASTPHASE[0x1]:(P_DATAOUT|P_BUSFREE) SCSISEQ0[0x0]
-16:26:04 SCSISEQ1[0x12]:(ENAUTOATNP|ENRSELI) SEQCTL0[0x10]:(FASTMODE)
-16:26:04 SEQINTCTL[0x0] SEQ_FLAGS[0xc0]:(NO_CDB_SENT|NOT_IDENTIFIED)
-16:26:04 SEQ_FLAGS2[0x0] SSTAT0[0x0] SSTAT1[0x8]:(BUSFREE)
-16:26:04 SSTAT2[0x0] SSTAT3[0x0] PERRDIAG[0x8]:(AIPERR) SIMODE1[0xa4]:(ENSCSIPERR|ENSCSIRST|ENSELTIMO)
-16:26:04 LQISTAT0[0x0] LQISTAT1[0x0] LQISTAT2[0x0] LQOSTAT0[0x0]
-16:26:04 LQOSTAT1[0x0] LQOSTAT2[0x1]:(LQOSTOP0)
-16:26:04
-16:26:04 SCB Count = 128 CMDS_PENDING = 1 LASTSCB 0x4f CURRSCB 0x4f NEXTSCB 0xff40
-16:26:04 qinstart = 34129 qinfifonext = 34129
-16:26:04 QINFIFO:
-16:26:04 WAITING_TID_QUEUES:
-16:26:04 Pending list:
-16:26:04  41 FIFO_USE[0x0] SCB_CONTROL[0x60]:(TAG_ENB|DISCENB) SCB_SCSIID[0x7]
-16:26:04 Total 1
-16:26:04 Kernel Free SCB list: 126 78 79 12 127 10 93 113 30 96 49 37 73 33 52 95 103 27 72 106 71 18 61 85 83 110 20 87 94 75 115 8 51 99 45 22 3 92 50 86 125 28 48 15 122 63 107 80 114 70 36 23 104 26 2 16 68 42 21 64 118 7 81 67 59 88 117 34 24 82 105 25 31 84 4 76 58 91 66 11 121 102 14 1 97 57 44 120 29 65 39 100 89 74 6 124 32 35 54 17 69 19 111 55 47 46 5 53 77 0 112 109 9 119 60 101 108 13 38 40 98 62 56 116 43 123 90
-16:26:04 Sequencer Complete DMA-inprog list:
-16:26:04 Sequencer Complete list:
-16:26:04 Sequencer DMA-Up and Complete list:
-16:26:04
-16:26:04 scsi0: FIFO0 Free, LONGJMP == 0x80ff, SCB 0x49
-16:26:04 SEQIMODE[0x3f]:(ENCFG4TCMD|ENCFG4ICMD|ENCFG4TSTAT|ENCFG4ISTAT|ENCFG4DATA|ENSAVEPTRS)
-16:26:04 SEQINTSRC[0x0] DFCNTRL[0x0] DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD_AVAIL)
-16:26:04 SG_CACHE_SHADOW[0x2]:(LAST_SEG) SG_STATE[0x0] DFFSXFRCTL[0x0]
-16:26:04 SOFFCNT[0x0] MDFFSTAT[0x5]:(FIFOFREE|DLZERO) SHADDR = 0x00, SHCNT = 0x0
-16:26:04 HADDR = 0x00, HCNT = 0x0 CCSGCTL[0x10]:(SG_CACHE_AVAIL)
-16:26:04 scsi0: FIFO1 Free, LONGJMP == 0x8277, SCB 0x7e
-16:26:04 SEQIMODE[0x3f]:(ENCFG4TCMD|ENCFG4ICMD|ENCFG4TSTAT|ENCFG4ISTAT|ENCFG4DATA|ENSAVEPTRS)
-16:26:04 SEQINTSRC[0x0] DFCNTRL[0x4]:(DIRECTION) DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD_AVAIL)
-16:26:04 SG_CACHE_SHADOW[0x2]:(LAST_SEG) SG_STATE[0x0] DFFSXFRCTL[0x0]
-16:26:04 SOFFCNT[0x0] MDFFSTAT[0x5]:(FIFOFREE|DLZERO) SHADDR = 0x00, SHCNT = 0x0
-16:26:04 HADDR = 0x00, HCNT = 0x0 CCSGCTL[0x10]:(SG_CACHE_AVAIL)
-16:26:04 LQIN: 0x55 0x0 0x0 0x7e 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
-16:26:04 scsi0: LQISTATE = 0x0, LQOSTATE = 0x0, OPTIONMODE = 0x42
-16:26:04 scsi0: OS_SPACE_CNT = 0x20 MAXCMDCNT = 0x1
-16:26:04
-16:26:04 SIMODE0[0xc]:(ENOVERRUN|ENIOERR)
-16:26:04 CCSCBCTL[0x0]
-16:26:04 scsi0: REG0 == 0x4f, SINDEX = 0x122, DINDEX = 0xe1
-16:26:04 scsi0: SCBPTR == 0x7e, SCB_NEXT == 0xff80, SCB_NEXT2 == 0xff62
-16:26:04 CDB 2a 0 0 80 8 c8
-16:26:04 STACK: 0x125 0x125 0x125 0x25e 0x240 0x25e 0x29 0x15
-16:26:04 <<<<<<<<<<<<<<<<< Dump Card State Ends >>>>>>>>>>>>>>>>>>
-16:26:04 DevQ(0:0:0): 0 waiting
-16:26:04 DevQ(0:1:0): 0 waiting
-16:26:04 DevQ(0:2:0): 0 waiting
-16:26:04 DevQ(0:4:0): 0 waiting
-16:26:04 (scsi0:A:0:0): Device is disconnected, re-queuing SCB
-16:26:04 Recovery code sleeping
-16:26:04 md: errors occurred during superblock update, repeating
-16:26:04 Recovery SCB completes
-16:26:04 Recovery code awake
-16:26:14 scsi: Device offlined - not ready after error recovery: host 0 channel 0 id 0 lun 0
-16:26:14 SCSI error : <0 0 0 0> return code = 0x8000002
-16:26:14 sda: Current: sense key: Aborted Command
-16:26:14     Additional sense: No additional sense information
-16:26:14 Info fld=0x0
-16:26:14 end_request: I/O error, dev sda, sector 67119433
-16:26:14 scsi0 (0:0): rejecting I/O to offline device
-16:26:14 md: write_disk_sb failed for device sda6
-16:26:14 md: write_disk_sb failed for device sda1
-16:26:14 (scsi0:A:0): 320.000MB/s transfers (160.000MHz DT|IU|QAS, 16bit)
-16:26:14 md: errors occurred during superblock update, repeating
-16:26:14 scsi0 (0:0): rejecting I/O to offline device
-16:26:14 md: write_disk_sb failed for device sda6
-.....
 
