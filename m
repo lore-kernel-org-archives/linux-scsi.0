@@ -1,42 +1,55 @@
-From: "cartel" <cartel.deliquesce@rpsbowling.com>
-Subject: New home its simple
-Date: Tue, 29 Aug 2006 23:11:38 +0200
-Message-ID: <57880155048866.6783AE55A1@BMVCR9H>
+From: Mark Ferguson <mark_ferguson4@virgilio.it>
+Subject: I AWAIT YOUR RESPONSE
+Date: Wed, 30 Aug 2006 09:53:45 +0100 (GMT+01:00)
+Message-ID: <10d5e48b287.mark_ferguson4__17967.2308885076$1156928057$gmane$org@virgilio.it>
+Reply-To: mark7ferguson@yahoo.co.uk
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="Windows-1252"
+Content-Type: text/plain;charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 196.Red-81-34-48.dynamicIP.rima-tde.net ([81.34.48.196]:15877
-	"EHLO PC-MZ.6a2w1v0.com") by vger.kernel.org with ESMTP
-	id S965384AbWH2VKg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Aug 2006 17:10:36 -0400
+Received: from vsmtp2.tin.it ([212.216.176.222]:60609 "EHLO vsmtp2.tin.it")
+	by vger.kernel.org with ESMTP id S1750711AbWH3Ixy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Aug 2006 04:53:54 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-serial@vger.kernel.org
 
-Hi Bro, 
+Dear Friend, 
+I write to you based on a request by an investor and his 
+need for investment/funding in your country. My name is Mark Ferguson, 
+a financial consultant and I work with a reputable financial services 
+firm.
 
-Your credit doesn't matter to us!
-If you OWN real estate and want IMMEDIATE cash to spend ANY way you 
-like, or simply wish to LOWER your monthly payments by a third or more, here are the deals we have TODAY:
+My company most times represents the interests of very wealthy 
+investors. Due to the sensitivity of the position they hold in thier 
+society and the unstable investment environment of their country, they 
+evacuate majority of their funds into more stable economies and 
+developed nations where they can get good yield for their money. 
 
-$488,000.00 at a 3.67% fixed-rate
-$372,000.00 at a 3.90% variable-rate
-$492,000.00 at a 3.21% interest-only
-$248,000.00 at a 3.36% fixed-rate
-$198,000.00 at a 3.55% variable-rate
+I 
+was recently approached by a Reserved Client, whom I had personally 
+worked with a few years ago with a proposal.What he request is an 
+individual such as yourself, who will be willing to receive money on 
+his behalf abroad, and put it to good use for a period not exceeding 6 
+years for a start.
 
-Hurry, we have requests limits, so when these deals are gone, they are 
-gone!
+The client has offered these terms:
 
-We have one-mimute form to apply the request,
-please CLICK HERE
+1. 30% 
+commission paid to me and my foreign partner of the total funds 
+successfully evacuated. The funds in question are over 13.2Million 
+USDollars.
+2. The funds will be used by the foreign partner for six 
+years as a loan without any interest. That is, you do not pay any 
+interest on the money but you give the client 50% of all profits after 
+tax that accrued from the use of the funds.
 
-http://KZP.yourcreditpartner.us/?ncache=10510736
-
-Don't worry about approval, your credit will not disqualify you!
-
-Approval Manager.
+If these terms are 
+agreeable to you, kindly let me know and I will provide you with all 
+necessary information and procedures involved. 
+Looking forward for 
+your prompt response. 
+Sincerely yours, 
+Mark Ferguson. 
 
 
