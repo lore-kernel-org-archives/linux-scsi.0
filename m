@@ -1,17 +1,17 @@
 From: "Darrick J. Wong" <djwong@us.ibm.com>
 Subject: Re: [PATCH] aic94xx: Increase can_queue and cmds_per_lun
-Date: Wed, 30 Aug 2006 12:03:08 -0700
-Message-ID: <44F5E0EC.8070602@us.ibm.com>
+Date: Wed, 30 Aug 2006 12:03:16 -0700
+Message-ID: <44F5E0F4.5080209@us.ibm.com>
 References: <44F3CF6E.1070000@us.ibm.com> <1156958383.7701.2.camel@mulgrave.il.steeleye.com>
 Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:63405 "EHLO
-	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751318AbWH3TDO
+Received: from e36.co.us.ibm.com ([32.97.110.154]:29843 "EHLO
+	e36.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751319AbWH3TDT
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Aug 2006 15:03:14 -0400
+	Wed, 30 Aug 2006 15:03:19 -0400
 In-Reply-To: <1156958383.7701.2.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
