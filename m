@@ -1,55 +1,79 @@
-From: Mark Ferguson <mark_ferguson4@virgilio.it>
-Subject: I AWAIT YOUR RESPONSE
-Date: Wed, 30 Aug 2006 09:53:45 +0100 (GMT+01:00)
-Message-ID: <10d5e48b287.mark_ferguson4__17967.2308885076$1156928057$gmane$org@virgilio.it>
-Reply-To: mark7ferguson@yahoo.co.uk
+From: "Ed Lin" <ed.lin@promise.com>
+Subject: [PATCH 1/3] stex: adjust command timeout in slave_config routine
+Date: Wed, 30 Aug 2006 17:29:00 +0800
+Message-ID: <NONAMEBDVRXGsNLqY5400000e3c@nonameb.ptu.promise.com>
 Mime-Version: 1.0
-Content-Type: text/plain;charset="UTF-8"
+Content-Type: text/plain;
+	charset="gb2312"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vsmtp2.tin.it ([212.216.176.222]:60609 "EHLO vsmtp2.tin.it")
-	by vger.kernel.org with ESMTP id S1750711AbWH3Ixy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Aug 2006 04:53:54 -0400
+Received: from 67.111.72.3.ptr.us.xo.net ([67.111.72.3]:58559 "EHLO
+	nonameb.ptu.promise.com") by vger.kernel.org with ESMTP
+	id S1750736AbWH3J3o (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Aug 2006 05:29:44 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, akpm <akpm@osdl.org>, promise_linux <promise_linux@promise.com>, "james.Bottomley" <james.Bottomley@SteelEye.com>, jeff <jeff@garzik.org>
 
-Dear Friend, 
-I write to you based on a request by an investor and his 
-need for investment/funding in your country. My name is Mark Ferguson, 
-a financial consultant and I work with a reputable financial services 
-firm.
+From: "Ed Lin" <ed.lin@promise.com>
 
-My company most times represents the interests of very wealthy 
-investors. Due to the sensitivity of the position they hold in thier 
-society and the unstable investment environment of their country, they 
-evacuate majority of their funds into more stable economies and 
-developed nations where they can get good yield for their money. 
+- remove unsuitable waiting code and unnecessary handling code
+  from reset routine
 
-I 
-was recently approached by a Reserved Client, whom I had personally 
-worked with a few years ago with a proposal.What he request is an 
-individual such as yourself, who will be willing to receive money on 
-his behalf abroad, and put it to good use for a period not exceeding 6 
-years for a start.
+- adjust command timeout in slave_config routine to achieve intended
+  effect of removed waiting code
 
-The client has offered these terms:
-
-1. 30% 
-commission paid to me and my foreign partner of the total funds 
-successfully evacuated. The funds in question are over 13.2Million 
-USDollars.
-2. The funds will be used by the foreign partner for six 
-years as a loan without any interest. That is, you do not pay any 
-interest on the money but you give the client 50% of all profits after 
-tax that accrued from the use of the funds.
-
-If these terms are 
-agreeable to you, kindly let me know and I will provide you with all 
-necessary information and procedures involved. 
-Looking forward for 
-your prompt response. 
-Sincerely yours, 
-Mark Ferguson. 
-
+Signed-off-by: Ed Lin <ed.lin@promise.com>
+---
+diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
+index fceae17..cb17415 100644
+--- a/drivers/scsi/stex.c
++++ b/drivers/scsi/stex.c
+@@ -519,6 +519,7 @@ stex_slave_config(struct scsi_device *sd
+ {
+ 	sdev->use_10_for_rw = 1;
+ 	sdev->use_10_for_ms = 1;
++	sdev->timeout = 60 * HZ;
+ 	return 0;
+ }
+ 
+@@ -938,37 +939,11 @@ static void stex_hard_reset(struct st_hb
+ static int stex_reset(struct scsi_cmnd *cmd)
+ {
+ 	struct st_hba *hba;
+-	int tag;
+-	int i = 0;
+ 	unsigned long flags;
+ 	hba = (struct st_hba *) &cmd->device->host->hostdata[0];
+ 
+-wait_cmds:
+-	spin_lock_irqsave(hba->host->host_lock, flags);
+-	for (tag = 0; tag < MU_MAX_REQUEST; tag++)
+-		if ((hba->tag & (1 << tag)) && hba->ccb[tag].req != NULL)
+-			break;
+-	spin_unlock_irqrestore(hba->host->host_lock, flags);
+-	if (tag < MU_MAX_REQUEST) {
+-		ssleep(1);
+-		if (++i < 10)
+-			goto wait_cmds;
+-	}
+-
+ 	hba->mu_status = MU_STATE_RESETTING;
+ 
+-	spin_lock_irqsave(hba->host->host_lock, flags);
+-
+-	for (tag = 0; tag < MU_MAX_REQUEST; tag++)
+-		if ((hba->tag & (1 << tag)) && hba->ccb[tag].req != NULL) {
+-			stex_free_tag((unsigned long *)&hba->tag, tag);
+-			stex_unmap_sg(hba, hba->ccb[tag].cmd);
+-			hba->ccb[tag].cmd->result = DID_RESET << 16;
+-			hba->ccb[tag].cmd->scsi_done(hba->ccb[tag].cmd);
+-		}
+-
+-	spin_unlock_irqrestore(hba->host->host_lock, flags);
+-
+ 	if (hba->cardtype == st_shasta)
+ 		stex_hard_reset(hba);
+ 
 
