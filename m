@@ -1,46 +1,40 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: [PATCH] aic94xx: Increase can_queue and cmds_per_lun
-Date: Wed, 30 Aug 2006 22:29:31 -0700 (PDT)
-Message-ID: <20060831052931.133.qmail@web31806.mail.mud.yahoo.com>
-References: <1156965920.7701.13.camel@mulgrave.il.steeleye.com>
-Reply-To: ltuikov@yahoo.com
+From: "Ed Lin" <ed.lin@promise.com>
+Subject: Re: [PATCH] block: add support for shared tag maps
+Date: Thu, 31 Aug 2006 16:55:35 +0800
+Message-ID: <NONAMEBU6CuyzC0bHwr00000ed4@nonameb.ptu.promise.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31806.mail.mud.yahoo.com ([68.142.207.69]:58227 "HELO
-	web31806.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S1751238AbWHaF3c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 Aug 2006 01:29:32 -0400
-In-Reply-To: <1156965920.7701.13.camel@mulgrave.il.steeleye.com>
+Received: from 67.111.72.3.ptr.us.xo.net ([67.111.72.3]:20638 "EHLO
+	nonameb.ptu.promise.com") by vger.kernel.org with ESMTP
+	id S1750724AbWHaIzQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 31 Aug 2006 04:55:16 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: "Darrick J. Wong" <djwong@us.ibm.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Alexis Bruemmer <alexisb@us.ibm.com>, Mike Anderson <andmike@us.ibm.com>, Konrad Rzeszutek <konrad@darnok.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Jens Axboe <axboe@suse.de>
 
---- James Bottomley <James.Bottomley@SteelEye.com> wrote:
-> On Wed, 2006-08-30 at 12:04 -0700, Luben Tuikov wrote:
-> > > --- a/drivers/scsi/aic94xx/aic94xx_init.c
-> > > +++ b/drivers/scsi/aic94xx/aic94xx_init.c
-> > > @@ -71,7 +72,7 @@ static struct scsi_host_template aic94xx
-> > >       .change_queue_type      = sas_change_queue_type,
-> > >       .bios_param             = sas_bios_param,
-> > >       .can_queue              = 1,
-> > > -     .cmd_per_lun            = 1,
-> > > +     .cmd_per_lun            = 2,
-> > 
-> > Why 2?  Why not 3?  If you can set this to 3, then why not 4?
-> > But if you can set it to 4, why not 5?
-> > 
-> > This value should also be dynamically set, it should depend on
-> > the type of LU and it shouldn't be present in the host template.
-> > (But that's an architectural argument which leads nowhere on lsml.)
-> 
-> actually, cmd_per_lun is pretty much a vestigial variable.  It's used
-> for the initial queue depth before the driver decides to turn on TCQ.
-> Thus, since the non-tagged depth should always only be 1, the only
-> useful value to set it to is 1.
 
-Who cares?
+======= On 2006-08-30 21:44:18, James Bottomley wrote:
+>+
+>+/**
+>+ * blk_free_tags - release a given set of tag maintenance info
+>+ *
+>+ * @bqt:	the tag map to free
+>+ *
+>+ * For externally managed @bqt@ frees the map.  Callers of this
+>+ * function must guarantee to have released all the queues that
+>+ * might have been using this tag map.
+>+ */
+>+void blk_free_tags(struct blk_queue_tag *bqt)
+>+{
+>+	if (unlikely(!__blk_free_tags(bqt)))
+>+		BUG();
+>+}
+>+
 
+EXPORT_SYMBOL(blk_free_tags) ?
+Also, add new function definitions in blkdev.h?
 
