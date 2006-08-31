@@ -1,52 +1,58 @@
-From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: Re: [PATCH v3] aic94xx: Increase can_queue for better performance
-Date: Wed, 30 Aug 2006 14:18:33 -0700
-Message-ID: <44F600A9.4050207@us.ibm.com>
-References: <20060830190454.28371.qmail@web31807.mail.mud.yahoo.com> <44F5FB54.5010700@us.ibm.com>
-Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
+From: Dmitry Torokhov <dtor@insightbb.com>
+Subject: Re: Conversion to generic boolean
+Date: Wed, 30 Aug 2006 23:50:16 -0400
+Message-ID: <200608302350.17150.dtor@insightbb.com>
+References: <44EFBEFA.2010707@student.ltu.se> <44F3952B.5000500@yahoo.com.au> <Pine.LNX.4.61.0608290754550.952@yvahk01.tjqt.qr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:48561 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S932074AbWH3VSl
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Aug 2006 17:18:41 -0400
-In-Reply-To: <44F5FB54.5010700@us.ibm.com>
+Received: from gateway.insightbb.com ([74.128.0.19]:46231 "EHLO
+	asav10.insightbb.com") by vger.kernel.org with ESMTP
+	id S1751051AbWHaDuS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Aug 2006 23:50:18 -0400
+In-Reply-To: <Pine.LNX.4.61.0608290754550.952@yvahk01.tjqt.qr>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Darrick J. Wong" <djwong@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Jan Engelhardt <jengelh@linux01.gwdg.de>
+Cc: Nick Piggin <nickpiggin@yahoo.com.au>, Andrew Morton <akpm@osdl.org>, Christoph Hellwig <hch@infradead.org>, Richard Knutsson <ricknu-0@student.ltu.se>, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Darrick J. Wong wrote:
-> Hi all,
+On Tuesday 29 August 2006 01:58, Jan Engelhardt wrote:
 > 
-> Below is a patch that sets can_queue in the aic94xx driver's scsi_host
-> to better performing values than what's there currently.  It seems that
-> asd_ha->seq.can_queue reflects the number of requests that can be
-> queued per controller; so long as there's one scsi_host per controller,
-> it seems logical that the scsi_host ought to have the same can_queue
-> value.  To the best of my (still limited) knowledge, this method
-> provides the correct value.
+> >> I was kinda planning on merging it ;)
+> >> 
+> >> I can't say that I'm in love with the patches, but they do improve the
+> >> situation.
+> >> 
+> >> At present we have >50 different definitions of TRUE and gawd knows how
+> >> many private implementations of various flavours of bool.
+> >> 
+> >> In that context, Richard's approach of giving the kernel a single
+> >> implementation of bool/true/false and then converting things over to use
+> >> it
+> >> makes sense.  The other approach would be to go through and nuke the lot,
+> >> convert them to open-coded 0/1.
+> >
+> > Well... we are programming in C here, aren't we ;)
 > 
-> The effect of leaving this value set to 1 is terrible performance in
-> the case of either (a) certain Maxtor SAS drives flying solo or (b)
-> flooding several disks with I/O simultaneously (md-raid).  There may be
-> more scenarios where we see similar problems that I haven't uncovered.
+> I like it for the annotation we get.
+> 
+> 	int fluff;
+> 	if(fluff == 0)
+> 
+> This does not tell if fluff is an integer or a boolean (that is, what the
+> programmer intended to do -- not the 'int' the compiler sees).
+> If it had been if(!fluff), it would give a hint, but a lot of places also have
+> !x where x really is intended to be an integer (and should have been x==0 or
+> y==NULL resp.)
+>
 
-Let's try this again, after kicking Thunderbird in the head.
-
-Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
-
-diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
-index 3e25e31..5c6d457 100644
---- a/drivers/scsi/aic94xx/aic94xx_init.c
-+++ b/drivers/scsi/aic94xx/aic94xx_init.c
-@@ -623,6 +623,8 @@ static int __devinit asd_pci_probe(struc
- 		   asd_ha->hw_prof.bios.present ? "build " : "not present",
- 		   asd_ha->hw_prof.bios.bld);
+Bool would not help much either unless declaration is immediately follows
+use. I like Alan Sterns proposal ofencode return value in function name
+better - actions should always return < 0/0 and predicates should always
+be boolean equivalent.
  
-+	shost->can_queue = asd_ha->seq.can_queue;
-+
- 	if (use_msi)
- 		pci_enable_msi(asd_ha->pcidev);
- 
+-- 
+Dmitry
