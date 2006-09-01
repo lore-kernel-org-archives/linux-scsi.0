@@ -1,72 +1,40 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] Wrong size information for devices with disabled read access
-Date: Fri, 01 Sep 2006 15:50:23 +0200
-Message-ID: <44F83A9F.6010502@suse.de>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] sd: fix cache flushing on module removal
+	(and	individual device removal)
+Date: Fri, 01 Sep 2006 09:54:18 -0400
+Message-ID: <1157118858.3675.13.camel@mulgrave.il.steeleye.com>
+References: <1157058484.3666.5.camel@mulgrave.il.steeleye.com>
+	 <1157062522.3666.10.camel@mulgrave.il.steeleye.com>
+	 <44F7F70F.4010000@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------010200050804080903010200"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns2.suse.de ([195.135.220.15]:19434 "EHLO mx2.suse.de")
-	by vger.kernel.org with ESMTP id S1751507AbWIANuZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Sep 2006 09:50:25 -0400
+Received: from stat9.steeleye.com ([209.192.50.41]:25221 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1751334AbWIANzV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 1 Sep 2006 09:55:21 -0400
+In-Reply-To: <44F7F70F.4010000@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------010200050804080903010200
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 8bit
+On Fri, 2006-09-01 at 11:02 +0200, Stefan Richter wrote:
+> Somehow the (void)try_module_get(...) looks dangerous to me. Is it
+> really safe to always ignore failures to get the module? Why would we
+> want to ignore failures? Couldn't there be border cases where a
+> module_getter/_putter in a concurrent code path disturbs
+> scsi_device_get/_put's underlying assumptions?
 
-Hi James,
+As long as we don't do spurious module_puts, yes.  However, there looks
+to be another nasty module race that's orthogonal to this, in that the
+final scsi_host_put() of a module doesn't necessarily wait for the host
+actually to be released, so it's possible to free the host template when
+the module exit finishes and still have a partially functioning host.
 
-when accessing a device with disabled read access the capacity is set
-somewhat arbitrary to 1GB. This makes it quite impossible for userspace
-applications to detect this as an invalid capacity.
-And it is inconsistent with other error conditions, where the capacity
-is in fact set to 0.
+James
 
-Please apply.
 
-Cheers,
 
-Hannes
--- 
-Dr. Hannes Reinecke			hare@suse.de
-SuSE Linux Products GmbH		S390 & zSeries
-Maxfeldstraße 5				+49 911 74053 688
-90409 Nürnberg				http://www.suse.de
 
---------------010200050804080903010200
-Content-Type: text/plain;
- name="sd-fix-unknown-size"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="sd-fix-unknown-size"
-
-Wrong size information for devices with disabled read access
-
-When accessing a device with disabled read access the capacity is set
-randomly to 1GB. This makes it impossible to userspace tools to detect
-invalid device capacities.
-
-Signed-off-by: Mike Anderson <andmike@us.ibm.com>
-Acked-by: Chris Mason <mason@suse.com>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 98bd3aa..638cff4 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1215,7 +1215,7 @@ repeat:
- 		/* Either no media are present but the drive didn't tell us,
- 		   or they are present but the read capacity command fails */
- 		/* sdkp->media_present = 0; -- not always correct */
--		sdkp->capacity = 0x200000; /* 1 GB - random */
-+		sdkp->capacity = 0; /* unknown mapped to zero - as usual */
- 
- 		return;
- 	} else if (the_result && longrc) {
-
---------------010200050804080903010200--
