@@ -1,41 +1,56 @@
-From: "Pete Bloom" <cljen@isoli.co.uk>
-Subject: Your Servers
-Date: Fri, 01 Sep 2006 23:54:38 +0600
-Message-ID: <E1A572M-4099nV-00cljen__44205.5658706979$1157129901$gmane$org@isoli.co.uk>
-References: <20031002150239.GG32185@asuka.tech.sitadelle.com>
+From: Doug Maxey <dwm@enoyolf.org>
+Subject: Re: [PATCH] block: add support for shared tag maps
+Date: Fri, 01 Sep 2006 14:04:23 -0500
+Message-ID: <20060901190423.806416@bebe.enoyolf.org>
+References: <NONAMEBh8GyUbvH4KQ700000f3d@nonameb.ptu.promise.com> <1157117328.3675.6.camel@mulgrave.il.steeleye.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:28304 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S932404AbWIAQ5l (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Sep 2006 12:57:41 -0400
-In-Reply-To: Your message of "Fri, 01 Sep 2006 10:53:38 -0700."
-             <20031002150239.GG32185@asuka.tech.sitadelle.com>
+Received: from falcon30.maxeymade.com ([24.173.215.190]:5815 "EHLO
+	bebe.enoyolf.org") by vger.kernel.org with ESMTP id S1750887AbWIATEx
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 1 Sep 2006 15:04:53 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-Icrease Your S''exual Desire and S''perm volume by 500%
-L'onger o''rgasms - The longest most intense o''rgasms of your life
-Multiple o''rgasms - Cum again and again
-S'PUR-M is The Newest and The Safest Way
-100% N''atural and No Side Effects - in contrast to well-known brands.
-Experience three times longer o''rgasms
-World Wide shipping within 24 hours
- 
- Clisk here http://www.edcampbelllaw.info
+To: Ravi Anand <ravi.anand@qlogic.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, mikec linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@suse.de>
 
 
+Ravi,
+
+While working on a patch to add shared tags to qla4xxx was looking at
+the shost->can_queue settings, I see the value is set pretty high:
+
+qla4xxx_probe()
+...
+	host->can_queue = REQUEST_QUEUE_DEPTH + 128;
+
+where REQUEST_QUEUE_DEPTH works out to be 1024.
+
+My question:
+what is the relationship between the can_queue and the
+setting in
+qla4xxx_slave_configure()
+	if (sdev->tagged_supported)
+		scsi_activate_tcq(sdev, 32);
+	else
+		scsi_deactivate_tcq(sdev, 32);
+
+Does this imply that the firmware can ultimately track more requests
+than we can possibly stuff in it?  Where do the other 1012 requests get
+queued, in the block layer?
+
+James' shared tag patch for stex has the following
++stex_slave_alloc(struct scsi_device *sdev)
++{
++	/* Cheat: usually extracted from Inquiry data */
++	sdev->tagged_supported = 1;
++
++	scsi_activate_tcq(sdev, sdev->host->can_queue);
+
+where in this case the can_queue is set to ST_CAN_QUEUE, which works
+out to 32.
+
+Is my concern misplaced?
 
 
-
-
-
-
-
-
-
-
-
-
-I was thinking how good you've been to me.
-Paul hid behind his work and tried not to think about his car, the discovery of which was already overdue.
-"They stared at the place where his foot wasn't for long long seconds and then McKnight whispered: "Good Christ.
