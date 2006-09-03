@@ -1,82 +1,46 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] drivers/scsi/wd33c93.c: cleanups
-Date: Mon, 4 Sep 2006 13:41:22 +0200
-Message-ID: <20060904114122.GM4416@stusta.de>
-References: <20060821104357.GH11651@stusta.de> <20060821105344.GA28759@infradead.org> <20060821192215.GL11651@stusta.de> <20060821.123142.08327833.davem@davemloft.net>
+From: Pavel Machek <pavel@suse.cz>
+Subject: Re: Conversion to generic boolean
+Date: Sun, 3 Sep 2006 12:51:11 +0000
+Message-ID: <20060903125111.GG4884@ucw.cz>
+References: <44EFBEFA.2010707@student.ltu.se> <44F3952B.5000500@yahoo.com.au> <Pine.LNX.4.61.0608290754550.952@yvahk01.tjqt.qr> <200608302350.17150.dtor@insightbb.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964798AbWIDLln@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from gprs189-60.eurotel.cz ([160.218.189.60]:44551 "EHLO
+	spitz.ucw.cz") by vger.kernel.org with ESMTP id S964860AbWIDMdu
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 4 Sep 2006 08:33:50 -0400
 Content-Disposition: inline
-In-Reply-To: <20060821.123142.08327833.davem@davemloft.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: hch@infradead.org, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <200608302350.17150.dtor@insightbb.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dmitry Torokhov <dtor@insightbb.com>
+Cc: Jan Engelhardt <jengelh@linux01.gwdg.de>, Nick Piggin <nickpiggin@yahoo.com.au>, Andrew Morton <akpm@osdl.org>, Christoph Hellwig <hch@infradead.org>, Richard Knutsson <ricknu-0@student.ltu.se>, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, Aug 21, 2006 at 12:31:42PM -0700, David Miller wrote:
-> From: Adrian Bunk <bunk@stusta.de>
-> Date: Mon, 21 Aug 2006 21:22:15 +0200
-> 
-> > On Mon, Aug 21, 2006 at 11:53:44AM +0100, Christoph Hellwig wrote:
-> > > On Mon, Aug 21, 2006 at 12:43:57PM +0200, Adrian Bunk wrote:
-> > > > This patch contains the following cleanups:
-> > > > - #include <linux/irq.h> for getting the prototypes of
-> > > >   {dis,en}able_irq()
-> > > 
-> > > nothing outside of arch code must ever include <linux/irq.h>
+Hi!
+
+> > I like it for the annotation we get.
 > > 
-> > Why?
-> > It sounds rather strange that non-arch code should use asm headers.
+> > 	int fluff;
+> > 	if(fluff == 0)
+> > 
+> > This does not tell if fluff is an integer or a boolean (that is, what the
+> > programmer intended to do -- not the 'int' the compiler sees).
+> > If it had been if(!fluff), it would give a hint, but a lot of places also have
+> > !x where x really is intended to be an integer (and should have been x==0 or
+> > y==NULL resp.)
+> >
 > 
-> It's an unfortunate side effect of how the generic IRQ layer was done.
-> 
-> The linux/irq.h head should only be used on platforms that make use of
-> the generic IRQ layer.
-> 
-> asm/irq.h is what should be included by drivers and the like that want
-> the IRQ interfaces.
-> 
-> I'm not saying this is a good situation, it's just the way it is.
+> Bool would not help much either unless declaration is immediately follows
+> use. I like Alan Sterns proposal ofencode return value in function name
+> better - actions should always return < 0/0 and predicates should always
+> be boolean equivalent.
 
-What a mess...
-
-Updated patch below.
-
-cu
-Adrian
-
-
-<--  snip  -->
-
-
-This patch contains the following cleanups:
-- #include <asm/irq.h> for getting the prototypes of
-  {dis,en}able_irq()
-- make the needlessly global wd33c93_setup() static
-
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
-
---- linux-2.6.18-rc5-mm1/drivers/scsi/wd33c93.c.old	2006-09-04 01:45:57.000000000 +0200
-+++ linux-2.6.18-rc5-mm1/drivers/scsi/wd33c93.c	2006-09-04 01:46:26.000000000 +0200
-@@ -85,6 +85,8 @@
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_host.h>
- 
-+#include <asm/irq.h>
-+
- #include "wd33c93.h"
- 
- 
-@@ -1710,7 +1712,7 @@
- static char setup_used[MAX_SETUP_ARGS];
- static int done_setup = 0;
- 
--int
-+static int
- wd33c93_setup(char *str)
- {
- 	int i;
-
+Sounds very reasonable. Even today, 90% of code follows that
+convention. Perhaps adding it to codingstyle would help?
 
 -- 
-VGER BF report: H 0.177864
+Thanks for all the (sleeping) penguins.
+
+-- 
+VGER BF report: H 0.254977
