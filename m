@@ -1,16 +1,16 @@
 From: Stefan Richter <stefanr@s5r6.in-berlin.de>
 Subject: Re: Open for adoption: orphan sbp2_target
-Date: Mon, 04 Sep 2006 12:13:49 +0200
-Message-ID: <44FBFC5D.4040406@s5r6.in-berlin.de>
+Date: Mon, 04 Sep 2006 11:08:48 +0200
+Message-ID: <44FBED20.8080109@s5r6.in-berlin.de>
 References: <5b45756a0608141057s6c00d7cfu388d9d342c5e936d@mail.gmail.com>	<44ED996A.4010009@s5r6.in-berlin.de> <200608260448.k7Q4m8rq019092@r-dd.iij4u.or.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hp3.statik.TU-Cottbus.De ([141.43.120.68]:62167 "EHLO
+Received: from hp3.statik.TU-Cottbus.De ([141.43.120.68]:12248 "EHLO
 	hp3.statik.tu-cottbus.de") by vger.kernel.org with ESMTP
-	id S1751351AbWIDKR6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 4 Sep 2006 06:17:58 -0400
+	id S1751361AbWIDKZ7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 4 Sep 2006 06:25:59 -0400
 In-Reply-To: <200608260448.k7Q4m8rq019092@r-dd.iij4u.or.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -68,4 +68,4 @@ Stefan Richter
 http://arcgraph.de/sr/
 
 -- 
-VGER BF report: U 0.500005
+VGER BF report: H 0
