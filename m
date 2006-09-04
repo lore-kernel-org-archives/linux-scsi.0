@@ -1,35 +1,71 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] block: add support for shared tag maps
-Date: Fri, 01 Sep 2006 16:52:34 -0400
-Message-ID: <1157143954.3675.21.camel@mulgrave.il.steeleye.com>
-References: <NONAMEBh8GyUbvH4KQ700000f3d@nonameb.ptu.promise.com>
-	 <1157117328.3675.6.camel@mulgrave.il.steeleye.com>
-	 <20060901190423.806416@bebe.enoyolf.org>
-	 <20060901202109.GD7941@ranandlinuxbox.qlogic.org>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: Open for adoption: orphan sbp2_target
+Date: Mon, 04 Sep 2006 12:13:49 +0200
+Message-ID: <44FBFC5D.4040406@s5r6.in-berlin.de>
+References: <5b45756a0608141057s6c00d7cfu388d9d342c5e936d@mail.gmail.com>	<44ED996A.4010009@s5r6.in-berlin.de> <200608260448.k7Q4m8rq019092@r-dd.iij4u.or.jp>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:15246 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1750799AbWIAUxb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 1 Sep 2006 16:53:31 -0400
-In-Reply-To: <20060901202109.GD7941@ranandlinuxbox.qlogic.org>
+Received: from hp3.statik.TU-Cottbus.De ([141.43.120.68]:62167 "EHLO
+	hp3.statik.tu-cottbus.de") by vger.kernel.org with ESMTP
+	id S1751351AbWIDKR6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 4 Sep 2006 06:17:58 -0400
+In-Reply-To: <200608260448.k7Q4m8rq019092@r-dd.iij4u.or.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ravi Anand <ravi.anand@qlogic.com>
-Cc: Doug Maxey <dwm@enoyolf.org>, mikec linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@suse.de>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: hani.mustafa@gmail.com, linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, tomof@acm.org, michaelc@cs.wisc.edu
 
-On Fri, 2006-09-01 at 13:21 -0700, Ravi Anand wrote:
-> Dont know much about stex driver. So cant comment on it. 
-> James any thought ? 
+FUJITA Tomonori wrote on 2006-08-26:
+> From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+...
+>> Could someone of the SCSI target folks give a rough outline of a SCSI
+>> target's building blocks when using this framework?
+> 
+> Our OLS's paper and slides have good pictures.
+> 
+> http://stgt.berlios.de/
+> 
+> I guess that SBP target stuff works well with the target
+> framework. All you need to do is to take care of SBP protocol. The
+> framework does the rest, that is, SCSI protocol processing, I/O,
+> logical unit management, configuration, etc.
+> 
+> For example, your driver receives a SCSI command from an initiator,
+> tell the framework to perform it. Then the framework sends back the
+> result and buffer containing data you send to the initiator if
+> necessary.
 
-The stex driver has a shared tag map (which is tiny:32) so it just sets
-the can_queue and the tag depth to the same value.
+This looks very comfortable to write a transport driver against.
 
-James
+> I don't know where your driver is implemented, in kernel space or user
+> space.
 
+Hani Mustafa's unpublished target is in kernel. Manish Singh's is in
+userspace (as a libraw1394 application via the raw1394 character device;
+AFAIU multiple initiators capable, currently single-LU and just RBC). I
+don't know the pros and cons of either approach in detail, however it's
+good to have the choice. (Besides and off topic, an SBP-2 target
+implementation in BIOS would be useful, like in Apple's firmware of
+their desktops and portables.)
 
+> The framework was designed for the former, however, it works
+> with both models now. You can find an example of the latter (though
+> it's just experiment):
+> 
+> svn co http://svn.berlios.de/svnroot/repos/stgt/branches/user-iscsi
+> 
+> 
+> BTW, we've prepared a new git tree:
+> 
+> http://www.kernel.org/git/?p=linux/kernel/git/mnc/linux-2.6-target.git;a=summary
+
+Thanks for the explanation and links.
+-- 
+Stefan Richter
+-=====-=-==- =--= --=--
+http://arcgraph.de/sr/
 
 -- 
-VGER BF report: H 1.02918e-13
+VGER BF report: U 0.500005
