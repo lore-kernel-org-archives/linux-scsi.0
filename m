@@ -1,15 +1,15 @@
 From: Stefan Richter <stefanr@s5r6.in-berlin.de>
 Subject: Re: Open for adoption: orphan sbp2_target
-Date: Mon, 04 Sep 2006 11:08:48 +0200
-Message-ID: <44FBED20.8080109@s5r6.in-berlin.de>
+Date: Mon, 04 Sep 2006 11:03:16 +0200
+Message-ID: <44FBEBD4.6070606@s5r6.in-berlin.de>
 References: <5b45756a0608141057s6c00d7cfu388d9d342c5e936d@mail.gmail.com>	<44ED996A.4010009@s5r6.in-berlin.de> <200608260448.k7Q4m8rq019092@r-dd.iij4u.or.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hp3.statik.TU-Cottbus.De ([141.43.120.68]:12248 "EHLO
+Received: from hp3.statik.TU-Cottbus.De ([141.43.120.68]:11224 "EHLO
 	hp3.statik.tu-cottbus.de") by vger.kernel.org with ESMTP
-	id S1751361AbWIDKZ7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1751356AbWIDKZ7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Mon, 4 Sep 2006 06:25:59 -0400
 In-Reply-To: <200608260448.k7Q4m8rq019092@r-dd.iij4u.or.jp>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -42,13 +42,16 @@ This looks very comfortable to write a transport driver against.
 > I don't know where your driver is implemented, in kernel space or user
 > space.
 
-Hani Mustafa's unpublished target is in kernel. Manish Singh's is in
+Hani Mustafa's unpublished target is in kernel, Manish Singh's in
 userspace (as a libraw1394 application via the raw1394 character device;
-AFAIU multiple initiators capable, currently single-LU and just RBC). I
-don't know the pros and cons of either approach in detail, however it's
-good to have the choice. (Besides and off topic, an SBP-2 target
-implementation in BIOS would be useful, like in Apple's firmware of
-their desktops and portables.)
+AFAIU multiple initiators capable, currently single-LU and only RBC
+implemented).
+
+>From end-user perspective, userspace might be preferable. I don't know
+though what the performance implications are and how easy e.g. optical
+drives could be integrated one or the other way. However, choices are
+good. (Besides and off topic, an SBP-2 target implementation in BIOS
+would be useful, like in Apple's firmware of their desktops and portables.)
 
 > The framework was designed for the former, however, it works
 > with both models now. You can find an example of the latter (though
@@ -62,10 +65,13 @@ their desktops and portables.)
 > http://www.kernel.org/git/?p=linux/kernel/git/mnc/linux-2.6-target.git;a=summary
 
 Thanks for the explanation and links.
+
+BTW, why not write the source file names out as _target_ instead of
+_tgt_? I hear git supports file renaming... :-)
 -- 
 Stefan Richter
 -=====-=-==- =--= --=--
 http://arcgraph.de/sr/
 
 -- 
-VGER BF report: H 0
+VGER BF report: H 4.53233e-10
