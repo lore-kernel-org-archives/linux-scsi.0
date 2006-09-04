@@ -1,77 +1,82 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: Open for adoption: orphan sbp2_target
-Date: Mon, 04 Sep 2006 11:03:16 +0200
-Message-ID: <44FBEBD4.6070606@s5r6.in-berlin.de>
-References: <5b45756a0608141057s6c00d7cfu388d9d342c5e936d@mail.gmail.com>	<44ED996A.4010009@s5r6.in-berlin.de> <200608260448.k7Q4m8rq019092@r-dd.iij4u.or.jp>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [2.6 patch] drivers/scsi/wd33c93.c: cleanups
+Date: Mon, 4 Sep 2006 13:41:22 +0200
+Message-ID: <20060904114122.GM4416@stusta.de>
+References: <20060821104357.GH11651@stusta.de> <20060821105344.GA28759@infradead.org> <20060821192215.GL11651@stusta.de> <20060821.123142.08327833.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hp3.statik.TU-Cottbus.De ([141.43.120.68]:11224 "EHLO
-	hp3.statik.tu-cottbus.de") by vger.kernel.org with ESMTP
-	id S1751356AbWIDKZ7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 4 Sep 2006 06:25:59 -0400
-In-Reply-To: <200608260448.k7Q4m8rq019092@r-dd.iij4u.or.jp>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964798AbWIDLln@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20060821.123142.08327833.davem@davemloft.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: hch@infradead.org, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: hani.mustafa@gmail.com, linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, tomof@acm.org, michaelc@cs.wisc.edu
 
-FUJITA Tomonori wrote on 2006-08-26:
-> From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-...
->> Could someone of the SCSI target folks give a rough outline of a SCSI
->> target's building blocks when using this framework?
+On Mon, Aug 21, 2006 at 12:31:42PM -0700, David Miller wrote:
+> From: Adrian Bunk <bunk@stusta.de>
+> Date: Mon, 21 Aug 2006 21:22:15 +0200
 > 
-> Our OLS's paper and slides have good pictures.
+> > On Mon, Aug 21, 2006 at 11:53:44AM +0100, Christoph Hellwig wrote:
+> > > On Mon, Aug 21, 2006 at 12:43:57PM +0200, Adrian Bunk wrote:
+> > > > This patch contains the following cleanups:
+> > > > - #include <linux/irq.h> for getting the prototypes of
+> > > >   {dis,en}able_irq()
+> > > 
+> > > nothing outside of arch code must ever include <linux/irq.h>
+> > 
+> > Why?
+> > It sounds rather strange that non-arch code should use asm headers.
 > 
-> http://stgt.berlios.de/
+> It's an unfortunate side effect of how the generic IRQ layer was done.
 > 
-> I guess that SBP target stuff works well with the target
-> framework. All you need to do is to take care of SBP protocol. The
-> framework does the rest, that is, SCSI protocol processing, I/O,
-> logical unit management, configuration, etc.
+> The linux/irq.h head should only be used on platforms that make use of
+> the generic IRQ layer.
 > 
-> For example, your driver receives a SCSI command from an initiator,
-> tell the framework to perform it. Then the framework sends back the
-> result and buffer containing data you send to the initiator if
-> necessary.
+> asm/irq.h is what should be included by drivers and the like that want
+> the IRQ interfaces.
+> 
+> I'm not saying this is a good situation, it's just the way it is.
 
-This looks very comfortable to write a transport driver against.
+What a mess...
 
-> I don't know where your driver is implemented, in kernel space or user
-> space.
+Updated patch below.
 
-Hani Mustafa's unpublished target is in kernel, Manish Singh's in
-userspace (as a libraw1394 application via the raw1394 character device;
-AFAIU multiple initiators capable, currently single-LU and only RBC
-implemented).
+cu
+Adrian
 
->From end-user perspective, userspace might be preferable. I don't know
-though what the performance implications are and how easy e.g. optical
-drives could be integrated one or the other way. However, choices are
-good. (Besides and off topic, an SBP-2 target implementation in BIOS
-would be useful, like in Apple's firmware of their desktops and portables.)
 
-> The framework was designed for the former, however, it works
-> with both models now. You can find an example of the latter (though
-> it's just experiment):
-> 
-> svn co http://svn.berlios.de/svnroot/repos/stgt/branches/user-iscsi
-> 
-> 
-> BTW, we've prepared a new git tree:
-> 
-> http://www.kernel.org/git/?p=linux/kernel/git/mnc/linux-2.6-target.git;a=summary
+<--  snip  -->
 
-Thanks for the explanation and links.
 
-BTW, why not write the source file names out as _target_ instead of
-_tgt_? I hear git supports file renaming... :-)
+This patch contains the following cleanups:
+- #include <asm/irq.h> for getting the prototypes of
+  {dis,en}able_irq()
+- make the needlessly global wd33c93_setup() static
+
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
+
+--- linux-2.6.18-rc5-mm1/drivers/scsi/wd33c93.c.old	2006-09-04 01:45:57.000000000 +0200
++++ linux-2.6.18-rc5-mm1/drivers/scsi/wd33c93.c	2006-09-04 01:46:26.000000000 +0200
+@@ -85,6 +85,8 @@
+ #include <scsi/scsi_device.h>
+ #include <scsi/scsi_host.h>
+ 
++#include <asm/irq.h>
++
+ #include "wd33c93.h"
+ 
+ 
+@@ -1710,7 +1712,7 @@
+ static char setup_used[MAX_SETUP_ARGS];
+ static int done_setup = 0;
+ 
+-int
++static int
+ wd33c93_setup(char *str)
+ {
+ 	int i;
+
+
 -- 
-Stefan Richter
--=====-=-==- =--= --=--
-http://arcgraph.de/sr/
-
--- 
-VGER BF report: H 4.53233e-10
+VGER BF report: H 0.177864
