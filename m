@@ -1,46 +1,47 @@
-From: Pavel Machek <pavel@suse.cz>
-Subject: Re: Conversion to generic boolean
-Date: Sun, 3 Sep 2006 12:51:11 +0000
-Message-ID: <20060903125111.GG4884@ucw.cz>
-References: <44EFBEFA.2010707@student.ltu.se> <44F3952B.5000500@yahoo.com.au> <Pine.LNX.4.61.0608290754550.952@yvahk01.tjqt.qr> <200608302350.17150.dtor@insightbb.com>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [Suspected Spam:#] Question about scsi_qla_host_t.fcports list
+ protection (qla2xxx)
+Date: Tue, 05 Sep 2006 14:08:25 +0400
+Message-ID: <44FD4C99.9060308@vlnb.net>
+References: <44E19F93.2020305@vlnb.net> <20060816175739.GS3674@andrew-vasquezs-computer.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gprs189-60.eurotel.cz ([160.218.189.60]:44551 "EHLO
-	spitz.ucw.cz") by vger.kernel.org with ESMTP id S964860AbWIDMdu
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 4 Sep 2006 08:33:50 -0400
-Content-Disposition: inline
-In-Reply-To: <200608302350.17150.dtor@insightbb.com>
+Received: from out-relay-02.infobox.ru ([85.249.135.211]:36482 "EHLO
+	out-relay-02.mailcluster.net") by vger.kernel.org with ESMTP
+	id S1751299AbWIEKJK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 5 Sep 2006 06:09:10 -0400
+In-Reply-To: <20060816175739.GS3674@andrew-vasquezs-computer.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dmitry Torokhov <dtor@insightbb.com>
-Cc: Jan Engelhardt <jengelh@linux01.gwdg.de>, Nick Piggin <nickpiggin@yahoo.com.au>, Andrew Morton <akpm@osdl.org>, Christoph Hellwig <hch@infradead.org>, Richard Knutsson <ricknu-0@student.ltu.se>, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: linux-driver@qlogic.com, linux-scsi@vger.kernel.org
 
-Hi!
-
-> > I like it for the annotation we get.
-> > 
-> > 	int fluff;
-> > 	if(fluff == 0)
-> > 
-> > This does not tell if fluff is an integer or a boolean (that is, what the
-> > programmer intended to do -- not the 'int' the compiler sees).
-> > If it had been if(!fluff), it would give a hint, but a lot of places also have
-> > !x where x really is intended to be an integer (and should have been x==0 or
-> > y==NULL resp.)
-> >
+Andrew Vasquez wrote:
+> On Tue, 15 Aug 2006, Vladislav Bolkhovitin wrote:
 > 
-> Bool would not help much either unless declaration is immediately follows
-> use. I like Alan Sterns proposal ofencode return value in function name
-> better - actions should always return < 0/0 and predicates should always
-> be boolean equivalent.
+> 
+>>Looking at the qla2xxx driver source code I noticed that 
+>>scsi_qla_host_t.fcports is used without any protection. For instance, 
+>>qla2x00_loop_reset() walks over this list. This function is called from 
+>>qla2xxx_eh_bus_reset(), which could be called at any time. What does 
+>>protect fcports from being changed, eg, by some async loop event during 
+>>the walking and eventually oops'ing? Do I miss something? There are many 
+>>such unprotected fcports list usages in the driver.
+> 
+> 
+> Nothing is ever removed from the fcports list during driver execution.
+> fcports are also only added from a single context (post init-time)
+> within the DPC thread. 
 
-Sounds very reasonable. Even today, 90% of code follows that
-convention. Perhaps adding it to codingstyle would help?
+How about qla2x00_send_login_iocb_cb(), where an entry is added to 
+fcports list and which is called from IRQ context from 
+qla2x00_process_iodesc()?
 
--- 
-Thanks for all the (sleeping) penguins.
+> We are safe here.
 
--- 
-VGER BF report: H 0.254977
+> Regards,
+> Andrew Vasquez
+> 
+
