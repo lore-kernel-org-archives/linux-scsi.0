@@ -1,118 +1,129 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: [PATCH] aic94xx: Widens the Range of Recognized FLASH Manufactures
-Date: Tue, 5 Sep 2006 23:24:38 -0700 (PDT)
-Message-ID: <20060906062438.72183.qmail@web31810.mail.mud.yahoo.com>
-References: <1157473228.7906.13.camel@localhost.localdomain>
-Reply-To: ltuikov@yahoo.com
+From: Henne <henne@nachtwindheim.de>
+Subject: [PATCH] scsi-driver ultrastore replace Scsi_Cmnd with struct scsi_cmnd
+Date: Wed, 06 Sep 2006 10:49:48 +0200
+Message-ID: <44FE8BAC.1030004@nachtwindheim.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31810.mail.mud.yahoo.com ([68.142.207.73]:33666 "HELO
-	web31810.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S1751197AbWIFGYm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 6 Sep 2006 02:24:42 -0400
-In-Reply-To: <1157473228.7906.13.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750703AbWIFItI@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>, James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alexis Bruemmer <alexisb@us.ibm.com>, linux-scsi@vger.kernel.org
 
-Flash part discovery and interfacing can be *generalized*
-in all of the following ways:
-        a) by flash part manufacturer, and
-        b) by flash part interface (8 or 8/16 bit), and
-        c) by how the flash part is connected to the chip.
-In other words, there exists flash part discovery and interface code
-which is flash part manufacturer agnostic, 8/16 bit part agnostic
-and connection agnostic.
+From: Henrik Kretzschmar <henne@nachtwindheim.de>
 
-For the aic94xx you may not need such an enterprise level solution,
-(since you'd need to know intricate details about the HW design),
-but you can _still generalize per sequence_, in which case you'd
-not need to know anything about the manufacturer of the flash part.
-That is, you can at least generalize by manufacturer, so that
-you wouldn't need the switch() { case ...} statements at all.
+Replaces the typedef'd Scsi_Cmnd with struct scsi_cmnd.
+Signed-off-by: Henrik Kretzschmar <henne@nachtwindheim.de>
 
+---
 
---- Alexis Bruemmer <alexisb@us.ibm.com> wrote:
-
-> The 94xx controller is now being shipped with a wider range of FLASH
-> chip manufactures, this patch simply allows the aic94xx driver to
-> recognize the new manufacturers ids.
-> 
-> 
-> --Alexis
-> 
-> 
-> 
-> Signed-off-by: Alexis Bruemmer <alexisb@us.ibm.com>
-> 
-> ----
-> 
-> diff -aNurp linux-2.6.18-rc5-aic94xx-orig/drivers/scsi/aic94xx/aic94xx_sds.c
-> linux-2.6.18-rc5-aic94xx-new/drivers/scsi/aic94xx/aic94xx_sds.c
-> --- linux-2.6.18-rc5-aic94xx-orig/drivers/scsi/aic94xx/aic94xx_sds.c	2006-08-28
-> 14:29:30.000000000 -0700
-> +++ linux-2.6.18-rc5-aic94xx-new/drivers/scsi/aic94xx/aic94xx_sds.c	2006-09-05
-> 09:11:34.000000000 -0700
-> @@ -376,7 +376,10 @@ out:
->  /* ---------- FLASH stuff ---------- */
->  
->  #define FLASH_RESET			0xF0
-> -#define FLASH_MANUF_AMD                 1
-> +#define FLASH_MANUF_AMD			0x01
-> +#define FLASH_MANUF_ST			0x20
-> +#define FLASH_MANUF_FUJITSU		0x04
-> +#define FLASH_MANUF_MACRONIX		0xC2
->  
->  #define FLASH_SIZE                      0x200000
->  #define FLASH_DIR_COOKIE                "*** ADAPTEC FLASH DIRECTORY *** "
-> @@ -663,7 +666,11 @@ static int asd_flash_getid(struct asd_ha
->  	/* Get out of autoselect mode. */
->  	err = asd_reset_flash(asd_ha);
->  
-> -	if (asd_ha->hw_prof.flash.manuf == FLASH_MANUF_AMD) {
-> +	switch(asd_ha->hw_prof.flash.manuf) {
-> +	case FLASH_MANUF_AMD:
-> +	case FLASH_MANUF_ST:
-> +	case FLASH_MANUF_FUJITSU:
-> +	case FLASH_MANUF_MACRONIX:
->  		ASD_DPRINTK("0Found FLASH(%d) manuf:%d, dev_id:0x%x, "
->  			    "sec_prot:%d\n",
->  			    asd_ha->hw_prof.flash.wide ? 16 : 8,
-> @@ -671,6 +678,9 @@ static int asd_flash_getid(struct asd_ha
->  			    asd_ha->hw_prof.flash.dev_id,
->  			    asd_ha->hw_prof.flash.sec_prot);
->  		return 0;
-> +	default:
-> +		break;
-> +
->  	}
->  
->  	/* Ok, try the sequence for byte mode of 160B and 800D.
-> @@ -684,7 +694,11 @@ static int asd_flash_getid(struct asd_ha
->  	asd_ha->hw_prof.flash.sec_prot = asd_read_reg_byte(asd_ha, reg + 4);
->  	err = asd_reset_flash(asd_ha);
->  
-> -	if (asd_ha->hw_prof.flash.manuf == FLASH_MANUF_AMD) {
-> +	switch(asd_ha->hw_prof.flash.manuf) {
-> +	case FLASH_MANUF_AMD:
-> +	case FLASH_MANUF_ST:
-> +	case FLASH_MANUF_FUJITSU:
-> +	case FLASH_MANUF_MACRONIX:
->  		ASD_DPRINTK("1Found FLASH(%d) manuf:%d, dev_id:0x%x, "
->  			    "sec_prot:%d\n",
->  			    asd_ha->hw_prof.flash.wide ? 16 : 8,
-> @@ -692,8 +706,12 @@ static int asd_flash_getid(struct asd_ha
->  			    asd_ha->hw_prof.flash.dev_id,
->  			    asd_ha->hw_prof.flash.sec_prot);
->  		return 0;
-> +	default:
-> +		break;
-> +
->  	}
->  
-> +
->  	return -ENOENT;
->  }
-
+--- linux-2.6.18-rc5-mm1/drivers/scsi/ultrastor.c	2006-09-03 16:36:04.468628760 +0200
++++ linux/drivers/scsi/ultrastor.c	2006-09-01 19:18:29.000000000 +0200
+@@ -196,8 +196,8 @@
+   u32 sense_data PACKED;
+   /* The following fields are for software only.  They are included in
+      the MSCP structure because they are associated with SCSI requests.  */
+-  void (*done)(Scsi_Cmnd *);
+-  Scsi_Cmnd *SCint;
++  void (*done) (struct scsi_cmnd *);
++  struct scsi_cmnd *SCint;
+   ultrastor_sg_list sglist[ULTRASTOR_24F_MAX_SG]; /* use larger size for 24F */
+ };
+ 
+@@ -289,7 +289,7 @@
+ 
+ static void ultrastor_interrupt(int, void *, struct pt_regs *);
+ static irqreturn_t do_ultrastor_interrupt(int, void *, struct pt_regs *);
+-static inline void build_sg_list(struct mscp *, Scsi_Cmnd *SCpnt);
++static inline void build_sg_list(struct mscp *, struct scsi_cmnd *SCpnt);
+ 
+ 
+ /* Always called with host lock held */
+@@ -673,7 +673,7 @@
+     return buf;
+ }
+ 
+-static inline void build_sg_list(struct mscp *mscp, Scsi_Cmnd *SCpnt)
++static inline void build_sg_list(struct mscp *mscp, struct scsi_cmnd *SCpnt)
+ {
+ 	struct scatterlist *sl;
+ 	long transfer_length = 0;
+@@ -694,7 +694,8 @@
+ 	mscp->transfer_data_length = transfer_length;
+ }
+ 
+-static int ultrastor_queuecommand(Scsi_Cmnd *SCpnt, void (*done)(Scsi_Cmnd *))
++static int ultrastor_queuecommand(struct scsi_cmnd *SCpnt,
++				void (*done) (struct scsi_cmnd *))
+ {
+     struct mscp *my_mscp;
+ #if ULTRASTOR_MAX_CMDS > 1
+@@ -833,7 +834,7 @@
+ 
+  */
+ 
+-static int ultrastor_abort(Scsi_Cmnd *SCpnt)
++static int ultrastor_abort(struct scsi_cmnd *SCpnt)
+ {
+ #if ULTRASTOR_DEBUG & UD_ABORT
+     char out[108];
+@@ -843,7 +844,7 @@
+     unsigned int mscp_index;
+     unsigned char old_aborted;
+     unsigned long flags;
+-    void (*done)(Scsi_Cmnd *);
++    void (*done)(struct scsi_cmnd *);
+     struct Scsi_Host *host = SCpnt->device->host;
+ 
+     if(config.slot) 
+@@ -960,7 +961,7 @@
+     return SUCCESS;
+ }
+ 
+-static int ultrastor_host_reset(Scsi_Cmnd * SCpnt)
++static int ultrastor_host_reset(struct scsi_cmnd * SCpnt)
+ {
+     unsigned long flags;
+     int i;
+@@ -1045,8 +1046,8 @@
+     unsigned int mscp_index;
+ #endif
+     struct mscp *mscp;
+-    void (*done)(Scsi_Cmnd *);
+-    Scsi_Cmnd *SCtmp;
++    void (*done) (struct scsi_cmnd *);
++    struct scsi_cmnd *SCtmp;
+ 
+ #if ULTRASTOR_MAX_CMDS == 1
+     mscp = &config.mscp[0];
+@@ -1079,7 +1080,7 @@
+ 	    return;
+ 	}
+ 	if (icm_status == 3) {
+-	    void (*done)(Scsi_Cmnd *) = mscp->done;
++	    void (*done)(struct scsi_cmnd *) = mscp->done;
+ 	    if (done) {
+ 		mscp->done = NULL;
+ 		mscp->SCint->result = DID_ABORT << 16;
+--- linux-2.6.18-rc5-mm1/drivers/scsi/ultrastor.h	2006-06-18 03:49:35.000000000 +0200
++++ linux/drivers/scsi/ultrastor.h	2006-09-01 19:13:50.366267680 +0200
+@@ -14,11 +14,13 @@
+ #define _ULTRASTOR_H
+ 
+ static int ultrastor_detect(struct scsi_host_template *);
+-static const char *ultrastor_info(struct Scsi_Host * shpnt);
+-static int ultrastor_queuecommand(Scsi_Cmnd *, void (*done)(Scsi_Cmnd *));
+-static int ultrastor_abort(Scsi_Cmnd *);
+-static int ultrastor_host_reset(Scsi_Cmnd *);
+-static int ultrastor_biosparam(struct scsi_device *, struct block_device *, sector_t, int *);
++static const char *ultrastor_info(struct Scsi_Host *shpnt);
++static int ultrastor_queuecommand(struct scsi_cmnd *,
++				void (*done)(struct scsi_cmnd *));
++static int ultrastor_abort(struct scsi_cmnd *);
++static int ultrastor_host_reset(struct scsi_cmnd *);
++static int ultrastor_biosparam(struct scsi_device *, struct block_device *,
++				sector_t, int *);
+ 
+ 
+ #define ULTRASTOR_14F_MAX_SG 16
