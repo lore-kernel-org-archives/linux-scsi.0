@@ -1,43 +1,44 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: Linux 2.6.18-rc6
-Date: Wed, 06 Sep 2006 10:47:33 +1000
-Message-ID: <1157503653.22705.156.camel@localhost.localdomain>
-References: <Pine.LNX.4.64.0609031939100.27779@g5.osdl.org>
-	 <20060905122656.GA3650@aepfle.de>
-	 <1157490066.3463.73.camel@mulgrave.il.steeleye.com>
-	 <1157494837.22705.151.camel@localhost.localdomain>
-	 <1157498567.3463.91.camel@mulgrave.il.steeleye.com>
+From: "Mohit Katiyar" <katiyar.mohit@gmail.com>
+Subject: Fibre channel and scsi naming
+Date: Wed, 6 Sep 2006 11:05:03 +0900
+Message-ID: <46465bb30609051905m2a046cacx8138f37b410dd603@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:4802 "EHLO gate.crashing.org")
-	by vger.kernel.org with ESMTP id S1751535AbWIFAsE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Sep 2006 20:48:04 -0400
-In-Reply-To: <1157498567.3463.91.camel@mulgrave.il.steeleye.com>
+Received: from wr-out-0506.google.com ([64.233.184.234]:4829 "EHLO
+	wr-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S965260AbWIFCFE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 5 Sep 2006 22:05:04 -0400
+Received: by wr-out-0506.google.com with SMTP id i2so567364wra
+        for <linux-scsi@vger.kernel.org>; Tue, 05 Sep 2006 19:05:03 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Olaf Hering <olaf@aepfle.de>, Linus Torvalds <torvalds@osdl.org>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Tue, 2006-09-05 at 18:22 -0500, James Bottomley wrote:
-> On Wed, 2006-09-06 at 08:20 +1000, Benjamin Herrenschmidt wrote:
-> > Yes, it's a PCI error.
-> 
-> Thanks, and the cat of /proc/scsi_host/host<n>/signalling?
-> 
-> My suspicion is the register doesn't actually exist on this card so it
-> doesn't actually respond on the bus.  However, on my equivalent
-> everything works; largely I think because the only PC's I have don't
-> know how to signal a PCI error.
+Hi all,
 
-Olaf will tell us (I don't have the hardware) but it's indeed a typical
-thing .... From my experience, Adaptec tend to very easily throw PCI
-aborts at you if it doesn't like something in a register access (which
-isn't necessarily a bad thing btw, other vendors are more lenient tho),
-and Macs are well known to Machine Check the box when getting a PCI
-error while most x86 boxes silently ignore them...
+In my program implementation on SLES 9 I was using the path
+/sys/class/scsi_host/host<host_no_for fibre channel
+adapter>/device/<host>:<channel>:<id>:<lun> entry to detect whether a
+disk is attached through fibre channel or some other channel.
 
-Ben.
+Now on SLES 10 the entry has been changed as
+/sys/class/scsi_host/host<host_no_for fibre channel
+adapter>/device/rport<some
+numbers>/target<host:channel:id>/<host>:<channel>:<id>:<lun>
+
+Can anyone tell me what are the new rport entries and how and who
+creates them. Is it possible to get the rport entries for scsi disk
+through scsi ioctls?
+
+I could also see an entry as
+/sys/class/fc_transport/target<host>:<channel>:<id>/device/<host>:<channel>:<id>:<lun>
+on SLES 10. Can I use these entries to check whether a device is
+registered through fibre channel adapter. Also which program populates
+the fc_transport entries?
 
 
+TIA
+Mohit
