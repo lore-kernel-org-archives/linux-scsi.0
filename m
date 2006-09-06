@@ -1,49 +1,69 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: git-scsi-misc oops
-Date: Wed, 06 Sep 2006 09:00:29 -0500
-Message-ID: <1157551229.3469.4.camel@mulgrave.il.steeleye.com>
-References: <20060905231933.3371cd8a.akpm@osdl.org>
+Subject: Re: Linux 2.6.18-rc6
+Date: Wed, 06 Sep 2006 09:04:40 -0500
+Message-ID: <1157551480.3469.8.camel@mulgrave.il.steeleye.com>
+References: <Pine.LNX.4.64.0609031939100.27779@g5.osdl.org>
+	 <20060905122656.GA3650@aepfle.de>
+	 <1157490066.3463.73.camel@mulgrave.il.steeleye.com>
+	 <20060906110147.GA12101@aepfle.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:5002 "EHLO
+Received: from stat9.steeleye.com ([209.192.50.41]:12938 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751053AbWIFOAf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 6 Sep 2006 10:00:35 -0400
-In-Reply-To: <20060905231933.3371cd8a.akpm@osdl.org>
+	id S1751094AbWIFOEu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 6 Sep 2006 10:04:50 -0400
+In-Reply-To: <20060906110147.GA12101@aepfle.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-scsi@vger.kernel.org
+To: Olaf Hering <olaf@aepfle.de>
+Cc: Linus Torvalds <torvalds@osdl.org>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On Tue, 2006-09-05 at 23:19 -0700, Andrew Morton wrote:
-> aic79xxx isn't happy.  Using
-> git+ssh://master.kernel.org/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git,
-> no other patches applied.
+On Wed, 2006-09-06 at 13:01 +0200, Olaf Hering wrote:
+> This causes another machine check because it runs ahc_inb(ahc, SBLKCTL) again.
+> With debug I get:
 
-Try this, please:
+Exactly.  It's not a card state problem; the register simply doesn't
+exist.  It looks like from the source code, it only exists on twin or U2
+and above chipsets (i.e. those supporting LVD).
+
+Try this patch, which should deduce the bus type for U and below without
+resorting to the SBLKCTL register.
 
 James
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index eedfd05..c35f5fc 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -873,10 +873,12 @@ EXPORT_SYMBOL(scsi_device_get);
-  */
- void scsi_device_put(struct scsi_device *sdev)
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+index e5bb4d8..0b3c01a 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+@@ -2539,15 +2539,23 @@ #endif
+ static void ahc_linux_get_signalling(struct Scsi_Host *shost)
  {
-+	struct module *module = sdev->host->hostt->module;
+ 	struct ahc_softc *ahc = *(struct ahc_softc **)shost->hostdata;
+-	u8 mode = ahc_inb(ahc, SBLKCTL);
++	u8 mode;
+ 
+-	if (mode & ENAB40)
+-		spi_signalling(shost) = SPI_SIGNAL_LVD;
+-	else if (mode & ENAB20)
++	if (!(ahc->features & AHC_ULTRA2)) {
++		/* non-LVD chipset, may not have SBLKCTL reg */
+ 		spi_signalling(shost) = 
+ 			ahc->features & AHC_HVD ?
+ 			SPI_SIGNAL_HVD :
+ 			SPI_SIGNAL_SE;
++		return;
++	}
 +
- 	/* The module refcount will be zero if scsi_device_get()
- 	 * was called from a module removal routine */
--	if (likely(module_refcount(sdev->host->hostt->module) != 0))
--		module_put(sdev->host->hostt->module);
-+	if (module && module_refcount(module) != 0)
-+		module_put(module);
- 	put_device(&sdev->sdev_gendev);
++	mode = ahc_inb(ahc, SBLKCTL);
++
++	if (mode & ENAB40)
++		spi_signalling(shost) = SPI_SIGNAL_LVD;
++	else if (mode & ENAB20)
++		spi_signalling(shost) = SPI_SIGNAL_SE;
+ 	else
+ 		spi_signalling(shost) = SPI_SIGNAL_UNKNOWN;
  }
- EXPORT_SYMBOL(scsi_device_put);
 
 
