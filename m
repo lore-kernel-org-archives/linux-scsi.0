@@ -1,100 +1,118 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: git-scsi-misc oops
-Date: Tue, 5 Sep 2006 23:19:33 -0700
-Message-ID: <20060905231933.3371cd8a.akpm@osdl.org>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: [PATCH] aic94xx: Widens the Range of Recognized FLASH Manufactures
+Date: Tue, 5 Sep 2006 23:24:38 -0700 (PDT)
+Message-ID: <20060906062438.72183.qmail@web31810.mail.mud.yahoo.com>
+References: <1157473228.7906.13.camel@localhost.localdomain>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:43697 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932598AbWIFGTg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Sep 2006 02:19:36 -0400
+Received: from web31810.mail.mud.yahoo.com ([68.142.207.73]:33666 "HELO
+	web31810.mail.mud.yahoo.com") by vger.kernel.org with SMTP
+	id S1751197AbWIFGYm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 6 Sep 2006 02:24:42 -0400
+In-Reply-To: <1157473228.7906.13.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi@vger.kernel.org
+To: Alexis Bruemmer <alexisb@us.ibm.com>, linux-scsi@vger.kernel.org
+
+Flash part discovery and interfacing can be *generalized*
+in all of the following ways:
+        a) by flash part manufacturer, and
+        b) by flash part interface (8 or 8/16 bit), and
+        c) by how the flash part is connected to the chip.
+In other words, there exists flash part discovery and interface code
+which is flash part manufacturer agnostic, 8/16 bit part agnostic
+and connection agnostic.
+
+For the aic94xx you may not need such an enterprise level solution,
+(since you'd need to know intricate details about the HW design),
+but you can _still generalize per sequence_, in which case you'd
+not need to know anything about the manufacturer of the flash part.
+That is, you can at least generalize by manufacturer, so that
+you wouldn't need the switch() { case ...} statements at all.
 
 
-aic79xxx isn't happy.  Using
-git+ssh://master.kernel.org/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git,
-no other patches applied.
+--- Alexis Bruemmer <alexisb@us.ibm.com> wrote:
 
+> The 94xx controller is now being shipped with a wider range of FLASH
+> chip manufactures, this patch simply allows the aic94xx driver to
+> recognize the new manufacturers ids.
+> 
+> 
+> --Alexis
+> 
+> 
+> 
+> Signed-off-by: Alexis Bruemmer <alexisb@us.ibm.com>
+> 
+> ----
+> 
+> diff -aNurp linux-2.6.18-rc5-aic94xx-orig/drivers/scsi/aic94xx/aic94xx_sds.c
+> linux-2.6.18-rc5-aic94xx-new/drivers/scsi/aic94xx/aic94xx_sds.c
+> --- linux-2.6.18-rc5-aic94xx-orig/drivers/scsi/aic94xx/aic94xx_sds.c	2006-08-28
+> 14:29:30.000000000 -0700
+> +++ linux-2.6.18-rc5-aic94xx-new/drivers/scsi/aic94xx/aic94xx_sds.c	2006-09-05
+> 09:11:34.000000000 -0700
+> @@ -376,7 +376,10 @@ out:
+>  /* ---------- FLASH stuff ---------- */
+>  
+>  #define FLASH_RESET			0xF0
+> -#define FLASH_MANUF_AMD                 1
+> +#define FLASH_MANUF_AMD			0x01
+> +#define FLASH_MANUF_ST			0x20
+> +#define FLASH_MANUF_FUJITSU		0x04
+> +#define FLASH_MANUF_MACRONIX		0xC2
+>  
+>  #define FLASH_SIZE                      0x200000
+>  #define FLASH_DIR_COOKIE                "*** ADAPTEC FLASH DIRECTORY *** "
+> @@ -663,7 +666,11 @@ static int asd_flash_getid(struct asd_ha
+>  	/* Get out of autoselect mode. */
+>  	err = asd_reset_flash(asd_ha);
+>  
+> -	if (asd_ha->hw_prof.flash.manuf == FLASH_MANUF_AMD) {
+> +	switch(asd_ha->hw_prof.flash.manuf) {
+> +	case FLASH_MANUF_AMD:
+> +	case FLASH_MANUF_ST:
+> +	case FLASH_MANUF_FUJITSU:
+> +	case FLASH_MANUF_MACRONIX:
+>  		ASD_DPRINTK("0Found FLASH(%d) manuf:%d, dev_id:0x%x, "
+>  			    "sec_prot:%d\n",
+>  			    asd_ha->hw_prof.flash.wide ? 16 : 8,
+> @@ -671,6 +678,9 @@ static int asd_flash_getid(struct asd_ha
+>  			    asd_ha->hw_prof.flash.dev_id,
+>  			    asd_ha->hw_prof.flash.sec_prot);
+>  		return 0;
+> +	default:
+> +		break;
+> +
+>  	}
+>  
+>  	/* Ok, try the sequence for byte mode of 160B and 800D.
+> @@ -684,7 +694,11 @@ static int asd_flash_getid(struct asd_ha
+>  	asd_ha->hw_prof.flash.sec_prot = asd_read_reg_byte(asd_ha, reg + 4);
+>  	err = asd_reset_flash(asd_ha);
+>  
+> -	if (asd_ha->hw_prof.flash.manuf == FLASH_MANUF_AMD) {
+> +	switch(asd_ha->hw_prof.flash.manuf) {
+> +	case FLASH_MANUF_AMD:
+> +	case FLASH_MANUF_ST:
+> +	case FLASH_MANUF_FUJITSU:
+> +	case FLASH_MANUF_MACRONIX:
+>  		ASD_DPRINTK("1Found FLASH(%d) manuf:%d, dev_id:0x%x, "
+>  			    "sec_prot:%d\n",
+>  			    asd_ha->hw_prof.flash.wide ? 16 : 8,
+> @@ -692,8 +706,12 @@ static int asd_flash_getid(struct asd_ha
+>  			    asd_ha->hw_prof.flash.dev_id,
+>  			    asd_ha->hw_prof.flash.sec_prot);
+>  		return 0;
+> +	default:
+> +		break;
+> +
+>  	}
+>  
+> +
+>  	return -ENOENT;
+>  }
 
-
-netconsole: network logging started
-GSI 18 sharing vector 0xB9 and IRQ 18
-ACPI: PCI Interrupt 0000:04:03.0[A] -> GSI 30 (level, low) -> IRQ 18
-scsi0 : Adaptec AIC79XX PCI-X SCSI HBA DRIVER, Rev 3.0
-        <Adaptec AIC7902 Ultra320 SCSI adapter>
-        aic7902: Ultra320 Wide Channel A, SCSI Id=7, PCI-X 67-100Mhz, 512 SCBs
-
-scsi 0:0:5:0: Direct access     MAXTOR   ATLAS10K4_73WLS  DFV0 PQ: 0 ANSI: 3
- target0:0:5: asynchronous
-scsi0:A:5:0: Tagged Queuing enabled.  Depth 64
-Unable to handle kernel NULL pointer dereference at 0000000000000200 RIP: 
- [<ffffffff8024aed1>] module_refcount+0x11/0x27
-PGD 0 
-Oops: 0000 [1] PREEMPT SMP 
-CPU 0 
-Modules linked in:
-Pid: 1, comm: swapper Not tainted 2.6.18-rc6 #5
-RIP: 0010:[<ffffffff8024aed1>]  [<ffffffff8024aed1>] module_refcount+0x11/0x27
-RSP: 0000:ffff81017fc5d850  EFLAGS: 00010246
-RAX: 0000000000000000 RBX: ffff81017f7a84d8 RCX: 0000000000000000
-RDX: 0000000000000000 RSI: 0000000000000213 RDI: 0000000000000000
-RBP: ffff81017fc5d850 R08: ffff81017fc01610 R09: ffff81017f72e000
-R10: ffff81017f72e000 R11: ffff81017f7aec98 R12: ffff81017f7a84c8
-R13: ffff81017f7aeae0 R14: ffff81017f7a84c8 R15: 0000000000000213
-FS:  0000000000000000(0000) GS:ffffffff80668000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
-CR2: 0000000000000200 CR3: 0000000000201000 CR4: 00000000000006e0
-Process swapper (pid: 1, threadinfo ffff81017fc5c000, task ffff81017fc53760)
-Stack:  ffff81017fc5d870 ffffffff803ccb03 ffff81017f7a84d8 0000000000000000
- ffff81017fc5d8b0 ffffffff803cd65d ffff81017f7a84c8 ffff81017f7a84c8
- ffff81017f7acb08 ffff81017f7aeae0 ffffffff803d1439 0000000000000000
-Call Trace:
- [<ffffffff803ccb03>] scsi_device_put+0x1c/0x9a
- [<ffffffff803cd65d>] __scsi_iterate_devices+0x67/0x77
- [<ffffffff803d1439>] device_quiesce_fn+0x0/0xb
- [<ffffffff803cd6ea>] starget_for_each_device+0x7d/0x93
- [<ffffffff803d0e91>] scsi_target_quiesce+0x12/0x14
- [<ffffffff803d6030>] spi_dv_device+0x62/0x520
- [<ffffffff803ccc59>] scsi_adjust_queue_depth+0xd8/0xe5
- [<ffffffff803f6f50>] ahd_linux_slave_configure+0x132/0x141
- [<ffffffff803d333a>] scsi_probe_and_add_lun+0x79b/0x901
- [<ffffffff803d3582>] __scsi_scan_target+0xe2/0x591
- [<ffffffff804c9de5>] _spin_unlock+0x13/0x2f
- [<ffffffff804c6952>] klist_next+0x5a/0x65
- [<ffffffff804c67c0>] klist_release+0x0/0x60
- [<ffffffff803d3a7e>] scsi_scan_channel+0x4d/0x79
- [<ffffffff803d3b2d>] scsi_scan_host_selected+0x83/0xc6
- [<ffffffff803d3b83>] scsi_scan_host+0x13/0x15
- [<ffffffff803f6b3c>] ahd_linux_register_host+0x2e3/0x2f7
- [<ffffffff803fa806>] ahd_pci_map_int+0x31/0x59
- [<ffffffff803f25e1>] ahd_pci_config+0xd2c/0xd5f
- [<ffffffff803faa22>] ahd_linux_pci_dev_probe+0x1e2/0x1fa
- [<ffffffff8033934d>] kobject_get+0x17/0x1e
- [<ffffffff8034469b>] pci_device_probe+0x4c/0x72
- [<ffffffff803a6fb4>] driver_probe_device+0x5a/0xaf
- [<ffffffff803a7111>] __driver_attach+0x87/0xc5
- [<ffffffff803a708a>] __driver_attach+0x0/0xc5
- [<ffffffff803a6402>] bus_for_each_dev+0x49/0x7a
- [<ffffffff803a6e44>] driver_attach+0x1c/0x1e
- [<ffffffff803a676c>] bus_add_driver+0x72/0x10f
- [<ffffffff803a758a>] driver_register+0x8d/0x91
- [<ffffffff8034426d>] __pci_register_driver+0x61/0x84
- [<ffffffff803fa7c1>] ahd_linux_pci_init+0x12/0x14
- [<ffffffff8069603b>] ahd_linux_init+0x6a/0x82
- [<ffffffff802071a0>] init+0x144/0x304
- [<ffffffff804c9eab>] _spin_unlock_irq+0x14/0x30
- [<ffffffff8022c1d6>] schedule_tail+0x43/0xb5
- [<ffffffff8020a8dc>] child_rip+0xa/0x12
- [<ffffffff8020705c>] init+0x0/0x304
- [<ffffffff8020a8d2>] child_rip+0x0/0x12
-
-
-Code: 48 8b 80 00 02 00 00 01 c1 48 ff c2 48 83 fa 04 75 e5 89 c8 
-RIP  [<ffffffff8024aed1>] module_refcount+0x11/0x27
- RSP <ffff81017fc5d850>
-CR2: 0000000000000200
- <0>Kernel panic - not syncing: Attempted to kill init!
