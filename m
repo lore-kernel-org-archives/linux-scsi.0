@@ -1,48 +1,54 @@
-From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: RE: MPT Fusion Crash
-Date: Wed, 6 Sep 2006 15:54:39 -0600
-Message-ID: <664A4EBB07F29743873A87CF62C26D702E363A@NAMAIL4.ad.lsil.com>
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: [PATCH] aic94xx: Widens the Range of Recognized FLASH Manufactures
+Date: Wed, 6 Sep 2006 15:29:57 -0700
+Message-ID: <20060906222957.GA17348@us.ibm.com>
+References: <1157473228.7906.13.camel@localhost.localdomain> <20060906062438.72183.qmail@web31810.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:21437 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S932212AbWIFVym convert rfc822-to-8bit
+Received: from e33.co.us.ibm.com ([32.97.110.151]:19937 "EHLO
+	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751759AbWIFW37
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 6 Sep 2006 17:54:42 -0400
-Content-class: urn:content-classes:message
+	Wed, 6 Sep 2006 18:29:59 -0400
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e33.co.us.ibm.com (8.13.8/8.12.11) with ESMTP id k86MTweB025180
+	for <linux-scsi@vger.kernel.org>; Wed, 6 Sep 2006 18:29:58 -0400
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
+	by westrelay02.boulder.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id k86MTwtL371082
+	for <linux-scsi@vger.kernel.org>; Wed, 6 Sep 2006 16:29:58 -0600
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k86MTwwO015830
+	for <linux-scsi@vger.kernel.org>; Wed, 6 Sep 2006 16:29:58 -0600
+Content-Disposition: inline
+In-Reply-To: <20060906062438.72183.qmail@web31810.mail.mud.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Chen, Justin" <justin.chen@hp.com>, linux-scsi@vger.kernel.org
-Cc: "Patterson, Andrew D (Linux R&D)" <andrew.patterson@hp.com>, "Helgaas, Bjorn" <bjorn.helgaas@hp.com>
+To: Luben Tuikov <ltuikov@yahoo.com>
+Cc: Alexis Bruemmer <alexisb@us.ibm.com>, linux-scsi@vger.kernel.org
 
-On Wednesday, September 06, 2006 3:05 PM, Chen, Justin wrote:
-
+Luben Tuikov <ltuikov@yahoo.com> wrote:
+> Flash part discovery and interfacing can be *generalized*
+> in all of the following ways:
+>         a) by flash part manufacturer, and
+>         b) by flash part interface (8 or 8/16 bit), and
+>         c) by how the flash part is connected to the chip.
+> In other words, there exists flash part discovery and interface code
+> which is flash part manufacturer agnostic, 8/16 bit part agnostic
+> and connection agnostic.
 > 
-> I got a kernel crash after offlined a scsi host when the 
-> kernel boots on
-> an ia64 box.  The crash is seen on the current upstream kernel
-> (2.6.18-rc6) and several versions of old kernels back. 
+> For the aic94xx you may not need such an enterprise level solution,
+> (since you'd need to know intricate details about the HW design),
+> but you can _still generalize per sequence_, in which case you'd
+> not need to know anything about the manufacturer of the flash part.
+> That is, you can at least generalize by manufacturer, so that
+> you wouldn't need the switch() { case ...} statements at all.
 > 
-> Any idea what the problem is?
-> 
 
-yes
+In looking through the code I cannot see any user of the data we obtain
+from the flash. It appears that we could simplify the function to just a
+check for FLASHEX unless I am missing something.
 
-> bsp=e0000700835190a8
->  [<a0000001001e77e0>] swiotlb_unmap_sg+0xa0/0x1e0
->                                 sp=e00007008351fd90 
-> bsp=e000070083519048
->  [<a00000010047b970>] mptscsih_search_running_cmds+0x210/0x340
->                                 sp=e00007008351fd90 
-
-Looks like it panic'd when pci_unmap_sg() is called.   In older kernels
-we had a similar panic, and we added a scsi_device_online call because
-midlayer was nulling some of the pointers in the scsi_cmd after itself
-offlined a device before the lld slave_destroy was called..  
-This panic occured because there were still outstanding io in fusion.
-Since I thought that was fix'd, it was recommended by hch and company
-that we kill the scsi_device_online call.
-
-Eric
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
