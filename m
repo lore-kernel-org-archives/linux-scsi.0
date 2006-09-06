@@ -1,69 +1,49 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Linux 2.6.18-rc6
-Date: Wed, 06 Sep 2006 09:04:40 -0500
-Message-ID: <1157551480.3469.8.camel@mulgrave.il.steeleye.com>
-References: <Pine.LNX.4.64.0609031939100.27779@g5.osdl.org>
-	 <20060905122656.GA3650@aepfle.de>
-	 <1157490066.3463.73.camel@mulgrave.il.steeleye.com>
-	 <20060906110147.GA12101@aepfle.de>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: [PATCH] aic94xx: Fix spelling error
+Date: Wed, 06 Sep 2006 10:58:37 -0700
+Message-ID: <44FF0C4D.7020905@us.ibm.com>
+Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:12938 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751094AbWIFOEu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 6 Sep 2006 10:04:50 -0400
-In-Reply-To: <20060906110147.GA12101@aepfle.de>
+Received: from e6.ny.us.ibm.com ([32.97.182.146]:45247 "EHLO e6.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1751252AbWIFR7B convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 6 Sep 2006 13:59:01 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Olaf Hering <olaf@aepfle.de>
-Cc: Linus Torvalds <torvalds@osdl.org>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On Wed, 2006-09-06 at 13:01 +0200, Olaf Hering wrote:
-> This causes another machine check because it runs ahc_inb(ahc, SBLKCTL) again.
-> With debug I get:
+This patch corrects the spelling of "ENEBLEABLE" in the aic94xx driver.
 
-Exactly.  It's not a card state problem; the register simply doesn't
-exist.  It looks like from the source code, it only exists on twin or U2
-and above chipsets (i.e. those supporting LVD).
+--D
 
-Try this patch, which should deduce the bus type for U and below without
-resorting to the SBLKCTL register.
+Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
 
-James
-
-diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
-index e5bb4d8..0b3c01a 100644
---- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
-+++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
-@@ -2539,15 +2539,23 @@ #endif
- static void ahc_linux_get_signalling(struct Scsi_Host *shost)
- {
- 	struct ahc_softc *ahc = *(struct ahc_softc **)shost->hostdata;
--	u8 mode = ahc_inb(ahc, SBLKCTL);
-+	u8 mode;
- 
--	if (mode & ENAB40)
--		spi_signalling(shost) = SPI_SIGNAL_LVD;
--	else if (mode & ENAB20)
-+	if (!(ahc->features & AHC_ULTRA2)) {
-+		/* non-LVD chipset, may not have SBLKCTL reg */
- 		spi_signalling(shost) = 
- 			ahc->features & AHC_HVD ?
- 			SPI_SIGNAL_HVD :
- 			SPI_SIGNAL_SE;
-+		return;
-+	}
-+
-+	mode = ahc_inb(ahc, SBLKCTL);
-+
-+	if (mode & ENAB40)
-+		spi_signalling(shost) = SPI_SIGNAL_LVD;
-+	else if (mode & ENAB20)
-+		spi_signalling(shost) = SPI_SIGNAL_SE;
- 	else
- 		spi_signalling(shost) = SPI_SIGNAL_UNKNOWN;
- }
-
+diff --git a/drivers/scsi/aic94xx/aic94xx_sds.c b/drivers/scsi/aic94xx/aic94xx_sds.c
+index eec1e0d..7508250 100644
+@@ -807,11 +808,11 @@ static void *asd_find_ll_by_id(void * co
+  *
+  * HIDDEN phys do not count in the total count.  REPORTED phys cannot
+  * be enabled but are reported and counted towards the total.
+- * ENEBLEABLE phys are enabled by default and count towards the total.
++ * ENABLEABLE phys are enabled by default and count towards the total.
+  * The absolute total phy number is ASD_MAX_PHYS.  hw_prof->num_phys
+  * merely specifies the number of phys the host adapter decided to
+  * report.  E.g., it is possible for phys 0, 1 and 2 to be HIDDEN,
+- * phys 3, 4 and 5 to be REPORTED and phys 6 and 7 to be ENEBLEABLE.
++ * phys 3, 4 and 5 to be REPORTED and phys 6 and 7 to be ENABLEABLE.
+  * In this case ASD_MAX_PHYS is 8, hw_prof->num_phys is 5, and only 2
+  * are actually enabled (enabled by default, max number of phys
+  * enableable in this case).
+@@ -868,7 +869,7 @@ static int asd_ms_get_phy_params(struct 
+ 			rep_phys++;
+ 			continue;
+ 		case MS_PHY_STATE_ENABLEABLE:
+-			ASD_DPRINTK("ms: phy%d: ENEBLEABLE\n", i);
++			ASD_DPRINTK("ms: phy%d: ENABLEABLE\n", i);
+ 			asd_ha->hw_prof.enabled_phys |= (1 << i);
+ 			en_phys++;
+ 			break;
 
