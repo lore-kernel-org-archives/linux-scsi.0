@@ -1,55 +1,51 @@
-From: Bjorn Helgaas <bjorn.helgaas@hp.com>
-Subject: Re: MPT Fusion Crash
-Date: Thu, 7 Sep 2006 10:37:08 -0600
-Message-ID: <200609071037.09259.bjorn.helgaas@hp.com>
-References: <664A4EBB07F29743873A87CF62C26D702E363A@NAMAIL4.ad.lsil.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [PATCH] fix up SCSI netlink build
+Date: Thu, 07 Sep 2006 11:43:59 -0500
+Message-ID: <1157647439.3462.49.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from atlrel8.hp.com ([156.153.255.206]:62940 "EHLO atlrel8.hp.com")
-	by vger.kernel.org with ESMTP id S1161022AbWIGQhO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Sep 2006 12:37:14 -0400
-In-Reply-To: <664A4EBB07F29743873A87CF62C26D702E363A@NAMAIL4.ad.lsil.com>
-Content-Disposition: inline
+Received: from stat9.steeleye.com ([209.192.50.41]:10669 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1161040AbWIGQoE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 7 Sep 2006 12:44:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric" <Eric.Moore@lsil.com>
-Cc: "Chen, Justin" <justin.chen@hp.com>, linux-scsi@vger.kernel.org, "Patterson, Andrew D (Linux R&D)" <andrew.patterson@hp.com>
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: James.Smart@emulex.com
 
-On Wednesday 06 September 2006 15:54, Moore, Eric wrote:
-> > bsp=e0000700835190a8
-> >  [<a0000001001e77e0>] swiotlb_unmap_sg+0xa0/0x1e0
-> >                                 sp=e00007008351fd90 
-> > bsp=e000070083519048
-> >  [<a00000010047b970>] mptscsih_search_running_cmds+0x210/0x340
-> >                                 sp=e00007008351fd90 
-> 
-> Looks like it panic'd when pci_unmap_sg() is called.   In older kernels
-> we had a similar panic, and we added a scsi_device_online call because
-> midlayer was nulling some of the pointers in the scsi_cmd after itself
-> offlined a device before the lld slave_destroy was called..  
-> This panic occured because there were still outstanding io in fusion.
-> Since I thought that was fix'd, it was recommended by hch and company
-> that we kill the scsi_device_online call.
+The configuration change I introduced was overly optimistic.  We need to
+account for the fact that CONFIG_SCSI_NETLINK can be a module.
 
-I suppose this is the scsi_device_online() removal you're talking
-about (item 5 in the changelog):
-  http://kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=0d0c79747e362ff54adc6418d2990d49cad9395d
+James
 
-I don't know enough about SCSI to know how the midlayer is supposed
-to know that all the outstanding fusion I/O has completed before it
-calls slave_destroy.
+Index: BUILD-2.6/drivers/scsi/Makefile
+===================================================================
+--- BUILD-2.6.orig/drivers/scsi/Makefile	2006-09-07 10:42:51.000000000 -0500
++++ BUILD-2.6/drivers/scsi/Makefile	2006-09-07 10:47:20.000000000 -0500
+@@ -144,7 +144,8 @@ scsi_mod-y			+= scsi.o hosts.o scsi_ioct
+ 				   scsicam.o scsi_error.o scsi_lib.o \
+ 				   scsi_scan.o scsi_sysfs.o \
+ 				   scsi_devinfo.o
+-scsi_mod-$(CONFIG_SCSI_NETLINK)	+= scsi_netlink.o
++scsi_nl-$(CONFIG_SCSI_NETLINK)	+= scsi_netlink.o
++scsi_mod-y			+= $(scsi_nl-m) $(scsi_nl-y)
+ scsi_mod-$(CONFIG_SYSCTL)	+= scsi_sysctl.o
+ scsi_mod-$(CONFIG_SCSI_PROC_FS)	+= scsi_proc.o
+ 
+Index: BUILD-2.6/drivers/scsi/scsi_priv.h
+===================================================================
+--- BUILD-2.6.orig/drivers/scsi/scsi_priv.h	2006-09-07 10:42:51.000000000 -0500
++++ BUILD-2.6/drivers/scsi/scsi_priv.h	2006-09-07 10:46:31.000000000 -0500
+@@ -112,7 +112,7 @@ extern void __scsi_remove_device(struct 
+ extern struct bus_type scsi_bus_type;
+ 
+ /* scsi_netlink.c */
+-#ifdef CONFIG_SCSI_NETLINK
++#if defined(CONFIG_SCSI_NETLINK) || defined(CONFIG_SCSI_NETLINK_MODULE)
+ extern void scsi_netlink_init(void);
+ extern void scsi_netlink_exit(void);
+ extern struct sock *scsi_nl_sock;
 
-I also have a naive question about the ScsiLookup[] table, which is
-used in mptscsih_qcmd(), mptscsih_io_done(), mptscsih_flush_running_cmds(),
-mptscsih_search_running_cmds(), mptscsih_remove(), and a few other
-places.  What is the locking strategy for this?
 
-It seems like the slave_destroy (which uses ScsiLookup[] via
-mptscsih_search_running_cmds()) might happen asynchronously with
-respect to I/O completions, and might need to be protected against
-updates by mptscsih_io_done().
-
-Bjorn
