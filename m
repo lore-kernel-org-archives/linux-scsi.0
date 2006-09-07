@@ -1,48 +1,43 @@
-From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: RE: [PATCH] scsi_transport_sas: make minimum and maximumlinkratesettable quantities
-Date: Thu, 7 Sep 2006 15:39:25 -0600
-Message-ID: <664A4EBB07F29743873A87CF62C26D7030717E@NAMAIL4.ad.lsil.com>
+From: malahal@us.ibm.com
+Subject: [PATCH] aic94xx: Fix for a typo in aic94xx_init()
+Date: Thu, 7 Sep 2006 15:12:42 -0700
+Message-ID: <20060907221242.GA19218@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:12514 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1751896AbWIGVjn convert rfc822-to-8bit
+Received: from e34.co.us.ibm.com ([32.97.110.152]:33923 "EHLO
+	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S1422633AbWIGWMp
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 7 Sep 2006 17:39:43 -0400
-Content-class: urn:content-classes:message
+	Thu, 7 Sep 2006 18:12:45 -0400
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e34.co.us.ibm.com (8.13.8/8.12.11) with ESMTP id k87MCiva000840
+	for <linux-scsi@vger.kernel.org>; Thu, 7 Sep 2006 18:12:44 -0400
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by westrelay02.boulder.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id k87MCiTE207218
+	for <linux-scsi@vger.kernel.org>; Thu, 7 Sep 2006 16:12:44 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k87MCi2n020340
+	for <linux-scsi@vger.kernel.org>; Thu, 7 Sep 2006 16:12:44 -0600
+Received: from malahal.beaverton.ibm.com (malahal.beaverton.ibm.com [9.47.17.93])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k87MCiLs020316
+	for <linux-scsi@vger.kernel.org>; Thu, 7 Sep 2006 16:12:44 -0600
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: dougg@torque.net, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Thursday, September 07, 2006 8:23 AM, James Bottomley wrote:
+Signed-off-by: Malahal Naineni <malahal@us.ibm.com>
 
-> 
-> Good ... I'm starting to think we might junk all the function 
-> callbacks
-> and simply have even the HBA configured via SMP (i.e. the driver would
-> interpret SMP messages and set the HBA phys appropriately).
-> 
 
-Id rather vote for seeing that we keep scsi lld callbacks for hba
-properties, and 
-smp passthru for expander properties.
-
-Its going to be alot of work to rip out the current code, and to add
-code
-for hba that snoops smp passthru, and interprets/translate what is meant
-for it.
-I doubt all smp passthru's directly map to hba properties.
-
-Also, all these KABI breakages are causing me major headaches.   Between
-SLES10 and RHEL5 there is a different API due to the wide port support.
-I think
-adding new callbacks in transport, doesn't necessary mean I have to
-implement them
-in the lld, which makes my oem supplied drivers and distro's drivers
-more 
-compatible between kernel rev's, and upstream.
-
-Eric
+diff -r 134012c83658 drivers/scsi/aic94xx/aic94xx_init.c
+--- a/drivers/scsi/aic94xx/aic94xx_init.c	Thu Aug 31 13:03:38 2006 -0700
++++ b/drivers/scsi/aic94xx/aic94xx_init.c	Thu Sep 07 15:05:39 2006 -0700
+@@ -822,7 +822,7 @@ static int __init aic94xx_init(void)
+ 
+ 	aic94xx_transport_template =
+ 		sas_domain_attach_transport(&aic94xx_transport_functions);
+-	if (err)
++	if (!aic94xx_transport_template)
+ 		goto out_destroy_caches;
+ 
+ 	err = pci_register_driver(&aic94xx_pci_driver);
