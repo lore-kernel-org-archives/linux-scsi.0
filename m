@@ -1,15 +1,21 @@
 From: "Fajun Chen" <fajunchen@gmail.com>
 Subject: Data read/write slows down other programs dramatically (2.6.18-rc2)
-Date: Thu, 7 Sep 2006 18:29:32 -0600
-Message-ID: <8202f4270609071729n84eaff7j5696e5db65090af8@mail.gmail.com>
+Date: Thu, 7 Sep 2006 21:16:25 -0600
+Message-ID: <8202f4270609072016x4bc549cdlf58d305d62b9c4d9@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from py-out-1112.google.com ([64.233.166.176]:59202 "EHLO
+	py-out-1112.google.com") by vger.kernel.org with ESMTP
+	id S1752058AbWIHDQ0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 7 Sep 2006 23:16:26 -0400
+Received: by py-out-1112.google.com with SMTP id n25so582038pyg
+        for <linux-scsi@vger.kernel.org>; Thu, 07 Sep 2006 20:16:26 -0700 (PDT)
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
 Hi,
 
@@ -23,7 +29,7 @@ The following problem was observed occasionally: the test program uses
 was very slow to respond,  ip connection was almost time out...  It
 seems the slowness was related to the dmesg traces below (just an
 observation which may not be true). Has anyone seen similar problem
-before? Is there any place or hot spot I should look closely?
+before? Is there any place in sg/scsi/libata code I should look closely?
 
 Thanks,
 Fajun
