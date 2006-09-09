@@ -1,64 +1,63 @@
-From: "Robin H. Johnson" <robbat2@gentoo.org>
-Subject: status question - IP over FC for qla2xxx?
-Date: Fri, 8 Sep 2006 23:49:16 -0700
-Message-ID: <20060909064916.GF12098@curie-int.orbis-terrarum.net>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [Bugme-new] [Bug 7130] New: loading driver eat all CPU and
+ since some time may block all system disk IO (even can not reboot)
+Date: Sat, 9 Sep 2006 08:36:31 -0700
+Message-ID: <20060909083631.95a63528.akpm@osdl.org>
+References: <200609091032.k89AW7bM017561@fire-2.osdl.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="ChQOR20MqfxkMJg9"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.isohunt.com ([69.64.61.20]:62169 "EHLO mail.isohunt.com")
-	by vger.kernel.org with ESMTP id S932325AbWIIGSO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Sep 2006 02:18:14 -0400
-Content-Disposition: inline
+Received: from smtp.osdl.org ([65.172.181.4]:61899 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932272AbWIIPg7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Sep 2006 11:36:59 -0400
+In-Reply-To: <200609091032.k89AW7bM017561@fire-2.osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, wizard580@gmail.com, sparclinux@vger.kernel.org, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>
 
+On Sat, 9 Sep 2006 03:32:07 -0700
+bugme-daemon@bugzilla.kernel.org wrote:
 
---ChQOR20MqfxkMJg9
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> http://bugzilla.kernel.org/show_bug.cgi?id=7130
+> 
+>            Summary: loading driver eat all CPU and since some time may block
+>                     all system disk IO (even can not reboot)
+>     Kernel Version: 2.6.17.12
+>             Status: NEW
+>           Severity: blocking
+>              Owner: scsi_drivers-other@kernel-bugs.osdl.org
+>          Submitter: wizard580@gmail.com
+> 
+> 
+> Most recent kernel where this bug did not occur: 2.6.17.12
+> Distribution: Debian SID/Unstable
+> Hardware Environment: SUN UltraSparc2 E3500 FC-AL SCSI hard drives
+> Software Environment: Debian with latest updates on 09.09.2006
+> Problem Description: When I load a driver fcal, mu cpu will be 100% busy and 
+> will never fred. modprobe fcal will never ends. If I do not restart 
+> immediately, then since 2-4min I can not even reboot. Seems to there is a 
+> block of all disk io. A top and so programs running fine, until exit. Start 
+> again will fail.
+> So... may be because of that, I can not see my FC-AL scsi hard drives.
+> My hardware (if I did't mistaken):
+> 1) X2652A FC-AL INTERFACE BOARD 3500.
+> 2) X6731A FCAL GBIC MODULE 100MB/SEC
+> P.S.: I do anything for seeing my hard drives in Debian. If I need to tell you 
+> any info, or make a tests, just let me know. :)
+> If anybody can quickly help, I will be blessed. :D My life is bet on this.
+> P.P.S:
+> hard drives I see in "pre boot 'bios' with probe-fcal-all command"
+> 
+> Steps to reproduce:
+> modprobe fcal on a Sparc arch.
+> 
 
-Hi,
+Does anyone else us the fcal driver?
 
-I'm trying to establish the status of IPFC (IP over Fibre Channel) for
-the qla2xxx driver (and the QLA2312 chip in my specific deployment).
+I'd suggest the next step would be to run a kernel profile, or just sysrq-P
+to find out where the CPU is stuck.  Could a sparc person please talk the
+reporter through that process?
 
-Researching it, I see that there were some patchsets way back in the
-2.4.20 days (http://ftp.parisc-linux.org/patches/diff-2.4.20-pa31), but
-I find nothing modern, nor any record of why it was ripped out.
+Thanks.
 
-The kernel and -scsi mailing list archives don't even mention IPFC.
-
-This is maybe a question better directed at the network mailing lists,
-but I'm reasonably certain that Ravi Anand and some of the others from
-Qlogic hang out here.
-
-I'm not after IPFC for high bandwidth, just the ability to check
-connectivity without having the HBA binary libraries (my test platform
-has them available, but I don't have that luxury further down the line).
-
-While I'm at it, how's the IP support for other cards? I'm already
-committed to Qlogic here, but I'd appreciate it for future design
-choices.
-
---=20
-Robin Hugh Johnson
-E-Mail     : robbat2@gentoo.org
-GnuPG FP   : 11AC BA4F 4778 E3F6 E4ED  F38E B27B 944E 3488 4E85
-
---ChQOR20MqfxkMJg9
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-Comment: Robbat2 @ Orbis-Terrarum Networks
-
-iD8DBQFFAmPsPpIsIjIzwiwRAinqAKDqQoy1Pd5RzN0Jd6HqMpYC1jdn/gCfXa5v
-BdVs9kouex0W8yxIvSgNaIU=
-=hiHS
------END PGP SIGNATURE-----
-
---ChQOR20MqfxkMJg9--
