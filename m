@@ -1,54 +1,59 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: [PATCH 2/2] block: convert bsg, scsi_ioctl and cdrom to new
+Subject: Re: [PATCH 2/2] block: convert bsg, scsi_ioctl and cdrom to new
 	blk_rq_map_user fns
-Date: Sat, 09 Sep 2006 16:53:42 -0400
-Message-ID: <1157835222.4543.11.camel@max>
+Date: Sat, 09 Sep 2006 18:09:45 -0400
+Message-ID: <1157839785.5281.4.camel@max>
+References: <1157835222.4543.11.camel@max>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:43172 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S964871AbWIIVxq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Sep 2006 17:53:46 -0400
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:1957 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S964994AbWIIXJh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Sep 2006 19:09:37 -0400
+In-Reply-To: <1157835222.4543.11.camel@max>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, axboe@suse.de
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, axboe@suse.de
 
-This patch just converts bsg, scsi_ioctl and cdrom to
-the new functions. There is not really much of a change
-for scsi_ioctl and cdrom. The block layer functions
-handle things like bounce buffers, and bio unmapping accounting
-for them now.
+On Sat, 2006-09-09 at 16:53 -0400, Mike Christie wrote:
+> This patch just converts bsg, scsi_ioctl and cdrom to
+> the new functions. There is not really much of a change
+> for scsi_ioctl and cdrom. The block layer functions
+> handle things like bounce buffers, and bio unmapping accounting
+> for them now.
+> 
+> The bsg change is larger since I based the blk layer functions
+> on it and the scsi lib code, so there are lots of deletions.
+> There were also a couple of bugs that got fixes as a result
+> of using the blk layer API:
+> - If the hdr iovec_count = 0, then the request was not getting
+> freed because blk_unmap_sghdr_rq thought blk_rq_unmap_user
+> would free the request which it does not.
+> - blk_unmap_sghdr_rq would always call bio_unmap_user, even if
+> bio_copy_user was used. This was causing all types of weird bugs
+> like slab corruption.
+> 
+> I have tested the copy and map code with scsi_ioctl.c with large
+> requests having multiple bios. I have not tested bsg or cdrom.
+> And High Mem is not tested well. I am not sure how to force high
+> mem pages to be used for the mapping. Was there a proc or module
+> param that can be used?
+> 
+> Patch was made over Jens's block tree and the bsg branch
+> 
+> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 
-The bsg change is larger since I based the blk layer functions
-on it and the scsi lib code, so there are lots of deletions.
-There were also a couple of bugs that got fixes as a result
-of using the blk layer API:
-- If the hdr iovec_count = 0, then the request was not getting
-freed because blk_unmap_sghdr_rq thought blk_rq_unmap_user
-would free the request which it does not.
-- blk_unmap_sghdr_rq would always call bio_unmap_user, even if
-bio_copy_user was used. This was causing all types of weird bugs
-like slab corruption.
 
-I have tested the copy and map code with scsi_ioctl.c with large
-requests having multiple bios. I have not tested bsg or cdrom.
-And High Mem is not tested well. I am not sure how to force high
-mem pages to be used for the mapping. Was there a proc or module
-param that can be used?
-
-Patch was made over Jens's block tree and the bsg branch
+That patch was bad. As you can probably tell, I was trying to use git
+and was hand editing the patch at the same time. The patch below fixes
+the compile errors found in the previous patch.
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 
----
- block/bsg.c           |   80 +++++++------------------------------------------
- block/scsi_ioctl.c    |   38 ++++++++---------------
- drivers/cdrom/cdrom.c |    7 +---
- 3 files changed, 26 insertions(+), 99 deletions(-)
-
 diff --git a/block/bsg.c b/block/bsg.c
-index cf48a81..41e8140 100644
+index cf48a81..d3f53f8 100644
 --- a/block/bsg.c
 +++ b/block/bsg.c
 @@ -70,11 +70,6 @@ #define BSG_CMDS_MASK		(BSG_CMDS_PER_LON
@@ -80,11 +85,26 @@ index cf48a81..41e8140 100644
  	if (hdr->dxfer_len > (q->max_sectors << 9))
  		return -EIO;
  
+@@ -282,12 +274,12 @@ bsg_validate_sghdr(request_queue_t *q, s
+  * each segment to a bio and string multiple bio's to the request
+  */
+ static struct request *
+-bsg_map_hdr(request_queue_t *q, int rw, struct sg_io_hdr *hdr)
++bsg_map_hdr(struct bsg_device *bd, int rw, struct sg_io_hdr *hdr)
+ {
++	request_queue_t *q = bd->queue;
+ 	struct sg_iovec iov;
+ 	struct sg_iovec __user *u_iov;
+ 	struct request *rq;
+-	struct bio *bio;
+ 	int ret, i = 0;
+ 
+ 	dprintk("map hdr %p/%d/%d\n", hdr->dxferp, hdr->dxfer_len,
 @@ -301,6 +293,12 @@ bsg_map_hdr(request_queue_t *q, int rw, 
  	 * map scatter-gather elements seperately and string them to request
  	 */
  	rq = blk_get_request(q, rw, GFP_KERNEL);
-+	ret = blk_fill_sghdr_rq(q, rq, &bc->hdr, test_bit(BSG_F_WRITE_PERM,
++	ret = blk_fill_sghdr_rq(q, rq, hdr, test_bit(BSG_F_WRITE_PERM,
 +				&bd->flags));
 +	if (ret) {
 +		blk_put_request(rq);
@@ -93,15 +113,17 @@ index cf48a81..41e8140 100644
  
  	if (!hdr->iovec_count) {
  		ret = blk_rq_map_user(q, rq, hdr->dxferp, hdr->dxfer_len);
-@@ -310,7 +308,6 @@ bsg_map_hdr(request_queue_t *q, int rw, 
+@@ -310,9 +308,6 @@ bsg_map_hdr(request_queue_t *q, int rw, 
  
  	u_iov = hdr->dxferp;
  	for (ret = 0, i = 0; i < hdr->iovec_count; i++, u_iov++) {
 -		int to_vm = rw == READ;
- 		unsigned long uaddr;
- 
+-		unsigned long uaddr;
+-
  		if (copy_from_user(&iov, u_iov, sizeof(iov))) {
-@@ -323,57 +320,9 @@ bsg_map_hdr(request_queue_t *q, int rw, 
+ 			ret = -EFAULT;
+ 			break;
+@@ -323,57 +318,9 @@ bsg_map_hdr(request_queue_t *q, int rw, 
  			break;
  		}
  
@@ -115,7 +137,7 @@ index cf48a81..41e8140 100644
 -		if (IS_ERR(bio)) {
 -			ret = PTR_ERR(bio);
 -			bio = NULL;
-+		ret = blk_rq_map_user(q, rq, uaddr, iov.iov_len);
++		ret = blk_rq_map_user(q, rq, iov.iov_base, iov.iov_len);
 +		if (ret)
  			break;
 -		}
@@ -161,7 +183,7 @@ index cf48a81..41e8140 100644
  	}
  
  	/*
-@@ -399,8 +348,8 @@ static void bsg_rq_end_io(struct request
+@@ -399,8 +346,8 @@ static void bsg_rq_end_io(struct request
  	struct bsg_device *bd = bc->bd;
  	unsigned long flags;
  
@@ -172,7 +194,7 @@ index cf48a81..41e8140 100644
  
  	bc->hdr.duration = jiffies_to_msecs(jiffies - bc->hdr.duration);
  
-@@ -424,7 +373,6 @@ static void bsg_add_command(struct bsg_d
+@@ -424,7 +371,6 @@ static void bsg_add_command(struct bsg_d
  	 * add bc command to busy queue and submit rq for io
  	 */
  	bc->rq = rq;
@@ -180,7 +202,7 @@ index cf48a81..41e8140 100644
  	bc->hdr.duration = jiffies;
  	spin_lock_irq(&bd->lock);
  	list_add_tail(&bc->list, &bd->busy_list);
-@@ -529,7 +477,7 @@ static int bsg_complete_all_commands(str
+@@ -529,7 +475,7 @@ static int bsg_complete_all_commands(str
  			break;
  		}
  
@@ -189,7 +211,7 @@ index cf48a81..41e8140 100644
  		if (!ret)
  			ret = tret;
  
-@@ -565,7 +513,7 @@ __bsg_read(char __user *buf, size_t coun
+@@ -565,7 +511,7 @@ __bsg_read(char __user *buf, size_t coun
  		 * after completing the request. so do that here,
  		 * bsg_complete_work() cannot do that for us
  		 */
@@ -198,7 +220,15 @@ index cf48a81..41e8140 100644
  
  		if (copy_to_user(buf, (char *) &bc->hdr, sizeof(bc->hdr)))
  			ret = -EFAULT;
-@@ -774,10 +722,6 @@ static ssize_t __bsg_write(struct bsg_de
+@@ -767,17 +713,13 @@ static ssize_t __bsg_write(struct bsg_de
+ 		/*
+ 		 * get a request, fill in the blanks, and add to request queue
+ 		 */
+-		rq = bsg_map_hdr(q, rw, &bc->hdr);
++		rq = bsg_map_hdr(bd, rw, &bc->hdr);
+ 		if (IS_ERR(rq)) {
+ 			ret = PTR_ERR(rq);
+ 			rq = NULL;
  			break;
  		}
  
@@ -340,8 +370,5 @@ index b38c84a..5991263 100644
  			ret = -EFAULT;
  
  		if (ret)
--- 
-1.4.1
-
 
 
