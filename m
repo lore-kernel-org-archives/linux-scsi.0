@@ -1,40 +1,78 @@
-From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: RE: [PATCH 0/2] struct scsi_lun preparation
-Date: Mon, 11 Sep 2006 14:43:58 -0600
-Message-ID: <664A4EBB07F29743873A87CF62C26D70307646@NAMAIL4.ad.lsil.com>
+From: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
+Subject: [PATCH 1/2] cciss: version update, new hw
+Date: Mon, 11 Sep 2006 16:31:26 -0500
+Message-ID: <20060911213126.GA6867@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:53228 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S964940AbWIKUoE convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Sep 2006 16:44:04 -0400
-Content-class: urn:content-classes:message
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750803AbWIKVba@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: axboe@suse.de, akpm@osdl.org
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vgter.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi@vger.kernel.org
 
-On Monday, September 11, 2006 1:56 PM, Jeff Garzik wrote: 
+PATCH 1 of 2
 
-> > A pretty print for the current u32 would be very useful though for
-> > transports dealing with non single level luns (or address 
-> methods other
-> > than zero).
-> 
-> A better subject line would have been "HCIL isolation" I suppose.  I 
-> would like to see increased usage of the accessors already present in 
-> include/scsi/scsi_device.h, which would ease the transition from 
-> hardcoded HCIL struct members to a more flexible addressing method.
-> 
-> Though, FWIW, for LUNs I would certainly like to see u64 rather than 
-> u32.....
-> 
+This patch adds support for new hardware and bumps the version to 3.6.10. It
+seems there were several changes introduced including soft_irq. I decided
+to bump the major number to reflect these changes. Since we're still 
+supporting older vendor kernels I need some way differenciate between kernel
+versions <=2.6.10 and newer kernels >=2.6.16. 
+I hate to send this in -rc6 but it seems like 2.6.18 is having a tough time
+getting out the gate. Please consider this for inclusion.
 
-shouldn't luns be defined as: 
+Signed-off-by: Mike Miller <mike.miller@hp.com>
 
-u8 lun[8] instead of u64?  
-
-Luben?
+ Documentation/cciss.txt |    1 +
+ drivers/block/cciss.c   |   10 ++++++----
+ 2 files changed, 7 insertions(+), 4 deletions(-)
+--------------------------------------------------------------------------------
+diff -urNp linux-2.6.18-rc6.orig/Documentation/cciss.txt linux-2.6.18-rc6-p0001/Documentation/cciss.txt
+--- linux-2.6.18-rc6.orig/Documentation/cciss.txt	2006-06-17 20:49:35.000000000 -0500
++++ linux-2.6.18-rc6-p0001/Documentation/cciss.txt	2006-09-11 14:29:43.000000000 -0500
+@@ -20,6 +20,7 @@ This driver is known to work with the fo
+ 	* SA P400i
+ 	* SA E200
+ 	* SA E200i
++	* SA E500
+ 
+ If nodes are not already created in the /dev/cciss directory, run as root:
+ 
+diff -urNp linux-2.6.18-rc6.orig/drivers/block/cciss.c linux-2.6.18-rc6-p0001/drivers/block/cciss.c
+--- linux-2.6.18-rc6.orig/drivers/block/cciss.c	2006-09-11 11:19:34.000000000 -0500
++++ linux-2.6.18-rc6-p0001/drivers/block/cciss.c	2006-09-11 14:35:35.000000000 -0500
+@@ -48,14 +48,14 @@
+ #include <linux/completion.h>
+ 
+ #define CCISS_DRIVER_VERSION(maj,min,submin) ((maj<<16)|(min<<8)|(submin))
+-#define DRIVER_NAME "HP CISS Driver (v 2.6.10)"
+-#define DRIVER_VERSION CCISS_DRIVER_VERSION(2,6,10)
++#define DRIVER_NAME "HP CISS Driver (v 3.6.10)"
++#define DRIVER_VERSION CCISS_DRIVER_VERSION(3,6,10)
+ 
+ /* Embedded module documentation macros - see modules.h */
+ MODULE_AUTHOR("Hewlett-Packard Company");
+-MODULE_DESCRIPTION("Driver for HP Controller SA5xxx SA6xxx version 2.6.10");
++MODULE_DESCRIPTION("Driver for HP Controller SA5xxx SA6xxx version 3.6.10");
+ MODULE_SUPPORTED_DEVICE("HP SA5i SA5i+ SA532 SA5300 SA5312 SA641 SA642 SA6400"
+-			" SA6i P600 P800 P400 P400i E200 E200i");
++			" SA6i P600 P800 P400 P400i E200 E200i E500");
+ MODULE_LICENSE("GPL");
+ 
+ #include "cciss_cmd.h"
+@@ -82,6 +82,7 @@ static const struct pci_device_id cciss_
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSD,     0x103C, 0x3213},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSD,     0x103C, 0x3214},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSD,     0x103C, 0x3215},
++	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSC,     0x103C, 0x3233},
+ 	{0,}
+ };
+ 
+@@ -110,6 +111,7 @@ static struct board_type products[] = {
+ 	{0x3213103C, "Smart Array E200i", &SA5_access},
+ 	{0x3214103C, "Smart Array E200i", &SA5_access},
+ 	{0x3215103C, "Smart Array E200i", &SA5_access},
++	{0x3233103C, "Smart Array E500", &SA5_access},
+ };
+ 
+ /* How long to wait (in milliseconds) for board to go into simple mode */
