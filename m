@@ -1,66 +1,42 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: lp8000 and 2.6.18-rc6
-Date: Mon, 11 Sep 2006 08:21:35 -0400
-Message-ID: <450554CF.4060906@emulex.com>
-References: <20060909210856.GC21263@stat.unipd.it> <20060910135631.GD29775@parisc-linux.org> <20060910210444.GC22873@stat.unipd.it> <4504B6AF.3080909@torque.net> <1157941050.3467.21.camel@mulgrave.il.steeleye.com> <20060911095109.GA4953@stat.unipd.it>
-Reply-To: James.Smart@Emulex.Com
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [PATCH 0/2] struct scsi_lun preparation
+Date: Mon, 11 Sep 2006 10:34:07 -0400
+Message-ID: <20060911143406.GA12991@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:7579 "EHLO emulex.emulex.com")
-	by vger.kernel.org with ESMTP id S1751421AbWIKMVv (ORCPT
+Received: from havoc.gtf.org ([69.61.125.42]:40327 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S1751247AbWIKOeM (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Sep 2006 08:21:51 -0400
-In-Reply-To: <20060911095109.GA4953@stat.unipd.it>
+	Mon, 11 Sep 2006 10:34:12 -0400
+Received: from havoc.gtf.org (havoc.gtf.org [127.0.0.1])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by havoc.gtf.org (Postfix) with ESMTP id 246C41C24E8A
+	for <linux-scsi@vger.kernel.org>; Mon, 11 Sep 2006 10:34:07 -0400 (EDT)
+Received: (from garzik@localhost)
+	by havoc.gtf.org (8.13.1/8.13.1/Submit) id k8BEY7m7013284
+	for linux-scsi@vger.kernel.org; Mon, 11 Sep 2006 10:34:07 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: mmzz@stat.unipd.it, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-What this tells me is that the reporting as a scsi-4 device is
-telling the midlayer to use Report Luns, and that Report Luns is likely
-failing on this target. If the manual scans succeed, it says the
-luns are there, but were not reported in Report Luns. What you are
-encountering is an interaction between the target device and the midlayer
-scan behaviors. You should have like behavior on other adapters.
-Sounds like this device could use a device list entry.
 
-Please note: it is general practice that /proc stuff for adapters is
-being deprecated in lieu of using the /sys/class/scsi_host/host<#>
-attributes. This has been true for the lpfc driver as it was a
-requirement when we first integrated into kernel.org around 2.6.10.
-Expect other adapters to behave the same as lpfc.
+A long-term, low priority project of mine is to increasingly isolate
+HCIL addressing, making it easier to directly support FC/SAS-style
+addressing without hacks and HCIL emulation.
 
--- james
+The following two patches are a small part of the changes I've been
+carrying for a while, in the repo
+git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/scsilun-2.6.git
 
-Alberto Cammozzo wrote:
-> On Sun, Sep 10, 2006 at 09:17:30PM -0500, James Bottomley wrote:
->> On Sun, 2006-09-10 at 21:06 -0400, Douglas Gilbert wrote:
->>> Type 0 is for disks, strange that sd didn't pick up
->>> those devices on host 7. Could you fetch the sg3_utils
->>> package, build it and try 'sg_inq /dev/sg6'. The output
->>> may be interesting.
->> That would be characteristic of a zoned array returning PQ not connected
->> (or not present) as James Smart suggested ...
->>
->> sg_inq would confirm this theory.
-> 
-> 	Thank you James, 
-> 
-> 	Eventually we managed to solve the problem: 
-> 
-> 	Debian sarge has an old rescan-scsi-bus.sh version based on /proc
-> 	instead of /sys. 
-> 
-> 	newer lpfc module in 2.6.18 kernels doesn't fill /proc/scsi/HOSTADAPTER, 
-> 	so older rescan-scsi-bus don't even try to map new devices.
-> 
-> 	Summarizing: to make partitions visible with lpfc drivers 
-> 	for Emulex LP8000 HBA under 2.6.18 kernels, use newer rescan-scsi-bus 
-> 	http://www.garloff.de/kurt/linux/rescan-scsi-bus.sh
-> 
-> 	Thank you everyone for support and the nice work.
-> 
-> 	Alberto
-> 
-> 
+Branches of note:
+
+master		- vanilla linus
+submit1		- patch #1; child of master
+submit2		- patch #2; child of submit1
+hacking		- the rest of the changes; child of submit2
+
+THESE CHANGES ARE NOT [YET] FOR APPLICATION.  DO NOT APPLY.
+
