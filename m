@@ -1,35 +1,40 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: lp8000 and 2.6.18-rc6
-Date: Sun, 10 Sep 2006 21:17:30 -0500
-Message-ID: <1157941050.3467.21.camel@mulgrave.il.steeleye.com>
-References: <20060909210856.GC21263@stat.unipd.it>
-	 <20060910135631.GD29775@parisc-linux.org>
-	 <20060910210444.GC22873@stat.unipd.it>  <4504B6AF.3080909@torque.net>
+From: "english" <english@ms1.dhps.ylc.edu.tw>
+Subject: Building AIC94xx driver
+Date: Mon, 11 Sep 2006 12:01:35 +0800
+Message-ID: <20060911034952.M44911@ms1.dhps.ylc.edu.tw>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset=big5
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:15274 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1750899AbWIKCRh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 10 Sep 2006 22:17:37 -0400
-In-Reply-To: <4504B6AF.3080909@torque.net>
+Received: from ms1.dhps.ylc.edu.tw ([163.27.227.1]:14518 "EHLO
+	ms1.dhps.ylc.edu.tw") by vger.kernel.org with ESMTP
+	id S1750703AbWIKDjH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 10 Sep 2006 23:39:07 -0400
+Received: from ms1.dhps.ylc.edu.tw (ms1 [127.0.0.1])
+	by ms1.dhps.ylc.edu.tw (Postfix) with ESMTP id 9F0D8126D210
+	for <linux-scsi@vger.kernel.org>; Mon, 11 Sep 2006 12:01:35 +0800 (CST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: mmzz@stat.unipd.it, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Sun, 2006-09-10 at 21:06 -0400, Douglas Gilbert wrote:
-> Type 0 is for disks, strange that sd didn't pick up
-> those devices on host 7. Could you fetch the sg3_utils
-> package, build it and try 'sg_inq /dev/sg6'. The output
-> may be interesting.
+Hello everyone, 
 
-That would be characteristic of a zoned array returning PQ not connected
-(or not present) as James Smart suggested ...
+My name is Ray Liao. I wish to help testing out the AIC94xx driver. 
+I cloned the aic94xx development tree via git and tried compiling it.
+The compilation completed without any error. However, when i try to
+load the driver-- i received the following error message :
 
-sg_inq would confirm this theory.
+aic94xx: Failed to load sequencer firmware file aic94xx-seq.fw, error -2
 
-James
+I looked around the source code and can't find the firmware file it speaks
+of. 
 
+Can someone tell me where i will be able to find this file?
+
+Thanks in advance for your help,
+
+Ray Liao
+
+--
+Open WebMail Project (http://openwebmail.org)
 
