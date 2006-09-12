@@ -1,29 +1,49 @@
-From: Helge Hafting <helge.hafting@aitel.hist.no>
-Subject: Re: [PATCH] BODGE scsi misc module reference count checks with no
- MODULE_UNLOAD
-Date: Tue, 12 Sep 2006 11:19:43 +0200
-Message-ID: <45067BAF.8070603@aitel.hist.no>
-References: <45067632.4020906@shadowen.org> <20060912090223.GA31576@shadowen.org>
+From: "english" <english@ms1.dhps.ylc.edu.tw>
+Subject: booting linux from a SAS drive attached to aic94xx
+Date: Tue, 12 Sep 2006 20:25:03 +0800
+Message-ID: <20060912122418.M37772@ms1.dhps.ylc.edu.tw>
+References: <20060911034952.M44911@ms1.dhps.ylc.edu.tw> <4504FAD4.1040700@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset=big5
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from embla.aitel.hist.no ([158.38.50.22]:12519 "HELO
-	embla.aitel.hist.no") by vger.kernel.org with SMTP id S965155AbWILJXE
+Received: from ms1.dhps.ylc.edu.tw ([163.27.227.1]:48270 "EHLO
+	ms1.dhps.ylc.edu.tw") by vger.kernel.org with ESMTP id S932302AbWILMCY
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Sep 2006 05:23:04 -0400
-In-Reply-To: <20060912090223.GA31576@shadowen.org>
+	Tue, 12 Sep 2006 08:02:24 -0400
+Received: from ms1.dhps.ylc.edu.tw (ms1 [127.0.0.1])
+	by ms1.dhps.ylc.edu.tw (Postfix) with ESMTP id 7B34B126D210
+	for <linux-scsi@vger.kernel.org>; Tue, 12 Sep 2006 20:25:03 +0800 (CST)
+In-Reply-To: <4504FAD4.1040700@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andy Whitcroft <apw@shadowen.org>
-Cc: Andrew Morton <akpm@osdl.org>, James.Bottomley@SteelEye.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Andy Whitcroft wrote:
-> BODGE scsi misc module reference count checks with no MODULE_UNLOAD
->
-> A quick bodge to try and get this to compile for testing.
->
-> Signed-off-by: Andy Whitcroft <apw@shadowen.org>
-Thanks, this was necessary to compile a non-modular kernel.
+Hello everyone,
 
-Helge Hafting
+First, i would like to thank Darrick Wong for pointing me to the sequencer code
+for the AIC94xx. Thanks to him, i was able to get my SAS drives to work. 
+
+Currently, my boot partition is located on an IDE drive. The aic94xx loads
+successfully because the kernel has no problem detecting the IDE drive.
+However, i would like to boot linux from the SAS drive that is attached to the
+adaptec controller. 
+
+I tried building the aic94xx as a part of the kernel. During the boot process,
+there is an error stating that the firmware cannot be loaded (error -2). 
+
+I also tried including the aic94xx module and the firmware on an external
+initrd image. The kernel panic right after the ramdisk fails to load. I
+suspect it is because the initrd image is located on the SAS drive which is
+inaccessible at the moment.
+
+If anyone knows a simple way to enable to boot linux from a SAS drive attached
+to the adaptec SAS controller, please tell me.
+
+Thanks in advance,
+
+Mingjui Liao
+
+--
+Open WebMail Project (http://openwebmail.org)
+
