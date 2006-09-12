@@ -1,82 +1,44 @@
-From: Henne <henne@nachtwindheim.de>
-Subject: [PATCH 2/2] 53c7xx linked drivers: Scsi_Cmnd to struct scsi_cmnd
- convertion
-Date: Tue, 12 Sep 2006 22:08:36 +0200
-Message-ID: <450713C4.2050303@nachtwindheim.de>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH 4/5] mvme147: Scsi_Cmnd to struct scsi_cmnd convertion
+Date: Tue, 12 Sep 2006 15:23:33 -0500
+Message-ID: <1158092613.3461.43.camel@mulgrave.il.steeleye.com>
+References: <4506FCEE.1070209@nachtwindheim.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from server6.greatnet.de ([83.133.96.26]:22689 "EHLO
-	server6.greatnet.de") by vger.kernel.org with ESMTP
-	id S1030396AbWILUIg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Sep 2006 16:08:36 -0400
+Received: from stat9.steeleye.com ([209.192.50.41]:47239 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1030413AbWILUXo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Sep 2006 16:23:44 -0400
+In-Reply-To: <4506FCEE.1070209@nachtwindheim.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
+To: Henne <henne@nachtwindheim.de>
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Henrik Kretzschmar <henne@nachtwindheim.de>
+On Tue, 2006-09-12 at 20:31 +0200, Henne wrote:
+> Changes obsolete typedef'd Scsi_Cmnd to struct scsi_cmnd.
+> Signed-off-by: Henrik Kretzschmar <henne@nachtwindheim.de>
 
-Chenges obsolete typedef'd Scsi_Cmnd into struct scsi_cmnd for drivers
-which use 53c7xx.
-Signed-off-by: Henrik Kretzschmar <henne@nachtwindheim.de>
+Actually, just a single patch for all the coupled drivers would be
+better, please.
 
----
+> -int wd33c93_queuecommand(Scsi_Cmnd *, void (*done)(Scsi_Cmnd *));
+> -int wd33c93_abort(Scsi_Cmnd *);
+> -int wd33c93_reset(Scsi_Cmnd *, unsigned int);
+> +int wd33c93_queuecommand(struct scsi_cmnd *, void (*done)(struct scsi_cmnd *));
+> +int wd33c93_abort(struct scsi_cmnd *);
+> +int wd33c93_reset(struct scsi_cmnd *, unsigned int);
 
-diff -ruN linux-2.6/drivers/scsi/amiga7xx.h devel/drivers/scsi/amiga7xx.h
---- linux-2.6/drivers/scsi/amiga7xx.h	2006-08-01 01:31:43.000000000 +0200
-+++ devel/drivers/scsi/amiga7xx.h	2006-09-12 21:13:15.000000000 +0200
-@@ -4,10 +4,11 @@
- 
- int amiga7xx_detect(struct scsi_host_template *);
- const char *NCR53c7x0_info(void);
--int NCR53c7xx_queue_command(Scsi_Cmnd *, void (*done)(Scsi_Cmnd *));
--int NCR53c7xx_abort(Scsi_Cmnd *);
-+int NCR53c7xx_queue_command(struct scsi_cmnd *,
-+			    void (*done) (struct scsi_cmnd *));
-+int NCR53c7xx_abort(struct scsi_cmnd *);
- int NCR53c7x0_release (struct Scsi_Host *);
--int NCR53c7xx_reset(Scsi_Cmnd *, unsigned int);
-+int NCR53c7xx_reset(struct scsi_cmnd *, unsigned int);
- void NCR53c7x0_intr(int irq, void *dev_id, struct pt_regs * regs);
- 
- #ifndef CMD_PER_LUN
-diff -ruN linux-2.6/drivers/scsi/bvme6000.h devel/drivers/scsi/bvme6000.h
---- linux-2.6/drivers/scsi/bvme6000.h	2006-08-01 01:31:43.000000000 +0200
-+++ devel/drivers/scsi/bvme6000.h	2006-09-12 21:18:50.000000000 +0200
-@@ -5,10 +5,11 @@
- 
- int bvme6000_scsi_detect(struct scsi_host_template *);
- const char *NCR53c7x0_info(void);
--int NCR53c7xx_queue_command(Scsi_Cmnd *, void (*done)(Scsi_Cmnd *));
--int NCR53c7xx_abort(Scsi_Cmnd *);
-+int NCR53c7xx_queue_command(struct scsi_cmnd *,
-+			    void (*done) (struct scsi_cmnd *));
-+int NCR53c7xx_abort(struct scsi_cmnd *);
- int NCR53c7x0_release (struct Scsi_Host *);
--int NCR53c7xx_reset(Scsi_Cmnd *, unsigned int);
-+int NCR53c7xx_reset(struct scsi_cmnd *, unsigned int);
- void NCR53c7x0_intr(int irq, void *dev_id, struct pt_regs * regs);
- 
- #ifndef CMD_PER_LUN
-diff -ruN linux-2.6/drivers/scsi/mvme16x.h devel/drivers/scsi/mvme16x.h
---- linux-2.6/drivers/scsi/mvme16x.h	2006-08-01 01:31:43.000000000 +0200
-+++ devel/drivers/scsi/mvme16x.h	2006-09-12 21:16:20.000000000 +0200
-@@ -5,10 +5,11 @@
- 
- int mvme16x_scsi_detect(struct scsi_host_template *);
- const char *NCR53c7x0_info(void);
--int NCR53c7xx_queue_command(Scsi_Cmnd *, void (*done)(Scsi_Cmnd *));
--int NCR53c7xx_abort(Scsi_Cmnd *);
-+int NCR53c7xx_queue_command(struct scsi_cmnd *,
-+			    void (*done) (struct scsi_cmnd *));
-+int NCR53c7xx_abort(struct scsi_cmnd *);
- int NCR53c7x0_release (struct Scsi_Host *);
--int NCR53c7xx_reset(Scsi_Cmnd *, unsigned int);
-+int NCR53c7xx_reset(struct scsi_cmnd *, unsigned int);
- void NCR53c7x0_intr(int irq, void *dev_id, struct pt_regs * regs);
- 
- #ifndef CMD_PER_LUN
+These prototypes are all unnecessary and can be pulled out of the
+individual header files.  The first two are provided by wd33c93.h and
+the last one isn't actually in the body of any file.
+
+wd33c93_info is also unused and can go.
+
+Thanks,
+
+James
 
 
