@@ -1,37 +1,44 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH 1/2] cciss: version update, new hw
-Date: Tue, 12 Sep 2006 07:25:07 +0200
-Message-ID: <20060912052507.GF10409@kernel.dk>
-References: <20060911213126.GA6867@beardog.cca.cpqcorp.net> <20060911153140.3f2433a9.akpm@osdl.org>
+From: "HighPoint Linux Team" <linux@highpoint-tech.com>
+Subject: Re: [PATCH] hptiop: backout ioctl mess
+Date: Tue, 12 Sep 2006 13:40:33 +0800
+Message-ID: <016101c6d62d$fc6e3070$1200a8c0@GMM>
+References: <20060730171336.GA31646@lst.de> <1154888332.3683.231.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965043AbWILF0v@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20060911153140.3f2433a9.akpm@osdl.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>, linux-kernel@vger.kernel.org, linux-scsi@vgter.kernel.org
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stats.hypersurf.com ([209.237.0.12]:17670 "EHLO
+	stats.hypersurf.com") by vger.kernel.org with ESMTP
+	id S1750820AbWILFkk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Sep 2006 01:40:40 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: jejb@SteelEye.com, linux-scsi@vger.kernel.org
 
-On Mon, Sep 11 2006, Andrew Morton wrote:
-> On Mon, 11 Sep 2006 16:31:26 -0500
-> "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net> wrote:
+James Bottomley wrote:
+> On Sun, 2006-07-30 at 19:13 +0200, Christoph Hellwig wrote:
+> > The hptiop just got merged with a horrible amount of really bad ioctl
+> > code that is against the standards for new scsi drivers.  This patch
+> > backs it out (and fixes a small bug where scsi_add_host is called to
+> > early).  We can re-add proper APIs once we agree on them.
 > 
-> > This patch adds support for new hardware and bumps the version to 3.6.10. It
-> > seems there were several changes introduced including soft_irq. I decided
-> > to bump the major number to reflect these changes. Since we're still 
-> > supporting older vendor kernels I need some way differenciate between kernel
-> > versions <=2.6.10 and newer kernels >=2.6.16. 
-> > I hate to send this in -rc6 but it seems like 2.6.18 is having a tough time
-> > getting out the gate. Please consider this for inclusion.
+> I'm assuming the model you want to use is megaraid_sas, which only has a
+> couple of defined ioctls?
 > 
-> Adding a new device ID is a bit of a no-brainer - in fact bumping the
-> version number seems more risky than adding a device ID.
+> > Please send this to Linus for 2.6.19 so that the ioctls don't make it
+> > into a release.
 > 
-> I'd be OK with a 2.6.18 merge, and shall send it into Linus unless Jens
-> nacks it, or gets there first.
+> OK, provided you take the lead in sorting out the ioctl infrastructure
+> for this driver ...
+> 
+> James
+> 
 
-Do just send it on for 2.6.18, it has my acked-by.
+Is there a suggested solution now? We just want RAID management
+functions to work on this driver. Is it ok to use register_chrdev()
+for the management interface like megaraid_sas?
 
--- 
-Jens Axboe
+HighPoint Linux Team
+
