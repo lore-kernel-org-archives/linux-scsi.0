@@ -1,31 +1,72 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: booting linux from a SAS drive attached to aic94xx
-Date: Tue, 12 Sep 2006 09:08:06 -0500
-Message-ID: <1158070086.3461.7.camel@mulgrave.il.steeleye.com>
-References: <20060911034952.M44911@ms1.dhps.ylc.edu.tw>
-	 <4504FAD4.1040700@us.ibm.com>  <20060912122418.M37772@ms1.dhps.ylc.edu.tw>
+From: Henne <henne@nachtwindheim.de>
+Subject: [PATCH 1/5] a2091: Scsi_Cmnd to struct scsi_cmnd convertion
+Date: Tue, 12 Sep 2006 20:26:04 +0200
+Message-ID: <4506FBBC.2040300@nachtwindheim.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:22506 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S965037AbWILOIX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Sep 2006 10:08:23 -0400
-In-Reply-To: <20060912122418.M37772@ms1.dhps.ylc.edu.tw>
+Received: from server6.greatnet.de ([83.133.96.26]:60140 "EHLO
+	server6.greatnet.de") by vger.kernel.org with ESMTP
+	id S1030339AbWILS0K (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Sep 2006 14:26:10 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: english <english@ms1.dhps.ylc.edu.tw>
-Cc: linux-scsi@vger.kernel.org
+To: James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, 2006-09-12 at 20:25 +0800, english wrote:
-> If anyone knows a simple way to enable to boot linux from a SAS drive attached
-> to the adaptec SAS controller, please tell me.
+From: Henrik Kretzschmar <henne@nachtwindheim.de>
 
-http://marc.theaimsgroup.com/?l=linux-kernel&m=115680315625712
+Chenges obsolete typedef'd Scsi_Cmnd into struct scsi_cmnd.
+Signed-off-by: Henrik Kretzschmar <henne@nachtwindheim.de>
 
-Contains the details for debian mkinitrd.
+---
 
-James
+diff -ruN linux-2.6/drivers/scsi/a2091.c devel/drivers/scsi/a2091.c
+--- linux-2.6/drivers/scsi/a2091.c	2006-08-01 01:31:43.000000000 +0200
++++ devel/drivers/scsi/a2091.c	2006-09-12 19:47:21.000000000 +0200
+@@ -40,7 +40,7 @@
+     return IRQ_HANDLED;
+ }
+ 
+-static int dma_setup (Scsi_Cmnd *cmd, int dir_in)
++static int dma_setup(struct scsi_cmnd *cmd, int dir_in)
+ {
+     unsigned short cntr = CNTR_PDMD | CNTR_INTEN;
+     unsigned long addr = virt_to_bus(cmd->SCp.ptr);
+@@ -115,7 +115,7 @@
+     return 0;
+ }
+ 
+-static void dma_stop (struct Scsi_Host *instance, Scsi_Cmnd *SCpnt, 
++static void dma_stop(struct Scsi_Host *instance, struct scsi_cmnd *SCpnt,
+ 		      int status)
+ {
+     /* disable SCSI interrupts */
+@@ -217,7 +217,7 @@
+     return num_a2091;
+ }
+ 
+-static int a2091_bus_reset(Scsi_Cmnd *cmd)
++static int a2091_bus_reset(struct scsi_cmnd *cmd)
+ {
+ 	/* FIXME perform bus-specific reset */
+ 
+diff -ruN linux-2.6/drivers/scsi/a2091.h devel/drivers/scsi/a2091.h
+--- linux-2.6/drivers/scsi/a2091.h	2006-08-01 01:31:43.000000000 +0200
++++ devel/drivers/scsi/a2091.h	2006-09-12 19:46:36.000000000 +0200
+@@ -14,9 +14,9 @@
+ int a2091_detect(struct scsi_host_template *);
+ int a2091_release(struct Scsi_Host *);
+ const char *wd33c93_info(void);
+-int wd33c93_queuecommand(Scsi_Cmnd *, void (*done)(Scsi_Cmnd *));
+-int wd33c93_abort(Scsi_Cmnd *);
+-int wd33c93_reset(Scsi_Cmnd *, unsigned int);
++int wd33c93_queuecommand(struct scsi_cmnd *, void (*done)(struct scsi_cmnd *));
++int wd33c93_abort(struct scsi_cmnd *);
++int wd33c93_reset(struct scsi_cmnd *, unsigned int);
+ 
+ #ifndef CMD_PER_LUN
+ #define CMD_PER_LUN 2
 
 
