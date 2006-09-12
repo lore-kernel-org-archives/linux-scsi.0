@@ -1,64 +1,50 @@
-From: Henne <henne@nachtwindheim.de>
-Subject: [PATCH 5/5] sgiwd93: Scsi_Cmnd to struct scsi_cmnd convertion
-Date: Tue, 12 Sep 2006 20:32:55 +0200
-Message-ID: <4506FD57.8030602@nachtwindheim.de>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: RE: [PATCH 0/2] struct scsi_lun preparation
+Date: Tue, 12 Sep 2006 12:21:08 -0700 (PDT)
+Message-ID: <20060912192108.16531.qmail@web31813.mail.mud.yahoo.com>
+References: <664A4EBB07F29743873A87CF62C26D70307646@NAMAIL4.ad.lsil.com>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from server6.greatnet.de ([83.133.96.26]:29831 "EHLO
-	server6.greatnet.de") by vger.kernel.org with ESMTP
-	id S1030353AbWILScz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Sep 2006 14:32:55 -0400
+Received: from web31813.mail.mud.yahoo.com ([68.142.207.76]:34151 "HELO
+	web31813.mail.mud.yahoo.com") by vger.kernel.org with SMTP
+	id S1030361AbWILTVJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Sep 2006 15:21:09 -0400
+In-Reply-To: <664A4EBB07F29743873A87CF62C26D70307646@NAMAIL4.ad.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Moore, Eric" <Eric.Moore@lsil.com>, Jeff Garzik <jeff@garzik.org>, James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi@vger.kernel.org
 
-From: Henrik Kretzschmar <henne@nachtwindheim.de>
+--- "Moore, Eric" <Eric.Moore@lsil.com> wrote:
+> On Monday, September 11, 2006 1:56 PM, Jeff Garzik wrote: 
+> 
+> > > A pretty print for the current u32 would be very useful though for
+> > > transports dealing with non single level luns (or address 
+> > methods other
+> > > than zero).
+> > 
+> > A better subject line would have been "HCIL isolation" I suppose.  I 
+> > would like to see increased usage of the accessors already present in 
+> > include/scsi/scsi_device.h, which would ease the transition from 
+> > hardcoded HCIL struct members to a more flexible addressing method.
+> > 
+> > Though, FWIW, for LUNs I would certainly like to see u64 rather than 
+> > u32.....
+> > 
+> 
+> shouldn't luns be defined as: 
+> 
+> u8 lun[8] instead of u64?  
+> 
+> Luben?
 
-Changes obsolete typedef'd Scsi_Cmnd to struct scsi_cmnd.
-Signed-off-by: Henrik Kretzschmar <henne@nachtwindheim.de>
+Hi Eric,
 
----
+Yes, you are absolutely correct, LUNs as well as SAS addresses,
+are indeed u8[8], for well known reasons.
 
---- linux-2.6/drivers/scsi/sgiwd93.c	2006-08-01 01:31:43.000000000 +0200
-+++ devel/drivers/scsi/sgiwd93.c	2006-09-12 20:16:37.000000000 +0200
-@@ -97,7 +97,7 @@
- }
- 
- static inline
--void fill_hpc_entries(struct hpc_chunk *hcp, Scsi_Cmnd *cmd, int datainp)
-+void fill_hpc_entries(struct hpc_chunk *hcp, struct scsi_cmnd *cmd, int datainp)
- {
- 	unsigned long len = cmd->SCp.this_residual;
- 	void *addr = cmd->SCp.ptr;
-@@ -129,7 +129,7 @@
- 	hcp->desc.cntinfo = HPCDMA_EOX;
- }
- 
--static int dma_setup(Scsi_Cmnd *cmd, int datainp)
-+static int dma_setup(struct scsi_cmnd *cmd, int datainp)
- {
- 	struct ip22_hostdata *hdata = HDATA(cmd->device->host);
- 	struct hpc3_scsiregs *hregs =
-@@ -163,7 +163,7 @@
- 	return 0;
- }
- 
--static void dma_stop(struct Scsi_Host *instance, Scsi_Cmnd *SCpnt,
-+static void dma_stop(struct Scsi_Host *instance, struct scsi_cmnd *SCpnt,
- 		     int status)
- {
- 	struct ip22_hostdata *hdata = HDATA(instance);
-@@ -305,7 +305,7 @@
- 	return 1;
- }
- 
--static int sgiwd93_bus_reset(Scsi_Cmnd *cmd)
-+static int sgiwd93_bus_reset(struct scsi_cmnd *cmd)
- {
- 	/* FIXME perform bus-specific reset */
- 
-
+    Luben
 
