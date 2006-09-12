@@ -1,78 +1,153 @@
-From: mmzz@stat.unipd.it (Alberto Cammozzo)
-Subject: Re: lp8000 and 2.6.18-rc6
-Date: Tue, 12 Sep 2006 08:45:14 +0200
-Message-ID: <20060912064514.GA28121@stat.unipd.it>
-References: <20060909210856.GC21263@stat.unipd.it> <20060910135631.GD29775@parisc-linux.org> <20060910210444.GC22873@stat.unipd.it> <4504B6AF.3080909@torque.net> <20060911064008.GA26293@stat.unipd.it> <1157994026.3470.3.camel@mulgrave.il.steeleye.com>
+From: Andy Whitcroft <apw@shadowen.org>
+Subject: Re: 2.6.18-rc6-mm2
+Date: Tue, 12 Sep 2006 09:56:18 +0100
+Message-ID: <45067632.4020906@shadowen.org>
+References: <20060912000618.a2e2afc0.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stavromula.stat.unipd.it ([147.162.35.208]:24253 "EHLO
-	stavromula.stat.unipd.it") by vger.kernel.org with ESMTP
-	id S1750801AbWILGp0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Sep 2006 02:45:26 -0400
-Received: from localhost (argabuthon.stat.unipd.it [147.162.35.209])
-	by stavromula.stat.unipd.it (Postfix) with ESMTP id 040231AF574E2
-	for <linux-scsi@vger.kernel.org>; Tue, 12 Sep 2006 08:45:23 +0200 (CEST)
-Received: from stavromula.stat.unipd.it ([147.162.35.208])
-	by localhost (argabuthon.stat.unipd.it [147.162.35.209]) (amavisd-new, port 10024)
-	with ESMTP id 01959-01 for <linux-scsi@vger.kernel.org>;
-	Tue, 12 Sep 2006 08:45:14 +0200 (CEST)
-Content-Disposition: inline
-In-Reply-To: <1157994026.3470.3.camel@mulgrave.il.steeleye.com>
+Received: from hellhawk.shadowen.org ([80.68.90.175]:39428 "EHLO
+	hellhawk.shadowen.org") by vger.kernel.org with ESMTP
+	id S965095AbWILI4u (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Sep 2006 04:56:50 -0400
+In-Reply-To: <20060912000618.a2e2afc0.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>, James.Bottomley@SteelEye.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Mon, Sep 11, 2006 at 12:00:26PM -0500, James Bottomley wrote:
-> On Mon, 2006-09-11 at 08:40 +0200, Alberto Cammozzo wrote:
-> > standard INQUIRY:
-> >   PQual=1  Device_type=0  RMB=0  [ANSI_version=4]  version=0x04
+Andrew Morton wrote:
+> ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.18-rc6/2.6.18-rc6-mm2/
 > 
-> That's the reason:  Peripheral Qualifier Not Connected.  sd won't bind
-> to this device.
+> - autofs4 mounting remains busted.
 > 
-> So, the next thing that would be tried is a report lun scan which seems
-> to have failed for some reason.
+> - CONFIG_BLOCK=n doesn't (quite) work.  Will fix later.
 > 
-> What does
+> - CONFIG_MSI=y is probably broken - try disabling it before reporting
+>   interrupt-related oopses.  Then please report it whether or not that fixed
+>   it.
 > 
-> sg_luns -v /dev/sg6
+> - Could I point out the fifth bullet-point in the "Boilerplate" section,
+>   below?
 > 
-> give?
+> - git-cryptodev.patch is dropped due to my continuing inability to pull a
+>   clean git diff (there is hope, but more work is needed)
+> 
+>   - Ditto git-sas.patch
+> 
+>   - And git-audit-master.patch (I think).
+> 
+>   Things will improve around the 2.6.19-rc1 timeframe.
+> 
+> - 1,915 patches breaks the previous record by ~200.
+> 
+> - This kernel includes the patch to sort the PCI devices breadth-first. 
+>   This might cause strange things to happen (particular devices get assigned
+>   to different /dev nodes, for example).  If this is suspected, please try
+>   reverting gregkh-pci-pci-sort-device-lists-breadth-first.patch then send a
+>   report.
+> 
+> 
+> 
+> Boilerplate:
+> 
+> - See the `hot-fixes' directory for any important updates to this patchset.
+> 
+> - To fetch an -mm tree using git, use (for example)
+> 
+>   git fetch git://git.kernel.org/pub/scm/linux/kernel/git/smurf/linux-trees.git v2.6.16-rc2-mm1
+> 
+> - -mm kernel commit activity can be reviewed by subscribing to the
+>   mm-commits mailing list.
+> 
+>         echo "subscribe mm-commits" | mail majordomo@vger.kernel.org
+> 
+> - If you hit a bug in -mm and it is not obvious which patch caused it, it is
+>   most valuable if you can perform a bisection search to identify which patch
+>   introduced the bug.  Instructions for this process are at
+> 
+>         http://www.zip.com.au/~akpm/linux/patches/stuff/bisecting-mm-trees.txt
+> 
+>   But beware that this process takes some time (around ten rebuilds and
+>   reboots), so consider reporting the bug first and if we cannot immediately
+>   identify the faulty patch, then perform the bisection search.
+> 
+> - When reporting bugs, please try to Cc: the relevant maintainer and mailing
+>   list on any email.
+> 
+> - When reporting bugs in this kernel via email, please also rewrite the
+>   email Subject: in some manner to reflect the nature of the bug.  Some
+>   developers filter by Subject: when looking for messages to read.
+> 
+> - Semi-daily snapshots of the -mm lineup are uploaded to
+>   ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/mm/ and are announced on
+>   the mm-commits list.
+> 
+> 
+> 
+> 
+> Changes since 2.6.18-rc6-mm1:
+> 
+> 
+>  origin.patch
+>  git-acpi.patch
+>  git-alsa.patch
+>  git-agpgart.patch
+>  git-block.patch
+>  git-cifs.patch
+>  git-cpufreq.patch
+>  git-drm.patch
+>  git-dvb.patch
+>  git-geode.patch
+>  git-gfs2.patch
+>  git-ia64.patch
+>  git-ieee1394.patch
+>  git-infiniband.patch
+>  git-input.patch
+>  git-intelfb.patch
+>  git-kbuild.patch
+>  git-libata-all.patch
+>  git-lxdialog.patch
+>  git-mtd.patch
+>  git-netdev-all.patch
+>  git-net.patch
+>  git-nfs.patch
+>  git-ocfs2.patch
+>  git-parisc.patch
+>  git-pcmcia.patch
+>  git-powerpc.patch
+>  git-r8169.patch
+>  git-s390.patch
+>  git-scsi-misc.patch
 
-	Here it is:
+Seems that the module unload bug in scsi.c (details below) is still
+there...  I'll follow up with the work around patch I am using.
 
-novantatre:~# dmesg
-[...]
-st 0:0:5:0: Attached scsi generic sg0 type 1
-ch 0:0:5:1: Attached scsi generic sg1 type 8
-sd 1:0:0:0: Attached scsi generic sg2 type 0
-scsi 1:0:15:0: Attached scsi generic sg3 type 3
-scsi 1:1:9:0: Attached scsi generic sg4 type 3
-scsi 1:2:8:0: Attached scsi generic sg5 type 3
-scsi 2:0:0:0: Attached scsi generic sg6 type 0
-scsi 2:0:1:0: Attached scsi generic sg7 type 0
-scsi 2:0:2:0: Attached scsi generic sg8 type 0
-scsi 2:0:3:0: Attached scsi generic sg9 type 0
-sd 3:0:0:0: Attached scsi generic sg10 type 0
+-apw
 
-novantatre:~# sg_luns -v sg6
-sg_luns: open error: sg6: No such file or directory
-novantatre:~# sg_luns -v /dev/sg6
-    report luns cdb: a0 00 00 00 00 00 00 00 04 00 00 00 
-    report luns: requested 1024 bytes but got 32 bytes
-Lun list length = 24 which imples 3 lun entries
+Seems that -mm fails to compile when CONFIG_MODULES is set but
+CONFIG_MODULE_UNLOAD is not.
 
-Output response in hex
- 00     00 00 00 18 00 00 00 00  00 01 00 00 00 00 00 00                    
- 10     00 03 00 00 00 00 00 00  00 04 00 00 00 00 00 00                    
-Report luns [select_report=0]:
-    0001000000000000
-    0003000000000000
-    0004000000000000
+   LD      .tmp_vmlinux1
+  drivers/built-in.o(.text+0x47724): In function `scsi_device_put':
+  drivers/scsi/scsi.c:887: undefined reference to `module_refcount'
 
+Config fragment:
+  CONFIG_MODULES=y
+  # CONFIG_MODULE_UNLOAD is not set
+  # CONFIG_MODULE_SRCVERSION_ALL is not set
 
+This seems to be caused by changes in the scsi-misc git tree, from the
+changes in the two commits below:
 
+  [SCSI] sd: fix cache flushing on module removal
+				(and individual device removal)
+  [SCSI] fix up non-modular SCSI
 
+  85b6c720b0931101c8bcc3a5abdc2b8514b0fb4b
+  f479ab87936563a286b8aa0e39003c40fa31c6da
 
-	Alberto
+It looks very much like module_refcount is really not meant to be an
+external interface, cirtainly its not available in all module
+'load/unload modes'.
