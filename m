@@ -1,63 +1,52 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH 0/2] struct scsi_lun preparation
-Date: Wed, 13 Sep 2006 00:27:39 -0400
-Message-ID: <450788BB.3040909@torque.net>
-References: <664A4EBB07F29743873A87CF62C26D70307646@NAMAIL4.ad.lsil.com> <4505D81F.5020300@garzik.org>
-Reply-To: dougg@torque.net
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH 1/2] block: Modify blk_rq_map_user to support large requests
+Date: Wed, 13 Sep 2006 11:30:09 +0200
+Message-ID: <20060913093009.GF23515@kernel.dk>
+References: <1157835221.4543.10.camel@max>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:25220 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1751544AbWIME2c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Sep 2006 00:28:32 -0400
-In-Reply-To: <4505D81F.5020300@garzik.org>
+Received: from brick.kernel.dk ([62.242.22.158]:8032 "EHLO kernel.dk")
+	by vger.kernel.org with ESMTP id S1750715AbWIMJbz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Sep 2006 05:31:55 -0400
+Content-Disposition: inline
+In-Reply-To: <1157835221.4543.10.camel@max>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: "Moore, Eric" <Eric.Moore@lsil.com>, James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Jeff Garzik wrote:
-> Moore, Eric wrote:
->> On Monday, September 11, 2006 1:56 PM, Jeff Garzik wrote:
->>>> A pretty print for the current u32 would be very useful though for
->>>> transports dealing with non single level luns (or address 
->>> methods other
->>>> than zero).
->>> A better subject line would have been "HCIL isolation" I suppose.  I
->>> would like to see increased usage of the accessors already present in
->>> include/scsi/scsi_device.h, which would ease the transition from
->>> hardcoded HCIL struct members to a more flexible addressing method.
->>>
->>> Though, FWIW, for LUNs I would certainly like to see u64 rather than
->>> u32.....
->>>
->>
->> shouldn't luns be defined as:
->> u8 lun[8] instead of u64?  
+On Sat, Sep 09 2006, Mike Christie wrote:
+> Currently, there is some duplication between bsg, scsi_ioctl.c
+> and scsi_lib.c/sg/st in its mapping code. This patch modifies
+> the block layer blk_rq_map_user code to support large requests so
+> that the scsi and block drivers can use this common code. The
+> changes also make it so the callers do not have to account for
+> the bio to be unmapped and bounce buffers.
 > 
-> Please, not that argument again :)
+> The next patch then coverts bsg.c, scsi_ioctl.c and cdrom.c
+> to use the updated functions. For scsi_ioctl.c and cdrom.c
+> the only thing that changes is that they no longer have
+> to do the bounce buffer management and pass in the len for
+> the unmapping. The bsg change is a little larger since that
+> code was duplicating a lot of code that is now common
+> in the block layer. The bsg conversions als should fix
+> a memory leak caused when unmapping a hdr with iovec_count=0.
 > 
-> It's purely semantics, the same storage is used, and only very rarely
-> are the contents actually examined in either case.
+> Patch was made over Jens's block tree and the bsg branch
 
-James Bottomley asked Alberto Cammozzo yesterday
-to see the output of 'sg_luns -v' so it ain't
-that rare.
+Generally it looks good - two comments:
 
-http://www.t10.org/ftp/t10/drafts/sam4/sam4r07.pdf
-section 4.6.2 discusses a 64 bit lun's
-"representation format". Assuming a 'u8 lun[8]'
-representation fetched directly from a REPORT
-LUNS response, then the first two bytes (i.e.
-lun[0] and lun[1]) are most often of interest.
-SCSI-2 (3 bit luns) map to lun[1] (with lun[0]=0),
-eight bit luns also map to lun[1], 16 bit luns
-map to lun[0] (msb) and lun[1] (lsb).
+- I see some advantages to having biohead_orig to avoid keeping track of
+  it and passing it around, but there's also good reasons for _not_
+  adding more stuff to struct request. Any particular reason you chose
+  to do that?
 
-For more background, Rob Elliott wrote a document
-on the subject (06-003r1 at www.t10.org).
+- blk_get_bounced_bio() looks redundant. BIO_BOUNCED should only be set
+  on a bounced bio, and ->bi_private should always hold that bounced
+  bio.
 
-Doug Gilbert
+-- 
+Jens Axboe
 
