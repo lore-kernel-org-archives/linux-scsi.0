@@ -1,59 +1,72 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH 2/2] block: convert bsg, scsi_ioctl and cdrom to new  blk_rq_map_user fns
-Date: Wed, 13 Sep 2006 11:32:43 +0200
-Message-ID: <20060913093243.GH23515@kernel.dk>
-References: <1157835222.4543.11.camel@max> <1157839785.5281.4.camel@max>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: lp8000 and 2.6.18-rc6
+Date: Wed, 13 Sep 2006 09:11:11 -0500
+Message-ID: <1158156671.3462.7.camel@mulgrave.il.steeleye.com>
+References: <20060909210856.GC21263@stat.unipd.it>
+	 <20060910135631.GD29775@parisc-linux.org>
+	 <20060910210444.GC22873@stat.unipd.it> <4504B6AF.3080909@torque.net>
+	 <20060911064008.GA26293@stat.unipd.it>
+	 <1157994026.3470.3.camel@mulgrave.il.steeleye.com>
+	 <20060912064514.GA28121@stat.unipd.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([62.242.22.158]:12640 "EHLO kernel.dk")
-	by vger.kernel.org with ESMTP id S1750728AbWIMJef (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Sep 2006 05:34:35 -0400
-Content-Disposition: inline
-In-Reply-To: <1157839785.5281.4.camel@max>
+Received: from stat9.steeleye.com ([209.192.50.41]:53154 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1750850AbWIMOLR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Sep 2006 10:11:17 -0400
+In-Reply-To: <20060912064514.GA28121@stat.unipd.it>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Alberto Cammozzo <mmzz@stat.unipd.it>
+Cc: linux-scsi@vger.kernel.org
 
-On Sat, Sep 09 2006, Mike Christie wrote:
-> On Sat, 2006-09-09 at 16:53 -0400, Mike Christie wrote:
-> > This patch just converts bsg, scsi_ioctl and cdrom to
-> > the new functions. There is not really much of a change
-> > for scsi_ioctl and cdrom. The block layer functions
-> > handle things like bounce buffers, and bio unmapping accounting
-> > for them now.
-> > 
-> > The bsg change is larger since I based the blk layer functions
-> > on it and the scsi lib code, so there are lots of deletions.
-> > There were also a couple of bugs that got fixes as a result
-> > of using the blk layer API:
-> > - If the hdr iovec_count = 0, then the request was not getting
-> > freed because blk_unmap_sghdr_rq thought blk_rq_unmap_user
-> > would free the request which it does not.
-> > - blk_unmap_sghdr_rq would always call bio_unmap_user, even if
-> > bio_copy_user was used. This was causing all types of weird bugs
-> > like slab corruption.
-> > 
-> > I have tested the copy and map code with scsi_ioctl.c with large
-> > requests having multiple bios. I have not tested bsg or cdrom.
-> > And High Mem is not tested well. I am not sure how to force high
-> > mem pages to be used for the mapping. Was there a proc or module
-> > param that can be used?
-> > 
-> > Patch was made over Jens's block tree and the bsg branch
-> > 
-> > Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+On Tue, 2006-09-12 at 08:45 +0200, Alberto Cammozzo wrote:
+> novantatre:~# dmesg
+> [...]
+> st 0:0:5:0: Attached scsi generic sg0 type 1
+> ch 0:0:5:1: Attached scsi generic sg1 type 8
+> sd 1:0:0:0: Attached scsi generic sg2 type 0
+> scsi 1:0:15:0: Attached scsi generic sg3 type 3
+> scsi 1:1:9:0: Attached scsi generic sg4 type 3
+> scsi 1:2:8:0: Attached scsi generic sg5 type 3
+> scsi 2:0:0:0: Attached scsi generic sg6 type 0
+> scsi 2:0:1:0: Attached scsi generic sg7 type 0
+> scsi 2:0:2:0: Attached scsi generic sg8 type 0
+> scsi 2:0:3:0: Attached scsi generic sg9 type 0
+
+This shows it found LUNS 0 1 2 3
+
+> sd 3:0:0:0: Attached scsi generic sg10 type 0
 > 
+> novantatre:~# sg_luns -v sg6
+> sg_luns: open error: sg6: No such file or directory
+> novantatre:~# sg_luns -v /dev/sg6
+>     report luns cdb: a0 00 00 00 00 00 00 00 04 00 00 00 
+>     report luns: requested 1024 bytes but got 32 bytes
+> Lun list length = 24 which imples 3 lun entries
 > 
-> That patch was bad. As you can probably tell, I was trying to use git
-> and was hand editing the patch at the same time. The patch below fixes
-> the compile errors found in the previous patch.
+> Output response in hex
+>  00     00 00 00 18 00 00 00 00  00 01 00 00 00 00 00 00                    
+>  10     00 03 00 00 00 00 00 00  00 04 00 00 00 00 00 00                    
+> Report luns [select_report=0]:
+>     0001000000000000
+>     0003000000000000
+>     0004000000000000
 
-Thanks, I will rebase bsg on top of the block branch and apply once we
-get the 1/2 patch sorted.
+This says the system only has three luns: 1 3 4 (i.e. no 2)
 
--- 
-Jens Axboe
+So something really strange is going on here ... The linux code should
+have executed a probe and add luns for the contents of report lun, which
+should have found the correct set, unless something went wrong during
+the reporting.
+
+Can you post the full dmesg from the time the Emulex is detected to the
+time sg attaches?  report luns is supposed to issue a failure message if
+something goes wrong (additionally, using the latest -mm would be
+helpful since that prints enhanced inquiry information from scsi-misc).
+
+James
+
 
