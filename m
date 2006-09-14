@@ -1,31 +1,51 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [GIT PATCH] (hopefully) final SCSI fixes for 2.6.19
-Date: Thu, 14 Sep 2006 17:12:06 -0500
-Message-ID: <1158271926.3514.81.camel@mulgrave.il.steeleye.com>
-References: <1158268378.3514.61.camel@mulgrave.il.steeleye.com>
-	 <4509CEF1.7060901@torque.net>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: Re: [PATCH v3] libsas: move ATA bits into a separate module
+Date: Thu, 14 Sep 2006 15:40:55 -0700
+Message-ID: <4509DA77.7000508@us.ibm.com>
+References: <4508A0A2.2080605@us.ibm.com> <450971D3.2040405@garzik.org>
+Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:4331 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751365AbWINWMN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 Sep 2006 18:12:13 -0400
-In-Reply-To: <4509CEF1.7060901@torque.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <450971D3.2040405@garzik.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, linux-ide <linux-ide@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>, Mike Anderson <andmike@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, 2006-09-14 at 17:51 -0400, Douglas Gilbert wrote:
-> Is the door already closed for patches to lk 2.6.19 ?
+Jeff Garzik wrote:
 
-It ain't over until the fat penguin sings.
+> I disagree completely with this approach.
+> 
+> You don't need a table of hooks for the case where libata is disabled in
+> .config.  Thus, it's only useful for the case where libsas is loaded as
+> a module, but libata is not.
 
-But I know of no major outstanding issues which would justify an
-emergency fix at this stage.
+Indeed, I misunderstood what James Bottomley wanted, so I reworked the
+patch.  It has the same functionality as before, but this module uses
+the module loader/symbol resolver for all the functions in libata, and
+allows libsas to (optionally) call into sas_ata with weak references by
+pushing a table of the necessary function pointers into libsas at
+sas_ata load time.  Thus, libsas doesn't need to load libata/sas_ata
+unless it actually finds a SATA device.
 
-James
+> The libsas code should directly call libata functions.  If ATA support
+> in libsas is disabled in .config, then those functions will never be
+> called, thus never loaded the libata module.
 
+I certainly can (and now do) call libata functions from sas_ata.
+However, there are a few cases where libsas needs to call libata (ex.
+sas_ioctl); for those cases, I think the function pointers are still
+necessary because I don't want to make libsas require libata.  In any
+case, if ATA support is disabled in .config, sata_is_dev always returns
+0, so the dead-code eliminator should zap that out of libsas entirely.
 
+As usual, thank you for any feedback that you have.
+
+Link to version 3:
+http://sweaglesw.net/~djwong/docs/sas-ata_3.patch
+
+--D
+
+Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
