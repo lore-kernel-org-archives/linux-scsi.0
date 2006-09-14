@@ -1,61 +1,63 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libsas: move ATA bits into a separate module
-Date: Thu, 14 Sep 2006 11:14:27 -0400
-Message-ID: <450971D3.2040405@garzik.org>
-References: <4508A0A2.2080605@us.ibm.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [GIT PATCH] (hopefully) final SCSI fixes for 2.6.19
+Date: Thu, 14 Sep 2006 16:12:58 -0500
+Message-ID: <1158268378.3514.61.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:3268 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1750749AbWINPOd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 Sep 2006 11:14:33 -0400
-In-Reply-To: <4508A0A2.2080605@us.ibm.com>
+Received: from stat9.steeleye.com ([209.192.50.41]:33256 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1751137AbWINVNE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 Sep 2006 17:13:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Darrick J. Wong" <djwong@us.ibm.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>, Mike Anderson <andmike@us.ibm.com>
+To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Darrick J. Wong wrote:
-> Hi all,
-> 
-> Per James Bottomley's request, I've moved all the libsas SATA support
-> code into a separate module, named sas_ata.  To satisfy his further
-> requirement that libsas not require libata (and vice versa), ata_sas
-> maintains fixed function pointer tables to various required functions
-> within libsas and libata.  Unfortunately, this means that libsas and
-> libata both require sas_ata, but sas_ata is smaller than libata.
-> Unloads of libata/libsas at inopportune moments are prevented by
-> increasing the refcounts on both modules whenever libsas detects a SATA
-> device (and decreasing it when the device goes away, of course).  If the
-> module is removed from the .config, then all of hooks into libsas/libata
-> should go away.
-> 
-> This is a rough-cut at separating out the ATA code; please let me know
-> what I can improve.  At the moment, I can load and talk to SATA disks
-> with the module enabled, as well as watch nothing happen if the module
-> is not config'd in.
-> 
-> The patch is a bit large, so here's where it lives:
-> http://sweaglesw.net/~djwong/docs/sas-ata_2.patch
+The patch is here
 
-I disagree completely with this approach.
+master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
 
-You don't need a table of hooks for the case where libata is disabled in 
-.config.  Thus, it's only useful for the case where libsas is loaded as 
-a module, but libata is not.
+However, as there's only a single patch in there, I attach it in case
+you'd prefer simply to apply it as a patch rather than merge a single
+patch tree.
 
-And the cost of having libata loaded via the normal symbol resolution / 
-module load mechanisms is low, so adding a table of hooks completely 
-wrapping libata functions is just silly.
+James
 
-The libsas code should directly call libata functions.  If ATA support 
-in libsas is disabled in .config, then those functions will never be 
-called, thus never loaded the libata module.
+---
 
-	Jeff
+commit 15d100224c123f0f993ef88e95fd5d46bb0bd085
+Author: James Smart <James.Smart@Emulex.Com>
+Date:   Thu Aug 31 12:27:57 2006 -0400
 
+    [SCSI] lpfc: don't free mempool if mailbox is busy
+    
+    Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
 
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index f6948ff..c31fe41 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -387,7 +387,8 @@ lpfc_config_port_post(struct lpfc_hba * 
+ 
+ 	lpfc_init_link(phba, pmb, phba->cfg_topology, phba->cfg_link_speed);
+ 	pmb->mbox_cmpl = lpfc_sli_def_mbox_cmpl;
+-	if (lpfc_sli_issue_mbox(phba, pmb, MBX_NOWAIT) != MBX_SUCCESS) {
++	rc = lpfc_sli_issue_mbox(phba, pmb, MBX_NOWAIT);
++	if (rc != MBX_SUCCESS) {
+ 		lpfc_printf_log(phba,
+ 				KERN_ERR,
+ 				LOG_INIT,
+@@ -404,7 +405,8 @@ lpfc_config_port_post(struct lpfc_hba * 
+ 		readl(phba->HAregaddr); /* flush */
+ 
+ 		phba->hba_state = LPFC_HBA_ERROR;
+-		mempool_free(pmb, phba->mbox_mem_pool);
++		if (rc != MBX_BUSY)
++			mempool_free(pmb, phba->mbox_mem_pool);
+ 		return -EIO;
+ 	}
+ 	/* MBOX buffer will be freed in mbox compl */
 
 
