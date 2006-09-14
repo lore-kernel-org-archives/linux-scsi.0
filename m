@@ -1,56 +1,45 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 1/2] block: Modify blk_rq_map_user to support large requests
-Date: Wed, 13 Sep 2006 14:38:08 -0500
-Message-ID: <45085E20.7070003@cs.wisc.edu>
-References: <1157835221.4543.10.camel@max> <20060913093009.GF23515@kernel.dk>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: [PATCH] libsas: move ATA bits into a separate module
+Date: Wed, 13 Sep 2006 17:21:54 -0700
+Message-ID: <4508A0A2.2080605@us.ibm.com>
+Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751011AbWIMTiZ@vger.kernel.org>
-In-Reply-To: <20060913093009.GF23515@kernel.dk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e33.co.us.ibm.com ([32.97.110.151]:51851 "EHLO
+	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751257AbWINAV4
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Sep 2006 20:21:56 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: Alexis Bruemmer <alexisb@us.ibm.com>, Mike Anderson <andmike@us.ibm.com>
 
-Jens Axboe wrote:
-> On Sat, Sep 09 2006, Mike Christie wrote:
->> Currently, there is some duplication between bsg, scsi_ioctl.c
->> and scsi_lib.c/sg/st in its mapping code. This patch modifies
->> the block layer blk_rq_map_user code to support large requests so
->> that the scsi and block drivers can use this common code. The
->> changes also make it so the callers do not have to account for
->> the bio to be unmapped and bounce buffers.
->>
->> The next patch then coverts bsg.c, scsi_ioctl.c and cdrom.c
->> to use the updated functions. For scsi_ioctl.c and cdrom.c
->> the only thing that changes is that they no longer have
->> to do the bounce buffer management and pass in the len for
->> the unmapping. The bsg change is a little larger since that
->> code was duplicating a lot of code that is now common
->> in the block layer. The bsg conversions als should fix
->> a memory leak caused when unmapping a hdr with iovec_count=0.
->>
->> Patch was made over Jens's block tree and the bsg branch
-> 
-> Generally it looks good - two comments:
-> 
-> - I see some advantages to having biohead_orig to avoid keeping track of
->   it and passing it around, but there's also good reasons for _not_
->   adding more stuff to struct request. Any particular reason you chose
->   to do that?
+Hi all,
 
-I think I originally made a mistake with the bounce buffers and thinking
-that others may do the same I felt that hiding a lot of the magic that
-is going on in blk_rq_map_user was nice. By adding the field to the
-request, the caller would only have to map the data and then unmap the
-request. Since not even a handful of drivers would ever use the api, I
-agree that adding the field for this limited use could be overkill.
+Per James Bottomley's request, I've moved all the libsas SATA support
+code into a separate module, named sas_ata.  To satisfy his further
+requirement that libsas not require libata (and vice versa), ata_sas
+maintains fixed function pointer tables to various required functions
+within libsas and libata.  Unfortunately, this means that libsas and
+libata both require sas_ata, but sas_ata is smaller than libata.
+Unloads of libata/libsas at inopportune moments are prevented by
+increasing the refcounts on both modules whenever libsas detects a SATA
+device (and decreasing it when the device goes away, of course).  If the
+module is removed from the .config, then all of hooks into libsas/libata
+should go away.
 
-> 
-> - blk_get_bounced_bio() looks redundant. BIO_BOUNCED should only be set
->   on a bounced bio, and ->bi_private should always hold that bounced
->   bio.
->
+This is a rough-cut at separating out the ATA code; please let me know
+what I can improve.  At the moment, I can load and talk to SATA disks
+with the module enabled, as well as watch nothing happen if the module
+is not config'd in.
 
-Ok, I will remove that.
+The patch is a bit large, so here's where it lives:
+http://sweaglesw.net/~djwong/docs/sas-ata_2.patch
+
+Thanks for any feedback that you can provide!
+
+--D
+
+Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
