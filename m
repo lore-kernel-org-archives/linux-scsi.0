@@ -1,50 +1,76 @@
-From: Jesper Juhl <jesper.juhl@gmail.com>
-Subject: [PATCH] SCSI: Make megaraid_ioctl() check copy_to_user() return value
-Date: Fri, 15 Sep 2006 14:43:11 +0200
-Message-ID: <200609151443.12941.jesper.juhl@gmail.com>
+From: "G Shyam Sundar" <callshyam@gmail.com>
+Subject: Re: question about qlogic QLA2312
+Date: Fri, 15 Sep 2006 19:26:46 +0530
+Message-ID: <19dce7c30609150656s4397bbfeyba53586cb2105ab7@mail.gmail.com>
+References: <1158307245.8103.12.camel@scarafaggio>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:1806 "EHLO
+Received: from nf-out-0910.google.com ([64.233.182.185]:28504 "EHLO
 	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S1751343AbWIOMnb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Sep 2006 08:43:31 -0400
-Received: by nf-out-0910.google.com with SMTP id o25so2224475nfa
-        for <linux-scsi@vger.kernel.org>; Fri, 15 Sep 2006 05:43:29 -0700 (PDT)
+	id S1751470AbWION4s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Sep 2006 09:56:48 -0400
+Received: by nf-out-0910.google.com with SMTP id o25so2243211nfa
+        for <linux-scsi@vger.kernel.org>; Fri, 15 Sep 2006 06:56:46 -0700 (PDT)
+In-Reply-To: <1158307245.8103.12.camel@scarafaggio>
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Seokmann Ju <Seokmann.Ju@lsil.com>, Neela Syam Kolli <Neela.Kolli@engenio.com>, linux-scsi@vger.kernel.org, akpm@osdl.org, James.Bottomley@steeleye.com, jesper.juhl@gmail.com
+To: Giuseppe Sacco <giuseppe.sacco@lixper.it>
+Cc: linux-scsi@vger.kernel.org
+
+Which version of the driver are you using ?
+Also, what is the version of the firmware ? You can get the version of
+fimware by
+# grep FW_VERSION_STRING in the source directory.
+
+It will be helpful if you could recompile the driver with
+QL_DEBUG_LEVEL_2 enabled (qla_dbg.h) and recreate the issue.
 
 
-Check copy_to_user() return value in drivers/scsi/megaraid.c::megadev_ioctl()
-This gets rid of this little warning:
-  drivers/scsi/megaraid.c:3661: warning: ignoring return value of 'copy_to_user', declared with attribute warn_unused_result
-
-
-Signed-off-by: Jesper Juhl <jesper.juhl@gmail.com>
----
-
- drivers/scsi/megaraid.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
---- linux-2.6.18-rc7-git1-orig/drivers/scsi/megaraid.c	2006-09-15 13:51:15.121774000 +0200
-+++ linux-2.6.18-rc7-git1/drivers/scsi/megaraid.c	2006-09-15 14:27:32.377407763 +0200
-@@ -3658,8 +3658,9 @@ megadev_ioctl(struct inode *inode, struc
- 			 * Send the request sense data also, irrespective of
- 			 * whether the user has asked for it or not.
- 			 */
--			copy_to_user(upthru->reqsensearea,
--					pthru->reqsensearea, 14);
-+			if (copy_to_user(upthru->reqsensearea,
-+					pthru->reqsensearea, 14))
-+				rval = -EFAULT;
- 
- freemem_and_return:
- 			if( pthru->dataxferlen ) {
+-Shyam
 
 
 
+On 9/15/06, Giuseppe Sacco <giuseppe.sacco@lixper.it> wrote:
+> Hi all,
+> I installed a new machine with this SCSI controller
+>
+> 03:02.0 Fibre Channel: QLogic Corp. QLA2312 Fibre Channel Adapter (rev
+> 02)
+>
+> The problem is that firmware cannot be loaded on this board. When
+> loading the qla2xxx driver, I get these messages:
+>
+> QLogic Fibre Channel HBA Driver
+> ACPI: PCI Interrupt 0000:03:02.0[A] -> GSI 22 (level, low) -> IRQ 177
+> qla2xxx 0000:03:02.0: Found an ISP2312, irq 177, iobase
+> 0xffffc20000f70000
+> qla2xxx 0000:03:02.0: Configuring PCI space...
+> qla2xxx 0000:03:02.0: Configure NVRAM parameters...
+> qla2xxx 0000:03:02.0: Verifying loaded RISC code...
+> qla2xxx 0000:03:02.0: Mailbox command timeout occured. Scheduling ISP
+> abort.
+> qla2xxx 0000:03:02.0: [ERROR] Failed to load segment 0 of firmware
+> qla2xxx 0000:03:02.0: Failed to initialize adapter
+> Trying to free free IRQ177
+>
+> Browsing the archives of linux-scsi I found a solution[1]: a patch
+> missing from the suse linux kernel. Sadly this was about an old versione
+> of the kernel, while the current one already include it.
+>
+> I am using kernel 2.6.16.21.
+>
+> Any idea about what the problem could be?
+>
+> Thanks,
+> Giuseppe
+>
+> [1]http://www.spinics.net/lists/linux-scsi/msg06713.html
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
