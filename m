@@ -1,53 +1,50 @@
-From: Giuseppe Sacco <giuseppe.sacco@lixper.it>
-Subject: question about qlogic QLA2312
-Date: Fri, 15 Sep 2006 10:00:45 +0200
-Message-ID: <1158307245.8103.12.camel@scarafaggio>
+From: Jesper Juhl <jesper.juhl@gmail.com>
+Subject: [PATCH] SCSI: Make megaraid_ioctl() check copy_to_user() return value
+Date: Fri, 15 Sep 2006 14:43:11 +0200
+Message-ID: <200609151443.12941.jesper.juhl@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vsmtp4.tin.it ([212.216.176.224]:29663 "EHLO vsmtp4.tin.it")
-	by vger.kernel.org with ESMTP id S1750707AbWIOIAj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Sep 2006 04:00:39 -0400
-Received: from casa (82.56.149.55) by vsmtp4.tin.it (7.2.072.1) (authenticated as giuseppe.sacco17@tin.it)
-        id 450948360010012E for linux-scsi@vger.kernel.org; Fri, 15 Sep 2006 10:00:37 +0200
+Received: from nf-out-0910.google.com ([64.233.182.186]:1806 "EHLO
+	nf-out-0910.google.com") by vger.kernel.org with ESMTP
+	id S1751343AbWIOMnb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Sep 2006 08:43:31 -0400
+Received: by nf-out-0910.google.com with SMTP id o25so2224475nfa
+        for <linux-scsi@vger.kernel.org>; Fri, 15 Sep 2006 05:43:29 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Seokmann Ju <Seokmann.Ju@lsil.com>, Neela Syam Kolli <Neela.Kolli@engenio.com>, linux-scsi@vger.kernel.org, akpm@osdl.org, James.Bottomley@steeleye.com, jesper.juhl@gmail.com
 
-Hi all,
-I installed a new machine with this SCSI controller 
 
-03:02.0 Fibre Channel: QLogic Corp. QLA2312 Fibre Channel Adapter (rev
-02)
+Check copy_to_user() return value in drivers/scsi/megaraid.c::megadev_ioctl()
+This gets rid of this little warning:
+  drivers/scsi/megaraid.c:3661: warning: ignoring return value of 'copy_to_user', declared with attribute warn_unused_result
 
-The problem is that firmware cannot be loaded on this board. When
-loading the qla2xxx driver, I get these messages:
 
-QLogic Fibre Channel HBA Driver
-ACPI: PCI Interrupt 0000:03:02.0[A] -> GSI 22 (level, low) -> IRQ 177
-qla2xxx 0000:03:02.0: Found an ISP2312, irq 177, iobase
-0xffffc20000f70000
-qla2xxx 0000:03:02.0: Configuring PCI space...
-qla2xxx 0000:03:02.0: Configure NVRAM parameters...
-qla2xxx 0000:03:02.0: Verifying loaded RISC code...
-qla2xxx 0000:03:02.0: Mailbox command timeout occured. Scheduling ISP
-abort.
-qla2xxx 0000:03:02.0: [ERROR] Failed to load segment 0 of firmware
-qla2xxx 0000:03:02.0: Failed to initialize adapter
-Trying to free free IRQ177
+Signed-off-by: Jesper Juhl <jesper.juhl@gmail.com>
+---
 
-Browsing the archives of linux-scsi I found a solution[1]: a patch
-missing from the suse linux kernel. Sadly this was about an old versione
-of the kernel, while the current one already include it.
+ drivers/scsi/megaraid.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-I am using kernel 2.6.16.21.
+--- linux-2.6.18-rc7-git1-orig/drivers/scsi/megaraid.c	2006-09-15 13:51:15.121774000 +0200
++++ linux-2.6.18-rc7-git1/drivers/scsi/megaraid.c	2006-09-15 14:27:32.377407763 +0200
+@@ -3658,8 +3658,9 @@ megadev_ioctl(struct inode *inode, struc
+ 			 * Send the request sense data also, irrespective of
+ 			 * whether the user has asked for it or not.
+ 			 */
+-			copy_to_user(upthru->reqsensearea,
+-					pthru->reqsensearea, 14);
++			if (copy_to_user(upthru->reqsensearea,
++					pthru->reqsensearea, 14))
++				rval = -EFAULT;
+ 
+ freemem_and_return:
+ 			if( pthru->dataxferlen ) {
 
-Any idea about what the problem could be?
 
-Thanks,
-Giuseppe
-
-[1]http://www.spinics.net/lists/linux-scsi/msg06713.html
 
