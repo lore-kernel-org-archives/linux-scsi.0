@@ -1,59 +1,59 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH v3] libsas: move ATA bits into a separate module
-Date: Thu, 14 Sep 2006 18:49:51 -0400
-Message-ID: <4509DC8F.6030900@garzik.org>
-References: <4508A0A2.2080605@us.ibm.com> <450971D3.2040405@garzik.org> <4509DA77.7000508@us.ibm.com>
+From: malahal@us.ibm.com
+Subject: AIC94XX discovery timeout problem details...
+Date: Fri, 15 Sep 2006 00:20:30 -0700
+Message-ID: <20060915072030.GA25595@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:60116 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932091AbWINWty (ORCPT
+Received: from e5.ny.us.ibm.com ([32.97.182.145]:24966 "EHLO e5.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1750974AbWIOHUd (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 Sep 2006 18:49:54 -0400
-In-Reply-To: <4509DA77.7000508@us.ibm.com>
+	Fri, 15 Sep 2006 03:20:33 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e5.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id k8F7KWko006713
+	for <linux-scsi@vger.kernel.org>; Fri, 15 Sep 2006 03:20:32 -0400
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay04.pok.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id k8F7KWGT291030
+	for <linux-scsi@vger.kernel.org>; Fri, 15 Sep 2006 03:20:32 -0400
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k8F7KWLu002796
+	for <linux-scsi@vger.kernel.org>; Fri, 15 Sep 2006 03:20:32 -0400
+Received: from malahal.beaverton.ibm.com (malahal.beaverton.ibm.com [9.47.17.93])
+	by d01av04.pok.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k8F7KW6g002793
+	for <linux-scsi@vger.kernel.org>; Fri, 15 Sep 2006 03:20:32 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Darrick J. Wong" <djwong@us.ibm.com>
-Cc: linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>, Mike Anderson <andmike@us.ibm.com>, James Bottomley <James.Bottomley@SteelEye.com>
+To: linux-scsi@vger.kernel.org
 
-Darrick J. Wong wrote:
-> Jeff Garzik wrote:
-> 
->> I disagree completely with this approach.
->>
->> You don't need a table of hooks for the case where libata is disabled in
->> .config.  Thus, it's only useful for the case where libsas is loaded as
->> a module, but libata is not.
-> 
-> Indeed, I misunderstood what James Bottomley wanted, so I reworked the
-> patch.  It has the same functionality as before, but this module uses
-> the module loader/symbol resolver for all the functions in libata, and
-> allows libsas to (optionally) call into sas_ata with weak references by
-> pushing a table of the necessary function pointers into libsas at
-> sas_ata load time.  Thus, libsas doesn't need to load libata/sas_ata
-> unless it actually finds a SATA device.
-> 
->> The libsas code should directly call libata functions.  If ATA support
->> in libsas is disabled in .config, then those functions will never be
->> called, thus never loaded the libata module.
-> 
-> I certainly can (and now do) call libata functions from sas_ata.
-> However, there are a few cases where libsas needs to call libata (ex.
-> sas_ioctl); for those cases, I think the function pointers are still
-> necessary because I don't want to make libsas require libata.  In any
-> case, if ATA support is disabled in .config, sata_is_dev always returns
-> 0, so the dead-code eliminator should zap that out of libsas entirely.
+I chased the time out problem and found that the PORTE_BYTES_DMAED port
+event must be responded with a call to lldd_port_formed() which will
+update PHY_IS_UP and port-links fields in DDB 0. As there is a single
+thread handling PHY/port events as well as discovery, we really can't
+handle PORTE_BYTES_DMAED event until the discovery is complete. This
+results in SCSI commands timing out in the discovery thread no matter
+what I do!  This problem may be unique to Vitesse expander, read the PS
+section for details.
 
-Looks MUCH better to me, and eliminates my objection to the 
-libata-related hooks.
+Tried using two threads, one for events and the other for discovery.
+That avoided the timeout problems, but the discovery thread would die
+after few iterations due to the event thread and the discovery thread
+racing each other for setting up and tearing down of sysfs objects.
 
-There remains the issue that I poke James about on IRC, namely that 
-there is no need to emulate the SATA phy registers.  libata permits a 
-driver high level access to the ATA engine without needing SATA SCRs. 
-Witness all the PATA drivers, which obviously do not have SCRs at all.
+I tried calling lldd_port_formed() with appropriate phy_mask from the
+notify_port_event() itself. That worked fine. It is just a hack for now!
 
-	Jeff
+Any comments, suggestions?
 
-
-
+Thanks, Malahal.
+PS: I instrumented the code to use only a single PHY out of 4-phy wide
+port by prematurely returning from sas_form_port() for all PHYs except
+one. In other words, I ignored the PORTE_BYTES_DMAED event for all PHYs
+but one.  There were SCSI timeouts every time I did that except if the
+PHY I was using is phy3.  When I swapped cables, the PHY that worked
+changed too. I believe, it goes with a specific Vitesse expander PHY. Is
+it possible that the Vitesse expander uses a specific PHY to respond to
+some SCSI requests even though the adapter uses a different PHY while
+sending the request?  Is this behavior of communicating on two different
+PHYs for a single SCSI command is allowed in the spec? Also note that
+the discovery commands (SMP) just work fine.
