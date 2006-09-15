@@ -1,22 +1,33 @@
-From: Giuseppe Sacco <giuseppe.sacco@lixper.it>
+From: Giuseppe Sacco <giuseppe@eppesuigoccas.homedns.org>
 Subject: Re: question about qlogic QLA2312
-Date: Fri, 15 Sep 2006 16:12:17 +0200
-Message-ID: <1158329537.8103.57.camel@scarafaggio>
+Date: Fri, 15 Sep 2006 17:54:02 +0200
+Message-ID: <1158335642.8103.70.camel@scarafaggio>
 References: <1158307245.8103.12.camel@scarafaggio>
 	 <19dce7c30609150656s4397bbfeyba53586cb2105ab7@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="=-+R9nmNjR2/qlqU85AKBz"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vsmtp21alice.tin.it ([212.216.176.110]:30946 "EHLO
-	vsmtp21.tin.it") by vger.kernel.org with ESMTP id S1751493AbWIOOM3
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Sep 2006 10:12:29 -0400
+Received: from vsmtp2.tin.it ([212.216.176.222]:22443 "EHLO vsmtp2.tin.it")
+	by vger.kernel.org with ESMTP id S932108AbWIOPx6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Sep 2006 11:53:58 -0400
+Received: from casa (82.56.149.55) by vsmtp2.tin.it (7.2.072.1) (authenticated as giuseppe.sacco17@tin.it)
+        id 4506B54A001DF9F1 for linux-scsi@vger.kernel.org; Fri, 15 Sep 2006 17:53:56 +0200
+Received: from [81.30.2.2] (helo=[192.168.12.252])
+	by casa with esmtpsa (TLS-1.0:RSA_ARCFOUR_MD5:16)
+	(Exim 4.63)
+	(envelope-from <giuseppe@eppesuigoccas.homedns.org>)
+	id 1GOG0r-0003Cy-Vz
+	for linux-scsi@vger.kernel.org; Fri, 15 Sep 2006 17:53:58 +0200
 In-Reply-To: <19dce7c30609150656s4397bbfeyba53586cb2105ab7@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: G Shyam Sundar <callshyam@gmail.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+
+--=-+R9nmNjR2/qlqU85AKBz
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
 Il giorno ven, 15/09/2006 alle 19.26 +0530, G Shyam Sundar ha scritto:
 > Which version of the driver are you using ?
@@ -27,46 +38,97 @@ Il giorno ven, 15/09/2006 alle 19.26 +0530, G Shyam Sundar ha scritto:
 > It will be helpful if you could recompile the driver with
 > QL_DEBUG_LEVEL_2 enabled (qla_dbg.h) and recreate the issue.
 
-I used two versions of the driver. The first one is shipped with the
-standard kernel from suse: 8.01.04-k (from modinfo). the second one is
-from the latest driver I could download from sourceforge.net (project
-linux-qla2xxx) and is version 8.01.06b2 (from modinfo).
-The new version emit some more information:
+Here it is, with some more debug levels (1,2,3, and 7)
 
-qla2xxx_conf: module not supported by Novell, setting U taint flag.
-qla2xxx: module not supported by Novell, setting U taint flag.
-QLogic Fibre Channel HBA Driver
-qla2300: module not supported by Novell, setting U taint flag.
-ACPI: PCI Interrupt 0000:03:02.0[A] -> GSI 22 (level, low) -> IRQ 177
-qla2300 0000:03:02.0: Found an ISP2312, irq 177, iobase
-0xffffc20000f70000
-qla2300 0000:03:02.0: Configuring PCI space...
-qla2300 0000:03:02.0: Configure NVRAM parameters...
-qla2300 0000:03:02.0: Verifying loaded RISC code...
-qla2300 0000:03:02.0: Mailbox command timeout occured. Scheduling ISP
-abort.
-qla2300 0000:03:02.0: [ERROR] Failed to load segment 0 of firmware
-Mailbox registers:
-scsi(7): mbox 0 0x4000 
-scsi(7): mbox 1 0xaaaa 
-scsi(7): mbox 2 0x5555 
-scsi(7): mbox 3 0xaa55 
-scsi(7): mbox 4 0x55aa 
-scsi(7): mbox 5 0xa5a5 
-qla2300 0000:03:02.0: Failed to initialize adapter
-qla2300: probe of 0000:03:02.0 failed with error -1
 
-About FW_VERSION_STRING:
 
-lnx01:/usr/src/linux/drivers/scsi/qla2xxx # grep FW_V *
-ql2100_fw.c:#define FW_VERSION_STRING "1.19.25"
-ql2200_fw.c:#define FW_VERSION_STRING "2.02.08"
-ql2300_fw.c:#define FW_VERSION_STRING "3.03.18"
-ql2322_fw.c:#define FW_VERSION_STRING "3.03.18"
-ql2400_fw.c:#define FW_VERSION_STRING "4.00.16"
-ql6312_fw.c:#define FW_VERSION_STRING "3.03.18"
-lnx01:/usr/src/linux/drivers/scsi/qla2xxx # 
+--=-+R9nmNjR2/qlqU85AKBz
+Content-Disposition: inline; filename=qla2xxx-8.01.06b2-debug.log
+Content-Type: text/x-log; name=qla2xxx-8.01.06b2-debug.log; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Thanks,
-Giuseppe
+Sep 15 17:49:01 lnx01 kernel: qla2xxx_conf: module not supported by Novell, setting U taint flag.
+Sep 15 17:49:01 lnx01 kernel: qla2xxx: module not supported by Novell, setting U taint flag.
+Sep 15 17:49:01 lnx01 kernel: QLogic Fibre Channel HBA Driver
+Sep 15 17:49:01 lnx01 kernel: qla2300: module not supported by Novell, setting U taint flag.
+Sep 15 17:49:01 lnx01 kernel: ACPI: PCI Interrupt 0000:03:02.0[A] -> GSI 22 (level, low) -> IRQ 177
+Sep 15 17:49:01 lnx01 kernel: qla2300 0000:03:02.0: Found an ISP2312, irq 177, iobase 0xffffc20000f72000
+Sep 15 17:49:01 lnx01 kernel: qla2300 0000:03:02.0: Configuring PCI space...
+Sep 15 17:49:01 lnx01 kernel: qla2x00_get_flash_version(): read BIOS 1.47.
+Sep 15 17:49:01 lnx01 kernel: qla2300 0000:03:02.0: Configure NVRAM parameters...
+Sep 15 17:49:01 lnx01 kernel: qla2300 0000:03:02.0: Verifying loaded RISC code...
+Sep 15 17:49:01 lnx01 kernel: scsi(11): Testing device at ffffc20000f72000.
+Sep 15 17:49:01 lnx01 kernel: scsi(11): Reset register cleared by chip reset
+Sep 15 17:49:01 lnx01 kernel: scsi(11): Checking product ID of chip
+Sep 15 17:49:01 lnx01 kernel: scsi(11): Checking mailboxes.
+Sep 15 17:49:01 lnx01 kernel: qla2x00_mailbox_command(11): Loaded MBX registers (displayed in bytes) = 
+Sep 15 17:49:01 lnx01 kernel:  0   1   2   3   4   5   6   7   8   9  Ah  Bh  Ch  Dh  Eh  Fh
+Sep 15 17:49:01 lnx01 kernel: --------------------------------------------------------------
+Sep 15 17:49:01 lnx01 kernel: 06  00  aa  aa  55  55  55  aa  aa  55  a5  a5  5a  5a  25  25
+Sep 15 17:49:01 lnx01 kernel: 
+Sep 15 17:49:01 lnx01 kernel:  0   1   2   3   4   5   6   7   8   9  Ah  Bh  Ch  Dh  Eh  Fh
+Sep 15 17:49:01 lnx01 kernel: --------------------------------------------------------------
+Sep 15 17:49:01 lnx01 kernel: 20  50  f7  00  00  00  00  00  08  00  00  80  00  00  00  00
+Sep 15 17:49:01 lnx01 kernel: 
+Sep 15 17:49:01 lnx01 kernel:  0   1   2   3   4   5   6   7   8   9  Ah  Bh  Ch  Dh  Eh  Fh
+Sep 15 17:49:01 lnx01 kernel: --------------------------------------------------------------
+Sep 15 17:49:01 lnx01 kernel: 53  49  f7  00  00  00  00  00  
+Sep 15 17:49:01 lnx01 kernel: 
+Sep 15 17:49:01 lnx01 kernel: qla2x00_mailbox_command(11): I/O address = ffffc20000f72080.
+Sep 15 17:49:01 lnx01 kernel: Mailbox registers:
+Sep 15 17:49:01 lnx01 kernel: scsi(11): mbox 0 0x0000 
+Sep 15 17:49:01 lnx01 kernel: scsi(11): mbox 1 0x4953 
+Sep 15 17:49:01 lnx01 kernel: scsi(11): mbox 2 0x5020 
+Sep 15 17:49:01 lnx01 kernel: scsi(11): mbox 3 0x2020 
+Sep 15 17:49:01 lnx01 kernel: scsi(11): mbox 4 0x0002 
+Sep 15 17:49:01 lnx01 kernel: scsi(11): mbox 5 0x0004 
+Sep 15 17:49:01 lnx01 kernel: qla2x00_mailbox_command(11): cmd=6 POLLING MODE.
+Sep 15 17:49:01 lnx01 kernel: qla2x00_mbx_completion(11): Got mailbox completion. cmd=6.
+Sep 15 17:49:01 lnx01 kernel: qla2x00_mailbox_command(11): cmd 6 completed.
+Sep 15 17:49:01 lnx01 kernel: scsi(11): Loading risc segment@ addr ffffffff8836fc40, number of bytes 0x8000, offset 0x800.
+Sep 15 17:49:01 lnx01 kernel: qla2x00_mailbox_command(11): Loaded MBX registers (displayed in bytes) = 
+Sep 15 17:49:01 lnx01 kernel:  0   1   2   3   4   5   6   7   8   9  Ah  Bh  Ch  Dh  Eh  Fh
+Sep 15 17:49:01 lnx01 kernel: --------------------------------------------------------------
+Sep 15 17:49:01 lnx01 kernel: 09  00  00  08  78  fc  00  00  00  80  00  00  00  00  01  00
+Sep 15 17:49:01 lnx01 kernel: 
+Sep 15 17:49:01 lnx01 kernel:  0   1   2   3   4   5   6   7   8   9  Ah  Bh  Ch  Dh  Eh  Fh
+Sep 15 17:49:01 lnx01 kernel: --------------------------------------------------------------
+Sep 15 17:49:01 lnx01 kernel: b8  3a  da  f3  01  81  ff  ff  f8  39  da  f3  01  81  ff  ff
+Sep 15 17:49:01 lnx01 kernel: 
+Sep 15 17:49:01 lnx01 kernel:  0   1   2   3   4   5   6   7   8   9  Ah  Bh  Ch  Dh  Eh  Fh
+Sep 15 17:49:01 lnx01 kernel: --------------------------------------------------------------
+Sep 15 17:49:01 lnx01 kernel: 80  84  03  05  02  81  ff  ff  
+Sep 15 17:49:01 lnx01 kernel: 
+Sep 15 17:49:01 lnx01 kernel: qla2x00_mailbox_command(11): I/O address = ffffc20000f72080.
+Sep 15 17:49:01 lnx01 kernel: Mailbox registers:
+Sep 15 17:49:01 lnx01 kernel: scsi(11): mbox 0 0x4000 
+Sep 15 17:49:01 lnx01 kernel: scsi(11): mbox 1 0xaaaa 
+Sep 15 17:49:01 lnx01 kernel: scsi(11): mbox 2 0x5555 
+Sep 15 17:49:01 lnx01 kernel: scsi(11): mbox 3 0xaa55 
+Sep 15 17:49:01 lnx01 kernel: scsi(11): mbox 4 0x55aa 
+Sep 15 17:49:01 lnx01 kernel: scsi(11): mbox 5 0xa5a5 
+Sep 15 17:49:01 lnx01 kernel: qla2x00_mailbox_command(11): cmd=9 POLLING MODE.
+Sep 15 17:49:31 lnx01 kernel: qla2x00_mailbox_command(11): **** MB Command Timeout for cmd 9 ****
+Sep 15 17:49:31 lnx01 kernel: qla2x00_mailbox_command(11): icontrol=0 jiffies=100055e49
+Sep 15 17:49:31 lnx01 kernel: qla2x00_mailbox_command(11): *** mailbox[0] = 0x4000 ***
+Sep 15 17:49:31 lnx01 kernel: Mailbox registers:
+Sep 15 17:49:31 lnx01 kernel: scsi(11): mbox 0 0x4000 
+Sep 15 17:49:31 lnx01 kernel: scsi(11): mbox 1 0xaaaa 
+Sep 15 17:49:31 lnx01 kernel: scsi(11): mbox 2 0x5555 
+Sep 15 17:49:31 lnx01 kernel: scsi(11): mbox 3 0xaa55 
+Sep 15 17:49:31 lnx01 kernel: scsi(11): mbox 4 0x55aa 
+Sep 15 17:49:31 lnx01 kernel: scsi(11): mbox 5 0xa5a5 
+Sep 15 17:49:31 lnx01 kernel: qla2300 0000:03:02.0: Mailbox command timeout occured. Scheduling ISP abort.
+Sep 15 17:49:31 lnx01 kernel: qla2300 0000:03:02.0: [ERROR] Failed to load segment 0 of firmware
+Sep 15 17:49:31 lnx01 kernel: Mailbox registers:
+Sep 15 17:49:31 lnx01 kernel: scsi(11): mbox 0 0x4000 
+Sep 15 17:49:31 lnx01 kernel: scsi(11): mbox 1 0xaaaa 
+Sep 15 17:49:31 lnx01 kernel: scsi(11): mbox 2 0x5555 
+Sep 15 17:49:31 lnx01 kernel: scsi(11): mbox 3 0xaa55 
+Sep 15 17:49:31 lnx01 kernel: scsi(11): mbox 4 0x55aa 
+Sep 15 17:49:31 lnx01 kernel: scsi(11): mbox 5 0xa5a5 
+Sep 15 17:49:31 lnx01 kernel: qla2300 0000:03:02.0: Failed to initialize adapter
+Sep 15 17:49:31 lnx01 kernel: qla2300: probe of 0000:03:02.0 failed with error -1
+
+--=-+R9nmNjR2/qlqU85AKBz--
 
