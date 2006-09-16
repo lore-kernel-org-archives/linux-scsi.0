@@ -1,74 +1,64 @@
-From: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
-Subject: RE: [PATCH] SCSI: Make megaraid_ioctl() check copy_to_user() return value
-Date: Fri, 15 Sep 2006 12:26:43 -0600
-Message-ID: <890BF3111FB9484E9526987D912B261932E37D@NAMAIL3.ad.lsil.com>
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: Linux 2.6.18-rc6
+Date: Fri, 15 Sep 2006 23:47:04 -0400
+Message-ID: <1158378424.2661.150.camel@fc6.xsintricity.com>
+References: <Pine.LNX.4.64.0609031939100.27779@g5.osdl.org>
+	 <20060905122656.GA3650@aepfle.de>
+	 <1157490066.3463.73.camel@mulgrave.il.steeleye.com>
+	 <20060906110147.GA12101@aepfle.de>
+	 <1157551480.3469.8.camel@mulgrave.il.steeleye.com>
+	 <20060907091517.GA21728@aepfle.de>
+	 <1157637874.3462.8.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:56716 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S932138AbWIOS1L convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Sep 2006 14:27:11 -0400
-Content-class: urn:content-classes:message
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Z7ubKhyjYxFWzD1CqxBl"
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932398AbWIPDre@vger.kernel.org>
+In-Reply-To: <1157637874.3462.8.camel@mulgrave.il.steeleye.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Olaf Hering <olaf@aepfle.de>, Linus Torvalds <torvalds@osdl.org>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Jesper Juhl <jesper.juhl@gmail.com>, linux-kernel@vger.kernel.org
-Cc: "Kolli, Neela" <Neela.Kolli@engenio.com>, linux-scsi@vger.kernel.org, akpm@osdl.org, James.Bottomley@steeleye.com
 
-Hi,
 
-On Friday, September 15, 2006 8:43 AM, Jesper Juhl wrote:
-> Check copy_to_user() return value in 
-> drivers/scsi/megaraid.c::megadev_ioctl()
-> This gets rid of this little warning:
->   drivers/scsi/megaraid.c:3661: warning: ignoring return 
-> value of 'copy_to_user', declared with attribute warn_unused_result
-ACK - Thank you for correction, Jesper. 
+--=-Z7ubKhyjYxFWzD1CqxBl
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Seokmann
+On Thu, 2006-09-07 at 09:04 -0500, James Bottomley wrote:
+> On Thu, 2006-09-07 at 11:15 +0200, Olaf Hering wrote:
+> > This does not work: ahc_linux_get_signalling: f 56f6
+> >=20
+> > echo $(( 0x56f6 & 0x00002 )) gives 2, and the ahc_inb is called.
+>=20
+> Erm, there's something else going on then:  An ultra 2 card has to have
+> this register.  It's used to signal mode changes in
+> ahc_handle_scsiint().  The piece of code in there will trigger and read
+> this register for any ultra 2 + controller every time there's an error
+> (just to see if the bus mode changed).
 
-> -----Original Message-----
-> From: Jesper Juhl [mailto:jesper.juhl@gmail.com] 
-> Sent: Friday, September 15, 2006 8:43 AM
-> To: linux-kernel@vger.kernel.org
-> Cc: Ju, Seokmann; Kolli, Neela; linux-scsi@vger.kernel.org; 
-> akpm@osdl.org; James.Bottomley@steeleye.com; jesper.juhl@gmail.com
-> Subject: [PATCH] SCSI: Make megaraid_ioctl() check 
-> copy_to_user() return value
-> 
-> 
-> Check copy_to_user() return value in 
-> drivers/scsi/megaraid.c::megadev_ioctl()
-> This gets rid of this little warning:
->   drivers/scsi/megaraid.c:3661: warning: ignoring return 
-> value of 'copy_to_user', declared with attribute warn_unused_result
-> 
-> 
-> Signed-off-by: Jesper Juhl <jesper.juhl@gmail.com>
-> ---
-> 
->  drivers/scsi/megaraid.c |    5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
-> 
-> --- linux-2.6.18-rc7-git1-orig/drivers/scsi/megaraid.c	
-> 2006-09-15 13:51:15.121774000 +0200
-> +++ linux-2.6.18-rc7-git1/drivers/scsi/megaraid.c	
-> 2006-09-15 14:27:32.377407763 +0200
-> @@ -3658,8 +3658,9 @@ megadev_ioctl(struct inode *inode, struc
->  			 * Send the request sense data also, 
-> irrespective of
->  			 * whether the user has asked for it or not.
->  			 */
-> -			copy_to_user(upthru->reqsensearea,
-> -					pthru->reqsensearea, 14);
-> +			if (copy_to_user(upthru->reqsensearea,
-> +					pthru->reqsensearea, 14))
-> +				rval = -EFAULT;
->  
->  freemem_and_return:
->  			if( pthru->dataxferlen ) {
-> 
-> 
-> 
-> 
+Sorry for my belated response, but this usually happens when you access
+an aic chipset too soon after a chip reset.  Try putting a delay before
+whatever access is causing this to see if it make s difference.  Common
+problems include after a chip reset, touching any register will cause
+the card to reset, etc.
+
+--=20
+Doug Ledford <dledford@redhat.com>
+              GPG KeyID: CFBFF194
+              http://people.redhat.com/dledford
+
+Infiniband specific RPMs available at
+              http://people.redhat.com/dledford/Infiniband
+
+--=-Z7ubKhyjYxFWzD1CqxBl
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBFC3O4g6WylM+/8ZQRAkMoAJ9bMRVyQVN8CAIQbMeCe1wMX8MrXACgkUbl
+D67khWM951RMKhHG5JOmn7E=
+=lKOW
+-----END PGP SIGNATURE-----
+
+--=-Z7ubKhyjYxFWzD1CqxBl--
