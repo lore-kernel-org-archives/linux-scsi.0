@@ -1,7 +1,7 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
+From: Doug Ledford <dledford@redhat.com>
 Subject: Re: Linux 2.6.18-rc6
-Date: Sun, 17 Sep 2006 09:05:09 -0500
-Message-ID: <1158501909.3485.1.camel@mulgrave.il.steeleye.com>
+Date: Sun, 17 Sep 2006 14:17:01 -0400
+Message-ID: <1158517021.17671.74.camel@fc6.xsintricity.com>
 References: <Pine.LNX.4.64.0609031939100.27779@g5.osdl.org>
 	 <20060905122656.GA3650@aepfle.de>
 	 <1157490066.3463.73.camel@mulgrave.il.steeleye.com>
@@ -11,32 +11,66 @@ References: <Pine.LNX.4.64.0609031939100.27779@g5.osdl.org>
 	 <1157637874.3462.8.camel@mulgrave.il.steeleye.com>
 	 <1158378424.2661.150.camel@fc6.xsintricity.com>
 	 <20060917053815.GA10918@aepfle.de>
+	 <1158501909.3485.1.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:48525 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1750989AbWIQOFf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 17 Sep 2006 10:05:35 -0400
-In-Reply-To: <20060917053815.GA10918@aepfle.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-DB8a90PxLJDkYspP0xCs"
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751157AbWIQSRT@vger.kernel.org>
+In-Reply-To: <1158501909.3485.1.camel@mulgrave.il.steeleye.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Olaf Hering <olaf@aepfle.de>, Linus Torvalds <torvalds@osdl.org>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Olaf Hering <olaf@aepfle.de>
-Cc: Doug Ledford <dledford@redhat.com>, Linus Torvalds <torvalds@osdl.org>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-
-On Sun, 2006-09-17 at 07:38 +0200, Olaf Hering wrote:
-> As pointed out in private mail, this patch fixes the machine check for
-> me. Thanks Doug.
-> 
-> Maybe the AHC_ULTRA2 feature check is needed as well for other cards.
-
-It is ... the non ULTRA2 non twin cards might not have this register
-(and if they do, it doesn't reflect the LVD/SE bus setting).
-
-This is a pretty significant alteration, so it's not a -rc candidate,
-but I'll put it in scsi-misc and see how it works out.
-
-James
 
 
+--=-DB8a90PxLJDkYspP0xCs
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Sun, 2006-09-17 at 09:05 -0500, James Bottomley wrote:
+> On Sun, 2006-09-17 at 07:38 +0200, Olaf Hering wrote:
+> > As pointed out in private mail, this patch fixes the machine check for
+> > me. Thanks Doug.
+> >=20
+> > Maybe the AHC_ULTRA2 feature check is needed as well for other cards.
+>=20
+> It is ... the non ULTRA2 non twin cards might not have this register
+> (and if they do, it doesn't reflect the LVD/SE bus setting).
+>=20
+> This is a pretty significant alteration, so it's not a -rc candidate,
+> but I'll put it in scsi-misc and see how it works out.
+
+No, it's present on all cards.  Reading it for signaling may not be
+needed on non-ultra 2 cards (as far as LVD goes), but it won't hurt.
+However, all the other places this particular register is touched in the
+driver, the card is already paused.  Olaf's problem may be that this is
+one of the registers that require the sequencer be paused before you
+touch it.  Depending on the chipset, if you touch a pause only register,
+it either pukes up like Olaf is seeing or auto pauses the chip.  I had
+thought that all the Ultra2 chipsets did autopause, but maybe the
+current driver disables that (and even if it did autopause, you would
+still need an unpause or else the card stops until the next time
+something happens that includes a pause/unpause pair).  Anyway, I asked
+Olaf to try wrapping the read in an ahc_lock/unlock and pause/unpause
+pair to see if it makes a difference.  We'll see.
+
+--=20
+Doug Ledford <dledford@redhat.com>
+              GPG KeyID: CFBFF194
+              http://people.redhat.com/dledford
+
+Infiniband specific RPMs available at
+              http://people.redhat.com/dledford/Infiniband
+
+--=-DB8a90PxLJDkYspP0xCs
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.5 (GNU/Linux)
+
+iD8DBQBFDZEdg6WylM+/8ZQRArL6AJ9cNCzYKI8eMuhDH0oagHa2BMhAcACfa5ck
+OwqNEePaNqgWQ8+Psn7xul4=
+=CQjC
+-----END PGP SIGNATURE-----
+
+--=-DB8a90PxLJDkYspP0xCs--
