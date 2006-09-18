@@ -1,36 +1,29 @@
-From: Konrad Rzeszutek <konradr@redhat.com>
-Subject: [PATCH] aic94xx: Compile problem on s390
-Date: Mon, 18 Sep 2006 15:15:45 -0400
-Message-ID: <20060918191545.GA10525@krzeszut.users.redhat.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] aic94xx: Compile problem on s390
+Date: Mon, 18 Sep 2006 13:21:38 -0600
+Message-ID: <20060918192138.GR2585@parisc-linux.org>
+References: <20060918191545.GA10525@krzeszut.users.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:37270 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S1751694AbWIRTPe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Sep 2006 15:15:34 -0400
+Received: from palinux.external.hp.com ([192.25.206.14]:22415 "EHLO
+	mail.parisc-linux.org") by vger.kernel.org with ESMTP
+	id S1751783AbWIRTVj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Sep 2006 15:21:39 -0400
 Content-Disposition: inline
+In-Reply-To: <20060918191545.GA10525@krzeszut.users.redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, alexisb@us.ibm.com
+To: Konrad Rzeszutek <konradr@redhat.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, alexisb@us.ibm.com
 
-The aic94xx driver in my-scsi and aic94xx James Bottomley tree does not
-compile on s390. Since the driver is generic, it makes sense to fix.
-The patch is quite simple:
+On Mon, Sep 18, 2006 at 03:15:45PM -0400, Konrad Rzeszutek wrote:
+> The aic94xx driver in my-scsi and aic94xx James Bottomley tree does not
+> compile on s390. Since the driver is generic, it makes sense to fix.
 
+Erm, well, I don't think there's any s390s with PCI ;-)
 
-diff -uNr linux-2.6.17.noarch.orig/include/scsi/libsas.h linux-2.6.17.noarch/include/scsi/libsas.h
---- linux-2.6.17.noarch.orig/include/scsi/libsas.h	2006-09-11 16:29:48.000000000 -0400
-+++ linux-2.6.17.noarch/include/scsi/libsas.h	2006-09-11 16:34:33.000000000 -0400
-@@ -32,6 +32,7 @@
- #include <scsi/sas.h>
- #include <linux/list.h>
- #include <asm/semaphore.h>
-+#include <asm/scatterlist.h>
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_transport_sas.h>
--- 
-Konrad Rzeszutek 1-(978)-392-3903 or 1-(617)-693-1718
-IBM on-site partner.
+> The patch is quite simple:
+> +#include <asm/scatterlist.h>
+
+Surely should be linux/scatterlist.h?
