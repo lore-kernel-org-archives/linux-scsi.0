@@ -1,26 +1,54 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [Patch] SCSI statistics
-Date: Mon, 18 Sep 2006 15:34:24 -0600
-Message-ID: <20060918213424.GS2585@parisc-linux.org>
-References: <1158578439.3060.50.camel@dyn-9-152-230-71.boeblingen.de.ibm.com> <1158614913.3182.78.camel@laptopd505.fenrus.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH v3] libsas: move ATA bits into a separate module
+Date: Mon, 18 Sep 2006 17:47:24 -0400
+Message-ID: <450F13EC.2020303@garzik.org>
+References: <4508A0A2.2080605@us.ibm.com> <450971D3.2040405@garzik.org> <4509DA77.7000508@us.ibm.com> <20060918190033.GD17670@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:61580 "EHLO
-	mail.parisc-linux.org") by vger.kernel.org with ESMTP
-	id S1751093AbWIRVe0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Sep 2006 17:34:26 -0400
-Content-Disposition: inline
-In-Reply-To: <1158614913.3182.78.camel@laptopd505.fenrus.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20060918190033.GD17670@infradead.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong" <djwong@us.ibm.com>, Andrew Morton <akpm@osdl.org>
+Cc: linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>, Mike Anderson <andmike@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: Martin Peschke <mp3@de.ibm.com>, linux-scsi@vger.kernel.org
 
-On Mon, Sep 18, 2006 at 11:28:32PM +0200, Arjan van de Ven wrote:
-> wouldn't this be nicer as a block level functionality?
+Christoph Hellwig wrote:
+> On Thu, Sep 14, 2006 at 03:40:55PM -0700, Darrick J. Wong wrote:
+>> Jeff Garzik wrote:
+>>
+>>> I disagree completely with this approach.
+>>>
+>>> You don't need a table of hooks for the case where libata is disabled in
+>>> .config.  Thus, it's only useful for the case where libsas is loaded as
+>>> a module, but libata is not.
+>> Indeed, I misunderstood what James Bottomley wanted, so I reworked the
+>> patch.  It has the same functionality as before, but this module uses
+>> the module loader/symbol resolver for all the functions in libata, and
+>> allows libsas to (optionally) call into sas_ata with weak references by
+>> pushing a table of the necessary function pointers into libsas at
+>> sas_ata load time.  Thus, libsas doesn't need to load libata/sas_ata
+>> unless it actually finds a SATA device.
+> 
+> NACK again.  Week references are bad.  Please change it back to normal
+> hard references so that it works like everything else in the kernel.
 
-We already have block layer statistics.  What we don't have are stats
-that measure the other ways to send commands to scsi devices like SG and
-retries that the scsi system does without notifying the block layer.  I
-think both are useful (although at first glance they seem redundant).
+I strongly agree.
+
+The kernel code will bloat, and performance will suffer, if we did weak 
+refs and jump tables everywhere.
+
+I just don't see the overhead of loading libata, and not using it, as a 
+huge penalty, when looking at the alternatives.
+
+Consider the common use cases:  (a) normal distro usage, often servers 
+where libata loading will be common anyway due to SATA presence on 
+motherboard, and (b) embedded use, where ATA support can be .config'd 
+out at compile time.
+
+Thus, the use cases where end users really will care about libata being 
+loaded, but not used, are slim to none.
+
+	Jeff
+
+
