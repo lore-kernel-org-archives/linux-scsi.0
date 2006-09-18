@@ -1,398 +1,266 @@
 From: Andreas Herrmann <aherrman@de.ibm.com>
-Subject: [PATCH 2/6] zfcp: create private slab caches to guarantee proper data alignment
-Date: Mon, 18 Sep 2006 22:28:49 +0200
-Message-ID: <20060918202849.GA10489@lion28.ibm.com>
+Subject: [PATCH 3/6] zfcp: fix: use correct req_id in eh_abort_handler
+Date: Mon, 18 Sep 2006 22:29:20 +0200
+Message-ID: <20060918202920.GA10496@lion28.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate2.de.ibm.com ([195.212.29.151]:41514 "EHLO
-	mtagate2.de.ibm.com") by vger.kernel.org with ESMTP id S964930AbWIRUdg
+Received: from mtagate1.de.ibm.com ([195.212.29.150]:38456 "EHLO
+	mtagate1.de.ibm.com") by vger.kernel.org with ESMTP id S964933AbWIRUeH
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Sep 2006 16:33:36 -0400
+	Mon, 18 Sep 2006 16:34:07 -0400
 Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
-	by mtagate2.de.ibm.com (8.13.8/8.13.8) with ESMTP id k8IKXZY7104762
-	for <linux-scsi@vger.kernel.org>; Mon, 18 Sep 2006 20:33:35 GMT
+	by mtagate1.de.ibm.com (8.13.8/8.13.8) with ESMTP id k8IKY6nn021150
+	for <linux-scsi@vger.kernel.org>; Mon, 18 Sep 2006 20:34:06 GMT
 Received: from d12av02.megacenter.de.ibm.com (d12av02.megacenter.de.ibm.com [9.149.165.228])
-	by d12nrmr1607.megacenter.de.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id k8IKcJNj2637976
-	for <linux-scsi@vger.kernel.org>; Mon, 18 Sep 2006 22:38:19 +0200
+	by d12nrmr1607.megacenter.de.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id k8IKcolK2949248
+	for <linux-scsi@vger.kernel.org>; Mon, 18 Sep 2006 22:38:50 +0200
 Received: from d12av02.megacenter.de.ibm.com (loopback [127.0.0.1])
-	by d12av02.megacenter.de.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k8IKXYib013926
-	for <linux-scsi@vger.kernel.org>; Mon, 18 Sep 2006 22:33:35 +0200
+	by d12av02.megacenter.de.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k8IKY5H9014085
+	for <linux-scsi@vger.kernel.org>; Mon, 18 Sep 2006 22:34:06 +0200
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jejb@steeleye.com>
-Cc: Linux SCSI <linux-scsi@vger.kernel.org>, Heiko Carstens <heiko.carstens@de.ibm.com>
+Cc: Linux SCSI <linux-scsi@vger.kernel.org>
 
-From: Heiko Carstens <heiko.carstens@de.ibm.com>
+zfcp: fix: use correct req_id in eh_abort_handler
 
-zfcp: create private slab caches to guarantee proper data alignment
+zfcp's eh_abort_handler used the wrong request ID to
+identify the request to be aborted. The bug was introduced
+with commit fea9d6c7bcd8ff1d60ff74f27ba483b3820b18a3
+for improved management of request IDs. The bug is
+fixed with this patch.
 
-Create private slab caches in order to guarantee proper alignment of
-data structures that get passed to hardware.
-
-Sidenote: with this patch slab cache debugging will finally work on s390
-(at least no known problems left).
-
-Furthermore this patch does some minor cleanups:
-- use do { } while (0) constructs instead of empty defines to avoid subtle
-compile bugs
-- store ptr for transport template in struct zfcp_data
-
-Signed-off-by: Heiko Carstens <heiko.carstens@de.ibm.com>
 Signed-off-by: Andreas Herrmann <aherrman@de.ibm.com>
 ---
- drivers/s390/scsi/zfcp_aux.c  |   76 +++++++++++++++++++++++++++++++----------
- drivers/s390/scsi/zfcp_def.h  |   24 ++++++++-----
- drivers/s390/scsi/zfcp_ext.h  |    1 -
- drivers/s390/scsi/zfcp_fsf.c  |   33 ++++++++++++------
- drivers/s390/scsi/zfcp_scsi.c |    5 +--
- 5 files changed, 96 insertions(+), 43 deletions(-)
+ drivers/s390/scsi/zfcp_aux.c  |    4 +++
+ drivers/s390/scsi/zfcp_dbf.c  |   13 ++++----
+ drivers/s390/scsi/zfcp_ext.h  |    2 +
+ drivers/s390/scsi/zfcp_fsf.c  |    9 +++---
+ drivers/s390/scsi/zfcp_scsi.c |   63 ++++++++++++++++++-----------------------
+ 5 files changed, 42 insertions(+), 49 deletions(-)
 
 diff --git a/drivers/s390/scsi/zfcp_aux.c b/drivers/s390/scsi/zfcp_aux.c
-index adc9d8f..d2b094d 100644
+index d2b094d..504c921 100644
 --- a/drivers/s390/scsi/zfcp_aux.c
 +++ b/drivers/s390/scsi/zfcp_aux.c
-@@ -299,11 +299,45 @@ zfcp_init_device_configure(void)
- 	return;
+@@ -189,6 +189,10 @@ struct zfcp_fsf_req *zfcp_reqlist_ismemb
+ 	struct zfcp_fsf_req *request, *tmp;
+ 	unsigned int i;
+ 
++	/* 0 is reserved as an invalid req_id */
++	if (req_id == 0)
++		return NULL;
++
+ 	i = req_id % REQUEST_LIST_SIZE;
+ 
+ 	list_for_each_entry_safe(request, tmp, &adapter->req_list[i], list)
+diff --git a/drivers/s390/scsi/zfcp_dbf.c b/drivers/s390/scsi/zfcp_dbf.c
+index c033145..0aa3b1a 100644
+--- a/drivers/s390/scsi/zfcp_dbf.c
++++ b/drivers/s390/scsi/zfcp_dbf.c
+@@ -707,7 +707,7 @@ _zfcp_scsi_dbf_event_common(const char *
+ 			    struct zfcp_adapter *adapter,
+ 			    struct scsi_cmnd *scsi_cmnd,
+ 			    struct zfcp_fsf_req *fsf_req,
+-			    struct zfcp_fsf_req *old_fsf_req)
++			    unsigned long old_req_id)
+ {
+ 	struct zfcp_scsi_dbf_record *rec = &adapter->scsi_dbf_buf;
+ 	struct zfcp_dbf_dump *dump = (struct zfcp_dbf_dump *)rec;
+@@ -768,8 +768,7 @@ _zfcp_scsi_dbf_event_common(const char *
+ 				rec->fsf_seqno = fsf_req->seq_no;
+ 				rec->fsf_issued = fsf_req->issued;
+ 			}
+-			rec->type.old_fsf_reqid =
+-				    (unsigned long) old_fsf_req;
++			rec->type.old_fsf_reqid = old_req_id;
+ 		} else {
+ 			strncpy(dump->tag, "dump", ZFCP_DBF_TAG_SIZE);
+ 			dump->total_size = buflen;
+@@ -794,17 +793,17 @@ zfcp_scsi_dbf_event_result(const char *t
+ 			   struct zfcp_fsf_req *fsf_req)
+ {
+ 	_zfcp_scsi_dbf_event_common("rslt", tag, level,
+-			adapter, scsi_cmnd, fsf_req, NULL);
++			adapter, scsi_cmnd, fsf_req, 0);
  }
  
-+static int calc_alignment(int size)
-+{
-+	int align = 1;
-+
-+	if (!size)
-+		return 0;
-+
-+	while ((size - align) > 0)
-+		align <<= 1;
-+
-+	return align;
-+}
-+
- static int __init
- zfcp_module_init(void)
+ inline void
+ zfcp_scsi_dbf_event_abort(const char *tag, struct zfcp_adapter *adapter,
+ 			  struct scsi_cmnd *scsi_cmnd,
+ 			  struct zfcp_fsf_req *new_fsf_req,
+-			  struct zfcp_fsf_req *old_fsf_req)
++			  unsigned long old_req_id)
  {
-+	int retval = -ENOMEM;
-+	int size, align;
+ 	_zfcp_scsi_dbf_event_common("abrt", tag, 1,
+-			adapter, scsi_cmnd, new_fsf_req, old_fsf_req);
++			adapter, scsi_cmnd, new_fsf_req, old_req_id);
+ }
+ 
+ inline void
+@@ -814,7 +813,7 @@ zfcp_scsi_dbf_event_devreset(const char 
+ 	struct zfcp_adapter *adapter = unit->port->adapter;
+ 
+ 	_zfcp_scsi_dbf_event_common(flag == FCP_TARGET_RESET ? "trst" : "lrst",
+-			tag, 1, adapter, scsi_cmnd, NULL, NULL);
++			tag, 1, adapter, scsi_cmnd, NULL, 0);
+ }
+ 
+ static int
+diff --git a/drivers/s390/scsi/zfcp_ext.h b/drivers/s390/scsi/zfcp_ext.h
+index 4f4ef0c..710ebbf 100644
+--- a/drivers/s390/scsi/zfcp_ext.h
++++ b/drivers/s390/scsi/zfcp_ext.h
+@@ -185,7 +185,7 @@ extern void zfcp_scsi_dbf_event_result(c
+ 				       struct zfcp_fsf_req *);
+ extern void zfcp_scsi_dbf_event_abort(const char *, struct zfcp_adapter *,
+ 				      struct scsi_cmnd *, struct zfcp_fsf_req *,
+-				      struct zfcp_fsf_req *);
++				      unsigned long);
+ extern void zfcp_scsi_dbf_event_devreset(const char *, u8, struct zfcp_unit *,
+ 					 struct scsi_cmnd *);
+ extern void zfcp_reqlist_add(struct zfcp_adapter *, struct zfcp_fsf_req *);
+diff --git a/drivers/s390/scsi/zfcp_fsf.c b/drivers/s390/scsi/zfcp_fsf.c
+index 4913ffb..a66b519 100644
+--- a/drivers/s390/scsi/zfcp_fsf.c
++++ b/drivers/s390/scsi/zfcp_fsf.c
+@@ -3527,7 +3527,7 @@ zfcp_fsf_send_fcp_command_task(struct zf
+ 	fsf_req->unit = unit;
+ 
+ 	/* associate FSF request with SCSI request (for look up on abort) */
+-	scsi_cmnd->host_scribble = (char *) fsf_req;
++	scsi_cmnd->host_scribble = (unsigned char *) fsf_req->req_id;
+ 
+ 	/* associate SCSI command with FSF request */
+ 	fsf_req->data = (unsigned long) scsi_cmnd;
+@@ -4667,7 +4667,6 @@ zfcp_fsf_req_create(struct zfcp_adapter 
+ {
+ 	volatile struct qdio_buffer_element *sbale;
+ 	struct zfcp_fsf_req *fsf_req = NULL;
+-	unsigned long flags;
+ 	int ret = 0;
+ 	struct zfcp_qdio_queue *req_queue = &adapter->request_queue;
+ 
+@@ -4684,10 +4683,10 @@ zfcp_fsf_req_create(struct zfcp_adapter 
+ 	fsf_req->fsf_command = fsf_cmd;
+ 	INIT_LIST_HEAD(&fsf_req->list);
+ 	
+-	/* unique request id */
+-	spin_lock_irqsave(&adapter->req_list_lock, flags);
++	/* this is serialized (we are holding req_queue-lock of adapter */
++	if (adapter->req_no == 0)
++		adapter->req_no++;
+ 	fsf_req->req_id = adapter->req_no++;
+-	spin_unlock_irqrestore(&adapter->req_list_lock, flags);
+ 
+         zfcp_fsf_req_qtcb_init(fsf_req);
+ 
+diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
+index 4857ccc..043ed7c 100644
+--- a/drivers/s390/scsi/zfcp_scsi.c
++++ b/drivers/s390/scsi/zfcp_scsi.c
+@@ -378,16 +378,15 @@ zfcp_unit_lookup(struct zfcp_adapter *ad
+  * will handle late commands.  (Usually, the normal completion of late
+  * commands is ignored with respect to the running abort operation.)
+  */
+-int
+-zfcp_scsi_eh_abort_handler(struct scsi_cmnd *scpnt)
++int zfcp_scsi_eh_abort_handler(struct scsi_cmnd *scpnt)
+ {
+  	struct Scsi_Host *scsi_host;
+  	struct zfcp_adapter *adapter;
+ 	struct zfcp_unit *unit;
+-	int retval = SUCCESS;
+-	struct zfcp_fsf_req *new_fsf_req = NULL;
+-	struct zfcp_fsf_req *old_fsf_req;
++	struct zfcp_fsf_req *fsf_req;
+ 	unsigned long flags;
++	unsigned long old_req_id;
++	int retval = SUCCESS;
+ 
+ 	scsi_host = scpnt->device->host;
+ 	adapter = (struct zfcp_adapter *) scsi_host->hostdata[0];
+@@ -399,55 +398,47 @@ zfcp_scsi_eh_abort_handler(struct scsi_c
+ 	/* avoid race condition between late normal completion and abort */
+ 	write_lock_irqsave(&adapter->abort_lock, flags);
+ 
+-	/*
+-	 * Check whether command has just completed and can not be aborted.
+-	 * Even if the command has just been completed late, we can access
+-	 * scpnt since the SCSI stack does not release it at least until
+-	 * this routine returns. (scpnt is parameter passed to this routine
+-	 * and must not disappear during abort even on late completion.)
+-	 */
+-	old_fsf_req = (struct zfcp_fsf_req *) scpnt->host_scribble;
+-	if (!old_fsf_req) {
++	/* Check whether corresponding fsf_req is still pending */
++	spin_lock(&adapter->req_list_lock);
++	fsf_req = zfcp_reqlist_ismember(adapter, (unsigned long)
++					scpnt->host_scribble);
++	spin_unlock(&adapter->req_list_lock);
++	if (!fsf_req) {
+ 		write_unlock_irqrestore(&adapter->abort_lock, flags);
+-		zfcp_scsi_dbf_event_abort("lte1", adapter, scpnt, NULL, NULL);
++		zfcp_scsi_dbf_event_abort("lte1", adapter, scpnt, NULL, 0);
+ 		retval = SUCCESS;
+ 		goto out;
+ 	}
+-	old_fsf_req->data = 0;
+-	old_fsf_req->status |= ZFCP_STATUS_FSFREQ_ABORTING;
++	fsf_req->data = 0;
++	fsf_req->status |= ZFCP_STATUS_FSFREQ_ABORTING;
++	old_req_id = fsf_req->req_id;
+ 
+-	/* don't access old_fsf_req after releasing the abort_lock */
++	/* don't access old fsf_req after releasing the abort_lock */
+ 	write_unlock_irqrestore(&adapter->abort_lock, flags);
+-	/* call FSF routine which does the abort */
+-	new_fsf_req = zfcp_fsf_abort_fcp_command((unsigned long) old_fsf_req,
+-						 adapter, unit, 0);
+-	if (!new_fsf_req) {
 +
-+	size = sizeof(struct zfcp_fsf_req_qtcb);
-+	align = calc_alignment(size);
-+	zfcp_data.fsf_req_qtcb_cache =
-+		kmem_cache_create("zfcp_fsf", size, align, 0, NULL, NULL);
-+	if (!zfcp_data.fsf_req_qtcb_cache)
-+		goto out;
- 
--	int retval = 0;
-+	size = sizeof(struct fsf_status_read_buffer);
-+	align = calc_alignment(size);
-+	zfcp_data.sr_buffer_cache =
-+		kmem_cache_create("zfcp_sr", size, align, 0, NULL, NULL);
-+	if (!zfcp_data.sr_buffer_cache)
-+		goto out_sr_cache;
-+
-+	size = sizeof(struct zfcp_gid_pn_data);
-+	align = calc_alignment(size);
-+	zfcp_data.gid_pn_cache =
-+		kmem_cache_create("zfcp_gid", size, align, 0, NULL, NULL);
-+	if (!zfcp_data.gid_pn_cache)
-+		goto out_gid_cache;
- 
- 	atomic_set(&zfcp_data.loglevel, loglevel);
- 
-@@ -313,15 +347,16 @@ zfcp_module_init(void)
- 	/* initialize adapters to be removed list head */
- 	INIT_LIST_HEAD(&zfcp_data.adapter_remove_lh);
- 
--	zfcp_transport_template = fc_attach_transport(&zfcp_transport_functions);
--	if (!zfcp_transport_template)
--		return -ENODEV;
-+	zfcp_data.scsi_transport_template =
-+		fc_attach_transport(&zfcp_transport_functions);
-+	if (!zfcp_data.scsi_transport_template)
-+		goto out_transport;
- 
- 	retval = misc_register(&zfcp_cfdc_misc);
- 	if (retval != 0) {
- 		ZFCP_LOG_INFO("registration of misc device "
- 			      "zfcp_cfdc failed\n");
--		goto out;
-+		goto out_misc;
++	fsf_req = zfcp_fsf_abort_fcp_command(old_req_id, adapter, unit, 0);
++	if (!fsf_req) {
+ 		ZFCP_LOG_INFO("error: initiation of Abort FCP Cmnd failed\n");
+ 		zfcp_scsi_dbf_event_abort("nres", adapter, scpnt, NULL,
+-					  old_fsf_req);
++					  old_req_id);
+ 		retval = FAILED;
+ 		goto out;
  	}
  
- 	ZFCP_LOG_TRACE("major/minor for zfcp_cfdc: %d/%d\n",
-@@ -333,9 +368,6 @@ zfcp_module_init(void)
- 	/* initialise configuration rw lock */
- 	rwlock_init(&zfcp_data.config_lock);
+-	/* wait for completion of abort */
+-	__wait_event(new_fsf_req->completion_wq,
+-		     new_fsf_req->status & ZFCP_STATUS_FSFREQ_COMPLETED);
++	__wait_event(fsf_req->completion_wq,
++		     fsf_req->status & ZFCP_STATUS_FSFREQ_COMPLETED);
  
--	/* save address of data structure managing the driver module */
--	zfcp_data.scsi_host_template.module = THIS_MODULE;
--
- 	/* setup dynamic I/O */
- 	retval = zfcp_ccw_register();
- 	if (retval) {
-@@ -350,6 +382,14 @@ zfcp_module_init(void)
- 
-  out_ccw_register:
- 	misc_deregister(&zfcp_cfdc_misc);
-+ out_misc:
-+	fc_release_transport(zfcp_data.scsi_transport_template);
-+ out_transport:
-+	kmem_cache_destroy(zfcp_data.gid_pn_cache);
-+ out_gid_cache:
-+	kmem_cache_destroy(zfcp_data.sr_buffer_cache);
-+ out_sr_cache:
-+	kmem_cache_destroy(zfcp_data.fsf_req_qtcb_cache);
+-	/* status should be valid since signals were not permitted */
+-	if (new_fsf_req->status & ZFCP_STATUS_FSFREQ_ABORTSUCCEEDED) {
+-		zfcp_scsi_dbf_event_abort("okay", adapter, scpnt, new_fsf_req,
+-					  NULL);
++	if (fsf_req->status & ZFCP_STATUS_FSFREQ_ABORTSUCCEEDED) {
++		zfcp_scsi_dbf_event_abort("okay", adapter, scpnt, fsf_req, 0);
+ 		retval = SUCCESS;
+-	} else if (new_fsf_req->status & ZFCP_STATUS_FSFREQ_ABORTNOTNEEDED) {
+-		zfcp_scsi_dbf_event_abort("lte2", adapter, scpnt, new_fsf_req,
+-					  NULL);
++	} else if (fsf_req->status & ZFCP_STATUS_FSFREQ_ABORTNOTNEEDED) {
++		zfcp_scsi_dbf_event_abort("lte2", adapter, scpnt, fsf_req, 0);
+ 		retval = SUCCESS;
+ 	} else {
+-		zfcp_scsi_dbf_event_abort("fail", adapter, scpnt, new_fsf_req,
+-					  NULL);
++		zfcp_scsi_dbf_event_abort("fail", adapter, scpnt, fsf_req, 0);
+ 		retval = FAILED;
+ 	}
+-	zfcp_fsf_req_free(new_fsf_req);
++	zfcp_fsf_req_free(fsf_req);
   out:
  	return retval;
  }
-@@ -935,20 +975,20 @@ static int
- zfcp_allocate_low_mem_buffers(struct zfcp_adapter *adapter)
- {
- 	adapter->pool.fsf_req_erp =
--		mempool_create_kmalloc_pool(ZFCP_POOL_FSF_REQ_ERP_NR,
--				sizeof(struct zfcp_fsf_req_pool_element));
-+		mempool_create_slab_pool(ZFCP_POOL_FSF_REQ_ERP_NR,
-+					 zfcp_data.fsf_req_qtcb_cache);
- 	if (!adapter->pool.fsf_req_erp)
- 		return -ENOMEM;
- 
- 	adapter->pool.fsf_req_scsi =
--		mempool_create_kmalloc_pool(ZFCP_POOL_FSF_REQ_SCSI_NR,
--				sizeof(struct zfcp_fsf_req_pool_element));
-+		mempool_create_slab_pool(ZFCP_POOL_FSF_REQ_SCSI_NR,
-+					 zfcp_data.fsf_req_qtcb_cache);
- 	if (!adapter->pool.fsf_req_scsi)
- 		return -ENOMEM;
- 
- 	adapter->pool.fsf_req_abort =
--		mempool_create_kmalloc_pool(ZFCP_POOL_FSF_REQ_ABORT_NR,
--				sizeof(struct zfcp_fsf_req_pool_element));
-+		mempool_create_slab_pool(ZFCP_POOL_FSF_REQ_ABORT_NR,
-+					 zfcp_data.fsf_req_qtcb_cache);
- 	if (!adapter->pool.fsf_req_abort)
- 		return -ENOMEM;
- 
-@@ -959,14 +999,14 @@ zfcp_allocate_low_mem_buffers(struct zfc
- 		return -ENOMEM;
- 
- 	adapter->pool.data_status_read =
--		mempool_create_kmalloc_pool(ZFCP_POOL_STATUS_READ_NR,
--					sizeof(struct fsf_status_read_buffer));
-+		mempool_create_slab_pool(ZFCP_POOL_STATUS_READ_NR,
-+					 zfcp_data.sr_buffer_cache);
- 	if (!adapter->pool.data_status_read)
- 		return -ENOMEM;
- 
- 	adapter->pool.data_gid_pn =
--		mempool_create_kmalloc_pool(ZFCP_POOL_DATA_GID_PN_NR,
--					    sizeof(struct zfcp_gid_pn_data));
-+		mempool_create_slab_pool(ZFCP_POOL_DATA_GID_PN_NR,
-+					 zfcp_data.gid_pn_cache);
- 	if (!adapter->pool.data_gid_pn)
- 		return -ENOMEM;
- 
-diff --git a/drivers/s390/scsi/zfcp_def.h b/drivers/s390/scsi/zfcp_def.h
-index 94d1b74..ef1cd49 100644
---- a/drivers/s390/scsi/zfcp_def.h
-+++ b/drivers/s390/scsi/zfcp_def.h
-@@ -19,7 +19,6 @@
-  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. 
-  */ 
- 
--
- #ifndef ZFCP_DEF_H
- #define ZFCP_DEF_H
- 
-@@ -32,6 +31,10 @@ #include <linux/major.h>
- #include <linux/blkdev.h>
- #include <linux/delay.h>
- #include <linux/timer.h>
-+#include <linux/slab.h>
-+#include <linux/mempool.h>
-+#include <linux/syscalls.h>
-+#include <linux/ioctl.h>
- #include <scsi/scsi.h>
- #include <scsi/scsi_tcq.h>
- #include <scsi/scsi_cmnd.h>
-@@ -39,14 +42,11 @@ #include <scsi/scsi_device.h>
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_transport.h>
- #include <scsi/scsi_transport_fc.h>
--#include "zfcp_fsf.h"
- #include <asm/ccwdev.h>
- #include <asm/qdio.h>
- #include <asm/debug.h>
- #include <asm/ebcdic.h>
--#include <linux/mempool.h>
--#include <linux/syscalls.h>
--#include <linux/ioctl.h>
-+#include "zfcp_fsf.h"
- 
- 
- /********************* GENERAL DEFINES *********************************/
-@@ -543,7 +543,7 @@ do { \
- } while (0)
- 	
- #if ZFCP_LOG_LEVEL_LIMIT < ZFCP_LOG_LEVEL_NORMAL
--# define ZFCP_LOG_NORMAL(fmt, args...)
-+# define ZFCP_LOG_NORMAL(fmt, args...)	do { } while (0)
- #else
- # define ZFCP_LOG_NORMAL(fmt, args...) \
- do { \
-@@ -553,7 +553,7 @@ do { \
- #endif
- 
- #if ZFCP_LOG_LEVEL_LIMIT < ZFCP_LOG_LEVEL_INFO
--# define ZFCP_LOG_INFO(fmt, args...)
-+# define ZFCP_LOG_INFO(fmt, args...)	do { } while (0)
- #else
- # define ZFCP_LOG_INFO(fmt, args...) \
- do { \
-@@ -563,14 +563,14 @@ do { \
- #endif
- 
- #if ZFCP_LOG_LEVEL_LIMIT < ZFCP_LOG_LEVEL_DEBUG
--# define ZFCP_LOG_DEBUG(fmt, args...)
-+# define ZFCP_LOG_DEBUG(fmt, args...)	do { } while (0)
- #else
- # define ZFCP_LOG_DEBUG(fmt, args...) \
- 	ZFCP_LOG(ZFCP_LOG_LEVEL_DEBUG, fmt , ##args)
- #endif
- 
- #if ZFCP_LOG_LEVEL_LIMIT < ZFCP_LOG_LEVEL_TRACE
--# define ZFCP_LOG_TRACE(fmt, args...)
-+# define ZFCP_LOG_TRACE(fmt, args...)	do { } while (0)
- #else
- # define ZFCP_LOG_TRACE(fmt, args...) \
- 	ZFCP_LOG(ZFCP_LOG_LEVEL_TRACE, fmt , ##args)
-@@ -1016,6 +1016,7 @@ typedef void zfcp_fsf_req_handler_t(stru
- /* driver data */
- struct zfcp_data {
- 	struct scsi_host_template scsi_host_template;
-+	struct scsi_transport_template *scsi_transport_template;
-         atomic_t                status;             /* Module status flags */
- 	struct list_head	adapter_list_head;  /* head of adapter list */
- 	struct list_head	adapter_remove_lh;  /* head of adapters to be
-@@ -1031,6 +1032,9 @@ struct zfcp_data {
- 	wwn_t                   init_wwpn;
- 	fcp_lun_t               init_fcp_lun;
- 	char 			*driver_version;
-+	kmem_cache_t		*fsf_req_qtcb_cache;
-+	kmem_cache_t		*sr_buffer_cache;
-+	kmem_cache_t		*gid_pn_cache;
- };
- 
- /**
-@@ -1051,7 +1055,7 @@ #define ZFCP_POOL_STATUS_READ_NR	ZFCP_ST
- #define ZFCP_POOL_DATA_GID_PN_NR	1
- 
- /* struct used by memory pools for fsf_requests */
--struct zfcp_fsf_req_pool_element {
-+struct zfcp_fsf_req_qtcb {
- 	struct zfcp_fsf_req fsf_req;
- 	struct fsf_qtcb qtcb;
- };
-diff --git a/drivers/s390/scsi/zfcp_ext.h b/drivers/s390/scsi/zfcp_ext.h
-index b45d1bf..4f4ef0c 100644
---- a/drivers/s390/scsi/zfcp_ext.h
-+++ b/drivers/s390/scsi/zfcp_ext.h
-@@ -130,7 +130,6 @@ extern int zfcp_scsi_command_async(struc
- 				   struct scsi_cmnd *, struct timer_list *);
- extern int zfcp_scsi_command_sync(struct zfcp_unit *, struct scsi_cmnd *,
- 				  struct timer_list *);
--extern struct scsi_transport_template *zfcp_transport_template;
- extern struct fc_function_template zfcp_transport_functions;
- 
- /******************************** ERP ****************************************/
-diff --git a/drivers/s390/scsi/zfcp_fsf.c b/drivers/s390/scsi/zfcp_fsf.c
-index ff2eacf..4913ffb 100644
---- a/drivers/s390/scsi/zfcp_fsf.c
-+++ b/drivers/s390/scsi/zfcp_fsf.c
-@@ -100,14 +100,19 @@ zfcp_fsf_req_alloc(mempool_t *pool, int 
- 	if (req_flags & ZFCP_REQ_NO_QTCB)
- 		size = sizeof(struct zfcp_fsf_req);
- 	else
--		size = sizeof(struct zfcp_fsf_req_pool_element);
-+		size = sizeof(struct zfcp_fsf_req_qtcb);
- 
--	if (likely(pool != NULL))
-+	if (likely(pool))
- 		ptr = mempool_alloc(pool, GFP_ATOMIC);
--	else
--		ptr = kmalloc(size, GFP_ATOMIC);
-+	else {
-+		if (req_flags & ZFCP_REQ_NO_QTCB)
-+			ptr = kmalloc(size, GFP_ATOMIC);
-+		else
-+			ptr = kmem_cache_alloc(zfcp_data.fsf_req_qtcb_cache,
-+					       SLAB_ATOMIC);
-+	}
- 
--	if (unlikely(NULL == ptr))
-+	if (unlikely(!ptr))
- 		goto out;
- 
- 	memset(ptr, 0, size);
-@@ -115,9 +120,8 @@ zfcp_fsf_req_alloc(mempool_t *pool, int 
- 	if (req_flags & ZFCP_REQ_NO_QTCB) {
- 		fsf_req = (struct zfcp_fsf_req *) ptr;
- 	} else {
--		fsf_req = &((struct zfcp_fsf_req_pool_element *) ptr)->fsf_req;
--		fsf_req->qtcb =
--			&((struct zfcp_fsf_req_pool_element *) ptr)->qtcb;
-+		fsf_req = &((struct zfcp_fsf_req_qtcb *) ptr)->fsf_req;
-+		fsf_req->qtcb =	&((struct zfcp_fsf_req_qtcb *) ptr)->qtcb;
- 	}
- 
- 	fsf_req->pool = pool;
-@@ -139,10 +143,17 @@ zfcp_fsf_req_alloc(mempool_t *pool, int 
- void
- zfcp_fsf_req_free(struct zfcp_fsf_req *fsf_req)
- {
--	if (likely(fsf_req->pool != NULL))
-+	if (likely(fsf_req->pool)) {
- 		mempool_free(fsf_req, fsf_req->pool);
--	else
--		kfree(fsf_req);
-+		return;
-+	}
-+
-+	if (fsf_req->qtcb) {
-+		kmem_cache_free(zfcp_data.fsf_req_qtcb_cache, fsf_req);
-+		return;
-+	}
-+
-+	kfree(fsf_req);
- }
- 
- /**
-diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
-index 1bb5508..4857ccc 100644
---- a/drivers/s390/scsi/zfcp_scsi.c
-+++ b/drivers/s390/scsi/zfcp_scsi.c
-@@ -39,11 +39,10 @@ static struct zfcp_unit *zfcp_unit_looku
- 
- static struct device_attribute *zfcp_sysfs_sdev_attrs[];
- 
--struct scsi_transport_template *zfcp_transport_template;
--
- struct zfcp_data zfcp_data = {
- 	.scsi_host_template = {
- 		.name			= ZFCP_NAME,
-+		.module			= THIS_MODULE,
- 		.proc_name		= "zfcp",
- 		.slave_alloc		= zfcp_scsi_slave_alloc,
- 		.slave_configure	= zfcp_scsi_slave_configure,
-@@ -607,7 +606,7 @@ zfcp_adapter_scsi_register(struct zfcp_a
- 	adapter->scsi_host->max_channel = 0;
- 	adapter->scsi_host->unique_id = unique_id++;	/* FIXME */
- 	adapter->scsi_host->max_cmd_len = ZFCP_MAX_SCSI_CMND_LENGTH;
--	adapter->scsi_host->transportt = zfcp_transport_template;
-+	adapter->scsi_host->transportt = zfcp_data.scsi_transport_template;
- 
- 	/*
- 	 * save a pointer to our own adapter data structure within
 -- 
 1.4.2.1.g80823
 
