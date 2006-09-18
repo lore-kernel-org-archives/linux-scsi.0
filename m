@@ -1,44 +1,36 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] libsas: move ATA bits into a separate module
-Date: Mon, 18 Sep 2006 19:59:24 +0100
-Message-ID: <20060918185924.GC17670@infradead.org>
-References: <4508A0A2.2080605@us.ibm.com>
+Subject: Re: [PATCH] scsi: Switch some more scsi drivers to pci_get_device and refcounted pci structures
+Date: Mon, 18 Sep 2006 20:01:55 +0100
+Message-ID: <20060918190155.GE17670@infradead.org>
+References: <1158330872.29932.61.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:10445 "EHLO
+Received: from pentafluge.infradead.org ([213.146.154.40]:21453 "EHLO
 	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S932218AbWIRS7s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Sep 2006 14:59:48 -0400
+	id S1751808AbWIRTCS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Sep 2006 15:02:18 -0400
 Content-Disposition: inline
-In-Reply-To: <4508A0A2.2080605@us.ibm.com>
+In-Reply-To: <1158330872.29932.61.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Darrick J. Wong" <djwong@us.ibm.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>, Mike Anderson <andmike@us.ibm.com>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-On Wed, Sep 13, 2006 at 05:21:54PM -0700, Darrick J. Wong wrote:
-> Hi all,
+On Fri, Sep 15, 2006 at 03:34:32PM +0100, Alan Cox wrote:
+> Signed-off-by: Alan Cox <alan@redhat.com>
 > 
-> Per James Bottomley's request, I've moved all the libsas SATA support
-> code into a separate module, named sas_ata.  To satisfy his further
-> requirement that libsas not require libata (and vice versa), ata_sas
-> maintains fixed function pointer tables to various required functions
-> within libsas and libata.  Unfortunately, this means that libsas and
-> libata both require sas_ata, but sas_ata is smaller than libata.
-> Unloads of libata/libsas at inopportune moments are prevented by
-> increasing the refcounts on both modules whenever libsas detects a SATA
-> device (and decreasing it when the device goes away, of course).  If the
-> module is removed from the .config, then all of hooks into libsas/libata
-> should go away.
-> 
-> This is a rough-cut at separating out the ATA code; please let me know
-> what I can improve.  At the moment, I can load and talk to SATA disks
-> with the module enabled, as well as watch nothing happen if the module
-> is not config'd in.
+> diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.18-rc6-mm1/drivers/scsi/aic7xxx_old.c linux-2.6.18-rc6-mm1/drivers/scsi/aic7xxx_old.c
+> --- linux.vanilla-2.6.18-rc6-mm1/drivers/scsi/aic7xxx_old.c	2006-09-11 17:00:17.000000000 +0100
+> +++ linux-2.6.18-rc6-mm1/drivers/scsi/aic7xxx_old.c	2006-09-14 16:50:25.000000000 +0100
+> @@ -9194,7 +9194,7 @@
+>      for (i = 0; i < ARRAY_SIZE(aic_pdevs); i++)
+>      {
+>        pdev = NULL;
+> -      while ((pdev = pci_find_device(aic_pdevs[i].vendor_id,
+> +      while ((pdev = pci_get_device(aic_pdevs[i].vendor_id,
+>                                       aic_pdevs[i].device_id,
 
-I think this while idea is flawed.  Please separate out the ATA code
-so it can be compiled out whelibata isn't built in, but it defintly
-shouldn't be a separate module.  We're not doing any complexity like
-that in any other subsystem (we used to do for AGP but got rid of it
-again because it caused lots of problems).
+NACK.  This doesn't help us forward at all.  In case you have
+the hardware please do a full conversion to the real pci probing API.
+
