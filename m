@@ -1,115 +1,88 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: Linux 2.6.18-rc6
-Date: Sun, 17 Sep 2006 14:20:37 -0400
-Message-ID: <1158517237.17671.77.camel@fc6.xsintricity.com>
-References: <Pine.LNX.4.64.0609031939100.27779@g5.osdl.org>
-	 <20060905122656.GA3650@aepfle.de>
-	 <1157490066.3463.73.camel@mulgrave.il.steeleye.com>
-	 <20060906110147.GA12101@aepfle.de>
-	 <1157551480.3469.8.camel@mulgrave.il.steeleye.com>
-	 <20060907091517.GA21728@aepfle.de>
-	 <1157637874.3462.8.camel@mulgrave.il.steeleye.com>
-	 <1158378424.2661.150.camel@fc6.xsintricity.com>
-	 <20060917053815.GA10918@aepfle.de>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: AIC94XX discovery timeout problem details...
+Date: Mon, 18 Sep 2006 00:35:06 -0700 (PDT)
+Message-ID: <20060918073506.74938.qmail@web31807.mail.mud.yahoo.com>
+References: <20060915072030.GA25595@us.ibm.com>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-Y3/Nzo1eUZqO/PyoqrhJ"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:59528 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S932163AbWIQSU7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 17 Sep 2006 14:20:59 -0400
-In-Reply-To: <20060917053815.GA10918@aepfle.de>
+Received: from web31807.mail.mud.yahoo.com ([68.142.207.70]:34680 "HELO
+	web31807.mail.mud.yahoo.com") by vger.kernel.org with SMTP
+	id S1751540AbWIRHfH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Sep 2006 03:35:07 -0400
+In-Reply-To: <20060915072030.GA25595@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Olaf Hering <olaf@aepfle.de>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Linus Torvalds <torvalds@osdl.org>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: malahal@us.ibm.com, linux-scsi@vger.kernel.org
 
+--- malahal@us.ibm.com wrote:
+> I chased the time out problem and found that the PORTE_BYTES_DMAED port
+> event must be responded with a call to lldd_port_formed() which will
+> update PHY_IS_UP and port-links fields in DDB 0. As there is a single
+> thread handling PHY/port events as well as discovery, we really can't
+> handle PORTE_BYTES_DMAED event until the discovery is complete. This
+> results in SCSI commands timing out in the discovery thread no matter
+> what I do!  This problem may be unique to Vitesse expander, read the PS
+> section for details.
+> 
+> Tried using two threads, one for events and the other for discovery.
 
---=-Y3/Nzo1eUZqO/PyoqrhJ
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Malahal,
 
-On Sun, 2006-09-17 at 07:38 +0200, Olaf Hering wrote:
-> On Fri, Sep 15, Doug Ledford wrote:
->=20
-> > On Thu, 2006-09-07 at 09:04 -0500, James Bottomley wrote:
-> > > On Thu, 2006-09-07 at 11:15 +0200, Olaf Hering wrote:
-> > > > This does not work: ahc_linux_get_signalling: f 56f6
-> > > >=20
-> > > > echo $(( 0x56f6 & 0x00002 )) gives 2, and the ahc_inb is called.
-> > >=20
-> > > Erm, there's something else going on then:  An ultra 2 card has to ha=
-ve
-> > > this register.  It's used to signal mode changes in
-> > > ahc_handle_scsiint().  The piece of code in there will trigger and re=
-ad
-> > > this register for any ultra 2 + controller every time there's an erro=
-r
-> > > (just to see if the bus mode changed).
-> >=20
-> > Sorry for my belated response, but this usually happens when you access
-> > an aic chipset too soon after a chip reset.  Try putting a delay before
-> > whatever access is causing this to see if it make s difference.  Common
-> > problems include after a chip reset, touching any register will cause
-> > the card to reset, etc.
->=20
-> As pointed out in private mail, this patch fixes the machine check for
-> me. Thanks Doug.
+If you go back in the archives, and take a look at the SAS Stack
+as I submitted it last year, you'll notice that this is exactly how
+the code is: there is a separate event thread and a separate
+discovery thread.
 
-Hehehe, everyone ignore my last email, I hadn't seen this one ;-)
-You're welcome.
+That is, from inception, my code has always had two separate threads,
+one for events and one for discovery.
 
-> Maybe the AHC_ULTRA2 feature check is needed as well for other cards.
->=20
-> ---
->  drivers/scsi/aic7xxx/aic7xxx_osm.c |    9 ++++++++-
->  1 file changed, 8 insertions(+), 1 deletion(-)
->=20
-> Index: linux-2.6.18-rc7/drivers/scsi/aic7xxx/aic7xxx_osm.c
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> --- linux-2.6.18-rc7.orig/drivers/scsi/aic7xxx/aic7xxx_osm.c
-> +++ linux-2.6.18-rc7/drivers/scsi/aic7xxx/aic7xxx_osm.c
-> @@ -2539,7 +2539,14 @@ static void ahc_linux_set_iu(struct scsi
->  static void ahc_linux_get_signalling(struct Scsi_Host *shost)
->  {
->  	struct ahc_softc *ahc =3D *(struct ahc_softc **)shost->hostdata;
-> -	u8 mode =3D ahc_inb(ahc, SBLKCTL);
-> +	unsigned long flags;
-> +	u8 mode;
-> +
-> +	ahc_lock(ahc, &flags);
-> +	ahc_pause(ahc);
-> +	mode =3D ahc_inb(ahc, SBLKCTL);
-> +	ahc_unpause(ahc);
-> +	ahc_unlock(ahc, &flags);
-> =20
->  	if (mode & ENAB40)
->  		spi_signalling(shost) =3D SPI_SIGNAL_LVD;
+I wasn't aware that the code had been changed such that a single
+thread handles events and discovery.  This is a very naive approach,
+and a regression over the original code.
+
+> That avoided the timeout problems, but the discovery thread would die
+> after few iterations due to the event thread and the discovery thread
+> racing each other for setting up and tearing down of sysfs objects.
+
+Indeed, the situation presented in such circumstances is tricky.
+These "races" have been dealt with in my (original) code.  Currently,
+I don't experience any problems with my SAS Stack, as I maintain it.
+
+If any of my original comments are still left in the code or the README
+files, that would give you a hint of how such "races" are handled.
+
+> I tried calling lldd_port_formed() with appropriate phy_mask from the
+> notify_port_event() itself. That worked fine. It is just a hack for now!
+
+This and your postscript below, tell me that you're coming around full
+circle to how the original code works.  I'd suggest that you take a look
+at the original code.
+
+> Any comments, suggestions?
+
+Good luck,
+     Luben
+
+> Thanks, Malahal.
+> PS: I instrumented the code to use only a single PHY out of 4-phy wide
+> port by prematurely returning from sas_form_port() for all PHYs except
+> one. In other words, I ignored the PORTE_BYTES_DMAED event for all PHYs
+> but one.  There were SCSI timeouts every time I did that except if the
+> PHY I was using is phy3.  When I swapped cables, the PHY that worked
+> changed too. I believe, it goes with a specific Vitesse expander PHY. Is
+> it possible that the Vitesse expander uses a specific PHY to respond to
+> some SCSI requests even though the adapter uses a different PHY while
+> sending the request?  Is this behavior of communicating on two different
+> PHYs for a single SCSI command is allowed in the spec?
+> Also note that
+> the discovery commands (SMP) just work fine.
 > -
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
---=20
-Doug Ledford <dledford@redhat.com>
-              GPG KeyID: CFBFF194
-              http://people.redhat.com/dledford
+> 
 
-Infiniband specific RPMs available at
-              http://people.redhat.com/dledford/Infiniband
-
---=-Y3/Nzo1eUZqO/PyoqrhJ
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBFDZH1g6WylM+/8ZQRAmgyAJ9Jggw+8m+foH4ValhBFSwGuai/EgCfUamT
-83u1zs/oE5qtHzUfwN6b1E8=
-=sudm
------END PGP SIGNATURE-----
-
---=-Y3/Nzo1eUZqO/PyoqrhJ--
 
