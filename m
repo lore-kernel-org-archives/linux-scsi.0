@@ -1,42 +1,68 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] scsi: Switch some more scsi drivers to pci_get_device
-	and refcounted pci structures
-Date: Mon, 18 Sep 2006 20:45:44 +0100
-Message-ID: <1158608744.6069.162.camel@localhost.localdomain>
-References: <1158330872.29932.61.camel@localhost.localdomain>
-	 <20060918190155.GE17670@infradead.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] block: add support for shared tag maps
+Date: Mon, 18 Sep 2006 14:25:08 -0500
+Message-ID: <1158607508.3800.4.camel@madmax>
+References: <NONAMEBh8GyUbvH4KQ700000f3d@nonameb.ptu.promise.com>
+	 <20060918184712.GA17670@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:55687 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1751784AbWIRTVq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Sep 2006 15:21:46 -0400
-In-Reply-To: <20060918190155.GE17670@infradead.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:44516 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S1750889AbWIRTZv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Sep 2006 15:25:51 -0400
+In-Reply-To: <20060918184712.GA17670@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
+Cc: Ed Lin <ed.lin@promise.com>, James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@suse.de>, david.somayajulu@qlogic.com
 
-Ar Llu, 2006-09-18 am 20:01 +0100, ysgrifennodd Christoph Hellwig:
-> NACK.  This doesn't help us forward at all.  In case you have
-> the hardware please do a full conversion to the real pci probing API.
+On Mon, 2006-09-18 at 19:47 +0100, Christoph Hellwig wrote:
+> On Fri, Sep 01, 2006 at 02:31:51PM +0800, Ed Lin wrote:
+> >  static int
+> > +stex_slave_alloc(struct scsi_device *sdev)
+> > +{
+> > +	/* Cheat: usually extracted from Inquiry data */
+> > +	sdev->tagged_supported = 1;
+> > +
+> > +	scsi_activate_tcq(sdev, sdev->host->can_queue);
+> 
+> these two calls look wrong here. scsi_activate_tcq is supposed to be
+> called from slave_configure.  similarly tagged_supported is probably
+> going to be overwriten as part of the scanning process, but you already
+> set it in slave_configure anyway.
 
-Then please mark every SCSI user of pci_find_device() as && BROKEN and
-delete them in 6 months because I want to remove pci_find_device because
-its a hazard. The patch I proposed ensures the driver doesn't crash the
-box iterating the list unsafely. If you won't accept safe iteration the
-driver should be deleted. 
+If a lld is doing host wide tagging will they always need a tag? For
+those drivers it seems like they are not doing tagging based on this in
+scsi_scan
 
-I guess the other alternative would be to add !HOTPLUG to all the
-offenders and remove pci_find_device if hotplug is enabled.
+        if ((sdev->scsi_level >= SCSI_2) && (inq_result[7] & 2) &&
+> >             !(*bflags & BLIST_NOTQ))
+> >                 sdev->tagged_supported = 1;
 
-Be honest - nobody is ever going to convert that driver or the other
-ancient scsi drivers or the serial drivers to the pci module API even if
-you play political games NAKing other fixes to try and make it happen. 
+Instead they need a tag because their FW or driver require it.
 
-James - what would you prefer - removal, && BROKEN, && !HOTPLUG or at
-least fixing one thing that needs a fix ?
+If so then should we just set this in scsi_alloc_sdev if shost->bqt is
+set? For qla4xxx we are doing something like stex which is a little odd.
+See patch below. It is untested and not even compile tested - just shows
+what I mean and for Qlogic to test if it is ok with you guys.
 
-Alan
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index fd9e281..2efd90c 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -206,6 +206,11 @@ static struct scsi_device *scsi_alloc_sd
+ 
+ 	scsi_sysfs_device_initialize(sdev);
+ 
++	if (shost->bqt) {
++		sdev->tagged_supported = 1;
++		scsi_activate_tcq(sdev, shost->can_queue);
++	}
++
+ 	if (shost->hostt->slave_alloc) {
+ 		ret = shost->hostt->slave_alloc(sdev);
+ 		if (ret) {
+
+
