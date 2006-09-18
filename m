@@ -1,38 +1,42 @@
-From: Andreas Herrmann <aherrman@de.ibm.com>
-Subject: [PATCH 6/6] zfcp: update maintainers file
-Date: Mon, 18 Sep 2006 22:32:15 +0200
-Message-ID: <20060918203215.GA10519@lion28.ibm.com>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [Patch] SCSI statistics
+Date: Mon, 18 Sep 2006 23:28:32 +0200
+Message-ID: <1158614913.3182.78.camel@laptopd505.fenrus.org>
+References: <1158578439.3060.50.camel@dyn-9-152-230-71.boeblingen.de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964955AbWIRUhE@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <jejb@steeleye.com>
-Cc: Linux SCSI <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from pentafluge.infradead.org ([213.146.154.40]:36809 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1751206AbWIRV2w (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Sep 2006 17:28:52 -0400
+In-Reply-To: <1158578439.3060.50.camel@dyn-9-152-230-71.boeblingen.de.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Martin Peschke <mp3@de.ibm.com>
+Cc: linux-scsi@vger.kernel.org
 
-zfcp: update maintainers file
+On Mon, 2006-09-18 at 13:20 +0200, Martin Peschke wrote:
+> This patch makes the SCSI mid layer report statistics data, i.e. request
+> sizes, request latencies, request results and queue utilisation.
+> For sample output please see below. This data is only gathered if these
+> statistics have been enabled by users at run time (default is off).
+> 
+> It is crucial (for us) to be able to look at such kernel level data in
+> case of customer situations. It allows us to determine what kind of
+> requests might be involved in performance situations. This information
+> helps to understand whether one faces a device issue or a Linux issue.
+> Not being able to tap into performance data is regarded as a big minus
+> by some enterprise customers, who are reluctant to use Linux SCSI
+> support or Linux.
+> 
+> Patch is against 2.6.18-rc6-mm2, as it requires the statistics
+> infrastructure patches.
 
-Removed myself as maintainer of the s390 zfcp driver --
-I will not maintain it any longer.
 
-Signed-off-by: Andreas Herrmann <aherrman@de.ibm.com>
----
- MAINTAINERS |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+wouldn't this be nicer as a block level functionality?
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 25cd707..aef694a 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -2459,8 +2459,6 @@ W:	http://www.ibm.com/developerworks/lin
- S:	Supported
- 
- S390 ZFCP DRIVER
--P:	Andreas Herrmann
--M:	aherrman@de.ibm.com
- M:	linux390@de.ibm.com
- L:	linux-390@vm.marist.edu
- W:	http://www.ibm.com/developerworks/linux/linux390/
 -- 
-1.4.2.1.g80823
+if you want to mail me at work (you don't), use arjan (at) linux.intel.com
+
