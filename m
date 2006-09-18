@@ -1,43 +1,36 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] block: add support for shared tag maps
-Date: Mon, 18 Sep 2006 14:10:56 -0500
-Message-ID: <1158606656.6390.1.camel@mulgrave.il.steeleye.com>
-References: <NONAMEBh8GyUbvH4KQ700000f3d@nonameb.ptu.promise.com>
-	 <20060918184712.GA17670@infradead.org>
+From: Konrad Rzeszutek <konradr@redhat.com>
+Subject: [PATCH] aic94xx: Compile problem on s390
+Date: Mon, 18 Sep 2006 15:15:45 -0400
+Message-ID: <20060918191545.GA10525@krzeszut.users.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:45252 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751604AbWIRTLH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Sep 2006 15:11:07 -0400
-In-Reply-To: <20060918184712.GA17670@infradead.org>
+Received: from mx1.redhat.com ([66.187.233.31]:37270 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S1751694AbWIRTPe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Sep 2006 15:15:34 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Ed Lin <ed.lin@promise.com>, linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@suse.de>
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, alexisb@us.ibm.com
 
-On Mon, 2006-09-18 at 19:47 +0100, Christoph Hellwig wrote:
-> these two calls look wrong here. scsi_activate_tcq is supposed to be
-> called from slave_configure.  similarly tagged_supported is probably
-> going to be overwriten as part of the scanning process, but you already
-> set it in slave_configure anyway.
-
-I agree in principle.  However, the driver is doing tags as indexes into
-its own internal firmware sequencer.  Thus, the first inquiry that comes
-down has to go into the sequencer with a tag.  Hence this charade to
-turn on tagging in slave_alloc.
+The aic94xx driver in my-scsi and aic94xx James Bottomley tree does not
+compile on s390. Since the driver is generic, it makes sense to fix.
+The patch is quite simple:
 
 
-> > +     if (unlikely(tag >= host->can_queue))
-> >               return SCSI_MLQUEUE_HOST_BUSY;
-> 
-> Do we really need this check?  I'm pretty sure the block layer never
-> hands out tags bigger than what you told it to with scsi_activate_tcq.
-
-Probably not.
-
-James
-
-
+diff -uNr linux-2.6.17.noarch.orig/include/scsi/libsas.h linux-2.6.17.noarch/include/scsi/libsas.h
+--- linux-2.6.17.noarch.orig/include/scsi/libsas.h	2006-09-11 16:29:48.000000000 -0400
++++ linux-2.6.17.noarch/include/scsi/libsas.h	2006-09-11 16:34:33.000000000 -0400
+@@ -32,6 +32,7 @@
+ #include <scsi/sas.h>
+ #include <linux/list.h>
+ #include <asm/semaphore.h>
++#include <asm/scatterlist.h>
+ #include <scsi/scsi_device.h>
+ #include <scsi/scsi_cmnd.h>
+ #include <scsi/scsi_transport_sas.h>
+-- 
+Konrad Rzeszutek 1-(978)-392-3903 or 1-(617)-693-1718
+IBM on-site partner.
