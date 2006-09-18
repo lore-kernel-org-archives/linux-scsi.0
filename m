@@ -1,36 +1,37 @@
-From: Konrad Rzeszutek <konradr@redhat.com>
-Subject: Re: [PATCH] aic94xx: Compile problem on s390
-Date: Mon, 18 Sep 2006 15:36:53 -0400
-Message-ID: <20060918193653.GB11112@krzeszut.users.redhat.com>
-References: <20060918191545.GA10525@krzeszut.users.redhat.com> <20060918192138.GR2585@parisc-linux.org>
+From: Andreas Herrmann <aherrman@de.ibm.com>
+Subject: [PATCH 0/6] zfcp: driver update
+Date: Mon, 18 Sep 2006 22:27:25 +0200
+Message-ID: <20060918202725.GA10470@lion28.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932326AbWIRTgh@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mtagate3.de.ibm.com ([195.212.29.152]:14035 "EHLO
+	mtagate3.de.ibm.com") by vger.kernel.org with ESMTP id S964918AbWIRUcL
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Sep 2006 16:32:11 -0400
+Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
+	by mtagate3.de.ibm.com (8.13.8/8.13.8) with ESMTP id k8IKWAxN056042
+	for <linux-scsi@vger.kernel.org>; Mon, 18 Sep 2006 20:32:10 GMT
+Received: from d12av02.megacenter.de.ibm.com (d12av02.megacenter.de.ibm.com [9.149.165.228])
+	by d12nrmr1607.megacenter.de.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id k8IKasp02588744
+	for <linux-scsi@vger.kernel.org>; Mon, 18 Sep 2006 22:36:54 +0200
+Received: from d12av02.megacenter.de.ibm.com (loopback [127.0.0.1])
+	by d12av02.megacenter.de.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k8IKW9It013477
+	for <linux-scsi@vger.kernel.org>; Mon, 18 Sep 2006 22:32:09 +0200
 Content-Disposition: inline
-In-Reply-To: <20060918192138.GR2585@parisc-linux.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, alexisb@us.ibm.com
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <jejb@steeleye.com>
+Cc: Linux SCSI <linux-scsi@vger.kernel.org>
 
-On Mon, Sep 18, 2006 at 01:21:38PM -0600, Matthew Wilcox wrote:
-> On Mon, Sep 18, 2006 at 03:15:45PM -0400, Konrad Rzeszutek wrote:
-> > The aic94xx driver in my-scsi and aic94xx James Bottomley tree does not
-> > compile on s390. Since the driver is generic, it makes sense to fix.
-> 
-> Erm, well, I don't think there's any s390s with PCI ;-)
-> 
-> > The patch is quite simple:
-> > +#include <asm/scatterlist.h>
-> 
-> Surely should be linux/scatterlist.h?
+Hi,
 
-Hm. Most of the drivers use the <asm/...> and that is where
-the struct scatterlist is defined. The linux/scatterlist.h includes
-the asm/scatterlist.h.
+this is probably the last patch series for zfcp that I send out.
+Mostly bug fixes and cleanups.
+Patches are against current linux-2.6 git tree and should be
+added to the next kernel release.
 
-Either one works. 
 
--- 
-Konrad Rzeszutek 1-(978)-392-3903 or 1-(617)-693-1718
-IBM on-site partner.
+Regards,
+
+Andreas
