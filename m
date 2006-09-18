@@ -1,88 +1,59 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: AIC94XX discovery timeout problem details...
-Date: Mon, 18 Sep 2006 00:35:06 -0700 (PDT)
-Message-ID: <20060918073506.74938.qmail@web31807.mail.mud.yahoo.com>
-References: <20060915072030.GA25595@us.ibm.com>
-Reply-To: ltuikov@yahoo.com
+From: Frederic TEMPORELLI <frederic.temporelli@ext.bull.net>
+Subject: issue with scan and SDEV_DEV devices
+Date: Mon, 18 Sep 2006 12:45:12 +0200
+Message-ID: <450E78B8.1050308@ext.bull.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31807.mail.mud.yahoo.com ([68.142.207.70]:34680 "HELO
-	web31807.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S1751540AbWIRHfH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Sep 2006 03:35:07 -0400
-In-Reply-To: <20060915072030.GA25595@us.ibm.com>
+Received: from ecfrec.frec.bull.fr ([129.183.4.8]:47019 "EHLO
+	ecfrec.frec.bull.fr") by vger.kernel.org with ESMTP id S965647AbWIRKpU
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Sep 2006 06:45:20 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by ecfrec.frec.bull.fr (Postfix) with ESMTP id 9B59F19D937
+	for <linux-scsi@vger.kernel.org>; Mon, 18 Sep 2006 12:45:15 +0200 (CEST)
+Received: from ecfrec.frec.bull.fr ([127.0.0.1])
+ by localhost (ecfrec.frec.bull.fr [127.0.0.1]) (amavisd-new, port 10024)
+ with ESMTP id 30522-03 for <linux-scsi@vger.kernel.org>;
+ Mon, 18 Sep 2006 12:45:13 +0200 (CEST)
+Received: from ecn002.frec.bull.fr (ecn002.frec.bull.fr [129.183.4.6])
+	by ecfrec.frec.bull.fr (Postfix) with ESMTP id 55F1719D92B
+	for <linux-scsi@vger.kernel.org>; Mon, 18 Sep 2006 12:45:13 +0200 (CEST)
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+	by openx3.frec.bull.fr (Postfix) with ESMTP id CE24B2B0EB
+	for <linux-scsi@vger.kernel.org>; Mon, 18 Sep 2006 12:45:12 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: malahal@us.ibm.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
---- malahal@us.ibm.com wrote:
-> I chased the time out problem and found that the PORTE_BYTES_DMAED port
-> event must be responded with a call to lldd_port_formed() which will
-> update PHY_IS_UP and port-links fields in DDB 0. As there is a single
-> thread handling PHY/port events as well as discovery, we really can't
-> handle PORTE_BYTES_DMAED event until the discovery is complete. This
-> results in SCSI commands timing out in the discovery thread no matter
-> what I do!  This problem may be unique to Vitesse expander, read the PS
-> section for details.
-> 
-> Tried using two threads, one for events and the other for discovery.
-
-Malahal,
-
-If you go back in the archives, and take a look at the SAS Stack
-as I submitted it last year, you'll notice that this is exactly how
-the code is: there is a separate event thread and a separate
-discovery thread.
-
-That is, from inception, my code has always had two separate threads,
-one for events and one for discovery.
-
-I wasn't aware that the code had been changed such that a single
-thread handles events and discovery.  This is a very naive approach,
-and a regression over the original code.
-
-> That avoided the timeout problems, but the discovery thread would die
-> after few iterations due to the event thread and the discovery thread
-> racing each other for setting up and tearing down of sysfs objects.
-
-Indeed, the situation presented in such circumstances is tricky.
-These "races" have been dealt with in my (original) code.  Currently,
-I don't experience any problems with my SAS Stack, as I maintain it.
-
-If any of my original comments are still left in the code or the README
-files, that would give you a hint of how such "races" are handled.
-
-> I tried calling lldd_port_formed() with appropriate phy_mask from the
-> notify_port_event() itself. That worked fine. It is just a hack for now!
-
-This and your postscript below, tell me that you're coming around full
-circle to how the original code works.  I'd suggest that you take a look
-at the original code.
-
-> Any comments, suggestions?
-
-Good luck,
-     Luben
-
-> Thanks, Malahal.
-> PS: I instrumented the code to use only a single PHY out of 4-phy wide
-> port by prematurely returning from sas_form_port() for all PHYs except
-> one. In other words, I ignored the PORTE_BYTES_DMAED event for all PHYs
-> but one.  There were SCSI timeouts every time I did that except if the
-> PHY I was using is phy3.  When I swapped cables, the PHY that worked
-> changed too. I believe, it goes with a specific Vitesse expander PHY. Is
-> it possible that the Vitesse expander uses a specific PHY to respond to
-> some SCSI requests even though the adapter uses a different PHY while
-> sending the request?  Is this behavior of communicating on two different
-> PHYs for a single SCSI command is allowed in the spec?
-> Also note that
-> the discovery commands (SMP) just work fine.
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Hello,
 
 
+There's an issue when using multipath (dm) and SDEV_DEL devices:
+
+When a link come down and after the device tmo has been fired, sdev state is set 
+to SDEV_DEL, but sdev isn't removed from the kernel because references haven't 
+been released (scsi device has been open by multipath and hasn't been released).
+
+Then, when the link come up, scsi_device_lookup_by_target is called.
+sdev can be retrived from the kernel (__scsi_device_lookup_by_target) but 
+scsi_device_get will return error because the device state is SDEV_DEL.
+Doing so:
+- scsi_device_lookup_by_target return a NULL sdev
+- scsi_probe_and_add_lun will create a new sdev
+- scsi_sysfs_add_sdev fail because there an already existing sdev with same 
+host:target:bus:lun
+
+This issue has been encountered when using Emulex and QLogic drivers with kernel 
+ >=2.6.16 (since sdev ref counting is working nice ??? )
+
+Note: similar issue when using mounted FS with scsi devices (if devices have 
+SDEV_DEL state)
+
+Any workaround/patch about this issue ?
+
+Best regards
+
+-- 
+Frederic TEMPORELLI
