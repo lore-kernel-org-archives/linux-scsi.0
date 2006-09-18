@@ -1,36 +1,43 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] scsi: Switch some more scsi drivers to pci_get_device and refcounted pci structures
-Date: Mon, 18 Sep 2006 20:01:55 +0100
-Message-ID: <20060918190155.GE17670@infradead.org>
-References: <1158330872.29932.61.camel@localhost.localdomain>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] block: add support for shared tag maps
+Date: Mon, 18 Sep 2006 14:10:56 -0500
+Message-ID: <1158606656.6390.1.camel@mulgrave.il.steeleye.com>
+References: <NONAMEBh8GyUbvH4KQ700000f3d@nonameb.ptu.promise.com>
+	 <20060918184712.GA17670@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:21453 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1751808AbWIRTCS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Sep 2006 15:02:18 -0400
-Content-Disposition: inline
-In-Reply-To: <1158330872.29932.61.camel@localhost.localdomain>
+Received: from stat9.steeleye.com ([209.192.50.41]:45252 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1751604AbWIRTLH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Sep 2006 15:11:07 -0400
+In-Reply-To: <20060918184712.GA17670@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Ed Lin <ed.lin@promise.com>, linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@suse.de>
 
-On Fri, Sep 15, 2006 at 03:34:32PM +0100, Alan Cox wrote:
-> Signed-off-by: Alan Cox <alan@redhat.com>
+On Mon, 2006-09-18 at 19:47 +0100, Christoph Hellwig wrote:
+> these two calls look wrong here. scsi_activate_tcq is supposed to be
+> called from slave_configure.  similarly tagged_supported is probably
+> going to be overwriten as part of the scanning process, but you already
+> set it in slave_configure anyway.
+
+I agree in principle.  However, the driver is doing tags as indexes into
+its own internal firmware sequencer.  Thus, the first inquiry that comes
+down has to go into the sequencer with a tag.  Hence this charade to
+turn on tagging in slave_alloc.
+
+
+> > +     if (unlikely(tag >= host->can_queue))
+> >               return SCSI_MLQUEUE_HOST_BUSY;
 > 
-> diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.18-rc6-mm1/drivers/scsi/aic7xxx_old.c linux-2.6.18-rc6-mm1/drivers/scsi/aic7xxx_old.c
-> --- linux.vanilla-2.6.18-rc6-mm1/drivers/scsi/aic7xxx_old.c	2006-09-11 17:00:17.000000000 +0100
-> +++ linux-2.6.18-rc6-mm1/drivers/scsi/aic7xxx_old.c	2006-09-14 16:50:25.000000000 +0100
-> @@ -9194,7 +9194,7 @@
->      for (i = 0; i < ARRAY_SIZE(aic_pdevs); i++)
->      {
->        pdev = NULL;
-> -      while ((pdev = pci_find_device(aic_pdevs[i].vendor_id,
-> +      while ((pdev = pci_get_device(aic_pdevs[i].vendor_id,
->                                       aic_pdevs[i].device_id,
+> Do we really need this check?  I'm pretty sure the block layer never
+> hands out tags bigger than what you told it to with scsi_activate_tcq.
 
-NACK.  This doesn't help us forward at all.  In case you have
-the hardware please do a full conversion to the real pci probing API.
+Probably not.
+
+James
+
 
