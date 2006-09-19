@@ -1,94 +1,100 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: [PATCH] block: add support for shared tag maps
-Date: Mon, 18 Sep 2006 22:20:28 -0400
-Message-ID: <1158632428.17671.109.camel@fc6.xsintricity.com>
-References: <NONAMEBh8GyUbvH4KQ700000f3d@nonameb.ptu.promise.com>
-	 <20060918184712.GA17670@infradead.org>  <1158607508.3800.4.camel@madmax>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] mptspi : Bug fix to prevent infinite nested domain
+	validation
+Date: Mon, 18 Sep 2006 22:56:00 -0400
+Message-ID: <1158634560.6390.69.camel@mulgrave.il.steeleye.com>
+References: <20060918234453.GA7576@lsil.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-I2Tmn5148aA6JF7VkeTO"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:13767 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S1752011AbWISCUy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Sep 2006 22:20:54 -0400
-In-Reply-To: <1158607508.3800.4.camel@madmax>
+Received: from stat9.steeleye.com ([209.192.50.41]:54997 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1752021AbWISDxU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Sep 2006 23:53:20 -0400
+In-Reply-To: <20060918234453.GA7576@lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Christoph Hellwig <hch@infradead.org>, Ed Lin <ed.lin@promise.com>, James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@suse.de>, david.somayajulu@qlogic.com
+To: Eric Moore <eric.moore@lsil.com>
+Cc: linux-scsi@vger.kernel.org
 
+On Mon, 2006-09-18 at 17:44 -0600, Eric Moore wrote:
+> This event occurs when dv sends an inquiry to a device,
+> and the device never returns, thus timing out.
+> This results in a task_abort, followed by host_reset.
+> >From host_reset, domain validation is invoked again, and this
+> loop repeats itself forever.
+> 
+> Invoking domain validation from host_reset is required, as
+> device go to slowest speed, asyn narrow.
+> 
+> The fix I propose is to keep a bitwise flag `hd->spi_pending`
+> that keeps track of the devices that are in progress of domain
+> validation.  Then when host_reset occurs, we see if the
+> flag is non-zero, then take a different path which
+> program devices to old nego parameters, instead of calling dv
+> again.  We do nothing for the device that currently in
+> the middle of dv. When `hd->spi_pending` is zero, then
+> dv is performed on all devices.
+> 
+> Please note, we tried using the starget_data->dv_pending flag
+> from host_reset, by calling dv for devices not pending,
+> and this doesn't work.  The reason is if there is a faulty device
+> with a high id, such as 10, by the time we loop back to that id,
+> the dv_pending flag was always was zero, thus dv looped again.
+> Using the `hd->spi_pending` prevents nested dv, and at
+> the same time programs the devices back to previous nego.
 
---=-I2Tmn5148aA6JF7VkeTO
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Erm, but surely, since reset->dv is fairly standard, this must need a
+generic fix.
 
-On Mon, 2006-09-18 at 14:25 -0500, Mike Christie wrote:
-> On Mon, 2006-09-18 at 19:47 +0100, Christoph Hellwig wrote:
-> > On Fri, Sep 01, 2006 at 02:31:51PM +0800, Ed Lin wrote:
-> > >  static int
-> > > +stex_slave_alloc(struct scsi_device *sdev)
-> > > +{
-> > > +	/* Cheat: usually extracted from Inquiry data */
-> > > +	sdev->tagged_supported =3D 1;
-> > > +
-> > > +	scsi_activate_tcq(sdev, sdev->host->can_queue);
-> >=20
-> > these two calls look wrong here. scsi_activate_tcq is supposed to be
-> > called from slave_configure.  similarly tagged_supported is probably
-> > going to be overwriten as part of the scanning process, but you already
-> > set it in slave_configure anyway.
->=20
-> If a lld is doing host wide tagging will they always need a tag? For
-> those drivers it seems like they are not doing tagging based on this in
-> scsi_scan
+Can you check this out.  I think it does the right thing gating
+spi_dv_device() with a new flag.  The pending flag is more used to
+manage scheduled domain validations.   The original idea was that resets
+would trigger scheduled dv that would use this flag correctly (and not
+be in the direct path of DV).  For some reason the mptspi seems to
+manage to entangle DV with the reset inline.
 
-Well, were I to ever convert the aic7xxx_old driver to mid level tags,
-then the answer to this is partially yes.  We don't need to pass the tag
-to the device, but since the firmware in the aic7xxx driver looks up the
-tag of the used slot via a table for untagged commands, we are in danger
-of having that tag passed back down to us for another device at another
-time while this one is still active.  Therefore, we need to know which
-tag slot the mid layer wants allocated even on untagged commands.  In
-addition, the aic7xxx_old driver will, even on tagged devices, send some
-commands as untagged when needed (some older devices would choke on both
-a tag message and an SDTR message in the same command, so the driver
-defaults to sending all WDTR/SDTR flagged commands as untagged).  On
-those untagged commands, when the device reconnects, the driver looks
-into a table indexed by target/lun to find the tag slot of the untagged
-command and then DMAs it into card memory from the SCB array.  On tagged
-commands, the tag itself was the index into the command array.  So,
-that's a quick rundown of what the aic7xxx_old does.  That means that in
-order to have the mid layer assign tags, the aic7xxx driver needs *all*
-commands, untagged or tagged, to have a tag value and for that tag to be
-reserved.  There would then need to be another something, such as tag
-type, to indicate if the passed down tag is to be used solely to index
-into the command array or if it should be passed to the device as the
-tag value.  One possible way to implement this would be to have a flag
-in the host struct registration that indicates that the host has a
-shared tag array, the mid layer would allocate a static tag array of
-can_queue tags, attach it to the host, then have all subsequent devices
-in scsi_scan link to that array, and all commands would be sent with an
-array slot allocated even if the command is untagged.  Problem solved.
+James
 
---=20
-Doug Ledford <dledford@redhat.com>
-              GPG KeyID: CFBFF194
-              http://people.redhat.com/dledford
+diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
+index 29a9a53..92e2bfc 100644
+--- a/drivers/scsi/scsi_transport_spi.c
++++ b/drivers/scsi/scsi_transport_spi.c
+@@ -47,6 +47,7 @@ #define DV_RETRIES	3	/* should only need
+ 
+ /* Private data accessors (keep these out of the header file) */
+ #define spi_dv_pending(x) (((struct spi_transport_attrs *)&(x)->starget_data)->dv_pending)
++#define spi_dv_in_progress(x) (((struct spi_transport_attrs *)&(x)->starget_data)->dv_in_progress)
+ #define spi_dv_mutex(x) (((struct spi_transport_attrs *)&(x)->starget_data)->dv_mutex)
+ 
+ struct spi_internal {
+@@ -240,6 +241,7 @@ static int spi_setup_transport_attrs(str
+ 	spi_pcomp_en(starget) = 0;
+ 	spi_hold_mcs(starget) = 0;
+ 	spi_dv_pending(starget) = 0;
++	spi_dv_in_progress(starget) = 0;
+ 	spi_initial_dv(starget) = 0;
+ 	mutex_init(&spi_dv_mutex(starget));
+ 
+@@ -907,6 +909,10 @@ spi_dv_device(struct scsi_device *sdev)
+ 	if (unlikely(scsi_device_get(sdev)))
+ 		return;
+ 
++	if (unlikely(spi_dv_in_progress(starget)))
++		return;
++	spi_dv_in_progress(starget) = 1;
++
+ 	buffer = kzalloc(len, GFP_KERNEL);
+ 
+ 	if (unlikely(!buffer))
+@@ -938,6 +944,7 @@ spi_dv_device(struct scsi_device *sdev)
+  out_free:
+ 	kfree(buffer);
+  out_put:
++	spi_dv_in_progress(starget) = 0;
+ 	scsi_device_put(sdev);
+ }
+ EXPORT_SYMBOL(spi_dv_device);
 
-Infiniband specific RPMs available at
-              http://people.redhat.com/dledford/Infiniband
-
---=-I2Tmn5148aA6JF7VkeTO
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBFD1Psg6WylM+/8ZQRAnX/AJ0ejhoE5uD1rmXmKULdM5w/nC+xRgCdEuZk
-LQekM0JE1XFZwDUYSjetvHA=
-=HW7q
------END PGP SIGNATURE-----
-
---=-I2Tmn5148aA6JF7VkeTO--
 
