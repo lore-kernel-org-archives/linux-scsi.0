@@ -1,51 +1,74 @@
 From: Doug Ledford <dledford@redhat.com>
-Subject: Re: [PATCH] scsi: Switch some more scsi drivers to pci_get_device
-	and refcounted pci structures
-Date: Mon, 18 Sep 2006 22:10:20 -0400
-Message-ID: <1158631820.17671.99.camel@fc6.xsintricity.com>
-References: <1158330872.29932.61.camel@localhost.localdomain>
-	 <20060918190155.GE17670@infradead.org>
+Subject: Re: [PATCH] block: add support for shared tag maps
+Date: Mon, 18 Sep 2006 22:20:28 -0400
+Message-ID: <1158632428.17671.109.camel@fc6.xsintricity.com>
+References: <NONAMEBh8GyUbvH4KQ700000f3d@nonameb.ptu.promise.com>
+	 <20060918184712.GA17670@infradead.org>  <1158607508.3800.4.camel@madmax>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-wKI4XWVzm7DQ5bFZNTTD"
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-I2Tmn5148aA6JF7VkeTO"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:15042 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S1752017AbWISCKb (ORCPT
+Received: from mx1.redhat.com ([66.187.233.31]:13767 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S1752011AbWISCUy (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Sep 2006 22:10:31 -0400
-In-Reply-To: <20060918190155.GE17670@infradead.org>
+	Mon, 18 Sep 2006 22:20:54 -0400
+In-Reply-To: <1158607508.3800.4.camel@madmax>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Christoph Hellwig <hch@infradead.org>, Ed Lin <ed.lin@promise.com>, James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@suse.de>, david.somayajulu@qlogic.com
 
 
---=-wKI4XWVzm7DQ5bFZNTTD
+--=-I2Tmn5148aA6JF7VkeTO
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2006-09-18 at 20:01 +0100, Christoph Hellwig wrote:
-> On Fri, Sep 15, 2006 at 03:34:32PM +0100, Alan Cox wrote:
-> > Signed-off-by: Alan Cox <alan@redhat.com>
+On Mon, 2006-09-18 at 14:25 -0500, Mike Christie wrote:
+> On Mon, 2006-09-18 at 19:47 +0100, Christoph Hellwig wrote:
+> > On Fri, Sep 01, 2006 at 02:31:51PM +0800, Ed Lin wrote:
+> > >  static int
+> > > +stex_slave_alloc(struct scsi_device *sdev)
+> > > +{
+> > > +	/* Cheat: usually extracted from Inquiry data */
+> > > +	sdev->tagged_supported =3D 1;
+> > > +
+> > > +	scsi_activate_tcq(sdev, sdev->host->can_queue);
 > >=20
-> > diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.va=
-nilla-2.6.18-rc6-mm1/drivers/scsi/aic7xxx_old.c linux-2.6.18-rc6-mm1/driver=
-s/scsi/aic7xxx_old.c
-> > --- linux.vanilla-2.6.18-rc6-mm1/drivers/scsi/aic7xxx_old.c	2006-09-11 =
-17:00:17.000000000 +0100
-> > +++ linux-2.6.18-rc6-mm1/drivers/scsi/aic7xxx_old.c	2006-09-14 16:50:25=
-.000000000 +0100
-> > @@ -9194,7 +9194,7 @@
-> >      for (i =3D 0; i < ARRAY_SIZE(aic_pdevs); i++)
-> >      {
-> >        pdev =3D NULL;
-> > -      while ((pdev =3D pci_find_device(aic_pdevs[i].vendor_id,
-> > +      while ((pdev =3D pci_get_device(aic_pdevs[i].vendor_id,
-> >                                       aic_pdevs[i].device_id,
+> > these two calls look wrong here. scsi_activate_tcq is supposed to be
+> > called from slave_configure.  similarly tagged_supported is probably
+> > going to be overwriten as part of the scanning process, but you already
+> > set it in slave_configure anyway.
 >=20
-> NACK.  This doesn't help us forward at all.  In case you have
-> the hardware please do a full conversion to the real pci probing API.
+> If a lld is doing host wide tagging will they always need a tag? For
+> those drivers it seems like they are not doing tagging based on this in
+> scsi_scan
 
-OMG, does anyone still use that thing?
+Well, were I to ever convert the aic7xxx_old driver to mid level tags,
+then the answer to this is partially yes.  We don't need to pass the tag
+to the device, but since the firmware in the aic7xxx driver looks up the
+tag of the used slot via a table for untagged commands, we are in danger
+of having that tag passed back down to us for another device at another
+time while this one is still active.  Therefore, we need to know which
+tag slot the mid layer wants allocated even on untagged commands.  In
+addition, the aic7xxx_old driver will, even on tagged devices, send some
+commands as untagged when needed (some older devices would choke on both
+a tag message and an SDTR message in the same command, so the driver
+defaults to sending all WDTR/SDTR flagged commands as untagged).  On
+those untagged commands, when the device reconnects, the driver looks
+into a table indexed by target/lun to find the tag slot of the untagged
+command and then DMAs it into card memory from the SCB array.  On tagged
+commands, the tag itself was the index into the command array.  So,
+that's a quick rundown of what the aic7xxx_old does.  That means that in
+order to have the mid layer assign tags, the aic7xxx driver needs *all*
+commands, untagged or tagged, to have a tag value and for that tag to be
+reserved.  There would then need to be another something, such as tag
+type, to indicate if the passed down tag is to be used solely to index
+into the command array or if it should be passed to the device as the
+tag value.  One possible way to implement this would be to have a flag
+in the host struct registration that indicates that the host has a
+shared tag array, the mid layer would allocate a static tag array of
+can_queue tags, attach it to the host, then have all subsequent devices
+in scsi_scan link to that array, and all commands would be sent with an
+array slot allocated even if the command is untagged.  Problem solved.
 
 --=20
 Doug Ledford <dledford@redhat.com>
@@ -55,17 +78,17 @@ Doug Ledford <dledford@redhat.com>
 Infiniband specific RPMs available at
               http://people.redhat.com/dledford/Infiniband
 
---=-wKI4XWVzm7DQ5bFZNTTD
+--=-I2Tmn5148aA6JF7VkeTO
 Content-Type: application/pgp-signature; name=signature.asc
 Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.5 (GNU/Linux)
 
-iD8DBQBFD1GMg6WylM+/8ZQRAi3hAJ4yun2OVO4mkZWM40XIzQeVf8pCEQCcDiX3
-SGsiO3E8Dh0tqodwsBkjgzo=
-=P9xC
+iD8DBQBFD1Psg6WylM+/8ZQRAnX/AJ0ejhoE5uD1rmXmKULdM5w/nC+xRgCdEuZk
+LQekM0JE1XFZwDUYSjetvHA=
+=HW7q
 -----END PGP SIGNATURE-----
 
---=-wKI4XWVzm7DQ5bFZNTTD--
+--=-I2Tmn5148aA6JF7VkeTO--
 
