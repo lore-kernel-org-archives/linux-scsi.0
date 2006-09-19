@@ -1,44 +1,37 @@
-From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: Re: Multi-Initiator SAS
-Date: Tue, 19 Sep 2006 13:05:13 -0700
-Message-ID: <45104D79.5030001@us.ibm.com>
-References: <451041AA.4060702@us.ibm.com> <451048C4.2090706@torque.net>
-Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
+From: "Moore, Eric" <Eric.Moore@lsil.com>
+Subject: RE: Multi-Initiator SAS
+Date: Tue, 19 Sep 2006 14:18:36 -0600
+Message-ID: <664A4EBB07F29743873A87CF62C26D7032CDC0@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.152]:18398 "EHLO
-	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751099AbWISUFQ
+Received: from mail0.lsil.com ([147.145.40.20]:46824 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1752016AbWISUSj convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Sep 2006 16:05:16 -0400
-In-Reply-To: <451048C4.2090706@torque.net>
+	Tue, 19 Sep 2006 16:18:39 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: "Darrick J. Wong" <djwong@us.ibm.com>, linux-scsi@vger.kernel.org
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-Douglas Gilbert wrote:
+On Tuesday, September 19, 2006 1:15 PM,  Darrick J. Wong wrote:
 
-> With the mptsas driver you can use smp_utils to look
-> at that expander via /dev/mptctl ('modprobe mptctl' first).
-> To get an overview of what the expander sees, try:
->  # smp_discover -mb /dev/mptctl
+> Alexis and I connected both a Adaptec 9410 and a LSI 1064E 
+> SAS initiator
+> to an expander.  Both machines saw the disks attached to the expander,
+> and both could send I/Os to the disks.  So far, so good.
+> 
+> We then connected a SATA disk to the expander.  libsas BUGd up in
+> sas_ex_discover_end_dev (sas_expander.c:636):
+> 
+> BUG_ON(sas_port_add(phy->port) != 0);
+> 
 
-Unfortunately, I see this:
+Which expander are you using?  I believe James has some sata work
+arounds
+for the sasx12, which has byte ordering issues.
 
-root@elm3a253:~# smp_discover -mb /dev/mptctl
-MPTCOMMAND ioctl failed: No such device
-ioctl failed
-smp_send_req failed, res=-1
-
-...a strace of the app reveals this:
-
-stat("/dev/mptctl", {st_mode=S_IFCHR|0660, st_rdev=makedev(10, 220),
-...}) = 0
-open("/dev/mptctl", O_RDWR)             = 3
-brk(0)                                  = 0x508000
-brk(0x529000)                           = 0x529000
-ioctl(3, 0xc0486d14, 0x508010)          = -1 ENODEV (No such device)
-
---D
+Eric
