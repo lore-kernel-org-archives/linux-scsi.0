@@ -1,35 +1,44 @@
 From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: Multi-Initiator SAS
-Date: Tue, 19 Sep 2006 12:14:50 -0700
-Message-ID: <451041AA.4060702@us.ibm.com>
+Subject: Re: Multi-Initiator SAS
+Date: Tue, 19 Sep 2006 13:05:13 -0700
+Message-ID: <45104D79.5030001@us.ibm.com>
+References: <451041AA.4060702@us.ibm.com> <451048C4.2090706@torque.net>
 Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e2.ny.us.ibm.com ([32.97.182.142]:29057 "EHLO e2.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1751965AbWISTOy convert rfc822-to-8bit
+Received: from e34.co.us.ibm.com ([32.97.110.152]:18398 "EHLO
+	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751099AbWISUFQ
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Sep 2006 15:14:54 -0400
+	Tue, 19 Sep 2006 16:05:16 -0400
+In-Reply-To: <451048C4.2090706@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: dougg@torque.net
+Cc: linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-Hi everybody!
+Douglas Gilbert wrote:
 
-Alexis and I connected both a Adaptec 9410 and a LSI 1064E SAS initiator
-to an expander.  Both machines saw the disks attached to the expander,
-and both could send I/Os to the disks.  So far, so good.
+> With the mptsas driver you can use smp_utils to look
+> at that expander via /dev/mptctl ('modprobe mptctl' first).
+> To get an overview of what the expander sees, try:
+>  # smp_discover -mb /dev/mptctl
 
-We then connected a SATA disk to the expander.  libsas BUGd up in
-sas_ex_discover_end_dev (sas_expander.c:636):
+Unfortunately, I see this:
 
-BUG_ON(sas_port_add(phy->port) != 0);
+root@elm3a253:~# smp_discover -mb /dev/mptctl
+MPTCOMMAND ioctl failed: No such device
+ioctl failed
+smp_send_req failed, res=-1
 
-mptsas didn't seem to do anything with the SATA device at all, though
-when we disconnected the SATA disk it recognized that a SATA device went
-away.  We'll have a look at the libsas problem in a jiffy.
+...a strace of the app reveals this:
+
+stat("/dev/mptctl", {st_mode=S_IFCHR|0660, st_rdev=makedev(10, 220),
+...}) = 0
+open("/dev/mptctl", O_RDWR)             = 3
+brk(0)                                  = 0x508000
+brk(0x529000)                           = 0x529000
+ioctl(3, 0xc0486d14, 0x508010)          = -1 ENODEV (No such device)
 
 --D
-
