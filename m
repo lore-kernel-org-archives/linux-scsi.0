@@ -1,40 +1,70 @@
-From: <crazyrushstar@yahoo.com.tw>
-Subject: Fwd: Re: scsi_scan_host will hang up my system!
-Date: Wed, 20 Sep 2006 18:58:45 +0800 (CST)
-Message-ID: <20060920105845.48447.qmail@web18301.mail.tpe.yahoo.com>
+From: "Metathronius Galabant" <m.galabant@googlemail.com>
+Subject: [PATCH]: cciss - remove unneeded spaces in output for attached volumes (resend)
+Date: Wed, 20 Sep 2006 13:22:09 +0200
+Message-ID: <1b270aae0609200422h511d1169na201cdeaee05a24a@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=big5
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web18301.mail.tpe.yahoo.com ([203.84.194.83]:52386 "HELO
-	web18301.mail.tpe.yahoo.com") by vger.kernel.org with SMTP
-	id S1751105AbWITK6s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Sep 2006 06:58:48 -0400
+Received: from wx-out-0506.google.com ([66.249.82.235]:60329 "EHLO
+	wx-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S1751132AbWITLWL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Sep 2006 07:22:11 -0400
+Received: by wx-out-0506.google.com with SMTP id s14so239014wxc
+        for <linux-scsi@vger.kernel.org>; Wed, 20 Sep 2006 04:22:10 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: iss_storagedev@hp.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-I am still reading scsi_mid_low_api.txt file.
+Hi,
 
-Report my newly discovery.
-Trace to kernel code,function call to
-"blk_execute_rq(req->q, NULL, req, 1);" at scsi_lib.c
-It's too deep to trace.
+please see the following patch against the cciss driver (HP/Compaq
+SmartArray Controllers).
+It removes the awkwards spaces after the "=" when displaying the
+geometry of the attached volumes.
 
-This function not response to my driver so that insmod
-stuck.
+Before:
+cciss: using DAC cycles
+     blocks= 286734240 block_size= 512
+     heads= 255, sectors= 32, cylinders= 35139
 
-If you are well known on this please tell me what=20
-wrong is!
+After:
+cciss: using DAC cycles
+     blocks=286734240 block_size=512
+     heads=255, sectors=32, cylinders=35139
 
 
+The following is against 2.6.18-rc6 (and I hope gmail doesn't corrupt
+the inline patch).
+Cheers,
+M.
 
-___________________________________________________=20
- =B1z=AA=BA=A5=CD=AC=A1=A7Y=AE=C9=B3q =A1=D0 =B7=BE=B3q=A1B=AET=BC=D6=A1=
-B=A5=CD=AC=A1=A1B=A4u=A7@=A4@=A6=B8=B7d=A9w=A1I=20
- http://messenger.yahoo.com.tw/
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Signed-off-by: Metathronius Galabant <m.galabant@gmail.com>
+
+diff -ru linux-2.6.18-rc6/drivers/block/cciss.c
+linux-2.6.18-rc6-f/drivers/block/cciss.c
+--- linux-2.6.18-rc6/drivers/block/cciss.c      2006-09-11
+15:57:54.000000000 +0200
++++ linux-2.6.18-rc6-f/drivers/block/cciss.c    2006-09-11
+16:32:42.000000000 +0200
+@@ -1934,7 +1934,7 @@
+        } else {                /* Get geometry failed */
+                printk(KERN_WARNING "cciss: reading geometry failed\n");
+        }
+-       printk(KERN_INFO "      heads= %d, sectors= %d, cylinders= %d\n\n",
++       printk(KERN_INFO "      heads=%d, sectors=%d, cylinders=%d\n\n",
+               drv->heads, drv->sectors, drv->cylinders);
+ }
+
+@@ -1962,7 +1962,7 @@
+                *total_size = 0;
+                *block_size = BLOCK_SIZE;
+        }
+-       printk(KERN_INFO "      blocks= %u block_size= %d\n",
++       printk(KERN_INFO "      blocks=%u block_size=%d\n",
+               *total_size, *block_size);
+        return;
+ }
