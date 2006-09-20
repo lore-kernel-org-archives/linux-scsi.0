@@ -1,58 +1,40 @@
-From: Henne <henne@nachtwindheim.de>
-Subject: Re: [PATCH] scsi-driver ultrastore replace Scsi_Cmnd with struct
- scsi_cmnd
-Date: Wed, 20 Sep 2006 11:57:50 +0200
-Message-ID: <4511109E.4050103@nachtwindheim.de>
-References: <44FE8BAC.1030004@nachtwindheim.de> <20060918185321.GB17670@infradead.org>
+From: <crazyrushstar@yahoo.com.tw>
+Subject: Fwd: Re: scsi_scan_host will hang up my system!
+Date: Wed, 20 Sep 2006 18:58:45 +0800 (CST)
+Message-ID: <20060920105845.48447.qmail@web18301.mail.tpe.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=big5
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from server6.greatnet.de ([83.133.96.26]:7828 "EHLO
-	server6.greatnet.de") by vger.kernel.org with ESMTP
-	id S1750908AbWITJ5h (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Sep 2006 05:57:37 -0400
-In-Reply-To: <20060918185321.GB17670@infradead.org>
+Received: from web18301.mail.tpe.yahoo.com ([203.84.194.83]:52386 "HELO
+	web18301.mail.tpe.yahoo.com") by vger.kernel.org with SMTP
+	id S1751105AbWITK6s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Sep 2006 06:58:48 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Henne <henne@nachtwindheim.de>
-Cc: Andrew Morton <akpm@osdl.org>, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
->>On Wed, Sept 06, 2006 at 10:49:48AM +0200, Henne wrote:From: Henrik Kretzschmar <henne@nachtwindheim.de>
->>
->>Replaces the typedef'd Scsi_Cmnd with struct scsi_cmnd.
->>Signed-off-by: Henrik Kretzschmar <henne@nachtwindheim.de>
+I am still reading scsi_mid_low_api.txt file.
 
->Looks good to me.  It would be even better if you could update the
->driver to not require
->
->	#include "scsi.h"
->
->anymore and get rid of ultrastor.h.  Also your mailer unfortunately
->damages tabs.
+Report my newly discovery.
+Trace to kernel code,function call to
+"blk_execute_rq(req->q, NULL, req, 1);" at scsi_lib.c
+It's too deep to trace.
 
-Sure, thats the big goal for all scsi drivers,but I decided to do one step after another.
-I think it would be better to remove Scsi_Cmnd first to remove drivers/scsi/scsi_typedefs.h
-first and then make the drivers use the headers in include/scsi/.
-This is imho clearer to have one target per patch.
-1. -	change Scsi_Cmnd to struct scsi_cmnd
-	remove scsi_typedefs.h from drivers/scsi/scsi.h
-	remove scsi_typedefs.h from the tree
-2. -	put the local headers into c files if only used
-	by the driver itself (maybe delete unneeded prototypes or reorder the functions that no prototypes are needed)
-3. -	switch over to include/scsi/
+This function not response to my driver so that insmod
+stuck.
 
-Thats is my opinion.
-
->Also your mailer unfortunately damages tabs.
-
-No, it doesn't. Even if it thunderbird. :)
-ultrastor.h uses 4 spaces as intention and I just forgot to replace the with a tab.
-Thanks. 
-But I'm still looking for an easy standalone commandline smtp-engine to send my patches. Any suggestions?
-
-Greets,
-Henne
+If you are well known on this please tell me what=20
+wrong is!
 
 
 
+___________________________________________________=20
+ =B1z=AA=BA=A5=CD=AC=A1=A7Y=AE=C9=B3q =A1=D0 =B7=BE=B3q=A1B=AET=BC=D6=A1=
+B=A5=CD=AC=A1=A1B=A4u=A7@=A4@=A6=B8=B7d=A9w=A1I=20
+ http://messenger.yahoo.com.tw/
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
