@@ -1,70 +1,57 @@
-From: "Metathronius Galabant" <m.galabant@googlemail.com>
-Subject: [PATCH]: cciss - remove unneeded spaces in output for attached volumes (resend)
-Date: Wed, 20 Sep 2006 13:22:09 +0200
-Message-ID: <1b270aae0609200422h511d1169na201cdeaee05a24a@mail.gmail.com>
+From: "=?ISO-8859-2?Q?V=E1clav_B=EDlek?=" <v.bilek@1art.cz>
+Subject: unable to compile aic94xx-sas-2.6.git tree kernel
+Date: Wed, 20 Sep 2006 14:09:44 +0200
+Message-ID: <45112F88.6010708@1art.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-2
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.235]:60329 "EHLO
-	wx-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1751132AbWITLWL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Sep 2006 07:22:11 -0400
-Received: by wx-out-0506.google.com with SMTP id s14so239014wxc
-        for <linux-scsi@vger.kernel.org>; Wed, 20 Sep 2006 04:22:10 -0700 (PDT)
-Content-Disposition: inline
+Received: from ns.albatani.cz ([195.122.208.21]:35021 "EHLO ns.albatani.cz")
+	by vger.kernel.org with ESMTP id S1751155AbWITMJ4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Sep 2006 08:09:56 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: iss_storagedev@hp.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Hi,
+Helo
 
-please see the following patch against the cciss driver (HP/Compaq
-SmartArray Controllers).
-It removes the awkwards spaces after the "=" when displaying the
-geometry of the attached volumes.
+I am trying to run a supermicro X7DB3 with adaptec 9410W and 9 sata
+disks 8 on 9410W and 1 on onboard sata intel controler.
 
-Before:
-cciss: using DAC cycles
-     blocks= 286734240 block_size= 512
-     heads= 255, sectors= 32, cylinders= 35139
+I did a git clone of
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/aic94xx-sas-2.6.git
 
-After:
-cciss: using DAC cycles
-     blocks=286734240 block_size=512
-     heads=255, sectors=32, cylinders=35139
+but I am not able to compile it :(
+
+when I do make mrproper; make menuconfig -> disable modular kernel;
+enable  aic94xx, sata piix,and nic e1000 ;
+make ...
+
+i get :
+
+drivers/scsi/scsi.c: In function `scsi_device_put':
+drivers/scsi/scsi.c:880: warning: implicit declaration of function
+`module_refcount'
+.
+.
+.
+.
+  LD      drivers/built-in.o
+  GEN     .version
+  CHK     include/linux/compile.h
+  UPD     include/linux/compile.h
+  CC      init/version.o
+  LD      init/built-in.o
+  LD      .tmp_vmlinux1
+drivers/built-in.o(.text+0xb2be7): In function `scsi_device_put':
+: undefined reference to `module_refcount'
+drivers/built-in.o(.text+0xc7477): In function `asd_request_firmware':
+: undefined reference to `request_firmware'
+make: *** [.tmp_vmlinux1] Error 1
 
 
-The following is against 2.6.18-rc6 (and I hope gmail doesn't corrupt
-the inline patch).
-Cheers,
-M.
+can anybody help me ?
 
+Vaclav Bilek
 
-Signed-off-by: Metathronius Galabant <m.galabant@gmail.com>
-
-diff -ru linux-2.6.18-rc6/drivers/block/cciss.c
-linux-2.6.18-rc6-f/drivers/block/cciss.c
---- linux-2.6.18-rc6/drivers/block/cciss.c      2006-09-11
-15:57:54.000000000 +0200
-+++ linux-2.6.18-rc6-f/drivers/block/cciss.c    2006-09-11
-16:32:42.000000000 +0200
-@@ -1934,7 +1934,7 @@
-        } else {                /* Get geometry failed */
-                printk(KERN_WARNING "cciss: reading geometry failed\n");
-        }
--       printk(KERN_INFO "      heads= %d, sectors= %d, cylinders= %d\n\n",
-+       printk(KERN_INFO "      heads=%d, sectors=%d, cylinders=%d\n\n",
-               drv->heads, drv->sectors, drv->cylinders);
- }
-
-@@ -1962,7 +1962,7 @@
-                *total_size = 0;
-                *block_size = BLOCK_SIZE;
-        }
--       printk(KERN_INFO "      blocks= %u block_size= %d\n",
-+       printk(KERN_INFO "      blocks=%u block_size=%d\n",
-               *total_size, *block_size);
-        return;
- }
