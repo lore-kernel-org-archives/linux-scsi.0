@@ -1,122 +1,141 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: AIC94XX discovery timeout problem details...
-Date: Wed, 20 Sep 2006 07:55:59 -0700 (PDT)
-Message-ID: <20060920145559.15218.qmail@web31807.mail.mud.yahoo.com>
-References: <20060919205902.GA4326@us.ibm.com>
-Reply-To: ltuikov@yahoo.com
+From: "Moore, Eric" <Eric.Moore@lsil.com>
+Subject: RE: [PATCH] mptspi : min_period, max_offset,max_width,incorrectlyset, resulting domain validation failing
+Date: Wed, 20 Sep 2006 09:24:52 -0600
+Message-ID: <664A4EBB07F29743873A87CF62C26D7032CEFC@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31807.mail.mud.yahoo.com ([68.142.207.70]:17753 "HELO
-	web31807.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S1751579AbWITOz7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Sep 2006 10:55:59 -0400
-In-Reply-To: <20060919205902.GA4326@us.ibm.com>
+Received: from mail0.lsil.com ([147.145.40.20]:50412 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1751621AbWITPZC convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Sep 2006 11:25:02 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: malahal@us.ibm.com
+To: James Bottomley <James.Bottomley@SteelEye.com>
 Cc: linux-scsi@vger.kernel.org
 
---- malahal@us.ibm.com wrote:
-> I am planning to process port/phy events in two phases. Phase-I sets up
-> asd_sas_port, asd_sas_phy lists and calls the LLDD with a correct
-> phy_mask. Phase-II is done in the thread context by queuing to the scsi
-> work queue that involves setting up sysfs objects.  Still there would be
-> just one thread setting up/tearing down sysfs objects that should avoid
-> any races.
-> 
-> Would appreciate any suggestions or issues with this approach.
+On Tuesday, September 19, 2006 7:17 PM, James Bottomley wrote: 
 
-Malahal,
-
-Your persev erance is commen dable.  Unfortunately this approach is too
-simplistic and naive, no offence intended.  That is, such an approach
-seems to be the first thing that "pops" into someone's head on how
-to do it and a more elaborate analysis of the protocol is warranted
-when coding such concepts.  That is, you want to handle the absolute
-general case of _more than one type of event_. (This is not intuitive.)
-
-You should take a look at the "patches" submitted by Bottomley and Hellwig
-in the areas of event infra, event processing, and discovery, since
-I posted the SAS Stack:
-  - The Priority Queue Without Duplication Implementation (sas_event.c)
-for queueing infinitely many events in finite storage, sorted by arrival
-time, where insertion is O(1) and ordered removal is O(1) has
-been completely removed.  For some reason they called it "long queue"
-in the subject line of their message or in the body, cannot remember.
-  - Threaded event processing has been completely removed.
-  - Threaded discovery has been removed for the more naive and simplistic,
-do-it-all-now-at-once way.
-
-Add to this the fact that some things shouldn't be done "right now",
-even though they happened "right now", but should be done "way later"
-because you want other things which depend on those things to ...
-This isn't intuitive, but is the result of careful analysis of the protocol.
-
-That is, since my original posting of the SAS Stack, Bottomley's refusal
-to accept it into the kernel has resulted in what you have right now.
-
-But look on the bright side: just take a look at the mailing list at how
-many people are now employed by this?  Five, six people?  So from another
-angle, Bottomley's refusal to accept what is the beginning of an enterprise
-level SAS Stack written by one person, and his subsequent "patches" has
-now created jobs for at least 5 people, and keeps another 1 or 2 busy with
-something to do.
-
-Good luck! (Because you're going to need it.)
-   Luben
-P.S. I even wrote a proposal for a presentation at OLS this year ('06) to
-describe the design and architectural decisions of the SAS Stack and SAS LLDD,
-as well as talk about SATL and future SCSI directions and while this proposal
-was initialy approved, then later it was silently dropped.  The details are in
-the archives of linux-scsi.  Good luck!
-
-> Thanks, Malahal.
-> 
-> Luben Tuikov [ltuikov@yahoo.com] wrote:
-> > --- malahal@us.ibm.com wrote:
-> > > I chased the time out problem and found that the PORTE_BYTES_DMAED port
-> > > event must be responded with a call to lldd_port_formed() which will
-> > > update PHY_IS_UP and port-links fields in DDB 0. As there is a single
-> > > thread handling PHY/port events as well as discovery, we really can't
-> > > handle PORTE_BYTES_DMAED event until the discovery is complete. This
-> > > results in SCSI commands timing out in the discovery thread no matter
-> > > what I do!  This problem may be unique to Vitesse expander, read the PS
-> > > section for details.
-> > > 
-> > > Tried using two threads, one for events and the other for discovery.
-> > 
-> > Malahal,
-> > 
-> > If you go back in the archives, and take a look at the SAS Stack
-> > as I submitted it last year, you'll notice that this is exactly how
-> > the code is: there is a separate event thread and a separate
-> > discovery thread.
-> > 
-> > That is, from inception, my code has always had two separate threads,
-> > one for events and one for discovery.
-> > 
-> > I wasn't aware that the code had been changed such that a single
-> > thread handles events and discovery.  This is a very naive approach,
-> > and a regression over the original code.
-> > 
-> > > That avoided the timeout problems, but the discovery thread would die
-> > > after few iterations due to the event thread and the discovery thread
-> > > racing each other for setting up and tearing down of sysfs objects.
-> > 
-> > Indeed, the situation presented in such circumstances is tricky.
-> > These "races" have been dealt with in my (original) code.  Currently,
-> > I don't experience any problems with my SAS Stack, as I maintain it.
-> > 
-> > If any of my original comments are still left in the code or the README
-> > files, that would give you a hint of how such "races" are handled.
-> > 
-> > > I tried calling lldd_port_formed() with appropriate phy_mask from the
-> > > notify_port_event() itself. That worked fine. It is just a hack for now!
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Well, by standard, I'm supposed to start out negotiation with the
+> fastest I can possibly do and the drive modifies this in its 
+> reply.  The
+> heuristics over DT vs non-DT in the transport class are to cope with
+> arguably buggy drives in the field.  I've never come across a 
+> DT capable
+> drive on an LVD bus that showed a problem in this regard ... have you
+> found one?
 > 
 
+Yes I have a U160 drive that does that.  Meaning sending a ppr
+with factor=0x8, the device returns factor=0xA.  Instead
+if you send a factor=0x9, the device returns factor=0x9.  In 
+other words, spi transport is short changing nego on U160 devices.
+See my proof at the end of this email.
+
+My suggestion is:
+the spi transport layer should only negotiate at factor=0x8
+when both QAS and IUS are enabled in byte 56 of the inquiry 
+data.  When you see both these bits zero, you should start 
+your max speed inquiry test at factor=0x9 instead of factor=0x8. 
+Yeah, I know that this came out in SPI-3, but there really
+are no U160 devices out there that can actually do QAS. 
+
+Also, another problem is you should only enable QAS when all 
+the devices on a single bus are U320(excluding safte proc).  
+Meaning, if you have mixed mode case, such as U160 mixed with 
+U320, you should disable QAS for all the U320 devices.
+The problem you will face is the U320 devices with QAS enabled
+are going to starve the bus, and the other devices never win 
+arbitration.  I've seen in my test bed using current
+spi transport.  In my environment, I have two U160 devices,
+and one U320 device. Spi transport will enable
+QAS for the U320 device.
+
+-----------------------------------------------------------------
+
+Here is my proof.  Here are two scsi bus traces.  
+
+(1) The first trace shows that sending ppr with 
+factor=0x8 nego, the device returns with factor=0xA.   
+(2) The second trace shows that sending ppr with 
+factor=0x9 nego, the device returns with factor=0x9.
+
+
+Fist Trace:
+
+  129          2_414  Arb
+  130          1_316  Arbwin 7
+  131          0_788 +Select 7,0
+  132         11_878 +Sel/Resel End
+  133        178_276 +MsgOut C0 Identify
+                             20 Simple Queue
+                             01 Tag
+                             01 06 04 08 00 7F 01 D3
+                       Parallel Protocol Pw:6.25ns,off:127,Width:16
+bits,
+                       IU=1 DT=1 QAS=0
+  134         44_228  MsgIn  01 06 04 0A 00 3F 01 00
+                       Parallel Protocol Pw:25ns,off:63,Width:16 bits,
+                       IU=0 DT=0 QAS=0
+  135        197_962  CMD - Inquiry     
+                       12 00 00 00 60 00
+  136          1_174  DataIn (W)
+                   0h: 00 00 03 02 5B 00 00 3E ....[..>
+                   8h: 51 55 41 4E 54 55 4D 20 QUANTUM 
+                  10h: 41 54 4C 41 53 20 56 20 ATLAS V 
+                  18h: 33 36 20 57 4C 53 20 20 36 WLS  
+                  20h: 30 41 30 36 31 34 33 39 0A061439
+                  28h: 39 31 31 32 32 30 32 38 91122028
+                  30h: 20 20 39 39 31 30 30 37   991007
+                  38h: 0C 30 30 30 30 30 30 30 .0000000
+                  40h: 30 30 30 30 30 30 30 30 00000000
+                  48h: 30 30 30 30 30 30 30 30 00000000
+                  50h: 30 30 30 30 30 30 30 30 00000000
+                  58h: 30 30 30 30 30 30 30 30 00000000
+                      (96 Bytes)
+  137         46_262  DEnd  96 Bytes
+  138          0_938  Status 00 Good
+  139          1_224  MsgIn  00 Cmd Complete
+  140         59_330 Bus Free 
+
+
+Second Trace:
+
+  128        730_298 Bus Free
+  129          2_412  Arb
+  130          1_314  Arbwin 7
+  131          0_790 +Select 7,0
+  132         12_830 +Sel/Resel End
+  133        161_576 +MsgOut C0 Identify
+                             20 Simple Queue
+                             01 Tag
+                             01 06 04 09 00 7F 01 02
+                       Parallel Protocol Pw:12.5ns,off:127,Width:16
+bits,
+                       IU=0 DT=1 QAS=0
+  134         45_576  MsgIn  01 06 04 09 00 3F 01 02
+                       Parallel Protocol Pw:12.5ns,off:63,Width:16 bits,
+                       IU=0 DT=1 QAS=0
+  135        201_852  CMD - Inquiry     
+                       12 00 00 00 60 00
+  136          0_644  DataIn (DT)
+                   0h: 00 00 03 02 5B 00 00 3E ....[..>
+                   8h: 51 55 41 4E 54 55 4D 20 QUANTUM 
+                  10h: 41 54 4C 41 53 20 56 20 ATLAS V 
+                  18h: 33 36 20 57 4C 53 20 20 36 WLS  
+                  20h: 30 41 30 36 31 34 33 39 0A061439
+                  28h: 39 31 31 32 32 30 32 38 91122028
+                  30h: 20 20 39 39 31 30 30 37   991007
+                  38h: 0C 30 30 30 30 30 30 30 .0000000
+                  40h: 30 30 30 30 30 30 30 30 00000000
+                  48h: 30 30 30 30 30 30 30 30 00000000
+                  50h: 30 30 30 30 30 30 30 30 00000000
+                  58h: 30 30 30 30 30 30 30 30 00000000
+                      (96 Bytes)
+  137         30_054  DEnd  96 Bytes
+  138          0_938  Status 00 Good
+  139          1_204  MsgIn  00 Cmd Complete
+  140         88_910 Bus Free
