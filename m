@@ -1,101 +1,87 @@
-From: Mark Haverkamp <markh@osdl.org>
-Subject: Re: [PATCH] mptspi: Bug fix to prevent infinite nested
-	domainvalidation
-Date: Wed, 20 Sep 2006 08:42:42 -0700
-Message-ID: <1158766963.27672.23.camel@markh3.pdx.osdl.net>
-References: <20060920003550.GA1154@lsil.com>
+From: Alexis Bruemmer <alexisb@us.ibm.com>
+Subject: Re: unable to compile aic94xx-sas-2.6.git tree kernel
+Date: Wed, 20 Sep 2006 08:57:18 -0700
+Message-ID: <1158767839.906.63.camel@localhost.localdomain>
+References: <45112F88.6010708@1art.cz>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:39896 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751650AbWITPmu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Sep 2006 11:42:50 -0400
-In-Reply-To: <20060920003550.GA1154@lsil.com>
+Received: from e33.co.us.ibm.com ([32.97.110.151]:55975 "EHLO
+	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751682AbWITP5p
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Sep 2006 11:57:45 -0400
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e33.co.us.ibm.com (8.13.8/8.12.11) with ESMTP id k8KFvj2c001449
+	for <linux-scsi@vger.kernel.org>; Wed, 20 Sep 2006 11:57:45 -0400
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by westrelay02.boulder.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id k8KFviLt268942
+	for <linux-scsi@vger.kernel.org>; Wed, 20 Sep 2006 09:57:44 -0600
+Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k8KFviQL030212
+	for <linux-scsi@vger.kernel.org>; Wed, 20 Sep 2006 09:57:44 -0600
+In-Reply-To: <45112F88.6010708@1art.cz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Eric Moore <eric.moore@lsil.com>
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
+To: =?ISO-8859-1?Q?V=E1clav_B=EDlek?= <v.bilek@1art.cz>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, 2006-09-19 at 18:35 -0600, Eric Moore wrote:
-> From host_reset, this patch will complete domain validation
-> in the same context as the eh threads.  I've added passing
-> the sleepFlag, which is CAN_SLEEP in the context of eh threads.
-> 
-> Mark pls try this with the patch that James posted earlier that
-> prevents re entry to pending dv.
+On Wed, 2006-09-20 at 14:09 +0200, V=C3=A1clav B=C3=ADlek wrote:
+> Helo
+>=20
+> I am trying to run a supermicro X7DB3 with adaptec 9410W and 9 sata
+> disks 8 on 9410W and 1 on onboard sata intel controler.
+>=20
+> I did a git clone of
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/aic94xx-sas-2.6.gi=
+t
 
-Something isn't working quite right.  Here is the log.  The modprobe
-gets stuck.
+You will also need to include scsi-misc-2.6 from jejb's tree.
 
-Sep 20 08:20:37 stp4-000 Fusion MPT base driver 3.04.01
-Sep 20 08:20:37 stp4-000 Copyright (c) 1999-2005 LSI Logic Corporation
-Sep 20 08:20:37 stp4-000 Fusion MPT SPI Host driver 3.04.01
-Sep 20 08:20:37 stp4-000 mptbase: Initiating ioc0 bringup
-Sep 20 08:20:39 stp4-000 ioc0: 53C1030: Capabilities={Initiator}
-Sep 20 08:20:40 stp4-000 scsi1 : ioc0: LSI53C1030, FwRev=01030a00h, Ports=1, MaxQ=222, IRQ=20
-Sep 20 08:20:41 stp4-000 scsi 1:0:1:0: Direct access     HP       18.2GB C 80-H008 H008 PQ: 0 ANSI: 2
-Sep 20 08:20:41 stp4-000 target1:0:1: Beginning Domain Validation
-Sep 20 08:20:41 stp4-000 target1:0:1: Ending Domain Validation
-Sep 20 08:20:41 stp4-000 target1:0:1: FAST-80 WIDE SCSI 160.0 MB/s DT RTI WRFLOW PCOMP (12.5 ns, offset 126)
-Sep 20 08:20:41 stp4-000 SCSI device sdb: 35566480 512-byte hdwr sectors (18210 MB)
-Sep 20 08:20:41 stp4-000 sdb: Write Protect is off
-Sep 20 08:20:41 stp4-000 sdb: Mode Sense: a7 00 10 08
-Sep 20 08:20:41 stp4-000 SCSI device sdb: drive cache: write back w/ FUA
-Sep 20 08:20:41 stp4-000 SCSI device sdb: 35566480 512-byte hdwr sectors (18210 MB)
-Sep 20 08:20:41 stp4-000 sdb: Write Protect is off
-Sep 20 08:20:41 stp4-000 sdb: Mode Sense: a7 00 10 08
-Sep 20 08:20:41 stp4-000 SCSI device sdb: drive cache: write back w/ FUA
-Sep 20 08:20:41 stp4-000 sdb: sdb1
-Sep 20 08:20:41 stp4-000 sd 1:0:1:0: Attached scsi disk sdb
-Sep 20 08:20:41 stp4-000 sd 1:0:1:0: Attached scsi generic sg1 type 0
-Sep 20 08:20:41 stp4-000 scsi 1:0:2:0: Direct access     HP       18.2GB C 80-H008 H008 PQ: 0 ANSI: 2
-Sep 20 08:20:41 stp4-000 target1:0:2: Beginning Domain Validation
-Sep 20 08:20:41 stp4-000 target1:0:2: Ending Domain Validation
-Sep 20 08:20:41 stp4-000 target1:0:2: FAST-80 WIDE SCSI 160.0 MB/s DT RTI WRFLOW PCOMP (12.5 ns, offset 126)
-Sep 20 08:20:41 stp4-000 SCSI device sdc: 35566480 512-byte hdwr sectors (18210 MB)
-Sep 20 08:20:42 stp4-000 sdc: Write Protect is off
-Sep 20 08:20:42 stp4-000 sdc: Mode Sense: a7 00 10 08
-Sep 20 08:20:42 stp4-000 SCSI device sdc: drive cache: write back w/ FUA
-Sep 20 08:20:42 stp4-000 SCSI device sdc: 35566480 512-byte hdwr sectors (18210 MB)
-Sep 20 08:20:42 stp4-000 sdc: Write Protect is off
-Sep 20 08:20:42 stp4-000 sdc: Mode Sense: a7 00 10 08
-Sep 20 08:20:42 stp4-000 SCSI device sdc: drive cache: write back w/ FUA
-Sep 20 08:20:42 stp4-000 sdc: unknown partition table
-Sep 20 08:20:42 stp4-000 sd 1:0:2:0: Attached scsi disk sdc
-Sep 20 08:20:42 stp4-000 sd 1:0:2:0: Attached scsi generic sg2 type 0
-Sep 20 08:20:42 stp4-000 scsi 1:0:3:0: Direct access     HP       18.2GB C 80-H008 H008 PQ: 0 ANSI: 2
-Sep 20 08:20:42 stp4-000 target1:0:3: Beginning Domain Validation
-Sep 20 08:20:42 stp4-000 target1:0:3: Ending Domain Validation
-Sep 20 08:20:42 stp4-000 target1:0:3: FAST-80 WIDE SCSI 160.0 MB/s DT RTI WRFLOW PCOMP (12.5 ns, offset 126)
-Sep 20 08:20:42 stp4-000 SCSI device sdd: 35566480 512-byte hdwr sectors (18210 MB)
-Sep 20 08:20:42 stp4-000 sdd: Write Protect is off
-Sep 20 08:20:42 stp4-000 sdd: Mode Sense: a7 00 10 08
-Sep 20 08:20:42 stp4-000 SCSI device sdd: drive cache: write back w/ FUA
-Sep 20 08:20:42 stp4-000 SCSI device sdd: 35566480 512-byte hdwr sectors (18210 MB)
-Sep 20 08:20:42 stp4-000 sdd: Write Protect is off
-Sep 20 08:20:42 stp4-000 sdd: Mode Sense: a7 00 10 08
-Sep 20 08:20:42 stp4-000 SCSI device sdd: drive cache: write back w/ FUA
-Sep 20 08:20:42 stp4-000 sdd: unknown partition table
-Sep 20 08:20:42 stp4-000 sd 1:0:3:0: Attached scsi disk sdd
-Sep 20 08:20:42 stp4-000 sd 1:0:3:0: Attached scsi generic sg3 type 0
-Sep 20 08:20:42 stp4-000 scsi 1:0:5:0: Processor         HP       D5989C           1.06 PQ: 0 ANSI: 2
-Sep 20 08:20:42 stp4-000 target1:0:5: Beginning Domain Validation
-Sep 20 08:20:42 stp4-000 target1:0:5: Ending Domain Validation
-Sep 20 08:20:42 stp4-000 target1:0:5: asynchronous
-Sep 20 08:20:42 stp4-000 scsi 1:0:5:0: Attached scsi generic sg4 type 3
-Sep 20 08:20:42 stp4-000 scsi 1:0:8:0: Direct access     HP 18.2G MAP3367NC#HJ     HPC6 PQ: 0 ANSI: 3
-Sep 20 08:20:42 stp4-000 target1:0:8: Beginning Domain Validation
-Sep 20 08:20:52 stp4-000 mptscsih: ioc0: attempting task abort! (sc=d4c2be60)
-Sep 20 08:20:52 stp4-000 scsi 1:0:8:0:
-Sep 20 08:20:52 stp4-000 command: cdb[0]=0x12: 12 00 00 00 60 00
-Sep 20 08:20:54 stp4-000 mptbase: Initiating ioc0 recovery
-Sep 20 08:21:19 stp4-000 target1:0:1: Beginning Domain Validation
+--Alexis
+>=20
+> but I am not able to compile it :(
+>=20
+> when I do make mrproper; make menuconfig -> disable modular kernel;
+> enable  aic94xx, sata piix,and nic e1000 ;
+> make ...
+>=20
+> i get :
+>=20
+> drivers/scsi/scsi.c: In function `scsi_device_put':
+> drivers/scsi/scsi.c:880: warning: implicit declaration of function
+> `module_refcount'
+> .
+> .
+> .
+> .
+>   LD      drivers/built-in.o
+>   GEN     .version
+>   CHK     include/linux/compile.h
+>   UPD     include/linux/compile.h
+>   CC      init/version.o
+>   LD      init/built-in.o
+>   LD      .tmp_vmlinux1
+> drivers/built-in.o(.text+0xb2be7): In function `scsi_device_put':
+> : undefined reference to `module_refcount'
+> drivers/built-in.o(.text+0xc7477): In function `asd_request_firmware'=
+:
+> : undefined reference to `request_firmware'
+> make: *** [.tmp_vmlinux1] Error 1
+>=20
+>=20
+> can anybody help me ?
+>=20
+> Vaclav Bilek
+>=20
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-
-
-> 
--- 
-Mark Haverkamp <markh@osdl.org>
-
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
