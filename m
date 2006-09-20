@@ -1,82 +1,58 @@
-From: <crazyrushstar@yahoo.com.tw>
-Subject: Re: scsi_scan_host will hang up my system!
-Date: Wed, 20 Sep 2006 13:06:30 +0800 (CST)
-Message-ID: <20060920050630.4431.qmail@web18302.mail.tpe.yahoo.com>
-References: <20060920040708.GA15909@synapse.neuralscape.com>
+From: Henne <henne@nachtwindheim.de>
+Subject: Re: [PATCH] scsi-driver ultrastore replace Scsi_Cmnd with struct
+ scsi_cmnd
+Date: Wed, 20 Sep 2006 11:57:50 +0200
+Message-ID: <4511109E.4050103@nachtwindheim.de>
+References: <44FE8BAC.1030004@nachtwindheim.de> <20060918185321.GB17670@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=big5
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web18302.mail.tpe.yahoo.com ([203.84.194.84]:48573 "HELO
-	web18302.mail.tpe.yahoo.com") by vger.kernel.org with SMTP
-	id S1751189AbWITFGc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Sep 2006 01:06:32 -0400
-In-Reply-To: <20060920040708.GA15909@synapse.neuralscape.com>
+Received: from server6.greatnet.de ([83.133.96.26]:7828 "EHLO
+	server6.greatnet.de") by vger.kernel.org with ESMTP
+	id S1750908AbWITJ5h (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Sep 2006 05:57:37 -0400
+In-Reply-To: <20060918185321.GB17670@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, Henne <henne@nachtwindheim.de>
+Cc: Andrew Morton <akpm@osdl.org>, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
+>>On Wed, Sept 06, 2006 at 10:49:48AM +0200, Henne wrote:From: Henrik Kretzschmar <henne@nachtwindheim.de>
+>>
+>>Replaces the typedef'd Scsi_Cmnd with struct scsi_cmnd.
+>>Signed-off-by: Henrik Kretzschmar <henne@nachtwindheim.de>
 
---- Karen Shaeffer <shaeffer@neuralscape.com> =BB=A1=A1G
+>Looks good to me.  It would be even better if you could update the
+>driver to not require
+>
+>	#include "scsi.h"
+>
+>anymore and get rid of ultrastor.h.  Also your mailer unfortunately
+>damages tabs.
 
-> On Tue, Sep 19, 2006 at 09:48:46PM -0600, Matthew
-> Wilcox wrote:
-> > On Wed, Sep 20, 2006 at 11:46:13AM +0800,
-> crazyrushstar@yahoo.com.tw wrote:
-> > > Does someone can advise me where the document of
-> "scsi
-> > > related" is?
-> >=20
-> > Documentation/scsi/scsi_mid_low_api.txt was of
-> immense help to me.
->=20
-> I would agree that documentation is well worth
-> reading. I also would
-> purchase the applicable scsi standards.
->=20
-> http://www.t10.org/
->=20
-> You have to go to the referred links from there to
-> actually buy
-> the standards. Those are very worth reading also.
-> Actually well
-> written and easy to assimilate. And, after all, the
-> code is
-> supposed to implement those standards -- so I would
-> think
-> everyone on this list has them. (smiles ;)
->=20
-> Then all you have to do is work with the source
-> code. Have fun.
->=20
-> Thanks,
-> Karen
-> --=20
->  Karen Shaeffer
->  Neuralscape, Palo Alto, Ca. 94306
->  shaeffer@neuralscape.com=20
-> http://www.neuralscape.com
+Sure, thats the big goal for all scsi drivers,but I decided to do one step after another.
+I think it would be better to remove Scsi_Cmnd first to remove drivers/scsi/scsi_typedefs.h
+first and then make the drivers use the headers in include/scsi/.
+This is imho clearer to have one target per patch.
+1. -	change Scsi_Cmnd to struct scsi_cmnd
+	remove scsi_typedefs.h from drivers/scsi/scsi.h
+	remove scsi_typedefs.h from the tree
+2. -	put the local headers into c files if only used
+	by the driver itself (maybe delete unneeded prototypes or reorder the functions that no prototypes are needed)
+3. -	switch over to include/scsi/
 
-Thank you all very much
-I have google out a link=20
-"http://www.mjmwired.net/kernel/Documentation/scsi/scsi_mid_low_api.txt=
-"
-I will read this right now, hope can solve this
-problem.
+Thats is my opinion.
 
-By the way, I have read T10 before, Because of
-writting pci option rom and so on. It is really a
-basic document for a scsi device developer wherether.
+>Also your mailer unfortunately damages tabs.
+
+No, it doesn't. Even if it thunderbird. :)
+ultrastor.h uses 4 spaces as intention and I just forgot to replace the with a tab.
+Thanks. 
+But I'm still looking for an easy standalone commandline smtp-engine to send my patches. Any suggestions?
+
+Greets,
+Henne
 
 
 
-
-___________________________________________________=20
- =B1z=AA=BA=A5=CD=AC=A1=A7Y=AE=C9=B3q =A1=D0 =B7=BE=B3q=A1B=AET=BC=D6=A1=
-B=A5=CD=AC=A1=A1B=A4u=A7@=A4@=A6=B8=B7d=A9w=A1I=20
- http://messenger.yahoo.com.tw/
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
