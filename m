@@ -1,55 +1,42 @@
-From: James Smart <James.Smart@Emulex.Com>
+From: Mike Christie <michaelc@cs.wisc.edu>
 Subject: Re: [RFC] [PATCH] qla4xxx driver resubmission
-Date: Thu, 21 Sep 2006 14:11:28 -0400
-Message-ID: <4512D5D0.2040209@emulex.com>
-References: <0BB3E5E7462EEA4295BC02D49691DC074144B0@AVEXCH1.qlogic.org>
-Reply-To: James.Smart@Emulex.Com
+Date: Thu, 21 Sep 2006 13:25:31 -0500
+Message-ID: <4512D91B.1020507@cs.wisc.edu>
+References: <1158710887.4358.17.camel@dcslnxpc.site> <451297C7.4000007@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:24448 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S1751434AbWIUSMD
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Sep 2006 14:12:03 -0400
-In-Reply-To: <0BB3E5E7462EEA4295BC02D49691DC074144B0@AVEXCH1.qlogic.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:54667 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S1751330AbWIUSZs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 21 Sep 2006 14:25:48 -0400
+In-Reply-To: <451297C7.4000007@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Somayajulu <david.somayajulu@qlogic.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, Mike Christie <michaelc@cs.wisc.edu>, Doug Maxey <dwm@enoyolf.org>, David Wagner <david.wagner@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>, Duane Grigsby <duane.grigsby@qlogic.com>
+To: James.Smart@Emulex.Com
+Cc: David C Somayajulu <david.somayajulu@qlogic.com>, James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, Doug Maxey <dwm@enoyolf.org>, David Wagner <david.wagner@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>, Duane Grigsby <duane.grigsby@qlogic.com>
 
-
-
-David Somayajulu wrote:
->> Why does your LLD need to reach up into the block layer to find an i/o
-> ?
-> Block layer tagging was the gating item in the previous submission.
-> Going over the conversation on the linux-scsi reflector on STEX driver
-> in this aspect, led us to believe that there should not be any driver
-> level book-keeping of outstanding commands to the HBA. This was the
-> reason for creating scsi_host_find_tag() in scsi_tcq.h (in the patch
-> titled [RFC] [PATCH] helper function for retrieving scsi_cmd given
-> hostbased block layer tag)
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=115871027627964&w=2
+James Smart wrote:
+> Why does your LLD need to reach up into the block layer to find an i/o ?
 > 
-> James, would you mind letting us know if block-layer tagging in your
-> opinion simply meant using the scsi_cmd->request->tag and let the driver
-> do the book-keeping of out-standing commands to HBA (like stex driver)
-> or is it along the lines we have implemented.
+> Even if you are using tags as an index into something... I would think that
+> having to go up to the blk layer to retrieve a something that should have
+> already been known lower in the driver leaves room for race conditions.
+> 
 
-Well, in general, I've been working on stuff that has little use for the
-tags, so they aren't that meaningful. I can certainly see some implementations
-that can benefit.
+This is how the blk and scsi tag api work for queue based tagging. We
+have the scsi_find_tag() function which takes a scsi device and than
+calls blk_queue_find_tag to get the request. It then does all the magic
+sdev to request_queue and request to scsi command work and pass the LLD
+the scsi command for the tag. So we can either add a driver array and do
+some tag to scsi command or driver stucture mapping or we can use the
+array already created in the scsi host block queue tag. And as you see
+Dave's patch did the latter in the spirit of not duplicating what
+scsi-ml or the block layer already do.
 
-But, on a newish transport like iSCSI, I'm surprised. There's lots of
-house-keeping that has to be done with resets and task management that makes
-me believe it's better/easier with local structures. I also know that I like
-to double-check my hardware (based on local structure) rather than blindly
-trusting job handles. I also believe there will be locking issues or data
-structures in flight issues between the block layer and LLDD that will
-be ugly.
-
-I wanted some justification. The new block layer function hasn't been needed
-in the past and I thought it a rather odd thing to add.
-
--- james
+I think there are some basic races though. For example, scsi_request_fn
+calls blk_queue_start_tag with only the queue lock held and so if the
+request_fn was called for two devices on the same host at the same time
+they both could call find_first_zero_bit on the shared bqt->tag_map and
+end up getting the same tag.
