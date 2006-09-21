@@ -1,302 +1,168 @@
 From: Sumant Patro <sumantp@lsil.com>
-Subject: [Patch 3/7] megaraid_sas function pointer for disable interrupt
-Date: Wed, 20 Sep 2006 18:57:03 -0700
-Message-ID: <1158803823.4171.44.camel@dumbo>
+Subject: [Patch 4/7] megaraid_sas: adds reboot handler
+Date: Wed, 20 Sep 2006 19:02:51 -0700
+Message-ID: <1158804171.4171.51.camel@dumbo>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-3SeUp7pHSTkwhL56wTrj"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:42178 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1750892AbWIUA5L (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Sep 2006 20:57:11 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Content-Type: multipart/mixed; boundary="=-R6HCLmdY/wtImRhpIp5v"
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750912AbWIUBC7@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
 Cc: akpm@osdl.org, hch@lst.de, linux-kernel@vger.kernel.org, Neela.Kolli@lsil.com, Bo.Yang@lsil.com
+List-Id: linux-scsi@vger.kernel.org
 
 
---=-3SeUp7pHSTkwhL56wTrj
+--=-R6HCLmdY/wtImRhpIp5v
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 
-This patch adds function pointer to invoke disable interrupt for 
-xscale and ppc IOP based controllers. Removes old implementation that checks
-for controller type in megasas_disable_intr.
+This patch adds handler to get reboot notification and fires flush command from 
+the reboot notification handler. 
 
 Signed-off-by: Sumant Patro <Sumant.Patro@lsil.com>
 
 
 diff -uprN linux-2.6orig/drivers/scsi/megaraid/megaraid_sas.c linux-2.6new/drivers/scsi/megaraid/megaraid_sas.c
---- linux-2.6orig/drivers/scsi/megaraid/megaraid_sas.c 2006-09-20 10:50:49.000000000 -0700
-+++ linux-2.6new/drivers/scsi/megaraid/megaraid_sas.c 2006-09-20 10:55:20.000000000 -0700
-@@ -135,6 +135,19 @@ megasas_enable_intr_xscale(struct megasa
+--- linux-2.6orig/drivers/scsi/megaraid/megaraid_sas.c 2006-09-20 11:04:34.000000000 -0700
++++ linux-2.6new/drivers/scsi/megaraid/megaraid_sas.c 2006-09-20 11:05:52.000000000 -0700
+@@ -36,6 +36,8 @@
+ #include <linux/fs.h>
+ #include <linux/compat.h>
+ #include <linux/mutex.h>
++#include <linux/reboot.h>
++#include <linux/notifier.h>
+ 
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
+@@ -2351,6 +2353,36 @@ static void megasas_flush_cache(struct m
  }
  
  /**
-+ * megasas_disable_intr_xscale -Disables interrupt
-+ * @regs:   MFI register set
++ * megasas_reboot_notify- Flush adapter cache
++ * @this:   Our notifier block
++ * @code:   The event notified
++ * @unused:   Unused
 + */
-+static inline void
-+megasas_disable_intr_xscale(struct megasas_register_set __iomem * regs)
++static int
++megasas_reboot_notify (struct notifier_block *this, unsigned long code,
++  void *unused)
 +{
-+ u32 mask = 0x1f; 
-+ writel(mask, &regs->outbound_intr_mask);
-+ /* Dummy readl to force pci flush */
-+ readl(&regs->outbound_intr_mask);
++	struct megasas_instance *instance;
++	int i;
++
++	for (i = 0; i < megasas_mgmt_info.max_index; i++) {
++		instance = megasas_mgmt_info.instance[i];
++		if (instance) {
++			megasas_flush_cache(instance);
++		}
++	}
++
++	return NOTIFY_DONE;
 +}
 +
 +/**
-  * megasas_read_fw_status_reg_xscale - returns the current FW status value
-  * @regs:   MFI register set
++ * notifier block to get notification on system halt/reboot/shutdown/power off
++ */
++static struct notifier_block megasas_notifier = {
++	.notifier_call = megasas_reboot_notify
++};
++
++/**
+  * megasas_shutdown_controller -	Instructs FW to shutdown the controller
+  * @instance:				Adapter soft state
   */
-@@ -185,6 +198,7 @@ static struct megasas_instance_template 
+@@ -2903,6 +2935,10 @@ static int __init megasas_init(void)
+ 	driver_create_file(&megasas_pci_driver.driver,
+ 			   &driver_attr_release_date);
  
- 	.fire_cmd = megasas_fire_cmd_xscale,
- 	.enable_intr = megasas_enable_intr_xscale,
-+	.disable_intr = megasas_disable_intr_xscale,
- 	.clear_intr = megasas_clear_intr_xscale,
- 	.read_fw_status_reg = megasas_read_fw_status_reg_xscale,
- };
-@@ -215,6 +229,19 @@ megasas_enable_intr_ppc(struct megasas_r
++	if(register_reboot_notifier(&megasas_notifier)) {
++		printk("megasas: reboot notify routine registration failed!!\n");
++	}
++
+ 	return rval;
  }
  
- /**
-+ * megasas_disable_intr_ppc -	Disable interrupt
-+ * @regs:			MFI register set
-+ */
-+static inline void
-+megasas_disable_intr_ppc(struct megasas_register_set __iomem * regs)
-+{
-+	u32 mask = 0xFFFFFFFF; 
-+	writel(mask, &regs->outbound_intr_mask);
-+	/* Dummy readl to force pci flush */
-+	readl(&regs->outbound_intr_mask);
-+}
-+
-+/**
-  * megasas_read_fw_status_reg_ppc - returns the current FW status value
-  * @regs:			MFI register set
-  */
-@@ -265,6 +292,7 @@ static struct megasas_instance_template 
- 	
- 	.fire_cmd = megasas_fire_cmd_ppc,
- 	.enable_intr = megasas_enable_intr_ppc,
-+	.disable_intr = megasas_disable_intr_ppc,
- 	.clear_intr = megasas_clear_intr_ppc,
- 	.read_fw_status_reg = megasas_read_fw_status_reg_ppc,
- };
-@@ -275,25 +303,6 @@ static struct megasas_instance_template 
- */
+@@ -2917,6 +2953,7 @@ static void __exit megasas_exit(void)
  
- /**
-- * megasas_disable_intr -	Disables interrupts
-- * @regs:			MFI register set
-- */
--static inline void
--megasas_disable_intr(struct megasas_instance *instance)
--{
--	u32 mask = 0x1f; 
--	struct megasas_register_set __iomem *regs = instance->reg_set;
--
--	if(instance->pdev->device == PCI_DEVICE_ID_LSI_SAS1078R)
--		mask = 0xffffffff;
--
--	writel(mask, &regs->outbound_intr_mask);
--
--	/* Dummy readl to force pci flush */
--	readl(&regs->outbound_intr_mask);
--}
--
--/**
-  * megasas_issue_polled -	Issues a polling command
-  * @instance:			Adapter soft state
-  * @cmd:			Command packet to be issued 
-@@ -1293,7 +1302,7 @@ megasas_transition_to_ready(struct megas
- 			/*
- 			 * Bring it to READY state; assuming max wait 10 secs
- 			 */
--			megasas_disable_intr(instance);
-+			instance->instancet->disable_intr(instance->reg_set);
- 			writel(MFI_RESET_FLAGS, &instance->reg_set->inbound_doorbell);
+  pci_unregister_driver(&megasas_pci_driver);
+  unregister_chrdev(megasas_mgmt_majorno, "megaraid_sas_ioctl");
++ unregister_reboot_notifier(&megasas_notifier);
+ }
  
- 			max_wait = 10;
-@@ -1799,7 +1808,7 @@ static int megasas_init_mfi(struct megas
- 	/*
- 	 * disable the intr before firing the init frame to FW
- 	 */
--	megasas_disable_intr(instance);
-+	instance->instancet->disable_intr(instance->reg_set);
- 
- 	/*
- 	 * Issue the init frame in polled mode
-@@ -2279,7 +2288,7 @@ megasas_probe_one(struct pci_dev *pdev, 
- 	megasas_mgmt_info.max_index--;
- 
- 	pci_set_drvdata(pdev, NULL);
--	megasas_disable_intr(instance);
-+	instance->instancet->disable_intr(instance->reg_set);
- 	free_irq(instance->pdev->irq, instance);
- 
- 	megasas_release_mfi(instance);
-@@ -2409,7 +2418,7 @@ static void megasas_detach_one(struct pc
- 
- 	pci_set_drvdata(instance->pdev, NULL);
- 
--	megasas_disable_intr(instance);
-+	instance->instancet->disable_intr(instance->reg_set);
- 
- 	free_irq(instance->pdev->irq, instance);
- 
-diff -uprN linux-2.6orig/drivers/scsi/megaraid/megaraid_sas.h linux-2.6new/drivers/scsi/megaraid/megaraid_sas.h
---- linux-2.6orig/drivers/scsi/megaraid/megaraid_sas.h	2006-09-20 10:50:49.000000000 -0700
-+++ linux-2.6new/drivers/scsi/megaraid/megaraid_sas.h	2006-09-20 10:55:20.000000000 -0700
-@@ -1049,6 +1049,7 @@ struct megasas_evt_detail {
- 	void (*fire_cmd)(dma_addr_t ,u32 ,struct megasas_register_set __iomem *);
- 
-  void (*enable_intr)(struct megasas_register_set __iomem *) ;
-+ void (*disable_intr)(struct megasas_register_set __iomem *);
- 
- 	int (*clear_intr)(struct megasas_register_set __iomem *);
- 
+ module_init(megasas_init);
 
 
---=-3SeUp7pHSTkwhL56wTrj
-Content-Disposition: attachment; filename=disable_int-p3.patch
-Content-Type: text/x-patch; name=disable_int-p3.patch; charset=UTF-8
+--=-R6HCLmdY/wtImRhpIp5v
+Content-Disposition: attachment; filename=reboot_noti-p4.patch
+Content-Type: text/x-patch; name=reboot_noti-p4.patch; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 diff -uprN linux-2.6orig/drivers/scsi/megaraid/megaraid_sas.c linux-2.6new/drivers/scsi/megaraid/megaraid_sas.c
---- linux-2.6orig/drivers/scsi/megaraid/megaraid_sas.c	2006-09-20 10:50:49.000000000 -0700
-+++ linux-2.6new/drivers/scsi/megaraid/megaraid_sas.c	2006-09-20 10:55:20.000000000 -0700
-@@ -135,6 +135,19 @@ megasas_enable_intr_xscale(struct megasa
+--- linux-2.6orig/drivers/scsi/megaraid/megaraid_sas.c	2006-09-20 11:04:34.000000000 -0700
++++ linux-2.6new/drivers/scsi/megaraid/megaraid_sas.c	2006-09-20 11:05:52.000000000 -0700
+@@ -36,6 +36,8 @@
+ #include <linux/fs.h>
+ #include <linux/compat.h>
+ #include <linux/mutex.h>
++#include <linux/reboot.h>
++#include <linux/notifier.h>
+ 
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
+@@ -2351,6 +2353,36 @@ static void megasas_flush_cache(struct m
  }
  
  /**
-+ * megasas_disable_intr_xscale -Disables interrupt
-+ * @regs:			MFI register set
++ * megasas_reboot_notify-	Flush adapter cache
++ * @this:			Our notifier block
++ * @code:			The event notified
++ * @unused:			Unused
 + */
-+static inline void
-+megasas_disable_intr_xscale(struct megasas_register_set __iomem * regs)
++static int
++megasas_reboot_notify (struct notifier_block *this, unsigned long code,
++		void *unused)
 +{
-+	u32 mask = 0x1f; 
-+	writel(mask, &regs->outbound_intr_mask);
-+	/* Dummy readl to force pci flush */
-+	readl(&regs->outbound_intr_mask);
++	struct megasas_instance *instance;
++	int i;
++
++	for (i = 0; i < megasas_mgmt_info.max_index; i++) {
++		instance = megasas_mgmt_info.instance[i];
++		if (instance) {
++			megasas_flush_cache(instance);
++		}
++	}
++
++	return NOTIFY_DONE;
 +}
 +
 +/**
-  * megasas_read_fw_status_reg_xscale - returns the current FW status value
-  * @regs:			MFI register set
++ * notifier block to get notification on system halt/reboot/shutdown/power off
++ */
++static struct notifier_block megasas_notifier = {
++	.notifier_call = megasas_reboot_notify
++};
++
++/**
+  * megasas_shutdown_controller -	Instructs FW to shutdown the controller
+  * @instance:				Adapter soft state
   */
-@@ -185,6 +198,7 @@ static struct megasas_instance_template 
+@@ -2903,6 +2935,10 @@ static int __init megasas_init(void)
+ 	driver_create_file(&megasas_pci_driver.driver,
+ 			   &driver_attr_release_date);
  
- 	.fire_cmd = megasas_fire_cmd_xscale,
- 	.enable_intr = megasas_enable_intr_xscale,
-+	.disable_intr = megasas_disable_intr_xscale,
- 	.clear_intr = megasas_clear_intr_xscale,
- 	.read_fw_status_reg = megasas_read_fw_status_reg_xscale,
- };
-@@ -215,6 +229,19 @@ megasas_enable_intr_ppc(struct megasas_r
++	if(register_reboot_notifier(&megasas_notifier)) {
++		printk("megasas: reboot notify routine registration failed!!\n");
++	}
++
+ 	return rval;
  }
  
- /**
-+ * megasas_disable_intr_ppc -	Disable interrupt
-+ * @regs:			MFI register set
-+ */
-+static inline void
-+megasas_disable_intr_ppc(struct megasas_register_set __iomem * regs)
-+{
-+	u32 mask = 0xFFFFFFFF; 
-+	writel(mask, &regs->outbound_intr_mask);
-+	/* Dummy readl to force pci flush */
-+	readl(&regs->outbound_intr_mask);
-+}
-+
-+/**
-  * megasas_read_fw_status_reg_ppc - returns the current FW status value
-  * @regs:			MFI register set
-  */
-@@ -265,6 +292,7 @@ static struct megasas_instance_template 
- 	
- 	.fire_cmd = megasas_fire_cmd_ppc,
- 	.enable_intr = megasas_enable_intr_ppc,
-+	.disable_intr = megasas_disable_intr_ppc,
- 	.clear_intr = megasas_clear_intr_ppc,
- 	.read_fw_status_reg = megasas_read_fw_status_reg_ppc,
- };
-@@ -275,25 +303,6 @@ static struct megasas_instance_template 
- */
+@@ -2917,6 +2953,7 @@ static void __exit megasas_exit(void)
  
- /**
-- * megasas_disable_intr -	Disables interrupts
-- * @regs:			MFI register set
-- */
--static inline void
--megasas_disable_intr(struct megasas_instance *instance)
--{
--	u32 mask = 0x1f; 
--	struct megasas_register_set __iomem *regs = instance->reg_set;
--
--	if(instance->pdev->device == PCI_DEVICE_ID_LSI_SAS1078R)
--		mask = 0xffffffff;
--
--	writel(mask, &regs->outbound_intr_mask);
--
--	/* Dummy readl to force pci flush */
--	readl(&regs->outbound_intr_mask);
--}
--
--/**
-  * megasas_issue_polled -	Issues a polling command
-  * @instance:			Adapter soft state
-  * @cmd:			Command packet to be issued 
-@@ -1293,7 +1302,7 @@ megasas_transition_to_ready(struct megas
- 			/*
- 			 * Bring it to READY state; assuming max wait 10 secs
- 			 */
--			megasas_disable_intr(instance);
-+			instance->instancet->disable_intr(instance->reg_set);
- 			writel(MFI_RESET_FLAGS, &instance->reg_set->inbound_doorbell);
+ 	pci_unregister_driver(&megasas_pci_driver);
+ 	unregister_chrdev(megasas_mgmt_majorno, "megaraid_sas_ioctl");
++	unregister_reboot_notifier(&megasas_notifier);
+ }
  
- 			max_wait = 10;
-@@ -1799,7 +1808,7 @@ static int megasas_init_mfi(struct megas
- 	/*
- 	 * disable the intr before firing the init frame to FW
- 	 */
--	megasas_disable_intr(instance);
-+	instance->instancet->disable_intr(instance->reg_set);
- 
- 	/*
- 	 * Issue the init frame in polled mode
-@@ -2279,7 +2288,7 @@ megasas_probe_one(struct pci_dev *pdev, 
- 	megasas_mgmt_info.max_index--;
- 
- 	pci_set_drvdata(pdev, NULL);
--	megasas_disable_intr(instance);
-+	instance->instancet->disable_intr(instance->reg_set);
- 	free_irq(instance->pdev->irq, instance);
- 
- 	megasas_release_mfi(instance);
-@@ -2409,7 +2418,7 @@ static void megasas_detach_one(struct pc
- 
- 	pci_set_drvdata(instance->pdev, NULL);
- 
--	megasas_disable_intr(instance);
-+	instance->instancet->disable_intr(instance->reg_set);
- 
- 	free_irq(instance->pdev->irq, instance);
- 
-diff -uprN linux-2.6orig/drivers/scsi/megaraid/megaraid_sas.h linux-2.6new/drivers/scsi/megaraid/megaraid_sas.h
---- linux-2.6orig/drivers/scsi/megaraid/megaraid_sas.h	2006-09-20 10:50:49.000000000 -0700
-+++ linux-2.6new/drivers/scsi/megaraid/megaraid_sas.h	2006-09-20 10:55:20.000000000 -0700
-@@ -1049,6 +1049,7 @@ struct megasas_evt_detail {
- 	void (*fire_cmd)(dma_addr_t ,u32 ,struct megasas_register_set __iomem *);
- 
- 	void (*enable_intr)(struct megasas_register_set __iomem *) ;
-+	void (*disable_intr)(struct megasas_register_set __iomem *);
- 
- 	int (*clear_intr)(struct megasas_register_set __iomem *);
- 
+ module_init(megasas_init);
 
---=-3SeUp7pHSTkwhL56wTrj--
-
+--=-R6HCLmdY/wtImRhpIp5v--
