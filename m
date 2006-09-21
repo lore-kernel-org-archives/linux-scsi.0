@@ -1,103 +1,55 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [Bugme-new] [Bug 7177] New: Mylex DAC960 driver is not working
- with Kernel newer than 2.6.11 !
-Date: Thu, 21 Sep 2006 10:56:12 -0700
-Message-ID: <20060921105612.ff8c54f0.akpm@osdl.org>
-References: <200609211508.k8LF8qAY029812@fire-2.osdl.org>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [RFC] [PATCH] qla4xxx driver resubmission
+Date: Thu, 21 Sep 2006 14:11:28 -0400
+Message-ID: <4512D5D0.2040209@emulex.com>
+References: <0BB3E5E7462EEA4295BC02D49691DC074144B0@AVEXCH1.qlogic.org>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:27615 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751402AbWIUR4V (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Sep 2006 13:56:21 -0400
-In-Reply-To: <200609211508.k8LF8qAY029812@fire-2.osdl.org>
+Received: from emulex.emulex.com ([138.239.112.1]:24448 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S1751434AbWIUSMD
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 21 Sep 2006 14:12:03 -0400
+In-Reply-To: <0BB3E5E7462EEA4295BC02D49691DC074144B0@AVEXCH1.qlogic.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, f1@vcc.de
-Cc: "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>
+To: David Somayajulu <david.somayajulu@qlogic.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, Mike Christie <michaelc@cs.wisc.edu>, Doug Maxey <dwm@enoyolf.org>, David Wagner <david.wagner@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>, Duane Grigsby <duane.grigsby@qlogic.com>
 
-On Thu, 21 Sep 2006 08:08:52 -0700
-bugme-daemon@bugzilla.kernel.org wrote:
 
-> http://bugzilla.kernel.org/show_bug.cgi?id=7177
 
-Is anyone else out there using dac960 on recentish kernels?
+David Somayajulu wrote:
+>> Why does your LLD need to reach up into the block layer to find an i/o
+> ?
+> Block layer tagging was the gating item in the previous submission.
+> Going over the conversation on the linux-scsi reflector on STEX driver
+> in this aspect, led us to believe that there should not be any driver
+> level book-keeping of outstanding commands to the HBA. This was the
+> reason for creating scsi_host_find_tag() in scsi_tcq.h (in the patch
+> titled [RFC] [PATCH] helper function for retrieving scsi_cmd given
+> hostbased block layer tag)
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=115871027627964&w=2
+> 
+> James, would you mind letting us know if block-layer tagging in your
+> opinion simply meant using the scsi_cmd->request->tag and let the driver
+> do the book-keeping of out-standing commands to HBA (like stex driver)
+> or is it along the lines we have implemented.
 
->            Summary: Mylex DAC960 driver is not working with Kernel newer
->                     than 2.6.11 !
->     Kernel Version: >2.6.11
->             Status: NEW
->           Severity: blocking
->              Owner: scsi_drivers-other@kernel-bugs.osdl.org
->          Submitter: f1@vcc.de
-> 
-> 
-> Most recent kernel where this bug did not occur: 2.6.18
-> Distribution: gentoo
-> Hardware Environment: SIEMENS Model: STM/L Quad Xeon P3 500MHz 2GIG Ram
-> Software Environment: 
-> Problem Description:
-> drivers/block/DAC960.c
-> Steps to reproduce: Just reboot with kernel newer than 2.6.11 eg 2.6.18
-> 
-> ...
-> FDC 0 is a National Semiconductor PC87306
-> loop: loaded (max 8 devices)
-> DAC960: ***** DAC960 RAID Driver Version 2.5.48 of 14 May 2006 *****
-> DAC960: Copyright 1998-2001 by Leonard N. Zubkoff <lnz@dandelion.com>
-> 
-> and here the kernel stops and nothing happends !
-> 
-> under 2.6.11 the output is much longer:
-> 
-> ...
-> FDC 0 is a National Semiconductor PC87306
-> loop: loaded (max 8 devices)
-> DAC960: ***** DAC960 RAID Driver Version 2.5.47 of 14 November 2002 *****
-> DAC960: Copyright 1998-2001 by Leonard N. Zubkoff <lnz@dandelion.com>
-> DAC960#0: Configuring Mylex DAC960PJ PCI RAID Controller
-> DAC960#0:   Firmware Version: 4.08-0-37, Channels: 3, Memory Size: 64MB
-> DAC960#0:   PCI Bus: 3, Device: 13, Function: 1, I/O Address: Unassigned
-> DAC960#0:   PCI Address: 0xFE600000 mapped at 0xF8810000, IRQ Channel: 161
-> DAC960#0:   Controller Queue Depth: 124, Maximum Blocks per Command: 128
-> DAC960#0:   Driver Queue Depth: 123, Scatter/Gather Limit: 33 of 33 Segments
-> DAC960#0:   Stripe Size: 64KB, Segment Size: 8KB, BIOS Geometry: 255/63
-> DAC960#0:   SAF-TE Enclosure Management Enabled
-> DAC960#0:   Physical Devices:
-> DAC960#0:     0:0  Vendor: SEAGATE   Model: ST39102LC         Revision: 7505
-> DAC960#0:          Serial Number: LJ46608500002910J0LZ
-> DAC960#0:          Disk Status: Standby, 17782784 blocks
-> DAC960#0:     0:1  Vendor: SEAGATE   Model: ST39102LC         Revision: 7503
-> DAC960#0:          Serial Number: LJL1072800002938HQ5K
-> DAC960#0:          Disk Status: Online, 17780736 blocks
-> DAC960#0:     0:2  Vendor: SEAGATE   Model: ST39102LC         Revision: 7503
-> DAC960#0:          Serial Number: LV263431000010091BE1
-> DAC960#0:          Disk Status: Online, 17780736 blocks
-> DAC960#0:     0:3  Vendor: SEAGATE   Model: ST39102LC         Revision: 7503
-> DAC960#0:          Serial Number: LJL04413000019400HC3
-> DAC960#0:          Disk Status: Online, 17780736 blocks
-> DAC960#0:     0:8  Vendor: SIEMENS   Model: STM/L S1          Revision: 4.1b
-> DAC960#0:     1:0  Vendor: SEAGATE   Model: ST39102LC         Revision: 7503
-> DAC960#0:          Serial Number: LJK896890000194006WC
-> DAC960#0:          Disk Status: Online, 17780736 blocks
-> DAC960#0:     1:1  Vendor: SEAGATE   Model: ST39173LC         Revision: 6246
-> DAC960#0:          Serial Number: LM90387100001834F0GP
-> DAC960#0:          Disk Status: Online, 17780736 blocks
-> DAC960#0:     1:2  Vendor: SEAGATE   Model: ST39102LC         Revision: 7503
-> DAC960#0:          Serial Number: LJL0800100002938K4D8
-> DAC960#0:          Disk Status: Online, 17780736 blocks
-> DAC960#0:     1:3  Vendor: SEAGATE   Model: ST39102LC         Revision: 7505
-> DAC960#0:          Serial Number: LJM15325000019220JG2
-> DAC960#0:          Disk Status: Online, 17780736 blocks
-> DAC960#0:     1:8  Vendor: SIEMENS   Model: STM/L S2          Revision: 4.1b
-> DAC960#0:   Logical Drives:
-> DAC960#0:     /dev/rd/c0d0: RAID-5, Online, 106659840 blocks, Write Thru
->  /dev/rd/host0/target0: p1 p2 p3
-> e100: Intel(R) PRO/100 Network Driver, 3.3.6-k2-NAPI
-> e100: Copyright(c) 1999-2004 Intel Corporation
-> ...
-> 
-> ------- You are receiving this mail because: -------
-> You are on the CC list for the bug, or are watching someone who is.
+Well, in general, I've been working on stuff that has little use for the
+tags, so they aren't that meaningful. I can certainly see some implementations
+that can benefit.
+
+But, on a newish transport like iSCSI, I'm surprised. There's lots of
+house-keeping that has to be done with resets and task management that makes
+me believe it's better/easier with local structures. I also know that I like
+to double-check my hardware (based on local structure) rather than blindly
+trusting job handles. I also believe there will be locking issues or data
+structures in flight issues between the block layer and LLDD that will
+be ugly.
+
+I wanted some justification. The new block layer function hasn't been needed
+in the past and I thought it a rather odd thing to add.
+
+-- james
