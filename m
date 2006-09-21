@@ -1,44 +1,53 @@
 From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: RE: [PATCH] mptspi : Usefull code for debuging domain validation
-Date: Thu, 21 Sep 2006 16:32:32 -0600
-Message-ID: <664A4EBB07F29743873A87CF62C26D7032D3D3@NAMAIL4.ad.lsil.com>
+Subject: RE: [PATCH] mptspi: Bug fix to prevent infinite nesteddomainvalidation
+Date: Thu, 21 Sep 2006 16:32:30 -0600
+Message-ID: <664A4EBB07F29743873A87CF62C26D7032D3D2@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:19196 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S932079AbWIUWir convert rfc822-to-8bit
+Received: from mail0.lsil.com ([147.145.40.20]:33788 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S932081AbWIUWjN convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Sep 2006 18:38:47 -0400
+	Thu, 21 Sep 2006 18:39:13 -0400
 Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
+To: Mark Haverkamp <markh@osdl.org>
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
 
-On Monday, September 18, 2006 5:47 PM,  Eric Moore wrote:
+On Wednesday, September 20, 2006 9:43 AM, Mark Haverkamp wrote:
 
 > 
-> Domain validation can be enabled by uncommenting MPT_DEBUG_DV
-> in the driver Makefile, and recompiling.
+> On Tue, 2006-09-19 at 18:35 -0600, Eric Moore wrote:
+> > From host_reset, this patch will complete domain validation
+> > in the same context as the eh threads.  I've added passing
+> > the sleepFlag, which is CAN_SLEEP in the context of eh threads.
+> > 
+> > Mark pls try this with the patch that James posted earlier that
+> > prevents re entry to pending dv.
 > 
-> Bump driver version to 3.04.02.
+> Something isn't working quite right.  Here is the log.  The modprobe
+> gets stuck.
 > 
 
+James, this is not going to work. I have to call delayed 
+spi_dv_device from host reset, or your getting this hang, 
+and/or get asyn narrow on all devices.  There is one other
+driver in the kernel tree that does dv from host reset.
+It is 53c700. It calls spi_schedule_dv_device.  So its
+delaying domain validation outside eh threads.
+We would be callign that too, if it wasn't for integrated 
+raid support, and we need to quiese IO to hidden disk.  
+Regardless, dv needs to be done outside eh threads, and
+due to this, domain validation is goign to be nested,
+and re-enterant.  The problem is by the time we do dv
+on the faulty device, the dv_in_progress flag will off
+been cleared.
 
-James, is this debug info better suited for the spi transport layer,
-or better left in fusion?
+So the question is how can spi transport layer better handle
+issueing domain validation scsi passthrus that timeout, leading
+to host_reset?   
 
-What would be nice for debuging issues would be
-(1) what nego parameters were sent to device
-(2) what nego parameters read back
-(3) scsi commands sent during dv, and result
-
-Another request, is can spi transport layer export a flag that would
-allow lld to disable enhanced domain validation?   When dv was done
-internally in fusion driver, there was a flag for this that was
-configurable
-in nvdata by the customer.  Some customers don't want enhanced dv.
-We can pull that info into driver/transport from the spi config pages.
-
-Eric
+Eric Moore
