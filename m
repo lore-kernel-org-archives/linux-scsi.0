@@ -1,32 +1,41 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: Re: ICH7* Hardware-RAID Support?
-Date: Thu, 21 Sep 2006 13:29:34 -0700
-Message-ID: <20060921132934.eff3b2dc.rdunlap@xenotime.net>
-References: <20060921194254.28601.qmail@web81802.mail.mud.yahoo.com>
+From: "Patro, Sumant" <Sumant.Patro@lsil.com>
+Subject: RE: [Patch 4/7] megaraid_sas: adds reboot handler
+Date: Thu, 21 Sep 2006 15:36:58 -0600
+Message-ID: <0631C836DBF79F42B5A60C8C8D4E82296DF2C9@NAMAIL2.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:60890 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S1750968AbWIUU2b (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Sep 2006 16:28:31 -0400
-Received: from midway.site ([71.117.233.155]) by xenotime.net for <linux-scsi@vger.kernel.org>; Thu, 21 Sep 2006 13:28:25 -0700
-In-Reply-To: <20060921194254.28601.qmail@web81802.mail.mud.yahoo.com>
+Received: from mail0.lsil.com ([147.145.40.20]:1010 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1751603AbWIUVhd convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 21 Sep 2006 17:37:33 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adonis Ranin <a_ranin@yahoo.com>
-Cc: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, akpm@osdl.org, hch@lst.de, linux-kernel@vger.kernel.org, "Kolli, Neela" <Neela.Kolli@engenio.com>, "Yang, Bo" <Bo.Yang@engenio.com>
 
-On Thu, 21 Sep 2006 12:42:54 -0700 (PDT) Adonis Ranin wrote:
+I agree.
 
-> Hi,
->  
->  I am not sure if this is the right place to inquire, but here goes:  is there any current or planned future development to add hardware-RAID support for ICH7* controllers?  If so, any info on its progress?  Thanks!
+Regards,
+Sumant
 
-Does this FAQ answer your question?
+-----Original Message-----
+From: Christoph Hellwig [mailto:hch@infradead.org] 
+Sent: Thursday, September 21, 2006 4:44 AM
+To: Patro, Sumant
+Cc: James.Bottomley@SteelEye.com; linux-scsi@vger.kernel.org;
+akpm@osdl.org; hch@lst.de; linux-kernel@vger.kernel.org; Kolli, Neela;
+Yang, Bo
+Subject: Re: [Patch 4/7] megaraid_sas: adds reboot handler
 
-http://linux-ata.org/faq-sata-raid.html#ich
+On Wed, Sep 20, 2006 at 07:02:51PM -0700, Sumant Patro wrote:
+> This patch adds handler to get reboot notification and fires flush
+command from 
+> the reboot notification handler. 
 
----
-~Randy
+NACK, this should be handled by the PCI driver ->shutdown method
+instead.
+
