@@ -1,236 +1,78 @@
-From: linas@austin.ibm.com (Linas Vepstas)
-Subject: [PATCH]: PCI Error Recovery: Symbios SCSI device driver
-Date: Thu, 21 Sep 2006 18:13:14 -0500
-Message-ID: <20060921231314.GW29167@austin.ibm.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: RE: [PATCH] mptspi :
+	min_period,max_offset,max_width,incorrectlyset, resulting domain validation
+	failing
+Date: Thu, 21 Sep 2006 19:13:48 -0400
+Message-ID: <1158880428.14329.50.camel@mulgrave.il.steeleye.com>
+References: <664A4EBB07F29743873A87CF62C26D7032D3D1@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.152]:54689 "EHLO
-	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S932099AbWIUXNQ
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Sep 2006 19:13:16 -0400
-Content-Disposition: inline
+Received: from stat9.steeleye.com ([209.192.50.41]:19136 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S932104AbWIUXN6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 21 Sep 2006 19:13:58 -0400
+In-Reply-To: <664A4EBB07F29743873A87CF62C26D7032D3D1@NAMAIL4.ad.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: matthew@wil.cx
-Cc: linux-scsi@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org
+To: "Moore, Eric" <Eric.Moore@lsil.com>
+Cc: linux-scsi@vger.kernel.org
+
+On Thu, 2006-09-21 at 16:32 -0600, Moore, Eric wrote:
+> On Wednesday, September 20, 2006 10:00 AM, James Bottomley wrote: 
+> 
+> > 
+> > Heh, Quantum Atlas ... I should have known ...
+> > 
+> > OK, try the attached (it's a rollup of all the heuristics 
+> > changes we've
+> > been discussing).
+> > 
+> 
+> Thanks so much
+> That appears to fix both issues I reported on U160 and U80 drives.
+> Can you pls apply this to your tree for 2.6.19 push. 
+
+Yes ... but I need to get back home to sort out my tree and the pending
+patch pile first.
+
+> > Actually, there are: there are some fujitsu devices that do 
+> > QAS at u160.
+> 
+> Didn't know.  Can you verify that it works with fusion with QAS enabled?
+
+I don't have one ... I actually only have 2 u80 (Quantum Atlas) and
+2xu320 (Seagate Cheetah) SPI devices.
+
+I know there's a problem because I enabled QAS in the aic7xxx (u160)
+driver and it failed miserably on a Fujitsu when the drive tried to
+negotiate for it.  I believe Matthew Wilcox was going to get one to try
+out QAS and IU on the 53c1010.
+
+> > This is a user policy thing.  Usually you want QAS set where 
+> > possible to
+> > speed up the transport ... if you're getting starvation problems, you
+> > can disable it using the parameters.
+> > 
+> 
+> I just don't think that is a good idea.
+> I forsee support calls, for users that don't know they
+> can't run QAS in mixed mode, and don't know this work around
+> that your suggesting.   Its going happen.  
+> I still think back to Andrew Patterson's request that we 
+> have a mechnism to turn one knob to shut off QAS for entire host, 
+> instead of traversing each and every target.
+
+It's hard to come up with an actual user scenario where fairness would
+be an issue.  Most users won't mix QAS and non-QAS disk devices, except
+for limited periods where they're upgrading or something ... I suppose
+there could be an issue with a tape drive on the same bus, but usually
+people are canny enough not to mix disk and tape either.
+
+There's really only one known field issue where QAS was a suspect ...
+and no-one's been able to reproduce it.
+
+James
 
 
-Matthew, 
-
-I hope this looks like a good patch.  Please review, apply and 
-forward upstream.
-
---linas
-
-Various PCI bus errors can be signaled by newer PCI controllers.  
-This patch adds the PCI error recovery callbacks to the Symbios 
-SCSI device driver.  The patch has been tested, and appears to 
-work well.
-
-Signed-off-by: Linas Vepstas <linas@ausin.ibm.com>
-
-----
- drivers/scsi/sym53c8xx_2/sym_glue.c |   97 ++++++++++++++++++++++++++++++++++++
- drivers/scsi/sym53c8xx_2/sym_glue.h |    4 +
- drivers/scsi/sym53c8xx_2/sym_hipd.c |   10 +++
- 3 files changed, 111 insertions(+)
-
-Index: linux-2.6.18-rc7-git1/drivers/scsi/sym53c8xx_2/sym_glue.c
-===================================================================
---- linux-2.6.18-rc7-git1.orig/drivers/scsi/sym53c8xx_2/sym_glue.c	2006-09-21 17:32:54.000000000 -0500
-+++ linux-2.6.18-rc7-git1/drivers/scsi/sym53c8xx_2/sym_glue.c	2006-09-21 17:35:37.000000000 -0500
-@@ -659,6 +659,11 @@ static irqreturn_t sym53c8xx_intr(int ir
- 
- 	if (DEBUG_FLAGS & DEBUG_TINY) printf_debug ("[");
- 
-+	/* Avoid spinloop trying to handle interrupts on frozen device */
-+	if ((np->s.device->error_state != pci_channel_io_normal) &&
-+	    (np->s.device->error_state != 0))
-+		return IRQ_HANDLED;
-+
- 	spin_lock_irqsave(np->s.host->host_lock, flags);
- 	sym_interrupt(np);
- 	spin_unlock_irqrestore(np->s.host->host_lock, flags);
-@@ -726,6 +731,19 @@ static int sym_eh_handler(int op, char *
- 
- 	dev_warn(&cmd->device->sdev_gendev, "%s operation started.\n", opname);
- 
-+	/* We may be in an error condition because the PCI bus
-+	 * went down. In this case, we need to wait until the
-+	 * PCI bus is reset, the card is reset, and only then
-+	 * proceed with the scsi error recovery.  There's no
-+	 * point in hurrying; take a leisurely wait.
-+	 */
-+#define WAIT_FOR_PCI_RECOVERY	35
-+	if ((np->s.device->error_state != pci_channel_io_normal) &&
-+	    (np->s.device->error_state != 0) &&
-+		 (0 == wait_for_completion_timeout(&np->s.io_reset_wait,
-+		                                 WAIT_FOR_PCI_RECOVERY*HZ)))
-+			return SCSI_FAILED;
-+
- 	spin_lock_irq(host->host_lock);
- 	/* This one is queued in some place -> to wait for completion */
- 	FOR_EACH_QUEUED_ELEMENT(&np->busy_ccbq, qp) {
-@@ -1510,6 +1528,7 @@ static struct Scsi_Host * __devinit sym_
- 	np->maxoffs	= dev->chip.offset_max;
- 	np->maxburst	= dev->chip.burst_max;
- 	np->myaddr	= dev->host_id;
-+	init_completion(&np->s.io_reset_wait);
- 
- 	/*
- 	 *  Edit its name.
-@@ -1948,6 +1967,77 @@ static void __devexit sym2_remove(struct
- 	attach_count--;
- }
- 
-+/**
-+ * sym2_io_error_detected() -- called when PCI error is detected
-+ * @pdev: pointer to PCI device
-+ * @state: current state of the PCI slot
-+ */
-+static pci_ers_result_t sym2_io_error_detected (struct pci_dev *pdev,
-+                                         enum pci_channel_state state)
-+{
-+	struct sym_hcb *np = pci_get_drvdata(pdev);
-+
-+	/* If slot is permanently frozen, turn everything off */
-+	if (state == pci_channel_io_perm_failure) {
-+		sym2_remove(pdev);
-+		return PCI_ERS_RESULT_DISCONNECT;
-+	}
-+
-+	init_completion(&np->s.io_reset_wait);
-+	disable_irq(pdev->irq);
-+	pci_disable_device(pdev);
-+
-+	/* Request a slot slot reset. */
-+	return PCI_ERS_RESULT_NEED_RESET;
-+}
-+
-+/**
-+ * sym2_io_slot_reset() -- called when the pci bus has been reset.
-+ * @pdev: pointer to PCI device
-+ *
-+ * Restart the card from scratch.
-+ */
-+static pci_ers_result_t sym2_io_slot_reset (struct pci_dev *pdev)
-+{
-+	struct sym_hcb *np = pci_get_drvdata(pdev);
-+
-+	printk (KERN_INFO "%s: recovering from a PCI slot reset\n",
-+	    sym_name(np));
-+
-+	if (pci_enable_device(pdev))
-+		printk (KERN_ERR "%s: device setup failed most egregiously\n",
-+			    sym_name(np));
-+
-+	pci_set_master(pdev);
-+	enable_irq (pdev->irq);
-+
-+	/* Perform host reset only on one instance of the card */
-+	if (0 == PCI_FUNC (pdev->devfn)) {
-+		if (sym_reset_scsi_bus(np, 0)) {
-+		   printk(KERN_ERR "%s: Unable to reset scsi host controller\n",
-+					          sym_name(np));
-+			return PCI_ERS_RESULT_DISCONNECT;
-+		}
-+		sym_start_up (np, 1);
-+	}
-+
-+	return PCI_ERS_RESULT_RECOVERED;
-+}
-+
-+/**
-+ * sym2_io_resume() -- resume normal ops after PCI reset
-+ * @pdev: pointer to PCI device
-+ *
-+ * Called when the error recovery driver tells us that its
-+ * OK to resume normal operation. Use completion to allow
-+ * halted scsi ops to resume.
-+ */
-+static void sym2_io_resume (struct pci_dev *pdev)
-+{
-+	struct sym_hcb *np = pci_get_drvdata(pdev);
-+	complete_all(&np->s.io_reset_wait);
-+}
-+
- static void sym2_get_signalling(struct Scsi_Host *shost)
- {
- 	struct sym_hcb *np = sym_get_hcb(shost);
-@@ -2110,11 +2200,18 @@ static struct pci_device_id sym2_id_tabl
- 
- MODULE_DEVICE_TABLE(pci, sym2_id_table);
- 
-+static struct pci_error_handlers sym2_err_handler = {
-+	.error_detected = sym2_io_error_detected,
-+	.slot_reset = sym2_io_slot_reset,
-+	.resume = sym2_io_resume,
-+};
-+
- static struct pci_driver sym2_driver = {
- 	.name		= NAME53C8XX,
- 	.id_table	= sym2_id_table,
- 	.probe		= sym2_probe,
- 	.remove		= __devexit_p(sym2_remove),
-+	.err_handler = &sym2_err_handler,
- };
- 
- static int __init sym2_init(void)
-Index: linux-2.6.18-rc7-git1/drivers/scsi/sym53c8xx_2/sym_glue.h
-===================================================================
---- linux-2.6.18-rc7-git1.orig/drivers/scsi/sym53c8xx_2/sym_glue.h	2006-09-21 17:32:54.000000000 -0500
-+++ linux-2.6.18-rc7-git1/drivers/scsi/sym53c8xx_2/sym_glue.h	2006-09-21 17:35:37.000000000 -0500
-@@ -40,6 +40,7 @@
- #ifndef SYM_GLUE_H
- #define SYM_GLUE_H
- 
-+#include <linux/completion.h>
- #include <linux/delay.h>
- #include <linux/ioport.h>
- #include <linux/pci.h>
-@@ -179,6 +180,9 @@ struct sym_shcb {
- 	char		chip_name[8];
- 	struct pci_dev	*device;
- 
-+	/* Waiter for clearing of frozen PCI bus */
-+	struct completion io_reset_wait;
-+
- 	struct Scsi_Host *host;
- 
- 	void __iomem *	ioaddr;		/* MMIO kernel io address	*/
-Index: linux-2.6.18-rc7-git1/drivers/scsi/sym53c8xx_2/sym_hipd.c
-===================================================================
---- linux-2.6.18-rc7-git1.orig/drivers/scsi/sym53c8xx_2/sym_hipd.c	2006-09-21 17:32:54.000000000 -0500
-+++ linux-2.6.18-rc7-git1/drivers/scsi/sym53c8xx_2/sym_hipd.c	2006-09-21 17:35:37.000000000 -0500
-@@ -2761,6 +2761,7 @@ void sym_interrupt (struct sym_hcb *np)
- 	u_char	istat, istatc;
- 	u_char	dstat;
- 	u_short	sist;
-+	u_int    icnt;
- 
- 	/*
- 	 *  interrupt on the fly ?
-@@ -2802,6 +2803,7 @@ void sym_interrupt (struct sym_hcb *np)
- 	sist	= 0;
- 	dstat	= 0;
- 	istatc	= istat;
-+	icnt = 0;
- 	do {
- 		if (istatc & SIP)
- 			sist  |= INW(np, nc_sist);
-@@ -2809,6 +2811,14 @@ void sym_interrupt (struct sym_hcb *np)
- 			dstat |= INB(np, nc_dstat);
- 		istatc = INB(np, nc_istat);
- 		istat |= istatc;
-+
-+		/* Prevent deadlock waiting on a condition that may never clear. */
-+		icnt ++;
-+		if (100 < icnt) {
-+			if ((np->s.device->error_state != pci_channel_io_normal)
-+			   && (np->s.device->error_state != 0))
-+				return;
-+		}
- 	} while (istatc & (SIP|DIP));
- 
- 	if (DEBUG_FLAGS & DEBUG_TINY)
