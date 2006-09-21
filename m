@@ -1,275 +1,309 @@
 From: Sumant Patro <sumantp@lsil.com>
-Subject: [Patch 1/7] megaraid_sas FW transition and q size changes
-Date: Wed, 20 Sep 2006 18:22:36 -0700
-Message-ID: <1158801756.4171.24.camel@dumbo>
+Subject: [Patch 2/7] megaraid_sas frame count optimization
+Date: Wed, 20 Sep 2006 18:50:26 -0700
+Message-ID: <1158803426.4171.38.camel@dumbo>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-TMnmmqk8NB8ZwnaxG2xS"
+Content-Type: multipart/mixed; boundary="=-zFOvd7WtKLef4dD5AOpH"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:34495 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1750816AbWIUAW5 (ORCPT
+Received: from mail0.lsil.com ([147.145.40.20]:3778 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1750874AbWIUAue (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Sep 2006 20:22:57 -0400
+	Wed, 20 Sep 2006 20:50:34 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
-Cc: akpm@osdl.org, hch@lst.de, linux-kernel@vger.kernel.org
+Cc: akpm@osdl.org, hch@lst.de, linux-kernel@vger.kernel.org, Neela.Kolli@lsil.com, Bo.Yang@lsil.com
 
 
---=-TMnmmqk8NB8ZwnaxG2xS
+--=-zFOvd7WtKLef4dD5AOpH
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 
-This patch has the following enhancements :
-	- handles new transition states of FW to support controller hotplug. 
-	- It reduces by 1 the maximum cmds that the driver may send to FW. 
-	- Sends "Stop Processing" cmd to FW before returning failure from reset routine
-	- Adds print in megasas_transition routine
-	- Sends "RESET" flag to FW to do a soft reset of controller 
-to move from Operational to Ready state, 
-	  
-	This patch has been generated on latest scsi-misc git.
+This patch removes duplicated code in frame calculation &  adds
+megasas_get_frame_count() that also takes into account the number of frames
+that can be contained in the Main frame.  
+FW uses the frame count to pull sufficient number of frames from host memory.
 
 Signed-off-by: Sumant Patro <Sumant.Patro@lsil.com>
 
+
 diff -uprN linux-2.6orig/drivers/scsi/megaraid/megaraid_sas.c linux-2.6new/drivers/scsi/megaraid/megaraid_sas.c
---- linux-2.6orig/drivers/scsi/megaraid/megaraid_sas.c 2006-09-20 10:20:40.000000000 -0700
-+++ linux-2.6new/drivers/scsi/megaraid/megaraid_sas.c 2006-09-20 10:26:56.000000000 -0700
-@@ -832,6 +832,12 @@ static int megasas_wait_for_outstanding(
-  }
- 
-  if (atomic_read(&instance->fw_outstanding)) {
-+  /*
-+  * Send signal to FW to stop processing any pending cmds.
-+  * The controller will be taken offline by the OS now.
-+  */
-+  writel(MFI_STOP_ADP,
-+    &instance->reg_set->inbound_doorbell);
-   instance->hw_crit_error = 1;
-   return FAILED;
-  }
-@@ -1229,10 +1235,12 @@ megasas_transition_to_ready(struct megas
- 
-  fw_state = instance->instancet->read_fw_status_reg(instance->reg_set) & MFI_STATE_MASK;
- 
-+ if (fw_state != MFI_STATE_READY) 
-+   printk(KERN_INFO "megasas: Waiting for FW to come to ready"
-+          " state\n");
-+
-  while (fw_state != MFI_STATE_READY) {
- 
--  printk(KERN_INFO "megasas: Waiting for FW to come to ready"
--         " state\n");
-   switch (fw_state) {
- 
-   case MFI_STATE_FAULT:
-@@ -1244,19 +1252,27 @@ megasas_transition_to_ready(struct megas
-    /*
-     * Set the CLR bit in inbound doorbell
-     */
--   writel(MFI_INIT_CLEAR_HANDSHAKE,
-+   writel(MFI_INIT_CLEAR_HANDSHAKE|MFI_INIT_HOTPLUG,
-     &instance->reg_set->inbound_doorbell);
- 
-    max_wait = 2;
-    cur_state = MFI_STATE_WAIT_HANDSHAKE;
-    break;
- 
-+  case MFI_STATE_BOOT_MESSAGE_PENDING: 
-+   writel(MFI_INIT_HOTPLUG,
-+    &instance->reg_set->inbound_doorbell);
-+
-+   max_wait = 10;
-+   cur_state = MFI_STATE_BOOT_MESSAGE_PENDING;
-+   break;
-+
-   case MFI_STATE_OPERATIONAL:
-    /*
--    * Bring it to READY state; assuming max wait 2 secs
-+    * Bring it to READY state; assuming max wait 10 secs
-     */
-    megasas_disable_intr(instance);
--   writel(MFI_INIT_READY, &instance->reg_set->inbound_doorbell);
-+   writel(MFI_RESET_FLAGS, &instance->reg_set->inbound_doorbell);
- 
-    max_wait = 10;
-    cur_state = MFI_STATE_OPERATIONAL;
-@@ -1323,6 +1339,7 @@ megasas_transition_to_ready(struct megas
-    return -ENODEV;
-   }
-  };
-+  printk(KERN_INFO "megasas: FW now in Ready state\n");
- 
-  return 0;
+--- linux-2.6orig/drivers/scsi/megaraid/megaraid_sas.c 2006-09-20 10:26:56.000000000 -0700
++++ linux-2.6new/drivers/scsi/megaraid/megaraid_sas.c 2006-09-20 10:43:54.000000000 -0700
+@@ -495,6 +495,46 @@ megasas_make_sgl64(struct megasas_instan
+  return sge_count;
  }
-@@ -1690,6 +1707,12 @@ static int megasas_init_mfi(struct megas
-   * Get various operational parameters from status register
-   */
-  instance->max_fw_cmds = instance->instancet->read_fw_status_reg(reg_set) & 0x00FFFF;
-+ /*
-+  * Reduce the max supported cmds by 1. This is to ensure that the 
-+  * reply_q_sz (1 more than the max cmd that driver may send)
-+  * does not exceed max cmds that the FW can support
-+  */
-+ instance->max_fw_cmds = instance->max_fw_cmds-1;
-  instance->max_num_sge = (instance->instancet->read_fw_status_reg(reg_set) & 0xFF0000) >> 
-      0x10;
-  /*
-diff -uprN linux-2.6orig/drivers/scsi/megaraid/megaraid_sas.h linux-2.6new/drivers/scsi/megaraid/megaraid_sas.h
---- linux-2.6orig/drivers/scsi/megaraid/megaraid_sas.h 2006-09-20 10:20:40.000000000 -0700
-+++ linux-2.6new/drivers/scsi/megaraid/megaraid_sas.h 2006-09-20 10:33:31.000000000 -0700
-@@ -50,6 +50,7 @@
- #define MFI_STATE_WAIT_HANDSHAKE  0x60000000
- #define MFI_STATE_FW_INIT_2   0x70000000
- #define MFI_STATE_DEVICE_SCAN   0x80000000
-+#define MFI_STATE_BOOT_MESSAGE_PENDING  0x90000000
- #define MFI_STATE_FLUSH_CACHE   0xA0000000
- #define MFI_STATE_READY    0xB0000000
- #define MFI_STATE_OPERATIONAL   0xC0000000
-@@ -64,12 +65,18 @@
-  * READY : Move from OPERATIONAL to READY state; discard queue info
-  * MFIMODE : Discard (possible) low MFA posted in 64-bit mode (??)
-  * CLR_HANDSHAKE: FW is waiting for HANDSHAKE from BIOS or Driver
-+ * HOTPLUG : Resume from Hotplug
-+ * MFI_STOP_ADP : Send signal to FW to stop processing
-  */
--#define MFI_INIT_ABORT    0x00000000
-+#define MFI_INIT_ABORT    0x00000001
- #define MFI_INIT_READY    0x00000002
- #define MFI_INIT_MFIMODE   0x00000004
- #define MFI_INIT_CLEAR_HANDSHAKE  0x00000008
--#define MFI_RESET_FLAGS    MFI_INIT_READY|MFI_INIT_MFIMODE
-+#define MFI_INIT_HOTPLUG   0x00000010
-+#define MFI_STOP_ADP    0x00000020
-+#define MFI_RESET_FLAGS    MFI_INIT_READY| \
-+      MFI_INIT_MFIMODE| \
-+      MFI_INIT_ABORT
  
++ /**
++ * megasas_get_frame_count - Computes the number of frames 
++ * @sge_count  : number of sg elements
++ *
++ * Returns the number of frames required for numnber of sge's (sge_count)
++ */
++
++u32 megasas_get_frame_count(u8 sge_count)
++{
++ int num_cnt;
++ int sge_bytes;
++ u32 sge_sz;
++ u32 frame_count=0;
++
++ sge_sz = (IS_DMA64) ? sizeof(struct megasas_sge64) :
++     sizeof(struct megasas_sge32);
++
++	/*
++	* Main frame can contain 2 SGEs for 64-bit SGLs and 
++	* 3 SGEs for 32-bit SGLs
++	*/
++	if (IS_DMA64)
++		num_cnt = sge_count - 2;
++	else
++		num_cnt = sge_count - 3;
++
++	if(num_cnt>0){
++		sge_bytes = sge_sz * num_cnt;
++
++		frame_count = (sge_bytes / MEGAMFI_FRAME_SIZE) +
++		    ((sge_bytes % MEGAMFI_FRAME_SIZE) ? 1 : 0) ;
++	}
++	/* Main frame */
++	frame_count +=1;
++
++	if (frame_count > 7)
++		frame_count = 8;
++	return frame_count;
++}
++
  /**
-  * MFI frame flags
+  * megasas_build_dcdb -	Prepares a direct cdb (DCDB) command
+  * @instance:		Adapter soft state
+@@ -508,8 +548,6 @@ static int
+ megasas_build_dcdb(struct megasas_instance *instance, struct scsi_cmnd *scp,
+ 		   struct megasas_cmd *cmd)
+ {
+-	u32 sge_sz;
+-	int sge_bytes;
+ 	u32 is_logical;
+ 	u32 device_id;
+ 	u16 flags = 0;
+@@ -544,9 +582,6 @@ megasas_build_dcdb(struct megasas_instan
+ 	/*
+ 	 * Construct SGL
+ 	 */
+-	sge_sz = (IS_DMA64) ? sizeof(struct megasas_sge64) :
+-	    sizeof(struct megasas_sge32);
+-
+ 	if (IS_DMA64) {
+ 		pthru->flags |= MFI_FRAME_SGL64;
+ 		pthru->sge_count = megasas_make_sgl64(instance, scp,
+@@ -562,17 +597,11 @@ megasas_build_dcdb(struct megasas_instan
+ 	pthru->sense_buf_phys_addr_hi = 0;
+ 	pthru->sense_buf_phys_addr_lo = cmd->sense_phys_addr;
+ 
+-	sge_bytes = sge_sz * pthru->sge_count;
+-
+ 	/*
+ 	 * Compute the total number of frames this command consumes. FW uses
+ 	 * this number to pull sufficient number of frames from host memory.
+ 	 */
+-	cmd->frame_count = (sge_bytes / MEGAMFI_FRAME_SIZE) +
+-	    ((sge_bytes % MEGAMFI_FRAME_SIZE) ? 1 : 0) + 1;
+-
+-	if (cmd->frame_count > 7)
+-		cmd->frame_count = 8;
++	cmd->frame_count = megasas_get_frame_count(pthru->sge_count);
+ 
+ 	return cmd->frame_count;
+ }
+@@ -589,8 +618,6 @@ static int
+ megasas_build_ldio(struct megasas_instance *instance, struct scsi_cmnd *scp,
+ 		   struct megasas_cmd *cmd)
+ {
+-	u32 sge_sz;
+-	int sge_bytes;
+ 	u32 device_id;
+ 	u8 sc = scp->cmnd[0];
+ 	u16 flags = 0;
+@@ -605,7 +632,7 @@ megasas_build_ldio(struct megasas_instan
+ 		flags = MFI_FRAME_DIR_READ;
+ 
+ 	/*
+-	 * Preare the Logical IO frame: 2nd bit is zero for all read cmds
++	 * Prepare the Logical IO frame: 2nd bit is zero for all read cmds
+ 	 */
+ 	ldio->cmd = (sc & 0x02) ? MFI_CMD_LD_WRITE : MFI_CMD_LD_READ;
+ 	ldio->cmd_status = 0x0;
+@@ -674,9 +701,6 @@ megasas_build_ldio(struct megasas_instan
+ 	/*
+ 	 * Construct SGL
+ 	 */
+-	sge_sz = (IS_DMA64) ? sizeof(struct megasas_sge64) :
+-	    sizeof(struct megasas_sge32);
+-
+ 	if (IS_DMA64) {
+ 		ldio->flags |= MFI_FRAME_SGL64;
+ 		ldio->sge_count = megasas_make_sgl64(instance, scp, &ldio->sgl);
+@@ -690,13 +714,11 @@ megasas_build_ldio(struct megasas_instan
+ 	ldio->sense_buf_phys_addr_hi = 0;
+ 	ldio->sense_buf_phys_addr_lo = cmd->sense_phys_addr;
+ 
+-	sge_bytes = sge_sz * ldio->sge_count;
+-
+- cmd->frame_count = (sge_bytes / MEGAMFI_FRAME_SIZE) +
+-     ((sge_bytes % MEGAMFI_FRAME_SIZE) ? 1 : 0) + 1;
+-
+- if (cmd->frame_count > 7)
+-		cmd->frame_count = 8;
++	/*
++	 * Compute the total number of frames this command consumes. FW uses
++	 * this number to pull sufficient number of frames from host memory.
++	 */
++	cmd->frame_count = megasas_get_frame_count(ldio->sge_count);
+ 
+ 	return cmd->frame_count;
+ }
 
 
-	
-
---=-TMnmmqk8NB8ZwnaxG2xS
-Content-Disposition: attachment; filename=fw_changes-p1.patch
-Content-Type: text/x-patch; name=fw_changes-p1.patch; charset=UTF-8
+--=-zFOvd7WtKLef4dD5AOpH
+Content-Disposition: attachment; filename=frm_cnt-p2.patch
+Content-Type: text/x-patch; name=frm_cnt-p2.patch; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 diff -uprN linux-2.6orig/drivers/scsi/megaraid/megaraid_sas.c linux-2.6new/drivers/scsi/megaraid/megaraid_sas.c
---- linux-2.6orig/drivers/scsi/megaraid/megaraid_sas.c	2006-09-20 10:20:40.000000000 -0700
-+++ linux-2.6new/drivers/scsi/megaraid/megaraid_sas.c	2006-09-20 10:26:56.000000000 -0700
-@@ -832,6 +832,12 @@ static int megasas_wait_for_outstanding(
- 	}
- 
- 	if (atomic_read(&instance->fw_outstanding)) {
-+		/*
-+		* Send signal to FW to stop processing any pending cmds.
-+		* The controller will be taken offline by the OS now.
-+		*/
-+		writel(MFI_STOP_ADP,
-+				&instance->reg_set->inbound_doorbell);
- 		instance->hw_crit_error = 1;
- 		return FAILED;
- 	}
-@@ -1229,10 +1235,12 @@ megasas_transition_to_ready(struct megas
- 
- 	fw_state = instance->instancet->read_fw_status_reg(instance->reg_set) & MFI_STATE_MASK;
- 
-+	if (fw_state != MFI_STATE_READY) 
-+ 		printk(KERN_INFO "megasas: Waiting for FW to come to ready"
-+ 		       " state\n");
-+
- 	while (fw_state != MFI_STATE_READY) {
- 
--		printk(KERN_INFO "megasas: Waiting for FW to come to ready"
--		       " state\n");
- 		switch (fw_state) {
- 
- 		case MFI_STATE_FAULT:
-@@ -1244,19 +1252,27 @@ megasas_transition_to_ready(struct megas
- 			/*
- 			 * Set the CLR bit in inbound doorbell
- 			 */
--			writel(MFI_INIT_CLEAR_HANDSHAKE,
-+			writel(MFI_INIT_CLEAR_HANDSHAKE|MFI_INIT_HOTPLUG,
- 				&instance->reg_set->inbound_doorbell);
- 
- 			max_wait = 2;
- 			cur_state = MFI_STATE_WAIT_HANDSHAKE;
- 			break;
- 
-+		case MFI_STATE_BOOT_MESSAGE_PENDING:	
-+			writel(MFI_INIT_HOTPLUG,
-+				&instance->reg_set->inbound_doorbell);
-+
-+			max_wait = 10;
-+			cur_state = MFI_STATE_BOOT_MESSAGE_PENDING;
-+			break;
-+
- 		case MFI_STATE_OPERATIONAL:
- 			/*
--			 * Bring it to READY state; assuming max wait 2 secs
-+			 * Bring it to READY state; assuming max wait 10 secs
- 			 */
- 			megasas_disable_intr(instance);
--			writel(MFI_INIT_READY, &instance->reg_set->inbound_doorbell);
-+			writel(MFI_RESET_FLAGS, &instance->reg_set->inbound_doorbell);
- 
- 			max_wait = 10;
- 			cur_state = MFI_STATE_OPERATIONAL;
-@@ -1323,6 +1339,7 @@ megasas_transition_to_ready(struct megas
- 			return -ENODEV;
- 		}
- 	};
-+ 	printk(KERN_INFO "megasas: FW now in Ready state\n");
- 
- 	return 0;
+--- linux-2.6orig/drivers/scsi/megaraid/megaraid_sas.c	2006-09-20 10:26:56.000000000 -0700
++++ linux-2.6new/drivers/scsi/megaraid/megaraid_sas.c	2006-09-20 10:43:54.000000000 -0700
+@@ -495,6 +495,46 @@ megasas_make_sgl64(struct megasas_instan
+ 	return sge_count;
  }
-@@ -1690,6 +1707,12 @@ static int megasas_init_mfi(struct megas
- 	 * Get various operational parameters from status register
- 	 */
- 	instance->max_fw_cmds = instance->instancet->read_fw_status_reg(reg_set) & 0x00FFFF;
-+	/*
-+	 * Reduce the max supported cmds by 1. This is to ensure that the 
-+	 * reply_q_sz (1 more than the max cmd that driver may send)
-+	 * does not exceed max cmds that the FW can support
-+	 */
-+	instance->max_fw_cmds = instance->max_fw_cmds-1;
- 	instance->max_num_sge = (instance->instancet->read_fw_status_reg(reg_set) & 0xFF0000) >> 
- 					0x10;
- 	/*
-diff -uprN linux-2.6orig/drivers/scsi/megaraid/megaraid_sas.h linux-2.6new/drivers/scsi/megaraid/megaraid_sas.h
---- linux-2.6orig/drivers/scsi/megaraid/megaraid_sas.h	2006-09-20 10:20:40.000000000 -0700
-+++ linux-2.6new/drivers/scsi/megaraid/megaraid_sas.h	2006-09-20 10:33:31.000000000 -0700
-@@ -50,6 +50,7 @@
- #define MFI_STATE_WAIT_HANDSHAKE		0x60000000
- #define MFI_STATE_FW_INIT_2			0x70000000
- #define MFI_STATE_DEVICE_SCAN			0x80000000
-+#define MFI_STATE_BOOT_MESSAGE_PENDING		0x90000000
- #define MFI_STATE_FLUSH_CACHE			0xA0000000
- #define MFI_STATE_READY				0xB0000000
- #define MFI_STATE_OPERATIONAL			0xC0000000
-@@ -64,12 +65,18 @@
-  * READY	: Move from OPERATIONAL to READY state; discard queue info
-  * MFIMODE	: Discard (possible) low MFA posted in 64-bit mode (??)
-  * CLR_HANDSHAKE: FW is waiting for HANDSHAKE from BIOS or Driver
-+ * HOTPLUG	: Resume from Hotplug
-+ * MFI_STOP_ADP	: Send signal to FW to stop processing
-  */
--#define MFI_INIT_ABORT				0x00000000
-+#define MFI_INIT_ABORT				0x00000001
- #define MFI_INIT_READY				0x00000002
- #define MFI_INIT_MFIMODE			0x00000004
- #define MFI_INIT_CLEAR_HANDSHAKE		0x00000008
--#define MFI_RESET_FLAGS				MFI_INIT_READY|MFI_INIT_MFIMODE
-+#define MFI_INIT_HOTPLUG			0x00000010
-+#define MFI_STOP_ADP				0x00000020
-+#define MFI_RESET_FLAGS				MFI_INIT_READY| \
-+						MFI_INIT_MFIMODE| \
-+						MFI_INIT_ABORT
  
++ /**
++ * megasas_get_frame_count - Computes the number of frames 
++ * @sge_count		: number of sg elements
++ *
++ * Returns the number of frames required for numnber of sge's (sge_count)
++ */
++
++u32 megasas_get_frame_count(u8 sge_count)
++{
++	int num_cnt;
++	int sge_bytes;
++	u32 sge_sz;
++	u32 frame_count=0;
++
++	sge_sz = (IS_DMA64) ? sizeof(struct megasas_sge64) :
++	    sizeof(struct megasas_sge32);
++
++	/*
++	* Main frame can contain 2 SGEs for 64-bit SGLs and 
++	* 3 SGEs for 32-bit SGLs
++	*/
++	if (IS_DMA64)
++		num_cnt = sge_count - 2;
++	else
++		num_cnt = sge_count - 3;
++
++	if(num_cnt>0){
++		sge_bytes = sge_sz * num_cnt;
++
++		frame_count = (sge_bytes / MEGAMFI_FRAME_SIZE) +
++		    ((sge_bytes % MEGAMFI_FRAME_SIZE) ? 1 : 0) ;
++	}
++	/* Main frame */
++	frame_count +=1;
++
++	if (frame_count > 7)
++		frame_count = 8;
++	return frame_count;
++}
++
  /**
-  * MFI frame flags
+  * megasas_build_dcdb -	Prepares a direct cdb (DCDB) command
+  * @instance:		Adapter soft state
+@@ -508,8 +548,6 @@ static int
+ megasas_build_dcdb(struct megasas_instance *instance, struct scsi_cmnd *scp,
+ 		   struct megasas_cmd *cmd)
+ {
+-	u32 sge_sz;
+-	int sge_bytes;
+ 	u32 is_logical;
+ 	u32 device_id;
+ 	u16 flags = 0;
+@@ -544,9 +582,6 @@ megasas_build_dcdb(struct megasas_instan
+ 	/*
+ 	 * Construct SGL
+ 	 */
+-	sge_sz = (IS_DMA64) ? sizeof(struct megasas_sge64) :
+-	    sizeof(struct megasas_sge32);
+-
+ 	if (IS_DMA64) {
+ 		pthru->flags |= MFI_FRAME_SGL64;
+ 		pthru->sge_count = megasas_make_sgl64(instance, scp,
+@@ -562,17 +597,11 @@ megasas_build_dcdb(struct megasas_instan
+ 	pthru->sense_buf_phys_addr_hi = 0;
+ 	pthru->sense_buf_phys_addr_lo = cmd->sense_phys_addr;
+ 
+-	sge_bytes = sge_sz * pthru->sge_count;
+-
+ 	/*
+ 	 * Compute the total number of frames this command consumes. FW uses
+ 	 * this number to pull sufficient number of frames from host memory.
+ 	 */
+-	cmd->frame_count = (sge_bytes / MEGAMFI_FRAME_SIZE) +
+-	    ((sge_bytes % MEGAMFI_FRAME_SIZE) ? 1 : 0) + 1;
+-
+-	if (cmd->frame_count > 7)
+-		cmd->frame_count = 8;
++	cmd->frame_count = megasas_get_frame_count(pthru->sge_count);
+ 
+ 	return cmd->frame_count;
+ }
+@@ -589,8 +618,6 @@ static int
+ megasas_build_ldio(struct megasas_instance *instance, struct scsi_cmnd *scp,
+ 		   struct megasas_cmd *cmd)
+ {
+-	u32 sge_sz;
+-	int sge_bytes;
+ 	u32 device_id;
+ 	u8 sc = scp->cmnd[0];
+ 	u16 flags = 0;
+@@ -605,7 +632,7 @@ megasas_build_ldio(struct megasas_instan
+ 		flags = MFI_FRAME_DIR_READ;
+ 
+ 	/*
+-	 * Preare the Logical IO frame: 2nd bit is zero for all read cmds
++	 * Prepare the Logical IO frame: 2nd bit is zero for all read cmds
+ 	 */
+ 	ldio->cmd = (sc & 0x02) ? MFI_CMD_LD_WRITE : MFI_CMD_LD_READ;
+ 	ldio->cmd_status = 0x0;
+@@ -674,9 +701,6 @@ megasas_build_ldio(struct megasas_instan
+ 	/*
+ 	 * Construct SGL
+ 	 */
+-	sge_sz = (IS_DMA64) ? sizeof(struct megasas_sge64) :
+-	    sizeof(struct megasas_sge32);
+-
+ 	if (IS_DMA64) {
+ 		ldio->flags |= MFI_FRAME_SGL64;
+ 		ldio->sge_count = megasas_make_sgl64(instance, scp, &ldio->sgl);
+@@ -690,13 +714,11 @@ megasas_build_ldio(struct megasas_instan
+ 	ldio->sense_buf_phys_addr_hi = 0;
+ 	ldio->sense_buf_phys_addr_lo = cmd->sense_phys_addr;
+ 
+-	sge_bytes = sge_sz * ldio->sge_count;
+-
+-	cmd->frame_count = (sge_bytes / MEGAMFI_FRAME_SIZE) +
+-	    ((sge_bytes % MEGAMFI_FRAME_SIZE) ? 1 : 0) + 1;
+-
+-	if (cmd->frame_count > 7)
+-		cmd->frame_count = 8;
++	/*
++	 * Compute the total number of frames this command consumes. FW uses
++	 * this number to pull sufficient number of frames from host memory.
++	 */
++	cmd->frame_count = megasas_get_frame_count(ldio->sge_count);
+ 
+ 	return cmd->frame_count;
+ }
 
---=-TMnmmqk8NB8ZwnaxG2xS--
+--=-zFOvd7WtKLef4dD5AOpH--
 
