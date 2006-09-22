@@ -1,47 +1,55 @@
-From: Muli Ben-Yehuda <muli@il.ibm.com>
-Subject: Re: Fw: [Bugme-new] [Bug 7180] New: aic94xx driver locks up on IBM x366 with Calgary IOMMU enabled
-Date: Fri, 22 Sep 2006 09:05:04 +0300
-Message-ID: <20060922060504.GD16501@rhun.haifa.ibm.com>
-References: <20060921182350.55cb2816.akpm@osdl.org>
+From: Vasily Averin <vvs@sw.ru>
+Subject: 64bit DMA in i2o_block
+Date: Fri, 22 Sep 2006 13:10:23 +0400
+Message-ID: <4513A87F.8040809@sw.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=KOI8-R
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate5.uk.ibm.com ([195.212.29.138]:58582 "EHLO
-	mtagate5.uk.ibm.com") by vger.kernel.org with ESMTP
-	id S1751701AbWIVGFI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Sep 2006 02:05:08 -0400
-Received: from d06nrmr1407.portsmouth.uk.ibm.com (d06nrmr1407.portsmouth.uk.ibm.com [9.149.38.185])
-	by mtagate5.uk.ibm.com (8.13.8/8.13.8) with ESMTP id k8M657U2047340
-	for <linux-scsi@vger.kernel.org>; Fri, 22 Sep 2006 06:05:07 GMT
-Received: from d06av04.portsmouth.uk.ibm.com (d06av04.portsmouth.uk.ibm.com [9.149.37.216])
-	by d06nrmr1407.portsmouth.uk.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id k8M67MH81962236
-	for <linux-scsi@vger.kernel.org>; Fri, 22 Sep 2006 07:07:22 +0100
-Received: from d06av04.portsmouth.uk.ibm.com (loopback [127.0.0.1])
-	by d06av04.portsmouth.uk.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k8M656I0001007
-	for <linux-scsi@vger.kernel.org>; Fri, 22 Sep 2006 07:05:07 +0100
-Content-Disposition: inline
-In-Reply-To: <20060921182350.55cb2816.akpm@osdl.org>
+Received: from mailhub.sw.ru ([195.214.233.200]:33089 "EHLO relay.sw.ru")
+	by vger.kernel.org with ESMTP id S1750950AbWIVJKf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Sep 2006 05:10:35 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-scsi@vger.kernel.org, Andi Kleen <ak@muc.de>, alexisb@us.ibm.com, djwong@us.ibm.com, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>, Jon Mason <jdmason@gmail.com>
+To: Markus Lidel <Markus.Lidel@shadowconnect.com>, linux-scsi@vger.kernel.org, devel@openvz.org
 
-On Thu, Sep 21, 2006 at 06:23:50PM -0700, Andrew Morton wrote:
-> 
-> 
-> Begin forwarded message:
-> 
-> Date: Thu, 21 Sep 2006 18:10:56 -0700
-> From: bugme-daemon@bugzilla.kernel.org
-> To: bugme-new@lists.osdl.org
-> Subject: [Bugme-new] [Bug 7180] New: aic94xx driver locks up on IBM
-> x366 with Calgary IOMMU enabled
->
-[snip]
->
-> http://bugzilla.kernel.org/show_bug.cgi?id=7180
+Markus,
 
-Thanks Andrew, we're looking into it.
+I've found that your driver does not work correctly with following options:
+CONFIG_I2O_EXT_ADAPTEC=y
+# CONFIG_I2O_EXT_ADAPTEC_DMA64 is not set
 
-Cheers,
-Muli
+I've checked it on 2.6.18 kernel on x86_64 node with 4Gb memory.
+
+I would note that I've not noticed any bugs on x86 kernels, but x86_64 does not
+work at all.
+
+The behaviors of x86_64 kernels can differ:
+sometimes driver can not find partition table:
+i2o/hda: unknown partition table
+
+sometimes it find not all partition:
+i2o/hda: i2o/hda1 i2o/hda2 i2o/hda3 i2o/hda4 < >
+
+in other cases it detects devices well but corrupt the memory and filesystem:
+Sep 21 16:46:09 ts10 block-osm: registered device at major 80
+Sep 21 16:46:09 ts10  i2o/hda: i2o/hda1 i2o/hda2 i2o/hda3 i2o/hda4 < i2o/hda5 >
+Sep 21 16:46:09 ts10 block-osm: device added (TID: 207): i2o/hda
+Sep 21 16:46:09 ts10 kjournald starting.  Commit interval 5 seconds
+Sep 21 16:46:09 ts10 EXT3-fs: mounted filesystem with ordered data mode.
+Sep 21 16:46:10 ts10 Freeing unused kernel memory: 236k freed
+Sep 21 16:46:10 ts10 hotplug[961]: segfault at 0000000000000008 rip
+00000032411088cf rsp 00007fff5b189050 error 4
+
+When I enabled CONFIG_I2O_EXT_ADAPTEC_DMA64 -- all the troubles went away.
+
+I've tried to investigate this issue, but I've not found and documentation
+described format of Adaptec's private messages.
+
+I would like to ask you, is this behavior specific for my hardware (Adaptec
+ASR-2010S I2O Zero Channel)? If not, I believe it makes sense to enable
+ CONFIG_I2O_EXT_ADAPTEC_DMA64 in Kconfig by default for 64-bit kernels.
+
+Thank you,
+	Vasily Averin
