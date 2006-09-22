@@ -1,45 +1,62 @@
-From: "Patro, Sumant" <Sumant.Patro@lsil.com>
-Subject: RE: [Patch 6/7] megaraid_sas: adds tasklet for cmd completion
-Date: Thu, 21 Sep 2006 19:12:06 -0600
-Message-ID: <0631C836DBF79F42B5A60C8C8D4E82296DF339@NAMAIL2.ad.lsil.com>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Fw: [Bugme-new] [Bug 7180] New: aic94xx driver locks up on IBM x366
+ with Calgary IOMMU enabled
+Date: Thu, 21 Sep 2006 18:23:50 -0700
+Message-ID: <20060921182350.55cb2816.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:53903 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S932166AbWIVBMe convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Sep 2006 21:12:34 -0400
-Content-class: urn:content-classes:message
+Received: from smtp.osdl.org ([65.172.181.4]:19908 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932176AbWIVBYN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 21 Sep 2006 21:24:13 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, akpm@osdl.org, hch@lst.de, linux-kernel@vger.kernel.org, "Kolli, Neela" <Neela.Kolli@engenio.com>, "Yang, Bo" <Bo.Yang@engenio.com>
+To: linux-scsi@vger.kernel.org, Andi Kleen <ak@muc.de>, Muli Ben-Yehuda <muli@il.ibm.com>
+Cc: alexisb@us.ibm.com, djwong@us.ibm.com, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>
 
-Hello Christoph,
 
-	Thank you for the review of the patches.	
-	With implementation of tasklet in the driver we see a
-performance increase of about 8%, so we decided to go with it.
 
-Regards,
-Sumant
+Begin forwarded message:
 
------Original Message-----
-From: Christoph Hellwig [mailto:hch@infradead.org] 
-Sent: Thursday, September 21, 2006 4:46 AM
-To: Patro, Sumant
-Cc: James.Bottomley@SteelEye.com; linux-scsi@vger.kernel.org;
-akpm@osdl.org; hch@lst.de; linux-kernel@vger.kernel.org; Kolli, Neela;
-Yang, Bo
-Subject: Re: [Patch 6/7] megaraid_sas: adds tasklet for cmd completion
+Date: Thu, 21 Sep 2006 18:10:56 -0700
+From: bugme-daemon@bugzilla.kernel.org
+To: bugme-new@lists.osdl.org
+Subject: [Bugme-new] [Bug 7180] New: aic94xx driver locks up on IBM x366 with Calgary IOMMU enabled
 
-On Wed, Sep 20, 2006 at 07:31:29PM -0700, Sumant Patro wrote:
-> This patch adds a tasklet for command completion.
 
-Why would you need this?  The normal scsi command completion is
-offloaded
-to the SCSI softirq ASAP so I don't see any point for those.  Do you see
-too much time spent in completion of the internal commands?
+http://bugzilla.kernel.org/show_bug.cgi?id=7180
 
+           Summary: aic94xx driver locks up on IBM x366 with Calgary IOMMU
+                    enabled
+    Kernel Version: 2.6.18
+            Status: NEW
+          Severity: normal
+             Owner: djwong@us.ibm.com
+         Submitter: djwong@us.ibm.com
+                CC: alexisb@us.ibm.com
+
+
+Most recent kernel where this bug did not occur: 2.6.17
+Distribution: Ubuntu 6.06
+Hardware Environment: IBM x366, 4x 3.16GHz Xeon, 8G RAM, aic94xx SAS controller,
+6x 36G SAS disks, Calgary IOMMU
+Software Environment: netbooted Ubuntu mutant.
+Problem Description: aic94xx driver NMIs the system if calgary iommu is enabled.
+
+Steps to reproduce:
+1. Clone linux-2.6 and add in scsi-misc, scsi-rc-fixes and aic94xx from
+git.kernel.org.
+2. Build a netbootable "allmodconfig" kernel with attached config file.
+3. Calgary IOMMU code activates
+4. Subsequent loading of the aic94xx driver causes the service processor to log
+a PCI SERR with a split completion timeout, followed by an NMI, followed by a
+reboot.
+
+Note that disabling the Calgary IOMMU for the bus that the SAS controller is
+connected to (either via kconfig or iommu=none or calgary=disable=1) will make
+the problem go away.
+
+------- You are receiving this mail because: -------
+You are on the CC list for the bug, or are watching someone who is.
