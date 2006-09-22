@@ -1,41 +1,60 @@
-From: malahal@us.ibm.com
-Subject: BUG in sas event handling mechanism???
-Date: Fri, 22 Sep 2006 10:40:46 -0700
-Message-ID: <20060922174046.GA18715@us.ibm.com>
+From: "Moore, Eric" <Eric.Moore@lsil.com>
+Subject: RE: [PATCH] scsi/mptsas: add RAID devices in ascending ID order
+Date: Fri, 22 Sep 2006 12:17:37 -0600
+Message-ID: <664A4EBB07F29743873A87CF62C26D7032D5CF@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e2.ny.us.ibm.com ([32.97.182.142]:11963 "EHLO e2.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S964820AbWIVRkz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Sep 2006 13:40:55 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e2.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id k8MHesD8021975
-	for <linux-scsi@vger.kernel.org>; Fri, 22 Sep 2006 13:40:54 -0400
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay04.pok.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id k8MHesog278198
-	for <linux-scsi@vger.kernel.org>; Fri, 22 Sep 2006 13:40:54 -0400
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k8MHesRH004622
-	for <linux-scsi@vger.kernel.org>; Fri, 22 Sep 2006 13:40:54 -0400
-Received: from malahal.beaverton.ibm.com (malahal.beaverton.ibm.com [9.47.17.93])
-	by d01av04.pok.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k8MHes6B004216
-	for <linux-scsi@vger.kernel.org>; Fri, 22 Sep 2006 13:40:54 -0400
-Content-Disposition: inline
+Received: from mail0.lsil.com ([147.145.40.20]:65172 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S964851AbWIVSRo convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Sep 2006 14:17:44 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: martin.wilck@fujitsu-siemens.com
+Cc: linux-scsi@vger.kernel.org, mpt_linux_developer <mpt_linux_developer@lsil.com>
 
-I see a PORTE_BYTES_DMAED event, followed by a PHYE_LOSS_OF_SIGNAL event
-and then followed by a PORTE_BYTES_DMAED event on the same phy. The code
-seems to just drop the last event because of the not yet processed first
-event. So, it just processes the first two events in that order. In
-other words, the link doesn't get used at all!
+On Friday, September 22, 2006 8:58 AM, Martin Wilck wrote: 
 
-Of course, I get timeouts because of Vitesse/AIC94xx combination while
-doing discovery. :-(
+> 
+> From: Martin Wilck <Martin.Wilck@fujitsu-siemens.com>
+> 
+>     [SCSI] mptsas: add RAID devices in ascending ID order
+>     
+>     This patch fixes the order in which mptsas registers
+>     RAID devices with the SCSI mid layer. The VolumeID field
+>     is not in ascending order. This leads to situations where
+>     e.g. device 2:8:2:0 is registered before 2:8:0:0.
+>     
+>     That may lead to an unbootable system e.g. if a user installs
+>     on a two-disk RAID1 array and adds another 2-disk RAID1 later
+>     (the new array will be detected as sda, the old one as sdb).
+>     
+>     The patch makes sure that arrays are added in ascending
+>     VolumeID order.
+> 
 
-Maybe, this is what Luben is talking about when he said,
-"Priority Queue Without Duplication Implementation"?
+Rejected.  
 
-Thanks, Malahal.
+Ascending ID ordering does not address all cases. 
+There is no guarantee which target ids are 
+assigned by firmware to volumes when
+volumes are created.   I've made similar 
+ordering proposals before to this mailing list. 
+All been rejected.
+
+I suggest that you not map your devices
+to /dev/sda, but instead use persistent
+device labels or names.  Most distro's
+now days ship with Logical Volume Manager
+that does this for you.
+
+Here is a link on udev:
+
+http://en.wikipedia.org/wiki/Udev
+
+
+Eric
