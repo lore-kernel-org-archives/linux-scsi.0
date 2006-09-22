@@ -1,56 +1,74 @@
-From: Markus Lidel <Markus.Lidel@shadowconnect.com>
-Subject: Re: 64bit DMA in i2o_block
-Date: Fri, 22 Sep 2006 13:47:56 +0200
-Message-ID: <4513CD6C.9050606@shadowconnect.com>
-References: <4513A87F.8040809@sw.ru> <4513B783.70008@shadowconnect.com> <p73lkoci32y.fsf@verdi.suse.de>
+From: martin.wilck@fujitsu-siemens.com
+Subject: [PATCH] scsi/mptsas: add RAID devices in ascending ID order
+Date: Fri, 22 Sep 2006 16:57:39 +0200
+Message-ID: <4513F9E3.mailNQ511V9QA@fujitsu-siemens.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from s0006.shadowconnect.net ([213.202.216.60]:4879 "EHLO
-	mail.shadowconnect.com") by vger.kernel.org with ESMTP
-	id S932308AbWIVLr6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Sep 2006 07:47:58 -0400
-In-Reply-To: <p73lkoci32y.fsf@verdi.suse.de>
+Received: from dgate1.fujitsu-siemens.com ([217.115.66.35]:65362 "EHLO
+	dgate1.fujitsu-siemens.com") by vger.kernel.org with ESMTP
+	id S932546AbWIVO5l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Sep 2006 10:57:41 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andi Kleen <ak@suse.de>
-Cc: linux-scsi@vger.kernel.org, devel@openvz.org
+To: Eric.Moore@lsil.com
+Cc: martin.wilck@fujitsu-siemens.com, linux-scsi@vger.kernel.org, mpt_linux_developer@lsil.com
 
-Hello,
+From: Martin Wilck <Martin.Wilck@fujitsu-siemens.com>
 
-Andi Kleen wrote:
-> Markus Lidel <Markus.Lidel@shadowconnect.com> writes:
->> I believe it's a driver issue. Do you have a testing-system where you
->> could try out the appended patch?
-> So it would bug instead? 
+    [SCSI] mptsas: add RAID devices in ascending ID order
+    
+    This patch fixes the order in which mptsas registers
+    RAID devices with the SCSI mid layer. The VolumeID field
+    is not in ascending order. This leads to situations where
+    e.g. device 2:8:2:0 is registered before 2:8:0:0.
+    
+    That may lead to an unbootable system e.g. if a user installs
+    on a two-disk RAID1 array and adds another 2-disk RAID1 later
+    (the new array will be detected as sda, the old one as sdb).
+    
+    The patch makes sure that arrays are added in ascending
+    VolumeID order.
 
-Yes, because ATM i don't know why it doesn't work. It's just for debugging.
+Signed-off-by: Martin Wilck <Martin.Wilck@fujitsu-siemens.com>
 
-> Can you please just get rid of that CONFIG? Such things shouldn't 
-> be CONFIGs, but have a suitable default. In particular drivers
-> running under 64bit should always support 64bit DMA.
-
-The 64-bit DMA is only available on Adaptec controllers, all other I2O 
-controllers only work with 32-bit DMA. Although the 64-bit DMA is (as far 
-as i can remember) slower then the 32-bit DMA and is therefore only 
-useful on systems which run out of memory.
-
-
-Best regards,
-
-
-Markus Lidel
-------------------------------------------
-Markus Lidel (Senior IT Consultant)
-
-Shadow Connect GmbH
-Carl-Reisch-Weg 12
-D-86381 Krumbach
-Germany
-
-Phone:  +49 82 82/99 51-0
-Fax:    +49 82 82/99 51-11
-
-E-Mail: Markus.Lidel@shadowconnect.com
-URL:    http://www.shadowconnect.com
+diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
+index b752a47..3f01f03 100644
+--- a/drivers/message/fusion/mptsas.c
++++ b/drivers/message/fusion/mptsas.c
+@@ -1962,6 +1962,7 @@ mptsas_scan_sas_topology(MPT_ADAPTER *io
+ {
+ 	u32 handle = 0xFFFF;
+ 	int i;
++	int last_added_id;
+ 
+ 	mutex_lock(&ioc->sas_discovery_mutex);
+ 	mptsas_probe_hba_phys(ioc);
+@@ -1974,9 +1975,24 @@ mptsas_scan_sas_topology(MPT_ADAPTER *io
+ 		goto out;
+ 	if (!ioc->raid_data.pIocPg2->NumActiveVolumes)
+ 		goto out;
+-	for (i=0; i<ioc->raid_data.pIocPg2->NumActiveVolumes; i++) {
++
++	/* Add logical volumes in the usual SCSI scan sequence (ascending VolumeID) */
++	for (last_added_id = -1;;) {
++		int idx = -1;
++		int smallest_id = 256; /* VolumeID is u8 */
++
++		for (i=0; i<ioc->raid_data.pIocPg2->NumActiveVolumes; i++) {
++			int id = ioc->raid_data.pIocPg2->RaidVolume[i].VolumeID;
++			if (id > last_added_id && id < smallest_id) {
++				smallest_id = id;
++				idx = i;
++			}
++		}
++		if (idx == -1)
++			break;
++		last_added_id = smallest_id;
+ 		scsi_add_device(ioc->sh, MPTSAS_RAID_CHANNEL,
+-		    ioc->raid_data.pIocPg2->RaidVolume[i].VolumeID, 0);
++		    ioc->raid_data.pIocPg2->RaidVolume[idx].VolumeID, 0);
+ 	}
+  out:
+ 	mutex_unlock(&ioc->sas_discovery_mutex);
