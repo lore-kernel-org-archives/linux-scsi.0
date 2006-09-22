@@ -1,133 +1,86 @@
-From: David C Somayajulu <david.somayajulu@qlogic.com>
-Subject: Re: [RFC] [PATCH] helper function for retrieving scsi_cmd given
-	host based block layer tag
-Date: Fri, 22 Sep 2006 15:00:34 -0700
-Message-ID: <1158962434.4040.35.camel@dcslnxpc.site>
-References: <1158710201.4358.8.camel@dcslnxpc.site>
-	 <1158944997.4040.10.camel@dcslnxpc.site> <20060922191156.GL16556@kernel.dk>
+From: Luca <kronos.it@gmail.com>
+Subject: Re: [PATCH]: PCI Error Recovery: Symbios SCSI device driver
+Date: Sat, 23 Sep 2006 00:06:29 +0200
+Message-ID: <20060922220629.GA4600@dreamland.darkstar.lan>
+References: <20060921231314.GW29167@austin.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:5800 "EHLO avexch1.qlogic.com")
-	by vger.kernel.org with ESMTP id S965198AbWIVWAe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Sep 2006 18:00:34 -0400
-In-Reply-To: <20060922191156.GL16556@kernel.dk>
+Received: from nf-out-0910.google.com ([64.233.182.184]:47531 "EHLO
+	nf-out-0910.google.com") by vger.kernel.org with ESMTP
+	id S965210AbWIVWGR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Sep 2006 18:06:17 -0400
+Received: by nf-out-0910.google.com with SMTP id o25so1124844nfa
+        for <linux-scsi@vger.kernel.org>; Fri, 22 Sep 2006 15:06:15 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <20060921231314.GW29167@austin.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>, Doug Maxey <dwm@enoyolf.org>, David Wagner <david.wagner@qlogic.com>
+To: Linas Vepstas <linas@austin.ibm.com>
+Cc: linux-scsi@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org
 
-On Fri, 2006-09-22 at 21:11 +0200, Jens Axboe wrote:
-> On Fri, Sep 22 2006, David C Somayajulu wrote:
-> > On Tue, 2006-09-19 at 16:56 -0700, David C Somayajulu wrote:
-> > > This was necessitated by the need for a function to get back
-> > > to a scsi_cmnd, when an hba the posts its (corresponding) completion 
-> > > interrupt with a block layer tag as its reference.
-> > Regenerated the patch with reference to
-> > git://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-2.6-block.git
-> > Also fixed tabs.
-> > 
-> > Here is the link to the same patch with reference scsi-misc just in case
-> > ( ftp://ftp.qlogic.com/outgoing/linux/iSCSI/upstream/5.00.05b10-k/blk_tag_helper_patch.txt  )
-> > 
-> > Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
-> > Signed-off-by: David Somayajulu <david.somayajulu@qlogic.com>
-> 
-> It still fails for me:
-> 
-> axboe@nelson:/src/linux-2.6-block.git $ patch -p1 --dry-run < ~/1
-> patching file block/ll_rw_blk.c
-> Hunk #1 succeeded at 840 (offset 3 lines).
-> patching file include/linux/blkdev.h
-> Hunk #1 succeeded at 766 (offset 19 lines).
-> patching file include/scsi/scsi_tcq.h
-> Hunk #1 FAILED at 131.
-> 1 out of 1 hunk FAILED -- saving rejects to file
-> include/scsi/scsi_tcq.h.rej
-> 
-> I wonder if you are using the 'block' branch, not just the master
-> branch? It seems to apply perfectly there, but that is just the same as
-> Linus' tree. So when you have cloned the block git repo, there are a
-> number of branches you can work against. The main branch with current
-> changes is the 'block' branch, that is what you want to be making
-> patches against.
-> 
-> I'll be away for the entire next week, so no rush on my end.
-> 
-I think I got it right this time. Here it is.
-Thanks
-David Somayajulu
 
----
+Hi Linas,
 
-diff --git a/block/ll_rw_blk.c b/block/ll_rw_blk.c
-index 4475fa4..a4a72bd 100644
---- a/block/ll_rw_blk.c
-+++ b/block/ll_rw_blk.c
-@@ -840,12 +840,7 @@ EXPORT_SYMBOL(blk_queue_dma_alignment);
-  **/
- struct request *blk_queue_find_tag(request_queue_t *q, int tag)
- {
--	struct blk_queue_tag *bqt = q->queue_tags;
--
--	if (unlikely(bqt == NULL || tag >= bqt->real_max_depth))
--		return NULL;
--
--	return bqt->tag_index[tag];
-+	return blk_map_queue_find_tag(q->queue_tags, tag);
- }
- 
- EXPORT_SYMBOL(blk_queue_find_tag);
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index c55d470..10fd39d 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -766,6 +766,14 @@ extern int blk_queue_resize_tags(request
- extern void blk_queue_invalidate_tags(request_queue_t *);
- extern long blk_congestion_wait(int rw, long timeout);
- 
-+static inline struct request *blk_map_queue_find_tag(struct blk_queue_tag *bqt,
-+						int tag)
-+{
-+	if (unlikely(bqt == NULL || tag >= bqt->real_max_depth))
-+		return NULL;
-+	return bqt->tag_index[tag];
-+}
-+
- extern void blk_rq_bio_prep(request_queue_t *, struct request *, struct bio *);
- extern int blkdev_issue_flush(struct block_device *, sector_t *);
- 
-diff --git a/include/scsi/scsi_tcq.h b/include/scsi/scsi_tcq.h
-index d1d9b10..01b7481 100644
---- a/include/scsi/scsi_tcq.h
-+++ b/include/scsi/scsi_tcq.h
-@@ -131,5 +131,25 @@ static inline struct scsi_cmnd *scsi_fin
- 	return sdev->current_cmnd;
- }
- 
-+/**
-+ * scsi_host_find_tag - find the tagged command by host
-+ * @shost:	pointer to scsi_host
-+ * @tag:	tag of the scsi_cmnd
-+ *
-+ * Notes:
-+ *	Only works with tags allocated by the generic blk layer.
-+ **/
-+static inline struct scsi_cmnd *scsi_host_find_tag(struct Scsi_Host *shost,
-+						int tag)
-+{
-+	struct request *req;
-+
-+	if (tag != SCSI_NO_TAG) {
-+		req = blk_map_queue_find_tag(shost->bqt, tag);
-+		return req ? (struct scsi_cmnd *)req->special : NULL;
-+	}
-+	return NULL;
-+}
-+
- #endif /* CONFIG_BLOCK */
- #endif /* _SCSI_SCSI_TCQ_H */
+Linas Vepstas <linas@austin.ibm.com> ha scritto:
+> Index: linux-2.6.18-rc7-git1/drivers/scsi/sym53c8xx_2/sym_glue.c
+> ===================================================================
+> --- linux-2.6.18-rc7-git1.orig/drivers/scsi/sym53c8xx_2/sym_glue.c      2006-09-21 17:32:54.000000000 -0500
+> +++ linux-2.6.18-rc7-git1/drivers/scsi/sym53c8xx_2/sym_glue.c   2006-09-21 17:35:37.000000000 -0500
+> +/**
+> + * sym2_io_slot_reset() -- called when the pci bus has been reset.
+> + * @pdev: pointer to PCI device
+> + *
+> + * Restart the card from scratch.
+> + */
+> +static pci_ers_result_t sym2_io_slot_reset (struct pci_dev *pdev)
+> +{
+> +       struct sym_hcb *np = pci_get_drvdata(pdev);
+> +
+> +       printk (KERN_INFO "%s: recovering from a PCI slot reset\n",
 
----
+Space after function name? You put in other places too, it's not
+consistent with the rest of the patch.
+
+> +           sym_name(np));
+> +
+> +       if (pci_enable_device(pdev))
+> +               printk (KERN_ERR "%s: device setup failed most egregiously\n",
+> +                           sym_name(np));
+
+Is the failure of pci_enable_device ignored on purpose?
+(plus extra space)
+
+> +
+> +       pci_set_master(pdev);
+> +       enable_irq (pdev->irq);
+
+Spurious space.
+
+> +
+> +       /* Perform host reset only on one instance of the card */
+> +       if (0 == PCI_FUNC (pdev->devfn)) {
+
+Ditto.
+
+> +               if (sym_reset_scsi_bus(np, 0)) {
+> +                  printk(KERN_ERR "%s: Unable to reset scsi host controller\n",
+> +                                                 sym_name(np));
+> +                       return PCI_ERS_RESULT_DISCONNECT;
+> +               }
+> +               sym_start_up (np, 1);
+
+Ditto.
+
+> +       }
+> +
+> +       return PCI_ERS_RESULT_RECOVERED;
+> +}
+
+
+Luca
+-- 
+"L'abilita` politica e` l'abilita` di prevedere quello che
+ accadra` domani, la prossima settimana, il prossimo mese e
+ l'anno prossimo. E di essere cosi` abili, piu` tardi,
+ da spiegare  perche' non e` accaduto."
