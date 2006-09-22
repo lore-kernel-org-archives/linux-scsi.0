@@ -1,36 +1,51 @@
-From: linas@austin.ibm.com (Linas Vepstas)
+From: "Randy.Dunlap" <rdunlap@xenotime.net>
 Subject: Re: [PATCH]: PCI Error Recovery: Symbios SCSI device driver
-Date: Fri, 22 Sep 2006 18:32:35 -0500
-Message-ID: <20060922233235.GB14213@austin.ibm.com>
-References: <20060921231314.GW29167@austin.ibm.com> <20060922220629.GA4600@dreamland.darkstar.lan>
+Date: Fri, 22 Sep 2006 16:39:29 -0700
+Message-ID: <20060922163929.bb870ee1.rdunlap@xenotime.net>
+References: <20060921231314.GW29167@austin.ibm.com>
+	<20060922220629.GA4600@dreamland.darkstar.lan>
+	<20060922233235.GB14213@austin.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:6785 "EHLO e36.co.us.ibm.com")
-	by vger.kernel.org with ESMTP id S964925AbWIVXcg (ORCPT
+Received: from xenotime.net ([66.160.160.81]:22188 "HELO xenotime.net")
+	by vger.kernel.org with SMTP id S964927AbWIVXiU (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Sep 2006 19:32:36 -0400
-Content-Disposition: inline
-In-Reply-To: <20060922220629.GA4600@dreamland.darkstar.lan>
+	Fri, 22 Sep 2006 19:38:20 -0400
+Received: from midway.site ([71.117.233.155]) by xenotime.net for <linux-scsi@vger.kernel.org>; Fri, 22 Sep 2006 16:38:18 -0700
+In-Reply-To: <20060922233235.GB14213@austin.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Luca <kronos.it@gmail.com>
-Cc: linux-scsi@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org
+To: Linas Vepstas <linas@austin.ibm.com>
+Cc: Luca <kronos.it@gmail.com>, linux-scsi@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org
 
-On Sat, Sep 23, 2006 at 12:06:29AM +0200, Luca wrote:
+On Fri, 22 Sep 2006 18:32:35 -0500 Linas Vepstas wrote:
+
+> On Sat, Sep 23, 2006 at 12:06:29AM +0200, Luca wrote:
+> > 
+> > Space after function name? You put in other places too, it's not
+> > consistent with the rest of the patch.
 > 
-> Space after function name? You put in other places too, it's not
-> consistent with the rest of the patch.
+> Oops. I was also coding on a different project recently, with a
+> different style.  I'll send a revised patch in a moment.
 
-Oops. I was also coding on a different project recently, with a
-different style.  I'll send a revised patch in a moment.
+Please change if()'s to use
 
-> > +       if (pci_enable_device(pdev))
-> > +               printk (KERN_ERR "%s: device setup failed most egregiously\n",
-> > +                           sym_name(np));
+	if (var == constant)
+instead of
+	if (constant == var)
+
+also.  (or whatever condition is being used)  Thanks.
+
+
+> > > +       if (pci_enable_device(pdev))
+> > > +               printk (KERN_ERR "%s: device setup failed most egregiously\n",
+> > > +                           sym_name(np));
+> > 
+> > Is the failure of pci_enable_device ignored on purpose?
 > 
-> Is the failure of pci_enable_device ignored on purpose?
+> No. :-( Thanks for the catch. I think I got cross-eyed staring at the code.
 
-No. :-( Thanks for the catch. I think I got cross-eyed staring at the code.
-
---linas
+---
+~Randy
