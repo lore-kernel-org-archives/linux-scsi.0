@@ -1,51 +1,40 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: Re: [PATCH]: PCI Error Recovery: Symbios SCSI device driver
-Date: Fri, 22 Sep 2006 17:57:33 -0700
-Message-ID: <20060922175733.522c9e0b.rdunlap@xenotime.net>
-References: <20060921231314.GW29167@austin.ibm.com>
-	<20060922220629.GA4600@dreamland.darkstar.lan>
-	<20060922233235.GB14213@austin.ibm.com>
-	<20060922163929.bb870ee1.rdunlap@xenotime.net>
-	<20060922235017.GD14213@austin.ibm.com>
+From: Stephen Atkins <satkins@skircr.com>
+Subject: Serial ATA (sii3512a) support
+Date: Sat, 23 Sep 2006 10:35:22 -0600
+Message-ID: <4515624A.4090100@skircr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:44500 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S964989AbWIWA4Y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Sep 2006 20:56:24 -0400
-Received: from midway.site ([71.117.233.155]) by xenotime.net for <linux-scsi@vger.kernel.org>; Fri, 22 Sep 2006 17:56:22 -0700
-In-Reply-To: <20060922235017.GD14213@austin.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751280AbWIWQh2@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linas Vepstas <linas@austin.ibm.com>
-Cc: Luca <kronos.it@gmail.com>, linux-scsi@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org
 
-On Fri, 22 Sep 2006 18:50:17 -0500 Linas Vepstas wrote:
+Hello everyone.  I'm just wondering what the status is for the Silicon
+Image 3512a serial ata support is.
 
-> On Fri, Sep 22, 2006 at 04:39:29PM -0700, Randy.Dunlap wrote:
-> > On Fri, 22 Sep 2006 18:32:35 -0500 Linas Vepstas wrote:
-> > 
-> > > On Sat, Sep 23, 2006 at 12:06:29AM +0200, Luca wrote:
-> > > > 
-> > > > Space after function name? You put in other places too, it's not
-> > > > consistent with the rest of the patch.
-> > > 
-> > > Oops. I was also coding on a different project recently, with a
-> > > different style.  I'll send a revised patch in a moment.
-> > 
-> > Please change if()'s to use
-> > 
-> > 	if (var == constant)
-> > instead of
-> > 	if (constant == var)
-> 
-> Yuck! Horrid coding style! No rational excuse for coding like that.
-> Advice taken under protest; new patch shortly.
+I was using gentoo-sources 2.6.12 my Seagate drives worked fine.  I'm
+now running a gentoo-sources 2.6.15-r1 and support has broken.  The same
+thing with gentoo-sources 2.6.17-r8.  I've added my drives to the
+sata_sil.c black list (one of them was missing) but I still get
+"Abnormal status 0x58 on port ..." errors.  Which essentially crashes my
+machine.
 
-Just after my email, I saw this :)
-http://marc.theaimsgroup.com/?l=linux-mm-commits&m=115896769322020&w=2
+Unfortunately I don't have the 2.6.12 kernel from Gentoo any more as I
+did a emerge --sync and it got rid of it.  Also some of the other
+drivers I'm using need more recent kernel versions.
 
----
-~Randy
+Just some notes on my MB/chipsets.  I've got a Gigabyte GA-7N400Pro2
+with an nForce2 chipset.  It has a on board SATA which the manual says
+is a Sil3112 but the bios reports it as a Sil3512a.  I've got a single 6
+gig IDE as my boot device and root dir.  There are also two SATA drives
+both are Seagates.  One is a ST3250823AS (250 gigs) and a ST3120026AS
+(120 gigs).  I know the Seagate drives have some issues and hence the
+black list.
+
+Just wondering if there is anything I can do to make these things work
+in some of the latest kernels.  Thanks for you help.
+
+-- 
+
+Stephen Atkins
