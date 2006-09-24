@@ -1,64 +1,43 @@
-From: Randy Dunlap <rdunlap@xenotime.net>
+From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: [PATCH] async scsi scanning, version 11
-Date: Sun, 24 Sep 2006 13:02:53 -0700
-Message-ID: <20060924130253.48f90fe5.rdunlap@xenotime.net>
-References: <20060924190623.GB2595@parisc-linux.org>
+Date: Sun, 24 Sep 2006 14:40:01 -0600
+Message-ID: <20060924204000.GE2595@parisc-linux.org>
+References: <20060924190623.GB2595@parisc-linux.org> <20060924130253.48f90fe5.rdunlap@xenotime.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:57269 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S1750988AbWIXUBm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 24 Sep 2006 16:01:42 -0400
-Received: from midway.site ([71.117.233.155]) by xenotime.net for <linux-scsi@vger.kernel.org>; Sun, 24 Sep 2006 13:01:39 -0700
-In-Reply-To: <20060924190623.GB2595@parisc-linux.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:65184 "EHLO
+	mail.parisc-linux.org") by vger.kernel.org with ESMTP
+	id S932076AbWIXUkD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 24 Sep 2006 16:40:03 -0400
+Content-Disposition: inline
+In-Reply-To: <20060924130253.48f90fe5.rdunlap@xenotime.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
+To: Randy Dunlap <rdunlap@xenotime.net>
 Cc: linux-scsi@vger.kernel.org
 
-On Sun, 24 Sep 2006 13:06:24 -0600 Matthew Wilcox wrote:
+On Sun, Sep 24, 2006 at 01:02:53PM -0700, Randy Dunlap wrote:
+> Do parts of Documentation/scsi/scsi_low_mid_api.txt need to be
+> updated also?
+> or are all of these changes outside of the low_mid realm?
 
+There's no interface changes at this point.  Once we start to get into
+fixing the FC/SAS drivers, there'll be some documenting to be done.
+
+> > +struct async_scan_data * scsi_prep_async_scan(struct Scsi_Host *shost)
 > 
-> OK, this is the 11th version of this patch.  Since the FC people don't
-> seem to have time to look into why their drivers still take
-> forever-and-a-day to initialise, I've dropped all the support for
-> non-parallel-scsi from this version of the patch.
-> 
-> Still outstanding:
-> 
->  - The comment at the top of scsi_sysfs_add_devices().  I'd really like
->    someone like James or Christoph to tell me what they prefer.
-> 
-> Other changes:
->  - I've rejigged how we wait for async scans to complete.  Now we
->    compile scsi_wait_scan in, even for the non-modular case.  Fewer
->    ifdefs, less mucking around in the Makefile, more commonality between
->    the modular and non-modular cases.
+> whitespace violation (*scsi_prep_async_scan)
 
-Do parts of Documentation/scsi/scsi_low_mid_api.txt need to be
-updated also?
-or are all of these changes outside of the low_mid realm?
+Hmm?  Wouldn't that be a function pointer?  Did you mean to say I should
+use:
 
+struct async_scan_data *scsi_prep_async_scan(struct Scsi_Host *shost)
 
-> +/**
-> + * scsi_prep_async_scan - prepare for an async scan
-> + * @shost: the host which will be scanned
-> + * Returns: a cookie to be passed to scsi_finish_async_scan()
-> + *
-> + * Tells the midlayer this host is going to do an asynchronous scan.
-> + * It reserves the host's position in the scanning list and ensures
-> + * that other asynchronous scans started after this one won't affect the
-> + * ordering of the discovered devices.
-> + */
-> +struct async_scan_data * scsi_prep_async_scan(struct Scsi_Host *shost)
+?  I don't particularly mind either way.
 
-whitespace violation (*scsi_prep_async_scan)
+> and thanks for adding/using kernel-doc.
 
-> +{
-
-and thanks for adding/using kernel-doc.
-
----
-~Randy
+I like it.  Documenting an earlier version of the interface made me
+realise it had bad semantics, so I fixed it rather than try to document
+its quirks.
