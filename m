@@ -1,31 +1,39 @@
-From: Linus Torvalds <torvalds@osdl.org>
+From: Douglas Gilbert <dougg@torque.net>
 Subject: Re: [GIT PATCH] scsi updates for post 2.6.18
-Date: Sat, 23 Sep 2006 20:46:38 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0609232046040.4388@g5.osdl.org>
+Date: Sun, 24 Sep 2006 10:37:17 -0400
+Message-ID: <4516981D.7080808@torque.net>
 References: <1159065451.3436.10.camel@mulgrave.il.steeleye.com>
- <Pine.LNX.4.64.0609232023530.4388@g5.osdl.org> <1159068981.3436.18.camel@mulgrave.il.steeleye.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:3293 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1752083AbWIXDqo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 23 Sep 2006 23:46:44 -0400
-In-Reply-To: <1159068981.3436.18.camel@mulgrave.il.steeleye.com>
+Received: from pentafluge.infradead.org ([213.146.154.40]:2793 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1751086AbWIXOh1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 24 Sep 2006 10:37:27 -0400
+In-Reply-To: <1159065451.3436.10.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Andrew Morton <akpm@osdl.org>, linux-scsi <linux-scsi@vger.kernel.org>, "David S. Miller" <davem@davemloft.net>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, brking@us.ibm.com
 
-
-
-On Sat, 23 Sep 2006, James Bottomley wrote:
+James Bottomley wrote:
+> This is the usual grab bag of updates including three new drivers:
+> aic94xx, stex and arcmsr.
 > 
-> Yes, that mirrors the fix I came up with.
+> The patch is available here:
+> 
+> master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git
+> 
+> The short changelog is:
 
-I pulled your fix. You had a commit message, and hopefully knew what you 
-were doing. 
+James,
+I noticed that this sg driver patch:
+http://marc.theaimsgroup.com/?l=linux-scsi&m=115879087404312&w=2
 
-Thanks. Pushed out,
+(or the one that Brian King proposed earlier) to fix an oops
+on the PPC64 machine (with 64 KB page size) made it into
+the list.
 
-		Linus
+Doug Gilbert
