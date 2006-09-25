@@ -1,47 +1,30 @@
-From: Denis Vlasenko <vda.linux@googlemail.com>
-Subject: Re: mainline aic94xx firmware woes
-Date: Mon, 25 Sep 2006 22:49:39 +0200
-Message-ID: <200609252249.39446.vda.linux@googlemail.com>
-References: <20060925101124.GH6374@rhun.haifa.ibm.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: [PATCH] aacraid: fix warning caused by missing include
+Date: Mon, 25 Sep 2006 23:45:04 +0100
+Message-ID: <1159224304.11049.166.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750731AbWIYUu5@vger.kernel.org>
-In-Reply-To: <20060925101124.GH6374@rhun.haifa.ibm.com>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Muli Ben-Yehuda <muli@il.ibm.com>, James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Linux-Kernel <linux-kernel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:34793 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S1751531AbWIYWUT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Sep 2006 18:20:19 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: akpm@osdl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Monday 25 September 2006 12:11, Muli Ben-Yehuda wrote:
-> Hi,
-> 
-> The recently merged aic94xx in mainline requires external firmware
-> support. This, in turn, necessitates an initrd/initramfs environment
-> that includes firmware support to load the firmware. Will a patch to
-> optionally include the firmware inline in the kernel and thus not
-> having to use an initramfs be acceptable?
-> 
-> Also, aic94xx does not compile unless FW_LOADER is set in .config due
-> to missing 'request_firmware'. What's the right thing to do here -
-> aic94xx selecting it, depending on it, or FW_LOADER providing empty
-> request_firmware() in case it's compiled out (the last one violates
-> the principle of least surprise IMHO).
+Signed-off-by: Alan Cox <alan@redhat.com>
 
-While we're at it, already existing aicXXXX driver continues to be
-insanely large due to excessive inlining of I/O routines:
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.18-mm1/drivers/scsi/aacraid/commsup.c linux-2.6.18-mm1/drivers/scsi/aacraid/commsup.c
+--- linux.vanilla-2.6.18-mm1/drivers/scsi/aacraid/commsup.c	2006-09-25 12:10:16.000000000 +0100
++++ linux-2.6.18-mm1/drivers/scsi/aacraid/commsup.c	2006-09-25 12:24:03.000000000 +0100
+@@ -40,6 +40,7 @@
+ #include <linux/blkdev.h>
+ #include <linux/delay.h>
+ #include <linux/kthread.h>
++#include <linux/interrupt.h>
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_device.h>
 
-# x86_64-pc-linux-gnu-size aic7xxx.o
-   text    data     bss     dec     hex filename
- 118978   22673     568  142219   22b8b aic7xxx.o
-
-This is not even helping performance one iota.
-Call overhead for these routines pales in comparison
-to I/O instruction stalls, which is in turn pales in comparison to
-disk seek delays.
-
-Please do something with it.
---
-vda
