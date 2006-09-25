@@ -1,38 +1,75 @@
 From: akpm@osdl.org
-Subject: [patch 11/28] dc395x: fix printk format warning
-Date: Mon, 25 Sep 2006 16:58:56 -0700
-Message-ID: <200609252358.k8PNwupw003482@shell0.pdx.osdl.net>
+Subject: [patch 18/28] drivers/scsi/nsp32.h: removal of old scsi code
+Date: Mon, 25 Sep 2006 16:59:04 -0700
+Message-ID: <200609252359.k8PNx4qr003509@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:16571 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751756AbWIYX7B (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:29627 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751763AbWIYX7L (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Sep 2006 19:59:01 -0400
+	Mon, 25 Sep 2006 19:59:11 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, rdunlap@xenotime.net
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, michal.k.k.piotrowski@gmail.com
 
-From: Randy Dunlap <rdunlap@xenotime.net>
+From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
 
-drivers/scsi/dc395x.c:1224: warning: format '%i' expects type 'int', but argument 5 has type 'size_t'
-
-Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+Signed-off-by: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/dc395x.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/nsp32.h |   42 -----------------------------------------
+ 1 file changed, 42 deletions(-)
 
-diff -puN drivers/scsi/dc395x.c~dc395x-fix-printk-format-warning drivers/scsi/dc395x.c
---- a/drivers/scsi/dc395x.c~dc395x-fix-printk-format-warning
-+++ a/drivers/scsi/dc395x.c
-@@ -1219,7 +1219,7 @@ static void dump_register_info(struct Ad
- 			    	srb, srb->cmd, srb->cmd->pid,
- 				srb->cmd->cmnd[0], srb->cmd->device->id,
- 			       	srb->cmd->device->lun);
--		printk("  sglist=%p cnt=%i idx=%i len=%i\n",
-+		printk("  sglist=%p cnt=%i idx=%i len=%Zd\n",
- 		       srb->segment_x, srb->sg_count, srb->sg_index,
- 		       srb->total_xfer_length);
- 		printk("  state=0x%04x status=0x%02x phase=0x%02x (%sconn.)\n",
+diff -puN drivers/scsi/nsp32.h~drivers-scsi-nsp32h-removal-of-old-scsi-code drivers/scsi/nsp32.h
+--- a/drivers/scsi/nsp32.h~drivers-scsi-nsp32h-removal-of-old-scsi-code
++++ a/drivers/scsi/nsp32.h
+@@ -619,47 +619,5 @@ typedef struct _nsp32_hw_data {
+ #define REQSACK_TIMEOUT_TIME	10000	/* max wait time for REQ/SACK assertion
+ 					   or negation, 10000us == 10ms */
+ 
+-/**************************************************************************
+- * Compatibility functions
+- */
+-
+-/* for Kernel 2.4 */
+-#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0))
+-# define scsi_register_host(template) 	scsi_register_module(MODULE_SCSI_HA, template)
+-# define scsi_unregister_host(template) scsi_unregister_module(MODULE_SCSI_HA, template)
+-# define scsi_host_put(host)            scsi_unregister(host)
+-# define pci_name(pci_dev)              ((pci_dev)->slot_name)
+-
+-typedef void irqreturn_t;
+-# define IRQ_NONE      /* */
+-# define IRQ_HANDLED   /* */
+-# define IRQ_RETVAL(x) /* */
+-
+-/* This is ad-hoc version of scsi_host_get_next() */
+-static inline struct Scsi_Host *scsi_host_get_next(struct Scsi_Host *host)
+-{
+-	if (host == NULL) {
+-		return scsi_hostlist;
+-	} else {
+-		return host->next;
+-	}
+-}
+-
+-/* This is ad-hoc version of scsi_host_hn_get() */
+-static inline struct Scsi_Host *scsi_host_hn_get(unsigned short hostno)
+-{
+-	struct Scsi_Host *host;
+-
+-	for (host = scsi_host_get_next(NULL); host != NULL;
+-	     host = scsi_host_get_next(host)) {
+-		if (host->host_no == hostno) {
+-			break;
+-		}
+-	}
+-
+-	return host;
+-}
+-#endif
+-
+ #endif /* _NSP32_H */
+ /* end */
 _
