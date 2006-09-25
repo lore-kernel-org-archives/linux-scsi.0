@@ -1,73 +1,39 @@
 From: akpm@osdl.org
-Subject: [patch 09/28] scsi: clean up warnings in Advansys driver
-Date: Mon, 25 Sep 2006 16:57:44 -0700
-Message-ID: <200609252357.k8PNvird003440@shell0.pdx.osdl.net>
+Subject: [patch 25/28] 3w-xxxx: fix "ATA UDMA upgrade" message number
+Date: Mon, 25 Sep 2006 16:59:11 -0700
+Message-ID: <200609252359.k8PNxBCx003538@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:57019 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751764AbWIYX7m (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:45755 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751764AbWIYX7S (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Sep 2006 19:59:42 -0400
+	Mon, 25 Sep 2006 19:59:18 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, ken@krwtech.com, jeffreyfreeman@syncleus.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, adobriyan@gmail.com
 
-From: Ken Witherow <ken@krwtech.com>
+From: Alexey Dobriyan <adobriyan@gmail.com>
 
-Fix typecast warnings and switch from check_region to request_region
+sparse "defined twice" warning
 
-(akpm: Ken and Jeffrey Phillips Freeman <jeffreyfreeman@syncleus.com> are
-possible advansys testers)
-
-Signed-off-by: Ken Witherow <ken@krwtech.com>
+Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/advansys.c |    7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ drivers/scsi/3w-xxxx.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/advansys.c~scsi-clean-up-warnings-in-advansys-driver drivers/scsi/advansys.c
---- a/drivers/scsi/advansys.c~scsi-clean-up-warnings-in-advansys-driver
-+++ a/drivers/scsi/advansys.c
-@@ -4403,7 +4403,7 @@ advansys_detect(struct scsi_host_templat
-                         ASC_DBG1(1,
-                                 "advansys_detect: probing I/O port 0x%x...\n",
-                             iop);
--                        if (check_region(iop, ASC_IOADR_GAP) != 0) {
-+			if (!request_region(iop, ASC_IOADR_GAP, "advansys")){
-                             printk(
- "AdvanSys SCSI: specified I/O Port 0x%X is busy\n", iop);
-                             /* Don't try this I/O port twice. */
-@@ -4413,6 +4413,7 @@ advansys_detect(struct scsi_host_templat
-                             printk(
- "AdvanSys SCSI: specified I/O Port 0x%X has no adapter\n", iop);
-                             /* Don't try this I/O port twice. */
-+			    release_region(iop, ASC_IOADR_GAP);
-                             asc_ioport[ioport] = 0;
-                             goto ioport_try_again;
-                         } else {
-@@ -4431,6 +4432,7 @@ advansys_detect(struct scsi_host_templat
-                                   * 'ioport' past this board.
-                                   */
-                                  ioport++;
-+				 release_region(iop, ASC_IOADR_GAP);
-                                  goto ioport_try_again;
-                             }
-                         }
-@@ -9740,13 +9742,14 @@ AscSearchIOPortAddr11(
-     }
-     for (; i < ASC_IOADR_TABLE_MAX_IX; i++) {
-         iop_base = _asc_def_iop_base[i];
--        if (check_region(iop_base, ASC_IOADR_GAP) != 0) {
-+	if (!request_region(iop_base, ASC_IOADR_GAP, "advansys")){
-             ASC_DBG1(1,
-                "AscSearchIOPortAddr11: check_region() failed I/O port 0x%x\n",
-                      iop_base);
-             continue;
-         }
-         ASC_DBG1(1, "AscSearchIOPortAddr11: probing I/O port 0x%x\n", iop_base);
-+	release_region(iop_base, ASC_IOADR_GAP);
-         if (AscFindSignature(iop_base)) {
-             return (iop_base);
-         }
+diff -puN drivers/scsi/3w-xxxx.h~3w-xxxx-fix-ata-udma-upgrade-message-number drivers/scsi/3w-xxxx.h
+--- a/drivers/scsi/3w-xxxx.h~3w-xxxx-fix-ata-udma-upgrade-message-number
++++ a/drivers/scsi/3w-xxxx.h
+@@ -74,7 +74,7 @@ static char *tw_aen_string[] = {
+ 	[0x00D] = "ERROR: Logical unit deleted: Unit #",
+ 	[0x00F] = "WARNING: SMART threshold exceeded: Port #",
+ 	[0x021] = "WARNING: ATA UDMA downgrade: Port #",
+-	[0x021] = "WARNING: ATA UDMA upgrade: Port #",
++	[0x022] = "WARNING: ATA UDMA upgrade: Port #",
+ 	[0x023] = "WARNING: Sector repair occurred: Port #",
+ 	[0x024] = "ERROR: SBUF integrity check failure",
+ 	[0x025] = "ERROR: Lost cached write: Port #",
 _
