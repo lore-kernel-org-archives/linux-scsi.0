@@ -1,48 +1,47 @@
-From: Al Viro <viro@ftp.linux.org.uk>
-Subject: Re: [PATCH] fix idiocy in asd_init_lseq_mdp()
-Date: Mon, 25 Sep 2006 15:59:37 +0100
-Message-ID: <20060925145937.GJ29920@ftp.linux.org.uk>
-References: <20060925015722.GF29920@ftp.linux.org.uk> <4517EBF7.4020508@torque.net>
+From: "Moore, Eric" <Eric.Moore@lsil.com>
+Subject: RE: Ultra320 drive detected as narrow SCSI by adapter
+Date: Mon, 25 Sep 2006 09:57:10 -0600
+Message-ID: <664A4EBB07F29743873A87CF62C26D7032D7DA@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750877AbWIYO7j@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4517EBF7.4020508@torque.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail0.lsil.com ([147.145.40.20]:1953 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1751050AbWIYP5N convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Sep 2006 11:57:13 -0400
+Content-class: urn:content-classes:message
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Israel Mouton <lebanon87@myrealbox.com>, linux-scsi@vger.kernel.org
 
-> Several of us have reported a degenerate mode, that
-> I term as "tmf timeout", in which a aic94xx based card
-> becomes inoperable. Alas, the same hardware running another
-> OS does not exhibit that problem (or at least not as much).
+On Sunday, September 24, 2006 10:47 PM, Israel Mouton wrote: 
 
-> >  	asd_write_reg_word(asd_ha, LmSEQ_INTEN_SAVE(lseq),
-> > -			    (u16) LmM0INTEN_MASK & 0xFFFF0000 >> 16);
-> > +			    (u16) ((LmM0INTEN_MASK & 0xFFFF0000) >> 16));
-> >  	asd_write_reg_word(asd_ha, LmSEQ_INTEN_SAVE(lseq) + 2,
-> >  			    (u16) LmM0INTEN_MASK & 0xFFFF);
-> >  	asd_write_reg_byte(asd_ha, LmSEQ_LINK_RST_FRM_LEN(lseq), 0);
- 
-> BTW Luben was pointing out that the call you patched
-> and the following call can be combined into a less
-> trouble prone asd_write_reg_dword() call.
+> 
+> It is 2.6.16; however, it is the Debian version.  I did 
+> compile it from
+> source.  Perhaps there is a chance I left something unchecked 
+> I should have
+> compiled in?
+> 
 
-In that case there's another bug - we should write upper 16 bits to
-addr + 2, not the lower ones.
 
-IOW, the old code was
-	broken attempt to write upper 16 bits to addr (ends up writing _lower_
-16 bits)
-	writing lower 16 bits to addr + 2
+If your using the driver having spi transport support,
+it will be calling spi_dv_device from mptspi.c; can
+you grep the source code?
 
-With this patch we get the first call do what it clearly intended to do
-(unless it's a deliberate obfuscation from hell).  _IF_ we really want
-to write the damn thing little-endian, the order should be reverted on
-top of that.  I.e.
-  	asd_write_reg_word(asd_ha, LmSEQ_INTEN_SAVE(lseq),
-  			    (u16) LmM0INTEN_MASK & 0xFFFF);
-  	asd_write_reg_word(asd_ha, LmSEQ_INTEN_SAVE(lseq) + 2,
-			    (u16) ((LmM0INTEN_MASK & 0xFFFF0000) >> 16));
-or, indeed, asd_write_reg_dword().
+If your using the older driver not having spi
+transport support, then you are using a driver
+where domain validation was implementing inside
+the driver. In that case, I ask that you enable
+the MPT_DEBUG_DV and MPT_DEBUG_NEGO from the driver
+Makefile, and recompile, sending me the output.
+
+In addition, if your having BIOS on your hba,
+can you go into the bios configuration utilitity
+and restore the defaults?
+
+Thanks,
+Eric Moore
+LSI Logic
