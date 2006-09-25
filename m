@@ -1,113 +1,49 @@
 From: akpm@osdl.org
-Subject: [patch 14/28] megaraid: fix warnings when CONFIG_PROC_FS=n
-Date: Mon, 25 Sep 2006 16:58:59 -0700
-Message-ID: <200609252358.k8PNwxGw003491@shell0.pdx.osdl.net>
+Subject: [patch 21/28] Signedness issue in drivers/scsi/ipr.c
+Date: Mon, 25 Sep 2006 16:59:07 -0700
+Message-ID: <200609252359.k8PNx7vJ003518@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:54204 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751808AbWIZAC2 (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:24253 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751811AbWIZADR (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Sep 2006 20:02:28 -0400
+	Mon, 25 Sep 2006 20:03:17 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, wharms@bfs.de, adobriyan@gmail.com, bunk@stusta.de
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, snakebyte@gmx.de, brking@us.ibm.com
 
-From: walter harms <wharms@bfs.de>
+From: Eric Sesterhenn <snakebyte@gmx.de>
 
-Signed-off-by: walter harms <wharms@bfs.de>
-Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
-Cc: Adrian Bunk <bunk@stusta.de>
+gcc 4.1 with some extra warnings show the following:
+
+drivers/scsi/ipr.c:6361: warning: comparison of unsigned expression < 0 is always false
+drivers/scsi/ipr.c:6385: warning: comparison of unsigned expression < 0 is always false
+drivers/scsi/ipr.c:6415: warning: comparison of unsigned expression < 0 is always false
+
+The problem is that rc is of the type u32, which can never be smaller than
+zero, therefore all three error handling checks get useless.  This patch
+changes it to a normal int, because all usages / all functions it get used
+with expect an int.
+
+Signed-off-by: Eric Sesterhenn <snakebyte@gmx.de>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Brian King <brking@us.ibm.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/megaraid.c |   17 +++++++++++------
- drivers/scsi/megaraid.h |    4 ++--
- 2 files changed, 13 insertions(+), 8 deletions(-)
+ drivers/scsi/ipr.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/megaraid.c~megaraid-fix-warnings-when-config_proc_fs=n drivers/scsi/megaraid.c
---- a/drivers/scsi/megaraid.c~megaraid-fix-warnings-when-config_proc_fs=n
-+++ a/drivers/scsi/megaraid.c
-@@ -3178,7 +3178,10 @@ proc_rdrv(adapter_t *adapter, char *page
+diff -puN drivers/scsi/ipr.c~signedness-issue-in-drivers-scsi-iprc drivers/scsi/ipr.c
+--- a/drivers/scsi/ipr.c~signedness-issue-in-drivers-scsi-iprc
++++ a/drivers/scsi/ipr.c
+@@ -6352,7 +6352,7 @@ static int __devinit ipr_probe_ioa(struc
+ 	struct Scsi_Host *host;
+ 	unsigned long ipr_regs_pci;
+ 	void __iomem *ipr_regs;
+-	u32 rc = PCIBIOS_SUCCESSFUL;
++	int rc = PCIBIOS_SUCCESSFUL;
+ 	volatile u32 mask, uproc;
  
- 	return len;
- }
--
-+#else
-+static inline void mega_create_proc_entry(int index, struct proc_dir_entry *parent)
-+{
-+}
- #endif
- 
- 
-@@ -4343,7 +4346,7 @@ mega_support_cluster(adapter_t *adapter)
- 	return 0;
- }
- 
--
-+#ifdef CONFIG_PROC_FS
- /**
-  * mega_adapinq()
-  * @adapter - pointer to our soft state
-@@ -4448,7 +4451,7 @@ mega_internal_dev_inquiry(adapter_t *ada
- 
- 	return rval;
- }
--
-+#endif
- 
- /**
-  * mega_internal_command()
-@@ -4964,7 +4967,6 @@ megaraid_remove_one(struct pci_dev *pdev
- {
- 	struct Scsi_Host *host = pci_get_drvdata(pdev);
- 	adapter_t *adapter = (adapter_t *)host->hostdata;
--	char	buf[12] = { 0 };
- 
- 	scsi_remove_host(host);
- 
-@@ -5010,8 +5012,11 @@ megaraid_remove_one(struct pci_dev *pdev
- 		remove_proc_entry("raiddrives-30-39",
- 				adapter->controller_proc_dir_entry);
- #endif
--		sprintf(buf, "hba%d", adapter->host->host_no);
--		remove_proc_entry(buf, mega_proc_dir_entry);
-+		{
-+			char	buf[12] = { 0 };
-+			sprintf(buf, "hba%d", adapter->host->host_no);
-+			remove_proc_entry(buf, mega_proc_dir_entry);
-+		}
- 	}
- #endif
- 
-diff -puN drivers/scsi/megaraid.h~megaraid-fix-warnings-when-config_proc_fs=n drivers/scsi/megaraid.h
---- a/drivers/scsi/megaraid.h~megaraid-fix-warnings-when-config_proc_fs=n
-+++ a/drivers/scsi/megaraid.h
-@@ -1001,7 +1001,6 @@ static int megaraid_reset(Scsi_Cmnd *);
- static int megaraid_abort_and_reset(adapter_t *, Scsi_Cmnd *, int);
- static int megaraid_biosparam(struct scsi_device *, struct block_device *,
- 		sector_t, int []);
--static int mega_print_inquiry(char *, char *);
- 
- static int mega_build_sglist (adapter_t *adapter, scb_t *scb,
- 			      u32 *buffer, u32 *length);
-@@ -1023,6 +1022,7 @@ static int mega_init_scb (adapter_t *);
- static int mega_is_bios_enabled (adapter_t *);
- 
- #ifdef CONFIG_PROC_FS
-+static int mega_print_inquiry(char *, char *);
- static void mega_create_proc_entry(int, struct proc_dir_entry *);
- static int proc_read_config(char *, char **, off_t, int, int *, void *);
- static int proc_read_stat(char *, char **, off_t, int, int *, void *);
-@@ -1039,10 +1039,10 @@ static int proc_rdrv_20(char *, char **,
- static int proc_rdrv_30(char *, char **, off_t, int, int *, void *);
- static int proc_rdrv_40(char *, char **, off_t, int, int *, void *);
- static int proc_rdrv(adapter_t *, char *, int, int);
--#endif
- 
- static int mega_adapinq(adapter_t *, dma_addr_t);
- static int mega_internal_dev_inquiry(adapter_t *, u8, u8, dma_addr_t);
-+#endif
- 
- static int mega_support_ext_cdb(adapter_t *);
- static mega_passthru* mega_prepare_passthru(adapter_t *, scb_t *,
+ 	ENTER;
 _
