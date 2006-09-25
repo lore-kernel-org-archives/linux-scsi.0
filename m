@@ -1,17 +1,17 @@
 From: Luben Tuikov <ltuikov@yahoo.com>
 Subject: Re: [PATCH] fix idiocy in asd_init_lseq_mdp()
-Date: Sun, 24 Sep 2006 23:52:03 -0700 (PDT)
-Message-ID: <20060925065203.8718.qmail@web31809.mail.mud.yahoo.com>
+Date: Sun, 24 Sep 2006 23:54:16 -0700 (PDT)
+Message-ID: <20060925065416.76348.qmail@web31804.mail.mud.yahoo.com>
 References: <20060925015722.GF29920@ftp.linux.org.uk>
 Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31809.mail.mud.yahoo.com ([68.142.207.72]:7057 "HELO
-	web31809.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S964820AbWIYGwE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Sep 2006 02:52:04 -0400
+Received: from web31804.mail.mud.yahoo.com ([68.142.207.67]:920 "HELO
+	web31804.mail.mud.yahoo.com") by vger.kernel.org with SMTP
+	id S964873AbWIYGyR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Sep 2006 02:54:17 -0400
 In-Reply-To: <20060925015722.GF29920@ftp.linux.org.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -28,8 +28,10 @@ Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 "whoever" would be Bottomley or someone at LTC.
 
 My code in that spot has:
-asd_write_reg_dword(asd_ha, LmSEQ_INTEN_SAVE(lseq),
-			    (u32) LmM0INTEN_MASK);
+     asd_write_reg_dword(asd_ha, LmSEQ_INTEN_SAVE(lseq),
+	        		    (u32) LmM0INTEN_MASK);
+
+    Luben
 
 > 
 > Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
