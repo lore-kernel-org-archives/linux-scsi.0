@@ -1,40 +1,38 @@
-From: Olaf Hering <olaf@aepfle.de>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: mainline aic94xx firmware woes
-Date: Mon, 25 Sep 2006 13:30:42 +0200
-Message-ID: <20060925113042.GA18946@aepfle.de>
+Date: Mon, 25 Sep 2006 06:38:56 -0500
+Message-ID: <1159184336.3463.3.camel@mulgrave.il.steeleye.com>
 References: <20060925101124.GH6374@rhun.haifa.ibm.com>
+	 <1159183984.11049.59.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from natblert.rzone.de ([81.169.145.181]:5838 "EHLO
-	natblert.rzone.de") by vger.kernel.org with ESMTP id S1751276AbWIYLa5
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Sep 2006 07:30:57 -0400
-Content-Disposition: inline
-In-Reply-To: <20060925101124.GH6374@rhun.haifa.ibm.com>
+Received: from stat9.steeleye.com ([209.192.50.41]:26804 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1751427AbWIYLjF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Sep 2006 07:39:05 -0400
+In-Reply-To: <1159183984.11049.59.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Muli Ben-Yehuda <muli@il.ibm.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux-Kernel <linux-kernel@vger.kernel.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Muli Ben-Yehuda <muli@il.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux-Kernel <linux-kernel@vger.kernel.org>
 
-On Mon, Sep 25, Muli Ben-Yehuda wrote:
+On Mon, 2006-09-25 at 12:33 +0100, Alan Cox wrote:
+> We should not be including non-free firmware in the kernel, we should be
+> continuing to drive it out into things like initramfs.
 
-> The recently merged aic94xx in mainline requires external firmware
-> support. This, in turn, necessitates an initrd/initramfs environment
-> that includes firmware support to load the firmware. Will a patch to
-> optionally include the firmware inline in the kernel and thus not
-> having to use an initramfs be acceptable?
+Right, which is why this was done as one of the conditions for accepting
+the driver
 
-initramfs is always in use. Wether you pass in an additional image via
-the bootloader is up to you.
-Adding the firmware and required tools to your vmlinux binary is trivial
-with CONFIG_INITRAMFS_SOURCE="/some/file"
+> > Also, aic94xx does not compile unless FW_LOADER is set in .config due
+> > to missing 'request_firmware'. What's the right thing to do here -
+> > aic94xx selecting it, depending on it
+> 
+> Either select or depend
 
-> Also, aic94xx does not compile unless FW_LOADER is set in .config due
-> to missing 'request_firmware'. What's the right thing to do here -
-> aic94xx selecting it, depending on it, or FW_LOADER providing empty
-> request_firmware() in case it's compiled out (the last one violates
-> the principle of least surprise IMHO).
+select, I think.
 
-select FW_LOADER is likely the right fix.
+James
+
 
