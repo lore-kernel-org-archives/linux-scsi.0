@@ -1,62 +1,124 @@
 From: akpm@osdl.org
-Subject: [patch 04/28] drivers/scsi/aic7xxx/aic79xx_core.c: make ahd_match_scb() static
-Date: Mon, 25 Sep 2006 16:57:38 -0700
-Message-ID: <200609252357.k8PNvceP003425@shell0.pdx.osdl.net>
+Subject: [patch 03/28] drivers/scsi/qla2xxx/: make some functions static
+Date: Mon, 25 Sep 2006 16:57:37 -0700
+Message-ID: <200609252357.k8PNvc82003422@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:9660 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751795AbWIZAA5 (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:8380 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751796AbWIZAAy (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Sep 2006 20:00:57 -0400
+	Mon, 25 Sep 2006 20:00:54 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, bunk@stusta.de, hare@suse.de
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, bunk@stusta.de
 
 From: Adrian Bunk <bunk@stusta.de>
 
+This patch makes some needlessly global functions static.
+
 Signed-off-by: Adrian Bunk <bunk@stusta.de>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
-Acked-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/aic7xxx/aic79xx.h      |    3 ---
- drivers/scsi/aic7xxx/aic79xx_core.c |    5 ++++-
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/qla2xxx/qla_os.c  |   12 ++++++------
+ drivers/scsi/qla2xxx/qla_sup.c |    8 ++++----
+ 2 files changed, 10 insertions(+), 10 deletions(-)
 
-diff -puN drivers/scsi/aic7xxx/aic79xx.h~drivers-scsi-aic7xxx-aic79xx_corec-make-ahd_match_scb-static drivers/scsi/aic7xxx/aic79xx.h
---- a/drivers/scsi/aic7xxx/aic79xx.h~drivers-scsi-aic7xxx-aic79xx_corec-make-ahd_match_scb-static
-+++ a/drivers/scsi/aic7xxx/aic79xx.h
-@@ -1345,9 +1345,6 @@ int	ahd_pci_test_register_access(struct 
- /************************** SCB and SCB queue management **********************/
- void		ahd_qinfifo_requeue_tail(struct ahd_softc *ahd,
- 					 struct scb *scb);
--int		ahd_match_scb(struct ahd_softc *ahd, struct scb *scb,
--			      int target, char channel, int lun,
--			      u_int tag, role_t role);
- 
- /****************************** Initialization ********************************/
- struct ahd_softc	*ahd_alloc(void *platform_arg, char *name);
-diff -puN drivers/scsi/aic7xxx/aic79xx_core.c~drivers-scsi-aic7xxx-aic79xx_corec-make-ahd_match_scb-static drivers/scsi/aic7xxx/aic79xx_core.c
---- a/drivers/scsi/aic7xxx/aic79xx_core.c~drivers-scsi-aic7xxx-aic79xx_corec-make-ahd_match_scb-static
-+++ a/drivers/scsi/aic7xxx/aic79xx_core.c
-@@ -262,6 +262,9 @@ static void		ahd_update_coalescing_value
- 						     u_int mincmds);
- static int		ahd_verify_vpd_cksum(struct vpd_config *vpd);
- static int		ahd_wait_seeprom(struct ahd_softc *ahd);
-+static int		ahd_match_scb(struct ahd_softc *ahd, struct scb *scb,
-+				      int target, char channel, int lun,
-+				      u_int tag, role_t role);
- 
- /******************************** Private Inlines *****************************/
- 
-@@ -7215,7 +7218,7 @@ ahd_busy_tcl(struct ahd_softc *ahd, u_in
+diff -puN drivers/scsi/qla2xxx/qla_os.c~drivers-scsi-qla2xxx-make-some-functions-static drivers/scsi/qla2xxx/qla_os.c
+--- a/drivers/scsi/qla2xxx/qla_os.c~drivers-scsi-qla2xxx-make-some-functions-static
++++ a/drivers/scsi/qla2xxx/qla_os.c
+@@ -274,7 +274,7 @@ qla24xx_pci_info_str(struct scsi_qla_hos
+ 	return str;
  }
  
- /************************** SCB and SCB queue management **********************/
+-char *
++static char *
+ qla2x00_fw_version_str(struct scsi_qla_host *ha, char *str)
+ {
+ 	char un_str[10];
+@@ -312,7 +312,7 @@ qla2x00_fw_version_str(struct scsi_qla_h
+ 	return (str);
+ }
+ 
+-char *
++static char *
+ qla24xx_fw_version_str(struct scsi_qla_host *ha, char *str)
+ {
+ 	sprintf(str, "%d.%02d.%02d ", ha->fw_major_version,
+@@ -604,7 +604,7 @@ qla2x00_wait_for_loop_ready(scsi_qla_hos
+ * Note:
+ *    Only return FAILED if command not returned by firmware.
+ **************************************************************************/
 -int
 +static int
- ahd_match_scb(struct ahd_softc *ahd, struct scb *scb, int target,
- 	      char channel, int lun, u_int tag, role_t role)
+ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
+ {
+ 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
+@@ -739,7 +739,7 @@ qla2x00_eh_wait_for_pending_target_comma
+ *    SUCCESS/FAILURE (defined as macro in scsi.h).
+ *
+ **************************************************************************/
+-int
++static int
+ qla2xxx_eh_device_reset(struct scsi_cmnd *cmd)
+ {
+ 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
+@@ -868,7 +868,7 @@ qla2x00_eh_wait_for_pending_commands(scs
+ *    SUCCESS/FAILURE (defined as macro in scsi.h).
+ *
+ **************************************************************************/
+-int
++static int
+ qla2xxx_eh_bus_reset(struct scsi_cmnd *cmd)
+ {
+ 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
+@@ -927,7 +927,7 @@ eh_bus_reset_done:
+ *
+ * Note:
+ **************************************************************************/
+-int
++static int
+ qla2xxx_eh_host_reset(struct scsi_cmnd *cmd)
+ {
+ 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
+diff -puN drivers/scsi/qla2xxx/qla_sup.c~drivers-scsi-qla2xxx-make-some-functions-static drivers/scsi/qla2xxx/qla_sup.c
+--- a/drivers/scsi/qla2xxx/qla_sup.c~drivers-scsi-qla2xxx-make-some-functions-static
++++ a/drivers/scsi/qla2xxx/qla_sup.c
+@@ -449,7 +449,7 @@ nvram_data_to_access_addr(uint32_t naddr
+ 	return FARX_ACCESS_NVRAM_DATA | naddr;
+ }
+ 
+-uint32_t
++static uint32_t
+ qla24xx_read_flash_dword(scsi_qla_host_t *ha, uint32_t addr)
+ {
+ 	int rval;
+@@ -490,7 +490,7 @@ qla24xx_read_flash_data(scsi_qla_host_t 
+ 	return dwptr;
+ }
+ 
+-int
++static int
+ qla24xx_write_flash_dword(scsi_qla_host_t *ha, uint32_t addr, uint32_t data)
+ {
+ 	int rval;
+@@ -512,7 +512,7 @@ qla24xx_write_flash_dword(scsi_qla_host_
+ 	return rval;
+ }
+ 
+-void
++static void
+ qla24xx_get_flash_manufacturer(scsi_qla_host_t *ha, uint8_t *man_id,
+     uint8_t *flash_id)
+ {
+@@ -537,7 +537,7 @@ qla24xx_get_flash_manufacturer(scsi_qla_
+ 	}
+ }
+ 
+-int
++static int
+ qla24xx_write_flash_data(scsi_qla_host_t *ha, uint32_t *dwptr, uint32_t faddr,
+     uint32_t dwords)
  {
 _
