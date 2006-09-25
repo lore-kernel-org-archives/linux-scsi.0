@@ -1,48 +1,52 @@
-From: Al Viro <viro@ftp.linux.org.uk>
-Subject: very odd code in stex.c
-Date: Mon, 25 Sep 2006 05:08:37 +0100
-Message-ID: <20060925040837.GH29920@ftp.linux.org.uk>
+From: Israel Mouton <lebanon87@myrealbox.com>
+Subject: Re: Ultra320 drive detected as narrow SCSI by adapter
+Date: Sun, 24 Sep 2006 21:46:51 -0700 (PDT)
+Message-ID: <6480232.post@talk.nabble.com>
+References: <6478431.post@talk.nabble.com> <1159147910.3462.16.camel@mulgrave.il.steeleye.com> <6479563.post@talk.nabble.com> <1159155135.3462.22.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:19849 "EHLO
-	ZenIV.linux.org.uk") by vger.kernel.org with ESMTP id S1751033AbWIYEIi
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Sep 2006 00:08:38 -0400
-Received: from viro by ZenIV.linux.org.uk with local (Exim 4.52 #1 (Red Hat Linux))
-	id 1GRhll-0004vM-Ns
-	for linux-scsi@vger.kernel.org; Mon, 25 Sep 2006 05:08:37 +0100
-Content-Disposition: inline
+Received: from www.nabble.com ([72.21.53.35]:20618 "EHLO talk.nabble.com")
+	by vger.kernel.org with ESMTP id S1751688AbWIYEqw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Sep 2006 00:46:52 -0400
+Received: from [72.21.53.38] (helo=jubjub.nabble.com)
+	by talk.nabble.com with esmtp (Exim 4.50)
+	id 1GRiMl-0005WT-Ud
+	for linux-scsi@vger.kernel.org; Sun, 24 Sep 2006 21:46:51 -0700
+In-Reply-To: <1159155135.3462.22.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-        REQ_VARIABLE_LEN                        = 1024,
-...
-struct req_msg {
-        __le16 tag;
-        u8 lun;
-        u8 target;
-        u8 task_attr;
-        u8 task_manage;
-        u8 prd_entry;
-        u8 payload_sz;          /* payload size in 4-byte */
-        u8 cdb[STEX_CDB_LENGTH];
-        u8 variable[REQ_VARIABLE_LEN];
-};
-...
-static void
-stex_send_cmd(struct st_hba *hba, struct req_msg *req, u16 tag)
-{
-        req->tag = cpu_to_le16(tag);
-        req->task_attr = TASK_ATTRIBUTE_SIMPLE;
-        req->task_manage = 0; /* not supported yet */
-        req->payload_sz = (u8)(sizeof(struct req_msg)/sizeof(u32));
 
-And of course, sizeof(struct req_msg) is greater than REQ_VARIABLE_LEN,
-aka 1024, aka 256 * sizeof(u32).
+It is 2.6.16; however, it is the Debian version.  I did compile it from
+source.  Perhaps there is a chance I left something unchecked I should have
+compiled in?
 
-What the hell is going on here?  Misspellt
-        req->payload_sz = offsetof(struct req_msg, variable)/sizeof(u32);
-relying on the fact that the last field is exactly 256*sizeof(u32) and thus
-its contribution to sizeof(struct req_msg) will be killed by cast to u8?
+James Bottomley wrote:
+> 
+> On Sun, 2006-09-24 at 19:57 -0700, Israel Mouton wrote:
+>> I don't seem to have a "/sys/class/spi_transport/" directory.  When the
+>> system boots the LSI board detects it as a narrow.  I was wondering if it
+>> is
+>> perhaps possible to reconfigure it under Linux at all?
+> 
+> Erm, what kernel is this?  The generic transport class, which does allow
+> you to configure this type of thing has been present in the kernel since
+> 2.6.16
+> 
+> James
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+-- 
+View this message in context: http://www.nabble.com/Ultra320-drive-detected-as-narrow-SCSI-by-adapter-tf2328646.html#a6480232
+Sent from the linux-scsi mailing list archive at Nabble.com.
+
