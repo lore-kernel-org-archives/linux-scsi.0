@@ -1,53 +1,62 @@
-From: Muli Ben-Yehuda <muli@il.ibm.com>
-Subject: Re: mainline aic94xx firmware woes
-Date: Mon, 25 Sep 2006 17:10:19 +0300
-Message-ID: <20060925141019.GP6374@rhun.haifa.ibm.com>
-References: <20060925101124.GH6374@rhun.haifa.ibm.com> <1159183984.11049.59.camel@localhost.localdomain> <1159184336.3463.3.camel@mulgrave.il.steeleye.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH] fix idiocy in asd_init_lseq_mdp()
+Date: Mon, 25 Sep 2006 10:47:19 -0400
+Message-ID: <4517EBF7.4020508@torque.net>
+References: <20060925015722.GF29920@ftp.linux.org.uk>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate2.de.ibm.com ([195.212.29.151]:7206 "EHLO
-	mtagate2.de.ibm.com") by vger.kernel.org with ESMTP id S932134AbWIYOKW
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Sep 2006 10:10:22 -0400
-Content-Disposition: inline
-In-Reply-To: <1159184336.3463.3.camel@mulgrave.il.steeleye.com>
+Received: from pentafluge.infradead.org ([213.146.154.40]:17798 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1750700AbWIYOr1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Sep 2006 10:47:27 -0400
+In-Reply-To: <20060925015722.GF29920@ftp.linux.org.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-scsi <linux-scsi@vger.kernel.org>, Linux-Kernel <linux-kernel@vger.kernel.org>
+To: Al Viro <viro@ftp.linux.org.uk>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, Sep 25, 2006 at 06:38:56AM -0500, James Bottomley wrote:
-> On Mon, 2006-09-25 at 12:33 +0100, Alan Cox wrote:
-> > We should not be including non-free firmware in the kernel, we should be
-> > continuing to drive it out into things like initramfs.
+Al Viro wrote:
+> To whoever had written that code:
 > 
-> Right, which is why this was done as one of the conditions for accepting
-> the driver
+> a) priority of >> is higher than that of &
+> b) priority of typecast is higher than that of any binary operator
+> c) learn the fscking C
 
-Fair enough.
+Al,
+On the assumption that you have hardware that uses this
+driver, did you notice any improvement with your patch
+applied?
 
-> > > Also, aic94xx does not compile unless FW_LOADER is set in .config due
-> > > to missing 'request_firmware'. What's the right thing to do here -
-> > > aic94xx selecting it, depending on it
-> > 
-> > Either select or depend
+Several of us have reported a degenerate mode, that
+I term as "tmf timeout", in which a aic94xx based card
+becomes inoperable. Alas, the same hardware running another
+OS does not exhibit that problem (or at least not as much).
+
+> Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+> ---
+>  drivers/scsi/aic94xx/aic94xx_seq.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
 > 
-> select, I think.
+> diff --git a/drivers/scsi/aic94xx/aic94xx_seq.c b/drivers/scsi/aic94xx/aic94xx_seq.c
+> index d9b6da5..56e4b3b 100644
+> --- a/drivers/scsi/aic94xx/aic94xx_seq.c
+> +++ b/drivers/scsi/aic94xx/aic94xx_seq.c
+> @@ -764,7 +764,7 @@ static void asd_init_lseq_mdp(struct asd
+>  	asd_write_reg_word(asd_ha, LmSEQ_FIRST_INV_SCB_SITE(lseq),
+>  			   (u16)last_scb_site_no+1);
+>  	asd_write_reg_word(asd_ha, LmSEQ_INTEN_SAVE(lseq),
+> -			    (u16) LmM0INTEN_MASK & 0xFFFF0000 >> 16);
+> +			    (u16) ((LmM0INTEN_MASK & 0xFFFF0000) >> 16));
+>  	asd_write_reg_word(asd_ha, LmSEQ_INTEN_SAVE(lseq) + 2,
+>  			    (u16) LmM0INTEN_MASK & 0xFFFF);
+>  	asd_write_reg_byte(asd_ha, LmSEQ_LINK_RST_FRM_LEN(lseq), 0);
 
-aic94xx relies on external firmware and thus requires FW_LOADER.
+BTW Luben was pointing out that the call you patched
+and the following call can be combined into a less
+trouble prone asd_write_reg_dword() call.
 
-Signed-off-by: Muli Ben-Yehuda <muli@il.ibm.com>
-
-diff -r 2e01eba444f0 drivers/scsi/aic94xx/Kconfig
---- a/drivers/scsi/aic94xx/Kconfig	Mon Sep 25 10:07:49 2006 +0700
-+++ b/drivers/scsi/aic94xx/Kconfig	Mon Sep 25 17:08:09 2006 +0300
-@@ -28,6 +28,7 @@ config SCSI_AIC94XX
- 	tristate "Adaptec AIC94xx SAS/SATA support"
- 	depends on PCI
- 	select SCSI_SAS_LIBSAS
-+	select FW_LOADER
- 	help
- 		This driver supports Adaptec's SAS/SATA 3Gb/s 64 bit PCI-X
- 		AIC94xx chip based host adapters.
+Doug Gilbert
 
