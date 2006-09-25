@@ -1,69 +1,66 @@
-From: Jes Sorensen <jes@sgi.com>
-Subject: [patch] qla1280 command timeout
-Date: 25 Sep 2006 05:44:57 -0400
-Message-ID: <yq04puwcmau.fsf@jaguar.mkp.net>
+From: Martin Wilck <martin.wilck@fujitsu-siemens.com>
+Subject: Re: [PATCH] scsi/mptsas: add RAID devices in ascending ID order
+Date: Mon, 25 Sep 2006 11:59:29 +0200
+Message-ID: <4517A881.3000903@fujitsu-siemens.com>
+References: <664A4EBB07F29743873A87CF62C26D7032D5CF@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from jaguar.mkp.net ([192.139.46.146]:37049 "EHLO jaguar.mkp.net")
-	by vger.kernel.org with ESMTP id S1750833AbWIYJo7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Sep 2006 05:44:59 -0400
+Received: from dgate2.fujitsu-siemens.com ([217.115.66.36]:8847 "EHLO
+	dgate2.fujitsu-siemens.com") by vger.kernel.org with ESMTP
+	id S1750897AbWIYJ7h (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Sep 2006 05:59:37 -0400
+In-Reply-To: <664A4EBB07F29743873A87CF62C26D7032D5CF@NAMAIL4.ad.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: Andrew Morton <akpm@osdl.org>, James.Bottomley@steeleye.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, scott.bailey@eds.com, ian@beware.dropbear.id.au, Jeremy Higdon <jeremy@sgi.com>
+To: "Moore, Eric" <Eric.Moore@lsil.com>
+Cc: linux-scsi@vger.kernel.org, mpt_linux_developer <mpt_linux_developer@lsil.com>
 
-Hi,
+Hi Eric,
 
-This one is originally from Ian Dall via bugzilla.kernel.org - Ian if
-you wish to add a Signed-off-by please do, couldn't add it since you
-didn't leave one in bugzilla.
+thanks for your response.
 
-Anyway the patch seems obviously correct (famous last words) and it
-would be nice to get into 2.6.19.
+>>    The patch makes sure that arrays are added in ascending
+>>    VolumeID order.
+> 
+> Rejected.  
+> 
+> Ascending ID ordering does not address all cases. 
+> There is no guarantee which target ids are 
+> assigned by firmware to volumes when
+> volumes are created.  
 
-Thanks,
-Jes
+That's what my patch was supposed to handle: No matter what the ordering 
+of IDs by firmware is, the devices are registered in ascending ID order.
 
-Original patch from Ian Dall in bugzilla. Set command timeout as
-specified by the SCSI layer rather than hardcode it to 30 seconds. I
-have received a couple of reports of people hitting this one with
-various tape configurations and the patch looks obviously correct.
-                                                                  - Jes
+> I've made similar 
+> ordering proposals before to this mailing list. 
+> All been rejected.
 
->From http://bugzilla.kernel.org/show_bug.cgi?id=6275
+Do you have a thread reference for me? I'd like to understand the 
+arguments better. I find this strange because scanning in ascending 
+order has always been the common case in drivers as well as in the mid 
+layer, AFAIK.
 
-ian@beware.dropbear.id.au (Ian Dall):
+> I suggest that you not map your devices
+> to /dev/sda, but instead use persistent
+> device labels or names.  Most distro's
+> now days ship with Logical Volume Manager
+> that does this for you.
 
-The command sent to the card was using a 30second timeout regardless of the
-timeout requested in the scsi command passed down from higher levels.
+I know it. The problem is that there are important distros out there 
+that do support persistent device names and LVM, but don't enable them 
+by  default. My patch was intended to implement the "principle of least 
+surprise" for users of such distributions with little experience.
+More so because mptspi and mptsas behave differently; the problem
+I was talking about is currently only encountered with mptsas.
 
-Signed-off-by: Jes Sorensen <jes@sgi.com>
+Regards,
+Martin
 
----
- drivers/scsi/qla1280.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-Index: linux-2.6/drivers/scsi/qla1280.c
-===================================================================
---- linux-2.6.orig/drivers/scsi/qla1280.c
-+++ linux-2.6/drivers/scsi/qla1280.c
-@@ -2864,7 +2864,7 @@ qla1280_64bit_start_scsi(struct scsi_qla
- 	memset(((char *)pkt + 8), 0, (REQUEST_ENTRY_SIZE - 8));
- 
- 	/* Set ISP command timeout. */
--	pkt->timeout = cpu_to_le16(30);
-+	pkt->timeout = cpu_to_le16(cmd->timeout_per_command/HZ);
- 
- 	/* Set device target ID and LUN */
- 	pkt->lun = SCSI_LUN_32(cmd);
-@@ -3163,7 +3163,7 @@ qla1280_32bit_start_scsi(struct scsi_qla
- 	memset(((char *)pkt + 8), 0, (REQUEST_ENTRY_SIZE - 8));
- 
- 	/* Set ISP command timeout. */
--	pkt->timeout = cpu_to_le16(30);
-+	pkt->timeout = cpu_to_le16(cmd->timeout_per_command/HZ);
- 
- 	/* Set device target ID and LUN */
- 	pkt->lun = SCSI_LUN_32(cmd);
+-- 
+Martin Wilck                Phone: +49 5251 8 15113
+Fujitsu Siemens Computers   Fax:   +49 5251 8 20409
+Heinz-Nixdorf-Ring 1        mailto:Martin.Wilck@Fujitsu-Siemens.com
+D-33106 Paderborn           http://www.fujitsu-siemens.com/primergy
