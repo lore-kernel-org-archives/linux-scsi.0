@@ -1,36 +1,46 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH]: Switch ips to pci_register from pci_module
-Date: Mon, 25 Sep 2006 23:45:51 +0100
-Message-ID: <1159224351.11049.168.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: akpm@osdl.org
+Subject: [patch 07/28] aic7xxx: fix byte I/O order in ahd_inw
+Date: Mon, 25 Sep 2006 16:57:42 -0700
+Message-ID: <200609252357.k8PNvgFe003434@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:35561 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1751529AbWIYWVC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Sep 2006 18:21:02 -0400
-Received: from localhost.localdomain (localhost.localdomain [127.0.0.1])
-	by lxorguk.ukuu.org.uk (8.13.6/8.13.4) with ESMTP id k8PMjqDB022225
-	for <linux-scsi@vger.kernel.org>; Mon, 25 Sep 2006 23:45:52 +0100
-Received: (from alan@localhost)
-	by localhost.localdomain (8.13.6/8.13.6/Submit) id k8PMjpMD022224
-	for linux-scsi@vger.kernel.org; Mon, 25 Sep 2006 23:45:51 +0100
+Received: from smtp.osdl.org ([65.172.181.4]:33722 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751621AbWIYX5t (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Sep 2006 19:57:49 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, vda.linux@googlemail.com
 
-Signed-off-by: Alan Cox <alan@redhat.com>
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.18-mm1/drivers/scsi/ips.c linux-2.6.18-mm1/drivers/scsi/ips.c
---- linux.vanilla-2.6.18-mm1/drivers/scsi/ips.c	2006-09-25 12:08:54.000000000 +0100
-+++ linux-2.6.18-mm1/drivers/scsi/ips.c	2006-09-25 12:26:15.000000000 +0100
-@@ -7078,7 +7078,7 @@
- static int __init
- ips_module_init(void)
- {
--	if (pci_module_init(&ips_pci_driver) < 0)
-+	if (pci_register_driver(&ips_pci_driver) < 0)
- 		return -ENODEV;
- 	ips_driver_template.module = THIS_MODULE;
- 	ips_order_controllers();
+From: Denis Vlasenko <vda.linux@googlemail.com>
 
+Comment says "Read high byte first as some registers increment..."
+but code doesn't guarantee that, I think:
+	return ((ahd_inb(ahd, port+1) << 8) | ahd_inb(ahd, port));
+Compiler can reorder it.
+
+Make the order explicit.
+
+Signed-off-by: Denis Vlasenko <vda.linux@googlemail.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
+Signed-off-by: Andrew Morton <akpm@osdl.org>
+---
+
+ drivers/scsi/aic7xxx/aic79xx_core.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff -puN drivers/scsi/aic7xxx/aic79xx_core.c~aic7xxx-fix-byte-i-o-order-in-ahd_inw drivers/scsi/aic7xxx/aic79xx_core.c
+--- a/drivers/scsi/aic7xxx/aic79xx_core.c~aic7xxx-fix-byte-i-o-order-in-ahd_inw
++++ a/drivers/scsi/aic7xxx/aic79xx_core.c
+@@ -323,7 +323,9 @@ ahd_inw(struct ahd_softc *ahd, u_int por
+ 	 * or have other side effects when the low byte is
+ 	 * read.
+ 	 */
+-	return ((ahd_inb(ahd, port+1) << 8) | ahd_inb(ahd, port));
++	uint16_t r = ahd_inb(ahd, port+1) << 8;
++	r |= ahd_inb(ahd, port);
++	return r;
+ }
+ 
+ void
+_
