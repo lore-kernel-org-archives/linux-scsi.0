@@ -1,79 +1,61 @@
-From: Ian Dall <ian@beware.dropbear.id.au>
-Subject: Re: [patch] qla1280 command timeout
-Date: Tue, 26 Sep 2006 01:41:47 +0930
-Message-ID: <1159200707.32368.16.camel@sibyl.beware.dropbear.id.au>
-References: <yq04puwcmau.fsf@jaguar.mkp.net>
+From: "Moore, Eric" <Eric.Moore@lsil.com>
+Subject: RE: [PATCH] scsi/mptsas: add RAID devices in ascending ID order
+Date: Mon, 25 Sep 2006 10:14:23 -0600
+Message-ID: <664A4EBB07F29743873A87CF62C26D7032D7EB@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sibyl.beware.dropbear.id.au ([203.38.218.57]:27841 "EHLO
-	sibyl.beware.dropbear.id.au") by vger.kernel.org with ESMTP
-	id S1751105AbWIYQMe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Sep 2006 12:12:34 -0400
-In-Reply-To: <yq04puwcmau.fsf@jaguar.mkp.net>
+Received: from mail0.lsil.com ([147.145.40.20]:46756 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1751095AbWIYQO0 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Sep 2006 12:14:26 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jes Sorensen <jes@sgi.com>
-Cc: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, James.Bottomley@steeleye.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, scott.bailey@eds.com, Jeremy Higdon <jeremy@sgi.com>
+To: Martin Wilck <martin.wilck@fujitsu-siemens.com>
+Cc: linux-scsi@vger.kernel.org, mpt_linux_developer <mpt_linux_developer@lsil.com>
 
-On Mon, 2006-09-25 at 05:44 -0400, Jes Sorensen wrote:
-> Hi,
+On Monday, September 25, 2006 3:59 AM, Martin Wilck wrote: 
+> > Ascending ID ordering does not address all cases. 
+> > There is no guarantee which target ids are 
+> > assigned by firmware to volumes when
+> > volumes are created.  
 > 
-> This one is originally from Ian Dall via bugzilla.kernel.org - Ian if
-> you wish to add a Signed-off-by please do, couldn't add it since you
-> didn't leave one in bugzilla.
+> That's what my patch was supposed to handle: No matter what 
+> the ordering 
+> of IDs by firmware is, the devices are registered in 
+> ascending ID order.
 
-See below.
+You patch will call scsi_add_device, from low to hi target 
+ids, right?  Well if someone creates a volume that
+is issued target id=8, installs the operating system.
+Then tommorrow they create a new volume that is issued
+target id=7, then what your patch will do is reverse
+the order, right?  If so, a panic would occur
+unless they assigned device names/lables.
 
-> Anyway the patch seems obviously correct (famous last words) and it
-> would be nice to get into 2.6.19.
 > 
-> Thanks,
-> Jes
+> > I've made similar 
+> > ordering proposals before to this mailing list. 
+> > All been rejected.
 > 
-> Original patch from Ian Dall in bugzilla. Set command timeout as
-> specified by the SCSI layer rather than hardcode it to 30 seconds. I
-> have received a couple of reports of people hitting this one with
-> various tape configurations and the patch looks obviously correct.
->                                                                   - Jes
-> 
-> >From http://bugzilla.kernel.org/show_bug.cgi?id=6275
-> 
-> ian@beware.dropbear.id.au (Ian Dall):
-> 
-> The command sent to the card was using a 30second timeout regardless of the
-> timeout requested in the scsi command passed down from higher levels.
-> 
-> Signed-off-by: Jes Sorensen <jes@sgi.com>
+> Do you have a thread reference for me? I'd like to understand the 
+> arguments better. I find this strange because scanning in ascending 
+> order has always been the common case in drivers as well as 
+> in the mid 
+> layer, AFAIK.
 
-Signed-off-by: Ian Dall <ian@beware.dropbear.id.au>
-> 
-> ---
->  drivers/scsi/qla1280.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> Index: linux-2.6/drivers/scsi/qla1280.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/scsi/qla1280.c
-> +++ linux-2.6/drivers/scsi/qla1280.c
-> @@ -2864,7 +2864,7 @@ qla1280_64bit_start_scsi(struct scsi_qla
->  	memset(((char *)pkt + 8), 0, (REQUEST_ENTRY_SIZE - 8));
->  
->  	/* Set ISP command timeout. */
-> -	pkt->timeout = cpu_to_le16(30);
-> +	pkt->timeout = cpu_to_le16(cmd->timeout_per_command/HZ);
->  
->  	/* Set device target ID and LUN */
->  	pkt->lun = SCSI_LUN_32(cmd);
-> @@ -3163,7 +3163,7 @@ qla1280_32bit_start_scsi(struct scsi_qla
->  	memset(((char *)pkt + 8), 0, (REQUEST_ENTRY_SIZE - 8));
->  
->  	/* Set ISP command timeout. */
-> -	pkt->timeout = cpu_to_le16(30);
-> +	pkt->timeout = cpu_to_le16(cmd->timeout_per_command/HZ);
->  
->  	/* Set device target ID and LUN */
->  	pkt->lun = SCSI_LUN_32(cmd);
--- 
-Ian Dall <ian@beware.dropbear.id.au>
+I was working with Christoph Hellwig and James Bottomley last
+year implementing raid support in mptsas, and they rejected it
+code that ordered raid ids.
+
+BTW, the scsi mid layer is not scanning devices that use
+transport layers, beside spi.  Meaning that lld's that are
+fibre channel, iscsi, and sas hba will report the know devices
+to transports, and the transport assign its own unique mapping.
+For example, mptsas and mptfc are using transport, and we
+don't call scsi_scan_host.  
+
+ 
