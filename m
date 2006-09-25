@@ -1,61 +1,118 @@
-From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: RE: [PATCH] scsi/mptsas: add RAID devices in ascending ID order
-Date: Mon, 25 Sep 2006 10:14:23 -0600
-Message-ID: <664A4EBB07F29743873A87CF62C26D7032D7EB@NAMAIL4.ad.lsil.com>
+From: "David Somayajulu" <david.somayajulu@qlogic.com>
+Subject: RE: [RFC] [PATCH] qla4xxx driver resubmission
+Date: Mon, 25 Sep 2006 09:56:20 -0700
+Message-ID: <0BB3E5E7462EEA4295BC02D49691DC074146BD@AVEXCH1.qlogic.org>
+References: <20060921190041.GI16556@kernel.dk>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:46756 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1751095AbWIYQO0 convert rfc822-to-8bit
+Received: from pat.qlogic.com ([198.70.193.2]:59415 "EHLO avexch1.qlogic.com")
+	by vger.kernel.org with ESMTP id S1751252AbWIYQ4V convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Sep 2006 12:14:26 -0400
+	Mon, 25 Sep 2006 12:56:21 -0400
 Content-class: urn:content-classes:message
+In-Reply-To: <20060921190041.GI16556@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Martin Wilck <martin.wilck@fujitsu-siemens.com>
-Cc: linux-scsi@vger.kernel.org, mpt_linux_developer <mpt_linux_developer@lsil.com>
+To: James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@lst.de>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, David Wagner <david.wagner@qlogic.com>
 
-On Monday, September 25, 2006 3:59 AM, Martin Wilck wrote: 
-> > Ascending ID ordering does not address all cases. 
-> > There is no guarantee which target ids are 
-> > assigned by firmware to volumes when
-> > volumes are created.  
+
+
+> From: Jens Axboe [mailto:axboe@kernel.dk]
+> On Thu, Sep 21 2006, David Somayajulu wrote:
+> > > From: Jens Axboe [mailto:axboe@kernel.dk]
+> > > Sent: Thursday, September 21, 2006 11:48 AM
+> > > On Thu, Sep 21 2006, Jens Axboe wrote:
+> > > > On Thu, Sep 21 2006, Mike Christie wrote:
+> > > > > Jens Axboe wrote:
+> > > > > > On Thu, Sep 21 2006, Mike Christie wrote:
+> > > > > >> James Smart wrote:
+> > > > > >>> Why does your LLD need to reach up into the block layer to
+> > find an i/o ?
+> > > > > >>>
+> > > > > >>> Even if you are using tags as an index into something... I
+> > would think that
+> > > > > >>> having to go up to the blk layer to retrieve a something
+that
+> > should have
+> > > > > >>> already been known lower in the driver leaves room for
+race
+> > conditions.
+> > > > > >>>
+> > > > > >> This is how the blk and scsi tag api work for queue based
+> > tagging. We
+> > > > > >> have the scsi_find_tag() function which takes a scsi device
+and
+> > than
+> > > > > >> calls blk_queue_find_tag to get the request. It then does
+all
+> > the magic
+> > > > > >> sdev to request_queue and request to scsi command work and
+pass
+> > the LLD
+> > > > > >> the scsi command for the tag. So we can either add a driver
+> > array and do
+> > > > > >> some tag to scsi command or driver stucture mapping or we
+can
+> > use the
+> > > > > >> array already created in the scsi host block queue tag. And
+as
+> > you see
+> > > > > >> Dave's patch did the latter in the spirit of not
+duplicating
+> > what
+> > > > > >> scsi-ml or the block layer already do.
+> > > > > >>
+> > > > > >> I think there are some basic races though. For example,
+> > scsi_request_fn
+> > > > > >> calls blk_queue_start_tag with only the queue lock held and
+so
+> > if the
+> > > > > >> request_fn was called for two devices on the same host at
+the
+> > same time
+> > > > > >> they both could call find_first_zero_bit on the shared
+> > bqt->tag_map and
+> > > > > >> end up getting the same tag.
+> > > > > >
+> > > > > > Hrmpf good point, I suspect that would be easy enough to fix
+> > with just
+> > > > > > using a
+> > > > > >
+> > > > > >         do {
+> > > > > >                 tag = ffz_bit(..);
+> > > > > >         } while (test_and_set_bit(tag, map);
+> > > > > >
+> > > > > > construct. Agree?
+> > > > > >
+> > > > >
+> > > > > I think so. I think this is similar to what Dave was going to
+do
+> > too.
+> > > >
+> > > > Already checked in such a fix:
+> > > >
+> > > >
+> >
+http://git.kernel.dk/?p=linux-2.6-block.git;a=commit;h=7ddbe6863ac4b7a55
+> > 88aa4a70f262c098f3c469a
+> >
+> > Thanks. This a lot elegant than the one I came up with using a lock.
+> > Jens, any comments on this patch
+> > [RFC] [PATCH] helper function for retrieving scsi_cmd given host
+based
+> > block layer tag
+> > http://marc.theaimsgroup.com/?l=linux-scsi&m=115871027627964&w=2
 > 
-> That's what my patch was supposed to handle: No matter what 
-> the ordering 
-> of IDs by firmware is, the devices are registered in 
-> ascending ID order.
+> Patch looks very nice to me, I'll apply it and let James scream if he
+> dislikes it for some reason (I don't see why, though).
+James and Christoph, 
+I would you really appreciate if you could let me know where we stand on
+the inclusion of qla4xxx driver upstream. Block layer tagging was the
+last gating item in the last round and it has been taken care of. 
+Thanks
+David Somayajulu
 
-You patch will call scsi_add_device, from low to hi target 
-ids, right?  Well if someone creates a volume that
-is issued target id=8, installs the operating system.
-Then tommorrow they create a new volume that is issued
-target id=7, then what your patch will do is reverse
-the order, right?  If so, a panic would occur
-unless they assigned device names/lables.
-
-> 
-> > I've made similar 
-> > ordering proposals before to this mailing list. 
-> > All been rejected.
-> 
-> Do you have a thread reference for me? I'd like to understand the 
-> arguments better. I find this strange because scanning in ascending 
-> order has always been the common case in drivers as well as 
-> in the mid 
-> layer, AFAIK.
-
-I was working with Christoph Hellwig and James Bottomley last
-year implementing raid support in mptsas, and they rejected it
-code that ordered raid ids.
-
-BTW, the scsi mid layer is not scanning devices that use
-transport layers, beside spi.  Meaning that lld's that are
-fibre channel, iscsi, and sas hba will report the know devices
-to transports, and the transport assign its own unique mapping.
-For example, mptsas and mptfc are using transport, and we
-don't call scsi_scan_host.  
-
- 
