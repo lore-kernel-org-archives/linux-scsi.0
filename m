@@ -1,75 +1,48 @@
 From: akpm@osdl.org
-Subject: [patch 18/28] drivers/scsi/nsp32.h: removal of old scsi code
-Date: Mon, 25 Sep 2006 16:59:04 -0700
-Message-ID: <200609252359.k8PNx4qr003509@shell0.pdx.osdl.net>
+Subject: [patch 15/28] megaraid: Use the proper type to hold the irq number.
+Date: Mon, 25 Sep 2006 16:59:01 -0700
+Message-ID: <200609252359.k8PNx1QD003497@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:29627 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751763AbWIYX7L (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:29371 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751760AbWIYX7L (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Mon, 25 Sep 2006 19:59:11 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, michal.k.k.piotrowski@gmail.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, ebiederm@xmission.com, Neela.Kolli@engenio.com, Seokmann.Ju@lsil.com
 
-From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+From: Eric W. Biederman <ebiederm@xmission.com>
 
-Signed-off-by: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+When testing on a Unisys machine it was discovered that the megaraid driver
+would not initialize as it was requesting irq 162 instead of irq 1442 it
+was assigned.  The problem was the irq number had been truncated by being
+stored in an unsigned char.
+
+This patches fixes that problem and the driver now appears to work.
+
+The ioctl interface appears fundamentally broken as it exports the irq
+number to user space in an unsigned char.
+
+Signed-off-by: Eric W. Biederman <ebiederm@xmission.com>
+Cc: Neela Syam Kolli<Neela.Kolli@engenio.com>
+Cc: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/nsp32.h |   42 -----------------------------------------
- 1 file changed, 42 deletions(-)
+ drivers/scsi/megaraid/mega_common.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/nsp32.h~drivers-scsi-nsp32h-removal-of-old-scsi-code drivers/scsi/nsp32.h
---- a/drivers/scsi/nsp32.h~drivers-scsi-nsp32h-removal-of-old-scsi-code
-+++ a/drivers/scsi/nsp32.h
-@@ -619,47 +619,5 @@ typedef struct _nsp32_hw_data {
- #define REQSACK_TIMEOUT_TIME	10000	/* max wait time for REQ/SACK assertion
- 					   or negation, 10000us == 10ms */
+diff -puN drivers/scsi/megaraid/mega_common.h~megaraid-use-the-proper-type-to-hold-the-irq-number drivers/scsi/megaraid/mega_common.h
+--- a/drivers/scsi/megaraid/mega_common.h~megaraid-use-the-proper-type-to-hold-the-irq-number
++++ a/drivers/scsi/megaraid/mega_common.h
+@@ -175,7 +175,7 @@ typedef struct {
+ 	uint8_t			max_lun;
  
--/**************************************************************************
-- * Compatibility functions
-- */
--
--/* for Kernel 2.4 */
--#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0))
--# define scsi_register_host(template) 	scsi_register_module(MODULE_SCSI_HA, template)
--# define scsi_unregister_host(template) scsi_unregister_module(MODULE_SCSI_HA, template)
--# define scsi_host_put(host)            scsi_unregister(host)
--# define pci_name(pci_dev)              ((pci_dev)->slot_name)
--
--typedef void irqreturn_t;
--# define IRQ_NONE      /* */
--# define IRQ_HANDLED   /* */
--# define IRQ_RETVAL(x) /* */
--
--/* This is ad-hoc version of scsi_host_get_next() */
--static inline struct Scsi_Host *scsi_host_get_next(struct Scsi_Host *host)
--{
--	if (host == NULL) {
--		return scsi_hostlist;
--	} else {
--		return host->next;
--	}
--}
--
--/* This is ad-hoc version of scsi_host_hn_get() */
--static inline struct Scsi_Host *scsi_host_hn_get(unsigned short hostno)
--{
--	struct Scsi_Host *host;
--
--	for (host = scsi_host_get_next(NULL); host != NULL;
--	     host = scsi_host_get_next(host)) {
--		if (host->host_no == hostno) {
--			break;
--		}
--	}
--
--	return host;
--}
--#endif
--
- #endif /* _NSP32_H */
- /* end */
+ 	uint32_t		unique_id;
+-	uint8_t			irq;
++	int			irq;
+ 	uint8_t			ito;
+ 	caddr_t			ibuf;
+ 	dma_addr_t		ibuf_dma_h;
 _
