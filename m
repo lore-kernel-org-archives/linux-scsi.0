@@ -1,138 +1,63 @@
-From: <crazyrushstar@yahoo.com.tw>
-Subject: Re: scsi_scan_host will hang up my system!
-Date: Tue, 26 Sep 2006 11:40:01 +0800 (CST)
-Message-ID: <20060926034001.28539.qmail@web18309.mail.tpe.yahoo.com>
-References: <4513C4C8.2070606@s5r6.in-berlin.de>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Serial ATA (sii3512a) support
+Date: Tue, 26 Sep 2006 14:08:20 +0900
+Message-ID: <4518B5C4.6020207@gmail.com>
+References: <4515624A.4090100@skircr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=big5
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web18309.mail.tpe.yahoo.com ([203.84.194.91]:33688 "HELO
-	web18309.mail.tpe.yahoo.com") by vger.kernel.org with SMTP
-	id S1750801AbWIZDkE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Sep 2006 23:40:04 -0400
-In-Reply-To: <4513C4C8.2070606@s5r6.in-berlin.de>
+Received: from wx-out-0506.google.com ([66.249.82.225]:31775 "EHLO
+	wx-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S1750996AbWIZFI0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 Sep 2006 01:08:26 -0400
+Received: by wx-out-0506.google.com with SMTP id s14so2070501wxc
+        for <linux-scsi@vger.kernel.org>; Mon, 25 Sep 2006 22:08:26 -0700 (PDT)
+In-Reply-To: <4515624A.4090100@skircr.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Stephen Atkins <satkins@skircr.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
---- Stefan Richter <stefanr@s5r6.in-berlin.de> =BB=A1=A1G
+[cc'ing linux-ide]
 
-> crazyrushstar@yahoo.com.tw wrote:
-> > --- Karen Shaeffer <shaeffer@neuralscape.com> =BB=A1=A1G
-> >> On Tue, Sep 19, 2006 at 09:48:46PM -0600, Matthew
-> >> Wilcox wrote:
-> >>> Documentation/scsi/scsi_mid_low_api.txt was of
-> >>> immense help to me.
->=20
-> This document is indeed essential for low-level
-> driver development.
-> However it doesn't (can't) tell you how to avoid
-> some types of deadlocks.
->=20
-> Crazyrushstar, I can't give specific advise about
-> scsi_scan_host() since
-> the code I'm maintaining (sbp2) doesn't use it.
-> However I have some
-> basic suggestions:
->=20
->  - Consider your driver a layer between Linux' SCSI
-> core (higher level)
-> and the interconnect software/firmware/hardware,
-> e.g. PCI layer (lower
-> level). Make sure that you first bring up the lower
-> level, then the
-> higher level. Vice versa, bring down the higher
-> level before the lower
-> level on driver shutdown.
->=20
->  - AFAIU your driver and everything below it has to
-> be fully able to
-> transfer commands, data and status before it calls
-> scsi_scan_host().
->=20
->  - Also keep the layer paradigm in mind when you
-> design the locking in
-> your driver. Watch out for the host lock which the
-> SCSI core will use on
-> several occasions and which your driver may have to
-> use on some
-> occasions. (The low-level driver I'm maintaining
-> doesn't touch the host
-> lock.) A clearly layered design helps to avoid
-> deadlocks.
->=20
->  - Don't use the scsi_block_requests()/
-> scsi_unblock_requests() API.
-> (The code I'm maintaining is using these, and it is
-> a nightmare because
-> it easily leads into deadlocks. I will rework that
-> driver to not use
-> these calls anymore.) The scsi_block_requests()/
-> scsi_unblock_requests()
-> API manipulates host state on a low level,
-> subverting the SCSI core's
-> assumptions about host/ target/ LU states. This and
-> similar
-> manipulations of host/ target/ LU state are better
-> _not_ done in a SCSI
-> low-level driver.
->=20
-> ...
-> >> I also would purchase the applicable scsi
-> standards.
-> >>=20
-> >> http://www.t10.org/
->=20
-> The drafts at http://www.t10.org/ftp/t10/drafts/ may
-> suffice too, at
-> least to get started.
->=20
-> ...
-> > I have google out a link=20
-> >
->
-"http://www.mjmwired.net/kernel/Documentation/scsi/scsi_mid_low_api.txt=
-"
-> ...
->=20
-> "Documentation/" is a subdirectory of the Linux
-> kernel source distribution.
->=20
-> Another essential resource are of course the sources
-> themselves. Good
-> tools to browse the code are Cscope or KScope or
-> LXR:
-> http://free-electrons.com/community/kernel/lxr
->=20
-> You certainly already read the sources in
-> include/scsi/.
-> --=20
-> Stefan Richter
-> -=3D=3D=3D=3D=3D-=3D-=3D=3D- =3D--=3D =3D--=3D=3D
-> http://arcgraph.de/sr/
->=20
-Now I have make my driver work well under a
-environment without a lun(This is a RAID card). After
-insmod , inquery(12H) , report lun(A0H) received 8
-times. Syetem   is alive.
+Stephen Atkins wrote:
+> Hello everyone.  I'm just wondering what the status is for the Silicon
+> Image 3512a serial ata support is.
 
-If I insmod after make a lun, system will hangup
-within 2 secends. All message printed by printk wont
-show so that I dont know where is wrong.
+Pretty good actually.
 
-I Use  "tail -f /var/log/messages &" to observe kernel
-log.
+> I was using gentoo-sources 2.6.12 my Seagate drives worked fine.  I'm
+> now running a gentoo-sources 2.6.15-r1 and support has broken.  The same
+> thing with gentoo-sources 2.6.17-r8.  I've added my drives to the
+> sata_sil.c black list (one of them was missing) but I still get
+> "Abnormal status 0x58 on port ..." errors.  Which essentially crashes my
+> machine.
 
-I have debug two days, but no more ideas for this
-situation.
+That looks like transmission failure and to me it doesn't seem to be a 
+driver problem and please don't add your drive to sata_sil blacklist. 
+The blacklist is for very specific cases and won't fix your problem 
+other than sometimes hiding the real problem by slowing things down a lot.
 
-___________________________________________________=20
- =B1z=AA=BA=A5=CD=AC=A1=A7Y=AE=C9=B3q =A1=D0 =B7=BE=B3q=A1B=AET=BC=D6=A1=
-B=A5=CD=AC=A1=A1B=A4u=A7@=A4@=A6=B8=B7d=A9w=A1I=20
- http://messenger.yahoo.com.tw/
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+When does such error occur?  Is it reproducible?  How often does it occur?
+
+> Unfortunately I don't have the 2.6.12 kernel from Gentoo any more as I
+> did a emerge --sync and it got rid of it.  Also some of the other
+> drivers I'm using need more recent kernel versions.
+> 
+> Just some notes on my MB/chipsets.  I've got a Gigabyte GA-7N400Pro2
+> with an nForce2 chipset.  It has a on board SATA which the manual says
+> is a Sil3112 but the bios reports it as a Sil3512a.  I've got a single 6
+> gig IDE as my boot device and root dir.  There are also two SATA drives
+> both are Seagates.  One is a ST3250823AS (250 gigs) and a ST3120026AS
+> (120 gigs).  I know the Seagate drives have some issues and hence the
+> black list.
+> 
+> Just wondering if there is anything I can do to make these things work
+> in some of the latest kernels.  Thanks for you help.
+
+Can you give a shot at 2.6.18?  It contains improved EH which should be 
+able to recover from the condition you described.
+
+-- 
+tejun
