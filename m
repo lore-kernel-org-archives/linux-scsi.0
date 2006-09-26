@@ -1,36 +1,40 @@
-From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: RE: [PATCH] scsi/mptsas: add RAID devices in ascending ID order
-Date: Tue, 26 Sep 2006 12:33:01 -0600
-Message-ID: <664A4EBB07F29743873A87CF62C26D7034FB88@NAMAIL4.ad.lsil.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [Patch] SCSI I/O statistics
+Date: Tue, 26 Sep 2006 16:45:54 -0500
+Message-ID: <45199F92.106@cs.wisc.edu>
+References: <1159286194.2925.5.camel@dyn-9-152-230-71.boeblingen.de.ibm.com> <20060926103930.471b75a5.akpm@osdl.org> <20060926182347.GH5017@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:18659 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1751578AbWIZSdH convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Sep 2006 14:33:07 -0400
-Content-class: urn:content-classes:message
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:57265 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S964845AbWIZVqJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 Sep 2006 17:46:09 -0400
+In-Reply-To: <20060926182347.GH5017@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Martin Wilck <martin.wilck@fujitsu-siemens.com>
-Cc: linux-scsi@vger.kernel.org, mpt_linux_developer <mpt_linux_developer@lsil.com>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Andrew Morton <akpm@osdl.org>, Martin Peschke <mp3@de.ibm.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Martin Wilck wrote: 
-
+Matthew Wilcox wrote:
+> On Tue, Sep 26, 2006 at 10:39:30AM -0700, Andrew Morton wrote:
+>> - Should it have been done at the block layer rather than at the scsi layer?
 > 
-> Yes, if the order of VolumeIDs assigned by the firmware is indeed 
-> random. That's not what was observed in our test lab, though.
-> 
+> This was already mentioned when he sent it to linux-scsi a few days ago.
+> There are scsi commands which bypass the block layer, such as SG_IO, and
 
-Yes, our firmware does persistent target mapping, and if you fill
-up your table, you can create a volume with a large target id.  The
-target id assigned usually will map to the least significant id
-of one of your hidden disk ids, and that hidden disk id will be moved
-to another id much larger during creation of the volume.  Then if you
-end up creating a volume at a later date, that uses smaller target ids,
-then
-my case I presented in yesterdays email would occur.
 
-Eric 
+I do not think any command completely bypasses the block layer now.
+SG_IO, tape, sd and scanning insertion go through blk_execute_rq_nowait
+for insertion. For completion they go through blk_complete_request +
+end_that_request_first/last in the normal path and blk_complete_request
++ blk_requeue_request in the retry path.
+
+
+> block layer stats can make an extremely busy disc look not busy.
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
