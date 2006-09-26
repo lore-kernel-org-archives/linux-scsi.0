@@ -1,50 +1,36 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [patch 20/28] drivers/message/fusion/linux_compat.h Removal of
- old code
-Date: Tue, 26 Sep 2006 14:30:41 -0400
-Message-ID: <451971D1.2040108@garzik.org>
-References: <664A4EBB07F29743873A87CF62C26D7034FB86@NAMAIL4.ad.lsil.com>
+From: "Moore, Eric" <Eric.Moore@lsil.com>
+Subject: RE: [PATCH] scsi/mptsas: add RAID devices in ascending ID order
+Date: Tue, 26 Sep 2006 12:33:01 -0600
+Message-ID: <664A4EBB07F29743873A87CF62C26D7034FB88@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:31628 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751574AbWIZSas (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Sep 2006 14:30:48 -0400
-In-Reply-To: <664A4EBB07F29743873A87CF62C26D7034FB86@NAMAIL4.ad.lsil.com>
+Received: from mail0.lsil.com ([147.145.40.20]:18659 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1751578AbWIZSdH convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 Sep 2006 14:33:07 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric" <Eric.Moore@lsil.com>
-Cc: akpm@osdl.org, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, michal.k.k.piotrowski@gmail.com
+To: Martin Wilck <martin.wilck@fujitsu-siemens.com>
+Cc: linux-scsi@vger.kernel.org, mpt_linux_developer <mpt_linux_developer@lsil.com>
 
-Moore, Eric wrote:
-> Jeff Garzik wrote:
+Martin Wilck wrote: 
+
 > 
->> Why?  That's against the general kernel policy...
->>
->> As an example, when maintaining libata for 2.4 kernels as well as 2.6 
->> kernels, I had a libata-compat.h file, and always just patched the 
->> include into the kernel source at the same time I patched in the 
->> libata-compat.h contents.
->>
+> Yes, if the order of VolumeIDs assigned by the firmware is indeed 
+> random. That's not what was observed in our test lab, though.
 > 
-> This is merely a request is all.
-> Supporting Red Hat and SuSE distro's is why I ask. 
-> I don't care about 2.4 kernel.  My compatibility 
-> changes I support occur between 2.6 kernels releases, 
-> such example is 2.6.17 and 2.6.18; e.g. SLES10 versus RHEL5
-> with sas transport changes.  And they pull from upstream, 
-> and I support them with interim bug fix's.
 
-I'm not talking specifically about the 2.4 kernel, but making a 
-comparison between upstream, and non-upstream back compat.  My example 
-is clearly the same as your current situation.
+Yes, our firmware does persistent target mapping, and if you fill
+up your table, you can create a volume with a large target id.  The
+target id assigned usually will map to the least significant id
+of one of your hidden disk ids, and that hidden disk id will be moved
+to another id much larger during creation of the volume.  Then if you
+end up creating a volume at a later date, that uses smaller target ids,
+then
+my case I presented in yesterdays email would occur.
 
-I think most kernel devs would NAK keeping around an empty kernel header 
-just for the sake of forked distro kernels.
-
-	Jeff
-
-
-
+Eric 
