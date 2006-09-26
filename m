@@ -1,64 +1,33 @@
-From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: RE: [patch 20/28] drivers/message/fusion/linux_compat.h Removal of old code
-Date: Mon, 25 Sep 2006 18:14:26 -0600
-Message-ID: <664A4EBB07F29743873A87CF62C26D7034FA42@NAMAIL4.ad.lsil.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [patch 20/28] drivers/message/fusion/linux_compat.h Removal of
+ old code
+Date: Mon, 25 Sep 2006 20:22:32 -0400
+Message-ID: <451872C8.7000400@garzik.org>
+References: <664A4EBB07F29743873A87CF62C26D7034FA42@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:60395 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1751840AbWIZAOd convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Sep 2006 20:14:33 -0400
-Content-class: urn:content-classes:message
+Received: from srv5.dvmed.net ([207.36.208.214]:34009 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751792AbWIZAWk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Sep 2006 20:22:40 -0400
+In-Reply-To: <664A4EBB07F29743873A87CF62C26D7034FA42@NAMAIL4.ad.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@osdl.org, James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, michal.k.k.piotrowski@gmail.com
+To: "Moore, Eric" <Eric.Moore@lsil.com>
+Cc: akpm@osdl.org, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, michal.k.k.piotrowski@gmail.com
 
-On Monday, September 25, 2006 5:59 PM, Andrew Morton wrote: 
+Moore, Eric wrote:
+> However pls don't remove this file from the tree.
 
-> 
-> From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
-> 
-> Signed-off-by: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
-> Acked-by: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-> Cc: James Bottomley <James.Bottomley@steeleye.com>
-> Signed-off-by: Andrew Morton <akpm@osdl.org>
-> ---
-> 
->  drivers/message/fusion/linux_compat.h |    9 ---------
->  1 file changed, 9 deletions(-)
-> 
-> diff -puN 
-> drivers/message/fusion/linux_compat.h~drivers-message-fusion-l
-> inux_compath-removal-of-old-code drivers/message/fusion/linux_compat.h
-> --- 
-> a/drivers/message/fusion/linux_compat.h~drivers-message-fusion
-> -linux_compath-removal-of-old-code
-> +++ a/drivers/message/fusion/linux_compat.h
-> @@ -6,13 +6,4 @@
->  #include <linux/version.h>
->  #include <scsi/scsi_device.h>
->  
-> -#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,6))
-> -static int inline scsi_device_online(struct scsi_device *sdev)
-> -{
-> -	return sdev->online;
-> -}
-> -#endif
-> -
-> -
-> -/*}-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-> -=-=-=-=-=-=-=-=*/
->  #endif /* _LINUX_COMPAT_H */
-> _
->
+Why?  That's against the general kernel policy...
+
+As an example, when maintaining libata for 2.4 kernels as well as 2.6 
+kernels, I had a libata-compat.h file, and always just patched the 
+include into the kernel source at the same time I patched in the 
+libata-compat.h contents.
+
+	Jeff
 
 
-James, pls apply. 
-
-However pls don't remove this file from the tree.
-
-Eric 
