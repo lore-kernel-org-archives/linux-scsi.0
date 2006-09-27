@@ -1,85 +1,92 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: 2.6.18-mm1
-Date: Wed, 27 Sep 2006 09:12:33 -0700
-Message-ID: <20060927091233.dbb006f0.akpm@osdl.org>
-References: <20060924040215.8e6e7f1a.akpm@osdl.org>
-	<451A4394.7000504@shadowen.org>
+From: Janusz Krzysztofik <jkrzyszt@tis.icnet.pl>
+Subject: Re: [patch 18/24] megaraid: Dell CERC ATA100/4ch support
+Date: Wed, 27 Sep 2006 18:25:03 +0200
+Message-ID: <451AA5DF.7000403@tis.icnet.pl>
+References: <890BF3111FB9484E9526987D912B261932E3A0@NAMAIL3.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------000005010804000809000400"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:9863 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1030220AbWI0QMp (ORCPT
+Received: from d1.icnet.pl ([212.160.220.21]:13952 "EHLO d1.icnet.pl")
+	by vger.kernel.org with ESMTP id S1751213AbWI0QZV (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Sep 2006 12:12:45 -0400
-In-Reply-To: <451A4394.7000504@shadowen.org>
+	Wed, 27 Sep 2006 12:25:21 -0400
+In-Reply-To: <890BF3111FB9484E9526987D912B261932E3A0@NAMAIL3.ad.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andy Whitcroft <apw@shadowen.org>
-Cc: linux-kernel@vger.kernel.org, Steve Fox <drfickle@us.ibm.com>, "Moore, Eric Dean" <Eric.Moore@lsil.com>, linux-scsi@vger.kernel.org
+To: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
+Cc: akpm@osdl.org, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
 
-On Wed, 27 Sep 2006 10:25:40 +0100
-Andy Whitcroft <apw@shadowen.org> wrote:
+This is a multi-part message in MIME format.
+--------------000005010804000809000400
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-> Ok.  Now that we've got past the linker changes breaking down under
-> older tool chains I am getting following panic on boot.  The machine has
-> one of these, other machines do seem to boot:
-> 
-> 0000:02:04.0 SCSI storage controller: LSI Logic / Symbios Logic 53c1030
-> PCI-X Fusion-MPT Dual Ultra320 SCSI (rev 07)
-> 
-> It appears that this driver is unchanged between 2.6.18 and -mm1.
-> 2.6.18 boots just fine.  Odd.
-> 
-> Any suggestions?
-> 
-> -apw
-> 
-> mptbase: Initiating ioc0 bringup
-> ioc0: 53C1030: Capabilities={Initiator}
-> mptbase: Initiating ioc0 recovery
-> Unable to handle kernel NULL pointer dereference at 0000000000000500 RIP:
->  [<ffffffff803fadfb>] mptspi_dv_renegotiate_work+0x10/0x4a
-> PGD 0
-> Oops: 0000 [1] SMP
-> last sysfs file:
-> CPU 0
-> Modules linked in:
-> Pid: 14, comm: events/0 Not tainted 2.6.18-mm1-autokern1 #1
-> RIP: 0010:[<ffffffff803fadfb>]  [<ffffffff803fadfb>]
-> mptspi_dv_renegotiate_work+0x10/0x4a
-> RSP: 0000:ffff8101000e1e20  EFLAGS: 00010282
-> RAX: 0000000000000001 RBX: ffff810001fe6940 RCX: 000000000000001f
-> RDX: 0000000000000000 RSI: ffff810001fe6940 RDI: 0000000000001fe6
-> RBP: ffff8101000e1e30 R08: ffff8101000e0000 R09: 0000000000000011
-> R10: ffff810001014820 R11: ffff810001014820 R12: 0000000000000500
-> R13: ffff810001ef1640 R14: 0000000000000206 R15: ffff810001fe6940
-> FS:  0000000000000000(0000) GS:ffffffff80582000(0000) knlGS:0000000000000000
-> CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
-> CR2: 0000000000000500 CR3: 0000000000201000 CR4: 00000000000006e0
-> Process events/0 (pid: 14, threadinfo ffff8101000e0000, task
-> ffff8100816b1040)
-> Stack:  ffff810001fe6940 ffff810001fe6948 ffff8101000e1e70 ffffffff80239163
->  ffffffff803fadeb ffff810001ef1640 ffff810001f0dd40 ffffffff802391a7
->  00000000fffffffc ffffffff804b08d4 ffff8101000e1f00 ffffffff8023929a
-> Call Trace:
->  [<ffffffff80239163>] run_workqueue+0xa2/0xe6
->  [<ffffffff803fadeb>] mptspi_dv_renegotiate_work+0x0/0x4a
->  [<ffffffff802391a7>] worker_thread+0x0/0x126
->  [<ffffffff8023929a>] worker_thread+0xf3/0x126
->  [<ffffffff80224de3>] default_wake_function+0x0/0xf
->  [<ffffffff80224de3>] default_wake_function+0x0/0xf
->  [<ffffffff802391a7>] worker_thread+0x0/0x126
->  [<ffffffff8023c304>] kthread+0xd0/0xfc
->  [<ffffffff8020a658>] child_rip+0xa/0x12
->  [<ffffffff8023c234>] kthread+0x0/0xfc
->  [<ffffffff8020a64e>] child_rip+0x0/0x12
-> 
-> 
-> Code: 49 8b 04 24 31 f6 48 8b b8 48 01 00 00 e8 5f 8f fe ff 48 85
-> RIP  [<ffffffff803fadfb>] mptspi_dv_renegotiate_work+0x10/0x4a
->  RSP <ffff8101000e1e20>
-> CR2: 0000000000000500
+Ju, Seokmann wrote:
+...
+> Technically, I would recommend you to check F/W version and make sure it is not higher than 6.61.
+> I believe the problem happens with 6.62 or higher.
 
-There are mpt-fusion changes in 2.6.18-mm1, but afaict they're in mainline
-now.  Do you know if current -linus works OK?
+Bingo! megaraid_mbox works for me with F/W 6.61. How did you know?
+
+I enclose a trivial patch that checks for F/W version and displays a 
+warning if too high. It should make life easier for those who may face 
+the problem :).
+
+Thank you,
+Janusz
+
+
+--------------000005010804000809000400
+Content-Type: text/x-patch;
+ name="megaraid_mbox-cerc_ata100_4ch.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="megaraid_mbox-cerc_ata100_4ch.patch"
+
+diff -upr linux-source-2.6.18/drivers/scsi/megaraid/megaraid_mbox.c linux-source-2.6.18-cerc/drivers/scsi/megaraid/megaraid_mbox.c
+--- linux-source-2.6.18/drivers/scsi/megaraid/megaraid_mbox.c	2006-09-20 05:42:06.000000000 +0200
++++ linux-source-2.6.18-cerc/drivers/scsi/megaraid/megaraid_mbox.c	2006-09-27 17:53:17.000000000 +0200
+@@ -25,6 +25,7 @@
+  * Dell PERC3/QC			101E	1960	1028	0471
+  * Dell PERC3/DC			101E	1960	1028	0493
+  * Dell PERC3/SC			101E	1960	1028	0475
++ * Dell CERC ATA100/4ch with F/W<=6.61	101E	1960	1028	0511
+  * Dell PERC3/Di			1028	1960	1028	0123
+  * Dell PERC4/SC			1000	1960	1028	0520
+  * Dell PERC4/DC			1000	1960	1028	0518
+@@ -791,6 +792,21 @@ megaraid_init_mbox(adapter_t *adapter)
+ 		goto out_alloc_cmds;
+ 	}
+ 
++	// Compatibility check
++	if (adapter->pdev->vendor == PCI_VENDOR_ID_AMI &&
++			adapter->pdev->device == PCI_DEVICE_ID_AMI_MEGARAID3 &&
++			adapter->pdev->subsystem_vendor == PCI_VENDOR_ID_DELL &&
++			adapter->pdev->subsystem_device == PCI_SUBSYS_ID_CERC_ATA100_4CH &&
++			(adapter->fw_version[0] > '6' ||
++			 (adapter->fw_version[0] == '6' &&
++			  adapter->fw_version[2] > '6') ||
++			 (adapter->fw_version[0] == '6'
++			  && adapter->fw_version[2] == '6'
++			  && adapter->fw_version[3] > '1'))) {
++		con_log(CL_ANN, (KERN_WARNING
++			"megaraid: problems? downgrade F/W to version 6.61\n"));
++	}
++
+ 	// Do we support extended CDBs
+ 	adapter->max_cdb_sz = 10;
+ 	if (megaraid_mbox_extended_cdb(adapter) == 0) {
+diff -upr linux-source-2.6.18/drivers/scsi/megaraid/megaraid_mbox.h linux-source-2.6.18-cerc/drivers/scsi/megaraid/megaraid_mbox.h
+--- linux-source-2.6.18/drivers/scsi/megaraid/megaraid_mbox.h	2006-09-20 05:42:06.000000000 +0200
++++ linux-source-2.6.18-cerc/drivers/scsi/megaraid/megaraid_mbox.h	2006-09-27 17:45:25.000000000 +0200
+@@ -88,6 +88,7 @@
+ #define PCI_SUBSYS_ID_PERC3_QC				0x0471
+ #define PCI_SUBSYS_ID_PERC3_DC				0x0493
+ #define PCI_SUBSYS_ID_PERC3_SC				0x0475
++#define PCI_SUBSYS_ID_CERC_ATA100_4CH			0x0511
+ 
+ 
+ #define MBOX_MAX_SCSI_CMDS	128	// number of cmds reserved for kernel
+
+--------------000005010804000809000400--
