@@ -1,89 +1,400 @@
-From: Andy Whitcroft <apw@shadowen.org>
-Subject: Re: 2.6.18-mm1
-Date: Wed, 27 Sep 2006 17:50:28 +0100
-Message-ID: <451AABD4.3040908@shadowen.org>
-References: <20060924040215.8e6e7f1a.akpm@osdl.org>	<451A4394.7000504@shadowen.org> <20060927091233.dbb006f0.akpm@osdl.org>
+From: Mark Haverkamp <markh@osdl.org>
+Subject: mptspi dv problems
+Date: Wed, 27 Sep 2006 10:37:06 -0700
+Message-ID: <1159378627.21628.37.camel@markh3.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751211AbWI0QvM@vger.kernel.org>
-In-Reply-To: <20060927091233.dbb006f0.akpm@osdl.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-kernel@vger.kernel.org, Steve Fox <drfickle@us.ibm.com>, "Moore, Eric Dean" <Eric.Moore@lsil.com>, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.osdl.org ([65.172.181.4]:41897 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1030484AbWI0RhQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 27 Sep 2006 13:37:16 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Moore, Eric" <Eric.Moore@lsil.com>, James Bottomley <James.Bottomley@steeleye.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Andrew Morton wrote:
-> On Wed, 27 Sep 2006 10:25:40 +0100
-> Andy Whitcroft <apw@shadowen.org> wrote:
-> 
->> Ok.  Now that we've got past the linker changes breaking down under
->> older tool chains I am getting following panic on boot.  The machine has
->> one of these, other machines do seem to boot:
->>
->> 0000:02:04.0 SCSI storage controller: LSI Logic / Symbios Logic 53c1030
->> PCI-X Fusion-MPT Dual Ultra320 SCSI (rev 07)
->>
->> It appears that this driver is unchanged between 2.6.18 and -mm1.
->> 2.6.18 boots just fine.  Odd.
->>
->> Any suggestions?
->>
->> -apw
->>
->> mptbase: Initiating ioc0 bringup
->> ioc0: 53C1030: Capabilities={Initiator}
->> mptbase: Initiating ioc0 recovery
->> Unable to handle kernel NULL pointer dereference at 0000000000000500 RIP:
->>  [<ffffffff803fadfb>] mptspi_dv_renegotiate_work+0x10/0x4a
->> PGD 0
->> Oops: 0000 [1] SMP
->> last sysfs file:
->> CPU 0
->> Modules linked in:
->> Pid: 14, comm: events/0 Not tainted 2.6.18-mm1-autokern1 #1
->> RIP: 0010:[<ffffffff803fadfb>]  [<ffffffff803fadfb>]
->> mptspi_dv_renegotiate_work+0x10/0x4a
->> RSP: 0000:ffff8101000e1e20  EFLAGS: 00010282
->> RAX: 0000000000000001 RBX: ffff810001fe6940 RCX: 000000000000001f
->> RDX: 0000000000000000 RSI: ffff810001fe6940 RDI: 0000000000001fe6
->> RBP: ffff8101000e1e30 R08: ffff8101000e0000 R09: 0000000000000011
->> R10: ffff810001014820 R11: ffff810001014820 R12: 0000000000000500
->> R13: ffff810001ef1640 R14: 0000000000000206 R15: ffff810001fe6940
->> FS:  0000000000000000(0000) GS:ffffffff80582000(0000) knlGS:0000000000000000
->> CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
->> CR2: 0000000000000500 CR3: 0000000000201000 CR4: 00000000000006e0
->> Process events/0 (pid: 14, threadinfo ffff8101000e0000, task
->> ffff8100816b1040)
->> Stack:  ffff810001fe6940 ffff810001fe6948 ffff8101000e1e70 ffffffff80239163
->>  ffffffff803fadeb ffff810001ef1640 ffff810001f0dd40 ffffffff802391a7
->>  00000000fffffffc ffffffff804b08d4 ffff8101000e1f00 ffffffff8023929a
->> Call Trace:
->>  [<ffffffff80239163>] run_workqueue+0xa2/0xe6
->>  [<ffffffff803fadeb>] mptspi_dv_renegotiate_work+0x0/0x4a
->>  [<ffffffff802391a7>] worker_thread+0x0/0x126
->>  [<ffffffff8023929a>] worker_thread+0xf3/0x126
->>  [<ffffffff80224de3>] default_wake_function+0x0/0xf
->>  [<ffffffff80224de3>] default_wake_function+0x0/0xf
->>  [<ffffffff802391a7>] worker_thread+0x0/0x126
->>  [<ffffffff8023c304>] kthread+0xd0/0xfc
->>  [<ffffffff8020a658>] child_rip+0xa/0x12
->>  [<ffffffff8023c234>] kthread+0x0/0xfc
->>  [<ffffffff8020a64e>] child_rip+0x0/0x12
->>
->>
->> Code: 49 8b 04 24 31 f6 48 8b b8 48 01 00 00 e8 5f 8f fe ff 48 85
->> RIP  [<ffffffff803fadfb>] mptspi_dv_renegotiate_work+0x10/0x4a
->>  RSP <ffff8101000e1e20>
->> CR2: 0000000000000500
-> 
-> There are mpt-fusion changes in 2.6.18-mm1, but afaict they're in mainline
-> now.  Do you know if current -linus works OK?
+The recent dv changes to scsi_transport_spi.c have fixed the problems
+that I had with my U160 drives being set to async/narrow but there are
+still problems with my U320 drive causing indefinite dv on my system.
 
-Arse, it seems that the other problem that we are talking about on this
-machine also just got pushed up to mainline (2.6.18-git7) so it
-currently doesn't compile.
 
-Will try the same fix on that I used on -mm1 and see if it fixes that.
+Fusion MPT base driver 3.04.01
+Copyright (c) 1999-2005 LSI Logic Corporation
+Fusion MPT SPI Host driver 3.04.01
+mptbase: Initiating ioc0 bringup
+ioc0: 53C1030: Capabilities={Initiator}
+scsi1 : ioc0: LSI53C1030, FwRev=01030a00h, Ports=1, MaxQ=222, IRQ=20
+scsi 1:0:1:0: Direct-Access     HP       18.2GB C 80-H008 H008 PQ: 0 ANSI: 2
+ target1:0:1: Beginning Domain Validation
+ target1:0:1: Ending Domain Validation
+ target1:0:1: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+SCSI device sdb: 35566480 512-byte hdwr sectors (18210 MB)
+sdb: Write Protect is off
+SCSI device sdb: drive cache: write back w/ FUA
+SCSI device sdb: 35566480 512-byte hdwr sectors (18210 MB)
+sdb: Write Protect is off
+SCSI device sdb: drive cache: write back w/ FUA
+ sdb: sdb1
+sd 1:0:1:0: Attached scsi disk sdb
+sd 1:0:1:0: Attached scsi generic sg1 type 0
+scsi 1:0:2:0: Direct-Access     HP       18.2GB C 80-H008 H008 PQ: 0 ANSI: 2
+ target1:0:2: Beginning Domain Validation
+ target1:0:2: Ending Domain Validation
+ target1:0:2: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+SCSI device sdc: 35566480 512-byte hdwr sectors (18210 MB)
+sdc: Write Protect is off
+SCSI device sdc: drive cache: write back w/ FUA
+SCSI device sdc: 35566480 512-byte hdwr sectors (18210 MB)
+sdc: Write Protect is off
+SCSI device sdc: drive cache: write back w/ FUA
+ sdc: unknown partition table
+sd 1:0:2:0: Attached scsi disk sdc
+sd 1:0:2:0: Attached scsi generic sg2 type 0
+scsi 1:0:3:0: Direct-Access     HP       18.2GB C 80-H008 H008 PQ: 0 ANSI: 2
+ target1:0:3: Beginning Domain Validation
+ target1:0:3: Ending Domain Validation
+ target1:0:3: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+SCSI device sdd: 35566480 512-byte hdwr sectors (18210 MB)
+sdd: Write Protect is off
+SCSI device sdd: drive cache: write back w/ FUA
+SCSI device sdd: 35566480 512-byte hdwr sectors (18210 MB)
+sdd: Write Protect is off
+SCSI device sdd: drive cache: write back w/ FUA
+ sdd: unknown partition table
+sd 1:0:3:0: Attached scsi disk sdd
+sd 1:0:3:0: Attached scsi generic sg3 type 0
+scsi 1:0:5:0: Processor         HP       D5989C           1.06 PQ: 0 ANSI: 2
+ target1:0:5: Beginning Domain Validation
+ target1:0:5: Ending Domain Validation
+ target1:0:5: asynchronous
+scsi 1:0:5:0: Attached scsi generic sg4 type 3
+scsi 1:0:8:0: Direct-Access     HP 18.2G MAP3367NC#HJ     HPC6 PQ: 0 ANSI: 3
+ target1:0:8: Beginning Domain Validation
+mptscsih: ioc0: attempting task abort! (sc=f734bc80)
+        command: cdb[0]=0x12: 12 00 00 00 60 00
+mptbase: Initiating ioc0 recovery
+mptscsih: ioc0: task abort: SUCCESS (sc=f734bc80)
+ target1:0:1: Beginning Domain Validation
+ target1:0:8: Domain Validation detected failure, dropping back
+ target1:0:8: Domain Validation skipping write tests
+ target1:0:8: Ending Domain Validation
+ target1:0:8: asynchronous
+SCSI device sde: 35566480 512-byte hdwr sectors (18210 MB)
+sde: Write Protect is off
+SCSI device sde: drive cache: write through w/ FUA
+SCSI device sde: 35566480 512-byte hdwr sectors (18210 MB)
+sde: Write Protect is off
+ target1:0:1: Ending Domain Validation
+ target1:0:1: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+SCSI device sde: drive cache: write through w/ FUA
+ sde:<6> target1:0:2: Beginning Domain Validation
+sd 1:0:8:0: Attached scsi disk sde
+sd 1:0:8:0: Attached scsi generic sg5 type 0
+scsi 1:0:9:0: Direct-Access     HP       18.2GB C 80-H008 H008 PQ: 0 ANSI: 2
+ target1:0:9: Beginning Domain Validation
+ target1:0:2: Ending Domain Validation
+ target1:0:2: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:3: Beginning Domain Validation
+ target1:0:9: Ending Domain Validation
+ target1:0:9: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+SCSI device sdf: 35566480 512-byte hdwr sectors (18210 MB)
+ target1:0:3: Ending Domain Validation
+ target1:0:3: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+sdf: Write Protect is off
+ target1:0:5: Beginning Domain Validation
+SCSI device sdf: drive cache: write back w/ FUA
+SCSI device sdf: 35566480 512-byte hdwr sectors (18210 MB)
+ target1:0:5: Ending Domain Validation
+sdf: Write Protect is off
+ target1:0:5: asynchronous
+ target1:0:8: Beginning Domain Validation
+SCSI device sdf: drive cache: write back w/ FUA
+ sdf: unknown partition table
+sd 1:0:9:0: Attached scsi disk sdf
+sd 1:0:9:0: Attached scsi generic sg6 type 0
+scsi 1:0:10:0: Direct-Access     HP       18.2GB C 80-H008 H008 PQ: 0 ANSI: 2
+ target1:0:10: Beginning Domain Validation
+mptscsih: ioc0: attempting task abort! (sc=f7501960)
+        command: cdb[0]=0x12: 12 00 00 00 60 00
+mptbase: Initiating ioc0 recovery
+mptscsih: ioc0: task abort: SUCCESS (sc=f7501960)
+ target1:0:10: Domain Validation Initial Inquiry Failed
+ target1:0:10: Ending Domain Validation
+ target1:0:10: asynchronous
+ target1:0:8: Domain Validation detected failure, dropping back
+SCSI device sdg: 35566480 512-byte hdwr sectors (18210 MB)
+ target1:0:8: Domain Validation skipping write tests
+ target1:0:8: Ending Domain Validation
+sdg: Write Protect is off
+ target1:0:8: asynchronous
+ target1:0:9: Beginning Domain Validation
+SCSI device sdg: drive cache: write through w/ FUA
+SCSI device sdg: 35566480 512-byte hdwr sectors (18210 MB)
+sdg: Write Protect is off
+SCSI device sdg: drive cache: write through w/ FUA
+ sdg: unknown partition table
+sd 1:0:10:0: Attached scsi disk sdg
+sd 1:0:10:0: Attached scsi generic sg7 type 0
+scsi 1:0:11:0: Direct-Access     HP       18.2GB C 80-H008 H008 PQ: 0 ANSI: 2
+ target1:0:11: Beginning Domain Validation
+ target1:0:9: Ending Domain Validation
+ target1:0:9: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:10: Beginning Domain Validation
+ target1:0:11: Ending Domain Validation
+ target1:0:11: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:10: Ending Domain Validation
+ target1:0:10: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+SCSI device sdh: 35566480 512-byte hdwr sectors (18210 MB)
+sdh: Write Protect is off
+SCSI device sdh: drive cache: write back w/ FUA
+SCSI device sdh: 35566480 512-byte hdwr sectors (18210 MB)
+sdh: Write Protect is off
+SCSI device sdh: drive cache: write back w/ FUA
+ sdh:<6> target1:0:11: Beginning Domain Validation
+ target1:0:11: Ending Domain Validation
+ target1:0:11: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:1: Beginning Domain Validation
+sd 1:0:11:0: Attached scsi disk sdh
+sd 1:0:11:0: Attached scsi generic sg8 type 0
+scsi 1:0:12:0: Direct-Access     HP       18.2GB C 80-H008 H008 PQ: 0 ANSI: 2
+ target1:0:12: Beginning Domain Validation
+ target1:0:1: Ending Domain Validation
+ target1:0:1: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:2: Beginning Domain Validation
+ target1:0:12: Ending Domain Validation
+ target1:0:12: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+SCSI device sdi: 35566480 512-byte hdwr sectors (18210 MB)
+ target1:0:2: Ending Domain Validation
+ target1:0:2: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+sdi: Write Protect is off
+ target1:0:3: Beginning Domain Validation
+SCSI device sdi: drive cache: write back w/ FUA
+SCSI device sdi: 35566480 512-byte hdwr sectors (18210 MB)
+sdi: Write Protect is off
+SCSI device sdi: drive cache: write back w/ FUA
+ sdi: sdi1
+sd 1:0:12:0: Attached scsi disk sdi
+sd 1:0:12:0: Attached scsi generic sg9 type 0
+scsi 1:0:13:0: Direct-Access     HP       18.2GB C 80-H008 H008 PQ: 0 ANSI: 2
+ target1:0:13: Beginning Domain Validation
+ target1:0:3: Ending Domain Validation
+ target1:0:3: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:5: Beginning Domain Validation
+ target1:0:5: Ending Domain Validation
+ target1:0:5: asynchronous
+ target1:0:8: Beginning Domain Validation
+ target1:0:13: Ending Domain Validation
+ target1:0:13: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+SCSI device sdj: 35566480 512-byte hdwr sectors (18210 MB)
+mptscsih: ioc0: attempting task abort! (sc=f734bc80)
+        command: cdb[0]=0x12: 12 00 00 00 60 00
+mptbase: Initiating ioc0 recovery
+mptscsih: ioc0: task abort: SUCCESS (sc=f734bc80)
+ target1:0:8: Domain Validation detected failure, dropping back
+sdj: Write Protect is off
+ target1:0:8: Domain Validation skipping write tests
+ target1:0:8: Ending Domain Validation
+ target1:0:8: asynchronous
+SCSI device sdj: drive cache: write back w/ FUA
+ target1:0:9: Beginning Domain Validation
+SCSI device sdj: 35566480 512-byte hdwr sectors (18210 MB)
+sdj: Write Protect is off
+SCSI device sdj: drive cache: write back w/ FUA
+ sdj: unknown partition table
+sd 1:0:13:0: Attached scsi disk sdj
+sd 1:0:13:0: Attached scsi generic sg10 type 0
+scsi 1:0:14:0: Direct-Access     HP       18.2GB C 80-H008 H008 PQ: 0 ANSI: 2
+ target1:0:9: Ending Domain Validation
+ target1:0:9: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:10: Beginning Domain Validation
+ target1:0:10: Ending Domain Validation
+ target1:0:10: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:11: Beginning Domain Validation
+ target1:0:11: Ending Domain Validation
+ target1:0:11: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:12: Beginning Domain Validation
+ target1:0:12: Ending Domain Validation
+ target1:0:12: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:13: Beginning Domain Validation
+ target1:0:13: Ending Domain Validation
+ target1:0:13: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:14: asynchronous
+ target1:0:1: Beginning Domain Validation
+ target1:0:14: Beginning Domain Validation
+ target1:0:14: Ending Domain Validation
+ target1:0:1: Ending Domain Validation
+ target1:0:14: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:1: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:2: Beginning Domain Validation
+SCSI device sdk: 35566480 512-byte hdwr sectors (18210 MB)
+ target1:0:2: Ending Domain Validation
+sdk: Write Protect is off
+ target1:0:2: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:3: Beginning Domain Validation
+SCSI device sdk: drive cache: write back w/ FUA
+SCSI device sdk: 35566480 512-byte hdwr sectors (18210 MB)
+sdk: Write Protect is off
+SCSI device sdk: drive cache: write back w/ FUA
+ sdk: sdk1
+sd 1:0:14:0: Attached scsi disk sdk
+sd 1:0:14:0: Attached scsi generic sg11 type 0
+scsi 1:0:15:0: Direct-Access     HP       18.2GB C 80-H008 H008 PQ: 0 ANSI: 2
+ target1:0:15: Beginning Domain Validation
+ target1:0:3: Ending Domain Validation
+ target1:0:3: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:5: Beginning Domain Validation
+ target1:0:5: Ending Domain Validation
+ target1:0:5: asynchronous
+ target1:0:8: Beginning Domain Validation
+ target1:0:15: Ending Domain Validation
+ target1:0:15: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+SCSI device sdl: 35566480 512-byte hdwr sectors (18210 MB)
+mptscsih: ioc0: attempting task abort! (sc=f734bc80)
+        command: cdb[0]=0x12: 12 00 00 00 60 00
+mptbase: Initiating ioc0 recovery
+mptscsih: ioc0: task abort: SUCCESS (sc=f734bc80)
+ target1:0:8: Domain Validation detected failure, dropping back
+ target1:0:8: Domain Validation skipping write tests
+ target1:0:8: Ending Domain Validation
+sdl: Write Protect is off
+ target1:0:8: asynchronous
+ target1:0:9: Beginning Domain Validation
+SCSI device sdl: drive cache: write through w/ FUA
+SCSI device sdl: 35566480 512-byte hdwr sectors (18210 MB)
+sdl: Write Protect is off
+SCSI device sdl: drive cache: write through w/ FUA
+ sdl: unknown partition table
+sd 1:0:15:0: Attached scsi disk sdl
+sd 1:0:15:0: Attached scsi generic sg12 type 0
+mptbase: Initiating ioc1 bringup
+ioc1: 53C1030: Capabilities={Initiator}
+scsi2 : ioc1: LSI53C1030, FwRev=01030a00h, Ports=1, MaxQ=222, IRQ=21
+ target1:0:9: Ending Domain Validation
+ target1:0:9: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:10: Beginning Domain Validation
+ target1:0:10: Ending Domain Validation
+ target1:0:10: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:11: Beginning Domain Validation
+ target1:0:11: Ending Domain Validation
+ target1:0:11: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:12: Beginning Domain Validation
+ target1:0:12: Ending Domain Validation
+ target1:0:12: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:13: Beginning Domain Validation
+ target1:0:13: Ending Domain Validation
+ target1:0:13: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:14: Beginning Domain Validation
+ target1:0:14: Ending Domain Validation
+ target1:0:14: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:15: Beginning Domain Validation
+ target1:0:15: Ending Domain Validation
+ target1:0:15: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:1: Beginning Domain Validation
+ target1:0:1: Ending Domain Validation
+ target1:0:1: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:2: Beginning Domain Validation
+ target1:0:2: Ending Domain Validation
+ target1:0:2: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:3: Beginning Domain Validation
+ target1:0:3: Ending Domain Validation
+ target1:0:3: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:5: Beginning Domain Validation
+ target1:0:5: Ending Domain Validation
+ target1:0:5: asynchronous
+ target1:0:8: Beginning Domain Validation
+mptscsih: ioc0: attempting task abort! (sc=f734bc80)
+        command: cdb[0]=0x12: 12 00 00 00 60 00
+mptbase: Initiating ioc0 recovery
+mptscsih: ioc0: task abort: SUCCESS (sc=f734bc80)
+ target1:0:8: Domain Validation detected failure, dropping back
+ target1:0:8: Domain Validation skipping write tests
+ target1:0:8: Ending Domain Validation
+ target1:0:8: asynchronous
+ target1:0:9: Beginning Domain Validation
+ target1:0:9: Ending Domain Validation
+ target1:0:9: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:10: Beginning Domain Validation
+ target1:0:10: Ending Domain Validation
+ target1:0:10: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:11: Beginning Domain Validation
+ target1:0:11: Ending Domain Validation
+ target1:0:11: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:12: Beginning Domain Validation
+ target1:0:12: Ending Domain Validation
+ target1:0:12: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:13: Beginning Domain Validation
+ target1:0:13: Ending Domain Validation
+ target1:0:13: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:14: Beginning Domain Validation
+ target1:0:14: Ending Domain Validation
+ target1:0:14: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:15: Beginning Domain Validation
+ target1:0:15: Ending Domain Validation
+ target1:0:15: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:1: Beginning Domain Validation
+ target1:0:1: Ending Domain Validation
+ target1:0:1: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:2: Beginning Domain Validation
+ target1:0:2: Ending Domain Validation
+ target1:0:2: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:3: Beginning Domain Validation
+ target1:0:3: Ending Domain Validation
+ target1:0:3: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:5: Beginning Domain Validation
+ target1:0:5: Ending Domain Validation
+ target1:0:5: asynchronous
+ target1:0:8: Beginning Domain Validation
+mptscsih: ioc0: attempting task abort! (sc=f734bc80)
+        command: cdb[0]=0x12: 12 00 00 00 60 00
+mptbase: Initiating ioc0 recovery
+mptscsih: ioc0: task abort: SUCCESS (sc=f734bc80)
+ target1:0:8: Domain Validation detected failure, dropping back
+ target1:0:8: Domain Validation skipping write tests
+ target1:0:8: Ending Domain Validation
+ target1:0:8: asynchronous
+ target1:0:9: Beginning Domain Validation
+ target1:0:9: Ending Domain Validation
+ target1:0:9: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:10: Beginning Domain Validation
+ target1:0:10: Ending Domain Validation
+ target1:0:10: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:11: Beginning Domain Validation
+ target1:0:11: Ending Domain Validation
+ target1:0:11: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:12: Beginning Domain Validation
+ target1:0:12: Ending Domain Validation
+ target1:0:12: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:13: Beginning Domain Validation
+ target1:0:13: Ending Domain Validation
+ target1:0:13: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:14: Beginning Domain Validation
+ target1:0:14: Ending Domain Validation
+ target1:0:14: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:15: Beginning Domain Validation
+ target1:0:15: Ending Domain Validation
+ target1:0:15: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:1: Beginning Domain Validation
+ target1:0:1: Ending Domain Validation
+ target1:0:1: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:2: Beginning Domain Validation
+ target1:0:2: Ending Domain Validation
+ target1:0:2: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:3: Beginning Domain Validation
+ target1:0:3: Ending Domain Validation
+ target1:0:3: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
+ target1:0:5: Beginning Domain Validation
+ target1:0:5: Ending Domain Validation
+ target1:0:5: asynchronous
+ target1:0:8: Beginning Domain Validation
+mptscsih: ioc0: attempting task abort! (sc=f734bc80)
+        command: cdb[0]=0x12: 12 00 00 00 60 00
+mptbase: Initiating ioc0 recovery
 
--apw
+
+This seems to repeat forever.
+
+-- 
+Mark Haverkamp <markh@osdl.org>
+
