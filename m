@@ -1,182 +1,85 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: [PATCH] fusion: fibre channel: stall eh handlers if resetting while
- rport blocked
-Date: Wed, 27 Sep 2006 11:09:37 -0500
-Message-ID: <451AA241.1070600@sgi.com>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: 2.6.18-mm1
+Date: Wed, 27 Sep 2006 09:12:33 -0700
+Message-ID: <20060927091233.dbb006f0.akpm@osdl.org>
+References: <20060924040215.8e6e7f1a.akpm@osdl.org>
+	<451A4394.7000504@shadowen.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------080102050605010909070406"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:50316 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S1030220AbWI0QJm (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:9863 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1030220AbWI0QMp (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Sep 2006 12:09:42 -0400
+	Wed, 27 Sep 2006 12:12:45 -0400
+In-Reply-To: <451A4394.7000504@shadowen.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: "Moore, Eric Dean" <Eric.Moore@lsil.com>, Michael Reed <mdr@sgi.com>
+To: Andy Whitcroft <apw@shadowen.org>
+Cc: linux-kernel@vger.kernel.org, Steve Fox <drfickle@us.ibm.com>, "Moore, Eric Dean" <Eric.Moore@lsil.com>, linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------080102050605010909070406
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+On Wed, 27 Sep 2006 10:25:40 +0100
+Andy Whitcroft <apw@shadowen.org> wrote:
 
-This patch applies against 2.6.18-git7.
-Thanks to James Smart for the inspiration.
+> Ok.  Now that we've got past the linker changes breaking down under
+> older tool chains I am getting following panic on boot.  The machine has
+> one of these, other machines do seem to boot:
+> 
+> 0000:02:04.0 SCSI storage controller: LSI Logic / Symbios Logic 53c1030
+> PCI-X Fusion-MPT Dual Ultra320 SCSI (rev 07)
+> 
+> It appears that this driver is unchanged between 2.6.18 and -mm1.
+> 2.6.18 boots just fine.  Odd.
+> 
+> Any suggestions?
+> 
+> -apw
+> 
+> mptbase: Initiating ioc0 bringup
+> ioc0: 53C1030: Capabilities={Initiator}
+> mptbase: Initiating ioc0 recovery
+> Unable to handle kernel NULL pointer dereference at 0000000000000500 RIP:
+>  [<ffffffff803fadfb>] mptspi_dv_renegotiate_work+0x10/0x4a
+> PGD 0
+> Oops: 0000 [1] SMP
+> last sysfs file:
+> CPU 0
+> Modules linked in:
+> Pid: 14, comm: events/0 Not tainted 2.6.18-mm1-autokern1 #1
+> RIP: 0010:[<ffffffff803fadfb>]  [<ffffffff803fadfb>]
+> mptspi_dv_renegotiate_work+0x10/0x4a
+> RSP: 0000:ffff8101000e1e20  EFLAGS: 00010282
+> RAX: 0000000000000001 RBX: ffff810001fe6940 RCX: 000000000000001f
+> RDX: 0000000000000000 RSI: ffff810001fe6940 RDI: 0000000000001fe6
+> RBP: ffff8101000e1e30 R08: ffff8101000e0000 R09: 0000000000000011
+> R10: ffff810001014820 R11: ffff810001014820 R12: 0000000000000500
+> R13: ffff810001ef1640 R14: 0000000000000206 R15: ffff810001fe6940
+> FS:  0000000000000000(0000) GS:ffffffff80582000(0000) knlGS:0000000000000000
+> CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
+> CR2: 0000000000000500 CR3: 0000000000201000 CR4: 00000000000006e0
+> Process events/0 (pid: 14, threadinfo ffff8101000e0000, task
+> ffff8100816b1040)
+> Stack:  ffff810001fe6940 ffff810001fe6948 ffff8101000e1e70 ffffffff80239163
+>  ffffffff803fadeb ffff810001ef1640 ffff810001f0dd40 ffffffff802391a7
+>  00000000fffffffc ffffffff804b08d4 ffff8101000e1f00 ffffffff8023929a
+> Call Trace:
+>  [<ffffffff80239163>] run_workqueue+0xa2/0xe6
+>  [<ffffffff803fadeb>] mptspi_dv_renegotiate_work+0x0/0x4a
+>  [<ffffffff802391a7>] worker_thread+0x0/0x126
+>  [<ffffffff8023929a>] worker_thread+0xf3/0x126
+>  [<ffffffff80224de3>] default_wake_function+0x0/0xf
+>  [<ffffffff80224de3>] default_wake_function+0x0/0xf
+>  [<ffffffff802391a7>] worker_thread+0x0/0x126
+>  [<ffffffff8023c304>] kthread+0xd0/0xfc
+>  [<ffffffff8020a658>] child_rip+0xa/0x12
+>  [<ffffffff8023c234>] kthread+0x0/0xfc
+>  [<ffffffff8020a64e>] child_rip+0x0/0x12
+> 
+> 
+> Code: 49 8b 04 24 31 f6 48 8b b8 48 01 00 00 e8 5f 8f fe ff 48 85
+> RIP  [<ffffffff803fadfb>] mptspi_dv_renegotiate_work+0x10/0x4a
+>  RSP <ffff8101000e1e20>
+> CR2: 0000000000000500
 
-Stall error handler if attempting recovery while an rport is blocked.
-This avoids device offline scenarios due to errors in the error handler.
-Also verify that VirtDevice is available before issuing scsi command.
-VirtDevice is removed when fc transport removes a target.
-
-See James Smart's patch of 08/17/2006 for greater detail.
-
-http://marc.theaimsgroup.com/?l=linux-scsi&m=115583213624803&w=2
-
-Also bump version number per Eric's request.
-
-Signed-off-by: Michael Reed <mdr@sgi.com>
-
-
-
---------------080102050605010909070406
-Content-Type: text/x-patch;
- name="mptfc_stall_recovery.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="mptfc_stall_recovery.patch"
-
---- smu/drivers/message/fusion/mptbase.h	2006-09-14 10:35:52.000000000 -0500
-+++ sm/drivers/message/fusion/mptbase.h	2006-09-27 09:31:13.041300911 -0500
-@@ -75,8 +75,8 @@
- #define COPYRIGHT	"Copyright (c) 1999-2005 " MODULEAUTHOR
- #endif
- 
--#define MPT_LINUX_VERSION_COMMON	"3.04.01"
--#define MPT_LINUX_PACKAGE_NAME		"@(#)mptlinux-3.04.01"
-+#define MPT_LINUX_VERSION_COMMON	"3.04.02"
-+#define MPT_LINUX_PACKAGE_NAME		"@(#)mptlinux-3.04.02"
- #define WHAT_MAGIC_STRING		"@" "(" "#" ")"
- 
- #define show_mptmod_ver(s,ver)  \
---- smu/drivers/message/fusion/mptfc.c	2006-09-14 10:35:52.000000000 -0500
-+++ sm/drivers/message/fusion/mptfc.c	2006-09-26 15:55:39.451261887 -0500
-@@ -96,6 +96,10 @@ static int mptfc_qcmd(struct scsi_cmnd *
- static void mptfc_target_destroy(struct scsi_target *starget);
- static void mptfc_set_rport_loss_tmo(struct fc_rport *rport, uint32_t timeout);
- static void __devexit mptfc_remove(struct pci_dev *pdev);
-+static int mptfc_abort(struct scsi_cmnd *SCpnt);
-+static int mptfc_dev_reset(struct scsi_cmnd *SCpnt);
-+static int mptfc_bus_reset(struct scsi_cmnd *SCpnt);
-+static int mptfc_host_reset(struct scsi_cmnd *SCpnt);
- 
- static struct scsi_host_template mptfc_driver_template = {
- 	.module				= THIS_MODULE,
-@@ -110,10 +114,10 @@ static struct scsi_host_template mptfc_d
- 	.target_destroy			= mptfc_target_destroy,
- 	.slave_destroy			= mptscsih_slave_destroy,
- 	.change_queue_depth 		= mptscsih_change_queue_depth,
--	.eh_abort_handler		= mptscsih_abort,
--	.eh_device_reset_handler	= mptscsih_dev_reset,
--	.eh_bus_reset_handler		= mptscsih_bus_reset,
--	.eh_host_reset_handler		= mptscsih_host_reset,
-+	.eh_abort_handler		= mptfc_abort,
-+	.eh_device_reset_handler	= mptfc_dev_reset,
-+	.eh_bus_reset_handler		= mptfc_bus_reset,
-+	.eh_host_reset_handler		= mptfc_host_reset,
- 	.bios_param			= mptscsih_bios_param,
- 	.can_queue			= MPT_FC_CAN_QUEUE,
- 	.this_id			= -1,
-@@ -171,6 +175,77 @@ static struct fc_function_template mptfc
- 	.show_host_symbolic_name = 1,
- };
- 
-+static int
-+mptfc_block_error_handler(struct scsi_cmnd *SCpnt,
-+			  int (*func)(struct scsi_cmnd *SCpnt),
-+			  const char *caller)
-+{
-+	struct scsi_device	*sdev = SCpnt->device;
-+	struct Scsi_Host	*shost = sdev->host;
-+	struct fc_rport		*rport = starget_to_rport(scsi_target(sdev));
-+	unsigned long		flags;
-+	int			ready;
-+
-+	spin_lock_irqsave(shost->host_lock, flags);
-+	while ((ready = fc_remote_port_chkready(rport) >> 16) == DID_IMM_RETRY) {
-+		spin_unlock_irqrestore(shost->host_lock, flags);
-+		dfcprintk ((MYIOC_s_INFO_FMT
-+			"mptfc_block_error_handler.%d: %d:%d, port status is "
-+			"DID_IMM_RETRY, deferring %s recovery.\n",
-+			((MPT_SCSI_HOST *) shost->hostdata)->ioc->name,
-+			((MPT_SCSI_HOST *) shost->hostdata)->ioc->sh->host_no,
-+			SCpnt->device->id,SCpnt->device->lun,caller));
-+		msleep(1000);
-+		spin_lock_irqsave(shost->host_lock, flags);
-+	}
-+	spin_unlock_irqrestore(shost->host_lock, flags);
-+
-+	if (ready == DID_NO_CONNECT || !SCpnt->device->hostdata) {
-+		dfcprintk ((MYIOC_s_INFO_FMT
-+			"%s.%d: %d:%d, failing recovery, "
-+			"port state %d, vdev %p.\n", caller,
-+			((MPT_SCSI_HOST *) shost->hostdata)->ioc->name,
-+			((MPT_SCSI_HOST *) shost->hostdata)->ioc->sh->host_no,
-+			SCpnt->device->id,SCpnt->device->lun,ready,
-+			SCpnt->device->hostdata));
-+		return FAILED;
-+	}
-+	dfcprintk ((MYIOC_s_INFO_FMT
-+		"%s.%d: %d:%d, executing recovery.\n", caller,
-+		((MPT_SCSI_HOST *) shost->hostdata)->ioc->name,
-+		((MPT_SCSI_HOST *) shost->hostdata)->ioc->sh->host_no,
-+		SCpnt->device->id,SCpnt->device->lun));
-+	return (*func)(SCpnt);
-+}
-+
-+static int
-+mptfc_abort(struct scsi_cmnd *SCpnt)
-+{
-+	return
-+	    mptfc_block_error_handler(SCpnt, mptscsih_abort, __FUNCTION__);
-+}
-+
-+static int
-+mptfc_dev_reset(struct scsi_cmnd *SCpnt)
-+{
-+	return
-+	    mptfc_block_error_handler(SCpnt, mptscsih_dev_reset, __FUNCTION__);
-+}
-+
-+static int
-+mptfc_bus_reset(struct scsi_cmnd *SCpnt)
-+{
-+	return
-+	    mptfc_block_error_handler(SCpnt, mptscsih_bus_reset, __FUNCTION__);
-+}
-+
-+static int
-+mptfc_host_reset(struct scsi_cmnd *SCpnt)
-+{
-+	return
-+	    mptfc_block_error_handler(SCpnt, mptscsih_host_reset, __FUNCTION__);
-+}
-+
- static void
- mptfc_set_rport_loss_tmo(struct fc_rport *rport, uint32_t timeout)
- {
-@@ -562,6 +637,12 @@ mptfc_qcmd(struct scsi_cmnd *SCpnt, void
- 		return 0;
- 	}
- 
-+	if (!SCpnt->device->hostdata) {	/* vdev */
-+		SCpnt->result = DID_NO_CONNECT << 16;
-+		done(SCpnt);
-+		return 0;
-+	}
-+
- 	/* dd_data is null until finished adding target */
- 	ri = *((struct mptfc_rport_info **)rport->dd_data);
- 	if (unlikely(!ri)) {
-
---------------080102050605010909070406--
+There are mpt-fusion changes in 2.6.18-mm1, but afaict they're in mainline
+now.  Do you know if current -linus works OK?
