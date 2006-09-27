@@ -1,22 +1,26 @@
-From: David Brownell <david-b@pacbell.net>
-Subject: fix compile-time divide-by-zero in scsi_ioctl
-Date: Tue, 26 Sep 2006 08:48:48 -0700
-Message-ID: <20060926154848.CFDC63DAF7@adsl-69-226-248-13.dsl.pltn13.pacbell.net>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: fix compile-time divide-by-zero in scsi_ioctl
+Date: Wed, 27 Sep 2006 14:27:10 -0600
+Message-ID: <20060927202710.GV5017@parisc-linux.org>
+References: <20060926154848.CFDC63DAF7@adsl-69-226-248-13.dsl.pltn13.pacbell.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp104.sbc.mail.mud.yahoo.com ([68.142.198.203]:61023 "HELO
-	smtp104.sbc.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S1030752AbWI0UQP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Sep 2006 16:16:15 -0400
+Received: from palinux.external.hp.com ([192.25.206.14]:59791 "EHLO
+	mail.parisc-linux.org") by vger.kernel.org with ESMTP
+	id S1030765AbWI0U1L (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 27 Sep 2006 16:27:11 -0400
+Content-Disposition: inline
+In-Reply-To: <20060926154848.CFDC63DAF7@adsl-69-226-248-13.dsl.pltn13.pacbell.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: David Brownell <david-b@pacbell.net>
+Cc: linux-scsi@vger.kernel.org
 
-This fixes a compiler-reported divide-by-zero when HZ < 100.
+On Tue, Sep 26, 2006 at 08:48:48AM -0700, David Brownell wrote:
+> This fixes a compiler-reported divide-by-zero when HZ < 100.
 
-Signed-off-by: David Brownell <dbrownell@users.sourceforge.net>
+Shouldn't we instead be using jiffies_to_clock_t?  Thus:
 
 Index: at91/block/scsi_ioctl.c
 ===================================================================
@@ -27,7 +31,7 @@ Index: at91/block/scsi_ioctl.c
  static int sg_get_timeout(request_queue_t *q)
  {
 -	return q->sg_timeout / (HZ / USER_HZ);
-+	return q->sg_timeout / max(1,(HZ / USER_HZ));
++	return jiffies_to_clock_t(q->sg_timeout);
  }
  
  static int sg_set_timeout(request_queue_t *q, int __user *p)
