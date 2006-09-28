@@ -1,79 +1,121 @@
-From: Douglas Gilbert <dougg@torque.net>
+From: Andrew Morton <akpm@osdl.org>
 Subject: Re: [PATCH] async scsi scanning, version 12
-Date: Thu, 28 Sep 2006 16:15:05 -0400
-Message-ID: <451C2D49.7040403@torque.net>
+Date: Thu, 28 Sep 2006 13:32:46 -0700
+Message-ID: <20060928133246.14e79ace.akpm@osdl.org>
 References: <20060928182438.GC5017@parisc-linux.org>
-Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:36581 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1161142AbWI1UPL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Sep 2006 16:15:11 -0400
+Received: from smtp.osdl.org ([65.172.181.4]:44467 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1750762AbWI1Uct (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Sep 2006 16:32:49 -0400
 In-Reply-To: <20060928182438.GC5017@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Matthew Wilcox <matthew@wil.cx>
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Matthew Wilcox wrote:
-> Hopefully the final version ... I've addressed all the comments
-> I received on version 11.  Please review the implementation of
-> shost_for_each_device_safe.
-> 
+On Thu, 28 Sep 2006 12:24:38 -0600
+Matthew Wilcox <matthew@wil.cx> wrote:
+
 > Add ability to scan scsi busses asynchronously
 > 
-> Since it often takes around 20-30 seconds to scan a scsi bus, it's
-> highly advantageous to do this in parallel with other things.  The bulk
-> of this patch is ensuring that devices don't change numbering, and that
-> all devices are discovered prior to trying to start init.  For those
-> who build SCSI as modules, there's a new scsi_wait_scan module that will
-> ensure all bus scans are finished.
-> 
-> This patch only handles drivers which call scsi_scan_host.  Fibre Channel,
-> SAS, SATA, USB and Firewire all need additional work.
-> 
-> Signed-off-by: Matthew Wilcox <matthew@wil.cx>
-> 
-> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-> index 5498324..4b687ef 100644
-> --- a/Documentation/kernel-parameters.txt
-> +++ b/Documentation/kernel-parameters.txt
-> @@ -1426,6 +1426,11 @@ running once the system is up.
+> ...
+
+> --- a/drivers/scsi/Makefile
+> +++ b/drivers/scsi/Makefile
+> @@ -140,6 +140,8 @@ obj-$(CONFIG_CHR_DEV_SCH)	+= ch.o
+>  # This goes last, so that "real" scsi devices probe earlier
+>  obj-$(CONFIG_SCSI_DEBUG)	+= scsi_debug.o
 >  
->  	scsi_logging=	[SCSI]
+> +obj-$(CONFIG_SCSI)		+= scsi_wait_scan.o
+> +
+>  scsi_mod-y			+= scsi.o hosts.o scsi_ioctl.o constants.o \
+>  				   scsicam.o scsi_error.o scsi_lib.o \
+>  				   scsi_scan.o scsi_sysfs.o \
+>
+> ...
+
+I think that's supposed to go into scsi_mod-y, at line 146.
+
+>
+> +static char scsi_scan_type[6] = "sync";
+
+That wasted a byte.
+
+> +
+> +module_param_string(scan, scsi_scan_type, sizeof(scsi_scan_type), S_IRUGO);
+> +MODULE_PARM_DESC(scan, "sync, async or none");
+> +
+>  /*
+>   * max_scsi_report_luns: the maximum number of LUNS that will be
+>   * returned from the REPORT LUNS command. 8 times this value must
+> @@ -108,6 +115,53 @@ MODULE_PARM_DESC(inq_timeout, 
+>  		 "Timeout (in seconds) waiting for devices to answer INQUIRY."
+>  		 " Default is 5. Some non-compliant devices need more.");
 >  
-> +	scsi_mod.scan=	[SCSI] sync (default) scans SCSI busses as they are
-> +			discovered.  async scans them in kernel threads,
-> +			allowing boot to proceed.  none ignores them, expecting
-> +			user space to do the scan.
+> +static spinlock_t async_scan_lock = SPIN_LOCK_UNLOCKED;
 
-Matthew,
-I like the "none" which is no doubt a place holder at
-the moment.
+DEFINE_SPINLOCK()
 
-For the user space to do discovery, it either needs an out
-of band mechanism (e.g. IP) or the ability to talk to a
-host in the absence of any "devices" (targets or logical units).
-That requires a device node (e.g. /dev/mptctl) or something
-equivalent in sysfs (yuk).
+> +static LIST_HEAD(scanning_hosts);
+> +
+> +struct async_scan_data {
+> +	struct list_head list;
+> +	struct Scsi_Host *shost;
+> +	struct completion prev_finished;
+> +};
+> +
+> +int scsi_complete_async_scans(void)
+> +{
+> +	struct async_scan_data *data;
+> +
+> +	do {
+> +		if (list_empty(&scanning_hosts))
+> +			return 0;
+> +		data = kmalloc(sizeof(*data), GFP_KERNEL);
+> +		if (!data)
+> +			msleep(1);
+> +	} while (!data);
 
-Your "none" explanation could be slightly extended to say
-that the LLD (and/or its firmware) might do the discovery. As an
-example the SAS-2 draft now has self-configuring expanders
-(the terms "edge" and "fanout" have been dropped) which
-effectively discover the topology and track changes, configuring
-themselves and dumber expanders as required. Then host discovery
-becomes importing the topology from an external device. However
-not all devices may be visible to self-configuring expanders
-(e.g. a SATA disk could be directly attached to a SAS HBA). So
-some extra work may be required.
+ick.  Immortal allocation loops are poor form.  If there's really no
+alternative, please use __GFP_NOFAIL, so people can easily grep for your
+sins.
 
-So at one extreme the discovery process may be distributed
-and at the other extreme there is no discovery at all.
-With modern transports (e.g. FC, SAS, iSCSI?) having world
-wide unique names who needs discovery?
+> +	data->shost = NULL;
+> +	init_completion(&data->prev_finished);
+> +
+> +	spin_lock(&async_scan_lock);
+> +	if (list_empty(&scanning_hosts))
+> +		goto done;
+> +	list_add_tail(&data->list, &scanning_hosts);
+> +	spin_unlock(&async_scan_lock);
 
-Doug Gilbert
+"If the list is not empty, stick something on it".
+
+What an unusual thing to do.  I'm sure it makes sense, but some comments
+explaining what's going on would be nice.
+
+> +	printk(KERN_INFO "scsi: waiting for bus probes to complete ...\n");
+> +	wait_for_completion(&data->prev_finished);
+> +
+> +	spin_lock(&async_scan_lock);
+> +	list_del(&data->list);
+> + done:
+> +	spin_unlock(&async_scan_lock);
+> +
+> +	kfree(data);
+> +	return 0;
+> +}
+> +
+> +#ifdef MODULE
+> +/* Only exported for the benefit of scsi_wait_scan */
+> +EXPORT_SYMBOL_GPL(scsi_complete_async_scans);
+> +#endif
+
+Is that actually needed?  AFACIT this .o file will just get linked against
+the one which contains scsi_wait_scan() anyway.
+
+
