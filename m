@@ -1,89 +1,45 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] async scsi scanning, version 12
-Date: Thu, 28 Sep 2006 14:40:43 -0600
-Message-ID: <20060928204043.GH5017@parisc-linux.org>
-References: <20060928182438.GC5017@parisc-linux.org> <20060928133246.14e79ace.akpm@osdl.org>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: use_clustering again (was Re: SCSI tape block size)
+Date: Thu, 28 Sep 2006 22:41:28 +0200 (CEST)
+Message-ID: <Pine.LNX.4.60.0609282211560.3268@poirot.grange>
+References: <200609241605.32327.johna@onevista.com>
+ <Pine.LNX.4.60.0609272246320.7350@poirot.grange>
+ <Pine.LNX.4.64.0609282231030.6979@kai.makisara.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:39652 "EHLO
-	mail.parisc-linux.org") by vger.kernel.org with ESMTP
-	id S1750764AbWI1Uko (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Sep 2006 16:40:44 -0400
-Content-Disposition: inline
-In-Reply-To: <20060928133246.14e79ace.akpm@osdl.org>
+Received: from mail.gmx.net ([213.165.64.20]:43943 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S1750718AbWI1Ulg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Sep 2006 16:41:36 -0400
+In-Reply-To: <Pine.LNX.4.64.0609282231030.6979@kai.makisara.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, Sep 28, 2006 at 01:32:46PM -0700, Andrew Morton wrote:
-> > +obj-$(CONFIG_SCSI)		+= scsi_wait_scan.o
-> > +
-> >  scsi_mod-y			+= scsi.o hosts.o scsi_ioctl.o constants.o \
-> >  				   scsicam.o scsi_error.o scsi_lib.o \
-> >  				   scsi_scan.o scsi_sysfs.o \
-> 
-> I think that's supposed to go into scsi_mod-y, at line 146.
+On Thu, 28 Sep 2006, Kai Makisara wrote:
 
-Nope.  If CONFIG_SCSI is a module, we want this module around so people
-can insmod it in order to ensure that scsi discovery is complete.  If
-CONFIG_SCSI is built-in, we want this built-in too.
+> The limits come from the block subsystem that all scsi devices use 
+> nowadays. It is a rather long story but can be found from linux-scsi 
+> archives, e.g.,
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=114147170831847&w=2
 
-> > +static char scsi_scan_type[6] = "sync";
-> 
-> That wasted a byte.
+Yes, already found the 2 later threads - one on lkml and one on scsi. I 
+did look at them briefly back then, but, probably, too briefly.
 
-If you specify "async" then the buffer needs to be 6 bytes long.
+One of the settings - enable_clustering - seems to be pretty critical and 
+can only be verified to be safe by intensive testing of various chips / 
+cards. So, how about making it a run-time parameter? A module parameter is 
+the easiest, but then each lld would have to do the same thing more or 
+less. A sysfs attribute - but where? It is a queue attribute, but st/sg 
+don't expose their queues in /sys...
 
-> >  
-> > +static spinlock_t async_scan_lock = SPIN_LOCK_UNLOCKED;
-> 
-> DEFINE_SPINLOCK()
+Maybe under /sys/class/scsi_host?
 
-OK.
+Similar for max_sectors?
 
-> > +int scsi_complete_async_scans(void)
-> > +{
-> > +	struct async_scan_data *data;
-> > +
-> > +	do {
-> > +		if (list_empty(&scanning_hosts))
-> > +			return 0;
-> > +		data = kmalloc(sizeof(*data), GFP_KERNEL);
-> > +		if (!data)
-> > +			msleep(1);
-> > +	} while (!data);
-> 
-> ick.  Immortal allocation loops are poor form.  If there's really no
-> alternative, please use __GFP_NOFAIL, so people can easily grep for your
-> sins.
-
-It's not immortal.  The scanning threads will eventually terminate, and
-so will this loop.
-
-> > +	data->shost = NULL;
-> > +	init_completion(&data->prev_finished);
-> > +
-> > +	spin_lock(&async_scan_lock);
-> > +	if (list_empty(&scanning_hosts))
-> > +		goto done;
-> > +	list_add_tail(&data->list, &scanning_hosts);
-> > +	spin_unlock(&async_scan_lock);
-> 
-> "If the list is not empty, stick something on it".
-> 
-> What an unusual thing to do.  I'm sure it makes sense, but some comments
-> explaining what's going on would be nice.
-
-OK.
-
-> > +#ifdef MODULE
-> > +/* Only exported for the benefit of scsi_wait_scan */
-> > +EXPORT_SYMBOL_GPL(scsi_complete_async_scans);
-> > +#endif
-> 
-> Is that actually needed?  AFACIT this .o file will just get linked against
-> the one which contains scsi_wait_scan() anyway.
-
-See above.
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
