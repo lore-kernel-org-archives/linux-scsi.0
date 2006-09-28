@@ -1,74 +1,41 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] Illustration of warning explosion silliness
-Date: Wed, 27 Sep 2006 21:48:42 -0400
-Message-ID: <451B29FA.7020502@garzik.org>
-References: <20060928005830.GA25694@havoc.gtf.org> <20060927183507.5ef244f3.akpm@osdl.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: fix compile-time divide-by-zero in scsi_ioctl
+Date: Wed, 27 Sep 2006 20:40:27 -0600
+Message-ID: <20060928024027.GW5017@parisc-linux.org>
+References: <20060926154848.CFDC63DAF7@adsl-69-226-248-13.dsl.pltn13.pacbell.net> <20060927202710.GV5017@parisc-linux.org> <200609271628.27120.david-b@pacbell.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:2003 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S965181AbWI1Bsp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Sep 2006 21:48:45 -0400
-In-Reply-To: <20060927183507.5ef244f3.akpm@osdl.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:41662 "EHLO
+	mail.parisc-linux.org") by vger.kernel.org with ESMTP
+	id S1031344AbWI1Ck2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 27 Sep 2006 22:40:28 -0400
+Content-Disposition: inline
+In-Reply-To: <200609271628.27120.david-b@pacbell.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-scsi@vger.kernel.org, Greg KH <greg@kroah.com>, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@osdl.org>
+To: David Brownell <david-b@pacbell.net>
+Cc: linux-scsi@vger.kernel.org
 
-Andrew Morton wrote:
-> On Wed, 27 Sep 2006 20:58:30 -0400
-> Jeff Garzik <jeff@garzik.org> wrote:
+On Wed, Sep 27, 2006 at 04:28:26PM -0700, David Brownell wrote:
+> On Wednesday 27 September 2006 1:27 pm, Matthew Wilcox wrote:
+> > On Tue, Sep 26, 2006 at 08:48:48AM -0700, David Brownell wrote:
+> > > This fixes a compiler-reported divide-by-zero when HZ < 100.
+> > 
+> > Shouldn't we instead be using jiffies_to_clock_t?  Thus:
 > 
->> The following patch (DO NOT APPLY) illustrates why
->> device_for_each_child() should not be marked with __must_check.
->>
->> The function returns the return value of the actor function, and ceases
->> iteration upon error.
->>
->> However, _every_ case in drivers/scsi has a hardcoded return value,
->> illustrating how it is quite valid to not check the return value of this
->> function.
->>
-> 
-> What does "has a hardcoded return value" mean?
+> Could be ... the units in that function unclear to me though.
 
-Reference the sentence before that.  The return value of the actor 
-passed to device_for_each_child() is always either zero (for some 
-actors) or one (for another actor).  In all cases, it is never variable.
+Me too, tbh.  But the function looks right.
 
-
-> AFICT the problem here is that (for example) (going up the call stack in
-> the callee->caller direction):
-> 
-> scsi_internal_device_block() returns an error code
-> 
-> but device_block() drops that on the floor
-> 
-> so target_block() drops it on the floor too
-> 
-> so scsi_target_block() drops it on the floor too
-> 
-> 
-> It's a small matter of (correct kernel) programming to correctly propagate
-> the scsi_internal_device_block() error code all the way back out of
-> scsi_target_block().
-> 
-> It all looks rather sloppy?
-
-Quite sloppy.  But that doesn't change the fact that 
-device_for_each_child()'s actor _may_ hardcode the return value.  It's a 
-valid usage model for that function.
-
-If you are doing a simple collection of data -- adding items to a 
-preallocating list or bitmap -- or doing a search, as with 
-__remove_child() in drivers/scsi/scsi_sysfs.c, the return value can be 
-quite useless.
-
-The usage model should not be _forced_ upon the caller, since it might 
-not be needed.
-
-	Jeff
-
+static inline clock_t jiffies_to_clock_t(long x)
+{
+#if (TICK_NSEC % (NSEC_PER_SEC / USER_HZ)) == 0
+        return x / (HZ / USER_HZ);
+#else
+        u64 tmp = (u64)x * TICK_NSEC;
+        do_div(tmp, (NSEC_PER_SEC / USER_HZ));
+        return (long)tmp;
+#endif
+}
 
