@@ -1,65 +1,79 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: SCSI tape block size
-Date: Thu, 28 Sep 2006 22:47:00 +0300 (EEST)
-Message-ID: <Pine.LNX.4.64.0609282231030.6979@kai.makisara.local>
-References: <200609241605.32327.johna@onevista.com>
- <Pine.LNX.4.60.0609272246320.7350@poirot.grange>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH] async scsi scanning, version 12
+Date: Thu, 28 Sep 2006 16:15:05 -0400
+Message-ID: <451C2D49.7040403@torque.net>
+References: <20060928182438.GC5017@parisc-linux.org>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fep02-0.kolumbus.fi ([193.229.0.44]:54354 "EHLO
-	fep02-app.kolumbus.fi") by vger.kernel.org with ESMTP
-	id S1161041AbWI1TrD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Sep 2006 15:47:03 -0400
-In-Reply-To: <Pine.LNX.4.60.0609272246320.7350@poirot.grange>
+Received: from pentafluge.infradead.org ([213.146.154.40]:36581 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1161142AbWI1UPL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Sep 2006 16:15:11 -0400
+In-Reply-To: <20060928182438.GC5017@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, 27 Sep 2006, Guennadi Liakhovetski wrote:
+Matthew Wilcox wrote:
+> Hopefully the final version ... I've addressed all the comments
+> I received on version 11.  Please review the implementation of
+> shost_for_each_device_safe.
+> 
+> Add ability to scan scsi busses asynchronously
+> 
+> Since it often takes around 20-30 seconds to scan a scsi bus, it's
+> highly advantageous to do this in parallel with other things.  The bulk
+> of this patch is ensuring that devices don't change numbering, and that
+> all devices are discovered prior to trying to start init.  For those
+> who build SCSI as modules, there's a new scsi_wait_scan module that will
+> ensure all bus scans are finished.
+> 
+> This patch only handles drivers which call scsi_scan_host.  Fibre Channel,
+> SAS, SATA, USB and Firewire all need additional work.
+> 
+> Signed-off-by: Matthew Wilcox <matthew@wil.cx>
+> 
+> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+> index 5498324..4b687ef 100644
+> --- a/Documentation/kernel-parameters.txt
+> +++ b/Documentation/kernel-parameters.txt
+> @@ -1426,6 +1426,11 @@ running once the system is up.
+>  
+>  	scsi_logging=	[SCSI]
+>  
+> +	scsi_mod.scan=	[SCSI] sync (default) scans SCSI busses as they are
+> +			discovered.  async scans them in kernel threads,
+> +			allowing boot to proceed.  none ignores them, expecting
+> +			user space to do the scan.
 
-> Hi all
-> 
-> I've got a problem report and a patch from John Adams, he says tmscsim 
-> driver under 2.6.17 and on doesn't allow him to read tapes with blocksize 
-> of 1MB. He fixes this with the below patch.
-> 
-> On Sun, 24 Sep 2006, John Adams wrote:
-> 
-> > --- drivers/scsi/tmscsim.c.bak	2006-09-24 12:55:08.000000000 -0400
-> > +++ drivers/scsi/tmscsim.c	2006-09-24 12:55:56.000000000 -0400
-> > @@ -2300,7 +2300,8 @@
-> >  	.this_id		= 7,
-> >  	.sg_tablesize		= SG_ALL,
-> >  	.cmd_per_lun		= 1,
-> > -	.use_clustering		= DISABLE_CLUSTERING,
-> > +	.use_clustering		= ENABLE_CLUSTERING,
-> > +	.max_sectors            = 2048,
-> >  };
-> >  
-> >  /***********************************************************************
-> 
-> It looks like
-> 
-> 1) use_clustering doesn't directly affect maximum block size, so, he 
-> doesn't really need it, although, it might make sense for tmscsim to 
-> improve performance.
-> 
-> 2) max_sectors is indeed what he needs, but it looks strange that now it 
-> has to be set by the low-level driver... For block devices you can set it 
-> at run time with /sys/block/sda/queue/max_sectors_kb, right? But what 
-> about tapes?
-> 
-Both 1 and 2 are needed for 1 MB block size. max_sectors_kb for tapes is 
-not visible in /sys.
+Matthew,
+I like the "none" which is no doubt a place holder at
+the moment.
 
-> Sorry, didn't find too much documentation about it.
-> 
-The limits come from the block subsystem that all scsi devices use 
-nowadays. It is a rather long story but can be found from linux-scsi 
-archives, e.g.,
-http://marc.theaimsgroup.com/?l=linux-scsi&m=114147170831847&w=2
+For the user space to do discovery, it either needs an out
+of band mechanism (e.g. IP) or the ability to talk to a
+host in the absence of any "devices" (targets or logical units).
+That requires a device node (e.g. /dev/mptctl) or something
+equivalent in sysfs (yuk).
 
--- 
-Kai
+Your "none" explanation could be slightly extended to say
+that the LLD (and/or its firmware) might do the discovery. As an
+example the SAS-2 draft now has self-configuring expanders
+(the terms "edge" and "fanout" have been dropped) which
+effectively discover the topology and track changes, configuring
+themselves and dumber expanders as required. Then host discovery
+becomes importing the topology from an external device. However
+not all devices may be visible to self-configuring expanders
+(e.g. a SATA disk could be directly attached to a SAS HBA). So
+some extra work may be required.
+
+So at one extreme the discovery process may be distributed
+and at the other extreme there is no discovery at all.
+With modern transports (e.g. FC, SAS, iSCSI?) having world
+wide unique names who needs discovery?
+
+Doug Gilbert
