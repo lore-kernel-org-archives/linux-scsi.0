@@ -1,45 +1,61 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: use_clustering again (was Re: SCSI tape block size)
-Date: Thu, 28 Sep 2006 22:41:28 +0200 (CEST)
-Message-ID: <Pine.LNX.4.60.0609282211560.3268@poirot.grange>
-References: <200609241605.32327.johna@onevista.com>
- <Pine.LNX.4.60.0609272246320.7350@poirot.grange>
- <Pine.LNX.4.64.0609282231030.6979@kai.makisara.local>
+From: "Moore, Eric" <Eric.Moore@lsil.com>
+Subject: RE: mptspi dv problems
+Date: Thu, 28 Sep 2006 14:50:53 -0600
+Message-ID: <664A4EBB07F29743873A87CF62C26D70350168@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:43943 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S1750718AbWI1Ulg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Sep 2006 16:41:36 -0400
-In-Reply-To: <Pine.LNX.4.64.0609282231030.6979@kai.makisara.local>
+Received: from mail0.lsil.com ([147.145.40.20]:3298 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1750849AbWI1Uu6 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Sep 2006 16:50:58 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Cc: linux-scsi@vger.kernel.org
+To: Mark Haverkamp <markh@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, 28 Sep 2006, Kai Makisara wrote:
+Mark Haverkamp wrote:
 
-> The limits come from the block subsystem that all scsi devices use 
-> nowadays. It is a rather long story but can be found from linux-scsi 
-> archives, e.g.,
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=114147170831847&w=2
+> 
+> The recent dv changes to scsi_transport_spi.c have fixed the problems
+> that I had with my U160 drives being set to async/narrow but there are
+> still problems with my U320 drive causing indefinite dv on my system.
 
-Yes, already found the 2 later threads - one on lkml and one on scsi. I 
-did look at them briefly back then, but, probably, too briefly.
 
-One of the settings - enable_clustering - seems to be pretty critical and 
-can only be verified to be safe by intensive testing of various chips / 
-cards. So, how about making it a run-time parameter? A module parameter is 
-the easiest, but then each lld would have to do the same thing more or 
-less. A sysfs attribute - but where? It is a queue attribute, but st/sg 
-don't expose their queues in /sys...
+> mptscsih: ioc0: attempting task abort! (sc=f734bc80)
+>         command: cdb[0]=0x12: 12 00 00 00 60 00
+> mptbase: Initiating ioc0 recovery
+> 
 
-Maybe under /sys/class/scsi_host?
 
-Similar for max_sectors?
+jejb - The problem is the task abort occurs as a result of the
+factor 0x8 max speed inquiry test timing out to the end device.  The
+task
+abort results in a host reset.  The host reset results in
+domain validation running again.  The thread running the host reset
+returns 
+control back to the device that failed the max speed inquiry test
+and exits dv; meanwhile the worker thread is still running and
+requesting domain validation on all devices, to include the one that
+failed.  When get back to the failed device, the previous dv run had
+already completed, and we are running dv all over again the same
+device, which will timeout the inquiry test.
 
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
+I had already provided a patch that will fix this problem on the mailing
+list. 
+The idea is we don't issue domain validation again if were in host
+reset and when some device is in the middle of domain validation.
+Instead
+we send previous nego parameters out to devices that have been already
+configured.
+
+This needs to be fixed one way or another.  If mid layer didn't issue 
+host reset when command timed out, such as a target reset, we wouldn't
+encounter this.   
+
+Eric Moore 
+
+
