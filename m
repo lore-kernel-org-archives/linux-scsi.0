@@ -1,66 +1,76 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [PATCH] Illustration of warning explosion silliness
-Date: Wed, 27 Sep 2006 22:04:51 -0700
-Message-ID: <20060927220451.05310cf5.akpm@osdl.org>
-References: <20060928005830.GA25694@havoc.gtf.org>
-	<20060927183507.5ef244f3.akpm@osdl.org>
-	<451B29FA.7020502@garzik.org>
-	<20060927203417.f07674de.akpm@osdl.org>
-	<451B4D58.9070401@garzik.org>
-	<20060927213628.ef12b1ed.akpm@osdl.org>
-	<20060927214428.9e5c0e79.akpm@osdl.org>
-	<451B5587.2050601@garzik.org>
+From: Michael Reed <mdr@sgi.com>
+Subject: Re: SCSI tape block size
+Date: Thu, 28 Sep 2006 09:34:44 -0500
+Message-ID: <451BDD84.2060704@sgi.com>
+References: <200609241605.32327.johna@onevista.com> <Pine.LNX.4.60.0609272246320.7350@poirot.grange>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:2755 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751601AbWI1FE5 (ORCPT
+Received: from omx2-ext.sgi.com ([192.48.171.19]:65422 "EHLO omx2.sgi.com")
+	by vger.kernel.org with ESMTP id S1161153AbWI1OfC (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Sep 2006 01:04:57 -0400
-In-Reply-To: <451B5587.2050601@garzik.org>
+	Thu, 28 Sep 2006 10:35:02 -0400
+In-Reply-To: <Pine.LNX.4.60.0609272246320.7350@poirot.grange>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-scsi@vger.kernel.org, Greg KH <greg@kroah.com>, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@osdl.org>
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, 28 Sep 2006 00:54:31 -0400
-Jeff Garzik <jeff@garzik.org> wrote:
 
-> Andrew Morton wrote:
-> > On Wed, 27 Sep 2006 21:36:28 -0700
-> > Andrew Morton <akpm@osdl.org> wrote:
-> > 
-> >> device_for_each_child() 
-> > 
-> > All that being said, device_for_each_child() is rather broken by design. 
-> > It walks a list of items applying a function to them and bales out on
-> > first-error.
+
+Guennadi Liakhovetski wrote:
+> Hi all
 > 
-> Or, like scsi_sysfs.c, it stops when it meets the first match.  Which is 
-> a common thing to do.
+> I've got a problem report and a patch from John Adams, he says tmscsim 
+> driver under 2.6.17 and on doesn't allow him to read tapes with blocksize 
+> of 1MB. He fixes this with the below patch.
+> 
+> On Sun, 24 Sep 2006, John Adams wrote:
+> 
+>> --- drivers/scsi/tmscsim.c.bak	2006-09-24 12:55:08.000000000 -0400
+>> +++ drivers/scsi/tmscsim.c	2006-09-24 12:55:56.000000000 -0400
+>> @@ -2300,7 +2300,8 @@
+>>  	.this_id		= 7,
+>>  	.sg_tablesize		= SG_ALL,
+>>  	.cmd_per_lun		= 1,
+>> -	.use_clustering		= DISABLE_CLUSTERING,
+>> +	.use_clustering		= ENABLE_CLUSTERING,
+>> +	.max_sectors            = 2048,
+>>  };
+>>  
+>>  /***********************************************************************
+> 
+> It looks like
+> 
+> 1) use_clustering doesn't directly affect maximum block size, so, he 
+> doesn't really need it, although, it might make sense for tmscsim to 
+> improve performance.
+> 
+> 2) max_sectors is indeed what he needs, but it looks strange that now it 
+> has to be set by the low-level driver... For block devices you can set it 
+> at run time with /sys/block/sda/queue/max_sectors_kb, right? But what 
+> about tapes?
 
-That code is flakey.  Trace through all the called functions, see all the
-errors which get ignored.
+Thank you for posting this.  I was wondering why with 2.6.16 the maximum
+tape block I could access via by BusLogic adapter dropped to 64k.  Now
+I know what to change.
+
+Does anyone know what the appropriate max sectors limit is for BusLogic?
+
+Thanks,
+ Mike
 
 > 
-> > There's no way in which the caller can know which items have been operated
-> > on, nor which items have yet to be operated on, nor which item experienced
-> > the failure.  Any caller which is serious about error recovery presumably
-> > won't use it, unless the callback function happens to be something which
-> > makes no state changes.
+> Sorry, didn't find too much documentation about it.
 > 
-> A simple integer return error doesn't tell you all that information 
-> either.  The actor must obviously store that additional information 
-> somewhere, if it cares.
-
-Yup.
-
-> But whatever.  I give up.
-
-That's the spirit ;)
-
-> I'm going back to working on the libata 
-> warnings each build spits out (iomap).
-
-Thanks.
+> Thanks
+> Guennadi
+> ---
+> Guennadi Liakhovetski
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
