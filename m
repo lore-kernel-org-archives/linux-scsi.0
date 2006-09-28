@@ -1,54 +1,41 @@
-From: David Brownell <david-b@pacbell.net>
-Subject: Re: fix compile-time divide-by-zero in scsi_ioctl
-Date: Wed, 27 Sep 2006 16:28:26 -0700
-Message-ID: <200609271628.27120.david-b@pacbell.net>
-References: <20060926154848.CFDC63DAF7@adsl-69-226-248-13.dsl.pltn13.pacbell.net> <20060927202710.GV5017@parisc-linux.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [PATCH] SCSI: quiet device_reprobe warning
+Date: Wed, 27 Sep 2006 20:38:57 -0400
+Message-ID: <20060928003857.GA23981@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp109.sbc.mail.mud.yahoo.com ([68.142.198.208]:34751 "HELO
-	smtp109.sbc.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S965167AbWI0X2c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Sep 2006 19:28:32 -0400
-In-Reply-To: <20060927202710.GV5017@parisc-linux.org>
+Received: from havoc.gtf.org ([69.61.125.42]:58833 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S1031296AbWI1Ai6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 27 Sep 2006 20:38:58 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org
-
-On Wednesday 27 September 2006 1:27 pm, Matthew Wilcox wrote:
-> On Tue, Sep 26, 2006 at 08:48:48AM -0700, David Brownell wrote:
-> > This fixes a compiler-reported divide-by-zero when HZ < 100.
-> 
-> Shouldn't we instead be using jiffies_to_clock_t?  Thus:
-
-Could be ... the units in that function unclear to me though.
-
-What I care about is not needing to carry a patch around in my tree ...
-I got no response when I posted a fix to LKML several months back,
-your suggestion could well be better!
-
-FWIW HZ=64 can be convenient for various embedded platforms with
-32768/sec system clocks; HZ=100 can be impractical.
-
-- Dave
+To: linux-scsi@vger.kernel.org, Andrew Morton <akpm@osdl.org>
+Cc: LKML <linux-kernel@vger.kernel.org>
 
 
+This quiets a huge explosion of warnings that appeared with the
+__must_check patch, by shifting the burden to the caller.
 
-> Index: at91/block/scsi_ioctl.c
-> ===================================================================
-> --- at91.orig/block/scsi_ioctl.c	2006-07-30 01:17:34.000000000 -0700
-> +++ at91/block/scsi_ioctl.c	2006-07-30 01:44:17.000000000 -0700
-> @@ -63,7 +63,7 @@ static int scsi_get_bus(request_queue_t 
->  
->  static int sg_get_timeout(request_queue_t *q)
->  {
-> -	return q->sg_timeout / (HZ / USER_HZ);
-> +	return jiffies_to_clock_t(q->sg_timeout);
->  }
->  
->  static int sg_set_timeout(request_queue_t *q, int __user *p)
-> 
+Incidentally, there is only a single user of this function: mptsas
+
+Signed-off-by: Jeff Garzik <jeff@garzik.org>
+
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 895d212..b401c82 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -298,9 +298,9 @@ extern int scsi_execute_async(struct scs
+ 			      void (*done)(void *, char *, int, int),
+ 			      gfp_t gfp);
+ 
+-static inline void scsi_device_reprobe(struct scsi_device *sdev)
++static inline int __must_check scsi_device_reprobe(struct scsi_device *sdev)
+ {
+-	device_reprobe(&sdev->sdev_gendev);
++	return device_reprobe(&sdev->sdev_gendev);
+ }
+ 
+ static inline unsigned int sdev_channel(struct scsi_device *sdev)
