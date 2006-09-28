@@ -1,70 +1,89 @@
 From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: [PATCH] async scsi scanning, version 12
-Date: Thu, 28 Sep 2006 14:36:56 -0600
-Message-ID: <20060928203656.GG5017@parisc-linux.org>
-References: <20060928182438.GC5017@parisc-linux.org> <451C2D49.7040403@torque.net>
+Date: Thu, 28 Sep 2006 14:40:43 -0600
+Message-ID: <20060928204043.GH5017@parisc-linux.org>
+References: <20060928182438.GC5017@parisc-linux.org> <20060928133246.14e79ace.akpm@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:43155 "EHLO
+Received: from palinux.external.hp.com ([192.25.206.14]:39652 "EHLO
 	mail.parisc-linux.org") by vger.kernel.org with ESMTP
-	id S1750758AbWI1Ug5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Sep 2006 16:36:57 -0400
+	id S1750764AbWI1Uko (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Sep 2006 16:40:44 -0400
 Content-Disposition: inline
-In-Reply-To: <451C2D49.7040403@torque.net>
+In-Reply-To: <20060928133246.14e79ace.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
+To: Andrew Morton <akpm@osdl.org>
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, Sep 28, 2006 at 04:15:05PM -0400, Douglas Gilbert wrote:
-> > +	scsi_mod.scan=	[SCSI] sync (default) scans SCSI busses as they are
-> > +			discovered.  async scans them in kernel threads,
-> > +			allowing boot to proceed.  none ignores them, expecting
-> > +			user space to do the scan.
+On Thu, Sep 28, 2006 at 01:32:46PM -0700, Andrew Morton wrote:
+> > +obj-$(CONFIG_SCSI)		+= scsi_wait_scan.o
+> > +
+> >  scsi_mod-y			+= scsi.o hosts.o scsi_ioctl.o constants.o \
+> >  				   scsicam.o scsi_error.o scsi_lib.o \
+> >  				   scsi_scan.o scsi_sysfs.o \
 > 
-> Matthew,
-> I like the "none" which is no doubt a place holder at
-> the moment.
+> I think that's supposed to go into scsi_mod-y, at line 146.
 
-I wouldn't say it was extensively tested, but no, there's checks for the
-value "none" and it does indeed fail to discover any devices ;-)
+Nope.  If CONFIG_SCSI is a module, we want this module around so people
+can insmod it in order to ensure that scsi discovery is complete.  If
+CONFIG_SCSI is built-in, we want this built-in too.
 
-> For the user space to do discovery, it either needs an out
-> of band mechanism (e.g. IP) or the ability to talk to a
-> host in the absence of any "devices" (targets or logical units).
-> That requires a device node (e.g. /dev/mptctl) or something
-> equivalent in sysfs (yuk).
+> > +static char scsi_scan_type[6] = "sync";
+> 
+> That wasted a byte.
 
-I must confess to having not thought about how userspace probes a
-scsi host to find out what devices are behind it.  This was a feature
-that James asked for and it was easy to add.
+If you specify "async" then the buffer needs to be 6 bytes long.
 
-> Your "none" explanation could be slightly extended to say
-> that the LLD (and/or its firmware) might do the discovery.
+> >  
+> > +static spinlock_t async_scan_lock = SPIN_LOCK_UNLOCKED;
+> 
+> DEFINE_SPINLOCK()
 
-Note that by specifying "none", not even the FC/SAS/etc drivers can
-register targets as they find them -- it really is up to userspace to
-echo scsi-add-single-device H C T L >/proc/scsi/scsi
+OK.
 
-I'm a little uncomfortable with that, and I'd be open to adding another
-word that means "no scanning, but if the driver's been told about the
-device by a switch, add it automatically, don't wait for userspace".
-I do think that none needs to mean none though.
+> > +int scsi_complete_async_scans(void)
+> > +{
+> > +	struct async_scan_data *data;
+> > +
+> > +	do {
+> > +		if (list_empty(&scanning_hosts))
+> > +			return 0;
+> > +		data = kmalloc(sizeof(*data), GFP_KERNEL);
+> > +		if (!data)
+> > +			msleep(1);
+> > +	} while (!data);
+> 
+> ick.  Immortal allocation loops are poor form.  If there's really no
+> alternative, please use __GFP_NOFAIL, so people can easily grep for your
+> sins.
 
-> As an
-> example the SAS-2 draft now has self-configuring expanders
-> (the terms "edge" and "fanout" have been dropped) which
-> effectively discover the topology and track changes, configuring
-> themselves and dumber expanders as required. Then host discovery
-> becomes importing the topology from an external device. However
-> not all devices may be visible to self-configuring expanders
-> (e.g. a SATA disk could be directly attached to a SAS HBA). So
-> some extra work may be required.
+It's not immortal.  The scanning threads will eventually terminate, and
+so will this loop.
 
-That would be up to userspace in the "none" view of the world.  I could
-see people wanting to ignore the self-configuring expander and impose
-a new (incorrect) topology on the system.
+> > +	data->shost = NULL;
+> > +	init_completion(&data->prev_finished);
+> > +
+> > +	spin_lock(&async_scan_lock);
+> > +	if (list_empty(&scanning_hosts))
+> > +		goto done;
+> > +	list_add_tail(&data->list, &scanning_hosts);
+> > +	spin_unlock(&async_scan_lock);
+> 
+> "If the list is not empty, stick something on it".
+> 
+> What an unusual thing to do.  I'm sure it makes sense, but some comments
+> explaining what's going on would be nice.
 
-BTW, there'll be a lucky version 13 in a few minutes ...
-shost_for_each_device_safe isn't.
+OK.
+
+> > +#ifdef MODULE
+> > +/* Only exported for the benefit of scsi_wait_scan */
+> > +EXPORT_SYMBOL_GPL(scsi_complete_async_scans);
+> > +#endif
+> 
+> Is that actually needed?  AFACIT this .o file will just get linked against
+> the one which contains scsi_wait_scan() anyway.
+
+See above.
