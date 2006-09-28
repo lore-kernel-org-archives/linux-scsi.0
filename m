@@ -1,43 +1,52 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [PATCH] SCSI: shift device_reprobe() warning explosion
-Date: Wed, 27 Sep 2006 21:08:24 -0400
-Message-ID: <20060928010824.GA26438@havoc.gtf.org>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [PATCH] Illustration of warning explosion silliness
+Date: Wed, 27 Sep 2006 18:35:07 -0700
+Message-ID: <20060927183507.5ef244f3.akpm@osdl.org>
+References: <20060928005830.GA25694@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:45522 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S964979AbWI1BIY (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:39302 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S965176AbWI1BiV (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Sep 2006 21:08:24 -0400
-Content-Disposition: inline
+	Wed, 27 Sep 2006 21:38:21 -0400
+In-Reply-To: <20060928005830.GA25694@havoc.gtf.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-scsi@vger.kernel.org, Greg KH <greg@kroah.com>, LKML <linux-kernel@vger.kernel.org>
+
+On Wed, 27 Sep 2006 20:58:30 -0400
+Jeff Garzik <jeff@garzik.org> wrote:
+
+> The following patch (DO NOT APPLY) illustrates why
+> device_for_each_child() should not be marked with __must_check.
+> 
+> The function returns the return value of the actor function, and ceases
+> iteration upon error.
+> 
+> However, _every_ case in drivers/scsi has a hardcoded return value,
+> illustrating how it is quite valid to not check the return value of this
+> function.
+> 
+
+What does "has a hardcoded return value" mean?
+
+AFICT the problem here is that (for example) (going up the call stack in
+the callee->caller direction):
+
+scsi_internal_device_block() returns an error code
+
+but device_block() drops that on the floor
+
+so target_block() drops it on the floor too
+
+so scsi_target_block() drops it on the floor too
 
 
-SCSI warns about device_reprobe() for _every file_, even though there is
-only a single caller in the entirety of SCSI.
+It's a small matter of (correct kernel) programming to correctly propagate
+the scsi_internal_device_block() error code all the way back out of
+scsi_target_block().
 
-The need to check return code is valid, so we update the warning area to
-shift the burden to the [only] caller, mptsas.
-
-Signed-off-by: Jeff Garzik <jeff@garzik.org>
-
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 895d212..b401c82 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -298,9 +298,9 @@ extern int scsi_execute_async(struct scs
- 			      void (*done)(void *, char *, int, int),
- 			      gfp_t gfp);
- 
--static inline void scsi_device_reprobe(struct scsi_device *sdev)
-+static inline int __must_check scsi_device_reprobe(struct scsi_device *sdev)
- {
--	device_reprobe(&sdev->sdev_gendev);
-+	return device_reprobe(&sdev->sdev_gendev);
- }
- 
- static inline unsigned int sdev_channel(struct scsi_device *sdev)
-
+It all looks rather sloppy?
