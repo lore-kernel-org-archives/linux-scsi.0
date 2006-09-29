@@ -1,130 +1,59 @@
-From: Bryce Harrington <bryce@osdl.org>
-Subject: Re: [OOPS] -git8,9:  NULL pointer dereference in mptspi_dv_renegotiate_work
-Date: Fri, 29 Sep 2006 14:41:10 -0700
-Message-ID: <20060929214110.GH12968@osdl.org>
-References: <664A4EBB07F29743873A87CF62C26D7035039A@NAMAIL4.ad.lsil.com>
+From: Frederik Deweerdt <deweerdt@free.fr>
+Subject: Re: 2.6.18-mm2
+Date: Fri, 29 Sep 2006 23:50:54 +0000
+Message-ID: <20060929235054.GB2020@slug>
+References: <20060928014623.ccc9b885.akpm@osdl.org> <20060929155738.7076f0c8@werewolf> <20060929143949.GL5017@parisc-linux.org> <1159550143.13029.36.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:46281 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S964851AbWI2VlO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Sep 2006 17:41:14 -0400
+Received: from ug-out-1314.google.com ([66.249.92.170]:19929 "EHLO
+	ug-out-1314.google.com") by vger.kernel.org with ESMTP
+	id S1422848AbWI2VwP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 29 Sep 2006 17:52:15 -0400
+Received: by ug-out-1314.google.com with SMTP id o38so319935ugd
+        for <linux-scsi@vger.kernel.org>; Fri, 29 Sep 2006 14:52:14 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <664A4EBB07F29743873A87CF62C26D7035039A@NAMAIL4.ad.lsil.com>
+In-Reply-To: <1159550143.13029.36.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric" <Eric.Moore@lsil.com>
-Cc: Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Matthew Wilcox <matthew@wil.cx>, "J.A. Magall??n" <jamagallon@ono.com>, Andrew Morton <akpm@osdl.org>, "Linux-Kernel," <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-On Fri, Sep 29, 2006 at 12:29:55PM -0600, Moore, Eric wrote:
-> On Friday, September 29, 2006 11:18 AM, Bryce Harrington wrote:  
+On Fri, Sep 29, 2006 at 06:15:42PM +0100, Alan Cox wrote:
+> Ar Gwe, 2006-09-29 am 08:39 -0600, ysgrifennodd Matthew Wilcox:
+> > On Fri, Sep 29, 2006 at 03:57:38PM +0200, J.A. Magall??n wrote:
+> > > aic7xxx oopses on boot:
+> > > 
+> > > PCI: Setting latency timer of device 0000:00:0e.0 to 64
+> > > IRQ handler type mismatch for IRQ 0
+> > 
+> > Of course, this isn't a scsi problem, it's a peecee hardware problem.
+> > Or maybe a PCI subsystem problem.  But it's clearly not aic7xxx's fault.
 > 
-> > [<ffffffff80484f94>] mpt_HardResetHandler+0xb4/0x12c
-> > [<ffffffff8048500c>] mpt_timer_expired+0x0/0x24
+> AIC7xxx finding it has no IRQ configured is valid (annoying, stupid and
+> valid) so the driver should check before requesting "no IRQ"
 > 
-> mpt_timer_expired means most likely we timed out sending 
-> request for config page from firmware.  The timeout results
-> in host reset, which results in domain validation being called.
-> Perhaps the config pages failed before we allocated memory for hd.
-> 
-> Can you enable debug messages in the driver Makefile, for
-> the line called MPT_DEBUG_CONFIG; that way we can find out which
-> config page failed.  
+Alan,
 
-Sure; not sure what the interesting part is, but here's the full log
-from this:
+Does this patch makes sense in that case? If yes, I'll put up a patch
+for the remaining cases in the drivers/scsi/aic7xxx/ directory.
+Also, aic7xxx's coding style would put parenthesis around the returned
+value, should I follow it?
 
-   http://crucible.osdl.org/runs/2265/sysinfo/amd01.2.console
+Regards,
+Frederik
 
-> There were some changes in scsi_transort_spi.c, that occured
-> between 2.6.18-git1 and 2.6.18-git2.  I doubt these changes
-> would of effected this.   Can you determine between which
-> git version releases did this problem begin occuring?
-
-I found that the problem did not occur with -git7, but did occur with
--git8, 9, 10, 11, and 12.  I didn't check kernels prior to that but
-could if you think it would help.
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c b/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
+index ea5687d..38f5ca7 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
+@@ -185,6 +185,9 @@ ahc_linux_pci_dev_probe(struct pci_dev *
+ 	int		 error;
+ 	struct device	*dev = &pdev->dev;
  
-> Also, can you describe your configuration?  Such as which
-> kind of devices are you usign, and whether if they are U320 devices,
-> or are their older ones, such as U160.
-
-Sure.  Yes, there are two U320 SCSI hd's.
-
-    Host:               amd01
-    Kernel:             2.6.12-gentoo-r10
-    Distribution:       gentoo 1.6.14
-    Memory:             2053852 kB
-    Arch:               x86_64
-    CPU(s):             2x AMD Opteron(tm) Processor 242
-
-SCSI:
-     *-pci:1
-          description: PCI bridge
-          product: AMD-8131 PCI-X Bridge
-          vendor: Advanced Micro Devices [AMD]
-          physical id: 2
-          bus info: pci@00:02.0
-          version: 12
-          width: 32 bits
-          clock: 66MHz
-          capabilities: pci normal_decode bus_master cap_list
-        *-scsi:0
-             description: SCSI storage controller
-             product: 53c1030 PCI-X Fusion-MPT Dual Ultra320 SCSI
-             vendor: LSI Logic / Symbios Logic
-             physical id: 1
-             bus info: pci@02:01.0
-             version: 07
-             width: 64 bits
-             clock: 33MHz
-             capabilities: scsi bus_master cap_list
-             configuration: driver=mptbase
-             resources: ioport:c400-c4ff iomemory:fe980000-fe98ffff iomemory:fe970000-fe97ffff irq:185
-        *-scsi:1
-             description: SCSI storage controller
-             product: 53c1030 PCI-X Fusion-MPT Dual Ultra320 SCSI
-             vendor: LSI Logic / Symbios Logic
-             physical id: 1.1
-             bus info: pci@02:01.1
-             version: 07
-             width: 64 bits
-             clock: 33MHz
-             capabilities: scsi bus_master cap_list
-             configuration: driver=mptbase
-             resources: ioport:c800-c8ff iomemory:fe9f0000-fe9fffff iomemory:fe9e0000-fe9effff irq:193
-
-
-PCI:
-
-    00:01.0 PCI bridge: Advanced Micro Devices [AMD] AMD-8131 PCI-X Bridge (rev 12) (prog-if 00 [Normal decode])
-    00:01.1 PIC: Advanced Micro Devices [AMD] AMD-8131 PCI-X IOAPIC (rev 01) (prog-if 10 [IO-APIC])
-    00:02.0 PCI bridge: Advanced Micro Devices [AMD] AMD-8131 PCI-X Bridge (rev 12) (prog-if 00 [Normal decode])
-    00:02.1 PIC: Advanced Micro Devices [AMD] AMD-8131 PCI-X IOAPIC (rev 01) (prog-if 10 [IO-APIC])
-    00:06.0 PCI bridge: Advanced Micro Devices [AMD] AMD-8111 PCI (rev 07) (prog-if 00 [Normal decode])
-    00:07.0 ISA bridge: Advanced Micro Devices [AMD] AMD-8111 LPC (rev 05)
-    00:07.1 IDE interface: Advanced Micro Devices [AMD] AMD-8111 IDE (rev 03) (prog-if 8a [Master SecP PriP])
-    00:07.3 Bridge: Advanced Micro Devices [AMD] AMD-8111 ACPI (rev 05)
-    00:18.0 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] HyperTransport Technology Configuration
-    00:18.1 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] Address Map
-    00:18.2 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] DRAM Controller
-    00:18.3 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] Miscellaneous Control
-    00:19.0 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] HyperTransport Technology Configuration
-    00:19.1 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] Address Map
-    00:19.2 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] DRAM Controller
-    00:19.3 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] Miscellaneous Control
-    01:00.0 USB Controller: Advanced Micro Devices [AMD] AMD-8111 USB (rev 0b) (prog-if 10 [OHCI])
-    01:00.1 USB Controller: Advanced Micro Devices [AMD] AMD-8111 USB (rev 0b) (prog-if 10 [OHCI])
-    01:04.0 VGA compatible controller: ATI Technologies Inc Rage XL (rev 27) (prog-if 00 [VGA])
-    02:01.0 SCSI storage controller: LSI Logic / Symbios Logic 53c1030 PCI-X Fusion-MPT Dual Ultra320 SCSI (rev 07)
-    02:01.1 SCSI storage controller: LSI Logic / Symbios Logic 53c1030 PCI-X Fusion-MPT Dual Ultra320 SCSI (rev 07)
-    02:03.0 Ethernet controller: Broadcom Corporation NetXtreme BCM5704 Gigabit Ethernet (rev 03)
-    02:03.1 Ethernet controller: Broadcom Corporation NetXtreme BCM5704 Gigabit Ethernet (rev 03)
-
-More info about this machine can be found here (for a different testrun).
-The INFO directory has the full output from lshw:
-
-    http://crucible.osdl.org/runs/2284/sysinfo/amd01.1/
-
-Bryce
++	if (!pdev->irq)
++		return -ENODEV;
++
+ 	pci = pdev;
+ 	entry = ahc_find_pci_device(pci);
+ 	if (entry == NULL)
