@@ -1,42 +1,39 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: 2.6.18-mm2
-Date: Sat, 30 Sep 2006 21:54:19 +0100
-Message-ID: <1159649659.13029.149.camel@localhost.localdomain>
-References: <20060928014623.ccc9b885.akpm@osdl.org>
-	 <20060929155738.7076f0c8@werewolf> <20060929143949.GL5017@parisc-linux.org>
-	 <1159550143.13029.36.camel@localhost.localdomain>
-	 <20060929235054.GB2020@slug>
-	 <1159629982.14918.4.camel@mulgrave.il.steeleye.com>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: SCSI tape block size
+Date: Sat, 30 Sep 2006 22:52:01 +0200 (CEST)
+Message-ID: <Pine.LNX.4.60.0609302243120.3656@poirot.grange>
+References: <200609241605.32327.johna@onevista.com>
+ <Pine.LNX.4.60.0609272246320.7350@poirot.grange>
+ <Pine.LNX.4.64.0609282231030.6979@kai.makisara.local>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:5538 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1751935AbWI3U3W (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 30 Sep 2006 16:29:22 -0400
-In-Reply-To: <1159629982.14918.4.camel@mulgrave.il.steeleye.com>
+Received: from mail.gmx.net ([213.165.64.20]:31894 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S1751966AbWI3UwB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 30 Sep 2006 16:52:01 -0400
+In-Reply-To: <Pine.LNX.4.64.0609282231030.6979@kai.makisara.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Frederik Deweerdt <deweerdt@free.fr>, Matthew Wilcox <matthew@wil.cx>, "J.A. Magall??n" <jamagallon@ono.com>, Andrew Morton <akpm@osdl.org>, "Linux-Kernel," <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Cc: linux-scsi@vger.kernel.org
 
-Ar Sad, 2006-09-30 am 10:26 -0500, ysgrifennodd James Bottomley:
-> On Fri, 2006-09-29 at 23:50 +0000, Frederik Deweerdt wrote:
-> > +       if (!pdev->irq)
-> > +               return -ENODEV;
-> > +
-> 
-> Don't I remember that 0 is a valid IRQ on some platforms?
-> 
-> i.e. shouldn't this be
-> 
-> if (pdev->irq == NO_IRQ)
-> 	return -ENODEV;
+On Thu, 28 Sep 2006, Kai Makisara wrote:
 
-NO_IRQ is gone. Everyone uses zero and Linus has declared that is how it
-shall be.
+> Both 1 and 2 are needed for 1 MB block size. max_sectors_kb for tapes is 
+> not visible in /sys.
 
+Kai, as st maintainer, you surely know - on my tape HP C1533A I cannot 
+seem to set up any block size other than 1 byte... Is it __really__ 1 byte 
+or is it just some fixed block size that the drive doesn't report and 
+cannot change? And it means I cannot test setting of different block 
+sizes? I have a (unconnected ATM) slightly newer C1555D, wonder if that 
+could use different block sizes?...
 
-Alan
+1 byte I see in "mt status" and setting anything else with "mt setblk" 
+causes "st0: Incorrect block size."
 
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
