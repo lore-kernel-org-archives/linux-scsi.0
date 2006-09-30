@@ -1,174 +1,131 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: Problem with legacy megaraid
-Date: Sat, 30 Sep 2006 15:54:10 -0700
-Message-ID: <20060930155410.8238c195.akpm@osdl.org>
-References: <451e87fa.60a54fb4.44c0.4562@mx.gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [-mm patch] aic7xxx: check irq validity (was Re: 2.6.18-mm2)
+Date: Sat, 30 Sep 2006 19:58:18 -0400
+Message-ID: <451F049A.1010404@garzik.org>
+References: <20060928014623.ccc9b885.akpm@osdl.org> <20060929155738.7076f0c8@werewolf> <20060929143949.GL5017@parisc-linux.org> <1159550143.13029.36.camel@localhost.localdomain> <20060929235054.GB2020@slug> <1159573404.13029.96.camel@localhost.localdomain> <20060930140946.GA1195@slug>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:60067 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751631AbWI3WyS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 30 Sep 2006 18:54:18 -0400
-In-Reply-To: <451e87fa.60a54fb4.44c0.4562@mx.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/mixed;
+ boundary="------------020906010503040500020808"
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751741AbWI3X6g@vger.kernel.org>
+In-Reply-To: <20060930140946.GA1195@slug>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Frederik Deweerdt <deweerdt@free.fr>, Andrew Morton <akpm@osdl.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Matthew Wilcox <matthew@wil.cx>, "J.A. Magall??n" <jamagallon@ono.com>, "Linux-Kernel," <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chris Lee <labmonkey42@gmail.com>
-Cc: linux-kernel@vger.kernel.org, "Ju, Seokmann" <Seokmann.Ju@lsil.com>, linux-scsi@vger.kernel.org, Neela.Kolli@engenio.com
 
-On Sat, 30 Sep 2006 10:06:36 -0500
-"Chris Lee" <labmonkey42@gmail.com> wrote:
+This is a multi-part message in MIME format.
+--------------020906010503040500020808
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-> I am not subscribed to this list.  Please CC me on replies.
+Frederik Deweerdt wrote:
+> On Sat, Sep 30, 2006 at 12:43:24AM +0100, Alan Cox wrote:
+>> Ar Gwe, 2006-09-29 am 23:50 +0000, ysgrifennodd Frederik Deweerdt:
+>>> Does this patch makes sense in that case? If yes, I'll put up a patch
+>>> for the remaining cases in the drivers/scsi/aic7xxx/ directory.
+>>> Also, aic7xxx's coding style would put parenthesis around the returned
+>>> value, should I follow it?
+>> Yes - but perhaps with a warning message so users know why ?
+>>
+>> As to coding style - kernel style is unbracketed so I wouldnt worry
+>> about either.
+>>
+> Thanks for the advices. 
+> 
+> The following patch checks whenever the irq is valid before issuing a
+> request_irq() for AIC7XXX and AIC79XX. An error message is displayed to
+> let the user know what went wrong.
+> 
+> Regards,
+> Frederik
+> 
+> Signed-off-by: Frederik Deweerdt <frederik.deweerdt@gmail.com>
 
-(more cc's added)
+Actually, rather than adding this check to every driver, I would rather 
+do something like the attached patch:  create a pci_request_irq(), and 
+pass a struct pci_device to it.  Then the driver author doesn't have to 
+worry about such details.
 
-> I have a machine I'm trying to use as a file server.  I have a RAID10 and a
-> RAID5 on a single Dell PERC2/DC (AMI Megaraid 467) controller.  Both arrays
-> are also on the same SCSI channel.  The system runs fine for days on end
-> until I put some heavy I/O load on either array and sustain it for a few
-> seconds.
-
-We recently discovered that "The old megaraid driver is apparently borken
-for firmware newer than 6.61.".  So please check that and see if a
-downgrade is needed.
-
-Is there some reason why you cannot use the new megaraid driver?
+	Jeff
 
 
-> Distro: Gentoo Linux
-> Kernel: 2.6.17-gentoo-r7
-> 
-> Hardware:
-> Motherboard: Tyan Thunder i7501 Pro (S2721-533)
-> CPUs: Dual 2.8Ghz P4 HT Xeons
-> RAM: 4GB registered (3/1 split, flat model)
-> RAID: Dell PERC2/DC (AMI Megaraid 467)
-> SCSI: Adaptec AHA-2940U2/U2W PCI
-> NICs: onboard e100 and dual onboard e1000
-> 
-> There are 14 hard drives on channel 0 of the perc2/dc.  IDs 1-6 are RAID10
-> mounted in an external enclosure; IDs 8-15 are RAID5 mounted internally.
-> The I/O problems occur on either array, which suggests to me that it is not
-> a cabling issue.
-> 
-> To reproduce the problem for the purpose of this email I ran `bonnie++ -d
-> /home/nobody -u nobody:nogroup` where /home is the mountpoint of the RAID5
-> and bonnie++ created an 8GB file.  I have reproduced this problem numerous
-> times and the sustained I/O time required to create the fault varies.  Once
-> it happened running a ./configure script for some rather small package.
-> However, this time it took approximately 20-30 minutes before it freaked
-> out.
-> 
-> Once the problem occurs I have to reboot the machine to regain use of the
-> affected array(s).  I should note that the controller bios finds nothing
-> wrong with the arrays, and when e2fsck is forced on boot it replays the
-> journal and reports no other problems aside from a "Superblock last write
-> time is in the future.  FIXED." which I attribute to a misconfiguration on
-> my part for saving system time to hardware clock.  If I attempt to unmount
-> the array and mount it again without rebooting I get an error message that
-> sdXX is not a valid block device.
-> 
-> Logs/info:
-> 
-> active vt says (this is copied via eyeball):
-> [4513644.094000] ext3_aboart called.
-> [4513644.101000] EXT3-fs error (device sdb1): ext3_journal_start_sb: <3>sd
-> 0:0:1:0: rejecting I/O to offline device
-> [4513644.109000] Remounting filesystem read-only
-> 
-> dmesg stuff about megaraid:
-> [4294675.180000] megaraid: found 0x8086:0x1960:bus 3:slot 3:func 1
-> [4294675.191000] scsi0:Found MegaRAID controller at 0xf8806000, IRQ:177
-> [4294675.254000] megaraid: [1.06:1p00] detected 2 logical drives.
-> [4294675.316000] megaraid: channel[0] is raid.
-> [4294675.326000] megaraid: channel[1] is raid.
-> [4294675.362000] scsi0 : LSI Logic MegaRAID 1.06 254 commands 16 targs 5
-> chans 7 luns
-> [4294675.372000] scsi0: scanning scsi channel 0 for logical drives.
-> [4294675.383000]   Vendor: MegaRAID  Model: LD0 RAID1 09634R  Rev: 1.06
-> [4294675.393000]   Type:   Direct-Access                      ANSI SCSI
-> revision: 02
-> [4294675.404000]   Vendor: MegaRAID  Model: LD1 RAID5 38288R  Rev: 1.06
-> [4294675.415000]   Type:   Direct-Access                      ANSI SCSI
-> revision: 02
-> [4294675.428000] scsi0: scanning scsi channel 4 [P0] for physical devices.
-> [4294675.726000] scsi0: scanning scsi channel 5 [P1] for physical devices.
-> [4294680.126000] megaraid cmm: 2.20.2.6 (Release Date: Mon Mar 7 00:01:03
-> EST 2005)
-> [4294680.136000] megaraid: 2.20.4.8 (Release Date: Mon Apr 11 12:27:22 EST
-> 2006)
-> [4294680.157000] SCSI device sda: 429330432 512-byte hdwr sectors (219817
-> MB)
-> [4294680.167000] sda: Write Protect is off
-> [4294680.198000] SCSI device sda: 429330432 512-byte hdwr sectors (219817
-> MB)
-> [4294680.208000] sda: Write Protect is off
-> [4294680.237000]  sda: sda1 sda2
-> [4294680.247000] sd 0:0:0:0: Attached scsi disk sda
-> [4294680.257000] SCSI device sdb: 2126413824 512-byte hdwr sectors (1088724
-> MB)
-> [4294680.267000] sdb: Write Protect is off
-> [4294680.296000] SCSI device sdb: 2126413824 512-byte hdwr sectors (1088724
-> MB)
-> [4294680.305000] sdb: Write Protect is off
-> [4294680.334000]  sdb: sdb1
-> [4294680.345000] sd 0:0:1:0: Attached scsi disk sdb
-> [4294680.355000] sd 0:0:0:0: Attached scsi generic sg0 type 0
-> [4294680.365000] sd 0:0:1:0: Attached scsi generic sg1 type 0
-> 
-> /var/log/messages:
-> Sep 29 07:46:16 hostname kernel: [4513615.601000] sd 0:0:1:0: SCSI error:
-> return code = 0x40001
-> Sep 29 07:46:16 hostname kernel: [4513615.601000] end_request: I/O error,
-> dev sdb, sector 1744348567
-> Sep 29 07:46:16 hostname kernel: [4513615.601000] Buffer I/O error on device
-> sdb1, logical block 218043563
-> Sep 29 07:46:16 hostname kernel: [4513615.601000] lost page write due to I/O
-> error on sdb1
-> Sep 29 07:46:16 hostname kernel: [4513615.601000] sd 0:0:1:0: SCSI error:
-> return code = 0x40001
-> Sep 29 07:46:16 hostname kernel: [4513615.601000] end_request: I/O error,
-> dev sdb, sector 1744348695
-> Sep 29 07:46:16 hostname kernel: [4513615.601000] Buffer I/O error on device
-> sdb1, logical block 218043579
-> Sep 29 07:46:16 hostname kernel: [4513615.601000] lost page write due to I/O
-> error on sdb1
-> Sep 29 07:46:16 hostname kernel: [4513615.778000] sd 0:0:1:0: SCSI error:
-> return code = 0x40001
-> Sep 29 07:46:16 hostname kernel: [4513615.778000] end_request: I/O error,
-> dev sdb, sector 1744348823
-> Sep 29 07:46:16 hostname kernel: [4513615.778000] Buffer I/O error on device
-> sdb1, logical block 218043595
-> Sep 29 07:46:16 hostname kernel: [4513615.778000] lost page write due to I/O
-> error on sdb1
-> Sep 29 07:46:16 hostname kernel: [4513615.778000] sd 0:0:1:0: SCSI error:
-> return code = 0x40001
-> Sep 29 07:46:44 hostname kernel: [4513615.778000] end_request: I/O error,
-> dev sdb, sector 1744348951
-> Sep 29 07:46:44 hostname kernel: [4513615.778000] Buffer I/O error on device
-> sdb1, logical block 218043611
-> Sep 29 07:46:44 hostname kernel: [4513615.778000] lost page write due to I/O
-> error on sdb1
-> Sep 29 07:46:44 hostname kernel: [4513615.778000] sd 0:0:1:0: SCSI error:
-> return code = 0x40001
-> Sep 29 07:46:44 hostname kernel: [4513615.778000] end_request: I/O error,
-> dev sdb, sector 1744348959
-> Sep 29 07:46:44 hostname kernel: [4513615.778000] Buffer I/O error on device
-> sdb1, logical block 218043612
-> Sep 29 07:46:44 hostname kernel: [4513615.778000] lost page write due to I/O
-> error on sdb1
-> Sep 29 07:46:44 hostname kernel: [4513643.303000] sd 0:0:1:0: rejecting I/O
-> to offline device
-> Sep 29 07:46:44 hostname last message repeated 92 times
-> 
-> The last two lines repeat as long as something continues trying to access
-> that logical drive.
-> 
-> If any other logs/info would be useful please let me know and I will by
-> happy to include them.  TIA for any help.  Also I apologise if this is not
-> relevant for the list.
-> 
-> Thanks,
-> Chris 
+
+--------------020906010503040500020808
+Content-Type: text/plain;
+ name="patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch"
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index a544997..9743471 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -809,6 +809,40 @@ err_out:
+ 	return -EBUSY;
+ }
+ 
++#ifndef ARCH_VALIDATE_PCI_IRQ
++int pci_valid_irq(struct pci_dev *pdev)
++{
++	if (pdev->irq == 0)
++		return -EINVAL;
++	
++	return 0;
++}
++EXPORT_SYMBOL(pci_valid_irq);
++#endif /* ARCH_VALIDATE_PCI_IRQ */
++
++int pci_request_irq(struct pci_dev *pdev,
++		    irqreturn_t (*handler)(int, void *, struct pt_regs *),
++		    unsigned long flags, const char *name, void *userdata)
++{
++	int rc;
++
++	rc = pci_valid_irq(pdev);
++	if (rc) {
++		dev_printk(KERN_ERR, &pdev->dev, "invalid irq\n");
++		return rc;
++	}
++
++	return request_irq(pdev->irq, handler, flags | IRQF_SHARED,
++			   name, userdata);
++}
++EXPORT_SYMBOL(pci_request_irq);
++
++void pci_release_irq(struct pci_dev *pdev, void *userdata)
++{
++	free_irq(pdev->irq, userdata);
++}
++EXPORT_SYMBOL(pci_release_irq);
++
+ /**
+  * pci_set_master - enables bus-mastering for device dev
+  * @dev: the PCI device to enable
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 5c3a417..5e254fc 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -52,6 +52,7 @@ #include <linux/list.h>
+ #include <linux/compiler.h>
+ #include <linux/errno.h>
+ #include <linux/device.h>
++#include <linux/interrupt.h>
+ 
+ /* File state for mmap()s on /proc/bus/pci/X/Y */
+ enum pci_mmap_state {
+@@ -537,6 +538,12 @@ void pci_release_regions(struct pci_dev 
+ int __must_check pci_request_region(struct pci_dev *, int, const char *);
+ void pci_release_region(struct pci_dev *, int);
+ 
++int __must_check pci_valid_irq(struct pci_dev *pdev);
++int __must_check pci_request_irq(struct pci_dev *pdev,
++		    irqreturn_t (*handler)(int, void *, struct pt_regs *),
++		    unsigned long flags, const char *name, void *userdata);
++void pci_release_irq(struct pci_dev *pdev, void *userdata);
++
+ /* drivers/pci/bus.c */
+ int __must_check pci_bus_alloc_resource(struct pci_bus *bus,
+ 			struct resource *res, resource_size_t size,
+
+--------------020906010503040500020808--
