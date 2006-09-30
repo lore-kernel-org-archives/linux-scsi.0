@@ -1,27 +1,76 @@
-From: "David Somayajulu" <david.somayajulu@qlogic.com>
-Subject: RE: [RFC] [PATCH] qla4xxx driver resubmission
-Date: Fri, 29 Sep 2006 17:42:13 -0700
-Message-ID: <0BB3E5E7462EEA4295BC02D49691DC07414C2E@AVEXCH1.qlogic.org>
-References: <0BB3E5E7462EEA4295BC02D49691DC074146BD@AVEXCH1.qlogic.org>
+From: Frederik Deweerdt <deweerdt@free.fr>
+Subject: [-mm patch] aic7xxx: check irq validity (was Re: 2.6.18-mm2)
+Date: Sat, 30 Sep 2006 14:09:46 +0000
+Message-ID: <20060930140946.GA1195@slug>
+References: <20060928014623.ccc9b885.akpm@osdl.org> <20060929155738.7076f0c8@werewolf> <20060929143949.GL5017@parisc-linux.org> <1159550143.13029.36.camel@localhost.localdomain> <20060929235054.GB2020@slug> <1159573404.13029.96.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:60438 "EHLO avexch1.qlogic.com")
-	by vger.kernel.org with ESMTP id S1161046AbWI3AmO convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Sep 2006 20:42:14 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <0BB3E5E7462EEA4295BC02D49691DC074146BD@AVEXCH1.qlogic.org>
+Received: from ug-out-1314.google.com ([66.249.92.174]:2283 "EHLO
+	ug-out-1314.google.com") by vger.kernel.org with ESMTP
+	id S1750932AbWI3MLI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 30 Sep 2006 08:11:08 -0400
+Received: by ug-out-1314.google.com with SMTP id o38so355815ugd
+        for <linux-scsi@vger.kernel.org>; Sat, 30 Sep 2006 05:11:07 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <1159573404.13029.96.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, David Wagner <david.wagner@qlogic.com>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Matthew Wilcox <matthew@wil.cx>, "J.A. Magall??n" <jamagallon@ono.com>, Andrew Morton <akpm@osdl.org>, "Linux-Kernel," <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
+On Sat, Sep 30, 2006 at 12:43:24AM +0100, Alan Cox wrote:
+> Ar Gwe, 2006-09-29 am 23:50 +0000, ysgrifennodd Frederik Deweerdt:
+> > Does this patch makes sense in that case? If yes, I'll put up a patch
+> > for the remaining cases in the drivers/scsi/aic7xxx/ directory.
+> > Also, aic7xxx's coding style would put parenthesis around the returned
+> > value, should I follow it?
+> 
+> Yes - but perhaps with a warning message so users know why ?
+> 
+> As to coding style - kernel style is unbracketed so I wouldnt worry
+> about either.
+> 
+Thanks for the advices. 
 
+The following patch checks whenever the irq is valid before issuing a
+request_irq() for AIC7XXX and AIC79XX. An error message is displayed to
+let the user know what went wrong.
 
-Once again, we would really appreciate if you could please let us know
-the status of qla4xxx driver regarding its inclusion upstream.
-Thanks
-David Somayajulu
+Regards,
+Frederik
+
+Signed-off-by: Frederik Deweerdt <frederik.deweerdt@gmail.com>
+
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm_pci.c b/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
+index 2001fe8..8279122 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
++++ b/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
+@@ -132,6 +132,11 @@ ahd_linux_pci_dev_probe(struct pci_dev *
+ 	char		*name;
+ 	int		 error;
+ 
++	if (!pdev->irq) {
++		printk(KERN_WARNING "aic79xx: No irq line set\n");
++		return -ENODEV;
++	}
++
+ 	pci = pdev;
+ 	entry = ahd_find_pci_device(pci);
+ 	if (entry == NULL)
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c b/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
+index ea5687d..ca61cdb 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
+@@ -185,6 +185,11 @@ ahc_linux_pci_dev_probe(struct pci_dev *
+ 	int		 error;
+ 	struct device	*dev = &pdev->dev;
+ 
++	if (!pdev->irq) {
++		printk(KERN_WARNING "aic7xxx: No irq line set\n");
++		return -ENODEV;
++	}
++
+ 	pci = pdev;
+ 	entry = ahc_find_pci_device(pci);
+ 	if (entry == NULL)
