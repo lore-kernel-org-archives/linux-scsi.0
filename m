@@ -1,92 +1,91 @@
-From: "Chris Lee" <labmonkey42@gmail.com>
-Subject: RE: Problem with legacy megaraid
-Date: Sun, 1 Oct 2006 00:39:37 -0500
-Message-ID: <451f5496.40cc4d00.1456.ffffef37@mx.gmail.com>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: Problem with legacy megaraid
+Date: Sat, 30 Sep 2006 23:02:59 -0700
+Message-ID: <20060930230259.497b7bc9.akpm@osdl.org>
 References: <20060930155410.8238c195.akpm@osdl.org>
+	<451f5496.40cc4d00.1456.ffffef37@mx.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.225]:22410 "EHLO
-	wx-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1752024AbWJAFjf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 1 Oct 2006 01:39:35 -0400
-Received: by wx-out-0506.google.com with SMTP id s14so1372538wxc
-        for <linux-scsi@vger.kernel.org>; Sat, 30 Sep 2006 22:39:34 -0700 (PDT)
-In-Reply-To: <20060930155410.8238c195.akpm@osdl.org>
+Received: from smtp.osdl.org ([65.172.181.4]:28833 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1752027AbWJAGDG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 1 Oct 2006 02:03:06 -0400
+In-Reply-To: <451f5496.40cc4d00.1456.ffffef37@mx.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Andrew Morton' <akpm@osdl.org>
+To: Chris Lee <labmonkey42@gmail.com>
 Cc: linux-kernel@vger.kernel.org, "'Ju, Seokmann'" <Seokmann.Ju@lsil.com>, linux-scsi@vger.kernel.org, Neela.Kolli@engenio.com
 
-Thanks for your response Andrew.  Comment responses in-line:
+On Sun, 1 Oct 2006 00:39:37 -0500
+"Chris Lee" <labmonkey42@gmail.com> wrote:
 
+> Thanks for your response Andrew.  Comment responses in-line:
 > 
-> > I am not subscribed to this list.  Please CC me on replies.
-> 
-> (more cc's added)
-> 
-
-Outstanding; thank you.
-
-> > I have a machine I'm trying to use as a file server.  I 
-> have a RAID10 and a
-> > RAID5 on a single Dell PERC2/DC (AMI Megaraid 467) 
-> controller.  Both arrays
-> > are also on the same SCSI channel.  The system runs fine 
-> for days on end
-> > until I put some heavy I/O load on either array and sustain 
-> it for a few
-> > seconds.
-> 
-> We recently discovered that "The old megaraid driver is 
-> apparently borken
-> for firmware newer than 6.61.".  So please check that and see if a
-> downgrade is needed.
-> 
-
-The Dell firmware version on the card currently is 1.06.  I have not found a
-newer firmware version than that one.
-
-> Is there some reason why you cannot use the new megaraid driver?
-> 
-
-The config help for the megaraid drivers suggested that the new megaraid
-driver would not support a PERC2.  I had enabled both drivers in the kernel
-which is having this problem.:
-
-CONFIG_MEGARAID_NEWGEN=y
-CONFIG_MEGARAID_MM=y
-CONFIG_MEGARAID_MAILBOX=y
-CONFIG_MEGARAID_LEGACY=y
-
-After your suggestion I rebuilt the kernel with legacy disabled.:
-
-CONFIG_MEGARAID_NEWGEN=y
-CONFIG_MEGARAID_MM=y
-CONFIG_MEGARAID_MAILBOX=y
-# CONFIG_MEGARAID_LEGACY is not set
-
-The new megaraid driver does not detect the PERC2/DC just as I feared it
-would not.  Unless I'm missing some kernel commandline arguments necessary
-to make the new driver find the card, I'm stuck with legacy.
-
-> 
-> > Distro: Gentoo Linux
-> > Kernel: 2.6.17-gentoo-r7
 > > 
-> > Hardware:
-> > Motherboard: Tyan Thunder i7501 Pro (S2721-533)
-> > CPUs: Dual 2.8Ghz P4 HT Xeons
-> > RAM: 4GB registered (3/1 split, flat model)
-> > RAID: Dell PERC2/DC (AMI Megaraid 467)
-> > SCSI: Adaptec AHA-2940U2/U2W PCI
-> > NICs: onboard e100 and dual onboard e1000
+> > > I am not subscribed to this list.  Please CC me on replies.
 > > 
+> > (more cc's added)
+> > 
+> 
+> Outstanding; thank you.
+> 
+> > > I have a machine I'm trying to use as a file server.  I 
+> > have a RAID10 and a
+> > > RAID5 on a single Dell PERC2/DC (AMI Megaraid 467) 
+> > controller.  Both arrays
+> > > are also on the same SCSI channel.  The system runs fine 
+> > for days on end
+> > > until I put some heavy I/O load on either array and sustain 
+> > it for a few
+> > > seconds.
+> > 
+> > We recently discovered that "The old megaraid driver is 
+> > apparently borken
+> > for firmware newer than 6.61.".  So please check that and see if a
+> > downgrade is needed.
+> > 
+> 
+> The Dell firmware version on the card currently is 1.06.  I have not found a
+> newer firmware version than that one.
+> 
+> > Is there some reason why you cannot use the new megaraid driver?
+> > 
+> 
+> The config help for the megaraid drivers suggested that the new megaraid
+> driver would not support a PERC2.  I had enabled both drivers in the kernel
+> which is having this problem.:
+> 
+> CONFIG_MEGARAID_NEWGEN=y
+> CONFIG_MEGARAID_MM=y
+> CONFIG_MEGARAID_MAILBOX=y
+> CONFIG_MEGARAID_LEGACY=y
+> 
+> After your suggestion I rebuilt the kernel with legacy disabled.:
+> 
+> CONFIG_MEGARAID_NEWGEN=y
+> CONFIG_MEGARAID_MM=y
+> CONFIG_MEGARAID_MAILBOX=y
+> # CONFIG_MEGARAID_LEGACY is not set
+> 
+> The new megaraid driver does not detect the PERC2/DC just as I feared it
+> would not.  Unless I'm missing some kernel commandline arguments necessary
+> to make the new driver find the card, I'm stuck with legacy.
 
-<snip>
+Oh well.  I was just guessing - I've never even seen a megaraid controller,
+sorry.
 
-Thanks,
-Chris  
+> > 
+> > > Distro: Gentoo Linux
+> > > Kernel: 2.6.17-gentoo-r7
+> > > 
+> > > Hardware:
+> > > Motherboard: Tyan Thunder i7501 Pro (S2721-533)
+> > > CPUs: Dual 2.8Ghz P4 HT Xeons
+> > > RAM: 4GB registered (3/1 split, flat model)
+> > > RAID: Dell PERC2/DC (AMI Megaraid 467)
+> > > SCSI: Adaptec AHA-2940U2/U2W PCI
+> > > NICs: onboard e100 and dual onboard e1000
+> > > 
 
+Did it work correctly under any earlier kernel version?  If so, which?
