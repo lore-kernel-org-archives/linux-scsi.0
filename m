@@ -1,49 +1,41 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: [PATCH] scsi: device_reprobe() can fail
-Date: Sat, 30 Sep 2006 21:23:44 -0400
-Message-ID: <20061001012344.GA24609@havoc.gtf.org>
+Subject: SCSI make all{yes,mod}config build breakage
+Date: Sat, 30 Sep 2006 21:25:40 -0400
+Message-ID: <451F1914.9040007@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751887AbWJABXr@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:55785 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751881AbWJABZo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 30 Sep 2006 21:25:44 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
 
+The block tree merge broke the SCSI build:
 
-[This has been sitting in James Bottomley's scsi-misc for five days.
- With SCSI outputting a warning for almost -every- file, let's go ahead
- and get the patch in.]
+   CC [M]  drivers/scsi/libsas/sas_scsi_host.o
+In file included from include/scsi/libsas.h:35,
+                  from drivers/scsi/libsas/sas_internal.h:32,
+                  from drivers/scsi/libsas/sas_scsi_host.c:26:
+include/scsi/scsi_device.h: In function =91scsi_device_reprobe=92:
+include/scsi/scsi_device.h:303: warning: ignoring return value of=20
+=91device_reprobe=92, declared with attribute warn_unused_result
+drivers/scsi/libsas/sas_scsi_host.c: In function =91sas_scsi_get_task_a=
+ttr=92:
+drivers/scsi/libsas/sas_scsi_host.c:129: error: =91struct request=92 ha=
+s no=20
+member named =91flags=92
 
-From: Andrew Morton <akpm@osdl.org>
+The attached patch (sent in separate email with proper sign-off) fixes=20
+things.
 
-device_reprobe() should return an error code.  When it does so,
-scsi_device_reprobe() should propagate it back.
-
-Acked-by: Jeff Garzik <jeff@garzik.org>
-Signed-off-by: Andrew Morton <akpm@osdl.org>
-Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
-
----
-
- include/scsi/scsi_device.h |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-8350a348e97c2f8aa3e91c025c0e040c90146414
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 895d212..b401c82 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -298,9 +298,9 @@ extern int scsi_execute_async(struct scs
- 			      void (*done)(void *, char *, int, int),
- 			      gfp_t gfp);
- 
--static inline void scsi_device_reprobe(struct scsi_device *sdev)
-+static inline int __must_check scsi_device_reprobe(struct scsi_device *sdev)
- {
--	device_reprobe(&sdev->sdev_gendev);
-+	return device_reprobe(&sdev->sdev_gendev);
- }
- 
- static inline unsigned int sdev_channel(struct scsi_device *sdev)
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
