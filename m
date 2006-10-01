@@ -1,50 +1,55 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] async scsi scanning, version 13
-Date: Sun, 01 Oct 2006 15:00:57 -0500
-Message-ID: <1159732857.3542.5.camel@mulgrave.il.steeleye.com>
-References: <20060928211920.GI5017@parisc-linux.org>
+From: Andi Kleen <ak@suse.de>
+Subject: GFP_DMA use in SCSI midlayer
+Date: Sun, 1 Oct 2006 22:13:24 +0200
+Message-ID: <200610012213.24123.ak@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:10218 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S932279AbWJAUCJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 1 Oct 2006 16:02:09 -0400
-In-Reply-To: <20060928211920.GI5017@parisc-linux.org>
+Received: from mx1.suse.de ([195.135.220.2]:36812 "EHLO mx1.suse.de")
+	by vger.kernel.org with ESMTP id S932297AbWJAUNc convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 1 Oct 2006 16:13:32 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-
-On Thu, 2006-09-28 at 15:19 -0600, Matthew Wilcox wrote:
-> Version 13 ...
->   
-> changes vs version 12:
-> 
-> Address akpm's comments:
->  - use DEFINE_SPINLOCK
->  - document how scsi_complete_async_scans works
->  - document why the memory allocation loop in scsi_complete_async_scans
->    will eventually terminate
->  - document why we don't add ourselves to the list if it's already empty
->     
-> shost_for_each_device is safe and shost_for_each_device_safe isn't.
-> Delete shost_for_each_device_safe, use shost_for_each_device and update
-> the docs for __shost_for_each_device and shost_for_each_device to be
-> more accurate.
-> 
-> changes vs version 11:
-> 
-> Fix whitespace pointed out by Randy Dunlap.
-
-OK, my plan for this is to place it in SCSI misc as soon as we get
-2.6.19-rc1.  That way we'll give it a thorough check out in -mm before
-it hits mainline.
-
-By the way, a global change log (rather than changes relative to
-previous versions) would be appreciated.
-
-James
+To: linux-scsi@vger.kernel.org
+Cc: Christoph Lameter <clameter@sgi.com>
 
 
+>From a quick grep the SCSI midlayer still uses a lot of GFP_DMA
+for various things:
+
+% gid GFP_DMA | grep scsi
+drivers/scsi/aha1542.c:704:             SCpnt->host_scribble = (unsigned char *) kmalloc(512, GFP_KERNEL | GFP_DMA);
+drivers/scsi/ch.c:266:  buffer = kmalloc(512, GFP_KERNEL | GFP_DMA);
+drivers/scsi/ch.c:323:  buffer = kmalloc(512, GFP_KERNEL | GFP_DMA);
+drivers/scsi/ch.c:773:          buffer = kmalloc(512, GFP_KERNEL | GFP_DMA);
+drivers/scsi/eata.c:1358:               gfp_t gfp_mask = (shost->unchecked_isa_dma ? GFP_DMA : 0) | GFP_ATOMIC;
+drivers/scsi/initio.c:2830:             if ((tul_scb = (SCB *) kmalloc(i, GFP_ATOMIC | GFP_DMA)) != NULL)
+drivers/scsi/osst.c:5250:               priority |= GFP_DMA;
+drivers/scsi/pluto.c:120:       fcs = (struct ctrl_inquiry *) kmalloc (sizeof (struct ctrl_inquiry) * fcscount, GFP_DMA);
+drivers/scsi/sg.c:1660:  * XXX(hch): we shouldn't need GFP_DMA for the actual S/G list.
+drivers/scsi/sg.c:1663:          gfp_flags |= GFP_DMA;
+drivers/scsi/sg.c:2453:         page_mask = GFP_ATOMIC | GFP_DMA | __GFP_COMP | __GFP_NOWARN;
+drivers/scsi/sr.c:628:  buffer = kmalloc(512, GFP_KERNEL | GFP_DMA);
+drivers/scsi/sr.c:728:  buffer = kmalloc(512, GFP_KERNEL | GFP_DMA);
+drivers/scsi/sr_ioctl.c:34:/* primitive to determine whether we need to have GFP_DMA set based on
+drivers/scsi/sr_ioctl.c:36:#define SR_GFP_DMA(cd) (((cd)->device->host->unchecked_isa_dma) ? GFP_DMA : 0)
+drivers/scsi/sr_vendor.c:120:   buffer = (unsigned char *) kmalloc(512, GFP_KERNEL | GFP_DMA);
+drivers/scsi/sr_vendor.c:167:   buffer = (unsigned char *) kmalloc(512, GFP_KERNEL | GFP_DMA);
+drivers/scsi/st.c:3627:         priority |= GFP_DMA;
+drivers/scsi/u14-34f.c:983:            (sh[j]->unchecked_isa_dma ? GFP_DMA : 0) | GFP_ATOMIC))) {
+
+GFP_DMA in general is deprecated and should be replaced by appropiate dma_alloc_coherent()
+or similar.  And I can't imagine any modern systems still need them, and for 
+the few still non CONFIG_BROKEN ISA drivers maybe some other way can be found?
+And do they really require the mid layer data structures to be GFP_DMA too?
+
+Is it possible to get rid of those GFP_DMAs in the mid layer and the 
+higher level drivers like sd,sr,ch etc.?
+
+Thanks,
+
+-Andi
