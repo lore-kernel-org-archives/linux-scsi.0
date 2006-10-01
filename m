@@ -1,43 +1,56 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] async scsi scanning, version 13
-Date: Sun, 1 Oct 2006 14:17:53 -0600
-Message-ID: <20061001201753.GG16272@parisc-linux.org>
-References: <20060928211920.GI5017@parisc-linux.org> <1159732857.3542.5.camel@mulgrave.il.steeleye.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: GFP_DMA use in SCSI midlayer
+Date: Sun, 01 Oct 2006 15:40:18 -0500
+Message-ID: <1159735218.3542.16.camel@mulgrave.il.steeleye.com>
+References: <200610012213.24123.ak@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:22149 "EHLO
-	mail.parisc-linux.org") by vger.kernel.org with ESMTP
-	id S932301AbWJAURy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 1 Oct 2006 16:17:54 -0400
-Content-Disposition: inline
-In-Reply-To: <1159732857.3542.5.camel@mulgrave.il.steeleye.com>
+Received: from stat9.steeleye.com ([209.192.50.41]:41962 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S932344AbWJAUk0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 1 Oct 2006 16:40:26 -0400
+In-Reply-To: <200610012213.24123.ak@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Andi Kleen <ak@suse.de>
+Cc: linux-scsi@vger.kernel.org, Christoph Lameter <clameter@sgi.com>
 
-On Sun, Oct 01, 2006 at 03:00:57PM -0500, James Bottomley wrote:
-> OK, my plan for this is to place it in SCSI misc as soon as we get
-> 2.6.19-rc1.  That way we'll give it a thorough check out in -mm before
-> it hits mainline.
-> 
-> By the way, a global change log (rather than changes relative to
-> previous versions) would be appreciated.
+On Sun, 2006-10-01 at 22:13 +0200, Andi Kleen wrote:
+> GFP_DMA in general is deprecated and should be replaced by appropiate
+> dma_alloc_coherent()
 
-Certainly ...
+Um, no it shouldn't.
 
-Add ability to scan scsi busses asynchronously
+All of the places where we use GFP_DMA are because we might be
+addressing an ISA card or other strange mask limited card (gated usually
+by unchecked_isa_dma).  However, what is wanted in every case is
+ordinary memory, not coherent memory.  They can't simply be replaced
+with dma_alloc_coherent because
 
-Since it often takes around 20-30 seconds to scan a scsi bus, it's
-highly advantageous to do this in parallel with other things.  The bulk
-of this patch is ensuring that devices don't change numbering, and that
-all devices are discovered prior to trying to start init.  For those
-who build SCSI as modules, there's a new scsi_wait_scan module that will
-ensure all bus scans are finished.
+a) it will waste memory for platforms that only do it in page size
+multiples
+b) It will fail on platforms that can't do it at all.
 
-This patch only handles drivers which call scsi_scan_host.  Fibre Channel,
-SAS, SATA, USB and Firewire all need additional work.
+Coherent memory is really only for device drivers to use in mailboxes
+and shared ring buffers.
 
-Signed-off-by: Matthew Wilcox <matthew@wil.cx>
+> or similar.  And I can't imagine any modern systems still need them, and for 
+> the few still non CONFIG_BROKEN ISA drivers maybe some other way can be found?
+> And do they really require the mid layer data structures to be GFP_DMA too?
+
+Well, it's the "or similar" that's still the problem.  All they need is
+ordinary memory which respects the device mask (then I can get rid of
+the unchecked_isa_dma flag as well).
+
+One could argue, I suppose, that when we get every SCSI path to go via
+sg, then the block layer will bounce this for us, and we don't need to
+worry at all.
+
+> Is it possible to get rid of those GFP_DMAs in the mid layer and the 
+> higher level drivers like sd,sr,ch etc.?
+
+James
+
 
