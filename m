@@ -1,41 +1,37 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: SCSI make all{yes,mod}config build breakage
-Date: Sat, 30 Sep 2006 21:25:40 -0400
-Message-ID: <451F1914.9040007@garzik.org>
+Subject: [PATCH] SCSI: fix request flag-related build breakage
+Date: Sat, 30 Sep 2006 21:28:22 -0400
+Message-ID: <20061001012822.GA25208@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:55785 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751881AbWJABZo (ORCPT
+Received: from havoc.gtf.org ([69.61.125.42]:22229 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S1751990AbWJAB2X (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 30 Sep 2006 21:25:44 -0400
+	Sat, 30 Sep 2006 21:28:23 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: axboe@kernel.dk, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-The block tree merge broke the SCSI build:
 
-   CC [M]  drivers/scsi/libsas/sas_scsi_host.o
-In file included from include/scsi/libsas.h:35,
-                  from drivers/scsi/libsas/sas_internal.h:32,
-                  from drivers/scsi/libsas/sas_scsi_host.c:26:
-include/scsi/scsi_device.h: In function =91scsi_device_reprobe=92:
-include/scsi/scsi_device.h:303: warning: ignoring return value of=20
-=91device_reprobe=92, declared with attribute warn_unused_result
-drivers/scsi/libsas/sas_scsi_host.c: In function =91sas_scsi_get_task_a=
-ttr=92:
-drivers/scsi/libsas/sas_scsi_host.c:129: error: =91struct request=92 ha=
-s no=20
-member named =91flags=92
+The ->flags in struct request was split into two variables, in a recent
+changeset.  The merge of this change forgot to update SCSI's libsas,
+probably because libsas was a very recent merge.
 
-The attached patch (sent in separate email with proper sign-off) fixes=20
-things.
+Signed-off-by: Jeff Garzik <jeff@garzik.org>
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index 7f9e89b..e46e793 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -126,7 +126,7 @@ static enum task_attribute sas_scsi_get_
+ 	enum task_attribute ta = TASK_ATTR_SIMPLE;
+ 	if (cmd->request && blk_rq_tagged(cmd->request)) {
+ 		if (cmd->device->ordered_tags &&
+-		    (cmd->request->flags & REQ_HARDBARRIER))
++		    (cmd->request->cmd_flags & REQ_HARDBARRIER))
+ 			ta = TASK_ATTR_HOQ;
+ 	}
+ 	return ta;
