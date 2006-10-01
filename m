@@ -1,58 +1,61 @@
-From: Frederik Deweerdt <deweerdt@free.fr>
+From: Arjan van de Ven <arjan@infradead.org>
 Subject: Re: [-mm patch] aic7xxx: check irq validity (was Re: 2.6.18-mm2)
-Date: Sun, 1 Oct 2006 21:31:47 +0000
-Message-ID: <20061001213147.GA2900@slug>
-References: <20060928014623.ccc9b885.akpm@osdl.org> <20060929155738.7076f0c8@werewolf> <20060929143949.GL5017@parisc-linux.org> <1159550143.13029.36.camel@localhost.localdomain> <20060929235054.GB2020@slug> <1159573404.13029.96.camel@localhost.localdomain> <20060930140946.GA1195@slug> <451F049A.1010404@garzik.org>
+Date: Sun, 01 Oct 2006 21:34:50 +0200
+Message-ID: <1159731290.2891.411.camel@laptopd505.fenrus.org>
+References: <20060928014623.ccc9b885.akpm@osdl.org>
+	 <20060929155738.7076f0c8@werewolf> <20060929143949.GL5017@parisc-linux.org>
+	 <1159550143.13029.36.camel@localhost.localdomain>
+	 <20060929235054.GB2020@slug>
+	 <1159573404.13029.96.camel@localhost.localdomain>
+	 <20060930140946.GA1195@slug> <451F049A.1010404@garzik.org>
+	 <20061001142807.GD16272@parisc-linux.org>
+	 <1159729523.2891.408.camel@laptopd505.fenrus.org>
+	 <452014C2.1050000@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.174]:57945 "EHLO
-	ug-out-1314.google.com") by vger.kernel.org with ESMTP
-	id S932237AbWJATdL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 1 Oct 2006 15:33:11 -0400
-Received: by ug-out-1314.google.com with SMTP id o38so443309ugd
-        for <linux-scsi@vger.kernel.org>; Sun, 01 Oct 2006 12:33:10 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <451F049A.1010404@garzik.org>
+Received: from pentafluge.infradead.org ([213.146.154.40]:7833 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S932242AbWJATfP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 1 Oct 2006 15:35:15 -0400
+In-Reply-To: <452014C2.1050000@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: Andrew Morton <akpm@osdl.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Matthew Wilcox <matthew@wil.cx>, "J.A. Magall??n" <jamagallon@ono.com>, "Linux-Kernel," <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org, "Linux-Kernel," <linux-kernel@vger.kernel.org>, "J.A. Magall??n" <jamagallon@ono.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@osdl.org>, Frederik Deweerdt <deweerdt@free.fr>
 
-On Sat, Sep 30, 2006 at 07:58:18PM -0400, Jeff Garzik wrote:
-> Frederik Deweerdt wrote:
-> >On Sat, Sep 30, 2006 at 12:43:24AM +0100, Alan Cox wrote:
-> >>Ar Gwe, 2006-09-29 am 23:50 +0000, ysgrifennodd Frederik Deweerdt:
-> >>>Does this patch makes sense in that case? If yes, I'll put up a patch
-> >>>for the remaining cases in the drivers/scsi/aic7xxx/ directory.
-> >>>Also, aic7xxx's coding style would put parenthesis around the returned
-> >>>value, should I follow it?
-> >>Yes - but perhaps with a warning message so users know why ?
-> >>
-> >>As to coding style - kernel style is unbracketed so I wouldnt worry
-> >>about either.
-> >>
-> >Thanks for the advices. The following patch checks whenever the irq is valid before issuing a
-> >request_irq() for AIC7XXX and AIC79XX. An error message is displayed to
-> >let the user know what went wrong.
-> >Regards,
-> >Frederik
-> >Signed-off-by: Frederik Deweerdt <frederik.deweerdt@gmail.com>
+On Sun, 2006-10-01 at 15:19 -0400, Jeff Garzik wrote:
+> Arjan van de Ven wrote:
+> > well... why not go one step further and eliminate the flags argument
+> > entirely? And use pci_name() for the name (so eliminate the argument ;)
+> > and always pass pdev as data, so that that argument can go away too....
+> > 
+> > that'll cover 99% of the request_irq() users for pci devices.. and makes
+> > it really nicely simple and consistent.
 > 
-> Actually, rather than adding this check to every driver, I would rather do something like the attached patch:  create a 
-> pci_request_irq(), and pass a struct pci_device to it.  Then the driver author doesn't have to worry about such details.
+> Disagree.  That would involve rewriting a lot of drivers.
 > 
-That's better, indeed. 
-[...]
-> +#ifndef ARCH_VALIDATE_PCI_IRQ
-> +int pci_valid_irq(struct pci_dev *pdev)
-> +{
-> +	if (pdev->irq == 0)
-> +		return -EINVAL;
-                        ^^^^^^
-Woulnd't this rather be ENODEV? Admitedly, from pci_valid_irq() (or
-is_irq_valid()) point of view, it _has_ been passed an invalid value. But
-from userspace's point of view, it's like the device was not present.
+> flags: may or may not need sample-random flag.
 
-Regards,
-Frederik
+ok fair.. but I'd then almost call it "samplerandom" not "flags"...
+
+
+> 
+> name: is always the ethernet interface, for net drivers, or did you 
+> forget from your irqbalance days?  ;-)
+
+I'd say the "always" isn't quite true .. I remember that well.
+If it's always the pci device at least irqbalance can look up the device
+type in sysfs ;)
+
+
+> data: in practice, is _rarely_ struct pci_dev.  It's usually a 
+> driver-private structure which is the structure most frequently 
+> accessed.  struct pci_dev* is rarely accessed inside the interrupt 
+> handler, except maybe somewhere deep in an error handling path.
+
+hmmm could put a pointer to the private data in the pci_dev at least...
+that'd be generally useful, and then this can either just pass that,
+or have the isr get to it that way (whichever makes more sense)
+
