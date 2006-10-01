@@ -1,53 +1,54 @@
-From: Arjan van de Ven <arjan@fenrus.demon.nl>
-Subject: Re: About sg_tablesize in 2.6 kernel
-Date: Sun, 01 Oct 2006 20:43:37 +0200
-Message-ID: <1159728217.2891.401.camel@laptopd505.fenrus.org>
-References: <451FA502.1070207@aboo.org>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [-mm patch] aic7xxx: check irq validity (was Re: 2.6.18-mm2)
+Date: Sun, 01 Oct 2006 21:05:23 +0200
+Message-ID: <1159729523.2891.408.camel@laptopd505.fenrus.org>
+References: <20060928014623.ccc9b885.akpm@osdl.org>
+	 <20060929155738.7076f0c8@werewolf> <20060929143949.GL5017@parisc-linux.org>
+	 <1159550143.13029.36.camel@localhost.localdomain>
+	 <20060929235054.GB2020@slug>
+	 <1159573404.13029.96.camel@localhost.localdomain>
+	 <20060930140946.GA1195@slug> <451F049A.1010404@garzik.org>
+	 <20061001142807.GD16272@parisc-linux.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from a222036.upc-a.chello.nl ([62.163.222.36]:18366 "EHLO
-	laptopd505.fenrus.org") by vger.kernel.org with ESMTP
-	id S932177AbWJASnq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 1 Oct 2006 14:43:46 -0400
-In-Reply-To: <451FA502.1070207@aboo.org>
+Received: from pentafluge.infradead.org ([213.146.154.40]:14757 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S932216AbWJATGU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 1 Oct 2006 15:06:20 -0400
+In-Reply-To: <20061001142807.GD16272@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Aboo Valappil <aboo@aboo.org>
-Cc: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org, "Linux-Kernel," <linux-kernel@vger.kernel.org>, "J.A. Magall??n" <jamagallon@ono.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@osdl.org>, Frederik Deweerdt <deweerdt@free.fr>, Jeff Garzik <jeff@garzik.org>
 
-
-[note: you forgot to put in a link to your sourcecode, which greatly
-reduces our ability to give you good answers; please fix this]
+> .
 > 
-> 1. In 2.6 kernel, even if I set the sg_tablesize to SG_NONE, the 
-> mid-layer is still queuing commands with use_sg=1. There is no way to 
-> disable this SG at all?
-
-in 2.6 everything is now going via the ONE sg codepath yes. The dual
-code path stuff was just incredibly fragile and a bad idea.
-
-
-
-> address=page_address(sg[i].page) + sg[i].offset;
+> And it doesn't need to be a __must_check.  There's no point -- it has
+> no side-effects.  The only reason to call it is if you want the answer
+> to the question.  You had the sense of the return code wrong too; you
+> want to use it as:
 > 
-> Is this the right way? I am assuming that sg[i].page will be mapped in 
-> to kernel address space as this address is created by SCSI mid-layer. Is 
-> that right? Or do I have to use kmap? I tried replacing page_address 
-> with kmap/kunmap. But as soon as call kunmap to unmap, the kernal 
-> panics! Any thoughts?
-
-kmap doesn't take struct page as argument.
-
- but.... if you show us the real code we can give you better
-suggestions.
-
+> int pci_request_irq(struct pci_dev *pdev, irq_handler_t handler,
+> 			unsigned long flags, const char *name, void *data)
+> {
+> 	if (!valid_irq(pdev->irq)) {
+> 		dev_printk(KERN_ERR, &pdev->dev, "invalid irq\n");
+> 		return -EINVAL;
+> 	}
 > 
-> 3. Do I have to disable bottom halves before calling scsi_done()? It 
-> seems that the kernel panics when I call scsi_done if I use spin_lock 
-> instead of spin_lock_bh(). This is one of my spin_locks created for 
-> protecting a data structure.
+> 	return request_irq(pdev->irq, handler, flags | IRQF_SHARED, name, data);
+> }
 
-you don't need any locks before calling the done method.
+
+well... why not go one step further and eliminate the flags argument
+entirely? And use pci_name() for the name (so eliminate the argument ;)
+and always pass pdev as data, so that that argument can go away too....
+
+that'll cover 99% of the request_irq() users for pci devices.. and makes
+it really nicely simple and consistent.
+
+-- 
+if you want to mail me at work (you don't), use arjan (at) linux.intel.com
 
