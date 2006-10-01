@@ -1,58 +1,50 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [-mm patch] aic7xxx: check irq validity (was Re: 2.6.18-mm2)
-Date: Sun, 01 Oct 2006 15:42:49 -0400
-Message-ID: <45201A39.6020500@garzik.org>
-References: <20060928014623.ccc9b885.akpm@osdl.org> <20060929155738.7076f0c8@werewolf> <20060929143949.GL5017@parisc-linux.org> <1159550143.13029.36.camel@localhost.localdomain> <20060929235054.GB2020@slug> <1159573404.13029.96.camel@localhost.localdomain> <20060930140946.GA1195@slug> <451F049A.1010404@garzik.org> <20061001142807.GD16272@parisc-linux.org> <1159729523.2891.408.camel@laptopd505.fenrus.org> <20061001193616.GF16272@parisc-linux.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] async scsi scanning, version 13
+Date: Sun, 01 Oct 2006 15:00:57 -0500
+Message-ID: <1159732857.3542.5.camel@mulgrave.il.steeleye.com>
+References: <20060928211920.GI5017@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:18067 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932252AbWJATnE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 1 Oct 2006 15:43:04 -0400
-In-Reply-To: <20061001193616.GF16272@parisc-linux.org>
+Received: from stat9.steeleye.com ([209.192.50.41]:10218 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S932279AbWJAUCJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 1 Oct 2006 16:02:09 -0400
+In-Reply-To: <20060928211920.GI5017@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Matthew Wilcox <matthew@wil.cx>
-Cc: Arjan van de Ven <arjan@infradead.org>, linux-scsi@vger.kernel.org, "Linux-Kernel," <linux-kernel@vger.kernel.org>, "J.A. Magall??n" <jamagallon@ono.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@osdl.org>, Frederik Deweerdt <deweerdt@free.fr>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Matthew Wilcox wrote:
-> Others tend to use the driver name.  Changing them all to be 0000:00:1d.2
-> isn't really an improvement in the readability of /proc/interrupts, IMO.
-
-agreed
-
-
-> Passing pdev as the data is a good idea for practically no device driver.
-
-agreed
-
-
-> It's rare to actually want the pci_device down in the interrupt handler;
-> normally you want the device private data.  Using pci_get_drvdata(pdev)
-> as the data would make sense for both sym2 and tg3.  I don't feel like
-
-Using pci_get_drvdata() is a pretty good idea
-
-
-> int pci_request_irq(struct pci_dev *pdev, irq_handler_t handler,
-> 			const char *name)
-> {
-> 	if (!valid_irq(pdev->irq)) {
-> 		dev_printk(KERN_ERR, &pdev->dev, "invalid irq\n");
-> 		return -EINVAL;
-> 	}
+On Thu, 2006-09-28 at 15:19 -0600, Matthew Wilcox wrote:
+> Version 13 ...
+>   
+> changes vs version 12:
 > 
-> 	return request_irq(pdev->irq, handler, IRQF_SHARED, name,
-> 				pci_get_drvdata(pdev));
-> }
+> Address akpm's comments:
+>  - use DEFINE_SPINLOCK
+>  - document how scsi_complete_async_scans works
+>  - document why the memory allocation loop in scsi_complete_async_scans
+>    will eventually terminate
+>  - document why we don't add ourselves to the list if it's already empty
+>     
+> shost_for_each_device is safe and shost_for_each_device_safe isn't.
+> Delete shost_for_each_device_safe, use shost_for_each_device and update
+> the docs for __shost_for_each_device and shost_for_each_device to be
+> more accurate.
 > 
-> But what about IRQF_SAMPLE_RANDOM?
+> changes vs version 11:
+> 
+> Fix whitespace pointed out by Randy Dunlap.
 
-I still like having a flags argument though.  It's enough of an open 
-question, and I bet there will be a new flag or two in the future that 
-PCI drivers will want to use.
+OK, my plan for this is to place it in SCSI misc as soon as we get
+2.6.19-rc1.  That way we'll give it a thorough check out in -mm before
+it hits mainline.
 
-	Jeff
+By the way, a global change log (rather than changes relative to
+previous versions) would be appreciated.
+
+James
 
 
