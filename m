@@ -1,57 +1,65 @@
-From: Aboo Valappil <aboo@aboo.org>
-Subject: About sg_tablesize in 2.6 kernel
-Date: Sun, 01 Oct 2006 21:22:42 +1000
-Message-ID: <451FA502.1070207@aboo.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [-mm patch] aic7xxx: check irq validity (was Re: 2.6.18-mm2)
+Date: Sun, 1 Oct 2006 08:28:07 -0600
+Message-ID: <20061001142807.GD16272@parisc-linux.org>
+References: <20060928014623.ccc9b885.akpm@osdl.org> <20060929155738.7076f0c8@werewolf> <20060929143949.GL5017@parisc-linux.org> <1159550143.13029.36.camel@localhost.localdomain> <20060929235054.GB2020@slug> <1159573404.13029.96.camel@localhost.localdomain> <20060930140946.GA1195@slug> <451F049A.1010404@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ppp245-155.static.internode.on.net ([59.167.245.155]:24737 "EHLO
-	localhost.localdomain") by vger.kernel.org with ESMTP
-	id S1751728AbWJALWn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 1 Oct 2006 07:22:43 -0400
-Received: from [192.168.1.65] ([192.168.1.65])
-	by localhost.localdomain (8.13.1/8.13.1) with ESMTP id k91BHxct029254
-	for <linux-scsi@vger.kernel.org>; Sun, 1 Oct 2006 21:17:59 +1000
+Received: from palinux.external.hp.com ([192.25.206.14]:713 "EHLO
+	mail.parisc-linux.org") by vger.kernel.org with ESMTP
+	id S932194AbWJAO2J (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 1 Oct 2006 10:28:09 -0400
+Content-Disposition: inline
+In-Reply-To: <451F049A.1010404@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Frederik Deweerdt <deweerdt@free.fr>, Andrew Morton <akpm@osdl.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, "J.A. Magall??n" <jamagallon@ono.com>, "Linux-Kernel," <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-Hi All,
+On Sat, Sep 30, 2006 at 07:58:18PM -0400, Jeff Garzik wrote:
+> Actually, rather than adding this check to every driver, I would rather 
+> do something like the attached patch:  create a pci_request_irq(), and 
+> pass a struct pci_device to it.  Then the driver author doesn't have to 
+> worry about such details.
 
-I am not sure if this is the right place to ask these questions. I am 
-new to this list. Does this list offer any help to device driver 
-developers? I appreciate if any one could give an answer to these 
-questions.
+I like pci_request_irq(), but pci_valid_irq is bad.
 
-1. In 2.6 kernel, even if I set the sg_tablesize to SG_NONE, the 
-mid-layer is still queuing commands with use_sg=1. There is no way to 
-disable this SG at all? I do not need a sg_table as I do not use any DMA 
-or anything else. With SG_NONE, the use_sg is always set to 1 and the IO 
-size queued by mid layer is only 512 bytes and decreases the throughput 
-very badly.
+> +#ifndef ARCH_VALIDATE_PCI_IRQ
+> +int pci_valid_irq(struct pci_dev *pdev)
+> +{
+> +	if (pdev->irq == 0)
+> +		return -EINVAL;
+> +	
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL(pci_valid_irq);
+> +#endif /* ARCH_VALIDATE_PCI_IRQ */
 
-2. One of the challenge I am facing is that the scatterlist structure is 
-changed. There is no virtual address, but they replaced this with a page 
-and offset fields. Since I need only the virtual addresses for the 
-actual buffer (No DMA), I am using the following method to calculate the 
-virtual address.
+Better would be:
 
-address=page_address(sg[i].page) + sg[i].offset;
+#ifndef ARCH_VALIDATE_IRQ
+static inline int valid_irq(unsigned int irq)
+{
+	return irq ? 1 : 0;
+}
+#endif
 
-Is this the right way? I am assuming that sg[i].page will be mapped in 
-to kernel address space as this address is created by SCSI mid-layer. Is 
-that right? Or do I have to use kmap? I tried replacing page_address 
-with kmap/kunmap. But as soon as call kunmap to unmap, the kernal 
-panics! Any thoughts?
+in linux/interrupt.h (around request_irq).
 
-3. Do I have to disable bottom halves before calling scsi_done()? It 
-seems that the kernel panics when I call scsi_done if I use spin_lock 
-instead of spin_lock_bh(). This is one of my spin_locks created for 
-protecting a data structure.
+And it doesn't need to be a __must_check.  There's no point -- it has
+no side-effects.  The only reason to call it is if you want the answer
+to the question.  You had the sense of the return code wrong too; you
+want to use it as:
 
+int pci_request_irq(struct pci_dev *pdev, irq_handler_t handler,
+			unsigned long flags, const char *name, void *data)
+{
+	if (!valid_irq(pdev->irq)) {
+		dev_printk(KERN_ERR, &pdev->dev, "invalid irq\n");
+		return -EINVAL;
+	}
 
-Thanks in advance,
-
-Aboo
+	return request_irq(pdev->irq, handler, flags | IRQF_SHARED, name, data);
+}
 
