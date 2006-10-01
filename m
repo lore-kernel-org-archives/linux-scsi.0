@@ -1,45 +1,86 @@
-From: "Chris Lee" <labmonkey42@gmail.com>
-Subject: RE: Problem with legacy megaraid
-Date: Sun, 1 Oct 2006 01:44:04 -0500
-Message-ID: <451f63b0.0b6e62c3.1073.0ffa@mx.gmail.com>
-References: <20060930230259.497b7bc9.akpm@osdl.org>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: [PATCH] enable clustering for tmscsim
+Date: Sun, 1 Oct 2006 12:00:47 +0200 (CEST)
+Message-ID: <Pine.LNX.4.60.0610011148410.4007@poirot.grange>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.228]:20420 "EHLO
-	wx-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1752036AbWJAGoA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 1 Oct 2006 02:44:00 -0400
-Received: by wx-out-0506.google.com with SMTP id s14so1379220wxc
-        for <linux-scsi@vger.kernel.org>; Sat, 30 Sep 2006 23:44:00 -0700 (PDT)
-In-Reply-To: <20060930230259.497b7bc9.akpm@osdl.org>
+Received: from mail.gmx.net ([213.165.64.20]:15027 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S1751704AbWJAKAq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 1 Oct 2006 06:00:46 -0400
+Received: from lyakh (helo=localhost)
+	by poirot.grange with local-esmtp (Exim 3.36 #1 (Debian))
+	id 1GTy7s-0004Xs-00
+	for <linux-scsi@vger.kernel.org>; Sun, 01 Oct 2006 12:00:48 +0200
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Andrew Morton' <akpm@osdl.org>
-Cc: linux-kernel@vger.kernel.org, "'Ju, Seokmann'" <Seokmann.Ju@lsil.com>, linux-scsi@vger.kernel.org, Neela.Kolli@engenio.com
+To: linux-scsi@vger.kernel.org
 
-> > > 
-> > > > Distro: Gentoo Linux
-> > > > Kernel: 2.6.17-gentoo-r7
-> > > > 
-> > > > Hardware:
-> > > > Motherboard: Tyan Thunder i7501 Pro (S2721-533)
-> > > > CPUs: Dual 2.8Ghz P4 HT Xeons
-> > > > RAM: 4GB registered (3/1 split, flat model)
-> > > > RAID: Dell PERC2/DC (AMI Megaraid 467)
-> > > > SCSI: Adaptec AHA-2940U2/U2W PCI
-> > > > NICs: onboard e100 and dual onboard e1000
-> > > > 
-> 
-> Did it work correctly under any earlier kernel version?  If 
-> so, which?
+Hi
 
-I've recently built the system and the problem was present with both
-2.6.16-gentoo-r4 and now 2.6.17-gentoo-r7.  I've not used any earlier kernel
-versions in this system.
+following an email from John Adams <johna@onevista.com> to me with a patch 
+to enable tmscsim to use blocks up to 1MB and a discussion on linux-scsi, 
+below is a patch to enable clustering for tmscsim. I made it switchable 
+with a module parameter, with default "enable" - in case somebody gets 
+problems with it. Unfortunately, I was not able to check if this alone 
+lets you use any bigger blocks with a tape, as my tape seems to only 
+support 1 block size - only "mt setblk 1" is successful, any other value 
+fails. OTOH, testing on a P-133 showed that enabling clustering alone 
+improves throughput by 10% and reduces CPU load by another 10%, so, seems 
+a worthy thing to do. As for setting max_sectors, that might become a 
+separate patch...
 
-Thanks,
-Chris  
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
 
+Signed-off-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+
+Enable clustering on tmscsim by default, but allow switching it off with a 
+module parameter. In a test it increased throughput by 10% and reduced CPU 
+load by another 10%.
+
+diff -u -p a/drivers/scsi/tmscsim.c b/drivers/scsi/tmscsim.c
+--- a/drivers/scsi/tmscsim.c	8 Feb 2006 23:08:48 -0000
++++ b/drivers/scsi/tmscsim.c	30 Sep 2006 19:10:53 -0000
+@@ -280,6 +280,10 @@ static void dc390_ResetDevParam(struct d
+ static u32	dc390_laststatus = 0;
+ static u8	dc390_adapterCnt = 0;
+ 
++static int disable_clustering;
++module_param(disable_clustering, int, S_IRUGO);
++MODULE_PARM_DESC(disable_clustering, "If you experience problems with your devices, try setting to 1");
++
+ /* Startup values, to be overriden on the commandline */
+ static int tmscsim[] = {-2, -2, -2, -2, -2, -2};
+ 
+@@ -2300,7 +2304,7 @@ static struct scsi_host_template driver_
+ 	.this_id		= 7,
+ 	.sg_tablesize		= SG_ALL,
+ 	.cmd_per_lun		= 1,
+-	.use_clustering		= DISABLE_CLUSTERING,
++	.use_clustering		= ENABLE_CLUSTERING,
+ };
+ 
+ /***********************************************************************
+@@ -2526,6 +2530,8 @@ static int __devinit dc390_probe_one(str
+ 	pci_set_master(pdev);
+ 
+ 	error = -ENOMEM;
++	if (disable_clustering)
++		driver_template.use_clustering = DISABLE_CLUSTERING;
+ 	shost = scsi_host_alloc(&driver_template, sizeof(struct dc390_acb));
+ 	if (!shost)
+ 		goto out_disable_device;
+@@ -2661,6 +2667,10 @@ static struct pci_driver dc390_driver = 
+ 
+ static int __init dc390_module_init(void)
+ {
++	if (!disable_clustering)
++		printk(KERN_INFO "DC390: clustering now enabled by default. If you get problems load\n"
++		       "\twith \"disable_clustering=1\" and report to maintainers\n");
++
+ 	if (tmscsim[0] == -1 || tmscsim[0] > 15) {
+ 		tmscsim[0] = 7;
+ 		tmscsim[1] = 4;
