@@ -1,77 +1,76 @@
-From: "adam radford" <aradford@gmail.com>
-Subject: Re: [Bugme-new] [Bug 7246] New: 3w-xxxx, IOMMU and >1go RAM
-Date: Mon, 2 Oct 2006 11:06:31 -0700
-Message-ID: <b1bc6a000610021106gab7efe7jcbab275b5030db9e@mail.gmail.com>
-References: <200610021508.k92F8bmq011159@fire-2.osdl.org>
-	 <20061002105733.a9e82ddf.akpm@osdl.org>
+From: Frederik Deweerdt <deweerdt@free.fr>
+Subject: [RFC PATCH] move aic7xxx to pci_request_irq
+Date: Mon, 2 Oct 2006 20:07:03 +0000
+Message-ID: <20061002200703.GD3003@slug>
+References: <1159550143.13029.36.camel@localhost.localdomain> <20060929235054.GB2020@slug> <1159573404.13029.96.camel@localhost.localdomain> <20060930140946.GA1195@slug> <451F049A.1010404@garzik.org> <20061001142807.GD16272@parisc-linux.org> <1159729523.2891.408.camel@laptopd505.fenrus.org> <20061001193616.GF16272@parisc-linux.org> <1159755141.2891.434.camel@laptopd505.fenrus.org> <20061002200048.GC3003@slug>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.189]:54883 "EHLO
-	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S965183AbWJBSGd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 Oct 2006 14:06:33 -0400
-Received: by nf-out-0910.google.com with SMTP id o25so1596015nfa
-        for <linux-scsi@vger.kernel.org>; Mon, 02 Oct 2006 11:06:32 -0700 (PDT)
-In-Reply-To: <20061002105733.a9e82ddf.akpm@osdl.org>
+Received: from ug-out-1314.google.com ([66.249.92.170]:17762 "EHLO
+	ug-out-1314.google.com") by vger.kernel.org with ESMTP
+	id S965215AbWJBSIc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 Oct 2006 14:08:32 -0400
+Received: by ug-out-1314.google.com with SMTP id o38so536235ugd
+        for <linux-scsi@vger.kernel.org>; Mon, 02 Oct 2006 11:08:31 -0700 (PDT)
 Content-Disposition: inline
+In-Reply-To: <20061002200048.GC3003@slug>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, bugme-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org, ak@suse.de
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org, "Linux-Kernel," <linux-kernel@vger.kernel.org>, "J.A. Magall??n" <jamagallon@ono.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@osdl.org>, Jeff Garzik <jeff@garzik.org>
 
-This driver is for the older 3ware controllers.  They can only DMA to 32-bit
-addresses.  I set pci_set_dma_mask(pdev, DMA_32BIT_MASK).  When you
-have >= 4GB of RAM, you should use the IOMMU.  The driver has a large
-default queue depth, so it can use up a lot of mappings.  Perhaps IOMMU is
-turned off in the bios, or the aperature isn't sufficiently large
-enough for the mappings?
+Hi,
 
--Adam
+This proof-of-concept patch converts the aic7xxx drivers to use the
+pci_request_irq() function.
 
-On 10/2/06, Andrew Morton <akpm@osdl.org> wrote:
-> On Mon, 2 Oct 2006 08:08:37 -0700
-> bugme-daemon@bugzilla.kernel.org wrote:
->
-> > http://bugzilla.kernel.org/show_bug.cgi?id=7246
-> >
-> >            Summary: 3w-xxxx, IOMMU and >1go RAM
-> >     Kernel Version: 2.6.18
-> >             Status: NEW
-> >           Severity: normal
-> >              Owner: scsi_drivers-other@kernel-bugs.osdl.org
-> >          Submitter: aarnoud@agematis.com
-> >
-> >
-> > Most recent kernel where this bug did not occur: 2.6.15-1
-> > Distribution: Debian Testing
-> > Hardware Environment: SuperMicro X6DVL-EG2, 4go RAM, 3ware 8006-2LP, 2xHitachi
-> > 2x80go
-> > Software Environment:
-> > Problem Description: Data corruption with kernel newer than 2.6.15-1.
-> >
-> > Steps to reproduce: tested with most kernel 2.6.16, 2.6.17 and 2.6.18 all doing
-> > same corruption.
-> >
-> > Solved the probleme leaving only 1go of RAM and setting IOMMU=off during boot
-> > time, with 4go RAM kernel hangs saying :
-> >
-> > 3w-xxxx: tw_map_scsi_sg_data(): pci_map_sg() failed.
-> > nommu_map_sg: overflow 2053d9000+4096 of device mask ffffffff
-> > 3w-xxxx: tw_map_scsi_sg_data(): pci_map_sg() failed.
-> > nommu_map_sg: overflow 2053d9000+4096 of device mask ffffffff
-> > 3w-xxxx: tw_map_scsi_sg_data(): pci_map_sg() failed.
-> > nommu_map_sg: overflow 2053d9000+4096 of device mask ffffffff
-> >
-> > and hangs badly.
-> >
->
-> James, Adam: I recall that we had a scsi driver recently which had problems
-> similar to this, but I think it was with addresses over 4G, not over 1G.
-> It also might not have been the 3ware driver.  Do you recall?
->
-> Alexandre, can you please send the full dmesg output for that machine?
->
-> Thanks.
->
+Regards,
+Frederik
+
+
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm_pci.c b/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
+index 2001fe8..c934f30 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
++++ b/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
+@@ -341,12 +341,12 @@ ahd_pci_map_int(struct ahd_softc *ahd)
+ {
+ 	int error;
+ 
+-	error = request_irq(ahd->dev_softc->irq, ahd_linux_isr,
+-			    IRQF_SHARED, "aic79xx", ahd);
++	error = pci_request_irq(ahd->dev_softc, ahd_linux_isr,
++			    IRQF_SHARED, "aic79xx");
+ 	if (!error)
+ 		ahd->platform_data->irq = ahd->dev_softc->irq;
+ 	
+-	return (-error);
++	return error;
+ }
+ 
+ void
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c b/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
+index ea5687d..d5c402e 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
+@@ -368,16 +368,14 @@ ahc_pci_map_registers(struct ahc_softc *
+ 	return (error);
+ }
+ 
+-int
+-ahc_pci_map_int(struct ahc_softc *ahc)
++int ahc_pci_map_int(struct ahc_softc *ahc)
+ {
+ 	int error;
+ 
+-	error = request_irq(ahc->dev_softc->irq, ahc_linux_isr,
+-			    IRQF_SHARED, "aic7xxx", ahc);
++	error = pci_request_irq(ahc->dev_softc, ahc_linux_isr, IRQF_SHARED,
++			    	"aic7xxx");
+ 	if (error == 0)
+ 		ahc->platform_data->irq = ahc->dev_softc->irq;
+-	
+-	return (-error);
+-}
+ 
++	return error;
++}
