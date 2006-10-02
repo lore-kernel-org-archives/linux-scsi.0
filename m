@@ -1,68 +1,87 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: GFP_DMA use in SCSI midlayer
-Date: Mon, 02 Oct 2006 09:52:49 -0500
-Message-ID: <1159800770.3460.11.camel@mulgrave.il.steeleye.com>
-References: <200610012213.24123.ak@suse.de>
-	 <1159735218.3542.16.camel@mulgrave.il.steeleye.com>
-	 <200610012255.49802.ak@suse.de>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] Introduce BROKEN_ON_64BIT facility
+Date: Mon, 2 Oct 2006 09:18:53 -0600
+Message-ID: <20061002151853.GK16272@parisc-linux.org>
+References: <200610021352.k92DqRwa015220@cmf.nrl.navy.mil> <1159801956.8907.13.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:39563 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S932453AbWJBOw6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 Oct 2006 10:52:58 -0400
-In-Reply-To: <200610012255.49802.ak@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <netdev-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1159801956.8907.13.camel@localhost.localdomain>
+Sender: netdev-owner@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: chas3@users.sourceforge.net, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@osdl.org>, LKML <linux-kernel@vger.kernel.org>, netdev@vger.kernel.org, kkeil@suse.de, kai.germaschewski@gmx.de, isdn4linux@listserv.isdn4linux.de, mac@melware.de, markus.lidel@shadowconnect.com, samuel@sortiz.org, Neela.Kolli@engenio.com, linux-scsi@vger.kernel.org, Greg KH <greg@kroah.com>, thomas@winischhofer.net, ak@suse.de
 List-Id: linux-scsi@vger.kernel.org
-To: Andi Kleen <ak@suse.de>
-Cc: linux-scsi@vger.kernel.org, Christoph Lameter <clameter@sgi.com>
 
-On Sun, 2006-10-01 at 22:55 +0200, Andi Kleen wrote:
-> This means the majority of drivers will never use it? I don't 
-> claim to be a SCSI expert, but a lot of uses looked unchecked
-> to me from a quick look. That is very worrying because it's
-> only 16MB on x86 and 16MB run out quickly.
+On Mon, Oct 02, 2006 at 04:12:35PM +0100, Alan Cox wrote:
+> @@ -1423,14 +1418,15 @@
+>  		printk(KERN_ERR DEV_LABEL "can't allocate DLEs\n");
+>  		goto err_out;
+>  	}
+> -	iadev->rx_dle_q.start = (struct dle*)dle_addr;  
+> +	iadev->rx_dle_q.start = (struct dle *)dle_addr;
+>  	iadev->rx_dle_q.read = iadev->rx_dle_q.start;  
+>  	iadev->rx_dle_q.write = iadev->rx_dle_q.start;  
+> -	iadev->rx_dle_q.end = (struct dle*)((u32)dle_addr+sizeof(struct dle)*DLE_ENTRIES);  
+> +	iadev->rx_dle_q.end = (struct dle*)((unsigned long)dle_addr+sizeof(struct dle)*DLE_ENTRIES);
+>  	/* the end of the dle q points to the entry after the last  
+>  	DLE that can be used. */  
 
-Yes, some cases it's used because the code can't be bothered to check to
-see if it's required ... these cases can be audited and cleaned up.
+dle_addr is a bit strange.  How about:
 
-> If it's never used I don't care that much, but it certainly
-> doesn't look like that.
-> 
-> Or do you only need it because pci_map_single() on i386 doesn't
-> do bouncing?  If yes we can probably fix that.
++++ b/drivers/atm/iphase.c
+@@ -1404,7 +1404,7 @@ static int rx_init(struct atm_dev *dev) 
+        IADEV *iadev;  
+        struct rx_buf_desc __iomem *buf_desc_ptr;  
+        unsigned long rx_pkt_start = 0;  
+-       void *dle_addr;  
++       struct dle *dle_addr;  
+        struct abr_vc_table  *abr_vc_table; 
+        u16 *vc_table;  
+        u16 *reass_table;  
+@@ -1423,10 +1423,10 @@ static int rx_init(struct atm_dev *dev) 
+                printk(KERN_ERR DEV_LABEL "can't allocate DLEs\n");
+                goto err_out;
+        }
+-       iadev->rx_dle_q.start = (struct dle*)dle_addr;  
++       iadev->rx_dle_q.start = dle_addr;  
+        iadev->rx_dle_q.read = iadev->rx_dle_q.start;  
+        iadev->rx_dle_q.write = iadev->rx_dle_q.start;  
+-       iadev->rx_dle_q.end = (struct dle*)((u32)dle_addr+sizeof(struct dle)*DLE
+_ENTRIES);  
++       iadev->rx_dle_q.end = dle_addr + DLE_ENTRIES;
+        /* the end of the dle q points to the entry after the last  
+        DLE that can be used. */  
+   
+@@ -1884,7 +1884,7 @@ static int tx_init(struct atm_dev *dev) 
+        IADEV *iadev;  
+        struct tx_buf_desc *buf_desc_ptr;
+        unsigned int tx_pkt_start;  
+-       void *dle_addr;  
++       struct dle *dle_addr;  
+        int i;  
+        u_short tcq_st_adr;  
+        u_short *tcq_start;  
+@@ -1908,10 +1908,10 @@ static int tx_init(struct atm_dev *dev) 
+                printk(KERN_ERR DEV_LABEL "can't allocate DLEs\n");
+                goto err_out;
+        }
+-       iadev->tx_dle_q.start = (struct dle*)dle_addr;  
++       iadev->tx_dle_q.start = dle_addr;  
+        iadev->tx_dle_q.read = iadev->tx_dle_q.start;  
+        iadev->tx_dle_q.write = iadev->tx_dle_q.start;  
+-       iadev->tx_dle_q.end = (struct dle*)((u32)dle_addr+sizeof(struct dle)*DLE
+_ENTRIES);  
++       iadev->tx_dle_q.end = dle_addr + DLE_ENTRIES;
+ 
+        /* write the upper 20 bits of the start address to tx list address regis
+ter */  
+        writel(iadev->tx_dle_dma & 0xfffff000,
 
-Heh, that would be the worst place to fix it. We usually have use
-context for the allocation, so can sleep in the worst case.  We don't
-have such context where we do pci_map_single().
+(whitespace damaged; more for comment than for application).
 
-> > However, what is wanted in every case is 
-> > ordinary memory, not coherent memory.  They can't simply be replaced
-> > with dma_alloc_coherent because
-> > 
-> > a) it will waste memory for platforms that only do it in page size
-> > multiples
-> > b) It will fail on platforms that can't do it at all.
-> 
-> GFP_DMA will also fail on a lot of platforms, so it's the same.
+> -        if ((u32)skb->data & 3) {
+> +        if ((unsigned long)skb->data & 3) {
 
-No, at the moment it succeeds on all of them (although at odd locations,
-like on parisc GFP_DMA goes up to 4GB).
-
-
-> > Coherent memory is really only for device drivers to use in
-> mailboxes
-> > and shared ring buffers.
-> 
-> Maybe we need a new interface then with a mask. The plan is anyways
-> get rid of GFP_DMA completely because it has lots of problems. And 
-> any user should declare the mask it really needs.
-
-Well ... possibly; either that or just let the SG only paths take care
-of it.
-
-James
-
-
+I suppose it quietens a compiler warning.  Doesn't actually fix a bug
+though.
