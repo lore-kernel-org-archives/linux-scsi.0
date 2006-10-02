@@ -1,29 +1,57 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Markus Lidel <Markus.Lidel@shadowconnect.com>
 Subject: Re: [PATCH] Introduce BROKEN_ON_64BIT facility
-Date: Mon, 02 Oct 2006 14:03:28 +0100
-Message-ID: <1159794208.8907.9.camel@localhost.localdomain>
-References: <20061002045512.GA8835@havoc.gtf.org>
+Date: Mon, 02 Oct 2006 16:19:34 +0200
+Message-ID: <45211FF6.7090303@shadowconnect.com>
+References: <20061002045512.GA8835@havoc.gtf.org> <p737izjhwpa.fsf@verdi.suse.de> <4520E1CB.6070104@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:50356 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S932342AbWJBN5x
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 Oct 2006 09:57:53 -0400
-In-Reply-To: <20061002045512.GA8835@havoc.gtf.org>
+Received: from s0006.shadowconnect.net ([213.202.216.60]:49161 "EHLO
+	mail.shadowconnect.com") by vger.kernel.org with ESMTP
+	id S932448AbWJBOT6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 Oct 2006 10:19:58 -0400
+In-Reply-To: <4520E1CB.6070104@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: Andrew Morton <akpm@osdl.org>, LKML <linux-kernel@vger.kernel.org>, chas@cmf.nrl.navy.mil, netdev@vger.kernel.org, kkeil@suse.de, kai.germaschewski@gmx.de, isdn4linux@listserv.isdn4linux.de, mac@melware.de, markus.lidel@shadowconnect.com, samuel@sortiz.org, Neela.Kolli@engenio.com, linux-scsi@vger.kernel.org, Greg KH <greg@kroah.com>, thomas@winischhofer.net, ak@suse.de
+Cc: Andi Kleen <ak@suse.de>, chas@cmf.nrl.navy.mil, netdev@vger.kernel.org, kkeil@suse.de, kai.germaschewski@gmx.de, isdn4linux@listserv.isdn4linux.de, mac@melware.de, samuel@sortiz.org, Neela.Kolli@engenio.com, linux-scsi@vger.kernel.org, Greg KH <greg@kroah.com>, thomas@winischhofer.net
 
-Ar Llu, 2006-10-02 am 00:55 -0400, ysgrifennodd Jeff Garzik:
-> Add a broken-on-64bit option, similar to the existing broken-on-smp
-> config option.  This is just the first pass, marking the obvious
-> candidates.
+Hello,
 
-NAK. This contains lots of stuff whcih isn't broken in the first place.
+Jeff Garzik wrote:
+> Andi Kleen wrote:
+>> Jeff Garzik <jeff@garzik.org> writes:
+>>> Add a broken-on-64bit option, similar to the existing broken-on-smp
+>>> config option.  This is just the first pass, marking the obvious
+>>> candidates.
+>> When I had this problem in the past I just used && !64BIT.
+>> How is this new option different?
+> Same reason why we have CONFIG_BROKEN_ON_SMP separate from CONFIG_SMP.
+>> AFAIK I2O got fixed too. Do you have any evidence that it is really
+>> broken on 64bit?
+> i2o_config did not.  Just read the code, it's obvious...
 
-(Eg Megaraid works with 32bit config tools not 64bit ones and is
-otherwise fine, ISDN is just bogus warnings now swatted)
+Although the documentation does say it need fixes, it really doesn't. It 
+is broken if used with 64-bit DMA addresses, but it does work on 64-bit 
+systems.
 
+
+
+Best regards,
+
+
+Markus Lidel
+------------------------------------------
+Markus Lidel (Senior IT Consultant)
+
+Shadow Connect GmbH
+Carl-Reisch-Weg 12
+D-86381 Krumbach
+Germany
+
+Phone:  +49 82 82/99 51-0
+Fax:    +49 82 82/99 51-11
+
+E-Mail: Markus.Lidel@shadowconnect.com
+URL:    http://www.shadowconnect.com
