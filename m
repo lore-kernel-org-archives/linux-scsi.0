@@ -1,57 +1,64 @@
-From: getitright <bret_stern@machinemanagement.com>
-Subject: SCSI basics - dell 210s
-Date: Sun, 1 Oct 2006 18:01:50 -0700 (PDT)
-Message-ID: <6594636.post@talk.nabble.com>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [-mm patch] aic7xxx: check irq validity (was Re: 2.6.18-mm2)
+Date: Mon, 02 Oct 2006 04:12:21 +0200
+Message-ID: <1159755141.2891.434.camel@laptopd505.fenrus.org>
+References: <20060928014623.ccc9b885.akpm@osdl.org>
+	 <20060929155738.7076f0c8@werewolf> <20060929143949.GL5017@parisc-linux.org>
+	 <1159550143.13029.36.camel@localhost.localdomain>
+	 <20060929235054.GB2020@slug>
+	 <1159573404.13029.96.camel@localhost.localdomain>
+	 <20060930140946.GA1195@slug> <451F049A.1010404@garzik.org>
+	 <20061001142807.GD16272@parisc-linux.org>
+	 <1159729523.2891.408.camel@laptopd505.fenrus.org>
+	 <20061001193616.GF16272@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from www.nabble.com ([72.21.53.35]:39091 "EHLO talk.nabble.com")
-	by vger.kernel.org with ESMTP id S932545AbWJBBBv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 1 Oct 2006 21:01:51 -0400
-Received: from [72.21.53.38] (helo=jubjub.nabble.com)
-	by talk.nabble.com with esmtp (Exim 4.50)
-	id 1GUCBq-0001G4-Qi
-	for linux-scsi@vger.kernel.org; Sun, 01 Oct 2006 18:01:50 -0700
+Received: from pentafluge.infradead.org ([213.146.154.40]:22695 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S932594AbWJBCNF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 1 Oct 2006 22:13:05 -0400
+In-Reply-To: <20061001193616.GF16272@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org, "Linux-Kernel," <linux-kernel@vger.kernel.org>, "J.A. Magall??n" <jamagallon@ono.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@osdl.org>, Frederik Deweerdt <deweerdt@free.fr>, Jeff Garzik <jeff@garzik.org>
 
 
-good day,
+> Network drivers use their eth%d name.  USB drivers use [eu]hci_hcd:usb%d.
+> Others tend to use the driver name.  Changing them all to be 0000:00:1d.2
+> isn't really an improvement in the readability of /proc/interrupts, IMO.
 
-I have a Dell 2450 with two 18gb drives, connected to the
-internal scsi adapter. Fine.
-They are /dev/sda  and  /dev/sdb.
+hmm ok; how about allowing name to be NULL, and if it's NULL, use the
+pci name?
 
-Now i have added an additional pci Adaptec 2940 scsi adapter
-connected to a Dell 210s with seven 9gb drives.
+> 
+> So, current proposal:
+> 
+> int pci_request_irq(struct pci_dev *pdev, irq_handler_t handler,
+> 			const char *name)
+> {
+> 	if (!valid_irq(pdev->irq)) {
+> 		dev_printk(KERN_ERR, &pdev->dev, "invalid irq\n");
+> 		return -EINVAL;
+> 	}
+> 
+> 	return request_irq(pdev->irq, handler, IRQF_SHARED, name,
+> 				pci_get_drvdata(pdev));
+> }
+> 
+> But what about IRQF_SAMPLE_RANDOM?
 
-The above two drives (which were in the Dell 2450) are
-now:  /dev/sdh.../dev/sdi.
-Why did they change order/id?
-Does the external adapter (2940) precede the scsi
-id's of the internal scsi adapter?
+that's a tough question. I'd almost suggest making such things
+properties of the pdev, but sample-random is so far away from PCI
+related that it makes no sense I suppose ;(
 
-Does scsi order the scsi id of ALL the combined scsi
-devices?
+(others do I think)
 
-Is there a way to keep the 2450 internal drives
-as /dev/sda, and /dev/sdb?
-Would i want ot keep them any specific way?
-
-Any suggestions for a good scsi arrangement with this
-Dell 2450 and Powervault 210s configuration (besides raid,
-i don't have the perc controller yet).
-
-Lot's of questions, but I know there is some good advice
-out there.
-
-So many thanks for comments.
-
-Bret
+One other interesting question is if this function can/should be used to
+use MSI transparently (after pci_enable_msi() obviously)
 
 -- 
-View this message in context: http://www.nabble.com/SCSI-basics---dell-210s-tf2367210.html#a6594636
-Sent from the linux-scsi mailing list archive at Nabble.com.
+if you want to mail me at work (you don't), use arjan (at) linux.intel.com
 
