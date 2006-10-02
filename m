@@ -1,106 +1,205 @@
 From: Evan Harris <eharris@puremagic.com>
-Subject: sata_promise driver disables IRQ for entire card when one device
- removed
-Date: Mon, 2 Oct 2006 16:54:10 -0500 (CDT)
-Message-ID: <Pine.LNX.4.62.0610021627170.10249@kinison.puremagic.com>
+Subject: Re: [PATCH] sata_promise: Port enumeration order - SATA 150 TX4,
+ SATA 300 TX4
+Date: Mon, 2 Oct 2006 17:08:17 -0500 (CDT)
+Message-ID: <Pine.LNX.4.62.0610021700350.10249@kinison.puremagic.com>
+References: <43FFAE3D.7010002@physics.harvard.edu> <44000036.7070403@eyal.emu.id.au>
+ <011f01c639f9$8dc86bc0$3d64880a@speedy> <442DB29D.1010102@avona.com>
+ <447CB9B4.50700@physics.harvard.edu>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cpe-70-113-217-93.austin.res.rr.com ([70.113.217.93]:22486 "EHLO
-	kinison.puremagic.com") by vger.kernel.org with ESMTP
-	id S965436AbWJBVyZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 Oct 2006 17:54:25 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <447CB9B4.50700@physics.harvard.edu>
+Sender: linux-ide-owner@vger.kernel.org
+To: Milan Kupcevic <milan@physics.harvard.edu>
+Cc: Fabian Knittel <fabian.knittel@avona.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, Linux Kernel List <linux-kernel@vger.kernel.org>, Eyal Lebedinsky <eyal@eyal.emu.id.au>, Stan Seibert <volsung@mailsnare.net>, linux-ide@vger.kernel.org, Christiaan den Besten <chris@scorpion.nl>
 List-Id: linux-scsi@vger.kernel.org
-To: Linux Kernel List <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-scsi@vger.kernel.org
 
 
-AMD64 Dual Opteron system with a self-compiled kernel from stock sources, 
-Debian base.
+I have a card that mirrors this one from your list:
 
-SATA card is a Promise SATAII300 TX4, here is the lspci entry:
+Retail name: SATA300 TX4
+Chip label: PDC40718-GP  SATAII300
+Vendor-Device number: 105a:3d17 (rev 02)
 
-0000:01:03.0 Unknown mass storage controller: Promise Technology, Inc.: Unknown device 3d17 (rev 02)
+Through testing, I've found linux 2.6.16 and 2.6.17 find the ports in this 
+order (the list is ordered by linux detection):
 
-I was tracking 2.6.16 all the way up to .27, when it showed this 
-behavior.  I then tried tried 2.6.17.13, and got the same result.  The logs 
-below are from the attempt with 2.6.17.13.
-
-During normal system operation, with no load, I tried pulling a SATA drive 
-from the promise controller (in this case "ata1" which is sda) in order to 
-test the system being able to handle a drive failure.
-
-I immediately got this in the syslog:
-
-Oct  2 16:14:43 stock kernel: irq 16: nobody cared (try booting with the "irqpoll" option)
-Oct  2 16:14:43 stock kernel:
-Oct  2 16:14:43 stock kernel: Call Trace: <IRQ> <ffffffff80299dd0>{__report_bad_irq+48}
-Oct  2 16:14:43 stock kernel:        <ffffffff80299eec>{note_interrupt+140} <ffffffff80299584>{__do_IRQ+196}
-Oct  2 16:14:43 stock kernel:        <ffffffff8025f352>{do_IRQ+66} <ffffffff8025c540>{default_idle+0}
-Oct  2 16:14:43 stock kernel:        <ffffffff802545b8>{ret_from_intr+0} <EOI> <ffffffff80256ce0>{thread_return+0}
-Oct  2 16:14:43 stock kernel:        <ffffffff8025c56f>{default_idle+47} <ffffffff8024092b>{cpu_idle+107}
-Oct  2 16:14:43 stock kernel: handlers:
-Oct  2 16:14:43 stock kernel: [pdc_interrupt+0/512] (pdc_interrupt+0x0/0x200)
-Oct  2 16:14:43 stock kernel: Disabling IRQ #16
-
-After this, all four of the disks on the Promise controller stopped working, 
-I am assuming because of the interrupt being disabled, even though the other 
-three should have been just fine.
-
-This is a partial log of console errors after the IRQ was disabled (all that 
-I was able to grab since I couldn't access any disks anymore).
-
-ata1: command timeout
-ata1: translated ATA stat/err 0xff/00 to SCSI SK/ASC/ASCQ 0xb/47/00
-ata1: status=0xff { Busy }
-sd 0:0:0:0: SCSI error: return code = 0x8000002
-sda: Current: sense key: Aborted Command
-     Additional sense: Scsi parity error
-end_request: I/O error, dev sda, sector 976767923
-ata4: command timeout
-ata4: status=0x50 { DriveReady SeekComplete }
-sdd: Current<3>ata2: command timeout
-ata2: status=0x50 { DriveReady SeekComplete }
-sdb: Current: sense key: No Sense
-     Additional sense: No additional sense information
-Info fld=0x301036
-: sense key: No Sense
-     Additional sense: No additional sense information
-Info fld=0x301036
-ata3: command timeout
-ata3: status=0x50 { DriveReady SeekComplete }
-sdc: Current: sense key: No Sense
-     Additional sense: No additional sense information
-Info fld=0x301036
-sdc: Current: sense key: No Sense
-     Additional sense: No additional sense information
-ata4: command timeout
-ata4: status=0x50 { DriveReady SeekComplete }
-ata2: command timeout
-ata2: status=0x50 { DriveReady SeekComplete }
-ata3: command timeout
-ata3: status=0x50 { DriveReady SeekComplete }
-ata4: command timeout
-ata4: status=0x50 { DriveReady SeekComplete }
-sdd: Current<3>ata2: command timeout
-ata2: status=0x50 { DriveReady SeekComplete }
-sdb: Current: sense key: No Sense
-     Additional sense: No additional sense information
-Info fld=0x917e
-: sense key: No Sense
-     Additional sense: No additional sense information
-Info fld=0x917e
-ata3: command timeout
-ata3: status=0x50 { DriveReady SeekComplete }
-sdc: Current: sense key: No Sense
-     Additional sense: No additional sense information
-Info fld=0x917e
-
-Similar messages continued to be printed to the console, and any disk 
-accesses continued to fail.  I waited about a half hour to see if the system 
-would ever recover, and it never did.
-
-I'd be happy to provide any additional information that may be helpful.
+1. silkscreen port 3
+2. silkscreen port 2
+3. silkscreen port 4
+4. silkscreen port 1
 
 Evan
+
+On Tue, 30 May 2006, Milan Kupcevic wrote:
+
+>
+> Fabian Knittel wrote:
+>
+>> In other words: The boards appear to be wired correctly (or maybe just
+>> uniformly the wrong way) and the bios, the windows driver and the closed
+>> source promise driver (reportedly) know how to handle it.
+>> 
+>> We have a SATA 150 TX4 board with the same behaviour and would love to
+>> see this annoying little bug fixed in linux. :)
+>> 
+>>  Fabian
+>> 
+>> Christiaan den Besten wrote:
+>> 
+>>> We have several of these boards in use [SATA 300 TX4] (bought over time
+>>> .. not in one batch). All of them have the ordering as described below.
+>>> So another vote for "Please fix!" :)
+>>> 
+>>> 
+>>>> Milan Kupcevic wrote:
+>>>> 
+>>>> 
+>>>>> From: Milan Kupcevic <milan@physics.harvard.edu>
+>>>>> 
+>>>>> Fix Promise SATAII 150 TX4 (PDC40518) and Promise SATA 300 TX4
+>>>>> (PDC40718-GP) wrong port enumeration order that makes it (nearly)
+>>>>> impossible to deal with boot problems using two or more drives.
+>>>>> 
+>>>>> Signed-off-by: Milan Kupcevic <milan@physics.harvard.edu>
+>>>>> ---
+>>>>> 
+>>>>> The current kernel driver assumes:
+>>>>> 
+>>>>> port 1 - scsi3
+>>>>> port 2 - scsi1
+>>>>> port 3 - scsi0
+>>>>> port 4 - scsi2
+>>>>> 
+>>>> I totally agree with the fact that the Linux driver gets the ports wrong
+>>>> when compared to the BIOS, Windows and surely contradicts the port
+>>>> numbers printed on the board. I doubt we all got samples on the one
+>>>> bad batch...
+>>>> 
+>>>> It *is* a real problem and if the solution is correct then I support it.
+>>>> 
+>>>> Maybe we need a quick feedback from current users: do you guys find
+>>>> that the ports are detected as they are labelled (white silk screen)
+>>>> on the board or do they show up out of order (as listed above by
+>>>> Milan)?
+>>>> 
+>
+> This is a list of Promise SATA TX4 and FastTrak TX4xxx controllers, I have in 
+> my lab, affected with the "wiring" bug:
+>
+> Retail name: SATAII150 TX4
+> Chip label: PDC40518  SATAII150
+> Vendor-Device number: 105a:3d18 (rev 02)
+> Wiring: NEW
+>
+> Retail name: FastTrak TX4200
+> Chip label: PDC40519  RAID  SATAII150
+> Vendor-Device number: 105a:3519
+> Wiring: NEW
+>
+> Retail name: SATA300 TX4
+> Chip label: PDC40718-GP  SATAII300
+> Vendor-Device number: 105a:3d17 (rev 02)
+> Wiring: NEW
+>
+>
+> This is the only one Promise TX4 controller, I have in my lab, that is 
+> working properly regarding the "wiring" bug with the current kernel driver:
+>
+> Retail name: FastTrak S150 TX4
+> Chip label: PDC20319 RAID SATA 150
+> Vendor-Device number: 105a:3319 (rev 02)
+> Wiring: OLD
+>
+>
+> This is a list of Promise SATA TX2 and FastTrak TX2xxx controllers, I have in 
+> my lab, that are working correctly regarding the "wiring" bug with the 
+> current kernel driver:
+>
+> Retail name: FastTrak S150 TX2plus
+> Chip label: PDC20371  SATA 150
+> Vendor-Device number: 105a:3371 (rev 02)
+>
+> Retail name: SATA150 TX2plus
+> Chip label: PDC20375  SATA 150
+> Vendor-Device number: 105a:3375 (rev 02)
+>
+> Retail name: FastTrak TX2200
+> Chip label: PDC20571  SATAII150
+> Vendor-Device number: 105a:3571 (rev 02)
+>
+>
+> It seems the problem exists on all newer Promise SATA TX4 and FastTrak TX4xxx 
+> controllers, so I refer to them as the "new wiring" Promise SATA controllers. 
+> All the Promise SATA TX2 and FastTrak TX2xxx I have in my lab are working 
+> correctly with the current kernel driver, so it seems this "wiring" problem 
+> does not affect the TX2(xxx) controllers; only SATA TX4 and FastTrak TX4xxx 
+> are affected.
+>
+> For driver to be able to distinguish the "new wiring" and the "old wiring" 
+> Promise TX4(xxx) controllers we need a feedback from the users that are aware 
+> of this problem.
+>
+> Q. How to know if a controller has the "new wiring"? A. You need to be able 
+> to boot your testing machine using a hard drive not attached to the 
+> controller you are going to test.  Connect 4 different size/brand/model SATA 
+> hard drives to the testing controller so you can see the particular order 
+> they are recognized by the BIOS and by the kernel (not patched for the "new 
+> wiring").   Boot the machine and look for the BIOS recognized hard drive 
+> order.  The BIOS recognized hard drive order always matches the order the 
+> hard drives are connected to, with respect to port number labels.  If you are 
+> testing FastTrak TX series controller you may need to press Ctrl-F (or 
+> Ctrl-A) to get into controllers' BIOS and then press "2" to see the BIOS 
+> recognized order.  Plain SATA models do not have controller specific BIOS and 
+> they will report the BIOS recognized order without user intervention.  You 
+> may want to press the "Pause" key on your keyboard to have enough time to 
+> read the text on the screen.  If you are arguing with your machine using a 
+> serial terminal, there is a Hold Screen button somewhere on the terminal 
+> keyboard.   When the machine boots up, type "cat /proc/scsi/scsi", it will 
+> show up the order hard drives are recognized by the kernel.  Make sure the 
+> kernel you are using is NOT patched for the "new wiring" bug.  If you have 
+> the "new wiring" case, the order will be 3-2-4-1; that means, the drive 
+> connected to the "port 3" and recognized as the third drive connected to the 
+> controller by the BIOS, will be seen by the kernel as first hard drive 
+> connected to this controller.  The second drive is always at second place, 
+> the fourth one goes at third place and the first one goes at fourth place.
+>
+>
+> Please respond with this data:
+>
+> - Your Promise SATA controller retail name
+> - Chip label (PDCxxxxx)
+> - PCI vendor and device code as you can get with "lspci -n"
+> - Say if the controler has the new or the old wiring
+>
+> Your feedback will be appreciated.
+>
+>
+> NOTE: the patch I have submitted ( 
+> http://marc.theaimsgroup.com/?l=linux-ide&m=114082978311290&w=2 ) is a 
+> solution that doesn't know about the older Promise SATA controllers, which 
+> are not affected with the "new wiring" problem, so the older controllers will 
+> appear screwed if you use it.
+>
+> Hopefully we will collect enough info about all the SATA Promise controllers 
+> to distinguish the new and the old wiring controllers, then produce a new 
+> patch that will be a correct solution to the "new wiring" problem.
+>
+>
+> The best to all,
+>
+> Milan
+>
+> -- 
+> Milan Kupcevic
+> System Administrator
+> Harvard University
+> Department of Physics
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+>
