@@ -1,43 +1,85 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [RFC PATCH] move drm to pci_request_irq
-Date: Mon, 2 Oct 2006 12:37:49 -0600
-Message-ID: <20061002183749.GO16272@parisc-linux.org>
-References: <20060929235054.GB2020@slug> <1159573404.13029.96.camel@localhost.localdomain> <20060930140946.GA1195@slug> <451F049A.1010404@garzik.org> <20061001142807.GD16272@parisc-linux.org> <1159729523.2891.408.camel@laptopd505.fenrus.org> <20061001193616.GF16272@parisc-linux.org> <1159755141.2891.434.camel@laptopd505.fenrus.org> <20061002200048.GC3003@slug> <20061002201229.GF3003@slug>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: GFP_DMA use in SCSI midlayer
+Date: Mon, 02 Oct 2006 13:43:36 -0500
+Message-ID: <1159814616.2945.7.camel@madmax>
+References: <200610012213.24123.ak@suse.de>
+	 <1159735218.3542.16.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:9169 "EHLO
-	mail.parisc-linux.org") by vger.kernel.org with ESMTP
-	id S964826AbWJBShu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 Oct 2006 14:37:50 -0400
-Content-Disposition: inline
-In-Reply-To: <20061002201229.GF3003@slug>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:27104 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S1751017AbWJBSnt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2006 14:43:49 -0400
+In-Reply-To: <1159735218.3542.16.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Frederik Deweerdt <deweerdt@free.fr>
-Cc: Arjan van de Ven <arjan@infradead.org>, linux-scsi@vger.kernel.org, "Linux-Kernel," <linux-kernel@vger.kernel.org>, "J.A. Magall??n" <jamagallon@ono.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@osdl.org>, Jeff Garzik <jeff@garzik.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Andi Kleen <ak@suse.de>, linux-scsi@vger.kernel.org, Christoph Lameter <clameter@sgi.com>
 
-On Mon, Oct 02, 2006 at 08:12:29PM +0000, Frederik Deweerdt wrote:
->  
-> +	pci_set_drvdata(dev, NULL);
-> +
->  	DRM_DEBUG("lastclose completed\n");
+On Sun, 2006-10-01 at 15:40 -0500, James Bottomley wrote:
+> On Sun, 2006-10-01 at 22:13 +0200, Andi Kleen wrote:
+> > GFP_DMA in general is deprecated and should be replaced by appropiate
+> > dma_alloc_coherent()
+> 
+> Um, no it shouldn't.
+> 
+> All of the places where we use GFP_DMA are because we might be
+> addressing an ISA card or other strange mask limited card (gated usually
+> by unchecked_isa_dma).  However, what is wanted in every case is
+> ordinary memory, not coherent memory.  They can't simply be replaced
+> with dma_alloc_coherent because
+> 
+> a) it will waste memory for platforms that only do it in page size
+> multiples
+> b) It will fail on platforms that can't do it at all.
+> 
+> Coherent memory is really only for device drivers to use in mailboxes
+> and shared ring buffers.
+> 
+> > or similar.  And I can't imagine any modern systems still need them, and for 
+> > the few still non CONFIG_BROKEN ISA drivers maybe some other way can be found?
+> > And do they really require the mid layer data structures to be GFP_DMA too?
+> 
+> Well, it's the "or similar" that's still the problem.  All they need is
+> ordinary memory which respects the device mask (then I can get rid of
+> the unchecked_isa_dma flag as well).
+> 
+> One could argue, I suppose, that when we get every SCSI path to go via
+> sg, then the block layer will bounce this for us, and we don't need to
+> worry at all.
 
-Not necessary.  pci_devs are allocated initialised to 0.
 
-> @@ -132,8 +132,10 @@ static int drm_irq_install(drm_device_t 
->  	if (drm_core_check_feature(dev, DRIVER_IRQ_SHARED))
->  		sh_flags = IRQF_SHARED;
->  
-> -	ret = request_irq(dev->irq, dev->driver->irq_handler,
-> -			  sh_flags, dev->devname, dev);
-> +	pci_set_drvdata(dev->pdev, dev);
-> +
-> +	ret = pci_request_irq(dev->pdev, dev->driver->irq_handler,
-> +			  sh_flags, dev->devname);
+I think we might just need the blk_map_kern users now. For the async
+execute I added the bounce code already and the block SG_IO has it
+atleady. I think the blk_map_kern bounce code got dropped because we
+thought the correct gfp_t would be passed in. But I think all we need is
+the patch below and all the paths are take care of. The patch is not
+tested. Patch was made against scsi-misc.
 
-This seems like the wrong place to be setting the pci_drvdata.  It
-should probably be done in each driver.  But then, requesting the IRQ
-should also be done by each driver.  You've dragged us into the "wow,
-what a mess DRI is" black hole here, I'm afraid.
+The last place that is sending non sg commands may just be md/dm-emc.c
+but that is is just waiting on alasdair to take some patches that fix
+that and a bunch of junk in there including adding bounce support. If
+the patch below is ok though and dm-emc finally gets converted then it
+will have sg and bonce buffer support.
+
+
+
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+
+diff --git a/block/ll_rw_blk.c b/block/ll_rw_blk.c
+index 9c3a06b..e58b43a 100644
+--- a/block/ll_rw_blk.c
++++ b/block/ll_rw_blk.c
+@@ -2533,6 +2533,7 @@ int blk_rq_map_kern(request_queue_t *q, 
+ 	rq->bio = rq->biotail = bio;
+ 	blk_rq_bio_prep(q, rq, bio);
+ 
++	blk_queue_bounce(q, &rq->bio);
+ 	rq->buffer = rq->data = NULL;
+ 	rq->data_len = len;
+ 	return 0;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+diff --git a/fs/bio.c b/fs/bio.c
+
 
