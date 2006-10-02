@@ -1,68 +1,33 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [RFC PATCH] pci_request_irq (was [-mm patch] aic7xxx: check irq validity)
-Date: Mon, 2 Oct 2006 12:15:22 -0600
-Message-ID: <20061002181522.GL16272@parisc-linux.org>
-References: <1159550143.13029.36.camel@localhost.localdomain> <20060929235054.GB2020@slug> <1159573404.13029.96.camel@localhost.localdomain> <20060930140946.GA1195@slug> <451F049A.1010404@garzik.org> <20061001142807.GD16272@parisc-linux.org> <1159729523.2891.408.camel@laptopd505.fenrus.org> <20061001193616.GF16272@parisc-linux.org> <1159755141.2891.434.camel@laptopd505.fenrus.org> <20061002200048.GC3003@slug>
+From: Andi Kleen <ak@suse.de>
+Subject: Re: [Bugme-new] [Bug 7246] New: 3w-xxxx, IOMMU and >1go RAM
+Date: Mon, 2 Oct 2006 20:17:59 +0200
+Message-ID: <200610022017.59697.ak@suse.de>
+References: <200610021508.k92F8bmq011159@fire-2.osdl.org> <20061002105733.a9e82ddf.akpm@osdl.org> <b1bc6a000610021106gab7efe7jcbab275b5030db9e@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:53457 "EHLO
-	mail.parisc-linux.org") by vger.kernel.org with ESMTP
-	id S965221AbWJBSPX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 Oct 2006 14:15:23 -0400
+Received: from ns2.suse.de ([195.135.220.15]:62884 "EHLO mx2.suse.de")
+	by vger.kernel.org with ESMTP id S965233AbWJBSSL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2006 14:18:11 -0400
+In-Reply-To: <b1bc6a000610021106gab7efe7jcbab275b5030db9e@mail.gmail.com>
 Content-Disposition: inline
-In-Reply-To: <20061002200048.GC3003@slug>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Frederik Deweerdt <deweerdt@free.fr>
-Cc: Arjan van de Ven <arjan@infradead.org>, linux-scsi@vger.kernel.org, "Linux-Kernel," <linux-kernel@vger.kernel.org>, "J.A. Magall??n" <jamagallon@ono.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@osdl.org>, Jeff Garzik <jeff@garzik.org>
+To: adam radford <aradford@gmail.com>
+Cc: Andrew Morton <akpm@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>, bugme-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
 
-On Mon, Oct 02, 2006 at 08:00:48PM +0000, Frederik Deweerdt wrote:
->  /**
-> + * pci_request_irq - Reserve an IRQ for a PCI device
-> + * @pdev: The PCI device whose irq is to be reserved
-> + * handler: The interrupt handler function,
 
-> + * pci_get_drvdata(pdev) shall be passed as an argument to that function
+> > > 3w-xxxx: tw_map_scsi_sg_data(): pci_map_sg() failed.
+> > > nommu_map_sg: overflow 2053d9000+4096 of device mask ffffffff
+> > > 3w-xxxx: tw_map_scsi_sg_data(): pci_map_sg() failed.
+> > > nommu_map_sg: overflow 2053d9000+4096 of device mask ffffffff
+> > > 3w-xxxx: tw_map_scsi_sg_data(): pci_map_sg() failed.
+> > > nommu_map_sg: overflow 2053d9000+4096 of device mask ffffffff
 
-I don't think you can (or should) do this.  Move it to the body of the
-comment below.
+nommu_* means he didn't compile in the IOMMU code.
 
-> + * @flags: The flags to be passed to request_irq()
-> + * @name: The name of the device to be associated with the irq
-> + *
-> + * Returns 0 on success, or a negative value on error.  A warning
-> + * message is also printed on failure.
-> + */
-> +int pci_request_irq(struct pci_dev *pdev,
-> +		    irqreturn_t (*handler)(int, void *, struct pt_regs *),
-> +		    unsigned long flags, const char *name)
-> +{
-> +	int rc;
-> +	const char *actual_name = name;
-> +
-> +	rc = is_irq_valid(pdev->irq);
-> +	if (!rc) {
-> +		dev_printk(KERN_ERR, &pdev->dev, "invalid irq #%d\n", pdev->irq);
-> +		return -EINVAL;
-> +	}
+Operator error -> invalid.
 
-Why is that more readable than
-
-	if (!is_irq_valid(pdev->irq)) {
-		dev_err(&pdev->dev, "invalid irq #%d\n", pdev->irq);
-		return -EINVAL;
-	}
-
-> +	if (!actual_name)
-> +		actual_name = pci_name(pdev);
-> +
-> +	return request_irq(pdev->irq, handler, flags | IRQF_SHARED,
-> +			   actual_name, pci_get_drvdata(pdev));
-
-The driver name is a far more common usage than the pci_name.
-
-	return request_irq(pdev->irq, handler, flags | IRQF_SHARED,
-			name ? name : pdev->driver->name,
-			pci_get_drvdata(pdev));
-
+-Andi
