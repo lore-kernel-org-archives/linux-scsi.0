@@ -1,46 +1,57 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: [PATCH] Set max_sectors for tmscsim
-Date: Mon, 2 Oct 2006 00:54:25 +0200 (CEST)
-Message-ID: <Pine.LNX.4.60.0610020028230.4088@poirot.grange>
+From: getitright <bret_stern@machinemanagement.com>
+Subject: SCSI basics - dell 210s
+Date: Sun, 1 Oct 2006 18:01:50 -0700 (PDT)
+Message-ID: <6594636.post@talk.nabble.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.de ([213.165.64.20]:50334 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S932453AbWJAWyX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 1 Oct 2006 18:54:23 -0400
-Received: from lyakh (helo=localhost)
-	by poirot.grange with local-esmtp (Exim 3.36 #1 (Debian))
-	id 1GUACX-0005DL-00
-	for <linux-scsi@vger.kernel.org>; Mon, 02 Oct 2006 00:54:25 +0200
+Received: from www.nabble.com ([72.21.53.35]:39091 "EHLO talk.nabble.com")
+	by vger.kernel.org with ESMTP id S932545AbWJBBBv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 1 Oct 2006 21:01:51 -0400
+Received: from [72.21.53.38] (helo=jubjub.nabble.com)
+	by talk.nabble.com with esmtp (Exim 4.50)
+	id 1GUCBq-0001G4-Qi
+	for linux-scsi@vger.kernel.org; Sun, 01 Oct 2006 18:01:50 -0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Hi
 
-The patch below depends on the previous one "enable clustering". I hope my 
-calculations are correct, and 0x8000 is the correct value for tmscsim. 
-Please, correct me if I am wrong. 16MiB are configured by setting all 24 
-bits to 0. Don't know if this works though.
+good day,
 
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
+I have a Dell 2450 with two 18gb drives, connected to the
+internal scsi adapter. Fine.
+They are /dev/sda  and  /dev/sdb.
 
-Signed-off-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Now i have added an additional pci Adaptec 2940 scsi adapter
+connected to a Dell 210s with seven 9gb drives.
 
-AM53C974A's Start Transfer Counter register has 24 bits, thus
-maximum transfer length is 16MiB.
+The above two drives (which were in the Dell 2450) are
+now:  /dev/sdh.../dev/sdi.
+Why did they change order/id?
+Does the external adapter (2940) precede the scsi
+id's of the internal scsi adapter?
 
-diff -u a/drivers/scsi/tmscsim.c b/drivers/scsi/tmscsim.c
---- a/drivers/scsi/tmscsim.c	2006-10-02 00:21:56.000000000 +0200
-+++ b/drivers/scsi/tmscsim.c	2006-10-02 00:21:46.000000000 +0200
-@@ -2304,6 +2304,7 @@
- 	.sg_tablesize		= SG_ALL,
- 	.cmd_per_lun		= 1,
- 	.use_clustering		= ENABLE_CLUSTERING,
-+	.max_sectors		= 0x8000, /* 16MiB = 32 * 1024 * 512 */
- };
- 
- /***********************************************************************
+Does scsi order the scsi id of ALL the combined scsi
+devices?
+
+Is there a way to keep the 2450 internal drives
+as /dev/sda, and /dev/sdb?
+Would i want ot keep them any specific way?
+
+Any suggestions for a good scsi arrangement with this
+Dell 2450 and Powervault 210s configuration (besides raid,
+i don't have the perc controller yet).
+
+Lot's of questions, but I know there is some good advice
+out there.
+
+So many thanks for comments.
+
+Bret
+
+-- 
+View this message in context: http://www.nabble.com/SCSI-basics---dell-210s-tf2367210.html#a6594636
+Sent from the linux-scsi mailing list archive at Nabble.com.
+
