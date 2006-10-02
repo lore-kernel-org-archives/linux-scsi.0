@@ -1,81 +1,29 @@
-From: "chas williams - CONTRACTOR" <chas@cmf.nrl.navy.mil>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: [PATCH] Introduce BROKEN_ON_64BIT facility
-Date: Mon, 02 Oct 2006 09:52:27 -0400
-Message-ID: <200610021352.k92DqRwa015220@cmf.nrl.navy.mil>
+Date: Mon, 02 Oct 2006 14:03:28 +0100
+Message-ID: <1159794208.8907.9.camel@localhost.localdomain>
 References: <20061002045512.GA8835@havoc.gtf.org>
-Reply-To: chas3@users.sourceforge.net
-Return-path: <netdev-owner@vger.kernel.org>
-Reply-To: chas3@users.sourceforge.net
-In-reply-to: <20061002045512.GA8835@havoc.gtf.org> 
-Sender: netdev-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Andrew Morton <akpm@osdl.org>, LKML <linux-kernel@vger.kernel.org>, netdev@vger.kernel.org, kkeil@suse.de, kai.germaschewski@gmx.de, isdn4linux@listserv.isdn4linux.de, mac@melware.de, markus.lidel@shadowconnect.com, samuel@sortiz.org, Neela.Kolli@engenio.com, linux-scsi@vger.kernel.org, Greg KH <greg@kroah.com>, thomas@winischhofer.net, ak@suse.de
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:50356 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S932342AbWJBN5x
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 Oct 2006 09:57:53 -0400
+In-Reply-To: <20061002045512.GA8835@havoc.gtf.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Andrew Morton <akpm@osdl.org>, LKML <linux-kernel@vger.kernel.org>, chas@cmf.nrl.navy.mil, netdev@vger.kernel.org, kkeil@suse.de, kai.germaschewski@gmx.de, isdn4linux@listserv.isdn4linux.de, mac@melware.de, markus.lidel@shadowconnect.com, samuel@sortiz.org, Neela.Kolli@engenio.com, linux-scsi@vger.kernel.org, Greg KH <greg@kroah.com>, thomas@winischhofer.net, ak@suse.de
 
-In message <20061002045512.GA8835@havoc.gtf.org>,Jeff Garzik writes:
->Several driver have been marked as dependent on CONFIG_32BIT in the
->past, when they should really be dependent on this new
->CONFIG_BROKEN_ON_64BIT option, because the 32BIT marker was due to bugs
->rather than fundamentals.
+Ar Llu, 2006-10-02 am 00:55 -0400, ysgrifennodd Jeff Garzik:
+> Add a broken-on-64bit option, similar to the existing broken-on-smp
+> config option.  This is just the first pass, marking the obvious
+> candidates.
 
-some of the drivers in atm are already marked with !64BIT and some
-need to be marked.  this might be more complete for drivers/atm/Kconfig:
+NAK. This contains lots of stuff whcih isn't broken in the first place.
 
-diff --git a/drivers/atm/Kconfig b/drivers/atm/Kconfig
-index cfa5af8..f4e0978 100644
---- a/drivers/atm/Kconfig
-+++ b/drivers/atm/Kconfig
-@@ -139,7 +139,7 @@ config ATM_ENI_BURST_RX_2W
- 
- config ATM_FIRESTREAM
- 	tristate "Fujitsu FireStream (FS50/FS155) "
--	depends on PCI && ATM
-+	depends on PCI && ATM && BROKEN_ON_64BIT
- 	help
- 	  Driver for the Fujitsu FireStream 155 (MB86697) and
- 	  FireStream 50 (MB86695) ATM PCI chips.
-@@ -149,7 +149,7 @@ config ATM_FIRESTREAM
- 
- config ATM_ZATM
- 	tristate "ZeitNet ZN1221/ZN1225"
--	depends on PCI && ATM
-+	depends on PCI && ATM && BROKEN_ON_64BIT
- 	help
- 	  Driver for the ZeitNet ZN1221 (MMF) and ZN1225 (UTP-5) 155 Mbps ATM
- 	  adapters.
-@@ -173,7 +173,7 @@ #      bool '  Enable extended debugging
- #   fi
- config ATM_NICSTAR
- 	tristate "IDT 77201 (NICStAR) (ForeRunnerLE)"
--	depends on PCI && ATM && !64BIT
-+	depends on PCI && ATM && BROKEN_ON_64BIT
- 	help
- 	  The NICStAR chipset family is used in a large number of ATM NICs for
- 	  25 and for 155 Mbps, including IDT cards and the Fore ForeRunnerLE
-@@ -241,7 +241,7 @@ config ATM_IDT77252_USE_SUNI
- 
- config ATM_AMBASSADOR
- 	tristate "Madge Ambassador (Collage PCI 155 Server)"
--	depends on PCI && ATM
-+	depends on PCI && ATM && BROKEN_ON_64BIT
- 	help
- 	  This is a driver for ATMizer based ATM card produced by Madge
- 	  Networks Ltd. Say Y (or M to compile as a module named ambassador)
-@@ -265,7 +265,7 @@ config ATM_AMBASSADOR_DEBUG
- 
- config ATM_HORIZON
- 	tristate "Madge Horizon [Ultra] (Collage PCI 25 and Collage PCI 155 Client)"
--	depends on PCI && ATM
-+	depends on PCI && ATM && BROKEN_ON_64BIT
- 	help
- 	  This is a driver for the Horizon chipset ATM adapter cards once
- 	  produced by Madge Networks Ltd. Say Y (or M to compile as a module
-@@ -289,7 +289,7 @@ config ATM_HORIZON_DEBUG
- 
- config ATM_IA
- 	tristate "Interphase ATM PCI x575/x525/x531"
--	depends on PCI && ATM && !64BIT
-+	depends on PCI && ATM && BROKEN_ON_64BIT
- 	---help---
- 	  This is a driver for the Interphase (i)ChipSAR adapter cards
- 	  which include a variety of variants in term of the size of the
+(Eg Megaraid works with 32bit config tools not 64bit ones and is
+otherwise fine, ISDN is just bogus warnings now swatted)
+
