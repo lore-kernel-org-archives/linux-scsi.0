@@ -1,63 +1,106 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: Panic from mptspi_dv_renegotiate_work in 2.6.18-mm2
-Date: Mon, 2 Oct 2006 13:39:37 -0700
-Message-ID: <20061002133937.112cb245.akpm@osdl.org>
-References: <45217232.2010805@google.com>
+From: Evan Harris <eharris@puremagic.com>
+Subject: sata_promise driver disables IRQ for entire card when one device
+ removed
+Date: Mon, 2 Oct 2006 16:54:10 -0500 (CDT)
+Message-ID: <Pine.LNX.4.62.0610021627170.10249@kinison.puremagic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:8106 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S964973AbWJBUjy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2006 16:39:54 -0400
-In-Reply-To: <45217232.2010805@google.com>
+Received: from cpe-70-113-217-93.austin.res.rr.com ([70.113.217.93]:22486 "EHLO
+	kinison.puremagic.com") by vger.kernel.org with ESMTP
+	id S965436AbWJBVyZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 Oct 2006 17:54:25 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Martin Bligh <mbligh@google.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, Andy Whitcroft <apw@shadowen.org>, "Moore, Eric Dean" <Eric.Moore@lsil.com>, linux-scsi@vger.kernel.org
+To: Linux Kernel List <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, 02 Oct 2006 13:10:26 -0700
-Martin Bligh <mbligh@google.com> wrote:
 
-> Panics on boot.
-> 
-> http://test.kernel.org/abat/50728/debug/console.log
-> 
-> Unable to handle kernel NULL pointer dereference at 0000000000000500 RIP:
->   [<ffffffff803fa9af>] mptspi_dv_renegotiate_work+0x10/0x4a
-> PGD 0
-> Oops: 0000 [1] SMP
-> last sysfs file:
-> CPU 0
-> Modules linked in:
-> Pid: 14, comm: events/0 Not tainted 2.6.18-mm2-autokern1 #1
-> RIP: 0010:[<ffffffff803fa9af>]  [<ffffffff803fa9af>] 
-> mptspi_dv_renegotiate_work+0x10/0x4a
-> RSP: 0000:ffff8101000e1e20  EFLAGS: 00010286
-> RAX: 0000000000000001 RBX: ffff810001fea8c0 RCX: 000000000000001f
-> RDX: 0000000000000000 RSI: ffff810001fea8c0 RDI: 0000000000001fea
-> RBP: ffff8101000e1e30 R08: ffff8101000e0000 R09: 0000000000000011
-> R10: ffff810001014820 R11: ffff810001014820 R12: 0000000000000500
-> R13: ffff810001ef1640 R14: 0000000000000202 R15: ffff810001fea8c0
-> FS:  0000000000000000(0000) GS:ffffffff80582000(0000) knlGS:0000000000000000
-> CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
-> CR2: 0000000000000500 CR3: 0000000000201000 CR4: 00000000000006e0
-> Process events/0 (pid: 14, threadinfo ffff8101000e0000, task 
-> ffff8100816b1040)
-> Stack:  ffff810001fea8c0 ffff810001fea8c8 ffff8101000e1e70 ffffffff802387e3
->   ffffffff803fa99f ffff810001ef1640 ffff810001f0dd40 ffffffff80238827
->   00000000fffffffc ffffffff804b0298 ffff8101000e1f00 ffffffff8023891a
-> Call Trace:
->   [<ffffffff802387e3>] run_workqueue+0xa2/0xe6
->   [<ffffffff803fa99f>] mptspi_dv_renegotiate_work+0x0/0x4a
->   [<ffffffff80238827>] worker_thread+0x0/0x126
->   [<ffffffff8023891a>] worker_thread+0xf3/0x126
->   [<ffffffff80224498>] default_wake_function+0x0/0xf
->   [<ffffffff80224498>] default_wake_function+0x0/0xf
->   [<ffffffff80238827>] worker_thread+0x0/0x126
->   [<ffffffff8023b984>] kthread+0xd0/0xfc
->   [<ffffffff8020a658>] child_rip+0xa/0x12
->   [<ffffffff8023b8b4>] kthread+0x0/0xfc
+AMD64 Dual Opteron system with a self-compiled kernel from stock sources, 
+Debian base.
 
-Yeah, Bryce@osdl is hitting this.  Apparently it can be worked around
-by compiling the driver as a module.
+SATA card is a Promise SATAII300 TX4, here is the lspci entry:
+
+0000:01:03.0 Unknown mass storage controller: Promise Technology, Inc.: Unknown device 3d17 (rev 02)
+
+I was tracking 2.6.16 all the way up to .27, when it showed this 
+behavior.  I then tried tried 2.6.17.13, and got the same result.  The logs 
+below are from the attempt with 2.6.17.13.
+
+During normal system operation, with no load, I tried pulling a SATA drive 
+from the promise controller (in this case "ata1" which is sda) in order to 
+test the system being able to handle a drive failure.
+
+I immediately got this in the syslog:
+
+Oct  2 16:14:43 stock kernel: irq 16: nobody cared (try booting with the "irqpoll" option)
+Oct  2 16:14:43 stock kernel:
+Oct  2 16:14:43 stock kernel: Call Trace: <IRQ> <ffffffff80299dd0>{__report_bad_irq+48}
+Oct  2 16:14:43 stock kernel:        <ffffffff80299eec>{note_interrupt+140} <ffffffff80299584>{__do_IRQ+196}
+Oct  2 16:14:43 stock kernel:        <ffffffff8025f352>{do_IRQ+66} <ffffffff8025c540>{default_idle+0}
+Oct  2 16:14:43 stock kernel:        <ffffffff802545b8>{ret_from_intr+0} <EOI> <ffffffff80256ce0>{thread_return+0}
+Oct  2 16:14:43 stock kernel:        <ffffffff8025c56f>{default_idle+47} <ffffffff8024092b>{cpu_idle+107}
+Oct  2 16:14:43 stock kernel: handlers:
+Oct  2 16:14:43 stock kernel: [pdc_interrupt+0/512] (pdc_interrupt+0x0/0x200)
+Oct  2 16:14:43 stock kernel: Disabling IRQ #16
+
+After this, all four of the disks on the Promise controller stopped working, 
+I am assuming because of the interrupt being disabled, even though the other 
+three should have been just fine.
+
+This is a partial log of console errors after the IRQ was disabled (all that 
+I was able to grab since I couldn't access any disks anymore).
+
+ata1: command timeout
+ata1: translated ATA stat/err 0xff/00 to SCSI SK/ASC/ASCQ 0xb/47/00
+ata1: status=0xff { Busy }
+sd 0:0:0:0: SCSI error: return code = 0x8000002
+sda: Current: sense key: Aborted Command
+     Additional sense: Scsi parity error
+end_request: I/O error, dev sda, sector 976767923
+ata4: command timeout
+ata4: status=0x50 { DriveReady SeekComplete }
+sdd: Current<3>ata2: command timeout
+ata2: status=0x50 { DriveReady SeekComplete }
+sdb: Current: sense key: No Sense
+     Additional sense: No additional sense information
+Info fld=0x301036
+: sense key: No Sense
+     Additional sense: No additional sense information
+Info fld=0x301036
+ata3: command timeout
+ata3: status=0x50 { DriveReady SeekComplete }
+sdc: Current: sense key: No Sense
+     Additional sense: No additional sense information
+Info fld=0x301036
+sdc: Current: sense key: No Sense
+     Additional sense: No additional sense information
+ata4: command timeout
+ata4: status=0x50 { DriveReady SeekComplete }
+ata2: command timeout
+ata2: status=0x50 { DriveReady SeekComplete }
+ata3: command timeout
+ata3: status=0x50 { DriveReady SeekComplete }
+ata4: command timeout
+ata4: status=0x50 { DriveReady SeekComplete }
+sdd: Current<3>ata2: command timeout
+ata2: status=0x50 { DriveReady SeekComplete }
+sdb: Current: sense key: No Sense
+     Additional sense: No additional sense information
+Info fld=0x917e
+: sense key: No Sense
+     Additional sense: No additional sense information
+Info fld=0x917e
+ata3: command timeout
+ata3: status=0x50 { DriveReady SeekComplete }
+sdc: Current: sense key: No Sense
+     Additional sense: No additional sense information
+Info fld=0x917e
+
+Similar messages continued to be printed to the console, and any disk 
+accesses continued to fail.  I waited about a half hour to see if the system 
+would ever recover, and it never did.
+
+I'd be happy to provide any additional information that may be helpful.
+
+Evan
