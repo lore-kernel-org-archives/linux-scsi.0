@@ -1,81 +1,64 @@
-From: Frederik Deweerdt <deweerdt@free.fr>
-Subject: Re: [RFC PATCH] pci_request_irq (was [-mm patch] aic7xxx: check irq validity)
-Date: Mon, 2 Oct 2006 21:09:49 +0000
-Message-ID: <20061002210949.GJ3003@slug>
-References: <20060929235054.GB2020@slug> <1159573404.13029.96.camel@localhost.localdomain> <20060930140946.GA1195@slug> <451F049A.1010404@garzik.org> <20061001142807.GD16272@parisc-linux.org> <1159729523.2891.408.camel@laptopd505.fenrus.org> <20061001193616.GF16272@parisc-linux.org> <1159755141.2891.434.camel@laptopd505.fenrus.org> <20061002200048.GC3003@slug> <20061002181522.GL16272@parisc-linux.org>
+From: Andi Kleen <ak@suse.de>
+Subject: Re: GFP_DMA use in SCSI midlayer
+Date: Mon, 2 Oct 2006 21:18:46 +0200
+Message-ID: <200610022118.46830.ak@suse.de>
+References: <200610012213.24123.ak@suse.de> <200610012255.49802.ak@suse.de> <1159800770.3460.11.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.169]:42288 "EHLO
-	ug-out-1314.google.com") by vger.kernel.org with ESMTP
-	id S965301AbWJBTLP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 Oct 2006 15:11:15 -0400
-Received: by ug-out-1314.google.com with SMTP id o38so544236ugd
-        for <linux-scsi@vger.kernel.org>; Mon, 02 Oct 2006 12:11:14 -0700 (PDT)
+Received: from mx2.suse.de ([195.135.220.15]:58798 "EHLO mx2.suse.de")
+	by vger.kernel.org with ESMTP id S965355AbWJBTSv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2006 15:18:51 -0400
+In-Reply-To: <1159800770.3460.11.camel@mulgrave.il.steeleye.com>
 Content-Disposition: inline
-In-Reply-To: <20061002181522.GL16272@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Arjan van de Ven <arjan@infradead.org>, linux-scsi@vger.kernel.org, "Linux-Kernel," <linux-kernel@vger.kernel.org>, "J.A. Magall??n" <jamagallon@ono.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@osdl.org>, Jeff Garzik <jeff@garzik.org>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: linux-scsi@vger.kernel.org, Christoph Lameter <clameter@sgi.com>
 
-On Mon, Oct 02, 2006 at 12:15:22PM -0600, Matthew Wilcox wrote:
-> On Mon, Oct 02, 2006 at 08:00:48PM +0000, Frederik Deweerdt wrote:
-> >  /**
-> > + * pci_request_irq - Reserve an IRQ for a PCI device
-> > + * @pdev: The PCI device whose irq is to be reserved
-> > + * handler: The interrupt handler function,
+On Monday 02 October 2006 16:52, James Bottomley wrote:
+> On Sun, 2006-10-01 at 22:55 +0200, Andi Kleen wrote:
+> > This means the majority of drivers will never use it? I don't 
+> > claim to be a SCSI expert, but a lot of uses looked unchecked
+> > to me from a quick look. That is very worrying because it's
+> > only 16MB on x86 and 16MB run out quickly.
 > 
-> > + * pci_get_drvdata(pdev) shall be passed as an argument to that function
+> Yes, some cases it's used because the code can't be bothered to check to
+> see if it's required ... these cases can be audited and cleaned up.
+
+That would be useful.
+
+> > If it's never used I don't care that much, but it certainly
+> > doesn't look like that.
+> > 
+> > Or do you only need it because pci_map_single() on i386 doesn't
+> > do bouncing?  If yes we can probably fix that.
 > 
-> I don't think you can (or should) do this.  Move it to the body of the
-> comment below.
-OK, thanks for pointing this, will do.
+> Heh, that would be the worst place to fix it. We usually have use
+> context for the allocation, so can sleep in the worst case.  We don't
+> have such context where we do pci_map_single().
+
+Ok then you'll likely want a new function that does this.
+
+Do you always have a device or is a mask enough? 
+
+
+
+> > > However, what is wanted in every case is 
+> > > ordinary memory, not coherent memory.  They can't simply be replaced
+> > > with dma_alloc_coherent because
+> > > 
+> > > a) it will waste memory for platforms that only do it in page size
+> > > multiples
+> > > b) It will fail on platforms that can't do it at all.
+> > 
+> > GFP_DMA will also fail on a lot of platforms, so it's the same.
 > 
-> > + * @flags: The flags to be passed to request_irq()
-> > + * @name: The name of the device to be associated with the irq
-> > + *
-> > + * Returns 0 on success, or a negative value on error.  A warning
-> > + * message is also printed on failure.
-> > + */
-> > +int pci_request_irq(struct pci_dev *pdev,
-> > +		    irqreturn_t (*handler)(int, void *, struct pt_regs *),
-> > +		    unsigned long flags, const char *name)
-> > +{
-> > +	int rc;
-> > +	const char *actual_name = name;
-> > +
-> > +	rc = is_irq_valid(pdev->irq);
-> > +	if (!rc) {
-> > +		dev_printk(KERN_ERR, &pdev->dev, "invalid irq #%d\n", pdev->irq);
-> > +		return -EINVAL;
-> > +	}
-> 
-> Why is that more readable than
-> 
-> 	if (!is_irq_valid(pdev->irq)) {
-> 		dev_err(&pdev->dev, "invalid irq #%d\n", pdev->irq);
-> 		return -EINVAL;
-> 	}
-> 
-Better too.
-> > +	if (!actual_name)
-> > +		actual_name = pci_name(pdev);
-> > +
-> > +	return request_irq(pdev->irq, handler, flags | IRQF_SHARED,
-> > +			   actual_name, pci_get_drvdata(pdev));
-> 
-> The driver name is a far more common usage than the pci_name.
-> 
-> 	return request_irq(pdev->irq, handler, flags | IRQF_SHARED,
-> 			name ? name : pdev->driver->name,
-> 			pci_get_drvdata(pdev));
-OK, thanks for the feedback,
-Frederik
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
+> No, at the moment it succeeds on all of them (although at odd locations,
+> like on parisc GFP_DMA goes up to 4GB).
+
+Not after Christoph's patchkit went in.
+
+-Andi
