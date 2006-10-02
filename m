@@ -1,92 +1,45 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: GFP_DMA use in SCSI midlayer
-Date: Mon, 02 Oct 2006 13:51:25 -0500
-Message-ID: <45215FAD.3080109@cs.wisc.edu>
-References: <200610012213.24123.ak@suse.de>	 <1159735218.3542.16.camel@mulgrave.il.steeleye.com> <1159814616.2945.7.camel@madmax>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [Bugme-new] [Bug 7246] New: 3w-xxxx, IOMMU and >1go RAM
+Date: Mon, 02 Oct 2006 13:58:07 -0500
+Message-ID: <1159815487.3460.36.camel@mulgrave.il.steeleye.com>
+References: <200610021508.k92F8bmq011159@fire-2.osdl.org>
+	 <200610022017.59697.ak@suse.de>
+	 <1159813447.3460.28.camel@mulgrave.il.steeleye.com>
+	 <200610022035.55482.ak@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:32224 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S1751027AbWJBSvf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2006 14:51:35 -0400
-In-Reply-To: <1159814616.2945.7.camel@madmax>
+Received: from stat9.steeleye.com ([209.192.50.41]:23952 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S964875AbWJBS6W (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 Oct 2006 14:58:22 -0400
+In-Reply-To: <200610022035.55482.ak@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Andi Kleen <ak@suse.de>, linux-scsi@vger.kernel.org, Christoph Lameter <clameter@sgi.com>
+To: Andi Kleen <ak@suse.de>
+Cc: adam radford <aradford@gmail.com>, Andrew Morton <akpm@osdl.org>, bugme-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
 
-Mike Christie wrote:
-> On Sun, 2006-10-01 at 15:40 -0500, James Bottomley wrote:
->> On Sun, 2006-10-01 at 22:13 +0200, Andi Kleen wrote:
->>> GFP_DMA in general is deprecated and should be replaced by appropiate
->>> dma_alloc_coherent()
->> Um, no it shouldn't.
->>
->> All of the places where we use GFP_DMA are because we might be
->> addressing an ISA card or other strange mask limited card (gated usually
->> by unchecked_isa_dma).  However, what is wanted in every case is
->> ordinary memory, not coherent memory.  They can't simply be replaced
->> with dma_alloc_coherent because
->>
->> a) it will waste memory for platforms that only do it in page size
->> multiples
->> b) It will fail on platforms that can't do it at all.
->>
->> Coherent memory is really only for device drivers to use in mailboxes
->> and shared ring buffers.
->>
->>> or similar.  And I can't imagine any modern systems still need them, and for 
->>> the few still non CONFIG_BROKEN ISA drivers maybe some other way can be found?
->>> And do they really require the mid layer data structures to be GFP_DMA too?
->> Well, it's the "or similar" that's still the problem.  All they need is
->> ordinary memory which respects the device mask (then I can get rid of
->> the unchecked_isa_dma flag as well).
->>
->> One could argue, I suppose, that when we get every SCSI path to go via
->> sg, then the block layer will bounce this for us, and we don't need to
->> worry at all.
-> 
-> 
-> I think we might just need the blk_map_kern users now. For the async
+On Mon, 2006-10-02 at 20:35 +0200, Andi Kleen wrote:
+> Yes, but it can't when the bounce code is not compiled in.
+> In this case it just printks and you saw those printks.
 
-Oops, I just meant for the ULDs, scsi-ml, and block layer drivers. I did
-not look at if/when the LLDs inject commands directly to their queuecommand.
+That's this bit of subversion in ll_rw_blk.c:blk_queue_bounce_limit()
 
-> execute I added the bounce code already and the block SG_IO has it
-> atleady. I think the blk_map_kern bounce code got dropped because we
-> thought the correct gfp_t would be passed in. But I think all we need is
-> the patch below and all the paths are take care of. The patch is not
-> tested. Patch was made against scsi-misc.
-> 
-> The last place that is sending non sg commands may just be md/dm-emc.c
-> but that is is just waiting on alasdair to take some patches that fix
-> that and a bunch of junk in there including adding bounce support. If
-> the patch below is ok though and dm-emc finally gets converted then it
-> will have sg and bonce buffer support.
-> 
-> 
-> 
-> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
-> 
-> diff --git a/block/ll_rw_blk.c b/block/ll_rw_blk.c
-> index 9c3a06b..e58b43a 100644
-> --- a/block/ll_rw_blk.c
-> +++ b/block/ll_rw_blk.c
-> @@ -2533,6 +2533,7 @@ int blk_rq_map_kern(request_queue_t *q, 
->  	rq->bio = rq->biotail = bio;
->  	blk_rq_bio_prep(q, rq, bio);
->  
-> +	blk_queue_bounce(q, &rq->bio);
->  	rq->buffer = rq->data = NULL;
->  	rq->data_len = len;
->  	return 0;
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> diff --git a/fs/bio.c b/fs/bio.c
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+#if BITS_PER_LONG == 64
+	/* Assume anything <= 4GB can be handled by IOMMU.
+	   Actually some IOMMUs can handle everything, but I don't
+	   know of a way to test this here. */
+	if (bounce_pfn < (min_t(u64,0xffffffff,BLK_BOUNCE_HIGH) >> PAGE_SHIFT))
+		dma = 1;
+	q->bounce_pfn = max_low_pfn;
+#else
+
+?
+
+That really looks wrong ... it will fail, as we've seen for 64 bit
+platforms with no iommu.  We should init the isa pool in that case.
+
+James
+
 
