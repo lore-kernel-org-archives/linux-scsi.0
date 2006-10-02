@@ -1,45 +1,39 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [Bugme-new] [Bug 7246] New: 3w-xxxx, IOMMU and >1go RAM
-Date: Mon, 02 Oct 2006 13:58:07 -0500
-Message-ID: <1159815487.3460.36.camel@mulgrave.il.steeleye.com>
-References: <200610021508.k92F8bmq011159@fire-2.osdl.org>
-	 <200610022017.59697.ak@suse.de>
-	 <1159813447.3460.28.camel@mulgrave.il.steeleye.com>
-	 <200610022035.55482.ak@suse.de>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: [PATCH 0/8] qla2xxx: driver update.
+Date: Mon, 2 Oct 2006 11:59:47 -0700
+Message-ID: <20061002185947.GF16536@andrew-vasquezs-computer.local>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:23952 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S964875AbWJBS6W (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 Oct 2006 14:58:22 -0400
-In-Reply-To: <200610022035.55482.ak@suse.de>
+Received: from pat.qlogic.com ([198.70.193.2]:30298 "EHLO avexch1.qlogic.com")
+	by vger.kernel.org with ESMTP id S964908AbWJBS7t (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2006 14:59:49 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andi Kleen <ak@suse.de>
-Cc: adam radford <aradford@gmail.com>, Andrew Morton <akpm@osdl.org>, bugme-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
+To: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <james.bottomley@steeleye.com>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-On Mon, 2006-10-02 at 20:35 +0200, Andi Kleen wrote:
-> Yes, but it can't when the bounce code is not compiled in.
-> In this case it just printks and you saw those printks.
+This patchset updates the qla2xxx driver to 8.01.07-k2.
 
-That's this bit of subversion in ll_rw_blk.c:blk_queue_bounce_limit()
+ drivers/scsi/qla2xxx/qla_attr.c    |   57 +++++++++-
+ drivers/scsi/qla2xxx/qla_def.h     |   40 ++++++-
+ drivers/scsi/qla2xxx/qla_gbl.h     |    9 ++
+ drivers/scsi/qla2xxx/qla_gs.c      |  228 +++++++++++++++++++++++++++++++++---
+ drivers/scsi/qla2xxx/qla_init.c    |   84 +++++++++++++-
+ drivers/scsi/qla2xxx/qla_isr.c     |    4 +-
+ drivers/scsi/qla2xxx/qla_mbx.c     |   86 ++++++++++++++
+ drivers/scsi/qla2xxx/qla_os.c      |   48 +++++++-
+ drivers/scsi/qla2xxx/qla_version.h |    2 +-
+ 9 files changed, 524 insertions(+), 34 deletions(-)
 
-#if BITS_PER_LONG == 64
-	/* Assume anything <= 4GB can be handled by IOMMU.
-	   Actually some IOMMUs can handle everything, but I don't
-	   know of a way to test this here. */
-	if (bounce_pfn < (min_t(u64,0xffffffff,BLK_BOUNCE_HIGH) >> PAGE_SHIFT))
-		dma = 1;
-	q->bounce_pfn = max_low_pfn;
-#else
+here's the commits:
 
-?
-
-That really looks wrong ... it will fail, as we've seen for 64 bit
-platforms with no iommu.  We should init the isa pool in that case.
-
-James
-
-
+ - Add iIDMA support.
+ - Add support for symbolic nodename FC transport attribute.
+ - Add support for system hostname FC transport attribute.
+ - Add support for fabric name FC transport attribute.
+ - Add support for host port state FC transport attribute.
+ - Add MODULE_FIRMWARE tags.
+ - Stall mid-layer error handlers while rport is blocked.
+ - Update version number to 8.01.07-k2.
