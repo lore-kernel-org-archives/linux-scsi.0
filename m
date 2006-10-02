@@ -1,61 +1,141 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [Bugme-new] [Bug 7246] New: 3w-xxxx, IOMMU and >1go RAM
-Date: Mon, 2 Oct 2006 10:57:33 -0700
-Message-ID: <20061002105733.a9e82ddf.akpm@osdl.org>
-References: <200610021508.k92F8bmq011159@fire-2.osdl.org>
+From: Frederik Deweerdt <deweerdt@free.fr>
+Subject: [RFC PATCH] pci_request_irq (was [-mm patch] aic7xxx: check irq validity)
+Date: Mon, 2 Oct 2006 20:00:48 +0000
+Message-ID: <20061002200048.GC3003@slug>
+References: <20060929143949.GL5017@parisc-linux.org> <1159550143.13029.36.camel@localhost.localdomain> <20060929235054.GB2020@slug> <1159573404.13029.96.camel@localhost.localdomain> <20060930140946.GA1195@slug> <451F049A.1010404@garzik.org> <20061001142807.GD16272@parisc-linux.org> <1159729523.2891.408.camel@laptopd505.fenrus.org> <20061001193616.GF16272@parisc-linux.org> <1159755141.2891.434.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:55517 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S965193AbWJBR5q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2006 13:57:46 -0400
-In-Reply-To: <200610021508.k92F8bmq011159@fire-2.osdl.org>
+Received: from ug-out-1314.google.com ([66.249.92.168]:58188 "EHLO
+	ug-out-1314.google.com") by vger.kernel.org with ESMTP
+	id S965202AbWJBSCO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 Oct 2006 14:02:14 -0400
+Received: by ug-out-1314.google.com with SMTP id o38so535371ugd
+        for <linux-scsi@vger.kernel.org>; Mon, 02 Oct 2006 11:02:13 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <1159755141.2891.434.camel@laptopd505.fenrus.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: adam radford <aradford@gmail.com>, James Bottomley <James.Bottomley@steeleye.com>
-Cc: bugme-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org, "Linux-Kernel," <linux-kernel@vger.kernel.org>, "J.A. Magall??n" <jamagallon@ono.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@osdl.org>, Jeff Garzik <jeff@garzik.org>
 
-On Mon, 2 Oct 2006 08:08:37 -0700
-bugme-daemon@bugzilla.kernel.org wrote:
+Hi all,
 
-> http://bugzilla.kernel.org/show_bug.cgi?id=7246
-> 
->            Summary: 3w-xxxx, IOMMU and >1go RAM
->     Kernel Version: 2.6.18
->             Status: NEW
->           Severity: normal
->              Owner: scsi_drivers-other@kernel-bugs.osdl.org
->          Submitter: aarnoud@agematis.com
-> 
-> 
-> Most recent kernel where this bug did not occur: 2.6.15-1
-> Distribution: Debian Testing
-> Hardware Environment: SuperMicro X6DVL-EG2, 4go RAM, 3ware 8006-2LP, 2xHitachi
-> 2x80go
-> Software Environment:
-> Problem Description: Data corruption with kernel newer than 2.6.15-1.
-> 
-> Steps to reproduce: tested with most kernel 2.6.16, 2.6.17 and 2.6.18 all doing
-> same corruption.
-> 
-> Solved the probleme leaving only 1go of RAM and setting IOMMU=off during boot
-> time, with 4go RAM kernel hangs saying :
-> 
-> 3w-xxxx: tw_map_scsi_sg_data(): pci_map_sg() failed.
-> nommu_map_sg: overflow 2053d9000+4096 of device mask ffffffff
-> 3w-xxxx: tw_map_scsi_sg_data(): pci_map_sg() failed.
-> nommu_map_sg: overflow 2053d9000+4096 of device mask ffffffff
-> 3w-xxxx: tw_map_scsi_sg_data(): pci_map_sg() failed.
-> nommu_map_sg: overflow 2053d9000+4096 of device mask ffffffff
-> 
-> and hangs badly.
-> 
+I've tried to summarize the different proposals made by Jeff Garzik,
+Matthew Wilcox and Arjan van de Ven in the "[-mm patch] aic7xxx: check
+irq validity" thread. I've also added:
+- some kerneldoc
+- renamed valid_irq to is_irq_valid() 
+- added pci_release_irq(). 
 
-James, Adam: I recall that we had a scsi driver recently which had problems
-similar to this, but I think it was with addresses over 4G, not over 1G. 
-It also might not have been the 3ware driver.  Do you recall?
+I'll send a follow-up patch showing the implied modifications for the
+following - semi-randomly chosen :) - drivers: aic7xxx, aic79xx, tg3
+and drm.
 
-Alexandre, can you please send the full dmesg output for that machine?
+Regards,
+Frederik
 
-Thanks.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index a544997..ae20a3a 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -15,6 +15,7 @@ #include <linux/init.h>
+ #include <linux/pci.h>
+ #include <linux/module.h>
+ #include <linux/spinlock.h>
++#include <linux/interrupt.h>
+ #include <linux/string.h>
+ #include <asm/dma.h>	/* isa_dma_bridge_buggy */
+ #include "pci.h"
+@@ -810,6 +811,49 @@ err_out:
+ }
+ 
+ /**
++ * pci_request_irq - Reserve an IRQ for a PCI device
++ * @pdev: The PCI device whose irq is to be reserved
++ * handler: The interrupt handler function,
++ * pci_get_drvdata(pdev) shall be passed as an argument to that function
++ * @flags: The flags to be passed to request_irq()
++ * @name: The name of the device to be associated with the irq
++ *
++ * Returns 0 on success, or a negative value on error.  A warning
++ * message is also printed on failure.
++ */
++int pci_request_irq(struct pci_dev *pdev,
++		    irqreturn_t (*handler)(int, void *, struct pt_regs *),
++		    unsigned long flags, const char *name)
++{
++	int rc;
++	const char *actual_name = name;
++
++	rc = is_irq_valid(pdev->irq);
++	if (!rc) {
++		dev_printk(KERN_ERR, &pdev->dev, "invalid irq #%d\n", pdev->irq);
++		return -EINVAL;
++	}
++
++	if (!actual_name)
++		actual_name = pci_name(pdev);
++
++	return request_irq(pdev->irq, handler, flags | IRQF_SHARED,
++			   actual_name, pci_get_drvdata(pdev));
++}
++EXPORT_SYMBOL(pci_request_irq);
++
++/**
++ * pci_free_irq - releases the interrupt line reserved to the PCI
++ * device pointed by @pdev 
++ * @pdev: the PCI device whose interrupt is to be freed
++ */
++void pci_free_irq(struct pci_dev *pdev)
++{
++	free_irq(pdev->irq, pci_get_drvdata(pdev));
++}
++EXPORT_SYMBOL(pci_free_irq);
++
++/**
+  * pci_set_master - enables bus-mastering for device dev
+  * @dev: the PCI device to enable
+  *
+diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
+index 1f97e3d..c320b50 100644
+--- a/include/linux/interrupt.h
++++ b/include/linux/interrupt.h
+@@ -75,6 +75,13 @@ struct irqaction {
+ 	struct proc_dir_entry *dir;
+ };
+ 
++#ifndef ARCH_VALIDATE_PCI_IRQ
++static inline int is_irq_valid(unsigned int irq)
++{
++	return irq ? 1 : 0;
++}
++#endif /* ARCH_VALIDATE_PCI_IRQ */
++
+ extern irqreturn_t no_action(int cpl, void *dev_id, struct pt_regs *regs);
+ extern int request_irq(unsigned int,
+ 		       irqreturn_t (*handler)(int, void *, struct pt_regs *),
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 5bc4659..5e0f07a 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -52,6 +52,7 @@ #include <linux/list.h>
+ #include <linux/compiler.h>
+ #include <linux/errno.h>
+ #include <linux/device.h>
++#include <linux/interrupt.h>
+ 
+ /* File state for mmap()s on /proc/bus/pci/X/Y */
+ enum pci_mmap_state {
+@@ -531,6 +532,11 @@ void pci_release_regions(struct pci_dev 
+ int __must_check pci_request_region(struct pci_dev *, int, const char *);
+ void pci_release_region(struct pci_dev *, int);
+ 
++int __must_check pci_request_irq(struct pci_dev *pdev,
++		    irqreturn_t (*handler)(int, void *, struct pt_regs *),
++		    unsigned long flags, const char *name);
++void pci_free_irq(struct pci_dev *pdev);
++
+ /* drivers/pci/bus.c */
+ int __must_check pci_bus_alloc_resource(struct pci_bus *bus,
+ 			struct resource *res, resource_size_t size,
