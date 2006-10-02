@@ -1,33 +1,36 @@
-From: Andi Kleen <ak@suse.de>
-Subject: Re: [Bugme-new] [Bug 7246] New: 3w-xxxx, IOMMU and >1go RAM
-Date: Mon, 2 Oct 2006 21:28:16 +0200
-Message-ID: <200610022128.16237.ak@suse.de>
-References: <200610021508.k92F8bmq011159@fire-2.osdl.org> <200610022035.55482.ak@suse.de> <1159815487.3460.36.camel@mulgrave.il.steeleye.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [RFC PATCH] move drm to pci_request_irq
+Date: Mon, 02 Oct 2006 21:36:38 +0100
+Message-ID: <1159821398.8907.57.camel@localhost.localdomain>
+References: <1159550143.13029.36.camel@localhost.localdomain>
+	 <20060929235054.GB2020@slug>
+	 <1159573404.13029.96.camel@localhost.localdomain>
+	 <20060930140946.GA1195@slug> <451F049A.1010404@garzik.org>
+	 <20061001142807.GD16272@parisc-linux.org>
+	 <1159729523.2891.408.camel@laptopd505.fenrus.org>
+	 <20061001193616.GF16272@parisc-linux.org>
+	 <1159755141.2891.434.camel@laptopd505.fenrus.org>
+	 <20061002200048.GC3003@slug>  <20061002201229.GF3003@slug>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:59056 "EHLO mx2.suse.de")
-	by vger.kernel.org with ESMTP id S965382AbWJBTfQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2006 15:35:16 -0400
-In-Reply-To: <1159815487.3460.36.camel@mulgrave.il.steeleye.com>
-Content-Disposition: inline
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:49084 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S964957AbWJBUMK
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 Oct 2006 16:12:10 -0400
+In-Reply-To: <20061002201229.GF3003@slug>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: adam radford <aradford@gmail.com>, Andrew Morton <akpm@osdl.org>, bugme-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
+To: Frederik Deweerdt <deweerdt@free.fr>
+Cc: Arjan van de Ven <arjan@infradead.org>, Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org, "Linux-Kernel," <linux-kernel@vger.kernel.org>, "J.A. Magall??n" <jamagallon@ono.com>, Andrew Morton <akpm@osdl.org>, Jeff Garzik <jeff@garzik.org>
 
+Ar Llu, 2006-10-02 am 20:12 +0000, ysgrifennodd Frederik Deweerdt:
+> Hi,
+> 
+> This proof-of-concept patch converts the drm driver to use the
+> pci_request_irq() function.
 
-> That really looks wrong ... it will fail, as we've seen for 64 bit
-> platforms with no iommu.
+0 isn't invalid - it means no IRQ was assigned so wants a different
+message.
 
-That is just an operator error.  It's like compiling your kernel
-without the driver for your root file system. Yes, CONFIG_* gives
-you plenty of rope ...
-
-> We should init the isa pool in that case. 
-
-No.
-
--Andi
