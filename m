@@ -1,64 +1,110 @@
-From: Andi Kleen <ak@suse.de>
-Subject: Re: GFP_DMA use in SCSI midlayer
-Date: Mon, 2 Oct 2006 21:18:46 +0200
-Message-ID: <200610022118.46830.ak@suse.de>
-References: <200610012213.24123.ak@suse.de> <200610012255.49802.ak@suse.de> <1159800770.3460.11.camel@mulgrave.il.steeleye.com>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [PATCH 7/8] qla2xxx: Stall mid-layer error handlers while rport
+ is blocked.
+Date: Mon, 02 Oct 2006 15:26:00 -0400
+Message-ID: <452167C8.3010401@emulex.com>
+References: <20061002185947.GF16536@andrew-vasquezs-computer.local> <11598156511007-git-send-email-andrew.vasquez@qlogic.com>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:58798 "EHLO mx2.suse.de")
-	by vger.kernel.org with ESMTP id S965355AbWJBTSv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2006 15:18:51 -0400
-In-Reply-To: <1159800770.3460.11.camel@mulgrave.il.steeleye.com>
-Content-Disposition: inline
+Received: from emulex.emulex.com ([138.239.112.1]:45491 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S965377AbWJBT0X
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 Oct 2006 15:26:23 -0400
+In-Reply-To: <11598156511007-git-send-email-andrew.vasquez@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi@vger.kernel.org, Christoph Lameter <clameter@sgi.com>
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <james.bottomley@steeleye.com>
 
-On Monday 02 October 2006 16:52, James Bottomley wrote:
-> On Sun, 2006-10-01 at 22:55 +0200, Andi Kleen wrote:
-> > This means the majority of drivers will never use it? I don't 
-> > claim to be a SCSI expert, but a lot of uses looked unchecked
-> > to me from a quick look. That is very worrying because it's
-> > only 16MB on x86 and 16MB run out quickly.
+Given this is the 3rd instance of this (qla2xxxx, lpfc, mpt fusion),
+we should either:
+
+- Fix the error handler. (but we all know this is a lot of work,
+     of which none of us have the time to do, nor expect it to
+     be complete in time for our next distro delivery).
+or
+- Write a transport wrapper function that our eh functions invoke.
+   The wrapper would perform the stall and validate port state.
+
+-- james s
+
+
+Andrew Vasquez wrote:
+> Stall error handler if attempting recovery while an rport is
+> blocked.  This avoids device offline scenarios due to errors in
+> the error handler.
 > 
-> Yes, some cases it's used because the code can't be bothered to check to
-> see if it's required ... these cases can be audited and cleaned up.
-
-That would be useful.
-
-> > If it's never used I don't care that much, but it certainly
-> > doesn't look like that.
-> > 
-> > Or do you only need it because pci_map_single() on i386 doesn't
-> > do bouncing?  If yes we can probably fix that.
+> Reference implementation from lpfc/mptfc.
 > 
-> Heh, that would be the worst place to fix it. We usually have use
-> context for the allocation, so can sleep in the worst case.  We don't
-> have such context where we do pci_map_single().
-
-Ok then you'll likely want a new function that does this.
-
-Do you always have a device or is a mask enough? 
-
-
-
-> > > However, what is wanted in every case is 
-> > > ordinary memory, not coherent memory.  They can't simply be replaced
-> > > with dma_alloc_coherent because
-> > > 
-> > > a) it will waste memory for platforms that only do it in page size
-> > > multiples
-> > > b) It will fail on platforms that can't do it at all.
-> > 
-> > GFP_DMA will also fail on a lot of platforms, so it's the same.
+> Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+> ---
+>  drivers/scsi/qla2xxx/qla_os.c |   25 +++++++++++++++++++++++++
+>  1 files changed, 25 insertions(+), 0 deletions(-)
 > 
-> No, at the moment it succeeds on all of them (although at odd locations,
-> like on parisc GFP_DMA goes up to 4GB).
-
-Not after Christoph's patchkit went in.
-
--Andi
+> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+> index cdc7fca..3ba8c23 100644
+> --- a/drivers/scsi/qla2xxx/qla_os.c
+> +++ b/drivers/scsi/qla2xxx/qla_os.c
+> @@ -589,6 +589,23 @@ qla2x00_wait_for_loop_ready(scsi_qla_hos
+>  	return (return_status);
+>  }
+>  
+> +static void
+> +qla2x00_block_error_handler(struct scsi_cmnd *cmnd)
+> +{
+> +	struct Scsi_Host *shost = cmnd->device->host;
+> +	struct fc_rport *rport = starget_to_rport(scsi_target(cmnd->device));
+> +	unsigned long flags;
+> +
+> +	spin_lock_irqsave(shost->host_lock, flags);
+> +	while (rport->port_state == FC_PORTSTATE_BLOCKED) {
+> +		spin_unlock_irqrestore(shost->host_lock, flags);
+> +		msleep(1000);
+> +		spin_lock_irqsave(shost->host_lock, flags);
+> +	}
+> +	spin_unlock_irqrestore(shost->host_lock, flags);
+> +	return;
+> +}
+> +
+>  /**************************************************************************
+>  * qla2xxx_eh_abort
+>  *
+> @@ -615,6 +632,8 @@ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
+>  	unsigned long flags;
+>  	int wait = 0;
+>  
+> +	qla2x00_block_error_handler(cmd);
+> +
+>  	if (!CMD_SP(cmd))
+>  		return SUCCESS;
+>  
+> @@ -748,6 +767,8 @@ qla2xxx_eh_device_reset(struct scsi_cmnd
+>  	unsigned int id, lun;
+>  	unsigned long serial;
+>  
+> +	qla2x00_block_error_handler(cmd);
+> +
+>  	ret = FAILED;
+>  
+>  	id = cmd->device->id;
+> @@ -877,6 +898,8 @@ qla2xxx_eh_bus_reset(struct scsi_cmnd *c
+>  	unsigned int id, lun;
+>  	unsigned long serial;
+>  
+> +	qla2x00_block_error_handler(cmd);
+> +
+>  	ret = FAILED;
+>  
+>  	id = cmd->device->id;
+> @@ -936,6 +959,8 @@ qla2xxx_eh_host_reset(struct scsi_cmnd *
+>  	unsigned int id, lun;
+>  	unsigned long serial;
+>  
+> +	qla2x00_block_error_handler(cmd);
+> +
+>  	ret = FAILED;
+>  
+>  	id = cmd->device->id;
