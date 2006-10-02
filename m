@@ -1,93 +1,81 @@
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: [PATCH 7/8] qla2xxx: Stall mid-layer error handlers while rport is blocked.
-Date: Mon,  2 Oct 2006 12:00:49 -0700
-Message-ID: <11598156511007-git-send-email-andrew.vasquez@qlogic.com>
+Subject: [PATCH 3/8] qla2xxx: Add support for system hostname FC transport attribute.
+Date: Mon,  2 Oct 2006 12:00:45 -0700
+Message-ID: <11598156511495-git-send-email-andrew.vasquez@qlogic.com>
 References: <20061002185947.GF16536@andrew-vasquezs-computer.local>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from pat.qlogic.com ([198.70.193.2]:53852 "EHLO avexch1.qlogic.com")
-	by vger.kernel.org with ESMTP id S964966AbWJBTAz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2006 15:00:55 -0400
+	by vger.kernel.org with ESMTP id S964947AbWJBTAx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2006 15:00:53 -0400
 In-Reply-To: <20061002185947.GF16536@andrew-vasquezs-computer.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <james.bottomley@steeleye.com>
 Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-Stall error handler if attempting recovery while an rport is
-blocked.  This avoids device offline scenarios due to errors in
-the error handler.
-
-Reference implementation from lpfc/mptfc.
+The system hostname will be used during a subsequent FDMI registration
+with the fabric.
 
 Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_os.c |   25 +++++++++++++++++++++++++
- 1 files changed, 25 insertions(+), 0 deletions(-)
+ drivers/scsi/qla2xxx/qla_attr.c |   10 ++++++++++
+ drivers/scsi/qla2xxx/qla_gs.c   |   15 +++++++++++++++
+ 2 files changed, 25 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index cdc7fca..3ba8c23 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -589,6 +589,23 @@ qla2x00_wait_for_loop_ready(scsi_qla_hos
- 	return (return_status);
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index 4638469..4e1e175 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -857,6 +857,14 @@ qla2x00_get_host_symbolic_name(struct Sc
+ 	qla2x00_get_sym_node_name(ha, fc_host_symbolic_name(shost));
  }
  
 +static void
-+qla2x00_block_error_handler(struct scsi_cmnd *cmnd)
++qla2x00_set_host_system_hostname(struct Scsi_Host *shost)
 +{
-+	struct Scsi_Host *shost = cmnd->device->host;
-+	struct fc_rport *rport = starget_to_rport(scsi_target(cmnd->device));
-+	unsigned long flags;
++	scsi_qla_host_t *ha = to_qla_host(shost);
 +
-+	spin_lock_irqsave(shost->host_lock, flags);
-+	while (rport->port_state == FC_PORTSTATE_BLOCKED) {
-+		spin_unlock_irqrestore(shost->host_lock, flags);
-+		msleep(1000);
-+		spin_lock_irqsave(shost->host_lock, flags);
-+	}
-+	spin_unlock_irqrestore(shost->host_lock, flags);
-+	return;
++	set_bit(REGISTER_FDMI_NEEDED, &ha->dpc_flags);
 +}
 +
- /**************************************************************************
- * qla2xxx_eh_abort
- *
-@@ -615,6 +632,8 @@ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
- 	unsigned long flags;
- 	int wait = 0;
+ struct fc_function_template qla2xxx_transport_functions = {
  
-+	qla2x00_block_error_handler(cmd);
+ 	.show_host_node_name = 1,
+@@ -871,6 +879,8 @@ struct fc_function_template qla2xxx_tran
+ 	.show_host_port_type = 1,
+ 	.get_host_symbolic_name = qla2x00_get_host_symbolic_name,
+ 	.show_host_symbolic_name = 1,
++	.set_host_system_hostname = qla2x00_set_host_system_hostname,
++	.show_host_system_hostname = 1,
+ 
+ 	.dd_fcrport_size = sizeof(struct fc_port *),
+ 	.show_rport_supported_classes = 1,
+diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
+index 225cf72..97fbc62 100644
+--- a/drivers/scsi/qla2xxx/qla_gs.c
++++ b/drivers/scsi/qla2xxx/qla_gs.c
+@@ -1580,6 +1580,21 @@ qla2x00_fdmi_rpa(scsi_qla_host_t *ha)
+ 	DEBUG13(printk("%s(%ld): OS_DEVICE_NAME=%s.\n", __func__, ha->host_no,
+ 	    eiter->a.os_dev_name));
+ 
++	/* Hostname. */
++	if (strlen(fc_host_system_hostname(ha->host))) {
++		eiter = (struct ct_fdmi_port_attr *) (entries + size);
++		eiter->type = __constant_cpu_to_be16(FDMI_PORT_HOST_NAME);
++		snprintf(eiter->a.host_name, sizeof(eiter->a.host_name),
++		    "%s", fc_host_system_hostname(ha->host));
++		alen = strlen(eiter->a.host_name);
++		alen += (alen & 3) ? (4 - (alen & 3)) : 4;
++		eiter->len = cpu_to_be16(4 + alen);
++		size += 4 + alen;
 +
- 	if (!CMD_SP(cmd))
- 		return SUCCESS;
- 
-@@ -748,6 +767,8 @@ qla2xxx_eh_device_reset(struct scsi_cmnd
- 	unsigned int id, lun;
- 	unsigned long serial;
- 
-+	qla2x00_block_error_handler(cmd);
++		DEBUG13(printk("%s(%ld): HOSTNAME=%s.\n", __func__,
++		    ha->host_no, eiter->a.host_name));
++	}
 +
- 	ret = FAILED;
+ 	/* Update MS request size. */
+ 	qla2x00_update_ms_fdmi_iocb(ha, size + 16);
  
- 	id = cmd->device->id;
-@@ -877,6 +898,8 @@ qla2xxx_eh_bus_reset(struct scsi_cmnd *c
- 	unsigned int id, lun;
- 	unsigned long serial;
- 
-+	qla2x00_block_error_handler(cmd);
-+
- 	ret = FAILED;
- 
- 	id = cmd->device->id;
-@@ -936,6 +959,8 @@ qla2xxx_eh_host_reset(struct scsi_cmnd *
- 	unsigned int id, lun;
- 	unsigned long serial;
- 
-+	qla2x00_block_error_handler(cmd);
-+
- 	ret = FAILED;
- 
- 	id = cmd->device->id;
 -- 
 1.4.2.3.gf59615
 
