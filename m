@@ -1,32 +1,44 @@
-From: Christoph Lameter <clameter@sgi.com>
-Subject: Re: GFP_DMA use in SCSI midlayer
-Date: Mon, 2 Oct 2006 15:24:02 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0610021521080.16692@schroedinger.engr.sgi.com>
-References: <200610012213.24123.ak@suse.de> <200610012255.49802.ak@suse.de>
- <1159800770.3460.11.camel@mulgrave.il.steeleye.com> <200610022118.46830.ak@suse.de>
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: [PATCH 7/8] qla2xxx: Stall mid-layer error handlers while rport is blocked.
+Date: Mon, 2 Oct 2006 16:05:31 -0700
+Message-ID: <20061002230531.GB27360@us.ibm.com>
+References: <20061002185947.GF16536@andrew-vasquezs-computer.local> <11598156511007-git-send-email-andrew.vasquez@qlogic.com> <452167C8.3010401@emulex.com> <20061002221424.GP16272@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx1-ext.sgi.com ([192.48.179.11]:29159 "EHLO
-	omx1.americas.sgi.com") by vger.kernel.org with ESMTP
-	id S965479AbWJBWYK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 Oct 2006 18:24:10 -0400
-In-Reply-To: <200610022118.46830.ak@suse.de>
+Received: from e36.co.us.ibm.com ([32.97.110.154]:12975 "EHLO
+	e36.co.us.ibm.com") by vger.kernel.org with ESMTP id S965507AbWJBXFd
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 Oct 2006 19:05:33 -0400
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e36.co.us.ibm.com (8.13.8/8.12.11) with ESMTP id k92N5WB0024884
+	for <linux-scsi@vger.kernel.org>; Mon, 2 Oct 2006 19:05:32 -0400
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by westrelay02.boulder.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id k92N5Wqh529188
+	for <linux-scsi@vger.kernel.org>; Mon, 2 Oct 2006 17:05:32 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k92N5Vv8008652
+	for <linux-scsi@vger.kernel.org>; Mon, 2 Oct 2006 17:05:32 -0600
+Content-Disposition: inline
+In-Reply-To: <20061002221424.GP16272@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Andi Kleen <ak@suse.de>, linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: James Smart <James.Smart@Emulex.Com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <james.bottomley@steeleye.com>
 
-On Mon, 2 Oct 2006, Andi Kleen wrote:
-
-> > > GFP_DMA will also fail on a lot of platforms, so it's the same.
-> > 
-> > No, at the moment it succeeds on all of them (although at odd locations,
-> > like on parisc GFP_DMA goes up to 4GB).
+Matthew Wilcox <matthew@wil.cx> wrote:
+> On Mon, Oct 02, 2006 at 03:26:00PM -0400, James Smart wrote:
+> > - Fix the error handler. (but we all know this is a lot of work,
+> >     of which none of us have the time to do, nor expect it to
+> >     be complete in time for our next distro delivery).
 > 
-> Not after Christoph's patchkit went in.
+> Can't you fix this in the driver instead?  Seems to me that
+> .eh_timed_out in the SHT would be enough to fix this case.  Just keep
+> returning EH_RESET_TIMER until the condition expires.
 
-Well we can make it fail if you want to do that. Currently if you do not 
-have CONFIG_ZONE_DMA set it simply ignores GFP_DMA because of the weird 
-stuff in places like the SCSI layer. If you would fix it up then I could 
-warn on GFP_DMA.
+This is already done in fc_timed_out.
+
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
