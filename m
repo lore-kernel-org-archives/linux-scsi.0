@@ -1,36 +1,32 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: [PATCH 8/8] qla2xxx: Update version number to 8.01.07-k2.
-Date: Mon,  2 Oct 2006 12:00:50 -0700
-Message-ID: <11598156513969-git-send-email-andrew.vasquez@qlogic.com>
-References: <20061002185947.GF16536@andrew-vasquezs-computer.local>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: scsi_device_reprobe compile failure in scsi_misc_2.6
+Date: Mon, 02 Oct 2006 14:02:57 -0500
+Message-ID: <1159815777.3460.39.camel@mulgrave.il.steeleye.com>
+References: <1159813997.3795.7.camel@markh3.pdx.osdl.net>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:53852 "EHLO avexch1.qlogic.com")
-	by vger.kernel.org with ESMTP id S964953AbWJBTAz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2006 15:00:55 -0400
-In-Reply-To: <20061002185947.GF16536@andrew-vasquezs-computer.local>
+Received: from stat9.steeleye.com ([209.192.50.41]:31888 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S965311AbWJBTDD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 Oct 2006 15:03:03 -0400
+In-Reply-To: <1159813997.3795.7.camel@markh3.pdx.osdl.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <james.bottomley@steeleye.com>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
+To: Mark Haverkamp <markh@osdl.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
----
- drivers/scsi/qla2xxx/qla_version.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+On Mon, 2006-10-02 at 11:33 -0700, Mark Haverkamp wrote:
+> It looks like a recent patch to scsi_device_reprobe() has introduced a
+> compile error.  It now checks the return value of device_reprobe() but
+> the patch to make device_reprobe() return int hasn't been applied to
+> the
+> tree yet.
 
-diff --git a/drivers/scsi/qla2xxx/qla_version.h b/drivers/scsi/qla2xxx/qla_version.h
-index 9712590..e57bf45 100644
---- a/drivers/scsi/qla2xxx/qla_version.h
-+++ b/drivers/scsi/qla2xxx/qla_version.h
-@@ -7,7 +7,7 @@
- /*
-  * Driver version
-  */
--#define QLA2XXX_VERSION      "8.01.07-k1"
-+#define QLA2XXX_VERSION      "8.01.07-k2"
- 
- #define QLA_DRIVER_MAJOR_VER	8
- #define QLA_DRIVER_MINOR_VER	1
--- 
-1.4.2.3.gf59615
+If you just pull scsi-misc-2.6 into the current linus git head,
+everything will work.
+
+James
+
 
