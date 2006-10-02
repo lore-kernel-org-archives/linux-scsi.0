@@ -1,70 +1,68 @@
-From: Frederik Deweerdt <deweerdt@free.fr>
-Subject: [RFC PATCH] move drm to pci_request_irq
-Date: Mon, 2 Oct 2006 20:12:29 +0000
-Message-ID: <20061002201229.GF3003@slug>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [RFC PATCH] pci_request_irq (was [-mm patch] aic7xxx: check irq validity)
+Date: Mon, 2 Oct 2006 12:15:22 -0600
+Message-ID: <20061002181522.GL16272@parisc-linux.org>
 References: <1159550143.13029.36.camel@localhost.localdomain> <20060929235054.GB2020@slug> <1159573404.13029.96.camel@localhost.localdomain> <20060930140946.GA1195@slug> <451F049A.1010404@garzik.org> <20061001142807.GD16272@parisc-linux.org> <1159729523.2891.408.camel@laptopd505.fenrus.org> <20061001193616.GF16272@parisc-linux.org> <1159755141.2891.434.camel@laptopd505.fenrus.org> <20061002200048.GC3003@slug>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.169]:56948 "EHLO
-	ug-out-1314.google.com") by vger.kernel.org with ESMTP
-	id S965221AbWJBSNz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 Oct 2006 14:13:55 -0400
-Received: by ug-out-1314.google.com with SMTP id o38so536957ugd
-        for <linux-scsi@vger.kernel.org>; Mon, 02 Oct 2006 11:13:54 -0700 (PDT)
+Received: from palinux.external.hp.com ([192.25.206.14]:53457 "EHLO
+	mail.parisc-linux.org") by vger.kernel.org with ESMTP
+	id S965221AbWJBSPX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 Oct 2006 14:15:23 -0400
 Content-Disposition: inline
 In-Reply-To: <20061002200048.GC3003@slug>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org, "Linux-Kernel," <linux-kernel@vger.kernel.org>, "J.A. Magall??n" <jamagallon@ono.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@osdl.org>, Jeff Garzik <jeff@garzik.org>
+To: Frederik Deweerdt <deweerdt@free.fr>
+Cc: Arjan van de Ven <arjan@infradead.org>, linux-scsi@vger.kernel.org, "Linux-Kernel," <linux-kernel@vger.kernel.org>, "J.A. Magall??n" <jamagallon@ono.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@osdl.org>, Jeff Garzik <jeff@garzik.org>
 
-Hi,
+On Mon, Oct 02, 2006 at 08:00:48PM +0000, Frederik Deweerdt wrote:
+>  /**
+> + * pci_request_irq - Reserve an IRQ for a PCI device
+> + * @pdev: The PCI device whose irq is to be reserved
+> + * handler: The interrupt handler function,
 
-This proof-of-concept patch converts the drm driver to use the
-pci_request_irq() function.
+> + * pci_get_drvdata(pdev) shall be passed as an argument to that function
 
-Regards,
-Frederik
+I don't think you can (or should) do this.  Move it to the body of the
+comment below.
 
+> + * @flags: The flags to be passed to request_irq()
+> + * @name: The name of the device to be associated with the irq
+> + *
+> + * Returns 0 on success, or a negative value on error.  A warning
+> + * message is also printed on failure.
+> + */
+> +int pci_request_irq(struct pci_dev *pdev,
+> +		    irqreturn_t (*handler)(int, void *, struct pt_regs *),
+> +		    unsigned long flags, const char *name)
+> +{
+> +	int rc;
+> +	const char *actual_name = name;
+> +
+> +	rc = is_irq_valid(pdev->irq);
+> +	if (!rc) {
+> +		dev_printk(KERN_ERR, &pdev->dev, "invalid irq #%d\n", pdev->irq);
+> +		return -EINVAL;
+> +	}
 
+Why is that more readable than
 
-diff --git a/drivers/char/drm/drm_drv.c b/drivers/char/drm/drm_drv.c
-index b366c5b..5b000cd 100644
---- a/drivers/char/drm/drm_drv.c
-+++ b/drivers/char/drm/drm_drv.c
-@@ -234,6 +234,8 @@ int drm_lastclose(drm_device_t * dev)
- 	}
- 	mutex_unlock(&dev->struct_mutex);
- 
-+	pci_set_drvdata(dev, NULL);
-+
- 	DRM_DEBUG("lastclose completed\n");
- 	return 0;
- }
-diff --git a/drivers/char/drm/drm_irq.c b/drivers/char/drm/drm_irq.c
-index 4553a3a..5dd12cb 100644
---- a/drivers/char/drm/drm_irq.c
-+++ b/drivers/char/drm/drm_irq.c
-@@ -132,8 +132,10 @@ static int drm_irq_install(drm_device_t 
- 	if (drm_core_check_feature(dev, DRIVER_IRQ_SHARED))
- 		sh_flags = IRQF_SHARED;
- 
--	ret = request_irq(dev->irq, dev->driver->irq_handler,
--			  sh_flags, dev->devname, dev);
-+	pci_set_drvdata(dev->pdev, dev);
-+
-+	ret = pci_request_irq(dev->pdev, dev->driver->irq_handler,
-+			  sh_flags, dev->devname);
- 	if (ret < 0) {
- 		mutex_lock(&dev->struct_mutex);
- 		dev->irq_enabled = 0;
-@@ -173,7 +175,7 @@ int drm_irq_uninstall(drm_device_t * dev
- 
- 	dev->driver->irq_uninstall(dev);
- 
--	free_irq(dev->irq, dev);
-+	pci_free_irq(dev->pdev);
- 
- 	return 0;
- }
+	if (!is_irq_valid(pdev->irq)) {
+		dev_err(&pdev->dev, "invalid irq #%d\n", pdev->irq);
+		return -EINVAL;
+	}
+
+> +	if (!actual_name)
+> +		actual_name = pci_name(pdev);
+> +
+> +	return request_irq(pdev->irq, handler, flags | IRQF_SHARED,
+> +			   actual_name, pci_get_drvdata(pdev));
+
+The driver name is a far more common usage than the pci_name.
+
+	return request_irq(pdev->irq, handler, flags | IRQF_SHARED,
+			name ? name : pdev->driver->name,
+			pci_get_drvdata(pdev));
+
