@@ -1,34 +1,43 @@
-From: Andi Kleen <ak@suse.de>
-Subject: Re: [Bugme-new] [Bug 7246] New: 3w-xxxx, IOMMU and >1go RAM
-Date: Mon, 2 Oct 2006 20:35:55 +0200
-Message-ID: <200610022035.55482.ak@suse.de>
-References: <200610021508.k92F8bmq011159@fire-2.osdl.org> <200610022017.59697.ak@suse.de> <1159813447.3460.28.camel@mulgrave.il.steeleye.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [RFC PATCH] move drm to pci_request_irq
+Date: Mon, 2 Oct 2006 12:37:49 -0600
+Message-ID: <20061002183749.GO16272@parisc-linux.org>
+References: <20060929235054.GB2020@slug> <1159573404.13029.96.camel@localhost.localdomain> <20060930140946.GA1195@slug> <451F049A.1010404@garzik.org> <20061001142807.GD16272@parisc-linux.org> <1159729523.2891.408.camel@laptopd505.fenrus.org> <20061001193616.GF16272@parisc-linux.org> <1159755141.2891.434.camel@laptopd505.fenrus.org> <20061002200048.GC3003@slug> <20061002201229.GF3003@slug>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:17571 "EHLO mx1.suse.de")
-	by vger.kernel.org with ESMTP id S965289AbWJBSgB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2006 14:36:01 -0400
-In-Reply-To: <1159813447.3460.28.camel@mulgrave.il.steeleye.com>
+Received: from palinux.external.hp.com ([192.25.206.14]:9169 "EHLO
+	mail.parisc-linux.org") by vger.kernel.org with ESMTP
+	id S964826AbWJBShu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 Oct 2006 14:37:50 -0400
 Content-Disposition: inline
+In-Reply-To: <20061002201229.GF3003@slug>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: adam radford <aradford@gmail.com>, Andrew Morton <akpm@osdl.org>, bugme-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
+To: Frederik Deweerdt <deweerdt@free.fr>
+Cc: Arjan van de Ven <arjan@infradead.org>, linux-scsi@vger.kernel.org, "Linux-Kernel," <linux-kernel@vger.kernel.org>, "J.A. Magall??n" <jamagallon@ono.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@osdl.org>, Jeff Garzik <jeff@garzik.org>
 
-On Monday 02 October 2006 20:24, James Bottomley wrote:
-> On Mon, 2006-10-02 at 20:17 +0200, Andi Kleen wrote:
-> > nommu_* means he didn't compile in the IOMMU code.
-> > 
-> > Operator error -> invalid.
-> 
-> But how did we get sg segments over the mask?  The block layer should
-> have bounced them, I think.
+On Mon, Oct 02, 2006 at 08:12:29PM +0000, Frederik Deweerdt wrote:
+>  
+> +	pci_set_drvdata(dev, NULL);
+> +
+>  	DRM_DEBUG("lastclose completed\n");
 
-Yes, but it can't when the bounce code is not compiled in.
-In this case it just printks and you saw those printks.
+Not necessary.  pci_devs are allocated initialised to 0.
 
--Andi
+> @@ -132,8 +132,10 @@ static int drm_irq_install(drm_device_t 
+>  	if (drm_core_check_feature(dev, DRIVER_IRQ_SHARED))
+>  		sh_flags = IRQF_SHARED;
+>  
+> -	ret = request_irq(dev->irq, dev->driver->irq_handler,
+> -			  sh_flags, dev->devname, dev);
+> +	pci_set_drvdata(dev->pdev, dev);
+> +
+> +	ret = pci_request_irq(dev->pdev, dev->driver->irq_handler,
+> +			  sh_flags, dev->devname);
+
+This seems like the wrong place to be setting the pci_drvdata.  It
+should probably be done in each driver.  But then, requesting the IRQ
+should also be done by each driver.  You've dragged us into the "wow,
+what a mess DRI is" black hole here, I'm afraid.
 
