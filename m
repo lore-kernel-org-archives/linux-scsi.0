@@ -1,152 +1,228 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: About sg_tablesize in 2.6 kernel
-Date: Sun, 01 Oct 2006 23:29:10 -0400
-Message-ID: <45208786.6010500@torque.net>
-References: <451FA502.1070207@aboo.org> <1159728217.2891.401.camel@laptopd505.fenrus.org> <45207A8B.1000101@aboo.org>
-Reply-To: dougg@torque.net
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [PATCH] Introduce BROKEN_ON_64BIT facility
+Date: Mon, 2 Oct 2006 00:55:12 -0400
+Message-ID: <20061002045512.GA8835@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:42441 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1751332AbWJBD1p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 1 Oct 2006 23:27:45 -0400
-In-Reply-To: <45207A8B.1000101@aboo.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <netdev-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: netdev-owner@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>, LKML <linux-kernel@vger.kernel.org>
+Cc: chas@cmf.nrl.navy.mil, netdev@vger.kernel.org, kkeil@suse.de, kai.germaschewski@gmx.de, isdn4linux@listserv.isdn4linux.de, mac@melware.de, markus.lidel@shadowconnect.com, samuel@sortiz.org, Neela.Kolli@engenio.com, linux-scsi@vger.kernel.org, Greg KH <greg@kroah.com>, thomas@winischhofer.net, ak@suse.de
 List-Id: linux-scsi@vger.kernel.org
-To: Aboo Valappil <aboo@aboo.org>
-Cc: Arjan van de Ven <arjan@fenrus.demon.nl>, linux-scsi@vger.kernel.org
 
-Aboo Valappil wrote:
-> Thanks Arjan for clearing it about SG. I think i am fine with the
-> page_address() for now.
-> 
-> I managed to finish my virtual scsi device driver. Everything seems to
-> be working fine (Reading, writing , etc). But i can not mount a file
-> system created on it. From my verification, the driver seems to be doing
-> its job. I verified the read and write to the disk by partitioning the
-> device, using dd, etc. Seems to work fine. But i can not mount the file
-> system created on it.
 
-READ(6+10), WRITE(6+10) and READ_CAPACITY(10) is all you
-should need initially. It may be useful to compare what
-your driver does with the scsi_debug driver which is also
-a virtual SCSI (disk) target (IOW a ram disk). See:
-http://www.torque.net/sg/sdebug26.html
+Add a broken-on-64bit option, similar to the existing broken-on-smp
+config option.  This is just the first pass, marking the obvious
+candidates.
 
-The fdisk, mkfs, mount sequence works with the scsi_debug
-driver. Try making the virtual disk image sizes for scsi_debug
-and your driver the same, then read (with dd) and compare
-both images after the mkfs. You could also check the first
-63 sectors after the fdisk stage.
+Several driver have been marked as dependent on CONFIG_32BIT in the
+past, when they should really be dependent on this new
+CONFIG_BROKEN_ON_64BIT option, because the 32BIT marker was due to bugs
+rather than fundamentals.
 
-> (I am sorry if i am taking too much of your time and posting wrong
-> questions in the mailing list. Please guide me on this, this is the only
-> mailing list which responded to my question. I am not a professional
-> kernel developer and this is not my full time job but rather just a hobby).
-> 
-> I attached the outputs below, can some one advice what could be wrong here?
-> I partitioned the drive as follows. Please not that it shows one head, 8
-> sectors. I am not sure where it is getting this info. (I do not see any
-> SCSI commands issued to the driver for MODE_SENSE for disk geometry page).
+Signed-off-by: Jeff Garzik <jeff@garzik.org>
 
-The kernel just makes them up.
-The head/cylinder/sector stuff is just fiction anyway.
-The disk geometry mode page is obsolete, but keep your
-mode page logic as it is useful in other situations.
+ drivers/atm/Kconfig                    |    2 +-
+ drivers/char/ftape/Kconfig             |    2 +-
+ drivers/isdn/capi/Kconfig              |    4 ++--
+ drivers/isdn/hardware/eicon/Kconfig    |    2 +-
+ drivers/isdn/hisax/Kconfig             |    1 +
+ drivers/message/i2o/Kconfig            |    2 +-
+ drivers/net/irda/Kconfig               |    2 +-
+ drivers/scsi/megaraid/Kconfig.megaraid |    2 +-
+ drivers/usb/misc/sisusbvga/Kconfig     |    2 +-
+ init/Kconfig                           |    5 +++++
+ sound/oss/Kconfig                      |   10 +++++-----
+ 11 files changed, 20 insertions(+), 14 deletions(-)
 
-Doug Gilbert
-
-> [root@localhost scsitap]# fdisk -l /dev/sdb
-> 
-> Disk /dev/sdb: 104 MB, 104858112 bytes
-> 1 heads, 8 sectors/track, 25600 cylinders
-> Units = cylinders of 8 * 512 = 4096 bytes
-> 
->   Device Boot      Start         End      Blocks   Id  System
-> /dev/sdb1               2       21975       87896   83  Linux
-> 
-> 
-> [root@localhost scsitap]# mkfs  /dev/sdb1
-> mke2fs 1.37 (21-Mar-2005)
-> Filesystem label=
-> OS type: Linux
-> Block size=1024 (log=0)
-> Fragment size=1024 (log=0)
-> 22000 inodes, 87896 blocks
-> 4394 blocks (5.00%) reserved for the super user
-> First data block=1
-> Maximum filesystem blocks=67371008
-> 11 block groups
-> 8192 blocks per group, 8192 fragments per group
-> 2000 inodes per group
-> Superblock backups stored on blocks:
->        8193, 24577, 40961, 57345, 73729
-> 
-> Writing inode tables: done
-> Writing superblocks and filesystem accounting information: done
-> 
-> This filesystem will be automatically checked every 39 mounts or
-> 180 days, whichever comes first.  Use tune2fs -c or -i to override.
-> 
-> [root@localhost scsitap]# mount -o ro /dev/sdb1 /mnt
-> mount: wrong fs type, bad option, bad superblock on /dev/sdb1,
->       missing codepage or other error
->       In some cases useful info is found in syslog - try
->       dmesg | tail  or so
-> 
-> EXT2-fs error (device sdb1): ext2_check_descriptors: Block bitmap for
-> group 0 not in group (block 0)!
-> EXT2-fs: group descriptors corrupted!
-> 
-> Aboo
-> 
-> 
-> 
-> Arjan van de Ven wrote:
->> [note: you forgot to put in a link to your sourcecode, which greatly
->> reduces our ability to give you good answers; please fix this]
->>  
->>> 1. In 2.6 kernel, even if I set the sg_tablesize to SG_NONE, the
->>> mid-layer is still queuing commands with use_sg=1. There is no way to
->>> disable this SG at all?
->>>     
->>
->> in 2.6 everything is now going via the ONE sg codepath yes. The dual
->> code path stuff was just incredibly fragile and a bad idea.
->>
->>
->>
->>  
->>> address=page_address(sg[i].page) + sg[i].offset;
->>>
->>> Is this the right way? I am assuming that sg[i].page will be mapped
->>> in to kernel address space as this address is created by SCSI
->>> mid-layer. Is that right? Or do I have to use kmap? I tried replacing
->>> page_address with kmap/kunmap. But as soon as call kunmap to unmap,
->>> the kernal panics! Any thoughts?
->>>     
->>
->> kmap doesn't take struct page as argument.
->>
->>  but.... if you show us the real code we can give you better
->> suggestions.
->>
->>  
->>> 3. Do I have to disable bottom halves before calling scsi_done()? It
->>> seems that the kernel panics when I call scsi_done if I use spin_lock
->>> instead of spin_lock_bh(). This is one of my spin_locks created for
->>> protecting a data structure.
->>>     
->>
->> you don't need any locks before calling the done method.
->>
->>   
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
+diff --git a/drivers/atm/Kconfig b/drivers/atm/Kconfig
+index cfa5af8..36c0fd7 100644
+--- a/drivers/atm/Kconfig
++++ b/drivers/atm/Kconfig
+@@ -139,7 +139,7 @@ config ATM_ENI_BURST_RX_2W
+ 
+ config ATM_FIRESTREAM
+ 	tristate "Fujitsu FireStream (FS50/FS155) "
+-	depends on PCI && ATM
++	depends on PCI && ATM && BROKEN_ON_64BIT
+ 	help
+ 	  Driver for the Fujitsu FireStream 155 (MB86697) and
+ 	  FireStream 50 (MB86695) ATM PCI chips.
+diff --git a/drivers/char/ftape/Kconfig b/drivers/char/ftape/Kconfig
+index 0d65189..13c9460 100644
+--- a/drivers/char/ftape/Kconfig
++++ b/drivers/char/ftape/Kconfig
+@@ -56,7 +56,7 @@ comment "The compressor will be built as
+ 
+ config ZFT_COMPRESSOR
+ 	tristate
+-	depends on FTAPE!=n && ZFTAPE!=n
++	depends on FTAPE!=n && ZFTAPE!=n && BROKEN_ON_64BIT
+ 	default m
+ 
+ config FT_NR_BUFFERS
+diff --git a/drivers/isdn/capi/Kconfig b/drivers/isdn/capi/Kconfig
+index 8b6c9a4..064b7bb 100644
+--- a/drivers/isdn/capi/Kconfig
++++ b/drivers/isdn/capi/Kconfig
+@@ -21,7 +21,7 @@ config ISDN_CAPI_MIDDLEWARE
+ 
+ config ISDN_CAPI_CAPI20
+ 	tristate "CAPI2.0 /dev/capi support"
+-	depends on ISDN_CAPI
++	depends on ISDN_CAPI && BROKEN_ON_64BIT
+ 	help
+ 	  This option will provide the CAPI 2.0 interface to userspace
+ 	  applications via /dev/capi20. Applications should use the
+@@ -44,7 +44,7 @@ config ISDN_CAPI_CAPIFS
+ 
+ config ISDN_CAPI_CAPIDRV
+ 	tristate "CAPI2.0 capidrv interface support"
+-	depends on ISDN_CAPI && ISDN_I4L
++	depends on ISDN_CAPI && ISDN_I4L && BROKEN_ON_64BIT
+ 	help
+ 	  This option provides the glue code to hook up CAPI driven cards to
+ 	  the legacy isdn4linux link layer.  If you have a card which is
+diff --git a/drivers/isdn/hardware/eicon/Kconfig b/drivers/isdn/hardware/eicon/Kconfig
+index 51e66bc..d41e99d 100644
+--- a/drivers/isdn/hardware/eicon/Kconfig
++++ b/drivers/isdn/hardware/eicon/Kconfig
+@@ -32,7 +32,7 @@ config ISDN_DIVAS_PRIPCI
+ 
+ config ISDN_DIVAS_DIVACAPI
+ 	tristate "DIVA CAPI2.0 interface support"
+-	depends on ISDN_DIVAS && ISDN_CAPI
++	depends on ISDN_DIVAS && ISDN_CAPI && BROKEN_ON_64BIT
+ 	help
+ 	  You need this to provide the CAPI interface
+ 	  for DIVA Server cards.
+diff --git a/drivers/isdn/hisax/Kconfig b/drivers/isdn/hisax/Kconfig
+index 6dfc941..b78abd8 100644
+--- a/drivers/isdn/hisax/Kconfig
++++ b/drivers/isdn/hisax/Kconfig
+@@ -4,6 +4,7 @@ menu "Passive cards"
+ 
+ config ISDN_DRV_HISAX
+ 	tristate "HiSax SiemensChipSet driver support"
++	depends on BROKEN_ON_64BIT
+ 	select CRC_CCITT
+ 	---help---
+ 	  This is a driver supporting the Siemens chipset on various
+diff --git a/drivers/message/i2o/Kconfig b/drivers/message/i2o/Kconfig
+index 6443392..0e135ce 100644
+--- a/drivers/message/i2o/Kconfig
++++ b/drivers/message/i2o/Kconfig
+@@ -56,7 +56,7 @@ config I2O_EXT_ADAPTEC_DMA64
+ 
+ config I2O_CONFIG
+ 	tristate "I2O Configuration support"
+-	depends on I2O
++	depends on I2O && BROKEN_ON_64BIT
+ 	---help---
+ 	  Say Y for support of the configuration interface for the I2O adapters.
+ 	  If you have a RAID controller from Adaptec and you want to use the
+diff --git a/drivers/net/irda/Kconfig b/drivers/net/irda/Kconfig
+index 7c8ccc0..f8cf8e1 100644
+--- a/drivers/net/irda/Kconfig
++++ b/drivers/net/irda/Kconfig
+@@ -145,7 +145,7 @@ comment "Old SIR device drivers"
+ 
+ config IRPORT_SIR
+ 	tristate "IrPORT (IrDA serial driver)"
+-	depends on IRDA && BROKEN_ON_SMP
++	depends on IRDA && BROKEN_ON_SMP && BROKEN_ON_64BIT
+ 	---help---
+ 	  Say Y here if you want to build support for the IrPORT IrDA device
+ 	  driver.  To compile it as a module, choose M here: the module will be
+diff --git a/drivers/scsi/megaraid/Kconfig.megaraid b/drivers/scsi/megaraid/Kconfig.megaraid
+index 17419e3..6227125 100644
+--- a/drivers/scsi/megaraid/Kconfig.megaraid
++++ b/drivers/scsi/megaraid/Kconfig.megaraid
+@@ -66,7 +66,7 @@ config MEGARAID_MAILBOX
+ 
+ config MEGARAID_LEGACY
+ 	tristate "LSI Logic Legacy MegaRAID Driver"
+-	depends on PCI && SCSI
++	depends on PCI && SCSI && BROKEN_ON_64BIT
+ 	help
+ 	This driver supports the LSI MegaRAID 418, 428, 438, 466, 762, 490
+ 	and 467 SCSI host adapters. This driver also support the all U320
+diff --git a/drivers/usb/misc/sisusbvga/Kconfig b/drivers/usb/misc/sisusbvga/Kconfig
+index 7603cbe..b6cc15c 100644
+--- a/drivers/usb/misc/sisusbvga/Kconfig
++++ b/drivers/usb/misc/sisusbvga/Kconfig
+@@ -1,7 +1,7 @@
+ 
+ config USB_SISUSBVGA
+ 	tristate "USB 2.0 SVGA dongle support (Net2280/SiS315)"
+-	depends on USB && USB_EHCI_HCD
++	depends on USB && USB_EHCI_HCD && BROKEN_ON_64BIT
+         ---help---
+ 	  Say Y here if you intend to attach a USB2VGA dongle based on a
+ 	  Net2280 and a SiS315 chip.
+diff --git a/init/Kconfig b/init/Kconfig
+index f7a04d0..6bd3dc3 100644
+--- a/init/Kconfig
++++ b/init/Kconfig
+@@ -47,6 +47,11 @@ config BROKEN_ON_SMP
+ 	depends on BROKEN || !SMP
+ 	default y
+ 
++config BROKEN_ON_64BIT
++	bool
++	depends on BROKEN || !64BIT
++	default y
++
+ config LOCK_KERNEL
+ 	bool
+ 	depends on SMP || PREEMPT
+diff --git a/sound/oss/Kconfig b/sound/oss/Kconfig
+index 97e38b6..724a3db 100644
+--- a/sound/oss/Kconfig
++++ b/sound/oss/Kconfig
+@@ -63,7 +63,7 @@ config MIDI_EMU10K1
+ 
+ config SOUND_FUSION
+ 	tristate "Crystal SoundFusion (CS4280/461x)"
+-	depends on SOUND_PRIME && PCI && OSS_OBSOLETE_DRIVER
++	depends on SOUND_PRIME && PCI && OSS_OBSOLETE_DRIVER && BROKEN_ON_64BIT
+ 	help
+ 	  This module drives the Crystal SoundFusion devices (CS4280/46xx
+ 	  series) when wired as native sound drivers with AC97 codecs.  If
+@@ -509,7 +509,7 @@ config SOUND_CS4232
+ 
+ config SOUND_SSCAPE
+ 	tristate "Ensoniq SoundScape support"
+-	depends on SOUND_OSS
++	depends on SOUND_OSS && BROKEN_ON_64BIT
+ 	help
+ 	  Answer Y if you have a sound card based on the Ensoniq SoundScape
+ 	  chipset. Such cards are being manufactured at least by Ensoniq, Spea
+@@ -584,7 +584,7 @@ config SOUND_MSS
+ 
+ config SOUND_MPU401
+ 	tristate "MPU-401 support (NOT for SB16)"
+-	depends on SOUND_OSS
++	depends on SOUND_OSS && BROKEN_ON_64BIT
+ 	---help---
+ 	  Be careful with this question.  The MPU401 interface is supported by
+ 	  all sound cards.  However, some natively supported cards have their
+@@ -634,7 +634,7 @@ config PAS_JOYSTICK
+ 
+ config SOUND_PSS
+ 	tristate "PSS (AD1848, ADSP-2115, ESC614) support"
+-	depends on SOUND_OSS
++	depends on SOUND_OSS && BROKEN_ON_64BIT
+ 	help
+ 	  Answer Y or M if you have an Orchid SW32, Cardinal DSP16, Beethoven
+ 	  ADSP-16 or some other card based on the PSS chipset (AD1848 codec +
+@@ -720,7 +720,7 @@ config SOUND_YM3812
+ 
+ config SOUND_OPL3SA2
+ 	tristate "Yamaha OPL3-SA2 and SA3 based PnP cards"
+-	depends on SOUND_OSS && OSS_OBSOLETE_DRIVER
++	depends on SOUND_OSS && OSS_OBSOLETE_DRIVER && BROKEN_ON_64BIT
+ 	help
+ 	  Say Y or M if you have a card based on one of these Yamaha sound
+ 	  chipsets or the "SAx", which is actually a SA3. Read
