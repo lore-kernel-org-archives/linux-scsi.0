@@ -1,39 +1,53 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] Introduce BROKEN_ON_64BIT facility
-Date: Mon, 02 Oct 2006 05:54:19 -0400
-Message-ID: <4520E1CB.6070104@garzik.org>
-References: <20061002045512.GA8835@havoc.gtf.org> <p737izjhwpa.fsf@verdi.suse.de>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH] async scsi scanning, version 13
+Date: Mon, 02 Oct 2006 12:02:14 +0200
+Message-ID: <4520E3A6.7030907@s5r6.in-berlin.de>
+References: <20060928211920.GI5017@parisc-linux.org> <1159732857.3542.5.camel@mulgrave.il.steeleye.com> <20061001201753.GG16272@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:49318 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1750985AbWJBJya (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2006 05:54:30 -0400
-In-Reply-To: <p737izjhwpa.fsf@verdi.suse.de>
+Received: from hp3.statik.TU-Cottbus.De ([141.43.120.68]:61620 "EHLO
+	hp3.statik.tu-cottbus.de") by vger.kernel.org with ESMTP
+	id S1750702AbWJBKCQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 Oct 2006 06:02:16 -0400
+In-Reply-To: <20061001201753.GG16272@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andi Kleen <ak@suse.de>
-Cc: chas@cmf.nrl.navy.mil, netdev@vger.kernel.org, kkeil@suse.de, kai.germaschewski@gmx.de, isdn4linux@listserv.isdn4linux.de, mac@melware.de, markus.lidel@shadowconnect.com, samuel@sortiz.org, Neela.Kolli@engenio.com, linux-scsi@vger.kernel.org, Greg KH <greg@kroah.com>, thomas@winischhofer.net
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Andi Kleen wrote:
-> Jeff Garzik <jeff@garzik.org> writes:
+Matthew Wilcox wrote:
+> Add ability to scan scsi busses asynchronously
 > 
->> Add a broken-on-64bit option, similar to the existing broken-on-smp
->> config option.  This is just the first pass, marking the obvious
->> candidates.
+> Since it often takes around 20-30 seconds to scan a scsi bus, it's
+> highly advantageous to do this in parallel with other things.  The bulk
+> of this patch is ensuring that devices don't change numbering, and that
+> all devices are discovered prior to trying to start init.  For those
+> who build SCSI as modules, there's a new scsi_wait_scan module that will
+> ensure all bus scans are finished.
 > 
-> When I had this problem in the past I just used && !64BIT.
-> How is this new option different?
+> This patch only handles drivers which call scsi_scan_host.  Fibre Channel,
+> SAS, SATA, USB and Firewire all need additional work.
 
-Same reason why we have CONFIG_BROKEN_ON_SMP separate from CONFIG_SMP.
+A note on FireWire/ SBP-2's status: We basically scan* asynchronously,
+although the scans are serialized across all FireWire devices on all
+buses. Parallelized scanning is on my long term to-do list. Serialized
+scanning is actually quick enough unless something goes wrong.
 
+Integration of sbp2 with scsi_wait_scan is now on my to-do list too. It
+is orthogonal to parallelized scanning as a feature but probably
+somewhat coupled when it comes to an actual implementation.
 
-> AFAIK I2O got fixed too. Do you have any evidence that it is really
-> broken on 64bit?
+So far, the few people who have the root filesystem (or any other
+filesystem that they want to have ready on boot) on an SBP-2 disk simply
+put a sleep into their initrd or run a more or less complete hotplug
+environment from initrd. The scsi_wait_scan module would certainly be
+more comfortable than that.
 
-i2o_config did not.  Just read the code, it's obvious...
-
-	Jeff
-
-
+[ *) "scan" = read ISO 13213 configuration ROMs, then run protocol
+     driver probes including sbp2's login ]
+-- 
+Stefan Richter
+-=====-=-==- =-=- ---=-
+http://arcgraph.de/sr/
