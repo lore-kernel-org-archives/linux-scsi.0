@@ -1,20 +1,17 @@
 From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: Panic from mptspi_dv_renegotiate_work in 2.6.18-mm2
-Date: Mon, 02 Oct 2006 20:51:15 -0400
-Message-ID: <4521B403.2050606@garzik.org>
+Date: Mon, 02 Oct 2006 21:35:38 -0400
+Message-ID: <4521BE6A.8060400@garzik.org>
 References: <664A4EBB07F29743873A87CF62C26D703507DA@NAMAIL4.ad.lsil.com>	<20061002163733.610a3c1f.akpm@osdl.org>	<4521AF8D.4050209@garzik.org> <20061002174147.82093f20.akpm@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:35019 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S965550AbWJCAvV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Oct 2006 20:51:21 -0400
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030226AbWJCBfs@vger.kernel.org>
 In-Reply-To: <20061002174147.82093f20.akpm@osdl.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Andrew Morton <akpm@osdl.org>
 Cc: "Moore, Eric" <Eric.Moore@lsil.com>, Martin Bligh <mbligh@google.com>, LKML <linux-kernel@vger.kernel.org>, Andy Whitcroft <apw@shadowen.org>, linux-scsi@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
 Andrew Morton wrote:
 > On Mon, 02 Oct 2006 20:32:13 -0400
@@ -37,11 +34,9 @@ Andrew Morton wrote:
 > Cc: "Eric W. Biederman" <ebiederm@xmission.com>
 > Signed-off-by: Andrew Morton <akpm@osdl.org>
 
-I'll give it a good test.  My sata_mv (requires PCI domains) also died 
-with a bunch of timeouts.  Lack of interrupts, or lack of PCI resources, 
-is definitely indicative of a cause.
+ACK, this fixes sata_mv timeouts and mptsas oopsen here.
+
+FWIW, both sata_mv and mptsas are only accessible on this machine after 
+applying my PCI domains patchset.
 
 	Jeff
-
-
-
