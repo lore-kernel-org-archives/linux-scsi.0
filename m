@@ -1,111 +1,295 @@
-From: David C Somayajulu <david.somayajulu@qlogic.com>
-Subject: Re: [RFC] [PATCH] helper function for retrieving scsi_cmd given
-	host based block layer tag
-Date: Tue, 03 Oct 2006 15:27:57 -0700
-Message-ID: <1159914477.4859.4.camel@dcslnxpc.site>
-References: <1158962434.4040.35.camel@dcslnxpc.site>
-	 <0BB3E5E7462EEA4295BC02D49691DC074A3F84@AVEXCH1.qlogic.org>
-	 <20061003191026.GU7778@kernel.dk>
+From: Sumant Patro <sumantp@lsil.com>
+Subject: [Patch 1/6] megaraid_sas: FW transition and q size changes
+Date: Tue, 03 Oct 2006 12:28:49 -0700
+Message-ID: <1159903729.5618.7.camel@dumbo>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="=-OLTp/3k5LLbKYwZGnT4p"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:38026 "EHLO avexch1.qlogic.com")
-	by vger.kernel.org with ESMTP id S1030624AbWJCW1y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Oct 2006 18:27:54 -0400
-In-Reply-To: <20061003191026.GU7778@kernel.dk>
+Received: from mail0.lsil.com ([147.145.40.20]:1522 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1030530AbWJDA3m (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Oct 2006 20:29:42 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: linux-scsi@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>, David Wagner <david.wagner@qlogic.com>
-
-On Tue, 2006-10-03 at 21:10 +0200, Jens Axboe wrote:
-> The content and indentation looks good, but it doesn't apply to the
-> current tree. Care to rediff it?
-Here it is. Thanks.
+To: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
+Cc: akpm@osdl.org, hch@lst.de, linux-kernel@vger.kernel.org
 
 
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
-Signed-off-by: David Somayajulu <david.somayajulu@qlogic.com>
-Date: Tue Oct 3 14:52:51 2006 -0700
+--=-OLTp/3k5LLbKYwZGnT4p
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
+Resubmitting with one addition (item f mentioned below)
 
----
+This patch has the following enhancements :
+        a. handles new transition states of FW to support controller hotplug. 
+        b. It reduces by 1 the maximum cmds that the driver may send to FW. 
+        c. Sends "Stop Processing" cmd to FW before returning failure from reset routine
+        d. Adds print in megasas_transition routine
+        e. Sends "RESET" flag to FW to do a soft reset of controller 
+to move from Operational to Ready state.
+	f. Sending correct pointer (cmd->sense) to pci_pool_free 
+          
+        This patch has been generated on latest scsi-misc git.
 
- block/ll_rw_blk.c       |    7 +------
- include/linux/blkdev.h  |    8 ++++++++
- include/scsi/scsi_tcq.h |   20 ++++++++++++++++++++
- 3 files changed, 29 insertions(+), 6 deletions(-)
+Signed-off-by: Sumant Patro <Sumant.Patro@lsil.com>
 
-fd6b37cdcd6db09207461f56eeebd377bab49d01
-diff --git a/block/ll_rw_blk.c b/block/ll_rw_blk.c
-index 83425fb..c847e17 100644
---- a/block/ll_rw_blk.c
-+++ b/block/ll_rw_blk.c
-@@ -840,12 +840,7 @@ EXPORT_SYMBOL(blk_queue_dma_alignment);
-  **/
- struct request *blk_queue_find_tag(request_queue_t *q, int tag)
- {
--	struct blk_queue_tag *bqt = q->queue_tags;
--
--	if (unlikely(bqt == NULL || tag >= bqt->real_max_depth))
--		return NULL;
--
--	return bqt->tag_index[tag];
-+	return blk_map_queue_find_tag(q->queue_tags, tag);
+diff -uprN linux2.6-orig/drivers/scsi/megaraid/megaraid_sas.c linux2.6/drivers/scsi/megaraid/megaraid_sas.c
+--- linux2.6-orig/drivers/scsi/megaraid/megaraid_sas.c 2006-10-02 10:15:31.000000000 -0700
++++ linux2.6/drivers/scsi/megaraid/megaraid_sas.c 2006-10-02 10:16:40.000000000 -0700
+@@ -832,6 +832,12 @@ static int megasas_wait_for_outstanding(
+  }
+ 
+  if (atomic_read(&instance->fw_outstanding)) {
++  /*
++  * Send signal to FW to stop processing any pending cmds.
++  * The controller will be taken offline by the OS now.
++  */
++  writel(MFI_STOP_ADP,
++    &instance->reg_set->inbound_doorbell);
+   instance->hw_crit_error = 1;
+   return FAILED;
+  }
+@@ -1229,10 +1235,12 @@ megasas_transition_to_ready(struct megas
+ 
+  fw_state = instance->instancet->read_fw_status_reg(instance->reg_set) & MFI_STATE_MASK;
+ 
++ if (fw_state != MFI_STATE_READY) 
++   printk(KERN_INFO "megasas: Waiting for FW to come to ready"
++          " state\n");
++
+  while (fw_state != MFI_STATE_READY) {
+ 
+-  printk(KERN_INFO "megasas: Waiting for FW to come to ready"
+-         " state\n");
+   switch (fw_state) {
+ 
+ 		case MFI_STATE_FAULT:
+@@ -1244,19 +1252,27 @@ megasas_transition_to_ready(struct megas
+ 			/*
+ 			 * Set the CLR bit in inbound doorbell
+ 			 */
+-			writel(MFI_INIT_CLEAR_HANDSHAKE,
++			writel(MFI_INIT_CLEAR_HANDSHAKE|MFI_INIT_HOTPLUG,
+ 				&instance->reg_set->inbound_doorbell);
+ 
+ 			max_wait = 2;
+ 			cur_state = MFI_STATE_WAIT_HANDSHAKE;
+ 			break;
+ 
++		case MFI_STATE_BOOT_MESSAGE_PENDING:	
++			writel(MFI_INIT_HOTPLUG,
++				&instance->reg_set->inbound_doorbell);
++
++			max_wait = 10;
++			cur_state = MFI_STATE_BOOT_MESSAGE_PENDING;
++			break;
++
+ 		case MFI_STATE_OPERATIONAL:
+ 			/*
+-			 * Bring it to READY state; assuming max wait 2 secs
++			 * Bring it to READY state; assuming max wait 10 secs
+ 			 */
+ 			megasas_disable_intr(instance);
+-			writel(MFI_INIT_READY, &instance->reg_set->inbound_doorbell);
++			writel(MFI_RESET_FLAGS, &instance->reg_set->inbound_doorbell);
+ 
+ 			max_wait = 10;
+ 			cur_state = MFI_STATE_OPERATIONAL;
+@@ -1323,6 +1339,7 @@ megasas_transition_to_ready(struct megas
+ 			return -ENODEV;
+ 		}
+ 	};
++ 	printk(KERN_INFO "megasas: FW now in Ready state\n");
+ 
+ 	return 0;
  }
+@@ -1352,7 +1369,7 @@ static void megasas_teardown_frame_pool(
+ 				      cmd->frame_phys_addr);
  
- EXPORT_SYMBOL(blk_queue_find_tag);
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 1d79b8d..26f7856 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -769,6 +769,14 @@ extern struct blk_queue_tag *blk_init_ta
- extern void blk_free_tags(struct blk_queue_tag *);
- extern void blk_congestion_end(int rw);
+ 		if (cmd->sense)
+-			pci_pool_free(instance->sense_dma_pool, cmd->frame,
++			pci_pool_free(instance->sense_dma_pool, cmd->sense,
+ 				      cmd->sense_phys_addr);
+ 	}
  
-+static inline struct request *blk_map_queue_find_tag(struct blk_queue_tag *bqt,
-+						int tag)
-+{
-+	if (unlikely(bqt == NULL || tag >= bqt->real_max_depth))
-+		return NULL;
-+	return bqt->tag_index[tag];
-+}
+@@ -1690,6 +1707,12 @@ static int megasas_init_mfi(struct megas
+ 	 * Get various operational parameters from status register
+ 	 */
+ 	instance->max_fw_cmds = instance->instancet->read_fw_status_reg(reg_set) & 0x00FFFF;
++	/*
++	 * Reduce the max supported cmds by 1. This is to ensure that the 
++	 * reply_q_sz (1 more than the max cmd that driver may send)
++	 * does not exceed max cmds that the FW can support
++	 */
++	instance->max_fw_cmds = instance->max_fw_cmds-1;
+ 	instance->max_num_sge = (instance->instancet->read_fw_status_reg(reg_set) & 0xFF0000) >> 
+ 					0x10;
+ 	/*
+diff -uprN linux2.6-orig/drivers/scsi/megaraid/megaraid_sas.h linux2.6/drivers/scsi/megaraid/megaraid_sas.h
+--- linux2.6-orig/drivers/scsi/megaraid/megaraid_sas.h	2006-10-02 10:15:31.000000000 -0700
++++ linux2.6/drivers/scsi/megaraid/megaraid_sas.h	2006-10-02 10:16:13.000000000 -0700
+@@ -50,6 +50,7 @@
+ #define MFI_STATE_WAIT_HANDSHAKE		0x60000000
+ #define MFI_STATE_FW_INIT_2			0x70000000
+ #define MFI_STATE_DEVICE_SCAN			0x80000000
++#define MFI_STATE_BOOT_MESSAGE_PENDING		0x90000000
+ #define MFI_STATE_FLUSH_CACHE			0xA0000000
+ #define MFI_STATE_READY				0xB0000000
+ #define MFI_STATE_OPERATIONAL			0xC0000000
+@@ -64,12 +65,18 @@
+  * READY	: Move from OPERATIONAL to READY state; discard queue info
+  * MFIMODE	: Discard (possible) low MFA posted in 64-bit mode (??)
+  * CLR_HANDSHAKE: FW is waiting for HANDSHAKE from BIOS or Driver
++ * HOTPLUG	: Resume from Hotplug
++ * MFI_STOP_ADP	: Send signal to FW to stop processing
+  */
+-#define MFI_INIT_ABORT				0x00000000
++#define MFI_INIT_ABORT				0x00000001
+ #define MFI_INIT_READY				0x00000002
+ #define MFI_INIT_MFIMODE			0x00000004
+ #define MFI_INIT_CLEAR_HANDSHAKE		0x00000008
+-#define MFI_RESET_FLAGS    MFI_INIT_READY|MFI_INIT_MFIMODE
++#define MFI_INIT_HOTPLUG   0x00000010
++#define MFI_STOP_ADP    0x00000020
++#define MFI_RESET_FLAGS    MFI_INIT_READY| \
++						MFI_INIT_MFIMODE| \
++						MFI_INIT_ABORT
+ 
+ /**
+  * MFI frame flags
+
+
+
+
+--=-OLTp/3k5LLbKYwZGnT4p
+Content-Disposition: attachment; filename=fw_changes-p1.patch
+Content-Type: text/x-patch; name=fw_changes-p1.patch; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+diff -uprN linux2.6-orig/drivers/scsi/megaraid/megaraid_sas.c linux2.6/drivers/scsi/megaraid/megaraid_sas.c
+--- linux2.6-orig/drivers/scsi/megaraid/megaraid_sas.c	2006-10-02 10:15:31.000000000 -0700
++++ linux2.6/drivers/scsi/megaraid/megaraid_sas.c	2006-10-02 10:16:40.000000000 -0700
+@@ -832,6 +832,12 @@ static int megasas_wait_for_outstanding(
+ 	}
+ 
+ 	if (atomic_read(&instance->fw_outstanding)) {
++		/*
++		* Send signal to FW to stop processing any pending cmds.
++		* The controller will be taken offline by the OS now.
++		*/
++		writel(MFI_STOP_ADP,
++				&instance->reg_set->inbound_doorbell);
+ 		instance->hw_crit_error = 1;
+ 		return FAILED;
+ 	}
+@@ -1229,10 +1235,12 @@ megasas_transition_to_ready(struct megas
+ 
+ 	fw_state = instance->instancet->read_fw_status_reg(instance->reg_set) & MFI_STATE_MASK;
+ 
++	if (fw_state != MFI_STATE_READY) 
++ 		printk(KERN_INFO "megasas: Waiting for FW to come to ready"
++ 		       " state\n");
 +
- extern void blk_rq_bio_prep(request_queue_t *, struct request *, struct bio *);
- extern int blkdev_issue_flush(struct block_device *, sector_t *);
+ 	while (fw_state != MFI_STATE_READY) {
  
-diff --git a/include/scsi/scsi_tcq.h b/include/scsi/scsi_tcq.h
-index c247a28..cf4c219 100644
---- a/include/scsi/scsi_tcq.h
-+++ b/include/scsi/scsi_tcq.h
-@@ -144,5 +144,25 @@ static inline int scsi_init_shared_tag_m
- 	return shost->bqt ? 0 : -ENOMEM;
+-		printk(KERN_INFO "megasas: Waiting for FW to come to ready"
+-		       " state\n");
+ 		switch (fw_state) {
+ 
+ 		case MFI_STATE_FAULT:
+@@ -1244,19 +1252,27 @@ megasas_transition_to_ready(struct megas
+ 			/*
+ 			 * Set the CLR bit in inbound doorbell
+ 			 */
+-			writel(MFI_INIT_CLEAR_HANDSHAKE,
++			writel(MFI_INIT_CLEAR_HANDSHAKE|MFI_INIT_HOTPLUG,
+ 				&instance->reg_set->inbound_doorbell);
+ 
+ 			max_wait = 2;
+ 			cur_state = MFI_STATE_WAIT_HANDSHAKE;
+ 			break;
+ 
++		case MFI_STATE_BOOT_MESSAGE_PENDING:	
++			writel(MFI_INIT_HOTPLUG,
++				&instance->reg_set->inbound_doorbell);
++
++			max_wait = 10;
++			cur_state = MFI_STATE_BOOT_MESSAGE_PENDING;
++			break;
++
+ 		case MFI_STATE_OPERATIONAL:
+ 			/*
+-			 * Bring it to READY state; assuming max wait 2 secs
++			 * Bring it to READY state; assuming max wait 10 secs
+ 			 */
+ 			megasas_disable_intr(instance);
+-			writel(MFI_INIT_READY, &instance->reg_set->inbound_doorbell);
++			writel(MFI_RESET_FLAGS, &instance->reg_set->inbound_doorbell);
+ 
+ 			max_wait = 10;
+ 			cur_state = MFI_STATE_OPERATIONAL;
+@@ -1323,6 +1339,7 @@ megasas_transition_to_ready(struct megas
+ 			return -ENODEV;
+ 		}
+ 	};
++ 	printk(KERN_INFO "megasas: FW now in Ready state\n");
+ 
+ 	return 0;
  }
+@@ -1352,7 +1369,7 @@ static void megasas_teardown_frame_pool(
+ 				      cmd->frame_phys_addr);
  
-+/**
-+ * scsi_host_find_tag - find the tagged command by host
-+ * @shost:	pointer to scsi_host
-+ * @tag:	tag of the scsi_cmnd
-+ *
-+ * Notes:
-+ *	Only works with tags allocated by the generic blk layer.
-+ **/
-+static inline struct scsi_cmnd *scsi_host_find_tag(struct Scsi_Host *shost,
-+						int tag)
-+{
-+	struct request *req;
-+
-+	if (tag != SCSI_NO_TAG) {
-+		req = blk_map_queue_find_tag(shost->bqt, tag);
-+		return req ? (struct scsi_cmnd *)req->special : NULL;
-+	}
-+	return NULL;
-+}
-+
- #endif /* CONFIG_BLOCK */
- #endif /* _SCSI_SCSI_TCQ_H */
--- 
+ 		if (cmd->sense)
+-			pci_pool_free(instance->sense_dma_pool, cmd->frame,
++			pci_pool_free(instance->sense_dma_pool, cmd->sense,
+ 				      cmd->sense_phys_addr);
+ 	}
+ 
+@@ -1690,6 +1707,12 @@ static int megasas_init_mfi(struct megas
+ 	 * Get various operational parameters from status register
+ 	 */
+ 	instance->max_fw_cmds = instance->instancet->read_fw_status_reg(reg_set) & 0x00FFFF;
++	/*
++	 * Reduce the max supported cmds by 1. This is to ensure that the 
++	 * reply_q_sz (1 more than the max cmd that driver may send)
++	 * does not exceed max cmds that the FW can support
++	 */
++	instance->max_fw_cmds = instance->max_fw_cmds-1;
+ 	instance->max_num_sge = (instance->instancet->read_fw_status_reg(reg_set) & 0xFF0000) >> 
+ 					0x10;
+ 	/*
+diff -uprN linux2.6-orig/drivers/scsi/megaraid/megaraid_sas.h linux2.6/drivers/scsi/megaraid/megaraid_sas.h
+--- linux2.6-orig/drivers/scsi/megaraid/megaraid_sas.h	2006-10-02 10:15:31.000000000 -0700
++++ linux2.6/drivers/scsi/megaraid/megaraid_sas.h	2006-10-02 10:16:13.000000000 -0700
+@@ -50,6 +50,7 @@
+ #define MFI_STATE_WAIT_HANDSHAKE		0x60000000
+ #define MFI_STATE_FW_INIT_2			0x70000000
+ #define MFI_STATE_DEVICE_SCAN			0x80000000
++#define MFI_STATE_BOOT_MESSAGE_PENDING		0x90000000
+ #define MFI_STATE_FLUSH_CACHE			0xA0000000
+ #define MFI_STATE_READY				0xB0000000
+ #define MFI_STATE_OPERATIONAL			0xC0000000
+@@ -64,12 +65,18 @@
+  * READY	: Move from OPERATIONAL to READY state; discard queue info
+  * MFIMODE	: Discard (possible) low MFA posted in 64-bit mode (??)
+  * CLR_HANDSHAKE: FW is waiting for HANDSHAKE from BIOS or Driver
++ * HOTPLUG	: Resume from Hotplug
++ * MFI_STOP_ADP	: Send signal to FW to stop processing
+  */
+-#define MFI_INIT_ABORT				0x00000000
++#define MFI_INIT_ABORT				0x00000001
+ #define MFI_INIT_READY				0x00000002
+ #define MFI_INIT_MFIMODE			0x00000004
+ #define MFI_INIT_CLEAR_HANDSHAKE		0x00000008
+-#define MFI_RESET_FLAGS				MFI_INIT_READY|MFI_INIT_MFIMODE
++#define MFI_INIT_HOTPLUG			0x00000010
++#define MFI_STOP_ADP				0x00000020
++#define MFI_RESET_FLAGS				MFI_INIT_READY| \
++						MFI_INIT_MFIMODE| \
++						MFI_INIT_ABORT
+ 
+ /**
+  * MFI frame flags
 
-
+--=-OLTp/3k5LLbKYwZGnT4p--
 
