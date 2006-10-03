@@ -1,60 +1,142 @@
-From: Jeff Garzik <jeff@garzik.org>
+From: Andrew Morton <akpm@osdl.org>
 Subject: Re: Panic from mptspi_dv_renegotiate_work in 2.6.18-mm2
-Date: Mon, 02 Oct 2006 20:32:13 -0400
-Message-ID: <4521AF8D.4050209@garzik.org>
-References: <664A4EBB07F29743873A87CF62C26D703507DA@NAMAIL4.ad.lsil.com> <20061002163733.610a3c1f.akpm@osdl.org>
+Date: Mon, 2 Oct 2006 17:41:47 -0700
+Message-ID: <20061002174147.82093f20.akpm@osdl.org>
+References: <664A4EBB07F29743873A87CF62C26D703507DA@NAMAIL4.ad.lsil.com>
+	<20061002163733.610a3c1f.akpm@osdl.org>
+	<4521AF8D.4050209@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965115AbWJCAcZ@vger.kernel.org>
-In-Reply-To: <20061002163733.610a3c1f.akpm@osdl.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030192AbWJCAmD@vger.kernel.org>
+In-Reply-To: <4521AF8D.4050209@garzik.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
+To: Jeff Garzik <jeff@garzik.org>
 Cc: "Moore, Eric" <Eric.Moore@lsil.com>, Martin Bligh <mbligh@google.com>, LKML <linux-kernel@vger.kernel.org>, Andy Whitcroft <apw@shadowen.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Andrew Morton wrote:
-> On Mon, 2 Oct 2006 17:21:08 -0600
-> "Moore, Eric" <Eric.Moore@lsil.com> wrote:
-> 
->> On Monday, October 02, 2006 2:40 PM, Andrew Morton wrote: 
->>
->>> Yeah, Bryce@osdl is hitting this.  Apparently it can be worked around
->>> by compiling the driver as a module.
->>>
->> What I saw in Bryces trace was the driver was not receiving interrupts
->> for
->> the first command sent after interrutps were enabled.  This was a config
->> page
->> for spi port pages.  Since this command timed out, an internal timeout
->> handler was called,
->> and we issued an internal host reset.  The host reset called each
->> driver,
->> such as mptspi, mptfc, mptsas,  callback handers.  That ended with
->> as pacin in mptspi, due to we assume ioc->hd to be a valid pointer.  
->> We don't allocate ioc->hd to well after mpt_attach, which is where the
->> config
->> page that timed out.    We could prevent the panic in mptspi, but that 
->> doesn't fix the problem why we are not getting interrupts.   
->>
->> I have a 2.6.18 gold kernel, and that works fine with modules.  
->> There are no changes in mpt stack since 2.6.18 that would effect
->> interrupts.  
->> Do you know of any changes in kernel effecting interrupts?   I suspect
->> that
->> modules versus linked drivers into kernel would matter, or would it?
-> 
-> There are lots and lots of interrupt changes, some now in mainline, some
-> not.
-> 
-> There's a known-problematic PCI resource allocation bug now in mainline
-> too.  It appears that this can cause devices to not get assigned an
-> interrupt.
-> 
-> So yes, this is probably the trigger.  But as a secondary thing, it appears
-> that the driver will crash if something goes wrong with the interrupt
-> setup?
+On Mon, 02 Oct 2006 20:32:13 -0400
+Jeff Garzik <jeff@garzik.org> wrote:
 
-FWIW, I am seeing precisely this problem, in the latest -git.
+> FWIW, I am seeing precisely this problem, in the latest -git.
 
-	Jeff
+I just sent this to Linus.  Fingers crossed, it'll fix...
+
+From: Andrew Morton <akpm@osdl.org>
+
+54dbc0c9ebefb38840c6b07fa6eabaeb96c921f5 is causing various people's machines
+to fail to map PCI resources.
+
+Revert it in preparation for addressing the show-APICs-in-/proc/iomem
+requirement in a different manner.
+
+Cc: Aaron Durbin <adurbin@google.com>
+Cc: Andi Kleen <ak@muc.de>
+Cc: "Eric W. Biederman" <ebiederm@xmission.com>
+Signed-off-by: Andrew Morton <akpm@osdl.org>
+---
+
+ arch/x86_64/kernel/apic.c |   54 ------------------------------------
+ 1 file changed, 54 deletions(-)
+
+diff -puN arch/x86_64/kernel/apic.c~revert-insert-ioapics-and-local-apic-into-resource-map arch/x86_64/kernel/apic.c
+--- a/arch/x86_64/kernel/apic.c~revert-insert-ioapics-and-local-apic-into-resource-map
++++ a/arch/x86_64/kernel/apic.c
+@@ -25,7 +25,6 @@
+ #include <linux/kernel_stat.h>
+ #include <linux/sysdev.h>
+ #include <linux/module.h>
+-#include <linux/ioport.h>
+ 
+ #include <asm/atomic.h>
+ #include <asm/smp.h>
+@@ -46,11 +45,6 @@ int apic_calibrate_pmtmr __initdata;
+ 
+ int disable_apic_timer __initdata;
+ 
+-static struct resource lapic_resource = {
+-	.name = "Local APIC",
+-	.flags = IORESOURCE_MEM | IORESOURCE_BUSY,
+-};
+-
+ /*
+  * cpu_mask that denotes the CPUs that needs timer interrupt coming in as
+  * IPIs in place of local APIC timers
+@@ -591,40 +585,6 @@ static int __init detect_init_APIC (void
+ 	return 0;
+ }
+ 
+-#ifdef CONFIG_X86_IO_APIC
+-static struct resource * __init ioapic_setup_resources(void)
+-{
+-#define IOAPIC_RESOURCE_NAME_SIZE 11
+-	unsigned long n;
+-	struct resource *res;
+-	char *mem;
+-	int i;
+-
+-	if (nr_ioapics <= 0)
+-		return NULL;
+-
+-	n = IOAPIC_RESOURCE_NAME_SIZE + sizeof(struct resource);
+-	n *= nr_ioapics;
+-
+-	res = alloc_bootmem(n);
+-
+-	if (!res)
+-		return NULL;
+-
+-	memset(res, 0, n);
+-	mem = (void *)&res[nr_ioapics];
+-
+-	for (i = 0; i < nr_ioapics; i++) {
+-		res[i].name = mem;
+-		res[i].flags = IORESOURCE_MEM | IORESOURCE_BUSY;
+-		snprintf(mem, IOAPIC_RESOURCE_NAME_SIZE, "IOAPIC %u", i);
+-		mem += IOAPIC_RESOURCE_NAME_SIZE;
+-	}
+-
+-	return res;
+-}
+-#endif
+-
+ void __init init_apic_mappings(void)
+ {
+ 	unsigned long apic_phys;
+@@ -644,11 +604,6 @@ void __init init_apic_mappings(void)
+ 	apic_mapped = 1;
+ 	apic_printk(APIC_VERBOSE,"mapped APIC to %16lx (%16lx)\n", APIC_BASE, apic_phys);
+ 
+-	/* Put local APIC into the resource map. */
+-	lapic_resource.start = apic_phys;
+-	lapic_resource.end = lapic_resource.start + PAGE_SIZE - 1;
+-	insert_resource(&iomem_resource, &lapic_resource);
+-
+ 	/*
+ 	 * Fetch the APIC ID of the BSP in case we have a
+ 	 * default configuration (or the MP table is broken).
+@@ -658,9 +613,7 @@ void __init init_apic_mappings(void)
+ 	{
+ 		unsigned long ioapic_phys, idx = FIX_IO_APIC_BASE_0;
+ 		int i;
+-		struct resource *ioapic_res;
+ 
+-		ioapic_res = ioapic_setup_resources();
+ 		for (i = 0; i < nr_ioapics; i++) {
+ 			if (smp_found_config) {
+ 				ioapic_phys = mp_ioapics[i].mpc_apicaddr;
+@@ -672,13 +625,6 @@ void __init init_apic_mappings(void)
+ 			apic_printk(APIC_VERBOSE,"mapped IOAPIC to %016lx (%016lx)\n",
+ 					__fix_to_virt(idx), ioapic_phys);
+ 			idx++;
+-
+-			if (ioapic_res) {
+-				ioapic_res->start = ioapic_phys;
+-				ioapic_res->end = ioapic_phys + (4 * 1024) - 1;
+-				insert_resource(&iomem_resource, ioapic_res);
+-				ioapic_res++;
+-			}
+ 		}
+ 	}
+ }
+_
