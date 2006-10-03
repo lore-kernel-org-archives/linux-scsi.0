@@ -1,95 +1,60 @@
-From: "Dave Airlie" <airlied@gmail.com>
-Subject: Re: [RFC PATCH] move drm to pci_request_irq
-Date: Tue, 3 Oct 2006 09:54:07 +1000
-Message-ID: <21d7e9970610021654j6f443feay67a11121d1d8a716@mail.gmail.com>
-References: <1159550143.13029.36.camel@localhost.localdomain>
-	 <1159573404.13029.96.camel@localhost.localdomain>
-	 <20060930140946.GA1195@slug> <451F049A.1010404@garzik.org>
-	 <20061001142807.GD16272@parisc-linux.org>
-	 <1159729523.2891.408.camel@laptopd505.fenrus.org>
-	 <20061001193616.GF16272@parisc-linux.org>
-	 <1159755141.2891.434.camel@laptopd505.fenrus.org>
-	 <20061002200048.GC3003@slug> <20061002201229.GF3003@slug>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Panic from mptspi_dv_renegotiate_work in 2.6.18-mm2
+Date: Mon, 02 Oct 2006 20:32:13 -0400
+Message-ID: <4521AF8D.4050209@garzik.org>
+References: <664A4EBB07F29743873A87CF62C26D703507DA@NAMAIL4.ad.lsil.com> <20061002163733.610a3c1f.akpm@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.235]:21260 "EHLO
-	wx-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S965123AbWJBXyI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 Oct 2006 19:54:08 -0400
-Received: by wx-out-0506.google.com with SMTP id s14so1853808wxc
-        for <linux-scsi@vger.kernel.org>; Mon, 02 Oct 2006 16:54:07 -0700 (PDT)
-In-Reply-To: <20061002201229.GF3003@slug>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965115AbWJCAcZ@vger.kernel.org>
+In-Reply-To: <20061002163733.610a3c1f.akpm@osdl.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: "Moore, Eric" <Eric.Moore@lsil.com>, Martin Bligh <mbligh@google.com>, LKML <linux-kernel@vger.kernel.org>, Andy Whitcroft <apw@shadowen.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Frederik Deweerdt <deweerdt@free.fr>
-Cc: Arjan van de Ven <arjan@infradead.org>, Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org, "Linux-Kernel," <linux-kernel@vger.kernel.org>, "J.A. Magall??n" <jamagallon@ono.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Andrew Morton <akpm@osdl.org>, Jeff Garzik <jeff@garzik.org>
 
-On 10/3/06, Frederik Deweerdt <deweerdt@free.fr> wrote:
-> Hi,
->
-> This proof-of-concept patch converts the drm driver to use the
-> pci_request_irq() function.
+Andrew Morton wrote:
+> On Mon, 2 Oct 2006 17:21:08 -0600
+> "Moore, Eric" <Eric.Moore@lsil.com> wrote:
+> 
+>> On Monday, October 02, 2006 2:40 PM, Andrew Morton wrote: 
+>>
+>>> Yeah, Bryce@osdl is hitting this.  Apparently it can be worked around
+>>> by compiling the driver as a module.
+>>>
+>> What I saw in Bryces trace was the driver was not receiving interrupts
+>> for
+>> the first command sent after interrutps were enabled.  This was a config
+>> page
+>> for spi port pages.  Since this command timed out, an internal timeout
+>> handler was called,
+>> and we issued an internal host reset.  The host reset called each
+>> driver,
+>> such as mptspi, mptfc, mptsas,  callback handers.  That ended with
+>> as pacin in mptspi, due to we assume ioc->hd to be a valid pointer.  
+>> We don't allocate ioc->hd to well after mpt_attach, which is where the
+>> config
+>> page that timed out.    We could prevent the panic in mptspi, but that 
+>> doesn't fix the problem why we are not getting interrupts.   
+>>
+>> I have a 2.6.18 gold kernel, and that works fine with modules.  
+>> There are no changes in mpt stack since 2.6.18 that would effect
+>> interrupts.  
+>> Do you know of any changes in kernel effecting interrupts?   I suspect
+>> that
+>> modules versus linked drivers into kernel would matter, or would it?
+> 
+> There are lots and lots of interrupt changes, some now in mainline, some
+> not.
+> 
+> There's a known-problematic PCI resource allocation bug now in mainline
+> too.  It appears that this can cause devices to not get assigned an
+> interrupt.
+> 
+> So yes, this is probably the trigger.  But as a secondary thing, it appears
+> that the driver will crash if something goes wrong with the interrupt
+> setup?
 
-NAK.
-Wow nice CC'list and no DRM maintainer in sight :-)
+FWIW, I am seeing precisely this problem, in the latest -git.
 
-This will break framebuffer drivers, the DRM is not a proper PCI
-device driver as we don't have PCI device sharing, take a look at the
-gpu-2.6.git tree on kernel.org for the "correct" solution, which needs
-more attention before merging..
-
-Dave.
->
-> Regards,
-> Frederik
->
->
->
-> diff --git a/drivers/char/drm/drm_drv.c b/drivers/char/drm/drm_drv.c
-> index b366c5b..5b000cd 100644
-> --- a/drivers/char/drm/drm_drv.c
-> +++ b/drivers/char/drm/drm_drv.c
-> @@ -234,6 +234,8 @@ int drm_lastclose(drm_device_t * dev)
->         }
->         mutex_unlock(&dev->struct_mutex);
->
-> +       pci_set_drvdata(dev, NULL);
-> +
->         DRM_DEBUG("lastclose completed\n");
->         return 0;
->  }
-> diff --git a/drivers/char/drm/drm_irq.c b/drivers/char/drm/drm_irq.c
-> index 4553a3a..5dd12cb 100644
-> --- a/drivers/char/drm/drm_irq.c
-> +++ b/drivers/char/drm/drm_irq.c
-> @@ -132,8 +132,10 @@ static int drm_irq_install(drm_device_t
->         if (drm_core_check_feature(dev, DRIVER_IRQ_SHARED))
->                 sh_flags = IRQF_SHARED;
->
-> -       ret = request_irq(dev->irq, dev->driver->irq_handler,
-> -                         sh_flags, dev->devname, dev);
-> +       pci_set_drvdata(dev->pdev, dev);
-> +
-> +       ret = pci_request_irq(dev->pdev, dev->driver->irq_handler,
-> +                         sh_flags, dev->devname);
->         if (ret < 0) {
->                 mutex_lock(&dev->struct_mutex);
->                 dev->irq_enabled = 0;
-> @@ -173,7 +175,7 @@ int drm_irq_uninstall(drm_device_t * dev
->
->         dev->driver->irq_uninstall(dev);
->
-> -       free_irq(dev->irq, dev);
-> +       pci_free_irq(dev->pdev);
->
->         return 0;
->  }
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
->
+	Jeff
