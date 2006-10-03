@@ -1,147 +1,103 @@
 From: Henne <henne@nachtwindheim.de>
-Subject: [PATCH] scsi: Scsi_Cmnd conversion in qlogicfas408 driver
-Date: Tue, 03 Oct 2006 21:31:14 +0200
-Message-ID: <4522BA82.60604@nachtwindheim.de>
+Subject: [PATCH] scsi: Scsi_Cmnd convertion in psi240i driver
+Date: Tue, 03 Oct 2006 22:21:16 +0200
+Message-ID: <4522C63C.6000208@nachtwindheim.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from server6.greatnet.de ([83.133.96.26]:30687 "EHLO
+Received: from server6.greatnet.de ([83.133.96.26]:44484 "EHLO
 	server6.greatnet.de") by vger.kernel.org with ESMTP
-	id S1030513AbWJCTav (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Oct 2006 15:30:51 -0400
+	id S1030320AbWJCUUx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Oct 2006 16:20:53 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Andrew Morton <akpm@osdl.org>
 Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Change obsolete Scsi_Cmnd to struct scsi_cmnd in the Qlocic FAS408 driver.
+Changes the obsolete Scsi_Cmnd to struct scsi_cmnd in psi240i-driver.
 Signed-off-by: Henrik Kretzschmar <henne@nachtwindheim.de>
 
 ---
 
- qlogicfas408.c |   18 +++++++++---------
- qlogicfas408.h |   30 +++++++++++++++---------------
- 2 files changed, 24 insertions(+), 24 deletions(-)
+ psi240i.c |   31 ++++++++++++++++++-------------
+ psi240i.h |    6 +++---
+ 2 files changed, 21 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/scsi/qlogicfas408.c b/drivers/scsi/qlogicfas408.c
-index 52fb2ec..2a75485 100644
---- a/drivers/scsi/qlogicfas408.c
-+++ b/drivers/scsi/qlogicfas408.c
-@@ -209,7 +209,7 @@ static int ql_wai(struct qlogicfas408_pr
-  *	caller must hold host lock
-  */
+diff --git a/drivers/scsi/psi240i.c b/drivers/scsi/psi240i.c
+index 5c2cdf5..b08654d 100644
+--- a/drivers/scsi/psi240i.c
++++ b/drivers/scsi/psi240i.c
+@@ -87,11 +87,11 @@ typedef struct
+ 	{
+ 	USHORT		 ports[13];
+ 	OUR_DEVICE	 device[8];
+-	Scsi_Cmnd	*pSCmnd;
++	struct scsi_cmnd *pSCmnd;
+ 	IDE_STRUCT	 ide;
+ 	ULONG		 startSector;
+ 	USHORT		 sectorCount;
+-	Scsi_Cmnd	*SCpnt;
++	struct scsi_cmnd *SCpnt;
+ 	VOID		*buffer;
+ 	USHORT		 expectingIRQ;
+ 	}	ADAPTER240I, *PADAPTER240I;
+@@ -254,12 +254,12 @@ static ULONG DecodeError (struct Scsi_Ho
+  ****************************************************************/
+ static void Irq_Handler (int irq, void *dev_id, struct pt_regs *regs)
+ 	{
+-	struct Scsi_Host   *shost;			// Pointer to host data block
+-	PADAPTER240I		padapter;		// Pointer to adapter control structure
+-	USHORT		 	   *pports;			// I/O port array
+-	Scsi_Cmnd		   *SCpnt;
+-	UCHAR				status;
+-	int					z;
++	struct Scsi_Host *shost;	// Pointer to host data block
++	PADAPTER240I padapter;		// Pointer to adapter control structure
++	USHORT *pports;			// I/O port array
++	struct scsi_cmnd *SCpnt;
++	UCHAR status;
++	int z;
  
--static void ql_icmd(Scsi_Cmnd * cmd)
-+static void ql_icmd(struct scsi_cmnd *cmd)
- {
- 	struct qlogicfas408_priv *priv = get_priv_by_cmd(cmd);
- 	int 	qbase = priv->qbase;
-@@ -256,7 +256,7 @@ static void ql_icmd(Scsi_Cmnd * cmd)
-  *	Process scsi command - usually after interrupt 
-  */
+ 	DEB(printk ("\npsi240i received interrupt\n"));
  
--static unsigned int ql_pcmd(Scsi_Cmnd * cmd)
-+static unsigned int ql_pcmd(struct scsi_cmnd *cmd)
- {
- 	unsigned int i, j;
- 	unsigned long k;
-@@ -407,7 +407,7 @@ static unsigned int ql_pcmd(Scsi_Cmnd * 
+@@ -390,12 +390,17 @@ static irqreturn_t do_Irq_Handler (int i
+  *	Returns:		Status code.
+  *
+  ****************************************************************/
+-static int Psi240i_QueueCommand (Scsi_Cmnd *SCpnt, void (*done)(Scsi_Cmnd *))
++static int Psi240i_QueueCommand(struct scsi_cmnd *SCpnt,
++				void (*done)(struct scsi_cmnd *))
+ 	{
+-	UCHAR		   *cdb = (UCHAR *)SCpnt->cmnd;					// Pointer to SCSI CDB
+-	PADAPTER240I	padapter = HOSTDATA (SCpnt->device->host); 			// Pointer to adapter control structure
+-	POUR_DEVICE 		pdev	 = &padapter->device [SCpnt->device->id];// Pointer to device information
+-	UCHAR			rc;											// command return code
++	UCHAR *cdb = (UCHAR *)SCpnt->cmnd;
++	// Pointer to SCSI CDB
++	PADAPTER240I padapter = HOSTDATA (SCpnt->device->host);
++	// Pointer to adapter control structure
++	POUR_DEVICE pdev = &padapter->device [SCpnt->device->id];
++	// Pointer to device information
++	UCHAR rc;
++	// command return code
  
- static void ql_ihandl(int irq, void *dev_id, struct pt_regs *regs)
- {
--	Scsi_Cmnd *icmd;
-+	struct scsi_cmnd *icmd;
- 	struct Scsi_Host *host = (struct Scsi_Host *)dev_id;
- 	struct qlogicfas408_priv *priv = get_priv_by_host(host);
- 	int qbase = priv->qbase;
-@@ -447,7 +447,8 @@ irqreturn_t qlogicfas408_ihandl(int irq,
-  *	Queued command
-  */
+ 	SCpnt->scsi_done = done;
+ 	padapter->ide.ide.ides.spigot = pdev->spigot;
+diff --git a/drivers/scsi/psi240i.h b/drivers/scsi/psi240i.h
+index 6a59876..21ebb92 100644
+--- a/drivers/scsi/psi240i.h
++++ b/drivers/scsi/psi240i.h
+@@ -309,7 +309,7 @@ typedef struct _IDENTIFY_DATA2 {
+ #endif	// PSI_EIDE_SCSIOP
  
--int qlogicfas408_queuecommand(Scsi_Cmnd * cmd, void (*done) (Scsi_Cmnd *))
-+int qlogicfas408_queuecommand(struct scsi_cmnd *cmd,
-+			      void (*done) (struct scsi_cmnd *))
- {
- 	struct qlogicfas408_priv *priv = get_priv_by_cmd(cmd);
- 	if (scmd_id(cmd) == priv->qinitid) {
-@@ -470,9 +471,8 @@ int qlogicfas408_queuecommand(Scsi_Cmnd 
-  *	Return bios parameters 
-  */
- 
--int qlogicfas408_biosparam(struct scsi_device * disk,
--		        struct block_device *dev,
--			sector_t capacity, int ip[])
-+int qlogicfas408_biosparam(struct scsi_device *disk, struct block_device *dev,
-+			   sector_t capacity, int ip[])
- {
- /* This should mimic the DOS Qlogic driver's behavior exactly */
- 	ip[0] = 0x40;
-@@ -494,7 +494,7 @@ #endif
-  *	Abort a command in progress
-  */
-  
--int qlogicfas408_abort(Scsi_Cmnd * cmd)
-+int qlogicfas408_abort(struct scsi_cmnd *cmd)
- {
- 	struct qlogicfas408_priv *priv = get_priv_by_cmd(cmd);
- 	priv->qabort = 1;
-@@ -508,7 +508,7 @@ int qlogicfas408_abort(Scsi_Cmnd * cmd)
-  *	the PCMCIA qlogic_stub code. This wants fixing
-  */
- 
--int qlogicfas408_bus_reset(Scsi_Cmnd * cmd)
-+int qlogicfas408_bus_reset(struct scsi_cmnd *cmd)
- {
- 	struct qlogicfas408_priv *priv = get_priv_by_cmd(cmd);
- 	unsigned long flags;
-diff --git a/drivers/scsi/qlogicfas408.h b/drivers/scsi/qlogicfas408.h
-index 4b3df20..ee3e23e 100644
---- a/drivers/scsi/qlogicfas408.h
-+++ b/drivers/scsi/qlogicfas408.h
-@@ -75,15 +75,15 @@ #define SYNCOFFST 0
- /*----------------------------------------------------------------*/
- 
- struct qlogicfas408_priv {
--	 int		qbase;		/* Port */
--	 int		qinitid;	/* initiator ID */
--	 int		qabort;		/* Flag to cause an abort */
--	 int		qlirq;		/* IRQ being used */
--	 int		int_type;	/* type of irq, 2 for ISA board, 0 for PCMCIA */
--	 char		qinfo[80];	/* description */
--	 Scsi_Cmnd 	*qlcmd;		/* current command being processed */
--	 struct Scsi_Host *shost;	/* pointer back to host */
--	 struct qlogicfas408_priv *next; /* next private struct */
-+	int qbase;		/* Port */
-+	int qinitid;		/* initiator ID */
-+	int qabort;		/* Flag to cause an abort */
-+	int qlirq;		/* IRQ being used */
-+	int int_type;		/* type of irq, 2 for ISA board, 0 for PCMCIA */
-+	char qinfo[80];		/* description */
-+	struct scsi_cmnd *qlcmd;	/* current command being processed */
-+	struct Scsi_Host *shost;	/* pointer back to host */
-+	struct qlogicfas408_priv *next; /* next private struct */
- };
- 
- /* The qlogic card uses two register maps - These macros select which one */
-@@ -103,12 +103,12 @@ #define get_priv_by_cmd(x) (struct qlogi
- #define get_priv_by_host(x) (struct qlogicfas408_priv *)&((x)->hostdata[0])
- 
- irqreturn_t qlogicfas408_ihandl(int irq, void *dev_id, struct pt_regs *regs);
--int qlogicfas408_queuecommand(Scsi_Cmnd * cmd, void (*done) (Scsi_Cmnd *));
--int qlogicfas408_biosparam(struct scsi_device * disk,
--		        struct block_device *dev,
--			sector_t capacity, int ip[]);
--int qlogicfas408_abort(Scsi_Cmnd * cmd);
--int qlogicfas408_bus_reset(Scsi_Cmnd * cmd);
-+int qlogicfas408_queuecommand(struct scsi_cmnd *cmd,
-+			      void (*done) (struct scsi_cmnd *));
-+int qlogicfas408_biosparam(struct scsi_device * disk, struct block_device *dev,
-+			   sector_t capacity, int ip[]);
-+int qlogicfas408_abort(struct scsi_cmnd *cmd);
-+int qlogicfas408_bus_reset(struct scsi_cmnd *cmd);
- const char *qlogicfas408_info(struct Scsi_Host *host);
- int qlogicfas408_get_chip_type(int qbase, int int_type);
- void qlogicfas408_setup(int qbase, int id, int int_type);
+ // function prototypes
+-int Psi240i_Command			(Scsi_Cmnd *SCpnt);
+-int Psi240i_Abort			(Scsi_Cmnd *SCpnt);
+-int Psi240i_Reset			(Scsi_Cmnd *SCpnt, unsigned int flags);
++int Psi240i_Command(struct scsi_cmnd *SCpnt);
++int Psi240i_Abort(struct scsi_cmnd *SCpnt);
++int Psi240i_Reset(struct scsi_cmnd *SCpnt, unsigned int flags);
+ #endif
 
 
