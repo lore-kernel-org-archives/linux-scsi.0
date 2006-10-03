@@ -1,37 +1,111 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] aic94xx: Hotplug ex_change_count race fix
-Date: Tue, 03 Oct 2006 17:18:56 -0400
-Message-ID: <4522D3C0.6060706@garzik.org>
-References: <20061003205237.18125.qmail@web31803.mail.mud.yahoo.com>
+From: David C Somayajulu <david.somayajulu@qlogic.com>
+Subject: Re: [RFC] [PATCH] helper function for retrieving scsi_cmd given
+	host based block layer tag
+Date: Tue, 03 Oct 2006 15:27:57 -0700
+Message-ID: <1159914477.4859.4.camel@dcslnxpc.site>
+References: <1158962434.4040.35.camel@dcslnxpc.site>
+	 <0BB3E5E7462EEA4295BC02D49691DC074A3F84@AVEXCH1.qlogic.org>
+	 <20061003191026.GU7778@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:50306 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1030468AbWJCVTD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Oct 2006 17:19:03 -0400
-In-Reply-To: <20061003205237.18125.qmail@web31803.mail.mud.yahoo.com>
+Received: from pat.qlogic.com ([198.70.193.2]:38026 "EHLO avexch1.qlogic.com")
+	by vger.kernel.org with ESMTP id S1030624AbWJCW1y (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Oct 2006 18:27:54 -0400
+In-Reply-To: <20061003191026.GU7778@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: ltuikov@yahoo.com
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Alexis Bruemmer <alexisb@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: linux-scsi@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>, David Wagner <david.wagner@qlogic.com>
 
-Luben Tuikov wrote:
-> You have to make a clarification: "the way event processing works" means
-> the way it works after you removed all of event processing from my code the
-> way I wrote it, and added a very naive "event processing" if it can be
-> called that.
-> 
-> Event processing seems to work just fine with my version of my code the
-> way I maintain it, and the way you had it originally on this list.
-> 
-> Just clarifying in case someone gets confused reading the code.
+On Tue, 2006-10-03 at 21:10 +0200, Jens Axboe wrote:
+> The content and indentation looks good, but it doesn't apply to the
+> current tree. Care to rediff it?
+Here it is. Thanks.
 
-And we were all waiting breathlessly for this clarification too, I 
-assure you.
 
-In the dictionary under the phrase "sore loser", it says "see: Luben"
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+Signed-off-by: David Somayajulu <david.somayajulu@qlogic.com>
+Date: Tue Oct 3 14:52:51 2006 -0700
 
-	Jeff
+
+---
+
+ block/ll_rw_blk.c       |    7 +------
+ include/linux/blkdev.h  |    8 ++++++++
+ include/scsi/scsi_tcq.h |   20 ++++++++++++++++++++
+ 3 files changed, 29 insertions(+), 6 deletions(-)
+
+fd6b37cdcd6db09207461f56eeebd377bab49d01
+diff --git a/block/ll_rw_blk.c b/block/ll_rw_blk.c
+index 83425fb..c847e17 100644
+--- a/block/ll_rw_blk.c
++++ b/block/ll_rw_blk.c
+@@ -840,12 +840,7 @@ EXPORT_SYMBOL(blk_queue_dma_alignment);
+  **/
+ struct request *blk_queue_find_tag(request_queue_t *q, int tag)
+ {
+-	struct blk_queue_tag *bqt = q->queue_tags;
+-
+-	if (unlikely(bqt == NULL || tag >= bqt->real_max_depth))
+-		return NULL;
+-
+-	return bqt->tag_index[tag];
++	return blk_map_queue_find_tag(q->queue_tags, tag);
+ }
+ 
+ EXPORT_SYMBOL(blk_queue_find_tag);
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 1d79b8d..26f7856 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -769,6 +769,14 @@ extern struct blk_queue_tag *blk_init_ta
+ extern void blk_free_tags(struct blk_queue_tag *);
+ extern void blk_congestion_end(int rw);
+ 
++static inline struct request *blk_map_queue_find_tag(struct blk_queue_tag *bqt,
++						int tag)
++{
++	if (unlikely(bqt == NULL || tag >= bqt->real_max_depth))
++		return NULL;
++	return bqt->tag_index[tag];
++}
++
+ extern void blk_rq_bio_prep(request_queue_t *, struct request *, struct bio *);
+ extern int blkdev_issue_flush(struct block_device *, sector_t *);
+ 
+diff --git a/include/scsi/scsi_tcq.h b/include/scsi/scsi_tcq.h
+index c247a28..cf4c219 100644
+--- a/include/scsi/scsi_tcq.h
++++ b/include/scsi/scsi_tcq.h
+@@ -144,5 +144,25 @@ static inline int scsi_init_shared_tag_m
+ 	return shost->bqt ? 0 : -ENOMEM;
+ }
+ 
++/**
++ * scsi_host_find_tag - find the tagged command by host
++ * @shost:	pointer to scsi_host
++ * @tag:	tag of the scsi_cmnd
++ *
++ * Notes:
++ *	Only works with tags allocated by the generic blk layer.
++ **/
++static inline struct scsi_cmnd *scsi_host_find_tag(struct Scsi_Host *shost,
++						int tag)
++{
++	struct request *req;
++
++	if (tag != SCSI_NO_TAG) {
++		req = blk_map_queue_find_tag(shost->bqt, tag);
++		return req ? (struct scsi_cmnd *)req->special : NULL;
++	}
++	return NULL;
++}
++
+ #endif /* CONFIG_BLOCK */
+ #endif /* _SCSI_SCSI_TCQ_H */
+-- 
+
 
 
