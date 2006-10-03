@@ -1,120 +1,57 @@
-From: "David Somayajulu" <david.somayajulu@qlogic.com>
-Subject: RE: [RFC] [PATCH] helper function for retrieving scsi_cmd given host based block layer tag
-Date: Tue, 3 Oct 2006 11:06:07 -0700
-Message-ID: <0BB3E5E7462EEA4295BC02D49691DC074A3F84@AVEXCH1.qlogic.org>
-References: <1158962434.4040.35.camel@dcslnxpc.site>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: list debugging BUG() hit by aic94xx
+Date: Tue, 03 Oct 2006 13:56:43 -0500
+Message-ID: <1159901803.3443.47.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:31418 "EHLO avexch1.qlogic.com")
-	by vger.kernel.org with ESMTP id S964787AbWJCSGJ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Oct 2006 14:06:09 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <1158962434.4040.35.camel@dcslnxpc.site>
+Received: from stat9.steeleye.com ([209.192.50.41]:10409 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1030362AbWJCS4p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Oct 2006 14:56:45 -0400
+Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
+	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id k93Iui528638
+	for <linux-scsi@vger.kernel.org>; Tue, 3 Oct 2006 14:56:44 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-scsi@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>, David Wagner <david.wagner@qlogic.com>
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-> From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of David C
-> Somayajulu
-> Sent: Friday, September 22, 2006 3:01 PM
-> To: Jens Axboe
-> Cc: James Bottomley; linux-scsi@vger.kernel.org; Mike Christie; Doug
-Maxey; David Wagner
-> > I wonder if you are using the 'block' branch, not just the master
-> > branch? It seems to apply perfectly there, but that is just the same
-as
-> > Linus' tree. So when you have cloned the block git repo, there are a
-> > number of branches you can work against. The main branch with
-current
-> > changes is the 'block' branch, that is what you want to be making
-> > patches against.
-> >
-> > I'll be away for the entire next week, so no rush on my end.
-> >
-> I think I got it right this time. Here it is.
-> Thanks
-> David Somayajulu
-Jens,
-I would appreciate if you can let me know if the last post of the above
-patch was acceptable.
-Thanks
-David Somayajulu
-> ---
-> 
-> diff --git a/block/ll_rw_blk.c b/block/ll_rw_blk.c
-> index 4475fa4..a4a72bd 100644
-> --- a/block/ll_rw_blk.c
-> +++ b/block/ll_rw_blk.c
-> @@ -840,12 +840,7 @@ EXPORT_SYMBOL(blk_queue_dma_alignment);
->   **/
->  struct request *blk_queue_find_tag(request_queue_t *q, int tag)
->  {
-> -	struct blk_queue_tag *bqt = q->queue_tags;
-> -
-> -	if (unlikely(bqt == NULL || tag >= bqt->real_max_depth))
-> -		return NULL;
-> -
-> -	return bqt->tag_index[tag];
-> +	return blk_map_queue_find_tag(q->queue_tags, tag);
->  }
-> 
->  EXPORT_SYMBOL(blk_queue_find_tag);
-> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-> index c55d470..10fd39d 100644
-> --- a/include/linux/blkdev.h
-> +++ b/include/linux/blkdev.h
-> @@ -766,6 +766,14 @@ extern int blk_queue_resize_tags(request
->  extern void blk_queue_invalidate_tags(request_queue_t *);
->  extern long blk_congestion_wait(int rw, long timeout);
-> 
-> +static inline struct request *blk_map_queue_find_tag(struct
-blk_queue_tag *bqt,
-> +						int tag)
-> +{
-> +	if (unlikely(bqt == NULL || tag >= bqt->real_max_depth))
-> +		return NULL;
-> +	return bqt->tag_index[tag];
-> +}
-> +
->  extern void blk_rq_bio_prep(request_queue_t *, struct request *,
-struct bio *);
->  extern int blkdev_issue_flush(struct block_device *, sector_t *);
-> 
-> diff --git a/include/scsi/scsi_tcq.h b/include/scsi/scsi_tcq.h
-> index d1d9b10..01b7481 100644
-> --- a/include/scsi/scsi_tcq.h
-> +++ b/include/scsi/scsi_tcq.h
-> @@ -131,5 +131,25 @@ static inline struct scsi_cmnd *scsi_fin
->  	return sdev->current_cmnd;
->  }
-> 
-> +/**
-> + * scsi_host_find_tag - find the tagged command by host
-> + * @shost:	pointer to scsi_host
-> + * @tag:	tag of the scsi_cmnd
-> + *
-> + * Notes:
-> + *	Only works with tags allocated by the generic blk layer.
-> + **/
-> +static inline struct scsi_cmnd *scsi_host_find_tag(struct Scsi_Host
-*shost,
-> +						int tag)
-> +{
-> +	struct request *req;
-> +
-> +	if (tag != SCSI_NO_TAG) {
-> +		req = blk_map_queue_find_tag(shost->bqt, tag);
-> +		return req ? (struct scsi_cmnd *)req->special : NULL;
-> +	}
-> +	return NULL;
-> +}
-> +
->  #endif /* CONFIG_BLOCK */
->  #endif /* _SCSI_SCSI_TCQ_H */
-> 
+If someone is bored, they can take a look at this list debug error:
+
+list_add corruption. prev->next should be dfa0b788, but was f795fd50
+------------[ cut here ]------------
+kernel BUG at lib/list_debug.c:31!
+invalid opcode: 0000 [#1]
+SMP 
+Modules linked in: aic94xx libsas firmware_class scsi_transport_sas sd_mod scsi_transport_spi scsi_mod
+CPU:    0
+EIP:    0060:[<c01df32e>]    Not tainted VLI
+EFLAGS: 00010286   (2.6.18 #14)
+EIP is at __list_add+0x6e/0x80
+eax: 00000048   ebx: dfa0b788   ecx: 00000003   edx: 00000008
+esi: f7929bb8   edi: dfaa2888   ebp: dfeabeec   esp: dfeabed4
+ds: 007b   es: 007b   ss: 0068
+Process scsi_wq_0 (pid: 872, ti=dfeaa000 task=dfe60030 task.ti=dfeaa000)
+Stack: c030a7b8 dfa0b788 f795fd50 dfa0b76c dfaa2864 00000000 dfeabf30 f884458d 
+       dfaa2888 f7929bb8 dfa0b788 00000001 c0114da0 dfaefd24 dfa2c2f0 dfa088f4 
+       00000286 dfa08ae4 dfa0b7ec dfaa2864 dfa0b6b8 dfa0b6bc dfaefd24 dfeabf64 
+Call Trace:
+ [<f884458d>] sas_discover_domain+0x2ed/0x4c0 [libsas]
+ [<c012d3bf>] run_workqueue+0x7f/0x100
+ [<c012dca8>] worker_thread+0x148/0x170
+ [<c0130c2d>] kthread+0xfd/0x110
+ [<c0103e33>] kernel_thread_helper+0x7/0x14
+ =======================
+Code: 08 c7 04 24 78 a7 30 c0 e8 c0 e1 f3 ff 0f 0b 1a 00 77 a2 30 c0 eb c5 89 5c 24 04 89 44 24 08 c7 04 24 b8 a7 30 c0 e8 a2 e1 f3 ff <0f> 0b 1f 00 77 a2 30 c0 eb ad 90 8d b4 26 00 00 00 00 55 89 e5 
+EIP: [<c01df32e>] __list_add+0x6e/0x80 SS:ESP 0068:dfeabed4
+
+This seems to be coming from the
+
+	list_add_tail(&dev->dev_list_node, &port->dev_list);
+
+in sas_get_port_device()
+
+James
+
+
