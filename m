@@ -1,103 +1,96 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: [PATCH] aic94xx: Hotplug ex_change_count race fix
-Date: Wed, 4 Oct 2006 00:39:28 -0700 (PDT)
-Message-ID: <20061004073928.93932.qmail@web31814.mail.mud.yahoo.com>
-References: <4522D3C0.6060706@garzik.org>
-Reply-To: ltuikov@yahoo.com
+From: Henne <henne@nachtwindheim.de>
+Subject: [PATCH] scsi: remove hosts.h
+Date: Wed, 04 Oct 2006 10:22:09 +0200
+Message-ID: <45236F31.3070602@nachtwindheim.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31814.mail.mud.yahoo.com ([68.142.206.167]:36273 "HELO
-	web31814.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S1161119AbWJDHj3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 Oct 2006 03:39:29 -0400
-In-Reply-To: <4522D3C0.6060706@garzik.org>
+Received: from server6.greatnet.de ([83.133.96.26]:11738 "EHLO
+	server6.greatnet.de") by vger.kernel.org with ESMTP
+	id S1030748AbWJDIVh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Oct 2006 04:21:37 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Alexis Bruemmer <alexisb@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Andrew Morton <akpm@osdl.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
---- Jeff Garzik <jeff@garzik.org> wrote:
-> Luben Tuikov wrote:
-> > You have to make a clarification: "the way event processing works" means
-> > the way it works after you removed all of event processing from my code the
-> > way I wrote it, and added a very naive "event processing" if it can be
-> > called that.
-> > 
-> > Event processing seems to work just fine with my version of my code the
-> > way I maintain it, and the way you had it originally on this list.
-> > 
-> > Just clarifying in case someone gets confused reading the code.
-> 
-> And we were all waiting breathlessly for this clarification too, I 
-> assure you.
-> 
-> In the dictionary under the phrase "sore loser", it says "see: Luben"
+Remove the obsolete hosts.h file under drivers/scsi.
+Signed-off-by: Henrik Kretzschmar <henne@nachtwindheim.de>
 
-Sorry that you feel this way Jeff and that your have to resort
-to personal attacks.  It makes me doubt your professionalism.
+---
 
-Merely on technical grounds and the fact that the code still
-bears my copyright, I wanted to mention that all those bugs
-being posted against aic94xx and the SAS Stack, and "fixed" by
-Bottomley and LTC are not due to the reason that I wrote the
-code with bugs, but due to the fact of Bottomley blocking the code
-from going in, then him and LTC removing large portions of perfectly well
-working and tested code (SAS analysed and complient) with their
-own versions and interpretations, only later to "fix" the very code
-they submitted as a substition of a perfectly working code I wrote
-that they removed.
+ b/drivers/scsi/dpt_i2o.c       |    2 +-
+ b/drivers/scsi/dpti.h          |    2 +-
+ b/drivers/scsi/ips.c           |    6 ------
+ b/drivers/scsi/pcmcia/nsp_cs.c |    1 -
+ drivers/scsi/hosts.h           |    2 --
+ 5 files changed, 2 insertions(+), 11 deletions(-)
 
-For example, event management is one such:
-http://marc.theaimsgroup.com/?l=linux-scsi&m=115895097501842&w=2
-
-Another example, commit 2908d778ab3e244900c310974e1fc1c69066e450,
-http://kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=2908d778ab3e244900c310974e1fc1c69066e450
-has things in it like this:
-    ...
-    o Preliminary expander support for aic94xx
-    ...
-All the while aic94xx and the SAS Stack had always supported
-expanders.  There is just a lot of misleading information,
-and I don't want the casual reader to believe that aic94xx
-and the SAS Stack as I posted them didn't support expanders
-all the while they did.
-
-And I'm sure you don't want such confusion too and as a member
-of the open source community will do everything in your power
-to disambiguate that.  For example mentioning the announcement
-emails of the very first posting of the SAS Stack and aic94xx:
-http://marc.theaimsgroup.com/?l=linux-scsi&m=112629423714248&w=2
-http://marc.theaimsgroup.com/?l=linux-scsi&m=112629509826900&w=2
-http://marc.theaimsgroup.com/?l=linux-scsi&m=112629509318354&w=2
-
-The tricky point is that aic94xx and the SAS Stack were
-*NOT* committed into git as I had posted them, but were
-first _edited_ and then "fixed" by what you see in
-commit 2908d778ab3e244900c310974e1fc1c69066e450,
-http://kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=2908d778ab3e244900c310974e1fc1c69066e450
-and _then_ commited into git as you'd see them starting
-with the commit id quoted above.
-
-Surely there are a lot of people just reading this mailing list,
-interested in where storage is going with Linux. You don't want
-to mislead them... Not to mention SATL support.
-
-I should probably post my git trees somewhere?  The SAS Stack
-now also includes enterprise-grade per-device SATL support.
-I'm sure you'd enjoy that the most. ;-)
-
-> 
-> 	Jeff
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
-
+diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
+index 7b3bd34..b20b376 100644
+--- a/drivers/scsi/dpt_i2o.c
++++ b/drivers/scsi/dpt_i2o.c
+@@ -2212,7 +2212,7 @@ static s32 adpt_scsi_register(adpt_hba* 
+ 	 */
+ 	host->io_port = 0;
+ 	host->n_io_port = 0;
+-				/* see comments in hosts.h */
++				/* see comments in scsi_host.h */
+ 	host->max_id = 16;
+ 	host->max_lun = 256;
+ 	host->max_channel = pHba->top_scsi_channel + 1;
+diff --git a/drivers/scsi/dpti.h b/drivers/scsi/dpti.h
+index 2ad2a89..2899832 100644
+--- a/drivers/scsi/dpti.h
++++ b/drivers/scsi/dpti.h
+@@ -44,7 +44,7 @@ static int adpt_device_reset(struct scsi
+ 
+ 
+ /*
+- * struct scsi_host_template (see hosts.h)
++ * struct scsi_host_template (see scsi/scsi_host.h)
+  */
+ 
+ #define DPT_DRIVER_NAME	"Adaptec I2O RAID"
+diff --git a/drivers/scsi/hosts.h b/drivers/scsi/hosts.h
+deleted file mode 100644
+index c27264b..0000000
+--- a/drivers/scsi/hosts.h
++++ /dev/null
+@@ -1,2 +0,0 @@
+-#warning "This file is obsolete, please use <scsi/scsi_host.h> instead"
+-#include <scsi/scsi_host.h>
+diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
+index 3c63928..ea03dd7 100644
+--- a/drivers/scsi/ips.c
++++ b/drivers/scsi/ips.c
+@@ -182,14 +182,8 @@ #include <linux/types.h>
+ #include <linux/dma-mapping.h>
+ 
+ #include <scsi/sg.h>
+-
+ #include "scsi.h"
+-
+-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,5,0)
+-#include "hosts.h"
+-#else
+ #include <scsi/scsi_host.h>
+-#endif
+ 
+ #include "ips.h"
+ 
+diff --git a/drivers/scsi/pcmcia/nsp_cs.c b/drivers/scsi/pcmcia/nsp_cs.c
+index 0d4c04e..053303d 100644
+--- a/drivers/scsi/pcmcia/nsp_cs.c
++++ b/drivers/scsi/pcmcia/nsp_cs.c
+@@ -80,7 +80,6 @@ static int       free_ports = 0;
+ module_param(free_ports, bool, 0);
+ MODULE_PARM_DESC(free_ports, "Release IO ports after configuration? (default: 0 (=no))");
+ 
+-/* /usr/src/linux/drivers/scsi/hosts.h */
+ static struct scsi_host_template nsp_driver_template = {
+ 	.proc_name	         = "nsp_cs",
+ 	.proc_info		 = nsp_proc_info,
 
 
