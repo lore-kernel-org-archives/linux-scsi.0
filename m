@@ -1,85 +1,64 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [PATCH] raid class: handle component-add errors
-Date: Wed, 4 Oct 2006 07:05:11 -0400
-Message-ID: <20061004110511.GA19666@havoc.gtf.org>
+From: "Kolli, Neela" <Neela.Kolli@lsil.com>
+Subject: RE: Problem with legacy megaraid
+Date: Wed, 4 Oct 2006 07:01:55 -0600
+Message-ID: <9738BCBE884FDB42801FAD8A7769C265F8A982@NAMAIL1.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:30088 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S1030576AbWJDLFM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Oct 2006 07:05:12 -0400
-Content-Disposition: inline
+Received: from mail0.lsil.com ([147.145.40.20]:42157 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S932409AbWJDNCB convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Oct 2006 09:02:01 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Andrew Morton <akpm@osdl.org>, LKML <linux-kernel@vger.kernel.org>
+To: Chris Lee <labmonkey42@gmail.com>, linux-kernel@vger.kernel.org
+Cc: Andrew Morton <akpm@osdl.org>, "Ju, Seokmann" <Seokmann.Ju@engenio.com>, linux-scsi@vger.kernel.org
+
+Hi Chris,
+This being a "Dell controller", Dell customer service would be the
+starting point to handle this.
+
+Thanks,
+Neela Syam Kolli.
 
 
-Signed-off-by: Jeff Garzik <jeff@garzik.org>
+-----Original Message-----
+From: Chris Lee [mailto:labmonkey42@gmail.com] 
+Sent: Wednesday, October 04, 2006 6:22 AM
+To: linux-kernel@vger.kernel.org
+Cc: 'Andrew Morton'; Ju, Seokmann; linux-scsi@vger.kernel.org; Kolli,
+Neela
+Subject: RE: Problem with legacy megaraid
 
----
+> > > > 
+> > > > > Distro: Gentoo Linux
+> > > > > Kernel: 2.6.17-gentoo-r7
+> > > > > 
+> > > > > Hardware:
+> > > > > Motherboard: Tyan Thunder i7501 Pro (S2721-533)
+> > > > > CPUs: Dual 2.8Ghz P4 HT Xeons
+> > > > > RAM: 4GB registered (3/1 split, flat model)
+> > > > > RAID: Dell PERC2/DC (AMI Megaraid 467)
+> > > > > SCSI: Adaptec AHA-2940U2/U2W PCI
+> > > > > NICs: onboard e100 and dual onboard e1000
+> > > > > 
+> > 
+> > Did it work correctly under any earlier kernel version?  If 
+> > so, which?
+> 
+> I've recently built the system and the problem was present 
+> with both 2.6.16-gentoo-r4 and now 2.6.17-gentoo-r7.  I've 
+> not used any earlier kernel versions in this system.
 
- drivers/scsi/raid_class.c  |   20 ++++++++++++++++----
- include/linux/raid_class.h |    5 +++--
- 2 files changed, 19 insertions(+), 6 deletions(-)
+To update... I've rolled back to 2.6.{12,11,9} and can still reproduce
+the
+problem on all of them.  I'm out of ideas as to where I can look for the
+cause.  If anyone (LSI, Dell people maybe?) has any ideas please let me
+know.
 
-diff --git a/drivers/scsi/raid_class.c b/drivers/scsi/raid_class.c
-index 327b33a..e79f3d9 100644
---- a/drivers/scsi/raid_class.c
-+++ b/drivers/scsi/raid_class.c
-@@ -215,18 +215,19 @@ static void raid_component_release(struc
- 	kfree(rc);
- }
- 
--void raid_component_add(struct raid_template *r,struct device *raid_dev,
--			struct device *component_dev)
-+int raid_component_add(struct raid_template *r,struct device *raid_dev,
-+		       struct device *component_dev)
- {
- 	struct class_device *cdev =
- 		attribute_container_find_class_device(&r->raid_attrs.ac,
- 						      raid_dev);
- 	struct raid_component *rc;
- 	struct raid_data *rd = class_get_devdata(cdev);
-+	int err;
- 
- 	rc = kzalloc(sizeof(*rc), GFP_KERNEL);
- 	if (!rc)
--		return;
-+		return -ENOMEM;
- 
- 	INIT_LIST_HEAD(&rc->node);
- 	class_device_initialize(&rc->cdev);
-@@ -239,7 +240,18 @@ void raid_component_add(struct raid_temp
- 	list_add_tail(&rc->node, &rd->component_list);
- 	rc->cdev.parent = cdev;
- 	rc->cdev.class = &raid_class.class;
--	class_device_add(&rc->cdev);
-+	err = class_device_add(&rc->cdev);
-+	if (err)
-+		goto err_out;
-+	
-+	return 0;
-+
-+err_out:
-+	list_del(&rc->node);
-+	rd->component_count--;
-+	put_device(component_dev);
-+	kfree(rc);
-+	return err;
- }
- EXPORT_SYMBOL(raid_component_add);
- 
-diff --git a/include/linux/raid_class.h b/include/linux/raid_class.h
-index d0dd38b..d22ad39 100644
---- a/include/linux/raid_class.h
-+++ b/include/linux/raid_class.h
-@@ -77,5 +77,6 @@ DEFINE_RAID_ATTRIBUTE(enum raid_state, s
- struct raid_template *raid_class_attach(struct raid_function_template *);
- void raid_class_release(struct raid_template *);
- 
--void raid_component_add(struct raid_template *, struct device *,
--			struct device *);
-+int __must_check raid_component_add(struct raid_template *, struct device *,
-+				    struct device *);
-+
+Thanks,
+Chris  
+
