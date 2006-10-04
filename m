@@ -1,96 +1,251 @@
-From: Henne <henne@nachtwindheim.de>
-Subject: [PATCH] scsi: remove hosts.h
-Date: Wed, 04 Oct 2006 10:22:09 +0200
-Message-ID: <45236F31.3070602@nachtwindheim.de>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [PATCH] SCSI osst: add error handling to module init, sysfs
+Date: Wed, 4 Oct 2006 05:23:04 -0400
+Message-ID: <20061004092304.GA14685@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from server6.greatnet.de ([83.133.96.26]:11738 "EHLO
-	server6.greatnet.de") by vger.kernel.org with ESMTP
-	id S1030748AbWJDIVh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 Oct 2006 04:21:37 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1161186AbWJDJXM@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Andrew Morton <akpm@osdl.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Remove the obsolete hosts.h file under drivers/scsi.
-Signed-off-by: Henrik Kretzschmar <henne@nachtwindheim.de>
+
+- check all sysfs-related return codes, and propagate them back to callers
+
+- properly unwind errors in osst_probe(), init_osst().  This fixes a
+  leak that occured if scsi driver registration failed, and fixes an
+  oops if sysfs creation returned an error.
+
+(unrelated)
+- kzalloc() cleanup in new_tape_buf()
+
+Signed-off-by: Jeff Garzik <jeff@garzik.org>
 
 ---
 
- b/drivers/scsi/dpt_i2o.c       |    2 +-
- b/drivers/scsi/dpti.h          |    2 +-
- b/drivers/scsi/ips.c           |    6 ------
- b/drivers/scsi/pcmcia/nsp_cs.c |    1 -
- drivers/scsi/hosts.h           |    2 --
- 5 files changed, 2 insertions(+), 11 deletions(-)
+ drivers/scsi/osst.c |  131 ++++++++++++++++++++++++++++++++++++----------------
+ 1 files changed, 91 insertions(+), 40 deletions(-)
 
-diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
-index 7b3bd34..b20b376 100644
---- a/drivers/scsi/dpt_i2o.c
-+++ b/drivers/scsi/dpt_i2o.c
-@@ -2212,7 +2212,7 @@ static s32 adpt_scsi_register(adpt_hba* 
- 	 */
- 	host->io_port = 0;
- 	host->n_io_port = 0;
--				/* see comments in hosts.h */
-+				/* see comments in scsi_host.h */
- 	host->max_id = 16;
- 	host->max_lun = 256;
- 	host->max_channel = pHba->top_scsi_channel + 1;
-diff --git a/drivers/scsi/dpti.h b/drivers/scsi/dpti.h
-index 2ad2a89..2899832 100644
---- a/drivers/scsi/dpti.h
-+++ b/drivers/scsi/dpti.h
-@@ -44,7 +44,7 @@ static int adpt_device_reset(struct scsi
+diff --git a/drivers/scsi/osst.c b/drivers/scsi/osst.c
+index 4a2fed3..4b2845e 100644
+--- a/drivers/scsi/osst.c
++++ b/drivers/scsi/osst.c
+@@ -5207,12 +5207,12 @@ static struct osst_buffer * new_tape_buf
+ 		priority = GFP_KERNEL;
  
+ 	i = sizeof(struct osst_buffer) + (osst_max_sg_segs - 1) * sizeof(struct scatterlist);
+-	tb = (struct osst_buffer *)kmalloc(i, priority);
++	tb = kzalloc(i, priority);
+ 	if (!tb) {
+ 		printk(KERN_NOTICE "osst :I: Can't allocate new tape buffer.\n");
+ 		return NULL;
+ 	}
+-	memset(tb, 0, i);
++
+ 	tb->sg_segs = tb->orig_sg_segs = 0;
+ 	tb->use_sg = max_sg;
+ 	tb->in_use = 1;
+@@ -5575,9 +5575,9 @@ static ssize_t osst_version_show(struct 
+ 
+ static DRIVER_ATTR(version, S_IRUGO, osst_version_show, NULL);
+ 
+-static void osst_create_driverfs_files(struct device_driver *driverfs)
++static int osst_create_driverfs_files(struct device_driver *driverfs)
+ {
+-	driver_create_file(driverfs, &driver_attr_version);
++	return driver_create_file(driverfs, &driver_attr_version);
+ }
+ 
+ static void osst_remove_driverfs_files(struct device_driver *driverfs)
+@@ -5663,50 +5663,70 @@ CLASS_DEVICE_ATTR(file_count, S_IRUGO, o
+ 
+ static struct class *osst_sysfs_class;
+ 
+-static int osst_sysfs_valid = 0;
+-
+-static void osst_sysfs_init(void)
++static int osst_sysfs_init(void)
+ {
+ 	osst_sysfs_class = class_create(THIS_MODULE, "onstream_tape");
+-	if ( IS_ERR(osst_sysfs_class) )
+-		printk(KERN_WARNING "osst :W: Unable to register sysfs class\n");
+-	else
+-		osst_sysfs_valid = 1;
++	if (IS_ERR(osst_sysfs_class)) {
++		printk(KERN_ERR "osst :W: Unable to register sysfs class\n");
++		return PTR_ERR(osst_sysfs_class);
++	}
++
++	return 0;
+ }
+ 
+-static void osst_sysfs_add(dev_t dev, struct device *device, struct osst_tape * STp, char * name)
++static void osst_sysfs_destroy(dev_t dev)
+ {
+-	struct class_device *osst_class_member;
++	class_device_destroy(osst_sysfs_class, dev);
++}
+ 
+-	if (!osst_sysfs_valid) return;
++static int osst_sysfs_add(dev_t dev, struct device *device, struct osst_tape * STp, char * name)
++{
++	struct class_device *osst_class_member;
++	int err;
+ 
+-	osst_class_member = class_device_create(osst_sysfs_class, NULL, dev, device, "%s", name);
++	osst_class_member = class_device_create(osst_sysfs_class, NULL, dev,
++						device, "%s", name);
+ 	if (IS_ERR(osst_class_member)) {
+ 		printk(KERN_WARNING "osst :W: Unable to add sysfs class member %s\n", name);
+-		return;
++		return PTR_ERR(osst_class_member);
+ 	}
++
+ 	class_set_devdata(osst_class_member, STp);
+-	class_device_create_file(osst_class_member, &class_device_attr_ADR_rev);
+-	class_device_create_file(osst_class_member, &class_device_attr_media_version);
+-	class_device_create_file(osst_class_member, &class_device_attr_capacity);
+-	class_device_create_file(osst_class_member, &class_device_attr_BOT_frame);
+-	class_device_create_file(osst_class_member, &class_device_attr_EOD_frame);
+-	class_device_create_file(osst_class_member, &class_device_attr_file_count);
+-}
++	err = class_device_create_file(osst_class_member,
++				       &class_device_attr_ADR_rev);
++	if (err)
++		goto err_out;
++	err = class_device_create_file(osst_class_member,
++				       &class_device_attr_media_version);
++	if (err)
++		goto err_out;
++	err = class_device_create_file(osst_class_member,
++				       &class_device_attr_capacity);
++	if (err)
++		goto err_out;
++	err = class_device_create_file(osst_class_member,
++				       &class_device_attr_BOT_frame);
++	if (err)
++		goto err_out;
++	err = class_device_create_file(osst_class_member,
++				       &class_device_attr_EOD_frame);
++	if (err)
++		goto err_out;
++	err = class_device_create_file(osst_class_member,
++				       &class_device_attr_file_count);
++	if (err)
++		goto err_out;
+ 
+-static void osst_sysfs_destroy(dev_t dev)
+-{
+-	if (!osst_sysfs_valid) return; 
++	return 0;
+ 
+-	class_device_destroy(osst_sysfs_class, dev);
++err_out:
++	osst_sysfs_destroy(dev);
++	return err;
+ }
+ 
+ static void osst_sysfs_cleanup(void)
+ {
+-	if (osst_sysfs_valid) {
+-		class_destroy(osst_sysfs_class);
+-		osst_sysfs_valid = 0;
+-	}
++	class_destroy(osst_sysfs_class);
+ }
  
  /*
-- * struct scsi_host_template (see hosts.h)
-+ * struct scsi_host_template (see scsi/scsi_host.h)
-  */
+@@ -5721,7 +5741,7 @@ static int osst_probe(struct device *dev
+ 	struct st_partstat * STps;
+ 	struct osst_buffer * buffer;
+ 	struct gendisk	   * drive;
+-	int		     i, dev_num;
++	int		     i, dev_num, err = -ENODEV;
  
- #define DPT_DRIVER_NAME	"Adaptec I2O RAID"
-diff --git a/drivers/scsi/hosts.h b/drivers/scsi/hosts.h
-deleted file mode 100644
-index c27264b..0000000
---- a/drivers/scsi/hosts.h
-+++ /dev/null
-@@ -1,2 +0,0 @@
--#warning "This file is obsolete, please use <scsi/scsi_host.h> instead"
--#include <scsi/scsi_host.h>
-diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
-index 3c63928..ea03dd7 100644
---- a/drivers/scsi/ips.c
-+++ b/drivers/scsi/ips.c
-@@ -182,14 +182,8 @@ #include <linux/types.h>
- #include <linux/dma-mapping.h>
+ 	if (SDp->type != TYPE_TAPE || !osst_supports(SDp))
+ 		return -ENODEV;
+@@ -5849,13 +5869,20 @@ static int osst_probe(struct device *dev
+ 	init_MUTEX(&tpnt->lock);
+ 	osst_nr_dev++;
+ 	write_unlock(&os_scsi_tapes_lock);
++
+ 	{
+ 		char name[8];
++
+ 		/*  Rewind entry  */
+-		osst_sysfs_add(MKDEV(OSST_MAJOR, dev_num), dev, tpnt, tape_name(tpnt));
++		err = osst_sysfs_add(MKDEV(OSST_MAJOR, dev_num), dev, tpnt, tape_name(tpnt));
++		if (err)
++			goto out_free_buffer;
++
+ 		/*  No-rewind entry  */
+ 		snprintf(name, 8, "%s%s", "n", tape_name(tpnt));
+-		osst_sysfs_add(MKDEV(OSST_MAJOR, dev_num + 128), dev, tpnt, name);
++		err = osst_sysfs_add(MKDEV(OSST_MAJOR, dev_num + 128), dev, tpnt, name);
++		if (err)
++			goto out_free_sysfs1;
+ 	}
  
- #include <scsi/sg.h>
--
- #include "scsi.h"
--
--#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,5,0)
--#include "hosts.h"
--#else
- #include <scsi/scsi_host.h>
--#endif
+ 	sdev_printk(KERN_INFO, SDp,
+@@ -5864,9 +5891,13 @@ static int osst_probe(struct device *dev
  
- #include "ips.h"
+ 	return 0;
  
-diff --git a/drivers/scsi/pcmcia/nsp_cs.c b/drivers/scsi/pcmcia/nsp_cs.c
-index 0d4c04e..053303d 100644
---- a/drivers/scsi/pcmcia/nsp_cs.c
-+++ b/drivers/scsi/pcmcia/nsp_cs.c
-@@ -80,7 +80,6 @@ static int       free_ports = 0;
- module_param(free_ports, bool, 0);
- MODULE_PARM_DESC(free_ports, "Release IO ports after configuration? (default: 0 (=no))");
++out_free_sysfs1:
++	osst_sysfs_destroy(MKDEV(OSST_MAJOR, dev_num));
++out_free_buffer:
++	kfree(buffer);
+ out_put_disk:
+         put_disk(drive);
+-        return -ENODEV;
++        return err;
+ };
  
--/* /usr/src/linux/drivers/scsi/hosts.h */
- static struct scsi_host_template nsp_driver_template = {
- 	.proc_name	         = "nsp_cs",
- 	.proc_info		 = nsp_proc_info,
-
-
+ static int osst_remove(struct device *dev)
+@@ -5903,19 +5934,39 @@ static int osst_remove(struct device *de
+ 
+ static int __init init_osst(void) 
+ {
++	int err;
++
+ 	printk(KERN_INFO "osst :I: Tape driver with OnStream support version %s\nosst :I: %s\n", osst_version, cvsid);
+ 
+ 	validate_options();
+-	osst_sysfs_init();
+ 
+-	if ((register_chrdev(OSST_MAJOR,"osst", &osst_fops) < 0) || scsi_register_driver(&osst_template.gendrv)) {
++	err = osst_sysfs_init();
++	if (err)
++		return err;
++
++	err = register_chrdev(OSST_MAJOR, "osst", &osst_fops);
++	if (err < 0) {
+ 		printk(KERN_ERR "osst :E: Unable to register major %d for OnStream tapes\n", OSST_MAJOR);
+-		osst_sysfs_cleanup();
+-		return 1;
++		goto err_out;
+ 	}
+-	osst_create_driverfs_files(&osst_template.gendrv);
++
++	err = scsi_register_driver(&osst_template.gendrv);
++	if (err)
++		goto err_out_chrdev;
++
++	err = osst_create_driverfs_files(&osst_template.gendrv);
++	if (err)
++		goto err_out_scsidrv;
+ 
+ 	return 0;
++
++err_out_scsidrv:
++	scsi_unregister_driver(&osst_template.gendrv);
++err_out_chrdev:
++	unregister_chrdev(OSST_MAJOR, "osst");
++err_out:
++	osst_sysfs_cleanup();
++	return err;
+ }
+ 
+ static void __exit exit_osst (void)
