@@ -1,49 +1,87 @@
-From: "Chris Lee" <labmonkey42@gmail.com>
-Subject: RE: Problem with legacy megaraid
-Date: Wed, 4 Oct 2006 05:21:55 -0500
-Message-ID: <45238b42.596f8da9.6d92.ffff908d@mx.gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [PATCH] SCSI megaraid_sas: handle thrown errors
+Date: Wed, 4 Oct 2006 06:34:03 -0400
+Message-ID: <20061004103403.GA18459@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.237]:11555 "EHLO
-	wx-out-0506.google.com") by vger.kernel.org with ESMTP
-	id S1030788AbWJDKV4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 Oct 2006 06:21:56 -0400
-Received: by wx-out-0506.google.com with SMTP id s14so126878wxc
-        for <linux-scsi@vger.kernel.org>; Wed, 04 Oct 2006 03:21:55 -0700 (PDT)
-In-Reply-To: 
+Received: from havoc.gtf.org ([69.61.125.42]:63367 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S1030547AbWJDKeF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Oct 2006 06:34:05 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: 'Andrew Morton' <akpm@osdl.org>, "'Ju, Seokmann'" <Seokmann.Ju@lsil.com>, linux-scsi@vger.kernel.org, Neela.Kolli@engenio.com
+To: linux-scsi@vger.kernel.org
+Cc: Andrew Morton <akpm@osdl.org>, LKML <linux-kernel@vger.kernel.org>
 
-> > > > 
-> > > > > Distro: Gentoo Linux
-> > > > > Kernel: 2.6.17-gentoo-r7
-> > > > > 
-> > > > > Hardware:
-> > > > > Motherboard: Tyan Thunder i7501 Pro (S2721-533)
-> > > > > CPUs: Dual 2.8Ghz P4 HT Xeons
-> > > > > RAM: 4GB registered (3/1 split, flat model)
-> > > > > RAID: Dell PERC2/DC (AMI Megaraid 467)
-> > > > > SCSI: Adaptec AHA-2940U2/U2W PCI
-> > > > > NICs: onboard e100 and dual onboard e1000
-> > > > > 
-> > 
-> > Did it work correctly under any earlier kernel version?  If 
-> > so, which?
-> 
-> I've recently built the system and the problem was present 
-> with both 2.6.16-gentoo-r4 and now 2.6.17-gentoo-r7.  I've 
-> not used any earlier kernel versions in this system.
 
-To update... I've rolled back to 2.6.{12,11,9} and can still reproduce the
-problem on all of them.  I'm out of ideas as to where I can look for the
-cause.  If anyone (LSI, Dell people maybe?) has any ideas please let me
-know.
+- handle clear_user() error
 
-Thanks,
-Chris  
+- handle and properly unwind from sysfs errors thrown during mod init
 
+- adjust order of calls in megasas_exit() to precisely match
+  registration order in megasas_init()
+
+Signed-off-by: Jeff Garzik <jeff@garzik.org>
+
+---
+
+ drivers/scsi/megaraid/megaraid_sas.c |   26 ++++++++++++++++++++------
+ 1 files changed, 20 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/scsi/megaraid/megaraid_sas.c b/drivers/scsi/megaraid/megaraid_sas.c
+index 4cab5b5..8e0ab99 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.c
++++ b/drivers/scsi/megaraid/megaraid_sas.c
+@@ -2716,7 +2716,8 @@ static int megasas_mgmt_compat_ioctl_fw(
+ 	int i;
+ 	int error = 0;
+ 
+-	clear_user(ioc, sizeof(*ioc));
++	if (clear_user(ioc, sizeof(*ioc)))
++		return -EFAULT;
+ 
+ 	if (copy_in_user(&ioc->host_no, &cioc->host_no, sizeof(u16)) ||
+ 	    copy_in_user(&ioc->sgl_off, &cioc->sgl_off, sizeof(u32)) ||
+@@ -2842,13 +2843,26 @@ static int __init megasas_init(void)
+ 
+ 	if (rval) {
+ 		printk(KERN_DEBUG "megasas: PCI hotplug regisration failed \n");
+-		unregister_chrdev(megasas_mgmt_majorno, "megaraid_sas_ioctl");
++		goto err_pcidrv;
+ 	}
+ 
+-	driver_create_file(&megasas_pci_driver.driver, &driver_attr_version);
+-	driver_create_file(&megasas_pci_driver.driver,
+-			   &driver_attr_release_date);
++	rval = driver_create_file(&megasas_pci_driver.driver,
++				  &driver_attr_version);
++	if (rval)
++		goto err_dcf_attr_ver;
++	rval = driver_create_file(&megasas_pci_driver.driver,
++				  &driver_attr_release_date);
++	if (rval)
++		goto err_dcf_rel_date;
+ 
++	return 0;
++
++err_dcf_rel_date:
++	driver_remove_file(&megasas_pci_driver.driver, &driver_attr_version);
++err_dcf_attr_ver:
++	pci_unregister_driver(&megasas_pci_driver);
++err_pcidrv:
++	unregister_chrdev(megasas_mgmt_majorno, "megaraid_sas_ioctl");
+ 	return rval;
+ }
+ 
+@@ -2857,9 +2871,9 @@ static int __init megasas_init(void)
+  */
+ static void __exit megasas_exit(void)
+ {
+-	driver_remove_file(&megasas_pci_driver.driver, &driver_attr_version);
+ 	driver_remove_file(&megasas_pci_driver.driver,
+ 			   &driver_attr_release_date);
++	driver_remove_file(&megasas_pci_driver.driver, &driver_attr_version);
+ 
+ 	pci_unregister_driver(&megasas_pci_driver);
+ 	unregister_chrdev(megasas_mgmt_majorno, "megaraid_sas_ioctl");
