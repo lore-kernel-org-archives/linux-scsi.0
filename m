@@ -1,49 +1,29 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH] aic94xx: Hotplug ex_change_count race fix
-Date: Tue, 03 Oct 2006 22:29:05 -0400
-Message-ID: <45231C71.2060306@torque.net>
-References: <20061003205237.18125.qmail@web31803.mail.mud.yahoo.com> <4522D3C0.6060706@garzik.org>
-Reply-To: dougg@torque.net
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [RFC] [PATCH] helper function for retrieving scsi_cmd given  host based block layer tag
+Date: Wed, 4 Oct 2006 08:27:45 +0200
+Message-ID: <20061004062745.GB7778@kernel.dk>
+References: <1158962434.4040.35.camel@dcslnxpc.site> <0BB3E5E7462EEA4295BC02D49691DC074A3F84@AVEXCH1.qlogic.org> <20061003191026.GU7778@kernel.dk> <1159914477.4859.4.camel@dcslnxpc.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:18844 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1030725AbWJDC23 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Oct 2006 22:28:29 -0400
-In-Reply-To: <4522D3C0.6060706@garzik.org>
+Received: from brick.kernel.dk ([62.242.22.158]:33129 "EHLO kernel.dk")
+	by vger.kernel.org with ESMTP id S1161088AbWJDG2K (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Oct 2006 02:28:10 -0400
+Content-Disposition: inline
+In-Reply-To: <1159914477.4859.4.camel@dcslnxpc.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: ltuikov@yahoo.com, James Bottomley <James.Bottomley@SteelEye.com>, Alexis Bruemmer <alexisb@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: David C Somayajulu <david.somayajulu@qlogic.com>
+Cc: linux-scsi@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>, David Wagner <david.wagner@qlogic.com>
 
-Jeff Garzik wrote:
-> Luben Tuikov wrote:
->> You have to make a clarification: "the way event processing works" means
->> the way it works after you removed all of event processing from my
->> code the
->> way I wrote it, and added a very naive "event processing" if it can be
->> called that.
->>
->> Event processing seems to work just fine with my version of my code the
->> way I maintain it, and the way you had it originally on this list.
->>
->> Just clarifying in case someone gets confused reading the code.
-> 
-> And we were all waiting breathlessly for this clarification too, I
-> assure you.
-> 
-> In the dictionary under the phrase "sore loser", it says "see: Luben"
+On Tue, Oct 03 2006, David C Somayajulu wrote:
+> On Tue, 2006-10-03 at 21:10 +0200, Jens Axboe wrote:
+> > The content and indentation looks good, but it doesn't apply to the
+> > current tree. Care to rediff it?
+> Here it is. Thanks.
 
-I work with both drivers and provide feedback to their
-maintainers. IMO the loser is "linux".
+Thanks, applied! It'll go upstream in a day or two.
 
-One handicap the official driver has is the SATL it has
-decided to use.
-
-... back to my redmond os for testing ...
-
-Doug Gilbert
-
+-- 
+Jens Axboe
 
