@@ -1,13 +1,13 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: [PATCH] SCSI st: fix error handling in module init, sysfs
-Date: Wed, 4 Oct 2006 06:00:38 -0400
-Message-ID: <20061004100037.GA16915@havoc.gtf.org>
+Subject: [PATCH] SCSI aic94xx: handle sysfs errors
+Date: Wed, 4 Oct 2006 06:19:18 -0400
+Message-ID: <20061004101918.GA17841@havoc.gtf.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:18823 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S1161199AbWJDKAj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Oct 2006 06:00:39 -0400
+Received: from havoc.gtf.org ([69.61.125.42]:48007 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S1030542AbWJDKTT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Oct 2006 06:19:19 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -15,211 +15,97 @@ To: linux-scsi@vger.kernel.org
 Cc: Andrew Morton <akpm@osdl.org>, LKML <linux-kernel@vger.kernel.org>
 
 
-- Notice and handle sysfs errors in module init, tape init
-
-- Properly unwind errors in module init
-
-- Remove bogus st_sysfs_class==NULL test, it is guaranteed !NULL at that point
+Handle and unwind from errors returned by driver model functions.
 
 Signed-off-by: Jeff Garzik <jeff@garzik.org>
 
 ---
 
- drivers/scsi/st.c |  115 ++++++++++++++++++++++++++++++++++++------------------
- 1 files changed, 78 insertions(+), 37 deletions(-)
+ drivers/scsi/aic94xx/aic94xx_init.c |   41 ++++++++++++++++++++++++++++--------
+ 1 files changed, 33 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index 7f669b6..3babdc7 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -195,9 +195,9 @@ static int sgl_unmap_user_pages(struct s
- static int st_probe(struct device *);
- static int st_remove(struct device *);
+diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
+index ee2ccad..418e789 100644
+--- a/drivers/scsi/aic94xx/aic94xx_init.c
++++ b/drivers/scsi/aic94xx/aic94xx_init.c
+@@ -310,11 +310,29 @@ static ssize_t asd_show_dev_pcba_sn(stru
+ }
+ static DEVICE_ATTR(pcba_sn, S_IRUGO, asd_show_dev_pcba_sn, NULL);
  
--static void do_create_driverfs_files(void);
-+static int do_create_driverfs_files(void);
- static void do_remove_driverfs_files(void);
--static void do_create_class_files(struct scsi_tape *, int, int);
-+static int do_create_class_files(struct scsi_tape *, int, int);
- 
- static struct scsi_driver st_template = {
- 	.owner			= THIS_MODULE,
-@@ -4048,7 +4048,9 @@ static int st_probe(struct device *dev)
- 			STm->cdevs[j] = cdev;
- 
- 		}
--		do_create_class_files(tpnt, dev_num, mode);
-+		error = do_create_class_files(tpnt, dev_num, mode);
-+		if (error)
-+			goto out_free_tape;
- 	}
- 
- 	sdev_printk(KERN_WARNING, SDp,
-@@ -4157,32 +4159,45 @@ static void scsi_tape_release(struct kre
- 
- static int __init init_st(void)
+-static void asd_create_dev_attrs(struct asd_ha_struct *asd_ha)
++static int asd_create_dev_attrs(struct asd_ha_struct *asd_ha)
  {
+-	device_create_file(&asd_ha->pcidev->dev, &dev_attr_revision);
+-	device_create_file(&asd_ha->pcidev->dev, &dev_attr_bios_build);
+-	device_create_file(&asd_ha->pcidev->dev, &dev_attr_pcba_sn);
 +	int err;
 +
- 	validate_options();
- 
--	printk(KERN_INFO
--		"st: Version %s, fixed bufsize %d, s/g segs %d\n",
-+	printk(KERN_INFO "st: Version %s, fixed bufsize %d, s/g segs %d\n",
- 		verstr, st_fixed_buffer_size, st_max_sg_segs);
- 
- 	st_sysfs_class = class_create(THIS_MODULE, "scsi_tape");
- 	if (IS_ERR(st_sysfs_class)) {
--		st_sysfs_class = NULL;
- 		printk(KERN_ERR "Unable create sysfs class for SCSI tapes\n");
--		return 1;
-+		return PTR_ERR(st_sysfs_class);
- 	}
- 
--	if (!register_chrdev_region(MKDEV(SCSI_TAPE_MAJOR, 0),
--				    ST_MAX_TAPE_ENTRIES, "st")) {
--		if (scsi_register_driver(&st_template.gendrv) == 0) {
--			do_create_driverfs_files();
--			return 0;
--		}
--		unregister_chrdev_region(MKDEV(SCSI_TAPE_MAJOR, 0),
--					 ST_MAX_TAPE_ENTRIES);
-+	err = register_chrdev_region(MKDEV(SCSI_TAPE_MAJOR, 0),
-+				     ST_MAX_TAPE_ENTRIES, "st");
-+	if (err) {
-+		printk(KERN_ERR "Unable to get major %d for SCSI tapes\n",
-+		       SCSI_TAPE_MAJOR);
-+		goto err_class;
- 	}
--	class_destroy(st_sysfs_class);
- 
--	printk(KERN_ERR "Unable to get major %d for SCSI tapes\n", SCSI_TAPE_MAJOR);
--	return 1;
-+	err = scsi_register_driver(&st_template.gendrv);
-+	if (err)
-+		goto err_chrdev;
-+
-+	err = do_create_driverfs_files();
-+	if (err)
-+		goto err_scsidrv;
-+
-+	return 0;
-+
-+err_scsidrv:
-+	scsi_unregister_driver(&st_template.gendrv);
-+err_chrdev:
-+	unregister_chrdev_region(MKDEV(SCSI_TAPE_MAJOR, 0),
-+				 ST_MAX_TAPE_ENTRIES);
-+err_class:
-+	class_destroy(st_sysfs_class);
-+	return err;
- }
- 
- static void __exit exit_st(void)
-@@ -4225,14 +4240,33 @@ static ssize_t st_version_show(struct de
- }
- static DRIVER_ATTR(version, S_IRUGO, st_version_show, NULL);
- 
--static void do_create_driverfs_files(void)
-+static int do_create_driverfs_files(void)
- {
- 	struct device_driver *driverfs = &st_template.gendrv;
-+	int err;
-+
-+	err = driver_create_file(driverfs, &driver_attr_try_direct_io);
++	err = device_create_file(&asd_ha->pcidev->dev, &dev_attr_revision);
 +	if (err)
 +		return err;
-+	err = driver_create_file(driverfs, &driver_attr_fixed_buffer_size);
++
++	err = device_create_file(&asd_ha->pcidev->dev, &dev_attr_bios_build);
 +	if (err)
-+		goto err_try_direct_io;
-+	err = driver_create_file(driverfs, &driver_attr_max_sg_segs);
++		goto err_rev;
++
++	err = device_create_file(&asd_ha->pcidev->dev, &dev_attr_pcba_sn);
 +	if (err)
-+		goto err_attr_fixed_buf;
-+	err = driver_create_file(driverfs, &driver_attr_version);
-+	if (err)
-+		goto err_attr_max_sg;
- 
--	driver_create_file(driverfs, &driver_attr_try_direct_io);
--	driver_create_file(driverfs, &driver_attr_fixed_buffer_size);
--	driver_create_file(driverfs, &driver_attr_max_sg_segs);
--	driver_create_file(driverfs, &driver_attr_version);
++		goto err_biosb;
++	
 +	return 0;
 +
-+err_attr_max_sg:
-+	driver_remove_file(driverfs, &driver_attr_max_sg_segs);
-+err_attr_fixed_buf:
-+	driver_remove_file(driverfs, &driver_attr_fixed_buffer_size);
-+err_try_direct_io:
-+	driver_remove_file(driverfs, &driver_attr_try_direct_io);
++err_biosb:
++	device_remove_file(&asd_ha->pcidev->dev, &dev_attr_bios_build);
++err_rev:
++	device_remove_file(&asd_ha->pcidev->dev, &dev_attr_revision);
 +	return err;
  }
  
- static void do_remove_driverfs_files(void)
-@@ -4293,15 +4327,12 @@ static ssize_t st_defcompression_show(st
- 
- CLASS_DEVICE_ATTR(default_compression, S_IRUGO, st_defcompression_show, NULL);
- 
--static void do_create_class_files(struct scsi_tape *STp, int dev_num, int mode)
-+static int do_create_class_files(struct scsi_tape *STp, int dev_num, int mode)
- {
- 	int i, rew, error;
- 	char name[10];
- 	struct class_device *st_class_member;
- 
--	if (!st_sysfs_class)
--		return;
--
- 	for (rew=0; rew < 2; rew++) {
- 		/* Make sure that the minor numbers corresponding to the four
- 		   first modes always get the same names */
-@@ -4316,18 +4347,24 @@ static void do_create_class_files(struct
- 		if (IS_ERR(st_class_member)) {
- 			printk(KERN_WARNING "st%d: class_device_create failed\n",
- 			       dev_num);
-+			error = PTR_ERR(st_class_member);
- 			goto out;
- 		}
- 		class_set_devdata(st_class_member, &STp->modes[mode]);
- 
--		class_device_create_file(st_class_member,
--					 &class_device_attr_defined);
--		class_device_create_file(st_class_member,
--					 &class_device_attr_default_blksize);
--		class_device_create_file(st_class_member,
--					 &class_device_attr_default_density);
--		class_device_create_file(st_class_member,
--					 &class_device_attr_default_compression);
-+		error = class_device_create_file(st_class_member,
-+					       &class_device_attr_defined);
-+		if (error) goto out;
-+		error = class_device_create_file(st_class_member,
-+					    &class_device_attr_default_blksize);
-+		if (error) goto out;
-+		error = class_device_create_file(st_class_member,
-+					    &class_device_attr_default_density);
-+		if (error) goto out;
-+		error = class_device_create_file(st_class_member,
-+				        &class_device_attr_default_compression);
-+		if (error) goto out;
-+
- 		if (mode == 0 && rew == 0) {
- 			error = sysfs_create_link(&STp->device->sdev_gendev.kobj,
- 						  &st_class_member->kobj,
-@@ -4336,11 +4373,15 @@ static void do_create_class_files(struct
- 				printk(KERN_ERR
- 				       "st%d: Can't create sysfs link from SCSI device.\n",
- 				       dev_num);
-+				goto out;
- 			}
- 		}
+ static void asd_remove_dev_attrs(struct asd_ha_struct *asd_ha)
+@@ -646,7 +664,9 @@ static int __devinit asd_pci_probe(struc
  	}
-- out:
--	return;
-+
-+	return 0;
-+
-+out:
-+	return error;
+ 	ASD_DPRINTK("escbs posted\n");
+ 
+-	asd_create_dev_attrs(asd_ha);
++	err = asd_create_dev_attrs(asd_ha);
++	if (err)
++		goto Err_dev_attrs;
+ 
+ 	err = asd_register_sas_ha(asd_ha);
+ 	if (err)
+@@ -669,6 +689,7 @@ Err_en_phys:
+ 	asd_unregister_sas_ha(asd_ha);
+ Err_reg_sas:
+ 	asd_remove_dev_attrs(asd_ha);
++Err_dev_attrs:
+ Err_escbs:
+ 	asd_disable_ints(asd_ha);
+ 	free_irq(dev->irq, asd_ha);
+@@ -755,9 +776,9 @@ static ssize_t asd_version_show(struct d
+ }
+ static DRIVER_ATTR(version, S_IRUGO, asd_version_show, NULL);
+ 
+-static void asd_create_driver_attrs(struct device_driver *driver)
++static int asd_create_driver_attrs(struct device_driver *driver)
+ {
+-	driver_create_file(driver, &driver_attr_version);
++	return driver_create_file(driver, &driver_attr_version);
  }
  
- /* The following functions may be useful for a larger audience. */
+ static void asd_remove_driver_attrs(struct device_driver *driver)
+@@ -835,10 +856,14 @@ static int __init aic94xx_init(void)
+ 	if (err)
+ 		goto out_release_transport;
+ 
+-	asd_create_driver_attrs(&aic94xx_pci_driver.driver);
++	err = asd_create_driver_attrs(&aic94xx_pci_driver.driver);
++	if (err)
++		goto out_unregister_pcidrv;
+ 
+ 	return err;
+ 
++ out_unregister_pcidrv:
++	pci_unregister_driver(&aic94xx_pci_driver);
+  out_release_transport:
+ 	sas_release_transport(aic94xx_transport_template);
+  out_destroy_caches:
