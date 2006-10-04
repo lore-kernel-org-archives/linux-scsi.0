@@ -1,179 +1,131 @@
-From: Bryce Harrington <bryce@osdl.org>
-Subject: Re: [Eng] [OOPS] -git8, 9:  NULL pointer dereference in
-Date: Wed, 4 Oct 2006 11:17:46 -0700
-Message-ID: <20061004181746.GA17434@osdl.org>
+From: Andy Warner <andyw@pobox.com>
+Subject: Re: aic94xx IO errors with "escb_tasklet_complete: phy0: REQ_TASK_ABORT"
+Date: Wed, 4 Oct 2006 13:29:29 -0500
+Message-ID: <20061004132929.A29689@florence.linkmargin.com>
+References: <20061004164438.GC5091@rhun.haifa.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:5822 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1161255AbWJDSRt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Oct 2006 14:17:49 -0400
+Received: from ms-smtp-02.rdc-kc.rr.com ([24.94.166.122]:35761 "EHLO
+	ms-smtp-02.rdc-kc.rr.com") by vger.kernel.org with ESMTP
+	id S1750884AbWJDT32 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Oct 2006 15:29:28 -0400
 Content-Disposition: inline
+In-Reply-To: <20061004164438.GC5091@rhun.haifa.ibm.com>; from muli@il.ibm.com on Wed, Oct 04, 2006 at 06:44:38PM +0200
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric" <Eric.Moore@lsil.com>
-Cc: Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Muli Ben-Yehuda <muli@il.ibm.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>
 
-mptspi_dv_renegotiate_work
-Reply-To:
-In-Reply-To: <20060930215544.GB7957@osdl.org>
+Muli Ben-Yehuda wrote:
+> [resending as it probably hit the 100K limit the first time]
+> 
+> I'm seeing these aic94xx IO errors on an IBM x366, usually after I
+> copy ~20GB but occasionally as soon as heavy IO starts. Happens with
+> and without Calgary enabled (iommu=off). I'm seeing this on two
+> different disks which badblocks claims are ok. The machine usually
+> stays up and keeps chugging along after this happens.
 
-On Sat, Sep 30, 2006 at 02:55:44PM -0700, Bryce Harrington wrote:
-> On Fri, Sep 29, 2006 at 10:22:50PM -0600, Moore, Eric wrote:
-> > On Fri 9/29/2006 6:27 PM, Bryce Harrington wrote:
-> > >    http://crucible.osdl.org/runs/2265/sysinfo/amd01.3.console
->
-> > Besides, we need to undertand why your interrupt controller is not
-> > generating interrupts.
+Since you're working in this area, the processing for REQ_TASK_ABORT,
+REQ_DEVICE_RESET, SIGNAL_NCQ_ERROR and CLEAR_NCQ_ERROR needs fixing as
+all 4 events collapse to REQ_TASK_ABORT, because sb_opcode is masked
+with ~DL_PHY_MASK before the switch() in escb_tasklet_complete(). In
+unpatched code, check the phy number reported in the REQ_TASK_ABORT message:
 
-The following patch seems to have fixed the issue, as of
-patch-2.6.18-git20.
+  0 => REQ_TASK_ABORT
+  1 => REQ_DEVICE_RESET
+  2 => SIGNAL_NCQ_ERROR
+  3 => CLEAR_NCQ_ERROR
 
-http://crucible.osdl.org/runs/2390/sysinfo/amd01.console
+So you are seeing legitimate REQ_TASK_ABORT values, but need to look
+at the remaining data to see what the chip is trying to tell you.
+For REQ_TASK_ABORT, status_block[1..2] is the transaction context,
+and status_block[3] is the reason (TC_NO_ERROR etc from aic94xx_sas.h)
 
-Thanks,
-Bryce
+Here's a patch (quick, suboptimal & compile tested only) that improves
+the decode and logs the reason, but doesn't actually process the
+events any more usefully. Hope it applies to your tree. Report
+back with the reason(s) and then track back to the port/device
+using the transaction context in status_block[1..2].
 
--------- Forwarded Message --------
-From: Andrew Morton <akpm@osdl.org>
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Moore, Eric <Eric.Moore@lsil.com>, Martin Bligh <mbligh@google.com>,
-LKML <linux-kernel@vger.kernel.org>, Andy Whitcroft <apw@shadowen.org>,
-linux-scsi@vger.kernel.org
-Subject: Re: Panic from mptspi_dv_renegotiate_work in 2.6.18-mm2
-Date: 	Mon, 2 Oct 2006 17:41:47 -0700
+Signed-off-by: Andy Warner <andyw@pobox.com>
 
-On Mon, 02 Oct 2006 20:32:13 -0400
-Jeff Garzik <jeff@garzik.org> wrote:
-
-> FWIW, I am seeing precisely this problem, in the latest -git.
-
-I just sent this to Linus.  Fingers crossed, it'll fix...
-
-From: Andrew Morton <akpm@osdl.org>
-
-54dbc0c9ebefb38840c6b07fa6eabaeb96c921f5 is causing various people's machines
-to fail to map PCI resources.
-
-Revert it in preparation for addressing the show-APICs-in-/proc/iomem
-requirement in a different manner.
-
-Cc: Aaron Durbin <adurbin@google.com>
-Cc: Andi Kleen <ak@muc.de>
-Cc: "Eric W. Biederman" <ebiederm@xmission.com>
-Signed-off-by: Andrew Morton <akpm@osdl.org>
----
-
- arch/x86_64/kernel/apic.c |   54 ------------------------------------
- 1 file changed, 54 deletions(-)
-
-diff -puN arch/x86_64/kernel/apic.c~revert-insert-ioapics-and-local-apic-into-resource-map arch/x86_64/kernel/apic.c
---- a/arch/x86_64/kernel/apic.c~revert-insert-ioapics-and-local-apic-into-resource-map
-+++ a/arch/x86_64/kernel/apic.c
-@@ -25,7 +25,6 @@
- #include <linux/kernel_stat.h>
- #include <linux/sysdev.h>
- #include <linux/module.h>
--#include <linux/ioport.h>
+--- a/drivers/scsi/aic94xx/aic94xx_scb.c	2006-10-04 13:22:35.821333918 -0500
++++ b/drivers/scsi/aic94xx/aic94xx_scb.c	2006-10-04 14:17:07.505966527 -0500
+@@ -389,39 +389,41 @@ static void escb_tasklet_complete(struct
+ 		sas_phy_disconnected(sas_phy);
+ 		sas_ha->notify_port_event(sas_phy, PORTE_TIMER_EVENT);
+ 		break;
+-	case REQ_TASK_ABORT:
+-		ASD_DPRINTK("%s: phy%d: REQ_TASK_ABORT\n", __FUNCTION__,
+-			    phy_id);
+-		break;
+-	case REQ_DEVICE_RESET:
+-		ASD_DPRINTK("%s: phy%d: REQ_DEVICE_RESET\n", __FUNCTION__,
+-			    phy_id);
+-		break;
+-	case SIGNAL_NCQ_ERROR:
+-		ASD_DPRINTK("%s: phy%d: SIGNAL_NCQ_ERROR\n", __FUNCTION__,
+-			    phy_id);
+-		break;
+-	case CLEAR_NCQ_ERROR:
+-		ASD_DPRINTK("%s: phy%d: CLEAR_NCQ_ERROR\n", __FUNCTION__,
+-			    phy_id);
+-		break;
+ 	default:
+-		ASD_DPRINTK("%s: phy%d: unknown event:0x%x\n", __FUNCTION__,
+-			    phy_id, sb_opcode);
+-		ASD_DPRINTK("edb is 0x%x! dl->opcode is 0x%x\n",
+-			    edb, dl->opcode);
+-		ASD_DPRINTK("sb_opcode : 0x%x, phy_id: 0x%x\n",
+-			    sb_opcode, phy_id);
+-		ASD_DPRINTK("escb: vaddr: 0x%p, "
+-			    "dma_handle: 0x%llx, next: 0x%llx, "
+-			    "index:%d, opcode:0x%02x\n",
+-			    ascb->dma_scb.vaddr,
+-			    (unsigned long long)ascb->dma_scb.dma_handle,
+-			    (unsigned long long)
+-			    le64_to_cpu(ascb->scb->header.next_scb),
+-			    le16_to_cpu(ascb->scb->header.index),
+-			    ascb->scb->header.opcode);
++		switch(sb_opcode) {
++		case REQ_TASK_ABORT:
++			ASD_DPRINTK("%s: REQ_TASK_ABORT, reason 0x%02x\n",
++					__FUNCTION__, dl->status_block[3]);
++			break;
++		case REQ_DEVICE_RESET:
++			ASD_DPRINTK("%s: REQ_DEVICE_RESET, reason 0x%02x\n",
++					__FUNCTION__, dl->status_block[3]);
++			break;
++		case SIGNAL_NCQ_ERROR:
++			ASD_DPRINTK("%s: SIGNAL_NCQ_ERROR\n", __FUNCTION__);
++			break;
++		case CLEAR_NCQ_ERROR:
++			ASD_DPRINTK("%s: CLEAR_NCQ_ERROR\n", __FUNCTION__);
++			break;
++		default:
++			ASD_DPRINTK("%s: phy%d: unknown event:0x%x\n", __FUNCTION__,
++				    phy_id, sb_opcode);
++			ASD_DPRINTK("edb is 0x%x! dl->opcode is 0x%x\n",
++				    edb, dl->opcode);
++			ASD_DPRINTK("sb_opcode : 0x%x, phy_id: 0x%x\n",
++				    sb_opcode, phy_id);
++			ASD_DPRINTK("escb: vaddr: 0x%p, "
++				    "dma_handle: 0x%llx, next: 0x%llx, "
++				    "index:%d, opcode:0x%02x\n",
++				    ascb->dma_scb.vaddr,
++				    (unsigned long long)ascb->dma_scb.dma_handle,
++				    (unsigned long long)
++				    le64_to_cpu(ascb->scb->header.next_scb),
++				    le16_to_cpu(ascb->scb->header.index),
++				    ascb->scb->header.opcode);
  
- #include <asm/atomic.h>
- #include <asm/smp.h>
-@@ -46,11 +45,6 @@ int apic_calibrate_pmtmr __initdata;
- 
- int disable_apic_timer __initdata;
- 
--static struct resource lapic_resource = {
--	.name = "Local APIC",
--	.flags = IORESOURCE_MEM | IORESOURCE_BUSY,
--};
--
- /*
-  * cpu_mask that denotes the CPUs that needs timer interrupt coming in as
-  * IPIs in place of local APIC timers
-@@ -591,40 +585,6 @@ static int __init detect_init_APIC (void
- 	return 0;
- }
- 
--#ifdef CONFIG_X86_IO_APIC
--static struct resource * __init ioapic_setup_resources(void)
--{
--#define IOAPIC_RESOURCE_NAME_SIZE 11
--	unsigned long n;
--	struct resource *res;
--	char *mem;
--	int i;
--
--	if (nr_ioapics <= 0)
--		return NULL;
--
--	n = IOAPIC_RESOURCE_NAME_SIZE + sizeof(struct resource);
--	n *= nr_ioapics;
--
--	res = alloc_bootmem(n);
--
--	if (!res)
--		return NULL;
--
--	memset(res, 0, n);
--	mem = (void *)&res[nr_ioapics];
--
--	for (i = 0; i < nr_ioapics; i++) {
--		res[i].name = mem;
--		res[i].flags = IORESOURCE_MEM | IORESOURCE_BUSY;
--		snprintf(mem, IOAPIC_RESOURCE_NAME_SIZE, "IOAPIC %u", i);
--		mem += IOAPIC_RESOURCE_NAME_SIZE;
--	}
--
--	return res;
--}
--#endif
--
- void __init init_apic_mappings(void)
- {
- 	unsigned long apic_phys;
-@@ -644,11 +604,6 @@ void __init init_apic_mappings(void)
- 	apic_mapped = 1;
- 	apic_printk(APIC_VERBOSE,"mapped APIC to %16lx (%16lx)\n", APIC_BASE, apic_phys);
- 
--	/* Put local APIC into the resource map. */
--	lapic_resource.start = apic_phys;
--	lapic_resource.end = lapic_resource.start + PAGE_SIZE - 1;
--	insert_resource(&iomem_resource, &lapic_resource);
--
- 	/*
- 	 * Fetch the APIC ID of the BSP in case we have a
- 	 * default configuration (or the MP table is broken).
-@@ -658,9 +613,7 @@ void __init init_apic_mappings(void)
- 	{
- 		unsigned long ioapic_phys, idx = FIX_IO_APIC_BASE_0;
- 		int i;
--		struct resource *ioapic_res;
- 
--		ioapic_res = ioapic_setup_resources();
- 		for (i = 0; i < nr_ioapics; i++) {
- 			if (smp_found_config) {
- 				ioapic_phys = mp_ioapics[i].mpc_apicaddr;
-@@ -672,13 +625,6 @@ void __init init_apic_mappings(void)
- 			apic_printk(APIC_VERBOSE,"mapped IOAPIC to %016lx (%016lx)\n",
- 					__fix_to_virt(idx), ioapic_phys);
- 			idx++;
--
--			if (ioapic_res) {
--				ioapic_res->start = ioapic_phys;
--				ioapic_res->end = ioapic_phys + (4 * 1024) - 1;
--				insert_resource(&iomem_resource, ioapic_res);
--				ioapic_res++;
--			}
- 		}
++			break;
++		}
+ 		break;
  	}
- }
-_
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ 
 -- 
-Mark Haverkamp <markh@osdl.org>
+andyw@pobox.com
 
------ End forwarded message -----
+Andy Warner		Voice: (612) 801-8549	Fax: (208) 575-5634
