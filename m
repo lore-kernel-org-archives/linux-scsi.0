@@ -1,32 +1,44 @@
-From: "Michael Lyulko" <mlyulko@gmail.com>
-Subject: SCSI Mid layer sends READ_10 cmd that starts in the middle of a sector
-Date: Wed, 4 Oct 2006 21:32:35 +0200
-Message-ID: <53d68ba60610041232l7e4a16fco820d74d43f0b7f3a@mail.gmail.com>
-References: <53d68ba60610041231ub88916al1762cfabfc3232dd@mail.gmail.com>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: Re: aic94xx IO errors with "escb_tasklet_complete: phy0: REQ_TASK_ABORT"
+Date: Wed, 04 Oct 2006 13:12:30 -0700
+Message-ID: <452415AE.7030202@us.ibm.com>
+References: <20061004164438.GC5091@rhun.haifa.ibm.com> <20061004132929.A29689@florence.linkmargin.com>
+Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.181]:25420 "EHLO
-	py-out-1112.google.com") by vger.kernel.org with ESMTP
-	id S1750857AbWJDTcg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 Oct 2006 15:32:36 -0400
-Received: by py-out-1112.google.com with SMTP id n25so397926pyg
-        for <linux-scsi@vger.kernel.org>; Wed, 04 Oct 2006 12:32:35 -0700 (PDT)
-In-Reply-To: <53d68ba60610041231ub88916al1762cfabfc3232dd@mail.gmail.com>
-Content-Disposition: inline
+Received: from e35.co.us.ibm.com ([32.97.110.153]:28394 "EHLO
+	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751049AbWJDUMi convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Oct 2006 16:12:38 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e35.co.us.ibm.com (8.13.8/8.12.11) with ESMTP id k94KCWv2007597
+	for <linux-scsi@vger.kernel.org>; Wed, 4 Oct 2006 16:12:32 -0400
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay04.boulder.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id k94KCWAP340334
+	for <linux-scsi@vger.kernel.org>; Wed, 4 Oct 2006 14:12:32 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k94KCVmO027235
+	for <linux-scsi@vger.kernel.org>; Wed, 4 Oct 2006 14:12:32 -0600
+In-Reply-To: <20061004132929.A29689@florence.linkmargin.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Andy Warner <andyw@pobox.com>
+Cc: Muli Ben-Yehuda <muli@il.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>
 
-Hello, all. I'm writing a kind of low level driver and trying to
-register it with scsi mid layer. During the registration process I
-receive from the mid layer READ_10 command that tries to read one
-block starting from the middle of a block (block size is 4K and it
-reads from address 2048). It doesn't seems normal to me, so what do
-you say?
-As I understand, the right place to tell mid layer about the block
-size is the answer to READ_CAPACITY command, am I right?
-Any tips are welcome!
-Thanks in advance,
-Michael.
+Andy Warner wrote:
+
+> So you are seeing legitimate REQ_TASK_ABORT values, but need to look
+> at the remaining data to see what the chip is trying to tell you.
+> For REQ_TASK_ABORT, status_block[1..2] is the transaction context,
+> and status_block[3] is the reason (TC_NO_ERROR etc from aic94xx_sas.h)
+
+Funny, I've been trying to write at least a REQ_TASK_ABORT handler all
+week.  I'm having a bit of trouble using the transaction context...
+mostly because the value I'm getting doesn't correspond to any ascb.
+Assuming, of course, that ascb->scb->header.index/ascb->tc_index are
+indeed transaction contexts.
+
+--D
+
