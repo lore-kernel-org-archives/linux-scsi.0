@@ -1,147 +1,74 @@
-From: malahal@us.ibm.com
-Subject: [PATCH 2/2] aic94xx SCSI timeout fix: SMP retry fix.
-Date: Wed, 4 Oct 2006 17:34:03 -0700
-Message-ID: <20061005003403.GB21898@us.ibm.com>
-References: <20061005002837.GA21898@us.ibm.com>
+From: "Patro, Sumant" <Sumant.Patro@lsil.com>
+Subject: RE: [Patch 1/6] megaraid_sas: FW transition and q size changes
+Date: Wed, 4 Oct 2006 18:44:16 -0600
+Message-ID: <0631C836DBF79F42B5A60C8C8D4E822971ABDF@NAMAIL2.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:27024 "EHLO e1.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1751266AbWJEAeG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Oct 2006 20:34:06 -0400
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e1.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id k950Y5bC029314
-	for <linux-scsi@vger.kernel.org>; Wed, 4 Oct 2006 20:34:05 -0400
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay02.pok.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id k950Y5O4276750
-	for <linux-scsi@vger.kernel.org>; Wed, 4 Oct 2006 20:34:05 -0400
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k950Y5ov005933
-	for <linux-scsi@vger.kernel.org>; Wed, 4 Oct 2006 20:34:05 -0400
-Received: from malahal.beaverton.ibm.com (malahal.beaverton.ibm.com [9.47.17.93])
-	by d01av04.pok.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id k950Y4rm005913
-	for <linux-scsi@vger.kernel.org>; Wed, 4 Oct 2006 20:34:05 -0400
-Content-Disposition: inline
-In-Reply-To: <20061005002837.GA21898@us.ibm.com>
+Received: from mail0.lsil.com ([147.145.40.20]:55435 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1751271AbWJEAoi convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Oct 2006 20:44:38 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, hch@lst.de, linux-kernel@vger.kernel.org
 
-Updating DDB0 inside aic94xx driver itself caused SMP command timeout. I
-hit this SMP timeout problem twice but I am not able to reproduce it since
-then. Here is a fix that retries an SMP command.
+Hello James,
 
-igned-off-by: Malahal Naineni <malahal@us.ibm.com>
+	I will do the clean up and check before submitting patches next
+time.	
 
-diff -r 42e5e02e2d2d drivers/scsi/libsas/sas_expander.c
---- a/drivers/scsi/libsas/sas_expander.c	Wed Oct 04 10:04:48 2006 -0700
-+++ b/drivers/scsi/libsas/sas_expander.c	Wed Oct 04 13:43:34 2006 -0700
-@@ -71,55 +71,65 @@ static int smp_execute_task(struct domai
- static int smp_execute_task(struct domain_device *dev, void *req, int req_size,
- 			    void *resp, int resp_size)
- {
--	int res;
--	struct sas_task *task = sas_alloc_task(GFP_KERNEL);
-+	int res, retry;
-+	struct sas_task *task = NULL;
- 	struct sas_internal *i =
- 		to_sas_internal(dev->port->ha->core.shost->transportt);
- 
--	if (!task)
--		return -ENOMEM;
--
--	task->dev = dev;
--	task->task_proto = dev->tproto;
--	sg_init_one(&task->smp_task.smp_req, req, req_size);
--	sg_init_one(&task->smp_task.smp_resp, resp, resp_size);
--
--	task->task_done = smp_task_done;
--
--	task->timer.data = (unsigned long) task;
--	task->timer.function = smp_task_timedout;
--	task->timer.expires = jiffies + SMP_TIMEOUT*HZ;
--	add_timer(&task->timer);
--
--	res = i->dft->lldd_execute_task(task, 1, GFP_KERNEL);
--
--	if (res) {
--		del_timer(&task->timer);
--		SAS_DPRINTK("executing SMP task failed:%d\n", res);
--		goto ex_err;
--	}
--
--	wait_for_completion(&task->completion);
--	res = -ETASK;
--	if ((task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
--		SAS_DPRINTK("smp task timed out or aborted\n");
--		i->dft->lldd_abort_task(task);
--		if (!(task->task_state_flags & SAS_TASK_STATE_DONE)) {
--			SAS_DPRINTK("SMP task aborted and not done\n");
-+	for (retry = 0; retry < 3; retry++) {
-+		task = sas_alloc_task(GFP_KERNEL);
-+		if (!task)
-+			return -ENOMEM;
-+
-+		task->dev = dev;
-+		task->task_proto = dev->tproto;
-+		sg_init_one(&task->smp_task.smp_req, req, req_size);
-+		sg_init_one(&task->smp_task.smp_resp, resp, resp_size);
-+
-+		task->task_done = smp_task_done;
-+
-+		task->timer.data = (unsigned long) task;
-+		task->timer.function = smp_task_timedout;
-+		task->timer.expires = jiffies + SMP_TIMEOUT*HZ;
-+		add_timer(&task->timer);
-+
-+		res = i->dft->lldd_execute_task(task, 1, GFP_KERNEL);
-+
-+		if (res) {
-+			del_timer(&task->timer);
-+			SAS_DPRINTK("executing SMP task failed:%d\n", res);
- 			goto ex_err;
- 		}
--	}
--	if (task->task_status.resp == SAS_TASK_COMPLETE &&
--	    task->task_status.stat == SAM_GOOD)
--		res = 0;
--	else
--		SAS_DPRINTK("%s: task to dev %016llx response: 0x%x "
--			    "status 0x%x\n", __FUNCTION__,
--			    SAS_ADDR(dev->sas_addr),
--			    task->task_status.resp,
--			    task->task_status.stat);
-+
-+		wait_for_completion(&task->completion);
-+		res = -ETASK;
-+		if ((task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
-+			SAS_DPRINTK("smp task timed out or aborted\n");
-+			i->dft->lldd_abort_task(task);
-+			if (!(task->task_state_flags & SAS_TASK_STATE_DONE)) {
-+				SAS_DPRINTK("SMP task aborted and not done\n");
-+				goto ex_err;
-+			}
-+		}
-+		if (task->task_status.resp == SAS_TASK_COMPLETE &&
-+		    task->task_status.stat == SAM_GOOD) {
-+			res = 0;
-+			break;
-+		} else {
-+			SAS_DPRINTK("%s: task to dev %016llx response: 0x%x "
-+				    "status 0x%x\n", __FUNCTION__,
-+				    SAS_ADDR(dev->sas_addr),
-+				    task->task_status.resp,
-+				    task->task_status.stat);
-+			sas_free_task(task);
-+			task = NULL;
-+		}
-+	}
- ex_err:
--	sas_free_task(task);
-+	BUG_ON(retry == 3 && task != NULL);
-+	if (task != NULL) {
-+		sas_free_task(task);
-+	}
- 	return res;
- }
- 
+Regards,
+
+Sumant 
+
+-----Original Message-----
+From: James Bottomley [mailto:James.Bottomley@SteelEye.com] 
+Sent: Wednesday, October 04, 2006 10:56 AM
+To: Patro, Sumant
+Cc: linux-scsi@vger.kernel.org; akpm@osdl.org; hch@lst.de;
+linux-kernel@vger.kernel.org
+Subject: Re: [Patch 1/6] megaraid_sas: FW transition and q size changes
+
+On Tue, 2006-10-03 at 12:28 -0700, Sumant Patro wrote:
+> Resubmitting with one addition (item f mentioned below)
+> 
+> This patch has the following enhancements :
+>         a. handles new transition states of FW to support controller
+hotplug. 
+>         b. It reduces by 1 the maximum cmds that the driver may send
+to FW. 
+>         c. Sends "Stop Processing" cmd to FW before returning failure
+from reset routine
+>         d. Adds print in megasas_transition routine
+>         e. Sends "RESET" flag to FW to do a soft reset of controller 
+> to move from Operational to Ready state.
+> 	f. Sending correct pointer (cmd->sense) to pci_pool_free
+>           
+>         This patch has been generated on latest scsi-misc git.
+> 
+> Signed-off-by: Sumant Patro <Sumant.Patro@lsil.com>
+
+Every one of these patches had extra whitespace at the end of several
+lines.  This is a sample from the first patch:
+
+Adds trailing whitespace.
+.dotest/patch:21:       if (fw_state != MFI_STATE_READY) 
+Adds trailing whitespace.
+.dotest/patch:44:               case MFI_STATE_BOOT_MESSAGE_PENDING:
+Adds trailing whitespace.
+.dotest/patch:85:        * Reduce the max supported cmds by 1. This is
+to ensure that the 
+
+Could you please try to ensure it doesn't happen in future ... it's time
+consuming to clean it all up again.
+
+Thanks,
+
+James
+
+
