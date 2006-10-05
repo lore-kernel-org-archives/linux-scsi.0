@@ -1,80 +1,115 @@
-From: malahal@us.ibm.com
-Subject: Re: list debugging BUG() hit by aic94xx
-Date: Wed, 4 Oct 2006 19:13:23 -0700
-Message-ID: <20061005021323.GA29447@us.ibm.com>
-References: <1159901803.3443.47.camel@mulgrave.il.steeleye.com>
+From: "Patro, Sumant" <Sumant.Patro@lsil.com>
+Subject: RE: [PATCH] SCSI megaraid_sas: handle thrown errors
+Date: Wed, 4 Oct 2006 22:08:07 -0600
+Message-ID: <0631C836DBF79F42B5A60C8C8D4E822971ABFF@NAMAIL2.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:41903 "EHLO e1.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1751325AbWJECN0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Oct 2006 22:13:26 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e1.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id k952DQg8001192
-	for <linux-scsi@vger.kernel.org>; Wed, 4 Oct 2006 22:13:26 -0400
-Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by d01relay04.pok.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id k952DPD6116874
-	for <linux-scsi@vger.kernel.org>; Wed, 4 Oct 2006 22:13:25 -0400
-Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
-	by d01av03.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k952DPWN006635
-	for <linux-scsi@vger.kernel.org>; Wed, 4 Oct 2006 22:13:25 -0400
-Content-Disposition: inline
-In-Reply-To: <1159901803.3443.47.camel@mulgrave.il.steeleye.com>
+Received: from mail0.lsil.com ([147.145.40.20]:58267 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1750743AbWJEEIZ convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Oct 2006 00:08:25 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org
+Cc: Andrew Morton <akpm@osdl.org>, LKML <linux-kernel@vger.kernel.org>
 
-The list seems to be guarded by a spin lock while adding items to the
-list. I don't see holding such a lock while removing list items. There
-is some code that goes through the list without any lock either. Most of
-it is single threaded, except the work queue thread (scsi_wq) and the
-unload thread when we unload the driver could race.
+Thank you Jeff.
 
-It is quite possible that I just mis-understood this whole thing.
+Regards,
 
-Thanks, Malahal.
+Sumant
 
-James Bottomley [James.Bottomley@SteelEye.com] wrote:
-> If someone is bored, they can take a look at this list debug error:
-> 
-> list_add corruption. prev->next should be dfa0b788, but was f795fd50
-> ------------[ cut here ]------------
-> kernel BUG at lib/list_debug.c:31!
-> invalid opcode: 0000 [#1]
-> SMP 
-> Modules linked in: aic94xx libsas firmware_class scsi_transport_sas sd_mod scsi_transport_spi scsi_mod
-> CPU:    0
-> EIP:    0060:[<c01df32e>]    Not tainted VLI
-> EFLAGS: 00010286   (2.6.18 #14)
-> EIP is at __list_add+0x6e/0x80
-> eax: 00000048   ebx: dfa0b788   ecx: 00000003   edx: 00000008
-> esi: f7929bb8   edi: dfaa2888   ebp: dfeabeec   esp: dfeabed4
-> ds: 007b   es: 007b   ss: 0068
-> Process scsi_wq_0 (pid: 872, ti=dfeaa000 task=dfe60030 task.ti=dfeaa000)
-> Stack: c030a7b8 dfa0b788 f795fd50 dfa0b76c dfaa2864 00000000 dfeabf30 f884458d 
->        dfaa2888 f7929bb8 dfa0b788 00000001 c0114da0 dfaefd24 dfa2c2f0 dfa088f4 
->        00000286 dfa08ae4 dfa0b7ec dfaa2864 dfa0b6b8 dfa0b6bc dfaefd24 dfeabf64 
-> Call Trace:
->  [<f884458d>] sas_discover_domain+0x2ed/0x4c0 [libsas]
->  [<c012d3bf>] run_workqueue+0x7f/0x100
->  [<c012dca8>] worker_thread+0x148/0x170
->  [<c0130c2d>] kthread+0xfd/0x110
->  [<c0103e33>] kernel_thread_helper+0x7/0x14
->  =======================
-> Code: 08 c7 04 24 78 a7 30 c0 e8 c0 e1 f3 ff 0f 0b 1a 00 77 a2 30 c0 eb c5 89 5c 24 04 89 44 24 08 c7 04 24 b8 a7 30 c0 e8 a2 e1 f3 ff <0f> 0b 1f 00 77 a2 30 c0 eb ad 90 8d b4 26 00 00 00 00 55 89 e5 
-> EIP: [<c01df32e>] __list_add+0x6e/0x80 SS:ESP 0068:dfeabed4
-> 
-> This seems to be coming from the
-> 
-> 	list_add_tail(&dev->dev_list_node, &port->dev_list);
-> 
-> in sas_get_port_device()
-> 
-> James
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Jeff Garzik
+Sent: Wednesday, October 04, 2006 3:34 AM
+To: linux-scsi@vger.kernel.org
+Cc: Andrew Morton; LKML
+Subject: [PATCH] SCSI megaraid_sas: handle thrown errors
+
+
+- handle clear_user() error
+
+- handle and properly unwind from sysfs errors thrown during mod init
+
+- adjust order of calls in megasas_exit() to precisely match
+  registration order in megasas_init()
+
+Signed-off-by: Jeff Garzik <jeff@garzik.org>
+
+---
+
+ drivers/scsi/megaraid/megaraid_sas.c |   26 ++++++++++++++++++++------
+ 1 files changed, 20 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/scsi/megaraid/megaraid_sas.c
+b/drivers/scsi/megaraid/megaraid_sas.c
+index 4cab5b5..8e0ab99 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.c
++++ b/drivers/scsi/megaraid/megaraid_sas.c
+@@ -2716,7 +2716,8 @@ static int megasas_mgmt_compat_ioctl_fw(
+ 	int i;
+ 	int error = 0;
+ 
+-	clear_user(ioc, sizeof(*ioc));
++	if (clear_user(ioc, sizeof(*ioc)))
++		return -EFAULT;
+ 
+ 	if (copy_in_user(&ioc->host_no, &cioc->host_no, sizeof(u16)) ||
+ 	    copy_in_user(&ioc->sgl_off, &cioc->sgl_off, sizeof(u32)) ||
+@@ -2842,13 +2843,26 @@ static int __init megasas_init(void)
+ 
+ 	if (rval) {
+ 		printk(KERN_DEBUG "megasas: PCI hotplug regisration
+failed \n");
+-		unregister_chrdev(megasas_mgmt_majorno,
+"megaraid_sas_ioctl");
++		goto err_pcidrv;
+ 	}
+ 
+-	driver_create_file(&megasas_pci_driver.driver,
+&driver_attr_version);
+-	driver_create_file(&megasas_pci_driver.driver,
+-			   &driver_attr_release_date);
++	rval = driver_create_file(&megasas_pci_driver.driver,
++				  &driver_attr_version);
++	if (rval)
++		goto err_dcf_attr_ver;
++	rval = driver_create_file(&megasas_pci_driver.driver,
++				  &driver_attr_release_date);
++	if (rval)
++		goto err_dcf_rel_date;
+ 
++	return 0;
++
++err_dcf_rel_date:
++	driver_remove_file(&megasas_pci_driver.driver,
+&driver_attr_version);
++err_dcf_attr_ver:
++	pci_unregister_driver(&megasas_pci_driver);
++err_pcidrv:
++	unregister_chrdev(megasas_mgmt_majorno, "megaraid_sas_ioctl");
+ 	return rval;
+ }
+ 
+@@ -2857,9 +2871,9 @@ static int __init megasas_init(void)
+  */
+ static void __exit megasas_exit(void)
+ {
+-	driver_remove_file(&megasas_pci_driver.driver,
+&driver_attr_version);
+ 	driver_remove_file(&megasas_pci_driver.driver,
+ 			   &driver_attr_release_date);
++	driver_remove_file(&megasas_pci_driver.driver,
+&driver_attr_version);
+ 
+ 	pci_unregister_driver(&megasas_pci_driver);
+ 	unregister_chrdev(megasas_mgmt_majorno, "megaraid_sas_ioctl");
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
