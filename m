@@ -1,38 +1,143 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [GIT PATCH] scsi updates for post 2.6.18
-Date: Thu, 05 Oct 2006 15:16:18 -0400
-Message-ID: <45255A02.2010308@garzik.org>
-References: <1159995678.3437.80.camel@mulgrave.il.steeleye.com> <Pine.LNX.4.60.0610052104330.6619@poirot.grange>
+From: Jeremy Linton <jli@greshamstorage.com>
+Subject: [PATCH] 2.4 sym53c8xx driver residual problem
+Date: Thu, 5 Oct 2006 14:50:58 -0500
+Message-ID: <200610051450.58156.jli@greshamstorage.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_iIWJFT0SXKVwr+D"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:57216 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1750731AbWJETQ0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Oct 2006 15:16:26 -0400
-In-Reply-To: <Pine.LNX.4.60.0610052104330.6619@poirot.grange>
+Received: from austin.greshamstorage.com ([216.143.252.250]:50446 "EHLO
+	austin.greshamstorage.com") by vger.kernel.org with ESMTP
+	id S1751072AbWJETvT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Oct 2006 15:51:19 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: groudier@free.fr
 
-Guennadi Liakhovetski wrote:
-> On Wed, 4 Oct 2006, James Bottomley wrote:
-> 
->> This is (hopefully) my final batch of updates before we go -rc1.  It's
->> mainly code cleanups, some driver updates and the new qla4xxx iScsi
->> driver.
-> 
-> James, is there a reason why you didn't include this one:
-> 
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=115974328128341&w=2
-> 
-> Do you think it can cause problems?
+--Boundary-00=_iIWJFT0SXKVwr+D
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-It would be nice to get it tested, based on your "don't know if it works 
-though" comment...
+Hello all,
+	I've got an application that depends on the residual data information in 
+order to send it to another application.  The basic problem is that if a 
+single SCSI transfer size is greater than a single scatter gather region 
+(generally ~32k), then the residual length is based on the size of the 
+scatter gather regions and not the request size. When the two differ, and 
+there is a residual data condition the application computes the transfer size 
+incorrectly. 
+	The attached patch is against the sym53c8xx.c driver in the 2.4 tree, I 
+haven't tested the 2.6 sym53c8xx_2 driver, but a quick glance at the code 
+seems to indicate it has the same problem. When I get a chance, I will test 
+the 2.6 driver as well, for the same problem. The patch basically saves the 
+original request length into a new member in the ccb structure called 
+orig_data_len. Then, when the residual len is being computed, it adjusts it 
+for the original data request size. 
 
-	Jeff
+	BTW: We are using the old sym53c8xx driver instead of the new one, because it 
+passes more of our validation tests in 2.4 than the sym53c8xx_2 driver does. 
+Our tests use the sg interface exclusively, so I'm not sure about behavior 
+with other drivers (st,sd). 
 
 
 
+
+--Boundary-00=_iIWJFT0SXKVwr+D
+Content-Type: text/x-diff;
+  charset="us-ascii";
+  name="sym53c.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="sym53c.patch"
+
+--- sym53c8xx.c.orig	2006-10-04 18:40:39.132184101 -0500
++++ sym53c8xx.c	2006-10-05 12:20:48.252759592 -0500
+@@ -1990,6 +1990,9 @@
+ 	int		ext_sg;		/* Extreme data pointer, used	*/
+ 	int		ext_ofs;	/*  to calculate the residual.	*/
+ 	int		resid;
++	int             orig_data_len;  /* used to calculate the correct*/
++	                                /* resid based on the original  */
++                                        /* data len, not the scatter len*/
+ };
+ 
+ #define CCB_PHYS(cp,lbl)	(cp->p_ccb + offsetof(struct ccb, lbl))
+@@ -10666,8 +10669,8 @@
+ 	**	unknown), then no data transfer should have 
+ 	**	taken place.
+ 	*/
+-	if (cp->phys.header.lastp == NCB_SCRIPTH_PHYS (np, data_io))
+-		return cp->data_len;
++	if (cp->phys.header.lastp == NCB_SCRIPTH_PHYS (np, data_io)) 
++		return cp->orig_data_len;
+ 
+ 	/*
+ 	**	If no data transfer occurs, or if the data
+@@ -10676,7 +10679,7 @@
+ 	if (cp->startp == cp->phys.header.lastp ||
+ 	    ncr_evaluate_dp(np, cp, scr_to_cpu(cp->phys.header.lastp),
+ 			    &dp_ofs) < 0) {
+-		return cp->data_len;
++		return cp->orig_data_len;
+ 	}
+ 
+ 	/*
+@@ -10685,14 +10688,13 @@
+ 	*/
+ 	dp_sgmin = MAX_SCATTER - cp->segments;
+ 	resid = -cp->ext_ofs;
+-	for (dp_sg = cp->ext_sg; dp_sg < MAX_SCATTER; ++dp_sg) {
++	for (dp_sg = cp->ext_sg; dp_sg < MAX_SCATTER; ++dp_sg) 	{
+ 		tmp = scr_to_cpu(cp->phys.data[dp_sg].size);
+ 		resid += (tmp & 0xffffff);
+ 	}
+-
+-	/*
+-	**	Hopefully, the result is not too wrong.
+-	*/
++	
++	/* adjust based on original data length */
++	resid=cp->orig_data_len-(cp->data_len-resid);
+ 	return resid;
+ }
+ 
+@@ -12096,6 +12098,7 @@
+ 	int segment;
+ 
+ 	cp->data_len = cmd->request_bufflen;
++	cp->orig_data_len = cmd->request_bufflen;
+ 
+ 	if (cmd->request_bufflen) {
+ 		dma_addr_t baddr = map_scsi_single_data(np, cmd);
+@@ -12136,6 +12139,7 @@
+ 	int use_sg = (int) cmd->use_sg;
+ 
+ 	cp->data_len = 0;
++	cp->orig_data_len = cmd->request_bufflen;
+ 
+ 	if (!use_sg)
+ 		segn = ncr_scatter_no_sglist(np, cp, cmd);
+@@ -12175,6 +12179,7 @@
+ 	int use_sg = (int) cmd->use_sg;
+ 
+ 	cp->data_len = 0;
++	cp->orig_data_len = cmd->request_bufflen;
+ 
+ 	if (!use_sg)
+ 		segment = ncr_scatter_no_sglist(np, cp, cmd);
+@@ -12191,9 +12196,7 @@
+ 			dma_addr_t baddr = scsi_sg_dma_address(&scatter[segment]);
+ 			unsigned int len = scsi_sg_dma_len(&scatter[segment]);
+ 
+-			SCATTER_ONE(&data[segment],
+-				    baddr,
+-				    len);
++			SCATTER_ONE(&data[segment], baddr, len);
+ 			cp->data_len += len;
+ 		}
+ 	}
+
+--Boundary-00=_iIWJFT0SXKVwr+D--
