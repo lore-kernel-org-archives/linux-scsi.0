@@ -1,47 +1,33 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: [PATCH] SCSI st: fix error handling in module init, sysfs
-Date: Thu, 5 Oct 2006 23:07:52 +0300 (EEST)
-Message-ID: <Pine.LNX.4.64.0610052305460.7808@kai.makisara.local>
-References: <20061004100037.GA16915@havoc.gtf.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [GIT PATCH] scsi updates for post 2.6.18
+Date: Thu, 05 Oct 2006 16:12:24 -0400
+Message-ID: <45256728.2060004@garzik.org>
+References: <1159995678.3437.80.camel@mulgrave.il.steeleye.com> <Pine.LNX.4.60.0610052104330.6619@poirot.grange> <45255A02.2010308@garzik.org> <Pine.LNX.4.60.0610052129020.6619@poirot.grange>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fep32-0.kolumbus.fi ([193.229.0.63]:24159 "EHLO
-	fep32-app.kolumbus.fi") by vger.kernel.org with ESMTP
-	id S1751145AbWJEUIE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 Oct 2006 16:08:04 -0400
-In-Reply-To: <20061004100037.GA16915@havoc.gtf.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:51074 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751192AbWJEUM2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Oct 2006 16:12:28 -0400
+In-Reply-To: <Pine.LNX.4.60.0610052129020.6619@poirot.grange>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-scsi@vger.kernel.org, Andrew Morton <akpm@osdl.org>, LKML <linux-kernel@vger.kernel.org>
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, 4 Oct 2006, Jeff Garzik wrote:
+Guennadi Liakhovetski wrote:
+> Sure, it WOULD be nice, but I don't know how. The "don't know" refers to 
+> the case 16MB block size, my tape supports only 16MB - 1 byte (according 
+> to st report). Is there a way to test various block sizes with CDs / 
+> hard-disks / ZIP / scanners? Would something with sg_dd work? Looks like 
+> it must be only sector size. Can I low-level format a disk with 16M 
+> sector?:-)
+> 
+> Another possibility is to limit the block size at 8MB - I can test that.
 
-> 
-> - Notice and handle sysfs errors in module init, tape init
-> 
-> - Properly unwind errors in module init
-> 
-> - Remove bogus st_sysfs_class==NULL test, it is guaranteed !NULL at that point
-> 
-> Signed-off-by: Jeff Garzik <jeff@garzik.org>
-> 
+I would say, increase it to whatever the max is you can test...
 
-Acked-by: Kai Makisara <kai.makisara@kolumbus.fi>
+	Jeff
 
-> ---
-> 
->  drivers/scsi/st.c |  115 ++++++++++++++++++++++++++++++++++++------------------
->  1 files changed, 78 insertions(+), 37 deletions(-)
-> 
-> diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-> index 7f669b6..3babdc7 100644
-> --- a/drivers/scsi/st.c
-> +++ b/drivers/scsi/st.c
-> @@ -195,9 +195,9 @@ static int sgl_unmap_user_pages(struct s
->  static int st_probe(struct device *);
-...
 
-Thanks,
-Kai
