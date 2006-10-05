@@ -1,115 +1,109 @@
-From: "Patro, Sumant" <Sumant.Patro@lsil.com>
-Subject: RE: [PATCH] SCSI megaraid_sas: handle thrown errors
-Date: Wed, 4 Oct 2006 22:08:07 -0600
-Message-ID: <0631C836DBF79F42B5A60C8C8D4E822971ABFF@NAMAIL2.ad.lsil.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: st: Fixup -ENOMEDIUM
+Date: Thu, 05 Oct 2006 11:26:02 +0200
+Message-ID: <4524CFAA.3010309@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: multipart/mixed;
+ boundary="------------020301070003010808040806"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:58267 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1750743AbWJEEIZ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 Oct 2006 00:08:25 -0400
-Content-class: urn:content-classes:message
+Received: from mail.suse.de ([195.135.220.2]:30357 "EHLO mx1.suse.de")
+	by vger.kernel.org with ESMTP id S1751568AbWJEJ0E (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Oct 2006 05:26:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org
-Cc: Andrew Morton <akpm@osdl.org>, LKML <linux-kernel@vger.kernel.org>
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: Kai.Makisara@kolumbus.fi
 
-Thank you Jeff.
+This is a multi-part message in MIME format.
+--------------020301070003010808040806
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 8bit
 
-Regards,
+Hi all,
 
-Sumant
+currently the tape driver doesn't believe in ENOMEDIUM. Even if the 
+sense code from TUR indicates that no tape is present the command will 
+be retried; maybe the user is fast enough to slip a medium in in the 
+meantime ...
+And even if not, it will return 'EIO' in any case.
 
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Jeff Garzik
-Sent: Wednesday, October 04, 2006 3:34 AM
-To: linux-scsi@vger.kernel.org
-Cc: Andrew Morton; LKML
-Subject: [PATCH] SCSI megaraid_sas: handle thrown errors
+This patch fixes the ENOMEDIUM handling: TUR will _not_ be retried if no 
+medium is present and the correct error number ENOMEDIUM will be set on 
+exit.
 
+Please apply.
 
-- handle clear_user() error
+Cheers,
 
-- handle and properly unwind from sysfs errors thrown during mod init
+Hannes
+-- 
+Dr. Hannes Reinecke			hare@suse.de
+SuSE Linux Products GmbH		S390 & zSeries
+Maxfeldstraße 5				+49 911 74053 688
+90409 Nürnberg				http://www.suse.de
 
-- adjust order of calls in megasas_exit() to precisely match
-  registration order in megasas_init()
+--------------020301070003010808040806
+Content-Type: text/x-patch;
+ name="st-no-tape.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="st-no-tape.diff"
 
-Signed-off-by: Jeff Garzik <jeff@garzik.org>
+st: Fix no medium handling
 
----
+Currently the 'st' driver doesn't believe in -ENOMEDIUM.
+Whenever the sense code indicates 'No tape' we might as well
+return that status instead of retrying for ages.
+And even then we really should return that error code to userland.
 
- drivers/scsi/megaraid/megaraid_sas.c |   26 ++++++++++++++++++++------
- 1 files changed, 20 insertions(+), 6 deletions(-)
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas.c
-b/drivers/scsi/megaraid/megaraid_sas.c
-index 4cab5b5..8e0ab99 100644
---- a/drivers/scsi/megaraid/megaraid_sas.c
-+++ b/drivers/scsi/megaraid/megaraid_sas.c
-@@ -2716,7 +2716,8 @@ static int megasas_mgmt_compat_ioctl_fw(
- 	int i;
- 	int error = 0;
+diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+index 7f669b6..b77fd61 100644
+--- a/drivers/scsi/st.c
++++ b/drivers/scsi/st.c
+@@ -877,6 +877,12 @@ static int test_ready(struct scsi_tape *
+ 			}
  
--	clear_user(ioc, sizeof(*ioc));
-+	if (clear_user(ioc, sizeof(*ioc)))
-+		return -EFAULT;
+ 			if (scode == NOT_READY) {
++				if ((STp->device)->scsi_level >= SCSI_2 &&
++				    cmdstatp->sense_hdr.asc == 0x3a) {
++					/* Early exit if there is no tape */
++					retval = CHKRES_NO_TAPE;
++					break;
++				}
+ 				if (waits < max_wait) {
+ 					if (msleep_interruptible(1000)) {
+ 						retval = (-EINTR);
+@@ -885,14 +891,9 @@ static int test_ready(struct scsi_tape *
+ 					waits++;
+ 					continue;
+ 				}
+-				else {
+-					if ((STp->device)->scsi_level >= SCSI_2 &&
+-					    cmdstatp->sense_hdr.asc == 0x3a)	/* Check ASC */
+-						retval = CHKRES_NO_TAPE;
+-					else
+-						retval = CHKRES_NOT_READY;
+-					break;
+-				}
++				/* Accept we won't be getting anywhere */
++				retval = CHKRES_NOT_READY;
++				break;
+ 			}
+ 		}
  
- 	if (copy_in_user(&ioc->host_no, &cioc->host_no, sizeof(u16)) ||
- 	    copy_in_user(&ioc->sgl_off, &cioc->sgl_off, sizeof(u32)) ||
-@@ -2842,13 +2843,26 @@ static int __init megasas_init(void)
- 
- 	if (rval) {
- 		printk(KERN_DEBUG "megasas: PCI hotplug regisration
-failed \n");
--		unregister_chrdev(megasas_mgmt_majorno,
-"megaraid_sas_ioctl");
-+		goto err_pcidrv;
+@@ -1177,7 +1178,10 @@ static int st_open(struct inode *inode, 
+ 		goto err_out;
+ 	if ((filp->f_flags & O_NONBLOCK) == 0 &&
+ 	    retval != CHKRES_READY) {
+-		retval = (-EIO);
++		if (STp->ready == ST_NO_TAPE)
++			retval = (-ENOMEDIUM);
++		else
++			retval = (-EIO);
+ 		goto err_out;
  	}
- 
--	driver_create_file(&megasas_pci_driver.driver,
-&driver_attr_version);
--	driver_create_file(&megasas_pci_driver.driver,
--			   &driver_attr_release_date);
-+	rval = driver_create_file(&megasas_pci_driver.driver,
-+				  &driver_attr_version);
-+	if (rval)
-+		goto err_dcf_attr_ver;
-+	rval = driver_create_file(&megasas_pci_driver.driver,
-+				  &driver_attr_release_date);
-+	if (rval)
-+		goto err_dcf_rel_date;
- 
-+	return 0;
-+
-+err_dcf_rel_date:
-+	driver_remove_file(&megasas_pci_driver.driver,
-&driver_attr_version);
-+err_dcf_attr_ver:
-+	pci_unregister_driver(&megasas_pci_driver);
-+err_pcidrv:
-+	unregister_chrdev(megasas_mgmt_majorno, "megaraid_sas_ioctl");
- 	return rval;
- }
- 
-@@ -2857,9 +2871,9 @@ static int __init megasas_init(void)
-  */
- static void __exit megasas_exit(void)
- {
--	driver_remove_file(&megasas_pci_driver.driver,
-&driver_attr_version);
- 	driver_remove_file(&megasas_pci_driver.driver,
- 			   &driver_attr_release_date);
-+	driver_remove_file(&megasas_pci_driver.driver,
-&driver_attr_version);
- 
- 	pci_unregister_driver(&megasas_pci_driver);
- 	unregister_chrdev(megasas_mgmt_majorno, "megaraid_sas_ioctl");
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ 	return 0;
+
+--------------020301070003010808040806--
