@@ -1,31 +1,29 @@
-From: Arjan van de Ven <arjan@fenrus.demon.nl>
-Subject: Re: lockdep warning looks scsi related
-Date: Fri, 06 Oct 2006 15:22:43 +0200
-Message-ID: <1160140963.3000.106.camel@laptopd505.fenrus.org>
-References: <20061005100853.4d65dc90@dxpl.pdx.osdl.net>
+From: "Yanochka K." <info@5com.ru>
+Subject: Re[4]:Hallo !
+Date: Fri, 06 Oct 2006 16:26:04 +0300
+Message-ID: <00b601c6e94a$e0806380$0f10000a__3111.91889127276$1160141132$gmane$org@JewLRxK>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="windows-1251"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from a222036.upc-a.chello.nl ([62.163.222.36]:12471 "EHLO
-	laptopd505.fenrus.org") by vger.kernel.org with ESMTP
-	id S932317AbWJFNWy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 Oct 2006 09:22:54 -0400
-In-Reply-To: <20061005100853.4d65dc90@dxpl.pdx.osdl.net>
+Received: from 201-43-135-135.dsl.telesp.net.br ([201.43.135.135]:49162 "EHLO
+	201-43-135-135.dsl.telesp.net.br") by vger.kernel.org with ESMTP
+	id S1422686AbWJFNZO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 Oct 2006 09:25:14 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stephen Hemminger <shemminger@osdl.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@osdl.org>
+To: linux-raid <linux-raid@vger.kernel.org>
 
-On Thu, 2006-10-05 at 10:08 -0700, Stephen Hemminger wrote:
-> This is current main linux-2.6 (git pulled yesterday).
-> Running on 2 CPU Opteron
-> Happened during overnight (beagle cronjob?)
+Ave :)	
 
-hmm lots of changes in cfq, and to be honest the
-cfq_exit_single_io_context() change makes me nervous.
-The comment says it's called with interrupts disabled, what the comment
-does NOT say is that this function ENABLES interrupts!
-(the entire cfq change has many places where interrupts now get enabled
-where previously they remained as is... )
+I am a lovely and lonely Lady who is looking for the man who will make me happy and whom I want to feel like in paradise with!
+If you want to be my beautiful Hero who will save me from this loneliness find me 
+http://www.youisnotalone.com/mydarling
+and wake me up with a warm kiss.
+
+so long...
+
+Yanochka K.
+
 
