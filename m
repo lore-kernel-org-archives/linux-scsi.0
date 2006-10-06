@@ -1,76 +1,81 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: aic7xxx: Adjust .max_sectors
-Date: Fri, 06 Oct 2006 09:22:41 +0200
-Message-ID: <45260441.1020102@suse.de>
+Subject: Re: st: Fixup -ENOMEDIUM
+Date: Fri, 06 Oct 2006 11:19:17 +0200
+Message-ID: <45261F95.90301@suse.de>
+References: <4524CFAA.3010309@suse.de> <Pine.LNX.4.64.0610052216180.7808@kai.makisara.local>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------080909070109080002030509"
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.suse.de ([195.135.220.2]:23277 "EHLO mx1.suse.de")
-	by vger.kernel.org with ESMTP id S1161082AbWJFHWr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Oct 2006 03:22:47 -0400
+Received: from cantor.suse.de ([195.135.220.2]:54414 "EHLO mx1.suse.de")
+	by vger.kernel.org with ESMTP id S1751001AbWJFJTU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Oct 2006 05:19:20 -0400
+In-Reply-To: <Pine.LNX.4.64.0610052216180.7808@kai.makisara.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
+To: Kai Makisara <Kai.Makisara@kolumbus.fi>
 Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------080909070109080002030509
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 8bit
+Kai Makisara wrote:
+> On Thu, 5 Oct 2006, Hannes Reinecke wrote:
+>=20
+>> Hi all,
+>>
+>> currently the tape driver doesn't believe in ENOMEDIUM. Even if the =
+sense code
+>> from TUR indicates that no tape is present the command will be retri=
+ed; maybe
+>> the user is fast enough to slip a medium in in the meantime ...
+>> And even if not, it will return 'EIO' in any case.
+>>
+> The driver implements (up to a point) the Single Unix Specification: =
+if=20
+> O_NONBLOCK is clear, open() shall wait until the device is ready or=20
+> available. It does not wait indefinitely but implements a timeout. Th=
+is is=20
+> the behaviour I found experimentally in some other Unices.
+>=20
+Ah. Ok; you're the maintainer, you get to decide.
 
-Hi James,
+>> This patch fixes the ENOMEDIUM handling: TUR will _not_ be retried i=
+f no
+>> medium is present and the correct error number ENOMEDIUM will be set=
+ on exit.
+>>
+> It is true that st_open() does not currently return ENOMEDIUM and you=
+r fix=20
+> for this is correct.
+>=20
+>> Please apply.
+>>
+> I don't think that the first and second parts should be applied. The =
+third=20
+> part fixes a bug and it should be applied. I include at the end a dif=
+f=20
+> containing only that part.
+>=20
+Right. Thanks.
 
-the aic7xxx drivers do not set .max_sectors, and hence defaults to 
-512kB. The adaptec sources indicate that it in realiter can handle up to 
-4MB, so there is no reason not to adjust it.
-
-Please apply,
-
-Hannes
--- 
-Dr. Hannes Reinecke			hare@suse.de
-SuSE Linux Products GmbH		S390 & zSeries
-Maxfeldstraße 5				+49 911 74053 688
-90409 Nürnberg				http://www.suse.de
-
---------------080909070109080002030509
-Content-Type: text/plain;
- name="aic7xxx-max-sectors-adjust"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="aic7xxx-max-sectors-adjust"
-
-aic7xxx: Adjust .max_sectors
-
-According to the adaptec sources aic7xxx / aic79xx really can do
-4MB transfers. So we should adjust .max_sectors.
-
+> -----------8<--------------------
+>=20
+> Fix st_open() to return -ENOMEDIUM instead of -EIO if no medium is=20
+> found.
+>=20
+> Signed-off-by: Kai Makisara <kai.makisara@kolumbus.fi>
+>=20
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 
-diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
-index c7eeace..7c05de2 100644
---- a/drivers/scsi/aic7xxx/aic79xx_osm.c
-+++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
-@@ -773,6 +773,7 @@ #if defined(__i386__)
- #endif
- 	.can_queue		= AHD_MAX_QUEUE,
- 	.this_id		= -1,
-+	.max_sectors		= 8192,
- 	.cmd_per_lun		= 2,
- 	.use_clustering		= ENABLE_CLUSTERING,
- 	.slave_alloc		= ahd_linux_slave_alloc,
-diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
-index 64c8b88..4cda337 100644
---- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
-+++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
-@@ -777,6 +777,7 @@ #if defined(__i386__)
- #endif
- 	.can_queue		= AHC_MAX_QUEUE,
- 	.this_id		= -1,
-+	.max_sectors		= 8192,
- 	.cmd_per_lun		= 2,
- 	.use_clustering		= ENABLE_CLUSTERING,
- 	.slave_alloc		= ahc_linux_slave_alloc,
+Cheers,
 
---------------080909070109080002030509--
+Hannes
+--=20
+Dr. Hannes Reinecke			hare@suse.de
+SuSE Linux Products GmbH		S390 & zSeries
+Maxfeldstra=DFe 5				+49 911 74053 688
+90409 N=FCrnberg				http://www.suse.de
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
