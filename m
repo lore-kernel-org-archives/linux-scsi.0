@@ -1,44 +1,83 @@
-From: "Simon Matthews" <simon.d.matthews@gmail.com>
-Subject: aacraid: Host adapter reset request. SCSI hang ? Adaptec 2820SA
-Date: Fri, 6 Oct 2006 14:23:25 -0700
-Message-ID: <40b437200610061423g3595bf55lcff9429fed84b399@mail.gmail.com>
+From: Olaf Hering <olaf@aepfle.de>
+Subject: [PATCH] use mesh_state instead of void
+Date: Sun, 8 Oct 2006 11:02:38 +0200
+Message-ID: <20061008090238.GA19475@aepfle.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:25414 "EHLO
-	nf-out-0910.google.com") by vger.kernel.org with ESMTP
-	id S932641AbWJFVX1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 Oct 2006 17:23:27 -0400
-Received: by nf-out-0910.google.com with SMTP id x30so1256273nfb
-        for <linux-scsi@vger.kernel.org>; Fri, 06 Oct 2006 14:23:25 -0700 (PDT)
+Received: from natreg.rzone.de ([81.169.145.183]:43455 "EHLO natreg.rzone.de")
+	by vger.kernel.org with ESMTP id S1750951AbWJHJCj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Oct 2006 05:02:39 -0400
+Received: from ibook.aepfle.de (p5493E729.dip.t-dialin.net [84.147.231.41])
+	by post.webmailer.de (8.13.6/8.13.6) with ESMTP id k9892bfU006159
+	for <linux-scsi@vger.kernel.org>; Sun, 8 Oct 2006 11:02:37 +0200 (MEST)
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-I am seeing the above message in logs.
 
-Some times the system locks up, some times it continues. The OS
-resides on the RAID array, so if the controller goes offline, the
-system cannot continue running.
+convert void* to struct mesh_state*
 
-Any ideas what might be causing this?
+Signed-off-by: Olaf Hering <olaf@aepfle.de>
 
-I am running a RedHat AMD64 system, with kernel: 2.6.9-34.EL and
-aacraid module version 1.1-5[2425].
+---
+ drivers/scsi/mesh.c |   14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-More info:
-#   grep aac /var/log/dmesg
-Adaptec aacraid driver (1.1-5[2425])
-aacraid0: kernel 5.1-0[9117]
-aacraid0: monitor 5.1-0[9117]
-aacraid0: bios 5.1-0[9117]
-aacraid0: serial 504e8b
-scsi0 : aacraid
-
-Does anyone have any suggestions? The system has hung twice within the
-space of 2 hours, so this is not good!
-
-Regards,
-Simon
+Index: linux-2.6/drivers/scsi/mesh.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/mesh.c
++++ linux-2.6/drivers/scsi/mesh.c
+@@ -185,7 +185,7 @@ struct mesh_state {
+  * Driver is too messy, we need a few prototypes...
+  */
+ static void mesh_done(struct mesh_state *ms, int start_next);
+-static void mesh_interrupt(int irq, void *dev_id);
++static void mesh_interrupt(int irq, struct mesh_state *ms);
+ static void cmd_complete(struct mesh_state *ms);
+ static void set_dma_cmds(struct mesh_state *ms, struct scsi_cmnd *cmd);
+ static void halt_dma(struct mesh_state *ms);
+@@ -466,7 +466,7 @@ static void mesh_start_cmd(struct mesh_s
+ 				dlog(ms, "intr b4 arb, intr/exc/err/fc=%.8x",
+ 				     MKWORD(mr->interrupt, mr->exception,
+ 					    mr->error, mr->fifo_count));
+-				mesh_interrupt(0, (void *)ms);
++				mesh_interrupt(0, ms);
+ 				if (ms->phase != arbitrating)
+ 					return;
+ 			}
+@@ -504,7 +504,7 @@ static void mesh_start_cmd(struct mesh_s
+ 		dlog(ms, "intr after disresel, intr/exc/err/fc=%.8x",
+ 		     MKWORD(mr->interrupt, mr->exception,
+ 			    mr->error, mr->fifo_count));
+-		mesh_interrupt(0, (void *)ms);
++		mesh_interrupt(0, ms);
+ 		if (ms->phase != arbitrating)
+ 			return;
+ 		dlog(ms, "after intr after disresel, intr/exc/err/fc=%.8x",
+@@ -1018,10 +1018,11 @@ static void handle_reset(struct mesh_sta
+ static irqreturn_t do_mesh_interrupt(int irq, void *dev_id)
+ {
+ 	unsigned long flags;
+-	struct Scsi_Host *dev = ((struct mesh_state *)dev_id)->host;
++	struct mesh_state *ms = dev_id;
++	struct Scsi_Host *dev = ms->host;
+ 	
+ 	spin_lock_irqsave(dev->host_lock, flags);
+-	mesh_interrupt(irq, dev_id);
++	mesh_interrupt(irq, ms);
+ 	spin_unlock_irqrestore(dev->host_lock, flags);
+ 	return IRQ_HANDLED;
+ }
+@@ -1661,9 +1662,8 @@ static int mesh_queue(struct scsi_cmnd *
+  * handler (do_mesh_interrupt) or by other functions in
+  * exceptional circumstances
+  */
+-static void mesh_interrupt(int irq, void *dev_id)
++static void mesh_interrupt(int irq, struct mesh_state *ms)
+ {
+-	struct mesh_state *ms = (struct mesh_state *) dev_id;
+ 	volatile struct mesh_regs __iomem *mr = ms->mesh;
+ 	int intr;
+ 
