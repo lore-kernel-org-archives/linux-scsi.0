@@ -1,101 +1,54 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: [PATCH] tmscsim: clean up endianness
-Date: Sun, 8 Oct 2006 22:24:02 +0200 (CEST)
-Message-ID: <Pine.LNX.4.60.0610082208090.20132@poirot.grange>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [2.6 patch] drivers/scsi/dpt_i2o.c: remove dead code
+Date: Mon, 9 Oct 2006 01:16:27 +0200
+Message-ID: <20061008231627.GO6755@stusta.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.de ([213.165.64.20]:61350 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S1751440AbWJHUXp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Oct 2006 16:23:45 -0400
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:54289 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S932104AbWJHXQc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 8 Oct 2006 19:16:32 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James Bottomley <James.Bottomley@steeleye.com>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-kernel@vger.kernel.org, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
 
-Hi
+The Coverity checker spotted this dead code introduced by
+commit a07f353701acae77e023f6270e8af353b37af7c4.
 
-The patch below removes endianness confusion from tmscsim. Don't think it 
-was ever correct and ever worked on big endian?
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
-
-diff -u a/drivers/scsi/tmscsim.c b/drivers/scsi/tmscsim.c
---- a/drivers/scsi/tmscsim.c	2006-10-02 00:48:52.000000000 +0200
-+++ b/drivers/scsi/tmscsim.c	2006-10-04 22:27:18.000000000 +0200
-@@ -859,8 +859,8 @@
- 		pSRB->pSegmentList++;
- 		psgl = pSRB->pSegmentList;
+--- linux-2.6/drivers/scsi/dpt_i2o.c.old	2006-10-09 00:28:41.000000000 +0200
++++ linux-2.6/drivers/scsi/dpt_i2o.c	2006-10-09 00:29:10.000000000 +0200
+@@ -185,28 +185,26 @@
  
--		pSRB->SGBusAddr = cpu_to_le32(pci_dma_lo32(sg_dma_address(psgl)));
--		pSRB->SGToBeXferLen = cpu_to_le32(sg_dma_len(psgl));
-+		pSRB->SGBusAddr = sg_dma_address(psgl);
-+		pSRB->SGToBeXferLen = sg_dma_len(psgl);
- 	    }
- 	    else
- 		pSRB->SGToBeXferLen = 0;
-@@ -934,8 +934,8 @@
- 		pSRB->pSegmentList++;
- 		psgl = pSRB->pSegmentList;
- 
--		pSRB->SGBusAddr = cpu_to_le32(pci_dma_lo32(sg_dma_address(psgl)));
--		pSRB->SGToBeXferLen = cpu_to_le32(sg_dma_len(psgl));
-+		pSRB->SGBusAddr = sg_dma_address(psgl);
-+		pSRB->SGToBeXferLen = sg_dma_len(psgl);
- 	    }
- 	    else
- 		pSRB->SGToBeXferLen = 0;
-@@ -1238,14 +1238,14 @@
- 	    {
- 		pSRB->pSegmentList++;
- 		psgl = pSRB->pSegmentList;
--		pSRB->SGBusAddr = cpu_to_le32(pci_dma_lo32(sg_dma_address(psgl)));
--		pSRB->SGToBeXferLen = cpu_to_le32(sg_dma_len(psgl));
-+		pSRB->SGBusAddr = sg_dma_address(psgl);
-+		pSRB->SGToBeXferLen = sg_dma_len(psgl);
- 	    }
- 	    else
- 		pSRB->SGToBeXferLen = 0;
+         /* search for all Adatpec I2O RAID cards */
+ 	while ((pDev = pci_get_device( PCI_DPT_VENDOR_ID, PCI_ANY_ID, pDev))) {
+ 		if(pDev->device == PCI_DPT_DEVICE_ID ||
+ 		   pDev->device == PCI_DPT_RAPTOR_DEVICE_ID){
+ 			if(adpt_install_hba(sht, pDev) ){
+ 				PERROR("Could not Init an I2O RAID device\n");
+ 				PERROR("Will not try to detect others.\n");
+ 				return hba_count-1;
+ 			}
+ 			pci_dev_get(pDev);
+ 		}
  	}
--	pSRB->SGToBeXferLen -= (pSRB->Saved_Ptr - pSRB->TotalXferredLen);
--	pSRB->SGBusAddr += (pSRB->Saved_Ptr - pSRB->TotalXferredLen);
-+	pSRB->SGToBeXferLen -= pSRB->Saved_Ptr - pSRB->TotalXferredLen;
-+	pSRB->SGBusAddr += pSRB->Saved_Ptr - pSRB->TotalXferredLen;
- 	printk (KERN_INFO "DC390: Pointer restored. Segment %i, Total %li, Bus %08lx\n",
- 		pSRB->SGIndex, pSRB->Saved_Ptr, pSRB->SGBusAddr);
+-	if (pDev)
+-		pci_dev_put(pDev);
  
-@@ -1396,8 +1396,8 @@
- 	if( !pSRB->SGToBeXferLen )
- 	{
- 	    psgl = pSRB->pSegmentList;
--	    pSRB->SGBusAddr = cpu_to_le32(pci_dma_lo32(sg_dma_address(psgl)));
--	    pSRB->SGToBeXferLen = cpu_to_le32(sg_dma_len(psgl));
-+	    pSRB->SGBusAddr = sg_dma_address(psgl);
-+	    pSRB->SGToBeXferLen = sg_dma_len(psgl);
- 	    DEBUG1(printk (KERN_DEBUG " DC390: Next SG segment."));
+ 	/* In INIT state, Activate IOPs */
+ 	for (pHba = hba_chain; pHba; pHba = pHba->next) {
+ 		// Activate does get status , init outbound, and get hrt
+ 		if (adpt_i2o_activate_hba(pHba) < 0) {
+ 			adpt_i2o_delete_hba(pHba);
+ 		}
  	}
- 	lval = pSRB->SGToBeXferLen;
-diff -u a/drivers/scsi/tmscsim.h b/drivers/scsi/tmscsim.h
---- a/drivers/scsi/tmscsim.h	13 Jan 2005 21:10:01 -0000
-+++ b/drivers/scsi/tmscsim.h	8 Oct 2006 19:56:01 -0000
-@@ -20,8 +20,6 @@
  
- #define SEL_TIMEOUT		153	/* 250 ms selection timeout (@ 40 MHz) */
  
--#define pci_dma_lo32(a)			(a & 0xffffffff)
--
- typedef u8		UCHAR;	/*  8 bits */
- typedef u16		USHORT;	/* 16 bits */
- typedef u32		UINT;	/* 32 bits */
-@@ -44,7 +42,7 @@
+ 	/* Active IOPs in HOLD state */
  
- struct scatterlist Segmentx;	/* make a one entry of S/G list table */
- 
--unsigned long	SGBusAddr;	/*;a segment starting address as seen by AM53C974A*/
-+dma_addr_t	SGBusAddr;	/*;a segment starting address as seen by AM53C974A*/
- unsigned long	SGToBeXferLen;	/*; to be xfer length */
- unsigned long	TotalXferredLen;
- unsigned long	SavedTotXLen;
+ rebuild_sys_tab:
+
