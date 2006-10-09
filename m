@@ -1,68 +1,27 @@
-From: Swen Schillig <swen@vnet.ibm.com>
-Subject: [PATCH] zfcp: initialize scsi_host_template.max_sectors with appropriate value
-Date: Mon, 9 Oct 2006 15:33:42 +0200
-Message-ID: <200610091533.42282.swen@vnet.ibm.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] scsi: Scsi_Cmnd convertion in aic7xxx_old.c
+Date: Mon, 09 Oct 2006 09:30:41 -0500
+Message-ID: <1160404241.3454.4.camel@mulgrave.il.steeleye.com>
+References: <452363DB.60107@nachtwindheim.de>
+	 <20061006202913.GA7835@aepfle.de>  <452A50DA.102@nachtwindheim.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate5.uk.ibm.com ([195.212.29.138]:10846 "EHLO
-	mtagate5.uk.ibm.com") by vger.kernel.org with ESMTP id S932803AbWJINdp
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 9 Oct 2006 09:33:45 -0400
-Received: from d06nrmr1407.portsmouth.uk.ibm.com (d06nrmr1407.portsmouth.uk.ibm.com [9.149.38.185])
-	by mtagate5.uk.ibm.com (8.13.8/8.13.8) with ESMTP id k99DXh0X081712
-	for <linux-scsi@vger.kernel.org>; Mon, 9 Oct 2006 13:33:43 GMT
-Received: from d06av01.portsmouth.uk.ibm.com (d06av01.portsmouth.uk.ibm.com [9.149.37.212])
-	by d06nrmr1407.portsmouth.uk.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id k99Da95I2052120
-	for <linux-scsi@vger.kernel.org>; Mon, 9 Oct 2006 14:36:09 +0100
-Received: from d06av01.portsmouth.uk.ibm.com (loopback [127.0.0.1])
-	by d06av01.portsmouth.uk.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k99DXhtS012559
-	for <linux-scsi@vger.kernel.org>; Mon, 9 Oct 2006 14:33:43 +0100
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932874AbWJIObB@vger.kernel.org>
+In-Reply-To: <452A50DA.102@nachtwindheim.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Henne <henne@nachtwindheim.de>
+Cc: Olaf Hering <olaf@aepfle.de>, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James Bottomley <James.Bottomley@steeleye.com>
 
-commit 7f3c3e955cfba57c4d95706c326d9c5b2f92e941
-Author: Swen Schillig <swen@vnet.ibm.com>
-Date:   Mon Oct 9 14:59:08 2006 +0200
+On Mon, 2006-10-09 at 15:38 +0200, Henne wrote:
+> Fixes a typo in the aic7xxx_old.c.
 
-Define (ZFCP_MAX_SECTORS) and initialize scsi_host_template.max_sectors with 
-appropriate value.
+I'll add this.
 
-     ZFCP_MAX_SECTORS (ZFCP_MAX_SBALES_PER_REQ * 8)
-        /* max. number of (data buffer) SBALEs in largest SBAL chain
-           multiplied with number of sectors per 4k block */
+But next time I would really appreciate it if you could actually compile
+the code before sending the patch.
 
-##############################################
+Thanks,
 
-diff --git a/drivers/s390/scsi/zfcp_def.h b/drivers/s390/scsi/zfcp_def.h
-index 8f88269..88591a4 100644
---- a/drivers/s390/scsi/zfcp_def.h
-+++ b/drivers/s390/scsi/zfcp_def.h
-@@ -107,6 +107,10 @@ #define ZFCP_MAX_SBALES_PER_REQ            \
-        (ZFCP_MAX_SBALS_PER_REQ * ZFCP_MAX_SBALES_PER_SBAL - 2)
-         /* request ID + QTCB in SBALE 0 + 1 of first SBAL in chain */
-
-+#define ZFCP_MAX_SECTORS (ZFCP_MAX_SBALES_PER_REQ * 8)
-+       /* max. number of (data buffer) SBALEs in largest SBAL chain
-+          multiplied with number of sectors per 4k block */
-+
- /* FIXME(tune): free space should be one max. SBAL chain plus what? */
- #define ZFCP_QDIO_PCI_INTERVAL         (QDIO_MAX_BUFFERS_PER_Q \
-                                          - (ZFCP_MAX_SBALS_PER_REQ + 4))
-diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
-index 7cafa34..71fee53 100644
---- a/drivers/s390/scsi/zfcp_scsi.c
-+++ b/drivers/s390/scsi/zfcp_scsi.c
-@@ -58,6 +58,7 @@ struct zfcp_data zfcp_data = {
-                .cmd_per_lun            = 1,
-                .use_clustering         = 1,
-                .sdev_attrs             = zfcp_sysfs_sdev_attrs,
-+               .max_sectors            = ZFCP_MAX_SECTORS,
-        },
-        .driver_version = ZFCP_VERSION,
- };
+James
