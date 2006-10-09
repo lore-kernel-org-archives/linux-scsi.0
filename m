@@ -1,27 +1,24 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] scsi: Scsi_Cmnd convertion in aic7xxx_old.c
-Date: Mon, 09 Oct 2006 09:30:41 -0500
-Message-ID: <1160404241.3454.4.camel@mulgrave.il.steeleye.com>
-References: <452363DB.60107@nachtwindheim.de>
-	 <20061006202913.GA7835@aepfle.de>  <452A50DA.102@nachtwindheim.de>
+From: Sean Bruno <sean.bruno@dsl-only.net>
+Subject: What is Target Mode in SATA terminology?
+Date: Mon, 09 Oct 2006 12:47:59 -0700
+Message-ID: <1160423279.27817.4.camel@home-desk>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932874AbWJIObB@vger.kernel.org>
-In-Reply-To: <452A50DA.102@nachtwindheim.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Henne <henne@nachtwindheim.de>
-Cc: Olaf Hering <olaf@aepfle.de>, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iron.pdx.net ([207.149.241.18]:1242 "EHLO iron.pdx.net")
+	by vger.kernel.org with ESMTP id S933013AbWJITsA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Oct 2006 15:48:00 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Mon, 2006-10-09 at 15:38 +0200, Henne wrote:
-> Fixes a typo in the aic7xxx_old.c.
+Just curious...with certain SCSI cards I could implement and play around
+with the card in 'target mode' and hook it up to a separate PC and it
+would appear as a SCSI disk.  Kind of fun to play with.
 
-I'll add this.
+Is there an equivalent in SATA / SAS land?  If there is, is there a well
+supported PCI-(E/X) board out there that I could play with?
 
-But next time I would really appreciate it if you could actually compile
-the code before sending the patch.
+Sean
 
-Thanks,
-
-James
