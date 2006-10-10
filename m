@@ -1,73 +1,137 @@
 From: akpm@osdl.org
-Subject: [patch 05/36] scsi: clean up warnings in Advansys driver
-Date: Tue, 10 Oct 2006 14:41:17 -0700
-Message-ID: <200610102141.k9ALfHjj025358@shell0.pdx.osdl.net>
+Subject: [patch 09/36] drivers/scsi/pcmcia/nsp_cs.h: removal of old scsi code
+Date: Tue, 10 Oct 2006 14:41:22 -0700
+Message-ID: <200610102141.k9ALfMmD025371@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:9630 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S964897AbWJJVli (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:2206 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751024AbWJJVlb (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Oct 2006 17:41:38 -0400
+	Tue, 10 Oct 2006 17:41:31 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, ken@krwtech.com, jeffreyfreeman@syncleus.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, michal.k.k.piotrowski@gmail.com
 
-From: Ken Witherow <ken@krwtech.com>
+From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
 
-Fix typecast warnings and switch from check_region to request_region
-
-(akpm: Ken and Jeffrey Phillips Freeman <jeffreyfreeman@syncleus.com> are
-possible advansys testers)
-
-Signed-off-by: Ken Witherow <ken@krwtech.com>
+Signed-off-by: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/advansys.c |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
+ drivers/scsi/pcmcia/nsp_cs.h |   66 ---------------------------------
+ 1 files changed, 66 deletions(-)
 
-diff -puN drivers/scsi/advansys.c~scsi-clean-up-warnings-in-advansys-driver drivers/scsi/advansys.c
---- a/drivers/scsi/advansys.c~scsi-clean-up-warnings-in-advansys-driver
-+++ a/drivers/scsi/advansys.c
-@@ -4403,7 +4403,7 @@ advansys_detect(struct scsi_host_templat
-                         ASC_DBG1(1,
-                                 "advansys_detect: probing I/O port 0x%x...\n",
-                             iop);
--                        if (check_region(iop, ASC_IOADR_GAP) != 0) {
-+			if (!request_region(iop, ASC_IOADR_GAP, "advansys")){
-                             printk(
- "AdvanSys SCSI: specified I/O Port 0x%X is busy\n", iop);
-                             /* Don't try this I/O port twice. */
-@@ -4413,6 +4413,7 @@ advansys_detect(struct scsi_host_templat
-                             printk(
- "AdvanSys SCSI: specified I/O Port 0x%X has no adapter\n", iop);
-                             /* Don't try this I/O port twice. */
-+			    release_region(iop, ASC_IOADR_GAP);
-                             asc_ioport[ioport] = 0;
-                             goto ioport_try_again;
-                         } else {
-@@ -4431,6 +4432,7 @@ advansys_detect(struct scsi_host_templat
-                                   * 'ioport' past this board.
-                                   */
-                                  ioport++;
-+				 release_region(iop, ASC_IOADR_GAP);
-                                  goto ioport_try_again;
-                             }
-                         }
-@@ -9740,13 +9742,14 @@ AscSearchIOPortAddr11(
-     }
-     for (; i < ASC_IOADR_TABLE_MAX_IX; i++) {
-         iop_base = _asc_def_iop_base[i];
--        if (check_region(iop_base, ASC_IOADR_GAP) != 0) {
-+	if (!request_region(iop_base, ASC_IOADR_GAP, "advansys")){
-             ASC_DBG1(1,
-                "AscSearchIOPortAddr11: check_region() failed I/O port 0x%x\n",
-                      iop_base);
-             continue;
-         }
-         ASC_DBG1(1, "AscSearchIOPortAddr11: probing I/O port 0x%x\n", iop_base);
-+	release_region(iop_base, ASC_IOADR_GAP);
-         if (AscFindSignature(iop_base)) {
-             return (iop_base);
-         }
+diff -puN drivers/scsi/pcmcia/nsp_cs.h~drivers-scsi-pcmcia-nsp_csh-removal-of-old drivers/scsi/pcmcia/nsp_cs.h
+--- a/drivers/scsi/pcmcia/nsp_cs.h~drivers-scsi-pcmcia-nsp_csh-removal-of-old
++++ a/drivers/scsi/pcmcia/nsp_cs.h
+@@ -290,7 +290,6 @@ typedef struct _nsp_hw_data {
+ #endif
+ } nsp_hw_data;
+ 
+-
+ /****************************************************************************
+  *
+  */
+@@ -302,22 +301,13 @@ static int        nsp_cs_config (struct 
+ 
+ /* Linux SCSI subsystem specific functions */
+ static struct Scsi_Host *nsp_detect     (struct scsi_host_template *sht);
+-#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0))
+-static        int        nsp_detect_old (struct scsi_host_template *sht);
+-static        int        nsp_release_old(struct Scsi_Host *shpnt);
+-#endif
+ static const  char      *nsp_info       (struct Scsi_Host *shpnt);
+ static        int        nsp_proc_info  (
+-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73))
+ 	                                 struct Scsi_Host *host,
+-#endif
+ 					 char   *buffer,
+ 					 char  **start,
+ 					 off_t   offset,
+ 					 int     length,
+-#if !(LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73))
+-					 int     hostno,
+-#endif
+ 					 int     inout);
+ static        int        nsp_queuecommand(Scsi_Cmnd *SCpnt, void (* done)(Scsi_Cmnd *SCpnt));
+ 
+@@ -352,7 +342,6 @@ static struct Scsi_Host *nsp_detect(stru
+ static int  __init nsp_cs_init(void);
+ static void __exit nsp_cs_exit(void);
+ 
+-
+ /* Debug */
+ #ifdef NSP_DEBUG
+ static void show_command (Scsi_Cmnd *SCpnt);
+@@ -397,7 +386,6 @@ enum _burst_mode {
+ 	BURST_MEM32 = 2,
+ };
+ 
+-
+ /**************************************************************************
+  * SCSI messaage
+  */
+@@ -409,62 +397,8 @@ enum _burst_mode {
+ 
+ #define MSG_EXT_SDTR         0x01
+ 
+-
+-/**************************************************************************
+- * Compatibility functions
+- */
+-
+-/* for Kernel 2.4 */
+-#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0))
+-#  define scsi_register_host(template)   scsi_register_module(MODULE_SCSI_HA, template)
+-#  define scsi_unregister_host(template) scsi_unregister_module(MODULE_SCSI_HA, template)
+-#  define scsi_host_put(host)            scsi_unregister(host)
+-
+-typedef void irqreturn_t;
+-#  define IRQ_NONE      /* */
+-#  define IRQ_HANDLED   /* */
+-#  define IRQ_RETVAL(x) /* */
+-
+-/* This is ad-hoc version of scsi_host_get_next() */
+-static inline struct Scsi_Host *scsi_host_get_next(struct Scsi_Host *host)
+-{
+-	if (host == NULL) {
+-		return scsi_hostlist;
+-	} else {
+-		return host->next;
+-	}
+-}
+-
+-/* This is ad-hoc version of scsi_host_hn_get() */
+-static inline struct Scsi_Host *scsi_host_hn_get(unsigned short hostno)
+-{
+-	struct Scsi_Host *host;
+-
+-	for (host = scsi_host_get_next(NULL); host != NULL;
+-	     host = scsi_host_get_next(host)) {
+-		if (host->host_no == hostno) {
+-			break;
+-		}
+-	}
+-
+-	return host;
+-}
+-
+-static void cs_error(struct pcmcia_device *handle, int func, int ret)
+-{
+-	error_info_t err = { func, ret };
+-	pcmcia_report_error(handle, &err);
+-}
+-
+-/* scatter-gather table */
+-#  define BUFFER_ADDR (SCpnt->SCp.buffer->address)
+-#endif
+-
+-/* for Kernel 2.6 */
+-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0))
+ /* scatter-gather table */
+ #  define BUFFER_ADDR ((char *)((unsigned int)(SCpnt->SCp.buffer->page) + SCpnt->SCp.buffer->offset))
+-#endif
+ 
+ #endif  /*__nsp_cs__*/
+ /* end */
 _
