@@ -1,37 +1,57 @@
 From: akpm@osdl.org
-Subject: [patch 35/36] scsi_lib.c: use BUILD_BUG_ON
-Date: Tue, 10 Oct 2006 14:42:01 -0700
-Message-ID: <200610102142.k9ALg1x2025485@shell0.pdx.osdl.net>
+Subject: [patch 32/36] pci_module_init() convertion in tmscsim.c
+Date: Tue, 10 Oct 2006 14:41:46 -0700
+Message-ID: <200610102141.k9ALfkgF025456@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:14498 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1030538AbWJJVum (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:49570 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1030553AbWJJVvV (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Oct 2006 17:50:42 -0400
+	Tue, 10 Oct 2006 17:51:21 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, adobriyan@gmail.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, henne@nachtinwdheim.de, alan@redhat.com, henne@nachtwindheim.de
 
-From: Alexey Dobriyan <adobriyan@gmail.com>
+From: Henrik Kretzschmar <henne@nachtinwdheim.de>
 
-Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
+pci_module_init() convertion in tmscsim.c
+
+Signed-off-by: Henrik Kretzschmar <henne@nachtwindheim.de>
+Acked-by: Alan Cox <alan@redhat.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/scsi_lib.c |    2 +-
- 1 files changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/tmscsim.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-diff -puN drivers/scsi/scsi_lib.c~scsi_libc-use-build_bug_on drivers/scsi/scsi_lib.c
---- a/drivers/scsi/scsi_lib.c~scsi_libc-use-build_bug_on
-+++ a/drivers/scsi/scsi_lib.c
-@@ -1084,7 +1084,7 @@ static void scsi_setup_blk_pc_cmnd(struc
- {
- 	struct request *req = cmd->request;
+diff -puN drivers/scsi/tmscsim.c~pci_module_init-convertion-in-tmscsimc drivers/scsi/tmscsim.c
+--- a/drivers/scsi/tmscsim.c~pci_module_init-convertion-in-tmscsimc
++++ a/drivers/scsi/tmscsim.c
+@@ -177,6 +177,8 @@
+  *	2.1d  04/05/27	GL	Moved setting of scan_devices to	*
+  *				slave_alloc/_configure/_destroy, as	*
+  *				suggested by CH.			*
++ *	2.1e  06/09/04	HENKR	change pci_module_init() to		*
++ *				pci_register_driver()			*
+  ***********************************************************************/
  
--	BUG_ON(sizeof(req->cmd) > sizeof(cmd->cmnd));
-+	BUILD_BUG_ON(sizeof(req->cmd) > sizeof(cmd->cmnd));
- 	memcpy(cmd->cmnd, req->cmd, sizeof(cmd->cmnd));
- 	cmd->cmd_len = req->cmd_len;
- 	if (!req->data_len)
+ /* DEBUG options */
+@@ -245,7 +247,7 @@
+ 
+ 
+ #define DC390_BANNER "Tekram DC390/AM53C974"
+-#define DC390_VERSION "2.1d 2004-05-27"
++#define DC390_VERSION "2.1e 2006-09-04"
+ 
+ #define PCI_DEVICE_ID_AMD53C974 	PCI_DEVICE_ID_AMD_SCSI
+ 
+@@ -2680,7 +2682,7 @@ static int __init dc390_module_init(void
+ 		printk (KERN_INFO "DC390: Using safe settings.\n");
+ 	}
+ 
+-	return pci_module_init(&dc390_driver);
++	return pci_register_driver(&dc390_driver);
+ }
+ 
+ static void __exit dc390_module_exit(void)
 _
