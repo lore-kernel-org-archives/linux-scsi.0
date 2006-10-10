@@ -1,16 +1,16 @@
 From: akpm@osdl.org
-Subject: [patch 16/36] ioremap balanced with iounmap for drivers/scsi/sun3_scsi.c
-Date: Tue, 10 Oct 2006 14:41:34 -0700
-Message-ID: <200610102141.k9ALfYn9025406@shell0.pdx.osdl.net>
+Subject: [patch 22/36] ioremap balanced with iounmap for drivers/scsi/fdomain.c
+Date: Tue, 10 Oct 2006 14:41:39 -0700
+Message-ID: <200610102141.k9ALfdBh025426@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:19871 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1030478AbWJJVnU (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:9375 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1030474AbWJJVnH (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Oct 2006 17:43:20 -0400
+	Tue, 10 Oct 2006 17:43:07 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, amol@verismonetworks.com, davem@davemloft.net
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, amol@verismonetworks.com
 
 From: Amol Lad <amol@verismonetworks.com>
 
@@ -19,48 +19,26 @@ memory leak.
 
 Signed-off-by: Amol Lad <amol@verismonetworks.com>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
-Cc: "David S. Miller" <davem@davemloft.net>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/sun3_scsi.c |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletion(-)
+ drivers/scsi/fdomain.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletion(-)
 
-diff -puN drivers/scsi/sun3_scsi.c~ioremap-balanced-with-iounmap-drivers-scsi-sun3_scsic drivers/scsi/sun3_scsi.c
---- a/drivers/scsi/sun3_scsi.c~ioremap-balanced-with-iounmap-drivers-scsi-sun3_scsic
-+++ a/drivers/scsi/sun3_scsi.c
-@@ -240,11 +240,13 @@ int sun3scsi_detect(struct scsi_host_tem
- 	if((udc_regs = dvma_malloc(sizeof(struct sun3_udc_regs)))
- 	   == NULL) {
- 	     printk("SUN3 Scsi couldn't allocate DVMA memory!\n");
-+		 iounmap((void*)ioaddr);
- 	     return 0;
- 	}
- #ifdef OLDDMA
- 	if((dmabuf = dvma_malloc_align(SUN3_DVMA_BUFSIZE, 0x10000)) == NULL) {
- 	     printk("SUN3 Scsi couldn't allocate DVMA memory!\n");
-+		 iounmap((void*)ioaddr);
- 	     return 0;
- 	}
- #endif
-@@ -254,8 +256,10 @@ int sun3scsi_detect(struct scsi_host_tem
+diff -puN drivers/scsi/fdomain.c~ioremap-balanced-with-iounmap-drivers-scsi-fdomainc drivers/scsi/fdomain.c
+--- a/drivers/scsi/fdomain.c~ioremap-balanced-with-iounmap-drivers-scsi-fdomainc
++++ a/drivers/scsi/fdomain.c
+@@ -779,7 +779,11 @@ found:
+    else      printk( " FAILURE\n" );
  #endif
  
- 	instance = scsi_register (tpnt, sizeof(struct NCR5380_hostdata));
--	if(instance == NULL)
-+	if(instance == NULL) {
-+		iounmap((void*)ioaddr);
- 		return 0;
-+	}
- 		
- 	default_instance = instance;
+-   if (!flag) return 0;		/* iobase not found */
++   if (!flag) {
++	  if (bios_mem)
++		 iounmap(bios_mem);
++	  return 0;		/* iobase not found */
++   }
  
-@@ -277,6 +281,7 @@ int sun3scsi_detect(struct scsi_host_tem
- #else
- 		printk("scsi%d: IRQ%d not free, bailing out\n",
- 		       instance->host_no, instance->irq);
-+		iounmap((void*)ioaddr);
- 		return 0;
- #endif
- 	}
+    *irq    = fdomain_get_irq( base );
+    *iobase = base;
 _
