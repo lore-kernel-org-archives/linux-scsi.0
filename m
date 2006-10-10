@@ -1,75 +1,45 @@
-From: "Thitiphan Komolwiwat" <thitiphankk@gmail.com>
-Subject: error while intstall fedora core3 with PowerEdge SC430
-Date: Tue, 10 Oct 2006 18:19:08 +0700
-Message-ID: <c00ee1a00610100419w30ddc83awaa6e96128ecd1a35@mail.gmail.com>
+From: Jeremy Linton <jli@greshamstorage.com>
+Subject: Re: What is Target Mode in SATA terminology?
+Date: Tue, 10 Oct 2006 09:26:08 -0500
+Message-ID: <200610100926.08656.jli@greshamstorage.com>
+References: <1160423279.27817.4.camel@home-desk> <200610092215.20396.jli@greshamstorage.com> <20061010035842.GA10086@lsil.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============0441833619=="
-Return-path: <linux-poweredge-bounces@dell.com>
-List-Unsubscribe: <http://lists.us.dell.com/mailman/listinfo/linux-poweredge>,
-	<mailto:linux-poweredge-request@dell.com?subject=unsubscribe>
-List-Archive: <http://lists.us.dell.com/pipermail/linux-poweredge>
-List-Post: <mailto:linux-poweredge@dell.com>
-List-Help: <mailto:linux-poweredge-request@dell.com?subject=help>
-List-Subscribe: <http://lists.us.dell.com/mailman/listinfo/linux-poweredge>,
-	<mailto:linux-poweredge-request@dell.com?subject=subscribe>
-Sender: linux-poweredge-bounces@dell.com
-Errors-To: linux-poweredge-bounces@dell.com
-To: linux-scsi@vger.kernel.org, linux-poweredge@dell.com
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from austin.greshamstorage.com ([216.143.252.250]:38674 "EHLO
+	austin.greshamstorage.com") by vger.kernel.org with ESMTP
+	id S932137AbWJJOos (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Oct 2006 10:44:48 -0400
+In-Reply-To: <20061010035842.GA10086@lsil.com>
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Eric Moore <eric.moore@lsil.com>
+Cc: Sean Bruno <sean.bruno@dsl-only.net>, linux-scsi@vger.kernel.org
 
---===============0441833619==
-Content-Type: multipart/alternative;
-	boundary="----=_Part_57824_27782603.1160479148264"
+On Monday 09 October 2006 22:58, Eric Moore wrote:
+> On Mon, Oct 09, 2006 at 10:15:20PM -0500, Jeremy Linton wrote:
+> > > Is there an equivalent in SATA / SAS land?  If there is, is there a
+> > > well supported PCI-(E/X) board out there that I could play with?
+> >
+> > 	Well, the MPT driver for scst should support SAS. I can tell you though
+> > that the MPT driver isn't exactly stable for SPI..
+> > -
+>
+> As far as I know, there are no scst target mode drivers for fusion.  Or are
+> there? I've not heard of anyone doing that so far.
+	One of the scst project members has a port of some LSI MPT target drivers to 
+scst. They are here http://bj.soulinfo.com/%7Ehugang/scst/tgt/. I've been 
+trying to get them working with a 53c1030 series LVD card and they don't get 
+past exporting basic inquiry data. The contact for the drivers hasn't 
+responded to any of my email's either, and the main project doesn't support 
+them.
 
-------=_Part_57824_27782603.1160479148264
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-Hi Sir,
-
-I have some problem when I tried to install  fedora core3 with Dell
-PowerEdge SC430 .It 's show error "No drives found"
-Server Dell PowerEdge SC430
-SCSI Harddisk 75 Gb.
-My service tags : 5swtl1s
-
-Do you have any idea.
-
-Best Regards,
-Thitiphan K.
-Thailand
-
-------=_Part_57824_27782603.1160479148264
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-<div>Hi Sir,</div>
-<div>&nbsp;</div>
-<div>I have some problem when I tried to install&nbsp;&nbsp;fedora core3 with Dell PowerEdge SC430 .It 's show error &quot;No drives found&quot;</div>
-<div>Server Dell PowerEdge SC430</div>
-<div>SCSI Harddisk 75 Gb.</div>
-<div>My service tags : 5swtl1s </div>
-<div>&nbsp;</div>
-<div>Do you have any idea.</div>
-<div>&nbsp;</div>
-<div>Best Regards,</div>
-<div>Thitiphan K.</div>
-<div>Thailand </div>
-
-------=_Part_57824_27782603.1160479148264--
+> The MPTSAS drivers you 'll find in the kernel tree are intiator mode only.
+> We have a driver called mptstm,  supplied to various customers. Its a
+> target mode driver. I can supply that per request.
+	That would be excellent, if you have one newer than 1.00.13.
 
 
---===============0441833619==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-Linux-PowerEdge mailing list
-Linux-PowerEdge@dell.com
-http://lists.us.dell.com/mailman/listinfo/linux-poweredge
-Please read the FAQ at http://lists.us.dell.com/faq
---===============0441833619==--
