@@ -1,77 +1,185 @@
 From: akpm@osdl.org
-Subject: [patch 14/36] magaraid: check for firmware version
-Date: Tue, 10 Oct 2006 14:41:31 -0700
-Message-ID: <200610102141.k9ALfVxF025390@shell0.pdx.osdl.net>
+Subject: [patch 34/36] Maintain module-parameter name consistency with qla2xxx/qla4xxx.
+Date: Tue, 10 Oct 2006 14:41:55 -0700
+Message-ID: <200610102141.k9ALfucA025474@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:41886 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S965124AbWJJVmR (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:47774 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1030467AbWJJVm3 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Oct 2006 17:42:17 -0400
+	Tue, 10 Oct 2006 17:42:29 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, jkrzyszt@tis.icnet.pl, Seokmann.Ju@lsil.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, andrew.vasquez@qlogic.com
 
-From: Janusz Krzysztofik <jkrzyszt@tis.icnet.pl>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-The old megaraid driver is apparently borken for firmware newer than 6.61.
+-ENOCHANGELOG.
 
-megaraid_mbox works OK for Janusz with F/W 6.61.
+Don't know who wrote it.
 
-Check for the F/W version and display a helpful warning if it is too high.  It
-should make life easier for those who may face the problem.
-
-Cc: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
+Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/megaraid/megaraid_mbox.c |   16 ++++++++++++++++
- drivers/scsi/megaraid/megaraid_mbox.h |    1 +
- 2 files changed, 17 insertions(+)
+ drivers/scsi/qla2xxx/qla_dbg.h  |   14 +++++++-------
+ drivers/scsi/qla2xxx/qla_gbl.h  |    2 +-
+ drivers/scsi/qla2xxx/qla_init.c |    2 +-
+ drivers/scsi/qla2xxx/qla_os.c   |    8 ++++----
+ drivers/scsi/qla4xxx/ql4_dbg.h  |    4 ++--
+ drivers/scsi/qla4xxx/ql4_glbl.h |    2 +-
+ drivers/scsi/qla4xxx/ql4_mbx.c  |    2 +-
+ drivers/scsi/qla4xxx/ql4_os.c   |    8 ++++----
+ 8 files changed, 21 insertions(+), 21 deletions(-)
 
-diff -puN drivers/scsi/megaraid/megaraid_mbox.c~megaraid-check-for-firmware-version drivers/scsi/megaraid/megaraid_mbox.c
---- a/drivers/scsi/megaraid/megaraid_mbox.c~megaraid-check-for-firmware-version
-+++ a/drivers/scsi/megaraid/megaraid_mbox.c
-@@ -25,6 +25,7 @@
-  * Dell PERC3/QC			101E	1960	1028	0471
-  * Dell PERC3/DC			101E	1960	1028	0493
-  * Dell PERC3/SC			101E	1960	1028	0475
-+ * Dell CERC ATA100/4ch with F/W<=6.61	101E	1960	1028	0511
-  * Dell PERC3/Di			1028	1960	1028	0123
-  * Dell PERC4/SC			1000	1960	1028	0520
-  * Dell PERC4/DC			1000	1960	1028	0518
-@@ -807,6 +808,21 @@ megaraid_init_mbox(adapter_t *adapter)
- 		goto out_alloc_cmds;
- 	}
+diff -puN drivers/scsi/qla2xxx/qla_dbg.h~maintain-module-parameter-name-consistency-with-qla2xxx-qla4xxx drivers/scsi/qla2xxx/qla_dbg.h
+--- a/drivers/scsi/qla2xxx/qla_dbg.h~maintain-module-parameter-name-consistency-with-qla2xxx-qla4xxx
++++ a/drivers/scsi/qla2xxx/qla_dbg.h
+@@ -38,7 +38,7 @@
+ * Macros use for debugging the driver.
+ */
  
-+	// Compatibility check
-+	if (adapter->pdev->vendor == PCI_VENDOR_ID_AMI &&
-+			adapter->pdev->device == PCI_DEVICE_ID_AMI_MEGARAID3 &&
-+			adapter->pdev->subsystem_vendor == PCI_VENDOR_ID_DELL &&
-+			adapter->pdev->subsystem_device == PCI_SUBSYS_ID_CERC_ATA100_4CH &&
-+			(adapter->fw_version[0] > '6' ||
-+			 (adapter->fw_version[0] == '6' &&
-+			  adapter->fw_version[2] > '6') ||
-+			 (adapter->fw_version[0] == '6'
-+			  && adapter->fw_version[2] == '6'
-+			  && adapter->fw_version[3] > '1'))) {
-+		con_log(CL_ANN, (KERN_WARNING
-+			"megaraid: problems? downgrade F/W to version 6.61\n"));
-+	}
-+
- 	// Do we support extended CDBs
- 	adapter->max_cdb_sz = 10;
- 	if (megaraid_mbox_extended_cdb(adapter) == 0) {
-diff -puN drivers/scsi/megaraid/megaraid_mbox.h~megaraid-check-for-firmware-version drivers/scsi/megaraid/megaraid_mbox.h
---- a/drivers/scsi/megaraid/megaraid_mbox.h~megaraid-check-for-firmware-version
-+++ a/drivers/scsi/megaraid/megaraid_mbox.h
-@@ -88,6 +88,7 @@
- #define PCI_SUBSYS_ID_PERC3_QC				0x0471
- #define PCI_SUBSYS_ID_PERC3_DC				0x0493
- #define PCI_SUBSYS_ID_PERC3_SC				0x0475
-+#define PCI_SUBSYS_ID_CERC_ATA100_4CH			0x0511
+-#define DEBUG(x)	do { if (qla2_extended_error_logging) { x; } } while (0)
++#define DEBUG(x)	do { if (ql2xextended_error_logging) { x; } } while (0)
  
+ #if defined(QL_DEBUG_LEVEL_1)
+ #define DEBUG1(x)	do {x;} while (0)
+@@ -46,12 +46,12 @@
+ #define DEBUG1(x)	do {} while (0)
+ #endif
  
- #define MBOX_MAX_SCSI_CMDS	128	// number of cmds reserved for kernel
+-#define DEBUG2(x)	do { if (qla2_extended_error_logging) { x; } } while (0)
+-#define DEBUG2_3(x)	do { if (qla2_extended_error_logging) { x; } } while (0)
+-#define DEBUG2_3_11(x)	do { if (qla2_extended_error_logging) { x; } } while (0)
+-#define DEBUG2_9_10(x)	do { if (qla2_extended_error_logging) { x; } } while (0)
+-#define DEBUG2_11(x)	do { if (qla2_extended_error_logging) { x; } } while (0)
+-#define DEBUG2_13(x)	do { if (qla2_extended_error_logging) { x; } } while (0)
++#define DEBUG2(x)	do { if (ql2xextended_error_logging) { x; } } while (0)
++#define DEBUG2_3(x)	do { if (ql2xextended_error_logging) { x; } } while (0)
++#define DEBUG2_3_11(x)	do { if (ql2xextended_error_logging) { x; } } while (0)
++#define DEBUG2_9_10(x)	do { if (ql2xextended_error_logging) { x; } } while (0)
++#define DEBUG2_11(x)	do { if (ql2xextended_error_logging) { x; } } while (0)
++#define DEBUG2_13(x)	do { if (ql2xextended_error_logging) { x; } } while (0)
+ 
+ #if defined(QL_DEBUG_LEVEL_3)
+ #define DEBUG3(x)	do {x;} while (0)
+diff -puN drivers/scsi/qla2xxx/qla_gbl.h~maintain-module-parameter-name-consistency-with-qla2xxx-qla4xxx drivers/scsi/qla2xxx/qla_gbl.h
+--- a/drivers/scsi/qla2xxx/qla_gbl.h~maintain-module-parameter-name-consistency-with-qla2xxx-qla4xxx
++++ a/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -60,7 +60,7 @@ extern int ql2xplogiabsentdevice;
+ extern int ql2xloginretrycount;
+ extern int ql2xfdmienable;
+ extern int ql2xallocfwdump;
+-extern int qla2_extended_error_logging;
++extern int ql2xextended_error_logging;
+ 
+ extern void qla2x00_sp_compl(scsi_qla_host_t *, srb_t *);
+ 
+diff -puN drivers/scsi/qla2xxx/qla_init.c~maintain-module-parameter-name-consistency-with-qla2xxx-qla4xxx drivers/scsi/qla2xxx/qla_init.c
+--- a/drivers/scsi/qla2xxx/qla_init.c~maintain-module-parameter-name-consistency-with-qla2xxx-qla4xxx
++++ a/drivers/scsi/qla2xxx/qla_init.c
+@@ -1644,7 +1644,7 @@ qla2x00_nvram_config(scsi_qla_host_t *ha
+ 	 * Set host adapter parameters.
+ 	 */
+ 	if (nv->host_p[0] & BIT_7)
+-		qla2_extended_error_logging = 1;
++		ql2xextended_error_logging = 1;
+ 	ha->flags.disable_risc_code_load = ((nv->host_p[0] & BIT_4) ? 1 : 0);
+ 	/* Always load RISC code on non ISP2[12]00 chips. */
+ 	if (!IS_QLA2100(ha) && !IS_QLA2200(ha))
+diff -puN drivers/scsi/qla2xxx/qla_os.c~maintain-module-parameter-name-consistency-with-qla2xxx-qla4xxx drivers/scsi/qla2xxx/qla_os.c
+--- a/drivers/scsi/qla2xxx/qla_os.c~maintain-module-parameter-name-consistency-with-qla2xxx-qla4xxx
++++ a/drivers/scsi/qla2xxx/qla_os.c
+@@ -61,9 +61,9 @@ MODULE_PARM_DESC(ql2xallocfwdump,
+ 		"during HBA initialization.  Memory allocation requirements "
+ 		"vary by ISP type.  Default is 1 - allocate memory.");
+ 
+-int qla2_extended_error_logging;
+-module_param(qla2_extended_error_logging, int, S_IRUGO|S_IRUSR);
+-MODULE_PARM_DESC(qla2_extended_error_logging,
++int ql2xextended_error_logging;
++module_param(ql2xextended_error_logging, int, S_IRUGO|S_IRUSR);
++MODULE_PARM_DESC(ql2xextended_error_logging,
+ 		"Option to enable extended error logging, "
+ 		"Default is 0 - no logging. 1 - log errors.");
+ 
+@@ -2697,7 +2697,7 @@ qla2x00_module_init(void)
+ 
+ 	/* Derive version string. */
+ 	strcpy(qla2x00_version_str, QLA2XXX_VERSION);
+-	if (qla2_extended_error_logging)
++	if (ql2xextended_error_logging)
+ 		strcat(qla2x00_version_str, "-debug");
+ 
+ 	qla2xxx_transport_template =
+diff -puN drivers/scsi/qla4xxx/ql4_dbg.h~maintain-module-parameter-name-consistency-with-qla2xxx-qla4xxx drivers/scsi/qla4xxx/ql4_dbg.h
+--- a/drivers/scsi/qla4xxx/ql4_dbg.h~maintain-module-parameter-name-consistency-with-qla2xxx-qla4xxx
++++ a/drivers/scsi/qla4xxx/ql4_dbg.h
+@@ -22,14 +22,14 @@
+ #endif
+ 
+ #if defined(QL_DEBUG_LEVEL_2)
+-#define DEBUG2(x)      do {if(qla4_extended_error_logging == 2) x;} while (0);
++#define DEBUG2(x)      do {if(ql4xextended_error_logging == 2) x;} while (0);
+ #define DEBUG2_3(x)   do {x;} while (0);
+ #else				/*  */
+ #define DEBUG2(x)	do {} while (0);
+ #endif				/*  */
+ 
+ #if defined(QL_DEBUG_LEVEL_3)
+-#define DEBUG3(x)      do {if(qla4_extended_error_logging == 3) x;} while (0);
++#define DEBUG3(x)      do {if(ql4xextended_error_logging == 3) x;} while (0);
+ #else				/*  */
+ #define DEBUG3(x)	do {} while (0);
+ #if !defined(QL_DEBUG_LEVEL_2)
+diff -puN drivers/scsi/qla4xxx/ql4_glbl.h~maintain-module-parameter-name-consistency-with-qla2xxx-qla4xxx drivers/scsi/qla4xxx/ql4_glbl.h
+--- a/drivers/scsi/qla4xxx/ql4_glbl.h~maintain-module-parameter-name-consistency-with-qla2xxx-qla4xxx
++++ a/drivers/scsi/qla4xxx/ql4_glbl.h
+@@ -72,7 +72,7 @@ int qla4xxx_reinitialize_ddb_list(struct
+ int qla4xxx_process_ddb_changed(struct scsi_qla_host * ha,
+ 				uint32_t fw_ddb_index, uint32_t state);
+ 
+-extern int qla4_extended_error_logging;
++extern int ql4xextended_error_logging;
+ extern int ql4xdiscoverywait;
+ extern int ql4xdontresethba;
+ #endif				/* _QLA4x_GBL_H */
+diff -puN drivers/scsi/qla4xxx/ql4_mbx.c~maintain-module-parameter-name-consistency-with-qla2xxx-qla4xxx drivers/scsi/qla4xxx/ql4_mbx.c
+--- a/drivers/scsi/qla4xxx/ql4_mbx.c~maintain-module-parameter-name-consistency-with-qla2xxx-qla4xxx
++++ a/drivers/scsi/qla4xxx/ql4_mbx.c
+@@ -701,7 +701,7 @@ void qla4xxx_get_conn_event_log(struct s
+ 	DEBUG3(printk("scsi%ld: Connection Event Log Dump (%d entries):\n",
+ 		      ha->host_no, num_valid_entries));
+ 
+-	if (qla4_extended_error_logging == 3) {
++	if (ql4xextended_error_logging == 3) {
+ 		if (oldest_entry == 0) {
+ 			/* Circular Buffer has not wrapped around */
+ 			for (i=0; i < num_valid_entries; i++) {
+diff -puN drivers/scsi/qla4xxx/ql4_os.c~maintain-module-parameter-name-consistency-with-qla2xxx-qla4xxx drivers/scsi/qla4xxx/ql4_os.c
+--- a/drivers/scsi/qla4xxx/ql4_os.c~maintain-module-parameter-name-consistency-with-qla2xxx-qla4xxx
++++ a/drivers/scsi/qla4xxx/ql4_os.c
+@@ -34,9 +34,9 @@ MODULE_PARM_DESC(ql4xdontresethba,
+ 		 " default it will reset hba :0"
+ 		 " set to 1 to avoid resetting HBA");
+ 
+-int qla4_extended_error_logging = 0; /* 0 = off, 1 = log errors */
+-module_param(qla4_extended_error_logging, int, S_IRUGO | S_IRUSR);
+-MODULE_PARM_DESC(qla4_extended_error_logging,
++int ql4xextended_error_logging = 0; /* 0 = off, 1 = log errors */
++module_param(ql4xextended_error_logging, int, S_IRUGO | S_IRUSR);
++MODULE_PARM_DESC(ql4xextended_error_logging,
+ 		 "Option to enable extended error logging, "
+ 		 "Default is 0 - no logging, 1 - debug logging");
+ 
+@@ -1714,7 +1714,7 @@ static int __init qla4xxx_module_init(vo
+ 
+ 	/* Derive version string. */
+ 	strcpy(qla4xxx_version_str, QLA4XXX_DRIVER_VERSION);
+-	if (qla4_extended_error_logging)
++	if (ql4xextended_error_logging)
+ 		strcat(qla4xxx_version_str, "-debug");
+ 
+ 	qla4xxx_scsi_transport =
 _
