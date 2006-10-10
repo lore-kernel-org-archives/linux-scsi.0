@@ -1,56 +1,158 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [PATCH 7/8] qla2xxx: Stall mid-layer error handlers while rport is blocked.
-Date: Tue, 10 Oct 2006 08:11:58 -0700
-Message-ID: <20061010151158.GA14909@us.ibm.com>
-References: <20061002185947.GF16536@andrew-vasquezs-computer.local> <11598156511007-git-send-email-andrew.vasquez@qlogic.com> <452167C8.3010401@emulex.com> <45252E1C.3000403@cs.wisc.edu> <452674E7.9080606@emulex.com> <45268BF9.10007@cs.wisc.edu> <4526934F.1020207@emulex.com>
+From: <Patrick_Boyd@dell.com>
+Subject: RE: error while intstall fedora core3 with PowerEdge SC430
+Date: Tue, 10 Oct 2006 10:20:50 -0500
+Message-ID: <FCD01C3AA0ADFB498F9BB1A6173DFC5D93B377@ausx3mpc120.aus.amer.dell.com>
+References: <c00ee1a00610100419w30ddc83awaa6e96128ecd1a35@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:20919 "EHLO e5.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1750808AbWJJPNf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Oct 2006 11:13:35 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e5.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id k9AFDYET032694
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Oct 2006 11:13:34 -0400
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay04.pok.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id k9AFCjbm097166
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Oct 2006 11:12:45 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k9AFCi1G016520
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Oct 2006 11:12:45 -0400
-Content-Disposition: inline
-In-Reply-To: <4526934F.1020207@emulex.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/mixed; boundary="===============1341157978=="
+Return-path: <linux-poweredge-bounces@dell.com>
+Content-class: urn:content-classes:message
+In-Reply-To: <c00ee1a00610100419w30ddc83awaa6e96128ecd1a35@mail.gmail.com>
+List-Unsubscribe: <http://lists.us.dell.com/mailman/listinfo/linux-poweredge>,
+	<mailto:linux-poweredge-request@dell.com?subject=unsubscribe>
+List-Archive: <http://lists.us.dell.com/pipermail/linux-poweredge>
+List-Post: <mailto:linux-poweredge@dell.com>
+List-Help: <mailto:linux-poweredge-request@dell.com?subject=help>
+List-Subscribe: <http://lists.us.dell.com/mailman/listinfo/linux-poweredge>,
+	<mailto:linux-poweredge-request@dell.com?subject=subscribe>
+Sender: linux-poweredge-bounces@dell.com
+Errors-To: linux-poweredge-bounces@dell.com
+To: thitiphankk@gmail.com, linux-scsi@vger.kernel.org, linux-poweredge@lists.us.dell.com
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <James.Smart@Emulex.Com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <james.bottomley@steeleye.com>
 
-On Fri, Oct 06, 2006 at 01:33:03PM -0400, James Smart wrote:
+This is a multi-part message in MIME format.
 
-> I'm not seeing a win in offlining the device.
-> 
-> >Maybe we need to fix up the SDEV_QUIESCE so we can do diagnostic IOs
-> >with SG_IO. Userspace can at least set the device to this state and do
-> >some tests but all other IO will not get through and the upper layers do
-> >not have to do special things like set the device in READ only or set
-> >the path state as failed.
-> >
-> >Or are you saying that even if we are able to relogin then there will be
-> >problems that cannot be handled with the current tools? Something like
-> >that one sense bug I was asking you about at OLS right? I am not sure
-> >what to do with that?
-> 
-> I'm questioning offlining, and wouldn't want to make a complicated
-> recovery path.
+--===============1341157978==
+Content-class: urn:content-classes:message
+Content-Type: multipart/alternative;
+	boundary="----_=_NextPart_001_01C6EC7F.AB389150"
 
-I always thought the offlining was to protect *other* devices attached to
-the HBA, so we don't repeatedly quiesce the entire HBA, and possibly reset
-the target or HBA attached to the same LU that had a timed out command.
+This is a multi-part message in MIME format.
 
-Then onlining in user space is not a problem as far as the given LU is
-concerned.
+------_=_NextPart_001_01C6EC7F.AB389150
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-Otherwise, I also can't think of a reason to offline the device.
+You should be able to switch to an alternate console during the install.
+Can send the output of the following commands:
+=20
+1) lspci
+2) lsmod
+3) ls /dev/sd*
+=20
+Thanks,
+Patrick Boyd=20
+Dell Storage Software Engineer=20
+(512)728-3182=20
 
--- Patrick Mansfield
+
+________________________________
+
+From: linux-poweredge-bounces@dell.com
+[mailto:linux-poweredge-bounces@dell.com] On Behalf Of Thitiphan
+Komolwiwat
+Sent: Tuesday, October 10, 2006 6:19 AM
+To: linux-scsi@vger.kernel.org; linux-poweredge-Lists
+Subject: error while intstall fedora core3 with PowerEdge SC430
+
+
+Hi Sir,
+=20
+I have some problem when I tried to install  fedora core3 with Dell
+PowerEdge SC430 .It 's show error "No drives found"
+Server Dell PowerEdge SC430
+SCSI Harddisk 75 Gb.
+My service tags : 5swtl1s=20
+=20
+Do you have any idea.
+=20
+Best Regards,
+Thitiphan K.
+Thailand=20
+
+------_=_NextPart_001_01C6EC7F.AB389150
+Content-Type: text/html;
+	charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML><HEAD>
+<META http-equiv=3DContent-Type content=3D"text/html; =
+charset=3Dus-ascii">
+<META content=3D"MSHTML 6.00.2900.2963" name=3DGENERATOR></HEAD>
+<BODY>
+<DIV dir=3Dltr align=3Dleft><SPAN class=3D813012015-10102006><FONT =
+face=3DArial=20
+color=3D#0000ff size=3D2>You should be able to switch to an alternate =
+console during=20
+the install. Can send the output of the following =
+commands:</FONT></SPAN></DIV>
+<DIV dir=3Dltr align=3Dleft><SPAN class=3D813012015-10102006><FONT =
+face=3DArial=20
+color=3D#0000ff size=3D2></FONT></SPAN>&nbsp;</DIV>
+<DIV dir=3Dltr align=3Dleft><SPAN class=3D813012015-10102006><FONT =
+face=3DArial=20
+color=3D#0000ff size=3D2>1) lspci</FONT></SPAN></DIV>
+<DIV dir=3Dltr align=3Dleft><SPAN class=3D813012015-10102006><FONT =
+face=3DArial=20
+color=3D#0000ff size=3D2>2) lsmod</FONT></SPAN></DIV>
+<DIV dir=3Dltr align=3Dleft><SPAN class=3D813012015-10102006><FONT =
+face=3DArial=20
+color=3D#0000ff size=3D2>3) ls /dev/sd*</FONT></SPAN></DIV>
+<DIV dir=3Dltr align=3Dleft><SPAN class=3D813012015-10102006><FONT =
+face=3DArial=20
+color=3D#0000ff size=3D2></FONT></SPAN>&nbsp;</DIV>
+<DIV dir=3Dltr align=3Dleft><SPAN class=3D813012015-10102006><FONT =
+face=3DArial=20
+color=3D#0000ff size=3D2>Thanks,</FONT></SPAN></DIV>
+<DIV dir=3Dltr align=3Dleft><SPAN class=3D813012015-10102006><!-- =
+Converted from text/rtf format -->
+<P><SPAN lang=3Den-us><FONT face=3DArial size=3D2>Patrick =
+Boyd</FONT></SPAN> <BR><SPAN=20
+lang=3Den-us><FONT face=3DArial size=3D2>Dell Storage Software =
+Engineer</FONT></SPAN>=20
+<BR><SPAN lang=3Den-us><FONT face=3DArial =
+size=3D2>(512)728-3182</FONT></SPAN>=20
+</P></SPAN></DIV><BR>
+<DIV class=3DOutlookMessageHeader lang=3Den-us dir=3Dltr align=3Dleft>
+<HR tabIndex=3D-1>
+<FONT face=3DTahoma size=3D2><B>From:</B> =
+linux-poweredge-bounces@dell.com=20
+[mailto:linux-poweredge-bounces@dell.com] <B>On Behalf Of </B>Thitiphan=20
+Komolwiwat<BR><B>Sent:</B> Tuesday, October 10, 2006 6:19 =
+AM<BR><B>To:</B>=20
+linux-scsi@vger.kernel.org; linux-poweredge-Lists<BR><B>Subject:</B> =
+error while=20
+intstall fedora core3 with PowerEdge SC430<BR></FONT><BR></DIV>
+<DIV></DIV>
+<DIV>Hi Sir,</DIV>
+<DIV>&nbsp;</DIV>
+<DIV>I have some problem when I tried to install&nbsp;&nbsp;fedora core3 =
+with=20
+Dell PowerEdge SC430 .It 's show error "No drives found"</DIV>
+<DIV>Server Dell PowerEdge SC430</DIV>
+<DIV>SCSI Harddisk 75 Gb.</DIV>
+<DIV>My service tags : 5swtl1s </DIV>
+<DIV>&nbsp;</DIV>
+<DIV>Do you have any idea.</DIV>
+<DIV>&nbsp;</DIV>
+<DIV>Best Regards,</DIV>
+<DIV>Thitiphan K.</DIV>
+<DIV>Thailand </DIV></BODY></HTML>
+
+------_=_NextPart_001_01C6EC7F.AB389150--
+
+
+--===============1341157978==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+Linux-PowerEdge mailing list
+Linux-PowerEdge@dell.com
+http://lists.us.dell.com/mailman/listinfo/linux-poweredge
+Please read the FAQ at http://lists.us.dell.com/faq
+--===============1341157978==--
