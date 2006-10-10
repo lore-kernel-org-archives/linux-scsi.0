@@ -1,42 +1,42 @@
 From: akpm@osdl.org
-Subject: [patch 33/36] aic94xx: SATA tag mask not set correctly
-Date: Tue, 10 Oct 2006 14:41:51 -0700
-Message-ID: <200610102141.k9ALfpnO025464@shell0.pdx.osdl.net>
+Subject: [patch 11/36] scsi: remove unnecessary check in drivers/scsi/sg.c
+Date: Tue, 10 Oct 2006 14:41:26 -0700
+Message-ID: <200610102141.k9ALfQrV025378@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:40606 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S965120AbWJJVmP (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:59038 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1030468AbWJJVmw (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Oct 2006 17:42:15 -0400
+	Tue, 10 Oct 2006 17:42:52 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, djwong@us.ibm.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, snakebyte@gmx.de, dougg@torque.net
 
-From: "Darrick J. Wong" <djwong@us.ibm.com>
+From: Eric Sesterhenn <snakebyte@gmx.de>
 
-The aic94xx controller has a bitmask establishing which tags are ok to use
-with a SATA NCQ disk.  When the queue depth is 32, however, the expression
-that is used sets the mask to zero, not 0xFFFFFFFF.  This patch widens the
-width of the integer so that this case is handled properly.
+coverity spotted this (cid #758).  All callers dereference sfp, so we dont
+need this check.  In addition to this, we dereference it earlier in the
+function.
 
-Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
+Signed-off-by: Eric Sesterhenn <snakebyte@gmx.de>
+Cc: Douglas Gilbert <dougg@torque.net>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/aic94xx/aic94xx_dev.c |    2 +-
+ drivers/scsi/sg.c |    2 +-
  1 files changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/aic94xx/aic94xx_dev.c~aic94xx-sata-tag-mask-not-set-correctly drivers/scsi/aic94xx/aic94xx_dev.c
---- a/drivers/scsi/aic94xx/aic94xx_dev.c~aic94xx-sata-tag-mask-not-set-correctly
-+++ a/drivers/scsi/aic94xx/aic94xx_dev.c
-@@ -134,7 +134,7 @@ static inline int asd_init_sata(struct d
- 		if (w76 & 0x100) /* NCQ? */
- 			qdepth = (w75 & 0x1F) + 1;
- 		asd_ddbsite_write_dword(asd_ha, ddb, SATA_TAG_ALLOC_MASK,
--					(1<<qdepth)-1);
-+					(1ULL<<qdepth)-1);
- 		asd_ddbsite_write_byte(asd_ha, ddb, NUM_SATA_TAGS, qdepth);
- 	}
- 	if (dev->dev_type == SATA_DEV || dev->dev_type == SATA_PM ||
+diff -puN drivers/scsi/sg.c~remove-unnecessary-check-in-drivers-scsi-sgc drivers/scsi/sg.c
+--- a/drivers/scsi/sg.c~remove-unnecessary-check-in-drivers-scsi-sgc
++++ a/drivers/scsi/sg.c
+@@ -1837,7 +1837,7 @@ sg_build_indirect(Sg_scatter_hold * schp
+ 	int blk_size = buff_size;
+ 	struct page *p = NULL;
+ 
+-	if ((blk_size < 0) || (!sfp))
++	if (blk_size < 0)
+ 		return -EFAULT;
+ 	if (0 == blk_size)
+ 		++blk_size;	/* don't know why */
 _
