@@ -1,62 +1,48 @@
-From: akpm@osdl.org
-Subject: [patch 04/36] drivers/scsi/aic7xxx/aic79xx_core.c: make ahd_match_scb() static
-Date: Tue, 10 Oct 2006 14:41:17 -0700
-Message-ID: <200610102141.k9ALfHP9025355@shell0.pdx.osdl.net>
+From: Christian Schmid <webmaster@rapidforum.com>
+Subject: Frozen system even with Raid 5
+Date: Wed, 11 Oct 2006 01:18:56 +0200
+Message-ID: <452C2A60.2070300@rapidforum.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:1184 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1030482AbWJJVoh (ORCPT
+Received: from www.rapidforum.com ([80.237.244.2]:34235 "HELO rapidforum.com")
+	by vger.kernel.org with SMTP id S1030334AbWJJXTC (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Oct 2006 17:44:37 -0400
+	Tue, 10 Oct 2006 19:19:02 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, bunk@stusta.de, hare@suse.de
+To: linuxraid@amcc.com, linux-scsi@vger.kernel.org
 
-From: Adrian Bunk <bunk@stusta.de>
+Hello.
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
-Acked-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Andrew Morton <akpm@osdl.org>
----
+We are right now having a 360 TB Raid-system with 3-Ware controllers. Unfortunately there are 2 ways 
+a disk can fail: A complete sudden fail, which results in a immediate shutdown of the disk, causing 
+the array to continue in degraded mode (raid5), and the soft-fail, which results in a complete hang 
+of the system, the system always prints errors of timeout sending command, card was resetted. A 
+hard-remove of the drive clears the problem, but I dont think thats supposed to be that way, is it? 
+The warnings below keep printed for hours, until the drive is removed. In this time the IOs hang.
 
- drivers/scsi/aic7xxx/aic79xx.h      |    3 ---
- drivers/scsi/aic7xxx/aic79xx_core.c |    5 ++++-
- 2 files changed, 4 insertions(+), 4 deletions(-)
+Oct 10 23:41:19 kernel: [2850624.586613] sd 0:0:4:0: WARNING: (0x06:0x002C): Command (0x28) timed 
+out, resetting card.
+Oct 10 23:41:33 kernel: [2850638.425847] 3w-9xxx: scsi0: AEN: INFO (0x04:0x005E): Cache synchronized 
+after power fail:unit=0.
+Oct 10 23:41:33 kernel: [2850638.545663] 3w-9xxx: scsi0: AEN: INFO (0x04:0x005E): Cache synchronized 
+after power fail:unit=1.
+Oct 10 23:41:33 kernel: [2850638.665481] 3w-9xxx: scsi0: AEN: INFO (0x04:0x005E): Cache synchronized 
+after power fail:unit=2.
+Oct 10 23:41:33 kernel: [2850638.785296] 3w-9xxx: scsi0: AEN: INFO (0x04:0x005E): Cache synchronized 
+after power fail:unit=3.
+Oct 10 23:41:33 kernel: [2850638.905123] 3w-9xxx: scsi0: AEN: INFO (0x04:0x005E): Cache synchronized 
+after power fail:unit=4.
+Oct 10 23:41:33 kernel: [2850639.024934] 3w-9xxx: scsi0: AEN: INFO (0x04:0x005E): Cache synchronized 
+after power fail:unit=5.
+Oct 10 23:41:33 kernel: [2850639.144759] 3w-9xxx: scsi0: AEN: INFO (0x04:0x005E): Cache synchronized 
+after power fail:unit=6.
+Oct 10 23:41:34 kernel: [2850639.264575] 3w-9xxx: scsi0: AEN: INFO (0x04:0x005E): Cache synchronized 
+after power fail:unit=7.
 
-diff -puN drivers/scsi/aic7xxx/aic79xx.h~drivers-scsi-aic7xxx-aic79xx_corec-make-ahd_match_scb-static drivers/scsi/aic7xxx/aic79xx.h
---- a/drivers/scsi/aic7xxx/aic79xx.h~drivers-scsi-aic7xxx-aic79xx_corec-make-ahd_match_scb-static
-+++ a/drivers/scsi/aic7xxx/aic79xx.h
-@@ -1345,9 +1345,6 @@ int	ahd_pci_test_register_access(struct 
- /************************** SCB and SCB queue management **********************/
- void		ahd_qinfifo_requeue_tail(struct ahd_softc *ahd,
- 					 struct scb *scb);
--int		ahd_match_scb(struct ahd_softc *ahd, struct scb *scb,
--			      int target, char channel, int lun,
--			      u_int tag, role_t role);
- 
- /****************************** Initialization ********************************/
- struct ahd_softc	*ahd_alloc(void *platform_arg, char *name);
-diff -puN drivers/scsi/aic7xxx/aic79xx_core.c~drivers-scsi-aic7xxx-aic79xx_corec-make-ahd_match_scb-static drivers/scsi/aic7xxx/aic79xx_core.c
---- a/drivers/scsi/aic7xxx/aic79xx_core.c~drivers-scsi-aic7xxx-aic79xx_corec-make-ahd_match_scb-static
-+++ a/drivers/scsi/aic7xxx/aic79xx_core.c
-@@ -262,6 +262,9 @@ static void		ahd_update_coalescing_value
- 						     u_int mincmds);
- static int		ahd_verify_vpd_cksum(struct vpd_config *vpd);
- static int		ahd_wait_seeprom(struct ahd_softc *ahd);
-+static int		ahd_match_scb(struct ahd_softc *ahd, struct scb *scb,
-+				      int target, char channel, int lun,
-+				      u_int tag, role_t role);
- 
- /******************************** Private Inlines *****************************/
- 
-@@ -7215,7 +7218,7 @@ ahd_busy_tcl(struct ahd_softc *ahd, u_in
- }
- 
- /************************** SCB and SCB queue management **********************/
--int
-+static int
- ahd_match_scb(struct ahd_softc *ahd, struct scb *scb, int target,
- 	      char channel, int lun, u_int tag, role_t role)
- {
-_
+Linux 2.6.17.11 vanilla.
+
+Regards,
+Chris
