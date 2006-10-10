@@ -1,137 +1,185 @@
 From: akpm@osdl.org
-Subject: [patch 09/36] drivers/scsi/pcmcia/nsp_cs.h: removal of old scsi code
-Date: Tue, 10 Oct 2006 14:41:22 -0700
-Message-ID: <200610102141.k9ALfMmD025371@shell0.pdx.osdl.net>
+Subject: [patch 26/36] fc4: Conversion to struct scsi_cmnd in fc4
+Date: Tue, 10 Oct 2006 14:41:42 -0700
+Message-ID: <200610102141.k9ALfgOB025438@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:2206 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751024AbWJJVlb (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:24990 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S964835AbWJJVl5 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Oct 2006 17:41:31 -0400
+	Tue, 10 Oct 2006 17:41:57 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, michal.k.k.piotrowski@gmail.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, henne@nachtwindheim.de
 
-From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+From: Henrik Kretzschmar <henne@nachtwindheim.de>
 
-Signed-off-by: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Changes the obsolete Scsi_Cmnd to struct scsi_cmnd in the Fibre Channel
+driver (fc4).
+
+Signed-off-by: Henrik Kretzschmar <henne@nachtwindheim.de>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/pcmcia/nsp_cs.h |   66 ---------------------------------
- 1 files changed, 66 deletions(-)
+ drivers/fc4/fc.c       |   28 +++++++++++++++-------------
+ drivers/fc4/fcp_impl.h |   15 ++++++++-------
+ 2 files changed, 23 insertions(+), 20 deletions(-)
 
-diff -puN drivers/scsi/pcmcia/nsp_cs.h~drivers-scsi-pcmcia-nsp_csh-removal-of-old drivers/scsi/pcmcia/nsp_cs.h
---- a/drivers/scsi/pcmcia/nsp_cs.h~drivers-scsi-pcmcia-nsp_csh-removal-of-old
-+++ a/drivers/scsi/pcmcia/nsp_cs.h
-@@ -290,7 +290,6 @@ typedef struct _nsp_hw_data {
- #endif
- } nsp_hw_data;
+diff -puN drivers/fc4/fc.c~fc4-conversion-to-struct-scsi_cmnd-in-fc4 drivers/fc4/fc.c
+--- a/drivers/fc4/fc.c~fc4-conversion-to-struct-scsi_cmnd-in-fc4
++++ a/drivers/fc4/fc.c
+@@ -70,9 +70,9 @@
  
--
- /****************************************************************************
-  *
-  */
-@@ -302,22 +301,13 @@ static int        nsp_cs_config (struct 
+ #define FCP_CMND(SCpnt) ((fcp_cmnd *)&(SCpnt->SCp))
+ #define FC_SCMND(SCpnt) ((fc_channel *)(SCpnt->device->host->hostdata[0]))
+-#define SC_FCMND(fcmnd) ((Scsi_Cmnd *)((long)fcmnd - (long)&(((Scsi_Cmnd *)0)->SCp)))
++#define SC_FCMND(fcmnd)	((struct scsi_cmnd *)((long)fcmnd - (long)&(((struct scsi_cmnd *)0)->SCp)))
  
- /* Linux SCSI subsystem specific functions */
- static struct Scsi_Host *nsp_detect     (struct scsi_host_template *sht);
--#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0))
--static        int        nsp_detect_old (struct scsi_host_template *sht);
--static        int        nsp_release_old(struct Scsi_Host *shpnt);
--#endif
- static const  char      *nsp_info       (struct Scsi_Host *shpnt);
- static        int        nsp_proc_info  (
--#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73))
- 	                                 struct Scsi_Host *host,
--#endif
- 					 char   *buffer,
- 					 char  **start,
- 					 off_t   offset,
- 					 int     length,
--#if !(LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73))
--					 int     hostno,
--#endif
- 					 int     inout);
- static        int        nsp_queuecommand(Scsi_Cmnd *SCpnt, void (* done)(Scsi_Cmnd *SCpnt));
+-static int fcp_scsi_queue_it(fc_channel *, Scsi_Cmnd *, fcp_cmnd *, int);
++static int fcp_scsi_queue_it(fc_channel *, struct scsi_cmnd *, fcp_cmnd *, int);
+ void fcp_queue_empty(fc_channel *);
  
-@@ -352,7 +342,6 @@ static struct Scsi_Host *nsp_detect(stru
- static int  __init nsp_cs_init(void);
- static void __exit nsp_cs_exit(void);
+ static void fcp_scsi_insert_queue (fc_channel *fc, fcp_cmnd *fcmd)
+@@ -378,14 +378,14 @@ void fcp_register(fc_channel *fc, u8 typ
+ 		printk ("FC: %segistering unknown type %02x\n", unregister ? "Unr" : "R", type);
+ }
  
--
- /* Debug */
- #ifdef NSP_DEBUG
- static void show_command (Scsi_Cmnd *SCpnt);
-@@ -397,7 +386,6 @@ enum _burst_mode {
- 	BURST_MEM32 = 2,
- };
+-static void fcp_scsi_done(Scsi_Cmnd *SCpnt);
++static void fcp_scsi_done(struct scsi_cmnd *SCpnt);
  
--
- /**************************************************************************
-  * SCSI messaage
-  */
-@@ -409,62 +397,8 @@ enum _burst_mode {
+ static inline void fcp_scsi_receive(fc_channel *fc, int token, int status, fc_hdr *fch)
+ {
+ 	fcp_cmnd *fcmd;
+ 	fcp_rsp  *rsp;
+ 	int host_status;
+-	Scsi_Cmnd *SCpnt;
++	struct scsi_cmnd *SCpnt;
+ 	int sense_len;
+ 	int rsp_status;
  
- #define MSG_EXT_SDTR         0x01
+@@ -757,13 +757,14 @@ void fcp_release(fc_channel *fcchain, in
+ }
  
--
--/**************************************************************************
-- * Compatibility functions
-- */
--
--/* for Kernel 2.4 */
--#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0))
--#  define scsi_register_host(template)   scsi_register_module(MODULE_SCSI_HA, template)
--#  define scsi_unregister_host(template) scsi_unregister_module(MODULE_SCSI_HA, template)
--#  define scsi_host_put(host)            scsi_unregister(host)
--
--typedef void irqreturn_t;
--#  define IRQ_NONE      /* */
--#  define IRQ_HANDLED   /* */
--#  define IRQ_RETVAL(x) /* */
--
--/* This is ad-hoc version of scsi_host_get_next() */
--static inline struct Scsi_Host *scsi_host_get_next(struct Scsi_Host *host)
--{
--	if (host == NULL) {
--		return scsi_hostlist;
--	} else {
--		return host->next;
--	}
--}
--
--/* This is ad-hoc version of scsi_host_hn_get() */
--static inline struct Scsi_Host *scsi_host_hn_get(unsigned short hostno)
--{
--	struct Scsi_Host *host;
--
--	for (host = scsi_host_get_next(NULL); host != NULL;
--	     host = scsi_host_get_next(host)) {
--		if (host->host_no == hostno) {
--			break;
--		}
--	}
--
--	return host;
--}
--
--static void cs_error(struct pcmcia_device *handle, int func, int ret)
--{
--	error_info_t err = { func, ret };
--	pcmcia_report_error(handle, &err);
--}
--
--/* scatter-gather table */
--#  define BUFFER_ADDR (SCpnt->SCp.buffer->address)
--#endif
--
--/* for Kernel 2.6 */
--#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0))
- /* scatter-gather table */
- #  define BUFFER_ADDR ((char *)((unsigned int)(SCpnt->SCp.buffer->page) + SCpnt->SCp.buffer->offset))
--#endif
  
- #endif  /*__nsp_cs__*/
- /* end */
+-static void fcp_scsi_done (Scsi_Cmnd *SCpnt)
++static void fcp_scsi_done(struct scsi_cmnd *SCpnt)
+ {
+ 	if (FCP_CMND(SCpnt)->done)
+ 		FCP_CMND(SCpnt)->done(SCpnt);
+ }
+ 
+-static int fcp_scsi_queue_it(fc_channel *fc, Scsi_Cmnd *SCpnt, fcp_cmnd *fcmd, int prepare)
++static int fcp_scsi_queue_it(fc_channel *fc, struct scsi_cmnd *SCpnt,
++			     fcp_cmnd *fcmd, int prepare)
+ {
+ 	long i;
+ 	fcp_cmd *cmd;
+@@ -837,7 +838,8 @@ static int fcp_scsi_queue_it(fc_channel 
+ 	return 0;
+ }
+ 
+-int fcp_scsi_queuecommand(Scsi_Cmnd *SCpnt, void (* done)(Scsi_Cmnd *))
++int fcp_scsi_queuecommand(struct scsi_cmnd *SCpnt,
++			  void (* done)(struct scsi_cmnd *))
+ {
+ 	fcp_cmnd *fcmd = FCP_CMND(SCpnt);
+ 	fc_channel *fc = FC_SCMND(SCpnt);
+@@ -873,7 +875,7 @@ void fcp_queue_empty(fc_channel *fc)
+ 	}
+ }
+ 
+-int fcp_scsi_abort(Scsi_Cmnd *SCpnt)
++int fcp_scsi_abort(struct scsi_cmnd *SCpnt)
+ {
+ 	/* Internal bookkeeping only. Lose 1 cmd_slots slot. */
+ 	fcp_cmnd *fcmd = FCP_CMND(SCpnt);
+@@ -910,7 +912,7 @@ int fcp_scsi_abort(Scsi_Cmnd *SCpnt)
+ }
+ 
+ #if 0
+-void fcp_scsi_reset_done(Scsi_Cmnd *SCpnt)
++void fcp_scsi_reset_done(struct scsi_cmnd *SCpnt)
+ {
+ 	fc_channel *fc = FC_SCMND(SCpnt);
+ 
+@@ -921,7 +923,7 @@ void fcp_scsi_reset_done(Scsi_Cmnd *SCpn
+ 
+ #define FCP_RESET_TIMEOUT (2*HZ)
+ 
+-int fcp_scsi_dev_reset(Scsi_Cmnd *SCpnt)
++int fcp_scsi_dev_reset(struct scsi_cmnd *SCpnt)
+ {
+ #if 0 /* broken junk, but if davem wants to compile this driver, let him.. */
+ 	unsigned long flags;
+@@ -931,7 +933,7 @@ int fcp_scsi_dev_reset(Scsi_Cmnd *SCpnt)
+         DECLARE_MUTEX_LOCKED(sem);
+ 
+ 	if (!fc->rst_pkt) {
+-		fc->rst_pkt = (Scsi_Cmnd *) kmalloc(sizeof(SCpnt), GFP_KERNEL);
++		fc->rst_pkt = (struct scsi_cmnd *) kmalloc(sizeof(SCpnt), GFP_KERNEL);
+ 		if (!fc->rst_pkt) return FAILED;
+ 		
+ 		fcmd = FCP_CMND(fc->rst_pkt);
+@@ -999,7 +1001,7 @@ int fcp_scsi_dev_reset(Scsi_Cmnd *SCpnt)
+ 	return SUCCESS;
+ }
+ 
+-static int __fcp_scsi_host_reset(Scsi_Cmnd *SCpnt)
++static int __fcp_scsi_host_reset(struct scsi_cmnd *SCpnt)
+ {
+ 	fc_channel *fc = FC_SCMND(SCpnt);
+ 	fcp_cmnd *fcmd = FCP_CMND(SCpnt);
+@@ -1020,7 +1022,7 @@ static int __fcp_scsi_host_reset(Scsi_Cm
+ 	else return FAILED;
+ }
+ 
+-int fcp_scsi_host_reset(Scsi_Cmnd *SCpnt)
++int fcp_scsi_host_reset(struct scsi_cmnd *SCpnt)
+ {
+ 	unsigned long flags;
+ 	int rc;
+diff -puN drivers/fc4/fcp_impl.h~fc4-conversion-to-struct-scsi_cmnd-in-fc4 drivers/fc4/fcp_impl.h
+--- a/drivers/fc4/fcp_impl.h~fc4-conversion-to-struct-scsi_cmnd-in-fc4
++++ a/drivers/fc4/fcp_impl.h
+@@ -39,7 +39,7 @@ struct _fc_channel; 
+ typedef struct fcp_cmnd {
+ 	struct fcp_cmnd		*next;
+ 	struct fcp_cmnd		*prev;
+-	void			(*done)(Scsi_Cmnd *);
++	void			(*done)(struct scsi_cmnd *);
+ 	unsigned short		proto;
+ 	unsigned short		token;
+ 	unsigned int		did;
+@@ -94,14 +94,14 @@ typedef struct _fc_channel {
+ 	long			*scsi_bitmap;
+ 	long			scsi_bitmap_end;
+ 	int			scsi_free;
+-	int			(*encode_addr)(Scsi_Cmnd *, u16 *, struct _fc_channel *, fcp_cmnd *);
++	int			(*encode_addr)(struct scsi_cmnd *, u16 *, struct _fc_channel *, fcp_cmnd *);
+ 	fcp_cmnd		*scsi_que;
+ 	char			scsi_name[4];
+ 	fcp_cmnd		**cmd_slots;
+ 	int			channels;
+ 	int			targets;
+ 	long			*ages;
+-	Scsi_Cmnd		*rst_pkt;
++	struct scsi_cmnd	*rst_pkt;
+ 	fcp_posmap		*posmap;
+ 	/* LOGIN stuff */
+ 	fcp_cmnd		*login;
+@@ -155,9 +155,10 @@ int fc_do_prli(fc_channel *, unsigned ch
+ 	for_each_fc_channel(fc)				\
+ 		if (fc->state == FC_STATE_ONLINE)
+ 
+-int fcp_scsi_queuecommand(Scsi_Cmnd *, void (* done)(Scsi_Cmnd *));
+-int fcp_scsi_abort(Scsi_Cmnd *);
+-int fcp_scsi_dev_reset(Scsi_Cmnd *);
+-int fcp_scsi_host_reset(Scsi_Cmnd *);
++int fcp_scsi_queuecommand(struct scsi_cmnd *,
++			  void (* done) (struct scsi_cmnd *));
++int fcp_scsi_abort(struct scsi_cmnd *);
++int fcp_scsi_dev_reset(struct scsi_cmnd *);
++int fcp_scsi_host_reset(struct scsi_cmnd *);
+ 
+ #endif /* !(_FCP_SCSI_H) */
 _
