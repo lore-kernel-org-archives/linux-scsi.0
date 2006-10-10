@@ -1,69 +1,54 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: [patch 34/36] Maintain module-parameter name consistency with qla2xxx/qla4xxx.
-Date: Tue, 10 Oct 2006 14:58:30 -0700
-Message-ID: <20061010215830.GJ8597@andrew-vasquezs-computer.local>
-References: <200610102141.k9ALfucA025474@shell0.pdx.osdl.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: akpm@osdl.org
+Subject: [patch 07/36] make drivers/scsi/aic7xxx/aic79xx_core.:ahd_set_tags() static
+Date: Tue, 10 Oct 2006 14:41:20 -0700
+Message-ID: <200610102141.k9ALfKsZ025365@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:59166 "EHLO avexch1.qlogic.com")
-	by vger.kernel.org with ESMTP id S1030562AbWJJV6c (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:2208 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1030493AbWJJVoi (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Oct 2006 17:58:32 -0400
-Content-Disposition: inline
-In-Reply-To: <200610102141.k9ALfucA025474@shell0.pdx.osdl.net>
+	Tue, 10 Oct 2006 17:44:38 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@osdl.org
-Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, bunk@stusta.de
 
-On Tue, 10 Oct 2006, akpm@osdl.org wrote:
+From: Adrian Bunk <bunk@stusta.de>
 
-> From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-> 
-> -ENOCHANGELOG.
-> 
-> Don't know who wrote it.
+ahd_set_tags() can now become static.
 
-it was a simple "perl -pi -e '" thingy...
-
-> 
-> Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
-> Cc: James Bottomley <James.Bottomley@steeleye.com>
-> Signed-off-by: Andrew Morton <akpm@osdl.org>
-
-
-Fredrick posted the following patch to address a variable name
-conflict in the recently added qla4xxx driver:
-
-http://article.gmane.org/gmane.linux.kernel/453703
-
-I'd suggested that the prefix be ql2x/ql4x rather than qla2_/qla4_ for
-consistency (some at least):
-
-http://article.gmane.org/gmane.linux.kernel/453769
-
-
-Linus ended up adding Fredrick's patch to the linux-2.6 tree.  I then
-ended up rediffing and posting the updated patch (you've now added to
-mm):
-
-http://article.gmane.org/gmane.linux.kernel/454031
-
-
-Sorry for the confusion -- how's this (too verbose):
-
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
+Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
-Maintain module-parameter name consistency with qla2xxx/qla4xxx.
 
-The recently added the iSCSI qla4xxx driver contains a global
-(non-static) variable that clashes with a pre-existing variable
-present in qla2xxx.
+ drivers/scsi/aic7xxx/aic79xx.h      |    5 -----
+ drivers/scsi/aic7xxx/aic79xx_core.c |    2 +-
+ 2 files changed, 1 insertion(+), 6 deletions(-)
 
-Commit d7a297baa6edea94167163bed808c6a8933bd5aa added a 'qla2_'
-and 'qla4_' prefix to the offending variable name.  Replace the
-'qla2_/qla4_' prefixes with 'ql2x/ql4x' to maintain consistency
-with other module-parameters.
-
-Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
----
+diff -puN drivers/scsi/aic7xxx/aic79xx.h~make-drivers-scsi-aic7xxx-aic79xx_coreahd_set_tags-static drivers/scsi/aic7xxx/aic79xx.h
+--- a/drivers/scsi/aic7xxx/aic79xx.h~make-drivers-scsi-aic7xxx-aic79xx_coreahd_set_tags-static
++++ a/drivers/scsi/aic7xxx/aic79xx.h
+@@ -1433,11 +1433,6 @@ typedef enum {
+ 	AHD_QUEUE_TAGGED
+ } ahd_queue_alg;
+ 
+-void			ahd_set_tags(struct ahd_softc *ahd,
+-				     struct scsi_cmnd *cmd,
+-				     struct ahd_devinfo *devinfo,
+-				     ahd_queue_alg alg);
+-
+ /**************************** Target Mode *************************************/
+ #ifdef AHD_TARGET_MODE
+ void		ahd_send_lstate_events(struct ahd_softc *,
+diff -puN drivers/scsi/aic7xxx/aic79xx_core.c~make-drivers-scsi-aic7xxx-aic79xx_coreahd_set_tags-static drivers/scsi/aic7xxx/aic79xx_core.c
+--- a/drivers/scsi/aic7xxx/aic79xx_core.c~make-drivers-scsi-aic7xxx-aic79xx_coreahd_set_tags-static
++++ a/drivers/scsi/aic7xxx/aic79xx_core.c
+@@ -3274,7 +3274,7 @@ ahd_set_width(struct ahd_softc *ahd, str
+ /*
+  * Update the current state of tagged queuing for a given target.
+  */
+-void
++static void
+ ahd_set_tags(struct ahd_softc *ahd, struct scsi_cmnd *cmd,
+ 	     struct ahd_devinfo *devinfo, ahd_queue_alg alg)
+ {
+_
