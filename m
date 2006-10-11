@@ -1,40 +1,30 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] zfcp: initialize scsi_host_template.max_sectors with
-	appropriate value
-Date: Wed, 11 Oct 2006 10:05:21 -0500
-Message-ID: <1160579121.3447.21.camel@mulgrave.il.steeleye.com>
-References: <200610091533.42282.swen@vnet.ibm.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [2.6 patch] drivers/scsi/dpt_i2o.c: remove dead code
+Date: Wed, 11 Oct 2006 18:45:54 +0100
+Message-ID: <1160588754.16513.53.camel@localhost.localdomain>
+References: <20061008231627.GO6755@stusta.de>
+	 <1160578300.16513.15.camel@localhost.localdomain>
+	 <20061011145222.GL721@stusta.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:59614 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S965224AbWJKPF1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Oct 2006 11:05:27 -0400
-In-Reply-To: <200610091533.42282.swen@vnet.ibm.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:57282 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S1161087AbWJKRVf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Oct 2006 13:21:35 -0400
+In-Reply-To: <20061011145222.GL721@stusta.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Swen Schillig <swen@vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org
+To: Adrian Bunk <bunk@stusta.de>
+Cc: linux-kernel@vger.kernel.org, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
 
-On Mon, 2006-10-09 at 15:33 +0200, Swen Schillig wrote:
-> commit 7f3c3e955cfba57c4d95706c326d9c5b2f92e941
-> Author: Swen Schillig <swen@vnet.ibm.com>
-> Date:   Mon Oct 9 14:59:08 2006 +0200
-> 
-> Define (ZFCP_MAX_SECTORS) and initialize scsi_host_template.max_sectors with 
-> appropriate value.
-> 
->      ZFCP_MAX_SECTORS (ZFCP_MAX_SBALES_PER_REQ * 8)
->         /* max. number of (data buffer) SBALEs in largest SBAL chain
->            multiplied with number of sectors per 4k block */
+> I don't see the point of the suggested place for the pci_dev_put()
+> since pci_dev_get() has never been executed in this case, or do I miss 
+> anything?
 
-This needs a signoff.
+Correct, thats what I get for being away and reading 4000 emails when I
+get back
 
-Plus it doesn't apply: it looks like your mailer has converted tabs to
-spaces.
-
-James
-
+Alan
 
