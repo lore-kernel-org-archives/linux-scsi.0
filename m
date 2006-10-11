@@ -1,68 +1,76 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Rejected patch to reduce polling I/O
-Date: Wed, 11 Oct 2006 10:32:30 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0610111027370.6950-100000@iolanthe.rowland.org>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: Re: [2.6 patch] drivers/scsi/dpt_i2o.c: remove dead code
+Date: Wed, 11 Oct 2006 16:52:22 +0200
+Message-ID: <20061011145222.GL721@stusta.de>
+References: <20061008231627.GO6755@stusta.de> <1160578300.16513.15.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:45318 "HELO
-	iolanthe.rowland.org") by vger.kernel.org with SMTP
-	id S1030444AbWJKOcb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Oct 2006 10:32:31 -0400
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:45574 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S1030552AbWJKOwZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Oct 2006 10:52:25 -0400
+Content-Disposition: inline
+In-Reply-To: <1160578300.16513.15.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-kernel@vger.kernel.org, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
 
-James:
+On Wed, Oct 11, 2006 at 03:51:40PM +0100, Alan Cox wrote:
+> Ar Llu, 2006-10-09 am 01:16 +0200, ysgrifennodd Adrian Bunk:
+> > The Coverity checker spotted this dead code introduced by
+> > commit a07f353701acae77e023f6270e8af353b37af7c4.
+> > 
+> > Signed-off-by: Adrian Bunk <bunk@stusta.de>
+> 
+> Semi-NAK
+> 
+> Its not dead jim, its in the wrong location
+> 
+> >  	while ((pDev = pci_get_device( PCI_DPT_VENDOR_ID, PCI_ANY_ID, pDev))) {
+> >  		if(pDev->device == PCI_DPT_DEVICE_ID ||
+> >  		   pDev->device == PCI_DPT_RAPTOR_DEVICE_ID){
+> >  			if(adpt_install_hba(sht, pDev) ){
+> >  				PERROR("Could not Init an I2O RAID device\n");
+> >  				PERROR("Will not try to detect others.\n");
+> 
+> ------------------------> pci_dev_put()
+> 
+> is needed there instead I think.
+>...
 
-Andrew Morton says you rejected the patch below.  Any particular reason?
-
-Alan Stern
+The current code is:
 
 
+        /* search for all Adatpec I2O RAID cards */
+        while ((pDev = pci_get_device( PCI_DPT_VENDOR_ID, PCI_ANY_ID, pDev))) {
+                if(pDev->device == PCI_DPT_DEVICE_ID ||
+                   pDev->device == PCI_DPT_RAPTOR_DEVICE_ID){
+                        if(adpt_install_hba(sht, pDev) ){
+                                PERROR("Could not Init an I2O RAID device\n");
+                                PERROR("Will not try to detect others.\n");
+                                return hba_count-1;
+                        }
+                        pci_dev_get(pDev);
+                }
+        }
+        if (pDev)
+                pci_dev_put(pDev);
 
-If a drive reports that no media is present, there's no point in
-continuing to ask it about media status.  This patch (as696) cuts the
-TUR polling short as soon as the drive reports no media instead of
-going a full 3 iterations.
 
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+I don't see the point of the suggested place for the pci_dev_put()
+since pci_dev_get() has never been executed in this case, or do I miss 
+anything?
 
----
 
-Index: usb-2.6/drivers/scsi/sd.c
-===================================================================
---- usb-2.6.orig/drivers/scsi/sd.c
-+++ usb-2.6/drivers/scsi/sd.c
-@@ -1046,6 +1046,14 @@ sd_spinup_disk(struct scsi_disk *sdkp, c
- 						      &sshdr, SD_TIMEOUT,
- 						      SD_MAX_RETRIES);
- 
-+			/*
-+			 * If the drive has indicated to us that it
-+			 * doesn't have any media in it, don't bother
-+			 * with any of the rest of this crap.
-+			 */
-+			if (media_not_present(sdkp, &sshdr))
-+				return;
-+
- 			if (the_result)
- 				sense_valid = scsi_sense_valid(&sshdr);
- 			retries++;
-@@ -1054,14 +1062,6 @@ sd_spinup_disk(struct scsi_disk *sdkp, c
- 			  ((driver_byte(the_result) & DRIVER_SENSE) &&
- 			  sense_valid && sshdr.sense_key == UNIT_ATTENTION)));
- 
--		/*
--		 * If the drive has indicated to us that it doesn't have
--		 * any media in it, don't bother with any of the rest of
--		 * this crap.
--		 */
--		if (media_not_present(sdkp, &sshdr))
--			return;
--
- 		if ((driver_byte(the_result) & DRIVER_SENSE) == 0) {
- 			/* no sense, TUR either succeeded or failed
- 			 * with a status error */
+cu
+Adrian
+
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
 
