@@ -1,83 +1,51 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH] Reduce polling in sd.c
-Date: Wed, 11 Oct 2006 16:48:28 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0610111646090.6437-100000@iolanthe.rowland.org>
-References: <1160578569.3447.19.camel@mulgrave.il.steeleye.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [PATCH] MPT fusion: handle PCI layer error on resume
+Date: Wed, 11 Oct 2006 17:38:34 -0400
+Message-ID: <20061011213834.GA20253@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:63759 "HELO
-	iolanthe.rowland.org") by vger.kernel.org with SMTP
-	id S1161263AbWJKUs3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Oct 2006 16:48:29 -0400
-In-Reply-To: <1160578569.3447.19.camel@mulgrave.il.steeleye.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1161529AbWJKVik@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Eric.Moore@lsil.com, linux-scsi@vger.kernel.org, Andrew Morton <akpm@osdl.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-If a drive reports that no media is present, there's no point in
-continuing to ask it about media status.  This patch (as696) cuts the
-TUR polling short as soon as the drive reports no media instead of
-going a full 3 iterations.
 
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+In the unlikely event of pci_enable_device() failure during resume, we
+do the minimalist solution and simply exit, rather than continuing to
+enable the hardware.
+
+Signed-off-by: Jeff Garzik <jeff@garzik.org>
 
 ---
 
-On Wed, 11 Oct 2006, James Bottomley wrote:
+ drivers/message/fusion/mptbase.c |   10 ++++++++--
 
-> On Wed, 2006-10-11 at 10:32 -0400, Alan Stern wrote:
-> > Andrew Morton says you rejected the patch below.  Any particular 
-reason?
->
-> I haven't said anything at all about this patch since my comments in
-> June, which were basically
->
-> - could we do more to reduce flag duplication
-> - since the change impacts the cdrom layer we'll wait to see what the cd
-> maintainers want to do.
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index e5c7271..f183b83 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -1515,7 +1515,7 @@ mpt_resume(struct pci_dev *pdev)
+ {
+ 	MPT_ADAPTER *ioc = pci_get_drvdata(pdev);
+ 	u32 device_state = pdev->current_state;
+-	int recovery_state;
++	int recovery_state, rc;
  
-Hmmm...  Well never mind that for now.  This particular patch has nothing
-to do with flag duplication or the cdrom layer; it is entirely
-self-contained.  I'd like to submit it on its own merits.
-
-Alan Stern
-
-
-
-Index: usb-2.6/drivers/scsi/sd.c
-===================================================================
---- usb-2.6.orig/drivers/scsi/sd.c
-+++ usb-2.6/drivers/scsi/sd.c
-@@ -1051,6 +1051,14 @@
- 						      &sshdr, SD_TIMEOUT,
- 						      SD_MAX_RETRIES);
+ 	printk(MYIOC_s_INFO_FMT
+ 	"pci-resume: pdev=0x%p, slot=%s, Previous operating state [D%d]\n",
+@@ -1523,7 +1523,13 @@ mpt_resume(struct pci_dev *pdev)
  
-+			/*
-+			 * If the drive has indicated to us that it
-+			 * doesn't have any media in it, don't bother
-+			 * with any more polling.
-+			 */
-+			if (media_not_present(sdkp, &sshdr))
-+				return;
+ 	pci_set_power_state(pdev, 0);
+ 	pci_restore_state(pdev);
+-	pci_enable_device(pdev);
 +
- 			if (the_result)
- 				sense_valid = scsi_sense_valid(&sshdr);
- 			retries++;
-@@ -1059,14 +1067,6 @@
- 			  ((driver_byte(the_result) & DRIVER_SENSE) &&
- 			  sense_valid && sshdr.sense_key == UNIT_ATTENTION)));
++	rc = pci_enable_device(pdev);
++	if (rc) {
++		printk(MYIOC_s_INFO_FMT
++			"pci-resume: device enable failed\n", ioc->name);
++		return rc;
++	}
  
--		/*
--		 * If the drive has indicated to us that it doesn't have
--		 * any media in it, don't bother with any of the rest of
--		 * this crap.
--		 */
--		if (media_not_present(sdkp, &sshdr))
--			return;
--
- 		if ((driver_byte(the_result) & DRIVER_SENSE) == 0) {
- 			/* no sense, TUR either succeeded or failed
- 			 * with a status error */
-
+ 	/* enable interrupts */
+ 	CHIPREG_WRITE32(&ioc->chip->IntMask, MPI_HIM_DIM);
