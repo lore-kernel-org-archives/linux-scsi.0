@@ -1,84 +1,50 @@
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Re: [PATCH] SCSI: minor bug fixes and cleanups
-Date: Wed, 11 Oct 2006 08:18:24 +0200
-Message-ID: <200610110818.25158.eike-kernel@sf-tec.de>
-References: <20061010232231.GA19015@havoc.gtf.org>
+From: Csillag Tamas <cstamas@digitus.itk.ppke.hu>
+Subject: Re: megaraid not working in 2.6.18
+Date: Wed, 11 Oct 2006 08:57:43 +0200
+Message-ID: <20061011065742.GE905@digitus>
+References: <890BF3111FB9484E9526987D912B261932E3CE@NAMAIL3.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1271319.9g9qtjkpBh";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-2
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:26020 "EHLO mail.sf-mail.de")
-	by vger.kernel.org with ESMTP id S1030647AbWJKGRT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Oct 2006 02:17:19 -0400
-In-Reply-To: <20061010232231.GA19015@havoc.gtf.org>
+Received: from jugis.itk.ppke.hu ([193.225.109.42]:15338 "EHLO
+	jugis.itk.ppke.hu") by vger.kernel.org with ESMTP id S932137AbWJKG5t
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Oct 2006 02:57:49 -0400
+Content-Disposition: inline
+In-Reply-To: <890BF3111FB9484E9526987D912B261932E3CE@NAMAIL3.ad.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-scsi@vger.kernel.org, Andrew Morton <akpm@osdl.org>, LKML <linux-kernel@vger.kernel.org>
+To: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
+Cc: linux-scsi@vger.kernel.org
 
---nextPart1271319.9g9qtjkpBh
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+On 10/10, Ju, Seokmann wrote:
+>  
+> Hi,
+> > However the legacy megaraid drivers does not work either. I get
+> > unknown-block-device error when the kernel tries to mount sdaX.
+> > I do not even see the megaraid driver coming up! no detecting 
+> > messages like
+> > in 2.6.11
+> From 2.6.13 or later, old megaraid controllers, like yours, has to go with megaraid legacy driver.
+> I'm not sure why the driver gets failed to load. 
+> For further assist, please contact LSI customer service if you bought directly from LSI, or contact your system maker.
+> 
+> Thank you,
 
-Jeff Garzik wrote:
-> BusLogic: use kzalloc(), remove cast to/from void*
->
-> aic7xxx_old: fix typo in cast
->
-> NCR53c406a: ifdef out static built code
->
-> fd_mcs: ifdef out static built code
->
-> ncr53c8xx: ifdef out static built code
->
-> Signed-off-by: Jeff Garzik <jeff@garzik.org>
->
-> ---
->
->  drivers/scsi/BusLogic.c       |   12 ++++++------
->  drivers/scsi/NCR53c406a.c     |    5 +++++
->  drivers/scsi/aic7xxx_old.c    |    2 +-
->  drivers/scsi/fd_mcs.c         |    2 ++
->  drivers/scsi/ncr53c8xx.c      |   19 +++++++++++--------
->
-> diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
-> index 7c59bba..689dc4c 100644
-> --- a/drivers/scsi/BusLogic.c
-> +++ b/drivers/scsi/BusLogic.c
-> @@ -2186,21 +2186,21 @@ #endif
->
->  	if (BusLogic_ProbeOptions.NoProbe)
->  		return -ENODEV;
-> -	BusLogic_ProbeInfoList = (struct BusLogic_ProbeInfo *)
-> -	    kmalloc(BusLogic_MaxHostAdapters * sizeof(struct BusLogic_ProbeInfo),
-> GFP_ATOMIC); +	BusLogic_ProbeInfoList =
-> +	    kzalloc(BusLogic_MaxHostAdapters * sizeof(struct BusLogic_ProbeInfo),
-> GFP_KERNEL); if (BusLogic_ProbeInfoList == NULL) {
->  		BusLogic_Error("BusLogic: Unable to allocate Probe Info List\n", NULL);
->  		return -ENOMEM;
->  	}
-> -	memset(BusLogic_ProbeInfoList, 0, BusLogic_MaxHostAdapters *
-> sizeof(struct BusLogic_ProbeInfo));
+Well that's an old (legacy? ;-) server we do not want to throw out. The
+vendor is HP. We do not have support for linux AFAIK we never had.
 
-kcalloc
+I will start examining the source (and the patches after 2.6.13) if I
+can see some obvious...
 
-Eike
+But if you have any hints please tell me.
 
---nextPart1271319.9g9qtjkpBh
-Content-Type: application/pgp-signature
+Thanks.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.2 (GNU/Linux)
+-- 
+"If you have an apple and I have  an apple and we  exchange apples then you
+and I will still each have  one apple. But  if you have an idea and I have
+an idea and we exchange these ideas, then each of us will have two ideas."
+                 -- George Bernard Shaw
 
-iD8DBQBFLIyxXKSJPmm5/E4RAvFqAKCF16dI/+zlI19DfZWp2nknxQkXMwCcCdfa
-4iXSvvijOc6R44XbwnZn/Ik=
-=nA4y
------END PGP SIGNATURE-----
-
---nextPart1271319.9g9qtjkpBh--
+CSILLAG Tamas (cstamas) - http://digitus.itk.ppke.hu/~cstamas
