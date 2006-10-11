@@ -1,43 +1,68 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [2.6 patch] drivers/scsi/dpt_i2o.c: remove dead code
-Date: Wed, 11 Oct 2006 15:51:40 +0100
-Message-ID: <1160578300.16513.15.camel@localhost.localdomain>
-References: <20061008231627.GO6755@stusta.de>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Rejected patch to reduce polling I/O
+Date: Wed, 11 Oct 2006 10:32:30 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0610111027370.6950-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:60133 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1030408AbWJKO13 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Oct 2006 10:27:29 -0400
-In-Reply-To: <20061008231627.GO6755@stusta.de>
+Received: from iolanthe.rowland.org ([192.131.102.54]:45318 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP
+	id S1030444AbWJKOcb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Oct 2006 10:32:31 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: linux-kernel@vger.kernel.org, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-Ar Llu, 2006-10-09 am 01:16 +0200, ysgrifennodd Adrian Bunk:
-> The Coverity checker spotted this dead code introduced by
-> commit a07f353701acae77e023f6270e8af353b37af7c4.
-> 
-> Signed-off-by: Adrian Bunk <bunk@stusta.de>
+James:
 
-Semi-NAK
+Andrew Morton says you rejected the patch below.  Any particular reason?
 
-Its not dead jim, its in the wrong location
-
->  	while ((pDev = pci_get_device( PCI_DPT_VENDOR_ID, PCI_ANY_ID, pDev))) {
->  		if(pDev->device == PCI_DPT_DEVICE_ID ||
->  		   pDev->device == PCI_DPT_RAPTOR_DEVICE_ID){
->  			if(adpt_install_hba(sht, pDev) ){
->  				PERROR("Could not Init an I2O RAID device\n");
->  				PERROR("Will not try to detect others.\n");
-
-------------------------> pci_dev_put()
-
-is needed there instead I think.
+Alan Stern
 
 
-Been away so just catching up
+
+If a drive reports that no media is present, there's no point in
+continuing to ask it about media status.  This patch (as696) cuts the
+TUR polling short as soon as the drive reports no media instead of
+going a full 3 iterations.
+
+Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+
+---
+
+Index: usb-2.6/drivers/scsi/sd.c
+===================================================================
+--- usb-2.6.orig/drivers/scsi/sd.c
++++ usb-2.6/drivers/scsi/sd.c
+@@ -1046,6 +1046,14 @@ sd_spinup_disk(struct scsi_disk *sdkp, c
+ 						      &sshdr, SD_TIMEOUT,
+ 						      SD_MAX_RETRIES);
+ 
++			/*
++			 * If the drive has indicated to us that it
++			 * doesn't have any media in it, don't bother
++			 * with any of the rest of this crap.
++			 */
++			if (media_not_present(sdkp, &sshdr))
++				return;
++
+ 			if (the_result)
+ 				sense_valid = scsi_sense_valid(&sshdr);
+ 			retries++;
+@@ -1054,14 +1062,6 @@ sd_spinup_disk(struct scsi_disk *sdkp, c
+ 			  ((driver_byte(the_result) & DRIVER_SENSE) &&
+ 			  sense_valid && sshdr.sense_key == UNIT_ATTENTION)));
+ 
+-		/*
+-		 * If the drive has indicated to us that it doesn't have
+-		 * any media in it, don't bother with any of the rest of
+-		 * this crap.
+-		 */
+-		if (media_not_present(sdkp, &sshdr))
+-			return;
+-
+ 		if ((driver_byte(the_result) & DRIVER_SENSE) == 0) {
+ 			/* no sense, TUR either succeeded or failed
+ 			 * with a status error */
 
