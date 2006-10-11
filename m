@@ -1,36 +1,35 @@
-From: <crazyrushstar@yahoo.com.tw>
-Subject: make a .img file for RH to install
-Date: Wed, 11 Oct 2006 16:07:52 +0800 (CST)
-Message-ID: <20061011080752.47706.qmail@web18305.mail.tpe.yahoo.com>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: make a .img file for RH to install
+Date: Wed, 11 Oct 2006 10:55:00 +0200
+Message-ID: <1160556900.3000.362.camel@laptopd505.fenrus.org>
+References: <20061011080752.47706.qmail@web18305.mail.tpe.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=big5
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web18305.mail.tpe.yahoo.com ([203.84.194.87]:62876 "HELO
-	web18305.mail.tpe.yahoo.com") by vger.kernel.org with SMTP
-	id S1161021AbWJKIIB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Oct 2006 04:08:01 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:50847 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S965192AbWJKIzE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Oct 2006 04:55:04 -0400
+In-Reply-To: <20061011080752.47706.qmail@web18305.mail.tpe.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: crazyrushstar@yahoo.com.tw
-
-Now I can build a .ko file but I dont know how to make
-a .img file for Red-hat OS to install system.
-
-Does this .img file(text dd will need this) contain a
-special format?
-
-And how to let my code be contain in linux kernel like
-other drivers!
+To: crazyrushstar@yahoo.com.tw
+Cc: linux-scsi@vger.kernel.org
 
 
-___________________________________________________=20
- =B1z=AA=BA=A5=CD=AC=A1=A7Y=AE=C9=B3q =A1=D0 =B7=BE=B3q=A1B=AET=BC=D6=A1=
-B=A5=CD=AC=A1=A1B=A4u=A7@=A4@=A6=B8=B7d=A9w=A1I=20
- http://messenger.yahoo.com.tw/
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> And how to let my code be contain in linux kernel like
+> other drivers!
+
+a good start for that is posting the code to this mailing list for code
+review; the first time you can expect MANY review comments, especially
+if you are new to Linux. But consider it an opportunity to learn....
+
+Once the review comments have been fixed, usually the driver can go into
+the kernel very easily.
+
+Greetings,
+   Arjan van de Ven 
+-- 
+if you want to mail me at work (you don't), use arjan (at) linux.intel.com
+
