@@ -1,58 +1,51 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
+From: aboo <aboo@aboo.org>
 Subject: Re: SCSITAP, Virtual SCSI HBA and user space SCSI initiators
-Date: Thu, 12 Oct 2006 15:39:14 -0500
-Message-ID: <452EA7F2.7040506@cs.wisc.edu>
-References: <452E0A5C.6020001@aboo.org> <452E7A9A.3000501@aboo.org>
+Date: Fri, 13 Oct 2006 8:13:24 +1000
+Message-ID: <c3b66b980e163824b0079e07578624da@aboo.org>
+References: <1160675319.3432.34.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:22196 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S1750845AbWJLUjX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Oct 2006 16:39:23 -0400
-In-Reply-To: <452E7A9A.3000501@aboo.org>
+Received: from ppp245-155.static.internode.on.net ([59.167.245.155]:21418 "EHLO
+	localhost.localdomain") by vger.kernel.org with ESMTP
+	id S1751198AbWJLWSq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Oct 2006 18:18:46 -0400
+In-Reply-To: <1160675319.3432.34.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Aboo Valappil <aboo@aboo.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
 Cc: linux-scsi@vger.kernel.org
 
-Aboo Valappil wrote:
-> I am sending this again as the initial mail did not make it to the list.
-> 
-> Hi All,
-> 
-> I thought a lot about whether  I should write to mailing list about this
-> or not. I have requested help from the list before to complete this. May
-> be I am too crazy to develop something like this. When I think more and
-> more about this, it will be really useful, mainly for educational
-> purposes and it could be useful in other environments.
-> 
-> I like to know everyone's opinion on this. Please let me know your
-> thoughts and suggestions and its inclusion in the main line Linux kernel.
-> 
-> I have developed a Virtual HBA (Around ~600 lines of code). It is a
-> kernel module and works very well with 2.6.9 kernel. Basically it
-> registers a HBA (LLD) to the SCSI Mid layer. It implements a linked list
-> with all the SCSI commands queued from Mid layer. I registered  a
-> character device driver. I ship out the SCSI commands off to user space
-> via this character device. There is a user space application monitoring
-> this character device looking for SCSI commands, process it and sends it
-> back to the mid layer through this character interface.  At the moment,
-> the interface to the Virtual HBA inside the kernel is through read/write
-> and ioctls to the character device. I am trying to get rid of reading
-> and writing of SCSI request_buffer through character device and use
-> memmap/splice to avoid copying kernel buffer to user space(I am facing
-> some challenges as the request_buffer is not a linear buffer, but a
-> scatter gather buffer).
+Thanks James,
 
-Is there any reason you went with the virtual scsi hba? There is a
-dm-userspace module which would allow you to put any block layer driver
-in userspace. You should ask Dan Smith <danms@us.ibm.com> and Tomo
-<fujita.tomonori@lab.ntt.co.jp> to learn more.
+Is'nt this a target implimentation, rather than a initiator? That page does not give me more details. I have sent an email to the author of the project to get more details. Hopefully, they will reply :)
 
-I guess the downside would be that a lot of scsi-ml would be duplicated
-in userspace. I am not sure how big a deal that is. If it is a problem,
-you could at least look into what it takes to throw requests and buffers
-between the kernel and userspace and what code can be shared between
-your driver, dm-userspace, SG_IO, and the scsi target code.
+Aboo
+
+On Thu, 12 Oct 2006 12:48:39 -0500, James Bottomley <James.Bottomley@SteelEye.com> wrote:
+> On Fri, 2006-10-13 at 03:25 +1000, Aboo Valappil wrote:
+>> I wanted to make a NDMP (A protocol used to manage tapes and perform
+>> backup/resotre on NAS heads)  initiator for Linux (Just out of my
+>> interest).. I was not very good with doing stuff inside the kernel.
+>> First my idea was to modify the Cisco iSCSI initiator and make it for
+>> NDMP. But i found, it is too much of work + I already had a user space
+>> implimentation of NDMP procedures. So I thought of making a virtual HBA
+>> and expose the SCSI mid-layer to a user space application.
+> 
+> We actually already have an existing target infrastructure project here:
+> 
+> http://git.kernel.org/git/?p=linux/kernel/git/tomo/linux-2.6-target.git;a=summary
+> 
+> It seems to be very similar to yours ... could you see how easy it would
+> be for you to integrate with this project?
+> 
+> Thanks,
+> 
+> James
+
+-------------------------------------
+Aboo.Org - Compliments From A & J :)
+-------------------------------------
+
+
