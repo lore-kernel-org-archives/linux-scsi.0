@@ -1,72 +1,58 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH RFC] replace dm hw handlers with scsi handlers
-Date: Thu, 12 Oct 2006 15:21:15 -0500
-Message-ID: <452EA3BB.8020305@cs.wisc.edu>
-References: <1160684310.4163.4.camel@madmax>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+Subject: Re: SCSITAP, Virtual SCSI HBA and user space SCSI initiators
+Date: Thu, 12 Oct 2006 15:39:14 -0500
+Message-ID: <452EA7F2.7040506@cs.wisc.edu>
+References: <452E0A5C.6020001@aboo.org> <452E7A9A.3000501@aboo.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <1160684310.4163.4.camel@madmax>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: dm-devel@redhat.com, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:22196 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S1750845AbWJLUjX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Oct 2006 16:39:23 -0400
+In-Reply-To: <452E7A9A.3000501@aboo.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Aboo Valappil <aboo@aboo.org>
+Cc: linux-scsi@vger.kernel.org
 
-Mike Christie wrote:
-> +
-> +static int clariion_check_sense(struct scsi_sense_hdr *sense_hdr)
-> +{
-> +	switch (sense_hdr->sense_key) {
-> +	case NOT_READY:
-> +		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x03)
-> +			/*
-> +			 * LUN Not Ready - Manual Intervention Required
-> +			 * indicates this is a passive path.
-> +			 *
-> +			 * FIXME: However, if this is seen and EVPD C0
-> +			 * indicates that this is due to a NDU in
-> +			 * progress, we should set FAIL_PATH too.
-> +			 * This indicates we might have to do a SCSI
-> +			 * inquiry in the end_io path. Ugh.
-> +			 */
-> +			return FAILED;
-> +		break;
-> +	case ILLEGAL_REQUEST:
-> +		if (sense_hdr->asc == 0x25 && sense_hdr->ascq == 0x01)
-> +			/*
-> +			 * An array based copy is in progress. Do not
-> +			 * fail the path, do not bypass to another PG,
-> +			 * do not retry. Fail the IO immediately.
-> +			 * (Actually this is the same conclusion as in
-> +			 * the default handler, but lets make sure.)
-> +			 */
-> +			return FAILED;
-> +		break;
-> +	case UNIT_ATTENTION:
-> +		if (sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x00)
-> +			/*
-> +			 * Unit Attention Code. This is the first IO
-> +			 * to the new path, so just retry.
-> +			 */
-> +			return NEEDS_RETRY;
-> +		break;
-> +	}
-> +
-> +	/* success just means we do not care what scsi-ml does */
-> +	return SUCCESS;
-> +}
-> +
+Aboo Valappil wrote:
+> I am sending this again as the initial mail did not make it to the list.
+> 
+> Hi All,
+> 
+> I thought a lot about whether  I should write to mailing list about this
+> or not. I have requested help from the list before to complete this. May
+> be I am too crazy to develop something like this. When I think more and
+> more about this, it will be really useful, mainly for educational
+> purposes and it could be useful in other environments.
+> 
+> I like to know everyone's opinion on this. Please let me know your
+> thoughts and suggestions and its inclusion in the main line Linux kernel.
+> 
+> I have developed a Virtual HBA (Around ~600 lines of code). It is a
+> kernel module and works very well with 2.6.9 kernel. Basically it
+> registers a HBA (LLD) to the SCSI Mid layer. It implements a linked list
+> with all the SCSI commands queued from Mid layer. I registered  a
+> character device driver. I ship out the SCSI commands off to user space
+> via this character device. There is a user space application monitoring
+> this character device looking for SCSI commands, process it and sends it
+> back to the mid layer through this character interface.  At the moment,
+> the interface to the Virtual HBA inside the kernel is through read/write
+> and ioctls to the character device. I am trying to get rid of reading
+> and writing of SCSI request_buffer through character device and use
+> memmap/splice to avoid copying kernel buffer to user space(I am facing
+> some challenges as the request_buffer is not a linear buffer, but a
+> scatter gather buffer).
 
-Oh yeah, Ed could you tell me where sometimes a commend gets retried
-over and over when a path is passive and can you tell me on what error
-values it does this so I can add this in? Does the check_sense code
-force the retry, or scsi_io_completion or the ULD?
+Is there any reason you went with the virtual scsi hba? There is a
+dm-userspace module which would allow you to put any block layer driver
+in userspace. You should ask Dan Smith <danms@us.ibm.com> and Tomo
+<fujita.tomonori@lab.ntt.co.jp> to learn more.
+
+I guess the downside would be that a lot of scsi-ml would be duplicated
+in userspace. I am not sure how big a deal that is. If it is a problem,
+you could at least look into what it takes to throw requests and buffers
+between the kernel and userspace and what code can be shared between
+your driver, dm-userspace, SG_IO, and the scsi target code.
