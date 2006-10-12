@@ -1,42 +1,40 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: [PATCH] SCSI/qla2xxx: handle sysfs errors
-Date: Thu, 12 Oct 2006 10:31:38 -0700
-Message-ID: <20061012173138.GC4296@andrew-vasquezs-computer.local>
-References: <20061012014538.GA12894@havoc.gtf.org> <20061012165734.GG3638@andrew-vasquezs-computer.local> <452E7966.7030206@garzik.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: SCSITAP, Virtual SCSI HBA and user space SCSI initiators
+Date: Thu, 12 Oct 2006 12:48:39 -0500
+Message-ID: <1160675319.3432.34.camel@mulgrave.il.steeleye.com>
+References: <452E0A5C.6020001@aboo.org>  <452E7A9A.3000501@aboo.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:53124 "EHLO avexch1.qlogic.com")
-	by vger.kernel.org with ESMTP id S1750806AbWJLRbm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Oct 2006 13:31:42 -0400
-Content-Disposition: inline
-In-Reply-To: <452E7966.7030206@garzik.org>
+Received: from stat9.steeleye.com ([209.192.50.41]:39047 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1750873AbWJLRsq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Oct 2006 13:48:46 -0400
+In-Reply-To: <452E7A9A.3000501@aboo.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-scsi@vger.kernel.org, Andrew Morton <akpm@osdl.org>, LKML <linux-kernel@vger.kernel.org>
+To: Aboo Valappil <aboo@aboo.org>
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, 12 Oct 2006, Jeff Garzik wrote:
+On Fri, 2006-10-13 at 03:25 +1000, Aboo Valappil wrote:
+> I wanted to make a NDMP (A protocol used to manage tapes and perform 
+> backup/resotre on NAS heads)  initiator for Linux (Just out of my 
+> interest).. I was not very good with doing stuff inside the kernel. 
+> First my idea was to modify the Cisco iSCSI initiator and make it for 
+> NDMP. But i found, it is too much of work + I already had a user space 
+> implimentation of NDMP procedures. So I thought of making a virtual HBA 
+> and expose the SCSI mid-layer to a user space application.
 
-> Andrew Vasquez wrote:
-> >NACK, please don't do this.  SYSFS entries, albiet important, aren't
-> >necessarilly critical to a functioning driver.  I'd rather the driver
-> >not error out.
-> 
-> As discussed before, the only errors thrown are either ENOMEM or EFAULT, 
-> both of which are quite serious.
+We actually already have an existing target infrastructure project here:
 
-Absolutely.  But, given the relatively late-stage initialization of
-these attributes (it's the last thing that gets done before probe()
-completes)-- the driver has already allocated (successfully) memory,
-intialized hardware and (possibly) presented storage, the complete
-unwinding, seems over-kill.
+http://git.kernel.org/git/?p=linux/kernel/git/tomo/linux-2.6-target.git;a=summary
 
-> >Here's what I had stewing to address the must_check directives and
-> >qla2xxx:
-> 
-> If you're gonna change it that much, might as well use attribute groups.
+It seems to be very similar to yours ... could you see how easy it would
+be for you to integrate with this project?
 
-sysfs_create_group() and friends don't appear to support
-binary attributes.
+Thanks,
+
+James
+
+
