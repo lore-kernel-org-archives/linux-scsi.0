@@ -1,48 +1,130 @@
-From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: mptsas suspend not working?
-Date: Wed, 11 Oct 2006 16:30:19 -0700
-Message-ID: <452D7E8B.6000907@us.ibm.com>
-Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [PATCH] SCSI/qla2xxx: handle sysfs errors
+Date: Wed, 11 Oct 2006 21:45:38 -0400
+Message-ID: <20061012014538.GA12894@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e6.ny.us.ibm.com ([32.97.182.146]:234 "EHLO e6.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1161288AbWJKXaV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Oct 2006 19:30:21 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e6.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id k9BNUWif010939
-	for <linux-scsi@vger.kernel.org>; Wed, 11 Oct 2006 19:30:32 -0400
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay04.pok.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id k9BNUK1d141244
-	for <linux-scsi@vger.kernel.org>; Wed, 11 Oct 2006 19:30:20 -0400
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k9BNUKal032092
-	for <linux-scsi@vger.kernel.org>; Wed, 11 Oct 2006 19:30:20 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1422678AbWJLBpk@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, Andrew Morton <akpm@osdl.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Eric Moore <eric.moore@lsil.com>
 
-Hi Eric, et. al.:
 
-I tried to put a mptsas controller into D3 suspend state while preparing
-to put a system into standby mode.  When I went out of standby, I got
-these errors in dmesg and all disk I/O ceased.  Any idea what's going on
-here?  Kernel is 2.6.19-rc1, btw.
 
---D
+Signed-off-by: Jeff Garzik <jeff@garzik.org>
 
-[514076.973779] mptsas 0000:01:00.0: suspend
-[514076.973786] mptbase: ioc0: pci-suspend: pdev=0xffff8100bb13c800, slot=0000:01:00.0, Entering operating state [D3]
-[514077.361178] mptsas 0000:01:00.0: LATE suspend
-[514129.109268] mptsas 0000:01:00.0: EARLY resume
-[514129.388680] mptsas 0000:01:00.0: resuming
-[514129.388684] mptbase: ioc0: pci-resume: pdev=0xffff8100bb13c800, slot=0000:01:00.0, Previous operating state [D3]
-[514129.512441] mptbase: ioc0: pci-resume: ioc-state=0x1,doorbell=0x10000000
-[514129.512443] mptbase: Initiating ioc0 recovery
-[514132.364805] mptbase: ioc0: ERROR - Invalid IOC facts reply, msgLength=0 offsetof=6!
-[514132.420725] mptbase: ioc0: ERROR - Invalid IOC facts reply, msgLength=0 offsetof=6!
-[514132.476662] mptbase: ioc0: ERROR - Invalid IOC facts reply, msgLength=0 offsetof=6!
-[514132.484649] mptbase: ioc0: pci-resume: Cannot recover, error:[fffffffe]
+---
+
+ drivers/scsi/qla2xxx/qla_attr.c |   52 +++++++++++++++++++++++++++++++---------
+ drivers/scsi/qla2xxx/qla_gbl.h  |    4 ---
+ drivers/scsi/qla2xxx/qla_os.c   |    7 ++++-
+
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index ee75a71..54e4a60 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -379,22 +379,52 @@ static struct bin_attribute sysfs_sfp_at
+ 	.read = qla2x00_sysfs_read_sfp,
+ };
+ 
+-void
++int
+ qla2x00_alloc_sysfs_attr(scsi_qla_host_t *ha)
+ {
+ 	struct Scsi_Host *host = ha->host;
+-
+-	sysfs_create_bin_file(&host->shost_gendev.kobj, &sysfs_fw_dump_attr);
+-	sysfs_create_bin_file(&host->shost_gendev.kobj, &sysfs_nvram_attr);
+-	sysfs_create_bin_file(&host->shost_gendev.kobj, &sysfs_optrom_attr);
+-	sysfs_create_bin_file(&host->shost_gendev.kobj,
+-	    &sysfs_optrom_ctl_attr);
++	int rc;
++
++	rc = sysfs_create_bin_file(&host->shost_gendev.kobj,
++				   &sysfs_fw_dump_attr);
++	if (rc) goto err;
++	rc = sysfs_create_bin_file(&host->shost_gendev.kobj,
++				   &sysfs_nvram_attr);
++	if (rc) goto err_fwd;
++	rc = sysfs_create_bin_file(&host->shost_gendev.kobj,
++				   &sysfs_optrom_attr);
++	if (rc) goto err_nvr;
++	rc = sysfs_create_bin_file(&host->shost_gendev.kobj,
++				   &sysfs_optrom_ctl_attr);
++	if (rc) goto err_optrom;
+ 	if (IS_QLA24XX(ha) || IS_QLA54XX(ha)) {
+-		sysfs_create_bin_file(&host->shost_gendev.kobj,
+-		    &sysfs_vpd_attr);
+-		sysfs_create_bin_file(&host->shost_gendev.kobj,
+-		    &sysfs_sfp_attr);
++		rc = sysfs_create_bin_file(&host->shost_gendev.kobj,
++					   &sysfs_vpd_attr);
++		if (rc) goto err_opt_ctl;
++		rc = sysfs_create_bin_file(&host->shost_gendev.kobj,
++					   &sysfs_sfp_attr);
++		if (rc) goto err_vpd;
+ 	}
++
++	return 0;
++
++err_vpd:
++	sysfs_remove_bin_file(&host->shost_gendev.kobj,
++				   &sysfs_vpd_attr);
++err_opt_ctl:
++	sysfs_remove_bin_file(&host->shost_gendev.kobj,
++				   &sysfs_optrom_ctl_attr);
++err_optrom:
++	sysfs_remove_bin_file(&host->shost_gendev.kobj,
++				   &sysfs_optrom_attr);
++err_nvr:
++	sysfs_remove_bin_file(&host->shost_gendev.kobj,
++				   &sysfs_nvram_attr);
++err_fwd:
++	sysfs_remove_bin_file(&host->shost_gendev.kobj,
++				   &sysfs_fw_dump_attr);
++err:
++	return rc;
+ }
+ 
+ void
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index 7da6983..60ade19 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -296,9 +296,7 @@ struct class_device_attribute;
+ extern struct class_device_attribute *qla2x00_host_attrs[];
+ struct fc_function_template;
+ extern struct fc_function_template qla2xxx_transport_functions;
+-extern void qla2x00_alloc_sysfs_attr(scsi_qla_host_t *);
++extern int qla2x00_alloc_sysfs_attr(scsi_qla_host_t *);
+ extern void qla2x00_free_sysfs_attr(scsi_qla_host_t *);
+ extern void qla2x00_init_host_attr(scsi_qla_host_t *);
+-extern void qla2x00_alloc_sysfs_attr(scsi_qla_host_t *);
+-extern void qla2x00_free_sysfs_attr(scsi_qla_host_t *);
+ #endif /* _QLA_GBL_H */
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 3f20d76..d70162b 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -1638,7 +1638,9 @@ qla2x00_probe_one(struct pci_dev *pdev, 
+ 	if (ret)
+ 		goto probe_failed;
+ 
+-	qla2x00_alloc_sysfs_attr(ha);
++	ret = qla2x00_alloc_sysfs_attr(ha);
++	if (ret)
++		goto probe_failed_rmhost;
+ 
+ 	qla2x00_init_host_attr(ha);
+ 
+@@ -1658,6 +1660,9 @@ qla2x00_probe_one(struct pci_dev *pdev, 
+ 
+ 	return 0;
+ 
++probe_failed_rmhost:
++	scsi_remove_host(host);
++
+ probe_failed:
+ 	qla2x00_free_device(ha);
+ 
