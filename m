@@ -1,10 +1,10 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: [PATCH] SCSI/qla2xxx: handle sysfs errors
-Date: Wed, 11 Oct 2006 21:45:38 -0400
-Message-ID: <20061012014538.GA12894@havoc.gtf.org>
+Subject: [PATCH] SCSI/aha1740: handle SCSI API errors
+Date: Wed, 11 Oct 2006 21:44:08 -0400
+Message-ID: <20061012014408.GA12771@havoc.gtf.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1422678AbWJLBpk@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1422672AbWJLBoL@vger.kernel.org>
 Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, Andrew Morton <akpm@osdl.org>, LKML <linux-kernel@vger.kernel.org>
@@ -16,115 +16,36 @@ Signed-off-by: Jeff Garzik <jeff@garzik.org>
 
 ---
 
- drivers/scsi/qla2xxx/qla_attr.c |   52 +++++++++++++++++++++++++++++++---------
- drivers/scsi/qla2xxx/qla_gbl.h  |    4 ---
- drivers/scsi/qla2xxx/qla_os.c   |    7 ++++-
+ drivers/scsi/aha1740.c          |   10 ++++++-
 
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index ee75a71..54e4a60 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -379,22 +379,52 @@ static struct bin_attribute sysfs_sfp_at
- 	.read = qla2x00_sysfs_read_sfp,
- };
+diff --git a/drivers/scsi/aha1740.c b/drivers/scsi/aha1740.c
+index c3c38a7..d7af9c6 100644
+--- a/drivers/scsi/aha1740.c
++++ b/drivers/scsi/aha1740.c
+@@ -586,7 +586,7 @@ static struct scsi_host_template aha1740
  
--void
-+int
- qla2x00_alloc_sysfs_attr(scsi_qla_host_t *ha)
+ static int aha1740_probe (struct device *dev)
  {
- 	struct Scsi_Host *host = ha->host;
--
--	sysfs_create_bin_file(&host->shost_gendev.kobj, &sysfs_fw_dump_attr);
--	sysfs_create_bin_file(&host->shost_gendev.kobj, &sysfs_nvram_attr);
--	sysfs_create_bin_file(&host->shost_gendev.kobj, &sysfs_optrom_attr);
--	sysfs_create_bin_file(&host->shost_gendev.kobj,
--	    &sysfs_optrom_ctl_attr);
-+	int rc;
-+
-+	rc = sysfs_create_bin_file(&host->shost_gendev.kobj,
-+				   &sysfs_fw_dump_attr);
-+	if (rc) goto err;
-+	rc = sysfs_create_bin_file(&host->shost_gendev.kobj,
-+				   &sysfs_nvram_attr);
-+	if (rc) goto err_fwd;
-+	rc = sysfs_create_bin_file(&host->shost_gendev.kobj,
-+				   &sysfs_optrom_attr);
-+	if (rc) goto err_nvr;
-+	rc = sysfs_create_bin_file(&host->shost_gendev.kobj,
-+				   &sysfs_optrom_ctl_attr);
-+	if (rc) goto err_optrom;
- 	if (IS_QLA24XX(ha) || IS_QLA54XX(ha)) {
--		sysfs_create_bin_file(&host->shost_gendev.kobj,
--		    &sysfs_vpd_attr);
--		sysfs_create_bin_file(&host->shost_gendev.kobj,
--		    &sysfs_sfp_attr);
-+		rc = sysfs_create_bin_file(&host->shost_gendev.kobj,
-+					   &sysfs_vpd_attr);
-+		if (rc) goto err_opt_ctl;
-+		rc = sysfs_create_bin_file(&host->shost_gendev.kobj,
-+					   &sysfs_sfp_attr);
-+		if (rc) goto err_vpd;
+-	int slotbase;
++	int slotbase, rc;
+ 	unsigned int irq_level, irq_type, translation;
+ 	struct Scsi_Host *shpnt;
+ 	struct aha1740_hostdata *host;
+@@ -641,10 +641,16 @@ static int aha1740_probe (struct device 
  	}
+ 
+ 	eisa_set_drvdata (edev, shpnt);
+-	scsi_add_host (shpnt, dev); /* XXX handle failure */
 +
-+	return 0;
++	rc = scsi_add_host (shpnt, dev);
++	if (rc)
++		goto err_irq;
 +
-+err_vpd:
-+	sysfs_remove_bin_file(&host->shost_gendev.kobj,
-+				   &sysfs_vpd_attr);
-+err_opt_ctl:
-+	sysfs_remove_bin_file(&host->shost_gendev.kobj,
-+				   &sysfs_optrom_ctl_attr);
-+err_optrom:
-+	sysfs_remove_bin_file(&host->shost_gendev.kobj,
-+				   &sysfs_optrom_attr);
-+err_nvr:
-+	sysfs_remove_bin_file(&host->shost_gendev.kobj,
-+				   &sysfs_nvram_attr);
-+err_fwd:
-+	sysfs_remove_bin_file(&host->shost_gendev.kobj,
-+				   &sysfs_fw_dump_attr);
-+err:
-+	return rc;
- }
- 
- void
-diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index 7da6983..60ade19 100644
---- a/drivers/scsi/qla2xxx/qla_gbl.h
-+++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -296,9 +296,7 @@ struct class_device_attribute;
- extern struct class_device_attribute *qla2x00_host_attrs[];
- struct fc_function_template;
- extern struct fc_function_template qla2xxx_transport_functions;
--extern void qla2x00_alloc_sysfs_attr(scsi_qla_host_t *);
-+extern int qla2x00_alloc_sysfs_attr(scsi_qla_host_t *);
- extern void qla2x00_free_sysfs_attr(scsi_qla_host_t *);
- extern void qla2x00_init_host_attr(scsi_qla_host_t *);
--extern void qla2x00_alloc_sysfs_attr(scsi_qla_host_t *);
--extern void qla2x00_free_sysfs_attr(scsi_qla_host_t *);
- #endif /* _QLA_GBL_H */
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 3f20d76..d70162b 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -1638,7 +1638,9 @@ qla2x00_probe_one(struct pci_dev *pdev, 
- 	if (ret)
- 		goto probe_failed;
- 
--	qla2x00_alloc_sysfs_attr(ha);
-+	ret = qla2x00_alloc_sysfs_attr(ha);
-+	if (ret)
-+		goto probe_failed_rmhost;
- 
- 	qla2x00_init_host_attr(ha);
- 
-@@ -1658,6 +1660,9 @@ qla2x00_probe_one(struct pci_dev *pdev, 
- 
+ 	scsi_scan_host (shpnt);
  	return 0;
  
-+probe_failed_rmhost:
-+	scsi_remove_host(host);
-+
- probe_failed:
- 	qla2x00_free_device(ha);
- 
++ err_irq:
++ 	free_irq(irq_level, shpnt);
+  err_unmap:
+ 	dma_unmap_single (&edev->dev, host->ecb_dma_addr,
+ 			  sizeof (host->ecb), DMA_BIDIRECTIONAL);
