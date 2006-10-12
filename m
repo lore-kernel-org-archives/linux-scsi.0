@@ -1,34 +1,149 @@
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: [PATCH 2/8] qla2xxx: Add support for symbolic nodename FC transport attribute.
-Date: Thu, 12 Oct 2006 09:37:44 -0700
-Message-ID: <20061012163744.GE3638@andrew-vasquezs-computer.local>
-References: <20061002185947.GF16536@andrew-vasquezs-computer.local> <11598156502784-git-send-email-andrew.vasquez@qlogic.com> <20061010093050.GC395@infradead.org>
+Subject: Re: [PATCH] SCSI/qla2xxx: handle sysfs errors
+Date: Thu, 12 Oct 2006 09:57:35 -0700
+Message-ID: <20061012165734.GG3638@andrew-vasquezs-computer.local>
+References: <20061012014538.GA12894@havoc.gtf.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:40125 "EHLO avexch1.qlogic.com")
-	by vger.kernel.org with ESMTP id S932678AbWJLQhq (ORCPT
+Received: from pat.qlogic.com ([198.70.193.2]:52491 "EHLO avexch1.qlogic.com")
+	by vger.kernel.org with ESMTP id S1422862AbWJLQ5h (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Oct 2006 12:37:46 -0400
+	Thu, 12 Oct 2006 12:57:37 -0400
 Content-Disposition: inline
-In-Reply-To: <20061010093050.GC395@infradead.org>
+In-Reply-To: <20061012014538.GA12894@havoc.gtf.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <james.bottomley@steeleye.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-scsi@vger.kernel.org, Andrew Morton <akpm@osdl.org>, LKML <linux-kernel@vger.kernel.org>
 
-On Tue, 10 Oct 2006, Christoph Hellwig wrote:
+On Wed, 11 Oct 2006, Jeff Garzik wrote:
 
-> On Mon, Oct 02, 2006 at 12:00:44PM -0700, Andrew Vasquez wrote:
-> > Refactored original code from qla_gs.c:qla2x00_rsnn_nn().
+> Signed-off-by: Jeff Garzik <jeff@garzik.org>
 > 
-> Ok.  Should we also allow to change the name from userspace?
+> ---
+> 
+>  drivers/scsi/qla2xxx/qla_attr.c |   52 +++++++++++++++++++++++++++++++---------
+>  drivers/scsi/qla2xxx/qla_gbl.h  |    4 ---
+>  drivers/scsi/qla2xxx/qla_os.c   |    7 ++++-
+> 
+> diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+> index ee75a71..54e4a60 100644
+> --- a/drivers/scsi/qla2xxx/qla_attr.c
+> +++ b/drivers/scsi/qla2xxx/qla_attr.c
+> @@ -379,22 +379,52 @@ static struct bin_attribute sysfs_sfp_at
+>  	.read = qla2x00_sysfs_read_sfp,
+>  };
+>  
+> -void
+> +int
+>  qla2x00_alloc_sysfs_attr(scsi_qla_host_t *ha)
+>  {
+>  	struct Scsi_Host *host = ha->host;
+> -
+> -	sysfs_create_bin_file(&host->shost_gendev.kobj, &sysfs_fw_dump_attr);
+> -	sysfs_create_bin_file(&host->shost_gendev.kobj, &sysfs_nvram_attr);
+> -	sysfs_create_bin_file(&host->shost_gendev.kobj, &sysfs_optrom_attr);
+> -	sysfs_create_bin_file(&host->shost_gendev.kobj,
+> -	    &sysfs_optrom_ctl_attr);
+> +	int rc;
+> +
+> +	rc = sysfs_create_bin_file(&host->shost_gendev.kobj,
+> +				   &sysfs_fw_dump_attr);
+> +	if (rc) goto err;
 
-Maybe...  FC-GS provides for no restrictions on format or content.
-Most initiator/target implementations I've seen have common items such
-as Manufacturer, Part ID, and driver/firmware version in the field.
-It might be useful (at least from a initiator perspective) within a
-virtualized environment to allow for information to be added to the
-SNN field, e.g. container id, DOM #, or some Virtual OS metadata.
+NACK, please don't do this.  SYSFS entries, albiet important, aren't
+necessarilly critical to a functioning driver.  I'd rather the driver
+not error out.
 
-Mike, James, Eric, any thoughts?
+Here's what I had stewing to address the must_check directives and
+qla2xxx:
+
+---
+
+qla2xxx: Check return value of sysfs_create_bin_file() usage.
+
+Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+---
+ drivers/scsi/qla2xxx/qla_attr.c |   51 ++++++++++++++++++++++++--------------
+ 1 files changed, 32 insertions(+), 19 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index ee75a71..285c8e8 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -379,21 +379,37 @@ static struct bin_attribute sysfs_sfp_at
+ 	.read = qla2x00_sysfs_read_sfp,
+ };
+ 
++static struct sysfs_entry {
++	char *name;
++	struct bin_attribute *attr;
++	int is4GBp_only;
++} bin_file_entries[] = {
++	{ "fw_dump", &sysfs_fw_dump_attr, },
++	{ "nvram", &sysfs_nvram_attr, },
++	{ "optrom", &sysfs_optrom_attr, },
++	{ "optrom_ctl", &sysfs_optrom_ctl_attr, },
++	{ "vpd", &sysfs_vpd_attr, 1 },
++	{ "sfp", &sysfs_sfp_attr, 1 },
++	{ 0 },
++};
++
+ void
+ qla2x00_alloc_sysfs_attr(scsi_qla_host_t *ha)
+ {
+ 	struct Scsi_Host *host = ha->host;
++	struct sysfs_entry *iter;
++	int ret;
+ 
+-	sysfs_create_bin_file(&host->shost_gendev.kobj, &sysfs_fw_dump_attr);
+-	sysfs_create_bin_file(&host->shost_gendev.kobj, &sysfs_nvram_attr);
+-	sysfs_create_bin_file(&host->shost_gendev.kobj, &sysfs_optrom_attr);
+-	sysfs_create_bin_file(&host->shost_gendev.kobj,
+-	    &sysfs_optrom_ctl_attr);
+-	if (IS_QLA24XX(ha) || IS_QLA54XX(ha)) {
+-		sysfs_create_bin_file(&host->shost_gendev.kobj,
+-		    &sysfs_vpd_attr);
+-		sysfs_create_bin_file(&host->shost_gendev.kobj,
+-		    &sysfs_sfp_attr);
++	for (iter = bin_file_entries; iter->name; iter++) {
++		if (iter->is4GBp_only && (!IS_QLA24XX(ha) && !IS_QLA54XX(ha)))
++			continue;
++
++		ret = sysfs_create_bin_file(&host->shost_gendev.kobj,
++		    iter->attr);
++		if (ret)
++			qla_printk(KERN_INFO, ha,
++			    "Unable to create sysfs %s binary attribute "
++			    "(%d).\n", iter->name, ret);
+ 	}
+ }
+ 
+@@ -401,17 +417,14 @@ void
+ qla2x00_free_sysfs_attr(scsi_qla_host_t *ha)
+ {
+ 	struct Scsi_Host *host = ha->host;
++	struct sysfs_entry *iter;
++
++	for (iter = bin_file_entries; iter->name; iter++) {
++		if (iter->is4GBp_only && (!IS_QLA24XX(ha) && !IS_QLA54XX(ha)))
++			continue;
+ 
+-	sysfs_remove_bin_file(&host->shost_gendev.kobj, &sysfs_fw_dump_attr);
+-	sysfs_remove_bin_file(&host->shost_gendev.kobj, &sysfs_nvram_attr);
+-	sysfs_remove_bin_file(&host->shost_gendev.kobj, &sysfs_optrom_attr);
+-	sysfs_remove_bin_file(&host->shost_gendev.kobj,
+-	    &sysfs_optrom_ctl_attr);
+-	if (IS_QLA24XX(ha) || IS_QLA54XX(ha)) {
+-		sysfs_remove_bin_file(&host->shost_gendev.kobj,
+-		    &sysfs_vpd_attr);
+ 		sysfs_remove_bin_file(&host->shost_gendev.kobj,
+-		    &sysfs_sfp_attr);
++		    iter->attr);
+ 	}
+ 
+ 	if (ha->beacon_blink_led == 1)
+-- 
+1.4.3.rc2.g0503
+
