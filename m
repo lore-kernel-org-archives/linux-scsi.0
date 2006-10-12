@@ -1,48 +1,32 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: SCSITAP, Virtual SCSI HBA and user space SCSI initiators
-Date: Fri, 13 Oct 2006 07:48:01 +0900 (JST)
-Message-ID: <20061013074411B.fujita.tomonori@lab.ntt.co.jp>
-References: <452E0A5C.6020001@aboo.org>
-	<452E7A9A.3000501@aboo.org>
+Date: Thu, 12 Oct 2006 18:02:42 -0500
+Message-ID: <1160694162.3432.48.camel@mulgrave.il.steeleye.com>
+References: <1160675319.3432.34.camel@mulgrave.il.steeleye.com>
+	 <c3b66b980e163824b0079e07578624da@aboo.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:53454 "EHLO
-	tama5.ecl.ntt.co.jp") by vger.kernel.org with ESMTP
-	id S1751275AbWJLWsf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Oct 2006 18:48:35 -0400
-In-Reply-To: <452E7A9A.3000501@aboo.org>
+Received: from stat9.steeleye.com ([209.192.50.41]:14735 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1751294AbWJLXCt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Oct 2006 19:02:49 -0400
+In-Reply-To: <c3b66b980e163824b0079e07578624da@aboo.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: aboo@aboo.org
+To: aboo <aboo@aboo.org>
 Cc: linux-scsi@vger.kernel.org
 
-From: Aboo Valappil <aboo@aboo.org>
-Subject: SCSITAP, Virtual SCSI HBA and user space SCSI initiators
-Date: Fri, 13 Oct 2006 03:25:46 +1000
+On Fri, 2006-10-13 at 08:13 +1000, aboo wrote:
+> Is'nt this a target implimentation, rather than a initiator? That page
+> does not give me more details. I have sent an email to the author of
+> the project to get more details. Hopefully, they will reply :)
 
-> I have developed a Virtual HBA (Around ~600 lines of code). It is a 
-> kernel module and works very well with 2.6.9 kernel. Basically it 
-> registers a HBA (LLD) to the SCSI Mid layer. It implements a linked list 
-> with all the SCSI commands queued from Mid layer. I registered  a 
-> character device driver. I ship out the SCSI commands off to user space 
-> via this character device. There is a user space application monitoring 
-> this character device looking for SCSI commands, process it and sends it 
-> back to the mid layer through this character interface.  At the moment, 
-> the interface to the Virtual HBA inside the kernel is through read/write 
-> and ioctls to the character device. I am trying to get rid of reading 
-> and writing of SCSI request_buffer through character device and use 
-> memmap/splice to avoid copying kernel buffer to user space(I am facing 
-> some challenges as the request_buffer is not a linear buffer, but a 
-> scatter gather buffer).
+It's designed for use by a target driver ... but there's no reason why a
+virtual initator couldn't also make use of the infrastructure; it's
+basically just a way to pass commands up and down plus the SG elements.
 
-As James and Mike said, tgt provides SCSI command processing in user
-space (target mode). I implemented the virtual HBA driver (initiator
-mode) for Xen that works with tgt. I guess that it is similar to your
-virtual HBA driver.
+James
 
-You can find the slides in Xen Summit site:
-
-http://www.xensource.com/xen/xensummit.html
 
