@@ -1,32 +1,33 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: SCSITAP, Virtual SCSI HBA and user space SCSI initiators
-Date: Thu, 12 Oct 2006 18:02:42 -0500
-Message-ID: <1160694162.3432.48.camel@mulgrave.il.steeleye.com>
-References: <1160675319.3432.34.camel@mulgrave.il.steeleye.com>
-	 <c3b66b980e163824b0079e07578624da@aboo.org>
+From: "Metathronius Galabant" <m.galabant@googlemail.com>
+Subject: Re: aacraid driver incomplete regarding info + logging
+Date: Fri, 13 Oct 2006 11:41:52 +0200
+Message-ID: <1b270aae0610130241wc755692ped86dc05d83a3781@mail.gmail.com>
+References: <547AF3BD0F3F0B4CBDC379BAC7E4189F02D8131A@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:14735 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751294AbWJLXCt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Oct 2006 19:02:49 -0400
-In-Reply-To: <c3b66b980e163824b0079e07578624da@aboo.org>
+Received: from wx-out-0506.google.com ([66.249.82.229]:6192 "EHLO
+	wx-out-0506.google.com") by vger.kernel.org with ESMTP
+	id S1750996AbWJMJlx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Oct 2006 05:41:53 -0400
+Received: by wx-out-0506.google.com with SMTP id s14so812970wxc
+        for <linux-scsi@vger.kernel.org>; Fri, 13 Oct 2006 02:41:52 -0700 (PDT)
+In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189F02D8131A@otce2k03.adaptec.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: aboo <aboo@aboo.org>
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
 Cc: linux-scsi@vger.kernel.org
 
-On Fri, 2006-10-13 at 08:13 +1000, aboo wrote:
-> Is'nt this a target implimentation, rather than a initiator? That page
-> does not give me more details. I have sent an email to the author of
-> the project to get more details. Hopefully, they will reply :)
+> There is not enough space to waste in the kernel to add such features,
+> and there is a dynamic and complicated relationship between the full
+> fledged native and proprietary management applications shipped by
 
-It's designed for use by a target driver ... but there's no reason why a
-virtual initator couldn't also make use of the infrastructure; it's
-basically just a way to pass commands up and down plus the SG elements.
+Are about maybe a handful of informational printk()s really too much?
+I'm used to this behaviour from all my machines (gdth, lsi, cciss).
+The thing is - because of the driver I had to exchange the adaptec
+raid card for something else.
 
-James
-
-
+Cheers,
+M
