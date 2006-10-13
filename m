@@ -1,61 +1,48 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: aacraid driver incomplete regarding info + logging
-Date: Fri, 13 Oct 2006 09:05:51 -0400
-Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F02D81A23@otce2k03.adaptec.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: [PATCH] Fusion: Call pci_set_mwi()
+Date: Fri, 13 Oct 2006 10:24:52 -0600
+Message-ID: <20061013162452.GB11633@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([216.52.22.36]:13224 "EHLO
-	mail-gw3.adaptec.com") by vger.kernel.org with ESMTP
-	id S1751038AbWJMNFx convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Oct 2006 09:05:53 -0400
-content-class: urn:content-classes:message
+Received: from palinux.external.hp.com ([192.25.206.14]:54177 "EHLO
+	mail.parisc-linux.org") by vger.kernel.org with ESMTP
+	id S1751723AbWJMQYx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Oct 2006 12:24:53 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Metathronius Galabant <m.galabant@googlemail.com>
+To: "Moore, Eric" <Eric.Moore@lsil.com>
 Cc: linux-scsi@vger.kernel.org
 
-The GPL application aeventd is 50K of text, hardly a handful when locked
-in core, occupying space in multiples on a driver update disk or on
-initrd image. Imagine the space taken if we had been granted approval to
-put the full fledged event monitor and r/o portion of array management
-into core!? We had customers & OEMs that demanded for the application
-instead of in-core, so can not please everyone, can not manage all
-levels of rationality. The bonus is that it adds internationalization
-and because it is an application, can be optional, can be modified
-without system risks and can be swapped.
 
-Why is it so critical that this occupy kernel memory for you (besides
-the marketing perception)? You are free to integrate aeventd into the
-driver; anyone can submit a patch. I do not mean that as a threat, Linux
-can evolve. However, I urge you to read all the accounts surrounding
-attempts to add CSMI to several of the drivers, an attempt at standards
-based target and array interrogation and management hooks (Note: the
-Adaptec version of the aacraid driver still has this integrated despite
-disapproval on the list, we still have some bruises ;-/ ).
+Hi Eric,
 
-Sincerely -- Mark Salyzyn
+Even though the 1030 is a PCI-X device, it can still be plugged into a PCI
+bus, and end up operating in PCI mode.  According to the documentation,
+it will benefit from using MWI and MRM commands, but in order to do so
+under Linux, we need to call pci_set_mwi(), which is what this patch does.
+Please apply.
 
-> -----Original Message-----
-> From: Metathronius Galabant [mailto:m.galabant@googlemail.com] 
-> Sent: Friday, October 13, 2006 5:42 AM
-> To: Salyzyn, Mark
-> Cc: linux-scsi@vger.kernel.org
-> Subject: Re: aacraid driver incomplete regarding info + logging
-> 
-> 
-> > There is not enough space to waste in the kernel to add 
-> such features,
-> > and there is a dynamic and complicated relationship between the full
-> > fledged native and proprietary management applications shipped by
-> 
-> Are about maybe a handful of informational printk()s really too much?
-> I'm used to this behaviour from all my machines (gdth, lsi, cciss).
-> The thing is - because of the driver I had to exchange the adaptec
-> raid card for something else.
-> 
-> Cheers,
-> M
-> 
+P.S. The if condition is just to avoid the warning from __must_check.
+Most device drivers do need to check and adjust their internal flags if
+it fails, but according to the 1030 manual, the chip automatically
+decides when to use MWI.
+
+Signed-off-by: Matthew Wilcox <matthew@wil.cx>
+
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index 29d0635..d301a67 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -1153,6 +1153,9 @@ #endif
+ 	if (pci_enable_device(pdev))
+ 		return r;
+ 
++	if (pci_set_mwi(pdev))
++		/* We don't have to do anything if it fails */;
++
+ 	dinitprintk((KERN_WARNING MYNAM ": mpt_adapter_install\n"));
+ 
+ 	if (!pci_set_dma_mask(pdev, DMA_64BIT_MASK)) {
+
