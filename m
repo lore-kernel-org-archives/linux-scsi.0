@@ -1,81 +1,74 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH RFC] replace dm hw handlers with scsi handlers
-Date: Sat, 14 Oct 2006 09:09:46 -0400
-Message-ID: <4530E19A.8040002@cs.wisc.edu>
-References: <1160684310.4163.4.camel@madmax>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Sergey Kononenko <sergk@sergk.org.ua>
+Subject: [PATCH 0/2] aic94xx: Supermicro motherboards support
+Date: Sun, 15 Oct 2006 02:31:00 +0300
+Message-ID: <20061015023100.390ee1b7@manowar.localnet>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <1160684310.4163.4.camel@madmax>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: device-mapper development <dm-devel@redhat.com>
-Cc: Christophe Varoqui <christophe.varoqui@free.fr>, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail2.hqhost.net ([80.77.80.130]:22704 "EHLO mail2.hqhost.net")
+	by vger.kernel.org with ESMTP id S1750892AbWJNXbE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 14 Oct 2006 19:31:04 -0400
+Received: from manowar.localnet (ukrtel-nat.ua-online.net [213.179.225.5])
+	(authenticated bits=0)
+	by mail2.hqhost.net (8.13.8/8.13.8/Debian-2) with ESMTP id k9ENVHfP001011
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Sat, 14 Oct 2006 23:31:21 GMT
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Mike Christie wrote:
-> - Bind per device instead of per target to allow for
-> per LU failover.
-> - Merge Ed's updated dm-emc code into scsi_emc_clariion.
-> - Add basic code to hook into REQ_TYPE_LINUX_BLOCK cmd_type
-> (must ask Jens if this is how he wanted it).
-> - Do a partial conversion of dm-mpath.c (hooked dm-mpath.c
-> in, but all the hw handler code can now be removed (will
-> do this in a seperate patch to reduce noise)).
-> - added device_id table to bind devices to modules by.
-> 
+Hello,
 
-I updated this patchset here
+The aic94xx driver in current mainline kernel don't work with
+controllers integrated in some of Supermicro motherboards (i have
+tested only on X6DHR-3G2) due to two reasons:
+- driver do not contain corresponding PCI id (9005:041F)
+- driver can not find flash on controller.
 
-http://kernel.org/git/?p=linux/kernel/git/mnc/linux-2.6-iscsi.git;a=summary
+Patches which i send now ordered to resolve this problems.
 
-in the multipath branch.
+First one is a simple and just add pci id, but second one is a bit
+controversial.
 
-I added a rdac handler and hp storage works one that does START_STOP. I
-also integrated it into the devinfo table (cannot update from proc or
-module param just yet) and fixed some bugs and did some cleanup - still
-need to better integrate the REQ cmt type checking.
+The following code from function asd_flash_getid (aic94xx_sds.c)
 
-Christophe V, I was wondering what is the vendor/module info for your
-box? We have a MSA1000 VOLUME/COMPAQ here, but START_STOP does not work.
-I mean if I send the command it always executes successfully, but the
-device does not failover (READ/WRITEs fail). I tried just running
-sg_start and this runs ok but READ/WRITE still fail, so I hacked up
-scsi_debug to simulate my testing.
+	reg = asd_read_reg_dword(asd_ha, EXSICNFGR);
 
-If you want to try it out, you just have to add a devinfo entry for your
-box. I did this for the MSA I thought used it by adding the "hp_sw"
-string to the end of an existing devinfo entry:
+        if (!(reg & FLASHEX)) {
+                ASD_DPRINTK("flash doesn't exist\n");
+                return -ENOENT;
+        }
 
-+       {"COMPAQ", "MSA1000", NULL, BLIST_SPARSELUN |
-BLIST_NOSTARTONADD, "hp_sw"},
-+       {"COMPAQ", "MSA1000 VOLUME", NULL, BLIST_SPARSELUN |
-BLIST_NOSTARTONADD, "hp_sw"},
+failed with error on controllers in supermicro motherboards.
+Looks like flag FLASHEX did not set on such devices, however flash chip
+present and without above if statement in code drivers works normally
+on supermicro controllers.
 
+As i found this code was commented out in original driver by Luben
+Tuikov with following comment:
 
-and you need to use a slightly different table format. I use this for a
-setup with two paths (one to each target controller) with each path in a
-different priority group.
+/*     Early (current?) SuperMicro mainboards, X6DHR-3G2 and X6DH3-G2
+       have a bug whereby RS104 is missing (not installed) and RS103
+       is installed, causing FLASHEX to be 0. */
+/*     if (!(reg & FLASHEX)) { */
+/*             ASD_DPRINTK("flash doesn't exist\n"); */
+/*             return -ENOENT; */
+/*     } */
 
-0 16384 multipath 1 queue_if_no_path 1 1 2 1 round-robin 0 1 1 8:48 1000
-round-robin 0 1 1 8:32 1000
+May be it is possible to write separate code for checking
+availability of flash chip especially for supermicro
+motherboards, but i don't know hot it possible and don't know what is
+RS104, RS103 and difference between it.
 
-0 16384 multipath 1 queue_if_no_path        <the bits here "1 1" is what
-changed >         2 1 round-robin 0 1 1 8:48 1000 round-robin 0 1 1 8:32
-1000
+But more likely that check of FLASHEX can be removed safely from code
+because below there is another more generic check for flash chip via
+pci config probe.
 
-If you have a device that needs manual failover, you pass "1 1". If it
-it does not require manual failover then just pass "0".  There is no
-need to pass any hw handler type because the hw handler is no longer in
-dm. Later when we do more advanced configuration we will have to write
-to some sysfs interface at the scsi layer to configure values like the
-tresspass or page2c type (clariion and rdac settings).
+This solution works perfect in my case, also it was in original code,
+however i think this second patch would be tested on some other
+varieties of aic94xx hardware.
+
+--
+Sergey Kononenko
