@@ -1,74 +1,81 @@
-From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: [PATCH] libsas: support NCQ for SATA disks
-Date: Fri, 13 Oct 2006 16:56:25 -0700
-Message-ID: <453027A9.3060606@us.ibm.com>
-Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH RFC] replace dm hw handlers with scsi handlers
+Date: Sat, 14 Oct 2006 09:09:46 -0400
+Message-ID: <4530E19A.8040002@cs.wisc.edu>
+References: <1160684310.4163.4.camel@madmax>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:50618 "EHLO
-	e36.co.us.ibm.com") by vger.kernel.org with ESMTP id S1752002AbWJMX41
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Oct 2006 19:56:27 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <1160684310.4163.4.camel@madmax>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: device-mapper development <dm-devel@redhat.com>
+Cc: Christophe Varoqui <christophe.varoqui@free.fr>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>
-Cc: Mike Anderson <andmike@us.ibm.com>
 
-This patch adds SATAII NCQ support to libsas.  Both the use_ncq and the
-dma_xfer flags in ata_task must be set for NCQ to work correctly on the
-Adaptec SAS controller.  The rest of the patch adds ATA_FLAG_NCQ to
-sata_port_info and sets up ap->scsi_host so that ata_setup_ncq doesn't
-crash.  Please note that this patch is against the aic94xx-sas git tree,
-not scsi-misc.  Thanks also to James Bottomley for providing an earlier
-version of this patch from which to work.
+Mike Christie wrote:
+> - Bind per device instead of per target to allow for
+> per LU failover.
+> - Merge Ed's updated dm-emc code into scsi_emc_clariion.
+> - Add basic code to hook into REQ_TYPE_LINUX_BLOCK cmd_type
+> (must ask Jens if this is how he wanted it).
+> - Do a partial conversion of dm-mpath.c (hooked dm-mpath.c
+> in, but all the hw handler code can now be removed (will
+> do this in a seperate patch to reduce noise)).
+> - added device_id table to bind devices to modules by.
+> 
 
-I've tested this patch on a x206m with a ST380819AS SATA2 disk plugged
-into the Adaptec SAS controller.  The drive came up with a queue depth
-of 31, and I successfully ran an I/O flood test to coerce libata into
-sending multiple commands simultaneously.  A kernel probe recorded the
-maximum tag number that had been seen before and after the flood test;
-before the test it was 2 and after it was 30, as I expected.
+I updated this patchset here
 
-Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
+http://kernel.org/git/?p=linux/kernel/git/mnc/linux-2.6-iscsi.git;a=summary
 
---
+in the multipath branch.
 
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index 60d13b1..77a9be8 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -673,8 +673,14 @@ static unsigned int sas_ata_qc_issue(str
- 	task->ata_task.retry_count = 1;
- 	task->task_state_flags = SAS_TASK_STATE_PENDING;
- 
--	if (qc->tf.protocol == ATA_PROT_DMA)
-+	switch (qc->tf.protocol) {
-+	case ATA_PROT_NCQ:
-+		task->ata_task.use_ncq = 1;
-+		/* fall through */
-+	case ATA_PROT_DMA:
- 		task->ata_task.dma_xfer = 1;
-+		break;
-+	}
- 
- 	if (sas_ha->lldd_max_execute_num < 2)
- 		res = i->dft->lldd_execute_task(task, 1, GFP_ATOMIC);
-@@ -807,7 +813,7 @@ static struct ata_port_operations sas_sa
- 
- static struct ata_port_info sata_port_info = {
- 	.flags = ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY | ATA_FLAG_SATA_RESET |
--		ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA,
-+		ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA | ATA_FLAG_NCQ,
- 	.pio_mask = 0x1f, /* PIO0-4 */
- 	.mwdma_mask = 0x07, /* MWDMA0-2 */
- 	.udma_mask = ATA_UDMA6,
-@@ -875,6 +881,7 @@ int sas_target_alloc(struct scsi_target 
- 
- 		ap->private_data = found_dev;
- 		ap->cbl = ATA_CBL_SATA;
-+		ap->scsi_host = shost;
- 		found_dev->sata_dev.ap = ap;
- 	}
- 
+I added a rdac handler and hp storage works one that does START_STOP. I
+also integrated it into the devinfo table (cannot update from proc or
+module param just yet) and fixed some bugs and did some cleanup - still
+need to better integrate the REQ cmt type checking.
+
+Christophe V, I was wondering what is the vendor/module info for your
+box? We have a MSA1000 VOLUME/COMPAQ here, but START_STOP does not work.
+I mean if I send the command it always executes successfully, but the
+device does not failover (READ/WRITEs fail). I tried just running
+sg_start and this runs ok but READ/WRITE still fail, so I hacked up
+scsi_debug to simulate my testing.
+
+If you want to try it out, you just have to add a devinfo entry for your
+box. I did this for the MSA I thought used it by adding the "hp_sw"
+string to the end of an existing devinfo entry:
+
++       {"COMPAQ", "MSA1000", NULL, BLIST_SPARSELUN |
+BLIST_NOSTARTONADD, "hp_sw"},
++       {"COMPAQ", "MSA1000 VOLUME", NULL, BLIST_SPARSELUN |
+BLIST_NOSTARTONADD, "hp_sw"},
+
+
+and you need to use a slightly different table format. I use this for a
+setup with two paths (one to each target controller) with each path in a
+different priority group.
+
+0 16384 multipath 1 queue_if_no_path 1 1 2 1 round-robin 0 1 1 8:48 1000
+round-robin 0 1 1 8:32 1000
+
+0 16384 multipath 1 queue_if_no_path        <the bits here "1 1" is what
+changed >         2 1 round-robin 0 1 1 8:48 1000 round-robin 0 1 1 8:32
+1000
+
+If you have a device that needs manual failover, you pass "1 1". If it
+it does not require manual failover then just pass "0".  There is no
+need to pass any hw handler type because the hw handler is no longer in
+dm. Later when we do more advanced configuration we will have to write
+to some sysfs interface at the scsi layer to configure values like the
+tresspass or page2c type (clariion and rdac settings).
