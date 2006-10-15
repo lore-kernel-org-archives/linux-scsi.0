@@ -1,83 +1,102 @@
-From: Sergey Kononenko <sergk@sergk.org.ua>
-Subject: [PATCH] aic94xx: Supermicro motherboards support (fixed patches)
-Date: Sun, 15 Oct 2006 03:12:08 +0300
-Message-ID: <20061015031208.6671cb31@manowar.localnet>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: [PATCH 0/2] aic94xx: Supermicro motherboards support
+Date: Sat, 14 Oct 2006 18:21:46 -0700 (PDT)
+Message-ID: <20061015012146.62933.qmail@web31809.mail.mud.yahoo.com>
+References: <20061015023100.390ee1b7@manowar.localnet>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail2.hqhost.net ([80.77.80.130]:36021 "EHLO mail2.hqhost.net")
-	by vger.kernel.org with ESMTP id S1752303AbWJOAMM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 14 Oct 2006 20:12:12 -0400
-Received: from manowar.localnet (ukrtel-nat.ua-online.net [213.179.225.5])
-	(authenticated bits=0)
-	by mail2.hqhost.net (8.13.8/8.13.8/Debian-2) with ESMTP id k9F0CQQZ021061
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Sun, 15 Oct 2006 00:12:30 GMT
+Received: from web31809.mail.mud.yahoo.com ([68.142.207.72]:56179 "HELO
+	web31809.mail.mud.yahoo.com") by vger.kernel.org with SMTP
+	id S1752320AbWJOBVr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 14 Oct 2006 21:21:47 -0400
+In-Reply-To: <20061015023100.390ee1b7@manowar.localnet>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Sergey Kononenko <sergk@sergk.org.ua>, linux-scsi@vger.kernel.org
 
-Sorry, patches in previous messages was with broken tabs,
-this ones would be correct:
+--- Sergey Kononenko <sergk@sergk.org.ua> wrote:
+> Hello,
+> 
+> The aic94xx driver in current mainline kernel don't work with
+> controllers integrated in some of Supermicro motherboards (i have
+> tested only on X6DHR-3G2) due to two reasons:
+> - driver do not contain corresponding PCI id (9005:041F)
+> - driver can not find flash on controller.
+> 
+> Patches which i send now ordered to resolve this problems.
+> 
+> First one is a simple and just add pci id, but second one is a bit
+> controversial.
+> 
+> The following code from function asd_flash_getid (aic94xx_sds.c)
+> 
+> 	reg = asd_read_reg_dword(asd_ha, EXSICNFGR);
+> 
+>         if (!(reg & FLASHEX)) {
+>                 ASD_DPRINTK("flash doesn't exist\n");
+>                 return -ENOENT;
+>         }
+> 
+> failed with error on controllers in supermicro motherboards.
+> Looks like flag FLASHEX did not set on such devices, however flash chip
+> present and without above if statement in code drivers works normally
+> on supermicro controllers.
+> 
+> As i found this code was commented out in original driver by Luben
+> Tuikov with following comment:
+> 
+> /*     Early (current?) SuperMicro mainboards, X6DHR-3G2 and X6DH3-G2
+>        have a bug whereby RS104 is missing (not installed) and RS103
+>        is installed, causing FLASHEX to be 0. */
+> /*     if (!(reg & FLASHEX)) { */
+> /*             ASD_DPRINTK("flash doesn't exist\n"); */
+> /*             return -ENOENT; */
+> /*     } */
+> 
+> May be it is possible to write separate code for checking
+> availability of flash chip especially for supermicro
+> motherboards, but i don't know hot it possible and don't know what is
+> RS104, RS103 and difference between it.
 
-Add PCI id.
+RSxyz stands for "resistor xyz" in the schematic diagrams.
+This is a hardware bug in the (early?) SuperMicro mainboards.
+It dates from last year, 20 October 2005.
 
-Signed-off-by: Sergey Kononenko <sergk@sergk.org.ua>
+This is the commit from my git tree:
 
-diff -urN linux-2.6.19-rc2/drivers/scsi/aic94xx/aic94xx_hwi.h \
-	linux-2.6.19-rc2.patched/drivers/scsi/aic94xx/aic94xx_hwi.h
---- linux-2.6.19-rc2/drivers/scsi/aic94xx/aic94xx_hwi.h	2006-10-14 \
-	21:11:59.000000000 +0000
-+++ linux-2.6.19-rc2.patched/drivers/scsi/aic94xx/aic94xx_hwi.h	\
-	2006-10-14 02:15:16.000000000 +0000
-@@ -46,6 +46,7 @@
- #define PCI_DEVICE_ID_ADAPTEC2_RAZOR10 0x410
- #define PCI_DEVICE_ID_ADAPTEC2_RAZOR12 0x412
- #define PCI_DEVICE_ID_ADAPTEC2_RAZOR1E 0x41E
-+#define PCI_DEVICE_ID_ADAPTEC2_RAZOR1F 0x41F
- #define PCI_DEVICE_ID_ADAPTEC2_RAZOR30 0x430
- #define PCI_DEVICE_ID_ADAPTEC2_RAZOR32 0x432
- #define PCI_DEVICE_ID_ADAPTEC2_RAZOR3E 0x43E
-diff -urN linux-2.6.19-rc2/drivers/scsi/aic94xx/aic94xx_init.c \
-	linux-2.6.19-rc2.patched/drivers/scsi/aic94xx/aic94xx_init.c
---- linux-2.6.19-rc2/drivers/scsi/aic94xx/aic94xx_init.c 2006-10-14 \
-	21:11:59.000000000 +0000
-+++ linux-2.6.19-rc2.patched/drivers/scsi/aic94xx/aic94xx_init.c 2006-10-14 \
-	02:15:16.000000000 +0000
-@@ -814,6 +814,8 @@
- 	 0, 0, 1},
- 	{PCI_DEVICE(PCI_VENDOR_ID_ADAPTEC2, PCI_DEVICE_ID_ADAPTEC2_RAZOR1E),
- 	 0, 0, 1},
-+	{PCI_DEVICE(PCI_VENDOR_ID_ADAPTEC2, PCI_DEVICE_ID_ADAPTEC2_RAZOR1F),
-+	 0, 0, 1},
- 	{PCI_DEVICE(PCI_VENDOR_ID_ADAPTEC2, PCI_DEVICE_ID_ADAPTEC2_RAZOR30),
- 	 0, 0, 2},
- 	{PCI_DEVICE(PCI_VENDOR_ID_ADAPTEC2, PCI_DEVICE_ID_ADAPTEC2_RAZOR32),
+commit 433484ee805a953793cc33efa890cb24ef4afe1a
+Author: Luben Tuikov <luben_tuikov@adaptec.com>
+Date:   Thu Oct 20 18:11:30 2005 -0400
 
---
-Remove FLASHEX check.
+    Fix around buggy mainboards reporting Flash memory present
+    Early (current?) SuperMicro mainboards, X6DHR-3G2 and X6DH3-G2
+    have a bug whereby RS104 is missing (not installed) and RS103
+    is installed, causing FLASHEX to be 0.
+    
+    Signed-off-by: Luben Tuikov <luben_tuikov@adaptec.com>
 
-Signed-off-by: Sergey Kononenko <sergk@sergk.org.ua>
+> But more likely that check of FLASHEX can be removed safely from code
 
-diff -urN linux-2.6.19-rc2/drivers/scsi/aic94xx/aic94xx_sds.c \
-	linux-2.6.19-rc2.patched/drivers/scsi/aic94xx/aic94xx_sds.c
---- linux-2.6.19-rc2/drivers/scsi/aic94xx/aic94xx_sds.c	2006-10-14 \
-	21:11:59.000000000 +0000
-+++ linux-2.6.19-rc2.patched/drivers/scsi/aic94xx/aic94xx_sds.c	\
-	2006-10-14 02:16:08.000000000 +0000
-@@ -630,10 +630,6 @@
- 
- 	reg = asd_read_reg_dword(asd_ha, EXSICNFGR);
- 
--	if (!(reg & FLASHEX)) {
--		ASD_DPRINTK("flash doesn't exist\n");
--		return -ENOENT;
--	}
- 	if (pci_read_config_dword(asd_ha->pcidev, PCI_CONF_FLSH_BAR,
- 				  &asd_ha->hw_prof.flash.bar)) {
- 		asd_printk("couldn't read PCI_CONF_FLSH_BAR of %s\n",
+Yes, you can remove it safely.
 
---
-Sergey Kononenko
+    Luben
+
+
+> because below there is another more generic check for flash chip via
+> pci config probe.
+> 
+> This solution works perfect in my case, also it was in original code,
+> however i think this second patch would be tested on some other
+> varieties of aic94xx hardware.
+> 
+> --
+> Sergey Kononenko
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
