@@ -1,64 +1,37 @@
-From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: Re: [PATCH] libsas: support NCQ for SATA disks
-Date: Sun, 15 Oct 2006 11:43:13 -0700
-Message-ID: <45328141.5020705@us.ibm.com>
-References: <453027A9.3060606@us.ibm.com> <1160934124.3544.7.camel@mulgrave.il.steeleye.com>
-Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: [PATCH] tmscsim: clean up endianness
+Date: Sun, 15 Oct 2006 21:01:00 +0200 (CEST)
+Message-ID: <Pine.LNX.4.60.0610152029080.3641@poirot.grange>
+References: <Pine.LNX.4.60.0610082208090.20132@poirot.grange>
+ <1160363950.3528.23.camel@mulgrave.il.steeleye.com>
+ <Pine.LNX.4.60.0610090747140.3756@poirot.grange>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.150]:55981 "EHLO
-	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751168AbWJOSnR
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 15 Oct 2006 14:43:17 -0400
-In-Reply-To: <1160934124.3544.7.camel@mulgrave.il.steeleye.com>
+Received: from mail.gmx.net ([213.165.64.20]:54412 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S1422764AbWJOTBA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 15 Oct 2006 15:01:00 -0400
+In-Reply-To: <Pine.LNX.4.60.0610090747140.3756@poirot.grange>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>, Mike Anderson <andmike@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
+On Mon, 9 Oct 2006, Guennadi Liakhovetski wrote:
 
-> This doesn't seem to quite work for me on a SATA-1 disc:
-> 
-> sas: DOING DISCOVERY on port 1, pid:1897
-> sas: sas_ata_phy_reset: Found ATA device.
-> ata1.00: ATA-7, max UDMA/133, 781422768 sectors: LBA48 NCQ (depth 31/32)
-> ata1.00: configured for UDMA/133
-> scsi 2:0:1:0: Direct-Access     ATA      ST3400832AS      3.03 PQ: 0
-> ANSI: 5
-> SCSI device sdc: 781422768 512-byte hdwr sectors (400088 MB)
-> sdc: Write Protect is off
-> SCSI device sdc: drive cache: write back
-> SCSI device sdc: 781422768 512-byte hdwr sectors (400088 MB)
-> sdc: Write Protect is off
-> SCSI device sdc: drive cache: write back
->  sdc: unknown partition table
-> sd 2:0:1:0: Attached scsi disk sdc
-> sas: DONE DISCOVERY on port 1, pid:1897, result:0
-> sas: command 0xf785f3c0, task 0x00000000, timed out: EH_HANDLED
-> sas: command 0xf785f3c0, task 0x00000000, timed out: EH_HANDLED
-> [...]
-> 
-> It looks like the first few commands get through (read capacity, ATA
-> IDENTIFY etc) and it hangs up on the read for the partition table.
+> but don't 32-bit io[rw] routines on BE machines do the swapping internally 
+> on PCI? I seem to remember having read something about that, not sure 
+> any more, though. But, at least, it won't be more buggy than before:-) 
+> Should I swap here?
 
-Hm... if I put in some debug printks in the qc_issue code, I get the
-same symptoms.  I've observed that once again we get hung up on ATA
-commands where the tag number > 0.  I also noticed this pattern:
+James, I tried again to look in ppc code, and it does look like io 
+operations are byte-swapped (use lwbrx and friends). If I am right, are 
+there still more problems with that patch? I need to know it as I have a 
+next patch, which eventually removes the bus_to_virt() from tmscsim. 
+Although I still have no way to test this path.
 
-1. ATA command w/ tag 0 (command A) issued.
-2. Command A goes out to sas-ata.
-2. ATA command w/ tag 1 (command B) issued.
-3. Command A completes
-4. Command B goes out to sas-ata.
-[...]
-5. Command B times out.
-
-Very odd that this all works if there are no printks.  I don't see
-anything obvious that would suggest why this apparent race seems to
-happen--unless there's some conflict between issuing an ATA command
-while completing another one.
-
---D
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
