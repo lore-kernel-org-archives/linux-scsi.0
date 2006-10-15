@@ -1,46 +1,64 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: sym53c8xx_2 negotiates improperly
-Date: Sun, 15 Oct 2006 12:55:02 -0500
-Message-ID: <1160934902.3544.14.camel@mulgrave.il.steeleye.com>
-References: <Pine.LNX.4.64.0610151329300.8184@monarch.fast.net>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: Re: [PATCH] libsas: support NCQ for SATA disks
+Date: Sun, 15 Oct 2006 11:43:13 -0700
+Message-ID: <45328141.5020705@us.ibm.com>
+References: <453027A9.3060606@us.ibm.com> <1160934124.3544.7.camel@mulgrave.il.steeleye.com>
+Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:18326 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1422642AbWJORzx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 15 Oct 2006 13:55:53 -0400
-In-Reply-To: <Pine.LNX.4.64.0610151329300.8184@monarch.fast.net>
+Received: from e32.co.us.ibm.com ([32.97.110.150]:55981 "EHLO
+	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751168AbWJOSnR
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 15 Oct 2006 14:43:17 -0400
+In-Reply-To: <1160934124.3544.7.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Steven N. Hirsch" <shirsch@adelphia.net>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>, Mike Anderson <andmike@us.ibm.com>
 
-On Sun, 2006-10-15 at 13:36 -0400, Steven N. Hirsch wrote:
-> <6> target0:0:0: ppr msgout: Parallel Protocol Request period = 12.5 ns offset = 62 width = 16 
+James Bottomley wrote:
 
-The driver asks for FAST-80
+> This doesn't seem to quite work for me on a SATA-1 disc:
+> 
+> sas: DOING DISCOVERY on port 1, pid:1897
+> sas: sas_ata_phy_reset: Found ATA device.
+> ata1.00: ATA-7, max UDMA/133, 781422768 sectors: LBA48 NCQ (depth 31/32)
+> ata1.00: configured for UDMA/133
+> scsi 2:0:1:0: Direct-Access     ATA      ST3400832AS      3.03 PQ: 0
+> ANSI: 5
+> SCSI device sdc: 781422768 512-byte hdwr sectors (400088 MB)
+> sdc: Write Protect is off
+> SCSI device sdc: drive cache: write back
+> SCSI device sdc: 781422768 512-byte hdwr sectors (400088 MB)
+> sdc: Write Protect is off
+> SCSI device sdc: drive cache: write back
+>  sdc: unknown partition table
+> sd 2:0:1:0: Attached scsi disk sdc
+> sas: DONE DISCOVERY on port 1, pid:1897, result:0
+> sas: command 0xf785f3c0, task 0x00000000, timed out: EH_HANDLED
+> sas: command 0xf785f3c0, task 0x00000000, timed out: EH_HANDLED
+> [...]
+> 
+> It looks like the first few commands get through (read capacity, ATA
+> IDENTIFY etc) and it hangs up on the read for the partition table.
 
-> <6> target0:0:0: ppr msgin: Parallel Protocol Request period = 25 ns offset = 62 width = 16 
+Hm... if I put in some debug printks in the qc_issue code, I get the
+same symptoms.  I've observed that once again we get hung up on ATA
+commands where the tag number > 0.  I also noticed this pattern:
 
-And the device denies the request and suggests FAST-40 instead
+1. ATA command w/ tag 0 (command A) issued.
+2. Command A goes out to sas-ata.
+2. ATA command w/ tag 1 (command B) issued.
+3. Command A completes
+4. Command B goes out to sas-ata.
+[...]
+5. Command B times out.
 
-> <6> target0:0:0: asynchronous
-> <6> 0:0:0:0: M_REJECT to send for : Parallel Protocol Request period = 25 ns offset = 62 width = 16 
-> <6> target0:0:0: ppr msgout: Parallel Protocol Request period = 25 ns offset = 31 width = 16 
-> <6> target0:0:0: ppr msgin: Parallel Protocol Request period = 25 ns offset = 31 width = 16 
-> <6> target0:0:0: FAST-40 WIDE SCSI 80.0 MB/s ST (25 ns, offset 31)
+Very odd that this all works if there are no printks.  I don't see
+anything obvious that would suggest why this apparent race seems to
+happen--unless there's some conflict between issuing an ATA command
+while completing another one.
 
-Which is what you eventually end up with.
-
-The driver is working as advertised ... the curiosity is why the device
-suggests FAST-40 in the first place.  There are reports of devices doing
-things like this when they're unhappy with the contents of some of the
-flags of the initial PPR message.  A work around for a Quantum Atlas
-with this issue went into 2.6.18 ... which kernel was this you were
-using?
-
-James
-
-
+--D
