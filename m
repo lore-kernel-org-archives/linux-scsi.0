@@ -1,69 +1,46 @@
-From: "Ju, Seokmann" <Seokmann.Ju@lsi.com>
-Subject: RE: [PATCH 2.6.19-rc2] scsi: megaraid_{mm,mbox}: 64-bit DMA capability fix
-Date: Mon, 16 Oct 2006 06:32:14 -0600
-Message-ID: <890BF3111FB9484E9526987D912B261932E3E4@NAMAIL3.ad.lsil.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [PATCH] add can_queue to host parameters
+Date: Mon, 16 Oct 2006 10:06:27 -0500
+Message-ID: <1161011187.3433.12.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:7635 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1422675AbWJPMc3 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Oct 2006 08:32:29 -0400
-Content-class: urn:content-classes:message
+Received: from stat9.steeleye.com ([209.192.50.41]:9674 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S932113AbWJPPG3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 Oct 2006 11:06:29 -0400
+Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
+	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id k9GF6R115649
+	for <linux-scsi@vger.kernel.org>; Mon, 16 Oct 2006 11:06:27 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vasily Averin <vvs@sw.ru>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, devel@openvz.org
-Cc: Andrey Mirkin <amirkin@sw.ru>
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-Hi,
-Monday, October 16, 2006 4:09 AM, Vasily Averin wrote:
-> It is known that 2 LSI Logic MegaRAID SATA RAID Controllers 
-> (150-4 and 150-6)
-> don't support 64-bit DMA. Unfortunately currently this check 
-> is wrong and driver
->  sets 64-bit DMA mode for these devices.
-ACK - this patch will fix the problem.
-Thank you for the finding, Vasily.
+Debugging TCQ issues has shown me this is a very useful parameter to be
+able to view.  Add it to he host class parameters.
 
-Seokmann
+James
 
-> -----Original Message-----
-> From: Vasily Averin [mailto:vvs@sw.ru] 
-> Sent: Monday, October 16, 2006 4:09 AM
-> To: Linux Kernel Mailing List; linux-scsi@vger.kernel.org; 
-> Ju, Seokmann; James Bottomley; Andrew Morton; Linus Torvalds; 
-> devel@openvz.org
-> Cc: Andrey Mirkin
-> Subject: [PATCH 2.6.19-rc2] scsi: megaraid_{mm,mbox}: 64-bit 
-> DMA capability fix
-> 
-> From: Andrey Mirkin (amirkin@sw.ru)
-> 
-> It is known that 2 LSI Logic MegaRAID SATA RAID Controllers 
-> (150-4 and 150-6)
-> don't support 64-bit DMA. Unfortunately currently this check 
-> is wrong and driver
->  sets 64-bit DMA mode for these devices.
-> 
-> Signed-off-by:	Andrey Mirkin <amirkin@sw.ru>
-> Ack-by:		Vasily Averin <vvs@sw.ru>
-> 
-> --- 
-> linux-2.6.19-rc2/drivers/scsi/megaraid/megaraid_mbox.c.mgst6	
-> 2006-10-16
-> 10:26:50.000000000 +0400
-> +++ linux-2.6.19-rc2/drivers/scsi/megaraid/megaraid_mbox.c	
-> 2006-10-16
-> 11:30:55.000000000 +0400
-> @@ -884,7 +884,7 @@ megaraid_init_mbox(adapter_t *adapter)
-> 
->  	if (((magic64 == HBA_SIGNATURE_64_BIT) &&
->  		((adapter->pdev->subsystem_device !=
-> -		PCI_SUBSYS_ID_MEGARAID_SATA_150_6) ||
-> +		PCI_SUBSYS_ID_MEGARAID_SATA_150_6) &&
->  		(adapter->pdev->subsystem_device !=
->  		PCI_SUBSYS_ID_MEGARAID_SATA_150_4))) ||
->  		(adapter->pdev->vendor == PCI_VENDOR_ID_LSI_LOGIC &&
-> 
-> 
+Index: BUILD-2.6/drivers/scsi/scsi_sysfs.c
+===================================================================
+--- BUILD-2.6.orig/drivers/scsi/scsi_sysfs.c	2006-10-16 08:50:48.000000000 -0500
++++ BUILD-2.6/drivers/scsi/scsi_sysfs.c	2006-10-16 08:56:54.000000000 -0500
+@@ -192,6 +192,7 @@ static CLASS_DEVICE_ATTR(state, S_IRUGO 
+ shost_rd_attr(unique_id, "%u\n");
+ shost_rd_attr(host_busy, "%hu\n");
+ shost_rd_attr(cmd_per_lun, "%hd\n");
++shost_rd_attr(can_queue, "%hd\n");
+ shost_rd_attr(sg_tablesize, "%hu\n");
+ shost_rd_attr(unchecked_isa_dma, "%d\n");
+ shost_rd_attr2(proc_name, hostt->proc_name, "%s\n");
+@@ -200,6 +201,7 @@ static struct class_device_attribute *sc
+ 	&class_device_attr_unique_id,
+ 	&class_device_attr_host_busy,
+ 	&class_device_attr_cmd_per_lun,
++	&class_device_attr_can_queue,
+ 	&class_device_attr_sg_tablesize,
+ 	&class_device_attr_unchecked_isa_dma,
+ 	&class_device_attr_proc_name,
+
+
