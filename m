@@ -1,114 +1,76 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [PATCH] aic94xx: add SATAPI support
-Date: Sun, 15 Oct 2006 20:24:35 -0500
-Message-ID: <1160961875.3544.37.camel@mulgrave.il.steeleye.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Mark Rustad <mrustad@mac.com>
+Subject: Re: [PATCH] libsas: support NCQ for SATA disks
+Date: Sun, 15 Oct 2006 20:27:08 -0500
+Message-ID: <0E9A17FC-4047-48AE-A283-520B87E7F28D@mac.com>
+References: <453027A9.3060606@us.ibm.com> <1160934124.3544.7.camel@mulgrave.il.steeleye.com> <45328141.5020705@us.ibm.com>
+Mime-Version: 1.0 (Apple Message framework v752.2)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:28840 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751188AbWJPBYh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 15 Oct 2006 21:24:37 -0400
-Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
-	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id k9G1OZ105973
-	for <linux-scsi@vger.kernel.org>; Sun, 15 Oct 2006 21:24:36 -0400
+Received: from smtpout.mac.com ([17.250.248.184]:51660 "EHLO smtpout.mac.com")
+	by vger.kernel.org with ESMTP id S1751285AbWJPB1O (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 15 Oct 2006 21:27:14 -0400
+In-Reply-To: <45328141.5020705@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: "Darrick J. Wong" <djwong@us.ibm.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>, Mike Anderson <andmike@us.ibm.com>
 
-It turns out this is fairly easy to plumb in by recognising the three
-command types and copying the CDB.  The protocol response path needs to
-be amended to cope with SAS_PROTO_RESPONSE.
+On Oct 15, 2006, at 1:43 PM, Darrick J. Wong wrote:
 
-James
+> James Bottomley wrote:
+>
+>> This doesn't seem to quite work for me on a SATA-1 disc:
+>>
+>> sas: DOING DISCOVERY on port 1, pid:1897
+>> sas: sas_ata_phy_reset: Found ATA device.
+>> ata1.00: ATA-7, max UDMA/133, 781422768 sectors: LBA48 NCQ (depth  
+>> 31/32)
+>> ata1.00: configured for UDMA/133
+>> scsi 2:0:1:0: Direct-Access     ATA      ST3400832AS      3.03 PQ: 0
+>> ANSI: 5
+>> SCSI device sdc: 781422768 512-byte hdwr sectors (400088 MB)
+>> sdc: Write Protect is off
+>> SCSI device sdc: drive cache: write back
+>> SCSI device sdc: 781422768 512-byte hdwr sectors (400088 MB)
+>> sdc: Write Protect is off
+>> SCSI device sdc: drive cache: write back
+>>  sdc: unknown partition table
+>> sd 2:0:1:0: Attached scsi disk sdc
+>> sas: DONE DISCOVERY on port 1, pid:1897, result:0
+>> sas: command 0xf785f3c0, task 0x00000000, timed out: EH_HANDLED
+>> sas: command 0xf785f3c0, task 0x00000000, timed out: EH_HANDLED
+>> [...]
+>>
+>> It looks like the first few commands get through (read capacity, ATA
+>> IDENTIFY etc) and it hangs up on the read for the partition table.
+>
+> Hm... if I put in some debug printks in the qc_issue code, I get the
+> same symptoms.  I've observed that once again we get hung up on ATA
+> commands where the tag number > 0.  I also noticed this pattern:
+>
+> 1. ATA command w/ tag 0 (command A) issued.
+> 2. Command A goes out to sas-ata.
+> 2. ATA command w/ tag 1 (command B) issued.
+> 3. Command A completes
+> 4. Command B goes out to sas-ata.
+> [...]
+> 5. Command B times out.
+>
+> Very odd that this all works if there are no printks.  I don't see
+> anything obvious that would suggest why this apparent race seems to
+> happen--unless there's some conflict between issuing an ATA command
+> while completing another one.
 
-Index: BUILD-2.6/drivers/scsi/libsas/sas_scsi_host.c
-===================================================================
---- BUILD-2.6.orig/drivers/scsi/libsas/sas_scsi_host.c	2006-10-15 20:05:56.000000000 -0500
-+++ BUILD-2.6/drivers/scsi/libsas/sas_scsi_host.c	2006-10-15 20:06:22.000000000 -0500
-@@ -580,7 +580,6 @@ static enum ata_completion_errors sas_to
- 		case SAM_CHECK_COND:
- 		case SAS_OPEN_TO:
- 		case SAS_OPEN_REJECT:
--		case SAS_PROTO_RESPONSE:
- 			SAS_DPRINTK("%s: Saw error %d.  What to do?\n",
- 				    __FUNCTION__, ts->stat);
- 			return AC_ERR_OTHER;
-@@ -588,6 +587,10 @@ static enum ata_completion_errors sas_to
- 		case SAS_ABORTED_TASK:
- 			return AC_ERR_DEV;
- 
-+		case SAS_PROTO_RESPONSE:
-+			/* This means the ending_fis has the error
-+			 * value; return 0 here to collect it */
-+			return 0;
- 		default:
- 			return 0;
- 	}
-@@ -601,23 +604,25 @@ static void sas_ata_task_done(struct sas
- 	struct ata_task_resp *resp = (struct ata_task_resp *)stat->buf;
- 	enum ata_completion_errors ac;
- 
--	ac = sas_to_ata_err(stat);
--	if (ac) {
--		SAS_DPRINTK("%s: SAS error %x\n", __FUNCTION__, stat->stat);
--		/* We saw a SAS error. Send a vague error. */
--		qc->err_mask = ac;
--		dev->sata_dev.tf.feature = 0x04; /* status err */
--		dev->sata_dev.tf.command = ATA_ERR;
--		goto end;
--	}
--
--	ata_tf_from_fis(resp->ending_fis, &dev->sata_dev.tf);
--	qc->err_mask |= ac_err_mask(dev->sata_dev.tf.command);
--	dev->sata_dev.sstatus = resp->sstatus;
--	dev->sata_dev.serror = resp->serror;
--	dev->sata_dev.scontrol = resp->scontrol;
--	dev->sata_dev.ap->sactive = resp->sactive;
--end:
-+	if (stat->stat == SAS_PROTO_RESPONSE) {
-+		ata_tf_from_fis(resp->ending_fis, &dev->sata_dev.tf);
-+		qc->err_mask |= ac_err_mask(dev->sata_dev.tf.command);
-+		dev->sata_dev.sstatus = resp->sstatus;
-+		dev->sata_dev.serror = resp->serror;
-+		dev->sata_dev.scontrol = resp->scontrol;
-+		dev->sata_dev.ap->sactive = resp->sactive;
-+	} else if (stat->stat != SAM_STAT_GOOD) {
-+		ac = sas_to_ata_err(stat);
-+		if (ac) {
-+			SAS_DPRINTK("%s: SAS error %x\n", __FUNCTION__,
-+				    stat->stat);
-+			/* We saw a SAS error. Send a vague error. */
-+			qc->err_mask = ac;
-+			dev->sata_dev.tf.feature = 0x04; /* status err */
-+			dev->sata_dev.tf.command = ATA_ERR;
-+		}
-+	}
-+
- 	ata_qc_complete(qc);
- 	list_del_init(&task->list);
- 	sas_free_task(task);
-@@ -677,11 +682,20 @@ static unsigned int sas_ata_qc_issue(str
- 	case ATA_PROT_NCQ:
- 		task->ata_task.use_ncq = 1;
- 		/* fall through */
-+	case ATA_PROT_ATAPI_DMA:
- 	case ATA_PROT_DMA:
- 		task->ata_task.dma_xfer = 1;
- 		break;
- 	}
- 
-+	switch (qc->tf.protocol) {
-+	case ATA_PROT_ATAPI:
-+	case ATA_PROT_ATAPI_NODATA:
-+	case ATA_PROT_ATAPI_DMA:
-+		memcpy(task->ata_task.atapi_packet, qc->cdb, qc->dev->cdb_len);
-+		break;
-+	}
-+
- 	if (sas_ha->lldd_max_execute_num < 2)
- 		res = i->dft->lldd_execute_task(task, 1, GFP_ATOMIC);
- 	else
+We have found in our system, using libata with Luben's driver, that  
+the aic94xx sequencer expects the SATA commands to always have a tag  
+of 0. The sequencer assigns its own tag before passing it to the  
+drive. Interestingly, it seems to OR-in its generated tag value, so  
+if a non-zero tag value is passed in, a real mess ensues.
 
+Andy Warner can provide a lot more details on this.
+
+-- 
+Mark Rustad, MRustad@mac.com
 
