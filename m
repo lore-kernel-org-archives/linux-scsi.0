@@ -1,122 +1,113 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] aic94xx: add SATAPI support
-Date: Mon, 16 Oct 2006 10:47:40 -0500
-Message-ID: <1161013660.3433.15.camel@mulgrave.il.steeleye.com>
-References: <1160961875.3544.37.camel@mulgrave.il.steeleye.com>
+Subject: [PATCH] libsas: better error handling
+Date: Mon, 16 Oct 2006 10:57:05 -0500
+Message-ID: <1161014226.3433.16.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:27083 "EHLO
+Received: from stat9.steeleye.com ([209.192.50.41]:45771 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1161006AbWJPPrm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Oct 2006 11:47:42 -0400
+	id S1161012AbWJPP5H (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 Oct 2006 11:57:07 -0400
 Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
-	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id k9GFlf118124
-	for <linux-scsi@vger.kernel.org>; Mon, 16 Oct 2006 11:47:41 -0400
-In-Reply-To: <1160961875.3544.37.camel@mulgrave.il.steeleye.com>
+	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id k9GFv6118590
+	for <linux-scsi@vger.kernel.org>; Mon, 16 Oct 2006 11:57:06 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Sun, 2006-10-15 at 20:24 -0500, James Bottomley wrote:
-> +	switch (qc->tf.protocol) {
-> +	case ATA_PROT_ATAPI:
-> +	case ATA_PROT_ATAPI_NODATA:
-> +	case ATA_PROT_ATAPI_DMA:
-> +		memcpy(task->ata_task.atapi_packet, qc->cdb, qc->dev->cdb_len);
-> +		break;
-> +	}
-
-I missed the fact that this is covered in the is_atapi_taskfile() if
-clause above.
-
-Here's the amended patch.
+This replaces a few BUG_ON() statements with the correct failure error
+handling.  There are still many more to do.
 
 James
 
-Index: BUILD-2.6/drivers/scsi/libsas/sas_scsi_host.c
+Index: BUILD-2.6/drivers/scsi/libsas/sas_expander.c
 ===================================================================
---- BUILD-2.6.orig/drivers/scsi/libsas/sas_scsi_host.c	2006-10-16 10:18:42.000000000 -0500
-+++ BUILD-2.6/drivers/scsi/libsas/sas_scsi_host.c	2006-10-16 10:20:13.000000000 -0500
-@@ -580,7 +580,6 @@ static enum ata_completion_errors sas_to
- 		case SAM_CHECK_COND:
- 		case SAS_OPEN_TO:
- 		case SAS_OPEN_REJECT:
--		case SAS_PROTO_RESPONSE:
- 			SAS_DPRINTK("%s: Saw error %d.  What to do?\n",
- 				    __FUNCTION__, ts->stat);
- 			return AC_ERR_OTHER;
-@@ -588,6 +587,10 @@ static enum ata_completion_errors sas_to
- 		case SAS_ABORTED_TASK:
- 			return AC_ERR_DEV;
- 
-+		case SAS_PROTO_RESPONSE:
-+			/* This means the ending_fis has the error
-+			 * value; return 0 here to collect it */
-+			return 0;
- 		default:
- 			return 0;
- 	}
-@@ -601,23 +604,25 @@ static void sas_ata_task_done(struct sas
- 	struct ata_task_resp *resp = (struct ata_task_resp *)stat->buf;
- 	enum ata_completion_errors ac;
- 
--	ac = sas_to_ata_err(stat);
--	if (ac) {
--		SAS_DPRINTK("%s: SAS error %x\n", __FUNCTION__, stat->stat);
--		/* We saw a SAS error. Send a vague error. */
--		qc->err_mask = ac;
--		dev->sata_dev.tf.feature = 0x04; /* status err */
--		dev->sata_dev.tf.command = ATA_ERR;
--		goto end;
--	}
--
--	ata_tf_from_fis(resp->ending_fis, &dev->sata_dev.tf);
--	qc->err_mask |= ac_err_mask(dev->sata_dev.tf.command);
--	dev->sata_dev.sstatus = resp->sstatus;
--	dev->sata_dev.serror = resp->serror;
--	dev->sata_dev.scontrol = resp->scontrol;
--	dev->sata_dev.ap->sactive = resp->sactive;
--end:
-+	if (stat->stat == SAS_PROTO_RESPONSE) {
-+		ata_tf_from_fis(resp->ending_fis, &dev->sata_dev.tf);
-+		qc->err_mask |= ac_err_mask(dev->sata_dev.tf.command);
-+		dev->sata_dev.sstatus = resp->sstatus;
-+		dev->sata_dev.serror = resp->serror;
-+		dev->sata_dev.scontrol = resp->scontrol;
-+		dev->sata_dev.ap->sactive = resp->sactive;
-+	} else if (stat->stat != SAM_STAT_GOOD) {
-+		ac = sas_to_ata_err(stat);
-+		if (ac) {
-+			SAS_DPRINTK("%s: SAS error %x\n", __FUNCTION__,
-+				    stat->stat);
-+			/* We saw a SAS error. Send a vague error. */
-+			qc->err_mask = ac;
-+			dev->sata_dev.tf.feature = 0x04; /* status err */
-+			dev->sata_dev.tf.command = ATA_ERR;
-+		}
+--- BUILD-2.6.orig/drivers/scsi/libsas/sas_expander.c	2006-09-07 15:59:21.000000000 -0500
++++ BUILD-2.6/drivers/scsi/libsas/sas_expander.c	2006-09-07 16:33:22.000000000 -0500
+@@ -631,9 +631,12 @@ static struct domain_device *sas_ex_disc
+ 	memcpy(child->sas_addr, phy->attached_sas_addr, SAS_ADDR_SIZE);
+ 	sas_hash_addr(child->hashed_sas_addr, child->sas_addr);
+ 	phy->port = sas_port_alloc(&parent->rphy->dev, phy_id);
+-	BUG_ON(!phy->port);
+-	/* FIXME: better error handling*/
+-	BUG_ON(sas_port_add(phy->port) != 0);
++	if (unlikely(!phy->port))
++		goto out_err;
++	if (unlikely(sas_port_add(phy->port) != 0)) {
++		sas_port_free(phy->port);
++		goto out_err;
 +	}
-+
- 	ata_qc_complete(qc);
- 	list_del_init(&task->list);
- 	sas_free_task(task);
-@@ -662,7 +667,7 @@ static unsigned int sas_ata_qc_issue(str
- 	ata_tf_to_fis(&qc->tf, (u8*)&task->ata_task.fis, 0);
- 	task->uldd_task = qc;
- 	if (is_atapi_taskfile(&qc->tf)) {
--		memcpy(task->ata_task.atapi_packet, qc->cdb, ATAPI_CDB_LEN);
-+		memcpy(task->ata_task.atapi_packet, qc->cdb, qc->dev->cdb_len);
- 		task->total_xfer_len = qc->nbytes + qc->pad_len;
- 		task->num_scatter = qc->pad_len ? qc->n_elem + 1 : qc->n_elem;
+ 	sas_ex_get_linkrate(parent, child, phy);
+ 
+ 	if ((phy->attached_tproto & SAS_PROTO_STP) || phy->attached_sata_dev) {
+@@ -648,15 +651,14 @@ static struct domain_device *sas_ex_disc
+ 			SAS_DPRINTK("report phy sata to %016llx:0x%x returned "
+ 				    "0x%x\n", SAS_ADDR(parent->sas_addr),
+ 				    phy_id, res);
+-			kfree(child);
+-			return NULL;
++			goto out_free;
+ 		}
+ 		memcpy(child->frame_rcvd, &child->sata_dev.rps_resp.rps.fis,
+ 		       sizeof(struct dev_to_host_fis));
+ 
+ 		rphy = sas_end_device_alloc(phy->port);
+-		/* FIXME: error handling */
+-		BUG_ON(!rphy);
++		if (unlikely(!rphy))
++			goto out_free;
+ 
+ 		sas_init_dev(child);
+ 
+@@ -672,16 +674,14 @@ static struct domain_device *sas_ex_disc
+ 				    "%016llx:0x%x returned 0x%x\n",
+ 				    SAS_ADDR(child->sas_addr),
+ 				    SAS_ADDR(parent->sas_addr), phy_id, res);
+-			sas_rphy_free(rphy);
+-			list_del(&child->dev_list_node);
+-			kfree(child);
+-			return NULL;
++			goto out_list_del;
+ 		}
+ 	} else if (phy->attached_tproto & SAS_PROTO_SSP) {
+ 		child->dev_type = SAS_END_DEV;
+ 		rphy = sas_end_device_alloc(phy->port);
+ 		/* FIXME: error handling */
+-		BUG_ON(!rphy);
++		if (unlikely(!rphy))
++			goto out_free;
+ 		child->tproto = phy->attached_tproto;
+ 		sas_init_dev(child);
+ 
+@@ -698,9 +698,7 @@ static struct domain_device *sas_ex_disc
+ 				    "at %016llx:0x%x returned 0x%x\n",
+ 				    SAS_ADDR(child->sas_addr),
+ 				    SAS_ADDR(parent->sas_addr), phy_id, res);
+-			/* FIXME: this kfrees list elements without removing them */
+-			//kfree(child);
+-			return NULL;
++			goto out_list_del;
+ 		}
  	} else {
-@@ -684,6 +689,7 @@ static unsigned int sas_ata_qc_issue(str
- 	case ATA_PROT_NCQ:
- 		task->ata_task.use_ncq = 1;
- 		/* fall through */
-+	case ATA_PROT_ATAPI_DMA:
- 	case ATA_PROT_DMA:
- 		task->ata_task.dma_xfer = 1;
- 		break;
+ 		SAS_DPRINTK("target proto 0x%x at %016llx:0x%x not handled\n",
+@@ -710,6 +708,16 @@ static struct domain_device *sas_ex_disc
+ 
+ 	list_add_tail(&child->siblings, &parent_ex->children);
+ 	return child;
++
++ out_list_del:
++	list_del(&child->dev_list_node);
++	sas_rphy_free(rphy);
++ out_free:
++	sas_port_delete(phy->port);
++ out_err:
++	phy->port = NULL;
++	kfree(child);
++	return NULL;
+ }
+ 
+ static struct domain_device *sas_ex_discover_expander(
 
 
