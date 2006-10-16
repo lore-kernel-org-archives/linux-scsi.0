@@ -1,57 +1,36 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH 3/5] libiscsi: fix missed iscsi_task_put in xmit error path
-Date: Mon, 16 Oct 2006 18:09:40 -0400
-Message-ID: <1161036585226-git-send-email-michaelc@cs.wisc.edu>
-References: <11610365823995-git-send-email-michaelc@cs.wisc.edu> <1161036583544-git-send-email-michaelc@cs.wisc.edu> <1161036584778-git-send-email-michaelc@cs.wisc.edu>
-Reply-To: michaelc@cs.wisc.edu
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] libsas: support NCQ for SATA disks
+Date: Mon, 16 Oct 2006 18:34:08 -0500
+Message-ID: <1161041648.3433.40.camel@mulgrave.il.steeleye.com>
+References: <453027A9.3060606@us.ibm.com>
+	 <1160934124.3544.7.camel@mulgrave.il.steeleye.com>
+	 <45328141.5020705@us.ibm.com>
+	 <0E9A17FC-4047-48AE-A283-520B87E7F28D@mac.com>
+	 <19106af40610151849n41a11e4frd8088797a4e1e65@mail.gmail.com>
+	 <1161023130.3433.21.camel@mulgrave.il.steeleye.com>
+	 <4533FAE4.3010601@pobox.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:962 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S1422899AbWJPXJo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Oct 2006 19:09:44 -0400
-In-Reply-To: <1161036584778-git-send-email-michaelc@cs.wisc.edu>
+Received: from stat9.steeleye.com ([209.192.50.41]:42458 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1750805AbWJPXoG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 Oct 2006 19:44:06 -0400
+In-Reply-To: <4533FAE4.3010601@pobox.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Andy Warner <andyw@pobox.com>, Mark Rustad <mrustad@mac.com>, "Darrick J. Wong" <djwong@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>, Mike Anderson <andmike@us.ibm.com>
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+On Mon, 2006-10-16 at 17:34 -0400, Jeff Garzik wrote:
+> As an aside, please clean up that magic number by assigning it a named 
+> constant (suggest SATA_FIS_H2D_REG) in include/linux/ata.h.
 
-from bhalevy@gmail.com:
-It looks like change 652 to libiscsi.c added some dead code around line
-670
-                if (rc) {
-                        spin_unlock_bh(&conn->session->lock);
-                        goto again;
-                }
+Fine by me ... I thought there would be one, but libata-core also uses
+the hex value.  Why don't you put it in and I'll convert aic94xx
+over ... that way we don't get into any cross tree dependencies?
 
-since 5 lines above we goto again if (rc).
+James
 
-It looks like the previous if (rc) should go away if we want to put the
-ctask before
-breaking out of the while loop with "goto again" (see following patch).
-
-did I miss anything here?
-
-Benny
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
----
- drivers/scsi/libiscsi.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 1000fe9..e3a2ec2 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -661,8 +661,6 @@ static int iscsi_data_xmit(struct iscsi_
- 		spin_unlock_bh(&conn->session->lock);
- 
- 		rc = tt->xmit_cmd_task(conn, conn->ctask);
--		if (rc)
--			goto again;
- 
- 		spin_lock_bh(&conn->session->lock);
- 		__iscsi_put_ctask(conn->ctask);
--- 
-1.4.1
 
