@@ -1,36 +1,84 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: aic94xx IO errors with "escb_tasklet_complete: phy0:
-	REQ_TASK_ABORT"
-Date: Mon, 16 Oct 2006 15:00:09 -0500
-Message-ID: <1161028809.3433.26.camel@mulgrave.il.steeleye.com>
-References: <20061004164438.GC5091@rhun.haifa.ibm.com>
-	 <20061004132929.A29689@florence.linkmargin.com>
-	 <20061004205621.GF5091@rhun.haifa.ibm.com>
-	 <1159996277.3437.83.camel@mulgrave.il.steeleye.com>
-	 <20061016195122.GC5385@rhun.haifa.ibm.com>
+From: "Ju, Seokmann" <Seokmann.Ju@lsi.com>
+Subject: RE: [PATCH 2.6.19-rc2] scsi: megaraid_{mm,mbox}: 64-bit DMAcapability fix
+Date: Mon, 16 Oct 2006 14:37:20 -0600
+Message-ID: <890BF3111FB9484E9526987D912B261932E3E8@NAMAIL3.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:54739 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1750782AbWJPUAn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Oct 2006 16:00:43 -0400
-In-Reply-To: <20061016195122.GC5385@rhun.haifa.ibm.com>
+Received: from mail0.lsil.com ([147.145.40.20]:62680 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1422907AbWJPUiY convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 Oct 2006 16:38:24 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Muli Ben-Yehuda <muli@il.ibm.com>
-Cc: Andy Warner <andyw@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>, "Darrick J. Wong" <djwong@us.ibm.com>
+To: James Bottomley <James.Bottomley@SteelEye.com>, Vasily Averin <vvs@sw.ru>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, devel@openvz.org, Andrey Mirkin <amirkin@sw.ru>
 
-On Mon, 2006-10-16 at 21:51 +0200, Muli Ben-Yehuda wrote:
-> I finally got a chance to try aic94xx in 2.6.19-rc2-git with the
-> Razor_10a1 firmware. Works splendidly. This is fine as a workaround,
-> but I'd like to get it working with the latest firmware version as
-> well.
+Hi,
+> Er ... this patch would apply in reverse, but what's in the tree
+> currently looks to be correct.
+No, the patch submitted by Andrey and Vasily should fix the issue.
+Without this, driver still claims 64-bit DMA capability for those MegaRAID SATA controllers.
+---
+Example)
+For SATA 150-6 with OLD filter,
+	if (((1) && ((0) || (1))) || (0) || (0) || (0) || (0) || (0) {
+		...;
+	}
+driver gets into inside of if clause and set DMA mask with 64-bit which is NOT correct.
 
-The sequencer firmware is a binary blob ... only adaptec know what's
-actually in it ...
+However, with the patch,
+	if (((1) && ((0) && (1))) || (0) || (0) || (0) || (0) || (0) {
+		...;
+	}
+driver bypasses this filter and stay with 32-bit DMA mask.
+---
 
-James
+Seokmann
 
-
+> -----Original Message-----
+> From: James Bottomley [mailto:James.Bottomley@SteelEye.com] 
+> Sent: Monday, October 16, 2006 3:35 PM
+> To: Vasily Averin
+> Cc: Linux Kernel Mailing List; linux-scsi@vger.kernel.org; 
+> Ju, Seokmann; Andrew Morton; Linus Torvalds; 
+> devel@openvz.org; Andrey Mirkin
+> Subject: Re: [PATCH 2.6.19-rc2] scsi: megaraid_{mm,mbox}: 
+> 64-bit DMAcapability fix
+> 
+> On Mon, 2006-10-16 at 12:08 +0400, Vasily Averin wrote:
+> > It is known that 2 LSI Logic MegaRAID SATA RAID Controllers 
+> (150-4 and 150-6)
+> > don't support 64-bit DMA. Unfortunately currently this 
+> check is wrong and driver
+> >  sets 64-bit DMA mode for these devices.
+> > 
+> > Signed-off-by:	Andrey Mirkin <amirkin@sw.ru>
+> > Ack-by:		Vasily Averin <vvs@sw.ru>
+> > 
+> > --- 
+> linux-2.6.19-rc2/drivers/scsi/megaraid/megaraid_mbox.c.mgst6	
+> 2006-10-16
+> > 10:26:50.000000000 +0400
+> > +++ linux-2.6.19-rc2/drivers/scsi/megaraid/megaraid_mbox.c	
+> 2006-10-16
+> > 11:30:55.000000000 +0400
+> > @@ -884,7 +884,7 @@ megaraid_init_mbox(adapter_t *adapter)
+> > 
+> >  	if (((magic64 == HBA_SIGNATURE_64_BIT) &&
+> >  		((adapter->pdev->subsystem_device !=
+> > -		PCI_SUBSYS_ID_MEGARAID_SATA_150_6) ||
+> > +		PCI_SUBSYS_ID_MEGARAID_SATA_150_6) &&
+> >  		(adapter->pdev->subsystem_device !=
+> >  		PCI_SUBSYS_ID_MEGARAID_SATA_150_4))) ||
+> >  		(adapter->pdev->vendor == PCI_VENDOR_ID_LSI_LOGIC &&
+> 
+> Er ... this patch would apply in reverse, but what's in the tree
+> currently looks to be correct.
+> 
+> James
+> 
+> 
+> 
