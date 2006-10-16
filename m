@@ -1,36 +1,49 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] libsas: support NCQ for SATA disks
-Date: Mon, 16 Oct 2006 18:34:08 -0500
-Message-ID: <1161041648.3433.40.camel@mulgrave.il.steeleye.com>
-References: <453027A9.3060606@us.ibm.com>
-	 <1160934124.3544.7.camel@mulgrave.il.steeleye.com>
-	 <45328141.5020705@us.ibm.com>
-	 <0E9A17FC-4047-48AE-A283-520B87E7F28D@mac.com>
-	 <19106af40610151849n41a11e4frd8088797a4e1e65@mail.gmail.com>
-	 <1161023130.3433.21.camel@mulgrave.il.steeleye.com>
-	 <4533FAE4.3010601@pobox.com>
+From: "Steven N. Hirsch" <shirsch@adelphia.net>
+Subject: Re: sym53c8xx_2 negotiates improperly
+Date: Mon, 16 Oct 2006 19:48:32 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0610161946180.15291@monarch.fast.net>
+References: <Pine.LNX.4.64.0610151329300.8184@monarch.fast.net>
+ <1160934902.3544.14.camel@mulgrave.il.steeleye.com>
+ <Pine.LNX.4.64.0610151406320.8184@monarch.fast.net>
+ <1160939042.3544.24.camel@mulgrave.il.steeleye.com>
+ <Pine.LNX.4.64.0610151749080.6669@monarch.fast.net>
+ <1160950861.3544.30.camel@mulgrave.il.steeleye.com>
+ <Pine.LNX.4.64.0610152043090.5170@monarch.fast.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:42458 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1750805AbWJPXoG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Oct 2006 19:44:06 -0400
-In-Reply-To: <4533FAE4.3010601@pobox.com>
+Received: from mta9.adelphia.net ([68.168.78.199]:38630 "EHLO
+	mta9.adelphia.net") by vger.kernel.org with ESMTP id S1422943AbWJPXsd
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 Oct 2006 19:48:33 -0400
+In-Reply-To: <Pine.LNX.4.64.0610152043090.5170@monarch.fast.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Andy Warner <andyw@pobox.com>, Mark Rustad <mrustad@mac.com>, "Darrick J. Wong" <djwong@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>, Mike Anderson <andmike@us.ibm.com>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, 2006-10-16 at 17:34 -0400, Jeff Garzik wrote:
-> As an aside, please clean up that magic number by assigning it a named 
-> constant (suggest SATA_FIS_H2D_REG) in include/linux/ata.h.
+On Sun, 15 Oct 2006, Steven N. Hirsch wrote:
 
-Fine by me ... I thought there would be one, but libata-core also uses
-the hex value.  Why don't you put it in and I'll convert aic94xx
-over ... that way we don't get into any cross tree dependencies?
+> Do you or anyone have even a WAG as to how I can trick this thing into 
+> negotiating at u160?  There was an older thread on this list where someone 
+> discovered that their drive was very unhappy about having anything faster 
+> than 12.5 ns (aka factor of '9') mentioned(?)  I don't pretend to fully 
+> understand it, but since the drive in question was an SX series 
+> workstation drive of similar vintage I'm wondering if this makes sense to 
+> anyone.  If so, what could I do to tailor the initial PPR request?
+> 
+> In the meantime, I'm going to try the drive on an Adaptec 29160 in another 
+> machine and see what transpires.
 
-James
+Looks like either a defective drive or some seriously broken OEM firmware.  
+I hooked it up to an Adaptec 29160 in a different machine and it still 
+negotiates for FAST-40.
+
+I'll have to have a talk with the vendor.
+
+Thanks for the help and suggestions!
+
+Steve
 
 
+-- 
