@@ -1,34 +1,38 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: RE: [PATCH 2.6.19-rc2] scsi: megaraid_{mm,mbox}: 64-bit
-	DMAcapability fix
-Date: Mon, 16 Oct 2006 15:59:59 -0500
-Message-ID: <1161032399.3433.28.camel@mulgrave.il.steeleye.com>
-References: <890BF3111FB9484E9526987D912B261932E3E8@NAMAIL3.ad.lsil.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] libsas: support NCQ for SATA disks
+Date: Mon, 16 Oct 2006 17:34:28 -0400
+Message-ID: <4533FAE4.3010601@pobox.com>
+References: <453027A9.3060606@us.ibm.com>	 <1160934124.3544.7.camel@mulgrave.il.steeleye.com>	 <45328141.5020705@us.ibm.com>	 <0E9A17FC-4047-48AE-A283-520B87E7F28D@mac.com>	 <19106af40610151849n41a11e4frd8088797a4e1e65@mail.gmail.com> <1161023130.3433.21.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:53205 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1161084AbWJPVAo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Oct 2006 17:00:44 -0400
-In-Reply-To: <890BF3111FB9484E9526987D912B261932E3E8@NAMAIL3.ad.lsil.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:50921 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1161094AbWJPVfA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 Oct 2006 17:35:00 -0400
+In-Reply-To: <1161023130.3433.21.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Ju, Seokmann" <Seokmann.Ju@lsi.com>
-Cc: Vasily Averin <vvs@sw.ru>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, devel@openvz.org, Andrey Mirkin <amirkin@sw.ru>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Andy Warner <andyw@pobox.com>, Mark Rustad <mrustad@mac.com>, "Darrick J. Wong" <djwong@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>, Mike Anderson <andmike@us.ibm.com>
 
-On Mon, 2006-10-16 at 14:37 -0600, Ju, Seokmann wrote:
-> Hi,
-> > Er ... this patch would apply in reverse, but what's in the tree
-> > currently looks to be correct.
-> No, the patch submitted by Andrey and Vasily should fix the issue.
-> Without this, driver still claims 64-bit DMA capability for those MegaRAID SATA controllers.
+James Bottomley wrote:
+> --- BUILD-2.6.orig/drivers/scsi/libsas/sas_discover.c	2006-10-16 11:38:47.000000000 -0500
+> +++ BUILD-2.6/drivers/scsi/libsas/sas_discover.c	2006-10-16 13:06:12.000000000 -0500
+> @@ -376,6 +376,7 @@ static int sas_issue_ata_cmd(struct doma
+>  
+>  	task->dev = dev;
+>  
+> +	task->ata_task.fis.fis_type = 0x27;
+>  	task->ata_task.fis.command = command;
+>  	task->ata_task.fis.features = features;
+>  	task->ata_task.fis.device = d2h_fis->device;
 
-Actually ... I found the problem ... the patch is double attached in the
-email so applying it spits reverse patch applied errors.  I've corrected
-this and put it in the tree.
 
-James
+As an aside, please clean up that magic number by assigning it a named 
+constant (suggest SATA_FIS_H2D_REG) in include/linux/ata.h.
+
+	Jeff
 
 
