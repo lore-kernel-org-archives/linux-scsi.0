@@ -1,42 +1,35 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: sg_remove and pending write request
-Date: Wed, 18 Oct 2006 00:02:11 +0200
-Message-ID: <453552E3.9030505@s5r6.in-berlin.de>
-References: <0F08E10B769EAF4EA2C43A573B8CC87F60B3A7@NAMAIL3.ad.lsil.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: CFP: Linux 2007 File System & IO Workshop
+Date: Tue, 17 Oct 2006 18:40:34 -0400
+Message-ID: <1161124834.6245.51.camel@mulgrave.il.steeleye.com>
+References: <4534268E.9030201@emc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:37859 "EHLO
-	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
-	id S1750793AbWJQWCZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Oct 2006 18:02:25 -0400
-In-Reply-To: <0F08E10B769EAF4EA2C43A573B8CC87F60B3A7@NAMAIL3.ad.lsil.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ext4-owner@vger.kernel.org>
+In-Reply-To: <4534268E.9030201@emc.com>
+Sender: linux-ext4-owner@vger.kernel.org
+To: Ric Wheeler <ric@emc.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, reiserfs-list@namesys.com, ext2-devel@lists.sourceforge.net, linux-ide@vger.kernel.org, ocfs2-devel@oss.oracle.com, linux-scsi@vger.kernel.org, lsf07pc@usenix.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Qi, Yanling" <Yanling.Qi@lsi.com>
-Cc: dougg@torque.net, linux-scsi@vger.kernel.org
 
-Qi, Yanling wrote:
-> It seems that the reattached SAS devices would take
-> the same sg slot if the following conditions meet
-> 1. wait for 2+ minutes for a pending SG-IO write request to come back
-> before pushing the cable back. The 2+ minutes gives the scsi middle
-> level to timeout the pending io request and do error-recovery if it is
-> needed.
-> 2. close user space fd properly (sg_release will try to do the
-> sg_dev_arr[k] = NULL.
+On Mon, 2006-10-16 at 20:40 -0400, Ric Wheeler wrote:
+> On  February 12-13, we have put together a combined Linux file system & 
+> IO 2-day workshop in San Jose, CA. Note that the USENIX File System and 
+> Storage Technologies conference follows us in the same venue, so we hope 
+> to get some interaction between the two groups as well as leverage the 
+> USENIX people to help us get this done.
 > 
-> Do you see any other conditions?
+> For more information, please see:
+> 
+> http://www.usenix.org/events/lsf07/
 
-3. Do not attach other SCSI devices in the meantime.
-4. Hope that the kernel re-adds the missing devices in exactly the same
-order as before.
+Just to clarify, this event is a follow on to the Vancouver Storage
+summit.   Although USENIX is helping us to run it, you don't have to be
+a USENIX member to submit a position paper.  The idea of the position
+papers is to give the limited number of places (for storage we've got
+about 20-25 and about the same again for fs) to people who have
+interesting topics they need to discuss---so if you submit, be prepared
+to make a presentation of it.
 
-That's why many SCSI transports provide unique persistent identifiers.
-You can let udev name devices files according to these identifiers or
-you can query them in your application software.
--- 
-Stefan Richter
--=====-=-==- =-=- =---=
-http://arcgraph.de/sr/
+James
