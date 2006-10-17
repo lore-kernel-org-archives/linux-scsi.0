@@ -1,64 +1,42 @@
-From: Clem Pryke <pryke@focus.uchicago.edu>
-Subject: mptsas driver
-Date: Tue, 17 Oct 2006 10:55:00 -0500
-Message-ID: <200610171555.k9HFt0sE029263@focus.uchicago.edu>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: device settings past a bus reset
+Date: Tue, 17 Oct 2006 11:02:22 -0500
+Message-ID: <1161100942.3720.3.camel@mulgrave.il.steeleye.com>
+References: <yq0k62z9f1t.fsf@jaguar.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from focus.uchicago.edu ([128.135.70.184]:7873 "EHLO
-	focus.uchicago.edu") by vger.kernel.org with ESMTP id S1751164AbWJQPzC
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Oct 2006 11:55:02 -0400
+Received: from stat9.steeleye.com ([209.192.50.41]:40584 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1751130AbWJQQC3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Oct 2006 12:02:29 -0400
+In-Reply-To: <yq0k62z9f1t.fsf@jaguar.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-raid@vger.kernel.org
-Cc: pryke@focus.uchicago.edu
+To: Jes Sorensen <jes@sgi.com>
+Cc: linux-scsi@vger.kernel.org
 
-I have an Xtore XJ-SA12-316R external SAS chassis housing 12 Seagate ST375064 
-disks.
+On Tue, 2006-10-17 at 10:45 -0400, Jes Sorensen wrote:
+> I have a bug report about the qla1280 driver dropping the per device
+> negotiated settings past a bus reset. I could in principle try and
+> keep a list of configured devices in the driver, but it seems to me
+> that it would be reasonable that the SCSI layer should call
+> ->slave_configure() again for each configured device after a bus
+> reset?
 
-After an abortive attempt to get this setup using an Adaptec 58300 SAS 
-controller card and their proprietary adp94xx driver I bought an LSI Logic 
-SAS3800X card.
+Really, no.  A lot of drivers allocate resources in slave_configure() on
+the assumption that it is just called once before the device begins to
+be used in earnest, so this routine isn't idempotent.
 
-This is supported by module mptsas in RHEL4U4 kernel. As far as I can tell the 
-fusion mpt driver is GPL and so I might not get told off for asking questions 
-about it here? ;-)
+> Anyone else seeing this in other drivers and have any oppinion on it?
 
-I am slaving the disks together using md as raid5 (or raid6 array). Basically 
-it works 99.999% but occasionally produces error during md re-sync:
+What most SPI drivers do is to call spi_schedule_dv() from the reset
+detection routines.  This schedules domain validation to run after the
+reset processing has completed.  Unfortunately, you actually have to
+attach to the transport class for this to work ... which the qla1280
+doesn't.
 
-kernel: mptbase: ioc0: LogInfo(0x31120400): Originator={PL}, Code={Abort}, 
-SubCode(0x0400)
-
-Most times things appear to proceed as normal but a few times it is followed 
-by SCSI errors and the disk is dropped:
-
-Oct 16 16:29:40 spt2 kernel: SCSI error : <2 0 9 0> return code = 0x10000
-Oct 16 16:29:40 spt2 kernel: end_request: I/O error, dev sdd, sector 948164346
-Oct 16 16:29:40 spt2 kernel: raid6: Disk failure on sdd1, disabling device. 
-Operation continuing on 10 devices
-
-I can't prove that the disks aren't really producing timeouts/errors. But I've 
-seen several of them appear to do so and suspect it's the controller/driver. A 
-complication is the chassis which has built in SAS port expander which might 
-also be a factor.
-
-Does anyone have any similar experience?
-
-Thanks for any help.
-
-Clem
-
-More details:
-Card is in Tyan dual AMD64 box. Kernel is RHEL4U4 2.6.9-42.0.2.ELsmp.
-
--- 
-**********************************************************************
-Clem Pryke - Assistant Professor - Astronomy and Astrophysics
-University of Chicago,
-Room 120, LASR, 933 East 56th Street, Chicago, Illinois 60637, USA
-Tel: 773 702-7853  Fax: 773 702-6645  email: pryke@focus.uchicago.edu
-**********************************************************************
+James
 
 
