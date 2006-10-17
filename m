@@ -1,32 +1,54 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libsas: support NCQ for SATA disks
-Date: Tue, 17 Oct 2006 07:15:39 -0400
-Message-ID: <4534BB5B.6080002@garzik.org>
-References: <453027A9.3060606@us.ibm.com> <45340A62.7050406@us.ibm.com>
+From: Jes Sorensen <jes@sgi.com>
+Subject: [patch] qla1280 bus reset typo
+Date: 17 Oct 2006 09:32:06 -0400
+Message-ID: <yq0odsb9ig9.fsf@jaguar.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:13201 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1423042AbWJQLPm (ORCPT
+Received: from jaguar.mkp.net ([192.139.46.146]:3222 "EHLO jaguar.mkp.net")
+	by vger.kernel.org with ESMTP id S1750929AbWJQNcH (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Oct 2006 07:15:42 -0400
-In-Reply-To: <45340A62.7050406@us.ibm.com>
+	Tue, 17 Oct 2006 09:32:07 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: brking@us.ibm.com
-Cc: "Darrick J. Wong" <djwong@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>, Mike Anderson <andmike@us.ibm.com>
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@steeleye.com, Andrew Morton <akpm@osdl.org>, Jeremy Higdon <jeremy@sgi.com>
 
-Brian King wrote:
-> This doesn't look like the right fix for the oops you were seeing. The
-> SAS usage of libata has ap->scsi_host as NULL, which indicates that
-> libata does not own the associated scsi_host. I'm concerned you may
-> have broken some other code path by making this change. I think the correct
-> fix may require removing the dependence of ap->scsi_host from
-> ata_dev_config_ncq. 
+Hi,
 
-Yep.  I had already mentioned this on IRC.
+This one falls in the 'must wear a brown paper bag when going out in
+public' deparment. Please apply as soon as possible. The actual fix is
+obfuscated inbetween the cleanup of the printk message to hide the
+embarrassment.
 
-	Jeff
+Thanks,
+Jes
 
+Fix typo in check of return value of qla1280_bus_reset() which would
+result in an adapter reset in addition to the bus reset.
 
+Signed-off-by: Jes Sorensen <jes@sgi.com>
+
+---
+ drivers/scsi/qla1280.c |    7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+Index: linux-2.6/drivers/scsi/qla1280.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/qla1280.c
++++ linux-2.6/drivers/scsi/qla1280.c
+@@ -931,11 +931,10 @@ qla1280_error_action(struct scsi_cmnd *c
+ 
+ 	case BUS_RESET:
+ 		if (qla1280_verbose)
+-			printk(KERN_INFO "qla1280(%ld:%d): Issuing BUS "
+-			       "DEVICE RESET\n", ha->host_no, bus);
+-		if (qla1280_bus_reset(ha, bus == 0))
++			printk(KERN_INFO "qla1280(%ld:%d): Issued bus "
++			       "reset.\n", ha->host_no, bus);
++		if (qla1280_bus_reset(ha, bus) == 0)
+ 			result = SUCCESS;
+-
+ 		break;
+ 
+ 	case ADAPTER_RESET:
