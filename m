@@ -1,76 +1,55 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: sg_remove and pending write request
-Date: Tue, 17 Oct 2006 15:36:30 -0400
-Message-ID: <453530BE.4030606@torque.net>
-References: <0F08E10B769EAF4EA2C43A573B8CC87F60B323@NAMAIL3.ad.lsil.com>
-Reply-To: dougg@torque.net
+From: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
+Subject: [PATCH 1/2] cciss: change PCI ID for bug workaround
+Date: Tue, 17 Oct 2006 16:10:27 -0500
+Message-ID: <20061017211027.GA17874@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:52927 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1751187AbWJQTfE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Oct 2006 15:35:04 -0400
-In-Reply-To: <0F08E10B769EAF4EA2C43A573B8CC87F60B323@NAMAIL3.ad.lsil.com>
+Received: from palrel13.hp.com ([156.153.255.238]:37769 "EHLO palrel13.hp.com")
+	by vger.kernel.org with ESMTP id S1750703AbWJQVK3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Oct 2006 17:10:29 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Qi, Yanling" <Yanling.Qi@lsi.com>
-Cc: linux-scsi@vger.kernel.org
+To: akpm@osdl.org, jens.axboe@oracle.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Qi, Yanling wrote:
-> Hi All,
-> 
-> We are running a test case of SAS cable pull/push on a SAS RAID system.
-> After the SAS cable is pulled from a SAS RAID, scsi devices are deleted.
-> And then when the cable is pushed back, the scsi device with the same
-> H:C:T:L sometime will be assigned to a diffent sgX.
+PATCH 1/2
+Changed E500 subsystem ID to work around a firmware bug. If a P[48]00
+is discovered first a bogus banner string will be displayed at POST
 
-There is no guarantee of the naming stability of sg
-nodes (e.g. /dev/sg3) when devices disappear and re-appear.
-Actually the design of lk 2.6 seems to actively discourage
-user space programs from the assumption. Same applies for
-all SCSI device nodes (and host numbers)
+---
+commit 499cc64fc708f3a25985bea3b77b40c3448ccbf8
+tree 711558d2965c618fa88283fa56c7cb78ce090efb
+parent 43f82216f0bd114599f4a221ae6924f3658a0c9a
+author Mike Miller <mikem@beardog.cca.cpqcorp.net> Tue, 17 Oct 2006 14:42:43 -0500
+committer Mike Miller <mikem@beardog.cca.cpqcorp.net> Tue, 17 Oct 2006 14:42:43 -0500
 
-In the case of SAS, you really should be looking at the
-target port SAS address in the device identification VPD
-page (page 0x83). If the device in question is a SATA disk
-then you have more work to do.
+Signed-off-by: Mike Miller <mikem@beardog.cca.cpqcorp.net>
 
-> Reading through the sg.c, it seems that if the sg device has a pending
-> write request, the sg slot (sg_dev_arr[k] = NULL) will not be freed
-> during sg_remove time. Can someone confirm this?
+ drivers/block/cciss.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Yes, I can confirm that. The sg driver waits for the mid
-level to callback with the outstanding IO completions (or
-timeouts). If the user kills the process, the sg driver
-still waits for IO completion. [A problem arises if the
-user tries to 'rmmod sg'.] The device could well re-appear
-during that "wait" time and the sg driver will assign a
-different device node (i.e. the first unused slot in
-sg_dev_arr[]).
-
-> If this is the case, what the user space process do to prevent this from
-> happening?
-
-Develop a user space program that applies fast acting
-super glue to the SAS connectors when IOs are in flight
-and hands approach.
-
-As I said above, you cannot assume device node names will
-be stable across disconnect, reconnect cycles.
-
-> I see that the sg.c sends SIGPOLL to the user space process
-> (kill_fasync(&sfp->async_qp, SIGPOLL,POLL_HUP);), what this signal will
-> be translated to the user space return-code from read/write call?
-
-You would need to be running asynchronous IO with the
-sg driver (i.e. write(),poll(),read() rather than SG_IO)
-and POLLUP should appear in struct pollfd::revents .
-You should also be able to run poll() from a signal handler
-that catches SIGPOLL. [My knowledge is a bit rusty in this
-area.]
-
-Doug Gilbert
-
-
+diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+index dcccaf2..a0a1dd9 100644
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -81,7 +81,7 @@ static const struct pci_device_id cciss_
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSD,     0x103C, 0x3213},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSD,     0x103C, 0x3214},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSD,     0x103C, 0x3215},
+-	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSC,     0x103C, 0x3233},
++	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSC,     0x103C, 0x3237},
+ 	{0,}
+ };
+ 
+@@ -110,7 +110,7 @@ static struct board_type products[] = {
+ 	{0x3213103C, "Smart Array E200i", &SA5_access},
+ 	{0x3214103C, "Smart Array E200i", &SA5_access},
+ 	{0x3215103C, "Smart Array E200i", &SA5_access},
+-	{0x3233103C, "Smart Array E500", &SA5_access},
++	{0x3237103C, "Smart Array E500", &SA5_access},
+ };
+ 
+ /* How long to wait (in milliseconds) for board to go into simple mode */
