@@ -1,52 +1,51 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH] ALUA support for scsi_debug
-Date: Wed, 18 Oct 2006 13:11:06 -0400
-Message-ID: <4536602A.5050008@torque.net>
-References: <20061018145018.GC25084@pentland.suse.de>
-Reply-To: dougg@torque.net
+From: Mark Haverkamp <markh@osdl.org>
+Subject: Re: kernel oops with aacraid 1.1-5[2409]-mh1 under
+	2.6.17-1.2187_FC5
+Date: Wed, 18 Oct 2006 10:42:11 -0700
+Message-ID: <1161193331.15307.11.camel@markh3.pdx.osdl.net>
+References: <20061018163357.GG1243@dot.oreally.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:45549 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1422703AbWJRRJl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Oct 2006 13:09:41 -0400
-In-Reply-To: <20061018145018.GC25084@pentland.suse.de>
+Received: from smtp.osdl.org ([65.172.181.4]:46299 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751507AbWJRRmU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 Oct 2006 13:42:20 -0400
+In-Reply-To: <20061018163357.GG1243@dot.oreally.co.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
+To: Colin Keith <linux-scsi@ckeith.clara.net>
 Cc: linux-scsi@vger.kernel.org
 
-Hannes Reinecke wrote:
-> Hi all,
+On Wed, 2006-10-18 at 17:33 +0100, Colin Keith wrote:
+> Hi,
 > 
-> I've hacked up scsi_debug to support REPORT TARGET PORT GROUPS.
-> In combination with vpd_use_hostno=0 it'll now support multipathing
-> nicely.
-> Doug, there is reference to port_a and port_b in the VPD page support.
-> However, port_b appearently is just a fake entry with no (virtual)
-> device backing.
+> I've been having a major problem with a box containing an adaptec
+> ASR-2130SLP scsi raid card randomly crashing. As more users were added
+> to the box it has gotten worse to the point where the uptime could be
+> in the order of hours. I've managed to snag the kernel oops a couple of
+> times and a copy of one is provided below (it always crashes in the same
+> place).
+> 
+> I've seen one other person post this exact same oops output but I saw no
+> responses. I've tried a number of different fixes including upgrading to
+> the Fedora provided 2.6.18-1.2200 kernel which uses 1-1.5[2409]-mh2.  This
+> has been running for 12 hours, but as the crashes are intermittent its hard
+> to know if this resolves it as yet, but I'm concerned that it won't. I've
+> tried various different kernels (including using the wonderful 2.6.17-1.2157
+> which thanks to the XFS bugs was secretly trashing my FS each time it
+> crashed and 2.6.17-1.2174 which stayed up 5 minutes before triggering this
+> bug).
 
-Hannes,
-Yes, I was mimicking a SAS drive with the secondary port
-unconnected.
+There was a patch checked in that removed some un-needed list_head
+elements post 2.6.17.   I believe that there were reports of list
+corruption problems that this patch solved.  The 2.6.18-1.2200-fc5 has
+this patch.
 
-> We could eg use the 'channel' value to refer the relative port number,
-> so that host & channel act as a fan-out for multipathing.
 
-I'll have a look, perhaps it could be wired when
-vpd_use_hostno=0 .
-
-> James, please apply.
-
-Umm, I would like to find out why that patch oopses
-my machine when I load the scsi_debug module.
-
-lk 2.6.19-rc2 has regressed in a few areas, for example
-after an oops, inane messages from atkbd repeat ad
-nauseum, making the oops hard to analyse. And my SMC2835W
-(prism54 driver) no longer works.
-
-Doug Gilbert
+> 
+> 
+-- 
+Mark Haverkamp <markh@osdl.org>
 
