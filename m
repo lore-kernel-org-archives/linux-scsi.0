@@ -1,36 +1,41 @@
-From: Colin Keith <linux-scsi@ckeith.clara.net>
-Subject: Re: kernel oops with aacraid 1.1-5[2409]-mh1 under 2.6.17-1.2187_FC5
-Date: Wed, 18 Oct 2006 19:03:11 +0100
-Message-ID: <20061018180311.GH1243@dot.oreally.co.uk>
-References: <20061018163357.GG1243@dot.oreally.co.uk> <1161193331.15307.11.camel@markh3.pdx.osdl.net>
+From: "Haefliger, Juerg" <Juerg.Haefliger@hp.com>
+Subject: Mid-layer API?
+Date: Wed, 18 Oct 2006 14:43:09 -0500
+Message-ID: <861B5CF71BC70C478DFEB9EAFE98F699A86E82@G3W0068.americas.hpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dot.reactive-networks.net ([217.144.82.11]:62983 "EHLO
-	dot.oreally.co.uk") by vger.kernel.org with ESMTP id S1422629AbWJRSDN
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Oct 2006 14:03:13 -0400
-Content-Disposition: inline
-In-Reply-To: <1161193331.15307.11.camel@markh3.pdx.osdl.net>
+Received: from ccerelbas01.cce.hp.com ([161.114.21.104]:26770 "EHLO
+	ccerelbas01.cce.hp.com") by vger.kernel.org with ESMTP
+	id S1422774AbWJRTnn convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Oct 2006 15:43:43 -0400
+Received: from G3W0059.americas.hpqcorp.net (g3w0059.americas.hpqcorp.net [16.232.1.16])
+	by ccerelbas01.cce.hp.com (Postfix) with ESMTP id 7AD7D347A3
+	for <linux-scsi@vger.kernel.org>; Wed, 18 Oct 2006 14:43:40 -0500 (CDT)
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Haverkamp <markh@osdl.org>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Wed, Oct 18, 2006 at 10:42:11AM -0700, Mark Haverkamp wrote:
-> There was a patch checked in that removed some un-needed list_head
-> elements post 2.6.17.   I believe that there were reports of list
-> corruption problems that this patch solved.  The 2.6.18-1.2200-fc5 has
-> this patch.
+Hi All,
 
-Thank you (lots!!).
+First, I'm a newbie to SCSI so please forgive me if any of the following
+questions are silly. Having said that, I very much appreciate pointers
+to good SCSI references and the Linux implementaion of the SCSI
+subsystem...
 
-As that's what I'm now running I'll keep an eye on this and see if it has
-any further problems and report and further errors that occur.
+I have a kernel driver that needs to send SCSI commands and data to a FC
+disk attached to a Qlogic FC HBA. I'm hooking into the SCSI mid-layer by
+calling scsi_do_req(). It seems to work but I'm not sure if this is the
+right way of doing things. Is scsi_do_req the right entry point into the
+mid-layer or should I use something else? Or should I hook into
+something else than the mid-layer? And finally, is there any
+documentation talking about the mid-layer API?
 
-Regards,
-Colin.
+Any help is greatly appreciated.
 
--- 
- "Developers are like artists; they produce their best work if they
-  have the freedom to do so" - Werner Vogels, CTO Amazon.com
+Thanks
+...juerg
+
