@@ -1,39 +1,24 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: [ANNOUNCE] sdparm 1.00
-Date: Wed, 18 Oct 2006 11:12:24 -0400
-Message-ID: <45364458.7020507@torque.net>
-Reply-To: dougg@torque.net
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [Announce] sg3_utils-1.22 available
+Date: Wed, 18 Oct 2006 16:50:14 +0100
+Message-ID: <20061018155014.GA12211@infradead.org>
+References: <453641DD.1040602@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1161152AbWJRPK5@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1161186AbWJRPuU@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <453641DD.1040602@torque.net>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, tomfa@debian.org, kumba@gentoo.org
+To: Douglas Gilbert <dougg@torque.net>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, emschwar@debian.org, robbat2@gentoo.org
 List-Id: linux-scsi@vger.kernel.org
 
-sdparm is a command line utility designed to get and set
-SCSI device parameters (cf hdparm for ATA disks). The
-parameters are held in mode pages. Apart from SCSI devices
-(e.g. disks, tapes and enclosures) sdparm can be used on
-any device that uses a SCSI command set. Virtually all CD/DVD
-drives use the SCSI MMC set irrespective of the transport.
-sdparm also can decode VPD pages including the device
-identification page. Commands to start and stop the media;
-load and unload removable media and some other housekeeping
-functions are supported. sdparm supports both the linux
-kernel 2.4 and 2.6 series.
+On Wed, Oct 18, 2006 at 11:01:49AM -0400, Douglas Gilbert wrote:
+> A changelog can be found at:
+> http://www.torque.net/sg/p/sg3_utils.CHANGELOG
 
-This version adds support for vendor specific mode pages.
-It modifies some exit status values to be the same as
-those found in the recently released sg3_utils version 1.22 .
+For future posts it would be really coold if you could just inline
+the changelog into the accouncement mail so the reader can skip over
+it without starting a browser.
 
-For more information and downloads see:
-http://www.torque.net/sg/sdparm.html
-
-Changelog:
-http://www.torque.net/sg/p/sdparm.ChangeLog
-
-A release announcement has been sent to freshmeat.net .
-
-Doug Gilbert
+Thanks a lot again for your continued work on the scsi userland!
