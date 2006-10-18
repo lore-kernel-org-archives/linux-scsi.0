@@ -1,46 +1,67 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: CFP: Linux 2007 File System & IO Workshop
-Date: Tue, 17 Oct 2006 17:50:12 -0700 (PDT)
-Message-ID: <20061018005013.97509.qmail@web31803.mail.mud.yahoo.com>
-References: <1161129608.6245.61.camel@mulgrave.il.steeleye.com>
-Reply-To: ltuikov@yahoo.com
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [dm-devel] [PATCH RFC] replace dm hw handlers with scsi handlers
+Date: Wed, 18 Oct 2006 16:33:25 +0200
+Message-ID: <20061018143324.GB25084@pentland.suse.de>
+References: <1160684310.4163.4.camel@madmax> <4530E19A.8040002@cs.wisc.edu> <1161074225.6464.1.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <xfs-bounce@oss.sgi.com>
-In-Reply-To: <1161129608.6245.61.camel@mulgrave.il.steeleye.com>
-Sender: xfs-bounce@oss.sgi.com
-Errors-to: xfs-bounce@oss.sgi.com
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Ric Wheeler <ric@emc.com>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, reiserfs-list@namesys.com, ext4@lists.sourceforge.net, linux-ide@vger.kernel.org, ocfs2-devel@oss.oracle.com, linux-scsi@vger.kernel.org, lsf07pc@usenix.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ns.suse.de ([195.135.220.2]:24028 "EHLO mx1.suse.de")
+	by vger.kernel.org with ESMTP id S1161037AbWJROda (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 Oct 2006 10:33:30 -0400
+Content-Disposition: inline
+In-Reply-To: <1161074225.6464.1.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: device-mapper development <dm-devel@redhat.com>, linux-scsi@vger.kernel.org
 
---- James Bottomley <James.Bottomley@SteelEye.com> wrote:
-> You can submit it as your position paper, certainly.
+Hi Mike,
 
-It is not a "position" paper.  There is too much SCSI
-Architecture Model (SAM) in it.  But from linux-scsi point of view
-I guess it is.
+On Tue, Oct 17, 2006 at 10:37:05AM +0200, Christophe Varoqui wrote:
+> Le samedi 14 octobre 2006 =C3=A0 09:09 -0400, Mike Christie a =C3=A9c=
+rit :
+> > Christophe V, I was wondering what is the vendor/module info for yo=
+ur
+> > box? We have a MSA1000 VOLUME/COMPAQ here, but START_STOP does not
+> > work.
+> > I mean if I send the command it always executes successfully, but t=
+he
+> > device does not failover (READ/WRITEs fail). I tried just running
+> > sg_start and this runs ok but READ/WRITE still fail, so I hacked up
+> > scsi_debug to simulate my testing.=20
+>=20
+> It was a HSG80 based array, namely a HP EMA8000.
+> I do not have access to this hardware anymore.
+>=20
 
-> However, the object of this event is not to collect a list of papers to
-> be presented: it's not a conference with hundreds of attendees (if you
-> want to present to an audience, you should submit to FAST, which is such
-> a conference, with which we're co-located).  It's a roundtable type
-> discussion with 20-25 people in the field; plus some plenary sessions to
-> get input and ideas from people working on the filesystem layer.  The
-> object is to stimulate discussion of important issues (which may be
-> guided by papers or other materials).  The position paper thing is only
-> to ensure people actually have things they want to discuss (and to allow
-> the programme committee to pick the attendees if there would be too
-> many).
+Hmm. Finally I got a MSA1000 here, too (Thanks, HP!). dm_hp_sw seems
+to work properly there. Note that according to the HP qla2xxx sources
+the MSA1000 might take some time to actually do the switchover.
+Appearently they return NOT_READY / UNIT_ATTENTION and some weird statu=
+s
+in byte 12 & 13 of the sense buffer (!). So please check the sense code
+if there is anything untoward.
+Oh, and you can check whether the failover really occured by using
+the management console; 'show this_controller' and 'show other_controll=
+er'
+will tell you which one's active.
+Drop me a mail if you got further questions.=20
 
-Ok, so this is targeted at the same 20-25 Linux people who attended
-the "Vancouver Storage summit" and you're just using FAST to co-locate.
+Apart from this: good work!
 
-I incorrectly assumed that this was targeted at storage professionals
-not necessarily Linux related, but with Linux exposure so as to hear
-new ideas and pathways.  I also missed to see the "by-invitation" clause
-at the top.
+Cheers,
 
-Thanks for the explanation!
-   Luben
+Hannes
+--=20
+Dr. Hannes Reinecke			hare@suse.de
+SuSE Linux Products GmbH		S390 & zSeries
+Maxfeldstra=EF=BF=BDe 5				+49 911 74053 688
+90409 N=EF=BF=BDrnberg				http://www.suse.de
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
