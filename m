@@ -1,42 +1,38 @@
 From: Douglas Gilbert <dougg@torque.net>
-Subject: [Announce] sg3_utils-1.22 available
-Date: Wed, 18 Oct 2006 11:01:49 -0400
-Message-ID: <453641DD.1040602@torque.net>
+Subject: [ANNOUNCE] sdparm 1.00
+Date: Wed, 18 Oct 2006 11:12:24 -0400
+Message-ID: <45364458.7020507@torque.net>
 Reply-To: dougg@torque.net
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:45445 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1161111AbWJRPAX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Oct 2006 11:00:23 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1161152AbWJRPK5@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, emschwar@debian.org, robbat2@gentoo.org
+Cc: linux-kernel@vger.kernel.org, tomfa@debian.org, kumba@gentoo.org
+List-Id: linux-scsi@vger.kernel.org
 
-sg3_utils is a package of command line utilities for sending
-SCSI (and some ATA) commands to devices. This package targets
-the linux kernel (lk) 2.6 and lk 2.4 series. In the lk 2.6
-series these utilities (except sgp_dd) can be used with any
-devices that support the SG_IO ioctl.
+sdparm is a command line utility designed to get and set
+SCSI device parameters (cf hdparm for ATA disks). The
+parameters are held in mode pages. Apart from SCSI devices
+(e.g. disks, tapes and enclosures) sdparm can be used on
+any device that uses a SCSI command set. Virtually all CD/DVD
+drives use the SCSI MMC set irrespective of the transport.
+sdparm also can decode VPD pages including the device
+identification page. Commands to start and stop the media;
+load and unload removable media and some other housekeeping
+functions are supported. sdparm supports both the linux
+kernel 2.4 and 2.6 series.
 
-This version adds the sg_sat_identify utility. This sends
-an ATA IDENTIFY (PACKET) DEVICE command through a SAT layer
-and can format its response suitable for hdparm ('--Istdin')
-to decode. See the CHANGELOG for more information.
+This version adds support for vendor specific mode pages.
+It modifies some exit status values to be the same as
+those found in the recently released sg3_utils version 1.22 .
 
-A tarball, rpm and deb can be found at (see table 2):
-http://www.torque.net/sg
-For an overview of sg3_utils see this page:
-http://www.torque.net/sg/sg3_utils.html
-The sg_dd utility has its own page at:
-http://www.torque.net/sg/sg_dd.html
-The SG_IO ioctl is discussed at:
-http://www.torque.net/sg/sg_io.html
-A changelog can be found at:
-http://www.torque.net/sg/p/sg3_utils.CHANGELOG
+For more information and downloads see:
+http://www.torque.net/sg/sdparm.html
+
+Changelog:
+http://www.torque.net/sg/p/sdparm.ChangeLog
 
 A release announcement has been sent to freshmeat.net .
 
