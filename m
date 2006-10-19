@@ -1,135 +1,147 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: Adaptec 29320 [aic79xx] fails on power cycle of LUN
-Date: Thu, 19 Oct 2006 16:10:47 +0200
-Message-ID: <45378767.4080106@suse.de>
-References: <1161210246.3204.17.camel@home-desk>	 <1161210748.3204.22.camel@home-desk>  <1161237121.15090.9.camel@max> <1161260730.3204.36.camel@home-desk>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH] ALUA support for scsi_debug
+Date: Thu, 19 Oct 2006 10:50:30 -0400
+Message-ID: <453790B6.9000802@torque.net>
+References: <20061018145018.GC25084@pentland.suse.de> <45368C0B.7070802@torque.net> <45377943.8090906@suse.de>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------010108020300010900000809"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:52631 "EHLO mx2.suse.de")
-	by vger.kernel.org with ESMTP id S1423009AbWJSOKs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 19 Oct 2006 10:10:48 -0400
-In-Reply-To: <1161260730.3204.36.camel@home-desk>
+Received: from pentafluge.infradead.org ([213.146.154.40]:43730 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1946099AbWJSOtE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 Oct 2006 10:49:04 -0400
+In-Reply-To: <45377943.8090906@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sean Bruno <sean.bruno@dsl-only.net>
-Cc: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
 
-This is a multi-part message in MIME format.
---------------010108020300010900000809
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 8bit
+Hannes Reinecke wrote:
+> Douglas Gilbert wrote:
+>> Hannes,
+>> Here is my counter patch for you to consider.
+>> I suspect my machine was running into stack
+>> problems so I moved some arrays onto the heap.
+>>
+> Ah. Good. To tell the truth I was a bit concerned once I've
+> discovered that all information pages are infact statically allocated ...
 
-Sean Bruno wrote:
-> On Thu, 2006-10-19 at 01:52 -0400, Mike Christie wrote:
->> On Wed, 2006-10-18 at 15:32 -0700, Sean Bruno wrote:
->>> On Wed, 2006-10-18 at 15:24 -0700, Sean Bruno wrote:
->>>> I have had a tough time tracking this one down, however I can say for
->>>> certain that the 29320 is really having trouble if a LUN is power
->>>> cycled.
->>>>
->>>> I don't have access to a BUS analyzer right now, but here is my
->>>> regression.
->>>>
->>>> 1.  Hook an external SCSI array/disk to a 29320.
->>>> 2.  Power up SCSI array/disk
->>>> 3.  Power up PC with 29320.
->>>> 4.  When PC has booted, login and test device by creating a file
->>>>     system, eg. mkfs /dev/sda (or whatever disk the array is called on
->>>>     ur machine).
->>>> 5.  Power cycle array/disk
->>>> 6.  Retest device with another 'mkfs /dev/sda' ... panic/crash/lock-up
->>>> ensues.
->>>>
->>>>
->>>>
->>>> This did not happen in 2.6.15.7 but did appear in 2.6.16 and higher.
->>>>
-> 
->> Does this only occur with sg or is that the only way you got a trace? In
->> the original bug report you mentioned it occurring with mkfs, but the
->> bug oops is from a sg request. Is tdg_2 run while the mkfs is running?
-> 
-> Snippets from 'dmesg' during step 6:
-> 
-> scsi0: Someone reset channel A
-> sd 0:0:4:0: Attempting to queue an ABORT message:CDB: 0x28 0x0 0x0 0x0
-> 0x0 0x80 0x0 0x0 0x80 0x0
-> Infinite interrupt loop, INTSTAT = 8scsi0: At time of recovery, card was
-> paused
-Ah. Hmm. Infinite SCSI interrupt.
+I wasn't aware that statically allocated data (file or local
+scope) would add to stack problems on a driver loaded as a
+module. The arrays I moved to the heap were "auto" (i.e. non-static).
 
-Maybe someone forgot to clear the status ...
+Most of the data scsi_debug keeps static are (manufacturer's)
+default mode pages. They are constant. Keeping the current mode
+page in static store is a bit more problematic: it may be
+logically correct depending on the mode page policy (a VPD page)
+but accesses probably should be locked if the page can be
+modified (e.g. MRIE in the IEC mode page).
 
-Can you try the attached patch?
 
-Cheers,
+Over zealous error processing ....
+I have made this mistake often enough, along with
+many others, so hopefully some readers will take note:
 
-Hannes
--- 
-Dr. Hannes Reinecke			hare@suse.de
-SuSE Linux Products GmbH		S390 & zSeries
-Maxfeldstraße 5				+49 911 74053 688
-90409 Nürnberg				http://www.suse.de
+<snip>
+> +#define SDEBUG_MAX_TGTPGS_ARR_SZ 1412
+> +
+> +static int resp_report_tgtpgs(struct scsi_cmnd * scp,
+> +			      struct sdebug_dev_info * devip)
+> +{
+> +	unsigned char *cmd = (unsigned char *)scp->cmnd;
+> +	unsigned char * arr;
+> +	int host_no = devip->sdbg_host->shost->host_no;
+> +	int n, ret, alloc_len, rlen;
+> +	int target_dev_id, port_group_a, port_group_b, port_a, port_b;
+> +
+> +	alloc_len = ((cmd[6] << 24) + (cmd[7] << 16) + (cmd[8] << 8)
+> +		     + cmd[9]);
+> +	if (alloc_len < 4 + (11 * 2)) {
+> +		mk_sense_buffer(devip, ILLEGAL_REQUEST, INVALID_FIELD_IN_CDB,
+> +			       	0);
+> +		return check_condition_result;
+> +	}
+> +	
+> +	arr = kzalloc(SDEBUG_MAX_TGTPGS_ARR_SZ, GFP_KERNEL);
+> +	n = 4;
+> +	/*
+> +	 * Each host has it's own target port group.
+> +	 * The asymmetric access state is cycled according to the host_id.
+> +	 */
+> +	target_dev_id = ((host_no + 1) * 2000) +
+> +			(devip->target * 1000) - 3;
+> +	port_a = target_dev_id + 1;
+> +	port_b = target_dev_id + 2;
+> +	port_group_a = (((host_no + 1) & 0x7f) << 8) + 
+> +	    (devip->channel & 0xff);
+> +	port_group_b = (((host_no + 1) & 0x7f) << 8) + 
+> +	    (devip->channel & 0xff) + 0x80;
+> +	if (0 == scsi_debug_vpd_use_hostno) {
+> +	    arr[n++] = host_no % 3; /* Asymm access state */
+> +	    arr[n++] = 0x0F; /* claim: all states are supported */
+> +	} else {
+> +	    arr[n++] = 0x0; /* Active/Optimized path */
+> +	    arr[n++] = 0x01; /* claim: only support active/optimized paths */
+> +	}
+> +	arr[n++] = (port_group_a >> 8) & 0xff;
+> +	arr[n++] = port_group_a & 0xff;
+> +	arr[n++] = 0;    /* Reserved */
+> +	arr[n++] = 0;    /* Status code */
+> +	arr[n++] = 0;    /* Vendor unique */
+> +	arr[n++] = 0x1;  /* One port per group */
+> +	arr[n++] = 0;    /* Reserved */
+> +	arr[n++] = 0;    /* Reserved */
+> +	arr[n++] = (port_a >> 8) & 0xff;
+> +	arr[n++] = port_a & 0xff;
+> +	arr[n++] = 3;    /* Port unavailable */
+> +	arr[n++] = 0x0F; /* claim: all states are supported */
+> +	arr[n++] = (port_group_b >> 8) & 0xff;
+> +	arr[n++] = port_group_b & 0xff;
+> +	arr[n++] = 0;    /* Reserved */
+> +	arr[n++] = 0;    /* Status code */
+> +	arr[n++] = 0;    /* Vendor unique */
+> +	arr[n++] = 0x1;  /* One port per group */
+> +	arr[n++] = 0;    /* Reserved */
+> +	arr[n++] = 0;    /* Reserved */
+> +	arr[n++] = (port_b >> 8) & 0xff;
+> +	arr[n++] = port_b & 0xff;
+> +
+> +	rlen = n - 4;
+> +	arr[0] = (rlen >> 24) & 0xff;
+> +	arr[1] = (rlen >> 16) & 0xff;
+> +	arr[2] = (rlen >> 8) & 0xff;
+> +	arr[3] = rlen & 0xff;
+> +
+> +	if (alloc_len < n) {
+> +		mk_sense_buffer(devip, ILLEGAL_REQUEST, INVALID_FIELD_IN_CDB,
+> +			       	0);
+> +		kfree(arr);
+> +		return check_condition_result;
+> +	}
+> +	
+> +	ret = fill_from_dev_buffer(scp, arr,
+> +				   min(n, SDEBUG_MAX_TGTPGS_ARR_SZ));
+> +	kfree(arr);
+> +	return ret;
+> +}
+<snip>
 
---------------010108020300010900000809
-Content-Type: text/plain;
- name="aic79xx-reset-scsiint"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="aic79xx-reset-scsiint"
+The above code is building a response to the REPORT TARGET
+PORT GROUPS command. The first 4 bytes of the response are
+the length of the response irrespective of whether the response
+is truncated by alloc_len (a field in the RTPG command).
+It is _not_ an error if alloc_len < n (see spc4r07a.pdf section
+4.3.4.6). This allows the application client to ask for a 4
+byte response if it is worried about how big the response
+will be, then issue the command again with an appropriate
+allocation length. This is a common paradigm with mode and
+log pages.
 
-diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_core.c
-index 653818d..78fa71d 100644
---- a/drivers/scsi/aic7xxx/aic79xx_core.c
-+++ b/drivers/scsi/aic7xxx/aic79xx_core.c
-@@ -1519,8 +1519,10 @@ ahd_handle_scsiint(struct ahd_softc *ahd
- 	/*
- 	 * Ignore external resets after a bus reset.
- 	 */
--	if (((status & SCSIRSTI) != 0) && (ahd->flags & AHD_BUS_RESET_ACTIVE))
-+	if (((status & SCSIRSTI) != 0) && (ahd->flags & AHD_BUS_RESET_ACTIVE)) {
-+		ahd_outb(ahd, CLRSINT1, CLRSCSIRSTI);
- 		return;
-+	}
- 
- 	/*
- 	 * Clear bus reset flag
-@@ -7920,6 +7922,11 @@ #endif
- 	ahd_clear_fifo(ahd, 1);
- 
- 	/*
-+	 * Clear SCSI interrupt status
-+	 */
-+	ahd_outb(ahd, CLRSINT1, CLRSCSIRSTI);
-+
-+	/*
- 	 * Reenable selections
- 	 */
- 	ahd_outb(ahd, SIMODE1, ahd_inb(ahd, SIMODE1) | ENSCSIRST);
-@@ -7952,10 +7959,6 @@ #ifdef AHD_TARGET_MODE
- 		}
- 	}
- #endif
--	/* Notify the XPT that a bus reset occurred */
--	ahd_send_async(ahd, devinfo.channel, CAM_TARGET_WILDCARD,
--		       CAM_LUN_WILDCARD, AC_BUS_RESET);
--
- 	/*
- 	 * Revert to async/narrow transfers until we renegotiate.
- 	 */
-@@ -7977,6 +7980,10 @@ #endif
- 		}
- 	}
- 
-+	/* Notify the XPT that a bus reset occurred */
-+	ahd_send_async(ahd, devinfo.channel, CAM_TARGET_WILDCARD,
-+		       CAM_LUN_WILDCARD, AC_BUS_RESET);
-+
- 	ahd_restart(ahd);
- 
- 	return (found);
+So the "if (alloc_len < 4 + (11 * 2))" block should be
+removed. Also the "if (alloc_len < n)" block should be
+removed and "min" should be (possibly a cleaner version of):
+  min(min(alloc_len, n), SDEBUG_MAX_TGTPGS_ARR_SZ))
 
---------------010108020300010900000809--
+Doug Gilbert
