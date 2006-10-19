@@ -1,36 +1,42 @@
-From: "Haefliger, Juerg" <Juerg.Haefliger@hp.com>
-Subject: RE: Mid-layer API?
-Date: Thu, 19 Oct 2006 13:54:31 -0500
-Message-ID: <861B5CF71BC70C478DFEB9EAFE98F699A87663@G3W0068.americas.hpqcorp.net>
-References: <20061018130843.299361dc.rdunlap@xenotime.net>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] AIC94XX: call tasklet_kill while unloading the module
+Date: Thu, 19 Oct 2006 14:57:19 -0400
+Message-ID: <1161284239.11219.19.camel@mulgrave.il.steeleye.com>
+References: <20061019032551.GB19570@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ccerelbas01.cce.hp.com ([161.114.21.104]:44705 "EHLO
-	ccerelbas01.cce.hp.com") by vger.kernel.org with ESMTP
-	id S1946366AbWJSSyf convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Oct 2006 14:54:35 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <20061018130843.299361dc.rdunlap@xenotime.net>
+Received: from stat9.steeleye.com ([209.192.50.41]:20100 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1946374AbWJSS51 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 Oct 2006 14:57:27 -0400
+In-Reply-To: <20061019032551.GB19570@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <rdunlap@xenotime.net>
+To: malahal@us.ibm.com
 Cc: linux-scsi@vger.kernel.org
 
-> I began on a scsi-mid-layer-api.txt file a few years ago.  :( 
-> Sadly I haven't touched it since then.  You can see if it may 
-> help you any:  http://www.xenotime.net/linux/doc/scsi-interfaces.txt
+On Wed, 2006-10-18 at 20:25 -0700, malahal@us.ibm.com wrote:
+> Signed-off-by: Malahal Naineni <malahal@us.ibm.com>
 > 
-> It's just text from scsi .h and .c files.
-> 
-> You can also see if this other *also outdated* SCSI driver 
-> doc helps you any:  (get pdf or OpenOffice files from 
-> http://developer.osdl.org/dev/opendrivers/wiki/index.php/Storage )
-> 
+> diff -r d134b26a8da8 drivers/scsi/aic94xx/aic94xx_init.c
+> --- a/drivers/scsi/aic94xx/aic94xx_init.c	Wed Oct 18 16:34:30 2006 -0700
+> +++ b/drivers/scsi/aic94xx/aic94xx_init.c	Wed Oct 18 18:21:40 2006 -0700
+> @@ -737,6 +737,11 @@ static void __devexit asd_pci_remove(str
+>  	/* XXX more here as needed */
+>  
+>  	free_irq(dev->irq, asd_ha);
+> +
+> +	/* We already disabled interrupts and freed the IRQ. Now, it is
+> +	 * safe to kill the tasklet that processes done list */
+> +	tasklet_kill(&asd_ha->seq.dl_tasklet);
+> +
 
-Thanks Randy. Those are good pointers.
+Actually, this should be in asd_destroy_ha_caches() which is where the
+asd_init_hw() teardown path is ... not that I'm very happy with this;
+the teardown should be in aic94xx_hwi.c where the init path is ...
+
+James
 
 
-...juerg
