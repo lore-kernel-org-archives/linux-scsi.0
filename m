@@ -1,152 +1,206 @@
 From: akpm@osdl.org
-Subject: [patch 43/45] revert "[SCSI] ips soft lockup during reset/initialization"
-Date: Fri, 20 Oct 2006 14:48:38 -0700
-Message-ID: <200610202148.k9KLmc8x004204@shell0.pdx.osdl.net>
+Subject: [patch 36/45] SCSI: minor bug fixes and cleanups
+Date: Fri, 20 Oct 2006 14:48:33 -0700
+Message-ID: <200610202148.k9KLmX2c004183@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:16007 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S2992786AbWJTVt2 (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:17799 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S2992855AbWJTVtc (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Oct 2006 17:49:28 -0400
+	Fri, 20 Oct 2006 17:49:32 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, jack_hammer@adaptec.com, nacc@us.ibm.com, nickpiggin@yahoo.com.au
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, jeff@garzik.org
 
-From: Andrew Morton <akpm@osdl.org>
+From: Jeff Garzik <jeff@garzik.org>
 
-Revert 15084a4a63bc300c18b28a8a9afac870c552abce - it caused a
-scheduling-inside-spinlock bug.
+BusLogic: use kzalloc(), remove cast to/from void*
 
-Cc: Nishanth Aravamudan <nacc@us.ibm.com>
-Cc: Nick Piggin <nickpiggin@yahoo.com.au>
-Cc: Jack Hammer <jack_hammer@adaptec.com>
+aic7xxx_old: fix typo in cast
+
+NCR53c406a: ifdef out static built code
+
+fd_mcs: ifdef out static built code
+
+ncr53c8xx: ifdef out static built code
+
+Signed-off-by: Jeff Garzik <jeff@garzik.org>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/ips.c |   28 ++++++++++++++--------------
- 1 files changed, 14 insertions(+), 14 deletions(-)
+ drivers/scsi/BusLogic.c    |   12 ++++++------
+ drivers/scsi/NCR53c406a.c  |    5 +++++
+ drivers/scsi/aic7xxx_old.c |    2 +-
+ drivers/scsi/fd_mcs.c      |    2 ++
+ drivers/scsi/ncr53c8xx.c   |   19 +++++++++++--------
+ 5 files changed, 25 insertions(+), 15 deletions(-)
 
-diff -puN drivers/scsi/ips.c~revert-scsi-ips-soft-lockup-during-reset-initialization drivers/scsi/ips.c
---- a/drivers/scsi/ips.c~revert-scsi-ips-soft-lockup-during-reset-initialization
-+++ a/drivers/scsi/ips.c
-@@ -5001,7 +5001,7 @@ ips_init_copperhead(ips_ha_t * ha)
- 				break;
+diff -puN drivers/scsi/BusLogic.c~scsi-minor-bug-fixes-and-cleanups drivers/scsi/BusLogic.c
+--- a/drivers/scsi/BusLogic.c~scsi-minor-bug-fixes-and-cleanups
++++ a/drivers/scsi/BusLogic.c
+@@ -2186,21 +2186,21 @@ static int __init BusLogic_init(void)
  
- 			/* Delay for 1 Second */
--			msleep(IPS_ONE_SEC);
-+			MDELAY(IPS_ONE_SEC);
- 		}
- 
- 		if (j >= 45)
-@@ -5027,7 +5027,7 @@ ips_init_copperhead(ips_ha_t * ha)
- 				break;
- 
- 			/* Delay for 1 Second */
--			msleep(IPS_ONE_SEC);
-+			MDELAY(IPS_ONE_SEC);
- 		}
- 
- 		if (j >= 240)
-@@ -5045,7 +5045,7 @@ ips_init_copperhead(ips_ha_t * ha)
- 			break;
- 
- 		/* Delay for 1 Second */
--		msleep(IPS_ONE_SEC);
-+		MDELAY(IPS_ONE_SEC);
+ 	if (BusLogic_ProbeOptions.NoProbe)
+ 		return -ENODEV;
+-	BusLogic_ProbeInfoList = (struct BusLogic_ProbeInfo *)
+-	    kmalloc(BusLogic_MaxHostAdapters * sizeof(struct BusLogic_ProbeInfo), GFP_ATOMIC);
++	BusLogic_ProbeInfoList =
++	    kzalloc(BusLogic_MaxHostAdapters * sizeof(struct BusLogic_ProbeInfo), GFP_KERNEL);
+ 	if (BusLogic_ProbeInfoList == NULL) {
+ 		BusLogic_Error("BusLogic: Unable to allocate Probe Info List\n", NULL);
+ 		return -ENOMEM;
  	}
- 
- 	if (i >= 240)
-@@ -5095,7 +5095,7 @@ ips_init_copperhead_memio(ips_ha_t * ha)
- 				break;
- 
- 			/* Delay for 1 Second */
--			msleep(IPS_ONE_SEC);
-+			MDELAY(IPS_ONE_SEC);
- 		}
- 
- 		if (j >= 45)
-@@ -5121,7 +5121,7 @@ ips_init_copperhead_memio(ips_ha_t * ha)
- 				break;
- 
- 			/* Delay for 1 Second */
--			msleep(IPS_ONE_SEC);
-+			MDELAY(IPS_ONE_SEC);
- 		}
- 
- 		if (j >= 240)
-@@ -5139,7 +5139,7 @@ ips_init_copperhead_memio(ips_ha_t * ha)
- 			break;
- 
- 		/* Delay for 1 Second */
--		msleep(IPS_ONE_SEC);
-+		MDELAY(IPS_ONE_SEC);
+-	memset(BusLogic_ProbeInfoList, 0, BusLogic_MaxHostAdapters * sizeof(struct BusLogic_ProbeInfo));
+-	PrototypeHostAdapter = (struct BusLogic_HostAdapter *)
+-	    kmalloc(sizeof(struct BusLogic_HostAdapter), GFP_ATOMIC);
++
++	PrototypeHostAdapter =
++	    kzalloc(sizeof(struct BusLogic_HostAdapter), GFP_KERNEL);
+ 	if (PrototypeHostAdapter == NULL) {
+ 		kfree(BusLogic_ProbeInfoList);
+ 		BusLogic_Error("BusLogic: Unable to allocate Prototype " "Host Adapter\n", NULL);
+ 		return -ENOMEM;
  	}
+-	memset(PrototypeHostAdapter, 0, sizeof(struct BusLogic_HostAdapter));
++
+ #ifdef MODULE
+ 	if (BusLogic != NULL)
+ 		BusLogic_Setup(BusLogic);
+diff -puN drivers/scsi/NCR53c406a.c~scsi-minor-bug-fixes-and-cleanups drivers/scsi/NCR53c406a.c
+--- a/drivers/scsi/NCR53c406a.c~scsi-minor-bug-fixes-and-cleanups
++++ a/drivers/scsi/NCR53c406a.c
+@@ -220,9 +220,11 @@ static void *addresses[] = {
+ static unsigned short ports[] = { 0x230, 0x330, 0x280, 0x290, 0x330, 0x340, 0x300, 0x310, 0x348, 0x350 };
+ #define PORT_COUNT ARRAY_SIZE(ports)
  
- 	if (i >= 240)
-@@ -5191,7 +5191,7 @@ ips_init_morpheus(ips_ha_t * ha)
- 			break;
++#ifndef MODULE
+ /* possible interrupt channels */
+ static unsigned short intrs[] = { 10, 11, 12, 15 };
+ #define INTR_COUNT ARRAY_SIZE(intrs)
++#endif /* !MODULE */
  
- 		/* Delay for 1 Second */
--		msleep(IPS_ONE_SEC);
-+		MDELAY(IPS_ONE_SEC);
+ /* signatures for NCR 53c406a based controllers */
+ #if USE_BIOS
+@@ -605,6 +607,7 @@ static int NCR53c406a_release(struct Scs
+ 	return 0;
+ }
+ 
++#ifndef MODULE
+ /* called from init/main.c */
+ static int __init NCR53c406a_setup(char *str)
+ {
+@@ -661,6 +664,8 @@ static int __init NCR53c406a_setup(char 
+ 
+ __setup("ncr53c406a=", NCR53c406a_setup);
+ 
++#endif /* !MODULE */
++
+ static const char *NCR53c406a_info(struct Scsi_Host *SChost)
+ {
+ 	DEB(printk("NCR53c406a_info called\n"));
+diff -puN drivers/scsi/aic7xxx_old.c~scsi-minor-bug-fixes-and-cleanups drivers/scsi/aic7xxx_old.c
+--- a/drivers/scsi/aic7xxx_old.c~scsi-minor-bug-fixes-and-cleanups
++++ a/drivers/scsi/aic7xxx_old.c
+@@ -2646,7 +2646,7 @@ static void aic7xxx_done_cmds_complete(s
+ 
+ 	while (p->completeq.head != NULL) {
+ 		cmd = p->completeq.head;
+-		p->completeq.head = (struct scsi_Cmnd *) cmd->host_scribble;
++		p->completeq.head = (struct scsi_cmnd *) cmd->host_scribble;
+ 		cmd->host_scribble = NULL;
+ 		cmd->scsi_done(cmd);
  	}
+diff -puN drivers/scsi/fd_mcs.c~scsi-minor-bug-fixes-and-cleanups drivers/scsi/fd_mcs.c
+--- a/drivers/scsi/fd_mcs.c~scsi-minor-bug-fixes-and-cleanups
++++ a/drivers/scsi/fd_mcs.c
+@@ -294,6 +294,7 @@ static struct Scsi_Host *hosts[FD_MAX_HO
+ static int user_fifo_count = 0;
+ static int user_fifo_size = 0;
  
- 	if (i >= 45) {
-@@ -5217,7 +5217,7 @@ ips_init_morpheus(ips_ha_t * ha)
- 			if (Post != 0x4F00)
- 				break;
- 			/* Delay for 1 Second */
--			msleep(IPS_ONE_SEC);
-+			MDELAY(IPS_ONE_SEC);
- 		}
++#ifndef MODULE
+ static int __init fd_mcs_setup(char *str)
+ {
+ 	static int done_setup = 0;
+@@ -311,6 +312,7 @@ static int __init fd_mcs_setup(char *str
+ }
  
- 		if (i >= 120) {
-@@ -5247,7 +5247,7 @@ ips_init_morpheus(ips_ha_t * ha)
- 			break;
+ __setup("fd_mcs=", fd_mcs_setup);
++#endif /* !MODULE */
  
- 		/* Delay for 1 Second */
--		msleep(IPS_ONE_SEC);
-+		MDELAY(IPS_ONE_SEC);
- 	}
+ static void print_banner(struct Scsi_Host *shpnt)
+ {
+diff -puN drivers/scsi/ncr53c8xx.c~scsi-minor-bug-fixes-and-cleanups drivers/scsi/ncr53c8xx.c
+--- a/drivers/scsi/ncr53c8xx.c~scsi-minor-bug-fixes-and-cleanups
++++ a/drivers/scsi/ncr53c8xx.c
+@@ -589,10 +589,12 @@ static int __map_scsi_sg_data(struct dev
+ static struct ncr_driver_setup
+ 	driver_setup			= SCSI_NCR_DRIVER_SETUP;
  
- 	if (i >= 240) {
-@@ -5307,12 +5307,12 @@ ips_reset_copperhead(ips_ha_t * ha)
- 		outb(IPS_BIT_RST, ha->io_addr + IPS_REG_SCPR);
++#ifndef MODULE
+ #ifdef	SCSI_NCR_BOOT_COMMAND_LINE_SUPPORT
+ static struct ncr_driver_setup
+ 	driver_safe_setup __initdata	= SCSI_NCR_DRIVER_SAFE_SETUP;
+ #endif
++#endif /* !MODULE */
  
- 		/* Delay for 1 Second */
--		msleep(IPS_ONE_SEC);
-+		MDELAY(IPS_ONE_SEC);
+ #define initverbose (driver_setup.verbose)
+ #define bootverbose (np->verbose)
+@@ -641,6 +643,13 @@ static struct ncr_driver_setup
+ #define OPT_IARB		26
+ #endif
  
- 		outb(0, ha->io_addr + IPS_REG_SCPR);
++#ifdef MODULE
++#define	ARG_SEP	' '
++#else
++#define	ARG_SEP	','
++#endif
++
++#ifndef MODULE
+ static char setup_token[] __initdata = 
+ 	"tags:"   "mpar:"
+ 	"spar:"   "disc:"
+@@ -660,12 +669,6 @@ static char setup_token[] __initdata = 
+ #endif
+ 	;	/* DONNOT REMOVE THIS ';' */
  
- 		/* Delay for 1 Second */
--		msleep(IPS_ONE_SEC);
-+		MDELAY(IPS_ONE_SEC);
+-#ifdef MODULE
+-#define	ARG_SEP	' '
+-#else
+-#define	ARG_SEP	','
+-#endif
+-
+ static int __init get_setup_token(char *p)
+ {
+ 	char *cur = setup_token;
+@@ -682,7 +685,6 @@ static int __init get_setup_token(char *
+ 	return 0;
+ }
  
- 		if ((*ha->func.init) (ha))
- 			break;
-@@ -5352,12 +5352,12 @@ ips_reset_copperhead_memio(ips_ha_t * ha
- 		writeb(IPS_BIT_RST, ha->mem_ptr + IPS_REG_SCPR);
+-
+ static int __init sym53c8xx__setup(char *str)
+ {
+ #ifdef SCSI_NCR_BOOT_COMMAND_LINE_SUPPORT
+@@ -804,6 +806,7 @@ static int __init sym53c8xx__setup(char 
+ #endif /* SCSI_NCR_BOOT_COMMAND_LINE_SUPPORT */
+ 	return 1;
+ }
++#endif /* !MODULE */
  
- 		/* Delay for 1 Second */
--		msleep(IPS_ONE_SEC);
-+		MDELAY(IPS_ONE_SEC);
+ /*===================================================================
+ **
+@@ -8321,12 +8324,12 @@ char *ncr53c8xx;	/* command line passed 
+ module_param(ncr53c8xx, charp, 0);
+ #endif
  
- 		writeb(0, ha->mem_ptr + IPS_REG_SCPR);
++#ifndef MODULE
+ static int __init ncr53c8xx_setup(char *str)
+ {
+ 	return sym53c8xx__setup(str);
+ }
  
- 		/* Delay for 1 Second */
--		msleep(IPS_ONE_SEC);
-+		MDELAY(IPS_ONE_SEC);
+-#ifndef MODULE
+ __setup("ncr53c8xx=", ncr53c8xx_setup);
+ #endif
  
- 		if ((*ha->func.init) (ha))
- 			break;
-@@ -5398,7 +5398,7 @@ ips_reset_morpheus(ips_ha_t * ha)
- 		writel(0x80000000, ha->mem_ptr + IPS_REG_I960_IDR);
- 
- 		/* Delay for 5 Seconds */
--		msleep(5 * IPS_ONE_SEC);
-+		MDELAY(5 * IPS_ONE_SEC);
- 
- 		/* Do a PCI config read to wait for adapter */
- 		pci_read_config_byte(ha->pcidev, 4, &junk);
 _
