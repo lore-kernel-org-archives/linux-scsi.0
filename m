@@ -1,76 +1,91 @@
-From: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
+From: Andrew Morton <akpm@osdl.org>
 Subject: Re: [PATCH 2/2] cciss: disable dma prefetch for P600
-Date: Fri, 20 Oct 2006 14:56:18 -0500
-Message-ID: <20061020195618.GA13181@beardog.cca.cpqcorp.net>
-References: <20061017211303.GB17874@beardog.cca.cpqcorp.net> <20061017171021.baea3c3f.akpm@osdl.org> <20061018165453.GA14255@beardog.cca.cpqcorp.net> <20061018143723.48510ea7.akpm@osdl.org>
+Date: Fri, 20 Oct 2006 13:23:50 -0700
+Message-ID: <20061020132350.d49f7b22.akpm@osdl.org>
+References: <20061017211303.GB17874@beardog.cca.cpqcorp.net>
+	<20061017171021.baea3c3f.akpm@osdl.org>
+	<20061018165453.GA14255@beardog.cca.cpqcorp.net>
+	<20061018143723.48510ea7.akpm@osdl.org>
+	<20061020195618.GA13181@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palrel11.hp.com ([156.153.255.246]:30403 "EHLO palrel11.hp.com")
-	by vger.kernel.org with ESMTP id S1422823AbWJTT4U (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:21465 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1423099AbWJTU1M (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Oct 2006 15:56:20 -0400
-Content-Disposition: inline
-In-Reply-To: <20061018143723.48510ea7.akpm@osdl.org>
+	Fri, 20 Oct 2006 16:27:12 -0400
+In-Reply-To: <20061020195618.GA13181@beardog.cca.cpqcorp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, jens.axboe@oracle.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
+Cc: jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Wed, Oct 18, 2006 at 02:37:23PM -0700, Andrew Morton wrote:
-> 
-> argh, you removed the mailing list from cc.
+On Fri, 20 Oct 2006 14:56:18 -0500
+"Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net> wrote:
 
-Sorry, I'm still lacking proper etiquette.
-
-> 
-> On Wed, 18 Oct 2006 11:54:53 -0500
-> "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net> wrote:
-> 
-> > On Tue, Oct 17, 2006 at 05:10:21PM -0700, Andrew Morton wrote:
-> > > On Tue, 17 Oct 2006 16:13:03 -0500
-> > > "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net> wrote:
-> > > 
-> > > > PATCH 2/2
-> > > > Turned off DMA prefetch for the P600 on systems which may present
-> > > > discontiguous memory.
+> ..
+> > 
 > > > > 
+> > > > What is the actual problem which is being fixed here?
 > > > 
-> > > What do you mean by "discontiguous memory"?  CONFIG_DISCONTIGMEM?
+> > > Sorry, I should have been clearer. There is a bug in the DMA engine that
+> > > that may result in prefetching data from beyond the end of memory or
+> > > falling off into one the holes on IPF and AMD. It causes a machine check
+> > > when that happens.
+> > > It doesn't happen on Proliant because the last 4kB (or so) of memory is
+> > > mapped out by the BIOS and Pentium guarantees contiguous memory.
 > > 
-> > The IPF memory map can have holes between the different regions. I've
-> > been told by our HW guys that AMD may also have holes.
-> 
-> Pretty much all platforms/architectures have holes in their physical memory
-> map.
-> 
-> 
-> > > 
-> > > What is the actual problem which is being fixed here?
+> > I think that this:
 > > 
-> > Sorry, I should have been clearer. There is a bug in the DMA engine that
-> > that may result in prefetching data from beyond the end of memory or
-> > falling off into one the holes on IPF and AMD. It causes a machine check
-> > when that happens.
-> > It doesn't happen on Proliant because the last 4kB (or so) of memory is
-> > mapped out by the BIOS and Pentium guarantees contiguous memory.
+> > > > #if defined(CONFIG_IA64) || defined(CONFIG_X86_64)
+> > 
+> > is nowhere near strong enough and is probably inappropriate.
+> > 
+> > It _could_ be that CONFIG_DISCONTIGMEM|CONFIG_SPARSEMEM will be closer, but
+> > even CONFIG_FLATMEM systems can have holes.
 > 
-> I think that this:
-> 
-> > > #if defined(CONFIG_IA64) || defined(CONFIG_X86_64)
-> 
-> is nowhere near strong enough and is probably inappropriate.
-> 
-> It _could_ be that CONFIG_DISCONTIGMEM|CONFIG_SPARSEMEM will be closer, but
-> even CONFIG_FLATMEM systems can have holes.
+> I'm poking around on some IPF platforms. It looks like CONFIG_DISCONTIGMEM is
+> set on them, but not the others you mention. Would that be sufficient?
 
-I'm poking around on some IPF platforms. It looks like CONFIG_DISCONTIGMEM is
-set on them, but not the others you mention. Would that be sufficient?
+I don't think so.  All machines in all memory models can and do have holes
+in their memory map.  I think the problem is that some machines object to
+having those holes read from and others do not.  It could be that this
+problem is purely an ia64 thing.
 
+And it's not just holes: we had a problem a year or so back where CPU
+prefetching was walking off the end of real mmeory and into the AGP region
+and was causing weird cache coherency problems on x86_64 (or something like
+that).
+
+> > 
+> > On what machines can/does this card exist?  Things like powerpc?
 > 
-> On what machines can/does this card exist?  Things like powerpc?
+> This problem was found on Itanium. We don't try to support powerpc.
 
-This problem was found on Itanium. We don't try to support powerpc.
+Well the CCISS driver presently has no architecture Kconfig dependencies,
+so anyone can build it on anything.  I don't know whether it's physically
+possible to put a cciss controller into a power/sparc/whatever machine -
+are these controllers only ever integrated onto the main boad?
 
-Thanks,
-mikem
+Anyway, I'd suggest the best way of sorting this out is to come up with a
+complete description of the problem, decide which architectures are
+affected and to then ask the relevant architecture maintainers to recommend
+a solution.
+
+I think the description would be
+
+  There is a bug in the DMA engine that that may result in prefetching
+  data from beyond the end of memory or falling off into one the holes on
+  IPF and AMD.  It causes a machine check when that happens.
+
+  It doesn't happen on Proliant because the last 4kB (or so) of memory is
+  mapped out by the BIOS and Pentium guarantees contiguous memory.
+
+  If the platform is culnerable to this then driver's prefetching needs
+  to be disabled at compile-time or, preferably, initialization-time.  What
+  is the best means by which we can determine whether the platform needs
+  this treatment?
+
+
+(the patch didn't compile, btw: there's no definition of I2O0_DMA1_CFG)
