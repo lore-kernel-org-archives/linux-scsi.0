@@ -1,145 +1,247 @@
 From: akpm@osdl.org
-Subject: [patch 28/45] scsi: Scsi_Cmnd conversion in qlogicfas408 driver
-Date: Fri, 20 Oct 2006 14:48:27 -0700
-Message-ID: <200610202148.k9KLmRLQ004158@shell0.pdx.osdl.net>
+Subject: [patch 45/45] drivers/scsi: Handcrafted MIN/MAX macro removal
+Date: Fri, 20 Oct 2006 14:48:40 -0700
+Message-ID: <200610202148.k9KLmeXZ004210@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:63110 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S2992786AbWJTVsx (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:6279 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S2992855AbWJTVtI (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Oct 2006 17:48:53 -0400
+	Fri, 20 Oct 2006 17:49:08 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, henne@nachtwindheim.de
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, amol@verismonetworks.com
 
-From: Henrik Kretzschmar <henne@nachtwindheim.de>
+From: Amol Lad <amol@verismonetworks.com>
 
-Change obsolete Scsi_Cmnd to struct scsi_cmnd in the Qlocic FAS408 driver.
+Cleanups done to use min/max macros from kernel.h.  Handcrafted MIN/MAX
+macros are changed to use macros in kernel.h
 
-Signed-off-by: Henrik Kretzschmar <henne@nachtwindheim.de>
+[akpm@osdl.org: fix warning]
+Signed-off-by: Amol Lad <amol@verismonetworks.com>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/qlogicfas408.c |   18 +++++++++---------
- drivers/scsi/qlogicfas408.h |   30 +++++++++++++++---------------
- 2 files changed, 24 insertions(+), 24 deletions(-)
+ drivers/scsi/aic7xxx/aic79xx.h      |    8 --------
+ drivers/scsi/aic7xxx/aic79xx_core.c |   22 +++++++++++-----------
+ drivers/scsi/aic7xxx/aic79xx_osm.c  |    7 ++++---
+ drivers/scsi/aic7xxx/aic7xxx.h      |    8 --------
+ drivers/scsi/aic7xxx/aic7xxx_core.c |   18 +++++++++---------
+ drivers/scsi/aic7xxx/aic7xxx_osm.c  |    4 ++--
+ 6 files changed, 26 insertions(+), 41 deletions(-)
 
-diff -puN drivers/scsi/qlogicfas408.c~scsi-scsi_cmnd-conversion-in-qlogicfas408-driver drivers/scsi/qlogicfas408.c
---- a/drivers/scsi/qlogicfas408.c~scsi-scsi_cmnd-conversion-in-qlogicfas408-driver
-+++ a/drivers/scsi/qlogicfas408.c
-@@ -209,7 +209,7 @@ static int ql_wai(struct qlogicfas408_pr
-  *	caller must hold host lock
-  */
+diff -puN drivers/scsi/aic7xxx/aic79xx.h~drivers-scsi-handcrafted-min-max-macro-removal drivers/scsi/aic7xxx/aic79xx.h
+--- a/drivers/scsi/aic7xxx/aic79xx.h~drivers-scsi-handcrafted-min-max-macro-removal
++++ a/drivers/scsi/aic7xxx/aic79xx.h
+@@ -53,14 +53,6 @@ struct ahd_platform_data;
+ struct scb_platform_data;
  
--static void ql_icmd(Scsi_Cmnd * cmd)
-+static void ql_icmd(struct scsi_cmnd *cmd)
- {
- 	struct qlogicfas408_priv *priv = get_priv_by_cmd(cmd);
- 	int 	qbase = priv->qbase;
-@@ -256,7 +256,7 @@ static void ql_icmd(Scsi_Cmnd * cmd)
-  *	Process scsi command - usually after interrupt 
-  */
+ /****************************** Useful Macros *********************************/
+-#ifndef MAX
+-#define MAX(a,b) (((a) > (b)) ? (a) : (b))
+-#endif
+-
+-#ifndef MIN
+-#define MIN(a,b) (((a) < (b)) ? (a) : (b))
+-#endif
+-
+ #ifndef TRUE
+ #define TRUE 1
+ #endif
+diff -puN drivers/scsi/aic7xxx/aic79xx_core.c~drivers-scsi-handcrafted-min-max-macro-removal drivers/scsi/aic7xxx/aic79xx_core.c
+--- a/drivers/scsi/aic7xxx/aic79xx_core.c~drivers-scsi-handcrafted-min-max-macro-removal
++++ a/drivers/scsi/aic7xxx/aic79xx_core.c
+@@ -2914,14 +2914,14 @@ ahd_devlimited_syncrate(struct ahd_softc
+ 		transinfo = &tinfo->goal;
+ 	*ppr_options &= (transinfo->ppr_options|MSG_EXT_PPR_PCOMP_EN);
+ 	if (transinfo->width == MSG_EXT_WDTR_BUS_8_BIT) {
+-		maxsync = MAX(maxsync, AHD_SYNCRATE_ULTRA2);
++		maxsync = max(maxsync, (u_int)AHD_SYNCRATE_ULTRA2);
+ 		*ppr_options &= ~MSG_EXT_PPR_DT_REQ;
+ 	}
+ 	if (transinfo->period == 0) {
+ 		*period = 0;
+ 		*ppr_options = 0;
+ 	} else {
+-		*period = MAX(*period, transinfo->period);
++		*period = max(*period, (u_int)transinfo->period);
+ 		ahd_find_syncrate(ahd, period, ppr_options, maxsync);
+ 	}
+ }
+@@ -2988,12 +2988,12 @@ ahd_validate_offset(struct ahd_softc *ah
+ 			maxoffset = MAX_OFFSET_PACED;
+ 	} else
+ 		maxoffset = MAX_OFFSET_NON_PACED;
+-	*offset = MIN(*offset, maxoffset);
++	*offset = min(*offset, maxoffset);
+ 	if (tinfo != NULL) {
+ 		if (role == ROLE_TARGET)
+-			*offset = MIN(*offset, tinfo->user.offset);
++			*offset = min(*offset, (u_int)tinfo->user.offset);
+ 		else
+-			*offset = MIN(*offset, tinfo->goal.offset);
++			*offset = min(*offset, (u_int)tinfo->goal.offset);
+ 	}
+ }
  
--static unsigned int ql_pcmd(Scsi_Cmnd * cmd)
-+static unsigned int ql_pcmd(struct scsi_cmnd *cmd)
- {
- 	unsigned int i, j;
- 	unsigned long k;
-@@ -407,7 +407,7 @@ static unsigned int ql_pcmd(Scsi_Cmnd * 
+@@ -3019,9 +3019,9 @@ ahd_validate_width(struct ahd_softc *ahd
+ 	}
+ 	if (tinfo != NULL) {
+ 		if (role == ROLE_TARGET)
+-			*bus_width = MIN(tinfo->user.width, *bus_width);
++			*bus_width = min((u_int)tinfo->user.width, *bus_width);
+ 		else
+-			*bus_width = MIN(tinfo->goal.width, *bus_width);
++			*bus_width = min((u_int)tinfo->goal.width, *bus_width);
+ 	}
+ }
  
- static void ql_ihandl(void *dev_id)
- {
--	Scsi_Cmnd *icmd;
-+	struct scsi_cmnd *icmd;
- 	struct Scsi_Host *host = dev_id;
- 	struct qlogicfas408_priv *priv = get_priv_by_host(host);
- 	int qbase = priv->qbase;
-@@ -447,7 +447,8 @@ irqreturn_t qlogicfas408_ihandl(int irq,
-  *	Queued command
-  */
+@@ -6121,9 +6121,9 @@ ahd_alloc_scbs(struct ahd_softc *ahd)
+ #endif
+ 	}
  
--int qlogicfas408_queuecommand(Scsi_Cmnd * cmd, void (*done) (Scsi_Cmnd *))
-+int qlogicfas408_queuecommand(struct scsi_cmnd *cmd,
-+			      void (*done) (struct scsi_cmnd *))
- {
- 	struct qlogicfas408_priv *priv = get_priv_by_cmd(cmd);
- 	if (scmd_id(cmd) == priv->qinitid) {
-@@ -470,9 +471,8 @@ int qlogicfas408_queuecommand(Scsi_Cmnd 
-  *	Return bios parameters 
-  */
+-	newcount = MIN(scb_data->sense_left, scb_data->scbs_left);
+-	newcount = MIN(newcount, scb_data->sgs_left);
+-	newcount = MIN(newcount, (AHD_SCB_MAX_ALLOC - scb_data->numscbs));
++	newcount = min(scb_data->sense_left, scb_data->scbs_left);
++	newcount = min(newcount, scb_data->sgs_left);
++	newcount = min(newcount, (AHD_SCB_MAX_ALLOC - scb_data->numscbs));
+ 	for (i = 0; i < newcount; i++) {
+ 		struct scb_platform_data *pdata;
+ 		u_int col_tag;
+@@ -8737,7 +8737,7 @@ ahd_resolve_seqaddr(struct ahd_softc *ah
+ 		if (skip_addr > i) {
+ 			int end_addr;
  
--int qlogicfas408_biosparam(struct scsi_device * disk,
--		        struct block_device *dev,
--			sector_t capacity, int ip[])
-+int qlogicfas408_biosparam(struct scsi_device *disk, struct block_device *dev,
-+			   sector_t capacity, int ip[])
- {
- /* This should mimic the DOS Qlogic driver's behavior exactly */
- 	ip[0] = 0x40;
-@@ -494,7 +494,7 @@ int qlogicfas408_biosparam(struct scsi_d
-  *	Abort a command in progress
-  */
-  
--int qlogicfas408_abort(Scsi_Cmnd * cmd)
-+int qlogicfas408_abort(struct scsi_cmnd *cmd)
- {
- 	struct qlogicfas408_priv *priv = get_priv_by_cmd(cmd);
- 	priv->qabort = 1;
-@@ -508,7 +508,7 @@ int qlogicfas408_abort(Scsi_Cmnd * cmd)
-  *	the PCMCIA qlogic_stub code. This wants fixing
-  */
+-			end_addr = MIN(address, skip_addr);
++			end_addr = min(address, skip_addr);
+ 			address_offset += end_addr - i;
+ 			i = skip_addr;
+ 		} else {
+diff -puN drivers/scsi/aic7xxx/aic79xx_osm.c~drivers-scsi-handcrafted-min-max-macro-removal drivers/scsi/aic7xxx/aic79xx_osm.c
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.c~drivers-scsi-handcrafted-min-max-macro-removal
++++ a/drivers/scsi/aic7xxx/aic79xx_osm.c
+@@ -1812,9 +1812,9 @@ ahd_linux_handle_scsi_status(struct ahd_
+ 			u_int sense_offset;
  
--int qlogicfas408_bus_reset(Scsi_Cmnd * cmd)
-+int qlogicfas408_bus_reset(struct scsi_cmnd *cmd)
- {
- 	struct qlogicfas408_priv *priv = get_priv_by_cmd(cmd);
- 	unsigned long flags;
-diff -puN drivers/scsi/qlogicfas408.h~scsi-scsi_cmnd-conversion-in-qlogicfas408-driver drivers/scsi/qlogicfas408.h
---- a/drivers/scsi/qlogicfas408.h~scsi-scsi_cmnd-conversion-in-qlogicfas408-driver
-+++ a/drivers/scsi/qlogicfas408.h
-@@ -75,15 +75,15 @@
- /*----------------------------------------------------------------*/
+ 			if (scb->flags & SCB_SENSE) {
+-				sense_size = MIN(sizeof(struct scsi_sense_data)
++				sense_size = min(sizeof(struct scsi_sense_data)
+ 					       - ahd_get_sense_residual(scb),
+-						 sizeof(cmd->sense_buffer));
++						 (u_long)sizeof(cmd->sense_buffer));
+ 				sense_offset = 0;
+ 			} else {
+ 				/*
+@@ -1823,7 +1823,8 @@ ahd_linux_handle_scsi_status(struct ahd_
+ 				 */
+ 				siu = (struct scsi_status_iu_header *)
+ 				    scb->sense_data;
+-				sense_size = MIN(scsi_4btoul(siu->sense_length),
++				sense_size = min_t(size_t,
++						scsi_4btoul(siu->sense_length),
+ 						sizeof(cmd->sense_buffer));
+ 				sense_offset = SIU_SENSE_OFFSET(siu);
+ 			}
+diff -puN drivers/scsi/aic7xxx/aic7xxx.h~drivers-scsi-handcrafted-min-max-macro-removal drivers/scsi/aic7xxx/aic7xxx.h
+--- a/drivers/scsi/aic7xxx/aic7xxx.h~drivers-scsi-handcrafted-min-max-macro-removal
++++ a/drivers/scsi/aic7xxx/aic7xxx.h
+@@ -54,14 +54,6 @@ struct scb_platform_data;
+ struct seeprom_descriptor;
  
- struct qlogicfas408_priv {
--	 int		qbase;		/* Port */
--	 int		qinitid;	/* initiator ID */
--	 int		qabort;		/* Flag to cause an abort */
--	 int		qlirq;		/* IRQ being used */
--	 int		int_type;	/* type of irq, 2 for ISA board, 0 for PCMCIA */
--	 char		qinfo[80];	/* description */
--	 Scsi_Cmnd 	*qlcmd;		/* current command being processed */
--	 struct Scsi_Host *shost;	/* pointer back to host */
--	 struct qlogicfas408_priv *next; /* next private struct */
-+	int qbase;		/* Port */
-+	int qinitid;		/* initiator ID */
-+	int qabort;		/* Flag to cause an abort */
-+	int qlirq;		/* IRQ being used */
-+	int int_type;		/* type of irq, 2 for ISA board, 0 for PCMCIA */
-+	char qinfo[80];		/* description */
-+	struct scsi_cmnd *qlcmd;	/* current command being processed */
-+	struct Scsi_Host *shost;	/* pointer back to host */
-+	struct qlogicfas408_priv *next; /* next private struct */
- };
+ /****************************** Useful Macros *********************************/
+-#ifndef MAX
+-#define MAX(a,b) (((a) > (b)) ? (a) : (b))
+-#endif
+-
+-#ifndef MIN
+-#define MIN(a,b) (((a) < (b)) ? (a) : (b))
+-#endif
+-
+ #ifndef TRUE
+ #define TRUE 1
+ #endif
+diff -puN drivers/scsi/aic7xxx/aic7xxx_core.c~drivers-scsi-handcrafted-min-max-macro-removal drivers/scsi/aic7xxx/aic7xxx_core.c
+--- a/drivers/scsi/aic7xxx/aic7xxx_core.c~drivers-scsi-handcrafted-min-max-macro-removal
++++ a/drivers/scsi/aic7xxx/aic7xxx_core.c
+@@ -1671,7 +1671,7 @@ ahc_devlimited_syncrate(struct ahc_softc
+ 		transinfo = &tinfo->goal;
+ 	*ppr_options &= transinfo->ppr_options;
+ 	if (transinfo->width == MSG_EXT_WDTR_BUS_8_BIT) {
+-		maxsync = MAX(maxsync, AHC_SYNCRATE_ULTRA2);
++		maxsync = max(maxsync, (u_int)AHC_SYNCRATE_ULTRA2);
+ 		*ppr_options &= ~MSG_EXT_PPR_DT_REQ;
+ 	}
+ 	if (transinfo->period == 0) {
+@@ -1679,7 +1679,7 @@ ahc_devlimited_syncrate(struct ahc_softc
+ 		*ppr_options = 0;
+ 		return (NULL);
+ 	}
+-	*period = MAX(*period, transinfo->period);
++	*period = max(*period, (u_int)transinfo->period);
+ 	return (ahc_find_syncrate(ahc, period, ppr_options, maxsync));
+ }
  
- /* The qlogic card uses two register maps - These macros select which one */
-@@ -103,12 +103,12 @@ struct qlogicfas408_priv {
- #define get_priv_by_host(x) (struct qlogicfas408_priv *)&((x)->hostdata[0])
+@@ -1804,12 +1804,12 @@ ahc_validate_offset(struct ahc_softc *ah
+ 		else
+ 			maxoffset = MAX_OFFSET_8BIT;
+ 	}
+-	*offset = MIN(*offset, maxoffset);
++	*offset = min(*offset, maxoffset);
+ 	if (tinfo != NULL) {
+ 		if (role == ROLE_TARGET)
+-			*offset = MIN(*offset, tinfo->user.offset);
++			*offset = min(*offset, (u_int)tinfo->user.offset);
+ 		else
+-			*offset = MIN(*offset, tinfo->goal.offset);
++			*offset = min(*offset, (u_int)tinfo->goal.offset);
+ 	}
+ }
  
- irqreturn_t qlogicfas408_ihandl(int irq, void *dev_id);
--int qlogicfas408_queuecommand(Scsi_Cmnd * cmd, void (*done) (Scsi_Cmnd *));
--int qlogicfas408_biosparam(struct scsi_device * disk,
--		        struct block_device *dev,
--			sector_t capacity, int ip[]);
--int qlogicfas408_abort(Scsi_Cmnd * cmd);
--int qlogicfas408_bus_reset(Scsi_Cmnd * cmd);
-+int qlogicfas408_queuecommand(struct scsi_cmnd *cmd,
-+			      void (*done) (struct scsi_cmnd *));
-+int qlogicfas408_biosparam(struct scsi_device * disk, struct block_device *dev,
-+			   sector_t capacity, int ip[]);
-+int qlogicfas408_abort(struct scsi_cmnd *cmd);
-+int qlogicfas408_bus_reset(struct scsi_cmnd *cmd);
- const char *qlogicfas408_info(struct Scsi_Host *host);
- int qlogicfas408_get_chip_type(int qbase, int int_type);
- void qlogicfas408_setup(int qbase, int id, int int_type);
+@@ -1835,9 +1835,9 @@ ahc_validate_width(struct ahc_softc *ahc
+ 	}
+ 	if (tinfo != NULL) {
+ 		if (role == ROLE_TARGET)
+-			*bus_width = MIN(tinfo->user.width, *bus_width);
++			*bus_width = min((u_int)tinfo->user.width, *bus_width);
+ 		else
+-			*bus_width = MIN(tinfo->goal.width, *bus_width);
++			*bus_width = min((u_int)tinfo->goal.width, *bus_width);
+ 	}
+ }
+ 
+@@ -4406,7 +4406,7 @@ ahc_alloc_scbs(struct ahc_softc *ahc)
+ 	physaddr = sg_map->sg_physaddr;
+ 
+ 	newcount = (PAGE_SIZE / (AHC_NSEG * sizeof(struct ahc_dma_seg)));
+-	newcount = MIN(newcount, (AHC_SCB_MAX_ALLOC - scb_data->numscbs));
++	newcount = min(newcount, (AHC_SCB_MAX_ALLOC - scb_data->numscbs));
+ 	for (i = 0; i < newcount; i++) {
+ 		struct scb_platform_data *pdata;
+ #ifndef __linux__
+@@ -6442,7 +6442,7 @@ ahc_download_instr(struct ahc_softc *ahc
+ 			if (skip_addr > i) {
+ 				int end_addr;
+ 
+-				end_addr = MIN(address, skip_addr);
++				end_addr = min(address, skip_addr);
+ 				address_offset += end_addr - i;
+ 				i = skip_addr;
+ 			} else {
+diff -puN drivers/scsi/aic7xxx/aic7xxx_osm.c~drivers-scsi-handcrafted-min-max-macro-removal drivers/scsi/aic7xxx/aic7xxx_osm.c
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm.c~drivers-scsi-handcrafted-min-max-macro-removal
++++ a/drivers/scsi/aic7xxx/aic7xxx_osm.c
+@@ -1875,9 +1875,9 @@ ahc_linux_handle_scsi_status(struct ahc_
+ 		if (scb->flags & SCB_SENSE) {
+ 			u_int sense_size;
+ 
+-			sense_size = MIN(sizeof(struct scsi_sense_data)
++			sense_size = min(sizeof(struct scsi_sense_data)
+ 				       - ahc_get_sense_residual(scb),
+-					 sizeof(cmd->sense_buffer));
++					 (u_long)sizeof(cmd->sense_buffer));
+ 			memcpy(cmd->sense_buffer,
+ 			       ahc_get_sense_buf(ahc, scb), sense_size);
+ 			if (sense_size < sizeof(cmd->sense_buffer))
 _
