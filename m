@@ -1,39 +1,24 @@
-From: akpm@osdl.org
-Subject: [patch 35/45] drivers/scsi/dpt_i2o.c: remove dead code
-Date: Fri, 20 Oct 2006 14:48:33 -0700
-Message-ID: <200610202148.k9KLmXhS004180@shell0.pdx.osdl.net>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [patch 45/45] drivers/scsi: Handcrafted MIN/MAX macro removal
+Date: Fri, 20 Oct 2006 15:19:28 -0700
+Message-ID: <20061020151928.2926816c.akpm@osdl.org>
+References: <200610202148.k9KLmeXZ004210@shell0.pdx.osdl.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:63111 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S2992878AbWJTVvu (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:5519 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1423242AbWJTWTf (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Oct 2006 17:51:50 -0400
+	Fri, 20 Oct 2006 18:19:35 -0400
+In-Reply-To: <200610202148.k9KLmeXZ004210@shell0.pdx.osdl.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, bunk@stusta.de
+Cc: linux-scsi@vger.kernel.org
 
-From: Adrian Bunk <bunk@stusta.de>
 
-The Coverity checker spotted this dead code introduced by
-commit a07f353701acae77e023f6270e8af353b37af7c4.
+I've been maintaining some of these scsi patches for over a year.  Please
+either merge them, nack-with-reasons or indicate that I should merge them.
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
-Signed-off-by: Andrew Morton <akpm@osdl.org>
----
-
- drivers/scsi/dpt_i2o.c |    2 --
- 1 files changed, 2 deletions(-)
-
-diff -puN drivers/scsi/dpt_i2o.c~drivers-scsi-dpt_i2oc-remove-dead-code drivers/scsi/dpt_i2o.c
---- a/drivers/scsi/dpt_i2o.c~drivers-scsi-dpt_i2oc-remove-dead-code
-+++ a/drivers/scsi/dpt_i2o.c
-@@ -195,8 +195,6 @@ static int adpt_detect(struct scsi_host_
- 			pci_dev_get(pDev);
- 		}
- 	}
--	if (pDev)
--		pci_dev_put(pDev);
- 
- 	/* In INIT state, Activate IOPs */
- 	for (pHba = hba_chain; pHba; pHba = pHba->next) {
-_
+Thanks.
