@@ -1,77 +1,52 @@
 From: akpm@osdl.org
-Subject: [patch 14/45] magaraid: check for firmware version
-Date: Fri, 20 Oct 2006 14:48:14 -0700
-Message-ID: <200610202148.k9KLmEHE004106@shell0.pdx.osdl.net>
+Subject: [patch 17/45] ioremap balanced with iounmap for drivers/scsi/sun3_vme.c
+Date: Fri, 20 Oct 2006 14:48:18 -0700
+Message-ID: <200610202148.k9KLmIKY004115@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:62086 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S2992796AbWJTVsv (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:61318 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S2992790AbWJTVsv (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 20 Oct 2006 17:48:51 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, jkrzyszt@tis.icnet.pl, Seokmann.Ju@lsil.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, amol@verismonetworks.com, davem@davemloft.net
 
-From: Janusz Krzysztofik <jkrzyszt@tis.icnet.pl>
+From: Amol Lad <amol@verismonetworks.com>
 
-The old megaraid driver is apparently borken for firmware newer than 6.61.
+ioremap must be balanced by an iounmap and failing to do so can result in a
+memory leak.
 
-megaraid_mbox works OK for Janusz with F/W 6.61.
-
-Check for the F/W version and display a helpful warning if it is too high.  It
-should make life easier for those who may face the problem.
-
-Cc: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
+Signed-off-by: Amol Lad <amol@verismonetworks.com>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
+Cc: "David S. Miller" <davem@davemloft.net>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/megaraid/megaraid_mbox.c |   16 ++++++++++++++++
- drivers/scsi/megaraid/megaraid_mbox.h |    1 +
- 2 files changed, 17 insertions(+)
+ drivers/scsi/sun3_scsi_vme.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletion(-)
 
-diff -puN drivers/scsi/megaraid/megaraid_mbox.c~megaraid-check-for-firmware-version drivers/scsi/megaraid/megaraid_mbox.c
---- a/drivers/scsi/megaraid/megaraid_mbox.c~megaraid-check-for-firmware-version
-+++ a/drivers/scsi/megaraid/megaraid_mbox.c
-@@ -25,6 +25,7 @@
-  * Dell PERC3/QC			101E	1960	1028	0471
-  * Dell PERC3/DC			101E	1960	1028	0493
-  * Dell PERC3/SC			101E	1960	1028	0475
-+ * Dell CERC ATA100/4ch with F/W<=6.61	101E	1960	1028	0511
-  * Dell PERC3/Di			1028	1960	1028	0123
-  * Dell PERC4/SC			1000	1960	1028	0520
-  * Dell PERC4/DC			1000	1960	1028	0518
-@@ -807,6 +808,21 @@ megaraid_init_mbox(adapter_t *adapter)
- 		goto out_alloc_cmds;
- 	}
+diff -puN drivers/scsi/sun3_scsi_vme.c~ioremap-balanced-with-iounmap-drivers-scsi-sun3_scsi_vmec drivers/scsi/sun3_scsi_vme.c
+--- a/drivers/scsi/sun3_scsi_vme.c~ioremap-balanced-with-iounmap-drivers-scsi-sun3_scsi_vmec
++++ a/drivers/scsi/sun3_scsi_vme.c
+@@ -216,8 +216,10 @@ static int sun3scsi_detect(struct scsi_h
+ #endif
  
-+	// Compatibility check
-+	if (adapter->pdev->vendor == PCI_VENDOR_ID_AMI &&
-+			adapter->pdev->device == PCI_DEVICE_ID_AMI_MEGARAID3 &&
-+			adapter->pdev->subsystem_vendor == PCI_VENDOR_ID_DELL &&
-+			adapter->pdev->subsystem_device == PCI_SUBSYS_ID_CERC_ATA100_4CH &&
-+			(adapter->fw_version[0] > '6' ||
-+			 (adapter->fw_version[0] == '6' &&
-+			  adapter->fw_version[2] > '6') ||
-+			 (adapter->fw_version[0] == '6'
-+			  && adapter->fw_version[2] == '6'
-+			  && adapter->fw_version[3] > '1'))) {
-+		con_log(CL_ANN, (KERN_WARNING
-+			"megaraid: problems? downgrade F/W to version 6.61\n"));
+ 	instance = scsi_register (tpnt, sizeof(struct NCR5380_hostdata));
+-	if(instance == NULL)
++	if(instance == NULL) {
++		iounmap((void *)ioaddr);
+ 		return 0;
 +	}
-+
- 	// Do we support extended CDBs
- 	adapter->max_cdb_sz = 10;
- 	if (megaraid_mbox_extended_cdb(adapter) == 0) {
-diff -puN drivers/scsi/megaraid/megaraid_mbox.h~megaraid-check-for-firmware-version drivers/scsi/megaraid/megaraid_mbox.h
---- a/drivers/scsi/megaraid/megaraid_mbox.h~megaraid-check-for-firmware-version
-+++ a/drivers/scsi/megaraid/megaraid_mbox.h
-@@ -88,6 +88,7 @@
- #define PCI_SUBSYS_ID_PERC3_QC				0x0471
- #define PCI_SUBSYS_ID_PERC3_DC				0x0493
- #define PCI_SUBSYS_ID_PERC3_SC				0x0475
-+#define PCI_SUBSYS_ID_CERC_ATA100_4CH			0x0511
+ 		
+ 	default_instance = instance;
  
- 
- #define MBOX_MAX_SCSI_CMDS	128	// number of cmds reserved for kernel
+@@ -239,6 +241,7 @@ static int sun3scsi_detect(struct scsi_h
+ #else
+ 		printk("scsi%d: IRQ%d not free, bailing out\n",
+ 		       instance->host_no, instance->irq);
++		iounmap((void *)ioaddr);
+ 		return 0;
+ #endif
+ 	}
 _
