@@ -1,40 +1,73 @@
 From: akpm@osdl.org
-Subject: [patch 23/45] ioremap balanced with iounmap for drivers/scsi/amiga7xx.c
-Date: Fri, 20 Oct 2006 14:48:23 -0700
-Message-ID: <200610202148.k9KLmNLv004136@shell0.pdx.osdl.net>
+Subject: [patch 05/45] scsi: clean up warnings in Advansys driver
+Date: Fri, 20 Oct 2006 14:48:00 -0700
+Message-ID: <200610202148.k9KLm0XE004075@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:43654 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S2992780AbWJTVsg (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:29830 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S2992771AbWJTVsY (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Oct 2006 17:48:36 -0400
+	Fri, 20 Oct 2006 17:48:24 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, amol@verismonetworks.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, ken@krwtech.com, jeffreyfreeman@syncleus.com
 
-From: Amol Lad <amol@verismonetworks.com>
+From: Ken Witherow <ken@krwtech.com>
 
-ioremap must be balanced by an iounmap and failing to do so can result in a
-memory leak.
+Fix typecast warnings and switch from check_region to request_region
 
-Signed-off-by: Amol Lad <amol@verismonetworks.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
+(akpm: Ken and Jeffrey Phillips Freeman <jeffreyfreeman@syncleus.com> are
+possible advansys testers)
+
+Signed-off-by: Ken Witherow <ken@krwtech.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/amiga7xx.c |    2 ++
- 1 files changed, 2 insertions(+)
+ drivers/scsi/advansys.c |    7 +++++--
+ 1 files changed, 5 insertions(+), 2 deletions(-)
 
-diff -puN drivers/scsi/amiga7xx.c~ioremap-balanced-with-iounmap-drivers-scsi-amiga7xxc drivers/scsi/amiga7xx.c
---- a/drivers/scsi/amiga7xx.c~ioremap-balanced-with-iounmap-drivers-scsi-amiga7xxc
-+++ a/drivers/scsi/amiga7xx.c
-@@ -115,6 +115,8 @@ static int amiga7xx_release(struct Scsi_
- 		free_irq(shost->irq, NULL);
- 	if (shost->dma_channel != 0xff)
- 		free_dma(shost->dma_channel);
-+	if (shost->base)
-+		z_iounmap((void *)shost->base);
- 	if (shost->io_port && shost->n_io_port)
- 		release_region(shost->io_port, shost->n_io_port);
- 	scsi_unregister(shost);
+diff -puN drivers/scsi/advansys.c~scsi-clean-up-warnings-in-advansys-driver drivers/scsi/advansys.c
+--- a/drivers/scsi/advansys.c~scsi-clean-up-warnings-in-advansys-driver
++++ a/drivers/scsi/advansys.c
+@@ -4403,7 +4403,7 @@ advansys_detect(struct scsi_host_templat
+                         ASC_DBG1(1,
+                                 "advansys_detect: probing I/O port 0x%x...\n",
+                             iop);
+-                        if (check_region(iop, ASC_IOADR_GAP) != 0) {
++			if (!request_region(iop, ASC_IOADR_GAP, "advansys")){
+                             printk(
+ "AdvanSys SCSI: specified I/O Port 0x%X is busy\n", iop);
+                             /* Don't try this I/O port twice. */
+@@ -4413,6 +4413,7 @@ advansys_detect(struct scsi_host_templat
+                             printk(
+ "AdvanSys SCSI: specified I/O Port 0x%X has no adapter\n", iop);
+                             /* Don't try this I/O port twice. */
++			    release_region(iop, ASC_IOADR_GAP);
+                             asc_ioport[ioport] = 0;
+                             goto ioport_try_again;
+                         } else {
+@@ -4431,6 +4432,7 @@ advansys_detect(struct scsi_host_templat
+                                   * 'ioport' past this board.
+                                   */
+                                  ioport++;
++				 release_region(iop, ASC_IOADR_GAP);
+                                  goto ioport_try_again;
+                             }
+                         }
+@@ -9740,13 +9742,14 @@ AscSearchIOPortAddr11(
+     }
+     for (; i < ASC_IOADR_TABLE_MAX_IX; i++) {
+         iop_base = _asc_def_iop_base[i];
+-        if (check_region(iop_base, ASC_IOADR_GAP) != 0) {
++	if (!request_region(iop_base, ASC_IOADR_GAP, "advansys")){
+             ASC_DBG1(1,
+                "AscSearchIOPortAddr11: check_region() failed I/O port 0x%x\n",
+                      iop_base);
+             continue;
+         }
+         ASC_DBG1(1, "AscSearchIOPortAddr11: probing I/O port 0x%x\n", iop_base);
++	release_region(iop_base, ASC_IOADR_GAP);
+         if (AscFindSignature(iop_base)) {
+             return (iop_base);
+         }
 _
