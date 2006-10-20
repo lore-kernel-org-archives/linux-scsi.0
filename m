@@ -1,843 +1,346 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: [PATCH] Migrate libsas ATA code into a separate file
-Date: Fri, 20 Oct 2006 00:49:05 -0700 (PDT)
-Message-ID: <20061020074905.79740.qmail@web31805.mail.mud.yahoo.com>
-References: <4536A009.3030609@us.ibm.com>
-Reply-To: ltuikov@yahoo.com
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] ALUA support for scsi_debug
+Date: Fri, 20 Oct 2006 09:58:47 +0200
+Message-ID: <453881B7.8000505@suse.de>
+References: <20061018145018.GC25084@pentland.suse.de> <45368C0B.7070802@torque.net> <45377943.8090906@suse.de> <453790B6.9000802@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/mixed;
+ boundary="------------050707010500020509040903"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31805.mail.mud.yahoo.com ([68.142.207.68]:30906 "HELO
-	web31805.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S2992570AbWJTHtG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Oct 2006 03:49:06 -0400
-In-Reply-To: <4536A009.3030609@us.ibm.com>
+Received: from cantor2.suse.de ([195.135.220.15]:15028 "EHLO mx2.suse.de")
+	by vger.kernel.org with ESMTP id S2992530AbWJTH7D (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Oct 2006 03:59:03 -0400
+In-Reply-To: <453790B6.9000802@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Darrick J. Wong" <djwong@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>
+To: dougg@torque.net
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
 
---- "Darrick J. Wong" <djwong@us.ibm.com> wrote:
-> This is a respin of my earlier patch that migrates the ATA support code
-> into a separate file.  For now, the controversial linking bits have
-> been removed per James Bottomley's request for a patch that contains
-> only the migration diffs, which means that libsas continues to require
-> libata.  I intend to address that problem in a separate patch.
+This is a multi-part message in MIME format.
+--------------050707010500020509040903
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 8bit
+
+Douglas Gilbert wrote:
+> Hannes Reinecke wrote:
+>> Douglas Gilbert wrote:
+>>> Hannes,
+>>> Here is my counter patch for you to consider.
+>>> I suspect my machine was running into stack
+>>> problems so I moved some arrays onto the heap.
+>>>
+>> Ah. Good. To tell the truth I was a bit concerned once I've
+>> discovered that all information pages are infact statically allocated ...
 > 
-> This patch is against the aic94xx-sas-2.6 git tree, and it has been
-> sanity tested on my x206m with Seagate SATA and SAS disks without
-> uncovering any new problems.
+> I wasn't aware that statically allocated data (file or local
+> scope) would add to stack problems on a driver loaded as a
+> module. The arrays I moved to the heap were "auto" (i.e. non-static).
 > 
-> Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
-
-It is unsettling to see how the Linux's libata "model" is overlaid
-onto SAS and how SAS is made to fit into Linux's libata model.
-First, libata isn't a proper SAT Layer, second, the architecture
-of this, is _upside down_.
-
-This further distances the Linux storage subsystem from being a
-professional storage system, which can be relied upon in
-commercial (storage) products.
-
-It seems that the Linux storage subsystem has taken a turn to go
-in a completely different direction from the SCSI Architecture Model,
-and they are getting further appart, by decisions like this one.
-
-It is not so much about just "getting the architecture right", but
-it is also that if the architecture _is_ gotten right, a lot of (old)
-capabilities currently missing from Linux SCSI and new ones, as they
-come, would be able to be implemented without much trouble.  The reason
-for this is that the SCSI Architecture Model will continue to evolve, and
-implement new protocols and capabilities, but the Linux storage
-system seems to be (de)evolving in opposite direction (as this
-patch shows).
-
-    Luben
-
+[ .. ]
 > 
-> --
+> Over zealous error processing ....
+> I have made this mistake often enough, along with
+> many others, so hopefully some readers will take note:
 > 
-> diff --git a/drivers/scsi/libsas/Makefile b/drivers/scsi/libsas/Makefile
-> index 44d972a..6383eb5 100644
-> --- a/drivers/scsi/libsas/Makefile
-> +++ b/drivers/scsi/libsas/Makefile
-> @@ -33,4 +33,5 @@ libsas-y +=  sas_init.o     \
->  		sas_dump.o     \
->  		sas_discover.o \
->  		sas_expander.o \
-> -		sas_scsi_host.o
-> +		sas_scsi_host.o \
-> +		sas_ata.o
-> diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-> new file mode 100644
-> index 0000000..de42b5b
-> --- /dev/null
-> +++ b/drivers/scsi/libsas/sas_ata.c
-> @@ -0,0 +1,339 @@
-> +/*
-> + * Support for SATA devices on Serial Attached SCSI (SAS) controllers
-> + *
-> + * Copyright (C) 2006 IBM Corporation
-> + *
-> + * Written by: Darrick J. Wong <djwong@us.ibm.com>, IBM Corporation
-> + *
-> + * This program is free software; you can redistribute it and/or
-> + * modify it under the terms of the GNU General Public License as
-> + * published by the Free Software Foundation; either version 2 of the
-> + * License, or (at your option) any later version.
-> + *
-> + * This program is distributed in the hope that it will be useful, but
-> + * WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-> + * General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program; if not, write to the Free Software
-> + * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-> + * USA
-> + */
-> +
-> +#include <scsi/sas_ata.h>
-> +#include "sas_internal.h"
-> +#include <scsi/scsi_host.h>
-> +#include <scsi/scsi_device.h>
-> +#include <scsi/scsi_tcq.h>
-> +#include <scsi/scsi.h>
-> +#include <scsi/scsi_transport.h>
-> +#include <scsi/scsi_transport_sas.h>
-> +#include "../scsi_sas_internal.h"
-> +
-> +static enum ata_completion_errors sas_to_ata_err(struct task_status_struct *ts)
-> +{
-> +	/* Cheesy attempt to translate SAS errors into ATA.  Hah! */
-> +
-> +	/* transport error */
-> +	if (ts->resp == SAS_TASK_UNDELIVERED)
-> +		return AC_ERR_ATA_BUS;
-> +
-> +	/* ts->resp == SAS_TASK_COMPLETE */
-> +	/* task delivered, what happened afterwards? */
-> +	switch (ts->stat) {
-> +		case SAS_DEV_NO_RESPONSE:
-> +			return AC_ERR_TIMEOUT;
-> +
-> +		case SAS_INTERRUPTED:
-> +		case SAS_PHY_DOWN:
-> +		case SAS_NAK_R_ERR:
-> +			return AC_ERR_ATA_BUS;
-> +
-> +
-> +		case SAS_DATA_UNDERRUN:
-> +			/*
-> +			 * Some programs that use the taskfile interface
-> +			 * (smartctl in particular) can cause underrun
-> +			 * problems.  Ignore these errors, perhaps at our
-> +			 * peril.
-> +			 */
-> +			return 0;
-> +
-> +		case SAS_DATA_OVERRUN:
-> +		case SAS_QUEUE_FULL:
-> +		case SAS_DEVICE_UNKNOWN:
-> +		case SAS_SG_ERR:
-> +			return AC_ERR_INVALID;
-> +
-> +		case SAM_CHECK_COND:
-> +		case SAS_OPEN_TO:
-> +		case SAS_OPEN_REJECT:
-> +			SAS_DPRINTK("%s: Saw error %d.  What to do?\n",
-> +				    __FUNCTION__, ts->stat);
-> +			return AC_ERR_OTHER;
-> +
-> +		case SAS_ABORTED_TASK:
-> +			return AC_ERR_DEV;
-> +
-> +		case SAS_PROTO_RESPONSE:
-> +			/* This means the ending_fis has the error
-> +			 * value; return 0 here to collect it */
-> +			return 0;
-> +		default:
-> +			return 0;
-> +	}
-> +}
-> +
-> +static void sas_ata_task_done(struct sas_task *task)
-> +{
-> +	struct ata_queued_cmd *qc = task->uldd_task;
-> +	struct domain_device *dev = qc->ap->private_data;
-> +	struct task_status_struct *stat = &task->task_status;
-> +	struct ata_task_resp *resp = (struct ata_task_resp *)stat->buf;
-> +	enum ata_completion_errors ac;
-> +
-> +	if (stat->stat == SAS_PROTO_RESPONSE) {
-> +		ata_tf_from_fis(resp->ending_fis, &dev->sata_dev.tf);
-> +		qc->err_mask |= ac_err_mask(dev->sata_dev.tf.command);
-> +		dev->sata_dev.sstatus = resp->sstatus;
-> +		dev->sata_dev.serror = resp->serror;
-> +		dev->sata_dev.scontrol = resp->scontrol;
-> +		dev->sata_dev.ap->sactive = resp->sactive;
-> +	} else if (stat->stat != SAM_STAT_GOOD) {
-> +		ac = sas_to_ata_err(stat);
-> +		if (ac) {
-> +			SAS_DPRINTK("%s: SAS error %x\n", __FUNCTION__,
-> +				    stat->stat);
-> +			/* We saw a SAS error. Send a vague error. */
-> +			qc->err_mask = ac;
-> +			dev->sata_dev.tf.feature = 0x04; /* status err */
-> +			dev->sata_dev.tf.command = ATA_ERR;
-> +		}
-> +	}
-> +
-> +	ata_qc_complete(qc);
-> +	list_del_init(&task->list);
-> +	sas_free_task(task);
-> +}
-> +
-> +static unsigned int sas_ata_qc_issue(struct ata_queued_cmd *qc)
-> +{
-> +	int res = -ENOMEM;
-> +	struct sas_task *task;
-> +	struct domain_device *dev = qc->ap->private_data;
-> +	struct sas_ha_struct *sas_ha = dev->port->ha;
-> +	struct Scsi_Host *host = sas_ha->core.shost;
-> +	struct sas_internal *i = to_sas_internal(host->transportt);
-> +	struct scatterlist *sg;
-> +	unsigned int num = 0;
-> +	unsigned int xfer = 0;
-> +
-> +	task = sas_alloc_task(GFP_ATOMIC);
-> +	if (!task)
-> +		goto out;
-> +	task->dev = dev;
-> +	task->task_proto = SAS_PROTOCOL_STP;
-> +	task->task_done = sas_ata_task_done;
-> +
-> +	if (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
-> +	    qc->tf.command == ATA_CMD_FPDMA_READ) {
-> +		/* Need to zero out the tag libata assigned us */
-> +		qc->tf.nsect = 0;
-> +	}
-> +
-> +	ata_tf_to_fis(&qc->tf, (u8*)&task->ata_task.fis, 0);
-> +	task->uldd_task = qc;
-> +	if (is_atapi_taskfile(&qc->tf)) {
-> +		memcpy(task->ata_task.atapi_packet, qc->cdb, qc->dev->cdb_len);
-> +		task->total_xfer_len = qc->nbytes + qc->pad_len;
-> +		task->num_scatter = qc->pad_len ? qc->n_elem + 1 : qc->n_elem;
-> +	} else {
-> +		ata_for_each_sg(sg, qc) {
-> +			num++;
-> +			xfer += sg->length;
-> +		}
-> +
-> +		task->total_xfer_len = xfer;
-> +		task->num_scatter = num;
-> +	}
-> +
-> +	task->data_dir = qc->dma_dir;
-> +	task->scatter = qc->__sg;
-> +	task->ata_task.retry_count = 1;
-> +	task->task_state_flags = SAS_TASK_STATE_PENDING;
-> +
-> +	switch (qc->tf.protocol) {
-> +	case ATA_PROT_NCQ:
-> +		task->ata_task.use_ncq = 1;
-> +		/* fall through */
-> +	case ATA_PROT_ATAPI_DMA:
-> +	case ATA_PROT_DMA:
-> +		task->ata_task.dma_xfer = 1;
-> +		break;
-> +	}
-> +
-> +	if (sas_ha->lldd_max_execute_num < 2)
-> +		res = i->dft->lldd_execute_task(task, 1, GFP_ATOMIC);
-> +	else
-> +		res = sas_queue_up(task);
-> +
-> +	/* Examine */
-> +	if (res) {
-> +		SAS_DPRINTK("lldd_execute_task returned: %d\n", res);
-> +
-> +		sas_free_task(task);
-> +		if (res == -SAS_QUEUE_FULL)
-> +			return -ENOMEM;
-> +	}
-> +
-> +out:
-> +	return res;
-> +}
-> +
-> +static u8 sas_ata_check_status(struct ata_port *ap)
-> +{
-> +	struct domain_device *dev = ap->private_data;
-> +	return dev->sata_dev.tf.command;
-> +}
-> +
-> +static void sas_ata_phy_reset(struct ata_port *ap)
-> +{
-> +	struct domain_device *dev = ap->private_data;
-> +	struct sas_internal *i =
-> +		to_sas_internal(dev->port->ha->core.shost->transportt);
-> +	int res = 0;
-> +
-> +	if (i->dft->lldd_I_T_nexus_reset)
-> +		res = i->dft->lldd_I_T_nexus_reset(dev);
-> +
-> +	if (res)
-> +		SAS_DPRINTK("%s: Unable to reset I T nexus?\n", __FUNCTION__);
-> +
-> +	switch (dev->sata_dev.command_set) {
-> +		case ATA_COMMAND_SET:
-> +			SAS_DPRINTK("%s: Found ATA device.\n", __FUNCTION__);
-> +			ap->device[0].class = ATA_DEV_ATA;
-> +			break;
-> +		case ATAPI_COMMAND_SET:
-> +			SAS_DPRINTK("%s: Found ATAPI device.\n", __FUNCTION__);
-> +			ap->device[0].class = ATA_DEV_ATAPI;
-> +			break;
-> +		default:
-> +			SAS_DPRINTK("%s: Unknown SATA command set: %d.\n",
-> +				    __FUNCTION__,
-> +				    dev->sata_dev.command_set);
-> +			ap->device[0].class = ATA_DEV_ATA;
-> +			break;
-> +	}
-> +
-> +	ap->cbl = ATA_CBL_SATA;
-> +}
-> +
-> +static void sas_ata_post_internal(struct ata_queued_cmd *qc)
-> +{
-> +	if (qc->flags & ATA_QCFLAG_FAILED)
-> +		qc->err_mask |= AC_ERR_OTHER;
-> +
-> +	if (qc->err_mask)
-> +		SAS_DPRINTK("%s: Failure; reset phy!\n", __FUNCTION__);
-> +}
-> +
-> +static void sas_ata_tf_read(struct ata_port *ap, struct ata_taskfile *tf)
-> +{
-> +	struct domain_device *dev = ap->private_data;
-> +	memcpy(tf, &dev->sata_dev.tf, sizeof (*tf));
-> +}
-> +
-> +static void sas_ata_scr_write(struct ata_port *ap, unsigned int sc_reg_in,
-> +			      u32 val)
-> +{
-> +	struct domain_device *dev = ap->private_data;
-> +
-> +	SAS_DPRINTK("STUB %s\n", __FUNCTION__);
-> +	switch (sc_reg_in) {
-> +		case SCR_STATUS:
-> +			dev->sata_dev.sstatus = val;
-> +			break;
-> +		case SCR_CONTROL:
-> +			dev->sata_dev.scontrol = val;
-> +			break;
-> +		case SCR_ERROR:
-> +			dev->sata_dev.serror = val;
-> +			break;
-> +		case SCR_ACTIVE:
-> +			dev->sata_dev.ap->sactive = val;
-> +			break;
-> +	}
-> +}
-> +
-> +static u32 sas_ata_scr_read(struct ata_port *ap, unsigned int sc_reg_in)
-> +{
-> +	struct domain_device *dev = ap->private_data;
-> +
-> +	SAS_DPRINTK("STUB %s\n", __FUNCTION__);
-> +	switch (sc_reg_in) {
-> +		case SCR_STATUS:
-> +			return dev->sata_dev.sstatus;
-> +		case SCR_CONTROL:
-> +			return dev->sata_dev.scontrol;
-> +		case SCR_ERROR:
-> +			return dev->sata_dev.serror;
-> +		case SCR_ACTIVE:
-> +			return dev->sata_dev.ap->sactive;
-> +		default:
-> +			return 0xffffffffU;
-> +	}
-> +}
-> +
-> +static struct ata_port_operations sas_sata_ops = {
-> +	.port_disable		= ata_port_disable,
-> +	.check_status		= sas_ata_check_status,
-> +	.check_altstatus	= sas_ata_check_status,
-> +	.dev_select		= ata_noop_dev_select,
-> +	.phy_reset		= sas_ata_phy_reset,
-> +	.post_internal_cmd	= sas_ata_post_internal,
-> +	.tf_read		= sas_ata_tf_read,
-> +	.qc_prep		= ata_noop_qc_prep,
-> +	.qc_issue		= sas_ata_qc_issue,
-> +	.port_start		= ata_sas_port_start,
-> +	.port_stop		= ata_sas_port_stop,
-> +	.scr_read		= sas_ata_scr_read,
-> +	.scr_write		= sas_ata_scr_write
-> +};
-> +
-> +static struct ata_port_info sata_port_info = {
-> +	.flags = ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY | ATA_FLAG_SATA_RESET |
-> +		ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA | ATA_FLAG_NCQ,
-> +	.pio_mask = 0x1f, /* PIO0-4 */
-> +	.mwdma_mask = 0x07, /* MWDMA0-2 */
-> +	.udma_mask = ATA_UDMA6,
-> +	.port_ops = &sas_sata_ops
-> +};
-> +
-> +int sas_ata_init_host_and_port(struct domain_device *found_dev,
-> +			       struct scsi_target *starget)
-> +{
-> +	struct Scsi_Host *shost = dev_to_shost(&starget->dev);
-> +	struct sas_ha_struct *ha = SHOST_TO_SAS_HA(shost);
-> +	struct ata_port *ap;
-> +
-> +	ata_host_init(&found_dev->sata_dev.ata_host,
-> +		      &ha->pcidev->dev,
-> +		      sata_port_info.flags,
-> +		      &sas_sata_ops);
-> +	ap = ata_sas_port_alloc(&found_dev->sata_dev.ata_host,
-> +				&sata_port_info,
-> +				shost);
-> +	if (!ap) {
-> +		SAS_DPRINTK("ata_sas_port_alloc failed.\n");
-> +		return -ENODEV;
-> +	}
-> +
-> +	ap->private_data = found_dev;
-> +	ap->cbl = ATA_CBL_SATA;
-> +	ap->scsi_host = shost;
-> +	found_dev->sata_dev.ap = ap;
-> +
-> +	return 0;
-> +}
-> diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-> index 8c88150..349e9a7 100644
-> --- a/drivers/scsi/libsas/sas_scsi_host.c
-> +++ b/drivers/scsi/libsas/sas_scsi_host.c
-> @@ -31,6 +31,7 @@ #include <scsi/scsi_tcq.h>
->  #include <scsi/scsi.h>
->  #include <scsi/scsi_transport.h>
->  #include <scsi/scsi_transport_sas.h>
-> +#include <scsi/sas_ata.h>
->  #include "../scsi_sas_internal.h"
->  
->  #include <linux/err.h>
-> @@ -166,7 +167,7 @@ static struct sas_task *sas_create_task(
->  	return task;
->  }
->  
-> -static int sas_queue_up(struct sas_task *task)
-> +int sas_queue_up(struct sas_task *task)
->  {
->  	struct sas_ha_struct *sas_ha = task->dev->port->ha;
->  	struct scsi_core *core = &sas_ha->core;
-> @@ -186,11 +187,6 @@ static int sas_queue_up(struct sas_task 
->  	return 0;
->  }
->  
-> -static inline int dev_is_sata(struct domain_device *dev)
-> -{
-> -	return (dev->rphy->identify.target_port_protocols & SAS_PROTOCOL_SATA);
-> -}
-> -
->  /**
->   * sas_queuecommand -- Enqueue a command for processing
->   * @parameters: See SCSI Core documentation
-> @@ -541,93 +537,6 @@ enum scsi_eh_timer_return sas_scsi_timed
->  	return EH_NOT_HANDLED;
->  }
->  
-> -
-> -static enum ata_completion_errors sas_to_ata_err(struct task_status_struct *ts)
-> -{
-> -	/* Cheesy attempt to translate SAS errors into ATA.  Hah! */
-> -
-> -	/* transport error */
-> -	if (ts->resp == SAS_TASK_UNDELIVERED)
-> -		return AC_ERR_ATA_BUS;
-> -
-> -	/* ts->resp == SAS_TASK_COMPLETE */
-> -	/* task delivered, what happened afterwards? */
-> -	switch (ts->stat) {
-> -		case SAS_DEV_NO_RESPONSE:
-> -			return AC_ERR_TIMEOUT;
-> -
-> -		case SAS_INTERRUPTED:
-> -		case SAS_PHY_DOWN:
-> -		case SAS_NAK_R_ERR:
-> -			return AC_ERR_ATA_BUS;
-> -
-> -
-> -		case SAS_DATA_UNDERRUN:
-> -			/*
-> -			 * Some programs that use the taskfile interface
-> -			 * (smartctl in particular) can cause underrun
-> -			 * problems.  Ignore these errors, perhaps at our
-> -			 * peril.
-> -			 */
-> -			return 0;
-> -
-> -		case SAS_DATA_OVERRUN:
-> -		case SAS_QUEUE_FULL:
-> -		case SAS_DEVICE_UNKNOWN:
-> -		case SAS_SG_ERR:
-> -			return AC_ERR_INVALID;
-> -
-> -		case SAM_CHECK_COND:
-> -		case SAS_OPEN_TO:
-> -		case SAS_OPEN_REJECT:
-> -			SAS_DPRINTK("%s: Saw error %d.  What to do?\n",
-> -				    __FUNCTION__, ts->stat);
-> -			return AC_ERR_OTHER;
-> -
-> -		case SAS_ABORTED_TASK:
-> -			return AC_ERR_DEV;
-> -
-> -		case SAS_PROTO_RESPONSE:
-> -			/* This means the ending_fis has the error
-> -			 * value; return 0 here to collect it */
-> -			return 0;
-> -		default:
-> -			return 0;
-> -	}
-> -}
-> -
-> -static void sas_ata_task_done(struct sas_task *task)
-> -{
-> -	struct ata_queued_cmd *qc = task->uldd_task;
-> -	struct domain_device *dev = qc->ap->private_data;
-> -	struct task_status_struct *stat = &task->task_status;
-> -	struct ata_task_resp *resp = (struct ata_task_resp *)stat->buf;
-> -	enum ata_completion_errors ac;
-> -
-> -	if (stat->stat == SAS_PROTO_RESPONSE) {
-> -		ata_tf_from_fis(resp->ending_fis, &dev->sata_dev.tf);
-> -		qc->err_mask |= ac_err_mask(dev->sata_dev.tf.command);
-> -		dev->sata_dev.sstatus = resp->sstatus;
-> -		dev->sata_dev.serror = resp->serror;
-> -		dev->sata_dev.scontrol = resp->scontrol;
-> -		dev->sata_dev.ap->sactive = resp->sactive;
-> -	} else if (stat->stat != SAM_STAT_GOOD) {
-> -		ac = sas_to_ata_err(stat);
-> -		if (ac) {
-> -			SAS_DPRINTK("%s: SAS error %x\n", __FUNCTION__,
-> -				    stat->stat);
-> -			/* We saw a SAS error. Send a vague error. */
-> -			qc->err_mask = ac;
-> -			dev->sata_dev.tf.feature = 0x04; /* status err */
-> -			dev->sata_dev.tf.command = ATA_ERR;
-> -		}
-> -	}
-> -
-> -	ata_qc_complete(qc);
-> -	list_del_init(&task->list);
-> -	sas_free_task(task);
-> -}
-> -
->  int sas_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
->  {
->  	struct domain_device *dev = sdev_to_domain_dev(sdev);
-> @@ -638,200 +547,6 @@ int sas_ioctl(struct scsi_device *sdev, 
->  	return -EINVAL;
->  }
->  
-> -static unsigned int sas_ata_qc_issue(struct ata_queued_cmd *qc)
-> -{
-> -	int res = -ENOMEM;
-> -	struct sas_task *task;
-> -	struct domain_device *dev = qc->ap->private_data;
-> -	struct sas_ha_struct *sas_ha = dev->port->ha;
-> -	struct Scsi_Host *host = sas_ha->core.shost;
-> -	struct sas_internal *i = to_sas_internal(host->transportt);
-> -	struct scatterlist *sg;
-> -	unsigned int num = 0;
-> -	unsigned int xfer = 0;
-> -
-> -	task = sas_alloc_task(GFP_ATOMIC);
-> -	if (!task)
-> -		goto out;
-> -	task->dev = dev;
-> -	task->task_proto = SAS_PROTOCOL_STP;
-> -	task->task_done = sas_ata_task_done;
-> -
-> -	if (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
-> -	    qc->tf.command == ATA_CMD_FPDMA_READ) {
-> -		/* Need to zero out the tag libata assigned us */
-> -		qc->tf.nsect = 0;
-> -	}
-> -
-> -	ata_tf_to_fis(&qc->tf, (u8*)&task->ata_task.fis, 0);
-> -	task->uldd_task = qc;
-> -	if (is_atapi_taskfile(&qc->tf)) {
-> -		memcpy(task->ata_task.atapi_packet, qc->cdb, qc->dev->cdb_len);
-> -		task->total_xfer_len = qc->nbytes + qc->pad_len;
-> -		task->num_scatter = qc->pad_len ? qc->n_elem + 1 : qc->n_elem;
-> -	} else {
-> -		ata_for_each_sg(sg, qc) {
-> -			num++;
-> -			xfer += sg->length;
-> -		}
-> -
-> -		task->total_xfer_len = xfer;
-> -		task->num_scatter = num;
-> -	}
-> -
-> -	task->data_dir = qc->dma_dir;
-> -	task->scatter = qc->__sg;
-> -	task->ata_task.retry_count = 1;
-> -	task->task_state_flags = SAS_TASK_STATE_PENDING;
-> -
-> -	switch (qc->tf.protocol) {
-> -	case ATA_PROT_NCQ:
-> -		task->ata_task.use_ncq = 1;
-> -		/* fall through */
-> -	case ATA_PROT_ATAPI_DMA:
-> -	case ATA_PROT_DMA:
-> -		task->ata_task.dma_xfer = 1;
-> -		break;
-> -	}
-> -
-> -	if (sas_ha->lldd_max_execute_num < 2)
-> -		res = i->dft->lldd_execute_task(task, 1, GFP_ATOMIC);
-> -	else
-> -		res = sas_queue_up(task);
-> -
-> -	/* Examine */
-> -	if (res) {
-> -		SAS_DPRINTK("lldd_execute_task returned: %d\n", res);
-> -
-> -		sas_free_task(task);
-> -		if (res == -SAS_QUEUE_FULL)
-> -			return -ENOMEM;
-> -	}
-> -
-> -out:
-> -	return res;
-> -}
-> -
-> -static u8 sas_ata_check_status(struct ata_port *ap)
-> -{
-> -	struct domain_device *dev = ap->private_data;
-> -	return dev->sata_dev.tf.command;
-> -}
-> -
-> -static void sas_ata_phy_reset(struct ata_port *ap)
-> -{
-> -	struct domain_device *dev = ap->private_data;
-> -	struct sas_internal *i =
-> -		to_sas_internal(dev->port->ha->core.shost->transportt);
-> -	int res = 0;
-> -
-> -	if (i->dft->lldd_I_T_nexus_reset)
-> -		res = i->dft->lldd_I_T_nexus_reset(dev);
-> -
-> -	if (res)
-> -		SAS_DPRINTK("%s: Unable to reset I T nexus?\n", __FUNCTION__);
-> -
-> -	switch (dev->sata_dev.command_set) {
-> -		case ATA_COMMAND_SET:
-> -			SAS_DPRINTK("%s: Found ATA device.\n", __FUNCTION__);
-> -			ap->device[0].class = ATA_DEV_ATA;
-> -			break;
-> -		case ATAPI_COMMAND_SET:
-> -			SAS_DPRINTK("%s: Found ATAPI device.\n", __FUNCTION__);
-> -			ap->device[0].class = ATA_DEV_ATAPI;
-> -			break;
-> -		default:
-> -			SAS_DPRINTK("%s: Unknown SATA command set: %d.\n",
-> -				    __FUNCTION__,
-> -				    dev->sata_dev.command_set);
-> -			ap->device[0].class = ATA_DEV_ATA;
-> -			break;
-> -	}
-> -
-> -	ap->cbl = ATA_CBL_SATA;
-> -}
-> -
-> -static void sas_ata_post_internal(struct ata_queued_cmd *qc)
-> -{
-> -	if (qc->flags & ATA_QCFLAG_FAILED)
-> -		qc->err_mask |= AC_ERR_OTHER;
-> -
-> -	if (qc->err_mask)
-> -		SAS_DPRINTK("%s: Failure; reset phy!\n", __FUNCTION__);
-> -}
-> -
-> -static void sas_ata_tf_read(struct ata_port *ap, struct ata_taskfile *tf)
-> -{
-> -	struct domain_device *dev = ap->private_data;
-> -	memcpy(tf, &dev->sata_dev.tf, sizeof (*tf));
-> -}
-> -
-> -static void sas_ata_scr_write(struct ata_port *ap, unsigned int sc_reg_in,
-> -			      u32 val)
-> -{
-> -	struct domain_device *dev = ap->private_data;
-> -
-> -	SAS_DPRINTK("STUB %s\n", __FUNCTION__);
-> -	switch (sc_reg_in) {
-> -		case SCR_STATUS:
-> -			dev->sata_dev.sstatus = val;
-> -			break;
-> -		case SCR_CONTROL:
-> -			dev->sata_dev.scontrol = val;
-> -			break;
-> -		case SCR_ERROR:
-> -			dev->sata_dev.serror = val;
-> -			break;
-> -		case SCR_ACTIVE:
-> -			dev->sata_dev.ap->sactive = val;
-> -			break;
-> -	}
-> -}
-> -
-> -static u32 sas_ata_scr_read(struct ata_port *ap, unsigned int sc_reg_in)
-> -{
-> -	struct domain_device *dev = ap->private_data;
-> -
-> -	SAS_DPRINTK("STUB %s\n", __FUNCTION__);
-> -	switch (sc_reg_in) {
-> -		case SCR_STATUS:
-> -			return dev->sata_dev.sstatus;
-> -		case SCR_CONTROL:
-> -			return dev->sata_dev.scontrol;
-> -		case SCR_ERROR:
-> -			return dev->sata_dev.serror;
-> -		case SCR_ACTIVE:
-> -			return dev->sata_dev.ap->sactive;
-> -		default:
-> -			return 0xffffffffU;
-> -	}
-> -}
-> -
-> -static struct ata_port_operations sas_sata_ops = {
-> -	.port_disable		= ata_port_disable,
-> -	.check_status		= sas_ata_check_status,
-> -	.check_altstatus	= sas_ata_check_status,
-> -	.dev_select		= ata_noop_dev_select,
-> -	.phy_reset		= sas_ata_phy_reset,
-> -	.post_internal_cmd	= sas_ata_post_internal,
-> -	.tf_read		= sas_ata_tf_read,
-> -	.qc_prep		= ata_noop_qc_prep,
-> -	.qc_issue		= sas_ata_qc_issue,
-> -	.port_start		= ata_sas_port_start,
-> -	.port_stop		= ata_sas_port_stop,
-> -	.scr_read		= sas_ata_scr_read,
-> -	.scr_write		= sas_ata_scr_write
-> -};
-> -
-> -static struct ata_port_info sata_port_info = {
-> -	.flags = ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY | ATA_FLAG_SATA_RESET |
-> -		ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA | ATA_FLAG_NCQ,
-> -	.pio_mask = 0x1f, /* PIO0-4 */
-> -	.mwdma_mask = 0x07, /* MWDMA0-2 */
-> -	.udma_mask = ATA_UDMA6,
-> -	.port_ops = &sas_sata_ops
-> -};
-> -
->  struct domain_device *sas_find_dev_by_rphy(struct sas_rphy *rphy)
->  {
->  	struct Scsi_Host *shost = dev_to_shost(rphy->dev.parent);
-> @@ -869,32 +584,16 @@ static inline struct domain_device *sas_
->  
->  int sas_target_alloc(struct scsi_target *starget)
->  {
-> -	struct Scsi_Host *shost = dev_to_shost(&starget->dev);
-> -	struct sas_ha_struct *ha = SHOST_TO_SAS_HA(shost);
->  	struct domain_device *found_dev = sas_find_target(starget);
-> +	int res;
->  
->  	if (!found_dev)
->  		return -ENODEV;
->  
->  	if (dev_is_sata(found_dev)) {
-> -		struct ata_port *ap;
-> -
-> -		ata_host_init(&found_dev->sata_dev.ata_host,
-> -			      &ha->pcidev->dev,
-> -			      sata_port_info.flags,
-> -			      &sas_sata_ops);
-> -		ap = ata_sas_port_alloc(&found_dev->sata_dev.ata_host,
-> -					&sata_port_info,
-> -					shost);
-> -		if (!ap) {
-> -			SAS_DPRINTK("ata_sas_port_alloc failed.\n");
-> -			return -ENODEV;
-> -		}
-> -
-> -		ap->private_data = found_dev;
-> -		ap->cbl = ATA_CBL_SATA;
-> -		ap->scsi_host = shost;
-> -		found_dev->sata_dev.ap = ap;
-> +		res = sas_ata_init_host_and_port(found_dev, starget);
-> +		if (res)
-> +			return res;
->  	}
->  
->  	starget->hostdata = found_dev;
-> diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-> index 161ca8a..3704fbf 100644
-> --- a/include/scsi/libsas.h
-> +++ b/include/scsi/libsas.h
-> @@ -600,6 +600,7 @@ struct sas_domain_function_template {
->  extern int sas_register_ha(struct sas_ha_struct *);
->  extern int sas_unregister_ha(struct sas_ha_struct *);
->  
-> +int sas_queue_up(struct sas_task *task);
->  extern int sas_queuecommand(struct scsi_cmnd *,
->  		     void (*scsi_done)(struct scsi_cmnd *));
->  extern int sas_target_alloc(struct scsi_target *);
-> diff --git a/include/scsi/sas_ata.h b/include/scsi/sas_ata.h
-> new file mode 100644
-> index 0000000..72a1904
-> --- /dev/null
-> +++ b/include/scsi/sas_ata.h
-> @@ -0,0 +1,39 @@
-> +/*
-> + * Support for SATA devices on Serial Attached SCSI (SAS) controllers
-> + *
-> + * Copyright (C) 2006 IBM Corporation
-> + *
-> + * Written by: Darrick J. Wong <djwong@us.ibm.com>, IBM Corporation
-> + *
-> + * This program is free software; you can redistribute it and/or
-> + * modify it under the terms of the GNU General Public License as
-> + * published by the Free Software Foundation; either version 2 of the
-> + * License, or (at your option) any later version.
-> + *
-> + * This program is distributed in the hope that it will be useful, but
-> + * WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-> + * General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program; if not, write to the Free Software
-> + * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-> + * USA
-> + *
-> + */
-> +
-> +#ifndef _SAS_ATA_H_
-> +#define _SAS_ATA_H_
-> +
-> +#include <linux/libata.h>
-> +#include <scsi/libsas.h>
-> +
-> +static inline int dev_is_sata(struct domain_device *dev)
-> +{
-> +	return (dev->rphy->identify.target_port_protocols & SAS_PROTOCOL_SATA);
-> +}
-> +
-> +int sas_ata_init_host_and_port(struct domain_device *found_dev,
-> +			       struct scsi_target *starget);
-> +
-> +#endif /* _SAS_ATA_H_ */
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+I know. Been there before, too :-)
 
+> <snip>
+[ .. ]
+> So the "if (alloc_len < 4 + (11 * 2))" block should be
+> removed. Also the "if (alloc_len < n)" block should be
+> removed and "min" should be (possibly a cleaner version of):
+>   min(min(alloc_len, n), SDEBUG_MAX_TGTPGS_ARR_SZ))
+> 
+Ok, did so. And returned the proper (relative !) port number
+in the port descriptor list.
+
+Is this more to your liking?
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke			hare@suse.de
+SuSE Linux Products GmbH		S390 & zSeries
+Maxfeldstraße 5				+49 911 74053 688
+90409 Nürnberg				http://www.suse.de
+
+--------------050707010500020509040903
+Content-Type: text/plain;
+ name="sdebug-alua-support-take3"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="sdebug-alua-support-take3"
+
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 9c0f358..8e71fd2 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -52,7 +52,7 @@ #include "scsi_logging.h"
+ #include "scsi_debug.h"
+ 
+ #define SCSI_DEBUG_VERSION "1.80"
+-static const char * scsi_debug_version_date = "20060914";
++static const char * scsi_debug_version_date = "20061018";
+ 
+ /* Additional Sense Code (ASC) used */
+ #define NO_ADDITIONAL_SENSE 0x0
+@@ -254,6 +254,8 @@ static int resp_requests(struct scsi_cmn
+ 			 struct sdebug_dev_info * devip);
+ static int resp_start_stop(struct scsi_cmnd * scp,
+ 			   struct sdebug_dev_info * devip);
++static int resp_report_tgtpgs(struct scsi_cmnd * scp,
++			      struct sdebug_dev_info * devip);
+ static int resp_readcap(struct scsi_cmnd * SCpnt,
+ 			struct sdebug_dev_info * devip);
+ static int resp_readcap16(struct scsi_cmnd * SCpnt,
+@@ -287,9 +289,9 @@ static void __init sdebug_build_parts(un
+ static void __init init_all_queued(void);
+ static void stop_all_queued(void);
+ static int stop_queued_cmnd(struct scsi_cmnd * cmnd);
+-static int inquiry_evpd_83(unsigned char * arr, int target_dev_id,
+-			   int dev_id_num, const char * dev_id_str,
+-			   int dev_id_str_len);
++static int inquiry_evpd_83(unsigned char * arr, int port_group_id,
++			   int target_dev_id, int dev_id_num,
++			   const char * dev_id_str, int dev_id_str_len);
+ static int inquiry_evpd_88(unsigned char * arr, int target_dev_id);
+ static int do_create_driverfs_files(void);
+ static void do_remove_driverfs_files(void);
+@@ -422,6 +424,15 @@ int scsi_debug_queuecommand(struct scsi_
+ 		}
+ 		errsts = resp_readcap16(SCpnt, devip);
+ 		break;
++	case MAINTENANCE_IN:
++		if (MI_REPORT_TARGET_PGS != cmd[1]) {
++			mk_sense_buffer(devip, ILLEGAL_REQUEST,
++					INVALID_OPCODE, 0);
++			errsts = check_condition_result;
++			break;
++		}
++		errsts = resp_report_tgtpgs(SCpnt, devip);
++		break;
+ 	case READ_16:
+ 	case READ_12:
+ 	case READ_10:
+@@ -665,8 +676,9 @@ static const char * inq_vendor_id = "Lin
+ static const char * inq_product_id = "scsi_debug      ";
+ static const char * inq_product_rev = "0004";
+ 
+-static int inquiry_evpd_83(unsigned char * arr, int target_dev_id,
+-			   int dev_id_num, const char * dev_id_str,
++static int inquiry_evpd_83(unsigned char * arr, int port_group_id,
++			   int target_dev_id, int dev_id_num,
++			   const char * dev_id_str,
+ 			   int dev_id_str_len)
+ {
+ 	int num, port_a;
+@@ -720,6 +732,15 @@ static int inquiry_evpd_83(unsigned char
+ 	arr[num++] = (port_a >> 16) & 0xff;
+ 	arr[num++] = (port_a >> 8) & 0xff;
+ 	arr[num++] = port_a & 0xff;
++	/* NAA-5, Target port group identifier */
++	arr[num++] = 0x61;	/* proto=sas, binary */
++	arr[num++] = 0x95;	/* piv=1, target port group id */
++	arr[num++] = 0x0;
++	arr[num++] = 0x4;
++	arr[num++] = 0;
++	arr[num++] = 0;
++	arr[num++] = (port_group_id >> 8) & 0xff;
++	arr[num++] = port_group_id & 0xff;
+ 	/* NAA-5, Target device identifier */
+ 	arr[num++] = 0x61;	/* proto=sas, binary */
+ 	arr[num++] = 0xa3;	/* piv=1, target device, naa */
+@@ -928,12 +949,12 @@ static int resp_inquiry(struct scsi_cmnd
+ 			struct sdebug_dev_info * devip)
+ {
+ 	unsigned char pq_pdt;
+-	unsigned char arr[SDEBUG_MAX_INQ_ARR_SZ];
++	unsigned char * arr;
+ 	unsigned char *cmd = (unsigned char *)scp->cmnd;
+-	int alloc_len, n;
++	int alloc_len, n, ret;
+ 
+ 	alloc_len = (cmd[3] << 8) + cmd[4];
+-	memset(arr, 0, SDEBUG_MAX_INQ_ARR_SZ);
++	arr = kzalloc(SDEBUG_MAX_INQ_ARR_SZ, GFP_KERNEL);
+ 	if (devip->wlun)
+ 		pq_pdt = 0x1e;	/* present, wlun */
+ 	else if (scsi_debug_no_lun_0 && (0 == devip->lun))
+@@ -944,12 +965,15 @@ static int resp_inquiry(struct scsi_cmnd
+ 	if (0x2 & cmd[1]) {  /* CMDDT bit set */
+ 		mk_sense_buffer(devip, ILLEGAL_REQUEST, INVALID_FIELD_IN_CDB,
+ 			       	0);
++		kfree(arr);
+ 		return check_condition_result;
+ 	} else if (0x1 & cmd[1]) {  /* EVPD bit set */
+-		int lu_id_num, target_dev_id, len;
++		int lu_id_num, port_group_id, target_dev_id, len;
+ 		char lu_id_str[6];
+ 		int host_no = devip->sdbg_host->shost->host_no;
+ 		
++		port_group_id = (((host_no + 1) & 0x7f) << 8) + 
++		    (devip->channel & 0x7f);
+ 		if (0 == scsi_debug_vpd_use_hostno)
+ 			host_no = 0;
+ 		lu_id_num = devip->wlun ? -1 : (((host_no + 1) * 2000) +
+@@ -977,8 +1001,9 @@ static int resp_inquiry(struct scsi_cmnd
+ 			memcpy(&arr[4], lu_id_str, len);
+ 		} else if (0x83 == cmd[2]) { /* device identification */
+ 			arr[1] = cmd[2];	/*sanity */
+-			arr[3] = inquiry_evpd_83(&arr[4], target_dev_id,
+-						 lu_id_num, lu_id_str, len);
++			arr[3] = inquiry_evpd_83(&arr[4], port_group_id,
++						 target_dev_id, lu_id_num,
++						 lu_id_str, len);
+ 		} else if (0x84 == cmd[2]) { /* Software interface ident. */
+ 			arr[1] = cmd[2];	/*sanity */
+ 			arr[3] = inquiry_evpd_84(&arr[4]);
+@@ -1012,17 +1037,22 @@ static int resp_inquiry(struct scsi_cmnd
+ 			/* Illegal request, invalid field in cdb */
+ 			mk_sense_buffer(devip, ILLEGAL_REQUEST,
+ 					INVALID_FIELD_IN_CDB, 0);
++			kfree(arr);
+ 			return check_condition_result;
+ 		}
+ 		len = min(((arr[2] << 8) + arr[3]) + 4, alloc_len);
+-		return fill_from_dev_buffer(scp, arr,
++		ret = fill_from_dev_buffer(scp, arr,
+ 			    min(len, SDEBUG_MAX_INQ_ARR_SZ));
++		kfree(arr);
++		return ret;
+ 	}
+ 	/* drops through here for a standard inquiry */
+ 	arr[1] = DEV_REMOVEABLE(target) ? 0x80 : 0;	/* Removable disk */
+ 	arr[2] = scsi_debug_scsi_level;
+ 	arr[3] = 2;    /* response_data_format==2 */
+ 	arr[4] = SDEBUG_LONG_INQ_SZ - 5;
++	if (0 == scsi_debug_vpd_use_hostno)
++		arr[5] = 0x10; /* claim: implicit TGPS */
+ 	arr[6] = 0x10; /* claim: MultiP */
+ 	/* arr[6] |= 0x40; ... claim: EncServ (enclosure services) */
+ 	arr[7] = 0xa; /* claim: LINKED + CMDQUE */
+@@ -1039,8 +1069,10 @@ static int resp_inquiry(struct scsi_cmnd
+ 		arr[n++] = 0x3; arr[n++] = 0x60; /* SSC-2 no version */
+ 	}
+ 	arr[n++] = 0xc; arr[n++] = 0xf;  /* SAS-1.1 rev 10 */
+-	return fill_from_dev_buffer(scp, arr,
++	ret = fill_from_dev_buffer(scp, arr,
+ 			    min(alloc_len, SDEBUG_LONG_INQ_SZ));
++	kfree(arr);
++	return ret;
+ }
+ 
+ static int resp_requests(struct scsi_cmnd * scp,
+@@ -1171,6 +1203,87 @@ static int resp_readcap16(struct scsi_cm
+ 				    min(alloc_len, SDEBUG_READCAP16_ARR_SZ));
+ }
+ 
++#define SDEBUG_MAX_TGTPGS_ARR_SZ 1412
++
++static int resp_report_tgtpgs(struct scsi_cmnd * scp,
++			      struct sdebug_dev_info * devip)
++{
++	unsigned char *cmd = (unsigned char *)scp->cmnd;
++	unsigned char * arr;
++	int host_no = devip->sdbg_host->shost->host_no;
++	int n, ret, alen, rlen;
++	int port_group_a, port_group_b, port_a, port_b;
++
++	alen = ((cmd[6] << 24) + (cmd[7] << 16) + (cmd[8] << 8)
++		+ cmd[9]);
++
++	arr = kzalloc(SDEBUG_MAX_TGTPGS_ARR_SZ, GFP_KERNEL);
++	/*
++	 * EVPD page 0x88 states we have two ports, one
++	 * real and a fake port with no device connected.
++	 * So we create two port groups with one port each
++	 * and set the group with port B to unavailable.
++	 */
++	port_a = 0x1; /* relative port A */
++	port_b = 0x2; /* relative port B */
++	port_group_a = (((host_no + 1) & 0x7f) << 8) + 
++	    (devip->channel & 0x7f);
++	port_group_b = (((host_no + 1) & 0x7f) << 8) + 
++	    (devip->channel & 0x7f) + 0x80;
++
++	/*
++	 * The asymmetric access state is cycled according to the host_id.
++	 */
++	n = 4;
++	if (0 == scsi_debug_vpd_use_hostno) {
++	    arr[n++] = host_no % 3; /* Asymm access state */
++	    arr[n++] = 0x0F; /* claim: all states are supported */
++	} else {
++	    arr[n++] = 0x0; /* Active/Optimized path */
++	    arr[n++] = 0x01; /* claim: only support active/optimized paths */
++	}
++	arr[n++] = (port_group_a >> 8) & 0xff;
++	arr[n++] = port_group_a & 0xff;
++	arr[n++] = 0;    /* Reserved */
++	arr[n++] = 0;    /* Status code */
++	arr[n++] = 0;    /* Vendor unique */
++	arr[n++] = 0x1;  /* One port per group */
++	arr[n++] = 0;    /* Reserved */
++	arr[n++] = 0;    /* Reserved */
++	arr[n++] = (port_a >> 8) & 0xff;
++	arr[n++] = port_a & 0xff;
++	arr[n++] = 3;    /* Port unavailable */
++	arr[n++] = 0x08; /* claim: only unavailalbe paths are supported */
++	arr[n++] = (port_group_b >> 8) & 0xff;
++	arr[n++] = port_group_b & 0xff;
++	arr[n++] = 0;    /* Reserved */
++	arr[n++] = 0;    /* Status code */
++	arr[n++] = 0;    /* Vendor unique */
++	arr[n++] = 0x1;  /* One port per group */
++	arr[n++] = 0;    /* Reserved */
++	arr[n++] = 0;    /* Reserved */
++	arr[n++] = (port_b >> 8) & 0xff;
++	arr[n++] = port_b & 0xff;
++
++	rlen = n - 4;
++	arr[0] = (rlen >> 24) & 0xff;
++	arr[1] = (rlen >> 16) & 0xff;
++	arr[2] = (rlen >> 8) & 0xff;
++	arr[3] = rlen & 0xff;
++
++	/*
++	 * Return the smallest value of either
++	 * - The allocated length
++	 * - The constructed command length
++	 * - The maximum array size
++	 */
++	rlen = min(alen,n);
++	ret = fill_from_dev_buffer(scp, arr,
++				   min(rlen, SDEBUG_MAX_TGTPGS_ARR_SZ));
++	kfree(arr);
++	return ret;
++}
++
+ /* <<Following mode page info copied from ST318451LW>> */
+ 
+ static int resp_err_recov_pg(unsigned char * p, int pcontrol, int target)
+diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+index 84a6d5f..8a3f0bd 100644
+--- a/include/scsi/scsi.h
++++ b/include/scsi/scsi.h
+@@ -97,6 +97,7 @@ #define MODE_SENSE_10         0x5a
+ #define PERSISTENT_RESERVE_IN 0x5e
+ #define PERSISTENT_RESERVE_OUT 0x5f
+ #define REPORT_LUNS           0xa0
++#define MAINTENANCE_IN        0xa3
+ #define MOVE_MEDIUM           0xa5
+ #define EXCHANGE_MEDIUM       0xa6
+ #define READ_12               0xa8
+@@ -114,6 +115,8 @@ #define VERIFY_16	      0x8f
+ #define SERVICE_ACTION_IN     0x9e
+ /* values for service action in */
+ #define	SAI_READ_CAPACITY_16  0x10
++/* values for maintenance in */
++#define MI_REPORT_TARGET_PGS  0x0a
+ 
+ /* Values for T10/04-262r7 */
+ #define	ATA_16		      0x85	/* 16-byte pass-thru */
+
+--------------050707010500020509040903--
