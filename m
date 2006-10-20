@@ -1,30 +1,55 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: question scsi_register verses register_blkdev
-Date: Fri, 20 Oct 2006 23:03:59 +0200
-Message-ID: <453939BF.8070506@s5r6.in-berlin.de>
-References: <861B5CF71BC70C478DFEB9EAFE98F699ACA42C@G3W0068.americas.hpqcorp.net> <20061020172549.7666.qmail@web31812.mail.mud.yahoo.com> <4538C032.8E7F.00B8.0@novell.com>
+From: Leann Ogasawara <ogasawara@osdl.org>
+Subject: [PATCH] mptbase:  Fix ignored return value warning
+Date: Fri, 20 Oct 2006 14:09:43 -0700
+Message-ID: <1161378583.19763.81.camel@ogasawara.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:17855 "EHLO
-	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
-	id S1946502AbWJTVEE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Oct 2006 17:04:04 -0400
-In-Reply-To: <4538C032.8E7F.00B8.0@novell.com>
+Received: from smtp.osdl.org ([65.172.181.4]:18408 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1030355AbWJTVJp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Oct 2006 17:09:45 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Thayne Harmon <THARMON@novell.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: "Moore, Eric" <Eric.Moore@lsil.com>
 
-Thayne Harmon wrote:
-> I am trying to write a linux driver (I'm new at this) for a
-> standard SCSI host bus adapter.
-...
+Hi All,
 
-Seems you want to write a SCSI low-level provider. The low-level API is
-documented in linux/Documentation/scsi_mid_low_api.txt.
--- 
-Stefan Richter
--=====-=-==- =-=- =-=--
-http://arcgraph.de/sr/
+This patch fixes the following warning:
+
+drivers/message/fusion/mptbase.c:1526: warning: ignoring return value of
+`pci_enable_device', declared with attribute warn_unused_result
+
+Signed-off-by: Leann Ogasawara <ogasawara@osdl.org>
+
+---
+
+Index: linux-2.6.19-rc2-git4/drivers/message/fusion/mptbase.c
+===================================================================
+--- linux-2.6.19-rc2-git4.orig/drivers/message/fusion/mptbase.c	2006-10-20 09:54:14.000000000 -0700
++++ linux-2.6.19-rc2-git4/drivers/message/fusion/mptbase.c	2006-10-20 13:43:15.000000000 -0700
+@@ -1516,6 +1516,7 @@
+ 	MPT_ADAPTER *ioc = pci_get_drvdata(pdev);
+ 	u32 device_state = pdev->current_state;
+ 	int recovery_state;
++	int err;
+ 
+ 	printk(MYIOC_s_INFO_FMT
+ 	"pci-resume: pdev=0x%p, slot=%s, Previous operating state [D%d]\n",
+@@ -1523,7 +1524,11 @@
+ 
+ 	pci_set_power_state(pdev, 0);
+ 	pci_restore_state(pdev);
+-	pci_enable_device(pdev);
++	err = pci_enable_device(pdev);
++	if (err) {
++		printk(KERN_ERR "mptbase: Failed to enable PCI device.\n");
++		return err;
++	}
+ 
+ 	/* enable interrupts */
+ 	CHIPREG_WRITE32(&ioc->chip->IntMask, MPI_HIM_DIM);
+
+
