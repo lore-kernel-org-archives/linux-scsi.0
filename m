@@ -1,42 +1,43 @@
 From: akpm@osdl.org
-Subject: [patch 11/45] scsi: remove unnecessary check in drivers/scsi/sg.c
-Date: Fri, 20 Oct 2006 14:48:10 -0700
-Message-ID: <200610202148.k9KLmA0b004095@shell0.pdx.osdl.net>
+Subject: [patch 20/45] ioremap balanced with iounmap for drivers/scsi/nsp32.c
+Date: Fri, 20 Oct 2006 14:48:20 -0700
+Message-ID: <200610202148.k9KLmK2W004127@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:43142 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S2992776AbWJTVsg (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:40326 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S2992704AbWJTVse (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Oct 2006 17:48:36 -0400
+	Fri, 20 Oct 2006 17:48:34 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, snakebyte@gmx.de, dougg@torque.net
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, amol@verismonetworks.com
 
-From: Eric Sesterhenn <snakebyte@gmx.de>
+From: Amol Lad <amol@verismonetworks.com>
 
-coverity spotted this (cid #758).  All callers dereference sfp, so we dont
-need this check.  In addition to this, we dereference it earlier in the
-function.
+ioremap must be balanced by an iounmap and failing to do so can result in a
+memory leak.
 
-Signed-off-by: Eric Sesterhenn <snakebyte@gmx.de>
-Cc: Douglas Gilbert <dougg@torque.net>
+Signed-off-by: Amol Lad <amol@verismonetworks.com>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/sg.c |    2 +-
- 1 files changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/nsp32.c |    5 +++++
+ 1 files changed, 5 insertions(+)
 
-diff -puN drivers/scsi/sg.c~remove-unnecessary-check-in-drivers-scsi-sgc drivers/scsi/sg.c
---- a/drivers/scsi/sg.c~remove-unnecessary-check-in-drivers-scsi-sgc
-+++ a/drivers/scsi/sg.c
-@@ -1837,7 +1837,7 @@ sg_build_indirect(Sg_scatter_hold * schp
- 	int blk_size = buff_size;
- 	struct page *p = NULL;
+diff -puN drivers/scsi/nsp32.c~ioremap-balanced-with-iounmap-drivers-scsi-nsp32c drivers/scsi/nsp32.c
+--- a/drivers/scsi/nsp32.c~ioremap-balanced-with-iounmap-drivers-scsi-nsp32c
++++ a/drivers/scsi/nsp32.c
+@@ -3540,6 +3540,11 @@ static int __devinit nsp32_probe(struct 
  
--	if ((blk_size < 0) || (!sfp))
-+	if (blk_size < 0)
- 		return -EFAULT;
- 	if (0 == blk_size)
- 		++blk_size;	/* don't know why */
+ 	nsp32_dbg(NSP32_DEBUG_REGISTER, "exit %d", ret);
+ 
++	if (ret) {
++		iounmap(data->MmioAddress);
++		data->MmioAddress = NULL;
++	}
++
+ 	return ret;
+ }
+ 
 _
