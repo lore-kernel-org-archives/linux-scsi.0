@@ -1,79 +1,56 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: [PATCH] fix to serialize unload and discovery
-Date: Thu, 19 Oct 2006 15:41:04 -0700 (PDT)
-Message-ID: <20061019224104.16983.qmail@web31801.mail.mud.yahoo.com>
-References: <20061019212048.GA26234@us.ibm.com>
-Reply-To: ltuikov@yahoo.com
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] replace u8 and u32 with __u8 and __u32 in scsi.h for user
+ space
+Date: Fri, 20 Oct 2006 09:08:18 +0900
+Message-ID: <20061020090818H.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31801.mail.mud.yahoo.com ([68.142.207.64]:11874 "HELO
-	web31801.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S1946600AbWJSWlH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 19 Oct 2006 18:41:07 -0400
-In-Reply-To: <20061019212048.GA26234@us.ibm.com>
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:35563 "EHLO
+	tama5.ecl.ntt.co.jp") by vger.kernel.org with ESMTP
+	id S1946730AbWJTAIY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 Oct 2006 20:08:24 -0400
+Received: from vcs3.rdh.ecl.ntt.co.jp (vcs3.rdh.ecl.ntt.co.jp [129.60.39.110])
+	by tama5.ecl.ntt.co.jp (8.13.8/8.13.8) with ESMTP id k9K08LbR011057
+	for <linux-scsi@vger.kernel.org>; Fri, 20 Oct 2006 09:08:21 +0900 (JST)
+Received: from mfs3.rdh.ecl.ntt.co.jp (mfs3.rdh.ecl.ntt.co.jp [129.60.39.112])
+	by vcs3.rdh.ecl.ntt.co.jp (8.13.8/8.13.8) with ESMTP id k9K08KXT021976
+	for <linux-scsi@vger.kernel.org>; Fri, 20 Oct 2006 09:08:20 +0900 (JST)
+Received: from nttmail3.ecl.ntt.co.jp ([129.60.39.100])
+	by mfs3.rdh.ecl.ntt.co.jp (8.13.8/8.13.8) with ESMTP id k9K08JdX012585
+	for <linux-scsi@vger.kernel.org>; Fri, 20 Oct 2006 09:08:19 +0900 (JST)
+Received: from dmailsv1.y.ecl.ntt.co.jp (dmailsv1.y.ecl.ntt.co.jp [129.60.53.14])
+	by nttmail3.ecl.ntt.co.jp (8.13.8/8.13.8) with ESMTP id k9K08INY003334
+	for <linux-scsi@vger.kernel.org>; Fri, 20 Oct 2006 09:08:18 +0900 (JST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: malahal@us.ibm.com
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
---- malahal@us.ibm.com wrote:
-> Lubin, I am not sure if you are referring to your version of the driver
-> or the mainline version!
-
-Malahal,
-
-I'm not referring to the bottomleyised version of my code.
-
-> If I read the mainline version correctly,
-> sas_deform_port() actually removes a phy from a port and also removes
-> all attached devices if it is the last phy in the port.
-> 
-> When a phy/port is gone, an event is posted to the work queue to
-> eventually call sas_deform_port(). Let me know if I misunderstood the
-> mainline version.
-
-I'm not sure if you misunderstood the mainline version of my code --
-you have to ask bottomley for that, since this code has been appropriated
-by bottomley who has also done some "architectural" changes.
-
-Good luck!
-    Luben
+What's the current policy on the usage of scsi/scsi.h by user-space
+programs (userspace should use the glibc kernel headers or trying to
+be compatible with userspace)?
 
 
-> 
-> Thanks, Malahal.
-> 
-> Luben Tuikov [ltuikov@yahoo.com] wrote:
-> > --- malahal@us.ibm.com wrote:
-> > > sas_discover_domain() and sas_deform_port() assume that they are single
-> > > threaded and never run in parallel.
-> > 
-> > This is indeed not true.
-> >
-> > > That is mostly true as we have a
-> > > single threaded work queue to handle discovery and other events.
-> > 
-> > Hint: when the port is gone, it is gone...
-> > 
-> > > The
-> > > only race I find is unloading a module will call sas_deform_port()
-> > > without watching if there is a discovery event is in progress. This
-> > > patch will stop queuing further events, flush the queue, and then call
-> > > sas_deform_port() to avoid the race.
-> > 
-> > You need a much more elaborate (read: general solution, aka algorithm)
-> > framework to solve this.
-> > 
-> > Needless to say, I don't observe these bugs and errors in my version
-> > of the SAS Stack.
-> > 
-> >     Luben
-> > 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+---
+ include/scsi/scsi.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+index 84a6d5f..f53f9b7 100644
+--- a/include/scsi/scsi.h
++++ b/include/scsi/scsi.h
+@@ -430,7 +430,7 @@ #define SCSI_IOCTL_GET_BUS_NUMBER	0x5386
+ #define SCSI_IOCTL_GET_PCI		0x5387
+ 
+ /* Pull a u32 out of a SCSI message (using BE SCSI conventions) */
+-static inline u32 scsi_to_u32(u8 *ptr)
++static inline __u32 scsi_to_u32(__u8 *ptr)
+ {
+ 	return (ptr[0]<<24) + (ptr[1]<<16) + (ptr[2]<<8) + ptr[3];
+ }
+-- 
+1.4.1.1
 
