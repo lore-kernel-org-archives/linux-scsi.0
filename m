@@ -1,103 +1,96 @@
-From: "Ju, Seokmann" <Seokmann.Ju@lsi.com>
-Subject: RE: Recurring MegaRAID SCSI Errors
-Date: Fri, 20 Oct 2006 08:08:28 -0600
-Message-ID: <890BF3111FB9484E9526987D912B261932E3FA@NAMAIL3.ad.lsil.com>
+From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+Subject: RE: [PATCH] cciss: Fix warnings (and bug on 1TB discs)
+Date: Fri, 20 Oct 2006 09:53:42 -0500
+Message-ID: <E717642AF17E744CA95C070CA815AE55AE2CF8@cceexc23.americas.cpqcorp.net>
+References: <20061020032755.GQ2602@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:7129 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1750789AbWJTOI6 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Oct 2006 10:08:58 -0400
+Received: from ccerelbas03.cce.hp.com ([161.114.21.106]:40599 "EHLO
+	ccerelbas03.cce.hp.com") by vger.kernel.org with ESMTP
+	id S2992629AbWJTOxt convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Oct 2006 10:53:49 -0400
 Content-class: urn:content-classes:message
+In-Reply-To: <20061020032755.GQ2602@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joshua Schmidlkofer <joshua@imrlive.com>
-Cc: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, Joshua Schmidlkofer <jms@dev.imr-net.com>, Mike Montagne <mike@opsisarch.com>
+To: Matthew Wilcox <matthew@wil.cx>, Andrew Morton <akpm@osdl.org>, Jens Axboe <jens.axboe@oracle.com>
+Cc: ISS StorageDev <iss_storagedev@hp.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Friday, October 20, 2006 9:53 AM, Joshua Schmidlkofer wrote:
->    Thank you for your reply.  This makes me feel _much_ 
-> better. =).  We 
-> have verified all the firmware levels except the PowerVault 
-> 220 external 
-> chassis.  We have only hit this error with external devices, 
-> and since 
-> we went ot the PV220 from an older chassis it has continued. (All new 
-> controllers, system and motherboard, but the same Debian Install w/ a 
-> newer kernel).   We have scheduled outage this weekend to down the 
-> server  and then use the diagnostic tools to check/update the 
-> firmware 
-> inside the PowerVault. 
-Hi Joshua,
 
-If it is happening only with external chassis, you may want to check with DELl as I don't have any valueable clue with it.
+> 
+> On Thu, Oct 19, 2006 at 09:23:36PM -0600, Matthew Wilcox wrote:
+> > CCISS was producing warnings about shifts being greater 
+> than the size 
+> > of the type and pointers being of incompatible type.  Turns 
+> out this 
+> > is because it's calling do_div on a 32-bit quantity.  Upon further 
+> > investigation, the sector_t total_size is being assigned to an int, 
+> > and then we're calling do_div on that int.  Obviously, 
+> sector_div is 
+> > called for here, and I took the chance to refactor the code 
+> a little.
+> 
+> Oops, forgot:
+> Signed-off-by: Matthew Wilcox <matthew@wil.cx>
 
-Thank you,
+Acked-by: Mike Miller <mike.miller@hp.com>
 
-Seokmann
-
-> -----Original Message-----
-> From: Joshua Schmidlkofer [mailto:joshua@imrlive.com] 
-> Sent: Friday, October 20, 2006 9:53 AM
-> To: Ju, Seokmann
-> Cc: Andrew Morton; linux-scsi@vger.kernel.org; Joshua 
-> Schmidlkofer; Mike Montagne
-> Subject: Re: Recurring MegaRAID SCSI Errors
 > 
-> Ju, Seokmann wrote:
-> > Hi,
-> >   
-> >> [17333187.152000] megaraid: aborting-6172714 cmd=2a <c=2 t=1 l=0>
-> >> [17333187.152000] megaraid abort: 6172714:124[255:129], fw owner
-> >> [17333187.152000] megaraid: 15 outstanding commands. Max 
-> wait 300 sec
-> >> [17333187.152000] megaraid mbox: Wait for 15 commands to 
-> complete:300
-> >> [17333192.172000] megaraid mbox: Wait for 10 commands to 
-> complete:295
-> >> [17333197.192000] megaraid mbox: Wait for 3 commands to 
-> complete:290
-> >> [17333199.200000] megaraid mbox: reset sequence completed 
-> sucessfully
-> >>     
-> > Above messages indicate that,
-> > - there are commands (mostly WRITE(10)) pending in MegaRAID 
-> F/W taking longer than given timeout period.
-> > - After driver waitinf for 10 seconds, all of those 
-> commands had been returned successfully.
-> > - So, the driver returned back to normal operation.
-> >
-> > There is NO data loss/integrity error related to this 
-> messages as driver returned back to normal successfully.
-> > Howerver, to get rid of those messages, I would like to ask 
-> you to check and upgrade F/W image on the controllers, first.
-> >
-> > Thank you,
-> >
-> > Seokmann
-> >   
-> Seokmann,
-> 
->    Thank you for your reply.  This makes me feel _much_ 
-> better. =).  We 
-> have verified all the firmware levels except the PowerVault 
-> 220 external 
-> chassis.  We have only hit this error with external devices, 
-> and since 
-> we went ot the PV220 from an older chassis it has continued. (All new 
-> controllers, system and motherboard, but the same Debian Install w/ a 
-> newer kernel).   We have scheduled outage this weekend to down the 
-> server  and then use the diagnostic tools to check/update the 
-> firmware 
-> inside the PowerVault.
-> 
->    Since we have brand-new hardware all over - do you have any other 
-> recommendations about what, if anything, further could be 
-> done, if the 
-> firmware is confirmed up to date?
-> 
-> 
-> Sincerely,
->   Joshua
+> > diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c index 
+> > dcccaf2..bc66026 100644
+> > --- a/drivers/block/cciss.c
+> > +++ b/drivers/block/cciss.c
+> > @@ -1923,7 +1923,6 @@ static void cciss_geometry_inquiry(int c  {
+> >  	int return_code;
+> >  	unsigned long t;
+> > -	unsigned long rem;
+> >  
+> >  	memset(inq_buff, 0, sizeof(InquiryData_struct));
+> >  	if (withirq)
+> > @@ -1939,26 +1938,23 @@ static void cciss_geometry_inquiry(int c
+> >  			printk(KERN_WARNING
+> >  			       "cciss: reading geometry failed, volume "
+> >  			       "does not support reading geometry\n");
+> > -			drv->block_size = block_size;
+> > -			drv->nr_blocks = total_size;
+> >  			drv->heads = 255;
+> >  			drv->sectors = 32;	// Sectors per track
+> > -			t = drv->heads * drv->sectors;
+> > -			drv->cylinders = total_size;
+> > -			rem = do_div(drv->cylinders, t);
+> >  		} else {
+> > -			drv->block_size = block_size;
+> > -			drv->nr_blocks = total_size;
+> >  			drv->heads = inq_buff->data_byte[6];
+> >  			drv->sectors = inq_buff->data_byte[7];
+> >  			drv->cylinders = 
+> (inq_buff->data_byte[4] & 0xff) << 8;
+> >  			drv->cylinders += inq_buff->data_byte[5];
+> >  			drv->raid_level = inq_buff->data_byte[8];
+> > -			t = drv->heads * drv->sectors;
+> > -			if (t > 1) {
+> > -				drv->cylinders = total_size;
+> > -				rem = do_div(drv->cylinders, t);
+> > -			}
+> > +		}
+> > +		drv->block_size = block_size;
+> > +		drv->nr_blocks = total_size;
+> > +		t = drv->heads * drv->sectors;
+> > +		if (t > 1) {
+> > +			unsigned rem = sector_div(total_size, t);
+> > +			if (rem)
+> > +				total_size++;
+> > +			drv->cylinders = total_size;
+> >  		}
+> >  	} else {		/* Get geometry failed */
+> >  		printk(KERN_WARNING "cciss: reading geometry failed\n");
+> > -
+> > To unsubscribe from this list: send the line "unsubscribe 
+> linux-scsi" 
+> > in the body of a message to majordomo@vger.kernel.org More 
+> majordomo 
+> > info at  http://vger.kernel.org/majordomo-info.html
 > 
