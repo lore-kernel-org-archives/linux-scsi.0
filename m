@@ -1,189 +1,465 @@
 From: akpm@osdl.org
-Subject: [patch 33/45] Maintain module-parameter name consistency with qla2xxx/qla4xxx
-Date: Fri, 20 Oct 2006 14:48:31 -0700
-Message-ID: <200610202148.k9KLmVVm004174@shell0.pdx.osdl.net>
+Subject: [patch 27/45] scsi: Scsi_Cmnd convertion in sun3-driver
+Date: Fri, 20 Oct 2006 14:48:26 -0700
+Message-ID: <200610202148.k9KLmQSU004153@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:6023 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S2992863AbWJTVtH (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:2951 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S2992815AbWJTVtC (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Oct 2006 17:49:07 -0400
+	Fri, 20 Oct 2006 17:49:02 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, andrew.vasquez@qlogic.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, henne@nachtwindheim.de
 
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+From: Henrik Kretzschmar <henne@nachtwindheim.de>
 
-The recently added the iSCSI qla4xxx driver contains a global (non-static)
-variable that clashes with a pre-existing variable present in qla2xxx.
+Change the obsolete Scsi_Cmnd to struct scsi_cmnd in the sun3-driver.
 
-Commit d7a297baa6edea94167163bed808c6a8933bd5aa added a 'qla2_' and 'qla4_'
-prefix to the offending variable name.  Replace the 'qla2_/qla4_' prefixes
-with 'ql2x/ql4x' to maintain consistency with other module-parameters.
-
-Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Signed-off-by: Henrik Kretzschmar <henne@nachtwindheim.de>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/qla2xxx/qla_dbg.h  |   14 +++++++-------
- drivers/scsi/qla2xxx/qla_gbl.h  |    2 +-
- drivers/scsi/qla2xxx/qla_init.c |    2 +-
- drivers/scsi/qla2xxx/qla_os.c   |    8 ++++----
- drivers/scsi/qla4xxx/ql4_dbg.h  |    4 ++--
- drivers/scsi/qla4xxx/ql4_glbl.h |    2 +-
- drivers/scsi/qla4xxx/ql4_mbx.c  |    2 +-
- drivers/scsi/qla4xxx/ql4_os.c   |    8 ++++----
- 8 files changed, 21 insertions(+), 21 deletions(-)
+ drivers/scsi/sun3_NCR5380.c  |  109 +++++++++++++++++----------------
+ drivers/scsi/sun3_scsi.c     |    7 +-
+ drivers/scsi/sun3_scsi.h     |    7 +-
+ drivers/scsi/sun3_scsi_vme.c |    7 +-
+ 4 files changed, 69 insertions(+), 61 deletions(-)
 
-diff -puN drivers/scsi/qla2xxx/qla_dbg.h~maintain-module-parameter-name-consistency-with-qla2xxx-qla4xxx drivers/scsi/qla2xxx/qla_dbg.h
---- a/drivers/scsi/qla2xxx/qla_dbg.h~maintain-module-parameter-name-consistency-with-qla2xxx-qla4xxx
-+++ a/drivers/scsi/qla2xxx/qla_dbg.h
-@@ -38,7 +38,7 @@
- * Macros use for debugging the driver.
- */
+diff -puN drivers/scsi/sun3_NCR5380.c~scsi-scsi_cmnd-convertion-in-sun3-driver drivers/scsi/sun3_NCR5380.c
+--- a/drivers/scsi/sun3_NCR5380.c~scsi-scsi_cmnd-convertion-in-sun3-driver
++++ a/drivers/scsi/sun3_NCR5380.c
+@@ -266,8 +266,8 @@ static struct scsi_host_template *the_te
+ 	(struct NCR5380_hostdata *)(in)->hostdata
+ #define	HOSTDATA(in) ((struct NCR5380_hostdata *)(in)->hostdata)
  
--#define DEBUG(x)	do { if (qla2_extended_error_logging) { x; } } while (0)
-+#define DEBUG(x)	do { if (ql2xextended_error_logging) { x; } } while (0)
+-#define	NEXT(cmd)	((Scsi_Cmnd *)((cmd)->host_scribble))
+-#define	NEXTADDR(cmd)	((Scsi_Cmnd **)&((cmd)->host_scribble))
++#define	NEXT(cmd)	((struct scsi_cmnd *)((cmd)->host_scribble))
++#define	NEXTADDR(cmd)	((struct scsi_cmnd **)&((cmd)->host_scribble))
  
- #if defined(QL_DEBUG_LEVEL_1)
- #define DEBUG1(x)	do {x;} while (0)
-@@ -46,12 +46,12 @@
- #define DEBUG1(x)	do {} while (0)
+ #define	HOSTNO		instance->host_no
+ #define	H_NO(cmd)	(cmd)->device->host->host_no
+@@ -360,7 +360,7 @@ static void __init init_tags( void )
+  * conditions.
+  */ 
+ 
+-static int is_lun_busy( Scsi_Cmnd *cmd, int should_be_tagged )
++static int is_lun_busy(struct scsi_cmnd *cmd, int should_be_tagged)
+ {
+     SETUP_HOSTDATA(cmd->device->host);
+ 
+@@ -384,7 +384,7 @@ static int is_lun_busy( Scsi_Cmnd *cmd, 
+  * untagged.
+  */
+ 
+-static void cmd_get_tag( Scsi_Cmnd *cmd, int should_be_tagged )
++static void cmd_get_tag(struct scsi_cmnd *cmd, int should_be_tagged)
+ {
+     SETUP_HOSTDATA(cmd->device->host);
+ 
+@@ -416,7 +416,7 @@ static void cmd_get_tag( Scsi_Cmnd *cmd,
+  * unlock the LUN.
+  */
+ 
+-static void cmd_free_tag( Scsi_Cmnd *cmd )
++static void cmd_free_tag(struct scsi_cmnd *cmd)
+ {
+     SETUP_HOSTDATA(cmd->device->host);
+ 
+@@ -460,18 +460,18 @@ static void free_all_tags( void )
+ 
+ 
+ /*
+- * Function: void merge_contiguous_buffers( Scsi_Cmnd *cmd )
++ * Function: void merge_contiguous_buffers(struct scsi_cmnd *cmd)
+  *
+  * Purpose: Try to merge several scatter-gather requests into one DMA
+  *    transfer. This is possible if the scatter buffers lie on
+  *    physical contiguous addresses.
+  *
+- * Parameters: Scsi_Cmnd *cmd
++ * Parameters: struct scsi_cmnd *cmd
+  *    The command to work on. The first scatter buffer's data are
+  *    assumed to be already transfered into ptr/this_residual.
+  */
+ 
+-static void merge_contiguous_buffers( Scsi_Cmnd *cmd )
++static void merge_contiguous_buffers(struct scsi_cmnd *cmd)
+ {
+     unsigned long endaddr;
+ #if (NDEBUG & NDEBUG_MERGING)
+@@ -501,15 +501,15 @@ static void merge_contiguous_buffers( Sc
+ }
+ 
+ /*
+- * Function : void initialize_SCp(Scsi_Cmnd *cmd)
++ * Function : void initialize_SCp(struct scsi_cmnd *cmd)
+  *
+  * Purpose : initialize the saved data pointers for cmd to point to the 
+  *	start of the buffer.
+  *
+- * Inputs : cmd - Scsi_Cmnd structure to have pointers reset.
++ * Inputs : cmd - struct scsi_cmnd structure to have pointers reset.
+  */
+ 
+-static __inline__ void initialize_SCp(Scsi_Cmnd *cmd)
++static __inline__ void initialize_SCp(struct scsi_cmnd *cmd)
+ {
+     /* 
+      * Initialize the Scsi Pointer field so that all of the commands in the 
+@@ -753,14 +753,15 @@ static void NCR5380_print_status (struct
+   do { if (pos + strlen(fmt) + 20 /* slop */ < buffer + length) \
+ 	 pos += sprintf(pos, fmt , ## args); } while(0)
+ static
+-char *lprint_Scsi_Cmnd (Scsi_Cmnd *cmd, char *pos, char *buffer, int length);
++char *lprint_Scsi_Cmnd(struct scsi_cmnd *cmd, char *pos, char *buffer,
++		       int length);
+ 
+-static int NCR5380_proc_info (struct Scsi_Host *instance, char *buffer, char **start,
+-		       off_t offset, int length, int inout)
++static int NCR5380_proc_info(struct Scsi_Host *instance, char *buffer,
++			     char **start, off_t offset, int length, int inout)
+ {
+     char *pos = buffer;
+     struct NCR5380_hostdata *hostdata;
+-    Scsi_Cmnd *ptr;
++    struct scsi_cmnd *ptr;
+     unsigned long flags;
+     off_t begin = 0;
+ #define check_offset()				\
+@@ -784,18 +785,19 @@ static int NCR5380_proc_info (struct Scs
+     if (!hostdata->connected)
+ 	SPRINTF("scsi%d: no currently connected command\n", HOSTNO);
+     else
+-	pos = lprint_Scsi_Cmnd ((Scsi_Cmnd *) hostdata->connected,
++	pos = lprint_Scsi_Cmnd ((struct scsi_cmnd *) hostdata->connected,
+ 				pos, buffer, length);
+     SPRINTF("scsi%d: issue_queue\n", HOSTNO);
+     check_offset();
+-    for (ptr = (Scsi_Cmnd *) hostdata->issue_queue; ptr; ptr = NEXT(ptr)) {
++    for (ptr = (struct scsi_cmnd *) hostdata->issue_queue; ptr; ptr = NEXT(ptr))
++    {
+ 	pos = lprint_Scsi_Cmnd (ptr, pos, buffer, length);
+ 	check_offset();
+     }
+ 
+     SPRINTF("scsi%d: disconnected_queue\n", HOSTNO);
+     check_offset();
+-    for (ptr = (Scsi_Cmnd *) hostdata->disconnected_queue; ptr;
++    for (ptr = (struct scsi_cmnd *) hostdata->disconnected_queue; ptr;
+ 	 ptr = NEXT(ptr)) {
+ 	pos = lprint_Scsi_Cmnd (ptr, pos, buffer, length);
+ 	check_offset();
+@@ -810,8 +812,8 @@ static int NCR5380_proc_info (struct Scs
+     return length;
+ }
+ 
+-static char *
+-lprint_Scsi_Cmnd (Scsi_Cmnd *cmd, char *pos, char *buffer, int length)
++static char *lprint_Scsi_Cmnd(struct scsi_cmnd *cmd, char *pos, char *buffer,
++			      int length)
+ {
+     int i, s;
+     unsigned char *command;
+@@ -888,8 +890,8 @@ static int NCR5380_init (struct Scsi_Hos
+ }
+ 
+ /* 
+- * Function : int NCR5380_queue_command (Scsi_Cmnd *cmd, 
+- *	void (*done)(Scsi_Cmnd *)) 
++ * Function : int NCR5380_queue_command (struct scsi_cmnd *cmd,
++ *	void (*done)(struct scsi_cmnd *))
+  *
+  * Purpose :  enqueues a SCSI command
+  *
+@@ -906,10 +908,11 @@ static int NCR5380_init (struct Scsi_Hos
+  */
+ 
+ /* Only make static if a wrapper function is used */
+-static int NCR5380_queue_command (Scsi_Cmnd *cmd, void (*done)(Scsi_Cmnd *))
++static int NCR5380_queue_command(struct scsi_cmnd *cmd,
++				 void (*done)(struct scsi_cmnd *))
+ {
+     SETUP_HOSTDATA(cmd->device->host);
+-    Scsi_Cmnd *tmp;
++    struct scsi_cmnd *tmp;
+     unsigned long flags;
+ 
+ #if (NDEBUG & NDEBUG_NO_WRITE)
+@@ -990,7 +993,7 @@ static int NCR5380_queue_command (Scsi_C
+ 	NEXT(cmd) = hostdata->issue_queue;
+ 	hostdata->issue_queue = cmd;
+     } else {
+-	for (tmp = (Scsi_Cmnd *)hostdata->issue_queue;
++	for (tmp = (struct scsi_cmnd *)hostdata->issue_queue;
+ 	     NEXT(tmp); tmp = NEXT(tmp))
+ 	    ;
+ 	LIST(cmd, tmp);
+@@ -1030,7 +1033,7 @@ static int NCR5380_queue_command (Scsi_C
+     
+ static void NCR5380_main (void *bl)
+ {
+-    Scsi_Cmnd *tmp, *prev;
++    struct scsi_cmnd *tmp, *prev;
+     struct Scsi_Host *instance = first_instance;
+     struct NCR5380_hostdata *hostdata = HOSTDATA(instance);
+     int done;
+@@ -1073,12 +1076,12 @@ static void NCR5380_main (void *bl)
+ 	     * for a target that's not busy.
+ 	     */
+ #if (NDEBUG & NDEBUG_LISTS)
+-	    for (tmp = (Scsi_Cmnd *) hostdata->issue_queue, prev = NULL;
++	    for (tmp = (struct scsi_cmnd *) hostdata->issue_queue, prev = NULL;
+ 		 tmp && (tmp != prev); prev = tmp, tmp = NEXT(tmp))
+ 		;
+ 	    if ((tmp == prev) && tmp) printk(" LOOP\n");/* else printk("\n");*/
+ #endif
+-	    for (tmp = (Scsi_Cmnd *) hostdata->issue_queue, 
++	    for (tmp = (struct scsi_cmnd *) hostdata->issue_queue,
+ 		 prev = NULL; tmp; prev = tmp, tmp = NEXT(tmp) ) {
+ 
+ #if (NDEBUG & NDEBUG_LISTS)
+@@ -1339,7 +1342,8 @@ static irqreturn_t NCR5380_intr (int irq
+ }
+ 
+ #ifdef NCR5380_STATS
+-static void collect_stats(struct NCR5380_hostdata* hostdata, Scsi_Cmnd* cmd)
++static void collect_stats(struct NCR5380_hostdata *hostdata,
++			  struct scsi_cmnd *cmd)
+ {
+ # ifdef NCR5380_STAT_LIMIT
+     if (cmd->request_bufflen > NCR5380_STAT_LIMIT)
+@@ -1365,8 +1369,8 @@ static void collect_stats(struct NCR5380
  #endif
  
--#define DEBUG2(x)	do { if (qla2_extended_error_logging) { x; } } while (0)
--#define DEBUG2_3(x)	do { if (qla2_extended_error_logging) { x; } } while (0)
--#define DEBUG2_3_11(x)	do { if (qla2_extended_error_logging) { x; } } while (0)
--#define DEBUG2_9_10(x)	do { if (qla2_extended_error_logging) { x; } } while (0)
--#define DEBUG2_11(x)	do { if (qla2_extended_error_logging) { x; } } while (0)
--#define DEBUG2_13(x)	do { if (qla2_extended_error_logging) { x; } } while (0)
-+#define DEBUG2(x)	do { if (ql2xextended_error_logging) { x; } } while (0)
-+#define DEBUG2_3(x)	do { if (ql2xextended_error_logging) { x; } } while (0)
-+#define DEBUG2_3_11(x)	do { if (ql2xextended_error_logging) { x; } } while (0)
-+#define DEBUG2_9_10(x)	do { if (ql2xextended_error_logging) { x; } } while (0)
-+#define DEBUG2_11(x)	do { if (ql2xextended_error_logging) { x; } } while (0)
-+#define DEBUG2_13(x)	do { if (ql2xextended_error_logging) { x; } } while (0)
+ /* 
+- * Function : int NCR5380_select (struct Scsi_Host *instance, Scsi_Cmnd *cmd, 
+- *	int tag);
++ * Function : int NCR5380_select(struct Scsi_Host *instance,
++ * 				 struct scsi_cmnd *cmd,	int tag);
+  *
+  * Purpose : establishes I_T_L or I_T_L_Q nexus for new or existing command,
+  *	including ARBITRATION, SELECTION, and initial message out for 
+@@ -1395,7 +1399,8 @@ static void collect_stats(struct NCR5380
+  *		cmd->result host byte set to DID_BAD_TARGET.
+  */
  
- #if defined(QL_DEBUG_LEVEL_3)
- #define DEBUG3(x)	do {x;} while (0)
-diff -puN drivers/scsi/qla2xxx/qla_gbl.h~maintain-module-parameter-name-consistency-with-qla2xxx-qla4xxx drivers/scsi/qla2xxx/qla_gbl.h
---- a/drivers/scsi/qla2xxx/qla_gbl.h~maintain-module-parameter-name-consistency-with-qla2xxx-qla4xxx
-+++ a/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -60,7 +60,7 @@ extern int ql2xplogiabsentdevice;
- extern int ql2xloginretrycount;
- extern int ql2xfdmienable;
- extern int ql2xallocfwdump;
--extern int qla2_extended_error_logging;
-+extern int ql2xextended_error_logging;
+-static int NCR5380_select (struct Scsi_Host *instance, Scsi_Cmnd *cmd, int tag)
++static int NCR5380_select(struct Scsi_Host *instance, struct scsi_cmnd *cmd,
++			  int tag)
+ {
+     SETUP_HOSTDATA(instance);
+     unsigned char tmp[3], phase;
+@@ -1985,7 +1990,7 @@ static void NCR5380_information_transfer
+ #endif
+     unsigned char *data;
+     unsigned char phase, tmp, extended_msg[10], old_phase=0xff;
+-    Scsi_Cmnd *cmd = (Scsi_Cmnd *) hostdata->connected;
++    struct scsi_cmnd *cmd = (struct scsi_cmnd *) hostdata->connected;
  
- extern void qla2x00_sp_compl(scsi_qla_host_t *, srb_t *);
+ #ifdef SUN3_SCSI_VME
+     dregs->csr |= CSR_INTR;
+@@ -2272,7 +2277,7 @@ static void NCR5380_information_transfer
+ 			local_irq_save(flags);
+ 			LIST(cmd,hostdata->issue_queue);
+ 			NEXT(cmd) = hostdata->issue_queue;
+-		        hostdata->issue_queue = (Scsi_Cmnd *) cmd;
++		        hostdata->issue_queue = (struct scsi_cmnd *) cmd;
+ 		        local_irq_restore(flags);
+ 			QU_PRINTK("scsi%d: REQUEST SENSE added to head of "
+ 				  "issue queue\n", H_NO(cmd));
+@@ -2502,7 +2507,7 @@ static void NCR5380_information_transfer
+  * Function : void NCR5380_reselect (struct Scsi_Host *instance)
+  *
+  * Purpose : does reselection, initializing the instance->connected 
+- *	field to point to the Scsi_Cmnd for which the I_T_L or I_T_L_Q 
++ *	field to point to the struct scsi_cmnd for which the I_T_L or I_T_L_Q
+  *	nexus has been reestablished,
+  *	
+  * Inputs : instance - this instance of the NCR5380.
+@@ -2521,7 +2526,7 @@ static void NCR5380_reselect (struct Scs
+     unsigned char tag;
+ #endif
+     unsigned char msg[3];
+-    Scsi_Cmnd *tmp = NULL, *prev;
++    struct scsi_cmnd *tmp = NULL, *prev;
+ /*    unsigned long flags; */
  
-diff -puN drivers/scsi/qla2xxx/qla_init.c~maintain-module-parameter-name-consistency-with-qla2xxx-qla4xxx drivers/scsi/qla2xxx/qla_init.c
---- a/drivers/scsi/qla2xxx/qla_init.c~maintain-module-parameter-name-consistency-with-qla2xxx-qla4xxx
-+++ a/drivers/scsi/qla2xxx/qla_init.c
-@@ -1644,7 +1644,7 @@ qla2x00_nvram_config(scsi_qla_host_t *ha
- 	 * Set host adapter parameters.
- 	 */
- 	if (nv->host_p[0] & BIT_7)
--		qla2_extended_error_logging = 1;
-+		ql2xextended_error_logging = 1;
- 	ha->flags.disable_risc_code_load = ((nv->host_p[0] & BIT_4) ? 1 : 0);
- 	/* Always load RISC code on non ISP2[12]00 chips. */
- 	if (!IS_QLA2100(ha) && !IS_QLA2200(ha))
-diff -puN drivers/scsi/qla2xxx/qla_os.c~maintain-module-parameter-name-consistency-with-qla2xxx-qla4xxx drivers/scsi/qla2xxx/qla_os.c
---- a/drivers/scsi/qla2xxx/qla_os.c~maintain-module-parameter-name-consistency-with-qla2xxx-qla4xxx
-+++ a/drivers/scsi/qla2xxx/qla_os.c
-@@ -61,9 +61,9 @@ MODULE_PARM_DESC(ql2xallocfwdump,
- 		"during HBA initialization.  Memory allocation requirements "
- 		"vary by ISP type.  Default is 1 - allocate memory.");
+     /*
+@@ -2577,7 +2582,7 @@ static void NCR5380_reselect (struct Scs
+      * just reestablished, and remove it from the disconnected queue.
+      */
  
--int qla2_extended_error_logging;
--module_param(qla2_extended_error_logging, int, S_IRUGO|S_IRUSR);
--MODULE_PARM_DESC(qla2_extended_error_logging,
-+int ql2xextended_error_logging;
-+module_param(ql2xextended_error_logging, int, S_IRUGO|S_IRUSR);
-+MODULE_PARM_DESC(ql2xextended_error_logging,
- 		"Option to enable extended error logging, "
- 		"Default is 0 - no logging. 1 - log errors.");
+-    for (tmp = (Scsi_Cmnd *) hostdata->disconnected_queue, prev = NULL; 
++    for (tmp = (struct scsi_cmnd *) hostdata->disconnected_queue, prev = NULL;
+ 	 tmp; prev = tmp, tmp = NEXT(tmp) ) {
+ 	if ((target_mask == (1 << tmp->device->id)) && (lun == tmp->device->lun)
+ #ifdef SUPPORT_TAGS
+@@ -2668,11 +2673,11 @@ static void NCR5380_reselect (struct Scs
  
-@@ -2697,7 +2697,7 @@ qla2x00_module_init(void)
  
- 	/* Derive version string. */
- 	strcpy(qla2x00_version_str, QLA2XXX_VERSION);
--	if (qla2_extended_error_logging)
-+	if (ql2xextended_error_logging)
- 		strcat(qla2x00_version_str, "-debug");
+ /*
+- * Function : int NCR5380_abort (Scsi_Cmnd *cmd)
++ * Function : int NCR5380_abort(struct scsi_cmnd *cmd)
+  *
+  * Purpose : abort a command
+  *
+- * Inputs : cmd - the Scsi_Cmnd to abort, code - code to set the 
++ * Inputs : cmd - the struct scsi_cmnd to abort, code - code to set the
+  * 	host byte of the result field to, if zero DID_ABORTED is 
+  *	used.
+  *
+@@ -2684,11 +2689,11 @@ static void NCR5380_reselect (struct Scs
+  * 	 called where the loop started in NCR5380_main().
+  */
  
- 	qla2xxx_transport_template =
-diff -puN drivers/scsi/qla4xxx/ql4_dbg.h~maintain-module-parameter-name-consistency-with-qla2xxx-qla4xxx drivers/scsi/qla4xxx/ql4_dbg.h
---- a/drivers/scsi/qla4xxx/ql4_dbg.h~maintain-module-parameter-name-consistency-with-qla2xxx-qla4xxx
-+++ a/drivers/scsi/qla4xxx/ql4_dbg.h
-@@ -22,14 +22,14 @@
+-static int NCR5380_abort (Scsi_Cmnd *cmd)
++static int NCR5380_abort(struct scsi_cmnd *cmd)
+ {
+     struct Scsi_Host *instance = cmd->device->host;
+     SETUP_HOSTDATA(instance);
+-    Scsi_Cmnd *tmp, **prev;
++    struct scsi_cmnd *tmp, **prev;
+     unsigned long flags;
+ 
+     printk(KERN_NOTICE "scsi%d: aborting command\n", HOSTNO);
+@@ -2753,9 +2758,9 @@ static int NCR5380_abort (Scsi_Cmnd *cmd
+  * Case 2 : If the command hasn't been issued yet, we simply remove it 
+  * 	    from the issue queue.
+  */
+-    for (prev = (Scsi_Cmnd **) &(hostdata->issue_queue), 
+-	tmp = (Scsi_Cmnd *) hostdata->issue_queue;
+-	tmp; prev = NEXTADDR(tmp), tmp = NEXT(tmp) )
++    for (prev = (struct scsi_cmnd **) &(hostdata->issue_queue),
++	tmp = (struct scsi_cmnd *) hostdata->issue_queue;
++	tmp; prev = NEXTADDR(tmp), tmp = NEXT(tmp))
+ 	if (cmd == tmp) {
+ 	    REMOVE(5, *prev, tmp, NEXT(tmp));
+ 	    (*prev) = NEXT(tmp);
+@@ -2812,7 +2817,7 @@ static int NCR5380_abort (Scsi_Cmnd *cmd
+  * it from the disconnected queue.
+  */
+ 
+-    for (tmp = (Scsi_Cmnd *) hostdata->disconnected_queue; tmp;
++    for (tmp = (struct scsi_cmnd *) hostdata->disconnected_queue; tmp;
+ 	 tmp = NEXT(tmp)) 
+         if (cmd == tmp) {
+             local_irq_restore(flags);
+@@ -2826,8 +2831,8 @@ static int NCR5380_abort (Scsi_Cmnd *cmd
+ 	    do_abort (instance);
+ 
+ 	    local_irq_save(flags);
+-	    for (prev = (Scsi_Cmnd **) &(hostdata->disconnected_queue), 
+-		tmp = (Scsi_Cmnd *) hostdata->disconnected_queue;
++	    for (prev = (struct scsi_cmnd **) &(hostdata->disconnected_queue),
++		tmp = (struct scsi_cmnd *) hostdata->disconnected_queue;
+ 		tmp; prev = NEXTADDR(tmp), tmp = NEXT(tmp) )
+ 		    if (cmd == tmp) {
+ 		    REMOVE(5, *prev, tmp, NEXT(tmp));
+@@ -2868,7 +2873,7 @@ static int NCR5380_abort (Scsi_Cmnd *cmd
+ 
+ 
+ /* 
+- * Function : int NCR5380_bus_reset (Scsi_Cmnd *cmd)
++ * Function : int NCR5380_bus_reset(struct scsi_cmnd *cmd)
+  * 
+  * Purpose : reset the SCSI bus.
+  *
+@@ -2876,13 +2881,13 @@ static int NCR5380_abort (Scsi_Cmnd *cmd
+  *
+  */ 
+ 
+-static int NCR5380_bus_reset( Scsi_Cmnd *cmd)
++static int NCR5380_bus_reset(struct scsi_cmnd *cmd)
+ {
+     SETUP_HOSTDATA(cmd->device->host);
+     int           i;
+     unsigned long flags;
+ #if 1
+-    Scsi_Cmnd *connected, *disconnected_queue;
++    struct scsi_cmnd *connected, *disconnected_queue;
  #endif
  
- #if defined(QL_DEBUG_LEVEL_2)
--#define DEBUG2(x)      do {if(qla4_extended_error_logging == 2) x;} while (0);
-+#define DEBUG2(x)      do {if(ql4xextended_error_logging == 2) x;} while (0);
- #define DEBUG2_3(x)   do {x;} while (0);
- #else				/*  */
- #define DEBUG2(x)	do {} while (0);
- #endif				/*  */
  
- #if defined(QL_DEBUG_LEVEL_3)
--#define DEBUG3(x)      do {if(qla4_extended_error_logging == 3) x;} while (0);
-+#define DEBUG3(x)      do {if(ql4xextended_error_logging == 3) x;} while (0);
- #else				/*  */
- #define DEBUG3(x)	do {} while (0);
- #if !defined(QL_DEBUG_LEVEL_2)
-diff -puN drivers/scsi/qla4xxx/ql4_glbl.h~maintain-module-parameter-name-consistency-with-qla2xxx-qla4xxx drivers/scsi/qla4xxx/ql4_glbl.h
---- a/drivers/scsi/qla4xxx/ql4_glbl.h~maintain-module-parameter-name-consistency-with-qla2xxx-qla4xxx
-+++ a/drivers/scsi/qla4xxx/ql4_glbl.h
-@@ -72,7 +72,7 @@ int qla4xxx_reinitialize_ddb_list(struct
- int qla4xxx_process_ddb_changed(struct scsi_qla_host * ha,
- 				uint32_t fw_ddb_index, uint32_t state);
+@@ -2914,9 +2919,9 @@ static int NCR5380_bus_reset( Scsi_Cmnd 
+      * remembered in local variables first.
+      */
+     local_irq_save(flags);
+-    connected = (Scsi_Cmnd *)hostdata->connected;
++    connected = (struct scsi_cmnd *)hostdata->connected;
+     hostdata->connected = NULL;
+-    disconnected_queue = (Scsi_Cmnd *)hostdata->disconnected_queue;
++    disconnected_queue = (struct scsi_cmnd *)hostdata->disconnected_queue;
+     hostdata->disconnected_queue = NULL;
+ #ifdef SUPPORT_TAGS
+     free_all_tags();
+diff -puN drivers/scsi/sun3_scsi.c~scsi-scsi_cmnd-convertion-in-sun3-driver drivers/scsi/sun3_scsi.c
+--- a/drivers/scsi/sun3_scsi.c~scsi-scsi_cmnd-convertion-in-sun3-driver
++++ a/drivers/scsi/sun3_scsi.c
+@@ -119,7 +119,7 @@ module_param(setup_use_tagged_queuing, i
+ static int setup_hostid = -1;
+ module_param(setup_hostid, int, 0);
  
--extern int qla4_extended_error_logging;
-+extern int ql4xextended_error_logging;
- extern int ql4xdiscoverywait;
- extern int ql4xdontresethba;
- #endif				/* _QLA4x_GBL_H */
-diff -puN drivers/scsi/qla4xxx/ql4_mbx.c~maintain-module-parameter-name-consistency-with-qla2xxx-qla4xxx drivers/scsi/qla4xxx/ql4_mbx.c
---- a/drivers/scsi/qla4xxx/ql4_mbx.c~maintain-module-parameter-name-consistency-with-qla2xxx-qla4xxx
-+++ a/drivers/scsi/qla4xxx/ql4_mbx.c
-@@ -701,7 +701,7 @@ void qla4xxx_get_conn_event_log(struct s
- 	DEBUG3(printk("scsi%ld: Connection Event Log Dump (%d entries):\n",
- 		      ha->host_no, num_valid_entries));
+-static Scsi_Cmnd *sun3_dma_setup_done = NULL;
++static struct scsi_cmnd *sun3_dma_setup_done = NULL;
  
--	if (qla4_extended_error_logging == 3) {
-+	if (ql4xextended_error_logging == 3) {
- 		if (oldest_entry == 0) {
- 			/* Circular Buffer has not wrapped around */
- 			for (i=0; i < num_valid_entries; i++) {
-diff -puN drivers/scsi/qla4xxx/ql4_os.c~maintain-module-parameter-name-consistency-with-qla2xxx-qla4xxx drivers/scsi/qla4xxx/ql4_os.c
---- a/drivers/scsi/qla4xxx/ql4_os.c~maintain-module-parameter-name-consistency-with-qla2xxx-qla4xxx
-+++ a/drivers/scsi/qla4xxx/ql4_os.c
-@@ -34,9 +34,9 @@ MODULE_PARM_DESC(ql4xdontresethba,
- 		 " default it will reset hba :0"
- 		 " set to 1 to avoid resetting HBA");
+ #define	AFTER_RESET_DELAY	(HZ/2)
  
--int qla4_extended_error_logging = 0; /* 0 = off, 1 = log errors */
--module_param(qla4_extended_error_logging, int, S_IRUGO | S_IRUSR);
--MODULE_PARM_DESC(qla4_extended_error_logging,
-+int ql4xextended_error_logging = 0; /* 0 = off, 1 = log errors */
-+module_param(ql4xextended_error_logging, int, S_IRUGO | S_IRUSR);
-+MODULE_PARM_DESC(ql4xextended_error_logging,
- 		 "Option to enable extended error logging, "
- 		 "Default is 0 - no logging, 1 - debug logging");
+@@ -526,8 +526,9 @@ static inline unsigned long sun3scsi_dma
+ 	return last_residual;
+ }
  
-@@ -1714,7 +1714,7 @@ static int __init qla4xxx_module_init(vo
+-static inline unsigned long sun3scsi_dma_xfer_len(unsigned long wanted, Scsi_Cmnd *cmd,
+-				    int write_flag)
++static inline unsigned long sun3scsi_dma_xfer_len(unsigned long wanted,
++						  struct scsi_cmnd *cmd,
++						  int write_flag)
+ {
+ 	if(blk_fs_request(cmd->request))
+  		return wanted;
+diff -puN drivers/scsi/sun3_scsi.h~scsi-scsi_cmnd-convertion-in-sun3-driver drivers/scsi/sun3_scsi.h
+--- a/drivers/scsi/sun3_scsi.h~scsi-scsi_cmnd-convertion-in-sun3-driver
++++ a/drivers/scsi/sun3_scsi.h
+@@ -47,11 +47,12 @@
  
- 	/* Derive version string. */
- 	strcpy(qla4xxx_version_str, QLA4XXX_DRIVER_VERSION);
--	if (qla4_extended_error_logging)
-+	if (ql4xextended_error_logging)
- 		strcat(qla4xxx_version_str, "-debug");
+ #define IOBASE_SUN3_VMESCSI 0xff200000
  
- 	qla4xxx_scsi_transport =
+-static int sun3scsi_abort (Scsi_Cmnd *);
++static int sun3scsi_abort(struct scsi_cmnd *);
+ static int sun3scsi_detect (struct scsi_host_template *);
+ static const char *sun3scsi_info (struct Scsi_Host *);
+-static int sun3scsi_bus_reset(Scsi_Cmnd *);
+-static int sun3scsi_queue_command (Scsi_Cmnd *, void (*done)(Scsi_Cmnd *));
++static int sun3scsi_bus_reset(struct scsi_cmnd *);
++static int sun3scsi_queue_command(struct scsi_cmnd *,
++				  void (*done)(struct scsi_cmnd *));
+ static int sun3scsi_release (struct Scsi_Host *);
+ 
+ #ifndef CMD_PER_LUN
+diff -puN drivers/scsi/sun3_scsi_vme.c~scsi-scsi_cmnd-convertion-in-sun3-driver drivers/scsi/sun3_scsi_vme.c
+--- a/drivers/scsi/sun3_scsi_vme.c~scsi-scsi_cmnd-convertion-in-sun3-driver
++++ a/drivers/scsi/sun3_scsi_vme.c
+@@ -84,7 +84,7 @@ module_param(setup_use_tagged_queuing, i
+ static int setup_hostid = -1;
+ module_param(setup_hostid, int, 0);
+ 
+-static Scsi_Cmnd *sun3_dma_setup_done = NULL;
++static struct scsi_cmnd *sun3_dma_setup_done = NULL;
+ 
+ #define	AFTER_RESET_DELAY	(HZ/2)
+ 
+@@ -458,8 +458,9 @@ static inline unsigned long sun3scsi_dma
+ 	return last_residual;
+ }
+ 
+-static inline unsigned long sun3scsi_dma_xfer_len(unsigned long wanted, Scsi_Cmnd *cmd,
+-				    int write_flag)
++static inline unsigned long sun3scsi_dma_xfer_len(unsigned long wanted,
++						  struct scsi_cmnd *cmd,
++						  int write_flag)
+ {
+ 	if(blk_fs_request(cmd->request))
+  		return wanted;
 _
