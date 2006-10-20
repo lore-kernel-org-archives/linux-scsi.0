@@ -1,73 +1,42 @@
 From: akpm@osdl.org
-Subject: [patch 05/45] scsi: clean up warnings in Advansys driver
-Date: Fri, 20 Oct 2006 14:48:00 -0700
-Message-ID: <200610202148.k9KLm0XE004075@shell0.pdx.osdl.net>
+Subject: [patch 11/45] scsi: remove unnecessary check in drivers/scsi/sg.c
+Date: Fri, 20 Oct 2006 14:48:10 -0700
+Message-ID: <200610202148.k9KLmA0b004095@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:29830 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S2992771AbWJTVsY (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:43142 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S2992776AbWJTVsg (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Oct 2006 17:48:24 -0400
+	Fri, 20 Oct 2006 17:48:36 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, ken@krwtech.com, jeffreyfreeman@syncleus.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, snakebyte@gmx.de, dougg@torque.net
 
-From: Ken Witherow <ken@krwtech.com>
+From: Eric Sesterhenn <snakebyte@gmx.de>
 
-Fix typecast warnings and switch from check_region to request_region
+coverity spotted this (cid #758).  All callers dereference sfp, so we dont
+need this check.  In addition to this, we dereference it earlier in the
+function.
 
-(akpm: Ken and Jeffrey Phillips Freeman <jeffreyfreeman@syncleus.com> are
-possible advansys testers)
-
-Signed-off-by: Ken Witherow <ken@krwtech.com>
+Signed-off-by: Eric Sesterhenn <snakebyte@gmx.de>
+Cc: Douglas Gilbert <dougg@torque.net>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/advansys.c |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
+ drivers/scsi/sg.c |    2 +-
+ 1 files changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/advansys.c~scsi-clean-up-warnings-in-advansys-driver drivers/scsi/advansys.c
---- a/drivers/scsi/advansys.c~scsi-clean-up-warnings-in-advansys-driver
-+++ a/drivers/scsi/advansys.c
-@@ -4403,7 +4403,7 @@ advansys_detect(struct scsi_host_templat
-                         ASC_DBG1(1,
-                                 "advansys_detect: probing I/O port 0x%x...\n",
-                             iop);
--                        if (check_region(iop, ASC_IOADR_GAP) != 0) {
-+			if (!request_region(iop, ASC_IOADR_GAP, "advansys")){
-                             printk(
- "AdvanSys SCSI: specified I/O Port 0x%X is busy\n", iop);
-                             /* Don't try this I/O port twice. */
-@@ -4413,6 +4413,7 @@ advansys_detect(struct scsi_host_templat
-                             printk(
- "AdvanSys SCSI: specified I/O Port 0x%X has no adapter\n", iop);
-                             /* Don't try this I/O port twice. */
-+			    release_region(iop, ASC_IOADR_GAP);
-                             asc_ioport[ioport] = 0;
-                             goto ioport_try_again;
-                         } else {
-@@ -4431,6 +4432,7 @@ advansys_detect(struct scsi_host_templat
-                                   * 'ioport' past this board.
-                                   */
-                                  ioport++;
-+				 release_region(iop, ASC_IOADR_GAP);
-                                  goto ioport_try_again;
-                             }
-                         }
-@@ -9740,13 +9742,14 @@ AscSearchIOPortAddr11(
-     }
-     for (; i < ASC_IOADR_TABLE_MAX_IX; i++) {
-         iop_base = _asc_def_iop_base[i];
--        if (check_region(iop_base, ASC_IOADR_GAP) != 0) {
-+	if (!request_region(iop_base, ASC_IOADR_GAP, "advansys")){
-             ASC_DBG1(1,
-                "AscSearchIOPortAddr11: check_region() failed I/O port 0x%x\n",
-                      iop_base);
-             continue;
-         }
-         ASC_DBG1(1, "AscSearchIOPortAddr11: probing I/O port 0x%x\n", iop_base);
-+	release_region(iop_base, ASC_IOADR_GAP);
-         if (AscFindSignature(iop_base)) {
-             return (iop_base);
-         }
+diff -puN drivers/scsi/sg.c~remove-unnecessary-check-in-drivers-scsi-sgc drivers/scsi/sg.c
+--- a/drivers/scsi/sg.c~remove-unnecessary-check-in-drivers-scsi-sgc
++++ a/drivers/scsi/sg.c
+@@ -1837,7 +1837,7 @@ sg_build_indirect(Sg_scatter_hold * schp
+ 	int blk_size = buff_size;
+ 	struct page *p = NULL;
+ 
+-	if ((blk_size < 0) || (!sfp))
++	if (blk_size < 0)
+ 		return -EFAULT;
+ 	if (0 == blk_size)
+ 		++blk_size;	/* don't know why */
 _
