@@ -1,229 +1,185 @@
 From: akpm@osdl.org
-Subject: [patch 10/45] PCI Error Recovery: Symbios SCSI device driver
-Date: Fri, 20 Oct 2006 14:48:10 -0700
-Message-ID: <200610202148.k9KLmAFT004090@shell0.pdx.osdl.net>
+Subject: [patch 25/45] fc4: Conversion to struct scsi_cmnd in fc4
+Date: Fri, 20 Oct 2006 14:48:24 -0700
+Message-ID: <200610202148.k9KLmObX004144@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:45702 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S2992783AbWJTVsj (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:50822 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S2992785AbWJTVso (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Oct 2006 17:48:39 -0400
+	Fri, 20 Oct 2006 17:48:44 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, linas@austin.ibm.com, willy@debian.org
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, henne@nachtwindheim.de
 
-From: Linas Vepstas <linas@austin.ibm.com>
+From: Henrik Kretzschmar <henne@nachtwindheim.de>
 
-Various PCI bus errors can be signaled by newer PCI controllers.  This
-patch adds the PCI error recovery callbacks to the Symbios SCSI device
-driver.  The patch has been tested, and appears to work well.
+Changes the obsolete Scsi_Cmnd to struct scsi_cmnd in the Fibre Channel
+driver (fc4).
 
-Signed-off-by: Linas Vepstas <linas@austin.ibm.com>
-Cc: Matthew Wilcox <willy@debian.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
+Signed-off-by: Henrik Kretzschmar <henne@nachtwindheim.de>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/sym53c8xx_2/sym_glue.c |   99 ++++++++++++++++++++++++++
- drivers/scsi/sym53c8xx_2/sym_glue.h |    4 +
- drivers/scsi/sym53c8xx_2/sym_hipd.c |   10 ++
- 3 files changed, 113 insertions(+)
+ drivers/fc4/fc.c       |   28 +++++++++++++++-------------
+ drivers/fc4/fcp_impl.h |   15 ++++++++-------
+ 2 files changed, 23 insertions(+), 20 deletions(-)
 
-diff -puN drivers/scsi/sym53c8xx_2/sym_glue.c~pci-error-recovery-symbios-scsi-device-driver drivers/scsi/sym53c8xx_2/sym_glue.c
---- a/drivers/scsi/sym53c8xx_2/sym_glue.c~pci-error-recovery-symbios-scsi-device-driver
-+++ a/drivers/scsi/sym53c8xx_2/sym_glue.c
-@@ -659,6 +659,11 @@ static irqreturn_t sym53c8xx_intr(int ir
+diff -puN drivers/fc4/fc.c~fc4-conversion-to-struct-scsi_cmnd-in-fc4 drivers/fc4/fc.c
+--- a/drivers/fc4/fc.c~fc4-conversion-to-struct-scsi_cmnd-in-fc4
++++ a/drivers/fc4/fc.c
+@@ -70,9 +70,9 @@
  
- 	if (DEBUG_FLAGS & DEBUG_TINY) printf_debug ("[");
+ #define FCP_CMND(SCpnt) ((fcp_cmnd *)&(SCpnt->SCp))
+ #define FC_SCMND(SCpnt) ((fc_channel *)(SCpnt->device->host->hostdata[0]))
+-#define SC_FCMND(fcmnd) ((Scsi_Cmnd *)((long)fcmnd - (long)&(((Scsi_Cmnd *)0)->SCp)))
++#define SC_FCMND(fcmnd)	((struct scsi_cmnd *)((long)fcmnd - (long)&(((struct scsi_cmnd *)0)->SCp)))
  
-+	/* Avoid spinloop trying to handle interrupts on frozen device */
-+	if ((np->s.device->error_state != pci_channel_io_normal) &&
-+	    (np->s.device->error_state != 0))
-+		return IRQ_HANDLED;
-+
- 	spin_lock_irqsave(np->s.host->host_lock, flags);
- 	sym_interrupt(np);
- 	spin_unlock_irqrestore(np->s.host->host_lock, flags);
-@@ -726,6 +731,19 @@ static int sym_eh_handler(int op, char *
+-static int fcp_scsi_queue_it(fc_channel *, Scsi_Cmnd *, fcp_cmnd *, int);
++static int fcp_scsi_queue_it(fc_channel *, struct scsi_cmnd *, fcp_cmnd *, int);
+ void fcp_queue_empty(fc_channel *);
  
- 	dev_warn(&cmd->device->sdev_gendev, "%s operation started.\n", opname);
- 
-+	/* We may be in an error condition because the PCI bus
-+	 * went down. In this case, we need to wait until the
-+	 * PCI bus is reset, the card is reset, and only then
-+	 * proceed with the scsi error recovery.  There's no
-+	 * point in hurrying; take a leisurely wait.
-+	 */
-+#define WAIT_FOR_PCI_RECOVERY	35
-+	if ((np->s.device->error_state != pci_channel_io_normal) &&
-+	    (np->s.device->error_state != 0) &&
-+		 (wait_for_completion_timeout(&np->s.io_reset_wait,
-+		                                 WAIT_FOR_PCI_RECOVERY*HZ) == 0))
-+			return SCSI_FAILED;
-+
- 	spin_lock_irq(host->host_lock);
- 	/* This one is queued in some place -> to wait for completion */
- 	FOR_EACH_QUEUED_ELEMENT(&np->busy_ccbq, qp) {
-@@ -1510,6 +1528,7 @@ static struct Scsi_Host * __devinit sym_
- 	np->maxoffs	= dev->chip.offset_max;
- 	np->maxburst	= dev->chip.burst_max;
- 	np->myaddr	= dev->host_id;
-+	init_completion(&np->s.io_reset_wait);
- 
- 	/*
- 	 *  Edit its name.
-@@ -1948,6 +1967,79 @@ static void __devexit sym2_remove(struct
- 	attach_count--;
+ static void fcp_scsi_insert_queue (fc_channel *fc, fcp_cmnd *fcmd)
+@@ -378,14 +378,14 @@ void fcp_register(fc_channel *fc, u8 typ
+ 		printk ("FC: %segistering unknown type %02x\n", unregister ? "Unr" : "R", type);
  }
  
-+/**
-+ * sym2_io_error_detected() -- called when PCI error is detected
-+ * @pdev: pointer to PCI device
-+ * @state: current state of the PCI slot
-+ */
-+static pci_ers_result_t sym2_io_error_detected (struct pci_dev *pdev,
-+                                         enum pci_channel_state state)
-+{
-+	struct sym_hcb *np = pci_get_drvdata(pdev);
-+
-+	/* If slot is permanently frozen, turn everything off */
-+	if (state == pci_channel_io_perm_failure) {
-+		sym2_remove(pdev);
-+		return PCI_ERS_RESULT_DISCONNECT;
-+	}
-+
-+	init_completion(&np->s.io_reset_wait);
-+	disable_irq(pdev->irq);
-+	pci_disable_device(pdev);
-+
-+	/* Request a slot reset. */
-+	return PCI_ERS_RESULT_NEED_RESET;
-+}
-+
-+/**
-+ * sym2_io_slot_reset() -- called when the pci bus has been reset.
-+ * @pdev: pointer to PCI device
-+ *
-+ * Restart the card from scratch.
-+ */
-+static pci_ers_result_t sym2_io_slot_reset (struct pci_dev *pdev)
-+{
-+	struct sym_hcb *np = pci_get_drvdata(pdev);
-+
-+	printk(KERN_INFO "%s: recovering from a PCI slot reset\n",
-+	    sym_name(np));
-+
-+	if (pci_enable_device(pdev)) {
-+		printk(KERN_ERR "%s: device setup failed most egregiously\n",
-+			    sym_name(np));
-+		return PCI_ERS_RESULT_DISCONNECT;
-+	}
-+
-+	pci_set_master(pdev);
-+	enable_irq(pdev->irq);
-+
-+	/* Perform host reset only on one instance of the card */
-+	if (PCI_FUNC (pdev->devfn) == 0) {
-+		if (sym_reset_scsi_bus(np, 0)) {
-+		   printk(KERN_ERR "%s: Unable to reset scsi host controller\n",
-+					          sym_name(np));
-+			return PCI_ERS_RESULT_DISCONNECT;
-+		}
-+		sym_start_up(np, 1);
-+	}
-+
-+	return PCI_ERS_RESULT_RECOVERED;
-+}
-+
-+/**
-+ * sym2_io_resume() -- resume normal ops after PCI reset
-+ * @pdev: pointer to PCI device
-+ *
-+ * Called when the error recovery driver tells us that its
-+ * OK to resume normal operation. Use completion to allow
-+ * halted scsi ops to resume.
-+ */
-+static void sym2_io_resume (struct pci_dev *pdev)
-+{
-+	struct sym_hcb *np = pci_get_drvdata(pdev);
-+	complete_all(&np->s.io_reset_wait);
-+}
-+
- static void sym2_get_signalling(struct Scsi_Host *shost)
+-static void fcp_scsi_done(Scsi_Cmnd *SCpnt);
++static void fcp_scsi_done(struct scsi_cmnd *SCpnt);
+ 
+ static inline void fcp_scsi_receive(fc_channel *fc, int token, int status, fc_hdr *fch)
  {
- 	struct sym_hcb *np = sym_get_hcb(shost);
-@@ -2110,11 +2202,18 @@ static struct pci_device_id sym2_id_tabl
+ 	fcp_cmnd *fcmd;
+ 	fcp_rsp  *rsp;
+ 	int host_status;
+-	Scsi_Cmnd *SCpnt;
++	struct scsi_cmnd *SCpnt;
+ 	int sense_len;
+ 	int rsp_status;
  
- MODULE_DEVICE_TABLE(pci, sym2_id_table);
+@@ -757,13 +757,14 @@ void fcp_release(fc_channel *fcchain, in
+ }
  
-+static struct pci_error_handlers sym2_err_handler = {
-+	.error_detected = sym2_io_error_detected,
-+	.slot_reset = sym2_io_slot_reset,
-+	.resume = sym2_io_resume,
-+};
-+
- static struct pci_driver sym2_driver = {
- 	.name		= NAME53C8XX,
- 	.id_table	= sym2_id_table,
- 	.probe		= sym2_probe,
- 	.remove		= __devexit_p(sym2_remove),
-+	.err_handler = &sym2_err_handler,
- };
  
- static int __init sym2_init(void)
-diff -puN drivers/scsi/sym53c8xx_2/sym_glue.h~pci-error-recovery-symbios-scsi-device-driver drivers/scsi/sym53c8xx_2/sym_glue.h
---- a/drivers/scsi/sym53c8xx_2/sym_glue.h~pci-error-recovery-symbios-scsi-device-driver
-+++ a/drivers/scsi/sym53c8xx_2/sym_glue.h
-@@ -40,6 +40,7 @@
- #ifndef SYM_GLUE_H
- #define SYM_GLUE_H
+-static void fcp_scsi_done (Scsi_Cmnd *SCpnt)
++static void fcp_scsi_done(struct scsi_cmnd *SCpnt)
+ {
+ 	if (FCP_CMND(SCpnt)->done)
+ 		FCP_CMND(SCpnt)->done(SCpnt);
+ }
  
-+#include <linux/completion.h>
- #include <linux/delay.h>
- #include <linux/ioport.h>
- #include <linux/pci.h>
-@@ -179,6 +180,9 @@ struct sym_shcb {
- 	char		chip_name[8];
- 	struct pci_dev	*device;
+-static int fcp_scsi_queue_it(fc_channel *fc, Scsi_Cmnd *SCpnt, fcp_cmnd *fcmd, int prepare)
++static int fcp_scsi_queue_it(fc_channel *fc, struct scsi_cmnd *SCpnt,
++			     fcp_cmnd *fcmd, int prepare)
+ {
+ 	long i;
+ 	fcp_cmd *cmd;
+@@ -837,7 +838,8 @@ static int fcp_scsi_queue_it(fc_channel 
+ 	return 0;
+ }
  
-+	/* Waiter for clearing of frozen PCI bus */
-+	struct completion io_reset_wait;
-+
- 	struct Scsi_Host *host;
+-int fcp_scsi_queuecommand(Scsi_Cmnd *SCpnt, void (* done)(Scsi_Cmnd *))
++int fcp_scsi_queuecommand(struct scsi_cmnd *SCpnt,
++			  void (* done)(struct scsi_cmnd *))
+ {
+ 	fcp_cmnd *fcmd = FCP_CMND(SCpnt);
+ 	fc_channel *fc = FC_SCMND(SCpnt);
+@@ -873,7 +875,7 @@ void fcp_queue_empty(fc_channel *fc)
+ 	}
+ }
  
- 	void __iomem *	ioaddr;		/* MMIO kernel io address	*/
-diff -puN drivers/scsi/sym53c8xx_2/sym_hipd.c~pci-error-recovery-symbios-scsi-device-driver drivers/scsi/sym53c8xx_2/sym_hipd.c
---- a/drivers/scsi/sym53c8xx_2/sym_hipd.c~pci-error-recovery-symbios-scsi-device-driver
-+++ a/drivers/scsi/sym53c8xx_2/sym_hipd.c
-@@ -2761,6 +2761,7 @@ void sym_interrupt (struct sym_hcb *np)
- 	u_char	istat, istatc;
- 	u_char	dstat;
- 	u_short	sist;
-+	u_int    icnt;
+-int fcp_scsi_abort(Scsi_Cmnd *SCpnt)
++int fcp_scsi_abort(struct scsi_cmnd *SCpnt)
+ {
+ 	/* Internal bookkeeping only. Lose 1 cmd_slots slot. */
+ 	fcp_cmnd *fcmd = FCP_CMND(SCpnt);
+@@ -910,7 +912,7 @@ int fcp_scsi_abort(Scsi_Cmnd *SCpnt)
+ }
  
- 	/*
- 	 *  interrupt on the fly ?
-@@ -2802,6 +2803,7 @@ void sym_interrupt (struct sym_hcb *np)
- 	sist	= 0;
- 	dstat	= 0;
- 	istatc	= istat;
-+	icnt = 0;
- 	do {
- 		if (istatc & SIP)
- 			sist  |= INW(np, nc_sist);
-@@ -2809,6 +2811,14 @@ void sym_interrupt (struct sym_hcb *np)
- 			dstat |= INB(np, nc_dstat);
- 		istatc = INB(np, nc_istat);
- 		istat |= istatc;
-+
-+		/* Prevent deadlock waiting on a condition that may never clear. */
-+		icnt ++;
-+		if (icnt > 100) {
-+			if ((np->s.device->error_state != pci_channel_io_normal)
-+			   && (np->s.device->error_state != 0))
-+				return;
-+		}
- 	} while (istatc & (SIP|DIP));
+ #if 0
+-void fcp_scsi_reset_done(Scsi_Cmnd *SCpnt)
++void fcp_scsi_reset_done(struct scsi_cmnd *SCpnt)
+ {
+ 	fc_channel *fc = FC_SCMND(SCpnt);
  
- 	if (DEBUG_FLAGS & DEBUG_TINY)
+@@ -921,7 +923,7 @@ void fcp_scsi_reset_done(Scsi_Cmnd *SCpn
+ 
+ #define FCP_RESET_TIMEOUT (2*HZ)
+ 
+-int fcp_scsi_dev_reset(Scsi_Cmnd *SCpnt)
++int fcp_scsi_dev_reset(struct scsi_cmnd *SCpnt)
+ {
+ #if 0 /* broken junk, but if davem wants to compile this driver, let him.. */
+ 	unsigned long flags;
+@@ -931,7 +933,7 @@ int fcp_scsi_dev_reset(Scsi_Cmnd *SCpnt)
+         DECLARE_MUTEX_LOCKED(sem);
+ 
+ 	if (!fc->rst_pkt) {
+-		fc->rst_pkt = (Scsi_Cmnd *) kmalloc(sizeof(SCpnt), GFP_KERNEL);
++		fc->rst_pkt = (struct scsi_cmnd *) kmalloc(sizeof(SCpnt), GFP_KERNEL);
+ 		if (!fc->rst_pkt) return FAILED;
+ 		
+ 		fcmd = FCP_CMND(fc->rst_pkt);
+@@ -999,7 +1001,7 @@ int fcp_scsi_dev_reset(Scsi_Cmnd *SCpnt)
+ 	return SUCCESS;
+ }
+ 
+-static int __fcp_scsi_host_reset(Scsi_Cmnd *SCpnt)
++static int __fcp_scsi_host_reset(struct scsi_cmnd *SCpnt)
+ {
+ 	fc_channel *fc = FC_SCMND(SCpnt);
+ 	fcp_cmnd *fcmd = FCP_CMND(SCpnt);
+@@ -1020,7 +1022,7 @@ static int __fcp_scsi_host_reset(Scsi_Cm
+ 	else return FAILED;
+ }
+ 
+-int fcp_scsi_host_reset(Scsi_Cmnd *SCpnt)
++int fcp_scsi_host_reset(struct scsi_cmnd *SCpnt)
+ {
+ 	unsigned long flags;
+ 	int rc;
+diff -puN drivers/fc4/fcp_impl.h~fc4-conversion-to-struct-scsi_cmnd-in-fc4 drivers/fc4/fcp_impl.h
+--- a/drivers/fc4/fcp_impl.h~fc4-conversion-to-struct-scsi_cmnd-in-fc4
++++ a/drivers/fc4/fcp_impl.h
+@@ -39,7 +39,7 @@ struct _fc_channel; 
+ typedef struct fcp_cmnd {
+ 	struct fcp_cmnd		*next;
+ 	struct fcp_cmnd		*prev;
+-	void			(*done)(Scsi_Cmnd *);
++	void			(*done)(struct scsi_cmnd *);
+ 	unsigned short		proto;
+ 	unsigned short		token;
+ 	unsigned int		did;
+@@ -94,14 +94,14 @@ typedef struct _fc_channel {
+ 	long			*scsi_bitmap;
+ 	long			scsi_bitmap_end;
+ 	int			scsi_free;
+-	int			(*encode_addr)(Scsi_Cmnd *, u16 *, struct _fc_channel *, fcp_cmnd *);
++	int			(*encode_addr)(struct scsi_cmnd *, u16 *, struct _fc_channel *, fcp_cmnd *);
+ 	fcp_cmnd		*scsi_que;
+ 	char			scsi_name[4];
+ 	fcp_cmnd		**cmd_slots;
+ 	int			channels;
+ 	int			targets;
+ 	long			*ages;
+-	Scsi_Cmnd		*rst_pkt;
++	struct scsi_cmnd	*rst_pkt;
+ 	fcp_posmap		*posmap;
+ 	/* LOGIN stuff */
+ 	fcp_cmnd		*login;
+@@ -155,9 +155,10 @@ int fc_do_prli(fc_channel *, unsigned ch
+ 	for_each_fc_channel(fc)				\
+ 		if (fc->state == FC_STATE_ONLINE)
+ 
+-int fcp_scsi_queuecommand(Scsi_Cmnd *, void (* done)(Scsi_Cmnd *));
+-int fcp_scsi_abort(Scsi_Cmnd *);
+-int fcp_scsi_dev_reset(Scsi_Cmnd *);
+-int fcp_scsi_host_reset(Scsi_Cmnd *);
++int fcp_scsi_queuecommand(struct scsi_cmnd *,
++			  void (* done) (struct scsi_cmnd *));
++int fcp_scsi_abort(struct scsi_cmnd *);
++int fcp_scsi_dev_reset(struct scsi_cmnd *);
++int fcp_scsi_host_reset(struct scsi_cmnd *);
+ 
+ #endif /* !(_FCP_SCSI_H) */
 _
