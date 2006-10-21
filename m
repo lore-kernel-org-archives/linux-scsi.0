@@ -1,133 +1,92 @@
-From: Henne <henne@nachtwindheim.de>
-Subject: [PATCH] scsi: t128 scsi_cmnd convertion
-Date: Sat, 21 Oct 2006 11:14:59 +0200
-Message-ID: <4539E513.4090101@nachtwindheim.de>
+From: Martin Peschke <mp3@de.ibm.com>
+Subject: [Fwd: [Patch 0/5] I/O statistics through request queues]
+Date: Sat, 21 Oct 2006 15:14:09 +0200
+Message-ID: <1161436449.3054.125.camel@dyn-9-152-230-71.boeblingen.de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from server6.greatnet.de ([83.133.96.26]:35254 "EHLO
-	server6.greatnet.de") by vger.kernel.org with ESMTP
-	id S2992887AbWJUJOB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 21 Oct 2006 05:14:01 -0400
+Received: from mtagate5.uk.ibm.com ([195.212.29.138]:64695 "EHLO
+	mtagate5.uk.ibm.com") by vger.kernel.org with ESMTP
+	id S1161484AbWJUNON (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 21 Oct 2006 09:14:13 -0400
+Received: from d06nrmr1407.portsmouth.uk.ibm.com (d06nrmr1407.portsmouth.uk.ibm.com [9.149.38.185])
+	by mtagate5.uk.ibm.com (8.13.8/8.13.8) with ESMTP id k9LDEChY278600
+	for <linux-scsi@vger.kernel.org>; Sat, 21 Oct 2006 13:14:12 GMT
+Received: from d06av01.portsmouth.uk.ibm.com (d06av01.portsmouth.uk.ibm.com [9.149.37.212])
+	by d06nrmr1407.portsmouth.uk.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id k9LDGigE2429148
+	for <linux-scsi@vger.kernel.org>; Sat, 21 Oct 2006 14:16:44 +0100
+Received: from d06av01.portsmouth.uk.ibm.com (loopback [127.0.0.1])
+	by d06av01.portsmouth.uk.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k9LDEBZa004972
+	for <linux-scsi@vger.kernel.org>; Sat, 21 Oct 2006 14:14:11 +0100
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: horst.hummel@de.ibm.com, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, axboe@kernel.dk
+Cc: Andrew Morton <akpm@osdl.org>
+
+My apologies... somehow I managed to break the cc list for this posting.
+Would you mind having a look at linux-kernel?
+
+Martin
+
+-------- Forwarded Message --------
+From: Martin Peschke <mp3@de.ibm.com>
 To: Andrew Morton <akpm@osdl.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Subject: [Patch 0/5] I/O statistics through request queues
+Date: 	Sat, 21 Oct 2006 14:57:03 +0200
 
-Changes the obsolete Scsi_Cmnd to struct scsi_cmnd and remove the trailing
-whitespaces.
-Signed-off-by: Henrik Kretzschmar <henne@nachtwindheim.de>
+This patch set makes the block layer maintain statistics for request
+queues. Resulting data closely resembles the actual I/O traffic to a
+device, as the block layer takes hints from block device drivers when a
+request is being issued as well as when it is about to complete.
 
----
+It is crucial (for us) to be able to look at such kernel level data in
+case of customer situations. It allows us to determine what kind of
+requests might be involved in performance situations. This information
+helps to understand whether one faces a device issue or a Linux issue.
+Not being able to tap into performance data is regarded as a big minus
+by some enterprise customers, who are reluctant to use Linux SCSI
+support or Linux.
 
-diff --git a/drivers/scsi/t128.h b/drivers/scsi/t128.h
-index 646e840..76a069b 100644
---- a/drivers/scsi/t128.h
-+++ b/drivers/scsi/t128.h
-@@ -8,20 +8,20 @@
-  *	drew@colorado.edu
-  *      +1 (303) 440-4894
-  *
-- * DISTRIBUTION RELEASE 3. 
-+ * DISTRIBUTION RELEASE 3.
-  *
-- * For more information, please consult 
-+ * For more information, please consult
-  *
-  * Trantor Systems, Ltd.
-  * T128/T128F/T228 SCSI Host Adapter
-  * Hardware Specifications
-- * 
-- * Trantor Systems, Ltd. 
-+ *
-+ * Trantor Systems, Ltd.
-  * 5415 Randall Place
-  * Fremont, CA 94538
-  * 1+ (415) 770-1400, FAX 1+ (415) 770-9910
-- * 
-- * and 
-+ *
-+ * and
-  *
-  * NCR 5380 Family
-  * SCSI Protocol Controller
-@@ -48,15 +48,15 @@ #define TDEBUG_INIT	0x1
- #define TDEBUG_TRANSFER 0x2
- 
- /*
-- * The trantor boards are memory mapped. They use an NCR5380 or 
-+ * The trantor boards are memory mapped. They use an NCR5380 or
-  * equivalent (my sample board had part second sourced from ZILOG).
-- * NCR's recommended "Pseudo-DMA" architecture is used, where 
-+ * NCR's recommended "Pseudo-DMA" architecture is used, where
-  * a PAL drives the DMA signals on the 5380 allowing fast, blind
-- * transfers with proper handshaking. 
-+ * transfers with proper handshaking.
-  */
- 
- /*
-- * Note : a boot switch is provided for the purpose of informing the 
-+ * Note : a boot switch is provided for the purpose of informing the
-  * firmware to boot or not boot from attached SCSI devices.  So, I imagine
-  * there are fewer people who've yanked the ROM like they do on the Seagate
-  * to make bootup faster, and I'll probably use this for autodetection.
-@@ -92,19 +92,20 @@ #define T_5380_OFFSET		0x1d00	/* 8 regis
- #define T_DATA_REG_OFFSET	0x1e00	/* rw 512 bytes long */
- 
- #ifndef ASM
--static int t128_abort(Scsi_Cmnd *);
-+static int t128_abort(struct scsi_cmnd *);
- static int t128_biosparam(struct scsi_device *, struct block_device *,
- 			  sector_t, int*);
- static int t128_detect(struct scsi_host_template *);
--static int t128_queue_command(Scsi_Cmnd *, void (*done)(Scsi_Cmnd *));
--static int t128_bus_reset(Scsi_Cmnd *);
-+static int t128_queue_command(struct scsi_cmnd *,
-+			      void (*done)(struct scsi_cmnd *));
-+static int t128_bus_reset(struct scsi_cmnd *);
- 
- #ifndef CMD_PER_LUN
- #define CMD_PER_LUN 2
- #endif
- 
- #ifndef CAN_QUEUE
--#define CAN_QUEUE 32 
-+#define CAN_QUEUE 32
- #endif
- 
- #ifndef HOSTS_C
-@@ -120,7 +121,7 @@ #define NCR5380_setup(instance) \
- 
- #define T128_address(reg) (base + T_5380_OFFSET + ((reg) * 0x20))
- 
--#if !(TDEBUG & TDEBUG_TRANSFER) 
-+#if !(TDEBUG & TDEBUG_TRANSFER)
- #define NCR5380_read(reg) readb(T128_address(reg))
- #define NCR5380_write(reg, value) writeb((value),(T128_address(reg)))
- #else
-@@ -129,7 +130,7 @@ #define NCR5380_read(reg)						\
-     , instance->hostno, (reg), T128_address(reg))), readb(T128_address(reg)))
- 
- #define NCR5380_write(reg, value) {					\
--    printk("scsi%d : write %02x to register %d at address %08x\n", 	\
-+    printk("scsi%d : write %02x to register %d at address %08x\n",	\
- 	    instance->hostno, (value), (reg), T128_address(reg));	\
-     writeb((value), (T128_address(reg)));				\
- }
-@@ -142,10 +143,10 @@ #define NCR5380_abort t128_abort
- #define NCR5380_bus_reset t128_bus_reset
- #define NCR5380_proc_info t128_proc_info
- 
--/* 15 14 12 10 7 5 3 
-+/* 15 14 12 10 7 5 3
-    1101 0100 1010 1000 */
--   
--#define T128_IRQS 0xc4a8 
-+
-+#define T128_IRQS 0xc4a8
- 
- #endif /* else def HOSTS_C */
- #endif /* ndef ASM */
+Statistics data includes:
+- request sizes (read + write),
+- residual bytes of partially completed requests (read + write),
+- request latencies (read + write),
+- request retries (read + write),
+- request concurrency,
+
+For sample data please have a look at the SCSI stack patch or the DASD
+driver patch respectively. This data is only gathered if statistics have
+been enabled by users at run time (default is off).
+
+The advantage of instrumenting request queues is that we can cover a
+broad range of devices, including SCSI tape devices.
+Having the block layer maintain such statistics on behalf of drivers
+provides for comparability through a common set of statistics.
+
+A previous approach was to put all the code into the SCSI stack:
+http://marc.theaimsgroup.com/?l=linux-kernel&m=115928678420835&w=2
+I gathered from feedback that moving that stuff to the block layer
+might be preferable.
+
+These patches use the statistics component described in
+Documentation/statistics.txt.
+
+Patches are against 2.6.19-rc2-mm2.
+
+[Patch 1/5] I/O statistics through request queues: timeval_to_us()
+[Patch 2/5] I/O statistics through request queues: queue instrumentation
+[Patch 3/5] I/O statistics through request queues: small SCSI cleanup
+[Patch 4/5] I/O statistics through request queues: SCSI
+[Patch 5/5] I/O statistics through request queues: DASD
+
+Martin
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Please read the FAQ at  http://www.tux.org/lkml/
 
 
