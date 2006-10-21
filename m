@@ -1,43 +1,133 @@
-From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: Re: [patch 32/45] aic94xx: SATA tag mask not set correctly
-Date: Fri, 20 Oct 2006 15:41:18 -0700
-Message-ID: <4539508E.3000802@us.ibm.com>
-References: <200610202148.k9KLmUJM004171@shell0.pdx.osdl.net>
-Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
+From: Henne <henne@nachtwindheim.de>
+Subject: [PATCH] scsi: t128 scsi_cmnd convertion
+Date: Sat, 21 Oct 2006 11:14:59 +0200
+Message-ID: <4539E513.4090101@nachtwindheim.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:19409 "EHLO
-	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S1422748AbWJTWlU
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Oct 2006 18:41:20 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e33.co.us.ibm.com (8.13.8/8.12.11) with ESMTP id k9KMfJaQ023973
-	for <linux-scsi@vger.kernel.org>; Fri, 20 Oct 2006 18:41:19 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id k9KMfJKj362766
-	for <linux-scsi@vger.kernel.org>; Fri, 20 Oct 2006 16:41:19 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k9KMfJ2L021710
-	for <linux-scsi@vger.kernel.org>; Fri, 20 Oct 2006 16:41:19 -0600
-In-Reply-To: <200610202148.k9KLmUJM004171@shell0.pdx.osdl.net>
+Received: from server6.greatnet.de ([83.133.96.26]:35254 "EHLO
+	server6.greatnet.de") by vger.kernel.org with ESMTP
+	id S2992887AbWJUJOB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 21 Oct 2006 05:14:01 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@osdl.org
-Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-akpm@osdl.org wrote:
-> From: "Darrick J. Wong" <djwong@us.ibm.com>
-> 
-> The aic94xx controller has a bitmask establishing which tags are ok to use
-> with a SATA NCQ disk.  When the queue depth is 32, however, the expression
-> that is used sets the mask to zero, not 0xFFFFFFFF.  This patch widens the
-> width of the integer so that this case is handled properly.
+Changes the obsolete Scsi_Cmnd to struct scsi_cmnd and remove the trailing
+whitespaces.
+Signed-off-by: Henrik Kretzschmar <henne@nachtwindheim.de>
 
-This patch is only useful if you have my SATA support patches for
-libsas.  It lives in James Bottomley's aic94xx-sas-2.6 tree, so it'll go
-in whenever the SATA stuff goes in.  That said, it won't hurt anything
-to merge it now.
+---
 
---D
+diff --git a/drivers/scsi/t128.h b/drivers/scsi/t128.h
+index 646e840..76a069b 100644
+--- a/drivers/scsi/t128.h
++++ b/drivers/scsi/t128.h
+@@ -8,20 +8,20 @@
+  *	drew@colorado.edu
+  *      +1 (303) 440-4894
+  *
+- * DISTRIBUTION RELEASE 3. 
++ * DISTRIBUTION RELEASE 3.
+  *
+- * For more information, please consult 
++ * For more information, please consult
+  *
+  * Trantor Systems, Ltd.
+  * T128/T128F/T228 SCSI Host Adapter
+  * Hardware Specifications
+- * 
+- * Trantor Systems, Ltd. 
++ *
++ * Trantor Systems, Ltd.
+  * 5415 Randall Place
+  * Fremont, CA 94538
+  * 1+ (415) 770-1400, FAX 1+ (415) 770-9910
+- * 
+- * and 
++ *
++ * and
+  *
+  * NCR 5380 Family
+  * SCSI Protocol Controller
+@@ -48,15 +48,15 @@ #define TDEBUG_INIT	0x1
+ #define TDEBUG_TRANSFER 0x2
+ 
+ /*
+- * The trantor boards are memory mapped. They use an NCR5380 or 
++ * The trantor boards are memory mapped. They use an NCR5380 or
+  * equivalent (my sample board had part second sourced from ZILOG).
+- * NCR's recommended "Pseudo-DMA" architecture is used, where 
++ * NCR's recommended "Pseudo-DMA" architecture is used, where
+  * a PAL drives the DMA signals on the 5380 allowing fast, blind
+- * transfers with proper handshaking. 
++ * transfers with proper handshaking.
+  */
+ 
+ /*
+- * Note : a boot switch is provided for the purpose of informing the 
++ * Note : a boot switch is provided for the purpose of informing the
+  * firmware to boot or not boot from attached SCSI devices.  So, I imagine
+  * there are fewer people who've yanked the ROM like they do on the Seagate
+  * to make bootup faster, and I'll probably use this for autodetection.
+@@ -92,19 +92,20 @@ #define T_5380_OFFSET		0x1d00	/* 8 regis
+ #define T_DATA_REG_OFFSET	0x1e00	/* rw 512 bytes long */
+ 
+ #ifndef ASM
+-static int t128_abort(Scsi_Cmnd *);
++static int t128_abort(struct scsi_cmnd *);
+ static int t128_biosparam(struct scsi_device *, struct block_device *,
+ 			  sector_t, int*);
+ static int t128_detect(struct scsi_host_template *);
+-static int t128_queue_command(Scsi_Cmnd *, void (*done)(Scsi_Cmnd *));
+-static int t128_bus_reset(Scsi_Cmnd *);
++static int t128_queue_command(struct scsi_cmnd *,
++			      void (*done)(struct scsi_cmnd *));
++static int t128_bus_reset(struct scsi_cmnd *);
+ 
+ #ifndef CMD_PER_LUN
+ #define CMD_PER_LUN 2
+ #endif
+ 
+ #ifndef CAN_QUEUE
+-#define CAN_QUEUE 32 
++#define CAN_QUEUE 32
+ #endif
+ 
+ #ifndef HOSTS_C
+@@ -120,7 +121,7 @@ #define NCR5380_setup(instance) \
+ 
+ #define T128_address(reg) (base + T_5380_OFFSET + ((reg) * 0x20))
+ 
+-#if !(TDEBUG & TDEBUG_TRANSFER) 
++#if !(TDEBUG & TDEBUG_TRANSFER)
+ #define NCR5380_read(reg) readb(T128_address(reg))
+ #define NCR5380_write(reg, value) writeb((value),(T128_address(reg)))
+ #else
+@@ -129,7 +130,7 @@ #define NCR5380_read(reg)						\
+     , instance->hostno, (reg), T128_address(reg))), readb(T128_address(reg)))
+ 
+ #define NCR5380_write(reg, value) {					\
+-    printk("scsi%d : write %02x to register %d at address %08x\n", 	\
++    printk("scsi%d : write %02x to register %d at address %08x\n",	\
+ 	    instance->hostno, (value), (reg), T128_address(reg));	\
+     writeb((value), (T128_address(reg)));				\
+ }
+@@ -142,10 +143,10 @@ #define NCR5380_abort t128_abort
+ #define NCR5380_bus_reset t128_bus_reset
+ #define NCR5380_proc_info t128_proc_info
+ 
+-/* 15 14 12 10 7 5 3 
++/* 15 14 12 10 7 5 3
+    1101 0100 1010 1000 */
+-   
+-#define T128_IRQS 0xc4a8 
++
++#define T128_IRQS 0xc4a8
+ 
+ #endif /* else def HOSTS_C */
+ #endif /* ndef ASM */
+
+
