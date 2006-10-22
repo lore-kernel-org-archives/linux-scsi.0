@@ -1,42 +1,47 @@
-From: Sean Bruno <sean.bruno@dsl-only.net>
-Subject: Re: Adaptec 29320 [aic79xx] fails on power cycle of LUN
-Date: Sat, 21 Oct 2006 21:45:03 -0700
-Message-ID: <1161492303.3204.75.camel@home-desk>
-References: <1161210246.3204.17.camel@home-desk>
-	 <1161210748.3204.22.camel@home-desk>  <1161237121.15090.9.camel@max>
-	 <1161260730.3204.36.camel@home-desk>  <45378767.4080106@suse.de>
-	 <1161274711.3204.41.camel@home-desk>  <45387462.10300@suse.de>
-	 <1161463732.3204.66.camel@home-desk>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: 3Ware delayed device mounting errors with newer 9500 series
+ adapters
+Date: Sat, 21 Oct 2006 23:39:04 -0700
+Message-ID: <20061021233904.c2f40a5f.akpm@osdl.org>
+References: <453A52CE.80605@wolfmountaingroup.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iron2.pdx.net ([69.64.224.71]:26033 "EHLO iron2.pdx.net")
-	by vger.kernel.org with ESMTP id S1422914AbWJVEpK (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:38596 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1423049AbWJVGjI (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 22 Oct 2006 00:45:10 -0400
-In-Reply-To: <1161463732.3204.66.camel@home-desk>
+	Sun, 22 Oct 2006 02:39:08 -0400
+In-Reply-To: <453A52CE.80605@wolfmountaingroup.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: linux-scsi@vger.kernel.org
+To: "Jeffrey V. Merkey" <jmerkey@wolfmountaingroup.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linuxraid@amcc.com, linux-scsi@vger.kernel.org
 
+On Sat, 21 Oct 2006 11:03:10 -0600
+"Jeffrey V. Merkey" <jmerkey@wolfmountaingroup.com> wrote:
 
-> I spent some time to whack together a SCSI target on a second machine
-> with a QLA1040 that I have lying around and connected my test machine
-> with the 29320 to it. Essentially, I'm just too lazy to sit at my desk
-> an continually disconnect and reconnect the power on my array!  :)
 > 
-> After a couple of minutes of whacking on it, I was able to script
-> something to automatically cycle through 5 iterations of 'mkfs' then
-> reboot the new 'scsi disk', sleep for 120 seconds and repeat.
+> Adam,
 > 
-> Seems to work fine with the patch applied to 2.6.19-rc2.  I'm running a
-> longer 100 iteration loop and I'll get back with results.
+> We have been getting 3Ware 9500 series adapters in the past 60 days 
+> which exhibit a delayed behavior during mounting of FS from
+> /etc/fstab.   The adapters older than this do not exhibit this behavior. 
+> 
+> During bootup, if the driver is compiled as a module rather than in 
+> kernel, mount points such as /var in fstab fail to detect the devices
+> until the system fully boots, at which point the /dev/sdb etc. devices 
+> showup.  It happens on both ATA cabled drives and drives
+> cabled with multi-lane controller backplanes.
+> 
+> The problem is easy to reproduce.  Install ES4, point the /var directory 
+> during install to one of the array devices in disk druid, and after
+> the install completes, /var/ will not mount during bootup and all sorts 
+> of errors stream off the screen.  I can reproduce the problem
+> with several systems in our labs and upon investigating the adapter 
+> revisions, I find that adapters ordered in the past 60 days exhibit
+> the problem.   Compiling the driver in kernel gets around the problem, 
+> indicating its timing related.
 > 
 
-
-Nice.  I ran a 100 loop test with zero errors.  
-
-Sean
-
+cc's added.
