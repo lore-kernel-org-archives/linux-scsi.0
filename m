@@ -1,69 +1,107 @@
-From: Ismail Donmez <ismail@pardus.org.tr>
-Subject: Re: [PATCH] scsi/scsi.h protect scsi_to_u32 function by ifdef __KERNEL__
-Date: Sun, 22 Oct 2006 20:32:00 +0300
-Message-ID: <200610222032.00597.ismail@pardus.org.tr>
-References: <200610211302.08574.ismail@pardus.org.tr>
+From: "Jeffrey V. Merkey" <jmerkey@wolfmountaingroup.com>
+Subject: Re: 3Ware delayed device mounting errors with newer 9500 series adapters
+Date: Sun, 22 Oct 2006 14:19:29 -0600
+Message-ID: <453BD251.1000703@wolfmountaingroup.com>
+References: <453A52CE.80605@wolfmountaingroup.com>	 <20061021233904.c2f40a5f.akpm@osdl.org> <b1bc6a000610221019i47283722g3b8f4a79918c4825@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Multipart/Mixed;
-  boundary="Boundary-00=_Qs6OFLRkwGXyZBO"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns2.uludag.org.tr ([193.140.100.220]:51108 "EHLO uludag.org.tr")
-	by vger.kernel.org with ESMTP id S1751322AbWJVRbw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 22 Oct 2006 13:31:52 -0400
-In-Reply-To: <200610211302.08574.ismail@pardus.org.tr>
+Received: from rwcrmhc14.comcast.net ([204.127.192.84]:3990 "EHLO
+	rwcrmhc14.comcast.net") by vger.kernel.org with ESMTP
+	id S1751343AbWJVUKt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 22 Oct 2006 16:10:49 -0400
+In-Reply-To: <b1bc6a000610221019i47283722g3b8f4a79918c4825@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ismail Donmez <ismail@pardus.org.tr>
-Cc: linux-scsi@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>
+To: adam radford <aradford@gmail.com>
+Cc: Andrew Morton <akpm@osdl.org>, linux-kernel <linux-kernel@vger.kernel.org>, linuxraid@amcc.com, linux-scsi@vger.kernel.org
 
---Boundary-00=_Qs6OFLRkwGXyZBO
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+adam radford wrote:
 
-=46orgot to cc linux-scsi list.
-
-21 Eki 2006 Cts 13:02 tarihinde =C5=9Funlar=C4=B1 yazm=C4=B1=C5=9Ft=C4=B1n=
-=C4=B1z:
-> Hi,
+> Jeff,
 >
-> include/scsi/scsi.h defines scsi_to_u32 function like this:
->
->  static inline u32 scsi_to_u32(u8 *ptr)
->
-> But the definition of u8 is protected by ifdef __KERNEL__ in asm/types.h
-> hence this whole function should be procted as well. This fixes compilati=
-on
-> of cdrtools with latest kernel-headers GIT tree.
->
-> Signed-off-by: Ismail Donmez <ismail@pardus.org.tr>
+> Can you reproduce with 2.6.18.1?  ES4 contains a custom 3ware driver.
 
---Boundary-00=_Qs6OFLRkwGXyZBO
-Content-Type: text/x-diff;
-  charset="utf-8";
-  name="1.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="1.patch"
+We don't use kernels later than 2.6.15 in our shipping releases since 
+they have
+some issues with stability. 
 
-diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-index 84a6d5f..0ce924a 100644
---- a/include/scsi/scsi.h
-+++ b/include/scsi/scsi.h
-@@ -429,10 +429,12 @@ #define SCSI_IOCTL_GET_BUS_NUMBER	0x5386
- /* Used to obtain the PCI location of a device */
- #define SCSI_IOCTL_GET_PCI		0x5387
- 
-+#ifdef __KERNEL__
- /* Pull a u32 out of a SCSI message (using BE SCSI conventions) */
- static inline u32 scsi_to_u32(u8 *ptr)
- {
- 	return (ptr[0]<<24) + (ptr[1]<<16) + (ptr[2]<<8) + ptr[3];
- }
-+#endif
- 
- #endif /* _SCSI_SCSI_H */
+>
+> Also, you have included no error output with this email whatsoever.  Can
+> you go to a virtual console during your ES4 install, run 'dmesg', and 
+> see if
+> the errors are in there, or if they are a part of the ES4 anaconda 
+> installer?
 
---Boundary-00=_Qs6OFLRkwGXyZBO--
+dmesg produces no output since the errors are reflected from init.
+
+Errors are typical of an unmounted volume.  i.e. 
+
+"cannot touch /var/lock/subsys/<service> (dozens of these)
+Starting System logger (hangs for 15 minutes) 
+
+So no logs .....
+
+>
+> /dev/sdb, etc. having delayed appearances sounds like it is udev related.
+
+No, I do not believe so.
+
+>
+> Are you running the latest firmware?  Do your controllers older than 
+> 60 days
+> have different firmware?
+
+This is the right question.  I will collect the various versions this 
+occurs on and post them here.
+
+>
+> I will try to reproduce this.
+
+Pretty easy to do.
+
+Jeff
+
+>
+> -Adam
+>
+> On 10/21/06, Andrew Morton <akpm@osdl.org> wrote:
+>
+>> On Sat, 21 Oct 2006 11:03:10 -0600
+>> "Jeffrey V. Merkey" <jmerkey@wolfmountaingroup.com> wrote:
+>>
+>> >
+>> > Adam,
+>> >
+>> > We have been getting 3Ware 9500 series adapters in the past 60 days
+>> > which exhibit a delayed behavior during mounting of FS from
+>> > /etc/fstab.   The adapters older than this do not exhibit this 
+>> behavior.
+>> >
+>> > During bootup, if the driver is compiled as a module rather than in
+>> > kernel, mount points such as /var in fstab fail to detect the devices
+>> > until the system fully boots, at which point the /dev/sdb etc. devices
+>> > showup.  It happens on both ATA cabled drives and drives
+>> > cabled with multi-lane controller backplanes.
+>> >
+>> > The problem is easy to reproduce.  Install ES4, point the /var 
+>> directory
+>> > during install to one of the array devices in disk druid, and after
+>> > the install completes, /var/ will not mount during bootup and all 
+>> sorts
+>> > of errors stream off the screen.  I can reproduce the problem
+>> > with several systems in our labs and upon investigating the adapter
+>> > revisions, I find that adapters ordered in the past 60 days exhibit
+>> > the problem.   Compiling the driver in kernel gets around the problem,
+>> > indicating its timing related.
+>> >
+>>
+>> cc's added.
+>> -
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>
+
