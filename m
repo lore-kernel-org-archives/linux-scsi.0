@@ -1,29 +1,29 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 2/4] aic79xx: set precompensation
-Date: Mon, 23 Oct 2006 15:24:23 +0200
-Message-ID: <453CC287.3000300@suse.de>
+Subject: [PATCH 3/4] aic7xxx: Remove slave_destroy
+Date: Mon, 23 Oct 2006 15:25:36 +0200
+Message-ID: <453CC2D0.7030403@suse.de>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------010706070309030605000008"
+ boundary="------------080407090104080606030206"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:1164 "EHLO mx2.suse.de")
-	by vger.kernel.org with ESMTP id S964840AbWJWNYZ (ORCPT
+Received: from mx1.suse.de ([195.135.220.2]:21964 "EHLO mx1.suse.de")
+	by vger.kernel.org with ESMTP id S964841AbWJWNZj (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Oct 2006 09:24:25 -0400
+	Mon, 23 Oct 2006 09:25:39 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>
 Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
 This is a multi-part message in MIME format.
---------------010706070309030605000008
+--------------080407090104080606030206
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 8bit
 
 Hi all,
 
-we really should update the IOCELL chip whenever we change the 
-precompensation.
+We've already removed that one from aic79xx. No reason why we shouldn't 
+do it here, too.
 
 Cheers,
 
@@ -34,58 +34,391 @@ SuSE Linux Products GmbH		S390 & zSeries
 Maxfeldstraße 5				+49 911 74053 688
 90409 Nürnberg				http://www.suse.de
 
---------------010706070309030605000008
+--------------080407090104080606030206
 Content-Type: text/plain;
- name="0002-aic79xx-Set-precompensation-correctly.txt"
+ name="0003-aic7xxx-Remove-slave_destroy.txt"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline;
- filename="0002-aic79xx-Set-precompensation-correctly.txt"
+ filename="0003-aic7xxx-Remove-slave_destroy.txt"
 
 From: Hannes Reinecke <hare@suse.de>
-Date: Mon Oct 23 11:02:57 2006 +0200
-Subject: aic79xx: Set precompensation correctly
+Date: Mon Oct 23 11:41:23 2006 +0200
+Subject: aic7xxx: Remove slave_destroy
 
-aic79xx has a special 'iocell' chip which handles the precompensation.
-If it's set via DV we should make sure to set the chip correctly, too.
+This is a cross-port from aic79xx; we still hit the occasional
+BUG_ON in slave_destroy. And again we don't really need the
+slave_destroy callback nor the ahc_linux_target structure
+at all.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 
 ---
 
- drivers/scsi/aic7xxx/aic79xx_osm.c |   16 +++++++++++++++-
- 1 files changed, 15 insertions(+), 1 deletions(-)
+ drivers/scsi/aic7xxx/aic7xxx.h      |    1 +
+ drivers/scsi/aic7xxx/aic7xxx_core.c |   22 ++++++------
+ drivers/scsi/aic7xxx/aic7xxx_osm.c  |   65 ++++++-----------------------------
+ drivers/scsi/aic7xxx/aic7xxx_osm.h  |   11 +-----
+ drivers/scsi/aic7xxx/aic7xxx_proc.c |   10 ++---
+ 5 files changed, 31 insertions(+), 78 deletions(-)
 
-2f3de401cc38fa20f861470c035a7d088bc23ede
-diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
-index f8e6048..d5375db 100644
---- a/drivers/scsi/aic7xxx/aic79xx_osm.c
-+++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
-@@ -2634,8 +2634,22 @@ #ifdef AHD_DEBUG
- 		       pcomp ? "Enable" : "Disable");
+71d32a1e8d0fc4eb7004a9b1edb7d65fb068b403
+diff --git a/drivers/scsi/aic7xxx/aic7xxx.h b/drivers/scsi/aic7xxx/aic7xxx.h
+index 62ff8c3..aa9a90d 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx.h
++++ b/drivers/scsi/aic7xxx/aic7xxx.h
+@@ -1289,6 +1289,7 @@ typedef enum {
+ } ahc_queue_alg;
+ 
+ void			ahc_set_tags(struct ahc_softc *ahc,
++				     struct scsi_cmnd *cmd,
+ 				     struct ahc_devinfo *devinfo,
+ 				     ahc_queue_alg alg);
+ 
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_core.c b/drivers/scsi/aic7xxx/aic7xxx_core.c
+index 93e4e40..0b28842 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_core.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_core.c
+@@ -1986,7 +1986,7 @@ ahc_set_syncrate(struct ahc_softc *ahc, 
+ 		tinfo->curr.ppr_options = ppr_options;
+ 
+ 		ahc_send_async(ahc, devinfo->channel, devinfo->target,
+-			       CAM_LUN_WILDCARD, AC_TRANSFER_NEG, NULL);
++			       CAM_LUN_WILDCARD, AC_TRANSFER_NEG);
+ 		if (bootverbose) {
+ 			if (offset != 0) {
+ 				printf("%s: target %d synchronous at %sMHz%s, "
+@@ -2056,7 +2056,7 @@ ahc_set_width(struct ahc_softc *ahc, str
+ 		tinfo->curr.width = width;
+ 
+ 		ahc_send_async(ahc, devinfo->channel, devinfo->target,
+-			       CAM_LUN_WILDCARD, AC_TRANSFER_NEG, NULL);
++			       CAM_LUN_WILDCARD, AC_TRANSFER_NEG);
+ 		if (bootverbose) {
+ 			printf("%s: target %d using %dbit transfers\n",
+ 			       ahc_name(ahc), devinfo->target,
+@@ -2074,12 +2074,14 @@ ahc_set_width(struct ahc_softc *ahc, str
+  * Update the current state of tagged queuing for a given target.
+  */
+ void
+-ahc_set_tags(struct ahc_softc *ahc, struct ahc_devinfo *devinfo,
+-	     ahc_queue_alg alg)
++ahc_set_tags(struct ahc_softc *ahc, struct scsi_cmnd *cmd,
++	     struct ahc_devinfo *devinfo, ahc_queue_alg alg)
+ {
+- 	ahc_platform_set_tags(ahc, devinfo, alg);
++	struct scsi_device *sdev = cmd->device;
++
++ 	ahc_platform_set_tags(ahc, sdev, devinfo, alg);
+  	ahc_send_async(ahc, devinfo->channel, devinfo->target,
+- 		       devinfo->lun, AC_TRANSFER_NEG, &alg);
++ 		       devinfo->lun, AC_TRANSFER_NEG);
+ }
+ 
+ /*
+@@ -3489,7 +3491,7 @@ ahc_handle_msg_reject(struct ahc_softc *
+ 			printf("(%s:%c:%d:%d): refuses tagged commands.  "
+ 			       "Performing non-tagged I/O\n", ahc_name(ahc),
+ 			       devinfo->channel, devinfo->target, devinfo->lun);
+-			ahc_set_tags(ahc, devinfo, AHC_QUEUE_NONE);
++			ahc_set_tags(ahc, scb->io_ctx, devinfo, AHC_QUEUE_NONE);
+ 			mask = ~0x23;
+ 		} else {
+ 			printf("(%s:%c:%d:%d): refuses %s tagged commands.  "
+@@ -3497,7 +3499,7 @@ ahc_handle_msg_reject(struct ahc_softc *
+ 			       ahc_name(ahc), devinfo->channel, devinfo->target,
+ 			       devinfo->lun, tag_type == MSG_ORDERED_TASK
+ 			       ? "ordered" : "head of queue");
+-			ahc_set_tags(ahc, devinfo, AHC_QUEUE_BASIC);
++			ahc_set_tags(ahc, scb->io_ctx, devinfo, AHC_QUEUE_BASIC);
+ 			mask = ~0x03;
+ 		}
+ 
+@@ -3763,7 +3765,7 @@ #endif
+ 	
+ 	if (status != CAM_SEL_TIMEOUT)
+ 		ahc_send_async(ahc, devinfo->channel, devinfo->target,
+-			       CAM_LUN_WILDCARD, AC_SENT_BDR, NULL);
++			       CAM_LUN_WILDCARD, AC_SENT_BDR);
+ 
+ 	if (message != NULL
+ 	 && (verbose_level <= bootverbose))
+@@ -6018,7 +6020,7 @@ #ifdef AHC_TARGET_MODE
  #endif
+ 	/* Notify the XPT that a bus reset occurred */
+ 	ahc_send_async(ahc, devinfo.channel, CAM_TARGET_WILDCARD,
+-		       CAM_LUN_WILDCARD, AC_BUS_RESET, NULL);
++		       CAM_LUN_WILDCARD, AC_BUS_RESET);
  
--	if (pcomp)
-+	if (pcomp) {
-+		uint8_t precomp;
-+
-+		if (ahd->unit < ARRAY_SIZE(aic79xx_iocell_info)) {
-+			struct ahd_linux_iocell_opts *iocell_opts;
-+
-+			iocell_opts = &aic79xx_iocell_info[ahd->unit];
-+			precomp = iocell_opts->precomp;
-+		} else {
-+			precomp = AIC79XX_DEFAULT_PRECOMP;
-+		}
- 		ppr_options |= MSG_EXT_PPR_PCOMP_EN;
-+		AHD_SET_PRECOMP(ahd, precomp);
-+	} else {
-+		AHD_SET_PRECOMP(ahd, 0);
-+	}
+ 	/*
+ 	 * Revert to async/narrow transfers until we renegotiate.
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+index 43ab753..7ffea7c 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+@@ -512,7 +512,6 @@ ahc_linux_target_alloc(struct scsi_targe
+ 	struct seeprom_config *sc = ahc->seep_config;
+ 	unsigned long flags;
+ 	struct scsi_target **ahc_targp = ahc_linux_target_in_softc(starget);
+-	struct ahc_linux_target *targ = scsi_transport_target_data(starget);
+ 	unsigned short scsirate;
+ 	struct ahc_devinfo devinfo;
+ 	struct ahc_initiator_tinfo *tinfo;
+@@ -533,7 +532,6 @@ ahc_linux_target_alloc(struct scsi_targe
+ 	BUG_ON(*ahc_targp != NULL);
  
- 	ahd_compile_devinfo(&devinfo, shost->this_id, starget->id, 0,
- 			    starget->channel + 'A', ROLE_INITIATOR);
+ 	*ahc_targp = starget;
+-	memset(targ, 0, sizeof(*targ));
+ 
+ 	if (sc) {
+ 		int maxsync = AHC_SYNCRATE_DT;
+@@ -594,14 +592,11 @@ ahc_linux_slave_alloc(struct scsi_device
+ 	struct	ahc_softc *ahc =
+ 		*((struct ahc_softc **)sdev->host->hostdata);
+ 	struct scsi_target *starget = sdev->sdev_target;
+-	struct ahc_linux_target *targ = scsi_transport_target_data(starget);
+ 	struct ahc_linux_device *dev;
+ 
+ 	if (bootverbose)
+ 		printf("%s: Slave Alloc %d\n", ahc_name(ahc), sdev->id);
+ 
+-	BUG_ON(targ->sdev[sdev->lun] != NULL);
+-
+ 	dev = scsi_transport_device_data(sdev);
+ 	memset(dev, 0, sizeof(*dev));
+ 
+@@ -618,8 +613,6 @@ ahc_linux_slave_alloc(struct scsi_device
+ 	 */
+ 	dev->maxtags = 0;
+ 	
+-	targ->sdev[sdev->lun] = sdev;
+-
+ 	spi_period(starget) = 0;
+ 
+ 	return 0;
+@@ -644,22 +637,6 @@ ahc_linux_slave_configure(struct scsi_de
+ 	return 0;
+ }
+ 
+-static void
+-ahc_linux_slave_destroy(struct scsi_device *sdev)
+-{
+-	struct	ahc_softc *ahc;
+-	struct	ahc_linux_device *dev = scsi_transport_device_data(sdev);
+-	struct	ahc_linux_target *targ = scsi_transport_target_data(sdev->sdev_target);
+-
+-	ahc = *((struct ahc_softc **)sdev->host->hostdata);
+-	if (bootverbose)
+-		printf("%s: Slave Destroy %d\n", ahc_name(ahc), sdev->id);
+-
+-	BUG_ON(dev->active);
+-
+-	targ->sdev[sdev->lun] = NULL;
+-}
+-
+ #if defined(__i386__)
+ /*
+  * Return the disk geometry for the given SCSI device.
+@@ -781,7 +758,6 @@ #endif
+ 	.use_clustering		= ENABLE_CLUSTERING,
+ 	.slave_alloc		= ahc_linux_slave_alloc,
+ 	.slave_configure	= ahc_linux_slave_configure,
+-	.slave_destroy		= ahc_linux_slave_destroy,
+ 	.target_alloc		= ahc_linux_target_alloc,
+ 	.target_destroy		= ahc_linux_target_destroy,
+ };
+@@ -1203,21 +1179,13 @@ void
+ ahc_platform_free(struct ahc_softc *ahc)
+ {
+ 	struct scsi_target *starget;
+-	int i, j;
++	int i;
+ 
+ 	if (ahc->platform_data != NULL) {
+ 		/* destroy all of the device and target objects */
+ 		for (i = 0; i < AHC_NUM_TARGETS; i++) {
+ 			starget = ahc->platform_data->starget[i];
+ 			if (starget != NULL) {
+-				for (j = 0; j < AHC_NUM_LUNS; j++) {
+-					struct ahc_linux_target *targ =
+-						scsi_transport_target_data(starget);
+-
+-					if (targ->sdev[j] == NULL)
+-						continue;
+-					targ->sdev[j] = NULL;
+-				}
+ 				ahc->platform_data->starget[i] = NULL;
+  			}
+  		}
+@@ -1251,24 +1219,13 @@ ahc_platform_freeze_devq(struct ahc_soft
+ }
+ 
+ void
+-ahc_platform_set_tags(struct ahc_softc *ahc, struct ahc_devinfo *devinfo,
+-		      ahc_queue_alg alg)
++ahc_platform_set_tags(struct ahc_softc *ahc, struct scsi_device *sdev,
++		      struct ahc_devinfo *devinfo, ahc_queue_alg alg)
+ {
+-	struct scsi_target *starget;
+-	struct ahc_linux_target *targ;
+ 	struct ahc_linux_device *dev;
+-	struct scsi_device *sdev;
+-	u_int target_offset;
+ 	int was_queuing;
+ 	int now_queuing;
+ 
+-	target_offset = devinfo->target;
+-	if (devinfo->channel != 'A')
+-		target_offset += 8;
+-	starget = ahc->platform_data->starget[target_offset];
+-	targ = scsi_transport_target_data(starget);
+-	BUG_ON(targ == NULL);
+-	sdev = targ->sdev[devinfo->lun];
+ 	if (sdev == NULL)
+ 		return;
+ 	dev = scsi_transport_device_data(sdev);
+@@ -1401,11 +1358,15 @@ ahc_linux_device_queue_depth(struct scsi
+ 	tags = ahc_linux_user_tagdepth(ahc, &devinfo);
+ 	if (tags != 0 && sdev->tagged_supported != 0) {
+ 
+-		ahc_set_tags(ahc, &devinfo, AHC_QUEUE_TAGGED);
++		ahc_platform_set_tags(ahc, sdev, &devinfo, AHC_QUEUE_TAGGED);
++		ahc_send_async(ahc, devinfo.channel, devinfo.target,
++			       devinfo.lun, AC_TRANSFER_NEG);
+ 		ahc_print_devinfo(ahc, &devinfo);
+ 		printf("Tagged Queuing enabled.  Depth %d\n", tags);
+ 	} else {
+-		ahc_set_tags(ahc, &devinfo, AHC_QUEUE_NONE);
++		ahc_platform_set_tags(ahc, sdev, &devinfo, AHC_QUEUE_NONE);
++		ahc_send_async(ahc, devinfo.channel, devinfo.target,
++			       devinfo.lun, AC_TRANSFER_NEG);
+ 	}
+ }
+ 
+@@ -1629,7 +1590,7 @@ ahc_platform_flushwork(struct ahc_softc 
+ 
+ void
+ ahc_send_async(struct ahc_softc *ahc, char channel,
+-	       u_int target, u_int lun, ac_code code, void *arg)
++	       u_int target, u_int lun, ac_code code)
+ {
+ 	switch (code) {
+ 	case AC_TRANSFER_NEG:
+@@ -1946,7 +1907,7 @@ #endif
+ 			}
+ 			ahc_set_transaction_status(scb, CAM_REQUEUE_REQ);
+ 			ahc_set_scsi_status(scb, SCSI_STATUS_OK);
+-			ahc_platform_set_tags(ahc, &devinfo,
++			ahc_platform_set_tags(ahc, sdev, &devinfo,
+ 				     (dev->flags & AHC_DEV_Q_BASIC)
+ 				   ? AHC_QUEUE_BASIC : AHC_QUEUE_TAGGED);
+ 			break;
+@@ -1957,7 +1918,7 @@ #endif
+ 		 */
+ 		dev->openings = 1;
+ 		ahc_set_scsi_status(scb, SCSI_STATUS_BUSY);
+-		ahc_platform_set_tags(ahc, &devinfo,
++		ahc_platform_set_tags(ahc, sdev, &devinfo,
+ 			     (dev->flags & AHC_DEV_Q_BASIC)
+ 			   ? AHC_QUEUE_BASIC : AHC_QUEUE_TAGGED);
+ 		break;
+@@ -2599,8 +2560,6 @@ ahc_linux_init(void)
+ 	if (!ahc_linux_transport_template)
+ 		return -ENODEV;
+ 
+-	scsi_transport_reserve_target(ahc_linux_transport_template,
+-				      sizeof(struct ahc_linux_target));
+ 	scsi_transport_reserve_device(ahc_linux_transport_template,
+ 				      sizeof(struct ahc_linux_device));
+ 
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.h b/drivers/scsi/aic7xxx/aic7xxx_osm.h
+index a87a4ce..21d1344 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm.h
++++ b/drivers/scsi/aic7xxx/aic7xxx_osm.h
+@@ -256,7 +256,6 @@ typedef enum {
+ 	AHC_DEV_PERIODIC_OTAG	 = 0x40, /* Send OTAG to prevent starvation */
+ } ahc_linux_dev_flags;
+ 
+-struct ahc_linux_target;
+ struct ahc_linux_device {
+ 	/*
+ 	 * The number of transactions currently
+@@ -329,12 +328,6 @@ #define AHC_LOCK_TAGS_COUNT 50
+ #define AHC_OTAG_THRESH	500
+ };
+ 
+-struct ahc_linux_target {
+-	struct scsi_device	 *sdev[AHC_NUM_LUNS];
+-	struct ahc_transinfo	  last_tinfo;
+-	struct ahc_softc	 *ahc;
+-};
+-
+ /********************* Definitions Required by the Core ***********************/
+ /*
+  * Number of SG segments we require.  So long as the S/G segments for
+@@ -824,7 +817,7 @@ ahc_freeze_scb(struct scb *scb)
+         }
+ }
+ 
+-void	ahc_platform_set_tags(struct ahc_softc *ahc,
++void	ahc_platform_set_tags(struct ahc_softc *ahc, struct scsi_device *sdev,
+ 			      struct ahc_devinfo *devinfo, ahc_queue_alg);
+ int	ahc_platform_abort_scbs(struct ahc_softc *ahc, int target,
+ 				char channel, int lun, u_int tag,
+@@ -834,7 +827,7 @@ irqreturn_t
+ void	ahc_platform_flushwork(struct ahc_softc *ahc);
+ void	ahc_done(struct ahc_softc*, struct scb*);
+ void	ahc_send_async(struct ahc_softc *, char channel,
+-		       u_int target, u_int lun, ac_code, void *);
++		       u_int target, u_int lun, ac_code);
+ void	ahc_print_path(struct ahc_softc *, struct scb *);
+ void	ahc_platform_dump_card_state(struct ahc_softc *ahc);
+ 
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_proc.c b/drivers/scsi/aic7xxx/aic7xxx_proc.c
+index 5914b4a..99e5443 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_proc.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_proc.c
+@@ -182,7 +182,6 @@ ahc_dump_target_state(struct ahc_softc *
+ 		      u_int our_id, char channel, u_int target_id,
+ 		      u_int target_offset)
+ {
+-	struct	ahc_linux_target *targ;
+ 	struct	scsi_target *starget;
+ 	struct	ahc_initiator_tinfo *tinfo;
+ 	struct	ahc_tmode_tstate *tstate;
+@@ -198,7 +197,6 @@ ahc_dump_target_state(struct ahc_softc *
+ 	starget = ahc->platform_data->starget[target_offset];
+ 	if (!starget)
+ 		return;
+-	targ = scsi_transport_target_data(starget);
+ 
+ 	copy_info(info, "\tGoal: ");
+ 	ahc_format_transinfo(info, &tinfo->goal);
+@@ -208,7 +206,7 @@ ahc_dump_target_state(struct ahc_softc *
+ 	for (lun = 0; lun < AHC_NUM_LUNS; lun++) {
+ 		struct scsi_device *sdev;
+ 
+-		sdev = targ->sdev[lun];
++		sdev = scsi_device_lookup_by_target(starget, lun);
+ 
+ 		if (sdev == NULL)
+ 			continue;
+@@ -383,11 +381,11 @@ ahc_linux_proc_info(struct Scsi_Host *sh
+ 	}
+ 	copy_info(&info, "\n");
+ 
+-	max_targ = 15;
++	max_targ = 16;
+ 	if ((ahc->features & (AHC_WIDE|AHC_TWIN)) == 0)
+-		max_targ = 7;
++		max_targ = 8;
+ 
+-	for (i = 0; i <= max_targ; i++) {
++	for (i = 0; i < max_targ; i++) {
+ 		u_int our_id;
+ 		u_int target_id;
+ 		char channel;
 -- 
 1.3.1
 
 
---------------010706070309030605000008--
+--------------080407090104080606030206--
