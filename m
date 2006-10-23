@@ -1,56 +1,43 @@
-From: "Haefliger, Juerg" <Juerg.Haefliger@hp.com>
-Subject: RE: Mid-layer API?
-Date: Mon, 23 Oct 2006 16:56:24 -0500
-Message-ID: <861B5CF71BC70C478DFEB9EAFE98F699ACB0DD@G3W0068.americas.hpqcorp.net>
-References: <20061020172549.7666.qmail@web31812.mail.mud.yahoo.com>
+From: Steven Hayter <steven@hayter.me.uk>
+Subject: Re: Mid-layer API?
+Date: Mon, 23 Oct 2006 23:53:29 +0100
+Message-ID: <453D47E9.8000606@hayter.me.uk>
+References: <861B5CF71BC70C478DFEB9EAFE98F699ACB0DD@G3W0068.americas.hpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ccerelbas03.cce.hp.com ([161.114.21.106]:25736 "EHLO
-	ccerelbas03.cce.hp.com") by vger.kernel.org with ESMTP
-	id S1752034AbWJWV40 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Oct 2006 17:56:26 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <20061020172549.7666.qmail@web31812.mail.mud.yahoo.com>
+Received: from 85.189.5.98 ([85.189.5.98]:16580 "EHLO zombie.undead")
+	by vger.kernel.org with ESMTP id S1751993AbWJWWzs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 23 Oct 2006 18:55:48 -0400
+In-Reply-To: <861B5CF71BC70C478DFEB9EAFE98F699ACB0DD@G3W0068.americas.hpqcorp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: ltuikov@yahoo.com, linux-scsi@vger.kernel.org
+To: "Haefliger, Juerg" <Juerg.Haefliger@hp.com>
+Cc: ltuikov@yahoo.com, linux-scsi@vger.kernel.org
 
-Hi Luben,
+Haefliger, Juerg wrote:
+ > Hi Luben,
+ >
+ > I did but I still don't get it :-) In fact I'm more confused now. Why
+ > host_template? Isn't that function used to register an LLD with the
+ > mid-layer? I'm trying to tap into the other side of the mid-layer.
 
-> > I'm using the Linux box as a 'dumb' SCSI adapter.
-> 
-> You just answered your question!
+On the driver side (HBA) you've got the host template, and queue_command().
 
-Hmm... OK...
- 
-> > The SCSI commands are
-> > received by a driver that manages a proprietary interface through 
-> > which the commands are coming in from a remote host. The 
-> driver then 
-> > needs to forward the commands to the FC disk (by means I'm 
-> trying to 
-> > figure out here :-) and pass the results back up to the host.
-> 
-> You again answered your own question.
+On the other side (the interface used by sg/sd/st) used to live 
+scsi_do_req() (gone in 2.6.18) which is now scsi_execute_async() and 
+friends.
 
-Hmmmmmm....
-  
-> > I guess my biggest problem is that I don't fully understand 
-> the flow 
-> > of command and data through the different layers.
-> 
-> Take a look at the scsi_host template, and the document Randy 
-> mentioned.
+The header files/function templates should be fairly self-explanatory 
+apart from the confusing use of old-style names, the 'void *buffer' is 
+the scatter gather list, the 'unsigned buflen' is the total amount of 
+data you want to transfer, and use_sg is the number of scatter-gather 
+elements.
 
-I did but I still don't get it :-) In fact I'm more confused now. Why
-host_template? Isn't that function used to register an LLD with the
-mid-layer? I'm trying to tap into the other side of the mid-layer.
+Hope that gives you some place to start with, if you just want to send 
+SCSI commands into the kernel.
 
-Thanks
-...juerg
-
-
->     Luben
+Regards,
+Steve
