@@ -1,58 +1,50 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: linux-2.6.19-rc2-gc7a3bd17 build #90 failed
-Date: Mon, 23 Oct 2006 07:46:58 -0600
-Message-ID: <20061023134657.GG25210@parisc-linux.org>
-References: <200610231526.48474.toralf.foerster@gmx.de>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [linux-usb-devel] Fw: garbled usb storage scsi vendor & model
+ in 2.6.19-rc1
+Date: Mon, 23 Oct 2006 10:05:15 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0610231002400.6401-100000@iolanthe.rowland.org>
+References: <Pine.SOC.4.61.0610230724360.15328@math.ut.ee>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:922 "EHLO
-	mail.parisc-linux.org") by vger.kernel.org with ESMTP
-	id S1751955AbWJWNq7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Oct 2006 09:46:59 -0400
-Content-Disposition: inline
-In-Reply-To: <200610231526.48474.toralf.foerster@gmx.de>
+Received: from iolanthe.rowland.org ([192.131.102.54]:49157 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP
+	id S1751094AbWJWOFS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 23 Oct 2006 10:05:18 -0400
+In-Reply-To: <Pine.SOC.4.61.0610230724360.15328@math.ut.ee>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Toralf =?iso-8859-1?Q?F=F6rster?= <toralf.foerster@gmx.de>
-Cc: linux-scsi@vger.kernel.org
+To: Meelis Roos <mroos@linux.ee>
+Cc: Andrew Morton <akpm@osdl.org>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Mon, Oct 23, 2006 at 03:26:46PM +0200, Toralf F=F6rster wrote:
-> the build with the attached .config failed, make ends with:
+On Mon, 23 Oct 2006, Meelis Roos wrote:
 
-What tree are you building?  In Linus' tree, advansys_pci_tbl is
-declared as:
+> >> scsi 2:0:0:0: Direct-Access     ugin.upd .dpkg-new  PQ: 0 ANSI: 0 CCS
+> >>
+> >> The data is garbage here (obviously I'm running debian and have done
+> >> daily upgrade recently). Other than that message, the device appeared
+> >> running fine. But it still worries.
+> >
+> > Try using the patch below.  If you still see the same garbage showing up,
+> > it must be because the drive is sending this garbage to your computer.
+> 
+> Tried the patch, still garbage. It returns different garbage each time, 
+> and it has returned sensible data before. Since the garbage contains 
+> debian-specific strings sometimes, it seems to come from system RAM 
+> (someone is overwriting scsi data?).
+> 
+> This is not x86_64 specific, the same happened on yesterdays 
+> 2.6.19-rc2+git on i386. Have not yet compiled and older kernel to really 
+> see if it still works with older kernel.
 
-static struct pci_device_id advansys_pci_tbl[] __devinitdata =3D {
+Here's the best thing to do to find out what is really happening:  Use the
+usbmon facility to see exactly what data bytes are being sent to the
+computer (instructions in Documentation/usb/usbmon.txt).  This will tell
+us for certain whether those garbage bytes are left-over junk in RAM or
+the device is actually sending them.
 
-Seems like your tree has it defined as:
+You don't even need to use the patch I sent for this test, although it 
+won't hurt.
 
-static struct pci_device_id advansys_pci_tbl[5] __devinitdata =3D {
+Alan Stern
 
->   CC      drivers/scsi/advansys.o
-> drivers/scsi/advansys.c:794:2: warning: #warning this driver is still=
- not properly converted to the DMA API
-> drivers/scsi/advansys.c: In function `advansys_detect':
-> drivers/scsi/advansys.c:4406: warning: `check_region' is deprecated (=
-declared at include/linux/ioport.h:133)
-> drivers/scsi/advansys.c: In function `AscSearchIOPortAddr11':
-> drivers/scsi/advansys.c:9743: warning: `check_region' is deprecated (=
-declared at include/linux/ioport.h:133)
-> ...
-> drivers/scsi/advansys.c:18231: warning: excess elements in struct ini=
-tializer
-> drivers/scsi/advansys.c:18231: warning: (near initialization for `adv=
-ansys_pci_tbl[5]')
-> drivers/scsi/advansys.c:18231: warning: excess elements in struct ini=
-tializer
-> drivers/scsi/advansys.c:18231: warning: (near initialization for `adv=
-ansys_pci_tbl[5]')
-> make[2]: *** [drivers/scsi/advansys.o] Error 1
-> make[1]: *** [drivers/scsi] Error 2
-> make: *** [drivers] Error 2
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
