@@ -1,107 +1,54 @@
-From: "Jeffrey V. Merkey" <jmerkey@wolfmountaingroup.com>
-Subject: Re: 3Ware delayed device mounting errors with newer 9500 series adapters
-Date: Sun, 22 Oct 2006 14:19:29 -0600
-Message-ID: <453BD251.1000703@wolfmountaingroup.com>
-References: <453A52CE.80605@wolfmountaingroup.com>	 <20061021233904.c2f40a5f.akpm@osdl.org> <b1bc6a000610221019i47283722g3b8f4a79918c4825@mail.gmail.com>
+From: Meelis Roos <mroos@linux.ee>
+Subject: Re: Fw: garbled usb storage scsi vendor & model
+ in 2.6.19-rc1
+Date: Mon, 23 Oct 2006 07:57:01 +0300 (EEST)
+Message-ID: <Pine.SOC.4.61.0610230724360.15328@math.ut.ee>
+References: <Pine.LNX.4.44L0.0610191100460.6471-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rwcrmhc14.comcast.net ([204.127.192.84]:3990 "EHLO
-	rwcrmhc14.comcast.net") by vger.kernel.org with ESMTP
-	id S1751343AbWJVUKt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 22 Oct 2006 16:10:49 -0400
-In-Reply-To: <b1bc6a000610221019i47283722g3b8f4a79918c4825@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-usb-devel-bounces@lists.sourceforge.net>
+In-Reply-To: <Pine.LNX.4.44L0.0610191100460.6471-100000@iolanthe.rowland.org>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
+List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
+List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: linux-usb-devel-bounces@lists.sourceforge.net
+Errors-To: linux-usb-devel-bounces@lists.sourceforge.net
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Andrew Morton <akpm@osdl.org>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: adam radford <aradford@gmail.com>
-Cc: Andrew Morton <akpm@osdl.org>, linux-kernel <linux-kernel@vger.kernel.org>, linuxraid@amcc.com, linux-scsi@vger.kernel.org
 
-adam radford wrote:
-
-> Jeff,
->
-> Can you reproduce with 2.6.18.1?  ES4 contains a custom 3ware driver.
-
-We don't use kernels later than 2.6.15 in our shipping releases since 
-they have
-some issues with stability. 
-
->
-> Also, you have included no error output with this email whatsoever.  Can
-> you go to a virtual console during your ES4 install, run 'dmesg', and 
-> see if
-> the errors are in there, or if they are a part of the ES4 anaconda 
-> installer?
-
-dmesg produces no output since the errors are reflected from init.
-
-Errors are typical of an unmounted volume.  i.e. 
-
-"cannot touch /var/lock/subsys/<service> (dozens of these)
-Starting System logger (hangs for 15 minutes) 
-
-So no logs .....
-
->
-> /dev/sdb, etc. having delayed appearances sounds like it is udev related.
-
-No, I do not believe so.
-
->
-> Are you running the latest firmware?  Do your controllers older than 
-> 60 days
-> have different firmware?
-
-This is the right question.  I will collect the various versions this 
-occurs on and post them here.
-
->
-> I will try to reproduce this.
-
-Pretty easy to do.
-
-Jeff
-
->
-> -Adam
->
-> On 10/21/06, Andrew Morton <akpm@osdl.org> wrote:
->
->> On Sat, 21 Oct 2006 11:03:10 -0600
->> "Jeffrey V. Merkey" <jmerkey@wolfmountaingroup.com> wrote:
+>> scsi 2:0:0:0: Direct-Access     ugin.upd .dpkg-new  PQ: 0 ANSI: 0 CCS
 >>
->> >
->> > Adam,
->> >
->> > We have been getting 3Ware 9500 series adapters in the past 60 days
->> > which exhibit a delayed behavior during mounting of FS from
->> > /etc/fstab.   The adapters older than this do not exhibit this 
->> behavior.
->> >
->> > During bootup, if the driver is compiled as a module rather than in
->> > kernel, mount points such as /var in fstab fail to detect the devices
->> > until the system fully boots, at which point the /dev/sdb etc. devices
->> > showup.  It happens on both ATA cabled drives and drives
->> > cabled with multi-lane controller backplanes.
->> >
->> > The problem is easy to reproduce.  Install ES4, point the /var 
->> directory
->> > during install to one of the array devices in disk druid, and after
->> > the install completes, /var/ will not mount during bootup and all 
->> sorts
->> > of errors stream off the screen.  I can reproduce the problem
->> > with several systems in our labs and upon investigating the adapter
->> > revisions, I find that adapters ordered in the past 60 days exhibit
->> > the problem.   Compiling the driver in kernel gets around the problem,
->> > indicating its timing related.
->> >
->>
->> cc's added.
->> -
->> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
+>> The data is garbage here (obviously I'm running debian and have done
+>> daily upgrade recently). Other than that message, the device appeared
+>> running fine. But it still worries.
 >
+> Try using the patch below.  If you still see the same garbage showing up,
+> it must be because the drive is sending this garbage to your computer.
 
+Tried the patch, still garbage. It returns different garbage each time, 
+and it has returned sensible data before. Since the garbage contains 
+debian-specific strings sometimes, it seems to come from system RAM 
+(someone is overwriting scsi data?).
+
+This is not x86_64 specific, the same happened on yesterdays 
+2.6.19-rc2+git on i386. Have not yet compiled and older kernel to really 
+see if it still works with older kernel.
+
+-- 
+Meelis Roos (mroos@linux.ee)
+
+-------------------------------------------------------------------------
+Using Tomcat but need to do more? Need to support web services, security?
+Get stuff done quickly with pre-integrated technology to make your job easier
+Download IBM WebSphere Application Server v.1.0.1 based on Apache Geronimo
+http://sel.as-us.falkag.net/sel?cmd=lnk&kid=120709&bid=263057&dat=121642
+_______________________________________________
+linux-usb-devel@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
