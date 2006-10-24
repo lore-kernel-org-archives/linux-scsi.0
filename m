@@ -1,31 +1,52 @@
-From: "Jana" <allenc_3@btinternet.com>
-Subject: Re[3]:  Klaudia
-Date: Tue, 24 Oct 2006 14:33:29 +0300
-Message-ID: <008f01c6f760$37b27080$5c16000a@201-1-48-29.dsl.telesp.net.br>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [PATCH] lpfc: fix printk format warning
+Date: Tue, 24 Oct 2006 07:46:28 -0400
+Message-ID: <453DFD14.5060500@emulex.com>
+References: <20061023214713.cfff635b.randy.dunlap@oracle.com>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="windows-1252"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 201-1-48-29.dsl.telesp.net.br ([201.1.48.29]:775 "EHLO
-	201-1-48-29.dsl.telesp.net.br") by vger.kernel.org with ESMTP
-	id S1030327AbWJXL2n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Oct 2006 07:28:43 -0400
+Received: from emulex.emulex.com ([138.239.112.1]:16005 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S1030388AbWJXLqv
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Oct 2006 07:46:51 -0400
+In-Reply-To: <20061023214713.cfff635b.randy.dunlap@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Torsten <linux-raid@vger.kernel.org>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: scsi <linux-scsi@vger.kernel.org>, jejb <james.bottomley@steeleye.com>, akpm <akpm@osdl.org>
 
-Hello, Torsten
+ack...
 
-www.musicworld.cc
-The site is not for the faint of heart. Here all morals are thrown to the wind and man boldly goes where most dare not tread. 
-The motto here is Wet and Wild. What happens is not your normal sex, instead hammer hard fuck games devoid of all taboos. 
-This is something for only the most adventurous sex pro's and lust junkies. 
-Hot, hard and exclusive; and all in the best picture and sound quality available. 
-No where else will you get a show like this; only here.
+-- james s
 
-Talk to you soon
-
-Jana
-
-
+Randy Dunlap wrote:
+> From: Randy Dunlap <randy.dunlap@oracle.com>
+> 
+> Fix printk format warning:
+> drivers/scsi/lpfc/lpfc_attr.c:597: warning: long long unsigned int format, uint64_t arg (arg 4)
+> 
+> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+> ---
+> 
+>  drivers/scsi/lpfc/lpfc_attr.c |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletion(-)
+> 
+> --- linux-2619-rc3-pv.orig/drivers/scsi/lpfc/lpfc_attr.c
+> +++ linux-2619-rc3-pv/drivers/scsi/lpfc/lpfc_attr.c
+> @@ -594,7 +594,8 @@ lpfc_soft_wwpn_show(struct class_device 
+>  {
+>  	struct Scsi_Host *host = class_to_shost(cdev);
+>  	struct lpfc_hba *phba = (struct lpfc_hba*)host->hostdata;
+> -	return snprintf(buf, PAGE_SIZE, "0x%llx\n", phba->cfg_soft_wwpn);
+> +	return snprintf(buf, PAGE_SIZE, "0x%llx\n",
+> +			(unsigned long long)phba->cfg_soft_wwpn);
+>  }
+>  
+>  
+> 
+> 
+> ---
+> 
