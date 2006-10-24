@@ -1,74 +1,57 @@
-From: Phil Dibowitz <phil@ipom.com>
-Subject: Re: [linux-usb-devel] Fw: garbled usb storage scsi vendor & model
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: Fw: garbled usb storage scsi vendor & model
  in 2.6.19-rc1
-Date: Tue, 24 Oct 2006 14:43:22 -0700
-Message-ID: <453E88FA.3070304@ipom.com>
+Date: Wed, 25 Oct 2006 00:39:04 +0200
+Message-ID: <453E9608.9000709@s5r6.in-berlin.de>
 References: <Pine.LNX.4.44L0.0610241557500.6203-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig1DA0A3947BD431849FC69D4E"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.ipom.com ([209.40.128.125]:12007 "EHLO
-	uberhacker.sage-inc.com") by vger.kernel.org with ESMTP
-	id S1161247AbWJXVn3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Oct 2006 17:43:29 -0400
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-devel-bounces@lists.sourceforge.net>
 In-Reply-To: <Pine.LNX.4.44L0.0610241557500.6203-100000@iolanthe.rowland.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
+List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
+List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: linux-usb-devel-bounces@lists.sourceforge.net
+Errors-To: linux-usb-devel-bounces@lists.sourceforge.net
 To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Meelis Roos <mroos@linux.ee>, Andrew Morton <akpm@osdl.org>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
-
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig1DA0A3947BD431849FC69D4E
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+Cc: Andrew Morton <akpm@osdl.org>, Meelis Roos <mroos@linux.ee>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
 Alan Stern wrote:
-> There's a comment about this in the source code, asking what should be
-> done if the INQUIRY response is too short (as it is here).  Maybe the b=
-est
-> approach would be always to assume the first 36 bytes are valid, even w=
-hen
-> the device says they aren't.  It ought to solve your problem, and it's
-> no worse than what we're doing now.
->=20
-> The patch is below.  This replaces the patch I sent earlier.
+...
+> @@ -575,6 +575,19 @@ static int scsi_probe_lun(struct scsi_de
+...
+> +	 * On the whole, the best approach seems to be to assume the first
+> +	 * 36 bytes are valid no matter what the device says.  That's
+> +	 * better than copying < 36 bytes to the inquiry-result buffer
+> +	 * and displaying garbage for the Vendor, Product, or Revision
+> +	 * strings.
+> +	 */
+> +	if (sdev->inquiry_len < 36) {
+> +		printk(KERN_INFO "scsi scan: INQUIRY result too short (%d),"
+> +				" using 36\n", sdev->inquiry_len);
+> +		sdev->inquiry_len = 36;
+> +	}
+...
 
-Perhaps a better approach might be to set the product and vendor to some
-specific string if the device says it isn't providing one? In the new mod=
-el,
-can't we still have the chance of showing garbage if the device really is=
-n't
-setting anything useful? So what if we show "Unknown" and "Unknown" or
-something similar in the event that the device sets the 'invalid' bit?
+BTW, AFAIU the sbp2 driver did exactly this in older versions, when it
+did its own conversions of commands and results.
+-- 
+Stefan Richter
+-=====-=-==- =-=- ==--=
+http://arcgraph.de/sr/
 
-Just a thought...
-
---=20
-Phil Dibowitz                             phil@ipom.com
-Freeware and Technical Pages              Insanity Palace of Metallica
-http://www.phildev.net/                   http://www.ipom.com/
-
-"Be who you are and say what you feel, because those who mind don't matte=
-r
-and those who matter don't mind."
- - Dr. Seuss
-
-
-
---------------enig1DA0A3947BD431849FC69D4E
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
-
-iD8DBQFFPoj6N5XoxaHnMrsRAv5+AKCUMoWTB7PppvDa05DjGsp2fcAlegCgnJ3e
-MTFzVzeTTe3lX8Qy3A4IPzk=
-=ZY/D
------END PGP SIGNATURE-----
-
---------------enig1DA0A3947BD431849FC69D4E--
+-------------------------------------------------------------------------
+Using Tomcat but need to do more? Need to support web services, security?
+Get stuff done quickly with pre-integrated technology to make your job easier
+Download IBM WebSphere Application Server v.1.0.1 based on Apache Geronimo
+http://sel.as-us.falkag.net/sel?cmd=lnk&kid=120709&bid=263057&dat=121642
+_______________________________________________
+linux-usb-devel@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
