@@ -1,43 +1,43 @@
-From: Steven Hayter <steven@hayter.me.uk>
-Subject: Re: Mid-layer API?
-Date: Mon, 23 Oct 2006 23:53:29 +0100
-Message-ID: <453D47E9.8000606@hayter.me.uk>
-References: <861B5CF71BC70C478DFEB9EAFE98F699ACB0DD@G3W0068.americas.hpqcorp.net>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: [PATCH] lpfc: fix printk format warning
+Date: Mon, 23 Oct 2006 21:47:13 -0700
+Message-ID: <20061023214713.cfff635b.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 85.189.5.98 ([85.189.5.98]:16580 "EHLO zombie.undead")
-	by vger.kernel.org with ESMTP id S1751993AbWJWWzs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Oct 2006 18:55:48 -0400
-In-Reply-To: <861B5CF71BC70C478DFEB9EAFE98F699ACB0DD@G3W0068.americas.hpqcorp.net>
+Received: from agminet01.oracle.com ([141.146.126.228]:63718 "EHLO
+	agminet01.oracle.com") by vger.kernel.org with ESMTP
+	id S1752024AbWJXEsK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Oct 2006 00:48:10 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Haefliger, Juerg" <Juerg.Haefliger@hp.com>
-Cc: ltuikov@yahoo.com, linux-scsi@vger.kernel.org
+To: scsi <linux-scsi@vger.kernel.org>
+Cc: james.smart@emulex.com, jejb <james.bottomley@steeleye.com>, akpm <akpm@osdl.org>
 
-Haefliger, Juerg wrote:
- > Hi Luben,
- >
- > I did but I still don't get it :-) In fact I'm more confused now. Why
- > host_template? Isn't that function used to register an LLD with the
- > mid-layer? I'm trying to tap into the other side of the mid-layer.
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-On the driver side (HBA) you've got the host template, and queue_command().
+Fix printk format warning:
+drivers/scsi/lpfc/lpfc_attr.c:597: warning: long long unsigned int format, uint64_t arg (arg 4)
 
-On the other side (the interface used by sg/sd/st) used to live 
-scsi_do_req() (gone in 2.6.18) which is now scsi_execute_async() and 
-friends.
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+---
 
-The header files/function templates should be fairly self-explanatory 
-apart from the confusing use of old-style names, the 'void *buffer' is 
-the scatter gather list, the 'unsigned buflen' is the total amount of 
-data you want to transfer, and use_sg is the number of scatter-gather 
-elements.
+ drivers/scsi/lpfc/lpfc_attr.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletion(-)
 
-Hope that gives you some place to start with, if you just want to send 
-SCSI commands into the kernel.
+--- linux-2619-rc3-pv.orig/drivers/scsi/lpfc/lpfc_attr.c
++++ linux-2619-rc3-pv/drivers/scsi/lpfc/lpfc_attr.c
+@@ -594,7 +594,8 @@ lpfc_soft_wwpn_show(struct class_device 
+ {
+ 	struct Scsi_Host *host = class_to_shost(cdev);
+ 	struct lpfc_hba *phba = (struct lpfc_hba*)host->hostdata;
+-	return snprintf(buf, PAGE_SIZE, "0x%llx\n", phba->cfg_soft_wwpn);
++	return snprintf(buf, PAGE_SIZE, "0x%llx\n",
++			(unsigned long long)phba->cfg_soft_wwpn);
+ }
+ 
+ 
 
-Regards,
-Steve
+
+---
