@@ -1,16 +1,18 @@
-From: Ismail Donmez <ismail@pardus.org.tr>
+From: "adam radford" <aradford@gmail.com>
 Subject: Re: [GIT PATCH] SCSI fixes for 2.6.19-rc3
-Date: Wed, 25 Oct 2006 23:04:35 +0300
-Message-ID: <200610252304.36098.ismail@pardus.org.tr>
+Date: Wed, 25 Oct 2006 14:49:28 -0700
+Message-ID: <b1bc6a000610251449j34e5226crc606a1759b6aca19@mail.gmail.com>
 References: <1161792760.3816.6.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns2.uludag.org.tr ([193.140.100.220]:43231 "EHLO uludag.org.tr")
-	by vger.kernel.org with ESMTP id S964832AbWJYUEs convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Oct 2006 16:04:48 -0400
+Received: from nf-out-0910.google.com ([64.233.182.191]:61377 "EHLO
+	nf-out-0910.google.com") by vger.kernel.org with ESMTP
+	id S1751104AbWJYVta (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 Oct 2006 17:49:30 -0400
+Received: by nf-out-0910.google.com with SMTP id c2so730443nfe
+        for <linux-scsi@vger.kernel.org>; Wed, 25 Oct 2006 14:49:29 -0700 (PDT)
 In-Reply-To: <1161792760.3816.6.camel@mulgrave.il.steeleye.com>
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
@@ -18,22 +20,18 @@ List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@steeleye.com>
 Cc: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Andrew,
-25 Eki 2006 =C3=87ar 19:12 tarihinde, James Bottomley =C5=9Funlar=C4=B1=
- yazm=C4=B1=C5=9Ft=C4=B1:=20
-[...]
-> Tomonori FUJITA:
->   o replace u8 and u32 with __u8 and __u32 in scsi.h for user space
+On 10/25/06, James Bottomley <James.Bottomley@steeleye.com> wrote:
+>  drivers/scsi/3w-9xxx.c                 |    5
 
-This patch obsoletes my =20
-scsi-scsih-protect-scsi_to_u32-function-by-ifdef-__kernel__.patch . It =
-would=20
-be nicer if I got CC'd oh well.
+James,
 
-Regards,
-ismail
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I NACK'd this patch in an earlier email and CC'd you on it:
+
+"ioremap-balanced-with-iounmap-drivers-scsi-3w-9xxxc.patch"
+
+Reason for NACK:  Whoever sprinkled iounmap() calls through various drivers put
+                             this one in the wrong place, where
+register accesses will occur
+                             afterward while shutting down the card.
+
+-Adam
