@@ -1,184 +1,39 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [GIT PATCH] SCSI fixes for 2.6.19-rc3
-Date: Wed, 25 Oct 2006 09:12:40 -0700
-Message-ID: <1161792760.3816.6.camel@mulgrave.il.steeleye.com>
+From: Ismail Donmez <ismail@pardus.org.tr>
+Subject: Re: [GIT PATCH] SCSI fixes for 2.6.19-rc3
+Date: Wed, 25 Oct 2006 23:04:35 +0300
+Message-ID: <200610252304.36098.ismail@pardus.org.tr>
+References: <1161792760.3816.6.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932464AbWJYQMs@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ns2.uludag.org.tr ([193.140.100.220]:43231 "EHLO uludag.org.tr")
+	by vger.kernel.org with ESMTP id S964832AbWJYUEs convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 Oct 2006 16:04:48 -0400
+In-Reply-To: <1161792760.3816.6.camel@mulgrave.il.steeleye.com>
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-This is basically the usual mixed bag of driver fixes.  The code is
-available here:
+Andrew,
+25 Eki 2006 =C3=87ar 19:12 tarihinde, James Bottomley =C5=9Funlar=C4=B1=
+ yazm=C4=B1=C5=9Ft=C4=B1:=20
+[...]
+> Tomonori FUJITA:
+>   o replace u8 and u32 with __u8 and __u32 in scsi.h for user space
 
-master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
+This patch obsoletes my =20
+scsi-scsih-protect-scsi_to_u32-function-by-ifdef-__kernel__.patch . It =
+would=20
+be nicer if I got CC'd oh well.
 
-The short changelog is:
-
-Adrian Bunk:
-  o aic79xx: make ahd_set_tags() static
-  o aic7xxx: cleanups
-
-Alan Cox:
-  o Switch fdomain to the pci_get API
-
-Alexey Dobriyan:
-  o scsi_lib.c: use BUILD_BUG_ON
-
-Amol Lad:
-  o drivers/scsi: Handcrafted MIN/MAX macro removal
-  o ioremap balanced with iounmap for drivers/scsi
-
-Andrew Vasquez:
-  o qla2xxx: Update version number to 8.01.07-k3
-  o qla2xxx: Correct QUEUE_FULL handling
-  o qla2xxx: Workaround D3 power-management issues
-  o qla2xxx: Check return value of sysfs_create_bin_file() usage
-  o Maintain module-parameter name consistency with qla2xxx/qla4xxx
-
-Andrey Mirkin:
-  o megaraid_{mm,mbox}: 64-bit DMA capability fix
-
-Doug Maxey:
-  o qla4xxx: fix double printk on load
-
-Eric Sesterhenn:
-  o lpfc: check before dereference in lpfc_ct.c
-
-Guennadi Liakhovetski:
-  o tmscsim: set max_sectors
-
-Hannes Reinecke:
-  o aic79xx: Print out signalling
-  o aic7xxx: Remove slave_destroy
-  o aic79xx: set precompensation
-  o aic79xx: Fixup external device reset
-  o scsi_debug: support REPORT TARGET PORT GROUPS
-  o aic7xxx: Adjust .max_sectors
-
-Henne:
-  o fix typo in previous Scsi_Cmnd convertion in aic7xxx_old.c
-  o Scsi_Cmnd conversion in qlogicfas408 driver
-  o Scsi_Cmnd convertion in sun3-driver
-
-Henrik Kretzschmar:
-  o fc4: Conversion to struct scsi_cmnd in fc4
-  o convert ninja driver to struct scsi_cmnd
-  o Scsi_Cmnd conversion in psi240i driver
-
-James Bottomley:
-  o add can_queue to host parameters
-
-Jes Sorensen:
-  o qla1280 bus reset typo
-
-Kai M=EF=BF=BDisara:
-  o st: Fixup -ENOMEDIUM
-
-Michael Reed:
-  o mptfc: stall eh handlers if resetting while rport blocked
-
-Mike Christie:
-  o libiscsi: fix logout pdu processing
-  o libiscsi: fix aen support
-  o libiscsi: fix missed iscsi_task_put in xmit error path
-  o libiscsi: fix oops in connection create failure path
-  o iscsi class: fix slab corruption during restart
-
-Randy Dunlap:
-  o lpfc: fix printk format warning
-
-Santiago Leon:
-  o ibmvscsi: correctly reenable CRQ
-
-Sergey Kononenko:
-  o aic94xx: Supermicro motherboards support
-
-Swen Schillig:
-  o zfcp: initialize scsi_host_template.max_sectors with appropriate va=
-lue
-
-Tomonori FUJITA:
-  o replace u8 and u32 with __u8 and __u32 in scsi.h for user space
-
-And the diffstat:
-
- drivers/fc4/fc.c                       |   28 +-
- drivers/fc4/fcp_impl.h                 |   15 -
- drivers/message/fusion/mptbase.h       |    4=20
- drivers/message/fusion/mptfc.c         |   89 ++++++++
- drivers/s390/scsi/zfcp_def.h           |    4=20
- drivers/s390/scsi/zfcp_scsi.c          |    1=20
- drivers/scsi/3w-9xxx.c                 |    5=20
- drivers/scsi/aic7xxx/aic79xx.h         |   66 ------
- drivers/scsi/aic7xxx/aic79xx_core.c    |  350 +++++++++++++++++++++---=
----------
- drivers/scsi/aic7xxx/aic79xx_inline.h  |   30 --
- drivers/scsi/aic7xxx/aic79xx_osm.c     |   45 +++-
- drivers/scsi/aic7xxx/aic79xx_osm.h     |    5=20
- drivers/scsi/aic7xxx/aic79xx_osm_pci.c |    2=20
- drivers/scsi/aic7xxx/aic79xx_pci.c     |    7=20
- drivers/scsi/aic7xxx/aic79xx_proc.c    |    2=20
- drivers/scsi/aic7xxx/aic7xxx.h         |   11 -
- drivers/scsi/aic7xxx/aic7xxx_core.c    |   40 +--
- drivers/scsi/aic7xxx/aic7xxx_osm.c     |   72 +-----
- drivers/scsi/aic7xxx/aic7xxx_osm.h     |   13 -
- drivers/scsi/aic7xxx/aic7xxx_osm_pci.c |    2=20
- drivers/scsi/aic7xxx/aic7xxx_pci.c     |    4=20
- drivers/scsi/aic7xxx/aic7xxx_proc.c    |   10=20
- drivers/scsi/aic7xxx_old.c             |    2=20
- drivers/scsi/aic94xx/aic94xx_hwi.h     |    1=20
- drivers/scsi/aic94xx/aic94xx_init.c    |    2=20
- drivers/scsi/aic94xx/aic94xx_sds.c     |    4=20
- drivers/scsi/amiga7xx.c                |    2=20
- drivers/scsi/fdomain.c                 |   36 ++-
- drivers/scsi/ibmvscsi/ibmvscsi.c       |    2=20
- drivers/scsi/libiscsi.c                |   69 +++---
- drivers/scsi/lpfc/lpfc_attr.c          |    3=20
- drivers/scsi/lpfc/lpfc_ct.c            |    3=20
- drivers/scsi/megaraid/megaraid_mbox.c  |    2=20
- drivers/scsi/ncr53c8xx.c               |    2=20
- drivers/scsi/nsp32.c                   |    5=20
- drivers/scsi/pcmcia/nsp_cs.c           |   42 ++-
- drivers/scsi/pcmcia/nsp_cs.h           |   46 ++--
- drivers/scsi/pcmcia/nsp_debug.c        |    4=20
- drivers/scsi/pcmcia/nsp_message.c      |    4=20
- drivers/scsi/psi240i.c                 |   31 +-
- drivers/scsi/psi240i.h                 |    6=20
- drivers/scsi/qla1280.c                 |    7=20
- drivers/scsi/qla2xxx/qla_attr.c        |   51 +++-
- drivers/scsi/qla2xxx/qla_dbg.h         |   14 -
- drivers/scsi/qla2xxx/qla_def.h         |    4=20
- drivers/scsi/qla2xxx/qla_gbl.h         |    4=20
- drivers/scsi/qla2xxx/qla_init.c        |   23 ++
- drivers/scsi/qla2xxx/qla_isr.c         |   91 +++++++-
- drivers/scsi/qla2xxx/qla_os.c          |   35 ++-
- drivers/scsi/qla2xxx/qla_version.h     |    2=20
- drivers/scsi/qla4xxx/ql4_dbg.h         |    4=20
- drivers/scsi/qla4xxx/ql4_glbl.h        |    2=20
- drivers/scsi/qla4xxx/ql4_mbx.c         |    2=20
- drivers/scsi/qla4xxx/ql4_os.c          |   10=20
- drivers/scsi/qlogicfas408.c            |   18 -
- drivers/scsi/qlogicfas408.h            |   29 +-
- drivers/scsi/qlogicpti.c               |    1=20
- drivers/scsi/scsi_debug.c              |  141 +++++++++++--
- drivers/scsi/scsi_lib.c                |    2=20
- drivers/scsi/scsi_sysfs.c              |    2=20
- drivers/scsi/scsi_transport_iscsi.c    |  246 +----------------------
- drivers/scsi/seagate.c                 |   13 +
- drivers/scsi/st.c                      |    5=20
- drivers/scsi/sun3_NCR5380.c            |  109 +++++-----
- drivers/scsi/sun3_scsi.c               |   14 -
- drivers/scsi/sun3_scsi.h               |    7=20
- drivers/scsi/sun3_scsi_vme.c           |   12 -
- drivers/scsi/tmscsim.c                 |    1=20
- drivers/scsi/zalon.c                   |    2=20
- include/scsi/libiscsi.h                |    3=20
- include/scsi/scsi.h                    |    5=20
- include/scsi/scsi_transport_iscsi.h    |    4=20
- 72 files changed, 1055 insertions(+), 879 deletions(-)
-
-James
+Regards,
+ismail
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
