@@ -1,59 +1,52 @@
-From: Janusz Krzysztofik <jkrzyszt@tis.icnet.pl>
-Subject: Re: [patch 18/24] megaraid: Dell CERC ATA100/4ch support
-Date: Wed, 25 Oct 2006 15:58:42 +0200
-Message-ID: <453F6D92.8070504@tis.icnet.pl>
-References: <890BF3111FB9484E9526987D912B261932E3A0@NAMAIL3.ad.lsil.com> <451AA5DF.7000403@tis.icnet.pl>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [linux-usb-devel] Fw: garbled usb storage scsi vendor & model
+ in 2.6.19-rc1
+Date: Wed, 25 Oct 2006 11:08:24 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0610251103540.6229-100000@iolanthe.rowland.org>
+References: <453E88FA.3070304@ipom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from d1.icnet.pl ([212.160.220.21]:61335 "EHLO d1.icnet.pl")
-	by vger.kernel.org with ESMTP id S1030438AbWJYN6V (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Oct 2006 09:58:21 -0400
-In-Reply-To: <451AA5DF.7000403@tis.icnet.pl>
+Received: from iolanthe.rowland.org ([192.131.102.54]:19716 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP id S932453AbWJYPI0
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 Oct 2006 11:08:26 -0400
+In-Reply-To: <453E88FA.3070304@ipom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
-Cc: akpm@osdl.org, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, 395174@bugs.debian.org, 374792@bugs.debian.org, 369378@bugs.debian.org
+To: Phil Dibowitz <phil@ipom.com>
+Cc: Meelis Roos <mroos@linux.ee>, Andrew Morton <akpm@osdl.org>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Hi Seokmann,
+On Tue, 24 Oct 2006, Phil Dibowitz wrote:
 
-Janusz Krzysztofik wrote:
-> Ju, Seokmann wrote:
->> Technically, I would recommend you to check F/W version and make sure 
->> it is not higher than 6.61.
->> I believe the problem happens with 6.62 or higher.
+> Alan Stern wrote:
+> > There's a comment about this in the source code, asking what should be
+> > done if the INQUIRY response is too short (as it is here).  Maybe the best
+> > approach would be always to assume the first 36 bytes are valid, even when
+> > the device says they aren't.  It ought to solve your problem, and it's
+> > no worse than what we're doing now.
+> > 
+> > The patch is below.  This replaces the patch I sent earlier.
 > 
-> Bingo! megaraid_mbox works for me with F/W 6.61. How did you know?
-
-Then, akpm@osdl.org wrote:
-> The patch titled
+> Perhaps a better approach might be to set the product and vendor to some
+> specific string if the device says it isn't providing one? In the new model,
+> can't we still have the chance of showing garbage if the device really isn't
+> setting anything useful? So what if we show "Unknown" and "Unknown" or
+> something similar in the event that the device sets the 'invalid' bit?
 > 
->      magaraid: check for firmware version
-> 
-> has been added to the -mm tree.  Its filename is
-> 
->      megaraid-check-for-firmware-version.patch
+> Just a thought...
 
-But "stephane matis" <s.matis@gmail.com> wrote:
- > Unfortunately, FW 6.61 doesn't seem to support disks capacity over
- > 128G, a condition I noted after downgrading from 6.67.  I confirmed
- > the same behavior with two brands of 200G disks.
+The vendor and product names are used to identify the device for blacklist
+purposes, so using fixed names like "Unknown" for all devices which don't
+seem to have their own valid name isn't a good idea.  Besides, in this
+case (and probably lots of others) it turned out that the device really
+_did_ provide usable data, even though it said the data wasn't valid.
 
-So the patch does not really solve the problem and probably should be
-removed from the -mm tree.
+If a device doesn't provide usable data, we still won't end up displaying 
+garbage.  That is, we will display whatever the device sends, in a 
+sanitized form.  As opposed to what we display now, which is whatever data 
+happens to be sitting in memory beyond the end of the allocated area.  
+That really _is_ garbage.
 
-However, Ju, Seokmann wrote:
-> Janusz Krzysztofik wrote:
- >> Will you accept a patch that limits PCI IDs with VID=101E, DID=1960 and
->> SSVID=1028 in the new driver to exactly three models specified in its 
->> source file comments and, on the other hand, adds PCI ID of Dell CERC 
->> ATA100/4ch to the old driver?
-> I've forwarded your request to program management team. But, I don't think it will be accepted.
+Alan Stern
 
-So I ask the question again: could a patch like described above be accepted
-until the problem with F/W >6.61 is solved in the new megaraid_mbox driver?
-
-Cheers,
-Janusz
