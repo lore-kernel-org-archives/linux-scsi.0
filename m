@@ -1,177 +1,181 @@
-From: MAEDA Naoaki <maeda.naoaki@jp.fujitsu.com>
-Subject: [RFC][PATCH] MPT fusion driver recovery failure fix
-Date: Fri, 27 Oct 2006 15:16:13 +0900 (JST)
-Message-ID: <20061027.151613.-1300545365.maeda.naoaki@jp.fujitsu.com>
+From: Swen Schillig <swen@vnet.ibm.com>
+Subject: [PATCH] zfcp: convert the zfcp_erp thread to the kthread api
+Date: Fri, 27 Oct 2006 11:38:49 +0200
+Message-ID: <200610271138.50201.swen@vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <fastboot-bounces@lists.osdl.org>
-List-Unsubscribe: <https://lists.osdl.org/mailman/listinfo/fastboot>,
-	<mailto:fastboot-request@lists.osdl.org?subject=unsubscribe>
-List-Archive: <http://lists.osdl.org/pipermail/fastboot>
-List-Post: <mailto:fastboot@lists.osdl.org>
-List-Help: <mailto:fastboot-request@lists.osdl.org?subject=help>
-List-Subscribe: <https://lists.osdl.org/mailman/listinfo/fastboot>,
-	<mailto:fastboot-request@lists.osdl.org?subject=subscribe>
-Sender: fastboot-bounces@lists.osdl.org
-Errors-To: fastboot-bounces@lists.osdl.org
-To: linux-scsi@vger.kernel.org
-Cc: fastboot@lists.osdl.org, Eric.Moore@lsil.com
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mtagate4.uk.ibm.com ([195.212.29.137]:55984 "EHLO
+	mtagate4.uk.ibm.com") by vger.kernel.org with ESMTP
+	id S1946267AbWJ0Jiq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Oct 2006 05:38:46 -0400
+Received: from d06nrmr1407.portsmouth.uk.ibm.com (d06nrmr1407.portsmouth.uk.ibm.com [9.149.38.185])
+	by mtagate4.uk.ibm.com (8.13.8/8.13.8) with ESMTP id k9R9ci6k186128
+	for <linux-scsi@vger.kernel.org>; Fri, 27 Oct 2006 09:38:44 GMT
+Received: from d06av03.portsmouth.uk.ibm.com (d06av03.portsmouth.uk.ibm.com [9.149.37.213])
+	by d06nrmr1407.portsmouth.uk.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id k9R9fKu82490500
+	for <linux-scsi@vger.kernel.org>; Fri, 27 Oct 2006 10:41:20 +0100
+Received: from d06av03.portsmouth.uk.ibm.com (loopback [127.0.0.1])
+	by d06av03.portsmouth.uk.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k9R9ciPm022171
+	for <linux-scsi@vger.kernel.org>; Fri, 27 Oct 2006 10:38:44 +0100
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Hi,
+commit fc26d0531e48a7361ac7e46ead4eec2a46774413
+Author: Cornelia Huck <cornelia.huck@de.ibm.com>
+Date:   Fri Oct 27 11:31:05 2006 +0200
 
-MPT fusion driver access uninitialized pointer if ioc recovery
-is initiated while kexec second kernel is booting. Oops message is
-cited at the end of this mail.
+    Convert the zfcp_erp thread to the kthread api. Also make zfcp_erp_thread_killdrivers
+    return void since it cannot fail.
+    
+    Signed-off-by: Cornelia Huck <cornelia.huck@de.ibm.com> 
+    Signed-off-by: Swen Schillig <swen@vnet.ibm.com>
 
-Since the second kernel is booted while adapter is still operating,
-MPT fusion driver possible to initiate ioc recovery. In this case,
-the driver access uninitialized pointer on reset.
-
-I've created a patch to fix the problem and tested it with
-53c1030 controller. Your suggestions are welcome.
-
-Signed-off-by: MAEDA Naoaki <maeda.naoaki@jp.fujitsu.com>
----
- drivers/message/fusion/mptspi.c |    8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
-
-Index: linux-2.6.19-rc3/drivers/message/fusion/mptspi.c
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
---- linux-2.6.19-rc3.orig/drivers/message/fusion/mptspi.c
-+++ linux-2.6.19-rc3/drivers/message/fusion/mptspi.c
-@@ -816,11 +816,17 @@ mptspi_dv_renegotiate(struct _MPT_SCSI_H
- static int
- mptspi_ioc_reset(MPT_ADAPTER *ioc, int reset_phase)
+diff --git a/drivers/s390/scsi/zfcp_def.h b/drivers/s390/scsi/zfcp_def.h
+index 74c0eac..d47a0d5 100644
+--- a/drivers/s390/scsi/zfcp_def.h
++++ b/drivers/s390/scsi/zfcp_def.h
+@@ -605,8 +605,6 @@ #define ZFCP_STATUS_ADAPTER_QDIOUP		0x00
+ #define ZFCP_STATUS_ADAPTER_REGISTERED		0x00000004
+ #define ZFCP_STATUS_ADAPTER_XCONFIG_OK		0x00000008
+ #define ZFCP_STATUS_ADAPTER_HOST_CON_INIT	0x00000010
+-#define ZFCP_STATUS_ADAPTER_ERP_THREAD_UP	0x00000020
+-#define ZFCP_STATUS_ADAPTER_ERP_THREAD_KILL	0x00000080
+ #define ZFCP_STATUS_ADAPTER_ERP_PENDING		0x00000100
+ #define ZFCP_STATUS_ADAPTER_LINK_UNPLUGGED	0x00000200
+ #define ZFCP_STATUS_ADAPTER_XPORT_OK		0x00000800
+@@ -900,6 +898,7 @@ struct zfcp_adapter {
+ 						      completion races */
+ 	u16			status_read_failed; /* # failed status reads */
+ 	atomic_t		status;	           /* status of this adapter */
++	struct task_struct      *erp_thread;       /* error recovery thread */
+ 	struct list_head	erp_ready_head;	   /* error recovery for this
+ 						      adapter/devices */
+ 	struct list_head	erp_running_head;
+diff --git a/drivers/s390/scsi/zfcp_erp.c b/drivers/s390/scsi/zfcp_erp.c
+index c88babc..597104a 100644
+--- a/drivers/s390/scsi/zfcp_erp.c
++++ b/drivers/s390/scsi/zfcp_erp.c
+@@ -22,6 +22,7 @@
+ #define ZFCP_LOG_AREA			ZFCP_LOG_AREA_ERP
+ 
+ #include "zfcp_ext.h"
++#include <linux/kthread.h>
+ 
+ static int zfcp_erp_adisc(struct zfcp_port *);
+ static void zfcp_erp_adisc_handler(unsigned long);
+@@ -991,24 +992,18 @@ static void zfcp_erp_action_dismiss(stru
+ int
+ zfcp_erp_thread_setup(struct zfcp_adapter *adapter)
  {
--	struct _MPT_SCSI_HOST *hd =3D (struct _MPT_SCSI_HOST *)ioc->sh->hostdata;
-+	struct _MPT_SCSI_HOST *hd;
- 	int rc;
- =
-
- 	rc =3D mptscsih_ioc_reset(ioc, reset_phase);
- =
-
-+	/* reset may be called before scsi host has been attached */
-+	if ((ioc->sh =3D=3D NULL) || (ioc->sh->hostdata =3D=3D NULL))
-+		return rc;
-+	else
-+		hd =3D (struct _MPT_SCSI_HOST *)ioc->sh->hostdata;
-+
- 	if (reset_phase =3D=3D MPT_IOC_POST_RESET)
- 		mptspi_dv_renegotiate(hd);
- =
-
-
-
----------------------------------------------------------------------------=
----
-Fusion MPT base driver 3.04.01
-Copyright (c) 1999-2005 LSI Logic Corporation
-Loading mptscsih.ko module
-Loading mptspi.ko module
-Fusion MPT SPI Host driver 3.04.01
-GSI 816 (level, low) -> CPU 0 (0x8604) vector 54
-ACPI: PCI Interrupt 0000:44:01.0[A] -> GSI 816 (level, low) -> IRQ 54
-mptbase: Initiating ioc0 bringup
-ioc0: 53C1030: Capabilities=3D{Initiator,Target}
-scsi0 : ioc0: LSI53C1030, FwRev=3D01032700h, Ports=3D1, MaxQ=3D255, IRQ=3D54
-  Vendor: FUJITSU   Model: MAP3735NC         Rev: 5207
-  Type:   Direct-Access                      ANSI SCSI revision: 03
- target0:0:0: Beginning Domain Validation
- target0:0:0: Ending Domain Validation
- target0:0:0: FAST-160 WIDE SCSI 320.0 MB/s DT IU QAS RTI PCOMP (6.25 ns, o=
-ffset 127)
-SCSI device sda: 143374741 512-byte hdwr sectors (73408 MB)
-sda: Write Protect is off
-SCSI device sda: drive cache: write through
-SCSI device sda: 143374741 512-byte hdwr sectors (73408 MB)
-sda: Write Protect is off
-SCSI device sda: drive cache: write through
- sda: sda1 sda2 sda3
-sd 0:0:0:0: Attached scsi disk sda
-  Vendor: FUJITSU   Model: MAT3073NC         Rev: 3701
-  Type:   Direct-Access                      ANSI SCSI revision: 03
- target0:0:1: Beginning Domain Validation
- target0:0:1: Ending Domain Validation
- target0:0:1: FAST-160 WIDE SCSI 320.0 MB/s DT IU QAS RTI WRFLOW PCOMP (6.2=
-5 ns, offset 127)
-SCSI device sdb: 143550456 512-byte hdwr sectors (73498 MB)
-sdb: Write Protect is off
-SCSI device sdb: drive cache: write through
-SCSI device sdb: 143550456 512-byte hdwr sectors (73498 MB)
-sdb: Write Protect is off
-SCSI device sdb: drive cache: write through
- sdb: sdb1 sdb2
-sd 0:0:1:0: Attached scsi disk sdb
-  Vendor: QLogic    Model: GEM359            Rev: 0204
-  Type:   Processor                          ANSI SCSI revision: 02
- target0:0:6: Beginning Domain Validation
- target0:0:6: Ending Domain Validation
- target0:0:6: asynchronous
-GSI 817 (level, low) -> CPU 0 (0x8604) vector 55
-ACPI: PCI Interrupt 0000:44:01.1[B] -> GSI 817 (level, low) -> IRQ 55
-mptbase: Initiating ioc1 bringup
-ioc1: 53C1030: Capabilities=3D{Initiator,Target}
-scsi1 : ioc1: LSI53C1030, FwRev=3D01032700h, Ports=3D1, MaxQ=3D255, IRQ=3D55
-GSI 864 (level, low) -> CPU 0 (0x8604) vector 56
-ACPI: PCI Interrupt 0000:47:01.0[A] -> GSI 864 (level, low) -> IRQ 56
-mptbase: Initiating ioc2 bringup
-ioc2: 53C1030: Capabilities=3D{Initiator,Target}
-mptbase: Initiating ioc2 recovery
-Unable to handle kernel NULL pointer dereference (address 0000000000000500)
-events/0[5]: Oops 8813272891392 [1]
-Modules linked in: mptspi mptscsih mptbase
-
-Pid: 5, CPU 0, comm:             events/0
-psr : 00001010085a6010 ifs : 8000000000000287 ip  : [<a000000200131b20>]   =
- Not tainted
-ip is at mptspi_dv_renegotiate_work+0x40/0xe0 [mptspi]
-unat: 0000000000000000 pfs : 0000000000000287 rsc : 0000000000000003
-rnat: 0000000000000000 bsps: 0000000000000000 pr  : 0000000000005641
-ldrs: 0000000000000000 ccv : 0000000000000001 fpsr: 0009804c8a70433f
-csd : 0000000000000000 ssd : 0000000000000000
-b0  : a000000200131b10 b6  : a000000200131ae0 b7  : a00000010000c220
-f6  : 0fffefffffffff0000000 f7  : 0ffe3f100000000000000
-f8  : 10007f100000000000000 f9  : 0ffff8000000000000000
-f10 : 10007f0fffffff0f00000 f11 : 1003e00000000000001e2
-r1  : a00000020013bd58 r2  : a000000100aab800 r3  : e00000000cededf0
-r8  : e0000000170fc028 r9  : 0000000000000078 r10 : e000000017e02900
-r11 : 0000000000000010 r12 : e000000017f77d80 r13 : e000000017f70000
-r14 : 0000000000000000 r15 : 000000000000000f r16 : e00000000cededf8
-r17 : e000000017e02884 r18 : 000000000000000f r19 : e000000017f70f90
-r20 : e000000017f70fa4 r21 : a000000100aab800 r22 : 0000000000004000
-r23 : 0000000000004000 r24 : e00000000cd9c000 r25 : 00000000000285b9
-r26 : e00000000cd9c001 r27 : 000000000002e1f8 r28 : 0000000000005c3f
-r29 : e000000008ae4000 r30 : 0000000000000000 r31 : e000000017f77d80
-
-Call Trace:
- [<a000000100014720>] show_stack+0x40/0xa0
-                                sp=3De000000017f77930 bsp=3De000000017f71208
- [<a000000100015020>] show_regs+0x840/0x880
-                                sp=3De000000017f77b00 bsp=3De000000017f711a8
- [<a000000100037560>] die+0x1c0/0x2c0
-                                sp=3De000000017f77b00 bsp=3De000000017f71160
- [<a0000001000614f0>] ia64_do_page_fault+0x810/0x940
-                                sp=3De000000017f77b20 bsp=3De000000017f71110
- [<a00000010000ca20>] ia64_leave_kernel+0x0/0x280
-                                sp=3De000000017f77bb0 bsp=3De000000017f71110
- [<a000000200131b20>] mptspi_dv_renegotiate_work+0x40/0xe0 [mptspi]
-                                sp=3De000000017f77d80 bsp=3De000000017f710d8
- [<a0000001000b7680>] run_workqueue+0x1c0/0x280
-                                sp=3De000000017f77d80 bsp=3De000000017f71098
- [<a0000001000b9620>] worker_thread+0x1a0/0x240
-                                sp=3De000000017f77d80 bsp=3De000000017f71068
- [<a0000001000c1470>] kthread+0x230/0x2a0
-                                sp=3De000000017f77dd0 bsp=3De000000017f71020
- [<a000000100012a50>] kernel_thread_helper+0xd0/0x100
-                                sp=3De000000017f77e30 bsp=3De000000017f70ff0
- [<a0000001000094c0>] start_kernel_thread+0x20/0x40
-                                sp=3De000000017f77e30 bsp=3De000000017f70ff0
- <6>mptbase: Initiating ioc2 recovery
-
-Thanks,
-MAEDA Naoaki
+-	int retval = 0;
+-
+-	atomic_clear_mask(ZFCP_STATUS_ADAPTER_ERP_THREAD_UP, &adapter->status);
+-
+-	retval = kernel_thread(zfcp_erp_thread, adapter, SIGCHLD);
+-	if (retval < 0) {
++	adapter->erp_thread = kthread_run(zfcp_erp_thread, adapter, "zfcperp%s",
++					  zfcp_get_busid_by_adapter(adapter));
++	if (IS_ERR(adapter->erp_thread)) {
+ 		ZFCP_LOG_NORMAL("error: creation of erp thread failed for "
+ 				"adapter %s\n",
+ 				zfcp_get_busid_by_adapter(adapter));
+ 		debug_text_event(adapter->erp_dbf, 5, "a_thset_fail");
+-	} else {
+-		wait_event(adapter->erp_thread_wqh,
+-			   atomic_test_mask(ZFCP_STATUS_ADAPTER_ERP_THREAD_UP,
+-					    &adapter->status));
++		adapter->erp_thread = NULL;
++	} else
+ 		debug_text_event(adapter->erp_dbf, 5, "a_thset_ok");
+-	}
+ 
+-	return (retval < 0);
++	return (!adapter->erp_thread);
+ }
+ 
+ /*
+@@ -1025,24 +1020,16 @@ zfcp_erp_thread_setup(struct zfcp_adapte
+  *		has been completed. Thus, there are no pending erp_actions
+  *		which would need to be handled here.
+  */
+-int
+-zfcp_erp_thread_kill(struct zfcp_adapter *adapter)
++void zfcp_erp_thread_kill(struct zfcp_adapter *adapter)
+ {
+-	int retval = 0;
++	struct task_struct *erp_thread;
+ 
+-	atomic_set_mask(ZFCP_STATUS_ADAPTER_ERP_THREAD_KILL, &adapter->status);
++	erp_thread = adapter->erp_thread;
++	adapter->erp_thread = NULL;
++	if (erp_thread)
++		kthread_stop(erp_thread);
+ 	up(&adapter->erp_ready_sem);
+-
+-	wait_event(adapter->erp_thread_wqh,
+-		   !atomic_test_mask(ZFCP_STATUS_ADAPTER_ERP_THREAD_UP,
+-				     &adapter->status));
+-
+-	atomic_clear_mask(ZFCP_STATUS_ADAPTER_ERP_THREAD_KILL,
+-			  &adapter->status);
+-
+ 	debug_text_event(adapter->erp_dbf, 5, "a_thki_ok");
+-
+-	return retval;
+ }
+ 
+ /*
+@@ -1060,15 +1047,12 @@ zfcp_erp_thread(void *data)
+ 	struct zfcp_erp_action *erp_action;
+ 	unsigned long flags;
+ 
+-	daemonize("zfcperp%s", zfcp_get_busid_by_adapter(adapter));
+ 	/* Block all signals */
+ 	siginitsetinv(&current->blocked, 0);
+-	atomic_set_mask(ZFCP_STATUS_ADAPTER_ERP_THREAD_UP, &adapter->status);
+ 	debug_text_event(adapter->erp_dbf, 5, "a_th_run");
+ 	wake_up(&adapter->erp_thread_wqh);
+ 
+-	while (!atomic_test_mask(ZFCP_STATUS_ADAPTER_ERP_THREAD_KILL,
+-				 &adapter->status)) {
++	while (!kthread_should_stop()) {
+ 
+ 		write_lock_irqsave(&adapter->erp_lock, flags);
+ 		next = adapter->erp_ready_head.prev;
+@@ -1093,7 +1077,6 @@ zfcp_erp_thread(void *data)
+ 		debug_text_event(adapter->erp_dbf, 5, "a_th_woken");
+ 	}
+ 
+-	atomic_clear_mask(ZFCP_STATUS_ADAPTER_ERP_THREAD_UP, &adapter->status);
+ 	debug_text_event(adapter->erp_dbf, 5, "a_th_stop");
+ 	wake_up(&adapter->erp_thread_wqh);
+ 
+@@ -2886,8 +2869,7 @@ zfcp_erp_action_enqueue(int action,
+ 	 * efficient.
+ 	 */
+ 
+-	if (!atomic_test_mask(ZFCP_STATUS_ADAPTER_ERP_THREAD_UP,
+-			      &adapter->status))
++	if (!adapter->erp_thread)
+ 		return -EIO;
+ 
+ 	debug_event(adapter->erp_dbf, 4, &action, sizeof (int));
+diff --git a/drivers/s390/scsi/zfcp_ext.h b/drivers/s390/scsi/zfcp_ext.h
+index b8794d7..aec24af 100644
+--- a/drivers/s390/scsi/zfcp_ext.h
++++ b/drivers/s390/scsi/zfcp_ext.h
+@@ -148,7 +148,7 @@ extern int  zfcp_erp_unit_shutdown(struc
+ extern void zfcp_erp_unit_failed(struct zfcp_unit *);
+ 
+ extern int  zfcp_erp_thread_setup(struct zfcp_adapter *);
+-extern int  zfcp_erp_thread_kill(struct zfcp_adapter *);
++extern void zfcp_erp_thread_kill(struct zfcp_adapter *);
+ extern int  zfcp_erp_wait(struct zfcp_adapter *);
+ extern void zfcp_erp_async_handler(struct zfcp_erp_action *, unsigned long);
+ 
