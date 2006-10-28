@@ -1,56 +1,154 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH] SCSI core: always store >= 36 bytes of INQUIRY data
-Date: Sat, 28 Oct 2006 11:41:34 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0610281133100.2757-100000@netrider.rowland.org>
-References: <454283F2.3090809@torque.net>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [RFC] support for bidirectional transfers and variable length CDBs
+Date: Sat, 28 Oct 2006 17:36:09 +0100
+Message-ID: <20061028163609.GA17317@infradead.org>
+References: <4541F822.70700@panasas.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.rowland.org ([192.131.102.7]:3848 "HELO mx2.rowland.org")
-	by vger.kernel.org with SMTP id S1750898AbWJ1Plf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 28 Oct 2006 11:41:35 -0400
-In-Reply-To: <454283F2.3090809@torque.net>
+Received: from pentafluge.infradead.org ([213.146.154.40]:35308 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1751029AbWJ1QgS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 28 Oct 2006 12:36:18 -0400
+Content-Disposition: inline
+In-Reply-To: <4541F822.70700@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, James Bottomley <James.Bottomley@SteelEye.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Benny Halevy <bhalevy@panasas.com>
+Cc: linux-scsi@vger.kernel.org, Mike Christie <mchristi@redhat.com>, James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <jens.axboe@oracle.com>, Christoph Hellwig <hch@infradead.org>, Dalit Naor <DALIT@il.ibm.com>, Liran Schour <LIRANS@il.ibm.com>, Sami.Iren@seagate.com, Daniel.E.Messinger@seagate.com, stuart.brodsky@seagate.com, open-iscsi@googlegroups.com, Boaz Harrosh <bharrosh@panasas.com>
 
-On Fri, 27 Oct 2006, Douglas Gilbert wrote:
-
-> Some more information on this subject: LLDs (including
-> pseudo ones like usb-storage) really should set the
-> Scsi_Cmnd::resid field to show, in the case of an
-> INQUIRY, when 36 bytes were requested, less bytes
-> were returned.
-
-Indeed.  usb-storage does do this.  However the devices addressed by this
-patch do send 36 bytes of data, all apparently plausible, just as you 
-say directly-attached ATA disks do.  So checking the residue wouldn't 
-help.
-
-> That OS from Redmond may have a hand here as well.
-> Directly attached ATA disks are found in SCSI scans and
-> respond to SCSI INQUIRY commands with plausible vendor,
-> model and revision strings but the additional length
-> field (byte 4 in the response) is set to 0. So code
-> could use that as a hint to stop sending further SCSI
-> commands and start sending ATA commands. ATA disks
-> behind USB and IEEE 1394 don't appear in SCSI scans
-> but do appear as "Physical Drives" and do respond
-> to SCSI INQUIRY commands properly.
-
-I don't understand this.  What do you mean, they don't appear in SCSI 
-scans?  They _are_ detected by scsi_probe_lun().  But they probably don't 
-show any special ATA signature in the INQUIRY data, since that data is 
-generally determined by the firmware in the USB/1394 interface.
-
->  Then there are
-> ATA disks behind a SATL and they respond to SCSI
-> INQUIRY commands (and most others) properly; the
-> easiest way to spot them is that the vendor is "ATA     ".
+On Fri, Oct 27, 2006 at 02:14:26PM +0200, Benny Halevy wrote:
+> Hi,
 > 
-> Doug Gilbert
+> Attached are patches for linux-2.6.18, open-iscsi (2.0-711), and
+> ibm-osd-initiator (v3.1.1), sketching a proposal for supporting 
+> bi-directional
+> scsi commands and variable length CDBs.  The motivation behind this is
+> having an OSD stack in the kernel for the Object-based pNFS layout driver
+> in the linux kernel that we're working on with CITI.
+> (part of NFSv4.1, see also 
+> http://www.ietf.org/internet-drafts/draft-ietf-nfsv4-pnfs-obj-02.txt)
 
-Alan Stern
+Offtopic note:  unless you opensource all your filesystem code and merge
+into the kernel there's not chance we'll put in nfs hooks for you.  This
+doesn't affect the scsi bits though as we plan to have bidi commands
+for other reasons though (which doesn't mean it's legal to use for
+binary modules either)
 
+> The core changes we propose in the scsi layer to support bidi are:
+>  - adding struct scsi_cmnd_sgl for holding a mapping of the caller 
+> buffers as
+>    <use_sg, sglist_len, request_buffer, request_bufflen, request>
+
+I would rather call this scsi_data_buffer, but that's just a smallish thing.
+Having this as a separate stuct is a lot nicer than my previous proposal,
+though.
+
+>   - using it in struct scsi_cmnd to map the read buffer of 
+> bidirectional commands.
+>     for backward compatibility and to keep this patch minimalistic we 
+> kept the mapping
+>     of the uni-directional buffers as well as the write buffers of 
+> bi-directional transfers intact;
+>     in the future I think it will be cleaner to hold these in a 
+> scsi_cmnd_sgl of their own.
+
+This on the other hand is not very nice.  We should put an in and and an
+out scsi_data_buffer in struct scsi_cmnd.  As we need to revist this part
+of the scsi midlayer <-> LLDD interface anyway we plan to handle this
+change as part of the bigger overall transition.  Here are the helpers
+I had envisioned at storage summit in the version where they still
+translate to the currently existing code, but can be nicely adopted
+to bidi-capable versions with two sg lists:
+
+size_t scsi_dma_map(struct device *dev, struct scsi_cmnd *cmd)
+{
+	ssize_t nseg = 0;
+
+	if (cmd->use_sg) {
+		struct scatterlist *sg =
+			(struct scatterlist *) cmd->request_buffer;
+
+		nseg = dma_map_sg(dev, sg, cmd->use_sg, cmd->sc_data_direction);
+		if (unlikely(!nseg))
+			return -ENOMEM;
+	}
+
+	return nseg;
+}
+
+void scsi_dma_unmap(struct device *dev, struct scsi_cmnd *cmd)
+{
+	if (cmd->use_sg) {
+		struct scatterlist *sg =
+			(struct scatterlist *) cmd->request_buffer;
+		dma_unmap_sg(dev, sg, cmd->use_sg, cmd->sc_data_direction);
+	}
+}
+
+
+and something similar for pio / virtual drivers.  Note that the
+above doesn't handle non-sg commands - we still have one user of them
+in the error handler, but I'll finally submit the patch to remove it
+soon.  Also note that actually bidi-capable driver still will have
+to opencode the map and know about the two data buffers.  I expect
+driver actually handling bidi commands to be the absolute minority,
+though.
+
+
+>  - allocate another struct request when executing a bidirectional 
+> command and use it to map the bidi read
+>    buffer (or sglist).  keep a pointer to it in the scsi_io_context.
+
+That's also not the way to go ahead - struct request should support
+bidi commands the same way scsi should.  I'd rather finish the scsi
+bits first, and until that is done your approach might be fine for
+(out of tree) debugging.
+
+> Core changes proposed to support variable length CDBs:
+
+This should be an entirely separate patch.  (As should your updates to
+the list of scsi device types and the typo fix in a comment in your
+patch)  I haven't looked at this code in detail but it looks rather
+messy already ;-)  I'd prefer if we could postponed implementing this
+properly until we've landed bidi support.
+
+>   - API crafted in the spirit of scsi_execute_async and is a super set of
+>     scsi_execute and scsi_execute_async (i.e. the varlen cdb and 
+> bidi_read_buff
+>     are optional)
+
+We might aswell change scsi_execute_async to just support bidi and varlen
+commands in the end.  There's very few user and having yet another API
+to submit scsi commands doesn't sound very helpfull.
+
+>  - use two scsi_cmnd_sgl's in struct scsi_cmnd to map uni/bidi_write 
+> buffers and bidi_read buffers
+>    respectively (or alternatively use one to map write buffers and the 
+> other to map read buffers, this
+>    doesn't matter much id everybody uses scsi_get_{in,out,uni}_buff() 
+> rather than dereferencing
+>    a scsi_cmnd pointer to get to the fields.
+> 
+>  - support bidi in struct request.  This will save allocating yet 
+> another request for mapping the
+>    bidi_read buffers
+
+As per comments above I think we should do this from the beginning.
+
+As for the further todo I'd suggest the following:
+
+ - I submit the patch to get rid of the remaining non-sg I/O ASAP
+ - you submit your patch to add the osd type and the addition device
+   type descriptions
+ - you submit your patch that fixes the scsi_execute comment typo
+ - you submit your patch to add the VARLEN_CDB opcode
+ - you start converting as many as possible drivers to the
+   above wrapper API (I already had a big FC card vendor signed up
+   for this, but no updates so far..)
+ 
+ And then once we have almost all direct references to the request_buffer
+ & friends gone you submit a new bidi patch based on the comments in this
+ mail.
+
+Thanks for working on this.
