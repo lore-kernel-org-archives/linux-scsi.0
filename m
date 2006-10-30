@@ -1,84 +1,79 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH] SCSI core: always store >= 36 bytes of INQUIRY data
-Date: Mon, 30 Oct 2006 10:20:24 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0610301017020.6233-100000@iolanthe.rowland.org>
-References: <20061027214343.GA1701@us.ibm.com>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: [PATCH] SCSI: ISCSI build failure
+Date: Mon, 30 Oct 2006 08:32:30 -0800
+Message-ID: <20061030083230.5e889415.randy.dunlap@oracle.com>
+References: <200610291945.16948.toralf.foerster@gmx.de>
+	<20061029190357.98fc9c98.randy.dunlap@oracle.com>
+	<Pine.LNX.4.64.0610301206240.6761@scrub.home>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:29966 "HELO
-	iolanthe.rowland.org") by vger.kernel.org with SMTP
-	id S1030431AbWJ3PUb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Oct 2006 10:20:31 -0500
-In-Reply-To: <20061027214343.GA1701@us.ibm.com>
+Received: from agminet01.oracle.com ([141.146.126.228]:24307 "EHLO
+	agminet01.oracle.com") by vger.kernel.org with ESMTP
+	id S1030430AbWJ3QhX convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Oct 2006 11:37:23 -0500
+In-Reply-To: <Pine.LNX.4.64.0610301206240.6761@scrub.home>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Roman Zippel <zippel@linux-m68k.org>, jejb <james.bottomley@steeleye.com>
+Cc: Toralf F_rster <toralf.foerster@gmx.de>, scsi <linux-scsi@vger.kernel.org>, akpm <akpm@osdl.org>
 
-This patch (as810b) copies a minimum of 36 bytes of INQUIRY data,
-even if the device claims that not all of them are valid.  Often badly
-behaved devices put plausible data in the Vendor, Product, and Revision
-strings but set the Additional Length byte to a small value.  Using
-potentially valid data is certainly better than allocating a short
-buffer and then reading beyond the end of it, which is what we do now.
+On Mon, 30 Oct 2006 12:07:48 +0100 (CET) Roman Zippel wrote:
 
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+> Hi,
+>=20
+> On Sun, 29 Oct 2006, Randy Dunlap wrote:
+>=20
+> > On Sun, 29 Oct 2006 19:45:15 +0100 Toralf F=F6rster wrote:
+> >=20
+> > > Hello,
+> >=20
+> > config SCSI_ISCSI_ATTRS
+> > 	tristate "iSCSI Transport Attributes"
+> > 	depends on SCSI && NET
+> > 	help
+> > 	  If you wish to export transport-specific information about
+> > 	  each attached iSCSI device to sysfs, say Y.
+> > 	  Otherwise, say N.
+> >=20
+> > but NET is disabled, yet somehow SCSI_ISCSI_ATTRS is enabled.
+> > I don't see how that happens.
+> > Roman, any ideas?
+> >=20
+> > [...]
+> > > CONFIG_SCSI_QLA_ISCSI=3Dy
+>=20
+> I guess, that needs a dependency on NET.
+
+Yep, thanks, Roman.
+
+James, should be in 2.6.19...
 
 ---
 
-On Fri, 27 Oct 2006, Patrick Mansfield wrote:
+=46rom: Randy Dunlap <randy.dunlap@oracle.com>
 
-> The comment is confusing, as it implies the device will modify data past
-> the indicated length, but well behaved devices should not do that, and  
-> with your patch should point to zero filled data.
-  
-> But definitely better to use possibly valid data for broken devices or
-> NUL for well behaved devices rather than garbage values.
+SCSI_QLA_ISCSI needs to depend on NET to prevent build (link) failures
+that are caused by selecting SCSI_ISCSI_ATTRS.
 
-This version of the patch has an improved comment.  And it's superior in
-another respect too:  It doesn't alter the value of sdev->inquiry_len.
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+---
+ drivers/scsi/qla4xxx/Kconfig |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Alan Stern
-
-
-Index: usb-2.6/drivers/scsi/scsi_scan.c
-===================================================================
---- usb-2.6.orig/drivers/scsi/scsi_scan.c
-+++ usb-2.6/drivers/scsi/scsi_scan.c
-@@ -621,6 +621,8 @@ static int scsi_probe_lun(struct scsi_de
- static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
- 		int *bflags)
- {
-+	int copy_len;
-+
- 	/*
- 	 * XXX do not save the inquiry, since it can change underneath us,
- 	 * save just vendor/model/rev.
-@@ -631,12 +633,23 @@ static int scsi_add_lun(struct scsi_devi
- 	 * scanning run at their own risk, or supply a user level program
- 	 * that can correctly scan.
- 	 */
--	sdev->inquiry = kmalloc(sdev->inquiry_len, GFP_ATOMIC);
-+
-+	/*
-+	 * Copy at least 36 bytes of INQUIRY data, so that we don't
-+	 * dereference unallocated memory when accessing the Vendor,
-+	 * Product, and Revision strings.  Badly behaved devices may set
-+	 * the INQUIRY Additional Length byte to a small value, indicating
-+	 * these strings are invalid, but often they contain plausible data
-+	 * nonetheless.  It doesn't matter if the device sent < 36 bytes
-+	 * total, since scsi_probe_lun() initializes inq_result with 0s.
-+	 */
-+	copy_len = max((int) sdev->inquiry_len, 36);
-+	sdev->inquiry = kmalloc(copy_len, GFP_ATOMIC);
- 	if (sdev->inquiry == NULL) {
- 		return SCSI_SCAN_NO_RESPONSE;
- 	}
- 
--	memcpy(sdev->inquiry, inq_result, sdev->inquiry_len);
-+	memcpy(sdev->inquiry, inq_result, copy_len);
- 	sdev->vendor = (char *) (sdev->inquiry + 8);
- 	sdev->model = (char *) (sdev->inquiry + 16);
- 	sdev->rev = (char *) (sdev->inquiry + 32);
-
+--- linux-2.6.19-rc3-git6.orig/drivers/scsi/qla4xxx/Kconfig
++++ linux-2.6.19-rc3-git6/drivers/scsi/qla4xxx/Kconfig
+@@ -1,6 +1,6 @@
+ config SCSI_QLA_ISCSI
+ 	tristate "QLogic ISP4XXX host adapter family support"
+-	depends on PCI && SCSI
++	depends on PCI && SCSI && NET
+ 	select SCSI_ISCSI_ATTRS
+ 	---help---
+ 	This driver supports the QLogic 40xx (ISP4XXX) iSCSI host
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
