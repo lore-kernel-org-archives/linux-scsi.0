@@ -1,58 +1,66 @@
-From: Kars de Jong <jongk@linux-m68k.org>
-Subject: Re: Removing BROKEN scsi drivers
-Date: Mon, 30 Oct 2006 13:34:39 +0100
-Message-ID: <1162211680.24098.8.camel@laptop-lcs.localdomain>
-References: <Pine.LNX.4.62.0510071024370.26010@numbat.sonytel.be>
- <20051007134232.GA6490@levanta.com>
- <1128693232.5041.7.camel@laptop-lcs.localdomain>
- <20051115095152.GA23470@infradead.org>
- <20051115101709.GK7031@2004.bluespice.org>
- <20051115103034.GA24352@infradead.org> <20051115113225.GS5252@levanta.com>
- <20060707124444.GA11199@infradead.org> <20060709111648.GR15414@levanta.com>
- <1152444304.5567.2.camel@kars.perseus.home>
- <20061030111311.GA756@infradead.org>
+From: Aboo Valappil <aboo@aboo.org>
+Subject: Re: Disk simulator driver
+Date: Mon, 30 Oct 2006 23:42:32 +1100
+Message-ID: <4545F338.5010904@aboo.org>
+References: <1162153159.6802.21.camel@home-desk>	 <20061029230243.GB13218@lists.us.dell.com> <1162166907.6802.24.camel@home-desk>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from psmtp04.wxs.nl ([195.121.247.13]:14066 "EHLO psmtp04.wxs.nl")
-	by vger.kernel.org with ESMTP id S932135AbWJ3MfJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Oct 2006 07:35:09 -0500
-In-reply-to: <20061030111311.GA756@infradead.org>
+Received: from ppp245-155.static.internode.on.net ([59.167.245.155]:50817 "EHLO
+	goobu.aboo.org") by vger.kernel.org with ESMTP id S932182AbWJ3Mmw
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 30 Oct 2006 07:42:52 -0500
+In-Reply-To: <1162166907.6802.24.camel@home-desk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Richard Hirst <rhirst@levanta.com>, Ingo Juergensmann <ij@2005.bluespice.org>, Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>
+To: Sean Bruno <sean.bruno@dsl-only.net>
+Cc: Matt Domsch <Matt_Domsch@dell.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On ma, 2006-10-30 at 11:13 +0000, Christoph Hellwig wrote:
-> On Sun, Jul 09, 2006 at 01:25:04PM +0200, Kars de Jong wrote:
-> > Yes, I have a current patch which integrates all of the above mentioned
-> > changes. Didn't get around to testing it yet with the integrated DMA API
-> > patches.
-> > 
-> > I hope to be able to send it later this week.
-> 
-> Any updates?  Honestly, I do not plan to touch the current 53c7xx/etc
-> mess in the upoming request_buffer transition, and unless the m68k
-> folks provide the new 53c700-based driver I'll just submit a patch to
-> rip 53c7xx and users out without replacement.
+Hi Sean,
 
-Unfortunately real life got in the way. I don't have much time to work
-on m68k anymore.
+I have posted some messages before with the subject "About SG Elements 
+of request_buffer" and "SCSITAP, Virtual SCSI HBA and user space SCSI 
+initiators". Can you please read them and tell me what you think?
+I have exactly what you wanted, and other people in the email group 
+either said it is already there or not seems to be very much interested.
 
-This weekend I did a test with 2.6.18 and the new 53c700-based driver on
-my MVME167 which didn't work very well. It locked up several times, and
-the exception handler got stuck in some loop.
+Basically, i built to impliment some user space SCSI engines and 
+initiators. If you want i can email you a working copy of it where you 
+can present the normal files as disks.
 
-I did not have these problems with 2.6.16.
+Aboo
 
-I will send the patch in its current form, so that the old 53c7xx driver
-can be removed.
-
-
-Kind regards,
-
-Kars.
-
+Sean Bruno wrote:
+> On Sun, 2006-10-29 at 17:02 -0600, Matt Domsch wrote:
+>   
+>> On Sun, Oct 29, 2006 at 12:19:19PM -0800, Sean Bruno wrote:
+>>     
+>>> Is there a project/driver that would take a disk/file/lvm partition as
+>>> an argument(/dev/sda, /tmp/my_big_file.bin /dev/Mapper/MYLVMPART eg.)
+>>> and then create a new /dev entry that could be read/written to as though
+>>> it were a disk?
+>>>
+>>> I think I want to look at sg, but I wasn't sure if that is what I want.
+>>>
+>>> Just poking around for fun and education.
+>>>
+>>> Sean
+>>>       
+>> You want something different than losetup and /dev/loop ?
+>> e.g. something you can issue disk-like ioctls to?
+>>
+>>     
+> Precisely.  I am interested in capturing the data that would be sent to
+> the device and copying it somewhere before it is written to the disk.
+> Kind of like the way target mode drivers accept a file/disk as a target
+> for their operations.
+>
+> Sean
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>   
 
