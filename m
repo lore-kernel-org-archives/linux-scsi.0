@@ -1,62 +1,55 @@
-From: Phillip Susi <psusi@cfl.rr.com>
-Subject: Re: [PATCH] make kernel ignore bogus partitions
-Date: Mon, 30 Oct 2006 14:45:12 -0500
-Message-ID: <45465648.3060608@cfl.rr.com>
-References: <20060503210055.GB31048@beardog.cca.cpqcorp.net> <20060509124138.43e4bac0.akpm@osdl.org> <20060509224848.GA29754@apps.cwi.nl> <20060511040014.66ea16fc.akpm@osdl.org> <20060511115117.GA870@apps.cwi.nl> <Pine.LNX.4.64.0605111822320.6713@iabervon.org> <Pine.LNX.4.61.0605121223560.9918@yvahk01.tjqt.qr>
+From: malahal@us.ibm.com
+Subject: Re: [PATCH] cleanup after a discovery error
+Date: Mon, 30 Oct 2006 12:23:02 -0800
+Message-ID: <20061030202302.GA22870@us.ibm.com>
+References: <20061019031910.GA16855@us.ibm.com> <1161284938.11219.22.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1161434AbWJ3Tov@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.61.0605121223560.9918@yvahk01.tjqt.qr>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jan Engelhardt <jengelh@linux01.gwdg.de>
-Cc: Daniel Barkalow <barkalow@iabervon.org>, Andries Brouwer <Andries.Brouwer@cwi.nl>, Andrew Morton <akpm@osdl.org>, mikem@beardog.cca.cpqcorp.net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e32.co.us.ibm.com ([32.97.110.150]:36517 "EHLO
+	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751539AbWJ3UXI
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 30 Oct 2006 15:23:08 -0500
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e32.co.us.ibm.com (8.13.8/8.12.11) with ESMTP id k9UKN57i011145
+	for <linux-scsi@vger.kernel.org>; Mon, 30 Oct 2006 15:23:05 -0500
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by westrelay02.boulder.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id k9UKN46O516560
+	for <linux-scsi@vger.kernel.org>; Mon, 30 Oct 2006 13:23:04 -0700
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k9UKN46Q023279
+	for <linux-scsi@vger.kernel.org>; Mon, 30 Oct 2006 13:23:04 -0700
+Content-Disposition: inline
+In-Reply-To: <1161284938.11219.22.camel@mulgrave.il.steeleye.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi@vger.kernel.org
 
-It looks like this patch got merged in to only warn about partitions 
-going beyond the end of the device.  What still concerns me is that I ( 
-and others ) get a lot of IO error kernel messages during boot because 
-we boot from a raid0 and the first disk in the set appears to contain a 
-valid partition table that lists partitions larger than the single disk 
-( since the partitions span both disks ).  This causes the kernel to 
-complain when it probes the partitions as it tries to read beyond the 
-end of the device.
+James Bottomley [James.Bottomley@SteelEye.com] wrote:
+> 
+> This is a bit of a layering violation
+> 
+> if the various discover functions are going to return an error, I think
+> it's their job to clean up whatever they did before returning.
+> 
+> James
 
-The arguments in this thread for not discarding such partitions out of 
-hand make sense to me, but I wonder: why does the kernel complain about 
-IO errors to the disk when it KNOWS it is making an invalid request ( to 
-sectors beyond the end of the device )?  Attempting the IO anyhow makes 
-sense in a way if sometimes the kernel can detect the size wrongly, but 
-if the IO fails, maybe the error message should be suppressed if it is 
-beyond the detected end of device?
+Hope this works better.
+Signed-off-by: Malahal Naineni <malahal@us.ibm.com>
 
-
-Jan Engelhardt wrote:
->> Perhaps the kernel should try reading beyond the ends of disks when it 
->> detects them, so that it can determine if there's actually available 
->> storage there, and automatically increase the size if there is? Or, at 
->> least, it could check whether the medium actually goes out to the point 
->> the partition table implies, and suppress the I/O error if the disk 
->> actually ends where it claims to.
->>
-> Sounds like a good idea. In fact, I had miscreated a sun disklabel on a 
-> disk because it has a slightly different notion of cylinders that I am used 
-> to from x86; IOW:
-> 
-> dmesg:
-> SCSI device sdb: 35378533 512-byte hdwr sectors (18114 MB)
-> 
-> fdisk:
-> Disk /dev/sdb (Sun disk label): 19 heads, 248 sectors, 7200 rpm
-> 7508 cylinders, 2 alternate cylinders, 7510 physical cylinders
-> 0 extra sects/cyl, interleave 1:1
-> (should have been 7506 cyl, 2 alt, 7508 phys)
-> 
-> And Solaris rightfully barfs about it when scanning disks,
-> because 7510*19*248 > 35378533. Linux keeps silent,
-> and I am not sure if I have a silent data corruption there (currently not 
-> as it seems).
-> (Since it's just a test box ATM, it's not critical.)
-> 
-> 
-> Jan Engelhardt
+diff -r 80de69a94159 drivers/scsi/libsas/sas_discover.c
+--- a/drivers/scsi/libsas/sas_discover.c	Wed Oct 25 13:28:31 2006 -0700
++++ b/drivers/scsi/libsas/sas_discover.c	Mon Oct 30 11:55:21 2006 -0800
+@@ -684,6 +684,11 @@ static void sas_discover_domain(void *da
+ 	}
+ 
+ 	if (error) {
++		sas_rphy_delete(port->port_dev->rphy);
++		port->port_dev->rphy = NULL;
++		spin_lock(&port->dev_list_lock);
++		list_del_init(&port->port_dev->dev_list_node);
++		spin_unlock(&port->dev_list_lock);
+ 		kfree(port->port_dev); /* not kobject_register-ed yet */
+ 		port->port_dev = NULL;
+ 	}
