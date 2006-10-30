@@ -1,43 +1,39 @@
-From: Sean Bruno <sean.bruno@dsl-only.net>
-Subject: Re: Disk simulator driver
-Date: Sun, 29 Oct 2006 16:08:27 -0800
-Message-ID: <1162166907.6802.24.camel@home-desk>
-References: <1162153159.6802.21.camel@home-desk>
-	 <20061029230243.GB13218@lists.us.dell.com>
+From: Pete Wyckoff <pw@osc.edu>
+Subject: [PATCH] iscsi: avoid oops when destroying unbound connection
+Date: Sun, 29 Oct 2006 20:29:12 -0500
+Message-ID: <20061030012912.GA12233@osc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iron2.pdx.net ([69.64.224.71]:17307 "EHLO iron2.pdx.net")
-	by vger.kernel.org with ESMTP id S1030470AbWJ3AI3 (ORCPT
+Received: from quasar.osc.edu ([192.148.249.15]:49569 "EHLO quasar.osc.edu")
+	by vger.kernel.org with ESMTP id S1030470AbWJ3B3O (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 29 Oct 2006 19:08:29 -0500
-In-Reply-To: <20061029230243.GB13218@lists.us.dell.com>
+	Sun, 29 Oct 2006 20:29:14 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matt Domsch <Matt_Domsch@dell.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Sun, 2006-10-29 at 17:02 -0600, Matt Domsch wrote:
-> On Sun, Oct 29, 2006 at 12:19:19PM -0800, Sean Bruno wrote:
-> > Is there a project/driver that would take a disk/file/lvm partition as
-> > an argument(/dev/sda, /tmp/my_big_file.bin /dev/Mapper/MYLVMPART eg.)
-> > and then create a new /dev entry that could be read/written to as though
-> > it were a disk?
-> > 
-> > I think I want to look at sg, but I wasn't sure if that is what I want.
-> > 
-> > Just poking around for fun and education.
-> > 
-> > Sean
-> 
-> You want something different than losetup and /dev/loop ?
-> e.g. something you can issue disk-like ioctls to?
-> 
-Precisely.  I am interested in capturing the data that would be sent to
-the device and copying it somewhere before it is written to the disk.
-Kind of like the way target mode drivers accept a file/disk as a target
-for their operations.
+Initialize the conn->item list head in a connection, used for
+associating it with a session, to avoid an oops if list_del happens
+before the connection is bound.  The oops is easy enough to
+reproduce by calling CREATE_SESSION, CREATE_CONN, then DESTROY_CONN
+(but no BIND_CONN) from userspace.
 
-Sean
+Signed-off-by: Pete Wyckoff <pw@osc.edu>
+---
+ drivers/scsi/libiscsi.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index c542d0e..66fc239 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -1477,6 +1477,7 @@ iscsi_conn_setup(struct iscsi_cls_sessio
+ 	INIT_LIST_HEAD(&conn->run_list);
+ 	INIT_LIST_HEAD(&conn->mgmt_run_list);
+ 	INIT_LIST_HEAD(&conn->xmitqueue);
++	INIT_LIST_HEAD(&conn->item);
+ 
+ 	/* initialize general immediate & non-immediate PDU commands queue */
+ 	conn->immqueue = kfifo_alloc(session->mgmtpool_max * sizeof(void*),
