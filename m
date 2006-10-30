@@ -1,66 +1,32 @@
-From: Aboo Valappil <aboo@aboo.org>
-Subject: Re: Disk simulator driver
-Date: Mon, 30 Oct 2006 23:42:32 +1100
-Message-ID: <4545F338.5010904@aboo.org>
-References: <1162153159.6802.21.camel@home-desk>	 <20061029230243.GB13218@lists.us.dell.com> <1162166907.6802.24.camel@home-desk>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [RFC] support for bidirectional transfers and variable length
+ CDBs
+Date: Mon, 30 Oct 2006 07:55:25 -0500
+Message-ID: <4545F63D.7080504@emulex.com>
+References: <4541F822.70700@panasas.com> <20061028163609.GA17317@infradead.org> <4544ADB3.8050708@panasas.com> <20061029134852.GB22902@infradead.org>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ppp245-155.static.internode.on.net ([59.167.245.155]:50817 "EHLO
-	goobu.aboo.org") by vger.kernel.org with ESMTP id S932182AbWJ3Mmw
+Received: from emulex.emulex.com ([138.239.112.1]:51110 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S932429AbWJ3M4g
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Oct 2006 07:42:52 -0500
-In-Reply-To: <1162166907.6802.24.camel@home-desk>
+	Mon, 30 Oct 2006 07:56:36 -0500
+In-Reply-To: <20061029134852.GB22902@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sean Bruno <sean.bruno@dsl-only.net>
-Cc: Matt Domsch <Matt_Domsch@dell.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Benny Halevy <bhalevy@panasas.com>, linux-scsi@vger.kernel.org, Mike Christie <mchristi@redhat.com>, James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <jens.axboe@oracle.com>, Dalit Naor <DALIT@il.ibm.com>, Liran Schour <LIRANS@il.ibm.com>, Sami.Iren@seagate.com, Daniel.E.Messinger@seagate.com, stuart.brodsky@seagate.com, open-iscsi@googlegroups.com, Boaz Harrosh <bharrosh@panasas.com>
 
-Hi Sean,
+Christoph Hellwig wrote:
+>>> - you submit your patch that fixes the scsi_execute comment typo
+>>> - you submit your patch to add the VARLEN_CDB opcode
+>>> - you start converting as many as possible drivers to the
+>>>   above wrapper API (I already had a big FC card vendor signed up
+>>>   for this, but no updates so far..)
 
-I have posted some messages before with the subject "About SG Elements 
-of request_buffer" and "SCSITAP, Virtual SCSI HBA and user space SCSI 
-initiators". Can you please read them and tell me what you think?
-I have exactly what you wanted, and other people in the email group 
-either said it is already there or not seems to be very much interested.
+Sign me (Emulex) up for the last item - and if you send me pre-releases
+of your patches, we can help out with preliminary testing.
 
-Basically, i built to impliment some user space SCSI engines and 
-initiators. If you want i can email you a working copy of it where you 
-can present the normal files as disks.
-
-Aboo
-
-Sean Bruno wrote:
-> On Sun, 2006-10-29 at 17:02 -0600, Matt Domsch wrote:
->   
->> On Sun, Oct 29, 2006 at 12:19:19PM -0800, Sean Bruno wrote:
->>     
->>> Is there a project/driver that would take a disk/file/lvm partition as
->>> an argument(/dev/sda, /tmp/my_big_file.bin /dev/Mapper/MYLVMPART eg.)
->>> and then create a new /dev entry that could be read/written to as though
->>> it were a disk?
->>>
->>> I think I want to look at sg, but I wasn't sure if that is what I want.
->>>
->>> Just poking around for fun and education.
->>>
->>> Sean
->>>       
->> You want something different than losetup and /dev/loop ?
->> e.g. something you can issue disk-like ioctls to?
->>
->>     
-> Precisely.  I am interested in capturing the data that would be sent to
-> the device and copying it somewhere before it is written to the disk.
-> Kind of like the way target mode drivers accept a file/disk as a target
-> for their operations.
->
-> Sean
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->   
-
+-- james s
