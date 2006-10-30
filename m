@@ -1,32 +1,44 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [RFC] support for bidirectional transfers and variable length
- CDBs
-Date: Mon, 30 Oct 2006 07:55:25 -0500
-Message-ID: <4545F63D.7080504@emulex.com>
-References: <4541F822.70700@panasas.com> <20061028163609.GA17317@infradead.org> <4544ADB3.8050708@panasas.com> <20061029134852.GB22902@infradead.org>
-Reply-To: James.Smart@Emulex.Com
+From: Sean Bruno <sean.bruno@dsl-only.net>
+Subject: Re: Disk simulator driver
+Date: Mon, 30 Oct 2006 06:59:57 -0800
+Message-ID: <1162220397.6802.27.camel@home-desk>
+References: <1162153159.6802.21.camel@home-desk>
+	 <20061029230243.GB13218@lists.us.dell.com>
+	 <1162166907.6802.24.camel@home-desk>  <4545F338.5010904@aboo.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:51110 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S932429AbWJ3M4g
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Oct 2006 07:56:36 -0500
-In-Reply-To: <20061029134852.GB22902@infradead.org>
+Received: from iron2.pdx.net ([69.64.224.71]:58302 "EHLO iron2.pdx.net")
+	by vger.kernel.org with ESMTP id S964977AbWJ3PCM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 30 Oct 2006 10:02:12 -0500
+In-Reply-To: <4545F338.5010904@aboo.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Benny Halevy <bhalevy@panasas.com>, linux-scsi@vger.kernel.org, Mike Christie <mchristi@redhat.com>, James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <jens.axboe@oracle.com>, Dalit Naor <DALIT@il.ibm.com>, Liran Schour <LIRANS@il.ibm.com>, Sami.Iren@seagate.com, Daniel.E.Messinger@seagate.com, stuart.brodsky@seagate.com, open-iscsi@googlegroups.com, Boaz Harrosh <bharrosh@panasas.com>
+To: Aboo Valappil <aboo@aboo.org>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-Christoph Hellwig wrote:
->>> - you submit your patch that fixes the scsi_execute comment typo
->>> - you submit your patch to add the VARLEN_CDB opcode
->>> - you start converting as many as possible drivers to the
->>>   above wrapper API (I already had a big FC card vendor signed up
->>>   for this, but no updates so far..)
+On Mon, 2006-10-30 at 23:42 +1100, Aboo Valappil wrote:
+> Hi Sean,
+> 
+> I have posted some messages before with the subject "About SG Elements 
+> of request_buffer" and "SCSITAP, Virtual SCSI HBA and user space SCSI 
+> initiators". Can you please read them and tell me what you think?
+> I have exactly what you wanted, and other people in the email group 
+> either said it is already there or not seems to be very much interested.
+> 
+> Basically, i built to impliment some user space SCSI engines and 
+> initiators. If you want i can email you a working copy of it where you 
+> can present the normal files as disks.
+> 
+> Aboo
 
-Sign me (Emulex) up for the last item - and if you send me pre-releases
-of your patches, we can help out with preliminary testing.
+It would be very good if you could send me the code you have written.
 
--- james s
+I would like to see where your code hooks into the /dev/ tree and how it
+handles write requests.
+
+
+Sean
+
