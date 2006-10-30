@@ -1,161 +1,70 @@
 From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: [PATCH] 1/3: Modify libsas error handler to use scsi_eh_* functions
-Date: Mon, 30 Oct 2006 15:18:39 -0800
-Message-ID: <4546884F.2080904@us.ibm.com>
+Subject: [PATCH] 0/3: Fix EH problems in libsas and implement more error handling
+Date: Mon, 30 Oct 2006 15:18:29 -0800
+Message-ID: <45468845.20400@us.ibm.com>
 Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.150]:41965 "EHLO
-	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S1161461AbWJ3XSl
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Oct 2006 18:18:41 -0500
+Received: from e35.co.us.ibm.com ([32.97.110.153]:2497 "EHLO e35.co.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1161435AbWJ3XSb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 30 Oct 2006 18:18:31 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 Cc: Alexis Bruemmer <alexisb@us.ibm.com>
 
-This patch adds an EH done queue to sas_ha, converts the error handling
-strategy function and the sas_scsi_task_done functions in libsas to use
-the scsi_eh_* commands for error'd commands, and adds checks for the
-INITIATOR_ABORTED flag so that we do the right thing if a sas_task has
-been aborted by the initiator.
+Hi all,
 
-Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
+The following three patches are early drafts of a series of patches to
+fix error handling in libsas so that the scsi_eh_* functions are called
+so that we can attempt to retry failed commands later.  There is also a
+patch to aic94xx to make escb errors are detected correctly,
+REQ_TASK_ABORT is handled, and the beginnings of a handler for
+REQ_DEVICE_RESET.
 
---
+However, there are a number of issues with these patches that I wish to
+bring to the attention of this mailing list for further input:
 
-diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
-index c836a23..a2b479a 100644
---- a/drivers/scsi/libsas/sas_init.c
-+++ b/drivers/scsi/libsas/sas_init.c
-@@ -112,6 +112,8 @@ int sas_register_ha(struct sas_ha_struct
- 		}
- 	}
- 
-+	INIT_LIST_HEAD(&sas_ha->eh_done_q);
-+
- 	return 0;
- 
- Undo_ports:
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index 349e9a7..50aac70 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -29,6 +29,7 @@ #include <scsi/scsi_host.h>
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_tcq.h>
- #include <scsi/scsi.h>
-+#include <scsi/scsi_eh.h>
- #include <scsi/scsi_transport.h>
- #include <scsi/scsi_transport_sas.h>
- #include <scsi/sas_ata.h>
-@@ -48,6 +49,7 @@ static void sas_scsi_task_done(struct sa
- {
- 	struct task_status_struct *ts = &task->task_status;
- 	struct scsi_cmnd *sc = task->uldd_task;
-+	struct sas_ha_struct *sas_ha = SHOST_TO_SAS_HA(sc->device->host);
- 	unsigned ts_flags = task->task_state_flags;
- 	int hs = 0, stat = 0;
- 
-@@ -118,7 +120,7 @@ static void sas_scsi_task_done(struct sa
- 	sas_free_task(task);
- 	/* This is very ugly but this is how SCSI Core works. */
- 	if (ts_flags & SAS_TASK_STATE_ABORTED)
--		scsi_finish_command(sc);
-+		scsi_eh_finish_cmd(sc, &sas_ha->eh_done_q);
- 	else
- 		sc->scsi_done(sc);
- }
-@@ -315,6 +317,15 @@ static enum task_disposition sas_scsi_fi
- 		spin_unlock_irqrestore(&core->task_queue_lock, flags);
- 	}
- 
-+	spin_lock_irqsave(&task->task_state_lock, flags);
-+	if (task->task_state_flags & SAS_TASK_INITIATOR_ABORTED) {
-+		spin_unlock_irqrestore(&task->task_state_lock, flags);
-+		SAS_DPRINTK("%s: task 0x%p already aborted\n",
-+			    __FUNCTION__, task);
-+		return TASK_IS_ABORTED;
-+	}
-+	spin_unlock_irqrestore(&task->task_state_lock, flags);
-+
- 	for (i = 0; i < 5; i++) {
- 		SAS_DPRINTK("%s: aborting task 0x%p\n", __FUNCTION__, task);
- 		res = si->dft->lldd_abort_task(task);
-@@ -417,13 +428,16 @@ Again:
- 	SAS_DPRINTK("going over list...\n");
- 	list_for_each_entry_safe(cmd, n, &error_q, eh_entry) {
- 		struct sas_task *task = TO_SAS_TASK(cmd);
-+		list_del_init(&cmd->eh_entry);
- 
-+		if (!task) {
-+			SAS_DPRINTK("%s: taskless cmd?!\n", __FUNCTION__);
-+			continue;
-+		}
- 		SAS_DPRINTK("trying to find task 0x%p\n", task);
--		list_del_init(&cmd->eh_entry);
- 		res = sas_scsi_find_task(task);
- 
- 		cmd->eh_eflags = 0;
--		shost->host_failed--;
- 
- 		switch (res) {
- 		case TASK_IS_DONE:
-@@ -499,6 +513,7 @@ Again:
- 		}
- 	}
- out:
-+	scsi_eh_flush_done_q(&ha->eh_done_q);
- 	SAS_DPRINTK("--- Exit %s\n", __FUNCTION__);
- 	return;
- clear_q:
-@@ -516,12 +531,18 @@ enum scsi_eh_timer_return sas_scsi_timed
- 	unsigned long flags;
- 
- 	if (!task) {
--		SAS_DPRINTK("command 0x%p, task 0x%p, timed out: EH_HANDLED\n",
-+		SAS_DPRINTK("command 0x%p, task 0x%p, gone: EH_HANDLED\n",
- 			    cmd, task);
- 		return EH_HANDLED;
- 	}
- 
- 	spin_lock_irqsave(&task->task_state_lock, flags);
-+	if (task->task_state_flags & SAS_TASK_INITIATOR_ABORTED) {
-+		spin_unlock_irqrestore(&task->task_state_lock, flags);
-+		SAS_DPRINTK("command 0x%p, task 0x%p, aborted by initiator: "
-+			    "EH_NOT_HANDLED\n", cmd, task);
-+		return EH_NOT_HANDLED;
-+	}
- 	if (task->task_state_flags & SAS_TASK_STATE_DONE) {
- 		spin_unlock_irqrestore(&task->task_state_lock, flags);
- 		SAS_DPRINTK("command 0x%p, task 0x%p, timed out: EH_HANDLED\n",
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index 3704fbf..914019a 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -346,6 +346,8 @@ struct sas_ha_struct {
- 	void (*notify_phy_event)(struct asd_sas_phy *, enum phy_event);
- 
- 	void *lldd_ha;		  /* not touched by sas class code */
-+
-+	struct list_head eh_done_q;
- };
- 
- #define SHOST_TO_SAS_HA(_shost) (*(struct sas_ha_struct **)(_shost)->hostdata)
-@@ -538,9 +540,10 @@ struct sas_task {
- 
- 
- 
--#define SAS_TASK_STATE_PENDING  1
--#define SAS_TASK_STATE_DONE     2
--#define SAS_TASK_STATE_ABORTED  4
-+#define SAS_TASK_STATE_PENDING      1
-+#define SAS_TASK_STATE_DONE         2
-+#define SAS_TASK_STATE_ABORTED      4
-+#define SAS_TASK_INITIATOR_ABORTED  8
- 
- static inline struct sas_task *sas_alloc_task(gfp_t flags)
- {
+First, the aic94xx sequencer can send back an ESCB with an error code of
+"REQ_TASK_ABORT", which means that the kernel has to send an ABORT TASK
+TMF to sequencer to unjam things.  Until this happens, the sequencer
+neither services commands nor sends back completions.  If we want to
+wait for the error handler to send the ABORT TASK, we end up waiting for
+_all_ pending commands to time out so that the EH can wake up.  This
+effectively stalls the system for 30 seconds every time we see
+REQ_TASK_ABORT.
 
+On the assumption that we'd like to get on with things sooner than
+later, the current iteration of these patches aborts the task as soon as
+possible so that the other pending commands will flush out on their own.
+ However, this also necessitates the addition of a new sas_task flag
+(SAS_TASK_INITIATOR_ABORTED) to indicate "Task aborted, but still
+waiting for the EH to call task_done."  From what I can tell,
+SAS_TASK_STATE_ABORTED means that the task will be lldd_abort_task'd by
+the EH at some point, but does not indicate if that has been done yet,
+and SAS_TASK_STATE_DONE is set after everything is done.
+
+The second issue is the manual decrementing of shost->host_failed in the
+error handler.  So long as we use the scsi_eh_* commands this value is
+decremented automatically--however, it appears that sas_scsi_clear_* is
+pulling scsi_cmnds off the error queue and ... dropping them so that
+they never go through the error handler.  Is this a desirable behavior,
+or am I reading the code incorrectly?  Or...?
+
+The third pertains to REQ_DEVICE_RESET: I've not yet figured out how to
+reset a device port as has been hinted that I must do.  I don't know if
+a phy reset is sufficient or if I'm barking up the wrong tree.
+
+In any case, these patches have been tested on a x206m, x260 and a x366.
+ They seemed pretty stable, though YMMV.  The patches should apply
+against linux-2.6.19-rc3 + scsi-misc + scsi-rc-fixes + aic94xx git trees
+in the order that they are posted.  They may also eat your disks.
+
+Questions/comments?  This is still very much a work in progress and at
+this stage I'm merely seeking constructive feedback to mould this code
+into better shape.
+
+--D
