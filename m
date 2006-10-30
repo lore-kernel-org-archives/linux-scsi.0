@@ -1,73 +1,161 @@
-From: linas@austin.ibm.com (Linas Vepstas)
-Subject: PCI error recovery for the Emulex LPFC
-Date: Mon, 30 Oct 2006 16:20:47 -0600
-Message-ID: <20061030222047.GN6360@austin.ibm.com>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: [PATCH] 1/3: Modify libsas error handler to use scsi_eh_* functions
+Date: Mon, 30 Oct 2006 15:18:39 -0800
+Message-ID: <4546884F.2080904@us.ibm.com>
+Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:45442 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S1422699AbWJ3WUw
+Received: from e32.co.us.ibm.com ([32.97.110.150]:41965 "EHLO
+	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S1161461AbWJ3XSl
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Oct 2006 17:20:52 -0500
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e35.co.us.ibm.com (8.13.8/8.12.11) with ESMTP id k9UMKnjO008268
-	for <linux-scsi@vger.kernel.org>; Mon, 30 Oct 2006 17:20:49 -0500
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id k9UMKnci329772
-	for <linux-scsi@vger.kernel.org>; Mon, 30 Oct 2006 15:20:49 -0700
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k9UMKmOx003894
-	for <linux-scsi@vger.kernel.org>; Mon, 30 Oct 2006 15:20:49 -0700
-Content-Disposition: inline
+	Mon, 30 Oct 2006 18:18:41 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: james.smart@emulex.com
-Cc: linux-scsi@vger.kernel.org, rlary@us.ibm.com
+To: linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: Alexis Bruemmer <alexisb@us.ibm.com>
 
+This patch adds an EH done queue to sas_ha, converts the error handling
+strategy function and the sas_scsi_task_done functions in libsas to use
+the scsi_eh_* commands for error'd commands, and adds checks for the
+INITIATOR_ABORTED flag so that we do the right thing if a sas_task has
+been aborted by the initiator.
 
-Hi James,
+Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
 
-I recently started fiddling with the emulex lpfc driver
-with the idea of adding PCI error recovery support to
-the driver.  I'm trying to figure out how to proceed.
+--
 
-Some background: In IBM pSeries, and now newer PCI-E
-based systems, things like parity errors, etc. on the 
-PCI bus are detected by the PCI bridge chip, which
-then freezes all further traffic to the adapter. 
-When an error condition is detected, there's a 
-handful of callbacks made to the device driver, which
-can then try to recover from the error, and move 
-forward.  
-
-When io is frozen, mmio reads return all 0xffff's ...
-I injected an error on the lpfc, and the (so far, 
-completely unmodified) driver promptly crashed on me:
-
-0:mon> excp
-cpu 0x0: Vector: 300 (Data Access) at [c0000003fbed3890]
-    pc: d000000000aa23c0: .lpfc_dev_loss_tmo_callbk+0x68/0x238 [lpfc]
-    lr: c0000000002e9dac: .fc_starget_delete+0x90/0x17c
-    sp: c0000003fbed3b10
-   msr: 9000000000009032
-   dar: 6b6b6b6b6b6b7753
- dsisr: 40000000
-  current = 0xc0000003fa4ac7f0
-  paca    = 0xc000000000523300
-    pid   = 4714, comm = fc_wq_1
-
-0:mon> t
-[c0000003fbed3bf0] c0000000002e9dac .fc_starget_delete+0x90/0x17c
-[c0000003fbed3c80] c0000000002ebc5c .fc_rport_final_delete+0x80/0x124
-[c0000003fbed3d20] c000000000067268 .run_workqueue+0xdc/0x168
-[c0000003fbed3dc0] c000000000067d0c .worker_thread+0x140/0x1b0
-[c0000003fbed3ee0] c00000000006c24c .kthread+0x124/0x174
-[c0000003fbed3f90] c000000000024d20 .kernel_thread+0x4c/0x68
-
-This is on 2.6.19-rc1-git11 -- I'll try to track this down 
-further, but thought I'd mention it now. Does sucha crash 
-look familiar?
-
--- Linas Vepstas
-
+diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
+index c836a23..a2b479a 100644
+--- a/drivers/scsi/libsas/sas_init.c
++++ b/drivers/scsi/libsas/sas_init.c
+@@ -112,6 +112,8 @@ int sas_register_ha(struct sas_ha_struct
+ 		}
+ 	}
+ 
++	INIT_LIST_HEAD(&sas_ha->eh_done_q);
++
+ 	return 0;
+ 
+ Undo_ports:
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index 349e9a7..50aac70 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -29,6 +29,7 @@ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_device.h>
+ #include <scsi/scsi_tcq.h>
+ #include <scsi/scsi.h>
++#include <scsi/scsi_eh.h>
+ #include <scsi/scsi_transport.h>
+ #include <scsi/scsi_transport_sas.h>
+ #include <scsi/sas_ata.h>
+@@ -48,6 +49,7 @@ static void sas_scsi_task_done(struct sa
+ {
+ 	struct task_status_struct *ts = &task->task_status;
+ 	struct scsi_cmnd *sc = task->uldd_task;
++	struct sas_ha_struct *sas_ha = SHOST_TO_SAS_HA(sc->device->host);
+ 	unsigned ts_flags = task->task_state_flags;
+ 	int hs = 0, stat = 0;
+ 
+@@ -118,7 +120,7 @@ static void sas_scsi_task_done(struct sa
+ 	sas_free_task(task);
+ 	/* This is very ugly but this is how SCSI Core works. */
+ 	if (ts_flags & SAS_TASK_STATE_ABORTED)
+-		scsi_finish_command(sc);
++		scsi_eh_finish_cmd(sc, &sas_ha->eh_done_q);
+ 	else
+ 		sc->scsi_done(sc);
+ }
+@@ -315,6 +317,15 @@ static enum task_disposition sas_scsi_fi
+ 		spin_unlock_irqrestore(&core->task_queue_lock, flags);
+ 	}
+ 
++	spin_lock_irqsave(&task->task_state_lock, flags);
++	if (task->task_state_flags & SAS_TASK_INITIATOR_ABORTED) {
++		spin_unlock_irqrestore(&task->task_state_lock, flags);
++		SAS_DPRINTK("%s: task 0x%p already aborted\n",
++			    __FUNCTION__, task);
++		return TASK_IS_ABORTED;
++	}
++	spin_unlock_irqrestore(&task->task_state_lock, flags);
++
+ 	for (i = 0; i < 5; i++) {
+ 		SAS_DPRINTK("%s: aborting task 0x%p\n", __FUNCTION__, task);
+ 		res = si->dft->lldd_abort_task(task);
+@@ -417,13 +428,16 @@ Again:
+ 	SAS_DPRINTK("going over list...\n");
+ 	list_for_each_entry_safe(cmd, n, &error_q, eh_entry) {
+ 		struct sas_task *task = TO_SAS_TASK(cmd);
++		list_del_init(&cmd->eh_entry);
+ 
++		if (!task) {
++			SAS_DPRINTK("%s: taskless cmd?!\n", __FUNCTION__);
++			continue;
++		}
+ 		SAS_DPRINTK("trying to find task 0x%p\n", task);
+-		list_del_init(&cmd->eh_entry);
+ 		res = sas_scsi_find_task(task);
+ 
+ 		cmd->eh_eflags = 0;
+-		shost->host_failed--;
+ 
+ 		switch (res) {
+ 		case TASK_IS_DONE:
+@@ -499,6 +513,7 @@ Again:
+ 		}
+ 	}
+ out:
++	scsi_eh_flush_done_q(&ha->eh_done_q);
+ 	SAS_DPRINTK("--- Exit %s\n", __FUNCTION__);
+ 	return;
+ clear_q:
+@@ -516,12 +531,18 @@ enum scsi_eh_timer_return sas_scsi_timed
+ 	unsigned long flags;
+ 
+ 	if (!task) {
+-		SAS_DPRINTK("command 0x%p, task 0x%p, timed out: EH_HANDLED\n",
++		SAS_DPRINTK("command 0x%p, task 0x%p, gone: EH_HANDLED\n",
+ 			    cmd, task);
+ 		return EH_HANDLED;
+ 	}
+ 
+ 	spin_lock_irqsave(&task->task_state_lock, flags);
++	if (task->task_state_flags & SAS_TASK_INITIATOR_ABORTED) {
++		spin_unlock_irqrestore(&task->task_state_lock, flags);
++		SAS_DPRINTK("command 0x%p, task 0x%p, aborted by initiator: "
++			    "EH_NOT_HANDLED\n", cmd, task);
++		return EH_NOT_HANDLED;
++	}
+ 	if (task->task_state_flags & SAS_TASK_STATE_DONE) {
+ 		spin_unlock_irqrestore(&task->task_state_lock, flags);
+ 		SAS_DPRINTK("command 0x%p, task 0x%p, timed out: EH_HANDLED\n",
+diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+index 3704fbf..914019a 100644
+--- a/include/scsi/libsas.h
++++ b/include/scsi/libsas.h
+@@ -346,6 +346,8 @@ struct sas_ha_struct {
+ 	void (*notify_phy_event)(struct asd_sas_phy *, enum phy_event);
+ 
+ 	void *lldd_ha;		  /* not touched by sas class code */
++
++	struct list_head eh_done_q;
+ };
+ 
+ #define SHOST_TO_SAS_HA(_shost) (*(struct sas_ha_struct **)(_shost)->hostdata)
+@@ -538,9 +540,10 @@ struct sas_task {
+ 
+ 
+ 
+-#define SAS_TASK_STATE_PENDING  1
+-#define SAS_TASK_STATE_DONE     2
+-#define SAS_TASK_STATE_ABORTED  4
++#define SAS_TASK_STATE_PENDING      1
++#define SAS_TASK_STATE_DONE         2
++#define SAS_TASK_STATE_ABORTED      4
++#define SAS_TASK_INITIATOR_ABORTED  8
+ 
+ static inline struct sas_task *sas_alloc_task(gfp_t flags)
+ {
 
