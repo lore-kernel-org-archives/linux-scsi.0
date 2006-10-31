@@ -1,35 +1,84 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: [PATCH] SCSI: ISCSI build failure
-Date: Tue, 31 Oct 2006 13:13:27 -0800
-Message-ID: <4547BC77.1020909@oracle.com>
-References: <200610291945.16948.toralf.foerster@gmx.de>	 <20061029190357.98fc9c98.randy.dunlap@oracle.com>	 <Pine.LNX.4.64.0610301206240.6761@scrub.home>	 <20061030083230.5e889415.randy.dunlap@oracle.com>	 <1162327892.13859.67.camel@mulgrave.il.steeleye.com>	 <4547B6D5.1050208@oracle.com>	 <1162328587.13859.71.camel@mulgrave.il.steeleye.com>	 <4547B9E3.4070307@oracle.com> <1162329179.13859.76.camel@mulgrave.il.steeleye.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH] SCSI core: always store >= 36 bytes of INQUIRY data
+Date: Tue, 31 Oct 2006 16:26:58 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0610311623260.5679-100000@iolanthe.rowland.org>
+References: <45462910.1090409@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rgminet01.oracle.com ([148.87.113.118]:11516 "EHLO
-	rgminet01.oracle.com") by vger.kernel.org with ESMTP
-	id S1946014AbWJaVR7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 31 Oct 2006 16:17:59 -0500
-In-Reply-To: <1162329179.13859.76.camel@mulgrave.il.steeleye.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:20235 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP
+	id S1946025AbWJaV1A (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 31 Oct 2006 16:27:00 -0500
+In-Reply-To: <45462910.1090409@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Roman Zippel <zippel@linux-m68k.org>, Toralf F_rster <toralf.foerster@gmx.de>, scsi <linux-scsi@vger.kernel.org>, akpm <akpm@osdl.org>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, Patrick Mansfield <patmans@us.ibm.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-James Bottomley wrote:
-> On Tue, 2006-10-31 at 13:02 -0800, Randy Dunlap wrote:
->> I suppose that means that you had rather stick with 'select'
->> intead of use 'depends' ?
+This patch (as810c) copies a minimum of 36 bytes of INQUIRY data,
+even if the device claims that not all of them are valid.  Often badly
+behaved devices put plausible data in the Vendor, Product, and Revision
+strings but set the Additional Length byte to a small value.  Using
+potentially valid data is certainly better than allocating a short
+buffer and then reading beyond the end of it, which is what we do now.
+
+Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+
+---
+
+On Mon, 30 Oct 2006, Stefan Richter wrote:
+
+> > +   sdev->inquiry = kmalloc(copy_len, GFP_ATOMIC);
+
+> ...
+> > +   memcpy(sdev->inquiry, inq_result, copy_len);
+> ...
+>    
+> Can be written slightly more concise:
 > 
-> Yes ... if we're going to use a config option as a select, I want it not
-> to have hidden dependencies ... and if that means the option itself
-> needs an additional select (like select NET in this case) then so be it.
+>       sdev->inquiry = kmemdup(inq_result,
+>                               max_t(size_t, sdev->inquiry_len, 36),
+>                               GFP_ATOMIC);
+>       if (sdev->inquiry == NULL)
+>               return SCSI_SCAN_NO_RESPONSE;
+>               
+> This is untested. kmemdup is only available since 2.6.19-rc1.
 
-OK, I guess that's clear enough.
+It seems to work, so I hereby submit it.  Thanks.
 
-I'd rather just eliminate the select usage, but whatever.
+Alan Stern
 
-Thanks,
--- 
-~Randy
+
+Index: usb-2.6/drivers/scsi/scsi_scan.c
+===================================================================
+--- usb-2.6.orig/drivers/scsi/scsi_scan.c
++++ usb-2.6/drivers/scsi/scsi_scan.c
+@@ -631,12 +631,22 @@ static int scsi_add_lun(struct scsi_devi
+ 	 * scanning run at their own risk, or supply a user level program
+ 	 * that can correctly scan.
+ 	 */
+-	sdev->inquiry = kmalloc(sdev->inquiry_len, GFP_ATOMIC);
+-	if (sdev->inquiry == NULL) {
++
++	/*
++	 * Copy at least 36 bytes of INQUIRY data, so that we don't
++	 * dereference unallocated memory when accessing the Vendor,
++	 * Product, and Revision strings.  Badly behaved devices may set
++	 * the INQUIRY Additional Length byte to a small value, indicating
++	 * these strings are invalid, but often they contain plausible data
++	 * nonetheless.  It doesn't matter if the device sent < 36 bytes
++	 * total, since scsi_probe_lun() initializes inq_result with 0s.
++	 */
++	sdev->inquiry = kmemdup(inq_result,
++				max_t(size_t, sdev->inquiry_len, 36),
++				GFP_ATOMIC);
++	if (sdev->inquiry == NULL)
+ 		return SCSI_SCAN_NO_RESPONSE;
+-	}
+ 
+-	memcpy(sdev->inquiry, inq_result, sdev->inquiry_len);
+ 	sdev->vendor = (char *) (sdev->inquiry + 8);
+ 	sdev->model = (char *) (sdev->inquiry + 16);
+ 	sdev->rev = (char *) (sdev->inquiry + 32);
+
