@@ -1,60 +1,52 @@
-From: Muli Ben-Yehuda <muli@il.ibm.com>
-Subject: Re: [PATCH] 0/3: Fix EH problems in libsas and implement more error handling
-Date: Tue, 31 Oct 2006 21:17:55 +0200
-Message-ID: <20061031191755.GF4698@rhun.ibm.com>
-References: <45468845.20400@us.ibm.com> <20061031105452.GD28239@rhun.haifa.ibm.com> <454791A5.9000202@us.ibm.com> <20061031183239.GE4698@rhun.ibm.com> <4547981F.6040006@us.ibm.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH]: PCI Error Recovery: Symbios SCSI device driver
+Date: Tue, 31 Oct 2006 14:24:01 -0500
+Message-ID: <1162322643.13859.54.camel@mulgrave.il.steeleye.com>
+References: <20061020180510.GN6537@austin.ibm.com>
+	 <20061031185506.GE26964@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate2.uk.ibm.com ([195.212.29.135]:32387 "EHLO
-	mtagate2.uk.ibm.com") by vger.kernel.org with ESMTP
-	id S1423806AbWJaTR6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 31 Oct 2006 14:17:58 -0500
-Content-Disposition: inline
-In-Reply-To: <4547981F.6040006@us.ibm.com>
+Received: from [71.30.118.248] ([71.30.118.248]:27837 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1423810AbWJaTZJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 31 Oct 2006 14:25:09 -0500
+In-Reply-To: <20061031185506.GE26964@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Darrick J. Wong" <djwong@us.ibm.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Linas Vepstas <linas@austin.ibm.com>, linux-scsi@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, linux-kernel@vger.kernel.org
 
-On Tue, Oct 31, 2006 at 10:38:23AM -0800, Darrick J. Wong wrote:
-> Muli Ben-Yehuda wrote:
+On Tue, 2006-10-31 at 11:55 -0700, Matthew Wilcox wrote:
+> Is it safe / reasonable / a good idea to sleep for 35 seconds in the EH
+> handler?  I'm not that familiar with how the EH code works.  It has its
+> own thread, so I suppose that's OK.
+
+Yes, each host has its own thread.  Ordinarily it would be impolite to
+delay recovery this long, but I assume that since the card is wedged
+there's nothing else it could be doing anyway.
+
+Just for my own edification, what happens on the dual function (dual
+channel) boards?  We have two threads there and two separate I/O
+processors.  I assume a PCI error will kill both, do we need to do
+something about this?
+
+James
+
+
+
+> I generally prefer not to be so perlish in conditionals, ie:
 > 
-> > Ok, I'll re-run with printk timestamps.
+>         if ((np->s.device->error_state != pci_channel_io_normal) &&
+>             (np->s.device->error_state != 0) {
+>                 int timed_out = wait_for_completion_timeout(
+>                         &np->s.io_reset_wait, WAIT_FOR_PCI_RECOVERY*HZ);
+>                 if (!timed_out)
+>                         return SCSI_FAILED;
+>         }
 > 
-> Thanks!
-
-[    0.000000] Linux version 2.6.19-rc4mx (muli@cluwyn) (gcc version 4.0.3) #58 SMP Tue Oct 31 20:48:13 IST 2006
-snip...
-[ 1062.470624] aic94xx: escb_tasklet_complete: REQ_TASK_ABORT, reason=0x6
-[ 1062.516206] aic94xx: tmf tasklet complete
-[ 1062.543056] aic94xx: tmf resp tasklet
-[ 1062.573523] aic94xx: tmf came back
-[ 1062.603114] aic94xx: task not done, clearing nexus
-[ 1062.639986] aic94xx: asd_clear_nexus_tag: PRE
-[ 1062.674182] aic94xx: asd_clear_nexus_tag: POST
-[ 1062.709161] aic94xx: asd_clear_nexus_tag: clear nexus posted, waiting...
-[ 1062.709259] aic94xx: task 0xffff8100b95d1080 done with opcode 0x23 resp 0x0 stat 0x8d but aborted by upper layer!
-[ 1062.709266] aic94xx: asd_clear_nexus_tasklet_complete: here
-[ 1062.709269] aic94xx: asd_clear_nexus_tasklet_complete: opcode: 0x0
-[ 1062.914273] aic94xx: came back from clear nexus
-[ 1062.949506] aic94xx: task 0xffff8100b95d1080 aborted, res: 0x0
-[ 1062.992706] sas: command 0xffff810193f66800, task 0xffff8100b95d1080, aborted by initiator: EH_NOT_HANDLED
-[ 1063.059105] sas: Enter sas_scsi_recover_host
-[ 1063.092642] sas: going over list...
-[ 1063.121747] sas: trying to find task 0xffff8100b95d1080
-[ 1063.161355] sas: sas_scsi_find_task: task 0xffff8100b95d1080 already aborted
-[ 1063.211994] sas: sas_scsi_recover_host: task 0xffff8100b95d1080 is aborted
-[ 1063.261575] sas: --- Exit sas_scsi_recover_host
-
-> > Pointers to the updated firmware and how to update it?
+> Why is the condition so complicated though?  What does 0 mean if it's
+> not io_normal?  At least let's hide that behind a convenience macro:
 > 
-> http://www-307.ibm.com/pc/support/site.wss/document.do?sitestyle=ibm&lndocid=MIGR-62832
-> 
-> Download ISO, burn ISO to CD, boot system off CD, run gross-looking DOS
-> based EGA gooey (and I mean gooey!) update program, reboot.
 
-Yuck, but thanks :-)
-
-Cheers,
-Muli
