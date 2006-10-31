@@ -1,102 +1,161 @@
 From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: [PATCH] 0/3: Fix EH problems in libsas and implement more error handling
-Date: Mon, 30 Oct 2006 23:49:26 -0800 (PST)
-Message-ID: <937570.82987.qm@web31801.mail.mud.yahoo.com>
-References: <45468845.20400@us.ibm.com>
+Subject: Re: [PATCH] 3/3: Handle REQ_TASK_ABORT in aic94xx
+Date: Mon, 30 Oct 2006 23:53:08 -0800 (PST)
+Message-ID: <355151.48546.qm@web31805.mail.mud.yahoo.com>
+References: <45468860.5060103@us.ibm.com>
 Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31801.mail.mud.yahoo.com ([68.142.207.64]:43396 "HELO
-	web31801.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S1161612AbWJaHt1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 31 Oct 2006 02:49:27 -0500
-In-Reply-To: <45468845.20400@us.ibm.com>
+Received: from web31805.mail.mud.yahoo.com ([68.142.207.68]:22659 "HELO
+	web31805.mail.mud.yahoo.com") by vger.kernel.org with SMTP
+	id S1422718AbWJaHxJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 31 Oct 2006 02:53:09 -0500
+In-Reply-To: <45468860.5060103@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Darrick J. Wong" <djwong@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 Cc: Alexis Bruemmer <alexisb@us.ibm.com>
 
 --- "Darrick J. Wong" <djwong@us.ibm.com> wrote:
-> The following three patches are early drafts of a series of patches to
-> fix error handling in libsas so that the scsi_eh_* functions are called
-> so that we can attempt to retry failed commands later.  There is also a
-> patch to aic94xx to make escb errors are detected correctly,
-> REQ_TASK_ABORT is handled, and the beginnings of a handler for
-> REQ_DEVICE_RESET.
+> This patch straightens out the code that distinguishes the various escb
+> opcodes in escb_tasklet_complete so that they can be handled correctly. 
+> It also provides all the necessary code to create a workqueue item that
+> tells libsas to abort a sas_task.
 > 
-> However, there are a number of issues with these patches that I wish to
-> bring to the attention of this mailing list for further input:
+> Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
 > 
-> First, the aic94xx sequencer can send back an ESCB with an error code of
-> "REQ_TASK_ABORT", which means that the kernel has to send an ABORT TASK
-> TMF to sequencer to unjam things.  Until this happens, the sequencer
-> neither services commands nor sends back completions.  If we want to
-> wait for the error handler to send the ABORT TASK, we end up waiting for
-> _all_ pending commands to time out so that the EH can wake up.  This
-> effectively stalls the system for 30 seconds every time we see
-> REQ_TASK_ABORT.
-
-The original code (as posted to this list) and as is currently maintained
-by me, does _not_ wait 30 seconds to start error recovery of the timed
-out command when the task is requested to be aborted by REQ_TASK_ABORT.
-
-I don't know how or why someone changed the code as there is a "black out
-perdiod" when the code was being "worked on" by bottomley and gang outside
-of git control.
-
-SCSI core already allows you to do what you're trying to do here going
-around your elbow... in a more straightforward way, and more elegantly.
-
-Study the following threads:
-http://marc.theaimsgroup.com/?l=linux-scsi&m=113833937421677&w=2
-http://marc.theaimsgroup.com/?l=linux-scsi&m=114399387517874&w=2
-http://marc.theaimsgroup.com/?l=linux-scsi&m=114771297626171&w=2
-
-I've listed them in chronological order so that you can see
-the "evolution" of opinion-changing.
-
-> On the assumption that we'd like to get on with things sooner than
-> later, the current iteration of these patches aborts the task as soon as
-> possible so that the other pending commands will flush out on their own.
->  However, this also necessitates the addition of a new sas_task flag
-> (SAS_TASK_INITIATOR_ABORTED) to indicate "Task aborted, but still
-> waiting for the EH to call task_done."  From what I can tell,
-> SAS_TASK_STATE_ABORTED means that the task will be lldd_abort_task'd by
-> the EH at some point, but does not indicate if that has been done yet,
-> and SAS_TASK_STATE_DONE is set after everything is done.
-
-This new task flag is neither necessary nor needed.
-
-> The second issue is the manual decrementing of shost->host_failed in the
-> error handler.  So long as we use the scsi_eh_* commands this value is
-> decremented automatically--however, it appears that sas_scsi_clear_* is
-> pulling scsi_cmnds off the error queue and ... dropping them so that
-> they never go through the error handler.  Is this a desirable behavior,
-> or am I reading the code incorrectly?  Or...?
+> --
 > 
-> The third pertains to REQ_DEVICE_RESET: I've not yet figured out how to
-> reset a device port as has been hinted that I must do.  I don't know if
-> a phy reset is sufficient or if I'm barking up the wrong tree.
-> 
-> In any case, these patches have been tested on a x206m, x260 and a x366.
->  They seemed pretty stable, though YMMV.  The patches should apply
-> against linux-2.6.19-rc3 + scsi-misc + scsi-rc-fixes + aic94xx git trees
-> in the order that they are posted.  They may also eat your disks.
-> 
-> Questions/comments?  This is still very much a work in progress and at
-> this stage I'm merely seeking constructive feedback to mould this code
-> into better shape.
+> diff --git a/drivers/scsi/aic94xx/aic94xx_scb.c b/drivers/scsi/aic94xx/aic94xx_scb.c
+> index 7ee49b5..1911c5d 100644
+> --- a/drivers/scsi/aic94xx/aic94xx_scb.c
+> +++ b/drivers/scsi/aic94xx/aic94xx_scb.c
+> @@ -25,6 +25,7 @@
+>   */
+>  
+>  #include <linux/pci.h>
+> +#include <scsi/scsi_host.h>
+>  
+>  #include "aic94xx.h"
+>  #include "aic94xx_reg.h"
+> @@ -342,6 +343,18 @@ void asd_invalidate_edb(struct asd_ascb 
+>  	}
+>  }
+>  
+> +/* start up the ABORT TASK tmf... */
+> +static void task_kill_later(struct asd_ascb *ascb)
+> +{
+> +	struct asd_ha_struct *asd_ha = ascb->ha;
+> +	struct sas_ha_struct *sas_ha = &asd_ha->sas_ha;
+> +	struct Scsi_Host *shost = sas_ha->core.shost;
+> +	struct sas_task *task = ascb->uldd_task;
+> +
+> +	INIT_WORK(&task->abort_work, (void (*)(void *))sas_task_abort, task);
+> +	queue_work(shost->work_q, &task->abort_work);
+> +}
+> +
+>  static void escb_tasklet_complete(struct asd_ascb *ascb,
+>  				  struct done_list_struct *dl)
+>  {
+> @@ -368,6 +381,58 @@ static void escb_tasklet_complete(struct
+>  			    ascb->scb->header.opcode);
+>  	}
+>  
+> +	/* Catch these before we mask off the sb_opcode bits */
+> +	switch (sb_opcode) {
+> +	case REQ_TASK_ABORT: {
+> +		struct asd_ascb *a, *b;
+> +		u16 tc_abort;
+> +
+> +		tc_abort = *((u16*)(&dl->status_block[1]));
+> +		tc_abort = le16_to_cpu(tc_abort);
+> +
+> +		ASD_DPRINTK("%s: REQ_TASK_ABORT, reason=0x%X\n",
+> +			    __FUNCTION__, dl->status_block[3]);
+> +
+> +		/* Find the pending task and abort it. */
+> +		list_for_each_entry_safe(a, b, &asd_ha->seq.pend_q, list)
+> +			if (a->tc_index == tc_abort) {
+> +				task_kill_later(a);
+> +				break;
+> +			}
+> +		goto out;
+> +	}
+> +	case REQ_DEVICE_RESET: {
+> +		struct asd_ascb *a, *b;
+> +		u16 conn_handle;
+> +
+> +		conn_handle = *((u16*)(&dl->status_block[1]));
+> +		conn_handle = le16_to_cpu(conn_handle);
+> +
+> +		ASD_DPRINTK("%s: REQ_DEVICE_RESET, reason=0x%X\n", __FUNCTION__,
+> +			    dl->status_block[3]);
+> +
+> +		/* Kill all pending tasks and reset the device */
+> +		list_for_each_entry_safe(a, b, &asd_ha->seq.pend_q, list) {
+> +			struct sas_task *task = a->uldd_task;
+> +			struct domain_device *dev = task->dev;
+> +			u16 x;
+> +
+> +			x = *((u16*)(&dev->lldd_dev));
+> +			if (x == conn_handle)
+> +				task_kill_later(a);
+> +		}
+> +
+> +		/* FIXME: Reset device port (huh?) */
+> +		goto out;
 
-It is good that it keeps you busy.  Sadly it has already been implemented.
+"huh?" -- LOL, that's a very funny comment.
 
 Good luck!
    Luben
 
-
-> 
-> --D
+> +	}
+> +	case SIGNAL_NCQ_ERROR:
+> +		ASD_DPRINTK("%s: SIGNAL_NCQ_ERROR\n", __FUNCTION__);
+> +		goto out;
+> +	case CLEAR_NCQ_ERROR:
+> +		ASD_DPRINTK("%s: CLEAR_NCQ_ERROR\n", __FUNCTION__);
+> +		goto out;
+> +	}
+> +
+>  	sb_opcode &= ~DL_PHY_MASK;
+>  
+>  	switch (sb_opcode) {
+> @@ -397,22 +462,6 @@ static void escb_tasklet_complete(struct
+>  		sas_phy_disconnected(sas_phy);
+>  		sas_ha->notify_port_event(sas_phy, PORTE_TIMER_EVENT);
+>  		break;
+> -	case REQ_TASK_ABORT:
+> -		ASD_DPRINTK("%s: phy%d: REQ_TASK_ABORT\n", __FUNCTION__,
+> -			    phy_id);
+> -		break;
+> -	case REQ_DEVICE_RESET:
+> -		ASD_DPRINTK("%s: phy%d: REQ_DEVICE_RESET\n", __FUNCTION__,
+> -			    phy_id);
+> -		break;
+> -	case SIGNAL_NCQ_ERROR:
+> -		ASD_DPRINTK("%s: phy%d: SIGNAL_NCQ_ERROR\n", __FUNCTION__,
+> -			    phy_id);
+> -		break;
+> -	case CLEAR_NCQ_ERROR:
+> -		ASD_DPRINTK("%s: phy%d: CLEAR_NCQ_ERROR\n", __FUNCTION__,
+> -			    phy_id);
+> -		break;
+>  	default:
+>  		ASD_DPRINTK("%s: phy%d: unknown event:0x%x\n", __FUNCTION__,
+>  			    phy_id, sb_opcode);
+> @@ -432,7 +481,7 @@ static void escb_tasklet_complete(struct
+>  
+>  		break;
+>  	}
+> -
+> +out:
+>  	asd_invalidate_edb(ascb, edb);
+>  }
+>  
 > -
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
 > the body of a message to majordomo@vger.kernel.org
