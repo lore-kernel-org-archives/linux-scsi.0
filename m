@@ -1,68 +1,61 @@
-From: linas@austin.ibm.com (Linas Vepstas)
-Subject: Re: PCI error recovery for the Emulex LPFC
-Date: Tue, 31 Oct 2006 11:19:02 -0600
-Message-ID: <20061031171902.GP6360@austin.ibm.com>
-References: <20061030222047.GN6360@austin.ibm.com> <454754CC.8040308@emulex.com>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: Re: [PATCH] 0/3: Fix EH problems in libsas and implement more error
+ handling
+Date: Tue, 31 Oct 2006 10:10:45 -0800
+Message-ID: <454791A5.9000202@us.ibm.com>
+References: <45468845.20400@us.ibm.com> <20061031105452.GD28239@rhun.haifa.ibm.com>
+Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:37351 "EHLO e1.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1423482AbWJaRTI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 31 Oct 2006 12:19:08 -0500
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e1.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id k9VHJ7Su003964
-	for <linux-scsi@vger.kernel.org>; Tue, 31 Oct 2006 12:19:07 -0500
-Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
-	by d03relay04.boulder.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id k9VHJ3er078322
-	for <linux-scsi@vger.kernel.org>; Tue, 31 Oct 2006 10:19:03 -0700
-Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av04.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id k9VHJ3rk000416
-	for <linux-scsi@vger.kernel.org>; Tue, 31 Oct 2006 10:19:03 -0700
-Content-Disposition: inline
-In-Reply-To: <454754CC.8040308@emulex.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1423740AbWJaSLI@vger.kernel.org>
+In-Reply-To: <20061031105452.GD28239@rhun.haifa.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Muli Ben-Yehuda <muli@il.ibm.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <James.Smart@Emulex.Com>
-Cc: linux-scsi@vger.kernel.org, rlary@us.ibm.com
 
-On Tue, Oct 31, 2006 at 08:51:08AM -0500, James Smart wrote:
-> Linas,
+Muli Ben-Yehuda wrote:
+
+> I'm still seeing this on my x366 with the V17 sequencer firmware (with
+> the old Razor sequencer it happens as well, but rarely).
 > 
-> I don't know of anything in this area.
-> I also need a deeper understand of what the error was, and how,
-> that was injected. This play into it.
+> aic94xx: escb_tasklet_complete: REQ_TASK_ABORT, reason=0x6
+> aic94xx: tmf tasklet complete
+> aic94xx: tmf resp tasklet
+> aic94xx: tmf came back
+> aic94xx: task not done, clearing nexus
+> aic94xx: asd_clear_nexus_tag: PRE
+> aic94xx: asd_clear_nexus_tag: POST
+> aic94xx: asd_clear_nexus_tag: clear nexus posted, waiting...
+> aic94xx: task 0xffff81015ee59580 done with opcode 0x23 resp 0x0 stat 0x8d but aborted by upper layer!
+> aic94xx: asd_clear_nexus_tasklet_complete: here
+> aic94xx: asd_clear_nexus_tasklet_complete: opcode: 0x0
+> aic94xx: came back from clear nexus
+> aic94xx: task 0xffff81015ee59580 aborted, res: 0x0
+> sas: command 0xffff8100e2afcb00, task 0xffff81015ee59580, aborted by initiator: EH_NOT_HANDLED
+> sas: Enter sas_scsi_recover_host
+> sas: going over list...
+> sas: trying to find task 0xffff81015ee59580
+> sas: sas_scsi_find_task: task 0xffff81015ee59580 already aborted
+> sas: sas_scsi_recover_host: task 0xffff81015ee59580 is aborted
+> sas: --- Exit sas_scsi_recover_host
 
-When the PCI slot is frozen, the PCI bridge will block all writes
-to the device, and will return all 0xffffffff for reads. All DMA
-will be prevented from going through. 
+Yes, the patch doesn't eliminate these errors; it merely does something
+more intelligent with the error code than "Sit around and wait for
+everything to time out"... despite the scary error messages, it looks
+like it's doing the right thing.  However, it'd be useful to have
+timestamps on the printks to know for sure.
 
-> Also, PCI error recovery is not a simple task. 
+> aic94xx: escb_tasklet_complete: REQ_TASK_ABORT, reason=0x5
 
-I've implemented it for the ipr and symbios SCSI controllers, 
-and for the e100, e1000, ixgb and s2io ethernet cards.  If you 
-revew the actual code, you will see its fairly tiny. Mostly
-I've discovered that if the device driver has clean, clear-cut 
-device-up/device-down routines, then recovery is straightforward.
+Break recv'd... that's a new one.
 
-FWIW, I've run some of the kernels & devices through 48-hour runs 
-with thousands of errors injected and successfully recovered from.
+> sas: DOING DISCOVERY on port 0, pid:1105
+> scsi 0:0:0:0: Direct-Access     IBM-ESXS ST936701SS    F  B512 PQ: 0 ANSI: 4
 
-> There are many
-> aspects to the adapter messaging interface and the affects of the
-> PCI error recovery scheme that has to be closely looked at. DMA
-> errors can be very fatal, even if the PCI bus survives. In many
-> cases, the only safe recovery is a hard adapter reset (with little
-> to no interaction with the adapter to clean up). 
+Hrm, you might want to update your disks to the latest firmware levels
+(B51C)... be wary that the firmware updates occasionally nuke everything
+on the drive. :(
 
-Currently, all of the device drivers I mention above perform the 
-recovery with a hard reset. The generic API does not require this,
-but this seems to be the simplest, most robust/reliable route.
-I experimeted with non-hard-reset on the s2io, which I got "almost
-working". I don't know that its worth the trouble.
-
-Just to be clear, I'm refering to the infrastructure documented 
-in Documentation/pci-error-recovery.txt
-
---linas
-
+--D
