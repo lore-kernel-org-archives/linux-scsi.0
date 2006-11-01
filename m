@@ -1,48 +1,52 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] SCSI: ISCSI build failure
-Date: Thu, 02 Nov 2006 06:57:59 +0900
-Message-ID: <1162418279.3612.7.camel@mulgrave.il.steeleye.com>
-References: <200610291945.16948.toralf.foerster@gmx.de>
-	 <20061029190357.98fc9c98.randy.dunlap@oracle.com>
-	 <Pine.LNX.4.64.0610301206240.6761@scrub.home>
-	 <20061030083230.5e889415.randy.dunlap@oracle.com>
-	 <1162327892.13859.67.camel@mulgrave.il.steeleye.com>
-	 <Pine.LNX.4.64.0611010057111.6242@scrub.home>
-	 <1162394814.13859.100.camel@mulgrave.il.steeleye.com>
-	 <20061101153623.GF11399@parisc-linux.org>
+From: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
+Subject: [PATCH 4/8] cciss: e500 SSID fix
+Date: Wed, 1 Nov 2006 15:58:28 -0600
+Message-ID: <20061101215828.GD29928@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:28329 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1752504AbWKAV6T (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Nov 2006 16:58:19 -0500
-In-Reply-To: <20061101153623.GF11399@parisc-linux.org>
+Received: from palrel13.hp.com ([156.153.255.238]:19662 "EHLO palrel13.hp.com")
+	by vger.kernel.org with ESMTP id S1752499AbWKAV6a (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Nov 2006 16:58:30 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Roman Zippel <zippel@linux-m68k.org>, Randy Dunlap <randy.dunlap@oracle.com>, Toralf F_rster <toralf.foerster@gmx.de>, scsi <linux-scsi@vger.kernel.org>, akpm <akpm@osdl.org>
-
-On Wed, 2006-11-01 at 08:36 -0700, Matthew Wilcox wrote:
-> On Thu, Nov 02, 2006 at 12:26:54AM +0900, James Bottomley wrote:
-> > On Wed, 2006-11-01 at 01:00 +0100, Roman Zippel wrote:
-> > > Please don't select NET, it's way too broad.
-> > 
-> > Then you'll make select implied dependencies work in Kbuild so we don't
-> > need to do anything at all about this?
-> 
-> This is iSCSI ... how can it possibly be useful without NET?  Why
-> doesn't CONFIG_ISCSI depend on NET, making this whole problem moot (for
-> now).
-
-Actually, no, this is a hardware iSCSI card thats using the iSCSI
-transport attributes so it presents the same appearance as the software
-iSCSI stack.  The card itself and its driver have no net dependency.
-We're getting the NET dependency from the use of the netlink transport
-in iSCSI.  Ironically, we also have a corresponding NET dependency in FC
-as well, again because of netlink.
-
-James
+To: akpm@osdl.org, jens.axboe@oracle.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
 
+PATCH 4/8
+
+The patch changes the SSID on the E500 as a workaround for a firmware bug. It
+looks like the original patch was backed out between rc2 and rc4.
+Please consider this for inclusion.
+
+Thanks,
+mikem
+
+Signed-off-by: Mike Miller <mike.miller@hp.com>
+
+ cciss.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+------------------------------------------------------------------------------------------
+diff -urNp linux-2.6-p00003/drivers/block/cciss.c linux-2.6/drivers/block/cciss.c
+--- linux-2.6-p00003/drivers/block/cciss.c	2006-10-31 15:05:49.000000000 -0600
++++ linux-2.6/drivers/block/cciss.c	2006-10-31 15:20:25.000000000 -0600
+@@ -82,7 +82,7 @@ static const struct pci_device_id cciss_
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSD,     0x103C, 0x3213},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSD,     0x103C, 0x3214},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSD,     0x103C, 0x3215},
+-	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSC,     0x103C, 0x3233},
++	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSC,     0x103C, 0x3237},
+ 	{PCI_VENDOR_ID_HP,     PCI_ANY_ID,	PCI_ANY_ID, PCI_ANY_ID,
+ 		PCI_CLASS_STORAGE_RAID << 8, 0xffff << 8, 0},
+ 	{0,}
+@@ -114,7 +114,7 @@ static struct board_type products[] = {
+ 	{0x3213103C, "Smart Array E200i", &SA5_access, 120},
+ 	{0x3214103C, "Smart Array E200i", &SA5_access, 120},
+ 	{0x3215103C, "Smart Array E200i", &SA5_access, 120},
+-	{0x3233103C, "Smart Array E500", &SA5_access, 512},
++	{0x3237103C, "Smart Array E500", &SA5_access, 512},
+ 	{0xFFFF103C, "Unknown Smart Array", &SA5_access, 120},
+ };
+ 
