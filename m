@@ -1,88 +1,39 @@
-From: linas@austin.ibm.com (Linas Vepstas)
-Subject: Re: [PATCH]: PCI Error Recovery: Symbios SCSI device driver
-Date: Tue, 31 Oct 2006 17:13:34 -0600
-Message-ID: <20061031231334.GR6360@austin.ibm.com>
-References: <20061020180510.GN6537@austin.ibm.com> <20061031185506.GE26964@parisc-linux.org>
+From: Roman Zippel <zippel@linux-m68k.org>
+Subject: Re: [PATCH] SCSI: ISCSI build failure
+Date: Wed, 1 Nov 2006 01:00:57 +0100 (CET)
+Message-ID: <Pine.LNX.4.64.0611010057111.6242@scrub.home>
+References: <200610291945.16948.toralf.foerster@gmx.de>
+ <20061029190357.98fc9c98.randy.dunlap@oracle.com>  <Pine.LNX.4.64.0610301206240.6761@scrub.home>
+  <20061030083230.5e889415.randy.dunlap@oracle.com>
+ <1162327892.13859.67.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e6.ny.us.ibm.com ([32.97.182.146]:58276 "EHLO e6.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1946139AbWJaXNl (ORCPT
+Received: from scrub.xs4all.nl ([194.109.195.176]:49281 "EHLO scrub.xs4all.nl")
+	by vger.kernel.org with ESMTP id S1946187AbWKAABZ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 31 Oct 2006 18:13:41 -0500
-Content-Disposition: inline
-In-Reply-To: <20061031185506.GE26964@parisc-linux.org>
+	Tue, 31 Oct 2006 19:01:25 -0500
+In-Reply-To: <1162327892.13859.67.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, linux-kernel@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Randy Dunlap <randy.dunlap@oracle.com>, Toralf F_rster <toralf.foerster@gmx.de>, scsi <linux-scsi@vger.kernel.org>, akpm <akpm@osdl.org>
 
-On Tue, Oct 31, 2006 at 11:55:07AM -0700, Matthew Wilcox wrote:
-> On Fri, Oct 20, 2006 at 01:05:10PM -0500, Linas Vepstas wrote:
-> > Index: linux-2.6.19-rc1-git11/drivers/scsi/sym53c8xx_2/sym_glue.c
+Hi,
+
+On Tue, 31 Oct 2006, James Bottomley wrote:
+
+> On Mon, 2006-10-30 at 08:32 -0800, Randy Dunlap wrote:
+> > > I guess, that needs a dependency on NET.
 > 
-> This needs to be before the printf_debug call.
-
-Right. This'll be in the next patch submision.
-
-> > @@ -726,6 +731,19 @@ static int sym_eh_handler(int op, char *
-> > +	/* We may be in an error condition because the PCI bus
-> > +	 * went down. In this case, we need to wait until the
-> > +	 * PCI bus is reset, the card is reset, and only then
-> > +	 * proceed with the scsi error recovery.  There's no
-> > +	 * point in hurrying; take a leisurely wait.
-> > +	 */
-> > +#define WAIT_FOR_PCI_RECOVERY	35
-> > +	if ((np->s.device->error_state != pci_channel_io_normal) &&
-> > +	    (np->s.device->error_state != 0) &&
-> > +	    (wait_for_completion_timeout(&np->s.io_reset_wait,
-> > +		                         WAIT_FOR_PCI_RECOVERY*HZ) == 0))
-> > +			return SCSI_FAILED;
-> > +
+> Actually, my first thought is that the select should give us an implied
+> NET dependency, since the thing we've selected depends on NET.
 > 
-> Is it safe / reasonable / a good idea to sleep for 35 seconds in the EH
-> handler?  I'm not that familiar with how the EH code works.  It has its
-> own thread, so I suppose that's OK.
+> However, if that's impossible in the Kbuild system, we should eliminate
+> the dependency duplication and simply make SCSI_ISCSI_ATTRS depend on
+> SCSI but select NET.  That will avoid this problem for any other
+> attribute users in future.
 
-As James pointed out, the pci channel is is not available until the 
-reset sequence is done.  The 35 seconds seemed like a reasonable time
-to wait for the pci reset to complete; hopefuly it will complete much 
-sooner.  If the pci reset fails for some reason, then things are hosed, 
-and the sysadmin will need to intervene.
+Please don't select NET, it's way too broad.
 
-> Are the driver's data structures still intact after a reset?
-
-They should be. No one is attempting to free or shut down the driver.
-
-> I generally prefer not to be so perlish in conditionals, ie:
-
-I wasn't sure what style is popular. Actually, I agree with you on 
-that, and picked the other style cause i thought it was prefered.
-Nex patch submission will be more nested.
-
-> 	if ((np->s.device->error_state != pci_channel_io_normal) &&
-> 	    (np->s.device->error_state != 0) {
-> 
-> Why is the condition so complicated though?  What does 0 mean if it's
-> not io_normal?  
-
-Its an unresolved stupidity. For some imagined, hypothetical
-reason, it momentarily seemed wise to make pci_channel_io_normal 
-be non-zero; but this imagined reason, although vague, did manage
-to bite back, as the above code demonstrates.
-
-> At least let's hide that behind a convenience macro:
-> 
-> 	if (abnormal_error_state(np->s.device->error_state)) {
-
-Should I submit a patch to make pci_channel_io_normal be zero,
-or submit a patch to define abnormal_error_state, or both?
-Both, probably; I don't have much of an opinion.
-
-> Though, since INB and INW will return 0xff and 0xffff, why not use that
-> as our test rather than using a counter?
-
-Right. I wanted to avoid checking for specific values, 
-as that vaguely seemed more robust; the direct check is easier.
-I'll change this.
-
+bye, Roman
