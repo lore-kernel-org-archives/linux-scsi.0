@@ -1,33 +1,29 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
+From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: [PATCH] SCSI: ISCSI build failure
-Date: Thu, 02 Nov 2006 00:26:54 +0900
-Message-ID: <1162394814.13859.100.camel@mulgrave.il.steeleye.com>
-References: <200610291945.16948.toralf.foerster@gmx.de>
-	 <20061029190357.98fc9c98.randy.dunlap@oracle.com>
-	 <Pine.LNX.4.64.0610301206240.6761@scrub.home>
-	 <20061030083230.5e889415.randy.dunlap@oracle.com>
-	 <1162327892.13859.67.camel@mulgrave.il.steeleye.com>
-	 <Pine.LNX.4.64.0611010057111.6242@scrub.home>
+Date: Wed, 1 Nov 2006 08:36:23 -0700
+Message-ID: <20061101153623.GF11399@parisc-linux.org>
+References: <200610291945.16948.toralf.foerster@gmx.de> <20061029190357.98fc9c98.randy.dunlap@oracle.com> <Pine.LNX.4.64.0610301206240.6761@scrub.home> <20061030083230.5e889415.randy.dunlap@oracle.com> <1162327892.13859.67.camel@mulgrave.il.steeleye.com> <Pine.LNX.4.64.0611010057111.6242@scrub.home> <1162394814.13859.100.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:23777 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S2992611AbWKAP1l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Nov 2006 10:27:41 -0500
-In-Reply-To: <Pine.LNX.4.64.0611010057111.6242@scrub.home>
+Received: from palinux.external.hp.com ([192.25.206.14]:13741 "EHLO
+	mail.parisc-linux.org") by vger.kernel.org with ESMTP
+	id S1946831AbWKAPgZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 1 Nov 2006 10:36:25 -0500
+Content-Disposition: inline
+In-Reply-To: <1162394814.13859.100.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Roman Zippel <zippel@linux-m68k.org>
-Cc: Randy Dunlap <randy.dunlap@oracle.com>, Toralf F_rster <toralf.foerster@gmx.de>, scsi <linux-scsi@vger.kernel.org>, akpm <akpm@osdl.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Roman Zippel <zippel@linux-m68k.org>, Randy Dunlap <randy.dunlap@oracle.com>, Toralf F_rster <toralf.foerster@gmx.de>, scsi <linux-scsi@vger.kernel.org>, akpm <akpm@osdl.org>
 
-On Wed, 2006-11-01 at 01:00 +0100, Roman Zippel wrote:
-> Please don't select NET, it's way too broad.
+On Thu, Nov 02, 2006 at 12:26:54AM +0900, James Bottomley wrote:
+> On Wed, 2006-11-01 at 01:00 +0100, Roman Zippel wrote:
+> > Please don't select NET, it's way too broad.
+> 
+> Then you'll make select implied dependencies work in Kbuild so we don't
+> need to do anything at all about this?
 
-Then you'll make select implied dependencies work in Kbuild so we don't
-need to do anything at all about this?
-
-James
-
-
+This is iSCSI ... how can it possibly be useful without NET?  Why
+doesn't CONFIG_ISCSI depend on NET, making this whole problem moot (for
+now).
