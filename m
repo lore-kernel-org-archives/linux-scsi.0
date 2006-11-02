@@ -1,54 +1,52 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 1/8] cciss: version number change
-Date: Thu, 2 Nov 2006 16:45:52 +0100
-Message-ID: <20061102154552.GO13555@kernel.dk>
-References: <20061101214913.GA29928@beardog.cca.cpqcorp.net> <20061102141045.GH13555@kernel.dk> <20061102144623.GC16430@beardog.cca.cpqcorp.net> <1162479914.14530.46.camel@laptopd505.fenrus.org>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: non-zero result with NO_SENSE
+Date: Thu, 02 Nov 2006 11:10:16 -0500
+Message-ID: <454A1868.9080507@torque.net>
+References: <20061102142859.93227.qmail@web31007.mail.mud.yahoo.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([62.242.22.158]:41486 "EHLO kernel.dk")
-	by vger.kernel.org with ESMTP id S1751408AbWKBPoC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Nov 2006 10:44:02 -0500
-Content-Disposition: inline
-In-Reply-To: <1162479914.14530.46.camel@laptopd505.fenrus.org>
+Received: from pentafluge.infradead.org ([213.146.154.40]:61613 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1751541AbWKBQKL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 2 Nov 2006 11:10:11 -0500
+In-Reply-To: <20061102142859.93227.qmail@web31007.mail.mud.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>, akpm@osdl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Laurie Costello <lmcostello@yahoo.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, Nov 02 2006, Arjan van de Ven wrote:
-> On Thu, 2006-11-02 at 08:46 -0600, Mike Miller (OS Dev) wrote:
-> > On Thu, Nov 02, 2006 at 03:10:45PM +0100, Jens Axboe wrote:
-> > > On Wed, Nov 01 2006, Mike Miller (OS Dev) wrote:
-> > > > 
-> > > > PATCH 1/8
-> > > > 
-> > > > This patch changes the cciss version number to 3.6.14 to reflect the following
-> > > > functionality changes added by the rest of the set. They include:
-> > > 
-> > > Mike, only some of your patches appeared to go out, both in personal
-> > > mail and on the list.
-> > 
-> > I ran into some last minute issues so I stopped at 5. Still re-testing
-> > the others.
-> > This snippet seems to tbe the culprit.
-> > +               if (blk_queue_stopped(h->gendisk[curr_queue]->queue) ||
-> > +                   blk_queue_plugged(h->gendisk[curr_queue]->queue))
-> > +                       blk_start_queue(h->gendisk[curr_queue]->queue);
-> > 
-> > We're testing to see if the queue is stopped or plugged so we don't
-> > try to start am already running queue. Without the blk_queue_plugged
-> > test it hangs every time. We added blk_queue_plugged and the first tests
-> > seem to run ok. Then at the last minute something broke. Does this look
-> > ok to you?
+Laurie Costello wrote:
+> I'm researching a problem with data corruption on linux 2.6.9.
 > 
+> I'm seeing results of scsi_print_sense() in the system log, which brought me
 > 
-> it looks like a design mistake to me if a device driver needs to care
-> about a queue being plugged at all....
+> to this chunk of code.  Is it correct to process a non-zero result with
+> 
+> NO_SENSE as if an error didn't occur or was recovered?
 
-The queue can't be plugged and stopped at the same time anyway, so the
-code is confusing. But yes I agree, that should go.
+Laurie,
+Well it isn't ideal obviously. The problem is that sd
+sits between a SCSI direct access device and the SCSI
+block subsystem. SCSI devices try and be helpful and
+tell the application client things like: the data was
+read but required 3 retries and ECC. The block layer
+is only interested in errors that impact the current
+IO, so sd has no slot to file these warnings in, apart
+from the system log. There was some proposal about
+logging such errors and warning (but where to store
+the log :-) ) and disks already do a fair amount of
+logging themselves.
 
--- 
-Jens Axboe
+Even more worrying are deferred errors. Something like
+a cached write that at some later time gets an IO error
+when the disk tries to write its cache to the media.
+This should become a more interesting area as disks get
+larger non-volatile caches.
 
+There are tools such as smartmontools that can monitor
+the health of disks.
+
+Doug Gilbert
