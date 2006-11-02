@@ -1,50 +1,90 @@
 From: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
-Subject: Re: [PATCH 1/8] cciss: version number change
-Date: Thu, 2 Nov 2006 08:46:23 -0600
-Message-ID: <20061102144623.GC16430@beardog.cca.cpqcorp.net>
-References: <20061101214913.GA29928@beardog.cca.cpqcorp.net> <20061102141045.GH13555@kernel.dk>
+Subject: [PATCH 6/8] cciss: change sector_size to 2048
+Date: Thu, 2 Nov 2006 09:00:24 -0600
+Message-ID: <20061102150024.GE16430@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palrel10.hp.com ([156.153.255.245]:1261 "EHLO palrel10.hp.com")
-	by vger.kernel.org with ESMTP id S1751046AbWKBOqX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Nov 2006 09:46:23 -0500
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751188AbWKBPA0@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20061102141045.GH13555@kernel.dk>
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: akpm@osdl.org, jens.axboe@oracle.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: akpm@osdl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Thu, Nov 02, 2006 at 03:10:45PM +0100, Jens Axboe wrote:
-> On Wed, Nov 01 2006, Mike Miller (OS Dev) wrote:
-> > 
-> > PATCH 1/8
-> > 
-> > This patch changes the cciss version number to 3.6.14 to reflect the following
-> > functionality changes added by the rest of the set. They include:
-> 
-> Mike, only some of your patches appeared to go out, both in personal
-> mail and on the list.
 
-I ran into some last minute issues so I stopped at 5. Still re-testing
-the others.
-This snippet seems to tbe the culprit.
-+               if (blk_queue_stopped(h->gendisk[curr_queue]->queue) ||
-+                   blk_queue_plugged(h->gendisk[curr_queue]->queue))
-+                       blk_start_queue(h->gendisk[curr_queue]->queue);
+PATCH 6/11
 
-We're testing to see if the queue is stopped or plugged so we don't
-try to start am already running queue. Without the blk_queue_plugged
-test it hangs every time. We added blk_queue_plugged and the first tests
-seem to run ok. Then at the last minute something broke. Does this look
-ok to you?
+This patch changes the blk_queue_max_sectors from 512 to 2048. This helps
+increase performance.
+Please consider this for inclusion.
 
-> 
-> Comment on this patch - normally you'd change the version number last,
-> not as the first patch.
-
-Yep, put the cart before horse I suppose. Maybe I shouldn't have a
-version number at all. :)
-
+Thanks,
 mikem
+
+Signed-off-by: Mike Miller <mike.miller@hp.com>
+
+ cciss.c |   12 +++++++++---
+ cciss.h |    1 +
+ 2 files changed, 10 insertions(+), 3 deletions(-)
+--------------------------------------------------------------------------------
+diff -urNp linux-2.6-p00005/drivers/block/cciss.c linux-2.6/drivers/block/cciss.c
+--- linux-2.6-p00005/drivers/block/cciss.c	2006-10-31 15:42:59.000000000 -0600
++++ linux-2.6/drivers/block/cciss.c	2006-10-31 15:48:46.000000000 -0600
+@@ -269,6 +269,7 @@ static int cciss_proc_get_info(char *buf
+ 		       "Firmware Version: %c%c%c%c\n"
+ 		       "IRQ: %d\n"
+ 		       "Logical drives: %d\n"
++		       "Sector size: %d\n"
+ 		       "Current Q depth: %d\n"
+ 		       "Current # commands on controller: %d\n"
+ 		       "Max Q depth since init: %d\n"
+@@ -279,7 +280,9 @@ static int cciss_proc_get_info(char *buf
+ 		       (unsigned long)h->board_id,
+ 		       h->firm_ver[0], h->firm_ver[1], h->firm_ver[2],
+ 		       h->firm_ver[3], (unsigned int)h->intr[SIMPLE_MODE_INT],
+-		       h->num_luns, h->Qdepth, h->commands_outstanding,
++		       h->num_luns,
++		       h->cciss_sector_size,
++		       h->Qdepth, h->commands_outstanding,
+ 		       h->maxQsinceinit, h->max_outstanding, h->maxSG);
+ 
+ 	pos += size;
+@@ -1389,7 +1392,7 @@ static void cciss_update_drive_info(int 
+ 		/* This is a limit in the driver and could be eliminated. */
+ 		blk_queue_max_phys_segments(disk->queue, MAXSGENTRIES);
+ 
+-		blk_queue_max_sectors(disk->queue, 512);
++		blk_queue_max_sectors(disk->queue, h->cciss_sector_size);
+ 
+ 		blk_queue_softirq_done(disk->queue, cciss_softirq_done);
+ 
+@@ -3344,6 +3347,9 @@ static int __devinit cciss_init_one(stru
+ 	hba[i]->access.set_intr_mask(hba[i], CCISS_INTR_ON);
+ 
+ 	cciss_procinit(i);
++
++	hba[i]->cciss_sector_size = 2048;
++
+ 	hba[i]->busy_initializing = 0;
+ 
+ 	for (j = 0; j < NWD; j++) {	/* mfm */
+@@ -3368,7 +3374,7 @@ static int __devinit cciss_init_one(stru
+ 		/* This is a limit in the driver and could be eliminated. */
+ 		blk_queue_max_phys_segments(q, MAXSGENTRIES);
+ 
+-		blk_queue_max_sectors(q, 512);
++		blk_queue_max_sectors(q, hba[i]->cciss_sector_size);
+ 
+ 		blk_queue_softirq_done(q, cciss_softirq_done);
+ 
+diff -urNp linux-2.6-p00005/drivers/block/cciss.h linux-2.6/drivers/block/cciss.h
+--- linux-2.6-p00005/drivers/block/cciss.h	2006-10-31 14:57:27.000000000 -0600
++++ linux-2.6/drivers/block/cciss.h	2006-10-31 15:54:20.000000000 -0600
+@@ -77,6 +77,7 @@ struct ctlr_info 
+ 	unsigned int intr[4];
+ 	unsigned int msix_vector;
+ 	unsigned int msi_vector;
++	int 	cciss_sector_size;
+ 	BYTE	cciss_read;
+ 	BYTE	cciss_write;
+ 	BYTE	cciss_read_capacity;
