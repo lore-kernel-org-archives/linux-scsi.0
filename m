@@ -1,35 +1,32 @@
 From: linas@austin.ibm.com (Linas Vepstas)
-Subject: [PATCH v3]: PCI Error Recovery: Symbios SCSI device driver
-Date: Wed, 1 Nov 2006 18:07:46 -0600
-Message-ID: <20061102000745.GX6360@austin.ibm.com>
-References: <20061020180510.GN6537@austin.ibm.com> <20061031185506.GE26964@parisc-linux.org> <20061031231334.GR6360@austin.ibm.com>
+Subject: [PATCH v4]: PCI Error Recovery: Symbios SCSI device driver
+Date: Wed, 1 Nov 2006 19:19:37 -0600
+Message-ID: <20061102011935.GZ6360@austin.ibm.com>
+References: <20061020180510.GN6537@austin.ibm.com> <20061031185506.GE26964@parisc-linux.org> <20061031231334.GR6360@austin.ibm.com> <20061102000745.GX6360@austin.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.144]:55268 "EHLO e4.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1752590AbWKBAHv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Nov 2006 19:07:51 -0500
+Received: from e3.ny.us.ibm.com ([32.97.182.143]:480 "EHLO e3.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1423105AbWKBBTn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Nov 2006 20:19:43 -0500
 Content-Disposition: inline
-In-Reply-To: <20061031231334.GR6360@austin.ibm.com>
+In-Reply-To: <20061102000745.GX6360@austin.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Matthew Wilcox <matthew@wil.cx>
 Cc: linux-scsi@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, linux-kernel@vger.kernel.org
 
-On Tue, Oct 31, 2006 at 05:13:34PM -0600, Linas Vepstas wrote:
-> On Tue, Oct 31, 2006 at 11:55:07AM -0700, Matthew Wilcox wrote:
-> > On Fri, Oct 20, 2006 at 01:05:10PM -0500, Linas Vepstas wrote:
-> > > Index: linux-2.6.19-rc1-git11/drivers/scsi/sym53c8xx_2/sym_glue.c
-> > 
-> > This needs to be 
+On Wed, Nov 01, 2006 at 06:07:46PM -0600, Linas Vepstas wrote:
 [...]
+
 
 Matthew,
 
-Here is a revised patch, cleaning up the assorted messes.  
-It does depend on 
-  [PATCH 1/2]: Renumber PCI error enums to start at zero
+You seem to always see me at my dullest. Here's another attempt.
 
+This patch depends on 
+   [PATCH 1/2 v2]: Renumber PCI error enums to start at zero
+ 
 which I just mailed out to GregKH, to add a small 
 pci_channel_offline() utility.
 
@@ -51,14 +48,14 @@ Signed-off-by: Linas Vepstas <linas@austin.ibm.com>
 
 Index: linux-2.6.19-rc4-git3/drivers/scsi/sym53c8xx_2/sym_glue.c
 ===================================================================
---- linux-2.6.19-rc4-git3.orig/drivers/scsi/sym53c8xx_2/sym_glue.c	2006-11-01 16:15:33.000000000 -0600
-+++ linux-2.6.19-rc4-git3/drivers/scsi/sym53c8xx_2/sym_glue.c	2006-11-01 16:21:00.000000000 -0600
+--- linux-2.6.19-rc4-git3.orig/drivers/scsi/sym53c8xx_2/sym_glue.c	2006-11-01 19:13:15.000000000 -0600
++++ linux-2.6.19-rc4-git3/drivers/scsi/sym53c8xx_2/sym_glue.c	2006-11-01 19:14:11.000000000 -0600
 @@ -657,6 +657,10 @@ static irqreturn_t sym53c8xx_intr(int ir
  	unsigned long flags;
  	struct sym_hcb *np = (struct sym_hcb *)dev_id;
  
 +	/* Avoid spinloop trying to handle interrupts on frozen device */
-+	if (pci_channel_offline(np->s.device->error_state))
++	if (pci_channel_offline(np->s.device))
 +		return IRQ_HANDLED;
 +
  	if (DEBUG_FLAGS & DEBUG_TINY) printf_debug ("[");
@@ -75,7 +72,7 @@ Index: linux-2.6.19-rc4-git3/drivers/scsi/sym53c8xx_2/sym_glue.c
 +	 * point in hurrying; take a leisurely wait.
 +	 */
 +#define WAIT_FOR_PCI_RECOVERY	35
-+	if (pci_channel_offline(np->s.device->error_state))
++	if (pci_channel_offline(np->s.device))
 +	{
 +		int finished_reset = wait_for_completion_timeout(
 +			&np->s.io_reset_wait, WAIT_FOR_PCI_RECOVERY*HZ);
@@ -195,8 +192,8 @@ Index: linux-2.6.19-rc4-git3/drivers/scsi/sym53c8xx_2/sym_glue.c
  static int __init sym2_init(void)
 Index: linux-2.6.19-rc4-git3/drivers/scsi/sym53c8xx_2/sym_glue.h
 ===================================================================
---- linux-2.6.19-rc4-git3.orig/drivers/scsi/sym53c8xx_2/sym_glue.h	2006-09-19 22:42:06.000000000 -0500
-+++ linux-2.6.19-rc4-git3/drivers/scsi/sym53c8xx_2/sym_glue.h	2006-11-01 16:21:00.000000000 -0600
+--- linux-2.6.19-rc4-git3.orig/drivers/scsi/sym53c8xx_2/sym_glue.h	2006-11-01 19:13:15.000000000 -0600
++++ linux-2.6.19-rc4-git3/drivers/scsi/sym53c8xx_2/sym_glue.h	2006-11-01 19:13:19.000000000 -0600
 @@ -40,6 +40,7 @@
  #ifndef SYM_GLUE_H
  #define SYM_GLUE_H
@@ -217,8 +214,8 @@ Index: linux-2.6.19-rc4-git3/drivers/scsi/sym53c8xx_2/sym_glue.h
  	void __iomem *	ioaddr;		/* MMIO kernel io address	*/
 Index: linux-2.6.19-rc4-git3/drivers/scsi/sym53c8xx_2/sym_hipd.c
 ===================================================================
---- linux-2.6.19-rc4-git3.orig/drivers/scsi/sym53c8xx_2/sym_hipd.c	2006-09-19 22:42:06.000000000 -0500
-+++ linux-2.6.19-rc4-git3/drivers/scsi/sym53c8xx_2/sym_hipd.c	2006-11-01 16:21:00.000000000 -0600
+--- linux-2.6.19-rc4-git3.orig/drivers/scsi/sym53c8xx_2/sym_hipd.c	2006-11-01 19:13:15.000000000 -0600
++++ linux-2.6.19-rc4-git3/drivers/scsi/sym53c8xx_2/sym_hipd.c	2006-11-01 19:13:19.000000000 -0600
 @@ -2809,6 +2809,12 @@ void sym_interrupt (struct sym_hcb *np)
  			dstat |= INB(np, nc_dstat);
  		istatc = INB(np, nc_istat);
@@ -226,7 +223,7 @@ Index: linux-2.6.19-rc4-git3/drivers/scsi/sym53c8xx_2/sym_hipd.c
 +
 +		/* Prevent deadlock waiting on a condition that may never clear. */
 +		if (unlikely(sist == 0xffff && dstat == 0xff)) {
-+			if (unlikely(pci_channel_offline(np->s.device->error_state)))
++			if (unlikely(pci_channel_offline(np->s.device)))
 +				return;
 +		}
  	} while (istatc & (SIP|DIP));
