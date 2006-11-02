@@ -1,43 +1,38 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [Bugme-new] [Bug 7444] New: BUG on drive removal with
-	pata_cmd64x
-Date: Thu, 02 Nov 2006 11:38:17 +0000
-Message-ID: <1162467497.11965.163.camel@localhost.localdomain>
-References: <200611011240.kA1Ceaj7025489@fire-2.osdl.org>
-	 <20061101120258.e7462f9f.akpm@osdl.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: unchecked_isa_dma and BusLogic SCSI controller
+Date: Thu, 2 Nov 2006 05:41:28 -0700
+Message-ID: <20061102124128.GC31830@parisc-linux.org>
+References: <20061101235330.GA30843@srv.junsun.net> <20061101173358.7b027d13.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:10390 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
-	id S1752862AbWKBLeX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 2 Nov 2006 06:34:23 -0500
-In-Reply-To: <20061101120258.e7462f9f.akpm@osdl.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:9682 "EHLO
+	mail.parisc-linux.org") by vger.kernel.org with ESMTP
+	id S1752813AbWKBMl3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 2 Nov 2006 07:41:29 -0500
+Content-Disposition: inline
+In-Reply-To: <20061101173358.7b027d13.randy.dunlap@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-scsi@vger.kernel.org, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>, jpw@wszib.edu.pl
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: Jun Sun <jsun@junsun.net>, linux-scsi@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
 
-Ar Mer, 2006-11-01 am 12:02 -0800, ysgrifennodd Andrew Morton:
-> Dunno if this is a scsi thing or an Alan thing.  But it is certainly a
-> thing!
-> > and driver hangs in a non-functional state (neither removed nor active)
-> > HOWEVER,
-> > going to /sys/bus/scsi/devices/X:0:0:0/ and echo'ing 1 to delete triggers the
-> > same BUG; the drive disappears from the system correctly(!) and pata_cmd64x can
-> > be removed from system without further problems.
+On Wed, Nov 01, 2006 at 05:33:58PM -0800, Randy Dunlap wrote:
+>     unchecked_isa_dma - 1=>only use bottom 16 MB of ram (ISA DMA addressing
+>                    restriction), 0=>can use full 32 bit (or better) DMA
+>                    address space
+> 
+> > It is hard for me to see why BusLogic controller would only do DMA
+> > in low 16MB.  Is there a fix for this?
+> 
+> Does anyone know that controller hardware and its limitations?
 
-It actually looks like a refcounting problem - could be in the SCSI code
-or in the libata code or in the AHCI code. I don't think it's in the
-driver however as the drivers don't carry custom code in that area
+I don't, but:
 
-> > On a subsequent docking, the drive affected by the above bug appears to be
-> > confused and kernel complains about not being able to identify the drive,
-> > however, after a few attempts it manages to reset the drive.
-> > 
+		if (pci_set_dma_mask(PCI_Device, DMA_32BIT_MASK ))
+			continue;
 
-That I think I understand assuming the first time you booted with the
-drive plugged in ?
+So somebody thinks the device can do 32-bit addressing.  I would expect
+that setting unchecked_isa_dma is a historical mistake.  However, I
+don't have any cards of this type to test.
 
-Alan
