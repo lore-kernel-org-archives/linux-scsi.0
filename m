@@ -1,64 +1,72 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 5/8] cciss: disable DMA prefetch for P600
-Date: Thu, 2 Nov 2006 15:12:13 +0100
-Message-ID: <20061102141213.GJ13555@kernel.dk>
-References: <20061101220633.GE29928@beardog.cca.cpqcorp.net>
+From: Laurie Costello <lmcostello@yahoo.com>
+Subject: non-zero result with NO_SENSE
+Date: Thu, 2 Nov 2006 06:28:59 -0800 (PST)
+Message-ID: <20061102142859.93227.qmail@web31007.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([62.242.22.158]:43098 "EHLO kernel.dk")
-	by vger.kernel.org with ESMTP id S1752901AbWKBOKW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Nov 2006 09:10:22 -0500
-Content-Disposition: inline
-In-Reply-To: <20061101220633.GE29928@beardog.cca.cpqcorp.net>
+Received: from web31007.mail.mud.yahoo.com ([68.142.200.170]:35425 "HELO
+	web31007.mail.mud.yahoo.com") by vger.kernel.org with SMTP
+	id S1750714AbWKBO3B convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Nov 2006 09:29:01 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
-Cc: akpm@osdl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Wed, Nov 01 2006, Mike Miller (OS Dev) wrote:
-> 
-> PATCH 5/8 
-> 
-> This disables DMA prefetch for the P600 on IPF. A chip bug may result in
-> a DMA prefetch going falling off into holes in memory. On Proliant x86[_64]
-> systems the top page of memory is mapped out and the io hole below 4GB is
-> similiarly protected because the memory at the lower boundary of the hole 
-> is used by ACPI and other things.
-> Please consider this for inclusion.
-> 
-> Thanks,
-> mikem
-> 
-> Signed-off-by: Mike Miller <mike.miller@hp.com>
-> 
->  cciss.c     |   14 ++++++++++++++
->  cciss_cmd.h |    1 +
->  2 files changed, 15 insertions(+)
-> --------------------------------------------------------------------------------
-> diff -urNp linux-2.6-p00004/drivers/block/cciss.c linux-2.6/drivers/block/cciss.c
-> --- linux-2.6-p00004/drivers/block/cciss.c	2006-10-31 15:20:25.000000000 -0600
-> +++ linux-2.6/drivers/block/cciss.c	2006-10-31 15:42:59.000000000 -0600
-> @@ -2997,6 +2997,20 @@ static int cciss_pci_init(ctlr_info_t *c
->  	}
->  #endif
->  
-> +#ifdef CONFIG_IA64
-> +	{
-> +		/* DMA prefetch must be disabled on P600 on platforms that may
-> +		 * present noncontiguous memory.
-> +		 */
-> +		__u32 dma_prefetch
-> +		if(board_id == 0x3225103C) {
-> +			dma_prefetch = readl(c->vaddr + I2O_DMA1_CFG);
-> +			dma_prefetch |= 0x8000;
-> +			writel(dma_prefetch, c->vaddr + I2O_DMA1_CFG);
-> +		}
-> +	}
-> +#endif /* CONFIG_IA64 */
+I'm researching a problem with data corruption on linux 2.6.9.
 
-Hmm, what about other platforms with discontig memory support?
+I'm seeing results of scsi_print_sense() in the system log, which brought me
 
--- 
-Jens Axboe
+to this chunk of code.  Is it correct to process a non-zero result with
+
+NO_SENSE as if an error didn't occur or was recovered?
+
+
+
+Laurie Costello
+
+
+
+
+
+Oct  9 08:16:03 localhost kernel: Info fld=0x0, Current sdv: sense key No Sense
+
+
+
+        /* An error occurred */
+
+        if (driver_byte(result) != 0 &&         /* An error occurred */
+
+            (SCpnt->sense_buffer[0] & 0x7f) == 0x70) { /* Sense current */
+
+                switch (SCpnt->sense_buffer[2]) {
+
+ ......deleted some case statement code
+
+
+
+                case RECOVERED_ERROR: /* an error occurred, but it recovered */
+
+                case NO_SENSE: /* LLDD got sense data */
+
+                        /*
+
+                         * Inform the user, but make sure that it's not treated
+
+                         * as a hard error.
+
+                         */
+
+                        scsi_print_sense("sd", SCpnt);
+
+                        SCpnt->result = 0;
+
+                        SCpnt->sense_buffer[0] = 0x0;
+                       good_bytes = this_count;
+
+                        break;
+
+
+
 
