@@ -1,49 +1,50 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 3/8] cciss: change number of commands per controller
-Date: Thu, 2 Nov 2006 15:39:45 +0100
-Message-ID: <20061102143945.GM13555@kernel.dk>
-References: <20061101215640.GC29928@beardog.cca.cpqcorp.net> <20061102141149.GI13555@kernel.dk> <20061102143318.GB16430@beardog.cca.cpqcorp.net>
+From: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
+Subject: Re: [PATCH 1/8] cciss: version number change
+Date: Thu, 2 Nov 2006 08:46:23 -0600
+Message-ID: <20061102144623.GC16430@beardog.cca.cpqcorp.net>
+References: <20061101214913.GA29928@beardog.cca.cpqcorp.net> <20061102141045.GH13555@kernel.dk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([62.242.22.158]:35692 "EHLO kernel.dk")
-	by vger.kernel.org with ESMTP id S1750905AbWKBOhz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Nov 2006 09:37:55 -0500
+Received: from palrel10.hp.com ([156.153.255.245]:1261 "EHLO palrel10.hp.com")
+	by vger.kernel.org with ESMTP id S1751046AbWKBOqX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Nov 2006 09:46:23 -0500
 Content-Disposition: inline
-In-Reply-To: <20061102143318.GB16430@beardog.cca.cpqcorp.net>
+In-Reply-To: <20061102141045.GH13555@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
+To: Jens Axboe <jens.axboe@oracle.com>
 Cc: akpm@osdl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Thu, Nov 02 2006, Mike Miller (OS Dev) wrote:
-> On Thu, Nov 02, 2006 at 03:11:50PM +0100, Jens Axboe wrote:
-> > On Wed, Nov 01 2006, Mike Miller (OS Dev) wrote:
-> > > +	{0x3211103C, "Smart Array E200i", &SA5_access, 120},
+On Thu, Nov 02, 2006 at 03:10:45PM +0100, Jens Axboe wrote:
+> On Wed, Nov 01 2006, Mike Miller (OS Dev) wrote:
 > > 
-> > Is it 120, or 128? And how big is the allocated command array now, with
-> > 512 commands?
+> > PATCH 1/8
+> > 
+> > This patch changes the cciss version number to 3.6.14 to reflect the following
+> > functionality changes added by the rest of the set. They include:
 > 
-> The controller can handle up to 128, but I artificially limited it to 120
-> for reasons I shouldn't discuss in public. :)
+> Mike, only some of your patches appeared to go out, both in personal
+> mail and on the list.
 
-:-)
+I ran into some last minute issues so I stopped at 5. Still re-testing
+the others.
+This snippet seems to tbe the culprit.
++               if (blk_queue_stopped(h->gendisk[curr_queue]->queue) ||
++                   blk_queue_plugged(h->gendisk[curr_queue]->queue))
++                       blk_start_queue(h->gendisk[curr_queue]->queue);
 
-> Each command is 548 bytes w/o scatter gather chaining. So 548 * 512 = 280576
-> bytes for the command list. We've tested using 1024 commands with several
-> Smart Array controllers and have not encountered issues. The reason for the
-> increase is performance. The busier you can keep the controller the better
-> it works.
+We're testing to see if the queue is stopped or plugged so we don't
+try to start am already running queue. Without the blk_queue_plugged
+test it hangs every time. We added blk_queue_plugged and the first tests
+seem to run ok. Then at the last minute something broke. Does this look
+ok to you?
 
-So this:
+> 
+> Comment on this patch - normally you'd change the version number last,
+> not as the first patch.
 
-       hba[i]->cmd_pool = (CommandList_struct *)
-            pci_alloc_consistent(hba[i]->pdev,
-                    NR_CMDS * sizeof(CommandList_struct),
-                    &(hba[i]->cmd_pool_dhandle));
+Yep, put the cart before horse I suppose. Maybe I shouldn't have a
+version number at all. :)
 
-is getting pretty huge then (it was already, actually).
-
--- 
-Jens Axboe
-
+mikem
