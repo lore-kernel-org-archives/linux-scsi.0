@@ -1,28 +1,43 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH]: PCI Error Recovery: Symbios SCSI device driver
-Date: Wed, 1 Nov 2006 21:56:34 -0700
-Message-ID: <20061102045634.GB31830@parisc-linux.org>
-References: <20061020180510.GN6537@austin.ibm.com> <20061031185506.GE26964@parisc-linux.org> <20061031231334.GR6360@austin.ibm.com> <20061102044633.GB23840@colo.lackof.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [Bugme-new] [Bug 7444] New: BUG on drive removal with
+	pata_cmd64x
+Date: Thu, 02 Nov 2006 11:38:17 +0000
+Message-ID: <1162467497.11965.163.camel@localhost.localdomain>
+References: <200611011240.kA1Ceaj7025489@fire-2.osdl.org>
+	 <20061101120258.e7462f9f.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751798AbWKBE4h@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20061102044633.GB23840@colo.lackof.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Grant Grundler <grundler@parisc-linux.org>
-Cc: Linas Vepstas <linas@austin.ibm.com>, linux-scsi@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, linux-kernel@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:10390 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S1752862AbWKBLeX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 2 Nov 2006 06:34:23 -0500
+In-Reply-To: <20061101120258.e7462f9f.akpm@osdl.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-scsi@vger.kernel.org, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>, jpw@wszib.edu.pl
 
-On Wed, Nov 01, 2006 at 09:46:33PM -0700, Grant Grundler wrote:
-> ISTR some chipsets return 0 or the most recent data on the bus
-> when INB/INW master-abort.  Maybe this an ISA bus behavior?
+Ar Mer, 2006-11-01 am 12:02 -0800, ysgrifennodd Andrew Morton:
+> Dunno if this is a scsi thing or an Alan thing.  But it is certainly a
+> thing!
+> > and driver hangs in a non-functional state (neither removed nor active)
+> > HOWEVER,
+> > going to /sys/bus/scsi/devices/X:0:0:0/ and echo'ing 1 to delete triggers the
+> > same BUG; the drive disappears from the system correctly(!) and pata_cmd64x can
+> > be removed from system without further problems.
 
-It's not a master-abort; it won't get as far as the device.
-Documentation/pci-error-recovery.txt says reads return 0xffffffff.
+It actually looks like a refcounting problem - could be in the SCSI code
+or in the libata code or in the AHCI code. I don't think it's in the
+driver however as the drivers don't carry custom code in that area
 
-> Or is config space access the only space which behaves this way
-> for master abort on PCI?
-> I'm looking at drivers/pci/probe.c:pci_scan_device().
+> > On a subsequent docking, the drive affected by the above bug appears to be
+> > confused and kernel complains about not being able to identify the drive,
+> > however, after a few attempts it manages to reset the drive.
+> > 
 
-As the comment says, the boards which do this are broken.  It's highly
-unlikely those boards will support error isolation and recovery ;-)
+That I think I understand assuming the first time you booted with the
+drive plugged in ?
+
+Alan
