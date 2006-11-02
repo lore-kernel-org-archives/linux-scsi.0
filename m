@@ -1,71 +1,76 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: unchecked_isa_dma and BusLogic SCSI controller
-Date: Wed, 1 Nov 2006 17:33:58 -0800
-Message-ID: <20061101173358.7b027d13.randy.dunlap@oracle.com>
-References: <20061101235330.GA30843@srv.junsun.net>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH v4]: PCI Error Recovery: Symbios SCSI device driver
+Date: Wed, 1 Nov 2006 20:57:22 -0700
+Message-ID: <20061102035722.GA31830@parisc-linux.org>
+References: <20061020180510.GN6537@austin.ibm.com> <20061031185506.GE26964@parisc-linux.org> <20061031231334.GR6360@austin.ibm.com> <20061102000745.GX6360@austin.ibm.com> <20061102011935.GZ6360@austin.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from agminet01.oracle.com ([141.146.126.228]:43674 "EHLO
-	agminet01.oracle.com") by vger.kernel.org with ESMTP
-	id S1751477AbWKBBiT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Nov 2006 20:38:19 -0500
-In-Reply-To: <20061101235330.GA30843@srv.junsun.net>
+Received: from palinux.external.hp.com ([192.25.206.14]:1932 "EHLO
+	mail.parisc-linux.org") by vger.kernel.org with ESMTP
+	id S1751679AbWKBD5Y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 1 Nov 2006 22:57:24 -0500
+Content-Disposition: inline
+In-Reply-To: <20061102011935.GZ6360@austin.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jun Sun <jsun@junsun.net>
-Cc: linux-scsi@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
+To: Linas Vepstas <linas@austin.ibm.com>
+Cc: linux-scsi@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, linux-kernel@vger.kernel.org
 
-On Wed, 1 Nov 2006 15:53:30 -0800 Jun Sun wrote:
+On Wed, Nov 01, 2006 at 07:19:37PM -0600, Linas Vepstas wrote:
+> @@ -657,6 +657,10 @@ static irqreturn_t sym53c8xx_intr(int ir
+>  	unsigned long flags;
+>  	struct sym_hcb *np = (struct sym_hcb *)dev_id;
+>  
+> +	/* Avoid spinloop trying to handle interrupts on frozen device */
+> +	if (pci_channel_offline(np->s.device))
+> +		return IRQ_HANDLED;
+> +
+>  	if (DEBUG_FLAGS & DEBUG_TINY) printf_debug ("[");
+>  
+>  	spin_lock_irqsave(np->s.host->host_lock, flags);
 
-> 
-> Can someone enlighten me on what "unchecked_isa_dma" means in the
-> struct scsi_host_template?
+Just wondering ... should we really be returning HANDLED?  What if the
+IRQ is shared?  Will the hardware de-assert the level interrupt when it
+puts the device in reset (ie is this a transitory glitch?), or do we
+have to cope with a screaming interrupt?
 
-It's documented in Documentation/scsi/scsi_mid_low_api.txt:
+> +#define WAIT_FOR_PCI_RECOVERY	35
+> +	if (pci_channel_offline(np->s.device))
+> +	{
 
-    unchecked_isa_dma - 1=>only use bottom 16 MB of ram (ISA DMA addressing
-                   restriction), 0=>can use full 32 bit (or better) DMA
-                   address space
+I prefer if () {
 
-> Specifically why Bus_Logic_template has
-> it set to 1?
+> +static pci_ers_result_t sym2_io_slot_reset (struct pci_dev *pdev)
+> +{
+> +	struct sym_hcb *np = pci_get_drvdata(pdev);
+> +
+> +	printk(KERN_INFO "%s: recovering from a PCI slot reset\n",
+> +	          sym_name(np));
+> +
+> +	if (pci_enable_device(pdev)) {
+> +		printk(KERN_ERR "%s: Unable to enable afer PCI reset\n",
+> +		        sym_name(np));
+> +		return PCI_ERS_RESULT_DISCONNECT;
+> +	}
+> +
+> +	pci_set_master(pdev);
+> +	enable_irq(pdev->irq);
 
-maybe ask on linux-scsi@vger.kernel.org (cc-ed)
+Hm.  If we need to call pci_set_master, then we're also going to need to
+call pci_set_mwi (if appropriate) which is currently done in
+sym_set_workarounds().  Except you don't have a sym_device, or a
+sym_chip around at this point.  Bother.  Need to do some refactoring to
+take care of that.
 
-> I am trying to reserve a block of memory (>16MB) starting from 0 and hide
-> it from kernel.  As a result, the DMA zone becomes 0 in size.
-> 
-> Because Bus_Logic_template has unchecked_isa_dma set to 1, the driver
-> will attempt to allocate a block of memory from DMA zone and thus
-> causes OOMs during its initialization.
-> 
-> It is hard for me to see why BusLogic controller would only do DMA
-> in low 16MB.  Is there a fix for this?
+> +		/* Prevent deadlock waiting on a condition that may never clear. */
+> +		if (unlikely(sist == 0xffff && dstat == 0xff)) {
+> +			if (unlikely(pci_channel_offline(np->s.device)))
+> +				return;
+> +		}
 
-Does anyone know that controller hardware and its limitations?
+I like the first unlikely ... but I'd drop the second one.  If they are
+both ffff ff, I'd say it's quite likely ;-)  Anyway, the first unlikely
+is good enough a hint to GCC, IMO.
 
-If the driver can't handle highmem addresses, you could just change
-it so that
-(a) it does not set unchecked_isa_dma
-(b) it sets .slave_alloc in the host template and then does
-like the <slave_alloc> function in ppa.c or imm.c:
-call blk_queue_bounce_limit() to set an address for which bounce
-buffers (from highmem to lowmem) will be used.
-[I don't guarantee that to work for BusLogic.]
-
-> BTW, I also tried to increase MAX_DMA_ADDRESS to cover the whole memory
-> area.  While the OOMs are gone during BusLogic driver initialization, 
-> kernel fails to find labelled root partition or fail to open
-> the initial console.  It appears the disk (or the scsi) is not working
-> properly after increasing MAX_DMA_ADDRESS.
-> 
-> My platform is vmplayer.  Pretty cool for devel.
-> 
-> Cheers.
-> 
-> Jun
-
----
-~Randy
+Thanks!
