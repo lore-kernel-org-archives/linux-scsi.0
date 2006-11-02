@@ -1,113 +1,68 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: non-zero result with NO_SENSE
-Date: Thu, 02 Nov 2006 14:06:01 -0500
-Message-ID: <454A4199.4070705@torque.net>
-References: <20061102165825.28759.qmail@web31005.mail.mud.yahoo.com>
-Reply-To: dougg@torque.net
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: Re: Fw: Re: 2.6.19-rc4-mm2 -- Build problems
+Date: Thu, 02 Nov 2006 13:24:47 -0800
+Message-ID: <454A621F.40906@us.ibm.com>
+References: <20061102124857.355208ec.akpm@osdl.org>
+Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:42666 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1752264AbWKBTF5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 2 Nov 2006 14:05:57 -0500
-In-Reply-To: <20061102165825.28759.qmail@web31005.mail.mud.yahoo.com>
+Received: from e32.co.us.ibm.com ([32.97.110.150]:51078 "EHLO
+	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S1752466AbWKBVYu
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 2 Nov 2006 16:24:50 -0500
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e32.co.us.ibm.com (8.13.8/8.12.11) with ESMTP id kA2LOnii024956
+	for <linux-scsi@vger.kernel.org>; Thu, 2 Nov 2006 16:24:49 -0500
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay04.boulder.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id kA2LOnFr353600
+	for <linux-scsi@vger.kernel.org>; Thu, 2 Nov 2006 14:24:49 -0700
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id kA2LOmHG015157
+	for <linux-scsi@vger.kernel.org>; Thu, 2 Nov 2006 14:24:48 -0700
+In-Reply-To: <20061102124857.355208ec.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Laurie Costello <lmcostello@yahoo.com>
-Cc: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Laurie Costello wrote:
-> I understand this for the case of RECOVERED_ERROR.  But for the
-> case of NO_SENSE the driver didn't supply any extra information with 
-> the failure.  Why does this code assume the request completed okay?
+Andrew Morton wrote:
 
-Laurie,
-By my reading of that logic, if the response code is
-0x70, 0x71, 0x72 or 0x73 then the sense buffer will
-be printed to the log in the case when the sense_key
-is RECOVERED_ERROR or NO_SENSE.
+> WARNING: "ata_sas_slave_configure" [drivers/scsi/libsas/libsas.ko] undefined!
+> WARNING: "ata_port_disable" [drivers/scsi/libsas/libsas.ko] undefined!
+> WARNING: "ata_sas_port_init" [drivers/scsi/libsas/libsas.ko] undefined!
+> WARNING: "ata_sas_port_stop" [drivers/scsi/libsas/libsas.ko] undefined!
+> WARNING: "ata_sas_port_start" [drivers/scsi/libsas/libsas.ko] undefined!
+> WARNING: "ata_sas_port_alloc" [drivers/scsi/libsas/libsas.ko] undefined!
+> WARNING: "ata_noop_qc_prep" [drivers/scsi/libsas/libsas.ko] undefined!
+> WARNING: "ata_tf_to_fis" [drivers/scsi/libsas/libsas.ko] undefined!
+> WARNING: "ata_noop_dev_select" [drivers/scsi/libsas/libsas.ko] undefined!
+> WARNING: "ata_tf_from_fis" [drivers/scsi/libsas/libsas.ko] undefined!
+> WARNING: "ata_host_init" [drivers/scsi/libsas/libsas.ko] undefined!
+> WARNING: "ata_sas_queuecmd" [drivers/scsi/libsas/libsas.ko] undefined!
+> WARNING: "ata_sas_port_destroy" [drivers/scsi/libsas/libsas.ko] undefined!
+> WARNING: "ata_scsi_ioctl" [drivers/scsi/libsas/libsas.ko] undefined!
+> WARNING: "ata_qc_complete" [drivers/scsi/libsas/libsas.ko] undefined!
 
-The sort of sense messages that come through with
-a valid response code and a sense_key of NO_SENSE
-are informational exceptions (when MRIE=5 or 6) **.
-The block layer isn't interested (but the user might
-be). A properly set up smartd (from smartmontools)
-should be sending automatically generated emails
-to system administrators in such cases.
+The SATA-fortified libsas depends on libata for SATA support.
+Kconfig needs to know about that.  Patch is for aic94xx-sas-2.6
+and apparently -mm as well.
 
+Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
 
-** REQUEST SENSE is the command that receives
-a sense_key of NO_SENSE in its data in buffer.
-The interesting cases are when the asc/ascq codes
-are non-zero. I'm not sure the sd driver ever issues
-a REQUEST SENSE command.
+--
 
-BTW There is another (lower) level of sense data
-checking in scsi_decide_disposition() found in
-the scsi_error.c file and belonging to the SCSI
-mid level code.
-
-> good_bytes is set to 0 based on the non-zero result in the scsi_cmnd
-> result field. Then its reset based on NO_SENSE.   Not returning more 
-> sense information would be poor driver behavior but changing result to 0 
-> seems dangerous.
-
-As far as I can tell the SG_IO ioctl applied to a
-scsi disk device node (e.g. /dev/sda) does _not_
-take the code path that you showed. That leaves
-mounted file systems and commands like dd using
-that code via the block layer.
-
-Do you have a suggestion of what you would prefer
-to happen?
-
-Doug Gilbert
-
-> ----- Original Message ----
-> From: Douglas Gilbert <dougg@torque.net>
-> To: Laurie Costello <lmcostello@yahoo.com>
-> Cc: linux-scsi@vger.kernel.org
-> Sent: Thursday, November 2, 2006 10:10:16 AM
-> Subject: Re: non-zero result with NO_SENSE
-> 
-> Laurie Costello wrote:
->> I'm researching a problem with data corruption on linux 2.6.9.
->>
->> I'm seeing results of scsi_print_sense() in the system log, which brought me
->>
->> to this chunk of code.  Is it correct to process a non-zero result with
->>
->> NO_SENSE as if an error didn't occur or was recovered?
-> 
-> Laurie,
-> Well it isn't ideal obviously. The problem is that sd
-> sits between a SCSI direct access device and the SCSI
-> block subsystem. SCSI devices try and be helpful and
-> tell the application client things like: the data was
-> read but required 3 retries and ECC. The block layer
-> is only interested in errors that impact the current
-> IO, so sd has no slot to file these warnings in, apart
-> from the system log. There was some proposal about
-> logging such errors and warning (but where to store
-> the log :-) ) and disks already do a fair amount of
-> logging themselves.
-> 
-> Even more worrying are deferred errors. Something like
-> a cached write that at some later time gets an IO error
-> when the disk tries to write its cache to the media.
-> This should become a more interesting area as disks get
-> larger non-volatile caches.
-> 
-> There are tools such as smartmontools that can monitor
-> the health of disks.
-> 
-> Doug Gilbert
-> 
-> 
-> 
-> 
-> 
-> 
-
+diff --git a/drivers/scsi/libsas/Kconfig b/drivers/scsi/libsas/Kconfig
+index aafdc92..b64e391 100644
+--- a/drivers/scsi/libsas/Kconfig
++++ b/drivers/scsi/libsas/Kconfig
+@@ -24,7 +24,7 @@ #
+ 
+ config SCSI_SAS_LIBSAS
+ 	tristate "SAS Domain Transport Attributes"
+-	depends on SCSI
++	depends on SCSI && ATA
+ 	select SCSI_SAS_ATTRS
+ 	help
+ 	  This provides transport specific helpers for SAS drivers which
