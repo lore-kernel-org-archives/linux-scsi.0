@@ -1,72 +1,35 @@
-From: Laurie Costello <lmcostello@yahoo.com>
-Subject: non-zero result with NO_SENSE
-Date: Thu, 2 Nov 2006 06:28:59 -0800 (PST)
-Message-ID: <20061102142859.93227.qmail@web31007.mail.mud.yahoo.com>
+From: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
+Subject: Re: [PATCH 3/8] cciss: change number of commands per controller
+Date: Thu, 2 Nov 2006 08:33:18 -0600
+Message-ID: <20061102143318.GB16430@beardog.cca.cpqcorp.net>
+References: <20061101215640.GC29928@beardog.cca.cpqcorp.net> <20061102141149.GI13555@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ascii
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31007.mail.mud.yahoo.com ([68.142.200.170]:35425 "HELO
-	web31007.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S1750714AbWKBO3B convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Nov 2006 09:29:01 -0500
+Received: from palrel10.hp.com ([156.153.255.245]:34785 "EHLO palrel10.hp.com")
+	by vger.kernel.org with ESMTP id S1750862AbWKBOdV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Nov 2006 09:33:21 -0500
+Content-Disposition: inline
+In-Reply-To: <20061102141149.GI13555@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: akpm@osdl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-I'm researching a problem with data corruption on linux 2.6.9.
+On Thu, Nov 02, 2006 at 03:11:50PM +0100, Jens Axboe wrote:
+> On Wed, Nov 01 2006, Mike Miller (OS Dev) wrote:
+> > +	{0x3211103C, "Smart Array E200i", &SA5_access, 120},
+> 
+> Is it 120, or 128? And how big is the allocated command array now, with
+> 512 commands?
 
-I'm seeing results of scsi_print_sense() in the system log, which brought me
+The controller can handle up to 128, but I artificially limited it to 120
+for reasons I shouldn't discuss in public. :)
 
-to this chunk of code.  Is it correct to process a non-zero result with
+Each command is 548 bytes w/o scatter gather chaining. So 548 * 512 = 280576
+bytes for the command list. We've tested using 1024 commands with several
+Smart Array controllers and have not encountered issues. The reason for the
+increase is performance. The busier you can keep the controller the better
+it works.
 
-NO_SENSE as if an error didn't occur or was recovered?
-
-
-
-Laurie Costello
-
-
-
-
-
-Oct  9 08:16:03 localhost kernel: Info fld=0x0, Current sdv: sense key No Sense
-
-
-
-        /* An error occurred */
-
-        if (driver_byte(result) != 0 &&         /* An error occurred */
-
-            (SCpnt->sense_buffer[0] & 0x7f) == 0x70) { /* Sense current */
-
-                switch (SCpnt->sense_buffer[2]) {
-
- ......deleted some case statement code
-
-
-
-                case RECOVERED_ERROR: /* an error occurred, but it recovered */
-
-                case NO_SENSE: /* LLDD got sense data */
-
-                        /*
-
-                         * Inform the user, but make sure that it's not treated
-
-                         * as a hard error.
-
-                         */
-
-                        scsi_print_sense("sd", SCpnt);
-
-                        SCpnt->result = 0;
-
-                        SCpnt->sense_buffer[0] = 0x0;
-                       good_bytes = this_count;
-
-                        break;
-
-
-
-
+mikem
