@@ -1,43 +1,51 @@
-From: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
-Subject: [PATCH 7/8] cciss: change cciss_open for consistency
-Date: Thu, 2 Nov 2006 09:04:14 -0600
-Message-ID: <20061102150414.GF16430@beardog.cca.cpqcorp.net>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [PATCH 1/8] cciss: version number change
+Date: Thu, 02 Nov 2006 16:05:14 +0100
+Message-ID: <1162479914.14530.46.camel@laptopd505.fenrus.org>
+References: <20061101214913.GA29928@beardog.cca.cpqcorp.net>
+	 <20061102141045.GH13555@kernel.dk>
+	 <20061102144623.GC16430@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palrel10.hp.com ([156.153.255.245]:32153 "EHLO palrel10.hp.com")
-	by vger.kernel.org with ESMTP id S1751204AbWKBPEa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Nov 2006 10:04:30 -0500
-Content-Disposition: inline
+Received: from pentafluge.infradead.org ([213.146.154.40]:11695 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1751247AbWKBPFZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 2 Nov 2006 10:05:25 -0500
+In-Reply-To: <20061102144623.GC16430@beardog.cca.cpqcorp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@osdl.org, jens.axboe@oracle.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
+Cc: Jens Axboe <jens.axboe@oracle.com>, akpm@osdl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+
+On Thu, 2006-11-02 at 08:46 -0600, Mike Miller (OS Dev) wrote:
+> On Thu, Nov 02, 2006 at 03:10:45PM +0100, Jens Axboe wrote:
+> > On Wed, Nov 01 2006, Mike Miller (OS Dev) wrote:
+> > > 
+> > > PATCH 1/8
+> > > 
+> > > This patch changes the cciss version number to 3.6.14 to reflect the following
+> > > functionality changes added by the rest of the set. They include:
+> > 
+> > Mike, only some of your patches appeared to go out, both in personal
+> > mail and on the list.
+> 
+> I ran into some last minute issues so I stopped at 5. Still re-testing
+> the others.
+> This snippet seems to tbe the culprit.
+> +               if (blk_queue_stopped(h->gendisk[curr_queue]->queue) ||
+> +                   blk_queue_plugged(h->gendisk[curr_queue]->queue))
+> +                       blk_start_queue(h->gendisk[curr_queue]->queue);
+> 
+> We're testing to see if the queue is stopped or plugged so we don't
+> try to start am already running queue. Without the blk_queue_plugged
+> test it hangs every time. We added blk_queue_plugged and the first tests
+> seem to run ok. Then at the last minute something broke. Does this look
+> ok to you?
 
 
-PATCH 7/11
+it looks like a design mistake to me if a device driver needs to care
+about a queue being plugged at all....
 
-This patch changes our open to test for drv->heads like we do in other
-places in the driver. Mostly for consistency.
-Please consider this for inclusion.
 
-Thanks,
-mikem
-
-Signed-off-by: Mike Miller <mike.miller@hp.com>
-
- cciss.c |    2 +-
- 1 files changed, 1 insertion(+), 1 deletion(-)
-------------------------------------------------------------------------------------------
-diff -urNp linux-2.6-p00006/drivers/block/cciss.c linux-2.6/drivers/block/cciss.c
---- linux-2.6-p00006/drivers/block/cciss.c	2006-10-31 15:48:46.000000000 -0600
-+++ linux-2.6/drivers/block/cciss.c	2006-10-31 15:57:39.000000000 -0600
-@@ -494,7 +494,7 @@ static int cciss_open(struct inode *inod
- 	 * but I'm already using way to many device nodes to claim another one
- 	 * for "raw controller".
- 	 */
--	if (drv->nr_blocks == 0) {
-+	if (drv->heads == 0) {
- 		if (iminor(inode) != 0) {	/* not node 0? */
- 			/* if not node 0 make sure it is a partition = 0 */
- 			if (iminor(inode) & 0x0f) {
