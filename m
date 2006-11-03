@@ -1,33 +1,50 @@
-From: <crazyrushstar@yahoo.com.tw>
-Subject: dma_alloc_coherent() modify at new kernel
-Date: Fri, 3 Nov 2006 17:24:56 +0800 (CST)
-Message-ID: <20061103092456.97653.qmail@web18305.mail.tpe.yahoo.com>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: [PATCH] [SCSI] st.c : fix up log messages format
+Date: Fri, 3 Nov 2006 01:25:12 -0800 (PST)
+Message-ID: <20061103092512.88130.qmail@web31807.mail.mud.yahoo.com>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=big5
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web18305.mail.tpe.yahoo.com ([203.84.194.87]:52617 "HELO
-	web18305.mail.tpe.yahoo.com") by vger.kernel.org with SMTP
-	id S1751325AbWKCJY6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 3 Nov 2006 04:24:58 -0500
+Received: from web31807.mail.mud.yahoo.com ([68.142.207.70]:18784 "HELO
+	web31807.mail.mud.yahoo.com") by vger.kernel.org with SMTP
+	id S1752367AbWKCJZN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 3 Nov 2006 04:25:13 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-At kernel 2.6.18-1.2798.fc6 the DMA_API was modified.
+Signed-off-by: Luben Tuikov <ltuikov@yahoo.com>
+---
+ drivers/scsi/st.c |    9 +++++----
+ 1 files changed, 5 insertions(+), 4 deletions(-)
 
-The last arg become useless, but my driver under this
-version can not alloc memory.
-Every time dma_alloc_coherent will return fail.
+That's a very old patch.
 
-How can it work normally?
+    Luben
 
-___________________________________________________=20
- =B1z=AA=BA=A5=CD=AC=A1=A7Y=AE=C9=B3q =A1=D0 =B7=BE=B3q=A1B=AET=BC=D6=A1=
-B=A5=CD=AC=A1=A1B=A4u=A7@=A4@=A6=B8=B7d=A9w=A1I=20
- http://messenger.yahoo.com.tw/
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+index 7f96f33..29d7319 100644
+--- a/drivers/scsi/st.c
++++ b/drivers/scsi/st.c
+@@ -4072,10 +4072,11 @@ static int st_probe(struct device *dev)
+ 	disk->number = devfs_register_tape(SDp->devfs_name);
+ 
+ 	sdev_printk(KERN_WARNING, SDp,
+-		    "Attached scsi tape %s", tape_name(tpnt));
+-	printk(KERN_WARNING "%s: try direct i/o: %s (alignment %d B)\n",
+-	       tape_name(tpnt), tpnt->try_dio ? "yes" : "no",
+-	       queue_dma_alignment(SDp->request_queue) + 1);
++		    "Attached scsi tape %s\n", tape_name(tpnt));
++	sdev_printk(KERN_WARNING, SDp,
++		    "%s: try direct i/o: %s (alignment %d bytes)\n",
++		    tape_name(tpnt), tpnt->try_dio ? "yes" : "no",
++		    queue_dma_alignment(SDp->request_queue) + 1);
+ 
+ 	return 0;
+ 
+-- 
+1.4.3.3.g6cec
+
+
