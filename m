@@ -1,34 +1,66 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] [SCSI] st.c : fix up log messages format
-Date: Fri, 3 Nov 2006 06:32:17 -0700
-Message-ID: <20061103133217.GC27140@parisc-linux.org>
-References: <20061103092512.88130.qmail@web31807.mail.mud.yahoo.com>
+From: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
+Subject: [PATCH 5/8] resend cciss: disable DMA prefetch on P600
+Date: Fri, 3 Nov 2006 09:54:12 -0600
+Message-ID: <20061103155412.GA1657@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:49571 "EHLO
-	mail.parisc-linux.org") by vger.kernel.org with ESMTP
-	id S1751676AbWKCNcS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 3 Nov 2006 08:32:18 -0500
+Received: from palrel12.hp.com ([156.153.255.237]:20123 "EHLO palrel12.hp.com")
+	by vger.kernel.org with ESMTP id S1753284AbWKCPyN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Nov 2006 10:54:13 -0500
 Content-Disposition: inline
-In-Reply-To: <20061103092512.88130.qmail@web31807.mail.mud.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <ltuikov@yahoo.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: akpm@osdl.org, jens.axboe@oracle.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Fri, Nov 03, 2006 at 01:25:12AM -0800, Luben Tuikov wrote:
->  	sdev_printk(KERN_WARNING, SDp,
-> -		    "Attached scsi tape %s", tape_name(tpnt));
-> -	printk(KERN_WARNING "%s: try direct i/o: %s (alignment %d B)\n",
-> -	       tape_name(tpnt), tpnt->try_dio ? "yes" : "no",
-> -	       queue_dma_alignment(SDp->request_queue) + 1);
-> +		    "Attached scsi tape %s\n", tape_name(tpnt));
-> +	sdev_printk(KERN_WARNING, SDp,
-> +		    "%s: try direct i/o: %s (alignment %d bytes)\n",
-> +		    tape_name(tpnt), tpnt->try_dio ? "yes" : "no",
-> +		    queue_dma_alignment(SDp->request_queue) + 1);
->  
+PATCH 5 of 8 resend
 
-I know you didn't change this ... but why are these KERN_WARNING?
-Surely KERN_INFO is more appropriate here?
+This patch unconditionally disables DMA prefetch on the P600 controller. A
+bug in the ASIC may result in prefetching either beyond the end of memory
+or to fall off into a memory hole.
+Please consider this for inclusion.
+
+Thanks,
+mikem
+
+Signed-off-by: Mike Miller <mike.miller@hp.com>
+
+ cciss.c     |   13 +++++++++++++
+ cciss_cmd.h |    1 +
+ 2 files changed, 14 insertions(+)
+--------------------------------------------------------------------------------
+diff -urNp linux-2.6-p00004/drivers/block/cciss.c linux-2.6-p00005/drivers/block/cciss.c
+--- linux-2.6-p00004/drivers/block/cciss.c	2006-10-31 15:20:25.000000000 -0600
++++ linux-2.6-p00005/drivers/block/cciss.c	2006-11-03 09:43:55.000000000 -0600
+@@ -2997,6 +2997,19 @@ static int cciss_pci_init(ctlr_info_t *c
+ 	}
+ #endif
+ 
++	{
++		/* Disabling DMA prefetch for the P600
++		 * An ASIC bug may result in a prefetch beyond
++		 * physical memory.
++		 */
++		__u32 dma_prefetch
++		if(board_id == 0x3225103C) {
++			dma_prefetch = readl(c->vaddr + I2O_DMA1_CFG);
++			dma_prefetch |= 0x8000;
++			writel(dma_prefetch, c->vaddr + I2O_DMA1_CFG);
++		}
++	}
++
+ #ifdef CCISS_DEBUG
+ 	printk("Trying to put board into Simple mode\n");
+ #endif				/* CCISS_DEBUG */
+diff -urNp linux-2.6-p00004/drivers/block/cciss_cmd.h linux-2.6-p00005/drivers/block/cciss_cmd.h
+--- linux-2.6-p00004/drivers/block/cciss_cmd.h	2006-10-31 14:31:05.000000000 -0600
++++ linux-2.6-p00005/drivers/block/cciss_cmd.h	2006-10-31 15:43:18.000000000 -0600
+@@ -55,6 +55,7 @@
+ #define I2O_INT_MASK            0x34
+ #define I2O_IBPOST_Q            0x40
+ #define I2O_OBPOST_Q            0x44
++#define I2O_DMA1_CFG		0x214
+ 
+ //Configuration Table
+ #define CFGTBL_ChangeReq        0x00000001l
