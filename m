@@ -1,34 +1,35 @@
-From: "Valentina" <allenjuliusyahoo.de@btopenworld.com>
-Subject: Re[3]: I want to greet you
-Date: Fri, 03 Nov 2006 09:22:24 +0200
-Message-ID: <00c601c6ff18$ca010400$2e0a000a__29567.8856004544$1162538521$gmane$org@61.17.47-133.bb-dynamic.vsnl.net.in>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: [PATCH 0/2] [SCSI] Don't overwhelm with messages when a device is unplugged
+Date: Fri, 3 Nov 2006 01:16:40 -0800 (PST)
+Message-ID: <665944.84253.qm@web31806.mail.mud.yahoo.com>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="windows-1252"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 61.17.47-133.bb-dynamic.vsnl.net.in ([61.17.47.133]:28939 "EHLO
-	61.17.47-133.bb-dynamic.vsnl.net.in") by vger.kernel.org with ESMTP
-	id S1752760AbWKCHVc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 3 Nov 2006 02:21:32 -0500
+Received: from web31806.mail.mud.yahoo.com ([68.142.207.69]:22658 "HELO
+	web31806.mail.mud.yahoo.com") by vger.kernel.org with SMTP
+	id S1752274AbWKCJQl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 3 Nov 2006 04:16:41 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Frank <linux-c-programming@vger.kernel.org>
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-Hi, Frank
+What follows are two patches.
+The first I've been carrying for a long time.
+The second is recent.
 
-It's such a nice day and I am in a good mood, are you?
-I am a lonely girl who is looking for sincere and open love and feelings. My heart desires to be connected with a
-good, responsible man who will support and help me and to whom I will present all my tenderness and love I have inside.
-Do you want to learn me better? I do! :) Let's start corresponding and I hope our hearts are the two halves of one
-big romantic miracle. I will open my personality to you and I want to learn you better too. 
-You can easily find me here
-http://withloveonly.com/greatfeelings
-I am waiting for your letter, don't make me wait for all my life...
+We see over 2 million messages of sorts when
+a device(s) is unplugged right in the middle of
+heavy I/O.
 
-Looking forward to get a note from you!
+"rejecting I/O to device being removed" and
+"rejecting I/O to dead device"...
 
+These are printed so many times that they cause
+soft-lockup on all 4 CPUs in succession!...
 
-Valentina
+The following patches remedy this sad situation.
 
+    Luben
 
