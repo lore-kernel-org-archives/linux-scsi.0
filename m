@@ -1,112 +1,213 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] scsi_execute_async should take a struct scatterlist *
-Date: Sat, 4 Nov 2006 20:14:40 +0100
-Message-ID: <20061104191440.GD23477@lst.de>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: [PATCH] [SCSI] sg.c: fixes to sg_build_indirect()
+Date: Sat, 4 Nov 2006 11:48:42 -0800 (PST)
+Message-ID: <254019.55389.qm@web31801.mail.mud.yahoo.com>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed; boundary="0-443814737-1162669722=:55389"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:2500 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S1753647AbWKDTOm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Nov 2006 14:14:42 -0500
-Content-Disposition: inline
+Received: from web31801.mail.mud.yahoo.com ([68.142.207.64]:51025 "HELO
+	web31801.mail.mud.yahoo.com") by vger.kernel.org with SMTP
+	id S965326AbWKDTsn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 4 Nov 2006 14:48:43 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@steeleye.com
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Douglas Gilbert <dougg@torque.net>
 
-Crrently scsi_execute_async takes a void *buffer argument that can
-be either interpreted as a kernel buffer or scatterlist pointer
-depending on what the use_sg argument is set to.  There is no user
-of the use_sg == 0 kernel buffer case and we should remove it in
-favour of type safety.
+--0-443814737-1162669722=:55389
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Content-Id: 
+Content-Disposition: inline
 
-And yes, long-term we should get rid of the current scsi_execute_async
-interface entirely, struct scatterlist * doesn't make sense as a data
-structure above the block layer.
+The sg driver corrupts memory when the data buffer
+size is 5493376 (0x53d280) bytes.  The reason for this
+is the computation of the left over size given the
+size of scatter-gather array and the size of the
+scatter-gather element.  This patch fixes this.
 
+Other fixes:
+1. Eliminate scatter_elem_sz_prev, and use memory
+   barriers to get its current value.  Reset it to PAGE_SIZE
+   if the user has set it to something smaller.
+2. Use roundup() defined in linux/kernel.h
+3. Figure out if the buff_size will fit in the maximum
+   table size. If not, give up early and print an
+   informative message.
+4. Greatly simplified allocation loop.
+5. Use min() defined in linux/kernel.h.
+6. The remaining size (rem_sz) is decremented not by ret_sz, but
+   by sg->length = min(num, ret_sz), i.e. by the effective memory
+   we've allocated.
+7. schp->bufflen is set to buff_size, not blk_size, since
+   this is the effective xfer size we want to xfer.
+8. blk_size must equal exactly 0 iff all allocation succeeded.
+  (this is the proof of the loop)
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Luben Tuikov <ltuikov@yahoo.com>
+---
+ drivers/scsi/sg.c |  108 +++++++++++++++++++++++++++-------------------------
+ 1 files changed, 56 insertions(+), 52 deletions(-)
 
-Index: scsi-misc-2.6/drivers/scsi/scsi_lib.c
-===================================================================
---- scsi-misc-2.6.orig/drivers/scsi/scsi_lib.c	2006-11-02 15:31:51.000000000 +0100
-+++ scsi-misc-2.6/drivers/scsi/scsi_lib.c	2006-11-02 17:05:34.000000000 +0100
-@@ -368,21 +368,24 @@
- }
+Getting out of my hair some patches in my dev (gateway) tree.
+
+    Luben
+
+--0-443814737-1162669722=:55389
+Content-Type: text/inline; name="sg.txt"
+Content-Description: 795371012-sg.txt
+Content-Disposition: name="sg.txt"; filename="sg.txt"
+
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 18fa739..f377295 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -95,11 +95,8 @@ static int def_reserved_size = -1;	/* pi
+ static int sg_allow_dio = SG_ALLOW_DIO_DEF;
  
- /**
-- * scsi_execute_async - insert request
-- * @sdev:	scsi device
-- * @cmd:	scsi command
-- * @cmd_len:	length of scsi cdb
-- * @data_direction: data direction
-- * @buffer:	data buffer (this can be a kernel buffer or scatterlist)
-- * @bufflen:	len of buffer
-- * @use_sg:	if buffer is a scatterlist this is the number of elements
-- * @timeout:	request timeout in seconds
-- * @retries:	number of times to retry request
-- * @flags:	or into request flags
-+ * scsi_execute_async - execute SCSI command asynchronously
-+ * @sdev:		scsi device
-+ * @cmd:		scsi command block
-+ * @cmd_len:		length of scsi command block
-+ * @data_direction:	data direction
-+ * @sg:			data buffer in form of a scatterlist
-+ * @data_length:	total data length
-+ * @use_sg:		number of elements in the scatterlist
-+ * @timeout:		request timeout in seconds
-+ * @retries:		number of times to retry request
-+ * @privdata:		private data passed back to the done callback
-+ * @done:		I/O completion callback
-+ * @gfp:		memory allocation flags
-  **/
- int scsi_execute_async(struct scsi_device *sdev, const unsigned char *cmd,
--		       int cmd_len, int data_direction, void *buffer, unsigned bufflen,
--		       int use_sg, int timeout, int retries, void *privdata,
-+		       int cmd_len, int data_direction, struct scatterlist *sg,
-+		       unsigned data_length, int use_sg, int timeout,
-+		       int retries, void *privdata,
- 		       void (*done)(void *, char *, int, int), gfp_t gfp)
- {
- 	struct request *req;
-@@ -390,6 +393,8 @@
- 	int err = 0;
- 	int write = (data_direction == DMA_TO_DEVICE);
+ static int scatter_elem_sz = SG_SCATTER_SZ;
+-static int scatter_elem_sz_prev = SG_SCATTER_SZ;
  
-+	BUG_ON(data_length && !use_sg);
-+
- 	sioc = kmem_cache_alloc(scsi_io_context_cache, gfp);
- 	if (!sioc)
- 		return DRIVER_ERROR << 24;
-@@ -401,13 +406,11 @@
- 	req->cmd_type = REQ_TYPE_BLOCK_PC;
- 	req->cmd_flags |= REQ_QUIET;
- 
--	if (use_sg)
--		err = scsi_req_map_sg(req, buffer, use_sg, bufflen, gfp);
--	else if (bufflen)
--		err = blk_rq_map_kern(req->q, req, buffer, bufflen, gfp);
+ #define SG_SECTOR_SZ 512
+-#define SG_SECTOR_MSK (SG_SECTOR_SZ - 1)
 -
--	if (err)
--		goto free_req;
-+	if (use_sg) {
-+		err = scsi_req_map_sg(req, sg, use_sg, data_length, gfp);
-+		if (err)
-+			goto free_req;
+ #define SG_DEV_ARR_LUMP 32	/* amount to over allocate sg_dev_arr by */
+ 
+ static int sg_add(struct class_device *, struct class_interface *);
+@@ -1560,10 +1557,8 @@ init_sg(void)
+ {
+ 	int rc;
+ 
+-	if (scatter_elem_sz < PAGE_SIZE) {
++	if (scatter_elem_sz < PAGE_SIZE)
+ 		scatter_elem_sz = PAGE_SIZE;
+-		scatter_elem_sz_prev = scatter_elem_sz;
+-	}
+ 	if (def_reserved_size >= 0)
+ 		sg_big_buff = def_reserved_size;
+ 	else
+@@ -1831,62 +1826,71 @@ static int
+ sg_build_indirect(Sg_scatter_hold * schp, Sg_fd * sfp, int buff_size)
+ {
+ 	struct scatterlist *sg;
+-	int ret_sz = 0, k, rem_sz, num, mx_sc_elems;
+-	int sg_tablesize = sfp->parentdp->sg_tablesize;
+-	int blk_size = buff_size;
+-	struct page *p = NULL;
+-
+-	if ((blk_size < 0) || (!sfp))
++	int max_tablesize = sfp->parentdp->sg_tablesize;
++	int sg_tablesize, blk_size, k;
++	int sc_elem_sz;
++	
++	if ((buff_size < 0) || (!sfp))
+ 		return -EFAULT;
+-	if (0 == blk_size)
+-		++blk_size;	/* don't know why */
+-/* round request up to next highest SG_SECTOR_SZ byte boundary */
+-	blk_size = (blk_size + SG_SECTOR_MSK) & (~SG_SECTOR_MSK);
+-	SCSI_LOG_TIMEOUT(4, printk("sg_build_indirect: buff_size=%d, blk_size=%d\n",
+-				   buff_size, blk_size));
+-
+-	/* N.B. ret_sz carried into this block ... */
+-	mx_sc_elems = sg_build_sgat(schp, sfp, sg_tablesize);
+-	if (mx_sc_elems < 0)
+-		return mx_sc_elems;	/* most likely -ENOMEM */
+-
+-	num = scatter_elem_sz;
+-	if (unlikely(num != scatter_elem_sz_prev)) {
+-		if (num < PAGE_SIZE) {
+-			scatter_elem_sz = PAGE_SIZE;
+-			scatter_elem_sz_prev = PAGE_SIZE;
+-		} else
+-			scatter_elem_sz_prev = num;
++	if (0 == buff_size)
++		buff_size = 1;
++
++	if (scatter_elem_sz < PAGE_SIZE)
++		scatter_elem_sz = PAGE_SIZE;
++	sc_elem_sz = scatter_elem_sz;
++	mb();
++
++	blk_size = roundup(buff_size, SG_SECTOR_SZ);
++	SCSI_LOG_TIMEOUT(4, printk("sg_build_indirect: buff_size=%d, "
++				   "blk_size=%d\n", buff_size, blk_size));
++
++	sg_tablesize = (blk_size + sc_elem_sz - 1)/sc_elem_sz;
++	if (sg_tablesize > max_tablesize) {
++		printk(KERN_NOTICE "%s: sg_table too big (%d > %d) for "
++		       "round-up transfer size of %d bytes with %d bytes an "
++		       "sg element\n",
++		       __FUNCTION__, sg_tablesize, max_tablesize,
++		       blk_size, sc_elem_sz);
++		return -ENOMEM;
+ 	}
+-	for (k = 0, sg = schp->buffer, rem_sz = blk_size;
+-	     (rem_sz > 0) && (k < mx_sc_elems);
+-	     ++k, rem_sz -= ret_sz, ++sg) {
++
++	/* Allocate the maximum table size, in case external memory
++	 * fragmentation stretches us over the nominal sg size for the
++	 * given blk_size and sc_elem_sz.
++	 */
++	sg_tablesize = sg_build_sgat(schp, sfp, max_tablesize);
++	if (sg_tablesize <= 0)
++		return -ENOMEM;
++
++	for (k = 0, sg = schp->buffer;
++	     0 < blk_size && k < sg_tablesize;
++	     ++k, ++sg) {
+ 		
+-		num = (rem_sz > scatter_elem_sz_prev) ?
+-		      scatter_elem_sz_prev : rem_sz;
+-		p = sg_page_malloc(num, sfp->low_dma, &ret_sz);
+-		if (!p)
++		int ret_sz;
++		int num = min(blk_size, sc_elem_sz);
++
++		sg->page = sg_page_malloc(num, sfp->low_dma, &ret_sz);
++		if (!sg->page)
+ 			return -ENOMEM;
+ 
+-		if (num == scatter_elem_sz_prev) {
+-			if (unlikely(ret_sz > scatter_elem_sz_prev)) {
+-				scatter_elem_sz = ret_sz;
+-				scatter_elem_sz_prev = ret_sz;
+-			}
+-		}
+-		sg->page = p;
+-		sg->length = ret_sz;
++		sg->length = min(num, ret_sz);
+ 
+-		SCSI_LOG_TIMEOUT(5, printk("sg_build_build: k=%d, a=0x%p, len=%d\n",
+-				  k, p, ret_sz));
+-	}		/* end of for loop */
++		blk_size -= sg->length;
++
++		SCSI_LOG_TIMEOUT(5, printk("sg_build_build: k=%d, a=0x%p, "
++					   "len=%d\n",
++					   k, sg->page, sg->length));
 +	}
  
- 	req->cmd_len = cmd_len;
- 	memcpy(req->cmd, cmd, req->cmd_len);
-Index: scsi-misc-2.6/include/scsi/scsi_device.h
-===================================================================
---- scsi-misc-2.6.orig/include/scsi/scsi_device.h	2006-10-30 17:00:35.000000000 +0100
-+++ scsi-misc-2.6/include/scsi/scsi_device.h	2006-11-02 17:05:49.000000000 +0100
-@@ -293,7 +293,7 @@
- 			    struct scsi_sense_hdr *, int timeout, int retries);
- extern int scsi_execute_async(struct scsi_device *sdev,
- 			      const unsigned char *cmd, int cmd_len, int data_direction,
--			      void *buffer, unsigned bufflen, int use_sg,
-+			      struct scatterlist *sg, unsigned data_length, int use_sg,
- 			      int timeout, int retries, void *privdata,
- 			      void (*done)(void *, char *, int, int),
- 			      gfp_t gfp);
+ 	schp->k_use_sg = k;
+-	SCSI_LOG_TIMEOUT(5, printk("sg_build_indirect: k_use_sg=%d, rem_sz=%d\n", k, rem_sz));
++	SCSI_LOG_TIMEOUT(5, printk("sg_build_indirect: k_use_sg=%d, "
++				   "remained=%d\n", k, blk_size));
+ 
+-	schp->bufflen = blk_size;
+-	if (rem_sz > 0)	/* must have failed */
++	schp->bufflen = buff_size;
++	if (blk_size != 0) {
++		/* must have failed */
+ 		return -ENOMEM;
++	}
+ 
+ 	return 0;
+ }
+-- 
+1.4.3.3.g8478
+
+
+--0-443814737-1162669722=:55389--
