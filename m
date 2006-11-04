@@ -1,109 +1,112 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] kill scsi_assign_lock
-Date: Sat, 4 Nov 2006 20:11:36 +0100
-Message-ID: <20061104191136.GC23477@lst.de>
+Subject: [PATCH] scsi_execute_async should take a struct scatterlist *
+Date: Sat, 4 Nov 2006 20:14:40 +0100
+Message-ID: <20061104191440.GD23477@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:55235 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S1753633AbWKDTLi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Nov 2006 14:11:38 -0500
+Received: from verein.lst.de ([213.95.11.210]:2500 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S1753647AbWKDTOm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Nov 2006 14:14:42 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@steeleye.com
 Cc: linux-scsi@vger.kernel.org
 
-scsi_assign_lock has been unused for a long time and is a bad idea
-in general, so kill it.
+Crrently scsi_execute_async takes a void *buffer argument that can
+be either interpreted as a kernel buffer or scatterlist pointer
+depending on what the use_sg argument is set to.  There is no user
+of the use_sg == 0 kernel buffer case and we should remove it in
+favour of type safety.
+
+And yes, long-term we should get rid of the current scsi_execute_async
+interface entirely, struct scatterlist * doesn't make sense as a data
+structure above the block layer.
 
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: scsi-misc-2.6/Documentation/scsi/scsi_mid_low_api.txt
+Index: scsi-misc-2.6/drivers/scsi/scsi_lib.c
 ===================================================================
---- scsi-misc-2.6.orig/Documentation/scsi/scsi_mid_low_api.txt	2006-07-09 17:27:57.000000000 +0200
-+++ scsi-misc-2.6/Documentation/scsi/scsi_mid_low_api.txt	2006-11-02 16:53:18.000000000 +0100
-@@ -375,7 +375,6 @@
-    scsi_add_device - creates new scsi device (lu) instance
-    scsi_add_host - perform sysfs registration and set up transport class
-    scsi_adjust_queue_depth - change the queue depth on a SCSI device
--   scsi_assign_lock - replace default host_lock with given lock
-    scsi_bios_ptable - return copy of block device's partition table
-    scsi_block_requests - prevent further commands being queued to given host
-    scsi_deactivate_tcq - turn off tag command queueing
-@@ -489,20 +488,6 @@
- 
+--- scsi-misc-2.6.orig/drivers/scsi/scsi_lib.c	2006-11-02 15:31:51.000000000 +0100
++++ scsi-misc-2.6/drivers/scsi/scsi_lib.c	2006-11-02 17:05:34.000000000 +0100
+@@ -368,21 +368,24 @@
+ }
  
  /**
-- * scsi_assign_lock - replace default host_lock with given lock
-- * @shost: a pointer to a scsi host instance
-- * @lock: pointer to lock to replace host_lock for this host
-- *
-- *      Returns nothing
-- *
-- *      Might block: no
-- *
-- *      Defined in: include/scsi/scsi_host.h .
-- **/
--void scsi_assign_lock(struct Scsi_Host *shost, spinlock_t *lock)
--
--
--/**
-  * scsi_bios_ptable - return copy of block device's partition table
-  * @dev:        pointer to block device
-  *
-@@ -1366,17 +1351,11 @@
- Each struct Scsi_Host instance has a spin_lock called struct 
- Scsi_Host::default_lock which is initialized in scsi_host_alloc() [found in 
- hosts.c]. Within the same function the struct Scsi_Host::host_lock pointer
--is initialized to point at default_lock with the scsi_assign_lock() function.
--Thereafter lock and unlock operations performed by the mid level use the
--struct Scsi_Host::host_lock pointer.
--
--LLDs can override the use of struct Scsi_Host::default_lock by
--using scsi_assign_lock(). The earliest opportunity to do this would
--be in the detect() function after it has invoked scsi_register(). It
--could be replaced by a coarser grain lock (e.g. per driver) or a
--lock of equal granularity (i.e. per host). Using finer grain locks 
--(e.g. per SCSI device) may be possible by juggling locks in
--queuecommand().
-+is initialized to point at default_lock.  Thereafter lock and unlock
-+operations performed by the mid level use the struct Scsi_Host::host_lock
-+pointer.  Previously drivers could override the host_lock pointer but
-+this is not allowed anymore.
-+
- 
- Autosense
- =========
-Index: scsi-misc-2.6/drivers/scsi/hosts.c
-===================================================================
---- scsi-misc-2.6.orig/drivers/scsi/hosts.c	2006-10-30 17:00:22.000000000 +0100
-+++ scsi-misc-2.6/drivers/scsi/hosts.c	2006-11-02 16:53:18.000000000 +0100
-@@ -301,8 +301,8 @@
- 	if (!shost)
- 		return NULL;
- 
--	spin_lock_init(&shost->default_lock);
--	scsi_assign_lock(shost, &shost->default_lock);
-+	shost->host_lock = &shost->default_lock;
-+	spin_lock_init(shost->host_lock);
- 	shost->shost_state = SHOST_CREATED;
- 	INIT_LIST_HEAD(&shost->__devices);
- 	INIT_LIST_HEAD(&shost->__targets);
-Index: scsi-misc-2.6/include/scsi/scsi_host.h
-===================================================================
---- scsi-misc-2.6.orig/include/scsi/scsi_host.h	2006-10-30 17:00:35.000000000 +0100
-+++ scsi-misc-2.6/include/scsi/scsi_host.h	2006-11-02 16:53:18.000000000 +0100
-@@ -651,11 +651,6 @@
- 
- extern u64 scsi_calculate_bounce_limit(struct Scsi_Host *);
- 
--static inline void scsi_assign_lock(struct Scsi_Host *shost, spinlock_t *lock)
--{
--	shost->host_lock = lock;
--}
--
- static inline struct device *scsi_get_device(struct Scsi_Host *shost)
+- * scsi_execute_async - insert request
+- * @sdev:	scsi device
+- * @cmd:	scsi command
+- * @cmd_len:	length of scsi cdb
+- * @data_direction: data direction
+- * @buffer:	data buffer (this can be a kernel buffer or scatterlist)
+- * @bufflen:	len of buffer
+- * @use_sg:	if buffer is a scatterlist this is the number of elements
+- * @timeout:	request timeout in seconds
+- * @retries:	number of times to retry request
+- * @flags:	or into request flags
++ * scsi_execute_async - execute SCSI command asynchronously
++ * @sdev:		scsi device
++ * @cmd:		scsi command block
++ * @cmd_len:		length of scsi command block
++ * @data_direction:	data direction
++ * @sg:			data buffer in form of a scatterlist
++ * @data_length:	total data length
++ * @use_sg:		number of elements in the scatterlist
++ * @timeout:		request timeout in seconds
++ * @retries:		number of times to retry request
++ * @privdata:		private data passed back to the done callback
++ * @done:		I/O completion callback
++ * @gfp:		memory allocation flags
+  **/
+ int scsi_execute_async(struct scsi_device *sdev, const unsigned char *cmd,
+-		       int cmd_len, int data_direction, void *buffer, unsigned bufflen,
+-		       int use_sg, int timeout, int retries, void *privdata,
++		       int cmd_len, int data_direction, struct scatterlist *sg,
++		       unsigned data_length, int use_sg, int timeout,
++		       int retries, void *privdata,
+ 		       void (*done)(void *, char *, int, int), gfp_t gfp)
  {
-         return shost->shost_gendev.parent;
+ 	struct request *req;
+@@ -390,6 +393,8 @@
+ 	int err = 0;
+ 	int write = (data_direction == DMA_TO_DEVICE);
+ 
++	BUG_ON(data_length && !use_sg);
++
+ 	sioc = kmem_cache_alloc(scsi_io_context_cache, gfp);
+ 	if (!sioc)
+ 		return DRIVER_ERROR << 24;
+@@ -401,13 +406,11 @@
+ 	req->cmd_type = REQ_TYPE_BLOCK_PC;
+ 	req->cmd_flags |= REQ_QUIET;
+ 
+-	if (use_sg)
+-		err = scsi_req_map_sg(req, buffer, use_sg, bufflen, gfp);
+-	else if (bufflen)
+-		err = blk_rq_map_kern(req->q, req, buffer, bufflen, gfp);
+-
+-	if (err)
+-		goto free_req;
++	if (use_sg) {
++		err = scsi_req_map_sg(req, sg, use_sg, data_length, gfp);
++		if (err)
++			goto free_req;
++	}
+ 
+ 	req->cmd_len = cmd_len;
+ 	memcpy(req->cmd, cmd, req->cmd_len);
+Index: scsi-misc-2.6/include/scsi/scsi_device.h
+===================================================================
+--- scsi-misc-2.6.orig/include/scsi/scsi_device.h	2006-10-30 17:00:35.000000000 +0100
++++ scsi-misc-2.6/include/scsi/scsi_device.h	2006-11-02 17:05:49.000000000 +0100
+@@ -293,7 +293,7 @@
+ 			    struct scsi_sense_hdr *, int timeout, int retries);
+ extern int scsi_execute_async(struct scsi_device *sdev,
+ 			      const unsigned char *cmd, int cmd_len, int data_direction,
+-			      void *buffer, unsigned bufflen, int use_sg,
++			      struct scatterlist *sg, unsigned data_length, int use_sg,
+ 			      int timeout, int retries, void *privdata,
+ 			      void (*done)(void *, char *, int, int),
+ 			      gfp_t gfp);
