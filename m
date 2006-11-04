@@ -1,71 +1,100 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 5/8] resend cciss: disable DMA prefetch on P600
-Date: Fri, 3 Nov 2006 16:58:56 +0000
-Message-ID: <20061103165856.GA9716@infradead.org>
-References: <20061103155412.GA1657@beardog.cca.cpqcorp.net> <1162572135.3160.2.camel@laptopd505.fenrus.org>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] use one-element sg list in scsi_send_eh_cmnd
+Date: Sat, 4 Nov 2006 20:04:21 +0100
+Message-ID: <20061104190421.GA23477@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:33955 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1753381AbWKCQ7B (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 3 Nov 2006 11:59:01 -0500
+Received: from verein.lst.de ([213.95.11.210]:30915 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S1753601AbWKDTEa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Nov 2006 14:04:30 -0500
 Content-Disposition: inline
-In-Reply-To: <1162572135.3160.2.camel@laptopd505.fenrus.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>, akpm@osdl.org, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: jejb@steeleye.com
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, Nov 03, 2006 at 05:42:15PM +0100, Arjan van de Ven wrote:
-> On Fri, 2006-11-03 at 09:54 -0600, Mike Miller (OS Dev) wrote:
-> > PATCH 5 of 8 resend
-> > 
-> > This patch unconditionally disables DMA prefetch on the P600 controller. A
-> > bug in the ASIC may result in prefetching either beyond the end of memory
-> > or to fall off into a memory hole.
-> > Please consider this for inclusion.
-> > 
-> > Thanks,
-> > mikem
-> > 
-> > Signed-off-by: Mike Miller <mike.miller@hp.com>
-> > 
-> >  cciss.c     |   13 +++++++++++++
-> >  cciss_cmd.h |    1 +
-> >  2 files changed, 14 insertions(+)
-> > --------------------------------------------------------------------------------
-> > diff -urNp linux-2.6-p00004/drivers/block/cciss.c linux-2.6-p00005/drivers/block/cciss.c
-> > --- linux-2.6-p00004/drivers/block/cciss.c	2006-10-31 15:20:25.000000000 -0600
-> > +++ linux-2.6-p00005/drivers/block/cciss.c	2006-11-03 09:43:55.000000000 -0600
-> > @@ -2997,6 +2997,19 @@ static int cciss_pci_init(ctlr_info_t *c
-> >  	}
-> >  #endif
-> >  
-> > +	{
-> > +		/* Disabling DMA prefetch for the P600
-> > +		 * An ASIC bug may result in a prefetch beyond
-> > +		 * physical memory.
-> > +		 */
-> > +		__u32 dma_prefetch
-> > +		if(board_id == 0x3225103C) {
-> > +			dma_prefetch = readl(c->vaddr + I2O_DMA1_CFG);
-> > +			dma_prefetch |= 0x8000;
-> > +			writel(dma_prefetch, c->vaddr + I2O_DMA1_CFG);
-> > +		}
-> > +	}
-> > +
-> 
-> if you remove the if() you might as well also remove the {}'s ;)
+scsi_send_eh_cmnd is the last user of non-sg commands currently.
+This patch switches it to a one-element SG list.  Also updates the
+kerneldoc comment for scsi_send_eh_cmnd to reflect reality while we're
+at it.
 
-And fix the spaces around the if() while we're at it, aka:
+Test on my mptsas card, but this should get testing with as many
+drivers as possible.
 
-	/*
-	 * Disable DMA prefetch for the P600.
-	 * An ASIC bug may result in a prefetch beyond
-	 * physical memory.
-	 */
-	if (board_id == 0x3225103C) {
-		u32 dma_prefetch = readl(c->vaddr + I2O_DMA1_CFG);
-		writel(dma_prefetch | 0x8000, c->vaddr + I2O_DMA1_CFG);
-	}
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Index: scsi-misc-2.6/drivers/scsi/scsi_error.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/scsi_error.c	2006-10-30 17:00:23.000000000 +0100
++++ scsi-misc-2.6/drivers/scsi/scsi_error.c	2006-11-04 17:30:33.000000000 +0100
+@@ -453,9 +453,18 @@
+ }
+ 
+ /**
+- * scsi_send_eh_cmnd  - send a cmd to a device as part of error recovery.
+- * @scmd:	SCSI Cmd to send.
+- * @timeout:	Timeout for cmd.
++ * scsi_send_eh_cmnd  - submit a scsi command as part of error recory
++ * @scmd:       SCSI command structure to hijack
++ * @cmnd:       CDB to send
++ * @cmnd_size:  size if bytes of @cmnd
++ * @timeout:    timeout for this request
++ * @copy_sense: request sense data if set to 1
++ *
++ * This function is used to send a scsi command down to a target device
++ * as part of the error recovery process.  If @copy_sense is 0 the command
++ * sent must be one that does not transfer any data.  If @copy_sense is 1
++ * the command must be REQUEST_SENSE and this functions copies out the
++ * sense buffer it got into @scmd->sense_buffer.
+  *
+  * Return value:
+  *    SUCCESS or FAILED or NEEDS_RETRY
+@@ -469,6 +478,7 @@
+ 	DECLARE_COMPLETION_ONSTACK(done);
+ 	unsigned long timeleft;
+ 	unsigned long flags;
++	struct scatterlist sgl;
+ 	unsigned char old_cmnd[MAX_COMMAND_SIZE];
+ 	enum dma_data_direction old_data_direction;
+ 	unsigned short old_use_sg;
+@@ -500,19 +510,24 @@
+ 		if (shost->hostt->unchecked_isa_dma)
+ 			gfp_mask |= __GFP_DMA;
+ 
+-		scmd->sc_data_direction = DMA_FROM_DEVICE;
+-		scmd->request_bufflen = 252;
+-		scmd->request_buffer = kzalloc(scmd->request_bufflen, gfp_mask);
+-		if (!scmd->request_buffer)
++		sgl.page = alloc_page(gfp_mask);
++		if (!sgl.page)
+ 			return FAILED;
++		sgl.offset = 0;
++		sgl.length = 252;
++
++		scmd->sc_data_direction = DMA_FROM_DEVICE;
++		scmd->request_bufflen = sgl.length;
++		scmd->request_buffer = &sgl;
++		scmd->use_sg = 1;
+ 	} else {
+ 		scmd->request_buffer = NULL;
+ 		scmd->request_bufflen = 0;
+ 		scmd->sc_data_direction = DMA_NONE;
++		scmd->use_sg = 0;
+ 	}
+ 
+ 	scmd->underflow = 0;
+-	scmd->use_sg = 0;
+ 	scmd->cmd_len = COMMAND_SIZE(scmd->cmnd[0]);
+ 
+ 	if (sdev->scsi_level <= SCSI_2)
+@@ -583,7 +598,7 @@
+ 			memcpy(scmd->sense_buffer, scmd->request_buffer,
+ 			       sizeof(scmd->sense_buffer));
+ 		}
+-		kfree(scmd->request_buffer);
++		__free_page(sgl.page);
+ 	}
+ 
+ 
