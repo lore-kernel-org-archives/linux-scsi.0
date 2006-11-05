@@ -1,28 +1,33 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] kill scsi_assign_lock
-Date: Sat, 04 Nov 2006 22:59:17 -0500
-Message-ID: <454D6195.2070704@garzik.org>
-References: <20061104191136.GC23477@lst.de>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] SCSI/SD: clearer output of disk cache state
+Date: Sun, 05 Nov 2006 14:36:56 +0900
+Message-ID: <1162705017.3630.36.camel@mulgrave.il.steeleye.com>
+References: <472336.19994.qm@web31803.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:5314 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S965827AbWKED7U (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Nov 2006 22:59:20 -0500
-In-Reply-To: <20061104191136.GC23477@lst.de>
+Received: from hancock.steeleye.com ([71.30.118.248]:11231 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1161015AbWKEFhC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 5 Nov 2006 00:37:02 -0500
+In-Reply-To: <472336.19994.qm@web31803.mail.mud.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: jejb@steeleye.com, linux-scsi@vger.kernel.org
+To: ltuikov@yahoo.com
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Christoph Hellwig wrote:
-> scsi_assign_lock has been unused for a long time and is a bad idea
-> in general, so kill it.
-> 
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Sat, 2006-11-04 at 16:45 -0800, Luben Tuikov wrote:
+> Re-based:
 
-ACK
+Thanks,
+
+If you want to go the whole hog on this one, we probably also need WCE
+and RCD files (taking 1 or 0) for the scsi_disk class and a date in the
+feature removal file for dumping the cache_type file.
+
+James
+
+
 
 
