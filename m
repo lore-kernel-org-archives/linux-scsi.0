@@ -1,49 +1,91 @@
 From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH] [SCSI] sg.c: SG_DXFER_TO_FROM_DEV mean DMA_BIDIRECTIONAL
-Date: Sun, 05 Nov 2006 09:34:01 -0500
-Message-ID: <454DF659.6050608@torque.net>
-References: <20465.60059.qm@web31801.mail.mud.yahoo.com>
+Subject: Re: [PATCH] SCSI/SD: clearer output of disk cache state
+Date: Sun, 05 Nov 2006 09:47:30 -0500
+Message-ID: <454DF982.3050508@torque.net>
+References: <472336.19994.qm@web31803.mail.mud.yahoo.com>
 Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:34464 "EHLO
+Received: from pentafluge.infradead.org ([213.146.154.40]:17877 "EHLO
 	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S965880AbWKEOeA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 5 Nov 2006 09:34:00 -0500
-In-Reply-To: <20465.60059.qm@web31801.mail.mud.yahoo.com>
+	id S1030319AbWKEOrY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 5 Nov 2006 09:47:24 -0500
+In-Reply-To: <472336.19994.qm@web31803.mail.mud.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: ltuikov@yahoo.com
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
 Luben Tuikov wrote:
-> SG_DXFER_TO_FROM_DEV means DMA_BIDIRECTIONAL, not
-> DMA_FROM_DEVICE.
+> --- James Bottomley <James.Bottomley@SteelEye.com> wrote:
+>> On Sat, 2006-11-04 at 11:54 -0800, Luben Tuikov wrote:
+>>> Signed-off-by: Luben Tuikov <ltuikov@yahoo.com>
+>>> ---
+>>>  drivers/scsi/sd.c |   17 +++++++----------
+>>>  1 files changed, 7 insertions(+), 10 deletions(-)
+>>>
+>>> This patch is 8 months old.
+>> Um:
+>>
+>> patching file drivers/scsi/sd.c
+>> Hunk #1 FAILED at 1354.
+>> Hunk #2 FAILED at 1382.
+>> 2 out of 2 hunks FAILED -- saving rejects to file drivers/scsi/sd.c.rej
+>>
+>> I think the code you're trying to change has altered a bit in the latest
+>> kernels.
+> 
+> Re-based:
 > 
 > Signed-off-by: Luben Tuikov <ltuikov@yahoo.com>
-> ---
->  drivers/scsi/sg.c |   11 +++++------
->  1 files changed, 5 insertions(+), 6 deletions(-)
 > 
-> This patch is 8 months old.
+> --- 
+>  drivers/scsi/sd.c |   13 +++++++------
+>  1 files changed, 7 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 84ff203..ffbd021 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -1467,7 +1467,6 @@ sd_read_cache_type(struct scsi_disk *sdk
+>         res = sd_do_mode_sense(sdp, dbd, modepage, buffer, len, &data, &sshdr);
+>  
+>         if (scsi_status_is_good(res)) {
+> -               int ct = 0;
+>                 int offset = data.header_length + data.block_descriptor_length;
+>  
+>                 if (offset >= SD_BUF_SIZE - 2) {
+> @@ -1496,11 +1495,13 @@ sd_read_cache_type(struct scsi_disk *sdk
+>                         sdkp->DPOFUA = 0;
+>                 }
+>  
+> -               ct =  sdkp->RCD + 2*sdkp->WCE;
+> -
+> -               printk(KERN_NOTICE "SCSI device %s: drive cache: %s%s\n",
+> -                      diskname, sd_cache_types[ct],
+> -                      sdkp->DPOFUA ? " w/ FUA" : "");
+> +               printk(KERN_NOTICE "SCSI device %s: "
+> +                      "write cache: %s, read cache: %s, %s\n",
+> +                      diskname,
+> +                      sdkp->WCE ? "enabled" : "disabled",
+> +                      sdkp->RCD ? "disabled" : "enabled",
+> +                      sdkp->DPOFUA ? "supports DPO and FUA"
+> +                      : "doesn't support DPO or FUA");
+>  
+>                 return;
+>         }
 
-While this patch is sensible, it breaks a very arcane
-usage that I inherited with the sg driver in 1998.
-At that time there was no resid, so application clients
-(e.g. cdrecord) had no way of knowing if the amount of
-data they requested to be read, was actually read.
-So, as indirect IO was the only game in town, the
-hack used was to prefill the kernel buffer prior to
-a read, and then check if it had been overwritten
-after the read operation.
-Hence SG_DXFER_TO_FROM_DEV was actually a read from
-the device.
+The definition of the DPOFUA flag (in the block descriptor
+returned by MODE SENSE for direct access devices) is a bit
+fuzzy in practice. When I queried the t10 reflector a
+member from a disk company said it should be interpreted as
+... we support DPO and/or FUA.
 
-Some LLDs still do not implement resid (properly).
-
-I'm happy to accept the change as long as people are
-prepared to wear the breakage.
+I also noticed that one disk manufacturer's unit attention mode
+page had a bit to disable FUA (force unit access). So you can
+set the FUA bit (in a READ or WRITE), we will ignore it! The
+associated note says that it improves performance :-)
 
 Doug Gilbert
