@@ -1,30 +1,79 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 8/12] repost: cciss: remove unused revalidate_allvol function
-Date: Mon, 6 Nov 2006 21:32:15 +0100
-Message-ID: <20061106203214.GH19471@kernel.dk>
-References: <20061106202352.GH17847@beardog.cca.cpqcorp.net>
+From: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
+Subject: [PATCH 12/12] cciss: fix for iostat
+Date: Mon, 6 Nov 2006 14:32:05 -0600
+Message-ID: <20061106203205.GL17847@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([62.242.22.158]:13070 "EHLO kernel.dk")
-	by vger.kernel.org with ESMTP id S1753746AbWKFUaH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Nov 2006 15:30:07 -0500
+Received: from palrel12.hp.com ([156.153.255.237]:57064 "EHLO palrel12.hp.com")
+	by vger.kernel.org with ESMTP id S1753764AbWKFUcI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Nov 2006 15:32:08 -0500
 Content-Disposition: inline
-In-Reply-To: <20061106202352.GH17847@beardog.cca.cpqcorp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
-Cc: akpm@osdl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: akpm@osdl.org, jens.axboe@oracle.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Mon, Nov 06 2006, Mike Miller (OS Dev) wrote:
-> PATCH 8/12
-> 
-> This patch removes the no longer used revalidate_allvol function. It was
-> replaced by rebuild_lun_table.
-> Please consider this for inclusion.
+Patch 12 of 12
 
-Ack 7-8.
+This patch replaces complete_buffers with end_that_request_first to fix
+programs like iostat. This has been broken for the last few kernel releases.
+Please consider this for inclusion.
 
--- 
-Jens Axboe
+Thanks,
+mikem
 
+Signed-off-by: Mike Miller <mike.miller@hp.com>
+
+
+---
+
+
+---
+
+ drivers/block/cciss.c |   20 ++++----------------
+ 1 files changed, 4 insertions(+), 16 deletions(-)
+
+diff -puN drivers/block/cciss.c~cciss_update_diskstats_fix drivers/block/cciss.c
+--- linux-2.6/drivers/block/cciss.c~cciss_update_diskstats_fix	2006-11-06 13:28:53.000000000 -0600
++++ linux-2.6-root/drivers/block/cciss.c	2006-11-06 13:28:53.000000000 -0600
+@@ -1156,18 +1156,6 @@ static int cciss_ioctl(struct inode *ino
+ 	}
+ }
+ 
+-static inline void complete_buffers(struct bio *bio, int status)
+-{
+-	while (bio) {
+-		struct bio *xbh = bio->bi_next;
+-		int nr_sectors = bio_sectors(bio);
+-
+-		bio->bi_next = NULL;
+-		bio_endio(bio, nr_sectors << 9, status ? 0 : -EIO);
+-		bio = xbh;
+-	}
+-}
+-
+ static void cciss_check_queues(ctlr_info_t *h)
+ {
+ 	int start_queue = h->next_to_run;
+@@ -1236,15 +1224,15 @@ static void cciss_softirq_done(struct re
+ 		pci_unmap_page(h->pdev, temp64.val, cmd->SG[i].Len, ddir);
+ 	}
+ 
+-	complete_buffers(rq->bio, rq->errors);
+-
+ #ifdef CCISS_DEBUG
+ 	printk("Done with %p\n", rq);
+ #endif				/* CCISS_DEBUG */
+ 
+-	add_disk_randomness(rq->rq_disk);
+ 	spin_lock_irqsave(&h->lock, flags);
+-	end_that_request_last(rq, rq->errors);
++	if (!end_that_request_first(rq, rq->errors, rq->nr_sectors)) {
++		add_disk_randomness(rq->rq_disk);
++		end_that_request_last(rq, rq->errors);
++	}
+ 	cmd_free(h, cmd, 1);
+ 	cciss_check_queues(h);
+ 	spin_unlock_irqrestore(&h->lock, flags);
+_
