@@ -1,63 +1,62 @@
-From: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
-Subject: [PATCH 11/12] repost: cciss: cleanup cciss_interrupt mode
-Date: Mon, 6 Nov 2006 14:29:44 -0600
-Message-ID: <20061106202944.GK17847@beardog.cca.cpqcorp.net>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH 9/12] repost: cciss: add busy_configuring flag
+Date: Mon, 6 Nov 2006 21:32:00 +0100
+Message-ID: <20061106203200.GG19471@kernel.dk>
+References: <20061106202559.GI17847@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palrel13.hp.com ([156.153.255.238]:5833 "EHLO palrel13.hp.com")
-	by vger.kernel.org with ESMTP id S1753719AbWKFU3p (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Nov 2006 15:29:45 -0500
+Received: from brick.kernel.dk ([62.242.22.158]:11534 "EHLO kernel.dk")
+	by vger.kernel.org with ESMTP id S1753733AbWKFU3x (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Nov 2006 15:29:53 -0500
 Content-Disposition: inline
+In-Reply-To: <20061106202559.GI17847@beardog.cca.cpqcorp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@osdl.org, jens.axboe@oracle.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
+Cc: akpm@osdl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-PATCH 11 of 12
+On Mon, Nov 06 2006, Mike Miller (OS Dev) wrote:
+> PATCH 9 of 12
+> 
+> This patch adds a check for busy_configuring to prevent starting a queue
+> on a drive that may be in the midst of updating, configuring, deleting, etc.
+> 
+> This had a test for if the queue was stopped or plugged but that seemed
+> to cause issues.
+> Please consider this for inclusion.
+> 
+> Thanks,
+> mikem
+> 
+> Signed-off-by: Mike Miller <mike.miller@hp.com>
+> 
+> --------------------------------------------------------------------------------
+> 
+> ---
+> 
+>  drivers/block/cciss.c |    5 ++++-
+>  1 files changed, 4 insertions(+), 1 deletion(-)
+> 
+> diff -puN drivers/block/cciss.c~cciss_busy_conf_for_lx2619-rc4 drivers/block/cciss.c
+> --- linux-2.6/drivers/block/cciss.c~cciss_busy_conf_for_lx2619-rc4	2006-11-06 13:27:53.000000000 -0600
+> +++ linux-2.6-root/drivers/block/cciss.c	2006-11-06 13:27:53.000000000 -0600
+> @@ -1190,8 +1190,11 @@ static void cciss_check_queues(ctlr_info
+>  		/* make sure the disk has been added and the drive is real
+>  		 * because this can be called from the middle of init_one.
+>  		 */
+> -		if (!(h->drv[curr_queue].queue) || !(h->drv[curr_queue].heads))
+> +		if (!(h->drv[curr_queue].queue) ||
+> +		    !(h->drv[curr_queue].heads) ||
+> +		    h->drv[curr_queue].busy_configuring)
+>  			continue;
+> +
+>  		blk_start_queue(h->gendisk[curr_queue]->queue);
 
-This patch is a pretty simple cleanup for cciss_interrupt_mode.
-Please consider this for inclusion.
+This is racy, because you don't start the queue when you unset
+->busy_configuring later on. For this to be safe, you need to call
+blk_start_queue() when you set ->busy_configuring to 0.
 
-Thanks,
-mikem
+-- 
+Jens Axboe
 
-Signed-off-by: Mike Miller <mike.miller@hp.com>
-
---------------------------------------------------------------------------------
----
-
- drivers/block/cciss.c |    8 +++-----
- 1 files changed, 3 insertions(+), 5 deletions(-)
-
-diff -puN drivers/block/cciss.c~cciss_cleanup_int_mode_for_lx2619-rc4 drivers/block/cciss.c
---- linux-2.6/drivers/block/cciss.c~cciss_cleanup_int_mode_for_lx2619-rc4	2006-11-06 13:28:48.000000000 -0600
-+++ linux-2.6-root/drivers/block/cciss.c	2006-11-06 13:28:48.000000000 -0600
-@@ -2785,23 +2785,21 @@ static void __devinit cciss_interrupt_mo
- 		if (err > 0) {
- 			printk(KERN_WARNING "cciss: only %d MSI-X vectors "
- 			       "available\n", err);
-+			goto default_int_mode;
- 		} else {
- 			printk(KERN_WARNING "cciss: MSI-X init failed %d\n",
- 			       err);
-+			goto default_int_mode;
- 		}
- 	}
- 	if (pci_find_capability(pdev, PCI_CAP_ID_MSI)) {
- 		if (!pci_enable_msi(pdev)) {
--			c->intr[SIMPLE_MODE_INT] = pdev->irq;
- 			c->msi_vector = 1;
--			return;
- 		} else {
- 			printk(KERN_WARNING "cciss: MSI init failed\n");
--			c->intr[SIMPLE_MODE_INT] = pdev->irq;
--			return;
- 		}
- 	}
--      default_int_mode:
-+default_int_mode:
- #endif				/* CONFIG_PCI_MSI */
- 	/* if we get here we're going to use the default interrupt mode */
- 	c->intr[SIMPLE_MODE_INT] = pdev->irq;
-_
