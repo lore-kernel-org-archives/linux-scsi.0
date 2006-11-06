@@ -1,112 +1,95 @@
 From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 12/12] cciss: fix for iostat
-Date: Mon, 6 Nov 2006 21:45:51 +0100
-Message-ID: <20061106204550.GI19471@kernel.dk>
-References: <20061106203205.GL17847@beardog.cca.cpqcorp.net>
+Subject: Re: [PATCH 1/2] [SCSI] Print only a single message "rejecting I/O to device being removed"
+Date: Mon, 6 Nov 2006 22:00:24 +0100
+Message-ID: <20061106210023.GJ19471@kernel.dk>
+References: <20061105113628.GU13555@kernel.dk> <267953.40180.qm@web31808.mail.mud.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([62.242.22.158]:13386 "EHLO kernel.dk")
-	by vger.kernel.org with ESMTP id S1753735AbWKFUno (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Nov 2006 15:43:44 -0500
+Received: from brick.kernel.dk ([62.242.22.158]:34839 "EHLO kernel.dk")
+	by vger.kernel.org with ESMTP id S1752499AbWKFU6Q (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Nov 2006 15:58:16 -0500
 Content-Disposition: inline
-In-Reply-To: <20061106203205.GL17847@beardog.cca.cpqcorp.net>
+In-Reply-To: <267953.40180.qm@web31808.mail.mud.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
-Cc: akpm@osdl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Luben Tuikov <ltuikov@yahoo.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James.Bottomley@SteelEye.com
 
-On Mon, Nov 06 2006, Mike Miller (OS Dev) wrote:
-> Patch 12 of 12
+On Sun, Nov 05 2006, Luben Tuikov wrote:
+> --- Jens Axboe <jens.axboe@oracle.com> wrote:
+> > On Sat, Nov 04 2006, Luben Tuikov wrote:
+> > > --- Jens Axboe <jens.axboe@oracle.com> wrote:
+> > > > On Fri, Nov 03 2006, Luben Tuikov wrote:
+> > > > > ... at device removal.
+> > > > > 
+> > > > > Signed-off-by: Luben Tuikov <ltuikov@yahoo.com>
+> > > > > ---
+> > > > >  drivers/scsi/scsi_lib.c    |   10 +++++++---
+> > > > >  drivers/scsi/scsi_scan.c   |    1 +
+> > > > >  include/scsi/scsi_device.h |    3 +++
+> > > > >  3 files changed, 11 insertions(+), 3 deletions(-)
+> > > > > 
+> > > > > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> > > > > index 7b0f9a3..f0de7ca 100644
+> > > > > --- a/drivers/scsi/scsi_lib.c
+> > > > > +++ b/drivers/scsi/scsi_lib.c
+> > > > > @@ -1302,9 +1302,13 @@ static int scsi_prep_fn(struct request_q
+> > > > >  			if(specials_only == SDEV_QUIESCE ||
+> > > > >  					specials_only == SDEV_BLOCK)
+> > > > >  				goto defer;
+> > > > > -			
+> > > > > -			sdev_printk(KERN_ERR, sdev,
+> > > > > -				    "rejecting I/O to device being removed\n");
+> > > > > +
+> > > > > +			if (sdev->num_rej_messages > 0) {
+> > > > > +				sdev->num_rej_messages--;
+> > > > > +				sdev_printk(KERN_ERR, sdev,
+> > > > > +					    "rejecting I/O to device "
+> > > > > +					    "being removed\n");
+> > > > > +			}
+> > > > 
+> > > > How about using some variant of printk_ratelimit() instead?
+> > > 
+> > > Jens, I didn't think to use such a heavy-weight as printk_ratelimit()
+> > > (grabbing irq spinlocks et al), since the device struct would be
+> > > "freed" shortly.  FWIW, one message is more than enough. I'm being
+> > > liberal with 5, but would gladly revert it back to the original
+> > > of one message.
+> > 
+> > It's a printk, it doesn't matter how heavy weight it is. Just seems
+> > silly to re-invent some sort of printk limiter, when one already exists.
 > 
-> This patch replaces complete_buffers with end_that_request_first to fix
-> programs like iostat. This has been broken for the last few kernel releases.
-> Please consider this for inclusion.
+> As with anything in life -- beauty is in the eye of the beholder.
+> Having said that, I'll take a patch using printk_ratelimint(), too.
 > 
-> Thanks,
-> mikem
+> The bottom line was that I didn't want over 2 million messages
+> of sorts to be printed within very short period of time and
+> soft-locking all 4 CPUs.
 > 
-> Signed-off-by: Mike Miller <mike.miller@hp.com>
+> > > Feel free to resubmit using printk_ratelimit().
+> > 
+> > Sorry no plans to do that, I'll let James decide what he wants to take
+> > or not.
 > 
+> You seem to know what is better for upsream Linux, i.e. using
+> printk_ratelimit() vs. printk() on a device which will be freed.
 > 
-> ---
-> 
-> 
-> ---
-> 
->  drivers/block/cciss.c |   20 ++++----------------
->  1 files changed, 4 insertions(+), 16 deletions(-)
-> 
-> diff -puN drivers/block/cciss.c~cciss_update_diskstats_fix drivers/block/cciss.c
-> --- linux-2.6/drivers/block/cciss.c~cciss_update_diskstats_fix	2006-11-06 13:28:53.000000000 -0600
-> +++ linux-2.6-root/drivers/block/cciss.c	2006-11-06 13:28:53.000000000 -0600
-> @@ -1156,18 +1156,6 @@ static int cciss_ioctl(struct inode *ino
->  	}
->  }
->  
-> -static inline void complete_buffers(struct bio *bio, int status)
-> -{
-> -	while (bio) {
-> -		struct bio *xbh = bio->bi_next;
-> -		int nr_sectors = bio_sectors(bio);
-> -
-> -		bio->bi_next = NULL;
-> -		bio_endio(bio, nr_sectors << 9, status ? 0 : -EIO);
-> -		bio = xbh;
-> -	}
-> -}
-> -
->  static void cciss_check_queues(ctlr_info_t *h)
->  {
->  	int start_queue = h->next_to_run;
-> @@ -1236,15 +1224,15 @@ static void cciss_softirq_done(struct re
->  		pci_unmap_page(h->pdev, temp64.val, cmd->SG[i].Len, ddir);
->  	}
->  
-> -	complete_buffers(rq->bio, rq->errors);
-> -
->  #ifdef CCISS_DEBUG
->  	printk("Done with %p\n", rq);
->  #endif				/* CCISS_DEBUG */
->  
-> -	add_disk_randomness(rq->rq_disk);
->  	spin_lock_irqsave(&h->lock, flags);
-> -	end_that_request_last(rq, rq->errors);
-> +	if (!end_that_request_first(rq, rq->errors, rq->nr_sectors)) {
-> +		add_disk_randomness(rq->rq_disk);
-> +		end_that_request_last(rq, rq->errors);
-> +	}
->  	cmd_free(h, cmd, 1);
->  	cciss_check_queues(h);
->  	spin_unlock_irqrestore(&h->lock, flags);
+> Why not submit your own version of the same thing "doing it the right
+> way"?
 
-Ah, so there's where that went. Your code isn't clear, though -
-end_that_request_first() _must_ return 0, so the above looks confusing.
-It would look cleaner and more informative like:
+"my" version would be really simple - either just use if
+(printk_ratelimit()) or add a scsi_printk_ratelimit() with personalized
+settings.
 
-        if (end_that_request_first(rq, rq->errors, rq->nr_sectors))
-                BUG();
+I do agree that we have an issue there, we have the potential to
+generate oodles of these offline or reject messages and currently
+nothing limiting them.
 
-        add_disk_randomness(rq->rq_disk);
-        end_that_request_last(rq, rq->errors);
-        ...
-
-and so on. Additionally you don't need the lock for
-end_that_request_first(), so it's a lot more optimal to rearrange it
-again.
-
-        add_disk_randomness(rq->rq_disk);
-        if (end_that_request_first(rq, rq->errors, rq->nr_sectors))
-                BUG();
-
-        spin_lock_irqsave(&h->lock, flags);
-        end_that_request_last(rq, rq->errors);
-        cmd_free(h, cmd, 1);
-        ...
-
-Not only cleaner to read since it's obvious what will happen, also moves
-the heavy path (end_that_request_first()) outside of the controller
-lock.
+So, again, I'll ask James' (this time cc'ed) opinion on what he thinks.
+Perhaps he agrees that we should go the ratelimit route, or perhaps he
+likes your version.  If the former, I'll be happy to code that up
+(should be a 1 minute job).
 
 -- 
 Jens Axboe
