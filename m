@@ -1,39 +1,30 @@
-From: Ulrich Enslin <ulrichenslin@christian.net>
-Subject: IBM Serveraid 4h on PSeries
-Date: Mon, 06 Nov 2006 10:19:33 +0200
-Message-ID: <454EF015.7040206@christian.net>
-Reply-To: ulrichenslin@christian.net
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH] use one-element sg list in scsi_send_eh_cmnd
+Date: Mon, 06 Nov 2006 09:51:56 +0100
+Message-ID: <454EF7AC.2040804@s5r6.in-berlin.de>
+References: <20061104190421.GA23477@lst.de> <200611031813.21938.eike-kernel@sf-tec.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [196.44.37.50] ([196.44.37.50]:23243 "EHLO mailza.softmar.co.za")
-	by vger.kernel.org with ESMTP id S1423591AbWKFISs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Nov 2006 03:18:48 -0500
-Received: from [192.168.5.55] (ulrichxp.sadev.softmar.co.za [192.168.5.55])
-	by mailza.softmar.co.za (Postfix) with ESMTP id D0495AE3C
-	for <linux-scsi@vger.kernel.org>; Mon,  6 Nov 2006 11:00:27 +0200 (SAST)
+Received: from hp3.statik.TU-Cottbus.De ([141.43.120.68]:6837 "EHLO
+	hp3.statik.tu-cottbus.de") by vger.kernel.org with ESMTP
+	id S1423623AbWKFIv6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 6 Nov 2006 03:51:58 -0500
+In-Reply-To: <200611031813.21938.eike-kernel@sf-tec.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Cc: Christoph Hellwig <hch@lst.de>, jejb@steeleye.com, linux-scsi@vger.kernel.org
 
-Hi
+Rolf Eike Beer wrote on 2006-11-03:
+> Christoph Hellwig wrote:
+>> + * @cmnd_size:  size if bytes of @cmnd
+>                          ^
+> "in"?
 
-I hope you can help me, or give me clarity or pointers with my problem.
-
-I have a IBM Pseries with a IBM Serveraid 4h card.  I have OpenSuse 10.1 
-installed,
-but it does not see the card.  In the PCI dump the card is listed, but 
-the IPS driver
-is missing.
-
-I have seen from other posts that the IPS driver only comes with x86 
-linux distributions.
-
-Any information or pointer is very welcome.
-
-Thank you
-
-Ulrich Enslin
-
-
+"size of @cmnd, in bytes"?
+-- 
+Stefan Richter
+-=====-=-==- =-== --==-
+http://arcgraph.de/sr/
