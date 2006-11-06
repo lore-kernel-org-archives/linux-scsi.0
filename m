@@ -1,129 +1,158 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 12/12] cciss: fix for iostat
-Date: Mon, 6 Nov 2006 22:05:04 +0100
-Message-ID: <20061106210504.GK19471@kernel.dk>
-References: <20061106203205.GL17847@beardog.cca.cpqcorp.net> <20061106204550.GI19471@kernel.dk>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: RFC: SCSI Generic version 4 interface
+Date: Mon, 06 Nov 2006 16:47:30 -0500
+Message-ID: <454FAD72.6040103@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------020109010906090908050304"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([62.242.22.158]:43848 "EHLO kernel.dk")
-	by vger.kernel.org with ESMTP id S1753756AbWKFVC4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Nov 2006 16:02:56 -0500
-Content-Disposition: inline
-In-Reply-To: <20061106204550.GI19471@kernel.dk>
+Received: from pentafluge.infradead.org ([213.146.154.40]:57829 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1752437AbWKFVrZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 6 Nov 2006 16:47:25 -0500
+Received: from ip-72.56.99.216.dsl-cust.ca.inter.net ([216.99.56.72] helo=[192.168.48.80])
+	by pentafluge.infradead.org with esmtpsa (Exim 4.63 #1 (Red Hat Linux))
+	id 1GhCJP-0005Lg-7G
+	for linux-scsi@vger.kernel.org; Mon, 06 Nov 2006 21:47:23 +0000
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
-Cc: akpm@osdl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Mon, Nov 06 2006, Jens Axboe wrote:
-> On Mon, Nov 06 2006, Mike Miller (OS Dev) wrote:
-> > Patch 12 of 12
-> > 
-> > This patch replaces complete_buffers with end_that_request_first to fix
-> > programs like iostat. This has been broken for the last few kernel releases.
-> > Please consider this for inclusion.
-> > 
-> > Thanks,
-> > mikem
-> > 
-> > Signed-off-by: Mike Miller <mike.miller@hp.com>
-> > 
-> > 
-> > ---
-> > 
-> > 
-> > ---
-> > 
-> >  drivers/block/cciss.c |   20 ++++----------------
-> >  1 files changed, 4 insertions(+), 16 deletions(-)
-> > 
-> > diff -puN drivers/block/cciss.c~cciss_update_diskstats_fix drivers/block/cciss.c
-> > --- linux-2.6/drivers/block/cciss.c~cciss_update_diskstats_fix	2006-11-06 13:28:53.000000000 -0600
-> > +++ linux-2.6-root/drivers/block/cciss.c	2006-11-06 13:28:53.000000000 -0600
-> > @@ -1156,18 +1156,6 @@ static int cciss_ioctl(struct inode *ino
-> >  	}
-> >  }
-> >  
-> > -static inline void complete_buffers(struct bio *bio, int status)
-> > -{
-> > -	while (bio) {
-> > -		struct bio *xbh = bio->bi_next;
-> > -		int nr_sectors = bio_sectors(bio);
-> > -
-> > -		bio->bi_next = NULL;
-> > -		bio_endio(bio, nr_sectors << 9, status ? 0 : -EIO);
-> > -		bio = xbh;
-> > -	}
-> > -}
-> > -
-> >  static void cciss_check_queues(ctlr_info_t *h)
-> >  {
-> >  	int start_queue = h->next_to_run;
-> > @@ -1236,15 +1224,15 @@ static void cciss_softirq_done(struct re
-> >  		pci_unmap_page(h->pdev, temp64.val, cmd->SG[i].Len, ddir);
-> >  	}
-> >  
-> > -	complete_buffers(rq->bio, rq->errors);
-> > -
-> >  #ifdef CCISS_DEBUG
-> >  	printk("Done with %p\n", rq);
-> >  #endif				/* CCISS_DEBUG */
-> >  
-> > -	add_disk_randomness(rq->rq_disk);
-> >  	spin_lock_irqsave(&h->lock, flags);
-> > -	end_that_request_last(rq, rq->errors);
-> > +	if (!end_that_request_first(rq, rq->errors, rq->nr_sectors)) {
-> > +		add_disk_randomness(rq->rq_disk);
-> > +		end_that_request_last(rq, rq->errors);
-> > +	}
-> >  	cmd_free(h, cmd, 1);
-> >  	cciss_check_queues(h);
-> >  	spin_unlock_irqrestore(&h->lock, flags);
-> 
-> Ah, so there's where that went. Your code isn't clear, though -
-> end_that_request_first() _must_ return 0, so the above looks confusing.
-> It would look cleaner and more informative like:
-> 
->         if (end_that_request_first(rq, rq->errors, rq->nr_sectors))
->                 BUG();
-> 
->         add_disk_randomness(rq->rq_disk);
->         end_that_request_last(rq, rq->errors);
->         ...
-> 
-> and so on. Additionally you don't need the lock for
-> end_that_request_first(), so it's a lot more optimal to rearrange it
-> again.
-> 
->         add_disk_randomness(rq->rq_disk);
->         if (end_that_request_first(rq, rq->errors, rq->nr_sectors))
->                 BUG();
-> 
->         spin_lock_irqsave(&h->lock, flags);
->         end_that_request_last(rq, rq->errors);
->         cmd_free(h, cmd, 1);
->         ...
-> 
-> Not only cleaner to read since it's obvious what will happen, also moves
-> the heavy path (end_that_request_first()) outside of the controller
-> lock.
+This is a multi-part message in MIME format.
+--------------020109010906090908050304
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-IOW, simple one-liner fix:
+I was asked to put together a proposal in May this
+year for a new SCSI Generic interface structure. This
+is the same structure that is used by the block layer
+SG_IO ioctl. A few people have asked whether I had forgotten
+that I agreed to write the proposal. So here it is. Those
+who have seen it have made comments, some of which have
+been incorporated.
 
-diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
-index 6ffe2b2..f9f128a 100644
---- a/drivers/block/cciss.c
-+++ b/drivers/block/cciss.c
-@@ -1299,6 +1299,7 @@ static void cciss_softirq_done(struct re
- 	}
- 
- 	complete_buffers(rq->bio, rq->errors);
-+	disk_stat_add(rq->rq_disk, sectors[rq_data_dir(rq)], rq->nr_sectors);
- 
- #ifdef CCISS_DEBUG
- 	printk("Done with %p\n", rq);
+Some shortcomings of the sg version 3 interface are:
+  - can't handle commands with bidirectional data (either
+    can the SCSI subsystem at the moment)
+  - if it was a bit more general it could carry other
+    request/response protocols (e.g. Task Management
+    Functions and SMP in Serial Attached SCSI)
+  - no way of associating a task attribute or task tag
+    with a SCSI command
 
--- 
-Jens Axboe
+Feel free to make suggestions.
 
+Doug Gilbert
+
+
+--------------020109010906090908050304
+Content-Type: text/plain;
+ name="sg4_proposal.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="sg4_proposal.txt"
+
+                SCSI Generic version 4 interface structure
+                ==========================================
+                                             Version 1.1
+
+Goals:
+  - handle both generalized request/response and data_out/data_in
+    independently in same invocation. Alternatively the request
+    and data_out could be in one invocation and the response and
+    data_in in a following invocation. This allows for the most
+    complicated SCSI commands: tagged variable length cdbs with
+    bidirectional data transfers.
+  - support multiple protocols. If they are generalized request-response
+    protocols then they can choose either the request/response part
+    of the interface or the data_out/data_in part.
+  - layered error/condition reporting: (OS) driver, transport and
+    device (logical unit). Method used to present this struct to OS
+    (e.g. ioctl()) may also report error (e.g. EPERM).
+  - allow for auxiliary information to be passed back for the
+    application client to consider
+  - same structure can be used for a synchronous (e.g. interruptible
+    ioctl) or asynchronous (e.g. ioctl()/read() ) pass through.
+  - leave device (lu) or target addressing issues to some other
+    mechanism (what SCSI standards call the I_T_L or the I_T nexus
+    respectively) as they are transport dependent. However do include
+    the tag level (the "_Q" part of a I_T_L_Q nexus).
+  - stay close enough to struct sg_io_hdr (sg version 3 interface)
+    to use with existing SG_IO ioctls, current implementations
+    expect 'S' in 'guard'
+
+
+Comments:
+  - use 64 bit integers to convey pointers. Does this help with
+    32 to 64 bit thunking?
+  - should there be more (or less) spare fields?
+  - we could allow the "struct" to be rubbery, only requiring the
+    first three integers and perhaps an additional_len field
+  - the write() usage in the sg driver's asynchronous interface has
+    caused problems when mistakenly applied to a block device node
+    rather than a sg device node. Using an ioctl(flag_async) followed
+    by a read() for asynchronous work offers similar functionality and
+    is safer. Using ioctl(flag_async_start) and ioctl(flag_async_finish)
+    is another possibility.
+  - rather than have a separate ATA pass through mechanism, the SAT
+    defined ATA PASS THROUGH SCSI commands could be used with the
+    driver implementation routing the ATA commands to their
+    subsystem. This could be flagged so it didn't preclude a SAT layer
+    in a SCSI transport (e.g. MPT SAS HBA firmware).
+  - if SAM/SPC does not define an enumeration for lesser used input
+    fields, then use the value 0 for inert/off/don't_care .
+
+
+-------------------------------------------------------------------
+
+
+struct sg_io_v4
+{
+        int32_t guard;          // [i] 'Q' to differentiate from v3
+        uint32_t protocol;      // [i] 0 -> SCSI , ....
+        uint32_t subprotocol;   // [i] 0 -> SCSI command, 1 -> SCSI task
+                                // management function, ....
+
+        uint32_t request_len;   // [i] in bytes
+        uint64_t request;       // [i], [*i] {SCSI: cdb}
+        uint32_t request_attr;  // [i] {SCSI: task attribute}
+        uint32_t request_tag;   // [i] {SCSI: task tag (only if flagged)}
+        uint32_t request_priority; // [i] {SCSI: task priority}
+        uint32_t max_response_len; // [i] in bytes
+        uint64_t response;      // [i], [*o]  {SCSI: (auto)sense data}
+
+        // "din_" for data in (from device); "dout_" for data out (to device)
+        uint32_t dout_iovec_count;      // [i] 0 -> "flat" data transfer
+                                // else dout_xfer points to array of iovec
+        uint32_t dout_xfer_len; // [i] bytes to be transferred to device
+        uint64_t dout_xfer;     // [i], [*i] 
+        uint32_t din_iovec_count;       // [i]
+        uint32_t din_xfer_len;  // [i] bytes to be transferred from device
+        uint64_t din_xfer;      // [i], [*o] 
+
+        uint32_t timeout;       // [i] units: seconds or milliseconds?
+        uint32_t flags;         // [i] bit mask
+        uint64_t usr_ptr;       // [i->o] unused internally
+        uint32_t spare_in;      // [i]
+
+        uint32_t driver_status; // [o] 0 -> ok
+        uint32_t transport_status;      // [o] 0 -> ok
+        uint32_t device_status; // [o] {SCSI: command completion status}
+        uint32_t retry_delay;   // [o] {SCSI: status auxiliary information}
+        uint32_t info;          // [o] additional information
+        uint32_t duration;      // [o] time to complete, in milliseconds
+        uint32_t response_len_wr;// [o] bytes of response actually written
+        int32_t din_resid;      // [o] actual_din_xfer_len - din_xfer_len
+        uint32_t generated_tag; // [o] {SCSI: task tag that transport chose}
+        uint32_t spare_out;     // [o]
+
+};
+
+
+-------------------------------------------------------------------------
+
+Doug Gilbert
+6th November 2006
+
+--------------020109010906090908050304--
