@@ -1,53 +1,58 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: IBM Serveraid 4h on PSeries
-Date: Mon, 06 Nov 2006 16:59:10 -0600
-Message-ID: <454FBE3E.2020400@us.ibm.com>
-References: <454EF015.7040206@christian.net>
-Reply-To: brking@us.ibm.com
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH 1/2] [SCSI] Print only a single message "rejecting I/O  to device being removed"
+Date: Tue, 7 Nov 2006 08:45:08 +0100
+Message-ID: <20061107074508.GP19471@kernel.dk>
+References: <20061105113628.GU13555@kernel.dk> <267953.40180.qm@web31808.mail.mud.yahoo.com> <20061106210023.GJ19471@kernel.dk> <1162851375.4551.6.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e6.ny.us.ibm.com ([32.97.182.146]:49048 "EHLO e6.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1753905AbWKFW7T (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Nov 2006 17:59:19 -0500
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e6.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id kA6MxUts002730
-	for <linux-scsi@vger.kernel.org>; Mon, 6 Nov 2006 17:59:30 -0500
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay02.pok.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id kA6MxCVa279248
-	for <linux-scsi@vger.kernel.org>; Mon, 6 Nov 2006 17:59:12 -0500
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id kA6MxBHA030630
-	for <linux-scsi@vger.kernel.org>; Mon, 6 Nov 2006 17:59:11 -0500
-In-Reply-To: <454EF015.7040206@christian.net>
+Received: from brick.kernel.dk ([62.242.22.158]:8815 "EHLO kernel.dk")
+	by vger.kernel.org with ESMTP id S1754090AbWKGHm7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Nov 2006 02:42:59 -0500
+Content-Disposition: inline
+In-Reply-To: <1162851375.4551.6.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: ulrichenslin@christian.net
-Cc: linux-scsi@vger.kernel.org, ipslinux@adaptec.com
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Luben Tuikov <ltuikov@yahoo.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Ulrich Enslin wrote:
-> Hi
+On Tue, Nov 07 2006, James Bottomley wrote:
+> On Mon, 2006-11-06 at 22:00 +0100, Jens Axboe wrote:
+> > So, again, I'll ask James' (this time cc'ed) opinion on what he thinks.
+> > Perhaps he agrees that we should go the ratelimit route, or perhaps he
+> > likes your version.  If the former, I'll be happy to code that up
+> > (should be a 1 minute job).
 > 
-> I hope you can help me, or give me clarity or pointers with my problem.
-> 
-> I have a IBM Pseries with a IBM Serveraid 4h card.  I have OpenSuse 10.1 
-> installed,
-> but it does not see the card.  In the PCI dump the card is listed, but 
-> the IPS driver
-> is missing.
-> 
-> I have seen from other posts that the IPS driver only comes with x86 
-> linux distributions.
+> I agree we should be using the standard tools rather than inventing our
+> own, so printk_ratelimit() would be the correct way to do this.
 
-The last I knew, this driver didn't work on PPC64.
+Alright, then it turns into something like this:
 
-cc'ing the ips maintainer...
+-----
 
+[SCSI] Rate limit IO reject messages
 
-Brian
+Otherwise we can flood the system with messages when a device is
+removed.
+
+Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index d2c02df..a935b9d 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1149,7 +1149,8 @@ static int scsi_prep_fn(struct request_q
+ 			    specials_only == SDEV_BLOCK)
+ 				goto defer;
+ 			
+-			sdev_printk(KERN_ERR, sdev,
++			if (printk_ratelimit())
++				sdev_printk(KERN_ERR, sdev,
+ 				    "rejecting I/O to device being removed\n");
+ 			goto kill;
+ 		}
+
 
 -- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+Jens Axboe
+
