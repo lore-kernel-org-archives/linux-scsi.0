@@ -1,82 +1,49 @@
-From: "IpsLinux" <ipslinux@Adaptec.com>
-Subject: RE: IBM Serveraid 4h on PSeries
-Date: Tue, 7 Nov 2006 08:38:55 -0500
-Message-ID: <BFE32E23E0220B4796F885CF3A46ED0207568B@rtpe2k301.adaptec.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: RFC: SCSI Generic version 4 interface
+Date: Tue, 7 Nov 2006 16:31:48 +0100
+Message-ID: <20061107153147.GV19471@kernel.dk>
+References: <454FAD72.6040103@torque.net> <45503A3B.5050107@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([216.52.22.36]:16618 "EHLO
-	mail-gw3.adaptec.com") by vger.kernel.org with ESMTP
-	id S1753774AbWKGNjI convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Nov 2006 08:39:08 -0500
-Content-class: urn:content-classes:message
+Received: from brick.kernel.dk ([62.242.22.158]:40812 "EHLO kernel.dk")
+	by vger.kernel.org with ESMTP id S1754050AbWKGP3h (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Nov 2006 10:29:37 -0500
+Content-Disposition: inline
+In-Reply-To: <45503A3B.5050107@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: ulrichenslin@christian.net, brking@us.ibm.com, linux-scsi@vger.kernel.org, IpsLinux <ipslinux@adaptec.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: dougg@torque.net, linux-scsi@vger.kernel.org, Jens Axboe <axboe@suse.de>
 
+On Tue, Nov 07 2006, Jeff Garzik wrote:
+> Douglas Gilbert wrote:
+> >I was asked to put together a proposal in May this
+> >year for a new SCSI Generic interface structure. This
+> >is the same structure that is used by the block layer
+> >SG_IO ioctl. A few people have asked whether I had forgotten
+> >that I agreed to write the proposal. So here it is. Those
+> >who have seen it have made comments, some of which have
+> >been incorporated.
+> >
+> >Some shortcomings of the sg version 3 interface are:
+> >  - can't handle commands with bidirectional data (either
+> >    can the SCSI subsystem at the moment)
+> >  - if it was a bit more general it could carry other
+> >    request/response protocols (e.g. Task Management
+> >    Functions and SMP in Serial Attached SCSI)
+> >  - no way of associating a task attribute or task tag
+> >    with a SCSI command
+> 
+> Why avoid Jens Axboe's bsg?
+> 
+> It seems like that is already a good interface for carrying other 
+> req/resp protocols.
 
-IBM has never supported ServeRAID ( ips ) on any Pseries machine that I
-am aware of.  
+I don't think Doug is avoiding that (if you are Doug, please do explain
+:-), but rather outlining the next generation command format that bsg
+should support for future use.
 
-I know it has never been tested. 
+-- 
+Jens Axboe
 
-
-
------Original Message-----
-From: Ulrich Enslin [mailto:ulrichenslin@christian.net] 
-Sent: Tuesday, November 07, 2006 4:39 AM
-To: brking@us.ibm.com; linux-scsi@vger.kernel.org; IpsLinux
-Subject: Re: IBM Serveraid 4h on PSeries
-
-Hi Brian, linux-scsi team, ipslinux team
-
-Thank you for below reply Brian.  I will not bother you again, but here
-is better details of my problem, since I managed to get hold of the
-documentation that belongs to this server:
-
-I have a IBM Pseries 620 with a Type 4-X, PCI 4-Channel Ultra3 SCSI RAID
-Adapter (FC 2498) (IBM code 4-x). I have OpenSuse 10.1 installed, but
-the raid card is not detected, and show in the PCI diagnostics as a
-Serveraid 4H card. The PCI diagnostics also showed a <access denied> in
-the extension tag.
-
-Can any one tell me what driver I should be loading, or what the true
-identity of the card is under Linux. I found some posts that showed I
-should be using the 'ips' module driver, but this is not found in
-OpenSuse and IBM's website only has x86 driver for the Serveraid 4H
-card.
-
-Any help will be appreciated.
-
-Thank you for your time.
-
-All the best
-Ulrich
-ulrichenslin <at> gmail.com
-
-Brian King wrote:
-> Ulrich Enslin wrote:
->   
->> Hi
->>
->> I hope you can help me, or give me clarity or pointers with my
-problem.
->>
->> I have a IBM Pseries with a IBM Serveraid 4h card.  I have OpenSuse 
->> 10.1 installed, but it does not see the card.  In the PCI dump the 
->> card is listed, but the IPS driver is missing.
->>
->> I have seen from other posts that the IPS driver only comes with x86 
->> linux distributions.
->>     
->
-> The last I knew, this driver didn't work on PPC64.
->
-> cc'ing the ips maintainer...
->
->
-> Brian
->
->   
