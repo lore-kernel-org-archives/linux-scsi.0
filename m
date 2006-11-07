@@ -1,108 +1,147 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: [PATCH] [SCSI] st.c : fix up log messages format
-Date: Tue, 7 Nov 2006 21:56:38 +0200 (EET)
-Message-ID: <Pine.LNX.4.64.0611072143560.4373@kai.makisara.local>
-References: <20061103092512.88130.qmail@web31807.mail.mud.yahoo.com>
- <20061103133217.GC27140@parisc-linux.org>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: Re: [PATCH] cleanup after a discovery error
+Date: Tue, 07 Nov 2006 12:01:19 -0800
+Message-ID: <4550E60F.2000901@us.ibm.com>
+References: <20061019031910.GA16855@us.ibm.com> <1161284938.11219.22.camel@mulgrave.il.steeleye.com> <20061030202302.GA22870@us.ibm.com>
+Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kolumbus.fi ([193.229.0.46]:55248 "EHLO mail.kolumbus.fi")
-	by vger.kernel.org with ESMTP id S1752474AbWKGT4P (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Nov 2006 14:56:15 -0500
-In-Reply-To: <20061103133217.GC27140@parisc-linux.org>
+Received: from e36.co.us.ibm.com ([32.97.110.154]:62898 "EHLO
+	e36.co.us.ibm.com") by vger.kernel.org with ESMTP id S1753036AbWKGUBV
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Nov 2006 15:01:21 -0500
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e36.co.us.ibm.com (8.13.8/8.12.11) with ESMTP id kA7K1KOg027574
+	for <linux-scsi@vger.kernel.org>; Tue, 7 Nov 2006 15:01:20 -0500
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay04.boulder.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id kA7K1Kb9359252
+	for <linux-scsi@vger.kernel.org>; Tue, 7 Nov 2006 13:01:20 -0700
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id kA7K1Km7018952
+	for <linux-scsi@vger.kernel.org>; Tue, 7 Nov 2006 13:01:20 -0700
+In-Reply-To: <20061030202302.GA22870@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Luben Tuikov <ltuikov@yahoo.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
 
-On Fri, 3 Nov 2006, Matthew Wilcox wrote:
+> James Bottomley [James.Bottomley@SteelEye.com] wrote:
+>> This is a bit of a layering violation
+>>
+>> if the various discover functions are going to return an error, I think
+>> it's their job to clean up whatever they did before returning.
 
-> On Fri, Nov 03, 2006 at 01:25:12AM -0800, Luben Tuikov wrote:
-> >  	sdev_printk(KERN_WARNING, SDp,
-> > -		    "Attached scsi tape %s", tape_name(tpnt));
-> > -	printk(KERN_WARNING "%s: try direct i/o: %s (alignment %d B)\n",
-> > -	       tape_name(tpnt), tpnt->try_dio ? "yes" : "no",
-> > -	       queue_dma_alignment(SDp->request_queue) + 1);
-> > +		    "Attached scsi tape %s\n", tape_name(tpnt));
-
-This has already been fixed.
-
-> > +	sdev_printk(KERN_WARNING, SDp,
-> > +		    "%s: try direct i/o: %s (alignment %d bytes)\n",
-> > +		    tape_name(tpnt), tpnt->try_dio ? "yes" : "no",
-> > +		    queue_dma_alignment(SDp->request_queue) + 1);
-> >  
-> 
-> I know you didn't change this ... but why are these KERN_WARNING?
-> Surely KERN_INFO is more appropriate here?
-
-Historical reasons: I suspected that the default loglevel at that time 
-would hide the message from the testers. The classification should have 
-been changed long time ago.
-
-Looking at the code, I noticed another place with improper printk class. 
-The patch below combines all of these things. Tested in todays git kernel.
+Here's a reworked version of Malahal's patch that pushes the sas_rphy
+cleanups into the sas_discover_{sas,sata,expander}.* functions.  It also
+checks the return value of sas_notify_lldd_dev_found().  This patch
+(since it includes discovery error cleanup for SATA) is against
+2.6.19-rc4 + scsi-misc + scsi-rc-fixes + aic94xx-sas, though I can
+respin it without the SATA bits if desired.
 
 --
 
-Printk -> sdev_printk change originally from Luben Tuikov 
-<ltuikov@yahoo.com>. Loglevel changes prompted by Matthew Wilcox 
-<matthew@wil.cx>. 
+Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
 
-Signed-off-by: Kai Makisara <kai.makisara@kolumbus.fi>
-
---- linux-2.6/drivers/scsi/st.c	2006-10-26 20:20:04.000000000 +0300
-+++ linux-2.6-k1/drivers/scsi/st.c	2006-11-07 21:39:10.000000000 +0200
-@@ -9,7 +9,7 @@
-    Steve Hirsch, Andreas Koppenh"ofer, Michael Leodolter, Eyal Lebedinsky,
-    Michael Schaefer, J"org Weule, and Eric Youngdale.
- 
--   Copyright 1992 - 2005 Kai Makisara
-+   Copyright 1992 - 2006 Kai Makisara
-    email Kai.Makisara@kolumbus.fi
- 
-    Some small formal changes - aeb, 950809
-@@ -17,7 +17,7 @@
-    Last modified: 18-JAN-1998 Richard Gooch <rgooch@atnf.csiro.au> Devfs support
-  */
- 
--static const char *verstr = "20050830";
-+static const char *verstr = "20061107";
- 
- #include <linux/module.h>
- 
-@@ -999,7 +999,7 @@ static int check_tape(struct scsi_tape *
- 			STp->min_block = ((STp->buffer)->b_data[4] << 8) |
- 			    (STp->buffer)->b_data[5];
- 			if ( DEB( debugging || ) !STp->inited)
--				printk(KERN_WARNING
-+				printk(KERN_INFO
-                                        "%s: Block limits %d - %d bytes.\n", name,
-                                        STp->min_block, STp->max_block);
- 		} else {
-@@ -1224,7 +1224,7 @@ static int st_flush(struct file *filp, f
+diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
+index 23461dc..0f790ea 100644
+--- a/drivers/scsi/libsas/sas_discover.c
++++ b/drivers/scsi/libsas/sas_discover.c
+@@ -564,12 +564,25 @@ int sas_discover_sata(struct domain_devi
+ 	default:
+ 		break;
  	}
++	if (res)
++		goto out_err;
  
- 	DEBC( if (STp->nbr_requests)
--		printk(KERN_WARNING "%s: Number of r/w requests %d, dio used in %d, pages %d (%d).\n",
-+		printk(KERN_DEBUG "%s: Number of r/w requests %d, dio used in %d, pages %d (%d).\n",
- 		       name, STp->nbr_requests, STp->nbr_dio, STp->nbr_pages, STp->nbr_combinable));
+ 	sas_notify_lldd_dev_gone(dev);
+-	if (!res) {
+-		sas_notify_lldd_dev_found(dev);
+-		res = sas_rphy_add(dev->rphy);
+-	}
++	res = sas_notify_lldd_dev_found(dev);
++	if (res)
++		goto out_err2;
++
++	res = sas_rphy_add(dev->rphy);
++	if (res)
++		goto out_err;
++
++	return res;
++
++out_err:
++	sas_notify_lldd_dev_gone(dev);
++out_err2:
++	sas_rphy_free(dev->rphy);
++	dev->rphy = NULL;
+ 	return res;
+ }
  
- 	if (STps->rw == ST_WRITING && !STp->pos_unknown) {
-@@ -4056,11 +4056,11 @@ static int st_probe(struct device *dev)
- 			goto out_free_tape;
- 	}
- 
--	sdev_printk(KERN_WARNING, SDp,
-+	sdev_printk(KERN_NOTICE, SDp,
- 		    "Attached scsi tape %s\n", tape_name(tpnt));
--	printk(KERN_WARNING "%s: try direct i/o: %s (alignment %d B)\n",
--	       tape_name(tpnt), tpnt->try_dio ? "yes" : "no",
--	       queue_dma_alignment(SDp->request_queue) + 1);
-+	sdev_printk(KERN_INFO, SDp, "%s: try direct i/o: %s (alignment %d B)\n",
-+		    tape_name(tpnt), tpnt->try_dio ? "yes" : "no",
-+		    queue_dma_alignment(SDp->request_queue) + 1);
+@@ -594,12 +607,20 @@ int sas_discover_end_dev(struct domain_d
+ 	/* do this to get the end device port attributes which will have
+ 	 * been scanned in sas_rphy_add */
+ 	sas_notify_lldd_dev_gone(dev);
+-	sas_notify_lldd_dev_found(dev);
++	res = sas_notify_lldd_dev_found(dev);
++	if (res)
++		goto out_err2;
  
  	return 0;
  
+ out_err:
+ 	sas_notify_lldd_dev_gone(dev);
++	sas_rphy_free(dev->rphy);
++	dev->rphy = NULL;
++	return res;
++out_err2:
++	sas_rphy_delete(dev->rphy);
++	dev->rphy = NULL;
+ 	return res;
+ }
+ 
+@@ -689,6 +710,10 @@ static void sas_discover_domain(void *da
+ 	}
+ 
+ 	if (error) {
++		spin_lock(&port->dev_list_lock);
++		list_del_init(&port->port_dev->dev_list_node);
++		spin_unlock(&port->dev_list_lock);
++
+ 		kfree(port->port_dev); /* not kobject_register-ed yet */
+ 		port->port_dev = NULL;
+ 	}
+diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+index 4cc7457..a79e89c 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -1474,14 +1474,27 @@ int sas_discover_root_expander(struct do
+ 	int res;
+ 	struct sas_expander_device *ex = rphy_to_expander_device(dev->rphy);
+ 
+-	sas_rphy_add(dev->rphy);
++	res = sas_rphy_add(dev->rphy);
++	if (res)
++		goto out_err;
+ 
+ 	ex->level = dev->port->disc.max_level; /* 0 */
+ 	res = sas_discover_expander(dev);
+-	if (!res)
+-		sas_ex_bfs_disc(dev->port);
++	if (res)
++		goto out_err2;
++
++	sas_ex_bfs_disc(dev->port);
+ 
+ 	return res;
++
++out_err2:
++	sas_rphy_delete(dev->rphy);
++	dev->rphy = NULL;
++	return res;
++out_err:
++	sas_rphy_free(dev->rphy);
++	dev->rphy = NULL;
++	return res;
+ }
+ 
+ /* ---------- Domain revalidation ---------- */
