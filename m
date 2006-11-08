@@ -1,42 +1,32 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: RFC: SCSI Generic version 4 interface
-Date: Wed, 8 Nov 2006 10:22:18 -0700
-Message-ID: <20061108172218.GG16952@parisc-linux.org>
-References: <454FAD72.6040103@torque.net> <200611081048.01531.jli@greshamstorage.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: iscsi bugfixes
+Date: Wed, 08 Nov 2006 15:58:30 -0600
+Message-ID: <11630231143038-git-send-email-michaelc@cs.wisc.edu>
+Reply-To: Mike Christie <michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:60560 "EHLO
-	mail.parisc-linux.org") by vger.kernel.org with ESMTP
-	id S1753271AbWKHRWU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Nov 2006 12:22:20 -0500
-Content-Disposition: inline
-In-Reply-To: <200611081048.01531.jli@greshamstorage.com>
+Received: from mx1.redhat.com ([66.187.233.31]:25498 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S965668AbWKHV6g (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Nov 2006 16:58:36 -0500
+Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
+	by mx1.redhat.com (8.12.11.20060308/8.12.11) with ESMTP id kA8LwZIC022640
+	for <linux-scsi@vger.kernel.org>; Wed, 8 Nov 2006 16:58:35 -0500
+Received: from pobox.corp.redhat.com (pobox.corp.redhat.com [10.11.255.20])
+	by int-mx1.corp.redhat.com (8.13.1/8.13.1) with ESMTP id kA8LwZpi027892
+	for <linux-scsi@vger.kernel.org>; Wed, 8 Nov 2006 16:58:35 -0500
+Received: from localhost.localdomain (vpn-14-145.rdu.redhat.com [10.11.14.145])
+	by pobox.corp.redhat.com (8.13.1/8.12.8) with ESMTP id kA8LwY17025732
+	for <linux-scsi@vger.kernel.org>; Wed, 8 Nov 2006 16:58:35 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeremy Linton <jli@greshamstorage.com>
-Cc: dougg@torque.net, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Wed, Nov 08, 2006 at 10:48:01AM -0600, Jeremy Linton wrote:
-> 	A unified multiple device mmap buffer interface for would probably be useful 
-> as well. This is to get around the problems inherent in the current design 
-> that keep more than one device from using a mmap/reserve buffer allocated for 
-> another device. 
-> 	What I would personally like to be able to do with the SG interface is have a 
-> shared memory region where I can kick off a few dozen tagged commands to a 
-> device, get notification when they have completed and then send a similar 
-> command to a second device, all without involving the CPU in any copy 
-> operations, or too many page management operations.
-> 	In my dream world this would require some kind of tagging of commands as well 
-> so I don't have to handle a bunch of async completions for commands in a 
-> group that need to complete as a group.
+These patches fix a memory leak, a oops, and some printk messages.
+The printk fixup is not critical but is small. The oops in the
+main write path and memory leak could be so if there are more patches
+going out for another rc kernel these could be ok.
 
-This is all starting to sound/feel a lot like the current proposed
-design for netchannels: http://lwn.net/Articles/206699/
+The patchset was made against scsi-rc-fixes but applies to
+scsi-misc incase it ends up there.
 
-If we did an AF_SCSI (I've seen it mooted before), then I suppose we
-could just use netchannels.
 
-The other route is tweaking the current netchannels proposal to be a bit
-less networking-centric and use kiocbs (or something ...) to hold the
-data that's being transmitted.
+
