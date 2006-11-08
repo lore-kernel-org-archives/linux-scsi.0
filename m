@@ -1,160 +1,47 @@
-From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: [PATCH] Handle REQ_DEVICE_RESET in aic94xx
-Date: Tue, 07 Nov 2006 17:28:55 -0800
-Message-ID: <455132D7.1010703@us.ibm.com>
-Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
+From: Jeremy Linton <jli@greshamstorage.com>
+Subject: Re: RFC: SCSI Generic version 4 interface
+Date: Wed, 8 Nov 2006 10:48:01 -0600
+Message-ID: <200611081048.01531.jli@greshamstorage.com>
+References: <454FAD72.6040103@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:37064 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S1753825AbWKHB25
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Nov 2006 20:28:57 -0500
+Received: from austin.greshamstorage.com ([216.143.252.250]:50948 "EHLO
+	austin.greshamstorage.com") by vger.kernel.org with ESMTP
+	id S965843AbWKHQsY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 8 Nov 2006 11:48:24 -0500
+In-Reply-To: <454FAD72.6040103@torque.net>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Cc: Alexis Bruemmer <alexisb@us.ibm.com>
+To: dougg@torque.net
+Cc: linux-scsi@vger.kernel.org
 
-As promised last week, this patch implements a REQ_DEVICE_RESET handler
-for the aic94xx driver.  Like the earlier REQ_TASK_ABORT patch, this
-patch defers the device reset to the Scsi_Host's workqueue, which has
-the added benefit of ensuring that the device reset does not happen at
-the same time that the abort tmfs are being processed.  After the phy
-reset, the busted drive should go away and be re-detected later, which
-is indeed what I've seen on both a x260 and a x206m.
 
-Questions/comments?  This is also a work in progress.
 
-Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
 
---
+On Monday 06 November 2006 15:47, Douglas Gilbert wrote:
+> I was asked to put together a proposal in May this
+> year for a new SCSI Generic interface structure. This
 
-diff --git a/drivers/scsi/aic94xx/aic94xx_scb.c b/drivers/scsi/aic94xx/aic94xx_scb.c
-index 1911c5d..ab77ed7 100644
---- a/drivers/scsi/aic94xx/aic94xx_scb.c
-+++ b/drivers/scsi/aic94xx/aic94xx_scb.c
-@@ -342,6 +342,27 @@ void asd_invalidate_edb(struct asd_ascb 
- 			asd_printk("couldn't post escb, err:%d\n", i);
- 	}
- }
-+ 
-+/* hard reset a phy later */
-+static void do_phy_reset_later(void *data)
-+{
-+	struct sas_phy *sas_phy = data;
-+	int error;
-+
-+	ASD_DPRINTK("%s: About to hard reset phy %d\n", __FUNCTION__,
-+		    sas_phy->identify.phy_identifier);
-+	/* Reset device port */
-+	error = sas_phy_reset(sas_phy, 1);
-+	if (error)
-+		ASD_DPRINTK("%s: Hard reset of phy %d failed (%d).\n",
-+			    __FUNCTION__, sas_phy->identify.phy_identifier, error);
-+}
-+
-+static void phy_reset_later(struct sas_phy *sas_phy, struct Scsi_Host *shost)
-+{
-+	INIT_WORK(&sas_phy->reset_work, do_phy_reset_later, sas_phy);
-+	queue_work(shost->work_q, &sas_phy->reset_work);
-+}
- 
- /* start up the ABORT TASK tmf... */
- static void task_kill_later(struct asd_ascb *ascb)
-@@ -402,7 +423,9 @@ static void escb_tasklet_complete(struct
- 		goto out;
- 	}
- 	case REQ_DEVICE_RESET: {
--		struct asd_ascb *a, *b;
-+		struct Scsi_Host *shost = sas_ha->core.shost;
-+		struct sas_phy *dev_phy;
-+		struct asd_ascb *a;
- 		u16 conn_handle;
- 
- 		conn_handle = *((u16*)(&dl->status_block[1]));
-@@ -412,17 +435,31 @@ static void escb_tasklet_complete(struct
- 			    dl->status_block[3]);
- 
- 		/* Kill all pending tasks and reset the device */
--		list_for_each_entry_safe(a, b, &asd_ha->seq.pend_q, list) {
--			struct sas_task *task = a->uldd_task;
--			struct domain_device *dev = task->dev;
-+		dev_phy = NULL;
-+		list_for_each_entry(a, &asd_ha->seq.pend_q, list) {
-+			struct sas_task *task;
-+			struct domain_device *dev;
- 			u16 x;
- 
--			x = *((u16*)(&dev->lldd_dev));
--			if (x == conn_handle)
-+			task = a->uldd_task;
-+			if (!task)
-+				continue;
-+			dev = task->dev;
-+
-+			x = (u16)dev->lldd_dev;
-+			if (x == conn_handle) {
-+				dev_phy = dev->port->phy;
- 				task_kill_later(a);
-+			}
- 		}
- 
--		/* FIXME: Reset device port (huh?) */
-+		/* Reset device port */
-+		if (!dev_phy) {
-+			ASD_DPRINTK("%s: No pending commands; can't reset.\n",
-+				    __FUNCTION__);
-+			goto out;
-+		}
-+		phy_reset_later(dev_phy, shost);
- 		goto out;
- 	}
- 	case SIGNAL_NCQ_ERROR:
-diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
-index a2b479a..0fb347b 100644
---- a/drivers/scsi/libsas/sas_init.c
-+++ b/drivers/scsi/libsas/sas_init.c
-@@ -144,7 +144,7 @@ static int sas_get_linkerrors(struct sas
- 	return sas_smp_get_phy_events(phy);
- }
- 
--static int sas_phy_reset(struct sas_phy *phy, int hard_reset)
-+int sas_phy_reset(struct sas_phy *phy, int hard_reset)
- {
- 	int ret;
- 	enum phy_func reset_type;
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index 8bb8eea..c4d8243 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -925,3 +925,4 @@ EXPORT_SYMBOL_GPL(sas_slave_alloc);
- EXPORT_SYMBOL_GPL(sas_target_destroy);
- EXPORT_SYMBOL_GPL(sas_ioctl);
- EXPORT_SYMBOL_GPL(sas_task_abort);
-+EXPORT_SYMBOL_GPL(sas_phy_reset);
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index 7da678d..921db78 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -605,6 +605,7 @@ struct sas_domain_function_template {
- extern int sas_register_ha(struct sas_ha_struct *);
- extern int sas_unregister_ha(struct sas_ha_struct *);
- 
-+int sas_phy_reset(struct sas_phy *phy, int hard_reset);
- int sas_queue_up(struct sas_task *task);
- extern int sas_queuecommand(struct scsi_cmnd *,
- 		     void (*scsi_done)(struct scsi_cmnd *));
-diff --git a/include/scsi/scsi_transport_sas.h b/include/scsi/scsi_transport_sas.h
-index 5302437..59633a8 100644
---- a/include/scsi/scsi_transport_sas.h
-+++ b/include/scsi/scsi_transport_sas.h
-@@ -73,6 +73,8 @@ struct sas_phy {
- 
- 	/* for the list of phys belonging to a port */
- 	struct list_head	port_siblings;
-+
-+	struct work_struct      reset_work;
- };
- 
- #define dev_to_phy(d) \
+> Feel free to make suggestions.
+	OK...
+
+	A unified multiple device mmap buffer interface for would probably be useful 
+as well. This is to get around the problems inherent in the current design 
+that keep more than one device from using a mmap/reserve buffer allocated for 
+another device. 
+	What I would personally like to be able to do with the SG interface is have a 
+shared memory region where I can kick off a few dozen tagged commands to a 
+device, get notification when they have completed and then send a similar 
+command to a second device, all without involving the CPU in any copy 
+operations, or too many page management operations.
+	In my dream world this would require some kind of tagging of commands as well 
+so I don't have to handle a bunch of async completions for commands in a 
+group that need to complete as a group.
+	
+	
+
+
