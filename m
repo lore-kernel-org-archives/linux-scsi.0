@@ -1,63 +1,48 @@
-From: Douglas Gilbert <dougg@torque.net>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 Subject: Re: RFC: SCSI Generic version 4 interface
-Date: Tue, 07 Nov 2006 16:09:24 -0500
-Message-ID: <4550F604.8040205@torque.net>
-References: <454FAD72.6040103@torque.net> <45503A3B.5050107@garzik.org> <20061107153147.GV19471@kernel.dk>
-Reply-To: dougg@torque.net
+Date: Wed, 08 Nov 2006 09:47:05 +0900
+Message-ID: <20061108094705M.fujita.tomonori@lab.ntt.co.jp>
+References: <454FAD72.6040103@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:60348 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1752925AbWKGVJn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Nov 2006 16:09:43 -0500
-In-Reply-To: <20061107153147.GV19471@kernel.dk>
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:53457 "EHLO
+	tama5.ecl.ntt.co.jp") by vger.kernel.org with ESMTP
+	id S1752129AbWKHArP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Nov 2006 19:47:15 -0500
+In-Reply-To: <454FAD72.6040103@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org
+To: dougg@torque.net
+Cc: linux-scsi@vger.kernel.org
 
-Jens Axboe wrote:
-> On Tue, Nov 07 2006, Jeff Garzik wrote:
->> Douglas Gilbert wrote:
->>> I was asked to put together a proposal in May this
->>> year for a new SCSI Generic interface structure. This
->>> is the same structure that is used by the block layer
->>> SG_IO ioctl. A few people have asked whether I had forgotten
->>> that I agreed to write the proposal. So here it is. Those
->>> who have seen it have made comments, some of which have
->>> been incorporated.
->>>
->>> Some shortcomings of the sg version 3 interface are:
->>>  - can't handle commands with bidirectional data (either
->>>    can the SCSI subsystem at the moment)
->>>  - if it was a bit more general it could carry other
->>>    request/response protocols (e.g. Task Management
->>>    Functions and SMP in Serial Attached SCSI)
->>>  - no way of associating a task attribute or task tag
->>>    with a SCSI command
->> Why avoid Jens Axboe's bsg?
->>
->> It seems like that is already a good interface for carrying other 
->> req/resp protocols.
+From: Douglas Gilbert <dougg@torque.net>
+Subject: RFC: SCSI Generic version 4 interface
+Date: Mon, 06 Nov 2006 16:47:30 -0500
+
+>                 SCSI Generic version 4 interface structure
+>                 ==========================================
+>                                              Version 1.1
 > 
-> I don't think Doug is avoiding that (if you are Doug, please do explain
-> :-), but rather outlining the next generation command format that bsg
-> should support for future use.
+> Goals:
 
-In the simplest case this is just the next generation
-version of the sg_io_hdr structure used by the SG_IO
-ioctl interface. It pitches at about the same level as
-modern SCSI transports (e.g. FCP, SAS and iSCSI). It
-leaves session and addressing issues, with the exception
-(arguably) of tags, to others. The "others" could include
-the bsg driver or perhaps a transport layer/driver.
+(snip)
 
-Reference:
-  SAM-4 version 7 section 5.1 "The Execute command
-                               procedure call"
-          http://www.t10.org/ftp/t10/drafts/sam4/sam4r07.pdf
+>   - same structure can be used for a synchronous (e.g. interruptible
+>     ioctl) or asynchronous (e.g. ioctl()/read() ) pass through.
 
-Doug Gilbert
+Can you provide details on "asynchronous" part?
 
+The scsi target code needs sg for:
+
+- SAN gateway (like iSCSI to FC)
+
+- SCSI device support in Xen (corresponds to raw device mapping in
+VMware); enables domU to use SCSI devices. domU sends SCSI commands
+via the virtual HBA driver to dom0 and then dom0 uses sg to perform
+them.
+
+The scsi target code uses the single user-space daemon so needs an
+asynchronous interface, i.e. sends requests and receives the
+completions asynchronously.
