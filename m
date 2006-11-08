@@ -1,47 +1,42 @@
-From: Jeremy Linton <jli@greshamstorage.com>
+From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: RFC: SCSI Generic version 4 interface
-Date: Wed, 8 Nov 2006 10:48:01 -0600
-Message-ID: <200611081048.01531.jli@greshamstorage.com>
-References: <454FAD72.6040103@torque.net>
+Date: Wed, 8 Nov 2006 10:22:18 -0700
+Message-ID: <20061108172218.GG16952@parisc-linux.org>
+References: <454FAD72.6040103@torque.net> <200611081048.01531.jli@greshamstorage.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from austin.greshamstorage.com ([216.143.252.250]:50948 "EHLO
-	austin.greshamstorage.com") by vger.kernel.org with ESMTP
-	id S965843AbWKHQsY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Nov 2006 11:48:24 -0500
-In-Reply-To: <454FAD72.6040103@torque.net>
+Received: from palinux.external.hp.com ([192.25.206.14]:60560 "EHLO
+	mail.parisc-linux.org") by vger.kernel.org with ESMTP
+	id S1753271AbWKHRWU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 8 Nov 2006 12:22:20 -0500
 Content-Disposition: inline
+In-Reply-To: <200611081048.01531.jli@greshamstorage.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi@vger.kernel.org
+To: Jeremy Linton <jli@greshamstorage.com>
+Cc: dougg@torque.net, linux-scsi@vger.kernel.org
 
+On Wed, Nov 08, 2006 at 10:48:01AM -0600, Jeremy Linton wrote:
+> 	A unified multiple device mmap buffer interface for would probably be useful 
+> as well. This is to get around the problems inherent in the current design 
+> that keep more than one device from using a mmap/reserve buffer allocated for 
+> another device. 
+> 	What I would personally like to be able to do with the SG interface is have a 
+> shared memory region where I can kick off a few dozen tagged commands to a 
+> device, get notification when they have completed and then send a similar 
+> command to a second device, all without involving the CPU in any copy 
+> operations, or too many page management operations.
+> 	In my dream world this would require some kind of tagging of commands as well 
+> so I don't have to handle a bunch of async completions for commands in a 
+> group that need to complete as a group.
 
+This is all starting to sound/feel a lot like the current proposed
+design for netchannels: http://lwn.net/Articles/206699/
 
+If we did an AF_SCSI (I've seen it mooted before), then I suppose we
+could just use netchannels.
 
-On Monday 06 November 2006 15:47, Douglas Gilbert wrote:
-> I was asked to put together a proposal in May this
-> year for a new SCSI Generic interface structure. This
-
-> Feel free to make suggestions.
-	OK...
-
-	A unified multiple device mmap buffer interface for would probably be useful 
-as well. This is to get around the problems inherent in the current design 
-that keep more than one device from using a mmap/reserve buffer allocated for 
-another device. 
-	What I would personally like to be able to do with the SG interface is have a 
-shared memory region where I can kick off a few dozen tagged commands to a 
-device, get notification when they have completed and then send a similar 
-command to a second device, all without involving the CPU in any copy 
-operations, or too many page management operations.
-	In my dream world this would require some kind of tagging of commands as well 
-so I don't have to handle a bunch of async completions for commands in a 
-group that need to complete as a group.
-	
-	
-
-
+The other route is tweaking the current netchannels proposal to be a bit
+less networking-centric and use kiocbs (or something ...) to hold the
+data that's being transmitted.
