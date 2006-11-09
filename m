@@ -1,58 +1,61 @@
-From: "Wesley J. Landaker" <wjl@icecavern.net>
-Subject: Support for (new?) Silicon Image PCI SATA controller
-Date: Wed, 8 Nov 2006 18:03:52 -0700
-Message-ID: <200611081803.52986.wjl@icecavern.net>
-Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+From: akpm@osdl.org
+Subject: [patch 03/26] drivers/scsi/aic7xxx/aic79xx_core.c: make ahd_match_scb() static
+Date: Wed, 08 Nov 2006 19:55:53 -0800
+Message-ID: <200611090355.kA93tsnv003901@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from c-68-54-3-45.hsd1.nm.comcast.net ([68.54.3.45]:48141 "EHLO
-	icecavern.net") by vger.kernel.org with ESMTP id S1423979AbWKIBDu
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Nov 2006 20:03:50 -0500
-Received: from ubuntu.local (unknown [10.0.0.166])
-	by icecavern.net (Postfix) with ESMTP id CBCC9ED912
-	for <linux-scsi@vger.kernel.org>; Wed,  8 Nov 2006 18:03:47 -0700 (MST)
-Content-Disposition: inline
+Received: from smtp.osdl.org ([65.172.181.4]:40625 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1423996AbWKID4K (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Nov 2006 22:56:10 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, bunk@stusta.de, hare@suse.de
 
-Hi folks,
+From: Adrian Bunk <bunk@stusta.de>
 
-I just obtained a new PCI SATA controller card that I was told was supported 
-by Linux, but it doesn't appear to match up with the expected device IDs I 
-see listed in the sata_sil or sata_sil24 drivers currently.
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
+Acked-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Andrew Morton <akpm@osdl.org>
+---
 
-Does anyone have any knowledge about this device? e.g. is it a new Silicon 
-Image device, or perhaps I am mistaken and it's a really *old* one?
+ drivers/scsi/aic7xxx/aic79xx.h      |    3 ---
+ drivers/scsi/aic7xxx/aic79xx_core.c |    5 ++++-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-Here is the output of lspci -vvnn for the device, which captures as much info 
-as I know how to easily obtain. It would be really interested if someone 
-could tell me if this looks anything like a possible-to-support SI device, so 
-I know whether it's worth pursuing or not?
-
-00:10.0 Mass storage controller [0180]: Silicon Image, Inc. Unknown device 
-[1095:2502] (rev 01)
-        Subsystem: Silicon Image, Inc. Unknown device [1095:2512]
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
-Stepping- SERR- FastB2B-
-        Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- 
-<TAbort- <MAbort- >SERR- <PERR+
-        Latency: 32, Cache Line Size: 32 bytes
-        Interrupt: pin A routed to IRQ 11
-        Region 0: I/O ports at d800 [size=8]
-        Region 1: I/O ports at dc00 [size=4]
-        Region 2: I/O ports at e000 [size=8]
-        Region 3: I/O ports at e400 [size=4]
-        Region 4: I/O ports at e800 [size=16]
-        Region 5: Memory at c1000000 (32-bit, non-prefetchable) [size=512]
-        [virtual] Expansion ROM at 13000000 [disabled] [size=512K]
-        Capabilities: [60] Power Management version 2
-                Flags: PMEClk- DSI+ D1+ D2+ AuxCurrent=0mA 
-PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                Status: D0 PME-Enable- DSel=0 DScale=2 PME-
-
--- 
-Wesley J. Landaker <wjl@icecavern.net>
+diff -puN drivers/scsi/aic7xxx/aic79xx.h~drivers-scsi-aic7xxx-aic79xx_corec-make-ahd_match_scb-static drivers/scsi/aic7xxx/aic79xx.h
+--- a/drivers/scsi/aic7xxx/aic79xx.h~drivers-scsi-aic7xxx-aic79xx_corec-make-ahd_match_scb-static
++++ a/drivers/scsi/aic7xxx/aic79xx.h
+@@ -1337,9 +1337,6 @@ int	ahd_pci_test_register_access(struct 
+ /************************** SCB and SCB queue management **********************/
+ void		ahd_qinfifo_requeue_tail(struct ahd_softc *ahd,
+ 					 struct scb *scb);
+-int		ahd_match_scb(struct ahd_softc *ahd, struct scb *scb,
+-			      int target, char channel, int lun,
+-			      u_int tag, role_t role);
+ 
+ /****************************** Initialization ********************************/
+ struct ahd_softc	*ahd_alloc(void *platform_arg, char *name);
+diff -puN drivers/scsi/aic7xxx/aic79xx_core.c~drivers-scsi-aic7xxx-aic79xx_corec-make-ahd_match_scb-static drivers/scsi/aic7xxx/aic79xx_core.c
+--- a/drivers/scsi/aic7xxx/aic79xx_core.c~drivers-scsi-aic7xxx-aic79xx_corec-make-ahd_match_scb-static
++++ a/drivers/scsi/aic7xxx/aic79xx_core.c
+@@ -262,6 +262,9 @@ static void		ahd_update_coalescing_value
+ 						     u_int mincmds);
+ static int		ahd_verify_vpd_cksum(struct vpd_config *vpd);
+ static int		ahd_wait_seeprom(struct ahd_softc *ahd);
++static int		ahd_match_scb(struct ahd_softc *ahd, struct scb *scb,
++				      int target, char channel, int lun,
++				      u_int tag, role_t role);
+ 
+ /******************************** Private Inlines *****************************/
+ 
+@@ -7256,7 +7259,7 @@ ahd_busy_tcl(struct ahd_softc *ahd, u_in
+ }
+ 
+ /************************** SCB and SCB queue management **********************/
+-int
++static int
+ ahd_match_scb(struct ahd_softc *ahd, struct scb *scb, int target,
+ 	      char channel, int lun, u_int tag, role_t role)
+ {
+_
