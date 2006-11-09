@@ -1,41 +1,40 @@
 From: akpm@osdl.org
-Subject: [patch 08/26] scsi: remove unnecessary check in drivers/scsi/sg.c
-Date: Wed, 08 Nov 2006 19:56:06 -0800
-Message-ID: <200611090356.kA93u6YD003933@shell0.pdx.osdl.net>
+Subject: [patch 09/26] remove extra newline from info message
+Date: Wed, 08 Nov 2006 19:56:09 -0800
+Message-ID: <200611090356.kA93u96U003936@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:49585 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1424003AbWKID4Q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Nov 2006 22:56:16 -0500
+Received: from smtp.osdl.org ([65.172.181.4]:55473 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1424006AbWKID4V (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Nov 2006 22:56:21 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, snakebyte@gmx.de, dougg@torque.net
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, eike-kernel@sf-tec.de
 
-From: Eric Sesterhenn <snakebyte@gmx.de>
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
 
-coverity spotted this (cid #758).  All callers dereference sfp, so we dont
-need this check.  In addition to this, we dereference it earlier in the
-function.
+remove extra newline from info message
 
-Signed-off-by: Eric Sesterhenn <snakebyte@gmx.de>
-Cc: Douglas Gilbert <dougg@torque.net>
+This extra newline character introduces a completely empty line in dmesg as
+the calling function itself adds a newline.
+
+Signed-off-by: Rolf Eike Beer <eike-kernel@sf-tec.de>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/sg.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/aic7xxx/aic79xx_osm.c |    1 -
+ 1 file changed, 1 deletion(-)
 
-diff -puN drivers/scsi/sg.c~remove-unnecessary-check-in-drivers-scsi-sgc drivers/scsi/sg.c
---- a/drivers/scsi/sg.c~remove-unnecessary-check-in-drivers-scsi-sgc
-+++ a/drivers/scsi/sg.c
-@@ -1837,7 +1837,7 @@ sg_build_indirect(Sg_scatter_hold * schp
- 	int blk_size = buff_size;
- 	struct page *p = NULL;
+diff -puN drivers/scsi/aic7xxx/aic79xx_osm.c~remove-extra-newline-from-info-message drivers/scsi/aic7xxx/aic79xx_osm.c
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.c~remove-extra-newline-from-info-message
++++ a/drivers/scsi/aic7xxx/aic79xx_osm.c
+@@ -418,7 +418,6 @@ ahd_linux_info(struct Scsi_Host *host)
+ 	strcat(bp, "        ");
+ 	ahd_controller_info(ahd, ahd_info);
+ 	strcat(bp, ahd_info);
+-	strcat(bp, "\n");
  
--	if ((blk_size < 0) || (!sfp))
-+	if (blk_size < 0)
- 		return -EFAULT;
- 	if (0 == blk_size)
- 		++blk_size;	/* don't know why */
+ 	return (bp);
+ }
 _
