@@ -1,56 +1,54 @@
 From: akpm@osdl.org
-Subject: [patch 14/26] MPT fusion: handle PCI layer error on resume
-Date: Wed, 08 Nov 2006 19:56:17 -0800
-Message-ID: <200611090356.kA93uIXI003955@shell0.pdx.osdl.net>
+Subject: [patch 15/26] SCSI/aha1740: handle SCSI API errors
+Date: Wed, 08 Nov 2006 19:56:19 -0800
+Message-ID: <200611090356.kA93uJwI003959@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:16050 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1424014AbWKID4u (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:16306 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1424019AbWKID4u (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Nov 2006 22:56:50 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, jeff@garzik.org, Eric.Moore@lsil.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, jeff@garzik.org
 
 From: Jeff Garzik <jeff@garzik.org>
 
-In the unlikely event of pci_enable_device() failure during resume, we do
-the minimalist solution and simply exit, rather than continuing to enable
-the hardware.
-
 Signed-off-by: Jeff Garzik <jeff@garzik.org>
-Cc: "Moore, Eric Dean" <Eric.Moore@lsil.com>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/message/fusion/mptbase.c |   10 ++++++++--
+ drivers/scsi/aha1740.c |   10 ++++++++--
  1 file changed, 8 insertions(+), 2 deletions(-)
 
-diff -puN drivers/message/fusion/mptbase.c~mpt-fusion-handle-pci-layer-error-on-resume drivers/message/fusion/mptbase.c
---- a/drivers/message/fusion/mptbase.c~mpt-fusion-handle-pci-layer-error-on-resume
-+++ a/drivers/message/fusion/mptbase.c
-@@ -1515,7 +1515,7 @@ mpt_resume(struct pci_dev *pdev)
+diff -puN drivers/scsi/aha1740.c~scsi-aha1740-handle-scsi-api-errors drivers/scsi/aha1740.c
+--- a/drivers/scsi/aha1740.c~scsi-aha1740-handle-scsi-api-errors
++++ a/drivers/scsi/aha1740.c
+@@ -586,7 +586,7 @@ static struct scsi_host_template aha1740
+ 
+ static int aha1740_probe (struct device *dev)
  {
- 	MPT_ADAPTER *ioc = pci_get_drvdata(pdev);
- 	u32 device_state = pdev->current_state;
--	int recovery_state;
-+	int recovery_state, rc;
+-	int slotbase;
++	int slotbase, rc;
+ 	unsigned int irq_level, irq_type, translation;
+ 	struct Scsi_Host *shpnt;
+ 	struct aha1740_hostdata *host;
+@@ -641,10 +641,16 @@ static int aha1740_probe (struct device 
+ 	}
  
- 	printk(MYIOC_s_INFO_FMT
- 	"pci-resume: pdev=0x%p, slot=%s, Previous operating state [D%d]\n",
-@@ -1523,7 +1523,13 @@ mpt_resume(struct pci_dev *pdev)
- 
- 	pci_set_power_state(pdev, 0);
- 	pci_restore_state(pdev);
--	pci_enable_device(pdev);
+ 	eisa_set_drvdata (edev, shpnt);
+-	scsi_add_host (shpnt, dev); /* XXX handle failure */
 +
-+	rc = pci_enable_device(pdev);
-+	if (rc) {
-+		printk(MYIOC_s_INFO_FMT
-+			"pci-resume: device enable failed\n", ioc->name);
-+		return rc;
-+	}
++	rc = scsi_add_host (shpnt, dev);
++	if (rc)
++		goto err_irq;
++
+ 	scsi_scan_host (shpnt);
+ 	return 0;
  
- 	/* enable interrupts */
- 	CHIPREG_WRITE32(&ioc->chip->IntMask, MPI_HIM_DIM);
++ err_irq:
++ 	free_irq(irq_level, shpnt);
+  err_unmap:
+ 	dma_unmap_single (&edev->dev, host->ecb_dma_addr,
+ 			  sizeof (host->ecb), DMA_BIDIRECTIONAL);
 _
