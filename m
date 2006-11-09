@@ -1,165 +1,291 @@
-From: Mattia Dongili <malattia@linux.it>
-Subject: Re: 2.6.19-rc5-mm1
-Date: Thu, 9 Nov 2006 20:26:59 +0100
-Message-ID: <20061109192658.GA2560@inferi.kami.home>
-References: <20061108015452.a2bb40d2.akpm@osdl.org>
-	<40f323d00611091043g407231e2nfcd7ed3fc06e711a@mail.gmail.com>
-	<20061109110453.4d2195dc.akpm@osdl.org>
+From: Alexis Bruemmer <alexisb@us.ibm.com>
+Subject: [PATCH 1/4] aic94xx: SCSI timeout fix
+Date: Thu, 09 Nov 2006 12:02:56 -0800
+Message-ID: <1163102576.6521.15.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-devel-bounces@lists.sourceforge.net>
-Content-Disposition: inline
-In-Reply-To: <20061109110453.4d2195dc.akpm@osdl.org>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
-List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux-usb-devel-bounces@lists.sourceforge.net
-Errors-To: linux-usb-devel-bounces@lists.sourceforge.net
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-usb-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org, Benoit Boissinot <bboissin@gmail.com>, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e1.ny.us.ibm.com ([32.97.182.141]:63917 "EHLO e1.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S965418AbWKIUDX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Nov 2006 15:03:23 -0500
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e1.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id kA9K3Lth012148
+	for <linux-scsi@vger.kernel.org>; Thu, 9 Nov 2006 15:03:21 -0500
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay02.pok.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id kA9K30aJ244218
+	for <linux-scsi@vger.kernel.org>; Thu, 9 Nov 2006 15:03:00 -0500
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id kA9K2wrH022891
+	for <linux-scsi@vger.kernel.org>; Thu, 9 Nov 2006 15:02:58 -0500
+Received: from [9.48.54.0] ([9.48.54.0])
+	by d01av04.pok.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id kA9K2vwZ022764
+	for <linux-scsi@vger.kernel.org>; Thu, 9 Nov 2006 15:02:58 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, Nov 09, 2006 at 11:04:53AM -0800, Andrew Morton wrote:
-> 
-> (added linux-scsi)
-[...]
-> > [27526.232000] EIP: [<e8074e26>]
-> > scsi_device_dev_release_usercontext+0x36/0x100 [scsi_mod] SS:ESP
-> > 0068:dfdb1e3c
-> > 
-> > full dmesg attached, I can test patches and provide any useful
-> > information if needed (just not now because the dock is at work).
-> 
-> You're the second or third person to report this (to no effect, btw). 
+The patch updates DDB0 in the aic94xx driver itself. It doesn't supply 
+or use lldd_port_formed field. DDB0 is updated prior to posting
+notification to libsas layer.
 
-oh, great. I was going to report the same (had with usb key unplug).
-Linux version 2.6.19-rc5-mm1-1 (mattia@tadamune) (gcc version 4.1.2 20060901 (prerelease) (Debian 4.1.1-13)) #4 SMP Wed Nov 8 22:46:11 CET 2006
-...
-usb 5-1: new high speed USB device using ehci_hcd and address 8
-usb 5-1: new device found, idVendor=0c76, idProduct=0005
-usb 5-1: new device strings: Mfr=1, Product=2, SerialNumber=3
-usb 5-1: Product: FlashDisk       
-usb 5-1: Manufacturer: USBDisk 
-usb 5-1: SerialNumber: 0608120154580
-usb 5-1: configuration #1 chosen from 1 choice
-scsi3 : SCSI emulation for USB Mass Storage devices
-usb-storage: device found at 8
-usb-storage: waiting for device to settle before scanning
-scsi 3:0:0:0: Direct-Access     USBDisk  FlashDisk        1.00 PQ: 0 ANSI: 2
-SCSI device sdc: 2002000 512-byte hdwr sectors (1025 MB)
-sdc: Write Protect is off
-sdc: Mode Sense: 0b 00 00 08
-sdc: assuming drive cache: write through
-SCSI device sdc: 2002000 512-byte hdwr sectors (1025 MB)
-sdc: Write Protect is off
-sdc: Mode Sense: 0b 00 00 08
-sdc: assuming drive cache: write through
- sdc: sdc1
-sd 3:0:0:0: Attached scsi removable disk sdc
-usb-storage: device scan complete
-usb 5-1: USB disconnect, address 8
-BUG: unable to handle kernel paging request at virtual address 00100104
- printing eip:
-c024831f
-*pde = 00000000
-Oops: 0002 [#1]
-SMP 
-last sysfs file: /devices/pci0000:00/0000:00:1d.7/usb5/5-1/idVendor
-Modules linked in: ipv6 cpufreq_ondemand acpi_cpufreq freq_table thermal fan button processor ac battery ipt_MASQUERADE iptable_nat ip_nat xt_tcpudp xt_state ip_conntrack nfnetlink iptable_filter ip_tables x_tables usbhid hci_usb bluetooth dm_snapshot dm_mirror dm_mod sbp2 loop eth1394 usb_storage pcmcia snd_hda_intel snd_hda_codec snd_pcm_oss snd_mixer_oss ipw3945 tpm_infineon tpm ieee80211 ieee80211_crypt yenta_socket i2c_i801 ide_cd ohci1394 firmware_class intel_agp agpgart tpm_bios pcspkr ehci_hcd evdev sky2 ieee1394 uhci_hcd rsrc_nonstatic tifm_7xx1 tifm_core snd_pcm rtc psmouse pcmcia_core snd_timer usbcore snd soundcore snd_page_alloc cdrom
-CPU:    0
-EIP:    0060:[<c024831f>]    Not tainted VLI
-EFLAGS: 00010002   (2.6.19-rc5-mm1-1 #4)
-EIP is at scsi_device_dev_release_usercontext+0x41/0xfa
-eax: 00200200   ebx: f7824094   ecx: 00100100   edx: 00000286
-esi: f7824008   edi: f7824000   ebp: f78bddc0   esp: f78bddb0
-ds: 007b   es: 007b   ss: 0068
-Process khubd (pid: 756, ti=f78bc000 task=c1990a70 task.ti=f78bc000)
-Stack: f7f05014 f7824284 c02482de c032e6e0 f78bddd0 c012d897 f782410c c032e748 
-       f78bddd8 c024754d f78bddf0 c022f74d c01d1b6e f782410c c032e748 c032e6e0 
-       f78bde08 c01d1b54 f7f0508c f7824124 c01d1b74 00000246 f78bde10 c01d1b7f 
-Call Trace:
- [<c012d897>] execute_in_process_context+0x1d/0x4e
- [<c024754d>] scsi_device_dev_release+0x15/0x17
- [<c022f74d>] device_release+0x29/0x6b
- [<c01d1b54>] kobject_cleanup+0x46/0x66
- [<c01d1b7f>] kobject_release+0xb/0xd
- [<c01d263b>] kref_put+0x7f/0x90
- [<c01d1b0c>] kobject_put+0x14/0x16
- [<c022f829>] put_device+0xf/0x11
- [<c0247c49>] __scsi_remove_device+0x5e/0x62
- [<c02458cc>] scsi_forget_host+0x30/0x4f
- [<c02410c5>] scsi_remove_host+0x6a/0xdd
- [<f8e3f6c7>] quiesce_and_remove_host+0x8f/0x94 [usb_storage]
- [<f8e3f789>] storage_disconnect+0x11/0x1b [usb_storage]
- [<f8d338c2>] usb_unbind_interface+0x4c/0x94 [usbcore]
- [<c02314c7>] __device_release_driver+0x71/0x86
- [<c0231895>] device_release_driver+0x26/0x3d
- [<c0230f29>] bus_remove_device+0x5e/0x6c
- [<c022fbd2>] device_del+0x104/0x15a
- [<f8d314a8>] usb_disable_device+0x5f/0xbc [usbcore]
- [<f8d2e1be>] usb_disconnect+0x8b/0xe7 [usbcore]
- [<f8d2edd5>] hub_thread+0x397/0xa50 [usbcore]
- [<c01307e2>] kthread+0xb5/0xdf
- [<c0103a0f>] kernel_thread_helper+0x7/0x10
-DWARF2 unwinder stuck at kernel_thread_helper+0x7/0x10
-Leftover inexact backtrace:
- [<c0103ee9>] show_trace_log_lvl+0x1a/0x2f
- [<c0103f9b>] show_stack_log_lvl+0x9d/0xa5
- [<c0104168>] show_registers+0x1c5/0x29b
- [<c0104354>] die+0x116/0x22e
- [<c0117c57>] do_page_fault+0x446/0x51f
- [<c02c5a4c>] error_code+0x7c/0x84
- [<c012d897>] execute_in_process_context+0x1d/0x4e
- [<c024754d>] scsi_device_dev_release+0x15/0x17
- [<c022f74d>] device_release+0x29/0x6b
- [<c01d1b54>] kobject_cleanup+0x46/0x66
- [<c01d1b7f>] kobject_release+0xb/0xd
- [<c01d263b>] kref_put+0x7f/0x90
- [<c01d1b0c>] kobject_put+0x14/0x16
- [<c022f829>] put_device+0xf/0x11
- [<c0247c49>] __scsi_remove_device+0x5e/0x62
- [<c02458cc>] scsi_forget_host+0x30/0x4f
- [<c02410c5>] scsi_remove_host+0x6a/0xdd
- [<f8e3f6c7>] quiesce_and_remove_host+0x8f/0x94 [usb_storage]
- [<f8e3f789>] storage_disconnect+0x11/0x1b [usb_storage]
- [<f8d338c2>] usb_unbind_interface+0x4c/0x94 [usbcore]
- [<c02314c7>] __device_release_driver+0x71/0x86
- [<c0231895>] device_release_driver+0x26/0x3d
- [<c0230f29>] bus_remove_device+0x5e/0x6c
- [<c022fbd2>] device_del+0x104/0x15a
- [<f8d314a8>] usb_disable_device+0x5f/0xbc [usbcore]
- [<f8d2e1be>] usb_disconnect+0x8b/0xe7 [usbcore]
- [<f8d2edd5>] hub_thread+0x397/0xa50 [usbcore]
- [<c01307e2>] kthread+0xb5/0xdf
- [<c0103a0f>] kernel_thread_helper+0x7/0x10
- =======================
-Code: f0 89 c6 8b 83 6c ff ff ff 83 ee 14 8b 40 2c e8 b5 d4 07 00 ff 86 70 01 00 00 8d b3 74 ff ff ff 8b 8b 74 ff ff ff 89 c2 8b 46 04 <89> 41 04 89 08 c7 46 04 00 02 20 00 8d b3 7c ff ff ff 8b 8b 7c 
-EIP: [<c024831f>] scsi_device_dev_release_usercontext+0x41/0xfa SS:ESP 0068:f78bddb0
+
+Signed-off-by: Malahal Naineni <malahal@us.ibm.com>
+
+---
+
+diff -r 445d70ce1ff2 drivers/scsi/aic94xx/aic94xx_hwi.c
+--- a/drivers/scsi/aic94xx/aic94xx_hwi.c	Wed Oct 04 10:02:16 2006 -0700
++++ b/drivers/scsi/aic94xx/aic94xx_hwi.c	Wed Oct 04 10:03:57 2006 -0700
+@@ -112,6 +112,21 @@ static int asd_init_phy(struct asd_phy *
+ 	return 0;
+ }
  
++static void asd_init_ports(struct asd_ha_struct *asd_ha)
++{
++	int i;
++
++	spin_lock_init(&asd_ha->asd_ports_lock);
++	for (i = 0; i < ASD_MAX_PHYS; i++) {
++		struct asd_port *asd_port = &asd_ha->asd_ports[i];
++
++		memset(asd_port->sas_addr, 0, SAS_ADDR_SIZE);
++		memset(asd_port->attached_sas_addr, 0, SAS_ADDR_SIZE);
++		asd_port->phy_mask = 0;
++		asd_port->num_phys = 0;
++	}
++}
++
+ static int asd_init_phys(struct asd_ha_struct *asd_ha)
+ {
+ 	u8 i;
+@@ -121,6 +136,7 @@ static int asd_init_phys(struct asd_ha_s
+ 		struct asd_phy *phy = &asd_ha->phys[i];
+ 
+ 		phy->phy_desc = &asd_ha->hw_prof.phy_desc[i];
++		phy->asd_port = NULL;
+ 
+ 		phy->sas_phy.enabled = 0;
+ 		phy->sas_phy.id = i;
+@@ -657,6 +673,8 @@ int asd_init_hw(struct asd_ha_struct *as
+ 			    pci_name(asd_ha->pcidev));
+ 		goto Out;
+ 	}
++
++	asd_init_ports(asd_ha);
+ 
+ 	err = asd_init_scbs(asd_ha);
+ 	if (err) {
+diff -r 445d70ce1ff2 drivers/scsi/aic94xx/aic94xx_hwi.h
+--- a/drivers/scsi/aic94xx/aic94xx_hwi.h	Wed Oct 04 10:02:16 2006 -0700
++++ b/drivers/scsi/aic94xx/aic94xx_hwi.h	Wed Oct 04 10:03:57 2006 -0700
+@@ -192,6 +192,16 @@ struct asd_seq_data {
+ 	struct asd_ascb **escb_arr; /* array of pointers to escbs */
+ };
+ 
++/* This is an internal port structure. These are used to get accurate
++ * phy_mask for updating DDB 0.
++ */
++struct asd_port {
++	u8  sas_addr[SAS_ADDR_SIZE];
++	u8  attached_sas_addr[SAS_ADDR_SIZE];
++	u32 phy_mask;
++	int num_phys;
++};
++
+ /* This is the Host Adapter structure.  It describes the hardware
+  * SAS adapter.
+  */
+@@ -210,6 +220,8 @@ struct asd_ha_struct {
+ 	struct hw_profile hw_prof;
+ 
+ 	struct asd_phy    phys[ASD_MAX_PHYS];
++	spinlock_t        asd_ports_lock;
++	struct asd_port   asd_ports[ASD_MAX_PHYS];
+ 	struct asd_sas_port   ports[ASD_MAX_PHYS];
+ 
+ 	struct dma_pool  *scb_pool;
+diff -r 445d70ce1ff2 drivers/scsi/aic94xx/aic94xx_init.c
+--- a/drivers/scsi/aic94xx/aic94xx_init.c	Wed Oct 04 10:02:16 2006 -0700
++++ b/drivers/scsi/aic94xx/aic94xx_init.c	Wed Oct 04 10:03:57 2006 -0700
+@@ -766,8 +766,6 @@ static void asd_remove_driver_attrs(stru
+ }
+ 
+ static struct sas_domain_function_template aic94xx_transport_functions = {
+-	.lldd_port_formed	= asd_update_port_links,
+-
+ 	.lldd_dev_found		= asd_dev_found,
+ 	.lldd_dev_gone		= asd_dev_gone,
+ 
+diff -r 445d70ce1ff2 drivers/scsi/aic94xx/aic94xx_sas.h
+--- a/drivers/scsi/aic94xx/aic94xx_sas.h	Wed Oct 04 10:02:16 2006 -0700
++++ b/drivers/scsi/aic94xx/aic94xx_sas.h	Wed Oct 04 10:03:57 2006 -0700
+@@ -733,6 +733,7 @@ struct asd_phy {
+ 
+ 	struct sas_identify_frame *identify_frame;
+ 	struct asd_dma_tok  *id_frm_tok;
++	struct asd_port     *asd_port;
+ 
+ 	u8         frame_rcvd[ASD_EDB_SIZE];
+ };
+diff -r 445d70ce1ff2 drivers/scsi/aic94xx/aic94xx_scb.c
+--- a/drivers/scsi/aic94xx/aic94xx_scb.c	Wed Oct 04 10:02:16 2006 -0700
++++ b/drivers/scsi/aic94xx/aic94xx_scb.c	Wed Oct 04 10:03:57 2006 -0700
+@@ -168,6 +168,70 @@ static inline void asd_get_attached_sas_
+ 	}
+ }
+ 
++static void asd_form_port(struct asd_ha_struct *asd_ha, struct asd_phy *phy)
++{
++	int i;
++	struct asd_port *free_port = NULL;
++	struct asd_port *port;
++	struct asd_sas_phy *sas_phy = &phy->sas_phy;
++	unsigned long flags;
++
++	spin_lock_irqsave(&asd_ha->asd_ports_lock, flags);
++	if (!phy->asd_port) {
++		for (i = 0; i < ASD_MAX_PHYS; i++) {
++			port = &asd_ha->asd_ports[i];
++
++			/* Check for wide port */
++			if (port->num_phys > 0 &&
++			    memcmp(port->sas_addr, sas_phy->sas_addr,
++				   SAS_ADDR_SIZE) == 0 &&
++			    memcmp(port->attached_sas_addr,
++				   sas_phy->attached_sas_addr,
++				   SAS_ADDR_SIZE) == 0) {
++				break;
++			}
++
++			/* Find a free port */
++			if (port->num_phys == 0 && free_port == NULL) {
++				free_port = port;
++			}
++		}
++
++		/* Use a free port if this doesn't form a wide port */
++		if (i >= ASD_MAX_PHYS) {
++			port = free_port;
++			BUG_ON(!port);
++			memcpy(port->sas_addr, sas_phy->sas_addr,
++			       SAS_ADDR_SIZE);
++			memcpy(port->attached_sas_addr,
++			       sas_phy->attached_sas_addr,
++			       SAS_ADDR_SIZE);
++		}
++		port->num_phys++;
++		port->phy_mask |= (1U << sas_phy->id);
++		phy->asd_port = port;
++	}
++	ASD_DPRINTK("%s: updating phy_mask 0x%x for phy%d\n",
++		    __FUNCTION__, phy->asd_port->phy_mask, sas_phy->id);
++	asd_update_port_links(asd_ha, phy);
++	spin_unlock_irqrestore(&asd_ha->asd_ports_lock, flags);
++}
++
++static void asd_deform_port(struct asd_ha_struct *asd_ha, struct asd_phy *phy)
++{
++	struct asd_port *port = phy->asd_port;
++	struct asd_sas_phy *sas_phy = &phy->sas_phy;
++	unsigned long flags;
++
++	spin_lock_irqsave(&asd_ha->asd_ports_lock, flags);
++	if (port) {
++		port->num_phys--;
++		port->phy_mask &= ~(1U << sas_phy->id);
++		phy->asd_port = NULL;
++	}
++	spin_unlock_irqrestore(&asd_ha->asd_ports_lock, flags);
++}
++
+ static inline void asd_bytes_dmaed_tasklet(struct asd_ascb *ascb,
+ 					   struct done_list_struct *dl,
+ 					   int edb_id, int phy_id)
+@@ -187,6 +251,7 @@ static inline void asd_bytes_dmaed_taskl
+ 	asd_get_attached_sas_addr(phy, phy->sas_phy.attached_sas_addr);
+ 	spin_unlock_irqrestore(&phy->sas_phy.frame_rcvd_lock, flags);
+ 	asd_dump_frame_rcvd(phy, dl);
++	asd_form_port(ascb->ha, phy);
+ 	sas_ha->notify_port_event(&phy->sas_phy, PORTE_BYTES_DMAED);
+ }
+ 
+@@ -197,6 +262,7 @@ static inline void asd_link_reset_err_ta
+ 	struct asd_ha_struct *asd_ha = ascb->ha;
+ 	struct sas_ha_struct *sas_ha = &asd_ha->sas_ha;
+ 	struct asd_sas_phy *sas_phy = sas_ha->sas_phy[phy_id];
++	struct asd_phy *phy = &asd_ha->phys[phy_id];
+ 	u8 lr_error = dl->status_block[1];
+ 	u8 retries_left = dl->status_block[2];
+ 
+@@ -221,6 +287,7 @@ static inline void asd_link_reset_err_ta
+ 
+ 	asd_turn_led(asd_ha, phy_id, 0);
+ 	sas_phy_disconnected(sas_phy);
++	asd_deform_port(asd_ha, phy);
+ 	sas_ha->notify_port_event(sas_phy, PORTE_LINK_RESET_ERR);
+ 
+ 	if (retries_left == 0) {
+@@ -248,6 +315,8 @@ static inline void asd_primitive_rcvd_ta
+ 	unsigned long flags;
+ 	struct sas_ha_struct *sas_ha = &ascb->ha->sas_ha;
+ 	struct asd_sas_phy *sas_phy = sas_ha->sas_phy[phy_id];
++	struct asd_ha_struct *asd_ha = ascb->ha;
++	struct asd_phy *phy = &asd_ha->phys[phy_id];
+ 	u8  reg  = dl->status_block[1];
+ 	u32 cont = dl->status_block[2] << ((reg & 3)*8);
+ 
+@@ -284,6 +353,7 @@ static inline void asd_primitive_rcvd_ta
+ 				    phy_id);
+ 			/* The sequencer disables all phys on that port.
+ 			 * We have to re-enable the phys ourselves. */
++			asd_deform_port(asd_ha, phy);
+ 			sas_ha->notify_port_event(sas_phy, PORTE_HARD_RESET);
+ 			break;
+ 
+@@ -351,6 +421,7 @@ static void escb_tasklet_complete(struct
+ 	u8  sb_opcode = dl->status_block[0];
+ 	int phy_id = sb_opcode & DL_PHY_MASK;
+ 	struct asd_sas_phy *sas_phy = sas_ha->sas_phy[phy_id];
++	struct asd_phy *phy = &asd_ha->phys[phy_id];
+ 
+ 	if (edb > 6 || edb < 0) {
+ 		ASD_DPRINTK("edb is 0x%x! dl->opcode is 0x%x\n",
+@@ -395,6 +466,7 @@ static void escb_tasklet_complete(struct
+ 		asd_turn_led(asd_ha, phy_id, 0);
+ 		/* the device is gone */
+ 		sas_phy_disconnected(sas_phy);
++		asd_deform_port(asd_ha, phy);
+ 		sas_ha->notify_port_event(sas_phy, PORTE_TIMER_EVENT);
+ 		break;
+ 	case REQ_TASK_ABORT:
+diff -r 445d70ce1ff2 drivers/scsi/aic94xx/aic94xx_seq.c
+--- a/drivers/scsi/aic94xx/aic94xx_seq.c	Wed Oct 04 10:02:16 2006 -0700
++++ b/drivers/scsi/aic94xx/aic94xx_seq.c	Wed Oct 04 10:03:57 2006 -0700
+@@ -1369,10 +1369,9 @@ int asd_start_seqs(struct asd_ha_struct 
+  * port_map_by_links is also used as the conn_mask byte in the
+  * initiator/target port DDB.
+  */
+-void asd_update_port_links(struct asd_sas_phy *sas_phy)
+-{
+-	struct asd_ha_struct *asd_ha = sas_phy->ha->lldd_ha;
+-	const u8 phy_mask = (u8) sas_phy->port->phy_mask;
++void asd_update_port_links(struct asd_ha_struct *asd_ha, struct asd_phy *phy)
++{
++	const u8 phy_mask = (u8) phy->asd_port->phy_mask;
+ 	u8  phy_is_up;
+ 	u8  mask;
+ 	int i, err;
+diff -r 445d70ce1ff2 drivers/scsi/aic94xx/aic94xx_seq.h
+--- a/drivers/scsi/aic94xx/aic94xx_seq.h	Wed Oct 04 10:02:16 2006 -0700
++++ b/drivers/scsi/aic94xx/aic94xx_seq.h	Wed Oct 04 10:03:57 2006 -0700
+@@ -64,7 +64,7 @@ int asd_init_seqs(struct asd_ha_struct *
+ int asd_init_seqs(struct asd_ha_struct *asd_ha);
+ int asd_start_seqs(struct asd_ha_struct *asd_ha);
+ 
+-void asd_update_port_links(struct asd_sas_phy *phy);
++void asd_update_port_links(struct asd_ha_struct *asd_ha, struct asd_phy *phy);
+ #endif
+ 
+ #endif
 
-> Other reports have been with USB-unplug, so I doubt if the docking code is
-> involved.
-
-full dmesg is here:
-http://oioio.altervista.org/linux/dmesg_usbkey_remove
-and .config:
-http://oioio.altervista.org/linux/config-2.6.19-rc5-mm1-1
-
--- 
-mattia
-:wq!
-
--------------------------------------------------------------------------
-Using Tomcat but need to do more? Need to support web services, security?
-Get stuff done quickly with pre-integrated technology to make your job easier
-Download IBM WebSphere Application Server v.1.0.1 based on Apache Geronimo
-http://sel.as-us.falkag.net/sel?cmd=lnk&kid=120709&bid=263057&dat=121642
-_______________________________________________
-linux-usb-devel@lists.sourceforge.net
-To unsubscribe, use the last form field at:
-https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
