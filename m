@@ -1,52 +1,58 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: RFC: SCSI Generic version 4 interface
-Date: Thu, 09 Nov 2006 09:52:57 +0900
-Message-ID: <20061109095257I.fujita.tomonori@lab.ntt.co.jp>
-References: <454FAD72.6040103@torque.net>
-	<200611081048.01531.jli@greshamstorage.com>
-	<20061108172218.GG16952@parisc-linux.org>
+From: "Wesley J. Landaker" <wjl@icecavern.net>
+Subject: Support for (new?) Silicon Image PCI SATA controller
+Date: Wed, 8 Nov 2006 18:03:52 -0700
+Message-ID: <200611081803.52986.wjl@icecavern.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:31141 "EHLO
-	tama5.ecl.ntt.co.jp") by vger.kernel.org with ESMTP
-	id S1422874AbWKIAyA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Nov 2006 19:54:00 -0500
-In-Reply-To: <20061108172218.GG16952@parisc-linux.org>
+Received: from c-68-54-3-45.hsd1.nm.comcast.net ([68.54.3.45]:48141 "EHLO
+	icecavern.net") by vger.kernel.org with ESMTP id S1423979AbWKIBDu
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 8 Nov 2006 20:03:50 -0500
+Received: from ubuntu.local (unknown [10.0.0.166])
+	by icecavern.net (Postfix) with ESMTP id CBCC9ED912
+	for <linux-scsi@vger.kernel.org>; Wed,  8 Nov 2006 18:03:47 -0700 (MST)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: matthew@wil.cx
-Cc: jli@greshamstorage.com, dougg@torque.net, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: RFC: SCSI Generic version 4 interface
-Date: Wed, 8 Nov 2006 10:22:18 -0700
+Hi folks,
 
-> On Wed, Nov 08, 2006 at 10:48:01AM -0600, Jeremy Linton wrote:
-> > 	A unified multiple device mmap buffer interface for would probably be useful 
-> > as well. This is to get around the problems inherent in the current design 
-> > that keep more than one device from using a mmap/reserve buffer allocated for 
-> > another device. 
-> > 	What I would personally like to be able to do with the SG interface is have a 
-> > shared memory region where I can kick off a few dozen tagged commands to a 
-> > device, get notification when they have completed and then send a similar 
-> > command to a second device, all without involving the CPU in any copy 
-> > operations, or too many page management operations.
-> > 	In my dream world this would require some kind of tagging of commands as well 
-> > so I don't have to handle a bunch of async completions for commands in a 
-> > group that need to complete as a group.
-> 
-> This is all starting to sound/feel a lot like the current proposed
-> design for netchannels: http://lwn.net/Articles/206699/
-> 
-> If we did an AF_SCSI (I've seen it mooted before), then I suppose we
-> could just use netchannels.
-> 
-> The other route is tweaking the current netchannels proposal to be a bit
-> less networking-centric and use kiocbs (or something ...) to hold the
-> data that's being transmitted.
+I just obtained a new PCI SATA controller card that I was told was supported 
+by Linux, but it doesn't appear to match up with the expected device IDs I 
+see listed in the sata_sil or sata_sil24 drivers currently.
 
-netchannels works if we can make it less networking-centric, though
-ring buffer would be preferable for the target code since netchannels
-needs to allocate and free skbuffs and do copies again and again.
+Does anyone have any knowledge about this device? e.g. is it a new Silicon 
+Image device, or perhaps I am mistaken and it's a really *old* one?
+
+Here is the output of lspci -vvnn for the device, which captures as much info 
+as I know how to easily obtain. It would be really interested if someone 
+could tell me if this looks anything like a possible-to-support SI device, so 
+I know whether it's worth pursuing or not?
+
+00:10.0 Mass storage controller [0180]: Silicon Image, Inc. Unknown device 
+[1095:2502] (rev 01)
+        Subsystem: Silicon Image, Inc. Unknown device [1095:2512]
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
+Stepping- SERR- FastB2B-
+        Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- 
+<TAbort- <MAbort- >SERR- <PERR+
+        Latency: 32, Cache Line Size: 32 bytes
+        Interrupt: pin A routed to IRQ 11
+        Region 0: I/O ports at d800 [size=8]
+        Region 1: I/O ports at dc00 [size=4]
+        Region 2: I/O ports at e000 [size=8]
+        Region 3: I/O ports at e400 [size=4]
+        Region 4: I/O ports at e800 [size=16]
+        Region 5: Memory at c1000000 (32-bit, non-prefetchable) [size=512]
+        [virtual] Expansion ROM at 13000000 [disabled] [size=512K]
+        Capabilities: [60] Power Management version 2
+                Flags: PMEClk- DSI+ D1+ D2+ AuxCurrent=0mA 
+PME(D0-,D1-,D2-,D3hot-,D3cold-)
+                Status: D0 PME-Enable- DSel=0 DScale=2 PME-
+
+-- 
+Wesley J. Landaker <wjl@icecavern.net>
