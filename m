@@ -1,48 +1,30 @@
-From: Jean Delvare <khali@linux-fr.org>
-Subject: [PATCH] gdth: Fix && typos
-Date: Thu, 9 Nov 2006 21:45:09 +0100
-Message-ID: <20061109214509.c4edee59.khali@linux-fr.org>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: [patch 02/26] drivers/scsi/qla2xxx/: make some functions static
+Date: Thu, 9 Nov 2006 13:52:06 -0800
+Message-ID: <20061109215206.GB4493@n4602ep8qx9l81.qlogic.org>
+References: <200611090355.kA93tpKr003898@shell0.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-104-thursday.noc.nerim.net ([62.4.17.104]:30729 "EHLO
-	mallaury.nerim.net") by vger.kernel.org with ESMTP id S965964AbWKIUpH
+Received: from avexch1.qlogic.com ([198.70.193.115]:40058 "EHLO
+	avexch1.qlogic.com") by vger.kernel.org with ESMTP id S1161843AbWKIVwK
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 9 Nov 2006 15:45:07 -0500
+	Thu, 9 Nov 2006 16:52:10 -0500
+Content-Disposition: inline
+In-Reply-To: <200611090355.kA93tpKr003898@shell0.pdx.osdl.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Achim Leubner <achim_leubner@adaptec.com>
-Cc: linux-scsi@vger.kernel.org
+To: akpm@osdl.org
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, bunk@stusta.de
 
-Fix uses of "&&" where "&" was obviously intended instead.
+On Wed, 08 Nov 2006, akpm@osdl.org wrote:
 
-Signed-off-by: Jean Delvare <khali@linux-fr.org>
----
- drivers/scsi/gdth.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+> From: Adrian Bunk <bunk@stusta.de>
+> 
+> This patch makes some needlessly global functions static.
+> 
+> Signed-off-by: Adrian Bunk <bunk@stusta.de>
+> Cc: James Bottomley <James.Bottomley@steeleye.com>
+> Signed-off-by: Andrew Morton <akpm@osdl.org>
 
---- linux-2.6.19-rc5.orig/drivers/scsi/gdth.c	2006-10-14 09:47:29.000000000 +0200
-+++ linux-2.6.19-rc5/drivers/scsi/gdth.c	2006-11-09 21:39:06.000000000 +0100
-@@ -3531,7 +3531,7 @@
-                 IStatus &= ~0x80;
- #ifdef INT_COAL
-                 if (coalesced)
--                    ha->status = pcs->ext_status && 0xffff;
-+                    ha->status = pcs->ext_status & 0xffff;
-                 else 
- #endif
-                     ha->status = gdth_readw(&dp6m_ptr->i960r.status);
-@@ -3543,7 +3543,7 @@
-             if (coalesced) {    
-                 ha->info = pcs->info0;
-                 ha->info2 = pcs->info1;
--                ha->service = (pcs->ext_status >> 16) && 0xffff;
-+                ha->service = (pcs->ext_status >> 16) & 0xffff;
-             } else
- #endif
-             {
-
-
--- 
-Jean Delvare
+ACK.
