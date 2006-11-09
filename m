@@ -1,58 +1,39 @@
 From: akpm@osdl.org
-Subject: [patch 1/2] git-sas Kconfig fix
-Date: Wed, 08 Nov 2006 19:57:07 -0800
-Message-ID: <200611090357.kA93v895004096@shell0.pdx.osdl.net>
+Subject: [patch 2/2] libsas fails to compile on s390
+Date: Wed, 08 Nov 2006 19:57:09 -0800
+Message-ID: <200611090357.kA93vA1u004099@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:31666 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1424020AbWKID5R (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Nov 2006 22:57:17 -0500
+Received: from smtp.osdl.org ([65.172.181.4]:32178 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1424021AbWKID5U (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Nov 2006 22:57:20 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, djwong@us.ibm.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, schwidefsky@de.ibm.com
 
-From: "Darrick J. Wong" <djwong@us.ibm.com>
+From: Martin Schwidefsky <schwidefsky@de.ibm.com>
 
-Andrew Morton wrote:
+Explicitly include scatterlist.h in sas_internal.h to avoid the implicit
+include dependency via the pci.h header.  For s390 the scatterlist.h header
+is not included because CONFIG_PCI=n.
 
-> WARNING: "ata_sas_slave_configure" [drivers/scsi/libsas/libsas.ko] undefined!
-> WARNING: "ata_port_disable" [drivers/scsi/libsas/libsas.ko] undefined!
-> WARNING: "ata_sas_port_init" [drivers/scsi/libsas/libsas.ko] undefined!
-> WARNING: "ata_sas_port_stop" [drivers/scsi/libsas/libsas.ko] undefined!
-> WARNING: "ata_sas_port_start" [drivers/scsi/libsas/libsas.ko] undefined!
-> WARNING: "ata_sas_port_alloc" [drivers/scsi/libsas/libsas.ko] undefined!
-> WARNING: "ata_noop_qc_prep" [drivers/scsi/libsas/libsas.ko] undefined!
-> WARNING: "ata_tf_to_fis" [drivers/scsi/libsas/libsas.ko] undefined!
-> WARNING: "ata_noop_dev_select" [drivers/scsi/libsas/libsas.ko] undefined!
-> WARNING: "ata_tf_from_fis" [drivers/scsi/libsas/libsas.ko] undefined!
-> WARNING: "ata_host_init" [drivers/scsi/libsas/libsas.ko] undefined!
-> WARNING: "ata_sas_queuecmd" [drivers/scsi/libsas/libsas.ko] undefined!
-> WARNING: "ata_sas_port_destroy" [drivers/scsi/libsas/libsas.ko] undefined!
-> WARNING: "ata_scsi_ioctl" [drivers/scsi/libsas/libsas.ko] undefined!
-> WARNING: "ata_qc_complete" [drivers/scsi/libsas/libsas.ko] undefined!
-
-The SATA-fortified libsas depends on libata for SATA support.  Kconfig
-needs to know about that.  Patch is for aic94xx-sas-2.6 and apparently -mm
-as well.
-
-Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
+Signed-off-by: Martin Schwidefsky <schwidefsky@de.ibm.com>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/libsas/Kconfig |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/libsas/sas_internal.h |    1 +
+ 1 file changed, 1 insertion(+)
 
-diff -puN drivers/scsi/libsas/Kconfig~git-sas-kconfig-fix drivers/scsi/libsas/Kconfig
---- a/drivers/scsi/libsas/Kconfig~git-sas-kconfig-fix
-+++ a/drivers/scsi/libsas/Kconfig
-@@ -24,7 +24,7 @@
+diff -puN drivers/scsi/libsas/sas_internal.h~libsas-fails-to-compile-on-s390 drivers/scsi/libsas/sas_internal.h
+--- a/drivers/scsi/libsas/sas_internal.h~libsas-fails-to-compile-on-s390
++++ a/drivers/scsi/libsas/sas_internal.h
+@@ -26,6 +26,7 @@
+ #ifndef _SAS_INTERNAL_H_
+ #define _SAS_INTERNAL_H_
  
- config SCSI_SAS_LIBSAS
- 	tristate "SAS Domain Transport Attributes"
--	depends on SCSI
-+	depends on SCSI && ATA
- 	select SCSI_SAS_ATTRS
- 	help
- 	  This provides transport specific helpers for SAS drivers which
++#include <linux/scatterlist.h>
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_transport_sas.h>
 _
