@@ -1,95 +1,211 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: 2.6.19-rc5-mm1
-Date: Thu, 9 Nov 2006 16:11:23 -0800
-Message-ID: <20061109161123.f9cea1e7.akpm@osdl.org>
-References: <20061109192658.GA2560@inferi.kami.home>
-	<Pine.LNX.4.44L0.0611091655080.2262-100000@iolanthe.rowland.org>
-	<20061109145100.01d6ec46.akpm@osdl.org>
-	<f56c1ba00611091539n1d1cbe99obdb1c5f608646c96@mail.gmail.com>
+From: Michael Stone <mstone@mathom.us>
+Subject: aic79xx dumping card state
+Date: Thu, 09 Nov 2006 19:45:09 -0500
+Message-ID: <20061110004508.GF2667@mathom.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <f56c1ba00611091539n1d1cbe99obdb1c5f608646c96@mail.gmail.com>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
-List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux-usb-devel-bounces@lists.sourceforge.net
-Errors-To: linux-usb-devel-bounces@lists.sourceforge.net
-To: =?ISO-8859-1?Q? C=E9dric?= Augonnet <cedric.augonnet@gmail.com>, Anton Vorontsov <cbou@mail.ru>
-Cc: USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>, Kernel development list <linux-kernel@vger.kernel.org>, Mattia Dongili <malattia@linux.it>, Alan Stern <stern@rowland.harvard.edu>, Benoit Boissinot <bboissin@gmail.com>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from vms044pub.verizon.net ([206.46.252.44]:20526 "EHLO
+	vms044pub.verizon.net") by vger.kernel.org with ESMTP
+	id S965695AbWKJApN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 9 Nov 2006 19:45:13 -0500
+Received: from osgiliath.mathom.us ([71.246.251.8])
+ by vms044.mailsrvcs.net (Sun Java System Messaging Server 6.2-6.01 (built Apr
+ 3 2006)) with ESMTPA id <0J8H001GOORCHJH4@vms044.mailsrvcs.net> for
+ linux-scsi@vger.kernel.org; Thu, 09 Nov 2006 18:45:12 -0600 (CST)
+Received: from localhost (localhost [127.0.0.1])
+	by osgiliath.mathom.us (Postfix) with ESMTP id 4512170621	for
+ <linux-scsi@vger.kernel.org>; Thu, 09 Nov 2006 19:45:11 -0500 (EST)
+Received: from osgiliath.mathom.us ([127.0.0.1])
+	by localhost (osgiliath.home.mathom.us [127.0.0.1]) (amavisd-new, port 10024)
+	with LMTP id 5e-o0MmGPI1A for <linux-scsi@vger.kernel.org>; Thu,
+ 09 Nov 2006 19:45:10 -0500 (EST)
+Content-disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, 10 Nov 2006 00:39:46 +0100
-"C__dric Augonnet" <cedric.augonnet@gmail.com> wrote:
+How to debug? Kernel is 2.6.18.1, I think the other details are in the 
+dmesg output:
 
-> 2006/11/9, Andrew Morton <akpm@osdl.org>:
-> 
-> >
-> > hm.  Maybe it's the disk_sysfs_symlinks() changes.
-> >
-> > Could someone who can reproduce this please try this revert, on
-> > 2.6.19-rc2-mm2 through 2.6.19-rc5-mm1?
-> >
-> >
-> >
-> >  fs/partitions/check.c |    5 +++--
-> >  1 files changed, 3 insertions(+), 2 deletions(-)
-> >
-> > diff -puN fs/partitions/check.c~revert-fix-ide-cs-hang-after-device-removal fs/partitions/check.c
-> > --- a/fs/partitions/check.c~revert-fix-ide-cs-hang-after-device-removal
-> > +++ a/fs/partitions/check.c
-> > @@ -416,7 +416,7 @@ static char *make_block_name(struct gend
-> >
-> >  static int disk_sysfs_symlinks(struct gendisk *disk)
-> >  {
-> > -       struct device *target = disk->driverfs_dev;
-> > +       struct device *target = get_device(disk->driverfs_dev);
-> >         int err;
-> >         char *disk_name = NULL;
-> >
-> > @@ -452,8 +452,9 @@ err_out_dev_link:
-> >                 sysfs_remove_link(&disk->kobj, "device");
-> >  err_out_disk_name:
-> >                 kfree(disk_name);
-> > -       }
-> >  err_out:
-> > +               put_device(target);
-> > +       }
-> >         return err;
-> >  }
-> >
-> > _
-> >
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > Please read the FAQ at  http://www.tux.org/lkml/
-> >
-> 
-> Hi,
-> 
-> This patch seems to be working : whereas i had the same oops as Mattia
-> each time I unplugged my USB external DD drive, now it does not happen
-> anymore.
-> Thank you very much for this one !
-> 
+ACPI: PCI Interrupt 0000:01:06.0[A] -> GSI 16 (level, low) -> IRQ 21
+scsi2 : Adaptec AIC79XX PCI-X SCSI HBA DRIVER, Rev 3.0
+        <Adaptec 39320A Ultra320 SCSI adapter>
+        aic7902: Ultra320 Wide Channel A, SCSI Id=7, PCI-X 67-100Mhz, 512 SCBs
 
-OK, thanks.  I dropped the patch.  So ide-cs will now start deadlocking
-again.
+  Vendor: SC U320/  Model: SATA16R           Rev: R0.0
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+ target2:0:0: asynchronous
+scsi2:A:0:0: Tagged Queuing enabled.  Depth 32
+ target2:0:0: Beginning Domain Validation
+ target2:0:0: wide asynchronous
+ target2:0:0: FAST-160 WIDE SCSI 320.0 MB/s DT IU RTI WRFLOW PCOMP (6.25 ns, offset 127)
+ target2:0:0: Ending Domain Validation
+SCSI device sdb: 4095967232 1024-byte hdwr sectors (4194270 MB)
+sdb: Write Protect is off
+sdb: Mode Sense: cd 00 00 08
+SCSI device sdb: drive cache: write back
+SCSI device sdb: 4095967232 1024-byte hdwr sectors (4194270 MB)
+sdb: Write Protect is off
+sdb: Mode Sense: cd 00 00 08
+SCSI device sdb: drive cache: write back
+ sdb: unknown partition table
+sd 2:0:0:0: Attached scsi disk sdb
 
 
--------------------------------------------------------------------------
-Using Tomcat but need to do more? Need to support web services, security?
-Get stuff done quickly with pre-integrated technology to make your job easier
-Download IBM WebSphere Application Server v.1.0.1 based on Apache Geronimo
-http://sel.as-us.falkag.net/sel?cmd=lnk&kid=120709&bid=263057&dat=121642
-_______________________________________________
-linux-usb-devel@lists.sourceforge.net
-To unsubscribe, use the last form field at:
-https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
+At this point I try to dd from /dev/sdb, don't get very far before:
+
+sd 2:0:0:0: Attempting to queue an ABORT message:CDB: 0x28 0x0 0x0 0x0 0x28 0x70
+ 0x0 0x1 0x0 0x0
+scsi2: At time of recovery, card was not paused
+>>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
+scsi2: Dumping Card State at program address 0x3b Mode 0x22
+Card was paused
+INTSTAT[0x0] SELOID[0x0] SELID[0x0] HS_MAILBOX[0x0] 
+INTCTL[0x80]:(SWTMINTMASK) SEQINTSTAT[0x0] SAVED_MODE[0x11] 
+DFFSTAT[0x33]:(CURRFIFO_NONE|FIFO0FREE|FIFO1FREE) 
+SCSISIGI[0x24]:(P_DATAOUT_DT|BSYI) SCSIPHASE[0x0] 
+SCSIBUS[0x0] LASTPHASE[0x1]:(P_DATAOUT|P_BUSFREE) 
+SCSISEQ0[0x40]:(ENSELO) SCSISEQ1[0x12]:(ENAUTOATNP|ENRSELI) 
+SEQCTL0[0x0] SEQINTCTL[0x0] SEQ_FLAGS[0x0] 
+SEQ_FLAGS2[0x4]:(SELECTOUT_QFROZEN) 
+QFREEZE_COUNT[0x0] KERNEL_QFREEZE_COUNT[0x0] MK_MESSAGE_SCB[0xff00] 
+MK_MESSAGE_SCSIID[0xff] SSTAT0[0x10]:(SELINGO) 
+SSTAT1[0x0] SSTAT2[0x0] SSTAT3[0x0] PERRDIAG[0x0] 
+SIMODE1[0xac]:(ENSCSIPERR|ENBUSFREE|ENSCSIRST|ENSELTIMO) 
+LQISTAT0[0x0] LQISTAT1[0x0] LQISTAT2[0x80]:(PACKETIZED) 
+LQOSTAT0[0x0] LQOSTAT1[0x0] LQOSTAT2[0x40] 
+
+SCB Count = 4 CMDS_PENDING = 1 LASTSCB 0xffff CURRSCB 0x3 NEXTSCB 0xff00
+qinstart = 90 qinfifonext = 90
+QINFIFO:
+WAITING_TID_QUEUES:
+       0 ( 0x3 )
+Pending list:
+  3 FIFO_USE[0x0] SCB_CONTROL[0x60]:(TAG_ENB|DISCENB) SCB_SCSIID[0x7] 
+Total 1
+Kernel Free SCB list: 2 1 0 
+Sequencer Complete DMA-inprog list: 
+Sequencer Complete list: 
+Sequencer DMA-Up and Complete list: 
+Sequencer On QFreeze and Complete list: 
+
+
+scsi2: FIFO0 Free, LONGJMP == 0x8271, SCB 0x3
+SEQIMODE[0x3f]:(ENCFG4TCMD|ENCFG4ICMD|ENCFG4TSTAT|ENCFG4ISTAT|ENCFG4DATA|ENSAVEP
+TRS) 
+SEQINTSRC[0x0] DFCNTRL[0x0] DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD_AVAIL) 
+SG_CACHE_SHADOW[0x2]:(LAST_SEG) SG_STATE[0x0] DFFSXFRCTL[0x0] 
+SOFFCNT[0x0] MDFFSTAT[0x5]:(FIFOFREE|DLZERO) SHADDR = 0x00, SHCNT = 0x0 
+HADDR = 0x00, HCNT = 0x0 CCSGCTL[0x10]:(SG_CACHE_AVAIL) 
+
+scsi2: FIFO1 Free, LONGJMP == 0x8063, SCB 0x3
+SEQIMODE[0x3f]:(ENCFG4TCMD|ENCFG4ICMD|ENCFG4TSTAT|ENCFG4ISTAT|ENCFG4DATA|ENSAVEP
+TRS) 
+SEQINTSRC[0x0] DFCNTRL[0x0] DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD_AVAIL) 
+SG_CACHE_SHADOW[0x2]:(LAST_SEG) SG_STATE[0x0] DFFSXFRCTL[0x0] 
+SOFFCNT[0x0] MDFFSTAT[0x5]:(FIFOFREE|DLZERO) SHADDR = 0x00, SHCNT = 0x0 
+HADDR = 0x00, HCNT = 0x0 CCSGCTL[0x10]:(SG_CACHE_AVAIL) 
+LQIN: 0x8 0x0 0x0 0x3 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 
+0x0 0x0 0x
+0 0x0 
+scsi2: LQISTATE = 0x1, LQOSTATE = 0x1a, OPTIONMODE = 0x52
+scsi2: OS_SPACE_CNT = 0x20 MAXCMDCNT = 0x0
+scsi2: SAVED_SCSIID = 0x0 SAVED_LUN = 0x0
+
+SIMODE0[0xc]:(ENOVERRUN|ENIOERR) 
+CCSCBCTL[0x4]:(CCSCBDIR) 
+scsi2: REG0 == 0x3, SINDEX = 0x102, DINDEX = 0x102
+scsi2: SCBPTR == 0xff03, SCB_NEXT == 0xff00, SCB_NEXT2 == 0x0
+CDB 3 1 0 0 0 0
+STACK: 0x24 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+<<<<<<<<<<<<<<<<< Dump Card State Ends >>>>>>>>>>>>>>>>>>
+scsi2:0:0:0: Cmd aborted from QINFIFO
+sd 2:0:0:0: Attempting to queue an ABORT message:CDB: 0x0 0x0 0x0 0x0 
+0x0 0x0
+scsi2: At time of recovery, card was not paused
+>>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
+scsi2: Dumping Card State at program address 0x3b Mode 0x22
+Card was paused
+INTSTAT[0x0] SELOID[0x0] SELID[0x0] HS_MAILBOX[0x0] 
+INTCTL[0x80]:(SWTMINTMASK) SEQINTSTAT[0x0] SAVED_MODE[0x11] 
+DFFSTAT[0x33]:(CURRFIFO_NONE|FIFO0FREE|FIFO1FREE) 
+SCSISIGI[0x24]:(P_DATAOUT_DT|BSYI) SCSIPHASE[0x0] 
+SCSIBUS[0x0] LASTPHASE[0x1]:(P_DATAOUT|P_BUSFREE) 
+SCSISEQ0[0x40]:(ENSELO) SCSISEQ1[0x12]:(ENAUTOATNP|ENRSELI) 
+SEQCTL0[0x0] SEQINTCTL[0x0] SEQ_FLAGS[0x0] 
+SEQ_FLAGS2[0x4]:(SELECTOUT_QFROZEN) 
+QFREEZE_COUNT[0x0] KERNEL_QFREEZE_COUNT[0x0] MK_MESSAGE_SCB[0xff00] 
+MK_MESSAGE_SCSIID[0xff] SSTAT0[0x10]:(SELINGO) 
+SSTAT1[0x0] SSTAT2[0x0] SSTAT3[0x0] PERRDIAG[0x0] 
+SIMODE1[0xac]:(ENSCSIPERR|ENBUSFREE|ENSCSIRST|ENSELTIMO) 
+LQISTAT0[0x0] LQISTAT1[0x0] LQISTAT2[0x80]:(PACKETIZED) 
+LQOSTAT0[0x0] LQOSTAT1[0x0] LQOSTAT2[0x40] 
+
+SCB Count = 4 CMDS_PENDING = 0 LASTSCB 0xffff CURRSCB 0x3 NEXTSCB 0xff00
+qinstart = 90 qinfifonext = 91
+QINFIFO: 0x3
+WAITING_TID_QUEUES:
+Pending list:
+  3 FIFO_USE[0x0] SCB_CONTROL[0x60]:(TAG_ENB|DISCENB) SCB_SCSIID[0x7] 
+Total 1
+Kernel Free SCB list: 2 1 0 
+Sequencer Complete DMA-inprog list: 
+Sequencer Complete list: 
+Sequencer DMA-Up and Complete list: 
+Sequencer On QFreeze and Complete list: 
+
+
+scsi2: FIFO0 Free, LONGJMP == 0x8271, SCB 0x3
+SEQIMODE[0x3f]:(ENCFG4TCMD|ENCFG4ICMD|ENCFG4TSTAT|ENCFG4ISTAT|ENCFG4DATA|ENSAVEP
+TRS) 
+SEQINTSRC[0x0] DFCNTRL[0x0] DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD_AVAIL) 
+SG_CACHE_SHADOW[0x2]:(LAST_SEG) SG_STATE[0x0] DFFSXFRCTL[0x0] 
+SOFFCNT[0x0] MDFFSTAT[0x5]:(FIFOFREE|DLZERO) SHADDR = 0x00, SHCNT = 0x0 
+HADDR = 0x00, HCNT = 0x0 CCSGCTL[0x10]:(SG_CACHE_AVAIL) 
+
+scsi2: FIFO1 Free, LONGJMP == 0x8063, SCB 0x3
+SEQIMODE[0x3f]:(ENCFG4TCMD|ENCFG4ICMD|ENCFG4TSTAT|ENCFG4ISTAT|ENCFG4DATA|ENSAVEP
+TRS) 
+SEQINTSRC[0x0] DFCNTRL[0x0] DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD_AVAIL) 
+SG_CACHE_SHADOW[0x2]:(LAST_SEG) SG_STATE[0x0] DFFSXFRCTL[0x0] 
+SOFFCNT[0x0] MDFFSTAT[0x5]:(FIFOFREE|DLZERO) SHADDR = 0x00, SHCNT = 0x0 
+HADDR = 0x00, HCNT = 0x0 CCSGCTL[0x10]:(SG_CACHE_AVAIL) 
+LQIN: 0x8 0x0 0x0 0x3 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 
+0x0 0x0 0x
+0 0x0 
+scsi2: LQISTATE = 0x1, LQOSTATE = 0x1a, OPTIONMODE = 0x52
+scsi2: OS_SPACE_CNT = 0x20 MAXCMDCNT = 0x0
+scsi2: SAVED_SCSIID = 0x0 SAVED_LUN = 0x0
+
+SIMODE0[0xc]:(ENOVERRUN|ENIOERR) 
+CCSCBCTL[0x4]:(CCSCBDIR) 
+scsi2: REG0 == 0x3, SINDEX = 0x102, DINDEX = 0x102
+scsi2: SCBPTR == 0xff03, SCB_NEXT == 0xff00, SCB_NEXT2 == 0x0
+CDB 3 1 0 0 0 0
+STACK: 0x24 0x0 0x0 0x0 0x0 0x0 0x0 0x0
+<<<<<<<<<<<<<<<<< Dump Card State Ends >>>>>>>>>>>>>>>>>>
+scsi2:0:0:0: Cmd aborted from QINFIFO
+sd 2:0:0:0: Attempting to queue a TARGET RESET message:CDB: 0x28 0x0 0x0 
+0x0 0x2
+8 0x70 0x0 0x1 0x0 0x0
+scsi2: Device reset code sleeping
+scsi2: Device reset timer expired (active 1)
+scsi2: Device reset returning 0x2003
+Recovery SCB completes
+sd 2:0:0:0: scsi: Device offlined - not ready after error recovery
+sd 2:0:0:0: SCSI error: return code = 0x00020000
+end_request: I/O error, dev sdb, sector 20704
+Buffer I/O error on device sdb, logical block 2588
+Buffer I/O error on device sdb, logical block 2589
+Buffer I/O error on device sdb, logical block 2590
+Buffer I/O error on device sdb, logical block 2591
+Buffer I/O error on device sdb, logical block 2592
+Buffer I/O error on device sdb, logical block 2593
+Buffer I/O error on device sdb, logical block 2594
+sd 2:0:0:0: rejecting I/O to offline device
+Buffer I/O error on device sdb, logical block 2588
+Buffer I/O error on device sdb, logical block 2595
+Buffer I/O error on device sdb, logical block 2596
+
+ 
