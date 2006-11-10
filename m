@@ -1,79 +1,178 @@
-From: Benoit Boissinot <benoit.boissinot@ens-lyon.org>
-Subject: Re: 2.6.19-rc5-mm1
-Date: Fri, 10 Nov 2006 20:29:37 +0100
-Message-ID: <20061110192937.GB9659@ens-lyon.fr>
-References: <20061109192658.GA2560@inferi.kami.home>
-	<Pine.LNX.4.44L0.0611091655080.2262-100000@iolanthe.rowland.org>
-	<20061109145100.01d6ec46.akpm@osdl.org>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: 2.6.19-rc3 system freezes when ripping with cdparanoia at ioctl(SG_IO)
+Date: Fri, 10 Nov 2006 12:08:15 -0800 (PST)
+Message-ID: <508312.85189.qm@web31812.mail.mud.yahoo.com>
+References: <4554777B.7050708@torque.net>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-devel-bounces@lists.sourceforge.net>
-Content-Disposition: inline
-In-Reply-To: <20061109145100.01d6ec46.akpm@osdl.org>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
-List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux-usb-devel-bounces@lists.sourceforge.net
-Errors-To: linux-usb-devel-bounces@lists.sourceforge.net
-To: Andrew Morton <akpm@osdl.org>
-Cc: Mattia Dongili <malattia@linux.it>, Alan Stern <stern@rowland.harvard.edu>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>, Kernel development list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from web31812.mail.mud.yahoo.com ([68.142.207.75]:2896 "HELO
+	web31812.mail.mud.yahoo.com") by vger.kernel.org with SMTP
+	id S1424407AbWKJUIQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Nov 2006 15:08:16 -0500
+In-Reply-To: <4554777B.7050708@torque.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: dougg@torque.net
+Cc: Tejun Heo <htejun@gmail.com>, Brice Goglin <Brice.Goglin@ens-lyon.org>, Jens Axboe <jens.axboe@oracle.com>, Gregor Jasny <gjasny@googlemail.com>, Linux Kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, monty@xiph.org, linux-scsi@vger.kernel.org
 
-On Thu, Nov 09, 2006 at 02:51:00PM -0800, Andrew Morton wrote:
-> On Thu, 9 Nov 2006 16:58:31 -0500 (EST)
-> Alan Stern <stern@rowland.harvard.edu> wrote:
-> > On Thu, 9 Nov 2006, Mattia Dongili wrote:
-> > > On Thu, Nov 09, 2006 at 11:04:53AM -0800, Andrew Morton wrote:
-> > > [...]
-> > > > > [27526.232000] EIP: [<e8074e26>]
-> > > > > scsi_device_dev_release_usercontext+0x36/0x100 [scsi_mod] SS:ESP
-> > > > > 0068:dfdb1e3c
-> > > > > 
-> > > > > full dmesg attached, I can test patches and provide any useful
-> > > > > information if needed (just not now because the dock is at work).
-> > > > 
-> > > > You're the second or third person to report this (to no effect, btw). 
-> > > 
-> > > oh, great. I was going to report the same (had with usb key unplug).
-> > > Linux version 2.6.19-rc5-mm1-1 (mattia@tadamune) (gcc version 4.1.2 20060901 (prerelease) (Debian 4.1.1-13)) #4 SMP Wed Nov 8 22:46:11 CET 2006
+--- Douglas Gilbert <dougg@torque.net> wrote:
+> Luben Tuikov wrote:
+> > --- Douglas Gilbert <dougg@torque.net> wrote:
+> >> Tejun Heo wrote:
+> >>> [CC'ing Monty and Douglas.]
+> >>>
+> >>> Hello, the original thread can be read from the following URL.
+> >>>
+> >>> http://thread.gmane.org/gmane.linux.ide/13708/focus=13708
+> >>>
+> >>> Brice Goglin wrote:
+> >>>> ens Axboe wrote:
+> >>>>> On Mon, Oct 30 2006, Gregor Jasny wrote:
+> >>>>>  
+> >>>>>> 2006/10/30, Jens Axboe <jens.axboe@oracle.com>:
+> >>>>>>    
+> >>>>>>> Can you confirm that 2.6.18 works?
+> >>>>>>>       
+> >>>>>> The reporter of [1] states that his SATA Thinkpad freezes with 2.6.17
+> >>>>>> and 2.6.18, too.
+> >>>>>>
+> >>>>>> Gregor
+> >>>>>>
+> >>>>>> [1] http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=391901
+> >>>>>>     
+> >>>>> Ok, mainly just checking if this was a potential dupe of another bug.
+> >>>>>
+> >>>>>   
+> >>>> Jens (or anybody else who has any idea of how to debug this),
+> >>>>
+> >>>> Did you have a chance to reproduce the problem? I guess we "only" need a
+> >>>> machine with SATA/ata_piix and cdparanoia 3.10. If you want me to debug
+> >>>> some stuff, feel free to tell me what. But, since it freezes the machine
+> >>>> and sysrq doesn't even work, I don't really know what to try...
+> >>>>
+> >>>> I just tried on rc5 and rc5-mm1, both have the problem (as 2.6.16, .17
+> >>>> and .18 do, don't know about earlier kernels). I didn't have a audio CD
+> >>>> here, so I tried abcde on a DVD on purpose. With cdparanoia 3.10-pre0
+> >>>> (from Debian testing), it reports nothing during about 5 seconds and
+> >>>> then the machine freezes. With cdparanoia 3a9.8-11 (from Debian stable),
+> >>>> it reports an error very quickly, and dmesg gets a couple line like
+> >>>> these:
+> >>>>     sg_write: data in/out 12/12 bytes for SCSI command 0x43--guessing
+> >>>> data in;
+> >>>>        program cdparanoia not setting count and/or reply_len properly
+> >>> Okay, here's the story.
+> >>>
+> >>> In interface/scan_devices.c::cdda_identify_scsi(), cdparanoia calls
+> >>> scsi_inquiry() to identify the device and determine interface type. This
+> >>> seems to be the first time to actually issue commands to the device.  As
+> >>> interface type isn't completely determined, for sg devices, it first
+> >>> issues the command w/ d->interface set to SGIO_SCSI.  If that fails, it
+> >>> falls back to SGIO_SCSI_BUGGY1.
+> >>>
+> >>> For to-device request, both SGIO_SCSI and SGIO_SCSI_BUGGY1 set
+> >>> sg_io_hdr.dxfer_direction to SG_DXFER_TO_DEV.  But for from-device
+> >>> request, SGIO_SCSI uses SG_DXFER_TO_FROM_DEV while SGIO_SCSI_BUGGY1 uses
+> >>> SG_DXFER_FROM_DEV.  So, cdparanoia first issues inquiry w/
+> >>> SG_DXFER_TO_FROM_DEV and if that fails falls back to SG_DXFER_FROM_DEV.
+> >>>
+> >>> drivers/scsi/sg.c interprets SG_DXFER_TO_FROM_DEV as read while
+> >>> block/scsi_ioctl.c interprets it as write.  I guess this is historic
+> >>> thing (scsi/sg.c updated but block/scsi_ioctl.c is forgotten).  As
+> >>> written above, cdparanoia can handle both cases as long as the kernel
+> >>> promptly fails command issued with the wrong direction.
+> >>>
+> >>> This works for most PATA ATAPI devices.  Most devices detect reversed
+> >>> transfer and terminate the command promptly.  But this doesn't seem to
+> >>> be true for SATA device.  Many just hang and time out commands with the
+> >>> wrong transfer direction.  If you consider that most early SATA ATAPI
+> >>> devices are actually PATA + bridge, this is sorta inevitable.  The
+> >>> PATA-SATA bridge cannot issue D2H FIS to abort the command by itself.
+> >>> It's just mirroring the status of PATA side and PATA side doesn't know
+> >>> SATA protocol mismatch has occurred.
+> >>>
+> >>> So, IDENTIFY w/ write-DMA protocol times out after quite some seconds.
+> >>> This is where things go worse from bad.  SATA controllers which have
+> >>> shadow TF registers don't handle timeout conditions very well,
+> >>> especially when they're waiting for data transfer.  They basically hold
+> >>> the PCI bus and hang till the transfer completes (which never happens).
+> >>>  That's where the hard lock up comes from.
+> >>>
+> >>> Jens, I think we need to match block sg's behavior to SCSI's.  Monty,
+> >>> the timeout and hard lock up are due to hardware restrictions.  Kernel
+> >>> and libata can't do much about it.  So, please find other way to detect
+> >>> interface.
+> >> Tejun,
+> >> Your SG_DXFER_TO_FROM_DEV analysis is correct.
+> >>
+> >> The stupid ~!@# who wrote the code, and the documentation
+> >> for it, defined SG_DXFER_TO_FROM_DEV to mean a "transfer
+> >> from device" operation where the kernel buffer receiving
+> >> the DMA transfer was prefilled with data that the application
+> >> provided. That certainly isn't a bidirectional transfer to/from
+> >> the device, but it is a bidirectional transfer to kernel
+> >> buffers when indirect IO is used.
+> >>
+> >> Why do this? Because the 'resid' field indicating how much
+> >> less data was transferred in a "from_device" transfer than
+> >> was requested, was not added to SCSI infrastructure till much
+> >> later. There are still LLDs out there that don't implement it.
+> >> It also reflected a similar technique used with the sg_header
+> >> structure (circa 1992) for precisely the same reason. And
+> >> application writers wanted that functionality. Joerg was the
+> >> first name of one such application writer.
+> >>
+> >>
+> >> Coincidentally I am sitting on a patch from Luben Tuikov
+> >> to cause the same breakage in the sg driver itself.
 > > 
-> > I don't know exactly where the problem lies, but I have narrowed it down.
+> > Here is a link to the recently posted 8 month patch:
+> > http://marc.theaimsgroup.com/?l=linux-scsi&m=116267031029025&w=2
 > > 
-> > In drivers/scsi/sd.c:sd_probe(), the call to add_disk() increases the 
-> > device's refcount by 1.  However in sd_remove(), the call to del_gendisk() 
-> > decreases the device's refcount by 2.  Consequently the structure is 
-> > deallocated too early, causing the oops.
+> > The patch would appear to fix the problem Tejun is describing.
 > > 
-> > Somebody who knows more than I do about add_disk() and del_gendisk() will 
-> > have to figure what's going wrong.
+> > I cannot quite remember exactly what I was doing that day 8 months
+> > ago, but was either disk or tape devices testing and arrived
+> > at that patch.
 > > 
+> > This patch had been in my dev (gateway) tree for the last 8
+> > months, without any problems.
+> > 
+> >     Luben
+> > 
+> > 
+> >> Nobody has proposed a patch to the documentation for
+> >> the explanation of SG_DXFER_TO_FROM_DEV :-)
+> >>     http://www.torque.net/sg/p/sg_v3_ho.html
+>                                   ^^^^^^^^^^^^^
 > 
-> hm.  Maybe it's the disk_sysfs_symlinks() changes.
+> Luben,
+> The failure being reported is that the block layer
+> SG_IO ioctl already does what you are proposing to
+> do for the sg driver.
 > 
-> Could someone who can reproduce this please try this revert, on
-> 2.6.19-rc2-mm2 through 2.6.19-rc5-mm1?
+> Hence an application, cdparanoia in this case, since
+> it coded against documented behaviour, assumes that
+> SG_DXFER_TO_FROM_DEV will read from the device.
+> See the definition of SG_DXFER_TO_FROM_DEV in sg.h and
+> the document above.
 > 
+> So your proposed patch would compound the problem. The
+> solution is _not_ to change the sg driver and put the
+> equivalent of the reverse of your patch in the block
+> layer SG_IO ioctl.
+> 
+> There is nothing to stop a new direction flag being
+> added called SG_DXFER_BIDIRECTIONAL that maps to
+> DMA_BIDIRECTIONAL.
 
-I confirm it fixes it for me too.
+Sounds good!
 
-regards,
+  Luben
 
-Benoit
+P.S. I'd love to see SG_DXFER_TO_FROM_DEV completely ripped out
+of sg.c, for obvious reasons.  Can you not duplicate the resid "fix"
+it provides into "FROM_DEV" -- do apps really rely on it?
 
--- 
-:wq
-
--------------------------------------------------------------------------
-Using Tomcat but need to do more? Need to support web services, security?
-Get stuff done quickly with pre-integrated technology to make your job easier
-Download IBM WebSphere Application Server v.1.0.1 based on Apache Geronimo
-http://sel.as-us.falkag.net/sel?cmd=lnk&kid=120709&bid=263057&dat=121642
-_______________________________________________
-linux-usb-devel@lists.sourceforge.net
-To unsubscribe, use the last form field at:
-https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
