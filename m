@@ -1,47 +1,53 @@
-From: "Jaco van der Schyff" <jvds@netgroup.co.za>
-Subject: Re: aic79xx dumping card state
-Date: Fri, 10 Nov 2006 19:09:14 +0200 (SAST)
-Message-ID: <36021.196.2.124.251.1163178554.squirrel@webmail.netgroup.co.za>
-References: <20061110004508.GF2667@mathom.us> <20061110150126.GA8222@npjaco>
-    <20061110153929.GG2667@mathom.us>
+From: Anton Vorontsov <cbou@mail.ru>
+Subject: Re: [linux-usb-devel] 2.6.19-rc5-mm1
+Date: Fri, 10 Nov 2006 23:17:25 +0300
+Message-ID: <20061110201725.GA7341@localhost>
+References: <20061109192658.GA2560@inferi.kami.home> <Pine.LNX.4.44L0.0611091655080.2262-100000@iolanthe.rowland.org> <20061109145100.01d6ec46.akpm@osdl.org> <f56c1ba00611091539n1d1cbe99obdb1c5f608646c96@mail.gmail.com> <20061109161123.f9cea1e7.akpm@osdl.org>
+Reply-To: cbou@mail.ru
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.netgroup.co.za ([196.25.213.80]:54734 "EHLO
-	mail.netgroup.co.za") by vger.kernel.org with ESMTP
-	id S1161319AbWKJRHg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Nov 2006 12:07:36 -0500
-In-Reply-To: <20061110153929.GG2667@mathom.us>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=koi8-r
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1946373AbWKJTPq@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20061109161123.f9cea1e7.akpm@osdl.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: =?koi8-r?B?PT9JU08tODg1OS0xP1E/?= C=E9dric?= Augonnet <cedric.augonnet@gmail.com>, Alan Stern <stern@rowland.harvard.edu>, Benoit Boissinot <bboissin@gmail.com>, Mattia Dongili <malattia@linux.it>, USB development list <linux-usb-devel@lists.sourceforge.net>, Kernel development list <linux-kernel@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, kernel-discuss@handhelds.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Stone <mstone@mathom.us>
-Cc: Jaco van der Schyff <jvds@netgroup.co.za>, linux-scsi@vger.kernel.org
 
-> On Fri, Nov 10, 2006 at 05:01:26PM +0200, Jaco van der Schyff wrote:
->>I had very similar problems on the aic79xx cards.  What you could first
->>check if QAS is enabled/disabled on both devices,
->
-> How do you tell that? Is it something readable from the kernel, or do I
-> have to poke around on the devices?
+On Thu, Nov 09, 2006 at 04:11:23PM -0800, Andrew Morton wrote:
+> On Fri, 10 Nov 2006 00:39:46 +0100
+> "C__dric Augonnet" <cedric.augonnet@gmail.com> wrote:
+> 
+> > 2006/11/9, Andrew Morton <akpm@osdl.org>:
+> > 
+> > >
+> > > hm.  Maybe it's the disk_sysfs_symlinks() changes.
+> > >
+> > > Could someone who can reproduce this please try this revert, on
+> > > 2.6.19-rc2-mm2 through 2.6.19-rc5-mm1?
+[...]
+> > 
+> > Hi,
+> > 
+> > This patch seems to be working : whereas i had the same oops as Mattia
+> > each time I unplugged my USB external DD drive, now it does not happen
+> > anymore.
+> > Thank you very much for this one !
+> > 
+> 
+> OK, thanks.  I dropped the patch.  So ide-cs will now start deadlocking
+> again.
 
-Yes on the devices, you will be able to see the settings of the card in
-the scsi select util at bootup.  Check the manuals of the devices you
-connect to the scsi bus for their settings.
+No, it will not. I'm really sorry, mainline was already fixed at
+2.6.17-rc5 time by that commit:
+http://www.kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=1a2acc9e9214699a99389e323e6686e9e0e2ca67
 
->>and step the card down
->>to 160MB/s.  I haven't successfully ran any aic79xx Ultra320 card at
->>Ultra320...
->>
->>Clock it down and it should be fine...
->
-> Yikes, that's not a solution. :) I found the aic79xx=slowcrc option and
-> enabled that, and I've been running pretty solid at 320 (~300MBps
-> transfer rates). I'll pound on it over the weekend and see if it stays
-> solid.
+But for some reason handhelds.org kernel tree's block/genhd.c file was
+unsynchronized with mainline. I've revealed that only after my patch was
+removed and I've started to investigate SCSI oops issue triggered by my
+patch.
 
-Cool! slowcrc didn't work for me... :(
+Resume: mainline do not need my patch, handhelds.org's kernel should be
+synchronized with mainline.
 
-- Jaco van der Schyff
-
-
+-- Anton (irc: bd2)
