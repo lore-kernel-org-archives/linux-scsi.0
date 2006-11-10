@@ -1,171 +1,354 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: 2.6.19-rc3 system freezes when ripping with cdparanoia at ioctl(SG_IO)
-Date: Fri, 10 Nov 2006 02:36:16 -0800 (PST)
-Message-ID: <20061110103617.79354.qmail@web31808.mail.mud.yahoo.com>
-References: <45534E2B.10303@torque.net>
-Reply-To: ltuikov@yahoo.com
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [RFC] Asynchronous scanning for FC/SAS version 2
+Date: Fri, 10 Nov 2006 05:53:28 -0700
+Message-ID: <20061110125327.GW16952@parisc-linux.org>
+References: <20061109225417.GS16952@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31808.mail.mud.yahoo.com ([68.142.207.71]:43943 "HELO
-	web31808.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S1946383AbWKJKgS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Nov 2006 05:36:18 -0500
-In-Reply-To: <45534E2B.10303@torque.net>
+Received: from palinux.external.hp.com ([192.25.206.14]:26540 "EHLO
+	mail.parisc-linux.org") by vger.kernel.org with ESMTP
+	id S1946557AbWKJMx3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Nov 2006 07:53:29 -0500
+Content-Disposition: inline
+In-Reply-To: <20061109225417.GS16952@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net, Tejun Heo <htejun@gmail.com>
-Cc: Brice Goglin <Brice.Goglin@ens-lyon.org>, Jens Axboe <jens.axboe@oracle.com>, Gregor Jasny <gjasny@googlemail.com>, Linux Kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, monty@xiph.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
---- Douglas Gilbert <dougg@torque.net> wrote:
-> Tejun Heo wrote:
-> > [CC'ing Monty and Douglas.]
-> > 
-> > Hello, the original thread can be read from the following URL.
-> > 
-> > http://thread.gmane.org/gmane.linux.ide/13708/focus=13708
-> > 
-> > Brice Goglin wrote:
-> >> ens Axboe wrote:
-> >>> On Mon, Oct 30 2006, Gregor Jasny wrote:
-> >>>  
-> >>>> 2006/10/30, Jens Axboe <jens.axboe@oracle.com>:
-> >>>>    
-> >>>>> Can you confirm that 2.6.18 works?
-> >>>>>       
-> >>>> The reporter of [1] states that his SATA Thinkpad freezes with 2.6.17
-> >>>> and 2.6.18, too.
-> >>>>
-> >>>> Gregor
-> >>>>
-> >>>> [1] http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=391901
-> >>>>     
-> >>> Ok, mainly just checking if this was a potential dupe of another bug.
-> >>>
-> >>>   
-> >>
-> >> Jens (or anybody else who has any idea of how to debug this),
-> >>
-> >> Did you have a chance to reproduce the problem? I guess we "only" need a
-> >> machine with SATA/ata_piix and cdparanoia 3.10. If you want me to debug
-> >> some stuff, feel free to tell me what. But, since it freezes the machine
-> >> and sysrq doesn't even work, I don't really know what to try...
-> >>
-> >> I just tried on rc5 and rc5-mm1, both have the problem (as 2.6.16, .17
-> >> and .18 do, don't know about earlier kernels). I didn't have a audio CD
-> >> here, so I tried abcde on a DVD on purpose. With cdparanoia 3.10-pre0
-> >> (from Debian testing), it reports nothing during about 5 seconds and
-> >> then the machine freezes. With cdparanoia 3a9.8-11 (from Debian stable),
-> >> it reports an error very quickly, and dmesg gets a couple line like
-> >> these:
-> >>     sg_write: data in/out 12/12 bytes for SCSI command 0x43--guessing
-> >> data in;
-> >>        program cdparanoia not setting count and/or reply_len properly
-> > 
-> > Okay, here's the story.
-> > 
-> > In interface/scan_devices.c::cdda_identify_scsi(), cdparanoia calls
-> > scsi_inquiry() to identify the device and determine interface type. This
-> > seems to be the first time to actually issue commands to the device.  As
-> > interface type isn't completely determined, for sg devices, it first
-> > issues the command w/ d->interface set to SGIO_SCSI.  If that fails, it
-> > falls back to SGIO_SCSI_BUGGY1.
-> > 
-> > For to-device request, both SGIO_SCSI and SGIO_SCSI_BUGGY1 set
-> > sg_io_hdr.dxfer_direction to SG_DXFER_TO_DEV.  But for from-device
-> > request, SGIO_SCSI uses SG_DXFER_TO_FROM_DEV while SGIO_SCSI_BUGGY1 uses
-> > SG_DXFER_FROM_DEV.  So, cdparanoia first issues inquiry w/
-> > SG_DXFER_TO_FROM_DEV and if that fails falls back to SG_DXFER_FROM_DEV.
-> > 
-> > drivers/scsi/sg.c interprets SG_DXFER_TO_FROM_DEV as read while
-> > block/scsi_ioctl.c interprets it as write.  I guess this is historic
-> > thing (scsi/sg.c updated but block/scsi_ioctl.c is forgotten).  As
-> > written above, cdparanoia can handle both cases as long as the kernel
-> > promptly fails command issued with the wrong direction.
-> > 
-> > This works for most PATA ATAPI devices.  Most devices detect reversed
-> > transfer and terminate the command promptly.  But this doesn't seem to
-> > be true for SATA device.  Many just hang and time out commands with the
-> > wrong transfer direction.  If you consider that most early SATA ATAPI
-> > devices are actually PATA + bridge, this is sorta inevitable.  The
-> > PATA-SATA bridge cannot issue D2H FIS to abort the command by itself.
-> > It's just mirroring the status of PATA side and PATA side doesn't know
-> > SATA protocol mismatch has occurred.
-> > 
-> > So, IDENTIFY w/ write-DMA protocol times out after quite some seconds.
-> > This is where things go worse from bad.  SATA controllers which have
-> > shadow TF registers don't handle timeout conditions very well,
-> > especially when they're waiting for data transfer.  They basically hold
-> > the PCI bus and hang till the transfer completes (which never happens).
-> >  That's where the hard lock up comes from.
-> > 
-> > Jens, I think we need to match block sg's behavior to SCSI's.  Monty,
-> > the timeout and hard lock up are due to hardware restrictions.  Kernel
-> > and libata can't do much about it.  So, please find other way to detect
-> > interface.
-> 
-> Tejun,
-> Your SG_DXFER_TO_FROM_DEV analysis is correct.
-> 
-> The stupid ~!@# who wrote the code, and the documentation
-> for it, defined SG_DXFER_TO_FROM_DEV to mean a "transfer
-> from device" operation where the kernel buffer receiving
-> the DMA transfer was prefilled with data that the application
-> provided. That certainly isn't a bidirectional transfer to/from
-> the device, but it is a bidirectional transfer to kernel
-> buffers when indirect IO is used.
-> 
-> Why do this? Because the 'resid' field indicating how much
-> less data was transferred in a "from_device" transfer than
-> was requested, was not added to SCSI infrastructure till much
-> later. There are still LLDs out there that don't implement it.
-> It also reflected a similar technique used with the sg_header
-> structure (circa 1992) for precisely the same reason. And
-> application writers wanted that functionality. Joerg was the
-> first name of one such application writer.
-> 
-> 
-> Coincidentally I am sitting on a patch from Luben Tuikov
-> to cause the same breakage in the sg driver itself.
+On Thu, Nov 09, 2006 at 03:54:17PM -0700, Matthew Wilcox wrote:
+> Here's the second iteration of
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=116136002113903&w=2
 
-Here is a link to the recently posted 8 month patch:
-http://marc.theaimsgroup.com/?l=linux-scsi&m=116267031029025&w=2
+Many thanks to Justin Chen for testing a couple of intermediate versions;
+this incremental patch rearranges the QLogic driver initialisation to
+perform the LIP reset in the scanning thread.  This gets the time to
+initialise qlogic devices down to under a tenth of a second per device.
 
-The patch would appear to fix the problem Tejun is describing.
+I introduce another scsi_host_template method to achieve this.  I suppose
+I could have done it by calling scan_finished(host, 0) and checking
+the time argument in the qlogic implementation ... but that seemed a
+bit unclean.
 
-I cannot quite remember exactly what I was doing that day 8 months
-ago, but was either disk or tape devices testing and arrived
-at that patch.
+Still todo:
+ - Get Emulex LPFC using scan_start
+ - Work out how to use this interface for USB/Firewire/iSCSI
+ - Get LSI Fusion using this infrastructure
 
-This patch had been in my dev (gateway) tree for the last 8
-months, without any problems.
-
-    Luben
-
-
-> Nobody has proposed a patch to the documentation for
-> the explanation of SG_DXFER_TO_FROM_DEV :-)
->     http://www.torque.net/sg/p/sg_v3_ho.html
-> 
-> 
-> As I am currently proposing a SCSI pass through version 4
-> interface with twin scatter gather lists for independent
-> bidirectional transfers for SCSI commands, I'm not sure
-> what setting DMA_BIDIRECTIONAL in the existing interface
-> buys us.
-> 
-> 
-> When you maintain and document a pass through interface you
-> sit between two groups of people that have conflicting goals
-> and don't have a particularly high opinion of each other.
-> 
-> Doug Gilbert
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 91b8bf3..048dd3f 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -83,7 +83,8 @@ MODULE_PARM_DESC(ql2xfdmienable,
+ static int qla2xxx_slave_configure(struct scsi_device * device);
+ static int qla2xxx_slave_alloc(struct scsi_device *);
+ static void qla2xxx_slave_destroy(struct scsi_device *);
+-static int qla2xxx_scan_finished(struct Scsi_Host *);
++static int qla2xxx_scan_finished(struct Scsi_Host *, unsigned long time);
++static void qla2xxx_scan_start(struct Scsi_Host *);
+ static int qla2x00_queuecommand(struct scsi_cmnd *cmd,
+ 		void (*fn)(struct scsi_cmnd *));
+ static int qla24xx_queuecommand(struct scsi_cmnd *cmd,
+@@ -112,7 +113,8 @@ static struct scsi_host_template qla2x00
+ 
+ 	.slave_alloc		= qla2xxx_slave_alloc,
+ 	.slave_destroy		= qla2xxx_slave_destroy,
+-	.scan_finished		= qla2x00_scan_finished,
++	.scan_finished		= qla2xxx_scan_finished,
++	.scan_start		= qla2xxx_scan_start,
+ 	.change_queue_depth	= qla2x00_change_queue_depth,
+ 	.change_queue_type	= qla2x00_change_queue_type,
+ 	.this_id		= -1,
+@@ -1355,18 +1357,115 @@ qla24xx_disable_intrs(scsi_qla_host_t *h
+ 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ }
+ 
+-static int qla2x00_scan_finished(struct Scsi_Host *shost, unsigned long time)
++static void qla2xxx_remove_device(scsi_qla_host_t *ha)
+ {
++	qla2x00_free_sysfs_attr(ha);
++	fc_remove_host(ha->host);
++	scsi_remove_host(ha->host);
++	qla2x00_free_device(ha);
++	scsi_host_put(ha->host);
++}
++
++static void qla2xxx_scan_start(struct Scsi_Host *shost)
++{
++	unsigned long flags;
++	device_reg_t __iomem *reg;
+ 	scsi_qla_host_t *ha = (scsi_qla_host_t *)shost->hostdata;
+ 
+-	if (time > ha->loop_reset_delay * HZ)
++	if (qla2x00_initialize_adapter(ha) &&
++	    !(ha->device_flags & DFLG_NO_CABLE)) {
++
++		qla_printk(KERN_WARNING, ha,
++		    "Failed to initialize adapter\n");
++
++		DEBUG2(printk("scsi(%ld): Failed to initialize adapter - "
++		    "Adapter flags %x.\n",
++		    ha->host_no, ha->device_flags));
++		goto error;
++	}
++
++	/*
++	 * Startup the kernel thread for this host adapter
++	 */
++	ha->dpc_thread = kthread_create(qla2x00_do_dpc, ha,
++			"%s_dpc", ha->host_str);
++	if (IS_ERR(ha->dpc_thread)) {
++		qla_printk(KERN_WARNING, ha,
++		    "Unable to start DPC thread!\n");
++		goto error;
++	}
++
++	qla2x00_start_timer(ha, qla2x00_timer, WATCH_INTERVAL);
++
++	DEBUG2(printk("DEBUG: detect hba %ld at address = %p\n",
++	    ha->host_no, ha));
++
++	ha->isp_ops.disable_intrs(ha);
++
++	spin_lock_irqsave(&ha->hardware_lock, flags);
++	reg = ha->iobase;
++	if (IS_QLA24XX(ha) || IS_QLA54XX(ha)) {
++		WRT_REG_DWORD(&reg->isp24.hccr, HCCRX_CLR_HOST_INT);
++		WRT_REG_DWORD(&reg->isp24.hccr, HCCRX_CLR_RISC_INT);
++	} else {
++		WRT_REG_WORD(&reg->isp.semaphore, 0);
++		WRT_REG_WORD(&reg->isp.hccr, HCCR_CLR_RISC_INT);
++		WRT_REG_WORD(&reg->isp.hccr, HCCR_CLR_HOST_INT);
++
++		/* Enable proper parity */
++		if (!IS_QLA2100(ha) && !IS_QLA2200(ha)) {
++			if (IS_QLA2300(ha))
++				/* SRAM parity */
++				WRT_REG_WORD(&reg->isp.hccr,
++				    (HCCR_ENABLE_PARITY + 0x1));
++			else
++				/* SRAM, Instruction RAM and GP RAM parity */
++				WRT_REG_WORD(&reg->isp.hccr,
++				    (HCCR_ENABLE_PARITY + 0x7));
++		}
++	}
++	spin_unlock_irqrestore(&ha->hardware_lock, flags);
++
++	ha->isp_ops.enable_intrs(ha);
++	ha->flags.init_done = 1;
++
++	return;
++
++ error:
++	qla2xxx_remove_device(ha);
++	ha->host = NULL;
++}
++
++static int qla2xxx_scan_finished(struct Scsi_Host *shost, unsigned long time)
++{
++	fc_port_t *fcport;
++	scsi_qla_host_t *ha = (scsi_qla_host_t *)shost->hostdata;
++
++	if (!ha->host)
+ 		return 1;
+ 
++	if (time > ha->loop_reset_delay * HZ)
++		goto finished;
++
+ 	qla2x00_check_fabric_devices(ha);
+ 
+ 	if (ha->device_flags & (DFLG_NO_CABLE | DFLG_FABRIC_DEVICES))
+-		return 1;
+-	return !(ha->device_flags & SWITCH_FOUND);
++		goto finished;
++	if (!(ha->device_flags & SWITCH_FOUND))
++		goto finished;
++
++	return 0;
++
++ finished:
++	qla2x00_alloc_sysfs_attr(ha);
++
++	qla2x00_init_host_attr(ha);
++
++	/* Go with fc_rport registration. */
++	list_for_each_entry(fcport, &ha->fcports, list)
++		qla2x00_reg_remote_port(ha, fcport);
++
++	return 1;
+ }
+ 
+ /*
+@@ -1376,13 +1475,10 @@ static int __devinit
+ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ {
+ 	int	ret = -ENODEV;
+-	device_reg_t __iomem *reg;
+ 	struct Scsi_Host *host;
+ 	scsi_qla_host_t *ha;
+-	unsigned long flags;
+ 	char pci_info[20];
+ 	char fw_str[30];
+-	fc_port_t *fcport;
+ 	struct scsi_host_template *sht;
+ 
+ 	if (pci_enable_device(pdev))
+@@ -1526,7 +1622,7 @@ qla2x00_probe_one(struct pci_dev *pdev, 
+ 	host->can_queue = ha->request_q_length + 128;
+ 
+ 	/* load the F/W, read paramaters, and init the H/W */
+-	ha->instance = num_hosts;
++	ha->instance = num_hosts++;
+ 
+ 	init_MUTEX(&ha->mbx_cmd_sem);
+ 	init_MUTEX_LOCKED(&ha->mbx_intr_sem);
+@@ -1551,32 +1647,6 @@ qla2x00_probe_one(struct pci_dev *pdev, 
+ 		goto probe_failed;
+ 	}
+ 
+-	if (qla2x00_initialize_adapter(ha) &&
+-	    !(ha->device_flags & DFLG_NO_CABLE)) {
+-
+-		qla_printk(KERN_WARNING, ha,
+-		    "Failed to initialize adapter\n");
+-
+-		DEBUG2(printk("scsi(%ld): Failed to initialize adapter - "
+-		    "Adapter flags %x.\n",
+-		    ha->host_no, ha->device_flags));
+-
+-		ret = -ENODEV;
+-		goto probe_failed;
+-	}
+-
+-	/*
+-	 * Startup the kernel thread for this host adapter
+-	 */
+-	ha->dpc_thread = kthread_create(qla2x00_do_dpc, ha,
+-			"%s_dpc", ha->host_str);
+-	if (IS_ERR(ha->dpc_thread)) {
+-		qla_printk(KERN_WARNING, ha,
+-		    "Unable to start DPC thread!\n");
+-		ret = PTR_ERR(ha->dpc_thread);
+-		goto probe_failed;
+-	}
+-
+ 	host->this_id = 255;
+ 	host->cmd_per_lun = 3;
+ 	host->unique_id = ha->instance;
+@@ -1594,54 +1664,13 @@ qla2x00_probe_one(struct pci_dev *pdev, 
+ 		goto probe_failed;
+ 	}
+ 	host->irq = pdev->irq;
+-
+-	/* Initialized the timer */
+-	qla2x00_start_timer(ha, qla2x00_timer, WATCH_INTERVAL);
+-
+-	DEBUG2(printk("DEBUG: detect hba %ld at address = %p\n",
+-	    ha->host_no, ha));
+-
+-	ha->isp_ops.disable_intrs(ha);
+-
+-	spin_lock_irqsave(&ha->hardware_lock, flags);
+-	reg = ha->iobase;
+-	if (IS_QLA24XX(ha) || IS_QLA54XX(ha)) {
+-		WRT_REG_DWORD(&reg->isp24.hccr, HCCRX_CLR_HOST_INT);
+-		WRT_REG_DWORD(&reg->isp24.hccr, HCCRX_CLR_RISC_INT);
+-	} else {
+-		WRT_REG_WORD(&reg->isp.semaphore, 0);
+-		WRT_REG_WORD(&reg->isp.hccr, HCCR_CLR_RISC_INT);
+-		WRT_REG_WORD(&reg->isp.hccr, HCCR_CLR_HOST_INT);
+-
+-		/* Enable proper parity */
+-		if (!IS_QLA2100(ha) && !IS_QLA2200(ha)) {
+-			if (IS_QLA2300(ha))
+-				/* SRAM parity */
+-				WRT_REG_WORD(&reg->isp.hccr,
+-				    (HCCR_ENABLE_PARITY + 0x1));
+-			else
+-				/* SRAM, Instruction RAM and GP RAM parity */
+-				WRT_REG_WORD(&reg->isp.hccr,
+-				    (HCCR_ENABLE_PARITY + 0x7));
+-		}
+-	}
+-	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+-
+-	ha->isp_ops.enable_intrs(ha);
+-
+ 	pci_set_drvdata(pdev, ha);
+-	ha->flags.init_done = 1;
+-	num_hosts++;
+ 
+ 	ret = scsi_add_host(host, &pdev->dev);
+ 	if (ret)
+ 		goto probe_failed;
+ 	scsi_scan_host(host);
+ 
+-	qla2x00_alloc_sysfs_attr(ha);
+-
+-	qla2x00_init_host_attr(ha);
+-
+ 	qla_printk(KERN_INFO, ha, "\n"
+ 	    " QLogic Fibre Channel HBA Driver: %s\n"
+ 	    "  QLogic %s - %s\n"
+@@ -1652,10 +1681,6 @@ qla2x00_probe_one(struct pci_dev *pdev, 
+ 	    ha->flags.enable_64bit_addressing ? '+': '-', ha->host_no,
+ 	    ha->isp_ops.fw_version_str(ha, fw_str));
+ 
+-	/* Go with fc_rport registration. */
+-	list_for_each_entry(fcport, &ha->fcports, list)
+-		qla2x00_reg_remote_port(ha, fcport);
+-
+ 	return 0;
+ 
+ probe_failed:
+@@ -1676,17 +1701,7 @@ qla2x00_remove_one(struct pci_dev *pdev)
+ 	scsi_qla_host_t *ha;
+ 
+ 	ha = pci_get_drvdata(pdev);
+-
+-	qla2x00_free_sysfs_attr(ha);
+-
+-	fc_remove_host(ha->host);
+-
+-	scsi_remove_host(ha->host);
+-
+-	qla2x00_free_device(ha);
+-
+-	scsi_host_put(ha->host);
+-
++	qla2xxx_remove_device(ha);
+ 	pci_set_drvdata(pdev, NULL);
+ }
+ 
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index bbeddf9..5c7d65d 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1713,6 +1713,9 @@ static void do_scsi_scan_host(struct Scs
+ {
+ 	if (shost->hostt->scan_finished) {
+ 		unsigned long start = jiffies;
++		if (shost->hostt->scan_start)
++			shost->hostt->scan_start(shost);
++
+ 		while (!shost->hostt->scan_finished(shost, jiffies - start))
+ 			msleep(10);
+ 	} else {
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 359672a..20ebcea 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -252,6 +252,13 @@ #endif
+ 	int (* scan_finished)(struct Scsi_Host *, unsigned long);
+ 
+ 	/*
++	 * If the host wants to be called before the scan starts, but
++	 * after the midlayer has set up ready for the scan, it can fill
++	 * in this function.
++	 */
++	void (* scan_start)(struct Scsi_Host *);
++
++	/*
+ 	 * fill in this function to allow the queue depth of this host
+ 	 * to be changeable (on a per device basis).  returns either
+ 	 * the current queue depth setting (may be different from what
