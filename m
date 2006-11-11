@@ -1,37 +1,46 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: 2.6.19-rc3 system freezes when ripping with cdparanoia at ioctl(SG_IO)
-Date: Sat, 11 Nov 2006 11:09:33 -0800 (PST)
-Message-ID: <589461.23187.qm@web31813.mail.mud.yahoo.com>
-References: <20061111104642.GA3356@infradead.org>
-Reply-To: ltuikov@yahoo.com
+From: Dave Jones <davej@redhat.com>
+Subject: Re: Support for (new?) Silicon Image PCI SATA controller
+Date: Sat, 11 Nov 2006 17:47:24 -0500
+Message-ID: <20061111224724.GA13292@redhat.com>
+References: <200611081803.52986.wjl@icecavern.net> <4553BBB3.1000508@gmail.com> <20061109234009.GT16952@parisc-linux.org> <200611091659.16002.wjl@icecavern.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20061111104642.GA3356@infradead.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: dougg@torque.net, Tejun Heo <htejun@gmail.com>, Brice Goglin <Brice.Goglin@ens-lyon.org>, Jens Axboe <jens.axboe@oracle.com>, Gregor Jasny <gjasny@googlemail.com>, Linux Kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, monty@xiph.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([66.187.233.31]:13721 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S1754888AbWKKWrk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 11 Nov 2006 17:47:40 -0500
+Content-Disposition: inline
+In-Reply-To: <200611091659.16002.wjl@icecavern.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Wesley J. Landaker" <wjl@icecavern.net>
+Cc: Matthew Wilcox <matthew@wil.cx>, Tejun Heo <htejun@gmail.com>, linux-scsi@vger.kernel.org, Carlos Pardo <Carlos.Pardo@siliconimage.com>
 
---- Christoph Hellwig <hch@infradead.org> wrote:
-> On Fri, Nov 10, 2006 at 12:08:15PM -0800, Luben Tuikov wrote:
-> > P.S. I'd love to see SG_DXFER_TO_FROM_DEV completely ripped out
-> > of sg.c, for obvious reasons.  Can you not duplicate the resid "fix"
-> > it provides into "FROM_DEV" -- do apps really rely on it?
-> 
-> At the beginning of this thread it was mentioned cdparanio uses it.
-> But in general we can't just rip out userland interfaces, we pretend
-> to have a stable userspace abi (and except for the big sysfs mess that
-> actually comes very close to the truth).
+On Thu, Nov 09, 2006 at 04:59:15PM -0700, Wesley J. Landaker wrote:
 
-The more reason to think things thorougly when introducing
-new code and architecture into a kernel.
+ > > > SIMG says there's no such device and it's probably bad hardware
+ > > > (probably a 3512) with stuck bits in PCI ID.  If you bought it, ask for
+ > > > replacement.
+ > > It could also be a problem with his motherboard.  I'd try it in a
+ > > different slot (or in a different machine) before returning the card
+ > > as bad.
+ > 
+ > Guys, thank you. Your suggestion about a stuck bit sounds reasonable, since I 
+ > couldn't find any indication of any device IDs from SI that matched... that's 
+ > why I originally assumed it was a new device (since the hardware is 
+ > supposedly fairly recent).
+ > 
+ > I will try this out in a different motherboard slot and if there's no luck 
+ > there see if I can get this card replaced.
+ > 
+ > Thank for the help, and hopefully I can get it working. =)
 
-     Luben
+I've seen similar things from cards with dirty connectors.
+A pencil eraser over the contacts made a similar problem I saw
+with a tulip card disappear.
 
-> What we should do is to document very well what SG_DXFER_TO_FROM_DEV
-> is doing and that odd name that's been chosen for it.  I'll prepare
-> a patch for that.
+		Dave
 
-
+-- 
+http://www.codemonkey.org.uk
