@@ -1,33 +1,50 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: 2.6.19-rc3 system freezes when ripping with cdparanoia at ioctl(SG_IO)
-Date: Sat, 11 Nov 2006 10:46:42 +0000
-Message-ID: <20061111104642.GA3356@infradead.org>
-References: <4554777B.7050708@torque.net> <508312.85189.qm@web31812.mail.mud.yahoo.com>
+From: Joe Ordnung <joeordnung@yahoo.de>
+Subject: Re: Please Her Tonite
+Date: Sat, 11 Nov 2006 14:03:34 +0100
+Message-ID: <4555CA26.6010000__41755.9259957217$1163250448$gmane$org@yahoo.de>
+References: <2A907EE3.7684.6715C2D5@localhost>
+Reply-To: joeordnung@yahoo.de
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:19916 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1947190AbWKKKqz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 11 Nov 2006 05:46:55 -0500
-Content-Disposition: inline
-In-Reply-To: <508312.85189.qm@web31812.mail.mud.yahoo.com>
+Received: from smtp006.mail.ukl.yahoo.com ([217.12.11.95]:39279 "HELO
+	smtp006.mail.ukl.yahoo.com") by vger.kernel.org with SMTP
+	id S1947217AbWKKNGy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 11 Nov 2006 08:06:54 -0500
+In-Reply-To: <2A907EE3.7684.6715C2D5@localhost>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <ltuikov@yahoo.com>
-Cc: dougg@torque.net, Tejun Heo <htejun@gmail.com>, Brice Goglin <Brice.Goglin@ens-lyon.org>, Jens Axboe <jens.axboe@oracle.com>, Gregor Jasny <gjasny@googlemail.com>, Linux Kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, monty@xiph.org, linux-scsi@vger.kernel.org
+To: Priscilla Kemp <ettaafnrqm@hotmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-serial@vger.kernel.org, linux-newbie@vger.kernel.org, linux-gcc@vger.kernel.org
 
-On Fri, Nov 10, 2006 at 12:08:15PM -0800, Luben Tuikov wrote:
-> P.S. I'd love to see SG_DXFER_TO_FROM_DEV completely ripped out
-> of sg.c, for obvious reasons.  Can you not duplicate the resid "fix"
-> it provides into "FROM_DEV" -- do apps really rely on it?
+Spam!
 
-At the beginning of this thread it was mentioned cdparanio uses it.
-But in general we can't just rip out userland interfaces, we pretend
-to have a stable userspace abi (and except for the big sysfs mess that
-actually comes very close to the truth).
 
-What we should do is to document very well what SG_DXFER_TO_FROM_DEV
-is doing and that odd name that's been chosen for it.  I'll prepare
-a patch for that.
+Priscilla Kemp schrieb:
+>
+> Suffering from short penniss?
+> Introduce revolution "ManXL" formula which
+> gauranteees sizes increase or moneey baack.
+>
+> Users reported:
+> - 2 inches extra in size
+> - 3x pleasurable orgasms
+> - 27% thicker
+>
+> Why waiting?
+>
+> http://kalfroutl.com/mxl/
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+>
+>   
+
+
+		
+___________________________________________________________ 
+Telefonate ohne weitere Kosten vom PC zum PC: http://messenger.yahoo.de
 
