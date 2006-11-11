@@ -1,79 +1,101 @@
 From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: Re: [PATCH 3/4] aic94xx: cleanup after a discovery error
-Date: Fri, 10 Nov 2006 16:48:24 -0800
-Message-ID: <45551DD8.3090703@us.ibm.com>
-References: <1163102636.6521.19.camel@localhost.localdomain>
+Subject: [PATCH] aic94xx: Don't call pci_map_sg for already-mapped scatterlists
+Date: Fri, 10 Nov 2006 16:59:24 -0800
+Message-ID: <4555206C.8010909@us.ibm.com>
 Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:1693 "EHLO e33.co.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1424470AbWKKAs0 (ORCPT
+Received: from e36.co.us.ibm.com ([32.97.110.154]:3740 "EHLO e36.co.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1424469AbWKKA70 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Nov 2006 19:48:26 -0500
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e33.co.us.ibm.com (8.13.8/8.12.11) with ESMTP id kAB0mPxA025900
-	for <linux-scsi@vger.kernel.org>; Fri, 10 Nov 2006 19:48:25 -0500
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id kAB0mPAa332726
-	for <linux-scsi@vger.kernel.org>; Fri, 10 Nov 2006 17:48:25 -0700
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id kAB0mPP0028707
-	for <linux-scsi@vger.kernel.org>; Fri, 10 Nov 2006 17:48:25 -0700
-In-Reply-To: <1163102636.6521.19.camel@localhost.localdomain>
+	Fri, 10 Nov 2006 19:59:26 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alexis Bruemmer <alexisb@us.ibm.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>
 
-This patch applies the same cleanups to sas_discover_sata.
-Note that this is against aic94xx-sas, not scsi-misc.
+It turns out that libata has already dma_map_sg'd the scatterlist
+entries that go with an ata_queued_cmd by the time it calls
+sas_ata_qc_issue.  sas_ata_qc_issue passes this scatterlist to aic94xx. 
+Unfortunately, aic94xx assumes that any scatterlist passed to it needs
+to be pci_map_sg'd... which blows away the mapping that libata created! 
+This causes (on a x260) Calgary IOMMU table leaks and duplicate frees
+when aic94xx and libata try to {pci,dma}_unmap_sg the scatterlist. 
+
+Since dma_map_sg and pci_map_sg are fed the same struct device, I think
+it's safe to add a flag to sas_task that tells aic94xx that it need
+not map the scatterlist.  It didn't break anything on the x260, though
+I don't have any SATAPI devices to test with.  Is this the correct
+approach to fixing this problem?
 
 --
 
 Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
 
-diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-index 23461dc..dcd0461 100644
---- a/drivers/scsi/libsas/sas_discover.c
-+++ b/drivers/scsi/libsas/sas_discover.c
-@@ -552,7 +552,7 @@ int sas_discover_sata(struct domain_devi
- 
- 	res = sas_notify_lldd_dev_found(dev);
- 	if (res)
--		return res;
-+		goto out_err2;
- 
- 	switch (dev->dev_type) {
- 	case SATA_DEV:
-@@ -564,12 +564,25 @@ int sas_discover_sata(struct domain_devi
- 	default:
- 		break;
+diff --git a/drivers/scsi/aic94xx/aic94xx_task.c b/drivers/scsi/aic94xx/aic94xx_task.c
+index 9840708..eaffaa6 100644
+--- a/drivers/scsi/aic94xx/aic94xx_task.c
++++ b/drivers/scsi/aic94xx/aic94xx_task.c
+@@ -74,8 +74,11 @@ static inline int asd_map_scatterlist(st
+ 		return 0;
  	}
-+	if (res)
-+		goto out_err;
  
- 	sas_notify_lldd_dev_gone(dev);
--	if (!res) {
--		sas_notify_lldd_dev_found(dev);
--		res = sas_rphy_add(dev->rphy);
--	}
-+	res = sas_notify_lldd_dev_found(dev);
-+	if (res)
-+		goto out_err2;
-+
-+	res = sas_rphy_add(dev->rphy);
-+	if (res)
-+		goto out_err;
-+
-+	return res;
-+
-+out_err:
-+	sas_notify_lldd_dev_gone(dev);
-+out_err2:
-+	sas_rphy_free(dev->rphy);
-+	dev->rphy = NULL;
+-	num_sg = pci_map_sg(asd_ha->pcidev, task->scatter, task->num_scatter,
+-			    task->data_dir);
++	if (task->external_sg)
++		num_sg = task->num_scatter;
++	else
++		num_sg = pci_map_sg(asd_ha->pcidev, task->scatter,
++				    task->num_scatter, task->data_dir);
+ 	if (num_sg == 0)
+ 		return -ENOMEM;
+ 
+@@ -120,8 +123,9 @@ static inline int asd_map_scatterlist(st
+ 
+ 	return 0;
+ err_unmap:
+-	pci_unmap_sg(asd_ha->pcidev, task->scatter, task->num_scatter,
+-		     task->data_dir);
++	if (!task->external_sg)
++		pci_unmap_sg(asd_ha->pcidev, task->scatter, task->num_scatter,
++			     task->data_dir);
  	return res;
  }
+ 
+@@ -142,8 +146,9 @@ static inline void asd_unmap_scatterlist
+ 	}
+ 
+ 	asd_free_coherent(asd_ha, ascb->sg_arr);
+-	pci_unmap_sg(asd_ha->pcidev, task->scatter, task->num_scatter,
+-		     task->data_dir);
++	if (!task->external_sg)
++		pci_unmap_sg(asd_ha->pcidev, task->scatter, task->num_scatter,
++			     task->data_dir);
+ }
+ 
+ /* ---------- Task complete tasklet ---------- */
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 8f8cd40..04115c3 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -167,6 +167,7 @@ static unsigned int sas_ata_qc_issue(str
+ 		task->num_scatter = num;
+ 	}
+ 
++	task->external_sg = 1;
+ 	task->data_dir = qc->dma_dir;
+ 	task->scatter = qc->__sg;
+ 	task->ata_task.retry_count = 1;
+diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+index 1263bd5..25a1fb3 100644
+--- a/include/scsi/libsas.h
++++ b/include/scsi/libsas.h
+@@ -546,6 +546,7 @@ struct sas_task {
+ 	void   *uldd_task;
+ 
+ 	struct work_struct abort_work;
++	int    external_sg;
+ };
+ 
  
