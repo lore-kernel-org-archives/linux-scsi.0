@@ -1,43 +1,81 @@
 From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: Re: [PATCH 3/4] aic94xx: cleanup after a discovery error
-Date: Sun, 12 Nov 2006 10:31:36 -0800
-Message-ID: <45576888.1090900@us.ibm.com>
-References: <1163102636.6521.19.camel@localhost.localdomain> <45551D3B.7070007@us.ibm.com>
+Subject: Re: Aic94xx and Linux kernel 2.6.19
+Date: Sun, 12 Nov 2006 11:05:31 -0800
+Message-ID: <4557707B.8040701@us.ibm.com>
+References: <834553.41356.qm@web31804.mail.mud.yahoo.com>
 Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e3.ny.us.ibm.com ([32.97.182.143]:43917 "EHLO e3.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1752375AbWKLSbk (ORCPT
+Received: from e6.ny.us.ibm.com ([32.97.182.146]:6890 "EHLO e6.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1752764AbWKLTFe (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 12 Nov 2006 13:31:40 -0500
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e3.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id kACIVcWc013276
-	for <linux-scsi@vger.kernel.org>; Sun, 12 Nov 2006 13:31:38 -0500
+	Sun, 12 Nov 2006 14:05:34 -0500
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e6.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id kACJ5r3c019018
+	for <linux-scsi@vger.kernel.org>; Sun, 12 Nov 2006 14:05:53 -0500
 Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay02.pok.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id kACIVcCp283408
-	for <linux-scsi@vger.kernel.org>; Sun, 12 Nov 2006 13:31:38 -0500
+	by d01relay04.pok.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id kACJ5XZg138574
+	for <linux-scsi@vger.kernel.org>; Sun, 12 Nov 2006 14:05:33 -0500
 Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id kACIVcXP017137
-	for <linux-scsi@vger.kernel.org>; Sun, 12 Nov 2006 13:31:38 -0500
-In-Reply-To: <45551D3B.7070007@us.ibm.com>
+	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id kACJ5W3Z027170
+	for <linux-scsi@vger.kernel.org>; Sun, 12 Nov 2006 14:05:33 -0500
+In-Reply-To: <834553.41356.qm@web31804.mail.mud.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Alexis Bruemmer <alexisb@us.ibm.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: ltuikov@yahoo.com, mike.redan@bell.ca, James.Bottomley@SteelEye.com, alexisb@us.ibm.com, linux-scsi <linux-scsi@vger.kernel.org>
 
-Darrick J. Wong wrote:
+Luben Tuikov wrote:
 
-> It'll still oops; sas_ex_discover_end_dev needs to be updated to know
-> that it needn't call sas_rphy_free if the device-specific discovery
-> functions fail.  This patch should fix that case too.
+> 3. I never see a crash.  After the transport driver couldn't allocate
+>    memory and returned 0xFFFFFFF4 (-ENOMEM), the SATL task is put
+>    back on the list of tasks to be executed, task order, NCQ, etc perfectly
+>    preserved. (SATL supports NCQ and Full Task Management, btw.)  The second time
+>    around* allocation succeeds and the task(s) are executed.  The application
+>    client (I/O tester application/whatever, in user space) never detects this,
+>    since the task does complete and status is returned to the application client.
 
-Erm... this patch is only necessary if one has jejb's "better error
-handling in sas_ex_discover_end_dev()" patch applied.
+Indeed, I had hoped that libata would do a similar thing.  A curious
+thing happens, however, when ata_qc_new_init fails to get an ata_queued_cmd:
 
-http://www.kernel.org/git/?p=linux/kernel/git/jejb/aic94xx-sas-2.6.git;a=commitdiff;h=82f6bc0849b6fce9a965dde11dd6f685adc7285e
+First, ata_qc_new_init handles the failure like this:
+    cmd->result = (DID_OK << 16) | (QUEUE_FULL << 1);
+    done(cmd);
 
-(My queue of pending patches is getting a bit too long, methinks.)
+Then, we return to ata_scsi_translate and do this:
+    err_mem:
+        cmd->result = (DID_ERROR << 16);
+        done(cmd);
 
---D
+It appears to me (jgarzik, please correct me if I'm wrong) that first we
+set a status code indicating that we're ok but the device queue is full
+and finish the command,  but then we blow away that status code and
+replace it with an error flag and finish the command a second time!
+That does not seem to be desirable behavior since we merely want the I/O
+to wait until a command slot frees up, not send errors up the block layer.
+
+Perhaps in the err_mem case we should simply exit out of
+ata_scsi_translate instead?  I've a quick-and-dirty patch, though I've
+not tested it thoroughly yet.
+
+--
+
+Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 7af2a4b..5c1fc46 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -1612,9 +1612,9 @@ early_finish:
+
+ err_did:
+ 	ata_qc_free(qc);
+-err_mem:
+ 	cmd->result = (DID_ERROR << 16);
+ 	done(cmd);
++err_mem:
+ 	DPRINTK("EXIT - internal\n");
+ 	return 0;
+
