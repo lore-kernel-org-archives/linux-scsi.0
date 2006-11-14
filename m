@@ -1,68 +1,59 @@
-From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: [PATCH] sas_ata: Fix sas_ata_qc_issue to return AC_ERR_*
-Date: Tue, 14 Nov 2006 13:47:12 -0800
-Message-ID: <455A3960.9070207@us.ibm.com>
-Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
+From: "Monty Montgomery" <monty@xiph.org>
+Subject: Re: 2.6.19-rc3 system freezes when ripping with cdparanoia at ioctl(SG_IO)
+Date: Tue, 14 Nov 2006 17:52:04 -0500
+Message-ID: <806dafc20611141452y7262df80g6fb7d3c0581f7b7f@mail.gmail.com>
+References: <20061111104642.GA3356@infradead.org>
+	 <589461.23187.qm@web31813.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:41397 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S966391AbWKNVrP
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Nov 2006 16:47:15 -0500
+Received: from nz-out-0102.google.com ([64.233.162.193]:3663 "EHLO
+	nz-out-0102.google.com") by vger.kernel.org with ESMTP
+	id S966424AbWKNWwG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Nov 2006 17:52:06 -0500
+Received: by nz-out-0102.google.com with SMTP id l1so1113772nzf
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Nov 2006 14:52:05 -0800 (PST)
+In-Reply-To: <589461.23187.qm@web31813.mail.mud.yahoo.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>
+To: ltuikov@yahoo.com
+Cc: Christoph Hellwig <hch@infradead.org>, dougg@torque.net, Tejun Heo <htejun@gmail.com>, Brice Goglin <Brice.Goglin@ens-lyon.org>, Jens Axboe <jens.axboe@oracle.com>, Gregor Jasny <gjasny@googlemail.com>, Linux Kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-I mistakenly wrote sas_ata_qc_issue to return error codes such as
-ENOMEM.  Since libata OR's qc->err_mask with the return value, I believe
-that it is necessary to make my code return one of the AC_ERR_ codes.
-For now I'm using AC_ERR_SYSTEM because an error here means that the
-command couldn't be sent to the controller.  Patch is against jejb's
-aic94xx-sas tree.
+On 11/11/06, Luben Tuikov <ltuikov@yahoo.com> wrote:
+> --- Christoph Hellwig <hch@infradead.org> wrote:
+> > On Fri, Nov 10, 2006 at 12:08:15PM -0800, Luben Tuikov wrote:
+> > > P.S. I'd love to see SG_DXFER_TO_FROM_DEV completely ripped out
+> > > of sg.c, for obvious reasons.  Can you not duplicate the resid "fix"
+> > > it provides into "FROM_DEV" -- do apps really rely on it?
+> >
+> > At the beginning of this thread it was mentioned cdparanio uses it.
+> > But in general we can't just rip out userland interfaces, we pretend
+> > to have a stable userspace abi (and except for the big sysfs mess that
+> > actually comes very close to the truth).
+>
+> The more reason to think things thorougly when introducing
+> new code and architecture into a kernel.
 
-If anybody has a suggestion for a better AC_ERR_ code to use, please
-suggest it.
+It was introduced for a good reason, and that reason is still relevant
+today.  Cdparanoia is not using it gratuitously.  The only problem is
+that the implementation had a bug (well, at least two bugs) and only
+sg ever implemented it correctly.  Had block and sata implemente dit
+correctly, we'd not be having this discussion.
 
---
+Or you can blame a lower level layer for having no way to inform
+mid-level drivers that DMA only completed a partial transfer.
 
-Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
+"but anyway"...
 
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index 47fb274..9208b8b 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -123,7 +123,7 @@ static void sas_ata_task_done(struct sas
- 
- static unsigned int sas_ata_qc_issue(struct ata_queued_cmd *qc)
- {
--	int res = -ENOMEM;
-+	int res;
- 	struct sas_task *task;
- 	struct domain_device *dev = qc->ap->private_data;
- 	struct sas_ha_struct *sas_ha = dev->port->ha;
-@@ -135,7 +135,7 @@ static unsigned int sas_ata_qc_issue(str
- 
- 	task = sas_alloc_task(GFP_ATOMIC);
- 	if (!task)
--		goto out;
-+		return AC_ERR_SYSTEM;
- 	task->dev = dev;
- 	task->task_proto = SAS_PROTOCOL_STP;
- 	task->task_done = sas_ata_task_done;
-@@ -187,12 +187,10 @@ static unsigned int sas_ata_qc_issue(str
- 		SAS_DPRINTK("lldd_execute_task returned: %d\n", res);
- 
- 		sas_free_task(task);
--		if (res == -SAS_QUEUE_FULL)
--			return -ENOMEM;
-+		return AC_ERR_SYSTEM;
- 	}
- 
--out:
--	return res;
-+	return 0;
- }
- 
- static u8 sas_ata_check_status(struct ata_port *ap)
+This lockup was happening using SATA through the block layer, or does
+SATA implement its own version of the ioctl?  Back when I was testing
+my probing code, the buggy kernel would reject the request, not lock
+up-- did a change make it inot 2.6.18 or later that causes a lockup
+instead?
+
+(I never tested with SATA cdroms, as I don't have any.  I tested with
+IDE and SCSI and saw correct or detectable behavior)
+
+Monty
