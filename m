@@ -1,44 +1,63 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] sas_ata: satisfy libata qc function locking requirements
-Date: Tue, 14 Nov 2006 18:07:03 -0500
-Message-ID: <455A4C17.5000902@garzik.org>
-References: <455A395D.1060407@us.ibm.com>
+From: "Moore, Eric" <Eric.Moore@lsi.com>
+Subject: RE: [mptscsi] endless Domain Validation loop with external RAID enclosure
+Date: Tue, 14 Nov 2006 16:33:02 -0700
+Message-ID: <664A4EBB07F29743873A87CF62C26D7041FE50@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:25043 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S966447AbWKNXHG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Nov 2006 18:07:06 -0500
-In-Reply-To: <455A395D.1060407@us.ibm.com>
+Received: from mail0.lsil.com ([147.145.40.20]:56035 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S966062AbWKNXdR convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Nov 2006 18:33:17 -0500
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Darrick J. Wong" <djwong@us.ibm.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>
+To: Etienne.Vogt@obspm.fr, linux-scsi@vger.kernel.org
 
-Darrick J. Wong wrote:
-> ata_qc_complete and ata_sas_queuecmd require that the port lock be held
-> when they are called.  sas_ata doesn't do this, leading to BUG messages
-> about qc tags newly allocated qc tags already being in use.  This patch
-> fixes the locking, which should clean up the rest of those messages.
+On Tuesday, November 14, 2006 7:42 AM,  Etienne Vogt wrote:
+
+
+> I understand that the problem is probably caused by buggy firmware in
+> the BR8600 RAID system, but we have 5 of those in production each with
+> 1.75 Tb of online storage that used to work fine on servers running
+> 2.4.x kernels. Replacing these RAID systems is not really an 
+> affordable 
+> option at the moment.
 > 
-> So far I've tested this against an IBM x206m with two SATA disks with no
-> BUG messages and no other signs of things going wrong, and the machine
-> finally passed the pounder stress test.  The patch is against jejb's
-> aic94xx-sas tree.
+> So, is there a way to tell the kernel scsi subsystem or the 
+> mptspi module 
+> not to bother about this domain validation failure ? Besides, souldn't
+> this kind of endless loop be considered as a kernel bug, even 
+> if triggered
+> by buggy peripheral firmware (afterwards, it works on kernel 2.4.x
+> or 2.6.8-2) ?
 > 
-> --
-> 
-> Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
 
-heh, yeah, proper locking helps :)
+I don't know how to disable domain validation.
 
-Glad to hear the progress.  Adaptec just sent me a cable that will allow 
-me to use my Razor card as a SATA controller, so I can finally start 
-testing that.
+What I do know is the problem. THis is due to domain validation commands
+timeout out,
+which results in a host reset.  From the mptspi host reset, the driver
+starts 
+spi transport domain validation all over again, and thus the infinite
+loop.  We do need to 
+renegotiate again after host reset, or all the devices are at slowest
+speed,
+asyn narrow.  I have proposed a patch on this mailing list a couple
+months ago
+to fix this problem, however that patch was rejected.  My fix was in the
+mptspi host reset function, where I told firmware to negotaiate with the
+last
+parameters, thus avoiding having spi transport dv going into infinite
+loop.
+However a better fix is to have spi transport avoid sending a host reset
+when the commands timeout. I'm not sure if James Bottomely is waiting
+for a patch like that which would address the concerns off all drivers,
+instead
+of just addressing mptspi wooes. I'm not sure.  I could repost my mptspi
+fix again?
 
-	Jeff
-
-
-
+Eric Moore
+LSI Logic   
