@@ -1,72 +1,68 @@
 From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: [PATCH] sas_ata: satisfy libata qc function locking requirements
-Date: Tue, 14 Nov 2006 13:47:09 -0800
-Message-ID: <455A395D.1060407@us.ibm.com>
+Subject: [PATCH] sas_ata: Fix sas_ata_qc_issue to return AC_ERR_*
+Date: Tue, 14 Nov 2006 13:47:12 -0800
+Message-ID: <455A3960.9070207@us.ibm.com>
 Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:62871 "EHLO
-	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S966389AbWKNVrP
+Received: from e35.co.us.ibm.com ([32.97.110.153]:41397 "EHLO
+	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S966391AbWKNVrP
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 14 Nov 2006 16:47:15 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Cc: Alexis Bruemmer <alexisb@us.ibm.com>
+To: linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>
 
-ata_qc_complete and ata_sas_queuecmd require that the port lock be held
-when they are called.  sas_ata doesn't do this, leading to BUG messages
-about qc tags newly allocated qc tags already being in use.  This patch
-fixes the locking, which should clean up the rest of those messages.
-
-So far I've tested this against an IBM x206m with two SATA disks with no
-BUG messages and no other signs of things going wrong, and the machine
-finally passed the pounder stress test.  The patch is against jejb's
+I mistakenly wrote sas_ata_qc_issue to return error codes such as
+ENOMEM.  Since libata OR's qc->err_mask with the return value, I believe
+that it is necessary to make my code return one of the AC_ERR_ codes.
+For now I'm using AC_ERR_SYSTEM because an error here means that the
+command couldn't be sent to the controller.  Patch is against jejb's
 aic94xx-sas tree.
+
+If anybody has a suggestion for a better AC_ERR_ code to use, please
+suggest it.
 
 --
 
 Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
 
 diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index de42b5b..47fb274 100644
+index 47fb274..9208b8b 100644
 --- a/drivers/scsi/libsas/sas_ata.c
 +++ b/drivers/scsi/libsas/sas_ata.c
-@@ -92,6 +92,7 @@ static void sas_ata_task_done(struct sas
- 	struct task_status_struct *stat = &task->task_status;
- 	struct ata_task_resp *resp = (struct ata_task_resp *)stat->buf;
- 	enum ata_completion_errors ac;
-+	unsigned long flags;
+@@ -123,7 +123,7 @@ static void sas_ata_task_done(struct sas
  
- 	if (stat->stat == SAS_PROTO_RESPONSE) {
- 		ata_tf_from_fis(resp->ending_fis, &dev->sata_dev.tf);
-@@ -112,7 +113,10 @@ static void sas_ata_task_done(struct sas
- 		}
+ static unsigned int sas_ata_qc_issue(struct ata_queued_cmd *qc)
+ {
+-	int res = -ENOMEM;
++	int res;
+ 	struct sas_task *task;
+ 	struct domain_device *dev = qc->ap->private_data;
+ 	struct sas_ha_struct *sas_ha = dev->port->ha;
+@@ -135,7 +135,7 @@ static unsigned int sas_ata_qc_issue(str
+ 
+ 	task = sas_alloc_task(GFP_ATOMIC);
+ 	if (!task)
+-		goto out;
++		return AC_ERR_SYSTEM;
+ 	task->dev = dev;
+ 	task->task_proto = SAS_PROTOCOL_STP;
+ 	task->task_done = sas_ata_task_done;
+@@ -187,12 +187,10 @@ static unsigned int sas_ata_qc_issue(str
+ 		SAS_DPRINTK("lldd_execute_task returned: %d\n", res);
+ 
+ 		sas_free_task(task);
+-		if (res == -SAS_QUEUE_FULL)
+-			return -ENOMEM;
++		return AC_ERR_SYSTEM;
  	}
  
-+	spin_lock_irqsave(dev->sata_dev.ap->lock, flags);
- 	ata_qc_complete(qc);
-+	spin_unlock_irqrestore(dev->sata_dev.ap->lock, flags);
-+
- 	list_del_init(&task->list);
- 	sas_free_task(task);
+-out:
+-	return res;
++	return 0;
  }
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index 50cc22c..9d4d2ed 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -212,8 +212,12 @@ int sas_queuecommand(struct scsi_cmnd *c
- 		struct sas_task *task;
  
- 		if (dev_is_sata(dev)) {
-+			unsigned long flags;
-+
-+			spin_lock_irqsave(dev->sata_dev.ap->lock, flags);
- 			res = ata_sas_queuecmd(cmd, scsi_done,
- 					       dev->sata_dev.ap);
-+			spin_unlock_irqrestore(dev->sata_dev.ap->lock, flags);
- 			goto out;
- 		}
- 
+ static u8 sas_ata_check_status(struct ata_port *ap)
