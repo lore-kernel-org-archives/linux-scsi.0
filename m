@@ -1,122 +1,106 @@
-From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: [PATCH] sas_ata: Abort sas_task on error in sas_ata_post_internal
-Date: Tue, 14 Nov 2006 18:20:24 -0800
-Message-ID: <455A7968.5080307@us.ibm.com>
-Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
+From: Josha Foust <lightn@lightn.org>
+Subject: Re: Sony VGP-XL1B (200 disk CD/DVD jukebox)
+Date: Wed, 15 Nov 2006 02:09:50 -0600
+Message-ID: <1163578190.7801.187.camel@localhost.localdomain>
+References: <1162685269.7801.16.camel@localhost.localdomain>
+	<1162713408.7801.86.camel@localhost.localdomain>
+	<454DB58F.7060401@s5r6.in-berlin.de>
+Reply-To: linux1394@lightn.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:33751 "EHLO
-	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751859AbWKOCU0
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Nov 2006 21:20:26 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux1394-user-bounces@lists.sourceforge.net>
+In-Reply-To: <454DB58F.7060401@s5r6.in-berlin.de>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-user>,
+	<mailto:linux1394-user-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux1394-user>
+List-Post: <mailto:linux1394-user@lists.sourceforge.net>
+List-Help: <mailto:linux1394-user-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-user>,
+	<mailto:linux1394-user-request@lists.sourceforge.net?subject=subscribe>
+Sender: linux1394-user-bounces@lists.sourceforge.net
+Errors-To: linux1394-user-bounces@lists.sourceforge.net
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: linux1394-user@lists.sourceforge.net, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Cc: Alexis Bruemmer <alexisb@us.ibm.com>
 
-This patch adds a new field, lldd_task, to ata_queued_cmd so that libata
-users such as libsas can associate some data with a qc.  The particular
-ambition with this patch is to associate a sas_task with a qc; that way,
-if libata decides to timeout a command, we can come back (in
-sas_ata_post_internal) and abort the sas task.
+On Sun, 2006-11-05 at 10:57 +0100, Stefan Richter wrote: 
+> > The biggest problem is that it says it only has 38 slots.  Any ideas on
+> > that one?
+> 
+> Hm. I suppose this number is obtained from the NUMBER OF STORAGE
+> ELEMENTS in the Element Address Assignment mode page. Perhaps the
+> firmware generates a malformed mode page. The sbp2 driver passes all
+> these mode parameters from the device through to the SCSI drivers and
+> applications as-is. (The contents of this mode page is defined by the
+> SMC-3 or SMC-2 or SMC spec at http://www.t10.org/drafts.htm.)
 
-I do wonder, however--is it necessary to reset the phy on error, or will
-the libata error handler take care of it?  (Assuming that I provide one,
-of course.)  This patch, as it is today, works well enough to clean
-things up when an ATA device probe attempt fails halfway through the probe,
-though I'm not sure this is always the right thing to do... and I haven't
-anything to inject errors into the SATA stack.
+Thanks for the reference, that is very useful information.
 
-This patch applies against aic94xx-sas + the big heap of other patches
-that I've sent in to this mailing list, and like most of them is rather
-experimental.  It works for me, but it might eat you instead.
+I haven't seen any more SCSI kernel errors in the log.  I think it is ok
+as long as you are careful to send the unit commands that it likes.  I
+am mainly writing this as a status report on making the unit work under
+Linux.
 
---
+I have determined what is occurring with the unit in regard to the
+number of storage elements.  Primarily, it is buggy and doesn't follow
+the spec (as I understand it).  MODE SENSE reports 200 storage elements,
+1 import/export element, 1 data transfer element and 1 medium transport
+element.  This is correct.  However, getting all of the data on these
+elements is a bit more difficult.
 
-Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
+Apparently READ ELEMENT STATUS on this device will only return a maximum
+of 40 elements at a time, even if it should have plenty of space in the
+element status page.  The kicker is that if you ask for less than *or
+equal to* the number of elements it wants to return, it will freak out.
+If the previous command was an element status request it will just
+return the previous response.  If it wasn't, it will crash the device
+and require a power cycle.
 
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index 9208b8b..b7e6593 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -88,12 +88,17 @@ static enum ata_completion_errors sas_to
- static void sas_ata_task_done(struct sas_task *task)
- {
- 	struct ata_queued_cmd *qc = task->uldd_task;
--	struct domain_device *dev = qc->ap->private_data;
-+	struct domain_device *dev;
- 	struct task_status_struct *stat = &task->task_status;
- 	struct ata_task_resp *resp = (struct ata_task_resp *)stat->buf;
- 	enum ata_completion_errors ac;
- 	unsigned long flags;
- 
-+	if (!qc)
-+		goto qc_already_gone;
-+
-+	dev = qc->ap->private_data;
-+
- 	if (stat->stat == SAS_PROTO_RESPONSE) {
- 		ata_tf_from_fis(resp->ending_fis, &dev->sata_dev.tf);
- 		qc->err_mask |= ac_err_mask(dev->sata_dev.tf.command);
-@@ -113,10 +118,12 @@ static void sas_ata_task_done(struct sas
- 		}
- 	}
- 
-+	qc->lldd_task = NULL;
- 	spin_lock_irqsave(dev->sata_dev.ap->lock, flags);
- 	ata_qc_complete(qc);
- 	spin_unlock_irqrestore(dev->sata_dev.ap->lock, flags);
- 
-+qc_already_gone:
- 	list_del_init(&task->list);
- 	sas_free_task(task);
- }
-@@ -166,6 +173,7 @@ static unsigned int sas_ata_qc_issue(str
- 	task->scatter = qc->__sg;
- 	task->ata_task.retry_count = 1;
- 	task->task_state_flags = SAS_TASK_STATE_PENDING;
-+	qc->lldd_task = task;
- 
- 	switch (qc->tf.protocol) {
- 	case ATA_PROT_NCQ:
-@@ -237,8 +245,24 @@ static void sas_ata_post_internal(struct
- 	if (qc->flags & ATA_QCFLAG_FAILED)
- 		qc->err_mask |= AC_ERR_OTHER;
- 
--	if (qc->err_mask)
--		SAS_DPRINTK("%s: Failure; reset phy!\n", __FUNCTION__);
-+	if (qc->err_mask) {
-+		/*
-+		 * Find the sas_task and kill it.  By this point,
-+		 * libata has decided to kill the qc, so we needn't
-+		 * bother with sas_ata_task_done.  But we still
-+		 * ought to abort the task.
-+		 */
-+		struct sas_task *task = qc->lldd_task;
-+		struct domain_device *dev = qc->ap->private_data;
-+
-+		qc->lldd_task = NULL;
-+		if (task) {
-+			task->uldd_task = NULL;
-+			sas_task_abort(task);
-+		}
-+
-+		sas_phy_reset(dev->port->phy, 1);
-+	}
- }
- 
- static void sas_ata_tf_read(struct ata_port *ap, struct ata_taskfile *tf)
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index abd2deb..e2df9d0 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -444,6 +444,7 @@ struct ata_queued_cmd {
- 	ata_qc_cb_t		complete_fn;
- 
- 	void			*private_data;
-+	void			*lldd_task;
- };
- 
- struct ata_port_stats {
+So you have to send 6 separate READ ELEMENT STATUS requests with
+"starting element addresses" incrementing (by 40) and a "number of
+elements" field of at least 41 to be safe, to get all of the information
+from the media changer.  I ended up doing this and stitching the data
+back together as if I had gotten back all of the information in a single
+packet.  Then the standard parsing routines in mtx can read it.
+
+The other problem is that it reports an extra storage element whose
+element address is the one for the medium transport element (0).  Oddly,
+it comes at the very end of the first element status packet of 40
+elements.  That makes a total of 204 elements reported when there should
+have only been 203 according to MODE SENSE (which complicates any
+generic method for requesting all of the elements' statuses).  I simply
+made mtx ignore any storage element information whose element address is
+the same as the transport element address.  I don't understand what its
+purpose might be, any ideas?
+
+I now have a mtx program that operates all of the basic functions of the
+media changer: load, unload, transfer, and status.
+
+My main remaining concern is with the safe operation of the unload
+command.  As I mentioned in a previous email, the media changer is
+perfectly happy to unload a disk from the drive while it is still
+spinning, obviously causing damage to the disk and possibly the changer.
+With the stop command that Dan Dennedy added in his patch to mtx, I can
+get the drive stopped if I retry until the command succeeds.  I am
+worried about race conditions, however.  Is there a way to lock a SCSI
+device for exclusive access so that I can guarantee a safe unload?  I.E.
+that the disk stays stopped while the media changer unloads it.
+
+> BTW, if you have a reasonably recent version of udev, you could
+> certainly also use persistent device file names according to
+> /sys/bus/scsi/devices/*/ieee1394_id which has the format
+> EUI64_of_node:number_of_unit_directory:logical_unit_number, instead of
+> the names /dev/sg* and /dev/sr* which may change by hotplugging.
+
+Thanks for the tip.
+
+Josha Foust
+
+
+
+-------------------------------------------------------------------------
+Take Surveys. Earn Cash. Influence the Future of IT
+Join SourceForge.net's Techsay panel and you'll get the chance to share your
+opinions on IT & business topics through brief surveys - and earn cash
+http://www.techsay.com/default.php?page=join.php&p=sourceforge&CID=DEVDEV
