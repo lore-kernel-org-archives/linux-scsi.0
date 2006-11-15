@@ -1,42 +1,30 @@
-From: David C Somayajulu <david.somayajulu@qlogic.com>
-Subject: Re: [PATCH] [SCSI] qla4xxx: add support for qla4032
-Date: Wed, 15 Nov 2006 11:03:00 -0800
-Message-ID: <1163617380.3916.0.camel@dcslnxpc.site>
-References: <1163209850.4485.14.camel@dcslnxpc.site>
-	 <455A5E06.5000200@cs.wisc.edu>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] SCSI/SD: clearer output of disk cache state
+Date: Wed, 15 Nov 2006 14:26:42 -0600
+Message-ID: <1163622402.3524.14.camel@mulgrave.il.steeleye.com>
+References: <472336.19994.qm@web31803.mail.mud.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:47516 "EHLO
-	avexch1.qlogic.com") by vger.kernel.org with ESMTP id S1030882AbWKOTDA
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Nov 2006 14:03:00 -0500
-In-Reply-To: <455A5E06.5000200@cs.wisc.edu>
+Received: from hancock.steeleye.com ([71.30.118.248]:48860 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1030973AbWKOU0q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Nov 2006 15:26:46 -0500
+In-Reply-To: <472336.19994.qm@web31803.mail.mud.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, David Wagner <david.wagner@qlogic.com>
+To: ltuikov@yahoo.com
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Tue, 2006-11-14 at 18:23 -0600, Mike Christie wrote:
-> David C Somayajulu wrote:
-> > The following patch provides the following:
-> > 
-> > 1. adds support for the next version of Qlogic's iSCSI HBA, qla4032 (PCI Device ID 4032). 
-> > 2. removes dead code related to topcat chip and renames qla4010_soft_reset to qla4xxx_soft_reset (minor changes).
-> > 
-> > 
+On Sat, 2006-11-04 at 16:45 -0800, Luben Tuikov wrote:
+> Re-based:
 > 
-> This patch adds some trailing whitespaces.
-> 
-> Adds trailing whitespace.
-> .dotest/patch:47:#endif
-> Adds trailing whitespace.
-> .dotest/patch:51:#endif
+> Signed-off-by: Luben Tuikov <ltuikov@yahoo.com>
 
-> Could you clean that up?
-Will fix and repost.
-> 
-> Also this patch applied with fuzz. Was it made against the current
-> upstream qla4xxx code or is this from another kernel?
-I generated it against scsi-misc.
+It still won't apply ... this time it looks like a mailer tab->space
+conversion problem.
+
+James
+
+
