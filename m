@@ -1,38 +1,53 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] [SCSI] qla4xxx: add support for qla4032
-Date: Tue, 14 Nov 2006 18:23:34 -0600
-Message-ID: <455A5E06.5000200@cs.wisc.edu>
-References: <1163209850.4485.14.camel@dcslnxpc.site>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: [PATCH] aic94xx: delete ascb timers when freeing queues
+Date: Tue, 14 Nov 2006 18:02:07 -0800
+Message-ID: <455A751F.4040607@us.ibm.com>
+Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:39889 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S966525AbWKOAXt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Nov 2006 19:23:49 -0500
-In-Reply-To: <1163209850.4485.14.camel@dcslnxpc.site>
+Received: from e31.co.us.ibm.com ([32.97.110.149]:23186 "EHLO
+	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S966622AbWKOCCJ
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Nov 2006 21:02:09 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David C Somayajulu <david.somayajulu@qlogic.com>
-Cc: linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, David Wagner <david.wagner@qlogic.com>
+To: linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: Alexis Bruemmer <alexisb@us.ibm.com>
 
-David C Somayajulu wrote:
-> The following patch provides the following:
-> 
-> 1. adds support for the next version of Qlogic's iSCSI HBA, qla4032 (PCI Device ID 4032). 
-> 2. removes dead code related to topcat chip and renames qla4010_soft_reset to qla4xxx_soft_reset (minor changes).
-> 
-> 
+When the aic94xx driver creates ascbs, each ascb is initialized with a
+timeout timer.  If there are any ascbs left over when the driver is being
+torn down, these timers need to be deleted.  In particular, we seem to
+hit this case when ascbs are issued yet never end up on the done list.
+Right now there's a sequencer bug that results in this happening every
+so often.
 
-This patch adds some trailing whitespaces.
+CONTROL PHY commands are typically sent when things are really messed
+up with the sequencer; however, any other leftover ascb should produce
+loud warnings.
 
-Adds trailing whitespace.
-.dotest/patch:47:#endif
-Adds trailing whitespace.
-.dotest/patch:51:#endif
+--
 
-Could you clean that up?
+Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
 
-Also this patch applied with fuzz. Was it made against the current
-upstream qla4xxx code or is this from another kernel?
+diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
+index 2148afd..c2c233d 100644
+--- a/drivers/scsi/aic94xx/aic94xx_init.c
++++ b/drivers/scsi/aic94xx/aic94xx_init.c
+@@ -727,6 +727,15 @@ static void asd_free_queues(struct asd_h
+ 
+ 	list_for_each_safe(pos, n, &pending) {
+ 		struct asd_ascb *ascb = list_entry(pos, struct asd_ascb, list);
++		/*
++		 * Delete unexpired ascb timers.  This may happen if we issue
++		 * a CONTROL PHY scb to an adapter and rmmod before the scb
++		 * times out.  Apparently we don't wait for the CONTROL PHY
++		 * to complete, so it doesn't matter if we kill the timer.
++		 */
++		del_timer_sync(&ascb->timer);
++		WARN_ON(ascb->scb->header.opcode != CONTROL_PHY);
++
+ 		list_del_init(pos);
+ 		ASD_DPRINTK("freeing from pending\n");
+ 		asd_ascb_free(ascb);
