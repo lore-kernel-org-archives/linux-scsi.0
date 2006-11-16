@@ -1,121 +1,153 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 7/8] scsi tgt: SCSI RDMA Protocol library functions
-Date: Thu, 16 Nov 2006 19:24:20 +0900
-Message-ID: <20061116192420V.fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 8/8] scsi tgt: IBM eServer i/pSeries virtual SCSI target
+ driver
+Date: Thu, 16 Nov 2006 19:24:26 +0900
+Message-ID: <20061116192426Y.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:42470 "EHLO
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:51686 "EHLO
 	tama5.ecl.ntt.co.jp") by vger.kernel.org with ESMTP
-	id S1423648AbWKPKYW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Nov 2006 05:24:22 -0500
-Received: from mfs4.rdh.ecl.ntt.co.jp (mfs4.rdh.ecl.ntt.co.jp [129.60.39.113])
-	by tama5.ecl.ntt.co.jp (8.13.8/8.13.8) with ESMTP id kAGAODiA002533
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Nov 2006 19:24:13 +0900 (JST)
+	id S1423688AbWKPKYX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Nov 2006 05:24:23 -0500
+Received: from mfs34.rdh.ecl.ntt.co.jp (mfs34.rdh.ecl.ntt.co.jp [129.60.39.114])
+	by tama5.ecl.ntt.co.jp (8.13.8/8.13.8) with ESMTP id kAGAOJUs002566
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Nov 2006 19:24:19 +0900 (JST)
+Received: from mfs34.rdh.ecl.ntt.co.jp (localhost [127.0.0.1])
+	by mfs34.rdh.ecl.ntt.co.jp (Postfix) with ESMTP id B0C0320AE2A
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Nov 2006 19:24:18 +0900 (JST)
 Received: from nttmail3.ecl.ntt.co.jp (nttmail3.ecl.ntt.co.jp [129.60.39.100])
-	by mfs4.rdh.ecl.ntt.co.jp (8.13.8/8.13.8) with ESMTP id kAGAOC8F023650
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Nov 2006 19:24:12 +0900 (JST)
+	by mfs34.rdh.ecl.ntt.co.jp (Postfix) with ESMTP id 7D8AA20AE28
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Nov 2006 19:24:18 +0900 (JST)
 Received: from dmailsv1.y.ecl.ntt.co.jp (dmailsv1.y.ecl.ntt.co.jp [129.60.53.14])
-	by nttmail3.ecl.ntt.co.jp (8.13.8/8.13.8) with ESMTP id kAGAOCxI013199
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Nov 2006 19:24:12 +0900 (JST)
+	by nttmail3.ecl.ntt.co.jp (8.13.8/8.13.8) with ESMTP id kAGAOIt1013234
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Nov 2006 19:24:18 +0900 (JST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-libsrp provides helper functions for SRP target drivers.
+This is IBM Virtual SCSI target driver for tgt. The driver is based on
+the original ibmvscsis driver:
 
-Some SRP target drivers would be out of drivers/scsi/ so we added an
-entry for libsrp in drivers/scsi/Kconfig.
+http://lkml.org/lkml/2005/10/17/99
 
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
 ---
- drivers/scsi/Kconfig  |   10 +
- drivers/scsi/Makefile |    1 +
- drivers/scsi/libsrp.c |  441 +++++++++++++++++++++++++++++++++++++++++++++++++
- include/scsi/libsrp.h |   77 +++++++++
- 4 files changed, 529 insertions(+), 0 deletions(-)
+ drivers/scsi/Kconfig             |   14 +
+ drivers/scsi/Makefile            |    1 +
+ drivers/scsi/ibmvscsi/Makefile   |    2 +
+ drivers/scsi/ibmvscsi/ibmvstgt.c |  958 ++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 975 insertions(+), 0 deletions(-)
 
 diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 7e25094..e5dd59e 100644
+index e5dd59e..87c51fd 100644
 --- a/drivers/scsi/Kconfig
 +++ b/drivers/scsi/Kconfig
-@@ -1741,6 +1741,16 @@ config ZFCP
-           called zfcp. If you want to compile it as a module, say M here
-           and read <file:Documentation/modules.txt>.
+@@ -804,6 +804,20 @@ config SCSI_IBMVSCSI
+ 	  To compile this driver as a module, choose M here: the
+ 	  module will be called ibmvscsic.
  
-+config SCSI_SRP
-+	tristate "SCSI RDMA Protocol helper library"
-+	depends on SCSI && PCI
-+	select SCSI_TGT
++config SCSI_IBMVSCSIS
++	tristate "IBM Virtual SCSI Server support"
++	depends on PPC_PSERIES && SCSI_TGT && SCSI_SRP
 +	help
-+	  If you wish to use SRP target drivers, say Y.
++	  This is the SRP target driver for IBM pSeries virtual environments.
++
++	  The userspace component needed to initialize the driver and
++	  documentation can be found:
++
++	  http://stgt.berlios.de/
 +
 +	  To compile this driver as a module, choose M here: the
-+	  module will be called libsrp.
++	  module will be called ibmvstgt.
 +
- endmenu
- 
- source "drivers/scsi/pcmcia/Kconfig"
+ config SCSI_INITIO
+ 	tristate "Initio 9100U(W) support"
+ 	depends on PCI && SCSI
 diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-index 7b2e634..a6281fd 100644
+index a6281fd..854b98b 100644
 --- a/drivers/scsi/Makefile
 +++ b/drivers/scsi/Makefile
-@@ -126,6 +126,7 @@ obj-$(CONFIG_SCSI_FCAL)		+= fcal.o
- obj-$(CONFIG_SCSI_LASI700)	+= 53c700.o lasi700.o
- obj-$(CONFIG_SCSI_NSP32)	+= nsp32.o
+@@ -128,6 +128,7 @@ obj-$(CONFIG_SCSI_NSP32)	+= nsp32.o
  obj-$(CONFIG_SCSI_IPR)		+= ipr.o
-+obj-$(CONFIG_SCSI_SRP)		+= libsrp.o
+ obj-$(CONFIG_SCSI_SRP)		+= libsrp.o
  obj-$(CONFIG_SCSI_IBMVSCSI)	+= ibmvscsi/
++obj-$(CONFIG_SCSI_IBMVSCSIS)	+= ibmvscsi/
  obj-$(CONFIG_SCSI_HPTIOP)	+= hptiop.o
  obj-$(CONFIG_SCSI_STEX)		+= stex.o
-diff --git a/drivers/scsi/libsrp.c b/drivers/scsi/libsrp.c
+ 
+diff --git a/drivers/scsi/ibmvscsi/Makefile b/drivers/scsi/ibmvscsi/Makefile
+index 4e247b6..6ac0633 100644
+--- a/drivers/scsi/ibmvscsi/Makefile
++++ b/drivers/scsi/ibmvscsi/Makefile
+@@ -3,3 +3,5 @@ obj-$(CONFIG_SCSI_IBMVSCSI)	+= ibmvscsic
+ ibmvscsic-y			+= ibmvscsi.o
+ ibmvscsic-$(CONFIG_PPC_ISERIES)	+= iseries_vscsi.o 
+ ibmvscsic-$(CONFIG_PPC_PSERIES)	+= rpa_vscsi.o 
++
++obj-$(CONFIG_SCSI_IBMVSCSIS)	+= ibmvstgt.o
+diff --git a/drivers/scsi/ibmvscsi/ibmvstgt.c b/drivers/scsi/ibmvscsi/ibmvstgt.c
 new file mode 100644
-index 0000000..89403b0
+index 0000000..73fcfca
 --- /dev/null
-+++ b/drivers/scsi/libsrp.c
-@@ -0,0 +1,441 @@
++++ b/drivers/scsi/ibmvscsi/ibmvstgt.c
+@@ -0,0 +1,958 @@
 +/*
-+ * SCSI RDAM Protocol lib functions
++ * IBM eServer i/pSeries Virtual SCSI Target Driver
++ * Copyright (C) 2003-2005 Dave Boutcher (boutcher@us.ibm.com) IBM Corp.
++ *			   Santiago Leon (santil@us.ibm.com) IBM Corp.
++ *			   Linda Xie (lxie@us.ibm.com) IBM Corp.
 + *
-+ * Copyright (C) 2006 FUJITA Tomonori <tomof@acm.org>
++ * Copyright (C) 2005-2006 FUJITA Tomonori <tomof@acm.org>
 + *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation; either version 2 of the
-+ * License, or (at your option) any later version.
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
 + *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
 + *
 + * You should have received a copy of the GNU General Public License
 + * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-+ * 02110-1301 USA
++ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
++ * USA
 + */
-+#include <linux/err.h>
-+#include <linux/kfifo.h>
-+#include <linux/scatterlist.h>
-+#include <linux/dma-mapping.h>
-+#include <linux/pci.h>
++#include <linux/interrupt.h>
++#include <linux/module.h>
 +#include <scsi/scsi.h>
-+#include <scsi/scsi_cmnd.h>
-+#include <scsi/scsi_tcq.h>
++#include <scsi/scsi_host.h>
 +#include <scsi/scsi_tgt.h>
-+#include <scsi/srp.h>
 +#include <scsi/libsrp.h>
++#include <asm/hvcall.h>
++#include <asm/iommu.h>
++#include <asm/prom.h>
++#include <asm/vio.h>
 +
-+enum srp_task_attributes {
-+	SRP_SIMPLE_TASK = 0,
-+	SRP_HEAD_TASK = 1,
-+	SRP_ORDERED_TASK = 2,
-+	SRP_ACA_TASK = 4
-+};
++#include "ibmvscsi.h"
++
++#define	INITIAL_SRP_LIMIT	16
++#define	DEFAULT_MAX_SECTORS	512
++
++#define	TGT_NAME	"ibmvstgt"
++
++/*
++ * Hypervisor calls.
++ */
++#define h_copy_rdma(l, sa, sb, da, db) \
++			plpar_hcall_norets(H_COPY_RDMA, l, sa, sb, da, db)
++#define h_send_crq(ua, l, h) \
++			plpar_hcall_norets(H_SEND_CRQ, ua, l, h)
++#define h_reg_crq(ua, tok, sz)\
++			plpar_hcall_norets(H_REG_CRQ, ua, tok, sz);
++#define h_free_crq(ua) \
++			plpar_hcall_norets(H_FREE_CRQ, ua);
 +
 +/* tmp - will replace with SCSI logging stuff */
 +#define eprintk(fmt, args...)					\
@@ -125,483 +157,903 @@ index 0000000..89403b0
 +/* #define dprintk eprintk */
 +#define dprintk(fmt, args...)
 +
-+static int srp_iu_pool_alloc(struct srp_queue *q, size_t max,
-+			     struct srp_buf **ring)
++struct vio_port {
++	struct vio_dev *dma_dev;
++
++	struct crq_queue crq_queue;
++	struct work_struct crq_work;
++
++	unsigned long liobn;
++	unsigned long riobn;
++};
++
++static struct workqueue_struct *vtgtd;
++
++/*
++ * These are fixed for the system and come from the Open Firmware device tree.
++ * We just store them here to save getting them every time.
++ */
++static char system_id[64] = "";
++static char partition_name[97] = "UNKNOWN";
++static unsigned int partition_number = -1;
++
++static struct vio_port *target_to_port(struct srp_target *target)
 +{
-+	int i;
-+	struct iu_entry *iue;
++	return (struct vio_port *) target->ldata;
++}
 +
-+	q->pool = kcalloc(max, sizeof(struct iu_entry *), GFP_KERNEL);
-+	if (!q->pool)
-+		return -ENOMEM;
-+	q->items = kcalloc(max, sizeof(struct iu_entry), GFP_KERNEL);
-+	if (!q->items)
-+		goto free_pool;
++static inline union viosrp_iu *vio_iu(struct iu_entry *iue)
++{
++	return (union viosrp_iu *) (iue->sbuf->buf);
++}
 +
-+	spin_lock_init(&q->lock);
-+	q->queue = kfifo_init((void *) q->pool, max * sizeof(void *),
-+			      GFP_KERNEL, &q->lock);
-+	if (IS_ERR(q->queue))
-+		goto free_item;
++static int send_iu(struct iu_entry *iue, uint64_t length, uint8_t format)
++{
++	struct srp_target *target = iue->target;
++	struct vio_port *vport = target_to_port(target);
++	long rc, rc1;
++	union {
++		struct viosrp_crq cooked;
++		uint64_t raw[2];
++	} crq;
 +
-+	for (i = 0, iue = q->items; i < max; i++) {
-+		__kfifo_put(q->queue, (void *) &iue, sizeof(void *));
-+		iue->sbuf = ring[i];
-+		iue++;
++	/* First copy the SRP */
++	rc = h_copy_rdma(length, vport->liobn, iue->sbuf->dma,
++			 vport->riobn, iue->remote_token);
++
++	if (rc)
++		eprintk("Error %ld transferring data\n", rc);
++
++	crq.cooked.valid = 0x80;
++	crq.cooked.format = format;
++	crq.cooked.reserved = 0x00;
++	crq.cooked.timeout = 0x00;
++	crq.cooked.IU_length = length;
++	crq.cooked.IU_data_ptr = vio_iu(iue)->srp.rsp.tag;
++
++	if (rc == 0)
++		crq.cooked.status = 0x99;	/* Just needs to be non-zero */
++	else
++		crq.cooked.status = 0x00;
++
++	rc1 = h_send_crq(vport->dma_dev->unit_address, crq.raw[0], crq.raw[1]);
++
++	if (rc1) {
++		eprintk("%ld sending response\n", rc1);
++		return rc1;
 +	}
++
++	return rc;
++}
++
++#define SRP_RSP_SENSE_DATA_LEN	18
++
++static int send_rsp(struct iu_entry *iue, struct scsi_cmnd *sc,
++		    unsigned char status, unsigned char asc)
++{
++	union viosrp_iu *iu = vio_iu(iue);
++	uint64_t tag = iu->srp.rsp.tag;
++
++	/* If the linked bit is on and status is good */
++	if (test_bit(V_LINKED, &iue->flags) && (status == NO_SENSE))
++		status = 0x10;
++
++	memset(iu, 0, sizeof(struct srp_rsp));
++	iu->srp.rsp.opcode = SRP_RSP;
++	iu->srp.rsp.req_lim_delta = 1;
++	iu->srp.rsp.tag = tag;
++
++	if (test_bit(V_DIOVER, &iue->flags))
++		iu->srp.rsp.flags |= SRP_RSP_FLAG_DIOVER;
++
++	iu->srp.rsp.data_in_res_cnt = 0;
++	iu->srp.rsp.data_out_res_cnt = 0;
++
++	iu->srp.rsp.flags &= ~SRP_RSP_FLAG_RSPVALID;
++
++	iu->srp.rsp.resp_data_len = 0;
++	iu->srp.rsp.status = status;
++	if (status) {
++		uint8_t *sense = iu->srp.rsp.data;
++
++		if (sc) {
++			iu->srp.rsp.flags |= SRP_RSP_FLAG_SNSVALID;
++			iu->srp.rsp.sense_data_len = SCSI_SENSE_BUFFERSIZE;
++			memcpy(sense, sc->sense_buffer, SCSI_SENSE_BUFFERSIZE);
++		} else {
++			iu->srp.rsp.status = SAM_STAT_CHECK_CONDITION;
++			iu->srp.rsp.flags |= SRP_RSP_FLAG_SNSVALID;
++			iu->srp.rsp.sense_data_len = SRP_RSP_SENSE_DATA_LEN;
++
++			/* Valid bit and 'current errors' */
++			sense[0] = (0x1 << 7 | 0x70);
++			/* Sense key */
++			sense[2] = status;
++			/* Additional sense length */
++			sense[7] = 0xa;	/* 10 bytes */
++			/* Additional sense code */
++			sense[12] = asc;
++		}
++	}
++
++	send_iu(iue, sizeof(iu->srp.rsp) + SRP_RSP_SENSE_DATA_LEN,
++		VIOSRP_SRP_FORMAT);
++
 +	return 0;
-+
-+free_item:
-+	kfree(q->items);
-+free_pool:
-+	kfree(q->pool);
-+	return -ENOMEM;
 +}
 +
-+static void srp_iu_pool_free(struct srp_queue *q)
++static void handle_cmd_queue(struct srp_target *target)
 +{
-+	kfree(q->items);
-+	kfree(q->pool);
-+}
-+
-+static struct srp_buf **srp_ring_alloc(struct device *dev,
-+				       size_t max, size_t size)
-+{
-+	int i;
-+	struct srp_buf **ring;
-+
-+	ring = kcalloc(max, sizeof(struct srp_buf *), GFP_KERNEL);
-+	if (!ring)
-+		return NULL;
-+
-+	for (i = 0; i < max; i++) {
-+		ring[i] = kzalloc(sizeof(struct srp_buf), GFP_KERNEL);
-+		if (!ring[i])
-+			goto out;
-+		ring[i]->buf = dma_alloc_coherent(dev, size, &ring[i]->dma,
-+						  GFP_KERNEL);
-+		if (!ring[i]->buf)
-+			goto out;
-+	}
-+	return ring;
-+
-+out:
-+	for (i = 0; i < max && ring[i]; i++) {
-+		if (ring[i]->buf)
-+			dma_free_coherent(dev, size, ring[i]->buf, ring[i]->dma);
-+		kfree(ring[i]);
-+	}
-+	kfree(ring);
-+
-+	return NULL;
-+}
-+
-+static void srp_ring_free(struct device *dev, struct srp_buf **ring, size_t max,
-+			  size_t size)
-+{
-+	int i;
-+
-+	for (i = 0; i < max; i++) {
-+		dma_free_coherent(dev, size, ring[i]->buf, ring[i]->dma);
-+		kfree(ring[i]);
-+	}
-+}
-+
-+int srp_target_alloc(struct srp_target *target, struct device *dev,
-+		     size_t nr, size_t iu_size)
-+{
++	struct Scsi_Host *shost = target->shost;
++	struct iu_entry *iue;
++	struct srp_cmd *cmd;
++	unsigned long flags;
 +	int err;
 +
-+	spin_lock_init(&target->lock);
-+	INIT_LIST_HEAD(&target->cmd_queue);
++retry:
++	spin_lock_irqsave(&target->lock, flags);
 +
-+	target->dev = dev;
-+	target->dev->driver_data = target;
++	list_for_each_entry(iue, &target->cmd_queue, ilist) {
++		if (!test_and_set_bit(V_FLYING, &iue->flags)) {
++			spin_unlock_irqrestore(&target->lock, flags);
++			cmd = iue->sbuf->buf;
++			err = srp_cmd_queue(shost, cmd, iue, 0);
++			if (err) {
++				eprintk("cannot queue cmd %p %d\n", cmd, err);
++				srp_iu_put(iue);
++			}
++			goto retry;
++		}
++	}
 +
-+	target->srp_iu_size = iu_size;
-+	target->rx_ring_size = nr;
-+	target->rx_ring = srp_ring_alloc(target->dev, nr, iu_size);
-+	if (!target->rx_ring)
-+		return -ENOMEM;
-+	err = srp_iu_pool_alloc(&target->iu_queue, nr, target->rx_ring);
-+	if (err)
-+		goto free_ring;
++	spin_unlock_irqrestore(&target->lock, flags);
++}
++
++static int ibmvstgt_rdma(struct scsi_cmnd *sc, struct scatterlist *sg, int nsg,
++			 struct srp_direct_buf *md, int nmd,
++			 enum dma_data_direction dir, unsigned int rest)
++{
++	struct iu_entry *iue = (struct iu_entry *) sc->SCp.ptr;
++	struct srp_target *target = iue->target;
++	struct vio_port *vport = target_to_port(target);
++	dma_addr_t token;
++	long err;
++	unsigned int done = 0;
++	int i, sidx, soff;
++
++	sidx = soff = 0;
++	token = sg_dma_address(sg + sidx);
++
++	for (i = 0; i < nmd && rest; i++) {
++		unsigned int mdone, mlen;
++
++		mlen = min(rest, md[i].len);
++		for (mdone = 0; mlen;) {
++			int slen = min(sg_dma_len(sg + sidx) - soff, mlen);
++
++			if (dir == DMA_TO_DEVICE)
++				err = h_copy_rdma(slen,
++						  vport->riobn,
++						  md[i].va + mdone,
++						  vport->liobn,
++						  token + soff);
++			else
++				err = h_copy_rdma(slen,
++						  vport->liobn,
++						  token + soff,
++						  vport->riobn,
++						  md[i].va + mdone);
++
++			if (err != H_SUCCESS) {
++				eprintk("rdma error %d %d\n", dir, slen);
++				goto out;
++			}
++
++			mlen -= slen;
++			mdone += slen;
++			soff += slen;
++			done += slen;
++
++			if (soff == sg_dma_len(sg + sidx)) {
++				sidx++;
++				soff = 0;
++				token = sg_dma_address(sg + sidx);
++
++				if (sidx > nsg) {
++					eprintk("out of sg %p %d %d\n",
++						iue, sidx, nsg);
++					goto out;
++				}
++			}
++		};
++
++		rest -= mlen;
++	}
++out:
 +
 +	return 0;
-+
-+free_ring:
-+	srp_ring_free(target->dev, target->rx_ring, nr, iu_size);
-+	return -ENOMEM;
 +}
-+EXPORT_SYMBOL_GPL(srp_target_alloc);
 +
-+void srp_target_free(struct srp_target *target)
++static int ibmvstgt_transfer_data(struct scsi_cmnd *sc,
++				  void (*done)(struct scsi_cmnd *))
 +{
-+	srp_ring_free(target->dev, target->rx_ring, target->rx_ring_size,
-+		      target->srp_iu_size);
-+	srp_iu_pool_free(&target->iu_queue);
-+}
-+EXPORT_SYMBOL_GPL(srp_target_free);
++	struct iu_entry	*iue = (struct iu_entry *) sc->SCp.ptr;
++	int err;
 +
-+struct iu_entry *srp_iu_get(struct srp_target *target)
-+{
-+	struct iu_entry *iue = NULL;
++	err = srp_transfer_data(sc, &vio_iu(iue)->srp.cmd, ibmvstgt_rdma, 1, 1);
 +
-+	kfifo_get(target->iu_queue.queue, (void *) &iue, sizeof(void *));
-+	if (!iue)
-+		return iue;
-+	iue->target = target;
-+	INIT_LIST_HEAD(&iue->ilist);
-+	iue->flags = 0;
-+	return iue;
-+}
-+EXPORT_SYMBOL_GPL(srp_iu_get);
-+
-+void srp_iu_put(struct iu_entry *iue)
-+{
-+	kfifo_put(iue->target->iu_queue.queue, (void *) &iue, sizeof(void *));
-+}
-+EXPORT_SYMBOL_GPL(srp_iu_put);
-+
-+static int srp_direct_data(struct scsi_cmnd *sc, struct srp_direct_buf *md,
-+			   enum dma_data_direction dir, srp_rdma_t rdma_io,
-+			   int dma_map, int ext_desc)
-+{
-+	struct iu_entry *iue = NULL;
-+	struct scatterlist *sg = NULL;
-+	int err, nsg = 0, len;
-+
-+	if (dma_map) {
-+		iue = (struct iu_entry *) sc->SCp.ptr;
-+		sg = sc->request_buffer;
-+
-+		dprintk("%p %u %u %d\n", iue, sc->request_bufflen,
-+			md->len, sc->use_sg);
-+
-+		nsg = dma_map_sg(iue->target->dev, sg, sc->use_sg,
-+				 DMA_BIDIRECTIONAL);
-+		if (!nsg) {
-+			printk("fail to map %p %d\n", iue, sc->use_sg);
-+			return 0;
-+		}
-+		len = min(sc->request_bufflen, md->len);
-+	} else
-+		len = md->len;
-+
-+	err = rdma_io(sc, sg, nsg, md, 1, dir, len);
-+
-+	if (dma_map)
-+		dma_unmap_sg(iue->target->dev, sg, nsg, DMA_BIDIRECTIONAL);
++	done(sc);
 +
 +	return err;
 +}
 +
-+static int srp_indirect_data(struct scsi_cmnd *sc, struct srp_cmd *cmd,
-+			     struct srp_indirect_buf *id,
-+			     enum dma_data_direction dir, srp_rdma_t rdma_io,
-+			     int dma_map, int ext_desc)
++static int ibmvstgt_cmd_done(struct scsi_cmnd *sc,
++			     void (*done)(struct scsi_cmnd *))
 +{
-+	struct iu_entry *iue = NULL;
-+	struct srp_direct_buf *md = NULL;
-+	struct scatterlist dummy, *sg = NULL;
-+	dma_addr_t token = 0;
-+	long err;
-+	unsigned int done = 0;
-+	int nmd, nsg = 0, len;
++	unsigned long flags;
++	struct iu_entry *iue = (struct iu_entry *) sc->SCp.ptr;
++	struct srp_target *target = iue->target;
 +
-+	if (dma_map || ext_desc) {
-+		iue = (struct iu_entry *) sc->SCp.ptr;
-+		sg = sc->request_buffer;
++	dprintk("%p %p %x\n", iue, target, vio_iu(iue)->srp.cmd.cdb[0]);
 +
-+		dprintk("%p %u %u %d %d\n",
-+			iue, sc->request_bufflen, id->len,
-+			cmd->data_in_desc_cnt, cmd->data_out_desc_cnt);
-+	}
++	spin_lock_irqsave(&target->lock, flags);
++	list_del(&iue->ilist);
++	spin_unlock_irqrestore(&target->lock, flags);
 +
-+	nmd = id->table_desc.len / sizeof(struct srp_direct_buf);
-+
-+	if ((dir == DMA_FROM_DEVICE && nmd == cmd->data_in_desc_cnt) ||
-+	    (dir == DMA_TO_DEVICE && nmd == cmd->data_out_desc_cnt)) {
-+		md = &id->desc_list[0];
-+		goto rdma;
-+	}
-+
-+	if (ext_desc && dma_map) {
-+		md = dma_alloc_coherent(iue->target->dev, id->table_desc.len,
-+				&token, GFP_KERNEL);
-+		if (!md) {
-+			eprintk("Can't get dma memory %u\n", id->table_desc.len);
-+			return -ENOMEM;
-+		}
-+
-+		sg_init_one(&dummy, md, id->table_desc.len);
-+		sg_dma_address(&dummy) = token;
-+		err = rdma_io(sc, &dummy, 1, &id->table_desc, 1, DMA_TO_DEVICE,
-+			      id->table_desc.len);
-+		if (err < 0) {
-+			eprintk("Error copying indirect table %ld\n", err);
-+			goto free_mem;
-+		}
-+	} else {
-+		eprintk("This command uses external indirect buffer\n");
-+		return -EINVAL;
-+	}
-+
-+rdma:
-+	if (dma_map) {
-+		nsg = dma_map_sg(iue->target->dev, sg, sc->use_sg, DMA_BIDIRECTIONAL);
-+		if (!nsg) {
-+			eprintk("fail to map %p %d\n", iue, sc->use_sg);
-+			goto free_mem;
-+		}
-+		len = min(sc->request_bufflen, id->len);
++	if (sc->result != SAM_STAT_GOOD) {
++		eprintk("operation failed %p %d %x\n",
++			iue, sc->result, vio_iu(iue)->srp.cmd.cdb[0]);
++		send_rsp(iue, sc, HARDWARE_ERROR, 0x00);
 +	} else
-+		len = id->len;
++		send_rsp(iue, sc, NO_SENSE, 0x00);
 +
-+	err = rdma_io(sc, sg, nsg, md, nmd, dir, len);
++	done(sc);
++	srp_iu_put(iue);
++	return 0;
++}
 +
-+	if (dma_map)
-+		dma_unmap_sg(iue->target->dev, sg, nsg, DMA_BIDIRECTIONAL);
++int send_adapter_info(struct iu_entry *iue,
++		      dma_addr_t remote_buffer, uint16_t length)
++{
++	struct srp_target *target = iue->target;
++	struct vio_port *vport = target_to_port(target);
++	struct Scsi_Host *shost = target->shost;
++	dma_addr_t data_token;
++	struct mad_adapter_info_data *info;
++	int err;
 +
-+free_mem:
-+	if (token && dma_map)
-+		dma_free_coherent(iue->target->dev, id->table_desc.len, md, token);
++	info = dma_alloc_coherent(target->dev, sizeof(*info), &data_token,
++				  GFP_KERNEL);
++	if (!info) {
++		eprintk("bad dma_alloc_coherent %p\n", target);
++		return 1;
++	}
++
++	/* Get remote info */
++	err = h_copy_rdma(sizeof(*info), vport->riobn, remote_buffer,
++			  vport->liobn, data_token);
++	if (err == H_SUCCESS) {
++		dprintk("Client connect: %s (%d)\n",
++			info->partition_name, info->partition_number);
++	}
++
++	memset(info, 0, sizeof(*info));
++
++	strcpy(info->srp_version, "16.a");
++	strncpy(info->partition_name, partition_name,
++		sizeof(info->partition_name));
++	info->partition_number = partition_number;
++	info->mad_version = 1;
++	info->os_type = 2;
++	info->port_max_txu[0] = shost->hostt->max_sectors << 9;
++
++	/* Send our info to remote */
++	err = h_copy_rdma(sizeof(*info), vport->liobn, data_token,
++			  vport->riobn, remote_buffer);
++
++	dma_free_coherent(target->dev, sizeof(*info), info, data_token);
++
++	if (err != H_SUCCESS) {
++		eprintk("Error sending adapter info %d\n", err);
++		return 1;
++	}
++
++	return 0;
++}
++
++static void process_login(struct iu_entry *iue)
++{
++	union viosrp_iu *iu = vio_iu(iue);
++	struct srp_login_rsp *rsp = &iu->srp.login_rsp;
++	uint64_t tag = iu->srp.rsp.tag;
++
++	/* TODO handle case that requested size is wrong and
++	 * buffer format is wrong
++	 */
++	memset(iu, 0, sizeof(struct srp_login_rsp));
++	rsp->opcode = SRP_LOGIN_RSP;
++	rsp->req_lim_delta = INITIAL_SRP_LIMIT;
++	rsp->tag = tag;
++	rsp->max_it_iu_len = sizeof(union srp_iu);
++	rsp->max_ti_iu_len = sizeof(union srp_iu);
++	/* direct and indirect */
++	rsp->buf_fmt = SRP_BUF_FORMAT_DIRECT | SRP_BUF_FORMAT_INDIRECT;
++
++	send_iu(iue, sizeof(*rsp), VIOSRP_SRP_FORMAT);
++}
++
++static inline void queue_cmd(struct iu_entry *iue)
++{
++	struct srp_target *target = iue->target;
++	unsigned long flags;
++
++	spin_lock_irqsave(&target->lock, flags);
++	list_add_tail(&iue->ilist, &target->cmd_queue);
++	spin_unlock_irqrestore(&target->lock, flags);
++}
++
++static int process_tsk_mgmt(struct iu_entry *iue)
++{
++	union viosrp_iu *iu = vio_iu(iue);
++	int fn;
++
++	dprintk("%p %u\n", iue, iu->srp.tsk_mgmt.tsk_mgmt_func);
++
++	switch (iu->srp.tsk_mgmt.tsk_mgmt_func) {
++	case SRP_TSK_ABORT_TASK:
++		fn = ABORT_TASK;
++		break;
++	case SRP_TSK_ABORT_TASK_SET:
++		fn = ABORT_TASK_SET;
++		break;
++	case SRP_TSK_CLEAR_TASK_SET:
++		fn = CLEAR_TASK_SET;
++		break;
++	case SRP_TSK_LUN_RESET:
++		fn = LOGICAL_UNIT_RESET;
++		break;
++	case SRP_TSK_CLEAR_ACA:
++		fn = CLEAR_ACA;
++		break;
++	default:
++		fn = 0;
++	}
++	if (fn)
++		scsi_tgt_tsk_mgmt_request(iue->target->shost, fn,
++					  iu->srp.tsk_mgmt.task_tag,
++					  (struct scsi_lun *) &iu->srp.tsk_mgmt.lun,
++					  iue);
++	else
++		send_rsp(iue, NULL, ILLEGAL_REQUEST, 0x20);
++
++	return !fn;
++}
++
++static int process_mad_iu(struct iu_entry *iue)
++{
++	union viosrp_iu *iu = vio_iu(iue);
++	struct viosrp_adapter_info *info;
++	struct viosrp_host_config *conf;
++
++	switch (iu->mad.empty_iu.common.type) {
++	case VIOSRP_EMPTY_IU_TYPE:
++		eprintk("%s\n", "Unsupported EMPTY MAD IU");
++		break;
++	case VIOSRP_ERROR_LOG_TYPE:
++		eprintk("%s\n", "Unsupported ERROR LOG MAD IU");
++		iu->mad.error_log.common.status = 1;
++		send_iu(iue, sizeof(iu->mad.error_log),	VIOSRP_MAD_FORMAT);
++		break;
++	case VIOSRP_ADAPTER_INFO_TYPE:
++		info = &iu->mad.adapter_info;
++		info->common.status = send_adapter_info(iue, info->buffer,
++							info->common.length);
++		send_iu(iue, sizeof(*info), VIOSRP_MAD_FORMAT);
++		break;
++	case VIOSRP_HOST_CONFIG_TYPE:
++		conf = &iu->mad.host_config;
++		conf->common.status = 1;
++		send_iu(iue, sizeof(*conf), VIOSRP_MAD_FORMAT);
++		break;
++	default:
++		eprintk("Unknown type %u\n", iu->srp.rsp.opcode);
++	}
++
++	return 1;
++}
++
++static int process_srp_iu(struct iu_entry *iue)
++{
++	union viosrp_iu *iu = vio_iu(iue);
++	int done = 1;
++	u8 opcode = iu->srp.rsp.opcode;
++
++	switch (opcode) {
++	case SRP_LOGIN_REQ:
++		process_login(iue);
++		break;
++	case SRP_TSK_MGMT:
++		done = process_tsk_mgmt(iue);
++		break;
++	case SRP_CMD:
++		queue_cmd(iue);
++		done = 0;
++		break;
++	case SRP_LOGIN_RSP:
++	case SRP_I_LOGOUT:
++	case SRP_T_LOGOUT:
++	case SRP_RSP:
++	case SRP_CRED_REQ:
++	case SRP_CRED_RSP:
++	case SRP_AER_REQ:
++	case SRP_AER_RSP:
++		eprintk("Unsupported type %u\n", opcode);
++		break;
++	default:
++		eprintk("Unknown type %u\n", opcode);
++	}
 +
 +	return done;
 +}
 +
-+static int data_out_desc_size(struct srp_cmd *cmd)
++static void process_iu(struct viosrp_crq *crq, struct srp_target *target)
 +{
-+	int size = 0;
-+	u8 fmt = cmd->buf_fmt >> 4;
++	struct vio_port *vport = target_to_port(target);
++	struct iu_entry *iue;
++	long err, done;
 +
-+	switch (fmt) {
-+	case SRP_NO_DATA_DESC:
-+		break;
-+	case SRP_DATA_DESC_DIRECT:
-+		size = sizeof(struct srp_direct_buf);
-+		break;
-+	case SRP_DATA_DESC_INDIRECT:
-+		size = sizeof(struct srp_indirect_buf) +
-+			sizeof(struct srp_direct_buf) * cmd->data_out_desc_cnt;
-+		break;
-+	default:
-+		eprintk("client error. Invalid data_out_format %x\n", fmt);
-+		break;
++	iue = srp_iu_get(target);
++	if (!iue) {
++		eprintk("Error getting IU from pool, %p\n", target);
++		return;
 +	}
-+	return size;
-+}
 +
-+/*
-+ * TODO: this can be called multiple times for a single command if it
-+ * has very long data.
-+ */
-+int srp_transfer_data(struct scsi_cmnd *sc, struct srp_cmd *cmd,
-+		      srp_rdma_t rdma_io, int dma_map, int ext_desc)
-+{
-+	struct srp_direct_buf *md;
-+	struct srp_indirect_buf *id;
-+	enum dma_data_direction dir;
-+	int offset, err = 0;
-+	u8 format;
++	iue->remote_token = crq->IU_data_ptr;
 +
-+	offset = cmd->add_cdb_len * 4;
++	err = h_copy_rdma(crq->IU_length, vport->riobn,
++			  iue->remote_token, vport->liobn, iue->sbuf->dma);
 +
-+	dir = srp_cmd_direction(cmd);
-+	if (dir == DMA_FROM_DEVICE)
-+		offset += data_out_desc_size(cmd);
++	if (err != H_SUCCESS) {
++		eprintk("%ld transferring data error %p\n", err, iue);
++		done = 1;
++		goto out;
++	}
 +
-+	if (dir == DMA_TO_DEVICE)
-+		format = cmd->buf_fmt >> 4;
++	if (crq->format == VIOSRP_MAD_FORMAT)
++		done = process_mad_iu(iue);
 +	else
-+		format = cmd->buf_fmt & ((1U << 4) - 1);
-+
-+	switch (format) {
-+	case SRP_NO_DATA_DESC:
-+		break;
-+	case SRP_DATA_DESC_DIRECT:
-+		md = (struct srp_direct_buf *)
-+			(cmd->add_data + offset);
-+		err = srp_direct_data(sc, md, dir, rdma_io, dma_map, ext_desc);
-+		break;
-+	case SRP_DATA_DESC_INDIRECT:
-+		id = (struct srp_indirect_buf *)
-+			(cmd->add_data + offset);
-+		err = srp_indirect_data(sc, cmd, id, dir, rdma_io, dma_map,
-+					ext_desc);
-+		break;
-+	default:
-+		eprintk("Unknown format %d %x\n", dir, format);
-+		break;
-+	}
-+
-+	return err;
-+}
-+EXPORT_SYMBOL_GPL(srp_transfer_data);
-+
-+static int vscsis_data_length(struct srp_cmd *cmd, enum dma_data_direction dir)
-+{
-+	struct srp_direct_buf *md;
-+	struct srp_indirect_buf *id;
-+	int len = 0, offset = cmd->add_cdb_len * 4;
-+	u8 fmt;
-+
-+	if (dir == DMA_TO_DEVICE)
-+		fmt = cmd->buf_fmt >> 4;
-+	else {
-+		fmt = cmd->buf_fmt & ((1U << 4) - 1);
-+		offset += data_out_desc_size(cmd);
-+	}
-+
-+	switch (fmt) {
-+	case SRP_NO_DATA_DESC:
-+		break;
-+	case SRP_DATA_DESC_DIRECT:
-+		md = (struct srp_direct_buf *) (cmd->add_data + offset);
-+		len = md->len;
-+		break;
-+	case SRP_DATA_DESC_INDIRECT:
-+		id = (struct srp_indirect_buf *) (cmd->add_data + offset);
-+		len = id->len;
-+		break;
-+	default:
-+		eprintk("invalid data format %x\n", fmt);
-+		break;
-+	}
-+	return len;
++		done = process_srp_iu(iue);
++out:
++	if (done)
++		srp_iu_put(iue);
 +}
 +
-+int srp_cmd_queue(struct Scsi_Host *shost, struct srp_cmd *cmd, void *info,
-+		  u64 addr)
++static irqreturn_t ibmvstgt_interrupt(int irq, void *data)
 +{
-+	enum dma_data_direction dir;
-+	struct scsi_cmnd *sc;
-+	int tag, len, err;
++	struct srp_target *target = (struct srp_target *) data;
++	struct vio_port *vport = target_to_port(target);
 +
-+	switch (cmd->task_attr) {
-+	case SRP_SIMPLE_TASK:
-+		tag = MSG_SIMPLE_TAG;
-+		break;
-+	case SRP_ORDERED_TASK:
-+		tag = MSG_ORDERED_TAG;
-+		break;
-+	case SRP_HEAD_TASK:
-+		tag = MSG_HEAD_TAG;
-+		break;
-+	default:
-+		eprintk("Task attribute %d not supported\n", cmd->task_attr);
-+		tag = MSG_ORDERED_TAG;
++	vio_disable_interrupts(vport->dma_dev);
++	queue_work(vtgtd, &vport->crq_work);
++
++	return IRQ_HANDLED;
++}
++
++static int crq_queue_create(struct crq_queue *queue, struct srp_target *target)
++{
++	int err;
++	struct vio_port *vport = target_to_port(target);
++
++	queue->msgs = (struct viosrp_crq *) get_zeroed_page(GFP_KERNEL);
++	if (!queue->msgs)
++		goto malloc_failed;
++	queue->size = PAGE_SIZE / sizeof(*queue->msgs);
++
++	queue->msg_token = dma_map_single(target->dev, queue->msgs,
++					  queue->size * sizeof(*queue->msgs),
++					  DMA_BIDIRECTIONAL);
++
++	if (dma_mapping_error(queue->msg_token))
++		goto map_failed;
++
++	err = h_reg_crq(vport->dma_dev->unit_address, queue->msg_token,
++			PAGE_SIZE);
++
++	/* If the adapter was left active for some reason (like kexec)
++	 * try freeing and re-registering
++	 */
++	if (err == H_RESOURCE) {
++	    do {
++		err = h_free_crq(vport->dma_dev->unit_address);
++	    } while (err == H_BUSY || H_IS_LONG_BUSY(err));
++
++	    err = h_reg_crq(vport->dma_dev->unit_address, queue->msg_token,
++			    PAGE_SIZE);
 +	}
 +
-+	dir = srp_cmd_direction(cmd);
-+	len = vscsis_data_length(cmd, dir);
++	if (err != H_SUCCESS && err != 2) {
++		eprintk("Error 0x%x opening virtual adapter\n", err);
++		goto reg_crq_failed;
++	}
 +
-+	dprintk("%p %x %lx %d %d %d %llx\n", info, cmd->cdb[0],
-+		cmd->lun, dir, len, tag, (unsigned long long) cmd->tag);
-+
-+	sc = scsi_host_get_command(shost, dir, GFP_KERNEL);
-+	if (!sc)
-+		return -ENOMEM;
-+
-+	sc->SCp.ptr = info;
-+	memcpy(sc->cmnd, cmd->cdb, MAX_COMMAND_SIZE);
-+	sc->request_bufflen = len;
-+	sc->request_buffer = (void *) (unsigned long) addr;
-+	sc->tag = tag;
-+	err = scsi_tgt_queue_command(sc, (struct scsi_lun *) &cmd->lun, cmd->tag);
++	err = request_irq(vport->dma_dev->irq, &ibmvstgt_interrupt,
++			  SA_INTERRUPT, "ibmvstgt", target);
 +	if (err)
-+		scsi_host_put_command(shost, sc);
++		goto req_irq_failed;
 +
-+	return err;
++	vio_enable_interrupts(vport->dma_dev);
++
++	h_send_crq(vport->dma_dev->unit_address, 0xC001000000000000, 0);
++
++	queue->cur = 0;
++	spin_lock_init(&queue->lock);
++
++	return 0;
++
++req_irq_failed:
++	do {
++		err = h_free_crq(vport->dma_dev->unit_address);
++	} while (err == H_BUSY || H_IS_LONG_BUSY(err));
++
++reg_crq_failed:
++	dma_unmap_single(target->dev, queue->msg_token,
++			 queue->size * sizeof(*queue->msgs), DMA_BIDIRECTIONAL);
++map_failed:
++	free_page((unsigned long) queue->msgs);
++
++malloc_failed:
++	return -ENOMEM;
 +}
-+EXPORT_SYMBOL_GPL(srp_cmd_queue);
 +
-+MODULE_DESCRIPTION("SCSI RDAM Protocol lib functions");
-+MODULE_AUTHOR("FUJITA Tomonori");
-+MODULE_LICENSE("GPL");
-diff --git a/include/scsi/libsrp.h b/include/scsi/libsrp.h
-new file mode 100644
-index 0000000..d143171
---- /dev/null
-+++ b/include/scsi/libsrp.h
-@@ -0,0 +1,77 @@
-+#ifndef __LIBSRP_H__
-+#define __LIBSRP_H__
++static void crq_queue_destroy(struct srp_target *target)
++{
++	struct vio_port *vport = target_to_port(target);
++	struct crq_queue *queue = &vport->crq_queue;
++	int err;
 +
-+#include <linux/list.h>
-+#include <scsi/scsi_cmnd.h>
-+#include <scsi/scsi_host.h>
-+#include <scsi/srp.h>
++	free_irq(vport->dma_dev->irq, target);
++	do {
++		err = h_free_crq(vport->dma_dev->unit_address);
++	} while (err == H_BUSY || H_IS_LONG_BUSY(err));
 +
-+enum iue_flags {
-+	V_DIOVER,
-+	V_WRITE,
-+	V_LINKED,
-+	V_FLYING,
-+};
++	dma_unmap_single(target->dev, queue->msg_token,
++			 queue->size * sizeof(*queue->msgs), DMA_BIDIRECTIONAL);
 +
-+struct srp_buf {
-+	dma_addr_t dma;
-+	void *buf;
-+};
++	free_page((unsigned long) queue->msgs);
++}
 +
-+struct srp_queue {
-+	void *pool;
-+	void *items;
-+	struct kfifo *queue;
-+	spinlock_t lock;
-+};
++static void process_crq(struct viosrp_crq *crq,	struct srp_target *target)
++{
++	struct vio_port *vport = target_to_port(target);
++	dprintk("%x %x\n", crq->valid, crq->format);
 +
-+struct srp_target {
-+	struct Scsi_Host *shost;
-+	struct device *dev;
++	switch (crq->valid) {
++	case 0xC0:
++		/* initialization */
++		switch (crq->format) {
++		case 0x01:
++			h_send_crq(vport->dma_dev->unit_address,
++				   0xC002000000000000, 0);
++			break;
++		case 0x02:
++			break;
++		default:
++			eprintk("Unknown format %u\n", crq->format);
++		}
++		break;
++	case 0xFF:
++		/* transport event */
++		break;
++	case 0x80:
++		/* real payload */
++		switch (crq->format) {
++		case VIOSRP_SRP_FORMAT:
++		case VIOSRP_MAD_FORMAT:
++			process_iu(crq, target);
++			break;
++		case VIOSRP_OS400_FORMAT:
++		case VIOSRP_AIX_FORMAT:
++		case VIOSRP_LINUX_FORMAT:
++		case VIOSRP_INLINE_FORMAT:
++			eprintk("Unsupported format %u\n", crq->format);
++			break;
++		default:
++			eprintk("Unknown format %u\n", crq->format);
++		}
++		break;
++	default:
++		eprintk("unknown message type 0x%02x!?\n", crq->valid);
++	}
++}
 +
-+	spinlock_t lock;
-+	struct list_head cmd_queue;
-+
-+	size_t srp_iu_size;
-+	struct srp_queue iu_queue;
-+	size_t rx_ring_size;
-+	struct srp_buf **rx_ring;
-+
-+	void *ldata;
-+};
-+
-+struct iu_entry {
-+	struct srp_target *target;
-+
-+	struct list_head ilist;
-+	dma_addr_t remote_token;
++static inline struct viosrp_crq *next_crq(struct crq_queue *queue)
++{
++	struct viosrp_crq *crq;
 +	unsigned long flags;
 +
-+	struct srp_buf *sbuf;
++	spin_lock_irqsave(&queue->lock, flags);
++	crq = &queue->msgs[queue->cur];
++	if (crq->valid & 0x80) {
++		if (++queue->cur == queue->size)
++			queue->cur = 0;
++	} else
++		crq = NULL;
++	spin_unlock_irqrestore(&queue->lock, flags);
++
++	return crq;
++}
++
++static void handle_crq(void *data)
++{
++	struct srp_target *target = (struct srp_target *) data;
++	struct vio_port *vport = target_to_port(target);
++	struct viosrp_crq *crq;
++	int done = 0;
++
++	while (!done) {
++		while ((crq = next_crq(&vport->crq_queue)) != NULL) {
++			process_crq(crq, target);
++			crq->valid = 0x00;
++		}
++
++		vio_enable_interrupts(vport->dma_dev);
++
++		crq = next_crq(&vport->crq_queue);
++		if (crq) {
++			vio_disable_interrupts(vport->dma_dev);
++			process_crq(crq, target);
++			crq->valid = 0x00;
++		} else
++			done = 1;
++	}
++
++	handle_cmd_queue(target);
++}
++
++
++static int ibmvstgt_eh_abort_handler(struct scsi_cmnd *sc)
++{
++	unsigned long flags;
++	struct iu_entry *iue = (struct iu_entry *) sc->SCp.ptr;
++	struct srp_target *target = iue->target;
++
++	dprintk("%p %p %x\n", iue, target, vio_iu(iue)->srp.cmd.cdb[0]);
++
++	spin_lock_irqsave(&target->lock, flags);
++	list_del(&iue->ilist);
++	spin_unlock_irqrestore(&target->lock, flags);
++
++	srp_iu_put(iue);
++
++	return 0;
++}
++
++static int ibmvstgt_tsk_mgmt_response(u64 mid, int result)
++{
++	struct iu_entry *iue = (struct iu_entry *) ((void *) mid);
++	union viosrp_iu *iu = vio_iu(iue);
++	unsigned char status, asc;
++
++	eprintk("%p %d\n", iue, result);
++	status = NO_SENSE;
++	asc = 0;
++
++	switch (iu->srp.tsk_mgmt.tsk_mgmt_func) {
++	case SRP_TSK_ABORT_TASK:
++		asc = 0x14;
++		if (result)
++			status = ABORTED_COMMAND;
++		break;
++	default:
++		break;
++	}
++
++	send_rsp(iue, NULL, status, asc);
++	srp_iu_put(iue);
++
++	return 0;
++}
++
++static ssize_t system_id_show(struct class_device *cdev, char *buf)
++{
++	return snprintf(buf, PAGE_SIZE, "%s\n", system_id);
++}
++
++static ssize_t partition_number_show(struct class_device *cdev, char *buf)
++{
++	return snprintf(buf, PAGE_SIZE, "%x\n", partition_number);
++}
++
++static ssize_t unit_address_show(struct class_device *cdev, char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(cdev);
++	struct srp_target *target = host_to_srp_target(shost);
++	struct vio_port *vport = target_to_port(target);
++	return snprintf(buf, PAGE_SIZE, "%x\n", vport->dma_dev->unit_address);
++}
++
++static CLASS_DEVICE_ATTR(system_id, S_IRUGO, system_id_show, NULL);
++static CLASS_DEVICE_ATTR(partition_number, S_IRUGO, partition_number_show, NULL);
++static CLASS_DEVICE_ATTR(unit_address, S_IRUGO, unit_address_show, NULL);
++
++static struct class_device_attribute *ibmvstgt_attrs[] = {
++	&class_device_attr_system_id,
++	&class_device_attr_partition_number,
++	&class_device_attr_unit_address,
++	NULL,
 +};
 +
-+typedef int (srp_rdma_t)(struct scsi_cmnd *, struct scatterlist *, int,
-+			 struct srp_direct_buf *, int,
-+			 enum dma_data_direction, unsigned int);
-+extern int srp_target_alloc(struct srp_target *, struct device *, size_t, size_t);
-+extern void srp_target_free(struct srp_target *);
++static struct scsi_host_template ibmvstgt_sht = {
++	.name			= TGT_NAME,
++	.module			= THIS_MODULE,
++	.can_queue		= INITIAL_SRP_LIMIT,
++	.sg_tablesize		= SG_ALL,
++	.use_clustering		= DISABLE_CLUSTERING,
++	.max_sectors		= DEFAULT_MAX_SECTORS,
++	.transfer_response	= ibmvstgt_cmd_done,
++	.transfer_data		= ibmvstgt_transfer_data,
++	.eh_abort_handler	= ibmvstgt_eh_abort_handler,
++	.tsk_mgmt_response	= ibmvstgt_tsk_mgmt_response,
++	.shost_attrs		= ibmvstgt_attrs,
++	.proc_name		= TGT_NAME,
++};
 +
-+extern struct iu_entry *srp_iu_get(struct srp_target *);
-+extern void srp_iu_put(struct iu_entry *);
-+
-+extern int srp_cmd_queue(struct Scsi_Host *, struct srp_cmd *, void *, u64);
-+extern int srp_transfer_data(struct scsi_cmnd *, struct srp_cmd *,
-+			     srp_rdma_t, int, int);
-+
-+
-+static inline struct srp_target *host_to_srp_target(struct Scsi_Host *host)
++static int ibmvstgt_probe(struct vio_dev *dev, const struct vio_device_id *id)
 +{
-+	return (struct srp_target *) host->hostdata;
++	struct Scsi_Host *shost;
++	struct srp_target *target;
++	struct vio_port *vport;
++	unsigned int *dma, dma_size;
++	int err = -ENOMEM;
++
++	vport = kzalloc(sizeof(struct vio_port), GFP_KERNEL);
++	if (!vport)
++		return err;
++	shost = scsi_host_alloc(&ibmvstgt_sht, sizeof(struct srp_target));
++	if (!shost)
++		goto free_vport;
++	err = scsi_tgt_alloc_queue(shost);
++	if (err)
++		goto put_host;
++
++	target = host_to_srp_target(shost);
++	target->shost = shost;
++	vport->dma_dev = dev;
++	target->ldata = vport;
++	err = srp_target_alloc(target, &dev->dev, INITIAL_SRP_LIMIT,
++			       SRP_MAX_IU_LEN);
++	if (err)
++		goto put_host;
++
++	dma = (unsigned int *) vio_get_attribute(dev, "ibm,my-dma-window",
++						 &dma_size);
++	if (!dma || dma_size != 40) {
++		eprintk("Couldn't get window property %d\n", dma_size);
++		err = -EIO;
++		goto free_srp_target;
++	}
++	vport->liobn = dma[0];
++	vport->riobn = dma[5];
++
++	INIT_WORK(&vport->crq_work, handle_crq, target);
++
++	err = crq_queue_create(&vport->crq_queue, target);
++	if (err)
++		goto free_srp_target;
++
++	err = scsi_add_host(shost, target->dev);
++	if (err)
++		goto destroy_queue;
++	return 0;
++
++destroy_queue:
++	crq_queue_destroy(target);
++free_srp_target:
++	srp_target_free(target);
++put_host:
++	scsi_host_put(shost);
++free_vport:
++	kfree(vport);
++	return err;
 +}
 +
-+static inline int srp_cmd_direction(struct srp_cmd *cmd)
++static int ibmvstgt_remove(struct vio_dev *dev)
 +{
-+	return (cmd->buf_fmt >> 4) ? DMA_TO_DEVICE : DMA_FROM_DEVICE;
++	struct srp_target *target = (struct srp_target *) dev->dev.driver_data;
++	struct Scsi_Host *shost = target->shost;
++	struct vio_port *vport = target->ldata;
++
++	crq_queue_destroy(target);
++	scsi_remove_host(shost);
++	scsi_tgt_free_queue(shost);
++	srp_target_free(target);
++	kfree(vport);
++	scsi_host_put(shost);
++	return 0;
 +}
 +
-+#endif
++static struct vio_device_id ibmvstgt_device_table[] __devinitdata = {
++	{"v-scsi-host", "IBM,v-scsi-host"},
++	{"",""}
++};
++
++MODULE_DEVICE_TABLE(vio, ibmvstgt_device_table);
++
++static struct vio_driver ibmvstgt_driver = {
++	.id_table = ibmvstgt_device_table,
++	.probe = ibmvstgt_probe,
++	.remove = ibmvstgt_remove,
++	.driver = {
++		.name = "ibmvscsis",
++		.owner = THIS_MODULE,
++	}
++};
++
++static int get_system_info(void)
++{
++	struct device_node *rootdn;
++	const char *id, *model, *name;
++	unsigned int *num;
++
++	rootdn = find_path_device("/");
++	if (!rootdn)
++		return -ENOENT;
++
++	model = get_property(rootdn, "model", NULL);
++	id = get_property(rootdn, "system-id", NULL);
++	if (model && id)
++		snprintf(system_id, sizeof(system_id), "%s-%s", model, id);
++
++	name = get_property(rootdn, "ibm,partition-name", NULL);
++	if (name)
++		strncpy(partition_name, name, sizeof(partition_name));
++
++	num = (unsigned int *) get_property(rootdn, "ibm,partition-no", NULL);
++	if (num)
++		partition_number = *num;
++
++	return 0;
++}
++
++static int ibmvstgt_init(void)
++{
++	int err = -ENOMEM;
++
++	printk("IBM eServer i/pSeries Virtual SCSI Target Driver\n");
++
++	vtgtd = create_workqueue("ibmvtgtd");
++	if (!vtgtd)
++		return err;
++
++	err = get_system_info();
++	if (err)
++		goto destroy_wq;
++
++	err = vio_register_driver(&ibmvstgt_driver);
++	if (err)
++		goto destroy_wq;
++
++	return 0;
++
++destroy_wq:
++	destroy_workqueue(vtgtd);
++	return err;
++}
++
++static void ibmvstgt_exit(void)
++{
++	printk("Unregister IBM virtual SCSI driver\n");
++
++	destroy_workqueue(vtgtd);
++	vio_unregister_driver(&ibmvstgt_driver);
++}
++
++MODULE_DESCRIPTION("IBM Virtual SCSI Target");
++MODULE_AUTHOR("Dave Boutcher");
++MODULE_LICENSE("GPL");
++
++module_init(ibmvstgt_init);
++module_exit(ibmvstgt_exit);
 -- 
 1.4.3.2
 
