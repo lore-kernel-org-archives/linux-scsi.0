@@ -1,51 +1,79 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [PATCH 0/8] target mode support
-Date: Thu, 16 Nov 2006 12:18:48 -0500
-Message-ID: <455C9D78.7020400@emulex.com>
-References: <20061116192358C.fujita.tomonori@lab.ntt.co.jp> <455C76D1.9050501@emulex.com> <455C9299.5010202@cs.wisc.edu>
-Reply-To: James.Smart@Emulex.Com
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: Persistent Reservation
+Date: Thu, 16 Nov 2006 12:52:46 -0500
+Message-ID: <455CA56E.202@torque.net>
+References: <216D6FA68B0F304DA93E95C5B786F2D17C8439@bart.corp.egenera.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:58314 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S1031113AbWKPRTV
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Nov 2006 12:19:21 -0500
-In-Reply-To: <455C9299.5010202@cs.wisc.edu>
+Received: from pentafluge.infradead.org ([213.146.154.40]:30888 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1031162AbWKPRww (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Nov 2006 12:52:52 -0500
+In-Reply-To: <216D6FA68B0F304DA93E95C5B786F2D17C8439@bart.corp.egenera.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, jens.axboe@oracle.com, James Bottomley <James.Bottomley@SteelEye.com>
+To: "Jansen, Frank" <fjansen@egenera.com>
+Cc: djshetty <dhirajshetty.junk@mailnull.com>, linux-scsi@vger.kernel.org
 
-Ok.  My assumption is that it is preferred to be a single mode, but that
-dual mode should be supported.  Please note that dual mode may impact some
-of the feature set in the emulated target - and it'll be a trick to identify
-that.
-
-Hmm... what this leads me to is - there is a difference between the
-pure SCSI behavior (performing a SCSI Read command), and the transport-level
-SCSI behavior (Mode Pages; FCP: Conf, Recovery; iSCSI CmdSN/StatSN progression,
-SNACK, RSP retransmission, etc). Although, these will be very tightly
-integrated.  How does this code account for this ?  Are there transport-level
-libraries in-between the LLDD and the SCSI Target ? Is it reflected in the
-LLDD to SCSI Target messaging ?
-
--- james
-
-
-Mike Christie wrote:
-> James Smart wrote:
->> One question....
->>
->> Does this assume that an hba is both initiator and target ?  target only ?
->> Do we have any issues if a scsi_host is a target only ?
->>
+Jansen, Frank wrote:
+> Dhiraj,
 > 
-> I do not think that is fully worked out yet. The only target that is
-> done is the vscsi one which is a little different from something like
-> lpfc or qla*. I think some developers like Qlogic would prefer the
-> driver and card is only in one mode or the other to simplify things.
-> However, I think Tomo and users would like to be able to use a
-> card/driver in both modes at the same time.
+> In the most common case, persistent reservations are stored with the
+> device, such as the storage array.  Note that not all devices
+> implement/support persistent reservations and there are cases where the
+> reservations are stored elsewhere, which tends to be the approach in
+> virtualizing environments.
+
+The linux SCSI subsystem doesn't interact with lu
+persistent reservations. Last time I looked, the
+kernel was pretty noisy when a RESERVATION CONFLICT
+status was received, even via a sg device node.
+
+You can manipulate persistent reservations from the
+user space with sg_persist in sg3_utils package.
+
+Device support for persistent reservations is improving,
+Fujitsu SCSI disks have had it for some time. I
+noticed that the Seagate 15K.5 series support those
+commands while the 15K.4 series and earlier didn't.
+
+Doug Gilbert
+
+>> -----Original Message-----
+>> From: linux-scsi-owner@vger.kernel.org 
+>> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of djshetty
+>> Sent: Thursday, November 16, 2006 7:27 AM
+>> To: linux-scsi@vger.kernel.org
+>> Subject: Persistent Reservation
+>>
+>>
+>> Hi,
+>>
+>> I had a doubt. In order to persist the reservation we need to 
+>> store some information like reservation keys, scope, type of 
+>> reservation etc.
+>>
+>> Where exactly are such information stored and by whom ?
+>>
+>> Regards,
+>> Dhiraj
+>> --
+>> View this message in context: 
+>> http://www.nabble.com/Persistent-Reservation-tf2642680.html#a7376789
+>> Sent from the linux-scsi mailing list archive at Nabble.com.
+>>
+>> -
+>> To unsubscribe from this list: send the line "unsubscribe 
+>> linux-scsi" in the body of a message to 
+>> majordomo@vger.kernel.org More majordomo info at  
+>> http://vger.kernel.org/majordomo-info.html
+>>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
+
