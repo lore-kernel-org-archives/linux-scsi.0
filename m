@@ -1,52 +1,71 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [PATCH 0/8] target mode support
-Date: Thu, 16 Nov 2006 09:33:53 -0500
-Message-ID: <455C76D1.9050501@emulex.com>
-References: <20061116192358C.fujita.tomonori@lab.ntt.co.jp>
-Reply-To: James.Smart@Emulex.Com
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [GIT PATCH] final SCSI fixes for 2.6.19-rc6
+Date: Thu, 16 Nov 2006 10:23:14 -0600
+Message-ID: <1163694194.3464.4.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:8608 "EHLO emulex.emulex.com")
-	by vger.kernel.org with ESMTP id S933513AbWKPOeV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Nov 2006 09:34:21 -0500
-In-Reply-To: <20061116192358C.fujita.tomonori@lab.ntt.co.jp>
+Received: from hancock.steeleye.com ([71.30.118.248]:34709 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1424270AbWKPQXW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Nov 2006 11:23:22 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org, jens.axboe@oracle.com, James Bottomley <James.Bottomley@SteelEye.com>
+To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-One question....
+These are the dump of the final -rc fixes I've been collecting. The
+patch is available here:
 
-Does this assume that an hba is both initiator and target ?  target only ?
-Do we have any issues if a scsi_host is a target only ?
+master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
 
--- james s
+The Short Changelog is:
 
-FUJITA Tomonori wrote:
-> The following patchset adds the target mode support in
-> user-space. This has been living in the -mm tree for a while. Mike and
-> I think it's ready for mainline inclusion.
-> 
-> The user-space tools and documents are available at:
-> 
-> http://stgt.berlios.de/
-> 
-> This patchset can be applied to both scsi-misc-2.6 and linux-2.6
-> trees.
-> 
-> 
-> The first two patches are for the block layer. The second patch is the
-> following 'support larger block pc requests' patch in the bsg tree:
-> 
-> http://kernel.org/git/?p=linux/kernel/git/axboe/linux-2.6-block.git;a=commitdiff;h=d872a1b22a09dffd7b48609f80f80dfa6e78227e
-> 
-> It's a slightly modified version since scsi_ioctl.c in the bsg tree
-> was cleaned up.
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+<malahal:us.ibm.com>:
+  o aic94xx SCSI timeout fix: SMP retry fix
+  o aic94xx SCSI timeout fix
+
+adam radford:
+  o 3ware 9000 add support for 9650SE
+
+Adrian Bunk:
+  o psi240i.c: fix an array overrun
+
+Douglas Gilbert:
+  o sg: fix incorrect last scatg length
+
+Jean Delvare:
+  o gdth: Fix && typos
+
+Mike Christie:
+  o iscsi class: update version
+  o iscsi_tcp: fix xmittask oops
+
+Pete Wyckoff:
+  o iscsi: add newlines to debug messages
+  o iscsi: always release crypto
+
+and the diffstat:
+
+ 3w-9xxx.c              |  141 +++++++++++++++++++++++++++++--------------------
+ 3w-9xxx.h              |   14 +++-
+ aic94xx/aic94xx_hwi.c  |   18 ++++++
+ aic94xx/aic94xx_hwi.h  |   12 ++++
+ aic94xx/aic94xx_init.c |    2 
+ aic94xx/aic94xx_sas.h  |    1 
+ aic94xx/aic94xx_scb.c  |   72 +++++++++++++++++++++++++
+ aic94xx/aic94xx_seq.c  |    5 -
+ aic94xx/aic94xx_seq.h  |    2 
+ gdth.c                 |    4 -
+ iscsi_tcp.c            |   22 +++----
+ libiscsi.c             |    9 +--
+ libsas/sas_expander.c  |   90 +++++++++++++++++--------------
+ psi240i.c              |    2 
+ scsi_transport_iscsi.c |    2 
+ sg.c                   |   25 ++++----
+ 16 files changed, 281 insertions(+), 140 deletions(-)
+
+James
+
+
