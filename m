@@ -1,71 +1,32 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [GIT PATCH] final SCSI fixes for 2.6.19-rc6
-Date: Thu, 16 Nov 2006 10:23:14 -0600
-Message-ID: <1163694194.3464.4.camel@mulgrave.il.steeleye.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 0/8] target mode support
+Date: Thu, 16 Nov 2006 10:32:25 -0600
+Message-ID: <455C9299.5010202@cs.wisc.edu>
+References: <20061116192358C.fujita.tomonori@lab.ntt.co.jp> <455C76D1.9050501@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:34709 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1424270AbWKPQXW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Nov 2006 11:23:22 -0500
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:2267 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S1030926AbWKPQcr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Nov 2006 11:32:47 -0500
+In-Reply-To: <455C76D1.9050501@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: James.Smart@Emulex.Com
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, jens.axboe@oracle.com, James Bottomley <James.Bottomley@SteelEye.com>
 
-These are the dump of the final -rc fixes I've been collecting. The
-patch is available here:
+James Smart wrote:
+> One question....
+> 
+> Does this assume that an hba is both initiator and target ?  target only ?
+> Do we have any issues if a scsi_host is a target only ?
+> 
 
-master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
-
-The Short Changelog is:
-
-<malahal:us.ibm.com>:
-  o aic94xx SCSI timeout fix: SMP retry fix
-  o aic94xx SCSI timeout fix
-
-adam radford:
-  o 3ware 9000 add support for 9650SE
-
-Adrian Bunk:
-  o psi240i.c: fix an array overrun
-
-Douglas Gilbert:
-  o sg: fix incorrect last scatg length
-
-Jean Delvare:
-  o gdth: Fix && typos
-
-Mike Christie:
-  o iscsi class: update version
-  o iscsi_tcp: fix xmittask oops
-
-Pete Wyckoff:
-  o iscsi: add newlines to debug messages
-  o iscsi: always release crypto
-
-and the diffstat:
-
- 3w-9xxx.c              |  141 +++++++++++++++++++++++++++++--------------------
- 3w-9xxx.h              |   14 +++-
- aic94xx/aic94xx_hwi.c  |   18 ++++++
- aic94xx/aic94xx_hwi.h  |   12 ++++
- aic94xx/aic94xx_init.c |    2 
- aic94xx/aic94xx_sas.h  |    1 
- aic94xx/aic94xx_scb.c  |   72 +++++++++++++++++++++++++
- aic94xx/aic94xx_seq.c  |    5 -
- aic94xx/aic94xx_seq.h  |    2 
- gdth.c                 |    4 -
- iscsi_tcp.c            |   22 +++----
- libiscsi.c             |    9 +--
- libsas/sas_expander.c  |   90 +++++++++++++++++--------------
- psi240i.c              |    2 
- scsi_transport_iscsi.c |    2 
- sg.c                   |   25 ++++----
- 16 files changed, 281 insertions(+), 140 deletions(-)
-
-James
-
-
+I do not think that is fully worked out yet. The only target that is
+done is the vscsi one which is a little different from something like
+lpfc or qla*. I think some developers like Qlogic would prefer the
+driver and card is only in one mode or the other to simplify things.
+However, I think Tomo and users would like to be able to use a
+card/driver in both modes at the same time.
