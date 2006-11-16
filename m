@@ -1,59 +1,52 @@
-From: "Jansen, Frank" <fjansen@egenera.com>
-Subject: RE: Persistent Reservation
-Date: Thu, 16 Nov 2006 08:46:08 -0500
-Message-ID: <216D6FA68B0F304DA93E95C5B786F2D17C8439@bart.corp.egenera.com>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [PATCH 0/8] target mode support
+Date: Thu, 16 Nov 2006 09:33:53 -0500
+Message-ID: <455C76D1.9050501@emulex.com>
+References: <20061116192358C.fujita.tomonori@lab.ntt.co.jp>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from roadrunner-base.egenera.com ([63.160.166.46]:24029 "EHLO
-	roadrunner-base.egenera.com") by vger.kernel.org with ESMTP
-	id S933501AbWKPNsU convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Nov 2006 08:48:20 -0500
-Content-class: urn:content-classes:message
+Received: from emulex.emulex.com ([138.239.112.1]:8608 "EHLO emulex.emulex.com")
+	by vger.kernel.org with ESMTP id S933513AbWKPOeV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Nov 2006 09:34:21 -0500
+In-Reply-To: <20061116192358C.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: djshetty <dhirajshetty.junk@mailnull.com>, linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linux-scsi@vger.kernel.org, jens.axboe@oracle.com, James Bottomley <James.Bottomley@SteelEye.com>
 
-Dhiraj,
+One question....
 
-In the most common case, persistent reservations are stored with the
-device, such as the storage array.  Note that not all devices
-implement/support persistent reservations and there are cases where the
-reservations are stored elsewhere, which tends to be the approach in
-virtualizing environments.
+Does this assume that an hba is both initiator and target ?  target only ?
+Do we have any issues if a scsi_host is a target only ?
 
-Regards,
+-- james s
 
-Frank
-
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org 
-> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of djshetty
-> Sent: Thursday, November 16, 2006 7:27 AM
-> To: linux-scsi@vger.kernel.org
-> Subject: Persistent Reservation
+FUJITA Tomonori wrote:
+> The following patchset adds the target mode support in
+> user-space. This has been living in the -mm tree for a while. Mike and
+> I think it's ready for mainline inclusion.
+> 
+> The user-space tools and documents are available at:
+> 
+> http://stgt.berlios.de/
+> 
+> This patchset can be applied to both scsi-misc-2.6 and linux-2.6
+> trees.
 > 
 > 
-> Hi,
+> The first two patches are for the block layer. The second patch is the
+> following 'support larger block pc requests' patch in the bsg tree:
 > 
-> I had a doubt. In order to persist the reservation we need to 
-> store some information like reservation keys, scope, type of 
-> reservation etc.
+> http://kernel.org/git/?p=linux/kernel/git/axboe/linux-2.6-block.git;a=commitdiff;h=d872a1b22a09dffd7b48609f80f80dfa6e78227e
 > 
-> Where exactly are such information stored and by whom ?
-> 
-> Regards,
-> Dhiraj
-> --
-> View this message in context: 
-> http://www.nabble.com/Persistent-Reservation-tf2642680.html#a7376789
-> Sent from the linux-scsi mailing list archive at Nabble.com.
-> 
+> It's a slightly modified version since scsi_ioctl.c in the bsg tree
+> was cleaned up.
 > -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-scsi" in the body of a message to 
-> majordomo@vger.kernel.org More majordomo info at  
-> http://vger.kernel.org/majordomo-info.html
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
