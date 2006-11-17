@@ -1,136 +1,55 @@
 From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: [PATCH 04/15] libsas: Don't give scsi_cmnds to the EH if they never made it to the SAS LLDD or have already returned
-Date: Fri, 17 Nov 2006 13:07:49 -0800
-Message-ID: <20061117210749.17052.56317.stgit@localhost.localdomain>
+Subject: [PATCH 03/15] aic94xx: Delete ascb timers when freeing queues
+Date: Fri, 17 Nov 2006 13:07:46 -0800
+Message-ID: <20061117210746.17052.25031.stgit@localhost.localdomain>
 References: <20061117210737.17052.67041.stgit@localhost.localdomain>
 Content-Type: text/plain; charset=utf-8; format=fixed
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755916AbWKQVBr@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e33.co.us.ibm.com ([32.97.110.151]:49568 "EHLO
+	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S1755907AbWKQVBS
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Nov 2006 16:01:18 -0500
 In-Reply-To: <20061117210737.17052.67041.stgit@localhost.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc: alexisb@us.ibm.com
-List-Id: linux-scsi@vger.kernel.org
 
 
-On a system with many SAS targets, it appears possible that a scsi_cmnd
-can time out without ever making it to the SAS LLDD or at the same time
-that a completion is occurring.  In both of these cases, telling the
-LLDD to abort the sas_task makes no sense because the LLDD won't know
-about the sas_task; what we really want to do is to increase the timer.
-Note that this involves creating another sas_task bit to indicate
-whether or not the task has been sent to the LLDD; I could have
-implemented this by slightly redefining SAS_TASK_STATE_PENDING, but
-this way seems cleaner.
+When the aic94xx driver creates ascbs, each ascb is initialized with a
+timeout timer.  If there are any ascbs left over when the driver is being
+torn down, these timers need to be deleted.  In particular, we seem to
+hit this case when ascbs are issued yet never end up on the done list.
+Right now there's a sequencer bug that results in this happening every
+so often.  CONTROL PHY commands also use these per-ascb timers.
+
+We also want to print a warning if there are leftover ascbs that are
+not for CONTROL PHY commands.
 
 Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
 ---
 
- drivers/scsi/aic94xx/aic94xx_task.c |    9 +++++++++
- drivers/scsi/aic94xx/aic94xx_tmf.c  |    4 +++-
- drivers/scsi/libsas/sas_ata.c       |    1 -
- drivers/scsi/libsas/sas_scsi_host.c |    7 +++++++
- include/scsi/libsas.h               |    1 +
- 5 files changed, 20 insertions(+), 2 deletions(-)
+ drivers/scsi/aic94xx/aic94xx_init.c |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/aic94xx/aic94xx_task.c b/drivers/scsi/aic94xx/aic94xx_task.c
-index 9840708..466b492 100644
---- a/drivers/scsi/aic94xx/aic94xx_task.c
-+++ b/drivers/scsi/aic94xx/aic94xx_task.c
-@@ -349,6 +349,7 @@ Again:
+diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
+index f7f009e..d9cf607 100644
+--- a/drivers/scsi/aic94xx/aic94xx_init.c
++++ b/drivers/scsi/aic94xx/aic94xx_init.c
+@@ -727,6 +727,15 @@ static void asd_free_queues(struct asd_h
  
- 	spin_lock_irqsave(&task->task_state_lock, flags);
- 	task->task_state_flags &= ~SAS_TASK_STATE_PENDING;
-+	task->task_state_flags &= ~SAS_TASK_AT_INITIATOR;
- 	task->task_state_flags |= SAS_TASK_STATE_DONE;
- 	if (unlikely((task->task_state_flags & SAS_TASK_STATE_ABORTED))) {
- 		spin_unlock_irqrestore(&task->task_state_lock, flags);
-@@ -556,6 +557,7 @@ int asd_execute_task(struct sas_task *ta
- 	struct sas_task *t = task;
- 	struct asd_ascb *ascb = NULL, *a;
- 	struct asd_ha_struct *asd_ha = task->dev->port->ha->lldd_ha;
-+	unsigned long flags;
- 
- 	res = asd_can_queue(asd_ha, num);
- 	if (res)
-@@ -601,9 +603,16 @@ int asd_execute_task(struct sas_task *ta
- 	}
- 	list_del_init(&alist);
- 
-+	spin_lock_irqsave(&task->task_state_lock, flags);
-+	task->task_state_flags |= SAS_TASK_AT_INITIATOR;
-+	spin_unlock_irqrestore(&task->task_state_lock, flags);
+ 	list_for_each_safe(pos, n, &pending) {
+ 		struct asd_ascb *ascb = list_entry(pos, struct asd_ascb, list);
++		/*
++		 * Delete unexpired ascb timers.  This may happen if we issue
++		 * a CONTROL PHY scb to an adapter and rmmod before the scb
++		 * times out.  Apparently we don't wait for the CONTROL PHY
++		 * to complete, so it doesn't matter if we kill the timer.
++		 */
++		del_timer_sync(&ascb->timer);
++		WARN_ON(ascb->scb->header.opcode != CONTROL_PHY);
 +
- 	res = asd_post_ascb_list(asd_ha, ascb, num);
- 	if (unlikely(res)) {
- 		a = NULL;
-+		spin_lock_irqsave(&task->task_state_lock, flags);
-+		task->task_state_flags &= ~SAS_TASK_AT_INITIATOR;
-+		spin_unlock_irqrestore(&task->task_state_lock, flags);
- 		__list_add(&alist, ascb->list.prev, &ascb->list);
- 		goto out_err_unmap;
- 	}
-diff --git a/drivers/scsi/aic94xx/aic94xx_tmf.c b/drivers/scsi/aic94xx/aic94xx_tmf.c
-index 6123438..686cea1 100644
---- a/drivers/scsi/aic94xx/aic94xx_tmf.c
-+++ b/drivers/scsi/aic94xx/aic94xx_tmf.c
-@@ -345,7 +345,7 @@ static inline int asd_clear_nexus(struct
- int asd_abort_task(struct sas_task *task)
- {
- 	struct asd_ascb *tascb = task->lldd_task;
--	struct asd_ha_struct *asd_ha = tascb->ha;
-+	struct asd_ha_struct *asd_ha;
- 	int res = 1;
- 	unsigned long flags;
- 	struct asd_ascb *ascb = NULL;
-@@ -360,6 +360,8 @@ int asd_abort_task(struct sas_task *task
- 	}
- 	spin_unlock_irqrestore(&task->task_state_lock, flags);
- 
-+	asd_ha = tascb->ha;
-+
- 	ascb = asd_ascb_alloc_list(asd_ha, &res, GFP_KERNEL);
- 	if (!ascb)
- 		return -ENOMEM;
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index de42b5b..f92f035 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -161,7 +161,6 @@ static unsigned int sas_ata_qc_issue(str
- 	task->data_dir = qc->dma_dir;
- 	task->scatter = qc->__sg;
- 	task->ata_task.retry_count = 1;
--	task->task_state_flags = SAS_TASK_STATE_PENDING;
- 
- 	switch (qc->tf.protocol) {
- 	case ATA_PROT_NCQ:
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index 5c6e6f2..7cc7a1e 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -550,6 +550,13 @@ enum scsi_eh_timer_return sas_scsi_timed
- 			    cmd, task);
- 		return EH_HANDLED;
- 	}
-+	if (!(task->task_state_flags & SAS_TASK_AT_INITIATOR)) {
-+		spin_unlock_irqrestore(&task->task_state_lock, flags);
-+		SAS_DPRINTK("command 0x%p, task 0x%p, not at initiator: "
-+			    "EH_RESET_TIMER\n",
-+			    cmd, task);
-+		return EH_RESET_TIMER;
-+	}
- 	task->task_state_flags |= SAS_TASK_STATE_ABORTED;
- 	spin_unlock_irqrestore(&task->task_state_lock, flags);
- 
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index 921db78..d2ec1be 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -546,6 +546,7 @@ #define SAS_TASK_STATE_PENDING      1
- #define SAS_TASK_STATE_DONE         2
- #define SAS_TASK_STATE_ABORTED      4
- #define SAS_TASK_INITIATOR_ABORTED  8
-+#define SAS_TASK_AT_INITIATOR       16
- 
- static inline struct sas_task *sas_alloc_task(gfp_t flags)
- {
+ 		list_del_init(pos);
+ 		ASD_DPRINTK("freeing from pending\n");
+ 		asd_ascb_free(ascb);
