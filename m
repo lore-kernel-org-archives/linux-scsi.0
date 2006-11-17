@@ -1,93 +1,136 @@
 From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: [PATCH 15/15] sas_ata: Make this a module separate from libsas
-Date: Fri, 17 Nov 2006 13:08:33 -0800
-Message-ID: <20061117210833.17052.41537.stgit@localhost.localdomain>
+Subject: [PATCH 04/15] libsas: Don't give scsi_cmnds to the EH if they never made it to the SAS LLDD or have already returned
+Date: Fri, 17 Nov 2006 13:07:49 -0800
+Message-ID: <20061117210749.17052.56317.stgit@localhost.localdomain>
 References: <20061117210737.17052.67041.stgit@localhost.localdomain>
 Content-Type: text/plain; charset=utf-8; format=fixed
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:40097 "EHLO
-	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S1755923AbWKQVCF
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Nov 2006 16:02:05 -0500
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755916AbWKQVBr@vger.kernel.org>
 In-Reply-To: <20061117210737.17052.67041.stgit@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc: alexisb@us.ibm.com
+List-Id: linux-scsi@vger.kernel.org
 
 
-Break out sas_ata as a free-standing module that provides a SATA
-Translation Layer (SATL) for libsas.  This patch requires the libsas
-SATL registration patch; the changes to sas_ata itself are rather
-minor.
+On a system with many SAS targets, it appears possible that a scsi_cmnd
+can time out without ever making it to the SAS LLDD or at the same time
+that a completion is occurring.  In both of these cases, telling the
+LLDD to abort the sas_task makes no sense because the LLDD won't know
+about the sas_task; what we really want to do is to increase the timer.
+Note that this involves creating another sas_task bit to indicate
+whether or not the task has been sent to the LLDD; I could have
+implemented this by slightly redefining SAS_TASK_STATE_PENDING, but
+this way seems cleaner.
 
 Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
 ---
 
- drivers/scsi/libsas/Makefile  |    5 +++--
- drivers/scsi/libsas/sas_ata.c |   34 ++++++++++++++++++++++++++++++++--
- 2 files changed, 35 insertions(+), 4 deletions(-)
+ drivers/scsi/aic94xx/aic94xx_task.c |    9 +++++++++
+ drivers/scsi/aic94xx/aic94xx_tmf.c  |    4 +++-
+ drivers/scsi/libsas/sas_ata.c       |    1 -
+ drivers/scsi/libsas/sas_scsi_host.c |    7 +++++++
+ include/scsi/libsas.h               |    1 +
+ 5 files changed, 20 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/libsas/Makefile b/drivers/scsi/libsas/Makefile
-index 6383eb5..5e95902 100644
---- a/drivers/scsi/libsas/Makefile
-+++ b/drivers/scsi/libsas/Makefile
-@@ -33,5 +33,6 @@ libsas-y +=  sas_init.o     \
- 		sas_dump.o     \
- 		sas_discover.o \
- 		sas_expander.o \
--		sas_scsi_host.o \
--		sas_ata.o
-+		sas_scsi_host.o
+diff --git a/drivers/scsi/aic94xx/aic94xx_task.c b/drivers/scsi/aic94xx/aic94xx_task.c
+index 9840708..466b492 100644
+--- a/drivers/scsi/aic94xx/aic94xx_task.c
++++ b/drivers/scsi/aic94xx/aic94xx_task.c
+@@ -349,6 +349,7 @@ Again:
+ 
+ 	spin_lock_irqsave(&task->task_state_lock, flags);
+ 	task->task_state_flags &= ~SAS_TASK_STATE_PENDING;
++	task->task_state_flags &= ~SAS_TASK_AT_INITIATOR;
+ 	task->task_state_flags |= SAS_TASK_STATE_DONE;
+ 	if (unlikely((task->task_state_flags & SAS_TASK_STATE_ABORTED))) {
+ 		spin_unlock_irqrestore(&task->task_state_lock, flags);
+@@ -556,6 +557,7 @@ int asd_execute_task(struct sas_task *ta
+ 	struct sas_task *t = task;
+ 	struct asd_ascb *ascb = NULL, *a;
+ 	struct asd_ha_struct *asd_ha = task->dev->port->ha->lldd_ha;
++	unsigned long flags;
+ 
+ 	res = asd_can_queue(asd_ha, num);
+ 	if (res)
+@@ -601,9 +603,16 @@ int asd_execute_task(struct sas_task *ta
+ 	}
+ 	list_del_init(&alist);
+ 
++	spin_lock_irqsave(&task->task_state_lock, flags);
++	task->task_state_flags |= SAS_TASK_AT_INITIATOR;
++	spin_unlock_irqrestore(&task->task_state_lock, flags);
 +
-+obj-$(CONFIG_SCSI_SAS_SATL) += sas_ata.o
+ 	res = asd_post_ascb_list(asd_ha, ascb, num);
+ 	if (unlikely(res)) {
+ 		a = NULL;
++		spin_lock_irqsave(&task->task_state_lock, flags);
++		task->task_state_flags &= ~SAS_TASK_AT_INITIATOR;
++		spin_unlock_irqrestore(&task->task_state_lock, flags);
+ 		__list_add(&alist, ascb->list.prev, &ascb->list);
+ 		goto out_err_unmap;
+ 	}
+diff --git a/drivers/scsi/aic94xx/aic94xx_tmf.c b/drivers/scsi/aic94xx/aic94xx_tmf.c
+index 6123438..686cea1 100644
+--- a/drivers/scsi/aic94xx/aic94xx_tmf.c
++++ b/drivers/scsi/aic94xx/aic94xx_tmf.c
+@@ -345,7 +345,7 @@ static inline int asd_clear_nexus(struct
+ int asd_abort_task(struct sas_task *task)
+ {
+ 	struct asd_ascb *tascb = task->lldd_task;
+-	struct asd_ha_struct *asd_ha = tascb->ha;
++	struct asd_ha_struct *asd_ha;
+ 	int res = 1;
+ 	unsigned long flags;
+ 	struct asd_ascb *ascb = NULL;
+@@ -360,6 +360,8 @@ int asd_abort_task(struct sas_task *task
+ 	}
+ 	spin_unlock_irqrestore(&task->task_state_lock, flags);
+ 
++	asd_ha = tascb->ha;
++
+ 	ascb = asd_ascb_alloc_list(asd_ha, &res, GFP_KERNEL);
+ 	if (!ascb)
+ 		return -ENOMEM;
 diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index 7338775..bfaee88 100644
+index de42b5b..f92f035 100644
 --- a/drivers/scsi/libsas/sas_ata.c
 +++ b/drivers/scsi/libsas/sas_ata.c
-@@ -398,8 +398,8 @@ static struct ata_port_info sata_port_in
- 	.port_ops = &sas_sata_ops
- };
+@@ -161,7 +161,6 @@ static unsigned int sas_ata_qc_issue(str
+ 	task->data_dir = qc->dma_dir;
+ 	task->scatter = qc->__sg;
+ 	task->ata_task.retry_count = 1;
+-	task->task_state_flags = SAS_TASK_STATE_PENDING;
  
--int sas_ata_init_host_and_port(struct domain_device *found_dev,
--			       struct scsi_target *starget)
-+static int sas_ata_init_host_and_port(struct domain_device *found_dev,
-+				      struct scsi_target *starget)
+ 	switch (qc->tf.protocol) {
+ 	case ATA_PROT_NCQ:
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index 5c6e6f2..7cc7a1e 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -550,6 +550,13 @@ enum scsi_eh_timer_return sas_scsi_timed
+ 			    cmd, task);
+ 		return EH_HANDLED;
+ 	}
++	if (!(task->task_state_flags & SAS_TASK_AT_INITIATOR)) {
++		spin_unlock_irqrestore(&task->task_state_lock, flags);
++		SAS_DPRINTK("command 0x%p, task 0x%p, not at initiator: "
++			    "EH_RESET_TIMER\n",
++			    cmd, task);
++		return EH_RESET_TIMER;
++	}
+ 	task->task_state_flags |= SAS_TASK_STATE_ABORTED;
+ 	spin_unlock_irqrestore(&task->task_state_lock, flags);
+ 
+diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+index 921db78..d2ec1be 100644
+--- a/include/scsi/libsas.h
++++ b/include/scsi/libsas.h
+@@ -546,6 +546,7 @@ #define SAS_TASK_STATE_PENDING      1
+ #define SAS_TASK_STATE_DONE         2
+ #define SAS_TASK_STATE_ABORTED      4
+ #define SAS_TASK_INITIATOR_ABORTED  8
++#define SAS_TASK_AT_INITIATOR       16
+ 
+ static inline struct sas_task *sas_alloc_task(gfp_t flags)
  {
- 	struct Scsi_Host *shost = dev_to_shost(&starget->dev);
- 	struct sas_ha_struct *ha = SHOST_TO_SAS_HA(shost);
-@@ -424,3 +424,33 @@ int sas_ata_init_host_and_port(struct do
- 
- 	return 0;
- }
-+
-+/* Module initialization */
-+static struct satl_operations sas_ata_ops = {
-+	.owner			= THIS_MODULE,
-+	.init_target		= sas_ata_init_host_and_port,
-+	.queuecommand		= ata_sas_queuecmd,
-+	.ioctl			= ata_scsi_ioctl,
-+	.configure_port		= ata_sas_slave_configure,
-+	.deactivate_port	= ata_port_disable,
-+	.destroy_port		= ata_sas_port_destroy,
-+	.init_port		= ata_sas_port_init
-+};
-+
-+static int __init sas_ata_init(void)
-+{
-+	return sas_register_satl(&sas_ata_ops);
-+}
-+
-+static void __exit sas_ata_exit(void)
-+{
-+	sas_unregister_satl(&sas_ata_ops);
-+}
-+
-+module_init(sas_ata_init);
-+module_exit(sas_ata_exit);
-+
-+MODULE_AUTHOR("Darrick Wong <djwong@us.ibm.com>");
-+MODULE_DESCRIPTION("libata SATL for SAS");
-+MODULE_LICENSE("GPL v2");
-+MODULE_VERSION("1.0");
