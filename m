@@ -1,48 +1,51 @@
-From: Joern Quillman <quillman@fbihome.de>
-Subject: Spinup of SCSI Disks: allow_restart won't work on 2.6.18
-Date: Fri, 17 Nov 2006 18:38:34 +0100
-Message-ID: <455DF39A.6090209@fbihome.de>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Atto UL5D: negotiates only up to FAST-40 SCSI
+Date: Fri, 17 Nov 2006 12:26:36 -0600
+Message-ID: <1163787996.8594.36.camel@mulgrave.il.steeleye.com>
+References: <xfku00y8gjn.fsf@uxrs53.drewag.de>
+	 <1163777478.8594.18.camel@mulgrave.il.steeleye.com>
+	 <xfk8xia82tn.fsf@uxrs53.drewag.de>  <xfkhcwy6la8.fsf@uxrs53.drewag.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.183]:13536 "EHLO
-	moutng.kundenserver.de") by vger.kernel.org with ESMTP
-	id S933027AbWKQRkz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Nov 2006 12:40:55 -0500
-Received: from [192.168.1.30]
-	by eis.satan.lan with esmtpa (Exim 4.60)
-	(envelope-from <quillman@fbihome.de>)
-	id 1Gl9f6-0000ke-CX
-	for linux-scsi@vger.kernel.org; Fri, 17 Nov 2006 19:46:10 +0000
+Received: from hancock.steeleye.com ([71.30.118.248]:16335 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1755729AbWKQS0n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Nov 2006 13:26:43 -0500
+In-Reply-To: <xfkhcwy6la8.fsf@uxrs53.drewag.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Sven Rudolph <Sven_Rudolph@drewag.de>
+Cc: linux-scsi@vger.kernel.org
 
-Hi
+On Fri, 2006-11-17 at 18:22 +0100, Sven Rudolph wrote:
+> Something I forgot to mention: I became aware of the problem when I
+> tried to read from (or write to (?)) three disks in parallel and the
+> sum of the transfer speeds was a bit below 40 MBytes/second when I ran
+> two disks and it was the nearly the same with three disks. The first
+> disk was the fastest in the three-disk test run, and the third was the
+> slowest. I suppose this is due to SCSI priority by SCSI ID. So I'm
+> quite sure that the bus really only runs in FAST-40 mode.
 
-I'm having troubles using the sysfs interface for enabling automatic 
-spinup of SCSI Drives.
-I searched the archives of this list and after discovering the patches 
-for enabling automatic spinup for SCSI disk drives I updated to a recent 
-2.6.18-2 kernel (debian unstable).
-I have now the allow_restart entry in sysfs.
-It's set to 0 in my machine and it won't let me change it with 'echo 1 > 
-allow_restart' or echo -n. I always get a write error.
+OK ... I think there's something unusual about your actual card.  I
+checked the specs and FAST-40 should be LVD.  The DV information
+indicates that the device is also Narrow not wide, which implies either
+it refused wide negotiation, or that the card wasn't able to set the
+correct parameters.  You can try to set it manually with 
 
-The first thing I thought about was that it may be set to 0 by default 
-and so I took a look into the original source of my debian kernel.
-It's set to 'sdev->allow_restart = 1' everywhere in the source as I can 
-see and I'm getting confused right now.
-Why can't I change the allow_restart setting at runtime? According to 
-former posts on this list it should be possible.
+echo 1 > /sys/class/spi_transport/target1:0:3/width
 
-Is there another way to force automatic spinup of my firewire drives?
+then you have to do I/O to force the renegotiation (fdisk is good for
+this) and then try and cat back the parameter.
 
-My setup consists of a bunch of 8 IDE harddisks connected through some 
-OXFW911 Firewire Bridges.
+You can also try to force it up to FAST-160 with
 
-Thanks
+echo 6.25 > /sys/class/spi_transport/target1:0:3/period
 
-Joern
+and again force I/O with fdisk then cat the parameter back to see if it
+took.
+
+James
+
 
