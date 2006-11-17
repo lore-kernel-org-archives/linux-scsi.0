@@ -1,15 +1,15 @@
 From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: [PATCH 12/15] sas_ata: Implement sata phy control
-Date: Fri, 17 Nov 2006 13:08:24 -0800
-Message-ID: <20061117210824.17052.1005.stgit@localhost.localdomain>
+Subject: [PATCH 07/15] sas_ata: Satisfy libata qc function locking requirements
+Date: Fri, 17 Nov 2006 13:08:06 -0800
+Message-ID: <20061117210806.17052.54460.stgit@localhost.localdomain>
 References: <20061117210737.17052.67041.stgit@localhost.localdomain>
 Content-Type: text/plain; charset=utf-8; format=fixed
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:26273 "EHLO
-	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S1755920AbWKQVB4
+Received: from e35.co.us.ibm.com ([32.97.110.153]:40890 "EHLO
+	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S1755906AbWKQVBi
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Nov 2006 16:01:56 -0500
+	Fri, 17 Nov 2006 16:01:38 -0500
 In-Reply-To: <20061117210737.17052.67041.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -17,85 +17,59 @@ To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc: alexisb@us.ibm.com
 
 
-This patch requires "libsas: Add a sysfs knob to enable/disable a phy"
-to be applied.  It hooks the SControl write function to provide basic
-SATA phy control for phy enable/disable and speed limits.  Power
-management is still broken, though it is unclear that libata actually
-uses those SControl bits anyway.
+ata_qc_complete and ata_sas_queuecmd require that the port lock be held
+when they are called.  sas_ata doesn't do this, leading to BUG messages
+about qc tags newly allocated qc tags already being in use.  This patch
+fixes the locking, which should clean up the rest of those messages.
+
+So far I've tested this against an IBM x206m with two SATA disks with no
+BUG messages and no other signs of things going wrong, and the machine
+finally passed the pounder stress test.
 
 Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
 ---
 
- drivers/scsi/libsas/sas_ata.c       |   42 ++++++++++++++++++++++++++++++++++-
- drivers/scsi/libsas/sas_scsi_host.c |    1 +
- 2 files changed, 42 insertions(+), 1 deletions(-)
+ drivers/scsi/libsas/sas_ata.c       |    4 ++++
+ drivers/scsi/libsas/sas_scsi_host.c |    4 ++++
+ 2 files changed, 8 insertions(+), 0 deletions(-)
 
 diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index e2650fa..e897140 100644
+index f92f035..32f2b66 100644
 --- a/drivers/scsi/libsas/sas_ata.c
 +++ b/drivers/scsi/libsas/sas_ata.c
-@@ -270,6 +270,46 @@ static void sas_ata_tf_read(struct ata_p
- 	memcpy(tf, &dev->sata_dev.tf, sizeof (*tf));
- }
+@@ -92,6 +92,7 @@ static void sas_ata_task_done(struct sas
+ 	struct task_status_struct *stat = &task->task_status;
+ 	struct ata_task_resp *resp = (struct ata_task_resp *)stat->buf;
+ 	enum ata_completion_errors ac;
++	unsigned long flags;
  
-+static void sas_ata_scontrol_write(struct domain_device *dev, u32 val)
-+{
-+	u32 tmp = dev->sata_dev.scontrol;
-+	struct sas_phy *phy = dev->port->phy;
+ 	if (stat->stat == SAS_PROTO_RESPONSE) {
+ 		ata_tf_from_fis(resp->ending_fis, &dev->sata_dev.tf);
+@@ -112,7 +113,10 @@ static void sas_ata_task_done(struct sas
+ 		}
+ 	}
+ 
++	spin_lock_irqsave(dev->sata_dev.ap->lock, flags);
+ 	ata_qc_complete(qc);
++	spin_unlock_irqrestore(dev->sata_dev.ap->lock, flags);
 +
-+	val &= 0x0FF; /* only set max spd and dev ctrl */
-+	val |= 0x300; /* disallow host pm */
-+	val |= tmp & 0xFFFFF000; /* preserve upper bits */
-+
-+	/* disable phy */
-+	if ((val & 0x4) && !(tmp & 0x4))
-+		sas_phy_enable(phy, 0);
-+
-+	/* enable phy */
-+	if (!(val & 0x4) && (tmp & 0x4))
-+		sas_phy_enable(phy, 1);
-+
-+	/* reset phy */
-+	if ((val & 0x1) && !(tmp & 0x1))
-+		sas_phy_reset(phy, 0);
-+
-+	/* speed limit */
-+	if ((val & 0xF0) != (tmp & 0xF0)) {
-+		struct sas_phy_linkrates rates = {0};
-+
-+		switch ((val & 0xF0) >> 4) {
-+		case 0:
-+		case 2:
-+			rates.maximum_linkrate = SAS_LINK_RATE_3_0_GBPS;
-+			break;
-+		case 1:
-+			rates.maximum_linkrate = SAS_LINK_RATE_1_5_GBPS;
-+			break;
-+		}
-+		sas_set_phy_speed(phy, &rates);
-+	}
-+
-+	dev->sata_dev.scontrol = val;
-+}
-+
- static void sas_ata_scr_write(struct ata_port *ap, unsigned int sc_reg_in,
- 			      u32 val)
- {
-@@ -281,7 +321,7 @@ static void sas_ata_scr_write(struct ata
- 			dev->sata_dev.sstatus = val;
- 			break;
- 		case SCR_CONTROL:
--			dev->sata_dev.scontrol = val;
-+			sas_ata_scontrol_write(dev, val);
- 			break;
- 		case SCR_ERROR:
- 			dev->sata_dev.serror = val;
+ 	list_del_init(&task->list);
+ 	sas_free_task(task);
+ }
 diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index 25639b5..59409be 100644
+index a88d3a4..25639b5 100644
 --- a/drivers/scsi/libsas/sas_scsi_host.c
 +++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -938,3 +938,4 @@ EXPORT_SYMBOL_GPL(sas_ioctl);
- EXPORT_SYMBOL_GPL(sas_task_abort);
- EXPORT_SYMBOL_GPL(sas_phy_reset);
- EXPORT_SYMBOL_GPL(sas_phy_enable);
-+EXPORT_SYMBOL_GPL(sas_set_phy_speed);
+@@ -212,8 +212,12 @@ int sas_queuecommand(struct scsi_cmnd *c
+ 		struct sas_task *task;
+ 
+ 		if (dev_is_sata(dev)) {
++			unsigned long flags;
++
++			spin_lock_irqsave(dev->sata_dev.ap->lock, flags);
+ 			res = ata_sas_queuecmd(cmd, scsi_done,
+ 					       dev->sata_dev.ap);
++			spin_unlock_irqrestore(dev->sata_dev.ap->lock, flags);
+ 			goto out;
+ 		}
+ 
