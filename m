@@ -1,106 +1,41 @@
 From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: [PATCH 10/15] aic94xx: Don't call pci_map_sg for already-mapped scatterlists
-Date: Fri, 17 Nov 2006 13:08:17 -0800
-Message-ID: <20061117210817.17052.27478.stgit@localhost.localdomain>
+Subject: [PATCH 11/15] sas_ata: Don't copy aic94xx's sactive to ata_port
+Date: Fri, 17 Nov 2006 13:08:21 -0800
+Message-ID: <20061117210821.17052.37114.stgit@localhost.localdomain>
 References: <20061117210737.17052.67041.stgit@localhost.localdomain>
 Content-Type: text/plain; charset=utf-8; format=fixed
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:50144 "EHLO
-	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S1755906AbWKQVBv
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Nov 2006 16:01:51 -0500
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755923AbWKQVD3@vger.kernel.org>
 In-Reply-To: <20061117210737.17052.67041.stgit@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc: alexisb@us.ibm.com
+List-Id: linux-scsi@vger.kernel.org
 
 
-It turns out that libata has already dma_map_sg'd the scatterlist
-entries that go with an ata_queued_cmd by the time it calls
-sas_ata_qc_issue.  sas_ata_qc_issue passes this scatterlist to aic94xx. 
-Unfortunately, aic94xx assumes that any scatterlist passed to it needs
-to be pci_map_sg'd... which blows away the mapping that libata created! 
-This causes (on a x260) Calgary IOMMU table leaks and duplicate frees
-when aic94xx and libata try to {pci,dma}_unmap_sg the scatterlist. 
+Since the aic94xx sequencer assigns its own NCQ tags to ATA commands, it
+no longer makes any sense to copy the sactive field in the STP response
+to ata_port->sactive, as that will confuse libata.  Also, libata seems
+to be capable of managing sactive on its own.
 
-Since dma_map_sg and pci_map_sg are fed the same struct device, I think
-it's safe to add a flag to sas_task that tells aic94xx that it need
-not map the scatterlist.  It didn't break anything on the x260, though
-I don't have any SATAPI devices handy for testing.
+The attached patch gets rid of one of the causes of the BUG messages in
+ata_qc_new, and seems to work without problems on an IBM x206m.
 
 Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
 ---
 
- drivers/scsi/aic94xx/aic94xx_task.c |   17 +++++++++++------
- drivers/scsi/libsas/sas_ata.c       |    1 +
- include/scsi/libsas.h               |    1 +
- 3 files changed, 13 insertions(+), 6 deletions(-)
+ drivers/scsi/libsas/sas_ata.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/aic94xx/aic94xx_task.c b/drivers/scsi/aic94xx/aic94xx_task.c
-index 466b492..f801c64 100644
---- a/drivers/scsi/aic94xx/aic94xx_task.c
-+++ b/drivers/scsi/aic94xx/aic94xx_task.c
-@@ -74,8 +74,11 @@ static inline int asd_map_scatterlist(st
- 		return 0;
- 	}
- 
--	num_sg = pci_map_sg(asd_ha->pcidev, task->scatter, task->num_scatter,
--			    task->data_dir);
-+	if (task->external_sg)
-+		num_sg = task->num_scatter;
-+	else
-+		num_sg = pci_map_sg(asd_ha->pcidev, task->scatter,
-+				    task->num_scatter, task->data_dir);
- 	if (num_sg == 0)
- 		return -ENOMEM;
- 
-@@ -120,8 +123,9 @@ static inline int asd_map_scatterlist(st
- 
- 	return 0;
- err_unmap:
--	pci_unmap_sg(asd_ha->pcidev, task->scatter, task->num_scatter,
--		     task->data_dir);
-+	if (!task->external_sg)
-+		pci_unmap_sg(asd_ha->pcidev, task->scatter, task->num_scatter,
-+			     task->data_dir);
- 	return res;
- }
- 
-@@ -142,8 +146,9 @@ static inline void asd_unmap_scatterlist
- 	}
- 
- 	asd_free_coherent(asd_ha, ascb->sg_arr);
--	pci_unmap_sg(asd_ha->pcidev, task->scatter, task->num_scatter,
--		     task->data_dir);
-+	if (!task->external_sg)
-+		pci_unmap_sg(asd_ha->pcidev, task->scatter, task->num_scatter,
-+			     task->data_dir);
- }
- 
- /* ---------- Task complete tasklet ---------- */
 diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index 209f402..77860ab 100644
+index 77860ab..e2650fa 100644
 --- a/drivers/scsi/libsas/sas_ata.c
 +++ b/drivers/scsi/libsas/sas_ata.c
-@@ -169,6 +169,7 @@ static unsigned int sas_ata_qc_issue(str
- 		task->num_scatter = num;
- 	}
- 
-+	task->external_sg = 1;
- 	task->data_dir = qc->dma_dir;
- 	task->scatter = qc->__sg;
- 	task->ata_task.retry_count = 1;
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index a06cbde..7dcf593 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -538,6 +538,7 @@ struct sas_task {
- 	void   *uldd_task;
- 
- 	struct work_struct abort_work;
-+	int    external_sg;
- };
- 
- 
+@@ -105,7 +105,6 @@ static void sas_ata_task_done(struct sas
+ 		dev->sata_dev.sstatus = resp->sstatus;
+ 		dev->sata_dev.serror = resp->serror;
+ 		dev->sata_dev.scontrol = resp->scontrol;
+-		dev->sata_dev.ap->sactive = resp->sactive;
+ 	} else if (stat->stat != SAM_STAT_GOOD) {
+ 		ac = sas_to_ata_err(stat);
+ 		if (ac) {
