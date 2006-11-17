@@ -1,31 +1,40 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Atto UL5D: negotiates only up to FAST-40 SCSI
-Date: Fri, 17 Nov 2006 15:15:52 -0600
-Message-ID: <1163798152.8594.62.camel@mulgrave.il.steeleye.com>
-References: <xfku00y8gjn.fsf@uxrs53.drewag.de>
-	 <20061117223506.4ec56d04.vsu@altlinux.ru>
+From: Joern Quillmann <q-man@gmx.de>
+Subject: Re: Spinup of SCSI Disks: allow_restart won't work on 2.6.18
+Date: Fri, 17 Nov 2006 22:44:36 +0100
+Message-ID: <455E2D44.5030903@gmx.de>
+References: <455DF39A.6090209@fbihome.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:30678 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S933772AbWKQVQA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Nov 2006 16:16:00 -0500
-In-Reply-To: <20061117223506.4ec56d04.vsu@altlinux.ru>
+Received: from moutng.kundenserver.de ([212.227.126.188]:20449 "EHLO
+	moutng.kundenserver.de") by vger.kernel.org with ESMTP
+	id S1755951AbWKQVq5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Nov 2006 16:46:57 -0500
+Received: from [192.168.1.30]
+	by eis.satan.lan with esmtpa (Exim 4.60)
+	(envelope-from <q-man@gmx.de>)
+	id 1GlDQ5-0000Gh-2Z
+	for linux-scsi@vger.kernel.org; Fri, 17 Nov 2006 23:46:54 +0000
+In-Reply-To: <455DF39A.6090209@fbihome.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sergey Vlasov <vsu@altlinux.ru>
-Cc: Sven Rudolph <Sven_Rudolph@drewag.de>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, 2006-11-17 at 22:35 +0300, Sergey Vlasov wrote:
-> This patch still applies to 2.6.18 with some fuzz, resulting in the
-> following changes:
+Joern Quillman wrote:
 
-That basically says the card doesn't use the same control flags as a
-standard LSI meaning it's thoroughly confused about how the DV code is
-asking it to negotiate.
+> I have now the allow_restart entry in sysfs.
+> It's set to 0 in my machine and it won't let me change it with 'echo 1 > 
+> allow_restart' or echo -n. I always get a write error.
 
-James
+I just bought an external USB->IDE converter and tested it again.
+Of course due to the cheap concerter-chip the USB disk wont go to 
+standby mode but I can set 'allow_restart' to 1 with this converter.
+
+So maybe it's only about sbp2 implementation or specifically my OXFW911 
+bridges?
 
 
+Thanks
+
+Joern
