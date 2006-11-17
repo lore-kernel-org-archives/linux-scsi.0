@@ -1,11 +1,11 @@
 From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: [PATCH 02/15] libsas: Clean up rphys/port dev list after a discovery error.
-Date: Fri, 17 Nov 2006 13:07:43 -0800
-Message-ID: <20061117210743.17052.97393.stgit@localhost.localdomain>
+Subject: [PATCH 01/15] aic94xx: Handle REQ_DEVICE_RESET
+Date: Fri, 17 Nov 2006 13:07:40 -0800
+Message-ID: <20061117210740.17052.34278.stgit@localhost.localdomain>
 References: <20061117210737.17052.67041.stgit@localhost.localdomain>
 Content-Type: text/plain; charset=utf-8; format=fixed
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755910AbWKQVBg@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755908AbWKQVBQ@vger.kernel.org>
 In-Reply-To: <20061117210737.17052.67041.stgit@localhost.localdomain>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
@@ -13,146 +13,151 @@ Cc: alexisb@us.ibm.com
 List-Id: linux-scsi@vger.kernel.org
 
 
-sas_get_port_device assigns a rphy to a domain device in anticipation
-of finding a disk.  When a discovery error occurs in
-sas_discover_{sata,sas,expander}*, however, we need to clean up that
-rphy and the port device list so that we don't GPF.  In addition, we
-need to check the result of the second sas_notify_lldd_dev_found.
-This patch seems ok on a x260, x366 and x206m.
+This patch implements a REQ_DEVICE_RESET handler for the aic94xx
+driver.  Like the earlier REQ_TASK_ABORT patch, this patch defers
+the device reset to the Scsi_Host's workqueue, which has the added
+benefit of ensuring that the device reset does not happen at the
+same time that the ABORT TASK TMFs that are issued in anticipation
+of it are being processed.  After the phy reset, the busted drive
+should go away and be re-detected later, which is indeed what
+I've seen on both a x260 and a x206m.
 
 Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
 ---
 
- drivers/scsi/libsas/sas_discover.c |   40 ++++++++++++++++++++++++++++++------
- drivers/scsi/libsas/sas_expander.c |   20 ++++++++++++++----
- 2 files changed, 49 insertions(+), 11 deletions(-)
+ drivers/scsi/aic94xx/aic94xx_scb.c  |   52 ++++++++++++++++++++++++++++++-----
+ drivers/scsi/libsas/sas_init.c      |    2 +
+ drivers/scsi/libsas/sas_scsi_host.c |    1 +
+ include/scsi/libsas.h               |    1 +
+ include/scsi/scsi_transport_sas.h   |    2 +
+ 5 files changed, 50 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-index 9e4fd2a..758b153 100644
---- a/drivers/scsi/libsas/sas_discover.c
-+++ b/drivers/scsi/libsas/sas_discover.c
-@@ -552,7 +552,7 @@ int sas_discover_sata(struct domain_devi
- 
- 	res = sas_notify_lldd_dev_found(dev);
- 	if (res)
--		return res;
-+		goto out_err2;
- 
- 	switch (dev->dev_type) {
- 	case SATA_DEV:
-@@ -564,12 +564,25 @@ int sas_discover_sata(struct domain_devi
- 	default:
- 		break;
+diff --git a/drivers/scsi/aic94xx/aic94xx_scb.c b/drivers/scsi/aic94xx/aic94xx_scb.c
+index 1911c5d..7145531 100644
+--- a/drivers/scsi/aic94xx/aic94xx_scb.c
++++ b/drivers/scsi/aic94xx/aic94xx_scb.c
+@@ -342,6 +342,28 @@ void asd_invalidate_edb(struct asd_ascb 
+ 			asd_printk("couldn't post escb, err:%d\n", i);
  	}
-+	if (res)
-+		goto out_err;
+ }
++ 
++/* hard reset a phy later */
++static void do_phy_reset_later(void *data)
++{
++	struct sas_phy *sas_phy = data;
++	int error;
++
++	ASD_DPRINTK("%s: About to hard reset phy %d\n", __FUNCTION__,
++		    sas_phy->identify.phy_identifier);
++	/* Reset device port */
++	error = sas_phy_reset(sas_phy, 1);
++	if (error)
++		ASD_DPRINTK("%s: Hard reset of phy %d failed (%d).\n",
++			    __FUNCTION__, sas_phy->identify.phy_identifier,
++			    error);
++}
++
++static void phy_reset_later(struct sas_phy *sas_phy, struct Scsi_Host *shost)
++{
++	INIT_WORK(&sas_phy->reset_work, do_phy_reset_later, sas_phy);
++	queue_work(shost->work_q, &sas_phy->reset_work);
++}
  
- 	sas_notify_lldd_dev_gone(dev);
--	if (!res) {
--		sas_notify_lldd_dev_found(dev);
--		res = sas_rphy_add(dev->rphy);
--	}
-+	res = sas_notify_lldd_dev_found(dev);
-+	if (res)
-+		goto out_err2;
+ /* start up the ABORT TASK tmf... */
+ static void task_kill_later(struct asd_ascb *ascb)
+@@ -402,7 +424,9 @@ static void escb_tasklet_complete(struct
+ 		goto out;
+ 	}
+ 	case REQ_DEVICE_RESET: {
+-		struct asd_ascb *a, *b;
++		struct Scsi_Host *shost = sas_ha->core.shost;
++		struct sas_phy *dev_phy;
++		struct asd_ascb *a;
+ 		u16 conn_handle;
+ 
+ 		conn_handle = *((u16*)(&dl->status_block[1]));
+@@ -412,17 +436,31 @@ static void escb_tasklet_complete(struct
+ 			    dl->status_block[3]);
+ 
+ 		/* Kill all pending tasks and reset the device */
+-		list_for_each_entry_safe(a, b, &asd_ha->seq.pend_q, list) {
+-			struct sas_task *task = a->uldd_task;
+-			struct domain_device *dev = task->dev;
++		dev_phy = NULL;
++		list_for_each_entry(a, &asd_ha->seq.pend_q, list) {
++			struct sas_task *task;
++			struct domain_device *dev;
+ 			u16 x;
+ 
+-			x = *((u16*)(&dev->lldd_dev));
+-			if (x == conn_handle)
++			task = a->uldd_task;
++			if (!task)
++				continue;
++			dev = task->dev;
 +
-+	res = sas_rphy_add(dev->rphy);
-+	if (res)
-+		goto out_err;
-+
-+	return res;
-+
-+out_err:
-+	sas_notify_lldd_dev_gone(dev);
-+out_err2:
-+	sas_rphy_free(dev->rphy);
-+	dev->rphy = NULL;
- 	return res;
++			x = (u16)dev->lldd_dev;
++			if (x == conn_handle) {
++				dev_phy = dev->port->phy;
+ 				task_kill_later(a);
++			}
+ 		}
+ 
+-		/* FIXME: Reset device port (huh?) */
++		/* Reset device port */
++		if (!dev_phy) {
++			ASD_DPRINTK("%s: No pending commands; can't reset.\n",
++				    __FUNCTION__);
++			goto out;
++		}
++		phy_reset_later(dev_phy, shost);
+ 		goto out;
+ 	}
+ 	case SIGNAL_NCQ_ERROR:
+diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
+index a2b479a..0fb347b 100644
+--- a/drivers/scsi/libsas/sas_init.c
++++ b/drivers/scsi/libsas/sas_init.c
+@@ -144,7 +144,7 @@ static int sas_get_linkerrors(struct sas
+ 	return sas_smp_get_phy_events(phy);
  }
  
-@@ -585,7 +598,7 @@ int sas_discover_end_dev(struct domain_d
+-static int sas_phy_reset(struct sas_phy *phy, int hard_reset)
++int sas_phy_reset(struct sas_phy *phy, int hard_reset)
+ {
+ 	int ret;
+ 	enum phy_func reset_type;
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index 6ccbb62..5c6e6f2 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -925,3 +925,4 @@ EXPORT_SYMBOL_GPL(sas_slave_alloc);
+ EXPORT_SYMBOL_GPL(sas_target_destroy);
+ EXPORT_SYMBOL_GPL(sas_ioctl);
+ EXPORT_SYMBOL_GPL(sas_task_abort);
++EXPORT_SYMBOL_GPL(sas_phy_reset);
+diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+index 7da678d..921db78 100644
+--- a/include/scsi/libsas.h
++++ b/include/scsi/libsas.h
+@@ -605,6 +605,7 @@ struct sas_domain_function_template {
+ extern int sas_register_ha(struct sas_ha_struct *);
+ extern int sas_unregister_ha(struct sas_ha_struct *);
  
- 	res = sas_notify_lldd_dev_found(dev);
- 	if (res)
--		return res;
-+		goto out_err2;
++int sas_phy_reset(struct sas_phy *phy, int hard_reset);
+ int sas_queue_up(struct sas_task *task);
+ extern int sas_queuecommand(struct scsi_cmnd *,
+ 		     void (*scsi_done)(struct scsi_cmnd *));
+diff --git a/include/scsi/scsi_transport_sas.h b/include/scsi/scsi_transport_sas.h
+index 5302437..59633a8 100644
+--- a/include/scsi/scsi_transport_sas.h
++++ b/include/scsi/scsi_transport_sas.h
+@@ -73,6 +73,8 @@ struct sas_phy {
  
- 	res = sas_rphy_add(dev->rphy);
- 	if (res)
-@@ -594,12 +607,21 @@ int sas_discover_end_dev(struct domain_d
- 	/* do this to get the end device port attributes which will have
- 	 * been scanned in sas_rphy_add */
- 	sas_notify_lldd_dev_gone(dev);
--	sas_notify_lldd_dev_found(dev);
-+	res = sas_notify_lldd_dev_found(dev);
-+	if (res)
-+		goto out_err3;
- 
- 	return 0;
- 
- out_err:
- 	sas_notify_lldd_dev_gone(dev);
-+out_err2:
-+	sas_rphy_free(dev->rphy);
-+	dev->rphy = NULL;
-+	return res;
-+out_err3:
-+	sas_rphy_delete(dev->rphy);
-+	dev->rphy = NULL;
- 	return res;
- }
- 
-@@ -689,6 +711,10 @@ static void sas_discover_domain(void *da
- 	}
- 
- 	if (error) {
-+		spin_lock(&port->dev_list_lock);
-+		list_del_init(&port->port_dev->dev_list_node);
-+		spin_unlock(&port->dev_list_lock);
+ 	/* for the list of phys belonging to a port */
+ 	struct list_head	port_siblings;
 +
- 		kfree(port->port_dev); /* not kobject_register-ed yet */
- 		port->port_dev = NULL;
- 	}
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index 4cc7457..a38d05b 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -711,7 +711,6 @@ static struct domain_device *sas_ex_disc
++	struct work_struct      reset_work;
+ };
  
-  out_list_del:
- 	list_del(&child->dev_list_node);
--	sas_rphy_free(rphy);
-  out_free:
- 	sas_port_delete(phy->port);
-  out_err:
-@@ -1474,14 +1473,27 @@ int sas_discover_root_expander(struct do
- 	int res;
- 	struct sas_expander_device *ex = rphy_to_expander_device(dev->rphy);
- 
--	sas_rphy_add(dev->rphy);
-+	res = sas_rphy_add(dev->rphy);
-+	if (res)
-+		goto out_err;
- 
- 	ex->level = dev->port->disc.max_level; /* 0 */
- 	res = sas_discover_expander(dev);
--	if (!res)
--		sas_ex_bfs_disc(dev->port);
-+	if (res)
-+		goto out_err2;
-+
-+	sas_ex_bfs_disc(dev->port);
- 
- 	return res;
-+
-+out_err2:
-+	sas_rphy_delete(dev->rphy);
-+	dev->rphy = NULL;
-+	return res;
-+out_err:
-+	sas_rphy_free(dev->rphy);
-+	dev->rphy = NULL;
-+	return res;
- }
- 
- /* ---------- Domain revalidation ---------- */
+ #define dev_to_phy(d) \
