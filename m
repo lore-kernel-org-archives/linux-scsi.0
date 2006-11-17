@@ -1,39 +1,43 @@
-From: "Mavis Mcwilliams" <qwxrqovsg@poker-hands-secrets.com>
-Subject: Extending Purchases at low rates
-Date: Fri, 17 Nov 2006 07:29:50 -0600
-Message-ID: <8IX608EJXVWDA644@brinkmanship.com>
-Content-Type: text/plain;
-	charset="us-ascii"
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Atto UL5D: negotiates only up to FAST-40 SCSI
+Date: Fri, 17 Nov 2006 09:31:18 -0600
+Message-ID: <1163777478.8594.18.camel@mulgrave.il.steeleye.com>
+References: <xfku00y8gjn.fsf@uxrs53.drewag.de>
+Mime-Version: 1.0
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 21.144.28.61.unassigned.static.eastern-tele.com ([61.28.144.21]:27657
-	"HELO 42BF92C8") by vger.kernel.org with SMTP id S1162054AbWKQN3t
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Nov 2006 08:29:49 -0500
-Received: (from tomcat@localhost)
-	by 61.28.144.21 (8.12.8/8.12.8/Submit) id j1CHmn9V477819
-	for linux-scsi@vger.kernel.org; Fri, 17 Nov 2006 07:29:50 -0600
+Received: from hancock.steeleye.com ([71.30.118.248]:54471 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1755714AbWKQPbY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Nov 2006 10:31:24 -0500
+In-Reply-To: <xfku00y8gjn.fsf@uxrs53.drewag.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Sven Rudolph <Sven_Rudolph@drewag.de>
+Cc: linux-scsi@vger.kernel.org
 
-Dear Sir
-Thanks to a nomination by an associate of yours, there are potentially three deals that will be offer?d to you. 
-Notice - past credit history is NOT a factor for this promotion as long as you still have own a home and we recieve word 
-from you within 24 hours. 
+On Fri, 2006-11-17 at 12:21 +0100, Sven Rudolph wrote:
+>   scsi 1:0:3:0: Direct-Access     SEAGATE  ST3300007LC      7806 PQ: 0
+> ANSI: 3
+>    target1:0:3: Beginning Domain Validation
+>    target1:0:3: Domain Validation skipping write tests
+>    target1:0:3: Ending Domain Validation
+>    target1:0:3: FAST-40 SCSI 40.0 MB/s ST (25 ns, offset 63)
 
-________Detail Summary___________ 
-Ammount: Up to 740,000
-Type: R?financ? or Hom? Equity 
-Closing Date: 9 days 
+This is characteristic of the bus being in single ended mode, can you
+execute
 
-In accordance with our terms please visit here to verify your information on our secure, private site to ensure our 
-records are accurate. 
-http://geocities.yahoo.com.br/luvegu98248
+cat /sys/class/spi_host/host1/signalling
 
-Best Regards
-Selena Law
+and see what it says.  If it returns SE, that's your problem.
 
-created by provincial law, and most jurisdictions have laws that
-Some of their settlements grew to become the world's first cities.  People
+>   scsi 1:0:8:0: Processor         QLogic   GEM359           1.10 PQ: 0
+> ANSI: 2
+
+This is a very old (circa 2000) processor.  Are you sure your storage
+cage supports LVD?
+
+James
+
 
