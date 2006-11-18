@@ -1,123 +1,64 @@
-From: David C Somayajulu <david.somayajulu@qlogic.com>
-Subject: Re: [PATCH] [SCSI] qla4xxx: fix for timing issue for nvram
-	accesses.
-Date: Fri, 17 Nov 2006 18:38:08 -0800
-Message-ID: <1163817489.4136.6.camel@dcslnxpc.site>
-References: <1163548841.3938.14.camel@dcslnxpc.site>
-	 <1163637669.3867.12.camel@dcslnxpc.site>
+From: Srdjan Todorovic <todorovic.s@googlemail.com>
+Subject: [Bug 5776] initio.c and k3b: git-bisect advice
+Date: Sat, 18 Nov 2006 03:11:07 +0000 (GMT)
+Message-ID: <Pine.LNX.4.63.0611180226490.5576@thor.lan>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:62114 "EHLO
-	avexch1.qlogic.com") by vger.kernel.org with ESMTP id S1753095AbWKRCiI
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Nov 2006 21:38:08 -0500
-In-Reply-To: <1163637669.3867.12.camel@dcslnxpc.site>
+Received: from ug-out-1314.google.com ([66.249.92.170]:31088 "EHLO
+	ug-out-1314.google.com") by vger.kernel.org with ESMTP
+	id S1756171AbWKRDFJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Nov 2006 22:05:09 -0500
+Received: by ug-out-1314.google.com with SMTP id m3so860078ugc
+        for <linux-scsi@vger.kernel.org>; Fri, 17 Nov 2006 19:05:07 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: open-iscsi@googlegroups.com, David Wagner <david.wagner@qlogic.com>, David Somayajulu <david.somayajulu@qlogic.com>
 
-This patch fixes a timing issue related to nvram accesses in qla4xxx driver for some cpu/slot speed combination.
+Greetings,
 
-Signed-off-by: David Somayajulu <david.somayajulu@qlogic.com>
+I just ran git-bisect on Linus' tree to try to find the cause of
+the hangs I've been experiencing with the below bug; 
+
+http://bugzilla.kernel.org/show_bug.cgi?id=5776
+
+and have narrowed down the search to one commit that causes the hang.
 
 ---
- drivers/scsi/qla4xxx/ql4_nvram.c |   19 +++++++++++++++++++
- 1 files changed, 19 insertions(+), 0 deletions(-)
+186d330e682210100c671355580a8592e4a21692 is first bad commit   
+commit 186d330e682210100c671355580a8592e4a21692   
+Author: Timothy Thelin <Timothy.Thelin@wdc.com>   
+Date:   Tue Sep 13 19:56:28 2005 -0700   
+   
+    [SCSI] scsi: sd, sr, st, and scsi_lib all fail to copy cmd_len to
+new cmd   
+   
+    This fixes an issue in scsi command initialization from a request   
+    where sd, sr, st, and scsi_lib all fail to copy the request's   
+    cmd_len to the scsi command's cmd_len field.   
+   
+    Signed-off-by: Timothy Thelin <timothy.thelin@wdc.com>   
+    Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
+---
 
-diff --git a/drivers/scsi/qla4xxx/ql4_nvram.c b/drivers/scsi/qla4xxx/ql4_nvram.c
-index fc50203..a84ed3e 100644
---- a/drivers/scsi/qla4xxx/ql4_nvram.c
-+++ b/drivers/scsi/qla4xxx/ql4_nvram.c
-@@ -29,7 +29,9 @@ static int fm93c56a_select(struct scsi_q
- 
- 	ha->eeprom_cmd_data = AUBURN_EEPROM_CS_1 | 0x000f0000;
- 	writel(ha->eeprom_cmd_data, isp_nvram(ha));
-+	udelay(1);
- 	readl(isp_nvram(ha));
-+	udelay(1);
- 	return 1;
- }
- 
-@@ -42,11 +44,15 @@ static int fm93c56a_cmd(struct scsi_qla_
- 
- 	/* Clock in a zero, then do the start bit. */
- 	writel(ha->eeprom_cmd_data | AUBURN_EEPROM_DO_1, isp_nvram(ha));
-+	udelay(1);
- 	writel(ha->eeprom_cmd_data | AUBURN_EEPROM_DO_1 |
- 	       AUBURN_EEPROM_CLK_RISE, isp_nvram(ha));
-+	udelay(1);
- 	writel(ha->eeprom_cmd_data | AUBURN_EEPROM_DO_1 |
- 	       AUBURN_EEPROM_CLK_FALL, isp_nvram(ha));
-+	udelay(1);
- 	readl(isp_nvram(ha));
-+	udelay(1);
- 	mask = 1 << (FM93C56A_CMD_BITS - 1);
- 
- 	/* Force the previous data bit to be different. */
-@@ -61,13 +67,17 @@ static int fm93c56a_cmd(struct scsi_qla_
- 			 * match.
- 			 */
- 			writel(ha->eeprom_cmd_data | dataBit, isp_nvram(ha));
-+			udelay(1);
- 			previousBit = dataBit;
- 		}
- 		writel(ha->eeprom_cmd_data | dataBit |
- 		       AUBURN_EEPROM_CLK_RISE, isp_nvram(ha));
-+		udelay(1);
- 		writel(ha->eeprom_cmd_data | dataBit |
- 		       AUBURN_EEPROM_CLK_FALL, isp_nvram(ha));
-+		udelay(1);
- 		readl(isp_nvram(ha));
-+		udelay(1);
- 		cmd = cmd << 1;
- 	}
- 	mask = 1 << (eeprom_no_addr_bits(ha) - 1);
-@@ -83,13 +93,17 @@ static int fm93c56a_cmd(struct scsi_qla_
- 			 * match.
- 			 */
- 			writel(ha->eeprom_cmd_data | dataBit, isp_nvram(ha));
-+			udelay(1);
- 			previousBit = dataBit;
- 		}
- 		writel(ha->eeprom_cmd_data | dataBit |
- 		       AUBURN_EEPROM_CLK_RISE, isp_nvram(ha));
-+		udelay(1);
- 		writel(ha->eeprom_cmd_data | dataBit |
- 		       AUBURN_EEPROM_CLK_FALL, isp_nvram(ha));
-+		udelay(1);
- 		readl(isp_nvram(ha));
-+		udelay(1);
- 		addr = addr << 1;
- 	}
- 	return 1;
-@@ -99,7 +113,9 @@ static int fm93c56a_deselect(struct scsi
- {
- 	ha->eeprom_cmd_data = AUBURN_EEPROM_CS_0 | 0x000f0000;
- 	writel(ha->eeprom_cmd_data, isp_nvram(ha));
-+	udelay(1);
- 	readl(isp_nvram(ha));
-+	udelay(1);
- 	return 1;
- }
- 
-@@ -114,10 +130,13 @@ static int fm93c56a_datain(struct scsi_q
- 	for (i = 0; i < eeprom_no_data_bits(ha); i++) {
- 		writel(ha->eeprom_cmd_data |
- 		       AUBURN_EEPROM_CLK_RISE, isp_nvram(ha));
-+		udelay(1);
- 		writel(ha->eeprom_cmd_data |
- 		       AUBURN_EEPROM_CLK_FALL, isp_nvram(ha));
-+		udelay(1);
- 		dataBit =
- 			(readw(isp_nvram(ha)) & AUBURN_EEPROM_DI_1) ? 1 : 0;
-+		udelay(1);
- 		data = (data << 1) | dataBit;
- 	}
- 
--- 
-1.4.2.3
+Running the latest k3b beta version does not produce a hang, running an
+earlier version does. I'm guessing that the newer k3b version properly
+passes the command length parameters to the SCSI system.
 
+I just wanted to know:
+  a) Is this the likely cause of the hangs?
+  b) is the commit above correct in setting the cmd_len member even if
+     sd, st, sr and scsi_lib fail? If those parts of SCSI system fail
+     to set the length, why would this patch succeed to set the length
+     correctly?
 
+     (I'm a kernelnewbie and am not very familiar with SCSI so I'm very
+      likely wrong. Please be gentle with the flames ;)  )
+
+If k3b was indeed passing garbage to the SCSI layers, this would be
+pretty dangerous because a userland application could hang the kernel
+arbitrarily. Or did I misunderstand?
+
+Regards,
+
+Srdjan Todorovic
