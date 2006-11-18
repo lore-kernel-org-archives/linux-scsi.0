@@ -1,64 +1,34 @@
-From: Srdjan Todorovic <todorovic.s@googlemail.com>
-Subject: [Bug 5776] initio.c and k3b: git-bisect advice
-Date: Sat, 18 Nov 2006 03:11:07 +0000 (GMT)
-Message-ID: <Pine.LNX.4.63.0611180226490.5576@thor.lan>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 0/8] target mode support
+Date: Sat, 18 Nov 2006 15:56:10 +0900 (JST)
+Message-ID: <20061118155910R.fujita.tomonori@lab.ntt.co.jp>
+References: <20061116192358C.fujita.tomonori@lab.ntt.co.jp>
+	<455C76D1.9050501@emulex.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.170]:31088 "EHLO
-	ug-out-1314.google.com") by vger.kernel.org with ESMTP
-	id S1756171AbWKRDFJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Nov 2006 22:05:09 -0500
-Received: by ug-out-1314.google.com with SMTP id m3so860078ugc
-        for <linux-scsi@vger.kernel.org>; Fri, 17 Nov 2006 19:05:07 -0800 (PST)
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:64741 "EHLO
+	tama5.ecl.ntt.co.jp") by vger.kernel.org with ESMTP
+	id S1754075AbWKRG4Y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 18 Nov 2006 01:56:24 -0500
+In-Reply-To: <455C76D1.9050501@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James.Smart@Emulex.Com
+Cc: fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, jens.axboe@oracle.com, James.Bottomley@SteelEye.com
 
-Greetings,
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [PATCH 0/8] target mode support
+Date: Thu, 16 Nov 2006 09:33:53 -0500
 
-I just ran git-bisect on Linus' tree to try to find the cause of
-the hangs I've been experiencing with the below bug; 
+> One question....
+> 
+> Does this assume that an hba is both initiator and target ?  target only ?
+> Do we have any issues if a scsi_host is a target only ?
 
-http://bugzilla.kernel.org/show_bug.cgi?id=5776
+As Mike said, now a scsi_host can be used as a target only. We need
+some more work to make one scsi_host support both initiator and target
+mode. Can a LLD use two scsi_hosts (for initiator and target mode
+respectively)?
 
-and have narrowed down the search to one commit that causes the hang.
-
----
-186d330e682210100c671355580a8592e4a21692 is first bad commit   
-commit 186d330e682210100c671355580a8592e4a21692   
-Author: Timothy Thelin <Timothy.Thelin@wdc.com>   
-Date:   Tue Sep 13 19:56:28 2005 -0700   
-   
-    [SCSI] scsi: sd, sr, st, and scsi_lib all fail to copy cmd_len to
-new cmd   
-   
-    This fixes an issue in scsi command initialization from a request   
-    where sd, sr, st, and scsi_lib all fail to copy the request's   
-    cmd_len to the scsi command's cmd_len field.   
-   
-    Signed-off-by: Timothy Thelin <timothy.thelin@wdc.com>   
-    Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
----
-
-Running the latest k3b beta version does not produce a hang, running an
-earlier version does. I'm guessing that the newer k3b version properly
-passes the command length parameters to the SCSI system.
-
-I just wanted to know:
-  a) Is this the likely cause of the hangs?
-  b) is the commit above correct in setting the cmd_len member even if
-     sd, st, sr and scsi_lib fail? If those parts of SCSI system fail
-     to set the length, why would this patch succeed to set the length
-     correctly?
-
-     (I'm a kernelnewbie and am not very familiar with SCSI so I'm very
-      likely wrong. Please be gentle with the flames ;)  )
-
-If k3b was indeed passing garbage to the SCSI layers, this would be
-pretty dangerous because a userland application could hang the kernel
-arbitrarily. Or did I misunderstand?
-
-Regards,
-
-Srdjan Todorovic
