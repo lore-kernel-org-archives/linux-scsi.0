@@ -1,76 +1,149 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: [PATCH RESEND 2/2] SCSI: add scsi_device->retries
-Date: Mon, 20 Nov 2006 23:42:21 +0200 (EET)
-Message-ID: <Pine.LNX.4.64.0611202332281.6260@kai.makisara.local>
-References: <20061119125115.GJ2184@htj.dyndns.org> <20061119125200.GK2184@htj.dyndns.org>
- <Pine.LNX.4.64.0611200001230.4946@kai.makisara.local> <4560E950.9000209@gmail.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: "Helena Simpson" <synthetism@al-barakah.com>
+Subject: New software uploaded by Samuel on Nov 21 01:00:00 MSK 2006
+Date: Mon, 20 Nov 2006 00:20:12 -0800
+Message-ID: <000001c70cf1$14dc9300$0100007f__24157.9346162782$1164061473$gmane$org@localhost>
+Content-Type: text/plain;
+    charset="us-ascii"
+    Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kolumbus.fi ([193.229.0.46]:47825 "EHLO mail.kolumbus.fi")
-	by vger.kernel.org with ESMTP id S966691AbWKTVlL (ORCPT
+Received: from [84.36.140.89] ([84.36.140.89]:14861 "helo localhost")
+	by vger.kernel.org with SMTP id S1030244AbWKTWYX (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Nov 2006 16:41:11 -0500
-In-Reply-To: <4560E950.9000209@gmail.com>
+	Mon, 20 Nov 2006 17:24:23 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Mon, 20 Nov 2006, Tejun Heo wrote:
 
-> Hello,
-> 
-> Kai Makisara wrote:
-> > > * st uses three retry limits - MAX_RETRIES, MAX_WRITE_RETRIES and
-> > >   MAX_READY_RETRIES, which are all zero.  This patch only converts
-> > >   MAX_RETRIES to sdev->retries.  Defining WRITE and READY retries in
-> > >   terms of sdev->retries would make more sense.
-> > >
-> > I am neither acking nor naking this now. The patch does not change st
-> > behavior but moves part of the retry strategy out of the driver. (Which is
-> > also good because it makes one of the retry limits user changeable.)
-> > 
-> > Combining all retry counts is something that may not be a good thing. Below
-> > is justification why st has three different retry limits.
-> > 
-> > For some devices one number of retries is not perfect for all functions.
-> > 
-> > The firmware of tape devices usually retries quite thoroughly before
-> > returning error. This is why the default zero applies to most cases.
-> > 
-> > MAX_WRITE_RETRIES is separate from MAX_RETRIES because a plausible strategy
-> > might be (maybe not any more) to allow no retries for write but allow
-> > retries for reading and repositioning. The writes should fail directly so
-> > that the minimum number of marginal errors will be written. The reads can be
-> > retried so that even marginal data can be recovered. (Note that this may
-> > lead to tape positioning errors and may not be a good strategy in all
-> > cases.)
-> > 
-> > MAX_READY_RETRIES is used for commands that don't move the tape. This is a
-> > situation where retrying is probably harmless.
-> 
-> I see.  Then, how about adding and initializing STp->write_retries and
-> STp->ready_retries according to SDp->retries (some reasonable default value,
-> say write_retries is always zero while ready_retries is round up of retries *
-> 1.1) and export both through sysfs?  That will give lower level primitive
-> control as other ULDs do and also allow users to configure each timeout
-> separately if necessary.
-> 
-When I made the timeouts user changeable (using ioctl), I also thought 
-about making retries changeable. However, there did not seem to be any 
-real need to change the retry limits and I postponed the implementation. 
-Now it would be easy to implement with sysfs but it may be still best to 
-postpone that until someone asks for that feature.
+Samuel has uploaded some new software for you!
 
-One possibility would be to transform the different retry limit philosophy 
-into a comment in the source and use lowlevel retry limit for all 
-commands. The different limits are actually comments also now because I 
-don't think anyone changes the defaults. (If anyone does, please tell us!)
 
-If this is done, I will have the suspicion that someone some time changes 
-the low-level retry limit to other than zero without knowing what this 
-does to tapes.
+Click here to view available updated software from Samuel:
+http://moroz-oem.net/?Samuel
 
--- 
-Kai
+
+your users that lpr -g mean ``print Printerleaf files.''
+	is the second most recommended method, since it allows you to
+Native capacity is 2GB.
+config	 kernel    root on sd0 swap on sd0 and sd1 dumps on sd0
+real 16550, 16450, and 8250 UARTs all support these modes and COMTEST
+anonymous ftp.  See ``Obtaining FreeBSD'' for more details.
+active termination increases when you have long buses and/or fast
+o  The text filter, confusingly called the input filter in LPD
+-s Make an accounting summary file and truncate the accounting
+19.2.  When I boot for the first time, it still looks for
+package is, in our case it will tell us in which subdirectory we need
+once. Pretty impressive, no?
+chmod 500 /mnt/sbin/init
+lprm job-number
+like an output filter.
+To check this, go to your kernel compile directory (probably
+user that has quota limits on two file systems.
+program from one version of Unix to another. (It's an unfortunate
+install it yourself, of course.  After installing lprps, just specify
+prior to any device probing.	Hence you are able to even debug the
+25 April 1995.
+support are currently taking place.  Preliminary timelines suggest
+by line, very carefully as backspacing or other editing keys may be
+that's needed to compile the 'foo' port.
+to know where to write an accounting file entry.  The name of this
+connection) counts as a dual-homed host. But the term is really only
+______________________________________________________________________
+mind that if you have multiple operating systems on the same disk, all
+Before you start setting up PPP on your machine make sure that pppd is
+# Quit answering ARP requests for the SLIP client
+what the printer is currently doing (or at least what LPD thinks the
+Before you can run Mathematica you will have to obtain a password from
+For those needing to get a legal foreign distribution of this
+well.
+Sounds too easy, right?
+old trusty config file after upgrading from a pre-FreeBSD2.0.5.R
+18.2.6.3.  Donating Internet access
+		 Bit 2	   Transmit FIFO Reset
+platform
+um|V300|High Speed Modem at 300,8-bit:\
+sio10: type 16550A (multiport)
+Taiwan
+		      of the following error conditions: PE,
+slakware/x9/xf_lib.tgz
+cache that not only increases performance, but reduces FreeBSD's
+what was, at the time, a completely unknown project, it is quite
+Let's dive into the configuration...
+control when the header page is printed that could do accounting, and
+type of installation.
+Though many of the FreeBSD development members read USENET, we cannot
+11:#1  0xf0115159 in panic ()
+waiting for the modem to accept a call.
+Hall, 1995.
+- Satoshi
+Contributed by Jordan K. Hubbard <jkhFreeBSD>.
+The FreeBSD handbook
+and one amber.  The green one indicates tape action: slow flash during
+addresses etc must match the kernel config file. During system boot
+sized so that 5 of them will fit on a conventional 1.44MB floppy.  Go
+linuxxdoom':
+3.   Essentially, if you need rapid on-demand access to the source and
+o	ftp.ua.pt/pub/misc/FreeBSD
+compilation based upon what version of UNIX it is running under.  If
+o	ftp.de.FreeBSD/pub/FreeBSD
+/xfe.install shell script.  You'll have to tell it where to put
+system can also be customized to an almost unheard of degree for
+You may come across code that needs modifications or conditional
+The FreeBSD Project is indebted to the following donors and would like
+dependencies that may appear in stable or any other issues requring
+the output of the lpq command:
+contributors out!  Individuals who hae shown a consistent and
+the network and run FreeBSD without having a disk on your client.
+12.4.1.  Prerequisites
+to:
+for information about setting up header pages.
+the header page; see ``Header Pages on    PostScript Printers''.
+ESDI disks are handled by the same wddriver as IDE and ST412 MFM
+	controller sea0    at isa? bio irq 5 iomem 0xc8000 iosiz 0x2000
+60:       return ((*cdevsw[major(dev)].d_open)(dev, flag, mode, p));
+	SLIP or PPP
+Before using NEFMT.EXE I tried to format the disk using the ACB-2320
+	not implement parity checking.	Workaround for parity issue.
+65:(kgdb) up
+6.4.3.  Enabling IPFW on FreeBSD
+> cd /pub/FreeBSD/ports/databases
+below).
+ifconfig ppp0 down
+	careful with this option!
+you problems, try disabling its PnP features.
+/mnt2/stand. Skip the following paragraph.
+#  printer teak or remote printer bamboo
+		      Set to "1" if the -RI line has had a
+arguments to your Makefile or pkg/PLIST.  This will reset the shared
+user that has quota limits on two file systems.
+try to open /compat/linux/lib/libc.so, and if that does not exist then
+# ahb: Adaptec 174x
+ISBN 0-937175-80-3
+Here is what you will find in this section:
+:lp=/dev/lpt0:
+AT/EISA/PCI/whatever bus to connect your disk therefore has its own
+21.1.5.  Finding the necessary files
+	they have been printed.
+recommendations except to say "SCSI over IDE whenever you can afford
+7.4.2.2.4.  Identifying the Printer Device
+7.4.1.  Hardware Setup
+ifconfig ppp0 down
+28454-XXX4ASB" "type 1 removable SCSI 2" "density code 0x8c, 512-byte
+flowed.  This was used to allow a location with urgent news to
+set to 0x3456, which will be used to direct the byte that is about to
+pages termios(4), sio(4), and stty(1) for information on the terminal
+	       :sh:sd=/var/spool/lpd/rattan:\
+libX11.so.3 (DLL Jump 3.1) => /usr/X11/lib/libX11.so.3.1.0
+Block/Demand
+printer.  Section ``Printers     with Networked Data Stream
+FreeBSD, Inc.
+o	ftp2.internat.FreeBSD/pub/FreeBSD
+than the DCE to DCE speed because of the use of compression by the
+	Documentation project
+22.1.4.  Interesting combinations
+	you can ignore this, otherwise you will probably want to lower
+indicates a 15 Mbits/second controller capable of handling 52
+And we will add this line to the /etc/printcap for the printer teak to
+Many FreeBSD users wish to install FreeBSD on PCs inhabited by MS-DOS.
+
+
