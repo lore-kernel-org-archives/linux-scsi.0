@@ -1,149 +1,118 @@
-From: "Helena Simpson" <synthetism@al-barakah.com>
-Subject: New software uploaded by Samuel on Nov 21 01:00:00 MSK 2006
-Date: Mon, 20 Nov 2006 00:20:12 -0800
-Message-ID: <000001c70cf1$14dc9300$0100007f__24157.9346162782$1164061473$gmane$org@localhost>
-Content-Type: text/plain;
-    charset="us-ascii"
-    Content-Transfer-Encoding: 7bit
+From: Joern Quillman <quillman@fbihome.de>
+Subject: Re: Spinup of SCSI Disks: allow_restart won't work on 2.6.18
+Date: Mon, 20 Nov 2006 23:32:21 +0100
+Message-ID: <45622CF5.507@fbihome.de>
+References: <455DF39A.6090209@fbihome.de> <455E2D44.5030903@gmx.de> <455E4703.3080005@s5r6.in-berlin.de> <456188FD.3020108@fbihome.de> <45619611.5020502@s5r6.in-berlin.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [84.36.140.89] ([84.36.140.89]:14861 "helo localhost")
-	by vger.kernel.org with SMTP id S1030244AbWKTWYX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Nov 2006 17:24:23 -0500
+Received: from moutng.kundenserver.de ([212.227.126.186]:19138 "EHLO
+	moutng.kundenserver.de") by vger.kernel.org with ESMTP
+	id S966409AbWKTWet (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Nov 2006 17:34:49 -0500
+In-Reply-To: <45619611.5020502@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: linux-scsi@vger.kernel.org
 
+Stefan Richter wrote
+>> One problem left. I still can't set or unset the flag with echo even on 
+>> 2.6.19-rc6 (as root). Always getting a write error. Not that I care much 
+>> about this, 'cause I for sure don't want it disabled.
+>> But it's strange nonethless.
+>>     
+>
+> But the attribute has write permission set? (ls -l)
+> It is writable on the last kernel I tried, which is -rc4.
+>   
+Yep
+Permissions of the file are -rw-r--r--. Owner is of course root.
+As I wrote before I can set/unset the flag without any problems when I 
+connect a dumb USB<->IDE
+converter with kernel 2.6.18. Same with 2.6.19-rc6.
 
-Samuel has uploaded some new software for you!
+The complete error message (sorry it's in german here) is:
+"-bash: echo: write error: Das Argument ist ungueltig"
 
+Is there a way to do some debug on the internals to see why the 
+attribute isn't actually writeable? Do you need parts of the kernel log?
 
-Click here to view available updated software from Samuel:
-http://moroz-oem.net/?Samuel
+A new problem just arised:
+When I switch on the external enclosure with 3 bridges and 3 disks a few 
+seconds "before" I plug the firewire connector into the PC everything works.
+But when I first plug in the connector and turn on the external 
+enclosure later, 2.6.19-rc6 hangs on the first disk and throws a BUG 
+message.
+I have to reboot the PC then and I reproduced it serveral times.
 
+------------------snip----------------------------------
+ieee1394: Error parsing configrom for node 0-00:1023
+ieee1394: Error parsing configrom for node 0-01:1023
+ieee1394: Error parsing configrom for node 0-02:1023
+ieee1394: Node changed: 0-00:1023 -> 0-03:1023
+ieee1394: Node added: ID:BUS[0-00:1023]  GUID[0001d20000091ab2]
+ieee1394: Node added: ID:BUS[0-01:1023]  GUID[0001d20000093c4d]
+ieee1394: Error parsing configrom for node 0-02:1023
+scsi0 : SBP-2 IEEE-1394
+ieee1394: sbp2: Logged into SBP-2 device
+ieee1394: Node 0-00:1023: Max speed [S400] - Max payload [1024]
+scsi 0:0:0:0: Direct-Access-RBC Maxtor 4 D080H4           DAK0 PQ: 0 ANSI: 4
+scsi1 : SBP-2 IEEE-1394
+SCSI device sda: 160086528 512-byte hdwr sectors (81964 MB)
+sda: Write Protect is off
+sda: Mode Sense: 11 00 00 00
+SCSI device sda: drive cache: write back
+SCSI device sda: 160086528 512-byte hdwr sectors (81964 MB)
+sda: Write Protect is off
+sda: Mode Sense: 11 00 00 00
+SCSI device sda: drive cache: write back
+ sda: sda1
+sd 0:0:0:0: Attached scsi disk sda
+ieee1394: sbp2: Error logging into SBP-2 device - timed out
+sbp2: probe of 0001d20000093c4d-0 failed with error -16
+------------[ cut here ]------------
+kernel BUG at fs/sysfs/file.c:460!
+invalid opcode: 0000 [#1]
+SMP
+Modules linked in: sd_mod nfs nfsd exportfs lockd nfs_acl sunrpc button 
+ac battery ipv6 de4x5 dm_snapshot dm_mirror dm_mod sr_mod sbp2 scsi_mod 
+ehci_hcd ohci_hcd tulip joydev tsdev pcmcia firmware_class evdev 
+i810_audio ac97_codec psmouse serio_raw floppy snd_intel8x0 yenta_socket 
+snd_ac97_codec snd_ac97_bus rsrc_nonstatic pcmcia_core snd_pcm snd_timer 
+snd soundcore snd_page_alloc parport_pc parport i2c_piix4 pcspkr 
+i2c_core rtc ext3 jbd mbcache ide_generic ide_cd cdrom ide_disk uhci_hcd 
+piix generic ide_core usbcore ohci1394 ieee1394 thermal processor fan
+CPU:    0
+EIP:    0060:[<c01966c6>]    Not tainted VLI
+EFLAGS: 00010202   (2.6.19-rc6 #1)
+EIP is at sysfs_create_file+0x19/0x31
+eax: c7d03800   ebx: cc85f12c   ecx: c7d038b0   edx: cc85f101
+esi: cc85f12c   edi: 00000000   ebp: c7d03800   esp: cb5f1eb8
+ds: 007b   es: 007b   ss: 0068
+Process knodemgrd_0 (pid: 549, ti=cb5f0000 task=cb595ab0 task.ti=cb5f0000)
+Stack: c7d03838 c021ed64 c7d03838 00000001 c7d03994 cc84f029 c7d03a14 
+00000014
+       cc853f32 cae3f0f4 00000000 cae3f000 fffffffc c7d03800 ccc6b000 
+00000000
+       00000000 cc84f45c fffffffc ccafd058 cae3f000 cb65d3f8 00000000 
+01afd058
+Call Trace:
+ [<c021ed64>] device_create_file+0x1c/0x2b
+ [<cc84f029>] nodemgr_register_device+0xd0/0x150 [ieee1394]
+ [<cc84f45c>] nodemgr_process_unit_directory+0x333/0x348 [ieee1394]
+ [<cc84f668>] nodemgr_probe_ne+0x183/0x37a [ieee1394]
+ [<cc850204>] nodemgr_host_thread+0x827/0x970 [ieee1394]
+ [<cc84f9dd>] nodemgr_host_thread+0x0/0x970 [ieee1394]
+ [<c01304d2>] kthread+0xc2/0xf0
+ [<c0130410>] kthread+0x0/0xf0
+ [<c01038bb>] kernel_thread_helper+0x7/0x10
+ =======================
+Code: 83 c0 74 e8 65 08 10 00 89 e8 83 c4 10 5b 5e 5f 5d c3 85 c0 89 c1 
+53 89 d3 74 10 83 78 30 00 0f 94 c2 85 db 0f 94 c0 08 c2 74 08 <0f> 0b 
+cc 01 d0 56 2b c0 8b 41 30 89 da b9 04 00 00 00 5b e9 5e
+EIP: [<c01966c6>] sysfs_create_file+0x19/0x31 SS:ESP 0068:cb5f1eb8
+------------------------snip------------------------------------------------
 
-your users that lpr -g mean ``print Printerleaf files.''
-	is the second most recommended method, since it allows you to
-Native capacity is 2GB.
-config	 kernel    root on sd0 swap on sd0 and sd1 dumps on sd0
-real 16550, 16450, and 8250 UARTs all support these modes and COMTEST
-anonymous ftp.  See ``Obtaining FreeBSD'' for more details.
-active termination increases when you have long buses and/or fast
-o  The text filter, confusingly called the input filter in LPD
--s Make an accounting summary file and truncate the accounting
-19.2.  When I boot for the first time, it still looks for
-package is, in our case it will tell us in which subdirectory we need
-once. Pretty impressive, no?
-chmod 500 /mnt/sbin/init
-lprm job-number
-like an output filter.
-To check this, go to your kernel compile directory (probably
-user that has quota limits on two file systems.
-program from one version of Unix to another. (It's an unfortunate
-install it yourself, of course.  After installing lprps, just specify
-prior to any device probing.	Hence you are able to even debug the
-25 April 1995.
-support are currently taking place.  Preliminary timelines suggest
-by line, very carefully as backspacing or other editing keys may be
-that's needed to compile the 'foo' port.
-to know where to write an accounting file entry.  The name of this
-connection) counts as a dual-homed host. But the term is really only
-______________________________________________________________________
-mind that if you have multiple operating systems on the same disk, all
-Before you start setting up PPP on your machine make sure that pppd is
-# Quit answering ARP requests for the SLIP client
-what the printer is currently doing (or at least what LPD thinks the
-Before you can run Mathematica you will have to obtain a password from
-For those needing to get a legal foreign distribution of this
-well.
-Sounds too easy, right?
-old trusty config file after upgrading from a pre-FreeBSD2.0.5.R
-18.2.6.3.  Donating Internet access
-		 Bit 2	   Transmit FIFO Reset
-platform
-um|V300|High Speed Modem at 300,8-bit:\
-sio10: type 16550A (multiport)
-Taiwan
-		      of the following error conditions: PE,
-slakware/x9/xf_lib.tgz
-cache that not only increases performance, but reduces FreeBSD's
-what was, at the time, a completely unknown project, it is quite
-Let's dive into the configuration...
-control when the header page is printed that could do accounting, and
-type of installation.
-Though many of the FreeBSD development members read USENET, we cannot
-11:#1  0xf0115159 in panic ()
-waiting for the modem to accept a call.
-Hall, 1995.
-- Satoshi
-Contributed by Jordan K. Hubbard <jkhFreeBSD>.
-The FreeBSD handbook
-and one amber.  The green one indicates tape action: slow flash during
-addresses etc must match the kernel config file. During system boot
-sized so that 5 of them will fit on a conventional 1.44MB floppy.  Go
-linuxxdoom':
-3.   Essentially, if you need rapid on-demand access to the source and
-o	ftp.ua.pt/pub/misc/FreeBSD
-compilation based upon what version of UNIX it is running under.  If
-o	ftp.de.FreeBSD/pub/FreeBSD
-/xfe.install shell script.  You'll have to tell it where to put
-system can also be customized to an almost unheard of degree for
-You may come across code that needs modifications or conditional
-The FreeBSD Project is indebted to the following donors and would like
-dependencies that may appear in stable or any other issues requring
-the output of the lpq command:
-contributors out!  Individuals who hae shown a consistent and
-the network and run FreeBSD without having a disk on your client.
-12.4.1.  Prerequisites
-to:
-for information about setting up header pages.
-the header page; see ``Header Pages on    PostScript Printers''.
-ESDI disks are handled by the same wddriver as IDE and ST412 MFM
-	controller sea0    at isa? bio irq 5 iomem 0xc8000 iosiz 0x2000
-60:       return ((*cdevsw[major(dev)].d_open)(dev, flag, mode, p));
-	SLIP or PPP
-Before using NEFMT.EXE I tried to format the disk using the ACB-2320
-	not implement parity checking.	Workaround for parity issue.
-65:(kgdb) up
-6.4.3.  Enabling IPFW on FreeBSD
-> cd /pub/FreeBSD/ports/databases
-below).
-ifconfig ppp0 down
-	careful with this option!
-you problems, try disabling its PnP features.
-/mnt2/stand. Skip the following paragraph.
-#  printer teak or remote printer bamboo
-		      Set to "1" if the -RI line has had a
-arguments to your Makefile or pkg/PLIST.  This will reset the shared
-user that has quota limits on two file systems.
-try to open /compat/linux/lib/libc.so, and if that does not exist then
-# ahb: Adaptec 174x
-ISBN 0-937175-80-3
-Here is what you will find in this section:
-:lp=/dev/lpt0:
-AT/EISA/PCI/whatever bus to connect your disk therefore has its own
-21.1.5.  Finding the necessary files
-	they have been printed.
-recommendations except to say "SCSI over IDE whenever you can afford
-7.4.2.2.4.  Identifying the Printer Device
-7.4.1.  Hardware Setup
-ifconfig ppp0 down
-28454-XXX4ASB" "type 1 removable SCSI 2" "density code 0x8c, 512-byte
-flowed.  This was used to allow a location with urgent news to
-set to 0x3456, which will be used to direct the byte that is about to
-pages termios(4), sio(4), and stty(1) for information on the terminal
-	       :sh:sd=/var/spool/lpd/rattan:\
-libX11.so.3 (DLL Jump 3.1) => /usr/X11/lib/libX11.so.3.1.0
-Block/Demand
-printer.  Section ``Printers     with Networked Data Stream
-FreeBSD, Inc.
-o	ftp2.internat.FreeBSD/pub/FreeBSD
-than the DCE to DCE speed because of the use of compression by the
-	Documentation project
-22.1.4.  Interesting combinations
-	you can ignore this, otherwise you will probably want to lower
-indicates a 15 Mbits/second controller capable of handling 52
-And we will add this line to the /etc/printcap for the printer teak to
-Many FreeBSD users wish to install FreeBSD on PCs inhabited by MS-DOS.
-
-
+Joern
