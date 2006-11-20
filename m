@@ -1,24 +1,41 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [-mm patch] drivers/scsi/scsi_scan.c: make 2 functions static
-Date: Sun, 19 Nov 2006 19:34:27 -0700
-Message-ID: <20061120023426.GL18567@parisc-linux.org>
-References: <20061114014125.dd315fff.akpm@osdl.org> <20061120022352.GH31879@stusta.de>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: [PATCH] scsi/initio: section mismatches with HOTPLUG=n
+Date: Sun, 19 Nov 2006 18:53:43 -0800
+Message-ID: <20061119185343.e4dde647.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:50090 "EHLO
-	mail.parisc-linux.org") by vger.kernel.org with ESMTP
-	id S933861AbWKTCe2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 19 Nov 2006 21:34:28 -0500
-Content-Disposition: inline
-In-Reply-To: <20061120022352.GH31879@stusta.de>
+Received: from agminet01.oracle.com ([141.146.126.228]:59484 "EHLO
+	agminet01.oracle.com") by vger.kernel.org with ESMTP
+	id S933886AbWKTCzS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 19 Nov 2006 21:55:18 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: Andrew Morton <akpm@osdl.org>, James.Bottomley@SteelEye.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: scsi <linux-scsi@vger.kernel.org>
+Cc: jejb <james.bottomley@steeleye.com>, akpm <akpm@osdl.org>
 
-On Mon, Nov 20, 2006 at 03:23:52AM +0100, Adrian Bunk wrote:
-> This patch makes two needlessly global functions static.
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-NAK, it's already in my scsi-async-scan tree which should be included
-before the 2.6.20 merge.
+WARNING: drivers/scsi/initio.o - Section mismatch: reference to .init.data: from .text between 'i91u_detect' (at offset 0x26e8) and 'i91uSCBPost'
+WARNING: drivers/scsi/initio.o - Section mismatch: reference to .init.data:i91u_pci_devices from .text between 'i91u_detect' (at offset 0x26ef) and 'i91uSCBPost'
+
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+---
+ drivers/scsi/initio.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- linux-2619-rc6g2.orig/drivers/scsi/initio.c
++++ linux-2619-rc6g2/drivers/scsi/initio.c
+@@ -170,7 +170,7 @@ static int setup_debug = 0;
+ static void i91uSCBPost(BYTE * pHcb, BYTE * pScb);
+ 
+ /* PCI Devices supported by this driver */
+-static struct pci_device_id i91u_pci_devices[] __devinitdata = {
++static struct pci_device_id i91u_pci_devices[] = {
+ 	{ PCI_VENDOR_ID_INIT,  I950_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+ 	{ PCI_VENDOR_ID_INIT,  I940_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+ 	{ PCI_VENDOR_ID_INIT,  I935_DEVICE_ID, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+
+
+---
