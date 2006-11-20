@@ -1,76 +1,68 @@
-From: Sven Rudolph <Sven_Rudolph@drewag.de>
-Subject: Re: Atto UL5D: negotiates only up to FAST-40 SCSI
-Date: Mon, 20 Nov 2006 15:31:03 +0100
-Message-ID: <xfkr6vymbq0.fsf@uxrs53.drewag.de>
-References: <xfku00y8gjn.fsf@uxrs53.drewag.de>
-	<20061117223506.4ec56d04.vsu@altlinux.ru>
+From: Brian King <brking@us.ibm.com>
+Subject: Re: [2.6 patch] drivers/scsi/ipr.c: make 2 functions static
+Date: Mon, 20 Nov 2006 08:36:05 -0600
+Message-ID: <4561BD55.3090703@us.ibm.com>
+References: <20061120022346.GF31879@stusta.de>
+Reply-To: brking@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from miranda.drewag.de ([212.111.238.29]:10156 "EHLO
-	miranda.drewag.de") by vger.kernel.org with ESMTP id S934201AbWKTOfp
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Nov 2006 09:35:45 -0500
-In-Reply-To: <20061117223506.4ec56d04.vsu@altlinux.ru> (Sergey Vlasov's
- message of "Fri, 17 Nov 2006 22:35:06 +0300")
+Received: from e2.ny.us.ibm.com ([32.97.182.142]:8921 "EHLO e2.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S934199AbWKTOgJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Nov 2006 09:36:09 -0500
+In-Reply-To: <20061120022346.GF31879@stusta.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sergey Vlasov <vsu@altlinux.ru>
-Cc: linux-scsi@vger.kernel.org
+To: Adrian Bunk <bunk@stusta.de>
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Sergey Vlasov <vsu@altlinux.ru> writes:
+I'll merge this into a patchset I am working on for 2.6.20, since it
+conflicts with another change I am making.
 
-> On Fri, 17 Nov 2006 12:21:32 +0100 Sven Rudolph wrote:
->
->> I try to use an Atto Dual-Channel Low-Profile PCIExpress SCSI HBA
->> (<http://www.attotech.com/ultra5Dlowpro.html>) with Linux (2.6.18.1,
->> 2.6.19rc6).
->>
->> (Atto provides a Linux driver on CD, but I prefer to use drivers
->> included in the vanilla Linux kernel. It looks like their driver does
->> not include all source code; but I might be wrong on this.)
->
-> They also provide a patch for the mptspi driver (apparently made for
-> 2.6.14):
->
-> http://www.attotech.com/software/secure/lnx_drv_epciu320_2.6.14-15.patch
+Thanks,
 
-Thank you for finding this. This patch seems to work fine.
+Brian
 
-So we should teach Atto to submit this patch to the Linux kernel
-instead of trying to roll their on driver? Or can this be implemented
-without asking Atto?
+Adrian Bunk wrote:
+> This patch makes two needlessly global functions static.
+> 
+> Signed-off-by: Adrian Bunk <bunk@stusta.de>
+> 
+> ---
+> 
+>  drivers/scsi/ipr.c |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> --- linux-2.6.19-rc5-mm2/drivers/scsi/ipr.c.old	2006-11-20 00:50:09.000000000 +0100
+> +++ linux-2.6.19-rc5-mm2/drivers/scsi/ipr.c	2006-11-20 00:50:28.000000000 +0100
+> @@ -4615,7 +4615,7 @@
+>   * Return value:
+>   * 	0 on success / other on failure
+>   **/
+> -int ipr_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
+> +static int ipr_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
+>  {
+>  	struct ipr_resource_entry *res;
+> 
+> @@ -4655,7 +4655,7 @@
+>   * Return value:
+>   * 	EH_NOT_HANDLED
+>   **/
+> -enum scsi_eh_timer_return ipr_scsi_timed_out(struct scsi_cmnd *scsi_cmd)
+> +static enum scsi_eh_timer_return ipr_scsi_timed_out(struct scsi_cmnd *scsi_cmd)
+>  {
+>  	struct ipr_ioa_cfg *ioa_cfg;
+>  	struct ipr_cmnd *ipr_cmd;
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Atto seems to prefer their own driver, they say on their web site:
 
-  Linux Support for ExpressPCI. ATTO strongly recommends using the
-  RedHat/SUSE driver for all installations. Linux support was
-  previously provided for the 2.4 and 2.6 kernels via patches to the
-  LSI Logic Fusion MPT driver. However, these patches are no longer
-  supported. Release notes and installation instructions are included
-  in the download packages.
-
-      Red Hat/SUSE Linux driver v1.00 (File Size393KB) This driver is
-      recommended for use with the Red Hat Linux Enterprise 3.x/4 and
-      SUSE Linux Enterprise Server for x86, x64(AMD64, EM64T), and
-      IA-64 (Itanium) systems.
-
-      The following patches are available for those who prefer the older driver:
-
-      Linux 2.4 Driver Patch for LSI Logic Fusion-MPT Driver v2.05.00
-      (File Size 2.2KB) The LSI Logic Fusion-MPT Driver v2.05.00 can
-      be downloaded here (File Size 23.4MB).
-
-      Linux 2.6 Driver Patch for LSI Logic Fusion-MPT Driver (File
-      Size 2.1KB)The LSI Logic Fusion-MPT Driver v3.01.xx is included
-      with the Linux kernel.
-
-> Apparently ATTO devices have a completely different NVRAM format -
-> maybe this causes the problem when a driver with just a PCI ID added
-> tries to interpret NVRAM data using the LSI format?
-
-This explains the problem. It is even surprising that it worked at
-all...
-
-	Sven
-
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
