@@ -1,17 +1,17 @@
 From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: [PATCH RESEND 1/2] SCSI: use scsi_device->timeout consistently
-Date: Mon, 20 Nov 2006 23:25:34 +0200 (EET)
-Message-ID: <Pine.LNX.4.64.0611202311280.6260@kai.makisara.local>
-References: <20061119125115.GJ2184@htj.dyndns.org>
- <Pine.LNX.4.64.0611192353590.4946@kai.makisara.local> <4560E825.3080504@gmail.com>
+Subject: Re: [PATCH RESEND 2/2] SCSI: add scsi_device->retries
+Date: Mon, 20 Nov 2006 23:42:21 +0200 (EET)
+Message-ID: <Pine.LNX.4.64.0611202332281.6260@kai.makisara.local>
+References: <20061119125115.GJ2184@htj.dyndns.org> <20061119125200.GK2184@htj.dyndns.org>
+ <Pine.LNX.4.64.0611200001230.4946@kai.makisara.local> <4560E950.9000209@gmail.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kolumbus.fi ([193.229.0.46]:54487 "EHLO mail.kolumbus.fi")
-	by vger.kernel.org with ESMTP id S966308AbWKTVYZ (ORCPT
+Received: from mail.kolumbus.fi ([193.229.0.46]:47825 "EHLO mail.kolumbus.fi")
+	by vger.kernel.org with ESMTP id S966691AbWKTVlL (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Nov 2006 16:24:25 -0500
-In-Reply-To: <4560E825.3080504@gmail.com>
+	Mon, 20 Nov 2006 16:41:11 -0500
+In-Reply-To: <4560E950.9000209@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
@@ -19,54 +19,58 @@ Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
 
 On Mon, 20 Nov 2006, Tejun Heo wrote:
 
+> Hello,
+> 
 > Kai Makisara wrote:
-> > On Sun, 19 Nov 2006, Tejun Heo wrote:
-> > 
-> > > Each high level driver uses scsi_device->timeout diffrently.
+> > > * st uses three retry limits - MAX_RETRIES, MAX_WRITE_RETRIES and
+> > >   MAX_READY_RETRIES, which are all zero.  This patch only converts
+> > >   MAX_RETRIES to sdev->retries.  Defining WRITE and READY retries in
+> > >   terms of sdev->retries would make more sense.
 > > >
-> > ...
-> > > Index: scsi-misc-2.6/drivers/scsi/st.c
-> > > ===================================================================
-> > > --- scsi-misc-2.6.orig/drivers/scsi/st.c
-> > > +++ scsi-misc-2.6/drivers/scsi/st.c
-> >> @@ -3986,7 +3986,8 @@ static int st_probe(struct device *dev)
-> > >   tpnt->partition = 0;
-> > >   tpnt->new_partition = 0;
-> > >   tpnt->nbr_partitions = 0;
-> > > -	tpnt->device->timeout = ST_TIMEOUT;
-> > > +	if (!SDp->timeout)
-> > > +		SDp->timeout = ST_TIMEOUT;
+> > I am neither acking nor naking this now. The patch does not change st
+> > behavior but moves part of the retry strategy out of the driver. (Which is
+> > also good because it makes one of the retry limits user changeable.)
 > > 
-> > I don't think this should be done. It probably makes the default timeout way
-> > too short. The error recovery with tapes takes a long time. The user can
-> > change the timeout if the default (900 seconds) seems too long (or short).
+> > Combining all retry counts is something that may not be a good thing. Below
+> > is justification why st has three different retry limits.
 > > 
-> > I don't think there is anything in the midlevel or low-level code to set the
-> > timeout based on the device characteristics. This is left to the ULD.
+> > For some devices one number of retries is not perfect for all functions.
+> > 
+> > The firmware of tape devices usually retries quite thoroughly before
+> > returning error. This is why the default zero applies to most cases.
+> > 
+> > MAX_WRITE_RETRIES is separate from MAX_RETRIES because a plausible strategy
+> > might be (maybe not any more) to allow no retries for write but allow
+> > retries for reading and repositioning. The writes should fail directly so
+> > that the minimum number of marginal errors will be written. The reads can be
+> > retried so that even marginal data can be recovered. (Note that this may
+> > lead to tape positioning errors and may not be a good strategy in all
+> > cases.)
+> > 
+> > MAX_READY_RETRIES is used for commands that don't move the tape. This is a
+> > situation where retrying is probably harmless.
 > 
-> Low level driver should configure timeout or retries to a known value iff it
-> knows what it's doing, when it knows both transport and device-type specific
-> characteristic.
-
-I am not so optimistic ;-)
-
->                 AFAICS, the only driver which modifies sdev->timeout is ipr
-> and it does so only when it knows the device is of certain type.  So, I don't
-> think it will cause any trouble, and using different initialization in
-> different ULDs is too subtle.
+> I see.  Then, how about adding and initializing STp->write_retries and
+> STp->ready_retries according to SDp->retries (some reasonable default value,
+> say write_retries is always zero while ready_retries is round up of retries *
+> 1.1) and export both through sysfs?  That will give lower level primitive
+> control as other ULDs do and also allow users to configure each timeout
+> separately if necessary.
 > 
-It does not cause trouble now but I think it is an accident waiting to 
-happen. The ULD probably knows more about the device characteristics than 
-the low-level driver. (I admit that there are other than device specific 
-aspects in setting timeouts and these should not be in ULD.)
+When I made the timeouts user changeable (using ioctl), I also thought 
+about making retries changeable. However, there did not seem to be any 
+real need to change the retry limits and I postponed the implementation. 
+Now it would be easy to implement with sysfs but it may be still best to 
+postpone that until someone asks for that feature.
 
-What about this variant:
-	if (SDp->timeout < ST_TIMEOUT)
-		SDp->timeout = ST_TIMEOUT;
+One possibility would be to transform the different retry limit philosophy 
+into a comment in the source and use lowlevel retry limit for all 
+commands. The different limits are actually comments also now because I 
+don't think anyone changes the defaults. (If anyone does, please tell us!)
 
-It does guarantee that the timeout is long enough for tape drives. It also 
-lets the low-level driver set a longer timeout if it has some reason to 
-make it longer than the ULD does.
+If this is done, I will have the suspicion that someone some time changes 
+the low-level retry limit to other than zero without knowing what this 
+does to tapes.
 
 -- 
 Kai
