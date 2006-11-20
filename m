@@ -1,33 +1,72 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: [PATCH 2/2] Use mutex_lock_timeout in qla2xxx driver
-Date: Mon, 20 Nov 2006 13:21:33 -0800
-Message-ID: <20061120212133.GJ11420@andrew-vasquezs-computer.local>
-References: <20061109182721.GN16952@parisc-linux.org> <20061109183054.GO16952@parisc-linux.org>
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: [PATCH RESEND 1/2] SCSI: use scsi_device->timeout consistently
+Date: Mon, 20 Nov 2006 23:25:34 +0200 (EET)
+Message-ID: <Pine.LNX.4.64.0611202311280.6260@kai.makisara.local>
+References: <20061119125115.GJ2184@htj.dyndns.org>
+ <Pine.LNX.4.64.0611192353590.4946@kai.makisara.local> <4560E825.3080504@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:24447 "EHLO
-	avexch1.qlogic.com") by vger.kernel.org with ESMTP id S966784AbWKTVVg
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Nov 2006 16:21:36 -0500
-Content-Disposition: inline
-In-Reply-To: <20061109183054.GO16952@parisc-linux.org>
+Received: from mail.kolumbus.fi ([193.229.0.46]:54487 "EHLO mail.kolumbus.fi")
+	by vger.kernel.org with ESMTP id S966308AbWKTVYZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Nov 2006 16:24:25 -0500
+In-Reply-To: <4560E825.3080504@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-driver@qlogic.com, hch@infradead.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
 
-On Thu, 09 Nov 2006, Matthew Wilcox wrote:
+On Mon, 20 Nov 2006, Tejun Heo wrote:
 
-> qla2xxx can use a mutex instead of a semaphore for mailbox serialisation.
-> It can also use the new mutex_down_timeout function I introduced in
-> patch 1/2.
+> Kai Makisara wrote:
+> > On Sun, 19 Nov 2006, Tejun Heo wrote:
+> > 
+> > > Each high level driver uses scsi_device->timeout diffrently.
+> > >
+> > ...
+> > > Index: scsi-misc-2.6/drivers/scsi/st.c
+> > > ===================================================================
+> > > --- scsi-misc-2.6.orig/drivers/scsi/st.c
+> > > +++ scsi-misc-2.6/drivers/scsi/st.c
+> >> @@ -3986,7 +3986,8 @@ static int st_probe(struct device *dev)
+> > >   tpnt->partition = 0;
+> > >   tpnt->new_partition = 0;
+> > >   tpnt->nbr_partitions = 0;
+> > > -	tpnt->device->timeout = ST_TIMEOUT;
+> > > +	if (!SDp->timeout)
+> > > +		SDp->timeout = ST_TIMEOUT;
+> > 
+> > I don't think this should be done. It probably makes the default timeout way
+> > too short. The error recovery with tapes takes a long time. The user can
+> > change the timeout if the default (900 seconds) seems too long (or short).
+> > 
+> > I don't think there is anything in the midlevel or low-level code to set the
+> > timeout based on the device characteristics. This is left to the ULD.
 > 
-> Compile-tested only (I don't have a qlogic card conveniently available
-> right now).
+> Low level driver should configure timeout or retries to a known value iff it
+> knows what it's doing, when it knows both transport and device-type specific
+> characteristic.
+
+I am not so optimistic ;-)
+
+>                 AFAICS, the only driver which modifies sdev->timeout is ipr
+> and it does so only when it knows the device is of certain type.  So, I don't
+> think it will cause any trouble, and using different initialization in
+> different ULDs is too subtle.
 > 
-> Signed-off-by: Matthew Wilcox <matthew@wil.cx>
+It does not cause trouble now but I think it is an accident waiting to 
+happen. The ULD probably knows more about the device characteristics than 
+the low-level driver. (I admit that there are other than device specific 
+aspects in setting timeouts and these should not be in ULD.)
 
-Initial testing appears promising.
+What about this variant:
+	if (SDp->timeout < ST_TIMEOUT)
+		SDp->timeout = ST_TIMEOUT;
 
-Ack-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+It does guarantee that the timeout is long enough for tape drives. It also 
+lets the low-level driver set a longer timeout if it has some reason to 
+make it longer than the ULD does.
+
+-- 
+Kai
