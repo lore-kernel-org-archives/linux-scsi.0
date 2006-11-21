@@ -1,68 +1,65 @@
-From: "Patro, Sumant" <Sumant.Patro@lsi.com>
-Subject: RE: [2.6 patch] drivers/scsi/megaraid/megaraid_sas.c: make 2 functions static
-Date: Mon, 20 Nov 2006 17:40:32 -0700
-Message-ID: <0631C836DBF79F42B5A60C8C8D4E82297F81D5@NAMAIL2.ad.lsil.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: Spinup of SCSI Disks: allow_restart won't work on 2.6.18
+Date: Mon, 20 Nov 2006 19:54:08 -0500
+Message-ID: <45624E30.5080605@torque.net>
+References: <455DF39A.6090209@fbihome.de> <455E2D44.5030903@gmx.de> <455E4703.3080005@s5r6.in-berlin.de> <456188FD.3020108@fbihome.de> <45619611.5020502@s5r6.in-berlin.de> <45622CF5.507@fbihome.de> <45624009.3040208@s5r6.in-berlin.de>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:25276 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1030592AbWKUAsK convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Nov 2006 19:48:10 -0500
-Content-class: urn:content-classes:message
+Received: from pentafluge.infradead.org ([213.146.154.40]:162 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1030622AbWKUAyW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Nov 2006 19:54:22 -0500
+In-Reply-To: <45624009.3040208@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: "Kolli, Neela" <Neela.Kolli@lsi.com>, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: Joern Quillman <quillman@fbihome.de>, linux-scsi@vger.kernel.org
 
-Ack.
-Thanks for submitting the patch.
+Stefan Richter wrote:
+> Joern Quillman wrote:
+>>>> One problem left. I still can't set or unset the flag with echo even
+>>>> on 2.6.19-rc6 (as root).
+> ...
+>> Permissions of the file are -rw-r--r--. Owner is of course root.
+>> As I wrote before I can set/unset the flag without any problems when I
+>> connect a dumb USB<->IDE
+>> converter with kernel 2.6.18. Same with 2.6.19-rc6.
+>>
+>> The complete error message (sorry it's in german here) is:
+>> "-bash: echo: write error: Das Argument ist ungueltig"
+>>
+>> Is there a way to do some debug on the internals to see why the
+>> attribute isn't actually writeable? Do you need parts of the kernel log?
+> 
+> The responsible kernel code is drivers/scsi/sd.c::sd_store_allow_restart().
+> 
+> static ssize_t sd_store_allow_restart(struct class_device *cdev, const
+> char *buf,
+> 				      size_t count)
+> {
+> 	struct scsi_disk *sdkp = to_scsi_disk(cdev);
+> 	struct scsi_device *sdp = sdkp->device;
+> 
+> 	if (!capable(CAP_SYS_ADMIN))
+> 		return -EACCES;
+> 
+> 	if (sdp->type != TYPE_DISK)
+> 		return -EINVAL;
+> 
+> 	sdp->allow_restart = simple_strtoul(buf, NULL, 10);
+> 
+> 	return count;
+> }
+> 
+> 
+> I think the solution is easy: Replace if (sdp->type != TYPE_DISK) by
+> 
+> 	if (sdp->type != TYPE_DISK && sdp->type != TYPE_RBC)
 
-Regards,
+... but why have the condition at all? What other peripheral
+device type should the _sd_ driver be handling??
 
-Sumant 
-
------Original Message-----
-From: Adrian Bunk [mailto:bunk@stusta.de] 
-Sent: Sunday, November 19, 2006 6:24 PM
-To: Patro, Sumant
-Cc: Kolli, Neela; James.Bottomley@SteelEye.com;
-linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org
-Subject: [2.6 patch] drivers/scsi/megaraid/megaraid_sas.c: make 2
-functions static
-
-This patch makes two needlessly global functions static.
-
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
-
----
-
- drivers/scsi/megaraid/megaraid_sas.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
---- linux-2.6.19-rc5-mm2/drivers/scsi/megaraid/megaraid_sas.c.old
-2006-11-20 00:55:39.000000000 +0100
-+++ linux-2.6.19-rc5-mm2/drivers/scsi/megaraid/megaraid_sas.c
-2006-11-20 00:55:57.000000000 +0100
-@@ -517,7 +517,7 @@
-  * Returns the number of frames required for numnber of sge's
-(sge_count)
-  */
- 
--u32 megasas_get_frame_count(u8 sge_count)
-+static u32 megasas_get_frame_count(u8 sge_count)
- {
- 	int num_cnt;
- 	int sge_bytes;
-@@ -1733,7 +1733,7 @@
-  *
-  * Tasklet to complete cmds
-  */
--void megasas_complete_cmd_dpc(unsigned long instance_addr)
-+static void megasas_complete_cmd_dpc(unsigned long instance_addr)
- {
- 	u32 producer;
- 	u32 consumer;
-
+Doug Gilbert
