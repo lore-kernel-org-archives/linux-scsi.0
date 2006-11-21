@@ -1,94 +1,61 @@
-From: "Jesper Juhl" <jesper.juhl@gmail.com>
-Subject: Re: 2.6.19-rc6 : Spontaneous reboots, stack overflows - seems to implicate xfs, scsi, networking, SMP
-Date: Wed, 22 Nov 2006 00:51:43 +0100
-Message-ID: <9a8748490611211551v2ebe88fel2bcf25af004c338a@mail.gmail.com>
-References: <200611211027.41971.jesper.juhl@gmail.com>
-	 <45637566.5020802@melbourne.sgi.com>
-	 <9a8748490611211402xdc2822fqbc95a77fe54d49b1@mail.gmail.com>
-	 <20061121233141.GP37654165@melbourne.sgi.com>
+From: Michael Ellerman <michael@ellerman.id.au>
+Subject: Re: [PATCH] Remove #warning cruft from drivers/scsi/ips.c
+Date: Wed, 22 Nov 2006 10:57:30 +1100
+Message-ID: <1164153450.8090.2.camel@localhost.localdomain>
+References: <20061121061413.5D10967BF3@ozlabs.org>
+	 <1164122214.2808.1.camel@mulgrave.il.steeleye.com>
+Reply-To: michael@ellerman.id.au
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-c08dA/iATCRm2c5GCl4d"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nz-out-0102.google.com ([64.233.162.206]:46279 "EHLO
-	nz-out-0102.google.com") by vger.kernel.org with ESMTP
-	id S1756873AbWKUXvo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Nov 2006 18:51:44 -0500
-Received: by nz-out-0102.google.com with SMTP id s1so14856nze
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Nov 2006 15:51:43 -0800 (PST)
-In-Reply-To: <20061121233141.GP37654165@melbourne.sgi.com>
-Content-Disposition: inline
+Received: from ozlabs.org ([203.10.76.45]:8426 "EHLO ozlabs.org")
+	by vger.kernel.org with ESMTP id S1756889AbWKUX5b (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Nov 2006 18:57:31 -0500
+In-Reply-To: <1164122214.2808.1.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Chinner <dgc@sgi.com>
-Cc: chatz@melbourne.sgi.com, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, netdev@vger.kernel.org, linux-scsi@vger.kernel.org
-
-On 22/11/06, David Chinner <dgc@sgi.com> wrote:
-> On Tue, Nov 21, 2006 at 11:02:23PM +0100, Jesper Juhl wrote:
-> > On 21/11/06, David Chatterton <chatz@melbourne.sgi.com> wrote:
-...
->
-> > >Audits have been done in the past and will again be done in the future to
-> > >try to
-> > >identify areas where XFS could use less stack space by reducing/avoid large
-> > >local variables. Reducing the code path is far more difficult.
-> > >
-> > I realize that fixing the problem may be difficult. I just wanted to
-> > make sure that people were informed that there is an actual problem
-> > and provide as much info as possible so that perhaps in the future it
-> > can be fixed... :)
->
-> I've got one that prevents gcc from inlining single use functions in XFS
-> that I need to finish off, and that results in some significant stack
-> usage reductions in some XFS functions.
->
-That sounds good. I'll be keeping an eye out for that one :)
-
-> However, XFS is only one part of the picture - when you put NFS on top,
-> DM+md then scsi/FC below and then you nest a soft irq that might go
-> 20 functions deep as well - then 4k stacks simply aren't big enough.
->
-True, there are a lot of players involved here, although XFS seems (to
-me) to be the biggest one.
-
-> > I'm reading through the XFS code myself at the moment and I'll be sure
-> > to submit patches if I spot something that could help reduce stack
-> > usage.
->
-> Most of the low hanging fruit is already gone. The problem we are
-> facing now for further reductions in stack usage is the fact that we
-> need to factor code. That is a major undertaking and has a _lot_ of
-> risk associated with it....
->
-I'll try to spot some of the remaining low hanging fruit ;)
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi@vger.kernel.org, ipslinux@adaptec.com
 
 
-> > >There is active discussion about reducing inlining:
-> > >http://bugzilla.kernel.org/show_bug.cgi?id=7364
-> >
-> > Thanks, I'll check that out.
->
-> That's one of the few remaining low hanging fruit, and that's fixed
-> in the patches I already have.
->
-Nice. Will be good to get that in.
+--=-c08dA/iATCRm2c5GCl4d
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
+On Tue, 2006-11-21 at 09:16 -0600, James Bottomley wrote:
+> On Tue, 2006-11-21 at 17:14 +1100, Michael Ellerman wrote:
+> > drivers/scsi/ips.c pollutes my build log telling me that it has only
+> > been tested on x86/ia64/x86_64. It's starting to get annoying.
+>=20
+> Since we have a failure report for this driver on the ppc platform, I
+> don't necessarily see the warning as being inappropriate.
 
-> > >Thanks for traces, I've captured this information.
-> > >
-> > You are welcome. If you want/need more traces then I've got ~2.1G
-> > worth of traces that you can have :)
->
-> Well, we don't need that many, but it would be nice to have a
-> set of unique traces that lead to overflows - could you process
-> them in some way just to extract just the unique XFS traces that
-> occur?
->
-I'll try to extract a copy of each unique trace that involves xfs,
-sometime tomorrow or the day after, and then send you the result.
+If it's known not to work, why are we building it at all for ppc?
 
+cheers
 
--- 
-Jesper Juhl <jesper.juhl@gmail.com>
-Don't top-post  http://www.catb.org/~esr/jargon/html/T/top-post.html
-Plain text mails only, please      http://www.expita.com/nomime.html
+--=20
+Michael Ellerman
+OzLabs, IBM Australia Development Lab
+
+wwweb: http://michael.ellerman.id.au
+phone: +61 2 6212 1183 (tie line 70 21183)
+
+We do not inherit the earth from our ancestors,
+we borrow it from our children. - S.M.A.R.T Person
+
+--=-c08dA/iATCRm2c5GCl4d
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.3 (GNU/Linux)
+
+iD8DBQBFY5JpdSjSd0sB4dIRAh7TAJ444tBnCyBCwwqs0abX2e/m6soSEwCdFjqk
+gYFAIhBOTol9qeImI4VsviU=
+=KzDI
+-----END PGP SIGNATURE-----
+
+--=-c08dA/iATCRm2c5GCl4d--
+
