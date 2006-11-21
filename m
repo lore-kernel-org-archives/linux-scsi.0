@@ -1,47 +1,76 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: Spinup of SCSI Disks: allow_restart won't work on 2.6.18
-Date: Tue, 21 Nov 2006 21:49:34 +0100
-Message-ID: <4563665E.2060301@s5r6.in-berlin.de>
-References: <455DF39A.6090209@fbihome.de> <455E2D44.5030903@gmx.de> <455E4703.3080005@s5r6.in-berlin.de> <456188FD.3020108@fbihome.de> <45619611.5020502@s5r6.in-berlin.de> <45622CF5.507@fbihome.de> <45624009.3040208@s5r6.in-berlin.de> <456251E2.4010700@fbihome.de>
+From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+Subject: RE: [PATCH] CISS: require same SCSI module support
+Date: Tue, 21 Nov 2006 15:19:21 -0600
+Message-ID: <E717642AF17E744CA95C070CA815AE55D8DDA3@cceexc23.americas.cpqcorp.net>
+References: <20061121110610.d72e3976.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:25014 "EHLO
-	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
-	id S1031241AbWKUUtj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Nov 2006 15:49:39 -0500
-In-Reply-To: <456251E2.4010700@fbihome.de>
+Received: from ccerelbas03.cce.hp.com ([161.114.21.106]:173 "EHLO
+	ccerelbas03.cce.hp.com") by vger.kernel.org with ESMTP
+	id S1161179AbWKUVTX convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Nov 2006 16:19:23 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <20061121110610.d72e3976.randy.dunlap@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joern Quillmann <quillman@fbihome.de>
-Cc: linux-scsi@vger.kernel.org
+To: Randy Dunlap <randy.dunlap@oracle.com>, scsi <linux-scsi@vger.kernel.org>
+Cc: ISS StorageDev <iss_storagedev@hp.com>, akpm <akpm@osdl.org>, linux-kernel@vger.kernel.org
 
-Joern Quillmann wrote:
-> Stefan Richter wrote:
->>> ieee1394: sbp2: Error logging into SBP-2 device - timed out
->>> sbp2: probe of 0001d20000093c4d-0 failed with error -16
->>
->> This should not be a problem per se, although it won't be possible to
->> actually use the disk after a login failure of course.
+ 
+
+> -----Original Message-----
+> From: Randy Dunlap [mailto:randy.dunlap@oracle.com] 
+> Sent: Tuesday, November 21, 2006 1:06 PM
+> To: scsi
+> Cc: Miller, Mike (OS Dev); ISS StorageDev; akpm
+> Subject: [PATCH] CISS: require same SCSI module support
 > 
-> The remaining disks were not found too.
-
-Because of the subsequent oops in ieee1394's nodemgr context, which runs
-all the device probes.
-
-...
->> if you can reproduce this bug, I could send you a
->> patch with a bunch of printk's to narrow the offending sysfs attribute
->> down.
+> From: Randy Dunlap <randy.dunlap@oracle.com>
 > 
-> Sure no problem. I'll test it asap.
-> Would be great to get a solution for this too. Kinda unfunny to always
-> have the external disks running before the system boots.
+> Building CCISS SCSI tape support in-kernel when SCSI=m causes 
+> build errors, so require SCSI support to be =y or same as 
+> CCISS SCSI tape support.
+> 
+> drivers/built-in.o: In function `cciss_remove_one':
+> cciss.c:(.text+0x79d4c): undefined reference to `scsi_remove_host'
+> cciss.c:(.text+0x79d55): undefined reference to `scsi_host_put'
+> drivers/built-in.o: In function `cciss_update_non_disk_devices':
+> cciss.c:(.text+0x7bb54): undefined reference to `scsi_device_type'
+> cciss.c:(.text+0x7bcc8): undefined reference to `scsi_device_type'
+> cciss.c:(.text+0x7be81): undefined reference to `scsi_device_type'
+> cciss.c:(.text+0x7bf81): undefined reference to `scsi_device_type'
+> drivers/built-in.o: In function `cciss_proc_write':
+> cciss.c:(.text+0x7c175): undefined reference to `scsi_host_alloc'
+> cciss.c:(.text+0x7c1ed): undefined reference to `scsi_add_host'
+> cciss.c:(.text+0x7c1f9): undefined reference to `scsi_scan_host'
+> cciss.c:(.text+0x7c206): undefined reference to `scsi_host_put'
+> make: *** [.tmp_vmlinux1] Error 1
+> 
+> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
 
-I'll get back to you once I have something to work on the oops or/and
-the login failure.
--- 
-Stefan Richter
--=====-=-==- =-== =-=-=
-http://arcgraph.de/sr/
+Acked-by: Mike Miller <mike.miller@hp.com>
+
+> ---
+>  drivers/block/Kconfig |    3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> --- linux-2619-rc6g3.orig/drivers/block/Kconfig
+> +++ linux-2619-rc6g3/drivers/block/Kconfig
+> @@ -168,7 +168,8 @@ config BLK_CPQ_CISS_DA
+>  
+>  config CISS_SCSI_TAPE
+>  	bool "SCSI tape drive support for Smart Array 5xxx"
+> -	depends on BLK_CPQ_CISS_DA && SCSI && PROC_FS
+> +	depends on BLK_CPQ_CISS_DA && PROC_FS
+> +	depends on SCSI=y || SCSI=BLK_CPQ_CISS_DA
+>  	help
+>  	  When enabled (Y), this option allows SCSI tape drives 
+> and SCSI medium
+>  	  changers (tape robots) to be accessed via a Compaq 5xxx array 
+> 
+> 
+> ---
+> 
