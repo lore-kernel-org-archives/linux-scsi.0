@@ -1,22 +1,22 @@
 From: Brian King <brking@us.ibm.com>
-Subject: [PATCH 08/10] ipr: Reduce default error log size
-Date: Tue, 21 Nov 2006 10:28:42 -0600
-Message-ID: <200611211628.kALGSggq020098@d03av02.boulder.ibm.com>
+Subject: [PATCH 03/10] ipr: PCI IDs for new SAS adapters
+Date: Tue, 21 Nov 2006 10:28:10 -0600
+Message-ID: <200611211628.kALGSBor021063@d01av02.pok.ibm.com>
 References: <11641264771784-patch-mail.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.152]:42391 "EHLO
-	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S1031055AbWKUQ2o
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Nov 2006 11:28:44 -0500
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e34.co.us.ibm.com (8.13.8/8.12.11) with ESMTP id kALGShfZ002357
-	for <linux-scsi@vger.kernel.org>; Tue, 21 Nov 2006 11:28:43 -0500
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by westrelay02.boulder.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id kALGShKO460116
-	for <linux-scsi@vger.kernel.org>; Tue, 21 Nov 2006 09:28:43 -0700
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id kALGSg11020111
-	for <linux-scsi@vger.kernel.org>; Tue, 21 Nov 2006 09:28:43 -0700
+Received: from e4.ny.us.ibm.com ([32.97.182.144]:62433 "EHLO e4.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1031076AbWKUQ3b (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Nov 2006 11:29:31 -0500
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e4.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id kALGTSit023761
+	for <linux-scsi@vger.kernel.org>; Tue, 21 Nov 2006 11:29:28 -0500
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay02.pok.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id kALGSCP9296690
+	for <linux-scsi@vger.kernel.org>; Tue, 21 Nov 2006 11:28:12 -0500
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id kALGSBEP021093
+	for <linux-scsi@vger.kernel.org>; Tue, 21 Nov 2006 11:28:11 -0500
 In-Reply-To: <11641264771784-patch-mail.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -24,91 +24,91 @@ To: James.Bottomley@steeleye.com
 Cc: linux-scsi@vger.kernel.org, brking@us.ibm.com
 
 
-Since the default error log size has increased on SAS adapters,
-prevent ipr from logging this additional data unless requested
-to do so by the user set log level in order to prevent flooding
-the logs.
+Adds PCI IDs for some new ipr SAS adapters.
 
-Signed-off-by: Brian King <brking@us.ibm.com>
 ---
 
- linux-2.6-bjking1/drivers/scsi/ipr.c |   14 +++++++++-----
- linux-2.6-bjking1/drivers/scsi/ipr.h |    1 +
- 2 files changed, 10 insertions(+), 5 deletions(-)
+ linux-2.6-bjking1/drivers/scsi/ipr.c |   18 +++++++++++++++++-
+ linux-2.6-bjking1/drivers/scsi/ipr.h |    6 ++++++
+ 2 files changed, 23 insertions(+), 1 deletion(-)
 
-diff -puN drivers/scsi/ipr.c~ipr_reduce_error_log_size drivers/scsi/ipr.c
---- linux-2.6/drivers/scsi/ipr.c~ipr_reduce_error_log_size	2006-11-20 08:54:05.000000000 -0600
-+++ linux-2.6-bjking1/drivers/scsi/ipr.c	2006-11-21 09:05:34.000000000 -0600
-@@ -1249,19 +1249,23 @@ static void ipr_log_array_error(struct i
+diff -puN drivers/scsi/ipr.h~ipr_aux_cache_pci_ids drivers/scsi/ipr.h
+--- linux-2.6/drivers/scsi/ipr.h~ipr_aux_cache_pci_ids	2006-11-15 15:43:05.000000000 -0600
++++ linux-2.6-bjking1/drivers/scsi/ipr.h	2006-11-15 15:43:05.000000000 -0600
+@@ -54,6 +54,8 @@
+  */
+ #define IPR_NUM_BASE_CMD_BLKS				100
  
- /**
-  * ipr_log_hex_data - Log additional hex IOA error data.
-+ * @ioa_cfg:	ioa config struct
-  * @data:		IOA error data
-  * @len:		data length
-  *
-  * Return value:
-  * 	none
-  **/
--static void ipr_log_hex_data(u32 *data, int len)
-+static void ipr_log_hex_data(struct ipr_ioa_cfg *ioa_cfg, u32 *data, int len)
- {
- 	int i;
- 
- 	if (len == 0)
- 		return;
- 
-+	if (ioa_cfg->log_level <= IPR_DEFAULT_LOG_LEVEL)
-+		len = min_t(int, len, IPR_DEFAULT_MAX_ERROR_DUMP);
++#define PCI_DEVICE_ID_IBM_OBSIDIAN_E	0x0339
 +
- 	for (i = 0; i < len / 4; i += 4) {
- 		ipr_err("%08X: %08X %08X %08X %08X\n", i*4,
- 			be32_to_cpu(data[i]),
-@@ -1290,7 +1294,7 @@ static void ipr_log_enhanced_dual_ioa_er
- 	ipr_err("%s\n", error->failure_reason);
- 	ipr_err("Remote Adapter VPD:\n");
- 	ipr_log_ext_vpd(&error->vpd);
--	ipr_log_hex_data(error->data,
-+	ipr_log_hex_data(ioa_cfg, error->data,
- 			 be32_to_cpu(hostrcb->hcam.length) -
- 			 (offsetof(struct ipr_hostrcb_error, u) +
- 			  offsetof(struct ipr_hostrcb_type_17_error, data)));
-@@ -1315,7 +1319,7 @@ static void ipr_log_dual_ioa_error(struc
- 	ipr_err("%s\n", error->failure_reason);
- 	ipr_err("Remote Adapter VPD:\n");
- 	ipr_log_vpd(&error->vpd);
--	ipr_log_hex_data(error->data,
-+	ipr_log_hex_data(ioa_cfg, error->data,
- 			 be32_to_cpu(hostrcb->hcam.length) -
- 			 (offsetof(struct ipr_hostrcb_error, u) +
- 			  offsetof(struct ipr_hostrcb_type_07_error, data)));
-@@ -1531,7 +1535,7 @@ static void ipr_log_fabric_error(struct 
- 			((unsigned long)fabric + be16_to_cpu(fabric->length));
- 	}
+ #define IPR_SUBS_DEV_ID_2780	0x0264
+ #define IPR_SUBS_DEV_ID_5702	0x0266
+ #define IPR_SUBS_DEV_ID_5703	0x0278
+@@ -66,7 +68,11 @@
+ #define IPR_SUBS_DEV_ID_571F	0x02D5
+ #define IPR_SUBS_DEV_ID_572A	0x02C1
+ #define IPR_SUBS_DEV_ID_572B	0x02C2
++#define IPR_SUBS_DEV_ID_572F	0x02C3
+ #define IPR_SUBS_DEV_ID_575B	0x030D
++#define IPR_SUBS_DEV_ID_575C	0x0338
++#define IPR_SUBS_DEV_ID_57B7	0x0360
++#define IPR_SUBS_DEV_ID_57B8	0x02C2
  
--	ipr_log_hex_data((u32 *)fabric, add_len);
-+	ipr_log_hex_data(ioa_cfg, (u32 *)fabric, add_len);
- }
+ #define IPR_NAME				"ipr"
  
- /**
-@@ -1545,7 +1549,7 @@ static void ipr_log_fabric_error(struct 
- static void ipr_log_generic_error(struct ipr_ioa_cfg *ioa_cfg,
- 				  struct ipr_hostrcb *hostrcb)
- {
--	ipr_log_hex_data(hostrcb->hcam.u.raw.data,
-+	ipr_log_hex_data(ioa_cfg, hostrcb->hcam.u.raw.data,
- 			 be32_to_cpu(hostrcb->hcam.length));
- }
+diff -puN drivers/scsi/ipr.c~ipr_aux_cache_pci_ids drivers/scsi/ipr.c
+--- linux-2.6/drivers/scsi/ipr.c~ipr_aux_cache_pci_ids	2006-11-15 15:43:05.000000000 -0600
++++ linux-2.6-bjking1/drivers/scsi/ipr.c	2006-11-15 15:43:05.000000000 -0600
+@@ -98,7 +98,7 @@ static DEFINE_SPINLOCK(ipr_driver_lock);
  
-diff -puN drivers/scsi/ipr.h~ipr_reduce_error_log_size drivers/scsi/ipr.h
---- linux-2.6/drivers/scsi/ipr.h~ipr_reduce_error_log_size	2006-11-20 08:54:05.000000000 -0600
-+++ linux-2.6-bjking1/drivers/scsi/ipr.h	2006-11-21 09:05:34.000000000 -0600
-@@ -104,6 +104,7 @@
- #define IPR_IOASC_IOA_WAS_RESET			0x10000001
- #define IPR_IOASC_PCI_ACCESS_ERROR			0x10000002
- 
-+#define IPR_DEFAULT_MAX_ERROR_DUMP			984
- #define IPR_NUM_LOG_HCAMS				2
- #define IPR_NUM_CFG_CHG_HCAMS				2
- #define IPR_NUM_HCAMS	(IPR_NUM_LOG_HCAMS + IPR_NUM_CFG_CHG_HCAMS)
+ /* This table describes the differences between DMA controller chips */
+ static const struct ipr_chip_cfg_t ipr_chip_cfg[] = {
+-	{ /* Gemstone, Citrine, and Obsidian */
++	{ /* Gemstone, Citrine, Obsidian, and Obsidian-E */
+ 		.mailbox = 0x0042C,
+ 		.cache_line_size = 0x20,
+ 		{
+@@ -135,6 +135,7 @@ static const struct ipr_chip_t ipr_chip[
+ 	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CITRINE, &ipr_chip_cfg[0] },
+ 	{ PCI_VENDOR_ID_ADAPTEC2, PCI_DEVICE_ID_ADAPTEC2_OBSIDIAN, &ipr_chip_cfg[0] },
+ 	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_OBSIDIAN, &ipr_chip_cfg[0] },
++	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_OBSIDIAN_E, &ipr_chip_cfg[0] },
+ 	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_SNIPE, &ipr_chip_cfg[1] },
+ 	{ PCI_VENDOR_ID_ADAPTEC2, PCI_DEVICE_ID_ADAPTEC2_SCAMP, &ipr_chip_cfg[1] }
+ };
+@@ -7363,12 +7364,24 @@ static struct pci_device_id ipr_pci_tabl
+ 	{ PCI_VENDOR_ID_ADAPTEC2, PCI_DEVICE_ID_ADAPTEC2_OBSIDIAN,
+ 	      PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_572B,
+ 	      0, 0, (kernel_ulong_t)&ipr_chip_cfg[0] },
++	{ PCI_VENDOR_ID_ADAPTEC2, PCI_DEVICE_ID_ADAPTEC2_OBSIDIAN,
++	      PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_575C,
++	      0, 0, (kernel_ulong_t)&ipr_chip_cfg[0] },
+ 	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_OBSIDIAN,
+ 	      PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_572A,
+ 	      0, 0, (kernel_ulong_t)&ipr_chip_cfg[0] },
+ 	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_OBSIDIAN,
+ 	      PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_572B,
+ 	      0, 0, (kernel_ulong_t)&ipr_chip_cfg[0] },
++	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_OBSIDIAN,
++	      PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_575C,
++	      0, 0, (kernel_ulong_t)&ipr_chip_cfg[0] },
++	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_OBSIDIAN,
++	      PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57B8,
++	      0, 0, (kernel_ulong_t)&ipr_chip_cfg[0] },
++	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_OBSIDIAN_E,
++	      PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57B7,
++	      0, 0, (kernel_ulong_t)&ipr_chip_cfg[0] },
+ 	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_SNIPE,
+ 		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_2780,
+ 		0, 0, (kernel_ulong_t)&ipr_chip_cfg[1] },
+@@ -7378,6 +7391,9 @@ static struct pci_device_id ipr_pci_tabl
+ 	{ PCI_VENDOR_ID_ADAPTEC2, PCI_DEVICE_ID_ADAPTEC2_SCAMP,
+ 		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_571F,
+ 		0, 0, (kernel_ulong_t)&ipr_chip_cfg[1] },
++	{ PCI_VENDOR_ID_ADAPTEC2, PCI_DEVICE_ID_ADAPTEC2_SCAMP,
++		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_572F,
++		0, 0, (kernel_ulong_t)&ipr_chip_cfg[1] },
+ 	{ }
+ };
+ MODULE_DEVICE_TABLE(pci, ipr_pci_table);
 _
