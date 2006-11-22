@@ -1,44 +1,35 @@
-From: Andy Whitcroft <apw@shadowen.org>
-Subject: [PATCH] scsi_device_put unused variable module without CONFIG_MODULE_UNLOAD
-Date: Wed, 22 Nov 2006 14:39:06 +0000
-Message-ID: <5b8c107f6d06b70065ca44309be0dcbf@pinky>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] scsi_device_put unused variable module without
+	CONFIG_MODULE_UNLOAD
+Date: Wed, 22 Nov 2006 09:15:27 -0600
+Message-ID: <1164208527.2785.6.camel@mulgrave.il.steeleye.com>
+References: <5b8c107f6d06b70065ca44309be0dcbf@pinky>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 41.150.104.212.access.eclipse.net.uk ([212.104.150.41]:53920
-	"EHLO localhost.localdomain") by vger.kernel.org with ESMTP
-	id S1753375AbWKVOjJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Nov 2006 09:39:09 -0500
-Content-Disposition: inline
+Received: from hancock.steeleye.com ([71.30.118.248]:28054 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1754665AbWKVPPb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Nov 2006 10:15:31 -0500
+In-Reply-To: <5b8c107f6d06b70065ca44309be0dcbf@pinky>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
-Cc: Andrew Morton <akpm@osdl.org>, apw@shadowen.org
+To: Andy Whitcroft <apw@shadowen.org>
+Cc: linux-scsi@vger.kernel.org, Andrew Morton <akpm@osdl.org>
 
-scsi_device_put: unused variable module without CONFIG_MODULE_UNLOAD
+On Wed, 2006-11-22 at 14:39 +0000, Andy Whitcroft wrote:
+> scsi_device_put: unused variable module without CONFIG_MODULE_UNLOAD
+> 
+> When CONFIG_MODULE_UNLOAD is not defined then the module variable
+> in scsi_device_put() becomes unused resulting in the warnings below.
+> Move this inside the existing #ifdef.
+> 
+>   .../drivers/scsi/scsi.c:883: warning: unused variable 'module'
 
-When CONFIG_MODULE_UNLOAD is not defined then the module variable
-in scsi_device_put() becomes unused resulting in the warnings below.
-Move this inside the existing #ifdef.
+Actually, the fix for this is already in scsi-misc, so it should be
+making its way into -mm.
 
-  .../drivers/scsi/scsi.c:883: warning: unused variable 'module'
-  
-Against 2.6.19-rc5-mm2.
+James
 
-Signed-off-by: Andy Whitcroft <apw@shadowen.org>
----
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 680d72e..fafc00d 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -880,9 +880,9 @@ EXPORT_SYMBOL(scsi_device_get);
-  */
- void scsi_device_put(struct scsi_device *sdev)
- {
-+#ifdef CONFIG_MODULE_UNLOAD
- 	struct module *module = sdev->host->hostt->module;
- 
--#ifdef CONFIG_MODULE_UNLOAD
- 	/* The module refcount will be zero if scsi_device_get()
- 	 * was called from a module removal routine */
- 	if (module && module_refcount(module) != 0)
+
