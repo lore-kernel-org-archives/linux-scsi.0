@@ -1,62 +1,47 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [RFC] Asynchronous scanning for FC/SAS version 3
-Date: Wed, 22 Nov 2006 10:51:25 -0700
-Message-ID: <20061122175125.GW18567@parisc-linux.org>
-References: <20061113152605.GZ16952@parisc-linux.org> <20061120192140.GE11420@andrew-vasquezs-computer.local> <20061120201143.GN18567@parisc-linux.org> <20061122161926.GC1538@andrew-vasquezs-computer.local>
+From: Grant Grundler <grundler@parisc-linux.org>
+Subject: Re: [PATCH 2/5] PCI : Move pci_fixup_device and
+	is_enabled
+Date: Wed, 22 Nov 2006 11:09:01 -0700
+Message-ID: <20061122180901.GD378@colo.lackof.org>
+References: <456404EF.3090902@jp.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:962 "EHLO
-	mail.parisc-linux.org") by vger.kernel.org with ESMTP
-	id S1756086AbWKVRv0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Nov 2006 12:51:26 -0500
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <e1000-devel-bounces@lists.sourceforge.net>
 Content-Disposition: inline
-In-Reply-To: <20061122161926.GC1538@andrew-vasquezs-computer.local>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <456404EF.3090902@jp.fujitsu.com>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/e1000-devel>,
+	<mailto:e1000-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=e1000-devel>
+List-Post: <mailto:e1000-devel@lists.sourceforge.net>
+List-Help: <mailto:e1000-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/e1000-devel>,
+	<mailto:e1000-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: e1000-devel-bounces@lists.sourceforge.net
+Errors-To: e1000-devel-bounces@lists.sourceforge.net
+To: Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>
+Cc: Andrew Morton <akpm@osdl.org>, Grant Grundler <grundler@parisc-linux.org>, linux-scsi@vger.kernel.org, e1000-devel@lists.sourceforge.net, Greg KH <greg@kroah.com>, Linux Kernel list <linux-kernel@vger.kernel.org>, Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>, linux-pci@atrey.karlin.mff.cuni.cz
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: linux-scsi@vger.kernel.org, linux-driver@qlogic.com, james.smart@emulex.com
 
-On Wed, Nov 22, 2006 at 08:19:26AM -0800, Andrew Vasquez wrote:
-> > This seems like a nice cleanup of some moderately complicated code.
-> > We still need scan_start and scan_finished methods so that the midlayer
-> > knows when the qla2xxx driver thinks it's found all the devices there
-> > are to find.
+On Wed, Nov 22, 2006 at 05:06:07PM +0900, Hidetoshi Seto wrote:
+> --- linux-2.6.19-rc6.orig/drivers/pci/pci.c
+> +++ linux-2.6.19-rc6/drivers/pci/pci.c
+> @@ -558,12 +558,18 @@
+>  {
+>  	int err;
 > 
-> BTW:  side-note, this is a bit tricky, as we are dealing with a fabric
-> environment where ports can fall on/off a topology at any given time
-> (ISL removed, port disconnected, etc. can all cause a loss in fcport
-> visibility).
+> +	if (dev->is_enabled)
+> +		return 0;
 
-Oh yes, I understand that.  I'm only trying to solve the situation where
-the fabric is stable.
+This is unfortunately going to collide with the previous
+patch posted by inaky@linux.intel.com:
 
-> What this condition in scan_finished() is going to
-> catch:
-> 
-> +static int
-> +qla2xxx_scan_finished(struct Scsi_Host *shost, unsigned long time)
-> +{
-> +       scsi_qla_host_t *ha = (scsi_qla_host_t *)shost->hostdata;
-> +
-> +       if (!ha->host)
-> +               return 1;
-> +       if (time > ha->loop_reset_delay * HZ)
-> +               return 1;
-> +
-> +       return atomic_read(&ha->loop_state) == LOOP_READY;
-> +}
-> 
-> is the *first* instance where the firmware/driver has attained a
-> steady link state within the topology.  The 'found all the devices
-> there are to find' case may or may not fall within this window...
+    Subject: [patch 0/2] pci: make pci_{enable,disable}_device() be nested
 
-Ah, fair point, I didn't *quite* understand the distinction between the
-various flags; can you suggest a better condition to test?
+grant
 
-> Ok, I've tweaked the code a bit and have been testing with the
-> following two patches, the first is a cleaned-up revision of my
-> 'alternate' proposal (from above).  The second, adds callbacks for
-> your scan_start/end() work.
-
-Thanks a lot!
+-------------------------------------------------------------------------
+Take Surveys. Earn Cash. Influence the Future of IT
+Join SourceForge.net's Techsay panel and you'll get the chance to share your
+opinions on IT & business topics through brief surveys - and earn cash
+http://www.techsay.com/default.php?page=join.php&p=sourceforge&CID=DEVDEV
