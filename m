@@ -1,15 +1,16 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [PATCH 5/5] lpfc : Make Emulex lpfc driver legacy
-	I/O port free
-Date: Wed, 22 Nov 2006 10:44:46 -0500
-Message-ID: <4564706E.9060900@emulex.com>
-References: <4564051C.3080908@jp.fujitsu.com>
-Reply-To: James.Smart@Emulex.Com
+From: Auke Kok <auke-jan.h.kok@intel.com>
+Subject: Re: [PATCH 4/5] e1000 : Make Intel e1000 driver
+	legacy I/O port free
+Date: Wed, 22 Nov 2006 08:11:28 -0800
+Message-ID: <456476B0.70705@intel.com>
+References: <4564050C.70607@jp.fujitsu.com>
+	<1164185809.31358.714.camel@laptopd505.fenrus.org>
+	<20061122135423.GV18567@parisc-linux.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <e1000-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <4564051C.3080908@jp.fujitsu.com>
+In-Reply-To: <20061122135423.GV18567@parisc-linux.org>
 List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/e1000-devel>,
 	<mailto:e1000-devel-request@lists.sourceforge.net?subject=unsubscribe>
 List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=e1000-devel>
@@ -19,76 +20,33 @@ List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/e1000-devel>,
 	<mailto:e1000-devel-request@lists.sourceforge.net?subject=subscribe>
 Sender: e1000-devel-bounces@lists.sourceforge.net
 Errors-To: e1000-devel-bounces@lists.sourceforge.net
-To: Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>
-Cc: Andrew Morton <akpm@osdl.org>, Grant Grundler <grundler@parisc-linux.org>, linux-scsi@vger.kernel.org, e1000-devel@lists.sourceforge.net, Greg KH <greg@kroah.com>, Linux Kernel list <linux-kernel@vger.kernel.org>, Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>, linux-pci@atrey.karlin.mff.cuni.cz
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Andrew Morton <akpm@osdl.org>, Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>, Grant Grundler <grundler@parisc-linux.org>, linux-scsi@vger.kernel.org, e1000-devel@lists.sourceforge.net, Greg KH <greg@kroah.com>, Linux Kernel list <linux-kernel@vger.kernel.org>, Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>, linux-pci@atrey.karlin.mff.cuni.cz, Arjan van de Ven <arjan@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-ACK  :)
+Matthew Wilcox wrote:
+> On Wed, Nov 22, 2006 at 09:56:49AM +0100, Arjan van de Ven wrote:
+>> On Wed, 2006-11-22 at 17:06 +0900, Hidetoshi Seto wrote:
+>>>  static struct pci_device_id e1000_pci_tbl[] = {
+>>> +	INTEL_E1000_ETHERNET_DEVICE(0x1004, 0),
+>>> +	INTEL_E1000_ETHERNET_DEVICE(0x1008, E1000_USE_IOPORT),
+>> Hi,
+>>
+>> this has the unfortunate effect that it's now a lot harder to add PCI
+>> ID's to this driver at runtime via sysfs ;(
+> 
+> It does?  Normally you get 0 passed in that field, so you'll just not
+> get io ports enabled ...
+> 
+> Need to set use_driver_data to get non-0 passed in that field.
 
-(I thought this had already gone in a while ago)
+I think we want to condense the USE_IOPORT flag together with the other hardware feature 
+flags, as suggested by Jeff Garzik. This would save some headroom and leave the pci 
+device id table as it is.
 
--- james s
+Cheers,
 
-Hidetoshi Seto wrote:
-> This patch makes Emulex lpfc driver legacy I/O port free.
-> 
-> Signed-off-by: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
-> Signed-off-by: Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>
-> 
-> ---
->  drivers/scsi/lpfc/lpfc_init.c |   10 ++++++----
->  1 files changed, 6 insertions(+), 4 deletions(-)
-> 
-> Index: linux-2.6.19-rc6/drivers/scsi/lpfc/lpfc_init.c
-> ===================================================================
-> --- linux-2.6.19-rc6.orig/drivers/scsi/lpfc/lpfc_init.c
-> +++ linux-2.6.19-rc6/drivers/scsi/lpfc/lpfc_init.c
-> @@ -1453,10 +1453,11 @@
->  	int error = -ENODEV, retval;
->  	int i;
->  	uint16_t iotag;
-> +	int bars = pci_select_bars(pdev, IORESOURCE_MEM);
-> 
-> -	if (pci_enable_device(pdev))
-> +	if (pci_enable_device_bars(pdev, bars))
->  		goto out;
-> -	if (pci_request_regions(pdev, LPFC_DRIVER_NAME))
-> +	if (pci_request_selected_regions(pdev, bars, LPFC_DRIVER_NAME))
->  		goto out_disable_device;
-> 
->  	host = scsi_host_alloc(&lpfc_template, sizeof (struct lpfc_hba));
-> @@ -1759,7 +1760,7 @@
->  	phba->host = NULL;
->  	scsi_host_put(host);
->  out_release_regions:
-> -	pci_release_regions(pdev);
-> +	pci_release_selected_regions(pdev, bars);
->  out_disable_device:
->  	pci_disable_device(pdev);
->  out:
-> @@ -1773,6 +1774,7 @@
->  	struct Scsi_Host   *host = pci_get_drvdata(pdev);
->  	struct lpfc_hba    *phba = (struct lpfc_hba *)host->hostdata;
->  	unsigned long iflag;
-> +	int bars = pci_select_bars(pdev, IORESOURCE_MEM);
-> 
->  	lpfc_free_sysfs_attr(phba);
-> 
-> @@ -1816,7 +1818,7 @@
->  	iounmap(phba->ctrl_regs_memmap_p);
->  	iounmap(phba->slim_memmap_p);
-> 
-> -	pci_release_regions(phba->pcidev);
-> +	pci_release_selected_regions(phba->pcidev, bars);
->  	pci_disable_device(phba->pcidev);
-> 
->  	idr_remove(&lpfc_hba_index, phba->brd_no);
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Auke
 
 -------------------------------------------------------------------------
 Take Surveys. Earn Cash. Influence the Future of IT
