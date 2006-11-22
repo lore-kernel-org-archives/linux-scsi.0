@@ -1,7 +1,8 @@
 From: Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>
-Subject: [PATCH 3/5] PCI : Add selected_regions funcs
-Date: Wed, 22 Nov 2006 17:06:22 +0900
-Message-ID: <456404FE.1040708@jp.fujitsu.com>
+Subject: [PATCH 4/5] e1000 : Make Intel e1000 driver legacy
+	I/O port free
+Date: Wed, 22 Nov 2006 17:06:36 +0900
+Message-ID: <4564050C.70607@jp.fujitsu.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -19,170 +20,246 @@ To: Linux Kernel list <linux-kernel@vger.kernel.org>, linux-pci@atrey.karlin.mff
 Cc: Andrew Morton <akpm@osdl.org>, Grant Grundler <grundler@parisc-linux.org>, linux-scsi@vger.kernel.org, e1000-devel@lists.sourceforge.net, Greg KH <greg@kroah.com>, Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This patch adds the following changes into generic PCI code especially
-for PCI legacy I/O port free drivers.
-
-    - Added new pci_request_selected_regions() and
-      pci_release_selected_regions() for PCI legacy I/O port free
-      drivers in order to request/release only the selected regions.
-
-    - Added helper routine pci_select_bars() which makes proper mask
-      of BARs from the specified resource type. This would be very
-      helpful for users of pci_enable_device_bars().
+This patch makes Intel e1000 driver legacy I/O port free.
 
 Signed-off-by: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
 Signed-off-by: Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>
 
 ---
- drivers/pci/pci.c   |   78 +++++++++++++++++++++++++++++++++++++++++-----------
- include/linux/pci.h |    3 ++
- 2 files changed, 65 insertions(+), 16 deletions(-)
+ drivers/net/e1000/e1000.h      |    6 +
+ drivers/net/e1000/e1000_main.c |  146 ++++++++++++++++++++++-------------------
+ 2 files changed, 83 insertions(+), 69 deletions(-)
 
-Index: linux-2.6.19-rc6/drivers/pci/pci.c
+Index: linux-2.6.19-rc6/drivers/net/e1000/e1000.h
 ===================================================================
---- linux-2.6.19-rc6.orig/drivers/pci/pci.c
-+++ linux-2.6.19-rc6/drivers/pci/pci.c
-@@ -758,6 +758,47 @@
- 	return -EBUSY;
- }
+--- linux-2.6.19-rc6.orig/drivers/net/e1000/e1000.h
++++ linux-2.6.19-rc6/drivers/net/e1000/e1000.h
+@@ -75,8 +75,9 @@
+ #define BAR_1		1
+ #define BAR_5		5
 
-+/**
-+ * pci_release_selected_regions - Release selected PCI I/O and memory resources
-+ * @pdev: PCI device whose resources were previously reserved
-+ * @bars: Bitmask of BARs to be released
-+ *
-+ * Release selected PCI I/O and memory resources previously reserved.
-+ * Call this function only after all use of the PCI regions has ceased.
-+ */
-+void pci_release_selected_regions(struct pci_dev *pdev, int bars)
-+{
-+	int i;
-+
-+	for (i = 0; i < 6; i++)
-+		if (bars & (1 << i))
-+			pci_release_region(pdev, i);
-+}
-+
-+/**
-+ * pci_request_selected_regions - Reserve selected PCI I/O and memory resources
-+ * @pdev: PCI device whose resources are to be reserved
-+ * @bars: Bitmask of BARs to be requested
-+ * @res_name: Name to be associated with resource
-+ */
-+int pci_request_selected_regions(struct pci_dev *pdev, int bars,
-+				 const char *res_name)
-+{
-+	int i;
-+
-+	for (i = 0; i < 6; i++)
-+		if (bars & (1 << i))
-+			if(pci_request_region(pdev, i, res_name))
-+				goto err_out;
-+	return 0;
-+
-+err_out:
-+	while(--i >= 0)
-+		if (bars & (1 << i))
-+			pci_release_region(pdev, i);
-+
-+	return -EBUSY;
-+}
+-#define INTEL_E1000_ETHERNET_DEVICE(device_id) {\
+-	PCI_DEVICE(PCI_VENDOR_ID_INTEL, device_id)}
++#define E1000_USE_IOPORT	(1 << 0)
++#define INTEL_E1000_ETHERNET_DEVICE(device_id, flags) {\
++	PCI_DEVICE(PCI_VENDOR_ID_INTEL, device_id), .driver_data = flags}
 
- /**
-  *	pci_release_regions - Release reserved PCI I/O and memory resources
-@@ -770,10 +811,7 @@
+ struct e1000_adapter;
 
- void pci_release_regions(struct pci_dev *pdev)
- {
--	int i;
--	
--	for (i = 0; i < 6; i++)
--		pci_release_region(pdev, i);
-+	pci_release_selected_regions(pdev, (1 << 6) - 1);
- }
+@@ -342,6 +343,7 @@
+ 	boolean_t quad_port_a;
+ 	unsigned long flags;
+ 	uint32_t eeprom_wol;
++	int bars;		/* BARs to be enabled */
+ };
 
- /**
-@@ -791,18 +829,7 @@
+ enum e1000_state_t {
+Index: linux-2.6.19-rc6/drivers/net/e1000/e1000_main.c
+===================================================================
+--- linux-2.6.19-rc6.orig/drivers/net/e1000/e1000_main.c
++++ linux-2.6.19-rc6/drivers/net/e1000/e1000_main.c
+@@ -47,62 +47,62 @@
+  *   {PCI_DEVICE(PCI_VENDOR_ID_INTEL, device_id)}
   */
- int pci_request_regions(struct pci_dev *pdev, const char *res_name)
- {
--	int i;
--	
--	for (i = 0; i < 6; i++)
--		if(pci_request_region(pdev, i, res_name))
--			goto err_out;
--	return 0;
--
--err_out:
--	while(--i >= 0)
--		pci_release_region(pdev, i);
--		
--	return -EBUSY;
-+	return pci_request_selected_regions(pdev, ((1 << 6) - 1), res_name);
- }
-
- /**
-@@ -975,6 +1002,22 @@
- }
- #endif
-
-+/**
-+ * pci_select_bars - Make BAR mask from the type of resource
-+ * @pdev: the PCI device for which BAR mask is made
-+ * @flags: resource type mask to be selected
-+ *
-+ * This helper routine makes bar mask from the type of resource.
-+ */
-+int pci_select_bars(struct pci_dev *dev, unsigned long flags)
-+{
-+	int i, bars = 0;
-+	for (i = 0; i < PCI_NUM_RESOURCES; i++)
-+		if (pci_resource_flags(dev, i) & flags)
-+			bars |= (1 << i);
-+	return bars;
-+}
+ static struct pci_device_id e1000_pci_tbl[] = {
+-	INTEL_E1000_ETHERNET_DEVICE(0x1000),
+-	INTEL_E1000_ETHERNET_DEVICE(0x1001),
+-	INTEL_E1000_ETHERNET_DEVICE(0x1004),
+-	INTEL_E1000_ETHERNET_DEVICE(0x1008),
+-	INTEL_E1000_ETHERNET_DEVICE(0x1009),
+-	INTEL_E1000_ETHERNET_DEVICE(0x100C),
+-	INTEL_E1000_ETHERNET_DEVICE(0x100D),
+-	INTEL_E1000_ETHERNET_DEVICE(0x100E),
+-	INTEL_E1000_ETHERNET_DEVICE(0x100F),
+-	INTEL_E1000_ETHERNET_DEVICE(0x1010),
+-	INTEL_E1000_ETHERNET_DEVICE(0x1011),
+-	INTEL_E1000_ETHERNET_DEVICE(0x1012),
+-	INTEL_E1000_ETHERNET_DEVICE(0x1013),
+-	INTEL_E1000_ETHERNET_DEVICE(0x1014),
+-	INTEL_E1000_ETHERNET_DEVICE(0x1015),
+-	INTEL_E1000_ETHERNET_DEVICE(0x1016),
+-	INTEL_E1000_ETHERNET_DEVICE(0x1017),
+-	INTEL_E1000_ETHERNET_DEVICE(0x1018),
+-	INTEL_E1000_ETHERNET_DEVICE(0x1019),
+-	INTEL_E1000_ETHERNET_DEVICE(0x101A),
+-	INTEL_E1000_ETHERNET_DEVICE(0x101D),
+-	INTEL_E1000_ETHERNET_DEVICE(0x101E),
+-	INTEL_E1000_ETHERNET_DEVICE(0x1026),
+-	INTEL_E1000_ETHERNET_DEVICE(0x1027),
+-	INTEL_E1000_ETHERNET_DEVICE(0x1028),
+-	INTEL_E1000_ETHERNET_DEVICE(0x1049),
+-	INTEL_E1000_ETHERNET_DEVICE(0x104A),
+-	INTEL_E1000_ETHERNET_DEVICE(0x104B),
+-	INTEL_E1000_ETHERNET_DEVICE(0x104C),
+-	INTEL_E1000_ETHERNET_DEVICE(0x104D),
+-	INTEL_E1000_ETHERNET_DEVICE(0x105E),
+-	INTEL_E1000_ETHERNET_DEVICE(0x105F),
+-	INTEL_E1000_ETHERNET_DEVICE(0x1060),
+-	INTEL_E1000_ETHERNET_DEVICE(0x1075),
+-	INTEL_E1000_ETHERNET_DEVICE(0x1076),
+-	INTEL_E1000_ETHERNET_DEVICE(0x1077),
+-	INTEL_E1000_ETHERNET_DEVICE(0x1078),
+-	INTEL_E1000_ETHERNET_DEVICE(0x1079),
+-	INTEL_E1000_ETHERNET_DEVICE(0x107A),
+-	INTEL_E1000_ETHERNET_DEVICE(0x107B),
+-	INTEL_E1000_ETHERNET_DEVICE(0x107C),
+-	INTEL_E1000_ETHERNET_DEVICE(0x107D),
+-	INTEL_E1000_ETHERNET_DEVICE(0x107E),
+-	INTEL_E1000_ETHERNET_DEVICE(0x107F),
+-	INTEL_E1000_ETHERNET_DEVICE(0x108A),
+-	INTEL_E1000_ETHERNET_DEVICE(0x108B),
+-	INTEL_E1000_ETHERNET_DEVICE(0x108C),
+-	INTEL_E1000_ETHERNET_DEVICE(0x1096),
+-	INTEL_E1000_ETHERNET_DEVICE(0x1098),
+-	INTEL_E1000_ETHERNET_DEVICE(0x1099),
+-	INTEL_E1000_ETHERNET_DEVICE(0x109A),
+-	INTEL_E1000_ETHERNET_DEVICE(0x10A4),
+-	INTEL_E1000_ETHERNET_DEVICE(0x10B5),
+-	INTEL_E1000_ETHERNET_DEVICE(0x10B9),
+-	INTEL_E1000_ETHERNET_DEVICE(0x10BA),
+-	INTEL_E1000_ETHERNET_DEVICE(0x10BB),
++	INTEL_E1000_ETHERNET_DEVICE(0x1000, 0),
++	INTEL_E1000_ETHERNET_DEVICE(0x1001, 0),
++	INTEL_E1000_ETHERNET_DEVICE(0x1004, 0),
++	INTEL_E1000_ETHERNET_DEVICE(0x1008, E1000_USE_IOPORT),
++	INTEL_E1000_ETHERNET_DEVICE(0x1009, E1000_USE_IOPORT),
++	INTEL_E1000_ETHERNET_DEVICE(0x100C, E1000_USE_IOPORT),
++	INTEL_E1000_ETHERNET_DEVICE(0x100D, E1000_USE_IOPORT),
++	INTEL_E1000_ETHERNET_DEVICE(0x100E, E1000_USE_IOPORT),
++	INTEL_E1000_ETHERNET_DEVICE(0x100F, E1000_USE_IOPORT),
++	INTEL_E1000_ETHERNET_DEVICE(0x1010, E1000_USE_IOPORT),
++	INTEL_E1000_ETHERNET_DEVICE(0x1011, E1000_USE_IOPORT),
++	INTEL_E1000_ETHERNET_DEVICE(0x1012, E1000_USE_IOPORT),
++	INTEL_E1000_ETHERNET_DEVICE(0x1013, E1000_USE_IOPORT),
++	INTEL_E1000_ETHERNET_DEVICE(0x1014, E1000_USE_IOPORT),
++	INTEL_E1000_ETHERNET_DEVICE(0x1015, E1000_USE_IOPORT),
++	INTEL_E1000_ETHERNET_DEVICE(0x1016, E1000_USE_IOPORT),
++	INTEL_E1000_ETHERNET_DEVICE(0x1017, E1000_USE_IOPORT),
++	INTEL_E1000_ETHERNET_DEVICE(0x1018, E1000_USE_IOPORT),
++	INTEL_E1000_ETHERNET_DEVICE(0x1019, 0),
++	INTEL_E1000_ETHERNET_DEVICE(0x101A, 0),
++	INTEL_E1000_ETHERNET_DEVICE(0x101D, E1000_USE_IOPORT),
++	INTEL_E1000_ETHERNET_DEVICE(0x101E, E1000_USE_IOPORT),
++	INTEL_E1000_ETHERNET_DEVICE(0x1026, 0),
++	INTEL_E1000_ETHERNET_DEVICE(0x1027, 0),
++	INTEL_E1000_ETHERNET_DEVICE(0x1028, 0),
++	INTEL_E1000_ETHERNET_DEVICE(0x1049, 0),
++	INTEL_E1000_ETHERNET_DEVICE(0x104A, 0),
++	INTEL_E1000_ETHERNET_DEVICE(0x104B, 0),
++	INTEL_E1000_ETHERNET_DEVICE(0x104C, 0),
++	INTEL_E1000_ETHERNET_DEVICE(0x104D, 0),
++	INTEL_E1000_ETHERNET_DEVICE(0x105E, 0),
++	INTEL_E1000_ETHERNET_DEVICE(0x105F, 0),
++	INTEL_E1000_ETHERNET_DEVICE(0x1060, 0),
++	INTEL_E1000_ETHERNET_DEVICE(0x1075, 0),
++	INTEL_E1000_ETHERNET_DEVICE(0x1076, E1000_USE_IOPORT),
++	INTEL_E1000_ETHERNET_DEVICE(0x1077, E1000_USE_IOPORT),
++	INTEL_E1000_ETHERNET_DEVICE(0x1078, E1000_USE_IOPORT),
++	INTEL_E1000_ETHERNET_DEVICE(0x1079, 0),
++	INTEL_E1000_ETHERNET_DEVICE(0x107A, 0),
++	INTEL_E1000_ETHERNET_DEVICE(0x107B, 0),
++	INTEL_E1000_ETHERNET_DEVICE(0x107C, E1000_USE_IOPORT),
++	INTEL_E1000_ETHERNET_DEVICE(0x107D, 0),
++	INTEL_E1000_ETHERNET_DEVICE(0x107E, 0),
++	INTEL_E1000_ETHERNET_DEVICE(0x107F, 0),
++	INTEL_E1000_ETHERNET_DEVICE(0x108A, 0),
++	INTEL_E1000_ETHERNET_DEVICE(0x108B, 0),
++	INTEL_E1000_ETHERNET_DEVICE(0x108C, 0),
++	INTEL_E1000_ETHERNET_DEVICE(0x1096, 0),
++	INTEL_E1000_ETHERNET_DEVICE(0x1098, 0),
++	INTEL_E1000_ETHERNET_DEVICE(0x1099, 0),
++	INTEL_E1000_ETHERNET_DEVICE(0x109A, 0),
++	INTEL_E1000_ETHERNET_DEVICE(0x10A4, 0),
++	INTEL_E1000_ETHERNET_DEVICE(0x10B5, 0),
++	INTEL_E1000_ETHERNET_DEVICE(0x10B9, 0),
++	INTEL_E1000_ETHERNET_DEVICE(0x10BA, 0),
++	INTEL_E1000_ETHERNET_DEVICE(0x10BB, 0),
+ 	/* required last entry */
+ 	{0,}
+ };
+@@ -735,7 +735,14 @@
+ 	int i, err, pci_using_dac;
+ 	uint16_t eeprom_data = 0;
+ 	uint16_t eeprom_apme_mask = E1000_EEPROM_APME;
+-	if ((err = pci_enable_device(pdev)))
++	int bars;
 +
- static int __devinit pci_init(void)
- {
- 	struct pci_dev *dev = NULL;
-@@ -1023,6 +1066,8 @@
- EXPORT_SYMBOL(pci_request_regions);
- EXPORT_SYMBOL(pci_release_region);
- EXPORT_SYMBOL(pci_request_region);
-+EXPORT_SYMBOL(pci_release_selected_regions);
-+EXPORT_SYMBOL(pci_request_selected_regions);
- EXPORT_SYMBOL(pci_set_master);
- EXPORT_SYMBOL(pci_set_mwi);
- EXPORT_SYMBOL(pci_clear_mwi);
-@@ -1031,6 +1076,7 @@
- EXPORT_SYMBOL(pci_set_consistent_dma_mask);
- EXPORT_SYMBOL(pci_assign_resource);
- EXPORT_SYMBOL(pci_find_parent_resource);
-+EXPORT_SYMBOL(pci_select_bars);
++	if (ent->driver_data & E1000_USE_IOPORT)
++		bars = pci_select_bars(pdev, IORESOURCE_MEM | IORESOURCE_IO);
++	else
++		bars = pci_select_bars(pdev, IORESOURCE_MEM);
++
++	if ((err = pci_enable_device_bars(pdev, bars)))
+ 		return err;
 
- EXPORT_SYMBOL(pci_set_power_state);
- EXPORT_SYMBOL(pci_save_state);
-Index: linux-2.6.19-rc6/include/linux/pci.h
-===================================================================
---- linux-2.6.19-rc6.orig/include/linux/pci.h
-+++ linux-2.6.19-rc6/include/linux/pci.h
-@@ -514,6 +514,7 @@
- int __must_check pci_assign_resource(struct pci_dev *dev, int i);
- int __must_check pci_assign_resource_fixed(struct pci_dev *dev, int i);
- void pci_restore_bars(struct pci_dev *dev);
-+int pci_select_bars(struct pci_dev *dev, unsigned long flags);
+ 	if (!(err = pci_set_dma_mask(pdev, DMA_64BIT_MASK)) &&
+@@ -750,7 +757,8 @@
+ 		pci_using_dac = 0;
+ 	}
 
- /* ROM control related routines */
- void __iomem __must_check *pci_map_rom(struct pci_dev *pdev, size_t *size);
-@@ -542,6 +543,8 @@
- void pci_release_regions(struct pci_dev *);
- int __must_check pci_request_region(struct pci_dev *, int, const char *);
- void pci_release_region(struct pci_dev *, int);
-+int pci_request_selected_regions(struct pci_dev *, int, const char *);
-+void pci_release_selected_regions(struct pci_dev *, int);
+-	if ((err = pci_request_regions(pdev, e1000_driver_name)))
++	err = pci_request_selected_regions(pdev, bars, e1000_driver_name);
++	if (err)
+ 		goto err_pci_reg;
 
- /* drivers/pci/bus.c */
- int __must_check pci_bus_alloc_resource(struct pci_bus *bus,
+ 	pci_set_master(pdev);
+@@ -769,6 +777,7 @@
+ 	adapter->pdev = pdev;
+ 	adapter->hw.back = adapter;
+ 	adapter->msg_enable = (1 << debug) - 1;
++	adapter->bars = bars;
+
+ 	mmio_start = pci_resource_start(pdev, BAR_0);
+ 	mmio_len = pci_resource_len(pdev, BAR_0);
+@@ -778,12 +787,15 @@
+ 	if (!adapter->hw.hw_addr)
+ 		goto err_ioremap;
+
+-	for (i = BAR_1; i <= BAR_5; i++) {
+-		if (pci_resource_len(pdev, i) == 0)
+-			continue;
+-		if (pci_resource_flags(pdev, i) & IORESOURCE_IO) {
+-			adapter->hw.io_base = pci_resource_start(pdev, i);
+-			break;
++	if (ent->driver_data & E1000_USE_IOPORT) {
++		for (i = BAR_1; i <= BAR_5; i++) {
++			if (pci_resource_len(pdev, i) == 0)
++				continue;
++			if (pci_resource_flags(pdev, i) & IORESOURCE_IO) {
++				adapter->hw.io_base =
++					pci_resource_start(pdev, i);
++				break;
++			}
+ 		}
+ 	}
+
+@@ -1050,7 +1062,7 @@
+ err_ioremap:
+ 	free_netdev(netdev);
+ err_alloc_etherdev:
+-	pci_release_regions(pdev);
++	pci_release_selected_regions(pdev, bars);
+ err_pci_reg:
+ err_dma:
+ 	pci_disable_device(pdev);
+@@ -1111,7 +1123,7 @@
+ 	iounmap(adapter->hw.hw_addr);
+ 	if (adapter->hw.flash_address)
+ 		iounmap(adapter->hw.flash_address);
+-	pci_release_regions(pdev);
++	pci_release_selected_regions(pdev, adapter->bars);
+
+ 	free_netdev(netdev);
+
+@@ -4824,7 +4836,7 @@
+
+ 	pci_set_power_state(pdev, PCI_D0);
+ 	e1000_pci_restore_state(adapter);
+-	if ((err = pci_enable_device(pdev))) {
++	if ((err = pci_enable_device_bars(pdev, adapter->bars))) {
+ 		printk(KERN_ERR "e1000: Cannot enable PCI device from suspend\n");
+ 		return err;
+ 	}
 
 
 -------------------------------------------------------------------------
