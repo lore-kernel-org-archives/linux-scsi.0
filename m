@@ -1,74 +1,76 @@
-From: Stephen Hemminger <shemminger@osdl.org>
-Subject: Re: 2.6.19-rc6 : Spontaneous reboots, stack overflows - seems to
- implicate xfs, scsi, networking, SMP
-Date: Wed, 22 Nov 2006 12:01:19 -0800
-Message-ID: <20061122120119.416901c7@freekitty>
-References: <200611211027.41971.jesper.juhl@gmail.com>
-	<45637566.5020802@melbourne.sgi.com>
-	<9a8748490611211402xdc2822fqbc95a77fe54d49b1@mail.gmail.com>
-	<20061121233141.GP37654165@melbourne.sgi.com>
-	<9a8748490611211551v2ebe88fel2bcf25af004c338a@mail.gmail.com>
-	<9a8748490611220458w4d94d953v21f7a29a9f1bdb72@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: [PATCH 1/3] Add Kconfig option for asynchronous SCSI scanning
+Date: Wed, 22 Nov 2006 13:24:52 -0700
+Message-ID: <11642270941849-git-send-email-matthew@wil.cx>
+References: <11642270942262-git-send-email-matthew@wil.cx>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.25]:7849 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1756777AbWKVUB2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Nov 2006 15:01:28 -0500
-In-Reply-To: <9a8748490611220458w4d94d953v21f7a29a9f1bdb72@mail.gmail.com>
+Received: from palinux.external.hp.com ([192.25.206.14]:60589 "EHLO
+	mail.parisc-linux.org") by vger.kernel.org with ESMTP
+	id S1756899AbWKVUYz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Nov 2006 15:24:55 -0500
+In-Reply-To: <11642270942262-git-send-email-matthew@wil.cx>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jesper Juhl <jesper.juhl@gmail.com>
-Cc: David Chinner <dgc@sgi.com>, chatz@melbourne.sgi.com, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, netdev@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>
 
-On Wed, 22 Nov 2006 13:58:11 +0100
-"Jesper Juhl" <jesper.juhl@gmail.com> wrote:
+Without this patch, the user has to add a kernel command line parameter
+to get asynchronous SCSI scanning.  Now they can select the default at
+compile time and still override it at boot time if they need to.
 
-> On 22/11/06, Jesper Juhl <jesper.juhl@gmail.com> wrote:
-> > On 22/11/06, David Chinner <dgc@sgi.com> wrote:
-> > > On Tue, Nov 21, 2006 at 11:02:23PM +0100, Jesper Juhl wrote:
-> > > > On 21/11/06, David Chatterton <chatz@melbourne.sgi.com> wrote:
-> ...
-> > > > >Thanks for traces, I've captured this information.
-> > > > >
-> > > > You are welcome. If you want/need more traces then I've got ~2.1G
-> > > > worth of traces that you can have :)
-> > >
-> > > Well, we don't need that many, but it would be nice to have a
-> > > set of unique traces that lead to overflows - could you process
-> > > them in some way just to extract just the unique XFS traces that
-> > > occur?
-> > >
-> > I'll try to extract a copy of each unique trace that involves xfs,
-> > sometime tomorrow or the day after, and then send you the result.
-> >
-> 
-> Attached are two files. The one named stack_overflows.txt.gz contains
-> one instance of each unique stack overflow + trace that I've got.  The
-> other file named kernel_BUG.txt.gz contains a few BUG() messages that
-> were also in the logs.
-> 
+Signed-off-by: Matthew Wilcox <matthew@wil.cx>
+---
+ drivers/scsi/Kconfig     |   17 +++++++++++++++++
+ drivers/scsi/scsi_scan.c |    8 +++++++-
+ 2 files changed, 24 insertions(+), 1 deletions(-)
 
-You have a kind of worst case scenario there:
-	XFS + Block layer
-	TCP receive/transmit
-	VLAN
-
-It is hard to know who to blame, there is no information about stack
-level at each call. Since it doesn't show up for filesystems other than
-XFS, I would pick on that. Perhaps the following:
-
-
---- 2.6.19-rc6.orig/arch/i386/Kconfig.debug	2006-11-22 11:59:32.000000000 -0800
-+++ 2.6.19-rc6/arch/i386/Kconfig.debug	2006-11-22 12:00:28.000000000 -0800
-@@ -58,7 +58,7 @@
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 9540eb8..c312444 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -216,6 +216,23 @@ config SCSI_LOGGING
+ 	  there should be no noticeable performance impact as long as you have
+ 	  logging turned off.
  
- config 4KSTACKS
- 	bool "Use 4Kb for kernel stacks instead of 8Kb"
--	depends on DEBUG_KERNEL
-+	depends on DEBUG_KERNEL && !XFS_FS
- 	help
- 	  If you say Y here the kernel will use a 4Kb stacksize for the
- 	  kernel stack attached to each process/thread. This facilitates
++config SCSI_SCAN_ASYNC
++	bool "Asynchronous SCSI scanning"
++	depends on SCSI
++	help
++	  The SCSI subsystem can probe for devices while the rest of the
++	  system continues booting, and even probe devices on different
++	  busses in parallel, leading to a significant speed-up.
++	  If you have built SCSI as modules, enabling this option can
++	  be a problem as the devices may not have been found by the
++	  time your system expects them to have been.  You can load the
++	  scsi_wait_scan module to ensure that all scans have completed.
++	  If you build your SCSI drivers into the kernel, then everything
++	  will work fine if you say Y here.
++
++	  You can override this choice by specifying scsi_mod.scan="sync"
++	  or "async" on the kernel's command line.
++
+ menu "SCSI Transports"
+ 	depends on SCSI
+ 
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 148e24c..6855472 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -89,7 +89,13 @@ module_param_named(max_luns, max_scsi_lu
+ MODULE_PARM_DESC(max_luns,
+ 		 "last scsi LUN (should be between 1 and 2^32-1)");
+ 
+-static char scsi_scan_type[6] = "sync";
++#ifdef CONFIG_SCSI_SCAN_ASYNC
++#define SCSI_SCAN_TYPE_DEFAULT "async"
++#else
++#define SCSI_SCAN_TYPE_DEFAULT "sync"
++#endif
++
++static char scsi_scan_type[6] = SCSI_SCAN_TYPE_DEFAULT;
+ 
+ module_param_string(scan, scsi_scan_type, sizeof(scsi_scan_type), S_IRUGO);
+ MODULE_PARM_DESC(scan, "sync, async or none");
+-- 
+1.4.3.3
+
