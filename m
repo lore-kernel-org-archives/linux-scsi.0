@@ -1,58 +1,74 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: [RFC] Asynchronous scanning for FC/SAS version 3
-Date: Wed, 22 Nov 2006 11:19:08 -0800
-Message-ID: <20061122191908.GK1538@andrew-vasquezs-computer.local>
-References: <20061113152605.GZ16952@parisc-linux.org> <20061120192140.GE11420@andrew-vasquezs-computer.local> <20061120201143.GN18567@parisc-linux.org> <20061122161926.GC1538@andrew-vasquezs-computer.local> <20061122175125.GW18567@parisc-linux.org>
+From: Stephen Hemminger <shemminger@osdl.org>
+Subject: Re: 2.6.19-rc6 : Spontaneous reboots, stack overflows - seems to
+ implicate xfs, scsi, networking, SMP
+Date: Wed, 22 Nov 2006 12:01:19 -0800
+Message-ID: <20061122120119.416901c7@freekitty>
+References: <200611211027.41971.jesper.juhl@gmail.com>
+	<45637566.5020802@melbourne.sgi.com>
+	<9a8748490611211402xdc2822fqbc95a77fe54d49b1@mail.gmail.com>
+	<20061121233141.GP37654165@melbourne.sgi.com>
+	<9a8748490611211551v2ebe88fel2bcf25af004c338a@mail.gmail.com>
+	<9a8748490611220458w4d94d953v21f7a29a9f1bdb72@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:41816 "EHLO
-	avexch1.qlogic.com") by vger.kernel.org with ESMTP id S1756701AbWKVTTK
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Nov 2006 14:19:10 -0500
-Content-Disposition: inline
-In-Reply-To: <20061122175125.GW18567@parisc-linux.org>
+Received: from smtp.osdl.org ([65.172.181.25]:7849 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1756777AbWKVUB2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Nov 2006 15:01:28 -0500
+In-Reply-To: <9a8748490611220458w4d94d953v21f7a29a9f1bdb72@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org, linux-driver@qlogic.com, james.smart@emulex.com
+To: Jesper Juhl <jesper.juhl@gmail.com>
+Cc: David Chinner <dgc@sgi.com>, chatz@melbourne.sgi.com, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, netdev@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Wed, 22 Nov 2006, Matthew Wilcox wrote:
-> On Wed, Nov 22, 2006 at 08:19:26AM -0800, Andrew Vasquez wrote:
-> > +static int
-> > +qla2xxx_scan_finished(struct Scsi_Host *shost, unsigned long time)
-> > +{
-> > +       scsi_qla_host_t *ha = (scsi_qla_host_t *)shost->hostdata;
-> > +
-> > +       if (!ha->host)
-> > +               return 1;
-> > +       if (time > ha->loop_reset_delay * HZ)
-> > +               return 1;
-> > +
-> > +       return atomic_read(&ha->loop_state) == LOOP_READY;
-> > +}
-> > 
-> > is the *first* instance where the firmware/driver has attained a
-> > steady link state within the topology.  The 'found all the devices
-> > there are to find' case may or may not fall within this window...
+On Wed, 22 Nov 2006 13:58:11 +0100
+"Jesper Juhl" <jesper.juhl@gmail.com> wrote:
+
+> On 22/11/06, Jesper Juhl <jesper.juhl@gmail.com> wrote:
+> > On 22/11/06, David Chinner <dgc@sgi.com> wrote:
+> > > On Tue, Nov 21, 2006 at 11:02:23PM +0100, Jesper Juhl wrote:
+> > > > On 21/11/06, David Chatterton <chatz@melbourne.sgi.com> wrote:
+> ...
+> > > > >Thanks for traces, I've captured this information.
+> > > > >
+> > > > You are welcome. If you want/need more traces then I've got ~2.1G
+> > > > worth of traces that you can have :)
+> > >
+> > > Well, we don't need that many, but it would be nice to have a
+> > > set of unique traces that lead to overflows - could you process
+> > > them in some way just to extract just the unique XFS traces that
+> > > occur?
+> > >
+> > I'll try to extract a copy of each unique trace that involves xfs,
+> > sometime tomorrow or the day after, and then send you the result.
+> >
 > 
-> Ah, fair point, I didn't *quite* understand the distinction between the
-> various flags; can you suggest a better condition to test?
+> Attached are two files. The one named stack_overflows.txt.gz contains
+> one instance of each unique stack overflow + trace that I've got.  The
+> other file named kernel_BUG.txt.gz contains a few BUG() messages that
+> were also in the logs.
+> 
 
-I don't really think there's a 'better' condition to test for given
-there's isn't a state at which a driver:
+You have a kind of worst case scenario there:
+	XFS + Block layer
+	TCP receive/transmit
+	VLAN
 
-- knows how to define 'all devices'
-- is in control of ports beyond its single interconnect (as is
-  the case of a fabric) from the HBA to the switch port.
+It is hard to know who to blame, there is no information about stack
+level at each call. Since it doesn't show up for filesystems other than
+XFS, I would pick on that. Perhaps the following:
 
-My only point is that when the LOOP_READY state is attained for the
-first time, we'll have only discovered devices (ports) present at
-precisely that point in time -- i.e. two seconds (one second, 10
-miliseconds) later (perhaps due to some hiccup on the fabric) an RSCN
-could occur, an SNS rescan performed, and some new target-capable
-device is discovered...
 
-Anyway, just something we need to keep in mind going forward... It's
-also another reason why lun-discovery is triggered indirectly during
-an fc_remote_port_add()...
+--- 2.6.19-rc6.orig/arch/i386/Kconfig.debug	2006-11-22 11:59:32.000000000 -0800
++++ 2.6.19-rc6/arch/i386/Kconfig.debug	2006-11-22 12:00:28.000000000 -0800
+@@ -58,7 +58,7 @@
+ 
+ config 4KSTACKS
+ 	bool "Use 4Kb for kernel stacks instead of 8Kb"
+-	depends on DEBUG_KERNEL
++	depends on DEBUG_KERNEL && !XFS_FS
+ 	help
+ 	  If you say Y here the kernel will use a 4Kb stacksize for the
+ 	  kernel stack attached to each process/thread. This facilitates
