@@ -1,124 +1,47 @@
-From: Ric Wheeler <ric@emc.com>
-Subject: Re: 2007 Linux Storage & Filesystem Workshop
-Date: Wed, 22 Nov 2006 08:26:16 -0500
-Message-ID: <45644FF8.20409@emc.com>
-References: <E1GkQQv-0001ZV-8X@candygram.thunk.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH 4/5] e1000 : Make Intel e1000 driver
+	legacy I/O port free
+Date: Wed, 22 Nov 2006 06:54:23 -0700
+Message-ID: <20061122135423.GV18567@parisc-linux.org>
+References: <4564050C.70607@jp.fujitsu.com>
+	<1164185809.31358.714.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mexforward.lss.emc.com ([128.222.32.20]:56983 "EHLO
-	mexforward.lss.emc.com") by vger.kernel.org with ESMTP
-	id S1755828AbWKVN0W (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Nov 2006 08:26:22 -0500
-In-Reply-To: <E1GkQQv-0001ZV-8X@candygram.thunk.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <e1000-devel-bounces@lists.sourceforge.net>
+Content-Disposition: inline
+In-Reply-To: <1164185809.31358.714.camel@laptopd505.fenrus.org>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/e1000-devel>,
+	<mailto:e1000-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=e1000-devel>
+List-Post: <mailto:e1000-devel@lists.sourceforge.net>
+List-Help: <mailto:e1000-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/e1000-devel>,
+	<mailto:e1000-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: e1000-devel-bounces@lists.sourceforge.net
+Errors-To: e1000-devel-bounces@lists.sourceforge.net
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: Andrew Morton <akpm@osdl.org>, Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>, Grant Grundler <grundler@parisc-linux.org>, linux-scsi@vger.kernel.org, e1000-devel@lists.sourceforge.net, Greg KH <greg@kroah.com>, Linux Kernel list <linux-kernel@vger.kernel.org>, Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>, linux-pci@atrey.karlin.mff.cuni.cz
 List-Id: linux-scsi@vger.kernel.org
-To: Theodore Ts'o <tytso@mit.edu>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Linux-ide <linux-ide@vger.kernel.org>, linux-ext4@vger.kernel.org
 
+On Wed, Nov 22, 2006 at 09:56:49AM +0100, Arjan van de Ven wrote:
+> On Wed, 2006-11-22 at 17:06 +0900, Hidetoshi Seto wrote:
+> >  static struct pci_device_id e1000_pci_tbl[] = {
+> > +	INTEL_E1000_ETHERNET_DEVICE(0x1004, 0),
+> > +	INTEL_E1000_ETHERNET_DEVICE(0x1008, E1000_USE_IOPORT),
+> 
+> Hi,
+> 
+> this has the unfortunate effect that it's now a lot harder to add PCI
+> ID's to this driver at runtime via sysfs ;(
 
+It does?  Normally you get 0 passed in that field, so you'll just not
+get io ports enabled ...
 
-Theodore Ts'o wrote:
+Need to set use_driver_data to get non-0 passed in that field.
 
->The submission date for the Linux Storage and Filesystem Workshop is
->coming up quickly, and I'd encourage folks who are interested to submit
->a 2-3 paragraph position statement.  
->
->						- Ted
->  
->
-
-Just another reminder - please do send in a submission if you want to 
-attend. If you cannot send in a submission by the 24th, you can contact 
-me or someone else on the program committee and we can help.
-
-Thanks!
-
-ric
-
-
->http://www.usenix.org/events/lsf07/cfp/
->
->2007 Linux Storage & Filesystem Workshop Call for Position Statements
->
->2007 Linux Storage & Filesystem Workshop
->February 12--13, 2007
->San Jose, CA
->
->Co-located with the 5th USENIX Conference on File and Storage
->Technologies (FAST '07), which will take place February
->13--16, 2007
->
->Important Dates
->Submissions due: November 24, 2006
->Notification of acceptance: December 15, 2006
->
->Workshop Organizers
->
->Program Chair
->Ric Wheeler, EMC
->
->Program Committee
->Jens Axboe, Oracle
->James Bottomley, SteelEye
->Valerie Henson, Intel
->Andrew Morton, Google
->Trond Myklebust, Network Appliance
->Brian Pawlowski, Network Appliance
->Theodore Ts'o, IBM
->
->Overview
->
->The Linux Storage and Filesystem Workshop is a small, tightly focused,
->by-invitation workshop. It is intended to bring together developers and
->researchers interested in implementing improvements in the Linux
->filesystem and storage subsystems that can find their way into the
->mainline kernel and into Linux distributions in the 2--3-year
->timeframe. The workshop will be two days, the second day overlapping
->with FAST '07 tutorials. The workshop will be separated into storage and
->filesystem tracks, with a combined plenary session.
->
->Topics and Submissions
->
->Researchers and developers who are interested in attending should submit
->a 2--3-paragraph position statement that describes the topic or topics
->they would like to discuss during the workshop, and whether such a topic
->would suit the filesystem track, the storage track, or the plenary
->session. Examples of topics of interest include:
->
->    * New trends in storage technologies likely to impact Linux in the 
->	next 3--5 years
->    * More realistic methods of measuring filesystem and storage performance
->    * Proposed improvements to Linux filesystems, including, in particular:
->          o Handling of storage errors
->          o Filesystem repair techniques
->          o Scaling to very large (terabyte) filesystems
->    * Progress reports on implementation of features discussed at the 
->	Portland Filesystem Summit
->    * Changes to the interface between the operating system and storage devices
->    * Proposed improvements to existing Linux storage subsystems, 
->		particularly with an emphasis on:
->          o Refactoring common code out of storage subsystems and into 
->		the block layer
->          o Better robustness and error recovery
->          o Barrier implementations in the face of TCQ
->          o Making use of storage capabilities (such as block guard or 
->		non-power-of-2 block sizes) for novel filesystem and 
->		application features
->    * Progress reports on implementation of features discussed at the 
->	Vancouver Storage Summit
->    * Userspace tools for managing storage systems (including better 
->	presentation to the user via sysfs)
->    * Storage futures, including:
->          o New transports
->          o Changes to existing standards for new storage features
->          o SAS/SATA convergence
->          o Do we yet have a use for Object-Based Storage Devices (OSD)?
->-
->To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->Please read the FAQ at  http://www.tux.org/lkml/
->
->  
->
+-------------------------------------------------------------------------
+Take Surveys. Earn Cash. Influence the Future of IT
+Join SourceForge.net's Techsay panel and you'll get the chance to share your
+opinions on IT & business topics through brief surveys - and earn cash
+http://www.techsay.com/default.php?page=join.php&p=sourceforge&CID=DEVDEV
