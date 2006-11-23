@@ -1,33 +1,34 @@
 From: David Miller <davem@davemloft.net>
 Subject: Re: 2.6.19-rc6 : Spontaneous reboots, stack overflows - seems to
  implicate xfs, scsi, networking, SMP
-Date: Thu, 23 Nov 2006 11:42:47 -0800 (PST)
-Message-ID: <20061123.114247.129061695.davem@davemloft.net>
-References: <20061123011809.GY37654165@melbourne.sgi.com>
-	<20061122.201013.112290046.davem@davemloft.net>
-	<20061123070837.GV11034@melbourne.sgi.com>
+Date: Thu, 23 Nov 2006 11:54:03 -0800 (PST)
+Message-ID: <20061123.115403.84973519.davem@davemloft.net>
+References: <20061123070837.GV11034@melbourne.sgi.com>
+	<200611231416.03387.netdev@axxeo.de>
+	<1164307020.3147.3.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <20061123070837.GV11034@melbourne.sgi.com>
-Sender: netdev-owner@vger.kernel.org
-To: dgc@sgi.com
-Cc: jesper.juhl@gmail.com, chatz@melbourne.sgi.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, netdev@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:58261
+	"EHLO sunset.davemloft.net") by vger.kernel.org with ESMTP
+	id S933721AbWKWTx6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 23 Nov 2006 14:53:58 -0500
+In-Reply-To: <1164307020.3147.3.camel@laptopd505.fenrus.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: arjan@infradead.org
+Cc: netdev@axxeo.de, dgc@sgi.com, jesper.juhl@gmail.com, chatz@melbourne.sgi.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, netdev@vger.kernel.org, linux-scsi@vger.kernel.org
 
-From: David Chinner <dgc@sgi.com>
-Date: Thu, 23 Nov 2006 18:08:37 +1100
+From: Arjan van de Ven <arjan@infradead.org>
+Date: Thu, 23 Nov 2006 19:37:00 +0100
 
-> Sure, we're trying to but it takes time.  However, if it's such a
-> problem for you now and you want this process sped up, then _please,
-> please, please_ submit patches to help fix the problem.....
+> On Thu, 2006-11-23 at 14:16 +0100, Ingo Oeser wrote:
+> > Hi there,
+> > 
+> > David Chinner schrieb:
+> > > If the softirqs were run on a different stack, then a lot of these
+> 
+> softirqs DO run on their own stack!
 
-As noted in other replies, such patch submissions have been rejected
-by the XFS maintainers in the past.  So don't give the false
-impression that people aren't trying to submit patches to fix this
-problem.
-
-The problem is the XFS maintainers rejecting the layering removal
-patches.
-
+This is a platform specific assertion :-)
