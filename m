@@ -1,128 +1,139 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH 3/3] [SCSI] Make scsi_scan_host work for drivers which find their own targets
-Date: Wed, 22 Nov 2006 13:24:54 -0700
-Message-ID: <1164227094214-git-send-email-matthew@wil.cx>
-References: <11642270942262-git-send-email-matthew@wil.cx>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:61869 "EHLO
-	mail.parisc-linux.org") by vger.kernel.org with ESMTP
-	id S1756954AbWKVUYz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Nov 2006 15:24:55 -0500
-In-Reply-To: <11642270942262-git-send-email-matthew@wil.cx>
-Sender: linux-scsi-owner@vger.kernel.org
+From: David Chinner <dgc@sgi.com>
+Subject: Re: 2.6.19-rc6 : Spontaneous reboots, stack overflows - seems to implicate xfs, scsi, networking, SMP
+Date: Thu, 23 Nov 2006 12:18:09 +1100
+Message-ID: <20061123011809.GY37654165@melbourne.sgi.com>
+References: <200611211027.41971.jesper.juhl@gmail.com> <45637566.5020802@melbourne.sgi.com> <9a8748490611211402xdc2822fqbc95a77fe54d49b1@mail.gmail.com> <20061121233141.GP37654165@melbourne.sgi.com> <9a8748490611211551v2ebe88fel2bcf25af004c338a@mail.gmail.com> <9a8748490611220458w4d94d953v21f7a29a9f1bdb72@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <netdev-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <9a8748490611220458w4d94d953v21f7a29a9f1bdb72@mail.gmail.com>
+Sender: netdev-owner@vger.kernel.org
+To: Jesper Juhl <jesper.juhl@gmail.com>
+Cc: David Chinner <dgc@sgi.com>, chatz@melbourne.sgi.com, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, netdev@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi@vger.kernel.org, Matthew Wilcox <willy@rowlf.int.wil.cx>, Matthew Wilcox <matthew@wil.cx>
 
-From: Matthew Wilcox <willy@rowlf.int.wil.cx>
+On Wed, Nov 22, 2006 at 01:58:11PM +0100, Jesper Juhl wrote:
+> On 22/11/06, Jesper Juhl <jesper.juhl@gmail.com> wrote:
+> >On 22/11/06, David Chinner <dgc@sgi.com> wrote:
+> >> On Tue, Nov 21, 2006 at 11:02:23PM +0100, Jesper Juhl wrote:
+> >> > On 21/11/06, David Chatterton <chatz@melbourne.sgi.com> wrote:
+> ...
+> >> > >Thanks for traces, I've captured this information.
+> >> > >
+> >> > You are welcome. If you want/need more traces then I've got ~2.1G
+> >> > worth of traces that you can have :)
+> >>
+> >> Well, we don't need that many, but it would be nice to have a
+> >> set of unique traces that lead to overflows - could you process
+> >> them in some way just to extract just the unique XFS traces that
+> >> occur?
+> >>
+> >I'll try to extract a copy of each unique trace that involves xfs,
+> >sometime tomorrow or the day after, and then send you the result.
+> >
+> 
+> Attached are two files. The one named stack_overflows.txt.gz contains
+> one instance of each unique stack overflow + trace that I've got.  The
+> other file named kernel_BUG.txt.gz contains a few BUG() messages that
+> were also in the logs.
 
-If a driver can find its own targets, it can now fill in scan_finished and
-(optionally) scan_start in the scsi_host_template.  Then, when it calls
-scsi_scan_host(), it will be called back (from a thread if asynchronous
-discovery is enabled), first to start the scan, and then at intervals to
-check if the scan is completed.
+Thank you, Jesper. The common paths through XFS here are:
 
-Also make scsi_prep_async_scan and scsi_finish_async_scan static.
+ [<c0236eec>] generic_make_request+0x14f/0x1b7
+ [<c0236fbc>] submit_bio+0x68/0x109
+ [<c02257bc>] _xfs_buf_ioapply+0x1cf/0x28d
+ [<c02258a3>] xfs_buf_iorequest+0x29/0x6e
+ [<c02254a4>] xfs_buf_iostart+0x6d/0x97
+ [<c0224e32>] xfs_buf_read_flags+0x8a/0x8c
+ [<c021768e>] xfs_trans_read_buf+0x153/0x2fc
+ [<c01eb559>] xfs_btree_read_bufs+0x6e/0x84
+ [<c01d27d9>] xfs_alloc_lookup+0x10a/0x39e
+ [<c01d3d5c>] xfs_alloc_lookup_eq+0x14/0x17
+ [<c01ceef8>] xfs_alloc_fixup_trees+0x252/0x2a9
+ [<c01cff24>] xfs_alloc_ag_vextent_size+0x318/0x405
+ [<c01cf0e5>] xfs_alloc_ag_vextent+0xe2/0x106
+ [<c01d13a9>] xfs_alloc_vextent+0x372/0x47a
+ [<c01dfcb9>] xfs_bmap_btalloc+0x31f/0x966
+ [<c01e031e>] xfs_bmap_alloc+0x1e/0x29
+ [<c01e3b92>] xfs_bmapi+0x1134/0x1545
+ [<c0206a20>] xfs_iomap_write_allocate+0x2bb/0x509
+ [<c020576b>] xfs_iomap+0x357/0x459
+ [<c022b02f>] xfs_bmap+0x2e/0x35
+ [<c0222bbb>] xfs_map_blocks+0x3c/0x70
+ [<c0223b24>] xfs_page_state_convert+0x3cc/0x629
+ [<c0223ddd>] xfs_vm_writepage+0x5c/0xd3
+ [<c01417a4>] generic_writepages+0x1b9/0x2d5
+ [<c0223e78>] xfs_vm_writepages+0x24/0x4a
+ [<c01418ea>] do_writepages+0x2a/0x46
+ [<c0172c03>] __sync_single_inode+0x5c/0x1de
+ [<c0172e0a>] __writeback_single_inode+0x85/0x18f
+ [<c01730c7>] sync_sb_inodes+0x1b3/0x2b2
 
-Signed-off-by: Matthew Wilcox <matthew@wil.cx>
----
- drivers/scsi/scsi_scan.c |   27 ++++++++++++++++++++-------
- include/scsi/scsi_host.h |   18 ++++++++++++++++++
- 2 files changed, 38 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index a2ca2e9..5c7d65d 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -1632,7 +1632,7 @@ static void scsi_sysfs_add_devices(struc
-  * that other asynchronous scans started after this one won't affect the
-  * ordering of the discovered devices.
-  */
--struct async_scan_data *scsi_prep_async_scan(struct Scsi_Host *shost)
-+static struct async_scan_data *scsi_prep_async_scan(struct Scsi_Host *shost)
- {
- 	struct async_scan_data *data;
- 
-@@ -1676,7 +1676,7 @@ struct async_scan_data *scsi_prep_async_
-  * This function announces all the devices it has found to the rest
-  * of the system.
-  */
--void scsi_finish_async_scan(struct async_scan_data *data)
-+static void scsi_finish_async_scan(struct async_scan_data *data)
- {
- 	struct Scsi_Host *shost;
- 
-@@ -1709,12 +1709,25 @@ void scsi_finish_async_scan(struct async
- 	kfree(data);
- }
- 
--static int do_scan_async(void *_data)
-+static void do_scsi_scan_host(struct Scsi_Host *shost)
- {
--	struct async_scan_data *data = _data;
--	scsi_scan_host_selected(data->shost, SCAN_WILD_CARD, SCAN_WILD_CARD,
-+	if (shost->hostt->scan_finished) {
-+		unsigned long start = jiffies;
-+		if (shost->hostt->scan_start)
-+			shost->hostt->scan_start(shost);
-+
-+		while (!shost->hostt->scan_finished(shost, jiffies - start))
-+			msleep(10);
-+	} else {
-+		scsi_scan_host_selected(shost, SCAN_WILD_CARD, SCAN_WILD_CARD,
- 				SCAN_WILD_CARD, 0);
-+	}
-+}
- 
-+static int do_scan_async(void *_data)
-+{
-+	struct async_scan_data *data = _data;
-+	do_scsi_scan_host(data->shost);
- 	scsi_finish_async_scan(data);
- 	return 0;
- }
-@@ -1732,10 +1745,10 @@ void scsi_scan_host(struct Scsi_Host *sh
- 
- 	data = scsi_prep_async_scan(shost);
- 	if (!data) {
--		scsi_scan_host_selected(shost, SCAN_WILD_CARD, SCAN_WILD_CARD,
--					SCAN_WILD_CARD, 0);
-+		do_scsi_scan_host(shost);
- 		return;
- 	}
-+
- 	kthread_run(do_scan_async, data, "scsi_scan_%d", shost->host_no);
- }
- EXPORT_SYMBOL(scsi_scan_host);
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index ba5b3eb..20ebcea 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -241,6 +241,24 @@ struct scsi_host_template {
- 	void (* target_destroy)(struct scsi_target *);
- 
- 	/*
-+	 * If a host has the ability to discover targets on its own instead
-+	 * of scanning the entire bus, it can fill in this function and
-+	 * call scsi_scan_host().  This function will be called periodically
-+	 * until it returns 1 with the scsi_host and the elapsed time of
-+	 * the scan in jiffies.
-+	 *
-+	 * Status: OPTIONAL
-+	 */
-+	int (* scan_finished)(struct Scsi_Host *, unsigned long);
-+
-+	/*
-+	 * If the host wants to be called before the scan starts, but
-+	 * after the midlayer has set up ready for the scan, it can fill
-+	 * in this function.
-+	 */
-+	void (* scan_start)(struct Scsi_Host *);
-+
-+	/*
- 	 * fill in this function to allow the queue depth of this host
- 	 * to be changeable (on a per device basis).  returns either
- 	 * the current queue depth setting (may be different from what
+i.e. through the allocator. This is delayed allocation occurring
+here during background writeback and we are having to read a
+free space btree block while preparing enough free single blocks
+to allow btree splits to occur (on top of the extent needed
+for the delalloc write).
+
+There are several variations on this (e.g. via write throttling,
+from nfsds, inode allocation, etc) which increase the stack usage
+before we get to XFS, and the subsequent stack overflow is almost
+always during softirq processing when we are deep down in that
+stack:
+
+% grep "stack overflow" stack_overflows.txt |wc -l
+            35
+% grep __do_softirq stack_overflows.txt | wc -l
+            29
+
+So part of the problem is softirqs that use a fair bit of stack
+space running on stacks that don't have a lot of space free to
+ begin with.
+
+I've just checked on a 2.6.17 build on i386 how much stack we
+are using (from checkstack.pl with min size reported set to 32 bytes)
+here in XFS:
+
+ 32 _xfs_buf_ioapply
+<32  xfs_buf_iorequest
+<32  xfs_buf_iostart
+<32  xfs_buf_read_flags
+<32  xfs_trans_read_buf
+<32  xfs_btree_read_bufs
+ 44 xfs_alloc_lookup
+<32  xfs_alloc_lookup_eq
+<32  xfs_alloc_fixup_trees
+ 36 xfs_alloc_ag_vextent_size
+<32  xfs_alloc_ag_vextent
+ 44  xfs_alloc_vextent
+148  xfs_bmap_btalloc
+<32  xfs_bmap_alloc
+272  xfs_bmapi
+160  xfs_iomap_write_allocate
+ 68  xfs_iomap
+<32  xfs_bmap
+<32  xfs_map_blocks
+128  xfs_page_state_convert
+<32  xfs_vm_writepage
+<32  generic_writepages
+<32  xfs_vm_writepages
+
+So, assuming the stacks less than 32 bytes are 32 bytes, we've got
+1380 bytes in the XFS stack there, and very few functions where it
+can be reduced further. Still, 1380 bytes is way, way short of 4KB,
+so unless there is extra stack usage that checkstack doesn't tell us
+about I'm not sure why this amount of usage is causing repeated
+stack overflows with very little stack usage on either side of it.
+
+Can someone enlighten me as to where all the rest of the stack
+is being used up here?
+
+Cheers,
+
+Dave.
 -- 
-1.4.3.3
-
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
