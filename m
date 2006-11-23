@@ -1,39 +1,36 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: RFC: adding the SCSI hptiop driver to 2.6.16
-Date: Thu, 23 Nov 2006 03:00:29 +0100
-Message-ID: <20061123020029.GJ3557@stusta.de>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [PATCH 2/5] PCI : Move pci_fixup_device and is_enabled
+Date: Wed, 22 Nov 2006 19:34:51 -0800
+Message-ID: <20061123033451.GB15439@kroah.com>
+References: <456404EF.3090902@jp.fujitsu.com> <20061122180901.GD378@colo.lackof.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:15116 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S932679AbWKWCA0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Nov 2006 21:00:26 -0500
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755091AbWKWDlT@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20061122180901.GD378@colo.lackof.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Grant Grundler <grundler@parisc-linux.org>
+Cc: Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>, Linux Kernel list <linux-kernel@vger.kernel.org>, linux-pci@atrey.karlin.mff.cuni.cz, Andrew Morton <akpm@osdl.org>, e1000-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux@highpoint-tech.com
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
 
-I'd like to add the SCSI hptiop driver to the 2.6.16 tree.
+On Wed, Nov 22, 2006 at 11:09:01AM -0700, Grant Grundler wrote:
+> On Wed, Nov 22, 2006 at 05:06:07PM +0900, Hidetoshi Seto wrote:
+> > --- linux-2.6.19-rc6.orig/drivers/pci/pci.c
+> > +++ linux-2.6.19-rc6/drivers/pci/pci.c
+> > @@ -558,12 +558,18 @@
+> >  {
+> >  	int err;
+> > 
+> > +	if (dev->is_enabled)
+> > +		return 0;
+> 
+> This is unfortunately going to collide with the previous
+> patch posted by inaky@linux.intel.com:
+> 
+>     Subject: [patch 0/2] pci: make pci_{enable,disable}_device() be nested
 
-The backport of the driver in 2.6.18 seems to be straightforward.
+Not a problem, that's what I'm here for :)
 
-My questions are:
+thanks,
 
-Is there any reason I miss why this driver might not work in 2.6.16?
-
-I lack the hardware, and I can therefore only test the compilation.
-Would anyone who has the hardware be willing to test whether this 
-actually works?
-
-TIA
-Adrian
-
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
-
+greg k-h
