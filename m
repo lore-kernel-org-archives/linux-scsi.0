@@ -1,40 +1,50 @@
-From: Al Viro <viro@ftp.linux.org.uk>
-Subject: Re: 2.6.19-rc6 : Spontaneous reboots, stack overflows - seems to implicate xfs, scsi, networking, SMP
-Date: Thu, 23 Nov 2006 04:35:43 +0000
-Message-ID: <20061123043543.GI3078@ftp.linux.org.uk>
-References: <9a8748490611211551v2ebe88fel2bcf25af004c338a@mail.gmail.com> <9a8748490611220458w4d94d953v21f7a29a9f1bdb72@mail.gmail.com> <20061123011809.GY37654165@melbourne.sgi.com> <20061122.201013.112290046.davem@davemloft.net>
+From: "Yinghai Lu" <yinghai.lu@amd.com>
+Subject: Re: [PATCH 4/5] e1000 : Make Intel e1000 driver
+	legacy I/O port free
+Date: Wed, 22 Nov 2006 22:16:07 -0800
+Message-ID: <86802c440611222216u629835fepe2a39d4d34d9fefb@mail.gmail.com>
+References: <4564050C.70607@jp.fujitsu.com>
+	<1164185809.31358.714.camel@laptopd505.fenrus.org>
+	<20061122135423.GV18567@parisc-linux.org> <456476B0.70705@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:53220 "EHLO
-	ZenIV.linux.org.uk") by vger.kernel.org with ESMTP id S1755626AbWKWEfs
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Nov 2006 23:35:48 -0500
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <e1000-devel-bounces@lists.sourceforge.net>
+In-Reply-To: <456476B0.70705@intel.com>
 Content-Disposition: inline
-In-Reply-To: <20061122.201013.112290046.davem@davemloft.net>
-Sender: linux-scsi-owner@vger.kernel.org
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/e1000-devel>,
+	<mailto:e1000-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=e1000-devel>
+List-Post: <mailto:e1000-devel@lists.sourceforge.net>
+List-Help: <mailto:e1000-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/e1000-devel>,
+	<mailto:e1000-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: e1000-devel-bounces@lists.sourceforge.net
+Errors-To: e1000-devel-bounces@lists.sourceforge.net
+To: Auke Kok <auke-jan.h.kok@intel.com>
+Cc: Andrew Morton <akpm@osdl.org>, Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>, Grant Grundler <grundler@parisc-linux.org>, linux-scsi@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>, e1000-devel@lists.sourceforge.net, Greg KH <greg@kroah.com>, Linux Kernel list <linux-kernel@vger.kernel.org>, Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>, linux-pci@atrey.karlin.mff.cuni.cz, Arjan van de Ven <arjan@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: dgc@sgi.com, jesper.juhl@gmail.com, chatz@melbourne.sgi.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, netdev@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Wed, Nov 22, 2006 at 08:10:13PM -0800, David Miller wrote:
-> From: David Chinner <dgc@sgi.com>
-> Date: Thu, 23 Nov 2006 12:18:09 +1100
-> 
-> > So, assuming the stacks less than 32 bytes are 32 bytes, we've got
-> > 1380 bytes in the XFS stack there, 
-> 
-> On sparc64 just the XFS parts of the backtrace would be a minimum of
-> 2816 bytes (each function has a minimum 8 * 16 byte stack frame, and
-> there are about 22 calls in that trace).  It's probably a lot more
-> with local variables and such.
-> 
-> It's way too much.  You guys have to fix this stuff.
-> 
-> If TCP's full send and receive path can be done in less function
-> calls, XFS can allocate blocks in less too.
-> 
-> I would even say 10 function calls deep to allocate file blocks
-> is overkill, but 22 it just astronomically bad.
+On 11/22/06, Auke Kok <auke-jan.h.kok@intel.com> wrote:
+> I think we want to condense the USE_IOPORT flag together with the other hardware
 
-Especially since a large part is due to cxfs...
+two cases
+1. the IO port is not allocated by firmware, but
+pci_assign_unassigned_resources will get that allocated.
+2. the IO port is allocated by firmware, the bar will be retrieved by
+pcibios_resource_survey.
+
+so acctully the device already get the bar allocated in any case.
+
+So what the purpose of this patch? the /poc/ioports hide ioport for the driver?
+
+It seems need to add some pci_quirk to clear the bar for 2, and skip
+the resource allocation for 1.
+
+YH
+
+-------------------------------------------------------------------------
+Take Surveys. Earn Cash. Influence the Future of IT
+Join SourceForge.net's Techsay panel and you'll get the chance to share your
+opinions on IT & business topics through brief surveys - and earn cash
+http://www.techsay.com/default.php?page=join.php&p=sourceforge&CID=DEVDEV
