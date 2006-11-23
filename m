@@ -1,34 +1,42 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: 2.6.19-rc6 : Spontaneous reboots, stack overflows - seems to
- implicate xfs, scsi, networking, SMP
-Date: Thu, 23 Nov 2006 11:54:03 -0800 (PST)
-Message-ID: <20061123.115403.84973519.davem@davemloft.net>
-References: <20061123070837.GV11034@melbourne.sgi.com>
-	<200611231416.03387.netdev@axxeo.de>
-	<1164307020.3147.3.camel@laptopd505.fenrus.org>
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 3/5] PCI : Add selected_regions funcs
+Date: Thu, 23 Nov 2006 21:42:48 +0000
+Message-ID: <20061123214248.6251a4c0@localhost.localdomain>
+References: <456404FE.1040708@jp.fujitsu.com>
+	<200611232033.35280.ioe-lkml@rameria.de>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:58261
-	"EHLO sunset.davemloft.net") by vger.kernel.org with ESMTP
-	id S933721AbWKWTx6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 23 Nov 2006 14:53:58 -0500
-In-Reply-To: <1164307020.3147.3.camel@laptopd505.fenrus.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <e1000-devel-bounces@lists.sourceforge.net>
+In-Reply-To: <200611232033.35280.ioe-lkml@rameria.de>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/e1000-devel>,
+	<mailto:e1000-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=e1000-devel>
+List-Post: <mailto:e1000-devel@lists.sourceforge.net>
+List-Help: <mailto:e1000-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/e1000-devel>,
+	<mailto:e1000-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: e1000-devel-bounces@lists.sourceforge.net
+Errors-To: e1000-devel-bounces@lists.sourceforge.net
+To: Ingo Oeser <ioe-lkml@rameria.de>
+Cc: Andrew Morton <akpm@osdl.org>, Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>, Grant Grundler <grundler@parisc-linux.org>, linux-scsi@vger.kernel.org, e1000-devel@lists.sourceforge.net, Greg KH <greg@kroah.com>, Linux Kernel list <linux-kernel@vger.kernel.org>, Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>, linux-pci@atrey.karlin.mff.cuni.cz
 List-Id: linux-scsi@vger.kernel.org
-To: arjan@infradead.org
-Cc: netdev@axxeo.de, dgc@sgi.com, jesper.juhl@gmail.com, chatz@melbourne.sgi.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, netdev@vger.kernel.org, linux-scsi@vger.kernel.org
 
-From: Arjan van de Ven <arjan@infradead.org>
-Date: Thu, 23 Nov 2006 19:37:00 +0100
+On Thu, 23 Nov 2006 20:33:32 +0100
+Ingo Oeser <ioe-lkml@rameria.de> wrote:
 
-> On Thu, 2006-11-23 at 14:16 +0100, Ingo Oeser wrote:
-> > Hi there,
-> > 
-> > David Chinner schrieb:
-> > > If the softirqs were run on a different stack, then a lot of these
+> Hi Hidetoshi Seto,
 > 
-> softirqs DO run on their own stack!
+> bitfields (and bitmask) should be unsigned and use machine word size,
+> which is usually "long". So please pass them in "unsigned long" instead of "int".
 
-This is a platform specific assertion :-)
+There are a fixed number of BARs , besides which the interface already
+uses int for the mask in pci_enable_device_bars() so the use of int is
+fine and continues the existing API.
+
+
+-------------------------------------------------------------------------
+Take Surveys. Earn Cash. Influence the Future of IT
+Join SourceForge.net's Techsay panel and you'll get the chance to share your
+opinions on IT & business topics through brief surveys - and earn cash
+http://www.techsay.com/default.php?page=join.php&p=sourceforge&CID=DEVDEV
