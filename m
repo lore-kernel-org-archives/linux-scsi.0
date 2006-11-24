@@ -1,69 +1,50 @@
-From: Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>
-Subject: Re: [PATCH 1/5] Update Documentation/pci.txt
-Date: Fri, 24 Nov 2006 15:05:18 +0900
-Message-ID: <45668B9E.60008@jp.fujitsu.com>
-References: <456404E2.1060102@jp.fujitsu.com>
-	<20061122182804.GE378@colo.lackof.org>
-	<45663EE8.1080708@jp.fujitsu.com>
-	<20061124051217.GB8202@colo.lackof.org>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: 2.6.19-rc6 : Spontaneous reboots, stack overflows - seems to
+	implicate xfs, scsi, networking, SMP
+Date: Fri, 24 Nov 2006 08:52:38 +0100
+Message-ID: <1164354759.3147.31.camel@laptopd505.fenrus.org>
+References: <9a8748490611211551v2ebe88fel2bcf25af004c338a@mail.gmail.com>
+	 <20061122.201013.112290046.davem@davemloft.net>
+	 <20061123070837.GV11034@melbourne.sgi.com>
+	 <200611231416.03387.netdev@axxeo.de>
+	 <1164307020.3147.3.camel@laptopd505.fenrus.org>
+	 <20061124005528.GF11034@melbourne.sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <e1000-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <20061124051217.GB8202@colo.lackof.org>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/e1000-devel>,
-	<mailto:e1000-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=e1000-devel>
-List-Post: <mailto:e1000-devel@lists.sourceforge.net>
-List-Help: <mailto:e1000-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/e1000-devel>,
-	<mailto:e1000-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: e1000-devel-bounces@lists.sourceforge.net
-Errors-To: e1000-devel-bounces@lists.sourceforge.net
-To: Grant Grundler <grundler@parisc-linux.org>
-Cc: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, e1000-devel@lists.sourceforge.net, Greg KH <greg@kroah.com>, Linux Kernel list <linux-kernel@vger.kernel.org>, Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>, linux-pci@atrey.karlin.mff.cuni.cz
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <20061124005528.GF11034@melbourne.sgi.com>
+Sender: netdev-owner@vger.kernel.org
+To: David Chinner <dgc@sgi.com>
+Cc: Ingo Oeser <netdev@axxeo.de>, David Miller <davem@davemloft.net>, jesper.juhl@gmail.com, chatz@melbourne.sgi.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, netdev@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Grant Grundler wrote:
-> On Fri, Nov 24, 2006 at 09:38:00AM +0900, Hidetoshi Seto wrote:
->> Grant Grundler wrote:
->>> Hidetoshi,
->>> I have a nearly finished rewrite of Documentation/pci.txt.
->>> Can you drop this patch for now on my promise to integrate
->>> your proposed text?
->> No problem at all.
+On Fri, 2006-11-24 at 11:55 +1100, David Chinner wrote:
+> On Thu, Nov 23, 2006 at 07:37:00PM +0100, Arjan van de Ven wrote:
+> > On Thu, 2006-11-23 at 14:16 +0100, Ingo Oeser wrote:
+> > > Hi there,
+> > > 
+> > > David Chinner schrieb:
+> > > > If the softirqs were run on a different stack, then a lot of these
+> > 
+> > softirqs DO run on their own stack!
 > 
-> Thanks - I've posted pci.txt-05 on:
-> 	http://www.parisc-linux.org/~grundler/pci.txt-05
+> So they run on a separate stack for 4k stacks on x86?
 > 
-> and appended it below.
+> They don't run on a separate stack for 8k stacks on x86 -
+> Jesper's traces show that - so this may indicate an issue
+> with the methodology used to generate the stack overflow
+> traces inteh first place. i.e. if 4k stacks use a separate
+> stack, then most of the reported overflows are spurious
+> and would not normally occur on 4k stack systems..
 > 
-> pci.txt-03 is the last version I posted.
-> pci.txt-04 contains all feedback from Andi Kleen and Randi Dunlap
->            (plus a few other minor changes)
-> pci.txt-05 reverts pci_enable_device/pci_request_resource ordering to
-> 	reflect current reality. But I've added a comment to remind us
-> 	about the issue. Also added Section 10/11 from Hidetoshi-san.
-> 	A few minor other changes as well.
-> 
-> If this looks good, I'll post a diff for gregkh.
-> 
-> thanks,
-> grant
+> Can you confirm this, Arjan?
 
-Thank you very much!
-
-I confirmed few minor fixes in section 10/11.
-I ACK them.
-
-Yes, this looks good. Please take your turn, Greg.
-
-Thanks,
-H.Seto
+yes there are separate stacks for softirq and hardirq context with 4K
+stacks, but not for 8K stacks.
 
 
--------------------------------------------------------------------------
-Take Surveys. Earn Cash. Influence the Future of IT
-Join SourceForge.net's Techsay panel and you'll get the chance to share your
-opinions on IT & business topics through brief surveys - and earn cash
-http://www.techsay.com/default.php?page=join.php&p=sourceforge&CID=DEVDEV
+-- 
+if you want to mail me at work (you don't), use arjan (at) linux.intel.com
+Test the interaction between Linux and your BIOS via http://www.linuxfirmwarekit.org
+
