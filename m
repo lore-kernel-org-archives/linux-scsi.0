@@ -1,50 +1,39 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: 2.6.19-rc6 : Spontaneous reboots, stack overflows - seems to
-	implicate xfs, scsi, networking, SMP
-Date: Fri, 24 Nov 2006 08:52:38 +0100
-Message-ID: <1164354759.3147.31.camel@laptopd505.fenrus.org>
-References: <9a8748490611211551v2ebe88fel2bcf25af004c338a@mail.gmail.com>
-	 <20061122.201013.112290046.davem@davemloft.net>
-	 <20061123070837.GV11034@melbourne.sgi.com>
-	 <200611231416.03387.netdev@axxeo.de>
-	 <1164307020.3147.3.camel@laptopd505.fenrus.org>
-	 <20061124005528.GF11034@melbourne.sgi.com>
+From: djshetty <dhirajshetty.junk@mailnull.com>
+Subject: Some doubts in Persistent Reservation
+Date: Thu, 23 Nov 2006 23:55:16 -0800 (PST)
+Message-ID: <7519006.post@talk.nabble.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <20061124005528.GF11034@melbourne.sgi.com>
-Sender: netdev-owner@vger.kernel.org
-To: David Chinner <dgc@sgi.com>
-Cc: Ingo Oeser <netdev@axxeo.de>, David Miller <davem@davemloft.net>, jesper.juhl@gmail.com, chatz@melbourne.sgi.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, netdev@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from www.nabble.com ([72.21.53.35]:36063 "EHLO talk.nabble.com")
+	by vger.kernel.org with ESMTP id S1757641AbWKXHzQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Nov 2006 02:55:16 -0500
+Received: from [72.21.53.38] (helo=jubjub.nabble.com)
+	by talk.nabble.com with esmtp (Exim 4.50)
+	id 1GnVu0-0000U0-7o
+	for linux-scsi@vger.kernel.org; Thu, 23 Nov 2006 23:55:16 -0800
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
-On Fri, 2006-11-24 at 11:55 +1100, David Chinner wrote:
-> On Thu, Nov 23, 2006 at 07:37:00PM +0100, Arjan van de Ven wrote:
-> > On Thu, 2006-11-23 at 14:16 +0100, Ingo Oeser wrote:
-> > > Hi there,
-> > > 
-> > > David Chinner schrieb:
-> > > > If the softirqs were run on a different stack, then a lot of these
-> > 
-> > softirqs DO run on their own stack!
-> 
-> So they run on a separate stack for 4k stacks on x86?
-> 
-> They don't run on a separate stack for 8k stacks on x86 -
-> Jesper's traces show that - so this may indicate an issue
-> with the methodology used to generate the stack overflow
-> traces inteh first place. i.e. if 4k stacks use a separate
-> stack, then most of the reported overflows are spurious
-> and would not normally occur on 4k stack systems..
-> 
-> Can you confirm this, Arjan?
-
-yes there are separate stacks for softirq and hardirq context with 4K
-stacks, but not for 8K stacks.
+To: linux-scsi@vger.kernel.org
 
 
+Hi,
+
+I have been trying to understand PERSISTENT RESERVATION as per SCSI SPC-3
+standards. I had the following two doubts:
+   1. Is persistent reservation applied on a target port or on a particular
+LUN connected to a target port. The SCOPE of persistent reservation says
+"Entire LOGICAL UNIT", whereas the registration is done for a target PORT.
+Hence the confusion.
+   2. Is there any precise use of the PRGeneration key? I guessed it must be
+used for knowing whether any changes have been on the target (with regards
+to persistent reservation) since the previous command executed. 
+
+Regards,
+Dhiraj.
 -- 
-if you want to mail me at work (you don't), use arjan (at) linux.intel.com
-Test the interaction between Linux and your BIOS via http://www.linuxfirmwarekit.org
+View this message in context: http://www.nabble.com/Some-doubts-in-Persistent-Reservation-tf2696285.html#a7519006
+Sent from the linux-scsi mailing list archive at Nabble.com.
 
