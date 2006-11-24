@@ -1,42 +1,49 @@
-From: Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>
-Subject: Re: [PATCH 1/5] Update Documentation/pci.txt
-Date: Fri, 24 Nov 2006 09:38:00 +0900
-Message-ID: <45663EE8.1080708@jp.fujitsu.com>
-References: <456404E2.1060102@jp.fujitsu.com>
-	<20061122182804.GE378@colo.lackof.org>
+From: David Chinner <dgc@sgi.com>
+Subject: Re: 2.6.19-rc6 : Spontaneous reboots, stack overflows - seems to implicate xfs, scsi, networking, SMP
+Date: Fri, 24 Nov 2006 11:55:28 +1100
+Message-ID: <20061124005528.GF11034@melbourne.sgi.com>
+References: <9a8748490611211551v2ebe88fel2bcf25af004c338a@mail.gmail.com> <20061122.201013.112290046.davem@davemloft.net> <20061123070837.GV11034@melbourne.sgi.com> <200611231416.03387.netdev@axxeo.de> <1164307020.3147.3.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <e1000-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <20061122182804.GE378@colo.lackof.org>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/e1000-devel>,
-	<mailto:e1000-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=e1000-devel>
-List-Post: <mailto:e1000-devel@lists.sourceforge.net>
-List-Help: <mailto:e1000-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/e1000-devel>,
-	<mailto:e1000-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: e1000-devel-bounces@lists.sourceforge.net
-Errors-To: e1000-devel-bounces@lists.sourceforge.net
-To: Grant Grundler <grundler@parisc-linux.org>
-Cc: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, e1000-devel@lists.sourceforge.net, Greg KH <greg@kroah.com>, Linux Kernel list <linux-kernel@vger.kernel.org>, Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>, linux-pci@atrey.karlin.mff.cuni.cz
+Content-Type: text/plain; charset=us-ascii
+Return-path: <netdev-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1164307020.3147.3.camel@laptopd505.fenrus.org>
+Sender: netdev-owner@vger.kernel.org
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: Ingo Oeser <netdev@axxeo.de>, David Chinner <dgc@sgi.com>, David Miller <davem@davemloft.net>, jesper.juhl@gmail.com, chatz@melbourne.sgi.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, netdev@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Grant Grundler wrote:
-> Hidetoshi,
-> I have a nearly finished rewrite of Documentation/pci.txt.
-> Can you drop this patch for now on my promise to integrate
-> your proposed text?
+On Thu, Nov 23, 2006 at 07:37:00PM +0100, Arjan van de Ven wrote:
+> On Thu, 2006-11-23 at 14:16 +0100, Ingo Oeser wrote:
+> > Hi there,
+> > 
+> > David Chinner schrieb:
+> > > If the softirqs were run on a different stack, then a lot of these
+> 
+> softirqs DO run on their own stack!
 
-No problem at all.
+So they run on a separate stack for 4k stacks on x86?
 
-Thanks,
-H.Seto
+They don't run on a separate stack for 8k stacks on x86 -
+Jesper's traces show that - so this may indicate an issue
+with the methodology used to generate the stack overflow
+traces inteh first place. i.e. if 4k stacks use a separate
+stack, then most of the reported overflows are spurious
+and would not normally occur on 4k stack systems..
 
+Can you confirm this, Arjan?
 
+Also, that means that while XFS is apparently only using <1500 bytes
+of stack through this path according to the static stack checker
+tool, there's more than 2k of extra stack usage that the tool is not
+telling me about. i.e. XFS and whatever is above/below it should
+have a full 4k to work with. I'd really like to know where that
+extra stack space is being used....
 
--------------------------------------------------------------------------
-Take Surveys. Earn Cash. Influence the Future of IT
-Join SourceForge.net's Techsay panel and you'll get the chance to share your
-opinions on IT & business topics through brief surveys - and earn cash
-http://www.techsay.com/default.php?page=join.php&p=sourceforge&CID=DEVDEV
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
