@@ -1,137 +1,49 @@
-From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: [PATCH v2] libsas: Don't give scsi_cmnds to the EH if they never
- made it to the SAS LLDD or have already returned
-Date: Fri, 24 Nov 2006 22:58:48 -0800
-Message-ID: <4567E9A8.70209@us.ibm.com>
-References: <20061117210737.17052.67041.stgit@localhost.localdomain> <20061117210749.17052.56317.stgit@localhost.localdomain>
-Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH] block: call blk_rq_map_user only for commands with data  transfer
+Date: Sat, 25 Nov 2006 09:54:29 +0100
+Message-ID: <20061125085427.GH5400@kernel.dk>
+References: <200611250122.kAP1MvHi021546@r-dd.iij4u.or.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e6.ny.us.ibm.com ([32.97.182.146]:14518 "EHLO e6.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1757858AbWKYG6w (ORCPT
+Received: from brick.kernel.dk ([62.242.22.158]:47957 "EHLO kernel.dk")
+	by vger.kernel.org with ESMTP id S934217AbWKYIy0 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 25 Nov 2006 01:58:52 -0500
-In-Reply-To: <20061117210749.17052.56317.stgit@localhost.localdomain>
+	Sat, 25 Nov 2006 03:54:26 -0500
+Content-Disposition: inline
+In-Reply-To: <200611250122.kAP1MvHi021546@r-dd.iij4u.or.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Darrick J. Wong" <djwong@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Alexis Bruemmer <alexisb@us.ibm.com>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linux-scsi@vger.kernel.org
 
-On a system with many SAS targets, it appears possible that a scsi_cmnd
-can time out without ever making it to the SAS LLDD or at the same time
-that a completion is occurring.  In both of these cases, telling the
-LLDD to abort the sas_task makes no sense because the LLDD won't know
-about the sas_task; what we really want to do is to increase the timer.
-Note that this involves creating another sas_task bit to indicate
-whether or not the task has been sent to the LLDD; I could have
-implemented this by slightly redefining SAS_TASK_STATE_PENDING, but
-this way seems cleaner.
+On Sat, Nov 25 2006, FUJITA Tomonori wrote:
+> bsg_map_hdr always calls blk_rq_map_user so commands without data
+> transfer fail.
+> 
+> This is against the bsg branch in the block tree.
+> 
+> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> ---
+>  block/bsg.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/block/bsg.c b/block/bsg.c
+> index 5d23f97..65729fd 100644
+> --- a/block/bsg.c
+> +++ b/block/bsg.c
+> @@ -301,7 +301,7 @@ bsg_map_hdr(struct bsg_device *bd, int r
+>  		return ERR_PTR(ret);
+>  	}
+>  
+> -	if (!hdr->iovec_count) {
+> +	if (!hdr->iovec_count && hdr->dxfer_len) {
+>  		ret = blk_rq_map_user(q, rq, hdr->dxferp, hdr->dxfer_len);
+>  		if (ret)
+>  			goto out;
 
-This second version amends the aic94xx portion to set the
-TASK_AT_INITIATOR flag for all sas_tasks that were passed to
-lldd_execute_task.
+Good point, thanks!
 
-Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
----
+-- 
+Jens Axboe
 
- drivers/scsi/aic94xx/aic94xx_task.c |    9 +++++++++
- drivers/scsi/aic94xx/aic94xx_tmf.c  |    4 +++-
- drivers/scsi/libsas/sas_scsi_host.c |    7 +++++++
- include/scsi/libsas.h               |    1 +
- 4 files changed, 20 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/scsi/aic94xx/aic94xx_task.c b/drivers/scsi/aic94xx/aic94xx_task.c
-index d202ed5..e2ad5be 100644
---- a/drivers/scsi/aic94xx/aic94xx_task.c
-+++ b/drivers/scsi/aic94xx/aic94xx_task.c
-@@ -349,6 +349,7 @@ Again:
- 
- 	spin_lock_irqsave(&task->task_state_lock, flags);
- 	task->task_state_flags &= ~SAS_TASK_STATE_PENDING;
-+	task->task_state_flags &= ~SAS_TASK_AT_INITIATOR;
- 	task->task_state_flags |= SAS_TASK_STATE_DONE;
- 	if (unlikely((task->task_state_flags & SAS_TASK_STATE_ABORTED))) {
- 		spin_unlock_irqrestore(&task->task_state_lock, flags);
-@@ -557,6 +558,7 @@ int asd_execute_task(struct sas_task *ta
- 	struct sas_task *t = task;
- 	struct asd_ascb *ascb = NULL, *a;
- 	struct asd_ha_struct *asd_ha = task->dev->port->ha->lldd_ha;
-+	unsigned long flags;
- 
- 	res = asd_can_queue(asd_ha, num);
- 	if (res)
-@@ -599,6 +601,10 @@ int asd_execute_task(struct sas_task *ta
- 		}
- 		if (res)
- 			goto out_err_unmap;
-+
-+		spin_lock_irqsave(&t->task_state_lock, flags);
-+		t->task_state_flags |= SAS_TASK_AT_INITIATOR;
-+		spin_unlock_irqrestore(&t->task_state_lock, flags);
- 	}
- 	list_del_init(&alist);
- 
-@@ -617,6 +623,9 @@ out_err_unmap:
- 			if (a == b)
- 				break;
- 			t = a->uldd_task;
-+			spin_lock_irqsave(&t->task_state_lock, flags);
-+			t->task_state_flags &= ~SAS_TASK_AT_INITIATOR;
-+			spin_unlock_irqrestore(&t->task_state_lock, flags);
- 			switch (t->task_proto) {
- 			case SATA_PROTO:
- 			case SAS_PROTO_STP:
-diff --git a/drivers/scsi/aic94xx/aic94xx_tmf.c b/drivers/scsi/aic94xx/aic94xx_tmf.c
-index 6123438..686cea1 100644
---- a/drivers/scsi/aic94xx/aic94xx_tmf.c
-+++ b/drivers/scsi/aic94xx/aic94xx_tmf.c
-@@ -345,7 +345,7 @@ static inline int asd_clear_nexus(struct
- int asd_abort_task(struct sas_task *task)
- {
- 	struct asd_ascb *tascb = task->lldd_task;
--	struct asd_ha_struct *asd_ha = tascb->ha;
-+	struct asd_ha_struct *asd_ha;
- 	int res = 1;
- 	unsigned long flags;
- 	struct asd_ascb *ascb = NULL;
-@@ -360,6 +360,8 @@ int asd_abort_task(struct sas_task *task
- 	}
- 	spin_unlock_irqrestore(&task->task_state_lock, flags);
- 
-+	asd_ha = tascb->ha;
-+
- 	ascb = asd_ascb_alloc_list(asd_ha, &res, GFP_KERNEL);
- 	if (!ascb)
- 		return -ENOMEM;
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index e064aac..c3fc8d6 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -542,6 +542,13 @@ enum scsi_eh_timer_return sas_scsi_timed
- 			    cmd, task);
- 		return EH_HANDLED;
- 	}
-+	if (!(task->task_state_flags & SAS_TASK_AT_INITIATOR)) {
-+		spin_unlock_irqrestore(&task->task_state_lock, flags);
-+		SAS_DPRINTK("command 0x%p, task 0x%p, not at initiator: "
-+			    "EH_RESET_TIMER\n",
-+			    cmd, task);
-+		return EH_RESET_TIMER;
-+	}
- 	task->task_state_flags |= SAS_TASK_STATE_ABORTED;
- 	spin_unlock_irqrestore(&task->task_state_lock, flags);
- 
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index c4a8af1..33b72ae 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -538,6 +538,7 @@ #define SAS_TASK_STATE_PENDING      1
- #define SAS_TASK_STATE_DONE         2
- #define SAS_TASK_STATE_ABORTED      4
- #define SAS_TASK_INITIATOR_ABORTED  8
-+#define SAS_TASK_AT_INITIATOR       16
- 
- static inline struct sas_task *sas_alloc_task(gfp_t flags)
- {
