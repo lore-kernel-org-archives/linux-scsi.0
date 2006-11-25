@@ -1,49 +1,38 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] block: call blk_rq_map_user only for commands with data  transfer
-Date: Sat, 25 Nov 2006 09:54:29 +0100
-Message-ID: <20061125085427.GH5400@kernel.dk>
-References: <200611250122.kAP1MvHi021546@r-dd.iij4u.or.jp>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] scsi/initio: section mismatches with HOTPLUG=n
+Date: Sat, 25 Nov 2006 09:19:31 -0600
+Message-ID: <1164467971.2804.3.camel@mulgrave.il.steeleye.com>
+References: <20061119185343.e4dde647.randy.dunlap@oracle.com>
+	 <1164408696.2813.19.camel@mulgrave.il.steeleye.com>
+	 <1164409859.5257.7.camel@gullible>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([62.242.22.158]:47957 "EHLO kernel.dk")
-	by vger.kernel.org with ESMTP id S934217AbWKYIy0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 25 Nov 2006 03:54:26 -0500
-Content-Disposition: inline
-In-Reply-To: <200611250122.kAP1MvHi021546@r-dd.iij4u.or.jp>
+Received: from hancock.steeleye.com ([71.30.118.248]:14014 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S966629AbWKYPTn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 25 Nov 2006 10:19:43 -0500
+In-Reply-To: <1164409859.5257.7.camel@gullible>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org
+To: Ben Collins <ben.collins@ubuntu.com>
+Cc: Randy Dunlap <randy.dunlap@oracle.com>, scsi <linux-scsi@vger.kernel.org>, akpm <akpm@osdl.org>
 
-On Sat, Nov 25 2006, FUJITA Tomonori wrote:
-> bsg_map_hdr always calls blk_rq_map_user so commands without data
-> transfer fail.
+On Fri, 2006-11-24 at 18:10 -0500, Ben Collins wrote:
+> The patch went in with about half a dozen others for similar changes, so
+> it was a group set.
 > 
-> This is against the bsg branch in the block tree.
+> Sorry about the mismatches. I've only been building with HOTPLUG=y.
 > 
-> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> ---
->  block/bsg.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/block/bsg.c b/block/bsg.c
-> index 5d23f97..65729fd 100644
-> --- a/block/bsg.c
-> +++ b/block/bsg.c
-> @@ -301,7 +301,7 @@ bsg_map_hdr(struct bsg_device *bd, int r
->  		return ERR_PTR(ret);
->  	}
->  
-> -	if (!hdr->iovec_count) {
-> +	if (!hdr->iovec_count && hdr->dxfer_len) {
->  		ret = blk_rq_map_user(q, rq, hdr->dxferp, hdr->dxfer_len);
->  		if (ret)
->  			goto out;
+> I can do a patch if you want, just let me know.
 
-Good point, thanks!
+Well, I was sort of hoping you weren't just randomly introducing
+__devinitdata but had all the necessary support patches for converting
+the driver to hotplug.  However, if that's not the case, the safest
+thing to do is remove the section annotation ... I don't think anyone
+cares enough about this driver to convert it fully and test it.
 
--- 
-Jens Axboe
+James
+
 
