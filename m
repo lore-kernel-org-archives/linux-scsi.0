@@ -1,50 +1,33 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: Re: adding the SCSI hptiop driver to 2.6.16
-Date: Sun, 26 Nov 2006 04:32:22 +0100
-Message-ID: <20061126033222.GF15364@stusta.de>
-References: <20061123020029.GJ3557@stusta.de> <009c01c70eb3$719abe50$1200a8c0@gmm>
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: 2.6.19-rc6 : Spontaneous reboots, stack overflows - seems to
+ implicate xfs, scsi, networking, SMP
+Date: Sun, 26 Nov 2006 08:31:29 -0600
+Message-ID: <4569A541.3030600@sandeen.net>
+References: <9a8748490611211551v2ebe88fel2bcf25af004c338a@mail.gmail.com>	 <9a8748490611220458w4d94d953v21f7a29a9f1bdb72@mail.gmail.com>	 <20061123011809.GY37654165@melbourne.sgi.com>	 <20061122.201013.112290046.davem@davemloft.net>	 <20061123043543.GI3078@ftp.linux.org.uk> <1164269545.31358.771.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:48399 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S967254AbWKZDcT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 25 Nov 2006 22:32:19 -0500
-Content-Disposition: inline
-In-Reply-To: <009c01c70eb3$719abe50$1200a8c0@gmm>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S935418AbWKZObg@vger.kernel.org>
+In-Reply-To: <1164269545.31358.771.camel@laptopd505.fenrus.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: Al Viro <viro@ftp.linux.org.uk>, David Miller <davem@davemloft.net>, dgc@sgi.com, jesper.juhl@gmail.com, chatz@melbourne.sgi.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, netdev@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: HighPoint Linux Team <linux@highpoint-tech.com>
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
 
-On Thu, Nov 23, 2006 at 11:56:56AM +0800, HighPoint Linux Team wrote:
-> Adrian Bunk wrote:
-> > I'd like to add the SCSI hptiop driver to the 2.6.16 tree.
-> > 
-> > The backport of the driver in 2.6.18 seems to be straightforward.
-> > 
-> > My questions are:
-> > 
-> > Is there any reason I miss why this driver might not work in 2.6.16?
-> > 
-> > I lack the hardware, and I can therefore only test the compilation.
-> > Would anyone who has the hardware be willing to test whether this 
-> > actually works?
+Arjan van de Ven wrote:
+> On Thu, 2006-11-23 at 04:35 +0000, Al Viro wrote:
+>>> I would even say 10 function calls deep to allocate file blocks
+>>> is overkill, but 22 it just astronomically bad.
+>> Especially since a large part is due to cxfs...
+>> -
 > 
-> Actually, the driver was developped and tested on 2.6.16 before it
-> was submitted.
+> it's a bit sad to see XFS this crippled in linux due to an external,
+> proprietary module ;(
+> 
 
-Thanks for this information, I've added the hptiop driver to 2.6.16.
+I understand that cxfs is a bit of a whipping-boy, but the stacks in 
+question in this thread really don't have much if anything to do with 
+the filesystem layering in xfs.  They are deep callchains & large 
+functions in core xfs code, it seems.
 
-> HighPoint Linux Team
-
-cu
-Adrian
-
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
-
+-Eric
