@@ -1,42 +1,98 @@
-From: Ben Collins <ben.collins@ubuntu.com>
-Subject: Re: [PATCH] scsi/initio: section mismatches with HOTPLUG=n
-Date: Sun, 26 Nov 2006 11:02:48 -0500
-Message-ID: <1164556968.5257.188.camel@gullible>
-References: <20061119185343.e4dde647.randy.dunlap@oracle.com>
-	 <1164408696.2813.19.camel@mulgrave.il.steeleye.com>
-	 <1164409859.5257.7.camel@gullible>
-	 <1164467971.2804.3.camel@mulgrave.il.steeleye.com>
-	 <1164475196.5257.105.camel@gullible>
-	 <1164476271.2804.11.camel@mulgrave.il.steeleye.com>
+From: "roland" <devzero@web.de>
+Subject: Disable SCSI-Reservation at the driver level ?
+Date: Sun, 26 Nov 2006 17:31:26 +0100
+Message-ID: <0ca701c71178$528eb3a0$eeeea8c0@aldipc>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1;
+	format=flowed	reply-type=original
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from adelie.ubuntu.com ([82.211.81.139]:2493 "EHLO adelie.ubuntu.com")
-	by vger.kernel.org with ESMTP id S934366AbWKZQC5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 26 Nov 2006 11:02:57 -0500
-In-Reply-To: <1164476271.2804.11.camel@mulgrave.il.steeleye.com>
+Received: from fmmailgate03.web.de ([217.72.192.234]:52168 "EHLO
+	fmmailgate03.web.de") by vger.kernel.org with ESMTP id S935437AbWKZQbg
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 26 Nov 2006 11:31:36 -0500
+Received: from smtp08.web.de (fmsmtp08.dlan.cinetic.de [172.20.5.216])
+	by fmmailgate03.web.de (Postfix) with ESMTP id 7F4CD3DCE354
+	for <linux-scsi@vger.kernel.org>; Sun, 26 Nov 2006 17:29:58 +0100 (CET)
+Received: from [82.141.46.150] (helo=aldipc)
+	by smtp08.web.de with smtp (WEB.DE 4.107 #114)
+	id 1GoMtC-0000kx-00
+	for linux-scsi@vger.kernel.org; Sun, 26 Nov 2006 17:29:58 +0100
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Randy Dunlap <randy.dunlap@oracle.com>, scsi <linux-scsi@vger.kernel.org>, akpm <akpm@osdl.org>
+To: linux-scsi@vger.kernel.org
 
-On Sat, 2006-11-25 at 11:37 -0600, James Bottomley wrote:
-> On Sat, 2006-11-25 at 12:19 -0500, Ben Collins wrote:
-> > The MODULE_DEV_TABLE was added so userspace has an easier time loading
-> > a
-> > driver for the device, without special rules. It wasn't meant to make
-> > the driver hot-pluggable. I think the idea that a module alias is just
-> > for hotplug is a little short-sighted.
-> 
-> The module device table isn't the problem.  The problem is the fact that
-> you marked the table __devinitdata.  __devinitdata is a sectional
-> marking that causes the table to be placed in a discardable init data
-> section for CONFIG_HOTPLUG=n.  However, the routines accessing it still
-> occur in the standard text segment hence the mismatch.  If you want to
-> mark data __devinitdata, you have to ensure that all the routines
-> accessing it are marked __devinit.
+Hello !
 
-I know what the section is :) I wasn't aware that it was causing a
-problem with HOTPLUG=n. I'll get a patch to fix it up.
+i have a "problem" with VMWare ESX (not big one, but interesting one - =
+at=20
+least for me).
+
+If you don`t know VMware ESX - ESX is sort of it`s own operating system=
+ with=20
+Linux as a management console OS on top of a hypervisor (vmkernel), jus=
+t=20
+similar to XEN hypervisor with and attached dom0. Besides the drivers i=
+n the=20
+console OS, the vmkernel loads it=B4s own drivers, which are derived fr=
+om=20
+Linux drivers.
+
+VMWare ESX refuses to create VMFS Filesystem on SATA disk, attached to =
+a=20
+onBoard SAS controller (lsi1068).
+When i raid1 two SATA disks, it works, if i use a single SATA disk, the=
+=20
+controller seems to "expose" the disk differently to the operating syst=
+em=20
+and creation of a VMFS fails due to missing ability to issue SCSI=20
+reservation command.
+
+Ok there is no official SATA support for now, but some controllers work=
+ with=20
+SATA,  because you can either attach SAS and SATA disks to that (LSI106=
+8).=20
+=46urthermore there are SATA-controllers which can be used with the dri=
+ver of=20
+some SCSI-model (LSI Megaraid 150-4)
+
+Afaik, SCSI reservations being used/needed in shared storage environmen=
+t=20
+(SAN, Shared local attached storage), so i wonder, why it's also being =
+used=20
+on local attached disk. Only vmware may give an answer here.
+
+Maybe i can can "workaround" this somehow ?
+I couldn`t find a way to stop the vmkfstools (which is used to format=20
+blockdevice with VMFS) issueing a SCSI reservation command, but i assum=
+e=20
+this can probably be done via filtering some syscall (ioctl?) via LD_PR=
+ELOAD=20
+library - i.e. wrapping vmkfstools - or maybe i can hack this at the dr=
+iver=20
+level, since source of the ESX storage drivers is available for downloa=
+d and=20
+can be recompiled. :)
+
+if somebody like to help hacking this -  there is a thread at:
+http://www.vmware.com/community/thread.jspa?messageID=3D518182&#518182
+thread begins with some related iSCSI issues and discusses SATA issues =
+later=20
+on.
+
+regards
+Roland
+
+ps:
+yes, i know this is somhow "evil" and i shouldn`t do that, because some=
+thing=20
+could badly fail -  but it`s for private purpose, for proof of concept =
+and=20
+for personal satisfaction. :) i=B4m not going to use such hack on any=20
+production system.=20
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
