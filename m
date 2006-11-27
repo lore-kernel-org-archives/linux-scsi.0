@@ -1,43 +1,35 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Disable SCSI-Reservation at the driver level ?
-Date: Mon, 27 Nov 2006 17:18:12 +0000
-Message-ID: <20061127171812.GA9185@infradead.org>
-References: <1456266874@web.de>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: [-mm patch] make qla2x00_reg_remote_port() static
+Date: Mon, 27 Nov 2006 09:22:38 -0800
+Message-ID: <20061127172238.GA21083@andrew-vasquezs-computer.local>
+References: <20061123021703.8550e37e.akpm@osdl.org> <20061124014601.GQ3557@stusta.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:14817 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1758451AbWK0RSN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Nov 2006 12:18:13 -0500
+Received: from avexch1.qlogic.com ([198.70.193.115]:33466 "EHLO
+	avexch1.qlogic.com") by vger.kernel.org with ESMTP id S1758411AbWK0RWj
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 27 Nov 2006 12:22:39 -0500
 Content-Disposition: inline
-In-Reply-To: <1456266874@web.de>
+In-Reply-To: <20061124014601.GQ3557@stusta.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: devzero@web.de
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
+To: Adrian Bunk <bunk@stusta.de>
+Cc: Andrew Morton <akpm@osdl.org>, linux-driver@qlogic.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
 
-On Mon, Nov 27, 2006 at 10:45:42AM +0100, devzero@web.de wrote:
-> > And more.  It's in fact one of the most blatant violations of the
-> > Linux 2.4 kernel copyrights.  Don't expect support if you use such
-> > an illegal product.
+On Fri, 24 Nov 2006, Adrian Bunk wrote:
+
+> On Thu, Nov 23, 2006 at 02:17:03AM -0800, Andrew Morton wrote:
+> >...
+> > Changes since 2.6.19-rc5-mm2:
+> >...
+> >  git-scsi-misc.patch
+> >...
+> >  git trees
+> >...
 > 
-> really?
-> this is the first time i hear that ESX is an "illegal" product from the point of view of the kernel community.
-> afaik, the esx kernel (vmnix) is a completely different product and for example, the source of the linux drivers they have modified to run under ESX are made available for download, as GPL tells them to do.
+> qla2x00_reg_remote_port() can now become static.
 > 
-> what`s the problem here?
+> Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
-It's a modified linux kernel with hooks for a big binary module that takes
-over part of the control.  It's rather hard to argue that it's not a derived
-work.  Especially as they reuse various I/O subsystem of the kernel
-that has been parasited.
-
-> can you provide a link to some thread where this has been discussed?
-
-I don't think so.
-
-> something to be resolved with the help of gpl-violations.org ?
-
-I haven't found any evidence that they are using enough code that
-gpl-violations.org has the right to defend.
+Acked-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
