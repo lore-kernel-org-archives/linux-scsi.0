@@ -1,48 +1,60 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: Possible bug in scsi_lib.c:scsi_req_map_sg()
-Date: Tue, 28 Nov 2006 19:57:08 +0100
-Message-ID: <20061128185708.GE5400@kernel.dk>
-References: <456B2416.7000101@panasas.com> <456B38E9.6060209@cs.wisc.edu> <456B3C1F.4050907@cs.wisc.edu>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: Disable SCSI-Reservation at the driver level ?
+Date: Tue, 28 Nov 2006 14:23:46 -0500
+Message-ID: <456C8CC2.5000006@torque.net>
+References: <0ca701c71178$528eb3a0$eeeea8c0@aldipc> <1164563196.13612.3.camel@localhost.localdomain>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([62.242.22.158]:48159 "EHLO kernel.dk")
-	by vger.kernel.org with ESMTP id S935994AbWK1S4w (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Nov 2006 13:56:52 -0500
-Content-Disposition: inline
-In-Reply-To: <456B3C1F.4050907@cs.wisc.edu>
+Received: from pentafluge.infradead.org ([213.146.154.40]:64156 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S936050AbWK1TXw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Nov 2006 14:23:52 -0500
+In-Reply-To: <1164563196.13612.3.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>, Benny Halevy <bhalevy@panasas.com>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: roland <devzero@web.de>, linux-scsi@vger.kernel.org
 
-On Mon, Nov 27 2006, Mike Christie wrote:
-> Mike Christie wrote:
-> > Boaz Harrosh wrote:
-> >> Playing with some tests which I admit are not 100% orthodox I have
-> >> stumbled upon a bug that raises a serious question:
-> >>
-> >> In the call to scsi_execute_async() in the use_sg case, must the
-> >> scatterlist* (pointed to by buffer) map a buffer that's contiguous in
-> >> virtual memory or is it allowed to map disjoint segments of memory?
-> > 
-> > I thought they were continguous. I think James has said before that they
-> > can be disjoint. When we converted sg it did not look like sg or st
-> > supported disjoint. The main non dio path used a buffer from
-> > get_free_pages so I thought that would always be contiguous. The dio
-> > path then always set the first sg offset, but the rest it set to zero.
+James Bottomley wrote:
+> On Sun, 2006-11-26 at 17:31 +0100, roland wrote:
+>> VMWare ESX refuses to create VMFS Filesystem on SATA disk, attached to a 
+>> onBoard SAS controller (lsi1068).
+>> When i raid1 two SATA disks, it works, if i use a single SATA disk, the 
+>> controller seems to "expose" the disk differently to the operating system 
+>> and creation of a VMFS fails due to missing ability to issue SCSI 
+>> reservation command.
 > 
-> And the len is set to page size for the middle entries too.
-> 
-> But for the non DIO st path we can end up with some middle sg entires
-> that are not a full page so that code in scsi_execute_async is broken
-> for that.
+> There's no SCSI fix for this ... the SAT has no translation for the SCSI
+> reservation commands, largely because there's no corresponding ATA
+> equivalent and even for SCSI devices they may fail anyway.  The
+> application should cope with such a failure, so in this case it's the
+> application that needs fixing.
 
-If something doesn't work with non-contig sg entries, that would be a
-bug. If the question is regarding holes in the sg list, that is probably
-unchartered territory and I would not regard that as supported.
+SAT originally did have persistent reservations and it
+was dropped and is back on the agenda for SAT-2. A SAT
+layer (such as the one found in libata) can do more
+that just translate command, it may also emulate SCSI
+commands.
 
--- 
-Jens Axboe
+And PERSISTENT RESERVE IN and OUT (and maybe the older
+RESERVE and RELEASE) would be very good candidates for
+emulation. To do this however libata would need to be
+a lot more transport aware than it is now. To do such
+an emulation a SAT layer needs to know:
+  a) whether it has full control over the SATA device
+     (i.e. there is no other path to it) and failing
+     that, it has some other mechanism such as
+     affiliations in SAS with SMP available to control
+     them
+  b) the identity of the initiator (port) asking for
+     the reservation.
+
+If libata could do this it would add a lot of value
+over and above simple command translation.
+
+Doug Gilbert
+
 
