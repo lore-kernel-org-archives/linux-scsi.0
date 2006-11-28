@@ -1,60 +1,58 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: Disable SCSI-Reservation at the driver level ?
-Date: Tue, 28 Nov 2006 14:23:46 -0500
-Message-ID: <456C8CC2.5000006@torque.net>
-References: <0ca701c71178$528eb3a0$eeeea8c0@aldipc> <1164563196.13612.3.camel@localhost.localdomain>
-Reply-To: dougg@torque.net
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: Re: Fw: aic94xx breaks with SATA drives that have medium errors
+Date: Tue, 28 Nov 2006 12:06:13 -0800
+Message-ID: <456C96B5.3080301@us.ibm.com>
+References: <20061127200550.4de27bc6.akpm@osdl.org>
+Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:64156 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S936050AbWK1TXw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Nov 2006 14:23:52 -0500
-In-Reply-To: <1164563196.13612.3.camel@localhost.localdomain>
+Received: from e1.ny.us.ibm.com ([32.97.182.141]:34510 "EHLO e1.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S936086AbWK1UGS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Nov 2006 15:06:18 -0500
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e1.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id kASK6Geq013964
+	for <linux-scsi@vger.kernel.org>; Tue, 28 Nov 2006 15:06:16 -0500
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay02.pok.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id kASK6FNl120110
+	for <linux-scsi@vger.kernel.org>; Tue, 28 Nov 2006 15:06:15 -0500
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id kASK6FQS017963
+	for <linux-scsi@vger.kernel.org>; Tue, 28 Nov 2006 15:06:15 -0500
+In-Reply-To: <20061127200550.4de27bc6.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: roland <devzero@web.de>, linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org, Dan Aloni <da-x@monatomic.org>, Alexis Bruemmer <alexisb@us.ibm.com>
 
-James Bottomley wrote:
-> On Sun, 2006-11-26 at 17:31 +0100, roland wrote:
->> VMWare ESX refuses to create VMFS Filesystem on SATA disk, attached to a 
->> onBoard SAS controller (lsi1068).
->> When i raid1 two SATA disks, it works, if i use a single SATA disk, the 
->> controller seems to "expose" the disk differently to the operating system 
->> and creation of a VMFS fails due to missing ability to issue SCSI 
->> reservation command.
+> Everything works okay until I perform a read I/O to the media-error-causing
+> location. Immediately I get:
 > 
-> There's no SCSI fix for this ... the SAT has no translation for the SCSI
-> reservation commands, largely because there's no corresponding ATA
-> equivalent and even for SCSI devices they may fail anyway.  The
-> application should cope with such a failure, so in this case it's the
-> application that needs fixing.
+> aic94xx: escb_tasklet_complete: phy2: REQ_TASK_ABORT
 
-SAT originally did have persistent reservations and it
-was dropped and is back on the agenda for SAT-2. A SAT
-layer (such as the one found in libata) can do more
-that just translate command, it may also emulate SCSI
-commands.
+Interesting that you get REQ_TASK_ABORT for a media error...
 
-And PERSISTENT RESERVE IN and OUT (and maybe the older
-RESERVE and RELEASE) would be very good candidates for
-emulation. To do this however libata would need to be
-a lot more transport aware than it is now. To do such
-an emulation a SAT layer needs to know:
-  a) whether it has full control over the SATA device
-     (i.e. there is no other path to it) and failing
-     that, it has some other mechanism such as
-     affiliations in SAS with SMP available to control
-     them
-  b) the identity of the initiator (port) asking for
-     the reservation.
+> But the I/O only returns to the SCSI layer after its full designated
+> timeout, instead of returning quickly with MEDIUM_ERROR.
 
-If libata could do this it would add a lot of value
-over and above simple command translation.
+Yep.  The abort function doesn't know how to tell libata to abort the
+command.  I suppose the "proper" thing to do would be to modify
+sas_ata_task_done to check if the SAS_TASK_ABORTED or
+SAS_TASK_INITIATOR_ABORTED flags are set and send some sort of ATA error
+code back that would cause a retry.  Though, I don't see why the
+sequencer sends back REQ_TASK_ABORT--presumably the drive generates some
+media error data that could be fed to libata.
 
-Doug Gilbert
+> After that particular I/O fails, every I/O to the driver will immediately
+> return as aborted. Unloading and loading the driver reverses the problem
+> but may crash the kernel not long after printing this:
+> 
+> Nov 28 02:13:58 pro210 kernel: aic94xx: Uh-oh! Pending is not empty!
+> Nov 28 02:13:58 pro210 kernel: aic94xx: freeing from pending
 
+Yep.  Side effect of above.  I'll send you a patch later today when I
+get this sorted out.  In any case, thank you for testing out the driver! :)
 
+--D
