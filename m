@@ -1,72 +1,67 @@
-From: Bino.Sebastian@Emulex.Com
-Subject: [PATCH] Fix race condition between scsi scan and sdev block/unblock
-Date: Tue, 28 Nov 2006 16:20:28 -0500
-Message-ID: <332A49C36DB0F64198D1A011FB1AA791016058@xbl3.emulex.com>
+From: Mark Haverkamp <markh@osdl.org>
+Subject: Re: aic94xx panic on module load
+Date: Tue, 28 Nov 2006 13:46:19 -0800
+Message-ID: <1164750379.21827.26.camel@markh3.pdx.osdl.net>
+References: <1164734233.21827.8.camel@markh3.pdx.osdl.net>
+	 <456C83A2.8020507@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:2242 "EHLO emulex.emulex.com")
-	by vger.kernel.org with ESMTP id S1755314AbWK1VVd convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Nov 2006 16:21:33 -0500
-Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
-	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id kASLKTcm000825
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Nov 2006 13:20:29 -0800 (PST)
-content-class: urn:content-classes:message
+Received: from smtp.osdl.org ([65.172.181.25]:64931 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1757100AbWK1Vxt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Nov 2006 16:53:49 -0500
+In-Reply-To: <456C83A2.8020507@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: dougg@torque.net
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, djwong@us.ibm.com
 
-James,
+On Tue, 2006-11-28 at 13:44 -0500, Douglas Gilbert wrote:
 
-Our testing has encountered an error between sdev initialization/
-scanning and the sdev block/unblock behavior. What we have seen is that 
-new target detection will kick off a scan, and that an sdev will be in 
-the creation process with the state SDEV_CREATED. At this point a link 
-event occurs, which blocks the sdev, changes its state to SDEV_BLOCK, 
-and stops its request queue.  However, the creation thread is still 
-executing, and decides to transition the sdev state to SDEV_RUNNING. 
-Note that the request queue is still blocked. The sdev then gets unblocked, 
-attempting to change the state to SDEV_RUNNING, which fails as it is already 
-SDEV_RUNNING, which causes the unblock routine to bypass the call to 
-blk_start_queue().
+[ ... ]
 
-This patch modifies the creation path so that it only changes to SDEV_RUNNING
-if the state is SDEV_CREATED. This allows the block/unblock to work 
-appropriately. It does have a side effect that unblock could early-transition 
-the sdev to SDEV_RUNNING.
+> So this is an interesting expander setup within the enclosure.
+> There are two expanders (500508b300a27a2f + 500508b300a27a3f)
+> interconnected via a two wide link (0,1 <-> 10,11 (T-S)) with
+> a four wide link back to the 94xx HBA (4,5,6,7 <-> 0,1,2,3).
+> My guess is that 500508b300a27a2f:12 is virtual and contains a
+> SES target. That leaves SAS disks on 500508b300a27a3f:0,
+> 500508b300a27a3f,2 and 500508b300a27a3f,4
+> 
+> The pain starts immediately after the sas transport layer
+> tries to process those expander SMP DISCOVER responses.
+> The trace seems to suggest the device at 500508b300a27a2f:12
+> is SATA: extremely unlikely.
+> 
+> Mark, do you have a LSI MPT Fusion SAS HBA handy? If
+> so you might connect the enclosure to it, get smp_utils
+> and do something like:
+>  # modprobe mptctl
+>  # smp_discover -p 12 -s 0x500508b300a27a2f /dev/mptctl
+> 
+> and post the output.
 
--- bino 
+I'm not sure how to interpret this, but it looks like something didn't
+work right.  
 
-Signed-off-by: Bino Sebastian <bino.sebastian@emulex.com>
+After the modprobe I see this:
 
-diff -upNr a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
---- a/drivers/scsi/scsi_scan.c	2006-11-20 16:40:21.977901000 -0500
-+++ b/drivers/scsi/scsi_scan.c	2006-11-21 09:08:41.232680000 -0500
-@@ -762,7 +762,8 @@ static int scsi_add_lun(struct scsi_devi
- 
- 	/* set the device running here so that slave configure
- 	 * may do I/O */
--	scsi_device_set_state(sdev, SDEV_RUNNING);
-+	if (sdev->sdev_state == SDEV_CREATED)
-+		scsi_device_set_state(sdev, SDEV_RUNNING);
- 
- 	if (*bflags & BLIST_MS_192_BYTES_FOR_3F)
- 		sdev->use_192_bytes_for_3f = 1;
-diff -upNr a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
---- a/drivers/scsi/scsi_sysfs.c	2006-11-20 16:40:21.988903000 -0500
-+++ b/drivers/scsi/scsi_sysfs.c	2006-11-21 09:08:41.245680000 -0500
-@@ -676,7 +676,8 @@ int scsi_sysfs_add_sdev(struct scsi_devi
- {
- 	int error, i;
- 
--	if ((error = scsi_device_set_state(sdev, SDEV_RUNNING)) != 0)
-+	if ((sdev->sdev_state == SDEV_CREATED) &&
-+		((error = scsi_device_set_state(sdev, SDEV_RUNNING)) != 0))
- 		return error;
- 
- 	error = device_add(&sdev->sdev_gendev);
+Nov 28 13:42:28 odt2-003 kernel: Fusion MPT misc device (ioctl) driver 3.04.02
+Nov 28 13:42:28 odt2-003 kernel: mptctl: Registered with Fusion MPT base driver
+Nov 28 13:42:28 odt2-003 kernel: mptctl: /dev/mptctl @ (major,minor=10,220)
 
 
+Then running the smp_discover command: 
+# ./smp_discover -p 12 -s 0x500508b300a27a2f /dev/mptctl
+smp_send_req failed, res=-1
+
+gets this in the log:
+Nov 28 13:43:17 odt2-003 kernel: mptbase: ioc0: IOCStatus(0x0001): Invalid Function
+
+
+> 
+-- 
+Mark Haverkamp <markh@osdl.org>
 
