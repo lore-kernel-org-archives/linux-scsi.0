@@ -1,58 +1,72 @@
-From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: Re: Fw: aic94xx breaks with SATA drives that have medium errors
-Date: Tue, 28 Nov 2006 12:06:13 -0800
-Message-ID: <456C96B5.3080301@us.ibm.com>
-References: <20061127200550.4de27bc6.akpm@osdl.org>
-Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
+From: Bino.Sebastian@Emulex.Com
+Subject: [PATCH] Fix race condition between scsi scan and sdev block/unblock
+Date: Tue, 28 Nov 2006 16:20:28 -0500
+Message-ID: <332A49C36DB0F64198D1A011FB1AA791016058@xbl3.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:34510 "EHLO e1.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S936086AbWK1UGS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Nov 2006 15:06:18 -0500
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e1.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id kASK6Geq013964
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Nov 2006 15:06:16 -0500
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay02.pok.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id kASK6FNl120110
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Nov 2006 15:06:15 -0500
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id kASK6FQS017963
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Nov 2006 15:06:15 -0500
-In-Reply-To: <20061127200550.4de27bc6.akpm@osdl.org>
+Received: from emulex.emulex.com ([138.239.112.1]:2242 "EHLO emulex.emulex.com")
+	by vger.kernel.org with ESMTP id S1755314AbWK1VVd convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Nov 2006 16:21:33 -0500
+Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
+	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id kASLKTcm000825
+	for <linux-scsi@vger.kernel.org>; Tue, 28 Nov 2006 13:20:29 -0800 (PST)
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org, Dan Aloni <da-x@monatomic.org>, Alexis Bruemmer <alexisb@us.ibm.com>
+To: linux-scsi@vger.kernel.org
 
-> Everything works okay until I perform a read I/O to the media-error-causing
-> location. Immediately I get:
-> 
-> aic94xx: escb_tasklet_complete: phy2: REQ_TASK_ABORT
+James,
 
-Interesting that you get REQ_TASK_ABORT for a media error...
+Our testing has encountered an error between sdev initialization/
+scanning and the sdev block/unblock behavior. What we have seen is that 
+new target detection will kick off a scan, and that an sdev will be in 
+the creation process with the state SDEV_CREATED. At this point a link 
+event occurs, which blocks the sdev, changes its state to SDEV_BLOCK, 
+and stops its request queue.  However, the creation thread is still 
+executing, and decides to transition the sdev state to SDEV_RUNNING. 
+Note that the request queue is still blocked. The sdev then gets unblocked, 
+attempting to change the state to SDEV_RUNNING, which fails as it is already 
+SDEV_RUNNING, which causes the unblock routine to bypass the call to 
+blk_start_queue().
 
-> But the I/O only returns to the SCSI layer after its full designated
-> timeout, instead of returning quickly with MEDIUM_ERROR.
+This patch modifies the creation path so that it only changes to SDEV_RUNNING
+if the state is SDEV_CREATED. This allows the block/unblock to work 
+appropriately. It does have a side effect that unblock could early-transition 
+the sdev to SDEV_RUNNING.
 
-Yep.  The abort function doesn't know how to tell libata to abort the
-command.  I suppose the "proper" thing to do would be to modify
-sas_ata_task_done to check if the SAS_TASK_ABORTED or
-SAS_TASK_INITIATOR_ABORTED flags are set and send some sort of ATA error
-code back that would cause a retry.  Though, I don't see why the
-sequencer sends back REQ_TASK_ABORT--presumably the drive generates some
-media error data that could be fed to libata.
+-- bino 
 
-> After that particular I/O fails, every I/O to the driver will immediately
-> return as aborted. Unloading and loading the driver reverses the problem
-> but may crash the kernel not long after printing this:
-> 
-> Nov 28 02:13:58 pro210 kernel: aic94xx: Uh-oh! Pending is not empty!
-> Nov 28 02:13:58 pro210 kernel: aic94xx: freeing from pending
+Signed-off-by: Bino Sebastian <bino.sebastian@emulex.com>
 
-Yep.  Side effect of above.  I'll send you a patch later today when I
-get this sorted out.  In any case, thank you for testing out the driver! :)
+diff -upNr a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+--- a/drivers/scsi/scsi_scan.c	2006-11-20 16:40:21.977901000 -0500
++++ b/drivers/scsi/scsi_scan.c	2006-11-21 09:08:41.232680000 -0500
+@@ -762,7 +762,8 @@ static int scsi_add_lun(struct scsi_devi
+ 
+ 	/* set the device running here so that slave configure
+ 	 * may do I/O */
+-	scsi_device_set_state(sdev, SDEV_RUNNING);
++	if (sdev->sdev_state == SDEV_CREATED)
++		scsi_device_set_state(sdev, SDEV_RUNNING);
+ 
+ 	if (*bflags & BLIST_MS_192_BYTES_FOR_3F)
+ 		sdev->use_192_bytes_for_3f = 1;
+diff -upNr a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+--- a/drivers/scsi/scsi_sysfs.c	2006-11-20 16:40:21.988903000 -0500
++++ b/drivers/scsi/scsi_sysfs.c	2006-11-21 09:08:41.245680000 -0500
+@@ -676,7 +676,8 @@ int scsi_sysfs_add_sdev(struct scsi_devi
+ {
+ 	int error, i;
+ 
+-	if ((error = scsi_device_set_state(sdev, SDEV_RUNNING)) != 0)
++	if ((sdev->sdev_state == SDEV_CREATED) &&
++		((error = scsi_device_set_state(sdev, SDEV_RUNNING)) != 0))
+ 		return error;
+ 
+ 	error = device_add(&sdev->sdev_gendev);
 
---D
+
+
