@@ -1,45 +1,34 @@
-From: Mark Haverkamp <markh@osdl.org>
-Subject: Re: aic94xx panic on module load
-Date: Tue, 28 Nov 2006 15:17:42 -0800
-Message-ID: <1164755862.21827.28.camel@markh3.pdx.osdl.net>
-References: <1164734233.21827.8.camel@markh3.pdx.osdl.net>
-	 <456C83A2.8020507@torque.net>
-	 <1164750379.21827.26.camel@markh3.pdx.osdl.net>
+From: David Woodhouse <dwmw2@infradead.org>
+Subject: Re: [PATCH 2.6.15.4 rel.2 1/1] libata: add hotswap to sata_svw
+Date: Tue, 28 Nov 2006 23:22:19 +0000
+Message-ID: <1164756139.14595.37.camel@pmac.infradead.org>
+References: <E1F9klH-0004Fg-00@devix>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.25]:63939 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1757862AbWK1XVK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Nov 2006 18:21:10 -0500
-In-Reply-To: <1164750379.21827.26.camel@markh3.pdx.osdl.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <E1F9klH-0004Fg-00@devix>
+Sender: linux-ide-owner@vger.kernel.org
+To: Martin Devera <devik@cdi.cz>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, lkosewsk@gmail.com.jgarzik
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, djwong@us.ibm.com
 
-On Tue, 2006-11-28 at 13:46 -0800, Mark Haverkamp wrote:
-> On Tue, 2006-11-28 at 13:44 -0500, Douglas Gilbert wrote:
+On Thu, 2006-02-16 at 16:09 +0100, Martin Devera wrote:
+> From: Martin Devera <devik@cdi.cz>
 > 
-> [ ... ]
+> Add hotswap capability to Serverworks/BroadCom SATA controlers. The
+> controler has SIM register and it selects which bits in SATA_ERROR
+> register fires interrupt.
+> The solution hooks on COMWAKE (plug), PHYRDY change and 10B8B decode 
+> error (unplug) and calls into Lukasz's hotswap framework.
+> The code got one day testing on dual core Athlon64 H8SSL Supermicro 
+> MoBo with HT-1000 SATA, SMP kernel and two CaviarRE SATA HDDs in
+> hotswap bays.
 > 
+> Signed-off-by: Martin Devera <devik@cdi.cz>
 
-I don't know if this helps, but I found the verbose option.  Here is a
-little debug output.
+What became of this?
 
-
-./smp_discover -vvvvvvvvv  -p 12 -s 0x500508b300a27a2f /dev/mptctl
-    Discover request: 40 10 00 02 00 00 00 00 00 0c 00 00 00 00 00 00
-send_req_mpt: subvalue=0  SAS address=0x500508b300a27a2f
-    mptctl two scatter gather list interface
-IOCStatus=0x1
-IOCStatus=0x1 IOCLogInfo=0xA27A2F SASStatus=0x0
-smp_send_req failed, res=-1
-
-
-> 
-> > 
 -- 
-Mark Haverkamp <markh@osdl.org>
+dwmw2
 
