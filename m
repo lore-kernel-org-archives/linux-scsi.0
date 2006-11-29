@@ -1,43 +1,105 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [2.6 patch] drivers/scsi/scsi_error.c should #include "scsi_transport_api.h"
-Date: Wed, 29 Nov 2006 07:32:10 -0700
-Message-ID: <20061129143210.GX14076@parisc-linux.org>
-References: <20061129100422.GL11084@stusta.de> <20061129131624.GV14076@parisc-linux.org> <456D958F.2080305@emulex.com>
+From: Mark Haverkamp <markh@osdl.org>
+Subject: Re: aic94xx panic on module load
+Date: Wed, 29 Nov 2006 07:16:43 -0800
+Message-ID: <1164813403.32583.3.camel@markh3.pdx.osdl.net>
+References: <1164734233.21827.8.camel@markh3.pdx.osdl.net>
+	 <456C83A2.8020507@torque.net>
+	 <1164750379.21827.26.camel@markh3.pdx.osdl.net>
+	 <1164755862.21827.28.camel@markh3.pdx.osdl.net>
+	 <456CE7D9.9000704@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:23957 "EHLO
-	mail.parisc-linux.org") by vger.kernel.org with ESMTP
-	id S967345AbWK2OcL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Nov 2006 09:32:11 -0500
-Content-Disposition: inline
-In-Reply-To: <456D958F.2080305@emulex.com>
+Received: from smtp.osdl.org ([65.172.181.25]:62933 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S967407AbWK2PQu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Nov 2006 10:16:50 -0500
+In-Reply-To: <456CE7D9.9000704@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <James.Smart@Emulex.Com>
-Cc: Adrian Bunk <bunk@stusta.de>, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: dougg@torque.net
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, djwong@us.ibm.com
 
-On Wed, Nov 29, 2006 at 09:13:35AM -0500, James Smart wrote:
-> would it only go in include/scsi if it intends to be an exported
-> api for LLDD's and/or user apps ?  and stay in drivers/scsi if its
-> an internal api within the scsi subsystem itself ?
+On Tue, 2006-11-28 at 20:52 -0500, Douglas Gilbert wrote:
+> Mark Haverkamp wrote:
+> > On Tue, 2006-11-28 at 13:46 -0800, Mark Haverkamp wrote:
+> >> On Tue, 2006-11-28 at 13:44 -0500, Douglas Gilbert wrote:
+> >>
+> >> [ ... ]
+> >>
+> > 
+> > I don't know if this helps, but I found the verbose option.  Here is a
+> > little debug output.
+> > 
+> > 
+> > ./smp_discover -vvvvvvvvv  -p 12 -s 0x500508b300a27a2f /dev/mptctl
+> >     Discover request: 40 10 00 02 00 00 00 00 00 0c 00 00 00 00 00 00
+> > send_req_mpt: subvalue=0  SAS address=0x500508b300a27a2f
+> >     mptctl two scatter gather list interface
+> > IOCStatus=0x1
+> > IOCStatus=0x1 IOCLogInfo=0xA27A2F SASStatus=0x0
+> > smp_send_req failed, res=-1
+> 
+> Mark,
+> The iocnum may be greater than 0 (especially if you have
+> other MPT Fusion HBAs (any kind) in that computer).
+> Have a look in the log around where the mptsas driver
+> is registered and look for the string "ioc". The number
+> following "ioc" is what you need. If you find "ioc3" then
+> try:
+> 
+>  ./smp_discover -p 12 -s 0x500508b300a27a2f /dev/mptctl,3
 
-It isn't clear to me that's the intended use of include/scsi.  If it is,
-it's already being violated, eg by
+OK thanks, I do have an mptspi card too. 
+ 
+# ./smp_discover -vvvvvvvvv  -p 12 -s 0x500508b300a27a2f /dev/mptctl,2
+    Discover request: 40 10 00 02 00 00 00 00 00 0c 00 00 00 00 00 00
+send_req_mpt: subvalue=2  SAS address=0x500508b300a27a2f
+    mptctl two scatter gather list interface
+Discover response:
+  expander change count: 0
+  phy identifier: 12
+  attached device type: end device
+  negotiated physical link rate: phy enabled; 3 Gbps
+  attached initiator: ssp=0 stp=0 smp=0 sata_host=0
+  attached sata port selector: 0
+  attached target: ssp=0 stp=1 smp=0 sata_device=0
+  SAS address: 0x500508b300a27a2f
+  attached SAS address: 0x500508b300a27a2c
+  attached phy identifier: 0
+  attached inside ZPSDS persistent: 0
+  attached requested inside ZPSDS: 0
+  attached break_reply capable: 0
+  programmed minimum physical link rate: 3 Gbps
+  hardware minimum physical link rate: 3 Gbps
+  programmed maximum physical link rate: 3 Gbps
+  hardware maximum physical link rate: 3 Gbps
+  phy change count: 105
+  virtual phy: 1
+  partial pathway timeout value: 7 us
+  routing attribute: direct
+  connector type: No information
+  connector element index: 0
+  connector physical link: 0
 
-$ find * -type f |xargs grep scsi_host_scan_allowed
-drivers/scsi/scsi_scan.c:       if (scsi_host_scan_allowed(shost))
-drivers/scsi/scsi_scan.c:       if (scsi_host_scan_allowed(shost))
-drivers/scsi/scsi_scan.c:       if (scsi_host_scan_allowed(shost)) {
-drivers/scsi/scsi_scan.c:       if (!scsi_host_scan_allowed(shost))
-include/scsi/scsi_host.h: * scsi_host_scan_allowed - Is scanning of this
-host allowed
-include/scsi/scsi_host.h:static inline int scsi_host_scan_allowed(struct
-Scsi_Host *shost)
 
-(a good candidate to be moved to scsi_scan.c, in fact!)
+> 
+> To verify that expander SAS address, try this:
+>   find /sys -name "sas_device:expander*"
+> cd to any directory found and try "cat sas_address".
 
-scsi_host_state_name, scsi_normalize_sense, scsi_reset_provider,
-scsi_test_unit_ready, scsi_put_command are all in similar usage to
-scsi_schedule_eh.  There's probably more, I just picked some likely
-looking candidates.
+0x500508b300a27a2f
+
+> 
+> 
+> BTW there is a smp_utils version 0.92 beta at
+> http://www.torque.net/sg
+> the error messages are somewhat clearer.
+> 
+> 
+> Doug Gilbert
+> 
+-- 
+Mark Haverkamp <markh@osdl.org>
+
