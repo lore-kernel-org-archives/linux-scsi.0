@@ -1,61 +1,68 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: aic94xx panic on module load
-Date: Tue, 28 Nov 2006 20:52:25 -0500
-Message-ID: <456CE7D9.9000704@torque.net>
-References: <1164734233.21827.8.camel@markh3.pdx.osdl.net>	 <456C83A2.8020507@torque.net>	 <1164750379.21827.26.camel@markh3.pdx.osdl.net> <1164755862.21827.28.camel@markh3.pdx.osdl.net>
-Reply-To: dougg@torque.net
+From: David Chinner <dgc@sgi.com>
+Subject: Re: 2.6.19-rc6 : Spontaneous reboots, stack overflows - seems to implicate xfs, scsi, networking, SMP
+Date: Wed, 29 Nov 2006 12:56:04 +1100
+Message-ID: <20061129015604.GA33919298@melbourne.sgi.com>
+References: <200611211027.41971.jesper.juhl@gmail.com> <45637566.5020802@melbourne.sgi.com> <9a8748490611211402xdc2822fqbc95a77fe54d49b1@mail.gmail.com> <20061121233141.GP37654165@melbourne.sgi.com> <9a8748490611211551v2ebe88fel2bcf25af004c338a@mail.gmail.com> <9a8748490611220458w4d94d953v21f7a29a9f1bdb72@mail.gmail.com> <20061123011809.GY37654165@melbourne.sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:55452 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1757551AbWK2Bwj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Nov 2006 20:52:39 -0500
-In-Reply-To: <1164755862.21827.28.camel@markh3.pdx.osdl.net>
+Received: from omx2-ext.sgi.com ([192.48.171.19]:6839 "EHLO omx2.sgi.com")
+	by vger.kernel.org with ESMTP id S1757831AbWK2B4Z (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Nov 2006 20:56:25 -0500
+Content-Disposition: inline
+In-Reply-To: <20061123011809.GY37654165@melbourne.sgi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Haverkamp <markh@osdl.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, djwong@us.ibm.com
+To: David Chinner <dgc@sgi.com>
+Cc: Jesper Juhl <jesper.juhl@gmail.com>, chatz@melbourne.sgi.com, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, kaos@sgi.com
 
-Mark Haverkamp wrote:
-> On Tue, 2006-11-28 at 13:46 -0800, Mark Haverkamp wrote:
->> On Tue, 2006-11-28 at 13:44 -0500, Douglas Gilbert wrote:
->>
->> [ ... ]
->>
+On Thu, Nov 23, 2006 at 12:18:09PM +1100, David Chinner wrote:
+> On Wed, Nov 22, 2006 at 01:58:11PM +0100, Jesper Juhl wrote:
+> > 
+> > Attached are two files. The one named stack_overflows.txt.gz contains
+> > one instance of each unique stack overflow + trace that I've got.  The
+> > other file named kernel_BUG.txt.gz contains a few BUG() messages that
+> > were also in the logs.
+....
+> I've just checked on a 2.6.17 build on i386 how much stack we
+> are using (from checkstack.pl with min size reported set to 32 bytes)
+> here in XFS:
+....
+> So, assuming the stacks less than 32 bytes are 32 bytes, we've got
+> 1380 bytes in the XFS stack there, and very few functions where it
+> can be reduced further. Still, 1380 bytes is way, way short of 4KB,
+> so unless there is extra stack usage that checkstack doesn't tell us
+> about I'm not sure why this amount of usage is causing repeated
+> stack overflows with very little stack usage on either side of it.
 > 
-> I don't know if this helps, but I found the verbose option.  Here is a
-> little debug output.
-> 
-> 
-> ./smp_discover -vvvvvvvvv  -p 12 -s 0x500508b300a27a2f /dev/mptctl
->     Discover request: 40 10 00 02 00 00 00 00 00 0c 00 00 00 00 00 00
-> send_req_mpt: subvalue=0  SAS address=0x500508b300a27a2f
->     mptctl two scatter gather list interface
-> IOCStatus=0x1
-> IOCStatus=0x1 IOCLogInfo=0xA27A2F SASStatus=0x0
-> smp_send_req failed, res=-1
+> Can someone enlighten me as to where all the rest of the stack
+> is being used up here?
 
-Mark,
-The iocnum may be greater than 0 (especially if you have
-other MPT Fusion HBAs (any kind) in that computer).
-Have a look in the log around where the mptsas driver
-is registered and look for the string "ioc". The number
-following "ioc" is what you need. If you find "ioc3" then
-try:
+FYI.
 
- ./smp_discover -p 12 -s 0x500508b300a27a2f /dev/mptctl,3
+With some help from Keith Owens, we've determined that gcc 3.3.5
+resulted in XFS stack usage of about 1.9KB through the writeback and
+allocation path with another ~800 bytes of stack usage in generic
+code in this path.
 
-To verify that expander SAS address, try this:
-  find /sys -name "sas_device:expander*"
-cd to any directory found and try "cat sas_address".
+The big difference between the numbers I was getting from checkstack
+and reality was CONFIG_CC_OPTIMISE_FOR_SIZE=y being set on the
+kernels I was stack checking. IOWs, CONFIG_CC_OPTIMISE_FOR_SIZE=y
+appears to reduce XFS stack usage by at least 20% and so probably
+should be used with XFS on 4k stacks.
 
+Keith also confirmed that gcc-4.1's aggressive inlining of static
+functions substantially increases stack usage (by ~15%) through this
+call chain.  Given that many of the inlined static functions are not
+required by the critical path (i.e. they'd previously been factored
+out to reduce stack usage), gcc is effectively undoing past mods
+that had substantially reduced XFS's stack usage.
 
-BTW there is a smp_utils version 0.92 beta at
-http://www.torque.net/sg
-the error messages are somewhat clearer.
+Cheers,
 
-
-Doug Gilbert
-
+Dave.
+-- 
+Dave Chinner
+Principal Engineer
+SGI Australian Software Group
