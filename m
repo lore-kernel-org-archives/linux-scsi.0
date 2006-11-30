@@ -1,137 +1,54 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: aic94xx panic on module load
-Date: Wed, 29 Nov 2006 23:11:52 -0800 (PST)
-Message-ID: <20061130071152.21964.qmail@web31807.mail.mud.yahoo.com>
-References: <456DB5A7.40503@torque.net>
-Reply-To: ltuikov@yahoo.com
+From: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
+Subject: [PATCH] scsi: 53c7xx brackets fix
+Date: Thu, 30 Nov 2006 09:48:32 +0100
+Message-ID: <200611300948.32470.m.kozlowski@tuxland.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+  charset="iso-8859-2"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31807.mail.mud.yahoo.com ([68.142.207.70]:30898 "HELO
-	web31807.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S1758461AbWK3HLw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 30 Nov 2006 02:11:52 -0500
-In-Reply-To: <456DB5A7.40503@torque.net>
+Received: from xdsl-664.zgora.dialog.net.pl ([81.168.226.152]:32015 "EHLO
+	tuxland.pl") by vger.kernel.org with ESMTP id S1759172AbWK3ItC
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 30 Nov 2006 03:49:02 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net, Mark Haverkamp <markh@osdl.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, djwong@us.ibm.com, Eric.Moore@lsi.com
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
---- Douglas Gilbert <dougg@torque.net> wrote:
-> Mark Haverkamp wrote:
-> > On Tue, 2006-11-28 at 20:52 -0500, Douglas Gilbert wrote:
-> >> Mark Haverkamp wrote:
-> >>> On Tue, 2006-11-28 at 13:46 -0800, Mark Haverkamp wrote:
-> >>>> On Tue, 2006-11-28 at 13:44 -0500, Douglas Gilbert wrote:
-> >>>>
-> >>>> [ ... ]
-> >>>>
-> >>> I don't know if this helps, but I found the verbose option.  Here is a
-> >>> little debug output.
-> >>>
-> >>>
-> >>> ./smp_discover -vvvvvvvvv  -p 12 -s 0x500508b300a27a2f /dev/mptctl
-> >>>     Discover request: 40 10 00 02 00 00 00 00 00 0c 00 00 00 00 00 00
-> >>> send_req_mpt: subvalue=0  SAS address=0x500508b300a27a2f
-> >>>     mptctl two scatter gather list interface
-> >>> IOCStatus=0x1
-> >>> IOCStatus=0x1 IOCLogInfo=0xA27A2F SASStatus=0x0
-> >>> smp_send_req failed, res=-1
-> >> Mark,
-> >> The iocnum may be greater than 0 (especially if you have
-> >> other MPT Fusion HBAs (any kind) in that computer).
-> >> Have a look in the log around where the mptsas driver
-> >> is registered and look for the string "ioc". The number
-> >> following "ioc" is what you need. If you find "ioc3" then
-> >> try:
-> >>
-> >>  ./smp_discover -p 12 -s 0x500508b300a27a2f /dev/mptctl,3
-> > 
-> > OK thanks, I do have an mptspi card too. 
-> >  
-> > # ./smp_discover -vvvvvvvvv  -p 12 -s 0x500508b300a27a2f /dev/mptctl,2
-> >     Discover request: 40 10 00 02 00 00 00 00 00 0c 00 00 00 00 00 00
-> > send_req_mpt: subvalue=2  SAS address=0x500508b300a27a2f
-> >     mptctl two scatter gather list interface
-> > Discover response:
-> >   expander change count: 0
-> >   phy identifier: 12
-> >   attached device type: end device
-> >   negotiated physical link rate: phy enabled; 3 Gbps
->                ^^^^^^^^
-> A "heads up" here. the "physical" has now be changed
-> to "logical" in SAS-2. The idea is that up to 4
-> logical 1.5 Gbps links (e.g. to SATA disks) can be
-> multiplexed on one 6 Gbps physical link.
-> 
-> >   attached initiator: ssp=0 stp=0 smp=0 sata_host=0
-> >   attached sata port selector: 0
-> >   attached target: ssp=0 stp=1 smp=0 sata_device=0
-> >   SAS address: 0x500508b300a27a2f
-> >   attached SAS address: 0x500508b300a27a2c
-> >   attached phy identifier: 0
-> >   attached inside ZPSDS persistent: 0
-> >   attached requested inside ZPSDS: 0
-> >   attached break_reply capable: 0
-> >   programmed minimum physical link rate: 3 Gbps
-> >   hardware minimum physical link rate: 3 Gbps
-> >   programmed maximum physical link rate: 3 Gbps
-> >   hardware maximum physical link rate: 3 Gbps
-> >   phy change count: 105
-> >   virtual phy: 1
-> >   partial pathway timeout value: 7 us
-> >   routing attribute: direct
-> >   connector type: No information
-> >   connector element index: 0
-> >   connector physical link: 0
-> 
-> Mark,
-> Finally ...
-> So the above is somewhat strange as it indicates a STP target but
-> not a SATA device. The phy is also flagged as virtual which means
-> that target port is within the expander.
-> 
-> So my guess is that the mptsas driver (or firmware) skips that
-> device while the aic94xx driver tries to set it up as a SATA
-> target and falls off the rails (naturally it shouldn't oops).
-> 
-> Hopefully Luben chips in here with what should happen ...
+Hello,
 
-I see a problematic expander: SAS phy reset sequence occured,
-but STP is set to 1, on top of this the phy is indicated
-to be virtual.
+	This patch fixes brackets in two places.
 
-What is the intention here?  A testing bed for sending and
-receiving SATA frames?
+Signed-off-by: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
 
-It is not inconceivable that someone would do this, although
-I wouldn't recommend it for production systems.
+ drivers/scsi/53c7xx.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-     Luben
+--- linux-2.6.19-rc6-mm2-a/drivers/scsi/53c7xx.c	2006-11-16 05:03:40.000000000 +0100
++++ linux-2.6.19-rc6-mm2-b/drivers/scsi/53c7xx.c	2006-11-29 15:50:54.000000000 +0100
+@@ -4400,7 +4400,7 @@ abort_connected (struct Scsi_Host *host)
+  * account the current synchronous offset) 
+  */
+ 
+-    sstat = (NCR53c8x0_read8 (SSTAT2_REG);
++    sstat = NCR53c8x0_read8 (SSTAT2_REG);
+     offset = OFFSET (sstat & SSTAT2_FF_MASK) >> SSTAT2_FF_SHIFT;
+     phase = sstat & SSTAT2_PHASE_MASK;
+ 
+@@ -5423,7 +5423,7 @@ insn_to_offset (Scsi_Cmnd *cmd, u32 *ins
+     	    	     --buffers, offset += segment->length, ++segment)
+ #if 0
+ 		    printk("scsi%d: comparing 0x%p to 0x%p\n", 
+-			cmd->device->host->host_no, saved, page_address(segment->page+segment->offset);
++			cmd->device->host->host_no, saved, page_address(segment->page+segment->offset));
+ #else
+ 		    ;
+ #endif
 
-> >> To verify that expander SAS address, try this:
-> >>   find /sys -name "sas_device:expander*"
-> >> cd to any directory found and try "cat sas_address".
-> > 
-> > 0x500508b300a27a2f
-> > 
-> >>
-> >> BTW there is a smp_utils version 0.92 beta at
-> >> http://www.torque.net/sg
-> >> the error messages are somewhat clearer.
-> 
-> Eric Moore pointed out to me that the ioc_num can also be
-> found in /proc/scsi/mptsas/<host_no> and
-> /sys/class/scsi_host/host<n>/unique_id
-> so I have updated the smp_utils documentation.
-> 
-> 
-> So this is an instructive case of using one manufacturer's
-> HBA and driver to debug a driver for another manufacturer's
-> HBA.
-> 
-> Doug Gilbert
-> 
-> 
 
+-- 
+Regards,
+
+	Mariusz Kozlowski
