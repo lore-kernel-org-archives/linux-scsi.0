@@ -1,69 +1,31 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: [PATCH 8/8] scsi tgt: IBM eServer i/pSeries virtual SCSI
- target driver
-Date: Fri, 01 Dec 2006 02:06:24 +0900
-Message-ID: <20061201020624Q.fujita.tomonori@lab.ntt.co.jp>
+	target driver
+Date: Thu, 30 Nov 2006 12:23:19 -0500
+Message-ID: <1164907399.22826.25.camel@mulgrave.il.steeleye.com>
 References: <20061116192426Y.fujita.tomonori@lab.ntt.co.jp>
-	<20061128233117S.fujita.tomonori@lab.ntt.co.jp>
-	<456EFAFB.4050206@us.ibm.com>
+	 <20061128233117S.fujita.tomonori@lab.ntt.co.jp>
+	 <456EFAFB.4050206@us.ibm.com>
+	 <20061201020624Q.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:145 "EHLO
-	tama5.ecl.ntt.co.jp") by vger.kernel.org with ESMTP
-	id S1030736AbWK3RGY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 30 Nov 2006 12:06:24 -0500
-In-Reply-To: <456EFAFB.4050206@us.ibm.com>
+Received: from hancock.steeleye.com ([71.30.118.248]:52632 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1030845AbWK3RYe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 30 Nov 2006 12:24:34 -0500
+In-Reply-To: <20061201020624Q.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: santil@us.ibm.com, James.Bottomley@SteelEye.com
-Cc: fujita.tomonori@lab.ntt.co.jp, boutcher@cs.umn.edu, linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: santil@us.ibm.com, boutcher@cs.umn.edu, linux-scsi@vger.kernel.org
 
-From: Santiago Leon <santil@us.ibm.com>
-Subject: Re: [PATCH 8/8] scsi tgt: IBM eServer i/pSeries virtual SCSI target driver
-Date: Thu, 30 Nov 2006 09:38:35 -0600
+On Fri, 2006-12-01 at 02:06 +0900, FUJITA Tomonori wrote:
+> James, would you like me to submit an updated version of the patch?
 
-> FUJITA Tomonori wrote:
-> > Hi ibmvscsi team,
-> > 
-> > Can I get your ACK on this patch to get it merged into the scsi-misc?
-> 
-> No problem, Ive been playing with it for a while now.
+Yes please, just so we know what everyone agrees to.
 
-Great!
+James
 
 
-> Just one tiny thing, Dave Boutcher has changed jobs within IBM, so
-> please put me in the MODULE_AUTHOR() call.
-
-Sure.
-
-James, would you like me to submit an updated version of the patch?
-
-
-> > From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > Subject: [PATCH 8/8] scsi tgt: IBM eServer i/pSeries virtual SCSI target driver
-> > Date: Thu, 16 Nov 2006 19:24:26 +0900
-> > 
-> >> This is IBM Virtual SCSI target driver for tgt. The driver is based on
-> >> the original ibmvscsis driver:
-> >>
-> >> http://lkml.org/lkml/2005/10/17/99
-> >>
-> >>
-> >> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> >> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
-> >> Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
-> 
-> Signed-off-by: Santiago Leon <santil@us.ibm.com>
-> 
-> -- 
-> Santiago A. Leon
-> Power Linux Development
-> IBM Linux Technology Center
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
