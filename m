@@ -1,83 +1,137 @@
 From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: [PATCH] [SCSI] Fix sense key MEDIUM ERROR processing and retry
-Date: Wed, 29 Nov 2006 19:45:23 -0800 (PST)
-Message-ID: <893942.63415.qm@web31804.mail.mud.yahoo.com>
+Subject: Re: aic94xx panic on module load
+Date: Wed, 29 Nov 2006 23:11:52 -0800 (PST)
+Message-ID: <20061130071152.21964.qmail@web31807.mail.mud.yahoo.com>
+References: <456DB5A7.40503@torque.net>
 Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="0-1842587125-1164858323=:63415"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31804.mail.mud.yahoo.com ([68.142.207.67]:12152 "HELO
-	web31804.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S967827AbWK3DpY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Nov 2006 22:45:24 -0500
+Received: from web31807.mail.mud.yahoo.com ([68.142.207.70]:30898 "HELO
+	web31807.mail.mud.yahoo.com") by vger.kernel.org with SMTP
+	id S1758461AbWK3HLw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 30 Nov 2006 02:11:52 -0500
+In-Reply-To: <456DB5A7.40503@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: dougg@torque.net, Mark Haverkamp <markh@osdl.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, djwong@us.ibm.com, Eric.Moore@lsi.com
 
---0-1842587125-1164858323=:63415
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Content-Id: 
-Content-Disposition: inline
+--- Douglas Gilbert <dougg@torque.net> wrote:
+> Mark Haverkamp wrote:
+> > On Tue, 2006-11-28 at 20:52 -0500, Douglas Gilbert wrote:
+> >> Mark Haverkamp wrote:
+> >>> On Tue, 2006-11-28 at 13:46 -0800, Mark Haverkamp wrote:
+> >>>> On Tue, 2006-11-28 at 13:44 -0500, Douglas Gilbert wrote:
+> >>>>
+> >>>> [ ... ]
+> >>>>
+> >>> I don't know if this helps, but I found the verbose option.  Here is a
+> >>> little debug output.
+> >>>
+> >>>
+> >>> ./smp_discover -vvvvvvvvv  -p 12 -s 0x500508b300a27a2f /dev/mptctl
+> >>>     Discover request: 40 10 00 02 00 00 00 00 00 0c 00 00 00 00 00 00
+> >>> send_req_mpt: subvalue=0  SAS address=0x500508b300a27a2f
+> >>>     mptctl two scatter gather list interface
+> >>> IOCStatus=0x1
+> >>> IOCStatus=0x1 IOCLogInfo=0xA27A2F SASStatus=0x0
+> >>> smp_send_req failed, res=-1
+> >> Mark,
+> >> The iocnum may be greater than 0 (especially if you have
+> >> other MPT Fusion HBAs (any kind) in that computer).
+> >> Have a look in the log around where the mptsas driver
+> >> is registered and look for the string "ioc". The number
+> >> following "ioc" is what you need. If you find "ioc3" then
+> >> try:
+> >>
+> >>  ./smp_discover -p 12 -s 0x500508b300a27a2f /dev/mptctl,3
+> > 
+> > OK thanks, I do have an mptspi card too. 
+> >  
+> > # ./smp_discover -vvvvvvvvv  -p 12 -s 0x500508b300a27a2f /dev/mptctl,2
+> >     Discover request: 40 10 00 02 00 00 00 00 00 0c 00 00 00 00 00 00
+> > send_req_mpt: subvalue=2  SAS address=0x500508b300a27a2f
+> >     mptctl two scatter gather list interface
+> > Discover response:
+> >   expander change count: 0
+> >   phy identifier: 12
+> >   attached device type: end device
+> >   negotiated physical link rate: phy enabled; 3 Gbps
+>                ^^^^^^^^
+> A "heads up" here. the "physical" has now be changed
+> to "logical" in SAS-2. The idea is that up to 4
+> logical 1.5 Gbps links (e.g. to SATA disks) can be
+> multiplexed on one 6 Gbps physical link.
+> 
+> >   attached initiator: ssp=0 stp=0 smp=0 sata_host=0
+> >   attached sata port selector: 0
+> >   attached target: ssp=0 stp=1 smp=0 sata_device=0
+> >   SAS address: 0x500508b300a27a2f
+> >   attached SAS address: 0x500508b300a27a2c
+> >   attached phy identifier: 0
+> >   attached inside ZPSDS persistent: 0
+> >   attached requested inside ZPSDS: 0
+> >   attached break_reply capable: 0
+> >   programmed minimum physical link rate: 3 Gbps
+> >   hardware minimum physical link rate: 3 Gbps
+> >   programmed maximum physical link rate: 3 Gbps
+> >   hardware maximum physical link rate: 3 Gbps
+> >   phy change count: 105
+> >   virtual phy: 1
+> >   partial pathway timeout value: 7 us
+> >   routing attribute: direct
+> >   connector type: No information
+> >   connector element index: 0
+> >   connector physical link: 0
+> 
+> Mark,
+> Finally ...
+> So the above is somewhat strange as it indicates a STP target but
+> not a SATA device. The phy is also flagged as virtual which means
+> that target port is within the expander.
+> 
+> So my guess is that the mptsas driver (or firmware) skips that
+> device while the aic94xx driver tries to set it up as a SATA
+> target and falls off the rails (naturally it shouldn't oops).
+> 
+> Hopefully Luben chips in here with what should happen ...
 
-1) If the device reports an uncorrectable MEDIUM ERROR, such
-as SK MEDIUM ERROR, ASC UNRECOVERED READ ERR, AMNF DATA
-FIELD or RECORD NOT FOUND, then: In scsi_check_sense()
-return SUCCESS so as to not retry -- the error is
-uncorrectable -- this speeds up total processing time.
+I see a problematic expander: SAS phy reset sequence occured,
+but STP is set to 1, on top of this the phy is indicated
+to be virtual.
 
-2) In scsi_io_completion(), retry if and only if there was
-at least one byte completed, i.e. good_bytes != 0.  If
-good_bytes == 0, don't try to retry.
+What is the intention here?  A testing bed for sending and
+receiving SATA frames?
 
-Without this patch, SCSI Core gets hung reading sector 0
-forever, for example when reading the partition table of a
-(newly discovered) device.
+It is not inconceivable that someone would do this, although
+I wouldn't recommend it for production systems.
 
-Signed-off-by: Luben Tuikov <ltuikov@yahoo.com>
----
- drivers/scsi/scsi_error.c |    5 +++++
- drivers/scsi/scsi_lib.c   |    3 ++-
- 2 files changed, 7 insertions(+), 1 deletions(-)
+     Luben
 
---0-1842587125-1164858323=:63415
-Content-Type: text/plain; name="p1.txt"
-Content-Description: 1207600725-p1.txt
-Content-Disposition: inline; filename="p1.txt"
+> >> To verify that expander SAS address, try this:
+> >>   find /sys -name "sas_device:expander*"
+> >> cd to any directory found and try "cat sas_address".
+> > 
+> > 0x500508b300a27a2f
+> > 
+> >>
+> >> BTW there is a smp_utils version 0.92 beta at
+> >> http://www.torque.net/sg
+> >> the error messages are somewhat clearer.
+> 
+> Eric Moore pointed out to me that the ioc_num can also be
+> found in /proc/scsi/mptsas/<host_no> and
+> /sys/class/scsi_host/host<n>/unique_id
+> so I have updated the smp_utils documentation.
+> 
+> 
+> So this is an instructive case of using one manufacturer's
+> HBA and driver to debug a driver for another manufacturer's
+> HBA.
+> 
+> Doug Gilbert
+> 
+> 
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index aff1b0c..011dd32 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -359,6 +359,11 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
- 		return SUCCESS;
- 
- 	case MEDIUM_ERROR:
-+		if (sshdr.asc == 0x11 || /* UNRECOVERED READ ERR */
-+		    sshdr.asc == 0x13 || /* AMNF DATA FIELD */
-+		    sshdr.asc == 0x14) { /* RECORD NOT FOUND */
-+			return SUCCESS;
-+		}
- 		return NEEDS_RETRY;
- 
- 	case HARDWARE_ERROR:
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 8b208b4..c5fa329 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -866,7 +866,8 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
- 	 * are leftovers and there is some kind of error
- 	 * (result != 0), retry the rest.
- 	 */
--	if (scsi_end_request(cmd, 1, good_bytes, !!result) == NULL)
-+	if (good_bytes &&
-+	    scsi_end_request(cmd, 1, good_bytes, !!result) == NULL)
- 		return;
- 
- 	/* good_bytes = 0, or (inclusive) there were leftovers and
--- 
-1.4.4.1.g7a0e
-
-
---0-1842587125-1164858323=:63415--
