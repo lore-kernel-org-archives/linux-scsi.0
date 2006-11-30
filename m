@@ -1,76 +1,41 @@
-From: Frederic TEMPORELLI <frederic.temporelli@ext.bull.net>
-Subject: aic79xx - wrong max memory at driver init
-Date: Thu, 30 Nov 2006 12:07:47 +0100
-Message-ID: <456EBB83.9010300@ext.bull.net>
+From: "Kit Gerrits" <kit@gerritsaa.nl>
+Subject: SCSI Rescan question
+Date: Thu, 30 Nov 2006 12:21:02 +0100
+Message-ID: <000001c71471$9fe34480$4c4b3291@kagtqp>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------090204000606060008050409"
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ecfrec.frec.bull.fr ([129.183.4.8]:12772 "EHLO
-	ecfrec.frec.bull.fr") by vger.kernel.org with ESMTP id S933585AbWK3LH6
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 30 Nov 2006 06:07:58 -0500
+Received: from smtp-out0.tiscali.nl ([195.241.79.175]:55200 "EHLO
+	smtp-out0.tiscali.nl") by vger.kernel.org with ESMTP
+	id S1759243AbWK3LVL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 30 Nov 2006 06:21:11 -0500
+Received: from [82.170.143.51] (helo=redhat01.gerritsacc.nl)
+	by smtp-out0.tiscali.nl with esmtp (Tiscali http://www.tiscali.nl)
+	id 1GpjyY-0000nO-N4
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Nov 2006 12:21:10 +0100
+Received: from kagtqp (b50-11.minvenw.nl [145.50.39.11])
+	by redhat01.gerritsacc.nl (Postfix) with ESMTP id 4E64EA7765
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Nov 2006 12:25:15 +0100 (CET)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: xb <xavier.bru@bull.net>, linux-scsi@vger.kernel.org
-
-This is a multi-part message in MIME format.
---------------090204000606060008050409
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset=ISO-8859-1
-
-Hello Hannes,
-
-Aic79xx driver for Adaptec 39320 supports 64-bit addressing, but the
-initialization code of the driver is wrong: it tests the available
-memory size instead of testing the maximum available memory address.
-This is necessary to support servers that provides 1 Terabyte of
-physical memory space addressing.
-
-Attached is the suggested patch (made against 2.6.17, but 2.6.19 is
-still using the available memory size instead of using the max memory
-address) to solve this issue.
-
-regards
-
---
-Fred
-
---------------090204000606060008050409
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain;
- name="aic-TBytes.patch"
-Content-Disposition: inline;
- filename="aic-TBytes.patch"
-
-Signed-off-by: xavier.bru@bull.net
-Signed-off-by: frederic.temporelli@bull.net
-
---- linux/drivers/scsi/aic7xxx/aic79xx_osm.c    2006-08-23 23:16:33.000000000 +0200
-+++ linux-new/drivers/scsi/aic7xxx/aic79xx_osm.c        2006-09-14 16:44:24.000000000 +0200
-@@ -62,6 +62,7 @@
-
- #include <linux/mm.h>          /* For fetching system memory size */
-
-+extern unsigned long blk_max_pfn;
- static struct scsi_transport_template *ahd_linux_transport_template = NULL;
-
- #include <linux/init.h>                /* __setup */
-@@ -1175,10 +1176,9 @@ ahd_linux_register_host(struct ahd_softc
- uint64_t
- ahd_linux_get_memsize(void)
- {
--       struct sysinfo si;
--
--       si_meminfo(&si);
--       return ((uint64_t)si.totalram << PAGE_SHIFT);
-+       /* Need to take in account the max physical address in case
-+        * of discontiguous memory. */
-+       return ((uint64_t)blk_max_pfn << PAGE_SHIFT);
- }
-
- /*
+To: linux-scsi@vger.kernel.org
 
 
---------------090204000606060008050409--
+Hey all,
+
+I have replaced a faulty (external) Ultrium tape on a RHEL 2.1 server.
+I have read that you can rescan the SCSI bus with:
+echo "scsi scan-new-devices" > /proc/scsi/scsi 
+( http://kbase.redhat.com/faq/FAQ_46_4011.shtm )
+
+Will this re-set the SCSI bus?
+(the system is currently in production and chances are -very slim- that they
+will let me do a Cold Reboot)
+
+
+Thanks,
+
+Kit
+
