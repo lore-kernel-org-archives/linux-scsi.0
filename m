@@ -1,53 +1,46 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [PATCH] 53c700: brown paper bag fix for auto request sense
-Date: Fri, 01 Dec 2006 11:25:12 -0600
-Message-ID: <1164993913.22826.58.camel@mulgrave.il.steeleye.com>
+From: "Ariel Burbaickij" <ariel.burbaickij@gmail.com>
+Subject: ABORT operation started/completed and how I can help you to help me
+Date: Fri, 1 Dec 2006 19:31:17 +0100
+Message-ID: <3058f9b40612011031g97bc109s4ef59193055ea5ed@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:18882 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S936535AbWLARZP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 1 Dec 2006 12:25:15 -0500
-Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
-	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id kB1HPDx00526
-	for <linux-scsi@vger.kernel.org>; Fri, 1 Dec 2006 12:25:13 -0500
+Received: from ug-out-1314.google.com ([66.249.92.168]:47195 "EHLO
+	ug-out-1314.google.com") by vger.kernel.org with ESMTP
+	id S1031702AbWLASbT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 1 Dec 2006 13:31:19 -0500
+Received: by ug-out-1314.google.com with SMTP id 44so2500104uga
+        for <linux-scsi@vger.kernel.org>; Fri, 01 Dec 2006 10:31:17 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-In the switch over, I forgot to set the command length, so it sends out
-a request sense with whatever length the prior command had (and fails
-badly if it wasn't 6).
+Hello dear mailing list participants,
+on one of my machines which uses
+sym53c8xx_2 driver and sym53c860
+chip I get A LOT of messages on the console
+announcing that ABORT operation has started
+completed and control msgout with some
+increasing value. The disc itself works in
+the sense that filesystem are fine, files
+can be created read from and written to.
+Now, these strings cannotbe found directly in the
+source of the driver at least not during cursory examination.
+I assume that there is nothing good in these
+messages and even more so if I mention
+that the driver hang for some 10-15 minutes
+during the bootup of the system. Now, I would
+like to understand what is going on, so several
+questions:
+1) What do these ABORT operation ... messages mean?
+2) What is the meaning of the values after msgout?
+3) Under what circumstances are they  normally generated?
 
-James
+If you need some more help from me in order to help you
+to answer these questions, certainly feel free to request
+some addtional information that might be needed.
 
-diff --git a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
-index 562432d..9aabb64 100644
---- a/drivers/scsi/53c700.c
-+++ b/drivers/scsi/53c700.c
-@@ -622,8 +622,10 @@ #endif
- 			dma_unmap_single(hostdata->dev, slot->dma_handle, sizeof(SCp->sense_buffer), DMA_FROM_DEVICE);
- 			/* restore the old result if the request sense was
- 			 * successful */
--			if(result == 0)
-+			if (result == 0)
- 				result = cmnd[7];
-+			/* restore the original length */
-+			SCp->cmd_len = cmnd[8];
- 		} else
- 			NCR_700_unmap(hostdata, SCp, slot);
- 
-@@ -1007,6 +1009,9 @@ #endif
- 				 * of the command */
- 				cmnd[6] = NCR_700_INTERNAL_SENSE_MAGIC;
- 				cmnd[7] = hostdata->status[0];
-+				cmnd[8] = SCp->cmd_len;
-+				SCp->cmd_len = 6; /* command length for 
-+						   * REQUEST_SENSE */
- 				slot->pCmd = dma_map_single(hostdata->dev, cmnd, MAX_COMMAND_SIZE, DMA_TO_DEVICE);
- 				slot->dma_handle = dma_map_single(hostdata->dev, SCp->sense_buffer, sizeof(SCp->sense_buffer), DMA_FROM_DEVICE);
- 				slot->SG[0].ins = bS_to_host(SCRIPT_MOVE_DATA_IN | sizeof(SCp->sense_buffer));
-
-
+/wbr
+Ariel Burbaickij
