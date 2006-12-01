@@ -1,46 +1,82 @@
-From: "Ariel Burbaickij" <ariel.burbaickij@gmail.com>
-Subject: ABORT operation started/completed and how I can help you to help me
-Date: Fri, 1 Dec 2006 19:31:17 +0100
-Message-ID: <3058f9b40612011031g97bc109s4ef59193055ea5ed@mail.gmail.com>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Fw: [Bugme-new] [Bug 7610] New: sense key error when sending even
+ number of bytes to /dev/st0
+Date: Fri, 1 Dec 2006 11:29:30 -0800
+Message-ID: <20061201112930.cff7f276.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:47195 "EHLO
-	ug-out-1314.google.com") by vger.kernel.org with ESMTP
-	id S1031702AbWLASbT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 1 Dec 2006 13:31:19 -0500
-Received: by ug-out-1314.google.com with SMTP id 44so2500104uga
-        for <linux-scsi@vger.kernel.org>; Fri, 01 Dec 2006 10:31:17 -0800 (PST)
-Content-Disposition: inline
+Received: from smtp.osdl.org ([65.172.181.25]:32725 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1031751AbWLAT3f (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Dec 2006 14:29:35 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: Kai Makisara <Kai.Makisara@kolumbus.fi>
 
-Hello dear mailing list participants,
-on one of my machines which uses
-sym53c8xx_2 driver and sym53c860
-chip I get A LOT of messages on the console
-announcing that ABORT operation has started
-completed and control msgout with some
-increasing value. The disc itself works in
-the sense that filesystem are fine, files
-can be created read from and written to.
-Now, these strings cannotbe found directly in the
-source of the driver at least not during cursory examination.
-I assume that there is nothing good in these
-messages and even more so if I mention
-that the driver hang for some 10-15 minutes
-during the bootup of the system. Now, I would
-like to understand what is going on, so several
-questions:
-1) What do these ABORT operation ... messages mean?
-2) What is the meaning of the values after msgout?
-3) Under what circumstances are they  normally generated?
 
-If you need some more help from me in order to help you
-to answer these questions, certainly feel free to request
-some addtional information that might be needed.
 
-/wbr
-Ariel Burbaickij
+Begin forwarded message:
+
+Date: Fri, 1 Dec 2006 08:40:16 -0800
+From: bugme-daemon@bugzilla.kernel.org
+To: bugme-new@lists.osdl.org
+Subject: [Bugme-new] [Bug 7610] New: sense key error when sending even number of bytes to /dev/st0
+
+
+http://bugzilla.kernel.org/show_bug.cgi?id=7610
+
+           Summary: sense key error when sending even number of bytes to
+                    /dev/st0
+    Kernel Version: 2.6.19
+            Status: NEW
+          Severity: normal
+             Owner: other_modules@kernel-bugs.osdl.org
+         Submitter: bergenia@pair.com
+
+
+Most recent kernel where this bug did *NOT* occur: unknown
+Distribution: Debian, but using kernel from kernel.org
+Hardware Environment: Dell Poweredge 2800 Xeon, Quantum DLT VS160 tape drive, 
+scsi1 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 7.0
+        <Adaptec 3960D Ultra160 SCSI adapter>
+        aic7899: Ultra160 Wide Channel B, SCSI Id=7, 32/253 SCBs
+Software Environment: 
+Gnu C                  3.3.5
+Gnu make               3.80
+binutils               2.15
+util-linux             2.12p
+mount                  2.12p
+module-init-tools      3.2.2
+e2fsprogs              1.37
+nfs-utils              1.0.6
+Linux C Library        2.3.6
+Dynamic linker (ldd)   2.3.6
+Procps                 3.2.1
+Net-tools              1.60
+Console-tools          0.2.3
+Sh-utils               5.2.1
+udev                   088
+Modules Loaded         st parport_pc parport
+
+Problem Description: 
+When sending an even number of bytes to /dev/st0, I get the following error in
+/var/log/kernel:
+
+Nov 30 16:13:47 mugsy kernel: st0: Current: sense key: Illegal Request
+Nov 30 16:13:47 mugsy kernel:     Additional sense: Invalid field in cdb
+
+Steps to reproduce:
+this will write to the tape:
+
+echo "A" > /dev/st0
+echo "ABC" > /dev/st0
+
+this will not write to the tape and will produce the kernel error:
+
+echo "AB" > /dev/st0
+echo "ABCD" > /dev/st0
+
+------- You are receiving this mail because: -------
+You are on the CC list for the bug, or are watching someone who is.
