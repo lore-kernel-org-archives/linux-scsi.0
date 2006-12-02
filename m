@@ -1,39 +1,51 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: [PATCH 9/9] lpfc 8.1.11 :  Change version number to 8.1.11
-Date: Sat, 02 Dec 2006 13:36:04 -0500
-Message-ID: <1165084565.27443.30.camel@localhost.localdomain>
-Reply-To: James.Smart@Emulex.Com
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [2.6 patch] drivers/scsi/wd33c93.c: cleanups
+Date: Sat, 2 Dec 2006 18:54:51 +0100
+Message-ID: <20061202175451.GR11084@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:57815 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S1163046AbWLBQHJ
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 2 Dec 2006 11:07:09 -0500
-Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
-	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id kB2G71at009324
-	for <linux-scsi@vger.kernel.org>; Sat, 2 Dec 2006 08:07:08 -0800 (PST)
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:54021 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S1163057AbWLBRyq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 2 Dec 2006 12:54:46 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Change version number to 8.1.11
+This patch contains the following cleanups:
+- #include <asm/irq.h> for getting the prototypes of
+  {dis,en}able_irq()
+- make the needlessly global wd33c93_setup() static
 
-Signed-off-by: James Smart <James.Smart@emulex.com>
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
+---
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
---- a/drivers/scsi/lpfc/lpfc_version.h	2006-12-01 12:13:54.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_version.h	2006-12-02 12:42:05.000000000 -0500
-@@ -18,7 +18,7 @@
-  * included with this package.                                     *
-  *******************************************************************/
+This patch was already sent on:
+- 4 Sep 2006
+
+--- linux-2.6.18-rc5-mm1/drivers/scsi/wd33c93.c.old	2006-09-04 01:45:57.000000000 +0200
++++ linux-2.6.18-rc5-mm1/drivers/scsi/wd33c93.c	2006-09-04 01:46:26.000000000 +0200
+@@ -85,6 +85,8 @@
+ #include <scsi/scsi_device.h>
+ #include <scsi/scsi_host.h>
  
--#define LPFC_DRIVER_VERSION "8.1.10"
-+#define LPFC_DRIVER_VERSION "8.1.11"
++#include <asm/irq.h>
++
+ #include "wd33c93.h"
  
- #define LPFC_DRIVER_NAME "lpfc"
  
+@@ -1710,7 +1712,7 @@
+ static char setup_used[MAX_SETUP_ARGS];
+ static int done_setup = 0;
+ 
+-int
++static int
+ wd33c93_setup(char *str)
+ {
+ 	int i;
 
 
