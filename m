@@ -1,143 +1,246 @@
 From: James Smart <James.Smart@Emulex.Com>
-Subject: [PATCH 8/9] lpfc 8.1.11 :  Misc Fixes
-Date: Sat, 02 Dec 2006 13:35:43 -0500
-Message-ID: <1165084543.27443.29.camel@localhost.localdomain>
+Subject: [PATCH 6/9] lpfc 8.1.11 :  Removed decoding of PCI Subsystem Id
+Date: Sat, 02 Dec 2006 13:35:08 -0500
+Message-ID: <1165084508.27443.27.camel@localhost.localdomain>
 Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:57559 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S1759467AbWLBQHI
+Received: from emulex.emulex.com ([138.239.112.1]:57047 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S1759468AbWLBQHH
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 2 Dec 2006 11:07:08 -0500
+	Sat, 2 Dec 2006 11:07:07 -0500
 Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
-	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id kB2G71ar009324
-	for <linux-scsi@vger.kernel.org>; Sat, 2 Dec 2006 08:07:08 -0800 (PST)
+	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id kB2G71an009324
+	for <linux-scsi@vger.kernel.org>; Sat, 2 Dec 2006 08:07:06 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-
-Misc Fixes:
- - Prevent references to NULL node list element in reset routines.
- - Add missing IOCB types to switch tables
- - Reset the card on Port Error 5
- - Fix infinite loop in LUN reset
+Removed decoding of PCI Subsystem Id.
+  To avoid continually updating the driver for new subsystem ids
+  (as adapter modules are proliferating), remove this 2nd level decode.
+  Genericize the reported Adapter names to be consistent across
+  Emulex product line.
+ 
 
 Signed-off-by: James Smart <James.Smart@emulex.com>
 
 
 diff -upNr a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
---- a/drivers/scsi/lpfc/lpfc_hw.h	2006-12-02 12:24:39.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_hw.h	2006-12-02 12:38:28.000000000 -0500
-@@ -1294,6 +1294,10 @@ typedef struct {		/* FireFly BIU registe
- #define CMD_FCP_IREAD_CX        0x1B
- #define CMD_FCP_ICMND_CR        0x1C
- #define CMD_FCP_ICMND_CX        0x1D
-+#define CMD_FCP_TSEND_CX        0x1F
-+#define CMD_FCP_TRECEIVE_CX     0x21
-+#define CMD_FCP_TRSP_CX	        0x23
-+#define CMD_FCP_AUTO_TRSP_CX    0x29
+--- a/drivers/scsi/lpfc/lpfc_hw.h	2006-12-02 11:57:07.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_hw.h	2006-12-02 12:23:02.000000000 -0500
+@@ -1105,12 +1105,6 @@ typedef struct {
+ #define PCI_DEVICE_ID_ZEPHYR_SCSP   0xfe11
+ #define PCI_DEVICE_ID_ZEPHYR_DCSP   0xfe12
  
- #define CMD_ADAPTER_MSG         0x20
- #define CMD_ADAPTER_DUMP        0x22
-@@ -1320,6 +1324,9 @@ typedef struct {		/* FireFly BIU registe
- #define CMD_FCP_IREAD64_CX      0x9B
- #define CMD_FCP_ICMND64_CR      0x9C
- #define CMD_FCP_ICMND64_CX      0x9D
-+#define CMD_FCP_TSEND64_CX      0x9F
-+#define CMD_FCP_TRECEIVE64_CX   0xA1
-+#define CMD_FCP_TRSP64_CX       0xA3
- 
- #define CMD_GEN_REQUEST64_CR    0xC2
- #define CMD_GEN_REQUEST64_CX    0xC3
+-#define PCI_SUBSYSTEM_ID_LP11000S      0xfc11
+-#define PCI_SUBSYSTEM_ID_LP11002S      0xfc12
+-#define PCI_SUBSYSTEM_ID_LPE11000S     0xfc21
+-#define PCI_SUBSYSTEM_ID_LPE11002S     0xfc22
+-#define PCI_SUBSYSTEM_ID_LPE11010S     0xfc2A
+-
+ #define JEDEC_ID_ADDRESS            0x0080001c
+ #define FIREFLY_JEDEC_ID            0x1ACC
+ #define SUPERFLY_JEDEC_ID           0x0020
 diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
---- a/drivers/scsi/lpfc/lpfc_init.c	2006-12-02 12:30:44.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_init.c	2006-12-02 12:38:28.000000000 -0500
-@@ -519,7 +519,8 @@ lpfc_handle_eratt(struct lpfc_hba * phba
- 	struct lpfc_sli_ring  *pring;
- 	uint32_t event_data;
+--- a/drivers/scsi/lpfc/lpfc_init.c	2006-12-02 12:13:17.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_init.c	2006-12-02 12:23:02.000000000 -0500
+@@ -804,19 +804,13 @@ lpfc_get_hba_model_desc(struct lpfc_hba 
+ {
+ 	lpfc_vpd_t *vp;
+ 	uint16_t dev_id = phba->pcidev->device;
+-	uint16_t dev_subid = phba->pcidev->subsystem_device;
+-	uint8_t hdrtype;
+ 	int max_speed;
+-	char * ports;
+ 	struct {
+ 		char * name;
+ 		int    max_speed;
+-		char * ports;
+ 		char * bus;
+-	} m = {"<Unknown>", 0, "", ""};
++	} m = {"<Unknown>", 0, ""};
  
--	if (phba->work_hs & HS_FFER6) {
-+	if (phba->work_hs & HS_FFER6 ||
-+	    phba->work_hs & HS_FFER5) {
- 		/* Re-establishing Link */
- 		lpfc_printf_log(phba, KERN_INFO, LOG_LINK_EVENT,
- 				"%d:1301 Re-establishing Link "
-diff -upNr a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
---- a/drivers/scsi/lpfc/lpfc_scsi.c	2006-12-02 12:07:50.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c	2006-12-02 12:38:28.000000000 -0500
-@@ -679,6 +679,9 @@ lpfc_scsi_tgt_reset(struct lpfc_scsi_buf
- 	struct lpfc_iocbq *iocbqrsp;
- 	int ret;
+-	pci_read_config_byte(phba->pcidev, PCI_HEADER_TYPE, &hdrtype);
+-	ports = (hdrtype == 0x80) ? "2-port " : "";
+ 	if (mdp && mdp[0] != '\0'
+ 		&& descp && descp[0] != '\0')
+ 		return;
+@@ -836,130 +830,93 @@ lpfc_get_hba_model_desc(struct lpfc_hba 
  
-+	if (!rdata->pnode)
-+		return FAILED;
-+
- 	lpfc_cmd->rdata = rdata;
- 	ret = lpfc_scsi_prep_task_mgmt_cmd(phba, lpfc_cmd, lun,
- 					   FCP_TARGET_RESET);
-@@ -985,20 +988,34 @@ lpfc_reset_lun_handler(struct scsi_cmnd 
- 
- 	lpfc_block_error_handler(cmnd);
- 	spin_lock_irq(shost->host_lock);
-+	loopcnt = 0;
- 	/*
- 	 * If target is not in a MAPPED state, delay the reset until
- 	 * target is rediscovered or devloss timeout expires.
- 	 */
- 	while ( 1 ) {
- 		if (!pnode)
+ 	switch (dev_id) {
+ 	case PCI_DEVICE_ID_FIREFLY:
+-		m = (typeof(m)){"LP6000", max_speed, "", "PCI"};
++		m = (typeof(m)){"LP6000", max_speed, "PCI"};
+ 		break;
+ 	case PCI_DEVICE_ID_SUPERFLY:
+ 		if (vp->rev.biuRev >= 1 && vp->rev.biuRev <= 3)
+-			m = (typeof(m)){"LP7000", max_speed, "", "PCI"};
++			m = (typeof(m)){"LP7000", max_speed,  "PCI"};
+ 		else
+-			m = (typeof(m)){"LP7000E", max_speed, "", "PCI"};
++			m = (typeof(m)){"LP7000E", max_speed, "PCI"};
+ 		break;
+ 	case PCI_DEVICE_ID_DRAGONFLY:
+-		m = (typeof(m)){"LP8000", max_speed, "", "PCI"};
++		m = (typeof(m)){"LP8000", max_speed, "PCI"};
+ 		break;
+ 	case PCI_DEVICE_ID_CENTAUR:
+ 		if (FC_JEDEC_ID(vp->rev.biuRev) == CENTAUR_2G_JEDEC_ID)
+-			m = (typeof(m)){"LP9002", max_speed, "", "PCI"};
++			m = (typeof(m)){"LP9002", max_speed, "PCI"};
+ 		else
+-			m = (typeof(m)){"LP9000", max_speed, "", "PCI"};
++			m = (typeof(m)){"LP9000", max_speed, "PCI"};
+ 		break;
+ 	case PCI_DEVICE_ID_RFLY:
+-		m = (typeof(m)){"LP952", max_speed, "", "PCI"};
++		m = (typeof(m)){"LP952", max_speed, "PCI"};
+ 		break;
+ 	case PCI_DEVICE_ID_PEGASUS:
+-		m = (typeof(m)){"LP9802", max_speed, "", "PCI-X"};
++		m = (typeof(m)){"LP9802", max_speed, "PCI-X"};
+ 		break;
+ 	case PCI_DEVICE_ID_THOR:
+-		if (hdrtype == 0x80)
+-			m = (typeof(m)){"LP10000DC",
+-					max_speed, ports, "PCI-X"};
+-		else
+-			m = (typeof(m)){"LP10000",
+-					max_speed, ports, "PCI-X"};
++		m = (typeof(m)){"LP10000", max_speed, "PCI-X"};
+ 		break;
+ 	case PCI_DEVICE_ID_VIPER:
+-		m = (typeof(m)){"LPX1000", max_speed, "", "PCI-X"};
++		m = (typeof(m)){"LPX1000", max_speed,  "PCI-X"};
+ 		break;
+ 	case PCI_DEVICE_ID_PFLY:
+-		m = (typeof(m)){"LP982", max_speed, "", "PCI-X"};
++		m = (typeof(m)){"LP982", max_speed, "PCI-X"};
+ 		break;
+ 	case PCI_DEVICE_ID_TFLY:
+-		if (hdrtype == 0x80)
+-			m = (typeof(m)){"LP1050DC", max_speed, ports, "PCI-X"};
+-		else
+-			m = (typeof(m)){"LP1050", max_speed, ports, "PCI-X"};
++		m = (typeof(m)){"LP1050", max_speed, "PCI-X"};
+ 		break;
+ 	case PCI_DEVICE_ID_HELIOS:
+-		if (hdrtype == 0x80)
+-			m = (typeof(m)){"LP11002", max_speed, ports, "PCI-X2"};
+-		else
+-			m = (typeof(m)){"LP11000", max_speed, ports, "PCI-X2"};
++		m = (typeof(m)){"LP11000", max_speed, "PCI-X2"};
+ 		break;
+ 	case PCI_DEVICE_ID_HELIOS_SCSP:
+-		m = (typeof(m)){"LP11000-SP", max_speed, ports, "PCI-X2"};
++		m = (typeof(m)){"LP11000-SP", max_speed, "PCI-X2"};
+ 		break;
+ 	case PCI_DEVICE_ID_HELIOS_DCSP:
+-		m = (typeof(m)){"LP11002-SP", max_speed, ports, "PCI-X2"};
++		m = (typeof(m)){"LP11002-SP", max_speed, "PCI-X2"};
+ 		break;
+ 	case PCI_DEVICE_ID_NEPTUNE:
+-		if (hdrtype == 0x80)
+-			m = (typeof(m)){"LPe1002", max_speed, ports, "PCIe"};
+-		else
+-			m = (typeof(m)){"LPe1000", max_speed, ports, "PCIe"};
++		m = (typeof(m)){"LPe1000", max_speed, "PCIe"};
+ 		break;
+ 	case PCI_DEVICE_ID_NEPTUNE_SCSP:
+-		m = (typeof(m)){"LPe1000-SP", max_speed, ports, "PCIe"};
++		m = (typeof(m)){"LPe1000-SP", max_speed, "PCIe"};
+ 		break;
+ 	case PCI_DEVICE_ID_NEPTUNE_DCSP:
+-		m = (typeof(m)){"LPe1002-SP", max_speed, ports, "PCIe"};
++		m = (typeof(m)){"LPe1002-SP", max_speed, "PCIe"};
+ 		break;
+ 	case PCI_DEVICE_ID_BMID:
+-		m = (typeof(m)){"LP1150", max_speed, ports, "PCI-X2"};
++		m = (typeof(m)){"LP1150", max_speed, "PCI-X2"};
+ 		break;
+ 	case PCI_DEVICE_ID_BSMB:
+-		m = (typeof(m)){"LP111", max_speed, ports, "PCI-X2"};
++		m = (typeof(m)){"LP111", max_speed, "PCI-X2"};
+ 		break;
+ 	case PCI_DEVICE_ID_ZEPHYR:
+-		if (hdrtype == 0x80)
+-			m = (typeof(m)){"LPe11002", max_speed, ports, "PCIe"};
+-		else
+-			m = (typeof(m)){"LPe11000", max_speed, ports, "PCIe"};
++		m = (typeof(m)){"LPe11000", max_speed, "PCIe"};
+ 		break;
+ 	case PCI_DEVICE_ID_ZEPHYR_SCSP:
+-		m = (typeof(m)){"LPe11000", max_speed, ports, "PCIe"};
++		m = (typeof(m)){"LPe11000", max_speed, "PCIe"};
+ 		break;
+ 	case PCI_DEVICE_ID_ZEPHYR_DCSP:
+-		m = (typeof(m)){"LPe11002-SP", max_speed, ports, "PCIe"};
++		m = (typeof(m)){"LPe11002-SP", max_speed, "PCIe"};
+ 		break;
+ 	case PCI_DEVICE_ID_ZMID:
+-		m = (typeof(m)){"LPe1150", max_speed, ports, "PCIe"};
++		m = (typeof(m)){"LPe1150", max_speed, "PCIe"};
+ 		break;
+ 	case PCI_DEVICE_ID_ZSMB:
+-		m = (typeof(m)){"LPe111", max_speed, ports, "PCIe"};
++		m = (typeof(m)){"LPe111", max_speed, "PCIe"};
+ 		break;
+ 	case PCI_DEVICE_ID_LP101:
+-		m = (typeof(m)){"LP101", max_speed, ports, "PCI-X"};
++		m = (typeof(m)){"LP101", max_speed, "PCI-X"};
+ 		break;
+ 	case PCI_DEVICE_ID_LP10000S:
+-		m = (typeof(m)){"LP10000-S", max_speed, ports, "PCI"};
++		m = (typeof(m)){"LP10000-S", max_speed, "PCI"};
+ 		break;
+ 	case PCI_DEVICE_ID_LP11000S:
++		m = (typeof(m)){"LP11000-S", max_speed,
++			"PCI-X2"};
++		break;
+ 	case PCI_DEVICE_ID_LPE11000S:
+-		switch (dev_subid) {
+-		case PCI_SUBSYSTEM_ID_LP11000S:
+-			m = (typeof(m)){"LP11000-S", max_speed,
+-					ports, "PCI-X2"};
 -			break;
-+			return FAILED;
+-		case PCI_SUBSYSTEM_ID_LP11002S:
+-			m = (typeof(m)){"LP11002-S", max_speed,
+-					ports, "PCI-X2"};
+-			break;
+-		case PCI_SUBSYSTEM_ID_LPE11000S:
+-			m = (typeof(m)){"LPe11000-S", max_speed,
+-					ports, "PCIe"};
+-			break;
+-		case PCI_SUBSYSTEM_ID_LPE11002S:
+-			m = (typeof(m)){"LPe11002-S", max_speed,
+-					ports, "PCIe"};
+-			break;
+-		case PCI_SUBSYSTEM_ID_LPE11010S:
+-			m = (typeof(m)){"LPe11010-S", max_speed,
+-					"10-port ", "PCIe"};
+-			break;
+-		default:
+-			m = (typeof(m)){ NULL };
+-			break;
+-		}
++		m = (typeof(m)){"LPe11000-S", max_speed,
++			"PCIe"};
+ 		break;
+ 	default:
+ 		m = (typeof(m)){ NULL };
+@@ -970,8 +927,8 @@ lpfc_get_hba_model_desc(struct lpfc_hba 
+ 		snprintf(mdp, 79,"%s", m.name);
+ 	if (descp && descp[0] == '\0')
+ 		snprintf(descp, 255,
+-			 "Emulex %s %dGb %s%s Fibre Channel Adapter",
+-			 m.name, m.max_speed, m.ports, m.bus);
++			 "Emulex %s %dGb %s Fibre Channel Adapter",
++			 m.name, m.max_speed, m.bus);
+ }
  
- 		if (pnode->nlp_state != NLP_STE_MAPPED_NODE) {
- 			spin_unlock_irq(phba->host->host_lock);
- 			schedule_timeout_uninterruptible(msecs_to_jiffies(500));
- 			spin_lock_irq(phba->host->host_lock);
-+			loopcnt++;
-+			rdata = cmnd->device->hostdata;
-+			if (!rdata ||
-+				(loopcnt > ((phba->cfg_devloss_tmo * 2) + 1))) {
-+				lpfc_printf_log(phba, KERN_ERR, LOG_FCP,
-+		   			"%d:0721 LUN Reset rport failure:"
-+					" cnt x%x rdata x%p\n",
-+		   			phba->brd_no, loopcnt, rdata);
-+				goto out;
-+			}
-+			pnode = rdata->pnode;
-+			if (!pnode)
-+				return FAILED;
- 		}
--		if ((pnode) && (pnode->nlp_state == NLP_STE_MAPPED_NODE))
-+		if (pnode->nlp_state == NLP_STE_MAPPED_NODE)
- 			break;
- 	}
- 
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
---- a/drivers/scsi/lpfc/lpfc_sli.c	2006-12-02 11:57:08.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_sli.c	2006-12-02 12:38:28.000000000 -0500
-@@ -117,6 +117,10 @@ lpfc_sli_iocb_cmd_type(uint8_t iocb_cmnd
- 	case CMD_FCP_IREAD_CX:
- 	case CMD_FCP_ICMND_CR:
- 	case CMD_FCP_ICMND_CX:
-+	case CMD_FCP_TSEND_CX:
-+	case CMD_FCP_TRSP_CX:
-+	case CMD_FCP_TRECEIVE_CX:
-+	case CMD_FCP_AUTO_TRSP_CX:
- 	case CMD_ADAPTER_MSG:
- 	case CMD_ADAPTER_DUMP:
- 	case CMD_XMIT_SEQUENCE64_CR:
-@@ -131,6 +135,9 @@ lpfc_sli_iocb_cmd_type(uint8_t iocb_cmnd
- 	case CMD_FCP_IREAD64_CX:
- 	case CMD_FCP_ICMND64_CR:
- 	case CMD_FCP_ICMND64_CX:
-+	case CMD_FCP_TSEND64_CX:
-+	case CMD_FCP_TRSP64_CX:
-+	case CMD_FCP_TRECEIVE64_CX:
- 	case CMD_GEN_REQUEST64_CR:
- 	case CMD_GEN_REQUEST64_CX:
- 	case CMD_XMIT_ELS_RSP64_CX:
+ /**************************************************/
 
 
