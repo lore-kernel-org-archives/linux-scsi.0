@@ -1,44 +1,38 @@
-From: Arjan van de Ven <arjan@infradead.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: Fw: [Bugme-new] [Bug 7614] New: kernel BUG at mm/slab.c:594!
 	Seems to affect various SCSI systems in various ways.
-Date: Sat, 02 Dec 2006 10:37:01 +0100
-Message-ID: <1165052221.3233.140.camel@laptopd505.fenrus.org>
+Date: Sat, 02 Dec 2006 08:42:07 -0600
+Message-ID: <1165070527.2857.2.camel@mulgrave.il.steeleye.com>
 References: <20061201162528.44076c5d.akpm@osdl.org>
 	 <1165046500.3233.138.camel@laptopd505.fenrus.org>
 	 <20061202001905.6260db9c.akpm@osdl.org>
-Reply-To: arjan@infradead.org
+	 <1165052221.3233.140.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:65191 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1162866AbWLBJhD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 2 Dec 2006 04:37:03 -0500
-In-Reply-To: <20061202001905.6260db9c.akpm@osdl.org>
+Received: from hancock.steeleye.com ([71.30.118.248]:9186 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1163023AbWLBOmS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 2 Dec 2006 09:42:18 -0500
+In-Reply-To: <1165052221.3233.140.camel@laptopd505.fenrus.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-scsi@vger.kernel.org
+To: arjan@infradead.org
+Cc: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, "Martin J. Bligh" <mbligh@mbligh.org>
 
-On Sat, 2006-12-02 at 00:19 -0800, Andrew Morton wrote:
-> On Sat, 02 Dec 2006 09:01:40 +0100
-> Arjan van de Ven <arjan@infradead.org> wrote:
-> 
-> > 
-> > > last sysfs file: /class/net/vmnet1/address
-> > > Modules linked in: ipv6 vmnet(U) vmmon(U) video sbs i2c_ec container button
-> > 
-> > 
-> > does this reproduce without these proprietary drivers as well ?
-> > 
-> 
-> Why are you asking me?
+On Sat, 2006-12-02 at 10:37 +0100, Arjan van de Ven wrote:
+> I was asking the bugzilla ;)
 
-I was asking the bugzilla ;)
+You're not if you don't cc it ...
 
+However, can we please either get email from the bugzilla flowing on to
+linux-scsi or just shut it down for SCSI altogether and force people to
+send email to the list?
 
--- 
-if you want to mail me at work (you don't), use arjan (at) linux.intel.com
-Test the interaction between Linux and your BIOS via http://www.linuxfirmwarekit.org
+Martin, I believe you said you were going to ask the vger postmasters
+about this?
+
+James
+
 
