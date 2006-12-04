@@ -1,83 +1,54 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [PATCH] SCSI/megaraid: fix MMIO casts
-Date: Sun, 3 Dec 2006 20:49:23 -0500
-Message-ID: <20061204014923.GA7227@havoc.gtf.org>
+From: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
+Subject: [2.4 PATCH] scsi 53c7,8xx parenthesis fix
+Date: Mon, 4 Dec 2006 10:22:40 +0100
+Message-ID: <200612041022.40958.m.kozlowski@tuxland.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-2
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:17795 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S1760203AbWLDBtY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Dec 2006 20:49:24 -0500
+Received: from xdsl-664.zgora.dialog.net.pl ([81.168.226.152]:15365 "EHLO
+	tuxland.pl") by vger.kernel.org with ESMTP id S1759886AbWLDJW7 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 4 Dec 2006 04:22:59 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Neela.Kolli@engenio.com, linux-scsi@vger.kernel.org, Andrew Morton <akpm@osdl.org>, LKML <linux-kernel@vger.kernel.org>
+To: James.Bottomley@hansenpartnership.com
+Cc: linux-scsi@vger.kernel.org, Willy Tarreau <wtarreau@hera.kernel.org>
+
+Hello,
+
+=A0=A0=A0=A0=A0=A0=A0=A0This patch removes an extra parenthesis in debu=
+gger_fn_bs() code.
+
+Signed-off-by: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
+
+=A0drivers/scsi/53c7,8xx.c | =A0 =A02 +-
+=A01 file changed, 1 insertion(+), 1 deletion(-)
+
+--- linux-2.4.34-pre6-a/drivers/scsi/53c7,8xx.c	2004-11-17 12:54:21.000=
+000000 +0100
++++ linux-2.4.34-pre6-b/drivers/scsi/53c7,8xx.c	2006-12-01 12:21:50.000=
+000000 +0100
+@@ -3197,7 +3197,7 @@ debugger_fn_bs (struct Scsi_Host *host,=20
+=20
+     bp->address =3D (u32 *) args[0];
+     memcpy ((void *) bp->old_instruction, (void *) bp->address, 8);
+-    bp->old_size =3D (((bp->old_instruction[0] >> 24) & DCMD_TYPE_MASK=
+) =3D=3D
++    bp->old_size =3D ((bp->old_instruction[0] >> 24) & DCMD_TYPE_MASK)=
+ =3D=3D
+ 	DCMD_TYPE_MMI ? 3 : 2;
+     bp->next =3D hostdata->breakpoints;
+     hostdata->breakpoints =3D bp->next;
 
 
-megaraid's MMIO RD*/WR* macros directly call readl() and writel() with
-an 'unsigned long' argument.  This throws a warning, but is otherwise OK
-because the 'unsigned long' is really the result of ioremap().  This
-setup is also OK because the variable can hold an ioremap cookie /or/ a
-PCI I/O port (PIO).
+--=20
+Regards,
 
-However, to fix the warning thrown when readl() and writel() are passed
-an unsigned long cookie, I introduce 'void __iomem *mmio_base', holding
-the same value as 'base'.  This will silence the warnings, and also
-cause an oops whenever these MMIO-only functions are ever accidentally
-passed an I/O address.
-
-Signed-off-by: Jeff Garzik <jeff@garzik.org>
-
-diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
-index 86099fd..77d9d38 100644
---- a/drivers/scsi/megaraid.c
-+++ b/drivers/scsi/megaraid.c
-@@ -73,10 +73,10 @@ static unsigned short int max_mbox_busy_
- module_param(max_mbox_busy_wait, ushort, 0);
- MODULE_PARM_DESC(max_mbox_busy_wait, "Maximum wait for mailbox in microseconds if busy (default=MBOX_BUSY_WAIT=10)");
- 
--#define RDINDOOR(adapter)		readl((adapter)->base + 0x20)
--#define RDOUTDOOR(adapter)		readl((adapter)->base + 0x2C)
--#define WRINDOOR(adapter,value)		writel(value, (adapter)->base + 0x20)
--#define WROUTDOOR(adapter,value)	writel(value, (adapter)->base + 0x2C)
-+#define RDINDOOR(adapter)	readl((adapter)->mmio_base + 0x20)
-+#define RDOUTDOOR(adapter)	readl((adapter)->mmio_base + 0x2C)
-+#define WRINDOOR(adapter,value)	 writel(value, (adapter)->mmio_base + 0x20)
-+#define WROUTDOOR(adapter,value) writel(value, (adapter)->mmio_base + 0x2C)
- 
- /*
-  * Global variables
-@@ -1386,7 +1386,8 @@ megaraid_isr_memmapped(int irq, void *de
- 
- 		handled = 1;
- 
--		while( RDINDOOR(adapter) & 0x02 ) cpu_relax();
-+		while( RDINDOOR(adapter) & 0x02 )
-+			cpu_relax();
- 
- 		mega_cmd_done(adapter, completed, nstatus, status);
- 
-@@ -4668,6 +4669,8 @@ megaraid_probe_one(struct pci_dev *pdev,
- 		host->host_no, mega_baseport, irq);
- 
- 	adapter->base = mega_baseport;
-+	if (flag & BOARD_MEMMAP)
-+		adapter->mmio_base = (void __iomem *) mega_baseport;
- 
- 	INIT_LIST_HEAD(&adapter->free_list);
- 	INIT_LIST_HEAD(&adapter->pending_list);
-diff --git a/drivers/scsi/megaraid.h b/drivers/scsi/megaraid.h
-index 66529f1..c6e7464 100644
---- a/drivers/scsi/megaraid.h
-+++ b/drivers/scsi/megaraid.h
-@@ -801,7 +801,8 @@ typedef struct {
- 				   clustering is available */
- 	u32	flag;
- 
--	unsigned long	base;
-+	unsigned long		base;
-+	void __iomem		*mmio_base;
- 
- 	/* mbox64 with mbox not aligned on 16-byte boundry */
- 	mbox64_t	*una_mbox64;
-
+	Mariusz Kozlowski
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
