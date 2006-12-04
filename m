@@ -1,86 +1,135 @@
 From: akpm@osdl.org
-Subject: [patch 30/30] SCSI/megaraid: fix MMIO casts
-Date: Mon, 04 Dec 2006 15:18:45 -0800
-Message-ID: <200612042319.kB4NJsx7008822@shell0.pdx.osdl.net>
+Subject: [patch 17/30] scsi: fix uaccess handling
+Date: Mon, 04 Dec 2006 15:18:34 -0800
+Message-ID: <200612042319.kB4NJh8v008777@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.25]:56808 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.25]:56883 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S967775AbWLDXUH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 4 Dec 2006 18:20:07 -0500
+	id S967770AbWLDXUO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 4 Dec 2006 18:20:14 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, jeff@garzik.org
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, heiko.carstens@de.ibm.com
 
-From: Jeff Garzik <jeff@garzik.org>
+From: Heiko Carstens <heiko.carstens@de.ibm.com>
 
-megaraid's MMIO RD*/WR* macros directly call readl() and writel() with an
-'unsigned long' argument.  This throws a warning, but is otherwise OK because
-the 'unsigned long' is really the result of ioremap().  This setup is also OK
-because the variable can hold an ioremap cookie /or/ a PCI I/O port (PIO).
-
-However, to fix the warning thrown when readl() and writel() are passed an
-unsigned long cookie, I introduce 'void __iomem *mmio_base', holding the same
-value as 'base'.  This will silence the warnings, and also cause an oops
-whenever these MMIO-only functions are ever accidentally passed an I/O
-address.
-
-Signed-off-by: Jeff Garzik <jeff@garzik.org>
+Signed-off-by: Heiko Carstens <heiko.carstens@de.ibm.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/megaraid.c |   13 ++++++++-----
- drivers/scsi/megaraid.h |    3 ++-
- 2 files changed, 10 insertions(+), 6 deletions(-)
+ drivers/scsi/scsi_ioctl.c |   17 +++++++------
+ drivers/scsi/sg.c         |   47 +++++++++++++++++++-----------------
+ 2 files changed, 35 insertions(+), 29 deletions(-)
 
-diff -puN drivers/scsi/megaraid.c~scsi-megaraid-fix-mmio-casts drivers/scsi/megaraid.c
---- a/drivers/scsi/megaraid.c~scsi-megaraid-fix-mmio-casts
-+++ a/drivers/scsi/megaraid.c
-@@ -73,10 +73,10 @@ static unsigned short int max_mbox_busy_
- module_param(max_mbox_busy_wait, ushort, 0);
- MODULE_PARM_DESC(max_mbox_busy_wait, "Maximum wait for mailbox in microseconds if busy (default=MBOX_BUSY_WAIT=10)");
+diff -puN drivers/scsi/scsi_ioctl.c~scsi-fix-uaccess-handling drivers/scsi/scsi_ioctl.c
+--- a/drivers/scsi/scsi_ioctl.c~scsi-fix-uaccess-handling
++++ a/drivers/scsi/scsi_ioctl.c
+@@ -217,13 +217,16 @@ int scsi_ioctl(struct scsi_device *sdev,
+ 		if (!access_ok(VERIFY_WRITE, arg, sizeof(struct scsi_idlun)))
+ 			return -EFAULT;
  
--#define RDINDOOR(adapter)		readl((adapter)->base + 0x20)
--#define RDOUTDOOR(adapter)		readl((adapter)->base + 0x2C)
--#define WRINDOOR(adapter,value)		writel(value, (adapter)->base + 0x20)
--#define WROUTDOOR(adapter,value)	writel(value, (adapter)->base + 0x2C)
-+#define RDINDOOR(adapter)	readl((adapter)->mmio_base + 0x20)
-+#define RDOUTDOOR(adapter)	readl((adapter)->mmio_base + 0x2C)
-+#define WRINDOOR(adapter,value)	 writel(value, (adapter)->mmio_base + 0x20)
-+#define WROUTDOOR(adapter,value) writel(value, (adapter)->mmio_base + 0x2C)
+-		__put_user((sdev->id & 0xff)
+-			 + ((sdev->lun & 0xff) << 8)
+-			 + ((sdev->channel & 0xff) << 16)
+-			 + ((sdev->host->host_no & 0xff) << 24),
+-			 &((struct scsi_idlun __user *)arg)->dev_id);
+-		__put_user(sdev->host->unique_id,
+-			 &((struct scsi_idlun __user *)arg)->host_unique_id);
++		if (__put_user((sdev->id & 0xff)
++			       + ((sdev->lun & 0xff) << 8)
++			       + ((sdev->channel & 0xff) << 16)
++			       + ((sdev->host->host_no & 0xff) << 24),
++			       &((struct scsi_idlun __user *)arg)->dev_id))
++			return -EFAULT;
++
++		if(__put_user(sdev->host->unique_id,
++			&((struct scsi_idlun __user *)arg)->host_unique_id))
++			return -EFAULT;
+ 		return 0;
+ 	case SCSI_IOCTL_GET_BUS_NUMBER:
+ 		return put_user(sdev->host->host_no, (int __user *)arg);
+diff -puN drivers/scsi/sg.c~scsi-fix-uaccess-handling drivers/scsi/sg.c
+--- a/drivers/scsi/sg.c~scsi-fix-uaccess-handling
++++ a/drivers/scsi/sg.c
+@@ -556,7 +556,8 @@ sg_write(struct file *filp, const char _
+ 		return -EDOM;
+ 	}
+ 	buf += SZ_SG_HEADER;
+-	__get_user(opcode, buf);
++	if (__get_user(opcode, buf))
++		return -EFAULT;
+ 	if (sfp->next_cmd_len > 0) {
+ 		if (sfp->next_cmd_len > MAX_COMMAND_SIZE) {
+ 			SCSI_LOG_TIMEOUT(1, printk("sg_write: command length too long\n"));
+@@ -779,6 +780,7 @@ sg_ioctl(struct inode *inode, struct fil
+ 	Sg_fd *sfp;
+ 	Sg_request *srp;
+ 	unsigned long iflags;
++	sg_scsi_id_t __user *sg_idp;
  
- /*
-  * Global variables
-@@ -1386,7 +1386,8 @@ megaraid_isr_memmapped(int irq, void *de
+ 	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
+ 		return -ENXIO;
+@@ -860,26 +862,25 @@ sg_ioctl(struct inode *inode, struct fil
+ 	case SG_GET_SCSI_ID:
+ 		if (!access_ok(VERIFY_WRITE, p, sizeof (sg_scsi_id_t)))
+ 			return -EFAULT;
+-		else {
+-			sg_scsi_id_t __user *sg_idp = p;
++		sg_idp = p;
  
- 		handled = 1;
- 
--		while( RDINDOOR(adapter) & 0x02 ) cpu_relax();
-+		while( RDINDOOR(adapter) & 0x02 )
-+			cpu_relax();
- 
- 		mega_cmd_done(adapter, completed, nstatus, status);
- 
-@@ -4672,6 +4673,8 @@ megaraid_probe_one(struct pci_dev *pdev,
- 		host->host_no, mega_baseport, irq);
- 
- 	adapter->base = mega_baseport;
-+	if (flag & BOARD_MEMMAP)
-+		adapter->mmio_base = (void __iomem *) mega_baseport;
- 
- 	INIT_LIST_HEAD(&adapter->free_list);
- 	INIT_LIST_HEAD(&adapter->pending_list);
-diff -puN drivers/scsi/megaraid.h~scsi-megaraid-fix-mmio-casts drivers/scsi/megaraid.h
---- a/drivers/scsi/megaraid.h~scsi-megaraid-fix-mmio-casts
-+++ a/drivers/scsi/megaraid.h
-@@ -801,7 +801,8 @@ typedef struct {
- 				   clustering is available */
- 	u32	flag;
- 
--	unsigned long	base;
-+	unsigned long		base;
-+	void __iomem		*mmio_base;
- 
- 	/* mbox64 with mbox not aligned on 16-byte boundry */
- 	mbox64_t	*una_mbox64;
+-			if (sdp->detached)
+-				return -ENODEV;
+-			__put_user((int) sdp->device->host->host_no,
+-				   &sg_idp->host_no);
+-			__put_user((int) sdp->device->channel,
+-				   &sg_idp->channel);
+-			__put_user((int) sdp->device->id, &sg_idp->scsi_id);
+-			__put_user((int) sdp->device->lun, &sg_idp->lun);
+-			__put_user((int) sdp->device->type, &sg_idp->scsi_type);
+-			__put_user((short) sdp->device->host->cmd_per_lun,
+-				   &sg_idp->h_cmd_per_lun);
+-			__put_user((short) sdp->device->queue_depth,
+-				   &sg_idp->d_queue_depth);
+-			__put_user(0, &sg_idp->unused[0]);
+-			__put_user(0, &sg_idp->unused[1]);
+-			return 0;
+-		}
++		if (sdp->detached)
++			return -ENODEV;
++		if (__put_user((int) sdp->device->host->host_no,
++			       &sg_idp->host_no) ||
++		    __put_user((int) sdp->device->channel,
++			       &sg_idp->channel) ||
++		    __put_user((int) sdp->device->id, &sg_idp->scsi_id) ||
++		    __put_user((int) sdp->device->lun, &sg_idp->lun) ||
++		    __put_user((int) sdp->device->type, &sg_idp->scsi_type) ||
++		    __put_user((short) sdp->device->host->cmd_per_lun,
++			       &sg_idp->h_cmd_per_lun) ||
++		    __put_user((short) sdp->device->queue_depth,
++			       &sg_idp->d_queue_depth) ||
++		    __put_user(0, &sg_idp->unused[0]) ||
++		    __put_user(0, &sg_idp->unused[1]))
++			return -EFAULT;
++		return 0;
+ 	case SG_SET_FORCE_PACK_ID:
+ 		result = get_user(val, ip);
+ 		if (result)
+@@ -894,12 +895,14 @@ sg_ioctl(struct inode *inode, struct fil
+ 			if ((1 == srp->done) && (!srp->sg_io_owned)) {
+ 				read_unlock_irqrestore(&sfp->rq_list_lock,
+ 						       iflags);
+-				__put_user(srp->header.pack_id, ip);
++				if (__put_user(srp->header.pack_id, ip))
++					return -EFAULT;
+ 				return 0;
+ 			}
+ 		}
+ 		read_unlock_irqrestore(&sfp->rq_list_lock, iflags);
+-		__put_user(-1, ip);
++		if (__put_user(-1, ip))
++			return -EFAULT;
+ 		return 0;
+ 	case SG_GET_NUM_WAITING:
+ 		read_lock_irqsave(&sfp->rq_list_lock, iflags);
 _
