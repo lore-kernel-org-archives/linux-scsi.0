@@ -1,135 +1,95 @@
 From: akpm@osdl.org
-Subject: [patch 17/30] scsi: fix uaccess handling
-Date: Mon, 04 Dec 2006 15:18:34 -0800
-Message-ID: <200612042319.kB4NJh8v008777@shell0.pdx.osdl.net>
+Subject: [patch 26/30] scsi: fix sense key MEDIUM ERROR processing and retry
+Date: Mon, 04 Dec 2006 15:18:42 -0800
+Message-ID: <200612042319.kB4NJpnD008810@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.25]:56883 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.25]:56774 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S967770AbWLDXUO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 4 Dec 2006 18:20:14 -0500
+	id S967782AbWLDXT6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 4 Dec 2006 18:19:58 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, heiko.carstens@de.ibm.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, ltuikov@yahoo.com
 
-From: Heiko Carstens <heiko.carstens@de.ibm.com>
+From: Luben Tuikov <ltuikov@yahoo.com>
 
-Signed-off-by: Heiko Carstens <heiko.carstens@de.ibm.com>
+- If the device reports an uncorrectable MEDIUM ERROR, such as SK MEDIUM
+  ERROR, ASC UNRECOVERED READ ERR, AMNF DATA FIELD or RECORD NOT FOUND,
+  then: In scsi_check_sense() return SUCCESS so as to not retry -- the
+  error is uncorrectable -- this speeds up total processing time.
+
+- In scsi_io_completion(), retry if and only if there was at least one
+  byte completed, i.e.  good_bytes != 0.  If good_bytes == 0, don't try to
+  retry.
+
+Without this patch, SCSI Core gets hung reading sector 0 forever, for
+example when reading the partition table of a (newly discovered) device.
+
+
+Here is what happens: sector 0 is broken -- the device cannot read the media
+at that location.  The device properly returns a certain type of uncorrectable
+MEDIUM ERROR (ASC: UNRECOVERABLE READ ERR).
+
+SCSI Core loops around its retries (which this patch fixes) and eventually
+gives up and sends it for "completion".  This is what happens when
+scsi_check_sense() returns NEEDS_RETRY to scsi_decide_disposition() to
+scsi_softirq().  The first chunk of the patch fixes this.
+
+We end up in scsi_io_completion(), where good_bytes = 0, and result =
+0x08000002 (DRIVER SENSE and CHECK CONDITION).
+
+This statement in scsi_io_completion() causes the infinite retry loop:
+
+   if (scsi_end_request(cmd, 1, good_bytes, !!result) == NULL)
+         return;
+
+substitute to get: scsi_end_request(cmd, uptodate=1, uptodate bytes=0,
+retry=1) Yeah, but it doesn't make sense to call scsi_end_request() with
+uptodate=1 and uptodate bytes = 0.  This causes the infinite retry, since the
+code tries to re-read the whole xfer size (0 bytes were uptodate and retry=1),
+from the bad media.
+
+That is, we want to set uptodate=1 iff there was at least 1 byte up to date. 
+Else if nothing was read, uptodate bytes = 0, then we should pass uptodate =
+0, uptodate_bytes = total xfer, to mean the whole xfer is not uptodate; and
+retry iff there was no error.  (This is the very bottom of the function.)
+
+
+Signed-off-by: Luben Tuikov <ltuikov@yahoo.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/scsi_ioctl.c |   17 +++++++------
- drivers/scsi/sg.c         |   47 +++++++++++++++++++-----------------
- 2 files changed, 35 insertions(+), 29 deletions(-)
+ drivers/scsi/scsi_error.c |    5 +++++
+ drivers/scsi/scsi_lib.c   |    3 ++-
+ 2 files changed, 7 insertions(+), 1 deletion(-)
 
-diff -puN drivers/scsi/scsi_ioctl.c~scsi-fix-uaccess-handling drivers/scsi/scsi_ioctl.c
---- a/drivers/scsi/scsi_ioctl.c~scsi-fix-uaccess-handling
-+++ a/drivers/scsi/scsi_ioctl.c
-@@ -217,13 +217,16 @@ int scsi_ioctl(struct scsi_device *sdev,
- 		if (!access_ok(VERIFY_WRITE, arg, sizeof(struct scsi_idlun)))
- 			return -EFAULT;
+diff -puN drivers/scsi/scsi_error.c~fix-sense-key-medium-error-processing-and-retry drivers/scsi/scsi_error.c
+--- a/drivers/scsi/scsi_error.c~fix-sense-key-medium-error-processing-and-retry
++++ a/drivers/scsi/scsi_error.c
+@@ -359,6 +359,11 @@ static int scsi_check_sense(struct scsi_
+ 		return SUCCESS;
  
--		__put_user((sdev->id & 0xff)
--			 + ((sdev->lun & 0xff) << 8)
--			 + ((sdev->channel & 0xff) << 16)
--			 + ((sdev->host->host_no & 0xff) << 24),
--			 &((struct scsi_idlun __user *)arg)->dev_id);
--		__put_user(sdev->host->unique_id,
--			 &((struct scsi_idlun __user *)arg)->host_unique_id);
-+		if (__put_user((sdev->id & 0xff)
-+			       + ((sdev->lun & 0xff) << 8)
-+			       + ((sdev->channel & 0xff) << 16)
-+			       + ((sdev->host->host_no & 0xff) << 24),
-+			       &((struct scsi_idlun __user *)arg)->dev_id))
-+			return -EFAULT;
-+
-+		if(__put_user(sdev->host->unique_id,
-+			&((struct scsi_idlun __user *)arg)->host_unique_id))
-+			return -EFAULT;
- 		return 0;
- 	case SCSI_IOCTL_GET_BUS_NUMBER:
- 		return put_user(sdev->host->host_no, (int __user *)arg);
-diff -puN drivers/scsi/sg.c~scsi-fix-uaccess-handling drivers/scsi/sg.c
---- a/drivers/scsi/sg.c~scsi-fix-uaccess-handling
-+++ a/drivers/scsi/sg.c
-@@ -556,7 +556,8 @@ sg_write(struct file *filp, const char _
- 		return -EDOM;
- 	}
- 	buf += SZ_SG_HEADER;
--	__get_user(opcode, buf);
-+	if (__get_user(opcode, buf))
-+		return -EFAULT;
- 	if (sfp->next_cmd_len > 0) {
- 		if (sfp->next_cmd_len > MAX_COMMAND_SIZE) {
- 			SCSI_LOG_TIMEOUT(1, printk("sg_write: command length too long\n"));
-@@ -779,6 +780,7 @@ sg_ioctl(struct inode *inode, struct fil
- 	Sg_fd *sfp;
- 	Sg_request *srp;
- 	unsigned long iflags;
-+	sg_scsi_id_t __user *sg_idp;
+ 	case MEDIUM_ERROR:
++		if (sshdr.asc == 0x11 || /* UNRECOVERED READ ERR */
++		    sshdr.asc == 0x13 || /* AMNF DATA FIELD */
++		    sshdr.asc == 0x14) { /* RECORD NOT FOUND */
++			return SUCCESS;
++		}
+ 		return NEEDS_RETRY;
  
- 	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
- 		return -ENXIO;
-@@ -860,26 +862,25 @@ sg_ioctl(struct inode *inode, struct fil
- 	case SG_GET_SCSI_ID:
- 		if (!access_ok(VERIFY_WRITE, p, sizeof (sg_scsi_id_t)))
- 			return -EFAULT;
--		else {
--			sg_scsi_id_t __user *sg_idp = p;
-+		sg_idp = p;
+ 	case HARDWARE_ERROR:
+diff -puN drivers/scsi/scsi_lib.c~fix-sense-key-medium-error-processing-and-retry drivers/scsi/scsi_lib.c
+--- a/drivers/scsi/scsi_lib.c~fix-sense-key-medium-error-processing-and-retry
++++ a/drivers/scsi/scsi_lib.c
+@@ -871,7 +871,8 @@ void scsi_io_completion(struct scsi_cmnd
+ 	 * are leftovers and there is some kind of error
+ 	 * (result != 0), retry the rest.
+ 	 */
+-	if (scsi_end_request(cmd, 1, good_bytes, result == 0) == NULL)
++	if (good_bytes &&
++	    scsi_end_request(cmd, 1, good_bytes, result == 0) == NULL)
+ 		return;
  
--			if (sdp->detached)
--				return -ENODEV;
--			__put_user((int) sdp->device->host->host_no,
--				   &sg_idp->host_no);
--			__put_user((int) sdp->device->channel,
--				   &sg_idp->channel);
--			__put_user((int) sdp->device->id, &sg_idp->scsi_id);
--			__put_user((int) sdp->device->lun, &sg_idp->lun);
--			__put_user((int) sdp->device->type, &sg_idp->scsi_type);
--			__put_user((short) sdp->device->host->cmd_per_lun,
--				   &sg_idp->h_cmd_per_lun);
--			__put_user((short) sdp->device->queue_depth,
--				   &sg_idp->d_queue_depth);
--			__put_user(0, &sg_idp->unused[0]);
--			__put_user(0, &sg_idp->unused[1]);
--			return 0;
--		}
-+		if (sdp->detached)
-+			return -ENODEV;
-+		if (__put_user((int) sdp->device->host->host_no,
-+			       &sg_idp->host_no) ||
-+		    __put_user((int) sdp->device->channel,
-+			       &sg_idp->channel) ||
-+		    __put_user((int) sdp->device->id, &sg_idp->scsi_id) ||
-+		    __put_user((int) sdp->device->lun, &sg_idp->lun) ||
-+		    __put_user((int) sdp->device->type, &sg_idp->scsi_type) ||
-+		    __put_user((short) sdp->device->host->cmd_per_lun,
-+			       &sg_idp->h_cmd_per_lun) ||
-+		    __put_user((short) sdp->device->queue_depth,
-+			       &sg_idp->d_queue_depth) ||
-+		    __put_user(0, &sg_idp->unused[0]) ||
-+		    __put_user(0, &sg_idp->unused[1]))
-+			return -EFAULT;
-+		return 0;
- 	case SG_SET_FORCE_PACK_ID:
- 		result = get_user(val, ip);
- 		if (result)
-@@ -894,12 +895,14 @@ sg_ioctl(struct inode *inode, struct fil
- 			if ((1 == srp->done) && (!srp->sg_io_owned)) {
- 				read_unlock_irqrestore(&sfp->rq_list_lock,
- 						       iflags);
--				__put_user(srp->header.pack_id, ip);
-+				if (__put_user(srp->header.pack_id, ip))
-+					return -EFAULT;
- 				return 0;
- 			}
- 		}
- 		read_unlock_irqrestore(&sfp->rq_list_lock, iflags);
--		__put_user(-1, ip);
-+		if (__put_user(-1, ip))
-+			return -EFAULT;
- 		return 0;
- 	case SG_GET_NUM_WAITING:
- 		read_lock_irqsave(&sfp->rq_list_lock, iflags);
+ 	/* good_bytes = 0, or (inclusive) there were leftovers and
 _
