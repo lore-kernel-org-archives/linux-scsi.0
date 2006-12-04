@@ -1,71 +1,49 @@
 From: akpm@osdl.org
-Subject: [patch 18/30] drivers/scsi/mca_53c9x.c : save_flags()/cli() removal
-Date: Mon, 04 Dec 2006 15:18:36 -0800
-Message-ID: <200612042319.kB4NJjjF008782@shell0.pdx.osdl.net>
+Subject: [patch 23/30] iscsi: fix crypto_alloc_hash() error check
+Date: Mon, 04 Dec 2006 15:18:40 -0800
+Message-ID: <200612042319.kB4NJnvj008801@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.25]:56755 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.25]:56743 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S967770AbWLDXT5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 4 Dec 2006 18:19:57 -0500
+	id S967776AbWLDXTz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 4 Dec 2006 18:19:55 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, amol@verismonetworks.com, alan@lxorguk.ukuu.org.uk
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, akinobu.mita@gmail.com, dmitry_yus@yahoo.com, itn780@yahoo.com
 
-From: Amol Lad <amol@verismonetworks.com>
+From: Akinobu Mita <akinobu.mita@gmail.com>
 
-Replaced save_flags()/cli() with spin_lock alternatives
+The return value of crypto_alloc_hash() should be checked by
+IS_ERR().
 
-[akpm@osdl.org: no longer BROKEN_ON_SMP]
-Signed-off-by: Amol Lad <amol@verismonetworks.com>
+Cc: Dmitry Yusupov <dmitry_yus@yahoo.com>
+Cc: Alex Aizman <itn780@yahoo.com>
+Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/mca_53c9x.c |   12 ++++--------
- 1 file changed, 4 insertions(+), 8 deletions(-)
+ drivers/scsi/iscsi_tcp.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff -puN drivers/scsi/mca_53c9x.c~drivers-scsi-mca_53c9xc-save_flags-cli-removal drivers/scsi/mca_53c9x.c
---- a/drivers/scsi/mca_53c9x.c~drivers-scsi-mca_53c9xc-save_flags-cli-removal
-+++ a/drivers/scsi/mca_53c9x.c
-@@ -341,9 +341,7 @@ static void dma_init_read(struct NCR_ESP
- {
- 	unsigned long flags;
+diff -puN drivers/scsi/iscsi_tcp.c~iscsi-fix-crypto_alloc_hash-error-check drivers/scsi/iscsi_tcp.c
+--- a/drivers/scsi/iscsi_tcp.c~iscsi-fix-crypto_alloc_hash-error-check
++++ a/drivers/scsi/iscsi_tcp.c
+@@ -1777,13 +1777,13 @@ iscsi_tcp_conn_create(struct iscsi_cls_s
+ 	tcp_conn->tx_hash.tfm = crypto_alloc_hash("crc32c", 0,
+ 						  CRYPTO_ALG_ASYNC);
+ 	tcp_conn->tx_hash.flags = 0;
+-	if (!tcp_conn->tx_hash.tfm)
++	if (IS_ERR(tcp_conn->tx_hash.tfm))
+ 		goto free_tcp_conn;
  
--
--	save_flags(flags);
--	cli();
-+	spin_lock_irqsave(esp->ehost->host_lock, flags);
+ 	tcp_conn->rx_hash.tfm = crypto_alloc_hash("crc32c", 0,
+ 						  CRYPTO_ALG_ASYNC);
+ 	tcp_conn->rx_hash.flags = 0;
+-	if (!tcp_conn->rx_hash.tfm)
++	if (IS_ERR(tcp_conn->rx_hash.tfm))
+ 		goto free_tx_tfm;
  
- 	mca_disable_dma(esp->dma);
- 	mca_set_dma_mode(esp->dma, MCA_DMA_MODE_XFER | MCA_DMA_MODE_16 |
-@@ -352,16 +350,14 @@ static void dma_init_read(struct NCR_ESP
- 	mca_set_dma_count(esp->dma, length / 2); /* !!! */
- 	mca_enable_dma(esp->dma);
- 
--	restore_flags(flags);
-+	spin_unlock_irqrestore(esp->ehost->host_lock, flags);
- }
- 
- static void dma_init_write(struct NCR_ESP *esp, __u32 addr, int length)
- {
- 	unsigned long flags;
- 
--
--	save_flags(flags);
--	cli();
-+	spin_lock_irqsave(esp->ehost->host_lock, flags);
- 
- 	mca_disable_dma(esp->dma);
- 	mca_set_dma_mode(esp->dma, MCA_DMA_MODE_XFER | MCA_DMA_MODE_WRITE |
-@@ -370,7 +366,7 @@ static void dma_init_write(struct NCR_ES
- 	mca_set_dma_count(esp->dma, length / 2); /* !!! */
- 	mca_enable_dma(esp->dma);
- 
--	restore_flags(flags);
-+	spin_unlock_irqrestore(esp->ehost->host_lock, flags);
- }
- 
- static void dma_ints_off(struct NCR_ESP *esp)
+ 	return cls_conn;
 _
