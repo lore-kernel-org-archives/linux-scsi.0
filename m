@@ -1,60 +1,47 @@
 From: akpm@osdl.org
-Subject: [patch 28/30] aic79xx: wrong max memory at driver init
+Subject: [patch 27/30] sym53c8xx_2 claims cpqarray device
 Date: Mon, 04 Dec 2006 15:18:43 -0800
-Message-ID: <200612042319.kB4NJqJ6008816@shell0.pdx.osdl.net>
+Message-ID: <200612042319.kB4NJqkh008813@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.25]:56809 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.25]:56980 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S967780AbWLDXUH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 4 Dec 2006 18:20:07 -0500
+	id S967783AbWLDXUh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 4 Dec 2006 18:20:37 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, frederic.temporelli@ext.bull.net, frederic.temporelli@bull.net, hare@suse.de, xavier.bru@bull.net
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, coldwell@redhat.com, willy@debian.org
 
-From: Frederic TEMPORELLI <frederic.temporelli@ext.bull.net>
+From: Chip Coldwell <coldwell@redhat.com>
 
-Aic79xx driver for Adaptec 39320 supports 64-bit addressing, but the
-initialization code of the driver is wrong: it tests the available memory
-size instead of testing the maximum available memory address.  This is
-necessary to support servers that provides 1 Terabyte of physical memory
-space addressing.
+Apropos this thread
 
-Attached is the suggested patch to solve this issue.
+http://marc.theaimsgroup.com/?l=linux-scsi&m=115591706804045&w=2
 
-[akpm@osdl.org: extern decls never go in .c files]
-Signed-off-by: <xavier.bru@bull.net>
-Signed-off-by: <frederic.temporelli@bull.net>
-Cc: Hannes Reinecke <hare@suse.de>
+which led to this patch
+
+http://www.kernel.org/git/?p=linux/kernel/git/jejb/scsi-rc-fixes-2.6.git;a=commit;h=b2b3c121076961333977f485f0d54c22121df920
+
+do we not also need the following patch, nine lines lower in the same file?
+
+Signed-off-by: Chip Coldwell <coldwell@redhat.com>
+Cc: Matthew Wilcox <willy@debian.org>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/aic7xxx/aic79xx_osm.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/sym53c8xx_2/sym_glue.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/aic7xxx/aic79xx_osm.c~aic79xx-wrong-max-memory-at-driver-init drivers/scsi/aic7xxx/aic79xx_osm.c
---- a/drivers/scsi/aic7xxx/aic79xx_osm.c~aic79xx-wrong-max-memory-at-driver-init
-+++ a/drivers/scsi/aic7xxx/aic79xx_osm.c
-@@ -44,6 +44,7 @@
- 
- #include "aic79xx_osm.h"
- #include "aic79xx_inline.h"
-+#include <linux/blkdev.h>
- #include <scsi/scsicam.h>
- 
- static struct scsi_transport_template *ahd_linux_transport_template = NULL;
-@@ -1130,10 +1131,9 @@ ahd_linux_register_host(struct ahd_softc
- uint64_t
- ahd_linux_get_memsize(void)
- {
--	struct sysinfo si;
--
--	si_meminfo(&si);
--	return ((uint64_t)si.totalram << PAGE_SHIFT);
-+	/* Need to take in account the max physical address in case
-+	 * of discontiguous memory. */
-+	return ((uint64_t)blk_max_pfn << PAGE_SHIFT);
- }
- 
- /*
+diff -puN drivers/scsi/sym53c8xx_2/sym_glue.c~sym53c8xx_2-claims-cpqarray-device drivers/scsi/sym53c8xx_2/sym_glue.c
+--- a/drivers/scsi/sym53c8xx_2/sym_glue.c~sym53c8xx_2-claims-cpqarray-device
++++ a/drivers/scsi/sym53c8xx_2/sym_glue.c
+@@ -2094,7 +2094,7 @@ static struct pci_device_id sym2_id_tabl
+ 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_NCR_53C875,
+ 	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0UL },
+ 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_NCR_53C1510,
+-	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0UL }, /* new */
++	  PCI_ANY_ID, PCI_ANY_ID,  PCI_CLASS_STORAGE_SCSI<<8,  0xffff00, 0UL }, /* new */
+ 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_53C895A,
+ 	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0UL },
+ 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_53C875A,
 _
