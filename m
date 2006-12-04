@@ -1,59 +1,88 @@
 From: akpm@osdl.org
-Subject: [patch 1/2] git-sas Kconfig fix
-Date: Mon, 04 Dec 2006 15:21:02 -0800
-Message-ID: <200612042322.kB4NMBWM009028@shell0.pdx.osdl.net>
+Subject: [patch 01/30] drivers/scsi/: small cleanups
+Date: Mon, 04 Dec 2006 15:18:20 -0800
+Message-ID: <200612042319.kB4NJTCN008727@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.25]:57256 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.25]:57364 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758404AbWLDXWU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 4 Dec 2006 18:22:20 -0500
+	id S967791AbWLDXWr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 4 Dec 2006 18:22:47 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, djwong@us.ibm.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, bunk@stusta.de
 
-From: "Darrick J. Wong" <djwong@us.ibm.com>
+From: Adrian Bunk <bunk@stusta.de>
 
-Andrew Morton wrote:
+This patch contains the following cleanups:
+- make needlessly global functions static
+- every file should #include the headers containing the prototypes for
+  it's global functions
 
-> WARNING: "ata_sas_slave_configure" [drivers/scsi/libsas/libsas.ko] undefined!
-> WARNING: "ata_port_disable" [drivers/scsi/libsas/libsas.ko] undefined!
-> WARNING: "ata_sas_port_init" [drivers/scsi/libsas/libsas.ko] undefined!
-> WARNING: "ata_sas_port_stop" [drivers/scsi/libsas/libsas.ko] undefined!
-> WARNING: "ata_sas_port_start" [drivers/scsi/libsas/libsas.ko] undefined!
-> WARNING: "ata_sas_port_alloc" [drivers/scsi/libsas/libsas.ko] undefined!
-> WARNING: "ata_noop_qc_prep" [drivers/scsi/libsas/libsas.ko] undefined!
-> WARNING: "ata_tf_to_fis" [drivers/scsi/libsas/libsas.ko] undefined!
-> WARNING: "ata_noop_dev_select" [drivers/scsi/libsas/libsas.ko] undefined!
-> WARNING: "ata_tf_from_fis" [drivers/scsi/libsas/libsas.ko] undefined!
-> WARNING: "ata_host_init" [drivers/scsi/libsas/libsas.ko] undefined!
-> WARNING: "ata_sas_queuecmd" [drivers/scsi/libsas/libsas.ko] undefined!
-> WARNING: "ata_sas_port_destroy" [drivers/scsi/libsas/libsas.ko] undefined!
-> WARNING: "ata_scsi_ioctl" [drivers/scsi/libsas/libsas.ko] undefined!
-> WARNING: "ata_qc_complete" [drivers/scsi/libsas/libsas.ko] undefined!
-
-The SATA-fortified libsas depends on libata for SATA support.  Kconfig
-needs to know about that.  Patch is for aic94xx-sas-2.6 and apparently -mm
-as well.
-
-Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/libsas/Kconfig |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/scsi_sysctl.c       |    1 +
+ drivers/scsi/scsi_sysfs.c        |    3 ++-
+ drivers/scsi/scsi_transport_fc.c |    2 +-
+ drivers/scsi/sr.c                |    2 +-
+ 4 files changed, 5 insertions(+), 3 deletions(-)
 
-diff -puN drivers/scsi/libsas/Kconfig~git-sas-kconfig-fix drivers/scsi/libsas/Kconfig
---- a/drivers/scsi/libsas/Kconfig~git-sas-kconfig-fix
-+++ a/drivers/scsi/libsas/Kconfig
-@@ -24,7 +24,7 @@
+diff -puN drivers/scsi/scsi_sysctl.c~drivers-scsi-small-cleanups drivers/scsi/scsi_sysctl.c
+--- a/drivers/scsi/scsi_sysctl.c~drivers-scsi-small-cleanups
++++ a/drivers/scsi/scsi_sysctl.c
+@@ -9,6 +9,7 @@
+ #include <linux/sysctl.h>
  
- config SCSI_SAS_LIBSAS
- 	tristate "SAS Domain Transport Attributes"
--	depends on SCSI
-+	depends on SCSI && ATA
- 	select SCSI_SAS_ATTRS
- 	help
- 	  This provides transport specific helpers for SAS drivers which
+ #include "scsi_logging.h"
++#include "scsi_priv.h"
+ 
+ 
+ static ctl_table scsi_table[] = {
+diff -puN drivers/scsi/scsi_sysfs.c~drivers-scsi-small-cleanups drivers/scsi/scsi_sysfs.c
+--- a/drivers/scsi/scsi_sysfs.c~drivers-scsi-small-cleanups
++++ a/drivers/scsi/scsi_sysfs.c
+@@ -16,6 +16,7 @@
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_tcq.h>
+ #include <scsi/scsi_transport.h>
++#include <scsi/scsi_driver.h>
+ 
+ #include "scsi_priv.h"
+ #include "scsi_logging.h"
+@@ -764,7 +765,7 @@ void scsi_remove_device(struct scsi_devi
+ }
+ EXPORT_SYMBOL(scsi_remove_device);
+ 
+-void __scsi_remove_target(struct scsi_target *starget)
++static void __scsi_remove_target(struct scsi_target *starget)
+ {
+ 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+ 	unsigned long flags;
+diff -puN drivers/scsi/scsi_transport_fc.c~drivers-scsi-small-cleanups drivers/scsi/scsi_transport_fc.c
+--- a/drivers/scsi/scsi_transport_fc.c~drivers-scsi-small-cleanups
++++ a/drivers/scsi/scsi_transport_fc.c
+@@ -1797,7 +1797,7 @@ fc_rport_final_delete(void *data)
+  * Notes:
+  *	This routine assumes no locks are held on entry.
+  **/
+-struct fc_rport *
++static struct fc_rport *
+ fc_rport_create(struct Scsi_Host *shost, int channel,
+ 	struct fc_rport_identifiers  *ids)
+ {
+diff -puN drivers/scsi/sr.c~drivers-scsi-small-cleanups drivers/scsi/sr.c
+--- a/drivers/scsi/sr.c~drivers-scsi-small-cleanups
++++ a/drivers/scsi/sr.c
+@@ -174,7 +174,7 @@ static void scsi_cd_put(struct scsi_cd *
+  * an inode for that to work, and we do not always have one.
+  */
+ 
+-int sr_media_change(struct cdrom_device_info *cdi, int slot)
++static int sr_media_change(struct cdrom_device_info *cdi, int slot)
+ {
+ 	struct scsi_cd *cd = cdi->handle;
+ 	int retval;
 _
