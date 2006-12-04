@@ -1,39 +1,52 @@
 From: akpm@osdl.org
-Subject: [patch 15/30] drivers/scsi/megaraid.c: Replacing yield() with a better alternative
-Date: Mon, 04 Dec 2006 15:18:33 -0800
-Message-ID: <200612042319.kB4NJgDF008771@shell0.pdx.osdl.net>
+Subject: [patch 20/30] SCSI: advansys, wrap PCI table inside ifdef CONFIG_PCI
+Date: Mon, 04 Dec 2006 15:18:38 -0800
+Message-ID: <200612042319.kB4NJlYP008790@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.25]:56760 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.25]:56764 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S967773AbWLDXT5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S967779AbWLDXT5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Mon, 4 Dec 2006 18:19:57 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, amol@verismonetworks.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, randy.dunlap@oracle.com, bobf@advansys.com
 
-From: Amol Lad <amol@verismonetworks.com>
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-For this driver cond_resched() seems to be a better alternative
+The Advansys ISA/EISA/PCI driver has a compile error when CONFIG_PCI=n, so
+wrap the pci_device_id table inside ifdef CONFIG_PCI.
 
-Signed-off-by: Amol Lad <amol@verismonetworks.com>
+drivers/scsi/advansys.c: At top level:
+drivers/scsi/advansys.c:18219: error: array type has incomplete element type
+drivers/scsi/advansys.c:18221: error: 'PCI_ANY_ID' undeclared here (not in a function)
+make[2]: *** [drivers/scsi/advansys.o] Error 1
+make[1]: *** [drivers/scsi] Error 2
+make: *** [drivers] Error 2
+
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: <bobf@advansys.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/megaraid.c |    3 ++-
+ drivers/scsi/advansys.c |    3 ++-
  1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff -puN drivers/scsi/megaraid.c~drivers-scsi-megaraidc-replacing-yield-with-a drivers/scsi/megaraid.c
---- a/drivers/scsi/megaraid.c~drivers-scsi-megaraidc-replacing-yield-with-a
-+++ a/drivers/scsi/megaraid.c
-@@ -1753,7 +1753,8 @@ __mega_busywait_mbox (adapter_t *adapter
- 	for (counter = 0; counter < 10000; counter++) {
- 		if (!mbox->m_in.busy)
- 			return 0;
--		udelay(100); yield();
-+		udelay(100);
-+		cond_resched();
- 	}
- 	return -1;		/* give up after 1 second */
+diff -puN drivers/scsi/advansys.c~scsi-advansys-wrap-pci-table-inside-ifdef-config_pci drivers/scsi/advansys.c
+--- a/drivers/scsi/advansys.c~scsi-advansys-wrap-pci-table-inside-ifdef-config_pci
++++ a/drivers/scsi/advansys.c
+@@ -18133,6 +18133,7 @@ AdvInquiryHandling(
  }
+ MODULE_LICENSE("Dual BSD/GPL");
+ 
++#ifdef CONFIG_PCI
+ /* PCI Devices supported by this driver */
+ static struct pci_device_id advansys_pci_tbl[] __devinitdata = {
+ 	{ PCI_VENDOR_ID_ASP, PCI_DEVICE_ID_ASP_1200A,
+@@ -18150,4 +18151,4 @@ static struct pci_device_id advansys_pci
+ 	{ }
+ };
+ MODULE_DEVICE_TABLE(pci, advansys_pci_tbl);
+-
++#endif /* CONFIG_PCI */
 _
