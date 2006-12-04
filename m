@@ -1,39 +1,45 @@
 From: akpm@osdl.org
-Subject: [patch 14/30] drivers/scsi/NCR5380.c: Replacing yield() with a better alternative
-Date: Mon, 04 Dec 2006 15:18:32 -0800
-Message-ID: <200612042319.kB4NJfUX008767@shell0.pdx.osdl.net>
+Subject: [patch 25/30] scsi: 53c7xx brackets fix
+Date: Mon, 04 Dec 2006 15:18:41 -0800
+Message-ID: <200612042319.kB4NJoM0008807@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.25]:56734 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.25]:56785 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S967775AbWLDXTy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 4 Dec 2006 18:19:54 -0500
+	id S967785AbWLDXUA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 4 Dec 2006 18:20:00 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, amol@verismonetworks.com, alan@lxorguk.ukuu.org.uk
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, m.kozlowski@tuxland.pl
 
-From: Amol Lad <amol@verismonetworks.com>
+From: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
 
-Replaced yield() with cond_resched()
-
-Signed-off-by: Amol Lad <amol@verismonetworks.com>
-Acked-by: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Signed-off-by: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/NCR5380.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/53c7xx.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff -puN drivers/scsi/NCR5380.c~drivers-scsi-ncr5380c-replacing-yield-with-a drivers/scsi/NCR5380.c
---- a/drivers/scsi/NCR5380.c~drivers-scsi-ncr5380c-replacing-yield-with-a
-+++ a/drivers/scsi/NCR5380.c
-@@ -347,7 +347,7 @@ static int NCR5380_poll_politely(struct 
- 		if((r & bit) == val)
- 			return 0;
- 		if(!in_interrupt())
--			yield();
-+			cond_resched();
- 		else
- 			cpu_relax();
- 	}
+diff -puN drivers/scsi/53c7xx.c~scsi-53c7xx-brackets-fix drivers/scsi/53c7xx.c
+--- a/drivers/scsi/53c7xx.c~scsi-53c7xx-brackets-fix
++++ a/drivers/scsi/53c7xx.c
+@@ -4400,7 +4400,7 @@ abort_connected (struct Scsi_Host *host)
+  * account the current synchronous offset) 
+  */
+ 
+-    sstat = (NCR53c8x0_read8 (SSTAT2_REG);
++    sstat = NCR53c8x0_read8 (SSTAT2_REG);
+     offset = OFFSET (sstat & SSTAT2_FF_MASK) >> SSTAT2_FF_SHIFT;
+     phase = sstat & SSTAT2_PHASE_MASK;
+ 
+@@ -5423,7 +5423,7 @@ insn_to_offset (Scsi_Cmnd *cmd, u32 *ins
+     	    	     --buffers, offset += segment->length, ++segment)
+ #if 0
+ 		    printk("scsi%d: comparing 0x%p to 0x%p\n", 
+-			cmd->device->host->host_no, saved, page_address(segment->page+segment->offset);
++			cmd->device->host->host_no, saved, page_address(segment->page+segment->offset));
+ #else
+ 		    ;
+ #endif
 _
