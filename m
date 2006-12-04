@@ -1,43 +1,39 @@
 From: akpm@osdl.org
-Subject: [patch 09/30] Fix scsi/scsi_transport.h compile error
-Date: Mon, 04 Dec 2006 15:18:29 -0800
-Message-ID: <200612042319.kB4NJc6H008751@shell0.pdx.osdl.net>
+Subject: [patch 14/30] drivers/scsi/NCR5380.c: Replacing yield() with a better alternative
+Date: Mon, 04 Dec 2006 15:18:32 -0800
+Message-ID: <200612042319.kB4NJfUX008767@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.25]:56730 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.25]:56734 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S967770AbWLDXTy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S967775AbWLDXTy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Mon, 4 Dec 2006 18:19:54 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, eike-kernel@sf-tec.de
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, amol@verismonetworks.com, alan@lxorguk.ukuu.org.uk
 
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
+From: Amol Lad <amol@verismonetworks.com>
 
-scsi_transport.h defines the inline function scsi_transport_device_data() that
-dereferences a pointer of "struct scsi_device *".  Since the struct is not
-known by the header this might break compilation.
+Replaced yield() with cond_resched()
 
-Include scsi/scsi_device.h to not rely on users doing the correct magic
-include order.
-
-Signed-off-by: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
+Signed-off-by: Amol Lad <amol@verismonetworks.com>
+Acked-by: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- include/scsi/scsi_transport.h |    1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/NCR5380.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN include/scsi/scsi_transport.h~fix-scsi-scsi_transporth-compile-error include/scsi/scsi_transport.h
---- a/include/scsi/scsi_transport.h~fix-scsi-scsi_transporth-compile-error
-+++ a/include/scsi/scsi_transport.h
-@@ -22,6 +22,7 @@
- 
- #include <linux/transport_class.h>
- #include <scsi/scsi_host.h>
-+#include <scsi/scsi_device.h>
- 
- struct scsi_transport_template {
- 	/* the attribute containers */
+diff -puN drivers/scsi/NCR5380.c~drivers-scsi-ncr5380c-replacing-yield-with-a drivers/scsi/NCR5380.c
+--- a/drivers/scsi/NCR5380.c~drivers-scsi-ncr5380c-replacing-yield-with-a
++++ a/drivers/scsi/NCR5380.c
+@@ -347,7 +347,7 @@ static int NCR5380_poll_politely(struct 
+ 		if((r & bit) == val)
+ 			return 0;
+ 		if(!in_interrupt())
+-			yield();
++			cond_resched();
+ 		else
+ 			cpu_relax();
+ 	}
 _
