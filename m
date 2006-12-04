@@ -1,38 +1,57 @@
 From: akpm@osdl.org
-Subject: [patch 10/30] pci_module_init() convertion in the legacy megaraid driver
-Date: Mon, 04 Dec 2006 15:18:29 -0800
-Message-ID: <200612042319.kB4NJcMJ008754@shell0.pdx.osdl.net>
+Subject: [patch 13/30] MPT fusion: handle PCI layer error on resume
+Date: Mon, 04 Dec 2006 15:18:32 -0800
+Message-ID: <200612042319.kB4NJfwe008764@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.25]:56673 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.25]:56711 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S967765AbWLDXTo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 4 Dec 2006 18:19:44 -0500
+	id S967769AbWLDXTv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 4 Dec 2006 18:19:51 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, henne@nachtwindheim.de
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, jeff@garzik.org, Eric.Moore@lsil.com
 
-From: Henrik Kretzschmar <henne@nachtwindheim.de>
+From: Jeff Garzik <jeff@garzik.org>
 
-pci_module_init() convertion in the legacy megaraid driver.
+In the unlikely event of pci_enable_device() failure during resume, we do
+the minimalist solution and simply exit, rather than continuing to enable
+the hardware.
 
-Signed-off-by: Henrik Kretzschmar <henne@nachtwindheim.de>
+Signed-off-by: Jeff Garzik <jeff@garzik.org>
+Cc: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/megaraid.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/message/fusion/mptbase.c |   10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-diff -puN drivers/scsi/megaraid.c~pci_module_init-convertion-in-the-legacy-megaraid-driver drivers/scsi/megaraid.c
---- a/drivers/scsi/megaraid.c~pci_module_init-convertion-in-the-legacy-megaraid-driver
-+++ a/drivers/scsi/megaraid.c
-@@ -5074,7 +5074,7 @@ static int __init megaraid_init(void)
- 				"megaraid: failed to create megaraid root\n");
- 	}
- #endif
--	error = pci_module_init(&megaraid_pci_driver);
-+	error = pci_register_driver(&megaraid_pci_driver);
- 	if (error) {
- #ifdef CONFIG_PROC_FS
- 		remove_proc_entry("megaraid", &proc_root);
+diff -puN drivers/message/fusion/mptbase.c~mpt-fusion-handle-pci-layer-error-on-resume drivers/message/fusion/mptbase.c
+--- a/drivers/message/fusion/mptbase.c~mpt-fusion-handle-pci-layer-error-on-resume
++++ a/drivers/message/fusion/mptbase.c
+@@ -1515,7 +1515,7 @@ mpt_resume(struct pci_dev *pdev)
+ {
+ 	MPT_ADAPTER *ioc = pci_get_drvdata(pdev);
+ 	u32 device_state = pdev->current_state;
+-	int recovery_state;
++	int recovery_state, rc;
+ 
+ 	printk(MYIOC_s_INFO_FMT
+ 	"pci-resume: pdev=0x%p, slot=%s, Previous operating state [D%d]\n",
+@@ -1523,7 +1523,13 @@ mpt_resume(struct pci_dev *pdev)
+ 
+ 	pci_set_power_state(pdev, 0);
+ 	pci_restore_state(pdev);
+-	pci_enable_device(pdev);
++
++	rc = pci_enable_device(pdev);
++	if (rc) {
++		printk(MYIOC_s_INFO_FMT
++			"pci-resume: device enable failed\n", ioc->name);
++		return rc;
++	}
+ 
+ 	/* enable interrupts */
+ 	CHIPREG_WRITE32(&ioc->chip->IntMask, MPI_HIM_DIM);
 _
