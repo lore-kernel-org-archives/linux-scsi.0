@@ -1,89 +1,234 @@
-From: "Wesley J. Landaker" <wjl@icecavern.net>
-Subject: [SOLVED] Re: Support for (new?) Silicon Image PCI SATA controller
-Date: Tue, 5 Dec 2006 15:48:50 -0700
-Message-ID: <200612051548.54416.wjl@icecavern.net>
-References: <200611081803.52986.wjl@icecavern.net> <20061109234009.GT16952@parisc-linux.org> <200611091659.16002.wjl@icecavern.net>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [GIT PATCH] scsi updates for 2.6.19
+Date: Tue, 05 Dec 2006 16:49:33 -0600
+Message-ID: <1165358973.2785.33.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart44836930.EB9X6IMpzB";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from c-68-54-3-45.hsd1.nm.comcast.net ([68.54.3.45]:2162 "EHLO
-	icecavern.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S936998AbWLEWsn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 5 Dec 2006 17:48:43 -0500
-In-Reply-To: <200611091659.16002.wjl@icecavern.net>
+Received: from hancock.steeleye.com ([71.30.118.248]:57090 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S937026AbWLEWtj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Dec 2006 17:49:39 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Tejun Heo <htejun@gmail.com>, linux-scsi@vger.kernel.org, Carlos Pardo <Carlos.Pardo@siliconimage.com>
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
---nextPart44836930.EB9X6IMpzB
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+This is quite a mixed bag.  The usual driver updates, plus asynchronous
+scanning and the new target infrastructure.
 
-On Thursday 09 November 2006 16:59, Wesley J. Landaker wrote:
-> On Thursday 09 November 2006 16:40, Matthew Wilcox wrote:
-> > On Fri, Nov 10, 2006 at 08:37:23AM +0900, Tejun Heo wrote:
-> > > >00:10.0 Mass storage controller [0180]: Silicon Image, Inc. Unknown
-> > > > device [1095:2502] (rev 01)
-> > > >        Subsystem: Silicon Image, Inc. Unknown device [1095:2512]
-> > >
-> > > SIMG says there's no such device and it's probably bad hardware
-> > > (probably a 3512) with stuck bits in PCI ID.  If you bought it, ask
-> > > for replacement.
-> >
-> > It could also be a problem with his motherboard.  I'd try it in a
-> > different slot (or in a different machine) before returning the card
-> > as bad.
->
-> Guys, thank you. Your suggestion about a stuck bit sounds reasonable,
-> since I couldn't find any indication of any device IDs from SI that
-> matched... that's why I originally assumed it was a new device (since the
-> hardware is supposedly fairly recent).
->
-> I will try this out in a different motherboard slot and if there's no
-> luck there see if I can get this card replaced.
->
-> Thank for the help, and hopefully I can get it working. =3D)
+The patch is available here:
 
-Just to follow up with this, I got another new SATA card (just in case) and=
-=20
-had another chance to take down the server in question and try to fix this.=
-=20
+master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git
 
-I did some testing with the other card and other slots and it was definitel=
-y=20
-the motherboard PCI slot that had problems.=20
+the shortlog is:
 
-A different card in the same slot failed, moving to a different slot with=20
-the either card worked immediately. It's now shows up as I would have=20
-expected. Whew!
+Adrian Bunk:
+       ipr: Make ipr_ioctl static
+       megaraid_sas: make 2 functions static
+       qla2xxx: make some functions static
 
-00:0f.0 Mass storage controller [0180]: Silicon Image, Inc. SiI 3512=20
-[SATALink/SATARaid] Serial ATA Controller [1095:3512] (rev 01)
-        Subsystem: Silicon Image, Inc. SiI 3512 SATALink Controller=20
-[1095:3512]
+Alan Stern:
+       Reduce polling in sd.c
 
-Anyway, thanks everyone for your help.
+Andrew Morton:
+       tgt: fix undefined flush_dcache_page() problem
+       ips: fix soft lockup during reset initialization
+       revert "[SCSI] ips soft lockup during reset/initialization"
 
-=2D-=20
-Wesley J. Landaker <wjl@icecavern.net> <xmpp:wjl@icecavern.net>
-OpenPGP FP: 4135 2A3B 4726 ACC5 9094  0097 F0A9 8A4C 4CD6 E3D2
+Andrew Vasquez:
+       qla2xxx: add asynchronous scsi scanning support.
+       qla2xxx: defer topology discovery to DPC thread during initialization.
 
---nextPart44836930.EB9X6IMpzB
-Content-Type: application/pgp-signature
+Brian King:
+       ipr: Driver version 2.3.0
+       ipr: Reduce default error log size
+       ipr: Add support for logging SAS fabric errors
+       ipr: Remove debug trace points from dump code
+       ipr: Remove ipr_scsi_timed_out
+       ipr: Set default ipr Kconfig values
+       ipr: PCI IDs for new SAS adapters
+       ipr: Stop issuing cancel all to disk arrays
+       ipr: SATA reset - wait for host reset completion
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
+Christoph Hellwig:
+       kill scsi_assign_lock
+       untangle scsi_prep_fn
+       use one-element sg list in scsi_send_eh_cmnd
 
-iD8DBQBFdfdW8KmKTEzW49IRAuKCAKCVwNuasuhanKt2wPt3A5vS6ALkQACfb8Px
-cwwNx0qDQfhPNwOD2fFOcEc=
-=sem6
------END PGP SIGNATURE-----
+Darrick J. Wong:
+      aic94xx: delete ascb timers when freeing queues
+      aic94xx: handle REQ_DEVICE_RESET
+       aic94xx: handle REQ_TASK_ABORT
+       libsas: add sas_abort_task
+       libsas: modify error handler to use scsi_eh_* functions
 
---nextPart44836930.EB9X6IMpzB--
+David C Somayajulu:
+       qla4xxx: fix for timing issue for nvram accesses.
+       qla4xxx: add support for qla4032
+      qla4xxx: bug fix: driver hardware semaphore needs to be grabbed before soft reset
+
+Ed Lin:
+       stex: version update
+       stex: change wait loop code
+       stex: add new device type support
+       stex: update device id info
+       stex: adjust default queue length
+       stex: add value check in hard reset routine
+       stex: fix controller_info command handling
+       stex: fix biosparam calculation
+
+FUJITA Tomonori:
+       scsi tgt: IBM eServer i/pSeries virtual SCSI target driver
+       scsi tgt: SCSI RDMA Protocol library functions
+       scsi-ml: Makefile and Kconfig changes for tgt
+       scsi tgt: scsi target user and kernel communication interface
+       scsi tgt: scsi target lib functionality
+       export scsi-ml functions needed by tgt_scsi_lib and its LLDs
+
+Hannes Reinecke:
+       block: convert jiffies to msecs in scsi_ioctl()
+
+Henne:
+       scsi: t128 scsi_cmnd convertion
+
+Ingo Molnar:
+       fix module unload induced compile warning
+
+James Bottomley:
+       libsas: better error handling in sas_expander.c
+       53c700: brown paper bag fix for auto request sense
+       aic94xx: fix pointer to integer conversion warning
+
+James Smart:
+       lpfc 8.1.11 : Change version number to 8.1.11
+       lpfc 8.1.11 : Misc Fixes
+       lpfc 8.1.11 : Add soft_wwnn sysfs attribute, rename soft_wwn_enable
+       lpfc 8.1.11 : Removed decoding of PCI Subsystem Id
+       lpfc 8.1.11 : Add MSI (Message Signalled Interrupts) support
+       lpfc 8.1.11 : Adjust LOG_FCP logging
+       lpfc 8.1.11 : Fix Memory leaks
+       lpfc 8.1.11 : Fix lpfc_multi_ring_support
+       lpfc 8.1.11 : Discovery Fixes
+
+Jeff Garzik:
+       megaraid: fix MMIO casts
+       minor bug fixes and cleanups
+       SCSI/aha1740: handle SCSI API errors
+
+Kai Makisara:
+       st: log message changes
+
+Luben Tuikov:
+       sd: clearer output of disk cache state
+
+Mark Haverkamp:
+       aacraid: Driver version update
+       aacraid: Abort management FIBs
+       aacraid: Detect Blinkled at startup
+
+Matthew Wilcox:
+       Make scsi_scan_host work for drivers which find their own targets
+       fix missing check for no scanning
+       Add Kconfig option for asynchronous SCSI scanning
+       Add ability to scan scsi busses asynchronously
+
+Randy Dunlap:
+       qla2xxx: use NULL instead of 0
+       initio: fix section mismatches with HOTPLUG=n
+
+Salyzyn, Mark:
+       aic79xx: Add ASC-29320LPE ids to driver
+
+
+and the diffstat:
+
+ Documentation/kernel-parameters.txt     |    5 
+ Documentation/scsi/scsi_mid_low_api.txt |   31 -
+ block/scsi_ioctl.c                      |    2 
+ drivers/scsi/53c700.c                   |    7 
+ drivers/scsi/BusLogic.c                 |   12 
+ drivers/scsi/Kconfig                    |   59 +
+ drivers/scsi/Makefile                   |    7 
+ drivers/scsi/NCR53c406a.c               |    5 
+ drivers/scsi/aacraid/aacraid.h          |    4 
+ drivers/scsi/aacraid/commsup.c          |   23 
+ drivers/scsi/aha1740.c                  |   10 
+ drivers/scsi/aic7xxx/aic79xx_osm_pci.c  |    1 
+ drivers/scsi/aic7xxx/aic79xx_pci.c      |    8 
+ drivers/scsi/aic7xxx/aic79xx_pci.h      |    1 
+ drivers/scsi/aic94xx/aic94xx_init.c     |    9 
+ drivers/scsi/aic94xx/aic94xx_scb.c      |  120 +++-
+ drivers/scsi/fd_mcs.c                   |    2 
+ drivers/scsi/hosts.c                    |    8 
+ drivers/scsi/ibmvscsi/Makefile          |    2 
+ drivers/scsi/ibmvscsi/ibmvstgt.c        |  958 ++++++++++++++++++++++++++++++++
+ drivers/scsi/initio.c                   |    2 
+ drivers/scsi/ipr.c                      |  313 ++++++++--
+ drivers/scsi/ipr.h                      |   83 ++
+ drivers/scsi/ips.c                      |   28 
+ drivers/scsi/ips.h                      |    9 
+ drivers/scsi/libsas/sas_expander.c      |   36 -
+ drivers/scsi/libsas/sas_init.c          |    4 
+ drivers/scsi/libsas/sas_scsi_host.c     |   90 ++-
+ drivers/scsi/libsrp.c                   |  441 ++++++++++++++
+ drivers/scsi/lpfc/lpfc.h                |    6 
+ drivers/scsi/lpfc/lpfc_attr.c           |  118 +++
+ drivers/scsi/lpfc/lpfc_ct.c             |   24 
+ drivers/scsi/lpfc/lpfc_els.c            |   34 -
+ drivers/scsi/lpfc/lpfc_hbadisc.c        |  229 +------
+ drivers/scsi/lpfc/lpfc_hw.h             |   35 -
+ drivers/scsi/lpfc/lpfc_init.c           |  136 +---
+ drivers/scsi/lpfc/lpfc_logmsg.h         |    2 
+ drivers/scsi/lpfc/lpfc_nportdisc.c      |    9 
+ drivers/scsi/lpfc/lpfc_scsi.c           |   56 +
+ drivers/scsi/lpfc/lpfc_sli.c            |   42 +
+ drivers/scsi/lpfc/lpfc_sli.h            |    2 
+ drivers/scsi/lpfc/lpfc_version.h        |    2 
+ drivers/scsi/megaraid.c                 |   13 
+ drivers/scsi/megaraid.h                 |    3 
+ drivers/scsi/megaraid/megaraid_sas.c    |    4 
+ drivers/scsi/ncr53c8xx.c                |   19 
+ drivers/scsi/qla2xxx/qla_attr.c         |    2 
+ drivers/scsi/qla2xxx/qla_init.c         |   94 ---
+ drivers/scsi/qla2xxx/qla_os.c           |   66 +-
+ drivers/scsi/qla2xxx/qla_sup.c          |    8 
+ drivers/scsi/qla4xxx/ql4_dbg.c          |    4 
+ drivers/scsi/qla4xxx/ql4_def.h          |  105 +--
+ drivers/scsi/qla4xxx/ql4_fw.h           |    7 
+ drivers/scsi/qla4xxx/ql4_glbl.h         |    3 
+ drivers/scsi/qla4xxx/ql4_init.c         |   47 -
+ drivers/scsi/qla4xxx/ql4_inline.h       |    4 
+ drivers/scsi/qla4xxx/ql4_iocb.c         |    6 
+ drivers/scsi/qla4xxx/ql4_isr.c          |    1 
+ drivers/scsi/qla4xxx/ql4_nvram.c        |   70 +-
+ drivers/scsi/qla4xxx/ql4_nvram.h        |    4 
+ drivers/scsi/qla4xxx/ql4_os.c           |  117 ---
+ drivers/scsi/qla4xxx/ql4_version.h      |    7 
+ drivers/scsi/scsi.c                     |   45 -
+ drivers/scsi/scsi_error.c               |   33 -
+ drivers/scsi/scsi_lib.c                 |  346 ++++++-----
+ drivers/scsi/scsi_priv.h                |    3 
+ drivers/scsi/scsi_scan.c                |  225 +++++++
+ drivers/scsi/scsi_tgt_if.c              |  352 +++++++++++
+ drivers/scsi/scsi_tgt_lib.c             |  742 ++++++++++++++++++++++++
+ drivers/scsi/scsi_tgt_priv.h            |   25 
+ drivers/scsi/scsi_wait_scan.c           |   31 +
+ drivers/scsi/sd.c                       |   29 
+ drivers/scsi/st.c                       |   16 
+ drivers/scsi/stex.c                     |  130 ++--
+ drivers/scsi/t128.h                     |   39 -
+ include/scsi/libsas.h                   |   14 
+ include/scsi/libsrp.h                   |   77 ++
+ include/scsi/scsi_cmnd.h                |   10 
+ include/scsi/scsi_device.h              |   30 -
+ include/scsi/scsi_host.h                |   69 ++
+ include/scsi/scsi_tgt.h                 |   19 
+ include/scsi/scsi_tgt_if.h              |   90 +++
+ include/scsi/scsi_transport_sas.h       |    2 
+ 83 files changed, 4760 insertions(+), 1126 deletions(-)
+
+James
+
+
