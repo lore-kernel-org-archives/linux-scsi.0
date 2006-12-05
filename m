@@ -1,94 +1,112 @@
 From: "Ed Lin" <ed.lin@promise.com>
-Subject: [repost][PATCH 5/8] stex: update device id info
-Date: Mon, 4 Dec 2006 17:49:36 -0800
-Message-ID: <NONAMEB2ROONwIidWZe00001572@nonameb.ptu.promise.com>
+Subject: [repost][PATCH 7/8] stex: change wait loop code
+Date: Mon, 4 Dec 2006 17:49:42 -0800
+Message-ID: <NONAMEBZhNfv57kVwyr00001574@nonameb.ptu.promise.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 67.111.72.3.ptr.us.xo.net ([67.111.72.3]:18934 "EHLO
+Received: from 67.111.72.3.ptr.us.xo.net ([67.111.72.3]:19092 "EHLO
 	nonameb.ptu.promise.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S968012AbWLEBtM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Dec 2006 20:49:12 -0500
+	with ESMTP id S968017AbWLEBt3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Dec 2006 20:49:29 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>
 Cc: "james.Bottomley" <james.Bottomley@SteelEye.com>, jeff <jeff@garzik.org>, promise_linux <promise_linux@promise.com>
 
 
-- add comments for various devices
-- remove unused device ids(0xf350, 0x4301, 0x8301, 0x8302)
-- add new device id(0xe350)
-- fix vendor id of st_vsc
-- modify Kconfig help info
+The original wait loop may be much longer than intended time.
+Use more accurate timer_after for it. Also adjust wait value to
+avoid unnecessary long waiting.
 
 Signed-off-by: Ed Lin <ed.lin@promise.com>
 ---
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 1b4bfaa..6956909 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -982,8 +982,13 @@ config SCSI_STEX
- 	tristate "Promise SuperTrak EX Series support"
- 	depends on PCI && SCSI
- 	---help---
--	  This driver supports Promise SuperTrak EX8350/8300/16350/16300
--	  Storage controllers.
-+	  This driver supports Promise SuperTrak EX series storage controllers.
-+
-+	  Promise provides Linux RAID configuration utility for these
-+	  controllers. Please visit <http://www.promise.com> to download.
-+
-+	  To compile this driver as a module, choose M here: the
-+	  module will be called stex.
- 
- config SCSI_SYM53C8XX_2
- 	tristate "SYM53C8XX Version 2 SCSI support"
 diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
-index a20cbd9..0fd115c 100644
+index bfd7983..7edbcc9 100644
 --- a/drivers/scsi/stex.c
 +++ b/drivers/scsi/stex.c
-@@ -1356,15 +1356,32 @@ static void stex_shutdown(struct pci_dev
- }
+@@ -76,9 +76,10 @@ enum {
+ 	MU_STATE_STARTED			= 4,
+ 	MU_STATE_RESETTING			= 5,
  
- static struct pci_device_id stex_pci_tbl[] = {
--	{ 0x105a, 0x8350, PCI_ANY_ID, PCI_ANY_ID, 0, 0, st_shasta },
--	{ 0x105a, 0xc350, PCI_ANY_ID, PCI_ANY_ID, 0, 0, st_shasta },
--	{ 0x105a, 0xf350, PCI_ANY_ID, PCI_ANY_ID, 0, 0, st_shasta },
--	{ 0x105a, 0x4301, PCI_ANY_ID, PCI_ANY_ID, 0, 0, st_shasta },
--	{ 0x105a, 0x4302, PCI_ANY_ID, PCI_ANY_ID, 0, 0, st_shasta },
--	{ 0x105a, 0x8301, PCI_ANY_ID, PCI_ANY_ID, 0, 0, st_shasta },
--	{ 0x105a, 0x8302, PCI_ANY_ID, PCI_ANY_ID, 0, 0, st_shasta },
--	{ 0x1725, 0x7250, PCI_ANY_ID, PCI_ANY_ID, 0, 0, st_vsc },
--	{ 0x105a, 0x8650, PCI_ANY_ID, PCI_ANY_ID, 0, 0, st_yosemite },
-+	/* st_shasta */
-+	{ 0x105a, 0x8350, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-+		st_shasta }, /* SuperTrak EX8350/8300/16350/16300 */
-+	{ 0x105a, 0xc350, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-+		st_shasta }, /* SuperTrak EX12350 */
-+	{ 0x105a, 0x4302, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-+		st_shasta }, /* SuperTrak EX4350 */
-+	{ 0x105a, 0xe350, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-+		st_shasta }, /* SuperTrak EX24350 */
-+
-+	/* st_vsc */
-+	{ 0x105a, 0x7250, PCI_ANY_ID, PCI_ANY_ID, 0, 0, st_vsc },
-+
-+	/* st_yosemite */
-+	{ 0x105a, 0x8650, PCI_ANY_ID, 0x4600, 0, 0,
-+		st_yosemite }, /* SuperTrak EX4650 */
-+	{ 0x105a, 0x8650, PCI_ANY_ID, 0x4610, 0, 0,
-+		st_yosemite }, /* SuperTrak EX4650o */
-+	{ 0x105a, 0x8650, PCI_ANY_ID, 0x8600, 0, 0,
-+		st_yosemite }, /* SuperTrak EX8650EL */
-+	{ 0x105a, 0x8650, PCI_ANY_ID, 0x8601, 0, 0,
-+		st_yosemite }, /* SuperTrak EX8650 */
-+	{ 0x105a, 0x8650, PCI_ANY_ID, 0x8602, 0, 0,
-+		st_yosemite }, /* SuperTrak EX8654 */
-+	{ 0x105a, 0x8650, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-+		st_yosemite }, /* generic st_yosemite */
- 	{ }	/* terminate list */
- };
- MODULE_DEVICE_TABLE(pci, stex_pci_tbl);
+-	MU_MAX_DELAY_TIME			= 240000,
++	MU_MAX_DELAY				= 120,
+ 	MU_HANDSHAKE_SIGNATURE			= 0x55aaaa55,
+ 	MU_HANDSHAKE_SIGNATURE_HALF		= 0x5a5a0000,
++	MU_HARD_RESET_WAIT			= 30000,
+ 	HMU_PARTNER_TYPE			= 2,
+ 
+ 	/* firmware returned values */
+@@ -910,23 +911,22 @@ static int stex_handshake(struct st_hba 
+ 	struct handshake_frame *h;
+ 	dma_addr_t status_phys;
+ 	u32 data;
+-	int i;
++	unsigned long before;
+ 
+ 	if (readl(base + OMR0) != MU_HANDSHAKE_SIGNATURE) {
+ 		writel(MU_INBOUND_DOORBELL_HANDSHAKE, base + IDBL);
+ 		readl(base + IDBL);
+-		for (i = 0; readl(base + OMR0) != MU_HANDSHAKE_SIGNATURE
+-			&& i < MU_MAX_DELAY_TIME; i++) {
++		before = jiffies;
++		while (readl(base + OMR0) != MU_HANDSHAKE_SIGNATURE) {
++			if (time_after(jiffies, before + MU_MAX_DELAY * HZ)) {
++				printk(KERN_ERR DRV_NAME
++					"(%s): no handshake signature\n",
++					pci_name(hba->pdev));
++				return -1;
++			}
+ 			rmb();
+ 			msleep(1);
+ 		}
+-
+-		if (i == MU_MAX_DELAY_TIME) {
+-			printk(KERN_ERR DRV_NAME
+-				"(%s): no handshake signature\n",
+-				pci_name(hba->pdev));
+-			return -1;
+-		}
+ 	}
+ 
+ 	udelay(10);
+@@ -965,19 +965,18 @@ static int stex_handshake(struct st_hba 
+ 	readl(base + IDBL); /* flush */
+ 
+ 	udelay(10);
+-	for (i = 0; readl(base + OMR0) != MU_HANDSHAKE_SIGNATURE
+-		&& i < MU_MAX_DELAY_TIME; i++) {
++	before = jiffies;
++	while (readl(base + OMR0) != MU_HANDSHAKE_SIGNATURE) {
++		if (time_after(jiffies, before + MU_MAX_DELAY * HZ)) {
++			printk(KERN_ERR DRV_NAME
++				"(%s): no signature after handshake frame\n",
++				pci_name(hba->pdev));
++			return -1;
++		}
+ 		rmb();
+ 		msleep(1);
+ 	}
+ 
+-	if (i == MU_MAX_DELAY_TIME) {
+-		printk(KERN_ERR DRV_NAME
+-			"(%s): no signature after handshake frame\n",
+-			pci_name(hba->pdev));
+-		return -1;
+-	}
+-
+ 	writel(0, base + IMR0);
+ 	readl(base + IMR0);
+ 	writel(0, base + OMR0);
+@@ -1059,7 +1058,7 @@ static void stex_hard_reset(struct st_hb
+ 	pci_bctl &= ~PCI_BRIDGE_CTL_BUS_RESET;
+ 	pci_write_config_byte(bus->self, PCI_BRIDGE_CONTROL, pci_bctl);
+ 
+-	for (i = 0; i < MU_MAX_DELAY_TIME; i++) {
++	for (i = 0; i < MU_HARD_RESET_WAIT; i++) {
+ 		pci_read_config_word(hba->pdev, PCI_COMMAND, &pci_cmd);
+ 		if (pci_cmd != 0xffff && (pci_cmd & PCI_COMMAND_MASTER))
+ 			break;
 
 
