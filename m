@@ -1,54 +1,58 @@
-From: "Gergely Frigyesi" <Duvenage@berlin.com>
-Subject: Gain up some Inches for your darling
-Date: Tue, 05 Dec 2006 23:27:52 +0000
-Message-ID: <461501c718c4$2374af40$02fa2ac8@[200.42.250.2]>
+From: Karsten Keil <kkeil@suse.de>
+Subject: Re: [PATCH 5/9] pcmcia: conf.ConfigBase and conf.Present consolidation
+Date: Wed, 6 Dec 2006 00:36:19 +0100
+Message-ID: <20061205233618.GB31463@pingi.kke.suse.de>
+References: <20061205015942.GA2624@dominikbrodowski.de> <20061205021716.GF2624@dominikbrodowski.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="Windows-1252";
-	reply-type=original
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:36222 "EHLO zeus1.kernel.org"
+Received: from mx2.suse.de ([195.135.220.15]:41453 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S967766AbWLEX3H (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 5 Dec 2006 18:29:07 -0500
-Received: from [200.42.250.2] ([200.42.250.2])
-	by zeus1.kernel.org (8.13.8/8.13.1) with SMTP id kB5NSsAa006772
-	for <linux-scsi@vger.kernel.org>; Tue, 5 Dec 2006 23:29:07 GMT
+	id S1753329AbWLEXgs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 5 Dec 2006 18:36:48 -0500
+Content-Disposition: inline
+In-Reply-To: <20061205021716.GF2624@dominikbrodowski.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Delcheva Slavina <linux-scsi@vger.kernel.org>
+To: linux-pcmcia@lists.infradead.org, alan@lxorguk.ukuu.org.uk, bluez-devel@lists.sf.net, isdn4linux@listserv.isdn4linux.de, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org, linux-parport@lists.infradead.org, linux-usb-devel@lists.sourceforge.net, laforge@gnumonks.org
 
-Salute Chap
+On Mon, Dec 04, 2006 at 09:17:16PM -0500, Dominik Brodowski wrote:
+> From: Dominik Brodowski <linux@dominikbrodowski.net>
+> Date: Wed, 25 Oct 2006 21:49:27 -0400
+> Subject: [PATCH] pcmcia: conf.ConfigBase and conf.Present consolidation
+> 
+> struct pcmcia_device *p_dev->conf.ConfigBase and .Present are set in almost
+> all PCMICA driver right at the beginning, using the same calls but slightly
+> different implementations. Unfiy this in the PCMCIA core.
+> 
+> Includes a small bugfix ("drivers/net/pcmcia/xirc2ps_cs.c: remove unused
+> label") from and Signed-off-by Adrian Bunk <bunk@stusta.de>
+> 
+> Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
+> ---
+>  drivers/ata/pata_pcmcia.c               |    7 -----
+>  drivers/bluetooth/bluecard_cs.c         |   38 +------------------------------
+>  drivers/bluetooth/bt3c_cs.c             |   20 +---------------
+>  drivers/bluetooth/btuart_cs.c           |   20 +---------------
+>  drivers/bluetooth/dtl1_cs.c             |   20 +---------------
+>  drivers/char/pcmcia/cm4000_cs.c         |   20 ----------------
+>  drivers/char/pcmcia/cm4040_cs.c         |   20 ----------------
+>  drivers/char/pcmcia/synclink_cs.c       |    7 -----
+>  drivers/ide/legacy/ide-cs.c             |    6 -----
 
-Don't tell me why your Johnson is so small,
-I will better help you to make it really Bigger!
 
-Why bigger? Because over 72% of all women need a longer
-woody to satisfy their desire!
+>  drivers/isdn/hardware/avm/avm_cs.c      |   22 ------------------
+>  drivers/isdn/hisax/avma1_cs.c           |   22 ------------------
+>  drivers/isdn/hisax/elsa_cs.c            |   17 -------------
+>  drivers/isdn/hisax/sedlbauer_cs.c       |   10 --------
+>  drivers/isdn/hisax/teles_cs.c           |   17 -------------
 
-Go there and get your solution: http://deceits.net
+Acked-by: Karsten Keil <kkeil@suse.de>
+for ISDN.
 
-It'll really help you!
-
-We will ship it worldwide within 24 hours, and if
-you find our product useless - we'll refund all your money!
-
-
+...
 
 -- 
-pfuqugumtutiqgttustrrotgsjrjrgsmnnrrrssqrjrtrfnirgsssm
-kdjfsekfjwererdf
-     'No, do taste it! '
-     Out of  politeness  the barman put a little piece  into  his  mouth and
-found that he was chewing something really fresh and unusually delicious. As
-he ate the succulent meat, however,  he  almost fell off his stool  again. A
-huge  dark bird flew in from the next room and softly brushed the top of the
-barman's bald head with its  wing. As it perched on the mantelpiece beside a
-clock, he saw that  the bird  was  an owl. '  Oh  my  God! ' thought  Andrei
-Fokich, nervous as all barmen are, ' what a place!'
-     'Glass of wine? White  or red? What sort  of wine do you like at  this
-time of day? '
-
-
+Karsten Keil
+SuSE Labs
+ISDN development
