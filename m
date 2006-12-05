@@ -1,37 +1,40 @@
 From: Joerg.Schilling@fokus.fraunhofer.de (Joerg Schilling)
 Subject: Re: [Bug 7026] CD/DVD burning with USB writer doesn't work
-Date: Wed, 06 Dec 2006 00:03:11 +0100
-Message-ID: <4575faaf.mLqmSNVeb+AwZXGB%Joerg.Schilling@fokus.fraunhofer.de>
+Date: Wed, 06 Dec 2006 00:08:46 +0100
+Message-ID: <4575fbfe.pc5NALkDYijOb4Eu%Joerg.Schilling@fokus.fraunhofer.de>
 References: <Pine.LNX.4.44L0.0612051546250.6667-100000@iolanthe.rowland.org>
+ <4575EAE8.7040303@interlog.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhub.fokus.fraunhofer.de ([193.174.154.14]:47007 "EHLO
+Received: from mailhub.fokus.fraunhofer.de ([193.174.154.14]:47524 "EHLO
 	mailhub.fokus.fraunhofer.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965914AbWLEXET (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Dec 2006 18:04:19 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0612051546250.6667-100000@iolanthe.rowland.org>
+	by vger.kernel.org with ESMTP id S966995AbWLEXJt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Dec 2006 18:09:49 -0500
+In-Reply-To: <4575EAE8.7040303@interlog.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: stern@rowland.harvard.edu, schilling@fokus.fraunhofer.de
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@steeleye.com, dgilbert@interlog.com
+To: stern@rowland.harvard.edu, dgilbert@interlog.com
+Cc: schilling@fokus.fraunhofer.de, linux-scsi@vger.kernel.org, James.Bottomley@steeleye.com
 
-Alan Stern <stern@rowland.harvard.edu> wrote:
+Douglas Gilbert <dgilbert@interlog.com> wrote:
 
-> I decided to do this by email instead of bugzilla so that it would be=
-=20
-> visible to everyone on the linux-scsi mailing list.
->
-> Re: http://bugzilla.kernel.org/show_bug.cgi?id=3D7026
+> BTW Joerg: SG_SET_RESERVED_SIZE simply makes it extremely
+> unlikely that the sg driver will not be able to fetch
+> enough memory from the kernel to move data associated with
+> a SCSI command. The block layer SG_IO just fudges that.
+> While a major concern in lk 2.0, memory starvation is typically
+> not a major concern in lk 2.6 assuming modern hardware.
+> The sg driver's reserved buffer has other uses as
+> FUJITA Tomonori pointed out yesterday on the linux-scsi list.
 
-I just put out preliminary support for this ioctl.
+If it is documented, no problem. The information I had said that=20
+SG_SET_RESERVED_SIZE would be limited in case that the HW does not allo=
+w=20
+bigger sizes.
 
-Please check:
-
-ftp://ftp.berlios.de/pub/cdrecord/alpha/cdrtools-2.01.01a23-pre.tar.bz2
-
-and try out whether the problems are now gone.
+Let us try out whether the proposed interface works as expected.
 
 J=F6rg
 
