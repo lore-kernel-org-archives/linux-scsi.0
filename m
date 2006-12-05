@@ -1,29 +1,28 @@
-From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: Re: [PATCH] aic94xx: Don't call pci_map_sg for already-mapped	scatterlists
-Date: Tue, 05 Dec 2006 12:38:58 -0800
-Message-ID: <4575D8E2.3070708@us.ibm.com>
-References: <4555206C.8010909@us.ibm.com> <1165338091.2785.8.camel@mulgrave.il.steeleye.com>
-Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
+From: Michael Reed <mdr@sgi.com>
+Subject: Re: Infinite retries reading the partition table
+Date: Tue, 05 Dec 2006 14:40:49 -0600
+Message-ID: <4575D951.3010705@sgi.com>
+References: <520003.85125.qm@web31807.mail.mud.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:41754 "EHLO
-	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S968687AbWLEUjF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Dec 2006 15:39:05 -0500
-In-Reply-To: <1165338091.2785.8.camel@mulgrave.il.steeleye.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S968691AbWLEUkz@vger.kernel.org>
+In-Reply-To: <520003.85125.qm@web31807.mail.mud.yahoo.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: ltuikov@yahoo.com
+Cc: Andrew Morton <akpm@osdl.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>
 
-James Bottomley wrote:
 
-> Rather than introduce an extra flag, I think we can key of the protocol
-> flag:  libata is the only thing that initiates STP tasks.  How does this
-> look?
 
-ACK.
+Luben Tuikov wrote:
+...snip...
+> This statement in scsi_io_completion() causes the infinite retry loop:
+>    if (scsi_end_request(cmd, 1, good_bytes, !!result) == NULL)
+>          return;
 
---D
+The code in 2.6.19 is "result==0", not "!!result", which is logically
+the same as "result!=0".  Did you mean to change the logic here?
+Am I missing something?
+
+Mike
