@@ -1,48 +1,43 @@
 From: Joerg.Schilling@fokus.fraunhofer.de (Joerg Schilling)
 Subject: Re: [Bug 7026] CD/DVD burning with USB writer doesn't work
-Date: Tue, 05 Dec 2006 23:35:39 +0100
-Message-ID: <4575f43b.Fqqu0sjVVj/8Tub8%Joerg.Schilling@fokus.fraunhofer.de>
+Date: Tue, 05 Dec 2006 23:46:30 +0100
+Message-ID: <4575f6c6.RvoLkLFpmxoSf6pC%Joerg.Schilling@fokus.fraunhofer.de>
 References: <Pine.LNX.4.44L0.0612051546250.6667-100000@iolanthe.rowland.org>
+ <1165355432.2785.20.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhub.fokus.fraunhofer.de ([193.174.154.14]:44941 "EHLO
+Received: from mailhub.fokus.fraunhofer.de ([193.174.154.14]:45856 "EHLO
 	mailhub.fokus.fraunhofer.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S936812AbWLEWgr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Dec 2006 17:36:47 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0612051546250.6667-100000@iolanthe.rowland.org>
+	by vger.kernel.org with ESMTP id S936954AbWLEWrd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Dec 2006 17:47:33 -0500
+In-Reply-To: <1165355432.2785.20.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: stern@rowland.harvard.edu, schilling@fokus.fraunhofer.de
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@steeleye.com, dgilbert@interlog.com
+To: stern@rowland.harvard.edu, James.Bottomley@steeleye.com
+Cc: schilling@fokus.fraunhofer.de, linux-scsi@vger.kernel.org, dgilbert@interlog.com
 
-Alan Stern <stern@rowland.harvard.edu> wrote:
+James Bottomley <James.Bottomley@SteelEye.com> wrote:
 
-> I decided to do this by email instead of bugzilla so that it would be=
-=20
-> visible to everyone on the linux-scsi mailing list.
-
-Thank you, this is a more convenient way of having a discussion.
-
-> Re: http://bugzilla.kernel.org/show_bug.cgi?id=3D7026
+> > Is the patch below acceptable?
 >
-> To recap: Joerg Schilling needs to be able to retrieve the max_sector=
-s=20
-> value for a SCSI device's request queue.  Doing it via sysfs is rathe=
-r=20
-> clumsy, especially when only a file descriptor is available and not t=
-he=20
-> device name.  He has asked for an ioctl interface to provide the=20
-> information.
->
-> Is the patch below acceptable?
+> Really, no.  The parameter you're fishing for is a block parameter, n=
+ot
+> a SCSI parameter ... it should really be a block ioctl if we have to
+> have an ioctl at all.
 
-If the number in "sectors" is not a value in sectors but a value in 512=
- byte=20
-units, it looks OK.
+I am afraid, you seem to missunderstand things.
 
-Is this value correct for all "host adaptors"?
+This parameter is not related to something you may call "block layer", =
+it is=20
+rather related to the low level SCSI transport. If the value is stored =
+in a=20
+higher layer, it is not stored in the layer where it belongs to.
+
+If you like to take care of clean interfaces, make sure that this param=
+eter is=20
+moved to the right place in the code.
 
 J=F6rg
 
