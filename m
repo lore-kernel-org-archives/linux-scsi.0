@@ -1,69 +1,37 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [patch 23/30] iscsi: fix crypto_alloc_hash() error check
-Date: Mon, 04 Dec 2006 18:20:51 -0600
-Message-ID: <4574BB63.2070104@cs.wisc.edu>
-References: <200612042319.kB4NJnvj008801@shell0.pdx.osdl.net>
+From: "Ed Lin" <ed.lin@promise.com>
+Subject: [repost][PATCH 3/8] stex: add value check in hard reset routine
+Date: Mon, 4 Dec 2006 17:49:31 -0800
+Message-ID: <NONAMEBwIPvlKWzqJX700001570@nonameb.ptu.promise.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:52027 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S967877AbWLEAVF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 4 Dec 2006 19:21:05 -0500
-In-Reply-To: <200612042319.kB4NJnvj008801@shell0.pdx.osdl.net>
+Received: from 67.111.72.3.ptr.us.xo.net ([67.111.72.3]:18934 "EHLO
+	nonameb.ptu.promise.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S968012AbWLEBtJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Dec 2006 20:49:09 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@osdl.org
-Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, akinobu.mita@gmail.com, dmitry_yus@yahoo.com, itn780@yahoo.com
-
-akpm@osdl.org wrote:
-> From: Akinobu Mita <akinobu.mita@gmail.com>
-> 
-> The return value of crypto_alloc_hash() should be checked by
-> IS_ERR().
-
-Looks good to me.
-
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
-
-Either James can merge it or Andrew can forward it or if when I send my
-update it is not merged by someone I will resend it.
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: "James.Bottomley" <James.Bottomley@SteelEye.com>, jeff <jeff@garzik.org>, promise_linux <promise_linux@promise.com>
 
 
-> 
-> Cc: Dmitry Yusupov <dmitry_yus@yahoo.com>
-> Cc: Alex Aizman <itn780@yahoo.com>
-> Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-> Cc: James Bottomley <James.Bottomley@steeleye.com>
-> Signed-off-by: Andrew Morton <akpm@osdl.org>
-> ---
-> 
->  drivers/scsi/iscsi_tcp.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff -puN drivers/scsi/iscsi_tcp.c~iscsi-fix-crypto_alloc_hash-error-check drivers/scsi/iscsi_tcp.c
-> --- a/drivers/scsi/iscsi_tcp.c~iscsi-fix-crypto_alloc_hash-error-check
-> +++ a/drivers/scsi/iscsi_tcp.c
-> @@ -1777,13 +1777,13 @@ iscsi_tcp_conn_create(struct iscsi_cls_s
->  	tcp_conn->tx_hash.tfm = crypto_alloc_hash("crc32c", 0,
->  						  CRYPTO_ALG_ASYNC);
->  	tcp_conn->tx_hash.flags = 0;
-> -	if (!tcp_conn->tx_hash.tfm)
-> +	if (IS_ERR(tcp_conn->tx_hash.tfm))
->  		goto free_tcp_conn;
->  
->  	tcp_conn->rx_hash.tfm = crypto_alloc_hash("crc32c", 0,
->  						  CRYPTO_ALG_ASYNC);
->  	tcp_conn->rx_hash.flags = 0;
-> -	if (!tcp_conn->rx_hash.tfm)
-> +	if (IS_ERR(tcp_conn->rx_hash.tfm))
->  		goto free_tx_tfm;
->  
->  	return cls_conn;
-> _
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+During hard reset, an all-1 value from PCI_COMMAND should be invalid.
+
+Signed-off-by: Ed Lin <ed.lin@promise.com>
+---
+diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
+index ea0d824..92dbac0 100644
+--- a/drivers/scsi/stex.c
++++ b/drivers/scsi/stex.c
+@@ -1041,7 +1041,7 @@ static void stex_hard_reset(struct st_hb
+ 
+ 	for (i = 0; i < MU_MAX_DELAY_TIME; i++) {
+ 		pci_read_config_word(hba->pdev, PCI_COMMAND, &pci_cmd);
+-		if (pci_cmd & PCI_COMMAND_MASTER)
++		if (pci_cmd != 0xffff && (pci_cmd & PCI_COMMAND_MASTER))
+ 			break;
+ 		msleep(1);
+ 	}
+
 
