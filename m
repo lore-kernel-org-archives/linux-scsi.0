@@ -1,58 +1,41 @@
-From: Karsten Keil <kkeil@suse.de>
-Subject: Re: [PATCH 5/9] pcmcia: conf.ConfigBase and conf.Present consolidation
-Date: Wed, 6 Dec 2006 00:36:19 +0100
-Message-ID: <20061205233618.GB31463@pingi.kke.suse.de>
-References: <20061205015942.GA2624@dominikbrodowski.de> <20061205021716.GF2624@dominikbrodowski.de>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: Infinite retries reading the partition table
+Date: Tue, 5 Dec 2006 21:00:20 -0800 (PST)
+Message-ID: <794609.32071.qm@web31811.mail.mud.yahoo.com>
+References: <4575D951.3010705@sgi.com>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41453 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753329AbWLEXgs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 5 Dec 2006 18:36:48 -0500
-Content-Disposition: inline
-In-Reply-To: <20061205021716.GF2624@dominikbrodowski.de>
+Received: from web31811.mail.mud.yahoo.com ([68.142.207.74]:45943 "HELO
+	web31811.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1760091AbWLFFAV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Dec 2006 00:00:21 -0500
+In-Reply-To: <4575D951.3010705@sgi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-pcmcia@lists.infradead.org, alan@lxorguk.ukuu.org.uk, bluez-devel@lists.sf.net, isdn4linux@listserv.isdn4linux.de, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org, linux-parport@lists.infradead.org, linux-usb-devel@lists.sourceforge.net, laforge@gnumonks.org
+To: Michael Reed <mdr@sgi.com>
+Cc: Andrew Morton <akpm@osdl.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Mon, Dec 04, 2006 at 09:17:16PM -0500, Dominik Brodowski wrote:
-> From: Dominik Brodowski <linux@dominikbrodowski.net>
-> Date: Wed, 25 Oct 2006 21:49:27 -0400
-> Subject: [PATCH] pcmcia: conf.ConfigBase and conf.Present consolidation
+--- Michael Reed <mdr@sgi.com> wrote:
+> Luben Tuikov wrote:
+> ...snip...
+> > This statement in scsi_io_completion() causes the infinite retry loop:
+> >    if (scsi_end_request(cmd, 1, good_bytes, !!result) == NULL)
+> >          return;
 > 
-> struct pcmcia_device *p_dev->conf.ConfigBase and .Present are set in almost
-> all PCMICA driver right at the beginning, using the same calls but slightly
-> different implementations. Unfiy this in the PCMCIA core.
-> 
-> Includes a small bugfix ("drivers/net/pcmcia/xirc2ps_cs.c: remove unused
-> label") from and Signed-off-by Adrian Bunk <bunk@stusta.de>
-> 
-> Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
-> ---
->  drivers/ata/pata_pcmcia.c               |    7 -----
->  drivers/bluetooth/bluecard_cs.c         |   38 +------------------------------
->  drivers/bluetooth/bt3c_cs.c             |   20 +---------------
->  drivers/bluetooth/btuart_cs.c           |   20 +---------------
->  drivers/bluetooth/dtl1_cs.c             |   20 +---------------
->  drivers/char/pcmcia/cm4000_cs.c         |   20 ----------------
->  drivers/char/pcmcia/cm4040_cs.c         |   20 ----------------
->  drivers/char/pcmcia/synclink_cs.c       |    7 -----
->  drivers/ide/legacy/ide-cs.c             |    6 -----
+> The code in 2.6.19 is "result==0", not "!!result", which is logically
+> the same as "result!=0".  Did you mean to change the logic here?
+> Am I missing something?
+
+Hmm, I think my trees have !!result from an earlier patch I posted.
+
+In this case it would appear that the second chunk of the patch
+wouldn't be necessary, since result==0 would be false, and it
+wouldn't retry.
+
+    Luben
 
 
->  drivers/isdn/hardware/avm/avm_cs.c      |   22 ------------------
->  drivers/isdn/hisax/avma1_cs.c           |   22 ------------------
->  drivers/isdn/hisax/elsa_cs.c            |   17 -------------
->  drivers/isdn/hisax/sedlbauer_cs.c       |   10 --------
->  drivers/isdn/hisax/teles_cs.c           |   17 -------------
 
-Acked-by: Karsten Keil <kkeil@suse.de>
-for ISDN.
-
-...
-
--- 
-Karsten Keil
-SuSE Labs
-ISDN development
