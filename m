@@ -1,33 +1,51 @@
-From: Etienne.Vogt@obspm.fr
-Subject: Re: Infinite retries reading the partition table
-Date: Wed, 6 Dec 2006 11:48:27 +0100 (CET)
-Message-ID: <Pine.LNX.4.64.0612061144340.11674@siolinb.obspm.fr>
-References: <20061130214716.6306a586.akpm@osdl.org> <117439.97789.qm@web31803.mail.mud.yahoo.com>
- <20061130232916.6cbd1408.akpm@osdl.org>
-Reply-To: Etienne.Vogt@obspm.fr
+From: "Onufriev Francisca" <Bernal@naplesnews.net>
+Subject: You think you have enough size?
+Date: Wed, 06 Dec 2006 15:56:53 +0000
+Message-ID: <2d8701c7194f$071ece0c$5ac27550@host90-194.pool80117.interbusiness.it>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain;
+	format=flowed;
+	charset="Windows-1252";
+	reply-type=original
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from siolinb.obspm.fr ([145.238.2.18]:49093 "EHLO siolinb.obspm.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760466AbWLFKs2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 6 Dec 2006 05:48:28 -0500
-In-Reply-To: <20061130232916.6cbd1408.akpm@osdl.org>
+Received: from host90-194.pool80117.interbusiness.it ([80.117.194.90]:2991
+	"HELO host90-194.pool80117.interbusiness.it" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S936051AbWLFP45 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Dec 2006 10:56:57 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>
+To: Gonzalez Angela <linux-scsi@vger.kernel.org>
+
+hello Man
+
+Don't tell me why your Johnson is so small,
+I will better help you to make it really Bigger!
+
+Why bigger? Because over 72% of all women need a longer
+woody to satisfy their desire!
+
+Go there and get your solution: http://www.mumbled.net
+
+It'll really help you!
+
+We will ship it worldwide within 24 hours, and if
+you find our product useless - we'll refund all your money!
 
 
-
-On Thu, 30 Nov 2006, Andrew Morton wrote:
-
-> That looks like it prevents the IO error.  But why was an IO error causing
-> an infinite loop?   What piece of code was initiating the retries?
-
-Maybe it's related to the infinite domain validation retry loop problem
-I reported on linux-scsi a few weeks ago ?
 
 -- 
- 		Etienne Vogt (Etienne.vogt@obspm.fr)
- 		Observatoire de Paris-Meudon, France
+jmgrgngrflfrknfkgjfqgfipfsgqgnfrkgtqtjuftstgtopntnuptt
+gndjknsdjdhfsweet
+asked, seizing Ivan Nikolay-ich by both hands. As he held them in his own he
+stared intently into Ivan's eyes, repeating : ' We shall help you ... do you
+hear? . .  . We shall help you  .  . . you will be  able to relax . . . it's
+quiet here, everything's going to be all right ... all right .  . . we shall
+help you . . .'
+     Ivan Nikolayich suddenly yawned and his expression softened.
+     'Yes, I see,' he said quietly.
+     'Splendid!  '  said  Stravinsky, closing  the conversation  in his no
+habitual way and getting up. ' Goodbye!' He shook Ivan by the hand and as he
+went out he  turned to  the  man with  the beard  and said :  ' Yes, and try
+
+
