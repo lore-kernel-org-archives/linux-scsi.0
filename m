@@ -1,85 +1,53 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
+From: Jeremy Linton <jlinton@greshamstorage.com>
 Subject: Re: [Bug 7026] CD/DVD burning with USB writer doesn't work
-Date: Wed, 06 Dec 2006 16:50:15 -0600
-Message-ID: <45774927.8090204@cs.wisc.edu>
-References: <Pine.LNX.4.44L0.0612051546250.6667-100000@iolanthe.rowland.org>	 <1165355432.2785.20.camel@mulgrave.il.steeleye.com>	 <4575f6c6.RvoLkLFpmxoSf6pC%Joerg.Schilling@fokus.fraunhofer.de>	 <1165359506.2785.37.camel@mulgrave.il.steeleye.com>	 <4575fd53.ja06l7+Yx9/C/OYS%Joerg.Schilling@fokus.fraunhofer.de> <1165421548.2810.17.camel@mulgrave.il.steeleye.com> <4576F661.2000802@torque.net> <4577374B.9000204@cs.wisc.edu>
+Date: Wed, 6 Dec 2006 17:42:27 -0600
+Message-ID: <200612061742.27884.jlinton@greshamstorage.com>
+References: <Pine.LNX.4.44L0.0612051546250.6667-100000@iolanthe.rowland.org> <4577374B.9000204@cs.wisc.edu> <45774927.8090204@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:35331 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S937762AbWLFWva (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 6 Dec 2006 17:51:30 -0500
-In-Reply-To: <4577374B.9000204@cs.wisc.edu>
+Received: from austin.greshamstorage.com ([216.143.252.250]:3605 "EHLO
+	austin.greshamstorage.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S937809AbWLFXmh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Dec 2006 18:42:37 -0500
+In-Reply-To: <45774927.8090204@cs.wisc.edu>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Joerg Schilling <Joerg.Schilling@fokus.fraunhofer.de>, stern@rowland.harvard.edu, schilling@fokus.fraunhofer.de, linux-scsi@vger.kernel.org, dgilbert@interlog.com
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: linux-scsi@vger.kernel.org, dougg@torque.net
 
-Mike Christie wrote:
-> Douglas Gilbert wrote:
->> James Bottomley wrote:
->>> On Wed, 2006-12-06 at 00:14 +0100, Joerg Schilling wrote:
->>>> Well, accept the patch if it works.
->>> It's not about work/not work: it's about correctness.
->>>
->>>>  And in case that you don't like it, make sure that the _parameter_ is
->>>> moved to where it belongs: to the low level transport layer.
->>> It's not a low level property; it's a property of the generic queue,
->>> namely the maximum request size.  It exists for devices independent of
->>> SCSI (i.e. you'll want it for IDE and weirder transport attachment CDs
->>> as well).
->> Too much smoke and mirrors.
->>
->> That maximum request size comes from the transport ** and
->> in many cases is a kludge between maximum, optimal and
->> defensive. The block paradigm is wrong for a pass through
->> because it requests transports to guess a "maximum",
->> trying to head off errors that the block layer isn't
->> particularly well equipped to handle at run time.
->>
->> On the other hand a pass through gets layered error reporting.
->> So if a host (and/or its LLD driver) doesn't like the
->> size (or shape) of data to be sent/received with a
-> 
-> 
-> For iscsi, we could negotiate a value like MaxBurstLength which says
-> don't send commands with a payload larger than that size. I would guess
-> other transports have something similar. We have to check or make sure
-> we do not get commands larger than this somewhere. It is nice if some
-> common layer could do this for us. Cards have a scatterlist limits and
-> having them checked before they get to the driver for everyone is nice.
-> I agree using and being limited to SG_ALL is a little strange since it
-> is a odd size and having to recompile your kernel to get up to that
-> limit is a pain in the butt, but that is not a problem with using the
-> block layer. Those are scsi layer variables and I think those values can
-> be changed.
-> 
-> Is the main gripe over max sectors? I agree max sectors is odd because
-> we do not know what that value means in some cases for pass through and
-> what that real limit is for many drivers. Because the other values that
-> we check in the block layer to create the scatterlist and request, seem
-> worthwhile to check as early as possible and if we checked them at the
-> driver level for every driver how would the test or return value be
-> different? I think this is the part I do not fully understand when this
-> keeps popping up.
-> 
+On Wednesday 06 December 2006 16:50, Mike Christie wrote:
+> > For iscsi, we could negotiate a value like MaxBurstLength which says
+> > don't send commands with a payload larger than that size. I would guess
+> > other transports have something similar. We have to check or make sure
+...
+> Oh yeah the exception I am thinking about may not be max sectors exactly
+> but something close like iscsi's MaxBurstLength limit. Maybe iscsi LLDs
+> are supposed to be translating that iscsi limit to max_sectors in which
+> case we are talking about the same thing. For this limit we do not want
 
-Oh yeah the exception I am thinking about may not be max sectors exactly
-but something close like iscsi's MaxBurstLength limit. Maybe iscsi LLDs
-are supposed to be translating that iscsi limit to max_sectors in which
-case we are talking about the same thing. For this limit we do not want
-a FS or pass through request with more data than MaxBurstLength bytes.
-If it is different than max_hw_sectors, we could add q->max_request_size
-and check this in the block mapping and request building functions, but
-the error value would be generic like maybe BLKERR_REQUEST_TOO_LARGE.
-You would not be able to tell the user that specifically the request was
-larger than the iscsi MaxBurstLength.
+	Sort of off topic, but the iSCSI MaxBurstLength doesn't set the max transfer 
+size, it simply is the amount of data that can be sent without a R2T. If the 
+transfer is larger then you have to wait for the R2T. In practice it ends up 
+controlling the _minimum_ amount of buffer space that needs to be available 
+_before_ the transfer starts, otherwise performace sucks. 
 
-I am not sure how this fits into the argument, since there is no
-guessing with it. The block layer handles this nicely for FS requests by
-breaking up requests into the correct size. The limit also applies to
-pass through requests and we can get a error indicating it is too large.
-The draw back is of course lack of information to the user or upper
-layer and it seems you guys are arguing where this type check belongs.
+-- 
+PHB REQ:
+
+Privileged or confidential information may be contained in this message.
+If you are not the addressee of this message please notify the sender by
+return email and thereafter delete the message.  You may not use, copy,
+disclose or rely on the information contained in this message.  Internet
+e-mail may be susceptible to data corruption, interception and
+unauthorized amendment for which Gresham does not accept liability.
+While we have taken reasonable precautions to ensure that this e-mail
+and any attachments have been swept for viruses, Gresham does not accept 
+liability for any damage sustained as a result of viruses.  Statements
+in this message that do not relate to the business of Gresham are
+neither given nor endorsed by the company or its directors.  A list of
+Gresham's directors is available on our web site:
+<www.gresham-computing.com>   
