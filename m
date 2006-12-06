@@ -1,59 +1,33 @@
-From: Joerg.Schilling@fokus.fraunhofer.de (Joerg Schilling)
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: [Bug 7026] CD/DVD burning with USB writer doesn't work
-Date: Wed, 06 Dec 2006 18:51:05 +0100
-Message-ID: <45770309.SQD5w0Pflctib/c7%Joerg.Schilling@fokus.fraunhofer.de>
-References: <Pine.LNX.4.44L0.0612061207550.3298-100000@iolanthe.rowland.org>
+Date: Wed, 06 Dec 2006 11:59:06 -0600
+Message-ID: <1165427946.2810.46.camel@mulgrave.il.steeleye.com>
+References: <Pine.LNX.4.44L0.0612061105500.3298-100000@iolanthe.rowland.org>
+	 <1165423635.2810.33.camel@mulgrave.il.steeleye.com>
+	 <4577029f./DIiz5nuoOKd82Zo%Joerg.Schilling@fokus.fraunhofer.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhub.fokus.fraunhofer.de ([193.174.154.14]:40496 "EHLO
-	mailhub.fokus.fraunhofer.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S936974AbWLFSAw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Dec 2006 13:00:52 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0612061207550.3298-100000@iolanthe.rowland.org>
+Received: from hancock.steeleye.com ([71.30.118.248]:36013 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S936962AbWLFSFQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Dec 2006 13:05:16 -0500
+In-Reply-To: <4577029f./DIiz5nuoOKd82Zo%Joerg.Schilling@fokus.fraunhofer.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: stern@rowland.harvard.edu, James.Bottomley@steeleye.com
-Cc: schilling@fokus.fraunhofer.de, linux-scsi@vger.kernel.org, dgilbert@interlog.com
+To: Joerg Schilling <Joerg.Schilling@fokus.fraunhofer.de>
+Cc: stern@rowland.harvard.edu, schilling@fokus.fraunhofer.de, linux-scsi@vger.kernel.org, dgilbert@interlog.com
 
-Alan Stern <stern@rowland.harvard.edu> wrote:
+On Wed, 2006-12-06 at 18:49 +0100, Joerg Schilling wrote:
+> Please keep in mind: all CD/DVD burners are SCSI devices.
 
-> It turns out that for block device files we don't need to change anyt=
-hing.
-> The BLKSECTGET ioctl already does almost exactly what we want:
->
-> 	int n;
->
-> 	if (ioctl(fd, BLKSECTGET, &n) =3D=3D 0)
-> 		max_transfer_size =3D n * 512;
->
-> So only the legacy sg character-device files need attention, which me=
-ans=20
-> that only the part of the patch affecting sg.c is necessary.  The new=
-=20
-> SG_GET_MAX_TRANSFER_LENGTH ioctl can remain unimplemented by the bloc=
-k=20
-> layer -- just as SG_[SG]ET_RESERVED_SIZE should be.
->
-> How does that sound?
+This is probably semantics, but nowadays, SCSI means SPI (or parallel
+SCSI).  I think you're trying to say that they're all devices that obey
+the MMC standard?  Which is true, but not really relevant.
 
-libscg needs a unique ioctl that works for all used filedescriptors tha=
-t
-may be a target for SG_IO.
+> You cannot write or even retrieve special information without SCSI.
 
-J=F6rg
+James
 
---=20
- EMail:joerg@schily.isdn.cs.tu-berlin.de (home) J=F6rg Schilling D-1335=
-3 Berlin
-       js@cs.tu-berlin.de                (uni) =20
-       schilling@fokus.fraunhofer.de     (work) Blog: http://schily.blo=
-gspot.com/
- URL:  http://cdrecord.berlios.de/old/private/ ftp://ftp.berlios.de/pub=
-/schily
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
