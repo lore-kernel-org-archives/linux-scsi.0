@@ -1,67 +1,46 @@
-From: Joerg.Schilling@fokus.fraunhofer.de (Joerg Schilling)
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: [Bug 7026] CD/DVD burning with USB writer doesn't work
-Date: Wed, 06 Dec 2006 19:48:42 +0100
-Message-ID: <4577108a.YA4uihJ9DhrgxnNY%Joerg.Schilling@fokus.fraunhofer.de>
+Date: Wed, 06 Dec 2006 12:50:37 -0600
+Message-ID: <1165431037.2810.55.camel@mulgrave.il.steeleye.com>
 References: <Pine.LNX.4.44L0.0612061105500.3298-100000@iolanthe.rowland.org>
- <1165423635.2810.33.camel@mulgrave.il.steeleye.com>
- <4577029f./DIiz5nuoOKd82Zo%Joerg.Schilling@fokus.fraunhofer.de>
- <1165427946.2810.46.camel@mulgrave.il.steeleye.com>
+	 <1165423635.2810.33.camel@mulgrave.il.steeleye.com>
+	 <4577029f./DIiz5nuoOKd82Zo%Joerg.Schilling@fokus.fraunhofer.de>
+	 <1165427946.2810.46.camel@mulgrave.il.steeleye.com>
+	 <45770E39.9070007@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhub.fokus.fraunhofer.de ([193.174.154.14]:46856 "EHLO
-	mailhub.fokus.fraunhofer.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S937098AbWLFSt5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Dec 2006 13:49:57 -0500
-In-Reply-To: <1165427946.2810.46.camel@mulgrave.il.steeleye.com>
+Received: from hancock.steeleye.com ([71.30.118.248]:36375 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S937090AbWLFSvG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Dec 2006 13:51:06 -0500
+In-Reply-To: <45770E39.9070007@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
-Cc: stern@rowland.harvard.edu, schilling@fokus.fraunhofer.de, linux-scsi@vger.kernel.org, dgilbert@interlog.com
+To: dougg@torque.net
+Cc: Joerg Schilling <Joerg.Schilling@fokus.fraunhofer.de>, stern@rowland.harvard.edu, schilling@fokus.fraunhofer.de, linux-scsi@vger.kernel.org, dgilbert@interlog.com
 
-James Bottomley <James.Bottomley@SteelEye.com> wrote:
+On Wed, 2006-12-06 at 13:38 -0500, Douglas Gilbert wrote:
+> SPI is dead. Get used to it. SCSI has not meant SPI for
+> years. We should be in the business of disabusing people
+> of that idea, not reinforcing it.
 
-> On Wed, 2006-12-06 at 18:49 +0100, Joerg Schilling wrote:
-> > Please keep in mind: all CD/DVD burners are SCSI devices.
->
-> This is probably semantics, but nowadays, SCSI means SPI (or parallel
-> SCSI).  I think you're trying to say that they're all devices that ob=
-ey
-> the MMC standard?  Which is true, but not really relevant.
->
-> > You cannot write or even retrieve special information without SCSI.
+I don't believe I said anything in favour of or against SPI.
 
-I am not sure if you did ever have a look at t10.org.
+I think you'll find the whole point of SAM is separating the command set
+from the transport and interconnect.  Saying a device speaks "SCSI" has
+no real meaning in that context anymore.  It's commonly taken to mean
+SCSI-2 where the whole things was lumped together and SPI centric.
 
-SCSI is a widely used protocol that is supported over many different tr=
-ansports.
-SPI is as dead as PATA and note that SAS controllers will transparently=
- handle
-even SATA devices.
+In the SAM context, a modern IDE CD is MMC over an ATAPI or SATAPI
+transport. An old SCSI CD is MMC over SPI.  The thing Alan's having
+trouble with is MMC over a USB transport.
 
-SCSI supports many more devices than MMC and SCSI runs on many differen=
-t=20
-transports.=20
+> If you went to www.t10.org and looked at draft documents
+> and the reflector you would be lucky to find any documents
+> or posts about SPI in the last two years.
 
-The SCSI protocol layer has been separated from the transport layer in =
-the=20
-early 1990s. Please do not try to make asumptions based on outdated inf=
-ormation.
+James
 
 
-J=F6rg
-
---=20
- EMail:joerg@schily.isdn.cs.tu-berlin.de (home) J=F6rg Schilling D-1335=
-3 Berlin
-       js@cs.tu-berlin.de                (uni) =20
-       schilling@fokus.fraunhofer.de     (work) Blog: http://schily.blo=
-gspot.com/
- URL:  http://cdrecord.berlios.de/old/private/ ftp://ftp.berlios.de/pub=
-/schily
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
