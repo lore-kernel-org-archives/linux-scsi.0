@@ -1,42 +1,39 @@
-From: Alan Stern <stern@rowland.harvard.edu>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: [Bug 7026] CD/DVD burning with USB writer doesn't work
-Date: Wed, 6 Dec 2006 13:58:25 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0612061354150.3298-100000@iolanthe.rowland.org>
-References: <1165425931.2810.37.camel@mulgrave.il.steeleye.com>
+Date: Wed, 06 Dec 2006 13:13:56 -0600
+Message-ID: <1165432436.2810.66.camel@mulgrave.il.steeleye.com>
+References: <Pine.LNX.4.44L0.0612061354150.3298-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:42656 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S937115AbWLFS60 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Dec 2006 13:58:26 -0500
-In-Reply-To: <1165425931.2810.37.camel@mulgrave.il.steeleye.com>
+Received: from hancock.steeleye.com ([71.30.118.248]:36621 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S937381AbWLFTUV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Dec 2006 14:20:21 -0500
+In-Reply-To: <Pine.LNX.4.44L0.0612061354150.3298-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
+To: Alan Stern <stern@rowland.harvard.edu>
 Cc: Joerg Schilling <Joerg.Schilling@fokus.fraunhofer.de>, schilling@fokus.fraunhofer.de, linux-scsi@vger.kernel.org, dgilbert@interlog.com
 
-On Wed, 6 Dec 2006, James Bottomley wrote:
+On Wed, 2006-12-06 at 13:58 -0500, Alan Stern wrote:
+> I'd love to do that -- but blkdev_ioctl() wants inode->i_bdev to be set, 
+> and blkdev_locked_ioctl() uses it as the argument to bdev_get_queue().  So 
+> it won't work with sg, which uses character device nodes.
 
-> On Wed, 2006-12-06 at 12:21 -0500, Alan Stern wrote:
-> > So only the legacy sg character-device files need attention, which
-> > means 
-> > that only the part of the patch affecting sg.c is necessary.  The new 
-> > SG_GET_MAX_TRANSFER_LENGTH ioctl can remain unimplemented by the
-> > block 
-> > layer -- just as SG_[SG]ET_RESERVED_SIZE should be.
-> > 
-> > How does that sound?
-> 
-> Actually, I'd just connect sg up to the block ioctl ... it has a block
-> queue and valid parameters, so BLKSECTGET will work for it as well.
+Well, even sg has the queue ... and what we're looking for are the queue
+parameters.  In block/ioctl.c the bdev is just used for getting the
+queue parameters (mainly via bdev->bd_disk->queue), so I could see if
+Jens might be amenable to refactoring the queue ioctls so we can get at
+them simply with a struct request_queue parameter.
 
-I'd love to do that -- but blkdev_ioctl() wants inode->i_bdev to be set, 
-and blkdev_locked_ioctl() uses it as the argument to bdev_get_queue().  So 
-it won't work with sg, which uses character device nodes.
+> How about adding BLKSECTGET to the list of commands accepted by 
+> sg_ioctl()?
 
-How about adding BLKSECTGET to the list of commands accepted by 
-sg_ioctl()?
+That's certainly a possible hack ... although I'd prefer to see the full
+queue ioctls exposed.
 
-Alan Stern
+James
+
 
