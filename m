@@ -1,46 +1,42 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
+From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: [Bug 7026] CD/DVD burning with USB writer doesn't work
-Date: Wed, 06 Dec 2006 12:50:37 -0600
-Message-ID: <1165431037.2810.55.camel@mulgrave.il.steeleye.com>
-References: <Pine.LNX.4.44L0.0612061105500.3298-100000@iolanthe.rowland.org>
-	 <1165423635.2810.33.camel@mulgrave.il.steeleye.com>
-	 <4577029f./DIiz5nuoOKd82Zo%Joerg.Schilling@fokus.fraunhofer.de>
-	 <1165427946.2810.46.camel@mulgrave.il.steeleye.com>
-	 <45770E39.9070007@torque.net>
+Date: Wed, 6 Dec 2006 13:58:25 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0612061354150.3298-100000@iolanthe.rowland.org>
+References: <1165425931.2810.37.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:36375 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S937090AbWLFSvG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Dec 2006 13:51:06 -0500
-In-Reply-To: <45770E39.9070007@torque.net>
+Received: from iolanthe.rowland.org ([192.131.102.54]:42656 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S937115AbWLFS60 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Dec 2006 13:58:26 -0500
+In-Reply-To: <1165425931.2810.37.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: Joerg Schilling <Joerg.Schilling@fokus.fraunhofer.de>, stern@rowland.harvard.edu, schilling@fokus.fraunhofer.de, linux-scsi@vger.kernel.org, dgilbert@interlog.com
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Joerg Schilling <Joerg.Schilling@fokus.fraunhofer.de>, schilling@fokus.fraunhofer.de, linux-scsi@vger.kernel.org, dgilbert@interlog.com
 
-On Wed, 2006-12-06 at 13:38 -0500, Douglas Gilbert wrote:
-> SPI is dead. Get used to it. SCSI has not meant SPI for
-> years. We should be in the business of disabusing people
-> of that idea, not reinforcing it.
+On Wed, 6 Dec 2006, James Bottomley wrote:
 
-I don't believe I said anything in favour of or against SPI.
+> On Wed, 2006-12-06 at 12:21 -0500, Alan Stern wrote:
+> > So only the legacy sg character-device files need attention, which
+> > means 
+> > that only the part of the patch affecting sg.c is necessary.  The new 
+> > SG_GET_MAX_TRANSFER_LENGTH ioctl can remain unimplemented by the
+> > block 
+> > layer -- just as SG_[SG]ET_RESERVED_SIZE should be.
+> > 
+> > How does that sound?
+> 
+> Actually, I'd just connect sg up to the block ioctl ... it has a block
+> queue and valid parameters, so BLKSECTGET will work for it as well.
 
-I think you'll find the whole point of SAM is separating the command set
-from the transport and interconnect.  Saying a device speaks "SCSI" has
-no real meaning in that context anymore.  It's commonly taken to mean
-SCSI-2 where the whole things was lumped together and SPI centric.
+I'd love to do that -- but blkdev_ioctl() wants inode->i_bdev to be set, 
+and blkdev_locked_ioctl() uses it as the argument to bdev_get_queue().  So 
+it won't work with sg, which uses character device nodes.
 
-In the SAM context, a modern IDE CD is MMC over an ATAPI or SATAPI
-transport. An old SCSI CD is MMC over SPI.  The thing Alan's having
-trouble with is MMC over a USB transport.
+How about adding BLKSECTGET to the list of commands accepted by 
+sg_ioctl()?
 
-> If you went to www.t10.org and looked at draft documents
-> and the reflector you would be lucky to find any documents
-> or posts about SPI in the last two years.
-
-James
-
+Alan Stern
 
