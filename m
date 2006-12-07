@@ -1,16 +1,16 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
 Subject: Re: [Bug 7026] CD/DVD burning with USB writer doesn't work
-Date: Wed, 06 Dec 2006 19:40:16 -0600
-Message-ID: <45777100.5060304@cs.wisc.edu>
+Date: Wed, 06 Dec 2006 20:05:29 -0600
+Message-ID: <457776E9.5080701@cs.wisc.edu>
 References: <Pine.LNX.4.44L0.0612051546250.6667-100000@iolanthe.rowland.org> <45774927.8090204@cs.wisc.edu> <200612061742.27884.jlinton@greshamstorage.com> <200612061755.08213.jli@greshamstorage.com> <45776CBF.5000209@cs.wisc.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:35496 "EHLO sabe.cs.wisc.edu"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:35520 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S937935AbWLGBk3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 6 Dec 2006 20:40:29 -0500
+	id S937952AbWLGCFh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 6 Dec 2006 21:05:37 -0500
 In-Reply-To: <45776CBF.5000209@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -54,8 +54,24 @@ Mike Christie wrote:
 > we send them something larger.
 > 
 > Oh the flip side, targets also end up sending us more than
-> MaxBurstLength bytes between r2ts. 
+> MaxBurstLength bytes between r2ts. The initiator just prints an error
+> and makes sure it does not go out of bounds because this is so common.
+> We have to handle lots of fun bugs in targets. I bet targets do lots of
+> weird things to handle our mess ups too :)
+> 
+> And a sequence does not necessarily mean one pdu so
+> MaxRecvDataSegmentLength does not matter in the discussion of max
+> request size here (as long as we are talking about good behaving targets
+> :)).
+> 
 
-And actually, I think there was a target that bugged out when we tried
-to send it a WRITE that was larger than MaxBurstLength. I do not
-remember though.
+Oh, where this transport level limit vs hw or queue vs software limit
+might also come in is if we do transport level requests through bsg and
+that ends up using the block layer. For that, if we wanted to send a
+nop-out with data we would have to make sure it is less than
+MaxRecvDataSegmentLength, right? I am not sure how all that will work
+out. Would that be some queue limit like a q->max_transport_request_size
+because we are using the queue and requests for transport level
+requests, or would we only check this at the iscsi level and return some
+new value to indicate the request was too large because of a transport
+limit?
