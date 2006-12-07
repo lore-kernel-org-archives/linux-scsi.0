@@ -1,107 +1,57 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: RFC: SCSI Generic version 4 interface
-Date: Thu, 7 Dec 2006 09:57:56 +0100
-Message-ID: <20061207085756.GZ4392@kernel.dk>
-References: <20061207080657.GX4392@kernel.dk> <20061207172133L.fujita.tomonori@lab.ntt.co.jp> <20061207083019.GY4392@kernel.dk> <20061207175351Y.fujita.tomonori@lab.ntt.co.jp>
+From: Joerg.Schilling@fokus.fraunhofer.de (Joerg Schilling)
+Subject: Re: [Bug 7026] CD/DVD burning with USB writer doesn't work
+Date: Thu, 07 Dec 2006 11:34:19 +0100
+Message-ID: <4577ee2b.YcNjPkzfKDfhAjUf%Joerg.Schilling@fokus.fraunhofer.de>
+References: <Pine.LNX.4.44L0.0612061645280.5127-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([62.242.22.158]:22471 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1031869AbWLGI5E (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 7 Dec 2006 03:57:04 -0500
-Content-Disposition: inline
-In-Reply-To: <20061207175351Y.fujita.tomonori@lab.ntt.co.jp>
+Received: from mailhub.fokus.fraunhofer.de ([193.174.154.14]:43719 "EHLO
+	mailhub.fokus.fraunhofer.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1032003AbWLGKfw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Dec 2006 05:35:52 -0500
+In-Reply-To: <Pine.LNX.4.44L0.0612061645280.5127-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: jeff@garzik.org, dougg@torque.net, linux-scsi@vger.kernel.org
+To: stern@rowland.harvard.edu, michaelc@cs.wisc.edu
+Cc: schilling@fokus.fraunhofer.de, linux-scsi@vger.kernel.org, James.Bottomley@steeleye.com, dougg@torque.net, dgilbert@interlog.com
 
-On Thu, Dec 07 2006, FUJITA Tomonori wrote:
-> From: Jens Axboe <jens.axboe@oracle.com>
-> Subject: Re: RFC: SCSI Generic version 4 interface
-> Date: Thu, 7 Dec 2006 09:30:20 +0100
-> 
-> > On Thu, Dec 07 2006, FUJITA Tomonori wrote:
-> > > From: Jens Axboe <jens.axboe@oracle.com>
-> > > Subject: Re: RFC: SCSI Generic version 4 interface
-> > > Date: Thu, 7 Dec 2006 09:06:59 +0100
-> > > 
-> > > > On Thu, Dec 07 2006, FUJITA Tomonori wrote:
-> > > > > From: Jens Axboe <jens.axboe@oracle.com>
-> > > > > Subject: Re: RFC: SCSI Generic version 4 interface
-> > > > > Date: Tue, 7 Nov 2006 16:31:48 +0100
-> > > > > 
-> > > > > > On Tue, Nov 07 2006, Jeff Garzik wrote:
-> > > > > > > Douglas Gilbert wrote:
-> > > > > > > >I was asked to put together a proposal in May this
-> > > > > > > >year for a new SCSI Generic interface structure. This
-> > > > > > > >is the same structure that is used by the block layer
-> > > > > > > >SG_IO ioctl. A few people have asked whether I had forgotten
-> > > > > > > >that I agreed to write the proposal. So here it is. Those
-> > > > > > > >who have seen it have made comments, some of which have
-> > > > > > > >been incorporated.
-> > > > > > > >
-> > > > > > > >Some shortcomings of the sg version 3 interface are:
-> > > > > > > >  - can't handle commands with bidirectional data (either
-> > > > > > > >    can the SCSI subsystem at the moment)
-> > > > > > > >  - if it was a bit more general it could carry other
-> > > > > > > >    request/response protocols (e.g. Task Management
-> > > > > > > >    Functions and SMP in Serial Attached SCSI)
-> > > > > > > >  - no way of associating a task attribute or task tag
-> > > > > > > >    with a SCSI command
-> > > > > > > 
-> > > > > > > Why avoid Jens Axboe's bsg?
-> > > > > > > 
-> > > > > > > It seems like that is already a good interface for carrying other 
-> > > > > > > req/resp protocols.
-> > > > > > 
-> > > > > > I don't think Doug is avoiding that (if you are Doug, please do explain
-> > > > > > :-), but rather outlining the next generation command format that bsg
-> > > > > > should support for future use.
-> > > > > 
-> > > > > sg4 can be implemented on bsg nicely, I think. But why does the
-> > > > > current bsg support sg3 partially? Do you plan to add the rest of sg3
-> > > > > (which doesn't work nicely) to bsg?
-> > > > 
-> > > > What parts of sg v3 are missing? It's been a while since I implemented
-> > > > that stuff, so I forget if I knowingly left out some features.
-> > > 
-> > > SG_FLAG_MMAP_IO, indirect IO, probably I miss something more.
-> > 
-> > bsg chooses the best way to handle the buffers on its own right now, in
-> > my opinion sg has grown too many "features" that aren't very useful.
-> 
-> I agree. But if bsg replaces sg3 code, it supports the full features,
-> doesn't it? If bsg does not replace sg3 code, we have more
-> duplication.
-> 
-> I think it would be nice for bsg to support only sg4 (does not support
-> some of the old sg3 interfaces) and not add sg4 support to sg.c and
-> scsi_ioctl.c (of course they can share some code).
+Alan Stern <stern@rowland.harvard.edu> wrote:
 
-Yeah, I agree with that (if only to reduce my headache of actually
-supporting the code!). When the sg v4 command interface is fully fleshed
-out, I'm fine with moving bsg in that direction and dumping sg v3
-support completely.
+> On Wed, 6 Dec 2006, Mike Christie wrote:
+>
+> > Alternatively, if we do start not checking values like max sectors =
+and
+> > send requests down to the drivers, the block layer mapping function=
+s can
+> > be modified to not check certain values and LLDs/scsi-ml can return
+> > these BLKERR values all the way up to sg/bsg/scsi_ioctl.c for value=
+s
+> > that they need to check.
+>
+> I bet in many cases the LLD depends on the higher layers to filter ou=
+t=20
+> transfers that are too large.  Duplicating all those tests in all the=
+ LLDs=20
+> seems like a waste.
 
-> Oh, bsg's sg3 doesn't work on 32-bit userspace and 64-bit kernel too
-> if applicationos use the iovec interface, does it?
+Once you are done with the implementation details, could you tell me wh=
+at you=20
+decided to add for the final implementation?
 
-Probably not, haven't looked or checked :-)
+J=F6rg
 
-> > mmap io may be useful, we could add that if anyone is actually using
-> > it.
-> 
-> sg mmap io is tricky. sg_io_hdr doesn't have a mapped address,
-> instead, the sg driver keeps a mapped address when an application
-> calls mmap (that means sg cannot handle multiple mmap io requests
-> simultaneously).
-
-With sg v3 support out of the picture, that's not a worry. I'll probably
-look into a different request/response architecture as well, the user
-visible ring buffer is a strong approach in my opinion.
-
--- 
-Jens Axboe
-
+--=20
+ EMail:joerg@schily.isdn.cs.tu-berlin.de (home) J=F6rg Schilling D-1335=
+3 Berlin
+       js@cs.tu-berlin.de                (uni) =20
+       schilling@fokus.fraunhofer.de     (work) Blog: http://schily.blo=
+gspot.com/
+ URL:  http://cdrecord.berlios.de/old/private/ ftp://ftp.berlios.de/pub=
+/schily
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
