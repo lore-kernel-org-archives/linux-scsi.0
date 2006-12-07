@@ -1,52 +1,43 @@
-From: Etienne.Vogt@obspm.fr
-Subject: Re: [mptscsi] endless Domain Validation loop with external RAID
- enclosure
-Date: Thu, 7 Dec 2006 18:14:45 +0100 (CET)
-Message-ID: <Pine.LNX.4.64.0612071809390.27398@siolinb.obspm.fr>
-References: <Pine.LNX.4.64.0611141502290.20450@siolinb.obspm.fr>
- <Pine.LNX.4.64.0611211024260.3878@siolinb.obspm.fr>
-Reply-To: Etienne.Vogt@obspm.fr
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: lsscsi version 0.19 beta
+Date: Thu, 07 Dec 2006 11:45:02 -0600
+Message-ID: <1165513502.4698.16.camel@mulgrave.il.steeleye.com>
+References: <4577B06D.6060701@torque.net>
+	 <1165508816.4698.2.camel@mulgrave.il.steeleye.com>
+	 <4578465A.1070202@torque.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from siolinb.obspm.fr ([145.238.2.18]:57254 "EHLO siolinb.obspm.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1162489AbWLGROq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 7 Dec 2006 12:14:46 -0500
-Received: from vogt (helo=localhost)
-	by siolinb.obspm.fr with local-esmtp (Exim 3.36 #1 (Debian))
-	id 1GsMpZ-00024V-00
-	for <linux-scsi@vger.kernel.org>; Thu, 07 Dec 2006 18:14:45 +0100
-In-Reply-To: <Pine.LNX.4.64.0611211024260.3878@siolinb.obspm.fr>
+Received: from hancock.steeleye.com ([71.30.118.248]:44909 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1162576AbWLGRpO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Dec 2006 12:45:14 -0500
+In-Reply-To: <4578465A.1070202@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: dougg@torque.net
+Cc: linux-scsi@vger.kernel.org
+
+On Thu, 2006-12-07 at 11:50 -0500, Douglas Gilbert wrote:
+>   - cope with dropping of 'generic' symlink post lk 2.6.16
+
+This one was supposed to be because you already have the class link:
+
+generic@
+
+and
+
+scsi_generic:sg0@
+
+So the necessary kernel changes (apart from the generic link removal)
+are already there.
+
+>   - anticipate the future removal of 'tape' symlink
+
+I think this one is the same: st has its own class, which will have a
+symlink.
+
+James
 
 
-
-On Tue, 21 Nov 2006, Etienne.Vogt@obspm.fr wrote:
-
->> I am having trouble getting an external Brownie BR8600 SCSItoIDE RAID
->> enclosure to work on our new HP Proliant ML350 file server. The SCSI
->> controller used is the integrated HP LSI based MPT SCSI controller :
->> 
->> With linux kernel 2.6.18.1 (official kernel.org, no added patches), the 
->> mptspi module goes into endless domain validation retries.
->
-> I just checked on the web site of the RAID system manufacturer
-> (axus.com.tw) to see if they have released an updated firmware that
-> could solve the problem and unfortunately this is not the case.
-> These BR8600 RAID systems are already running the latest available
-> firmware (1.16a).
-> So I really need a solution to continue using these systems on recent
-> 2.6 kernels.
-
-I just checked with the new 2.6.19 kernel and the problem is gone, no
-more endless domain validation retries, just the usual insults about
-SCSI protocol errors while scanning the bus and then everyone seems
-happy again.
-Many thanks to whoever did the right fix !
-
--- 
- 		Etienne Vogt (Etienne.Vogt@obspm.fr)
- 		Observatoire de Paris-Meudon, France
