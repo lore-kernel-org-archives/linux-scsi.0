@@ -1,36 +1,48 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH v2] libata: Simulate REPORT LUNS for ATAPI devices
-Date: Thu, 07 Dec 2006 12:09:43 -0600
-Message-ID: <1165514983.4698.21.camel@mulgrave.il.steeleye.com>
-References: <4574A90E.5010801@us.ibm.com> <4574AB78.40102@garzik.org>
-	 <4574B004.6030606@us.ibm.com>
+Subject: Re: Infinite retries reading the partition table
+Date: Thu, 07 Dec 2006 12:16:17 -0600
+Message-ID: <1165515378.4698.24.camel@mulgrave.il.steeleye.com>
+References: <265807.57572.qm@web31813.mail.mud.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4574B004.6030606@us.ibm.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: "Darrick J. Wong" <djwong@us.ibm.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hancock.steeleye.com ([71.30.118.248]:45143 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1162930AbWLGSRA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Dec 2006 13:17:00 -0500
+In-Reply-To: <265807.57572.qm@web31813.mail.mud.yahoo.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: ltuikov@yahoo.com
+Cc: Andrew Morton <akpm@osdl.org>, mdr@sgi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, 2006-12-04 at 15:32 -0800, Darrick J. Wong wrote:
-> The Quantum GoVault SATAPI removable disk device returns ATA_ERR in
-> response to a REPORT LUNS packet.  If this happens to an ATAPI device
-> that is attached to a SAS controller (this is the case with sas_ata),
-> the device does not load because SCSI won't touch a "SCSI device"
-> that won't report its LUNs.  Since most ATAPI devices don't support
-> multiple LUNs anyway, we might as well fake a response like we do for
-> ATA devices.
+On Wed, 2006-12-06 at 12:24 -0800, Luben Tuikov wrote:
+> NEEDS_RETRY _does_ terminate, after it exhausts the retries.  But since
+> by the ASC value we know that no amount of retries is going to work,
+> this chunk of the patch resolves it quicker, i.e. eliminates the
+> "NEEDS_RETRY" pointless retries (given the SK/ASC combination).
 
-Actually, there may be a standards conflict here.  SPC says that all
-devices reporting compliance with this standard (as the inquiry data for
-this device claims) shall support REPORT LUNS.  On the other hand, MMC
-doesn't list REPORT LUNS in its table of mandatory commands.
+I agree that it's useful behaviour.  However, the change header should
+be something like "scsi_error: don't retry for unrecoverable medium
+errors" not "infinite retries .."
 
-I'm starting to think that even if they report a SCSI compliance level
-of 3 or greater, we still shouldn't send REPORT LUNS to devices that
-return MMC type unless we have a white list override.
+> > > -	if (scsi_end_request(cmd, 1, good_bytes, result == 0) == NULL)
+> > > +	if (good_bytes &&
+> > > +	    scsi_end_request(cmd, 1, good_bytes, result == 0) == NULL)
+> > >  		return;
+> > 
+> > What exactly is this supposed to be doing?  its result is identical to
+> > the code it's replacing (because of the way scsi_end_request() processes
+> > its second argument), so it can't have any effect on the stated problem.
+> 
+> I suppose this is true, but I'd rather it not even go in
+> scsi_end_request as (cmd, uptodate=1, good_bytes=0, retry=0) and complete
+> at the bottom as (cmd, uptodate=0, total_xfer, retry=0).
+
+But, logically, this isn't part of the change set ... the behaviour
+you're altering is unrelated to the change set details, so this piece
+shouldn't be in.
 
 James
 
