@@ -1,44 +1,54 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [Bug 7026] CD/DVD burning with USB writer doesn't work
-Date: Thu, 7 Dec 2006 13:27:52 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0612071325050.3537-100000@iolanthe.rowland.org>
-References: <4577ee2b.YcNjPkzfKDfhAjUf%Joerg.Schilling@fokus.fraunhofer.de>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH v2] libata: Simulate REPORT LUNS for ATAPI devices
+Date: Thu, 07 Dec 2006 14:13:09 -0500
+Message-ID: <457867C5.7060508@torque.net>
+References: <4574A90E.5010801@us.ibm.com> <4574AB78.40102@garzik.org>	 <4574B004.6030606@us.ibm.com> <1165514983.4698.21.camel@mulgrave.il.steeleye.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:58298 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1163169AbWLGS1x (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Dec 2006 13:27:53 -0500
-In-Reply-To: <4577ee2b.YcNjPkzfKDfhAjUf%Joerg.Schilling@fokus.fraunhofer.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1165514983.4698.21.camel@mulgrave.il.steeleye.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: "Darrick J. Wong" <djwong@us.ibm.com>, Jeff Garzik <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: Joerg Schilling <Joerg.Schilling@fokus.fraunhofer.de>
-Cc: michaelc@cs.wisc.edu, schilling@fokus.fraunhofer.de, linux-scsi@vger.kernel.org, James.Bottomley@steeleye.com, dougg@torque.net, dgilbert@interlog.com
 
-On Thu, 7 Dec 2006, Joerg Schilling wrote:
-
-> Alan Stern <stern@rowland.harvard.edu> wrote:
+James Bottomley wrote:
+> On Mon, 2006-12-04 at 15:32 -0800, Darrick J. Wong wrote:
+>> The Quantum GoVault SATAPI removable disk device returns ATA_ERR in
+>> response to a REPORT LUNS packet.  If this happens to an ATAPI device
+>> that is attached to a SAS controller (this is the case with sas_ata),
+>> the device does not load because SCSI won't touch a "SCSI device"
+>> that won't report its LUNs.  Since most ATAPI devices don't support
+>> multiple LUNs anyway, we might as well fake a response like we do for
+>> ATA devices.
 > 
-> > On Wed, 6 Dec 2006, Mike Christie wrote:
-> >
-> > > Alternatively, if we do start not checking values like max sectors and
-> > > send requests down to the drivers, the block layer mapping functions can
-> > > be modified to not check certain values and LLDs/scsi-ml can return
-> > > these BLKERR values all the way up to sg/bsg/scsi_ioctl.c for values
-> > > that they need to check.
-> >
-> > I bet in many cases the LLD depends on the higher layers to filter out 
-> > transfers that are too large.  Duplicating all those tests in all the LLDs 
-> > seems like a waste.
-> 
-> Once you are done with the implementation details, could you tell me what you 
-> decided to add for the final implementation?
+> Actually, there may be a standards conflict here.  SPC says that all
+> devices reporting compliance with this standard (as the inquiry data for
+> this device claims) shall support REPORT LUNS.  On the other hand, MMC
+> doesn't list REPORT LUNS in its table of mandatory commands.
 
-I will.  If everything goes well then BLKSECTGET will be made to work with 
-the SCSI-Generic interface as well as with the usual block device files, 
-so you'll be able to use it with any file descriptor for a CD or DVD 
-drive.
+MMC-5 rev 4 section 7.1:
+"Some commands that may be implemented by MM drives are
+not described in this standard, but are found in other
+SCSI standards. For a complete list of these commands
+refer to [SPC-3]."
 
-Alan Stern
+Hmm, "may be implemented" yet REPORT LUNS is mandatory
+in SPC-3 (and SPC-3 is a normative reference for MMC-5).
+I guess there is wriggle room there.
+In practice, MMC diverges from SPC a lot more than other
+SCSI device type command sets (e.g. SBC and SSC).
 
+> I'm starting to think that even if they report a SCSI compliance level
+> of 3 or greater, we still shouldn't send REPORT LUNS to devices that
+> return MMC type unless we have a white list override.
+
+There is also SAT compliance. For the ATA command set (i.e.
+disks) sat-r09 lists REPORT LUNS and refers to SPC-3. For
+ATAPI sat-r09 is far less clear. It does recommend, for
+example, that the ATA Information VPD pages is implemented
+in the SATL for ATAPI devices.
+
+Doug Gilbert
