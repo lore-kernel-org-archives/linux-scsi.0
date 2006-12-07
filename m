@@ -1,26 +1,30 @@
-From: "Angel Clark" <washingtontemps.com@idothework.com>
-Subject: Avoid enhancement pills
-Date: Fri, 08 Dec 2006 01:45:50 -0800
-Message-ID: <000001c719f4$f2d35800$0100007f@localhost>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH v2] libata: Simulate REPORT LUNS for ATAPI devices
+Date: Thu, 07 Dec 2006 07:20:54 -0500
+Message-ID: <45780726.8010107@garzik.org>
+References: <4574A90E.5010801@us.ibm.com> <4574AB78.40102@garzik.org> <4574B004.6030606@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [86.105.151.235] ([86.105.151.235]:4988 "helo localhost"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1032065AbWLGLpx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 7 Dec 2006 06:45:53 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4574B004.6030606@us.ibm.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: "Darrick J. Wong" <djwong@us.ibm.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Over a million men have been helped with the potent ingredients 
-in Pen_is Growth Patch - men have experienced bigger size, 
-more action, and super-satisfying results for themselves and 
-their partners.
+Darrick J. Wong wrote:
+> The Quantum GoVault SATAPI removable disk device returns ATA_ERR in
+> response to a REPORT LUNS packet.  If this happens to an ATAPI device
+> that is attached to a SAS controller (this is the case with sas_ata),
+> the device does not load because SCSI won't touch a "SCSI device"
+> that won't report its LUNs.  Since most ATAPI devices don't support
+> multiple LUNs anyway, we might as well fake a response like we do for
+> ATA devices.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
 
-Don't be left behind! Take advantage of price specials going on now.
+Seems sane to me, but I would like additional comment/testing/etc. 
+before applying...
 
-Click here!
-http://www.lazerv.hk/?189&lrh
 
