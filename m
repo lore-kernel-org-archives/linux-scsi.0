@@ -1,94 +1,47 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Fw: [Bugme-new] [Bug 7644] New: Race: host lock is not acquired
- before calling ql_icmd
-Date: Wed, 6 Dec 2006 16:28:06 -0800
-Message-ID: <20061206162806.12cb1196.akpm@osdl.org>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [PATCH 2/5] PCI : Move pci_fixup_device and is_enabled
+Date: Wed, 6 Dec 2006 17:16:14 -0800
+Message-ID: <20061207011614.GA32650@kroah.com>
+References: <456404EF.3090902@jp.fujitsu.com> <20061122180901.GD378@colo.lackof.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.25]:58747 "EHLO smtp.osdl.org"
+Received: from ns2.suse.de ([195.135.220.15]:43544 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S937836AbWLGA2I (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 6 Dec 2006 19:28:08 -0500
-Received: from shell0.pdx.osdl.net (fw.osdl.org [65.172.181.6])
-	by smtp.osdl.org (8.12.8/8.12.8) with ESMTP id kB70S7ID012074
-	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Wed, 6 Dec 2006 16:28:07 -0800
-Received: from akpm.corp.google.com (shell0.pdx.osdl.net [10.9.0.31])
-	by shell0.pdx.osdl.net (8.13.1/8.11.6) with SMTP id kB70S7wV022497
-	for <linux-scsi@vger.kernel.org>; Wed, 6 Dec 2006 16:28:07 -0800
+	id S937907AbWLGBQ2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 6 Dec 2006 20:16:28 -0500
+Content-Disposition: inline
+In-Reply-To: <20061122180901.GD378@colo.lackof.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Grant Grundler <grundler@parisc-linux.org>
+Cc: Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>, Linux Kernel list <linux-kernel@vger.kernel.org>, linux-pci@atrey.karlin.mff.cuni.cz, Andrew Morton <akpm@osdl.org>, e1000-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
 
+On Wed, Nov 22, 2006 at 11:09:01AM -0700, Grant Grundler wrote:
+> On Wed, Nov 22, 2006 at 05:06:07PM +0900, Hidetoshi Seto wrote:
+> > --- linux-2.6.19-rc6.orig/drivers/pci/pci.c
+> > +++ linux-2.6.19-rc6/drivers/pci/pci.c
+> > @@ -558,12 +558,18 @@
+> >  {
+> >  	int err;
+> > 
+> > +	if (dev->is_enabled)
+> > +		return 0;
+> 
+> This is unfortunately going to collide with the previous
+> patch posted by inaky@linux.intel.com:
+> 
+>     Subject: [patch 0/2] pci: make pci_{enable,disable}_device() be nested
 
-Does drivers/scsi/qlogicfas408.c have a maintainer?
+Grant, you were right.  This has changed the logic around this area, and
+the pci_enable_device() stuff conflicts with this.
 
+Hidetoshi, I tried to merge things together, but I think I got it wrong,
+as the logic is different now.  Can you please respin this patch and
+resend all of them?
 
-Begin forwarded message:
+Sorry for the delay,
 
-Date: Wed, 6 Dec 2006 16:14:31 -0800
-From: bugme-daemon@bugzilla.kernel.org
-To: bugme-new@lists.osdl.org
-Subject: [Bugme-new] [Bug 7644] New: Race: host lock is not acquired before calling ql_icmd
+thanks,
 
-
-http://bugzilla.kernel.org/show_bug.cgi?id=7644
-
-           Summary: Race: host lock is not acquired before calling ql_icmd
-    Kernel Version: 2.6.19
-            Status: NEW
-          Severity: normal
-             Owner: drivers_parallel@kernel-bugs.osdl.org
-         Submitter: tammy000@gmail.com
-
-
-The caller of ql_icmd() should hold the host lock (from the head comments of
-ql_icmd() shown below). But, the lock is not acquired in function
-qlogicfas408_queuecommand(). All of these code is in file
-drivers/scsi/qlogicfas408.c
-
-/*
- *      Initiate scsi command - queueing handler 
- *      caller must hold host lock
- */
-
-static void ql_icmd(struct scsi_cmnd *cmd)
-{
-        struct qlogicfas408_priv *priv = get_priv_by_cmd(cmd);
-        int     qbase = priv->qbase;
-        int     int_type = priv->int_type;
-        unsigned int i;
-
-        priv->qabort = 0;
-
-        REG0;
-        /* clearing of interrupts and the fifo is needed */
-
- ...
-
-------------------------------------------------------
-
-int qlogicfas408_queuecommand(struct scsi_cmnd *cmd,
-                              void (*done) (struct scsi_cmnd *))
-{
-        struct qlogicfas408_priv *priv = get_priv_by_cmd(cmd);
-        if (scmd_id(cmd) == priv->qinitid) {
-                cmd->result = DID_BAD_TARGET << 16;
-                done(cmd);
-                return 0;
-        }
-
-        cmd->scsi_done = done;
-        /* wait for the last command's interrupt to finish */
-        while (priv->qlcmd != NULL) {
-                barrier();
-                cpu_relax();
-        }
-        ql_icmd(cmd);
-        return 0;
-}
-
-------- You are receiving this mail because: -------
-You are on the CC list for the bug, or are watching someone who is.
+greg k-h
