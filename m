@@ -1,49 +1,44 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Infinite retries reading the partition table
-Date: Thu, 07 Dec 2006 12:16:17 -0600
-Message-ID: <1165515378.4698.24.camel@mulgrave.il.steeleye.com>
-References: <265807.57572.qm@web31813.mail.mud.yahoo.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [Bug 7026] CD/DVD burning with USB writer doesn't work
+Date: Thu, 7 Dec 2006 13:27:52 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0612071325050.3537-100000@iolanthe.rowland.org>
+References: <4577ee2b.YcNjPkzfKDfhAjUf%Joerg.Schilling@fokus.fraunhofer.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:45143 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1162930AbWLGSRA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Dec 2006 13:17:00 -0500
-In-Reply-To: <265807.57572.qm@web31813.mail.mud.yahoo.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:58298 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1163169AbWLGS1x (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Dec 2006 13:27:53 -0500
+In-Reply-To: <4577ee2b.YcNjPkzfKDfhAjUf%Joerg.Schilling@fokus.fraunhofer.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: ltuikov@yahoo.com
-Cc: Andrew Morton <akpm@osdl.org>, mdr@sgi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Joerg Schilling <Joerg.Schilling@fokus.fraunhofer.de>
+Cc: michaelc@cs.wisc.edu, schilling@fokus.fraunhofer.de, linux-scsi@vger.kernel.org, James.Bottomley@steeleye.com, dougg@torque.net, dgilbert@interlog.com
 
-On Wed, 2006-12-06 at 12:24 -0800, Luben Tuikov wrote:
-> NEEDS_RETRY _does_ terminate, after it exhausts the retries.  But since
-> by the ASC value we know that no amount of retries is going to work,
-> this chunk of the patch resolves it quicker, i.e. eliminates the
-> "NEEDS_RETRY" pointless retries (given the SK/ASC combination).
+On Thu, 7 Dec 2006, Joerg Schilling wrote:
 
-I agree that it's useful behaviour.  However, the change header should
-be something like "scsi_error: don't retry for unrecoverable medium
-errors" not "infinite retries .."
-
-> > > -	if (scsi_end_request(cmd, 1, good_bytes, result == 0) == NULL)
-> > > +	if (good_bytes &&
-> > > +	    scsi_end_request(cmd, 1, good_bytes, result == 0) == NULL)
-> > >  		return;
-> > 
-> > What exactly is this supposed to be doing?  its result is identical to
-> > the code it's replacing (because of the way scsi_end_request() processes
-> > its second argument), so it can't have any effect on the stated problem.
+> Alan Stern <stern@rowland.harvard.edu> wrote:
 > 
-> I suppose this is true, but I'd rather it not even go in
-> scsi_end_request as (cmd, uptodate=1, good_bytes=0, retry=0) and complete
-> at the bottom as (cmd, uptodate=0, total_xfer, retry=0).
+> > On Wed, 6 Dec 2006, Mike Christie wrote:
+> >
+> > > Alternatively, if we do start not checking values like max sectors and
+> > > send requests down to the drivers, the block layer mapping functions can
+> > > be modified to not check certain values and LLDs/scsi-ml can return
+> > > these BLKERR values all the way up to sg/bsg/scsi_ioctl.c for values
+> > > that they need to check.
+> >
+> > I bet in many cases the LLD depends on the higher layers to filter out 
+> > transfers that are too large.  Duplicating all those tests in all the LLDs 
+> > seems like a waste.
+> 
+> Once you are done with the implementation details, could you tell me what you 
+> decided to add for the final implementation?
 
-But, logically, this isn't part of the change set ... the behaviour
-you're altering is unrelated to the change set details, so this piece
-shouldn't be in.
+I will.  If everything goes well then BLKSECTGET will be made to work with 
+the SCSI-Generic interface as well as with the usual block device files, 
+so you'll be able to use it with any file descriptor for a CD or DVD 
+drive.
 
-James
-
+Alan Stern
 
