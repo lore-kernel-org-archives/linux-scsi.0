@@ -1,45 +1,169 @@
-From: Joerg.Schilling@fokus.fraunhofer.de (Joerg Schilling)
-Subject: Re: [Bug 7026] CD/DVD burning with USB writer doesn't work
-Date: Fri, 08 Dec 2006 13:45:24 +0100
-Message-ID: <45795e64.5YR0KEYlCvFrV8Ni%Joerg.Schilling@fokus.fraunhofer.de>
-References: <Pine.LNX.4.44L0.0612071325050.3537-100000@iolanthe.rowland.org>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [PATCH] lpfc: add PCI error recovery support
+Date: Fri, 08 Dec 2006 08:39:27 -0500
+Message-ID: <45796B0F.9010000@emulex.com>
+References: <20061206201631.GF17931@austin.ibm.com>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhub.fokus.fraunhofer.de ([193.174.154.14]:46723 "EHLO
-	mailhub.fokus.fraunhofer.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1425485AbWLHMtP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Dec 2006 07:49:15 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0612071325050.3537-100000@iolanthe.rowland.org>
+Received: from emulex.emulex.com ([138.239.112.1]:42540 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760723AbWLHNxz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Dec 2006 08:53:55 -0500
+In-Reply-To: <20061206201631.GF17931@austin.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: stern@rowland.harvard.edu
-Cc: schilling@fokus.fraunhofer.de, michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, James.Bottomley@steeleye.com, dougg@torque.net, dgilbert@interlog.com
+To: Linas Vepstas <linas@austin.ibm.com>
+Cc: linuxppc-dev@ozlabs.org, linux-pci@atrey.karlin.mff.cuni.cz, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, rlary@us.ibm.com
 
-Alan Stern <stern@rowland.harvard.edu> wrote:
+Linas,
 
-> I will.  If everything goes well then BLKSECTGET will be made to work=
- with=20
-> the SCSI-Generic interface as well as with the usual block device fil=
-es,=20
-> so you'll be able to use it with any file descriptor for a CD or DVD=20
-> drive.
+We're pulling this in for testing, but have a few questions.
+We'll work with you offline to resolve them.
 
-Coud you please inform me if this has been done?
+-- james s
 
-J=F6rg
-
---=20
- EMail:joerg@schily.isdn.cs.tu-berlin.de (home) J=F6rg Schilling D-1335=
-3 Berlin
-       js@cs.tu-berlin.de                (uni) =20
-       schilling@fokus.fraunhofer.de     (work) Blog: http://schily.blo=
-gspot.com/
- URL:  http://cdrecord.berlios.de/old/private/ ftp://ftp.berlios.de/pub=
-/schily
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Linas Vepstas wrote:
+> James,
+> 
+> Please review the patch below. Presuming that you lke it,
+> please forward upstream.
+> 
+> --linas
+> 
+> This patch adds PCI Error recovery support to the 
+> Emulex Lightpulse Fibrechannel (lpfc) SCSI device driver.
+> Lightly tested at this point, works.
+> 
+> Signed-off-by: Linas Vepstas <linas@austin.ibm.com>
+> Cc: James Smart <james.smart@emulex.com>
+> 
+> ----
+> 
+>  drivers/scsi/lpfc/lpfc_init.c |   91 ++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 91 insertions(+)
+> 
+> Index: linux-2.6.19-git7/drivers/scsi/lpfc/lpfc_init.c
+> ===================================================================
+> --- linux-2.6.19-git7.orig/drivers/scsi/lpfc/lpfc_init.c	2006-12-06 13:31:39.000000000 -0600
+> +++ linux-2.6.19-git7/drivers/scsi/lpfc/lpfc_init.c	2006-12-06 13:33:49.000000000 -0600
+> @@ -517,6 +517,11 @@ lpfc_handle_eratt(struct lpfc_hba * phba
+>  	struct lpfc_sli_ring  *pring;
+>  	uint32_t event_data;
+>  
+> +	/* If the pci channel is offline, ignore possible errors,
+> +	 * since we cannot communicate with the pci card anyway. */
+> +	if (pci_channel_offline(phba->pcidev))
+> +		return;
+> +
+>  	if (phba->work_hs & HS_FFER6) {
+>  		/* Re-establishing Link */
+>  		lpfc_printf_log(phba, KERN_INFO, LOG_LINK_EVENT,
+> @@ -1825,6 +1830,85 @@ lpfc_pci_remove_one(struct pci_dev *pdev
+>  	pci_set_drvdata(pdev, NULL);
+>  }
+>  
+> +/**
+> + * lpfc_io_error_detected - called when PCI error is detected
+> + * @pdev: Pointer to PCI device
+> + * @state: The current pci conneection state
+> + *
+> + * This function is called after a PCI bus error affecting
+> + * this device has been detected.
+> + */
+> +static pci_ers_result_t lpfc_io_error_detected(struct pci_dev *pdev, 
+> +                        pci_channel_state_t state)
+> +{
+> +	if (state == pci_channel_io_perm_failure) {
+> +		lpfc_pci_remove_one(pdev);
+> +		return PCI_ERS_RESULT_DISCONNECT;
+> +	}
+> +	pci_disable_device(pdev);
+> +
+> +	/* Request a slot reset. */
+> +	return PCI_ERS_RESULT_NEED_RESET;
+> +}
+> +
+> +/**
+> + * lpfc_io_slot_reset - called after the pci bus has been reset.
+> + * @pdev: Pointer to PCI device
+> + *
+> + * Restart the card from scratch, as if from a cold-boot.
+> + */
+> +static pci_ers_result_t lpfc_io_slot_reset(struct pci_dev *pdev)
+> +{
+> +	struct Scsi_Host *host = pci_get_drvdata(pdev);
+> +	struct lpfc_hba *phba = (struct lpfc_hba *)host->hostdata;
+> +	struct lpfc_sli *psli = &phba->sli;
+> +	struct lpfc_sli_ring  *pring;
+> +
+> +	dev_printk(KERN_INFO, &pdev->dev, "recovering from a slot reset.\n");
+> +	if (pci_enable_device(pdev)) {
+> +		printk(KERN_ERR "lpfc: Cannot re-enable PCI device after reset.\n");
+> +		return PCI_ERS_RESULT_DISCONNECT;
+> +	}
+> +
+> +	pci_set_master(pdev);
+> +
+> +	/* Re-establishing Link */
+> +	spin_lock_irq(phba->host->host_lock);
+> +	phba->fc_flag |= FC_ESTABLISH_LINK;
+> +	psli->sli_flag &= ~LPFC_SLI2_ACTIVE;
+> +	spin_unlock_irq(phba->host->host_lock);
+> +
+> +	/*
+> +	 * There may be I/Os dropped by the firmware.
+> +	 * Error iocb (I/O) on txcmplq and let the SCSI layer
+> +	 * retry it after re-establishing link.
+> +	 */
+> +	pring = &psli->ring[psli->fcp_ring];
+> +	lpfc_sli_abort_iocb_ring(phba, pring);
+> +
+> +	/* Take device offline; this will perform cleanup */
+> +	lpfc_offline(phba);
+> +	lpfc_sli_brdrestart(phba);
+> +
+> +	return PCI_ERS_RESULT_RECOVERED;
+> +}
+> +
+> +/**
+> + * lpfc_io_resume - called when traffic can start flowing again.
+> + * @pdev: Pointer to PCI device
+> + *
+> + * This callback is called when the error recovery driver tells us that
+> + * its OK to resume normal operation.
+> + */
+> +static void lpfc_io_resume(struct pci_dev *pdev)
+> +{
+> +	struct Scsi_Host *host = pci_get_drvdata(pdev);
+> +	struct lpfc_hba *phba = (struct lpfc_hba *)host->hostdata;
+> +
+> +	lpfc_online(phba);
+> +	mod_timer(&phba->fc_estabtmo, jiffies + HZ * 60);
+> +}
+> +
+>  static struct pci_device_id lpfc_id_table[] = {
+>  	{PCI_VENDOR_ID_EMULEX, PCI_DEVICE_ID_VIPER,
+>  		PCI_ANY_ID, PCI_ANY_ID, },
+> @@ -1885,11 +1969,18 @@ static struct pci_device_id lpfc_id_tabl
+>  
+>  MODULE_DEVICE_TABLE(pci, lpfc_id_table);
+>  
+> +static struct pci_error_handlers lpfc_err_handler = {
+> +	.error_detected = lpfc_io_error_detected,
+> +	.slot_reset = lpfc_io_slot_reset,
+> +	.resume = lpfc_io_resume,
+> +};
+> +
+>  static struct pci_driver lpfc_driver = {
+>  	.name		= LPFC_DRIVER_NAME,
+>  	.id_table	= lpfc_id_table,
+>  	.probe		= lpfc_pci_probe_one,
+>  	.remove		= __devexit_p(lpfc_pci_remove_one),
+> +	.err_handler = &lpfc_err_handler,
+>  };
+>  
+>  static int __init
+> 
