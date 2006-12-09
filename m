@@ -1,112 +1,55 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [PATCH] Sun3 SCSI: Make sun3 scsi drivers compile/work again
-Date: Sat, 9 Dec 2006 10:37:05 +0100 (CET)
-Message-ID: <Pine.LNX.4.64.0612091036450.12009@anakin>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: [Announce] smp_utils-0.92 available
+Date: Sat, 09 Dec 2006 09:09:58 -0500
+Message-ID: <457AC3B6.3090800@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from asia.telenet-ops.be ([195.130.137.74]:52136 "EHLO
-	asia.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S936679AbWLIJhH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Dec 2006 04:37:07 -0500
+Received: from pentafluge.infradead.org ([213.146.154.40]:39875 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761781AbWLIOKI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Dec 2006 09:10:08 -0500
+Received: from ip-106.82.126.206.dsl-cust.ca.inter.net ([206.126.82.106] helo=[192.168.48.80])
+	by pentafluge.infradead.org with esmtpsa (Exim 4.63 #1 (Red Hat Linux))
+	id 1Gt2tz-0001r9-KD
+	for linux-scsi@vger.kernel.org; Sat, 09 Dec 2006 14:10:07 +0000
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
-Cc: linux-scsi@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>, Sam Creasey <sammy@sammy.net>, Geert Uytterhoeven <geert@linux-m68k.org>
+To: linux-scsi@vger.kernel.org
 
-From: Sam Creasey <sammy@sammy.net>
+smp_utils is a package of command line utilities for invoking
+SMP functions to monitor and manage SAS expanders. SMP is the
+Serial Attached SCSI (SAS) Management Protocol (SMP). A SAS Host
+Bus Adapter (HBA) includes a SMP initiator (along with a SSP and
+STP initiator). A SAS expander contains a SMP target. Several
+SAS HBAs have a SMP pass through interface that can be used to
+send SMP requests and receive the responses. This package targets
+the linux kernel (lk) 2.6 and lk 2.4 series.
 
-Make sun3 scsi drivers compile/work again (though with way too many warnings...)
+Two interfaces are available: the "mptctl" pass through used
+by MPT Fusion SAS HBAs and the "smp_portal" sysfs attribute
+pass through used by at least one aic94xx based Linux driver.
 
-Tested on 3/50, 3/60.
+For an overview and examples of smp_utils see:
+http://www.torque.net/sg/smp_utils.html
+A tarball, rpm and deb can be found in table 2.
 
-Signed-off-by: Sam Creasey <sammy@sammy.net>
-Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+CHANGELOG (since version 0.91):
+  - all: suggest using '-v' if smp_send_req() fails
+  - smp_lib: sync function names and results with sas2r07
+  - smp_rep_general: sync with sas2r07
+  - smp_rep_route_info: add '--multiple' and '--num="
+    options. Underlying SMP function may be called multiple
+    times to show one line per phy's route table.
+  - smp_lib.h: add C++ 'extern "C" ' wrapper
+  - smp_discover+smp_discover_list: sync with sas2r07
+  - smp_conf_general: add new SMP function
+  - smp_utils.8: suggestions for finding expander SAS addresses
+    and mptsas ioc_num
+  - Makefile.freebsd: builds utilities on FreeBSD
+  - man pages: cleanup
 
----
- drivers/scsi/Kconfig         |    2 +-
- drivers/scsi/sun3_NCR5380.c  |    4 ++--
- drivers/scsi/sun3_scsi.c     |    2 +-
- drivers/scsi/sun3_scsi.h     |    2 +-
- drivers/scsi/sun3_scsi_vme.c |    2 +-
- 5 files changed, 6 insertions(+), 6 deletions(-)
 
---- linux-m68k-2.6.19.orig/drivers/scsi/Kconfig
-+++ linux-m68k-2.6.19/drivers/scsi/Kconfig
-@@ -1692,7 +1692,7 @@ config SCSI_NCR53C7xx_FAST
- 
- config SUN3_SCSI
- 	tristate "Sun3 NCR5380 SCSI"
--	depends on SUN3 && SCSI && BROKEN
-+	depends on SUN3 && SCSI
- 	select SCSI_SPI_ATTRS
- 	help
- 	  This option will enable support for the OBIO (onboard io) NCR5380
---- linux-m68k-2.6.19.orig/drivers/scsi/sun3_NCR5380.c
-+++ linux-m68k-2.6.19/drivers/scsi/sun3_NCR5380.c
-@@ -1271,7 +1271,7 @@ static irqreturn_t NCR5380_intr (int irq
- 	NCR_PRINT(NDEBUG_INTR);
- 	if ((NCR5380_read(STATUS_REG) & (SR_SEL|SR_IO)) == (SR_SEL|SR_IO)) {
- 	    done = 0;
--	    ENABLE_IRQ();
-+//	    ENABLE_IRQ();
- 	    INT_PRINTK("scsi%d: SEL interrupt\n", HOSTNO);
- 	    NCR5380_reselect(instance);
- 	    (void) NCR5380_read(RESET_PARITY_INTERRUPT_REG);
-@@ -1304,7 +1304,7 @@ static irqreturn_t NCR5380_intr (int irq
- 		INT_PRINTK("scsi%d: PHASE MISM or EOP interrupt\n", HOSTNO);
- 		NCR5380_dma_complete( instance );
- 		done = 0;
--		ENABLE_IRQ();
-+//		ENABLE_IRQ();
- 	    } else
- #endif /* REAL_DMA */
- 	    {
---- linux-m68k-2.6.19.orig/drivers/scsi/sun3_scsi.c
-+++ linux-m68k-2.6.19/drivers/scsi/sun3_scsi.c
-@@ -75,9 +75,9 @@
- #define REAL_DMA
- 
- #include "scsi.h"
-+#include "initio.h"
- #include <scsi/scsi_host.h>
- #include "sun3_scsi.h"
--#include "NCR5380.h"
- 
- static void NCR5380_print(struct Scsi_Host *instance);
- 
---- linux-m68k-2.6.19.orig/drivers/scsi/sun3_scsi.h
-+++ linux-m68k-2.6.19/drivers/scsi/sun3_scsi.h
-@@ -221,7 +221,7 @@ struct sun3_udc_regs {
-  *
-  */
- 
--
-+#include "NCR5380.h"
- 
- #if NDEBUG & NDEBUG_ARBITRATION
- #define ARB_PRINTK(format, args...) \
---- linux-m68k-2.6.19.orig/drivers/scsi/sun3_scsi_vme.c
-+++ linux-m68k-2.6.19/drivers/scsi/sun3_scsi_vme.c
-@@ -41,9 +41,9 @@
- #define REAL_DMA
- 
- #include "scsi.h"
-+#include "initio.h"
- #include <scsi/scsi_host.h>
- #include "sun3_scsi.h"
--#include "NCR5380.h"
- 
- extern int sun3_map_test(unsigned long, char *);
- 
-
-Gr{oetje,eeting}s,
-
-						Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-							    -- Linus Torvalds
+Doug Gilbert
