@@ -1,49 +1,112 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: [PATCH] imbvscsi: use 4k buffer  to transfer config data
-Date: Fri, 8 Dec 2006 16:14:48 -0800
-Message-ID: <20061208161448.75294251.randy.dunlap@oracle.com>
-References: <457A24B9.2010804@us.ibm.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: [PATCH] Sun3 SCSI: Make sun3 scsi drivers compile/work again
+Date: Sat, 9 Dec 2006 10:37:05 +0100 (CET)
+Message-ID: <Pine.LNX.4.64.0612091036450.12009@anakin>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rgminet01.oracle.com ([148.87.113.118]:29038 "EHLO
-	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1947527AbWLIAOB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Dec 2006 19:14:01 -0500
-In-Reply-To: <457A24B9.2010804@us.ibm.com>
+Received: from asia.telenet-ops.be ([195.130.137.74]:52136 "EHLO
+	asia.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S936679AbWLIJhH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Dec 2006 04:37:07 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: lxiep@us.ibm.com
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, Dave C Boutcher <sleddog@us.ibm.com>, Santiago Leon <santil@us.ibm.com>
+To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
+Cc: linux-scsi@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>, Sam Creasey <sammy@sammy.net>, Geert Uytterhoeven <geert@linux-m68k.org>
 
-On Fri, 08 Dec 2006 20:51:37 -0600 Linda Xie wrote:
+From: Sam Creasey <sammy@sammy.net>
 
-> Hi James,
-> 
-> This patch changes the size of the buffer used for transfering config 
-> data to 4K. It was tested against
-> 2.6.19-rc2 tree.
-> 
-> Please consider it for inclusion in upstream.
+Make sun3 scsi drivers compile/work again (though with way too many warnings...)
 
-+/* host data buffer size */
-+#define buff_size	4096
+Tested on 3/50, 3/60.
 
-from Documentation/CodingStyle:
-
-<quote>
-Names of macros defining constants and labels in enums are capitalized.
-
-#define CONSTANT 0x12345
-
-Enums are preferred when defining several related constants.
-
-CAPITALIZED macro names are appreciated but macros resembling functions
-may be named in lower case.
-</quote>
-
-I conclude that it should be BUFF_SIZE.
+Signed-off-by: Sam Creasey <sammy@sammy.net>
+Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
 
 ---
-~Randy
+ drivers/scsi/Kconfig         |    2 +-
+ drivers/scsi/sun3_NCR5380.c  |    4 ++--
+ drivers/scsi/sun3_scsi.c     |    2 +-
+ drivers/scsi/sun3_scsi.h     |    2 +-
+ drivers/scsi/sun3_scsi_vme.c |    2 +-
+ 5 files changed, 6 insertions(+), 6 deletions(-)
+
+--- linux-m68k-2.6.19.orig/drivers/scsi/Kconfig
++++ linux-m68k-2.6.19/drivers/scsi/Kconfig
+@@ -1692,7 +1692,7 @@ config SCSI_NCR53C7xx_FAST
+ 
+ config SUN3_SCSI
+ 	tristate "Sun3 NCR5380 SCSI"
+-	depends on SUN3 && SCSI && BROKEN
++	depends on SUN3 && SCSI
+ 	select SCSI_SPI_ATTRS
+ 	help
+ 	  This option will enable support for the OBIO (onboard io) NCR5380
+--- linux-m68k-2.6.19.orig/drivers/scsi/sun3_NCR5380.c
++++ linux-m68k-2.6.19/drivers/scsi/sun3_NCR5380.c
+@@ -1271,7 +1271,7 @@ static irqreturn_t NCR5380_intr (int irq
+ 	NCR_PRINT(NDEBUG_INTR);
+ 	if ((NCR5380_read(STATUS_REG) & (SR_SEL|SR_IO)) == (SR_SEL|SR_IO)) {
+ 	    done = 0;
+-	    ENABLE_IRQ();
++//	    ENABLE_IRQ();
+ 	    INT_PRINTK("scsi%d: SEL interrupt\n", HOSTNO);
+ 	    NCR5380_reselect(instance);
+ 	    (void) NCR5380_read(RESET_PARITY_INTERRUPT_REG);
+@@ -1304,7 +1304,7 @@ static irqreturn_t NCR5380_intr (int irq
+ 		INT_PRINTK("scsi%d: PHASE MISM or EOP interrupt\n", HOSTNO);
+ 		NCR5380_dma_complete( instance );
+ 		done = 0;
+-		ENABLE_IRQ();
++//		ENABLE_IRQ();
+ 	    } else
+ #endif /* REAL_DMA */
+ 	    {
+--- linux-m68k-2.6.19.orig/drivers/scsi/sun3_scsi.c
++++ linux-m68k-2.6.19/drivers/scsi/sun3_scsi.c
+@@ -75,9 +75,9 @@
+ #define REAL_DMA
+ 
+ #include "scsi.h"
++#include "initio.h"
+ #include <scsi/scsi_host.h>
+ #include "sun3_scsi.h"
+-#include "NCR5380.h"
+ 
+ static void NCR5380_print(struct Scsi_Host *instance);
+ 
+--- linux-m68k-2.6.19.orig/drivers/scsi/sun3_scsi.h
++++ linux-m68k-2.6.19/drivers/scsi/sun3_scsi.h
+@@ -221,7 +221,7 @@ struct sun3_udc_regs {
+  *
+  */
+ 
+-
++#include "NCR5380.h"
+ 
+ #if NDEBUG & NDEBUG_ARBITRATION
+ #define ARB_PRINTK(format, args...) \
+--- linux-m68k-2.6.19.orig/drivers/scsi/sun3_scsi_vme.c
++++ linux-m68k-2.6.19/drivers/scsi/sun3_scsi_vme.c
+@@ -41,9 +41,9 @@
+ #define REAL_DMA
+ 
+ #include "scsi.h"
++#include "initio.h"
+ #include <scsi/scsi_host.h>
+ #include "sun3_scsi.h"
+-#include "NCR5380.h"
+ 
+ extern int sun3_map_test(unsigned long, char *);
+ 
+
+Gr{oetje,eeting}s,
+
+						Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
