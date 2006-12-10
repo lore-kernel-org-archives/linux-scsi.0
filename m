@@ -1,72 +1,107 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: SCSI Controler SCRU32 becomes realy slow on the latest kernels
-Date: Sat, 9 Dec 2006 22:36:16 -0800
-Message-ID: <20061209223616.356229cc.akpm@osdl.org>
-References: <200612071428.44850.manz@intes.de>
+From: Grant Grundler <grundler@parisc-linux.org>
+Subject: Re: [PATCH 1/5] Update Documentation/pci.txt
+Date: Sun, 10 Dec 2006 00:25:08 -0700
+Message-ID: <20061210072508.GA12272@colo.lackof.org>
+References: <456404E2.1060102@jp.fujitsu.com> <20061122182804.GE378@colo.lackof.org> <45663EE8.1080708@jp.fujitsu.com> <20061124051217.GB8202@colo.lackof.org> <20061206072651.GG17199@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.25]:56067 "EHLO smtp.osdl.org"
+Received: from colo.lackof.org ([198.49.126.79]:45636 "EHLO colo.lackof.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760298AbWLJGgd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 10 Dec 2006 01:36:33 -0500
-In-Reply-To: <200612071428.44850.manz@intes.de>
+	id S1760334AbWLJHZL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 10 Dec 2006 02:25:11 -0500
+Content-Disposition: inline
+In-Reply-To: <20061206072651.GG17199@kroah.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: manz@intes.de
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Greg KH <greg@kroah.com>
+Cc: Grant Grundler <grundler@parisc-linux.org>, Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>, Linux Kernel list <linux-kernel@vger.kernel.org>, linux-pci@atrey.karlin.mff.cuni.cz, Andrew Morton <akpm@osdl.org>, e1000-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
 
-> On Thu, 7 Dec 2006 14:28:44 +0100 Hartmut Manz <manz@intes.de> wrote:
-> I am using here 2 machines with the ICP Vortex SCSI-Controler SCRU32 for some 
-> years now.
+On Tue, Dec 05, 2006 at 11:26:51PM -0800, Greg KH wrote:
+...
+> I do have a few minor comments:
+...
+> > Please mark the initialization and cleanup functions where appropriate
+> > (the corresponding macros are defined in <linux/init.h>):
+> > 
+> > 	__init		Initialization code. Thrown away after the driver
+> > 			initializes.
+> > 	__exit		Exit code. Ignored for non-modular drivers.
+> > 	__devinit	Device initialization code. Identical to __init if
+> > 			the kernel is not compiled with CONFIG_HOTPLUG, normal
+> > 			function otherwise.
+> > 	__devexit	The same for __exit.
+> > 
+> > Tips on marks:
+> > 	o The module_init()/module_exit() functions (and all initialization
+> >           functions called _only_ from these) should be marked __init/__exit.
+> > 
+> > 	o The struct pci_driver shouldn't be marked with any of these tags.
+> > 
+> > 	o The ID table array should be marked __devinitdata.
+> > 
+> > 	o The probe() and remove() functions (and all initialization
+> > 	  functions called only from these) should be marked __devinit
+> > 	  and __devexit.
+> > 
+> > 	o If the driver is not a hotplug driver then use only
+> > 	  __init/__exit and __initdata/__exitdata.
 > 
-> After switching one machine from Debian 3.1 (sarge, with Kernel 2.6.8) to the 
-> upcoming Debian 4.0 (etch with Kernel 2.6.17 or 2.6.18) I have noticed that 
-> my scsi-devices become very slow while there is also a dramatical increase in
-> the sys time needed for I/O operations.
+> No, don't say this, pci drivers are not "hotplug drivers",
+
+agreed - removed that bullet item.
+
+> and since CONFIG_HOTPLUG is really hard to turn off these days,
+> don't confuse people with the devinit stuff.  Everyone gets it wrong...
+
+While revisiting this bit, I started thinking:
+
+o While I agree HOTPLUG is essential to desktop and server,
+  I don't think that's true for "embedded" (e.g. routers/switches).
+
+o drivers should use __dev* exactly because HOTPLUG is defined.
+
+o Why does everyone get __dev* wrong? Bad API? Missing or bad Documentation?
+  [ This is not a free-for-all...I'd like a clear answer from
+  Greg what would help driver writers get this right. ]
+
+o Prefer a seperate patch to clean this up?
+  Take what I have for now and sort out the __devinit handling in
+  another round?
+
+o Note what I have is essentially the original text - just reformatted
+  to be a bit more readable.
+
+o Hrm...what did greg mean with "it"? All of the markers?
+  Or just the __dev* markers?
+
+> > 	o Pointers to functions marked as __devexit must be created using
+> > 	  __devexit_p(function_name).  That will generate the function
+> > 	  name or NULL if the __devexit function will be discarded.
 > 
-> The machine is a dual processor Xeon system (2 * 2.2 GHz) with 2 GB memory.
-> The used scsi drives are seagate R10k and R15k disks.
-> 
-> i.e.  reading 1 GB from the first SCSI drive takes about:
-> xen-1:/var/log# time dd if=/dev/sda bs=256k count=4000 of=/dev/null
-> 4000+0 records in
-> 4000+0 records out
-> 1048576000 bytes (1.0 GB) copied, 55.3079 seconds, 19.0 MB/s
-> 
-> real    0m55.361s
-> user    0m0.368s
-> sys     0m49.107s
+> I really recommend just not using any of these for almost all PCI
+> drivers, as the space savings just really isn't there...
 
-ouch.
+It's a bit too late for that, no?
+And even if it's more of a PITA than it's worth, we do save something:
 
-> There are two strange things: 
->    1. The transfer rate is only 19 MB/sec what is very low for this machine.
->        The expected value would be at least 50 MB/sec.
-> 
->    2. the system time is in the same range as the real time and thats
->        realy annoying,  on the old kernel the system time for such an operatin
->        was about 7 sec.
-> 
+# hppa64-linux-gnu-readelf -S vmlinux
+...
+ [26] .init.text        PROGBITS         0000000040598000  00457000
+      0000000000022280  0000000000000000  AX       0     0     8
+ [27] .init.data        PROGBITS         00000000405ba280  00479280
+      000000000001faf0  0000000000000000  WA       0     0     8
+...
 
-It would help a lot of we can determine where the kernel is spending all this
-time.  Can you please generate a kernel profile?
+Reality is they are used in _alot_ of drivers.
+I checked 2.6.19:
+grundler <514>find -name \*.c | xargs fgrep __devinit | wc
+   2723   16812  235863
 
-Start a large IO operation then, while it is running, run
+I'd prefer to keep the short references here if you
+don't mind too much. At least until you can get some
+consensus that __init and __exit should go away
+or get replaced by easier-to-get-right markers.
 
-#!/bin/sh
-sudo opcontrol --stop
-sudo opcontrol --shutdown
-sudo rm -rf /var/lib/oprofile
-sudo opcontrol --vmlinux=/boot/vmlinux-$(uname -r)
-sudo opcontrol --start-daemon
-sudo opcontrol --start
-sleep 10
-sudo opcontrol --stop
-sudo opcontrol --shutdown
-sudo opreport -l /boot/vmlinux-$(uname -r) | head -50
-
-(might need some adjustments for distro variation)
-
-Thanks.
+thanks,
+grant
