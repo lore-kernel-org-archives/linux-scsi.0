@@ -1,55 +1,72 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: [Announce] smp_utils-0.92 available
-Date: Sat, 09 Dec 2006 09:09:58 -0500
-Message-ID: <457AC3B6.3090800@torque.net>
-Reply-To: dougg@torque.net
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: SCSI Controler SCRU32 becomes realy slow on the latest kernels
+Date: Sat, 9 Dec 2006 22:36:16 -0800
+Message-ID: <20061209223616.356229cc.akpm@osdl.org>
+References: <200612071428.44850.manz@intes.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:39875 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761781AbWLIOKI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Dec 2006 09:10:08 -0500
-Received: from ip-106.82.126.206.dsl-cust.ca.inter.net ([206.126.82.106] helo=[192.168.48.80])
-	by pentafluge.infradead.org with esmtpsa (Exim 4.63 #1 (Red Hat Linux))
-	id 1Gt2tz-0001r9-KD
-	for linux-scsi@vger.kernel.org; Sat, 09 Dec 2006 14:10:07 +0000
+Received: from smtp.osdl.org ([65.172.181.25]:56067 "EHLO smtp.osdl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760298AbWLJGgd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 10 Dec 2006 01:36:33 -0500
+In-Reply-To: <200612071428.44850.manz@intes.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: manz@intes.de
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-smp_utils is a package of command line utilities for invoking
-SMP functions to monitor and manage SAS expanders. SMP is the
-Serial Attached SCSI (SAS) Management Protocol (SMP). A SAS Host
-Bus Adapter (HBA) includes a SMP initiator (along with a SSP and
-STP initiator). A SAS expander contains a SMP target. Several
-SAS HBAs have a SMP pass through interface that can be used to
-send SMP requests and receive the responses. This package targets
-the linux kernel (lk) 2.6 and lk 2.4 series.
+> On Thu, 7 Dec 2006 14:28:44 +0100 Hartmut Manz <manz@intes.de> wrote:
+> I am using here 2 machines with the ICP Vortex SCSI-Controler SCRU32 for some 
+> years now.
+> 
+> After switching one machine from Debian 3.1 (sarge, with Kernel 2.6.8) to the 
+> upcoming Debian 4.0 (etch with Kernel 2.6.17 or 2.6.18) I have noticed that 
+> my scsi-devices become very slow while there is also a dramatical increase in
+> the sys time needed for I/O operations.
+> 
+> The machine is a dual processor Xeon system (2 * 2.2 GHz) with 2 GB memory.
+> The used scsi drives are seagate R10k and R15k disks.
+> 
+> i.e.  reading 1 GB from the first SCSI drive takes about:
+> xen-1:/var/log# time dd if=/dev/sda bs=256k count=4000 of=/dev/null
+> 4000+0 records in
+> 4000+0 records out
+> 1048576000 bytes (1.0 GB) copied, 55.3079 seconds, 19.0 MB/s
+> 
+> real    0m55.361s
+> user    0m0.368s
+> sys     0m49.107s
 
-Two interfaces are available: the "mptctl" pass through used
-by MPT Fusion SAS HBAs and the "smp_portal" sysfs attribute
-pass through used by at least one aic94xx based Linux driver.
+ouch.
 
-For an overview and examples of smp_utils see:
-http://www.torque.net/sg/smp_utils.html
-A tarball, rpm and deb can be found in table 2.
+> There are two strange things: 
+>    1. The transfer rate is only 19 MB/sec what is very low for this machine.
+>        The expected value would be at least 50 MB/sec.
+> 
+>    2. the system time is in the same range as the real time and thats
+>        realy annoying,  on the old kernel the system time for such an operatin
+>        was about 7 sec.
+> 
 
-CHANGELOG (since version 0.91):
-  - all: suggest using '-v' if smp_send_req() fails
-  - smp_lib: sync function names and results with sas2r07
-  - smp_rep_general: sync with sas2r07
-  - smp_rep_route_info: add '--multiple' and '--num="
-    options. Underlying SMP function may be called multiple
-    times to show one line per phy's route table.
-  - smp_lib.h: add C++ 'extern "C" ' wrapper
-  - smp_discover+smp_discover_list: sync with sas2r07
-  - smp_conf_general: add new SMP function
-  - smp_utils.8: suggestions for finding expander SAS addresses
-    and mptsas ioc_num
-  - Makefile.freebsd: builds utilities on FreeBSD
-  - man pages: cleanup
+It would help a lot of we can determine where the kernel is spending all this
+time.  Can you please generate a kernel profile?
 
+Start a large IO operation then, while it is running, run
 
-Doug Gilbert
+#!/bin/sh
+sudo opcontrol --stop
+sudo opcontrol --shutdown
+sudo rm -rf /var/lib/oprofile
+sudo opcontrol --vmlinux=/boot/vmlinux-$(uname -r)
+sudo opcontrol --start-daemon
+sudo opcontrol --start
+sleep 10
+sudo opcontrol --stop
+sudo opcontrol --shutdown
+sudo opreport -l /boot/vmlinux-$(uname -r) | head -50
+
+(might need some adjustments for distro variation)
+
+Thanks.
