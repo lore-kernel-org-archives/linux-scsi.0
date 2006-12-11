@@ -1,37 +1,40 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] Add support for asynchronous scans to libata
-Date: Mon, 11 Dec 2006 11:18:17 -0500
-Message-ID: <457D84C9.6020907@pobox.com>
-References: <20061208211236.GC29763@parisc-linux.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] scsi_lib.c: avoid max_hw_segments warning
+Date: Mon, 11 Dec 2006 10:23:46 -0600
+Message-ID: <1165854226.2791.4.camel@mulgrave.il.steeleye.com>
+References: <Pine.LNX.4.64.0612081206300.21386@halbrend.uninett.no>
+	 <Pine.LNX.4.58.0612081356540.6702@xplor.biophys.uni-duesseldorf.de>
+	 <Pine.LNX.4.62.0612081433590.17313@pademelon.sonytel.be>
+	 <Pine.LNX.4.58.0612081601080.7221@xplor.biophys.uni-duesseldorf.de>
+	 <Pine.LNX.4.58.0612111351020.29925@xplor.biophys.uni-duesseldorf.de>
+	 <Pine.LNX.4.62.0612111414140.1150@pademelon.sonytel.be>
+	 <Pine.LNX.4.58.0612111704370.30544@xplor.biophys.uni-duesseldorf.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20061208211236.GC29763@parisc-linux.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hancock.steeleye.com ([71.30.118.248]:50810 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S936997AbWLKQX7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Dec 2006 11:23:59 -0500
+In-Reply-To: <Pine.LNX.4.58.0612111704370.30544@xplor.biophys.uni-duesseldorf.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Michael Schmitz <schmitz@opal.biophys.uni-duesseldorf.de>
+Cc: jejb@SteelEye.com, Geert Uytterhoeven <geert@linux-m68k.org>, linux-scsi@vger.kernel.org
 
-Matthew Wilcox wrote:
-> Some of the drivers (AHCI was mentioned to me as a culprit) take a long
-> time to discover all the devices attached to them.  Even for ones which
-> are relatively quick, if you put a lot of them in a machine, it will
-> take a long time in aggregate.  This can be fixed by adding support for
-> asynchronous scsi scans, which causes the time-consuming portions of
-> initialisation to take place in threads.
+On Mon, 2006-12-11 at 17:09 +0100, Michael Schmitz wrote:
+> Hi,
 > 
-> Signed-off-by: Matthew Wilcox <matthew@wil.cx>
+> as per request by Geert Uytterhoeven: the patch below avoids a warning in
+> blk_queue_max_hw_segments(), caused by a SCSI host adapter using SG_NONE.
+> Please apply.
 
-ACK.  I tried to apply the patch, but git-applymbox choked on every 
-single file modified.  Quite possibly, its due to a whitespace cleanup 
-in Alan territory.
+Actually, isn't the correct fix to change SG_NONE to 1?
 
-If you would either (a) wait several hours for libata-dev.git#upstream 
-to mirror out, and resend, or (b) supply a git:// URL to pull from, I'll 
-merge.
+We're deprecating the non-sg paths, however use_sg == 1 is equivalent to
+use_sg==0, you just set it up differently.
 
-	Jeff
-
+James
 
 
