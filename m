@@ -1,36 +1,37 @@
-From: Matthew Wilcox <matthew@wil.cx>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [PATCH] Add support for asynchronous scans to libata
-Date: Mon, 11 Dec 2006 09:09:45 -0700
-Message-ID: <20061211160945.GC21070@parisc-linux.org>
-References: <20061208211236.GC29763@parisc-linux.org> <457D800E.5070908@pobox.com>
+Date: Mon, 11 Dec 2006 11:18:17 -0500
+Message-ID: <457D84C9.6020907@pobox.com>
+References: <20061208211236.GC29763@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:33210 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S936965AbWLKQJq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Dec 2006 11:09:46 -0500
-Content-Disposition: inline
-In-Reply-To: <457D800E.5070908@pobox.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20061208211236.GC29763@parisc-linux.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
 Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Dec 11, 2006 at 10:58:06AM -0500, Jeff Garzik wrote:
-> The time-consuming portion already takes place in a thread.  Do you mean 
-> multiple threads?  Or, ATA's scan is in one thread, while work continues 
-> in other threads?
+Matthew Wilcox wrote:
+> Some of the drivers (AHCI was mentioned to me as a culprit) take a long
+> time to discover all the devices attached to them.  Even for ones which
+> are relatively quick, if you put a lot of them in a machine, it will
+> take a long time in aggregate.  This can be fixed by adding support for
+> asynchronous scsi scans, which causes the time-consuming portions of
+> initialisation to take place in threads.
 > 
-> Patch seems sane, provided that I am educated a bit :)
+> Signed-off-by: Matthew Wilcox <matthew@wil.cx>
 
-Each host will be scanned in its own thread.  So boot-up and
-initialisation of other devices (eg, USB, networking, PS/2, etc) will
-continue.  Drive ordering and numbering is maintained, and the default
-configuration right now is to not enable this feature.
+ACK.  I tried to apply the patch, but git-applymbox choked on every 
+single file modified.  Quite possibly, its due to a whitespace cleanup 
+in Alan territory.
 
-We have infrastructure in place to make sure that all discs are found
-before we try to start init or autorun RAID.  If there's anywhere we're
-missing a call to scsi_complete_async_scans(), it'll affect SCSI as much
-as it will IDE, and I'm extremely interested in fixing it.
+If you would either (a) wait several hours for libata-dev.git#upstream 
+to mirror out, and resend, or (b) supply a git:// URL to pull from, I'll 
+merge.
+
+	Jeff
+
+
 
