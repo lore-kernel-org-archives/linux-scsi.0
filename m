@@ -1,47 +1,39 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [PATCH] scsi_transport_spi: fix sense buffer size error
-Date: Mon, 11 Dec 2006 09:47:06 -0600
-Message-ID: <1165852026.2791.2.camel@mulgrave.il.steeleye.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] Add support for asynchronous scans to libata
+Date: Mon, 11 Dec 2006 10:58:06 -0500
+Message-ID: <457D800E.5070908@pobox.com>
+References: <20061208211236.GC29763@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:50515 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S936679AbWLKPrJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Dec 2006 10:47:09 -0500
-Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
-	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id kBBFl7x24999
-	for <linux-scsi@vger.kernel.org>; Mon, 11 Dec 2006 10:47:07 -0500
+Received: from srv5.dvmed.net ([207.36.208.214]:47066 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S936885AbWLKP6J (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 Dec 2006 10:58:09 -0500
+In-Reply-To: <20061208211236.GC29763@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-The code does this:
+Matthew Wilcox wrote:
+> Some of the drivers (AHCI was mentioned to me as a culprit) take a long
+> time to discover all the devices attached to them.  Even for ones which
+> are relatively quick, if you put a lot of them in a machine, it will
+> take a long time in aggregate.  This can be fixed by adding support for
+> asynchronous scsi scans, which causes the time-consuming portions of
+> initialisation to take place in threads.
+> 
+> Signed-off-by: Matthew Wilcox <matthew@wil.cx>
 
-unsigned char sense[SCSI_SENSE_BUFFERSIZE];
-...
-scsi_normalize_sense(sense, sizeof(*sense), sshdr)
+The time-consuming portion already takes place in a thread.  Do you mean 
+multiple threads?  Or, ATA's scan is in one thread, while work continues 
+in other threads?
 
-however the sizeof will return 1 not 96 which means the sense data will
-have no valid ASC/ASCQ values.  Fix by putting the correct sense size.
-The only affected case for this would have been the DV buffer sanity
-check failure, which is fortunately quite rare.
+Patch seems sane, provided that I am educated a bit :)
 
-James
+	Jeff
 
-diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
-index 3fded48..014d7fe 100644
---- a/drivers/scsi/scsi_transport_spi.c
-+++ b/drivers/scsi/scsi_transport_spi.c
-@@ -122,7 +122,7 @@ static int spi_execute(struct scsi_devic
- 			if (!sshdr)
- 				sshdr = &sshdr_tmp;
- 
--			if (scsi_normalize_sense(sense, sizeof(*sense),
-+			if (scsi_normalize_sense(sense, SCSI_SENSE_BUFFERSIZE,
- 						 sshdr)
- 			    && sshdr->sense_key == UNIT_ATTENTION)
- 				continue;
 
 
