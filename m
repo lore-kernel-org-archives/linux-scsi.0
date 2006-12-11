@@ -1,33 +1,47 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] fix SG_IO bio leak
-Date: Mon, 11 Dec 2006 09:55:54 +0100
-Message-ID: <20061211085554.GG4576@kernel.dk>
-References: <200612101633.kBAGXl6L001306@r-dd.iij4u.or.jp>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [PATCH] scsi_transport_spi: fix sense buffer size error
+Date: Mon, 11 Dec 2006 09:47:06 -0600
+Message-ID: <1165852026.2791.2.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([62.242.22.158]:3262 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762654AbWLKIyo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Dec 2006 03:54:44 -0500
-Content-Disposition: inline
-In-Reply-To: <200612101633.kBAGXl6L001306@r-dd.iij4u.or.jp>
+Received: from hancock.steeleye.com ([71.30.118.248]:50515 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S936679AbWLKPrJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Dec 2006 10:47:09 -0500
+Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
+	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id kBBFl7x24999
+	for <linux-scsi@vger.kernel.org>; Mon, 11 Dec 2006 10:47:07 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, Dec 11 2006, FUJITA Tomonori wrote:
-> This patch fixes bio leaks in SG_IO.
-> 
-> http://marc.theaimsgroup.com/?l=linux-kernel&m=116570666807983&w=2
-> 
-> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+The code does this:
 
-Perhaps it was a mistake to remove the bio argument. I'll apply your
-patch, and contemplate if we want to strengthen this api a little.
-Thanks!
+unsigned char sense[SCSI_SENSE_BUFFERSIZE];
+...
+scsi_normalize_sense(sense, sizeof(*sense), sshdr)
 
--- 
-Jens Axboe
+however the sizeof will return 1 not 96 which means the sense data will
+have no valid ASC/ASCQ values.  Fix by putting the correct sense size.
+The only affected case for this would have been the DV buffer sanity
+check failure, which is fortunately quite rare.
+
+James
+
+diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
+index 3fded48..014d7fe 100644
+--- a/drivers/scsi/scsi_transport_spi.c
++++ b/drivers/scsi/scsi_transport_spi.c
+@@ -122,7 +122,7 @@ static int spi_execute(struct scsi_devic
+ 			if (!sshdr)
+ 				sshdr = &sshdr_tmp;
+ 
+-			if (scsi_normalize_sense(sense, sizeof(*sense),
++			if (scsi_normalize_sense(sense, SCSI_SENSE_BUFFERSIZE,
+ 						 sshdr)
+ 			    && sshdr->sense_key == UNIT_ATTENTION)
+ 				continue;
+
 
