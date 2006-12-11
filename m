@@ -1,261 +1,117 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: [RFC] Prevent infinite retries due to DID_RESET return status
-Date: Mon, 11 Dec 2006 15:42:34 -0600
-Message-ID: <457DD0CA.9010509@sgi.com>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [Bugme-new] [Bug 7667] New: BUG at drivers/scsi/scsi_lib.c:1118
+ caused by "pktsetup dvd /dev/sr0"
+Date: Mon, 11 Dec 2006 14:10:29 -0800
+Message-ID: <20061211141029.9a0b0376.akpm@osdl.org>
+References: <200612112159.kBBLxmep005850@fire-2.osdl.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------000201050502030800000508"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:51943 "EHLO omx2.sgi.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S937673AbWLKVnI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Dec 2006 16:43:08 -0500
+Received: from smtp.osdl.org ([65.172.181.25]:42227 "EHLO smtp.osdl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1763140AbWLKWOC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 Dec 2006 17:14:02 -0500
+In-Reply-To: <200612112159.kBBLxmep005850@fire-2.osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Jeremy Higdon <jeremy@sgi.com>
+To: Christoph Hellwig <hch@lst.de>, Peter Osterlund <petero2@telia.com>
+Cc: linux-scsi@vger.kernel.org, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>, laurent.riffard@free.fr, Adrian Bunk <bunk@stusta.de>
 
-This is a multi-part message in MIME format.
---------------000201050502030800000508
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+On Mon, 11 Dec 2006 13:59:48 -0800
+bugme-daemon@bugzilla.kernel.org wrote:
 
-Due to a firmware mismatch between a host and target (names withheld to
-protect the innocent?), the LLDD was returning DID_RESET for every
-i/o command.  This patch modifies the scsi layer to take into account
-when the command which received DID_RESET was issued and eventually
-give up on it instead of unconditionally reissuing it forever
-when it receives a DID_RESET.  With this patch, on my test system,
-the command receiving the constant DID_RESET times out after about
-360 seconds.
+> http://bugzilla.kernel.org/show_bug.cgi?id=7667
+> 
+>            Summary: BUG at drivers/scsi/scsi_lib.c:1118 caused by "pktsetup
+>                     dvd /dev/sr0"
+>     Kernel Version: 2.6.19-rc6-mm2, 2.6.19-git*
+>             Status: NEW
+>           Severity: normal
+>              Owner: scsi_drivers-other@kernel-bugs.osdl.org
+>          Submitter: laurent.riffard@free.fr
+> 
+> 
+> Most recent kernel where this bug did *NOT* occur: 2.6.19
+> 
+> Distribution: Mandriva Linux release 2007.0 (Official) for i586
+> 
+> Hardware Environment: Desktop
+>   Motherboard: Asus A7V133-C,
+>   Processor: AMD Athlon XP 1600+,
+>   IDE DVD-burner: HL-DT-ST DVDRAM GSA-4165B 
+> 
+> Software Environment:
+>   Relevant kernel modules: pata_via, scsi_mod, sr_mod, sd_mod, libata, pktcdvd
+>   Userspace tools: udftools-1.0.0-0.b3.10mdv2007.0 
+> 
+> Problem Description: The kernel BUGs when I issue "pktsetup dvd /dev/sr0"
+> 
+> pktcdvd: writer pktcdvd0 mapped to sr0
+> ------------[ cut here ]------------
+> kernel BUG at drivers/scsi/scsi_lib.c:1118!
+> invalid opcode: 0000 [#1]
+> Modules linked in: pktcdvd snd_seq_oss snd_seq_midi_event snd_seq bonding
+> snd_pcm_oss snd_mixer_oss af_packet snd_ens1371 gameport snd_rawmidi snd_seq_device
+>  snd_ac97_codec snd_ac97_bus snd_pcm via686a snd_timer snd_page_alloc w83781d
+> snd soundcore hwmon_vid i2c_isa i2c_viapro binfmt_misc loop nls_iso8859_15 nls_
+> cp850 vfat fat reiserfs via_agp agpgart lp parport_pc parport 8250 serial_core
+> pcspkr rtc ohci1394 ieee1394 uhci_hcd usbcore sr_mod cdrom dm_mirror dm_mod sd
+> _mod pata_via libata scsi_mod
+> CPU:    0
+> EIP:    0060:[<e0833017>]    Not tainted VLI
+> EFLAGS: 00010002   (2.6.19-gaf1713e0 #5)
+> EIP is at scsi_prep_fn+0x10b/0x24f [scsi_mod]
+> eax: c15f9c34   ebx: dfc00be4   ecx: dfc39628   edx: c15f9c34
+> esi: dfc39598   edi: c15f7448   ebp: c156daf0   esp: c156dad0
+> ds: 007b   es: 007b   ss: 0068
+> Process vol_id (pid: 2099, ti=c156c000 task=dff6a570 task.ti=c156c000)
+> Stack: 00011200 c1479de0 00000833 c15f9c34 c15f7448 c15f9c34 c15f7448 c15f7448 
+>        c156db14 c019ed65 dfc23d28 dfc39690 c156db0c c15f9c34 dfc39598 dfc34000 
+>        c15f7448 c156db44 e08335db 00000082 00000082 c15f7448 dfc39628 c01a1465 
+> Call Trace:
+>  [<c0103a92>] show_trace_log_lvl+0x1a/0x2f
+>  [<c0103b42>] show_stack_log_lvl+0x9b/0xa3
+>  [<c0103cdc>] show_registers+0x192/0x268
+>  [<c0103e9c>] die+0xea/0x1bd
+>  [<c0103fe8>] do_trap+0x79/0x91
+>  [<c01047c6>] do_invalid_op+0x97/0xa1
+>  [<c027fac4>] error_code+0x74/0x7c
+>  [<c019ed65>] elv_next_request+0x6b/0x116
+>  [<e08335db>] scsi_request_fn+0x5e/0x26d [scsi_mod]
+>  [<c019ee6a>] elv_insert+0x5a/0x134
+>  [<c019efc1>] __elv_add_request+0x7d/0x82
+>  [<c019f0ab>] elv_add_request+0x16/0x1d
+>  [<e0e8d2ed>] pkt_generic_packet+0x107/0x133 [pktcdvd]
+>  [<e0e8d772>] pkt_get_disc_info+0x42/0x7b [pktcdvd]
+>  [<e0e8eae3>] pkt_open+0xbf/0xc56 [pktcdvd]
+>  [<c0168078>] do_open+0x7e/0x246
+>  [<c01683df>] blkdev_open+0x28/0x51
+>  [<c014a057>] __dentry_open+0xb5/0x160
+>  [<c014a183>] nameidata_to_filp+0x27/0x37
+>  [<c014a1c6>] do_filp_open+0x33/0x3b
+>  [<c014a211>] do_sys_open+0x43/0xc7
+>  [<c014a2cd>] sys_open+0x1c/0x1e
+>  [<c0102b82>] sysenter_past_esp+0x5f/0x85
+>  =======================
+> Code: 74 1d 66 83 78 60 00 75 04 0f 0b eb fe 89 d8 e8 3d fe ff ff 85 c0 89 c7 74
+> 43 e9 00 01 00 00 8b 55 ec 83 ba 90 00 00 00 00 74 04 <0f> 0b eb fe 8b 45 ec
+>  83 b8 98 00 00 00 00 74 04 0f 0b eb fe c7 
+> EIP: [<e0833017>] scsi_prep_fn+0x10b/0x24f [scsi_mod] SS:ESP 0068:c156dad0
+> 
+> 
+> Steps to reproduce:
+> - load an UDF-formatted DVD-RW
+> - issue "modprobe pktcdvd"
+> - issue "pktsetup dvd /dev/sr0"
+> 
+> Notes:
+> 
+> I did a git-bisect, which gave this result:
+>   commit b00315799d78f76531b71435fbc2643cd71ae4c
+> (http://www.kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=3b00315799d78f76531b71435fbc2643cd71ae4c)
+>   Author: Christoph Hellwig <hch@lst.de>
+>   Date:   Sat Nov 4 20:10:55 2006 +0100
+>   [SCSI] untangle scsi_prep_fn
+> 
 
-The premise for this patch is that no command should have an infinite
-lifetime.  The impetus for this patch was a system which would not
-reach a command prompt without disconnecting the storage from the
-host.
-
-The significant change in this patch is to call scsi_retry_command()
-instead of scsi_requeue_command() if the command which receives a
-DID_RESET did not complete any i/o (good_bytes==0).  scsi_retry_command()
-does not release the command and regenerate it like scsi_requeue_command()
-does, hence jiffies_at_alloc reflects when the command was first issued.
-
-This patch is based upon 2.6.19.  Thanks for taking the time to
-look at this.
-
-Mike
-
-
-
-
-
-
-
-
-
---------------000201050502030800000508
-Content-Type: text/x-patch;
- name="did_reset.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="did_reset.patch"
-
---- kdbu/drivers/scsi/scsi_priv.h	2006-10-09 01:58:19.000000000 -0500
-+++ kdb/drivers/scsi/scsi_priv.h	2006-12-07 14:15:19.925332776 -0600
-@@ -28,7 +28,7 @@ extern int scsi_dispatch_cmd(struct scsi
- extern int scsi_setup_command_freelist(struct Scsi_Host *shost);
- extern void scsi_destroy_command_freelist(struct Scsi_Host *shost);
- extern void __scsi_done(struct scsi_cmnd *cmd);
--extern int scsi_retry_command(struct scsi_cmnd *cmd);
-+extern int scsi_retry_command(struct scsi_cmnd *cmd, int reason);
- #ifdef CONFIG_SCSI_LOGGING
- void scsi_log_send(struct scsi_cmnd *cmd);
- void scsi_log_completion(struct scsi_cmnd *cmd, int disposition);
---- kdbu/include/scsi/scsi.h	2006-10-31 21:08:47.000000000 -0600
-+++ kdb/include/scsi/scsi.h	2006-12-07 14:13:09.188052974 -0600
-@@ -353,6 +353,7 @@ struct scsi_lun {
- #define SCSI_MLQUEUE_HOST_BUSY   0x1055
- #define SCSI_MLQUEUE_DEVICE_BUSY 0x1056
- #define SCSI_MLQUEUE_EH_RETRY    0x1057
-+#define SCSI_MLQUEUE_DID_RESET   0x1058
- 
- /*
-  *  Use these to separate status msg and our bytes
---- kdbu/drivers/scsi/scsi.c	2006-10-09 01:58:19.000000000 -0500
-+++ kdb/drivers/scsi/scsi.c	2006-12-07 14:15:49.835794930 -0600
-@@ -673,7 +673,7 @@ void __scsi_done(struct scsi_cmnd *cmd)
-  *              level drivers should not become re-entrant as a result of
-  *              this.
-  */
--int scsi_retry_command(struct scsi_cmnd *cmd)
-+int scsi_retry_command(struct scsi_cmnd *cmd, int reason)
- {
-         /*
-          * Zero the sense information from the last time we tried
-@@ -681,7 +681,7 @@ int scsi_retry_command(struct scsi_cmnd 
-          */
- 	memset(cmd->sense_buffer, 0, sizeof(cmd->sense_buffer));
- 
--	return scsi_queue_insert(cmd, SCSI_MLQUEUE_EH_RETRY);
-+	return scsi_queue_insert(cmd, reason);
- }
- 
- /*
---- kdbu/drivers/scsi/scsi_lib.c	2006-11-29 21:09:07.000000000 -0600
-+++ kdb/drivers/scsi/scsi_lib.c	2006-12-11 14:22:52.756579311 -0600
-@@ -65,6 +65,7 @@ static struct scsi_host_sg_pool scsi_sg_
- #undef SP
- 
- static void scsi_run_queue(struct request_queue *q);
-+static void scsi_release_buffers(struct scsi_cmnd *cmd);
- 
- /*
-  * Function:	scsi_unprep_request()
-@@ -100,10 +101,10 @@ static void scsi_unprep_request(struct r
-  *
-  * Returns:     Nothing.
-  *
-- * Notes:       We do this for one of two cases.  Either the host is busy
-+ * Notes:       We do this for one of three cases.  1) the host is busy
-  *              and it cannot accept any more commands for the time being,
-- *              or the device returned QUEUE_FULL and can accept no more
-- *              commands.
-+ *              2) the device returned QUEUE_FULL and can accept no more
-+ *              commands, or 3) the LLDD returned DID_RESET.
-  * Notes:       This could be called either from an interrupt context or a
-  *              normal process context.
-  */
-@@ -137,9 +138,11 @@ int scsi_queue_insert(struct scsi_cmnd *
- 
- 	/*
- 	 * Decrement the counters, since these commands are no longer
--	 * active on the host/device.
-+	 * active on the host/device.  If the reason is SCSI_MLQUEUE_DID_RESET
-+	 * then scsi_device_unbusy() was previously called.
- 	 */
--	scsi_device_unbusy(device);
-+	if (reason != SCSI_MLQUEUE_DID_RESET)
-+		scsi_device_unbusy(device);
- 
- 	/*
- 	 * Requeue this command.  It will go before all other commands
-@@ -601,6 +604,7 @@ static void scsi_requeue_command(struct 
- 	struct request *req = cmd->request;
- 	unsigned long flags;
- 
-+	scsi_release_buffers(cmd);
- 	scsi_unprep_request(req);
- 	spin_lock_irqsave(q->queue_lock, flags);
- 	blk_requeue_request(q, req);
-@@ -646,6 +650,7 @@ void scsi_run_host_queues(struct Scsi_Ho
-  * Lock status: Assumed that lock is not held upon entry.
-  *
-  * Returns:     cmd if requeue required, NULL otherwise.
-+ * 		If cmd is returned then its buffers have not been released.
-  *
-  * Notes:       This is called for block device requests in order to
-  *              mark some number of sectors as complete.
-@@ -688,6 +693,7 @@ static struct scsi_cmnd *scsi_end_reques
- 		}
- 	}
- 
-+	scsi_release_buffers(cmd);
- 	add_disk_randomness(req->rq_disk);
- 
- 	spin_lock_irqsave(q->queue_lock, flags);
-@@ -786,6 +792,33 @@ static void scsi_release_buffers(struct 
- }
- 
- /*
-+ * Function:    scsi_command_expired()
-+ *
-+ * Purpose:     Check scsi a command's age before retrying it.
-+ *
-+ * Arguments:   cmd	- command that we are checking for timeout.
-+ *
-+ * Returns:     non-zero if command has exceeded its lifetime
-+ *              zero otherwise
-+ *
-+ * Notes:       A commands lifetime is considered to be the number
-+ *              of (retries permitted plus one) * command timeout.
-+ *
-+ */
-+static int scsi_command_expired(struct scsi_cmnd *cmd)
-+{
-+	int ret = 0;
-+	unsigned long wait_for = (cmd->allowed + 1) * cmd->timeout_per_command;
-+	if (time_before(cmd->jiffies_at_alloc + wait_for, jiffies)) {
-+		sdev_printk(KERN_ERR, cmd->device,
-+			    "timing out command, waited %lus\n",
-+			    wait_for/HZ);
-+		ret = 1;
-+	}
-+	return ret;
-+}
-+
-+/*
-  * Function:    scsi_io_completion()
-  *
-  * Purpose:     Completion processing for block device I/O requests.
-@@ -824,8 +857,6 @@ void scsi_io_completion(struct scsi_cmnd
- 	int sense_valid = 0;
- 	int sense_deferred = 0;
- 
--	scsi_release_buffers(cmd);
--
- 	if (result) {
- 		sense_valid = scsi_command_normalize_sense(cmd, &sshdr);
- 		if (sense_valid)
-@@ -961,9 +992,20 @@ void scsi_io_completion(struct scsi_cmnd
- 		/* Third party bus reset or reset for error recovery
- 		 * reasons.  Just retry the request and see what
- 		 * happens.
-+		 * If no data was transferred, just reissue this
-+		 * command.  If data was transferred, regenerate
-+		 * the command to transfer only untransferred data.
- 		 */
--		scsi_requeue_command(q, cmd);
--		return;
-+		if (!good_bytes) {
-+			if (!(scsi_command_expired(cmd))) {
-+				scsi_retry_command(cmd, SCSI_MLQUEUE_DID_RESET);
-+				return;
-+			}
-+		}
-+		else {
-+			scsi_requeue_command(q, cmd);
-+			return;
-+		}
- 	}
- 	if (result) {
- 		if (!(req->cmd_flags & REQ_QUIET)) {
-@@ -1358,17 +1400,12 @@ static void scsi_kill_request(struct req
- static void scsi_softirq_done(struct request *rq)
- {
- 	struct scsi_cmnd *cmd = rq->completion_data;
--	unsigned long wait_for = (cmd->allowed + 1) * cmd->timeout_per_command;
- 	int disposition;
- 
- 	INIT_LIST_HEAD(&cmd->eh_entry);
- 
- 	disposition = scsi_decide_disposition(cmd);
--	if (disposition != SUCCESS &&
--	    time_before(cmd->jiffies_at_alloc + wait_for, jiffies)) {
--		sdev_printk(KERN_ERR, cmd->device,
--			    "timing out command, waited %lus\n",
--			    wait_for/HZ);
-+	if (disposition != SUCCESS && scsi_command_expired(cmd)) {
- 		disposition = SUCCESS;
- 	}
- 			
-@@ -1379,7 +1416,7 @@ static void scsi_softirq_done(struct req
- 			scsi_finish_command(cmd);
- 			break;
- 		case NEEDS_RETRY:
--			scsi_retry_command(cmd);
-+			scsi_retry_command(cmd, SCSI_MLQUEUE_EH_RETRY);
- 			break;
- 		case ADD_TO_MLQUEUE:
- 			scsi_queue_insert(cmd, SCSI_MLQUEUE_DEVICE_BUSY);
-
---------------000201050502030800000508--
