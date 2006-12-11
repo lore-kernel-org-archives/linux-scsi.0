@@ -1,41 +1,27 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH v2] libata: Simulate REPORT LUNS for ATAPI devices
-Date: Mon, 11 Dec 2006 11:24:23 -0500
-Message-ID: <457D8637.5070707@garzik.org>
-References: <4574A90E.5010801@us.ibm.com> <4574AB78.40102@garzik.org> <4574B004.6030606@us.ibm.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] fix SG_IO bio leak
+Date: Mon, 11 Dec 2006 10:38:39 -0600
+Message-ID: <457D898F.1080208@cs.wisc.edu>
+References: <200612101633.kBAGXl6L001306@r-dd.iij4u.or.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:47280 "EHLO mail.dvmed.net"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:41053 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S937017AbWLKQY1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Dec 2006 11:24:27 -0500
-In-Reply-To: <4574B004.6030606@us.ibm.com>
+	id S937137AbWLKQjZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 Dec 2006 11:39:25 -0500
+In-Reply-To: <200612101633.kBAGXl6L001306@r-dd.iij4u.or.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Darrick J. Wong" <djwong@us.ibm.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Douglas Gilbert <dougg@torque.net>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: jens.axboe@oracle.com, linux-scsi@vger.kernel.org
 
-Darrick J. Wong wrote:
-> The Quantum GoVault SATAPI removable disk device returns ATA_ERR in
-> response to a REPORT LUNS packet.  If this happens to an ATAPI device
-> that is attached to a SAS controller (this is the case with sas_ata),
-> the device does not load because SCSI won't touch a "SCSI device"
-> that won't report its LUNs.  Since most ATAPI devices don't support
-> multiple LUNs anyway, we might as well fake a response like we do for
-> ATA devices.
+FUJITA Tomonori wrote:
+> This patch fixes bio leaks in SG_IO.
 > 
-> Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
+> http://marc.theaimsgroup.com/?l=linux-kernel&m=116570666807983&w=2
+> 
 
-I'm leaning towards applying this, perhaps with a module option that 
-allows experimenters to revert back to the older behavior.
-
-Any chance you could be talked into tackling some of the SAT 
-translation-related items Doug G mentioned?  I'm almost certain there 
-are some info pages we should be returning, but are not, at the very least.
-
-	Jeff
-
-
-
+Tomo, when you ported and converted the patches there was another user
+of blk_rq_map_user in the ide code. Did you get that path?
