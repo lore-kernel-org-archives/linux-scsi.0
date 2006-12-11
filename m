@@ -1,40 +1,41 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] scsi_lib.c: avoid max_hw_segments warning
-Date: Mon, 11 Dec 2006 10:23:46 -0600
-Message-ID: <1165854226.2791.4.camel@mulgrave.il.steeleye.com>
-References: <Pine.LNX.4.64.0612081206300.21386@halbrend.uninett.no>
-	 <Pine.LNX.4.58.0612081356540.6702@xplor.biophys.uni-duesseldorf.de>
-	 <Pine.LNX.4.62.0612081433590.17313@pademelon.sonytel.be>
-	 <Pine.LNX.4.58.0612081601080.7221@xplor.biophys.uni-duesseldorf.de>
-	 <Pine.LNX.4.58.0612111351020.29925@xplor.biophys.uni-duesseldorf.de>
-	 <Pine.LNX.4.62.0612111414140.1150@pademelon.sonytel.be>
-	 <Pine.LNX.4.58.0612111704370.30544@xplor.biophys.uni-duesseldorf.de>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH v2] libata: Simulate REPORT LUNS for ATAPI devices
+Date: Mon, 11 Dec 2006 11:24:23 -0500
+Message-ID: <457D8637.5070707@garzik.org>
+References: <4574A90E.5010801@us.ibm.com> <4574AB78.40102@garzik.org> <4574B004.6030606@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:50810 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S936997AbWLKQX7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Dec 2006 11:23:59 -0500
-In-Reply-To: <Pine.LNX.4.58.0612111704370.30544@xplor.biophys.uni-duesseldorf.de>
+Received: from srv5.dvmed.net ([207.36.208.214]:47280 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S937017AbWLKQY1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 Dec 2006 11:24:27 -0500
+In-Reply-To: <4574B004.6030606@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Schmitz <schmitz@opal.biophys.uni-duesseldorf.de>
-Cc: jejb@SteelEye.com, Geert Uytterhoeven <geert@linux-m68k.org>, linux-scsi@vger.kernel.org
+To: "Darrick J. Wong" <djwong@us.ibm.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Douglas Gilbert <dougg@torque.net>
 
-On Mon, 2006-12-11 at 17:09 +0100, Michael Schmitz wrote:
-> Hi,
+Darrick J. Wong wrote:
+> The Quantum GoVault SATAPI removable disk device returns ATA_ERR in
+> response to a REPORT LUNS packet.  If this happens to an ATAPI device
+> that is attached to a SAS controller (this is the case with sas_ata),
+> the device does not load because SCSI won't touch a "SCSI device"
+> that won't report its LUNs.  Since most ATAPI devices don't support
+> multiple LUNs anyway, we might as well fake a response like we do for
+> ATA devices.
 > 
-> as per request by Geert Uytterhoeven: the patch below avoids a warning in
-> blk_queue_max_hw_segments(), caused by a SCSI host adapter using SG_NONE.
-> Please apply.
+> Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
 
-Actually, isn't the correct fix to change SG_NONE to 1?
+I'm leaning towards applying this, perhaps with a module option that 
+allows experimenters to revert back to the older behavior.
 
-We're deprecating the non-sg paths, however use_sg == 1 is equivalent to
-use_sg==0, you just set it up differently.
+Any chance you could be talked into tackling some of the SAT 
+translation-related items Doug G mentioned?  I'm almost certain there 
+are some info pages we should be returning, but are not, at the very least.
 
-James
+	Jeff
+
 
 
