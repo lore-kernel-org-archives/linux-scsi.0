@@ -1,31 +1,87 @@
-From: "josefine mccoy" <kbeemanrj@ssi.samsung.com>
-Subject: Abolish all that you are indebted for with out mailing an other dollar
-Date: Tue, 12 Dec 2006 06:26:15 +0000
-Message-ID: <667F580E.0EB83AAE@ssi.samsung.com>
+From: Joseph Malicki <jmalicki@metacarta.com>
+Subject: Re: megaraid_sas waiting for command and then offline
+Date: Tue, 12 Dec 2006 00:53:02 -0500
+Message-ID: <457E43BE.9040806@metacarta.com>
+References: <457E1C59.80208@metacarta.com> <457E3D0D.7070707@imvu.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [60.217.227.200] ([60.217.227.200]:1721 "HELO ssi.samsung.com"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1751179AbWLLFjz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Dec 2006 00:39:55 -0500
+Received: from silene.metacarta.com ([65.77.47.18]:52443 "EHLO
+	silene.metacarta.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932074AbWLLFxI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Dec 2006 00:53:08 -0500
+In-Reply-To: <457E3D0D.7070707@imvu.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Lenna <linux-scsi@vger.kernel.org>
+To: "Brett G. Durrett" <brett@imvu.com>
+Cc: "linux-scsi "@vger.kernel.org, "David N. Welton" <d.welton@webster.it>, linux-poweredge@dell.com, Sumant Patro <Sumant.Patro@lsil.com>, "Marc A. Meadows" <mam+megaraid@metacarta.com>, "Keith R. Baker" <krbaker+megaraid@metacarta.com>
 
-Se1ect 1egal counse1 just found a loophole in the bank laws. With this
-discovery, we've been 5uccessful at eliminating people's creditcarddebt with
-0ut them paying one more cent. WeGuarantee that we can help you with this.
+Hi Brett!
 
-C0ntact us at
-1--313-263-2706
+Thanks for the response, hopefully we can gather enough data points to 
+help solve the problem.
+
+The new PERC 5/i integrated firmware dated 11/21/2006 is at:
+http://support.dell.com/support/downloads/format.aspx?c=us&l=en&s=gen&SystemID=PWE_2950&os=LIN4&osl=en&deviceid=9182&typecnt=2&libid=46&releaseid=R139225&vercnt=3
+PERC 5/E adapter: 
+http://support.dell.com/support/downloads/format.aspx?c=us&l=en&s=gen&SystemID=PWE_2950&os=LIN4&osl=en&deviceid=9181&typecnt=2&libid=46&releaseid=R139227&vercnt=2
+
+The release notes describe very similar symptoms, but I am not ready to 
+believe it yet as I can't reliably reproduce the problem well enough to 
+be confident of a fix, though it sounds like you might be able to.    
+Unfortunately we're using Debian at the moment, but if I can reproduce I 
+can run on RHEL in a heartbeat to duplicate it for support (for now I'm 
+trying to minimize variables).
+
+Also, which driver version are you running?  I noticed you were using 
+some patches from Sumant Patro@LSI - is your driver identical to the one 
+in 2.6.19?  If not, what does it look like?
+
+Have you noticed any correlations with patrol reads at the times of the 
+failures? You can tell by running MegaCli -FwTermLog -Dsply -aALL
+
+What hardware are you running (CPUs, RAM, disk configuration)?
+
+Have you noticed any correlation with heavy network I/O (as well as disk 
+I/O)?  Some of our systems may have experienced this when running more 
+network load than typical.
 
 
-This, said the man, taking up a box and handling it gently, contains twelve
-dozen rustles--enough to last any lady a year. He sat calmly throughout the
-meal, eating nothing, but apparently in good health and spirits, while even
-his sisters regarded him with troubled countenances
+Thanks!
+Joe
 
+Brett G. Durrett wrote:
+>
+> I am still seeing this and we have between 2 and 5 failures per week 
+> (across almost 20 machines).  I am seeing it on ext3 (we migrated all 
+> of the machines from XFS) and with ReadAhead disabled.
+>
+> You mention a firmware update but I don't see any new PERC 5 firmware 
+> packages on Dell's site... can you give me a pointer to the firmware 
+> update?
+>
+> Also, has anybody had this problem on RHE?  Dell does not support 
+> Linux unless it is RHE... I would be surprised is somehow RHE did not 
+> have this problem.
+>
+> B-
+>
+>
+>
+> Joe Malicki wrote:
+>>>  I have the same or a similar issue running 2.6.17 SMP x86_64 - the
+>>> megaraid_sas driver hangs waiting for commands and then the filesystem
+>>> unmounts, leaving the machine in an unusable state until there is a 
+>>> hard
+>>> reboot (the machine is responsive but any access, shell or 
+>>> otherwise, is
+>>> impossible without the filesystem). While I do not have much debugging
+>>> information available, this happens to me about once every 6-7 days in
+>>> my pool of seven machines, so I can probably get debugging info. Since
+>>> the disk is offline and I can't get remote console, I don't have any
+>>> details except something similar to Dave Lloyd's post, below.
+>>>     
+>>
+>
 
