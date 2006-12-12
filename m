@@ -1,97 +1,116 @@
-From: Joe Malicki <jmalicki@metacarta.com>
-Subject: Re: megaraid_sas waiting for command and then offline
-Date: Mon, 11 Dec 2006 22:04:57 -0500
-Message-ID: <457E1C59.80208@metacarta.com>
+From: Arnaldo Carvalho de Melo <acme@mandriva.com>
+Subject: [PATCH][SCSI]: Save some bytes in struct scsi_target
+Date: Tue, 12 Dec 2006 01:17:18 -0200
+Message-ID: <20061212031718.GC6218@mandriva.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from silene.metacarta.com ([65.77.47.18]:47885 "EHLO
-	silene.metacarta.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751028AbWLLDF5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Dec 2006 22:05:57 -0500
+Received: from mx1.mandriva.com ([212.85.150.183]:39559 "EHLO mx1.mandriva.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751052AbWLLDRQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 Dec 2006 22:17:16 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Brett G. Durrett" <brett@imvu.com>, "linux-scsi "@vger.kernel.org, "David N. Welton" <d.welton@webster.it>, linux-poweredge@dell.com, Sumant Patro <Sumant.Patro@lsil.com>
-Cc: "Marc A. Meadows" <mam+megaraid@metacarta.com>, "Keith R. Baker" <krbaker+megaraid@metacarta.com>
+To: "James E.J. Bottomley" <James.Bottomley@SteelEye.com>
+Cc: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
->  I have the same or a similar issue running 2.6.17 SMP x86_64 - the
-> megaraid_sas driver hangs waiting for commands and then the filesystem
-> unmounts, leaving the machine in an unusable state until there is a hard
-> reboot (the machine is responsive but any access, shell or otherwise, is
-> impossible without the filesystem). While I do not have much debugging
-> information available, this happens to me about once every 6-7 days in
-> my pool of seven machines, so I can probably get debugging info. Since
-> the disk is offline and I can't get remote console, I don't have any
-> details except something similar to Dave Lloyd's post, below.
+Before:
 
-Brett, is this still happening to you?  We're seeing this very
-sporadically, but it does concern us.  We've seen driver updates in
-2.6.19 (v00.00.03.05) and a new Dell PERC 5/i firmware:
+[acme@newtoy kpahole-2.6]$ pahole --cacheline 32 /tmp/scsi.o.before scsi_target
+/* include/scsi/scsi_device.h:86 */
+struct scsi_target {
+        struct scsi_device *       starget_sdev_user;    /*     0     4 */
+        struct list_head           siblings;             /*     4     8 */
+        struct list_head           devices;              /*    12     8 */
+        struct device              dev;                  /*    20   300 */
+        /* --- cacheline 10 boundary (320 bytes) --- */
+        unsigned int               reap_ref;             /*   320     4 */
+        unsigned int               channel;              /*   324     4 */
+        unsigned int               id;                   /*   328     4 */
+        unsigned int               create:1;             /*   332     4 */
 
-Package Version - 5.0.2-0003
-Firmware Version - 1.00.01-0157
-SASBIOS Version - MT23
-Ctrl-R Version - 1.02-007
-MPT Version - 00.06.71.00-IT
+        /* XXX 31 bits hole, try to pack */
 
-and haven't been able to reproduce it, but we can't find a test case to
-reliably reproduce the problem to know that anything was fixed (out of
-31 identically configured Dell 2950's with the PERC 5/i RAID controller
-(configured with 6 300MB SAS drives in a RAID 5, most (all?) of them
-Maxtor Atlas 10k, not hot spare).  Our 2950s do have 16GB of RAM each,
-so the firmware update (which mentions that it fixes DMA beyond 8GB)
-sounds promising, but I would think that if that was the problem we were
-experiencing, we would reproduce this much more often?  We are certainly
-using the RAM for cache and memory, it's not like we've never touched
-beyond 8GB.
+        unsigned int               pdt_1f_for_no_lun;    /*   336     4 */
+        char                       scsi_level;           /*   340     1 */
 
-Does anyone have a test case to reproduce this problem reliably, or a
-detailed description of what actually happens (on low levels) when this
-problem occurs that can help to make a test?  We are more interested in
-making this reproducible now than in finding a workaround... if anyone
-has any tips on how to make this *more* likely to happen we'd like to
-know (so far, I know to try to use XFS and enable ReadAhead).
+        /* XXX 3 bytes hole, try to pack */
 
-We have seen this correlated with Patrol Reads going on at the same
-time, but aren't sure if this is a red herring, and haven't been able to
-force the issue to happen by enabling Patrol Reads.
+        struct execute_work        ew;                   /*   344    16 */
+        /* --- cacheline 11 boundary (352 bytes) was 8 bytes ago --- */
+        enum scsi_target_state     state;                /*   360     4 */
+        void *                     hostdata;             /*   364     4 */
+        long unsigned int          starget_data[0];      /*   368     0 */
+}; /* size: 368, cachelines: 12 */
+   /* sum members: 365, holes: 1, sum holes: 3 */
+   /* bit holes: 1, sum bit holes: 31 bits */
+   /* last cacheline: 16 bytes */
 
-We've only ever seen these on two machines - one machine reproduces the
-problem in a little over a week, and the other has reproduced it a small
-number of times.  The machines that reproduce it run an experimental
-demo workload, but we have not found a test case so far to reproduce the
-problem on demand to find or verify solutions.  We're currently swapping
-out machines to verify that there are no hardware problems, but the
-machines diagnose themselves cleanly, and the workload they run is
-different enough that something about the workload we can't yet
-synthesize into a test case is the problem.
+After:
 
-Thank you!
-Joe Malicki
-Software Engineer
-Metacarta, Inc.
-email: jmalicki@metacarta.com
+[acme@newtoy kpahole-2.6]$ pahole --cacheline 32 drivers/scsi/scsi.o scsi_target
+/* include/scsi/scsi_device.h:86 */
+struct scsi_target {
+        struct scsi_device *       starget_sdev_user;    /*     0     4 */
+        struct list_head           siblings;             /*     4     8 */
+        struct list_head           devices;              /*    12     8 */
+        struct device              dev;                  /*    20   300 */
+        /* --- cacheline 10 boundary (320 bytes) --- */
+        unsigned int               reap_ref;             /*   320     4 */
+        unsigned int               channel;              /*   324     4 */
+        unsigned int               id;                   /*   328     4 */
+        char                       scsi_level;           /*   332     1 */
+        unsigned char              create:1;             /*   333     1 */
 
-> The only thing that the machines with these failures seem to have in
-> common is the fact that they are almost exclusively writes - they are
-> slave database machines with large memory and pretty much just
-> replicate. The read/write machines seem to have less failures.
-> 
-> I am happy to help provide debugging information in any reasonable way.
-> In the mean time, if there are any known suggestions or workarounds for
-> the problem, I would be grateful for the guidance.
-> 
-> Here are what details on the controller. If you want additional info,
-> let me know exactly what you need and I will do what I can to get it to
-> you.:
-> 
-> Product Name : PERC 5/i Integrated
-> Serial No : 12345
-> FW Package Build: 5.0.1-0030
-> FW Version : 1.00.01-0088
-> BIOS Version : MT23
-> Ctrl-R Version :1.02-007
-> 
-> B-
+        /* XXX 7 bits hole, try to pack */
+        /* XXX 2 bytes hole, try to pack */
 
+        unsigned int               pdt_1f_for_no_lun;    /*   336     4 */
+        struct execute_work        ew;                   /*   340    16 */
+        /* --- cacheline 11 boundary (352 bytes) was 4 bytes ago --- */
+        enum scsi_target_state     state;                /*   356     4 */
+        void *                     hostdata;             /*   360     4 */
+        long unsigned int          starget_data[0];      /*   364     0 */
+}; /* size: 364, cachelines: 12 */
+   /* sum members: 362, holes: 1, sum holes: 2 */
+   /* bit holes: 1, sum bit holes: 7 bits */
+   /* last cacheline: 12 bytes */
+
+[acme@newtoy kpahole-2.6]$ codiff -V /tmp/scsi.o.before drivers/scsi/scsi.o
+drivers/scsi/scsi.c:
+  struct scsi_target |   -4
+    create:1;
+     from: unsigned int          /*   332(31)    4(1) */
+     to:   unsigned char         /*   333(7)     1(1) */
+    scsi_level;
+     from: char                  /*   340(0)     1(0) */
+     to:   char                  /*   332(0)     1(0) */
+<SNIP offset changes>
+ 1 struct changed
+
+Signed-off-by: Arnaldo Carvalho de Melo <acme@mandriva.com>
+
+---
+
+ scsi_device.h |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index ebf31b1..ab245fc 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -175,11 +175,11 @@ struct scsi_target {
+ 	unsigned int		channel;
+ 	unsigned int		id; /* target id ... replace
+ 				     * scsi_device.id eventually */
+-	unsigned int		create:1; /* signal that it needs to be added */
++	char			scsi_level;
++	unsigned char		create:1; /* signal that it needs to be added */
+ 	unsigned int		pdt_1f_for_no_lun;	/* PDT = 0x1f */
+ 						/* means no lun present */
+ 
+-	char			scsi_level;
+ 	struct execute_work	ew;
+ 	enum scsi_target_state	state;
+ 	void 			*hostdata; /* available to low-level driver */
