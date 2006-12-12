@@ -1,39 +1,43 @@
-From: Joe Malicki <jmalicki@metacarta.com>
-Subject: Re: megaraid_sas waiting for command and then offline
-Date: Tue, 12 Dec 2006 13:40:28 -0500
-Message-ID: <457EF79C.9030009@metacarta.com>
-References: <457E1C59.80208@metacarta.com> <457E3D0D.7070707@imvu.com>	 <457E43BE.9040806@metacarta.com> <1165926657.4991.132.camel@edinburgh.max-t.internal>
+From: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
+Subject: [PATCH 1/2] cciss: map out more memory for config table
+Date: Tue, 12 Dec 2006 13:51:31 -0600
+Message-ID: <20061212195131.GA2471@beardog.cca.cpqcorp.net>
+Reply-To: mike.miller@hp.com, mikem@beardog.cca.cpqcorp.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from silene.metacarta.com ([65.77.47.18]:40034 "EHLO
-	silene.metacarta.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932327AbWLLSlb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Dec 2006 13:41:31 -0500
-In-Reply-To: <1165926657.4991.132.camel@edinburgh.max-t.internal>
+Received: from palrel13.hp.com ([156.153.255.238]:56302 "EHLO palrel13.hp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932329AbWLLTve (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Dec 2006 14:51:34 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg Dickie <greg@max-t.com>
-Cc: "Brett G. Durrett" <brett@imvu.com>, linux-scsi@vger.kernel.org, linux-poweredge@dell.com, "David N. Welton" <d.welton@webster.it>, Sumant Patro <Sumant.Patro@lsil.com>, "Marc A. Meadows" <mam+megaraid@metacarta.com>, "Keith R. Baker" <krbaker+megaraid@metacarta.com>
+To: akpm@osdl.org, jens.axboe@oracle.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Thanks Greg,
+PATCH 1/2
 
-Is there documentation or tests of the number of commands per LUN that
-the hardware can handle?  The driver is clearly reading the value out of
-a register on the card.
+This patch maps out more memory for our config table. It's required to reach offset 0x214 to disable DMA on the P600. I'm not sure how I lost this hunk. 
+Please consider this for inclusion.
 
-thanks,
-joe
+Thanks,
+mikem
 
-Greg Dickie wrote:
-> We've never had lockups like this but we did notice that the
-> megaraid_sas modules defaults to a much higher commands per lun setting
-> than the hardware seems to be able to handle. IIRC the default is 128
-> and we lowered it to 16 for the 5i and 32 for the 5E.
-> 
-> HTH,
-> Greg
-> 
-> 
+Signed-off-by: Mike Miller <mike.miller@hp.com>
 
+ drivers/block/cciss.c |    2 +-
+ 1 files changed, 1 insertion(+), 1 deletion(-)
+--------------------------------------------------------------------------------
+diff -puN drivers/block/cciss.c~cciss_fix_for_p600_dma drivers/block/cciss.c
+--- linux-2.6-work/drivers/block/cciss.c~cciss_fix_for_p600_dma	2006-12-11 15:20:07.000000000 -0600
++++ linux-2.6-work-mikem/drivers/block/cciss.c	2006-12-11 15:21:33.000000000 -0600
+@@ -2865,7 +2865,7 @@ static int cciss_pci_init(ctlr_info_t *c
+ #ifdef CCISS_DEBUG
+ 	printk("address 0 = %x\n", c->paddr);
+ #endif				/* CCISS_DEBUG */
+-	c->vaddr = remap_pci_mem(c->paddr, 200);
++	c->vaddr = remap_pci_mem(c->paddr, 0x250);
+ 
+ 	/* Wait for the board to become ready.  (PCI hotplug needs this.)
+ 	 * We poll for up to 120 secs, once per 100ms. */
