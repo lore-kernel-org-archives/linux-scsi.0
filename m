@@ -1,71 +1,38 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: Re: [2.6 patch] remove the broken SCSI_SEAGATE driver
-Date: Wed, 13 Dec 2006 01:09:02 +0100
-Message-ID: <20061213000902.GD28443@stusta.de>
-References: <20061212162238.GR28443@stusta.de> <1165966274.5903.56.camel@mulgrave.il.steeleye.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [Bugme-new] [Bug 7667] New: BUG at drivers/scsi/scsi_lib.c:1118
+ caused by "pktsetup dvd /dev/sr0"
+Date: Wed, 13 Dec 2006 10:06:37 +0200
+Message-ID: <457FB48D.4050206@panasas.com>
+References: <200612112159.kBBLxmep005850@fire-2.osdl.org> <20061211141029.9a0b0376.akpm@osdl.org> <20061212103842.GA9619@lst.de> <20061212132600.GA19912@lst.de> <457EBAE3.6090609@panasas.com> <457F2F17.3000009@free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932580AbWLMAIx@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1165966274.5903.56.camel@mulgrave.il.steeleye.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from gw-e.panasas.com ([65.194.124.178]:46193 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932616AbWLMIdJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Dec 2006 03:33:09 -0500
+In-Reply-To: <457F2F17.3000009@free.fr>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Laurent Riffard <laurent.riffard@free.fr>, linux-scsi@vger.kernel.org
 
-On Tue, Dec 12, 2006 at 05:31:14PM -0600, James Bottomley wrote:
-> On Tue, 2006-12-12 at 17:22 +0100, Adrian Bunk wrote:
-> > The SCSI_SEAGATE driver has:
-> > - already been marked as BROKEN in 2.6.0 three years ago and
-> > - is still marked as BROKEN.
-> > 
-> > Drivers that had been marked as BROKEN for such a long time seem to be
-> > unlikely to be revived in the forseeable future.
-> > 
-> > But if anyone wants to ever revive this driver, the code is still
-> > present in the older kernel releases.
+Laurent Riffard wrote:
 > 
-> Would you care to explain the rationale for this, please.  If the driver
-> had been riddled with errors and compilation problems, I might have
-> acquiesced, but now I come to look it over, it seems structurally
-> reasonably OK (we certainly have non-BROKEN worse ones) plus it compiles
-> fine.  So I'm wondering why it's marked broken in the first place.
+> Christoph's patch fixed the BUG, while Boaz's patch didn't fix anything 
+> (both tested with kernel 2.6.16-rc6-mm2). 
 > 
-> Since it was your original patch:
+> Please note I don't use ide-cd, I use libata+pata_via+sr_mod.
 > 
-> Author: Adrian Bunk <bunk@fs.tum.de>
-> Date:   Mon Sep 1 19:22:52 2003 -0700
+> Boaz, when you wrote "below patch combined with your patch...", did you mean 
+> your patch should be applied on top of Christoph's one ? In this case, it fails with:
+>    patching file drivers/block/pktcdvd.c
+>    Hunk #1 FAILED at 778.
+>    1 out of 1 hunk FAILED -- rejects in file drivers/block/pktcdvd.c
 > 
->     [PATCH] Mark more drivers BROKEN{,ON_SMP}
->     
->     - let more drivers that don't compile depend on BROKEN
->     - MTD_BLKMTD is fixed, remove the dependency on BROKEN
->     - let all drivers that don't compile on SMP (due to cli/sti usage)
->       depend on a BROKEN_ON_SMP that is only defined if !SMP || BROKEN
->     - #include interrupt.h for dummy cli/sti/... in two files to fix the
->       UP compilation of these files
->     
->     I marked only drivers that are broken for a long time and where I don't
->     know about existing fixes with BROKEN or BROKEN_ON_SMP.
-> 
-> I'd like to know why it was marked BROKEN in the first place.
 
+Disregard my patch, it was only to point out places that are broken.
+Just that I was working at exact same problems and it was something in my Q.
 
-There must have been a compile error that has since been fixed, but I 
-don't remember the details of this specific driver and I don't have 
-such old compile logs anymore.
-
-
-> Thanks,
-> 
-> James
-
-cu
-Adrian
-
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
+Free Life
+Boaz
