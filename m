@@ -1,46 +1,50 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH v2] libata: Simulate REPORT LUNS for ATAPI devices
-Date: Wed, 13 Dec 2006 11:57:25 -0600
-Message-ID: <1166032646.2790.39.camel@mulgrave.il.steeleye.com>
-References: <4574A90E.5010801@us.ibm.com> <4574AB78.40102@garzik.org>
-	 <4574B004.6030606@us.ibm.com>  <457D8637.5070707@garzik.org>
-	 <1165855489.2791.7.camel@mulgrave.il.steeleye.com>
-	 <457F2C1C.1030503@us.ibm.com>
-	 <1166026240.2790.27.camel@mulgrave.il.steeleye.com>
-	 <45803AA0.8020203@us.ibm.com>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: What is Target Mode in SATA terminology?
+Date: Wed, 13 Dec 2006 21:09:36 +0300
+Message-ID: <458041E0.2010408@vlnb.net>
+References: <1160423279.27817.4.camel@home-desk> <200610092215.20396.jli@greshamstorage.com> <20061010035842.GA10086@lsil.com> <200610100926.08656.jli@greshamstorage.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:46474 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S965047AbWLMR6s (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Dec 2006 12:58:48 -0500
-In-Reply-To: <45803AA0.8020203@us.ibm.com>
+Received: from mail-relay-02.mailcluster.net ([85.249.135.243]:36296 "EHLO
+	mail-relay-02.mailcluster.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S964900AbWLMSkR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Dec 2006 13:40:17 -0500
+In-Reply-To: <200610100926.08656.jli@greshamstorage.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Darrick J. Wong" <djwong@us.ibm.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Douglas Gilbert <dougg@torque.net>
+To: Jeremy Linton <jli@greshamstorage.com>
+Cc: Eric Moore <eric.moore@lsil.com>, Sean Bruno <sean.bruno@dsl-only.net>, linux-scsi@vger.kernel.org, erikhabbinga@inphase-tech.com
 
-On Wed, 2006-12-13 at 09:38 -0800, Darrick J. Wong wrote:
-> Sorry, I should have clarified this earlier--the Quantum GoVault is a
-> removable disk drive, not a CD-ROM.  The device is reminiscent of Zip
-> disks, but the cartridge is a sealed unit and contains a 2.5" SATA disk
-> inside; hence it's not a CD-ROM.  So the patch below won't work for me,
-> because sdev->type == TYPE_DISK.
+Jeremy Linton wrote:
+> On Monday 09 October 2006 22:58, Eric Moore wrote:
+> 
+>>On Mon, Oct 09, 2006 at 10:15:20PM -0500, Jeremy Linton wrote:
+>>
+>>>>Is there an equivalent in SATA / SAS land?  If there is, is there a
+>>>>well supported PCI-(E/X) board out there that I could play with?
+>>>
+>>>	Well, the MPT driver for scst should support SAS. I can tell you though
+>>>that the MPT driver isn't exactly stable for SPI..
+>>>-
+>>
+>>As far as I know, there are no scst target mode drivers for fusion.  Or are
+>>there? I've not heard of anyone doing that so far.
+> 
+> 	One of the scst project members has a port of some LSI MPT target drivers to 
+> scst. They are here http://bj.soulinfo.com/%7Ehugang/scst/tgt/. I've been 
+> trying to get them working with a 53c1030 series LVD card and they don't get 
+> past exporting basic inquiry data. The contact for the drivers hasn't 
+> responded to any of my email's either, and the main project doesn't support 
+> them.
 
-So it's a SATAPI device of type 0 ... that's fun ... but it still needs
-a blacklist; it's governed by SBC which isn't ambiguous about the need
-to support REPORT LUNS.  Now, if it supported RBC instead of SBC, that's
-different; RBC also makes REPORT LUNS optional.  However, it is required
-to indicate RBC support by being type 0xe.
+If you are still interested in SCSI target mode driver for fusion, you
+can take a look at the new version of the Hu Gang's driver, developed by
+Erik Habbinga, which is just made available from SCST SVN. You can get
+anonymous access there using:
 
-> I wonder if the same sort of REPORT LUNS screw-up might apply to other
-> ATAPI devices too, such as tape drives.  Since we've seen that
-> manufacturers of CD-ROMs and removable disks don't implement it, it
-> would not surprise me if the other ATAPI devices don't either.  But,
-> that's speculation on my part.
+svn co https://svn.sourceforge.net/svnroot/scst
 
-James
-
-
+Vlad
