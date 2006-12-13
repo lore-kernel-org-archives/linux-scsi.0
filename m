@@ -1,38 +1,30 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [Bugme-new] [Bug 7667] New: BUG at drivers/scsi/scsi_lib.c:1118
- caused by "pktsetup dvd /dev/sr0"
-Date: Wed, 13 Dec 2006 10:06:37 +0200
-Message-ID: <457FB48D.4050206@panasas.com>
-References: <200612112159.kBBLxmep005850@fire-2.osdl.org> <20061211141029.9a0b0376.akpm@osdl.org> <20061212103842.GA9619@lst.de> <20061212132600.GA19912@lst.de> <457EBAE3.6090609@panasas.com> <457F2F17.3000009@free.fr>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH 2/2] cciss: remove calls to pci_disable_device
+Date: Wed, 13 Dec 2006 13:07:04 +0100
+Message-ID: <20061213120703.GN4576@kernel.dk>
+References: <20061212195458.GB2471@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-e.panasas.com ([65.194.124.178]:46193 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932616AbWLMIdJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Dec 2006 03:33:09 -0500
-In-Reply-To: <457F2F17.3000009@free.fr>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964876AbWLMMFp@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20061212195458.GB2471@beardog.cca.cpqcorp.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: mike.miller@hp.com, mikem@beardog.cca.cpqcorp.net
+Cc: akpm@osdl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Laurent Riffard <laurent.riffard@free.fr>, linux-scsi@vger.kernel.org
 
-Laurent Riffard wrote:
+On Tue, Dec 12 2006, Mike Miller (OS Dev) wrote:
+> PATCH 2/2
 > 
-> Christoph's patch fixed the BUG, while Boaz's patch didn't fix anything 
-> (both tested with kernel 2.6.16-rc6-mm2). 
-> 
-> Please note I don't use ide-cd, I use libata+pata_via+sr_mod.
-> 
-> Boaz, when you wrote "below patch combined with your patch...", did you mean 
-> your patch should be applied on top of Christoph's one ? In this case, it fails with:
->    patching file drivers/block/pktcdvd.c
->    Hunk #1 FAILED at 778.
->    1 out of 1 hunk FAILED -- rejects in file drivers/block/pktcdvd.c
-> 
+> This patch removes calls to pci_disable_device except in
+> fail_all_cmds. The pci_disable_device function does something nasty to
+> Smart Array controllers that pci_enable_device does not undo. So if
+> the driver is unloaded it cannot be reloaded.  Also, customers can
+> disable any pci device via the ROM Based Setup Utility (RBSU). If the
+> customer has disabled the controller we should not try to blindly
+> enable the card from the driver.  Please consider this for inclusion.
 
-Disregard my patch, it was only to point out places that are broken.
-Just that I was working at exact same problems and it was something in my Q.
+Applied 1+2 for inclusion.
 
-Free Life
-Boaz
+-- 
+Jens Axboe
