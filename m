@@ -1,53 +1,58 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: [PATCH 7/9] qla2xxx: Perform a fw-dump when an ISP23xx RISC-paused state is detected.
-Date: Wed, 13 Dec 2006 19:20:31 -0800
-Message-ID: <11660664333401-git-send-email-andrew.vasquez@qlogic.com>
-References: <20061214031935.GB538@andrew-vasquezs-powerbook-g4-15.local>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: aic79xx - wrong max memory at driver init
+Date: Thu, 14 Dec 2006 11:37:42 +0100
+Message-ID: <45812976.4090000@suse.de>
+References: <456EBB83.9010300@ext.bull.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:39867 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750819AbWLNDdr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Dec 2006 22:33:47 -0500
-In-Reply-To: <20061214031935.GB538@andrew-vasquezs-powerbook-g4-15.local>
+Received: from cantor.suse.de ([195.135.220.2]:39030 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932401AbWLNKuH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 Dec 2006 05:50:07 -0500
+In-Reply-To: <456EBB83.9010300@ext.bull.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <james.bottomley@steeleye.com>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
+To: Frederic TEMPORELLI <frederic.temporelli@ext.bull.net>
+Cc: xb <xavier.bru@bull.net>, linux-scsi@vger.kernel.org
 
-Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+=46rederic TEMPORELLI wrote:
+> Hello Hannes,
+>=20
+> Aic79xx driver for Adaptec 39320 supports 64-bit addressing, but the
+> initialization code of the driver is wrong: it tests the available
+> memory size instead of testing the maximum available memory address.
+> This is necessary to support servers that provides 1 Terabyte of
+> physical memory space addressing.
+>=20
+> Attached is the suggested patch (made against 2.6.17, but 2.6.19 is
+> still using the available memory size instead of using the max memory
+> address) to solve this issue.
+>=20
+> regards
+>=20
+> --
+> Fred
+>=20
+>=20
+Yes, this sound reasonable.
+
+> ---------------------------------------------------------------------=
 ---
- drivers/scsi/qla2xxx/qla_isr.c |   10 ++++++----
- 1 files changed, 6 insertions(+), 4 deletions(-)
+>=20
+> Signed-off-by: xavier.bru@bull.net
+> Signed-off-by: frederic.temporelli@bull.net
+>=20
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 79115c1..6a741e3 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -134,11 +134,11 @@ qla2300_intr_handler(int irq, void *dev_id)
- 		if (stat & HSR_RISC_PAUSED) {
- 			hccr = RD_REG_WORD(&reg->hccr);
- 			if (hccr & (BIT_15 | BIT_13 | BIT_11 | BIT_8))
--				qla_printk(KERN_INFO, ha,
--				    "Parity error -- HCCR=%x.\n", hccr);
-+				qla_printk(KERN_INFO, ha, "Parity error -- "
-+				    "HCCR=%x, Dumping firmware!\n", hccr);
- 			else
--				qla_printk(KERN_INFO, ha,
--				    "RISC paused -- HCCR=%x.\n", hccr);
-+				qla_printk(KERN_INFO, ha, "RISC paused -- "
-+				    "HCCR=%x, Dumping firmware!\n", hccr);
- 
- 			/*
- 			 * Issue a "HARD" reset in order for the RISC
-@@ -147,6 +147,8 @@ qla2300_intr_handler(int irq, void *dev_id)
- 			 */
- 			WRT_REG_WORD(&reg->hccr, HCCR_RESET_RISC);
- 			RD_REG_WORD(&reg->hccr);
-+
-+			ha->isp_ops.fw_dump(ha, 1);
- 			set_bit(ISP_ABORT_NEEDED, &ha->dpc_flags);
- 			break;
- 		} else if ((stat & HSR_RISC_INT) == 0)
--- 
-1.4.4.2.g4cfec
-
+--=20
+Dr. Hannes Reinecke			hare@suse.de
+SuSE Linux Products GmbH		S390 & zSeries
+Maxfeldstra=DFe 5				+49 911 74053 688
+90409 N=FCrnberg				http://www.suse.de
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
