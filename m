@@ -1,26 +1,34 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [patch 01/30] drivers/scsi/: small cleanups
-Date: Fri, 15 Dec 2006 11:47:12 -0800
-Message-ID: <20061215114712.e859d192.akpm@osdl.org>
-References: <200612042319.kB4NJTCN008727@shell0.pdx.osdl.net>
-	<20061215092929.5c816afb.randy.dunlap@oracle.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [patch 26/30] scsi: fix sense key MEDIUM ERROR processing and
+	retry
+Date: Fri, 15 Dec 2006 13:51:32 -0600
+Message-ID: <1166212292.2846.52.camel@mulgrave.il.steeleye.com>
+References: <200612042319.kB4NJpnD008810@shell0.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.25]:38967 "EHLO smtp.osdl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753286AbWLOTuu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Dec 2006 14:50:50 -0500
-In-Reply-To: <20061215092929.5c816afb.randy.dunlap@oracle.com>
+Received: from hancock.steeleye.com ([71.30.118.248]:42895 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753335AbWLOTvg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Dec 2006 14:51:36 -0500
+In-Reply-To: <200612042319.kB4NJpnD008810@shell0.pdx.osdl.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, bunk@stusta.de
+To: akpm@osdl.org
+Cc: linux-scsi@vger.kernel.org, ltuikov@yahoo.com
 
-On Fri, 15 Dec 2006 09:29:29 -0800
-Randy Dunlap <randy.dunlap@oracle.com> wrote:
+On Mon, 2006-12-04 at 15:18 -0800, akpm@osdl.org wrote:
+> From: Luben Tuikov <ltuikov@yahoo.com>
+> 
+> - If the device reports an uncorrectable MEDIUM ERROR, such as SK MEDIUM
+>   ERROR, ASC UNRECOVERED READ ERR, AMNF DATA FIELD or RECORD NOT FOUND,
+>   then: In scsi_check_sense() return SUCCESS so as to not retry -- the
+>   error is uncorrectable -- this speeds up total processing time.
 
-> What's the status of these 30 scsi patches from akpm?
+not with the extraneous patch piece at the bottom ... otherwise it's OK
+with an updated changelog.
 
-I'll be re-re-re-re-re-sending them in the next day or two.
+James
+
+
