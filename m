@@ -1,94 +1,47 @@
-From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: [PATCHSET] Various sas_ata feature additions and EH fixes
-Date: Fri, 15 Dec 2006 12:55:49 -0800
-Message-ID: <45830BD5.7000208@us.ibm.com>
-Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
+From: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
+Subject: [PATCH 1/2] cciss: set default raid level when reading geometry fails
+Date: Fri, 15 Dec 2006 14:49:22 -0600
+Message-ID: <20061215204922.GA8682@beardog.cca.cpqcorp.net>
+Reply-To: mike.miller@hp.com, mikem@beardog.cca.cpqcorp.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:43594 "EHLO
-	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964876AbWLOUzw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Dec 2006 15:55:52 -0500
+Received: from palrel10.hp.com ([156.153.255.245]:59969 "EHLO palrel10.hp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964958AbWLOVE6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Dec 2006 16:04:58 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Cc: Alexis Bruemmer <alexisb@us.ibm.com>, Malahal Naineni <malahal@us.ibm.com>, Mike Anderson <andmike@us.ibm.com>
+To: jens.axboe@oracle.com, akpm@osdl.org
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, daniel_frazier@hp.com, andrew.patterson@hp.com
 
-Hi again,
+PATCH 1 of 2
 
-As a companion to today's libsas roll-up, this is the queue of patches
-for the SATL connector between SAS and ATA.  For patches not
-specifically focusing on SAS ATA, please refer to my previous email (or
-the patches themselves).  Each patch has its own preamble description,
-but I'd like to call attention to a few of the larger shifts.
+This patch sets a default raid level on a volume that either does not support
+reading the geometry or reports an invalid geometry for whatever reason. We
+were always setting some values for heads and sectors but never set a raid
+level. This caused lots of problems on some buggy firmware. Please consider
+this for inclusion.
 
-The most significant modifications are a few fixes to make ATAPI devices
-work again, the beginnings of SATA PHY control (as best as can be
-approximated), and integration with the new libsas EH strategy.
+Thanks,
+mikem
 
-These patches should apply in number order cleanly against 2.6.19 +
-scsi_misc + aic94xx-sas.  At the moment 2.6.20-rc isn't stable enough to
-boot cleanly on any of our machines, but we've been running insmod/rmmod
-and pounder tests on a x206m with mixed SAS/SATA/SATAPI devices for
-several days without problems.
+Signed-off-by: Mike Miller <mike.miller@hp.com>
+--------------------------------------------------------------------------------
 
-One can pick up the patches at the URL below.
+ drivers/block/cciss.c |    1 +
+ 1 files changed, 1 insertion(+)
 
-http://sweaglesw.net/~djwong/docs/sas_ata-patches/
-
-A rough breakdown of the patches follows.
-
-These patches were covered in my libsas email, though the numbers shift
-a bit.
-03-libsas-discovery-failure_6.patch
-04-libsas-discovery-failure-expander_6.patch
-05-aic94xx-abort-task-race_2.patch
-06-libsas-enable-phy_2.patch
-07-libsas-taskless-cmnd-reset-timer_2.patch
-08-libsas-kill-task-collector-after-ports_1.patch
-09-aic94xx-set-max-execute-num_1.patch
-10-libsas-use-scan-wildcard_1.patch
-11-aic94xx-dont-eat-query-task-results_1.patch
-12-libsas-remove-initiator-aborted_1.patch
-13-libsas-add-dev-reset-to-eh_1.patch
-14-libsas-abort-sas-task-deferral_1.patch
-15-aic94xx-defer-task-abort_1.patch
-16-libsas-smp-portal_1.patch
-17-aic94xx-fix-fw-leak_1.patch
-18-aic94xx-fix-ddb-scb-init_2.patch
-19-aic94xx-lock-ddb-access_2.patch
-20-libsas-phy-sysfs-ctrl-not-iwugo_1.patch
-33-andmike-lockdep-fix.patch
-34-malahal-discovery-race.patch
-35-alexisb-aic94xx-abort-task-failed-fallthrough.patch
-
-Roughly the same as last time:
-21-libsas-ata-kconfig-fix_1.patch
-22-libsas-fix-ata-qc-locking_3.patch
-23-libsas-fix-qc-issue-err_1.patch
-24-libsas-fix-libata-error_3.patch
-25-libsas-ata-preserve-sactive_2.patch
-31-libsas-satl-registration_3.patch
-32-libsas-ata-module_3.patch
-
-Add some semblance of PHY control:
-26-libsas-ata-enable-phy_1.patch
-
-ATAPI fixes:
-27-libsas-atapi-sam-good_1.patch
-28-libsas-ata-handle-unknown_1.patch
-
-This patch enables ATAPI devices for patch testing, though jejb is
-working on a better fix:
-02-libata-atapi-handle-failed-report-luns_2.patch
-
-This goes with the new EH strategy code:
-29-libsas-ata-assign-task-to-cmd_1.patch
-30-libsas-ata-sas-task-abort_1.patch
-
-I appreciate any feedback/comments/flames people have about this patch
-set.  Thanks!
-
---D
+diff -puN drivers/block/cciss.c~cciss_set_default_raidlevel drivers/block/cciss.c
+--- linux-2.6-work/drivers/block/cciss.c~cciss_set_default_raidlevel	2006-12-13 11:04:39.000000000 -0600
++++ linux-2.6-work-mikem/drivers/block/cciss.c	2006-12-13 11:05:06.000000000 -0600
+@@ -1907,6 +1907,7 @@ static void cciss_geometry_inquiry(int c
+ 			       "does not support reading geometry\n");
+ 			drv->heads = 255;
+ 			drv->sectors = 32;	// Sectors per track
++			drv->raid_level = RAID_UNKNOWN;
+ 		} else {
+ 			drv->heads = inq_buff->data_byte[6];
+ 			drv->sectors = inq_buff->data_byte[7];
+_
