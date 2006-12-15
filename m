@@ -1,46 +1,63 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: aic79xx - wrong max memory at driver init
-Date: Fri, 15 Dec 2006 11:47:47 -0600
-Message-ID: <1166204867.2846.28.camel@mulgrave.il.steeleye.com>
-References: <456EBB83.9010300@ext.bull.net>  <45812976.4090000@suse.de>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH 3/3] Import fw-sbp2 driver.
+Date: Fri, 15 Dec 2006 19:27:56 +0100
+Message-ID: <4582E92C.7030004@s5r6.in-berlin.de>
+References: <20061205052229.7213.38194.stgit@dinky.boston.redhat.com> <20061205052253.7213.41796.stgit@dinky.boston.redhat.com> <45750C9A.607@garzik.org> <4581B88C.9040104@redhat.com> <4581C4D1.8090803@s5r6.in-berlin.de> <4582BA68.1010303@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:41767 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753067AbWLORr7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Dec 2006 12:47:59 -0500
-In-Reply-To: <45812976.4090000@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751720AbWLOS17@vger.kernel.org>
+In-Reply-To: <4582BA68.1010303@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: =?ISO-8859-1?Q?Kristian_H=F8gsberg?= <krh@redhat.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Frederic TEMPORELLI <frederic.temporelli@ext.bull.net>, xb <xavier.bru@bull.net>, linux-scsi@vger.kernel.org
 
-On Thu, 2006-12-14 at 11:37 +0100, Hannes Reinecke wrote:
-> Frederic TEMPORELLI wrote:
-> > Hello Hannes,
-> > 
-> > Aic79xx driver for Adaptec 39320 supports 64-bit addressing, but the
-> > initialization code of the driver is wrong: it tests the available
-> > memory size instead of testing the maximum available memory address.
-> > This is necessary to support servers that provides 1 Terabyte of
-> > physical memory space addressing.
-> > 
-> > Attached is the suggested patch (made against 2.6.17, but 2.6.19 is
-> > still using the available memory size instead of using the max memory
-> > address) to solve this issue.
+(added Cc: lsml)
 
-Actually, this driver shouldn't be hacking around at all with either the
-memory functions or blk_max_pfn, it should be using the provided api,
-which is dma_get_required_mask()
+Kristian H=F8gsberg wrote at lkml:
+> I saw that the stack
+[the FireWire stack]
+> creates a struct device per LUN, which is kinda gross in my opinion.
 
-James
+If you mean regular "unit directories" here, not SCSI LUs, then one
+device per unit makes sense. Different units of a node may implement
+different protocols and may have different lifetimes.
 
+If you mean the special representation of SBP-2 logical units by
+multiple leaf entries in one and the same unit directory (Why the heck
+did they allow two different representations?), then you are right that
+the burden could certainly be shifted from the FireWire core to the
+SBP-2 protocol driver, WRT ROM scanning and generic device representati=
+on.
 
-> > Signed-off-by: xavier.bru@bull.net
-> > Signed-off-by: frederic.temporelli@bull.net
-> > 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> 
+> It's easy enough to discover the LUNs from the rom, I just need to
+> figure out how to tell the SCSI stack about multiple LUNs.
 
+Since REPORT LUNS is not guaranteed to work with SBP-2 targets, we stic=
+k
+to scsi_add_device(). With some effort we could supply scsi_add_device(=
+)
+with common instances of Scsi_Host and target for units which reside on
+the same target. Alas the scsi_add_device() API has a concept of target
+which is quite unfit for most SCSI transports other than SPI. We have
+got the following alternatives:
+ - Implement a mapping of SAM targets to scsi_add_device targets in
+   sbp2. Effectively, map from pointer or EUI-64 to uint. <linux/idr.h>
+   has an infrastructure for such a mapping.
+   (This is not the Linux way of doing things, but wicked people may be
+   tempted to call it 'the Linux SCSI way so far'.)
+ - Reform the scsi_add_device API to support SAM targets.
+ - Leave stuff as is, concentrate on fixing the FireWire stack's issues
+   first.
+If you look closely, you see the order of list items reflecting my
+personal preference. :-)
+
+Of course, as mentioned before, a precondition to represent multiple LU=
+s
+beneath a single representation of a target is to convert sbp2 to
+instantiante only one Scsi_Host for many or all SBP-2 units.
+--=20
+Stefan Richter
+-=3D=3D=3D=3D=3D-=3D-=3D=3D- =3D=3D-- -=3D=3D=3D=3D
+http://arcgraph.de/sr/
