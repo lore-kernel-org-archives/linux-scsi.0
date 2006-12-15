@@ -1,38 +1,107 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [patch 5/5] scsi: fix uaccess handling
-Date: Fri, 15 Dec 2006 11:36:37 -0600
-Message-ID: <1166204197.2846.22.camel@mulgrave.il.steeleye.com>
-References: <20061026130010.GA7127@osiris.boeblingen.de.ibm.com>
-	 <20061026130452.GF7127@osiris.boeblingen.de.ibm.com>
-	 <20061028113143.GB14785@infradead.org>
-	 <20061029213922.GA8494@osiris.ibm.com>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: [patch 01/30] drivers/scsi/: small cleanups
+Date: Fri, 15 Dec 2006 09:29:29 -0800
+Message-ID: <20061215092929.5c816afb.randy.dunlap@oracle.com>
+References: <200612042319.kB4NJTCN008727@shell0.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:41666 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753036AbWLORgz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Dec 2006 12:36:55 -0500
-In-Reply-To: <20061029213922.GA8494@osiris.ibm.com>
+Received: from rgminet02.oracle.com ([148.87.113.119]:25909 "EHLO
+	rgminet02.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753042AbWLORiE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Dec 2006 12:38:04 -0500
+Received: from rgminet01.oracle.com (rgminet01.oracle.com [148.87.113.118])
+	by rgminet02.oracle.com (Switch-3.2.4/Switch-3.1.7) with ESMTP id kBFHc11M027173
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Fri, 15 Dec 2006 10:38:01 -0700
+In-Reply-To: <200612042319.kB4NJTCN008727@shell0.pdx.osdl.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Heiko Carstens <heiko.carstens@de.ibm.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: akpm@osdl.org
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, bunk@stusta.de
 
-On Sun, 2006-10-29 at 22:39 +0100, Heiko Carstens wrote:
-> > While not your fault I'd suggest to fix the __put_user abuse at the same
-> > time, as in the untested patch below for scsi_ioctl.c:
+On Mon, 04 Dec 2006 15:18:20 -0800 akpm@osdl.org wrote:
+
+Hi,
+What's the status of these 30 scsi patches from akpm?
+
+Thanks.
+
+> From: Adrian Bunk <bunk@stusta.de>
 > 
-> Makes sense. Even though the whole SCSI_IOCTL_GET_IDLUN ioctl interface
-> is pretty pointless.
-> It supports only up to 255 different ids and luns and might return the
-> same 'dev_id' for two different devices...
-> Any user space utility that depends on this interface would do the wrong
-> thing (whatever that would be).
+> This patch contains the following cleanups:
+> - make needlessly global functions static
+> - every file should #include the headers containing the prototypes for
+>   it's global functions
+> 
+> Signed-off-by: Adrian Bunk <bunk@stusta.de>
+> Cc: James Bottomley <James.Bottomley@steeleye.com>
+> Signed-off-by: Andrew Morton <akpm@osdl.org>
+> ---
+> 
+>  drivers/scsi/scsi_sysctl.c       |    1 +
+>  drivers/scsi/scsi_sysfs.c        |    3 ++-
+>  drivers/scsi/scsi_transport_fc.c |    2 +-
+>  drivers/scsi/sr.c                |    2 +-
+>  4 files changed, 5 insertions(+), 3 deletions(-)
+> 
+> diff -puN drivers/scsi/scsi_sysctl.c~drivers-scsi-small-cleanups drivers/scsi/scsi_sysctl.c
+> --- a/drivers/scsi/scsi_sysctl.c~drivers-scsi-small-cleanups
+> +++ a/drivers/scsi/scsi_sysctl.c
+> @@ -9,6 +9,7 @@
+>  #include <linux/sysctl.h>
+>  
+>  #include "scsi_logging.h"
+> +#include "scsi_priv.h"
+>  
+>  
+>  static ctl_table scsi_table[] = {
+> diff -puN drivers/scsi/scsi_sysfs.c~drivers-scsi-small-cleanups drivers/scsi/scsi_sysfs.c
+> --- a/drivers/scsi/scsi_sysfs.c~drivers-scsi-small-cleanups
+> +++ a/drivers/scsi/scsi_sysfs.c
+> @@ -16,6 +16,7 @@
+>  #include <scsi/scsi_host.h>
+>  #include <scsi/scsi_tcq.h>
+>  #include <scsi/scsi_transport.h>
+> +#include <scsi/scsi_driver.h>
+>  
+>  #include "scsi_priv.h"
+>  #include "scsi_logging.h"
+> @@ -764,7 +765,7 @@ void scsi_remove_device(struct scsi_devi
+>  }
+>  EXPORT_SYMBOL(scsi_remove_device);
+>  
+> -void __scsi_remove_target(struct scsi_target *starget)
+> +static void __scsi_remove_target(struct scsi_target *starget)
+>  {
+>  	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+>  	unsigned long flags;
+> diff -puN drivers/scsi/scsi_transport_fc.c~drivers-scsi-small-cleanups drivers/scsi/scsi_transport_fc.c
+> --- a/drivers/scsi/scsi_transport_fc.c~drivers-scsi-small-cleanups
+> +++ a/drivers/scsi/scsi_transport_fc.c
+> @@ -1797,7 +1797,7 @@ fc_rport_final_delete(void *data)
+>   * Notes:
+>   *	This routine assumes no locks are held on entry.
+>   **/
+> -struct fc_rport *
+> +static struct fc_rport *
+>  fc_rport_create(struct Scsi_Host *shost, int channel,
+>  	struct fc_rport_identifiers  *ids)
+>  {
+> diff -puN drivers/scsi/sr.c~drivers-scsi-small-cleanups drivers/scsi/sr.c
+> --- a/drivers/scsi/sr.c~drivers-scsi-small-cleanups
+> +++ a/drivers/scsi/sr.c
+> @@ -174,7 +174,7 @@ static void scsi_cd_put(struct scsi_cd *
+>   * an inode for that to work, and we do not always have one.
+>   */
+>  
+> -int sr_media_change(struct cdrom_device_info *cdi, int slot)
+> +static int sr_media_change(struct cdrom_device_info *cdi, int slot)
+>  {
+>  	struct scsi_cd *cd = cdi->handle;
+>  	int retval;
+> _
 
-So has anyone actually tested this?
-
-James
-
-
+---
+~Randy
