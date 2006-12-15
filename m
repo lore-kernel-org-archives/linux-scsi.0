@@ -1,48 +1,34 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 0/3] SG v4 support
-Date: Fri, 15 Dec 2006 19:57:05 +0100
-Message-ID: <20061215185704.GZ5010@kernel.dk>
-References: <20061216001753F.fujita.tomonori@lab.ntt.co.jp>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 0/3] SG v4 support
+Date: Sat, 16 Dec 2006 00:18:22 +0900 (JST)
+Message-ID: <20061216001753F.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([62.242.22.158]:27128 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753181AbWLOSzg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Dec 2006 13:55:36 -0500
-Content-Disposition: inline
-In-Reply-To: <20061216001753F.fujita.tomonori@lab.ntt.co.jp>
+Received: from tama55.ecl.ntt.co.jp ([129.60.39.103]:38939 "EHLO
+	tama55.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753289AbWLOTf4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Dec 2006 14:35:56 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org, dougg@torque.net
+To: linux-scsi@vger.kernel.org
+Cc: dougg@torque.net, jens.axboe@oracle.com
 
-On Sat, Dec 16 2006, FUJITA Tomonori wrote:
-> The following patches add SG v4 support to bsg. They are over Jens'
-> bsg branch.
-> 
-> I just replaced bsg's SG v3 support with SG v4 and haven't added
-> anything new yet. So it can only handle SCSI commands.
+The following patches add SG v4 support to bsg. They are over Jens'
+bsg branch.
 
-Good start! Just one comment before I look over this and merge it - I'd
-prefer keeping this out of sg.c. One of the problems we have right now
-are dual pieces of code for sg v3, and I think it would be silly to
-continue down this path. Lets keep sg.c as a legacy sg v3 interface
-(it'll be the only one except SG_IO in the block layer), and let bsg
-take sg v4 and forward.
+I just replaced bsg's SG v3 support with SG v4 and haven't added
+anything new yet. So it can only handle SCSI commands.
 
-There's really zero gain in having it in two places.
+I've uploaded simple programs to just read/write by using SG v4:
 
-IOW, put the sg v4 structure in bsg.h.
+http://www.kernel.org/pub/linux/kernel/people/tomo/sg4/
 
-> I've uploaded simple programs to just read/write by using SG v4:
-> 
-> http://www.kernel.org/pub/linux/kernel/people/tomo/sg4/
+# They haven't showed up yet. kernel.org is very slow today. please
+# wait for a while.
 
-Great!
-
-I'll get this reviewed and merged as soon as I can, probably monday.
-
--- 
-Jens Axboe
+I've not heavily tested this but seems to work. We can begin to do fun
+stuff like extending the current code paths for blk_pc (or creates new
+paths) for non SCSI commands.
 
