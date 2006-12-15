@@ -1,89 +1,81 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] bsg: minor cleanups
-Date: Sat, 16 Dec 2006 00:18:22 +0900 (JST)
-Message-ID: <20061215223001N.fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 1/3] block: export blk_verify_command for SG v4
+Date: Sat, 16 Dec 2006 00:18:23 +0900 (JST)
+Message-ID: <20061216001756S.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:38626 "EHLO
 	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753345AbWLOTzN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Dec 2006 14:55:13 -0500
+	with ESMTP id S1753350AbWLOT4s (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Dec 2006 14:56:48 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: jens.axboe@oracle.com
+Cc: dougg@torque.net, jens.axboe@oracle.com
 
-This just kills linux/config.h and dprintk warnings.
-
-The patch is over Jens's bsg branch.
+blk_fill_sghdr_rq doesn't work for SG v4 so verify_command needed to
+be exported.
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
 ---
- block/bsg.c |   13 ++++++-------
- 1 files changed, 6 insertions(+), 7 deletions(-)
+ block/scsi_ioctl.c     |    7 ++++---
+ include/linux/blkdev.h |    1 +
+ 2 files changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/block/bsg.c b/block/bsg.c
-index 724b693..53a09a5 100644
---- a/block/bsg.c
-+++ b/block/bsg.c
-@@ -16,7 +16,6 @@
-  *	  seperated right now.
-  *
-  */
--#include <linux/config.h>
- #include <linux/module.h>
- #include <linux/init.h>
- #include <linux/file.h>
-@@ -347,8 +346,8 @@ static void bsg_rq_end_io(struct request
- 	struct bsg_device *bd = bc->bd;
- 	unsigned long flags;
+diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+index e74f807..751f32b 100644
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -110,7 +110,7 @@ #define CMD_WARNED	0x04
+ #define safe_for_read(cmd)	[cmd] = CMD_READ_SAFE
+ #define safe_for_write(cmd)	[cmd] = CMD_WRITE_SAFE
  
--	dprintk("%s: finished rq %p bio %p, bc %p offset %ld stat %d\n",
--			bd->name, rq, bc, bc->bio, bc - bd->cmd_map, uptodate);
-+	dprintk("%s: finished rq %p bc %p, bio %p offset %d stat %d\n",
-+		bd->name, rq, bc, bc->bio, bc - bd->cmd_map, uptodate);
+-static int verify_command(unsigned char *cmd, int has_write_perm)
++int blk_verify_command(unsigned char *cmd, int has_write_perm)
+ {
+ 	static unsigned char cmd_type[256] = {
  
- 	bc->hdr.duration = jiffies_to_msecs(jiffies - bc->hdr.duration);
- 
-@@ -562,7 +561,7 @@ bsg_read(struct file *file, char __user 
- 	int ret;
- 	ssize_t bytes_read;
- 
--	dprintk("%s: read %lu bytes\n", bd->name, count);
-+	dprintk("%s: read %Zd bytes\n", bd->name, count);
- 
- 	bsg_set_block(bd, file);
- 	bytes_read = 0;
-@@ -642,7 +641,7 @@ bsg_write(struct file *file, const char 
- 	ssize_t bytes_read;
- 	int ret;
- 
--	dprintk("%s: write %lu bytes\n", bd->name, count);
-+	dprintk("%s: write %Zd bytes\n", bd->name, count);
- 
- 	bsg_set_block(bd, file);
- 	bsg_set_write_perm(bd, file);
-@@ -657,7 +656,7 @@ bsg_write(struct file *file, const char 
- 	if (!bytes_read || (bytes_read && err_block_err(ret)))
- 		bytes_read = ret;
- 
--	dprintk("%s: returning %lu\n", bd->name, bytes_read);
-+	dprintk("%s: returning %Zd\n", bd->name, bytes_read);
- 	return bytes_read;
+@@ -210,6 +210,7 @@ static int verify_command(unsigned char 
+ 	/* Otherwise fail it with an "Operation not permitted" */
+ 	return -EPERM;
  }
++EXPORT_SYMBOL_GPL(blk_verify_command);
  
-@@ -768,7 +767,7 @@ #endif
+ int blk_fill_sghdr_rq(request_queue_t *q, struct request *rq,
+ 		      struct sg_io_hdr *hdr, int has_write_perm)
+@@ -218,7 +219,7 @@ int blk_fill_sghdr_rq(request_queue_t *q
  
- 	strncpy(bd->name, disk->disk_name, sizeof(bd->name) - 1);
- 	dprintk("bound to <%s>, max queue %d\n",
--		format_dev_t(buf, i->i_rdev), bd->max_queue);
-+		format_dev_t(buf, inode->i_rdev), bd->max_queue);
+ 	if (copy_from_user(rq->cmd, hdr->cmdp, hdr->cmd_len))
+ 		return -EFAULT;
+-	if (verify_command(rq->cmd, has_write_perm))
++	if (blk_verify_command(rq->cmd, has_write_perm))
+ 		return -EPERM;
  
- 	mutex_unlock(&bsg_mutex);
- 	return bd;
+ 	/*
+@@ -456,7 +457,7 @@ int sg_scsi_ioctl(struct file *file, str
+ 	if (in_len && copy_from_user(buffer, sic->data + cmdlen, in_len))
+ 		goto error;
+ 
+-	err = verify_command(rq->cmd, file->f_mode & FMODE_WRITE);
++	err = blk_verify_command(rq->cmd, file->f_mode & FMODE_WRITE);
+ 	if (err)
+ 		goto error;
+ 
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 28ee679..492dc96 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -694,6 +694,7 @@ extern int blk_fill_sghdr_rq(request_que
+ extern int blk_unmap_sghdr_rq(struct request *, struct sg_io_hdr *);
+ extern int blk_complete_sghdr_rq(struct request *, struct sg_io_hdr *,
+ 			  struct bio *);
++extern int blk_verify_command(unsigned char *, int);
+ 
+ static inline request_queue_t *bdev_get_queue(struct block_device *bdev)
+ {
 -- 
 1.4.1.1
 
