@@ -1,88 +1,54 @@
-From: Bernd Schubert <bernd-schubert@gmx.de>
-Subject: Re: I/O errors on 6TB device
-Date: Sat, 16 Dec 2006 17:28:13 +0100
-Message-ID: <200612161728.14093.bernd-schubert@gmx.de>
-References: <em0nro$njf$1@sea.gmane.org> <1166282914.2878.2.camel@mulgrave.il.steeleye.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] sata_promise: Port enumeration order - SATA 150 TX4,
+ SATA 300 TX4
+Date: Sat, 16 Dec 2006 12:09:00 -0500
+Message-ID: <4584282C.5060803@pobox.com>
+References: <43FFAE3D.7010002@physics.harvard.edu> <44000036.7070403@eyal.emu.id.au> <011f01c639f9$8dc86bc0$3d64880a@speedy> <442DB29D.1010102@avona.com> <447CB9B4.50700@physics.harvard.edu> <Pine.LNX.4.62.0610021700350.10249@kinison.puremagic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:54805 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1161138AbWLPQ2T convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 16 Dec 2006 11:28:19 -0500
-In-Reply-To: <1166282914.2878.2.camel@mulgrave.il.steeleye.com>
-Content-Disposition: inline
+Received: from srv5.dvmed.net ([207.36.208.214]:34990 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161237AbWLPRJ1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 16 Dec 2006 12:09:27 -0500
+In-Reply-To: <Pine.LNX.4.62.0610021700350.10249@kinison.puremagic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi@vger.kernel.org, "Moore, Eric" <Eric.Moore@lsil.com>
+To: Evan Harris <eharris@puremagic.com>
+Cc: Milan Kupcevic <milan@physics.harvard.edu>, Fabian Knittel <fabian.knittel@avona.com>, linux-scsi@vger.kernel.org, Linux Kernel List <linux-kernel@vger.kernel.org>, Eyal Lebedinsky <eyal@eyal.emu.id.au>, Stan Seibert <volsung@mailsnare.net>, linux-ide@vger.kernel.org, Christiaan den Besten <chris@scorpion.nl>, Mikael Pettersson <mikpe@it.uu.se>
 
-> > [17179726.100000]  sda:<6>sd 0:0:1:0: SCSI error: return code =3D 0=
-xb0000
-> > [17179726.132000] end_request: I/O error, dev sda, sector 126911016=
-88
->
-> This is definitely a fusion driver error: it's DID_SOFT_ERROR, which
-> that driver returns for a variety of firmware related conditions or
-> transfer underruns.
->
-> I've cc'd the fusion people to see if they can help you diagnose it
-> further.
->
-> James
+Evan Harris wrote:
+> 
+> I have a card that mirrors this one from your list:
+> 
+> Retail name: SATA300 TX4
+> Chip label: PDC40718-GP  SATAII300
+> Vendor-Device number: 105a:3d17 (rev 02)
+> 
+> Through testing, I've found linux 2.6.16 and 2.6.17 find the ports in 
+> this order (the list is ordered by linux detection):
+> 
+> 1. silkscreen port 3
+> 2. silkscreen port 2
+> 3. silkscreen port 4
+> 4. silkscreen port 1
+>> NOTE: the patch I have submitted ( 
+>> http://marc.theaimsgroup.com/?l=linux-ide&m=114082978311290&w=2 ) is a 
+>> solution that doesn't know about the older Promise SATA controllers, 
+>> which are not affected with the "new wiring" problem, so the older 
+>> controllers will appear screwed if you use it.
+>>
+>> Hopefully we will collect enough info about all the SATA Promise 
+>> controllers to distinguish the new and the old wiring controllers, 
+>> then produce a new patch that will be a correct solution to the "new 
+>> wiring" problem.
 
-James, many thanks for your help. I will try to do a firmware update on=
-=20
-Monday, maybe that helps. Of course, we also appreciate any help furthe=
-r help=20
-from LSI/MPT.
+Mikael Pettersson has been doing some excellent work recently on 
+sata_promise.  If enough data has been collected on this sata_promise 
+port enumeration problem, maybe the data could be collated and proposed 
+via Mikael as a patch?
 
-Thanks again,
-Bernd
+	Jeff
 
-PS: Since the controller hardware might be important now, its an onboar=
-d=20
-controller on a Tyan S2880 mainboard.
 
-0000:02:0a.0 SCSI storage controller: LSI Logic / Symbios Logic 53c1030=
- PCI-X=20
-=46usion-MPT Dual Ultra320 SCSI (rev 07)
-        Subsystem: LSI Logic / Symbios Logic: Unknown device 1000
-        Flags: bus master, 66MHz, medium devsel, latency 72, IRQ 19
-        I/O ports at a400 [size=3D256]
-        Memory at fc9d0000 (64-bit, non-prefetchable) [size=3D64K]
-        Memory at fc9c0000 (64-bit, non-prefetchable) [size=3D64K]
-        Expansion ROM at fc700000 [disabled] [size=3D1M]
-        Capabilities: [50] Power Management version 2
-        Capabilities: [58] Message Signalled Interrupts: 64bit+ Queue=3D=
-0/0=20
-Enable-
-        Capabilities: [68]
-0000:02:0a.1 SCSI storage controller: LSI Logic / Symbios Logic 53c1030=
- PCI-X=20
-=46usion-MPT Dual Ultra320 SCSI (rev 07)
-        Subsystem: LSI Logic / Symbios Logic: Unknown device 1000
-        Flags: bus master, 66MHz, medium devsel, latency 72, IRQ 20
-        I/O ports at a800 [size=3D256]
-        Memory at fc9f0000 (64-bit, non-prefetchable) [size=3D64K]
-        Memory at fc9e0000 (64-bit, non-prefetchable) [size=3D64K]
-        Expansion ROM at fc800000 [disabled] [size=3D1M]
-        Capabilities: [50] Power Management version 2
-        Capabilities: [58] Message Signalled Interrupts: 64bit+ Queue=3D=
-0/0=20
-Enable-
-        Capabilities: [68]
-
---=20
-Bernd Schubert
-PCI / Theoretische Chemie
-Universit=E4t Heidelberg
-INF 229
-69120 Heidelberg
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
