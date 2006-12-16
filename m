@@ -1,109 +1,114 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: I/O errors on 6TB device
-Date: Sat, 16 Dec 2006 09:28:34 -0600
-Message-ID: <1166282914.2878.2.camel@mulgrave.il.steeleye.com>
-References: <em0nro$njf$1@sea.gmane.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] [PATCH] libata: take scmd->cmd_len into account when
+ translating SCSI commands
+Date: Sat, 16 Dec 2006 10:40:28 -0500
+Message-ID: <4584136C.5070009@pobox.com>
+References: <20061216104331.GA5400@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:49508 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1161045AbWLPP2k (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 16 Dec 2006 10:28:40 -0500
-In-Reply-To: <em0nro$njf$1@sea.gmane.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:34621 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161121AbWLPQIP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 16 Dec 2006 11:08:15 -0500
+In-Reply-To: <20061216104331.GA5400@htj.dyndns.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bernd Schubert <bernd-schubert@gmx.de>
-Cc: linux-scsi@vger.kernel.org, "Moore, Eric" <Eric.Moore@lsil.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, dougg@torque.net, jens.axboe@oracle.com
 
-On Sat, 2006-12-16 at 13:12 +0100, Bernd Schubert wrote:
-> Hi,
+Tejun Heo wrote:
+> libata depended on SCSI command to have the correct length when
+> tranlating it into an ATA command.  This generally worked for commands
+> issued by SCSI HLD but user could issue arbitrary broken command using
+> sg interface.
 > 
-> recently I asked about problems to expect with >2TB devices and the answer
-> of Douglas made me hope we won't get any problems this time.
-> Unfortunately, we get I/O errors on accessing the device.
+> Also, when building ATAPI command, full command size was always
+> copied.  Because some ATAPI devices needs bytes after CDB cleared, if
+> upper layer doesn't clear bytes after CDB, such devices will
+> malfunction.  This necessiated recent clear-garbage-after-CDB fix in
+> sg interfaces.  However, scsi_execute() isn't fixed yet and HL-DT-ST
+> DVD-RAM GSA-H30N malfunctions on initialization commands issued from
+> SCSI.
 > 
-> The unit is called transtec PV610S, which is actually an Infortrend EonStor
-> A16U-G2421-1 device.
+> This patch updates libata xlat functions.
 > 
-> Presently its running in test mode on our failover system with attached to a
-> MPT scsi controller, after thouroughly tested it is supposed to become our
-> main storage device on our primary server with an AIC79XX controller.
+> * SCSI cmd_len is always considered.  Each translation function checks
+>   for proper cmd_len and ATAPI translaation clears bytes after CDB.
 > 
-> Without any knowledge about the scsi protocol and its error numbers it looks
-> like the device is claiming to have more sectors than it actually has,
-> doesn't it?
+> * Don't pass CDB as argument to xlat functions.  xlat functions need
+>   to access more than just CDB and they have already been accessing scmd
+>   via qc->scsicmd.  Just pass in qc.
 > 
-> [17179724.816000] Fusion MPT base driver 3.03.07
-> [17179724.816000] Copyright (c) 1999-2005 LSI Logic Corporation
-> [17179724.832000] Fusion MPT SPI Host driver 3.03.07
-> [17179724.840000] ACPI: PCI Interrupt 0000:02:0a.0[A] -> GSI 24 (level,
-> low) -> IRQ 19
-> [17179724.840000] mptbase: Initiating ioc0 bringup
-> [17179725.312000] ioc0: 53C1030: Capabilities={Initiator}
-> [17179725.800000] scsi0 : ioc0: LSI53C1030, FwRev=01030600h, Ports=1,
-> MaxQ=255, IRQ=19
-> [17179726.064000]   Vendor: Transtec  Model: PV610S16R1B       Rev: 347G
-> [17179726.064000]   Type:   Direct-Access                      ANSI SCSI
-> revision: 05
-> [17179726.084000] sda : very big device. try to use READ CAPACITY(16).
-> [17179726.084000] SCSI device sda: 12691101696 512-byte hdwr sectors
-> (6497844 MB)
-> [17179726.088000] sda: Write Protect is off
-> [17179726.088000] sda: Mode Sense: 9b 00 00 08
-> [17179726.088000] SCSI device sda: drive cache: write back
-> [17179726.100000] sda : very big device. try to use READ CAPACITY(16).
-> [17179726.100000] SCSI device sda: 12691101696 512-byte hdwr sectors
-> (6497844 MB)
-> [17179726.100000] sda: Write Protect is off
-> [17179726.100000] sda: Mode Sense: 9b 00 00 08
-> [17179726.100000] SCSI device sda: drive cache: write back
-> [17179726.100000]  sda:<6>sd 0:0:1:0: SCSI error: return code = 0xb0000
-> [17179726.132000] end_request: I/O error, dev sda, sector 12691101688
-
-This is definitely a fusion driver error: it's DID_SOFT_ERROR, which
-that driver returns for a variety of firmware related conditions or
-transfer underruns.
-
-I've cc'd the fusion people to see if they can help you diagnose it
-further.
-
-James
-
-
-> [17179726.132000] Buffer I/O error on device sda, logical block 1586387711
-> [17179726.136000] sd 0:0:1:0: SCSI error: return code = 0xb0000
-> [17179726.136000] end_request: I/O error, dev sda, sector 12691101688
-> [17179726.136000] Buffer I/O error on device sda, logical block 1586387711
-> [17179726.136000] Alternate GPT is invalid, using primary GPT.
-> [17179726.136000]
-> [17179726.136000] sd 0:0:1:0: Attached scsi disk sda
-> [17179726.160000] sd 0:0:1:0: Attached scsi generic sg0 type 0
-> [17179729.412000] ACPI: PCI Interrupt 0000:02:0a.1[B] -> GSI 25 (level,
-> low) -> IRQ 20
-> [17179729.660000] mptbase: Initiating ioc1 bringup
-> [17179730.132000] ioc1: 53C1030: Capabilities={Initiator}
-> [17179730.620000] scsi1 : ioc1: LSI53C1030, FwRev=01030600h, Ports=1,
-> MaxQ=255, IRQ=20
-> /10
+> * Variable names are normalized.  scsi_cmnd is scmd and CDB, cdb.
 > 
-> Now using parted to set a proper partition table, parted will complain about
-> an I/O error and dmesg shows the messages below.
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> Cc: Jens Axboe <jens.axboe@oracle.com>
+> Cc: Douglas Gilbert <dougg@torque.net>
+> ---
+>  drivers/ata/libata-scsi.c |  187 ++++++++++++++++++++++++---------------------
+>  1 files changed, 100 insertions(+), 87 deletions(-)
 > 
-> [17179939.464000] sd 0:0:1:0: SCSI error: return code = 0xb0000
-> [17179939.464000] end_request: I/O error, dev sda, sector 12691101688
-> [17180107.112000] sd 0:0:1:0: SCSI error: return code = 0xb0000
-> [17180107.116000] end_request: I/O error, dev sda, sector 12691101688
-> 
-> 
-> Any help is appriciated.
-> 
-> Thanks in advance,
-> Bernd
-> 
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index a4790be..f82871c 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -51,7 +51,7 @@
+>  
+>  #define SECTOR_SIZE	512
+>  
+> -typedef unsigned int (*ata_xlat_func_t)(struct ata_queued_cmd *qc, const u8 *scsicmd);
+> +typedef unsigned int (*ata_xlat_func_t)(struct ata_queued_cmd *qc);
+>  
+>  static struct ata_device * __ata_scsi_find_dev(struct ata_port *ap,
+>  					const struct scsi_device *scsidev);
+> @@ -935,7 +935,6 @@ int ata_scsi_change_queue_depth(struct scsi_device *sdev, int queue_depth)
+>  /**
+>   *	ata_scsi_start_stop_xlat - Translate SCSI START STOP UNIT command
+>   *	@qc: Storage for translated ATA taskfile
+> - *	@scsicmd: SCSI command to translate
+>   *
+>   *	Sets up an ATA taskfile to issue STANDBY (to stop) or READ VERIFY
+>   *	(to start). Perhaps these commands should be preceded by
+> @@ -948,22 +947,25 @@ int ata_scsi_change_queue_depth(struct scsi_device *sdev, int queue_depth)
+>   *	RETURNS:
+>   *	Zero on success, non-zero on error.
+>   */
 > -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> -static unsigned int ata_scsi_start_stop_xlat(struct ata_queued_cmd *qc,
+> -					     const u8 *scsicmd)
+> +static unsigned int ata_scsi_start_stop_xlat(struct ata_queued_cmd *qc)
+>  {
+> +	struct scsi_cmnd *scmd = qc->scsicmd;
+> +	const u8 *cdb = scmd->cmnd;
+>  	struct ata_taskfile *tf = &qc->tf;
+>  
+> +	if (scmd->cmd_len < 5)
+> +		goto invalid_fld;
+> +
+>  	tf->flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_ISADDR;
+>  	tf->protocol = ATA_PROT_NODATA;
+> -	if (scsicmd[1] & 0x1) {
+> +	if (cdb[1] & 0x1) {
+>  		;	/* ignore IMMED bit, violates sat-r05 */
+>  	}
+> -	if (scsicmd[4] & 0x2)
+> -		goto invalid_fld;       /* LOEJ bit set not supported */
+> -	if (((scsicmd[4] >> 4) & 0xf) != 0)
+> -		goto invalid_fld;       /* power conditions not supported */
+> -	if (scsicmd[4] & 0x1) {
+> +	if (cdb[4] & 0x2)
+> +		goto invalid_fld;	/* LOEJ bit set not supported */
+> +	if (((cdb[4] >> 4) & 0xf) != 0)
+> +		goto invalid_fld;	/* power conditions not supported */
+> +	if (cdb[4] & 0x1) {
+
+ACK change for #upstream-fixes, but please revise so that the 
+"s/scsicmd/cdb/" rename is moved to a separate patch.  You should be 
+able to name the local variables such that this patch becomes much smaller.
+
+	Jeff
+
+
 
