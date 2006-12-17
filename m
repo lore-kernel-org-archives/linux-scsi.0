@@ -1,46 +1,38 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
+From: Krzysztof Halasa <khc@pm.waw.pl>
 Subject: Re: [2.6 patch] remove the broken SCSI_SEAGATE driver
-Date: Sun, 17 Dec 2006 14:22:46 -0600
-Message-ID: <1166386966.9647.20.camel@mulgrave.il.steeleye.com>
+Date: Sun, 17 Dec 2006 22:18:07 +0100
+Message-ID: <m3tzzu9q7k.fsf@defiant.localdomain>
 References: <20061212162238.GR28443@stusta.de>
-	 <1165966274.5903.56.camel@mulgrave.il.steeleye.com>
-	 <20061213000902.GD28443@stusta.de> <m3wt4tp9ka.fsf@defiant.localdomain>
-	 <1166198454.2846.10.camel@mulgrave.il.steeleye.com>
-	 <m3ac1mb88s.fsf@defiant.localdomain>
+	<1165966274.5903.56.camel@mulgrave.il.steeleye.com>
+	<20061213000902.GD28443@stusta.de>
+	<m3wt4tp9ka.fsf@defiant.localdomain>
+	<1166198454.2846.10.camel@mulgrave.il.steeleye.com>
+	<m3ac1mb88s.fsf@defiant.localdomain>
+	<1166386966.9647.20.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:60384 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751632AbWLQUYA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 17 Dec 2006 15:24:00 -0500
-In-Reply-To: <m3ac1mb88s.fsf@defiant.localdomain>
+Received: from khc.piap.pl ([195.187.100.11]:40936 "EHLO khc.piap.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751944AbWLQVSK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 17 Dec 2006 16:18:10 -0500
+In-Reply-To: <1166386966.9647.20.camel@mulgrave.il.steeleye.com> (James Bottomley's message of "Sun, 17 Dec 2006 14:22:46 -0600")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Krzysztof Halasa <khc@pm.waw.pl>
+To: James Bottomley <James.Bottomley@SteelEye.com>
 Cc: Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sun, 2006-12-17 at 21:03 +0100, Krzysztof Halasa wrote:
-> James Bottomley <James.Bottomley@SteelEye.com> writes:
-> 
-> > I really don't see a need to declare drivers obsolete unless they bitrot
-> > to the point they're demonstrably useless and no-one wants to step up to
-> > fix them, which is what the BROKEN flag is for.
-> 
-> How do you know if the driver is broken? Especially if it still
-> compiles?
-> 
-> Some of these things are 20 years old.
+James Bottomley <James.Bottomley@SteelEye.com> writes:
 
-One of the touted benefits of Linux is that we run on old hardware.
-Unless the driver is demonstrably wrong (and they do become so as the
-APIs evolve) or it fails to compile because of bitrotting, there's no
-real urgency to remove it, is there?
+> One of the touted benefits of Linux is that we run on old hardware.
+> Unless the driver is demonstrably wrong (and they do become so as the
+> APIs evolve)
 
-The reverse (how do you know if someone's still using the driver) is
-equally hard to determine.
+Sure, I expect they do - but nobody is able to check.
 
-James
+> The reverse (how do you know if someone's still using the driver) is
+> equally hard to determine.
 
-
+Sure. That's way I asked if we could make it easier.
+-- 
+Krzysztof Halasa
