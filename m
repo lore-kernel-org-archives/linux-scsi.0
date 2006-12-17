@@ -1,55 +1,29 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH 2/5] iscsi: fix crypto_alloc_hash() error check
-Date: Sun, 17 Dec 2006 12:10:25 -0600
-Message-ID: <11663790303684-git-send-email-michaelc@cs.wisc.edu>
-References: <1166379028772-git-send-email-michaelc@cs.wisc.edu>
-Reply-To: michaelc@cs.wisc.edu
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: [PATCH 0/5] iscsi bug fixes
+Date: Sun, 17 Dec 2006 12:17:08 -0600
+Message-ID: <458589A4.10802@cs.wisc.edu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:52521 "EHLO mx1.redhat.com"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:50744 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932260AbWLQSKw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 17 Dec 2006 13:10:52 -0500
-In-Reply-To: <1166379028772-git-send-email-michaelc@cs.wisc.edu>
+	id S932348AbWLQSaZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 17 Dec 2006 13:30:25 -0500
+Received: from [192.168.0.7] (c-75-73-64-158.hsd1.mn.comcast.net [75.73.64.158])
+	(authenticated bits=0)
+	by sabe.cs.wisc.edu (8.13.6/8.13.6) with ESMTP id kBHIHEf7028762
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Sun, 17 Dec 2006 12:17:14 -0600
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, Andrew Morton <akpm@osdl.org>, Mike Christie <michaelc@cs.wisc.edu>
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-From: Akinobu Mita <akinobu.mita@gmail.com>
+These are bug fixes for LSI support, big endian fix for sense len
+calculation, digest porting errors, and printing output. There have been
+several iscsi patches floating around from Andrew and other users and
+this incorporates those patches.
 
-The return value of crypto_alloc_hash() should be checked by
-IS_ERR().
-
-Cc: Dmitry Yusupov <dmitry_yus@yahoo.com>
-Cc: Alex Aizman <itn780@yahoo.com>
-Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
-Signed-off-by: Andrew Morton <akpm@osdl.org>
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
----
- drivers/scsi/iscsi_tcp.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index 61e3a61..8889686 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -1777,13 +1777,13 @@ iscsi_tcp_conn_create(struct iscsi_cls_s
- 	tcp_conn->tx_hash.tfm = crypto_alloc_hash("crc32c", 0,
- 						  CRYPTO_ALG_ASYNC);
- 	tcp_conn->tx_hash.flags = 0;
--	if (!tcp_conn->tx_hash.tfm)
-+	if (IS_ERR(tcp_conn->tx_hash.tfm))
- 		goto free_tcp_conn;
- 
- 	tcp_conn->rx_hash.tfm = crypto_alloc_hash("crc32c", 0,
- 						  CRYPTO_ALG_ASYNC);
- 	tcp_conn->rx_hash.flags = 0;
--	if (!tcp_conn->rx_hash.tfm)
-+	if (IS_ERR(tcp_conn->rx_hash.tfm))
- 		goto free_tx_tfm;
- 
- 	return cls_conn;
--- 
-1.4.1.1
-
+The patches were made over scsi-misc, but apply to Linus's current git
+tree. One patch applies at a offset because of some of the queue work
+changes in linus's tree but it is ok.
