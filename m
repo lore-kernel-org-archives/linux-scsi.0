@@ -1,34 +1,45 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 2/2] cciss: fix XFER_READ/XFER_WRITE in do_cciss_request
-Date: Mon, 18 Dec 2006 10:58:53 +0100
-Message-ID: <20061218095852.GF5010@kernel.dk>
-References: <20061215212817.GA10996@beardog.cca.cpqcorp.net>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [2.6 patch] remove the broken SCSI_SEAGATE driver
+Date: Mon, 18 Dec 2006 09:47:02 +0100
+Message-ID: <1166431702.3365.934.camel@laptopd505.fenrus.org>
+References: <20061212162238.GR28443@stusta.de>
+	 <1165966274.5903.56.camel@mulgrave.il.steeleye.com>
+	 <20061213000902.GD28443@stusta.de> <m3wt4tp9ka.fsf@defiant.localdomain>
+	 <1166198454.2846.10.camel@mulgrave.il.steeleye.com>
+	 <m3ac1mb88s.fsf@defiant.localdomain>
+	 <1166386966.9647.20.camel@mulgrave.il.steeleye.com>
+	 <m3tzzu9q7k.fsf@defiant.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([62.242.22.158]:11384 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753679AbWLRJ5O (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Dec 2006 04:57:14 -0500
-Content-Disposition: inline
-In-Reply-To: <20061215212817.GA10996@beardog.cca.cpqcorp.net>
+Received: from pentafluge.infradead.org ([213.146.154.40]:57751 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753869AbWLRLlb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Dec 2006 06:41:31 -0500
+In-Reply-To: <m3tzzu9q7k.fsf@defiant.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
-Cc: akpm@osdl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, daniel_frazier@hp.com, andrew.patterson@hp.com
+To: Krzysztof Halasa <khc@pm.waw.pl>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Dec 15 2006, Mike Miller (OS Dev) wrote:
-> Patch 2 of 2
+On Sun, 2006-12-17 at 22:18 +0100, Krzysztof Halasa wrote:
+> James Bottomley <James.Bottomley@SteelEye.com> writes:
 > 
-> This patch fixes a stupid bug. Sometime during the 2tb enhancement I ended up
-> replacing the macros XFER_READ and XFER_WRITE with h->cciss_read and
-> h->cciss_write respectively. It seemed to work somehow at least on x86_64 and
-> ia64. I don't know how. But people started complaining about command timeouts
-> on older controllers like the 64xx series and only on ia32. This resolves the
-> issue reproduced in our lab. Please consider this for inclusion. 
+> > One of the touted benefits of Linux is that we run on old hardware.
+> > Unless the driver is demonstrably wrong (and they do become so as the
+> > APIs evolve)
+> 
+> Sure, I expect they do - but nobody is able to check.
 
-Great, works here as well. Applied 1+2.
+if a tree falls in a forest but there's nobody around to hear it, does
+it make a sound?
+
+This sort of heisenbug questions aren't solved by "nobody hears it so
+lets chop down the forest to make houses out of the wood" answers...
+
 
 -- 
-Jens Axboe
+if you want to mail me at work (you don't), use arjan (at) linux.intel.com
+Test the interaction between Linux and your BIOS via http://www.linuxfirmwarekit.org
 
