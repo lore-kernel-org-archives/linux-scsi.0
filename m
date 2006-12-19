@@ -1,71 +1,38 @@
 From: akpm@osdl.org
-Subject: [patch 17/26] drivers/scsi/mca_53c9x.c : save_flags()/cli() removal
-Date: Tue, 19 Dec 2006 13:14:52 -0800
-Message-ID: <200612192114.kBJLEqZo010725@shell0.pdx.osdl.net>
+Subject: [patch 22/26] scsi: sic7xxx stray bracket fix
+Date: Tue, 19 Dec 2006 13:14:57 -0800
+Message-ID: <200612192114.kBJLEvG5010746@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.25]:36094 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.25]:36098 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932984AbWLSVPG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S932941AbWLSVPG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 19 Dec 2006 16:15:06 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, amol@verismonetworks.com, alan@lxorguk.ukuu.org.uk
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, m.kozlowski@tuxland.pl
 
-From: Amol Lad <amol@verismonetworks.com>
+From: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
 
-Replaced save_flags()/cli() with spin_lock alternatives
+Fix broken-but-unused macro.
 
-[akpm@osdl.org: no longer BROKEN_ON_SMP]
-Signed-off-by: Amol Lad <amol@verismonetworks.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Signed-off-by: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/mca_53c9x.c |   12 ++++--------
- 1 files changed, 4 insertions(+), 8 deletions(-)
+ drivers/scsi/aic7xxx/aic79xx_pci.c |    2 +-
+ 1 files changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/mca_53c9x.c~drivers-scsi-mca_53c9xc-save_flags-cli-removal drivers/scsi/mca_53c9x.c
---- a/drivers/scsi/mca_53c9x.c~drivers-scsi-mca_53c9xc-save_flags-cli-removal
-+++ a/drivers/scsi/mca_53c9x.c
-@@ -341,9 +341,7 @@ static void dma_init_read(struct NCR_ESP
- {
- 	unsigned long flags;
+diff -puN drivers/scsi/aic7xxx/aic79xx_pci.c~scsi-sic7xxx-stray-bracket-fix drivers/scsi/aic7xxx/aic79xx_pci.c
+--- a/drivers/scsi/aic7xxx/aic79xx_pci.c~scsi-sic7xxx-stray-bracket-fix
++++ a/drivers/scsi/aic7xxx/aic79xx_pci.c
+@@ -88,7 +88,7 @@ ahd_compose_id(u_int device, u_int vendo
  
--
--	save_flags(flags);
--	cli();
-+	spin_lock_irqsave(esp->ehost->host_lock, flags);
+ #define SUBID_9005_LEGACYCONN_FUNC(id) ((id) & 0x20)
  
- 	mca_disable_dma(esp->dma);
- 	mca_set_dma_mode(esp->dma, MCA_DMA_MODE_XFER | MCA_DMA_MODE_16 |
-@@ -352,16 +350,14 @@ static void dma_init_read(struct NCR_ESP
- 	mca_set_dma_count(esp->dma, length / 2); /* !!! */
- 	mca_enable_dma(esp->dma);
+-#define SUBID_9005_SEEPTYPE(id) ((id) & 0x0C0) >> 6)
++#define SUBID_9005_SEEPTYPE(id) (((id) & 0x0C0) >> 6)
+ #define		SUBID_9005_SEEPTYPE_NONE	0x0
+ #define		SUBID_9005_SEEPTYPE_4K		0x1
  
--	restore_flags(flags);
-+	spin_unlock_irqrestore(esp->ehost->host_lock, flags);
- }
- 
- static void dma_init_write(struct NCR_ESP *esp, __u32 addr, int length)
- {
- 	unsigned long flags;
- 
--
--	save_flags(flags);
--	cli();
-+	spin_lock_irqsave(esp->ehost->host_lock, flags);
- 
- 	mca_disable_dma(esp->dma);
- 	mca_set_dma_mode(esp->dma, MCA_DMA_MODE_XFER | MCA_DMA_MODE_WRITE |
-@@ -370,7 +366,7 @@ static void dma_init_write(struct NCR_ES
- 	mca_set_dma_count(esp->dma, length / 2); /* !!! */
- 	mca_enable_dma(esp->dma);
- 
--	restore_flags(flags);
-+	spin_unlock_irqrestore(esp->ehost->host_lock, flags);
- }
- 
- static void dma_ints_off(struct NCR_ESP *esp)
 _
