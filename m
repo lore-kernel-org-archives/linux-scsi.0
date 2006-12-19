@@ -1,47 +1,88 @@
 From: akpm@osdl.org
-Subject: [patch 24/26] sym53c8xx_2 claims cpqarray device
-Date: Tue, 19 Dec 2006 13:14:59 -0800
-Message-ID: <200612192114.kBJLExYh010761@shell0.pdx.osdl.net>
+Subject: [patch 01/26] drivers/scsi/: small cleanups
+Date: Tue, 19 Dec 2006 13:14:36 -0800
+Message-ID: <200612192114.kBJLEakB010676@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.25]:36205 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.25]:36544 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932987AbWLSVPr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Dec 2006 16:15:47 -0500
+	id S932995AbWLSVRw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Dec 2006 16:17:52 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, coldwell@redhat.com, willy@debian.org
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, bunk@stusta.de
 
-From: Chip Coldwell <coldwell@redhat.com>
+From: Adrian Bunk <bunk@stusta.de>
 
-Apropos this thread
+This patch contains the following cleanups:
+- make needlessly global functions static
+- every file should #include the headers containing the prototypes for
+  it's global functions
 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=115591706804045&w=2
-
-which led to this patch
-
-http://www.kernel.org/git/?p=linux/kernel/git/jejb/scsi-rc-fixes-2.6.git;a=commit;h=b2b3c121076961333977f485f0d54c22121df920
-
-do we not also need the following patch, nine lines lower in the same file?
-
-Signed-off-by: Chip Coldwell <coldwell@redhat.com>
-Cc: Matthew Wilcox <willy@debian.org>
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/sym53c8xx_2/sym_glue.c |    2 +-
- 1 files changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/scsi_sysctl.c       |    1 +
+ drivers/scsi/scsi_sysfs.c        |    3 ++-
+ drivers/scsi/scsi_transport_fc.c |    2 +-
+ drivers/scsi/sr.c                |    2 +-
+ 4 files changed, 5 insertions(+), 3 deletions(-)
 
-diff -puN drivers/scsi/sym53c8xx_2/sym_glue.c~sym53c8xx_2-claims-cpqarray-device drivers/scsi/sym53c8xx_2/sym_glue.c
---- a/drivers/scsi/sym53c8xx_2/sym_glue.c~sym53c8xx_2-claims-cpqarray-device
-+++ a/drivers/scsi/sym53c8xx_2/sym_glue.c
-@@ -2094,7 +2094,7 @@ static struct pci_device_id sym2_id_tabl
- 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_NCR_53C875,
- 	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0UL },
- 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_NCR_53C1510,
--	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0UL }, /* new */
-+	  PCI_ANY_ID, PCI_ANY_ID,  PCI_CLASS_STORAGE_SCSI<<8,  0xffff00, 0UL }, /* new */
- 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_53C895A,
- 	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0UL },
- 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_53C875A,
+diff -puN drivers/scsi/scsi_sysctl.c~drivers-scsi-small-cleanups drivers/scsi/scsi_sysctl.c
+--- a/drivers/scsi/scsi_sysctl.c~drivers-scsi-small-cleanups
++++ a/drivers/scsi/scsi_sysctl.c
+@@ -9,6 +9,7 @@
+ #include <linux/sysctl.h>
+ 
+ #include "scsi_logging.h"
++#include "scsi_priv.h"
+ 
+ 
+ static ctl_table scsi_table[] = {
+diff -puN drivers/scsi/scsi_sysfs.c~drivers-scsi-small-cleanups drivers/scsi/scsi_sysfs.c
+--- a/drivers/scsi/scsi_sysfs.c~drivers-scsi-small-cleanups
++++ a/drivers/scsi/scsi_sysfs.c
+@@ -16,6 +16,7 @@
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_tcq.h>
+ #include <scsi/scsi_transport.h>
++#include <scsi/scsi_driver.h>
+ 
+ #include "scsi_priv.h"
+ #include "scsi_logging.h"
+@@ -764,7 +765,7 @@ void scsi_remove_device(struct scsi_devi
+ }
+ EXPORT_SYMBOL(scsi_remove_device);
+ 
+-void __scsi_remove_target(struct scsi_target *starget)
++static void __scsi_remove_target(struct scsi_target *starget)
+ {
+ 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+ 	unsigned long flags;
+diff -puN drivers/scsi/scsi_transport_fc.c~drivers-scsi-small-cleanups drivers/scsi/scsi_transport_fc.c
+--- a/drivers/scsi/scsi_transport_fc.c~drivers-scsi-small-cleanups
++++ a/drivers/scsi/scsi_transport_fc.c
+@@ -1796,7 +1796,7 @@ fc_rport_final_delete(struct work_struct
+  * Notes:
+  *	This routine assumes no locks are held on entry.
+  **/
+-struct fc_rport *
++static struct fc_rport *
+ fc_rport_create(struct Scsi_Host *shost, int channel,
+ 	struct fc_rport_identifiers  *ids)
+ {
+diff -puN drivers/scsi/sr.c~drivers-scsi-small-cleanups drivers/scsi/sr.c
+--- a/drivers/scsi/sr.c~drivers-scsi-small-cleanups
++++ a/drivers/scsi/sr.c
+@@ -174,7 +174,7 @@ static void scsi_cd_put(struct scsi_cd *
+  * an inode for that to work, and we do not always have one.
+  */
+ 
+-int sr_media_change(struct cdrom_device_info *cdi, int slot)
++static int sr_media_change(struct cdrom_device_info *cdi, int slot)
+ {
+ 	struct scsi_cd *cd = cdi->handle;
+ 	int retval;
 _
