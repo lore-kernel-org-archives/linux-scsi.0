@@ -1,42 +1,38 @@
 From: akpm@osdl.org
-Subject: [patch 07/26] scsi: remove unnecessary check in drivers/scsi/sg.c
-Date: Tue, 19 Dec 2006 13:14:42 -0800
-Message-ID: <200612192114.kBJLEgIc010694@shell0.pdx.osdl.net>
+Subject: [patch 10/26] pci_module_init() convertion in the legacy megaraid driver
+Date: Tue, 19 Dec 2006 13:14:45 -0800
+Message-ID: <200612192114.kBJLEjiF010703@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.25]:35977 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.25]:35994 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932936AbWLSVOw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Dec 2006 16:14:52 -0500
+	id S932968AbWLSVOx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Dec 2006 16:14:53 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, snakebyte@gmx.de, dougg@torque.net
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, henne@nachtwindheim.de
 
-From: Eric Sesterhenn <snakebyte@gmx.de>
+From: Henrik Kretzschmar <henne@nachtwindheim.de>
 
-coverity spotted this (cid #758).  All callers dereference sfp, so we dont
-need this check.  In addition to this, we dereference it earlier in the
-function.
+pci_module_init() convertion in the legacy megaraid driver.
 
-Signed-off-by: Eric Sesterhenn <snakebyte@gmx.de>
-Cc: Douglas Gilbert <dougg@torque.net>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
+Signed-off-by: Henrik Kretzschmar <henne@nachtwindheim.de>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/sg.c |    2 +-
+ drivers/scsi/megaraid.c |    2 +-
  1 files changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/sg.c~remove-unnecessary-check-in-drivers-scsi-sgc drivers/scsi/sg.c
---- a/drivers/scsi/sg.c~remove-unnecessary-check-in-drivers-scsi-sgc
-+++ a/drivers/scsi/sg.c
-@@ -1837,7 +1837,7 @@ sg_build_indirect(Sg_scatter_hold * schp
- 	int blk_size = buff_size;
- 	struct page *p = NULL;
- 
--	if ((blk_size < 0) || (!sfp))
-+	if (blk_size < 0)
- 		return -EFAULT;
- 	if (0 == blk_size)
- 		++blk_size;	/* don't know why */
+diff -puN drivers/scsi/megaraid.c~pci_module_init-convertion-in-the-legacy-megaraid-driver drivers/scsi/megaraid.c
+--- a/drivers/scsi/megaraid.c~pci_module_init-convertion-in-the-legacy-megaraid-driver
++++ a/drivers/scsi/megaraid.c
+@@ -5077,7 +5077,7 @@ static int __init megaraid_init(void)
+ 				"megaraid: failed to create megaraid root\n");
+ 	}
+ #endif
+-	error = pci_module_init(&megaraid_pci_driver);
++	error = pci_register_driver(&megaraid_pci_driver);
+ 	if (error) {
+ #ifdef CONFIG_PROC_FS
+ 		remove_proc_entry("megaraid", &proc_root);
 _
