@@ -1,52 +1,137 @@
-From: Jon Escombe <lists@dresco.co.uk>
-Subject: Re: [PATCH] scsi_execute_async() should add to the tail of the  queue
-Date: Tue, 19 Dec 2006 18:34:33 +0000
-Message-ID: <458830B9.90107@dresco.co.uk>
-References: <20061219083507.GA20847@localdomain> <1166522613.3365.1198.camel@laptopd505.fenrus.org> <20061219112649.GG5010@kernel.dk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+From: akpm@osdl.org
+Subject: [patch 06/26] drivers/scsi/pcmcia/nsp_cs.h: removal of old scsi code
+Date: Tue, 19 Dec 2006 13:14:41 -0800
+Message-ID: <200612192114.kBJLEgtA010691@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from doppler.zen.co.uk ([212.23.3.27]:39757 "EHLO doppler.zen.co.uk"
+Received: from smtp.osdl.org ([65.172.181.25]:35940 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932901AbWLSTJx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Dec 2006 14:09:53 -0500
-In-Reply-To: <20061219112649.GG5010@kernel.dk>
+	id S932936AbWLSVOr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Dec 2006 16:14:47 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Arjan van de Ven <arjan@fenrus.demon.nl>, Dan Aloni <da-x@monatomic.org>, Linux Kernel List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>, Elias Oltmanns <eo@nebensachen.de>
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, michal.k.k.piotrowski@gmail.com
 
-Jens Axboe wrote:
- > On Tue, Dec 19 2006, Arjan van de Ven wrote:
- >> On Tue, 2006-12-19 at 10:35 +0200, Dan Aloni wrote:
- >>> Hello,
- >>>
- >>> scsi_execute_async() has replaced scsi_do_req() a few versions ago,
- >>> but it also incurred a change of behavior. I noticed that over-queuing
- >>> a SCSI device using that function causes I/Os to be starved from
- >>> low-level queuing for no justified reason.
- >>>
- >>> I think it makes much more sense to perserve the original behaviour
- >>> of scsi_do_req() and add the request to the tail of the queue.
- >> Hi,
- >>
- >> some things should really be added to the head of the queue, like
- >> maintenance requests and error handling requests. Are you sure this is
- >> the right change? At least I'd expect 2 apis, one for a head and one for
- >> a "normal" queueing...
- >
- > It does sounds broken - head insertion should only be used for careful
- > internal commands, not be the default way user issued commands. Looking
- > at the current users, the patch makes sense to me.
- >
+From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
 
-It's worth noting that the hdaps disk protection patches rely on the 
-current behaviour to add 'IDLE IMMEDIATE WITH UNLOAD' commands to the 
-head of the queue.. Another function, or a new parameter for queue 
-position would be needed to retain this functionality - any preference 
-for either?
+Signed-off-by: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Signed-off-by: Andrew Morton <akpm@osdl.org>
+---
 
-Regards,
-Jon.
+ drivers/scsi/pcmcia/nsp_cs.h |   66 ---------------------------------
+ 1 files changed, 66 deletions(-)
 
+diff -puN drivers/scsi/pcmcia/nsp_cs.h~drivers-scsi-pcmcia-nsp_csh-removal-of-old drivers/scsi/pcmcia/nsp_cs.h
+--- a/drivers/scsi/pcmcia/nsp_cs.h~drivers-scsi-pcmcia-nsp_csh-removal-of-old
++++ a/drivers/scsi/pcmcia/nsp_cs.h
+@@ -290,7 +290,6 @@ typedef struct _nsp_hw_data {
+ #endif
+ } nsp_hw_data;
+ 
+-
+ /****************************************************************************
+  *
+  */
+@@ -302,22 +301,13 @@ static int        nsp_cs_config (struct 
+ 
+ /* Linux SCSI subsystem specific functions */
+ static struct Scsi_Host *nsp_detect     (struct scsi_host_template *sht);
+-#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0))
+-static        int        nsp_detect_old (struct scsi_host_template *sht);
+-static        int        nsp_release_old(struct Scsi_Host *shpnt);
+-#endif
+ static const  char      *nsp_info       (struct Scsi_Host *shpnt);
+ static        int        nsp_proc_info  (
+-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73))
+ 	                                 struct Scsi_Host *host,
+-#endif
+ 					 char   *buffer,
+ 					 char  **start,
+ 					 off_t   offset,
+ 					 int     length,
+-#if !(LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73))
+-					 int     hostno,
+-#endif
+ 					 int     inout);
+ static int nsp_queuecommand(struct scsi_cmnd *SCpnt,
+ 			    void (* done)(struct scsi_cmnd *SCpnt));
+@@ -356,7 +346,6 @@ static struct Scsi_Host *nsp_detect(stru
+ static int  __init nsp_cs_init(void);
+ static void __exit nsp_cs_exit(void);
+ 
+-
+ /* Debug */
+ #ifdef NSP_DEBUG
+ static void show_command (struct scsi_cmnd *SCpnt);
+@@ -401,7 +390,6 @@ enum _burst_mode {
+ 	BURST_MEM32 = 2,
+ };
+ 
+-
+ /**************************************************************************
+  * SCSI messaage
+  */
+@@ -413,62 +401,8 @@ enum _burst_mode {
+ 
+ #define MSG_EXT_SDTR         0x01
+ 
+-
+-/**************************************************************************
+- * Compatibility functions
+- */
+-
+-/* for Kernel 2.4 */
+-#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0))
+-#  define scsi_register_host(template)   scsi_register_module(MODULE_SCSI_HA, template)
+-#  define scsi_unregister_host(template) scsi_unregister_module(MODULE_SCSI_HA, template)
+-#  define scsi_host_put(host)            scsi_unregister(host)
+-
+-typedef void irqreturn_t;
+-#  define IRQ_NONE      /* */
+-#  define IRQ_HANDLED   /* */
+-#  define IRQ_RETVAL(x) /* */
+-
+-/* This is ad-hoc version of scsi_host_get_next() */
+-static inline struct Scsi_Host *scsi_host_get_next(struct Scsi_Host *host)
+-{
+-	if (host == NULL) {
+-		return scsi_hostlist;
+-	} else {
+-		return host->next;
+-	}
+-}
+-
+-/* This is ad-hoc version of scsi_host_hn_get() */
+-static inline struct Scsi_Host *scsi_host_hn_get(unsigned short hostno)
+-{
+-	struct Scsi_Host *host;
+-
+-	for (host = scsi_host_get_next(NULL); host != NULL;
+-	     host = scsi_host_get_next(host)) {
+-		if (host->host_no == hostno) {
+-			break;
+-		}
+-	}
+-
+-	return host;
+-}
+-
+-static void cs_error(struct pcmcia_device *handle, int func, int ret)
+-{
+-	error_info_t err = { func, ret };
+-	pcmcia_report_error(handle, &err);
+-}
+-
+-/* scatter-gather table */
+-#  define BUFFER_ADDR (SCpnt->SCp.buffer->address)
+-#endif
+-
+-/* for Kernel 2.6 */
+-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0))
+ /* scatter-gather table */
+ #  define BUFFER_ADDR ((char *)((unsigned int)(SCpnt->SCp.buffer->page) + SCpnt->SCp.buffer->offset))
+-#endif
+ 
+ #endif  /*__nsp_cs__*/
+ /* end */
+_
