@@ -1,57 +1,71 @@
 From: akpm@osdl.org
-Subject: [patch 13/26] MPT fusion: handle PCI layer error on resume
-Date: Tue, 19 Dec 2006 13:14:48 -0800
-Message-ID: <200612192114.kBJLEmHA010712@shell0.pdx.osdl.net>
+Subject: [patch 17/26] drivers/scsi/mca_53c9x.c : save_flags()/cli() removal
+Date: Tue, 19 Dec 2006 13:14:52 -0800
+Message-ID: <200612192114.kBJLEqZo010725@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.25]:36117 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.25]:36094 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932981AbWLSVPJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Dec 2006 16:15:09 -0500
+	id S932984AbWLSVPG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Dec 2006 16:15:06 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, jeff@garzik.org, Eric.Moore@lsil.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, amol@verismonetworks.com, alan@lxorguk.ukuu.org.uk
 
-From: Jeff Garzik <jeff@garzik.org>
+From: Amol Lad <amol@verismonetworks.com>
 
-In the unlikely event of pci_enable_device() failure during resume, we do
-the minimalist solution and simply exit, rather than continuing to enable
-the hardware.
+Replaced save_flags()/cli() with spin_lock alternatives
 
-Signed-off-by: Jeff Garzik <jeff@garzik.org>
-Cc: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+[akpm@osdl.org: no longer BROKEN_ON_SMP]
+Signed-off-by: Amol Lad <amol@verismonetworks.com>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/message/fusion/mptbase.c |   10 ++++++++--
- 1 files changed, 8 insertions(+), 2 deletions(-)
+ drivers/scsi/mca_53c9x.c |   12 ++++--------
+ 1 files changed, 4 insertions(+), 8 deletions(-)
 
-diff -puN drivers/message/fusion/mptbase.c~mpt-fusion-handle-pci-layer-error-on-resume drivers/message/fusion/mptbase.c
---- a/drivers/message/fusion/mptbase.c~mpt-fusion-handle-pci-layer-error-on-resume
-+++ a/drivers/message/fusion/mptbase.c
-@@ -1524,7 +1524,7 @@ mpt_resume(struct pci_dev *pdev)
+diff -puN drivers/scsi/mca_53c9x.c~drivers-scsi-mca_53c9xc-save_flags-cli-removal drivers/scsi/mca_53c9x.c
+--- a/drivers/scsi/mca_53c9x.c~drivers-scsi-mca_53c9xc-save_flags-cli-removal
++++ a/drivers/scsi/mca_53c9x.c
+@@ -341,9 +341,7 @@ static void dma_init_read(struct NCR_ESP
  {
- 	MPT_ADAPTER *ioc = pci_get_drvdata(pdev);
- 	u32 device_state = pdev->current_state;
--	int recovery_state;
-+	int recovery_state, rc;
+ 	unsigned long flags;
  
- 	printk(MYIOC_s_INFO_FMT
- 	"pci-resume: pdev=0x%p, slot=%s, Previous operating state [D%d]\n",
-@@ -1532,7 +1532,13 @@ mpt_resume(struct pci_dev *pdev)
+-
+-	save_flags(flags);
+-	cli();
++	spin_lock_irqsave(esp->ehost->host_lock, flags);
  
- 	pci_set_power_state(pdev, 0);
- 	pci_restore_state(pdev);
--	pci_enable_device(pdev);
-+
-+	rc = pci_enable_device(pdev);
-+	if (rc) {
-+		printk(MYIOC_s_INFO_FMT
-+			"pci-resume: device enable failed\n", ioc->name);
-+		return rc;
-+	}
+ 	mca_disable_dma(esp->dma);
+ 	mca_set_dma_mode(esp->dma, MCA_DMA_MODE_XFER | MCA_DMA_MODE_16 |
+@@ -352,16 +350,14 @@ static void dma_init_read(struct NCR_ESP
+ 	mca_set_dma_count(esp->dma, length / 2); /* !!! */
+ 	mca_enable_dma(esp->dma);
  
- 	/* enable interrupts */
- 	CHIPREG_WRITE32(&ioc->chip->IntMask, MPI_HIM_DIM);
+-	restore_flags(flags);
++	spin_unlock_irqrestore(esp->ehost->host_lock, flags);
+ }
+ 
+ static void dma_init_write(struct NCR_ESP *esp, __u32 addr, int length)
+ {
+ 	unsigned long flags;
+ 
+-
+-	save_flags(flags);
+-	cli();
++	spin_lock_irqsave(esp->ehost->host_lock, flags);
+ 
+ 	mca_disable_dma(esp->dma);
+ 	mca_set_dma_mode(esp->dma, MCA_DMA_MODE_XFER | MCA_DMA_MODE_WRITE |
+@@ -370,7 +366,7 @@ static void dma_init_write(struct NCR_ES
+ 	mca_set_dma_count(esp->dma, length / 2); /* !!! */
+ 	mca_enable_dma(esp->dma);
+ 
+-	restore_flags(flags);
++	spin_unlock_irqrestore(esp->ehost->host_lock, flags);
+ }
+ 
+ static void dma_ints_off(struct NCR_ESP *esp)
 _
