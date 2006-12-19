@@ -1,12 +1,12 @@
 From: akpm@osdl.org
-Subject: [patch 12/26] drivers/scsi/dpt_i2o.c: remove dead code
-Date: Tue, 19 Dec 2006 13:14:47 -0800
-Message-ID: <200612192114.kBJLEloG010709@shell0.pdx.osdl.net>
+Subject: [patch 25/26] drivers/scsi/wd33c93.c: cleanups
+Date: Tue, 19 Dec 2006 13:15:00 -0800
+Message-ID: <200612192115.kBJLF0Oe010767@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.25]:36577 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.25]:36603 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932981AbWLSVSD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Dec 2006 16:18:03 -0500
+	id S932981AbWLSVSP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Dec 2006 16:18:15 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
@@ -14,26 +14,36 @@ Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, bunk@stusta.de
 
 From: Adrian Bunk <bunk@stusta.de>
 
-The Coverity checker spotted this dead code introduced by
-commit a07f353701acae77e023f6270e8af353b37af7c4.
+- #include <asm/irq.h> for getting the prototypes of {dis,en}able_irq()
+
+- make the needlessly global wd33c93_setup() static
 
 Signed-off-by: Adrian Bunk <bunk@stusta.de>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/dpt_i2o.c |    2 --
- 1 files changed, 2 deletions(-)
+ drivers/scsi/wd33c93.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletion(-)
 
-diff -puN drivers/scsi/dpt_i2o.c~drivers-scsi-dpt_i2oc-remove-dead-code drivers/scsi/dpt_i2o.c
---- a/drivers/scsi/dpt_i2o.c~drivers-scsi-dpt_i2oc-remove-dead-code
-+++ a/drivers/scsi/dpt_i2o.c
-@@ -195,8 +195,6 @@ static int adpt_detect(struct scsi_host_
- 			pci_dev_get(pDev);
- 		}
- 	}
--	if (pDev)
--		pci_dev_put(pDev);
+diff -puN drivers/scsi/wd33c93.c~drivers-scsi-wd33c93c-cleanups drivers/scsi/wd33c93.c
+--- a/drivers/scsi/wd33c93.c~drivers-scsi-wd33c93c-cleanups
++++ a/drivers/scsi/wd33c93.c
+@@ -85,6 +85,8 @@
+ #include <scsi/scsi_device.h>
+ #include <scsi/scsi_host.h>
  
- 	/* In INIT state, Activate IOPs */
- 	for (pHba = hba_chain; pHba; pHba = pHba->next) {
++#include <asm/irq.h>
++
+ #include "wd33c93.h"
+ 
+ 
+@@ -1710,7 +1712,7 @@ static char setup_buffer[SETUP_BUFFER_SI
+ static char setup_used[MAX_SETUP_ARGS];
+ static int done_setup = 0;
+ 
+-int
++static int
+ wd33c93_setup(char *str)
+ {
+ 	int i;
 _
