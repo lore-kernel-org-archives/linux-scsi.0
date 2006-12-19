@@ -1,137 +1,42 @@
 From: akpm@osdl.org
-Subject: [patch 06/26] drivers/scsi/pcmcia/nsp_cs.h: removal of old scsi code
-Date: Tue, 19 Dec 2006 13:14:41 -0800
-Message-ID: <200612192114.kBJLEgtA010691@shell0.pdx.osdl.net>
+Subject: [patch 07/26] scsi: remove unnecessary check in drivers/scsi/sg.c
+Date: Tue, 19 Dec 2006 13:14:42 -0800
+Message-ID: <200612192114.kBJLEgIc010694@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.25]:35940 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.25]:35977 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932936AbWLSVOr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Dec 2006 16:14:47 -0500
+	id S932936AbWLSVOw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Dec 2006 16:14:52 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, michal.k.k.piotrowski@gmail.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, snakebyte@gmx.de, dougg@torque.net
 
-From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+From: Eric Sesterhenn <snakebyte@gmx.de>
 
-Signed-off-by: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+coverity spotted this (cid #758).  All callers dereference sfp, so we dont
+need this check.  In addition to this, we dereference it earlier in the
+function.
+
+Signed-off-by: Eric Sesterhenn <snakebyte@gmx.de>
+Cc: Douglas Gilbert <dougg@torque.net>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/pcmcia/nsp_cs.h |   66 ---------------------------------
- 1 files changed, 66 deletions(-)
+ drivers/scsi/sg.c |    2 +-
+ 1 files changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/pcmcia/nsp_cs.h~drivers-scsi-pcmcia-nsp_csh-removal-of-old drivers/scsi/pcmcia/nsp_cs.h
---- a/drivers/scsi/pcmcia/nsp_cs.h~drivers-scsi-pcmcia-nsp_csh-removal-of-old
-+++ a/drivers/scsi/pcmcia/nsp_cs.h
-@@ -290,7 +290,6 @@ typedef struct _nsp_hw_data {
- #endif
- } nsp_hw_data;
+diff -puN drivers/scsi/sg.c~remove-unnecessary-check-in-drivers-scsi-sgc drivers/scsi/sg.c
+--- a/drivers/scsi/sg.c~remove-unnecessary-check-in-drivers-scsi-sgc
++++ a/drivers/scsi/sg.c
+@@ -1837,7 +1837,7 @@ sg_build_indirect(Sg_scatter_hold * schp
+ 	int blk_size = buff_size;
+ 	struct page *p = NULL;
  
--
- /****************************************************************************
-  *
-  */
-@@ -302,22 +301,13 @@ static int        nsp_cs_config (struct 
- 
- /* Linux SCSI subsystem specific functions */
- static struct Scsi_Host *nsp_detect     (struct scsi_host_template *sht);
--#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0))
--static        int        nsp_detect_old (struct scsi_host_template *sht);
--static        int        nsp_release_old(struct Scsi_Host *shpnt);
--#endif
- static const  char      *nsp_info       (struct Scsi_Host *shpnt);
- static        int        nsp_proc_info  (
--#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73))
- 	                                 struct Scsi_Host *host,
--#endif
- 					 char   *buffer,
- 					 char  **start,
- 					 off_t   offset,
- 					 int     length,
--#if !(LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73))
--					 int     hostno,
--#endif
- 					 int     inout);
- static int nsp_queuecommand(struct scsi_cmnd *SCpnt,
- 			    void (* done)(struct scsi_cmnd *SCpnt));
-@@ -356,7 +346,6 @@ static struct Scsi_Host *nsp_detect(stru
- static int  __init nsp_cs_init(void);
- static void __exit nsp_cs_exit(void);
- 
--
- /* Debug */
- #ifdef NSP_DEBUG
- static void show_command (struct scsi_cmnd *SCpnt);
-@@ -401,7 +390,6 @@ enum _burst_mode {
- 	BURST_MEM32 = 2,
- };
- 
--
- /**************************************************************************
-  * SCSI messaage
-  */
-@@ -413,62 +401,8 @@ enum _burst_mode {
- 
- #define MSG_EXT_SDTR         0x01
- 
--
--/**************************************************************************
-- * Compatibility functions
-- */
--
--/* for Kernel 2.4 */
--#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0))
--#  define scsi_register_host(template)   scsi_register_module(MODULE_SCSI_HA, template)
--#  define scsi_unregister_host(template) scsi_unregister_module(MODULE_SCSI_HA, template)
--#  define scsi_host_put(host)            scsi_unregister(host)
--
--typedef void irqreturn_t;
--#  define IRQ_NONE      /* */
--#  define IRQ_HANDLED   /* */
--#  define IRQ_RETVAL(x) /* */
--
--/* This is ad-hoc version of scsi_host_get_next() */
--static inline struct Scsi_Host *scsi_host_get_next(struct Scsi_Host *host)
--{
--	if (host == NULL) {
--		return scsi_hostlist;
--	} else {
--		return host->next;
--	}
--}
--
--/* This is ad-hoc version of scsi_host_hn_get() */
--static inline struct Scsi_Host *scsi_host_hn_get(unsigned short hostno)
--{
--	struct Scsi_Host *host;
--
--	for (host = scsi_host_get_next(NULL); host != NULL;
--	     host = scsi_host_get_next(host)) {
--		if (host->host_no == hostno) {
--			break;
--		}
--	}
--
--	return host;
--}
--
--static void cs_error(struct pcmcia_device *handle, int func, int ret)
--{
--	error_info_t err = { func, ret };
--	pcmcia_report_error(handle, &err);
--}
--
--/* scatter-gather table */
--#  define BUFFER_ADDR (SCpnt->SCp.buffer->address)
--#endif
--
--/* for Kernel 2.6 */
--#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0))
- /* scatter-gather table */
- #  define BUFFER_ADDR ((char *)((unsigned int)(SCpnt->SCp.buffer->page) + SCpnt->SCp.buffer->offset))
--#endif
- 
- #endif  /*__nsp_cs__*/
- /* end */
+-	if ((blk_size < 0) || (!sfp))
++	if (blk_size < 0)
+ 		return -EFAULT;
+ 	if (0 == blk_size)
+ 		++blk_size;	/* don't know why */
 _
