@@ -1,44 +1,65 @@
-From: Dan Aloni <da-x@monatomic.org>
-Subject: [PATCH] scsi_execute_async() should add to the tail of the queue
-Date: Tue, 19 Dec 2006 10:35:07 +0200
-Message-ID: <20061219083507.GA20847@localdomain>
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: [PATCH] scsi: raise error when sg slab/mempool cannot be initialized
+Date: Tue, 19 Dec 2006 17:36:40 +0900
+Message-ID: <20061219083640.GB4025@APFDCB5C>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from noname.neutralserver.com ([70.84.186.210]:53539 "EHLO
-	noname.neutralserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932663AbWLSIfj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Dec 2006 03:35:39 -0500
+Received: from an-out-0708.google.com ([209.85.132.250]:53773 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932671AbWLSIhd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Dec 2006 03:37:33 -0500
+Received: by an-out-0708.google.com with SMTP id b33so496991ana
+        for <linux-scsi@vger.kernel.org>; Tue, 19 Dec 2006 00:37:32 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux Kernel List <linux-kernel@vger.kernel.org>
-Cc: linux-scsi@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>
+To: linux-scsi@vger.kernel.org
+Cc: "James E.J. Bottomley" <James.Bottomley@SteelEye.com>
 
-Hello,
+This patch raises error when sg slab or mempool cannot be initialized.
+It is better than crash after initialization.
 
-scsi_execute_async() has replaced scsi_do_req() a few versions ago, 
-but it also incurred a change of behavior. I noticed that over-queuing 
-a SCSI device using that function causes I/Os to be starved from 
-low-level queuing for no justified reason.
+Cc: "James E.J. Bottomley" <James.Bottomley@SteelEye.com>
+Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+
+---
+ drivers/scsi/scsi_lib.c |   14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+Index: 2.6-mm/drivers/scsi/scsi_lib.c
+===================================================================
+--- 2.6-mm.orig/drivers/scsi/scsi_lib.c
++++ 2.6-mm/drivers/scsi/scsi_lib.c
+@@ -1682,6 +1682,7 @@ int __init scsi_init_queue(void)
+ 		if (!sgp->slab) {
+ 			printk(KERN_ERR "SCSI: can't init sg slab %s\n",
+ 					sgp->name);
++			goto out;
+ 		}
  
-I think it makes much more sense to perserve the original behaviour 
-of scsi_do_req() and add the request to the tail of the queue.
-
-Signed-off-by: Dan Aloni <da-x@monatomic.org>
-
-diff -p -urN a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
---- a/drivers/scsi/scsi_lib.c	2006-12-19 01:48:50.000000000 +0200
-+++ b/drivers/scsi/scsi_lib.c	2006-12-19 01:49:35.000000000 +0200
-@@ -421,7 +421,7 @@ int scsi_execute_async(struct scsi_devic
- 	sioc->data = privdata;
- 	sioc->done = done;
+ 		sgp->pool = mempool_create_slab_pool(SG_MEMPOOL_SIZE,
+@@ -1689,10 +1690,23 @@ int __init scsi_init_queue(void)
+ 		if (!sgp->pool) {
+ 			printk(KERN_ERR "SCSI: can't init sg mempool %s\n",
+ 					sgp->name);
++			goto out;
+ 		}
+ 	}
  
--	blk_execute_rq_nowait(req->q, NULL, req, 1, scsi_end_async);
-+	blk_execute_rq_nowait(req->q, NULL, req, 0, scsi_end_async);
  	return 0;
++out:
++	for (i = 0; i < SG_MEMPOOL_NR; i++) {
++		struct scsi_host_sg_pool *sgp = scsi_sg_pools + i;
++		if (sgp->pool)
++			mempool_destroy(sgp->pool);
++		if (sgp->slab)
++			kmem_cache_destroy(sgp->slab);
++	}
++
++	kmem_cache_destroy(scsi_io_context_cache);
++
++	return -ENOMEM;
+ }
  
- free_req:
-
-
- - Dan
+ void scsi_exit_queue(void)
