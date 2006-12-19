@@ -1,34 +1,50 @@
-From: Krzysztof Halasa <khc@pm.waw.pl>
-Subject: Re: [2.6 patch] remove the broken SCSI_SEAGATE driver
-Date: Mon, 18 Dec 2006 14:48:25 +0100
-Message-ID: <m3ac1l2u3a.fsf@defiant.localdomain>
-References: <20061212162238.GR28443@stusta.de>
-	<1165966274.5903.56.camel@mulgrave.il.steeleye.com>
-	<20061213000902.GD28443@stusta.de>
-	<m3wt4tp9ka.fsf@defiant.localdomain>
-	<1166198454.2846.10.camel@mulgrave.il.steeleye.com>
-	<m3ac1mb88s.fsf@defiant.localdomain>
-	<1166386966.9647.20.camel@mulgrave.il.steeleye.com>
-	<m3tzzu9q7k.fsf@defiant.localdomain>
-	<1166431702.3365.934.camel@laptopd505.fenrus.org>
+From: Al Viro <viro@ftp.linux.org.uk>
+Subject: Re: [RFC PATCH] m68k: switch to 53c700 driver
+Date: Tue, 19 Dec 2006 03:09:19 +0000
+Message-ID: <20061219030919.GG17561@ftp.linux.org.uk>
+References: <20051115101709.GK7031@2004.bluespice.org> <20051115103034.GA24352@infradead.org> <20051115113225.GS5252@levanta.com> <20060707124444.GA11199@infradead.org> <20060709111648.GR15414@levanta.com> <1152444304.5567.2.camel@kars.perseus.home> <20061030111311.GA756@infradead.org> <1162331224.7805.18.camel@kars.perseus.home> <1166394517.9647.22.camel@mulgrave.il.steeleye.com> <Pine.LNX.4.62.0612181032080.24587@pademelon.sonytel.be>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754021AbWLRNs3@vger.kernel.org>
-In-Reply-To: <1166431702.3365.934.camel@laptopd505.fenrus.org> (Arjan van de Ven's message of "Mon, 18 Dec 2006 09:47:02 +0100")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from zeniv.linux.org.uk ([195.92.253.2]:59411 "EHLO
+	ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752314AbWLSDm1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Dec 2006 22:42:27 -0500
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.62.0612181032080.24587@pademelon.sonytel.be>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Kars de Jong <jongk@linux-m68k.org>, Christoph Hellwig <hch@infradead.org>, Richard Hirst <rhirst@levanta.com>, Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org
 
-Arjan van de Ven <arjan@infradead.org> writes:
+On Mon, Dec 18, 2006 at 10:34:21AM +0100, Geert Uytterhoeven wrote:
+> On Sun, 17 Dec 2006, James Bottomley wrote:
+> > On Tue, 2006-10-31 at 22:47 +0100, Kars de Jong wrote:
+> > > On ma, 2006-10-30 at 11:13 +0000, Christoph Hellwig wrote:
+> > > > Any updates?  Honestly, I do not plan to touch the current 53c7xx/etc
+> > > > mess in the upoming request_buffer transition, and unless the m68k
+> > > > folks provide the new 53c700-based driver I'll just submit a patch to
+> > > > rip 53c7xx and users out without replacement.
+> > > 
+> > > OK, here's the patch, without the m68k generic iomap changes.
+> > 
+> > Could you regenerate this against the current git-head?  I've tried
+> > several merge points and I still can't get it to apply ... I suspect it
+> > had additional m68k fixes in the original file.
+> 
+> Yes, it was against the m68k tree.
+> 
+> If Kars doesn't respond, you can try
+> 
+> m68k-generic-io.diff
 
-> if a tree falls in a forest but there's nobody around to hear it, does
-> it make a sound?
->
-> This sort of heisenbug questions aren't solved by "nobody hears it so
-> lets chop down the forest to make houses out of the wood" answers...
+Hmm...  That breaks when you have ISA && !PCI (e.g. amiga or q40 defconfig):
 
-Does that mean you don't want to know which hardware/drivers aren't used
-anymore and which ones are?
--- 
-Krzysztof Halasa
+lib/built-in.o: In function `ioread32_rep':
+(.text+0xc31a): undefined reference to `insl'
+lib/built-in.o: In function `iowrite32_rep':
+(.text+0xc43e): undefined reference to `outsl'
+lib/built-in.o: In function `ioread32':
+(.text+0xc7da): undefined reference to `readl'
+lib/built-in.o: In function `iowrite32':
+(.text+0xca6a): undefined reference to `writel'
