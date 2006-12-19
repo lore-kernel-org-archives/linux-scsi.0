@@ -1,73 +1,43 @@
 From: akpm@osdl.org
-Subject: [patch 03/26] scsi: clean up warnings in Advansys driver
-Date: Tue, 19 Dec 2006 13:14:38 -0800
-Message-ID: <200612192114.kBJLEccu010682@shell0.pdx.osdl.net>
+Subject: [patch 09/26] Fix scsi/scsi_transport.h compile error
+Date: Tue, 19 Dec 2006 13:14:44 -0800
+Message-ID: <200612192114.kBJLEjN6010700@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.25]:35997 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.25]:36018 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932942AbWLSVOy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Dec 2006 16:14:54 -0500
+	id S932975AbWLSVO4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Dec 2006 16:14:56 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, ken@krwtech.com, jeffreyfreeman@syncleus.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, eike-kernel@sf-tec.de
 
-From: Ken Witherow <ken@krwtech.com>
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
 
-Fix typecast warnings and switch from check_region to request_region
+scsi_transport.h defines the inline function scsi_transport_device_data() that
+dereferences a pointer of "struct scsi_device *".  Since the struct is not
+known by the header this might break compilation.
 
-(akpm: Ken and Jeffrey Phillips Freeman <jeffreyfreeman@syncleus.com> are
-possible advansys testers)
+Include scsi/scsi_device.h to not rely on users doing the correct magic
+include order.
 
-Signed-off-by: Ken Witherow <ken@krwtech.com>
+Signed-off-by: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/advansys.c |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
+ include/scsi/scsi_transport.h |    1 +
+ 1 files changed, 1 insertion(+)
 
-diff -puN drivers/scsi/advansys.c~scsi-clean-up-warnings-in-advansys-driver drivers/scsi/advansys.c
---- a/drivers/scsi/advansys.c~scsi-clean-up-warnings-in-advansys-driver
-+++ a/drivers/scsi/advansys.c
-@@ -4403,7 +4403,7 @@ advansys_detect(struct scsi_host_templat
-                         ASC_DBG1(1,
-                                 "advansys_detect: probing I/O port 0x%x...\n",
-                             iop);
--                        if (check_region(iop, ASC_IOADR_GAP) != 0) {
-+			if (!request_region(iop, ASC_IOADR_GAP, "advansys")){
-                             printk(
- "AdvanSys SCSI: specified I/O Port 0x%X is busy\n", iop);
-                             /* Don't try this I/O port twice. */
-@@ -4413,6 +4413,7 @@ advansys_detect(struct scsi_host_templat
-                             printk(
- "AdvanSys SCSI: specified I/O Port 0x%X has no adapter\n", iop);
-                             /* Don't try this I/O port twice. */
-+			    release_region(iop, ASC_IOADR_GAP);
-                             asc_ioport[ioport] = 0;
-                             goto ioport_try_again;
-                         } else {
-@@ -4431,6 +4432,7 @@ advansys_detect(struct scsi_host_templat
-                                   * 'ioport' past this board.
-                                   */
-                                  ioport++;
-+				 release_region(iop, ASC_IOADR_GAP);
-                                  goto ioport_try_again;
-                             }
-                         }
-@@ -9740,13 +9742,14 @@ AscSearchIOPortAddr11(
-     }
-     for (; i < ASC_IOADR_TABLE_MAX_IX; i++) {
-         iop_base = _asc_def_iop_base[i];
--        if (check_region(iop_base, ASC_IOADR_GAP) != 0) {
-+	if (!request_region(iop_base, ASC_IOADR_GAP, "advansys")){
-             ASC_DBG1(1,
-                "AscSearchIOPortAddr11: check_region() failed I/O port 0x%x\n",
-                      iop_base);
-             continue;
-         }
-         ASC_DBG1(1, "AscSearchIOPortAddr11: probing I/O port 0x%x\n", iop_base);
-+	release_region(iop_base, ASC_IOADR_GAP);
-         if (AscFindSignature(iop_base)) {
-             return (iop_base);
-         }
+diff -puN include/scsi/scsi_transport.h~fix-scsi-scsi_transporth-compile-error include/scsi/scsi_transport.h
+--- a/include/scsi/scsi_transport.h~fix-scsi-scsi_transporth-compile-error
++++ a/include/scsi/scsi_transport.h
+@@ -22,6 +22,7 @@
+ 
+ #include <linux/transport_class.h>
+ #include <scsi/scsi_host.h>
++#include <scsi/scsi_device.h>
+ 
+ struct scsi_transport_template {
+ 	/* the attribute containers */
 _
