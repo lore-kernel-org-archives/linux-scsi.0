@@ -1,65 +1,32 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: [PATCH 1/1]  fusion: fibre channel: return DID_ERROR for MPI_IOCSTATUS_SCSI_IOC_TERMINATED
-Date: Wed, 20 Dec 2006 17:11:19 -0600
-Message-ID: <4589C317.60709@sgi.com>
+From: Jeremy Linton <jli@greshamstorage.com>
+Subject: Re: [PATCH] scsi_execute_async() should add to the tail of the queue
+Date: Wed, 20 Dec 2006 17:50:51 -0600
+Message-ID: <4589CC5B.9090704@greshamstorage.com>
+References: <20061219083507.GA20847@localdomain> <1166522613.3365.1198.camel@laptopd505.fenrus.org> <4587C04E.10307@monatomic.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------030100080004020407090000"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:40283 "EHLO omx2.sgi.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1161008AbWLTXLY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Dec 2006 18:11:24 -0500
+Received: from austin.greshamstorage.com ([216.143.252.250]:2555 "EHLO
+	austin.greshamstorage.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161050AbWLUAGU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Dec 2006 19:06:20 -0500
+In-Reply-To: <4587C04E.10307@monatomic.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: "Moore, Eric Dean" <Eric.Moore@lsil.com>, Jeremy Higdon <jeremy@sgi.com>
+To: Dan Aloni <da-x@monatomic.org>
+Cc: Arjan van de Ven <arjan@fenrus.demon.nl>, Linux Kernel List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>
 
-This is a multi-part message in MIME format.
---------------030100080004020407090000
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+> So instead of adding a parameter, we can make scsi_execute_async()
+> decide for itself based on the SCSI command, with read/write I/Os
+> taking the lowest priority.
+	This seems like a bad idea, I can come up with a number of cases where 
+the priority of a request would better be optimized by a higher level 
+subsystem, rather than a simple prioritization based on the command type.
 
-The fibre channel IOC may kill a request for a variety of
-reasons, some of which may be recovered by a retry, some of
-which are unlikely to be recovered.  Return DID_ERROR
-instead of DID_RESET to permit retry of the command,
-just not an infinite number of them.
+The original suggestion to provide both head and tail insertion options 
+seems like the obvious solution, short of a full priority queuing system.
 
-Signed-off-by: Michael Reed <mdr@sgi.com>
 
---------------030100080004020407090000
-Content-Type: text/x-patch;
- name="mptscsih.c.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="mptscsih.c.patch"
 
-The fibre channel IOC may kill a request for a variety of
-reasons, some of which may be recovered by a retry, some of
-which are unlikely to be recovered.  Return DID_ERROR
-instead of DID_RESET to permit retry of the command,
-just not an infinite number of them.
 
-Signed-off-by: Michael Reed <mdr@sgi.com>
-
---- kdbu/drivers/message/fusion/mptscsih.c	2006-08-04 02:10:22.000000000 -0500
-+++ kdb/drivers/message/fusion/mptscsih.c	2006-12-16 12:54:13.952128107 -0600
-@@ -702,9 +702,14 @@ mptscsih_io_done(MPT_ADAPTER *ioc, MPT_F
- 					}
- 				}
- 			}
-+			else if (ioc->bus_type == FC) {
-+				/* i/o killed by IOC */
-+				sc->result = DID_ERROR << 16;
-+				break;
-+			}
- 
- 			/*
--			 * Allow non-SAS & non-NEXUS_LOSS to drop into below code
-+			 * Allow non-FC, non-SAS & non-NEXUS_LOSS to drop into below code
- 			 */
- 
- 		case MPI_IOCSTATUS_SCSI_TASK_TERMINATED:	/* 0x0048 */
-
---------------030100080004020407090000--
