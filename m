@@ -1,60 +1,68 @@
 From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 5/6] bsg: replace SG v3 with SG v4
-Date: Wed, 20 Dec 2006 11:15:18 +0100
-Message-ID: <20061220101518.GM5010@kernel.dk>
-References: <20061220144311D.fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 6/6] bsg: add SG_IO to SG v4
+Date: Wed, 20 Dec 2006 11:16:14 +0100
+Message-ID: <20061220101614.GN5010@kernel.dk>
+References: <20061220144313T.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([62.242.22.158]:5654 "EHLO kernel.dk"
+Received: from brick.kernel.dk ([62.242.22.158]:5667 "EHLO kernel.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753022AbWLTKNc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Dec 2006 05:13:32 -0500
+	id S1753539AbWLTKO2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Dec 2006 05:14:28 -0500
 Content-Disposition: inline
-In-Reply-To: <20061220144311D.fujita.tomonori@lab.ntt.co.jp>
+In-Reply-To: <20061220144313T.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: FUJITA Tomonori <tomof@acm.org>
 Cc: linux-scsi@vger.kernel.org, dougg@torque.net
 
 On Wed, Dec 20 2006, FUJITA Tomonori wrote:
-> This patch replaces SG v3 in bsg with SG v4 (except for SG_IO).
+> This adds SG_IO support to SG v4.
 > 
 > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 > ---
->  block/bsg.c |  198 ++++++++++++++++++++++++++++++++++++-----------------------
->  1 files changed, 121 insertions(+), 77 deletions(-)
+>  block/bsg.c |   23 +++++++++++++++++++++--
+>  1 files changed, 21 insertions(+), 2 deletions(-)
 > 
 > diff --git a/block/bsg.c b/block/bsg.c
-> index 53a09a5..6d139d2 100644
+> index 6d139d2..9dc5d36 100644
 > --- a/block/bsg.c
 > +++ b/block/bsg.c
-> @@ -103,8 +103,8 @@ struct bsg_command {
->  	struct request *rq;
->  	struct bio *bio;
->  	int err;
-> -	struct sg_io_hdr hdr;
-> -	struct sg_io_hdr __user *uhdr;
-> +	struct sg_io_v4 hdr;
-> +	struct sg_io_v4 __user *uhdr;
->  	char sense[SCSI_SENSE_BUFFERSIZE];
->  };
->  
-> @@ -235,57 +235,82 @@ static struct bsg_command *bsg_get_comma
->  	return bc;
->  }
->  
-> +static int blk_fill_sgv4_hdr_rq(request_queue_t *q, struct request *rq,
-> +				struct sg_io_v4 *hdr, int has_write_perm)
-> +{
-> +	memset(rq->cmd, 0, BLK_MAX_CDB); /* ATAPI hates garbage after CDB */
+> @@ -945,8 +945,27 @@ bsg_ioctl(struct inode *inode, struct fi
+>  		void __user *uarg = (void __user *) arg;
+>  		return scsi_cmd_ioctl(file, bd->disk, cmd, uarg);
+>  	}
+> -	case SG_IO:
+> -		return -EINVAL;
+> +	case SG_IO: {
+> +		struct request *rq;
+> +		struct bio *bio;
+> +		struct sg_io_v4 hdr;
 > +
-> +	if (copy_from_user(rq->cmd, (void *)(unsigned long)hdr->request,
-> +			   hdr->request_len))
-> +		return -EFAULT;
+> +		if (copy_from_user(&hdr, uarg, sizeof(hdr)))
+> +			return -EFAULT;
+> +
+> +		rq = bsg_map_hdr(bd, &hdr);
+> +		if (IS_ERR(rq))
+> +			return PTR_ERR(rq);
+> +
+> +		bio = rq->bio;
 
-Strange casting, that should be cleaned up. Also reminds me that the
-sg_io_v4 header needs proper __user annotation.
+Pointless assignment. In fact the bio can be completely removed.
+
+> +		blk_execute_rq(bd->queue, bd->disk, rq, 0);
+> +		blk_complete_sgv4_hdr_rq(rq, &hdr, bio);
+> +
+> +		if (copy_to_user(uarg, &hdr, sizeof(hdr)))
+> +			return -EFAULT;
+> +		else
+> +			return 0;
+
+Kill the else.
+
+I'll make both changes. Applying your series as-is, and making the
+changes I noted in the previous mails.
 
 -- 
 Jens Axboe
