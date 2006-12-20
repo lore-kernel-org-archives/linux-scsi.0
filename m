@@ -1,853 +1,614 @@
 From: "Maciej W. Rozycki" <macro@linux-mips.org>
-Subject: [PATCH 2.6.20-rc1 01/10] TURBOchannel update to the driver model
-Date: Wed, 20 Dec 2006 12:01:30 +0000 (GMT)
-Message-ID: <Pine.LNX.4.64N.0612201139080.11005@blysk.ds.pg.gda.pl>
+Subject: [PATCH 2.6.20-rc1 10/10] dec_esp: Driver model for the PMAZ-A
+Date: Wed, 20 Dec 2006 12:02:27 +0000 (GMT)
+Message-ID: <Pine.LNX.4.64N.0612201123520.11005@blysk.ds.pg.gda.pl>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-mips-bounce@linux-mips.org>
-Sender: linux-mips-bounce@linux-mips.org
-Errors-to: linux-mips-bounce@linux-mips.org
-To: Andrew Morton <akpm@osdl.org>, Ralf Baechle <ralf@linux-mips.org>, Jeff Garzik <jgarzik@pobox.com>, Antonino Daplas <adaplas@pol.net>, James.Bottomley@SteelEye.com
-Cc: linux-mips@linux-mips.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, linux-fbdev-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964986AbWLTMDB@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>, James.Bottomley@SteelEye.com
+Cc: linux-mips@linux-mips.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
- This is a set of changes to convert support for the TURBOchannel bus to 
-the driver model.  It implements the usual set of calls similar to what 
-other bus drivers have: tc_register_driver(), tc_unregister_driver(), etc.  
-All the platform-specific bits have been removed and headers from 
-asm-mips/dec/ have been merged into linux/tc.h, which should be included 
-by drivers.
+ This is a set of changes that converts the PMAZ-A support to the driver
+model.
 
 Signed-off-by: Maciej W. Rozycki <macro@linux-mips.org>
 ---
+
+ The use of the driver model required switching to the hotplug SCSI 
+initialization model, which in turn required a change to the core NCR53C9x 
+driver.  I decided not to break all the frontend drivers and introduced an 
+additional parameter for esp_allocate() to select between the old and the 
+new model.  I hope this is OK, but I would be fine with converting 
+NCR53C9x to the new model unconditionally as long as I do not have to fix 
+all the other frontends (OK, perhaps I could do some of them ;-) ).
 
  Please apply.
 
   Maciej
 
-patch-mips-2.6.18-20060920-tc-sysfs-78
-diff -up --recursive --new-file linux-mips-2.6.18-20060920.macro/MAINTAINERS linux-mips-2.6.18-20060920/MAINTAINERS
---- linux-mips-2.6.18-20060920.macro/MAINTAINERS	2006-09-20 04:56:08.000000000 +0000
-+++ linux-mips-2.6.18-20060920/MAINTAINERS	2006-11-30 01:54:54.000000000 +0000
-@@ -2910,6 +2910,11 @@ L:	vtun@office.satix.net
- W:	http://vtun.sourceforge.net/tun
- S:	Maintained
- 
-+TURBOCHANNEL SUBSYSTEM
-+P:	Maciej W. Rozycki
-+M:	macro@linux-mips.org
-+S:	Maintained
-+
- U14-34F SCSI DRIVER
- P:	Dario Ballabio
- M:	ballabio_dario@emc.com
-diff -up --recursive --new-file linux-mips-2.6.18-20060920.macro/drivers/tc/Makefile linux-mips-2.6.18-20060920/drivers/tc/Makefile
---- linux-mips-2.6.18-20060920.macro/drivers/tc/Makefile	2003-06-05 04:03:00.000000000 +0000
-+++ linux-mips-2.6.18-20060920/drivers/tc/Makefile	2006-10-03 21:01:58.000000000 +0000
-@@ -4,7 +4,7 @@
- 
- # Object file lists.
- 
--obj-$(CONFIG_TC) += tc.o
-+obj-$(CONFIG_TC) += tc.o tc-driver.o
- obj-$(CONFIG_ZS) += zs.o
- obj-$(CONFIG_VT) += lk201.o lk201-map.o lk201-remap.o
- 
-diff -up --recursive --new-file linux-mips-2.6.18-20060920.macro/drivers/tc/tc-driver.c linux-mips-2.6.18-20060920/drivers/tc/tc-driver.c
---- linux-mips-2.6.18-20060920.macro/drivers/tc/tc-driver.c	1970-01-01 00:00:00.000000000 +0000
-+++ linux-mips-2.6.18-20060920/drivers/tc/tc-driver.c	2006-12-19 22:29:49.000000000 +0000
-@@ -0,0 +1,110 @@
-+/*
-+ *	TURBOchannel driver services.
-+ *
-+ *	Copyright (c) 2005  James Simmons
-+ *	Copyright (c) 2006  Maciej W. Rozycki
-+ *
-+ *	Loosely based on drivers/dio/dio-driver.c and
-+ *	drivers/pci/pci-driver.c.
-+ *
-+ *	This file is subject to the terms and conditions of the GNU
-+ *	General Public License.  See the file "COPYING" in the main
-+ *	directory of this archive for more details.
-+ */
-+
-+#include <linux/init.h>
-+#include <linux/module.h>
-+#include <linux/tc.h>
-+
-+/**
-+ * tc_register_driver - register a new TC driver
-+ * @drv: the driver structure to register
-+ *
-+ * Adds the driver structure to the list of registered drivers
-+ * Returns a negative value on error, otherwise 0.
-+ * If no error occurred, the driver remains registered even if
-+ * no device was claimed during registration.
-+ */
-+int tc_register_driver(struct tc_driver *tdrv)
-+{
-+	return driver_register(&tdrv->driver);
-+}
-+EXPORT_SYMBOL(tc_register_driver);
-+
-+/**
-+ * tc_unregister_driver - unregister a TC driver
-+ * @drv: the driver structure to unregister
-+ *
-+ * Deletes the driver structure from the list of registered TC drivers,
-+ * gives it a chance to clean up by calling its remove() function for
-+ * each device it was responsible for, and marks those devices as
-+ * driverless.
-+ */
-+void tc_unregister_driver(struct tc_driver *tdrv)
-+{
-+	driver_unregister(&tdrv->driver);
-+}
-+EXPORT_SYMBOL(tc_unregister_driver);
-+
-+/**
-+ * tc_match_device - tell if a TC device structure has a matching
-+ *                   TC device ID structure
-+ * @tdrv: the TC driver to earch for matching TC device ID strings
-+ * @tdev: the TC device structure to match against
-+ *
-+ * Used by a driver to check whether a TC device present in the
-+ * system is in its list of supported devices.  Returns the matching
-+ * tc_device_id structure or %NULL if there is no match.
-+ */
-+const struct tc_device_id *tc_match_device(struct tc_driver *tdrv,
-+					   struct tc_dev *tdev)
-+{
-+	const struct tc_device_id *id = tdrv->id_table;
-+
-+	if (id) {
-+		while (id->name[0] || id->vendor[0]) {
-+			if (strcmp(tdev->name, id->name) == 0 &&
-+			    strcmp(tdev->vendor, id->vendor) == 0)
-+				return id;
-+			id++;
-+		}
-+	}
-+	return NULL;
-+}
-+EXPORT_SYMBOL(tc_match_device);
-+
-+/**
-+ * tc_bus_match - Tell if a device structure has a matching
-+ *                TC device ID structure
-+ * @dev: the device structure to match against
-+ * @drv: the device driver to search for matching TC device ID strings
-+ *
-+ * Used by a driver to check whether a TC device present in the
-+ * system is in its list of supported devices.  Returns 1 if there
-+ * is a match or 0 otherwise.
-+ */
-+static int tc_bus_match(struct device *dev, struct device_driver *drv)
-+{
-+	struct tc_dev *tdev = to_tc_dev(dev);
-+	struct tc_driver *tdrv = to_tc_driver(drv);
-+	const struct tc_device_id *id;
-+
-+	id = tc_match_device(tdrv, tdev);
-+	if (id)
-+		return 1;
-+
-+	return 0;
-+}
-+
-+struct bus_type tc_bus_type = {
-+	.name	= "tc",
-+	.match	= tc_bus_match,
-+};
-+EXPORT_SYMBOL(tc_bus_type);
-+
-+static int __init tc_driver_init(void)
-+{
-+	return bus_register(&tc_bus_type);
-+}
-+
-+postcore_initcall(tc_driver_init);
-diff -up --recursive --new-file linux-mips-2.6.18-20060920.macro/drivers/tc/tc.c linux-mips-2.6.18-20060920/drivers/tc/tc.c
---- linux-mips-2.6.18-20060920.macro/drivers/tc/tc.c	2006-05-30 17:03:11.000000000 +0000
-+++ linux-mips-2.6.18-20060920/drivers/tc/tc.c	2006-12-19 23:03:11.000000000 +0000
-@@ -1,254 +1,193 @@
- /*
-- * tc-init: We assume the TURBOchannel to be up and running so
-- * just probe for Modules and fill in the global data structure
-- * tc_bus.
-+ *	TURBOchannel bus services.
-  *
-- * This file is subject to the terms and conditions of the GNU General Public
-- * License.  See the file "COPYING" in the main directory of this archive
-- * for more details.
-+ *	Copyright (c) Harald Koerfgen, 1998
-+ *	Copyright (c) 2001, 2003, 2005, 2006  Maciej W. Rozycki
-+ *	Copyright (c) 2005  James Simmons 
-  *
-- * Copyright (c) Harald Koerfgen, 1998
-- * Copyright (c) 2001, 2003, 2005  Maciej W. Rozycki
-+ *	This file is subject to the terms and conditions of the GNU
-+ *	General Public License.  See the file "COPYING" in the main
-+ *	directory of this archive for more details.
+patch-2.6.20-rc1-tc-pmaz-a-5
+diff -up --recursive --new-file linux-2.6.20-rc1.macro/drivers/scsi/NCR53C9x.c linux-2.6.20-rc1/drivers/scsi/NCR53C9x.c
+--- linux-2.6.20-rc1.macro/drivers/scsi/NCR53C9x.c	2006-12-14 01:14:23.000000000 +0000
++++ linux-2.6.20-rc1/drivers/scsi/NCR53C9x.c	2006-12-18 21:29:38.000000000 +0000
+@@ -528,12 +528,16 @@ void esp_bootup_reset(struct NCR_ESP *es
+ /* Allocate structure and insert basic data such as SCSI chip frequency
+  * data and a pointer to the device
   */
-+#include <linux/compiler.h>
-+#include <linux/errno.h>
- #include <linux/init.h>
-+#include <linux/ioport.h>
+-struct NCR_ESP* esp_allocate(struct scsi_host_template *tpnt, void *esp_dev)
++struct NCR_ESP* esp_allocate(struct scsi_host_template *tpnt, void *esp_dev,
++			     int hotplug)
+ {
+ 	struct NCR_ESP *esp, *elink;
+ 	struct Scsi_Host *esp_host;
+ 
+-	esp_host = scsi_register(tpnt, sizeof(struct NCR_ESP));
++	if (hotplug)
++		esp_host = scsi_host_alloc(tpnt, sizeof(struct NCR_ESP));
++	else
++		esp_host = scsi_register(tpnt, sizeof(struct NCR_ESP));
+ 	if(!esp_host)
+ 		panic("Cannot register ESP SCSI host");
+ 	esp = (struct NCR_ESP *) esp_host->hostdata;
+diff -up --recursive --new-file linux-2.6.20-rc1.macro/drivers/scsi/NCR53C9x.h linux-2.6.20-rc1/drivers/scsi/NCR53C9x.h
+--- linux-2.6.20-rc1.macro/drivers/scsi/NCR53C9x.h	2006-12-14 01:14:23.000000000 +0000
++++ linux-2.6.20-rc1/drivers/scsi/NCR53C9x.h	2006-12-18 21:29:38.000000000 +0000
+@@ -652,7 +652,7 @@ extern int nesps, esps_in_use, esps_runn
+ 
+ /* External functions */
+ extern void esp_bootup_reset(struct NCR_ESP *esp, struct ESP_regs *eregs);
+-extern struct NCR_ESP *esp_allocate(struct scsi_host_template *, void *);
++extern struct NCR_ESP *esp_allocate(struct scsi_host_template *, void *, int);
+ extern void esp_deallocate(struct NCR_ESP *);
+ extern void esp_release(void);
+ extern void esp_initialize(struct NCR_ESP *);
+diff -up --recursive --new-file linux-2.6.20-rc1.macro/drivers/scsi/blz1230.c linux-2.6.20-rc1/drivers/scsi/blz1230.c
+--- linux-2.6.20-rc1.macro/drivers/scsi/blz1230.c	2006-12-14 01:14:23.000000000 +0000
++++ linux-2.6.20-rc1/drivers/scsi/blz1230.c	2006-12-18 21:29:38.000000000 +0000
+@@ -121,7 +121,8 @@ int __init blz1230_esp_detect(struct scs
+ 		 */
+ 		address = ZTWO_VADDR(board);
+ 		eregs = (struct ESP_regs *)(address + REAL_BLZ1230_ESP_ADDR);
+-		esp = esp_allocate(tpnt, (void *)board+REAL_BLZ1230_ESP_ADDR);
++		esp = esp_allocate(tpnt, (void *)board + REAL_BLZ1230_ESP_ADDR,
++				   0);
+ 
+ 		esp_write(eregs->esp_cfg1, (ESP_CONFIG1_PENABLE | 7));
+ 		udelay(5);
+diff -up --recursive --new-file linux-2.6.20-rc1.macro/drivers/scsi/blz2060.c linux-2.6.20-rc1/drivers/scsi/blz2060.c
+--- linux-2.6.20-rc1.macro/drivers/scsi/blz2060.c	2006-12-14 01:14:23.000000000 +0000
++++ linux-2.6.20-rc1/drivers/scsi/blz2060.c	2006-12-18 21:29:38.000000000 +0000
+@@ -100,7 +100,7 @@ int __init blz2060_esp_detect(struct scs
+ 	    unsigned long board = z->resource.start;
+ 	    if (request_mem_region(board+BLZ2060_ESP_ADDR,
+ 				   sizeof(struct ESP_regs), "NCR53C9x")) {
+-		esp = esp_allocate(tpnt, (void *)board+BLZ2060_ESP_ADDR);
++		esp = esp_allocate(tpnt, (void *)board + BLZ2060_ESP_ADDR, 0);
+ 
+ 		/* Do command transfer with programmed I/O */
+ 		esp->do_pio_cmds = 1;
+diff -up --recursive --new-file linux-2.6.20-rc1.macro/drivers/scsi/cyberstorm.c linux-2.6.20-rc1/drivers/scsi/cyberstorm.c
+--- linux-2.6.20-rc1.macro/drivers/scsi/cyberstorm.c	2006-12-14 01:14:23.000000000 +0000
++++ linux-2.6.20-rc1/drivers/scsi/cyberstorm.c	2006-12-18 21:29:38.000000000 +0000
+@@ -126,7 +126,7 @@ int __init cyber_esp_detect(struct scsi_
+ 					   sizeof(struct ESP_regs));
+ 			return 0;
+ 		}
+-		esp = esp_allocate(tpnt, (void *)board+CYBER_ESP_ADDR);
++		esp = esp_allocate(tpnt, (void *)board + CYBER_ESP_ADDR, 0);
+ 
+ 		/* Do command transfer with programmed I/O */
+ 		esp->do_pio_cmds = 1;
+diff -up --recursive --new-file linux-2.6.20-rc1.macro/drivers/scsi/cyberstormII.c linux-2.6.20-rc1/drivers/scsi/cyberstormII.c
+--- linux-2.6.20-rc1.macro/drivers/scsi/cyberstormII.c	2006-12-14 01:14:23.000000000 +0000
++++ linux-2.6.20-rc1/drivers/scsi/cyberstormII.c	2006-12-18 21:29:38.000000000 +0000
+@@ -98,7 +98,7 @@ int __init cyberII_esp_detect(struct scs
+ 		address = (unsigned long)ZTWO_VADDR(board);
+ 		eregs = (struct ESP_regs *)(address + CYBERII_ESP_ADDR);
+ 
+-		esp = esp_allocate(tpnt, (void *)board+CYBERII_ESP_ADDR);
++		esp = esp_allocate(tpnt, (void *)board + CYBERII_ESP_ADDR, 0);
+ 
+ 		esp_write(eregs->esp_cfg1, (ESP_CONFIG1_PENABLE | 7));
+ 		udelay(5);
+diff -up --recursive --new-file linux-2.6.20-rc1.macro/drivers/scsi/dec_esp.c linux-2.6.20-rc1/drivers/scsi/dec_esp.c
+--- linux-2.6.20-rc1.macro/drivers/scsi/dec_esp.c	2006-12-14 01:14:23.000000000 +0000
++++ linux-2.6.20-rc1/drivers/scsi/dec_esp.c	2006-12-18 21:29:38.000000000 +0000
+@@ -18,7 +18,7 @@
+  * 20001005	- Initialization fixes for 2.4.0-test9
+  * 			  Florian Lohoff <flo@rfc822.org>
+  *
+- *	Copyright (C) 2002, 2003, 2005  Maciej W. Rozycki
++ *	Copyright (C) 2002, 2003, 2005, 2006  Maciej W. Rozycki
+  */
+ 
  #include <linux/kernel.h>
-+#include <linux/list.h>
- #include <linux/module.h>
- #include <linux/string.h>
+@@ -30,6 +30,7 @@
+ #include <linux/proc_fs.h>
+ #include <linux/spinlock.h>
+ #include <linux/stat.h>
 +#include <linux/tc.h>
- #include <linux/types.h>
  
--#include <asm/addrspace.h>
--#include <asm/errno.h>
- #include <asm/io.h>
--#include <asm/paccess.h>
+ #include <asm/dma.h>
+ #include <asm/irq.h>
+@@ -42,7 +43,6 @@
+ #include <asm/dec/ioasic_ints.h>
+ #include <asm/dec/machtype.h>
+ #include <asm/dec/system.h>
+-#include <asm/dec/tc.h>
  
--#include <asm/dec/machtype.h>
--#include <asm/dec/prom.h>
--#include <asm/dec/tcinfo.h>
--#include <asm/dec/tcmodule.h>
--#include <asm/dec/interrupts.h>
+ #define DEC_SCSI_SREG 0
+ #define DEC_SCSI_DMAREG 0x40000
+@@ -98,51 +98,33 @@ static irqreturn_t scsi_dma_merr_int(int
+ static irqreturn_t scsi_dma_err_int(int, void *);
+ static irqreturn_t scsi_dma_int(int, void *);
+ 
+-static int dec_esp_detect(struct scsi_host_template * tpnt);
 -
--MODULE_LICENSE("GPL");
--slot_info tc_bus[MAX_SLOT];
--static int num_tcslots;
--static tcinfo *info;
-+static struct tc_bus tc_bus = {
-+	.name = "TURBOchannel",
-+};
- 
- /*
-- * Interface to the world. Read comment in include/asm-mips/tc.h.
-+ * Probing for TURBOchannel modules.
-  */
--
--int search_tc_card(const char *name)
+-static int dec_esp_release(struct Scsi_Host *shost)
 -{
+-	if (shost->irq)
+-		free_irq(shost->irq, NULL);
+-	if (shost->io_port && shost->n_io_port)
+-		release_region(shost->io_port, shost->n_io_port);
+-	scsi_unregister(shost);
+-	return 0;
+-}
+-
+-static struct scsi_host_template driver_template = {
+-	.proc_name		= "dec_esp",
+-	.proc_info		= esp_proc_info,
++static struct scsi_host_template dec_esp_template = {
++	.module			= THIS_MODULE,
+ 	.name			= "NCR53C94",
+-	.detect			= dec_esp_detect,
+-	.slave_alloc		= esp_slave_alloc,
+-	.slave_destroy		= esp_slave_destroy,
+-	.release		= dec_esp_release,
+ 	.info			= esp_info,
+ 	.queuecommand		= esp_queue,
+ 	.eh_abort_handler	= esp_abort,
+ 	.eh_bus_reset_handler	= esp_reset,
++	.slave_alloc		= esp_slave_alloc,
++	.slave_destroy		= esp_slave_destroy,
++	.proc_info		= esp_proc_info,
++	.proc_name		= "dec_esp",
+ 	.can_queue		= 7,
+-	.this_id		= 7,
+ 	.sg_tablesize		= SG_ALL,
+ 	.cmd_per_lun		= 1,
+ 	.use_clustering		= DISABLE_CLUSTERING,
+ };
+ 
+-
+-#include "scsi_module.c"
++static struct NCR_ESP *dec_esp_platform;
+ 
+ /***************************************************************** Detection */
+-static int dec_esp_detect(struct scsi_host_template * tpnt)
++static int dec_esp_platform_probe(void)
+ {
+ 	struct NCR_ESP *esp;
+-	struct ConfigDev *esp_dev;
 -	int slot;
--	slot_info *sip;
--
--	for (slot = 0; slot < num_tcslots; slot++) {
--		sip = &tc_bus[slot];
--		if ((sip->flags & FREE) &&
--		    (strncmp(sip->name, name, strlen(name)) == 0)) {
--			return slot;
--		}
--	}
--
--	return -ENODEV;
--}
--
--void claim_tc_card(int slot)
--{
--	if (tc_bus[slot].flags & IN_USE) {
--		printk("claim_tc_card: attempting to claim a card already in use\n");
--		return;
--	}
--	tc_bus[slot].flags &= ~FREE;
--	tc_bus[slot].flags |= IN_USE;
--}
--
--void release_tc_card(int slot)
-+static void __init tc_bus_add_devices(struct tc_bus *tbus)
- {
--	if (tc_bus[slot].flags & FREE) {
--		printk("release_tc_card: "
--		       "attempting to release a card already free\n");
--		return;
--	}
--	tc_bus[slot].flags &= ~IN_USE;
--	tc_bus[slot].flags |= FREE;
--}
--
--unsigned long get_tc_base_addr(int slot)
--{
--	return tc_bus[slot].base_addr;
--}
--
--unsigned long get_tc_irq_nr(int slot)
--{
--	return tc_bus[slot].interrupt;
--}
--
--unsigned long get_tc_speed(void)
--{
--	return 100000 * (10000 / (unsigned long)info->clk_period);
--}
--
--/*
-- * Probing for TURBOchannel modules
-- */
--static void __init tc_probe(unsigned long startaddr, unsigned long size,
--			    int slots)
--{
--	unsigned long slotaddr;
-+	resource_size_t slotsize = tbus->info.slot_size << 20;
-+	resource_size_t extslotsize = tbus->ext_slot_size;
-+	resource_size_t slotaddr;
-+	resource_size_t extslotaddr;
-+	resource_size_t devsize;
-+	void __iomem *module;
-+	struct tc_dev *tdev;
- 	int i, slot, err;
--	long offset;
- 	u8 pattern[4];
--	volatile u8 *module;
-+	long offset;
+-	unsigned long mem_start;
++	int err = 0;
  
--	for (slot = 0; slot < slots; slot++) {
--		slotaddr = startaddr + slot * size;
--		module = ioremap_nocache(slotaddr, size);
-+	for (slot = 0; slot < tbus->num_tcslots; slot++) {
-+		slotaddr = tbus->slot_base + slot * slotsize;
-+		extslotaddr = tbus->ext_slot_base + slot * extslotsize;
-+		module = ioremap_nocache(slotaddr, slotsize);
- 		BUG_ON(!module);
+ 	if (IOASIC) {
+-		esp_dev = 0;
+-		esp = esp_allocate(tpnt, (void *) esp_dev);
++		esp = esp_allocate(&dec_esp_template, NULL, 1);
  
--		offset = OLDCARD;
-+		offset = TC_OLDCARD;
+ 		/* Do command transfer with programmed I/O */
+ 		esp->do_pio_cmds = 1;
+@@ -200,112 +182,175 @@ static int dec_esp_detect(struct scsi_ho
+ 		/* Check for differential SCSI-bus */
+ 		esp->diff = 0;
  
- 		err = 0;
--		err |= get_dbe(pattern[0], module + OLDCARD + TC_PATTERN0);
--		err |= get_dbe(pattern[1], module + OLDCARD + TC_PATTERN1);
--		err |= get_dbe(pattern[2], module + OLDCARD + TC_PATTERN2);
--		err |= get_dbe(pattern[3], module + OLDCARD + TC_PATTERN3);
--		if (err) {
--			iounmap(module);
--			continue;
--		}
-+		err |= tc_preadb(pattern + 0, module + offset + TC_PATTERN0);
-+		err |= tc_preadb(pattern + 1, module + offset + TC_PATTERN1);
-+		err |= tc_preadb(pattern + 2, module + offset + TC_PATTERN2);
-+		err |= tc_preadb(pattern + 3, module + offset + TC_PATTERN3);
++		err = request_irq(esp->irq, esp_intr, IRQF_DISABLED,
++				  "ncr53c94", esp->ehost);
 +		if (err)
-+			goto out_err;
- 
- 		if (pattern[0] != 0x55 || pattern[1] != 0x00 ||
- 		    pattern[2] != 0xaa || pattern[3] != 0xff) {
--			offset = NEWCARD;
-+			offset = TC_NEWCARD;
- 
- 			err = 0;
--			err |= get_dbe(pattern[0], module + TC_PATTERN0);
--			err |= get_dbe(pattern[1], module + TC_PATTERN1);
--			err |= get_dbe(pattern[2], module + TC_PATTERN2);
--			err |= get_dbe(pattern[3], module + TC_PATTERN3);
--			if (err) {
--				iounmap(module);
--				continue;
--			}
-+			err |= tc_preadb(pattern + 0,
-+					 module + offset + TC_PATTERN0);
-+			err |= tc_preadb(pattern + 1,
-+					 module + offset + TC_PATTERN1);
-+			err |= tc_preadb(pattern + 2,
-+					 module + offset + TC_PATTERN2);
-+			err |= tc_preadb(pattern + 3,
-+					 module + offset + TC_PATTERN3);
-+			if (err)
-+				goto out_err;
- 		}
- 
- 		if (pattern[0] != 0x55 || pattern[1] != 0x00 ||
--		    pattern[2] != 0xaa || pattern[3] != 0xff) {
--			iounmap(module);
--			continue;
--		}
-+		    pattern[2] != 0xaa || pattern[3] != 0xff)
-+			goto out_err;
++			goto err_alloc;
++		err = request_irq(dec_interrupt[DEC_IRQ_ASC_MERR],
++				  scsi_dma_merr_int, IRQF_DISABLED,
++				  "ncr53c94 error", esp->ehost);
++		if (err)
++			goto err_irq;
++		err = request_irq(dec_interrupt[DEC_IRQ_ASC_ERR],
++				  scsi_dma_err_int, IRQF_DISABLED,
++				  "ncr53c94 overrun", esp->ehost);
++		if (err)
++			goto err_irq_merr;
++		err = request_irq(dec_interrupt[DEC_IRQ_ASC_DMA], scsi_dma_int,
++				  IRQF_DISABLED, "ncr53c94 dma", esp->ehost);
++		if (err)
++			goto err_irq_err;
 +
-+		/* Found a board, allocate it an entry in the list */
-+		tdev = kzalloc(sizeof(*tdev), GFP_KERNEL);
-+		if (!tdev) {
-+			printk(KERN_ERR "tc%x: unable to allocate tc_dev\n",
-+			       slot);
-+			goto out_err;
-+		}
-+		sprintf(tdev->dev.bus_id, "tc%x", slot);
-+		tdev->bus = tbus;
-+		tdev->dev.parent = &tbus->dev;
-+		tdev->dev.bus = &tc_bus_type;
-+		tdev->slot = slot;
+ 		esp_initialize(esp);
  
--		tc_bus[slot].base_addr = slotaddr;
- 		for (i = 0; i < 8; i++) {
--			tc_bus[slot].firmware[i] =
--				module[TC_FIRM_VER + offset + 4 * i];
--			tc_bus[slot].vendor[i] =
--				module[TC_VENDOR + offset + 4 * i];
--			tc_bus[slot].name[i] =
--				module[TC_MODULE + offset + 4 * i];
--		}
--		tc_bus[slot].firmware[8] = 0;
--		tc_bus[slot].vendor[8] = 0;
--		tc_bus[slot].name[8] = 0;
--		/*
--		 * Looks unneccesary, but we may change
--		 * TC? in the future
--		 */
--		switch (slot) {
--		case 0:
--			tc_bus[slot].interrupt = dec_interrupt[DEC_IRQ_TC0];
--			break;
--		case 1:
--			tc_bus[slot].interrupt = dec_interrupt[DEC_IRQ_TC1];
--			break;
--		case 2:
--			tc_bus[slot].interrupt = dec_interrupt[DEC_IRQ_TC2];
--			break;
--		/*
--		 * Yuck! DS5000/200 onboard devices
--		 */
--		case 5:
--			tc_bus[slot].interrupt = dec_interrupt[DEC_IRQ_TC5];
--			break;
--		case 6:
--			tc_bus[slot].interrupt = dec_interrupt[DEC_IRQ_TC6];
--			break;
--		default:
--			tc_bus[slot].interrupt = -1;
--			break;
--		}
-+			tdev->firmware[i] =
-+				readb(module + offset + TC_FIRM_VER + 4 * i);
-+			tdev->vendor[i] =
-+				readb(module + offset + TC_VENDOR + 4 * i);
-+			tdev->name[i] =
-+				readb(module + offset + TC_MODULE + 4 * i);
-+		}
-+		tdev->firmware[8] = 0;
-+		tdev->vendor[8] = 0;
-+		tdev->name[8] = 0;
-+
-+		pr_info("%s: %s %s %s\n", tdev->dev.bus_id, tdev->vendor,
-+			tdev->name, tdev->firmware);
-+
-+		devsize = readb(module + offset + TC_SLOT_SIZE);
-+		devsize <<= 22;
-+		if (devsize <= slotsize) {
-+			tdev->resource.start = slotaddr;
-+			tdev->resource.end = slotaddr + devsize - 1;
-+		} else if (devsize <= extslotsize) {
-+			tdev->resource.start = extslotaddr;
-+			tdev->resource.end = extslotaddr + devsize - 1;
-+		} else {
-+			printk(KERN_ERR "%s: Cannot provide slot space "
-+			       "(%dMiB required, up to %dMiB supported)\n",
-+			       tdev->dev.bus_id, devsize >> 20,
-+			       max(slotsize, extslotsize) >> 20);
-+			kfree(tdev);
-+			goto out_err;
-+		}
-+		tdev->resource.name = tdev->name;
-+		tdev->resource.flags = IORESOURCE_MEM;
-+
-+		tc_device_get_irq(tdev);
+-		if (request_irq(esp->irq, esp_intr, IRQF_DISABLED,
+-				"ncr53c94", esp->ehost))
+-			goto err_dealloc;
+-		if (request_irq(dec_interrupt[DEC_IRQ_ASC_MERR],
+-				scsi_dma_merr_int, IRQF_DISABLED,
+-				"ncr53c94 error", esp->ehost))
+-			goto err_free_irq;
+-		if (request_irq(dec_interrupt[DEC_IRQ_ASC_ERR],
+-				scsi_dma_err_int, IRQF_DISABLED,
+-				"ncr53c94 overrun", esp->ehost))
+-			goto err_free_irq_merr;
+-		if (request_irq(dec_interrupt[DEC_IRQ_ASC_DMA],
+-				scsi_dma_int, IRQF_DISABLED,
+-				"ncr53c94 dma", esp->ehost))
+-			goto err_free_irq_err;
++		err = scsi_add_host(esp->ehost, NULL);
++		if (err) {
++			printk(KERN_ERR "ESP: Unable to register adapter\n");
++			goto err_irq_dma;
++ 		}
  
-+		device_register(&tdev->dev);
-+		list_add_tail(&tdev->node, &tbus->devices);
-+
-+out_err:
- 		iounmap(module);
- 	}
- }
- 
- /*
-- * the main entry
-+ * The main entry.
-  */
- static int __init tc_init(void)
- {
--	int tc_clock;
--	int i;
--	unsigned long slot0addr;
--	unsigned long slot_size;
--
--	if (!TURBOCHANNEL)
-+	/* Initialize the TURBOchannel bus */
-+	if (tc_bus_get_info(&tc_bus))
- 		return 0;
- 
--	for (i = 0; i < MAX_SLOT; i++) {
--		tc_bus[i].base_addr = 0;
--		tc_bus[i].name[0] = 0;
--		tc_bus[i].vendor[0] = 0;
--		tc_bus[i].firmware[0] = 0;
--		tc_bus[i].interrupt = -1;
--		tc_bus[i].flags = FREE;
 -	}
++		scsi_scan_host(esp->ehost);
+ 
+-	if (TURBOCHANNEL) {
+-		while ((slot = search_tc_card("PMAZ-AA")) >= 0) {
+-			claim_tc_card(slot);
 -
--	info = rex_gettcinfo();
--	slot0addr = CPHYSADDR((long)rex_slot_address(0));
+-			esp_dev = 0;
+-			esp = esp_allocate(tpnt, (void *) esp_dev);
 -
--	switch (mips_machtype) {
--	case MACH_DS5000_200:
--		num_tcslots = 7;
--		break;
--	case MACH_DS5000_1XX:
--	case MACH_DS5000_2X0:
--	case MACH_DS5900:
--		num_tcslots = 3;
--		break;
--	case MACH_DS5000_XX:
--	default:
--		num_tcslots = 2;
--		break;
--	}
+-			mem_start = get_tc_base_addr(slot);
 -
--	tc_clock = 10000 / info->clk_period;
+-			/* Store base addr into esp struct */
+-			esp->slot = CPHYSADDR(mem_start);
 -
--	if (info->slot_size && slot0addr) {
--		pr_info("TURBOchannel rev. %d at %d.%d MHz (with%s parity)\n",
--			info->revision, tc_clock / 10, tc_clock % 10,
--			info->parity ? "" : "out");
+-			esp->dregs = 0;
+-			esp->eregs = (void *)CKSEG1ADDR(mem_start +
+-							DEC_SCSI_SREG);
+-			esp->do_pio_cmds = 1;
 -
--		slot_size = info->slot_size << 20;
+-			/* Set the command buffer */
+-			esp->esp_command = (volatile unsigned char *) pmaz_cmd_buffer;
 -
--		tc_probe(slot0addr, slot_size, num_tcslots);
+-			/* get virtual dma address for command buffer */
+-			esp->esp_command_dvma = virt_to_phys(pmaz_cmd_buffer);
 -
--		for (i = 0; i < num_tcslots; i++) {
--			if (!tc_bus[i].base_addr)
--				continue;
--			pr_info("    slot %d: %s %s %s\n", i, tc_bus[i].vendor,
--				tc_bus[i].name, tc_bus[i].firmware);
-+	INIT_LIST_HEAD(&tc_bus.devices);
-+	strcpy(tc_bus.dev.bus_id, "tc");
-+	device_register(&tc_bus.dev);
-+
-+	if (tc_bus.info.slot_size) {
-+		unsigned int tc_clock = tc_get_speed(&tc_bus) / 100000;
-+
-+		pr_info("tc: TURBOchannel rev. %d at %d.%d MHz "
-+			"(with%s parity)\n", tc_bus.info.revision,
-+			tc_clock / 10, tc_clock % 10,
-+			tc_bus.info.parity ? "" : "out");
-+
-+		tc_bus.resource[0].start = tc_bus.slot_base;
-+		tc_bus.resource[0].end = tc_bus.slot_base +
-+					 (tc_bus.info.slot_size << 20) *
-+					 tc_bus.num_tcslots;
-+		tc_bus.resource[0].name = tc_bus.name;
-+		tc_bus.resource[0].flags = IORESOURCE_MEM;
-+		if (request_resource(&iomem_resource,
-+				     &tc_bus.resource[0]) < 0) {
-+			printk(KERN_ERR "tc: Cannot reserve resource\n");
-+			return 0;
-+		}
-+		if (tc_bus.ext_slot_size) {
-+			tc_bus.resource[1].start = tc_bus.ext_slot_base;
-+			tc_bus.resource[1].end = tc_bus.ext_slot_base +
-+						 tc_bus.ext_slot_size *
-+						 tc_bus.num_tcslots;
-+			tc_bus.resource[1].name = tc_bus.name;
-+			tc_bus.resource[1].flags = IORESOURCE_MEM;
-+			if (request_resource(&iomem_resource,
-+					     &tc_bus.resource[1]) < 0) {
-+				printk(KERN_ERR
-+				       "tc: Cannot reserve resource\n");
-+				release_resource(&tc_bus.resource[0]);
-+				return 0;
-+			}
- 		}
-+
-+		tc_bus_add_devices(&tc_bus);
+-			esp->cfreq = get_tc_speed();
+-
+-			esp->irq = get_tc_irq_nr(slot);
+-
+-			/* Required functions */
+-			esp->dma_bytes_sent = &dma_bytes_sent;
+-			esp->dma_can_transfer = &dma_can_transfer;
+-			esp->dma_dump_state = &dma_dump_state;
+-			esp->dma_init_read = &pmaz_dma_init_read;
+-			esp->dma_init_write = &pmaz_dma_init_write;
+-			esp->dma_ints_off = &pmaz_dma_ints_off;
+-			esp->dma_ints_on = &pmaz_dma_ints_on;
+-			esp->dma_irq_p = &dma_irq_p;
+-			esp->dma_ports_p = &dma_ports_p;
+-			esp->dma_setup = &pmaz_dma_setup;
+-
+-			/* Optional functions */
+-			esp->dma_barrier = 0;
+-			esp->dma_drain = &pmaz_dma_drain;
+-			esp->dma_invalidate = 0;
+-			esp->dma_irq_entry = 0;
+-			esp->dma_irq_exit = 0;
+-			esp->dma_poll = 0;
+-			esp->dma_reset = 0;
+-			esp->dma_led_off = 0;
+-			esp->dma_led_on = 0;
+-
+-			esp->dma_mmu_get_scsi_one = pmaz_dma_mmu_get_scsi_one;
+-			esp->dma_mmu_get_scsi_sgl = 0;
+-			esp->dma_mmu_release_scsi_one = 0;
+-			esp->dma_mmu_release_scsi_sgl = 0;
+-			esp->dma_advance_sg = 0;
+-
+- 			if (request_irq(esp->irq, esp_intr, IRQF_DISABLED,
+- 					 "PMAZ_AA", esp->ehost)) {
+- 				esp_deallocate(esp);
+- 				release_tc_card(slot);
+- 				continue;
+- 			}
+-			esp->scsi_id = 7;
+-			esp->diff = 0;
+-			esp_initialize(esp);
+-		}
++		dec_esp_platform = esp;
  	}
  
+-	if(nesps) {
+-		printk("ESP: Total of %d ESP hosts found, %d actually in use.\n", nesps, esps_in_use);
+-		esps_running = esps_in_use;
+-		return esps_in_use;
+-	}
  	return 0;
+ 
+-err_free_irq_err:
+-	free_irq(dec_interrupt[DEC_IRQ_ASC_ERR], scsi_dma_err_int);
+-err_free_irq_merr:
+-	free_irq(dec_interrupt[DEC_IRQ_ASC_MERR], scsi_dma_merr_int);
+-err_free_irq:
+-	free_irq(esp->irq, esp_intr);
+-err_dealloc:
++err_irq_dma:
++	free_irq(dec_interrupt[DEC_IRQ_ASC_DMA], esp->ehost);
++err_irq_err:
++	free_irq(dec_interrupt[DEC_IRQ_ASC_ERR], esp->ehost);
++err_irq_merr:
++	free_irq(dec_interrupt[DEC_IRQ_ASC_MERR], esp->ehost);
++err_irq:
++	free_irq(esp->irq, esp->ehost);
++err_alloc:
+ 	esp_deallocate(esp);
++	scsi_host_put(esp->ehost);
++	return err;
++}
++
++static int __init dec_esp_probe(struct device *dev)
++{
++	struct NCR_ESP *esp;
++	resource_size_t start, len;
++	int err;
++
++	esp = esp_allocate(&dec_esp_template,  NULL, 1);
++
++	dev_set_drvdata(dev, esp);
++
++	start = to_tc_dev(dev)->resource.start;
++	len = to_tc_dev(dev)->resource.end - start + 1;
++
++	if (!request_mem_region(start, len, dev->bus_id)) {
++		printk(KERN_ERR "%s: Unable to reserve MMIO resource\n",
++		       dev->bus_id);
++		err = -EBUSY;
++		goto err_alloc;
++	}
++
++	/* Store base addr into esp struct.  */
++	esp->slot = start;
++
++	esp->dregs = 0;
++	esp->eregs = (void *)CKSEG1ADDR(start + DEC_SCSI_SREG);
++	esp->do_pio_cmds = 1;
++
++	/* Set the command buffer.  */
++	esp->esp_command = (volatile unsigned char *)pmaz_cmd_buffer;
++
++	/* Get virtual dma address for command buffer.  */
++	esp->esp_command_dvma = virt_to_phys(pmaz_cmd_buffer);
++
++	esp->cfreq = tc_get_speed(to_tc_dev(dev)->bus);
++
++	esp->irq = to_tc_dev(dev)->interrupt;
++
++	/* Required functions.  */
++	esp->dma_bytes_sent = &dma_bytes_sent;
++	esp->dma_can_transfer = &dma_can_transfer;
++	esp->dma_dump_state = &dma_dump_state;
++	esp->dma_init_read = &pmaz_dma_init_read;
++	esp->dma_init_write = &pmaz_dma_init_write;
++	esp->dma_ints_off = &pmaz_dma_ints_off;
++	esp->dma_ints_on = &pmaz_dma_ints_on;
++	esp->dma_irq_p = &dma_irq_p;
++	esp->dma_ports_p = &dma_ports_p;
++	esp->dma_setup = &pmaz_dma_setup;
++
++	/* Optional functions.  */
++	esp->dma_barrier = 0;
++	esp->dma_drain = &pmaz_dma_drain;
++	esp->dma_invalidate = 0;
++	esp->dma_irq_entry = 0;
++	esp->dma_irq_exit = 0;
++	esp->dma_poll = 0;
++	esp->dma_reset = 0;
++	esp->dma_led_off = 0;
++	esp->dma_led_on = 0;
++
++	esp->dma_mmu_get_scsi_one = pmaz_dma_mmu_get_scsi_one;
++	esp->dma_mmu_get_scsi_sgl = 0;
++	esp->dma_mmu_release_scsi_one = 0;
++	esp->dma_mmu_release_scsi_sgl = 0;
++	esp->dma_advance_sg = 0;
++
++ 	err = request_irq(esp->irq, esp_intr, IRQF_DISABLED, "PMAZ_AA",
++			  esp->ehost);
++	if (err) {
++		printk(KERN_ERR "%s: Unable to get IRQ %d\n",
++		       dev->bus_id, esp->irq);
++		goto err_resource;
++ 	}
++
++	esp->scsi_id = 7;
++	esp->diff = 0;
++	esp_initialize(esp);
++
++	err = scsi_add_host(esp->ehost, dev);
++	if (err) {
++		printk(KERN_ERR "%s: Unable to register adapter\n",
++		       dev->bus_id);
++		goto err_irq;
++ 	}
++
++	scsi_scan_host(esp->ehost);
++
+ 	return 0;
++
++err_irq:
++	free_irq(esp->irq, esp->ehost);
++
++err_resource:
++	release_mem_region(start, len);
++
++err_alloc:
++	esp_deallocate(esp);
++	scsi_host_put(esp->ehost);
++ 	return err;
  }
  
- subsys_initcall(tc_init);
--
--EXPORT_SYMBOL(search_tc_card);
--EXPORT_SYMBOL(claim_tc_card);
--EXPORT_SYMBOL(release_tc_card);
--EXPORT_SYMBOL(get_tc_base_addr);
--EXPORT_SYMBOL(get_tc_irq_nr);
--EXPORT_SYMBOL(get_tc_speed);
-diff -up --recursive --new-file linux-mips-2.6.18-20060920.macro/include/asm-mips/dec/tc.h linux-mips-2.6.18-20060920/include/asm-mips/dec/tc.h
---- linux-mips-2.6.18-20060920.macro/include/asm-mips/dec/tc.h	2005-07-20 05:00:28.000000000 +0000
-+++ linux-mips-2.6.18-20060920/include/asm-mips/dec/tc.h	1970-01-01 00:00:00.000000000 +0000
-@@ -1,41 +0,0 @@
--/*
-- * Interface to the TURBOchannel related routines
-- *
-- * This file is subject to the terms and conditions of the GNU General Public
-- * License.  See the file "COPYING" in the main directory of this archive
-- * for more details.
-- *
-- * Copyright (c) 1998 Harald Koerfgen
-- */
--#ifndef __ASM_DEC_TC_H
--#define __ASM_DEC_TC_H
--
--/*
-- * Search for a TURBOchannel Option Module
-- * with a certain name. Returns slot number
-- * of the first card not in use or -ENODEV
-- * if none found.
-- */
--extern int search_tc_card(const char *);
--/*
-- * Marks the card in slot as used
-- */
--extern void claim_tc_card(int);
--/*
-- * Marks the card in slot as free
-- */
--extern void release_tc_card(int);
--/*
-- * Return base address of card in slot
-- */
--extern unsigned long get_tc_base_addr(int);
--/*
-- * Return interrupt number of slot
-- */
--extern unsigned long get_tc_irq_nr(int);
--/*
-- * Return TURBOchannel clock frequency in Hz
-- */
--extern unsigned long get_tc_speed(void);
--
--#endif /* __ASM_DEC_TC_H */
-diff -up --recursive --new-file linux-mips-2.6.18-20060920.macro/include/asm-mips/dec/tcinfo.h linux-mips-2.6.18-20060920/include/asm-mips/dec/tcinfo.h
---- linux-mips-2.6.18-20060920.macro/include/asm-mips/dec/tcinfo.h	2002-08-06 03:57:30.000000000 +0000
-+++ linux-mips-2.6.18-20060920/include/asm-mips/dec/tcinfo.h	1970-01-01 00:00:00.000000000 +0000
-@@ -1,47 +0,0 @@
--/*
-- * Various TURBOchannel related stuff
-- *
-- * This file is subject to the terms and conditions of the GNU General Public
-- * License.  See the file "COPYING" in the main directory of this archive
-- * for more details.
-- *
-- * Information obtained through the get_tcinfo prom call
-- * created from:
-- *
-- * TURBOchannel Firmware Specification
-- *
-- * EK-TCAAD-FS-004
-- * from Digital Equipment Corporation
-- *
-- * Copyright (c) 1998 Harald Koerfgen
-- */
--
--typedef struct {
--	int revision;
--	int clk_period;
--	int slot_size;
--	int io_timeout;
--	int dma_range;
--	int max_dma_burst;
--	int parity;
--	int reserved[4];
--} tcinfo;
--
--#define MAX_SLOT 7
--
--typedef struct {
--	unsigned long base_addr;
--	unsigned char name[9];
--	unsigned char vendor[9];
--	unsigned char firmware[9];
--	int interrupt;
--	int flags;
--} slot_info;
--
--/*
-- * Values for flags
-- */
--#define FREE 	1<<0
--#define IN_USE	1<<1
--
--
-diff -up --recursive --new-file linux-mips-2.6.18-20060920.macro/include/asm-mips/dec/tcmodule.h linux-mips-2.6.18-20060920/include/asm-mips/dec/tcmodule.h
---- linux-mips-2.6.18-20060920.macro/include/asm-mips/dec/tcmodule.h	2002-08-06 03:57:30.000000000 +0000
-+++ linux-mips-2.6.18-20060920/include/asm-mips/dec/tcmodule.h	1970-01-01 00:00:00.000000000 +0000
-@@ -1,39 +0,0 @@
--/*
-- * This file is subject to the terms and conditions of the GNU General Public
-- * License.  See the file "COPYING" in the main directory of this archive
-- * for more details.
-- *
-- * Offsets for the ROM header locations for
-- * TURBOchannel cards
-- *
-- * created from:
-- *
-- * TURBOchannel Firmware Specification
-- *
-- * EK-TCAAD-FS-004
-- * from Digital Equipment Corporation
-- *
-- * Jan.1998 Harald Koerfgen
-- */
--#ifndef __ASM_DEC_TCMODULE_H
--#define __ASM_DEC_TCMODULE_H
--
--#define OLDCARD 0x3c0000
--#define NEWCARD 0x000000
--
--#define TC_ROM_WIDTH	0x3e0
--#define TC_ROM_STRIDE	0x3e4
--#define TC_ROM_SIZE	0x3e8
--#define TC_SLOT_SIZE	0x3ec
--#define TC_PATTERN0	0x3f0
--#define TC_PATTERN1	0x3f4
--#define TC_PATTERN2	0x3f8
--#define TC_PATTERN3	0x3fc
--#define TC_FIRM_VER	0x400
--#define TC_VENDOR	0x420
--#define TC_MODULE	0x440
--#define TC_FIRM_TYPE	0x460
--#define TC_FLAGS	0x470
--#define TC_ROM_OBJECTS	0x480
--
--#endif /* __ASM_DEC_TCMODULE_H */
-diff -up --recursive --new-file linux-mips-2.6.18-20060920.macro/include/linux/tc.h linux-mips-2.6.18-20060920/include/linux/tc.h
---- linux-mips-2.6.18-20060920.macro/include/linux/tc.h	1970-01-01 00:00:00.000000000 +0000
-+++ linux-mips-2.6.18-20060920/include/linux/tc.h	2006-12-19 22:33:29.000000000 +0000
-@@ -0,0 +1,141 @@
-+/*
-+ *	Interface to the TURBOchannel related routines.
-+ *
-+ *	Copyright (c) 1998  Harald Koerfgen
-+ *	Copyright (c) 2005  James Simmons
-+ *	Copyright (c) 2006  Maciej W. Rozycki
-+ *
-+ *	Based on:
-+ *
-+ *	"TURBOchannel Firmware Specification", EK-TCAAD-FS-004
-+ *
-+ *	from Digital Equipment Corporation.
-+ *
-+ *	This file is subject to the terms and conditions of the GNU
-+ *	General Public License.  See the file "COPYING" in the main
-+ *	directory of this archive for more details.
-+ */
-+#ifndef _LINUX_TC_H
-+#define _LINUX_TC_H
-+
-+#include <linux/compiler.h>
-+#include <linux/device.h>
-+#include <linux/ioport.h>
-+#include <linux/types.h>
-+
-+/*
-+ * Offsets for the ROM header locations for TURBOchannel cards.
-+ */
-+#define TC_OLDCARD	0x3c0000
-+#define TC_NEWCARD	0x000000
-+
-+#define TC_ROM_WIDTH	0x3e0
-+#define TC_ROM_STRIDE	0x3e4
-+#define TC_ROM_SIZE	0x3e8
-+#define TC_SLOT_SIZE	0x3ec
-+#define TC_PATTERN0	0x3f0
-+#define TC_PATTERN1	0x3f4
-+#define TC_PATTERN2	0x3f8
-+#define TC_PATTERN3	0x3fc
-+#define TC_FIRM_VER	0x400
-+#define TC_VENDOR	0x420
-+#define TC_MODULE	0x440
-+#define TC_FIRM_TYPE	0x460
-+#define TC_FLAGS	0x470
-+#define TC_ROM_OBJECTS	0x480
-+
-+/*
-+ * Information obtained through the get_tcinfo() PROM call.
-+ */
-+struct tcinfo {
-+	s32		revision;	/* Hardware revision level. */
-+	s32		clk_period;	/* Clock period in nanoseconds. */
-+	s32		slot_size;	/* Slot size in megabytes. */
-+	s32		io_timeout;	/* I/O timeout in cycles. */
-+	s32		dma_range;	/* DMA address range in megabytes. */
-+	s32		max_dma_burst;	/* Maximum DMA burst length. */
-+	s32		parity;		/* System module supports TC parity. */
-+	s32		reserved[4];
-+};
-+
-+/*
-+ * TURBOchannel bus.
-+ */
-+struct tc_bus {
-+	struct list_head devices;	/* List of devices on this bus. */
-+	struct resource	resource[2];	/* Address space routed to this bus. */
-+
-+	struct device	dev;
-+	char		name[13];
-+	resource_size_t	slot_base;
-+	resource_size_t	ext_slot_base;
-+	resource_size_t	ext_slot_size;
-+	int		num_tcslots;
-+	struct tcinfo	info;
-+};
-+
-+/*
-+ * TURBOchannel device.
-+ */
-+struct tc_dev {
-+	struct list_head node;		/* Node in list of all TC devices. */
-+	struct tc_bus	*bus;		/* Bus this device is on. */
-+	struct tc_driver *driver;	/* Which driver has allocated this
-+					   device. */
-+	struct device	dev;		/* Generic device interface. */
-+	struct resource	resource;	/* Address space of this device. */
-+	char		vendor[9];
-+	char		name[9];
-+	char		firmware[9];
-+	int		interrupt;
-+	int		slot;
-+};
-+
-+#define to_tc_dev(n) container_of(n, struct tc_dev, dev)
-+
-+struct tc_device_id {
-+	char		vendor[9];
-+	char		name[9];
-+};
-+
-+/*
-+ * TURBOchannel driver.
-+ */
-+struct tc_driver {
-+	struct list_head node;
-+	const struct tc_device_id *id_table;
-+	struct device_driver driver;
-+};
-+
-+#define to_tc_driver(drv) container_of(drv, struct tc_driver, driver)
-+
-+/*
-+ * Return TURBOchannel clock frequency in Hz.
-+ */
-+static inline unsigned long tc_get_speed(struct tc_bus *tbus)
++static void __exit dec_esp_platform_remove(void)
 +{
-+	return 100000 * (10000 / (unsigned long)tbus->info.clk_period);
++	struct NCR_ESP *esp = dec_esp_platform;
++
++	free_irq(esp->irq, esp->ehost);
++	esp_deallocate(esp);
++	scsi_host_put(esp->ehost);
++	dec_esp_platform = NULL;
 +}
++
++static void __exit dec_esp_remove(struct device *dev)
++{
++	struct NCR_ESP *esp = dev_get_drvdata(dev);
++
++	free_irq(esp->irq, esp->ehost);
++	esp_deallocate(esp);
++	scsi_host_put(esp->ehost);
++}
++
++
+ /************************************************************* DMA Functions */
+ static irqreturn_t scsi_dma_merr_int(int irq, void *dev_id)
+ {
+@@ -576,3 +621,67 @@ static void pmaz_dma_mmu_get_scsi_one(st
+ {
+ 	sp->SCp.ptr = (char *)virt_to_phys(sp->request_buffer);
+ }
++
 +
 +#ifdef CONFIG_TC
++static int __init dec_esp_tc_probe(struct device *dev);
++static int __exit dec_esp_tc_remove(struct device *dev);
 +
-+extern struct bus_type tc_bus_type;
++static const struct tc_device_id dec_esp_tc_table[] = {
++        { "DEC     ", "PMAZ-AA " },
++        { }
++};
++MODULE_DEVICE_TABLE(tc, dec_esp_tc_table);
 +
-+extern int tc_register_driver(struct tc_driver *tdrv);
-+extern void tc_unregister_driver(struct tc_driver *tdrv);
++static struct tc_driver dec_esp_tc_driver = {
++        .id_table       = dec_esp_tc_table,
++        .driver         = {
++                .name   = "dec_esp",
++                .bus    = &tc_bus_type,
++                .probe  = dec_esp_tc_probe,
++                .remove = __exit_p(dec_esp_tc_remove),
++        },
++};
 +
-+#else /* !CONFIG_TC */
++static int __init dec_esp_tc_probe(struct device *dev)
++{
++	int status = dec_esp_probe(dev);
++	if (!status)
++		get_device(dev);
++	return status;
++}
 +
-+static inline int tc_register_driver(struct tc_driver *tdrv) { return 0; }
-+static inline void tc_unregister_driver(struct tc_driver *tdrv) { }
++static int __exit dec_esp_tc_remove(struct device *dev)
++{
++	put_device(dev);
++	dec_esp_remove(dev);
++	return 0;
++}
++#endif
 +
-+#endif /* CONFIG_TC */
++static int __init dec_esp_init(void)
++{
++	int status;
 +
-+/*
-+ * These have to be provided by the architecture.
-+ */
-+extern int tc_preadb(u8 *valp, void __iomem *addr);
-+extern int tc_bus_get_info(struct tc_bus *tbus);
-+extern void tc_device_get_irq(struct tc_dev *tdev);
++	status = tc_register_driver(&dec_esp_tc_driver);
++	if (!status)
++		dec_esp_platform_probe();
 +
-+#endif /* _LINUX_TC_H */
++	if (nesps) {
++		pr_info("ESP: Total of %d ESP hosts found, "
++			"%d actually in use.\n", nesps, esps_in_use);
++		esps_running = esps_in_use;
++	}
++
++	return status;
++}
++
++static void __exit dec_esp_exit(void)
++{
++	dec_esp_platform_remove();
++	tc_unregister_driver(&dec_esp_tc_driver);
++}
++
++
++module_init(dec_esp_init);
++module_exit(dec_esp_exit);
+diff -up --recursive --new-file linux-2.6.20-rc1.macro/drivers/scsi/fastlane.c linux-2.6.20-rc1/drivers/scsi/fastlane.c
+--- linux-2.6.20-rc1.macro/drivers/scsi/fastlane.c	2006-12-14 01:14:23.000000000 +0000
++++ linux-2.6.20-rc1/drivers/scsi/fastlane.c	2006-12-18 21:29:38.000000000 +0000
+@@ -142,7 +142,7 @@ int __init fastlane_esp_detect(struct sc
+ 		if (board < 0x1000000) {
+ 			goto err_release;
+ 		}
+-		esp = esp_allocate(tpnt, (void *)board+FASTLANE_ESP_ADDR);
++		esp = esp_allocate(tpnt, (void *)board + FASTLANE_ESP_ADDR, 0);
+ 
+ 		/* Do command transfer with programmed I/O */
+ 		esp->do_pio_cmds = 1;
+diff -up --recursive --new-file linux-2.6.20-rc1.macro/drivers/scsi/jazz_esp.c linux-2.6.20-rc1/drivers/scsi/jazz_esp.c
+--- linux-2.6.20-rc1.macro/drivers/scsi/jazz_esp.c	2006-12-14 01:14:23.000000000 +0000
++++ linux-2.6.20-rc1/drivers/scsi/jazz_esp.c	2006-12-18 21:29:38.000000000 +0000
+@@ -75,7 +75,7 @@ static int jazz_esp_detect(struct scsi_h
+      */
+     if (1) {
+ 	esp_dev = NULL;
+-	esp = esp_allocate(tpnt, (void *) esp_dev);
++	esp = esp_allocate(tpnt, esp_dev, 0);
+ 	
+ 	/* Do command transfer with programmed I/O */
+ 	esp->do_pio_cmds = 1;
+diff -up --recursive --new-file linux-2.6.20-rc1.macro/drivers/scsi/mac_esp.c linux-2.6.20-rc1/drivers/scsi/mac_esp.c
+--- linux-2.6.20-rc1.macro/drivers/scsi/mac_esp.c	2006-12-14 01:14:23.000000000 +0000
++++ linux-2.6.20-rc1/drivers/scsi/mac_esp.c	2006-12-18 21:29:38.000000000 +0000
+@@ -351,7 +351,7 @@ int mac_esp_detect(struct scsi_host_temp
+ 	for (chipnum = 0; chipnum < chipspresent; chipnum ++) {
+ 		struct NCR_ESP * esp;
+ 
+-		esp = esp_allocate(tpnt, (void *) NULL);
++		esp = esp_allocate(tpnt, NULL, 0);
+ 		esp->eregs = (struct ESP_regs *) get_base(chipnum);
+ 
+ 		esp->dma_irq_p = &esp_dafb_dma_irq_p;
+diff -up --recursive --new-file linux-2.6.20-rc1.macro/drivers/scsi/mca_53c9x.c linux-2.6.20-rc1/drivers/scsi/mca_53c9x.c
+--- linux-2.6.20-rc1.macro/drivers/scsi/mca_53c9x.c	2006-12-14 01:14:23.000000000 +0000
++++ linux-2.6.20-rc1/drivers/scsi/mca_53c9x.c	2006-12-18 21:29:38.000000000 +0000
+@@ -122,7 +122,7 @@ static int mca_esp_detect(struct scsi_ho
+ 		if ((slot = mca_find_adapter(*id_to_check, 0)) !=
+ 		  MCA_NOTFOUND) 
+ 		{
+-			esp = esp_allocate(tpnt, (void *) NULL);
++			esp = esp_allocate(tpnt, NULL, 0);
+ 
+ 			pos[0] = mca_read_stored_pos(slot, 2);
+ 			pos[1] = mca_read_stored_pos(slot, 3);
+diff -up --recursive --new-file linux-2.6.20-rc1.macro/drivers/scsi/oktagon_esp.c linux-2.6.20-rc1/drivers/scsi/oktagon_esp.c
+--- linux-2.6.20-rc1.macro/drivers/scsi/oktagon_esp.c	2006-12-14 01:14:23.000000000 +0000
++++ linux-2.6.20-rc1/drivers/scsi/oktagon_esp.c	2006-12-18 21:29:38.000000000 +0000
+@@ -133,7 +133,7 @@ int oktagon_esp_detect(struct scsi_host_
+ 		eregs = (struct ESP_regs *)(address + OKTAGON_ESP_ADDR);
+ 
+ 		/* This line was 5 lines lower */
+-		esp = esp_allocate(tpnt, (void *)board+OKTAGON_ESP_ADDR);
++		esp = esp_allocate(tpnt, (void *)board + OKTAGON_ESP_ADDR, 0);
+ 
+ 		/* we have to shift the registers only one bit for oktagon */
+ 		esp->shift = 1;
+diff -up --recursive --new-file linux-2.6.20-rc1.macro/drivers/scsi/sun3x_esp.c linux-2.6.20-rc1/drivers/scsi/sun3x_esp.c
+--- linux-2.6.20-rc1.macro/drivers/scsi/sun3x_esp.c	2006-12-14 01:14:23.000000000 +0000
++++ linux-2.6.20-rc1/drivers/scsi/sun3x_esp.c	2006-12-18 21:29:38.000000000 +0000
+@@ -53,7 +53,7 @@ int sun3x_esp_detect(struct scsi_host_te
+ 	struct ConfigDev *esp_dev;
+ 
+ 	esp_dev = 0;
+-	esp = esp_allocate(tpnt, (void *) esp_dev);
++	esp = esp_allocate(tpnt, esp_dev, 0);
+ 
+ 	/* Do command transfer with DMA */
+ 	esp->do_pio_cmds = 0;
