@@ -1,82 +1,39 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: [Bugme-new] [Bug 7717] New: Tapes unreadable after unload
-Date: Wed, 20 Dec 2006 22:41:17 +0200 (EET)
-Message-ID: <Pine.LNX.4.64.0612202228060.4873@kai.makisara.local>
-References: <200612201031.kBKAVIJS005240@fire-2.osdl.org>
- <20061220025058.70d3d4ea.akpm@osdl.org>
+From: Steven Hayter <steven@hayter.me.uk>
+Subject: Re: [PATCH] scsi_execute_async() should add to the tail of the queue
+Date: Wed, 20 Dec 2006 20:40:29 +0000
+Message-ID: <45899FBD.9070803@hayter.me.uk>
+References: <20061219000234.GA5330@localdomain>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kolumbus.fi ([193.229.0.46]:53691 "EHLO mail.kolumbus.fi"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030358AbWLTVBk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Dec 2006 16:01:40 -0500
-In-Reply-To: <20061220025058.70d3d4ea.akpm@osdl.org>
+Received: from 85.189.5.98 ([85.189.5.98]:38502 "EHLO zombie.undead"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1030373AbWLTVyd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Dec 2006 16:54:33 -0500
+In-Reply-To: <20061219000234.GA5330@localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-scsi@vger.kernel.org, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>, bgs@bgs.hu
+To: Dan Aloni <da-x@monatomic.org>
+Cc: Linux Kernel List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>
 
-On Wed, 20 Dec 2006, Andrew Morton wrote:
+Dan Aloni wrote:
+> Hello,
+> 
+> scsi_execute_async() has replaced scsi_do_req() a few versions ago, 
+> but it also incurred a change of behavior. I noticed that over-queuing 
+> a SCSI device using that function causes I/Os to be starved from 
+> low-level queuing for no justified reason.
+>  
+> I think it makes much more sense to perserve the original behaviour 
+> of scsi_do_req() and add the request to the tail of the queue.
 
-> 
-> (please respond via emailed reply-to-all)
-> 
-> On Wed, 20 Dec 2006 02:31:18 -0800
-> bugme-daemon@bugzilla.kernel.org wrote:
-> 
-> > http://bugzilla.kernel.org/show_bug.cgi?id=7717
-> > 
-> >            Summary: Tapes unreadable after unload
-> >     Kernel Version: tested 2.6.17 through 2.6.29 with various results
-> 
-> I assume that means 2.6.17 and 2.6.19 failed.
-> 
-> >             Status: NEW
-> >           Severity: blocking
-> >              Owner: io_scsi@kernel-bugs.osdl.org
-> >          Submitter: bgs@bgs.hu
-> > 
-> > 
-> > Most recent kernel where this bug did *NOT* occur: 2.6.19
-> 
-> And that means that 2.6.19 did not fail.
-> 
-> Please clarify.
-> 
-> > Distribution: Slackware/Fedora
-> > Hardware Environment: HP 530, HP Dl380
-> > Software Environment: tar, mtx
-> > Problem Description: Doing a tar backup works well. Data is written and is
-> > readable. Binary restore comparison is ok. After unload/load the tape produces
-> > Input/output errors. The tape is unreadable with working kernels too. Any
-> > attempt to restore data from faulty tapes were in vain until now. 
-> > 
-> > Steps to reproduce:
-> > tar cvf /dev/st0 /path/to/something
-> > mtx -f /dev/sg1 unload
-> > mtx -f /dev/sg1 load X
-> > tar tvf /dev/st0
-> > 
+As far as I'm aware the way in which scsi_do_req() was to insert at the 
+head of the queue, leading to projects like SCST to come up with 
+scsi_do_req_fifo() as queuing multiple commands using scsi_do_req() with 
+constant head insertion might lead to out of order execution.
 
-I tried this with 2.6.19 and the tape was readable. Unfortunately I don't 
-have any older kernels around to test. I have not heard about any problem 
-like this.
+Just thought I'd throw some light on the history and what others have 
+done in the past.
 
-Note that the data becomes unreadable after the tape is touched by mtx 
-through sg device, i.e, bypassing st.
-
-> > tar output:
-> > tar: /dev/st0: Cannot read: Input/output error
-> > tar: At beginning of tape, quitting now
-> > tar: Error is not recoverable: exiting now
-> > 
-Do you find any messages with dmesg or in system log?
-
-> > All read() attempts fail after 42 bytes. (I can attach those 42 bytes if they
-> > are of any help).
-> 
-Interesting byte count :-)
-
--- 
-Kai
+Steve
