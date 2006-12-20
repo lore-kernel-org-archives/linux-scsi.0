@@ -1,62 +1,66 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 6/6] bsg: add SG_IO to SG v4
-Date: Wed, 20 Dec 2006 11:24:44 +0100
-Message-ID: <20061220102444.GO5010@kernel.dk>
-References: <20061220144313T.fujita.tomonori@lab.ntt.co.jp> <20061220101614.GN5010@kernel.dk>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [Bugme-new] [Bug 7717] New: Tapes unreadable after unload
+Date: Wed, 20 Dec 2006 02:50:58 -0800
+Message-ID: <20061220025058.70d3d4ea.akpm@osdl.org>
+References: <200612201031.kBKAVIJS005240@fire-2.osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([62.242.22.158]:11850 "EHLO kernel.dk"
+Received: from smtp.osdl.org ([65.172.181.25]:54166 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932721AbWLTKW6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Dec 2006 05:22:58 -0500
-Content-Disposition: inline
-In-Reply-To: <20061220101614.GN5010@kernel.dk>
+	id S964982AbWLTKv2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Dec 2006 05:51:28 -0500
+In-Reply-To: <200612201031.kBKAVIJS005240@fire-2.osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>
-Cc: linux-scsi@vger.kernel.org, dougg@torque.net
+To: linux-scsi@vger.kernel.org
+Cc: "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>, Kai Makisara <Kai.Makisara@kolumbus.fi>, bgs@bgs.hu
 
-On Wed, Dec 20 2006, Jens Axboe wrote:
-> On Wed, Dec 20 2006, FUJITA Tomonori wrote:
-> > This adds SG_IO support to SG v4.
-> > 
-> > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > ---
-> >  block/bsg.c |   23 +++++++++++++++++++++--
-> >  1 files changed, 21 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/block/bsg.c b/block/bsg.c
-> > index 6d139d2..9dc5d36 100644
-> > --- a/block/bsg.c
-> > +++ b/block/bsg.c
-> > @@ -945,8 +945,27 @@ bsg_ioctl(struct inode *inode, struct fi
-> >  		void __user *uarg = (void __user *) arg;
-> >  		return scsi_cmd_ioctl(file, bd->disk, cmd, uarg);
-> >  	}
-> > -	case SG_IO:
-> > -		return -EINVAL;
-> > +	case SG_IO: {
-> > +		struct request *rq;
-> > +		struct bio *bio;
-> > +		struct sg_io_v4 hdr;
-> > +
-> > +		if (copy_from_user(&hdr, uarg, sizeof(hdr)))
-> > +			return -EFAULT;
-> > +
-> > +		rq = bsg_map_hdr(bd, &hdr);
-> > +		if (IS_ERR(rq))
-> > +			return PTR_ERR(rq);
-> > +
-> > +		bio = rq->bio;
+
+(please respond via emailed reply-to-all)
+
+On Wed, 20 Dec 2006 02:31:18 -0800
+bugme-daemon@bugzilla.kernel.org wrote:
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=7717
 > 
-> Pointless assignment. In fact the bio can be completely removed.
+>            Summary: Tapes unreadable after unload
+>     Kernel Version: tested 2.6.17 through 2.6.29 with various results
 
-> > +		blk_execute_rq(bd->queue, bd->disk, rq, 0);
-> > +		blk_complete_sgv4_hdr_rq(rq, &hdr, bio);
+I assume that means 2.6.17 and 2.6.19 failed.
 
-My mistake, the bio assignment is fine and of course needed.
+>             Status: NEW
+>           Severity: blocking
+>              Owner: io_scsi@kernel-bugs.osdl.org
+>          Submitter: bgs@bgs.hu
+> 
+> 
+> Most recent kernel where this bug did *NOT* occur: 2.6.19
 
--- 
-Jens Axboe
+And that means that 2.6.19 did not fail.
+
+Please clarify.
+
+> Distribution: Slackware/Fedora
+> Hardware Environment: HP 530, HP Dl380
+> Software Environment: tar, mtx
+> Problem Description: Doing a tar backup works well. Data is written and is
+> readable. Binary restore comparison is ok. After unload/load the tape produces
+> Input/output errors. The tape is unreadable with working kernels too. Any
+> attempt to restore data from faulty tapes were in vain until now. 
+> 
+> Steps to reproduce:
+> tar cvf /dev/st0 /path/to/something
+> mtx -f /dev/sg1 unload
+> mtx -f /dev/sg1 load X
+> tar tvf /dev/st0
+> 
+> tar output:
+> tar: /dev/st0: Cannot read: Input/output error
+> tar: At beginning of tape, quitting now
+> tar: Error is not recoverable: exiting now
+> 
+> All read() attempts fail after 42 bytes. (I can attach those 42 bytes if they
+> are of any help).
 
