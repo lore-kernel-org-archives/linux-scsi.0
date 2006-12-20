@@ -1,66 +1,32 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [Bugme-new] [Bug 7717] New: Tapes unreadable after unload
-Date: Wed, 20 Dec 2006 02:50:58 -0800
-Message-ID: <20061220025058.70d3d4ea.akpm@osdl.org>
-References: <200612201031.kBKAVIJS005240@fire-2.osdl.org>
+From: "Maciej W. Rozycki" <macro@linux-mips.org>
+Subject: [PATCH 2.6.20-rc1 00/10] TURBOchannel update to the driver model
+Date: Wed, 20 Dec 2006 12:01:19 +0000 (GMT)
+Message-ID: <Pine.LNX.4.64N.0612182115550.10069@blysk.ds.pg.gda.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.25]:54166 "EHLO smtp.osdl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964982AbWLTKv2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Dec 2006 05:51:28 -0500
-In-Reply-To: <200612201031.kBKAVIJS005240@fire-2.osdl.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754627AbWLTMB2@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>, Ralf Baechle <ralf@linux-mips.org>, Jeff Garzik <jgarzik@pobox.com>, Antonino Daplas <adaplas@pol.net>, James.Bottomley@SteelEye.com
+Cc: linux-mips@linux-mips.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, linux-fbdev-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>, Kai Makisara <Kai.Makisara@kolumbus.fi>, bgs@bgs.hu
 
+Hello,
 
-(please respond via emailed reply-to-all)
+ It has been much longer than expected, but finally it is here!  This 
+series of patches converts support for the TURBOchannel bus to the driver 
+model.  As a nice side effect, the generic part of the code is now really 
+generic, that is no more dependencies on MIPS specifics under drivers/tc/ 
+and platform specific code for MIPS got moved where it belongs.  As to 
+whether other relevant platforms will add TURBOchannel support or not I 
+cannot tell right now. ;-)
 
-On Wed, 20 Dec 2006 02:31:18 -0800
-bugme-daemon@bugzilla.kernel.org wrote:
+ All the changes have been successfully tested with a DECstation 5000/133 
+and the necessary bits of additional hardware as appropriate.  Where 
+drivers supporting different bus attachments were concerned, they were 
+built for configurations enabling all the other buses supported and 
+run-time checked if possible.
 
-> http://bugzilla.kernel.org/show_bug.cgi?id=7717
-> 
->            Summary: Tapes unreadable after unload
->     Kernel Version: tested 2.6.17 through 2.6.29 with various results
+ And last but not least, thanks to James Simmons for beginning this work a 
+while ago as his code was great to start with.
 
-I assume that means 2.6.17 and 2.6.19 failed.
-
->             Status: NEW
->           Severity: blocking
->              Owner: io_scsi@kernel-bugs.osdl.org
->          Submitter: bgs@bgs.hu
-> 
-> 
-> Most recent kernel where this bug did *NOT* occur: 2.6.19
-
-And that means that 2.6.19 did not fail.
-
-Please clarify.
-
-> Distribution: Slackware/Fedora
-> Hardware Environment: HP 530, HP Dl380
-> Software Environment: tar, mtx
-> Problem Description: Doing a tar backup works well. Data is written and is
-> readable. Binary restore comparison is ok. After unload/load the tape produces
-> Input/output errors. The tape is unreadable with working kernels too. Any
-> attempt to restore data from faulty tapes were in vain until now. 
-> 
-> Steps to reproduce:
-> tar cvf /dev/st0 /path/to/something
-> mtx -f /dev/sg1 unload
-> mtx -f /dev/sg1 load X
-> tar tvf /dev/st0
-> 
-> tar output:
-> tar: /dev/st0: Cannot read: Input/output error
-> tar: At beginning of tape, quitting now
-> tar: Error is not recoverable: exiting now
-> 
-> All read() attempts fail after 42 bytes. (I can attach those 42 bytes if they
-> are of any help).
-
+  Maciej
