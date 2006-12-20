@@ -1,80 +1,51 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: [PATCH 3/6] block: export blk_verify_command for SG v4
-Date: Wed, 20 Dec 2006 14:43:06 +0900
-Message-ID: <20061220144306B.fujita.tomonori@lab.ntt.co.jp>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH 4/6] bsg: add sg_io_v4 structure
+Date: Wed, 20 Dec 2006 11:13:14 +0100
+Message-ID: <20061220101314.GL5010@kernel.dk>
+References: <20061220144309O.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:61029 "EHLO
-	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933009AbWLTFnR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Dec 2006 00:43:17 -0500
+Received: from brick.kernel.dk ([62.242.22.158]:5642 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752874AbWLTKL2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Dec 2006 05:11:28 -0500
+Content-Disposition: inline
+In-Reply-To: <20061220144309O.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: jens.axboe@oracle.com, dougg@torque.net
+To: FUJITA Tomonori <tomof@acm.org>
+Cc: linux-scsi@vger.kernel.org, dougg@torque.net
 
-blk_fill_sghdr_rq doesn't work for SG v4 so verify_command needed to
-be exported.
+On Wed, Dec 20 2006, FUJITA Tomonori wrote:
+> This patch adds sg_io_v4 structure that Doug proposed last month.
+> 
+> There's one major change from the RFC. I dropped iovec, which needs
+> compat stuff. The bsg code simply calls blk_rq_map_user against
+> dout_xferp/din_xferp. So if possible, the page frames are directly
+> mapped. If not possible, the block layer allocates new page frames and
+> does memory copies.
+> 
+> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> ---
+>  include/linux/bsg.h |   43 +++++++++++++++++++++++++++++++++++++++++++
+>  1 files changed, 43 insertions(+), 0 deletions(-)
+> 
+> diff --git a/include/linux/bsg.h b/include/linux/bsg.h
+> index dc0d728..0d212cc 100644
+> --- a/include/linux/bsg.h
+> +++ b/include/linux/bsg.h
+> @@ -1,6 +1,47 @@
+>  #ifndef BSG_H
+>  #define BSG_H
+>  
+> +struct sg_io_v4 {
+> +	int32_t guard;		/* [i] 'Q' to differentiate from v3 */
+> +	uint32_t protocol;	/* [i] 0 -> SCSI , .... */
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- block/scsi_ioctl.c     |    7 ++++---
- include/linux/blkdev.h |    1 +
- 2 files changed, 5 insertions(+), 3 deletions(-)
+I prefer using the u32 types and so on for explicitly sized variables.
+I'll make that change.
 
-diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-index 5e69ef6..18e935f 100644
---- a/block/scsi_ioctl.c
-+++ b/block/scsi_ioctl.c
-@@ -110,7 +110,7 @@ #define CMD_WARNED	0x04
- #define safe_for_read(cmd)	[cmd] = CMD_READ_SAFE
- #define safe_for_write(cmd)	[cmd] = CMD_WRITE_SAFE
- 
--static int verify_command(unsigned char *cmd, int has_write_perm)
-+int blk_verify_command(unsigned char *cmd, int has_write_perm)
- {
- 	static unsigned char cmd_type[256] = {
- 
-@@ -210,6 +210,7 @@ static int verify_command(unsigned char
- 	/* Otherwise fail it with an "Operation not permitted" */
- 	return -EPERM;
- }
-+EXPORT_SYMBOL_GPL(blk_verify_command);
- 
- int blk_fill_sghdr_rq(request_queue_t *q, struct request *rq,
- 		      struct sg_io_hdr *hdr, int has_write_perm)
-@@ -218,7 +219,7 @@ int blk_fill_sghdr_rq(request_queue_t *q
- 
- 	if (copy_from_user(rq->cmd, hdr->cmdp, hdr->cmd_len))
- 		return -EFAULT;
--	if (verify_command(rq->cmd, has_write_perm))
-+	if (blk_verify_command(rq->cmd, has_write_perm))
- 		return -EPERM;
- 
- 	/*
-@@ -455,7 +456,7 @@ int sg_scsi_ioctl(struct file *file, str
- 	if (in_len && copy_from_user(buffer, sic->data + cmdlen, in_len))
- 		goto error;
- 
--	err = verify_command(rq->cmd, file->f_mode & FMODE_WRITE);
-+	err = blk_verify_command(rq->cmd, file->f_mode & FMODE_WRITE);
- 	if (err)
- 		goto error;
- 
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 3f99737..9c55749 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -692,6 +692,7 @@ extern int blk_fill_sghdr_rq(request_que
- extern int blk_unmap_sghdr_rq(struct request *, struct sg_io_hdr *);
- extern int blk_complete_sghdr_rq(struct request *, struct sg_io_hdr *,
- 			  struct bio *);
-+extern int blk_verify_command(unsigned char *, int);
- 
- static inline request_queue_t *bdev_get_queue(struct block_device *bdev)
- {
 -- 
-1.4.3.2
+Jens Axboe
 
