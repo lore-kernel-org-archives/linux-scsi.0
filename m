@@ -1,54 +1,65 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: Re: [PATCH 4/6] bsg: add sg_io_v4 structure
-Date: Thu, 21 Dec 2006 07:29:42 +0900
-Message-ID: <20061221072942N.fujita.tomonori@lab.ntt.co.jp>
-References: <20061220144309O.fujita.tomonori@lab.ntt.co.jp>
-	<20061220101314.GL5010@kernel.dk>
+From: Michael Reed <mdr@sgi.com>
+Subject: [PATCH 1/1]  fusion: fibre channel: return DID_ERROR for MPI_IOCSTATUS_SCSI_IOC_TERMINATED
+Date: Wed, 20 Dec 2006 17:11:19 -0600
+Message-ID: <4589C317.60709@sgi.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------030100080004020407090000"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:40889 "EHLO
-	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030404AbWLTW33 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Dec 2006 17:29:29 -0500
-In-Reply-To: <20061220101314.GL5010@kernel.dk>
+Received: from omx2-ext.sgi.com ([192.48.171.19]:40283 "EHLO omx2.sgi.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1161008AbWLTXLY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Dec 2006 18:11:24 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jens.axboe@oracle.com
-Cc: tomof@acm.org, linux-scsi@vger.kernel.org, dougg@torque.net
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: "Moore, Eric Dean" <Eric.Moore@lsil.com>, Jeremy Higdon <jeremy@sgi.com>
 
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 4/6] bsg: add sg_io_v4 structure
-Date: Wed, 20 Dec 2006 11:13:14 +0100
+This is a multi-part message in MIME format.
+--------------030100080004020407090000
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-> On Wed, Dec 20 2006, FUJITA Tomonori wrote:
-> > This patch adds sg_io_v4 structure that Doug proposed last month.
-> > 
-> > There's one major change from the RFC. I dropped iovec, which needs
-> > compat stuff. The bsg code simply calls blk_rq_map_user against
-> > dout_xferp/din_xferp. So if possible, the page frames are directly
-> > mapped. If not possible, the block layer allocates new page frames and
-> > does memory copies.
-> > 
-> > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > ---
-> >  include/linux/bsg.h |   43 +++++++++++++++++++++++++++++++++++++++++++
-> >  1 files changed, 43 insertions(+), 0 deletions(-)
-> > 
-> > diff --git a/include/linux/bsg.h b/include/linux/bsg.h
-> > index dc0d728..0d212cc 100644
-> > --- a/include/linux/bsg.h
-> > +++ b/include/linux/bsg.h
-> > @@ -1,6 +1,47 @@
-> >  #ifndef BSG_H
-> >  #define BSG_H
-> >  
-> > +struct sg_io_v4 {
-> > +	int32_t guard;		/* [i] 'Q' to differentiate from v3 */
-> > +	uint32_t protocol;	/* [i] 0 -> SCSI , .... */
-> 
-> I prefer using the u32 types and so on for explicitly sized variables.
-> I'll make that change.
+The fibre channel IOC may kill a request for a variety of
+reasons, some of which may be recovered by a retry, some of
+which are unlikely to be recovered.  Return DID_ERROR
+instead of DID_RESET to permit retry of the command,
+just not an infinite number of them.
 
-I see though we need to use __u32 instead of u32, don't we?
+Signed-off-by: Michael Reed <mdr@sgi.com>
+
+--------------030100080004020407090000
+Content-Type: text/x-patch;
+ name="mptscsih.c.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="mptscsih.c.patch"
+
+The fibre channel IOC may kill a request for a variety of
+reasons, some of which may be recovered by a retry, some of
+which are unlikely to be recovered.  Return DID_ERROR
+instead of DID_RESET to permit retry of the command,
+just not an infinite number of them.
+
+Signed-off-by: Michael Reed <mdr@sgi.com>
+
+--- kdbu/drivers/message/fusion/mptscsih.c	2006-08-04 02:10:22.000000000 -0500
++++ kdb/drivers/message/fusion/mptscsih.c	2006-12-16 12:54:13.952128107 -0600
+@@ -702,9 +702,14 @@ mptscsih_io_done(MPT_ADAPTER *ioc, MPT_F
+ 					}
+ 				}
+ 			}
++			else if (ioc->bus_type == FC) {
++				/* i/o killed by IOC */
++				sc->result = DID_ERROR << 16;
++				break;
++			}
+ 
+ 			/*
+-			 * Allow non-SAS & non-NEXUS_LOSS to drop into below code
++			 * Allow non-FC, non-SAS & non-NEXUS_LOSS to drop into below code
+ 			 */
+ 
+ 		case MPI_IOCSTATUS_SCSI_TASK_TERMINATED:	/* 0x0048 */
+
+--------------030100080004020407090000--
