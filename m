@@ -1,32 +1,51 @@
-From: Jeremy Linton <jli@greshamstorage.com>
-Subject: Re: [PATCH] scsi_execute_async() should add to the tail of the queue
-Date: Wed, 20 Dec 2006 17:50:51 -0600
-Message-ID: <4589CC5B.9090704@greshamstorage.com>
-References: <20061219083507.GA20847@localdomain> <1166522613.3365.1198.camel@laptopd505.fenrus.org> <4587C04E.10307@monatomic.org>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [PATCH 2.6.20-rc1 01/10] TURBOchannel update to the driver
+ model
+Date: Wed, 20 Dec 2006 20:54:06 -0800
+Message-ID: <20061220205406.0061081c.akpm@osdl.org>
+References: <Pine.LNX.4.64N.0612201139080.11005@blysk.ds.pg.gda.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from austin.greshamstorage.com ([216.143.252.250]:2555 "EHLO
-	austin.greshamstorage.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161050AbWLUAGU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Dec 2006 19:06:20 -0500
-In-Reply-To: <4587C04E.10307@monatomic.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.64N.0612201139080.11005@blysk.ds.pg.gda.pl>
+Sender: netdev-owner@vger.kernel.org
+To: "Maciej W. Rozycki" <macro@linux-mips.org>
+Cc: Ralf Baechle <ralf@linux-mips.org>, Jeff Garzik <jgarzik@pobox.com>, Antonino Daplas <adaplas@pol.net>, James.Bottomley@SteelEye.com, linux-mips@linux-mips.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, linux-fbdev-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Aloni <da-x@monatomic.org>
-Cc: Arjan van de Ven <arjan@fenrus.demon.nl>, Linux Kernel List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>
 
-> So instead of adding a parameter, we can make scsi_execute_async()
-> decide for itself based on the SCSI command, with read/write I/Os
-> taking the lowest priority.
-	This seems like a bad idea, I can come up with a number of cases where 
-the priority of a request would better be optimized by a higher level 
-subsystem, rather than a simple prioritization based on the command type.
+On Wed, 20 Dec 2006 12:01:30 +0000 (GMT)
+"Maciej W. Rozycki" <macro@linux-mips.org> wrote:
 
-The original suggestion to provide both head and tail insertion options 
-seems like the obvious solution, short of a full priority queuing system.
+> +/**
+> + * tc_register_driver - register a new TC driver
+> + * @drv: the driver structure to register
+> + *
+> + * Adds the driver structure to the list of registered drivers
+> + * Returns a negative value on error, otherwise 0.
+> + * If no error occurred, the driver remains registered even if
+> + * no device was claimed during registration.
+> + */
+> +int tc_register_driver(struct tc_driver *tdrv)
+> +{
+> +	return driver_register(&tdrv->driver);
+> +}
+> +EXPORT_SYMBOL(tc_register_driver);
+> +
+> +/**
+> + * tc_unregister_driver - unregister a TC driver
+> + * @drv: the driver structure to unregister
+> + *
+> + * Deletes the driver structure from the list of registered TC drivers,
+> + * gives it a chance to clean up by calling its remove() function for
+> + * each device it was responsible for, and marks those devices as
+> + * driverless.
+> + */
+> +void tc_unregister_driver(struct tc_driver *tdrv)
+> +{
+> +	driver_unregister(&tdrv->driver);
+> +}
+> +EXPORT_SYMBOL(tc_unregister_driver);
 
-
-
-
+I spose making these inline would save a bit of code, stack space and 
+a couple of exports.
