@@ -1,62 +1,46 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [PATCH 1/5] Update Documentation/pci.txt
-Date: Fri, 22 Dec 2006 22:52:09 +0100
-Message-ID: <458C5389.70704@s5r6.in-berlin.de>
-References: <456404E2.1060102@jp.fujitsu.com>	<20061122182804.GE378@colo.lackof.org>	<45663EE8.1080708@jp.fujitsu.com>	<20061124051217.GB8202@colo.lackof.org>	<20061206072651.GG17199@kroah.com>	<20061210072508.GA12272@colo.lackof.org>	<20061215170207.GB15058@kroah.com>	<20061218071133.GA1738@colo.lackof.org>
-	<20061222114658.01da661b.randy.dunlap@oracle.com>
+From: Kars de Jong <jongk@linux-m68k.org>
+Subject: Re: [RFC PATCH] m68k: switch to 53c700 driver
+Date: Fri, 22 Dec 2006 22:21:52 +0100
+Message-ID: <1166822512.27647.2.camel@kars.perseus.home>
+References: <20051115101709.GK7031@2004.bluespice.org>
+	 <20051115103034.GA24352@infradead.org> <20051115113225.GS5252@levanta.com>
+	 <20060707124444.GA11199@infradead.org> <20060709111648.GR15414@levanta.com>
+	 <1152444304.5567.2.camel@kars.perseus.home>
+	 <20061030111311.GA756@infradead.org>
+	 <1162331224.7805.18.camel@kars.perseus.home>
+	 <1166394517.9647.22.camel@mulgrave.il.steeleye.com>
+	 <Pine.LNX.4.62.0612181032080.24587@pademelon.sonytel.be>
+	 <20061219030919.GG17561@ftp.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <e1000-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <20061222114658.01da661b.randy.dunlap@oracle.com>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/e1000-devel>,
-	<mailto:e1000-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=e1000-devel>
-List-Post: <mailto:e1000-devel@lists.sourceforge.net>
-List-Help: <mailto:e1000-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/e1000-devel>,
-	<mailto:e1000-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: e1000-devel-bounces@lists.sourceforge.net
-Errors-To: e1000-devel-bounces@lists.sourceforge.net
-To: Grant Grundler <grundler@parisc-linux.org>
-Cc: Randy Dunlap <randy.dunlap@oracle.com>, Andrew Morton <akpm@osdl.org>, Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>, linux-scsi@vger.kernel.org, e1000-devel@lists.sourceforge.net, Greg KH <greg@kroah.com>, Linux Kernel list <linux-kernel@vger.kernel.org>, Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>, linux-pci@atrey.karlin.mff.cuni.cz
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtpq3.groni1.gr.home.nl ([213.51.130.202]:54629 "EHLO
+	smtpq3.groni1.gr.home.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753134AbWLVWd3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Dec 2006 17:33:29 -0500
+In-Reply-To: <20061219030919.GG17561@ftp.linux.org.uk>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Al Viro <viro@ftp.linux.org.uk>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>, James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@infradead.org>, Richard Hirst <rhirst@levanta.com>, Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org
 
-> On Mon, 18 Dec 2006 00:11:33 -0700 Grant Grundler wrote:
-...
->> +4.1 Stop IRQs on the device
->> +~~~~~~~~~~~~~~~~~~~~~~~~~~~
->> +How to do this is chip/device specific. If it's not done, it opens
->> +the possibility of a "screaming interrupt" if (and only if)
->> +the IRQ is shared with another device.
->> +
->> +When the shared IRQ handler is "unhoooked", the remaining devices
-                                       ^^^
--> unhooked
-
-...
->> +11. MMIO Space and "Write Posting"
->> +~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->> +Converting a driver from using I/O Port space to using MMIO space
->> +often requires some additional changes. Specifically, "write posting"
->> +needs to be handled. Many drivers (e.g. tg3, acenic, sym53c8xx_2)
->> +already do. I/O Port space guarantees write transactions reach the PCI
+On di, 2006-12-19 at 03:09 +0000, Al Viro wrote:
+> > m68k-generic-io.diff
 > 
->    already do this.
+> Hmm...  That breaks when you have ISA && !PCI (e.g. amiga or q40 defconfig):
 > 
->> +device before the CPU can continue. Writes to MMIO space allow to CPU
-                                                                   ^^
->> +continue before the transaction reaches the PCI device. HW weenies
-   ^
--> allow the CPU to continue
+> lib/built-in.o: In function `ioread32_rep':
+> (.text+0xc31a): undefined reference to `insl'
+> lib/built-in.o: In function `iowrite32_rep':
+> (.text+0xc43e): undefined reference to `outsl'
+> lib/built-in.o: In function `ioread32':
+> (.text+0xc7da): undefined reference to `readl'
+> lib/built-in.o: In function `iowrite32':
+> (.text+0xca6a): undefined reference to `writel'
 
--- 
-Stefan Richter
--=====-=-==- ==-- =-==-
-http://arcgraph.de/sr/
+Thanks for spotting that. I'll update the patch.
 
--------------------------------------------------------------------------
-Take Surveys. Earn Cash. Influence the Future of IT
-Join SourceForge.net's Techsay panel and you'll get the chance to share your
-opinions on IT & business topics through brief surveys - and earn cash
-http://www.techsay.com/default.php?page=join.php&p=sourceforge&CID=DEVDEV
+Kars.
+
+
