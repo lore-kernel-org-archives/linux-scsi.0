@@ -1,34 +1,72 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: SG v4 task tag
-Date: Fri, 22 Dec 2006 13:47:41 +0900
-Message-ID: <20061222134741J.fujita.tomonori@lab.ntt.co.jp>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH 4/6] bsg: add sg_io_v4 structure
+Date: Fri, 22 Dec 2006 09:42:24 +0100
+Message-ID: <20061222084224.GM17199@kernel.dk>
+References: <20061220101314.GL5010@kernel.dk> <20061221072942N.fujita.tomonori@lab.ntt.co.jp> <20061221072809.GM10535@kernel.dk> <20061222134635M.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:47427 "EHLO
-	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1945928AbWLVErZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Dec 2006 23:47:25 -0500
+Received: from brick.kernel.dk ([62.242.22.158]:14301 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1945986AbWLVIkb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Dec 2006 03:40:31 -0500
+Content-Disposition: inline
+In-Reply-To: <20061222134635M.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: jens.axboe@oracle.com, dougg@torque.net
+To: FUJITA Tomonori <tomof@acm.org>
+Cc: linux-scsi@vger.kernel.org, dougg@torque.net
 
-The bsg tree has SG v4 basic support (Jens, thanks for merging the
-patches). Next I try to add task tag support.
+On Fri, Dec 22 2006, FUJITA Tomonori wrote:
+> From: Jens Axboe <jens.axboe@oracle.com>
+> Subject: Re: [PATCH 4/6] bsg: add sg_io_v4 structure
+> Date: Thu, 21 Dec 2006 08:28:23 +0100
+> 
+> > On Thu, Dec 21 2006, FUJITA Tomonori wrote:
+> > > From: Jens Axboe <jens.axboe@oracle.com>
+> > > Subject: Re: [PATCH 4/6] bsg: add sg_io_v4 structure
+> > > Date: Wed, 20 Dec 2006 11:13:14 +0100
+> > > 
+> > > > On Wed, Dec 20 2006, FUJITA Tomonori wrote:
+> > > > > This patch adds sg_io_v4 structure that Doug proposed last month.
+> > > > > 
+> > > > > There's one major change from the RFC. I dropped iovec, which needs
+> > > > > compat stuff. The bsg code simply calls blk_rq_map_user against
+> > > > > dout_xferp/din_xferp. So if possible, the page frames are directly
+> > > > > mapped. If not possible, the block layer allocates new page frames and
+> > > > > does memory copies.
+> > > > > 
+> > > > > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> > > > > ---
+> > > > >  include/linux/bsg.h |   43 +++++++++++++++++++++++++++++++++++++++++++
+> > > > >  1 files changed, 43 insertions(+), 0 deletions(-)
+> > > > > 
+> > > > > diff --git a/include/linux/bsg.h b/include/linux/bsg.h
+> > > > > index dc0d728..0d212cc 100644
+> > > > > --- a/include/linux/bsg.h
+> > > > > +++ b/include/linux/bsg.h
+> > > > > @@ -1,6 +1,47 @@
+> > > > >  #ifndef BSG_H
+> > > > >  #define BSG_H
+> > > > >  
+> > > > > +struct sg_io_v4 {
+> > > > > +	int32_t guard;		/* [i] 'Q' to differentiate from v3 */
+> > > > > +	uint32_t protocol;	/* [i] 0 -> SCSI , .... */
+> > > > 
+> > > > I prefer using the u32 types and so on for explicitly sized variables.
+> > > > I'll make that change.
+> > > 
+> > > I see though we need to use __u32 instead of u32, don't we?
+> > 
+> > Yep, we should.
+> 
+> Are you waiting for a patch?
 
-- LLDs use their own internal value (pointer, counter, etc) or the
-  block tagging code for task tags.
+Not really, just didn't get to it yet. But I'll take the patch, thanks
+:-)
 
-- task tags need to be always unique (though they might be generated
-  in kernel or specified by user space via SG v4).
+Could you do the __user annotations as well?
 
-If LLDs are going to be converted to use the block tagging code, then
-we can narrow down the problems to the tag collision between
-user-space and the block layer. But still I'm not sure how to
-implement it nicely; sgv4 returns an assigned tag when user-space
-submits a SCSI command (but SG_IO cannot handle this), exporting
-available tags to user space somehow; reserving some tags for sg v4.
+-- 
+Jens Axboe
 
-Suggestions?
