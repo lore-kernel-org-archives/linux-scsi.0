@@ -1,32 +1,61 @@
-From: Laurent Riffard <laurent.riffard@free.fr>
-Subject: Re: [Bugme-new] [Bug 7667] New: BUG at drivers/scsi/scsi_lib.c:1118
- caused by "pktsetup dvd /dev/sr0"
-Date: Thu, 28 Dec 2006 23:28:14 +0100
-Message-ID: <459444FE.4080909@free.fr>
-References: <200612112159.kBBLxmep005850@fire-2.osdl.org> <20061211141029.9a0b0376.akpm@osdl.org> <20061212103842.GA9619@lst.de> <20061212132600.GA19912@lst.de> <457EBAE3.6090609@panasas.com> <457F2F17.3000009@free.fr>
+From: "Iordan Iordanov" <iordanov@utias.utoronto.ca>
+Subject: megaraid driver in linux kernel
+Date: Thu, 28 Dec 2006 18:03:18 -0500 (EST)
+Message-ID: <41029.142.150.208.10.1167346998.squirrel@arrow.utias.utoronto.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp10.orange.fr ([193.252.22.21]:37161 "EHLO smtp10.orange.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965027AbWL1Wtd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Dec 2006 17:49:33 -0500
-Received: from smtp10.orange.fr (mwinf1002 [172.22.141.24])
-	by mwinf1005.orange.fr (SMTP Server) with ESMTP id 59C2AC046D8
-	for <linux-scsi@vger.kernel.org>; Thu, 28 Dec 2006 23:28:42 +0100 (CET)
-In-Reply-To: <457F2F17.3000009@free.fr>
+Received: from arrow.utias.utoronto.ca ([128.100.201.226]:58834 "EHLO
+	arrow.utias.utoronto.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965034AbWL1XNu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Dec 2006 18:13:50 -0500
+Received: from arrow.utias.utoronto.ca (localhost [127.0.0.1])
+	by arrow.utias.utoronto.ca (8.12.8/8.12.8) with ESMTP id kBSN3IKJ010788
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Thu, 28 Dec 2006 18:03:18 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Boaz Harrosh <bharrosh@panasas.com>, Christoph Hellwig <hch@lst.de>, Peter Osterlund <petero2@telia.com>, linux-scsi@vger.kernel.org, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>, Adrian Bunk <bunk@stusta.de>
+To: linux-scsi@vger.kernel.org
 
+Hello,
 
-This BUG (http://bugzilla.kernel.org/show_bug.cgi?id=7667) still happens with 
-2.6.20-rc2-mm1.
+We are having some trouble with a PERC4/DC card driven by the legacy
+megaraid driver on kernel version 2.6.15. It seems as though every once in
+a while a few of the drives become corrupt. I read a few places online
+people complaining about similar errors (SCSI error: return code =
+0x40001).
 
-Fortunately, Christoph Hellwig's patch 
-(http://bugzilla.kernel.org/show_bug.cgi?id=7667#c5) still fix it.
+I also read that the suggestion was to abandon the legacy driver and go
+with the new driver.
+
+Well, I compiled kernel 2.6.17 and in my kernel configuration I have the
+lines:
+
+CONFIG_MEGARAID_NEWGEN=y
+CONFIG_MEGARAID_MM=y
+CONFIG_MEGARAID_MAILBOX=y
+CONFIG_MEGARAID_SAS=y
+CONFIG_MEGARAID_LEGACY=m
+
+I also tried:
+
+CONFIG_MEGARAID_NEWGEN=y
+CONFIG_MEGARAID_MM=m
+CONFIG_MEGARAID_MAILBOX=m
+CONFIG_MEGARAID_SAS=m
+CONFIG_MEGARAID_LEGACY=m
+
+In both cases, the card is not detected! Is it that the new megaraid
+driver does not support a card as new as the PERC4/DC? Also, is it
+possible that it's the legacy driver which is causing the corruption?
+
+Can you please suggest a course of action for us?  I am not subscribed to
+the mailing list, so please "cc" me on any replies.
+
+Thank you very much,
+Iordan Iordanov,
+University of Toronto
 
 -- 
-laurent
+The human mind has a single thread of execution.
