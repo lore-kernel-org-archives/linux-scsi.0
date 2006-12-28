@@ -1,14 +1,15 @@
-From: Douglas Gilbert <dougg@torque.net>
+From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: [PATCH] ieee1394: sbp2: pass REQUEST_SENSE through to the target
-Date: Thu, 28 Dec 2006 15:21:45 -0500
-Message-ID: <45942759.8080804@torque.net>
+Date: Thu, 28 Dec 2006 13:54:06 -0700
+Message-ID: <20061228205406.GC20153@parisc-linux.org>
 References: <tkrat.9e24970727f8c664@s5r6.in-berlin.de>
-Reply-To: dougg@torque.net
+	<45942759.8080804@torque.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <tkrat.9e24970727f8c664@s5r6.in-berlin.de>
+Content-Disposition: inline
+In-Reply-To: <45942759.8080804@torque.net>
 List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
 	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
 List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux1394-devel>
@@ -18,36 +19,31 @@ List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
 	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
 Sender: linux1394-devel-bounces@lists.sourceforge.net
 Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+To: Douglas Gilbert <dougg@torque.net>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Stefan Richter wrote:
-> Delete some incorrect code, left over from the initial driver submission
-> in March 2001.
-> 
-> SBP-2 targets should provide sense data via the SBP-2 status block
-> (autosense).  We have to pass the REQUEST_SENSE command through to
-> targets which don't implement autosense, if there are any.
+On Thu, Dec 28, 2006 at 03:21:45PM -0500, Douglas Gilbert wrote:
+> So, this patch is a step in the right direction.
+> Hopefully not too many other LLDs are playing
+> games with REQUEST SENSE.
 
-Umm, REQUEST SENSE has several other useful capabilities.
-It can convey information about low power conditions,
-a progress indicator (e.g. during FORMAT with IMMED=1)
-and informational exception warnings. It is also
-defined to work any time INQUIRY works (e.g. on lun=0
-when there is no lu there but there is a lun>0).
+A lot of drivers play games with REQUEST_SENSE, but they mostly seem to
+be doing things with their own internal state.  One suspicious one is
+BusLogic.c :
 
-smartmontools sets MRIE to 6 in the control mode page so
-it can periodically poll a disk with REQUEST SENSE to see
-if it has tripped a threshold . It could use other techniques
-but they would most likely interfere with normal error
-processing on the host OS (and linux is one of about 8).
+        /*
+           SCSI REQUEST_SENSE commands will be executed automatically by the Host
+           Adapter for any errors, so they should not be executed explicitly unless
+           the Sense Data is zero indicating that no error occurred.
+         */
+        if (CDB[0] == REQUEST_SENSE && Command->sense_buffer[0] != 0) {
+                Command->result = DID_OK << 16;
+                CompletionRoutine(Command);
+                return 0;
+        }
 
-So, this patch is a step in the right direction.
-Hopefully not too many other LLDs are playing
-games with REQUEST SENSE.
-
-Doug Gilbert
+I don't know if this is OK for your scenario or not.
 
 -------------------------------------------------------------------------
 Take Surveys. Earn Cash. Influence the Future of IT
