@@ -1,49 +1,32 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [PATCH] ieee1394: sbp2: pass REQUEST_SENSE through to the target
-Date: Thu, 28 Dec 2006 23:38:22 +0100
-Message-ID: <4594475E.9040408@s5r6.in-berlin.de>
-References: <tkrat.9e24970727f8c664@s5r6.in-berlin.de>
-	<45942759.8080804@torque.net>
+From: Laurent Riffard <laurent.riffard@free.fr>
+Subject: Re: [Bugme-new] [Bug 7667] New: BUG at drivers/scsi/scsi_lib.c:1118
+ caused by "pktsetup dvd /dev/sr0"
+Date: Thu, 28 Dec 2006 23:28:14 +0100
+Message-ID: <459444FE.4080909@free.fr>
+References: <200612112159.kBBLxmep005850@fire-2.osdl.org> <20061211141029.9a0b0376.akpm@osdl.org> <20061212103842.GA9619@lst.de> <20061212132600.GA19912@lst.de> <457EBAE3.6090609@panasas.com> <457F2F17.3000009@free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <45942759.8080804@torque.net>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux1394-devel-bounces@lists.sourceforge.net
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: dougg@torque.net
-Cc: linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp10.orange.fr ([193.252.22.21]:37161 "EHLO smtp10.orange.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965027AbWL1Wtd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Dec 2006 17:49:33 -0500
+Received: from smtp10.orange.fr (mwinf1002 [172.22.141.24])
+	by mwinf1005.orange.fr (SMTP Server) with ESMTP id 59C2AC046D8
+	for <linux-scsi@vger.kernel.org>; Thu, 28 Dec 2006 23:28:42 +0100 (CET)
+In-Reply-To: <457F2F17.3000009@free.fr>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Boaz Harrosh <bharrosh@panasas.com>, Christoph Hellwig <hch@lst.de>, Peter Osterlund <petero2@telia.com>, linux-scsi@vger.kernel.org, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>, Adrian Bunk <bunk@stusta.de>
 
-Douglas Gilbert wrote:
-> Stefan Richter wrote:
->> Delete some incorrect code, left over from the initial driver submission
->> in March 2001.
->>
->> SBP-2 targets should provide sense data via the SBP-2 status block
->> (autosense).  We have to pass the REQUEST_SENSE command through to
->> targets which don't implement autosense, if there are any.
-> 
-> Umm, REQUEST SENSE has several other useful capabilities.
-[...]
 
-Well, my patch description might be misleading as REQUEST SENSE is now
-going through sbp2 regardless of device capabilities. I'll chose a
-better wording when pushing this upstream.
+This BUG (http://bugzilla.kernel.org/show_bug.cgi?id=7667) still happens with 
+2.6.20-rc2-mm1.
+
+Fortunately, Christoph Hellwig's patch 
+(http://bugzilla.kernel.org/show_bug.cgi?id=7667#c5) still fix it.
+
 -- 
-Stefan Richter
--=====-=-==- ==-- ===--
-http://arcgraph.de/sr/
-
--------------------------------------------------------------------------
-Take Surveys. Earn Cash. Influence the Future of IT
-Join SourceForge.net's Techsay panel and you'll get the chance to share your
-opinions on IT & business topics through brief surveys - and earn cash
-http://www.techsay.com/default.php?page=join.php&p=sourceforge&CID=DEVDEV
+laurent
