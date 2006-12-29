@@ -1,68 +1,101 @@
 From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: sas_device/end_device-*/phy_identifier flipped
-Date: Fri, 29 Dec 2006 11:56:26 -0800 (PST)
-Message-ID: <953993.32133.qm@web31812.mail.mud.yahoo.com>
-References: <4593562F.2000604@torque.net>
+Subject: Fwd: Re: Problem with Linux aic94xx driver
+Date: Fri, 29 Dec 2006 12:18:27 -0800 (PST)
+Message-ID: <203581.7076.qm@web31806.mail.mud.yahoo.com>
 Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31812.mail.mud.yahoo.com ([68.142.207.75]:31483 "HELO
-	web31812.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S965132AbWL2UDI (ORCPT
+Received: from web31806.mail.mud.yahoo.com ([68.142.207.69]:47739 "HELO
+	web31806.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S965140AbWL2US1 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Dec 2006 15:03:08 -0500
-In-Reply-To: <4593562F.2000604@torque.net>
+	Fri, 29 Dec 2006 15:18:27 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net, linux-scsi@vger.kernel.org
+To: terje.rosten@ntnu.no, linux-scsi <linux-scsi@vger.kernel.org>
 
---- Douglas Gilbert <dougg@torque.net> wrote:
-> In lk 2.6.20-rc2 (and probably earlier) the phy_identifier
-> attribute in the /sys/class/sas_device/end_device-*
-> directory is showing the wrong end of the point to point
-> link.
-> 
-> Phy identifiers on (dual ported) SAS disks are typically
-> 0 and 1. For SATA disks the phy identifier should be 0.
-> 
-> # lsscsi
-> [4:0:0:0]    disk    ATA      ST3160812AS      D     /dev/sda
-> [4:0:1:0]    disk    SEAGATE  ST336754SS       0003  /dev/sdb
-> # lsscsi -t
-> [4:0:0:0]    disk    sas:0x500605b0000033e6          /dev/sda
-> [4:0:1:0]    disk    sas:0x5000c500005208ee          /dev/sdb
-> # lsscsi -tL 4:0:1:0
-> [4:0:1:0]    disk    sas:0x5000c500005208ee          /dev/sdb
->   transport=sas
->   initiator_port_protocols=none
->   initiator_response_timeout=10000
->   I_T_nexus_loss_timeout=1744
->   phy_identifier=7
->   ready_led_meaning=1
->   sas_address=0x5000c500005208ee
->   target_port_protocols=ssp
-> 
-> # smp_discover -mb
-> Device <500605b0000033ef>, expander (only connected phys shown):
->   phy   5:T:attached:[500605b00006f260:03  i(SSP+STP+SMP)]  3 Gbps
->   phy   6:T:attached:[500605b0000033e6:00  t(SATA)]  1.5 Gbps
->   phy   7:T:attached:[5000c500005208ee:01  t(SSP)]  3 Gbps
-> 
-> 
-> The SATA and SAS disks are connected via an expander which
-> lets me look at sysfs for 4:0:1:0 and the expander configuration
-> with smp_discover. The port in use on the SAS disk has the
-> address: 5000c500005208ee . The expander says that cable is
-> attached to phy 1 which agrees with what I can see. However
-> sysfs reports "phy_identifier=7" which is wrong (and happens
-> to be the attached phy_id seen from the SAS disk).
-> 
-> Both aic94xx and mptsas drivers do the same thing so it
-> looks like a SAS transport problem.
+--- Terje R=F8sten <terje.rosten@ntnu.no> wrote:
+> Hi!
+>=20
+> I have a Tyan Transport TA26 barebone, with an addon card that I thin=
+k=20
+> has a AIC-94xx chip.
+> I am using Fedora Core 6 with a kernel from Fedora rawhide (developme=
+nt):
+>=20
+> $ uname -a
+> Linux randi.phys.ntnu.no 2.6.19-1.2891.fc7 #1 SMP Thu Dec 21 10:59:56=
+=20
+> EST 2006 x86_64 x86_64 x86_64 GNU/Linux
+>=20
+> It's 2.6.20rc1-git5 kernel with some patches.
+>=20
+> When I load the module I get:
+>=20
+> aic94xx: Adaptec aic94xx SAS/SATA driver version 1.0.2 loaded
+> ACPI: PCI Interrupt 0000:03:05.0[A] -> GSI 25 (level, low) -> IRQ 25
+> aic94xx: found Adaptec AIC-9410W SAS/SATA Host Adapter, device 0000:0=
+3:05.0
+> scsi7 : aic94xx
+> aic94xx: using sequencer V17/10c6
+> aic94xx: device 0000:03:05.0: SAS addr 500e081000011470, PCBA SN , 8=20
+> phys, 8 enabled phys, flash present, BIOS build 1608
+> ERROR: Unidentified device type 5
+> ERROR: Unidentified device type 5
+> ERROR: Unidentified device type 5
+> ERROR: Unidentified device type 5
+>=20
+> (It's 4 Western Digital RE2 WD5000YS with NCQ (500 GB SATA) on the=20
+> controller,
+> set up in RAID BIOS  to one RAID 1+0 logical drive).
+>=20
+> Seems like I end up here:
+>=20
+> drivers/scsi/libsas/sas_discover.c: sas_get_port_device() :
+>=20
+> 256   switch (dev->dev_type) {
+> 257         case SAS_END_DEV:
+> 258                 rphy =3D sas_end_device_alloc(port->port);
+> 259                 break;
+> 260         case EDGE_DEV:
+> 261                 rphy =3D sas_expander_alloc(port->port,
+> 262                                           SAS_EDGE_EXPANDER_DEVIC=
+E);
+> 263                 break;
+> 264         case FANOUT_DEV:
+> 265                 rphy =3D sas_expander_alloc(port->port,
+> 266                                           SAS_FANOUT_EXPANDER_DEV=
+ICE);
+> 267                 break;
+> 268         case SATA_DEV:
+> 269         default:
+> 270                 printk("ERROR: Unidentified device type %d\n",=20
+> dev->dev_type);
+> 271                 rphy =3D NULL;
+> 272                 break;
+> 273         }
+>=20
+> Any ideas?
 
-Have you tested this with the SAS Stack as I distribute it?
+Terje,
 
-     Luben
+In my SAS Stack, I _do not_ have that switch statement in that
+function.  Apparently you are using "libsas", which is based
+on an early, early version of my code, which bottomley and his
+gang of SAS experts appropriated to "maintain".  And as your
+problem shows has been "fixed" in many ways.
 
+You should complain to them -- I've CC-ed the linux-scsi mailing
+list.
+
+BTW, I don't experience this bug with the SAS Stack as I maintain it.
+
+    Luben
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
