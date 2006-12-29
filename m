@@ -1,61 +1,68 @@
-From: "Iordan Iordanov" <iordanov@utias.utoronto.ca>
-Subject: megaraid driver in linux kernel
-Date: Thu, 28 Dec 2006 18:03:18 -0500 (EST)
-Message-ID: <41029.142.150.208.10.1167346998.squirrel@arrow.utias.utoronto.ca>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: sas_device/end_device-*/phy_identifier flipped
+Date: Fri, 29 Dec 2006 11:56:26 -0800 (PST)
+Message-ID: <953993.32133.qm@web31812.mail.mud.yahoo.com>
+References: <4593562F.2000604@torque.net>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from arrow.utias.utoronto.ca ([128.100.201.226]:58834 "EHLO
-	arrow.utias.utoronto.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965034AbWL1XNu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Dec 2006 18:13:50 -0500
-Received: from arrow.utias.utoronto.ca (localhost [127.0.0.1])
-	by arrow.utias.utoronto.ca (8.12.8/8.12.8) with ESMTP id kBSN3IKJ010788
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Thu, 28 Dec 2006 18:03:18 -0500
+Received: from web31812.mail.mud.yahoo.com ([68.142.207.75]:31483 "HELO
+	web31812.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S965132AbWL2UDI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 29 Dec 2006 15:03:08 -0500
+In-Reply-To: <4593562F.2000604@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: dougg@torque.net, linux-scsi@vger.kernel.org
 
-Hello,
+--- Douglas Gilbert <dougg@torque.net> wrote:
+> In lk 2.6.20-rc2 (and probably earlier) the phy_identifier
+> attribute in the /sys/class/sas_device/end_device-*
+> directory is showing the wrong end of the point to point
+> link.
+> 
+> Phy identifiers on (dual ported) SAS disks are typically
+> 0 and 1. For SATA disks the phy identifier should be 0.
+> 
+> # lsscsi
+> [4:0:0:0]    disk    ATA      ST3160812AS      D     /dev/sda
+> [4:0:1:0]    disk    SEAGATE  ST336754SS       0003  /dev/sdb
+> # lsscsi -t
+> [4:0:0:0]    disk    sas:0x500605b0000033e6          /dev/sda
+> [4:0:1:0]    disk    sas:0x5000c500005208ee          /dev/sdb
+> # lsscsi -tL 4:0:1:0
+> [4:0:1:0]    disk    sas:0x5000c500005208ee          /dev/sdb
+>   transport=sas
+>   initiator_port_protocols=none
+>   initiator_response_timeout=10000
+>   I_T_nexus_loss_timeout=1744
+>   phy_identifier=7
+>   ready_led_meaning=1
+>   sas_address=0x5000c500005208ee
+>   target_port_protocols=ssp
+> 
+> # smp_discover -mb
+> Device <500605b0000033ef>, expander (only connected phys shown):
+>   phy   5:T:attached:[500605b00006f260:03  i(SSP+STP+SMP)]  3 Gbps
+>   phy   6:T:attached:[500605b0000033e6:00  t(SATA)]  1.5 Gbps
+>   phy   7:T:attached:[5000c500005208ee:01  t(SSP)]  3 Gbps
+> 
+> 
+> The SATA and SAS disks are connected via an expander which
+> lets me look at sysfs for 4:0:1:0 and the expander configuration
+> with smp_discover. The port in use on the SAS disk has the
+> address: 5000c500005208ee . The expander says that cable is
+> attached to phy 1 which agrees with what I can see. However
+> sysfs reports "phy_identifier=7" which is wrong (and happens
+> to be the attached phy_id seen from the SAS disk).
+> 
+> Both aic94xx and mptsas drivers do the same thing so it
+> looks like a SAS transport problem.
 
-We are having some trouble with a PERC4/DC card driven by the legacy
-megaraid driver on kernel version 2.6.15. It seems as though every once in
-a while a few of the drives become corrupt. I read a few places online
-people complaining about similar errors (SCSI error: return code =
-0x40001).
+Have you tested this with the SAS Stack as I distribute it?
 
-I also read that the suggestion was to abandon the legacy driver and go
-with the new driver.
+     Luben
 
-Well, I compiled kernel 2.6.17 and in my kernel configuration I have the
-lines:
-
-CONFIG_MEGARAID_NEWGEN=y
-CONFIG_MEGARAID_MM=y
-CONFIG_MEGARAID_MAILBOX=y
-CONFIG_MEGARAID_SAS=y
-CONFIG_MEGARAID_LEGACY=m
-
-I also tried:
-
-CONFIG_MEGARAID_NEWGEN=y
-CONFIG_MEGARAID_MM=m
-CONFIG_MEGARAID_MAILBOX=m
-CONFIG_MEGARAID_SAS=m
-CONFIG_MEGARAID_LEGACY=m
-
-In both cases, the card is not detected! Is it that the new megaraid
-driver does not support a card as new as the PERC4/DC? Also, is it
-possible that it's the legacy driver which is causing the corruption?
-
-Can you please suggest a course of action for us?  I am not subscribed to
-the mailing list, so please "cc" me on any replies.
-
-Thank you very much,
-Iordan Iordanov,
-University of Toronto
-
--- 
-The human mind has a single thread of execution.
