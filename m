@@ -1,88 +1,135 @@
 From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: Fwd: Re: Problem with Linux aic94xx driver
-Date: Sat, 30 Dec 2006 18:40:56 -0800 (PST)
-Message-ID: <872564.54821.qm@web31810.mail.mud.yahoo.com>
-References: <4596D8B7.2080005@us.ibm.com>
+Subject: Re: sas_device/end_device-*/phy_identifier flipped
+Date: Sat, 30 Dec 2006 18:55:43 -0800 (PST)
+Message-ID: <255538.52551.qm@web31814.mail.mud.yahoo.com>
+References: <459720E8.6050705@torque.net>
 Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31810.mail.mud.yahoo.com ([68.142.207.73]:44213 "HELO
-	web31810.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752475AbWLaCk5 (ORCPT
+Received: from web31814.mail.mud.yahoo.com ([68.142.206.167]:36715 "HELO
+	web31814.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S932696AbWLaDCZ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 30 Dec 2006 21:40:57 -0500
-In-Reply-To: <4596D8B7.2080005@us.ibm.com>
+	Sat, 30 Dec 2006 22:02:25 -0500
+In-Reply-To: <459720E8.6050705@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Darrick J. Wong" <djwong@us.ibm.com>, terje.rosten@ntnu.no
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>
+To: dougg@torque.net
+Cc: linux-scsi@vger.kernel.org
 
---- "Darrick J. Wong" <djwong@us.ibm.com> wrote:
-> --- Terje R=F8sten <terje.rosten@ntnu.no> wrote:
->=20
-> > (It's 4 Western Digital RE2 WD5000YS with NCQ (500 GB SATA) on the
-> > controller,
-> > set up in RAID BIOS  to one RAID 1+0 logical drive).
->=20
-> I suppose this may be a moot point since Mr. R=F8sten bought a better
-> controller, but for the record, there exists another SAS stack that a=
-lso
-> does not have this bug (namely, the entire lack of SATA support):
->=20
-> http://www.kernel.org/git/?p=3Dlinux/kernel/git/jejb/aic94xx-sas-2.6.=
-git;a=3Dsummary
+--- Douglas Gilbert <dougg@torque.net> wrote:
+> Luben Tuikov wrote:
+> > --- Douglas Gilbert <dougg@torque.net> wrote:
+> >> In lk 2.6.20-rc2 (and probably earlier) the phy_identifier
+> >> attribute in the /sys/class/sas_device/end_device-*
+> >> directory is showing the wrong end of the point to point
+> >> link.
+> >>
+> >> Phy identifiers on (dual ported) SAS disks are typically
+> >> 0 and 1. For SATA disks the phy identifier should be 0.
+> >>
+> >> # lsscsi
+> >> [4:0:0:0]    disk    ATA      ST3160812AS      D     /dev/sda
+> >> [4:0:1:0]    disk    SEAGATE  ST336754SS       0003  /dev/sdb
+> >> # lsscsi -t
+> >> [4:0:0:0]    disk    sas:0x500605b0000033e6          /dev/sda
+> >> [4:0:1:0]    disk    sas:0x5000c500005208ee          /dev/sdb
+> >> # lsscsi -tL 4:0:1:0
+> >> [4:0:1:0]    disk    sas:0x5000c500005208ee          /dev/sdb
+> >>   transport=sas
+> >>   initiator_port_protocols=none
+> >>   initiator_response_timeout=10000
+> >>   I_T_nexus_loss_timeout=1744
+> >>   phy_identifier=7
+> >>   ready_led_meaning=1
+> >>   sas_address=0x5000c500005208ee
+> >>   target_port_protocols=ssp
+> >>
+> >> # smp_discover -mb
+> >> Device <500605b0000033ef>, expander (only connected phys shown):
+> >>   phy   5:T:attached:[500605b00006f260:03  i(SSP+STP+SMP)]  3 Gbps
+> >>   phy   6:T:attached:[500605b0000033e6:00  t(SATA)]  1.5 Gbps
+> >>   phy   7:T:attached:[5000c500005208ee:01  t(SSP)]  3 Gbps
+> >>
+> >>
+> >> The SATA and SAS disks are connected via an expander which
+> >> lets me look at sysfs for 4:0:1:0 and the expander configuration
+> >> with smp_discover. The port in use on the SAS disk has the
+> >> address: 5000c500005208ee . The expander says that cable is
+> >> attached to phy 1 which agrees with what I can see. However
+> >> sysfs reports "phy_identifier=7" which is wrong (and happens
+> >> to be the attached phy_id seen from the SAS disk).
+> >>
+> >> Both aic94xx and mptsas drivers do the same thing so it
+> >> looks like a SAS transport problem.
+> > 
+> > Have you tested this with the SAS Stack as I distribute it?
+> 
+> Luben,
+> Yes, but it is boring because it just works ***.
 
-And there exists the original SAS Stack _with_ SATA support, _without_ =
-this
-bug, which I distribute.  I'm not sure if Terje was aware of it.
+Yes, I agree -- things are boring when they just work.
 
-I think it is clear from his letter that he wanted SATA support.  Why w=
-ould
-he use a SAS Stack which has no SATA support, and thus trivially wouldn=
-'t
-exhibit this bug, as per your suggestion...
+> With your driver for a different port on the same SAS
+> disk, lsscsi outputs:
+> 
+> # lsscsi -tL 6:0:0:0
+> [6:0:0:0]    disk    sas:5000c500005208ed            /dev/sdd
+>   transport=sas
+>   sub_transport=sas_class
+>   device_name=0000000000000000
+>   dev_type=end device
+>   iproto=
+>   iresp_timeout=0x2710
+>   linkrate=3,0 Gbps
+>   max_linkrate=3,0 Gbps
+>   max_pathways=1
+>   min_linkrate=3,0 Gbps
+>   pathways=1
+>   ready_led_meaning=1
+>   rl_wlun=0
+>   sas_addr=5000c500005208ed
+>   tproto=SSP
+>   transport_layer_retries=0
+> 
+> lsscsi is data mining this directory:
+> /sys/class/scsi_device/6:0:0:0/device/sas_device
+> 
+> which contains:
+> # ls
+> device_name    itnl_timeout  max_pathways       rl_wlun
+> dev_type       linkrate      min_linkrate       sas_addr
+> iproto         LUNS          pathways           tproto
+> iresp_timeout  max_linkrate  ready_led_meaning  transport_layer_retries
+> 
+> Interestingly there is no phy_id entry (and a single
+> entry wouldn't be sufficient if the target was
+> wide port). I can live without the phy_id there (as
+> it can be found other ways: SMP and the protocol
+> specific (SAS) log page).
+> 
+> So the bottom line is that the phy_id(s) doesn't need
+> to be there but if it is it should be correct.
 
-This all of course begs the question: Why is there such a blatant
-bug in the "master" branch of the Linux kernel for this driver?
-Yep, I'm looking at tag v2.6.20-rc2 and it is right there where he
-pointed out that it is.  The commit introducing it is
-2908d778ab3e244900c310974e1fc1c69066e450, and it is one blob commit,
-without previous git history, only the log message.
+Indeed, you assesment is very correct.  "phy_id(s)" have no
+business there.  They should be represented implicitly by
+the way the port is "built" _and_ only for the initiator's ports
+as is done in my SAS stack.
 
-You seem to have replied to an email which I posted to linux-scsi, i.e.
-my email is in the To: header.  You also seem to have edited the mail
-headers to remove me from the CC/To list which is automatically built w=
-hen
-one replies to a message.
+The "sas_device" "directory" contains attributes which
+belong to the SAS device.
 
-Removing people from CC lists is considered impolite. Adding people=20
-is ok.
+Also, "internal" domain ports and their properties should
+NOT represented and for very good reasons which I've hinted
+at in my numerous emails on the subject matter last year
+on this list.
+
+> *** I plan to write another mail on the aic94xx
+> driver mess.
+
+What mess?  Did I fail to see and read an email?
 
    Luben
 
-> There are various stability/functionality fixes for that stack that a=
-re
-> under development as well:
->=20
-> http://sweaglesw.net/~djwong/docs/sas_ata-patches/
->=20
-> That said, even if Mr. R=F8sten had built a driver with SATA support,=
- he
-> wrote that he had configured a RAID in the BIOS; to use that under
-> Linux, one needs the dmraid tool to set up BIOS RAID arrays as
-> device-mapper devices.  Of course, it is possible that at least one o=
-f
-> the many (five? six?) Adaptec 94xx driver variants supports both SATA
-> and HostRAID natively.
->=20
-> Better to use a nice 3ware card that takes care of all this in hardwa=
-re.
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
