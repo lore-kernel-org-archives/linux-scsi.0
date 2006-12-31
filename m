@@ -1,135 +1,45 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: sas_device/end_device-*/phy_identifier flipped
-Date: Sat, 30 Dec 2006 18:55:43 -0800 (PST)
-Message-ID: <255538.52551.qm@web31814.mail.mud.yahoo.com>
-References: <459720E8.6050705@torque.net>
-Reply-To: ltuikov@yahoo.com
+From: Bjarne Thomsen <bjarne.thomsen@get2net.dk>
+Subject: aic79xx+ASC39320A crash
+Date: Sun, 31 Dec 2006 11:07:15 +0100
+Message-ID: <1167559635.5863.28.camel@tycho.astronomy.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31814.mail.mud.yahoo.com ([68.142.206.167]:36715 "HELO
-	web31814.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S932696AbWLaDCZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 30 Dec 2006 22:02:25 -0500
-In-Reply-To: <459720E8.6050705@torque.net>
+Received: from mailfe03.tele2.dk ([212.247.154.67]:44363 "EHLO swip.net"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S933128AbWLaLHY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 31 Dec 2006 06:07:24 -0500
+Received: from [83.72.33.52] (account mp56609@get2net.dk HELO tycho.astronomy.dk)
+  by mailfe03.swip.net (CommuniGate Pro SMTP 5.0.12)
+  with ESMTPA id 377833861 for linux-scsi@vger.kernel.org; Sun, 31 Dec 2006 11:07:15 +0100
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
---- Douglas Gilbert <dougg@torque.net> wrote:
-> Luben Tuikov wrote:
-> > --- Douglas Gilbert <dougg@torque.net> wrote:
-> >> In lk 2.6.20-rc2 (and probably earlier) the phy_identifier
-> >> attribute in the /sys/class/sas_device/end_device-*
-> >> directory is showing the wrong end of the point to point
-> >> link.
-> >>
-> >> Phy identifiers on (dual ported) SAS disks are typically
-> >> 0 and 1. For SATA disks the phy identifier should be 0.
-> >>
-> >> # lsscsi
-> >> [4:0:0:0]    disk    ATA      ST3160812AS      D     /dev/sda
-> >> [4:0:1:0]    disk    SEAGATE  ST336754SS       0003  /dev/sdb
-> >> # lsscsi -t
-> >> [4:0:0:0]    disk    sas:0x500605b0000033e6          /dev/sda
-> >> [4:0:1:0]    disk    sas:0x5000c500005208ee          /dev/sdb
-> >> # lsscsi -tL 4:0:1:0
-> >> [4:0:1:0]    disk    sas:0x5000c500005208ee          /dev/sdb
-> >>   transport=sas
-> >>   initiator_port_protocols=none
-> >>   initiator_response_timeout=10000
-> >>   I_T_nexus_loss_timeout=1744
-> >>   phy_identifier=7
-> >>   ready_led_meaning=1
-> >>   sas_address=0x5000c500005208ee
-> >>   target_port_protocols=ssp
-> >>
-> >> # smp_discover -mb
-> >> Device <500605b0000033ef>, expander (only connected phys shown):
-> >>   phy   5:T:attached:[500605b00006f260:03  i(SSP+STP+SMP)]  3 Gbps
-> >>   phy   6:T:attached:[500605b0000033e6:00  t(SATA)]  1.5 Gbps
-> >>   phy   7:T:attached:[5000c500005208ee:01  t(SSP)]  3 Gbps
-> >>
-> >>
-> >> The SATA and SAS disks are connected via an expander which
-> >> lets me look at sysfs for 4:0:1:0 and the expander configuration
-> >> with smp_discover. The port in use on the SAS disk has the
-> >> address: 5000c500005208ee . The expander says that cable is
-> >> attached to phy 1 which agrees with what I can see. However
-> >> sysfs reports "phy_identifier=7" which is wrong (and happens
-> >> to be the attached phy_id seen from the SAS disk).
-> >>
-> >> Both aic94xx and mptsas drivers do the same thing so it
-> >> looks like a SAS transport problem.
-> > 
-> > Have you tested this with the SAS Stack as I distribute it?
-> 
-> Luben,
-> Yes, but it is boring because it just works ***.
+I have had this problem with an Adaptec ASC-39320A for more than 2 years
+(using the x86_64 version of the aic79xx driver).
+The 39320A board has been tried on the Tyan 2882 and 2885 MBs with
+the same result: I can copy a few small files, byt when I try to
+copy a directory tree with a few hundred MB the system freezes
+without any traces in the syslog or on the screen.
+Two older Ultra 160 Adaptec boards work fine with the 2 Tyan MBs.
+The raid option has been disabled for the ASC-39320A.
 
-Yes, I agree -- things are boring when they just work.
+Tho years ago I gave up, but I have now tested the board
+with some newer linux distributions using the Tyan 2885 MB
+with the latest available BIOS (for both 2885 and 39320A):
+ubuntu 6.06 LTS x86_64 (2.6.15 kernel)
+Mandriva 2007 x86_64 (2.6.17 and 2.6.19 kernels)
+Fedora core 6 (2.6.18 kernel)
 
-> With your driver for a different port on the same SAS
-> disk, lsscsi outputs:
-> 
-> # lsscsi -tL 6:0:0:0
-> [6:0:0:0]    disk    sas:5000c500005208ed            /dev/sdd
->   transport=sas
->   sub_transport=sas_class
->   device_name=0000000000000000
->   dev_type=end device
->   iproto=
->   iresp_timeout=0x2710
->   linkrate=3,0 Gbps
->   max_linkrate=3,0 Gbps
->   max_pathways=1
->   min_linkrate=3,0 Gbps
->   pathways=1
->   ready_led_meaning=1
->   rl_wlun=0
->   sas_addr=5000c500005208ed
->   tproto=SSP
->   transport_layer_retries=0
-> 
-> lsscsi is data mining this directory:
-> /sys/class/scsi_device/6:0:0:0/device/sas_device
-> 
-> which contains:
-> # ls
-> device_name    itnl_timeout  max_pathways       rl_wlun
-> dev_type       linkrate      min_linkrate       sas_addr
-> iproto         LUNS          pathways           tproto
-> iresp_timeout  max_linkrate  ready_led_meaning  transport_layer_retries
-> 
-> Interestingly there is no phy_id entry (and a single
-> entry wouldn't be sufficient if the target was
-> wide port). I can live without the phy_id there (as
-> it can be found other ways: SMP and the protocol
-> specific (SAS) log page).
-> 
-> So the bottom line is that the phy_id(s) doesn't need
-> to be there but if it is it should be correct.
+The symptom is the same: the system freezes during the copy
+of files from an IDE harddisk to a SCSI disk on the 39320 controller.
+I am about to give up, again.
 
-Indeed, you assesment is very correct.  "phy_id(s)" have no
-business there.  They should be represented implicitly by
-the way the port is "built" _and_ only for the initiator's ports
-as is done in my SAS stack.
+Any advice is welcome.
 
-The "sas_device" "directory" contains attributes which
-belong to the SAS device.
+ -- Bjarne
 
-Also, "internal" domain ports and their properties should
-NOT represented and for very good reasons which I've hinted
-at in my numerous emails on the subject matter last year
-on this list.
 
-> *** I plan to write another mail on the aic94xx
-> driver mess.
-
-What mess?  Did I fail to see and read an email?
-
-   Luben
 
