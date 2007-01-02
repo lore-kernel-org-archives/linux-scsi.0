@@ -1,36 +1,32 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] SCSI: fix error code check in sr_block_ioctl()
-Date: Tue, 2 Jan 2007 17:41:04 +0900
-Message-ID: <20070102084104.GC10987@htj.dyndns.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [2.6 patch] drivers/scsi/scsi_error.c should #include "scsi_transport_api.h"
+Date: Tue, 2 Jan 2007 11:11:36 +0000
+Message-ID: <20070102111136.GD21963@infradead.org>
+References: <20061129100422.GL11084@stusta.de> <20061129131624.GV14076@parisc-linux.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [221.139.199.108] ([221.139.199.108]:40050 "EHLO htj.dyndns.org"
-	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S932996AbXABJNR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 2 Jan 2007 04:13:17 -0500
+Received: from pentafluge.infradead.org ([213.146.154.40]:55820 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754808AbXABLMD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Jan 2007 06:12:03 -0500
 Content-Disposition: inline
+In-Reply-To: <20061129131624.GV14076@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Adrian Bunk <bunk@stusta.de>, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-sr_block_ioctl() should proceed to SCSI ioctls if cdrom_ioctl()
-returns -ENOSYS.  However it tested for ENOSYS instead of -ENOSYS
-rendering all SCSI ioctls other than GET_IDLUN and GET_BUS_NUMBER
-inaccessible.  Fix it.
+On Wed, Nov 29, 2006 at 06:16:24AM -0700, Matthew Wilcox wrote:
+> On Wed, Nov 29, 2006 at 11:04:22AM +0100, Adrian Bunk wrote:
+> > +#include "scsi_transport_api.h"
+> 
+> scsi_transport_api.h is a weird little file.  It's not included by
+> anything in the drivers/scsi directory, only
+> drivers/scsi/libsas/sas_scsi_host.c:#include "../scsi_transport_api.h"
+> drivers/ata/libata-eh.c:#include "../scsi/scsi_transport_api.h"
+> 
+> To me, that says it should be living in include/scsi/ somewhere ...
+> maybe just put the one function prototype into scsi_eh.h?
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index fae6e95..89e9b36 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -468,7 +468,7 @@ static int sr_block_ioctl(struct inode *inode, struct file *file, unsigned cmd,
- 	}
- 
- 	ret = cdrom_ioctl(file, &cd->cdi, inode, cmd, arg);
--	if (ret != ENOSYS)
-+	if (ret != -ENOSYS)
- 		return ret;
- 
- 	/*
+Yes, it should probably go into scsi_eh.h.
