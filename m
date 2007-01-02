@@ -1,205 +1,439 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] sym2: streamlinke queuecommand path
-Date: Tue, 2 Jan 2007 17:37:48 +0100
-Message-ID: <20070102163748.GA17602@lst.de>
+Subject: [PATCH] sym2: remove SYM_OPT_HANDLE_DEVICE_QUEUEING code
+Date: Tue, 2 Jan 2007 17:38:46 +0100
+Message-ID: <20070102163846.GB17602@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:49260 "EHLO mail.lst.de"
+Received: from verein.lst.de ([213.95.11.210]:49292 "EHLO mail.lst.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755366AbXABQhv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 2 Jan 2007 11:37:51 -0500
+	id S1755362AbXABQit (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 2 Jan 2007 11:38:49 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: matthew@wil.cx
 Cc: linux-scsi@vger.kernel.org
 
-Merge sym_queue_command, sym_setup_cdb and sym_setup_data_and_start into
-sym53c8xx_queue_command.  Rename sym_queue_scsiio into sym_init_scsiio
-now that it doesn't start I/O anymore but is simply a helper for
-sym53c8xx_queue_command.
+All per-device queueing is handled by the scsi midlayer for quite
+a while so we can remove the code to deal with it.  It has been
+completly disabled at the cpp level already.
 
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: scsi-misc-2.6/drivers/scsi/sym53c8xx_2/sym_glue.c
+Index: linux-2.6/drivers/scsi/sym53c8xx_2/sym_glue.h
 ===================================================================
---- scsi-misc-2.6.orig/drivers/scsi/sym53c8xx_2/sym_glue.c	2006-11-02 15:44:10.000000000 +0100
-+++ scsi-misc-2.6/drivers/scsi/sym53c8xx_2/sym_glue.c	2007-01-02 17:24:56.000000000 +0100
-@@ -401,15 +401,38 @@
- }
- 
- /*
-- *  Queue a SCSI command.
-+ * queuecommand method.  Entered with the host adapter lock held and
-+ * interrupts disabled.
+--- linux-2.6.orig/drivers/scsi/sym53c8xx_2/sym_glue.h	2007-01-02 17:12:14.000000000 +0100
++++ linux-2.6/drivers/scsi/sym53c8xx_2/sym_glue.h	2007-01-02 17:12:18.000000000 +0100
+@@ -67,7 +67,6 @@
   */
--static int sym_queue_command(struct sym_hcb *np, struct scsi_cmnd *cmd)
-+static int sym53c8xx_queue_command(struct scsi_cmnd *cmd,
-+					void (*done)(struct scsi_cmnd *))
- {
- 	struct scsi_device *sdev = cmd->device;
-+	struct sym_hcb *np = SYM_SOFTC_PTR(cmd);
-+	struct sym_ucmd *ucp = SYM_UCMD_PTR(cmd);
- 	struct sym_tcb *tp;
- 	struct sym_lcb *lp;
- 	struct sym_ccb *cp;
--	int	order;
-+	u32 lastp, goalp;
-+	int dir, order;
-+
-+	cmd->scsi_done     = done;
-+	memset(ucp, 0, sizeof(*ucp));
-+
-+	/*
-+	 *  Shorten our settle_time if needed for
-+	 *  this command not to time out.
-+	 */
-+	if (np->s.settle_time_valid && cmd->timeout_per_command) {
-+		unsigned long tlimit = jiffies + cmd->timeout_per_command;
-+		tlimit -= SYM_CONF_TIMER_INTERVAL*2;
-+		if (time_after(np->s.settle_time, tlimit)) {
-+			np->s.settle_time = tlimit;
-+		}
-+	}
-+
-+	if (np->s.settle_time_valid)
-+		return SCSI_MLQUEUE_HOST_BUSY;
+ #define	SYM_CONF_TIMER_INTERVAL		((HZ+1)/2)
  
- 	/*
- 	 *  Minimal checkings, so that we will not 
-@@ -436,38 +459,13 @@
- 	 */
- 	cp = sym_get_ccb(np, cmd, order);
- 	if (!cp)
--		return 1;	/* Means resource shortage */
--	sym_queue_scsiio(np, cmd, cp);
--	return 0;
--}
-+		return SCSI_MLQUEUE_HOST_BUSY;
-+	sym_init_scsiio(np, cmd, cp);
- 
--/*
-- *  Setup buffers and pointers that address the CDB.
-- */
--static inline int sym_setup_cdb(struct sym_hcb *np, struct scsi_cmnd *cmd, struct sym_ccb *cp)
--{
- 	memcpy(cp->cdb_buf, cmd->cmnd, cmd->cmd_len);
--
- 	cp->phys.cmd.addr = CCB_BA(cp, cdb_buf[0]);
- 	cp->phys.cmd.size = cpu_to_scr(cmd->cmd_len);
- 
--	return 0;
--}
--
--/*
-- *  Setup pointers that address the data and start the I/O.
-- */
--int sym_setup_data_and_start(struct sym_hcb *np, struct scsi_cmnd *cmd, struct sym_ccb *cp)
--{
--	u32 lastp, goalp;
--	int dir;
--
--	/*
--	 *  Build the CDB.
--	 */
--	if (sym_setup_cdb(np, cmd, cp))
--		goto out_abort;
--
- 	/*
- 	 *  No direction means no data.
- 	 */
-@@ -615,41 +613,6 @@
- }
+-#undef SYM_OPT_HANDLE_DEVICE_QUEUEING
+ #define SYM_OPT_LIMIT_COMMAND_REORDERING
  
  /*
-- * queuecommand method.  Entered with the host adapter lock held and
-- * interrupts disabled.
+Index: linux-2.6/drivers/scsi/sym53c8xx_2/sym_hipd.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/sym53c8xx_2/sym_hipd.c	2007-01-02 17:10:14.000000000 +0100
++++ linux-2.6/drivers/scsi/sym53c8xx_2/sym_hipd.c	2007-01-02 17:11:40.000000000 +0100
+@@ -1529,57 +1529,6 @@
+ 	OUTB(np, nc_istat, SIGP|np->istat_sem);
+ }
+ 
+-#ifdef SYM_OPT_HANDLE_DEVICE_QUEUEING
+-/*
+- *  Start next ready-to-start CCBs.
 - */
--static int sym53c8xx_queue_command(struct scsi_cmnd *cmd,
--					void (*done)(struct scsi_cmnd *))
+-void sym_start_next_ccbs(struct sym_hcb *np, struct sym_lcb *lp, int maxn)
 -{
--	struct sym_hcb *np = SYM_SOFTC_PTR(cmd);
--	struct sym_ucmd *ucp = SYM_UCMD_PTR(cmd);
--	int sts = 0;
+-	SYM_QUEHEAD *qp;
+-	struct sym_ccb *cp;
 -
--	cmd->scsi_done     = done;
--	memset(ucp, 0, sizeof(*ucp));
+-	/* 
+-	 *  Paranoia, as usual. :-)
+-	 */
+-	assert(!lp->started_tags || !lp->started_no_tag);
 -
 -	/*
--	 *  Shorten our settle_time if needed for 
--	 *  this command not to time out.
+-	 *  Try to start as many commands as asked by caller.
+-	 *  Prevent from having both tagged and untagged 
+-	 *  commands queued to the device at the same time.
 -	 */
--	if (np->s.settle_time_valid && cmd->timeout_per_command) {
--		unsigned long tlimit = jiffies + cmd->timeout_per_command;
--		tlimit -= SYM_CONF_TIMER_INTERVAL*2;
--		if (time_after(np->s.settle_time, tlimit)) {
--			np->s.settle_time = tlimit;
+-	while (maxn--) {
+-		qp = sym_remque_head(&lp->waiting_ccbq);
+-		if (!qp)
+-			break;
+-		cp = sym_que_entry(qp, struct sym_ccb, link2_ccbq);
+-		if (cp->tag != NO_TAG) {
+-			if (lp->started_no_tag ||
+-			    lp->started_tags >= lp->started_max) {
+-				sym_insque_head(qp, &lp->waiting_ccbq);
+-				break;
+-			}
+-			lp->itlq_tbl[cp->tag] = cpu_to_scr(cp->ccb_ba);
+-			lp->head.resel_sa =
+-				cpu_to_scr(SCRIPTA_BA(np, resel_tag));
+-			++lp->started_tags;
+-		} else {
+-			if (lp->started_no_tag || lp->started_tags) {
+-				sym_insque_head(qp, &lp->waiting_ccbq);
+-				break;
+-			}
+-			lp->head.itl_task_sa = cpu_to_scr(cp->ccb_ba);
+-			lp->head.resel_sa =
+-			      cpu_to_scr(SCRIPTA_BA(np, resel_no_tag));
+-			++lp->started_no_tag;
 -		}
+-		cp->started = 1;
+-		sym_insque_tail(qp, &lp->started_ccbq);
+-		sym_put_start_queue(np, cp);
+-	}
+-}
+-#endif /* SYM_OPT_HANDLE_DEVICE_QUEUEING */
+-
+ /*
+  *  The chip may have completed jobs. Look at the DONE QUEUE.
+  *
+@@ -1649,25 +1598,6 @@
+ 		cmd = cp->cmd;
+ 		if (cam_status)
+ 			sym_set_cam_status(cmd, cam_status);
+-#ifdef SYM_OPT_HANDLE_DEVICE_QUEUEING
+-		if (sym_get_cam_status(cmd) == DID_SOFT_ERROR) {
+-			struct sym_tcb *tp = &np->target[cp->target];
+-			struct sym_lcb *lp = sym_lp(tp, cp->lun);
+-			if (lp) {
+-				sym_remque(&cp->link2_ccbq);
+-				sym_insque_tail(&cp->link2_ccbq,
+-				                &lp->waiting_ccbq);
+-				if (cp->started) {
+-					if (cp->tag != NO_TAG)
+-						--lp->started_tags;
+-					else
+-						--lp->started_no_tag;
+-				}
+-			}
+-			cp->started = 0;
+-			continue;
+-		}
+-#endif
+ 		sym_free_ccb(np, cp);
+ 		sym_xpt_done(np, cmd);
+ 	}
+@@ -3327,12 +3257,7 @@
+ 		/*
+ 		 *  Make sure at least our IO to abort has been dequeued.
+ 		 */
+-#ifndef SYM_OPT_HANDLE_DEVICE_QUEUEING
+ 		assert(i && sym_get_cam_status(cp->cmd) == DID_SOFT_ERROR);
+-#else
+-		sym_remque(&cp->link_ccbq);
+-		sym_insque_tail(&cp->link_ccbq, &np->comp_ccbq);
+-#endif
+ 		/*
+ 		 *  Keep track in cam status of the reason of the abort.
+ 		 */
+@@ -4606,10 +4531,8 @@
+ 			/*
+ 			 *  Debugging purpose.
+ 			 */
+-#ifndef SYM_OPT_HANDLE_DEVICE_QUEUEING
+ 			if (lp->busy_itl != 0)
+ 				goto out_free;
+-#endif
+ 			/*
+ 			 *  Allocate resources for tags if not yet.
+ 			 */
+@@ -4629,11 +4552,9 @@
+ 				if (++lp->ia_tag == SYM_CONF_MAX_TASK)
+ 					lp->ia_tag = 0;
+ 				++lp->busy_itlq;
+-#ifndef SYM_OPT_HANDLE_DEVICE_QUEUEING
+ 				lp->itlq_tbl[tag] = cpu_to_scr(cp->ccb_ba);
+ 				lp->head.resel_sa =
+ 					cpu_to_scr(SCRIPTA_BA(np, resel_tag));
+-#endif
+ #ifdef SYM_OPT_LIMIT_COMMAND_REORDERING
+ 				cp->tags_si = lp->tags_si;
+ 				++lp->tags_sum[cp->tags_si];
+@@ -4652,17 +4573,14 @@
+ 			/*
+ 			 *  Debugging purpose.
+ 			 */
+-#ifndef SYM_OPT_HANDLE_DEVICE_QUEUEING
+ 			if (lp->busy_itl != 0 || lp->busy_itlq != 0)
+ 				goto out_free;
+-#endif
+ 			/*
+ 			 *  Count this nexus for this LUN.
+ 			 *  Set up the CCB bus address for reselection.
+ 			 *  Toggle reselect path to untagged.
+ 			 */
+ 			++lp->busy_itl;
+-#ifndef SYM_OPT_HANDLE_DEVICE_QUEUEING
+ 			if (lp->busy_itl == 1) {
+ 				lp->head.itl_task_sa = cpu_to_scr(cp->ccb_ba);
+ 				lp->head.resel_sa =
+@@ -4670,20 +4588,12 @@
+ 			}
+ 			else
+ 				goto out_free;
+-#endif
+ 		}
+ 	}
+ 	/*
+ 	 *  Put the CCB into the busy queue.
+ 	 */
+ 	sym_insque_tail(&cp->link_ccbq, &np->busy_ccbq);
+-#ifdef SYM_OPT_HANDLE_DEVICE_QUEUEING
+-	if (lp) {
+-		sym_remque(&cp->link2_ccbq);
+-		sym_insque_tail(&cp->link2_ccbq, &lp->waiting_ccbq);
 -	}
 -
--	if (np->s.settle_time_valid)
--		return SCSI_MLQUEUE_HOST_BUSY;
+-#endif
+ 	cp->to_abort = 0;
+ 	cp->odd_byte_adjustment = 0;
+ 	cp->tag	   = tag;
+@@ -4778,20 +4688,6 @@
+ 	cp->host_status = HS_IDLE;
+ 	sym_remque(&cp->link_ccbq);
+ 	sym_insque_head(&cp->link_ccbq, &np->free_ccbq);
 -
--	sts = sym_queue_command(np, cmd);
--	if (sts)
--		return SCSI_MLQUEUE_HOST_BUSY;
--	return 0;
--}
--
--/*
-  *  Linux entry point of the interrupt handler.
-  */
- static irqreturn_t sym53c8xx_intr(int irq, void *dev_id)
-Index: scsi-misc-2.6/drivers/scsi/sym53c8xx_2/sym_glue.h
-===================================================================
---- scsi-misc-2.6.orig/drivers/scsi/sym53c8xx_2/sym_glue.h	2006-07-07 14:39:00.000000000 +0200
-+++ scsi-misc-2.6/drivers/scsi/sym53c8xx_2/sym_glue.h	2007-01-02 17:26:54.000000000 +0100
-@@ -264,7 +264,6 @@
- #define sym_print_addr(cmd, arg...) dev_info(&cmd->device->sdev_gendev , ## arg)
- void sym_xpt_async_bus_reset(struct sym_hcb *np);
- void sym_xpt_async_sent_bdr(struct sym_hcb *np, int target);
--int  sym_setup_data_and_start (struct sym_hcb *np, struct scsi_cmnd *csio, struct sym_ccb *cp);
- void sym_log_bus_error(struct sym_hcb *np);
- 
- #endif /* SYM_GLUE_H */
-Index: scsi-misc-2.6/drivers/scsi/sym53c8xx_2/sym_hipd.c
-===================================================================
---- scsi-misc-2.6.orig/drivers/scsi/sym53c8xx_2/sym_hipd.c	2006-06-24 19:48:44.000000000 +0200
-+++ scsi-misc-2.6/drivers/scsi/sym53c8xx_2/sym_hipd.c	2007-01-02 17:27:21.000000000 +0100
-@@ -5030,7 +5030,7 @@
- /*
-  *  Queue a SCSI IO to the controller.
-  */
--int sym_queue_scsiio(struct sym_hcb *np, struct scsi_cmnd *cmd, struct sym_ccb *cp)
-+void sym_init_scsiio(struct sym_hcb *np, struct scsi_cmnd *cmd, struct sym_ccb *cp)
- {
- 	struct scsi_device *sdev = cmd->device;
- 	struct sym_tcb *tp;
-@@ -5155,12 +5155,6 @@
- 	 */
- 	cp->ext_sg  = -1;
- 	cp->ext_ofs = 0;
--
--	/*
--	 *  Build the CDB and DATA descriptor block 
--	 *  and start the IO.
--	 */
--	return sym_setup_data_and_start(np, cmd, cp);
+-#ifdef SYM_OPT_HANDLE_DEVICE_QUEUEING
+-	if (lp) {
+-		sym_remque(&cp->link2_ccbq);
+-		sym_insque_tail(&cp->link2_ccbq, &np->dummy_ccbq);
+-		if (cp->started) {
+-			if (cp->tag != NO_TAG)
+-				--lp->started_tags;
+-			else
+-				--lp->started_no_tag;
+-		}
+-	}
+-	cp->started = 0;
+-#endif
  }
  
  /*
-Index: scsi-misc-2.6/drivers/scsi/sym53c8xx_2/sym_hipd.h
+@@ -4848,13 +4744,6 @@
+ 	 *  Chain into free ccb queue.
+ 	 */
+ 	sym_insque_head(&cp->link_ccbq, &np->free_ccbq);
+-
+-	/*
+-	 *  Chain into optionnal lists.
+-	 */
+-#ifdef SYM_OPT_HANDLE_DEVICE_QUEUEING
+-	sym_insque_head(&cp->link2_ccbq, &np->dummy_ccbq);
+-#endif
+ 	return cp;
+ out_free:
+ 	if (cp)
+@@ -4966,17 +4855,6 @@
+ 	 *  Set user capabilities.
+ 	 */
+ 	lp->user_flags = tp->usrflags & (SYM_DISC_ENABLED | SYM_TAGS_ENABLED);
+-
+-#ifdef SYM_OPT_HANDLE_DEVICE_QUEUEING
+-	/*
+-	 *  Initialize device queueing.
+-	 */
+-	sym_que_init(&lp->waiting_ccbq);
+-	sym_que_init(&lp->started_ccbq);
+-	lp->started_max   = SYM_CONF_MAX_TASK;
+-	lp->started_limit = SYM_CONF_MAX_TASK;
+-#endif
+-
+ fail:
+ 	return lp;
+ }
+@@ -5303,44 +5181,11 @@
+ 	 */
+ 	OUTL_DSP(np, SCRIPTA_BA(np, start));
+ 
+-#ifdef SYM_OPT_HANDLE_DEVICE_QUEUEING
+-	if (cp->host_status == HS_COMPLETE &&
+-	    cp->ssss_status == S_QUEUE_FULL) {
+-		if (!lp || lp->started_tags - i < 2)
+-			goto weirdness;
+-		/*
+-		 *  Decrease queue depth as needed.
+-		 */
+-		lp->started_max = lp->started_tags - i - 1;
+-		lp->num_sgood = 0;
+-
+-		if (sym_verbose >= 2) {
+-			sym_print_addr(cmd, " queue depth is now %d\n",
+-					lp->started_max);
+-		}
+-
+-		/*
+-		 *  Repair the CCB.
+-		 */
+-		cp->host_status = HS_BUSY;
+-		cp->ssss_status = S_ILLEGAL;
+-
+-		/*
+-		 *  Let's requeue it to device.
+-		 */
+-		sym_set_cam_status(cmd, DID_SOFT_ERROR);
+-		goto finish;
+-	}
+-weirdness:
+-#endif
+ 	/*
+ 	 *  Build result in CAM ccb.
+ 	 */
+ 	sym_set_cam_result_error(np, cp, resid);
+ 
+-#ifdef SYM_OPT_HANDLE_DEVICE_QUEUEING
+-finish:
+-#endif
+ 	/*
+ 	 *  Add this one to the COMP queue.
+ 	 */
+@@ -5352,13 +5197,6 @@
+ 	 *  or requeue condition.
+ 	 */
+ 	sym_flush_comp_queue(np, 0);
+-
+-#ifdef SYM_OPT_HANDLE_DEVICE_QUEUEING
+-	/*
+-	 *  Donnot start more than 1 command after an error.
+-	 */
+-	sym_start_next_ccbs(np, lp, 1);
+-#endif
+ }
+ 
+ /*
+@@ -5420,36 +5258,11 @@
+ 	 */
+ 	sym_set_cam_result_ok(cp, cmd, resid);
+ 
+-#ifdef SYM_OPT_HANDLE_DEVICE_QUEUEING
+-	/*
+-	 *  If max number of started ccbs had been reduced,
+-	 *  increase it if 200 good status received.
+-	 */
+-	if (lp && lp->started_max < lp->started_limit) {
+-		++lp->num_sgood;
+-		if (lp->num_sgood >= 200) {
+-			lp->num_sgood = 0;
+-			++lp->started_max;
+-			if (sym_verbose >= 2) {
+-				sym_print_addr(cmd, " queue depth is now %d\n",
+-				       lp->started_max);
+-			}
+-		}
+-	}
+-#endif
+-
+ 	/*
+ 	 *  Free our CCB.
+ 	 */
+ 	sym_free_ccb (np, cp);
+ 
+-#ifdef SYM_OPT_HANDLE_DEVICE_QUEUEING
+-	/*
+-	 *  Requeue a couple of awaiting scsi commands.
+-	 */
+-	if (!sym_que_empty(&lp->waiting_ccbq))
+-		sym_start_next_ccbs(np, lp, 2);
+-#endif
+ 	/*
+ 	 *  Complete the command.
+ 	 */
+@@ -5551,13 +5364,6 @@
+ 	sym_que_init(&np->comp_ccbq);
+ 
+ 	/*
+-	 *  Initialization for optional handling 
+-	 *  of device queueing.
+-	 */
+-#ifdef SYM_OPT_HANDLE_DEVICE_QUEUEING
+-	sym_que_init(&np->dummy_ccbq);
+-#endif
+-	/*
+ 	 *  Allocate some CCB. We need at least ONE.
+ 	 */
+ 	if (!sym_alloc_ccb(np))
+Index: linux-2.6/drivers/scsi/sym53c8xx_2/sym_hipd.h
 ===================================================================
---- scsi-misc-2.6.orig/drivers/scsi/sym53c8xx_2/sym_hipd.h	2006-06-02 18:20:23.000000000 +0200
-+++ scsi-misc-2.6/drivers/scsi/sym53c8xx_2/sym_hipd.h	2007-01-02 17:27:24.000000000 +0100
-@@ -1058,7 +1058,7 @@
- struct sym_ccb *sym_get_ccb(struct sym_hcb *np, struct scsi_cmnd *cmd, u_char tag_order);
- void sym_free_ccb(struct sym_hcb *np, struct sym_ccb *cp);
- struct sym_lcb *sym_alloc_lcb(struct sym_hcb *np, u_char tn, u_char ln);
--int sym_queue_scsiio(struct sym_hcb *np, struct scsi_cmnd *csio, struct sym_ccb *cp);
-+void sym_init_scsiio(struct sym_hcb *np, struct scsi_cmnd *csio, struct sym_ccb *cp);
- int sym_abort_scsiio(struct sym_hcb *np, struct scsi_cmnd *ccb, int timed_out);
- int sym_reset_scsi_target(struct sym_hcb *np, int target);
- void sym_hcb_free(struct sym_hcb *np);
+--- linux-2.6.orig/drivers/scsi/sym53c8xx_2/sym_hipd.h	2007-01-02 17:10:14.000000000 +0100
++++ linux-2.6/drivers/scsi/sym53c8xx_2/sym_hipd.h	2007-01-02 17:12:09.000000000 +0100
+@@ -48,17 +48,12 @@
+  *  They may be defined in platform specific headers, if they 
+  *  are useful.
+  *
+- *    SYM_OPT_HANDLE_DEVICE_QUEUEING
+- *        When this option is set, the driver will use a queue per 
+- *        device and handle QUEUE FULL status requeuing internally.
+- *
+  *    SYM_OPT_LIMIT_COMMAND_REORDERING
+  *        When this option is set, the driver tries to limit tagged 
+  *        command reordering to some reasonnable value.
+  *        (set for Linux)
+  */
+ #if 0
+-#define SYM_OPT_HANDLE_DEVICE_QUEUEING
+ #define SYM_OPT_LIMIT_COMMAND_REORDERING
+ #endif
+ 
+@@ -508,20 +503,6 @@
+ 	struct sym_slcb s;
+ #endif
+ 
+-#ifdef SYM_OPT_HANDLE_DEVICE_QUEUEING
+-	/*
+-	 *  Optionnaly the driver can handle device queueing, 
+-	 *  and requeues internally command to redo.
+-	 */
+-	SYM_QUEHEAD waiting_ccbq;
+-	SYM_QUEHEAD started_ccbq;
+-	int	num_sgood;
+-	u_short	started_tags;
+-	u_short	started_no_tag;
+-	u_short	started_max;
+-	u_short	started_limit;
+-#endif
+-
+ #ifdef SYM_OPT_LIMIT_COMMAND_REORDERING
+ 	/*
+ 	 *  Optionally the driver can try to prevent SCSI 
+@@ -785,10 +766,6 @@
+ 	u32	goalp;		/* Expected last data pointer	*/
+ 	int	ext_sg;		/* Extreme data pointer, used	*/
+ 	int	ext_ofs;	/*  to calculate the residual.	*/
+-#ifdef SYM_OPT_HANDLE_DEVICE_QUEUEING
+-	SYM_QUEHEAD link2_ccbq;	/* Link for device queueing	*/
+-	u_char	started;	/* CCB queued to the squeue	*/
+-#endif
+ 	u_char	to_abort;	/* Want this IO to be aborted	*/
+ #ifdef SYM_OPT_LIMIT_COMMAND_REORDERING
+ 	u_char	tags_si;	/* Lun tags sum index (0,1)	*/
+@@ -987,10 +964,6 @@
+ 	 */
+ 	SYM_QUEHEAD	comp_ccbq;
+ 
+-#ifdef SYM_OPT_HANDLE_DEVICE_QUEUEING
+-	SYM_QUEHEAD	dummy_ccbq;
+-#endif
+-
+ 	/*
+ 	 *  IMMEDIATE ARBITRATION (IARB) control.
+ 	 *
+@@ -1047,11 +1020,7 @@
+ void sym_print_xerr(struct scsi_cmnd *cmd, int x_status);
+ int sym_reset_scsi_bus(struct sym_hcb *np, int enab_int);
+ struct sym_chip *sym_lookup_chip_table(u_short device_id, u_char revision);
+-#ifdef SYM_OPT_HANDLE_DEVICE_QUEUEING
+-void sym_start_next_ccbs(struct sym_hcb *np, struct sym_lcb *lp, int maxn);
+-#else
+ void sym_put_start_queue(struct sym_hcb *np, struct sym_ccb *cp);
+-#endif
+ void sym_start_up(struct sym_hcb *np, int reason);
+ void sym_interrupt(struct sym_hcb *np);
+ int sym_clear_tasks(struct sym_hcb *np, int cam_status, int target, int lun, int task);
