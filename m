@@ -1,45 +1,58 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: struct request members, etc..
-Date: Tue, 2 Jan 2007 13:44:27 +0100
-Message-ID: <20070102124427.GY2483@kernel.dk>
-References: <200612112159.kBBLxmep005850@fire-2.osdl.org> <20061211141029.9a0b0376.akpm@osdl.org> <20061212103842.GA9619@lst.de> <20061212132600.GA19912@lst.de> <457EBAE3.6090609@panasas.com> <20070102120531.GB7032@lst.de> <20070102123418.GW2483@kernel.dk> <20070102123916.GA8689@lst.de>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 1/3] block: export blk_verify_command for SG v4
+Date: Wed, 03 Jan 2007 00:02:20 +0900
+Message-ID: <200701021502.l02F2MI9019472@r-dd.iij4u.or.jp>
+References: <20061216001756S.fujita.tomonori@lab.ntt.co.jp>
+	<20070102114916.GC24951@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([62.242.22.158]:17310 "EHLO kernel.dk"
+Received: from mfo06.iij.ad.jp ([210.130.1.94]:61322 "EHLO mfo06.iij.ad.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964899AbXABMob (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 2 Jan 2007 07:44:31 -0500
-Content-Disposition: inline
-In-Reply-To: <20070102123916.GA8689@lst.de>
+	id S1752964AbXABPDf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 2 Jan 2007 10:03:35 -0500
+Received: MFO(mfo06) for <linux-scsi@vger.kernel.org> id l02F3RGx021023; Wed, 3 Jan 2007 00:03:27 +0900 (JST)
+In-Reply-To: <20070102114916.GC24951@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, linux-scsi@vger.kernel.org
+To: hch@infradead.org
+Cc: fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, dougg@torque.net, jens.axboe@oracle.com
 
-On Tue, Jan 02 2007, Christoph Hellwig wrote:
-> On Tue, Jan 02, 2007 at 01:34:18PM +0100, Jens Axboe wrote:
-> > On Tue, Jan 02 2007, Christoph Hellwig wrote:
-> > > This gets a little offtopic for the original issue, so let's cut the Cc
-> > > list and change the subject.
-> > > 
-> > > On Tue, Dec 12, 2006 at 04:21:23PM +0200, Boaz Harrosh wrote:
-> > > > I'm afraid this might not be enough because of code in drivers/ide/ide-cd.c. It does IO off of request->data.
-> > > 
-> > > Only for FS requests, but we do BLOCK_PC requests here.
-> > 
-> > ->buffer is the old style FS requests, ->data is never used for FS
-> > requests. BLOCK_PC requests should use just ->data, but I would not be
-> > surprised if ide-cd and others still map it to ->buffer.
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/3] block: export blk_verify_command for SG v4
+Date: Tue, 2 Jan 2007 11:49:16 +0000
+
+> On Sat, Dec 16, 2006 at 12:18:23AM +0900, FUJITA Tomonori wrote:
+> > blk_fill_sghdr_rq doesn't work for SG v4 so verify_command needed to
+> > be exported.
 > 
-> Actually after my last patch BLOCK_PC request should use neither.
-> Nowdays if a BLOCK_PC requests wants to transfer data it must
-> use req->bio.
+> So fixup blk_fill_sghdr_rq to deal with SG v4 aswell.  We really
+> need to support all SGv4 features in the core code - bsg should
+> only be a small wrapper around core functionality at the end.
 
-Cool, just worrying that it might complicate some drivers. ide-cd itself
-should actually be cleaned up, as we can drop one of the old pc
-interrupt handlers as well.
+Should blk_fill_sghdr_rq take cmd pointer, cmd_len, timeout, etc
+instead of sg_io_hdr structure?
 
--- 
-Jens Axboe
 
+> And while you're touching this code, is there any chance you could
+> unifity the command permission tables for the block layer code and
+> the sg driver?  This has been long overdue.
+
+No problem.
+
+You refer to unifying allow_ops in drivers/scsi/sg.c and
+blk_verify_command in block/scsi_ioctl.c, right?
+
+
+> doug has a nice document somewhere that documents the differences
+> between command allowances for the block layer vs the sg driver.
+> Please go through these and take the more resonable version for
+> each command.
+
+SCSI command permissions:
+
+http://sg.torque.net/sg/sg_io.html
+
+You mean that the sg driver and the block layer code share the same
+tables (might break some user-space code)?
