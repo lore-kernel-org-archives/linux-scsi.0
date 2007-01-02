@@ -1,439 +1,212 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] sym2: remove SYM_OPT_HANDLE_DEVICE_QUEUEING code
-Date: Tue, 2 Jan 2007 17:38:46 +0100
-Message-ID: <20070102163846.GB17602@lst.de>
+From: Andreas Heiduk <Andreas.Heiduk@web.de>
+Subject: [sym53c8xx] problem: dropping back to 5MB/s with 2.6.18+
+Date: Tue, 02 Jan 2007 23:20:44 +0100
+Message-ID: <1305561378@web.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="=-------------11677764444645398248"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:49292 "EHLO mail.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755362AbXABQit (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 2 Jan 2007 11:38:49 -0500
-Content-Disposition: inline
+Received: from fmmailgate09.web.de ([217.72.192.184]:57846 "EHLO
+	fmmailgate09.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964931AbXABWUp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Jan 2007 17:20:45 -0500
+Received: from web.de
+	by fmmailgate09.web.de (Postfix) with SMTP id 6F63522857D
+	for <linux-scsi@vger.kernel.org>; Tue,  2 Jan 2007 23:20:44 +0100 (CET)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: matthew@wil.cx
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-All per-device queueing is handled by the scsi midlayer for quite
-a while so we can remove the code to deal with it.  It has been
-completly disabled at the cpp level already.
+This is a multi-part message in MIME format.
+
+--=-------------11677764444645398248
+Content-Type: text/plain; charset=iso-8859-15
+Content-Transfer-Encoding: quoted-printable
+
+Hello!
+
+I'm trying to upgrade my kernel from 2.6.15, but my external RAID drops ba=
+ck to 5 MB/s due to domain validation errors. With my current kernel 2.6.1=
+5 the performance is OK.
+
+Here are the details:
+
+ - kernel: 2.6.15-1-686 i686 GNU/Linux
+ - kernel driver: sym53c8xx - 2.2.1
+ - hostadapter: LSI Logic / Symbios Logic 53c1010 66MHz Ultra3 SCSI (rev 0=
+1)
+ - external RAID: Transtec BR-1600U3p=20
+
+Please note, that the hostadapter is a 66MHz/32bit device stuffed into a p=
+lain 33MHz/32bit socket. (I'm not sure it that matters.)
 
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+With kernel 2.6.20-rc3 the following kind of error are logged while iterat=
+ing down to FAST-5:
 
-Index: linux-2.6/drivers/scsi/sym53c8xx_2/sym_glue.h
-===================================================================
---- linux-2.6.orig/drivers/scsi/sym53c8xx_2/sym_glue.h	2007-01-02 17:12:14.000000000 +0100
-+++ linux-2.6/drivers/scsi/sym53c8xx_2/sym_glue.h	2007-01-02 17:12:18.000000000 +0100
-@@ -67,7 +67,6 @@
-  */
- #define	SYM_CONF_TIMER_INTERVAL		((HZ+1)/2)
- 
--#undef SYM_OPT_HANDLE_DEVICE_QUEUEING
- #define SYM_OPT_LIMIT_COMMAND_REORDERING
- 
- /*
-Index: linux-2.6/drivers/scsi/sym53c8xx_2/sym_hipd.c
-===================================================================
---- linux-2.6.orig/drivers/scsi/sym53c8xx_2/sym_hipd.c	2007-01-02 17:10:14.000000000 +0100
-+++ linux-2.6/drivers/scsi/sym53c8xx_2/sym_hipd.c	2007-01-02 17:11:40.000000000 +0100
-@@ -1529,57 +1529,6 @@
- 	OUTB(np, nc_istat, SIGP|np->istat_sem);
- }
- 
--#ifdef SYM_OPT_HANDLE_DEVICE_QUEUEING
--/*
-- *  Start next ready-to-start CCBs.
-- */
--void sym_start_next_ccbs(struct sym_hcb *np, struct sym_lcb *lp, int maxn)
--{
--	SYM_QUEHEAD *qp;
--	struct sym_ccb *cp;
--
--	/* 
--	 *  Paranoia, as usual. :-)
--	 */
--	assert(!lp->started_tags || !lp->started_no_tag);
--
--	/*
--	 *  Try to start as many commands as asked by caller.
--	 *  Prevent from having both tagged and untagged 
--	 *  commands queued to the device at the same time.
--	 */
--	while (maxn--) {
--		qp = sym_remque_head(&lp->waiting_ccbq);
--		if (!qp)
--			break;
--		cp = sym_que_entry(qp, struct sym_ccb, link2_ccbq);
--		if (cp->tag != NO_TAG) {
--			if (lp->started_no_tag ||
--			    lp->started_tags >= lp->started_max) {
--				sym_insque_head(qp, &lp->waiting_ccbq);
--				break;
--			}
--			lp->itlq_tbl[cp->tag] = cpu_to_scr(cp->ccb_ba);
--			lp->head.resel_sa =
--				cpu_to_scr(SCRIPTA_BA(np, resel_tag));
--			++lp->started_tags;
--		} else {
--			if (lp->started_no_tag || lp->started_tags) {
--				sym_insque_head(qp, &lp->waiting_ccbq);
--				break;
--			}
--			lp->head.itl_task_sa = cpu_to_scr(cp->ccb_ba);
--			lp->head.resel_sa =
--			      cpu_to_scr(SCRIPTA_BA(np, resel_no_tag));
--			++lp->started_no_tag;
--		}
--		cp->started = 1;
--		sym_insque_tail(qp, &lp->started_ccbq);
--		sym_put_start_queue(np, cp);
--	}
--}
--#endif /* SYM_OPT_HANDLE_DEVICE_QUEUEING */
--
- /*
-  *  The chip may have completed jobs. Look at the DONE QUEUE.
-  *
-@@ -1649,25 +1598,6 @@
- 		cmd = cp->cmd;
- 		if (cam_status)
- 			sym_set_cam_status(cmd, cam_status);
--#ifdef SYM_OPT_HANDLE_DEVICE_QUEUEING
--		if (sym_get_cam_status(cmd) == DID_SOFT_ERROR) {
--			struct sym_tcb *tp = &np->target[cp->target];
--			struct sym_lcb *lp = sym_lp(tp, cp->lun);
--			if (lp) {
--				sym_remque(&cp->link2_ccbq);
--				sym_insque_tail(&cp->link2_ccbq,
--				                &lp->waiting_ccbq);
--				if (cp->started) {
--					if (cp->tag != NO_TAG)
--						--lp->started_tags;
--					else
--						--lp->started_no_tag;
--				}
--			}
--			cp->started = 0;
--			continue;
--		}
--#endif
- 		sym_free_ccb(np, cp);
- 		sym_xpt_done(np, cmd);
- 	}
-@@ -3327,12 +3257,7 @@
- 		/*
- 		 *  Make sure at least our IO to abort has been dequeued.
- 		 */
--#ifndef SYM_OPT_HANDLE_DEVICE_QUEUEING
- 		assert(i && sym_get_cam_status(cp->cmd) == DID_SOFT_ERROR);
--#else
--		sym_remque(&cp->link_ccbq);
--		sym_insque_tail(&cp->link_ccbq, &np->comp_ccbq);
--#endif
- 		/*
- 		 *  Keep track in cam status of the reason of the abort.
- 		 */
-@@ -4606,10 +4531,8 @@
- 			/*
- 			 *  Debugging purpose.
- 			 */
--#ifndef SYM_OPT_HANDLE_DEVICE_QUEUEING
- 			if (lp->busy_itl != 0)
- 				goto out_free;
--#endif
- 			/*
- 			 *  Allocate resources for tags if not yet.
- 			 */
-@@ -4629,11 +4552,9 @@
- 				if (++lp->ia_tag == SYM_CONF_MAX_TASK)
- 					lp->ia_tag = 0;
- 				++lp->busy_itlq;
--#ifndef SYM_OPT_HANDLE_DEVICE_QUEUEING
- 				lp->itlq_tbl[tag] = cpu_to_scr(cp->ccb_ba);
- 				lp->head.resel_sa =
- 					cpu_to_scr(SCRIPTA_BA(np, resel_tag));
--#endif
- #ifdef SYM_OPT_LIMIT_COMMAND_REORDERING
- 				cp->tags_si = lp->tags_si;
- 				++lp->tags_sum[cp->tags_si];
-@@ -4652,17 +4573,14 @@
- 			/*
- 			 *  Debugging purpose.
- 			 */
--#ifndef SYM_OPT_HANDLE_DEVICE_QUEUEING
- 			if (lp->busy_itl != 0 || lp->busy_itlq != 0)
- 				goto out_free;
--#endif
- 			/*
- 			 *  Count this nexus for this LUN.
- 			 *  Set up the CCB bus address for reselection.
- 			 *  Toggle reselect path to untagged.
- 			 */
- 			++lp->busy_itl;
--#ifndef SYM_OPT_HANDLE_DEVICE_QUEUEING
- 			if (lp->busy_itl == 1) {
- 				lp->head.itl_task_sa = cpu_to_scr(cp->ccb_ba);
- 				lp->head.resel_sa =
-@@ -4670,20 +4588,12 @@
- 			}
- 			else
- 				goto out_free;
--#endif
- 		}
- 	}
- 	/*
- 	 *  Put the CCB into the busy queue.
- 	 */
- 	sym_insque_tail(&cp->link_ccbq, &np->busy_ccbq);
--#ifdef SYM_OPT_HANDLE_DEVICE_QUEUEING
--	if (lp) {
--		sym_remque(&cp->link2_ccbq);
--		sym_insque_tail(&cp->link2_ccbq, &lp->waiting_ccbq);
--	}
--
--#endif
- 	cp->to_abort = 0;
- 	cp->odd_byte_adjustment = 0;
- 	cp->tag	   = tag;
-@@ -4778,20 +4688,6 @@
- 	cp->host_status = HS_IDLE;
- 	sym_remque(&cp->link_ccbq);
- 	sym_insque_head(&cp->link_ccbq, &np->free_ccbq);
--
--#ifdef SYM_OPT_HANDLE_DEVICE_QUEUEING
--	if (lp) {
--		sym_remque(&cp->link2_ccbq);
--		sym_insque_tail(&cp->link2_ccbq, &np->dummy_ccbq);
--		if (cp->started) {
--			if (cp->tag != NO_TAG)
--				--lp->started_tags;
--			else
--				--lp->started_no_tag;
--		}
--	}
--	cp->started = 0;
--#endif
- }
- 
- /*
-@@ -4848,13 +4744,6 @@
- 	 *  Chain into free ccb queue.
- 	 */
- 	sym_insque_head(&cp->link_ccbq, &np->free_ccbq);
--
--	/*
--	 *  Chain into optionnal lists.
--	 */
--#ifdef SYM_OPT_HANDLE_DEVICE_QUEUEING
--	sym_insque_head(&cp->link2_ccbq, &np->dummy_ccbq);
--#endif
- 	return cp;
- out_free:
- 	if (cp)
-@@ -4966,17 +4855,6 @@
- 	 *  Set user capabilities.
- 	 */
- 	lp->user_flags = tp->usrflags & (SYM_DISC_ENABLED | SYM_TAGS_ENABLED);
--
--#ifdef SYM_OPT_HANDLE_DEVICE_QUEUEING
--	/*
--	 *  Initialize device queueing.
--	 */
--	sym_que_init(&lp->waiting_ccbq);
--	sym_que_init(&lp->started_ccbq);
--	lp->started_max   = SYM_CONF_MAX_TASK;
--	lp->started_limit = SYM_CONF_MAX_TASK;
--#endif
--
- fail:
- 	return lp;
- }
-@@ -5303,44 +5181,11 @@
- 	 */
- 	OUTL_DSP(np, SCRIPTA_BA(np, start));
- 
--#ifdef SYM_OPT_HANDLE_DEVICE_QUEUEING
--	if (cp->host_status == HS_COMPLETE &&
--	    cp->ssss_status == S_QUEUE_FULL) {
--		if (!lp || lp->started_tags - i < 2)
--			goto weirdness;
--		/*
--		 *  Decrease queue depth as needed.
--		 */
--		lp->started_max = lp->started_tags - i - 1;
--		lp->num_sgood = 0;
--
--		if (sym_verbose >= 2) {
--			sym_print_addr(cmd, " queue depth is now %d\n",
--					lp->started_max);
--		}
--
--		/*
--		 *  Repair the CCB.
--		 */
--		cp->host_status = HS_BUSY;
--		cp->ssss_status = S_ILLEGAL;
--
--		/*
--		 *  Let's requeue it to device.
--		 */
--		sym_set_cam_status(cmd, DID_SOFT_ERROR);
--		goto finish;
--	}
--weirdness:
--#endif
- 	/*
- 	 *  Build result in CAM ccb.
- 	 */
- 	sym_set_cam_result_error(np, cp, resid);
- 
--#ifdef SYM_OPT_HANDLE_DEVICE_QUEUEING
--finish:
--#endif
- 	/*
- 	 *  Add this one to the COMP queue.
- 	 */
-@@ -5352,13 +5197,6 @@
- 	 *  or requeue condition.
- 	 */
- 	sym_flush_comp_queue(np, 0);
--
--#ifdef SYM_OPT_HANDLE_DEVICE_QUEUEING
--	/*
--	 *  Donnot start more than 1 command after an error.
--	 */
--	sym_start_next_ccbs(np, lp, 1);
--#endif
- }
- 
- /*
-@@ -5420,36 +5258,11 @@
- 	 */
- 	sym_set_cam_result_ok(cp, cmd, resid);
- 
--#ifdef SYM_OPT_HANDLE_DEVICE_QUEUEING
--	/*
--	 *  If max number of started ccbs had been reduced,
--	 *  increase it if 200 good status received.
--	 */
--	if (lp && lp->started_max < lp->started_limit) {
--		++lp->num_sgood;
--		if (lp->num_sgood >= 200) {
--			lp->num_sgood = 0;
--			++lp->started_max;
--			if (sym_verbose >= 2) {
--				sym_print_addr(cmd, " queue depth is now %d\n",
--				       lp->started_max);
--			}
--		}
--	}
--#endif
--
- 	/*
- 	 *  Free our CCB.
- 	 */
- 	sym_free_ccb (np, cp);
- 
--#ifdef SYM_OPT_HANDLE_DEVICE_QUEUEING
--	/*
--	 *  Requeue a couple of awaiting scsi commands.
--	 */
--	if (!sym_que_empty(&lp->waiting_ccbq))
--		sym_start_next_ccbs(np, lp, 2);
--#endif
- 	/*
- 	 *  Complete the command.
- 	 */
-@@ -5551,13 +5364,6 @@
- 	sym_que_init(&np->comp_ccbq);
- 
- 	/*
--	 *  Initialization for optional handling 
--	 *  of device queueing.
--	 */
--#ifdef SYM_OPT_HANDLE_DEVICE_QUEUEING
--	sym_que_init(&np->dummy_ccbq);
--#endif
--	/*
- 	 *  Allocate some CCB. We need at least ONE.
- 	 */
- 	if (!sym_alloc_ccb(np))
-Index: linux-2.6/drivers/scsi/sym53c8xx_2/sym_hipd.h
-===================================================================
---- linux-2.6.orig/drivers/scsi/sym53c8xx_2/sym_hipd.h	2007-01-02 17:10:14.000000000 +0100
-+++ linux-2.6/drivers/scsi/sym53c8xx_2/sym_hipd.h	2007-01-02 17:12:09.000000000 +0100
-@@ -48,17 +48,12 @@
-  *  They may be defined in platform specific headers, if they 
-  *  are useful.
-  *
-- *    SYM_OPT_HANDLE_DEVICE_QUEUEING
-- *        When this option is set, the driver will use a queue per 
-- *        device and handle QUEUE FULL status requeuing internally.
-- *
-  *    SYM_OPT_LIMIT_COMMAND_REORDERING
-  *        When this option is set, the driver tries to limit tagged 
-  *        command reordering to some reasonnable value.
-  *        (set for Linux)
-  */
- #if 0
--#define SYM_OPT_HANDLE_DEVICE_QUEUEING
- #define SYM_OPT_LIMIT_COMMAND_REORDERING
- #endif
- 
-@@ -508,20 +503,6 @@
- 	struct sym_slcb s;
- #endif
- 
--#ifdef SYM_OPT_HANDLE_DEVICE_QUEUEING
--	/*
--	 *  Optionnaly the driver can handle device queueing, 
--	 *  and requeues internally command to redo.
--	 */
--	SYM_QUEHEAD waiting_ccbq;
--	SYM_QUEHEAD started_ccbq;
--	int	num_sgood;
--	u_short	started_tags;
--	u_short	started_no_tag;
--	u_short	started_max;
--	u_short	started_limit;
--#endif
--
- #ifdef SYM_OPT_LIMIT_COMMAND_REORDERING
- 	/*
- 	 *  Optionally the driver can try to prevent SCSI 
-@@ -785,10 +766,6 @@
- 	u32	goalp;		/* Expected last data pointer	*/
- 	int	ext_sg;		/* Extreme data pointer, used	*/
- 	int	ext_ofs;	/*  to calculate the residual.	*/
--#ifdef SYM_OPT_HANDLE_DEVICE_QUEUEING
--	SYM_QUEHEAD link2_ccbq;	/* Link for device queueing	*/
--	u_char	started;	/* CCB queued to the squeue	*/
--#endif
- 	u_char	to_abort;	/* Want this IO to be aborted	*/
- #ifdef SYM_OPT_LIMIT_COMMAND_REORDERING
- 	u_char	tags_si;	/* Lun tags sum index (0,1)	*/
-@@ -987,10 +964,6 @@
- 	 */
- 	SYM_QUEHEAD	comp_ccbq;
- 
--#ifdef SYM_OPT_HANDLE_DEVICE_QUEUEING
--	SYM_QUEHEAD	dummy_ccbq;
--#endif
--
- 	/*
- 	 *  IMMEDIATE ARBITRATION (IARB) control.
- 	 *
-@@ -1047,11 +1020,7 @@
- void sym_print_xerr(struct scsi_cmnd *cmd, int x_status);
- int sym_reset_scsi_bus(struct sym_hcb *np, int enab_int);
- struct sym_chip *sym_lookup_chip_table(u_short device_id, u_char revision);
--#ifdef SYM_OPT_HANDLE_DEVICE_QUEUEING
--void sym_start_next_ccbs(struct sym_hcb *np, struct sym_lcb *lp, int maxn);
--#else
- void sym_put_start_queue(struct sym_hcb *np, struct sym_ccb *cp);
--#endif
- void sym_start_up(struct sym_hcb *np, int reason);
- void sym_interrupt(struct sym_hcb *np);
- int sym_clear_tasks(struct sym_hcb *np, int cam_status, int target, int lun, int task);
+         target0:0:0: FAST-40 WIDE SCSI 80.0 MB/s DT (25 ns, offset 31)
+        sym0: unexpected disconnect
+        scsi 0:0:0:0: illegal scsi phase (4/5).
+         target0:0:0: Domain Validation detected failure, dropping back
+        sym0:0: No MSG OUT phase after selection with ATN.
+        sym0:0: ERROR (0:48) (8-ae-0) (1f/38/80) @ (scripta 70:9e030000).
+        sym0: script cmd =3D 80000000
+        sym0: regdump: da 10 80 38 47 1f 00 0e 00 08 00 ae 80 01 06 02 00 =
+3c 53$
+        08 00 00 00.
+        sym0: SCSI BUS reset detected.
+        sym0: SCSI BUS has been reset.
+=20
+I have tried kernels 2.6.18, 2.6.19.1 and 2.6.20-rc3. They all show the sa=
+me pattern. With kernel 2.6.15 no such errors are printed (see both attach=
+ed logfiles).
+
+
+Do you have any ideas how to fix this problem=3F
+
+
+Best Regards
+Andreas Heiduk
+
+=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F=5F
+Viren-Scan f=FCr Ihren PC! Jetzt f=FCr jeden. Sofort, online und kostenlos.
+Gleich testen! http://www.pc-sicherheit.web.de/freescan/=3Fmc=3D022222
+
+
+--=-------------11677764444645398248
+Content-Type: text/plain;
+ name="logfile-2.6.15.txt"
+Content-Disposition: attachment;
+ filename="logfile-2.6.15.txt"
+Content-Transfer-Encoding: 7bit
+
+sym0: <1010-66> rev 0x1 at pci 0000:02:08.0 irq 209
+sym0: Symbios NVRAM, ID 7, Fast-80, LVD, parity checking
+sym0: open drain IRQ line driver, using on-chip SRAM
+sym0: using LOAD/STORE-based firmware.
+sym0: handling phase mismatch from SCRIPTS.
+sym0: SCAN AT BOOT disabled for targets 1 2 3 4 5 6 8 9 10 11 12 13 14 15.
+sym0: SCSI BUS has been reset.
+scsi1 : sym-2.2.1
+  Vendor: transtec  Model:                   Rev: 0001
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+ target1:0:0: tagged command queuing enabled, command queue depth 16.
+ target1:0:0: Beginning Domain Validation
+ target1:0:0: asynchronous.
+ target1:0:0: wide asynchronous.
+ target1:0:0: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 31)
+ target1:0:0: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 31)
+ target1:0:0: Domain Validation skipping write tests
+ target1:0:0: Ending Domain Validation
+SCSI device sda: 3418750976 512-byte hdwr sectors (1750400 MB)
+SCSI device sda: drive cache: write back
+SCSI device sda: 3418750976 512-byte hdwr sectors (1750400 MB)
+SCSI device sda: drive cache: write back
+ sda: unknown partition table
+sd 1:0:0:0: Attached scsi disk sda
+
+--=-------------11677764444645398248
+Content-Type: text/plain;
+ name="logfile-2.6.20-rc3.txt"
+Content-Disposition: attachment;
+ filename="logfile-2.6.20-rc3.txt"
+Content-Transfer-Encoding: 7bit
+
+sym0: <1010-66> rev 0x1 at pci 0000:02:08.0 irq 21
+sym0: Symbios NVRAM, ID 7, Fast-80, LVD, parity checking
+sym0: open drain IRQ line driver, using on-chip SRAM
+sym0: using LOAD/STORE-based firmware.
+sym0: handling phase mismatch from SCRIPTS.
+sym0: SCSI BUS has been reset.
+scsi0 : sym-2.2.3
+ target0:0:1: Scan at boot disabled in NVRAM
+ target0:0:2: Scan at boot disabled in NVRAM
+ target0:0:3: Scan at boot disabled in NVRAM
+ target0:0:4: Scan at boot disabled in NVRAM
+ target0:0:5: Scan at boot disabled in NVRAM
+ target0:0:6: Scan at boot disabled in NVRAM
+ target0:0:8: Scan at boot disabled in NVRAM
+ target0:0:9: Scan at boot disabled in NVRAM
+ target0:0:10: Scan at boot disabled in NVRAM
+ target0:0:11: Scan at boot disabled in NVRAM
+ target0:0:12: Scan at boot disabled in NVRAM
+ target0:0:13: Scan at boot disabled in NVRAM
+ target0:0:14: Scan at boot disabled in NVRAM
+ target0:0:15: Scan at boot disabled in NVRAM
+scsi 0:0:0:0: Direct-Access     transtec                  0001 PQ: 0 ANSI: 3
+ target0:0:0: tagged command queuing enabled, command queue depth 16.
+ target0:0:0: Beginning Domain Validation
+ target0:0:0: asynchronous
+ target0:0:0: wide asynchronous
+ target0:0:0: FAST-40 WIDE SCSI 80.0 MB/s DT (25 ns, offset 31)
+sym0: unexpected disconnect
+scsi 0:0:0:0: illegal scsi phase (4/5).
+ target0:0:0: Domain Validation detected failure, dropping back
+sym0:0: No MSG OUT phase after selection with ATN.
+sym0:0: ERROR (0:48) (8-ae-0) (1f/38/80) @ (scripta 70:9e030000).
+sym0: script cmd = 80000000
+sym0: regdump: da 10 80 38 47 1f 00 0e 00 08 00 ae 80 01 06 02 00 3c 53 37
+08 00 00 00.
+sym0: SCSI BUS reset detected.
+sym0: SCSI BUS has been reset.
+ target0:0:0: Domain Validation detected failure, dropping back
+ target0:0:0: FAST-20 WIDE SCSI 40.0 MB/s DT (50 ns, offset 31)
+sym0: unexpected disconnect
+scsi 0:0:0:0: illegal scsi phase (4/5).
+ target0:0:0: Domain Validation detected failure, dropping back
+sym0:0: No MSG OUT phase after selection with ATN.
+sym0:0: ERROR (0:48) (8-ae-0) (1f/58/80) @ (scripta 70:9e030000).
+sym0: script cmd = 80000000
+sym0: regdump: da 10 80 58 47 1f 00 0e 00 08 00 ae 80 01 06 02 00 3c 53 37
+08 00 00 00.
+sym0: SCSI BUS reset detected.
+sym0: SCSI BUS has been reset.
+ target0:0:0: Domain Validation detected failure, dropping back
+ target0:0:0: FAST-10 WIDE SCSI 20.0 MB/s DT (100 ns, offset 31)
+sym0: unexpected disconnect
+scsi 0:0:0:0: illegal scsi phase (4/5).
+ target0:0:0: Domain Validation detected failure, dropping back
+sym0:0: No MSG OUT phase after selection with ATN.
+sym0:0: ERROR (0:48) (8-ae-0) (1f/78/80) @ (scripta 70:9e030000).
+sym0: script cmd = 80000000
+sym0: regdump: da 10 80 78 47 1f 00 0e 00 08 00 ae 80 01 06 02 00 3c 53 37
+08 00 00 00.
+sym0: SCSI BUS reset detected.
+sym0: SCSI BUS has been reset.
+ target0:0:0: Domain Validation detected failure, dropping back
+ target0:0:0: FAST-5 WIDE SCSI 10.0 MB/s DT (200 ns, offset 31)
+sym0: unexpected disconnect
+scsi 0:0:0:0: illegal scsi phase (4/5).
+ target0:0:0: Domain Validation detected failure, dropping back
+sym0:0: No MSG OUT phase after selection with ATN.
+sym0:0: ERROR (0:48) (8-ae-0) (1f/78/8f) @ (scripta 70:9e030000).
+sym0: script cmd = 80000000
+sym0: regdump: da 10 80 78 47 1f 00 0e 00 08 00 ae 80 01 06 02 00 3c 53 37
+08 00 00 00.
+sym0: SCSI BUS reset detected.
+sym0: SCSI BUS has been reset.
+ target0:0:0: Domain Validation detected failure, dropping back
+ target0:0:0: FAST-5 WIDE SCSI 10.0 MB/s DT (200 ns, offset 31)
+sym0: unexpected disconnect
+scsi 0:0:0:0: illegal scsi phase (4/5).
+ target0:0:0: Domain Validation detected failure, dropping back
+sym0:0: No MSG OUT phase after selection with ATN.
+sym0:0: ERROR (0:48) (8-ae-0) (1f/78/8f) @ (scripta 70:9e030000).
+sym0: script cmd = 80000000
+sym0: regdump: da 10 80 78 47 1f 00 0e 00 08 00 ae 80 01 06 0a 00 3c 53 37
+08 00 00 00.
+sym0: SCSI BUS reset detected.
+sym0: SCSI BUS has been reset.
+ target0:0:0: Domain Validation Failure, dropping back to Asynchronous
+ target0:0:0: wide asynchronous
+ target0:0:0: Domain Validation skipping write tests
+ target0:0:0: Ending Domain Validation
+SCSI device sda: 3418750976 512-byte hdwr sectors (1750400 MB)
+sda: Write Protect is off
+sda: Mode Sense: ad 00 00 08
+SCSI device sda: write cache: enabled, read cache: enabled, doesn't support
+DPO or FUA
+ sda: unknown partition table
+sd 0:0:0:0: Attached scsi disk sda
+
+--=-------------11677764444645398248--
