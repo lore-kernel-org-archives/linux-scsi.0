@@ -1,89 +1,83 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC] Prevent infinite retries due to DID_RESET return status
-Date: Tue, 2 Jan 2007 12:15:14 +0000
-Message-ID: <20070102121514.GA31621@infradead.org>
-References: <457DD0CA.9010509@sgi.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] kill scsi_rety_command
+Date: Tue, 2 Jan 2007 12:56:00 +0100
+Message-ID: <20070102115600.GA6909@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:58816 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964784AbXABMPQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Jan 2007 07:15:16 -0500
+Received: from verein.lst.de ([213.95.11.210]:45168 "EHLO mail.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964825AbXABMRv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 2 Jan 2007 07:17:51 -0500
 Content-Disposition: inline
-In-Reply-To: <457DD0CA.9010509@sgi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Reed <mdr@sgi.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Jeremy Higdon <jeremy@sgi.com>
+To: jejb@steeleye.com
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, Dec 11, 2006 at 03:42:34PM -0600, Michael Reed wrote:
-> Due to a firmware mismatch between a host and target (names withheld to
-> protect the innocent?), the LLDD was returning DID_RESET for every
-> i/o command.  This patch modifies the scsi layer to take into account
-> when the command which received DID_RESET was issued and eventually
-> give up on it instead of unconditionally reissuing it forever
-> when it receives a DID_RESET.  With this patch, on my test system,
-> the command receiving the constant DID_RESET times out after about
-> 360 seconds.
-> 
-> The premise for this patch is that no command should have an infinite
-> lifetime.  The impetus for this patch was a system which would not
-> reach a command prompt without disconnecting the storage from the
-> host.
-> 
-> The significant change in this patch is to call scsi_retry_command()
-> instead of scsi_requeue_command() if the command which receives a
-> DID_RESET did not complete any i/o (good_bytes==0).  scsi_retry_command()
-> does not release the command and regenerate it like scsi_requeue_command()
-> does, hence jiffies_at_alloc reflects when the command was first issued.
-
-Generally this patch looks good to me.  Some comments:
+scsi_retry_command only has a single caller, so there is no point
+in having this function.  Additionally the memset of the sense
+buffer it does is entirely superflous as scsi_request_fn already
+calls scsi_init_cmd_errh to perform this memset before the command
+is reissued.
 
 
-> -extern int scsi_retry_command(struct scsi_cmnd *cmd);
-> +extern int scsi_retry_command(struct scsi_cmnd *cmd, int reason);
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-	I've just sent a patch to kill scsi_retry_command.  Use
-	scsi_queue_insert directly instead.
-
-> +	scsi_release_buffers(cmd);
-
-	Can you please separate out the moving of the scsi_release_buffer
-	calls into a separate patch so it can be audited better?
-
-> @@ -961,9 +992,20 @@ void scsi_io_completion(struct scsi_cmnd
->  		/* Third party bus reset or reset for error recovery
->  		 * reasons.  Just retry the request and see what
->  		 * happens.
-> +		 * If no data was transferred, just reissue this
-> +		 * command.  If data was transferred, regenerate
-> +		 * the command to transfer only untransferred data.
->  		 */
-
-The whole comment should look more like:
-
-		/*
-		 * Third party bus reset or reset for error recovery reasons.
-		 * If no data was transferred, just reissue this command.
-		 * If data was transferred, regenerate the command to transfer
-		 * only untransferred data.
-		 */
-
-> -		scsi_requeue_command(q, cmd);
-> -		return;
-> +		if (!good_bytes) {
-> +			if (!(scsi_command_expired(cmd))) {
-> +				scsi_retry_command(cmd, SCSI_MLQUEUE_DID_RESET);
-> +				return;
-> +			}
-> +		}
-> +		else {
-> +			scsi_requeue_command(q, cmd);
-> +			return;
-> +		}
-
-	With this code we now fallthrough if we don't have any good bytes
-	and the command has expired.  Is this the expected behaviour? If
-	yes we need a good comment describing it.
-
+Index: linux-2.6/drivers/scsi/scsi.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/scsi.c	2007-01-02 12:34:46.000000000 +0100
++++ linux-2.6/drivers/scsi/scsi.c	2007-01-02 12:35:46.000000000 +0100
+@@ -673,27 +673,6 @@
+ }
+ 
+ /*
+- * Function:    scsi_retry_command
+- *
+- * Purpose:     Send a command back to the low level to be retried.
+- *
+- * Notes:       This command is always executed in the context of the
+- *              bottom half handler, or the error handler thread. Low
+- *              level drivers should not become re-entrant as a result of
+- *              this.
+- */
+-int scsi_retry_command(struct scsi_cmnd *cmd)
+-{
+-        /*
+-         * Zero the sense information from the last time we tried
+-         * this command.
+-         */
+-	memset(cmd->sense_buffer, 0, sizeof(cmd->sense_buffer));
+-
+-	return scsi_queue_insert(cmd, SCSI_MLQUEUE_EH_RETRY);
+-}
+-
+-/*
+  * Function:    scsi_finish_command
+  *
+  * Purpose:     Pass command off to upper layer for finishing of I/O
+Index: linux-2.6/drivers/scsi/scsi_lib.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/scsi_lib.c	2007-01-02 12:34:46.000000000 +0100
++++ linux-2.6/drivers/scsi/scsi_lib.c	2007-01-02 12:36:58.000000000 +0100
+@@ -1400,7 +1400,7 @@
+ 			scsi_finish_command(cmd);
+ 			break;
+ 		case NEEDS_RETRY:
+-			scsi_retry_command(cmd);
++			scsi_queue_insert(cmd, SCSI_MLQUEUE_EH_RETRY);
+ 			break;
+ 		case ADD_TO_MLQUEUE:
+ 			scsi_queue_insert(cmd, SCSI_MLQUEUE_DEVICE_BUSY);
+Index: linux-2.6/drivers/scsi/scsi_priv.h
+===================================================================
+--- linux-2.6.orig/drivers/scsi/scsi_priv.h	2007-01-02 12:34:46.000000000 +0100
++++ linux-2.6/drivers/scsi/scsi_priv.h	2007-01-02 12:35:51.000000000 +0100
+@@ -28,7 +28,6 @@
+ extern int scsi_setup_command_freelist(struct Scsi_Host *shost);
+ extern void scsi_destroy_command_freelist(struct Scsi_Host *shost);
+ extern void __scsi_done(struct scsi_cmnd *cmd);
+-extern int scsi_retry_command(struct scsi_cmnd *cmd);
+ #ifdef CONFIG_SCSI_LOGGING
+ void scsi_log_send(struct scsi_cmnd *cmd);
+ void scsi_log_completion(struct scsi_cmnd *cmd, int disposition);
