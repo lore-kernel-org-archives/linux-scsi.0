@@ -1,57 +1,89 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: struct request members, etc..
-Date: Tue, 2 Jan 2007 13:05:31 +0100
-Message-ID: <20070102120531.GB7032@lst.de>
-References: <200612112159.kBBLxmep005850@fire-2.osdl.org> <20061211141029.9a0b0376.akpm@osdl.org> <20061212103842.GA9619@lst.de> <20061212132600.GA19912@lst.de> <457EBAE3.6090609@panasas.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [RFC] Prevent infinite retries due to DID_RESET return status
+Date: Tue, 2 Jan 2007 12:15:14 +0000
+Message-ID: <20070102121514.GA31621@infradead.org>
+References: <457DD0CA.9010509@sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:44898 "EHLO mail.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964779AbXABMFn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 2 Jan 2007 07:05:43 -0500
+Received: from pentafluge.infradead.org ([213.146.154.40]:58816 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964784AbXABMPQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Jan 2007 07:15:16 -0500
 Content-Disposition: inline
-In-Reply-To: <457EBAE3.6090609@panasas.com>
+In-Reply-To: <457DD0CA.9010509@sgi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: linux-scsi@vger.kernel.org, axboe@kernel.dk
+To: Michael Reed <mdr@sgi.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Jeremy Higdon <jeremy@sgi.com>
 
-This gets a little offtopic for the original issue, so let's cut the Cc
-list and change the subject.
-
-On Tue, Dec 12, 2006 at 04:21:23PM +0200, Boaz Harrosh wrote:
-> I'm afraid this might not be enough because of code in drivers/ide/ide-cd.c. It does IO off of request->data.
-
-Only for FS requests, but we do BLOCK_PC requests here.
-
-> [background]
-> pkt_generic_packet and ton of other places mainly cd(s), floppy(s), and
-> other ide code paths, are using what I call BLACK requests. They put some
-> data on request->buffer or request->data stick it in the Q and than advance
-> on them later down the ladder. Remove of "buffer" and "data" from
-> struct request will reveal all these places. At one time I had plans to do
-> just that. But 1/2 way through I gave up, it is too risky, too much
-> Hardware that I don't have, that needs checking.
-
-Removing this old code would definitly be worthwile, but I understand
-that you don't want to get too deeply into the mess of floppy.c and the
-old ide code :)
-
-> below patch combined with your patch might get a bit closer for this code
-> path.  At struct request I have changed the name of "data" member to
-> "user_data". than changed the code paths that used "data" as IO to use
-> request->buffer instead. This is just as bad but is a more common practice.
+On Mon, Dec 11, 2006 at 03:42:34PM -0600, Michael Reed wrote:
+> Due to a firmware mismatch between a host and target (names withheld to
+> protect the innocent?), the LLDD was returning DID_RESET for every
+> i/o command.  This patch modifies the scsi layer to take into account
+> when the command which received DID_RESET was issued and eventually
+> give up on it instead of unconditionally reissuing it forever
+> when it receives a DID_RESET.  With this patch, on my test system,
+> the command receiving the constant DID_RESET times out after about
+> 360 seconds.
 > 
-> I suspect there is a problem with what I did in scsi_lib.c Christoph please
-> check me out with the new BUG_ON.
+> The premise for this patch is that no command should have an infinite
+> lifetime.  The impetus for this patch was a system which would not
+> reach a command prompt without disconnecting the storage from the
+> host.
+> 
+> The significant change in this patch is to call scsi_retry_command()
+> instead of scsi_requeue_command() if the command which receives a
+> DID_RESET did not complete any i/o (good_bytes==0).  scsi_retry_command()
+> does not release the command and regenerate it like scsi_requeue_command()
+> does, hence jiffies_at_alloc reflects when the command was first issued.
 
-They look good to me.
+Generally this patch looks good to me.  Some comments:
 
-> Mainly what you need from below is only the code in ide-cd.c.
-> (And there are 3-4 places that do exactly like pkt_generic_packet, though
-> I'm not sure they end up through SCSI.
 
-Do you have a list of those places at hand?  We should try to fix them
-up, especially if it's as trivial as the pkt code.
+> -extern int scsi_retry_command(struct scsi_cmnd *cmd);
+> +extern int scsi_retry_command(struct scsi_cmnd *cmd, int reason);
+
+	I've just sent a patch to kill scsi_retry_command.  Use
+	scsi_queue_insert directly instead.
+
+> +	scsi_release_buffers(cmd);
+
+	Can you please separate out the moving of the scsi_release_buffer
+	calls into a separate patch so it can be audited better?
+
+> @@ -961,9 +992,20 @@ void scsi_io_completion(struct scsi_cmnd
+>  		/* Third party bus reset or reset for error recovery
+>  		 * reasons.  Just retry the request and see what
+>  		 * happens.
+> +		 * If no data was transferred, just reissue this
+> +		 * command.  If data was transferred, regenerate
+> +		 * the command to transfer only untransferred data.
+>  		 */
+
+The whole comment should look more like:
+
+		/*
+		 * Third party bus reset or reset for error recovery reasons.
+		 * If no data was transferred, just reissue this command.
+		 * If data was transferred, regenerate the command to transfer
+		 * only untransferred data.
+		 */
+
+> -		scsi_requeue_command(q, cmd);
+> -		return;
+> +		if (!good_bytes) {
+> +			if (!(scsi_command_expired(cmd))) {
+> +				scsi_retry_command(cmd, SCSI_MLQUEUE_DID_RESET);
+> +				return;
+> +			}
+> +		}
+> +		else {
+> +			scsi_requeue_command(q, cmd);
+> +			return;
+> +		}
+
+	With this code we now fallthrough if we don't have any good bytes
+	and the command has expired.  Is this the expected behaviour? If
+	yes we need a good comment describing it.
 
