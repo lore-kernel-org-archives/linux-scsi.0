@@ -1,75 +1,55 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: 2.6.20-rc3: known unfixed regressions (v3)
-Date: Thu, 4 Jan 2007 18:46:32 +0100
-Message-ID: <20070104174632.GC20714@stusta.de>
-References: <Pine.LNX.4.64.0612311710430.4473@woody.osdl.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: 2.6.20-rc3: known unfixed regressions (v3)
+Date: Thu, 4 Jan 2007 11:13:27 -0700
+Message-ID: <20070104181327.GF24620@parisc-linux.org>
+References: <Pine.LNX.4.64.0612311710430.4473@woody.osdl.org> <20070104174632.GC20714@stusta.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965057AbXADSNr@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0612311710430.4473@woody.osdl.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jon Smirl <jonsmirl@gmail.com>, Damien Wyart <damien.wyart@free.fr>, Aaron Sethman <androsyn@ratbox.org>, alan@lxorguk.ukuu.org.uk, linux-ide@vger.kernel.org, Berthold Cogel <cogel@rrz.uni-koeln.de>, len.brown@intel.com, linux-acpi@vger.kernel.org, Florin Iucha <florin@iucha.net>, greg@kroah.com, linux-usb-devel@lists.sourceforge.net, dmitry.torokhov@gmail.com, linux-input@atrey.karlin.mff.cuni.cz, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, Komuro <komurojun-mbn@nifty.com>, YOSHIFUJI Hideaki <yoshfuji@linux-ipv6.org>, netdev@vger.kernel.org, Tobias Diedrich <ranma+kernel@tdiedrich.de>, Andi Kleen <ak@suse.de>, Yinghai Lu <yinghai.lu@amd.com>, "Eric W. Biederman" <ebiederm@xmission.com>, discuss@x86-64.org, mingo@redhat.com
+In-Reply-To: <20070104174632.GC20714@stusta.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Horst H. von Brand" <vonbrand@inf.utfsm.cl>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This email lists some known regressions in 2.6.20-rc3 compared to 2.6.19
-that are not yet fixed in Linus' tree.
+On Thu, Jan 04, 2007 at 06:46:32PM +0100, Adrian Bunk wrote:
+> Subject    : SPARC64: Can't mount /  (CONFIG_SCSI_SCAN_ASYNC=y ?)
+> References : http://lkml.org/lkml/2006/12/13/181
+>              http://lkml.org/lkml/2007/01/04/75
+> Submitter  : Horst H. von Brand <vonbrand@inf.utfsm.cl>
+> Status     : unknown
 
-If you find your name in the Cc header, you are either submitter of one
-of the bugs, maintainer of an affectected subsystem or driver, a patch
-of you caused a breakage or I'm considering you in any other way possibly
-involved with one or more of these issues.
+It'd be nice if people bothered to cc authors on bug reports, eh?
 
-Due to the huge amount of recipients, please trim the Cc when answering.
+It seems to me that you're building scsi as modules.  In which case
+you need to follow the instructions in the help text to load the
+scsi_wait_scan module.  Or just say 'n' to the CONFIG_SCSI_SCAN_ASYNC
+option, of course.
 
+You're right that the quotes need to disappear from the Kconfig help
+text as they're just confusing.
 
-Subject    : BUG: scheduling while atomic: hald-addon-stor/...
-             cdrom_{open,release,ioctl} in trace
-References : http://lkml.org/lkml/2006/12/26/105
-             http://lkml.org/lkml/2006/12/29/22
-             http://lkml.org/lkml/2006/12/31/133
-Submitter  : Jon Smirl <jonsmirl@gmail.com>
-             Damien Wyart <damien.wyart@free.fr>
-             Aaron Sethman <androsyn@ratbox.org>
-Status     : unknown
-
-
-Subject    : Acer Extensa 3002 WLMi: 'shutdown -h now' reboots the system
-References : http://lkml.org/lkml/2006/12/25/40
-Submitter  : Berthold Cogel <cogel@rrz.uni-koeln.de>
-Status     : unknown
-
-
-Subject    : USB keyboard unresponsive after some time
-References : http://lkml.org/lkml/2006/12/25/35
-             http://lkml.org/lkml/2006/12/26/106
-Submitter  : Florin Iucha <florin@iucha.net>
-Status     : unknown
-
-
-Subject    : SPARC64: Can't mount /  (CONFIG_SCSI_SCAN_ASYNC=y ?)
-References : http://lkml.org/lkml/2006/12/13/181
-             http://lkml.org/lkml/2007/01/04/75
-Submitter  : Horst H. von Brand <vonbrand@inf.utfsm.cl>
-Status     : unknown
-
-
-Subject    : ftp: get or put stops during file-transfer
-References : http://lkml.org/lkml/2006/12/16/174
-Submitter  : Komuro <komurojun-mbn@nifty.com>
-Caused-By  : YOSHIFUJI Hideaki <yoshfuji@linux-ipv6.org>
-             commit cfb6eeb4c860592edd123fdea908d23c6ad1c7dc
-Handled-By : YOSHIFUJI Hideaki <yoshfuji@linux-ipv6.org>
-Status     : problem is being debugged
-
-
-Subject    : x86_64 boot failure: "IO-APIC + timer doesn't work"
-References : http://lkml.org/lkml/2006/12/16/101
-             http://lkml.org/lkml/2007/1/3/9
-Submitter  : Tobias Diedrich <ranma+kernel@tdiedrich.de>
-Caused-By  : Andi Kleen <ak@suse.de>
-             commit b026872601976f666bae77b609dc490d1834bf77
-Handled-By : Yinghai Lu <yinghai.lu@amd.com>
-             Eric W. Biederman <ebiederm@xmission.com>
-Status     : patches are being discussed
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 60f5827..103d0da 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -230,6 +230,7 @@ config SCSI_SCAN_ASYNC
+ 	  The SCSI subsystem can probe for devices while the rest of the
+ 	  system continues booting, and even probe devices on different
+ 	  busses in parallel, leading to a significant speed-up.
++
+ 	  If you have built SCSI as modules, enabling this option can
+ 	  be a problem as the devices may not have been found by the
+ 	  time your system expects them to have been.  You can load the
+@@ -237,8 +238,8 @@ config SCSI_SCAN_ASYNC
+ 	  If you build your SCSI drivers into the kernel, then everything
+ 	  will work fine if you say Y here.
+ 
+-	  You can override this choice by specifying scsi_mod.scan="sync"
+-	  or "async" on the kernel's command line.
++	  You can override this choice by specifying "scsi_mod.scan=sync"
++	  or async on the kernel's command line.
+ 
+ menu "SCSI Transports"
+ 	depends on SCSI
