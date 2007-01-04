@@ -1,36 +1,38 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH] SCSI, libata: add support for ATA_16  commands to libata
- ATAPI devices
-Date: Thu, 04 Jan 2007 10:29:13 -0500
-Message-ID: <459D1D49.3060909@rtr.ca>
-References: <200701021935.07840.liml@rtr.ca> <1167788405.3687.25.camel@mulgrave.il.steeleye.com> <459B4243.5080804@rtr.ca> <1167838307.2789.12.camel@mulgrave.il.steeleye.com> <459C066D.30507@torque.net> <1167860496.2789.70.camel@mulgrave.il.steeleye.com> <20070104150900.GD11203@kernel.dk>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] scsi_debug: illegal blocking memory allocation
+Date: Thu, 04 Jan 2007 09:34:32 -0600
+Message-ID: <1167924872.2819.12.camel@mulgrave.il.steeleye.com>
+References: <20070103134907.GV11203@kernel.dk> <459C92CE.4090709@torque.net>
+	 <20070104112156.GV11203@kernel.dk>
+	 <1167923401.2819.7.camel@mulgrave.il.steeleye.com>
+	 <20070104152748.GE24620@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:4210 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964907AbXADP3U (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 4 Jan 2007 10:29:20 -0500
-In-Reply-To: <20070104150900.GD11203@kernel.dk>
+Received: from hancock.steeleye.com ([71.30.118.248]:57888 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S964928AbXADPjq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Jan 2007 10:39:46 -0500
+In-Reply-To: <20070104152748.GE24620@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, dougg@torque.net, Linux IDE <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Jens Axboe <jens.axboe@oracle.com>, Douglas Gilbert <dougg@torque.net>, linux-scsi@vger.kernel.org
 
-Jens Axboe wrote:
-> On Wed, Jan 03 2007, James Bottomley wrote:
->> Er, well, as you know, I've never been a fan of this static list.  I
->> thought Jens was going to put us all out of our misery by making the
->> list settable per device by root and thus shovel the problem off onto
->> the distros?
-> 
-> The code is there, just haven't had the guts to merge it yet.
-> 
-> http://git.kernel.dk/?p=linux-2.6-block.git;a=commitdiff;h=bf5f922d167a5c5cf57132bbcaa1e0ddfd5c45f7
-> 
+On Thu, 2007-01-04 at 08:27 -0700, Matthew Wilcox wrote:
+> Any returning command, or a returning command from this device? 
 
-That's nice, but doesn't help with the case of trying to do ATA passthru
-to ATAPI devices, the subject of the original patch here.
+This device
 
-Cheers!
+>  We may
+> be out of memory from a different device, and this may be the only
+> command being sent to the scsi_debug driver.  Wouldn't we end up
+> halting the device queue indefinitely then?
+
+it's basically the SCSI_MLQUEUE_DEVICE_BUSY condition ... and yes, it
+has a mechanism for no outstanding commands.
+
+James
+
+
