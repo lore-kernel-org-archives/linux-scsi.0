@@ -1,52 +1,60 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] scsi_debug: illegal blocking memory allocation
-Date: Fri, 5 Jan 2007 13:49:18 +0100
-Message-ID: <20070105124918.GD11203@kernel.dk>
-References: <20070103134907.GV11203@kernel.dk> <459C92CE.4090709@torque.net> <20070104112156.GV11203@kernel.dk> <1167923401.2819.7.camel@mulgrave.il.steeleye.com> <20070104155047.GE11203@kernel.dk> <459DE265.7030100@torque.net>
+From: <Patrick_Boyd@Dell.com>
+Subject: RE: [PATCH 5/6] fusion: bump version
+Date: Fri, 5 Jan 2007 10:37:12 -0600
+Message-ID: <FCD01C3AA0ADFB498F9BB1A6173DFC5DE5AD72@ausx3mpc120.aus.amer.dell.com>
+References: <20070105034903.GA14155@lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([62.242.22.158]:4935 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161089AbXAEMs7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Jan 2007 07:48:59 -0500
-Content-Disposition: inline
-In-Reply-To: <459DE265.7030100@torque.net>
+Received: from ausc60pc101.us.dell.com ([143.166.85.206]:10047 "EHLO
+	ausc60pc101.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161146AbXAEQqv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Jan 2007 11:46:51 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <20070105034903.GA14155@lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
+To: eric.moore@lsil.com, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
 
-On Fri, Jan 05 2007, Douglas Gilbert wrote:
-> Jens Axboe wrote:
-> > On Thu, Jan 04 2007, James Bottomley wrote:
-> >> On Thu, 2007-01-04 at 12:21 +0100, Jens Axboe wrote:
-> >>> I guess it's fully up to you how you want to solve it. The scheme seems
-> >>> a little elaborate, but these error conditions are unlikely to ever been
-> >>> seen in the wild, so no objections from me.
-> >> Actually, there's already a DID_ code that does what you want.  Instead
-> >> of DID_ERROR, which will retry immediately, there's DID_REQUEUE which
-> >> will halt the device queue and wait for a returning command to retry.
-> > 
-> > As long as it keeps firing the queue at some intervals even without any
-> > commands pending at all, then that'll work just fine. I like that
-> > approach a lot better than coding the error into some sense value that
-> > is (at best) some vague approximation of what has happened (calling
-> > memory shortage a transport error is a bit of a stretch).
-> 
-> True, but both happen. The scsi_debug driver is a
-> virtual host, virtual target and a lu (ram disk).
-> The failure that you pointed out stopped a response
-> being built. In the real world that would in the
-> target or lu.
+Is there a reason that you have the version information in two different
+places instead of just concatinating the strings together?
 
-The point is that the condition need not be exposed, even if it could be
-compared to (say) a device busy condition. Both should just results in a
-requeue and later retry, when resources are available to satisfy the
-request.
+Patrick Boyd
+Dell Storage Software Engineer
+(512)728-3182
+ 
 
-Your revised patch looks good to me!
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Eric Moore
+Sent: Thursday, January 04, 2007 9:49 PM
+To: linux-scsi@vger.kernel.org; James.Bottomley@SteelEye.com
+Subject: [PATCH 5/6] fusion: bump version
 
--- 
-Jens Axboe
+bump version
 
+Signed-off-by: Eric Moore <Eric.Moore@lsi.com>
+
+diff -uarpN b/drivers/message/fusion/mptbase.h
+a/drivers/message/fusion/mptbase.h
+--- b/drivers/message/fusion/mptbase.h	2006-12-25 01:41:05.000000000
+-0700
++++ a/drivers/message/fusion/mptbase.h	2006-12-25 01:45:41.000000000
+-0700
+@@ -75,8 +75,8 @@
+ #define COPYRIGHT	"Copyright (c) 1999-2007 " MODULEAUTHOR
+ #endif
+ 
+-#define MPT_LINUX_VERSION_COMMON	"3.04.02"
+-#define MPT_LINUX_PACKAGE_NAME		"@(#)mptlinux-3.04.02"
++#define MPT_LINUX_VERSION_COMMON	"3.04.03"
++#define MPT_LINUX_PACKAGE_NAME		"@(#)mptlinux-3.04.03"
+ #define WHAT_MAGIC_STRING		"@" "(" "#" ")"
+ 
+ #define show_mptmod_ver(s,ver)  \
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org More majordomo info
+at  http://vger.kernel.org/majordomo-info.html
