@@ -1,21 +1,42 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: [PATCH] scsi: megaraid_{mm,mbox} init fix for kdump
-Date: Fri, 5 Jan 2007 13:34:30 -0800
-Message-ID: <20070105133430.07a338e4.randy.dunlap@oracle.com>
-References: <1168009809.4188.10.camel@dumbo>
+From: "Patro, Sumant" <Sumant.Patro@lsi.com>
+Subject: RE: [PATCH] scsi: megaraid_{mm,mbox} init fix for kdump
+Date: Fri, 5 Jan 2007 16:47:00 -0700
+Message-ID: <0631C836DBF79F42B5A60C8C8D4E82298909B0@NAMAIL2.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from agminet01.oracle.com ([141.146.126.228]:53608 "EHLO
-	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750774AbXAEVfs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Jan 2007 16:35:48 -0500
-In-Reply-To: <1168009809.4188.10.camel@dumbo>
+Received: from mail0.lsil.com ([147.145.40.20]:44701 "EHLO mail0.lsil.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750892AbXAEXrO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Jan 2007 18:47:14 -0500
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sumant Patro <sumantp@lsil.com>
-Cc: James.Bottomley@SteelEye.com, akpm@osdl.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, neela.kolli@lsi.com, bo.yang@lsi.com, sumant.patro@lsi.com
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: James.Bottomley@SteelEye.com, akpm@osdl.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Kolli, Neela" <Neela.Kolli@lsi.com>, "Yang, Bo" <Bo.Yang@lsi.com>
+
+Hello Randy,
+
+	At this time I am not trying to modify the function comment
+style of existing megaraid_mbox code. For the new function the
+description style is in sync with the preexisting code.
+	So, I request for the patch to be accepted in its current
+submitted form. 
+
+Regards,
+
+Sumant 
+
+-----Original Message-----
+From: Randy Dunlap [mailto:randy.dunlap@oracle.com] 
+Sent: Friday, January 05, 2007 1:35 PM
+To: Patro, Sumant
+Cc: James.Bottomley@SteelEye.com; akpm@osdl.org;
+linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org; Kolli, Neela;
+Yang, Bo; Patro, Sumant
+Subject: Re: [PATCH] scsi: megaraid_{mm,mbox} init fix for kdump
 
 On Fri, 05 Jan 2007 07:10:09 -0800 Sumant Patro wrote:
 
@@ -28,9 +49,12 @@ Hi,
 >  drivers/scsi/megaraid/megaraid_mbox.h |    4
 >  3 files changed, 130 insertions(+), 30 deletions(-)
 > 
-> diff -uprN linux-2.6.orig/drivers/scsi/megaraid/megaraid_mbox.c linux-2.6.new/drivers/scsi/megaraid/megaraid_mbox.c
-> --- linux-2.6.orig/drivers/scsi/megaraid/megaraid_mbox.c	2006-12-28 09:56:04.000000000 -0800
-> +++ linux-2.6.new/drivers/scsi/megaraid/megaraid_mbox.c	2007-01-04 11:22:21.000000000 -0800
+> diff -uprN linux-2.6.orig/drivers/scsi/megaraid/megaraid_mbox.c
+linux-2.6.new/drivers/scsi/megaraid/megaraid_mbox.c
+> --- linux-2.6.orig/drivers/scsi/megaraid/megaraid_mbox.c
+2006-12-28 09:56:04.000000000 -0800
+> +++ linux-2.6.new/drivers/scsi/megaraid/megaraid_mbox.c
+2007-01-04 11:22:21.000000000 -0800
 > @@ -3380,6 +3386,84 @@ megaraid_mbox_flush_cache(adapter_t *ada
 >  
 >  
@@ -44,11 +68,8 @@ That (above) should just be:
 
 
 > + *
-> + * Clears the pending cmds in FW and reinits its RAID structs
-> + */
-> +static int
-> +megaraid_mbox_fire_sync_cmd(adapter_t *adapter)
-> +{
+> + * Clears the pending cmds in FW and reinits its RAID structs  */ 
+> +static int megaraid_mbox_fire_sync_cmd(adapter_t *adapter) {
 > +	mbox_t	*mbox;
 > +	uint8_t	raw_mbox[sizeof(mbox_t)];
 > +	mraid_device_t	*raid_dev = ADAP2RAIDDEV(adapter);
@@ -119,12 +140,13 @@ That (above) should just be:
 > +}
 > +
 > +/**
->   * megaraid_mbox_display_scb - display SCB information, mostly debug purposes
+>   * megaraid_mbox_display_scb - display SCB information, mostly debug
+purposes
 >   * @param adapter	: controllers' soft state
 >   * @param scb  : SCB to be displayed
 
-I haven't looked at the entire source file, but these extra
-"param" words should not be there.  kernel-doc syntax is just
+I haven't looked at the entire source file, but these extra "param"
+words should not be there.  kernel-doc syntax is just
   @name: description
 
 
