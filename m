@@ -1,60 +1,58 @@
-From: <Patrick_Boyd@Dell.com>
-Subject: RE: [PATCH 5/6] fusion: bump version
-Date: Fri, 5 Jan 2007 10:37:12 -0600
-Message-ID: <FCD01C3AA0ADFB498F9BB1A6173DFC5DE5AD72@ausx3mpc120.aus.amer.dell.com>
-References: <20070105034903.GA14155@lsil.com>
+From: Jes Sorensen <jes@sgi.com>
+Subject: [patch] qla1280 set residual correctly
+Date: 05 Jan 2007 12:05:37 -0500
+Message-ID: <yq0hcv5s8ta.fsf@jaguar.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ausc60pc101.us.dell.com ([143.166.85.206]:10047 "EHLO
-	ausc60pc101.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161146AbXAEQqv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Jan 2007 11:46:51 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <20070105034903.GA14155@lsil.com>
+Received: from jaguar.mkp.net ([192.139.46.146]:47989 "EHLO jaguar.mkp.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1422635AbXAERX4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 5 Jan 2007 12:23:56 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: eric.moore@lsil.com, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, Jeremy Higdon <jeremy@sgi.com>, Michael Reed <mdr@sgi.com>
 
-Is there a reason that you have the version information in two different
-places instead of just concatinating the strings together?
+Hi,
 
-Patrick Boyd
-Dell Storage Software Engineer
-(512)728-3182
+Jeremy caught a bug in the qla1280 driver where it didn't set the
+residual value correctly.
+
+Please apply,
+Jes
+
+Set residual correctly in qla1280 driver.
+
+Signed-off-by: Jeremy Higdon <jeremy@sgi.com>
+Signed-off-by: Jes Sorensen <jes@sgi.com>
+
+---
+ drivers/scsi/qla1280.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+Index: linux-2.6/drivers/scsi/qla1280.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/qla1280.c
++++ linux-2.6/drivers/scsi/qla1280.c
+@@ -1341,7 +1341,7 @@ qla1280_return_status(struct response * 
+ 	int host_status = DID_ERROR;
+ 	uint16_t comp_status = le16_to_cpu(sts->comp_status);
+ 	uint16_t state_flags = le16_to_cpu(sts->state_flags);
+-	uint16_t residual_length = le32_to_cpu(sts->residual_length);
++	uint32_t residual_length = le32_to_cpu(sts->residual_length);
+ 	uint16_t scsi_status = le16_to_cpu(sts->scsi_status);
+ #if DEBUG_QLA1280_INTR
+ 	static char *reason[] = {
+@@ -1413,8 +1413,10 @@ qla1280_return_status(struct response * 
+ 			       "scsi: Underflow detected - retrying "
+ 			       "command.\n");
+ 			host_status = DID_ERROR;
+-		} else
++		} else {
++			cp->resid = residual_length;
+ 			host_status = DID_OK;
++		}
+ 		break;
  
-
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Eric Moore
-Sent: Thursday, January 04, 2007 9:49 PM
-To: linux-scsi@vger.kernel.org; James.Bottomley@SteelEye.com
-Subject: [PATCH 5/6] fusion: bump version
-
-bump version
-
-Signed-off-by: Eric Moore <Eric.Moore@lsi.com>
-
-diff -uarpN b/drivers/message/fusion/mptbase.h
-a/drivers/message/fusion/mptbase.h
---- b/drivers/message/fusion/mptbase.h	2006-12-25 01:41:05.000000000
--0700
-+++ a/drivers/message/fusion/mptbase.h	2006-12-25 01:45:41.000000000
--0700
-@@ -75,8 +75,8 @@
- #define COPYRIGHT	"Copyright (c) 1999-2007 " MODULEAUTHOR
- #endif
- 
--#define MPT_LINUX_VERSION_COMMON	"3.04.02"
--#define MPT_LINUX_PACKAGE_NAME		"@(#)mptlinux-3.04.02"
-+#define MPT_LINUX_VERSION_COMMON	"3.04.03"
-+#define MPT_LINUX_PACKAGE_NAME		"@(#)mptlinux-3.04.03"
- #define WHAT_MAGIC_STRING		"@" "(" "#" ")"
- 
- #define show_mptmod_ver(s,ver)  \
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org More majordomo info
-at  http://vger.kernel.org/majordomo-info.html
+ 	default:
