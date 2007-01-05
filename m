@@ -1,353 +1,247 @@
-From: "adam radford" <aradford@gmail.com>
-Subject: [PATCH 1/1] 3ware 8000 serialize reset code
-Date: Thu, 4 Jan 2007 18:16:56 -0800
-Message-ID: <b1bc6a000701041816m475c227fi1666467b53cb2365@mail.gmail.com>
+From: "Patro, Sumant" <Sumant.Patro@lsi.com>
+Subject: RE: megaraid_sas xscale interrupt mask?
+Date: Thu, 4 Jan 2007 19:20:34 -0700
+Message-ID: <0631C836DBF79F42B5A60C8C8D4E822989085B@NAMAIL2.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_18261_17361365.1167963416866"
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.174]:31438 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030276AbXAECQ6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Jan 2007 21:16:58 -0500
-Received: by ug-out-1314.google.com with SMTP id 44so5597360uga
-        for <linux-scsi@vger.kernel.org>; Thu, 04 Jan 2007 18:16:57 -0800 (PST)
+Received: from mail0.lsil.com ([147.145.40.20]:42358 "EHLO mail0.lsil.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030288AbXAECUm convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Jan 2007 21:20:42 -0500
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Joe Malicki <jmalicki@metacarta.com>
+Cc: linux-poweredge@dell.com, "Keith R. Baker" <krbaker+dpe@metacarta.com>, linux-scsi@vger.kernel.org, "Kolli, Neela" <Neela.Kolli@lsi.com>, "Yang, Bo" <Bo.Yang@lsi.com>
 
-------=_Part_18261_17361365.1167963416866
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
 
-The attached patch for scsi-misc-2.6 updates the 3ware 8000 driver:
+Hello Joe,
 
-- Free irq handler in __tw_shutdown().
-- Turn on RCD bit for caching mode page.
-- Serialize reset code.
+	The mask value 0x1f is to mask out interrupts. The value in the
+current kernel code is appropriate for all controllers that the driver
+supports. 
 
-Signed-off-by: Adam Radford <linuxraid@amcc.com>
+	Are you seeing any specific issue in driver with this mask
+value?
+	
+Regards,
 
-James, Please apply
+Sumant 
+
+-----Original Message-----
+From: Joe Malicki [mailto:jmalicki@metacarta.com] 
+Sent: Wednesday, January 03, 2007 5:41 PM
+To: Patro, Sumant
+Cc: linux-poweredge@dell.com; Keith R. Baker; linux-scsi@vger.kernel.org
+Subject: megaraid_sas xscale interrupt mask?
+
+Hi Sumant,
+
+While trying to debug Dell PERC 5/i RAID controller problems we've been
+having with the megaraid_sas driver, we've been inspecting differences
+between the Red Hat EL 4 kernel (which Dell officially supports) versus
+the stock Linux 2.6.17.13 driver we use.  We found a very interesting
+change, introduced into linux 2.6.16, that seems very odd to us:
+
+http://groups.google.com/group/fa.linux.kernel/browse_frm/thread/51f889b
+d09bafd2d/cbbe2a30b8c2eb94?lnk=st&q=outbound_intr_mask+0x1f+0x00000001&r
+num=1#cbbe2a30b8c2eb94
+
+The title of the thread is "megaraid_sas: new template defined to
+represent each type of controllers", and introduces this curious change:
+
+ /**
+  * megasas_disable_intr -      Disables interrupts
+  * @regs:                      MFI register set
+  */
+ static inline void
+ megasas_disable_intr(struct megasas_register_set __iomem * regs)  {
+-       u32 mask = readl(&regs->outbound_intr_mask) & (~0x00000001);
++       u32 mask = 0x1f;
+        writel(mask, &regs->outbound_intr_mask);
+
+        /* Dummy readl to force pci flush */
+
+Interrupts are enabled by writing "1" to the same register.
+
+Is there a specific reason for this?  Is it possible that Dell PERC 5/i
+controllers differ from LSI controllers in this respect?  It seems odd
+that this change would be introduced without any explanation for what
+it's meant to do, so I am very curious if it could be an inadvertently
+introduced bug that is causing some problems.
 
 Thanks!
+Joe Malicki
 
--Adam
+--
+Joseph Malicki
+Software Engineer
+Metacarta, Inc.
+350 Massachusetts Avenue
+4th Floor
+Cambridge, MA 02451 USA
 
-Note: The patch is attached as an attachment, and also included
-in-line below.   The below may have line-wrap issues since I'm pasting
-into gmail.
+email: joe.malicki@metacarta.com
 
-diff -Naur scsi-misc-2.6/drivers/scsi/3w-xxxx.c
-scsi-misc-2.6.new/drivers/scsi/3w-xxxx.c
---- scsi-misc-2.6/drivers/scsi/3w-xxxx.c	2006-11-29 13:57:37.000000000 -0800
-+++ scsi-misc-2.6.new/drivers/scsi/3w-xxxx.c	2007-01-04 17:06:40.000000000 -0800
-@@ -6,7 +6,7 @@
-    		     Arnaldo Carvalho de Melo <acme@conectiva.com.br>
-                      Brad Strand <linux@3ware.com>
+http://www.metacarta.com
 
--   Copyright (C) 1999-2005 3ware Inc.
-+   Copyright (C) 1999-2007 3ware Inc.
+Joe Malicki wrote:
+> After upgrading to the new 5.0.3-0001 "package build" firmware, 
+> released 12/12/06, from 
+> http://support.dell.com/support/downloads/format.aspx?c=us&l=en&s=gen&
+> osl=en&deviceid=9182&releaseid=R141188,
+> we just experienced one firmware problem that's leaving a clear 
+> traceback.  I don't know if this is
+> 
+> 1) the same problem we were experiencing before, that the new firmware
 
-    Kernel compatiblity By: 	Andre Hedrick <andre@suse.com>
-    Non-Copyright (C) 2000	Andre Hedrick <andre@suse.com>
-@@ -191,6 +191,9 @@
-                  before shutting down card.
-                  Change to new 'change_queue_depth' api.
-                  Fix 'handled=1' ISR usage, remove bogus IRQ check.
-+   1.26.02.002 - Free irq handler in __tw_shutdown().
-+                 Turn on RCD bit for caching mode page.
-+                 Serialize reset code.
- */
+> introduced debugging/a detailed error message for (if this is the 
+> case, I do really appreciate that Dell did this, since it may help to 
+> fix these problems eventually),
+> 2) A problem introduced by the new firmware, or
+> 3) A preexisting problem that we never happened to experience before.
+> 
+> In the firmware logs at the end of this message, note that just 15 
+> minutes after a battery relearn is finished and the battery finished 
+> charging, we see the message:
+> 
+> 01/02/07  0:33:50: Diag Retention test is running...all activities are
 
- #include <linux/module.h>
-@@ -214,7 +217,7 @@
- #include "3w-xxxx.h"
+> stopped
+> 
+> This corresponds to when the megasas driver timed out SCSI commands 
+> and the controller stopped responding.
+> 
+> 1) Does anyone know what a "Diag Retention test" is?  Documentation 
+> mentions "BBU Retention tests" and "NVRAM Retention tests", but not 
+> "Diag Retention test" - is the "Diag Retention test" a synonym for one
 
- /* Globals */
--#define TW_DRIVER_VERSION "1.26.02.001"
-+#define TW_DRIVER_VERSION "1.26.02.002"
- static TW_Device_Extension *tw_device_extension_list[TW_MAX_SLOT];
- static int tw_device_extension_count = 0;
- static int twe_major = -1;
-@@ -226,7 +229,7 @@
- MODULE_VERSION(TW_DRIVER_VERSION);
+> of these, or is it something different?
+> 2) Has anyone seen a similar failure?
+> 
+> Note that 4 hours after the controller has been offline, a stack 
+> backtrace, with a firmware source code file and line number, appears 
+> in the firmware logs - which is something I wouldn't expect to happen 
+> under any circumstances on a stable product - and seems to drop to a 
+> debug console (we haven't tried hooking up a serial port to what look 
+> like the headers on the PERC card, we didn't experiment too much the 
+> first time it happened as it's a production machine we wanted to get
+back up quickly).
+> 
+> We have previously noticed failures corresponding with patrol reads, 
+> and this failure takes place several hours later, and the traceback 
+> happens within the "PatrolReadTimer" procedure - is this the same
+failure as before?
+> 
+> We don't yet have a clear reproduction case, but are working on it 
+> with additional information we have from this crash (as we've begun 
+> remote logging to capture the state of the machine as it's dying, 
+> since syslog failing because it couldn't write to disk in previous 
+> crashes lowered the amount of information we could get).
+> 
+> Thanks,
+> Joe
+> 
+> Logs follow:
+> 
+> 01/01/07 20:16:57: PR cycle complete
+> 01/01/07 20:16:57: EVT#06277-01/01/07 20:16:57:  35=Patrol Read 
+> complete
+> 01/01/07 20:16:57: Next PR scheduled to start at 01/02/07 18:13:20
+> 01/01/07 21:17:01: EVT#06278-01/01/07 21:17:01:  44=Time established 
+> as
+> 01/01/07 21:17:01; (1727059 seconds since power on)
+> 01/01/07 21:23:40: EVT#06279-01/01/07 21:23:40: 162=Current capacity 
+> of the battery is below threshold
+> 01/01/07 21:23:40: EVT#06280-01/01/07 21:23:40: 195=BBU disabled; 
+> changing WB virtual disks to WT
+> 01/01/07 21:26:40: EVT#06281-01/01/07 21:26:40: 153=Battery relearn 
+> completed
+> 01/01/07 21:26:40: Learn completed successfully
+> 01/01/07 21:26:40: Next Learn will start on 04 01 2007
+> 
+> 01/01/07 21:26:40:       *** BATTERY FEATURE PROPERTIES ***
+> 01/01/07 21:26:40:  _________________________________________________
+> 
+> 01/01/07 21:26:40:       Auto Learn Period     : 90  days
+> 01/01/07 21:26:40:       Next Learn Time       : 228778000
+> 01/01/07 21:26:40:       Battery ID            : 34ec019f
+> 01/01/07 21:26:40:       Delayed Learn Interval: 0  hours from
+scheduled
+> time
+> 01/01/07 21:26:40:       Next Learn cheduled on: 04 01 2007
+> 01/01/07 21:26:40:  _________________________________________________
+> 
+> 01/01/07 21:26:55: EVT#06282-01/01/07 21:26:55: 147=Battery started 
+> charging
+> 01/01/07 21:26:55: EVT#06283-01/01/07 21:26:55: 162=Current capacity 
+> of the battery is below threshold
+> 01/01/07 21:49:40: EVT#06284-01/01/07 21:49:40: 163=Current capacity 
+> of the battery is above threshold
+> 01/01/07 21:49:40: EVT#06285-01/01/07 21:49:40: 194=BBU enabled; 
+> changing WT virtual disks to WB
+> 01/01/07 23:16:52: EVT#06286-01/01/07 23:16:52:  73=VD 00/0 Properties
 
- /* Function prototypes */
--static int tw_reset_device_extension(TW_Device_Extension *tw_dev, int
-ioctl_reset);
-+static int tw_reset_device_extension(TW_Device_Extension *tw_dev);
+> updated to [ID=00,dcp=0d,ccp=0c,ap=0,dc=0,dbgi=0] (from
+> [ID=00,dcp=0c,ccp=0c,ap=0,dc=0,dbgi=0])
+> 01/02/07  0:18:05: EVT#06287-01/02/07  0:18:05: 242=Battery charge 
+> complete
+> 01/02/07  0:33:50: Diag Retention test is running...all activities are
 
- /* Functions */
+> stopped
+> 01/02/07  4:41:08: TaskAdd: No more tasks available!!!
+> [0]: fp=a00ffde4, lr=a0885aac  -  TaskAdd+7c
+> [1]: fp=a00ffe00, lr=a086a3ac  -  PatrolReadTimer+fc
+> [2]: fp=a00ffe40, lr=a0885f2c  -  TimerISR+a4
+> [3]: fp=a00ffe60, lr=a088e428  -  FIQ_isr+48
+> [4]: fp=a00ffe88, lr=a000a848  -  dbits+1787e34
+> [5]: fp=a00ffe9c, lr=a000a24c  -  dbits+1787838
+> [6]: fp=a00ffee4, lr=a0883440  -  kbhit+48
+> [7]: fp=a00ffef8, lr=a0866e28  -  MonCheck+14
+> [8]: fp=a00fff0c, lr=a0815930  -  diagRetentionCmdBlockDone+7c
+> [9]: fp=a00fff34, lr=a084d630  -  CmdBlocked+1b4
+> [10]: fp=a00fff60, lr=a0874c28  -  set_state+278
+> [11]: fp=a00fff94, lr=a08748b0  -  raid_task+2f0
+> [12]: fp=a00fffb8, lr=a088e0b0  -  main+3b0
+> [13]: fp=a00fffe4, lr=a088c774  -  c_start+30
+> [14]: fp=a00ffffc, lr=9e8804cc  -  _start+6c
+> [15]: fp=a0018344, lr=a00061d0  -  dbits+17837bc
+> [16]: fp=a00183fc, lr=4c0  -  000004c0
+> MonTask: line 100 in file ../../raid/taskman.c 
+> INTCTL=16c00000:1003dcf, IINTSRC=0:0, FINTSRC=0:0, CPSR=600000d3,
+> sp=a00ffb28
+> MegaMon>
+> 
+> T0: LSI Logic MegaRAID firmware loaded
+> T0: Firmware version 1.00.02-0163 built on Nov 13 2006 at 18:32:21
+> T0: Board is type 1028/0015/1028/1f03
+> 
+> T0: Initializing 1MB memory pool
+> T0: LogInit: Flushing events from previous boot
+> T0: EVT#06288-01/02/07  4:41:08:  15=Fatal firmware error: Line 100 in
 
-@@ -984,24 +987,12 @@
- 			/* Now wait for the command to complete */
- 			timeout = wait_event_timeout(tw_dev->ioctl_wqueue,
-tw_dev->chrdev_request_id == TW_IOCTL_CHRDEV_FREE, timeout);
+> ../../raid/taskman.c
+> 
+> T0: EVT#06289-T0:   0=Firmware initialization started (PCI ID
+> 0015/1028/1f03/1028)
+> T0: EVT#06290-T0:   1=Firmware version 1.00.02-0163
+> T0: EVT#06291-T0: 209=BBU Retention test was initiated on previous 
+> boot
+> T12: EVT#06292-T12: 210=BBU Retention test passed
+> T12: EVT#06293-T12: 212=NVRAM Retention test was initiated on previous
 
--			/* See if we reset while waiting for the ioctl to complete */
--			if (test_bit(TW_IN_RESET, &tw_dev->flags)) {
--				clear_bit(TW_IN_RESET, &tw_dev->flags);
--				retval = -ERESTARTSYS;
--				goto out2;
--			}
--
- 			/* We timed out, and didn't get an interrupt */
- 			if (tw_dev->chrdev_request_id != TW_IOCTL_CHRDEV_FREE) {
- 				/* Now we need to reset the board */
- 				printk(KERN_WARNING "3w-xxxx: scsi%d: Character ioctl (0x%x)
-timed out, resetting card.\n", tw_dev->host->host_no, cmd);
- 				retval = -EIO;
--				spin_lock_irqsave(tw_dev->host->host_lock, flags);
--				tw_dev->state[request_id] = TW_S_COMPLETED;
--				tw_state_request_finish(tw_dev, request_id);
--				tw_dev->posted_request_count--;
--				spin_unlock_irqrestore(tw_dev->host->host_lock, flags);
--				if (tw_reset_device_extension(tw_dev, 1)) {
-+				if (tw_reset_device_extension(tw_dev)) {
- 					printk(KERN_WARNING "3w-xxxx: tw_chrdev_ioctl(): Reset failed
-for card %d.\n", tw_dev->host->host_no);
- 				}
- 				goto out2;
-@@ -1336,7 +1327,7 @@
- } /* End tw_unmap_scsi_data() */
+> boot
+> T12: EVT#06294-T12: 213=NVRAM Retention test passed
+> T12: Authenticating RAID key: Done!
+> 
+> _______________________________________________
+> Linux-PowerEdge mailing list
+> Linux-PowerEdge@dell.com
+> http://lists.us.dell.com/mailman/listinfo/linux-poweredge
+> Please read the FAQ at http://lists.us.dell.com/faq
+> 
 
- /* This function will reset a device extension */
--static int tw_reset_device_extension(TW_Device_Extension *tw_dev, int
-ioctl_reset)
-+static int tw_reset_device_extension(TW_Device_Extension *tw_dev)
- {
- 	int i = 0;
- 	struct scsi_cmnd *srb;
-@@ -1382,15 +1373,10 @@
- 		printk(KERN_WARNING "3w-xxxx: scsi%d: Reset sequence failed.\n",
-tw_dev->host->host_no);
- 		return 1;
- 	}
--	TW_ENABLE_AND_CLEAR_INTERRUPTS(tw_dev);
 
--	/* Wake up any ioctl that was pending before the reset */
--	if ((tw_dev->chrdev_request_id == TW_IOCTL_CHRDEV_FREE) || (ioctl_reset)) {
--		clear_bit(TW_IN_RESET, &tw_dev->flags);
--	} else {
--		tw_dev->chrdev_request_id = TW_IOCTL_CHRDEV_FREE;
--		wake_up(&tw_dev->ioctl_wqueue);
--	}
-+	TW_ENABLE_AND_CLEAR_INTERRUPTS(tw_dev);
-+	clear_bit(TW_IN_RESET, &tw_dev->flags);
-+	tw_dev->chrdev_request_id = TW_IOCTL_CHRDEV_FREE;
-
- 	return 0;
- } /* End tw_reset_device_extension() */
-@@ -1437,14 +1423,18 @@
- 		"WARNING: Command (0x%x) timed out, resetting card.\n",
- 		SCpnt->cmnd[0]);
-
-+	/* Make sure we are not issuing an ioctl or resetting from ioctl */
-+	mutex_lock(&tw_dev->ioctl_lock);
-+
- 	/* Now reset the card and some of the device extension data */
--	if (tw_reset_device_extension(tw_dev, 0)) {
-+	if (tw_reset_device_extension(tw_dev)) {
- 		printk(KERN_WARNING "3w-xxxx: scsi%d: Reset failed.\n",
-tw_dev->host->host_no);
- 		goto out;
- 	}
-
- 	retval = SUCCESS;
- out:
-+	mutex_unlock(&tw_dev->ioctl_lock);
- 	return retval;
- } /* End tw_scsi_eh_reset() */
-
-@@ -1660,9 +1650,9 @@
- 	request_buffer[4] = 0x8;        /* caching page */
- 	request_buffer[5] = 0xa;        /* page length */
- 	if (*flags & 0x1)
--		request_buffer[6] = 0x4;        /* WCE on */
-+		request_buffer[6] = 0x5;        /* WCE on, RCD on */
- 	else
--		request_buffer[6] = 0x0;        /* WCE off */
-+		request_buffer[6] = 0x1;        /* WCE off, RCD on */
- 	tw_transfer_internal(tw_dev, request_id, request_buffer,
- 			     sizeof(request_buffer));
-
-@@ -2012,6 +2002,10 @@
- 	int retval = 1;
- 	TW_Device_Extension *tw_dev = (TW_Device_Extension
-*)SCpnt->device->host->hostdata;
-
-+	/* If we are resetting due to timed out ioctl, report as busy */
-+	if (test_bit(TW_IN_RESET, &tw_dev->flags))
-+		return SCSI_MLQUEUE_HOST_BUSY;
-+
- 	/* Save done function into Scsi_Cmnd struct */
- 	SCpnt->scsi_done = done;
- 		
-@@ -2100,6 +2094,10 @@
-
- 	handled = 1;
-
-+	/* If we are resetting, bail */
-+	if (test_bit(TW_IN_RESET, &tw_dev->flags))
-+		goto tw_interrupt_bail;
-+
- 	/* Check controller for errors */
- 	if (tw_check_bits(status_reg_value)) {
- 		dprintk(KERN_WARNING "3w-xxxx: tw_interrupt(): Unexpected bits.\n");
-@@ -2276,6 +2274,9 @@
- 	/* Disable interrupts */
- 	TW_DISABLE_INTERRUPTS(tw_dev);
-
-+	/* Free up the IRQ */
-+	free_irq(tw_dev->tw_pci_dev->irq, tw_dev);
-+
- 	printk(KERN_WARNING "3w-xxxx: Shutting down host %d.\n",
-tw_dev->host->host_no);
-
- 	/* Tell the card we are shutting down */
-@@ -2444,9 +2445,6 @@
- 		twe_major = -1;
- 	}
-
--	/* Free up the IRQ */
--	free_irq(tw_dev->tw_pci_dev->irq, tw_dev);
--
- 	/* Shutdown the card */
- 	__tw_shutdown(tw_dev);
-
-diff -Naur scsi-misc-2.6/drivers/scsi/3w-xxxx.h
-scsi-misc-2.6.new/drivers/scsi/3w-xxxx.h
---- scsi-misc-2.6/drivers/scsi/3w-xxxx.h	2006-11-29 13:57:37.000000000 -0800
-+++ scsi-misc-2.6.new/drivers/scsi/3w-xxxx.h	2007-01-04 17:06:42.000000000 -0800
-@@ -6,7 +6,7 @@
-    		     Arnaldo Carvalho de Melo <acme@conectiva.com.br>
-                      Brad Strand <linux@3ware.com>
-
--   Copyright (C) 1999-2005 3ware Inc.
-+   Copyright (C) 1999-2007 3ware Inc.
-
-    Kernel compatiblity By:	Andre Hedrick <andre@suse.com>
-    Non-Copyright (C) 2000	Andre Hedrick <andre@suse.com>
-
-------=_Part_18261_17361365.1167963416866
-Content-Type: text/x-patch; name=3ware_linux_2.6.20-rc3.patch;
-	charset=ANSI_X3.4-1968
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_ewjz7qdk
-Content-Disposition: attachment; filename="3ware_linux_2.6.20-rc3.patch"
-
-ZGlmZiAtTmF1ciBzY3NpLW1pc2MtMi42L2RyaXZlcnMvc2NzaS8zdy14eHh4LmMgc2NzaS1taXNj
-LTIuNi5uZXcvZHJpdmVycy9zY3NpLzN3LXh4eHguYwotLS0gc2NzaS1taXNjLTIuNi9kcml2ZXJz
-L3Njc2kvM3cteHh4eC5jCTIwMDYtMTEtMjkgMTM6NTc6MzcuMDAwMDAwMDAwIC0wODAwCisrKyBz
-Y3NpLW1pc2MtMi42Lm5ldy9kcml2ZXJzL3Njc2kvM3cteHh4eC5jCTIwMDctMDEtMDQgMTc6MDY6
-NDAuMDAwMDAwMDAwIC0wODAwCkBAIC02LDcgKzYsNyBAQAogICAgCQkgICAgIEFybmFsZG8gQ2Fy
-dmFsaG8gZGUgTWVsbyA8YWNtZUBjb25lY3RpdmEuY29tLmJyPgogICAgICAgICAgICAgICAgICAg
-ICAgQnJhZCBTdHJhbmQgPGxpbnV4QDN3YXJlLmNvbT4KIAotICAgQ29weXJpZ2h0IChDKSAxOTk5
-LTIwMDUgM3dhcmUgSW5jLgorICAgQ29weXJpZ2h0IChDKSAxOTk5LTIwMDcgM3dhcmUgSW5jLgog
-CiAgICBLZXJuZWwgY29tcGF0aWJsaXR5IEJ5OiAJQW5kcmUgSGVkcmljayA8YW5kcmVAc3VzZS5j
-b20+CiAgICBOb24tQ29weXJpZ2h0IChDKSAyMDAwCUFuZHJlIEhlZHJpY2sgPGFuZHJlQHN1c2Uu
-Y29tPgpAQCAtMTkxLDYgKzE5MSw5IEBACiAgICAgICAgICAgICAgICAgIGJlZm9yZSBzaHV0dGlu
-ZyBkb3duIGNhcmQuCiAgICAgICAgICAgICAgICAgIENoYW5nZSB0byBuZXcgJ2NoYW5nZV9xdWV1
-ZV9kZXB0aCcgYXBpLgogICAgICAgICAgICAgICAgICBGaXggJ2hhbmRsZWQ9MScgSVNSIHVzYWdl
-LCByZW1vdmUgYm9ndXMgSVJRIGNoZWNrLgorICAgMS4yNi4wMi4wMDIgLSBGcmVlIGlycSBoYW5k
-bGVyIGluIF9fdHdfc2h1dGRvd24oKS4KKyAgICAgICAgICAgICAgICAgVHVybiBvbiBSQ0QgYml0
-IGZvciBjYWNoaW5nIG1vZGUgcGFnZS4KKyAgICAgICAgICAgICAgICAgU2VyaWFsaXplIHJlc2V0
-IGNvZGUuCiAqLwogCiAjaW5jbHVkZSA8bGludXgvbW9kdWxlLmg+CkBAIC0yMTQsNyArMjE3LDcg
-QEAKICNpbmNsdWRlICIzdy14eHh4LmgiCiAKIC8qIEdsb2JhbHMgKi8KLSNkZWZpbmUgVFdfRFJJ
-VkVSX1ZFUlNJT04gIjEuMjYuMDIuMDAxIgorI2RlZmluZSBUV19EUklWRVJfVkVSU0lPTiAiMS4y
-Ni4wMi4wMDIiCiBzdGF0aWMgVFdfRGV2aWNlX0V4dGVuc2lvbiAqdHdfZGV2aWNlX2V4dGVuc2lv
-bl9saXN0W1RXX01BWF9TTE9UXTsKIHN0YXRpYyBpbnQgdHdfZGV2aWNlX2V4dGVuc2lvbl9jb3Vu
-dCA9IDA7CiBzdGF0aWMgaW50IHR3ZV9tYWpvciA9IC0xOwpAQCAtMjI2LDcgKzIyOSw3IEBACiBN
-T0RVTEVfVkVSU0lPTihUV19EUklWRVJfVkVSU0lPTik7CiAKIC8qIEZ1bmN0aW9uIHByb3RvdHlw
-ZXMgKi8KLXN0YXRpYyBpbnQgdHdfcmVzZXRfZGV2aWNlX2V4dGVuc2lvbihUV19EZXZpY2VfRXh0
-ZW5zaW9uICp0d19kZXYsIGludCBpb2N0bF9yZXNldCk7CitzdGF0aWMgaW50IHR3X3Jlc2V0X2Rl
-dmljZV9leHRlbnNpb24oVFdfRGV2aWNlX0V4dGVuc2lvbiAqdHdfZGV2KTsKIAogLyogRnVuY3Rp
-b25zICovCiAKQEAgLTk4NCwyNCArOTg3LDEyIEBACiAJCQkvKiBOb3cgd2FpdCBmb3IgdGhlIGNv
-bW1hbmQgdG8gY29tcGxldGUgKi8KIAkJCXRpbWVvdXQgPSB3YWl0X2V2ZW50X3RpbWVvdXQodHdf
-ZGV2LT5pb2N0bF93cXVldWUsIHR3X2Rldi0+Y2hyZGV2X3JlcXVlc3RfaWQgPT0gVFdfSU9DVExf
-Q0hSREVWX0ZSRUUsIHRpbWVvdXQpOwogCi0JCQkvKiBTZWUgaWYgd2UgcmVzZXQgd2hpbGUgd2Fp
-dGluZyBmb3IgdGhlIGlvY3RsIHRvIGNvbXBsZXRlICovCi0JCQlpZiAodGVzdF9iaXQoVFdfSU5f
-UkVTRVQsICZ0d19kZXYtPmZsYWdzKSkgewotCQkJCWNsZWFyX2JpdChUV19JTl9SRVNFVCwgJnR3
-X2Rldi0+ZmxhZ3MpOwotCQkJCXJldHZhbCA9IC1FUkVTVEFSVFNZUzsKLQkJCQlnb3RvIG91dDI7
-Ci0JCQl9Ci0KIAkJCS8qIFdlIHRpbWVkIG91dCwgYW5kIGRpZG4ndCBnZXQgYW4gaW50ZXJydXB0
-ICovCiAJCQlpZiAodHdfZGV2LT5jaHJkZXZfcmVxdWVzdF9pZCAhPSBUV19JT0NUTF9DSFJERVZf
-RlJFRSkgewogCQkJCS8qIE5vdyB3ZSBuZWVkIHRvIHJlc2V0IHRoZSBib2FyZCAqLwogCQkJCXBy
-aW50ayhLRVJOX1dBUk5JTkcgIjN3LXh4eHg6IHNjc2klZDogQ2hhcmFjdGVyIGlvY3RsICgweCV4
-KSB0aW1lZCBvdXQsIHJlc2V0dGluZyBjYXJkLlxuIiwgdHdfZGV2LT5ob3N0LT5ob3N0X25vLCBj
-bWQpOwogCQkJCXJldHZhbCA9IC1FSU87Ci0JCQkJc3Bpbl9sb2NrX2lycXNhdmUodHdfZGV2LT5o
-b3N0LT5ob3N0X2xvY2ssIGZsYWdzKTsKLQkJCQl0d19kZXYtPnN0YXRlW3JlcXVlc3RfaWRdID0g
-VFdfU19DT01QTEVURUQ7Ci0JCQkJdHdfc3RhdGVfcmVxdWVzdF9maW5pc2godHdfZGV2LCByZXF1
-ZXN0X2lkKTsKLQkJCQl0d19kZXYtPnBvc3RlZF9yZXF1ZXN0X2NvdW50LS07Ci0JCQkJc3Bpbl91
-bmxvY2tfaXJxcmVzdG9yZSh0d19kZXYtPmhvc3QtPmhvc3RfbG9jaywgZmxhZ3MpOwotCQkJCWlm
-ICh0d19yZXNldF9kZXZpY2VfZXh0ZW5zaW9uKHR3X2RldiwgMSkpIHsKKwkJCQlpZiAodHdfcmVz
-ZXRfZGV2aWNlX2V4dGVuc2lvbih0d19kZXYpKSB7CiAJCQkJCXByaW50ayhLRVJOX1dBUk5JTkcg
-IjN3LXh4eHg6IHR3X2NocmRldl9pb2N0bCgpOiBSZXNldCBmYWlsZWQgZm9yIGNhcmQgJWQuXG4i
-LCB0d19kZXYtPmhvc3QtPmhvc3Rfbm8pOwogCQkJCX0KIAkJCQlnb3RvIG91dDI7CkBAIC0xMzM2
-LDcgKzEzMjcsNyBAQAogfSAvKiBFbmQgdHdfdW5tYXBfc2NzaV9kYXRhKCkgKi8KIAogLyogVGhp
-cyBmdW5jdGlvbiB3aWxsIHJlc2V0IGEgZGV2aWNlIGV4dGVuc2lvbiAqLwotc3RhdGljIGludCB0
-d19yZXNldF9kZXZpY2VfZXh0ZW5zaW9uKFRXX0RldmljZV9FeHRlbnNpb24gKnR3X2RldiwgaW50
-IGlvY3RsX3Jlc2V0KSAKK3N0YXRpYyBpbnQgdHdfcmVzZXRfZGV2aWNlX2V4dGVuc2lvbihUV19E
-ZXZpY2VfRXh0ZW5zaW9uICp0d19kZXYpCiB7CiAJaW50IGkgPSAwOwogCXN0cnVjdCBzY3NpX2Nt
-bmQgKnNyYjsKQEAgLTEzODIsMTUgKzEzNzMsMTAgQEAKIAkJcHJpbnRrKEtFUk5fV0FSTklORyAi
-M3cteHh4eDogc2NzaSVkOiBSZXNldCBzZXF1ZW5jZSBmYWlsZWQuXG4iLCB0d19kZXYtPmhvc3Qt
-Pmhvc3Rfbm8pOwogCQlyZXR1cm4gMTsKIAl9Ci0JVFdfRU5BQkxFX0FORF9DTEVBUl9JTlRFUlJV
-UFRTKHR3X2Rldik7CiAKLQkvKiBXYWtlIHVwIGFueSBpb2N0bCB0aGF0IHdhcyBwZW5kaW5nIGJl
-Zm9yZSB0aGUgcmVzZXQgKi8KLQlpZiAoKHR3X2Rldi0+Y2hyZGV2X3JlcXVlc3RfaWQgPT0gVFdf
-SU9DVExfQ0hSREVWX0ZSRUUpIHx8IChpb2N0bF9yZXNldCkpIHsKLQkJY2xlYXJfYml0KFRXX0lO
-X1JFU0VULCAmdHdfZGV2LT5mbGFncyk7Ci0JfSBlbHNlIHsKLQkJdHdfZGV2LT5jaHJkZXZfcmVx
-dWVzdF9pZCA9IFRXX0lPQ1RMX0NIUkRFVl9GUkVFOwotCQl3YWtlX3VwKCZ0d19kZXYtPmlvY3Rs
-X3dxdWV1ZSk7Ci0JfQorCVRXX0VOQUJMRV9BTkRfQ0xFQVJfSU5URVJSVVBUUyh0d19kZXYpOwor
-CWNsZWFyX2JpdChUV19JTl9SRVNFVCwgJnR3X2Rldi0+ZmxhZ3MpOworCXR3X2Rldi0+Y2hyZGV2
-X3JlcXVlc3RfaWQgPSBUV19JT0NUTF9DSFJERVZfRlJFRTsKIAogCXJldHVybiAwOwogfSAvKiBF
-bmQgdHdfcmVzZXRfZGV2aWNlX2V4dGVuc2lvbigpICovCkBAIC0xNDM3LDE0ICsxNDIzLDE4IEBA
-CiAJCSJXQVJOSU5HOiBDb21tYW5kICgweCV4KSB0aW1lZCBvdXQsIHJlc2V0dGluZyBjYXJkLlxu
-IiwKIAkJU0NwbnQtPmNtbmRbMF0pOwogCisJLyogTWFrZSBzdXJlIHdlIGFyZSBub3QgaXNzdWlu
-ZyBhbiBpb2N0bCBvciByZXNldHRpbmcgZnJvbSBpb2N0bCAqLworCW11dGV4X2xvY2soJnR3X2Rl
-di0+aW9jdGxfbG9jayk7CisKIAkvKiBOb3cgcmVzZXQgdGhlIGNhcmQgYW5kIHNvbWUgb2YgdGhl
-IGRldmljZSBleHRlbnNpb24gZGF0YSAqLwotCWlmICh0d19yZXNldF9kZXZpY2VfZXh0ZW5zaW9u
-KHR3X2RldiwgMCkpIHsKKwlpZiAodHdfcmVzZXRfZGV2aWNlX2V4dGVuc2lvbih0d19kZXYpKSB7
-CiAJCXByaW50ayhLRVJOX1dBUk5JTkcgIjN3LXh4eHg6IHNjc2klZDogUmVzZXQgZmFpbGVkLlxu
-IiwgdHdfZGV2LT5ob3N0LT5ob3N0X25vKTsKIAkJZ290byBvdXQ7CiAJfQogCiAJcmV0dmFsID0g
-U1VDQ0VTUzsKIG91dDoKKwltdXRleF91bmxvY2soJnR3X2Rldi0+aW9jdGxfbG9jayk7CiAJcmV0
-dXJuIHJldHZhbDsKIH0gLyogRW5kIHR3X3Njc2lfZWhfcmVzZXQoKSAqLwogCkBAIC0xNjYwLDkg
-KzE2NTAsOSBAQAogCXJlcXVlc3RfYnVmZmVyWzRdID0gMHg4OyAgICAgICAgLyogY2FjaGluZyBw
-YWdlICovCiAJcmVxdWVzdF9idWZmZXJbNV0gPSAweGE7ICAgICAgICAvKiBwYWdlIGxlbmd0aCAq
-LwogCWlmICgqZmxhZ3MgJiAweDEpCi0JCXJlcXVlc3RfYnVmZmVyWzZdID0gMHg0OyAgICAgICAg
-LyogV0NFIG9uICovCisJCXJlcXVlc3RfYnVmZmVyWzZdID0gMHg1OyAgICAgICAgLyogV0NFIG9u
-LCBSQ0Qgb24gKi8KIAllbHNlCi0JCXJlcXVlc3RfYnVmZmVyWzZdID0gMHgwOyAgICAgICAgLyog
-V0NFIG9mZiAqLworCQlyZXF1ZXN0X2J1ZmZlcls2XSA9IDB4MTsgICAgICAgIC8qIFdDRSBvZmYs
-IFJDRCBvbiAqLwogCXR3X3RyYW5zZmVyX2ludGVybmFsKHR3X2RldiwgcmVxdWVzdF9pZCwgcmVx
-dWVzdF9idWZmZXIsCiAJCQkgICAgIHNpemVvZihyZXF1ZXN0X2J1ZmZlcikpOwogCkBAIC0yMDEy
-LDYgKzIwMDIsMTAgQEAKIAlpbnQgcmV0dmFsID0gMTsKIAlUV19EZXZpY2VfRXh0ZW5zaW9uICp0
-d19kZXYgPSAoVFdfRGV2aWNlX0V4dGVuc2lvbiAqKVNDcG50LT5kZXZpY2UtPmhvc3QtPmhvc3Rk
-YXRhOwogCisJLyogSWYgd2UgYXJlIHJlc2V0dGluZyBkdWUgdG8gdGltZWQgb3V0IGlvY3RsLCBy
-ZXBvcnQgYXMgYnVzeSAqLworCWlmICh0ZXN0X2JpdChUV19JTl9SRVNFVCwgJnR3X2Rldi0+Zmxh
-Z3MpKQorCQlyZXR1cm4gU0NTSV9NTFFVRVVFX0hPU1RfQlVTWTsKKwogCS8qIFNhdmUgZG9uZSBm
-dW5jdGlvbiBpbnRvIFNjc2lfQ21uZCBzdHJ1Y3QgKi8KIAlTQ3BudC0+c2NzaV9kb25lID0gZG9u
-ZTsKIAkJIApAQCAtMjEwMCw2ICsyMDk0LDEwIEBACiAKIAloYW5kbGVkID0gMTsKIAorCS8qIElm
-IHdlIGFyZSByZXNldHRpbmcsIGJhaWwgKi8KKwlpZiAodGVzdF9iaXQoVFdfSU5fUkVTRVQsICZ0
-d19kZXYtPmZsYWdzKSkKKwkJZ290byB0d19pbnRlcnJ1cHRfYmFpbDsKKwogCS8qIENoZWNrIGNv
-bnRyb2xsZXIgZm9yIGVycm9ycyAqLwogCWlmICh0d19jaGVja19iaXRzKHN0YXR1c19yZWdfdmFs
-dWUpKSB7CiAJCWRwcmludGsoS0VSTl9XQVJOSU5HICIzdy14eHh4OiB0d19pbnRlcnJ1cHQoKTog
-VW5leHBlY3RlZCBiaXRzLlxuIik7CkBAIC0yMjc2LDYgKzIyNzQsOSBAQAogCS8qIERpc2FibGUg
-aW50ZXJydXB0cyAqLwogCVRXX0RJU0FCTEVfSU5URVJSVVBUUyh0d19kZXYpOwogCisJLyogRnJl
-ZSB1cCB0aGUgSVJRICovCisJZnJlZV9pcnEodHdfZGV2LT50d19wY2lfZGV2LT5pcnEsIHR3X2Rl
-dik7CisKIAlwcmludGsoS0VSTl9XQVJOSU5HICIzdy14eHh4OiBTaHV0dGluZyBkb3duIGhvc3Qg
-JWQuXG4iLCB0d19kZXYtPmhvc3QtPmhvc3Rfbm8pOwogCiAJLyogVGVsbCB0aGUgY2FyZCB3ZSBh
-cmUgc2h1dHRpbmcgZG93biAqLwpAQCAtMjQ0NCw5ICsyNDQ1LDYgQEAKIAkJdHdlX21ham9yID0g
-LTE7CiAJfQogCi0JLyogRnJlZSB1cCB0aGUgSVJRICovCi0JZnJlZV9pcnEodHdfZGV2LT50d19w
-Y2lfZGV2LT5pcnEsIHR3X2Rldik7Ci0KIAkvKiBTaHV0ZG93biB0aGUgY2FyZCAqLwogCV9fdHdf
-c2h1dGRvd24odHdfZGV2KTsKIApkaWZmIC1OYXVyIHNjc2ktbWlzYy0yLjYvZHJpdmVycy9zY3Np
-LzN3LXh4eHguaCBzY3NpLW1pc2MtMi42Lm5ldy9kcml2ZXJzL3Njc2kvM3cteHh4eC5oCi0tLSBz
-Y3NpLW1pc2MtMi42L2RyaXZlcnMvc2NzaS8zdy14eHh4LmgJMjAwNi0xMS0yOSAxMzo1NzozNy4w
-MDAwMDAwMDAgLTA4MDAKKysrIHNjc2ktbWlzYy0yLjYubmV3L2RyaXZlcnMvc2NzaS8zdy14eHh4
-LmgJMjAwNy0wMS0wNCAxNzowNjo0Mi4wMDAwMDAwMDAgLTA4MDAKQEAgLTYsNyArNiw3IEBACiAg
-ICAJCSAgICAgQXJuYWxkbyBDYXJ2YWxobyBkZSBNZWxvIDxhY21lQGNvbmVjdGl2YS5jb20uYnI+
-CiAgICAgICAgICAgICAgICAgICAgICBCcmFkIFN0cmFuZCA8bGludXhAM3dhcmUuY29tPgogCi0g
-ICBDb3B5cmlnaHQgKEMpIDE5OTktMjAwNSAzd2FyZSBJbmMuCisgICBDb3B5cmlnaHQgKEMpIDE5
-OTktMjAwNyAzd2FyZSBJbmMuCiAKICAgIEtlcm5lbCBjb21wYXRpYmxpdHkgQnk6CUFuZHJlIEhl
-ZHJpY2sgPGFuZHJlQHN1c2UuY29tPgogICAgTm9uLUNvcHlyaWdodCAoQykgMjAwMAlBbmRyZSBI
-ZWRyaWNrIDxhbmRyZUBzdXNlLmNvbT4K
-------=_Part_18261_17361365.1167963416866--
