@@ -1,57 +1,40 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH] scsi_debug: illegal blocking memory allocation
-Date: Fri, 05 Jan 2007 00:30:13 -0500
-Message-ID: <459DE265.7030100@torque.net>
-References: <20070103134907.GV11203@kernel.dk> <459C92CE.4090709@torque.net> <20070104112156.GV11203@kernel.dk> <1167923401.2819.7.camel@mulgrave.il.steeleye.com> <20070104155047.GE11203@kernel.dk>
-Reply-To: dougg@torque.net
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [RFC: 2.6 patch] remove the broken SCSI_AMIGA7XX driver
+Date: Fri, 5 Jan 2007 10:30:13 +0100 (CET)
+Message-ID: <Pine.LNX.4.62.0701051026500.17589@pademelon.sonytel.be>
+References: <20070104185359.GJ20714@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:56623 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030331AbXAEFaT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Jan 2007 00:30:19 -0500
-In-Reply-To: <20070104155047.GE11203@kernel.dk>
+Received: from vervifontaine.sonytel.be ([80.88.33.193]:51061 "EHLO
+	vervifontaine.sonycom.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S965139AbXAEJaS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Jan 2007 04:30:18 -0500
+In-Reply-To: <20070104185359.GJ20714@stusta.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
+To: Adrian Bunk <bunk@stusta.de>
+Cc: "James E.J. Bottomley" <James.Bottomley@SteelEye.com>, Kars de Jong <jongk@linux-m68k.org>, linux-scsi@vger.kernel.org, Roman Zippel <zippel@linux-m68k.org>, linux-m68k@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>
 
-Jens Axboe wrote:
-> On Thu, Jan 04 2007, James Bottomley wrote:
->> On Thu, 2007-01-04 at 12:21 +0100, Jens Axboe wrote:
->>> I guess it's fully up to you how you want to solve it. The scheme seems
->>> a little elaborate, but these error conditions are unlikely to ever been
->>> seen in the wild, so no objections from me.
->> Actually, there's already a DID_ code that does what you want.  Instead
->> of DID_ERROR, which will retry immediately, there's DID_REQUEUE which
->> will halt the device queue and wait for a returning command to retry.
+On Thu, 4 Jan 2007, Adrian Bunk wrote:
+> The SCSI_AMIGA7XX driver:
+> - has been marked as BROKEN for more than two years and
+> - is still marked as BROKEN.
 > 
-> As long as it keeps firing the queue at some intervals even without any
-> commands pending at all, then that'll work just fine. I like that
-> approach a lot better than coding the error into some sense value that
-> is (at best) some vague approximation of what has happened (calling
-> memory shortage a transport error is a bit of a stretch).
+> Drivers that had been marked as BROKEN for such a long time seem to be
+> unlikely to be revived in the forseeable future.
 
-True, but both happen. The scsi_debug driver is a
-virtual host, virtual target and a lu (ram disk).
-The failure that you pointed out stopped a response
-being built. In the real world that would in the
-target or lu.
+There's a fix available to convert this driver to the new 53c700 core.
+But it needs the new DMA framework, which still causes a few regressions on
+m68k that are being worked on.
 
-The reason that I mentioned aborted_command sense key
-is that it is also a "out of resources" (bandwidth) error
-and it broke sg_dd. I would bet money that it would
-also break the block layer/sd. The block layer should
-leave it alone as it is simply a matter of sd
-retrying a few times. However the st driver could have
-a real problem (e.g. did that state changing command
-work, fail or partially work??).
+Gr{oetje,eeting}s,
 
-Anyway, I have submitted a patch that reports DID_REQUEUE
-for an allocation failures and adds the ability to inject
-aborted_command errors.
+						Geert
 
-Doug Gilbert
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
