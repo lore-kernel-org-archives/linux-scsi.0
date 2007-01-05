@@ -1,144 +1,234 @@
 From: Eric Moore <eric.moore@lsil.com>
-Subject: [PATCH 3/5] fusion: power pc and miscellaneous bug fixs
-Date: Thu, 4 Jan 2007 20:46:54 -0700
-Message-ID: <20070105034654.GA14122@lsil.com>
+Subject: [PATCH 4/5] fusion: MODULE_VERSION support
+Date: Thu, 4 Jan 2007 20:47:47 -0700
+Message-ID: <20070105034747.GA14126@lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:43929 "EHLO mail0.lsil.com"
+Received: from mail0.lsil.com ([147.145.40.20]:43940 "EHLO mail0.lsil.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030316AbXAEDpH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 4 Jan 2007 22:45:07 -0500
+	id S1030316AbXAEDqB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Jan 2007 22:46:01 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
 
-* Endian fix's for warnings found in ppc environment.
-* Fix compile time warning when calling scsi_device_reprobe, where
-in newer kernels this API expects its return value to be examined.
-* Fix compile errors when debug messages are enabled.
+* Add modinfo driver version support.
+* Change copyright year to 2007.
 
 Signed-off-by: Eric Moore <Eric.Moore@lsi.com>
 
-
+diff -uarpN b/drivers/message/fusion/mptbase.c a/drivers/message/fusion/mptbase.c
+--- b/drivers/message/fusion/mptbase.c	2006-12-23 21:00:32.000000000 -0700
++++ a/drivers/message/fusion/mptbase.c	2006-12-25 01:42:17.000000000 -0700
+@@ -5,7 +5,7 @@
+  *      For use with LSI Logic PCI chip/adapter(s)
+  *      running LSI Logic Fusion MPT (Message Passing Technology) firmware.
+  *
+- *  Copyright (c) 1999-2005 LSI Logic Corporation
++ *  Copyright (c) 1999-2007 LSI Logic Corporation
+  *  (mailto:mpt_linux_developer@lsil.com)
+  *
+  */
+@@ -73,6 +73,7 @@
+ MODULE_AUTHOR(MODULEAUTHOR);
+ MODULE_DESCRIPTION(my_NAME);
+ MODULE_LICENSE("GPL");
++MODULE_VERSION(my_VERSION);
+ 
+ /*
+  *  cmd line parameters
 diff -uarpN b/drivers/message/fusion/mptbase.h a/drivers/message/fusion/mptbase.h
---- b/drivers/message/fusion/mptbase.h	2006-12-23 21:00:32.000000000 -0700
-+++ a/drivers/message/fusion/mptbase.h	2006-12-25 00:35:10.000000000 -0700
-@@ -1059,7 +1059,7 @@ extern int		  mpt_stm_index;	/* needed b
+--- b/drivers/message/fusion/mptbase.h	2006-12-25 00:35:10.000000000 -0700
++++ a/drivers/message/fusion/mptbase.h	2006-12-25 01:41:05.000000000 -0700
+@@ -5,7 +5,7 @@
+  *          LSIFC9xx/LSI409xx Fibre Channel
+  *      running LSI Logic Fusion MPT (Message Passing Technology) firmware.
+  *
+- *  Copyright (c) 1999-2005 LSI Logic Corporation
++ *  Copyright (c) 1999-2007 LSI Logic Corporation
+  *  (mailto:mpt_linux_developer@lsil.com)
+  *
+  */
+@@ -72,7 +72,7 @@
+ #endif
+ 
+ #ifndef COPYRIGHT
+-#define COPYRIGHT	"Copyright (c) 1999-2005 " MODULEAUTHOR
++#define COPYRIGHT	"Copyright (c) 1999-2007 " MODULEAUTHOR
+ #endif
+ 
+ #define MPT_LINUX_VERSION_COMMON	"3.04.02"
+diff -uarpN b/drivers/message/fusion/mptctl.c a/drivers/message/fusion/mptctl.c
+--- b/drivers/message/fusion/mptctl.c	2006-12-23 21:00:32.000000000 -0700
++++ a/drivers/message/fusion/mptctl.c	2006-12-25 01:42:25.000000000 -0700
+@@ -4,7 +4,7 @@
+  *      For use with LSI Logic PCI chip/adapters
+  *      running LSI Logic Fusion MPT (Message Passing Technology) firmware.
+  *
+- *  Copyright (c) 1999-2005 LSI Logic Corporation
++ *  Copyright (c) 1999-2007 LSI Logic Corporation
+  *  (mailto:mpt_linux_developer@lsil.com)
+  *
+  */
+@@ -66,7 +66,7 @@
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_tcq.h>
+ 
+-#define COPYRIGHT	"Copyright (c) 1999-2005 LSI Logic Corporation"
++#define COPYRIGHT	"Copyright (c) 1999-2007 LSI Logic Corporation"
+ #define MODULEAUTHOR	"LSI Logic Corporation"
+ #include "mptbase.h"
+ #include "mptctl.h"
+@@ -79,6 +79,7 @@
+ MODULE_AUTHOR(MODULEAUTHOR);
+ MODULE_DESCRIPTION(my_NAME);
+ MODULE_LICENSE("GPL");
++MODULE_VERSION(my_VERSION);
+ 
  /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
- #endif		/* } __KERNEL__ */
  
--#if defined(__alpha__) || defined(__sparc_v9__) || defined(__ia64__) || defined(__x86_64__)
-+#if defined(__alpha__) || defined(__sparc_v9__) || defined(__ia64__) || defined(__x86_64__) || defined(__powerpc__)
- #define CAST_U32_TO_PTR(x)	((void *)(u64)x)
- #define CAST_PTR_TO_U32(x)	((u32)(u64)x)
- #else
+diff -uarpN b/drivers/message/fusion/mptctl.h a/drivers/message/fusion/mptctl.h
+--- b/drivers/message/fusion/mptctl.h	2006-12-23 21:00:32.000000000 -0700
++++ a/drivers/message/fusion/mptctl.h	2006-12-25 01:39:58.000000000 -0700
+@@ -5,7 +5,7 @@
+  *          LSIFC9xx/LSI409xx Fibre Channel
+  *      running LSI Logic Fusion MPT (Message Passing Technology) firmware.
+  *
+- *  Copyright (c) 1999-2005 LSI Logic Corporation
++ *  Copyright (c) 1999-2007 LSI Logic Corporation
+  *  (mailto:mpt_linux_developer@lsil.com)
+  *
+  */
+diff -uarpN b/drivers/message/fusion/mptfc.c a/drivers/message/fusion/mptfc.c
+--- b/drivers/message/fusion/mptfc.c	2006-12-23 21:00:32.000000000 -0700
++++ a/drivers/message/fusion/mptfc.c	2006-12-25 01:42:34.000000000 -0700
+@@ -3,7 +3,7 @@
+  *      For use with LSI Logic PCI chip/adapter(s)
+  *      running LSI Logic Fusion MPT (Message Passing Technology) firmware.
+  *
+- *  Copyright (c) 1999-2005 LSI Logic Corporation
++ *  Copyright (c) 1999-2007 LSI Logic Corporation
+  *  (mailto:mpt_linux_developer@lsil.com)
+  *
+  */
+@@ -75,6 +75,7 @@
+ MODULE_AUTHOR(MODULEAUTHOR);
+ MODULE_DESCRIPTION(my_NAME);
+ MODULE_LICENSE("GPL");
++MODULE_VERSION(my_VERSION);
+ 
+ /* Command line args */
+ #define MPTFC_DEV_LOSS_TMO (60)
+diff -uarpN b/drivers/message/fusion/mptlan.c a/drivers/message/fusion/mptlan.c
+--- b/drivers/message/fusion/mptlan.c	2006-12-23 21:00:32.000000000 -0700
++++ a/drivers/message/fusion/mptlan.c	2006-12-25 01:44:32.000000000 -0700
+@@ -4,7 +4,7 @@
+  *      For use with LSI Logic Fibre Channel PCI chip/adapters
+  *      running LSI Logic Fusion MPT (Message Passing Technology) firmware.
+  *
+- *  Copyright (c) 2000-2005 LSI Logic Corporation
++ *  Copyright (c) 2000-2007 LSI Logic Corporation
+  *
+  */
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+@@ -56,9 +56,11 @@
+ #include <linux/module.h>
+ #include <linux/fs.h>
+ 
++#define my_VERSION	MPT_LINUX_VERSION_COMMON
+ #define MYNAM		"mptlan"
+ 
+ MODULE_LICENSE("GPL");
++MODULE_VERSION(my_VERSION);
+ 
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+ /*
+diff -uarpN b/drivers/message/fusion/mptlan.h a/drivers/message/fusion/mptlan.h
+--- b/drivers/message/fusion/mptlan.h	2006-12-23 21:00:32.000000000 -0700
++++ a/drivers/message/fusion/mptlan.h	2006-12-25 01:40:12.000000000 -0700
+@@ -4,7 +4,7 @@
+  *      For use with LSI Logic Fibre Channel PCI chip/adapters
+  *      running LSI Logic Fusion MPT (Message Passing Technology) firmware.
+  *
+- *  Copyright (c) 2000-2005 LSI Logic Corporation
++ *  Copyright (c) 2000-2007 LSI Logic Corporation
+  *
+  */
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
 diff -uarpN b/drivers/message/fusion/mptsas.c a/drivers/message/fusion/mptsas.c
---- b/drivers/message/fusion/mptsas.c	2006-12-23 21:00:32.000000000 -0700
-+++ a/drivers/message/fusion/mptsas.c	2006-12-25 00:54:43.000000000 -0700
-@@ -245,7 +245,8 @@ static void mptsas_print_device_pg0(SasD
- 	printk("Parent Handle=0x%X\n" ,le16_to_cpu(pg0->ParentDevHandle));
- 	printk("Enclosure Handle=0x%X\n", le16_to_cpu(pg0->EnclosureHandle));
- 	printk("Slot=0x%X\n", le16_to_cpu(pg0->Slot));
--	printk("SAS Address=0x%llX\n", le64_to_cpu(sas_address));
-+	printk("SAS Address=0x%llX\n", (unsigned long long)
-+	    le64_to_cpu(sas_address));
- 	printk("Target ID=0x%X\n", pg0->TargetID);
- 	printk("Bus=0x%X\n", pg0->Bus);
- 	/* The PhyNum field specifies the PHY number of the parent
-@@ -349,9 +350,9 @@ mptsas_port_delete(struct mptsas_portinf
- 	phy_info = port_info->phy_info;
+--- b/drivers/message/fusion/mptsas.c	2006-12-25 00:54:43.000000000 -0700
++++ a/drivers/message/fusion/mptsas.c	2006-12-25 01:42:40.000000000 -0700
+@@ -3,9 +3,9 @@
+  *      For use with LSI Logic PCI chip/adapter(s)
+  *      running LSI Logic Fusion MPT (Message Passing Technology) firmware.
+  *
+- *  Copyright (c) 1999-2005 LSI Logic Corporation
++ *  Copyright (c) 1999-2007 LSI Logic Corporation
+  *  (mailto:mpt_linux_developer@lsil.com)
+- *  Copyright (c) 2005-2006 Dell
++ *  Copyright (c) 2005-2007 Dell
+  */
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+ /*
+@@ -75,6 +75,7 @@
+ MODULE_AUTHOR(MODULEAUTHOR);
+ MODULE_DESCRIPTION(my_NAME);
+ MODULE_LICENSE("GPL");
++MODULE_VERSION(my_VERSION);
  
- 	dsaswideprintk((KERN_DEBUG "%s: [%p]: num_phys=%02d "
--	    	"bitmask=0x%016llX\n",
--		__FUNCTION__, port_details, port_details->num_phys,
--		    port_details->phy_bitmask));
-+	    "bitmask=0x%016llX\n", __FUNCTION__, port_details,
-+	    port_details->num_phys, (unsigned long long)
-+	    port_details->phy_bitmask));
- 
- 	for (i = 0; i < port_info->num_phys; i++, phy_info++) {
- 		if(phy_info->port_details != port_details)
-@@ -476,7 +477,7 @@ mptsas_setup_wide_ports(MPT_ADAPTER *ioc
- 	for (i = 0 ; i < port_info->num_phys ; i++, phy_info++) {
- 		sas_address = phy_info->attached.sas_address;
- 		dsaswideprintk((KERN_DEBUG "phy_id=%d sas_address=0x%018llX\n",
--			i, sas_address));
-+		    i, (unsigned long long)sas_address));
- 		if (!sas_address)
- 			continue;
- 		port_details = phy_info->port_details;
-@@ -495,8 +496,8 @@ mptsas_setup_wide_ports(MPT_ADAPTER *ioc
- 				    (1 << phy_info->phy_id);
- 			phy_info->sas_port_add_phy=1;
- 			dsaswideprintk((KERN_DEBUG "\t\tForming port\n\t\t"
--				"phy_id=%d sas_address=0x%018llX\n",
--				i, sas_address));
-+			    "phy_id=%d sas_address=0x%018llX\n",
-+			    i, (unsigned long long)sas_address));
- 			phy_info->port_details = port_details;
- 		}
- 
-@@ -512,8 +513,9 @@ mptsas_setup_wide_ports(MPT_ADAPTER *ioc
- 			if (phy_info_cmp->port_details == port_details )
- 				continue;
- 			dsaswideprintk((KERN_DEBUG
--				"\t\tphy_id=%d sas_address=0x%018llX\n",
--				j, phy_info_cmp->attached.sas_address));
-+			    "\t\tphy_id=%d sas_address=0x%018llX\n",
-+			    j, (unsigned long long)
-+			    phy_info_cmp->attached.sas_address));
- 			if (phy_info_cmp->port_details) {
- 				port_details->rphy =
- 				    mptsas_get_rphy(phy_info_cmp);
-@@ -546,11 +548,10 @@ mptsas_setup_wide_ports(MPT_ADAPTER *ioc
- 		if (!port_details)
- 			continue;
- 		dsaswideprintk((KERN_DEBUG
--			"%s: [%p]: phy_id=%02d num_phys=%02d "
--		    	"bitmask=0x%016llX\n",
--			__FUNCTION__,
--			port_details, i, port_details->num_phys,
--			port_details->phy_bitmask));
-+		    "%s: [%p]: phy_id=%02d num_phys=%02d "
-+		    "bitmask=0x%016llX\n", __FUNCTION__,
-+		    port_details, i, port_details->num_phys,
-+		    (unsigned long long)port_details->phy_bitmask));
- 		dsaswideprintk((KERN_DEBUG"\t\tport = %p rphy=%p\n",
- 			port_details->port, port_details->rphy));
- 	}
-@@ -2079,8 +2080,10 @@ mptsas_persist_clear_table(struct work_s
- static void
- mptsas_reprobe_lun(struct scsi_device *sdev, void *data)
- {
-+	int rc;
-+
- 	sdev->no_uld_attach = data ? 1 : 0;
--	scsi_device_reprobe(sdev);
-+	rc = scsi_device_reprobe(sdev);
- }
- 
- static void
+ static int mpt_pt_clear;
+ module_param(mpt_pt_clear, int, 0);
 diff -uarpN b/drivers/message/fusion/mptscsih.c a/drivers/message/fusion/mptscsih.c
---- b/drivers/message/fusion/mptscsih.c	2006-12-25 01:55:05.000000000 -0700
-+++ a/drivers/message/fusion/mptscsih.c	2006-12-25 01:55:24.000000000 -0700
-@@ -2699,7 +2699,8 @@ mptscsih_initTarget(MPT_SCSI_HOST *hd, V
- 		    struct scsi_device *sdev)
- {
- 	dinitprintk((MYIOC_s_INFO_FMT "initTarget bus=%d id=%d lun=%d hd=%p\n",
--		hd->ioc->name, vtarget->bus_id, vtarget->target_id, lun, hd));
-+		hd->ioc->name, vtarget->bus_id, vtarget->target_id,
-+		sdev->lun, hd));
+--- b/drivers/message/fusion/mptscsih.c	2006-12-25 01:55:24.000000000 -0700
++++ a/drivers/message/fusion/mptscsih.c	2006-12-25 01:55:45.000000000 -0700
+@@ -3,7 +3,7 @@
+  *      For use with LSI Logic PCI chip/adapter(s)
+  *      running LSI Logic Fusion MPT (Message Passing Technology) firmware.
+  *
+- *  Copyright (c) 1999-2005 LSI Logic Corporation
++ *  Copyright (c) 1999-2007 LSI Logic Corporation
+  *  (mailto:mpt_linux_developer@lsil.com)
+  *
+  */
+@@ -76,6 +76,7 @@
+ MODULE_AUTHOR(MODULEAUTHOR);
+ MODULE_DESCRIPTION(my_NAME);
+ MODULE_LICENSE("GPL");
++MODULE_VERSION(my_VERSION);
  
- 	/* Is LUN supported? If so, upper 2 bits will be 0
- 	* in first byte of inquiry data.
-@@ -2781,7 +2782,7 @@ mptscsih_setTargetNegoParms(MPT_SCSI_HOS
- 				else {
- 					factor = MPT_ULTRA320;
- 					if (scsi_device_qas(sdev)) {
--						ddvtprintk((KERN_INFO "Enabling QAS due to byte56=%02x on id=%d!\n", byte56, id));
-+						ddvtprintk((KERN_INFO "Enabling QAS due to byte56=%02x on id=%d!\n", scsi_device_qas(sdev), id));
- 						noQas = 0;
- 					}
- 					if (sdev->type == TYPE_TAPE &&
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+ 
+diff -uarpN b/drivers/message/fusion/mptscsih.h a/drivers/message/fusion/mptscsih.h
+--- b/drivers/message/fusion/mptscsih.h	2006-12-23 21:00:32.000000000 -0700
++++ a/drivers/message/fusion/mptscsih.h	2006-12-25 01:40:30.000000000 -0700
+@@ -5,7 +5,7 @@
+  *          LSIFC9xx/LSI409xx Fibre Channel
+  *      running LSI Logic Fusion MPT (Message Passing Technology) firmware.
+  *
+- *  Copyright (c) 1999-2005 LSI Logic Corporation
++ *  Copyright (c) 1999-2007 LSI Logic Corporation
+  *  (mailto:mpt_linux_developer@lsil.com)
+  *
+  */
+diff -uarpN b/drivers/message/fusion/mptspi.c a/drivers/message/fusion/mptspi.c
+--- b/drivers/message/fusion/mptspi.c	2006-12-23 21:00:32.000000000 -0700
++++ a/drivers/message/fusion/mptspi.c	2006-12-25 01:42:51.000000000 -0700
+@@ -3,7 +3,7 @@
+  *      For use with LSI Logic PCI chip/adapter(s)
+  *      running LSI Logic Fusion MPT (Message Passing Technology) firmware.
+  *
+- *  Copyright (c) 1999-2005 LSI Logic Corporation
++ *  Copyright (c) 1999-2007 LSI Logic Corporation
+  *  (mailto:mpt_linux_developer@lsil.com)
+  *
+  */
+@@ -77,6 +77,7 @@
+ MODULE_AUTHOR(MODULEAUTHOR);
+ MODULE_DESCRIPTION(my_NAME);
+ MODULE_LICENSE("GPL");
++MODULE_VERSION(my_VERSION);
+ 
+ /* Command line args */
+ static int mpt_saf_te = MPTSCSIH_SAF_TE;
