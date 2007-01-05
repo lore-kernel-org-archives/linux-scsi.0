@@ -1,36 +1,132 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: REGRESSION: 2.6.20-rc3-git4: EIO not returned to direct i/o application
- following disk error
-Date: Fri, 05 Jan 2007 15:05:55 -0600
-Message-ID: <459EBDB3.3080408@sgi.com>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: [PATCH] scsi: megaraid_{mm,mbox} init fix for kdump
+Date: Fri, 5 Jan 2007 13:34:30 -0800
+Message-ID: <20070105133430.07a338e4.randy.dunlap@oracle.com>
+References: <1168009809.4188.10.camel@dumbo>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:40352 "EHLO omx2.sgi.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750772AbXAEVF7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Jan 2007 16:05:59 -0500
+Received: from agminet01.oracle.com ([141.146.126.228]:53608 "EHLO
+	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750774AbXAEVfs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Jan 2007 16:35:48 -0500
+In-Reply-To: <1168009809.4188.10.camel@dumbo>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Jeremy Higdon <jeremy@sgi.com>, Michael Reed <mdr@sgi.com>, James Bottomley <James.Bottomley@SteelEye.com>
+To: Sumant Patro <sumantp@lsil.com>
+Cc: James.Bottomley@SteelEye.com, akpm@osdl.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, neela.kolli@lsi.com, bo.yang@lsi.com, sumant.patro@lsi.com
 
-Testing using 2.6.20-rc3-git4 I observed that my direct i/o test
-application no longer receives an EIO when the fc transport deletes
-a target following a fibre channel switch port disable.
+On Fri, 05 Jan 2007 07:10:09 -0800 Sumant Patro wrote:
 
-With 2.6.19 EIO is returned and the application terminates.
+Hi,
 
-With 2.6.20, the requested read length is returned with incorrect
-data in the buffer.
+> ---
+> 
+>  Documentation/scsi/ChangeLog.megaraid |   16 ++
+>  drivers/scsi/megaraid/megaraid_mbox.c |  140 +++++++++++++++++++-----
+>  drivers/scsi/megaraid/megaraid_mbox.h |    4
+>  3 files changed, 130 insertions(+), 30 deletions(-)
+> 
+> diff -uprN linux-2.6.orig/drivers/scsi/megaraid/megaraid_mbox.c linux-2.6.new/drivers/scsi/megaraid/megaraid_mbox.c
+> --- linux-2.6.orig/drivers/scsi/megaraid/megaraid_mbox.c	2006-12-28 09:56:04.000000000 -0800
+> +++ linux-2.6.new/drivers/scsi/megaraid/megaraid_mbox.c	2007-01-04 11:22:21.000000000 -0800
+> @@ -3380,6 +3386,84 @@ megaraid_mbox_flush_cache(adapter_t *ada
+>  
+>  
+>  /**
+> + * megaraid_mbox_fire_sync_cmd - fire the sync cmd
+> + * @param adapter	: soft state for the controller
 
-(I was playing around with an error recovery patch when I first
-discovered this, and do believe it is not limited in scope to
-targets being removed by the transport.)
+That (above) should just be:
+ * @adapter:  (plus its description; the description there
+   doesn't seem to agree with its parameter name).
 
-This is a serious regression which puts customer data at risk.
 
-(Is there a formal mechanism for filing a bug?)
+> + *
+> + * Clears the pending cmds in FW and reinits its RAID structs
+> + */
+> +static int
+> +megaraid_mbox_fire_sync_cmd(adapter_t *adapter)
+> +{
+> +	mbox_t	*mbox;
+> +	uint8_t	raw_mbox[sizeof(mbox_t)];
+> +	mraid_device_t	*raid_dev = ADAP2RAIDDEV(adapter);
+> +	mbox64_t *mbox64;
+> +	int	status = 0;
+> +	int i;
+> +	uint32_t dword;
+> +
+> +	mbox = (mbox_t *)raw_mbox;
+> +
+> +	memset((caddr_t)raw_mbox, 0, sizeof(mbox_t));
+> +
+> +	raw_mbox[0] = 0xFF;
+> +
+> +	mbox64	= raid_dev->mbox64;
+> +	mbox	= raid_dev->mbox;
+> +
+> +	/* Wait until mailbox is free */
+> +	if (megaraid_busywait_mbox(raid_dev) != 0) {
+> +		status = 1;
+> +		goto blocked_mailbox;
+> +	}
+> +
+> +	/* Copy mailbox data into host structure */
+> +	memcpy((caddr_t)mbox, (caddr_t)raw_mbox, 16);
+> +	mbox->cmdid		= 0xFE;
+> +	mbox->busy		= 1;
+> +	mbox->poll		= 0;
+> +	mbox->ack		= 0;
+> +	mbox->numstatus		= 0;
+> +	mbox->status		= 0;
+> +
+> +	wmb();
+> +	WRINDOOR(raid_dev, raid_dev->mbox_dma | 0x1);
+> +
+> +	/* Wait for maximum 1 min for status to post.
+> +	 * If the Firmware SUPPORTS the ABOVE COMMAND,
+> +	 * mbox->cmd will be set to 0
+> +	 * else
+> +	 * the firmware will reject the command with
+> +	 * mbox->numstatus set to 1
+> +	 */
+> +
+> +	i = 0;
+> +	status = 0;
+> +	while (!mbox->numstatus && mbox->cmd == 0xFF) {
+> +		rmb();
+> +		msleep(1);
+> +		i++;
+> +		if (i > 1000 * 60) {
+> +			status = 1;
+> +			break;
+> +		}
+> +	}
+> +	if (mbox->numstatus == 1)
+> +		status = 1; /*cmd not supported*/
+> +
+> +	/* Check for interrupt line */
+> +	dword = RDOUTDOOR(raid_dev);
+> +	WROUTDOOR(raid_dev, dword);
+> +	WRINDOOR(raid_dev,2);
+> +
+> +	return status;
+> +
+> +blocked_mailbox:
+> +	con_log(CL_ANN, (KERN_WARNING "megaraid: blocked mailbox\n"));
+> +	return status;
+> +}
+> +
+> +/**
+>   * megaraid_mbox_display_scb - display SCB information, mostly debug purposes
+>   * @param adapter	: controllers' soft state
+>   * @param scb  : SCB to be displayed
 
-Mike
+I haven't looked at the entire source file, but these extra
+"param" words should not be there.  kernel-doc syntax is just
+  @name: description
+
+
+---
+~Randy
