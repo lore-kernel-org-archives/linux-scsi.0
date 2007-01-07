@@ -1,130 +1,72 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [GIT PATCH] scsi bug fixes for 2.6.20-rc4
-Date: Sun, 07 Jan 2007 10:04:03 -0600
-Message-ID: <1168185843.2792.76.camel@mulgrave.il.steeleye.com>
+From: Justin Rosander <myrddinemrys@neo.rr.com>
+Subject: Re: PROBLEM: LSIFC909 mpt card fails to recognize devices
+Date: Sun, 07 Jan 2007 13:07:07 -0500
+Message-ID: <1168193227.4458.2.camel@localhost>
+References: <1167955606.5133.13.camel@localhost>
+	 <20070104165922.137c6df9.akpm@osdl.org>  <20070105035526.GA14185@lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:54658 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932589AbXAGQEL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Jan 2007 11:04:11 -0500
+Received: from ms-smtp-01.ohiordc.rr.com ([65.24.5.135]:56895 "EHLO
+	ms-smtp-01.ohiordc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964819AbXAGSHR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Jan 2007 13:07:17 -0500
+In-Reply-To: <20070105035526.GA14185@lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+To: Eric Moore <eric.moore@lsil.com>
+Cc: Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-This is mainly bug fixes, although there are a few harmless updates
-(like email addresses and driver PCI IDs).  The patch is available here:
+Hi Eric,
+I tried recompiling the kernel per your instructions, but I got a
+failure here:
+          CC [M]  drivers/message/fusion/mptbase.o
+        drivers/message/fusion/mptbase.c: In function =E2=80=98mpt_resu=
+me=E2=80=99:
+        drivers/message/fusion/mptbase.c:1526: warning: ignoring return=
+ value of =E2=80=98pci_enable_device=E2=80=99, declared with attribute =
+warn_unused_result
+          CC [M]  drivers/message/fusion/mptscsih.o
+        drivers/message/fusion/mptscsih.c: In function =E2=80=98mptscsi=
+h_initTarget=E2=80=99:
+        drivers/message/fusion/mptscsih.c:2691: error: =E2=80=98lun=E2=80=
+=99 undeclared (first use in this function)
+        drivers/message/fusion/mptscsih.c:2691: error: (Each undeclared=
+ identifier is reported only once
+        drivers/message/fusion/mptscsih.c:2691: error: for each functio=
+n it appears in.)
+        make[4]: *** [drivers/message/fusion/mptscsih.o] Error 1
+        make[3]: *** [drivers/message/fusion] Error 2
+        make[2]: *** [drivers/message] Error 2
+        make[1]: *** [drivers] Error 2
 
-master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6
+Did I do something wrong?
+Regards,
+Justin
 
-The Short Changelog is:
+On Thu, 2007-01-04 at 20:55 -0700, Eric Moore wrote:
+> On Thu, Jan 04, 2007 at 04:59:22PM -0800, Andrew Morton wrote:
+> > On Thu, 04 Jan 2007 19:06:46 -0500
+> > Justin Rosander <myrddinemrys@neo.rr.com> wrote:
+> >=20
+> > > Please forward this to the appropriate maintainer.  Thank you.
+> > >=20
+> > > [1.] One line summary of the problem:    My fibre channel drives =
+fail to
+> > > be recognized by my LSIFC909 card.=20
+> >=20
+> > Please send the output of `lspci -vn'
+> > -
+>=20
+> Recompile the driver with MPT_DEBUG_INIT enabled in the driver Makefi=
+le,
+> and repost the output.
+>=20
+> Eric Moore
 
-adam radford (1):
-       3ware 8000 serialize reset code
-
-Adrian Bunk (1):
-       qla2xxx: make qla2x00_reg_remote_port() static
-
-Akinobu Mita (1):
-       iscsi: fix crypto_alloc_hash() error check
-
-Andrew Vasquez (9):
-       qla2xxx: Update version number to 8.01.07-k4.
-       qla2xxx: Use generic isp_ops.fw_dump() function.
-       qla2xxx: Perform a fw-dump when an ISP23xx RISC-paused state is detected.
-       qla2xxx: Correct reset handling logic.
-       qla2xxx: Correct IOCB queueing mechanism for ISP54XX HBAs.
-       qla2xxx: Detect GPSC capabilities within a fabric.
-       qla2xxx: Use proper prep_ms_iocb() function during GFPN_ID.
-       qla2xxx: Correct endianess issue while interrogating MS status.
-       qla2xxx: Don't log trace-control async-events.
-
-Arne Redlich (1):
-       iscsi: fix 2.6.19 data digest calculation bug
-
-Eric Moore (4):
-       fusion: bump version
-       fusion: MODULE_VERSION support
-       fusion: power pc and miscellaneous bug fixs
-       fusion: fibre channel: return DID_ERROR for MPI_IOCSTATUS_SCSI_IOC_TERMINATED
-
-FUJITA Tomonori (1):
-       iscsi: simplify IPv6 and IPv4 address printing
-
-James Bottomley (3):
-       scsi_scan: fix report lun problems with CDROM or RBC devices
-       seagate: remove BROKEN tag
-       scsi_transport_spi: fix sense buffer size error
-
-Jes Sorensen (1):
-       qla1280: set residual correctly
-
-Mariusz Kozlowski (1):
-       scsi: lpfc error path fix
-
-Matthew Wilcox (1):
-       Add missing completion to scsi_complete_async_scans()
-
-Meelis Roos (1):
-       iscsi: newline in printk
-
-Mike Christie (1):
-       libiscsi: fix senselen calculation
-
-Randy Dunlap (1):
-       advansys: wrap PCI table inside ifdef CONFIG_PCI
-
-Salyzyn, Mark (1):
-       aacraid: Product List Update
-
-Sumant Patro (1):
-       megaraid_sas: Update module author
-
-Tejun Heo (1):
-       sr: fix error code check in sr_block_ioctl()
-
-
-and the diffstat:
-
- Documentation/scsi/aacraid.txt       |   66 +++++++++++++++++-------------
- drivers/message/fusion/mptbase.c     |    3 -
- drivers/message/fusion/mptbase.h     |   10 ++--
- drivers/message/fusion/mptctl.c      |    5 +-
- drivers/message/fusion/mptctl.h      |    2 
- drivers/message/fusion/mptfc.c       |    3 -
- drivers/message/fusion/mptlan.c      |    4 +
- drivers/message/fusion/mptlan.h      |    2 
- drivers/message/fusion/mptsas.c      |   38 +++++++++--------
- drivers/message/fusion/mptscsih.c    |   19 +++++++-
- drivers/message/fusion/mptscsih.h    |    2 
- drivers/message/fusion/mptspi.c      |    3 -
- drivers/scsi/3w-xxxx.c               |   60 +++++++++++++--------------
- drivers/scsi/3w-xxxx.h               |    2 
- drivers/scsi/Kconfig                 |    2 
- drivers/scsi/aacraid/linit.c         |   20 ++++-----
- drivers/scsi/advansys.c              |    3 -
- drivers/scsi/iscsi_tcp.c             |   12 ++---
- drivers/scsi/libiscsi.c              |    6 +-
- drivers/scsi/lpfc/lpfc_mem.c         |    6 ++
- drivers/scsi/megaraid/megaraid_sas.c |    6 +-
- drivers/scsi/qla1280.c               |    6 +-
- drivers/scsi/qla2xxx/qla_def.h       |    2 
- drivers/scsi/qla2xxx/qla_gbl.h       |    1 
- drivers/scsi/qla2xxx/qla_gs.c        |   24 ++++++++---
- drivers/scsi/qla2xxx/qla_init.c      |   76 +++++++++++++++++------------------
- drivers/scsi/qla2xxx/qla_isr.c       |   15 ++++--
- drivers/scsi/qla2xxx/qla_mbx.c       |   12 ++---
- drivers/scsi/qla2xxx/qla_os.c        |   59 ++++++++++++++-------------
- drivers/scsi/qla2xxx/qla_version.h   |    2 
- drivers/scsi/scsi_scan.c             |   33 +++++++++++----
- drivers/scsi/scsi_transport_iscsi.c  |    2 
- drivers/scsi/scsi_transport_spi.c    |    2 
- drivers/scsi/seagate.c               |    5 +-
- drivers/scsi/sr.c                    |    2 
- 35 files changed, 296 insertions(+), 219 deletions(-)
-
-James
-
-
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
