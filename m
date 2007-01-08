@@ -1,66 +1,56 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [GIT PATCH] scsi bug fixes for 2.6.20-rc4
-Date: Sun, 07 Jan 2007 17:16:12 -0500
-Message-ID: <45A1712C.8010804@torque.net>
-References: <1168185843.2792.76.camel@mulgrave.il.steeleye.com>	 <20070107181612.GP24620@parisc-linux.org> <1168196709.2792.81.camel@mulgrave.il.steeleye.com>
-Reply-To: dougg@torque.net
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: [PATCH] SCSI, libata: add support for ATA_16 commands to libata ATAPI devices
+Date: Sun, 7 Jan 2007 21:00:37 -0800 (PST)
+Message-ID: <141410.19366.qm@web31811.mail.mud.yahoo.com>
+References: <459C066D.30507@torque.net>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:39218 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965220AbXAGWQS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Jan 2007 17:16:18 -0500
-In-Reply-To: <1168196709.2792.81.camel@mulgrave.il.steeleye.com>
+Received: from web31811.mail.mud.yahoo.com ([68.142.207.74]:35260 "HELO
+	web31811.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1160995AbXAHFAi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jan 2007 00:00:38 -0500
+In-Reply-To: <459C066D.30507@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org
+To: dougg@torque.net, James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Mark Lord <liml@rtr.ca>, Linux IDE <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
-> On Sun, 2007-01-07 at 11:16 -0700, Matthew Wilcox wrote:
->> On Sun, Jan 07, 2007 at 10:04:03AM -0600, James Bottomley wrote:
->>> This is mainly bug fixes, although there are a few harmless updates
->>> (like email addresses and driver PCI IDs).  The patch is available here:
->> Could I ask that you add
->>
->> http://marc.theaimsgroup.com/?l=linux-scsi&m=116793460427798&w=2
+--- Douglas Gilbert <dougg@torque.net> wrote:
 > 
-> OK ... how about a title, changelog and signoff for it?
+> I seem to be fighting a losing battle against the mindset
 
-Titles and sign-offs don't necessarily help. For example:
+That may be the case.
 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=116797255528029&w=2
+> It is the _transport_ that should block the command,
+> if it so chooses. In this case the transport is a
+> virtual one between sr/sg and libata and libata should
+> recognize SCSI ATA PASS-THROUGH (12+16) cdbs as
+> transport related and not (directly) to be sent to
+> the logical unit. And it is at this level we should
+> add the wrinkle that if the pdt=5 (cd or dvd) then
+> don't translate ATA_12. [I have already been around this
+> loop with Luben and his SATL: sorted with the minimum
+> of fuss.]
 
-Followed by this misdirected ** post from Eric Moore
-which you and I also received:
+LOL, I don't think your mentioning my name in an email
+to bottomley is going to convince him of anything, in
+fact it may prompt him to do it the opposite way.
 
-On Thursday, January 04, 2007 9:39 PM, Douglas Gilbert wrote:
+Good luck!
 
-> >
-> > This patch makes the mptctl pass through available if
-> > the mptsas driver is selected. Without this patch
-> > if mptsas is the only fusion driver chosen, then
-> > the mptctl is not presented as an option.
-> >
-> > smp_utils uses the mptctl driver to pass SAS SMP
-> > functions through a MPT SAS HBA.
-> >
-> > I have discussed this patch with Eric and it may
-> > be in one of his coming patchsets (but I didn't see
-> > it in today's patches). So this one is for the
-> > record. The patch is against lk 2.6.20-rc3 .
-> >
-> > Signed-off-by: Douglas Gilbert <dougg@torque.net>
-> >
+As to the "been around this loop", the fix was a two
+liner, without checking the PDT, and ATA_16, ATA_12
+and BLANK work as expected.
 
-Sorry I overlooked this, but please apply.
+> ** I have been told that USB disk enclosures being designed
+> now will include at a SATL. This will mean smartmontools
 
-ACK
+Absolutely.  Many reasons, one of which is having to deal
+with battles like this one, probably the least one, but
+still a reason which is sometimes mentioned.
 
+    Luben
 
-
-** linux-scsi-owner@vger.kernel.org strikes again.
-
-Doug Gilbert
