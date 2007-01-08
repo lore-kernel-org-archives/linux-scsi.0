@@ -1,91 +1,31 @@
-From: Joe Malicki <jmalicki@metacarta.com>
-Subject: Re: megaraid_sas xscale interrupt mask?
-Date: Mon, 08 Jan 2007 10:59:33 -0500
-Message-ID: <45A26A65.6080801@metacarta.com>
-References: <0631C836DBF79F42B5A60C8C8D4E822989085B@NAMAIL2.ad.lsil.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [GIT PATCH] scsi bug fixes for 2.6.20-rc4
+Date: Mon, 08 Jan 2007 10:13:17 -0600
+Message-ID: <1168272797.2824.8.camel@mulgrave.il.steeleye.com>
+References: <1168185843.2792.76.camel@mulgrave.il.steeleye.com>
+	 <20070107181612.GP24620@parisc-linux.org>
+	 <1168196709.2792.81.camel@mulgrave.il.steeleye.com>
+	 <45A1712C.8010804@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from silene.metacarta.com ([65.77.47.18]:45268 "EHLO
-	silene.metacarta.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161327AbXAHQDd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jan 2007 11:03:33 -0500
-In-Reply-To: <0631C836DBF79F42B5A60C8C8D4E822989085B@NAMAIL2.ad.lsil.com>
+Received: from hancock.steeleye.com ([71.30.118.248]:34791 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1161317AbXAHQNb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jan 2007 11:13:31 -0500
+In-Reply-To: <45A1712C.8010804@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Patro, Sumant" <Sumant.Patro@lsi.com>
-Cc: linux-poweredge@dell.com, "Keith R. Baker" <krbaker+dpe@metacarta.com>, linux-scsi@vger.kernel.org, "Kolli, Neela" <Neela.Kolli@lsi.com>, "Yang, Bo" <Bo.Yang@lsi.com>
+To: dougg@torque.net
+Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org
 
-Hi Sumant,
+On Sun, 2007-01-07 at 17:16 -0500, Douglas Gilbert wrote:
+> Followed by this misdirected ** post from Eric Moore
+> which you and I also received:
 
-Thanks for the quick response!  I don't believe we're having any issues
-with the mask - we're just trying to debug some issues we're
-having with some controllers with 2.6.17.13, and that's the only
-real semantic difference (other than crashdump mode) between
-RHEL 4 kernels and 2.6.17.13, and it spooked me that the changelog
-didn't mention that it was intentional... I really appreciate the
-response, it helps us eliminate possibilities and doubt.
+OK ... I missed the ack for this on linux-scsi ... I'll add it.
 
-Thanks!
-Joe
+James
 
-Patro, Sumant wrote:
-> Hello Joe,
-> 
-> 	The mask value 0x1f is to mask out interrupts. The value in the
-> current kernel code is appropriate for all controllers that the driver
-> supports. 
-> 
-> 	Are you seeing any specific issue in driver with this mask
-> value?
-> 	
-> Regards,
-> 
-> Sumant 
-> 
-> -----Original Message-----
-> From: Joe Malicki [mailto:jmalicki@metacarta.com] 
-> Sent: Wednesday, January 03, 2007 5:41 PM
-> To: Patro, Sumant
-> Cc: linux-poweredge@dell.com; Keith R. Baker; linux-scsi@vger.kernel.org
-> Subject: megaraid_sas xscale interrupt mask?
-> 
-> Hi Sumant,
-> 
-> While trying to debug Dell PERC 5/i RAID controller problems we've been
-> having with the megaraid_sas driver, we've been inspecting differences
-> between the Red Hat EL 4 kernel (which Dell officially supports) versus
-> the stock Linux 2.6.17.13 driver we use.  We found a very interesting
-> change, introduced into linux 2.6.16, that seems very odd to us:
-> 
-> http://groups.google.com/group/fa.linux.kernel/browse_frm/thread/51f889b
-> d09bafd2d/cbbe2a30b8c2eb94?lnk=st&q=outbound_intr_mask+0x1f+0x00000001&r
-> num=1#cbbe2a30b8c2eb94
-> 
-> The title of the thread is "megaraid_sas: new template defined to
-> represent each type of controllers", and introduces this curious change:
-> 
->  /**
->   * megasas_disable_intr -      Disables interrupts
->   * @regs:                      MFI register set
->   */
->  static inline void
->  megasas_disable_intr(struct megasas_register_set __iomem * regs)  {
-> -       u32 mask = readl(&regs->outbound_intr_mask) & (~0x00000001);
-> +       u32 mask = 0x1f;
->         writel(mask, &regs->outbound_intr_mask);
-> 
->         /* Dummy readl to force pci flush */
-> 
-> Interrupts are enabled by writing "1" to the same register.
-> 
-> Is there a specific reason for this?  Is it possible that Dell PERC 5/i
-> controllers differ from LSI controllers in this respect?  It seems odd
-> that this change would be introduced without any explanation for what
-> it's meant to do, so I am very curious if it could be an inadvertently
-> introduced bug that is causing some problems.
-> 
-> Thanks!
-> Joe Malicki
-> 
+
