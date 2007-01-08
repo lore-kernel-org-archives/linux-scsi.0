@@ -1,50 +1,52 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [Bug 7026] CD/DVD burning with USB writer doesn't work
-Date: Mon, 8 Jan 2007 11:19:55 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0701081112590.4249-100000@iolanthe.rowland.org>
-References: <1165432436.2810.66.camel@mulgrave.il.steeleye.com>
+From: "Moore, Eric" <Eric.Moore@lsi.com>
+Subject: RE: PROBLEM: LSIFC909 mpt card fails to recognize devices
+Date: Mon, 8 Jan 2007 09:21:58 -0700
+Message-ID: <664A4EBB07F29743873A87CF62C26D704E8F0C@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:58504 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1161343AbXAHQT4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jan 2007 11:19:56 -0500
-In-Reply-To: <1165432436.2810.66.camel@mulgrave.il.steeleye.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1161341AbXAHQXr@vger.kernel.org>
+Content-class: urn:content-classes:message
+Sender: linux-kernel-owner@vger.kernel.org
+To: Justin Rosander <myrddinemrys@neo.rr.com>
+Cc: Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>
 
-On Wed, 6 Dec 2006, James Bottomley wrote:
-
-> On Wed, 2006-12-06 at 13:58 -0500, Alan Stern wrote:
-> > I'd love to do that -- but blkdev_ioctl() wants inode->i_bdev to be set, 
-> > and blkdev_locked_ioctl() uses it as the argument to bdev_get_queue().  So 
-> > it won't work with sg, which uses character device nodes.
+On Sunday, January 07, 2007 11:07 AM, Justin Rosander wrote:
+> Hi Eric,
+> I tried recompiling the kernel per your instructions, but I got a
+> failure here:
+>           CC [M]  drivers/message/fusion/mptbase.o
+>         drivers/message/fusion/mptbase.c: In function 'mpt_resume':
+>         drivers/message/fusion/mptbase.c:1526: warning: 
+> ignoring return value of 'pci_enable_device', declared with 
+> attribute warn_unused_result
+>           CC [M]  drivers/message/fusion/mptscsih.o
+>         drivers/message/fusion/mptscsih.c: In function 
+> 'mptscsih_initTarget':
+>         drivers/message/fusion/mptscsih.c:2691: error: 'lun' 
+> undeclared (first use in this function)
+>         drivers/message/fusion/mptscsih.c:2691: error: (Each 
+> undeclared identifier is reported only once
+>         drivers/message/fusion/mptscsih.c:2691: error: for 
+> each function it appears in.)
+>         make[4]: *** [drivers/message/fusion/mptscsih.o] Error 1
+>         make[3]: *** [drivers/message/fusion] Error 2
+>         make[2]: *** [drivers/message] Error 2
+>         make[1]: *** [drivers] Error 2
 > 
-> Well, even sg has the queue ... and what we're looking for are the queue
-> parameters.  In block/ioctl.c the bdev is just used for getting the
-> queue parameters (mainly via bdev->bd_disk->queue), so I could see if
-> Jens might be amenable to refactoring the queue ioctls so we can get at
-> them simply with a struct request_queue parameter.
+> Did I do something wrong?
+> Regards,
+> Justin
 > 
-> > How about adding BLKSECTGET to the list of commands accepted by 
-> > sg_ioctl()?
-> 
-> That's certainly a possible hack ... although I'd prefer to see the full
-> queue ioctls exposed.
 
-James:
+All you need to do is change lun to sdev->lun.
 
-Back in December you wrote a patch to expose the queue ioctls, and sent it
-(off-list) to Jens Axboe and to me.  Jens spproved it, but then it
-disappeared and was never applied.  Unfortunately I have lost my copy of
-it.
+I fix'ed that compile error in a patch I posted last week on the lsml:
 
-If you still have the patch, could you please apply it?  If you don't, I 
-could try to re-create it.  Or maybe Jens still has it in his email 
-records.  Either way, please let me know.
+http://marc.theaimsgroup.com/?l=linux-scsi&m=116796872432421&w=2
 
-Alan Stern
+Can you try again?
 
+Eric Moore
