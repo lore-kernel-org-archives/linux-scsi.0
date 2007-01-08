@@ -1,41 +1,40 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH] SCSI core: display sdev->scsi_level correctly
-Date: Mon, 8 Jan 2007 11:07:41 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0701081106540.4249-100000@iolanthe.rowland.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: linux-scsi-owner@vger.kernel.org is a pain
+Date: Mon, 08 Jan 2007 10:16:15 -0600
+Message-ID: <1168272975.2824.11.camel@mulgrave.il.steeleye.com>
+References: <45A16FED.7000005@torque.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:60254 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1161335AbXAHQOX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jan 2007 11:14:23 -0500
+Received: from hancock.steeleye.com ([71.30.118.248]:34822 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1161334AbXAHQQX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jan 2007 11:16:23 -0500
+In-Reply-To: <45A16FED.7000005@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: dougg@torque.net
+Cc: linux-scsi@vger.kernel.org
 
-This patch (as833) fixes the "SCSI revision" output for
-/proc/scsi/scsi.  If the scsi_level value is 0 (UNKNOWN), we want it
-to show up as "0", not "ffffffff".
+On Sun, 2007-01-07 at 17:10 -0500, Douglas Gilbert wrote:
+> Seems I'm not the only one sending posts to the
+> linux-scsi-owner@vger.kernel.org bit bucket.
+> 
+> Could the maintainer of lsml either:
+>   - get rid of linux-scsi-owner@vger.kernel.org
+>   - or forward posts in there to lsml
+> 
+> That bright idea might save the maintainer time but
+> it wastes ours.
 
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+I think it's a majordomo feature ... you need misdelivered or
+undelivered emails not to come back to the list, so the return-path: is
+set to the owner list (so they can be removed from the email list).
 
----
+In theory, a mailer should never reply to the return path, so how are
+you getting this in your reply path?
 
-Index: usb-2.6/drivers/scsi/scsi_proc.c
-===================================================================
---- usb-2.6.orig/drivers/scsi/scsi_proc.c
-+++ usb-2.6/drivers/scsi/scsi_proc.c
-@@ -179,9 +179,8 @@ static int proc_print_scsidevice(struct 
- 	seq_printf(s, "\n");
- 
- 	seq_printf(s, "  Type:   %s ", scsi_device_type(sdev->type));
--	seq_printf(s, "               ANSI"
--		     " SCSI revision: %02x", (sdev->scsi_level - 1) ?
--		     sdev->scsi_level - 1 : 1);
-+	seq_printf(s, "               ANSI  SCSI revision: %02x",
-+			sdev->scsi_level - (sdev->scsi_level > 1));
- 	if (sdev->scsi_level == 2)
- 		seq_printf(s, " CCS\n");
- 	else
+James
+
 
