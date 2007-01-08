@@ -1,65 +1,50 @@
 From: Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH] SCSI core: better initialization for sdev->scsi_level
-Date: Mon, 8 Jan 2007 11:12:32 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0701081107440.4249-100000@iolanthe.rowland.org>
+Subject: Re: [Bug 7026] CD/DVD burning with USB writer doesn't work
+Date: Mon, 8 Jan 2007 11:19:55 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0701081112590.4249-100000@iolanthe.rowland.org>
+References: <1165432436.2810.66.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:58502 "HELO
+Received: from iolanthe.rowland.org ([192.131.102.54]:58504 "HELO
 	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1161339AbXAHQTO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jan 2007 11:19:14 -0500
+	with SMTP id S1161343AbXAHQT4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jan 2007 11:19:56 -0500
+In-Reply-To: <1165432436.2810.66.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>
 
-Both scsi_device and scsi_target include a scsi_level field, and the
-SCSI core makes a half-hearted effort to keep the values equal.
-Ultimately this effort may be doomed, since as far as I know there is
-no reason why all LUNs in a target must report the same "ANSI-approved
-version" number.  But for the most part it should work okay.
+On Wed, 6 Dec 2006, James Bottomley wrote:
 
-This patch (as834) changes the SCSI core so that after the first LUN
-has been probed and the target's scsi_level is known, further LUNs
-default to the target's scsi_level and not to SCSI_2.
+> On Wed, 2006-12-06 at 13:58 -0500, Alan Stern wrote:
+> > I'd love to do that -- but blkdev_ioctl() wants inode->i_bdev to be set, 
+> > and blkdev_locked_ioctl() uses it as the argument to bdev_get_queue().  So 
+> > it won't work with sg, which uses character device nodes.
+> 
+> Well, even sg has the queue ... and what we're looking for are the queue
+> parameters.  In block/ioctl.c the bdev is just used for getting the
+> queue parameters (mainly via bdev->bd_disk->queue), so I could see if
+> Jens might be amenable to refactoring the queue ioctls so we can get at
+> them simply with a struct request_queue parameter.
+> 
+> > How about adding BLKSECTGET to the list of commands accepted by 
+> > sg_ioctl()?
+> 
+> That's certainly a possible hack ... although I'd prefer to see the full
+> queue ioctls exposed.
 
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+James:
 
----
+Back in December you wrote a patch to expose the queue ioctls, and sent it
+(off-list) to Jens Axboe and to me.  Jens spproved it, but then it
+disappeared and was never applied.  Unfortunately I have lost my copy of
+it.
 
-This patch will affect the CDB in INQUIRY commands sent to LUNs above 0 
-when LUN-0 reports a scsi_level of 0; the LUN bits will no longer be set 
-in the second byte of the CDB.  This is as it should be.  Nevertheless, 
-it's possible that some wacky device might be adversely affected.  I doubt 
-anyone will complain...
+If you still have the patch, could you please apply it?  If you don't, I 
+could try to re-create it.  Or maybe Jens still has it in his email 
+records.  Either way, please let me know.
 
 Alan Stern
-
-
-Index: usb-2.6/drivers/scsi/scsi_scan.c
-===================================================================
---- usb-2.6.orig/drivers/scsi/scsi_scan.c
-+++ usb-2.6/drivers/scsi/scsi_scan.c
-@@ -382,6 +382,7 @@ static struct scsi_target *scsi_alloc_ta
- 	INIT_LIST_HEAD(&starget->siblings);
- 	INIT_LIST_HEAD(&starget->devices);
- 	starget->state = STARGET_RUNNING;
-+	starget->scsi_level = SCSI_2;
-  retry:
- 	spin_lock_irqsave(shost->host_lock, flags);
- 
-Index: usb-2.6/drivers/scsi/scsi_sysfs.c
-===================================================================
---- usb-2.6.orig/drivers/scsi/scsi_sysfs.c
-+++ usb-2.6/drivers/scsi/scsi_sysfs.c
-@@ -922,7 +922,7 @@ void scsi_sysfs_device_initialize(struct
- 	snprintf(sdev->sdev_classdev.class_id, BUS_ID_SIZE,
- 		 "%d:%d:%d:%d", sdev->host->host_no,
- 		 sdev->channel, sdev->id, sdev->lun);
--	sdev->scsi_level = SCSI_2;
-+	sdev->scsi_level = starget->scsi_level;
- 	transport_setup_device(&sdev->sdev_gendev);
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	list_add_tail(&sdev->same_target_siblings, &starget->devices);
 
