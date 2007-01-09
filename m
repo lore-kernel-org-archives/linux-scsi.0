@@ -1,105 +1,146 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH] SCSI core: better initialization for sdev->scsi_level
-Date: Mon, 08 Jan 2007 19:13:06 -0500
-Message-ID: <45A2DE12.4050603@torque.net>
-References: <Pine.LNX.4.44L0.0701081107440.4249-100000@iolanthe.rowland.org>
-Reply-To: dougg@torque.net
+From: Justin Rosander <myrddinemrys@neo.rr.com>
+Subject: Re: PROBLEM: LSIFC909 mpt card fails to recognize devices
+Date: Mon, 08 Jan 2007 19:53:47 -0500
+Message-ID: <1168304027.5403.0.camel@localhost>
+References: <1167955606.5133.13.camel@localhost>
+	 <20070104165922.137c6df9.akpm@osdl.org>  <20070105035526.GA14185@lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:58711 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1749667AbXAIANZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jan 2007 19:13:25 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0701081107440.4249-100000@iolanthe.rowland.org>
+Received: from ms-smtp-05.ohiordc.rr.com ([65.24.5.139]:35376 "EHLO
+	ms-smtp-05.ohiordc.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750788AbXAIAxz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Jan 2007 19:53:55 -0500
+In-Reply-To: <20070105035526.GA14185@lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Eric Moore <eric.moore@lsil.com>
+Cc: Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Alan Stern wrote:
-> Both scsi_device and scsi_target include a scsi_level field, and the
-> SCSI core makes a half-hearted effort to keep the values equal.
-> Ultimately this effort may be doomed, since as far as I know there is
-> no reason why all LUNs in a target must report the same "ANSI-approved
-> version" number.  But for the most part it should work okay.
+Success! Here you are:
+00:00.0 0600: 1106:3189 (rev 80)
+        Subsystem: 1458:5000
+        Flags: bus master, 66MHz, medium devsel, latency 8
+        Memory at d0000000 (32-bit, prefetchable) [size=128M]
+        Capabilities: [80] AGP version 3.5
+        Capabilities: [c0] Power Management version 2
+
+00:01.0 0604: 1106:b198
+        Flags: bus master, 66MHz, medium devsel, latency 0
+        Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+        Memory behind bridge: e0000000-e1ffffff
+        Prefetchable memory behind bridge: d8000000-dfffffff
+        Capabilities: [80] Power Management version 2
+
+00:0a.0 0401: 1102:0004 (rev 04)
+        Subsystem: 1102:1003
+        Flags: bus master, medium devsel, latency 32, IRQ 10
+        I/O ports at c000 [size=64]
+        Capabilities: [dc] Power Management version 2
+
+00:0a.2 0c00: 1102:4001 (rev 04) (prog-if 10)
+        Subsystem: 1102:0010
+        Flags: bus master, medium devsel, latency 32, IRQ 11
+        Memory at e3035000 (32-bit, non-prefetchable) [size=2K]
+        Memory at e3030000 (32-bit, non-prefetchable) [size=16K]
+        Capabilities: [44] Power Management version 2
+
+00:0b.0 0480: 1131:7133 (rev 10)
+        Subsystem: 1043:4843
+        Flags: bus master, medium devsel, latency 32, IRQ 11
+        Memory at e3034000 (32-bit, non-prefetchable) [size=2K]
+        Capabilities: [40] Power Management version 2
+
+00:0c.0 0100: 1000:0621 (rev 01)
+        Subsystem: 10cd:1000
+        Flags: bus master, 66MHz, medium devsel, latency 64, IRQ 11
+        I/O ports at c400 [size=256]
+        Memory at e3000000 (64-bit, non-prefetchable) [size=128K]
+        Memory at e3020000 (64-bit, non-prefetchable) [size=64K]
+        [virtual] Expansion ROM at 30000000 [disabled] [size=1M]
+        Capabilities: [40] Power Management version 2
+
+00:0f.0 0101: 1106:0571 (rev 06) (prog-if 8a)
+        Subsystem: 1458:5002
+        Flags: bus master, medium devsel, latency 32, IRQ 11
+        I/O ports at c800 [size=16]
+        Capabilities: [c0] Power Management version 2
+
+00:10.0 0c03: 1106:3038 (rev 81)
+        Subsystem: 1458:5004
+        Flags: bus master, medium devsel, latency 32, IRQ 11
+        I/O ports at cc00 [size=32]
+        Capabilities: [80] Power Management version 2
+
+00:10.1 0c03: 1106:3038 (rev 81)
+        Subsystem: 1458:5004
+        Flags: bus master, medium devsel, latency 32, IRQ 11
+        I/O ports at d000 [size=32]
+        Capabilities: [80] Power Management version 2
+
+00:10.2 0c03: 1106:3038 (rev 81)
+        Subsystem: 1458:5004
+        Flags: bus master, medium devsel, latency 32, IRQ 11
+        I/O ports at d400 [size=32]
+        Capabilities: [80] Power Management version 2
+
+00:10.3 0c03: 1106:3038 (rev 81)
+        Subsystem: 1458:5004
+        Flags: bus master, medium devsel, latency 32, IRQ 11
+        I/O ports at d800 [size=32]
+        Capabilities: [80] Power Management version 2
+
+00:10.4 0c03: 1106:3104 (rev 86) (prog-if 20)
+        Subsystem: 1458:5004
+        Flags: bus master, medium devsel, latency 32, IRQ 10
+        Memory at e3036000 (32-bit, non-prefetchable) [size=256]
+        Capabilities: [80] Power Management version 2
+
+00:11.0 0601: 1106:3227
+        Subsystem: 1458:5001
+        Flags: bus master, stepping, medium devsel, latency 0
+        Capabilities: [c0] Power Management version 2
+
+00:11.5 0401: 1106:3059 (rev 60)
+        Subsystem: 1458:a002
+        Flags: medium devsel, IRQ 10
+        I/O ports at dc00 [size=256]
+        Capabilities: [c0] Power Management version 2
+
+00:12.0 0200: 1106:3065 (rev 78)
+        Subsystem: 1458:e000
+        Flags: bus master, medium devsel, latency 32, IRQ 11
+        I/O ports at e000 [size=256]
+        Memory at e3037000 (32-bit, non-prefetchable) [size=256]
+        Capabilities: [40] Power Management version 2
+
+01:00.0 0300: 10de:0172 (rev a3)
+        Subsystem: 1545:0035
+        Flags: bus master, 66MHz, medium devsel, latency 32, IRQ 11
+        Memory at e0000000 (32-bit, non-prefetchable) [size=16M]
+        Memory at d8000000 (32-bit, prefetchable) [size=64M]
+        Memory at dc000000 (32-bit, prefetchable) [size=512K]
+        [virtual] Expansion ROM at dc080000 [disabled] [size=128K]
+        Capabilities: [60] Power Management version 2
+        Capabilities: [44] AGP version 2.0
+
+
+On Thu, 2007-01-04 at 20:55 -0700, Eric Moore wrote:
+> On Thu, Jan 04, 2007 at 04:59:22PM -0800, Andrew Morton wrote:
+> > On Thu, 04 Jan 2007 19:06:46 -0500
+> > Justin Rosander <myrddinemrys@neo.rr.com> wrote:
+> > 
+> > > Please forward this to the appropriate maintainer.  Thank you.
+> > > 
+> > > [1.] One line summary of the problem:    My fibre channel drives fail to
+> > > be recognized by my LSIFC909 card. 
+> > 
+> > Please send the output of `lspci -vn'
+> > -
 > 
-> This patch (as834) changes the SCSI core so that after the first LUN
-> has been probed and the target's scsi_level is known, further LUNs
-> default to the target's scsi_level and not to SCSI_2.
-
-Alan,
-Umm, scsi_level is a mangled value derived from the
-"version" field in an INQUIRY standard response. As
-such it is per logical unit ***. There is nothing to stop
-a single target (especially if it is a bridge that
-maps targets at the remote end to luns) having a wide
-variety of lus with different "version" values (and
-different peripheral device types).
-
-IMO scsi_level should only be per lu which means it
-should only exist in the scsi_device structure.
-If the scsi mid level was really advanced it could
-track the "version" value in the INQUIRY response to
-"well known" logical units (see spc4r08.pdf section 8)
-because these really are per target. I don't expect
-that to happen any time soon (and there wouldn't be
-much benefit).
-
-So the existing code seems broken but I'm not sure
-your patch advances things.
-
-
-*** this statement assumes the "peripheral qualifier"
-    field is 0, otherwise there is no real lu at the
-    given lun
-
-Doug Gilbert
-
-
-> Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+> Recompile the driver with MPT_DEBUG_INIT enabled in the driver Makefile,
+> and repost the output.
 > 
-> ---
-> 
-> This patch will affect the CDB in INQUIRY commands sent to LUNs above 0 
-> when LUN-0 reports a scsi_level of 0; the LUN bits will no longer be set 
-> in the second byte of the CDB.  This is as it should be.  Nevertheless, 
-> it's possible that some wacky device might be adversely affected.  I doubt 
-> anyone will complain...
-> 
-> Alan Stern
-> 
-> 
-> Index: usb-2.6/drivers/scsi/scsi_scan.c
-> ===================================================================
-> --- usb-2.6.orig/drivers/scsi/scsi_scan.c
-> +++ usb-2.6/drivers/scsi/scsi_scan.c
-> @@ -382,6 +382,7 @@ static struct scsi_target *scsi_alloc_ta
->  	INIT_LIST_HEAD(&starget->siblings);
->  	INIT_LIST_HEAD(&starget->devices);
->  	starget->state = STARGET_RUNNING;
-> +	starget->scsi_level = SCSI_2;
->   retry:
->  	spin_lock_irqsave(shost->host_lock, flags);
->  
-> Index: usb-2.6/drivers/scsi/scsi_sysfs.c
-> ===================================================================
-> --- usb-2.6.orig/drivers/scsi/scsi_sysfs.c
-> +++ usb-2.6/drivers/scsi/scsi_sysfs.c
-> @@ -922,7 +922,7 @@ void scsi_sysfs_device_initialize(struct
->  	snprintf(sdev->sdev_classdev.class_id, BUS_ID_SIZE,
->  		 "%d:%d:%d:%d", sdev->host->host_no,
->  		 sdev->channel, sdev->id, sdev->lun);
-> -	sdev->scsi_level = SCSI_2;
-> +	sdev->scsi_level = starget->scsi_level;
->  	transport_setup_device(&sdev->sdev_gendev);
->  	spin_lock_irqsave(shost->host_lock, flags);
->  	list_add_tail(&sdev->same_target_siblings, &starget->devices);
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> Eric Moore
 
