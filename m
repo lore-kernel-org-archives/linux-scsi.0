@@ -1,116 +1,212 @@
-From: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
-Subject: Fix the reproducible oops in scsi
-Date: Wed, 10 Jan 2007 06:04:59 +0900
-Message-ID: <878xgbhpxg.fsf@duaron.myhome.or.jp>
+From: Edward Goggin <egoggin@vmware.com>
+Subject: Re: [PATCH 2/5] fusion: vmware bug fix prevent inifinite retries
+Date: Tue, 09 Jan 2007 16:32:37 -0500
+Message-ID: <1168378357.8850.51.camel@egoggin-devd.eng.vmware.com>
+References: <65B5F504434AD3469DC12E5564E3794D01EAB81D@PA-EXCH02.vmware.com>
+	 <45A4014F.7070203@vmware.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932446AbXAIVFK@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: multipart/mixed; boundary="=-sw9vjHmYmKM/TA3HRyXb"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mailout1.vmware.com ([65.113.40.130]:45906 "EHLO
+	mailout1.vmware.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932442AbXAIVdW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Jan 2007 16:33:22 -0500
+In-Reply-To: <45A4014F.7070203@vmware.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
-I got the oops after some hotplug events. And the similar oops can
-reproduce by the following step.
-
-   plug usb-storage (e.g. scsi_host of usb is "host5", and device is sde)
-   # mount /dev/sde1 /mnt
-   # echo 1 > /sys/block/sde/device/delete
-   # echo - - - > /sys/class/scsi_host/host5/scan
-   # echo - - - > /sys/class/scsi_host/host5/scan
-   # echo - - - > /sys/class/scsi_host/host5/scan
-   unplug usb-storage
-   # umount /mnt
-
-general protection fault: 0000 [1] SMP 
-CPU 1 
-Modules linked in: nls_iso8859_1 nls_cp437 vfat fat nls_base nfsd exportfs p4_clockmod speedstep_lib cpufreq_ondemand freq_table thermal fan button processor ac battery autofs4 ipv6 nfs lockd nfs_acl sunrpc deflate zlib_deflate zlib_inflate twofish twofish_common serpent blowfish des cbc ecb blkcipher aes xcbc sha256 sha1 crypto_null hmac crypto_hash cryptomgr af_key binfmt_misc dm_snapshot dm_mirror dm_mod eth1394 usb_storage snd_hda_intel snd_hda_codec snd_pcm_oss snd_mixer_oss snd_pcm snd_timer r8169 snd i2c_i801 bitrev crc32 ehci_hcd uhci_hcd intel_agp ohci1394 ieee1394 rng_core usbcore soundcore snd_page_alloc i2c_core parport_pc parport evdev sg sr_mod cdrom floppy
-Pid: 3780, comm: umount Not tainted 2.6.20-rc4 #1
-RIP: 0010:[<ffffffff801af74b>]  [<ffffffff801af74b>] sysfs_remove_file+0x8/0x12
-RSP: 0018:ffff810059703b58  EFLAGS: 00010286
-RAX: ffff8100596bba50 RBX: ffff8100596bba50 RCX: ffff810059703b68
-RDX: ffff810059703b48 RSI: 6b6b6b6b6b6b6b6b RDI: 6b6b6b6b6b6b6b6b
-RBP: ffff810059703b58 R08: ffff8100596bbac8 R09: 0000000000000000
-R10: ffff8100596bba28 R11: 0000000000000400 R12: 6b6b6b6b6b6b6b6b
-R13: ffff81005e303650 R14: ffff81005e9cf1b8 R15: ffff8100596bba50
-FS:  00002af1e22111d0(0000) GS:ffff81005f7a9898(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-CR2: 00007fff3c0145e8 CR3: 0000000059600000 CR4: 00000000000006e0
-Process umount (pid: 3780, threadinfo ffff810059702000, task ffff81005f3997f0)
-Stack:  ffff810059703b78 ffffffff8023a07a ffff8100596bba50 ffff8100596bba50
- ffff810059703ba8 ffffffff8023a110 ffff81005e303478 ffff8100596bba50
- ffff8100596bba28 ffff81005e303478 ffff810059703bd8 ffffffff80249049
-Call Trace:
- [<ffffffff8023a07a>] device_remove_file+0x26/0x33
- [<ffffffff8023a110>] device_del+0x3a/0x1d1
- [<ffffffff80249049>] scsi_target_reap_usercontext+0x54/0xbb
- [<ffffffff80137f4e>] execute_in_process_context+0x27/0x56
- [<ffffffff80247fdc>] scsi_target_reap+0x98/0xac
- [<ffffffff80249290>] scsi_device_dev_release_usercontext+0xab/0xd8
- [<ffffffff80137f4e>] execute_in_process_context+0x27/0x56
- [<ffffffff802491e3>] scsi_device_dev_release+0x17/0x19
- [<ffffffff80239d9f>] device_release+0x31/0x70
- [<ffffffff801e411d>] kobject_cleanup+0x53/0x77
- [<ffffffff801e4141>] kobject_release+0x0/0xf
- [<ffffffff801e414e>] kobject_release+0xd/0xf
- [<ffffffff801e4f3f>] kref_put+0x63/0x6d
- [<ffffffff801e40c8>] kobject_put+0x19/0x1b
- [<ffffffff80239ec2>] put_device+0x15/0x17
- [<ffffffff80240610>] scsi_device_put+0x3d/0x42
- [<ffffffff8024b821>] scsi_disk_put+0x2e/0x3f
- [<ffffffff8024c21e>] sd_release+0x7b/0x82
- [<ffffffff8019243a>] __blkdev_put+0x7c/0x15e
- [<ffffffff801924e9>] __blkdev_put+0x12b/0x15e
- [<ffffffff80192527>] blkdev_put+0xb/0xd
- [<ffffffff80192542>] close_bdev_excl+0x19/0x1e
- [<ffffffff80170e3b>] kill_block_super+0x36/0x3b
- [<ffffffff80170f16>] deactivate_super+0x6f/0x84
- [<ffffffff801838f8>] mntput_no_expire+0x56/0x87
- [<ffffffff80175c02>] path_release_on_umount+0x1d/0x21
- [<ffffffff8018412c>] sys_umount+0x21f/0x254
- [<ffffffff80172361>] sys_newstat+0x22/0x3c
- [<ffffffff80109c2e>] system_call+0x7e/0x83
+To: linux-scsi@vger.kernel.org
+Cc: Adam Zimman <azimman@vmware.com>, Petr Vandrovec <petr@vmware.com>, dgreen@vmware.com, Manon Goo <manon@manon.de>, Michael Reed <mdr@sgi.com>, "Moore, Eric" <Eric.Moore@lsi.com>, David Berghoff <david@dg-i.net>, Vicky Xu <vgxu@vmware.com>, James Bottomley <James.Bottomley@SteelEye.com>, "Shirron, Stephen" <Stephen.Shirron@lsi.com>
 
 
-By "echo 1 > /sys/block/sde/device/delete", sdev->sdev_state became SDEV_DEL.
+--=-sw9vjHmYmKM/TA3HRyXb
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
-The problem is in,
-    scsi_probe_and_add_lun()
-        -> scsi_device_lookup_by_target()
-	    -> __scsi_device_lookup_by_target()
+On Tue, 2007-01-09 at 12:55 -0800, Petr Vandrovec wrote:
+> Adam Zimman wrote:
+> > Adding VMware engineering... 
+> > 
+> > -----Original Message-----
+> > From: Manon Goo [mailto:manon@manon.de] 
+> > Sent: Tuesday, January 09, 2007 9:49 AM
+> > To: Michael Reed; Moore, Eric; David Berghoff
+> > Cc: James Bottomley; Adam Zimman; linux-scsi@vger.kernel.org; Shirron, Stephen
+> > Subject: Re: [PATCH 2/5] fusion: vmware bug fix prevent inifinite retries
+> > 
+> > Hmm .... why don't w make the whole thing configurable (david implemented this for us)
+> 
+> In that case I would prefer going on with automatic detection of our 
+> implementation - see first part of attached mpt-patch.diff I offered 
+> when this all started.  As passing options to modules loaded by initrd 
+> is not exactly trivial and varies across distributions, I would prefer 
+> this runtime detection...
+> 				Thanks,
+> 					Petr Vandrovec
+> 
 
-by "echo - - - > /sys/class/scsi_host/host5/scan".
+The attached (untested) patch shows a VMware and scsi transport agnostic
+approach which introduces a new host status (DID_QUALIFIED_REQUEUE) to
+be used by mptscsih.c (and other LLDs) instead of DID_BUS_BUSY.  A host
+status of DID_QUALIFIED_REQUEUE will return ADD_TO_MLQUEUE from
+scsi_decide_disposition IFF the REQ_FAILFAST bit is not set in the
+cmd_flags field of the SCSI command's request structure.
 
-The first scan is still not problem. Since founded existence device is
-already SDEV_DEL, it just adds a new device.
+The approach depends on both VMware Linux guests not setting
+REQ_FAILFAST and non-VMware Linux hosts with an IBM RDAC/MPP multi-
+pathing driver doing so.  This requirement is not a problem for VMware
+since its guest operating systems have no need to configure block device
+multi-pathing.  This requirement shouldn't be a problem for the IBM
+RDAC/MPP driver either since it should already be setting the
+REQ_FAILFAST attribute of I/Os for which it is providing multi-pathing,
+similar to what the Linux dm-multipath driver already does.
 
-The problem is second re-scan, it is looking a existence device up. In
-this case it is SDEV_DEL device, not newly added device by first scan.
+Ed Goggin
 
-This patch fixes the oops by excluding the SDEV_DEL devices in
-__scsi_device_lookup_by_target().
+> > 
+> > +/*
+> > + *  cmd line parameters
+> > + */
+> > +static int mpt_mpi_busy;
+> > +module_param(mpt_mpi_busy, int, 0);
+> > +MODULE_PARM_DESC(mpt_mpi_busy, " MPT MPI busy workaround for VMWare ESX 
+> > (default=0)");
+> > +
+> >  /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+> > 
+> >  typedef struct _BIG_SENSE_BUF {
+> > @@ -704,10 +711,13 @@
+> >                         sc->resid=0;
+> >                 case MPI_IOCSTATUS_SCSI_RECOVERED_ERROR:        /* 0x0040 */
+> >                 case MPI_IOCSTATUS_SUCCESS:                     /* 0x0000 */
+> > -                       if (scsi_status == MPI_SCSI_STATUS_BUSY)
+> > +                       if ((scsi_status == MPI_SCSI_STATUS_BUSY) && 
+> > !mpt_mpi_busy)
+> >                                 sc->result = (DID_BUS_BUSY << 16) | 
+> > scsi_status;
+> > -                       else
+> > +                       else {
+> > +                                if (mpt_mpi_busy)
+> > +                                        printk(KERN_INFO "MPT MPI ESX busy 
+> > hack enabled ... waiting\n");
+> >                                 sc->result = (DID_OK << 16) | scsi_status;
+> > +                        }
+> >                         if (scsi_state == 0) {
+> >                                 ;
+> >                         } else if (scsi_state & 
+> > MPI_SCSI_STATE_AUTOSENSE_VALID) {
+> plain text document attachment (mpt-patch.diff)
+> Patch to fix timeouts during multi-path failover with LSILogic adapter on RedHat 4.0 Update 3 & 4.
+> Patch is needed for other distributions as well - for example current Linus's 2.6.19 kernel needs it.
+> 
+> 
+> diff -urN linux-2.6.9.orig/drivers/message/fusion/mptbase.c linux-2.6.9/drivers/message/fusion/mptbase.c
+> --- linux-2.6.9.orig/drivers/message/fusion/mptbase.c	2006-12-15 11:13:47.000000000 -0800
+> +++ linux-2.6.9/drivers/message/fusion/mptbase.c	2006-12-15 11:43:01.000000000 -0800
+> @@ -1435,12 +1435,21 @@
+>  		ioc->bus_type = SPI;
+>  		/* 1030 Chip Fix. Disable Split transactions
+>  		 * for PCIX. Set MOST bits to zero if Rev < C0( = 8).
+> +		 *
+> +		 * Also detect VMware's LSILogic emulation - it does
+> +		 * not have PCI-X capability at offset 0x68 (and does
+> +		 * not need disabling split transactions although it
+> +		 * reports itself as revision 1).
+>  		 */
+>  		pci_read_config_byte(pdev, PCI_CLASS_REVISION, &revision);
+>  		if (revision < C0_1030) {
+> -			pci_read_config_byte(pdev, 0x6a, &pcixcmd);
+> -			pcixcmd &= 0x8F;
+> -			pci_write_config_byte(pdev, 0x6a, pcixcmd);
+> +			if (pci_find_capability(pdev, PCI_CAP_ID_PCIX) == 0x68) {
+> +				pci_read_config_byte(pdev, 0x6a, &pcixcmd);
+> +				pcixcmd &= 0x8F;
+> +				pci_write_config_byte(pdev, 0x6a, pcixcmd);
+> +			} else {
+> +				ioc->isVMware = 1;
+> +			}
+>  		}
+>  	}
+>  	else if (pdev->device == MPI_MANUFACTPAGE_DEVID_1030_53C1035) {
+> diff -urN linux-2.6.9.orig/drivers/message/fusion/mptbase.h linux-2.6.9/drivers/message/fusion/mptbase.h
+> --- linux-2.6.9.orig/drivers/message/fusion/mptbase.h	2006-12-15 11:13:47.000000000 -0800
+> +++ linux-2.6.9/drivers/message/fusion/mptbase.h	2006-12-15 11:40:47.000000000 -0800
+> @@ -673,7 +673,8 @@
+>  	u8			 upload_fw;	/* If set, do a fw upload */
+>  	u8			 reload_fw;	/* Force a FW Reload on next reset */
+>  	u8			 NBShiftFactor;  /* NB Shift Factor based on Block Size (Facts)  */
+> -	u8			 pad1[4];
+> +	u8			 isVMware;
+> +	u8			 pad1[3];
+>  	int			 DoneCtx;
+>  	int			 TaskCtx;
+>  	int			 InternalCtx;
+> diff -urN linux-2.6.9.orig/drivers/message/fusion/mptscsi.c linux-2.6.9/drivers/message/fusion/mptscsi.c
+> --- linux-2.6.9.orig/drivers/message/fusion/mptscsi.c	2006-12-15 11:13:47.000000000 -0800
+> +++ linux-2.6.9/drivers/message/fusion/mptscsi.c	2006-12-15 11:49:18.000000000 -0800
+> @@ -773,7 +773,12 @@
+>  			sc->resid=0;
+>  		case MPI_IOCSTATUS_SCSI_RECOVERED_ERROR:	/* 0x0040 */
+>  		case MPI_IOCSTATUS_SUCCESS:			/* 0x0000 */
+> -			if (scsi_status == MPI_SCSI_STATUS_BUSY)
+> +			/*
+> +			 * In the case of emulated adapter busy status may be reported 
+> +			 * for minutes when storage path switch occurs in the firmware.
+> +			 * We definitely do not want to give up after standard timeout.
+> +			 */
+> +			if (scsi_status == MPI_SCSI_STATUS_BUSY && !ioc->isVMware)
+>  				sc->result = (DID_BUS_BUSY << 16) | scsi_status;
+>  			else
+>  				sc->result = (DID_OK << 16) | scsi_status;
+> @@ -810,6 +815,7 @@
+>  				 * Not real sure here either so do nothing...  */
+>  			}
+>  
+> +			/* Perhaps this wanted to test scsi_status and not sc->result? */
+>  			if (sc->result == MPI_SCSI_STATUS_TASK_SET_FULL)
+>  				mptscsih_report_queue_full(sc, pScsiReply, pScsiReq);
+>  
 
-What do you think of this?
+--=-sw9vjHmYmKM/TA3HRyXb
+Content-Disposition: attachment; filename=vmware_patch
+Content-Type: text/x-patch; name=vmware_patch; charset=utf-8
+Content-Transfer-Encoding: base64
 
-Signed-off-by: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
----
+ZGlmZiAtcnUgbGludXgtMi42LjIwLXJjMy9kcml2ZXJzL21lc3NhZ2UvZnVzaW9uL21wdHNjc2lo
+LmMgbGludXgtMi42LjIwLXJjMy52bXdhcmVfcGF0Y2gvZHJpdmVycy9tZXNzYWdlL2Z1c2lvbi9t
+cHRzY3NpaC5jDQotLS0gbGludXgtMi42LjIwLXJjMy9kcml2ZXJzL21lc3NhZ2UvZnVzaW9uL21w
+dHNjc2loLmMJMjAwNy0wMS0wOSAxNToxMDoyOC4wMDAwMTkwMDAgLTA1MDANCisrKyBsaW51eC0y
+LjYuMjAtcmMzLnZtd2FyZV9wYXRjaC9kcml2ZXJzL21lc3NhZ2UvZnVzaW9uL21wdHNjc2loLmMJ
+MjAwNy0wMS0wOSAxNTo0NjoyNi4wMDAxMDUwMDAgLTA1MDANCkBAIC03NjksNyArNzY5LDcgQEAN
+CiAJCWNhc2UgTVBJX0lPQ1NUQVRVU19TQ1NJX1JFQ09WRVJFRF9FUlJPUjoJLyogMHgwMDQwICov
+DQogCQljYXNlIE1QSV9JT0NTVEFUVVNfU1VDQ0VTUzoJCQkvKiAweDAwMDAgKi8NCiAJCQlpZiAo
+c2NzaV9zdGF0dXMgPT0gTVBJX1NDU0lfU1RBVFVTX0JVU1kpDQotCQkJCXNjLT5yZXN1bHQgPSAo
+RElEX0JVU19CVVNZIDw8IDE2KSB8IHNjc2lfc3RhdHVzOw0KKwkJCQlzYy0+cmVzdWx0ID0gKERJ
+RF9RVUFMSUZJRURfUkVRVUVVRSA8PCAxNikgfCBzY3NpX3N0YXR1czsNCiAJCQllbHNlDQogCQkJ
+CXNjLT5yZXN1bHQgPSAoRElEX09LIDw8IDE2KSB8IHNjc2lfc3RhdHVzOw0KIAkJCWlmIChzY3Np
+X3N0YXRlID09IDApIHsNCmRpZmYgLXJ1IGxpbnV4LTIuNi4yMC1yYzMvZHJpdmVycy9zY3NpL3Nj
+c2lfZXJyb3IuYyBsaW51eC0yLjYuMjAtcmMzLnZtd2FyZV9wYXRjaC9kcml2ZXJzL3Njc2kvc2Nz
+aV9lcnJvci5jDQotLS0gbGludXgtMi42LjIwLXJjMy9kcml2ZXJzL3Njc2kvc2NzaV9lcnJvci5j
+CTIwMDctMDEtMDkgMTQ6NDA6MTYuMDAwMDIyMDAwIC0wNTAwDQorKysgbGludXgtMi42LjIwLXJj
+My52bXdhcmVfcGF0Y2gvZHJpdmVycy9zY3NpL3Njc2lfZXJyb3IuYwkyMDA3LTAxLTA5IDE1OjU1
+OjQ4LjAwMDA1MTAwMCAtMDUwMA0KQEAgLTEyMTYsNiArMTIxNiwxNCBAQA0KIAljYXNlIERJRF9J
+TU1fUkVUUlk6DQogCQlyZXR1cm4gTkVFRFNfUkVUUlk7DQogDQorCWNhc2UgRElEX1FVQUxJRklF
+RF9SRVFVRVVFOg0KKwkJLyoNCisJCSAqIFJldHVybiBpbW1lZGlhdGVseSB3L28gcmVxdWV1ZSBp
+ZiB0aGUgcmVxdWVzdCANCisJCSAqIGluZGljYXRlcyBubyByZXRyeS4NCisJCSAqLw0KKwkJaWYg
+KGJsa19ub3JldHJ5X3JlcXVlc3Qoc2NtZC0+cmVxdWVzdCkpIHsNCisJCQlyZXR1cm4gU1VDQ0VT
+UzsNCisJCX0NCiAJY2FzZSBESURfUkVRVUVVRToNCiAJCXJldHVybiBBRERfVE9fTUxRVUVVRTsN
+CiANCmRpZmYgLXJ1IGxpbnV4LTIuNi4yMC1yYzMvaW5jbHVkZS9zY3NpL3Njc2kuaCBsaW51eC0y
+LjYuMjAtcmMzLnZtd2FyZV9wYXRjaC9pbmNsdWRlL3Njc2kvc2NzaS5oDQotLS0gbGludXgtMi42
+LjIwLXJjMy9pbmNsdWRlL3Njc2kvc2NzaS5oCTIwMDctMDEtMDkgMTU6MDc6MzAuMDAwMDA5MDAw
+IC0wNTAwDQorKysgbGludXgtMi42LjIwLXJjMy52bXdhcmVfcGF0Y2gvaW5jbHVkZS9zY3NpL3Nj
+c2kuaAkyMDA3LTAxLTA5IDE1OjQ1OjQxLjAwMDA3NTAwMCAtMDUwMA0KQEAgLTMwOSw2ICszMDks
+OCBAQA0KICNkZWZpbmUgRElEX0lNTV9SRVRSWSAgIDB4MGMJLyogUmV0cnkgd2l0aG91dCBkZWNy
+ZW1lbnRpbmcgcmV0cnkgY291bnQgICovDQogI2RlZmluZSBESURfUkVRVUVVRQkweDBkCS8qIFJl
+cXVldWUgY29tbWFuZCAobm8gaW1tZWRpYXRlIHJldHJ5KSBhbHNvDQogCQkJCSAqIHdpdGhvdXQg
+ZGVjcmVtZW50aW5nIHRoZSByZXRyeSBjb3VudAkgICAqLw0KKyNkZWZpbmUgRElEX1FVQUxJRklF
+RF9SRVFVRVVFIDB4MGUgLyogUmVxdWV1ZSBjbWQgdy9vIGRlY3Igb2YgcmV0cnkgY291bnQgSUZG
+DQorCQkJCSAqIG5vdCBibGtfbm9yZXRyeV9yZXF1ZXN0CQkgICAqLw0KICNkZWZpbmUgRFJJVkVS
+X09LICAgICAgIDB4MDAJLyogRHJpdmVyIHN0YXR1cyAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICovDQogDQogLyoNCg==
 
- drivers/scsi/scsi.c |    2 ++
- 1 file changed, 2 insertions(+)
 
-diff -puN drivers/scsi/scsi.c~scsi_device_lookup-fix drivers/scsi/scsi.c
---- linux-2.6/drivers/scsi/scsi.c~scsi_device_lookup-fix	2007-01-10 05:19:03.000000000 +0900
-+++ linux-2.6-hirofumi/drivers/scsi/scsi.c	2007-01-10 05:19:22.000000000 +0900
-@@ -959,6 +959,8 @@ struct scsi_device *__scsi_device_lookup
- 	struct scsi_device *sdev;
- 
- 	list_for_each_entry(sdev, &starget->devices, same_target_siblings) {
-+		if (sdev->sdev_state == SDEV_DEL)
-+			continue;
- 		if (sdev->lun ==lun)
- 			return sdev;
- 	}
-_
-
--- 
-OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+--=-sw9vjHmYmKM/TA3HRyXb--
