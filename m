@@ -1,66 +1,41 @@
-From: Russell King <rmk+lkml@arm.linux.org.uk>
-Subject: Re: [PATCH 5/5] fixing errors handling during pci_driver resume stage [serial]
-Date: Tue, 9 Jan 2007 12:27:53 +0000
-Message-ID: <20070109122752.GA26337@flint.arm.linux.org.uk>
-References: <87ps9omv3t.fsf@sw.ru>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] qla2xxx: spin_unlock_irq in IRQ context
+Date: Tue, 9 Jan 2007 05:29:23 -0700
+Message-ID: <20070109122923.GA9819@parisc-linux.org>
+References: <6.0.0.20.2.20070109140514.02ea25e0@172.19.0.2> <1168327639.2824.46.camel@mulgrave.il.steeleye.com> <6.0.0.20.2.20070109162928.02ea3500@172.19.0.2>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <netdev-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:42701 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751371AbXAIM3Z (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Jan 2007 07:29:25 -0500
 Content-Disposition: inline
-In-Reply-To: <87ps9omv3t.fsf@sw.ru>
-Sender: netdev-owner@vger.kernel.org
-To: Dmitriy Monakhov <dmonakhov@openvz.org>
-Cc: linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>, devel@openvz.org, linux-pci@atrey.karlin.mff.cuni.cz, netdev@vger.kernel.org, linux-scsi@vger.kernel.org
+In-Reply-To: <6.0.0.20.2.20070109162928.02ea3500@172.19.0.2>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hisashi Hifumi <hifumi.hisashi@oss.ntt.co.jp>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-On Tue, Jan 09, 2007 at 12:01:58PM +0300, Dmitriy Monakhov wrote:
-> serial pci drivers have to return correct error code during resume stage in
-> case of errors.
+On Tue, Jan 09, 2007 at 04:46:34PM +0900, Hisashi Hifumi wrote:
+> Hi
+> 
+> >If the function can be called with interrupts disabled as well as
+> >enabled, then the spin_lock_irq needs to become a spin_lock_irqsave()
+> >which is the correct API for this case.
+> 
+> I know that spin_lock_irqsave()/spin_unlock_irqrestore() is correct .
+> But in this case, many places need to be modified to use
+> spin_lock_irqsave()/spin_unlock_irqrestore().Because
+> spin_lock_irqsave()/spin_unlock_irqrestore() is not in the same function,
+> and it is needed to pass eflags.
+> 
+> So I use in_irq() to distinguish between IRQ and process context and
+> minimize modifications.
 
-Sigh.  *hate* *hate* *hate*.
-
-> diff --git a/drivers/serial/8250_pci.c b/drivers/serial/8250_pci.c
-> index 52e2e64..e26e4a6 100644
-> --- a/drivers/serial/8250_pci.c
-> +++ b/drivers/serial/8250_pci.c
-> @@ -1805,6 +1805,7 @@ static int pciserial_suspend_one(struct
->  static int pciserial_resume_one(struct pci_dev *dev)
->  {
->  	struct serial_private *priv = pci_get_drvdata(dev);
-> +	int err;
->  
->  	pci_set_power_state(dev, PCI_D0);
->  	pci_restore_state(dev);
-> @@ -1813,7 +1814,12 @@ static int pciserial_resume_one(struct p
->  		/*
->  		 * The device may have been disabled.  Re-enable it.
->  		 */
-> -		pci_enable_device(dev);
-> +		err = pci_enable_device(dev);
-> +		if (err) {
-> +			dev_err(&dev->dev, "Cannot enable PCI device, "
-> +				"aborting.\n");
-> +			return err;
-> +		}
->  
->  		pciserial_resume_ports(priv);
->  	}
-
-So if pci_enable_device() fails, what do we do with the still suspended
-serial port?  Does it clean up that state?  Probably not.
-
-Look, merely going around bunging this stupid "oh lets propagate the
-error" crap into the kernel doesn't actually fix _anything_.  In fact
-it potentially _hides_ the warnings produced by __must_check which
-give a hint that _something_ needs to be done to _properly_ fix the
-problem.
-
-And by "properly", I mean not just merely propagating the error.
-
-In this particular case, the above may result in resources not being
-freed.
-
--- 
-Russell King
- Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
- maintainer of:
+Why do we need to re-enable interrupts here?  Can't we just
+spin_unlock() / spin_lock()?  Actually, I don't see why we need to drop
+the lock here ... starget_for_each_device can be called under a
+spinlock.  qla2x00_adjust_sdev_qdepth_up() only calls
+scsi_adjust_queue_depth().  Is there an AB-BA issue with hardware_lock
+and request_queue->queue_lock?
