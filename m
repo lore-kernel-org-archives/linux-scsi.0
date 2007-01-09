@@ -1,212 +1,252 @@
-From: Edward Goggin <egoggin@vmware.com>
-Subject: Re: [PATCH 2/5] fusion: vmware bug fix prevent inifinite retries
-Date: Tue, 09 Jan 2007 16:32:37 -0500
-Message-ID: <1168378357.8850.51.camel@egoggin-devd.eng.vmware.com>
-References: <65B5F504434AD3469DC12E5564E3794D01EAB81D@PA-EXCH02.vmware.com>
-	 <45A4014F.7070203@vmware.com>
+From: tsbogend@alpha.franken.de (Thomas Bogendoerfer)
+Subject: Re: PATCH: SNI RM 53c710 driver
+Date: Tue, 9 Jan 2007 22:56:22 +0100
+Message-ID: <20070109215622.GA21039@alpha.franken.de>
+References: <20061225203204.GB3293@alpha.franken.de> <20070102115241.GD24951@infradead.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-sw9vjHmYmKM/TA3HRyXb"
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout1.vmware.com ([65.113.40.130]:45906 "EHLO
-	mailout1.vmware.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932442AbXAIVdW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Jan 2007 16:33:22 -0500
-In-Reply-To: <45A4014F.7070203@vmware.com>
+Received: from elvis.franken.de ([193.175.24.41]:46001 "EHLO elvis.franken.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932402AbXAIV7l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 9 Jan 2007 16:59:41 -0500
+Content-Disposition: inline
+In-Reply-To: <20070102115241.GD24951@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Adam Zimman <azimman@vmware.com>, Petr Vandrovec <petr@vmware.com>, dgreen@vmware.com, Manon Goo <manon@manon.de>, Michael Reed <mdr@sgi.com>, "Moore, Eric" <Eric.Moore@lsi.com>, David Berghoff <david@dg-i.net>, Vicky Xu <vgxu@vmware.com>, James Bottomley <James.Bottomley@SteelEye.com>, "Shirron, Stephen" <Stephen.Shirron@lsi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
+On Tue, Jan 02, 2007 at 11:52:41AM +0000, Christoph Hellwig wrote:
+> On Mon, Dec 25, 2006 at 09:32:04PM +0100, Thomas Bogendoerfer wrote:
+> > This patch adds a SCSI driver for the onboard 53c710 chip of some
+> > SNI RM machines.
+>=20
+> Nice, this looks really clean.  I haven't seen the code to declare
+> the platform devices in the mips queue yet, do you plan to submit it
+> soon?
 
---=-sw9vjHmYmKM/TA3HRyXb
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+yes, it's now in Ralf queue branch and I hope it gets merged in the
+2.6.21 timeframe.
 
-On Tue, 2007-01-09 at 12:55 -0800, Petr Vandrovec wrote:
-> Adam Zimman wrote:
-> > Adding VMware engineering... 
-> > 
-> > -----Original Message-----
-> > From: Manon Goo [mailto:manon@manon.de] 
-> > Sent: Tuesday, January 09, 2007 9:49 AM
-> > To: Michael Reed; Moore, Eric; David Berghoff
-> > Cc: James Bottomley; Adam Zimman; linux-scsi@vger.kernel.org; Shirron, Stephen
-> > Subject: Re: [PATCH 2/5] fusion: vmware bug fix prevent inifinite retries
-> > 
-> > Hmm .... why don't w make the whole thing configurable (david implemented this for us)
-> 
-> In that case I would prefer going on with automatic detection of our 
-> implementation - see first part of attached mpt-patch.diff I offered 
-> when this all started.  As passing options to modules loaded by initrd 
-> is not exactly trivial and varies across distributions, I would prefer 
-> this runtime detection...
-> 				Thanks,
-> 					Petr Vandrovec
-> 
+> Please just write this as:
 
-The attached (untested) patch shows a VMware and scsi transport agnostic
-approach which introduces a new host status (DID_QUALIFIED_REQUEUE) to
-be used by mptscsih.c (and other LLDs) instead of DID_BUS_BUSY.  A host
-status of DID_QUALIFIED_REQUEUE will return ADD_TO_MLQUEUE from
-scsi_decide_disposition IFF the REQ_FAILFAST bit is not set in the
-cmd_flags field of the SCSI command's request structure.
+ok, attached is a new diff.
 
-The approach depends on both VMware Linux guests not setting
-REQ_FAILFAST and non-VMware Linux hosts with an IBM RDAC/MPP multi-
-pathing driver doing so.  This requirement is not a problem for VMware
-since its guest operating systems have no need to configure block device
-multi-pathing.  This requirement shouldn't be a problem for the IBM
-RDAC/MPP driver either since it should already be setting the
-REQ_FAILFAST attribute of I/Os for which it is providing multi-pathing,
-similar to what the Linux dm-multipath driver already does.
+Signed-off-by: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
+---
+ drivers/scsi/Kconfig      |    9 +++
+ drivers/scsi/Makefile     |    1 +
+ drivers/scsi/sni_53c710.c |  153 +++++++++++++++++++++++++++++++++++++=
+++++++++
+ 7 files changed, 187 insertions(+), 4 deletions(-)
 
-Ed Goggin
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 60f5827..9417042 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -973,6 +973,15 @@ config SCSI_LASI700
+ 	  many PA-RISC workstations & servers.  If you do not know whether yo=
+u
+ 	  have a Lasi chip, it is safe to say "Y" here.
+=20
++config SCSI_SNI_53C710
++	tristate "SNI RM SCSI support for 53c710"
++	depends on SNI_RM && SCSI
++	select SCSI_SPI_ATTRS
++	select 53C700_LE_ON_BE
++	help
++	  This is a driver for the onboard SCSI controller found in older
++	  SNI RM workstations & servers.=20
++
+ config 53C700_LE_ON_BE
+ 	bool
+ 	depends on SCSI_LASI700
+diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
+index bd7c988..79ecf4e 100644
+--- a/drivers/scsi/Makefile
++++ b/drivers/scsi/Makefile
+@@ -124,6 +124,7 @@ obj-$(CONFIG_JAZZ_ESP)		+=3D NCR53C9x.o	ja
+ obj-$(CONFIG_SUN3X_ESP)		+=3D NCR53C9x.o	sun3x_esp.o
+ obj-$(CONFIG_SCSI_FCAL)		+=3D fcal.o
+ obj-$(CONFIG_SCSI_LASI700)	+=3D 53c700.o lasi700.o
++obj-$(CONFIG_SCSI_SNI_53C710)	+=3D 53c700.o sni_53c710.o
+ obj-$(CONFIG_SCSI_NSP32)	+=3D nsp32.o
+ obj-$(CONFIG_SCSI_IPR)		+=3D ipr.o
+ obj-$(CONFIG_SCSI_SRP)		+=3D libsrp.o
+diff --git a/drivers/scsi/sni_53c710.c b/drivers/scsi/sni_53c710.c
+new file mode 100644
+index 0000000..6199ab6
+--- /dev/null
++++ b/drivers/scsi/sni_53c710.c
+@@ -0,0 +1,153 @@
++/* -*- mode: c; c-basic-offset: 8 -*- */
++
++/* SNI RM driver
++ *
++ * Copyright (C) 2001 by James.Bottomley@HansenPartnership.com
++**--------------------------------------------------------------------=
+---------
++** =20
++**  This program is free software; you can redistribute it and/or modi=
+fy
++**  it under the terms of the GNU General Public License as published =
+by
++**  the Free Software Foundation; either version 2 of the License, or
++**  (at your option) any later version.
++**
++**  This program is distributed in the hope that it will be useful,
++**  but WITHOUT ANY WARRANTY; without even the implied warranty of
++**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++**  GNU General Public License for more details.
++**
++**  You should have received a copy of the GNU General Public License
++**  along with this program; if not, write to the Free Software
++**  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++**
++**--------------------------------------------------------------------=
+---------
++ */
++
++/*
++ * Based on lasi700.c
++ */
++
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/init.h>
++#include <linux/types.h>
++#include <linux/stat.h>
++#include <linux/mm.h>
++#include <linux/blkdev.h>
++#include <linux/sched.h>
++#include <linux/ioport.h>
++#include <linux/dma-mapping.h>
++#include <linux/platform_device.h>
++
++#include <asm/page.h>
++#include <asm/pgtable.h>
++#include <asm/irq.h>
++#include <asm/delay.h>
++
++#include <scsi/scsi_host.h>
++#include <scsi/scsi_device.h>
++#include <scsi/scsi_transport.h>
++#include <scsi/scsi_transport_spi.h>
++
++#include "53c700.h"
++
++MODULE_AUTHOR("Thomas Bogend=F6rfer");
++MODULE_DESCRIPTION("SNI RM 53c710 SCSI Driver");
++MODULE_LICENSE("GPL");
++
++#define SNIRM710_CLOCK	32
++
++static struct scsi_host_template snirm710_template =3D {
++	.name		=3D "SNI RM SCSI 53c710",
++	.proc_name	=3D "snirm_53c710",
++	.this_id	=3D 7,
++	.module		=3D THIS_MODULE,
++};
++
++static int __init snirm710_probe(struct platform_device *dev)
++{
++	unsigned long base;
++	struct NCR_700_Host_Parameters *hostdata;
++	struct Scsi_Host *host;
++	struct  resource *res;
++
++	res =3D platform_get_resource(dev, IORESOURCE_MEM, 0);
++	if (!res)
++		return -ENODEV;
++
++	base =3D res->start;
++	hostdata =3D kzalloc(sizeof(*hostdata), GFP_KERNEL);
++	if (!hostdata) {
++		printk(KERN_ERR "%s: Failed to allocate host data\n",
++		       dev->dev.bus_id);
++		return -ENOMEM;
++	}
++
++	hostdata->dev =3D &dev->dev;
++	dma_set_mask(&dev->dev, DMA_32BIT_MASK);
++	hostdata->base =3D ioremap_nocache(CPHYSADDR(base), 0x100);
++	hostdata->differential =3D 0;
++
++	hostdata->clock =3D SNIRM710_CLOCK;
++	hostdata->force_le_on_be =3D 1;
++	hostdata->chip710 =3D 1;
++	hostdata->burst_length =3D 4;
++
++	host =3D NCR_700_detect(&snirm710_template, hostdata, &dev->dev);
++	if (!host)
++		goto out_kfree;
++	host->this_id =3D 7;
++	host->base =3D base;
++	host->irq =3D platform_get_irq(dev, 0);
++	if(request_irq(host->irq, NCR_700_intr, SA_SHIRQ, "snirm710", host)) =
+{
++		printk(KERN_ERR "snirm710: request_irq failed!\n");
++		goto out_put_host;
++	}
++
++	dev_set_drvdata(&dev->dev, host);
++	scsi_scan_host(host);
++
++	return 0;
++
++ out_put_host:
++	scsi_host_put(host);
++ out_kfree:
++	iounmap(hostdata->base);
++	kfree(hostdata);
++	return -ENODEV;
++}
++
++static int __exit snirm710_driver_remove(struct platform_device *dev)
++{
++	struct Scsi_Host *host =3D dev_get_drvdata(&dev->dev);
++	struct NCR_700_Host_Parameters *hostdata =3D=20
++		(struct NCR_700_Host_Parameters *)host->hostdata[0];
++
++	scsi_remove_host(host);
++	NCR_700_release(host);
++	free_irq(host->irq, host);
++	iounmap(hostdata->base);
++	kfree(hostdata);
++
++	return 0;
++}
++
++static struct platform_driver snirm710_driver =3D {
++	.probe	=3D snirm710_probe,
++	.remove	=3D __devexit_p(snirm710_driver_remove),
++	.driver	=3D {
++		.name	=3D "snirm_53c710",
++	},
++};
++
++static int __init snirm710_init(void)
++{
++	return platform_driver_register(&snirm710_driver);
++}
++
++static void __exit snirm710_exit(void)
++{
++	platform_driver_unregister(&snirm710_driver);
++}
++
++module_init(snirm710_init);
++module_exit(snirm710_exit);
 
-> > 
-> > +/*
-> > + *  cmd line parameters
-> > + */
-> > +static int mpt_mpi_busy;
-> > +module_param(mpt_mpi_busy, int, 0);
-> > +MODULE_PARM_DESC(mpt_mpi_busy, " MPT MPI busy workaround for VMWare ESX 
-> > (default=0)");
-> > +
-> >  /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
-> > 
-> >  typedef struct _BIG_SENSE_BUF {
-> > @@ -704,10 +711,13 @@
-> >                         sc->resid=0;
-> >                 case MPI_IOCSTATUS_SCSI_RECOVERED_ERROR:        /* 0x0040 */
-> >                 case MPI_IOCSTATUS_SUCCESS:                     /* 0x0000 */
-> > -                       if (scsi_status == MPI_SCSI_STATUS_BUSY)
-> > +                       if ((scsi_status == MPI_SCSI_STATUS_BUSY) && 
-> > !mpt_mpi_busy)
-> >                                 sc->result = (DID_BUS_BUSY << 16) | 
-> > scsi_status;
-> > -                       else
-> > +                       else {
-> > +                                if (mpt_mpi_busy)
-> > +                                        printk(KERN_INFO "MPT MPI ESX busy 
-> > hack enabled ... waiting\n");
-> >                                 sc->result = (DID_OK << 16) | scsi_status;
-> > +                        }
-> >                         if (scsi_state == 0) {
-> >                                 ;
-> >                         } else if (scsi_state & 
-> > MPI_SCSI_STATE_AUTOSENSE_VALID) {
-> plain text document attachment (mpt-patch.diff)
-> Patch to fix timeouts during multi-path failover with LSILogic adapter on RedHat 4.0 Update 3 & 4.
-> Patch is needed for other distributions as well - for example current Linus's 2.6.19 kernel needs it.
-> 
-> 
-> diff -urN linux-2.6.9.orig/drivers/message/fusion/mptbase.c linux-2.6.9/drivers/message/fusion/mptbase.c
-> --- linux-2.6.9.orig/drivers/message/fusion/mptbase.c	2006-12-15 11:13:47.000000000 -0800
-> +++ linux-2.6.9/drivers/message/fusion/mptbase.c	2006-12-15 11:43:01.000000000 -0800
-> @@ -1435,12 +1435,21 @@
->  		ioc->bus_type = SPI;
->  		/* 1030 Chip Fix. Disable Split transactions
->  		 * for PCIX. Set MOST bits to zero if Rev < C0( = 8).
-> +		 *
-> +		 * Also detect VMware's LSILogic emulation - it does
-> +		 * not have PCI-X capability at offset 0x68 (and does
-> +		 * not need disabling split transactions although it
-> +		 * reports itself as revision 1).
->  		 */
->  		pci_read_config_byte(pdev, PCI_CLASS_REVISION, &revision);
->  		if (revision < C0_1030) {
-> -			pci_read_config_byte(pdev, 0x6a, &pcixcmd);
-> -			pcixcmd &= 0x8F;
-> -			pci_write_config_byte(pdev, 0x6a, pcixcmd);
-> +			if (pci_find_capability(pdev, PCI_CAP_ID_PCIX) == 0x68) {
-> +				pci_read_config_byte(pdev, 0x6a, &pcixcmd);
-> +				pcixcmd &= 0x8F;
-> +				pci_write_config_byte(pdev, 0x6a, pcixcmd);
-> +			} else {
-> +				ioc->isVMware = 1;
-> +			}
->  		}
->  	}
->  	else if (pdev->device == MPI_MANUFACTPAGE_DEVID_1030_53C1035) {
-> diff -urN linux-2.6.9.orig/drivers/message/fusion/mptbase.h linux-2.6.9/drivers/message/fusion/mptbase.h
-> --- linux-2.6.9.orig/drivers/message/fusion/mptbase.h	2006-12-15 11:13:47.000000000 -0800
-> +++ linux-2.6.9/drivers/message/fusion/mptbase.h	2006-12-15 11:40:47.000000000 -0800
-> @@ -673,7 +673,8 @@
->  	u8			 upload_fw;	/* If set, do a fw upload */
->  	u8			 reload_fw;	/* Force a FW Reload on next reset */
->  	u8			 NBShiftFactor;  /* NB Shift Factor based on Block Size (Facts)  */
-> -	u8			 pad1[4];
-> +	u8			 isVMware;
-> +	u8			 pad1[3];
->  	int			 DoneCtx;
->  	int			 TaskCtx;
->  	int			 InternalCtx;
-> diff -urN linux-2.6.9.orig/drivers/message/fusion/mptscsi.c linux-2.6.9/drivers/message/fusion/mptscsi.c
-> --- linux-2.6.9.orig/drivers/message/fusion/mptscsi.c	2006-12-15 11:13:47.000000000 -0800
-> +++ linux-2.6.9/drivers/message/fusion/mptscsi.c	2006-12-15 11:49:18.000000000 -0800
-> @@ -773,7 +773,12 @@
->  			sc->resid=0;
->  		case MPI_IOCSTATUS_SCSI_RECOVERED_ERROR:	/* 0x0040 */
->  		case MPI_IOCSTATUS_SUCCESS:			/* 0x0000 */
-> -			if (scsi_status == MPI_SCSI_STATUS_BUSY)
-> +			/*
-> +			 * In the case of emulated adapter busy status may be reported 
-> +			 * for minutes when storage path switch occurs in the firmware.
-> +			 * We definitely do not want to give up after standard timeout.
-> +			 */
-> +			if (scsi_status == MPI_SCSI_STATUS_BUSY && !ioc->isVMware)
->  				sc->result = (DID_BUS_BUSY << 16) | scsi_status;
->  			else
->  				sc->result = (DID_OK << 16) | scsi_status;
-> @@ -810,6 +815,7 @@
->  				 * Not real sure here either so do nothing...  */
->  			}
->  
-> +			/* Perhaps this wanted to test scsi_status and not sc->result? */
->  			if (sc->result == MPI_SCSI_STATUS_TASK_SET_FULL)
->  				mptscsih_report_queue_full(sc, pScsiReply, pScsiReq);
->  
-
---=-sw9vjHmYmKM/TA3HRyXb
-Content-Disposition: attachment; filename=vmware_patch
-Content-Type: text/x-patch; name=vmware_patch; charset=utf-8
-Content-Transfer-Encoding: base64
-
-ZGlmZiAtcnUgbGludXgtMi42LjIwLXJjMy9kcml2ZXJzL21lc3NhZ2UvZnVzaW9uL21wdHNjc2lo
-LmMgbGludXgtMi42LjIwLXJjMy52bXdhcmVfcGF0Y2gvZHJpdmVycy9tZXNzYWdlL2Z1c2lvbi9t
-cHRzY3NpaC5jDQotLS0gbGludXgtMi42LjIwLXJjMy9kcml2ZXJzL21lc3NhZ2UvZnVzaW9uL21w
-dHNjc2loLmMJMjAwNy0wMS0wOSAxNToxMDoyOC4wMDAwMTkwMDAgLTA1MDANCisrKyBsaW51eC0y
-LjYuMjAtcmMzLnZtd2FyZV9wYXRjaC9kcml2ZXJzL21lc3NhZ2UvZnVzaW9uL21wdHNjc2loLmMJ
-MjAwNy0wMS0wOSAxNTo0NjoyNi4wMDAxMDUwMDAgLTA1MDANCkBAIC03NjksNyArNzY5LDcgQEAN
-CiAJCWNhc2UgTVBJX0lPQ1NUQVRVU19TQ1NJX1JFQ09WRVJFRF9FUlJPUjoJLyogMHgwMDQwICov
-DQogCQljYXNlIE1QSV9JT0NTVEFUVVNfU1VDQ0VTUzoJCQkvKiAweDAwMDAgKi8NCiAJCQlpZiAo
-c2NzaV9zdGF0dXMgPT0gTVBJX1NDU0lfU1RBVFVTX0JVU1kpDQotCQkJCXNjLT5yZXN1bHQgPSAo
-RElEX0JVU19CVVNZIDw8IDE2KSB8IHNjc2lfc3RhdHVzOw0KKwkJCQlzYy0+cmVzdWx0ID0gKERJ
-RF9RVUFMSUZJRURfUkVRVUVVRSA8PCAxNikgfCBzY3NpX3N0YXR1czsNCiAJCQllbHNlDQogCQkJ
-CXNjLT5yZXN1bHQgPSAoRElEX09LIDw8IDE2KSB8IHNjc2lfc3RhdHVzOw0KIAkJCWlmIChzY3Np
-X3N0YXRlID09IDApIHsNCmRpZmYgLXJ1IGxpbnV4LTIuNi4yMC1yYzMvZHJpdmVycy9zY3NpL3Nj
-c2lfZXJyb3IuYyBsaW51eC0yLjYuMjAtcmMzLnZtd2FyZV9wYXRjaC9kcml2ZXJzL3Njc2kvc2Nz
-aV9lcnJvci5jDQotLS0gbGludXgtMi42LjIwLXJjMy9kcml2ZXJzL3Njc2kvc2NzaV9lcnJvci5j
-CTIwMDctMDEtMDkgMTQ6NDA6MTYuMDAwMDIyMDAwIC0wNTAwDQorKysgbGludXgtMi42LjIwLXJj
-My52bXdhcmVfcGF0Y2gvZHJpdmVycy9zY3NpL3Njc2lfZXJyb3IuYwkyMDA3LTAxLTA5IDE1OjU1
-OjQ4LjAwMDA1MTAwMCAtMDUwMA0KQEAgLTEyMTYsNiArMTIxNiwxNCBAQA0KIAljYXNlIERJRF9J
-TU1fUkVUUlk6DQogCQlyZXR1cm4gTkVFRFNfUkVUUlk7DQogDQorCWNhc2UgRElEX1FVQUxJRklF
-RF9SRVFVRVVFOg0KKwkJLyoNCisJCSAqIFJldHVybiBpbW1lZGlhdGVseSB3L28gcmVxdWV1ZSBp
-ZiB0aGUgcmVxdWVzdCANCisJCSAqIGluZGljYXRlcyBubyByZXRyeS4NCisJCSAqLw0KKwkJaWYg
-KGJsa19ub3JldHJ5X3JlcXVlc3Qoc2NtZC0+cmVxdWVzdCkpIHsNCisJCQlyZXR1cm4gU1VDQ0VT
-UzsNCisJCX0NCiAJY2FzZSBESURfUkVRVUVVRToNCiAJCXJldHVybiBBRERfVE9fTUxRVUVVRTsN
-CiANCmRpZmYgLXJ1IGxpbnV4LTIuNi4yMC1yYzMvaW5jbHVkZS9zY3NpL3Njc2kuaCBsaW51eC0y
-LjYuMjAtcmMzLnZtd2FyZV9wYXRjaC9pbmNsdWRlL3Njc2kvc2NzaS5oDQotLS0gbGludXgtMi42
-LjIwLXJjMy9pbmNsdWRlL3Njc2kvc2NzaS5oCTIwMDctMDEtMDkgMTU6MDc6MzAuMDAwMDA5MDAw
-IC0wNTAwDQorKysgbGludXgtMi42LjIwLXJjMy52bXdhcmVfcGF0Y2gvaW5jbHVkZS9zY3NpL3Nj
-c2kuaAkyMDA3LTAxLTA5IDE1OjQ1OjQxLjAwMDA3NTAwMCAtMDUwMA0KQEAgLTMwOSw2ICszMDks
-OCBAQA0KICNkZWZpbmUgRElEX0lNTV9SRVRSWSAgIDB4MGMJLyogUmV0cnkgd2l0aG91dCBkZWNy
-ZW1lbnRpbmcgcmV0cnkgY291bnQgICovDQogI2RlZmluZSBESURfUkVRVUVVRQkweDBkCS8qIFJl
-cXVldWUgY29tbWFuZCAobm8gaW1tZWRpYXRlIHJldHJ5KSBhbHNvDQogCQkJCSAqIHdpdGhvdXQg
-ZGVjcmVtZW50aW5nIHRoZSByZXRyeSBjb3VudAkgICAqLw0KKyNkZWZpbmUgRElEX1FVQUxJRklF
-RF9SRVFVRVVFIDB4MGUgLyogUmVxdWV1ZSBjbWQgdy9vIGRlY3Igb2YgcmV0cnkgY291bnQgSUZG
-DQorCQkJCSAqIG5vdCBibGtfbm9yZXRyeV9yZXF1ZXN0CQkgICAqLw0KICNkZWZpbmUgRFJJVkVS
-X09LICAgICAgIDB4MDAJLyogRHJpdmVyIHN0YXR1cyAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICovDQogDQogLyoNCg==
-
-
---=-sw9vjHmYmKM/TA3HRyXb--
+--=20
+Crap can work. Given enough thrust pigs will fly, but it's not necessar=
+y a
+good idea.                                                [ RFC1925, 2.=
+3 ]
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
