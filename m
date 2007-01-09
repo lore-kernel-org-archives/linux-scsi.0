@@ -1,75 +1,70 @@
-From: Dmitriy Monakhov <dmonakhov@sw.ru>
-Subject: Re: [PATCH 5/5] fixing errors handling during pci_driver resume stage [serial]
-Date: Tue, 09 Jan 2007 18:02:44 +0300
-Message-ID: <87y7ocqm3v.fsf@sw.ru>
-References: <87ps9omv3t.fsf@sw.ru>
-	<20070109122752.GA26337@flint.arm.linux.org.uk>
+From: Michael Reed <mdr@sgi.com>
+Subject: Re: [PATCH 2/5] fusion: vmware bug fix prevent inifinite retries
+Date: Tue, 09 Jan 2007 10:17:17 -0600
+Message-ID: <45A3C00D.2030707@sgi.com>
+References: <664A4EBB07F29743873A87CF62C26D704E90F8@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932135AbXAIPCw@vger.kernel.org>
-In-Reply-To: <20070109122752.GA26337@flint.arm.linux.org.uk> (Russell King's message of "Tue, 9 Jan 2007 12:27:53 +0000")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dmitriy Monakhov <dmonakhov@openvz.org>
-Cc: linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>, devel@openvz.org, linux-pci@atrey.karlin.mff.cuni.cz, netdev@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from omx2-ext.sgi.com ([192.48.171.19]:38624 "EHLO omx2.sgi.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932191AbXAIQRg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 9 Jan 2007 11:17:36 -0500
+In-Reply-To: <664A4EBB07F29743873A87CF62C26D704E90F8@NAMAIL4.ad.lsil.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Moore, Eric" <Eric.Moore@lsi.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, manon@manon.de, azimman@vmware.com, linux-scsi@vger.kernel.org, "Shirron, Stephen" <Stephen.Shirron@lsi.com>
 
-Russell King <rmk+lkml@arm.linux.org.uk> writes:
 
-> On Tue, Jan 09, 2007 at 12:01:58PM +0300, Dmitriy Monakhov wrote:
->> serial pci drivers have to return correct error code during resume stage in
->> case of errors.
->
-> Sigh.  *hate* *hate* *hate*.
->
->> diff --git a/drivers/serial/8250_pci.c b/drivers/serial/8250_pci.c
->> index 52e2e64..e26e4a6 100644
->> --- a/drivers/serial/8250_pci.c
->> +++ b/drivers/serial/8250_pci.c
->> @@ -1805,6 +1805,7 @@ static int pciserial_suspend_one(struct
->>  static int pciserial_resume_one(struct pci_dev *dev)
->>  {
->>  	struct serial_private *priv = pci_get_drvdata(dev);
->> +	int err;
->>  
->>  	pci_set_power_state(dev, PCI_D0);
->>  	pci_restore_state(dev);
->> @@ -1813,7 +1814,12 @@ static int pciserial_resume_one(struct p
->>  		/*
->>  		 * The device may have been disabled.  Re-enable it.
->>  		 */
->> -		pci_enable_device(dev);
->> +		err = pci_enable_device(dev);
->> +		if (err) {
->> +			dev_err(&dev->dev, "Cannot enable PCI device, "
->> +				"aborting.\n");
->> +			return err;
->> +		}
->>  
->>  		pciserial_resume_ports(priv);
->>  	}
->
-> So if pci_enable_device() fails, what do we do with the still suspended
-> serial port?  Does it clean up that state?  Probably not.
->
-> Look, merely going around bunging this stupid "oh lets propagate the
-> error" crap into the kernel doesn't actually fix _anything_.  In fact
-> it potentially _hides_ the warnings produced by __must_check which
-> give a hint that _something_ needs to be done to _properly_ fix the
-> problem.
->
-> And by "properly", I mean not just merely propagating the error.
->
-> In this particular case, the above may result in resources not being
-> freed.
-Yep 100% true. But the question is _HOW_? We want shutdown not enabled device.
-Is it safe just call pciserial_remove_ports() for this device? 
->
-> -- 
-> Russell King
->  Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
->  maintainer of:
+
+Moore, Eric wrote:
+> On  Monday, January 08, 2007 3:25 PM, James Bottomley wrote:
+> 
+>> Right, I sort of suspected something like this.  BUSY/QUEUE_FULL
+>> handling was a bit iffy in 2.4; but it was sorted out in the 2003/4
+>> timeframe.  Nowadays, I think you want to translate the
+>> MPI_SCSI_STATUS_BUSY directly to SAM_STAT_BUSY (i.e. just remove the
+>> special casing if).
+
+Christoph put in code to limit a command's lifetime to prevent infinite
+loops in the case of QUEUE_FULL and BUSY.  (See scsi_softirq_done()
+for implementation.)
+
+DID_OK / COMMAND_COMPLETE / BUSY results in a ADD_TO_MLQUEUE for a retry,
+same as QUEUE_FULL.  I don't infinite retries, just a whole lot of them.
+See scsi_decide_disposition().
+
+Mike
+
+>>
+> 
+> I think your'e on the same page with the folks from VMware,
+> where the've asked us to go back to our old driver code.
+> Meaning we kill the check for "MPI_SCSI_STATUS_BUSY", instead the sam
+> status
+> is sent back "as is" without changing the DID_OK to DID_BUS_BUSY, etc. 
+> 
+> My problem with that is whether is breaks the Fibre Channel Folks. 
+> Will FC failover solution work properly if we go back to the old code?
+> I add Stephen Shirron and Mike Reed. 
+> I don't know.   Here is an explanation why that fix was needed back
+> about a year ago:
+> 
+> 
+> "When a target device responds with BUSY status, the MPT driver was
+> sending DID_OK to the 
+> SCSI mid layer, which caused the IO to be retried indefinitely between
+> the mid layer and the 
+> driver.  By changing the driver return status to DID_BUS_BUSY, the
+> target BUSY status can 
+> now flow through the mid layer to an upper layer Failover driver, which
+> will manage the I/O timeout."
+> 
 > -
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+> 
+> 
