@@ -1,52 +1,39 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: [PATCH] megaraid: more kernel-doc fixes
-Date: Tue, 9 Jan 2007 21:40:52 -0800
-Message-ID: <20070109214052.23d47976.randy.dunlap@oracle.com>
+From: "Moore, Eric" <Eric.Moore@lsi.com>
+Subject: RE: [PATCH 2/5] fusion: vmware bug fix prevent inifinite retries
+Date: Tue, 9 Jan 2007 22:44:02 -0700
+Message-ID: <664A4EBB07F29743873A87CF62C26D70513031@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from agminet01.oracle.com ([141.146.126.228]:55226 "EHLO
-	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932619AbXAJFlL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Jan 2007 00:41:11 -0500
+Received: from mail0.lsil.com ([147.145.40.20]:44500 "EHLO mail0.lsil.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932600AbXAJFoZ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Jan 2007 00:44:25 -0500
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sumant.Patro@lsi.com
-Cc: jejb <james.bottomley@steeleye.com>, akpm <akpm@osdl.org>, scsi <linux-scsi@vger.kernel.org>
+To: Edward Goggin <egoggin@vmware.com>, linux-scsi@vger.kernel.org
+Cc: Adam Zimman <azimman@vmware.com>, Petr Vandrovec <petr@vmware.com>, dgreen@vmware.com, Manon Goo <manon@manon.de>, Michael Reed <mdr@sgi.com>, David Berghoff <david@dg-i.net>, Vicky Xu <vgxu@vmware.com>, James Bottomley <James.Bottomley@SteelEye.com>, "Shirron, Stephen" <Stephen.Shirron@lsi.com>
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
+On Tuesday, January 09, 2007 2:33 PM, Edward Goggin wrote: 
 
-More megaraid kernel-doc fixes.
+> multi-pathing.  This requirement shouldn't be a problem for the IBM
+> RDAC/MPP driver either since it should already be setting the
+> REQ_FAILFAST attribute of I/Os for which it is providing 
+> multi-pathing,
+> similar to what the Linux dm-multipath driver already does.
+> 
 
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
----
- drivers/scsi/megaraid/mbox_defs.h   |    2 +-
- drivers/scsi/megaraid/mega_common.h |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+This approach seems to be the best.   The other one from Petr is
+good as well, however I've not had time today to verify whether 
+this detection algorithm will work properly, as we have built pcie 1030
+parts,
+and its checking for pcix compatibilty at offset 0x68.
 
---- linux-2.6.20-rc3-mm1.orig/drivers/scsi/megaraid/mbox_defs.h
-+++ linux-2.6.20-rc3-mm1/drivers/scsi/megaraid/mbox_defs.h
-@@ -748,7 +748,7 @@ typedef struct {
- 
- 
- /**
-- * private_bios_data - bios private data for boot devices
-+ * struct private_bios_data - bios private data for boot devices
-  * @geometry	: bits 0-3 - BIOS geometry, 0x0001 - 1GB, 0x0010 - 2GB,
-  *		0x1000 - 8GB, Others values are invalid
-  * @unused	: bits 4-7 are unused
---- linux-2.6.20-rc3-mm1.orig/drivers/scsi/megaraid/mega_common.h
-+++ linux-2.6.20-rc3-mm1/drivers/scsi/megaraid/mega_common.h
-@@ -271,7 +271,7 @@ typedef struct {
- #define ASSERT(expression)
- #endif
- 
--/*
-+/**
-  * struct mraid_pci_blk - structure holds DMA memory block info
-  * @vaddr		: virtual address to a memory block
-  * @dma_addr		: DMA handle to a memory block
+With regards to this patch, I need to contact the mpp folks to see
+whether they are setting the REQ_FAILFAST attribute.   I will
+followup shortly.
 
-
----
+Eric 
