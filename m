@@ -1,51 +1,68 @@
-From: linas@austin.ibm.com (Linas Vepstas)
-Subject: crash on lpfc rmmod
-Date: Wed, 10 Jan 2007 17:09:11 -0600
-Message-ID: <20070110230910.GC6177@austin.ibm.com>
+From: john clyne <clyne@ucar.edu>
+Subject: Re: IO transfer limits
+Date: Wed, 10 Jan 2007 15:47:33 -0800 (PST)
+Message-ID: <8269227.post@talk.nabble.com>
+References: <8260533.post@talk.nabble.com> <45A5250E.3020205@cs.wisc.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:37725 "EHLO e1.ny.us.ibm.com"
+Received: from www.nabble.com ([72.21.53.35]:54636 "EHLO talk.nabble.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965161AbXAJXJO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Jan 2007 18:09:14 -0500
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e1.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id l0AN9CSb026842
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Jan 2007 18:09:12 -0500
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay04.pok.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id l0AN9C5e301380
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Jan 2007 18:09:12 -0500
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l0AN9BNL013110
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Jan 2007 18:09:12 -0500
-Content-Disposition: inline
+	id S965245AbXAJXrg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Jan 2007 18:47:36 -0500
+Received: from [72.21.53.38] (helo=jubjub.nabble.com)
+	by talk.nabble.com with esmtp (Exim 4.50)
+	id 1H4nAL-0007Ao-CA
+	for linux-scsi@vger.kernel.org; Wed, 10 Jan 2007 15:47:33 -0800
+In-Reply-To: <45A5250E.3020205@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bino.Sebastian@Emulex.Com
-Cc: linux-scsi@vger.kernel.org, rlary@us.ibm.com
+To: linux-scsi@vger.kernel.org
 
-Hi Bino,
 
-Fiddling with the lpfc driver on 2.6.20-rc4, shortly after 
-booting, I attempted to rmmod the lpfc module and got a crash:
+What do the different hostX in /sys/class/scsi_host corespond to? There are
+seven hostX directories, 5 with sg_tablesize set to 128 and two set to 255.
 
-io-raiders:~ # rmmod lpfc
-cpu 0x0: Vector: 300 (Data Access) at [c0000003c86075a0]
-    pc: d0000000008d0988: .lpfc_free_sysfs_attr+0x1c/0x58 [lpfc]
-    lr: d0000000008c458c: .lpfc_pci_remove_one+0x3c/0x278 [lpfc]
-    sp: c0000003c8607820
-   msr: 9000000000009032
-   dar: 11c0
- dsisr: 40000000
-  current = 0xc0000003bf4b4c80
-  paca    = 0xc000000000674080
-    pid   = 12977, comm = rmmod
-[ 3005.329608] ------------[ cut here ]------------
+Is the implication that the hard limit is 255 * page_size, or is page_size
+simply the default?
 
-at which point the system locked up hard (I was expecting it to
-go into xmon).
 
-Suggestions?
 
---linas
+Mike Christie wrote:
+> 
+> john clyne wrote:
+>> Can anyone give me some guidance on where in the IO stack I might be
+>> running
+>> into a 512KB limit on IO transfer sizes to an external FC device? I've
+>> checked IO scheduler parameter
+>> (/sys/block/<dev>/queue/{max_sectors_kb,max_hw_sectors_kb}. Both are set
+>> to
+>> 32767. I'm using Qlogic HBAs (qla2312), but I don't see any relevent
+>> parameters. I'm running RHEL 4.0 with a 2.6.9-34 kernel. Any pointers
+>> would
+>> be greatly appreciated.
+>> 
+> 
+> There are also scatterlist limits.
+> 
+> /sys/class/scsi_host/hostX/sg_tablesize is a limit for the number of
+> scatter list entries. For qla2xxx it is 255.
+> 
+> The scsi layer sets the queue's max_phys_segments to 128 by default. I
+> thought there was ia scsi compile time option to increase this, but
+> maybe you have to just modify the SCSI_MAX_PHYS_SEGMENTS define by hand.
+> 
+> So with the default value and with 4 K pages if you end up getting pages
+> that cannot be clustered you will end up with 4K * 128.
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
+
+-- 
+View this message in context: http://www.nabble.com/IO-transfer-limits-tf2953389.html#a8269227
+Sent from the linux-scsi mailing list archive at Nabble.com.
 
