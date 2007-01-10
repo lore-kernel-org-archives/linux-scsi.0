@@ -1,43 +1,59 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: IO transfer limits
-Date: Wed, 10 Jan 2007 13:38:08 -0500
-Message-ID: <45A53290.1060400@torque.net>
-References: <8260533.post@talk.nabble.com>
-Reply-To: dougg@torque.net
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: [PATCH] ieee1394: sbp2: fix probing of some DVD-ROM/RWs
+Date: Wed, 10 Jan 2007 20:17:15 +0100 (CET)
+Message-ID: <tkrat.f2ec979ea3f2a616@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:43365 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964994AbXAJSiY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Jan 2007 13:38:24 -0500
-In-Reply-To: <8260533.post@talk.nabble.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
+Content-Disposition: INLINE
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux1394-devel>
+List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
+List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: linux1394-devel-bounces@lists.sourceforge.net
+Errors-To: linux1394-devel-bounces@lists.sourceforge.net
+To: linux-scsi@vger.kernel.org, linux1394-devel@lists.sourceforge.net
 List-Id: linux-scsi@vger.kernel.org
-To: john clyne <clyne@ucar.edu>
-Cc: linux-scsi@vger.kernel.org
 
-john clyne wrote:
-> Can anyone give me some guidance on where in the IO stack I might be running
-> into a 512KB limit on IO transfer sizes to an external FC device? I've
-> checked IO scheduler parameter
-> (/sys/block/<dev>/queue/{max_sectors_kb,max_hw_sectors_kb}. Both are set to
-> 32767. I'm using Qlogic HBAs (qla2312), but I don't see any relevent
-> parameters. I'm running RHEL 4.0 with a 2.6.9-34 kernel. Any pointers would
-> be greatly appreciated.
+Since commit 98e238cd42be6c0852da519303cf0182690f8d9f in Linux 2.6.19,
+"ieee1394: sbp2: don't prefer MODE SENSE 10", some FireWire DVD-ROMs and
+DVD-RWs were mistaken as CD-ROM because sr_mod now sent MODE SENSE 6.
+The MMC command set includes only MODE SENSE 10.
+http://bugzilla.kernel.org/show_bug.cgi?id=7800
 
-John,
-I discuss the subject in this page:
-   http://www.torque.net/sg/sg_io.html
-in the section titled:
-Maximum transfer size per command
+This fix lets sbp2 switch scsi_device.use_10_for_rw on for MMC LUs.
+This should rather be done in the command set driver sr_mod, not in the
+sbp2 transport driver, and an according patch will follow for a next
+Linux release.
 
-Mike C. has given you the answer for the block device
-interface (e.g. via /dev/sda); you should be able
-to do about 8 times better via the scsi generic
-interface (e.g. /dev/sg0).
+Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
+---
+Index: linux/drivers/ieee1394/sbp2.c
+===================================================================
+--- linux.orig/drivers/ieee1394/sbp2.c
++++ linux/drivers/ieee1394/sbp2.c
+@@ -2016,6 +2016,8 @@ static int sbp2scsi_slave_configure(stru
+ 	blk_queue_dma_alignment(sdev->request_queue, (512 - 1));
+ 	sdev->use_10_for_rw = 1;
+ 
++	if (sdev->type == TYPE_ROM)
++		sdev->use_10_for_ms = 1;
+ 	if (sdev->type == TYPE_DISK &&
+ 	    lu->workarounds & SBP2_WORKAROUND_MODE_SENSE_8)
+ 		sdev->skip_ms_page_8 = 1;
 
-Doug Gilbert
+-- 
+Stefan Richter
+-=====-=-=== ---= -=-=-
+http://arcgraph.de/sr/
 
 
+-------------------------------------------------------------------------
+Take Surveys. Earn Cash. Influence the Future of IT
+Join SourceForge.net's Techsay panel and you'll get the chance to share your
+opinions on IT & business topics through brief surveys - and earn cash
+http://www.techsay.com/default.php?page=join.php&p=sourceforge&CID=DEVDEV
