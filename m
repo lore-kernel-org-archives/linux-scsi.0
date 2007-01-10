@@ -1,59 +1,93 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: [PATCH] ieee1394: sbp2: fix probing of some DVD-ROM/RWs
-Date: Wed, 10 Jan 2007 20:17:15 +0100 (CET)
-Message-ID: <tkrat.f2ec979ea3f2a616@s5r6.in-berlin.de>
+From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Subject: [RFC PATCH 0/3] blk_end_request: full I/O completion
+	handler
+Date: Wed, 10 Jan 2007 18:06:27 -0500 (EST)
+Message-ID: <20070110.180627.41627650.k-ueda@ct.jp.nec.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-Content-Disposition: INLINE
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux1394-devel-bounces@lists.sourceforge.net
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: linux-scsi@vger.kernel.org, linux1394-devel@lists.sourceforge.net
+Return-path: <dm-devel-bounces@redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-Since commit 98e238cd42be6c0852da519303cf0182690f8d9f in Linux 2.6.19,
-"ieee1394: sbp2: don't prefer MODE SENSE 10", some FireWire DVD-ROMs and
-DVD-RWs were mistaken as CD-ROM because sr_mod now sent MODE SENSE 6.
-The MMC command set includes only MODE SENSE 10.
-http://bugzilla.kernel.org/show_bug.cgi?id=7800
+Hi Jens and device driver maintainers,
 
-This fix lets sbp2 switch scsi_device.use_10_for_rw on for MMC LUs.
-This should rather be done in the command set driver sr_mod, not in the
-sbp2 transport driver, and an according patch will follow for a next
-Linux release.
+I would like to make block interface to hook in before completing
+each chunk of request (for errors) to allow request-based multipath.
+The first approach was to add a new hook in __end_that_request_first().
+  - http://marc.theaimsgroup.com/?l=linux-scsi&m=115520444515914&w=2
+  - http://marc.theaimsgroup.com/?l=linux-kernel&m=116656637425880&w=2
+However, Jens pointed out that redesigning ->end_io() as a full
+completion handler would be better:
 
-Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
----
-Index: linux/drivers/ieee1394/sbp2.c
-===================================================================
---- linux.orig/drivers/ieee1394/sbp2.c
-+++ linux/drivers/ieee1394/sbp2.c
-@@ -2016,6 +2016,8 @@ static int sbp2scsi_slave_configure(stru
- 	blk_queue_dma_alignment(sdev->request_queue, (512 - 1));
- 	sdev->use_10_for_rw = 1;
- 
-+	if (sdev->type == TYPE_ROM)
-+		sdev->use_10_for_ms = 1;
- 	if (sdev->type == TYPE_DISK &&
- 	    lu->workarounds & SBP2_WORKAROUND_MODE_SENSE_8)
- 		sdev->skip_ms_page_8 = 1;
+On Thu, 21 Dec 2006 08:49:47 +0100, Jens Axboe <jens.axboe@oracle.com> wrote:
+> Ok, I see what you are getting at. The current ->end_io() is called when
+> the request has fully completed, you want notification for each chunk
+> potentially completed.
+> 
+> I think a better design here would be to use ->end_io() as the full
+> completion handler, similar to how bio->bi_end_io() works. A request
+> originating from __make_request() would set something ala:
+.....
+> instead of calling the functions manually. That would allow you to get
+> notification right at the beginning and do what you need, without adding
+> a special hook for this.
 
--- 
-Stefan Richter
--=====-=-=== ---= -=-=-
-http://arcgraph.de/sr/
+So I made a tentative patch based on Jens' suggestion.
+Are the interface and the design acceptable for block layer and
+device drivers, though a little bit big modification of device drivers
+is needed to take this approach?
 
+What is changed:
+  o blk_end_request() is a helper for drivers to call a full completion
+    handler (req->end_io) for the request.
+    (end_that_request_* are no longer used from outside of the handlers.)
+  o If blk_end_request() returns 0, the request is completed.
+    If blk_end_request() returns 1, the request isn't completed and
+    the caller should decide reactions for it.
+  o __make_request() sets blk_end_io() in req->end_io
+  o Added some templates to existing req->end_io users so they can be
+    full completion handler.
 
--------------------------------------------------------------------------
-Take Surveys. Earn Cash. Influence the Future of IT
-Join SourceForge.net's Techsay panel and you'll get the chance to share your
-opinions on IT & business topics through brief surveys - and earn cash
-http://www.techsay.com/default.php?page=join.php&p=sourceforge&CID=DEVDEV
+The interface of blk_end_request():
+  o About the 4th argument (int locked)
+    blk_end_request() has to get a queue lock before it calls
+    end_that_request_last().  On the other hand, some callers need to
+    call blk_end_request() with the lock held.
+    Callers can tell blk_end_request() by this argument whether a queue
+    lock needs to be held in blk_end_request().
+
+  o About the 5th and the 6th arguments (int (callback)(void *), void *arg)
+    Most of callers do caller-specific work between
+    end_that_request_{first,chunk} and end_that_request_last.
+    Callers now pass a callback for such work by these arguments.
+
+    By using the callback feature, critical sections protected by
+    single queue lock might need to be divided.
+    (e.g. In scsi_end_request(), blk_queue_end_tag() and
+          end_that_request_last() was protected by 1 spinlock but 
+          1 spinlock is used for each call. See PATCH#3)
+    If it can't be divided, the caller has to get the lock before
+    calling blk_end_request(), though it may have performance affects.
+
+    To cover callers which wants to call only __end_that_request_first()
+    like PIO mode in cdrom_newpc_intr(), the callback can return int value.
+    If the return value is non 0, blk_end_request() returns 1 immediately
+    without the request completion. (See cdrom_newpc_intr() in PATCH#3)
+
+If this is acceptable approach, I will break down, clean up and repost
+the patch.
+
+Thanks,
+Kiyoshi Ueda
