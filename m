@@ -1,24 +1,24 @@
 From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: [PATCH 13/21] aic94xx: Remove workqueue code from REQ_TASK_ABORT/REQ_DEVICE_RESET code
-Date: Thu, 11 Jan 2007 14:15:23 -0800
-Message-ID: <20070111221523.3543.9150.stgit@elm3a70.beaverton.ibm.com>
+Subject: [PATCH 14/21] aic94xx: Match request_firmware with release_firmware
+Date: Thu, 11 Jan 2007 14:15:26 -0800
+Message-ID: <20070111221526.3543.14966.stgit@elm3a70.beaverton.ibm.com>
 References: <20070111221443.3543.95584.stgit@elm3a70.beaverton.ibm.com>
 Content-Type: text/plain; charset=utf-8; format=fixed
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:35478 "EHLO e5.ny.us.ibm.com"
+Received: from e3.ny.us.ibm.com ([32.97.182.143]:40333 "EHLO e3.ny.us.ibm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932165AbXAKWPF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Jan 2007 17:15:05 -0500
+	id S932184AbXAKWPH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Jan 2007 17:15:07 -0500
 Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e5.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id l0BMF3uZ026324
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 17:15:03 -0500
-Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by d01relay04.pok.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id l0BMF3Ol279876
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 17:15:03 -0500
-Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
-	by d01av03.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l0BMF3oT002869
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 17:15:03 -0500
+	by e3.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id l0BMF6Ou015657
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 17:15:06 -0500
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay04.pok.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id l0BMF6Wl293098
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 17:15:06 -0500
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l0BMF6lo018235
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 17:15:06 -0500
 In-Reply-To: <20070111221443.3543.95584.stgit@elm3a70.beaverton.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -26,182 +26,57 @@ To: djwong@us.ibm.com, linux-scsi@vger.kernel.org
 Cc: alexisb@us.ibm.com
 
 
-Now that task aborts and device port resets are done by the EH, we can
-remove all the code that set up workqueues and such and simply call
-sas_task_abort and let libsas figure things out.
+The vmalloc() blob holding the sequencer firmware wasn't being released at
+module unload time, which resulted in a memory leak.
+
+Signed-off-by: Alexis Bruemmer <alexisb@us.ibm.com>
+Acked-by: Darrick J. Wong <djwong@us.ibm.com>
 ---
 
- drivers/scsi/aic94xx/aic94xx_scb.c |  122 +++++++++++++++++++-----------------
- 1 files changed, 66 insertions(+), 56 deletions(-)
+ drivers/scsi/aic94xx/aic94xx_init.c |    1 +
+ drivers/scsi/aic94xx/aic94xx_seq.c  |    7 +++++++
+ drivers/scsi/aic94xx/aic94xx_seq.h  |    1 +
+ 3 files changed, 9 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/aic94xx/aic94xx_scb.c b/drivers/scsi/aic94xx/aic94xx_scb.c
-index 75ed6b0..8f43ff7 100644
---- a/drivers/scsi/aic94xx/aic94xx_scb.c
-+++ b/drivers/scsi/aic94xx/aic94xx_scb.c
-@@ -413,40 +413,6 @@ void asd_invalidate_edb(struct asd_ascb 
- 	}
+diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
+index 9a9ea74..6faa10f 100644
+--- a/drivers/scsi/aic94xx/aic94xx_init.c
++++ b/drivers/scsi/aic94xx/aic94xx_init.c
+@@ -886,6 +886,7 @@ static void __exit aic94xx_exit(void)
+ 	asd_remove_driver_attrs(&aic94xx_pci_driver.driver);
+ 	pci_unregister_driver(&aic94xx_pci_driver);
+ 	sas_release_transport(aic94xx_transport_template);
++	asd_release_firmware();
+ 	asd_destroy_global_caches();
+ 	asd_printk("%s version %s unloaded\n", ASD_DRIVER_DESCRIPTION,
+ 		   ASD_DRIVER_VERSION);
+diff --git a/drivers/scsi/aic94xx/aic94xx_seq.c b/drivers/scsi/aic94xx/aic94xx_seq.c
+index 8451125..21569ec 100644
+--- a/drivers/scsi/aic94xx/aic94xx_seq.c
++++ b/drivers/scsi/aic94xx/aic94xx_seq.c
+@@ -1232,6 +1232,13 @@ static int asd_seq_start_lseq(struct asd
+ 	return asd_seq_unpause_lseq(asd_ha, lseq);
  }
  
--/* hard reset a phy later */
--static void do_phy_reset_later(struct work_struct *work)
--{
--	struct sas_phy *sas_phy =
--		container_of(work, struct sas_phy, reset_work);
--	int error;
--
--	ASD_DPRINTK("%s: About to hard reset phy %d\n", __FUNCTION__,
--		    sas_phy->identify.phy_identifier);
--	/* Reset device port */
--	error = sas_phy_reset(sas_phy, 1);
--	if (error)
--		ASD_DPRINTK("%s: Hard reset of phy %d failed (%d).\n",
--			    __FUNCTION__, sas_phy->identify.phy_identifier, error);
--}
--
--static void phy_reset_later(struct sas_phy *sas_phy, struct Scsi_Host *shost)
--{
--	INIT_WORK(&sas_phy->reset_work, do_phy_reset_later);
--	queue_work(shost->work_q, &sas_phy->reset_work);
--}
--
--/* start up the ABORT TASK tmf... */
--static void task_kill_later(struct asd_ascb *ascb)
--{
--	struct asd_ha_struct *asd_ha = ascb->ha;
--	struct sas_ha_struct *sas_ha = &asd_ha->sas_ha;
--	struct Scsi_Host *shost = sas_ha->core.shost;
--	struct sas_task *task = ascb->uldd_task;
--
--	INIT_WORK(&task->abort_work, sas_task_abort);
--	queue_work(shost->work_q, &task->abort_work);
--}
--
- static void escb_tasklet_complete(struct asd_ascb *ascb,
- 				  struct done_list_struct *dl)
++int asd_release_firmware(void)
++{
++	if (sequencer_fw)
++		release_firmware(sequencer_fw);
++	return 0;
++}
++
+ static int asd_request_firmware(struct asd_ha_struct *asd_ha)
  {
-@@ -479,26 +445,55 @@ static void escb_tasklet_complete(struct
- 	case REQ_TASK_ABORT: {
- 		struct asd_ascb *a, *b;
- 		u16 tc_abort;
-+		struct domain_device *failed_dev = NULL;
-+
-+		ASD_DPRINTK("%s: REQ_TASK_ABORT, reason=0x%X\n",
-+			    __FUNCTION__, dl->status_block[3]);
+ 	int err, i;
+diff --git a/drivers/scsi/aic94xx/aic94xx_seq.h b/drivers/scsi/aic94xx/aic94xx_seq.h
+index 9e715e5..9437ff0 100644
+--- a/drivers/scsi/aic94xx/aic94xx_seq.h
++++ b/drivers/scsi/aic94xx/aic94xx_seq.h
+@@ -63,6 +63,7 @@ int asd_pause_lseq(struct asd_ha_struct 
+ int asd_unpause_lseq(struct asd_ha_struct *asd_ha, u8 lseq_mask);
+ int asd_init_seqs(struct asd_ha_struct *asd_ha);
+ int asd_start_seqs(struct asd_ha_struct *asd_ha);
++int asd_release_firmware(void);
  
-+		/*
-+		 * Find the task that caused the abort and abort it first.
-+		 * The sequencer won't put anything on the done list until
-+		 * that happens.
-+		 */
- 		tc_abort = *((u16*)(&dl->status_block[1]));
- 		tc_abort = le16_to_cpu(tc_abort);
- 
--		ASD_DPRINTK("%s: REQ_TASK_ABORT, reason=0x%X\n",
--			    __FUNCTION__, dl->status_block[3]);
-+		list_for_each_entry_safe(a, b, &asd_ha->seq.pend_q, list) {
-+			struct sas_task *task = ascb->uldd_task;
- 
--		/* Find the pending task and abort it. */
--		list_for_each_entry_safe(a, b, &asd_ha->seq.pend_q, list)
--			if (a->tc_index == tc_abort) {
--				task_kill_later(a);
-+			if (task && a->tc_index == tc_abort) {
-+				failed_dev = task->dev;
-+				sas_task_abort(task);
- 				break;
- 			}
-+		}
-+
-+		if (!failed_dev) {
-+			ASD_DPRINTK("%s: Can't find task (tc=%d) to abort!\n",
-+				    __FUNCTION__, tc_abort);
-+			goto out;
-+		}
-+
-+		/*
-+		 * Now abort everything else for that device (hba?) so
-+		 * that the EH will wake up and do something.
-+		 */
-+		list_for_each_entry_safe(a, b, &asd_ha->seq.pend_q, list) {
-+			struct sas_task *task = ascb->uldd_task;
-+
-+			if (task &&
-+			    task->dev == failed_dev &&
-+			    a->tc_index != tc_abort)
-+				sas_task_abort(task);
-+		}
-+
- 		goto out;
- 	}
- 	case REQ_DEVICE_RESET: {
--		struct Scsi_Host *shost = sas_ha->core.shost;
--		struct sas_phy *dev_phy;
- 		struct asd_ascb *a;
- 		u16 conn_handle;
-+		unsigned long flags;
-+		struct sas_task *last_dev_task = NULL;
- 
- 		conn_handle = *((u16*)(&dl->status_block[1]));
- 		conn_handle = le16_to_cpu(conn_handle);
-@@ -506,32 +501,47 @@ static void escb_tasklet_complete(struct
- 		ASD_DPRINTK("%s: REQ_DEVICE_RESET, reason=0x%X\n", __FUNCTION__,
- 			    dl->status_block[3]);
- 
--		/* Kill all pending tasks and reset the device */
--		dev_phy = NULL;
-+		/* Find the last pending task for the device... */
- 		list_for_each_entry(a, &asd_ha->seq.pend_q, list) {
--			struct sas_task *task;
--			struct domain_device *dev;
- 			u16 x;
-+			struct domain_device *dev;
-+			struct sas_task *task = a->uldd_task;
- 
--			task = a->uldd_task;
- 			if (!task)
- 				continue;
- 			dev = task->dev;
- 
- 			x = (unsigned long)dev->lldd_dev;
--			if (x == conn_handle) {
--				dev_phy = dev->port->phy;
--				task_kill_later(a);
--			}
-+			if (x == conn_handle)
-+				last_dev_task = task;
- 		}
- 
--		/* Reset device port */
--		if (!dev_phy) {
--			ASD_DPRINTK("%s: No pending commands; can't reset.\n",
--				    __FUNCTION__);
-+		if (!last_dev_task) {
-+			ASD_DPRINTK("%s: Device reset for idle device %d?\n",
-+				    __FUNCTION__, conn_handle);
- 			goto out;
- 		}
--		phy_reset_later(dev_phy, shost);
-+
-+		/* ...and set the reset flag */
-+		spin_lock_irqsave(&last_dev_task->task_state_lock, flags);
-+		last_dev_task->task_state_flags |= SAS_TASK_NEED_DEV_RESET;
-+		spin_unlock_irqrestore(&last_dev_task->task_state_lock, flags);
-+
-+		/* Kill all pending tasks for the device */
-+		list_for_each_entry(a, &asd_ha->seq.pend_q, list) {
-+			u16 x;
-+			struct domain_device *dev;
-+			struct sas_task *task = a->uldd_task;
-+
-+			if (!task)
-+				continue;
-+			dev = task->dev;
-+
-+			x = (unsigned long)dev->lldd_dev;
-+			if (x == conn_handle)
-+				sas_task_abort(task);
-+		}
-+
- 		goto out;
- 	}
- 	case SIGNAL_NCQ_ERROR:
+ void asd_update_port_links(struct asd_ha_struct *asd_ha, struct asd_phy *phy);
+ #endif
