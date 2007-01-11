@@ -1,61 +1,93 @@
-From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: [PATCH] mptbase: Reset ioc initiator after PCI resume
-Date: Thu, 11 Jan 2007 13:25:57 -0800
-Message-ID: <45A6AB65.1000002@us.ibm.com>
-References: <452D7E8B.6000907@us.ibm.com>
-Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: IO transfer limits
+Date: Thu, 11 Jan 2007 16:50:24 -0500
+Message-ID: <45A6B120.7070903@torque.net>
+References: <8260533.post@talk.nabble.com> <45A5250E.3020205@cs.wisc.edu> <8269227.post@talk.nabble.com> <45A58FA5.2090003@torque.net> <45A6620C.3040807@s5r6.in-berlin.de>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.150]:58527 "EHLO
-	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751484AbXAKV0A (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Jan 2007 16:26:00 -0500
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e32.co.us.ibm.com (8.13.8/8.12.11) with ESMTP id l0BLOlMa005627
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 16:24:47 -0500
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by westrelay02.boulder.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id l0BLPwCK554892
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 14:25:58 -0700
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l0BLPwXX025809
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 14:25:58 -0700
-In-Reply-To: <452D7E8B.6000907@us.ibm.com>
+Received: from pentafluge.infradead.org ([213.146.154.40]:53834 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751469AbXAKVuo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Jan 2007 16:50:44 -0500
+In-Reply-To: <45A6620C.3040807@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, Eric Moore <eric.moore@lsil.com>
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: john clyne <clyne@ucar.edu>, linux-scsi@vger.kernel.org
 
-It appears that the LSI SAS 1064E chip needs to be reset after a
-suspend/resume cycle before the driver attempts further communications with
-the chip.  This patch gets rid of these error messages:
+Stefan Richter wrote:
+> Douglas Gilbert wrote:
+>> john clyne wrote:
+>>> What do the different hostX in /sys/class/scsi_host corespond to? There are
+>>> seven hostX directories, 5 with sg_tablesize set to 128 and two set to 255.
+>> A Linux "host" is a SCSI initiator port (e.g. FC) or a
+>> SCSI initiator device (e.g. SAS). Another way of looking
+>> at a "host" is as a bridge between a computer bus (e.g. PCI)
+>> and a storage transport. There is usually one (low level)
+>> driver (LLD) controlling all hosts associated with a
+>> specific class of hardware.
+>>
+>> If you fetch the lsscsi utility and load it then you can
+>> try 'lsscsi --hosts' to list the active hosts on a
+>> system (numbered on the left) and see the names of the
+>> various LLDs associated with them. Here is an example:
+>>
+>> # lsscsi --hosts
+>> [0]    sata_nv
+>> [1]    sata_nv
+>> [2]    sata_nv
+>> [3]    sata_nv
+>> [4]    mptsas
+>> [5]    aic94xx
+>> [6]    sbp2
+>>
+>> The first four are SATA ports (connectors) on the motherboard,
+>> all controlled by the same driver. Then there is a LSI SAS
+>> HBA (whose driver is mptsas), an Adaptec SAS HBA (48300) and
+>> finally an Adaptec IEEE 1394 controller.
+> 
+> A side note:
+> I don't think a Scsi_Host has a well-defined meaning beyond "the
+> kernel-internal resource which LLDs use to connect to the Linux SCSI mid
+> layer". It may have further meaning for many LLDs, but not for all.
+> Specifically, the host6 in your example is in the current implementation
+>  indeed nothing more than an internal resource. lsscsi is nevertheless
+> able to determine the actual initiator port by means of knowledge of the
+> implementation.
 
-mptbase: ioc0: ERROR - Invalid IOC facts reply, msgLength=0 offsetof=6!
+There are two sides to a "host": a kernel side (e.g. a
+PCI device or virtual) and a storage transport side.
+A host can be seen as a bridge between the two sides.
 
-after a system wakes up from sleep.  I've also tested it on a 53c1030 chip
-with no observable regressions.
+SCSI command sets need the concept of an initiator.
+For queuing, mode page policy and reservations (i.e.
+in multi-initiator environments) those initiators
+(actually initiator ports) need domain unique identifiers,
+preferably world wide unique. The identifier is an
+attribute of the external side (i.e. the storage
+transport side) of a linux "host".
 
-Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
----
+So even if you consider the kernel side of a host
+is a kludge, there is still the storage transport
+side to consider.
 
- drivers/message/fusion/mptbase.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+In the case of sbp, the initiator (device and port) has
+a EUI-64 wwn. SBP, USB mass storage, and iSCSI all set up
+SCSI hosts in Linux on a session basis (just-in-time if
+you like). As long as the initiator port identifiers are
+stable (predictable from one session to the next) it seems
+to me little different to SAS, SPI and FC which maintain
+their hosts for as long as their HBAs are present.
 
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index b3f28a0..b228e4c 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -1545,6 +1545,12 @@ mpt_resume(struct pci_dev *pdev)
- 		(mpt_GetIocState(ioc, 1) >> MPI_IOC_STATE_SHIFT),
- 		CHIPREG_READ32(&ioc->chip->Doorbell));
- 
-+	/* put ioc into READY_STATE */
-+	if(SendIocReset(ioc, MPI_FUNCTION_IOC_MESSAGE_UNIT_RESET, CAN_SLEEP)) {
-+		printk(MYIOC_s_ERR_FMT
-+		"pci-resume:  IOC msg unit reset failed!\n", ioc->name);
-+	}
-+
- 	/* bring ioc to operational state */
- 	if ((recovery_state = mpt_do_ioc_recovery(ioc,
- 	    MPT_HOSTEVENT_IOC_RECOVER, CAN_SLEEP)) != 0) {
+
+There are cheap external boxes out there that have 1394,
+USB and (e)SATA interfaces. I wonder what would happen
+if one tried to use two interfaces connected to different
+machines at the same time :-)
+
+Doug Gilbert
+
 
