@@ -1,24 +1,24 @@
 From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: [PATCH 18/21] aic94xx: Scan SAS devices asynchronously
-Date: Thu, 11 Jan 2007 14:15:38 -0800
-Message-ID: <20070111221538.3543.24379.stgit@elm3a70.beaverton.ibm.com>
+Subject: [PATCH 20/21] libsas: Add SAS_HA state flags to avoid queueing events while unloading
+Date: Thu, 11 Jan 2007 14:15:43 -0800
+Message-ID: <20070111221543.3543.47653.stgit@elm3a70.beaverton.ibm.com>
 References: <20070111221443.3543.95584.stgit@elm3a70.beaverton.ibm.com>
 Content-Type: text/plain; charset=utf-8; format=fixed
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e3.ny.us.ibm.com ([32.97.182.143]:40582 "EHLO e3.ny.us.ibm.com"
+Received: from e3.ny.us.ibm.com ([32.97.182.143]:40724 "EHLO e3.ny.us.ibm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932608AbXAKWPS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Jan 2007 17:15:18 -0500
+	id S932640AbXAKWPY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Jan 2007 17:15:24 -0500
 Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e3.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id l0BMFI8U015724
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 17:15:18 -0500
-Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by d01relay04.pok.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id l0BMFIDN199658
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 17:15:18 -0500
-Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
-	by d01av03.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l0BMFHlw004041
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 17:15:17 -0500
+	by e3.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id l0BMFNeH015953
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 17:15:23 -0500
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay04.pok.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id l0BMFNcF274046
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 17:15:23 -0500
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l0BMFNvQ019254
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 17:15:23 -0500
 In-Reply-To: <20070111221443.3543.95584.stgit@elm3a70.beaverton.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -26,88 +26,142 @@ To: djwong@us.ibm.com, linux-scsi@vger.kernel.org
 Cc: alexisb@us.ibm.com
 
 
-Add the necessary hooks to the aic94xx driver to support the asynchronous SCSI
-device scan infrastructure.
+Track sas_ha_struct state so that we ignore events that come in while
+we're shutting things down.
 
-Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
-Signed-off-by: Matthew Wilcox <matthew@wil.cx>
+Signed-off-by: Malahal Naineni <malahal@us.ibm.com>
 ---
 
- drivers/scsi/aic94xx/aic94xx_init.c |   41 ++++++++++++++++++++++++-----------
- 1 files changed, 28 insertions(+), 13 deletions(-)
+ drivers/scsi/libsas/sas_discover.c |    2 +-
+ drivers/scsi/libsas/sas_event.c    |    6 +++---
+ drivers/scsi/libsas/sas_init.c     |   12 ++++++++++++
+ drivers/scsi/libsas/sas_internal.h |    9 +++++++--
+ include/scsi/libsas.h              |    8 ++++++++
+ 5 files changed, 31 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
-index 7344f4d..a6fb33f 100644
---- a/drivers/scsi/aic94xx/aic94xx_init.c
-+++ b/drivers/scsi/aic94xx/aic94xx_init.c
-@@ -57,6 +57,8 @@ MODULE_PARM_DESC(collector, "\n"
- char sas_addr_str[2*SAS_ADDR_SIZE + 1] = "";
+diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
+index 21f538e..b6ba0e0 100644
+--- a/drivers/scsi/libsas/sas_discover.c
++++ b/drivers/scsi/libsas/sas_discover.c
+@@ -753,7 +753,7 @@ int sas_discover_event(struct asd_sas_po
+ 	BUG_ON(ev >= DISC_NUM_EVENTS);
  
- static struct scsi_transport_template *aic94xx_transport_template;
-+static int asd_scan_finished(struct Scsi_Host *, unsigned long);
-+static void asd_scan_start(struct Scsi_Host *);
- 
- static struct scsi_host_template aic94xx_sht = {
- 	.module			= THIS_MODULE,
-@@ -66,6 +68,8 @@ static struct scsi_host_template aic94xx
- 	.target_alloc		= sas_target_alloc,
- 	.slave_configure	= sas_slave_configure,
- 	.slave_destroy		= sas_slave_destroy,
-+	.scan_finished		= asd_scan_finished,
-+	.scan_start		= asd_scan_start,
- 	.change_queue_depth	= sas_change_queue_depth,
- 	.change_queue_type	= sas_change_queue_type,
- 	.bios_param		= sas_bios_param,
-@@ -672,21 +676,10 @@ static int __devinit asd_pci_probe(struc
- 	if (err)
- 		goto Err_reg_sas;
- 
--	err = asd_enable_phys(asd_ha, asd_ha->hw_prof.enabled_phys);
--	if (err) {
--		asd_printk("coudln't enable phys, err:%d\n", err);
--		goto Err_en_phys;
--	}
--	ASD_DPRINTK("enabled phys\n");
--	/* give the phy enabling interrupt event time to come in (1s
--	 * is empirically about all it takes) */
--	ssleep(1);
--	/* Wait for discovery to finish */
--	scsi_flush_work(asd_ha->sas_ha.core.shost);
-+	scsi_scan_host(shost);
+ 	sas_queue_event(ev, &disc->disc_event_lock, &disc->pending,
+-			&disc->disc_work[ev].work, port->ha->core.shost);
++			&disc->disc_work[ev].work, port->ha);
  
  	return 0;
--Err_en_phys:
--	asd_unregister_sas_ha(asd_ha);
-+
- Err_reg_sas:
- 	asd_remove_dev_attrs(asd_ha);
- Err_dev_attrs:
-@@ -779,6 +772,28 @@ static void __devexit asd_pci_remove(str
- 	return;
+ }
+diff --git a/drivers/scsi/libsas/sas_event.c b/drivers/scsi/libsas/sas_event.c
+index d83392e..9db30fb 100644
+--- a/drivers/scsi/libsas/sas_event.c
++++ b/drivers/scsi/libsas/sas_event.c
+@@ -31,7 +31,7 @@ static void notify_ha_event(struct sas_h
+ 	BUG_ON(event >= HA_NUM_EVENTS);
+ 
+ 	sas_queue_event(event, &sas_ha->event_lock, &sas_ha->pending,
+-			&sas_ha->ha_events[event].work, sas_ha->core.shost);
++			&sas_ha->ha_events[event].work, sas_ha);
  }
  
-+static void asd_scan_start(struct Scsi_Host *shost)
-+{
-+	struct asd_ha_struct *asd_ha;
-+	int err;
+ static void notify_port_event(struct asd_sas_phy *phy, enum port_event event)
+@@ -41,7 +41,7 @@ static void notify_port_event(struct asd
+ 	BUG_ON(event >= PORT_NUM_EVENTS);
+ 
+ 	sas_queue_event(event, &ha->event_lock, &phy->port_events_pending,
+-			&phy->port_events[event].work, ha->core.shost);
++			&phy->port_events[event].work, ha);
+ }
+ 
+ static void notify_phy_event(struct asd_sas_phy *phy, enum phy_event event)
+@@ -51,7 +51,7 @@ static void notify_phy_event(struct asd_
+ 	BUG_ON(event >= PHY_NUM_EVENTS);
+ 
+ 	sas_queue_event(event, &ha->event_lock, &phy->phy_events_pending,
+-			&phy->phy_events[event].work, ha->core.shost);
++			&phy->phy_events[event].work, ha);
+ }
+ 
+ int sas_init_events(struct sas_ha_struct *sas_ha)
+diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
+index 4df73d6..965698c 100644
+--- a/drivers/scsi/libsas/sas_init.c
++++ b/drivers/scsi/libsas/sas_init.c
+@@ -87,6 +87,9 @@ int sas_register_ha(struct sas_ha_struct
+ 	else if (sas_ha->lldd_queue_size == -1)
+ 		sas_ha->lldd_queue_size = 128; /* Sanity */
+ 
++	sas_ha->state = SAS_HA_REGISTERED;
++	spin_lock_init(&sas_ha->state_lock);
 +
-+	asd_ha = SHOST_TO_SAS_HA(shost)->lldd_ha;
-+	err = asd_enable_phys(asd_ha, asd_ha->hw_prof.enabled_phys);
-+	if (err)
-+		asd_printk("Couldn't enable phys, err:%d\n", err);
-+}
-+
-+static int asd_scan_finished(struct Scsi_Host *shost, unsigned long time)
-+{
-+	/* give the phy enabling interrupt event time to come in (1s
-+	 * is empirically about all it takes) */
-+	if (time < HZ)
-+		return 0;
-+	/* Wait for discovery to finish */
-+	scsi_flush_work(shost);
-+	return 1;
-+}
-+
- static ssize_t asd_version_show(struct device_driver *driver, char *buf)
+ 	error = sas_register_phys(sas_ha);
+ 	if (error) {
+ 		printk(KERN_NOTICE "couldn't register sas phys:%d\n", error);
+@@ -127,6 +130,15 @@ Undo_phys:
+ 
+ int sas_unregister_ha(struct sas_ha_struct *sas_ha)
  {
- 	return snprintf(buf, PAGE_SIZE, "%s\n", ASD_DRIVER_VERSION);
++	unsigned long flags;
++
++	/* Set the state to unregistered to avoid further
++	 * events to be queued */
++	spin_lock_irqsave(&sas_ha->state_lock, flags);
++	sas_ha->state = SAS_HA_UNREGISTERED;
++	spin_unlock_irqrestore(&sas_ha->state_lock, flags);
++	scsi_flush_work(sas_ha->core.shost);
++
+ 	sas_unregister_ports(sas_ha);
+ 
+ 	if (sas_ha->lldd_max_execute_num > 1) {
+diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
+index 137d7e4..a78638d 100644
+--- a/drivers/scsi/libsas/sas_internal.h
++++ b/drivers/scsi/libsas/sas_internal.h
+@@ -80,7 +80,7 @@ void sas_hae_reset(struct work_struct *w
+ static inline void sas_queue_event(int event, spinlock_t *lock,
+ 				   unsigned long *pending,
+ 				   struct work_struct *work,
+-				   struct Scsi_Host *shost)
++				   struct sas_ha_struct *sas_ha)
+ {
+ 	unsigned long flags;
+ 
+@@ -91,7 +91,12 @@ static inline void sas_queue_event(int e
+ 	}
+ 	__set_bit(event, pending);
+ 	spin_unlock_irqrestore(lock, flags);
+-	scsi_queue_work(shost, work);
++
++	spin_lock_irqsave(&sas_ha->state_lock, flags);
++	if (sas_ha->state != SAS_HA_UNREGISTERED) {
++		scsi_queue_work(sas_ha->core.shost, work);
++	}
++	spin_unlock_irqrestore(&sas_ha->state_lock, flags);
+ }
+ 
+ static inline void sas_begin_event(int event, spinlock_t *lock,
+diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+index c834263..ca39392 100644
+--- a/include/scsi/libsas.h
++++ b/include/scsi/libsas.h
+@@ -323,12 +323,20 @@ struct sas_ha_event {
+ 	struct sas_ha_struct *ha;
+ };
+ 
++enum sas_ha_state {
++	SAS_HA_REGISTERED,
++	SAS_HA_UNREGISTERED
++};
++
+ struct sas_ha_struct {
+ /* private: */
+ 	spinlock_t       event_lock;
+ 	struct sas_ha_event ha_events[HA_NUM_EVENTS];
+ 	unsigned long	 pending;
+ 
++	enum sas_ha_state state;
++	spinlock_t 	  state_lock;
++
+ 	struct scsi_core core;
+ 
+ /* public: */
