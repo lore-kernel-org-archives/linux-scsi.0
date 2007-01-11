@@ -1,61 +1,54 @@
-From: Jean-Max Reymond <jmreymond@ckr-solutions.com>
-Subject: no disk drive detected at boot time
-Date: Thu, 11 Jan 2007 12:11:15 +0100
-Message-ID: <45A61B53.1040700@ckr-solutions.com>
+From: Tarjei Huse <tarjei@scanventure.no>
+Subject: Adaptect 9405w: What is the best solution?
+Date: Thu, 11 Jan 2007 12:02:54 +0100
+Message-ID: <45A6195E.7020103@scanventure.no>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------010304020102000104070103"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from postfix1-g20.free.fr ([212.27.60.42]:46450 "EHLO
-	postfix1-g20.free.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030277AbXAKLMT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Jan 2007 06:12:19 -0500
-Received: from smtp1-g19.free.fr (smtp1-g19.free.fr [212.27.42.27])
-	by postfix1-g20.free.fr (Postfix) with ESMTP id 00388797181
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 12:12:18 +0100 (CET)
-Received: from [192.168.0.32] (pbp87.dyndns.org [82.243.162.80])
-	by smtp1-g19.free.fr (Postfix) with ESMTP id 584A69B6B4
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 12:11:17 +0100 (CET)
+Received: from mail2.bergfald.no ([213.158.252.226]:1695 "EHLO
+	mail2.bergfald.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030276AbXAKLYI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Jan 2007 06:24:08 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by mail2.bergfald.no (Postfix) with ESMTP id A6447296F71
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 12:03:01 +0100 (CET)
+Received: from mail2.bergfald.no ([127.0.0.1])
+ by localhost (mail2 [127.0.0.1]) (amavisd-new, port 10024) with ESMTP
+ id 18247-04 for <linux-scsi@vger.kernel.org>;
+ Thu, 11 Jan 2007 12:02:54 +0100 (CET)
+Received: from [192.168.6.100] (box80-64-200-29.static.sdsl.no [80.64.200.29])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mail2.bergfald.no (Postfix) with ESMTP id 30C1B296F6A
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 12:02:54 +0100 (CET)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------010304020102000104070103
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
+Hi, I'm working on getting Linux to use my SATA drives on an IBM x306 running a HostRaid controller that uses the adaptech 9405w chipset.
 
-hi,
-The computer is an DELL 1600SC with SATA RAID.
-At boot time, no disk are detected.
-I have tried with Ubuntu Edgy and Fedora Core 6 and I have the same troubles. Fedora Core 2 is running on the computer.
-it seems that Dell CERC ATA100/4ch is not supported by any driver.
-see
-http://www.mail-archive.com/debian-kernel@lists.debian.org/msg20989.html
+I found this thread on the list:
+ http://thread.gmane.org/gmane.linux.scsi/29040/focus=29040
+
+What I'm wondering about is:
+a) Where can I get the patches that mr Tuikov maintains for this chipset? 
+b) Are they maintained wrt to different kernel versions, i.e. do they apply cleanly to a 2.6.20 or 2.6.16 kernel? 
+
+c) In the thread Darrick Wong refers to another branch[1] that contains  (according to him) a lot of fixes for this chipset. Is that branch confirmed to work with my chipset?
 
 
+My main goal is to get this box up and running using debian or ubuntu. I have managed to get it to run the debian 2.6.9 kernel as outlined in [2] using the adp94xx driver, but I cannot get that driver to compile on newer kernels.
 
---------------010304020102000104070103
-Content-Type: text/x-vcard; charset=utf-8;
- name="jmreymond.vcf"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="jmreymond.vcf"
+I have also tried to compile the latest rc of the 2.6.20 kernel and loaded up the aic94xx driver + firmware. I then ended up getting the same errors that started the above mentioned thread on this list.
 
-begin:vcard
-fn:Jean-Max Reymond
-n:Reymond;Jean-Max
-org:CKR Solutions Open Source
-email;internet:jmreymond@ckr-solutions.com
-title:Responsable technique
-tel;work:08 71 03 25 11
-tel;fax:08 21 74 92 65
-tel;cell:06 16 94 25 11
-note:jabber: jmreymond@jabber.fr
-x-mozilla-html:FALSE
-url:http://www.ckr-solutions.com
-version:2.1
-end:vcard
+So what is the best solution here? Has anyone managed to get a newer kernel to run on this chipset?
+
+1. http://www.kernel.org/git/?p=linux/kernel/git/jejb/aic94xx-sas-2.6.git;a=summary
+2. http://www.jimmy.co.at/weblog/?p=71
+
+Kind regards and thanks for any input.
+Tarjei Huse
 
 
---------------010304020102000104070103--
+
