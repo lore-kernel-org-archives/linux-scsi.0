@@ -1,24 +1,24 @@
 From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: [PATCH 19/21] libsas: phy port lock needs irq spinlocks
-Date: Thu, 11 Jan 2007 14:15:40 -0800
-Message-ID: <20070111221540.3543.85507.stgit@elm3a70.beaverton.ibm.com>
+Subject: [PATCH 17/21] libsas: sysfs phy control attributes should not be S_IWUGO
+Date: Thu, 11 Jan 2007 14:15:35 -0800
+Message-ID: <20070111221535.3543.1571.stgit@elm3a70.beaverton.ibm.com>
 References: <20070111221443.3543.95584.stgit@elm3a70.beaverton.ibm.com>
 Content-Type: text/plain; charset=utf-8; format=fixed
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:35590 "EHLO e5.ny.us.ibm.com"
+Received: from e5.ny.us.ibm.com ([32.97.182.145]:35575 "EHLO e5.ny.us.ibm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932184AbXAKWPX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Jan 2007 17:15:23 -0500
+	id S932177AbXAKWPV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Jan 2007 17:15:21 -0500
 Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e5.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id l0BMFMWY026533
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 17:15:22 -0500
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay04.pok.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id l0BMFK0u284382
+	by e5.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id l0BMFKdX026455
 	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 17:15:20 -0500
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l0BMFKLq019187
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 17:15:20 -0500
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by d01relay04.pok.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id l0BMFF3q135342
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 17:15:15 -0500
+Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
+	by d01av03.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l0BMFErt003881
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 17:15:15 -0500
 In-Reply-To: <20070111221443.3543.95584.stgit@elm3a70.beaverton.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -26,101 +26,31 @@ To: djwong@us.ibm.com, linux-scsi@vger.kernel.org
 Cc: alexisb@us.ibm.com
 
 
-Convert the phy port locks to use irq spinlocks.
+Allowing the phy reset controls to be world-triggerable does not seem like
+a terribly good idea because SAS devices can be disrupted (and ATA devices
+are really disrupted) by a phy reset.  By default only root should be able
+to do things like that.
 
 Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
 ---
 
- drivers/scsi/libsas/sas_port.c      |   12 +++++++-----
- drivers/scsi/libsas/sas_scsi_host.c |    5 +++--
- 2 files changed, 10 insertions(+), 7 deletions(-)
+ drivers/scsi/scsi_transport_sas.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_port.c b/drivers/scsi/libsas/sas_port.c
-index 971c37c..a796ae3 100644
---- a/drivers/scsi/libsas/sas_port.c
-+++ b/drivers/scsi/libsas/sas_port.c
-@@ -42,6 +42,7 @@ static void sas_form_port(struct asd_sas
- 	struct asd_sas_port *port = phy->port;
- 	struct sas_internal *si =
- 		to_sas_internal(sas_ha->core.shost->transportt);
-+	unsigned long flags;
+diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
+index e57b02e..bfbcf5f 100644
+--- a/drivers/scsi/scsi_transport_sas.c
++++ b/drivers/scsi/scsi_transport_sas.c
+@@ -1446,10 +1446,10 @@ #define SETUP_OPTIONAL_PHY_ATTRIBUTE(fie
+ 	SETUP_TEMPLATE(phy_attrs, field, S_IRUGO, i->f->func)
  
- 	if (port) {
- 		if (memcmp(port->attached_sas_addr, phy->attached_sas_addr,
-@@ -56,7 +57,7 @@ static void sas_form_port(struct asd_sas
- 	}
+ #define SETUP_PHY_ATTRIBUTE_WRONLY(field)				\
+-	SETUP_TEMPLATE(phy_attrs, field, S_IWUGO, 1)
++	SETUP_TEMPLATE(phy_attrs, field, S_IWUSR, 1)
  
- 	/* find a port */
--	spin_lock(&sas_ha->phy_port_lock);
-+	spin_lock_irqsave(&sas_ha->phy_port_lock, flags);
- 	for (i = 0; i < sas_ha->num_phys; i++) {
- 		port = sas_ha->sas_port[i];
- 		spin_lock(&port->phy_list_lock);
-@@ -78,7 +79,7 @@ static void sas_form_port(struct asd_sas
- 	if (i >= sas_ha->num_phys) {
- 		printk(KERN_NOTICE "%s: couldn't find a free port, bug?\n",
- 		       __FUNCTION__);
--		spin_unlock(&sas_ha->phy_port_lock);
-+		spin_unlock_irqrestore(&sas_ha->phy_port_lock, flags);
- 		return;
- 	}
+ #define SETUP_OPTIONAL_PHY_ATTRIBUTE_WRONLY(field, func)		\
+-	SETUP_TEMPLATE(phy_attrs, field, S_IWUGO, i->f->func)
++	SETUP_TEMPLATE(phy_attrs, field, S_IWUSR, i->f->func)
  
-@@ -105,7 +106,7 @@ static void sas_form_port(struct asd_sas
- 	} else
- 		port->linkrate = max(port->linkrate, phy->linkrate);
- 	spin_unlock(&port->phy_list_lock);
--	spin_unlock(&sas_ha->phy_port_lock);
-+	spin_unlock_irqrestore(&sas_ha->phy_port_lock, flags);
- 
- 	if (!port->port) {
- 		port->port = sas_port_alloc(phy->phy->dev.parent, port->id);
-@@ -137,6 +138,7 @@ void sas_deform_port(struct asd_sas_phy 
- 	struct asd_sas_port *port = phy->port;
- 	struct sas_internal *si =
- 		to_sas_internal(sas_ha->core.shost->transportt);
-+	unsigned long flags;
- 
- 	if (!port)
- 		return;		  /* done by a phy event */
-@@ -155,7 +157,7 @@ void sas_deform_port(struct asd_sas_phy 
- 	if (si->dft->lldd_port_deformed)
- 		si->dft->lldd_port_deformed(phy);
- 
--	spin_lock(&sas_ha->phy_port_lock);
-+	spin_lock_irqsave(&sas_ha->phy_port_lock, flags);
- 	spin_lock(&port->phy_list_lock);
- 
- 	list_del_init(&phy->port_phy_el);
-@@ -174,7 +176,7 @@ void sas_deform_port(struct asd_sas_phy 
- 		port->phy_mask = 0;
- 	}
- 	spin_unlock(&port->phy_list_lock);
--	spin_unlock(&sas_ha->phy_port_lock);
-+	spin_unlock_irqrestore(&sas_ha->phy_port_lock, flags);
- 
- 	return;
- }
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index f867455..8a1b98e 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -589,8 +589,9 @@ struct domain_device *sas_find_dev_by_rp
- 	struct sas_ha_struct *ha = SHOST_TO_SAS_HA(shost);
- 	struct domain_device *found_dev = NULL;
- 	int i;
-+	unsigned long flags;
- 
--	spin_lock(&ha->phy_port_lock);
-+	spin_lock_irqsave(&ha->phy_port_lock, flags);
- 	for (i = 0; i < ha->num_phys; i++) {
- 		struct asd_sas_port *port = ha->sas_port[i];
- 		struct domain_device *dev;
-@@ -606,7 +607,7 @@ struct domain_device *sas_find_dev_by_rp
- 		spin_unlock(&port->dev_list_lock);
- 	}
-  found:
--	spin_unlock(&ha->phy_port_lock);
-+	spin_unlock_irqrestore(&ha->phy_port_lock, flags);
- 
- 	return found_dev;
- }
+ #define SETUP_END_DEV_ATTRIBUTE(field)					\
+ 	SETUP_TEMPLATE(end_dev_attrs, field, S_IRUGO, 1)
