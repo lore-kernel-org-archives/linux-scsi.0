@@ -1,55 +1,51 @@
-From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: Re: Adaptect 9405w: What is the best solution?
-Date: Thu, 11 Jan 2007 12:08:23 -0800
-Message-ID: <45A69937.8030400@us.ibm.com>
-References: <45A6195E.7020103@scanventure.no> <45A6570C.3090308@torque.net> <45A6906D.3040805@us.ibm.com> <45A694A1.6010400@scanventure.no>
-Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: no utility / method to show association between host bus	adapter
+ and non-sg BLOCK devices
+Date: Thu, 11 Jan 2007 15:15:18 -0500
+Message-ID: <45A69AD6.60207@torque.net>
+References: <8260533.post@talk.nabble.com> <45A53290.1060400@torque.net> <45A62C32.8E7F.00B8.0@novell.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.152]:58743 "EHLO
-	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751460AbXAKUIe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Jan 2007 15:08:34 -0500
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e34.co.us.ibm.com (8.13.8/8.12.11) with ESMTP id l0BK8Pm2017979
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 15:08:25 -0500
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id l0BK8PeQ512198
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 13:08:25 -0700
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l0BK8OXX029606
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 13:08:25 -0700
-In-Reply-To: <45A694A1.6010400@scanventure.no>
+Received: from pentafluge.infradead.org ([213.146.154.40]:46108 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751469AbXAKUP1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Jan 2007 15:15:27 -0500
+In-Reply-To: <45A62C32.8E7F.00B8.0@novell.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tarjei Huse <tarjei@scanventure.no>
-Cc: dougg@torque.net, linux-scsi@vger.kernel.org, "Wu, Gilbert" <Gilbert_Wu@adaptec.com>, "Chim, Ed" <ed_chim@adaptec.com>, Alexis Bruemmer <alexisb@us.ibm.com>
+To: Thayne Harmon <THARMON@novell.com>
+Cc: linux-scsi@vger.kernel.org
 
-Tarjei Huse wrote:
+Thayne Harmon wrote:
+> Gentlemen,
+> 
+> hwinfo, lshal, sysfs do not show the relationship for non-sg BLOCK devices with there 
+> associated Host Bus Adapter.
 
-> Ok, I haven't tested a git tree yet, but what you're saying is that I
-> should download just this git tree and use it, right?
+All devices (i.e. logical units) have a 4 element tuple
+associated with them and the first element is the host
+number. A HBA contains one or more hosts. Then you can
+datamine in /sys/class/scsi_host/host<n> for whatever
+information you want.
 
-I suppose you could do that with some patch massaging, though at the
-moment the patches are based off 2.6.20-rc4 + scsi-misc + scsi-rc-fixes
-+ aic94xx-sas and will probably generate quite a bit of fuzz when
-applied against anything else.
+> Do you know of a utility or method that can show this?
 
-> http://www.kernel.org/git/?p=linux/kernel/git/jejb/aic94xx-sas-2.6.git;a=summary
-> Or should I just download the the patches you mention and
+May I suggest lsscsi. That won't help you in the lk 2.4
+series and earlier though There are other methods by
+which the sg device corresponding to a "non-sg" block
+device (e.g. /dev/sdc) can be found.
 
-...and?  I think your message got truncated?
+> Example is the HP/Compaq CCISS block driver.
+> 
+> The HBA and devices are listed, but no association is given or can be determine, 
+> only by the user knowing which is which.
+> 
+> The kernel certainly knows, surely the above apps could be made to 
+> determine this or some utility exits that will show this?
 
-> What patches? Are they related to the aic driver or are they related to
-> other things you are testing? (i.e. do I run a risk by using them?
+See http://www.torque.net/scsi/lsscsi.html
 
-All of those patches fix problems seen while testing/beating/exercising
-the aic94xx driver.
-
-> Also, when will this work land in the mainline kernel tree?
-
-Hopefully sooner than later.
-
---D
+Doug Gilbert
