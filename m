@@ -1,62 +1,126 @@
 From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: [PATCH 00/21] Roll-up of libsas and aic94xx patches
-Date: Thu, 11 Jan 2007 17:14:25 -0500
-Message-ID: <200701112214.l0BMEP9v011652@d01av01.pok.ibm.com>
+Subject: [PATCH 01/21] libsas: Clean up rphys/port dev list after a discovery error.
+Date: Thu, 11 Jan 2007 14:14:49 -0800
+Message-ID: <20070111221449.3543.23480.stgit@elm3a70.beaverton.ibm.com>
+References: <20070111221443.3543.95584.stgit@elm3a70.beaverton.ibm.com>
+Content-Type: text/plain; charset=utf-8; format=fixed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:35246 "EHLO e5.ny.us.ibm.com"
+Received: from e5.ny.us.ibm.com ([32.97.182.145]:35267 "EHLO e5.ny.us.ibm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751492AbXAKWO2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Jan 2007 17:14:28 -0500
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e5.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id l0BMEQdR025840
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 17:14:26 -0500
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by d01relay04.pok.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id l0BMEQbE296500
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 17:14:26 -0500
-Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
-	by d01av01.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l0BMEQAX011669
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 17:14:26 -0500
+	id S1751510AbXAKWOa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Jan 2007 17:14:30 -0500
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e5.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id l0BMET6U025852
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 17:14:29 -0500
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay02.pok.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id l0BMETBK243852
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 17:14:29 -0500
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l0BMETnt016466
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 17:14:29 -0500
+In-Reply-To: <20070111221443.3543.95584.stgit@elm3a70.beaverton.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Darrick J. Wong" <djwong@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Alexis Bruemmer <alexisb@us.ibm.com>
+To: djwong@us.ibm.com, linux-scsi@vger.kernel.org
+Cc: alexisb@us.ibm.com
 
-Hi all,
 
-This is a roll-up of all of my uncommitted patches against libsas
-and aic94xx to date.  There is only one new patch since last month,
-which makes aic94xx work with the async SCSI scanning code.
+sas_get_port_device assigns a rphy to a domain device in anticipation
+of finding a disk.  When a discovery error occurs in
+sas_discover_{sata,sas,expander}*, however, we need to clean up that
+rphy and the port device list so that we don't GPF.  In addition, we
+need to check the result of the second sas_notify_lldd_dev_found.
+This patch seems ok on a x260, x366 and x206m.
 
-[excerpt from last month's message]
+Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
+---
 
-It has been a while since I posted the last batch of patches against
-libsas and aic94xx.  In that time, we've been working with Adaptec
-engineers to stabilize the driver under disk stress workloads and reboot
-tests, and these patches represent the results of this work and a few
-other cleanups that have been made along the way.  Each patch has its
-own preamble description, but I'd like to call attention to two of the
-larger shifts.
+ drivers/scsi/libsas/sas_discover.c |   39 ++++++++++++++++++++++++++++++------
+ 1 files changed, 33 insertions(+), 6 deletions(-)
 
-Adaptec's sequencer engineers pointed out that a few of the assumptions
-that I made about SCB return were invalid, which forced me to rewrite
-much of the REQ_TASK_ABORT and REQ_DEVICE RESET code to move all of the
-ABORT TASK code into the SAS EH.  By concentrating all error handling in
-the EH, the REQ_TASK_ABORT case is less efficient, but the race
-conditions and other strange nits that I'd been seeing went away.  In
-particular, libsas now handles the case where a sas_task causes the
-controller to send both a REQ_TASK_ABORT ESCB and a CHECK CONDITION SCB
-response.  These changes are in patches 10-13.
-
-The second major set of changes (14-16) fix the insmod/rmmod and pounder
-stability problems by performing correct device memory initialization
-and locking device descriptor updates to avoid corrupting the controller
-memory.
-
-These patches should apply in number order cleanly against 2.6.20-rc4 +
-scsi_misc + scsi-rc-fixes.  We've been running insmod/rmmod and pounder
-tests on x260, x206m and x366 machines for several days without problems.
-Hopefully these patches are ready for more widespread testing.
-
-(Apologies for any stgit mail misconfiguration on my part.)
-
---D
+diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
+index fb7df7b..21f538e 100644
+--- a/drivers/scsi/libsas/sas_discover.c
++++ b/drivers/scsi/libsas/sas_discover.c
+@@ -548,7 +548,7 @@ int sas_discover_sata(struct domain_devi
+ 
+ 	res = sas_notify_lldd_dev_found(dev);
+ 	if (res)
+-		return res;
++		goto out_err2;
+ 
+ 	switch (dev->dev_type) {
+ 	case SATA_DEV:
+@@ -560,11 +560,25 @@ int sas_discover_sata(struct domain_devi
+ 	default:
+ 		break;
+ 	}
++	if (res)
++		goto out_err;
+ 
+ 	sas_notify_lldd_dev_gone(dev);
+-	if (!res) {
+-		sas_notify_lldd_dev_found(dev);
+-	}
++	res = sas_notify_lldd_dev_found(dev);
++	if (res)
++		goto out_err2;
++
++	res = sas_rphy_add(dev->rphy);
++	if (res)
++		goto out_err;
++
++	return res;
++
++out_err:
++	sas_notify_lldd_dev_gone(dev);
++out_err2:
++	sas_rphy_free(dev->rphy);
++	dev->rphy = NULL;
+ 	return res;
+ }
+ 
+@@ -580,7 +594,7 @@ int sas_discover_end_dev(struct domain_d
+ 
+ 	res = sas_notify_lldd_dev_found(dev);
+ 	if (res)
+-		return res;
++		goto out_err2;
+ 
+ 	res = sas_rphy_add(dev->rphy);
+ 	if (res)
+@@ -589,12 +603,21 @@ int sas_discover_end_dev(struct domain_d
+ 	/* do this to get the end device port attributes which will have
+ 	 * been scanned in sas_rphy_add */
+ 	sas_notify_lldd_dev_gone(dev);
+-	sas_notify_lldd_dev_found(dev);
++	res = sas_notify_lldd_dev_found(dev);
++	if (res)
++		goto out_err3;
+ 
+ 	return 0;
+ 
+ out_err:
+ 	sas_notify_lldd_dev_gone(dev);
++out_err2:
++	sas_rphy_free(dev->rphy);
++	dev->rphy = NULL;
++	return res;
++out_err3:
++	sas_rphy_delete(dev->rphy);
++	dev->rphy = NULL;
+ 	return res;
+ }
+ 
+@@ -686,6 +709,10 @@ static void sas_discover_domain(struct w
+ 	}
+ 
+ 	if (error) {
++		spin_lock(&port->dev_list_lock);
++		list_del_init(&port->port_dev->dev_list_node);
++		spin_unlock(&port->dev_list_lock);
++
+ 		kfree(port->port_dev); /* not kobject_register-ed yet */
+ 		port->port_dev = NULL;
+ 	}
