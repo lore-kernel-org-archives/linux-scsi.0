@@ -1,51 +1,61 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: no utility / method to show association between host bus	adapter
- and non-sg BLOCK devices
-Date: Thu, 11 Jan 2007 15:15:18 -0500
-Message-ID: <45A69AD6.60207@torque.net>
-References: <8260533.post@talk.nabble.com> <45A53290.1060400@torque.net> <45A62C32.8E7F.00B8.0@novell.com>
-Reply-To: dougg@torque.net
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: [PATCH] mptbase: Reset ioc initiator after PCI resume
+Date: Thu, 11 Jan 2007 13:25:57 -0800
+Message-ID: <45A6AB65.1000002@us.ibm.com>
+References: <452D7E8B.6000907@us.ibm.com>
+Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:46108 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751469AbXAKUP1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Jan 2007 15:15:27 -0500
-In-Reply-To: <45A62C32.8E7F.00B8.0@novell.com>
+Received: from e32.co.us.ibm.com ([32.97.110.150]:58527 "EHLO
+	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751484AbXAKV0A (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Jan 2007 16:26:00 -0500
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e32.co.us.ibm.com (8.13.8/8.12.11) with ESMTP id l0BLOlMa005627
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 16:24:47 -0500
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by westrelay02.boulder.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id l0BLPwCK554892
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 14:25:58 -0700
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l0BLPwXX025809
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 14:25:58 -0700
+In-Reply-To: <452D7E8B.6000907@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Thayne Harmon <THARMON@novell.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, Eric Moore <eric.moore@lsil.com>
 
-Thayne Harmon wrote:
-> Gentlemen,
-> 
-> hwinfo, lshal, sysfs do not show the relationship for non-sg BLOCK devices with there 
-> associated Host Bus Adapter.
+It appears that the LSI SAS 1064E chip needs to be reset after a
+suspend/resume cycle before the driver attempts further communications with
+the chip.  This patch gets rid of these error messages:
 
-All devices (i.e. logical units) have a 4 element tuple
-associated with them and the first element is the host
-number. A HBA contains one or more hosts. Then you can
-datamine in /sys/class/scsi_host/host<n> for whatever
-information you want.
+mptbase: ioc0: ERROR - Invalid IOC facts reply, msgLength=0 offsetof=6!
 
-> Do you know of a utility or method that can show this?
+after a system wakes up from sleep.  I've also tested it on a 53c1030 chip
+with no observable regressions.
 
-May I suggest lsscsi. That won't help you in the lk 2.4
-series and earlier though There are other methods by
-which the sg device corresponding to a "non-sg" block
-device (e.g. /dev/sdc) can be found.
+Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
+---
 
-> Example is the HP/Compaq CCISS block driver.
-> 
-> The HBA and devices are listed, but no association is given or can be determine, 
-> only by the user knowing which is which.
-> 
-> The kernel certainly knows, surely the above apps could be made to 
-> determine this or some utility exits that will show this?
+ drivers/message/fusion/mptbase.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-See http://www.torque.net/scsi/lsscsi.html
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index b3f28a0..b228e4c 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -1545,6 +1545,12 @@ mpt_resume(struct pci_dev *pdev)
+ 		(mpt_GetIocState(ioc, 1) >> MPI_IOC_STATE_SHIFT),
+ 		CHIPREG_READ32(&ioc->chip->Doorbell));
+ 
++	/* put ioc into READY_STATE */
++	if(SendIocReset(ioc, MPI_FUNCTION_IOC_MESSAGE_UNIT_RESET, CAN_SLEEP)) {
++		printk(MYIOC_s_ERR_FMT
++		"pci-resume:  IOC msg unit reset failed!\n", ioc->name);
++	}
++
+ 	/* bring ioc to operational state */
+ 	if ((recovery_state = mpt_do_ioc_recovery(ioc,
+ 	    MPT_HOSTEVENT_IOC_RECOVER, CAN_SLEEP)) != 0) {
 
-Doug Gilbert
