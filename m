@@ -1,21 +1,21 @@
 From: "Darrick J. Wong" <djwong@us.ibm.com>
 Subject: [PATCH 00/21] Roll-up of libsas and aic94xx patches
-Date: Thu, 11 Jan 2007 17:13:09 -0500
-Message-ID: <200701112213.l0BMD9gk013581@d01av04.pok.ibm.com>
+Date: Thu, 11 Jan 2007 17:14:25 -0500
+Message-ID: <200701112214.l0BMEP9v011652@d01av01.pok.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.144]:56820 "EHLO e4.ny.us.ibm.com"
+Received: from e5.ny.us.ibm.com ([32.97.182.145]:35246 "EHLO e5.ny.us.ibm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751447AbXAKWNN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Jan 2007 17:13:13 -0500
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e4.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id l0BMDAcP025981
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 17:13:10 -0500
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay02.pok.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id l0BMD9cZ297722
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 17:13:09 -0500
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l0BMD9KP013599
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 17:13:09 -0500
+	id S1751492AbXAKWO2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Jan 2007 17:14:28 -0500
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e5.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id l0BMEQdR025840
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 17:14:26 -0500
+Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by d01relay04.pok.ibm.com (8.13.6/8.13.6/NCO v8.1.1) with ESMTP id l0BMEQbE296500
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 17:14:26 -0500
+Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
+	by d01av01.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l0BMEQAX011669
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Jan 2007 17:14:26 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Darrick J. Wong" <djwong@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
