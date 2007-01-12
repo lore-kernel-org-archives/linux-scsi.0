@@ -1,92 +1,81 @@
-From: Jean-Max Reymond <jmreymond@ckr-solutions.com>
-Subject: Re: no disk drive detected at boot time
-Date: Fri, 12 Jan 2007 15:00:48 +0100
-Message-ID: <45A79490.8050309@ckr-solutions.com>
-References: <45A61B53.1040700@ckr-solutions.com>
+From: "Qi, Yanling" <Yanling.Qi@lsi.com>
+Subject: mptfc parallel device scan and modprobe
+Date: Fri, 12 Jan 2007 14:36:35 -0700
+Message-ID: <0F08E10B769EAF4EA2C43A573B8CC87F824A83@NAMAIL3.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------010002010803030406070106"
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp8-g19.free.fr ([212.27.42.65]:52101 "EHLO smtp8-g19.free.fr"
+Received: from mail0.lsil.com ([147.145.40.20]:48765 "EHLO mail0.lsil.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750816AbXALOBE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Jan 2007 09:01:04 -0500
-Received: from [192.168.0.32] (pbp87.dyndns.org [82.243.162.80])
-	by smtp8-g19.free.fr (Postfix) with ESMTP id 1C37E54CD
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Jan 2007 15:01:01 +0100 (CET)
-In-Reply-To: <45A61B53.1040700@ckr-solutions.com>
+	id S1030459AbXALVgi convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Jan 2007 16:36:38 -0500
+Received: from milmhbs0.lsil.com (mhbs.lsil.com [147.145.1.30])
+	by mail0.lsil.com (8.12.8/8.12.8) with ESMTP id l0CLZAG0001926
+	for <linux-scsi@vger.kernel.org>; Fri, 12 Jan 2007 13:35:10 -0800 (PST)
+Received: from namail.ad.lsil.com (namail.co.lsil.com [172.21.36.18])
+	by milmhbs0.lsil.com (8.12.11/8.12.11) with ESMTP id l0CLabNJ018474
+	for <linux-scsi@vger.kernel.org>; Fri, 12 Jan 2007 13:36:37 -0800
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: "Hebsur, Shailendra" <Shailendra.Hebsur@lsi.com>, "Dachepalli, Sudhir" <Sudhir.Dachepalli@lsi.com>, "Stout, Christina" <Christina.Stout@lsi.com>
 
-This is a multi-part message in MIME format.
---------------010002010803030406070106
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 8bit
+Hi All,
 
-Jean-Max Reymond a écrit :
-> hi,
-> The computer is an DELL 1600SC with SATA RAID.
-> At boot time, no disk are detected.
-> I have tried with Ubuntu Edgy and Fedora Core 6 and I have the same 
-> troubles. Fedora Core 2 is running on the computer.
-> it seems that Dell CERC ATA100/4ch is not supported by any driver.
-> see
-> http://www.mail-archive.com/debian-kernel@lists.debian.org/msg20989.html
-> 
-> 
+ 
 
-the output of dmesg when running Fedora Core 2
-megaraid is nicely found
+I didn't follow the thread and progress of the parallel device scan at
+FC LLD driver module loading time in the list. I would like to
+understand the expected behavior of the parallel scan and
+insmod/modprobe.
 
-megaraid: found 0x101e:0x1960:bus 1:slot 2:func 0
-scsi3:Found MegaRAID controller at 0xe0822000, IRQ:201
-megaraid: [6.62:1.03] detected 1 logical drives.
-megaraid: supports extended CDBs.
-megaraid: channel[0] is raid.
-megaraid: channel[1] is raid.
-megaraid: channel[2] is raid.
-megaraid: channel[3] is raid.
-scsi3 : LSI Logic MegaRAID 6.62 254 commands 16 targs 7 chans 7 luns
-scsi3: scanning scsi channel 0 for logical drives.
-   Vendor: MegaRAID  Model: LD 0 RAID5  714G  Rev: 6.62
-   Type:   Direct-Access                      ANSI SCSI revision: 02
-SCSI device sda: 1464287232 512-byte hdwr sectors (749715 MB)
-sda: asking for cache data failed
-sda: assuming drive cache: write through
-SCSI device sda: 1464287232 512-byte hdwr sectors (749715 MB)
-sda: asking for cache data failed
-sda: assuming drive cache: write through
-  sda: sda1 sda2 sda3 sda4 < sda5 >
-Attached scsi disk sda at scsi3, channel 0, id 0, lun 0
-scsi3: scanning scsi channel 1 for logical drives.
-scsi3: scanning scsi channel 2 for logical drives.
-scsi3: scanning scsi channel 4 [P0] for physical devices.
-scsi3: scanning scsi channel 5 [P1] for physical devices.
-scsi3: scanning scsi channel 6 [P2] for physical devices.
-scsi3: scanning scsi channel 7 [P3] for physical devices
+ 
 
---------------010002010803030406070106
-Content-Type: text/x-vcard; charset=utf-8;
- name="jmreymond.vcf"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="jmreymond.vcf"
+I have a configuration where I have 4 LSI FC ports. When I insmod the
+mptfc driver, the insmod process returned very quickly. After the insmod
+is finished, only a few scsi-devices are discovered. The 4
+scan-work-queue threads keep running to discover the rest of the
+devices.
 
-begin:vcard
-fn:Jean-Max Reymond
-n:Reymond;Jean-Max
-org:CKR Solutions Open Source
-email;internet:jmreymond@ckr-solutions.com
-title:Responsable technique
-tel;work:08 71 03 25 11
-tel;fax:08 21 74 92 65
-tel;cell:06 16 94 25 11
-note:jabber: jmreymond@jabber.fr
-x-mozilla-html:FALSE
-url:http://www.ckr-solutions.com
-version:2.1
-end:vcard
+ 
 
+I thought the behavior should be
 
---------------010002010803030406070106--
+1.	the module init function kicks off the work-threads to do the
+discovery.
+2.	the module init waits all the work-thread completing the device
+scan
+3.	the module init function returns
+
+ 
+
+If the module init returns before work-threads complete device scanning,
+does it cause problem in high level of the io stack?
+
+ 
+
+Thanks,
+
+ 
+
+Yanling
+
+ 
+
+ 
+
+Yanling Qi
+
+Engenio Storage Group - LSI Logic
+
+512-794-3713 (Office)
+
+512-794-3702 (Fax)
+
+yanling.qi@lsi.com
+
+ 
+
