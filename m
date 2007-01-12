@@ -1,38 +1,37 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: IO transfer limits
-Date: Fri, 12 Jan 2007 01:54:05 +0100 (CET)
-Message-ID: <tkrat.2c7c7f62e5e34ac3@s5r6.in-berlin.de>
-References: <8260533.post@talk.nabble.com> <45A5250E.3020205@cs.wisc.edu>
- <8269227.post@talk.nabble.com> <45A58FA5.2090003@torque.net>
- <45A6620C.3040807@s5r6.in-berlin.de> <45A6B120.7070903@torque.net>
+Date: Thu, 11 Jan 2007 18:17:18 -0700
+Message-ID: <1168564639.2983.42.camel@mulgrave.il.steeleye.com>
+References: <8260533.post@talk.nabble.com> <45A53290.1060400@torque.net>
+	 <8268682.post@talk.nabble.com>
+	 <1168539824.2983.11.camel@mulgrave.il.steeleye.com>
+	 <8284792.post@talk.nabble.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; CHARSET=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:54077 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751559AbXALAyQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Jan 2007 19:54:16 -0500
-In-Reply-To: <45A6B120.7070903@torque.net>
-Content-Disposition: INLINE
+Received: from hancock.steeleye.com ([71.30.118.248]:39631 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932515AbXALBR2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Jan 2007 20:17:28 -0500
+In-Reply-To: <8284792.post@talk.nabble.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: john clyne <clyne@ucar.edu>, linux-scsi@vger.kernel.org
+To: john clyne <clyne@ucar.edu>
+Cc: linux-scsi@vger.kernel.org
 
-Douglas Gilbert wrote:
-> There are cheap external boxes out there that have 1394,
-> USB and (e)SATA interfaces. I wonder what would happen
-> if one tried to use two interfaces connected to different
-> machines at the same time :-)
+On Thu, 2007-01-11 at 11:48 -0800, john clyne wrote:
+> So what's the best course of action for increasing the 512kb IO transfer size
+> limit, changing SCSI_MAX_PHYS_SEGMENTS (currently 128 and apparently can be
+> set no greater than 256), or increasing the page size? Or is there another
+> option.
 
-AFAIK these are all based on the OXUF924 series of bridge chips. Their
-FireWire side supports multiple initiators, at least if OxSemi's
-firmware is used, like all but the very earliest OxSemi SBP-2 target
-devices. However my _guess_ is the different interconnects---FireWire,
-USB, eSATA---cannot be used together at once. (John, sorry for straying
-off the subject.)
--- 
-Stefan Richter
--=====-=-=== ---= -==--
-http://arcgraph.de/sr/
+Well, without knowing the details of what you want to do it's hard to
+say.  Doug offered you a method via SG_IO (albeit involving buffer
+copying); you can just increase the SCSI_MAX_PHYS_SEGMENTS, or you could
+increase the PAGE_SIZE or use an IOMMU.  For a given workload, you'll
+just have to see which works out best in practice.
+
+James
+
 
