@@ -1,81 +1,66 @@
-From: "Qi, Yanling" <Yanling.Qi@lsi.com>
-Subject: mptfc parallel device scan and modprobe
-Date: Fri, 12 Jan 2007 14:36:35 -0700
-Message-ID: <0F08E10B769EAF4EA2C43A573B8CC87F824A83@NAMAIL3.ad.lsil.com>
+From: john clyne <clyne@ucar.edu>
+Subject: Re: IO transfer limits
+Date: Fri, 12 Jan 2007 14:27:22 -0800 (PST)
+Message-ID: <8307532.post@talk.nabble.com>
+References: <8260533.post@talk.nabble.com> <45A5250E.3020205@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:48765 "EHLO mail0.lsil.com"
+Received: from www.nabble.com ([72.21.53.35]:35350 "EHLO talk.nabble.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030459AbXALVgi convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Jan 2007 16:36:38 -0500
-Received: from milmhbs0.lsil.com (mhbs.lsil.com [147.145.1.30])
-	by mail0.lsil.com (8.12.8/8.12.8) with ESMTP id l0CLZAG0001926
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Jan 2007 13:35:10 -0800 (PST)
-Received: from namail.ad.lsil.com (namail.co.lsil.com [172.21.36.18])
-	by milmhbs0.lsil.com (8.12.11/8.12.11) with ESMTP id l0CLabNJ018474
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Jan 2007 13:36:37 -0800
-Content-class: urn:content-classes:message
+	id S1161141AbXALW1X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Jan 2007 17:27:23 -0500
+Received: from [72.21.53.38] (helo=jubjub.nabble.com)
+	by talk.nabble.com with esmtp (Exim 4.50)
+	id 1H5Urq-0003SD-Pg
+	for linux-scsi@vger.kernel.org; Fri, 12 Jan 2007 14:27:22 -0800
+In-Reply-To: <45A5250E.3020205@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: "Hebsur, Shailendra" <Shailendra.Hebsur@lsi.com>, "Dachepalli, Sudhir" <Sudhir.Dachepalli@lsi.com>, "Stout, Christina" <Christina.Stout@lsi.com>
 
-Hi All,
 
- 
+Increasing SCSI_MAX_PHYS_SEGMENTS to 256 has doubled the IO size to 1MB.
+Thanks to all!
 
-I didn't follow the thread and progress of the parallel device scan at
-FC LLD driver module loading time in the list. I would like to
-understand the expected behavior of the parallel scan and
-insmod/modprobe.
+cheers - jc
 
- 
 
-I have a configuration where I have 4 LSI FC ports. When I insmod the
-mptfc driver, the insmod process returned very quickly. After the insmod
-is finished, only a few scsi-devices are discovered. The 4
-scan-work-queue threads keep running to discover the rest of the
-devices.
+Mike Christie wrote:
+> 
+> john clyne wrote:
+>> Can anyone give me some guidance on where in the IO stack I might be
+>> running
+>> into a 512KB limit on IO transfer sizes to an external FC device? I've
+>> checked IO scheduler parameter
+>> (/sys/block/<dev>/queue/{max_sectors_kb,max_hw_sectors_kb}. Both are set
+>> to
+>> 32767. I'm using Qlogic HBAs (qla2312), but I don't see any relevent
+>> parameters. I'm running RHEL 4.0 with a 2.6.9-34 kernel. Any pointers
+>> would
+>> be greatly appreciated.
+>> 
+> 
+> There are also scatterlist limits.
+> 
+> /sys/class/scsi_host/hostX/sg_tablesize is a limit for the number of
+> scatter list entries. For qla2xxx it is 255.
+> 
+> The scsi layer sets the queue's max_phys_segments to 128 by default. I
+> thought there was ia scsi compile time option to increase this, but
+> maybe you have to just modify the SCSI_MAX_PHYS_SEGMENTS define by hand.
+> 
+> So with the default value and with 4 K pages if you end up getting pages
+> that cannot be clustered you will end up with 4K * 128.
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
 
- 
-
-I thought the behavior should be
-
-1.	the module init function kicks off the work-threads to do the
-discovery.
-2.	the module init waits all the work-thread completing the device
-scan
-3.	the module init function returns
-
- 
-
-If the module init returns before work-threads complete device scanning,
-does it cause problem in high level of the io stack?
-
- 
-
-Thanks,
-
- 
-
-Yanling
-
- 
-
- 
-
-Yanling Qi
-
-Engenio Storage Group - LSI Logic
-
-512-794-3713 (Office)
-
-512-794-3702 (Fax)
-
-yanling.qi@lsi.com
-
- 
+-- 
+View this message in context: http://www.nabble.com/IO-transfer-limits-tf2953389.html#a8307532
+Sent from the linux-scsi mailing list archive at Nabble.com.
 
