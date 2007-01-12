@@ -1,37 +1,37 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: IO transfer limits
-Date: Thu, 11 Jan 2007 18:17:18 -0700
-Message-ID: <1168564639.2983.42.camel@mulgrave.il.steeleye.com>
-References: <8260533.post@talk.nabble.com> <45A53290.1060400@torque.net>
-	 <8268682.post@talk.nabble.com>
-	 <1168539824.2983.11.camel@mulgrave.il.steeleye.com>
-	 <8284792.post@talk.nabble.com>
+From: Richard Knutsson <ricknu-0@student.ltu.se>
+Subject: [PATCH] tmscsim.c: Convert pci_module_init() to pci_register_driver()
+Date: Fri, 12 Jan 2007 14:31:51 +0100
+Message-ID: <45A78DC7.6090808@student.ltu.se>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:39631 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932515AbXALBR2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Jan 2007 20:17:28 -0500
-In-Reply-To: <8284792.post@talk.nabble.com>
+Received: from gepetto.dc.ltu.se ([130.240.42.40]:35353 "EHLO
+	gepetto.dc.ltu.se" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751616AbXALNvj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Jan 2007 08:51:39 -0500
+Received: from [130.240.205.31] (thinktank.campus.luth.se [130.240.205.31])
+	by gepetto.dc.ltu.se (8.12.5/8.12.5) with ESMTP id l0CDTcp9013464
+	for <linux-scsi@vger.kernel.org>; Fri, 12 Jan 2007 14:29:38 +0100 (MET)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: john clyne <clyne@ucar.edu>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Thu, 2007-01-11 at 11:48 -0800, john clyne wrote:
-> So what's the best course of action for increasing the 512kb IO transfer size
-> limit, changing SCSI_MAX_PHYS_SEGMENTS (currently 128 and apparently can be
-> set no greater than 256), or increasing the page size? Or is there another
-> option.
+Signed-off-by: Richard Knutsson <ricknu-0@student.ltu.se>
+---
 
-Well, without knowing the details of what you want to do it's hard to
-say.  Doug offered you a method via SG_IO (albeit involving buffer
-copying); you can just increase the SCSI_MAX_PHYS_SEGMENTS, or you could
-increase the PAGE_SIZE or use an IOMMU.  For a given workload, you'll
-just have to see which works out best in practice.
-
-James
+diff --git a/drivers/scsi/tmscsim.c b/drivers/scsi/tmscsim.c
+index fa5382e..ce8845e 100644
+--- a/drivers/scsi/tmscsim.c
++++ b/drivers/scsi/tmscsim.c
+@@ -2681,7 +2681,7 @@ static int __init dc390_module_init(void)
+ 		printk (KERN_INFO "DC390: Using safe settings.\n");
+ 	}
+ 
+-	return pci_module_init(&dc390_driver);
++	return pci_register_driver(&dc390_driver);
+ }
+ 
+ static void __exit dc390_module_exit(void)
 
 
