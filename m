@@ -1,14 +1,11 @@
 From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [PATCH] ieee1394: sbp2: lower block queue alignment requirement
-Date: Sun, 14 Jan 2007 21:14:15 +0100 (CET)
-Message-ID: <tkrat.cad61efa52eb6e56@s5r6.in-berlin.de>
-References: <tkrat.37326df2d568d12d@s5r6.in-berlin.de>
-	<1168802387.2780.1.camel@mulgrave.il.steeleye.com>
+Subject: [PATCH] ieee1394: sbp2: remove bogus "emulated" host flag
+Date: Sun, 14 Jan 2007 19:40:41 +0100 (CET)
+Message-ID: <tkrat.cd304ed480ae458e@s5r6.in-berlin.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <1168802387.2780.1.camel@mulgrave.il.steeleye.com>
 Content-Disposition: INLINE
 List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
 	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
@@ -19,23 +16,27 @@ List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
 	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
 Sender: linux1394-devel-bounces@lists.sourceforge.net
 Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+To: linux1394-devel@lists.sourceforge.net
+Cc: linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 14 Jan, James Bottomley wrote:
-> The block layer currently provides sector (512) byte alignment
-> guarantees.  However, there has been talk in SCSI of reducing that to
-> word (4) since that's what most intelligent PCI controllers can cope
-> with.  If you have any alignment constraints, they should be expressed
-> in the slave configure.
+There is no emulation going on here.
 
-OK, thanks. I will keep the explicit setting of the mask then.
-I actually think that everything should work just fine with 4 bytes
-alignment, but the SBP-2 spec mentiones 8 bytes alignment for the S/G
-tables.  So maybe device firmwares will expect it that way even though
-IEEE 1394 doesn't impose such a restriction even on transfers with a
-payload of a multiple of 8 bytes.
+Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
+---
+Index: linux/drivers/ieee1394/sbp2.c
+===================================================================
+--- linux.orig/drivers/ieee1394/sbp2.c	2007-01-14 15:45:30.000000000 +0100
++++ linux/drivers/ieee1394/sbp2.c	2007-01-14 18:40:08.000000000 +0100
+@@ -304,7 +304,6 @@ static struct scsi_host_template sbp2_sh
+ 	.use_clustering		 = ENABLE_CLUSTERING,
+ 	.cmd_per_lun		 = SBP2_MAX_CMDS,
+ 	.can_queue		 = SBP2_MAX_CMDS,
+-	.emulated		 = 1,
+ 	.sdev_attrs		 = sbp2_sysfs_sdev_attrs,
+ };
+ 
+
 -- 
 Stefan Richter
 -=====-=-=== ---= -===-
