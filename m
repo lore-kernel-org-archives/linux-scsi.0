@@ -1,56 +1,71 @@
-From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: Re: Adaptect 9405w: What is the best solution?
-Date: Mon, 15 Jan 2007 12:50:40 -0800
-Message-ID: <45ABE920.7090304@us.ibm.com>
-References: <45A6195E.7020103@scanventure.no> <45A6570C.3090308@torque.net> <45A6906D.3040805@us.ibm.com> <45A694A1.6010400@scanventure.no> <45A69937.8030400@us.ibm.com> <45A6C33C.8060900@scanventure.no> <45A81BBF.7050104@us.ibm.com> <45AA4A7B.7070607@scanventure.no>
-Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH] ieee1394: sbp2: remove bogus "emulated" host flag
+Date: Mon, 15 Jan 2007 15:40:02 -0500
+Message-ID: <45ABE6A2.10509@torque.net>
+References: <tkrat.cd304ed480ae458e@s5r6.in-berlin.de> <59ad55d30701151141n72e3e99ey509d859c272b8bda@mail.gmail.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:35961 "EHLO
-	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751515AbXAOUuq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Jan 2007 15:50:46 -0500
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e36.co.us.ibm.com (8.13.8/8.12.11) with ESMTP id l0FKoghQ020736
-	for <linux-scsi@vger.kernel.org>; Mon, 15 Jan 2007 15:50:42 -0500
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by westrelay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.2) with ESMTP id l0FKogS4488436
-	for <linux-scsi@vger.kernel.org>; Mon, 15 Jan 2007 13:50:42 -0700
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l0FKof8I013323
-	for <linux-scsi@vger.kernel.org>; Mon, 15 Jan 2007 13:50:41 -0700
-In-Reply-To: <45AA4A7B.7070607@scanventure.no>
+Received: from pentafluge.infradead.org ([213.146.154.40]:43946 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751460AbXAOUkb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Jan 2007 15:40:31 -0500
+In-Reply-To: <59ad55d30701151141n72e3e99ey509d859c272b8bda@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: tarjei@nu.no
-Cc: dougg@torque.net, linux-scsi@vger.kernel.org, "Wu, Gilbert" <Gilbert_Wu@adaptec.com>, "Chim, Ed" <ed_chim@adaptec.com>, Alexis Bruemmer <alexisb@us.ibm.com>
+To: =?UTF-8?B?S3Jpc3RpYW4gSMO4Z3NiZXJn?= <krh@bitplanet.net>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 
-Tarjei Huse wrote:
+Kristian H=C3=B8gsberg wrote:
+> On 1/14/07, Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
+>> There is no emulation going on here.
+> ...
+>=20
+>> -       .emulated                =3D 1,
+>=20
+> Not sure what this flag does, but I copied it over to fw-sbp2.c.  If
+> it's bogus, I guess we should drop it from fw-sbp2.c too.
 
-> Duh! Thanks :-)
-> 
-> After doing as you suggested, and running make oldconfig using the
-> configuration from Ubuntu Dapper (2.6.15-23-server) and the stock Ubuntu
-> Edgy I get the same error when booting the kernel:
-> 
-> PCI: BIOS Bug: MCFG area at e00000000 is not E820-reserved
-> PCI: Not using MMCONFIG
-> PCI Cannot allocate resource region 7 of bridge 0000:00:01.1
-> PCI Cannot allocate resource region 8 of bridge 0000:00:01.1
-> PCI Cannot allocate resource region 9 of bridge 0000:00:01.1
+Kristian,
+The 'emulated' flag dates from the original ide-scsi
+driver (lk 2.0 series or earlier) when some app wanted
+to know if there was a "real" SCSI cd drive attached
+or a fudged one (i.e. ATAPI) via the ide-scsi bridging
+driver. So it is unclear to me why the sbp driver
+(and USB mass storage) sets emulated.
 
-This is a known conflict between the kernel and the BIOS.  As far as I
-know this should not affect the operation of the aic94xx because it is a
-PCIX device, and bridge 0:0:1.1 is a PCIe port.  At least on the x306m...
+Hopefully if any app cares these days there are much
+better ways to find out what the transport is. Also
+now we have the transport the LLD can see
+and the transport the device (i.e. logical unit) can
+see; and they aren't necessarily the same. In the
+case of a CD/DVD drive there is the GET CONFIGURATION
+command for finding out what the lu can see:
+$ sg_get_config /dev/hdc
+  HL-DT-ST  RW/DVD GCC-4242N  0201
+  Peripheral device type: cd/dvd
+No current profile
+=46eatures:
+  Profile list feature
+    version=3D0, persist=3D1, current=3D1 [0x0]
+    available profiles [more recent typically higher in list]:
+      profile: DVD-ROM , currentP=3D0
+      profile: CD-ROM , currentP=3D0
+      profile: CD-R , currentP=3D0
+      profile: CD-RW , currentP=3D0
+  Core feature
+    version=3D0, persist=3D1, current=3D1 [0x1]
+      Physical interface standard: ATAPI
+=2E.....
 
-> Kernel panic - not syncing: VFS: Unable to mount root fs on unknown
-> wn-block(0,0)
-> 
-> Is this some missing compile option or a bug?
+So IMO 'emulated' is best retired.
 
-Perhaps.  Could you send a full output?  It does not appear that the
-aic94xx driver is loading at all...?
+Doug Gilbert
 
---D
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
