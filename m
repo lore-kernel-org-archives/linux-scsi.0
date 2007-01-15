@@ -1,71 +1,52 @@
-From: Douglas Gilbert <dougg@torque.net>
+From: "=?UTF-8?Q?Kristian_H=C3=B8gsberg?=" <krh@bitplanet.net>
 Subject: Re: [PATCH] ieee1394: sbp2: remove bogus "emulated" host flag
-Date: Mon, 15 Jan 2007 15:40:02 -0500
-Message-ID: <45ABE6A2.10509@torque.net>
-References: <tkrat.cd304ed480ae458e@s5r6.in-berlin.de> <59ad55d30701151141n72e3e99ey509d859c272b8bda@mail.gmail.com>
-Reply-To: dougg@torque.net
+Date: Mon, 15 Jan 2007 16:11:04 -0500
+Message-ID: <59ad55d30701151311l10256cccl67ab952f93603b50@mail.gmail.com>
+References: <tkrat.cd304ed480ae458e@s5r6.in-berlin.de>
+	<59ad55d30701151141n72e3e99ey509d859c272b8bda@mail.gmail.com>
+	<45ABE6A2.10509@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:43946 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751460AbXAOUkb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Jan 2007 15:40:31 -0500
-In-Reply-To: <59ad55d30701151141n72e3e99ey509d859c272b8bda@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: =?UTF-8?B?S3Jpc3RpYW4gSMO4Z3NiZXJn?= <krh@bitplanet.net>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
+In-Reply-To: <45ABE6A2.10509@torque.net>
+Content-Disposition: inline
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux1394-devel>
+List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
+List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: linux1394-devel-bounces@lists.sourceforge.net
+Errors-To: linux1394-devel-bounces@lists.sourceforge.net
+To: dougg@torque.net
 Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-Kristian H=C3=B8gsberg wrote:
-> On 1/14/07, Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
->> There is no emulation going on here.
-> ...
->=20
->> -       .emulated                =3D 1,
->=20
-> Not sure what this flag does, but I copied it over to fw-sbp2.c.  If
-> it's bogus, I guess we should drop it from fw-sbp2.c too.
-
-Kristian,
-The 'emulated' flag dates from the original ide-scsi
-driver (lk 2.0 series or earlier) when some app wanted
-to know if there was a "real" SCSI cd drive attached
-or a fudged one (i.e. ATAPI) via the ide-scsi bridging
-driver. So it is unclear to me why the sbp driver
-(and USB mass storage) sets emulated.
-
-Hopefully if any app cares these days there are much
-better ways to find out what the transport is. Also
-now we have the transport the LLD can see
-and the transport the device (i.e. logical unit) can
-see; and they aren't necessarily the same. In the
-case of a CD/DVD drive there is the GET CONFIGURATION
-command for finding out what the lu can see:
-$ sg_get_config /dev/hdc
-  HL-DT-ST  RW/DVD GCC-4242N  0201
-  Peripheral device type: cd/dvd
-No current profile
-=46eatures:
-  Profile list feature
-    version=3D0, persist=3D1, current=3D1 [0x0]
-    available profiles [more recent typically higher in list]:
-      profile: DVD-ROM , currentP=3D0
-      profile: CD-ROM , currentP=3D0
-      profile: CD-R , currentP=3D0
-      profile: CD-RW , currentP=3D0
-  Core feature
-    version=3D0, persist=3D1, current=3D1 [0x1]
-      Physical interface standard: ATAPI
-=2E.....
-
-So IMO 'emulated' is best retired.
-
-Doug Gilbert
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+T24gMS8xNS8wNywgRG91Z2xhcyBHaWxiZXJ0IDxkb3VnZ0B0b3JxdWUubmV0PiB3cm90ZToKPiBL
+cmlzdGlhbiBIw7hnc2Jlcmcgd3JvdGU6Cj4gPiBPbiAxLzE0LzA3LCBTdGVmYW4gUmljaHRlciA8
+c3RlZmFuckBzNXI2LmluLWJlcmxpbi5kZT4gd3JvdGU6Cj4gPj4gVGhlcmUgaXMgbm8gZW11bGF0
+aW9uIGdvaW5nIG9uIGhlcmUuCj4gPiAuLi4KPiA+Cj4gPj4gLSAgICAgICAuZW11bGF0ZWQgICAg
+ICAgICAgICAgICAgPSAxLAo+ID4KPiA+IE5vdCBzdXJlIHdoYXQgdGhpcyBmbGFnIGRvZXMsIGJ1
+dCBJIGNvcGllZCBpdCBvdmVyIHRvIGZ3LXNicDIuYy4gIElmCj4gPiBpdCdzIGJvZ3VzLCBJIGd1
+ZXNzIHdlIHNob3VsZCBkcm9wIGl0IGZyb20gZnctc2JwMi5jIHRvby4KPgo+IEtyaXN0aWFuLAo+
+IFRoZSAnZW11bGF0ZWQnIGZsYWcgZGF0ZXMgZnJvbSB0aGUgb3JpZ2luYWwgaWRlLXNjc2kKPiBk
+cml2ZXIgKGxrIDIuMCBzZXJpZXMgb3IgZWFybGllcikgd2hlbiBzb21lIGFwcCB3YW50ZWQKPiB0
+byBrbm93IGlmIHRoZXJlIHdhcyBhICJyZWFsIiBTQ1NJIGNkIGRyaXZlIGF0dGFjaGVkCj4gb3Ig
+YSBmdWRnZWQgb25lIChpLmUuIEFUQVBJKSB2aWEgdGhlIGlkZS1zY3NpIGJyaWRnaW5nCj4gZHJp
+dmVyLiBTbyBpdCBpcyB1bmNsZWFyIHRvIG1lIHdoeSB0aGUgc2JwIGRyaXZlcgo+IChhbmQgVVNC
+IG1hc3Mgc3RvcmFnZSkgc2V0cyBlbXVsYXRlZC4KLi4uCj4gU28gSU1PICdlbXVsYXRlZCcgaXMg
+YmVzdCByZXRpcmVkLgoKQWgsIHRoYW5rcyBmb3IgdGhlIGV4cGxhbmF0aW9uLiAgSXQgc291bmRz
+IGxpa2UgaXQgZG9lc24ndCBkbyBtdWNoCmhhcm0gd2hhdGV2ZXIgaXQncyBzZXQgdG8uICBCdXQg
+aWYgaXQncyBkZXByZWNhdGVkL3JldGlyZWQsIGxldCdzIGp1c3QKZ2V0IHJpZCBvZiBpdC4KCnRo
+YW5rcywKS3Jpc3RpYW4KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpUYWtlIFN1cnZleXMuIEVhcm4gQ2FzaC4g
+SW5mbHVlbmNlIHRoZSBGdXR1cmUgb2YgSVQKSm9pbiBTb3VyY2VGb3JnZS5uZXQncyBUZWNoc2F5
+IHBhbmVsIGFuZCB5b3UnbGwgZ2V0IHRoZSBjaGFuY2UgdG8gc2hhcmUgeW91cgpvcGluaW9ucyBv
+biBJVCAmIGJ1c2luZXNzIHRvcGljcyB0aHJvdWdoIGJyaWVmIHN1cnZleXMgLSBhbmQgZWFybiBj
+YXNoCmh0dHA6Ly93d3cudGVjaHNheS5jb20vZGVmYXVsdC5waHA/cGFnZT1qb2luLnBocCZwPXNv
+dXJjZWZvcmdlJkNJRD1ERVZERVYKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX18KbWFpbGluZyBsaXN0IGxpbnV4MTM5NC1kZXZlbEBsaXN0cy5zb3VyY2Vmb3Jn
+ZS5uZXQKaHR0cHM6Ly9saXN0cy5zb3VyY2Vmb3JnZS5uZXQvbGlzdHMvbGlzdGluZm8vbGludXgx
+Mzk0LWRldmVsCg==
