@@ -1,16 +1,17 @@
-From: "=?UTF-8?Q?Kristian_H=C3=B8gsberg?=" <krh@bitplanet.net>
-Subject: Re: [PATCH] ieee1394: sbp2: remove bogus "emulated" host flag
-Date: Mon, 15 Jan 2007 16:11:04 -0500
-Message-ID: <59ad55d30701151311l10256cccl67ab952f93603b50@mail.gmail.com>
-References: <tkrat.cd304ed480ae458e@s5r6.in-berlin.de>
-	<59ad55d30701151141n72e3e99ey509d859c272b8bda@mail.gmail.com>
-	<45ABE6A2.10509@torque.net>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] ieee1394: sbp2: lower block queue alignment requirement
+Date: Mon, 15 Jan 2007 15:24:59 -0600
+Message-ID: <1168896299.7708.15.camel@mulgrave.il.steeleye.com>
+References: <tkrat.37326df2d568d12d@s5r6.in-berlin.de>
+	<1168802387.2780.1.camel@mulgrave.il.steeleye.com>
+	<tkrat.cad61efa52eb6e56@s5r6.in-berlin.de>
+	<59ad55d30701151139w6176e785g53404d7b3a42ce6e@mail.gmail.com>
+	<tkrat.8dad811bf4dbb360@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <45ABE6A2.10509@torque.net>
-Content-Disposition: inline
+In-Reply-To: <tkrat.8dad811bf4dbb360@s5r6.in-berlin.de>
 List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
 	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
 List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux1394-devel>
@@ -20,33 +21,41 @@ List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
 	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
 Sender: linux1394-devel-bounces@lists.sourceforge.net
 Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: dougg@torque.net
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: Kristian =?ISO-8859-1?Q?H=F8gsberg?= <krh@bitplanet.net>, linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-T24gMS8xNS8wNywgRG91Z2xhcyBHaWxiZXJ0IDxkb3VnZ0B0b3JxdWUubmV0PiB3cm90ZToKPiBL
-cmlzdGlhbiBIw7hnc2Jlcmcgd3JvdGU6Cj4gPiBPbiAxLzE0LzA3LCBTdGVmYW4gUmljaHRlciA8
-c3RlZmFuckBzNXI2LmluLWJlcmxpbi5kZT4gd3JvdGU6Cj4gPj4gVGhlcmUgaXMgbm8gZW11bGF0
-aW9uIGdvaW5nIG9uIGhlcmUuCj4gPiAuLi4KPiA+Cj4gPj4gLSAgICAgICAuZW11bGF0ZWQgICAg
-ICAgICAgICAgICAgPSAxLAo+ID4KPiA+IE5vdCBzdXJlIHdoYXQgdGhpcyBmbGFnIGRvZXMsIGJ1
-dCBJIGNvcGllZCBpdCBvdmVyIHRvIGZ3LXNicDIuYy4gIElmCj4gPiBpdCdzIGJvZ3VzLCBJIGd1
-ZXNzIHdlIHNob3VsZCBkcm9wIGl0IGZyb20gZnctc2JwMi5jIHRvby4KPgo+IEtyaXN0aWFuLAo+
-IFRoZSAnZW11bGF0ZWQnIGZsYWcgZGF0ZXMgZnJvbSB0aGUgb3JpZ2luYWwgaWRlLXNjc2kKPiBk
-cml2ZXIgKGxrIDIuMCBzZXJpZXMgb3IgZWFybGllcikgd2hlbiBzb21lIGFwcCB3YW50ZWQKPiB0
-byBrbm93IGlmIHRoZXJlIHdhcyBhICJyZWFsIiBTQ1NJIGNkIGRyaXZlIGF0dGFjaGVkCj4gb3Ig
-YSBmdWRnZWQgb25lIChpLmUuIEFUQVBJKSB2aWEgdGhlIGlkZS1zY3NpIGJyaWRnaW5nCj4gZHJp
-dmVyLiBTbyBpdCBpcyB1bmNsZWFyIHRvIG1lIHdoeSB0aGUgc2JwIGRyaXZlcgo+IChhbmQgVVNC
-IG1hc3Mgc3RvcmFnZSkgc2V0cyBlbXVsYXRlZC4KLi4uCj4gU28gSU1PICdlbXVsYXRlZCcgaXMg
-YmVzdCByZXRpcmVkLgoKQWgsIHRoYW5rcyBmb3IgdGhlIGV4cGxhbmF0aW9uLiAgSXQgc291bmRz
-IGxpa2UgaXQgZG9lc24ndCBkbyBtdWNoCmhhcm0gd2hhdGV2ZXIgaXQncyBzZXQgdG8uICBCdXQg
-aWYgaXQncyBkZXByZWNhdGVkL3JldGlyZWQsIGxldCdzIGp1c3QKZ2V0IHJpZCBvZiBpdC4KCnRo
-YW5rcywKS3Jpc3RpYW4KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpUYWtlIFN1cnZleXMuIEVhcm4gQ2FzaC4g
-SW5mbHVlbmNlIHRoZSBGdXR1cmUgb2YgSVQKSm9pbiBTb3VyY2VGb3JnZS5uZXQncyBUZWNoc2F5
-IHBhbmVsIGFuZCB5b3UnbGwgZ2V0IHRoZSBjaGFuY2UgdG8gc2hhcmUgeW91cgpvcGluaW9ucyBv
-biBJVCAmIGJ1c2luZXNzIHRvcGljcyB0aHJvdWdoIGJyaWVmIHN1cnZleXMgLSBhbmQgZWFybiBj
-YXNoCmh0dHA6Ly93d3cudGVjaHNheS5jb20vZGVmYXVsdC5waHA/cGFnZT1qb2luLnBocCZwPXNv
-dXJjZWZvcmdlJkNJRD1ERVZERVYKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX18KbWFpbGluZyBsaXN0IGxpbnV4MTM5NC1kZXZlbEBsaXN0cy5zb3VyY2Vmb3Jn
-ZS5uZXQKaHR0cHM6Ly9saXN0cy5zb3VyY2Vmb3JnZS5uZXQvbGlzdHMvbGlzdGluZm8vbGludXgx
-Mzk0LWRldmVsCg==
+On Mon, 2007-01-15 at 21:02 +0100, Stefan Richter wrote:
+> > By the way, is there a way to ask the SCSI stack to limit the size of
+> > the entries in the scatterlist to 64k?  This would greatly simplify
+> > the conversion to SBP-2 page tables, since this is the maximum size
+> > these can hold.
+> 
+> Douglas has a very informative text on this:
+> http://sg.torque.net/sg/sg_io.html#mozTocId154063
+> 
+> | [...] since lk 2.6.16 another limit comes into play: the
+> | MAX_SEGMENT_SIZE define which is set to 64 KB. MAX_SEGMENT_SIZE is a
+> | default and can be overridden by the LLD calling
+> | blk_queue_max_segment_size().
+> 
+> Looks like we can yank out some cruft off sbp2.
+
+Actually, there's one unfortunate case where Linux won't respect this:
+an IOMMU that can do virtual merging.  This parameter is a block queue
+parameter, so block will happily make sure the request segments obey it.
+However, when you get to dma_map_rq() it doesn't see the segment limits,
+so, if the iommu merges, you can end up with SG elements the other side
+that violate this.  I've been meaning to do something about this for
+ages (IDE is the other subsystem that has an absolute requirement for a
+fixed maximum segment size) but never found an excuse to fix it.
+
+James
+
+
+
+-------------------------------------------------------------------------
+Take Surveys. Earn Cash. Influence the Future of IT
+Join SourceForge.net's Techsay panel and you'll get the chance to share your
+opinions on IT & business topics through brief surveys - and earn cash
+http://www.techsay.com/default.php?page=join.php&p=sourceforge&CID=DEVDEV
