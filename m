@@ -1,61 +1,61 @@
-From: "=?UTF-8?Q?Kristian_H=C3=B8gsberg?=" <krh@bitplanet.net>
-Subject: Re: [PATCH] ieee1394: sbp2: lower block queue alignment requirement
-Date: Mon, 15 Jan 2007 14:39:10 -0500
-Message-ID: <59ad55d30701151139w6176e785g53404d7b3a42ce6e@mail.gmail.com>
-References: <tkrat.37326df2d568d12d@s5r6.in-berlin.de>
-	<1168802387.2780.1.camel@mulgrave.il.steeleye.com>
-	<tkrat.cad61efa52eb6e56@s5r6.in-berlin.de>
+From: Bjarne Thomsen <bjarne.thomsen@get2net.dk>
+Subject: Re: [Fwd: Re: aic79xx+ASC39320A crash]
+Date: Mon, 15 Jan 2007 20:24:04 +0100
+Message-ID: <1168889044.9588.16.camel@tycho.astronomy.dk>
+References: <1167639505.27998.25.camel@home-desk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <tkrat.cad61efa52eb6e56@s5r6.in-berlin.de>
-Content-Disposition: inline
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux1394-devel-bounces@lists.sourceforge.net
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mailfe07.tele2.dk ([212.247.154.195]:40699 "EHLO swip.net"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751416AbXAOTYL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Jan 2007 14:24:11 -0500
+Received: from [83.72.33.52] (account mp56609@get2net.dk HELO tycho.astronomy.dk)
+  by mailfe07.swip.net (CommuniGate Pro SMTP 5.0.12)
+  with ESMTPA id 385264814 for linux-scsi@vger.kernel.org; Mon, 15 Jan 2007 20:24:05 +0100
+In-Reply-To: <1167639505.27998.25.camel@home-desk>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On 1/14/07, Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
-> On 14 Jan, James Bottomley wrote:
-> > The block layer currently provides sector (512) byte alignment
-> > guarantees.  However, there has been talk in SCSI of reducing that to
-> > word (4) since that's what most intelligent PCI controllers can cope
-> > with.  If you have any alignment constraints, they should be expressed
-> > in the slave configure.
->
-> OK, thanks. I will keep the explicit setting of the mask then.
-> I actually think that everything should work just fine with 4 bytes
-> alignment, but the SBP-2 spec mentiones 8 bytes alignment for the S/G
-> tables.  So maybe device firmwares will expect it that way even though
-> IEEE 1394 doesn't impose such a restriction even on transfers with a
-> payload of a multiple of 8 bytes.
+On Mon, 2007-01-01 at 00:18 -0800, Sean Bruno wrote:
+> email message attachment, "Forwarded message - Re: aic79xx+ASC39320A
+> crash"
+> > -------- Forwarded Message --------
+> > From: Bjarne Thomsen <bjarne.thomsen@get2net.dk>
+> > To: Sean Bruno <sean.bruno@dsl-only.net>
+> > Subject: Re: aic79xx+ASC39320A crash
+> > Date: Mon, 01 Jan 2007 09:12:16 +0100 
+> > 
+> > On Sun, 2006-12-31 at 11:29 -0800, Sean Bruno wrote:
+> > > On Sun, 2006-12-31 at 11:07 +0100, Bjarne Thomsen wrote: 
+> > > > The symptom is the same: the system freezes during the copy
+> > > > of files from an IDE harddisk to a SCSI disk on the 39320 controller.
+> > > 
+> > > Is there any crash dump or panic information on your screen?
+> > >  
+> > > Sean
+> > > 
+> > There is no crash dump or panic information.
+> > The keyboard and mouse are dead.
+> > Only the reset button works.
+> > 
+> > I tried to reset the 39320A BIOS to its default values.
+> > The result of a cp from the IDE drive to the SCSI drive
+> > was again a crash without a trace in the syslog file,
+> > or on the screen.
 
-Do you have a reference to this 8 byte alignment requirement?  I
-couldn't find it browsing through the standard.  Also, since the SBP-2
-driver has to  convert the scatterlist to an SBP-2 page table, it can
-just allocate the page table on a 8-byte boundary if that is required.
- The entries in the scatter table have no alignment restrictions from
-the SBP-2 side.
+Something else has happened. This time the partition table
+seemed to have been currupted. I could not write a new
+partition table to the IDE disk. fdisk kept showing no
+partitions on /dev/hda.
+Then I had the idea to load the BIOS defaults for the MB,
+and I could suddenly see all partitions on /dev/hda with fdisk.
+To me it looks as if some parts of the BIOS of the main board
+has been overwritten (by the aic79xx driver?).
+The main board is a Tyan 2885 with 1 GB of RAM.
 
-By the way, is there a way to ask the SCSI stack to limit the size of
-the entries in the scatterlist to 64k?  This would greatly simplify
-the conversion to SBP-2 page tables, since this is the maximum size
-these can hold.
+ -- Bjarne
 
-cheers,
-Kristian
 
--------------------------------------------------------------------------
-Take Surveys. Earn Cash. Influence the Future of IT
-Join SourceForge.net's Techsay panel and you'll get the chance to share your
-opinions on IT & business topics through brief surveys - and earn cash
-http://www.techsay.com/default.php?page=join.php&p=sourceforge&CID=DEVDEV
