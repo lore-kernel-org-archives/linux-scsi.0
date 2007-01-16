@@ -1,38 +1,57 @@
-From: Ravi Anand <ravi.anand@qlogic.com>
-Subject: Re: [RFC: 2.6 patch] drivers/scsi/qla4xxx/: possible cleanups
-Date: Tue, 16 Jan 2007 15:54:13 -0800
-Message-ID: <20070116235413.GA17703@ranandlinuxbox.qlogic.org>
-References: <20070114134554.GW7469@stusta.de>
+From: aboo <aboo@aboo.org>
+Subject: Re: Linux Virtual SCSI HBAs and Virtual disks
+Date: Wed, 17 Jan 2007 10:01:43 +1100
+Message-ID: <50b306dbfbae037a2bc087f946c251c8@aboo.org>
+References: <20070116215224.GA14040@harddisk-recovery.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:46834 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751949AbXAQAIO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Jan 2007 19:08:14 -0500
-Content-Disposition: inline
-In-Reply-To: <20070114134554.GW7469@stusta.de>
+Received: from ppp245-155.static.internode.on.net ([59.167.245.155]:41146 "EHLO
+	goobu.aboo.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751957AbXAQAKj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Jan 2007 19:10:39 -0500
+In-Reply-To: <20070116215224.GA14040@harddisk-recovery.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: David Somayajulu <david.somayajulu@qlogic.com>, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Erik Mouw <erik@harddisk-recovery.com>
 
->On Sun, 14 Jan 2007, Adrian Bunk wrote:
+I am sorry for the host name resolution before. The link should be working now.
+Please check it out.
 
-> Date: Sun, 14 Jan 2007 14:45:54 +0100
-> From: Adrian Bunk <bunk@stusta.de>
-> To: Ravi Anand <ravi.anand@qlogic.com>,
-> 	David Somayajulu <david.somayajulu@qlogic.com>
-> Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org,
-> 	linux-kernel@vger.kernel.org
-> Subject: [RFC: 2.6 patch] drivers/scsi/qla4xxx/: possible cleanups
-> User-Agent: Mutt/1.5.13 (2006-08-11)
+Aboo
+
+
+On Tue, 16 Jan 2007 22:52:24 +0100, Erik Mouw <erik@harddisk-recovery.com> wrote:
+> On Tue, Jan 16, 2007 at 09:22:29PM +1100, Aboo Valappil wrote:
+>> I have tried this before but I guess I was unsuccessful in presenting it
+>> properly in the mailing list. I think it is really useful especially for
+>> prototyping and also for people who wants to develop their own scsi
+>> targets and transports.
+>> There are few people told me about the SCSI target and initiator
+>> implementation of XEN. But I do not think it is this simple and might
+>> take a while to port it to normal linux kernel.  At the moment, there is
+>> nothing like this available in a simplest form.
+>>
+>> Please visit this site http://vscsihba.aboo.org. I put a complete
+>> description of the project and the source code. I appreciate if you
+>> could go through it and put your thoughts....  This is my final attempt
+>> in this mailing list before I throw away whole of my work.
 > 
-> This patch contains the following possible cleanups:
-> - make needlessly global code static
-> - #if 0 unused functions
+> You make it hard to review, the hostname doesn't resolve:
+> 
+>   host -a vscsihba.aboo.org
+>   vscsihba.aboo.org does not exist, try again
+> 
+> 
+> Erik
+> 
+> --
+> +-- Erik Mouw -- www.harddisk-recovery.com -- +31 70 370 12 90 
 
-Ack. 
+-------------------------------------
+Aboo.Org - Compliments From A & J :)
+-------------------------------------
 
-Thanx
-Ravi Anand
+
