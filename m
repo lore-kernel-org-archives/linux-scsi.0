@@ -1,108 +1,38 @@
-From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: [PATCH v2] aic94xx: fix typos and update verison number
-Date: Tue, 16 Jan 2007 15:48:46 -0800
-Message-ID: <45AD645E.3000201@us.ibm.com>
-References: <1168990573.16470.29.camel@alexisLabtop>
-Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
+From: Ravi Anand <ravi.anand@qlogic.com>
+Subject: Re: [RFC: 2.6 patch] drivers/scsi/qla4xxx/: possible cleanups
+Date: Tue, 16 Jan 2007 15:54:13 -0800
+Message-ID: <20070116235413.GA17703@ranandlinuxbox.qlogic.org>
+References: <20070114134554.GW7469@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:36959 "EHLO e1.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751835AbXAPXsu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Jan 2007 18:48:50 -0500
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e1.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id l0GNmmND012090
-	for <linux-scsi@vger.kernel.org>; Tue, 16 Jan 2007 18:48:48 -0500
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v8.2) with ESMTP id l0GNmmFF307508
-	for <linux-scsi@vger.kernel.org>; Tue, 16 Jan 2007 18:48:48 -0500
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l0GNml1V016259
-	for <linux-scsi@vger.kernel.org>; Tue, 16 Jan 2007 18:48:47 -0500
-In-Reply-To: <1168990573.16470.29.camel@alexisLabtop>
+Received: from avexch1.qlogic.com ([198.70.193.115]:46834 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751949AbXAQAIO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Jan 2007 19:08:14 -0500
+Content-Disposition: inline
+In-Reply-To: <20070114134554.GW7469@stusta.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Alexis Bruemmer <alexisb@us.ibm.com>
+To: Adrian Bunk <bunk@stusta.de>
+Cc: David Somayajulu <david.somayajulu@qlogic.com>, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-libsas: Fix typos and bump version number
+>On Sun, 14 Jan 2007, Adrian Bunk wrote:
 
-Fix a few typos with the driver--"enableable" should be "enabled".  Also
-bump version to 1.0.3 due to major changes recently.  Supersedes earlier
-patch that had the version bump reversed because stgit got confused...
+> Date: Sun, 14 Jan 2007 14:45:54 +0100
+> From: Adrian Bunk <bunk@stusta.de>
+> To: Ravi Anand <ravi.anand@qlogic.com>,
+> 	David Somayajulu <david.somayajulu@qlogic.com>
+> Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org,
+> 	linux-kernel@vger.kernel.org
+> Subject: [RFC: 2.6 patch] drivers/scsi/qla4xxx/: possible cleanups
+> User-Agent: Mutt/1.5.13 (2006-08-11)
+> 
+> This patch contains the following possible cleanups:
+> - make needlessly global code static
+> - #if 0 unused functions
 
-Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
----
+Ack. 
 
- drivers/scsi/aic94xx/aic94xx_init.c |    2 +-
- drivers/scsi/aic94xx/aic94xx_sds.c  |   10 +++++-----
- drivers/scsi/scsi_transport_sas.c   |    2 +-
- 3 files changed, 7 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
-index 2a8e309..f391585 100644
---- a/drivers/scsi/aic94xx/aic94xx_init.c
-+++ b/drivers/scsi/aic94xx/aic94xx_init.c
-@@ -38,7 +38,7 @@ #include "aic94xx_hwi.h"
- #include "aic94xx_seq.h"
- 
- /* The format is "version.release.patchlevel" */
--#define ASD_DRIVER_VERSION "1.0.2"
-+#define ASD_DRIVER_VERSION "1.0.3"
- 
- static int use_msi = 0;
- module_param_named(use_msi, use_msi, int, S_IRUGO);
-diff --git a/drivers/scsi/aic94xx/aic94xx_sds.c b/drivers/scsi/aic94xx/aic94xx_sds.c
-index e5a0ec3..5b0932f 100644
---- a/drivers/scsi/aic94xx/aic94xx_sds.c
-+++ b/drivers/scsi/aic94xx/aic94xx_sds.c
-@@ -427,7 +427,7 @@ struct asd_manuf_sec {
- 
- struct asd_manuf_phy_desc {
- 	u8    state;         /* low 4 bits */
--#define MS_PHY_STATE_ENABLEABLE 0
-+#define MS_PHY_STATE_ENABLED    0
- #define MS_PHY_STATE_REPORTED   1
- #define MS_PHY_STATE_HIDDEN     2
- 	u8    phy_id;
-@@ -756,11 +756,11 @@ static void *asd_find_ll_by_id(void * co
-  *
-  * HIDDEN phys do not count in the total count.  REPORTED phys cannot
-  * be enabled but are reported and counted towards the total.
-- * ENEBLEABLE phys are enabled by default and count towards the total.
-+ * ENABLED phys are enabled by default and count towards the total.
-  * The absolute total phy number is ASD_MAX_PHYS.  hw_prof->num_phys
-  * merely specifies the number of phys the host adapter decided to
-  * report.  E.g., it is possible for phys 0, 1 and 2 to be HIDDEN,
-- * phys 3, 4 and 5 to be REPORTED and phys 6 and 7 to be ENEBLEABLE.
-+ * phys 3, 4 and 5 to be REPORTED and phys 6 and 7 to be ENABLED.
-  * In this case ASD_MAX_PHYS is 8, hw_prof->num_phys is 5, and only 2
-  * are actually enabled (enabled by default, max number of phys
-  * enableable in this case).
-@@ -816,8 +816,8 @@ static int asd_ms_get_phy_params(struct 
- 			asd_ha->hw_prof.enabled_phys &= ~(1 << i);
- 			rep_phys++;
- 			continue;
--		case MS_PHY_STATE_ENABLEABLE:
--			ASD_DPRINTK("ms: phy%d: ENEBLEABLE\n", i);
-+		case MS_PHY_STATE_ENABLED:
-+			ASD_DPRINTK("ms: phy%d: ENABLED\n", i);
- 			asd_ha->hw_prof.enabled_phys |= (1 << i);
- 			en_phys++;
- 			break;
-diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
-index f4a7a9e..0fcd332 100644
---- a/drivers/scsi/scsi_transport_sas.c
-+++ b/drivers/scsi/scsi_transport_sas.c
-@@ -1761,7 +1761,7 @@ static void __exit sas_transport_exit(vo
- }
- 
- MODULE_AUTHOR("Christoph Hellwig");
--MODULE_DESCRIPTION("SAS Transphy Attributes");
-+MODULE_DESCRIPTION("SAS Transport Attributes");
- MODULE_LICENSE("GPL");
- 
- module_init(sas_transport_init);
-
+Thanx
+Ravi Anand
