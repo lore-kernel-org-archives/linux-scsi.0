@@ -1,45 +1,32 @@
-From: Erik Mouw <erik@harddisk-recovery.com>
-Subject: Re: Linux Virtual SCSI HBAs and Virtual disks
-Date: Tue, 16 Jan 2007 22:52:24 +0100
-Message-ID: <20070116215224.GA14040@harddisk-recovery.com>
-References: <45ACA765.3030701@aboo.org>
+From: Paul Mundt <lethal@linux-sh.org>
+Subject: Re: [PATCH 37/59] sysctl: C99 convert arch/sh64/kernel/traps.c and remove ABI breakage.
+Date: Wed, 17 Jan 2007 07:07:08 +0900
+Message-ID: <20070116220708.GA10821@linux-sh.org>
+References: <m1ac0jc4no.fsf@ebiederm.dsl.xmission.com> <11689656622749-git-send-email-ebiederm@xmission.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dtp.xs4all.nl ([80.126.206.180]:16586 "HELO abra2.bitwizard.nl"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1751422AbXAPV75 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Jan 2007 16:59:57 -0500
+Return-path: <linux-mips-bounce@linux-mips.org>
 Content-Disposition: inline
-In-Reply-To: <45ACA765.3030701@aboo.org>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <11689656622749-git-send-email-ebiederm@xmission.com>
+Sender: linux-mips-bounce@linux-mips.org
+Errors-to: linux-mips-bounce@linux-mips.org
+To: "Eric W. Biederman" <ebiederm@xmission.com>
+Cc: "<Andrew Morton" <akpm@osdl.org>, linux-kernel@vger.kernel.org, containers@lists.osdl.org, netdev@vger.kernel.org, xfs-masters@oss.sgi.com, xfs@oss.sgi.com, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, minyard@acm.org, openipmi-developer@lists.sourceforge.net, tony.luck@intel.com, linux-mips@linux-mips.org, ralf@linux-mips.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, linux390@de.ibm.com, linux-390@vm.marist.edu, paulus@samba.org, linuxppc-dev@ozlabs.org, linuxsh-shmedia-dev@lists.sourceforge.net, ak@suse.de, vojtech@suse.cz, clemens@ladisch.de, a.zummo@towertech.it, rtc-linux@googlegroups.com, linux-parport@lists.infradead.org, andrea@suse.de, tim@cyberelk.net, philb@gnu.org, aharkes@cs.cmu.edu, coda@cs.cmu.edu, codalist@TELEMANN.coda.cs.cmu.edu, aia21@cantab.net, linux-ntfs-dev@lists.sourceforge.net, mark.fasheh@oracle.com, kurt.hackel@oracle.
 List-Id: linux-scsi@vger.kernel.org
-To: Aboo Valappil <aboo@aboo.org>
-Cc: linux-scsi@vger.kernel.org
 
-On Tue, Jan 16, 2007 at 09:22:29PM +1100, Aboo Valappil wrote:
-> I have tried this before but I guess I was unsuccessful in presenting it 
-> properly in the mailing list. I think it is really useful especially for 
-> prototyping and also for people who wants to develop their own scsi 
-> targets and transports.
-> There are few people told me about the SCSI target and initiator 
-> implementation of XEN. But I do not think it is this simple and might 
-> take a while to port it to normal linux kernel.  At the moment, there is 
-> nothing like this available in a simplest form.
+On Tue, Jan 16, 2007 at 09:39:42AM -0700, Eric W. Biederman wrote:
+> From: Eric W. Biederman <ebiederm@xmission.com> - unquoted
 > 
-> Please visit this site http://vscsihba.aboo.org. I put a complete 
-> description of the project and the source code. I appreciate if you 
-> could go through it and put your thoughts....  This is my final attempt 
-> in this mailing list before I throw away whole of my work.
+> While doing the C99 conversion I notices that the top level sh64
+> directory was using the binary number for CTL_KERN.  That is a
+> no-no so I removed the support for the sysctl binary interface
+> only leaving sysctl /proc support.
+> 
+> At least the sysctl tables were placed at the end of
+> the list so user space did not see this mistake.
+> 
+> Signed-off-by: Eric W. Biederman <ebiederm@xmission.com>
 
-You make it hard to review, the hostname doesn't resolve:
+Looks good, thanks Eric.
 
-  host -a vscsihba.aboo.org
-  vscsihba.aboo.org does not exist, try again
-
-
-Erik
-
--- 
-+-- Erik Mouw -- www.harddisk-recovery.com -- +31 70 370 12 90 --
-| Lab address: Delftechpark 26, 2628 XH, Delft, The Netherlands
+Acked-by: Paul Mundt <lethal@linux-sh.org>
