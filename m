@@ -1,7 +1,7 @@
 From: "Eric W. Biederman" <ebiederm@xmission.com>
-Subject: [PATCH 37/59] sysctl: C99 convert arch/sh64/kernel/traps.c and remove ABI breakage.
-Date: Tue, 16 Jan 2007 09:39:42 -0700
-Message-ID: <11689656622749-git-send-email-ebiederm@xmission.com>
+Subject: [PATCH 41/59] sysctl: C99 convert ctl_tables in arch/x86_64/mm/init.c
+Date: Tue, 16 Jan 2007 09:39:46 -0700
+Message-ID: <11689656673646-git-send-email-ebiederm@xmission.com>
 References: <m1ac0jc4no.fsf@ebiederm.dsl.xmission.com>
 Return-path: <linux-mips-bounce@linux-mips.org>
 In-Reply-To: <m1ac0jc4no.fsf@ebiederm.dsl.xmission.com>
@@ -13,86 +13,46 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Eric W. Biederman <ebiederm@xmission.com> - unquoted
 
-While doing the C99 conversion I notices that the top level sh64
-directory was using the binary number for CTL_KERN.  That is a
-no-no so I removed the support for the sysctl binary interface
-only leaving sysctl /proc support.
-
-At least the sysctl tables were placed at the end of
-the list so user space did not see this mistake.
-
 Signed-off-by: Eric W. Biederman <ebiederm@xmission.com>
 ---
- arch/sh64/kernel/traps.c |   49 +++++++++++++++++++++++++++++++++++----------
- 1 files changed, 38 insertions(+), 11 deletions(-)
+ arch/x86_64/mm/init.c |   22 ++++++++++++++++------
+ 1 files changed, 16 insertions(+), 6 deletions(-)
 
-diff --git a/arch/sh64/kernel/traps.c b/arch/sh64/kernel/traps.c
-index 224b7f5..02cca74 100644
---- a/arch/sh64/kernel/traps.c
-+++ b/arch/sh64/kernel/traps.c
-@@ -910,25 +910,52 @@ static int misaligned_fixup(struct pt_regs *regs)
- }
+diff --git a/arch/x86_64/mm/init.c b/arch/x86_64/mm/init.c
+index 65aa66c..a04535d 100644
+--- a/arch/x86_64/mm/init.c
++++ b/arch/x86_64/mm/init.c
+@@ -711,15 +711,25 @@ int kern_addr_valid(unsigned long addr)
+ extern int exception_trace, page_fault_trace;
  
- static ctl_table unaligned_table[] = {
--	{1, "kernel_reports", &kernel_mode_unaligned_fixup_count,
--		sizeof(int), 0644, NULL, &proc_dointvec},
+ static ctl_table debug_table2[] = {
+-	{ 99, "exception-trace", &exception_trace, sizeof(int), 0644, NULL,
+-	  proc_dointvec },
+-	{ 0, }
 +	{
-+		.ctl_name	= CTL_UNNUMBERED,
-+		.procname	= "kernel_reports",
-+		.data		= &kernel_mode_unaligned_fixup_count,
++		.ctl_name	= 99,
++		.procname	= "exception-trace",
++		.data		= &exception_trace,
 +		.maxlen		= sizeof(int),
 +		.mode		= 0644,
-+		.proc_handler	= &proc_dointvec
++		.proc_handler	= proc_dointvec
 +	},
- #if defined(CONFIG_SH64_USER_MISALIGNED_FIXUP)
--	{2, "user_reports", &user_mode_unaligned_fixup_count,
--		sizeof(int), 0644, NULL, &proc_dointvec},
--	{3, "user_enable", &user_mode_unaligned_fixup_enable,
--		sizeof(int), 0644, NULL, &proc_dointvec},
-+	{
-+		.ctl_name	= CTL_UNNUMBERED,
-+		.procname	= "user_reports",
-+		.data		= &user_mode_unaligned_fixup_count,
-+		.maxlen		= sizeof(int),
-+		.mode		= 0644,
-+		.proc_handler	= &proc_dointvec
-+	},
-+	{
-+		.ctl_name	= CTL_UNNUMBERED,
-+		.procname	= "user_enable",
-+		.data		= &user_mode_unaligned_fixup_enable,
-+		.maxlen		= sizeof(int),
-+		.mode		= 0644,
-+		.proc_handler	= &proc_dointvec},
- #endif
--	{0}
 +	{}
- };
+ }; 
  
- static ctl_table unaligned_root[] = {
--	{1, "unaligned_fixup", NULL, 0, 0555, unaligned_table},
--	{0}
+ static ctl_table debug_root_table2[] = { 
+-	{ .ctl_name = CTL_DEBUG, .procname = "debug", .mode = 0555, 
+-	   .child = debug_table2 }, 
+-	{ 0 }, 
 +	{
-+		.ctl_name	= CTL_UNNUMBERED,
-+		.procname	= "unaligned_fixup",
-+		.mode		= 0555,
-+		unaligned_table
-+	},
++		.ctl_name = CTL_DEBUG,
++		.procname = "debug",
++		.mode = 0555,
++		.child = debug_table2
++	}, 
 +	{}
- };
+ }; 
  
- static ctl_table sh64_root[] = {
--	{1, "sh64", NULL, 0, 0555, unaligned_root},
--	{0}
-+	{
-+		.ctl_name	= CTL_UNNUMBERED,
-+		.procname	= "sh64",
-+		.mode		= 0555,
-+		.child		= unaligned_root
-+	},
-+	{}
- };
- static struct ctl_table_header *sysctl_header;
- static int __init init_sysctl(void)
+ static __init int x8664_sysctl_init(void)
 -- 
 1.4.4.1.g278f
