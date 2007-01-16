@@ -1,51 +1,40 @@
-From: Ingo Oeser <ioe-lkml@rameria.de>
-Subject: Re: [PATCH 45/59] sysctl: C99 convert ctl_tables in drivers/parport/procfs.c
-Date: Tue, 16 Jan 2007 23:15:43 +0100
-Message-ID: <200701162315.56454.ioe-lkml@rameria.de>
-References: <m1ac0jc4no.fsf@ebiederm.dsl.xmission.com> <11689656733768-git-send-email-ebiederm@xmission.com>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: ipr SATA problems in 2.6.20
+Date: Tue, 16 Jan 2007 16:24:45 -0600
+Message-ID: <45AD50AD.2040700@linux.vnet.ibm.com>
+Reply-To: brking@linux.vnet.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-mips-bounce@linux-mips.org>
-In-Reply-To: <11689656733768-git-send-email-ebiederm@xmission.com>
-Content-Disposition: inline
-Sender: linux-mips-bounce@linux-mips.org
-Errors-to: linux-mips-bounce@linux-mips.org
-To: "Eric W. Biederman" <ebiederm@xmission.com>
-Cc: "<Andrew Morton" <akpm@osdl.org>, linux-kernel@vger.kernel.org, containers@lists.osdl.org, netdev@vger.kernel.org, xfs-masters@oss.sgi.com, xfs@oss.sgi.com, linux-scsi@vger.kernel.org, James.Bottomley@steeleye.com, minyard@acm.org, openipmi-developer@lists.sourceforge.net, tony.luck@intel.com, linux-mips@linux-mips.org, ralf@linux-mips.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, linux390@de.ibm.com, linux-390@vm.marist.edu, paulus@samba.org, linuxppc-dev@ozlabs.org, lethal@linux-sh.org, linuxsh-shmedia-dev@lists.sourceforge.net, ak@suse.de, vojtech@suse.cz, clemens@ladisch.de, a.zummo@towertech.it, rtc-linux@googlegroups.com, linux-parport@lists.infradead.org, andrea@suse.de, tim@cyberelk.net, philb@gnu.org, aharkes@cs.cmu.edu, coda@cs.cmu.edu, codalist@telemann.coda.cs.cmu.edu, aia21@cantab.net, linux-ntfs-dev@lists.sourceforge.net, mark.fasheh@oracle.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e1.ny.us.ibm.com ([32.97.182.141]:53236 "EHLO e1.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751146AbXAPWYt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 Jan 2007 17:24:49 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: James Bottomley <James.Bottomley@steeleye.com>, Jeff Garzik <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Hi Eric,
+I'm currently debugging some problems with SATA on ipr and figured I would
+give a heads up. The problems include overlength errors and data corruption.
+Basically SATA on ipr is completely broken in its current state.
+>From what I have found so far, it looks like due to some libata changes
+made recently, qc->nbytes is no longer getting setup for ATAPI devices
+all the time.
 
-On Tuesday, 16. January 2007 17:39, Eric W. Biederman wrote:
-> diff --git a/drivers/parport/procfs.c b/drivers/parport/procfs.c
-> index 2e744a2..5337789 100644
-> --- a/drivers/parport/procfs.c
-> +++ b/drivers/parport/procfs.c
-> @@ -263,50 +263,118 @@ struct parport_sysctl_table {
-> +		{
-> +			.ctl_name	= DEV_PARPORT_BASE_ADDR,
-> +			.procname	= "base-addr",
-> +			.data		= NULL,
-> +			.maxlen		= 0,
-> +			.mode		= 0444,
-> +			.proc_handler	= &do_hardware_base_addr
-> +		},
+Jeff - should qc->nbytes be used a libata user? If not, what is the proper
+way to determine the total command length in bytes? Summing all the sg entries?
+I was using nbytes + pad_len.
 
-No need to initialize to zero or NULL. Just list any variable, which is NOT zero or NULL.
+The other oddity I've been seeing is that I am getting zero length commands,
+such as TEST_UNIT_READY with a dma_dir of DMA_FROM_DEVICE. Shouldn't this be
+DMA_NONE? I'm still tracking this down.
 
-> +		{
-> +			.ctl_name	= DEV_PARPORT_AUTOPROBE + 1,
-> +			.procname	= "autoprobe0",
-> +			.data		= NULL,
-> +			.maxlen		= 0,
-> +			.maxlen		= 0444,
-> +			.proc_handler	=  &do_autoprobe
-> +		},
 
-Typo here? .mode = 0444 makes mor sense.
+Brian
 
-Regards
-
-Ingo Oeser
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
