@@ -1,44 +1,39 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH] Fix scsi_add_device() for async scanning
-Date: Mon, 15 Jan 2007 18:07:09 -0700
-Message-ID: <20070116010709.GA17240@parisc-linux.org>
+From: Aboo Valappil <aboo@aboo.org>
+Subject: Linux Virtual SCSI HBAs and Virtual disks
+Date: Tue, 16 Jan 2007 21:22:29 +1100
+Message-ID: <45ACA765.3030701@aboo.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:41590 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932177AbXAPBHL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Jan 2007 20:07:11 -0500
-Content-Disposition: inline
+Received: from ppp245-155.static.internode.on.net ([59.167.245.155]:41024 "EHLO
+	goobu.aboo.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751043AbXAPL7U (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Jan 2007 06:59:20 -0500
+Received: from [192.168.1.65] ([192.168.1.65])
+	by goobu.aboo.org (8.13.1/8.13.1) with ESMTP id l0G9DjJw007970
+	for <linux-scsi@vger.kernel.org>; Tue, 16 Jan 2007 20:13:45 +1100
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
+Hi All,
 
-I had thought that all drivers which didn't call scsi_scan_host()
-called scsi_scan_target().  Some, such as sbp2, mptsas and libata-scsi,
-call scsi_add_device() or __scsi_add_device().  We just need to wait
-for the currently executing async scans to complete first.  This is the
-same code that's in scsi_scan_target(), except that we have to return
-an error instead of void when we're declining to scan at all.
+I have tried this before but I guess I was unsuccessful in presenting it 
+properly in the mailing list. I think it is really useful especially for 
+prototyping and also for people who wants to develop their own scsi 
+targets and transports.
+There are few people told me about the SCSI target and initiator 
+implementation of XEN. But I do not think it is this simple and might 
+take a while to port it to normal linux kernel.  At the moment, there is 
+nothing like this available in a simplest form.
 
-Signed-off-by: Matthew Wilcox <matthew@wil.cx>
+Please visit this site http://vscsihba.aboo.org. I put a complete 
+description of the project and the source code. I appreciate if you 
+could go through it and put your thoughts....  This is my final attempt 
+in this mailing list before I throw away whole of my work.
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 14e635a..1ad06e2 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -1436,6 +1436,12 @@ struct scsi_device *__scsi_add_device(struct Scsi_Host *shost, uint channel,
- 	struct device *parent = &shost->shost_gendev;
- 	struct scsi_target *starget;
- 
-+	if (strncmp(scsi_scan_type, "none", 4) == 0)
-+		return ERR_PTR(-ENODEV);
-+
-+	if (!shost->async_scan)
-+		scsi_complete_async_scans();
-+
- 	starget = scsi_alloc_target(parent, channel, id);
- 	if (!starget)
- 		return ERR_PTR(-ENOMEM);
+Thanks
+
+Aboo
 
