@@ -1,63 +1,70 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] libata: initialize qc->dma_dir to DMA_NONE
-Date: Wed, 17 Jan 2007 10:07:20 -0600
-Message-ID: <1169050040.3416.14.camel@mulgrave.il.steeleye.com>
-References: <45AD50AD.2040700@linux.vnet.ibm.com>
-	 <20070116224115.50d29cf7@localhost.localdomain> <45AD55A4.50208@pobox.com>
-	 <1168989094.2789.20.camel@mulgrave.il.steeleye.com>
-	 <45AD5D27.8020004@linux.vnet.ibm.com> <45AD60B9.3030501@linux.vnet.ibm.com>
-	 <20070117023402.GP10987@htj.dyndns.org>
-	 <1169047153.3416.5.camel@mulgrave.il.steeleye.com>
-	 <45AE4589.4070309@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Mark Rustad <mrustad@gmail.com>
+Subject: Re: Adaptect 9405w: What is the best solution?
+Date: Wed, 17 Jan 2007 10:32:54 -0600
+Message-ID: <B7A62A39-ECD0-4A7E-8645-696F9D2F330C@gmail.com>
+References: <45A6195E.7020103@scanventure.no> <45A6570C.3090308@torque.net>	 <45A6906D.3040805@us.ibm.com> <45A694A1.6010400@scanventure.no>	 <45A69937.8030400@us.ibm.com> <45A6C33C.8060900@scanventure.no>	 <45A81BBF.7050104@us.ibm.com> <45AA4A7B.7070607@scanventure.no>	 <45ABE920.7090304@us.ibm.com>  <45ACDD6A.7040201@scanventure.no> <1168989278.16470.22.camel@alexisLabtop> <45ADFFA8.5040702@scanventure.no>
+Mime-Version: 1.0 (Apple Message framework v752.2)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:60430 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932545AbXAQQNt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jan 2007 11:13:49 -0500
-In-Reply-To: <45AE4589.4070309@gmail.com>
+Received: from wx-out-0506.google.com ([66.249.82.235]:28840 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932503AbXAQQdD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jan 2007 11:33:03 -0500
+Received: by wx-out-0506.google.com with SMTP id h31so2543267wxd
+        for <linux-scsi@vger.kernel.org>; Wed, 17 Jan 2007 08:33:00 -0800 (PST)
+In-Reply-To: <45ADFFA8.5040702@scanventure.no>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Brian King <brking@linux.vnet.ibm.com>, Jeff Garzik <jgarzik@pobox.com>, Alan <alan@lxorguk.ukuu.org.uk>, linux-scsi@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Tarjei Huse <tarjei@scanventure.no>
+Cc: Alexis Bruemmer <alexisb@us.ibm.com>, linux-scsi@vger.kernel.org, "Tan, Dennis" <Dennis_Tan@adaptec.com>, "Chim, Ed" <ed_chim@adaptec.com>, "Wu, Gilbert" <Gilbert_Wu@adaptec.com>
 
-On Thu, 2007-01-18 at 00:49 +0900, Tejun Heo wrote:
-> James Bottomley wrote:
-> > This looks perfectly fine as a possible solution.  Is there any reason
-> > not to initialise qc->dma_dir unconditionally from the SCSI command?
-> 
-> That should work too.  I did what I did because it was more in line with
-> what the current code assumed and initializing the field on qc alloc
-> seemed like a good idea with or without unconditional qc->dma_dir =
-> scmd->sc_data_direction because not all commands are translated from
-> scsi command.
+On Jan 17, 2007, at 4:51 AM, Tarjei Huse wrote:
 
-Sure, I agree with the initialisation (although it should perhaps be
-initialised to an error value we can detect just in case there are other
-paths where it would leak through uninitialised ... we'll still get
-cockups if a command with data ever goes through as DMA_NONE.
+> Alexis Bruemmer wrote:
+>> Hi Tarjei,
+>>
+>> I am glad that you a progressing forward!
+>>
+> Me too :-)
+>> <snip>
+>>
+>>>> Perhaps.  Could you send a full output?  It does not appear that  
+>>>> the
+>>>> aic94xx driver is loading at all...?
+>>>>
+>>>>
+>>> Duh again. I thought I had added the module to the initrd, but that
+>>> didn't happen.
+>>>
+>>> Ok, I'm one step further. Where can I get the binary firmware the
+>>> adapter asks for?
+>>>
+>>
+>> The new sequencer has yet to be posted.  You can, however, use the  
+>> old
+>> f/w in the meantime by backing out patch #38:
+>>
+>> http://sweaglesw.net/~djwong/docs/sas_ata-patches/38-aic94xx-v28- 
+>> sequencer_2.patch
+>>
+> Ok, did that. I now manage to load the module after boot when  
+> running rmmod aic94xx and then modprobe aic94xx. However, I cannot  
+> get it to load the firmware on boot. I've tried modifying the  
+> initram-fs image and placing the module in both /lib/firmware/ and / 
+> lib/firmware/2.6.20-rc5/ but it seems not to find the firmware  
+> (aic94xx-seq.fw) in any of those locations.
+>
+> If I reload the module after booting, it will find the firmware in / 
+> lib/firmware/2.6.20-rc5 without problems.
+>
+> Any tips?
 
-> > The only potential problem is DMA_BIDIRECTIONAL, which we don't use
-> > (yet) ... but if it ever did come down libata will do the wrong thing
-> > anyway.
-> 
-> If that ever happens, libata probably should emulate it using multiple
-> commands, I guess.
+Your initramfs needs to have hotplug scripts that can handle firmware  
+loading. I'm pretty sure that is what is missing, because I just went  
+through the same thing with a QLogic FC driver.
 
-This really depends on where SATA is going.  Current SCSI bidirectional
-commands are the preserve of the complex command sets I don't believe
-even a SATA device would ever emulate.  On the other hand, we're
-planning to use bidirectional in SGv4 for frame in/frame out type
-packets that are used to control expanders.
-
-So the interesting question is whether SATA would ever want to drive
-expanders?  For the low end, given the lack of success of the port
-multipliers which are effectively a poor man's expander, I guess not ...
-but, since most SAS/SATA cages seem to be coming with built in
-expanders, I can see that changing.
-
-James
+-- 
+Mark Rustad, MRustad@mac.com
 
 
