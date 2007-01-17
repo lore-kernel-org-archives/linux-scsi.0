@@ -1,37 +1,93 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Adaptect 9405w: What is the best solution?
-Date: Wed, 17 Jan 2007 10:54:11 -0600
-Message-ID: <1169052851.3416.18.camel@mulgrave.il.steeleye.com>
-References: <45A6195E.7020103@scanventure.no> <45A6570C.3090308@torque.net>
-	 <45A6906D.3040805@us.ibm.com> <45A694A1.6010400@scanventure.no>
-	 <45A69937.8030400@us.ibm.com> <45A6C33C.8060900@scanventure.no>
-	 <45A81BBF.7050104@us.ibm.com> <45AA4A7B.7070607@scanventure.no>
-	 <45ABE920.7090304@us.ibm.com>  <45ACDD6A.7040201@scanventure.no>
-	 <1168989278.16470.22.camel@alexisLabtop> <45ADFFA8.5040702@scanventure.no>
-	 <B7A62A39-ECD0-4A7E-8645-696F9D2F330C@gmail.com>
+From: Kirill Korotaev <dev@sw.ru>
+Subject: Re: [PATCH 25/59] sysctl: C99 convert arch/frv/kernel/pm.c
+Date: Wed, 17 Jan 2007 20:14:17 +0300
+Message-ID: <45AE5969.8030603@sw.ru>
+References: <m1ac0jc4no.fsf@ebiederm.dsl.xmission.com> <11689656443582-git-send-email-ebiederm@xmission.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:60751 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932524AbXAQQ4V (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jan 2007 11:56:21 -0500
-In-Reply-To: <B7A62A39-ECD0-4A7E-8645-696F9D2F330C@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-mips-bounce@linux-mips.org>
+In-Reply-To: <11689656443582-git-send-email-ebiederm@xmission.com>
+Sender: linux-mips-bounce@linux-mips.org
+Errors-to: linux-mips-bounce@linux-mips.org
+To: "Eric W. Biederman" <ebiederm@xmission.com>
+Cc: "<Andrew Morton" <akpm@osdl.org>, James.Bottomley@SteelEye.com, linux-mips@linux-mips.org, linux-parport@lists.infradead.org, minyard@acm.org, rtc-linux@googlegroups.com, clemens@ladisch.de, heiko.carstens@de.ibm.com, xfs@oss.sgi.com, linuxppc-dev@ozlabs.org, paulus@samba.org, openipmi-developer@lists.sourceforge.net, linux-390@vm.marist.edu, schwidefsky@de.ibm.com, tim@cyberelk.net, codalist@TELEMANN.coda.cs.cmu.edu, a.zummo@towertech.it, tony.luck@intel.com, vojtech@suse.cz, linux-scsi@vger.kernel.org, xfs-masters@oss.sgi.com, linux-ntfs-dev@lists.sourceforge.net, netdev@vger.kernel.org, aia21@cantab.net, aharkes@cs.cmu.edu, linux-kernel@vger.kernel.org, ralf@linux-mips.org, mark.fasheh@oracle.com, coda@cs.cmu.edu, lethal@linux-sh.org, kurt.hackel@oracle.com, containers@lists.osdl.org, linux390@de.ibm.com, philb@gnu.org, andrea@suse.de, linuxsh-shmedia-dev@lists.sour
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Rustad <mrustad@gmail.com>
-Cc: Tarjei Huse <tarjei@scanventure.no>, Alexis Bruemmer <alexisb@us.ibm.com>, linux-scsi@vger.kernel.org, "Tan, Dennis" <Dennis_Tan@adaptec.com>, "Chim, Ed" <ed_chim@adaptec.com>, "Wu, Gilbert" <Gilbert_Wu@adaptec.com>
 
-On Wed, 2007-01-17 at 10:32 -0600, Mark Rustad wrote:
-> Your initramfs needs to have hotplug scripts that can handle firmware  
-> loading. I'm pretty sure that is what is missing, because I just went  
-> through the same thing with a QLogic FC driver.
+another small minor note.
 
-Yes, there was a patch for at least debian's mkinitrd to do all of this:
+> From: Eric W. Biederman <ebiederm@xmission.com> - unquoted
+> 
+> Signed-off-by: Eric W. Biederman <ebiederm@xmission.com>
+> ---
+>  arch/frv/kernel/pm.c |   50 +++++++++++++++++++++++++++++++++++++++++++-------
+>  1 files changed, 43 insertions(+), 7 deletions(-)
+> 
+> diff --git a/arch/frv/kernel/pm.c b/arch/frv/kernel/pm.c
+> index c1840d6..aa50333 100644
+> --- a/arch/frv/kernel/pm.c
+> +++ b/arch/frv/kernel/pm.c
+> @@ -401,17 +401,53 @@ static int cm_sysctl(ctl_table *table, int __user *name, int nlen,
+>  
+>  static struct ctl_table pm_table[] =
+>  {
+> -	{CTL_PM_SUSPEND, "suspend", NULL, 0, 0200, NULL, &sysctl_pm_do_suspend},
+> -	{CTL_PM_CMODE, "cmode", &clock_cmode_current, sizeof(int), 0644, NULL, &cmode_procctl, &cmode_sysctl, NULL},
+> -	{CTL_PM_P0, "p0", &clock_p0_current, sizeof(int), 0644, NULL, &p0_procctl, &p0_sysctl, NULL},
+> -	{CTL_PM_CM, "cm", &clock_cm_current, sizeof(int), 0644, NULL, &cm_procctl, &cm_sysctl, NULL},
+> -	{0}
+> +	{
+> +		.ctl_name	= CTL_PM_SUSPEND,
+> +		.procname	= "suspend",
+> +		.data		= NULL,
+> +		.maxlen		= 0,
+> +		.mode		= 0200,
+> +		.proc_handler	= &sysctl_pm_do_suspend,
+> +	},
+> +	{
+> +		.ctl_name	= CTL_PM_CMODE,
+> +		.procname	= "cmode",
+> +		.data		= &clock_cmode_current,
+> +		.maxlen		= sizeof(int),
+> +		.mode		= 0644,
+> +		.proc_handler	= &cmode_procctl,
+> +		.strategy	= &cmode_sysctl,
+> +	},
+> +	{
+> +		.ctl_name	= CTL_PM_P0,
+> +		.procname	= "p0",
+> +		.data		= &clock_p0_current,
+> +		.maxlen		= sizeof(int),
+> +		.mode		= 0644,
+> +		.proc_handler	= &p0_procctl,
+> +		.strategy	= &p0_sysctl,
+> +	},
+> +	{
+> +		.ctl_name	= CTL_PM_CM,
+> +		.procname	= "cm",
+> +		.data		= &clock_cm_current,
+> +		.maxlen		= sizeof(int),
+> +		.mode		= 0644,
+> +		.proc_handler	= &cm_procctl,
+> +		.strategy	= &cm_sysctl,
+> +	},
+> +	{ .ctl_name = 0}
+in next patch (26/59) you write just "{ }". .ctl_name = 0 not required here.
 
-http://marc.theaimsgroup.com/?l=linux-kernel&m=115680315625712
 
-James
-
-
+>  };
+>  
+>  static struct ctl_table pm_dir_table[] =
+>  {
+> -	{CTL_PM, "pm", NULL, 0, 0555, pm_table},
+> -	{0}
+> +	{
+> +		.ctl_name	= CTL_PM,
+> +		.procname	= "pm",
+> +		.mode		= 0555,
+> +		.child		= pm_table,
+> +	},
+> +	{ .ctl_name = 0}
+>  };
+>  
+>  /*
