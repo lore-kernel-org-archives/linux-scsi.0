@@ -1,44 +1,44 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] libata: initialize qc->dma_dir to DMA_NONE
-Date: Wed, 17 Jan 2007 11:34:02 +0900
-Message-ID: <20070117023402.GP10987@htj.dyndns.org>
-References: <45AD50AD.2040700@linux.vnet.ibm.com> <20070116224115.50d29cf7@localhost.localdomain> <45AD55A4.50208@pobox.com> <1168989094.2789.20.camel@mulgrave.il.steeleye.com> <45AD5D27.8020004@linux.vnet.ibm.com> <45AD60B9.3030501@linux.vnet.ibm.com>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH 18/59] sysctl: ipmi remove unnecessary insert_at_head
+	flag
+Date: Wed, 17 Jan 2007 14:14:54 +1100
+Message-ID: <1169003694.4778.15.camel@localhost.localdomain>
+References: <m1ac0jc4no.fsf@ebiederm.dsl.xmission.com>
+	 <1168965635875-git-send-email-ebiederm@xmission.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <45AD60B9.3030501@linux.vnet.ibm.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@SteelEye.com>, Alan <alan@lxorguk.ukuu.org.uk>, linux-scsi@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-mips-bounce@linux-mips.org>
+In-Reply-To: <1168965635875-git-send-email-ebiederm@xmission.com>
+Sender: linux-mips-bounce@linux-mips.org
+Errors-to: linux-mips-bounce@linux-mips.org
+To: "Eric W. Biederman" <ebiederm@xmission.com>
+Cc: "<Andrew Morton" <akpm@osdl.org>, linux-mips@linux-mips.org, linux-parport@lists.infradead.org, heiko.carstens@de.ibm.com, ak@suse.de, linuxppc-dev@ozlabs.org, paulus@samba.org, aharkes@cs.cmu.edu, schwidefsky@de.ibm.com, tim@cyberelk.net, rtc-linux@googlegroups.com, linux-scsi@vger.kernel.org, kurt.hackel@oracle.com, coda@cs.cmu.edu, vojtech@suse.cz, linuxsh-shmedia-dev@lists.sourceforge.net, James.Bottomley@SteelEye.com, clemens@ladisch.de, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, andrea@suse.de, openipmi-developer@lists.sourceforge.net, linux-390@vm.marist.edu, codalist@TELEMANN.coda.cs.cmu.edu, a.zummo@towertech.it, tony.luck@intel.com, linux-ntfs-dev@lists.sourceforge.net, netdev@vger.kernel.org, aia21@cantab.net, linux-kernel@vger.kernel.org, ralf@linux-mips.org, lethal@linux-sh.org, containers@lists.osdl.org, linux390@de.ibm.com, philb@gnu.org
 List-Id: linux-scsi@vger.kernel.org
 
-libata didn't used to init qc->dma_dir to any specific value on qc
-initialization and command translation path didn't set qc->dma_dir if
-the command doesn't need data transfer.  This made non-data commands
-to have random qc->dma_dir.
+On Tue, 2007-01-16 at 09:39 -0700, Eric W. Biederman wrote:
+> From: Eric W. Biederman <ebiederm@xmission.com> - unquoted
+> 
+> With unique sysctl binary numbers setting insert_at_head is pointless.
+> 
+> Signed-off-by: Eric W. Biederman <ebiederm@xmission.com>
 
-This usually doesn't cause problem because LLDs usually check
-qc->protocol first and look at qc->dma_dir iff the command needs data
-transfer but this doesn't hold for all LLDs.
+Acked-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 
-It might be worthwhile to rename qc->dma_dir to qc->data_dir as we use
-the field to tag data direction for both PIO and DMA protocols.
-
-This problem has been spotted by James Bottomley.
-
-Signed-off-by: Tejun Heo <htejun@gmail.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>
-
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 7cfc18f..925ad7f 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1139,6 +1139,7 @@ static inline void ata_tf_init(struct ata_device *dev, struct ata_taskfile *tf)
- 
- static inline void ata_qc_reinit(struct ata_queued_cmd *qc)
- {
-+	qc->dma_dir = DMA_NONE;
- 	qc->__sg = NULL;
- 	qc->flags = 0;
- 	qc->cursect = qc->cursg = qc->cursg_ofs = 0;
+> ---
+>  drivers/char/ipmi/ipmi_poweroff.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/char/ipmi/ipmi_poweroff.c b/drivers/char/ipmi/ipmi_poweroff.c
+> index 9d23136..b3ae65e 100644
+> --- a/drivers/char/ipmi/ipmi_poweroff.c
+> +++ b/drivers/char/ipmi/ipmi_poweroff.c
+> @@ -686,7 +686,7 @@ static int ipmi_poweroff_init (void)
+>  		printk(KERN_INFO PFX "Power cycle is enabled.\n");
+>  
+>  #ifdef CONFIG_PROC_FS
+> -	ipmi_table_header = register_sysctl_table(ipmi_root_table, 1);
+> +	ipmi_table_header = register_sysctl_table(ipmi_root_table, 0);
+>  	if (!ipmi_table_header) {
+>  		printk(KERN_ERR PFX "Unable to register powercycle sysctl\n");
+>  		rv = -ENOMEM;
