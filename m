@@ -1,108 +1,215 @@
-From: Andrew Patterson <andrew.patterson@hp.com>
-Subject: Re: no utility / method to show association between HBA &	non-sg
-	BLOCK (scsi) devices - register_blkdev()
-Date: Wed, 17 Jan 2007 15:06:12 -0700
-Message-ID: <1169071572.7419.2.camel@bluto.andrew>
-References: <8260533.post@talk.nabble.com> <45A53290.1060400@torque.net>
-	 <45A62C32.8E7F.00B8.0@novell.com> <45A69AD6.60207@torque.net>
-	 <45AE22E0.DB3A.00B8.0@novell.com>  <45AE8F64.9080504@torque.net>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: Linux Virtual SCSI HBAs and Virtual disks
+Date: Wed, 17 Jan 2007 17:20:08 -0500
+Message-ID: <45AEA118.5030608@torque.net>
+References: <45ACA765.3030701@aboo.org> <45AD80F3.6020100@torque.net> <45ADE01F.3020708@s5r6.in-berlin.de> <45ADF979.7090003@aboo.org>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from atlrel6.hp.com ([156.153.255.205]:51422 "EHLO atlrel6.hp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751850AbXAQWSG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Jan 2007 17:18:06 -0500
-In-Reply-To: <45AE8F64.9080504@torque.net>
+Received: from pentafluge.infradead.org ([213.146.154.40]:46296 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751848AbXAQWUZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jan 2007 17:20:25 -0500
+In-Reply-To: <45ADF979.7090003@aboo.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: Thayne Harmon <tharmon@novell.com>, linux-scsi@vger.kernel.org
+To: Aboo Valappil <aboo@aboo.org>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, linux-scsi@vger.kernel.org
 
-On Wed, 2007-01-17 at 16:04 -0500, Douglas Gilbert wrote:
-> Thayne Harmon wrote:
-> >>>> On Thu, Jan 11, 2007 at  1:15 PM, in message <45A69AD6.60207@torque.net>,
-> > Douglas Gilbert <dougg@torque.net> wrote: 
-> >> Thayne Harmon wrote:
-> >>> Gentlemen,
-> >>>
-> >>> hwinfo, lshal, sysfs do not show the relationship for non- sg BLOCK devices 
-> >> with there 
-> >>> associated Host Bus Adapter.
-> >> All devices (i.e. logical units) have a 4 element tuple
-> >> associated with them and the first element is the host
-> >> number. A HBA contains one or more hosts. Then you can
-> >> datamine in /sys/class/scsi_host/host<n> for whatever
-> >> information you want.
-> >>
-> >>> Do you know of a utility or method that can show this?
-> >> May I suggest lsscsi. That won't help you in the lk 2.4
-> >> series and earlier though There are other methods by
-> >> which the sg device corresponding to a "non- sg" block
-> >> device (e.g. /dev/sdc) can be found.
-> > 
-> > [context - Linux testserver 2.6.16.21-0.8-smp i586]
-> > 
-> > There is no corresponding sg device. The device file is
-> > /dev/cciss/c0d1.
+Aboo Valappil wrote:
+> Hi All,
 > 
-> Ok, I'm not familiar with the cciss driver. It looks like
-> it lives outside the linux scsi subsystem but according
-> to Documentation/cciss.txt it can subsequently "engage"
-> the scsi subsystem??
+> Thanks everyone to have a look at this.
 > 
-> If it is outside the scsi subsystem then it doesn't
-> get corresponding sg devices. However as part of the
-> block subsystem it might accept the SG_IO ioctl (if
-> it accepts SCSI commands and it is implemented).
+> I think i modified to have the latest kernel support. Unfortunately I
+> could not test it with 2.6.20 kernel due to some issues in my laptop and
+> 2.6.20 kernel. But it should work with 2.6.20 with this modification.
 > 
+> The modified version is available through
+> http://vscsihba.aboo.org/vscsihbav202.tgz.
+> 
+> 1. I fixed the kmem_cache issue for sure.
+> 2. I think i got around with INIT_WORK ... Made the following
+> modifications ...
 
-Cciss is a block driver mostly outside of SCSI. It does interface into
-the SCSI system for tape drives.
+Perhaps you could get some of my scsi tools (e.g.
+sdparm and sg3_utils) and make sure that vscsihba
+can handle everything they can throw at it.
+If the user space doesn't support a SCSI command then
+your driver should fail gracefully (i.e. CHECK CONDITION,
+etc).
 
-> > I tried lsscsi, however it would not print out the non-sg block devices.
-> > 
-> > I have attached the output of tree /sys and the output of lsscsi and uname.
-> > One can search for cciss to find the devices and the driver.
-> > I still cannot see a relationship.
-> 
-> <snip sysfs dump>
-> 
-> > [0:0:0:0]    storage COMPAQ   MSA1000          4.32  -       
-> > [0:0:0:3]    disk    COMPAQ   MSA1000 VOLUME   4.32  /dev/sda
-> > [0:0:0:4]    disk    COMPAQ   MSA1000 VOLUME   4.32  /dev/sdb
-> > [0:0:0:5]    disk    COMPAQ   MSA1000 VOLUME   4.32  /dev/sdc
-> > [0:0:0:6]    disk    COMPAQ   MSA1000 VOLUME   4.32  /dev/sdd
-> > [0:0:0:7]    disk    COMPAQ   MSA1000 VOLUME   4.32  /dev/sde
-> > [1:0:0:0]    storage COMPAQ   MSA1000          4.32  -       
-> > [1:0:0:3]    disk    COMPAQ   MSA1000 VOLUME   4.32  /dev/sdf
-> > [1:0:0:4]    disk    COMPAQ   MSA1000 VOLUME   4.32  /dev/sdg
-> > [1:0:0:5]    disk    COMPAQ   MSA1000 VOLUME   4.32  /dev/sdh
-> > [1:0:0:6]    disk    COMPAQ   MSA1000 VOLUME   4.32  /dev/sdi
-> > [1:0:0:7]    disk    COMPAQ   MSA1000 VOLUME   4.32  /dev/sdj
-> 
-> Well this looks like output from lsscsi. And those devices look
-> like they could be associated with cciss, especially the
-> compaq "storage" devices. These devices should have corresponding
-> sg device nodes. Try "lsscsi -g".
+Here is a worrying example: sdparm sends an INQUIRY
+and a couple of MODE SENSE(10) commands to a device.
+/dev/sda was created by your script:
+$ ./start_target.sh id=3 -files zz_lun0
 
-These are Fibre-Channel Storage arrays, probably going through a QLogic
-HBA.
+$ sdparm /dev/sda
+    /dev/sda: VirtualH  VHD               0
+<long wait>
+$
 
-> 
-> Still a bit unclear as hosts 0 and 1 are Fibre Channel
-> judging from the sysfs output for them.
-> 
-> Doug Gilbert
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
--- 
-Andrew Patterson
-Hewlett-Packard Company
+However dmesg showed this:
 
+vscsihba:3: In Reset Device
+vscsihba:3: In Reset Device
+vscsihba:3: In Reset Device
+vscsihba:3: In Reset Device
+vscsihba:3: In Reset Device
+vscsihba:3: In Reset Device
+sd 0:0:0:0: SCSI error: return code = 0x00000002
+end_request: I/O error, dev sda, sector 10240
+Buffer I/O error on device sda, logical block 10240
+vscsihba:3: In Reset Device
+vscsihba:3: In Reset Device
+vscsihba:3: In Reset Device
+vscsihba:3: In Reset Device
+vscsihba:3: In Reset Device
+vscsihba:3: In Reset Device
+sd 0:0:0:0: SCSI error: return code = 0x00000002
+end_request: I/O error, dev sda, sector 10240
+Buffer I/O error on device sda, logical block 10240
+vscsihba:3: In Reset Device
+vscsihba:3: In Reset Device
+vscsihba:3: In Reset Device
+vscsihba:3: In Reset Device
+vscsihba:3: In Reset Device
+vscsihba:3: In Reset Device
+sd 0:0:0:0: SCSI error: return code = 0x00000002
+end_request: I/O error, dev sda, sector 10240
+Buffer I/O error on device sda, logical block 10240
+vscsihba:3: In Reset Device
+vscsihba:3: In Reset Device
+vscsihba:3: In Reset Device
+vscsihba:3: In Reset Device
+vscsihba:3: In Reset Device
+vscsihba:3: In Reset Device
+sd 0:0:0:0: SCSI error: return code = 0x00000002
+end_request: I/O error, dev sda, sector 10240
+Buffer I/O error on device sda, logical block 10240
+vscsihba:3: In Reset Device
+vscsihba:3: In Reset Device
+vscsihba:3: In Reset Device
+vscsihba:3: In Reset Device
+vscsihba:3: In Reset Device
+vscsihba:3: In Reset Device
+sd 0:0:0:0: SCSI error: return code = 0x00000002
+end_request: I/O error, dev sda, sector 10240
+Buffer I/O error on device sda, logical block 10240
+vscsihba:3: In Reset Device
+vscsihba:3: In Reset Device
+vscsihba:3: In Reset Device
+vscsihba:3: In Reset Device
+vscsihba:3: In Reset Device
+vscsihba:3: In Reset Device
+sd 0:0:0:0: SCSI error: return code = 0x00000002
+end_request: I/O error, dev sda, sector 10240
+Buffer I/O error on device sda, logical block 10240
+BUG: at kernel/sched.c:3388 sub_preempt_count()
+ [<e1bf029c>] scsitap_eh_abort+0x1c/0x90 [vscsihba]
+ [<c024fe22>] scsi_error_handler+0x3e2/0xbe0
+ [<c02d74f1>] __sched_text_start+0x2f1/0x660
+ [<c024fa40>] scsi_error_handler+0x0/0xbe0
+ [<c0131679>] kthread+0xa9/0xe0
+ [<c01315d0>] kthread+0x0/0xe0
+ [<c0103d0f>] kernel_thread_helper+0x7/0x18
+ =======================
+vscsihba:3: Abortng command serial number : 94
+BUG: scheduling while atomic: scsi_eh_0/0x00000001/4749
+ [<c02d7684>] __sched_text_start+0x484/0x660
+ [<c013183b>] autoremove_wake_function+0x1b/0x50
+ [<c01264a8>] lock_timer_base+0x28/0x70
+ [<c01265f2>] __mod_timer+0x92/0xd0
+ [<c02d826b>] schedule_timeout+0x4b/0xd0
+ [<c01269c0>] process_timeout+0x0/0x10
+ [<c02d7bbc>] wait_for_completion_timeout+0x9c/0x130
+ [<c0119ee0>] default_wake_function+0x0/0x10
+ [<c024f3c9>] scsi_send_eh_cmnd+0x1b9/0x390
+ [<c011df3e>] vprintk+0x1fe/0x3a0
+ [<c024f805>] scsi_delete_timer+0x15/0x60
+ [<c024f624>] scsi_eh_tur+0x34/0xa0
+ [<c024fe69>] scsi_error_handler+0x429/0xbe0
+ [<c02d74f1>] __sched_text_start+0x2f1/0x660
+ [<c024fa40>] scsi_error_handler+0x0/0xbe0
+ [<c0131679>] kthread+0xa9/0xe0
+ [<c01315d0>] kthread+0x0/0xe0
+ [<c0103d0f>] kernel_thread_helper+0x7/0x18
+ =======================
+vscsihba:3: Abortng command serial number : 95
+vscsihba:3: In Reset Device
+BUG: scheduling while atomic: scsi_eh_0/0x00000001/4749
+ [<c02d7684>] __sched_text_start+0x484/0x660
+ [<c011df3e>] vprintk+0x1fe/0x3a0
+ [<c01264a8>] lock_timer_base+0x28/0x70
+ [<c01265f2>] __mod_timer+0x92/0xd0
+ [<c02d826b>] schedule_timeout+0x4b/0xd0
+ [<c01269c0>] process_timeout+0x0/0x10
+ [<c02d7bbc>] wait_for_completion_timeout+0x9c/0x130
+ [<c0119ee0>] default_wake_function+0x0/0x10
+ [<c024f3c9>] scsi_send_eh_cmnd+0x1b9/0x390
+ [<c024f805>] scsi_delete_timer+0x15/0x60
+ [<c024f624>] scsi_eh_tur+0x34/0xa0
+ [<e1bf00cd>] scsitap_eh_device_reset+0x1d/0x30 [vscsihba]
+ [<c02503a8>] scsi_error_handler+0x968/0xbe0
+ [<c02d74f1>] __sched_text_start+0x2f1/0x660
+ [<c024fa40>] scsi_error_handler+0x0/0xbe0
+ [<c0131679>] kthread+0xa9/0xe0
+ [<c01315d0>] kthread+0x0/0xe0
+ [<c0103d0f>] kernel_thread_helper+0x7/0x18
+ =======================
+vscsihba:3: Abortng command serial number : 96
+vscsihba:3: In Reset Host
+BUG: scheduling while atomic: scsi_eh_0/0x00000001/4749
+ [<c02d7684>] __sched_text_start+0x484/0x660
+ [<c01264a8>] lock_timer_base+0x28/0x70
+ [<c01265f2>] __mod_timer+0x92/0xd0
+ [<c02d826b>] schedule_timeout+0x4b/0xd0
+ [<c01269c0>] process_timeout+0x0/0x10
+ [<c01273d5>] msleep+0x25/0x30
+ [<c024efb1>] scsi_try_host_reset+0xa1/0xd0
+ [<c0250150>] scsi_error_handler+0x710/0xbe0
+ [<c02d74f1>] __sched_text_start+0x2f1/0x660
+ [<c024fa40>] scsi_error_handler+0x0/0xbe0
+ [<c0131679>] kthread+0xa9/0xe0
+ [<c01315d0>] kthread+0x0/0xe0
+ [<c0103d0f>] kernel_thread_helper+0x7/0x18
+ =======================
+BUG: scheduling while atomic: scsi_eh_0/0x00000001/4749
+ [<c02d7684>] __sched_text_start+0x484/0x660
+ [<c01264a8>] lock_timer_base+0x28/0x70
+ [<c01265f2>] __mod_timer+0x92/0xd0
+ [<c02d826b>] schedule_timeout+0x4b/0xd0
+ [<c01269c0>] process_timeout+0x0/0x10
+ [<c02d7bbc>] wait_for_completion_timeout+0x9c/0x130
+ [<c0119ee0>] default_wake_function+0x0/0x10
+ [<c024f3c9>] scsi_send_eh_cmnd+0x1b9/0x390
+ [<c02d74f1>] __sched_text_start+0x2f1/0x660
+ [<c01265f2>] __mod_timer+0x92/0xd0
+ [<c02d8272>] schedule_timeout+0x52/0xd0
+ [<c024f624>] scsi_eh_tur+0x34/0xa0
+ [<c02501a0>] scsi_error_handler+0x760/0xbe0
+ [<c02d74f1>] __sched_text_start+0x2f1/0x660
+ [<c024fa40>] scsi_error_handler+0x0/0xbe0
+ [<c0131679>] kthread+0xa9/0xe0
+ [<c01315d0>] kthread+0x0/0xe0
+ [<c0103d0f>] kernel_thread_helper+0x7/0x18
+ =======================
+vscsihba:3: Abortng command serial number : 97
+sd 0:0:0:0: scsi: Device offlined - not ready after error recovery
+BUG: scheduling while atomic: scsi_eh_0/0x00000001/4749
+ [<c02d7684>] __sched_text_start+0x484/0x660
+ [<c013aa11>] module_put+0x31/0x60
+ [<c024bd6e>] scsi_device_put+0x3e/0x40
+ [<c024be5f>] __scsi_iterate_devices+0x6f/0x90
+ [<c024fa86>] scsi_error_handler+0x46/0xbe0
+ [<c024fa40>] scsi_error_handler+0x0/0xbe0
+ [<c0131679>] kthread+0xa9/0xe0
+ [<c01315d0>] kthread+0x0/0xe0
+ [<c0103d0f>] kernel_thread_helper+0x7/0x18
+ =======================
+
+
+Doug Gilbert
