@@ -1,56 +1,61 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH 36/59] sysctl: C99 convert ctl_tables entries in
-	arch/ppc/kernel/ppc_htab.c
-Date: Wed, 17 Jan 2007 14:16:54 +1100
-Message-ID: <1169003814.4778.19.camel@localhost.localdomain>
-References: <m1ac0jc4no.fsf@ebiederm.dsl.xmission.com>
-	 <11689656602523-git-send-email-ebiederm@xmission.com>
+From: Brian King <brking@us.ibm.com>
+Subject: Re: [PATCH] libata: initialize qc->dma_dir to DMA_NONE
+Date: Tue, 16 Jan 2007 21:43:59 -0600
+Message-ID: <45AD9B7F.4090608@us.ibm.com>
+References: <45AD50AD.2040700@linux.vnet.ibm.com> <20070116224115.50d29cf7@localhost.localdomain> <45AD55A4.50208@pobox.com> <1168989094.2789.20.camel@mulgrave.il.steeleye.com> <45AD5D27.8020004@linux.vnet.ibm.com> <45AD60B9.3030501@linux.vnet.ibm.com> <20070117023402.GP10987@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-mips-bounce@linux-mips.org>
-In-Reply-To: <11689656602523-git-send-email-ebiederm@xmission.com>
-Sender: linux-mips-bounce@linux-mips.org
-Errors-to: linux-mips-bounce@linux-mips.org
-To: "Eric W. Biederman" <ebiederm@xmission.com>
-Cc: "<Andrew Morton" <akpm@osdl.org>, linux-mips@linux-mips.org, linux-parport@lists.infradead.org, heiko.carstens@de.ibm.com, ak@suse.de, linuxppc-dev@ozlabs.org, paulus@samba.org, aharkes@cs.cmu.edu, schwidefsky@de.ibm.com, tim@cyberelk.net, rtc-linux@googlegroups.com, linux-scsi@vger.kernel.org, kurt.hackel@oracle.com, coda@cs.cmu.edu, vojtech@suse.cz, linuxsh-shmedia-dev@lists.sourceforge.net, James.Bottomley@SteelEye.com, clemens@ladisch.de, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, andrea@suse.de, openipmi-developer@lists.sourceforge.net, linux-390@vm.marist.edu, codalist@TELEMANN.coda.cs.cmu.edu, a.zummo@towertech.it, tony.luck@intel.com, linux-ntfs-dev@lists.sourceforge.net, netdev@vger.kernel.org, aia21@cantab.net, linux-kernel@vger.kernel.org, ralf@linux-mips.org, lethal@linux-sh.org, containers@lists.osdl.org, linux390@de.ibm.com, philb@gnu.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e34.co.us.ibm.com ([32.97.110.152]:53376 "EHLO
+	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751008AbXAQDo7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Jan 2007 22:44:59 -0500
+In-Reply-To: <20070117023402.GP10987@htj.dyndns.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Brian King <brking@linux.vnet.ibm.com>, Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@SteelEye.com>, Alan <alan@lxorguk.ukuu.org.uk>, linux-scsi@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On Tue, 2007-01-16 at 09:39 -0700, Eric W. Biederman wrote:
-> From: Eric W. Biederman <ebiederm@xmission.com> - unquoted
-> 
-> And make the mode of the kernel directory 0555 no one is allowed
-> to write to sysctl directories.
-> 
-> Signed-off-by: Eric W. Biederman <ebiederm@xmission.com>
+ACK
 
-Acked-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-
-> ---
->  arch/ppc/kernel/ppc_htab.c |   11 ++++++++---
->  1 files changed, 8 insertions(+), 3 deletions(-)
+Tejun Heo wrote:
+> libata didn't used to init qc->dma_dir to any specific value on qc
+> initialization and command translation path didn't set qc->dma_dir if
+> the command doesn't need data transfer.  This made non-data commands
+> to have random qc->dma_dir.
 > 
-> diff --git a/arch/ppc/kernel/ppc_htab.c b/arch/ppc/kernel/ppc_htab.c
-> index bd129d3..77b20ff 100644
-> --- a/arch/ppc/kernel/ppc_htab.c
-> +++ b/arch/ppc/kernel/ppc_htab.c
-> @@ -442,11 +442,16 @@ static ctl_table htab_ctl_table[]={
->  		.mode		= 0644,
->  		.proc_handler	= &proc_dol2crvec,
->  	},
-> -	{ 0, },
-> +	{}
->  };
->  static ctl_table htab_sysctl_root[] = {
-> -	{ 1, "kernel", NULL, 0, 0755, htab_ctl_table, },
-> - 	{ 0,},
-> +	{
-> +		.ctl_name	= CTL_KERN,
-> +		.procname	= "kernel",
-> +		.mode		= 0555,
-> +		.child		= htab_ctl_table,
-> +	},
-> +	{}
->  };
->  
->  static int __init
+> This usually doesn't cause problem because LLDs usually check
+> qc->protocol first and look at qc->dma_dir iff the command needs data
+> transfer but this doesn't hold for all LLDs.
+> 
+> It might be worthwhile to rename qc->dma_dir to qc->data_dir as we use
+> the field to tag data direction for both PIO and DMA protocols.
+> 
+> This problem has been spotted by James Bottomley.
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> Cc: James Bottomley <James.Bottomley@SteelEye.com>
+> 
+> diff --git a/include/linux/libata.h b/include/linux/libata.h
+> index 7cfc18f..925ad7f 100644
+> --- a/include/linux/libata.h
+> +++ b/include/linux/libata.h
+> @@ -1139,6 +1139,7 @@ static inline void ata_tf_init(struct ata_device *dev, struct ata_taskfile *tf)
+> 
+>  static inline void ata_qc_reinit(struct ata_queued_cmd *qc)
+>  {
+> +	qc->dma_dir = DMA_NONE;
+>  	qc->__sg = NULL;
+>  	qc->flags = 0;
+>  	qc->cursect = qc->cursg = qc->cursg_ofs = 0;
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
