@@ -1,58 +1,89 @@
-From: ebiederm@xmission.com (Eric W. Biederman)
-Subject: Re: [PATCH 50/59] sysctl: Move utsname sysctls to their own file
-Date: Wed, 17 Jan 2007 12:31:22 -0700
-Message-ID: <m1ps9d8n79.fsf@ebiederm.dsl.xmission.com>
-References: <m1ac0jc4no.fsf@ebiederm.dsl.xmission.com>
-	<11689656853154-git-send-email-ebiederm@xmission.com>
-	<45AE5FDC.5050603@sw.ru>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: no utility / method to show association between HBA &	non-sg
+ BLOCK (scsi) devices - register_blkdev()
+Date: Wed, 17 Jan 2007 16:04:36 -0500
+Message-ID: <45AE8F64.9080504@torque.net>
+References: <8260533.post@talk.nabble.com> <45A53290.1060400@torque.net> <45A62C32.8E7F.00B8.0@novell.com> <45A69AD6.60207@torque.net> <45AE22E0.DB3A.00B8.0@novell.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-mips-bounce@linux-mips.org>
-In-Reply-To: <45AE5FDC.5050603@sw.ru> (Kirill Korotaev's message of "Wed, 17
-	Jan 2007 20:41:48 +0300")
-Sender: linux-mips-bounce@linux-mips.org
-Errors-to: linux-mips-bounce@linux-mips.org
-To: Kirill Korotaev <dev@sw.ru>
-Cc: "<Andrew Morton" <akpm@osdl.org>, James.Bottomley@SteelEye.com, linux-mips@linux-mips.org, linux-parport@lists.infradead.org, minyard@acm.org, rtc-linux@googlegroups.com, clemens@ladisch.de, heiko.carstens@de.ibm.com, xfs@oss.sgi.com, linuxppc-dev@ozlabs.org, paulus@samba.org, openipmi-developer@lists.sourceforge.net, linux-390@vm.marist.edu, schwidefsky@de.ibm.com, tim@cyberelk.net, codalist@TELEMANN.coda.cs.cmu.edu, a.zummo@towertech.it, tony.luck@intel.com, vojtech@suse.cz, linux-scsi@vger.kernel.org, xfs-masters@oss.sgi.com, linux-ntfs-dev@lists.sourceforge.net, netdev@vger.kernel.org, aia21@cantab.net, aharkes@cs.cmu.edu, linux-kernel@vger.kernel.org, ralf@linux-mips.org, mark.fasheh@oracle.com, coda@cs.cmu.edu, lethal@linux-sh.org, kurt.hackel@oracle.com, containers@lists.osdl.org, linux390@de.ibm.com, philb@gnu.org, andrea@suse.de, linuxsh-shmedia-dev@lists.sour
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from pentafluge.infradead.org ([213.146.154.40]:33968 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750723AbXAQVEv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jan 2007 16:04:51 -0500
+In-Reply-To: <45AE22E0.DB3A.00B8.0@novell.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Thayne Harmon <tharmon@novell.com>
+Cc: linux-scsi@vger.kernel.org
 
-Kirill Korotaev <dev@sw.ru> writes:
+Thayne Harmon wrote:
+>>>> On Thu, Jan 11, 2007 at  1:15 PM, in message <45A69AD6.60207@torque.net>,
+> Douglas Gilbert <dougg@torque.net> wrote: 
+>> Thayne Harmon wrote:
+>>> Gentlemen,
+>>>
+>>> hwinfo, lshal, sysfs do not show the relationship for non- sg BLOCK devices 
+>> with there 
+>>> associated Host Bus Adapter.
+>> All devices (i.e. logical units) have a 4 element tuple
+>> associated with them and the first element is the host
+>> number. A HBA contains one or more hosts. Then you can
+>> datamine in /sys/class/scsi_host/host<n> for whatever
+>> information you want.
+>>
+>>> Do you know of a utility or method that can show this?
+>> May I suggest lsscsi. That won't help you in the lk 2.4
+>> series and earlier though There are other methods by
+>> which the sg device corresponding to a "non- sg" block
+>> device (e.g. /dev/sdc) can be found.
+> 
+> [context - Linux testserver 2.6.16.21-0.8-smp i586]
+> 
+> There is no corresponding sg device. The device file is
+> /dev/cciss/c0d1.
 
-> Eric, though I personally don't care much:
-> 1. I ask for not setting your authorship/copyright on the code which you just
-> copied
->   from other places. Just doesn't look polite IMHO.
+Ok, I'm not familiar with the cciss driver. It looks like
+it lives outside the linux scsi subsystem but according
+to Documentation/cciss.txt it can subsequently "engage"
+the scsi subsystem??
 
-I can't claim complete ownership of the code, there was plenty of feed back
-and contributions from others but the final form without a big switch
-statement is mine.  I certainly can't claim the table, it has been in
-that form for years.
+If it is outside the scsi subsystem then it doesn't
+get corresponding sg devices. However as part of the
+block subsystem it might accept the SG_IO ioctl (if
+it accepts SCSI commands and it is implemented).
 
-If you notice I actually didn't say whose copyright it was :)  just
-that I wrote the file.
+> I tried lsscsi, however it would not print out the non-sg block devices.
+> 
+> I have attached the output of tree /sys and the output of lsscsi and uname.
+> One can search for cciss to find the devices and the driver.
+> I still cannot see a relationship.
 
-If there are copyright claims I should include I will be happy to do that.
-Mostly I was just trying to find some stupid boiler plate that would work.
+<snip sysfs dump>
 
-> 2. I would propose to not introduce utsname_sysctl.c.
->   both files are too small and minor that I can't see much reasons splitting
-> them.
+> [0:0:0:0]    storage COMPAQ   MSA1000          4.32  -       
+> [0:0:0:3]    disk    COMPAQ   MSA1000 VOLUME   4.32  /dev/sda
+> [0:0:0:4]    disk    COMPAQ   MSA1000 VOLUME   4.32  /dev/sdb
+> [0:0:0:5]    disk    COMPAQ   MSA1000 VOLUME   4.32  /dev/sdc
+> [0:0:0:6]    disk    COMPAQ   MSA1000 VOLUME   4.32  /dev/sdd
+> [0:0:0:7]    disk    COMPAQ   MSA1000 VOLUME   4.32  /dev/sde
+> [1:0:0:0]    storage COMPAQ   MSA1000          4.32  -       
+> [1:0:0:3]    disk    COMPAQ   MSA1000 VOLUME   4.32  /dev/sdf
+> [1:0:0:4]    disk    COMPAQ   MSA1000 VOLUME   4.32  /dev/sdg
+> [1:0:0:5]    disk    COMPAQ   MSA1000 VOLUME   4.32  /dev/sdh
+> [1:0:0:6]    disk    COMPAQ   MSA1000 VOLUME   4.32  /dev/sdi
+> [1:0:0:7]    disk    COMPAQ   MSA1000 VOLUME   4.32  /dev/sdj
 
-The impact of moving this code out of sysctl.c is a major
-simplification, to sysctl.c.  Putting them in their own file means we
-can cleanly restrict the code to only be compiled CONFIG_SYSCTL is set.
+Well this looks like output from lsscsi. And those devices look
+like they could be associated with cciss, especially the
+compaq "storage" devices. These devices should have corresponding
+sg device nodes. Try "lsscsi -g".
 
-It is a necessary first step to implementing a per process /proc/sys.
+Still a bit unclear as hosts 0 and 1 are Fibre Channel
+judging from the sysfs output for them.
 
-It reorganizes the ipc and utsname sysctl from a terribly fragile
-structure to something that is robust and easy to follow.  Code
-scattered all throughout sysctl.c was just a disaster.  We had
-several instances of having to fix bugs with odd combinations of
-CONFIG options, simply because the other spot that needed to be touched
-wasn't obvious.
+Doug Gilbert
 
-So from my perspective this is an extremely worthwhile change that
-will make maintenance easier and is a small first step towards
-some nice future functionality.
 
-Eric
