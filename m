@@ -1,54 +1,85 @@
-From: ebiederm@xmission.com (Eric W. Biederman)
-Subject: Re: [PATCH 0/59] Cleanup sysctl
-Date: Wed, 17 Jan 2007 12:02:27 -0700
-Message-ID: <m1y7o18ojg.fsf@ebiederm.dsl.xmission.com>
-References: <m1ac0jc4no.fsf@ebiederm.dsl.xmission.com>
-	<45AE66AA.1050508@sw.ru>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-mips-bounce@linux-mips.org>
-In-Reply-To: <45AE66AA.1050508@sw.ru> (Kirill Korotaev's message of "Wed, 17
-	Jan 2007 21:10:50 +0300")
-Sender: linux-mips-bounce@linux-mips.org
-Errors-to: linux-mips-bounce@linux-mips.org
-To: Kirill Korotaev <dev@sw.ru>
-Cc: Andrew Morton <akpm@osdl.org>, James.Bottomley@SteelEye.com, linux-mips@linux-mips.org, linux-parport@lists.infradead.org, minyard@acm.org, rtc-linux@googlegroups.com, clemens@ladisch.de, heiko.carstens@de.ibm.com, xfs@oss.sgi.com, linuxppc-dev@ozlabs.org, paulus@samba.org, openipmi-developer@lists.sourceforge.net, linux-390@vm.marist.edu, schwidefsky@de.ibm.com, tim@cyberelk.net, codalist@TELEMANN.coda.cs.cmu.edu, a.zummo@towertech.it, tony.luck@intel.com, vojtech@suse.cz, linux-scsi@vger.kernel.org, xfs-masters@oss.sgi.com, linux-ntfs-dev@lists.sourceforge.net, netdev@vger.kernel.org, aia21@cantab.net, aharkes@cs.cmu.edu, linux-kernel@vger.kernel.org, ralf@linux-mips.org, mark.fasheh@oracle.com, coda@cs.cmu.edu, lethal@linux-sh.org, kurt.hackel@oracle.com, Linux Containers <containers@lists.osdl.org>, linux390@de.ibm.com, philb@gnu.org, andrea@suse.de, linuxsh-shmed
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: [PATCH 2/2] libsas: Check return values of sysfs_create_link
+Date: Wed, 17 Jan 2007 11:25:32 -0800
+Message-ID: <20070117192532.4551.24351.stgit@elm3a70.beaverton.ibm.com>
+References: <20070117192529.4551.23926.stgit@elm3a70.beaverton.ibm.com>
+Content-Type: text/plain; charset=utf-8; format=fixed
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e1.ny.us.ibm.com ([32.97.182.141]:55224 "EHLO e1.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932659AbXAQTZ3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 Jan 2007 14:25:29 -0500
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e1.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id l0HJPQMK011289
+	for <linux-scsi@vger.kernel.org>; Wed, 17 Jan 2007 14:25:26 -0500
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.2) with ESMTP id l0HJPPsO270818
+	for <linux-scsi@vger.kernel.org>; Wed, 17 Jan 2007 14:25:25 -0500
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l0HJPPPA025349
+	for <linux-scsi@vger.kernel.org>; Wed, 17 Jan 2007 14:25:25 -0500
+In-Reply-To: <20070117192529.4551.23926.stgit@elm3a70.beaverton.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: djwong@us.ibm.com, linux-scsi@vger.kernel.org
+Cc: alexisb@us.ibm.com
 
-Kirill Korotaev <dev@sw.ru> writes:
 
-> Eric, really good job!
->
-> Patches: 1-13, 15-24, 26-32, 34-44, 46-49, 52-55, 57 (all except below)
-> Acked-By: Kirill Korotaev <dev@openvz.org>
->
-> 14/59 - minor (extra space)
-> 25/59 - minor note	
-> 33/59 - not sorted sysctl IDs
-> 45/59 - typo
-> 50/59 - copyright/file note
-> 51/59 - copyright/file name/kconfig option notes
->
-> 56,58,59/59 - will review tomorrow
->
-> another issue I have to think over is removal of de->owner.
-> Alexey Dobriyan has sent recently patching fixing /proc <-> modules refcounting.
-> I guess w/o these patches your changes are not safe if proc_handler or strategy
-> are functions from the module.
+Get rid of: "warning: ignoring return value of sysfs_create_link..."
 
-sysctl uses the logic in use_table/unuse_table to keep it safe from module
-remove while it is in use.  And it does the logic in the generic code
-in either do_rw_proc or do_sysctl.  This definitely works on the sys_sysctl path
-and it appears to work in the do_rw_proc case, things are a little trickier
-there so someone may have missed a race somewhere.  In my rewrite of proc
-it works exactly like the binary case so we are good there. 
+Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
+---
 
-It is certainly the intention of the sysctl implementation that users
-should not have to set de->owner.  So if there is a problem with 
-removing de->owner it is a bug in the sysctl implementation not in
-the code where it was removed.
+ drivers/scsi/scsi_transport_sas.c |   26 ++++++++++++++++++++++----
+ 1 files changed, 22 insertions(+), 4 deletions(-)
 
-Normal proc users definitely have to set de->owner to be safe, but sysctl has
-always been it's own thing, with different rules. 
-
-Eric
+diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
+index a5142eb..bd18f01 100644
+--- a/drivers/scsi/scsi_transport_sas.c
++++ b/drivers/scsi/scsi_transport_sas.c
+@@ -625,8 +625,19 @@ static void sas_port_release(struct devi
+ static void sas_port_create_link(struct sas_port *port,
+ 				 struct sas_phy *phy)
+ {
+-	sysfs_create_link(&port->dev.kobj, &phy->dev.kobj, phy->dev.bus_id);
+-	sysfs_create_link(&phy->dev.kobj, &port->dev.kobj, "port");
++	int res;
++
++	res = sysfs_create_link(&port->dev.kobj, &phy->dev.kobj,
++				phy->dev.bus_id);
++	if (res)
++		goto err;
++	res = sysfs_create_link(&phy->dev.kobj, &port->dev.kobj, "port");
++	if (res)
++		goto err;
++	return;
++err:
++	printk(KERN_ERR "%s: Cannot create port links, err=%d\n",
++	       __FUNCTION__, res);
+ }
+ 
+ static void sas_port_delete_link(struct sas_port *port,
+@@ -864,13 +875,20 @@ EXPORT_SYMBOL(sas_port_delete_phy);
+ 
+ void sas_port_mark_backlink(struct sas_port *port)
+ {
++	int res;
+ 	struct device *parent = port->dev.parent->parent->parent;
+ 
+ 	if (port->is_backlink)
+ 		return;
+ 	port->is_backlink = 1;
+-	sysfs_create_link(&port->dev.kobj, &parent->kobj,
+-			  parent->bus_id);
++	res = sysfs_create_link(&port->dev.kobj, &parent->kobj,
++				parent->bus_id);
++	if (res)
++		goto err;
++	return;
++err:
++	printk(KERN_ERR "%s: Cannot create port backlink, err=%d\n",
++	       __FUNCTION__, res);
+ 
+ }
+ EXPORT_SYMBOL(sas_port_mark_backlink);
