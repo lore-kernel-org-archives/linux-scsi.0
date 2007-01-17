@@ -1,100 +1,370 @@
 From: Kirill Korotaev <dev@sw.ru>
-Subject: Re: [PATCH 33/59] sysctl: s390 move sysctl definitions to sysctl.h
-Date: Wed, 17 Jan 2007 20:23:22 +0300
-Message-ID: <45AE5B8A.5040407@sw.ru>
-References: <m1ac0jc4no.fsf@ebiederm.dsl.xmission.com> <11689656572714-git-send-email-ebiederm@xmission.com>
+Subject: Re: [PATCH 50/59] sysctl: Move utsname sysctls to their own file
+Date: Wed, 17 Jan 2007 20:41:48 +0300
+Message-ID: <45AE5FDC.5050603@sw.ru>
+References: <m1ac0jc4no.fsf@ebiederm.dsl.xmission.com> <11689656853154-git-send-email-ebiederm@xmission.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-mips-bounce@linux-mips.org>
-In-Reply-To: <11689656572714-git-send-email-ebiederm@xmission.com>
+In-Reply-To: <11689656853154-git-send-email-ebiederm@xmission.com>
 Sender: linux-mips-bounce@linux-mips.org
 Errors-to: linux-mips-bounce@linux-mips.org
 To: "Eric W. Biederman" <ebiederm@xmission.com>
 Cc: "<Andrew Morton" <akpm@osdl.org>, James.Bottomley@SteelEye.com, linux-mips@linux-mips.org, linux-parport@lists.infradead.org, minyard@acm.org, rtc-linux@googlegroups.com, clemens@ladisch.de, heiko.carstens@de.ibm.com, xfs@oss.sgi.com, linuxppc-dev@ozlabs.org, paulus@samba.org, openipmi-developer@lists.sourceforge.net, linux-390@vm.marist.edu, schwidefsky@de.ibm.com, tim@cyberelk.net, codalist@TELEMANN.coda.cs.cmu.edu, a.zummo@towertech.it, tony.luck@intel.com, vojtech@suse.cz, linux-scsi@vger.kernel.org, xfs-masters@oss.sgi.com, linux-ntfs-dev@lists.sourceforge.net, netdev@vger.kernel.org, aia21@cantab.net, aharkes@cs.cmu.edu, linux-kernel@vger.kernel.org, ralf@linux-mips.org, mark.fasheh@oracle.com, coda@cs.cmu.edu, lethal@linux-sh.org, kurt.hackel@oracle.com, containers@lists.osdl.org, linux390@de.ibm.com, philb@gnu.org, andrea@suse.de, linuxsh-shmedia-dev@lists.sour
 List-Id: linux-scsi@vger.kernel.org
 
-IDs not sorted in enum. see below.
+Eric, though I personally don't care much:
+1. I ask for not setting your authorship/copyright on the code which you just copied
+  from other places. Just doesn't look polite IMHO.
+2. I would propose to not introduce utsname_sysctl.c.
+  both files are too small and minor that I can't see much reasons splitting them.
+
+Kirill
 
 > From: Eric W. Biederman <ebiederm@xmission.com> - unquoted
 > 
-> We need to have the the definition of all top level sysctl
-> directories registers in sysctl.h so we don't conflict by
-> accident and cause abi problems.
+> This is just a simple cleanup to keep kernel/sysctl.c
+> from getting to crowded with special cases, and by
+> keeping all of the utsname logic to together it makes
+> the code a little more readable.
 > 
 > Signed-off-by: Eric W. Biederman <ebiederm@xmission.com>
 > ---
->  arch/s390/appldata/appldata.h |    3 +--
->  arch/s390/kernel/debug.c      |    1 -
->  arch/s390/mm/cmm.c            |    4 ----
->  include/linux/sysctl.h        |    7 +++++++
->  4 files changed, 8 insertions(+), 7 deletions(-)
+>  kernel/Makefile         |    1 +
+>  kernel/sysctl.c         |  115 -------------------------------------
+>  kernel/utsname_sysctl.c |  146 +++++++++++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 147 insertions(+), 115 deletions(-)
 > 
-> diff --git a/arch/s390/appldata/appldata.h b/arch/s390/appldata/appldata.h
-> index 0429481..4069b81 100644
-> --- a/arch/s390/appldata/appldata.h
-> +++ b/arch/s390/appldata/appldata.h
-> @@ -21,8 +21,7 @@
->  #define APPLDATA_RECORD_NET_SUM_ID	0x03	/* must be < 256 !     */
->  #define APPLDATA_RECORD_PROC_ID		0x04
+> diff --git a/kernel/Makefile b/kernel/Makefile
+> index 14f4d45..d286c44 100644
+> --- a/kernel/Makefile
+> +++ b/kernel/Makefile
+> @@ -48,6 +48,7 @@ obj-$(CONFIG_SECCOMP) += seccomp.o
+>  obj-$(CONFIG_RCU_TORTURE_TEST) += rcutorture.o
+>  obj-$(CONFIG_RELAY) += relay.o
+>  obj-$(CONFIG_UTS_NS) += utsname.o
+> +obj-$(CONFIG_SYSCTL) += utsname_sysctl.o
+>  obj-$(CONFIG_TASK_DELAY_ACCT) += delayacct.o
+>  obj-$(CONFIG_TASKSTATS) += taskstats.o tsacct.o
 >  
-> -#define CTL_APPLDATA 		2120	/* sysctl IDs, must be unique */
-> -#define CTL_APPLDATA_TIMER 	2121
-> +#define CTL_APPLDATA_TIMER 	2121	/* sysctl IDs, must be unique */
->  #define CTL_APPLDATA_INTERVAL 	2122
->  #define CTL_APPLDATA_MEM	2123
->  #define CTL_APPLDATA_OS		2124
-> diff --git a/arch/s390/kernel/debug.c b/arch/s390/kernel/debug.c
-> index bb57bc0..c81f8e5 100644
-> --- a/arch/s390/kernel/debug.c
-> +++ b/arch/s390/kernel/debug.c
-> @@ -852,7 +852,6 @@ debug_finish_entry(debug_info_t * id, debug_entry_t* active, int level,
->  static int debug_stoppable=1;
->  static int debug_active=1;
+> diff --git a/kernel/sysctl.c b/kernel/sysctl.c
+> index 7420761..a8c0a03 100644
+> --- a/kernel/sysctl.c
+> +++ b/kernel/sysctl.c
+> @@ -135,13 +135,6 @@ static int parse_table(int __user *, int, void __user *, size_t __user *,
+>  		void __user *, size_t, ctl_table *);
+>  #endif
 >  
-> -#define CTL_S390DBF 5677
->  #define CTL_S390DBF_STOPPABLE 5678
->  #define CTL_S390DBF_ACTIVE 5679
+> -static int proc_do_uts_string(ctl_table *table, int write, struct file *filp,
+> -		  void __user *buffer, size_t *lenp, loff_t *ppos);
+> -
+> -static int sysctl_uts_string(ctl_table *table, int __user *name, int nlen,
+> -		  void __user *oldval, size_t __user *oldlenp,
+> -		  void __user *newval, size_t newlen);
+> -
+>  #ifdef CONFIG_SYSVIPC
+>  static int sysctl_ipc_data(ctl_table *table, int __user *name, int nlen,
+>  		  void __user *oldval, size_t __user *oldlenp,
+> @@ -174,27 +167,6 @@ extern ctl_table inotify_table[];
+>  int sysctl_legacy_va_layout;
+>  #endif
 >  
-> diff --git a/arch/s390/mm/cmm.c b/arch/s390/mm/cmm.c
-> index 607f50e..df733d5 100644
-> --- a/arch/s390/mm/cmm.c
-> +++ b/arch/s390/mm/cmm.c
-> @@ -256,10 +256,6 @@ cmm_skip_blanks(char *cp, char **endp)
+> -static void *get_uts(ctl_table *table, int write)
+> -{
+> -	char *which = table->data;
+> -#ifdef CONFIG_UTS_NS
+> -	struct uts_namespace *uts_ns = current->nsproxy->uts_ns;
+> -	which = (which - (char *)&init_uts_ns) + (char *)uts_ns;
+> -#endif
+> -	if (!write)
+> -		down_read(&uts_sem);
+> -	else
+> -		down_write(&uts_sem);
+> -	return which;
+> -}
+> -
+> -static void put_uts(ctl_table *table, int write, void *which)
+> -{
+> -	if (!write)
+> -		up_read(&uts_sem);
+> -	else
+> -		up_write(&uts_sem);
+> -}
+>  
+>  #ifdef CONFIG_SYSVIPC
+>  static void *get_ipc(ctl_table *table, int write)
+> @@ -275,51 +247,6 @@ static ctl_table root_table[] = {
+>  
+>  static ctl_table kern_table[] = {
+>  	{
+> -		.ctl_name	= KERN_OSTYPE,
+> -		.procname	= "ostype",
+> -		.data		= init_uts_ns.name.sysname,
+> -		.maxlen		= sizeof(init_uts_ns.name.sysname),
+> -		.mode		= 0444,
+> -		.proc_handler	= &proc_do_uts_string,
+> -		.strategy	= &sysctl_uts_string,
+> -	},
+> -	{
+> -		.ctl_name	= KERN_OSRELEASE,
+> -		.procname	= "osrelease",
+> -		.data		= init_uts_ns.name.release,
+> -		.maxlen		= sizeof(init_uts_ns.name.release),
+> -		.mode		= 0444,
+> -		.proc_handler	= &proc_do_uts_string,
+> -		.strategy	= &sysctl_uts_string,
+> -	},
+> -	{
+> -		.ctl_name	= KERN_VERSION,
+> -		.procname	= "version",
+> -		.data		= init_uts_ns.name.version,
+> -		.maxlen		= sizeof(init_uts_ns.name.version),
+> -		.mode		= 0444,
+> -		.proc_handler	= &proc_do_uts_string,
+> -		.strategy	= &sysctl_uts_string,
+> -	},
+> -	{
+> -		.ctl_name	= KERN_NODENAME,
+> -		.procname	= "hostname",
+> -		.data		= init_uts_ns.name.nodename,
+> -		.maxlen		= sizeof(init_uts_ns.name.nodename),
+> -		.mode		= 0644,
+> -		.proc_handler	= &proc_do_uts_string,
+> -		.strategy	= &sysctl_uts_string,
+> -	},
+> -	{
+> -		.ctl_name	= KERN_DOMAINNAME,
+> -		.procname	= "domainname",
+> -		.data		= init_uts_ns.name.domainname,
+> -		.maxlen		= sizeof(init_uts_ns.name.domainname),
+> -		.mode		= 0644,
+> -		.proc_handler	= &proc_do_uts_string,
+> -		.strategy	= &sysctl_uts_string,
+> -	},
+> -	{
+>  		.ctl_name	= KERN_PANIC,
+>  		.procname	= "panic",
+>  		.data		= &panic_timeout,
+> @@ -1746,21 +1673,6 @@ int proc_dostring(ctl_table *table, int write, struct file *filp,
+>  			       buffer, lenp, ppos);
 >  }
 >  
->  #ifdef CONFIG_CMM_PROC
-> -/* These will someday get removed. */
-> -#define VM_CMM_PAGES		1111
-> -#define VM_CMM_TIMED_PAGES	1112
-> -#define VM_CMM_TIMEOUT		1113
+> -/*
+> - *	Special case of dostring for the UTS structure. This has locks
+> - *	to observe. Should this be in kernel/sys.c ????
+> - */
+> -
+> -static int proc_do_uts_string(ctl_table *table, int write, struct file *filp,
+> -		  void __user *buffer, size_t *lenp, loff_t *ppos)
+> -{
+> -	int r;
+> -	void *which;
+> -	which = get_uts(table, write);
+> -	r = _proc_do_string(which, table->maxlen,write,filp,buffer,lenp, ppos);
+> -	put_uts(table, write, which);
+> -	return r;
+> -}
 >  
->  static struct ctl_table cmm_table[];
+>  static int do_proc_dointvec_conv(int *negp, unsigned long *lvalp,
+>  				 int *valp,
+> @@ -2379,12 +2291,6 @@ int proc_dostring(ctl_table *table, int write, struct file *filp,
+>  	return -ENOSYS;
+>  }
 >  
-> diff --git a/include/linux/sysctl.h b/include/linux/sysctl.h
-> index 71c16b4..56d0161 100644
-> --- a/include/linux/sysctl.h
-> +++ b/include/linux/sysctl.h
-> @@ -73,6 +73,8 @@ enum
->  	CTL_SUNRPC=7249,	/* sunrpc debug */
->  	CTL_PM=9899,		/* frv power management */
->  	CTL_FRV=9898,		/* frv specific sysctls */
-> +	CTL_S390DBF=5677,	/* s390 debug */
-> +	CTL_APPLDATA=2120,	/* s390 appldata */
-<<<< not sorted by ID? imho should be sorted. otherwise can'be unnotied when inserted above.
-
->  };
+> -static int proc_do_uts_string(ctl_table *table, int write, struct file *filp,
+> -		void __user *buffer, size_t *lenp, loff_t *ppos)
+> -{
+> -	return -ENOSYS;
+> -}
+> -
+>  #ifdef CONFIG_SYSVIPC
+>  static int proc_do_ipc_string(ctl_table *table, int write, struct file *filp,
+>  		void __user *buffer, size_t *lenp, loff_t *ppos)
+> @@ -2602,21 +2508,6 @@ int sysctl_ms_jiffies(ctl_table *table, int __user *name, int nlen,
+>  }
 >  
->  /* CTL_BUS names: */
-> @@ -205,6 +207,11 @@ enum
->  	VM_PANIC_ON_OOM=33,	/* panic at out-of-memory */
->  	VM_VDSO_ENABLED=34,	/* map VDSO into new processes? */
->  	VM_MIN_SLAB=35,		 /* Percent pages ignored by zone reclaim */
+>  
+> -/* The generic string strategy routine: */
+> -static int sysctl_uts_string(ctl_table *table, int __user *name, int nlen,
+> -		  void __user *oldval, size_t __user *oldlenp,
+> -		  void __user *newval, size_t newlen)
+> -{
+> -	struct ctl_table uts_table;
+> -	int r, write;
+> -	write = newval && newlen;
+> -	memcpy(&uts_table, table, sizeof(uts_table));
+> -	uts_table.data = get_uts(table, write);
+> -	r = sysctl_string(&uts_table, name, nlen,
+> -		oldval, oldlenp, newval, newlen);
+> -	put_uts(table, write, uts_table.data);
+> -	return r;
+> -}
+>  
+>  #ifdef CONFIG_SYSVIPC
+>  /* The generic sysctl ipc data routine. */
+> @@ -2723,12 +2614,6 @@ int sysctl_ms_jiffies(ctl_table *table, int __user *name, int nlen,
+>  	return -ENOSYS;
+>  }
+>  
+> -static int sysctl_uts_string(ctl_table *table, int __user *name, int nlen,
+> -		  void __user *oldval, size_t __user *oldlenp,
+> -		  void __user *newval, size_t newlen)
+> -{
+> -	return -ENOSYS;
+> -}
+>  static int sysctl_ipc_data(ctl_table *table, int __user *name, int nlen,
+>  		void __user *oldval, size_t __user *oldlenp,
+>  		void __user *newval, size_t newlen)
+> diff --git a/kernel/utsname_sysctl.c b/kernel/utsname_sysctl.c
+> new file mode 100644
+> index 0000000..324aa13
+> --- /dev/null
+> +++ b/kernel/utsname_sysctl.c
+> @@ -0,0 +1,146 @@
+> +/*
+> + *  Copyright (C) 2007
+> + *
+> + *  Author: Eric Biederman <ebiederm@xmision.com>
+> + *
+> + *  This program is free software; you can redistribute it and/or
+> + *  modify it under the terms of the GNU General Public License as
+> + *  published by the Free Software Foundation, version 2 of the
+> + *  License.
+> + */
 > +
-> +	/* s390 vm cmm sysctls */
-> +	VM_CMM_PAGES=1111,
-> +	VM_CMM_TIMED_PAGES=1112,
-> +	VM_CMM_TIMEOUT=1113,
->  };
->  
->  
+> +#include <linux/module.h>
+> +#include <linux/uts.h>
+> +#include <linux/utsname.h>
+> +#include <linux/version.h>
+> +#include <linux/sysctl.h>
+> +
+> +static void *get_uts(ctl_table *table, int write)
+> +{
+> +	char *which = table->data;
+> +#ifdef CONFIG_UTS_NS
+> +	struct uts_namespace *uts_ns = current->nsproxy->uts_ns;
+> +	which = (which - (char *)&init_uts_ns) + (char *)uts_ns;
+> +#endif
+> +	if (!write)
+> +		down_read(&uts_sem);
+> +	else
+> +		down_write(&uts_sem);
+> +	return which;
+> +}
+> +
+> +static void put_uts(ctl_table *table, int write, void *which)
+> +{
+> +	if (!write)
+> +		up_read(&uts_sem);
+> +	else
+> +		up_write(&uts_sem);
+> +}
+> +
+> +#ifdef CONFIG_PROC_FS
+> +/*
+> + *	Special case of dostring for the UTS structure. This has locks
+> + *	to observe. Should this be in kernel/sys.c ????
+> + */
+> +static int proc_do_uts_string(ctl_table *table, int write, struct file *filp,
+> +		  void __user *buffer, size_t *lenp, loff_t *ppos)
+> +{
+> +	struct ctl_table uts_table;
+> +	int r;
+> +	memcpy(&uts_table, table, sizeof(uts_table));
+> +	uts_table.data = get_uts(table, write);
+> +	r = proc_dostring(&uts_table,write,filp,buffer,lenp, ppos);
+> +	put_uts(table, write, uts_table.data);
+> +	return r;
+> +}
+> +#else
+> +#define proc_do_uts_string NULL
+> +#endif
+> +
+> +
+> +#ifdef CONFIG_SYSCTL_SYSCALL
+> +/* The generic string strategy routine: */
+> +static int sysctl_uts_string(ctl_table *table, int __user *name, int nlen,
+> +		  void __user *oldval, size_t __user *oldlenp,
+> +		  void __user *newval, size_t newlen)
+> +{
+> +	struct ctl_table uts_table;
+> +	int r, write;
+> +	write = newval && newlen;
+> +	memcpy(&uts_table, table, sizeof(uts_table));
+> +	uts_table.data = get_uts(table, write);
+> +	r = sysctl_string(&uts_table, name, nlen,
+> +		oldval, oldlenp, newval, newlen);
+> +	put_uts(table, write, uts_table.data);
+> +	return r;
+> +}
+> +#else
+> +#define sysctl_uts_string NULL
+> +#endif
+> +
+> +static struct ctl_table uts_kern_table[] = {
+> +	{
+> +		.ctl_name	= KERN_OSTYPE,
+> +		.procname	= "ostype",
+> +		.data		= init_uts_ns.name.sysname,
+> +		.maxlen		= sizeof(init_uts_ns.name.sysname),
+> +		.mode		= 0444,
+> +		.proc_handler	= proc_do_uts_string,
+> +		.strategy	= sysctl_uts_string,
+> +	},
+> +	{
+> +		.ctl_name	= KERN_OSRELEASE,
+> +		.procname	= "osrelease",
+> +		.data		= init_uts_ns.name.release,
+> +		.maxlen		= sizeof(init_uts_ns.name.release),
+> +		.mode		= 0444,
+> +		.proc_handler	= proc_do_uts_string,
+> +		.strategy	= sysctl_uts_string,
+> +	},
+> +	{
+> +		.ctl_name	= KERN_VERSION,
+> +		.procname	= "version",
+> +		.data		= init_uts_ns.name.version,
+> +		.maxlen		= sizeof(init_uts_ns.name.version),
+> +		.mode		= 0444,
+> +		.proc_handler	= proc_do_uts_string,
+> +		.strategy	= sysctl_uts_string,
+> +	},
+> +	{
+> +		.ctl_name	= KERN_NODENAME,
+> +		.procname	= "hostname",
+> +		.data		= init_uts_ns.name.nodename,
+> +		.maxlen		= sizeof(init_uts_ns.name.nodename),
+> +		.mode		= 0644,
+> +		.proc_handler	= proc_do_uts_string,
+> +		.strategy	= sysctl_uts_string,
+> +	},
+> +	{
+> +		.ctl_name	= KERN_DOMAINNAME,
+> +		.procname	= "domainname",
+> +		.data		= init_uts_ns.name.domainname,
+> +		.maxlen		= sizeof(init_uts_ns.name.domainname),
+> +		.mode		= 0644,
+> +		.proc_handler	= proc_do_uts_string,
+> +		.strategy	= sysctl_uts_string,
+> +	},
+> +	{}
+> +};
+> +
+> +static struct ctl_table uts_root_table[] = {
+> +	{
+> +		.ctl_name	= CTL_KERN,
+> +		.procname	= "kernel",
+> +		.mode		= 0555,
+> +		.child		= uts_kern_table,
+> +	},
+> +	{}
+> +};
+> +
+> +static int __init utsname_sysctl_init(void)
+> +{
+> +	register_sysctl_table(uts_root_table, 0);
+> +	return 0;
+> +}
+> +
+> +__initcall(utsname_sysctl_init);
