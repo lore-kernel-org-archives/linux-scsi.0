@@ -1,71 +1,57 @@
-From: "Moore, Eric" <Eric.Moore@lsi.com>
-Subject: RE: [PATCH] Fusion: Call pci_set_mwi()
-Date: Fri, 19 Jan 2007 14:03:05 -0700
-Message-ID: <664A4EBB07F29743873A87CF62C26D705378FD@NAMAIL4.ad.lsil.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH] sd: implement stop_on_shutdown
+Date: Fri, 19 Jan 2007 18:34:13 -0500
+Message-ID: <45B15575.5090806@torque.net>
+References: <20070119170122.GS10987@htj.dyndns.org>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:51648 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964865AbXASVDN convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Jan 2007 16:03:13 -0500
-Content-class: urn:content-classes:message
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20070119170122.GS10987@htj.dyndns.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: James.Bottomley@SteelEye.com, Jeff Garzik <jgarzik@pobox.com>, hmh@hmh.eng.br, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org
 
-On Friday, October 13, 2006 10:25 AM,Matthew Wilcox wrote:   
+Tejun Heo wrote:
+> sd doesn't stop (unload head) on shutdown.  This behavior is necessary
+> for multi initiator cases.  Unloading head by powering off stresses
+> the drive and sometimes produces distinct clunking noise which
+> apparently disturbs users considering multiple reports on different
+> distributions.  halt(8) usually puts the drives to sleep prior to
+> shutdown but the implementation is fragile and it doesn't work with
+> sleep-to-disk.
+> 
+> This patch implements sd attribute stop_on_shutdown.  If set to 1, sd
+> stops the drive on non-restarting shutdown.  stop_on_shutdown is
+> initialized from sd parameter stop_on_shutdown_default which defaults
+> to 0.  So, this patch does not change the default behavior.
 
-> 
-> Hi Eric,
-> 
-> Even though the 1030 is a PCI-X device, it can still be 
-> plugged into a PCI
-> bus, and end up operating in PCI mode.  According to the 
-> documentation,
-> it will benefit from using MWI and MRM commands, but in order to do so
-> under Linux, we need to call pci_set_mwi(), which is what 
-> this patch does.
-> Please apply.
-> 
-> P.S. The if condition is just to avoid the warning from __must_check.
-> Most device drivers do need to check and adjust their 
-> internal flags if
-> it fails, but according to the 1030 manual, the chip automatically
-> decides when to use MWI.
-> 
-> Signed-off-by: Matthew Wilcox <matthew@wil.cx>
-> 
-> diff --git a/drivers/message/fusion/mptbase.c 
-> b/drivers/message/fusion/mptbase.c
-> index 29d0635..d301a67 100644
-> --- a/drivers/message/fusion/mptbase.c
-> +++ b/drivers/message/fusion/mptbase.c
-> @@ -1153,6 +1153,9 @@ #endif
->  	if (pci_enable_device(pdev))
->  		return r;
->  
-> +	if (pci_set_mwi(pdev))
-> +		/* We don't have to do anything if it fails */;
-> +
->  	dinitprintk((KERN_WARNING MYNAM ": mpt_adapter_install\n"));
->  
->  	if (!pci_set_dma_mask(pdev, DMA_64BIT_MASK)) {
-> 
-> 
+Tejun,
+The IMMED bit in the START STOP UNIT cdb is not being set
+when your patch stops a drive:
 
+Advantage:
+  - the power won't be dropped immediately after sending
+    the command to the drive (assuming the drive gets
+    its power from the same power supply that shutdown
+    turns off)
 
-I just responded to the HP thread, and I remember this patch.
+Disadvantage:
+  - it will delay shutdown proportional to the number of
+    drives with the stop_on_shutdown attribute set. Say
+    5 seconds per disk.
+Disadvantage (with or without IMMED bit set):
+  - if another initiator (e.g. on another machine) was
+    using a different partition on that disk, then it might
+    get upset (especially if it was running Linux).
+    [I'm not sure why you say this patch is necessary
+     in this case.]
 
-I hadn't had a chance to check this up.  Pls let me know importance of
-this,
-and I will ask around the office wrt to this patch..  You don't think
-this shouldn't break anything else? , such
-as pci-express cards, cuase we have 1030 pcie, as well as FC and SAS
-that
-are express.  
+BTW SCSI disks typically have a lower start-stop lifetime
+rating than ATA disks. This reflects that SCSI disks are
+designed to be on 168 hours per week.
 
-Eric
+Doug Gilbert
+
