@@ -1,57 +1,149 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: Linux Virtual SCSI HBAs and Virtual disks
-Date: Thu, 18 Jan 2007 01:38:55 +0100
-Message-ID: <45AEC19F.3010203@s5r6.in-berlin.de>
-References: <45AEA118.5030608@torque.net> <4ca60b48a895ce4b50ba227197649f1b@aboo.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] sd: implement stop_on_shutdown
+Date: Sat, 20 Jan 2007 02:01:22 +0900
+Message-ID: <20070119170122.GS10987@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:41480 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751453AbXARAjN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Jan 2007 19:39:13 -0500
-In-Reply-To: <4ca60b48a895ce4b50ba227197649f1b@aboo.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
+To: James.Bottomley@SteelEye.com, Jeff Garzik <jgarzik@pobox.com>, hmh@hmh.eng.br
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: aboo <aboo@aboo.org>
-Cc: dougg@torque.net, linux-scsi@vger.kernel.org
 
-aboo wrote:
-> Also, I am facing another challenge which I wanted to ask. If the kernel or
-> user space opens  a scsi device, there is no healthy way of identifying if a
-> scsi device is open or not. The struct scsi_device does not have a field. I
-> can see a openers field in the scsi_disk structure inside sd.c. I can see it
-> incrimenting in sd_open(). What is the best to way to identify if a
-> scsi_device id open by kernel (mount or volumes manager) or use application
-> (fsck or dd)? When a destroy a scsi_host, it kills all the scsi_devices
-> associated with it irrespective of those devices are open or not. Any
-> thoughts?
+sd doesn't stop (unload head) on shutdown.  This behavior is necessary
+for multi initiator cases.  Unloading head by powering off stresses
+the drive and sometimes produces distinct clunking noise which
+apparently disturbs users considering multiple reports on different
+distributions.  halt(8) usually puts the drives to sleep prior to
+shutdown but the implementation is fragile and it doesn't work with
+sleep-to-disk.
 
-I thought about this myself too while working on the sbp2 driver. This
-is a low-level driver from the SCSI perspective and a high-level driver
-from the FireWire perspective. It was possible to unload a FireWire
-low-level driver which provided the interconnect to a SBP-2 LU while
-that LU's device file was in use --- with the obvious result of sudden
-loss of connection. As a simple solution, sbp2 now blocks unloading of
-the FireWire low-level driver as long as it is logged in into a SBP-2
-target (i.e. independent of actual usage of the device; longer than
-actually necessary).
+This patch implements sd attribute stop_on_shutdown.  If set to 1, sd
+stops the drive on non-restarting shutdown.  stop_on_shutdown is
+initialized from sd parameter stop_on_shutdown_default which defaults
+to 0.  So, this patch does not change the default behavior.
 
-My idea for a more fine-grained solution was:
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+Acked-by: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
 
-  - Add something like .slave_get(sdev) and .slave_put(sdev) to the
-    scsi_host_template.
-  - Let scsi_device_get() call shost->hostt->slave_get() if it exists.
-    Let scsi_device_put() call shost->hostt->slave_put() if it exists.
-  - In the two new hooks, an LLD can get and put whatever transport- or
-    interconnect-related resources it needs, per LU.
-
-However I never found this matter pressing enough to post a respective
-patch here. From my perspective, it would have only been justified if
-other LLDs besides sbp2 would have profited from it, and I was too busy
-elsewhere to research that.
--- 
-Stefan Richter
--=====-=-=== ---= =--=-
-http://arcgraph.de/sr/
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 978bfc1..f21e5fe 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -90,6 +90,12 @@ MODULE_ALIAS_BLOCKDEV_MAJOR(SCSI_DISK13_MAJOR);
+ MODULE_ALIAS_BLOCKDEV_MAJOR(SCSI_DISK14_MAJOR);
+ MODULE_ALIAS_BLOCKDEV_MAJOR(SCSI_DISK15_MAJOR);
+ 
++static int sd_stop_on_shutdown_dfl = 0;
++module_param_named(stop_on_shutdown_default, sd_stop_on_shutdown_dfl,
++		   bool, 0644);
++MODULE_PARM_DESC(stop_on_shutdown_default, "Default setting for stopping "
++		 "disk on shutdown (0=disable, 1=enable)");
++
+ /*
+  * This is limited by the naming scheme enforced in sd_probe,
+  * add another character to it if you really need more disks.
+@@ -126,6 +132,7 @@ struct scsi_disk {
+ 	unsigned	WCE : 1;	/* state of disk WCE bit */
+ 	unsigned	RCD : 1;	/* state of disk RCD bit, unused */
+ 	unsigned	DPOFUA : 1;	/* state of disk DPOFUA bit */
++	unsigned	stop_on_shutdown : 1; /* stop on device shutdown */
+ };
+ #define to_scsi_disk(obj) container_of(obj,struct scsi_disk,cdev)
+ 
+@@ -207,6 +214,19 @@ static ssize_t sd_store_cache_type(struct class_device *cdev, const char *buf,
+ 	return count;
+ }
+ 
++static ssize_t sd_store_stop_on_shutdown(struct class_device *cdev,
++					 const char *buf, size_t count)
++{
++	struct scsi_disk *sdkp = to_scsi_disk(cdev);
++
++	if (!capable(CAP_SYS_ADMIN))
++		return -EACCES;
++
++	sdkp->stop_on_shutdown = simple_strtoul(buf, NULL, 10);
++
++	return count;
++}
++
+ static ssize_t sd_store_allow_restart(struct class_device *cdev, const char *buf,
+ 				      size_t count)
+ {
+@@ -239,6 +259,13 @@ static ssize_t sd_show_fua(struct class_device *cdev, char *buf)
+ 	return snprintf(buf, 20, "%u\n", sdkp->DPOFUA);
+ }
+ 
++static ssize_t sd_show_stop_on_shutdown(struct class_device *cdev, char *buf)
++{
++	struct scsi_disk *sdkp = to_scsi_disk(cdev);
++
++	return snprintf(buf, 20, "%u\n", sdkp->stop_on_shutdown);
++}
++
+ static ssize_t sd_show_allow_restart(struct class_device *cdev, char *buf)
+ {
+ 	struct scsi_disk *sdkp = to_scsi_disk(cdev);
+@@ -252,6 +279,8 @@ static struct class_device_attribute sd_disk_attrs[] = {
+ 	__ATTR(FUA, S_IRUGO, sd_show_fua, NULL),
+ 	__ATTR(allow_restart, S_IRUGO|S_IWUSR, sd_show_allow_restart,
+ 	       sd_store_allow_restart),
++	__ATTR(stop_on_shutdown, S_IRUGO|S_IWUSR, sd_show_stop_on_shutdown,
++	       sd_store_stop_on_shutdown),
+ 	__ATTR_NULL,
+ };
+ 
+@@ -1662,6 +1691,7 @@ static int sd_probe(struct device *dev)
+ 	sdkp->disk = gd;
+ 	sdkp->index = index;
+ 	sdkp->openers = 0;
++	sdkp->stop_on_shutdown = sd_stop_on_shutdown_dfl;
+ 
+ 	if (!sdp->timeout) {
+ 		if (sdp->type != TYPE_MOD)
+@@ -1766,6 +1796,29 @@ static void scsi_disk_release(struct class_device *cdev)
+ 	kfree(sdkp);
+ }
+ 
++static int sd_stop_device(struct scsi_device *sdp)
++{
++	unsigned char cmd[6] = { START_STOP }; /* START_VALID and START == 0 */
++	struct scsi_sense_hdr sshdr;
++	int res;
++
++	if (!scsi_device_online(sdp))
++		return -ENODEV;
++
++	res = scsi_execute_req(sdp, cmd, DMA_NONE, NULL, 0, &sshdr,
++			       SD_TIMEOUT, SD_MAX_RETRIES);
++	if (res) {
++		printk(KERN_WARNING "FAILED\n  status = %x, message = %02x, "
++		       "host = %d, driver = %02x\n  ",
++		       status_byte(res), msg_byte(res),
++		       host_byte(res), driver_byte(res));
++		if (driver_byte(res) & DRIVER_SENSE)
++			scsi_print_sense_hdr("sd", &sshdr);
++	}
++
++	return res;
++}
++
+ /*
+  * Send a SYNCHRONIZE CACHE instruction down to the device through
+  * the normal SCSI command structure.  Wait for the command to
+@@ -1784,6 +1837,13 @@ static void sd_shutdown(struct device *dev)
+ 				sdkp->disk->disk_name);
+ 		sd_sync_cache(sdp);
+ 	}
++
++	if (system_state != SYSTEM_RESTART && sdkp->stop_on_shutdown) {
++ 		printk(KERN_NOTICE "Stopping disk %s: \n",
++		       sdkp->disk->disk_name);
++		sd_stop_device(sdp);
++	}
++
+ 	scsi_disk_put(sdkp);
+ }
+ 
