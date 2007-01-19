@@ -1,77 +1,71 @@
-From: dann frazier <dannf@dannf.org>
-Subject: Re: [PATCH 9/12] repost: cciss: add busy_configuring flag
-Date: Fri, 19 Jan 2007 10:42:21 -0700
-Message-ID: <20070119174220.GF26210@colo>
-References: <20061106202559.GI17847@beardog.cca.cpqcorp.net> <20061106203200.GG19471@kernel.dk> <20061212170111.GA26017@beardog.cca.cpqcorp.net> <20061213125236.GO4576@kernel.dk>
+From: "Moore, Eric" <Eric.Moore@lsi.com>
+Subject: RE: [PATCH] Fusion: Call pci_set_mwi()
+Date: Fri, 19 Jan 2007 14:03:05 -0700
+Message-ID: <664A4EBB07F29743873A87CF62C26D705378FD@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932684AbXASRmb@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20061213125236.GO4576@kernel.dk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>, akpm@osdl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, chase.maupin@hp.com
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail0.lsil.com ([147.145.40.20]:51648 "EHLO mail0.lsil.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964865AbXASVDN convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Jan 2007 16:03:13 -0500
+Content-class: urn:content-classes:message
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, Dec 13, 2006 at 01:52:36PM +0100, Jens Axboe wrote:
-> On Tue, Dec 12 2006, Mike Miller (OS Dev) wrote:
-> > On Mon, Nov 06, 2006 at 09:32:00PM +0100, Jens Axboe wrote:
-> > > On Mon, Nov 06 2006, Mike Miller (OS Dev) wrote:
-> > > > PATCH 9 of 12
-> > > > 
-> > > > This patch adds a check for busy_configuring to prevent starting a queue
-> > > > on a drive that may be in the midst of updating, configuring, deleting, etc.
-> > > > 
-> > > > This had a test for if the queue was stopped or plugged but that seemed
-> > > > to cause issues.
-> > > > Please consider this for inclusion.
-> > > > 
-> > > > Thanks,
-> > > > mikem
-> > > > 
-> > > > Signed-off-by: Mike Miller <mike.miller@hp.com>
-> > > > 
-> > > > --------------------------------------------------------------------------------
-> > > > 
-> > > > ---
-> > > > 
-> > > >  drivers/block/cciss.c |    5 ++++-
-> > > >  1 files changed, 4 insertions(+), 1 deletion(-)
-> > > > 
-> > > > diff -puN drivers/block/cciss.c~cciss_busy_conf_for_lx2619-rc4 drivers/block/cciss.c
-> > > > --- linux-2.6/drivers/block/cciss.c~cciss_busy_conf_for_lx2619-rc4	2006-11-06 13:27:53.000000000 -0600
-> > > > +++ linux-2.6-root/drivers/block/cciss.c	2006-11-06 13:27:53.000000000 -0600
-> > > > @@ -1190,8 +1190,11 @@ static void cciss_check_queues(ctlr_info
-> > > >  		/* make sure the disk has been added and the drive is real
-> > > >  		 * because this can be called from the middle of init_one.
-> > > >  		 */
-> > > > -		if (!(h->drv[curr_queue].queue) || !(h->drv[curr_queue].heads))
-> > > > +		if (!(h->drv[curr_queue].queue) ||
-> > > > +		    !(h->drv[curr_queue].heads) ||
-> > > > +		    h->drv[curr_queue].busy_configuring)
-> > > >  			continue;
-> > > > +
-> > > >  		blk_start_queue(h->gendisk[curr_queue]->queue);
-> > > 
-> > > This is racy, because you don't start the queue when you unset
-> > > ->busy_configuring later on. For this to be safe, you need to call
-> > > blk_start_queue() when you set ->busy_configuring to 0.
-> > 
-> > Jens, please see Chase's reply to your concerns:
-> > > busy_configuring - I do not think this is racy.  This
-> > > flag is used only when we are removing/deleting a disk.  In
-> > > this case the queue is cleaned up and the disk is deleted.
-> > > If we are doing that then there is no queue to start later.
-> > > The check of this flag in the interrupt handler is to prevent
-> > > us from trying to start a queue that is in the middle of
-> > > being deleted.  This flag could be called busy_deleting.
+On Friday, October 13, 2006 10:25 AM,Matthew Wilcox wrote:   
+
 > 
-> Ok, no worries then if it's simply a going away flag. I wonder if it's
-> needed at all, but it certainly doesn't hurt.
+> Hi Eric,
+> 
+> Even though the 1030 is a PCI-X device, it can still be 
+> plugged into a PCI
+> bus, and end up operating in PCI mode.  According to the 
+> documentation,
+> it will benefit from using MWI and MRM commands, but in order to do so
+> under Linux, we need to call pci_set_mwi(), which is what 
+> this patch does.
+> Please apply.
+> 
+> P.S. The if condition is just to avoid the warning from __must_check.
+> Most device drivers do need to check and adjust their 
+> internal flags if
+> it fails, but according to the 1030 manual, the chip automatically
+> decides when to use MWI.
+> 
+> Signed-off-by: Matthew Wilcox <matthew@wil.cx>
+> 
+> diff --git a/drivers/message/fusion/mptbase.c 
+> b/drivers/message/fusion/mptbase.c
+> index 29d0635..d301a67 100644
+> --- a/drivers/message/fusion/mptbase.c
+> +++ b/drivers/message/fusion/mptbase.c
+> @@ -1153,6 +1153,9 @@ #endif
+>  	if (pci_enable_device(pdev))
+>  		return r;
+>  
+> +	if (pci_set_mwi(pdev))
+> +		/* We don't have to do anything if it fails */;
+> +
+>  	dinitprintk((KERN_WARNING MYNAM ": mpt_adapter_install\n"));
+>  
+>  	if (!pci_set_dma_mask(pdev, DMA_64BIT_MASK)) {
+> 
+> 
 
-hey Jens,
-  Just a poke since I haven't seen this change go into your block
-tree. Is it still in-plan?
 
--- 
-dann frazier
+I just responded to the HP thread, and I remember this patch.
+
+I hadn't had a chance to check this up.  Pls let me know importance of
+this,
+and I will ask around the office wrt to this patch..  You don't think
+this shouldn't break anything else? , such
+as pci-express cards, cuase we have 1030 pcie, as well as FC and SAS
+that
+are express.  
+
+Eric
