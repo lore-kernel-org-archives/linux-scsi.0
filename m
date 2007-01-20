@@ -1,20 +1,23 @@
-From: Eric Moore <eric.moore@lsil.com>
-Subject: [PATCH] - mpi header update - version 1.05.14
-Date: Fri, 19 Jan 2007 18:41:13 -0700
-Message-ID: <20070120014113.GA15536@lsil.com>
+From: Eric Moore <eric.moore@lsi.com>
+Subject: [PATCH] - fusion - mpi header update - version 1.05.14
+Date: Fri, 19 Jan 2007 18:46:17 -0700
+Message-ID: <20070120014616.GA15543@lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:59537 "EHLO mail0.lsil.com"
+Received: from mail0.lsil.com ([147.145.40.20]:59660 "EHLO mail0.lsil.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932825AbXATAee (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Jan 2007 19:34:34 -0500
+	id S965050AbXATAjh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Jan 2007 19:39:37 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
 
-Here are latest mpi headers (firmware/driver interface).
+Here are the lastest mpi headers for mpt fusion driver, which defines
+the firmware to driver interface.
+
+(sorry about repost, I hadn't mentioned the driver in previous email)
 
 Signed-off-by: Eric Moore <Eric.Moore@lsi.com>
 
