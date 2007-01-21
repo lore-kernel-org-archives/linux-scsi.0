@@ -1,35 +1,38 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] add bsg queue resize
-Date: Sun, 21 Jan 2007 15:09:13 +1100
-Message-ID: <20070121040913.GG4658@kernel.dk>
-References: <20070120232518E.fujita.tomonori@lab.ntt.co.jp>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [2.6 patch] make seagate_st0x_detect() static
+Date: Sun, 21 Jan 2007 20:12:55 +0100
+Message-ID: <20070121191255.GK9093@stusta.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fallbackmx02.syd.optusnet.com.au ([211.29.133.72]:43540 "EHLO
-	fallbackmx02.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751369AbXAUTHJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 21 Jan 2007 14:07:09 -0500
-Received: from mail06.syd.optusnet.com.au (mail06.syd.optusnet.com.au [211.29.132.187])
-	by fallbackmx02.syd.optusnet.com.au (8.12.11.20060308/8.12.11) with ESMTP id l0L4As6q023787
-	for <linux-scsi@vger.kernel.org>; Sun, 21 Jan 2007 15:10:54 +1100
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:4193 "HELO
+	mailout.stusta.mhn.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751385AbXAUTMv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Jan 2007 14:12:51 -0500
 Content-Disposition: inline
-In-Reply-To: <20070120232518E.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sat, Jan 20 2007, FUJITA Tomonori wrote:
-> This enables bsg to resize the queue depth via
-> SG_SET_COMMAND_Q. bsg_command structures are allocated via mempool
-> because the previous way to use contiguous memory makes it difficult
-> to resize the queue depth when a bsg_device has outstanding commands.
+seagate_st0x_detect() can become static.
 
-You work quickly! I'll give this a review during the flight back, if
-everything is alright I'll merge it up. Thanks!
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
--- 
-Jens Axboe
+---
+
+This patch was already sent on:
+- 6 Jan 2007
+
+--- linux-2.6.20-rc3-mm1/drivers/scsi/seagate.c.old	2007-01-05 22:53:13.000000000 +0100
++++ linux-2.6.20-rc3-mm1/drivers/scsi/seagate.c	2007-01-05 22:57:54.000000000 +0100
+@@ -420,7 +420,7 @@
+ #define ULOOP( i ) for (clock = i*8;;)
+ #define TIMEOUT (!(clock--))
+ 
+-int __init seagate_st0x_detect (struct scsi_host_template * tpnt)
++static int __init seagate_st0x_detect (struct scsi_host_template * tpnt)
+ {
+ 	struct Scsi_Host *instance;
+ 	int i, j;
 
