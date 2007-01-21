@@ -1,56 +1,86 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] sd: implement stop_on_shutdown
-Date: Sat, 20 Jan 2007 08:39:36 -0600
-Message-ID: <1169303976.2842.11.camel@mulgrave.il.steeleye.com>
-References: <20070119170122.GS10987@htj.dyndns.org>
-	 <45B1574D.1090502@us.ibm.com> <45B18AE2.3010503@gmail.com>
-	 <45B1E5D3.90101@pobox.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH 9/12] repost: cciss: add busy_configuring flag
+Date: Sun, 21 Jan 2007 15:07:35 +1100
+Message-ID: <20070121040735.GF4658@kernel.dk>
+References: <20061106202559.GI17847@beardog.cca.cpqcorp.net> <20061106203200.GG19471@kernel.dk> <20061212170111.GA26017@beardog.cca.cpqcorp.net> <20061213125236.GO4576@kernel.dk> <20070119174220.GF26210@colo>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <45B1E5D3.90101@pobox.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Tejun Heo <htejun@gmail.com>, "Darrick J. Wong" <djwong@us.ibm.com>, hmh@hmh.eng.br, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail07.syd.optusnet.com.au ([211.29.132.188]:39188 "EHLO
+	mail07.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751182AbXAUEQi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 20 Jan 2007 23:16:38 -0500
+Content-Disposition: inline
+In-Reply-To: <20070119174220.GF26210@colo>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: dann frazier <dannf@dannf.org>
+Cc: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>, akpm@osdl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, chase.maupin@hp.com
 
-On Sat, 2007-01-20 at 04:50 -0500, Jeff Garzik wrote:
-> Tejun Heo wrote:
-> > Darrick J. Wong wrote:
-> >> Tejun Heo wrote:
-> >>> sd doesn't stop (unload head) on shutdown.  This behavior is necessary
-> >>> for multi initiator cases.  Unloading head by powering off stresses
-> >>> the drive and sometimes produces distinct clunking noise which
-> >>> apparently disturbs users considering multiple reports on different
-> >>> distributions.  halt(8) usually puts the drives to sleep prior to
-> >>> shutdown but the implementation is fragile and it doesn't work with
-> >>> sleep-to-disk.
-> >> I wonder if this sort of thing (cache flush + spin down) is the sort of
-> >> thing that ought to be done to near-line storage at suspend time too,
-> >> though one would want allow_restart = 1 before doing such a thing.
+On Fri, Jan 19 2007, dann frazier wrote:
+> On Wed, Dec 13, 2006 at 01:52:36PM +0100, Jens Axboe wrote:
+> > On Tue, Dec 12 2006, Mike Miller (OS Dev) wrote:
+> > > On Mon, Nov 06, 2006 at 09:32:00PM +0100, Jens Axboe wrote:
+> > > > On Mon, Nov 06 2006, Mike Miller (OS Dev) wrote:
+> > > > > PATCH 9 of 12
+> > > > > 
+> > > > > This patch adds a check for busy_configuring to prevent starting a queue
+> > > > > on a drive that may be in the midst of updating, configuring, deleting, etc.
+> > > > > 
+> > > > > This had a test for if the queue was stopped or plugged but that seemed
+> > > > > to cause issues.
+> > > > > Please consider this for inclusion.
+> > > > > 
+> > > > > Thanks,
+> > > > > mikem
+> > > > > 
+> > > > > Signed-off-by: Mike Miller <mike.miller@hp.com>
+> > > > > 
+> > > > > --------------------------------------------------------------------------------
+> > > > > 
+> > > > > ---
+> > > > > 
+> > > > >  drivers/block/cciss.c |    5 ++++-
+> > > > >  1 files changed, 4 insertions(+), 1 deletion(-)
+> > > > > 
+> > > > > diff -puN drivers/block/cciss.c~cciss_busy_conf_for_lx2619-rc4 drivers/block/cciss.c
+> > > > > --- linux-2.6/drivers/block/cciss.c~cciss_busy_conf_for_lx2619-rc4	2006-11-06 13:27:53.000000000 -0600
+> > > > > +++ linux-2.6-root/drivers/block/cciss.c	2006-11-06 13:27:53.000000000 -0600
+> > > > > @@ -1190,8 +1190,11 @@ static void cciss_check_queues(ctlr_info
+> > > > >  		/* make sure the disk has been added and the drive is real
+> > > > >  		 * because this can be called from the middle of init_one.
+> > > > >  		 */
+> > > > > -		if (!(h->drv[curr_queue].queue) || !(h->drv[curr_queue].heads))
+> > > > > +		if (!(h->drv[curr_queue].queue) ||
+> > > > > +		    !(h->drv[curr_queue].heads) ||
+> > > > > +		    h->drv[curr_queue].busy_configuring)
+> > > > >  			continue;
+> > > > > +
+> > > > >  		blk_start_queue(h->gendisk[curr_queue]->queue);
+> > > > 
+> > > > This is racy, because you don't start the queue when you unset
+> > > > ->busy_configuring later on. For this to be safe, you need to call
+> > > > blk_start_queue() when you set ->busy_configuring to 0.
+> > > 
+> > > Jens, please see Chase's reply to your concerns:
+> > > > busy_configuring - I do not think this is racy.  This
+> > > > flag is used only when we are removing/deleting a disk.  In
+> > > > this case the queue is cleaned up and the disk is deleted.
+> > > > If we are doing that then there is no queue to start later.
+> > > > The check of this flag in the interrupt handler is to prevent
+> > > > us from trying to start a queue that is in the middle of
+> > > > being deleted.  This flag could be called busy_deleting.
 > > 
-> > For ATA, it's currently being done inside libata proper (a bit ugly).
-> > It would be nice to have those implemented at sd layer but I wonder how
-> > useful it's going to be for actual SCSI devices.  Do people actually
-> > suspend using SCSI?  If it's useful at the SCSI layer, I can implement
-> > and test it with SATA devices here.
+> > Ok, no worries then if it's simply a going away flag. I wonder if it's
+> > needed at all, but it certainly doesn't hurt.
 > 
-> There is always the open question for multi-initiator SCSI devices, as 
-> to who "owns" the SCSI device.  Some devices should be suspended/stopped 
-> when the machine is suspended/stopped, others not.
+> hey Jens,
+>   Just a poke since I haven't seen this change go into your block
+> tree. Is it still in-plan?
 
-Actually, ownership in multi-initiator is horribly complex: Some cluster
-models have transferrable single ownership, but for things like OCFS,
-there's no one recognised owner at all (for power down, the owner would
-be the last unmounter).  As a practical point, this isn't just a SCSI
-problem:  it won't be long before someone realises they can run OCFS
-from multiple nodes directly connected over SAS using SATA devices via
-an expander.
+I had it stashed for a 2.6.21 merge, it'll go in by then.
 
-The current almost de-facto standard for multi-initiator SATA is the DVD
-device in a blade centre.
-
-James
-
+-- 
+Jens Axboe
 
