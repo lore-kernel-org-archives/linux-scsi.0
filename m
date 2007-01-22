@@ -1,104 +1,55 @@
-From: Herbert Poetzl <herbert@13thfloor.at>
-Subject: Re: [PATCH 25/59] sysctl: C99 convert arch/frv/kernel/pm.c
-Date: Mon, 22 Jan 2007 23:21:15 +0100
-Message-ID: <20070122222115.GC11128@MAIL.13thfloor.at>
-References: <m1ac0jc4no.fsf@ebiederm.dsl.xmission.com> <11689656443582-git-send-email-ebiederm@xmission.com> <45AE5969.8030603@sw.ru>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <netdev-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <45AE5969.8030603@sw.ru>
-Sender: netdev-owner@vger.kernel.org
-To: Kirill Korotaev <dev@sw.ru>
-Cc: "Eric W. Biederman" <ebiederm@xmission.com>, James.Bottomley@SteelEye.com, linux-parport@lists.infradead.org, rtc-linux@googlegroups.com, linux-mips@linux-mips.org, heiko.carstens@de.ibm.com, containers@lists.osdl.org, lethal@linux-sh.org, clemens@ladisch.de, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, paulus@samba.org, linux390@de.ibm.com, openipmi-developer@lists.sourceforge.net, linux-390@vm.marist.edu, aharkes@cs.cmu.edu, tim@cyberelk.net, codalist@TELEMANN.coda.cs.cmu.edu, a.zummo@towertech.it, tony.luck@intel.com, minyard@acm.org, linux-scsi@vger.kernel.org, linuxppc-dev@ozlabs.org, linux-ntfs-dev@lists.sourceforge.net, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, ralf@linux-mips.org, mark.fasheh@oracle.com, coda@cs.cmu.edu, vojtech@suse.cz, kurt.hackel@oracle.com, schwidefsky@de.ibm.com, aia21@cantab.net, philb@gnu.org, andrea@suse.de, linuxsh-shmedia-dev
+From: William Studenmund <wrstuden@apple.com>
+Subject: Re: [RFC 1/6] bidi support: request dma_data_direction
+Date: Mon, 22 Jan 2007 13:53:27 -0800
+Message-ID: <A5D5F816-B98C-4637-B92F-E2AAF37469D3@apple.com>
+References: <45B3F578.7090109@panasas.com> <45B40458.9010107@torque.net> <45B4547A.3020105@panasas.com>
+Mime-Version: 1.0 (Apple Message framework v752.3)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-out4.apple.com ([17.254.13.23]:56509 "EHLO
+	mail-out4.apple.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932518AbXAVWXC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Jan 2007 17:23:02 -0500
+In-Reply-To: <45B4547A.3020105@panasas.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: open-iscsi@googlegroups.com
+Cc: dougg@torque.net, Boaz Harrosh <bharrosh@panasas.com>, Jens Axboe <jens.axboe@oracle.com>, Christoph Hellwig <hch@infradead.org>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Daniel.E.Messinger@seagate.com, Liran Schour <LIRANS@il.ibm.com>
 
-On Wed, Jan 17, 2007 at 08:14:17PM +0300, Kirill Korotaev wrote:
-> another small minor note.
-> 
-> > From: Eric W. Biederman <ebiederm@xmission.com> - unquoted
-> > 
-> > Signed-off-by: Eric W. Biederman <ebiederm@xmission.com>
-> > ---
-> >  arch/frv/kernel/pm.c |   50 +++++++++++++++++++++++++++++++++++++++++++-------
-> >  1 files changed, 43 insertions(+), 7 deletions(-)
-> > 
-> > diff --git a/arch/frv/kernel/pm.c b/arch/frv/kernel/pm.c
-> > index c1840d6..aa50333 100644
-> > --- a/arch/frv/kernel/pm.c
-> > +++ b/arch/frv/kernel/pm.c
-> > @@ -401,17 +401,53 @@ static int cm_sysctl(ctl_table *table, int __user *name, int nlen,
-> >  
-> >  static struct ctl_table pm_table[] =
-> >  {
-> > -	{CTL_PM_SUSPEND, "suspend", NULL, 0, 0200, NULL, &sysctl_pm_do_suspend},
-> > -	{CTL_PM_CMODE, "cmode", &clock_cmode_current, sizeof(int), 0644, NULL, &cmode_procctl, &cmode_sysctl, NULL},
-> > -	{CTL_PM_P0, "p0", &clock_p0_current, sizeof(int), 0644, NULL, &p0_procctl, &p0_sysctl, NULL},
-> > -	{CTL_PM_CM, "cm", &clock_cm_current, sizeof(int), 0644, NULL, &cm_procctl, &cm_sysctl, NULL},
-> > -	{0}
-> > +	{
-> > +		.ctl_name	= CTL_PM_SUSPEND,
-> > +		.procname	= "suspend",
-> > +		.data		= NULL,
-> > +		.maxlen		= 0,
-> > +		.mode		= 0200,
-> > +		.proc_handler	= &sysctl_pm_do_suspend,
-> > +	},
-> > +	{
-> > +		.ctl_name	= CTL_PM_CMODE,
-> > +		.procname	= "cmode",
-> > +		.data		= &clock_cmode_current,
-> > +		.maxlen		= sizeof(int),
-> > +		.mode		= 0644,
-> > +		.proc_handler	= &cmode_procctl,
-> > +		.strategy	= &cmode_sysctl,
-> > +	},
-> > +	{
-> > +		.ctl_name	= CTL_PM_P0,
-> > +		.procname	= "p0",
-> > +		.data		= &clock_p0_current,
-> > +		.maxlen		= sizeof(int),
-> > +		.mode		= 0644,
-> > +		.proc_handler	= &p0_procctl,
-> > +		.strategy	= &p0_sysctl,
-> > +	},
-> > +	{
-> > +		.ctl_name	= CTL_PM_CM,
-> > +		.procname	= "cm",
-> > +		.data		= &clock_cm_current,
-> > +		.maxlen		= sizeof(int),
-> > +		.mode		= 0644,
-> > +		.proc_handler	= &cm_procctl,
-> > +		.strategy	= &cm_sysctl,
-> > +	},
-> > +	{ .ctl_name = 0}
-> in next patch (26/59) you write just "{ }". .ctl_name = 0 not required here.
+On Jan 21, 2007, at 10:06 PM, Benny Halevy wrote:
 
-I'd prefer '{ 0 }' here, but I'm fine with the '{ .ctl_name = 0 }'
-too, just '{ }' seems confusing, and it actually might get
-misinterpreted too ..
+> Douglas Gilbert wrote:
+>> Boaz Harrosh wrote:
+>>> - Introduce a new enum dma_data_direction data_dir member in  
+>>> struct request.
+>>>   and remove the RW bit from request->cmd_flag
+>>> - Add new API to query request direction.
+>>> - Adjust existing API and implementation.
+>>> - Cleanup wrong use of DMA_BIDIRECTIONAL
+>>> - Introduce new blk_rq_init_unqueued_req() and use it in places  
+>>> ad-hoc
+>>>   requests were used and bzero'ed.
+>>
+>> With a bi-directional transfer is it always unambiguous
+>> which transfer occurs first (or could they occur at
+>> the same time)?
+>
+> The bidi transfers can occur in any order and in parallel.
 
-best,
-Herbert
+Yes.
 
-> >  };
-> >  
-> >  static struct ctl_table pm_dir_table[] =
-> >  {
-> > -	{CTL_PM, "pm", NULL, 0, 0555, pm_table},
-> > -	{0}
-> > +	{
-> > +		.ctl_name	= CTL_PM,
-> > +		.procname	= "pm",
-> > +		.mode		= 0555,
-> > +		.child		= pm_table,
-> > +	},
-> > +	{ .ctl_name = 0}
-> >  };
-> >  
-> >  /*
-> 
-> _______________________________________________
-> Containers mailing list
-> Containers@lists.osdl.org
-> https://lists.osdl.org/mailman/listinfo/containers
+However it's not that hard. If you're a target (which open-iscsi  
+isn't), you know what the command needs. If you're an initiator, you  
+just send the unsolicited data (if any), then let the target tell you  
+what it needs next.
+
+While it is possible for commands to have multiple phases, all the  
+BiDi commands I'm familiar with use the Data-Out phase to send extra  
+command data, then use the Data-In phase to get either an extended  
+response to the query (such as a search command) or extended status  
+(OSD commands). So it's not that bad in reality.
+
+Take care,
+
+Bill
