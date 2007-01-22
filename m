@@ -1,57 +1,53 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [RFC 1/6] bidi support: request dma_data_direction
-Date: Mon, 22 Jan 2007 09:31:43 -0600
-Message-ID: <1169479903.2769.20.camel@mulgrave.il.steeleye.com>
-References: <45B3F578.7090109@panasas.com> <45B40458.9010107@torque.net>
-	 <45B4547A.3020105@panasas.com>  <45B4D2A0.4080201@torque.net>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: Re: [2.6 patch] SCSI seagate.c: remove SEAGATE_USE_ASM
+Date: Mon, 22 Jan 2007 16:38:13 +0100
+Message-ID: <20070122153813.GT9093@stusta.de>
+References: <20070121191300.GL9093@stusta.de> <20070122151841.6d0473e4@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:47975 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750840AbXAVPc7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Jan 2007 10:32:59 -0500
-In-Reply-To: <45B4D2A0.4080201@torque.net>
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:2738 "HELO
+	mailout.stusta.mhn.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751045AbXAVPiI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Jan 2007 10:38:08 -0500
+Content-Disposition: inline
+In-Reply-To: <20070122151841.6d0473e4@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: Benny Halevy <bhalevy@panasas.com>, Boaz Harrosh <bharrosh@panasas.com>, Jens Axboe <jens.axboe@oracle.com>, Christoph Hellwig <hch@infradead.org>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, open-iscsi@googlegroups.com, Daniel.E.Messinger@seagate.com, Liran Schour <LIRANS@il.ibm.com>
+To: Alan <alan@lxorguk.ukuu.org.uk>
+Cc: Andrew Morton <akpm@osdl.org>, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, 2007-01-22 at 10:05 -0500, Douglas Gilbert wrote:
-> Perhaps the right use of DMA_BIRECTIONAL needs to be
-> defined.
+On Mon, Jan 22, 2007 at 03:18:41PM +0000, Alan wrote:
+> On Sun, 21 Jan 2007 20:13:00 +0100
+> Adrian Bunk <bunk@stusta.de> wrote:
 > 
-> Could it be used with a XDWRITE(10) SCSI command
-> defined in sbc3r07.pdf at http://www.t10.org ? I suspect
-> using two scatter gather lists would be a better approach.
-> 
-> >>> - Introduce new blk_rq_init_unqueued_req() and use it in places ad-hoc
-> >>>   requests were used and bzero'ed.
-> >> With a bi-directional transfer is it always unambiguous
-> >> which transfer occurs first (or could they occur at
-> >> the same time)?
+> > Using assembler code for performance in drivers might have been a good 
+> > idea 15 years ago when this code was written, but with today's compilers 
+> > that's unlikely to be an advantage.
 > > 
-> > The bidi transfers can occur in any order and in parallel.
+> > Besides this, it also hurts the readability.
+> > 
+> > Simply use the C code that was already there as an alternative.
+> > 
+> > Signed-off-by: Adrian Bunk <bunk@stusta.de>
+> 					"stosb\n\t"
+> 
+> NAK
+> 
+> The C codepaths are essentially untested on this driver.
 
-> Then it is not sufficient for modern SCSI transports in which
-> certain bidirectional commands (probably most) have a well
-> defined order.
+Has any part of this driver ever be tested with kernel 2.6?
+Or compiled with gcc 4?
 
-Right, that's why I think bi-directional needs to be one way op followed
-by one way op ... even if it is to the same buffer.  That should be a
-general enough paradigm for everything.
+> Alan
 
-> So DMA_BIDIRECTIONAL looks PCI specific and it may have
-> been a mistake to replace other subsystem's direction flags
-> with it. RDMA might be an interesting case.
+cu
+Adrian
 
-It's bus specific ... it means that the bus must be programmed to expect
-the device to transfer both to and from the memory buffer.  There are a
-very few drivers which do this when they don't know the actual transfer
-direction, so it might be reasonably tested on architectures ... but
-we'd probably have to check.
+-- 
 
-James
-
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
 
