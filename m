@@ -1,55 +1,38 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [RFC 1/6] bidi support: request dma_data_direction
-Date: Mon, 22 Jan 2007 10:05:04 -0500
-Message-ID: <45B4D2A0.4080201@torque.net>
-References: <45B3F578.7090109@panasas.com> <45B40458.9010107@torque.net> <45B4547A.3020105@panasas.com>
-Reply-To: dougg@torque.net
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [2.6 patch] SCSI seagate.c: remove SEAGATE_USE_ASM
+Date: Mon, 22 Jan 2007 15:18:41 +0000
+Message-ID: <20070122151841.6d0473e4@localhost.localdomain>
+References: <20070121191300.GL9093@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:35657 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751881AbXAVPFZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Jan 2007 10:05:25 -0500
-In-Reply-To: <45B4547A.3020105@panasas.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:53674 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751889AbXAVPJm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Jan 2007 10:09:42 -0500
+In-Reply-To: <20070121191300.GL9093@stusta.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Benny Halevy <bhalevy@panasas.com>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, Jens Axboe <jens.axboe@oracle.com>, Christoph Hellwig <hch@infradead.org>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, open-iscsi@googlegroups.com, Daniel.E.Messinger@seagate.com, Liran Schour <LIRANS@il.ibm.com>
+To: Adrian Bunk <bunk@stusta.de>
+Cc: Andrew Morton <akpm@osdl.org>, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Benny Halevy wrote:
-> Douglas Gilbert wrote:
->> Boaz Harrosh wrote:
->>> - Introduce a new enum dma_data_direction data_dir member in struct request.
->>>   and remove the RW bit from request->cmd_flag
->>> - Add new API to query request direction.
->>> - Adjust existing API and implementation.
->>> - Cleanup wrong use of DMA_BIDIRECTIONAL
+On Sun, 21 Jan 2007 20:13:00 +0100
+Adrian Bunk <bunk@stusta.de> wrote:
 
-Perhaps the right use of DMA_BIRECTIONAL needs to be
-defined.
-
-Could it be used with a XDWRITE(10) SCSI command
-defined in sbc3r07.pdf at http://www.t10.org ? I suspect
-using two scatter gather lists would be a better approach.
-
->>> - Introduce new blk_rq_init_unqueued_req() and use it in places ad-hoc
->>>   requests were used and bzero'ed.
->> With a bi-directional transfer is it always unambiguous
->> which transfer occurs first (or could they occur at
->> the same time)?
+> Using assembler code for performance in drivers might have been a good 
+> idea 15 years ago when this code was written, but with today's compilers 
+> that's unlikely to be an advantage.
 > 
-> The bidi transfers can occur in any order and in parallel.
+> Besides this, it also hurts the readability.
+> 
+> Simply use the C code that was already there as an alternative.
+> 
+> Signed-off-by: Adrian Bunk <bunk@stusta.de>
+					"stosb\n\t"
 
-Then it is not sufficient for modern SCSI transports in which
-certain bidirectional commands (probably most) have a well
-defined order.
+NAK
 
-So DMA_BIDIRECTIONAL looks PCI specific and it may have
-been a mistake to replace other subsystem's direction flags
-with it. RDMA might be an interesting case.
+The C codepaths are essentially untested on this driver.
 
-Doug Gilbert
-
-
+Alan
