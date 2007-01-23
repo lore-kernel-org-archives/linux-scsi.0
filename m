@@ -1,15 +1,15 @@
 From: Mark Haverkamp <markh@linux-foundation.org>
-Subject: [PATCH 3/4] aacraid: Begin adding support for new adapter type
-Date: Tue, 23 Jan 2007 15:00:13 -0800
-Message-ID: <1169593213.10440.24.camel@markh3.pdx.osdl.net>
+Subject: [PATCH 4/4] aacraid:  rework packet support code
+Date: Tue, 23 Jan 2007 15:00:30 -0800
+Message-ID: <1169593230.10440.25.camel@markh3.pdx.osdl.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:33706 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.24]:33786 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965551AbXAWXAS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Jan 2007 18:00:18 -0500
+	id S965575AbXAWXAg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Jan 2007 18:00:36 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@steeleye.com>
@@ -17,150 +17,754 @@ Cc: linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.
 
 Received from Mark Salyzyn,
 
-Add in the NEMER/ARK physical register mapping, represented in up and coming
-products currently under test at Adaptec.
+Replace all if/else packet formations with platform function calls. This is in
+recognition of the proliferation of read and write packet types, and in the
+need to migrate to up-and-coming packets for new products.
 
 Signed-off-by Mark Haverkamp <markh@linux-foundation.org>
 ---
 
---- scsi-misc-aac.orig/drivers/scsi/aacraid/aacraid.h	2007-01-18 10:06:54.000000000 -0800
-+++ scsi-misc-aac/drivers/scsi/aacraid/aacraid.h	2007-01-18 10:11:28.000000000 -0800
-@@ -1810,6 +1810,7 @@
- int aac_do_ioctl(struct aac_dev * dev, int cmd, void __user *arg);
- int aac_rx_init(struct aac_dev *dev);
- int aac_rkt_init(struct aac_dev *dev);
-+int aac_nark_init(struct aac_dev *dev);
- int aac_sa_init(struct aac_dev *dev);
- int aac_queue_get(struct aac_dev * dev, u32 * index, u32 qid, struct hw_fib * hw_fib, int wait, struct fib * fibptr, unsigned long *nonotify);
- unsigned int aac_response_normal(struct aac_queue * q);
---- scsi-misc-aac.orig/drivers/scsi/aacraid/linit.c	2007-01-18 10:11:26.000000000 -0800
-+++ scsi-misc-aac/drivers/scsi/aacraid/linit.c	2007-01-18 10:11:28.000000000 -0800
-@@ -157,6 +157,7 @@
- 	{ 0x9005, 0x0285, 0x17aa, PCI_ANY_ID, 0, 0, 58 }, /* Legend Catchall */
- 	{ 0x9005, 0x0285, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 59 }, /* Adaptec Catch All */
- 	{ 0x9005, 0x0286, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 60 }, /* Adaptec Rocket Catch All */
-+	{ 0x9005, 0x0288, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 61 }, /* Adaptec NEMER/ARK Catch All */
- 	{ 0,}
- };
- MODULE_DEVICE_TABLE(pci, aac_pci_tbl);
-@@ -230,7 +231,8 @@
- 	{ aac_rx_init, "aacraid",  "DELL    ", "RAID            ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG }, /* Dell Catchall */
- 	{ aac_rx_init, "aacraid",  "Legend  ", "RAID            ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG }, /* Legend Catchall */
- 	{ aac_rx_init, "aacraid",  "ADAPTEC ", "RAID            ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG }, /* Adaptec Catch All */
--	{ aac_rkt_init, "aacraid", "ADAPTEC ", "RAID            ", 2 } /* Adaptec Rocket Catch All */
-+	{ aac_rkt_init, "aacraid", "ADAPTEC ", "RAID            ", 2 }, /* Adaptec Rocket Catch All */
-+	{ aac_nark_init, "aacraid", "ADAPTEC ", "RAID            ", 2 } /* Adaptec NEMER/ARK Catch All */
- };
+--- scsi-misc-aac.orig/drivers/scsi/aacraid/aachba.c	2007-01-18 10:11:26.000000000 -0800
++++ scsi-misc-aac/drivers/scsi/aacraid/aachba.c	2007-01-18 10:11:30.000000000 -0800
+@@ -706,6 +706,309 @@
+ 	}
+ }
  
- /**
-@@ -804,7 +806,6 @@
- 	.emulated                       = 1,
- };
- 
--
- static int __devinit aac_probe_one(struct pci_dev *pdev,
- 		const struct pci_device_id *id)
- {
---- scsi-misc-aac.orig/drivers/scsi/aacraid/Makefile	2007-01-18 10:06:54.000000000 -0800
-+++ scsi-misc-aac/drivers/scsi/aacraid/Makefile	2007-01-18 10:11:28.000000000 -0800
-@@ -3,6 +3,6 @@
- obj-$(CONFIG_SCSI_AACRAID) := aacraid.o
- 
- aacraid-objs	:= linit.o aachba.o commctrl.o comminit.o commsup.o \
--		   dpcsup.o rx.o sa.o rkt.o
-+		   dpcsup.o rx.o sa.o rkt.o nark.o
- 
- EXTRA_CFLAGS	:= -Idrivers/scsi
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ scsi-misc-aac/drivers/scsi/aacraid/nark.c	2007-01-18 10:11:28.000000000 -0800
-@@ -0,0 +1,87 @@
-+/*
-+ *	Adaptec AAC series RAID controller driver
-+ *	(c) Copyright 2001 Red Hat Inc.	<alan@redhat.com>
-+ *
-+ * based on the old aacraid driver that is..
-+ * Adaptec aacraid device driver for Linux.
-+ *
-+ * Copyright (c) 2000 Adaptec, Inc. (aacraid@adaptec.com)
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2, or (at your option)
-+ * any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; see the file COPYING.  If not, write to
-+ * the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
-+ *
-+ * Module Name:
-+ *  nark.c
-+ *
-+ * Abstract: Hardware Device Interface for NEMER/ARK
-+ *
-+ */
-+
-+#include <linux/pci.h>
-+#include <linux/blkdev.h>
-+
-+#include <scsi/scsi_host.h>
-+
-+#include "aacraid.h"
-+
-+/**
-+ *	aac_nark_ioremap
-+ *	@size: mapping resize request
-+ *
-+ */
-+static int aac_nark_ioremap(struct aac_dev * dev, u32 size)
++static int aac_bounds_32(struct aac_dev * dev, struct scsi_cmnd * cmd, u64 lba)
 +{
-+	if (!size) {
-+		iounmap(dev->regs.rx);
-+		dev->regs.rx = NULL;
-+		iounmap(dev->base);
-+		dev->base = NULL;
-+		return 0;
++	if (lba & 0xffffffff00000000LL) {
++		int cid = scmd_id(cmd);
++		dprintk((KERN_DEBUG "aacraid: Illegal lba\n"));
++		cmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8 |
++			SAM_STAT_CHECK_CONDITION;
++		set_sense((u8 *) &dev->fsa_dev[cid].sense_data,
++			    HARDWARE_ERROR,
++			    SENCODE_INTERNAL_TARGET_FAILURE,
++			    ASENCODE_INTERNAL_TARGET_FAILURE, 0, 0,
++			    0, 0);
++		memcpy(cmd->sense_buffer, &dev->fsa_dev[cid].sense_data,
++		  (sizeof(dev->fsa_dev[cid].sense_data) > sizeof(cmd->sense_buffer))
++		    ? sizeof(cmd->sense_buffer)
++		    : sizeof(dev->fsa_dev[cid].sense_data));
++		cmd->scsi_done(cmd);
++		return 1;
 +	}
-+	dev->scsi_host_ptr->base = pci_resource_start(dev->pdev, 2);
-+	dev->regs.rx = ioremap((u64)pci_resource_start(dev->pdev, 0) |
-+	  ((u64)pci_resource_start(dev->pdev, 1) << 32),
-+	  sizeof(struct rx_registers) - sizeof(struct rx_inbound));
-+	dev->base = NULL;
-+	if (dev->regs.rx == NULL)
-+		return -1;
-+	dev->base = ioremap(dev->scsi_host_ptr->base, size);
-+	if (dev->base == NULL) {
-+		iounmap(dev->regs.rx);
-+		dev->regs.rx = NULL;
-+		return -1;
-+	}
-+	dev->IndexRegs = &((struct rx_registers __iomem *)dev->base)->IndexRegs;
 +	return 0;
 +}
 +
-+/**
-+ *	aac_nark_init	-	initialize an NEMER/ARK Split Bar card
-+ *	@dev: device to configure
-+ *
-+ */
-+
-+int aac_nark_init(struct aac_dev * dev)
++static int aac_bounds_64(struct aac_dev * dev, struct scsi_cmnd * cmd, u64 lba)
 +{
-+	extern int _aac_rx_init(struct aac_dev *dev);
-+	extern int aac_rx_select_comm(struct aac_dev *dev, int comm);
++	return 0;
++}
++
++static void io_callback(void *context, struct fib * fibptr);
++
++static int aac_read_raw_io(struct fib * fib, struct scsi_cmnd * cmd, u64 lba, u32 count)
++{
++	u16 fibsize;
++	struct aac_raw_io *readcmd;
++	aac_fib_init(fib);
++	readcmd = (struct aac_raw_io *) fib_data(fib);
++	readcmd->block[0] = cpu_to_le32((u32)(lba&0xffffffff));
++	readcmd->block[1] = cpu_to_le32((u32)((lba&0xffffffff00000000LL)>>32));
++	readcmd->count = cpu_to_le32(count<<9);
++	readcmd->cid = cpu_to_le16(scmd_id(cmd));
++	readcmd->flags = cpu_to_le16(1);
++	readcmd->bpTotal = 0;
++	readcmd->bpComplete = 0;
++
++	aac_build_sgraw(cmd, &readcmd->sg);
++	fibsize = sizeof(struct aac_raw_io) + ((le32_to_cpu(readcmd->sg.count) - 1) * sizeof (struct sgentryraw));
++	BUG_ON(fibsize > (fib->dev->max_fib_size - sizeof(struct aac_fibhdr)));
++	/*
++	 *	Now send the Fib to the adapter
++	 */
++	return aac_fib_send(ContainerRawIo,
++			  fib,
++			  fibsize,
++			  FsaNormal,
++			  0, 1,
++			  (fib_callback) io_callback,
++			  (void *) cmd);
++}
++
++static int aac_read_block64(struct fib * fib, struct scsi_cmnd * cmd, u64 lba, u32 count)
++{
++	u16 fibsize;
++	struct aac_read64 *readcmd;
++	aac_fib_init(fib);
++	readcmd = (struct aac_read64 *) fib_data(fib);
++	readcmd->command = cpu_to_le32(VM_CtHostRead64);
++	readcmd->cid = cpu_to_le16(scmd_id(cmd));
++	readcmd->sector_count = cpu_to_le16(count);
++	readcmd->block = cpu_to_le32((u32)(lba&0xffffffff));
++	readcmd->pad   = 0;
++	readcmd->flags = 0;
++
++	aac_build_sg64(cmd, &readcmd->sg);
++	fibsize = sizeof(struct aac_read64) +
++		((le32_to_cpu(readcmd->sg.count) - 1) *
++		 sizeof (struct sgentry64));
++	BUG_ON (fibsize > (fib->dev->max_fib_size -
++				sizeof(struct aac_fibhdr)));
++	/*
++	 *	Now send the Fib to the adapter
++	 */
++	return aac_fib_send(ContainerCommand64,
++			  fib,
++			  fibsize,
++			  FsaNormal,
++			  0, 1,
++			  (fib_callback) io_callback,
++			  (void *) cmd);
++}
++
++static int aac_read_block(struct fib * fib, struct scsi_cmnd * cmd, u64 lba, u32 count)
++{
++	u16 fibsize;
++	struct aac_read *readcmd;
++	aac_fib_init(fib);
++	readcmd = (struct aac_read *) fib_data(fib);
++	readcmd->command = cpu_to_le32(VM_CtBlockRead);
++	readcmd->cid = cpu_to_le16(scmd_id(cmd));
++	readcmd->block = cpu_to_le32((u32)(lba&0xffffffff));
++	readcmd->count = cpu_to_le32(count * 512);
++
++	aac_build_sg(cmd, &readcmd->sg);
++	fibsize = sizeof(struct aac_read) +
++			((le32_to_cpu(readcmd->sg.count) - 1) *
++			 sizeof (struct sgentry));
++	BUG_ON (fibsize > (fib->dev->max_fib_size -
++				sizeof(struct aac_fibhdr)));
++	/*
++	 *	Now send the Fib to the adapter
++	 */
++	return aac_fib_send(ContainerCommand,
++			  fib,
++			  fibsize,
++			  FsaNormal,
++			  0, 1,
++			  (fib_callback) io_callback,
++			  (void *) cmd);
++}
++
++static int aac_write_raw_io(struct fib * fib, struct scsi_cmnd * cmd, u64 lba, u32 count)
++{
++	u16 fibsize;
++	struct aac_raw_io *writecmd;
++	aac_fib_init(fib);
++	writecmd = (struct aac_raw_io *) fib_data(fib);
++	writecmd->block[0] = cpu_to_le32((u32)(lba&0xffffffff));
++	writecmd->block[1] = cpu_to_le32((u32)((lba&0xffffffff00000000LL)>>32));
++	writecmd->count = cpu_to_le32(count<<9);
++	writecmd->cid = cpu_to_le16(scmd_id(cmd));
++	writecmd->flags = 0;
++	writecmd->bpTotal = 0;
++	writecmd->bpComplete = 0;
++
++	aac_build_sgraw(cmd, &writecmd->sg);
++	fibsize = sizeof(struct aac_raw_io) + ((le32_to_cpu(writecmd->sg.count) - 1) * sizeof (struct sgentryraw));
++	BUG_ON(fibsize > (fib->dev->max_fib_size - sizeof(struct aac_fibhdr)));
++	/*
++	 *	Now send the Fib to the adapter
++	 */
++	return aac_fib_send(ContainerRawIo,
++			  fib,
++			  fibsize,
++			  FsaNormal,
++			  0, 1,
++			  (fib_callback) io_callback,
++			  (void *) cmd);
++}
++
++static int aac_write_block64(struct fib * fib, struct scsi_cmnd * cmd, u64 lba, u32 count)
++{
++	u16 fibsize;
++	struct aac_write64 *writecmd;
++	aac_fib_init(fib);
++	writecmd = (struct aac_write64 *) fib_data(fib);
++	writecmd->command = cpu_to_le32(VM_CtHostWrite64);
++	writecmd->cid = cpu_to_le16(scmd_id(cmd));
++	writecmd->sector_count = cpu_to_le16(count);
++	writecmd->block = cpu_to_le32((u32)(lba&0xffffffff));
++	writecmd->pad	= 0;
++	writecmd->flags	= 0;
++
++	aac_build_sg64(cmd, &writecmd->sg);
++	fibsize = sizeof(struct aac_write64) +
++		((le32_to_cpu(writecmd->sg.count) - 1) *
++		 sizeof (struct sgentry64));
++	BUG_ON (fibsize > (fib->dev->max_fib_size -
++				sizeof(struct aac_fibhdr)));
++	/*
++	 *	Now send the Fib to the adapter
++	 */
++	return aac_fib_send(ContainerCommand64,
++			  fib,
++			  fibsize,
++			  FsaNormal,
++			  0, 1,
++			  (fib_callback) io_callback,
++			  (void *) cmd);
++}
++
++static int aac_write_block(struct fib * fib, struct scsi_cmnd * cmd, u64 lba, u32 count)
++{
++	u16 fibsize;
++	struct aac_write *writecmd;
++	aac_fib_init(fib);
++	writecmd = (struct aac_write *) fib_data(fib);
++	writecmd->command = cpu_to_le32(VM_CtBlockWrite);
++	writecmd->cid = cpu_to_le16(scmd_id(cmd));
++	writecmd->block = cpu_to_le32((u32)(lba&0xffffffff));
++	writecmd->count = cpu_to_le32(count * 512);
++	writecmd->sg.count = cpu_to_le32(1);
++	/* ->stable is not used - it did mean which type of write */
++
++	aac_build_sg(cmd, &writecmd->sg);
++	fibsize = sizeof(struct aac_write) +
++		((le32_to_cpu(writecmd->sg.count) - 1) *
++		 sizeof (struct sgentry));
++	BUG_ON (fibsize > (fib->dev->max_fib_size -
++				sizeof(struct aac_fibhdr)));
++	/*
++	 *	Now send the Fib to the adapter
++	 */
++	return aac_fib_send(ContainerCommand,
++			  fib,
++			  fibsize,
++			  FsaNormal,
++			  0, 1,
++			  (fib_callback) io_callback,
++			  (void *) cmd);
++}
++
++static struct aac_srb * aac_scsi_common(struct fib * fib, struct scsi_cmnd * cmd)
++{
++	struct aac_srb * srbcmd;
++	u32 flag;
++	u32 timeout;
++
++	aac_fib_init(fib);
++	switch(cmd->sc_data_direction){
++	case DMA_TO_DEVICE:
++		flag = SRB_DataOut;
++		break;
++	case DMA_BIDIRECTIONAL:
++		flag = SRB_DataIn | SRB_DataOut;
++		break;
++	case DMA_FROM_DEVICE:
++		flag = SRB_DataIn;
++		break;
++	case DMA_NONE:
++	default:	/* shuts up some versions of gcc */
++		flag = SRB_NoDataXfer;
++		break;
++	}
++
++	srbcmd = (struct aac_srb*) fib_data(fib);
++	srbcmd->function = cpu_to_le32(SRBF_ExecuteScsi);
++	srbcmd->channel  = cpu_to_le32(aac_logical_to_phys(scmd_channel(cmd)));
++	srbcmd->id       = cpu_to_le32(scmd_id(cmd));
++	srbcmd->lun      = cpu_to_le32(cmd->device->lun);
++	srbcmd->flags    = cpu_to_le32(flag);
++	timeout = cmd->timeout_per_command/HZ;
++	if (timeout == 0)
++		timeout = 1;
++	srbcmd->timeout  = cpu_to_le32(timeout);  // timeout in seconds
++	srbcmd->retry_limit = 0; /* Obsolete parameter */
++	srbcmd->cdb_size = cpu_to_le32(cmd->cmd_len);
++	return srbcmd;
++}
++
++static void aac_srb_callback(void *context, struct fib * fibptr);
++
++static int aac_scsi_64(struct fib * fib, struct scsi_cmnd * cmd)
++{
++	u16 fibsize;
++	struct aac_srb * srbcmd = aac_scsi_common(fib, cmd);
++
++	aac_build_sg64(cmd, (struct sgmap64*) &srbcmd->sg);
++	srbcmd->count = cpu_to_le32(cmd->request_bufflen);
++
++	memset(srbcmd->cdb, 0, sizeof(srbcmd->cdb));
++	memcpy(srbcmd->cdb, cmd->cmnd, cmd->cmd_len);
++	/*
++	 *	Build Scatter/Gather list
++	 */
++	fibsize = sizeof (struct aac_srb) - sizeof (struct sgentry) +
++		((le32_to_cpu(srbcmd->sg.count) & 0xff) *
++		 sizeof (struct sgentry64));
++	BUG_ON (fibsize > (fib->dev->max_fib_size -
++				sizeof(struct aac_fibhdr)));
 +
 +	/*
-+	 *	Fill in the function dispatch table.
++	 *	Now send the Fib to the adapter
 +	 */
-+	dev->a_ops.adapter_ioremap = aac_nark_ioremap;
-+	dev->a_ops.adapter_comm = aac_rx_select_comm;
-+
-+	return _aac_rx_init(dev);
++	return aac_fib_send(ScsiPortCommand64, fib,
++				fibsize, FsaNormal, 0, 1,
++				  (fib_callback) aac_srb_callback,
++				  (void *) cmd);
 +}
++
++static int aac_scsi_32(struct fib * fib, struct scsi_cmnd * cmd)
++{
++	u16 fibsize;
++	struct aac_srb * srbcmd = aac_scsi_common(fib, cmd);
++
++	aac_build_sg(cmd, (struct sgmap*)&srbcmd->sg);
++	srbcmd->count = cpu_to_le32(cmd->request_bufflen);
++
++	memset(srbcmd->cdb, 0, sizeof(srbcmd->cdb));
++	memcpy(srbcmd->cdb, cmd->cmnd, cmd->cmd_len);
++	/*
++	 *	Build Scatter/Gather list
++	 */
++	fibsize = sizeof (struct aac_srb) +
++		(((le32_to_cpu(srbcmd->sg.count) & 0xff) - 1) *
++		 sizeof (struct sgentry));
++	BUG_ON (fibsize > (fib->dev->max_fib_size -
++				sizeof(struct aac_fibhdr)));
++
++	/*
++	 *	Now send the Fib to the adapter
++	 */
++	return aac_fib_send(ScsiPortCommand, fib, fibsize, FsaNormal, 0, 1,
++				  (fib_callback) aac_srb_callback, (void *) cmd);
++}
++
+ int aac_get_adapter_info(struct aac_dev* dev)
+ {
+ 	struct fib* fibptr;
+@@ -874,14 +1177,27 @@
+ 		}
+ 	}
+ 	/* 
+-	 * 57 scatter gather elements 
++	 * Deal with configuring for the individualized limits of each packet
++	 * interface.
+ 	 */
+-	if (!(dev->raw_io_interface)) {
++	dev->a_ops.adapter_scsi = (dev->dac_support)
++				? aac_scsi_64
++				: aac_scsi_32;
++	if (dev->raw_io_interface) {
++		dev->a_ops.adapter_bounds = (dev->raw_io_64)
++					? aac_bounds_64
++					: aac_bounds_32;
++		dev->a_ops.adapter_read = aac_read_raw_io;
++		dev->a_ops.adapter_write = aac_write_raw_io;
++	} else {
++		dev->a_ops.adapter_bounds = aac_bounds_32;
+ 		dev->scsi_host_ptr->sg_tablesize = (dev->max_fib_size -
+ 			sizeof(struct aac_fibhdr) -
+ 			sizeof(struct aac_write) + sizeof(struct sgentry)) /
+ 				sizeof(struct sgentry);
+ 		if (dev->dac_support) {
++			dev->a_ops.adapter_read = aac_read_block64;
++			dev->a_ops.adapter_write = aac_write_block64;
+ 			/* 
+ 			 * 38 scatter gather elements 
+ 			 */
+@@ -891,6 +1207,9 @@
+ 				sizeof(struct aac_write64) +
+ 				sizeof(struct sgentry64)) /
+ 					sizeof(struct sgentry64);
++		} else {
++			dev->a_ops.adapter_read = aac_read_block;
++			dev->a_ops.adapter_write = aac_write_block;
+ 		}
+ 		dev->scsi_host_ptr->max_sectors = AAC_MAX_32BIT_SGBCOUNT;
+ 		if(!(dev->adapter_info.options & AAC_OPT_NEW_COMM)) {
+@@ -1004,8 +1323,6 @@
+ 	u64 lba;
+ 	u32 count;
+ 	int status;
+-
+-	u16 fibsize;
+ 	struct aac_dev *dev;
+ 	struct fib * cmd_fibcontext;
+ 
+@@ -1059,23 +1376,8 @@
+ 	}
+ 	dprintk((KERN_DEBUG "aac_read[cpu %d]: lba = %llu, t = %ld.\n",
+ 	  smp_processor_id(), (unsigned long long)lba, jiffies));
+-	if ((!(dev->raw_io_interface) || !(dev->raw_io_64)) &&
+-		(lba & 0xffffffff00000000LL)) {
+-		dprintk((KERN_DEBUG "aac_read: Illegal lba\n"));
+-		scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8 | 
+-			SAM_STAT_CHECK_CONDITION;
+-		set_sense((u8 *) &dev->fsa_dev[cid].sense_data,
+-			    HARDWARE_ERROR,
+-			    SENCODE_INTERNAL_TARGET_FAILURE,
+-			    ASENCODE_INTERNAL_TARGET_FAILURE, 0, 0,
+-			    0, 0);
+-		memcpy(scsicmd->sense_buffer, &dev->fsa_dev[cid].sense_data,
+-		  (sizeof(dev->fsa_dev[cid].sense_data) > sizeof(scsicmd->sense_buffer))
+-		    ? sizeof(scsicmd->sense_buffer)
+-		    : sizeof(dev->fsa_dev[cid].sense_data));
+-		scsicmd->scsi_done(scsicmd);
++	if (aac_adapter_bounds(dev,scsicmd,lba))
+ 		return 0;
+-	}
+ 	/*
+ 	 *	Alocate and initialize a Fib
+ 	 */
+@@ -1083,85 +1385,7 @@
+ 		return -1;
+ 	}
+ 
+-	aac_fib_init(cmd_fibcontext);
+-
+-	if (dev->raw_io_interface) {
+-		struct aac_raw_io *readcmd;
+-		readcmd = (struct aac_raw_io *) fib_data(cmd_fibcontext);
+-		readcmd->block[0] = cpu_to_le32((u32)(lba&0xffffffff));
+-		readcmd->block[1] = cpu_to_le32((u32)((lba&0xffffffff00000000LL)>>32));
+-		readcmd->count = cpu_to_le32(count<<9);
+-		readcmd->cid = cpu_to_le16(cid);
+-		readcmd->flags = cpu_to_le16(1);
+-		readcmd->bpTotal = 0;
+-		readcmd->bpComplete = 0;
+-		
+-		aac_build_sgraw(scsicmd, &readcmd->sg);
+-		fibsize = sizeof(struct aac_raw_io) + ((le32_to_cpu(readcmd->sg.count) - 1) * sizeof (struct sgentryraw));
+-		BUG_ON(fibsize > (dev->max_fib_size - sizeof(struct aac_fibhdr)));
+-		/*
+-		 *	Now send the Fib to the adapter
+-		 */
+-		status = aac_fib_send(ContainerRawIo,
+-			  cmd_fibcontext, 
+-			  fibsize, 
+-			  FsaNormal, 
+-			  0, 1, 
+-			  (fib_callback) io_callback, 
+-			  (void *) scsicmd);
+-	} else if (dev->dac_support == 1) {
+-		struct aac_read64 *readcmd;
+-		readcmd = (struct aac_read64 *) fib_data(cmd_fibcontext);
+-		readcmd->command = cpu_to_le32(VM_CtHostRead64);
+-		readcmd->cid = cpu_to_le16(cid);
+-		readcmd->sector_count = cpu_to_le16(count);
+-		readcmd->block = cpu_to_le32((u32)(lba&0xffffffff));
+-		readcmd->pad   = 0;
+-		readcmd->flags = 0; 
+-
+-		aac_build_sg64(scsicmd, &readcmd->sg);
+-		fibsize = sizeof(struct aac_read64) + 
+-			((le32_to_cpu(readcmd->sg.count) - 1) * 
+-			 sizeof (struct sgentry64));
+-		BUG_ON (fibsize > (dev->max_fib_size - 
+-					sizeof(struct aac_fibhdr)));
+-		/*
+-		 *	Now send the Fib to the adapter
+-		 */
+-		status = aac_fib_send(ContainerCommand64,
+-			  cmd_fibcontext, 
+-			  fibsize, 
+-			  FsaNormal, 
+-			  0, 1, 
+-			  (fib_callback) io_callback, 
+-			  (void *) scsicmd);
+-	} else {
+-		struct aac_read *readcmd;
+-		readcmd = (struct aac_read *) fib_data(cmd_fibcontext);
+-		readcmd->command = cpu_to_le32(VM_CtBlockRead);
+-		readcmd->cid = cpu_to_le32(cid);
+-		readcmd->block = cpu_to_le32((u32)(lba&0xffffffff));
+-		readcmd->count = cpu_to_le32(count * 512);
+-
+-		aac_build_sg(scsicmd, &readcmd->sg);
+-		fibsize = sizeof(struct aac_read) + 
+-			((le32_to_cpu(readcmd->sg.count) - 1) * 
+-			 sizeof (struct sgentry));
+-		BUG_ON (fibsize > (dev->max_fib_size -
+-					sizeof(struct aac_fibhdr)));
+-		/*
+-		 *	Now send the Fib to the adapter
+-		 */
+-		status = aac_fib_send(ContainerCommand,
+-			  cmd_fibcontext, 
+-			  fibsize, 
+-			  FsaNormal, 
+-			  0, 1, 
+-			  (fib_callback) io_callback, 
+-			  (void *) scsicmd);
+-	}
+-
+-	
++	status = aac_adapter_read(cmd_fibcontext, scsicmd, lba, count);
+ 
+ 	/*
+ 	 *	Check that the command queued to the controller
+@@ -1187,7 +1411,6 @@
+ 	u64 lba;
+ 	u32 count;
+ 	int status;
+-	u16 fibsize;
+ 	struct aac_dev *dev;
+ 	struct fib * cmd_fibcontext;
+ 
+@@ -1227,22 +1450,8 @@
+ 	}
+ 	dprintk((KERN_DEBUG "aac_write[cpu %d]: lba = %llu, t = %ld.\n",
+ 	  smp_processor_id(), (unsigned long long)lba, jiffies));
+-	if ((!(dev->raw_io_interface) || !(dev->raw_io_64))
+-	 && (lba & 0xffffffff00000000LL)) {
+-		dprintk((KERN_DEBUG "aac_write: Illegal lba\n"));
+-		scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8 | SAM_STAT_CHECK_CONDITION;
+-		set_sense((u8 *) &dev->fsa_dev[cid].sense_data,
+-			    HARDWARE_ERROR,
+-			    SENCODE_INTERNAL_TARGET_FAILURE,
+-			    ASENCODE_INTERNAL_TARGET_FAILURE, 0, 0,
+-			    0, 0);
+-		memcpy(scsicmd->sense_buffer, &dev->fsa_dev[cid].sense_data,
+-		  (sizeof(dev->fsa_dev[cid].sense_data) > sizeof(scsicmd->sense_buffer))
+-		    ? sizeof(scsicmd->sense_buffer)
+-		    : sizeof(dev->fsa_dev[cid].sense_data));
+-		scsicmd->scsi_done(scsicmd);
++	if (aac_adapter_bounds(dev,scsicmd,lba))
+ 		return 0;
+-	}
+ 	/*
+ 	 *	Allocate and initialize a Fib then setup a BlockWrite command
+ 	 */
+@@ -1251,85 +1460,8 @@
+ 		scsicmd->scsi_done(scsicmd);
+ 		return 0;
+ 	}
+-	aac_fib_init(cmd_fibcontext);
+ 
+-	if (dev->raw_io_interface) {
+-		struct aac_raw_io *writecmd;
+-		writecmd = (struct aac_raw_io *) fib_data(cmd_fibcontext);
+-		writecmd->block[0] = cpu_to_le32((u32)(lba&0xffffffff));
+-		writecmd->block[1] = cpu_to_le32((u32)((lba&0xffffffff00000000LL)>>32));
+-		writecmd->count = cpu_to_le32(count<<9);
+-		writecmd->cid = cpu_to_le16(cid);
+-		writecmd->flags = 0; 
+-		writecmd->bpTotal = 0;
+-		writecmd->bpComplete = 0;
+-		
+-		aac_build_sgraw(scsicmd, &writecmd->sg);
+-		fibsize = sizeof(struct aac_raw_io) + ((le32_to_cpu(writecmd->sg.count) - 1) * sizeof (struct sgentryraw));
+-		BUG_ON(fibsize > (dev->max_fib_size - sizeof(struct aac_fibhdr)));
+-		/*
+-		 *	Now send the Fib to the adapter
+-		 */
+-		status = aac_fib_send(ContainerRawIo,
+-			  cmd_fibcontext, 
+-			  fibsize, 
+-			  FsaNormal, 
+-			  0, 1, 
+-			  (fib_callback) io_callback, 
+-			  (void *) scsicmd);
+-	} else if (dev->dac_support == 1) {
+-		struct aac_write64 *writecmd;
+-		writecmd = (struct aac_write64 *) fib_data(cmd_fibcontext);
+-		writecmd->command = cpu_to_le32(VM_CtHostWrite64);
+-		writecmd->cid = cpu_to_le16(cid);
+-		writecmd->sector_count = cpu_to_le16(count); 
+-		writecmd->block = cpu_to_le32((u32)(lba&0xffffffff));
+-		writecmd->pad	= 0;
+-		writecmd->flags	= 0;
+-
+-		aac_build_sg64(scsicmd, &writecmd->sg);
+-		fibsize = sizeof(struct aac_write64) + 
+-			((le32_to_cpu(writecmd->sg.count) - 1) * 
+-			 sizeof (struct sgentry64));
+-		BUG_ON (fibsize > (dev->max_fib_size -
+-					sizeof(struct aac_fibhdr)));
+-		/*
+-		 *	Now send the Fib to the adapter
+-		 */
+-		status = aac_fib_send(ContainerCommand64,
+-			  cmd_fibcontext, 
+-			  fibsize, 
+-			  FsaNormal, 
+-			  0, 1, 
+-			  (fib_callback) io_callback, 
+-			  (void *) scsicmd);
+-	} else {
+-		struct aac_write *writecmd;
+-		writecmd = (struct aac_write *) fib_data(cmd_fibcontext);
+-		writecmd->command = cpu_to_le32(VM_CtBlockWrite);
+-		writecmd->cid = cpu_to_le32(cid);
+-		writecmd->block = cpu_to_le32((u32)(lba&0xffffffff));
+-		writecmd->count = cpu_to_le32(count * 512);
+-		writecmd->sg.count = cpu_to_le32(1);
+-		/* ->stable is not used - it did mean which type of write */
+-
+-		aac_build_sg(scsicmd, &writecmd->sg);
+-		fibsize = sizeof(struct aac_write) + 
+-			((le32_to_cpu(writecmd->sg.count) - 1) * 
+-			 sizeof (struct sgentry));
+-		BUG_ON (fibsize > (dev->max_fib_size -
+-					sizeof(struct aac_fibhdr)));
+-		/*
+-		 *	Now send the Fib to the adapter
+-		 */
+-		status = aac_fib_send(ContainerCommand,
+-			  cmd_fibcontext, 
+-			  fibsize, 
+-			  FsaNormal, 
+-			  0, 1, 
+-			  (fib_callback) io_callback, 
+-			  (void *) scsicmd);
+-	}
++	status = aac_adapter_write(cmd_fibcontext, scsicmd, lba, count);
+ 
+ 	/*
+ 	 *	Check that the command queued to the controller
+@@ -2167,10 +2299,6 @@
+ 	struct fib* cmd_fibcontext;
+ 	struct aac_dev* dev;
+ 	int status;
+-	struct aac_srb *srbcmd;
+-	u16 fibsize;
+-	u32 flag;
+-	u32 timeout;
+ 
+ 	dev = (struct aac_dev *)scsicmd->device->host->hostdata;
+ 	if (scmd_id(scsicmd) >= dev->maximum_num_physicals ||
+@@ -2180,88 +2308,14 @@
+ 		return 0;
+ 	}
+ 
+-	switch(scsicmd->sc_data_direction){
+-	case DMA_TO_DEVICE:
+-		flag = SRB_DataOut;
+-		break;
+-	case DMA_BIDIRECTIONAL:
+-		flag = SRB_DataIn | SRB_DataOut;
+-		break;
+-	case DMA_FROM_DEVICE:
+-		flag = SRB_DataIn;
+-		break;
+-	case DMA_NONE:
+-	default:	/* shuts up some versions of gcc */
+-		flag = SRB_NoDataXfer;
+-		break;
+-	}
+-
+-
+ 	/*
+ 	 *	Allocate and initialize a Fib then setup a BlockWrite command
+ 	 */
+ 	if (!(cmd_fibcontext = aac_fib_alloc(dev))) {
+ 		return -1;
+ 	}
+-	aac_fib_init(cmd_fibcontext);
+-
+-	srbcmd = (struct aac_srb*) fib_data(cmd_fibcontext);
+-	srbcmd->function = cpu_to_le32(SRBF_ExecuteScsi);
+-	srbcmd->channel  = cpu_to_le32(aac_logical_to_phys(scmd_channel(scsicmd)));
+-	srbcmd->id   = cpu_to_le32(scmd_id(scsicmd));
+-	srbcmd->lun      = cpu_to_le32(scsicmd->device->lun);
+-	srbcmd->flags    = cpu_to_le32(flag);
+-	timeout = scsicmd->timeout_per_command/HZ;
+-	if(timeout == 0){
+-		timeout = 1;
+-	}
+-	srbcmd->timeout  = cpu_to_le32(timeout);  // timeout in seconds
+-	srbcmd->retry_limit = 0; /* Obsolete parameter */
+-	srbcmd->cdb_size = cpu_to_le32(scsicmd->cmd_len);
+-	
+-	if( dev->dac_support == 1 ) {
+-		aac_build_sg64(scsicmd, (struct sgmap64*) &srbcmd->sg);
+-		srbcmd->count = cpu_to_le32(scsicmd->request_bufflen);
+-
+-		memset(srbcmd->cdb, 0, sizeof(srbcmd->cdb));
+-		memcpy(srbcmd->cdb, scsicmd->cmnd, scsicmd->cmd_len);
+-		/*
+-		 *	Build Scatter/Gather list
+-		 */
+-		fibsize = sizeof (struct aac_srb) - sizeof (struct sgentry) +
+-			((le32_to_cpu(srbcmd->sg.count) & 0xff) * 
+-			 sizeof (struct sgentry64));
+-		BUG_ON (fibsize > (dev->max_fib_size -
+-					sizeof(struct aac_fibhdr)));
++	status = aac_adapter_scsi(cmd_fibcontext, scsicmd);
+ 
+-		/*
+-		 *	Now send the Fib to the adapter
+-		 */
+-		status = aac_fib_send(ScsiPortCommand64, cmd_fibcontext,
+-				fibsize, FsaNormal, 0, 1,
+-				  (fib_callback) aac_srb_callback, 
+-				  (void *) scsicmd);
+-	} else {
+-		aac_build_sg(scsicmd, (struct sgmap*)&srbcmd->sg);
+-		srbcmd->count = cpu_to_le32(scsicmd->request_bufflen);
+-
+-		memset(srbcmd->cdb, 0, sizeof(srbcmd->cdb));
+-		memcpy(srbcmd->cdb, scsicmd->cmnd, scsicmd->cmd_len);
+-		/*
+-		 *	Build Scatter/Gather list
+-		 */
+-		fibsize = sizeof (struct aac_srb) + 
+-			(((le32_to_cpu(srbcmd->sg.count) & 0xff) - 1) * 
+-			 sizeof (struct sgentry));
+-		BUG_ON (fibsize > (dev->max_fib_size -
+-					sizeof(struct aac_fibhdr)));
+-
+-		/*
+-		 *	Now send the Fib to the adapter
+-		 */
+-		status = aac_fib_send(ScsiPortCommand, cmd_fibcontext, fibsize, FsaNormal, 0, 1,
+-				  (fib_callback) aac_srb_callback, (void *) scsicmd);
+-	}
+ 	/*
+ 	 *	Check that the command queued to the controller
+ 	 */
+--- scsi-misc-aac.orig/drivers/scsi/aacraid/aacraid.h	2007-01-18 10:11:28.000000000 -0800
++++ scsi-misc-aac/drivers/scsi/aacraid/aacraid.h	2007-01-18 10:11:30.000000000 -0800
+@@ -486,6 +486,7 @@
+ 
+ struct aac_dev;
+ struct fib;
++struct scsi_cmnd;
+ 
+ struct adapter_ops
+ {
+@@ -501,6 +502,10 @@
+ 	irqreturn_t (*adapter_intr)(int irq, void *dev_id);
+ 	/* Packet operations */
+ 	int  (*adapter_deliver)(struct fib * fib);
++	int  (*adapter_bounds)(struct aac_dev * dev, struct scsi_cmnd * cmd, u64 lba);
++	int  (*adapter_read)(struct fib * fib, struct scsi_cmnd * cmd, u64 lba, u32 count);
++	int  (*adapter_write)(struct fib * fib, struct scsi_cmnd * cmd, u64 lba, u32 count);
++	int  (*adapter_scsi)(struct fib * fib, struct scsi_cmnd * cmd);
+ 	/* Administrative operations */
+ 	int  (*adapter_comm)(struct aac_dev * dev, int comm);
+ };
+@@ -1061,6 +1066,18 @@
+ #define aac_adapter_deliver(fib) \
+ 	((fib)->dev)->a_ops.adapter_deliver(fib)
+ 
++#define aac_adapter_bounds(dev,cmd,lba) \
++	dev->a_ops.adapter_bounds(dev,cmd,lba)
++
++#define aac_adapter_read(fib,cmd,lba,count) \
++	((fib)->dev)->a_ops.adapter_read(fib,cmd,lba,count)
++
++#define aac_adapter_write(fib,cmd,lba,count) \
++	((fib)->dev)->a_ops.adapter_write(fib,cmd,lba,count)
++
++#define aac_adapter_scsi(fib,cmd) \
++	((fib)->dev)->a_ops.adapter_scsi(fib,cmd)
++
+ #define aac_adapter_comm(dev,comm) \
+ 	(dev)->a_ops.adapter_comm(dev, comm)
+ 
+@@ -1783,7 +1800,6 @@
+ 	return (u32)capacity;
+ }
+ 
+-struct scsi_cmnd;
+ /* SCp.phase values */
+ #define AAC_OWNER_MIDLEVEL	0x101
+ #define AAC_OWNER_LOWLEVEL	0x102
 
 -- 
 Mark Haverkamp <markh@linux-foundation.org>
