@@ -1,22 +1,22 @@
 From: Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH 2/4] ipr: Tolerate not finding PCI-X registers
-Date: Tue, 23 Jan 2007 11:25:30 -0600
-Message-ID: <200701231725.l0NHPUau011798@d03av04.boulder.ibm.com>
+Subject: [PATCH 3/4] ipr: PCI error recovery fix
+Date: Tue, 23 Jan 2007 11:25:37 -0600
+Message-ID: <200701231725.l0NHPb9t020204@d03av03.boulder.ibm.com>
 References: <1169573123318-patch-mail.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:51718 "EHLO
-	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965038AbXAWRZd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Jan 2007 12:25:33 -0500
+Received: from e34.co.us.ibm.com ([32.97.110.152]:59459 "EHLO
+	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965067AbXAWRZm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Jan 2007 12:25:42 -0500
 Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e36.co.us.ibm.com (8.13.8/8.12.11) with ESMTP id l0NHPWbD007704
-	for <linux-scsi@vger.kernel.org>; Tue, 23 Jan 2007 12:25:32 -0500
-Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.2) with ESMTP id l0NHPW6b466646
-	for <linux-scsi@vger.kernel.org>; Tue, 23 Jan 2007 10:25:32 -0700
-Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av04.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l0NHPV8m011830
-	for <linux-scsi@vger.kernel.org>; Tue, 23 Jan 2007 10:25:31 -0700
+	by e34.co.us.ibm.com (8.13.8/8.12.11) with ESMTP id l0NHPdTC002766
+	for <linux-scsi@vger.kernel.org>; Tue, 23 Jan 2007 12:25:39 -0500
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.2) with ESMTP id l0NHPcpj496558
+	for <linux-scsi@vger.kernel.org>; Tue, 23 Jan 2007 10:25:38 -0700
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l0NHPbMb020239
+	for <linux-scsi@vger.kernel.org>; Tue, 23 Jan 2007 10:25:38 -0700
 In-Reply-To: <1169573123318-patch-mail.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -24,40 +24,60 @@ To: James.Bottomley@steeleye.com
 Cc: linux-scsi@vger.kernel.org, brazilnut@linux.vnet.ibm.com, brking@linux.vnet.ibm.com
 
 
-Don't fail initialization of an adapter if the PCI-X registers
-cannot be found since it may be a PCI-E adapter.
+Since the pci_block_user_cfg_access API was modified to track
+block/unblocks, it was discovered that the ipr driver had a
+path through its code (in PCI error recovery) which would unblock
+when not previously blocked.
 
 Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
 ---
 
- linux-2.6-bjking1/drivers/scsi/ipr.c |   10 ++--------
- 1 files changed, 2 insertions(+), 8 deletions(-)
+ linux-2.6-bjking1/drivers/scsi/ipr.c |   21 +++++++++++++++++++--
+ 1 files changed, 19 insertions(+), 2 deletions(-)
 
-diff -puN drivers/scsi/ipr.c~ipr_pcie_sas drivers/scsi/ipr.c
---- linux-2.6/drivers/scsi/ipr.c~ipr_pcie_sas	2007-01-17 17:21:10.000000000 -0600
-+++ linux-2.6-bjking1/drivers/scsi/ipr.c	2007-01-17 17:21:10.000000000 -0600
-@@ -595,10 +595,8 @@ static int ipr_save_pcix_cmd_reg(struct 
- {
- 	int pcix_cmd_reg = pci_find_capability(ioa_cfg->pdev, PCI_CAP_ID_PCIX);
+diff -puN drivers/scsi/ipr.c~ipr_eeh_recovery_fix drivers/scsi/ipr.c
+--- linux-2.6/drivers/scsi/ipr.c~ipr_eeh_recovery_fix	2007-01-18 17:08:08.000000000 -0600
++++ linux-2.6-bjking1/drivers/scsi/ipr.c	2007-01-18 17:08:08.000000000 -0600
+@@ -6308,7 +6308,6 @@ static int ipr_reset_restore_cfg_space(s
+ 	int rc;
  
--	if (pcix_cmd_reg == 0) {
--		dev_err(&ioa_cfg->pdev->dev, "Failed to save PCI-X command register\n");
--		return -EIO;
--	}
-+	if (pcix_cmd_reg == 0)
-+		return 0;
+ 	ENTER;
+-	pci_unblock_user_cfg_access(ioa_cfg->pdev);
+ 	rc = pci_restore_state(ioa_cfg->pdev);
  
- 	if (pci_read_config_word(ioa_cfg->pdev, pcix_cmd_reg + PCI_X_CMD,
- 				 &ioa_cfg->saved_pcix_cmd_reg) != PCIBIOS_SUCCESSFUL) {
-@@ -627,10 +625,6 @@ static int ipr_set_pcix_cmd_reg(struct i
- 			dev_err(&ioa_cfg->pdev->dev, "Failed to setup PCI-X command register\n");
- 			return -EIO;
- 		}
--	} else {
--		dev_err(&ioa_cfg->pdev->dev,
--			"Failed to setup PCI-X command register\n");
--		return -EIO;
+ 	if (rc != PCIBIOS_SUCCESSFUL) {
+@@ -6349,6 +6348,24 @@ static int ipr_reset_restore_cfg_space(s
+ }
+ 
+ /**
++ * ipr_reset_bist_done - BIST has completed on the adapter.
++ * @ipr_cmd:	ipr command struct
++ *
++ * Description: Unblock config space and resume the reset process.
++ *
++ * Return value:
++ * 	IPR_RC_JOB_CONTINUE
++ **/
++static int ipr_reset_bist_done(struct ipr_cmnd *ipr_cmd)
++{
++	ENTER;
++	pci_unblock_user_cfg_access(ipr_cmd->ioa_cfg->pdev);
++	ipr_cmd->job_step = ipr_reset_restore_cfg_space;
++	LEAVE;
++	return IPR_RC_JOB_CONTINUE;
++}
++
++/**
+  * ipr_reset_start_bist - Run BIST on the adapter.
+  * @ipr_cmd:	ipr command struct
+  *
+@@ -6370,7 +6387,7 @@ static int ipr_reset_start_bist(struct i
+ 		ipr_cmd->ioasa.ioasc = cpu_to_be32(IPR_IOASC_PCI_ACCESS_ERROR);
+ 		rc = IPR_RC_JOB_CONTINUE;
+ 	} else {
+-		ipr_cmd->job_step = ipr_reset_restore_cfg_space;
++		ipr_cmd->job_step = ipr_reset_bist_done;
+ 		ipr_reset_start_timer(ipr_cmd, IPR_WAIT_FOR_BIST_TIMEOUT);
+ 		rc = IPR_RC_JOB_RETURN;
  	}
- 
- 	return 0;
 _
