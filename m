@@ -1,267 +1,138 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] add bsg queue resize
-Date: Tue, 23 Jan 2007 16:23:49 +0100
-Message-ID: <20070123152348.GD11995@kernel.dk>
-References: <20070120232518E.fujita.tomonori@lab.ntt.co.jp> <20070123083403.GC5486@kernel.dk>
+From: Carsten John <cjohn@mpi-bremen.de>
+Subject: LSI 22320-R with >3TB RAID problem
+Date: Tue, 23 Jan 2007 17:11:29 +0100
+Message-ID: <1169568690.632690@magnum.mpi-bremen.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-2
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([62.242.22.158]:22905 "EHLO kernel.dk"
+Received: from main.gmane.org ([80.91.229.2]:42412 "EHLO ciao.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751987AbXAWPWP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Jan 2007 10:22:15 -0500
-Content-Disposition: inline
-In-Reply-To: <20070123083403.GC5486@kernel.dk>
+	id S933092AbXAWQUM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Jan 2007 11:20:12 -0500
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1H9ONP-0005Ge-Jt
+	for linux-scsi@vger.kernel.org; Tue, 23 Jan 2007 17:20:03 +0100
+Received: from magnum.mpi-bremen.de ([134.102.40.13])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Tue, 23 Jan 2007 17:20:03 +0100
+Received: from cjohn by magnum.mpi-bremen.de with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Tue, 23 Jan 2007 17:20:03 +0100
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, Jan 23 2007, Jens Axboe wrote:
-> On Sat, Jan 20 2007, FUJITA Tomonori wrote:
-> > This enables bsg to resize the queue depth via
-> > SG_SET_COMMAND_Q. bsg_command structures are allocated via mempool
-> > because the previous way to use contiguous memory makes it difficult
-> > to resize the queue depth when a bsg_device has outstanding commands.
-> 
-> Overall the patch looks fine. I don't think we need a mempool though,
-> and allocations could just use GFP_USER from the user invoked queuing
-> paths. Just make it GFP_USER, we can always extend the
-> bsg_alloc_command() to take a gfp_t argument as well If you get rid of
-> the mempool, then resizing is simply just adjusting bd->max_queue.
+Hello everybody,
 
-Like so.
+I'm running into Problems with an external Transtec RAID System (it's an
+labled EONSTOR). The RAID has about 3.5TB in total. The RAID is
+recognized, but can't be accessed.
 
-diff --git a/block/bsg.c b/block/bsg.c
-index 9d77a0c..c56618a 100644
---- a/block/bsg.c
-+++ b/block/bsg.c
-@@ -33,8 +33,6 @@
- 
- static char bsg_version[] = "block layer sg (bsg) 0.4";
- 
--struct bsg_command;
--
- struct bsg_device {
- 	struct gendisk *disk;
- 	request_queue_t *queue;
-@@ -46,8 +44,6 @@ struct bsg_device {
- 	int minor;
- 	int queued_cmds;
- 	int done_cmds;
--	unsigned long *cmd_bitmap;
--	struct bsg_command *cmd_map;
- 	wait_queue_head_t wq_done;
- 	wait_queue_head_t wq_free;
- 	char name[BDEVNAME_SIZE];
-@@ -60,14 +56,7 @@ enum {
- 	BSG_F_WRITE_PERM	= 2,
- };
- 
--/*
-- * command allocation bitmap defines
-- */
--#define BSG_CMDS_PAGE_ORDER	(1)
--#define BSG_CMDS_PER_LONG	(sizeof(unsigned long) * 8)
--#define BSG_CMDS_MASK		(BSG_CMDS_PER_LONG - 1)
--#define BSG_CMDS_BYTES		(PAGE_SIZE * (1 << BSG_CMDS_PAGE_ORDER))
--#define BSG_CMDS		(BSG_CMDS_BYTES / sizeof(struct bsg_command))
-+#define BSG_DEFAULT_CMDS	64
- 
- #undef BSG_DEBUG
- 
-@@ -94,6 +83,8 @@ static struct hlist_head bsg_device_list[BSG_LIST_SIZE];
- static struct class *bsg_class;
- static LIST_HEAD(bsg_class_list);
- 
-+static struct kmem_cache *bsg_cmd_cachep;
-+
- /*
-  * our internal command type
-  */
-@@ -111,14 +102,12 @@ struct bsg_command {
- static void bsg_free_command(struct bsg_command *bc)
- {
- 	struct bsg_device *bd = bc->bd;
--	unsigned long bitnr = bc - bd->cmd_map;
- 	unsigned long flags;
- 
--	dprintk("%s: command bit offset %lu\n", bd->name, bitnr);
-+	kmem_cache_free(bsg_cmd_cachep, bc);
- 
- 	spin_lock_irqsave(&bd->lock, flags);
- 	bd->queued_cmds--;
--	__clear_bit(bitnr, bd->cmd_bitmap);
- 	spin_unlock_irqrestore(&bd->lock, flags);
- 
- 	wake_up(&bd->wq_free);
-@@ -127,32 +116,29 @@ static void bsg_free_command(struct bsg_command *bc)
- static struct bsg_command *__bsg_alloc_command(struct bsg_device *bd)
- {
- 	struct bsg_command *bc = NULL;
--	unsigned long *map;
--	int free_nr;
- 
- 	spin_lock_irq(&bd->lock);
- 
- 	if (bd->queued_cmds >= bd->max_queue)
- 		goto out;
- 
--	for (free_nr = 0, map = bd->cmd_bitmap; *map == ~0UL; map++)
--		free_nr += BSG_CMDS_PER_LONG;
--
--	BUG_ON(*map == ~0UL);
--
- 	bd->queued_cmds++;
--	free_nr += ffz(*map);
--	__set_bit(free_nr, bd->cmd_bitmap);
- 	spin_unlock_irq(&bd->lock);
- 
--	bc = bd->cmd_map + free_nr;
-+	bc = kmem_cache_alloc(bsg_cmd_cachep, GFP_USER);
-+	if (unlikely(!bc)) {
-+		spin_lock_irq(&bd->lock);
-+		goto alloc_fail;
-+	}
-+
- 	memset(bc, 0, sizeof(*bc));
- 	bc->bd = bd;
- 	INIT_LIST_HEAD(&bc->list);
--	dprintk("%s: returning free cmd %p (bit %d)\n", bd->name, bc, free_nr);
-+	dprintk("%s: returning free cmd %p\n", bd->name, bc);
- 	return bc;
-+alloc_fail:
-+	bd->queued_cmds--;
- out:
--	dprintk("%s: failed (depth %d)\n", bd->name, bd->queued_cmds);
- 	spin_unlock_irq(&bd->lock);
- 	return bc;
- }
-@@ -356,8 +342,8 @@ static void bsg_rq_end_io(struct request *rq, int uptodate)
- 	struct bsg_device *bd = bc->bd;
- 	unsigned long flags;
- 
--	dprintk("%s: finished rq %p bc %p, bio %p offset %Zd stat %d\n",
--		bd->name, rq, bc, bc->bio, bc - bd->cmd_map, uptodate);
-+	dprintk("%s: finished rq %p bc %p, bio %p stat %d\n",
-+		bd->name, rq, bc, bc->bio, uptodate);
- 
- 	bc->hdr.duration = jiffies_to_msecs(jiffies - bc->hdr.duration);
- 
-@@ -703,21 +689,9 @@ bsg_write(struct file *file, const char __user *buf, size_t count, loff_t *ppos)
- 	return bytes_read;
- }
- 
--static void bsg_free_device(struct bsg_device *bd)
--{
--	if (bd->cmd_map)
--		free_pages((unsigned long) bd->cmd_map, BSG_CMDS_PAGE_ORDER);
--
--	kfree(bd->cmd_bitmap);
--	kfree(bd);
--}
--
- static struct bsg_device *bsg_alloc_device(void)
- {
--	struct bsg_command *cmd_map;
--	unsigned long *cmd_bitmap;
- 	struct bsg_device *bd;
--	int bits;
- 
- 	bd = kzalloc(sizeof(struct bsg_device), GFP_KERNEL);
- 	if (unlikely(!bd))
-@@ -725,19 +699,7 @@ static struct bsg_device *bsg_alloc_device(void)
- 
- 	spin_lock_init(&bd->lock);
- 
--	bd->max_queue = BSG_CMDS;
--
--	bits = (BSG_CMDS / BSG_CMDS_PER_LONG) + 1;
--	cmd_bitmap = kzalloc(bits * sizeof(unsigned long), GFP_KERNEL);
--	if (!cmd_bitmap)
--		goto out_free_bd;
--	bd->cmd_bitmap = cmd_bitmap;
--
--	cmd_map = (void *) __get_free_pages(GFP_KERNEL | __GFP_ZERO,
--						BSG_CMDS_PAGE_ORDER);
--	if (!cmd_map)
--		goto out_free_bitmap;
--	bd->cmd_map = cmd_map;
-+	bd->max_queue = BSG_DEFAULT_CMDS;
- 
- 	INIT_LIST_HEAD(&bd->busy_list);
- 	INIT_LIST_HEAD(&bd->done_list);
-@@ -746,12 +708,6 @@ static struct bsg_device *bsg_alloc_device(void)
- 	init_waitqueue_head(&bd->wq_free);
- 	init_waitqueue_head(&bd->wq_done);
- 	return bd;
--
--out_free_bitmap:
--	kfree(cmd_bitmap);
--out_free_bd:
--	kfree(bd);
--	return NULL;
- }
- 
- static int bsg_put_device(struct bsg_device *bd)
-@@ -779,7 +735,7 @@ static int bsg_put_device(struct bsg_device *bd)
- 
- 	blk_put_queue(bd->queue);
- 	hlist_del(&bd->dev_list);
--	bsg_free_device(bd);
-+	kfree(bd);
- out:
- 	mutex_unlock(&bsg_mutex);
- 	return ret;
-@@ -918,15 +874,17 @@ bsg_ioctl(struct inode *inode, struct file *file, unsigned int cmd,
- 		 */
- 	case SG_GET_COMMAND_Q:
- 		return put_user(bd->max_queue, uarg);
--		case SG_SET_COMMAND_Q: {
-+	case SG_SET_COMMAND_Q: {
- 		int queue;
- 
- 		if (get_user(queue, uarg))
- 			return -EFAULT;
--		if (queue > BSG_CMDS || queue < 1)
-+		if (queue < 1)
- 			return -EINVAL;
- 
-+		spin_lock_irq(&bd->lock);
- 		bd->max_queue = queue;
-+		spin_unlock_irq(&bd->lock);
- 		return 0;
- 	}
- 
-@@ -1035,15 +993,25 @@ static int __init bsg_init(void)
- {
- 	int ret, i;
- 
-+	bsg_cmd_cachep = kmem_cache_create("bsg_cmd",
-+				sizeof(struct bsg_command), 0, 0, NULL, NULL);
-+	if (!bsg_cmd_cachep) {
-+		printk(KERN_ERR "bsg: failed creating slab cache\n");
-+		return -ENOMEM;
-+	}
-+
- 	for (i = 0; i < BSG_LIST_SIZE; i++)
- 		INIT_HLIST_HEAD(&bsg_device_list[i]);
- 
- 	bsg_class = class_create(THIS_MODULE, "bsg");
--	if (IS_ERR(bsg_class))
-+	if (IS_ERR(bsg_class)) {
-+		kmem_cache_destroy(bsg_cmd_cachep);
- 		return PTR_ERR(bsg_class);
-+	}
- 
- 	ret = register_chrdev(BSG_MAJOR, "bsg", &bsg_fops);
- 	if (ret) {
-+		kmem_cache_destroy(bsg_cmd_cachep);
- 		class_destroy(bsg_class);
- 		return ret;
- 	}
+a similar EONSTOR RAID with 2.5TB is recognized and can be accessed,
+despite a few I/O errors during startup.
+
+hardware:
+P4 Asus Server
+LSI 22320-R SCSI HBA, firmware MPTBIOS-IM-5.07.02
+EONSTOR RAID
+
+software:
+Ubuntu 6.06 "dapper"
+Ubuntu server kernel 2.6.15
+
+relevant dmesg output:
+[42949375.460000] Fusion MPT base driver 3.03.04
+[42949375.460000] Copyright (c) 1999-2005 LSI Logic Corporation
+[42949375.460000] Fusion MPT SPI Host driver 3.03.04
+[42949375.460000] ACPI: PCI Interrupt 0000:02:02.0[A] -> GSI 24 (level,
+low) -> IRQ 169
+[42949375.460000] mptbase: Initiating ioc0 bringup
+[42949376.640000] ioc0: 53C1030: Capabilities={Initiator}
+[42949377.490000] scsi0 : ioc0: LSI53C1030, FwRev=01030700h, Ports=1,
+MaxQ=222, IRQ=169
+[42949377.490000]   Vendor: IFT       Model: U16U-G4010-6      Rev: 342F
+[42949377.490000]   Type:   Direct-Access                      ANSI SCSI
+revision: 03
+[42949380.990000] ACPI: PCI Interrupt 0000:02:02.1[B] -> GSI 25 (level,
+low) -> IRQ 177
+[42949380.990000] mptbase: Initiating ioc1 bringup
+[42949382.170000] ioc1: 53C1030: Capabilities={Initiator}
+[42949383.010000] scsi1 : ioc1: LSI53C1030, FwRev=01030700h, Ports=1,
+MaxQ=222, IRQ=177
+[42949383.010000]   Vendor: transtec  Model: T6100S08R1-D      Rev: 342J
+[42949383.010000]   Type:   Direct-Access                      ANSI SCSI
+revision: 05
+[42949383.010000] Driver 'sd' needs updating - please use bus_type methods
+[42949383.010000] sda : very big device. try to use READ CAPACITY(16).
+[42949383.010000] SCSI device sda: 4683300864 512-byte hdwr sectors
+(2397850 MB)
+[42949383.010000] SCSI device sda: drive cache: write back
+[42949383.020000] sda : very big device. try to use READ CAPACITY(16).
+[42949383.020000] SCSI device sda: 4683300864 512-byte hdwr sectors
+(2397850 MB)
+[42949383.020000] SCSI device sda: drive cache: write back
+[42949383.020000]  sda:<6>sd 0:0:0:0: SCSI error: return code = 0xb0000
+[42949383.030000] end_request: I/O error, dev sda, sector 4683300856
+[42949383.030000] Buffer I/O error on device sda, logical block 585412607
+[42949383.030000] sd 0:0:0:0: SCSI error: return code = 0xb0000
+[42949383.030000] end_request: I/O error, dev sda, sector 4683300856
+[42949383.030000] Buffer I/O error on device sda, logical block 585412607
+[42949383.030000] Alternate GPT is invalid, using primary GPT.
+[42949383.030000]  sda1
+[42949383.030000] sd 0:0:0:0: Attached scsi disk sda
+[42949384.510000] sdb : very big device. try to use READ CAPACITY(16).
+[42949385.010000] SCSI device sdb: 6833670144 512-byte hdwr sectors
+(3498839 MB)
+[42949386.510000] SCSI device sdb: drive cache: write back
+[42949386.510000] sdb : very big device. try to use READ CAPACITY(16).
+[42949386.510000] SCSI device sdb: 6833670144 512-byte hdwr sectors
+(3498839 MB)
+[42949386.510000] SCSI device sdb: drive cache: write back
+[42949386.510000]  sdb:<6>sd 1:0:0:0: SCSI error: return code = 0xb0000
+[42949386.520000] end_request: I/O error, dev sdb, sector 6833670136
+[42949386.520000] Buffer I/O error on device sdb, logical block 854208767
+[42949386.520000] sd 1:0:0:0: SCSI error: return code = 0xb0000
+[42949386.520000] end_request: I/O error, dev sdb, sector 6833670136
+[42949386.520000] Buffer I/O error on device sdb, logical block 854208767
+[42949386.520000] Alternate GPT is invalid, using primary GPT.
+[42949386.520000]
+[42949386.520000] sd 1:0:0:0: Attached scsi disk sdb
+[42949386.550000] sd 1:0:0:0: SCSI error: return code = 0xb0000
+[42949386.550000] end_request: I/O error, dev sdb, sector 6833670016
+[42949386.550000] Buffer I/O error on device sdb, logical block 854208752
+[42949386.560000] sd 1:0:0:0: SCSI error: return code = 0xb0000
+[42949386.560000] end_request: I/O error, dev sdb, sector 6833670016
+[42949386.560000] Buffer I/O error on device sdb, logical block 854208752
+[42949386.560000] sd 1:0:0:0: SCSI error: return code = 0xb0000
+[42949386.560000] end_request: I/O error, dev sdb, sector 6833670136
+[42949386.560000] Buffer I/O error on device sdb, logical block 854208767
+[42949386.560000] sd 1:0:0:0: SCSI error: return code = 0xb0000
+[42949386.560000] end_request: I/O error, dev sdb, sector 6833670136
+[42949386.560000] Buffer I/O error on device sdb, logical block 854208767
+[42949386.560000] sd 1:0:0:0: SCSI error: return code = 0xb0000
+[42949386.560000] end_request: I/O error, dev sdb, sector 6833670136
+[42949386.560000] Buffer I/O error on device sdb, logical block 854208767
+[42949386.560000] sd 1:0:0:0: SCSI error: return code = 0xb0000
+[42949386.560000] end_request: I/O error, dev sdb, sector 6833670136
 
 
+Any ideas?
+
+
+
+Thanks
+
+Carsten
+
+
+			
 -- 
-Jens Axboe
+Max Planck Institut fuer marine Mikrobiologie
+- Network Administration -
+Celsiustr. 1
+D-28359 Bremen
+Tel.: +49 421 2028568
+Fax.: +49 421 2028565
 
