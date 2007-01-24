@@ -1,47 +1,52 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [Bug 7026] CD/DVD burning with USB writer doesn't work
-Date: Wed, 24 Jan 2007 15:36:54 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0701241525160.5126-100000@iolanthe.rowland.org>
-References: <1168273543.2824.13.camel@mulgrave.il.steeleye.com>
+From: "Ed Lin" <ed.lin@promise.com>
+Subject: RE: [patch] scsi: use lock per host instead of per device for shared queue tag host
+Date: Wed, 24 Jan 2007 15:33:57 -0800
+Message-ID: <B70A50D07063384EB9BCE3330D18414F02F5AF83@nonameb.ptu.promise.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:37334 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751062AbXAXUgz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Jan 2007 15:36:55 -0500
-In-Reply-To: <1168273543.2824.13.camel@mulgrave.il.steeleye.com>
+Received: from 67.111.72.3.ptr.us.xo.net ([67.111.72.3]:11405 "EHLO
+	nonameb.ptu.promise.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S964785AbXAXXcw convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Jan 2007 18:32:52 -0500
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: Michael Reed <mdr@sgi.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "james.Bottomley" <james.Bottomley@SteelEye.com>, jeff <jeff@garzik.org>, Promise_Linux <Promise_Linux@promise.com>
 
-On Mon, 8 Jan 2007, James Bottomley wrote:
 
-> On Mon, 2007-01-08 at 11:19 -0500, Alan Stern wrote:
-> > Back in December you wrote a patch to expose the queue ioctls, and sent it
-> > (off-list) to Jens Axboe and to me.  Jens spproved it, but then it
-> > disappeared and was never applied.  Unfortunately I have lost my copy of
-> > it.
-> > 
-> > If you still have the patch, could you please apply it?  If you don't, I 
-> > could try to re-create it.  Or maybe Jens still has it in his email 
-> > records.  Either way, please let me know.
+
+> -----Original Message-----
+> From: Michael Reed [mailto:mdr@sgi.com] 
+> Sent: Wednesday, January 24, 2007 7:59 AM
+> To: Ed Lin
+> Cc: linux-scsi; linux-kernel; james.Bottomley; jeff; Promise_Linux
+> Subject: Re: [patch] scsi: use lock per host instead of per 
+> device for shared queue tag host
 > 
-> I have it somewhere ... I was absent from the internet for 2 weeks over
-> christmas, so I'm still catching up with the backlog.
+> 
+> How 'bout a comment in scsh_host.h indicating that the 
+> pointer will be NULL unless
+> initialized by the driver?
+> 
+> "Protect shared block queue tag" is unique to stex.  Perhaps 
+> have no comment on
+> the variable declaration in scsi_host.h and explain why you 
+> use it in stex.
+> 
+> Mike
+> 
+> 
 
-Has there been time enough to catch up yet?  I'd still like the see this 
-patch applied...  If you can't find it, there's a copy available here:
+Thanks for commenting. I agree more detailed explaination should
+be better.
 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=116828430928154&w=2
+It seems another driver(qla4xxx) is also using shared queue tag.
+It is natural to imagine there might be same symptom in that
+driver. But I don't know the driver and have no hardware so I
+can not say anything certain about it.
 
-While I'm bending your ear, please also consider applying these patches:
-
-http://marc.theaimsgroup.com/?l=linux-scsi&m=116827305914482&w=2
-http://marc.theaimsgroup.com/?l=linux-scsi&m=116827339011208&w=2
-
-Thanks,
-
-Alan Stern
-
+Ed Lin
