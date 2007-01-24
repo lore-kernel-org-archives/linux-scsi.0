@@ -1,38 +1,78 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: Linux Virtual SCSI HBAs and Virtual disks
-Date: Wed, 24 Jan 2007 01:09:13 +0100
-Message-ID: <45B6A3A9.1010603@s5r6.in-berlin.de>
-References: <1e157f74d8578f24c762571c1016aab3@aboo.org> <b43c8fc9882e65d397a6465e6cb7c998@aboo.org> <45B4EAAC.5000008@s5r6.in-berlin.de> <45B60993.9070508@aboo.org> <45B64308.1060703@s5r6.in-berlin.de> <45B6884E.9040700@aboo.org>
+From: "Ed Lin" <ed.lin@promise.com>
+Subject: [patch] scsi: use lock per host instead of per device for shared queue tag host
+Date: Tue, 23 Jan 2007 16:53:44 -0800
+Message-ID: <NONAMEBDp7mvjkO22Zh0000056d@nonameb.ptu.promise.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:41380 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933111AbXAXAJ0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Jan 2007 19:09:26 -0500
-In-Reply-To: <45B6884E.9040700@aboo.org>
+Received: from 67.111.72.3.ptr.us.xo.net ([67.111.72.3]:50833 "EHLO
+	nonameb.ptu.promise.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S965458AbXAXBHD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Jan 2007 20:07:03 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Aboo Valappil <aboo@aboo.org>
-Cc: dougg@torque.net, linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, "james.Bottomley" <james.Bottomley@SteelEye.com>, jeff <jeff@garzik.org>, promise_linux <promise_linux@promise.com>
 
-Aboo Valappil wrote:
-> Stefan Richter wrote:
-...
->>   - vscsihba enters scsi_remove_host() or scsi_remove_device(),
->>   - SCSI core and upper layers do whatever it takes to withdraw from
->>     the respective I-T(-L) nexus gracefully (e.g. synchronize cache,
->>     unlock drive door...),
->>   
-> Does this happen automatically when the scsi_remove_host() is called,
+The block layer uses lock to protect request queue. Every scsi device
+has a unique request queue, and queue lock is the default lock in struct
+request_queue. This is good for normal cases. But for a  host with
+shared queue tag (e.g. stex controllers), a queue lock per device means
+the shared queue tag is not protected when multiple devices are accessed
+at a same time.  This patch is a simple fix for this situation by introducing
+a host queue lock to protect shared queue tag. Without this patch we will
+see various kernel panics (including the BUG() and kernel errors in
+blk_queue_start_tag and blk_queue_end_tag of ll_rw_blk.c) when accessing
+different devices simultaneously (e.g. copying big file from one device to
+another in smp kernels).
 
-Yes. The SCSI core passes the remove/shutdown request up to the higher
-layers like sd_mod for orderly shutdown. There is no distinction between
-regular shutdown and hot-unplug in SCSI core or above; these layers
-treat everything as regular shutdown. Only the LLD can (and has to) make
-this distinction.
--- 
-Stefan Richter
--=====-=-=== ---= ==---
-http://arcgraph.de/sr/
+This is against kernel 2.6.20-rc5.
+
+Signed-off-by: Ed Lin <ed.lin@promise.com>
+---
+ drivers/scsi/scsi_lib.c  |    2 +-
+ drivers/scsi/stex.c      |    2 ++
+ include/scsi/scsi_host.h |    3 +++
+ 3 files changed, 6 insertions(+), 1 deletion(-)
+
+diff -purN a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+--- a/drivers/scsi/scsi_lib.c	2007-01-23 14:40:28.000000000 -0800
++++ b/drivers/scsi/scsi_lib.c	2007-01-23 14:46:43.000000000 -0800
+@@ -1574,7 +1574,7 @@ struct request_queue *__scsi_alloc_queue
+ {
+ 	struct request_queue *q;
+ 
+-	q = blk_init_queue(request_fn, NULL);
++	q = blk_init_queue(request_fn, shost->req_q_lock);
+ 	if (!q)
+ 		return NULL;
+ 
+diff -purN a/drivers/scsi/stex.c b/drivers/scsi/stex.c
+--- a/drivers/scsi/stex.c	2007-01-23 14:40:28.000000000 -0800
++++ b/drivers/scsi/stex.c	2007-01-23 14:48:59.000000000 -0800
+@@ -1254,6 +1254,8 @@ stex_probe(struct pci_dev *pdev, const s
+ 	if (err)
+ 		goto out_free_irq;
+ 
++	spin_lock_init(&host->__req_q_lock);
++	host->req_q_lock = &host->__req_q_lock;
+ 	err = scsi_init_shared_tag_map(host, host->can_queue);
+ 	if (err) {
+ 		printk(KERN_ERR DRV_NAME "(%s): init shared queue failed\n",
+diff -purN a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+--- a/include/scsi/scsi_host.h	2007-01-23 14:40:29.000000000 -0800
++++ b/include/scsi/scsi_host.h	2007-01-23 14:57:04.000000000 -0800
+@@ -508,6 +508,9 @@ struct Scsi_Host {
+ 	spinlock_t		default_lock;
+ 	spinlock_t		*host_lock;
+ 
++	spinlock_t		__req_q_lock;
++	spinlock_t		*req_q_lock;/* protect shared block queue tag */
++
+ 	struct mutex		scan_mutex;/* serialize scanning activity */
+ 
+ 	struct list_head	eh_cmd_q;
+
+
+
