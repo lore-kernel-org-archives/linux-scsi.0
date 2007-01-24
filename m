@@ -1,40 +1,54 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [Patch 2/4] aacraid: expanded expose physical device code
-Date: Wed, 24 Jan 2007 05:49:02 +0000
-Message-ID: <20070124054902.GA14694@infradead.org>
-References: <1169593190.10440.23.camel@markh3.pdx.osdl.net>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH] add bsg queue resize
+Date: Wed, 24 Jan 2007 09:04:57 +0100
+Message-ID: <20070124080456.GB12718@kernel.dk>
+References: <20070120232518E.fujita.tomonori@lab.ntt.co.jp> <20070123083403.GC5486@kernel.dk> <20070123152348.GD11995@kernel.dk> <20070124111613M.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:50987 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030215AbXAXFtS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Jan 2007 00:49:18 -0500
+Received: from brick.kernel.dk ([62.242.22.158]:22772 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933198AbXAXIDT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Jan 2007 03:03:19 -0500
 Content-Disposition: inline
-In-Reply-To: <1169593190.10440.23.camel@markh3.pdx.osdl.net>
+In-Reply-To: <20070124111613M.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Haverkamp <markh@linux-foundation.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linux-scsi@vger.kernel.org
 
-> +		if ((scsicmd->cmnd[0] == INQUIRY) && (expose_physicals <= 0)) {
-> +			u8 b;
-> +			u8 b1;
-> +			/* We can't expose disk devices because we can't
-> +			 * tell whether they are the raw container drives
-> +			 * or stand alone drives.  If they have the removable
-> +			 * bit set then we should expose them though.
-> +			 */
-> +			b = (*(u8*)scsicmd->request_buffer)&0x1f;
-> +			b1 = ((u8*)scsicmd->request_buffer)[1];
-> +			if (b == TYPE_TAPE || b == TYPE_WORM ||
-> +			    b == TYPE_ROM || b==TYPE_MOD ||
-> +			    b == TYPE_MEDIUM_CHANGER ||
-> +			    (b == TYPE_DISK && (b1 & 0x80))) {
-> +				scsicmd->result = DID_OK << 16 |
-> +					COMMAND_COMPLETE << 8;
+On Wed, Jan 24 2007, FUJITA Tomonori wrote:
+> From: Jens Axboe <jens.axboe@oracle.com>
+> Subject: Re: [PATCH] add bsg queue resize
+> Date: Tue, 23 Jan 2007 16:23:49 +0100
+> 
+> > On Tue, Jan 23 2007, Jens Axboe wrote:
+> > > On Sat, Jan 20 2007, FUJITA Tomonori wrote:
+> > > > This enables bsg to resize the queue depth via
+> > > > SG_SET_COMMAND_Q. bsg_command structures are allocated via mempool
+> > > > because the previous way to use contiguous memory makes it difficult
+> > > > to resize the queue depth when a bsg_device has outstanding commands.
+> > > 
+> > > Overall the patch looks fine. I don't think we need a mempool though,
+> > > and allocations could just use GFP_USER from the user invoked queuing
+> > > paths. Just make it GFP_USER, we can always extend the
+> > > bsg_alloc_command() to take a gfp_t argument as well If you get rid of
+> > > the mempool, then resizing is simply just adjusting bd->max_queue.
+> > 
+> > Like so.
+> 
+> Thanks. I thought that pre-allocating bsg_command structures would be
+> nice. But it doesn't matter much for me.
 
-This can't work at all.  request_buffer is always a scatterlist these days.
-Besides this implementation bug it's also not the wrong way to do it either.
-Please just return -ENXIO in ->slave_configure if sdev->type is not to
-your liking instead of failing the INQUIRY command.
+Probably not very useful in the end, we need to allocate some other
+structures for IO anyway.
+
+> One minor comment is that we could simplify __bsg_alloc_command
+> failpath a bit?
+
+Yep, applied. Another thing that needs cleaning up for the allocation is
+the whole bsg_io_schedule() stuff.
+
+-- 
+Jens Axboe
+
