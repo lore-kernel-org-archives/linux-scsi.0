@@ -1,78 +1,85 @@
-From: "Ed Lin" <ed.lin@promise.com>
-Subject: [patch] scsi: use lock per host instead of per device for shared queue tag host
-Date: Tue, 23 Jan 2007 16:53:44 -0800
-Message-ID: <NONAMEBDp7mvjkO22Zh0000056d@nonameb.ptu.promise.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH] add bsg queue resize
+Date: Wed, 24 Jan 2007 11:25:25 +0900 (JST)
+Message-ID: <20070124111613M.fujita.tomonori@lab.ntt.co.jp>
+References: <20070120232518E.fujita.tomonori@lab.ntt.co.jp>
+	<20070123083403.GC5486@kernel.dk>
+	<20070123152348.GD11995@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 67.111.72.3.ptr.us.xo.net ([67.111.72.3]:50833 "EHLO
-	nonameb.ptu.promise.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S965458AbXAXBHD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Jan 2007 20:07:03 -0500
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:44845 "EHLO
+	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965622AbXAXCZq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Jan 2007 21:25:46 -0500
+In-Reply-To: <20070123152348.GD11995@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, "james.Bottomley" <james.Bottomley@SteelEye.com>, jeff <jeff@garzik.org>, promise_linux <promise_linux@promise.com>
+To: jens.axboe@oracle.com
+Cc: fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org
 
-The block layer uses lock to protect request queue. Every scsi device
-has a unique request queue, and queue lock is the default lock in struct
-request_queue. This is good for normal cases. But for a  host with
-shared queue tag (e.g. stex controllers), a queue lock per device means
-the shared queue tag is not protected when multiple devices are accessed
-at a same time.  This patch is a simple fix for this situation by introducing
-a host queue lock to protect shared queue tag. Without this patch we will
-see various kernel panics (including the BUG() and kernel errors in
-blk_queue_start_tag and blk_queue_end_tag of ll_rw_blk.c) when accessing
-different devices simultaneously (e.g. copying big file from one device to
-another in smp kernels).
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH] add bsg queue resize
+Date: Tue, 23 Jan 2007 16:23:49 +0100
 
-This is against kernel 2.6.20-rc5.
+> On Tue, Jan 23 2007, Jens Axboe wrote:
+> > On Sat, Jan 20 2007, FUJITA Tomonori wrote:
+> > > This enables bsg to resize the queue depth via
+> > > SG_SET_COMMAND_Q. bsg_command structures are allocated via mempool
+> > > because the previous way to use contiguous memory makes it difficult
+> > > to resize the queue depth when a bsg_device has outstanding commands.
+> > 
+> > Overall the patch looks fine. I don't think we need a mempool though,
+> > and allocations could just use GFP_USER from the user invoked queuing
+> > paths. Just make it GFP_USER, we can always extend the
+> > bsg_alloc_command() to take a gfp_t argument as well If you get rid of
+> > the mempool, then resizing is simply just adjusting bd->max_queue.
+> 
+> Like so.
 
-Signed-off-by: Ed Lin <ed.lin@promise.com>
+Thanks. I thought that pre-allocating bsg_command structures would be
+nice. But it doesn't matter much for me.
+
+One minor comment is that we could simplify __bsg_alloc_command
+failpath a bit?
+
 ---
- drivers/scsi/scsi_lib.c  |    2 +-
- drivers/scsi/stex.c      |    2 ++
- include/scsi/scsi_host.h |    3 +++
- 3 files changed, 6 insertions(+), 1 deletion(-)
+>From 6cebe0e87adc90ba50067f017c52a233fb9262d6 Mon Sep 17 00:00:00 2001
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Date: Wed, 24 Jan 2007 11:08:47 +0900
+Subject: [PATCH] bsg: simplify __bsg_alloc_command failpath
 
-diff -purN a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
---- a/drivers/scsi/scsi_lib.c	2007-01-23 14:40:28.000000000 -0800
-+++ b/drivers/scsi/scsi_lib.c	2007-01-23 14:46:43.000000000 -0800
-@@ -1574,7 +1574,7 @@ struct request_queue *__scsi_alloc_queue
- {
- 	struct request_queue *q;
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ block/bsg.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/block/bsg.c b/block/bsg.c
+index e97e3ec..c85d961 100644
+--- a/block/bsg.c
++++ b/block/bsg.c
+@@ -128,7 +128,8 @@ static struct bsg_command *__bsg_alloc_command(struct bsg_device *bd)
+ 	bc = kmem_cache_alloc(bsg_cmd_cachep, GFP_USER);
+ 	if (unlikely(!bc)) {
+ 		spin_lock_irq(&bd->lock);
+-		goto alloc_fail;
++		bd->queued_cmds--;
++		goto out;
+ 	}
  
--	q = blk_init_queue(request_fn, NULL);
-+	q = blk_init_queue(request_fn, shost->req_q_lock);
- 	if (!q)
- 		return NULL;
- 
-diff -purN a/drivers/scsi/stex.c b/drivers/scsi/stex.c
---- a/drivers/scsi/stex.c	2007-01-23 14:40:28.000000000 -0800
-+++ b/drivers/scsi/stex.c	2007-01-23 14:48:59.000000000 -0800
-@@ -1254,6 +1254,8 @@ stex_probe(struct pci_dev *pdev, const s
- 	if (err)
- 		goto out_free_irq;
- 
-+	spin_lock_init(&host->__req_q_lock);
-+	host->req_q_lock = &host->__req_q_lock;
- 	err = scsi_init_shared_tag_map(host, host->can_queue);
- 	if (err) {
- 		printk(KERN_ERR DRV_NAME "(%s): init shared queue failed\n",
-diff -purN a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
---- a/include/scsi/scsi_host.h	2007-01-23 14:40:29.000000000 -0800
-+++ b/include/scsi/scsi_host.h	2007-01-23 14:57:04.000000000 -0800
-@@ -508,6 +508,9 @@ struct Scsi_Host {
- 	spinlock_t		default_lock;
- 	spinlock_t		*host_lock;
- 
-+	spinlock_t		__req_q_lock;
-+	spinlock_t		*req_q_lock;/* protect shared block queue tag */
-+
- 	struct mutex		scan_mutex;/* serialize scanning activity */
- 
- 	struct list_head	eh_cmd_q;
+ 	memset(bc, 0, sizeof(*bc));
+@@ -136,8 +137,6 @@ static struct bsg_command *__bsg_alloc_command(struct bsg_device *bd)
+ 	INIT_LIST_HEAD(&bc->list);
+ 	dprintk("%s: returning free cmd %p\n", bd->name, bc);
+ 	return bc;
+-alloc_fail:
+-	bd->queued_cmds--;
+ out:
+ 	spin_unlock_irq(&bd->lock);
+ 	return bc;
+-- 
+1.4.4.3
 
 
 
