@@ -1,32 +1,45 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: why no cmd_flags parameter for scsi_execute_async?
-Date: Thu, 25 Jan 2007 16:34:17 -0500
-Message-ID: <45B92259.20401@cs.wisc.edu>
-References: <1169763544.6129.47.camel@egoggin-devd.eng.vmware.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: lsscsi-0.19 released
+Date: Thu, 25 Jan 2007 17:43:45 -0500
+Message-ID: <45B932A1.90003@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:39253 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030642AbXAYWeU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Jan 2007 17:34:20 -0500
-In-Reply-To: <1169763544.6129.47.camel@egoggin-devd.eng.vmware.com>
+Received: from pentafluge.infradead.org ([213.146.154.40]:35146 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030630AbXAYWn5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Jan 2007 17:43:57 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Edward Goggin <egoggin@vmware.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, taggart@debian.org
 
-Edward Goggin wrote:
-> Looks like a simple oversight, but does anyone know why there a
-> cmd_flags parameter for scsi_execute but not for scsi_execute_async?
-> 
-> Seems like this is lost functionality when scsi_execute_async replaced
-> scsi_do_req.  Previously, the caller of scsi_do_req could set the flags
-> field of the sr_request structure of the scsi_request parameter to the
-> function.
-> 
-> Is scsi_execute_async being replaced as part of the bidi patch set?
-> 
+lsscsi is a utility that uses sysfs in linux 2.6 series kernels
+to list information about SCSI devices and SCSI hosts. Both a
+compact format (default) which is one line per device and a
+"classic" format (like the output of 'cat /proc/scsi/scsi') are
+supported.
 
-I am trying to kill it and covert the ulds to use requests directly.
+Version 0.19 is available at
+http://www.torque.net/scsi/lsscsi.html
+More information can be found on that page including examples
+and a Download section for tarballs, rpm and deb packages.
+This version adds transport specific information.
+
+ChangeLog:
+Version 0.19 2007/1/25
+  - add transport information (target + initiator)
+    - start with FC, SAS, SPI, iSCSI and SBP
+    - alter ISCSI for 2.6.20 changes
+  - SAS fix for lk 2.6.20 (SYSFS_DEPRECATED=n)
+  - enhance host name search when proc_name is "<NULL>"
+  - implement filter option for '--hosts'
+    - accept 'host<n>' as first item in filter to mean host <n>
+  - output more host attributes when '-Hll' given
+  - add '--list' (or '-L') option output attribute=value
+    entries, one per line
+
+
+Doug Gilbert
