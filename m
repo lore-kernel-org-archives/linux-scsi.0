@@ -1,62 +1,34 @@
-From: Aboo Valappil <aboo@aboo.org>
-Subject: Linux Virtual SCSI HBAs and Virtual disks
-Date: Fri, 26 Jan 2007 09:02:54 +1100
-Message-ID: <45B9290E.7020801@aboo.org>
-References: <1e157f74d8578f24c762571c1016aab3@aboo.org>	<b43c8fc9882e65d397a6465e6cb7c998@aboo.org>	<45B4EAAC.5000008@s5r6.in-berlin.de>	<45B60993.9070508@aboo.org> <20070123083627.9b4ddfe3.randy.dunlap@oracle.com> <45B64465.7000507@s5r6.in-berlin.de>
+From: Edward Goggin <egoggin@vmware.com>
+Subject: why no cmd_flags parameter for scsi_execute_async?
+Date: Thu, 25 Jan 2007 17:19:04 -0500
+Message-ID: <1169763544.6129.47.camel@egoggin-devd.eng.vmware.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ppp245-155.static.internode.on.net ([59.167.245.155]:43183 "EHLO
-	goobu.aboo.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1030619AbXAYWDg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Jan 2007 17:03:36 -0500
-In-Reply-To: <45B64465.7000507@s5r6.in-berlin.de>
+Received: from mailout1.vmware.com ([65.113.40.130]:59512 "EHLO
+	mailout1.vmware.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030620AbXAYWRX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Jan 2007 17:17:23 -0500
+Received: from mailhost2.vmware.com (mailhost2.vmware.com [10.16.64.160])
+	by mailout1.vmware.com (Postfix) with ESMTP id 500525FE9
+	for <linux-scsi@vger.kernel.org>; Thu, 25 Jan 2007 14:17:37 -0800 (PST)
+Received: from PA-EXCH03.vmware.com (pa-exch-node04.vmware.com [10.16.64.143])
+	by mailhost2.vmware.com (Postfix) with ESMTP id D7F52909BC
+	for <linux-scsi@vger.kernel.org>; Thu, 25 Jan 2007 15:14:31 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: Randy Dunlap <randy.dunlap@oracle.com>, dougg@torque.net, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Hi All,
+Looks like a simple oversight, but does anyone know why there a
+cmd_flags parameter for scsi_execute but not for scsi_execute_async?
 
-Thanks for all your encouragement and help on this project. I like to 
-take this project one step ahead. I hope you can help me on this.
+Seems like this is lost functionality when scsi_execute_async replaced
+scsi_do_req.  Previously, the caller of scsi_do_req could set the flags
+field of the sr_request structure of the scsi_request parameter to the
+function.
 
-As you may have noticed, I am doing a copy of buffers ( request_buffer) 
-between user space and kernel space. What are my options these days to 
-make a user buffer access inside the kernel space and vice versa? Please 
-also not that request_buffer is not a linear buffer it is  a sg :)
+Is scsi_execute_async being replaced as part of the bidi patch set?
 
-One option I researched was mmap. I am facing an issue here. I will try 
-to explain. Everything seems to be working, but a big page table 
-manipulation issue is found.
-
-When a SCSI read comes in for a device (For eg: dd if=/dev/sda 
-of=/dev/null count=1). A read is always accompanied by a write (I do not 
-do this, but the kernel does it!).
-
-I think the pages of "request_buffer" will get mapped to virtual memory  
-of "dd" process.When I memmap request_buffer (Through mmap_nopage 
-method) to "user space SCSI target", the same page of "dd" process gets 
-mapped to "user space SCSI target". Since the operation is a read, the 
-"user space target" modifies the page making it dirty as far as "page 
-cache" is concerned. Of course, "dd" gets what it wants from read. But 
-as soon as "dd" closes "/dev/sda", page cache knows that one of the page 
-belong to "/dev/sda" is dirty and needs to be flushed to disk!. Now, the 
-page cache issues a SCSI write for the same page through the SCSI 
-driver. This makes all the SCSI reads accompanied by a SCSI write.
-
-This is the most closest explanation i can come up with for the 
-behaviour. If this explanation is correct or not, it is happening (A 
-SCSI read following by a SCSI write).
-
-If this has to work properly, I need to find a way of "memmap/user space 
-target" to modify the pages silently without letting the page cache know 
-about it. There could be some ugly page table manipulation. But I am 
-wondering if this can be achieve easily or through some other way. One 
-of my friend also told me about the splice option.... Any thoughts on this?
-
-Aboo
-
-
-
+I'd like to submit a patch to fix this but I want to make sure its
+worthwhile.
