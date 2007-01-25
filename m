@@ -1,50 +1,56 @@
-From: "Ed Lin" <ed.lin@promise.com>
-Subject: RE: [patch] scsi: use lock per host instead of per device forshared queue tag host
-Date: Wed, 24 Jan 2007 19:25:11 -0800
-Message-ID: <B70A50D07063384EB9BCE3330D18414F02F5AF9D@nonameb.ptu.promise.com>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [Bugme-new] [Bug 7864] New: A MTIOCTOP/MTWEOF within the early
+ warning will cause the file number to be incorrect
+Date: Wed, 24 Jan 2007 20:48:04 -0800
+Message-ID: <20070124204804.77486468.akpm@osdl.org>
+References: <200701222107.l0ML7KPn010266@fire-2.osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 67.111.72.3.ptr.us.xo.net ([67.111.72.3]:41406 "EHLO
-	nonameb.ptu.promise.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932549AbXAYDYD convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Jan 2007 22:24:03 -0500
-Content-class: urn:content-classes:message
+Received: from smtp.osdl.org ([65.172.181.24]:46624 "EHLO smtp.osdl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752115AbXAYEsP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Jan 2007 23:48:15 -0500
+In-Reply-To: <200701222107.l0ML7KPn010266@fire-2.osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, jeff <jeff@garzik.org>, Promise_Linux <Promise_Linux@promise.com>
+To: ce_reisinger@yahoo.com
+Cc: "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>, linux-scsi@vger.kernel.org, Kai Makisara <Kai.Makisara@kolumbus.fi>
 
+On Mon, 22 Jan 2007 13:07:20 -0800
+bugme-daemon@bugzilla.kernel.org wrote:
 
+> http://bugzilla.kernel.org/show_bug.cgi?id=7864
+> 
+>            Summary: A MTIOCTOP/MTWEOF within the early warning will cause
+>                     the file number to be incorrect
+>     Kernel Version: 2.6.19.2
+>             Status: NEW
+>           Severity: low
+>              Owner: io_scsi@kernel-bugs.osdl.org
+>          Submitter: ce_reisinger@yahoo.com
+> 
+> 
+> Write records to a SCSI tape until a write fails with a ENOSPC (you have reached
+> early warning.
+> Now perform a:
+>    struct mtget before, after;
+>    ioctl(fd, MTIOCGET, &before);
+>    struct mtop mtop = { MTWEOF, 1 };
+>    ioctl(fd, MTIOCTOP, &mtop);
+>    ioctl(fd, MTIOCGET, &after);
+> 
+> Check the value of mt_fileno in the before and after structures. Notice the
+> after is 2 greater then the before.
+> 
+> The problem appears to be in the block of code starting at line 2817 in st.c.
+> This block is entered because the drive did return a CHECK CONDITION with NO
+> SENSE and the SENSE_EOM bit set. At lines 2824/5 the fileno is incremented. But
+> it has already been increased by the number of filemarks requested by the
+> MTIOCTOP. I believe that the residue count in the sense data should be
+> subtracted from fileno, not a increment as is done.
+> 
 
-> -----Original Message-----
-> From: James Bottomley [mailto:James.Bottomley@SteelEye.com] 
-> Sent: Wednesday, January 24, 2007 9:00 AM
-> To: Ed Lin
-> Cc: linux-scsi; linux-kernel; jeff; Promise_Linux
-> Subject: Re: [patch] scsi: use lock per host instead of per 
-> device forshared queue tag host
-> 
-...
-> 
-> This patch looks OK in principle.
-> 
-> However, are you sure you're not using a sledgehammer to crack a nut?
-> If the only reason you're doing this is because of the shared tag map,
-> then probably that should be the area you protect with a per-tag-map
-> lock.   The net effect of what you've done will be to serialise all
-> accesses to your storage devices.  For a small number of devices, this
-> probably won't matter than much, but for large numbers of devices,
-> you're probably going to introduce artificial performance 
-> degredation in
-> the I/O scheduler.
-> 
-> James
-> 
-
-Thanks.
-Maybe this issue needs more discussion. I'll follow up.
-
-Ed Lin
+Thanks.  Could you please send us a tested patch to fix these things, as
+per http://www.zip.com.au/~akpm/linux/patches/stuff/tpp.txt ?
