@@ -1,44 +1,53 @@
-From: Greg KH <greg@kroah.com>
-Subject: [PATCH] remove duplicate device id from IPR driver
-Date: Thu, 25 Jan 2007 18:15:03 -0800
-Message-ID: <20070126021503.GB3444@kroah.com>
+From: "Tucker, Greg B" <greg.b.tucker@intel.com>
+Subject: RE: [PATCH RFC 2/2] iop13xx: imu scsi driver
+Date: Fri, 26 Jan 2007 00:03:58 -0700
+Message-ID: <9910A595EF5F194ABCC11F517D3A76A7015211E6@azsmsx415.amr.corp.intel.com>
+References: <1169759754.3037.78.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns2.suse.de ([195.135.220.15]:57155 "EHLO mx2.suse.de"
+Received: from mga03.intel.com ([143.182.124.21]:42038 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030709AbXAZCQF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Jan 2007 21:16:05 -0500
-Content-Disposition: inline
+	id S1030801AbXAZHEB convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Jan 2007 02:04:01 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <1169759754.3037.78.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: brking@us.ibm.com, James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>, "Williams, Dan J" <dan.j.williams@intel.com>
+Cc: linux@arm.linux.org.uk, linux-arm-kernel@lists.arm.linux.org.uk, linux-scsi@vger.kernel.org
 
-From: Greg Kroah-Hartman <gregkh@suse.de>
+James, thank you for the corrections.  I think I can fix all of these as
+suggested and resubmit a new patch shortly.
 
-This patch removes a duplicate device id from the IPR driver.  Based on
-the ipr.h file, I'm not so sure this was intended to be a duplicate, and
-if so, the .h file should be modified to use the proper sub-device id
-instead.
+>Another thing that strikes me is on the ARM side, it looks like this is
+>effectively vectoring up to a user space target ... is that true?  And
+>if so, would the existing in-kernel target infrastructure be a better
+>way of doing this?
 
-This was pointed out to me by Kay Sievers <kay.sievers@suse.de>
+No, there's no user space target.  The target is special hardware.  Or
+more precisely, special communication hardware to send messages to
+off-core hardware.
 
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+>> +static int imu_queuecommand(struct scsi_cmnd *scp,
+>[...]
+>> +	if (!imu_scsi->connection_handle) {
+>> +		scp->result = (DID_RESET << 16) | (SUGGEST_RETRY << 24);
+>> +		done(scp);
+>> +		return SCSI_MLQUEUE_HOST_BUSY;
+>> +	}
+>
+>Absolutely wrong.  Either you execute done() on the command and return
+>zero, or you *don't* execute done on the command and return a queueing
+>condition.  Doing both will lead to double completions and really
+>horrible things.
 
----
- drivers/scsi/ipr.c |    3 ---
- 1 file changed, 3 deletions(-)
+I'll return zero like the previous error condition, thanks.
 
---- gregkh-2.6.orig/drivers/scsi/ipr.c
-+++ gregkh-2.6/drivers/scsi/ipr.c
-@@ -7558,9 +7558,6 @@ static struct pci_device_id ipr_pci_tabl
- 	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_OBSIDIAN,
- 	      PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_575C,
- 	      0, 0, (kernel_ulong_t)&ipr_chip_cfg[0] },
--	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_OBSIDIAN,
--	      PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57B8,
--	      0, 0, (kernel_ulong_t)&ipr_chip_cfg[0] },
- 	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_OBSIDIAN_E,
- 	      PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57B7,
- 	      0, 0, (kernel_ulong_t)&ipr_chip_cfg[0] },
+> ...wrong...
+
+Other corrections greatly appreciated and I'll roll into next patch.
+
+--Greg
