@@ -1,92 +1,70 @@
-From: Chip Coldwell <coldwell@redhat.com>
-Subject: on the polarity of scsi_eh_tur
-Date: Fri, 26 Jan 2007 11:26:19 -0500
-Message-ID: <m37iv969g4.fsf@redhat.com>
+From: Mark Haverkamp <markh@linux-foundation.org>
+Subject: [PATCH] aacraid: expanded expose physical device code (new)
+Date: Fri, 26 Jan 2007 09:23:32 -0800
+Message-ID: <1169832213.17872.7.camel@markh3.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:36652 "EHLO mx1.redhat.com"
+Received: from smtp.osdl.org ([65.172.181.24]:45669 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965704AbXAZQZr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 26 Jan 2007 11:25:47 -0500
-Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
-	by mx1.redhat.com (8.13.1/8.13.1) with ESMTP id l0QGPkc0021928
-	for <linux-scsi@vger.kernel.org>; Fri, 26 Jan 2007 11:25:46 -0500
-Received: from mail.boston.redhat.com (mail.boston.redhat.com [172.16.76.12])
-	by int-mx1.corp.redhat.com (8.13.1/8.13.1) with ESMTP id l0QGPfH6005851
-	for <linux-scsi@vger.kernel.org>; Fri, 26 Jan 2007 11:25:41 -0500
-Received: from localhost.localdomain (vpn-248-89.boston.redhat.com [10.13.248.89])
-	by mail.boston.redhat.com (8.12.11.20060308/8.12.11) with ESMTP id l0QGPeVi013430
-	for <linux-scsi@vger.kernel.org>; Fri, 26 Jan 2007 11:25:40 -0500
+	id S1161056AbXAZRXr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 26 Jan 2007 12:23:47 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>, Christoph Hellwig <hch@infradead.org>
 
+Received from Mark Salyzyn,
 
-I have a question about scsi_eh_tur.  The comment says:
+Take the expose_physicals flag and allow the user to select default (physicals
+available via /dev/sg), exposed (physicals available via /dev/sd for
+experimental reasons) and hidden (physicals blocked from all access). This
+expands the functionality of the previous expose_physicals insmod parameter
+which was added to support some experimental configurations.
 
-/**
- * scsi_eh_tur - Send TUR to device.
- * @scmd:	Scsi cmd to send TUR
- *
- * Return value:
- *    0 - Device is ready. 1 - Device NOT ready.
- **/
-static int scsi_eh_tur(struct scsi_cmnd *scmd)
+Signed-off-by Mark Haverkamp <markh@linux-foundation.org>
+---
+The patch has been updated after talking with Mark about Christoph's
+comments on the previous version of the patch.
 
-However, this function is used throughout the error handling code in
-an idiom that seems to imply the opposite polarity:
-
-!scsi_device_online(sdev) || !scsi_eh_tur(bdr_scmd)
-
-For example (scsi_eh_bus_device_reset):
-
-                rtn = scsi_try_bus_device_reset(bdr_scmd);
-                if (rtn == SUCCESS) {
-                        if (!scsi_device_online(sdev) ||
-                            !scsi_eh_tur(bdr_scmd)) {
-                                list_for_each_entry_safe(scmd, next,
-                                                         work_q, eh_entry) {
-                                        if (scmd->device == sdev)
-                                                scsi_eh_finish_cmd(scmd,
-                                                                   done_q);
-                                }
-                        }
-                } else {
-                        SCSI_LOG_ERROR_RECOVERY(3, printk("%s: BDR"
-                                                          " failed sdev:"
-                                                          "0x%p\n",
-                                                          current->comm,
-                                                           sdev));
-                }
-
-It looks like the intent of the first branch above is to do a BDR, and
-if that succeeds but the device remains offline or does not respond to
-a test-unit-ready then to finish all the commands for that device
-instead of retrying them.
-
-Even within scsi_eh_tur, things get confused.  This is near the end:
-
-	if (rtn == SUCCESS)
-		return 0;
-	else if (rtn == NEEDS_RETRY) {
-		if (retry_cnt--)
-			goto retry_tur;
-		return 0;
-	}
-	return 1;
-
-So if (rtn == SUCCESS) or (rtn == NEEDS_RETRY && retry_cnt == 0) then
-we consider the device to be ready?  I would think running out of
-retries without SUCCESS would mean the device isn't ready, i.e. the
-function should return 1.
-
-Do I misunderstand?
-
-Chip
+--- scsi-misc-aac.orig/drivers/scsi/aacraid/aachba.c	2007-01-25 14:18:02.000000000 -0800
++++ scsi-misc-aac/drivers/scsi/aacraid/aachba.c	2007-01-25 14:19:39.000000000 -0800
+@@ -170,9 +170,9 @@
+ module_param(acbsize, int, S_IRUGO|S_IWUSR);
+ MODULE_PARM_DESC(acbsize, "Request a specific adapter control block (FIB) size. Valid values are 512, 2048, 4096 and 8192. Default is to use suggestion from Firmware.");
+ 
+-int expose_physicals = 0;
++int expose_physicals = -1;
+ module_param(expose_physicals, int, S_IRUGO|S_IWUSR);
+-MODULE_PARM_DESC(expose_physicals, "Expose physical components of the arrays. 0=off, 1=on");
++MODULE_PARM_DESC(expose_physicals, "Expose physical components of the arrays. -1=protect 0=off, 1=on");
+ /**
+  *	aac_get_config_status	-	check the adapter configuration
+  *	@common: adapter to query
+--- scsi-misc-aac.orig/drivers/scsi/aacraid/linit.c	2007-01-25 14:18:02.000000000 -0800
++++ scsi-misc-aac/drivers/scsi/aacraid/linit.c	2007-01-25 14:52:13.000000000 -0800
+@@ -398,11 +398,15 @@
+ 		sdev->skip_ms_page_3f = 1;
+ 	}
+ 	if ((sdev->type == TYPE_DISK) &&
+-			!expose_physicals &&
+ 			(sdev_channel(sdev) != CONTAINER_CHANNEL)) {
+-		struct aac_dev *aac = (struct aac_dev *)sdev->host->hostdata;
+-		if (!aac->raid_scsi_mode || (sdev_channel(sdev) != 2))
+-			sdev->no_uld_attach = 1;
++		if (expose_physicals == 0)
++			return -ENXIO;
++		if (expose_physicals < 0) {
++			struct aac_dev *aac =
++				(struct aac_dev *)sdev->host->hostdata;
++			if (!aac->raid_scsi_mode || (sdev_channel(sdev) != 2))
++				sdev->no_uld_attach = 1;
++		}
+ 	}
+ 	if (sdev->tagged_supported && (sdev->type == TYPE_DISK) &&
+ 			(sdev_channel(sdev) == CONTAINER_CHANNEL)) {
 
 -- 
-Charles M. "Chip" Coldwell
-Senior Software Engineer
-Red Hat, Inc.
-1-978-392-2426
+Mark Haverkamp <markh@linux-foundation.org>
+
