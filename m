@@ -1,89 +1,74 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] Add VPD support to aacraid
-Date: Fri, 26 Jan 2007 09:04:46 +0100
-Message-ID: <45B9B61E.7040000@suse.de>
-References: <AE4F746F2AECFC4DA4AADD66A1DFEF0141A067@otce2k301.adaptec.com>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Fw: SAS1068 PCI-X Fusion-MPT SAS 1000:0055
+Date: Fri, 26 Jan 2007 02:19:07 -0800
+Message-ID: <20070126021907.559f23c9.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.suse.de ([195.135.220.2]:51049 "EHLO mx1.suse.de"
+Received: from smtp.osdl.org ([65.172.181.24]:54526 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030812AbXAZIEw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 26 Jan 2007 03:04:52 -0500
-In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF0141A067@otce2k301.adaptec.com>
+	id S1161028AbXAZKTw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 26 Jan 2007 05:19:52 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Mark Haverkamp <markh@linux-foundation.org>
+To: linux-scsi@vger.kernel.org
+Cc: "Moore, Eric Dean" <Eric.Moore@lsil.com>, areq@areq.eu.org
 
-Salyzyn, Mark wrote:
-> Hannes, I am working the firmware and management software folks to fi=
-nd out how
-> to mine for this information. In your patch, the controller serial
-number may be
-> helpful, but not necessarily compliant?
->
-Well, the information in page 0x80 is 'vendor specific'. So anything we
-put in there is compliant :-)
 
-> Besides persistent device id, what else is gained? The controller ens=
-ures persistent
-> device id for the arrays through the meta-data, only migrating if it
-happens to be a
-> foreign (from another controller) array that collides with a native
-array at the same
-> ID. Plug the constituent drives into totally different IDs in the SAS
-infrastructure,
-> the ID remains the same as presented by the controller. Plug those
-drives into another
-> controller, and if not taken by an existing array, the ID will again
-remain the same.
->
-Yes, that's what I thought would happen. Main reason for adding page
-0x80 support is to get it to work with the current persistent device ID
-setup from udev. There we're using the scsi_id program which doesn't
-return a serial number if neither page 0x83 nor page 0x80 are supported=
-=2E
-So just hacking them into the driver was the easiest way to get it fixe=
-d.
 
-And there is actually a second reason for adding page 0x80 support:
-If there were something like a build uuid for the array (either a prope=
-r
-uuid or maybe even the build date) we would be able to detect an array
-re-initialisation. Currently we won't be able to deal with this as the
-array will have the same ID, so we would try to mount a drive with a
-totally different content.
+Begin forwarded message:
 
-That was actually what I was aiming for with that patch, but after two
-days of hacking I gave up and settled for the easy way out.
-I know that at least the array build date is somewhere, as the
-management software displays them :-). So it should be relatively easy
-to use that as the serial number.
+Date: Tue, 23 Jan 2007 17:51:43 +0100
+From: areq@areq.eu.org
+To: linux-kernel@vger.kernel.org
+Subject: SAS1068 PCI-X Fusion-MPT SAS 1000:0055
 
-> If this is all of your concerns, adding the baggage to the driver
-> will be redundant.
->=20
-Actually, not quite. In not supporting EVPD page any compliant software
-must assume that there is not way of reliably distinguish between two
-drives from the same vendor/model.
-And, incidentally, it should be possible to hook in two controllers, an=
-d
-creating two arrays with the same name, right?
-So we _don't_ have a reliable way for doing so.
-And this is where EVPD page 0x80 support comes in.
+
+Hi
+
+I have new NEC server with SAS1068 PCI-X Fusion-MPT SAS
+pciid: 1000:0055
+mptsas form 2.6.20-rc5 don't recognize it ;(
+
+I see that driver support only 1000:0054 and 1000:0058 devices.
+
+./drivers/message/fusion/mptsas.c:      { PCI_VENDOR_ID_LSI_LOGIC,
+MPI_MANUFACTPAGE_DEVID_SAS1068,
+./drivers/message/fusion/mptsas.c:      { PCI_VENDOR_ID_LSI_LOGIC,
+MPI_MANUFACTPAGE_DEVID_SAS1068E,
+./drivers/message/fusion/mptbase.c:     else if (pdev->device ==
+MPI_MANUFACTPAGE_DEVID_SAS1068) {
+./drivers/message/fusion/mptbase.c:     else if (pdev->device ==
+MPI_MANUFACTPAGE_DEVID_SAS1068E) {
+./drivers/message/fusion/lsi/mpi_cnfg.h:#define
+MPI_MANUFACTPAGE_DEVID_SAS1068              (0x0054)
+./drivers/message/fusion/lsi/mpi_cnfg.h:#define
+MPI_MANUFACTPAGE_DEVID_SAS1068E             (0x0058)
+
+lspci -v:
+
+0d:05.0 SCSI storage controller: LSI Logic / Symbios Logic Unknown
+device 0055 (rev 01)
+	Subsystem: NEC Corporation Unknown device 8336
+	Flags: bus master, 66MHz, medium devsel, latency 32, IRQ 7
+	I/O ports at 3000 [size=256]
+	Memory at deb10000 (64-bit, non-prefetchable) [size=16K]
+	Memory at deb00000 (64-bit, non-prefetchable) [size=64K]
+	[virtual] Expansion ROM at 88000000 [disabled] [size=2M]
+	Capabilities: [50] Power Management version 2
+	Capabilities: [98] Message Signalled Interrupts: Mask- 64bit+
+Queue=0/0 Enable-
+	Capabilities: [68] PCI-X non-bridge device
+	Capabilities: [b0] MSI-X: Enable- Mask- TabSize=1
+
+
+Any solution ?
 
 Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke			hare@suse.de
-SuSE Linux Products GmbH		S390 & zSeries
-Maxfeldstra=DFe 5				+49 911 74053 688
-90409 N=FCrnberg				http://www.suse.de
+Areq
 -
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
+To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
 the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Please read the FAQ at  http://www.tux.org/lkml/
