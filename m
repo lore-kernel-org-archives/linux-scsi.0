@@ -1,35 +1,37 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] aacraid: expanded expose physical device code (new)
-Date: Fri, 26 Jan 2007 18:08:23 +0000
-Message-ID: <20070126180823.GA13768@infradead.org>
-References: <1169832213.17872.7.camel@markh3.pdx.osdl.net>
+From: "Jun'ichi Nomura" <j-nomura@ce.jp.nec.com>
+Subject: Re: Fw: SAS1068 PCI-X Fusion-MPT SAS 1000:0055
+Date: Fri, 26 Jan 2007 14:53:20 -0500
+Message-ID: <45BA5C30.9050901@ce.jp.nec.com>
+References: <20070126021907.559f23c9.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:51273 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161120AbXAZSI0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Jan 2007 13:08:26 -0500
-Content-Disposition: inline
-In-Reply-To: <1169832213.17872.7.camel@markh3.pdx.osdl.net>
+Received: from mx1.redhat.com ([66.187.233.31]:56993 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161242AbXAZTyO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 26 Jan 2007 14:54:14 -0500
+In-Reply-To: <20070126021907.559f23c9.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Haverkamp <markh@linux-foundation.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>, Christoph Hellwig <hch@infradead.org>
+To: areq@areq.eu.org
+Cc: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, "Moore, Eric Dean" <Eric.Moore@lsil.com>
 
-On Fri, Jan 26, 2007 at 09:23:32AM -0800, Mark Haverkamp wrote:
-> Received from Mark Salyzyn,
-> 
-> Take the expose_physicals flag and allow the user to select default (physicals
-> available via /dev/sg), exposed (physicals available via /dev/sd for
-> experimental reasons) and hidden (physicals blocked from all access). This
-> expands the functionality of the previous expose_physicals insmod parameter
-> which was added to support some experimental configurations.
-> 
-> Signed-off-by Mark Haverkamp <markh@linux-foundation.org>
-> ---
-> The patch has been updated after talking with Mark about Christoph's
-> comments on the previous version of the patch.
-> 
+Hi,
 
-Thanks, this version looks a lot better.
+> I have new NEC server with SAS1068 PCI-X Fusion-MPT SAS
+> pciid: 1000:0055
+> mptsas form 2.6.20-rc5 don't recognize it ;(
+> 
+> I see that driver support only 1000:0054 and 1000:0058 devices.
+
+It might be that the device has software RAID feature and changes
+device ID based on setup. (1000:0055 when software RAID is enabled
+and 1000:0054 or something for normal SAS)
+
+If so, there is a chance you can disable the software RAID
+via BIOS setup utility.
+
+Thanks,
+-- 
+Jun'ichi Nomura, NEC Corporation of America
