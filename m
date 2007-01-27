@@ -1,45 +1,51 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] qla4xxx: bug fixes
-Date: Sat, 27 Jan 2007 10:08:22 -0600
-Message-ID: <1169914102.4392.5.camel@mulgrave.il.steeleye.com>
-References: <1169497571.12416.2.camel@linux-58to>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] libsas: fix task attribute
+Date: Sun, 28 Jan 2007 01:19:41 +0900
+Message-ID: <20070128011941I.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:46062 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751634AbXA0QIc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 27 Jan 2007 11:08:32 -0500
-In-Reply-To: <1169497571.12416.2.camel@linux-58to>
+Received: from tama55.ecl.ntt.co.jp ([129.60.39.103]:43560 "EHLO
+	tama55.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751812AbXA0QTD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 27 Jan 2007 11:19:03 -0500
+Received: from mfs34.rdh.ecl.ntt.co.jp (mfs34.rdh.ecl.ntt.co.jp [129.60.39.114])
+	by tama55.ecl.ntt.co.jp (8.13.8/8.13.8) with ESMTP id l0RGJ0vL015244
+	for <linux-scsi@vger.kernel.org>; Sun, 28 Jan 2007 01:19:01 +0900 (JST)
+Received: from mfs34.rdh.ecl.ntt.co.jp (localhost [127.0.0.1])
+	by mfs34.rdh.ecl.ntt.co.jp (Postfix) with ESMTP id 075BA20AE2B
+	for <linux-scsi@vger.kernel.org>; Sun, 28 Jan 2007 01:19:01 +0900 (JST)
+Received: from nttmail3.ecl.ntt.co.jp (nttmail3.ecl.ntt.co.jp [129.60.39.100])
+	by mfs34.rdh.ecl.ntt.co.jp (Postfix) with ESMTP id EE1EC20AE30
+	for <linux-scsi@vger.kernel.org>; Sun, 28 Jan 2007 01:18:59 +0900 (JST)
+Received: from dmailsv1.y.ecl.ntt.co.jp (dmailsv1.y.ecl.ntt.co.jp [129.60.53.14])
+	by nttmail3.ecl.ntt.co.jp (8.13.8/8.13.8) with ESMTP id l0RGIx2M011023
+	for <linux-scsi@vger.kernel.org>; Sun, 28 Jan 2007 01:18:59 +0900 (JST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David C Somayajulu <david.somayajulu@qlogic.com>
-Cc: linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, Mike Christie <michaelc@cs.wisc.edu>
+To: linux-scsi@vger.kernel.org
 
-On Mon, 2007-01-22 at 12:26 -0800, David C Somayajulu wrote:
-> The included patch fixes the following issues:
-> 1. qla3xxx/qla4xxx co-existence issue which can result in a lockup when qla3xxx driver is unloaded, or when ifdown; ifup is performed on one of the interfaces correponding to qla3xxx. This is because qla4xxx HBA supports one ethernet and iscsi interfaces per port. Both iscsi and ethernet interfaces share the same state machine. The problem has to do with synchronizing access to the state machine in the event of a reset
-> 2. mutex_lock() is sometimes not followed by mutex_unlock() prior to invoking a msleep() in qla4xxx_mailbox_command()
+Why TASK_ATTR_HOQ?
 
-Git applymbox picked up this nasty (which I've corrected):
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ drivers/scsi/libsas/sas_scsi_host.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Applying 'qla4xxx: bug fixes'
-
-Space in indent is followed by a tab.
-.dotest/patch:122:                      set_bit(AF_MBOX_COMMAND,
-&ha->flags);
-Space in indent is followed by a tab.
-.dotest/patch:123:                      mutex_unlock(&ha->mbox_sem);
-Space in indent is followed by a tab.
-.dotest/patch:124:                      break;
-Space in indent is followed by a tab.
-.dotest/patch:125:              }
-Space in indent is followed by a tab.
-.dotest/patch:126:              mutex_unlock(&ha->mbox_sem);
-warning: squelched 7 whitespace errors
-warning: 12 lines add trailing whitespaces.
-
-James
-
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index 22672d5..7ae3997 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -130,7 +130,7 @@ static enum task_attribute sas_scsi_get_
+ 	if (cmd->request && blk_rq_tagged(cmd->request)) {
+ 		if (cmd->device->ordered_tags &&
+ 		    (cmd->request->cmd_flags & REQ_HARDBARRIER))
+-			ta = TASK_ATTR_HOQ;
++			ta = TASK_ATTR_ORDERED;
+ 	}
+ 	return ta;
+ }
+-- 
+1.4.3.2
 
