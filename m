@@ -1,42 +1,72 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH 0/7] Roll-up of libsas and aic94xx patches
-Date: Sat, 27 Jan 2007 00:33:40 -0500
-Message-ID: <45BAE434.6090306@torque.net>
-References: <200701262206.l0QM6iCb017066@d01av02.pok.ibm.com>
-Reply-To: dougg@torque.net
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [PATCH 49/59] sysctl: Move init_irq_proc into init/main where
+ it belongs
+Date: Sat, 27 Jan 2007 02:51:37 -0800
+Message-ID: <20070127025137.9a2c65bb.akpm@osdl.org>
+References: <m1ac0jc4no.fsf@ebiederm.dsl.xmission.com>
+	<1168965684147-git-send-email-ebiederm@xmission.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:35696 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750755AbXA0Fdu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 27 Jan 2007 00:33:50 -0500
-In-Reply-To: <200701262206.l0QM6iCb017066@d01av02.pok.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-mips-bounce@linux-mips.org>
+In-Reply-To: <1168965684147-git-send-email-ebiederm@xmission.com>
+Sender: linux-mips-bounce@linux-mips.org
+Errors-to: linux-mips-bounce@linux-mips.org
+To: "Eric W. Biederman" <ebiederm@xmission.com>
+Cc: linux-kernel@vger.kernel.org, containers@lists.osdl.org, netdev@vger.kernel.org, xfs-masters@oss.sgi.com, xfs@oss.sgi.com, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, minyard@acm.org, openipmi-developer@lists.sourceforge.net, tony.luck@intel.com, linux-mips@linux-mips.org, ralf@linux-mips.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, linux390@de.ibm.com, linux-390@vm.marist.edu, paulus@samba.org, linuxppc-dev@ozlabs.org, lethal@linux-sh.org, linuxsh-shmedia-dev@lists.sourceforge.net, ak@suse.de, vojtech@suse.cz, clemens@ladisch.de, a.zummo@towertech.it, rtc-linux@googlegroups.com, linux-parport@lists.infradead.org, andrea@suse.de, tim@cyberelk.net, philb@gnu.org, aharkes@cs.cmu.edu, coda@cs.cmu.edu, codalist@TELEMANN.coda.cs.cmu.edu, aia21@cantab.net, linux-ntfs-dev@lists.sourceforge.net, mark.fasheh@oracle.com, kurt.hackel@oracle.com
 List-Id: linux-scsi@vger.kernel.org
-To: "Darrick J. Wong" <djwong@us.ibm.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>
 
-Darrick J. Wong wrote:
-> Hi all,
+On Tue, 16 Jan 2007 09:39:54 -0700
+"Eric W. Biederman" <ebiederm@xmission.com> wrote:
+
+> From: Eric W. Biederman <ebiederm@xmission.com> - unquoted
 > 
-> This is a roll-up of all of my uncommitted patches against libsas
-> and aic94xx to date.  The first patch features an important fix for an
-> incorrect port deformation after a phy reset event.  The next two
-> patches in this set complete the reorganization of the
-> sas_rphy_{delete,free} calls after errors during discovery.  The next
-> two patches amend the SAS error handler to be able to handle scsi_cmnds
-> that have completed successfully but with a failure code, first by
-> trying START UNIT if the disk is not spinning, second by trying to
-> reset the device, and finally offlining the device if nothing works.
+> Signed-off-by: Eric W. Biederman <ebiederm@xmission.com>
+> ---
+>  init/main.c     |    3 +++
+>  kernel/sysctl.c |    3 ---
+>  2 files changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/init/main.c b/init/main.c
+> index 8b4a7d7..8af5c6e 100644
+> --- a/init/main.c
+> +++ b/init/main.c
+> @@ -691,6 +691,9 @@ static void __init do_basic_setup(void)
+>  #ifdef CONFIG_SYSCTL
+>  	sysctl_init();
+>  #endif
+> +#ifdef CONFIG_PROC_FS
+> +	init_irq_proc();
+> +#endif
+>  
+>  	do_initcalls();
+>  }
+> diff --git a/kernel/sysctl.c b/kernel/sysctl.c
+> index 600b333..7420761 100644
+> --- a/kernel/sysctl.c
+> +++ b/kernel/sysctl.c
+> @@ -1172,8 +1172,6 @@ static ctl_table dev_table[] = {
+>  	{ .ctl_name = 0 }
+>  };
+>  
+> -extern void init_irq_proc (void);
+> -
+>  static DEFINE_SPINLOCK(sysctl_lock);
+>  
+>  /* called under sysctl_lock */
+> @@ -1219,7 +1217,6 @@ void __init sysctl_init(void)
+>  {
+>  #ifdef CONFIG_PROC_SYSCTL
+>  	register_proc_table(root_table, proc_sys_root, &root_table_header);
+> -	init_irq_proc();
+>  #endif
+>  }
 
-Darrick,
-The "reset the device" is a bit vague. Would that
-be a LU reset (task management function) or a
-"hard reset"? If the latter then it will cause
-collateral damage if the target contains multiple
-logical units (i.e. it will reset all of them,
-not just the one failing to spin up).
+sparc64:
 
-Doug Gilbert
+init/main.c: In function `do_basic_setup':
+init/main.c:707: warning: implicit declaration of function `init_irq_proc'
+
+I couldn't be bothered working out how init/main.c is supposed to get at
+its declaration of init_irq_proc().  It's not allowed to include
+linux/irq.h.
