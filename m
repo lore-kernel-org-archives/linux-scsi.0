@@ -1,85 +1,42 @@
-From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: [PATCH 3/7] libsas: Check return values of sysfs_create_link
-Date: Fri, 26 Jan 2007 14:08:46 -0800
-Message-ID: <20070126220846.20198.13342.stgit@elm3a70.beaverton.ibm.com>
-References: <20070126220834.20198.21100.stgit@elm3a70.beaverton.ibm.com>
-Content-Type: text/plain; charset=utf-8; format=fixed
-Content-Transfer-Encoding: 8bit
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH 0/7] Roll-up of libsas and aic94xx patches
+Date: Sat, 27 Jan 2007 00:33:40 -0500
+Message-ID: <45BAE434.6090306@torque.net>
+References: <200701262206.l0QM6iCb017066@d01av02.pok.ibm.com>
+Reply-To: dougg@torque.net
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.144]:48491 "EHLO e4.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030243AbXAZWJP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 26 Jan 2007 17:09:15 -0500
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e4.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id l0QM9C27002567
-	for <linux-scsi@vger.kernel.org>; Fri, 26 Jan 2007 17:09:12 -0500
-Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.2) with ESMTP id l0QM6rNT290288
-	for <linux-scsi@vger.kernel.org>; Fri, 26 Jan 2007 17:06:53 -0500
-Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
-	by d01av03.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l0QM6rod012326
-	for <linux-scsi@vger.kernel.org>; Fri, 26 Jan 2007 17:06:53 -0500
-In-Reply-To: <20070126220834.20198.21100.stgit@elm3a70.beaverton.ibm.com>
+Received: from pentafluge.infradead.org ([213.146.154.40]:35696 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750755AbXA0Fdu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 27 Jan 2007 00:33:50 -0500
+In-Reply-To: <200701262206.l0QM6iCb017066@d01av02.pok.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: djwong@us.ibm.com, linux-scsi@vger.kernel.org
-Cc: alexisb@us.ibm.com
+To: "Darrick J. Wong" <djwong@us.ibm.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>
 
+Darrick J. Wong wrote:
+> Hi all,
+> 
+> This is a roll-up of all of my uncommitted patches against libsas
+> and aic94xx to date.  The first patch features an important fix for an
+> incorrect port deformation after a phy reset event.  The next two
+> patches in this set complete the reorganization of the
+> sas_rphy_{delete,free} calls after errors during discovery.  The next
+> two patches amend the SAS error handler to be able to handle scsi_cmnds
+> that have completed successfully but with a failure code, first by
+> trying START UNIT if the disk is not spinning, second by trying to
+> reset the device, and finally offlining the device if nothing works.
 
-Get rid of: "warning: ignoring return value of sysfs_create_link..."
+Darrick,
+The "reset the device" is a bit vague. Would that
+be a LU reset (task management function) or a
+"hard reset"? If the latter then it will cause
+collateral damage if the target contains multiple
+logical units (i.e. it will reset all of them,
+not just the one failing to spin up).
 
-Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
----
-
- drivers/scsi/scsi_transport_sas.c |   26 ++++++++++++++++++++++----
- 1 files changed, 22 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
-index a5142eb..bd18f01 100644
---- a/drivers/scsi/scsi_transport_sas.c
-+++ b/drivers/scsi/scsi_transport_sas.c
-@@ -625,8 +625,19 @@ static void sas_port_release(struct devi
- static void sas_port_create_link(struct sas_port *port,
- 				 struct sas_phy *phy)
- {
--	sysfs_create_link(&port->dev.kobj, &phy->dev.kobj, phy->dev.bus_id);
--	sysfs_create_link(&phy->dev.kobj, &port->dev.kobj, "port");
-+	int res;
-+
-+	res = sysfs_create_link(&port->dev.kobj, &phy->dev.kobj,
-+				phy->dev.bus_id);
-+	if (res)
-+		goto err;
-+	res = sysfs_create_link(&phy->dev.kobj, &port->dev.kobj, "port");
-+	if (res)
-+		goto err;
-+	return;
-+err:
-+	printk(KERN_ERR "%s: Cannot create port links, err=%d\n",
-+	       __FUNCTION__, res);
- }
- 
- static void sas_port_delete_link(struct sas_port *port,
-@@ -864,13 +875,20 @@ EXPORT_SYMBOL(sas_port_delete_phy);
- 
- void sas_port_mark_backlink(struct sas_port *port)
- {
-+	int res;
- 	struct device *parent = port->dev.parent->parent->parent;
- 
- 	if (port->is_backlink)
- 		return;
- 	port->is_backlink = 1;
--	sysfs_create_link(&port->dev.kobj, &parent->kobj,
--			  parent->bus_id);
-+	res = sysfs_create_link(&port->dev.kobj, &parent->kobj,
-+				parent->bus_id);
-+	if (res)
-+		goto err;
-+	return;
-+err:
-+	printk(KERN_ERR "%s: Cannot create port backlink, err=%d\n",
-+	       __FUNCTION__, res);
- 
- }
- EXPORT_SYMBOL(sas_port_mark_backlink);
+Doug Gilbert
