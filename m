@@ -1,45 +1,34 @@
-From: Andrew Morton <akpm@osdl.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: AIC7xxx on 2.6.18
-Date: Sun, 28 Jan 2007 16:24:08 -0800
-Message-ID: <20070128162408.9fffb6de.akpm@osdl.org>
+Date: Sun, 28 Jan 2007 19:05:15 -0600
+Message-ID: <1170032715.4439.2.camel@mulgrave.il.steeleye.com>
 References: <20070128194620.GA6358@animx.eu.org>
+	 <20070128162408.9fffb6de.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:43354 "EHLO smtp.osdl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932997AbXA2AYV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 28 Jan 2007 19:24:21 -0500
-In-Reply-To: <20070128194620.GA6358@animx.eu.org>
+Received: from hancock.steeleye.com ([71.30.118.248]:55908 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932997AbXA2BFc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Jan 2007 20:05:32 -0500
+In-Reply-To: <20070128162408.9fffb6de.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Wakko Warner <wakko@animx.eu.org>
-Cc: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: Wakko Warner <wakko@animx.eu.org>, linux-scsi@vger.kernel.org
 
+On Sun, 2007-01-28 at 16:24 -0800, Andrew Morton wrote:
+> Yes, getting the oops traces will help, thanks.  And confirmation on a more
+> recent kernel would be good.
 
-(switched mailing lists)
+Yes, this would be useful, thanks, definitely for the first oops (mixed
+U160 and U cards).
 
-On Sun, 28 Jan 2007 14:46:20 -0500
-Wakko Warner <wakko@animx.eu.org> wrote:
+I'd be curious to know what the problem with the OF card is, although
+the only way to get them to work is to have the driver post the card,
+which we don't have the documentation to make happen.
 
-> I have 2 machine that oops with these cards.
-> 
-> 1) The bios has the option to enable/disable option roms on individual PCI
-> slots.  I have an AHA-39160 and an AHA-2940U/UW (dual channel).  If I
-> disable option roms, the driver oopses when accessing the 2nd card.
-> 
-> I can get the oops if really needed as I don't like rebooting this machine.
-> 
-> 2) I have an AHA-39160 with Apple/Mac firmware.  When attempting to use it
-> on a PC, the driver oopses presumably because the card wasn't initialized or
-> something.  I realize this is probably not a supported configuration, but I
-> don't believe that it should be oopsing.
-> 
-> I can get the oops for this one if it'll help.
-
-Yes, getting the oops traces will help, thanks.  And confirmation on a more
-recent kernel would be good.
-
+James
 
 
