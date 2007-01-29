@@ -1,184 +1,135 @@
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: [PATCH 13/14] qla2xxx: Remove unnecessary spinlock primitive - mbx_reg_lock.
-Date: Mon, 29 Jan 2007 10:22:30 -0800
-Message-ID: <1170094951220-git-send-email-andrew.vasquez@qlogic.com>
+Subject: [PATCH 7/14] qla2xxx: Refactor set-HBA-model/description code.
+Date: Mon, 29 Jan 2007 10:22:24 -0800
+Message-ID: <11700949513962-git-send-email-andrew.vasquez@qlogic.com>
 References: <20070129182124.GA26940@andrew-vasquezs-computer.local>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from avexch1.qlogic.com ([198.70.193.115]:47719 "EHLO
 	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752542AbXA2SWi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jan 2007 13:22:38 -0500
+	with ESMTP id S1752543AbXA2SWg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jan 2007 13:22:36 -0500
 In-Reply-To: <20070129182124.GA26940@andrew-vasquezs-computer.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <james.bottomley@steeleye.com>
 Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-From: Seokmann Ju <seokmann.ju@qlogic.com>
+Limit assignments via qla2x00_model_name[] array to HBA
+subsystem vendor IDs equal to QLogic.
 
-Since, mailbox commands are executed in a synchronous
-manner, there is no need to have a separate spinlock
-primitive to protect data/register access shared by callers.
-
-Signed-off-by: Seokmann Ju <seokmann.ju@qlogic.com>
 Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h |    2 --
- drivers/scsi/qla2xxx/qla_isr.c |   16 ----------------
- drivers/scsi/qla2xxx/qla_mbx.c |   16 ----------------
- drivers/scsi/qla2xxx/qla_os.c  |    8 --------
- 4 files changed, 0 insertions(+), 42 deletions(-)
+ drivers/scsi/qla2xxx/qla_init.c |   83 +++++++++++++++++---------------------
+ 1 files changed, 37 insertions(+), 46 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index aba63b0..05f4f2a 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -2340,8 +2340,6 @@ typedef struct scsi_qla_host {
- #define MBX_INTR_WAIT	2
- #define MBX_UPDATE_FLASH_ACTIVE	3
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 5c9ce61..f4c63ad 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -1355,6 +1355,39 @@ qla2x00_configure_hba(scsi_qla_host_t *ha)
+ 	return(rval);
+ }
  
--	spinlock_t	mbx_reg_lock;   /* Mbx Cmd Register Lock */
++static inline void
++qla2x00_set_model_info(scsi_qla_host_t *ha, uint8_t *model, size_t len, char *def)
++{
++	char *st, *en;
++	uint16_t index;
++
++	if (memcmp(model, BINZERO, len) != 0) {
++		strncpy(ha->model_number, model, len);
++		st = en = ha->model_number;
++		en += len - 1;
++		while (en > st) {
++			if (*en != 0x20 && *en != 0x00)
++				break;
++			*en-- = '\0';
++		}
++
++		index = (ha->pdev->subsystem_device & 0xff);
++		if (ha->pdev->subsystem_vendor == PCI_VENDOR_ID_QLOGIC &&
++		    index < QLA_MODEL_NAMES)
++			ha->model_desc = qla2x00_model_name[index * 2 + 1];
++	} else {
++		index = (ha->pdev->subsystem_device & 0xff);
++		if (ha->pdev->subsystem_vendor == PCI_VENDOR_ID_QLOGIC &&
++		    index < QLA_MODEL_NAMES) {
++			strcpy(ha->model_number,
++			    qla2x00_model_name[index * 2]);
++			ha->model_desc = qla2x00_model_name[index * 2 + 1];
++		} else {
++			strcpy(ha->model_number, def);
++		}
++	}
++}
++
+ /*
+ * NVRAM configuration for ISP 2xxx
+ *
+@@ -1493,33 +1526,8 @@ qla2x00_nvram_config(scsi_qla_host_t *ha)
+ 				strcpy(ha->model_number, "QLA2300");
+ 			}
+ 		} else {
+-			if (rval == 0 &&
+-			    memcmp(nv->model_number, BINZERO,
+-				    sizeof(nv->model_number)) != 0) {
+-				char *st, *en;
 -
- 	struct semaphore mbx_cmd_sem;	/* Serialialize mbx access */
- 	struct semaphore mbx_intr_sem;  /* Used for completion notification */
- 
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 3cd34ba..d488561 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -86,12 +86,8 @@ qla2100_intr_handler(int irq, void *dev_id)
- 
- 	if (test_bit(MBX_INTR_WAIT, &ha->mbx_cmd_flags) &&
- 	    (status & MBX_INTERRUPT) && ha->flags.mbox_int) {
--		spin_lock_irqsave(&ha->mbx_reg_lock, flags);
+-				strncpy(ha->model_number, nv->model_number,
+-				    sizeof(nv->model_number));
+-				st = en = ha->model_number;
+-				en += sizeof(nv->model_number) - 1;
+-				while (en > st) {
+-					if (*en != 0x20 && *en != 0x00)
+-						break;
+-					*en-- = '\0';
+-				}
+-			} else {
+-				uint16_t        index;
 -
- 		set_bit(MBX_INTERRUPT, &ha->mbx_cmd_flags);
- 		up(&ha->mbx_intr_sem);
+-				index = (ha->pdev->subsystem_device & 0xff);
+-				if (index < QLA_MODEL_NAMES) {
+-					strcpy(ha->model_number,
+-					    qla2x00_model_name[index * 2]);
+-					ha->model_desc =
+-					    qla2x00_model_name[index * 2 + 1];
+-				} else {
+-					strcpy(ha->model_number, "QLA23xx");
+-				}
+-			}
++			qla2x00_set_model_info(ha, nv->model_number,
++			    sizeof(nv->model_number), "QLA23xx");
+ 		}
+ 	} else if (IS_QLA2200(ha)) {
+ 		nv->firmware_options[0] |= BIT_2;
+@@ -3444,25 +3452,8 @@ qla24xx_nvram_config(scsi_qla_host_t *ha)
+ 	/*
+ 	 * Setup driver NVRAM options.
+ 	 */
+-	if (memcmp(nv->model_name, BINZERO, sizeof(nv->model_name)) != 0) {
+-		char *st, *en;
+-		uint16_t index;
 -
--		spin_unlock_irqrestore(&ha->mbx_reg_lock, flags);
- 	}
- 
- 	return (IRQ_HANDLED);
-@@ -199,12 +195,8 @@ qla2300_intr_handler(int irq, void *dev_id)
- 
- 	if (test_bit(MBX_INTR_WAIT, &ha->mbx_cmd_flags) &&
- 	    (status & MBX_INTERRUPT) && ha->flags.mbox_int) {
--		spin_lock_irqsave(&ha->mbx_reg_lock, flags);
+-		strncpy(ha->model_number, nv->model_name,
+-		    sizeof(nv->model_name));
+-		st = en = ha->model_number;
+-		en += sizeof(nv->model_name) - 1;
+-		while (en > st) {
+-			if (*en != 0x20 && *en != 0x00)
+-				break;
+-			*en-- = '\0';
+-		}
 -
- 		set_bit(MBX_INTERRUPT, &ha->mbx_cmd_flags);
- 		up(&ha->mbx_intr_sem);
--
--		spin_unlock_irqrestore(&ha->mbx_reg_lock, flags);
- 	}
+-		index = (ha->pdev->subsystem_device & 0xff);
+-		if (index < QLA_MODEL_NAMES)
+-			ha->model_desc = qla2x00_model_name[index * 2 + 1];
+-	} else
+-		strcpy(ha->model_number, "QLA2462");
++	qla2x00_set_model_info(ha, nv->model_name, sizeof(nv->model_name),
++	    "QLA2462");
  
- 	return (IRQ_HANDLED);
-@@ -1494,12 +1486,8 @@ qla24xx_intr_handler(int irq, void *dev_id)
- 
- 	if (test_bit(MBX_INTR_WAIT, &ha->mbx_cmd_flags) &&
- 	    (status & MBX_INTERRUPT) && ha->flags.mbox_int) {
--		spin_lock_irqsave(&ha->mbx_reg_lock, flags);
--
- 		set_bit(MBX_INTERRUPT, &ha->mbx_cmd_flags);
- 		up(&ha->mbx_intr_sem);
--
--		spin_unlock_irqrestore(&ha->mbx_reg_lock, flags);
- 	}
- 
- 	return IRQ_HANDLED;
-@@ -1632,12 +1620,8 @@ qla24xx_msix_default(int irq, void *dev_id)
- 
- 	if (test_bit(MBX_INTR_WAIT, &ha->mbx_cmd_flags) &&
- 	    (status & MBX_INTERRUPT) && ha->flags.mbox_int) {
--		spin_lock_irqsave(&ha->mbx_reg_lock, flags);
--
- 		set_bit(MBX_INTERRUPT, &ha->mbx_cmd_flags);
- 		up(&ha->mbx_intr_sem);
--
--		spin_unlock_irqrestore(&ha->mbx_reg_lock, flags);
- 	}
- 
- 	return IRQ_HANDLED;
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index 7a70ead..83376f6 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -55,7 +55,6 @@ qla2x00_mailbox_command(scsi_qla_host_t *ha, mbx_cmd_t *mcp)
- 	uint16_t __iomem *optr;
- 	uint32_t	cnt;
- 	uint32_t	mboxes;
--	unsigned long	mbx_flags = 0;
- 	unsigned long	wait_time;
- 
- 	rval = QLA_SUCCESS;
-@@ -81,10 +80,6 @@ qla2x00_mailbox_command(scsi_qla_host_t *ha, mbx_cmd_t *mcp)
- 	/* Save mailbox command for debug */
- 	ha->mcp = mcp;
- 
--	/* Try to get mailbox register access */
--	if (!abort_active)
--		spin_lock_irqsave(&ha->mbx_reg_lock, mbx_flags);
--
- 	DEBUG11(printk("scsi(%ld): prepare to issue mbox cmd=0x%x.\n",
- 	    ha->host_no, mcp->mb[0]));
- 
-@@ -161,9 +156,6 @@ qla2x00_mailbox_command(scsi_qla_host_t *ha, mbx_cmd_t *mcp)
- 			WRT_REG_WORD(&reg->isp.hccr, HCCR_SET_HOST_INT);
- 		spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 
--		if (!abort_active)
--			spin_unlock_irqrestore(&ha->mbx_reg_lock, mbx_flags);
--
- 		/* Wait for either the timer to expire
- 		 * or the mbox completion interrupt
- 		 */
-@@ -184,8 +176,6 @@ qla2x00_mailbox_command(scsi_qla_host_t *ha, mbx_cmd_t *mcp)
- 		else
- 			WRT_REG_WORD(&reg->isp.hccr, HCCR_SET_HOST_INT);
- 		spin_unlock_irqrestore(&ha->hardware_lock, flags);
--		if (!abort_active)
--			spin_unlock_irqrestore(&ha->mbx_reg_lock, mbx_flags);
- 
- 		wait_time = jiffies + mcp->tov * HZ; /* wait at most tov secs */
- 		while (!ha->flags.mbox_int) {
-@@ -201,9 +191,6 @@ qla2x00_mailbox_command(scsi_qla_host_t *ha, mbx_cmd_t *mcp)
- 		} /* while */
- 	}
- 
--	if (!abort_active)
--		spin_lock_irqsave(&ha->mbx_reg_lock, mbx_flags);
--
- 	/* Check whether we timed out */
- 	if (ha->flags.mbox_int) {
- 		uint16_t *iptr2;
-@@ -256,9 +243,6 @@ qla2x00_mailbox_command(scsi_qla_host_t *ha, mbx_cmd_t *mcp)
- 		rval = QLA_FUNCTION_TIMEOUT;
- 	}
- 
--	if (!abort_active)
--		spin_unlock_irqrestore(&ha->mbx_reg_lock, mbx_flags);
--
- 	ha->flags.mbox_busy = 0;
- 
- 	/* Clean up */
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index fc99398..68f5d24 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -1566,14 +1566,6 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	INIT_LIST_HEAD(&ha->list);
- 	INIT_LIST_HEAD(&ha->fcports);
- 
--	/*
--	 * These locks are used to prevent more than one CPU
--	 * from modifying the queue at the same time. The
--	 * higher level "host_lock" will reduce most
--	 * contention for these locks.
--	 */
--	spin_lock_init(&ha->mbx_reg_lock);
--
- 	qla2x00_config_dma_addressing(ha);
- 	if (qla2x00_mem_alloc(ha)) {
- 		qla_printk(KERN_WARNING, ha,
+ 	/* Use alternate WWN? */
+ 	if (nv->host_p & __constant_cpu_to_le32(BIT_15)) {
 -- 
 1.5.0.rc2.gdbaa0
 
