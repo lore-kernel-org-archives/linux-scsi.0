@@ -1,51 +1,45 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] libsas: fix task attribute
-Date: Sun, 28 Jan 2007 01:19:41 +0900
-Message-ID: <20070128011941I.fujita.tomonori@lab.ntt.co.jp>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: AIC7xxx on 2.6.18
+Date: Sun, 28 Jan 2007 16:24:08 -0800
+Message-ID: <20070128162408.9fffb6de.akpm@osdl.org>
+References: <20070128194620.GA6358@animx.eu.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama55.ecl.ntt.co.jp ([129.60.39.103]:43560 "EHLO
-	tama55.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751812AbXA0QTD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 27 Jan 2007 11:19:03 -0500
-Received: from mfs34.rdh.ecl.ntt.co.jp (mfs34.rdh.ecl.ntt.co.jp [129.60.39.114])
-	by tama55.ecl.ntt.co.jp (8.13.8/8.13.8) with ESMTP id l0RGJ0vL015244
-	for <linux-scsi@vger.kernel.org>; Sun, 28 Jan 2007 01:19:01 +0900 (JST)
-Received: from mfs34.rdh.ecl.ntt.co.jp (localhost [127.0.0.1])
-	by mfs34.rdh.ecl.ntt.co.jp (Postfix) with ESMTP id 075BA20AE2B
-	for <linux-scsi@vger.kernel.org>; Sun, 28 Jan 2007 01:19:01 +0900 (JST)
-Received: from nttmail3.ecl.ntt.co.jp (nttmail3.ecl.ntt.co.jp [129.60.39.100])
-	by mfs34.rdh.ecl.ntt.co.jp (Postfix) with ESMTP id EE1EC20AE30
-	for <linux-scsi@vger.kernel.org>; Sun, 28 Jan 2007 01:18:59 +0900 (JST)
-Received: from dmailsv1.y.ecl.ntt.co.jp (dmailsv1.y.ecl.ntt.co.jp [129.60.53.14])
-	by nttmail3.ecl.ntt.co.jp (8.13.8/8.13.8) with ESMTP id l0RGIx2M011023
-	for <linux-scsi@vger.kernel.org>; Sun, 28 Jan 2007 01:18:59 +0900 (JST)
+Received: from smtp.osdl.org ([65.172.181.24]:43354 "EHLO smtp.osdl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932997AbXA2AYV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 28 Jan 2007 19:24:21 -0500
+In-Reply-To: <20070128194620.GA6358@animx.eu.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Wakko Warner <wakko@animx.eu.org>
+Cc: linux-scsi@vger.kernel.org
 
-Why TASK_ATTR_HOQ?
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- drivers/scsi/libsas/sas_scsi_host.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+(switched mailing lists)
 
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index 22672d5..7ae3997 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -130,7 +130,7 @@ static enum task_attribute sas_scsi_get_
- 	if (cmd->request && blk_rq_tagged(cmd->request)) {
- 		if (cmd->device->ordered_tags &&
- 		    (cmd->request->cmd_flags & REQ_HARDBARRIER))
--			ta = TASK_ATTR_HOQ;
-+			ta = TASK_ATTR_ORDERED;
- 	}
- 	return ta;
- }
--- 
-1.4.3.2
+On Sun, 28 Jan 2007 14:46:20 -0500
+Wakko Warner <wakko@animx.eu.org> wrote:
+
+> I have 2 machine that oops with these cards.
+> 
+> 1) The bios has the option to enable/disable option roms on individual PCI
+> slots.  I have an AHA-39160 and an AHA-2940U/UW (dual channel).  If I
+> disable option roms, the driver oopses when accessing the 2nd card.
+> 
+> I can get the oops if really needed as I don't like rebooting this machine.
+> 
+> 2) I have an AHA-39160 with Apple/Mac firmware.  When attempting to use it
+> on a PC, the driver oopses presumably because the card wasn't initialized or
+> something.  I realize this is probably not a supported configuration, but I
+> don't believe that it should be oopsing.
+> 
+> I can get the oops for this one if it'll help.
+
+Yes, getting the oops traces will help, thanks.  And confirmation on a more
+recent kernel would be good.
+
+
 
