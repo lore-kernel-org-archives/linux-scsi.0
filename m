@@ -1,13 +1,13 @@
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: [PATCH 9/14] qla2xxx: Fail initialization when inconsistent NVRAM detected.
-Date: Mon, 29 Jan 2007 10:22:26 -0800
-Message-ID: <11700949513420-git-send-email-andrew.vasquez@qlogic.com>
+Subject: [PATCH 2/14] qla2xxx: Add MSI-X support.
+Date: Mon, 29 Jan 2007 10:22:19 -0800
+Message-ID: <11700949511578-git-send-email-andrew.vasquez@qlogic.com>
 References: <20070129182124.GA26940@andrew-vasquezs-computer.local>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from avexch1.qlogic.com ([198.70.193.115]:47719 "EHLO
 	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752548AbXA2SWo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jan 2007 13:22:44 -0500
+	with ESMTP id S1752543AbXA2SWk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jan 2007 13:22:40 -0500
 In-Reply-To: <20070129182124.GA26940@andrew-vasquezs-computer.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,215 +16,345 @@ Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
 Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_init.c |  125 ++++----------------------------------
- 1 files changed, 14 insertions(+), 111 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h  |   24 +++++
+ drivers/scsi/qla2xxx/qla_gbl.h  |    3 +
+ drivers/scsi/qla2xxx/qla_init.c |    2 +
+ drivers/scsi/qla2xxx/qla_isr.c  |  215 +++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/qla2xxx/qla_os.c   |   14 +--
+ 5 files changed, 247 insertions(+), 11 deletions(-)
 
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 2c10130..9b7bcc0 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -2047,6 +2047,27 @@ struct isp_operations {
+ 		uint32_t);
+ };
+ 
++/* MSI-X Support *************************************************************/
++
++#define QLA_MSIX_CHIP_REV_24XX	3
++#define QLA_MSIX_FW_MODE(m)	(((m) & (BIT_7|BIT_8|BIT_9)) >> 7)
++#define QLA_MSIX_FW_MODE_1(m)	(QLA_MSIX_FW_MODE(m) == 1)
++
++#define QLA_MSIX_DEFAULT	0x00
++#define QLA_MSIX_RSP_Q		0x01
++
++#define QLA_MSIX_ENTRIES	2
++#define QLA_MIDX_DEFAULT	0
++#define QLA_MIDX_RSP_Q		1
++
++struct scsi_qla_host;
++
++struct qla_msix_entry {
++	int have_irq;
++	uint16_t msix_vector;
++	uint16_t msix_entry;
++};
++
+ /*
+  * Linux Host Adapter structure
+  */
+@@ -2358,6 +2379,7 @@ typedef struct scsi_qla_host {
+ 
+ 	uint8_t		host_str[16];
+ 	uint32_t	pci_attr;
++	uint16_t	chip_revision;
+ 
+ 	uint16_t	product_id[4];
+ 
+@@ -2391,6 +2413,8 @@ typedef struct scsi_qla_host {
+ 	uint16_t	zio_mode;
+ 	uint16_t	zio_timer;
+ 	struct fc_host_statistics fc_host_stat;
++
++	struct qla_msix_entry msix_entries[QLA_MSIX_ENTRIES];
+ } scsi_qla_host_t;
+ 
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index e4dd12f..7a7b7e9 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -224,6 +224,9 @@ extern irqreturn_t qla24xx_intr_handler(int, void *);
+ extern void qla2x00_process_response_queue(struct scsi_qla_host *);
+ extern void qla24xx_process_response_queue(struct scsi_qla_host *);
+ 
++extern int qla2x00_request_irqs(scsi_qla_host_t *);
++extern void qla2x00_free_irqs(scsi_qla_host_t *);
++
+ /*
+  * Global Function Prototypes in qla_sup.c source file.
+  */
 diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index f4c63ad..6c790dd 100644
+index b3dac26..e594915 100644
 --- a/drivers/scsi/qla2xxx/qla_init.c
 +++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -88,7 +88,12 @@ qla2x00_initialize_adapter(scsi_qla_host_t *ha)
+@@ -293,6 +293,8 @@ qla24xx_pci_config(scsi_qla_host_t *ha)
+ 	d &= ~PCI_ROM_ADDRESS_ENABLE;
+ 	pci_write_config_dword(ha->pdev, PCI_ROM_ADDRESS, d);
  
- 	qla_printk(KERN_INFO, ha, "Configure NVRAM parameters...\n");
++	pci_read_config_word(ha->pdev, PCI_REVISION_ID, &ha->chip_revision);
++
+ 	/* Get PCI bus information. */
+ 	spin_lock_irqsave(&ha->hardware_lock, flags);
+ 	ha->pci_attr = RD_REG_DWORD(&reg->ctrl_status);
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index ba67077..d6f396d 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -1532,3 +1532,218 @@ qla24xx_ms_entry(scsi_qla_host_t *ha, struct ct_entry_24xx *pkt)
+ 	qla2x00_sp_compl(ha, sp);
+ }
  
--	ha->isp_ops.nvram_config(ha);
-+	rval = ha->isp_ops.nvram_config(ha);
-+	if (rval) {
-+		DEBUG2(printk("scsi(%ld): Unable to verify NVRAM data.\n",
-+		    ha->host_no));
-+		return rval;
++static irqreturn_t
++qla24xx_msix_rsp_q(int irq, void *dev_id)
++{
++	scsi_qla_host_t	*ha;
++	struct device_reg_24xx __iomem *reg;
++	unsigned long flags;
++
++	ha = dev_id;
++	reg = &ha->iobase->isp24;
++
++	spin_lock_irqsave(&ha->hardware_lock, flags);
++
++	qla24xx_process_response_queue(ha);
++
++	WRT_REG_DWORD(&reg->hccr, HCCRX_CLR_RISC_INT);
++	RD_REG_DWORD_RELAXED(&reg->hccr);
++
++	spin_unlock_irqrestore(&ha->hardware_lock, flags);
++
++	return IRQ_HANDLED;
++}
++
++static irqreturn_t
++qla24xx_msix_default(int irq, void *dev_id)
++{
++	scsi_qla_host_t	*ha;
++	struct device_reg_24xx __iomem *reg;
++	int		status;
++	unsigned long	flags;
++	unsigned long	iter;
++	uint32_t	stat;
++	uint32_t	hccr;
++	uint16_t	mb[4];
++
++	ha = dev_id;
++	reg = &ha->iobase->isp24;
++	status = 0;
++
++	spin_lock_irqsave(&ha->hardware_lock, flags);
++	for (iter = 50; iter--; ) {
++		stat = RD_REG_DWORD(&reg->host_status);
++		if (stat & HSRX_RISC_PAUSED) {
++			hccr = RD_REG_DWORD(&reg->hccr);
++
++			qla_printk(KERN_INFO, ha, "RISC paused -- HCCR=%x, "
++			    "Dumping firmware!\n", hccr);
++			ha->isp_ops.fw_dump(ha, 1);
++			set_bit(ISP_ABORT_NEEDED, &ha->dpc_flags);
++			break;
++		} else if ((stat & HSRX_RISC_INT) == 0)
++			break;
++
++		switch (stat & 0xff) {
++		case 0x1:
++		case 0x2:
++		case 0x10:
++		case 0x11:
++			qla24xx_mbx_completion(ha, MSW(stat));
++			status |= MBX_INTERRUPT;
++
++			break;
++		case 0x12:
++			mb[0] = MSW(stat);
++			mb[1] = RD_REG_WORD(&reg->mailbox1);
++			mb[2] = RD_REG_WORD(&reg->mailbox2);
++			mb[3] = RD_REG_WORD(&reg->mailbox3);
++			qla2x00_async_event(ha, mb);
++			break;
++		case 0x13:
++			qla24xx_process_response_queue(ha);
++			break;
++		default:
++			DEBUG2(printk("scsi(%ld): Unrecognized interrupt type "
++			    "(%d).\n",
++			    ha->host_no, stat & 0xff));
++			break;
++		}
++		WRT_REG_DWORD(&reg->hccr, HCCRX_CLR_RISC_INT);
++		RD_REG_DWORD_RELAXED(&reg->hccr);
 +	}
++	spin_unlock_irqrestore(&ha->hardware_lock, flags);
++
++	if (test_bit(MBX_INTR_WAIT, &ha->mbx_cmd_flags) &&
++	    (status & MBX_INTERRUPT) && ha->flags.mbox_int) {
++		spin_lock_irqsave(&ha->mbx_reg_lock, flags);
++
++		set_bit(MBX_INTERRUPT, &ha->mbx_cmd_flags);
++		up(&ha->mbx_intr_sem);
++
++		spin_unlock_irqrestore(&ha->mbx_reg_lock, flags);
++	}
++
++	return IRQ_HANDLED;
++}
++
++/* Interrupt handling helpers. */
++
++struct qla_init_msix_entry {
++	uint16_t entry;
++	uint16_t index;
++	const char *name;
++	irqreturn_t (*handler)(int, void *);
++};
++
++static struct qla_init_msix_entry imsix_entries[QLA_MSIX_ENTRIES] = {
++	{ QLA_MSIX_DEFAULT, QLA_MIDX_DEFAULT,
++		"qla2xxx (default)", qla24xx_msix_default },
++
++	{ QLA_MSIX_RSP_Q, QLA_MIDX_RSP_Q,
++		"qla2xxx (rsp_q)", qla24xx_msix_rsp_q },
++};
++
++static void
++qla24xx_disable_msix(scsi_qla_host_t *ha)
++{
++	int i;
++	struct qla_msix_entry *qentry;
++
++	for (i = 0; i < QLA_MSIX_ENTRIES; i++) {
++		qentry = &ha->msix_entries[imsix_entries[i].index];
++		if (qentry->have_irq)
++			free_irq(qentry->msix_vector, ha);
++	}
++	pci_disable_msix(ha->pdev);
++}
++
++static int
++qla24xx_enable_msix(scsi_qla_host_t *ha)
++{
++	int i, ret;
++	struct msix_entry entries[QLA_MSIX_ENTRIES];
++	struct qla_msix_entry *qentry;
++
++	for (i = 0; i < QLA_MSIX_ENTRIES; i++)
++		entries[i].entry = imsix_entries[i].entry;
++
++	ret = pci_enable_msix(ha->pdev, entries, ARRAY_SIZE(entries));
++	if (ret) {
++		qla_printk(KERN_WARNING, ha,
++		    "MSI-X: Failed to enable support -- %d/%d\n",
++		    QLA_MSIX_ENTRIES, ret);
++		goto msix_out;
++	}
++	ha->flags.msix_enabled = 1;
++
++	for (i = 0; i < QLA_MSIX_ENTRIES; i++) {
++		qentry = &ha->msix_entries[imsix_entries[i].index];
++		qentry->msix_vector = entries[i].vector;
++		qentry->msix_entry = entries[i].entry;
++		qentry->have_irq = 0;
++		ret = request_irq(qentry->msix_vector,
++		    imsix_entries[i].handler, 0, imsix_entries[i].name, ha);
++		if (ret) {
++			qla_printk(KERN_WARNING, ha,
++			    "MSI-X: Unable to register handler -- %x/%d.\n",
++			    imsix_entries[i].index, ret);
++			qla24xx_disable_msix(ha);
++			goto msix_out;
++		}
++		qentry->have_irq = 1;
++	}
++
++msix_out:
++	return ret;
++}
++
++int
++qla2x00_request_irqs(scsi_qla_host_t *ha)
++{
++	int ret;
++
++	/* If possible, enable MSI-X. */
++	if (!IS_QLA2432(ha))
++		goto skip_msix;
++
++        if (ha->chip_revision < QLA_MSIX_CHIP_REV_24XX ||
++	    !QLA_MSIX_FW_MODE_1(ha->fw_attributes)) {
++		DEBUG2(qla_printk(KERN_WARNING, ha,
++		    "MSI-X: Unsupported ISP2432 (0x%X, 0x%X).\n",
++		    ha->chip_revision, ha->fw_attributes));
++
++		goto skip_msix;
++	}
++
++	ret = qla24xx_enable_msix(ha);
++	if (!ret) {
++		DEBUG2(qla_printk(KERN_INFO, ha,
++		    "MSI-X: Enabled (0x%X, 0x%X).\n", ha->chip_revision,
++		    ha->fw_attributes));
++		return ret;
++	}
++	qla_printk(KERN_WARNING, ha,
++	    "MSI-X: Falling back-to INTa mode -- %d.\n", ret);
++skip_msix:
++	ret = request_irq(ha->pdev->irq, ha->isp_ops.intr_handler,
++	    IRQF_DISABLED|IRQF_SHARED, QLA2XXX_DRIVER_NAME, ha);
++	if (ret) {
++		qla_printk(KERN_WARNING, ha,
++		    "Failed to reserve interrupt %d already in use.\n",
++		    ha->pdev->irq);
++	}
++	ha->host->irq = ha->pdev->irq;
++
++	return ret;
++}
++
++void
++qla2x00_free_irqs(scsi_qla_host_t *ha)
++{
++
++	if (ha->flags.msix_enabled)
++		qla24xx_disable_msix(ha);
++	else if (ha->host->irq)
++		free_irq(ha->host->irq, ha);
++}
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index d6445ae..1f8d04c 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -1615,15 +1615,9 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	host->max_lun = MAX_LUNS;
+ 	host->transportt = qla2xxx_transport_template;
  
- 	if (ha->flags.disable_serdes) {
- 		/* Mask HBA via NVRAM settings? */
-@@ -1404,7 +1409,6 @@ qla2x00_set_model_info(scsi_qla_host_t *ha, uint8_t *model, size_t len, char *de
- int
- qla2x00_nvram_config(scsi_qla_host_t *ha)
- {
--	int             rval;
- 	uint8_t         chksum = 0;
- 	uint16_t        cnt;
- 	uint8_t         *dptr1, *dptr2;
-@@ -1413,8 +1417,6 @@ qla2x00_nvram_config(scsi_qla_host_t *ha)
- 	uint8_t         *ptr = (uint8_t *)ha->request_ring;
- 	struct device_reg_2xxx __iomem *reg = &ha->iobase->isp;
- 
--	rval = QLA_SUCCESS;
--
- 	/* Determine NVRAM starting address. */
- 	ha->nvram_size = sizeof(nvram_t);
- 	ha->nvram_base = 0;
-@@ -1438,55 +1440,7 @@ qla2x00_nvram_config(scsi_qla_host_t *ha)
- 		qla_printk(KERN_WARNING, ha, "Inconsistent NVRAM detected: "
- 		    "checksum=0x%x id=%c version=0x%x.\n", chksum, nv->id[0],
- 		    nv->nvram_version);
--		qla_printk(KERN_WARNING, ha, "Falling back to functioning (yet "
--		    "invalid -- WWPN) defaults.\n");
--
--		/*
--		 * Set default initialization control block.
--		 */
--		memset(nv, 0, ha->nvram_size);
--		nv->parameter_block_version = ICB_VERSION;
--
--		if (IS_QLA23XX(ha)) {
--			nv->firmware_options[0] = BIT_2 | BIT_1;
--			nv->firmware_options[1] = BIT_7 | BIT_5;
--			nv->add_firmware_options[0] = BIT_5;
--			nv->add_firmware_options[1] = BIT_5 | BIT_4;
--			nv->frame_payload_size = __constant_cpu_to_le16(2048);
--			nv->special_options[1] = BIT_7;
--		} else if (IS_QLA2200(ha)) {
--			nv->firmware_options[0] = BIT_2 | BIT_1;
--			nv->firmware_options[1] = BIT_7 | BIT_5;
--			nv->add_firmware_options[0] = BIT_5;
--			nv->add_firmware_options[1] = BIT_5 | BIT_4;
--			nv->frame_payload_size = __constant_cpu_to_le16(1024);
--		} else if (IS_QLA2100(ha)) {
--			nv->firmware_options[0] = BIT_3 | BIT_1;
--			nv->firmware_options[1] = BIT_5;
--			nv->frame_payload_size = __constant_cpu_to_le16(1024);
--		}
--
--		nv->max_iocb_allocation = __constant_cpu_to_le16(256);
--		nv->execution_throttle = __constant_cpu_to_le16(16);
--		nv->retry_count = 8;
--		nv->retry_delay = 1;
--
--		nv->port_name[0] = 33;
--		nv->port_name[3] = 224;
--		nv->port_name[4] = 139;
--
--		nv->login_timeout = 4;
--
--		/*
--		 * Set default host adapter parameters
--		 */
--		nv->host_p[1] = BIT_2;
--		nv->reset_delay = 5;
--		nv->port_down_retry_count = 8;
--		nv->max_luns_per_target = __constant_cpu_to_le16(8);
--		nv->link_down_timeout = 60;
--
--		rval = 1;
-+		return QLA_FUNCTION_FAILED;
- 	}
- 
- #if defined(CONFIG_IA64_GENERIC) || defined(CONFIG_IA64_SGI_SN2)
-@@ -1699,11 +1653,7 @@ qla2x00_nvram_config(scsi_qla_host_t *ha)
- 		}
- 	}
- 
--	if (rval) {
--		DEBUG2_3(printk(KERN_WARNING
--		    "scsi(%ld): NVRAM configuration failed!\n", ha->host_no));
+-	ret = request_irq(pdev->irq, ha->isp_ops.intr_handler,
+-	    IRQF_DISABLED|IRQF_SHARED, QLA2XXX_DRIVER_NAME, ha);
+-	if (ret) {
+-		qla_printk(KERN_WARNING, ha,
+-		    "Failed to reserve interrupt %d already in use.\n",
+-		    pdev->irq);
++	ret = qla2x00_request_irqs(ha);
++	if (ret)
+ 		goto probe_failed;
 -	}
--	return (rval);
-+	return QLA_SUCCESS;
- }
+-	host->irq = pdev->irq;
  
- static void
-@@ -3121,7 +3071,9 @@ qla2x00_abort_isp(scsi_qla_host_t *ha)
+ 	/* Initialized the timer */
+ 	qla2x00_start_timer(ha, qla2x00_timer, WATCH_INTERVAL);
+@@ -1753,9 +1747,7 @@ qla2x00_free_device(scsi_qla_host_t *ha)
  
- 		ha->isp_ops.get_flash_version(ha, ha->request_ring);
+ 	qla2x00_mem_free(ha);
  
--		ha->isp_ops.nvram_config(ha);
-+		rval = ha->isp_ops.nvram_config(ha);
-+		if (rval)
-+			goto isp_abort_retry;
+-	/* Detach interrupts */
+-	if (ha->host->irq)
+-		free_irq(ha->host->irq, ha);
++	qla2x00_free_irqs(ha);
  
- 		if (!qla2x00_restart_isp(ha)) {
- 			clear_bit(RESET_MARKER_NEEDED, &ha->dpc_flags);
-@@ -3151,6 +3103,7 @@ qla2x00_abort_isp(scsi_qla_host_t *ha)
- 				}
- 			}
- 		} else {	/* failed the ISP abort */
-+isp_abort_retry:
- 			ha->flags.online = 1;
- 			if (test_bit(ISP_ABORT_RETRY, &ha->dpc_flags)) {
- 				if (ha->isp_abort_cnt == 0) {
-@@ -3340,7 +3293,6 @@ qla24xx_reset_adapter(scsi_qla_host_t *ha)
- int
- qla24xx_nvram_config(scsi_qla_host_t *ha)
- {
--	int   rval;
- 	struct init_cb_24xx *icb;
- 	struct nvram_24xx *nv;
- 	uint32_t *dptr;
-@@ -3348,7 +3300,6 @@ qla24xx_nvram_config(scsi_qla_host_t *ha)
- 	uint32_t chksum;
- 	uint16_t cnt;
- 
--	rval = QLA_SUCCESS;
- 	icb = (struct init_cb_24xx *)ha->init_cb;
- 	nv = (struct nvram_24xx *)ha->request_ring;
- 
-@@ -3381,51 +3332,7 @@ qla24xx_nvram_config(scsi_qla_host_t *ha)
- 		qla_printk(KERN_WARNING, ha, "Inconsistent NVRAM detected: "
- 		    "checksum=0x%x id=%c version=0x%x.\n", chksum, nv->id[0],
- 		    le16_to_cpu(nv->nvram_version));
--		qla_printk(KERN_WARNING, ha, "Falling back to functioning (yet "
--		    "invalid -- WWPN) defaults.\n");
--
--		/*
--		 * Set default initialization control block.
--		 */
--		memset(nv, 0, ha->nvram_size);
--		nv->nvram_version = __constant_cpu_to_le16(ICB_VERSION);
--		nv->version = __constant_cpu_to_le16(ICB_VERSION);
--		nv->frame_payload_size = __constant_cpu_to_le16(2048);
--		nv->execution_throttle = __constant_cpu_to_le16(0xFFFF);
--		nv->exchange_count = __constant_cpu_to_le16(0);
--		nv->hard_address = __constant_cpu_to_le16(124);
--		nv->port_name[0] = 0x21;
--		nv->port_name[1] = 0x00 + PCI_FUNC(ha->pdev->devfn);
--		nv->port_name[2] = 0x00;
--		nv->port_name[3] = 0xe0;
--		nv->port_name[4] = 0x8b;
--		nv->port_name[5] = 0x1c;
--		nv->port_name[6] = 0x55;
--		nv->port_name[7] = 0x86;
--		nv->node_name[0] = 0x20;
--		nv->node_name[1] = 0x00;
--		nv->node_name[2] = 0x00;
--		nv->node_name[3] = 0xe0;
--		nv->node_name[4] = 0x8b;
--		nv->node_name[5] = 0x1c;
--		nv->node_name[6] = 0x55;
--		nv->node_name[7] = 0x86;
--		nv->login_retry_count = __constant_cpu_to_le16(8);
--		nv->interrupt_delay_timer = __constant_cpu_to_le16(0);
--		nv->login_timeout = __constant_cpu_to_le16(0);
--		nv->firmware_options_1 =
--		    __constant_cpu_to_le32(BIT_14|BIT_13|BIT_2|BIT_1);
--		nv->firmware_options_2 = __constant_cpu_to_le32(2 << 4);
--		nv->firmware_options_2 |= __constant_cpu_to_le32(BIT_12);
--		nv->firmware_options_3 = __constant_cpu_to_le32(2 << 13);
--		nv->host_p = __constant_cpu_to_le32(BIT_11|BIT_10);
--		nv->efi_parameters = __constant_cpu_to_le32(0);
--		nv->reset_delay = 5;
--		nv->max_luns_per_target = __constant_cpu_to_le16(128);
--		nv->port_down_retry_count = __constant_cpu_to_le16(30);
--		nv->link_down_timeout = __constant_cpu_to_le16(30);
--
--		rval = 1;
-+		return QLA_FUNCTION_FAILED;
- 	}
- 
- 	/* Reset Initialization control block */
-@@ -3572,11 +3479,7 @@ qla24xx_nvram_config(scsi_qla_host_t *ha)
- 		ha->flags.process_response_queue = 1;
- 	}
- 
--	if (rval) {
--		DEBUG2_3(printk(KERN_WARNING
--		    "scsi(%ld): NVRAM configuration failed!\n", ha->host_no));
--	}
--	return (rval);
-+	return QLA_SUCCESS;
- }
- 
- static int
+ 	/* release io space registers  */
+ 	if (ha->iobase)
 -- 
 1.5.0.rc2.gdbaa0
 
