@@ -1,162 +1,46 @@
-From: Eric Moore <eric.moore@lsi.com>
-Subject: [PATCH 9/9] - fusion - bump version - 3.04.04
-Date: Mon, 29 Jan 2007 09:48:50 -0700
-Message-ID: <20070129164850.GA1932@lsil.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: [PATCH 0/14] qla2xxx: driver update.
+Date: Mon, 29 Jan 2007 10:21:24 -0800
+Message-ID: <20070129182124.GA26940@andrew-vasquezs-computer.local>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:60772 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752521AbXA2QsO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Jan 2007 11:48:14 -0500
+Received: from avexch1.qlogic.com ([198.70.193.115]:47526 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752107AbXA2SV1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jan 2007 13:21:27 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
+To: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <james.bottomley@steeleye.com>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-bump version, and fix email addr for lsi support
+This patchset updates the qla2xxx driver to 8.01.07-k5.
 
-Signed-off-by: Eric Moore <Eric.Moore@lsi.com>
+ drivers/scsi/qla2xxx/qla_attr.c    |   68 +++++++-
+ drivers/scsi/qla2xxx/qla_def.h     |   38 ++++-
+ drivers/scsi/qla2xxx/qla_gbl.h     |    6 +
+ drivers/scsi/qla2xxx/qla_init.c    |  218 ++++++----------------
+ drivers/scsi/qla2xxx/qla_isr.c     |  241 +++++++++++++++++++++++--
+ drivers/scsi/qla2xxx/qla_mbx.c     |   18 +--
+ drivers/scsi/qla2xxx/qla_os.c      |   24 +--
+ drivers/scsi/qla2xxx/qla_sup.c     |  348 +++++++++++++++++++++++++++++++++++-
+ drivers/scsi/qla2xxx/qla_version.h |    2 +-
+ 9 files changed, 745 insertions(+), 218 deletions(-)
 
+here's the commits:
 
-diff -uarpN b/drivers/message/fusion/mptbase.c a/drivers/message/fusion/mptbase.c
---- b/drivers/message/fusion/mptbase.c	2007-01-28 12:57:29.000000000 -0700
-+++ a/drivers/message/fusion/mptbase.c	2007-01-28 12:57:29.000000000 -0700
-@@ -6,7 +6,7 @@
-  *      running LSI Logic Fusion MPT (Message Passing Technology) firmware.
-  *
-  *  Copyright (c) 1999-2007 LSI Logic Corporation
-- *  (mailto:mpt_linux_developer@lsil.com)
-+ *  (mailto:mpt_linux_developer@lsi.com)
-  *
-  */
- /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
-diff -uarpN b/drivers/message/fusion/mptbase.h a/drivers/message/fusion/mptbase.h
---- b/drivers/message/fusion/mptbase.h	2007-01-28 12:57:29.000000000 -0700
-+++ a/drivers/message/fusion/mptbase.h	2007-01-28 12:57:29.000000000 -0700
-@@ -6,7 +6,7 @@
-  *      running LSI Logic Fusion MPT (Message Passing Technology) firmware.
-  *
-  *  Copyright (c) 1999-2007 LSI Logic Corporation
-- *  (mailto:mpt_linux_developer@lsil.com)
-+ *  (mailto:mpt_linux_developer@lsi.com)
-  *
-  */
- /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
-@@ -75,8 +75,8 @@
- #define COPYRIGHT	"Copyright (c) 1999-2007 " MODULEAUTHOR
- #endif
- 
--#define MPT_LINUX_VERSION_COMMON	"3.04.03"
--#define MPT_LINUX_PACKAGE_NAME		"@(#)mptlinux-3.04.03"
-+#define MPT_LINUX_VERSION_COMMON	"3.04.04"
-+#define MPT_LINUX_PACKAGE_NAME		"@(#)mptlinux-3.04.04"
- #define WHAT_MAGIC_STRING		"@" "(" "#" ")"
- 
- #define show_mptmod_ver(s,ver)  \
-diff -uarpN b/drivers/message/fusion/mptctl.c a/drivers/message/fusion/mptctl.c
---- b/drivers/message/fusion/mptctl.c	2007-01-28 12:57:29.000000000 -0700
-+++ a/drivers/message/fusion/mptctl.c	2007-01-28 12:57:29.000000000 -0700
-@@ -5,7 +5,7 @@
-  *      running LSI Logic Fusion MPT (Message Passing Technology) firmware.
-  *
-  *  Copyright (c) 1999-2007 LSI Logic Corporation
-- *  (mailto:mpt_linux_developer@lsil.com)
-+ *  (mailto:mpt_linux_developer@lsi.com)
-  *
-  */
- /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
-diff -uarpN b/drivers/message/fusion/mptctl.h a/drivers/message/fusion/mptctl.h
---- b/drivers/message/fusion/mptctl.h	2007-01-28 12:57:29.000000000 -0700
-+++ a/drivers/message/fusion/mptctl.h	2007-01-28 12:57:29.000000000 -0700
-@@ -6,7 +6,7 @@
-  *      running LSI Logic Fusion MPT (Message Passing Technology) firmware.
-  *
-  *  Copyright (c) 1999-2007 LSI Logic Corporation
-- *  (mailto:mpt_linux_developer@lsil.com)
-+ *  (mailto:mpt_linux_developer@lsi.com)
-  *
-  */
- /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
-diff -uarpN b/drivers/message/fusion/mptfc.c a/drivers/message/fusion/mptfc.c
---- b/drivers/message/fusion/mptfc.c	2007-01-28 12:57:29.000000000 -0700
-+++ a/drivers/message/fusion/mptfc.c	2007-01-28 12:57:29.000000000 -0700
-@@ -4,7 +4,7 @@
-  *      running LSI Logic Fusion MPT (Message Passing Technology) firmware.
-  *
-  *  Copyright (c) 1999-2007 LSI Logic Corporation
-- *  (mailto:mpt_linux_developer@lsil.com)
-+ *  (mailto:mpt_linux_developer@lsi.com)
-  *
-  */
- /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
-diff -uarpN b/drivers/message/fusion/mptlan.c a/drivers/message/fusion/mptlan.c
---- b/drivers/message/fusion/mptlan.c	2007-01-28 12:57:29.000000000 -0700
-+++ a/drivers/message/fusion/mptlan.c	2007-01-28 12:57:29.000000000 -0700
-@@ -5,6 +5,7 @@
-  *      running LSI Logic Fusion MPT (Message Passing Technology) firmware.
-  *
-  *  Copyright (c) 2000-2007 LSI Logic Corporation
-+ *  (mailto:mpt_linux_developer@lsi.com)
-  *
-  */
- /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
-diff -uarpN b/drivers/message/fusion/mptlan.h a/drivers/message/fusion/mptlan.h
---- b/drivers/message/fusion/mptlan.h	2007-01-28 12:57:29.000000000 -0700
-+++ a/drivers/message/fusion/mptlan.h	2007-01-28 12:57:29.000000000 -0700
-@@ -5,6 +5,7 @@
-  *      running LSI Logic Fusion MPT (Message Passing Technology) firmware.
-  *
-  *  Copyright (c) 2000-2007 LSI Logic Corporation
-+ *  (mailto:mpt_linux_developer@lsi.com)
-  *
-  */
- /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
-diff -uarpN b/drivers/message/fusion/mptsas.c a/drivers/message/fusion/mptsas.c
---- b/drivers/message/fusion/mptsas.c	2007-01-28 12:57:29.000000000 -0700
-+++ a/drivers/message/fusion/mptsas.c	2007-01-28 12:57:29.000000000 -0700
-@@ -4,7 +4,7 @@
-  *      running LSI Logic Fusion MPT (Message Passing Technology) firmware.
-  *
-  *  Copyright (c) 1999-2007 LSI Logic Corporation
-- *  (mailto:mpt_linux_developer@lsil.com)
-+ *  (mailto:mpt_linux_developer@lsi.com)
-  *  Copyright (c) 2005-2007 Dell
-  */
- /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
-diff -uarpN b/drivers/message/fusion/mptscsih.c a/drivers/message/fusion/mptscsih.c
---- b/drivers/message/fusion/mptscsih.c	2007-01-28 12:57:29.000000000 -0700
-+++ a/drivers/message/fusion/mptscsih.c	2007-01-28 12:57:29.000000000 -0700
-@@ -4,7 +4,7 @@
-  *      running LSI Logic Fusion MPT (Message Passing Technology) firmware.
-  *
-  *  Copyright (c) 1999-2007 LSI Logic Corporation
-- *  (mailto:mpt_linux_developer@lsil.com)
-+ *  (mailto:mpt_linux_developer@lsi.com)
-  *
-  */
- /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
-diff -uarpN b/drivers/message/fusion/mptscsih.h a/drivers/message/fusion/mptscsih.h
---- b/drivers/message/fusion/mptscsih.h	2007-01-28 12:57:29.000000000 -0700
-+++ a/drivers/message/fusion/mptscsih.h	2007-01-28 12:57:29.000000000 -0700
-@@ -6,7 +6,7 @@
-  *      running LSI Logic Fusion MPT (Message Passing Technology) firmware.
-  *
-  *  Copyright (c) 1999-2007 LSI Logic Corporation
-- *  (mailto:mpt_linux_developer@lsil.com)
-+ *  (mailto:mpt_linux_developer@lsi.com)
-  *
-  */
- /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
-diff -uarpN b/drivers/message/fusion/mptspi.c a/drivers/message/fusion/mptspi.c
---- b/drivers/message/fusion/mptspi.c	2007-01-28 12:57:29.000000000 -0700
-+++ a/drivers/message/fusion/mptspi.c	2007-01-28 12:57:29.000000000 -0700
-@@ -4,7 +4,7 @@
-  *      running LSI Logic Fusion MPT (Message Passing Technology) firmware.
-  *
-  *  Copyright (c) 1999-2007 LSI Logic Corporation
-- *  (mailto:mpt_linux_developer@lsil.com)
-+ *  (mailto:mpt_linux_developer@lsi.com)
-  *
-  */
- /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+ -  Correct sector-erase issues while writing flash.
+ -  Add MSI-X support.
+ -  Handle IRQ-0 assignments by the system.
+ -  Export OptionROM boot-codes version information.
+ -  Perform implicit LOGO during fabric logout request.
+ -  Set correct cabling state during initialization.
+ -  Refactor set-HBA-model/description code.
+ -  Check loop-state before reading host statistics.
+ -  Fail initialization when inconsistent NVRAM detected.
+ -  Enable queue-full throttling when UNDERRUN detected.
+ -  Allow NVRAM updates to immediately go into affect.
+ -  Fixup printk() with proper new-line character.
+ -  Remove unnecessary spinlock primitive - mbx_reg_lock.
+ -  Update version number to 8.01.07-k5.
