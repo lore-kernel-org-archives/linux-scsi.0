@@ -1,61 +1,74 @@
-From: "David Somayajulu" <david.somayajulu@qlogic.com>
-Subject: RE: [PATCH] qla4xxx: bug fixes
-Date: Mon, 29 Jan 2007 10:34:05 -0800
-Message-ID: <0BB3E5E7462EEA4295BC02D49691DC07828CF9@AVEXCH1.qlogic.org>
-References: <1169914102.4392.5.camel@mulgrave.il.steeleye.com>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH] remove duplicate device id from IPR driver
+Date: Mon, 29 Jan 2007 13:59:11 -0600
+Message-ID: <45BE520F.4050507@linux.vnet.ibm.com>
+References: <20070126021503.GB3444@kroah.com>
+Reply-To: brking@linux.vnet.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:50466 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752564AbXA2SeH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Jan 2007 13:34:07 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <1169914102.4392.5.camel@mulgrave.il.steeleye.com>
+Received: from e2.ny.us.ibm.com ([32.97.182.142]:47385 "EHLO e2.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752579AbXA2T7P (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Jan 2007 14:59:15 -0500
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e2.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id l0TJxDcg029071
+	for <linux-scsi@vger.kernel.org>; Mon, 29 Jan 2007 14:59:13 -0500
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v8.2) with ESMTP id l0TJxDgt305754
+	for <linux-scsi@vger.kernel.org>; Mon, 29 Jan 2007 14:59:13 -0500
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l0TJxCpG008148
+	for <linux-scsi@vger.kernel.org>; Mon, 29 Jan 2007 14:59:13 -0500
+In-Reply-To: <20070126021503.GB3444@kroah.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, Mike Christie <michaelc@cs.wisc.edu>
+To: Greg KH <greg@kroah.com>
+Cc: brking@us.ibm.com, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-> From: James Bottomley [mailto:James.Bottomley@SteelEye.com]
-> Sent: Saturday, January 27, 2007 8:08 AM
-> On Mon, 2007-01-22 at 12:26 -0800, David C Somayajulu wrote:
-> > The included patch fixes the following issues:
-> > 1. qla3xxx/qla4xxx co-existence issue which can result in a lockup
-when qla3xxx driver is unloaded,
-> or when ifdown; ifup is performed on one of the interfaces
-correponding to qla3xxx. This is because
-> qla4xxx HBA supports one ethernet and iscsi interfaces per port. Both
-iscsi and ethernet interfaces
-> share the same state machine. The problem has to do with synchronizing
-access to the state machine in
-> the event of a reset
-> > 2. mutex_lock() is sometimes not followed by mutex_unlock() prior to
-invoking a msleep() in
-> qla4xxx_mailbox_command()
+Greg KH wrote:
+> From: Greg Kroah-Hartman <gregkh@suse.de>
 > 
-> Git applymbox picked up this nasty (which I've corrected):
+> This patch removes a duplicate device id from the IPR driver.  Based on
+> the ipr.h file, I'm not so sure this was intended to be a duplicate, and
+> if so, the .h file should be modified to use the proper sub-device id
+> instead.
+
+ACK.
+
+I double checked the subsystem ids and this patch is indeed the correct
+fix. It turns out both of these adapters have the same subsystem ids,
+which I didn't realize initially.
+
+Thanks,
+
+Brian
+
 > 
-> Applying 'qla4xxx: bug fixes'
+> This was pointed out to me by Kay Sievers <kay.sievers@suse.de>
 > 
-> Space in indent is followed by a tab.
-> .dotest/patch:122:                      set_bit(AF_MBOX_COMMAND,
-> &ha->flags);
-> Space in indent is followed by a tab.
-> .dotest/patch:123:                      mutex_unlock(&ha->mbox_sem);
-> Space in indent is followed by a tab.
-> .dotest/patch:124:                      break;
-> Space in indent is followed by a tab.
-> .dotest/patch:125:              }
-> Space in indent is followed by a tab.
-> .dotest/patch:126:              mutex_unlock(&ha->mbox_sem);
-> warning: squelched 7 whitespace errors
-> warning: 12 lines add trailing whitespaces.
+> Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
 > 
-> James
+> ---
+>  drivers/scsi/ipr.c |    3 ---
+>  1 file changed, 3 deletions(-)
 > 
-Sorry about that. Really appreciate your correcting them. 
-Thanks
-David S.
+> --- gregkh-2.6.orig/drivers/scsi/ipr.c
+> +++ gregkh-2.6/drivers/scsi/ipr.c
+> @@ -7558,9 +7558,6 @@ static struct pci_device_id ipr_pci_tabl
+>  	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_OBSIDIAN,
+>  	      PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_575C,
+>  	      0, 0, (kernel_ulong_t)&ipr_chip_cfg[0] },
+> -	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_OBSIDIAN,
+> -	      PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57B8,
+> -	      0, 0, (kernel_ulong_t)&ipr_chip_cfg[0] },
+>  	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_OBSIDIAN_E,
+>  	      PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57B7,
+>  	      0, 0, (kernel_ulong_t)&ipr_chip_cfg[0] },
+
+
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
