@@ -1,112 +1,52 @@
-From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: [PATCH 12/12] sas_ata: Make this a module separate from libsas
-Date: Tue, 30 Jan 2007 01:19:04 -0800
-Message-ID: <20070130091903.31530.90178.stgit@elm3a70.beaverton.ibm.com>
-References: <20070130091814.31530.23152.stgit@elm3a70.beaverton.ibm.com>
-Content-Type: text/plain; charset=utf-8; format=fixed
-Content-Transfer-Encoding: 8bit
+From: Wakko Warner <wakko@animx.eu.org>
+Subject: Re: AIC7xxx on 2.6.18
+Date: Tue, 30 Jan 2007 07:18:20 -0500
+Message-ID: <20070130121820.GA11843@animx.eu.org>
+References: <20070128194620.GA6358@animx.eu.org> <20070128162408.9fffb6de.akpm@osdl.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e6.ny.us.ibm.com ([32.97.182.146]:39651 "EHLO e6.ny.us.ibm.com"
+Received: from animx.eu.org ([216.98.75.249]:48237 "EHLO animx.eu.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965464AbXA3JRr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Jan 2007 04:17:47 -0500
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e6.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id l0U9IPER019402
-	for <linux-scsi@vger.kernel.org>; Tue, 30 Jan 2007 04:18:25 -0500
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v8.2) with ESMTP id l0U9GUDC234362
-	for <linux-scsi@vger.kernel.org>; Tue, 30 Jan 2007 04:16:30 -0500
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l0U9GUhs011099
-	for <linux-scsi@vger.kernel.org>; Tue, 30 Jan 2007 04:16:30 -0500
-In-Reply-To: <20070130091814.31530.23152.stgit@elm3a70.beaverton.ibm.com>
+	id S965333AbXA3NGa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Jan 2007 08:06:30 -0500
+Content-Disposition: inline
+In-Reply-To: <20070128162408.9fffb6de.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: djwong@us.ibm.com, linux-scsi@vger.kernel.org
-Cc: alexisb@us.ibm.com
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-scsi@vger.kernel.org
 
+NOTE: I am not on the linux-scsi list, keep me in CC.
 
-Break out sas_ata as a free-standing module that provides a SATA
-Translation Layer (SATL) for libsas.  This patch requires the libsas
-SATL registration patch; the changes to sas_ata itself are rather
-minor.
+Andrew Morton wrote:
+> On Sun, 28 Jan 2007 14:46:20 -0500
+> Wakko Warner <wakko@animx.eu.org> wrote:
+> 
+> > I have 2 machine that oops with these cards.
+> > 
+> > 1) The bios has the option to enable/disable option roms on individual PCI
+> > slots.  I have an AHA-39160 and an AHA-2940U/UW (dual channel).  If I
+> > disable option roms, the driver oopses when accessing the 2nd card.
+> > 
+> > I can get the oops if really needed as I don't like rebooting this machine.
+> > 
+> > 2) I have an AHA-39160 with Apple/Mac firmware.  When attempting to use it
+> > on a PC, the driver oopses presumably because the card wasn't initialized or
+> > something.  I realize this is probably not a supported configuration, but I
+> > don't believe that it should be oopsing.
+> > 
+> > I can get the oops for this one if it'll help.
+> 
+> Yes, getting the oops traces will help, thanks.  And confirmation on a more
+> recent kernel would be good.
 
-Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
----
+I tested with a 2.6.20-rc6 kernel and the MAC 39160 card.  There was no oops
+and I was able to access the 2 disks.  This was on a different PC though. 
+I'll try it again on the original PC.
 
- drivers/scsi/libsas/Makefile  |    5 +++--
- drivers/scsi/libsas/sas_ata.c |   37 ++++++++++++++++++++++++++++++++++---
- 2 files changed, 37 insertions(+), 5 deletions(-)
+Should I try 2.6.19 as well?
 
-diff --git a/drivers/scsi/libsas/Makefile b/drivers/scsi/libsas/Makefile
-index 6383eb5..5e95902 100644
---- a/drivers/scsi/libsas/Makefile
-+++ b/drivers/scsi/libsas/Makefile
-@@ -33,5 +33,6 @@ libsas-y +=  sas_init.o     \
- 		sas_dump.o     \
- 		sas_discover.o \
- 		sas_expander.o \
--		sas_scsi_host.o \
--		sas_ata.o
-+		sas_scsi_host.o
-+
-+obj-$(CONFIG_SCSI_SAS_SATL) += sas_ata.o
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index 1b7221c..f75fa59 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -404,8 +404,8 @@ static struct ata_port_info sata_port_in
- 	.port_ops = &sas_sata_ops
- };
- 
--int sas_ata_init_host_and_port(struct domain_device *found_dev,
--			       struct scsi_target *starget)
-+static int sas_ata_init_host_and_port(struct domain_device *found_dev,
-+				      struct scsi_target *starget)
- {
- 	struct Scsi_Host *shost = dev_to_shost(&starget->dev);
- 	struct sas_ha_struct *ha = SHOST_TO_SAS_HA(shost);
-@@ -431,7 +431,7 @@ int sas_ata_init_host_and_port(struct do
- 	return 0;
- }
- 
--void sas_ata_task_abort(struct sas_task *task)
-+static void sas_ata_task_abort(struct sas_task *task)
- {
- 	struct ata_queued_cmd *qc = task->uldd_task;
- 	struct completion *waiting;
-@@ -450,3 +450,34 @@ void sas_ata_task_abort(struct sas_task 
- 	waiting = qc->private_data;
- 	complete(waiting);
- }
-+
-+/* Module initialization */
-+static struct satl_operations sas_ata_ops = {
-+	.owner			= THIS_MODULE,
-+	.init_target		= sas_ata_init_host_and_port,
-+	.queuecommand		= ata_sas_queuecmd,
-+	.ioctl			= ata_scsi_ioctl,
-+	.configure_port		= ata_sas_slave_configure,
-+	.deactivate_port	= ata_port_disable,
-+	.destroy_port		= ata_sas_port_destroy,
-+	.init_port		= ata_sas_port_init,
-+	.task_abort		= sas_ata_task_abort
-+};
-+
-+static int __init sas_ata_init(void)
-+{
-+	return sas_register_satl(&sas_ata_ops);
-+}
-+
-+static void __exit sas_ata_exit(void)
-+{
-+	sas_unregister_satl(&sas_ata_ops);
-+}
-+
-+module_init(sas_ata_init);
-+module_exit(sas_ata_exit);
-+
-+MODULE_AUTHOR("Darrick Wong <djwong@us.ibm.com>");
-+MODULE_DESCRIPTION("libata SATL for SAS");
-+MODULE_LICENSE("GPL v2");
-+MODULE_VERSION("1.0");
+-- 
+ Lab tests show that use of micro$oft causes cancer in lab animals
+ Got Gas???
