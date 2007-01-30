@@ -1,53 +1,43 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [Bugme-new] [Bug 7900] New: Kernel OOPS when using tape drive
- (compiler bug?)
-Date: Mon, 29 Jan 2007 18:05:35 -0800
-Message-ID: <20070129180535.85950b67.akpm@osdl.org>
-References: <200701300139.l0U1dP09019983@fire-2.osdl.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: [PATCH 0/4] Roll-up of libsas and aic94xx patches
+Date: Tue, 30 Jan 2007 02:45:40 -0500
+Message-ID: <200701300745.l0U7jehp014538@d01av04.pok.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:38001 "EHLO smtp.osdl.org"
+Received: from e6.ny.us.ibm.com ([32.97.182.146]:60767 "EHLO e6.ny.us.ibm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752643AbXA3CFt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Jan 2007 21:05:49 -0500
-In-Reply-To: <200701300139.l0U1dP09019983@fire-2.osdl.org>
+	id S965427AbXA3Hpm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Jan 2007 02:45:42 -0500
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e6.ny.us.ibm.com (8.13.8/8.12.11) with ESMTP id l0U7kJus024105
+	for <linux-scsi@vger.kernel.org>; Tue, 30 Jan 2007 02:46:19 -0500
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v8.2) with ESMTP id l0U7jfu7228234
+	for <linux-scsi@vger.kernel.org>; Tue, 30 Jan 2007 02:45:41 -0500
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l0U7jesn014559
+	for <linux-scsi@vger.kernel.org>; Tue, 30 Jan 2007 02:45:41 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>, Kai Makisara <Kai.Makisara@kolumbus.fi>, michal@logix.cz
+To: "Darrick J. Wong" <djwong@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Alexis Bruemmer <alexisb@us.ibm.com>
 
-On Mon, 29 Jan 2007 17:39:25 -0800
-bugme-daemon@bugzilla.kernel.org wrote:
+Hi all,
 
-> http://bugzilla.kernel.org/show_bug.cgi?id=7900
-> 
->            Summary: Kernel OOPS when using tape drive (compiler bug?)
->     Kernel Version: 2.6.20-rc5
->             Status: NEW
->           Severity: high
->              Owner: io_scsi@kernel-bugs.osdl.org
->          Submitter: michal@logix.cz
-> 
-> 
-> Most recent kernel where this bug did *NOT* occur:
-> Distribution: OpenSUSE 10.2 x86
-> Hardware Environment: 
-> SCSI controller "LSI Logic / Symbios Logic 53c1030 PCI-X Fusion-MPT Dual
-> Ultra320 SCSI (rev 07)", tape streamer Datastor LTO1 (don't know the exact model)
-> 
-> Software Environment: OpenSUSE 10.2 x86, mondoarchive, mondorescue
-> 
-> Problem Description:
-> Attempt to restore data from a tape drive results in the following Oops and
-> subsequent functinality loss of the strreamer. Writing to the tape, however,
-> worked fine. Or at least mondoarchive haven't complained.
-> 
-> Following kernel Oops happens on both self-compiled vanilla 2.6.20-rc5 and
-> original Suse kernel 2.6.18.2-34-default, both are compiled with GCC 4.1.2. As
-> soon as I recompiled 2.6.20-rc5 with the exactly same config on an older Suse
-> with GCC 3.3.3 it fixed the problem.
-> 
-> ------- You are receiving this mail because: -------
-> You are on the CC list for the bug, or are watching someone who is.
+This is a roll-up of all of my uncommitted patches against libsas
+and aic94xx to date.  The first patch fixes a bug when connecting two
+expanders to each other and there is a enough of a delay between the
+phy-going-up broadcasts that each phy gets its own round of discovery.
+The remaining patches move the phy reset code to the libsas default
+bus reset handler, make the default device reset handler send a
+LU RESET message instead, and make aic94xx not clobber TMF result codes
+(so that LU RESET works properly).
+
+These patches should apply in number order cleanly against 2.6.20-rc6 +
+scsi_misc + scsi-rc-fixes.  I've been running fault injection tests
+on x260, x206m and x366 machines for most of the day without problems 
+Hopefully these patches are ready for more widespread testing in
+scsi-misc, and thank you for any comments or feedback that you provide.
+
+(Apologies for any stgit mail misconfiguration on my part.)
+
+--D
