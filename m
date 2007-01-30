@@ -1,115 +1,64 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: [PATCH] aacraid: Add kernel command line parameter parsing
-Date: Tue, 30 Jan 2007 16:42:28 -0500
-Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF01483B4A@otce2k301.adaptec.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: SAS illegal toplogies [was Re: [PATCH 1/4 v2] libsas: Don't BUG when
+ connecting two expanders via wide port]
+Date: Tue, 30 Jan 2007 17:26:19 -0500
+Message-ID: <45BFC60B.10809@torque.net>
+References: <20070130074810.7612.31980.stgit@elm3a70.beaverton.ibm.com> <20070130074816.7612.6444.stgit@elm3a70.beaverton.ibm.com> <45BFA57F.5020408@us.ibm.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C744B7.8A10E11F"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([216.52.22.36]:50518 "EHLO
-	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751739AbXA3Vma (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jan 2007 16:42:30 -0500
-Content-class: urn:content-classes:message
+Received: from pentafluge.infradead.org ([213.146.154.40]:50856 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751827AbXA3W0a (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jan 2007 17:26:30 -0500
+In-Reply-To: <45BFA57F.5020408@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Mark Haverkamp <markh@linux-foundation.org>
+To: "Darrick J. Wong" <djwong@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org, alexisb@us.ibm.com
 
-This is a multi-part message in MIME format.
+Darrick J. Wong wrote:
+> libsas: Don't BUG when connecting two expanders via wide port
+> 
+> When a device is connected to an expander, the discovery process goes through
+> sas_ex_discover_dev to figure out what's attached to the phy.  If it is the
+> case that the phy being discovered happens to be the second phy of a wide link
+> to an expander, that discover_dev function will incorrectly call
+> sas_ex_discover_expander, which creates another sas_port and tries to attach the
+> other sas_phys to the new port, thus triggering a BUG.  The correct thing to do is
+> to check the other ex_phys of the expander to see if there's a sas_port for this
+> sas_phy, and attach the sas_phy to the existing sas_port.
+> 
+> This is easily triggered if one enables the phys of a wide port between
+> expanders one by one.
+> 
+> This second version of the patch fixes a small regression in the case where
+> all the phys show up at once and we accidentally try to attach to a port
+> that hasn't been created yet.
 
-------_=_NextPart_001_01C744B7.8A10E11F
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Darrick,
+Okay.
 
-One shortcoming of the driver relationship with the kernel is that there
-is no standard means of having the insmod parameters associated with a
-driver to also be parsed and set by the kernel parameter line. The
-enclosed patch is a proposal for the aacraid driver to pick up the
-kernel parameter line, parse it, and then adjust the insmod parameters.
+Now I'm wondering what the discovery algorithm in libsas
+does if it finds truly illegal connections between expanders.
+The spec defines what is illegal but says it is vendor specific
+what will be done.
 
-The format of the kernel parameter line is
-	aacraid=3D<parm>:<value>[,<parm>:<value>]...
+One approach is to use the SMP PHY CONTROL function to disable
+the phy (or the phys at both ends of the illegal link). The
+next trick is how to tell the user who just connected a cable
+between expanders that "you can't do that!". Tools like my
+smp_discover could alert a user to a disabled phy but
+without turning it back on (and causing the libsas discovery
+algorithm another headache) my SMP utilities don't know what
+it is connected to.
 
-There may be a better way of providing this service via the kernel
-without any modifications from the driver, since all the characteristics
-of the insmod parameters are exported by the MODULE_PARM_* hints. Would
-such mods be in insmod/modprobe and not in the kernel or driver?
+Another question is which link to disable. Imagine three
+expanders interconnected with 3 links which is illegal.
+Breaking any one link makes it legal, but which one
+to break? Last seen, or perhaps the link which has
+the largest SAS address sum ...
 
-Signed-off-by Mark Salyzyn <aacraid@adaptec.com>
----
-
-Sincerely -- Mark Salyzyn
-Illegitimi Non Carborundum
-
-------_=_NextPart_001_01C744B7.8A10E11F
-Content-Type: application/octet-stream;
-	name="aacraid_command_line.patch"
-Content-Transfer-Encoding: base64
-Content-Description: aacraid_command_line.patch
-Content-Disposition: attachment;
-	filename="aacraid_command_line.patch"
-
-ZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNoYmEuYyBiL2RyaXZlcnMvc2NzaS9h
-YWNyYWlkL2FhY2hiYS5jCi0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY2hiYS5jCTIwMDct
-MDEtMzAgMTY6MjQ6MzUuNzgxMzcwMjM2IC0wNTAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlk
-L2FhY2hiYS5jCTIwMDctMDEtMzAgMTY6MzE6NTEuNzM4ODkxMzYxIC0wNTAwCkBAIC0xNzMsNiAr
-MTczLDUxIEBACiBpbnQgZXhwb3NlX3BoeXNpY2FscyA9IC0xOwogbW9kdWxlX3BhcmFtKGV4cG9z
-ZV9waHlzaWNhbHMsIGludCwgU19JUlVHT3xTX0lXVVNSKTsKIE1PRFVMRV9QQVJNX0RFU0MoZXhw
-b3NlX3BoeXNpY2FscywgIkV4cG9zZSBwaHlzaWNhbCBjb21wb25lbnRzIG9mIHRoZSBhcnJheXMu
-IC0xPXByb3RlY3QgMD1vZmYsIDE9b24iKTsKKworc3RhdGljIGNoYXIgYWFjcmFpZFtDT01NQU5E
-X0xJTkVfU0laRV07Cittb2R1bGVfcGFyYW1fc3RyaW5nKGFhY3JhaWQsIGFhY3JhaWQsIHNpemVv
-ZihhYWNyYWlkKSwgMCk7CitNT0RVTEVfUEFSTV9ERVNDKGFhY3JhaWQsICJzZXQgdGhlIHZhcmlv
-dXMgcHVibGlzaGVkIHBhcmFtZXRlcnMgb2YgdGhlIGFhY3JhaWQgZHJpdmVyIHdpdGggYSBzeW50
-YXggb2YgYWFjcmFpZD1wYXJtOnZhbHVlWyxwYXJtOnZhbHVlXS4uLiIpOworCitzdGF0aWMgaW50
-IGFhY3JhaWRfc2V0dXAoY2hhciAqc3RyKQoreworCWludCBpOworCWNoYXIgKmtleTsKKwljaGFy
-ICp2YWx1ZTsKKwlzdHJ1Y3QgeworCQljaGFyICogb3B0aW9uX25hbWU7CisJCWludCAqIG9wdGlv
-bl9mbGFnOworCQlpbnQgb3B0aW9uX3ZhbHVlOworCX0gb3B0aW9uc1tdID0geworCQl7ICJub25k
-YXNkIiwgJm5vbmRhc2QsIDEgfSwKKwkJeyAiZGFjbW9kZSIsICZkYWNtb2RlLCAxIH0sCisJCXsg
-ImNvbW1pdCIsICZjb21taXQsIDEgfSwKKwkJeyAiYWNic2l6ZSIsICZhY2JzaXplLCA4MTkyIH0s
-CisJCXsgImV4cG9zZV9waHlzaWNhbHMiLCAmZXhwb3NlX3BoeXNpY2FscywgLTEgfSwKKwl9Owor
-CisJaWYgKHN0cikgd2hpbGUgKChrZXkgPSBzdHJzZXAoJnN0ciwgIiwuOyIpKSkgeworCQlpZiAo
-ISprZXkpCisJCQljb250aW51ZTsKKwkJaWYgKCgodmFsdWUgPSBzdHJjaHIoa2V5LCAnOicpKSkK
-KwkJIHx8ICgodmFsdWUgPSBzdHJjaHIoa2V5LCAnPScpKSkpCisJCQkqdmFsdWUrKyA9ICdcMCc7
-CisJCWZvciAoaSA9IDA7IGkgPCAoc2l6ZW9mIChvcHRpb25zKSAvIHNpemVvZiAob3B0aW9uc1sw
-XSkpOyBpKyspIHsKKwkJCWlmIChzdHJuaWNtcCAoa2V5LCBvcHRpb25zW2ldLm9wdGlvbl9uYW1l
-LAorCQkJICAgICBzdHJsZW4ob3B0aW9uc1tpXS5vcHRpb25fbmFtZSkpID09IDApIHsKKwkJCQkq
-b3B0aW9uc1tpXS5vcHRpb25fZmxhZworCQkJCSAgPSAodmFsdWUpCisJCQkJICAgID8gc2ltcGxl
-X3N0cnRvdWwodmFsdWUsIE5VTEwsIDApCisJCQkJICAgIDogb3B0aW9uc1tpXS5vcHRpb25fdmFs
-dWU7CisJCQkJYnJlYWs7CisJCQl9CisJCX0KKwl9CisKKwlyZXR1cm4gKDEpOworfQorCitfX3Nl
-dHVwKCJhYWNyYWlkPSIsIGFhY3JhaWRfc2V0dXApOworCiAvKioKICAqCWFhY19nZXRfY29uZmln
-X3N0YXR1cwktCWNoZWNrIHRoZSBhZGFwdGVyIGNvbmZpZ3VyYXRpb24KICAqCUBjb21tb246IGFk
-YXB0ZXIgdG8gcXVlcnkKQEAgLTExNDgsNiArMTE5Myw2OSBAQAogCQkJCWRldi0+bmFtZSwgZGV2
-LT5pZCwKIAkJCQlsZTMyX3RvX2NwdShkZXYtPmFkYXB0ZXJfaW5mby5zZXJpYWxbMF0pKTsKIAl9
-CisJaWYgKCFhYWNyYWlkWzBdKQorCXsKKwkJY2hhciAqIGNvbW1hbmRfbGluZTsKKwkJY2hhciAq
-ZnJvbSwgKnRvOworI2lmZGVmIE1PRFVMRQorCQlleHRlcm4gc3RydWN0IHByb2NfZGlyX2VudHJ5
-IHByb2Nfcm9vdDsKKwkJc3RydWN0IHByb2NfZGlyX2VudHJ5ICogZW50cnk7CisKKwkJY29tbWFu
-ZF9saW5lID0ga21hbGxvYyhDT01NQU5EX0xJTkVfU0laRSwgR0ZQX0tFUk5FTCk7CisJCW1lbXNl
-dChjb21tYW5kX2xpbmUsIDAsIENPTU1BTkRfTElORV9TSVpFKTsKKwkJZm9yIChlbnRyeSA9IHBy
-b2Nfcm9vdC5zdWJkaXI7CisJCSAgZW50cnkgIT0gKHN0cnVjdCBwcm9jX2Rpcl9lbnRyeSAqKU5V
-TEw7CisJCSAgZW50cnkgPSBlbnRyeS0+bmV4dCkgeworCQkJaWYgKChlbnRyeS0+bG93X2lubyAh
-PSAwKQorCQkJICYmIChlbnRyeS0+bmFtZWxlbiA9PSA3KQorCQkJICYmIChtZW1jbXAgKCJjbWRs
-aW5lIiwgZW50cnktPm5hbWUsIDcpID09IDApKSB7CisJCQkJaWYgKGVudHJ5LT5yZWFkX3Byb2Mg
-IT0gKGludCAoKikoY2hhciAqLCBjaGFyICoqLCBvZmZfdCwgaW50LCBpbnQgKiwgdm9pZCAqKSlO
-VUxMKSB7CisJCQkJCWNoYXIgKiBzdGFydCA9IGNvbW1hbmRfbGluZTsKKwkJCQkJaW50IGVvZjsK
-KwkJCQkJbW1fc2VnbWVudF90IGZzOworCisJCQkJCWZzID0gZ2V0X2ZzKCk7CisJCQkJCXNldF9m
-cyhnZXRfZHMoKSk7CisJCQkJCWxvY2tfa2VybmVsKCk7CisJCQkJCWVudHJ5LT5yZWFkX3Byb2Mo
-Y29tbWFuZF9saW5lLCAmc3RhcnQsCisJCQkJCSAgKG9mZl90KTAsIENPTU1BTkRfTElORV9TSVpF
-LTEsICZlb2YsCisJCQkJCSAgTlVMTCk7CisJCQkJCXVubG9ja19rZXJuZWwoKTsKKwkJCQkJc2V0
-X2ZzKGZzKTsKKwkJCQl9CisJCQkJYnJlYWs7CisJCQl9CisJCX0KKyNlbHNlCisJCWV4dGVybiBj
-aGFyIHNhdmVkX2NvbW1hbmRfbGluZVtdOworCQljb21tYW5kX2xpbmUgPSBzYXZlZF9jb21tYW5k
-X2xpbmU7CisjZW5kaWYKKwkJbWVtc2V0KGFhY3JhaWQsIDAsIHNpemVvZihhYWNyYWlkKSk7CisJ
-CWZyb20gPSBjb21tYW5kX2xpbmU7CisJCXRvID0gYWFjcmFpZDsKKwkJd2hpbGUgKCpmcm9tKSB7
-CisJCQlpZiAoKGZyb21bMF0gPT0gJ2EnKQorCQkJICYmIChmcm9tWzFdID09ICdhJykKKwkJCSAm
-JiAoZnJvbVsyXSA9PSAnYycpCisJCQkgJiYgKGZyb21bM10gPT0gJ3InKQorCQkJICYmIChmcm9t
-WzRdID09ICdhJykKKwkJCSAmJiAoZnJvbVs1XSA9PSAnaScpCisJCQkgJiYgKGZyb21bNl0gPT0g
-J2QnKQorCQkJICYmIChmcm9tWzddID09ICc9JykpIHsKKwkJCQkvKiBjb25jYXRlbmF0ZSBtdWx0
-aXBsZSBpbnN0YW5jZXMgb2YgYWFjcmFpZD0gKi8KKwkJCQlpZiAodG8gIT0gYWFjcmFpZCkKKwkJ
-CQkJKnRvKysgPSAnLCc7CisJCQkJZm9yIChmcm9tICs9IDg7ICpmcm9tICYmICgqZnJvbSAhPSAn
-ICcpOyArK2Zyb20pCisJCQkJCSp0bysrID0qZnJvbTsKKwkJCX0KKwkJCSsrZnJvbTsKKwkJfQor
-I2lmZGVmIE1PRFVMRQorCQlrZnJlZShjb21tYW5kX2xpbmUpOworI2VuZGlmCisJfQorCWlmIChh
-YWNyYWlkWzBdKQorCQlhYWNyYWlkX3NldHVwKGFhY3JhaWQpOwogCiAJZGV2LT5ub25kYXNkX3N1
-cHBvcnQgPSAwOwogCWRldi0+cmFpZF9zY3NpX21vZGUgPSAwOwo=
-
-------_=_NextPart_001_01C744B7.8A10E11F--
+Doug Gilbert
