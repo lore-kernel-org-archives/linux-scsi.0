@@ -1,114 +1,315 @@
-From: "Wu, Gilbert" <Gilbert_Wu@adaptec.com>
-Subject: [PATCH] scsi: Update Aic94xx SAS/SATA Linux open source device driver for new sequence firmware.
-Date: Tue, 30 Jan 2007 15:31:25 -0800
-Message-ID: <89FD792A883D4B47AD469FEA2E5D1F9B0F59B6@aime2k302.adaptec.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: [PATCH 1/1] scsi: Fix lost EH commands
+Date: Tue, 30 Jan 2007 17:51:17 -0600
+Message-ID: <11180.6885608987$1170201110@news.gmane.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([216.52.22.36]:53636 "EHLO
-	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752044AbXA3Xb0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Jan 2007 18:31:26 -0500
-Received: from aime2k302.adaptec.com (aime2k302.adaptec.com [10.25.8.48])
-	by mail-gw3.adaptec.com (Spam Firewall) with ESMTP id 7732B12BEF2
-	for <linux-scsi@vger.kernel.org>; Tue, 30 Jan 2007 15:31:25 -0800 (PST)
-Content-class: urn:content-classes:message
+Received: from e2.ny.us.ibm.com ([32.97.182.142]:58186 "EHLO e2.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750910AbXA3XvW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Jan 2007 18:51:22 -0500
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e2.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l0UNpJQl004831
+	for <linux-scsi@vger.kernel.org>; Tue, 30 Jan 2007 18:51:19 -0500
+Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v8.2) with ESMTP id l0UNpKOR296700
+	for <linux-scsi@vger.kernel.org>; Tue, 30 Jan 2007 18:51:20 -0500
+Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
+	by d01av01.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l0UNpJ6A002714
+	for <linux-scsi@vger.kernel.org>; Tue, 30 Jan 2007 18:51:20 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, brazilnut@linux.vnet.ibm.com, brking@linux.vnet.ibm.com
 
-Subject:  [PATCH] scsi: Update Aic94xx SAS/SATA Linux open source device
-driver for new sequence firmware.
 
+If an EH command times out today, the LLDD's abort handler
+will be called to abort the command. It is assumed that this
+completes successfully, which can result in the command getting
+completed later resulting in an oops. Improve the current
+implementation by escalating all the way to host reset if
+necessary in order to clean up the EH command.
+
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+---
+
+ linux-2.6-bjking1/drivers/scsi/scsi_error.c |  239 ++++++++++++++--------------
+ 1 files changed, 123 insertions(+), 116 deletions(-)
+
+diff -puN drivers/scsi/scsi_error.c~scsi_fix_eh_lost_cmds drivers/scsi/scsi_error.c
+--- linux-2.6/drivers/scsi/scsi_error.c~scsi_fix_eh_lost_cmds	2007-01-12 15:42:11.000000000 -0600
++++ linux-2.6-bjking1/drivers/scsi/scsi_error.c	2007-01-12 15:42:11.000000000 -0600
+@@ -453,6 +453,128 @@ static void scsi_eh_done(struct scsi_cmn
+ }
  
-
-Contribution:
-
-   Ed Chim <ed_chim@adaptec.com>
-   Gilbert Wu <gilbert_wu@adaptec.com>
-
-Change Log:
+ /**
++ * scsi_try_host_reset - ask host adapter to reset itself
++ * @scmd:	SCSI cmd to send hsot reset.
++ **/
++static int scsi_try_host_reset(struct scsi_cmnd *scmd)
++{
++	unsigned long flags;
++	int rtn;
++
++	SCSI_LOG_ERROR_RECOVERY(3, printk("%s: Snd Host RST\n",
++					  __FUNCTION__));
++
++	if (!scmd->device->host->hostt->eh_host_reset_handler)
++		return FAILED;
++
++	rtn = scmd->device->host->hostt->eh_host_reset_handler(scmd);
++
++	if (rtn == SUCCESS) {
++		if (!scmd->device->host->hostt->skip_settle_delay)
++			ssleep(HOST_RESET_SETTLE_TIME);
++		spin_lock_irqsave(scmd->device->host->host_lock, flags);
++		scsi_report_bus_reset(scmd->device->host,
++				      scmd_channel(scmd));
++		spin_unlock_irqrestore(scmd->device->host->host_lock, flags);
++	}
++
++	return rtn;
++}
++
++/**
++ * scsi_try_bus_reset - ask host to perform a bus reset
++ * @scmd:	SCSI cmd to send bus reset.
++ **/
++static int scsi_try_bus_reset(struct scsi_cmnd *scmd)
++{
++	unsigned long flags;
++	int rtn;
++
++	SCSI_LOG_ERROR_RECOVERY(3, printk("%s: Snd Bus RST\n",
++					  __FUNCTION__));
++
++	if (!scmd->device->host->hostt->eh_bus_reset_handler)
++		return FAILED;
++
++	rtn = scmd->device->host->hostt->eh_bus_reset_handler(scmd);
++
++	if (rtn == SUCCESS) {
++		if (!scmd->device->host->hostt->skip_settle_delay)
++			ssleep(BUS_RESET_SETTLE_TIME);
++		spin_lock_irqsave(scmd->device->host->host_lock, flags);
++		scsi_report_bus_reset(scmd->device->host,
++				      scmd_channel(scmd));
++		spin_unlock_irqrestore(scmd->device->host->host_lock, flags);
++	}
++
++	return rtn;
++}
++
++/**
++ * scsi_try_bus_device_reset - Ask host to perform a BDR on a dev
++ * @scmd:	SCSI cmd used to send BDR
++ *
++ * Notes:
++ *    There is no timeout for this operation.  if this operation is
++ *    unreliable for a given host, then the host itself needs to put a
++ *    timer on it, and set the host back to a consistent state prior to
++ *    returning.
++ **/
++static int scsi_try_bus_device_reset(struct scsi_cmnd *scmd)
++{
++	int rtn;
++
++	if (!scmd->device->host->hostt->eh_device_reset_handler)
++		return FAILED;
++
++	rtn = scmd->device->host->hostt->eh_device_reset_handler(scmd);
++	if (rtn == SUCCESS) {
++		scmd->device->was_reset = 1;
++		scmd->device->expecting_cc_ua = 1;
++	}
++
++	return rtn;
++}
++
++static int __scsi_try_to_abort_cmd(struct scsi_cmnd *scmd)
++{
++	if (!scmd->device->host->hostt->eh_abort_handler)
++		return FAILED;
++
++	return scmd->device->host->hostt->eh_abort_handler(scmd);
++}
++
++/**
++ * scsi_try_to_abort_cmd - Ask host to abort a running command.
++ * @scmd:	SCSI cmd to abort from Lower Level.
++ *
++ * Notes:
++ *    This function will not return until the user's completion function
++ *    has been called.  there is no timeout on this operation.  if the
++ *    author of the low-level driver wishes this operation to be timed,
++ *    they can provide this facility themselves.  helper functions in
++ *    scsi_error.c can be supplied to make this easier to do.
++ **/
++static int scsi_try_to_abort_cmd(struct scsi_cmnd *scmd)
++{
++	/*
++	 * scsi_done was called just after the command timed out and before
++	 * we had a chance to process it. (db)
++	 */
++	if (scmd->serial_number == 0)
++		return SUCCESS;
++	return __scsi_try_to_abort_cmd(scmd);
++}
++
++static void scsi_abort_eh_cmnd(struct scsi_cmnd *scmd)
++{
++	if (__scsi_try_to_abort_cmd(scmd) != SUCCESS)
++		if (scsi_try_bus_device_reset(scmd) != SUCCESS)
++			if (scsi_try_bus_reset(scmd) != SUCCESS)
++				scsi_try_host_reset(scmd);
++}
++
++/**
+  * scsi_send_eh_cmnd  - submit a scsi command as part of error recory
+  * @scmd:       SCSI command structure to hijack
+  * @cmnd:       CDB to send
+@@ -579,13 +701,7 @@ static int scsi_send_eh_cmnd(struct scsi
+ 			break;
+ 		}
+ 	} else {
+-		/*
+-		 * FIXME(eric) - we are not tracking whether we could
+-		 * abort a timed out command or not.  not sure how
+-		 * we should treat them differently anyways.
+-		 */
+-		if (shost->hostt->eh_abort_handler)
+-			shost->hostt->eh_abort_handler(scmd);
++		scsi_abort_eh_cmnd(scmd);
+ 		rtn = FAILED;
+ 	}
  
-1.    Use dword instead of qword to display the value of Connection
-State register for debug purpose.
-
-2.    There are some registers location of AIC94xx chip has been changed
-according to the new V28 firmware. The patch has redefined the register
-location and provided initialization.
-
-3.    The new sequencer firmware v28 for Aic94xx SAS/SATA Linux open
-source device driver can be downloaded from
-http://www.adaptec.com/NR/exeres/35B611BC-9789-4B5B-82C6-85A2CCA8A46A.ht
-m
-
+@@ -717,31 +833,6 @@ static int scsi_eh_get_sense(struct list
+ }
  
-
-Patch: apply to scsi-misc-2.6.git development tree
-
-Signed-off-by: Gilbert Wu <gilbert_wu@adaptec.com>
-
-
-
-diff -urN a/drivers/scsi/aic94xx/aic94xx_dump.c
-b/drivers/scsi/aic94xx/aic94xx_dump.c
---- a/drivers/scsi/aic94xx/aic94xx_dump.c	2007-01-29
-10:20:44.000000000 -0800
-+++ b/drivers/scsi/aic94xx/aic94xx_dump.c	2007-01-29
-10:31:44.000000000 -0800
-@@ -556,7 +556,7 @@
- 	PRINT_LMIP_word(asd_ha, lseq, Q_TGTXFR_TAIL);
- 	PRINT_LMIP_byte(asd_ha, lseq, LINK_NUMBER);
- 	PRINT_LMIP_byte(asd_ha, lseq, SCRATCH_FLAGS);
--	PRINT_LMIP_qword(asd_ha, lseq, CONNECTION_STATE);
-+	PRINT_LMIP_dword(asd_ha, lseq, CONNECTION_STATE);
- 	PRINT_LMIP_word(asd_ha, lseq, CONCTL);
- 	PRINT_LMIP_byte(asd_ha, lseq, CONSTAT);
- 	PRINT_LMIP_byte(asd_ha, lseq, CONNECTION_MODES);
-diff -urN a/drivers/scsi/aic94xx/aic94xx_reg_def.h
-b/drivers/scsi/aic94xx/aic94xx_reg_def.h
---- a/drivers/scsi/aic94xx/aic94xx_reg_def.h	2007-01-29
-10:21:14.000000000 -0800
-+++ b/drivers/scsi/aic94xx/aic94xx_reg_def.h	2007-01-29
-10:35:54.000000000 -0800
-@@ -2226,9 +2226,10 @@
- #define LmSEQ_SAS_RESET_MODE(LinkNum)		(LmSCRATCH(LinkNum) +
-0x0074)
- #define LmSEQ_LINK_RESET_RETRY_COUNT(LinkNum)	(LmSCRATCH(LinkNum) +
-0x0075)
- #define LmSEQ_NUM_LINK_RESET_RETRIES(LinkNum)	(LmSCRATCH(LinkNum) +
-0x0076)
--#define LmSEQ_OOB_INT_ENABLES(LinkNum)		(LmSCRATCH(LinkNum) +
-0x007A)
-+#define LmSEQ_OOB_INT_ENABLES(LinkNum)		(LmSCRATCH(LinkNum) +
-0x0078)
-+#define LmSEQ_NOTIFY_TIMER_DOWN_COUNT(LinkNum)	(LmSCRATCH(LinkNum) +
-0x007A)
- #define LmSEQ_NOTIFY_TIMER_TIMEOUT(LinkNum)	(LmSCRATCH(LinkNum) +
-0x007C)
--#define LmSEQ_NOTIFY_TIMER_DOWN_COUNT(LinkNum)	(LmSCRATCH(LinkNum) +
-0x007E)
-+#define LmSEQ_NOTIFY_TIMER_INITIAL_COUNT(LinkNum) (LmSCRATCH(LinkNum) +
-0x007E)
+ /**
+- * scsi_try_to_abort_cmd - Ask host to abort a running command.
+- * @scmd:	SCSI cmd to abort from Lower Level.
+- *
+- * Notes:
+- *    This function will not return until the user's completion function
+- *    has been called.  there is no timeout on this operation.  if the
+- *    author of the low-level driver wishes this operation to be timed,
+- *    they can provide this facility themselves.  helper functions in
+- *    scsi_error.c can be supplied to make this easier to do.
+- **/
+-static int scsi_try_to_abort_cmd(struct scsi_cmnd *scmd)
+-{
+-	if (!scmd->device->host->hostt->eh_abort_handler)
+-		return FAILED;
+-
+-	/*
+-	 * scsi_done was called just after the command timed out and before
+-	 * we had a chance to process it. (db)
+-	 */
+-	if (scmd->serial_number == 0)
+-		return SUCCESS;
+-	return scmd->device->host->hostt->eh_abort_handler(scmd);
+-}
+-
+-/**
+  * scsi_eh_tur - Send TUR to device.
+  * @scmd:	Scsi cmd to send TUR
+  *
+@@ -815,32 +906,6 @@ static int scsi_eh_abort_cmds(struct lis
+ }
  
- /* Mode dependent scratch page 1, mode 0 and mode 1 */
- #define LmSEQ_SG_LIST_PTR_ADDR0(LinkNum)        (LmSCRATCH(LinkNum) +
-0x0020)
-diff -urN a/drivers/scsi/aic94xx/aic94xx_seq.c
-b/drivers/scsi/aic94xx/aic94xx_seq.c
---- a/drivers/scsi/aic94xx/aic94xx_seq.c	2007-01-29
-10:21:28.000000000 -0800
-+++ b/drivers/scsi/aic94xx/aic94xx_seq.c	2007-01-29
-10:42:55.000000000 -0800
-@@ -810,6 +810,8 @@
- 	/* No delay for the first NOTIFY to be sent to the attached
-target. */
- 	asd_write_reg_word(asd_ha, LmSEQ_NOTIFY_TIMER_DOWN_COUNT(lseq),
- 			   ASD_NOTIFY_DOWN_COUNT);
-+	asd_write_reg_word(asd_ha,
-LmSEQ_NOTIFY_TIMER_INITIAL_COUNT(lseq),
-+			   ASD_NOTIFY_DOWN_COUNT);
+ /**
+- * scsi_try_bus_device_reset - Ask host to perform a BDR on a dev
+- * @scmd:	SCSI cmd used to send BDR	
+- *
+- * Notes:
+- *    There is no timeout for this operation.  if this operation is
+- *    unreliable for a given host, then the host itself needs to put a
+- *    timer on it, and set the host back to a consistent state prior to
+- *    returning.
+- **/
+-static int scsi_try_bus_device_reset(struct scsi_cmnd *scmd)
+-{
+-	int rtn;
+-
+-	if (!scmd->device->host->hostt->eh_device_reset_handler)
+-		return FAILED;
+-
+-	rtn = scmd->device->host->hostt->eh_device_reset_handler(scmd);
+-	if (rtn == SUCCESS) {
+-		scmd->device->was_reset = 1;
+-		scmd->device->expecting_cc_ua = 1;
+-	}
+-
+-	return rtn;
+-}
+-
+-/**
+  * scsi_eh_try_stu - Send START_UNIT to device.
+  * @scmd:	Scsi cmd to send START_UNIT
+  *
+@@ -971,64 +1036,6 @@ static int scsi_eh_bus_device_reset(stru
+ }
  
- 	/* LSEQ Mode dependent, mode 0 and 1, page 1 setup. */
- 	for (i = 0; i < 2; i++)	{
+ /**
+- * scsi_try_bus_reset - ask host to perform a bus reset
+- * @scmd:	SCSI cmd to send bus reset.
+- **/
+-static int scsi_try_bus_reset(struct scsi_cmnd *scmd)
+-{
+-	unsigned long flags;
+-	int rtn;
+-
+-	SCSI_LOG_ERROR_RECOVERY(3, printk("%s: Snd Bus RST\n",
+-					  __FUNCTION__));
+-
+-	if (!scmd->device->host->hostt->eh_bus_reset_handler)
+-		return FAILED;
+-
+-	rtn = scmd->device->host->hostt->eh_bus_reset_handler(scmd);
+-
+-	if (rtn == SUCCESS) {
+-		if (!scmd->device->host->hostt->skip_settle_delay)
+-			ssleep(BUS_RESET_SETTLE_TIME);
+-		spin_lock_irqsave(scmd->device->host->host_lock, flags);
+-		scsi_report_bus_reset(scmd->device->host,
+-				      scmd_channel(scmd));
+-		spin_unlock_irqrestore(scmd->device->host->host_lock, flags);
+-	}
+-
+-	return rtn;
+-}
+-
+-/**
+- * scsi_try_host_reset - ask host adapter to reset itself
+- * @scmd:	SCSI cmd to send hsot reset.
+- **/
+-static int scsi_try_host_reset(struct scsi_cmnd *scmd)
+-{
+-	unsigned long flags;
+-	int rtn;
+-
+-	SCSI_LOG_ERROR_RECOVERY(3, printk("%s: Snd Host RST\n",
+-					  __FUNCTION__));
+-
+-	if (!scmd->device->host->hostt->eh_host_reset_handler)
+-		return FAILED;
+-
+-	rtn = scmd->device->host->hostt->eh_host_reset_handler(scmd);
+-
+-	if (rtn == SUCCESS) {
+-		if (!scmd->device->host->hostt->skip_settle_delay)
+-			ssleep(HOST_RESET_SETTLE_TIME);
+-		spin_lock_irqsave(scmd->device->host->host_lock, flags);
+-		scsi_report_bus_reset(scmd->device->host,
+-				      scmd_channel(scmd));
+-		spin_unlock_irqrestore(scmd->device->host->host_lock, flags);
+-	}
+-
+-	return rtn;
+-}
+-
+-/**
+  * scsi_eh_bus_reset - send a bus reset 
+  * @shost:	scsi host being recovered.
+  * @eh_done_q:	list_head for processed commands.
+_
