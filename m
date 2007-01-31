@@ -1,40 +1,53 @@
-From: Ric Wheeler <ric@emc.com>
-Subject: Re: [PATCH] scsi_lib.c: continue after MEDIUM_ERROR
-Date: Wed, 31 Jan 2007 11:35:14 -0500
-Message-ID: <45C0C542.2090609@emc.com>
-References: <200701301947.08478.liml@rtr.ca>	<1170206199.10890.13.camel@mulgrave.il.steeleye.com>	<311601c90701301725n53d25a74g652b7ca3bfc64c56@mail.gmail.com>	<45BFF3D6.9050605@rtr.ca>	<45C00AEE.1090708@emc.com>	<45C0B0DC.8030501@rtr.ca> <20070131152301.19a8a5ac@localhost.localdomain>
-Reply-To: ric@emc.com
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] scsi: Update Aic94xx SAS/SATA Linux open source device
+	driver for new sequence firmware.
+Date: Wed, 31 Jan 2007 10:56:04 -0600
+Message-ID: <1170262564.3402.42.camel@mulgrave.il.steeleye.com>
+References: <89FD792A883D4B47AD469FEA2E5D1F9B0F59B6@aime2k302.adaptec.com>
+	 <20070131095603.GB3200@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20070131152301.19a8a5ac@localhost.localdomain>
-Sender: linux-ide-owner@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: Mark Lord <liml@rtr.ca>, "Eric D. Mudama" <edmudama@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, dougg@torque.net
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hancock.steeleye.com ([71.30.118.248]:47627 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932936AbXAaQ4O (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Jan 2007 11:56:14 -0500
+In-Reply-To: <20070131095603.GB3200@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Wu, Gilbert" <Gilbert_Wu@adaptec.com>, linux-scsi@vger.kernel.org
 
-
-
-Alan wrote:
->> When libata reports a MEDIUM_ERROR to us, we *know* it's non-recoverable,
->> as the drive itself has already done internal retries (libata uses the
->> "with retry" ATA opcodes for this).
+On Wed, 2007-01-31 at 09:56 +0000, Christoph Hellwig wrote:
+> On Tue, Jan 30, 2007 at 03:31:25PM -0800, Wu, Gilbert wrote:
+> > Subject:  [PATCH] scsi: Update Aic94xx SAS/SATA Linux open source device
+> > driver for new sequence firmware.
+> > 
+> >  
+> > 
+> > Contribution:
+> > 
+> >    Ed Chim <ed_chim@adaptec.com>
+> >    Gilbert Wu <gilbert_wu@adaptec.com>
+> > 
+> > Change Log:
+> >  
+> > 1.    Use dword instead of qword to display the value of Connection
+> > State register for debug purpose.
+> > 
+> > 2.    There are some registers location of AIC94xx chip has been changed
+> > according to the new V28 firmware. The patch has redefined the register
+> > location and provided initialization.
 > 
-> This depends on the firmware. Some of the "raid firmware" drives don't
-> appear to do retries in firmware.
+> These look like incompatible changes, so you should make sure the driver
+> still works when it detects the old firmware.
 
-I think that even for these devices, the actual drives behind the controller 
-will do retries. In any case, it would be reasonable to be able to set this 
-retry/no-retry via /sys to handle exceptional cases...
+Yes, there's going to be a bit of a problem if they are:  I expected the
+firmware to be backward compatible, so the current driver only prints
+out the firmware version, it won't refuse to use it ... what will happen
+if we use the new firmware on an old driver?
 
-> 
->> But meanwhile, we still have the original issue too, where a single stray
->> bad sector can blow a system out of the water, because the mid-layer
->> currently aborts everything after it from a large merged request.
->>
->> Thus the original patch from this thread.  :)
-> 
-> Agreed
+James
 
 
