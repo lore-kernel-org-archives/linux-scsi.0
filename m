@@ -1,56 +1,41 @@
-From: Wakko Warner <wakko@animx.eu.org>
-Subject: Re: AIC7xxx on 2.6.18
-Date: Tue, 30 Jan 2007 20:30:31 -0500
-Message-ID: <20070131013031.GA14422@animx.eu.org>
-References: <20070128194620.GA6358@animx.eu.org> <20070128162408.9fffb6de.akpm@osdl.org> <20070130121820.GA11843@animx.eu.org> <20070130095746.8c2e7db9.akpm@osdl.org>
+From: Mark Lord <lkml@rtr.ca>
+Subject: Re: [PATCH] scsi_lib.c: continue after MEDIUM_ERROR
+Date: Tue, 30 Jan 2007 20:36:02 -0500
+Message-ID: <45BFF282.4050305@rtr.ca>
+References: <200701301947.08478.liml@rtr.ca> <1170206199.10890.13.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from animx.eu.org ([216.98.75.249]:44667 "EHLO animx.eu.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932252AbXAaBaZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Jan 2007 20:30:25 -0500
-Content-Disposition: inline
-In-Reply-To: <20070130095746.8c2e7db9.akpm@osdl.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1170206199.10890.13.camel@mulgrave.il.steeleye.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-scsi@vger.kernel.org
 
-NOTE: I am not on the linux-scsi list, keep me in CC.
+James Bottomley wrote:
+> First off, please send SCSI patches to the SCSI list:
+> <linux-scsi@vger.kernel.org>
 
-Andrew Morton wrote:
-> On Tue, 30 Jan 2007 07:18:20 -0500
-> Wakko Warner <wakko@animx.eu.org> wrote:
-> > Andrew Morton wrote:
-> > > Yes, getting the oops traces will help, thanks.  And confirmation on a more
-> > > recent kernel would be good.
-> > 
-> > I tested with a 2.6.20-rc6 kernel and the MAC 39160 card.  There was no oops
-> > and I was able to access the 2 disks.  This was on a different PC though. 
-> > I'll try it again on the original PC.
+Fixed already, thanks!
+
+>> This patch fixes the behaviour to be similar to what we had originally.
+>>
+>> When a bad sector is encounted, SCSI will now work around it again,
+>> failing *only* the bad sector itself.
 > 
-> Thanks.
+> Erm, but the corollary is that if we get a large read failure because of
+> a bad track, you're going to try and chunk up it a sector at a time
 
-The PC was a completely different PC when I tried it that time.  This time,
-I tried it on a similar PC (same motherboard model, but not the exact same
-machine).  I had no problems with 2.6.18.  I looked a little close and I
-noticed that the original machine was actually overclocked.  I did the same
-to the machine that works and it is now not working.  So the problem with
-the mac card seems to be the overclocking.  I completely forgotten about it
-since it was a test machine anyway.
+That's better than the huge data-loss scenario that we currently
+have for single-sector errors.  MUCH better.
 
-So this just leaves the problem I've experienced on the machine with the PC
-u160 and the u/uw dual card.
+> forcing an individual error for each sector is going to annoy some
+> people ... particularly removable medium ones which return this error if
+> the medium isn't present ... Are you sure this is really what we want to
+> do?
 
-> > Should I try 2.6.19 as well?
-> 
-> There's not a lot of point in doing so.  If/when we come up with a
-> 2.6.20-rc6 fix we'll know whether it is applicable to 2.6.19.x.
+No, for removed-medium everything just fails right away.
+This patch is *only* for media errors, not any other failures.
 
-I'll try 2.6.19 on the machine with the 2 scsi cards with the option roms
-disabled.  I'd rather not run a -rc kernel on this machine.
-
--- 
- Lab tests show that use of micro$oft causes cancer in lab animals
- Got Gas???
+Cheers
