@@ -1,74 +1,56 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] scsi_lib.c: continue after MEDIUM_ERROR
-Date: Tue, 30 Jan 2007 19:16:39 -0600
-Message-ID: <1170206199.10890.13.camel@mulgrave.il.steeleye.com>
-References: <200701301947.08478.liml@rtr.ca>
+From: Wakko Warner <wakko@animx.eu.org>
+Subject: Re: AIC7xxx on 2.6.18
+Date: Tue, 30 Jan 2007 20:30:31 -0500
+Message-ID: <20070131013031.GA14422@animx.eu.org>
+References: <20070128194620.GA6358@animx.eu.org> <20070128162408.9fffb6de.akpm@osdl.org> <20070130121820.GA11843@animx.eu.org> <20070130095746.8c2e7db9.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932095AbXAaBQo@vger.kernel.org>
-In-Reply-To: <200701301947.08478.liml@rtr.ca>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from animx.eu.org ([216.98.75.249]:44667 "EHLO animx.eu.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932252AbXAaBaZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Jan 2007 20:30:25 -0500
+Content-Disposition: inline
+In-Reply-To: <20070130095746.8c2e7db9.akpm@osdl.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-scsi@vger.kernel.org
 
-First off, please send SCSI patches to the SCSI list:
-<linux-scsi@vger.kernel.org>
+NOTE: I am not on the linux-scsi list, keep me in CC.
 
-On Tue, 2007-01-30 at 19:47 -0500, Mark Lord wrote:
-> In ancient kernels, the SCSI disk code used to continue after
-> encountering a MEDIUM_ERROR.  It would "complete" the good
-> sectors before the error, fail the bad sector/block, and then
-> continue with the rest of the request.
+Andrew Morton wrote:
+> On Tue, 30 Jan 2007 07:18:20 -0500
+> Wakko Warner <wakko@animx.eu.org> wrote:
+> > Andrew Morton wrote:
+> > > Yes, getting the oops traces will help, thanks.  And confirmation on a more
+> > > recent kernel would be good.
+> > 
+> > I tested with a 2.6.20-rc6 kernel and the MAC 39160 card.  There was no oops
+> > and I was able to access the 2 disks.  This was on a different PC though. 
+> > I'll try it again on the original PC.
 > 
-> Kernels since about 2.6.16 or so have been broken in this regard.
-> They "complete" the good sectors before the error,
-> and then fail the entire remaining portions of the request.
+> Thanks.
 
-What was the commit that introduced the change? ... I have a vague
-memory of it being deliberate.
+The PC was a completely different PC when I tried it that time.  This time,
+I tried it on a similar PC (same motherboard model, but not the exact same
+machine).  I had no problems with 2.6.18.  I looked a little close and I
+noticed that the original machine was actually overclocked.  I did the same
+to the machine that works and it is now not working.  So the problem with
+the mac card seems to be the overclocking.  I completely forgotten about it
+since it was a test machine anyway.
 
-> This is very risky behaviour, as a request is often a merge
-> of several bios, and just because one application hits a bad sector
-> is no reason to pretend that (for example) an adjacent directly lookup also failed.
+So this just leaves the problem I've experienced on the machine with the PC
+u160 and the u/uw dual card.
+
+> > Should I try 2.6.19 as well?
 > 
-> This patch fixes the behaviour to be similar to what we had originally.
-> 
-> When a bad sector is encounted, SCSI will now work around it again,
-> failing *only* the bad sector itself.
+> There's not a lot of point in doing so.  If/when we come up with a
+> 2.6.20-rc6 fix we'll know whether it is applicable to 2.6.19.x.
 
-Erm, but the corollary is that if we get a large read failure because of
-a bad track, you're going to try and chunk up it a sector at a time
-forcing an individual error for each sector is going to annoy some
-people ... particularly removable medium ones which return this error if
-the medium isn't present ... Are you sure this is really what we want to
-do?
+I'll try 2.6.19 on the machine with the 2 scsi cards with the option roms
+disabled.  I'd rather not run a -rc kernel on this machine.
 
-> Signed-off-by:  Mark Lord <mlord@pobox.com>
-> ---
-> diff -u --recursive --new-file --exclude-from=linux_17//Documentation/dontdiff old/drivers/scsi/scsi_lib.c linux/drivers/scsi/scsi_lib.c
-> --- old/drivers/scsi/scsi_lib.c	2007-01-30 13:58:05.000000000 -0500
-> +++ linux/drivers/scsi/scsi_lib.c	2007-01-30 18:30:01.000000000 -0500
-> @@ -865,6 +865,12 @@
->  	 */
->  	if (sense_valid && !sense_deferred) {
->  		switch (sshdr.sense_key) {
-> +		case MEDIUM_ERROR:
-> +			// Bad sector.  Fail it, and then continue the rest of the request:
-> +			if (scsi_end_request(cmd, 0, cmd->device->sector_size, 1) == NULL) {
-
-The sense key may have come with additional information  I think we want
-to parse that (if it exists) rather than just blindly failing the first
-sector of the request.
-
-> +				cmd->retries = 0;	// go around again..
-> +				return;
-> +			}
-
-This would drop through to the UNIT_ATTENTION case if scsi_end_request()
-fails ... I don't think that's correct.
-
->  		case UNIT_ATTENTION:
->  			if (cmd->device->removable) {
->  				/* Detected disc change.  Set a bit
+-- 
+ Lab tests show that use of micro$oft causes cancer in lab animals
+ Got Gas???
