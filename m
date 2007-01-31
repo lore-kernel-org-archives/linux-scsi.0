@@ -1,165 +1,83 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: [PATCH 2/2] Prevent infinite retries due to DID_RESET return status
-Date: Wed, 31 Jan 2007 12:54:25 -0600
-Message-ID: <45C0E5E1.8040703@sgi.com>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: [PATCH] scsi: Update Aic94xx SAS/SATA Linux open source device driver for new sequence firmware.
+Date: Wed, 31 Jan 2007 11:32:38 -0800 (PST)
+Message-ID: <75297.51455.qm@web31801.mail.mud.yahoo.com>
+References: <1170262564.3402.42.camel@mulgrave.il.steeleye.com>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------020807090407040709080406"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:45844 "EHLO omx2.sgi.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933331AbXAaSyc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 31 Jan 2007 13:54:32 -0500
+Received: from web31801.mail.mud.yahoo.com ([68.142.207.64]:28301 "HELO
+	web31801.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1030565AbXAaTcj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 31 Jan 2007 14:32:39 -0500
+In-Reply-To: <1170262564.3402.42.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Jeremy Higdon <jeremy@sgi.com>
+To: James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@infradead.org>
+Cc: "Wu, Gilbert" <Gilbert_Wu@adaptec.com>, linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------020807090407040709080406
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+--- James Bottomley <James.Bottomley@SteelEye.com> wrote:
 
-Limit lifetime of scsi commands receiving DID_RESET status.
+> On Wed, 2007-01-31 at 09:56 +0000, Christoph Hellwig wrote:
+> > On Tue, Jan 30, 2007 at 03:31:25PM -0800, Wu, Gilbert wrote:
+> > > Subject:  [PATCH] scsi: Update Aic94xx SAS/SATA Linux open source device
+> > > driver for new sequence firmware.
+> > > 
+> > >  
+> > > 
+> > > Contribution:
+> > > 
+> > >    Ed Chim <ed_chim@adaptec.com>
+> > >    Gilbert Wu <gilbert_wu@adaptec.com>
+> > > 
+> > > Change Log:
+> > >  
+> > > 1.    Use dword instead of qword to display the value of Connection
+> > > State register for debug purpose.
+> > > 
+> > > 2.    There are some registers location of AIC94xx chip has been changed
+> > > according to the new V28 firmware. The patch has redefined the register
+> > > location and provided initialization.
+> > 
+> > These look like incompatible changes, so you should make sure the driver
+> > still works when it detects the old firmware.
+> 
+> Yes, there's going to be a bit of a problem if they are:  I expected the
+> firmware to be backward compatible, so the current driver only prints
+> out the firmware version, it won't refuse to use it ... what will happen
+> if we use the new firmware on an old driver?
 
-Signed-off-by: Michael Reed <mdr@sgi.com>
+What will happen?  No-workie, or if you're lucky, unexpected random
+behavior from the sequencer and thus the driver.
 
+Hmm, I think I mentioned this on several an occasion, back when "the community"
+decided that the best thing to do is to pull out the FW out of the driver and
+into user space, thus decoupling the source code (version) from the FW version.
+I just don't have the time to search linux-scsi in marc.10east.com and include
+links to the messages here.
 
---------------020807090407040709080406
-Content-Type: text/x-patch;
- name="DID_RESET_new_2.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="DID_RESET_new_2.patch"
+That is, if the user upgrades the kernel to include a new(er) driver, but
+forgets to upgrade the FW (now living in the filesystem in user space)
+then kaboom, no-workie.
 
-Limit lifetime of scsi commands receiving DID_RESET status.
+For this reason, and to make it easiest for the user to upgrade, the FW should
+be part of the driver source code, as was originally designed.  Then when
+a user upgrades the kernel, possibly including a new(er) driver, the FW is right
+there, in the source code.  Then compile and run, simple.
 
-Signed-off-by: Michael Reed <mdr@sgi.com>
+Now a user, before rebooting, will have to go out on the internet and find
+this (elusive?) new FW version to go with their new kernel.  This is especially
+true when the driver provides the device on which the root fs is mounted, else
+after a reboot -- no workie.
 
---- rg61u/include/scsi/scsi.h	2006-10-31 21:08:47.000000000 -0600
-+++ rg61/include/scsi/scsi.h	2007-01-29 15:58:40.633779567 -0600
-@@ -353,6 +353,7 @@ struct scsi_lun {
- #define SCSI_MLQUEUE_HOST_BUSY   0x1055
- #define SCSI_MLQUEUE_DEVICE_BUSY 0x1056
- #define SCSI_MLQUEUE_EH_RETRY    0x1057
-+#define SCSI_MLQUEUE_DID_RESET   0x1058
- 
- /*
-  *  Use these to separate status msg and our bytes
---- rg61u/drivers/scsi/scsi_lib.c	2007-01-29 15:11:11.466213588 -0600
-+++ rg61/drivers/scsi/scsi_lib.c	2007-01-29 15:58:40.637779387 -0600
-@@ -101,10 +101,10 @@ static void scsi_unprep_request(struct r
-  *
-  * Returns:     Nothing.
-  *
-- * Notes:       We do this for one of two cases.  Either the host is busy
-+ * Notes:       We do this for one of three cases.  1) the host is busy
-  *              and it cannot accept any more commands for the time being,
-- *              or the device returned QUEUE_FULL and can accept no more
-- *              commands.
-+ *              2) the device returned QUEUE_FULL and can accept no more
-+ *              commands, or 3) the LLDD returned DID_RESET.
-  * Notes:       This could be called either from an interrupt context or a
-  *              normal process context.
-  */
-@@ -138,9 +138,11 @@ int scsi_queue_insert(struct scsi_cmnd *
- 
- 	/*
- 	 * Decrement the counters, since these commands are no longer
--	 * active on the host/device.
-+	 * active on the host/device.  If the reason is SCSI_MLQUEUE_DID_RESET
-+	 * then scsi_device_unbusy() was called by scsi_finish_command().
- 	 */
--	scsi_device_unbusy(device);
-+	if (reason != SCSI_MLQUEUE_DID_RESET)
-+		scsi_device_unbusy(device);
- 
- 	/*
- 	 * Requeue this command.  It will go before all other commands
-@@ -792,6 +794,33 @@ static void scsi_release_buffers(struct 
- }
- 
- /*
-+ * Function:    scsi_command_expired()
-+ *
-+ * Purpose:     Check scsi a command's age before retrying it.
-+ *
-+ * Arguments:   cmd	- command that we are checking for timeout.
-+ *
-+ * Returns:     non-zero if command has exceeded its lifetime
-+ *              zero otherwise
-+ *
-+ * Notes:       A command's lifetime is considered to be the number
-+ *              of (retries permitted plus one) * command timeout.
-+ *
-+ */
-+static int scsi_command_expired(struct scsi_cmnd *cmd)
-+{
-+	int ret = 0;
-+	unsigned long wait_for = (cmd->allowed + 1) * cmd->timeout_per_command;
-+	if (time_before(cmd->jiffies_at_alloc + wait_for, jiffies)) {
-+		sdev_printk(KERN_ERR, cmd->device,
-+			    "timing out command, waited %lus\n",
-+			    wait_for/HZ);
-+		ret = 1;
-+	}
-+	return ret;
-+}
-+
-+/*
-  * Function:    scsi_io_completion()
-  *
-  * Purpose:     Completion processing for block device I/O requests.
-@@ -962,12 +991,26 @@ void scsi_io_completion(struct scsi_cmnd
- 		}
- 	}
- 	if (host_byte(result) == DID_RESET) {
--		/* Third party bus reset or reset for error recovery
--		 * reasons.  Just retry the request and see what
--		 * happens.
-+		/*
-+		 * Third party bus reset or reset for error recovery reasons.
-+		 * If no data was transferred and the command has not expired,
-+		 * just reinsert the command  on the queue.  If the command
-+		 * HAS expired, we fall through to call scsi_end_request.
-+		 *
-+		 * If data was transferred, regenerate the command to transfer
-+		 * only untransferred data by calling scsi_requeue_command().
- 		 */
--		scsi_requeue_command(q, cmd);
--		return;
-+		if (!good_bytes) {
-+			if (!(scsi_command_expired(cmd))) {
-+				scsi_queue_insert(cmd, SCSI_MLQUEUE_DID_RESET);
-+				return;
-+			}
-+			/* fall through to call scsi_end_request() */
-+		}
-+		else {
-+			scsi_requeue_command(q, cmd);
-+			return;
-+		}
- 	}
- 	if (result) {
- 		if (!(req->cmd_flags & REQ_QUIET)) {
-@@ -1381,17 +1424,12 @@ static void scsi_kill_request(struct req
- static void scsi_softirq_done(struct request *rq)
- {
- 	struct scsi_cmnd *cmd = rq->completion_data;
--	unsigned long wait_for = (cmd->allowed + 1) * cmd->timeout_per_command;
- 	int disposition;
- 
- 	INIT_LIST_HEAD(&cmd->eh_entry);
- 
- 	disposition = scsi_decide_disposition(cmd);
--	if (disposition != SUCCESS &&
--	    time_before(cmd->jiffies_at_alloc + wait_for, jiffies)) {
--		sdev_printk(KERN_ERR, cmd->device,
--			    "timing out command, waited %lus\n",
--			    wait_for/HZ);
-+	if (disposition != SUCCESS && scsi_command_expired(cmd)) {
- 		disposition = SUCCESS;
- 	}
- 			
+This split only makes it harder for the user: integration and deployment are
+"out with the bath water".  And after all, faster integration and deployment
+and easy upgrade is what the user wants, and what should probably be striven to.
 
---------------020807090407040709080406--
+    Luben
+P.S. Needless to say, the driver as I maintain it, still has the FW right
+in the source -- patch, compile and run.
+
