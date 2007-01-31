@@ -1,50 +1,137 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH] scsi_lib.c: continue after MEDIUM_ERROR
-Date: Wed, 31 Jan 2007 13:37:56 -0500
-Message-ID: <45C0E204.3030901@rtr.ca>
-References: <200701301947.08478.liml@rtr.ca>	 <1170206199.10890.13.camel@mulgrave.il.steeleye.com>	 <311601c90701301725n53d25a74g652b7ca3bfc64c56@mail.gmail.com>	 <45BFF3D6.9050605@rtr.ca>	<45C00AEE.1090708@emc.com>	 <45C0B0DC.8030501@rtr.ca> <20070131152301.19a8a5ac@localhost.localdomain>	 <45C0D8A1.2030506@rtr.ca> <1170267198.3402.58.camel@mulgrave.il.steeleye.com>
+From: Michael Reed <mdr@sgi.com>
+Subject: [PATCH 0/2] Prevent infinite retries due to DID_RESET return status
+Date: Wed, 31 Jan 2007 12:54:06 -0600
+Message-ID: <45C0E5CE.7040203@sgi.com>
+References: <457DD0CA.9010509@sgi.com> <20070102121514.GA31621@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:2262 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030532AbXAaSh7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 31 Jan 2007 13:37:59 -0500
-In-Reply-To: <1170267198.3402.58.camel@mulgrave.il.steeleye.com>
+Received: from omx2-ext.sgi.com ([192.48.171.19]:45832 "EHLO omx2.sgi.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932978AbXAaSyS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 31 Jan 2007 13:54:18 -0500
+In-Reply-To: <20070102121514.GA31621@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Alan <alan@lxorguk.ukuu.org.uk>, Ric Wheeler <ric@emc.com>, "Eric D. Mudama" <edmudama@gmail.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, dougg@torque.net
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Jeremy Higdon <jeremy@sgi.com>
 
-James Bottomley wrote:
-> On Wed, 2007-01-31 at 12:57 -0500, Mark Lord wrote:
->> Alan wrote:
->>>> When libata reports a MEDIUM_ERROR to us, we *know* it's non-recoverable,
->>>> as the drive itself has already done internal retries (libata uses the
->>>> "with retry" ATA opcodes for this).
->>> This depends on the firmware. Some of the "raid firmware" drives don't
->>> appear to do retries in firmware.
->> One way to tell if this is true, is simply to time how long
->> the failed operation takes.  If the drive truly does not do retries,
->> then the media error should be reported more or less instantly
->> (assuming drive was already spun up).
+I have implemented Christoph's suggestions and comments in his reply
+to my RFC.
+--------------------------------------------------------------------
+
+Due to a firmware mismatch between a host and target (names withheld to
+protect the innocent?), the LLDD was returning DID_RESET for every
+i/o command.  This patch modifies the scsi layer to take into account
+when the command which received DID_RESET was issued and eventually
+give up on it instead of unconditionally reissuing it forever.
+With this patch, on my test system, the command receiving the solid
+DID_RESET times out after about 360 seconds.
+
+The premise for this patch is that no command should have an infinite
+lifetime.  The impetus for this patch was a system which would not
+reach a command prompt without disconnecting the storage from the
+host.
+
+The significant change in this patch is to call scsi_queue_insert()
+instead of scsi_requeue_command() if the command which receives a
+DID_RESET did not complete any i/o (good_bytes==0).  scsi_queue_insert()
+does not release the command and regenerate it like scsi_requeue_command()
+does, hence jiffies_at_alloc reflects when the command was first issued.
+
+Per Christoph's suggestion, I have broken this into two patches.  The
+first implements the moving of the scsi_release_buffer() calls so that
+it can be more easily reviewed.  The second patch implements the
+lifetime timer for commands receiving DID_RESET.
+
+These patches differ from the first posting in that scsi_queue_insert()
+is called directly instead of calling the since removed scsi_retry_command();
+comments have been cleaned up; and a comment has been added to indicate
+that the code is supposed to fall through to call scsi_end_request()
+if the command which received DID_RESET has expired.
+
+These patches were tested by modifying a LLDD to return DID_RESET for
+every command received.
+
+Patches apply to 2.6.20-rc6-git1.
+
+Signed-off-by: Michael Reed <mdr@sgi.com>
+
+Christoph Hellwig wrote:
+> On Mon, Dec 11, 2006 at 03:42:34PM -0600, Michael Reed wrote:
+>> Due to a firmware mismatch between a host and target (names withheld to
+>> protect the innocent?), the LLDD was returning DID_RESET for every
+>> i/o command.  This patch modifies the scsi layer to take into account
+>> when the command which received DID_RESET was issued and eventually
+>> give up on it instead of unconditionally reissuing it forever
+>> when it receives a DID_RESET.  With this patch, on my test system,
+>> the command receiving the constant DID_RESET times out after about
+>> 360 seconds.
+>>
+>> The premise for this patch is that no command should have an infinite
+>> lifetime.  The impetus for this patch was a system which would not
+>> reach a command prompt without disconnecting the storage from the
+>> host.
+>>
+>> The significant change in this patch is to call scsi_retry_command()
+>> instead of scsi_requeue_command() if the command which receives a
+>> DID_RESET did not complete any i/o (good_bytes==0).  scsi_retry_command()
+>> does not release the command and regenerate it like scsi_requeue_command()
+>> does, hence jiffies_at_alloc reflects when the command was first issued.
 > 
-> Well, the simpler way (and one we have a hope of implementing) is to
-> examine the ASC/ASCQ codes to see if the error is genuinely unretryable.
-
-My suggestion above was not for a kernel fix,
-but rather just as a way of determining if drives
-which claim "no retries" actually do them or not.  :)
-
-> I seem to have dropped the ball on this one in that the scsi_error.c
-> pieces of this patch
+> Generally this patch looks good to me.  Some comments:
 > 
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=116485834119885
 > 
-> I thought I'd applied.  Apparently I didn't, so I'll go back and put
-> them in.
-
-Good.  That would be a useful supplement to the patch I posted here.
-
-Cheers
+>> -extern int scsi_retry_command(struct scsi_cmnd *cmd);
+>> +extern int scsi_retry_command(struct scsi_cmnd *cmd, int reason);
+> 
+> 	I've just sent a patch to kill scsi_retry_command.  Use
+> 	scsi_queue_insert directly instead.
+> 
+>> +	scsi_release_buffers(cmd);
+> 
+> 	Can you please separate out the moving of the scsi_release_buffer
+> 	calls into a separate patch so it can be audited better?
+> 
+>> @@ -961,9 +992,20 @@ void scsi_io_completion(struct scsi_cmnd
+>>  		/* Third party bus reset or reset for error recovery
+>>  		 * reasons.  Just retry the request and see what
+>>  		 * happens.
+>> +		 * If no data was transferred, just reissue this
+>> +		 * command.  If data was transferred, regenerate
+>> +		 * the command to transfer only untransferred data.
+>>  		 */
+> 
+> The whole comment should look more like:
+> 
+> 		/*
+> 		 * Third party bus reset or reset for error recovery reasons.
+> 		 * If no data was transferred, just reissue this command.
+> 		 * If data was transferred, regenerate the command to transfer
+> 		 * only untransferred data.
+> 		 */
+> 
+>> -		scsi_requeue_command(q, cmd);
+>> -		return;
+>> +		if (!good_bytes) {
+>> +			if (!(scsi_command_expired(cmd))) {
+>> +				scsi_retry_command(cmd, SCSI_MLQUEUE_DID_RESET);
+>> +				return;
+>> +			}
+>> +		}
+>> +		else {
+>> +			scsi_requeue_command(q, cmd);
+>> +			return;
+>> +		}
+> 
+> 	With this code we now fallthrough if we don't have any good bytes
+> 	and the command has expired.  Is this the expected behaviour? If
+> 	yes we need a good comment describing it.
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
