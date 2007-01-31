@@ -1,29 +1,41 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] aacraid: Add kernel command line parameter parsing
-Date: Wed, 31 Jan 2007 09:55:08 +0000
-Message-ID: <20070131095508.GA3200@infradead.org>
-References: <AE4F746F2AECFC4DA4AADD66A1DFEF01483B4A@otce2k301.adaptec.com>
+Subject: Re: [PATCH] scsi: Update Aic94xx SAS/SATA Linux open source device driver for new sequence firmware.
+Date: Wed, 31 Jan 2007 09:56:03 +0000
+Message-ID: <20070131095603.GB3200@infradead.org>
+References: <89FD792A883D4B47AD469FEA2E5D1F9B0F59B6@aime2k302.adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:56281 "EHLO
+Received: from pentafluge.infradead.org ([213.146.154.40]:56296 "EHLO
 	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932788AbXAaJzL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Jan 2007 04:55:11 -0500
+	with ESMTP id S932920AbXAaJ4E (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Jan 2007 04:56:04 -0500
 Content-Disposition: inline
-In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF01483B4A@otce2k301.adaptec.com>
+In-Reply-To: <89FD792A883D4B47AD469FEA2E5D1F9B0F59B6@aime2k302.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>, Mark Haverkamp <markh@linux-foundation.org>
+To: "Wu, Gilbert" <Gilbert_Wu@adaptec.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Jan 30, 2007 at 04:42:28PM -0500, Salyzyn, Mark wrote:
-> One shortcoming of the driver relationship with the kernel is that there
-> is no standard means of having the insmod parameters associated with a
-> driver to also be parsed and set by the kernel parameter line.
+On Tue, Jan 30, 2007 at 03:31:25PM -0800, Wu, Gilbert wrote:
+> Subject:  [PATCH] scsi: Update Aic94xx SAS/SATA Linux open source device
+> driver for new sequence firmware.
+> 
+>  
+> 
+> Contribution:
+> 
+>    Ed Chim <ed_chim@adaptec.com>
+>    Gilbert Wu <gilbert_wu@adaptec.com>
+> 
+> Change Log:
+>  
+> 1.    Use dword instead of qword to display the value of Connection
+> State register for debug purpose.
+> 
+> 2.    There are some registers location of AIC94xx chip has been changed
+> according to the new V28 firmware. The patch has redefined the register
+> location and provided initialization.
 
-Actually there is.  In Linux 2.6 every module paramter can also specified
-as <modulename>.<parameter> on the kernel command line.
-
-Thus you patch is superflous and should not be applied.
-
+These look like incompatible changes, so you should make sure the driver
+still works when it detects the old firmware.
