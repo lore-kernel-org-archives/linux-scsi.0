@@ -1,32 +1,40 @@
-From: Mark Lord <liml@rtr.ca>
+From: Ric Wheeler <ric@emc.com>
 Subject: Re: [PATCH] scsi_lib.c: continue after MEDIUM_ERROR
-Date: Wed, 31 Jan 2007 10:38:47 -0500
-Message-ID: <45C0B807.8010508@rtr.ca>
-References: <200701301947.08478.liml@rtr.ca>	 <1170206199.10890.13.camel@mulgrave.il.steeleye.com> <311601c90701301725n53d25a74g652b7ca3bfc64c56@mail.gmail.com> <45BFF3D6.9050605@rtr.ca> <45C061C3.8030006@garzik.org> <45C0A985.7010402@emc.com> <45C0B5A1.8000506@torque.net>
+Date: Wed, 31 Jan 2007 11:35:14 -0500
+Message-ID: <45C0C542.2090609@emc.com>
+References: <200701301947.08478.liml@rtr.ca>	<1170206199.10890.13.camel@mulgrave.il.steeleye.com>	<311601c90701301725n53d25a74g652b7ca3bfc64c56@mail.gmail.com>	<45BFF3D6.9050605@rtr.ca>	<45C00AEE.1090708@emc.com>	<45C0B0DC.8030501@rtr.ca> <20070131152301.19a8a5ac@localhost.localdomain>
+Reply-To: ric@emc.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932929AbXAaPiv@vger.kernel.org>
-In-Reply-To: <45C0B5A1.8000506@torque.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: dougg@torque.net
-Cc: ric@emc.com, Jeff Garzik <jeff@garzik.org>, "Eric D. Mudama" <edmudama@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20070131152301.19a8a5ac@localhost.localdomain>
+Sender: linux-ide-owner@vger.kernel.org
+To: Alan <alan@lxorguk.ukuu.org.uk>
+Cc: Mark Lord <liml@rtr.ca>, "Eric D. Mudama" <edmudama@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, dougg@torque.net
 List-Id: linux-scsi@vger.kernel.org
 
-Douglas Gilbert wrote:
->
-> Ric,
-> Both ATA (ATA8-ACS) and SCSI (SBC-3) have recently added
-> command support to flag a block as "uncorrectable". There
-> is no need to send bad "long" data to it and suppress the
-> disk's automatic re-allocation logic.
 
-That'll be useful in a couple of years, once drives that have it
-become more common.  For now, though, we're hacking current drives
-using READ/WRITE LONG commands, with a corresponding patch to libata
-to allow for the longer "sector size" involved.
 
-Having real bad sectors, exactly where we want them on the media,
-sure does make testing / fixing the EH mechanisms a lot more feasible.
+Alan wrote:
+>> When libata reports a MEDIUM_ERROR to us, we *know* it's non-recoverable,
+>> as the drive itself has already done internal retries (libata uses the
+>> "with retry" ATA opcodes for this).
+> 
+> This depends on the firmware. Some of the "raid firmware" drives don't
+> appear to do retries in firmware.
 
-Cheers
+I think that even for these devices, the actual drives behind the controller 
+will do retries. In any case, it would be reasonable to be able to set this 
+retry/no-retry via /sys to handle exceptional cases...
+
+> 
+>> But meanwhile, we still have the original issue too, where a single stray
+>> bad sector can blow a system out of the water, because the mid-layer
+>> currently aborts everything after it from a large merged request.
+>>
+>> Thus the original patch from this thread.  :)
+> 
+> Agreed
+
+
