@@ -1,33 +1,57 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] RESEND: SCSI, libata: add support for ATA_16 commands
- to libata ATAPI devices
-Date: Thu, 01 Feb 2007 15:30:54 -0500
-Message-ID: <45C24DFE.80202@garzik.org>
-References: <200701021935.07840.liml@rtr.ca>	 <200701311346.26644.liml@rtr.ca> <45C1356B.6000907@gmail.com>	 <45C1377F.6070001@rtr.ca> <45C138E8.1040706@gmail.com>	 <45C1A4BD.3030909@garzik.org> <45C1A823.30008@gmail.com>	 <45C1B8D4.1070209@garzik.org> <1170342565.3388.4.camel@mulgrave.il.steeleye.com> <45C24BC5.6060305@torque.net>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] scsi_lib.c: continue after MEDIUM_ERROR
+Date: Thu, 01 Feb 2007 15:55:20 -0600
+Message-ID: <1170366920.3388.62.camel@mulgrave.il.steeleye.com>
+References: <200701301947.08478.liml@rtr.ca>
+	 <1170206199.10890.13.camel@mulgrave.il.steeleye.com>
+	 <45C2474E.9030306@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <45C24BC5.6060305@torque.net>
+In-Reply-To: <45C2474E.9030306@rtr.ca>
 Sender: linux-ide-owner@vger.kernel.org
-To: dougg@torque.net
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Tejun Heo <htejun@gmail.com>, Mark Lord <liml@rtr.ca>, Linux IDE <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Douglas Gilbert wrote:
-> It is the ATAPI _transport_ that has the 12 byte cdb
-> limit *** (at least according to MMC-5 rev Annex A;
-> is S-ATAPI any better?).
+On Thu, 2007-02-01 at 15:02 -0500, Mark Lord wrote:
+> I believe you made the first change in response to my prodding at the time,
+> when libata was not returning valid sense data (no LBA) for media errors.
+> The SCSI EH handling of that was rather poor at the time,
+> and so having it not retry the remaining sectors was actually
+> a very good fix at the time.
+> 
+> But now, libata *does* return valid sense data for LBA/DMA drives,
+> and the workaround from circa 2.6.16 is no longer the best we can do.
+> Now that we know which sector failed, we ought to be able to skip
+> over it, and continue with the rest of the merged request.
 
-Then the spec is wrong.
+We can ... the big concern with your approach, which you haven't
+addressed is the time factor.  For most SCSI devices, returning a fatal
+MEDIUM ERROR means we're out of remapping table, and also that there's
+probably a bunch of sectors on the track that are now out.  Thus, there
+are almost always multiple sector failures.  In linux, the average
+request size on a filesystem is around 64-128kb; thats 128-256 sectors.
+If we fail at the initial sector, we have to go through another 128-256
+attempts, with the internal device retries, before we fail the entire
+request.  Some devices can take a second or so for each read before they
+finally give up and decide they really can't read the sector, so you're
+looking at 2-5 minutes before the machine finally fails this one
+request ... and much worse for devices that retry more times.
 
-1) The transport does not limit the CDB size.
+> One thing that could be even better than the patch below,
+> would be to have it perhaps skip the entire bio that includes
+> the failed sector, rather than only the bad sector itself.
 
-2) The ATAPI device limits the CDB size, and it exports this limit via 
-IDENTIFY PACKET DEVICE.  It can be either 12 or 16 bytes.
+Er ... define "skip over the bio".  A bio is simply a block
+representation for a bunch of sg elements coming in to the elevator.
+Mostly what we see in SCSI is a single bio per request, so skipping the
+bio is really the current behaviour (to fail the rest of the request).
 
-3) In some rare cases, the host controller silicon may limit CDB size.
+> I think doing that might address most concerns expressed here.
+> Have you got an alternate suggestion, James?
 
-	Jeff
+James
 
 
