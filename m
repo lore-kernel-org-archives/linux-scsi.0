@@ -1,37 +1,60 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: [PATCH RFC] sd: spin down disks on removal or power-down
-Date: Wed, 31 Jan 2007 17:45:41 -0600
-Message-ID: <45C12A25.8080805@shaw.ca>
-References: <45BD522F.3070706@shaw.ca> <20070129154706.dfb3edab.akpm@osdl.org>
- <1170116201.3378.29.camel@mulgrave.il.steeleye.com> <45BE9252.3040108@shaw.ca>
- <45C0FA3B.5030508@s5r6.in-berlin.de>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] RESEND: SCSI, libata: add support for ATA_16 commands
+ to libata ATAPI devices
+Date: Thu, 01 Feb 2007 09:33:47 +0900
+Message-ID: <45C1356B.6000907@gmail.com>
+References: <200701021935.07840.liml@rtr.ca> <200701311346.26644.liml@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-reply-to: <45C0FA3B.5030508@s5r6.in-berlin.de>
-Sender: linux-ide-owner@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@osdl.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, htejun@gmail.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from wr-out-0506.google.com ([64.233.184.232]:57840 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161122AbXBAAdy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Jan 2007 19:33:54 -0500
+Received: by wr-out-0506.google.com with SMTP id i22so377242wra
+        for <linux-scsi@vger.kernel.org>; Wed, 31 Jan 2007 16:33:53 -0800 (PST)
+In-Reply-To: <200701311346.26644.liml@rtr.ca>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Linux IDE <linux-ide@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org
 
-Stefan Richter wrote:
-> Robert Hancock wrote:
->>> http://marc.theaimsgroup.com/?t=116922621200002
->> It looks like Tejun's patch essentially does the same thing as mine with
->> the addition of the control from userspace. There is one exception
->> though, my patch also does the stop on removal of the SCSI disk (i.e.
->> writing 1 to its "delete" file in sysfs, what scsiadd -r does).
+Mark Lord wrote:
+> In an ideal world, we would use the existing ATA_12 opcode
+> to issue 12-byte ATA passthrough commands for libata ATAPI drives
+> from userspace.
 > 
-> Isn't sd_shutdown called at this occasion?
+> But ATA_12 happens to have the same SCSI opcode value as the older
+> CD/RW "BLANK" command, widely used by cdrecord and friends.
+> 
+> So, to achieve ATA passthru capability for libata ATAPI,
+> we have to instead use the ATA_16 opcode: a 16-byte command.
+> 
+> SCSI normally disallows issuing 16-byte commands to 12-byte devices,
+> so special support has to be added for this.
+> 
+> Introduce an "allow_ata_16" boolean to the scsi_host struct.
+> This provides a means for libata to signal that 16-byte ATA_16
+> commands should be permitted even for 12-byte ATAPI devices.
+> 
+> There are companion patches submitted separately
+> to add ATAPI ATA_16 capability to libata.
+> 
+> Signed-off-by:  Mark Lord <mlord@pobox.com>
 
-Ah, indeed it is. I was thinking of the way I had written my patch, 
-where it only does the spindown if the system state is SYSTEM_POWER_OFF 
-so I needed an extra call to force this on removal. Tejun's patch just 
-checks for not SYSTEM_RESTART, so it should happen on removal as well.
+I might have missed the discussion but can't we just set
+host->max_cmd_len to 16 unconditionally?  libata is emulating a SCSI
+device anyway and, from SCSI's POV, the situation is that any libata
+ATAPI device can do both 12 and 16 byte commands while some of them only
+allow allow ATA_16 for 16 byte command.
+
+Also, it's not like host->max_cmd_len gives any guaranteed protection
+against CDB length.  Being a 'host' limit, it's set to the highest
+number in the host.  In that respect, it should be set to 16 too.  All
+ATA hosts can do 16 byte CDBs.
+
+Thanks.
 
 -- 
-Robert Hancock      Saskatoon, SK, Canada
-To email, remove "nospam" from hancockr@nospamshaw.ca
-Home Page: http://www.roberthancock.com/
-
+tejun
