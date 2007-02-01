@@ -1,57 +1,99 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] scsi_lib.c: continue after MEDIUM_ERROR
-Date: Thu, 01 Feb 2007 15:55:20 -0600
-Message-ID: <1170366920.3388.62.camel@mulgrave.il.steeleye.com>
-References: <200701301947.08478.liml@rtr.ca>
-	 <1170206199.10890.13.camel@mulgrave.il.steeleye.com>
-	 <45C2474E.9030306@rtr.ca>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH 1/3] pci: New PCI-E reset API
+Date: Thu, 01 Feb 2007 16:14:11 -0600
+Message-ID: <45C26633.2010804@linux.vnet.ibm.com>
+References: <11703510202911-patch-mail.ibm.com> <20070201191235.GQ7585@parisc-linux.org>
+Reply-To: brking@linux.vnet.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <45C2474E.9030306@rtr.ca>
-Sender: linux-ide-owner@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e5.ny.us.ibm.com ([32.97.182.145]:49160 "EHLO e5.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751667AbXBAWOQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 1 Feb 2007 17:14:16 -0500
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e5.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l11MEEjv006904
+	for <linux-scsi@vger.kernel.org>; Thu, 1 Feb 2007 17:14:14 -0500
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.2) with ESMTP id l11MEEBb296120
+	for <linux-scsi@vger.kernel.org>; Thu, 1 Feb 2007 17:14:14 -0500
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l11MED1N002345
+	for <linux-scsi@vger.kernel.org>; Thu, 1 Feb 2007 17:14:14 -0500
+In-Reply-To: <20070201191235.GQ7585@parisc-linux.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: gregkh@suse.de, linux-pci@atrey.karlin.mff.cuni.cz, paulus@samba.org, linuxppc-dev@ozlabs.org, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, hch@lst.de, Linas Vepstas <linas@austin.ibm.com>
 
-On Thu, 2007-02-01 at 15:02 -0500, Mark Lord wrote:
-> I believe you made the first change in response to my prodding at the time,
-> when libata was not returning valid sense data (no LBA) for media errors.
-> The SCSI EH handling of that was rather poor at the time,
-> and so having it not retry the remaining sectors was actually
-> a very good fix at the time.
+Matthew Wilcox wrote:
+> On Thu, Feb 01, 2007 at 11:30:21AM -0600, Brian King wrote:
+>> Adds a new API which can be used to issue various types
+>> of PCI-E reset, including PCI-E warm reset and PCI-E hot reset.
+>> This is needed for an ipr PCI-E adapter which does not properly
+>> implement BIST. Running BIST on this adapter results in PCI-E
+>> errors. The only reliable reset mechanism that exists on this
+>> hardware is PCI Fundamental reset (warm reset). Since driving
+>> this type of reset is architecture unique, this provides the
+>> necessary hooks for architectures to add this support.
 > 
-> But now, libata *does* return valid sense data for LBA/DMA drives,
-> and the workaround from circa 2.6.16 is no longer the best we can do.
-> Now that we know which sector failed, we ought to be able to skip
-> over it, and continue with the rest of the merged request.
+> A few points ...
+> 
+>  - When doing a warm reset, you reset the entire device not just the
+>    function (== pci_dev) that gets passed in.  How happy are drivers for
+>    the other functions going to be about this?
 
-We can ... the big concern with your approach, which you haven't
-addressed is the time factor.  For most SCSI devices, returning a fatal
-MEDIUM ERROR means we're out of remapping table, and also that there's
-probably a bunch of sectors on the track that are now out.  Thus, there
-are almost always multiple sector failures.  In linux, the average
-request size on a filesystem is around 64-128kb; thats 128-256 sectors.
-If we fail at the initial sector, we have to go through another 128-256
-attempts, with the internal device retries, before we fail the entire
-request.  Some devices can take a second or so for each read before they
-finally give up and decide they really can't read the sector, so you're
-looking at 2-5 minutes before the machine finally fails this one
-request ... and much worse for devices that retry more times.
-
-> One thing that could be even better than the patch below,
-> would be to have it perhaps skip the entire bio that includes
-> the failed sector, rather than only the bad sector itself.
-
-Er ... define "skip over the bio".  A bio is simply a block
-representation for a bunch of sg elements coming in to the elevator.
-Mostly what we see in SCSI is a single bio per request, so skipping the
-bio is really the current behaviour (to fail the rest of the request).
-
-> I think doing that might address most concerns expressed here.
-> Have you got an alternate suggestion, James?
-
-James
+I guess I don't see how a warm reset could be issued to a single function
+of a PCI device. I would argue that for a multi-function device, you would
+have to use function level reset. 
 
 
+>  - You've missed the requirement:
+> 
+> "To allow components to perform internal initialization, system software
+> must wait for at least 100 ms from the end of a Conventional Reset of one
+> or more devices before it is permitted to issue Configuration Requests
+> to those devices."
+> 
+>    To fix this, we need to call pci_block_user_cfg_access() before
+>    calling the pcibios function, then msleep(100) after calling it, then
+>    call pci_unblock_user_cfg_access().
+
+What I've done is to provide a very low-level API that can be used to
+accomplish this. In my implementation, the ipr driver is the one doing
+all the required delays and calling pci_block_user_cfg_access, since it
+already was doing that in order to run BIST on the adapter.
+
+>  - There's no attempt to support either cold or function-level reset in
+>    this patch.
+
+Correct. I had no requirement to implement this. It can always be added
+if there is a need. A function level reset can be performed by simply
+writing a bit in config space, so *technically* we wouldn't need an
+API to do that for us, but it could certainly be added here.
+
+> I suspect the Right Way of handling hot/warm/cold reset is going to be
+> some kind of integration with error handling.  This driver understands
+> about slots being different from functions, and has the ability to
+> notify drivers of other functions that a reset is happening.
+
+Perhaps. It would require a way for the adapter device driver to
+indicate what type of reset(s) will work for a particular pci device.
+It would also require a method for a device driver to invoke a reset,
+which does not currently exist today. I think it would be the first
+case of the device driver invoking pci error recovery, so I'm not sure
+how difficult that would be to do with the current code.
+
+I actually thought this API might be used by PCI error recovery
+code, since it may need to perform these sorts of functions.
+
+CC'ing Linas Vepstas since he wrote the powerpc pci recovery code.
+
+Brian
+
+
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
