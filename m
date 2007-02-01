@@ -1,42 +1,61 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: RE: [PATCH] - export scsilun_to_int
-Date: Wed, 31 Jan 2007 19:51:57 -0600
-Message-ID: <1170294717.3402.92.camel@mulgrave.il.steeleye.com>
-References: <20070131225433.GA6652@lsil.com>
+From: Matthias Urlichs <smurf@smurf.noris.de>
+Subject: Re: [PATCH] scsi: megaraid_{mm,mbox} cmd timeout
+Date: Thu, 1 Feb 2007 08:01:49 +0100
+Message-ID: <20070201070149.GQ16848@kiste.smurf.noris.de>
+References: <0631C836DBF79F42B5A60C8C8D4E82298ECBCC@NAMAIL2.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="rwgQ89ZNnFUwFHTC"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:51486 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1161252AbXBABwH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Jan 2007 20:52:07 -0500
-In-Reply-To: <20070131225433.GA6652@lsil.com>
+Received: from smurf.noris.de ([192.109.102.42]:39316 "EHLO smurf.noris.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161253AbXBAHYf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 1 Feb 2007 02:24:35 -0500
+Content-Disposition: inline
+In-Reply-To: <0631C836DBF79F42B5A60C8C8D4E82298ECBCC@NAMAIL2.ad.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Eric Moore <eric.moore@lsi.com>
-Cc: linux-scsi@vger.kernel.org
-
-On Wed, 2007-01-31 at 15:54 -0700, Eric Moore wrote:
-> static int
-> +mptscsih_cmp_scsilun(struct scsi_lun * lun1, struct scsi_lun * lun2)
-> +{
-> +       int i;
-> +
-> +       for (i = 0; i < 8 ; i++)
-> +               if (lun1->scsi_lun[i] != lun2->scsi_lun[i])
-> +                       return 1;
-> +
-> +       return 0;
-> +}
-
-what's wrong with
-
-memcmp(lun1->scsi_lun, lun2->scsi_lun, 8)
-
-rather than introducing a wrapper?  The compiler can even optimise
-memcmp for a fixed size nicely.
-
-James
+To: "Patro, Sumant" <Sumant.Patro@lsi.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
+--rwgQ89ZNnFUwFHTC
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+Hi,
+
+Patro, Sumant:
+> What I see in the log is cmd timeout(s) and is not related to the patch.
+>=20
+Ouch.
+
+Any ideas what causes my problem? It's a regression; I tested Ubuntu
+Dapper and Edgy install CDs, and it's not worked since the latter.
+
+I can pinpoint the change that triggers the problem more closely if
+necessary.
+
+--=20
+Matthias Urlichs   |   {M:U} IT Design @ m-u-it.de   |  smurf@smurf.noris.de
+Disclaimer: The quote was selected randomly. Really. | http://smurf.noris.de
+ - -
+My father was a God-fearing man, but he never missed a copy of the
+New York Times, either.
+		-- E.B. White
+
+--rwgQ89ZNnFUwFHTC
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.3 (GNU/Linux)
+
+iD8DBQFFwZBd8+hUANcKr/kRAsN9AJ0WjgKt3P0z5t99qsm8k1H+xIeZdwCdHZIw
+8csg6UPaSVc/QvJteNoBcU0=
+=76uI
+-----END PGP SIGNATURE-----
+
+--rwgQ89ZNnFUwFHTC--
