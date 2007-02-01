@@ -1,67 +1,81 @@
-From: Eric Moore <eric.moore@lsi.com>
-Subject: RE: [PATCH] - export scsilun_to_int
-Date: Thu, 1 Feb 2007 10:24:43 -0700
-Message-ID: <20070201172442.GA8322@lsil.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: [PATCH 2/3] powerpc: Add powerpc PCI-E reset API implementation
+Date: Thu, 01 Feb 2007 11:30:28 -0600
+Message-ID: <200702011730.l11HUTSJ022072@d01av02.pok.ibm.com>
+References: <11703510202911-patch-mail.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:43023 "EHLO mail0.lsil.com"
+Received: from e2.ny.us.ibm.com ([32.97.182.142]:60693 "EHLO e2.ny.us.ibm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751856AbXBARYg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Feb 2007 12:24:36 -0500
-Content-Disposition: inline
+	id S1751937AbXBARad (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 1 Feb 2007 12:30:33 -0500
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e2.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l11HUVtB028416
+	for <linux-scsi@vger.kernel.org>; Thu, 1 Feb 2007 12:30:31 -0500
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v8.2) with ESMTP id l11HUVAW305832
+	for <linux-scsi@vger.kernel.org>; Thu, 1 Feb 2007 12:30:31 -0500
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l11HUTDF022121
+	for <linux-scsi@vger.kernel.org>; Thu, 1 Feb 2007 12:30:30 -0500
+In-Reply-To: <11703510202911-patch-mail.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
-
-On Wednesday, January 31, 2007 6:52 PM, James Bottomley wrote:
-> 
-> what's wrong with
-> 
-> memcmp(lun1->scsi_lun, lun2->scsi_lun, 8)
-> 
-> rather than introducing a wrapper?  The compiler can even optimise
-> memcmp for a fixed size nicely.
-> 
-> James
-> 
+To: gregkh@suse.de
+Cc: linux-pci@atrey.karlin.mff.cuni.cz, paulus@samba.org, linuxppc-dev@ozlabs.org, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, hch@lst.de, brking@linux.vnet.ibm.com
 
 
-Changed to using memcmp. This replaces the prevous patch.
+Adds the pSeries platform implementation for a new PCI API
+which can be used to issue various types of PCI-E reset,
+including PCI-E warm reset and PCI-E hot reset. This is needed
+for an ipr PCI-E adapter which does not properly implement BIST.
+Running BIST on this adapter results in PCI-E errors. The only
+reliable reset mechanism that exists on this hardware is PCI
+Fundamental reset (warm reset). 
 
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+---
 
-Signed-off-by: Eric Moore <Eric.Moore@lsi.com>
+ linux-2.6-bjking1/arch/powerpc/platforms/pseries/eeh.c |   30 +++++++++++++++++
+ 1 files changed, 30 insertions(+)
 
-
-diff -uarpN b/drivers/message/fusion/mptscsih.c a/drivers/message/fusion/mptscsih.c
---- b/drivers/message/fusion/mptscsih.c	2007-01-27 19:09:00.000000000 -0700
-+++ a/drivers/message/fusion/mptscsih.c	2007-02-01 10:09:24.000000000 -0700
-@@ -1016,7 +1016,7 @@ mptscsih_search_running_cmds(MPT_SCSI_HO
- 	int		 ii;
- 	int		 max = hd->ioc->req_depth;
- 	struct scsi_cmnd *sc;
--	int		 lun;
-+	struct scsi_lun  lun;
+diff -puN arch/powerpc/platforms/pseries/eeh.c~powerpc_slot_reset_api3 arch/powerpc/platforms/pseries/eeh.c
+--- linux-2.6/arch/powerpc/platforms/pseries/eeh.c~powerpc_slot_reset_api3	2007-02-01 10:29:21.000000000 -0600
++++ linux-2.6-bjking1/arch/powerpc/platforms/pseries/eeh.c	2007-02-01 10:30:59.000000000 -0600
+@@ -561,6 +561,36 @@ rtas_pci_slot_reset(struct pci_dn *pdn, 
+ }
  
- 	dsprintk((KERN_INFO MYNAM ": search_running channel %d id %d lun %d max %d\n",
- 	    vdevice->vtarget->channel, vdevice->vtarget->id, vdevice->lun, max));
-@@ -1027,13 +1027,14 @@ mptscsih_search_running_cmds(MPT_SCSI_HO
- 			mf = (SCSIIORequest_t *)MPT_INDEX_2_MFPTR(hd->ioc, ii);
- 			if (mf == NULL)
- 				continue;
--			lun = scsilun_to_int((struct scsi_lun *)mf->LUN);
--			dsprintk(( "search_running: found (sc=%p, mf = %p) chanel %d id %d, lun %d \n",
--			    hd->ScsiLookup[ii], mf, mf->Bus, mf->TargetID, lun));
-+			int_to_scsilun(vdevice->lun, &lun);
- 			if ((mf->Bus != vdevice->vtarget->channel) ||
- 			    (mf->TargetID != vdevice->vtarget->id) ||
--			    (lun != vdevice->lun))
-+			    memcmp(lun.scsi_lun, mf->LUN, 8))
- 				continue;
-+			dsprintk(( "search_running: found (sc=%p, mf = %p) "
-+			    "channel %d id %d, lun %d \n", hd->ScsiLookup[ii],
-+			    mf, mf->Bus, mf->TargetID, vdevice->lun));
- 
- 			/* Cleanup
- 			 */
-
+ /**
++ * pcibios_set_pcie_slot_reset - Set PCI-E reset state
++ * @dev:	pci device struct
++ * @state:	reset state to enter
++ *
++ * Return value:
++ * 	0 if success
++ **/
++int pcibios_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state state)
++{
++	struct device_node *dn = pci_device_to_OF_node(dev);
++	struct pci_dn *pdn = PCI_DN(dn);
++
++	switch (state) {
++	case pci_reset_normal:
++		rtas_pci_slot_reset(pdn, 0);
++		break;
++	case pci_reset_pcie_hot_reset:
++		rtas_pci_slot_reset(pdn, 1);
++		break;
++	case pci_reset_pcie_warm_reset:
++		rtas_pci_slot_reset(pdn, 3);
++		break;
++	default:
++		return -EINVAL;
++	};
++
++	return 0;
++}
++
++/**
+  * rtas_set_slot_reset -- assert the pci #RST line for 1/4 second
+  * @pdn: pci device node to be reset.
+  *
+_
