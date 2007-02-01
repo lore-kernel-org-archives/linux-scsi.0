@@ -1,81 +1,116 @@
 From: Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH 2/3] powerpc: Add powerpc PCI-E reset API implementation
-Date: Thu, 01 Feb 2007 11:30:28 -0600
-Message-ID: <200702011730.l11HUTSJ022072@d01av02.pok.ibm.com>
-References: <11703510202911-patch-mail.ibm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e2.ny.us.ibm.com ([32.97.182.142]:60693 "EHLO e2.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751937AbXBARad (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Feb 2007 12:30:33 -0500
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e2.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l11HUVtB028416
-	for <linux-scsi@vger.kernel.org>; Thu, 1 Feb 2007 12:30:31 -0500
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v8.2) with ESMTP id l11HUVAW305832
-	for <linux-scsi@vger.kernel.org>; Thu, 1 Feb 2007 12:30:31 -0500
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l11HUTDF022121
-	for <linux-scsi@vger.kernel.org>; Thu, 1 Feb 2007 12:30:30 -0500
-In-Reply-To: <11703510202911-patch-mail.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [PATCH 1/3] pci: New PCI-E reset API
+Date: Thu, 01 Feb 2007 11:30:21 -0600
+Message-ID: <7847.90134425766$1170351084@news.gmane.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
+List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
+List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
+List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
 To: gregkh@suse.de
-Cc: linux-pci@atrey.karlin.mff.cuni.cz, paulus@samba.org, linuxppc-dev@ozlabs.org, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, hch@lst.de, brking@linux.vnet.ibm.com
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, linuxppc-dev@ozlabs.org, paulus@samba.org, brking@linux.vnet.ibm.com, linux-pci@atrey.karlin.mff.cuni.cz
+List-Id: linux-scsi@vger.kernel.org
 
 
-Adds the pSeries platform implementation for a new PCI API
-which can be used to issue various types of PCI-E reset,
-including PCI-E warm reset and PCI-E hot reset. This is needed
-for an ipr PCI-E adapter which does not properly implement BIST.
-Running BIST on this adapter results in PCI-E errors. The only
-reliable reset mechanism that exists on this hardware is PCI
-Fundamental reset (warm reset). 
+Adds a new API which can be used to issue various types
+of PCI-E reset, including PCI-E warm reset and PCI-E hot reset.
+This is needed for an ipr PCI-E adapter which does not properly
+implement BIST. Running BIST on this adapter results in PCI-E
+errors. The only reliable reset mechanism that exists on this
+hardware is PCI Fundamental reset (warm reset). Since driving
+this type of reset is architecture unique, this provides the
+necessary hooks for architectures to add this support.
 
 Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
 ---
 
- linux-2.6-bjking1/arch/powerpc/platforms/pseries/eeh.c |   30 +++++++++++++++++
- 1 files changed, 30 insertions(+)
+ linux-2.6-bjking1/drivers/pci/pci.c   |   29 +++++++++++++++++++++++++++++
+ linux-2.6-bjking1/include/linux/pci.h |   14 ++++++++++++++
+ 2 files changed, 43 insertions(+)
 
-diff -puN arch/powerpc/platforms/pseries/eeh.c~powerpc_slot_reset_api3 arch/powerpc/platforms/pseries/eeh.c
---- linux-2.6/arch/powerpc/platforms/pseries/eeh.c~powerpc_slot_reset_api3	2007-02-01 10:29:21.000000000 -0600
-+++ linux-2.6-bjking1/arch/powerpc/platforms/pseries/eeh.c	2007-02-01 10:30:59.000000000 -0600
-@@ -561,6 +561,36 @@ rtas_pci_slot_reset(struct pci_dn *pdn, 
+diff -puN drivers/pci/pci.c~pci_pci_reset_api drivers/pci/pci.c
+--- linux-2.6/drivers/pci/pci.c~pci_pci_reset_api	2007-01-30 12:48:54.000000000 -0600
++++ linux-2.6-bjking1/drivers/pci/pci.c	2007-01-30 12:48:54.000000000 -0600
+@@ -791,6 +791,34 @@ pci_disable_device(struct pci_dev *dev)
  }
  
  /**
-+ * pcibios_set_pcie_slot_reset - Set PCI-E reset state
-+ * @dev:	pci device struct
-+ * @state:	reset state to enter
++ * pcibios_set_pcie_reset_state - set reset state for device dev
++ * @dev: the PCI-E device reset
++ * @state: Reset state to enter into
 + *
-+ * Return value:
-+ * 	0 if success
-+ **/
-+int pcibios_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state state)
++ *
++ * Sets the PCI-E reset state for the device. This is the default
++ * implementation. Architecture implementations can override this.
++ */
++int __attribute__ ((weak)) pcibios_set_pcie_reset_state(struct pci_dev *dev,
++							enum pcie_reset_state state)
 +{
-+	struct device_node *dn = pci_device_to_OF_node(dev);
-+	struct pci_dn *pdn = PCI_DN(dn);
-+
-+	switch (state) {
-+	case pci_reset_normal:
-+		rtas_pci_slot_reset(pdn, 0);
-+		break;
-+	case pci_reset_pcie_hot_reset:
-+		rtas_pci_slot_reset(pdn, 1);
-+		break;
-+	case pci_reset_pcie_warm_reset:
-+		rtas_pci_slot_reset(pdn, 3);
-+		break;
-+	default:
-+		return -EINVAL;
-+	};
-+
-+	return 0;
++	return -EINVAL;
 +}
 +
 +/**
-  * rtas_set_slot_reset -- assert the pci #RST line for 1/4 second
-  * @pdn: pci device node to be reset.
-  *
++ * pci_set_pcie_reset_state - set reset state for device dev
++ * @dev: the PCI-E device reset
++ * @state: Reset state to enter into
++ *
++ *
++ * Sets the PCI reset state for the device.
++ */
++int pci_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state state)
++{
++	return pcibios_set_pcie_reset_state(dev, state);
++}
++
++/**
+  * pci_enable_wake - enable device to generate PME# when suspended
+  * @dev: - PCI device to operate on
+  * @state: - Current state of device.
+@@ -1210,6 +1238,7 @@ EXPORT_SYMBOL(pci_set_power_state);
+ EXPORT_SYMBOL(pci_save_state);
+ EXPORT_SYMBOL(pci_restore_state);
+ EXPORT_SYMBOL(pci_enable_wake);
++EXPORT_SYMBOL_GPL(pci_set_pcie_reset_state);
+ 
+ /* Quirk info */
+ 
+diff -puN include/linux/pci.h~pci_pci_reset_api include/linux/pci.h
+--- linux-2.6/include/linux/pci.h~pci_pci_reset_api	2007-01-30 12:48:54.000000000 -0600
++++ linux-2.6-bjking1/include/linux/pci.h	2007-01-30 12:48:54.000000000 -0600
+@@ -96,6 +96,19 @@ enum pci_channel_state {
+ 	pci_channel_io_perm_failure = (__force pci_channel_state_t) 3,
+ };
+ 
++typedef unsigned int __bitwise pcie_reset_state_t;
++
++enum pcie_reset_state {
++	/* Reset is NOT asserted (Use to deassert reset) */
++	pci_reset_normal = (__force pcie_reset_state_t) 1,
++
++	/* Use #PERST to reset PCI-E device */
++	pci_reset_pcie_warm_reset = (__force pcie_reset_state_t) 2,
++
++	/* Use PCI-E Hot Reset to reset device */
++	pci_reset_pcie_hot_reset = (__force pcie_reset_state_t) 3
++};
++
+ typedef unsigned short __bitwise pci_bus_flags_t;
+ enum pci_bus_flags {
+ 	PCI_BUS_FLAGS_NO_MSI = (__force pci_bus_flags_t) 1,
+@@ -523,6 +536,7 @@ int __must_check pci_enable_device(struc
+ int __must_check pci_enable_device_bars(struct pci_dev *dev, int mask);
+ void pci_disable_device(struct pci_dev *dev);
+ void pci_set_master(struct pci_dev *dev);
++int pci_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state state);
+ #define HAVE_PCI_SET_MWI
+ int __must_check pci_set_mwi(struct pci_dev *dev);
+ void pci_clear_mwi(struct pci_dev *dev);
 _
