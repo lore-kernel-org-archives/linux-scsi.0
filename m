@@ -1,84 +1,56 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [Bugme-new] [Bug 7919] New: Tape dies if wrong block size used
-Date: Thu, 1 Feb 2007 16:08:58 -0800
-Message-ID: <20070201160858.ef28f354.akpm@osdl.org>
-References: <200702012334.l11NYTWu010618@fire-2.osdl.org>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH] scsi_lib.c: continue after MEDIUM_ERROR
+Date: Thu, 01 Feb 2007 21:48:27 -0500
+Message-ID: <45C2A67B.7090907@rtr.ca>
+References: <200701301947.08478.liml@rtr.ca>	 <1170206199.10890.13.camel@mulgrave.il.steeleye.com>	 <45C2474E.9030306@rtr.ca> <1170366920.3388.62.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:50930 "EHLO smtp.osdl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1422965AbXBBAJM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Feb 2007 19:09:12 -0500
-In-Reply-To: <200702012334.l11NYTWu010618@fire-2.osdl.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1170366920.3388.62.camel@mulgrave.il.steeleye.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>, dmartin@sccd.ctc.edu
 
-On Thu, 1 Feb 2007 15:34:29 -0800
-bugme-daemon@bugzilla.kernel.org wrote:
+James Bottomley wrote:
+> On Thu, 2007-02-01 at 15:02 -0500, Mark Lord wrote:
+>..
+>> One thing that could be even better than the patch below,
+>> would be to have it perhaps skip the entire bio that includes
+>> the failed sector, rather than only the bad sector itself.
+> 
+> Er ... define "skip over the bio".  A bio is simply a block
+> representation for a bunch of sg elements coming in to the elevator.
 
-> http://bugzilla.kernel.org/show_bug.cgi?id=7919
-> 
->            Summary: Tape dies if wrong block size used
->     Kernel Version: 2.6.20-rc5
->             Status: NEW
->           Severity: normal
->              Owner: scsi_drivers-other@kernel-bugs.osdl.org
->          Submitter: dmartin@sccd.ctc.edu
-> 
-> 
-> Most recent kernel where this bug did *NOT* occur: 2.6.17.14
-> 
-> Other Kernels Tested and Results:
-> 
->     OK 2.6.15.7
->     OK 2.6.16.37 
->     OK 2.6.17.14 
->     BAD 2.6.18.6
->     BAD 2.6.18-1.2869.fc6
->     BAD 2.6.19.2 +
->     BAD 2.6.20-rc5
-> 
-> NOTE: 2.6.18-1.2869.fc6 is a Fedora modified kernel, all others are from kernel.org
-> 
-> Distribution: Fedora 
-> Hardware Environment: i386
->   Arch    I386 
->   Model    Dell Poweredge 1300 
->   Processor    Pentium III (Coppermine) 697.929 Mhz. 
->   SCSI    Adaptec AHA-2940U/UW/D / AIC-7881U 
->   Disks    3 QUANTUM ATLAS V 9 WLS in RAID 5 software raid attached to adaptech
->                card above 
->   Tape    HP C1537A attached to adaptech card above
-> 
-> Software Environment: tar and mt
-> 
-> Problem Description: 
-> 
-> I usually specify a tape block size, such as 'mt setblk 4096'. If I access the
-> tape drive with the wrong tape block size, for instance 'tar -cvf /dev/tape
-> foo', the screen fills with kernel errors. If I use the correct block size, as
-> in 'tar -b 8 -cvf /dev/tape foo', it works fine. If I use the wrong block size I
-> have to reboot to make the tape drive respond again.
-> 
-> I've seen this problem on three systems with identical SCSI cards and different
-> tape drives, so that makes me think it's the AIC7XXX driver. I've tested with
-> several kernels to try and isolate when this problem was introduced. More
-> details below.
-> 
-> Interestingly, my main testing system is running software raid from the same
-> scsi card with no problems, so this seems specific to tape drives. The other
-> machine I've seen this on had a separate raid card, so you can't blame it on my
-> software raid setup.
-> 
-> Steps to reproduce: 
-> Get a Adaptec AHA-2940U/UW/D / AIC-7881U card and a tape drive,
-> install a recent kernel
-> set the tape block size - mt setblk 4096
-> read from or write to tape using wrong block size - tar -b 7 -cvf /dev/tape foo
-> 
-> ------- You are receiving this mail because: -------
-> You are on the CC list for the bug, or are watching someone who is.
+Exactly.  Or rather, a block of sg_elements from a single point
+of request, is it not?
+
+> Mostly what we see in SCSI is a single bio per request, so skipping the
+> bio is really the current behaviour (to fail the rest of the request).
+
+Very good.  That's what it's supposed to do.
+
+But if each request contained only a single bio, then all of Jens'
+work on IO scheduling would be for nothing, n'est-ce pas?
+
+In the case where a request consists of multiple bio's
+which have been merged under a single request struct,
+we really should give at least one attempt to each bio.
+
+This way, in most cases, only the process that requested the
+failed sector(s) will see an error, not the innocent victims
+that happened to get merged onto the end.  Which could be very
+critical stuff (or not -- it could be quite random).
+
+So the time factor works out to one disk I/O timeout per failed bio.
+That's what would have happened with the NOP scheduler anyway.
+
+On the sytems I'm working with, I don't see huge numbers of bad sectors.
+What they tend to show is just one or two bad sectors, widely scattered.
+
+So:
+>> I think doing that might address most concerns expressed here.
+>> Have you got an alternate suggestion, James?
+
+Cheers
