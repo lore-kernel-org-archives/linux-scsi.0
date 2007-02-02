@@ -1,62 +1,34 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 0/2] : definion, code, and use of new SCSI ML host
-	status DID_COND_REQUEUE
-Date: Fri, 02 Feb 2007 16:54:52 -0600
-Message-ID: <1170456892.3380.35.camel@mulgrave.il.steeleye.com>
-References: <1170453887.14264.73.camel@egoggin-devd.eng.vmware.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH] scsi_lib.c: continue after MEDIUM_ERROR
+Date: Fri, 02 Feb 2007 17:58:04 -0500
+Message-ID: <45C3C1FC.8020500@rtr.ca>
+References: <200701301947.08478.liml@rtr.ca> <1170206199.10890.13.camel@mulgrave.il.steeleye.com> <45C2474E.9030306@rtr.ca> <1170366920.3388.62.camel@mulgrave.il.steeleye.com> <45C32C7F.9050706@emc.com> <20070202145003.525bd682@localhost.localdomain> <45C3617B.2020400@rtr.ca> <20070202194956.GF16722@waste.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:37255 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1946141AbXBBWy5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Feb 2007 17:54:57 -0500
-In-Reply-To: <1170453887.14264.73.camel@egoggin-devd.eng.vmware.com>
+Received: from rtr.ca ([64.26.128.89]:1491 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1946149AbXBBW6I (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 2 Feb 2007 17:58:08 -0500
+In-Reply-To: <20070202194956.GF16722@waste.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Edward Goggin <egoggin@vmware.com>
-Cc: linux-scsi@vger.kernel.org, eric.moore@lsi.com
+To: Matt Mackall <mpm@selenic.com>
+Cc: Alan <alan@lxorguk.ukuu.org.uk>, Ric Wheeler <ric@emc.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Fri, 2007-02-02 at 17:04 -0500, Edward Goggin wrote:
-> Patch Set Summary:
-> 
-> 1	Define new SCSI ML host status DID_COND_REQUEUE and
-> 	add its handling code to scsi_decide_disposition.
-> 	Scsi_decide_disposition returns ADD_TO_MLQUEUE IFF
-> 	not REQ_FAILFAST.
-> 
-> 2	Return DID_COND_REQUEUE instead of DID_BUS_BUSY host status
-> 	in MPT fusion driver when IOC status is SUCCESS and scsi
-> 	status is busy.
+Matt Mackall wrote:
+> ..
+> Also worth considering is that spending minutes trying to reread
+> damaged sectors is likely to accelerate your death spiral. More data
+> may be recoverable if you give up quickly in a first pass, then go
+> back and manually retry damaged bits with smaller I/Os.
 
-Please, no.
+All good input.  But what was being debated here is not so much
+the retrying of known-bad sectors, but rather what to do about
+the kiBs or MiBs of sectors remaining in a merged request after
+hitting a single bad sector mid-way.
 
-In the first place, as I already said on the previous thread, I don't
-think the driver should be interpreting the BUSY return.
+Currently, SCSI just abandons the entire remaining workload.
 
-Secondly, the original problem was with fibre devices which seemed to
-want FAILFAST on BUSY (which looks very bogus to me), but no-one asked
-for this behaviour to be preserved.  The original bug report:
-
-        "When a target device responds with BUSY status, the MPT driver
-        was
-        sending DID_OK to the SCSI mid layer, which caused the IO to be
-        retried indefinitely betweenthe mid layer and the 
-        driver.  By changing the driver return status to DID_BUS_BUSY,
-        the target BUSY status can now flow through the mid layer to an
-        upper layer Failover driver, whichwill manage the I/O timeout."
-        
-is about behaviour which is now fixed (BUSY is retried for the command's
-maximum lifetime but no longer).
-
-Thirdly, the VMware issue was that the fibre fix was causing your
-implementation to time out too fast.
-
-The solution, then, as I said previously should simply be to pass the
-BUSY status up unmodified from the fusion driver.
-
-James
-
-
-
+Cheers
