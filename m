@@ -1,51 +1,76 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH] scsi_lib.c: continue after MEDIUM_ERROR
-Date: Fri, 02 Feb 2007 15:16:55 -0500
-Message-ID: <45C39C37.8060201@torque.net>
-References: <200701301947.08478.liml@rtr.ca>	<1170206199.10890.13.camel@mulgrave.il.steeleye.com>	<45C2474E.9030306@rtr.ca>	<1170366920.3388.62.camel@mulgrave.il.steeleye.com>	<45C32C7F.9050706@emc.com> <20070202144211.5a2d2365@localhost.localdomain>
-Reply-To: dougg@torque.net
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: [BUG] Unable to handle kernel NULL pointer dereference...as_move_to_dispatch+0x11/0x135
+Date: Fri, 2 Feb 2007 12:56:30 -0800
+Message-ID: <20070202205630.GI3737@andrew-vasquezs-computer.local>
+References: <20070122183510.GA19905@andrew-vasquezs-computer.local> <20070201232302.905962b6.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:57417 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946043AbXBBURe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Feb 2007 15:17:34 -0500
-In-Reply-To: <20070202144211.5a2d2365@localhost.localdomain>
+Received: from avexch1.qlogic.com ([198.70.193.115]:52420 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946067AbXBBU4f (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Feb 2007 15:56:35 -0500
+Content-Disposition: inline
+In-Reply-To: <20070201232302.905962b6.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: Ric Wheeler <ric@emc.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Mark Lord <liml@rtr.ca>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, Nigel Kirkland <nigel.kirkland@qlogic.com>
 
-Alan wrote:
->> The interesting point of this question is about the typically pattern of 
->> IO errors. On a read, it is safe to assume that you will have issues 
->> with some bounded numbers of adjacent sectors.
+On Thu, 01 Feb 2007, Andrew Morton wrote:
+
+> On Mon, 22 Jan 2007 10:35:10 -0800 Andrew Vasquez <andrew.vasquez@qlogic.com> wrote:
+> > Basically what is happening from the FC side is the initiator executes
+> > a simple dt test:
+> > 
+> >         dt of=/dev/raw/raw1 procs=8 oncerr=abort bs=16k disable=stats limit=2m passes=1000000 pattern=iot dlimit=2048
+> > 
+> > against a single lun (a very basic Windows target mode driver).
+> > During the test a port-enable, port-disable script is running agains
+> > the switch's port that is connected to the target (this occurs every
+> > sixty seconds (for a disabled duration of 2 seconds).  Additionally,
+> > the target itself is set to LOGO (logout) or drop off the topology
+> > every 30 seconds.
 > 
-> Which in theory you can get by asking the drive for the real sector size
-> from the ATA7 info. (We ought to dig this out more as its relevant for
-> partition layout too).
+> I don't understand what effect the port-enable/port-disable has upon the
+> system.  Will it cause I/O errors, or what?
+
+No I/O errors should make there way to the upper-layers (block/FS).
+The system *should* be shielded from the fibre-channel fabric events.
+I just wanted to explain what the (basic sanity) test did.
+
+> > This test runs fine up to 2.6.19.
 > 
->> I really like the idea of being able to set this kind of policy on a per 
->> drive instance since what you want here will change depending on what 
->> your system requirements are, what the system is trying to do (i.e., 
->> when trying to recover a failing but not dead yet disk, IO errors should 
->> be as quick as possible and we should choose an IO scheduler that does 
->> not combine IO's).
+> One thing we did in there was to give direct-io-against-blockdevs some
+> special-case bio-preparation code.  Perhaps this is tickling a bug somehow.
 > 
-> That seems to be arguing for a bounded "live" time including retry run
-> time for a command. That's also more intuitive for real time work and for
-> end user setup. "Either work or fail within n seconds"
+> We can revert that change like this:
+> 
+> 
+> diff -puN fs/block_dev.c~a fs/block_dev.c
+> --- a/fs/block_dev.c~a
+> +++ a/fs/block_dev.c
+> @@ -196,8 +196,47 @@ static void blk_unget_page(struct page *
+>  	pvec->page[--pvec->idx] = page;
+>  }
+>  
+> +static int
+> +blkdev_get_blocks(struct inode *inode, sector_t iblock,
+> +		struct buffer_head *bh, int create)
+...
 
-Which is more or less the "streaming" feature set in recent
-ATA standards. [Alas, streaming and NCQ/TCQ can't be done
-with the same access.] SCSI has its Read Write Error Recovery
-mode page which doesn't have timeouts but does have Read
-and Write Retry Counts amongst other fields that control
-the amount (and indirectly the time) of attempted error
-recovery.
+Hmm, with this patch we've noted two main differences:
 
-Doug Gilbert
+1) I/O throughput with the basic 'dd' command used (above) is back to
+   60MB/s, rather than the appalling 20-22 MB/s we were seeing with
+   2.6.20-rcX.
 
+2) No panics -- so far with 2+ hours of testing.  With our vanilla
+   system of 2.6.20-rc7, the test could trigger the panic within 15 to
+   20 minutes.
 
+We'll let this run over the weekend -- I'll certainly let you know if
+anything has changed (failures).
+
+--
+Andrew Vasquez
