@@ -1,29 +1,72 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] RESEND: SCSI, libata: add support for ATA_16 commands to libata ATAPI devices
-Date: Fri, 2 Feb 2007 09:11:16 +0000
-Message-ID: <20070202091116.GB27907@infradead.org>
-References: <200701021935.07840.liml@rtr.ca> <200701311346.26644.liml@rtr.ca> <45C1356B.6000907@gmail.com> <45C1377F.6070001@rtr.ca> <45C138E8.1040706@gmail.com> <45C1A4BD.3030909@garzik.org> <45C1A823.30008@gmail.com> <45C1B8D4.1070209@garzik.org> <1170342565.3388.4.camel@mulgrave.il.steeleye.com> <45C24BC5.6060305@torque.net>
+From: Nagendra Singh Tomar <nagendra_tomar@adaptec.com>
+Subject: [PATCH 2.6.19.2] SCSI sd:  udev accessing an uninitialized scsi_disk results in a crash
+Date: Fri, 2 Feb 2007 17:34:56 +0530
+Message-ID: <200702021734.57161.nagendra_tomar@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1423044AbXBBMLh@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <45C24BC5.6060305@torque.net>
-Sender: linux-ide-owner@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, Mark Lord <liml@rtr.ca>, Linux IDE <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Feb 01, 2007 at 03:21:25PM -0500, Douglas Gilbert wrote:
-> My point is that the linux block layer and scsi mid
-> level should get out of the business of putting hard
-> limits place. Why?
+Hi,
+	sd_probe() calls class_device_add() even before initializing the 
+sdkp->device variable. class_device_add() eventually results in the user mode 
+udev program to be called. udev program can read the the allow_restart 
+attribute of the newly created scsi device. This is resulting in a crash as 
+the show function for allow_restart (i.e sd_show_allow_restart) returns the 
+attribute value by reading the sdkp->device->allow_restart variable. As the 
+sdkp->device is not initialized before calling the user mode hotplug helper, 
+this results in a crash.
+	The patch below solves it by calling class_device_add() only after the 
+necessary fields in the scsi_disk structure are initialized properly.
 
-Both of them never have been in the business of putting hard
-limits in place.  We currently have a hard limit in place
-because the storage for the cdb is allocated statically.  This
-is a desin decision done more than ten years ago that we're
-slowly trying to fix.  Second we have a facility to allow
-LLDDs limit the size of the cdb they receive.  It's not
-mandatory in any way, but very useful for those "smart"
-HBAs that can't deal with larger dbs due to hardware limitations.
 
+Thanx,
+Tomar
+
+
+
+Signed-off-by: Nagendra Singh Tomar <nagendra_tomar@adaptec.com>
+---
+
+--- linux-2.6.19.2/drivers/scsi/sd.c.orig	2007-02-02 17:03:03.000000000 +0530
++++ linux-2.6.19.2/drivers/scsi/sd.c	2007-02-02 17:04:04.000000000 +0530
+@@ -1646,16 +1646,6 @@ static int sd_probe(struct device *dev)
+ 	if (error)
+ 		goto out_put;
+ 
+-	class_device_initialize(&sdkp->cdev);
+-	sdkp->cdev.dev = &sdp->sdev_gendev;
+-	sdkp->cdev.class = &sd_disk_class;
+-	strncpy(sdkp->cdev.class_id, sdp->sdev_gendev.bus_id, BUS_ID_SIZE);
+-
+-	if (class_device_add(&sdkp->cdev))
+-		goto out_put;
+-
+-	get_device(&sdp->sdev_gendev);
+-
+ 	sdkp->device = sdp;
+ 	sdkp->driver = &sd_template;
+ 	sdkp->disk = gd;
+@@ -1669,6 +1659,16 @@ static int sd_probe(struct device *dev)
+ 			sdp->timeout = SD_MOD_TIMEOUT;
+ 	}
+ 
++	class_device_initialize(&sdkp->cdev);
++	sdkp->cdev.dev = &sdp->sdev_gendev;
++	sdkp->cdev.class = &sd_disk_class;
++	strncpy(sdkp->cdev.class_id, sdp->sdev_gendev.bus_id, BUS_ID_SIZE);
++
++	if (class_device_add(&sdkp->cdev))
++		goto out_put;
++
++	get_device(&sdp->sdev_gendev);
++
+ 	gd->major = sd_major((index & 0xf0) >> 4);
+ 	gd->first_minor = ((index & 0xf) << 4) | (index & 0xfff00);
+ 	gd->minors = 16;
