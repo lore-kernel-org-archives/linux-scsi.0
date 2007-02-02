@@ -1,56 +1,78 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH] scsi_lib.c: continue after MEDIUM_ERROR
-Date: Thu, 01 Feb 2007 21:48:27 -0500
-Message-ID: <45C2A67B.7090907@rtr.ca>
-References: <200701301947.08478.liml@rtr.ca>	 <1170206199.10890.13.camel@mulgrave.il.steeleye.com>	 <45C2474E.9030306@rtr.ca> <1170366920.3388.62.camel@mulgrave.il.steeleye.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [2.6.20-rc6] pktcdvd doesn't work
+Date: Thu, 1 Feb 2007 20:07:12 -0800
+Message-ID: <20070201200712.3b48311a.akpm@osdl.org>
+References: <20070130195319.GA10994@dreamland.darkstar.lan>
+	<20070131233044.GX3754@stusta.de>
+	<20070201230752.GA17679@dreamland.darkstar.lan>
+	<20070201182147.2835668e.akpm@osdl.org>
+	<20070202023343.GY3754@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1170366920.3388.62.camel@mulgrave.il.steeleye.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.osdl.org ([65.172.181.24]:59825 "EHLO smtp.osdl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933017AbXBBEKh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 1 Feb 2007 23:10:37 -0500
+In-Reply-To: <20070202023343.GY3754@stusta.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Adrian Bunk <bunk@stusta.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Luca Tettamanti <kronos.it@gmail.com>, Peter Osterlund <petero2@telia.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-James Bottomley wrote:
-> On Thu, 2007-02-01 at 15:02 -0500, Mark Lord wrote:
->..
->> One thing that could be even better than the patch below,
->> would be to have it perhaps skip the entire bio that includes
->> the failed sector, rather than only the bad sector itself.
+On Fri, 2 Feb 2007 03:33:43 +0100 Adrian Bunk <bunk@stusta.de> wrote:
+
+> On Thu, Feb 01, 2007 at 06:21:47PM -0800, Andrew Morton wrote:
+> > On Fri, 2 Feb 2007 00:07:52 +0100 Luca Tettamanti <kronos.it@gmail.com> wrote:
+> > 
+> > > Il Thu, Feb 01, 2007 at 12:30:44AM +0100, Adrian Bunk ha scritto: 
+> > > > On Tue, Jan 30, 2007 at 08:53:19PM +0100, Luca Tettamanti wrote:
+> > > > > Hi,
+> > > > > pktcdvd on kernel 2.6.20-rc6 is not working as expected. Any file that
+> > > > > is written to the device is lost after umount.
+> > > > > I rarely use pktcdvd but at some point it used to work on my system.
+> > > > > 
+> > > > > This is what I'm doing:
+> > > > > 
+> > > > > root@dreamland:/tmp# cdrwtool -d /dev/scd0 -q
+> > > > > using device /dev/scd0
+> > > > > 1029KB internal buffer
+> > > > > setting write speed to 12x
+> > > > > Settings for /dev/scd0:
+> > > > >         Fixed packets, size 32
+> > > > >         Mode-2 disc
+> > > > >...
+> > > > 
+> > > > Does 2.6.20-rc7 work?
+> > > > If no, does it work after applying the attached patch?
+> > > > If no, does 2.6.19.2 work?
+> > > 
+> > > Git current + the following patch works.
+> > > 
+> > > > diff --git a/drivers/block/pktcdvd.c b/drivers/block/pktcdvd.c
+> > > > index 6246219..7c95c76 100644
+> > > > --- a/drivers/block/pktcdvd.c
+> > > > +++ b/drivers/block/pktcdvd.c
+> > > > @@ -765,34 +765,47 @@ static inline struct bio *pkt_get_list_first(struct bio **list_head, struct bio
+> > > >   */
+> > > >  static int pkt_generic_packet(struct pktcdvd_device *pd, struct packet_command *cgc)
+> > > >  {
+> > > > -	request_queue_t *q = bdev_get_queue(pd->bdev);
+> > > > +	char sense[SCSI_SENSE_BUFFERSIZE];
+> > 
+> > Where did this patch come from?
 > 
-> Er ... define "skip over the bio".  A bio is simply a block
-> representation for a bunch of sg elements coming in to the elevator.
+> It's a revert of the commits 3b00315799d78f76531b71435fbc2643cd71ae4c 
+> and 406c9b605cbc45151c03ac9a3f95e9acf050808c
+> 
 
-Exactly.  Or rather, a block of sg_elements from a single point
-of request, is it not?
+Oh.  That's
 
-> Mostly what we see in SCSI is a single bio per request, so skipping the
-> bio is really the current behaviour (to fail the rest of the request).
+ [SCSI] untangle scsi_prep_fn
+and	
+ [PATCH] Fix BUG at drivers/scsi/scsi_lib.c:1118 caused by "pktsetup dvd /dev
 
-Very good.  That's what it's supposed to do.
+so this is a post-2.6.18 regression, yes?
 
-But if each request contained only a single bio, then all of Jens'
-work on IO scheduling would be for nothing, n'est-ce pas?
-
-In the case where a request consists of multiple bio's
-which have been merged under a single request struct,
-we really should give at least one attempt to each bio.
-
-This way, in most cases, only the process that requested the
-failed sector(s) will see an error, not the innocent victims
-that happened to get merged onto the end.  Which could be very
-critical stuff (or not -- it could be quite random).
-
-So the time factor works out to one disk I/O timeout per failed bio.
-That's what would have happened with the NOP scheduler anyway.
-
-On the sytems I'm working with, I don't see huge numbers of bad sectors.
-What they tend to show is just one or two bad sectors, widely scattered.
-
-So:
->> I think doing that might address most concerns expressed here.
->> Have you got an alternate suggestion, James?
-
-Cheers
+do we know why this is happening?
