@@ -1,99 +1,84 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH 1/3] pci: New PCI-E reset API
-Date: Thu, 01 Feb 2007 16:14:11 -0600
-Message-ID: <45C26633.2010804@linux.vnet.ibm.com>
-References: <11703510202911-patch-mail.ibm.com> <20070201191235.GQ7585@parisc-linux.org>
-Reply-To: brking@linux.vnet.ibm.com
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [Bugme-new] [Bug 7919] New: Tape dies if wrong block size used
+Date: Thu, 1 Feb 2007 16:08:58 -0800
+Message-ID: <20070201160858.ef28f354.akpm@osdl.org>
+References: <200702012334.l11NYTWu010618@fire-2.osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:49160 "EHLO e5.ny.us.ibm.com"
+Received: from smtp.osdl.org ([65.172.181.24]:50930 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751667AbXBAWOQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Feb 2007 17:14:16 -0500
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e5.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l11MEEjv006904
-	for <linux-scsi@vger.kernel.org>; Thu, 1 Feb 2007 17:14:14 -0500
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.2) with ESMTP id l11MEEBb296120
-	for <linux-scsi@vger.kernel.org>; Thu, 1 Feb 2007 17:14:14 -0500
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l11MED1N002345
-	for <linux-scsi@vger.kernel.org>; Thu, 1 Feb 2007 17:14:14 -0500
-In-Reply-To: <20070201191235.GQ7585@parisc-linux.org>
+	id S1422965AbXBBAJM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 1 Feb 2007 19:09:12 -0500
+In-Reply-To: <200702012334.l11NYTWu010618@fire-2.osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: gregkh@suse.de, linux-pci@atrey.karlin.mff.cuni.cz, paulus@samba.org, linuxppc-dev@ozlabs.org, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, hch@lst.de, Linas Vepstas <linas@austin.ibm.com>
+To: linux-scsi@vger.kernel.org
+Cc: "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>, dmartin@sccd.ctc.edu
 
-Matthew Wilcox wrote:
-> On Thu, Feb 01, 2007 at 11:30:21AM -0600, Brian King wrote:
->> Adds a new API which can be used to issue various types
->> of PCI-E reset, including PCI-E warm reset and PCI-E hot reset.
->> This is needed for an ipr PCI-E adapter which does not properly
->> implement BIST. Running BIST on this adapter results in PCI-E
->> errors. The only reliable reset mechanism that exists on this
->> hardware is PCI Fundamental reset (warm reset). Since driving
->> this type of reset is architecture unique, this provides the
->> necessary hooks for architectures to add this support.
+On Thu, 1 Feb 2007 15:34:29 -0800
+bugme-daemon@bugzilla.kernel.org wrote:
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=7919
 > 
-> A few points ...
+>            Summary: Tape dies if wrong block size used
+>     Kernel Version: 2.6.20-rc5
+>             Status: NEW
+>           Severity: normal
+>              Owner: scsi_drivers-other@kernel-bugs.osdl.org
+>          Submitter: dmartin@sccd.ctc.edu
 > 
->  - When doing a warm reset, you reset the entire device not just the
->    function (== pci_dev) that gets passed in.  How happy are drivers for
->    the other functions going to be about this?
-
-I guess I don't see how a warm reset could be issued to a single function
-of a PCI device. I would argue that for a multi-function device, you would
-have to use function level reset. 
-
-
->  - You've missed the requirement:
 > 
-> "To allow components to perform internal initialization, system software
-> must wait for at least 100 ms from the end of a Conventional Reset of one
-> or more devices before it is permitted to issue Configuration Requests
-> to those devices."
+> Most recent kernel where this bug did *NOT* occur: 2.6.17.14
 > 
->    To fix this, we need to call pci_block_user_cfg_access() before
->    calling the pcibios function, then msleep(100) after calling it, then
->    call pci_unblock_user_cfg_access().
-
-What I've done is to provide a very low-level API that can be used to
-accomplish this. In my implementation, the ipr driver is the one doing
-all the required delays and calling pci_block_user_cfg_access, since it
-already was doing that in order to run BIST on the adapter.
-
->  - There's no attempt to support either cold or function-level reset in
->    this patch.
-
-Correct. I had no requirement to implement this. It can always be added
-if there is a need. A function level reset can be performed by simply
-writing a bit in config space, so *technically* we wouldn't need an
-API to do that for us, but it could certainly be added here.
-
-> I suspect the Right Way of handling hot/warm/cold reset is going to be
-> some kind of integration with error handling.  This driver understands
-> about slots being different from functions, and has the ability to
-> notify drivers of other functions that a reset is happening.
-
-Perhaps. It would require a way for the adapter device driver to
-indicate what type of reset(s) will work for a particular pci device.
-It would also require a method for a device driver to invoke a reset,
-which does not currently exist today. I think it would be the first
-case of the device driver invoking pci error recovery, so I'm not sure
-how difficult that would be to do with the current code.
-
-I actually thought this API might be used by PCI error recovery
-code, since it may need to perform these sorts of functions.
-
-CC'ing Linas Vepstas since he wrote the powerpc pci recovery code.
-
-Brian
-
-
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+> Other Kernels Tested and Results:
+> 
+>     OK 2.6.15.7
+>     OK 2.6.16.37 
+>     OK 2.6.17.14 
+>     BAD 2.6.18.6
+>     BAD 2.6.18-1.2869.fc6
+>     BAD 2.6.19.2 +
+>     BAD 2.6.20-rc5
+> 
+> NOTE: 2.6.18-1.2869.fc6 is a Fedora modified kernel, all others are from kernel.org
+> 
+> Distribution: Fedora 
+> Hardware Environment: i386
+>   Arch    I386 
+>   Model    Dell Poweredge 1300 
+>   Processor    Pentium III (Coppermine) 697.929 Mhz. 
+>   SCSI    Adaptec AHA-2940U/UW/D / AIC-7881U 
+>   Disks    3 QUANTUM ATLAS V 9 WLS in RAID 5 software raid attached to adaptech
+>                card above 
+>   Tape    HP C1537A attached to adaptech card above
+> 
+> Software Environment: tar and mt
+> 
+> Problem Description: 
+> 
+> I usually specify a tape block size, such as 'mt setblk 4096'. If I access the
+> tape drive with the wrong tape block size, for instance 'tar -cvf /dev/tape
+> foo', the screen fills with kernel errors. If I use the correct block size, as
+> in 'tar -b 8 -cvf /dev/tape foo', it works fine. If I use the wrong block size I
+> have to reboot to make the tape drive respond again.
+> 
+> I've seen this problem on three systems with identical SCSI cards and different
+> tape drives, so that makes me think it's the AIC7XXX driver. I've tested with
+> several kernels to try and isolate when this problem was introduced. More
+> details below.
+> 
+> Interestingly, my main testing system is running software raid from the same
+> scsi card with no problems, so this seems specific to tape drives. The other
+> machine I've seen this on had a separate raid card, so you can't blame it on my
+> software raid setup.
+> 
+> Steps to reproduce: 
+> Get a Adaptec AHA-2940U/UW/D / AIC-7881U card and a tape drive,
+> install a recent kernel
+> set the tape block size - mt setblk 4096
+> read from or write to tape using wrong block size - tar -b 7 -cvf /dev/tape foo
+> 
+> ------- You are receiving this mail because: -------
+> You are on the CC list for the bug, or are watching someone who is.
