@@ -1,36 +1,34 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 2.6.19.2] SCSI sd:  udev accessing an uninitialized
-	scsi_disk results in a crash
-Date: Fri, 02 Feb 2007 21:14:36 -0600
-Message-ID: <1170472476.3380.55.camel@mulgrave.il.steeleye.com>
-References: <200702021734.57161.nagendra_tomar@adaptec.com>
-	 <20070202171924.a225cff7.akpm@linux-foundation.org>
-	 <20070203015635.GA18467@kroah.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: [BUG] Unable to handle kernel NULL pointer dereference...as_move_to_dispatch+0x11/0x135
+Date: Fri, 2 Feb 2007 20:30:24 -0800
+Message-ID: <20070203043024.GC11332@plap2.qlogic.org>
+References: <20070122183510.GA19905@andrew-vasquezs-computer.local> <20070201232302.905962b6.akpm@linux-foundation.org> <20070202205630.GI3737@andrew-vasquezs-computer.local> <20070202162541.20e1e930.akpm@linux-foundation.org> <20070202171810.5f089b38.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:38504 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1946302AbXBCDOu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Feb 2007 22:14:50 -0500
-In-Reply-To: <20070203015635.GA18467@kroah.com>
+Received: from avexch1.qlogic.com ([198.70.193.115]:55313 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946315AbXBCEa3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Feb 2007 23:30:29 -0500
+Content-Disposition: inline
+In-Reply-To: <20070202171810.5f089b38.randy.dunlap@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: Andrew Morton <akpm@osdl.org>, Nagendra Singh Tomar <nagendra_tomar@adaptec.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, Nigel Kirkland <nigel.kirkland@qlogic.com>
 
-On Fri, 2007-02-02 at 17:56 -0800, Greg KH wrote:
-> > Thanks - I'll queue this up for 2.6.20 also.
+On Fri, 02 Feb 2007, Randy Dunlap wrote:
+
+> On Fri, 2 Feb 2007 16:25:41 -0800 Andrew Morton wrote:
 > 
-> No objection from me, as long as James says this is ok.
+> > On Fri, 2 Feb 2007 12:56:30 -0800
+> > Andrew Vasquez <andrew.vasquez@qlogic.com> wrote:
+> > 
+> > > > >         dt of=/dev/raw/raw1 procs=8 oncerr=abort bs=16k disable=stats limit=2m passes=1000000 pattern=iot dlimit=2048
+> > 
+> > What is this mysterious dt command, btw?
 > 
-> I wonder why we haven't noticed this in the past?
+> I expect that it's the one here:
+> http://www.scsifaq.org/RMiller_Tools/index.html
 
-Because the race is so small ...
-
-I'll queue it in the rc-fixes tree .. I have three others for 2.6.20
-
-James
-
-
+yep, that's the one.
