@@ -1,88 +1,39 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 12/12] sas_ata: Make this a module separate from libsas
-Date: Sat, 03 Feb 2007 10:03:12 -0600
-Message-ID: <1170518592.3345.38.camel@mulgrave.il.steeleye.com>
-References: <20070130091814.31530.23152.stgit@elm3a70.beaverton.ibm.com>
-	 <20070130091903.31530.90178.stgit@elm3a70.beaverton.ibm.com>
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: [Bugme-new] [Bug 7919] New: Tape dies if wrong block size used
+Date: Sat, 3 Feb 2007 18:35:27 +0200 (EET)
+Message-ID: <Pine.LNX.4.64.0702031827070.6410@kai.makisara.local>
+References: <200702012334.l11NYTWu010618@fire-2.osdl.org>
+ <20070201160858.ef28f354.akpm@osdl.org>  <Pine.LNX.4.64.0702031307480.6410@kai.makisara.local>
+ <1170511444.3345.8.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:41541 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1946478AbXBCQDQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 3 Feb 2007 11:03:16 -0500
-In-Reply-To: <20070130091903.31530.90178.stgit@elm3a70.beaverton.ibm.com>
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:59933 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946491AbXBCQcs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 3 Feb 2007 11:32:48 -0500
+In-Reply-To: <1170511444.3345.8.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Darrick J. Wong" <djwong@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org, alexisb@us.ibm.com
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>, dmartin@sccd.ctc.edu
 
-On Tue, 2007-01-30 at 01:19 -0800, Darrick J. Wong wrote:
-> Break out sas_ata as a free-standing module that provides a SATA
-> Translation Layer (SATL) for libsas.  This patch requires the libsas
-> SATL registration patch; the changes to sas_ata itself are rather
-> minor.
+On Sat, 3 Feb 2007, James Bottomley wrote:
 
-Right at the moment, this doesn't work.  The dependency of ATA_AVAILABLE
-on SCSI_SAS_SATL forces libsas to require sas_ata if you select it as a
-module (i.e. they're not truly independent).
+> On Sat, 2007-02-03 at 13:21 +0200, Kai Makisara wrote:
+> > This patch may also fix the bug 7900.
+> > 
+> > The patch compiles and is lightly tested.
+> 
+> We can give it a spin in scsi-misc ... do you want me to hold off from
+> sending it upstream with the scsi-misc tree when 2.6.20 is declared?
+> 
+You can send it upstream after 2.6.20 is out. I am actually very happy 
+with the patch. Conceptually it is very simple and based on mechanisms 
+existing in the driver. In addition to fixing the bug in this report, it 
+removes the last difference in user space sematics between direct i/o and 
+using the driver buffer. (No documentation change needed because 
+Documentation/scsi/st.txt has not mentioned this difference ;-)
 
-How about this solution to untangle them?
-
-James
-
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index 009fd2b..73a737f 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -46,7 +46,16 @@
- 
- 
- static DEFINE_SPINLOCK(satl_ops_lock);
--static struct satl_operations *satl_ops;
-+static struct satl_operations *satl_ops = NULL;
-+
-+
-+static inline int dev_is_sata(struct domain_device *dev)
-+{
-+	return (satl_ops
-+		&& (dev->rphy->identify.target_port_protocols
-+		    & SAS_PROTOCOL_SATA));
-+}
-+
- 
- static void sas_scsi_task_done(struct sas_task *task)
- {
-diff --git a/include/scsi/sas_ata.h b/include/scsi/sas_ata.h
-index f1d90f7..06a9be5 100644
---- a/include/scsi/sas_ata.h
-+++ b/include/scsi/sas_ata.h
-@@ -49,25 +49,4 @@ struct satl_operations {
- int sas_register_satl(struct satl_operations *satl_ops);
- int sas_unregister_satl(struct satl_operations *satl_ops);
- 
--#ifdef CONFIG_SCSI_SAS_SATL_MODULE
--# define SAS_ATA_AVAILABLE
--#endif
--
--#ifdef CONFIG_SCSI_SAS_SATL
--# define SAS_ATA_AVAILABLE
--#endif
--
--#ifdef SAS_ATA_AVAILABLE
--
--static inline int dev_is_sata(struct domain_device *dev)
--{
--	return (dev->rphy->identify.target_port_protocols & SAS_PROTOCOL_SATA);
--}
--
--#else
--
--#define dev_is_sata(x) (0)
--
--#endif /* SAS_ATA_AVAILABLE */
--
- #endif /* _SAS_ATA_H_ */
-
-
+-- 
+Kai
