@@ -1,40 +1,58 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] scsi: Update Aic94xx SAS/SATA Linux open source device
-	driver for new sequence firmware.
-Date: Sat, 03 Feb 2007 16:28:43 -0600
-Message-ID: <1170541723.3345.64.camel@mulgrave.il.steeleye.com>
-References: <89FD792A883D4B47AD469FEA2E5D1F9B0F59B6@aime2k302.adaptec.com>
+Subject: Re: [PATCH 00/12] Roll-up of sas_ata patches
+Date: Sat, 03 Feb 2007 16:32:14 -0600
+Message-ID: <1170541934.3345.69.camel@mulgrave.il.steeleye.com>
+References: <200701300915.l0U9FuPu010198@d01av04.pok.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:43295 "EHLO
+Received: from hancock.steeleye.com ([71.30.118.248]:43317 "EHLO
 	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751626AbXBCW2v (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 3 Feb 2007 17:28:51 -0500
-In-Reply-To: <89FD792A883D4B47AD469FEA2E5D1F9B0F59B6@aime2k302.adaptec.com>
+	with ESMTP id S1751749AbXBCWcl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 3 Feb 2007 17:32:41 -0500
+In-Reply-To: <200701300915.l0U9FuPu010198@d01av04.pok.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Wu, Gilbert" <Gilbert_Wu@adaptec.com>
-Cc: linux-scsi@vger.kernel.org
+To: "Darrick J. Wong" <djwong@us.ibm.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>
 
-On Tue, 2007-01-30 at 15:31 -0800, Wu, Gilbert wrote:
-> Subject:  [PATCH] scsi: Update Aic94xx SAS/SATA Linux open source device
-> driver for new sequence firmware.
+On Tue, 2007-01-30 at 04:15 -0500, Darrick J. Wong wrote:
+> This is a roll-up of all of my ATA related uncommitted patches against
+> libsas and aic94xx to date.  Per James Bottomley's request, I'm pushing
+> these patches out for further review in aic94xx-sas.  The big changes in
+> this patch set are a lot of bug and locking fixes, the conversion of the
+> EH routines to interact with the SAS EH strategy routines, and of course
+> the separation of the SATL code into a separate module.
+> 
+> These patches should apply in number order cleanly against 2.6.20-rc6 +
+> scsi_misc + scsi-rc-fixes + aic94xx-sas.  They've been fairly well tested
+> on a bunch of SATA disks in a x206m, though the ATAPI support is not so
+> well tested.  However, I have run these patches in other loads for a while.
+> Hopefully these patches are ready for more widespread testing in
+> scsi-misc, and thank you for any comments or feedback that you provide.
+> 
+> (Apologies for any stgit mail misconfiguration on my part.)
 
-I put the patch, which seems fine, into scsi-misc-2.6; however, it looks
-like the firmware isn't fine.  With the V28 firmware I get instability
-on my directly attached SATA disk.  It begins about three minutes into a
-small exercise of the filesystem on the disk as:
+There's a problem somewhere with your error handler changes (which I
+picked up thanks to the problems with the V28 firmware).  What I see
+without your changes is that for a directly attached SATA device, when
+the firmware begins its death spiral, the commands all return and
+eventually send I/O errors to the filesystem,  With your patch series
+applied, it just loops forever giving messages like:
 
-Feb  3 16:13:50 localhost kernel: sas: command 0xf7aca994, task
-0x00000000, gone: EH_RESET_TIMER
-
-and then times out commands and eventually flips ext3 into read only
-mode because of the errors.
-
-If I run the same tests with the V17/10c6 firmware, everything runs fine
-and to completion.
+Feb  3 12:07:06 localhost kernel: aic94xx: escb_tasklet_complete: phy5: LINK_RESET_ERROR
+Feb  3 12:07:06 localhost kernel: aic94xx: phy5: Receive FIS timeout
+Feb  3 12:07:06 localhost kernel: aic94xx: phy5: retries:0 performing link reset seq
+Feb  3 12:07:06 localhost kernel: sas: --- Exit sas_scsi_recover_host
+Feb  3 12:07:06 localhost kernel: aic94xx: control_phy_tasklet_complete: phy5, lrate:0x8, proto:0xe
+Feb  3 12:07:06 localhost kernel: sas: Enter sas_scsi_recover_host
+Feb  3 12:07:06 localhost kernel: sas: --- Exit sas_scsi_recover_host
+Feb  3 12:07:06 localhost kernel: sas: Enter sas_scsi_recover_host
+Feb  3 12:07:06 localhost kernel: sas: --- Exit sas_scsi_recover_host
+Feb  3 12:07:06 localhost kernel: sas: Enter sas_scsi_recover_host
+Feb  3 12:07:06 localhost kernel: sas: --- Exit sas_scsi_recover_host
+....
 
 James
 
