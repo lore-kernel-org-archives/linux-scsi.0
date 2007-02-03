@@ -1,39 +1,41 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: [Bugme-new] [Bug 7919] New: Tape dies if wrong block size used
-Date: Sat, 3 Feb 2007 18:35:27 +0200 (EET)
-Message-ID: <Pine.LNX.4.64.0702031827070.6410@kai.makisara.local>
-References: <200702012334.l11NYTWu010618@fire-2.osdl.org>
- <20070201160858.ef28f354.akpm@osdl.org>  <Pine.LNX.4.64.0702031307480.6410@kai.makisara.local>
- <1170511444.3345.8.camel@mulgrave.il.steeleye.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] scsi: Update Aic94xx SAS/SATA Linux open source device
+	driver for new sequence firmware.
+Date: Sat, 03 Feb 2007 16:28:43 -0600
+Message-ID: <1170541723.3345.64.camel@mulgrave.il.steeleye.com>
+References: <89FD792A883D4B47AD469FEA2E5D1F9B0F59B6@aime2k302.adaptec.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:59933 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946491AbXBCQcs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 3 Feb 2007 11:32:48 -0500
-In-Reply-To: <1170511444.3345.8.camel@mulgrave.il.steeleye.com>
+Received: from hancock.steeleye.com ([71.30.118.248]:43295 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751626AbXBCW2v (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 3 Feb 2007 17:28:51 -0500
+In-Reply-To: <89FD792A883D4B47AD469FEA2E5D1F9B0F59B6@aime2k302.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>, dmartin@sccd.ctc.edu
+To: "Wu, Gilbert" <Gilbert_Wu@adaptec.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Sat, 3 Feb 2007, James Bottomley wrote:
+On Tue, 2007-01-30 at 15:31 -0800, Wu, Gilbert wrote:
+> Subject:  [PATCH] scsi: Update Aic94xx SAS/SATA Linux open source device
+> driver for new sequence firmware.
 
-> On Sat, 2007-02-03 at 13:21 +0200, Kai Makisara wrote:
-> > This patch may also fix the bug 7900.
-> > 
-> > The patch compiles and is lightly tested.
-> 
-> We can give it a spin in scsi-misc ... do you want me to hold off from
-> sending it upstream with the scsi-misc tree when 2.6.20 is declared?
-> 
-You can send it upstream after 2.6.20 is out. I am actually very happy 
-with the patch. Conceptually it is very simple and based on mechanisms 
-existing in the driver. In addition to fixing the bug in this report, it 
-removes the last difference in user space sematics between direct i/o and 
-using the driver buffer. (No documentation change needed because 
-Documentation/scsi/st.txt has not mentioned this difference ;-)
+I put the patch, which seems fine, into scsi-misc-2.6; however, it looks
+like the firmware isn't fine.  With the V28 firmware I get instability
+on my directly attached SATA disk.  It begins about three minutes into a
+small exercise of the filesystem on the disk as:
 
--- 
-Kai
+Feb  3 16:13:50 localhost kernel: sas: command 0xf7aca994, task
+0x00000000, gone: EH_RESET_TIMER
+
+and then times out commands and eventually flips ext3 into read only
+mode because of the errors.
+
+If I run the same tests with the V17/10c6 firmware, everything runs fine
+and to completion.
+
+James
+
+
