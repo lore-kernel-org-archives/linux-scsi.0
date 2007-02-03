@@ -1,54 +1,31 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: [Bugme-new] [Bug 7900] New: Kernel OOPS when using tape drive
- (compiler bug?)
-Date: Sat, 3 Feb 2007 13:25:21 +0200 (EET)
-Message-ID: <Pine.LNX.4.64.0702031322370.6410@kai.makisara.local>
-References: <200701300139.l0U1dP09019983@fire-2.osdl.org>
- <20070129180535.85950b67.akpm@osdl.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [Bugme-new] [Bug 7919] New: Tape dies if wrong block size used
+Date: Sat, 03 Feb 2007 08:04:03 -0600
+Message-ID: <1170511444.3345.8.camel@mulgrave.il.steeleye.com>
+References: <200702012334.l11NYTWu010618@fire-2.osdl.org>
+	 <20070201160858.ef28f354.akpm@osdl.org>
+	 <Pine.LNX.4.64.0702031307480.6410@kai.makisara.local>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:56131 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946455AbXBCLWm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 3 Feb 2007 06:22:42 -0500
-In-Reply-To: <20070129180535.85950b67.akpm@osdl.org>
+Received: from hancock.steeleye.com ([71.30.118.248]:41034 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1945995AbXBCOEP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 3 Feb 2007 09:04:15 -0500
+In-Reply-To: <Pine.LNX.4.64.0702031307480.6410@kai.makisara.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-scsi@vger.kernel.org, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>, michal@logix.cz
+To: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>, dmartin@sccd.ctc.edu
 
-On Mon, 29 Jan 2007, Andrew Morton wrote:
-
-> On Mon, 29 Jan 2007 17:39:25 -0800
-> bugme-daemon@bugzilla.kernel.org wrote:
+On Sat, 2007-02-03 at 13:21 +0200, Kai Makisara wrote:
+> This patch may also fix the bug 7900.
 > 
-> > http://bugzilla.kernel.org/show_bug.cgi?id=7900
-> > 
-> >            Summary: Kernel OOPS when using tape drive (compiler bug?)
-> >     Kernel Version: 2.6.20-rc5
-> >             Status: NEW
-> >           Severity: high
-> >              Owner: io_scsi@kernel-bugs.osdl.org
-> >          Submitter: michal@logix.cz
-> > 
-> > 
-> > Most recent kernel where this bug did *NOT* occur:
-> > Distribution: OpenSUSE 10.2 x86
-> > Hardware Environment: 
-> > SCSI controller "LSI Logic / Symbios Logic 53c1030 PCI-X Fusion-MPT Dual
-> > Ultra320 SCSI (rev 07)", tape streamer Datastor LTO1 (don't know the exact model)
-> > 
-> > Software Environment: OpenSUSE 10.2 x86, mondoarchive, mondorescue
-> > 
-> > Problem Description:
-> > Attempt to restore data from a tape drive results in the following Oops and
-> > subsequent functinality loss of the strreamer. Writing to the tape, however,
-> > worked fine. Or at least mondoarchive haven't complained.
-> > 
-I don't know how mondoarchive uses the tape. The bug 7900 looked somewhat 
-similar. It might be useful to try the patch provided for that bug (in 
-Bugzilla and linux-scsi).
+> The patch compiles and is lightly tested.
 
--- 
-Kai
+We can give it a spin in scsi-misc ... do you want me to hold off from
+sending it upstream with the scsi-misc tree when 2.6.20 is declared?
+
+James
+
