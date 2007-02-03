@@ -1,31 +1,57 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [Bugme-new] [Bug 7919] New: Tape dies if wrong block size used
-Date: Sat, 03 Feb 2007 08:04:03 -0600
-Message-ID: <1170511444.3345.8.camel@mulgrave.il.steeleye.com>
-References: <200702012334.l11NYTWu010618@fire-2.osdl.org>
-	 <20070201160858.ef28f354.akpm@osdl.org>
-	 <Pine.LNX.4.64.0702031307480.6410@kai.makisara.local>
+Subject: [GIT PATCH] SCSI final bug fixes for 2.6.20-rc7
+Date: Sat, 03 Feb 2007 08:25:59 -0600
+Message-ID: <1170512760.3345.20.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:41034 "EHLO
+Received: from hancock.steeleye.com ([71.30.118.248]:41136 "EHLO
 	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1945995AbXBCOEP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 3 Feb 2007 09:04:15 -0500
-In-Reply-To: <Pine.LNX.4.64.0702031307480.6410@kai.makisara.local>
+	with ESMTP id S1946457AbXBCO0G (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 3 Feb 2007 09:26:06 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>, dmartin@sccd.ctc.edu
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Sat, 2007-02-03 at 13:21 +0200, Kai Makisara wrote:
-> This patch may also fix the bug 7900.
-> 
-> The patch compiles and is lightly tested.
+There are four small bug fixes in this:  A set of qla4xxx driver bugs, a
+fix for uninitialised variables in sd during initial hotplug, a tape fix
+for BUG 7864 and an async scan fix for the "none" scanning type with
+RAID devices.
 
-We can give it a spin in scsi-misc ... do you want me to hold off from
-sending it upstream with the scsi-misc tree when 2.6.20 is declared?
+The fix is available here:
+
+master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
+
+The short changelog is:
+
+David C Somayajulu (1):
+       qla4xxx: bug fixes
+
+Kai Makisara (1):
+       st: A MTIOCTOP/MTWEOF within the early warning will cause the file number to be incorrect
+
+Matthew Wilcox (1):
+       Fix scsi_add_device() for async scanning
+
+Nagendra Singh Tomar (1):
+       sd: udev accessing an uninitialized scsi_disk field results in a crash
+
+and the diffstat:
+
+ qla4xxx/ql4_def.h     |    1 
+ qla4xxx/ql4_glbl.h    |    1 
+ qla4xxx/ql4_init.c    |   18 +++++++-------
+ qla4xxx/ql4_isr.c     |    4 +--
+ qla4xxx/ql4_mbx.c     |   35 ++++++++++++++++-----------
+ qla4xxx/ql4_os.c      |   64 ++++++++++++++++++++++++++++++--------------------
+ qla4xxx/ql4_version.h |    2 -
+ scsi_scan.c           |    6 ++++
+ sd.c                  |   20 +++++++--------
+ st.c                  |   19 ++++++++------
+ 10 files changed, 100 insertions(+), 70 deletions(-)
 
 James
+
 
