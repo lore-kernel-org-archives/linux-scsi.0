@@ -1,69 +1,89 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 00/12] Roll-up of sas_ata patches
-Date: Sun, 04 Feb 2007 09:11:46 -0600
-Message-ID: <1170601907.3424.4.camel@mulgrave.il.steeleye.com>
-References: <200701300915.l0U9FuPu010198@d01av04.pok.ibm.com>
-	 <1170541934.3345.69.camel@mulgrave.il.steeleye.com>
-	 <45C5A581.1070504@us.ibm.com>
+From: David Moore <dcm@MIT.EDU>
+Subject: Re: [PATCH] ieee1394: sbp2: enforce 32bit DMA mapping
+Date: Sun, 04 Feb 2007 11:06:37 -0500
+Message-ID: <1170605197.26464.16.camel@PISCES.MIT.EDU>
+References: <tkrat.37326df2d568d12d@s5r6.in-berlin.de>
+	<1168802387.2780.1.camel@mulgrave.il.steeleye.com>
+	<tkrat.581ea0f6f3fe6292@s5r6.in-berlin.de>
+	<tkrat.e82713a8340840b3@s5r6.in-berlin.de>
+	<tkrat.61995f33104845d9@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:47258 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752379AbXBDPMB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 4 Feb 2007 10:12:01 -0500
-In-Reply-To: <45C5A581.1070504@us.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
+In-Reply-To: <tkrat.61995f33104845d9@s5r6.in-berlin.de>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux1394-devel>
+List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
+List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: linux1394-devel-bounces@lists.sourceforge.net
+Errors-To: linux1394-devel-bounces@lists.sourceforge.net
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Darrick J. Wong" <djwong@us.ibm.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>
 
-On Sun, 2007-02-04 at 01:21 -0800, Darrick J. Wong wrote:
-> James Bottomley wrote:
+Yes, I think you should use GFP_DMA32 instead of GFP_DMA.  GFP_DMA
+refers to just the first 16MB of memory.
+
+I'd like to make a similar change in ieee1394/dma.c.  Right now, it
+allocates large DMA regions with vmalloc().  One reason why that is bad
+is because it often returns physical addresses larger than 32-bits,
+causing the hardware to use bounce buffers (and is thus slow, and also
+happened to expose a bug in swiotlb).
+
+-David
+
+On Sun, 2007-02-04 at 13:05 +0100, Stefan Richter wrote:
+> In order to use OHCI physical DMA, all s/g elements, s/g tables, ORBs,
+> and response buffers have to reside within the first 4 GB of the
+> FireWire controller's physical address space.  Set the correct mask for
+> DMA mappings.
 > 
-> > There's a problem somewhere with your error handler changes (which I
-> > picked up thanks to the problems with the V28 firmware).  What I see
-> > without your changes is that for a directly attached SATA device, when
-> > the firmware begins its death spiral, the commands all return and
-> > eventually send I/O errors to the filesystem,  With your patch series
-> > applied, it just loops forever giving messages like:
-> > 
-> > Feb  3 12:07:06 localhost kernel: aic94xx: escb_tasklet_complete: phy5: LINK_RESET_ERROR
-> > Feb  3 12:07:06 localhost kernel: aic94xx: phy5: Receive FIS timeout
-> > Feb  3 12:07:06 localhost kernel: aic94xx: phy5: retries:0 performing link reset seq
-> > Feb  3 12:07:06 localhost kernel: sas: --- Exit sas_scsi_recover_host
-> > Feb  3 12:07:06 localhost kernel: aic94xx: control_phy_tasklet_complete: phy5, lrate:0x8, proto:0xe
-> > Feb  3 12:07:06 localhost kernel: sas: Enter sas_scsi_recover_host
-> > Feb  3 12:07:06 localhost kernel: sas: --- Exit sas_scsi_recover_host
-> > Feb  3 12:07:06 localhost kernel: sas: Enter sas_scsi_recover_host
-> > Feb  3 12:07:06 localhost kernel: sas: --- Exit sas_scsi_recover_host
-> > Feb  3 12:07:06 localhost kernel: sas: Enter sas_scsi_recover_host
-> > Feb  3 12:07:06 localhost kernel: sas: --- Exit sas_scsi_recover_host
+> Also ensure that the memory allocated for command ORBs and s/g tables is
+> suitable for DMA.
 > 
-> Interesting, since the opposite happens with SAS disks. :)
+> Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
+> ---
+> Should I use GFP_DMA32 instead of GFP_DMA?
+> 
+> 
+>  drivers/ieee1394/sbp2.c |    7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
+> 
+> Index: linux-2.6.20-rc5/drivers/ieee1394/sbp2.c
+> ===================================================================
+> --- linux-2.6.20-rc5.orig/drivers/ieee1394/sbp2.c
+> +++ linux-2.6.20-rc5/drivers/ieee1394/sbp2.c
+> @@ -477,7 +477,7 @@ static int sbp2util_create_command_orb_p
+>  
+>  	spin_lock_irqsave(&lu->cmd_orb_lock, flags);
+>  	for (i = 0; i < orbs; i++) {
+> -		cmd = kzalloc(sizeof(*cmd), GFP_ATOMIC);
+> +		cmd = kzalloc(sizeof(*cmd), GFP_ATOMIC | GFP_DMA);
+>  		if (!cmd) {
+>  			spin_unlock_irqrestore(&lu->cmd_orb_lock, flags);
+>  			return -ENOMEM;
+> @@ -757,6 +757,11 @@ static struct sbp2_lu *sbp2_alloc_device
+>  			SBP2_ERR("failed to register lower 4GB address range");
+>  			goto failed_alloc;
+>  		}
+> +#else
+> +		if (dma_set_mask(hi->host->device.parent, DMA_32BIT_MASK)) {
+> +			SBP2_ERR("failed to set 4GB DMA mask");
+> +			goto failed_alloc;
+> +		}
+>  #endif
+>  	}
+>  
+> 
+> 
 
-Well, the initial error is a firmware induced drive error of some type.
 
-> The infinite loop is usually what happens if a scsi_cmnd gets pulled off
-> the eh queue without being scsi_eh_finish_cmnd()'d.  Can you send me the
-> whole dmesg?  It's possible that we're trying to abort a command, which
-> of course fails for a SATA disk, so we try bigger and bigger hammers....
-> and the big hammers don't call scsi-eh-finish-cmd.
-
-I've put the full log from detection of the aic94xx to forced power off
-(all 512k of it) at
-
-http://www2.kernel.org:/pub/linux/kernel/people/jejb/klog.aic94xx.failure.txt
-
-(give it a while for the kernel.org mirrors to propagate)
-
-> Did these SATA link reset errors only start showing up after the v28
-> firmware patch, or has this always happened?  I've noticed lately that I
-> get link reset errors if I run a short exercise on an ext3 filesystem on
-> a SATA disk, yet dd exercise runs just fine.  But I had also thought
-> that it was just my flaky hardware. :)
-
-Er ... no idea ... The problem only shows up with V28 firmware, so I've
-never seen a SATA disc fail with the V17 firmware.
-
+-------------------------------------------------------------------------
+Using Tomcat but need to do more? Need to support web services, security?
+Get stuff done quickly with pre-integrated technology to make your job easier.
+Download IBM WebSphere Application Server v.1.0.1 based on Apache Geronimo
+http://sel.as-us.falkag.net/sel?cmd=lnk&kid=120709&bid=263057&dat=121642
