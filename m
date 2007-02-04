@@ -1,65 +1,81 @@
-From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: Re: [PATCH 00/12] Roll-up of sas_ata patches
-Date: Sun, 04 Feb 2007 01:21:05 -0800
-Message-ID: <45C5A581.1070504@us.ibm.com>
-References: <200701300915.l0U9FuPu010198@d01av04.pok.ibm.com> <1170541934.3345.69.camel@mulgrave.il.steeleye.com>
-Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: [PATCH] ieee1394: sbp2: remove unnecessary alignments of struct
+ members
+Date: Sun, 4 Feb 2007 13:04:32 +0100 (CET)
+Message-ID: <tkrat.e82713a8340840b3@s5r6.in-berlin.de>
+References: <tkrat.37326df2d568d12d@s5r6.in-berlin.de>
+ <1168802387.2780.1.camel@mulgrave.il.steeleye.com>
+ <tkrat.581ea0f6f3fe6292@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; CHARSET=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:35225 "EHLO e1.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752192AbXBDJVL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 4 Feb 2007 04:21:11 -0500
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e1.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l149LAGk019467
-	for <linux-scsi@vger.kernel.org>; Sun, 4 Feb 2007 04:21:10 -0500
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.2) with ESMTP id l149L9mS294252
-	for <linux-scsi@vger.kernel.org>; Sun, 4 Feb 2007 04:21:09 -0500
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l149L9et009226
-	for <linux-scsi@vger.kernel.org>; Sun, 4 Feb 2007 04:21:09 -0500
-In-Reply-To: <1170541934.3345.69.camel@mulgrave.il.steeleye.com>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:49866 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752021AbXBDMEk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 4 Feb 2007 07:04:40 -0500
+In-Reply-To: <tkrat.581ea0f6f3fe6292@s5r6.in-berlin.de>
+Content-Disposition: INLINE
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>
+To: linux1394-devel@lists.sourceforge.net
+Cc: linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
+The members "dma_addr_t command_orb_dma" and "dma_addr_t sge_dma" of
+sbp2.h::sbp2_command_info do not have to be aligned themselves --- only
+the memory which they point to has to be.
 
-> There's a problem somewhere with your error handler changes (which I
-> picked up thanks to the problems with the V28 firmware).  What I see
-> without your changes is that for a directly attached SATA device, when
-> the firmware begins its death spiral, the commands all return and
-> eventually send I/O errors to the filesystem,  With your patch series
-> applied, it just loops forever giving messages like:
-> 
-> Feb  3 12:07:06 localhost kernel: aic94xx: escb_tasklet_complete: phy5: LINK_RESET_ERROR
-> Feb  3 12:07:06 localhost kernel: aic94xx: phy5: Receive FIS timeout
-> Feb  3 12:07:06 localhost kernel: aic94xx: phy5: retries:0 performing link reset seq
-> Feb  3 12:07:06 localhost kernel: sas: --- Exit sas_scsi_recover_host
-> Feb  3 12:07:06 localhost kernel: aic94xx: control_phy_tasklet_complete: phy5, lrate:0x8, proto:0xe
-> Feb  3 12:07:06 localhost kernel: sas: Enter sas_scsi_recover_host
-> Feb  3 12:07:06 localhost kernel: sas: --- Exit sas_scsi_recover_host
-> Feb  3 12:07:06 localhost kernel: sas: Enter sas_scsi_recover_host
-> Feb  3 12:07:06 localhost kernel: sas: --- Exit sas_scsi_recover_host
-> Feb  3 12:07:06 localhost kernel: sas: Enter sas_scsi_recover_host
-> Feb  3 12:07:06 localhost kernel: sas: --- Exit sas_scsi_recover_host
+The member "struct sbp2_command_orb command_orb" has to be aligned on
+4 bytes boundary which is guaranteed because it contains u32 members.
 
-Interesting, since the opposite happens with SAS disks. :)
+The member "struct sbp2_unrestricted_page_table scatter_gather_element",
+i.e. the SBP-2 s/g table, has to be aligned on 8 bytes boundary
+according to the SBP-2 spec.  This is not a requirement for FireWire
+controllers but could be expected by SBP-2 targets.
 
-The infinite loop is usually what happens if a scsi_cmnd gets pulled off
-the eh queue without being scsi_eh_finish_cmnd()'d.  Can you send me the
-whole dmesg?  It's possible that we're trying to abort a command, which
-of course fails for a SATA disk, so we try bigger and bigger hammers....
-and the big hammers don't call scsi-eh-finish-cmd.
+I see no need to align the members command_orb and
+scatter_gather_element on CPU cacheline boundaries.  It could have
+performance benefits, but on the other hand sbp2 has a somewhat wasteful
+allocation scheme which should be optimized first before further tweaks
+like cacheline alignments.  (E.g. don't always allocate SG_ALL s/g table
+elements.)
 
-Did these SATA link reset errors only start showing up after the v28
-firmware patch, or has this always happened?  I've noticed lately that I
-get link reset errors if I run a short exercise on an ext3 filesystem on
-a SATA disk, yet dd exercise runs just fine.  But I had also thought
-that it was just my flaky hardware. :)
+Note, before as well as after the patch, the code relies on the
+assumption that memory alignment in the virtual address space is
+preserved in the physical address space after DMA mapping.
 
---D
+Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
+---
+ drivers/ieee1394/sbp2.h |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+Index: linux-2.6.20-rc5/drivers/ieee1394/sbp2.h
+===================================================================
+--- linux-2.6.20-rc5.orig/drivers/ieee1394/sbp2.h
++++ linux-2.6.20-rc5/drivers/ieee1394/sbp2.h
+@@ -250,15 +250,15 @@ enum sbp2_dma_types {
+ /* Per SCSI command */
+ struct sbp2_command_info {
+ 	struct list_head list;
+-	struct sbp2_command_orb command_orb ____cacheline_aligned;
+-	dma_addr_t command_orb_dma ____cacheline_aligned;
++	struct sbp2_command_orb command_orb;
++	dma_addr_t command_orb_dma;
+ 	struct scsi_cmnd *Current_SCpnt;
+ 	void (*Current_done)(struct scsi_cmnd *);
+ 
+ 	/* Also need s/g structure for each sbp2 command */
+ 	struct sbp2_unrestricted_page_table
+-			scatter_gather_element[SG_ALL] ____cacheline_aligned;
+-	dma_addr_t sge_dma ____cacheline_aligned;
++		scatter_gather_element[SG_ALL] __attribute__((aligned(8)));
++	dma_addr_t sge_dma;
+ 	void *sge_buffer;
+ 	dma_addr_t cmd_dma;
+ 	enum sbp2_dma_types dma_type;
+
+
+-- 
+Stefan Richter
+-=====-=-=== --=- --=--
+http://arcgraph.de/sr/
+
