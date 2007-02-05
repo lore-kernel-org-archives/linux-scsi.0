@@ -1,98 +1,97 @@
-From: Mark Haverkamp <markh@linux-foundation.org>
-Subject: [PATCH] scsi spi transport: SCSI domain validation after reset
-Date: Mon, 05 Feb 2007 12:49:00 -0800
-Message-ID: <1170708540.2573.10.camel@markh3.pdx.osdl.net>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: SG_IO weirdness
+Date: Mon, 05 Feb 2007 16:19:21 -0500
+Message-ID: <45C79F59.3090305@torque.net>
+References: <558F4D473FD7FE419B019232BF2D37B40B22F2@G3W0634.americas.hpqcorp.net> <45C782CF.9030207@torque.net> <558F4D473FD7FE419B019232BF2D37B40B22F8@G3W0634.americas.hpqcorp.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:32781 "EHLO smtp.osdl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933366AbXBEUtG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 Feb 2007 15:49:06 -0500
+Received: from pentafluge.infradead.org ([213.146.154.40]:57864 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933458AbXBEVT2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Feb 2007 16:19:28 -0500
+In-Reply-To: <558F4D473FD7FE419B019232BF2D37B40B22F8@G3W0634.americas.hpqcorp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>
+To: "Cameron, Steve" <Steve.Cameron@hp.com>
+Cc: linux-scsi@vger.kernel.org
 
-James,
+Cameron, Steve wrote:
+>> Steve,
+>> Even though the SCSI status is CHECK CONDITION, the data-in
+>> buffer may still be transferred. One obvious example
+>> is a READ command when the sense key is RECOVERED ERROR.
+> 
+> Yep, of course.
+> 
+>> The sg driver and I suspect the block layer SG_IO do
+>> not check the SCSI status to determine whether or not
+>> to transfer the data-in buffer (or where it would have
+>> been DMA-ed to if the command worked) back to user space.
+>> If it was _direct_ IO then the block layer SG_IO and the
+>> sg driver would have no control over the data-in transfer
+>> (apart from setting it up).
+>>
+>> Both the sg driver and the block layer SG_IO could check
+>> the resid field which a LLD should set after a DMA
+>> (especially inbound). However LLDs are not compelled to
+>> set resid properly.
+>>
+>> So a few questions:
+>> - block layer SG_IO, the sg driver or both?
+> 
+> sg driver.
+> 
+>> - indirect IO (i.e. O_DIRECT not set)?
+> 
+> indirect IO, O_DIRECT was not set.
+> 
+>> - did the offending process have superuser permissions?
+> Yes.
+> 
+>> - did the resid field indicate a short data-in transfer?
+> 
+> resid == 64, the requested buffer was 1088 bytes.
+> (If I interpret that right, it means that all but 64 
+> bytes were transferred, that is, 1024 bytes were 
+> transferred?  Odd, considering the CDB was nonsense.)
 
-Some months ago, I had problems with a mis-behaving disk that failed
-domain validation on a fusion card resulting in an infinite loop of
-domain validation.  At the time Eric proposed a patch to the mptspi
-driver to reload devices with parameters previously negotiated when a
-reset occurred.  You indicated that a more generic solution should be
-done.
+Steve,
+>From memory, between SPC-2 and SPC-3 the INQUIRY allocation
+length field went from 8 bits to 16 bits. If you do the
+above calculation modulo 256 it comes out correct :-)
 
-This patch updates spi_dv_device_internal() to check if domain
-validation has already been performed on a device and just sets it
-previously negotiated parameters.  This solved the "infinite domain
-validation" loop for me when a reset is performed as a result of command
-timeout with the mis-behaving device.
+The moral here is don't set INQUIRY lengths > 252
+unless the target can handle it. There is no point
+anyway for a "standard" INQUIRY (EVPD=0, CmdDt is
+obsolete). With VPD pages you can do a double fetch,
+the first one 4 bytes long to pick up "page length"
+field.
+But then again you said the cdb was nonsense.
 
-Signed-off-by Mark Haverkamp <markh@linux-foundation.org>
 
----
+Now it is still a bit fuzzy because there is the
+allocation length field in some cdbs and the dxfer_len
+given to sg_io_hdr. I would think that the LLD
+should concentrate on the latter and set resid
+accordingly. That makes me wonder about the LLD
+involved (the sg driver just passes resid through).
 
-Applies to scsi-misc-2.6
+>> As long as the SCSI status and sense buffer are conveyed
+>> back properly _and_ this is only observed when the
+>> process has superuser permissions, then I wouldn't
+>> regard it as serious. Others may disagree.
+> 
+> I haven't tried it as non-superuser.  (And couldn't,
+> unless I chmod'ed /dev/sg* )
 
----
+The sg driver zeros out the scatter gather elements
+for non-superusers.
+chmod'ing is not always needed, for example a non-superuser
+may well have permissions on a USB cd/dvd drive (including
+the sg device node) in some distributions.
 
-Index: scsi-misc-2.6/drivers/scsi/scsi_transport_spi.c
-===================================================================
---- scsi-misc-2.6.orig/drivers/scsi/scsi_transport_spi.c
-+++ scsi-misc-2.6/drivers/scsi/scsi_transport_spi.c
-@@ -363,6 +363,7 @@ static int child_iter(struct device *dev
- {
- 	struct scsi_device *sdev = to_scsi_device(dev);
- 
-+	spi_initial_dv(sdev->sdev_target) = 0;
- 	spi_dv_device(sdev);
- 	return 1;
- }
-@@ -787,6 +788,29 @@ spi_dv_device_internal(struct scsi_devic
- 	struct scsi_target *starget = sdev->sdev_target;
- 	struct Scsi_Host *shost = sdev->host;
- 	int len = sdev->inquiry_len;
-+
-+	/*
-+	 * If dv has been done already on this target, just set its
-+         * previously determined parameters.
-+         */
-+	if (spi_initial_dv(starget)) {
-+		DV_SET(dt, spi_dt(starget));
-+		DV_SET(iu, spi_iu(starget));
-+		DV_SET(width, spi_width(starget));
-+		DV_SET(offset, spi_offset(starget));
-+		DV_SET(period, spi_period(starget));
-+		DV_SET(qas, spi_qas(starget));
-+		DV_SET(rd_strm, spi_rd_strm(starget));
-+		DV_SET(wr_flow, spi_wr_flow(starget));
-+		DV_SET(rti, spi_rti(starget));
-+		DV_SET(pcomp_en, spi_pcomp_en(starget));
-+		if (spi_dv_device_compare_inquiry(sdev, buffer,
-+		    buffer, DV_LOOPS) == SPI_COMPARE_SUCCESS)
-+			return;
-+		starget_printk(KERN_ERR, starget,
-+				"Domain Validation Inquiry Failed\n");
-+	}
-+
- 	/* first set us up for narrow async */
- 	DV_SET(offset, 0);
- 	DV_SET(width, 0);
-@@ -917,8 +941,10 @@ spi_dv_device(struct scsi_device *sdev)
- 	if (unlikely(scsi_device_get(sdev)))
- 		return;
- 
--	if (unlikely(spi_dv_in_progress(starget)))
-+	if (unlikely(spi_dv_in_progress(starget))) {
-+		scsi_device_put(sdev);
- 		return;
-+	}
- 	spi_dv_in_progress(starget) = 1;
- 
- 	buffer = kzalloc(len, GFP_KERNEL);
-
--- 
-Mark Haverkamp <markh@linux-foundation.org>
+Doug Gilbert
 
