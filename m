@@ -1,61 +1,59 @@
-From: Mark Haverkamp <markh@linux-foundation.org>
-Subject: Re: [PATCH] scsi spi transport: SCSI domain validation after reset
-Date: Mon, 05 Feb 2007 14:01:51 -0800
-Message-ID: <1170712911.2573.25.camel@markh3.pdx.osdl.net>
-References: <1170708540.2573.10.camel@markh3.pdx.osdl.net>
-	 <1170712218.4517.16.camel@mulgrave.il.steeleye.com>
+From: "Patro, Sumant" <Sumant.Patro@lsi.com>
+Subject: megaraid_sas : Error message from SYNC CACHE cmd fills up kernel log
+Date: Mon, 5 Feb 2007 15:14:13 -0700
+Message-ID: <0631C836DBF79F42B5A60C8C8D4E82298ED151@NAMAIL2.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:35770 "EHLO smtp.osdl.org"
+Received: from mail0.lsil.com ([147.145.40.20]:54434 "EHLO mail0.lsil.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964819AbXBEWBz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 Feb 2007 17:01:55 -0500
-In-Reply-To: <1170712218.4517.16.camel@mulgrave.il.steeleye.com>
+	id S964930AbXBEWO3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Feb 2007 17:14:29 -0500
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>
-
-On Mon, 2007-02-05 at 15:50 -0600, James Bottomley wrote:
-> On Mon, 2007-02-05 at 12:49 -0800, Mark Haverkamp wrote:
-> > James,
-> > 
-> > Some months ago, I had problems with a mis-behaving disk that failed
-> > domain validation on a fusion card resulting in an infinite loop of
-> > domain validation.  At the time Eric proposed a patch to the mptspi
-> > driver to reload devices with parameters previously negotiated when a
-> > reset occurred.  You indicated that a more generic solution should be
-> > done.
-> > 
-> > This patch updates spi_dv_device_internal() to check if domain
-> > validation has already been performed on a device and just sets it
-> > previously negotiated parameters.  This solved the "infinite domain
-> > validation" loop for me when a reset is performed as a result of command
-> > timeout with the mis-behaving device.
-> 
-> Er,but this code basically disabled domain revalidation after a reset,
-> doesn't it? 
-
-Yes it does.  The problem I am seeing is that a device that fails
-validation can cause a reset to occur.  If it does, then all devices are
-now re-validated.  Including any that have failed validation previously.
-Which can cause another reset and another validation, etc. forever.  I'm
-not sure how else to break out of this cycle.
-
->  If we could do it that way, we could simply take the calls
-> to spi_dv_device() out of the fusion driver and instead set the
-> parameters up in its place without having to modify the transport class.
-
-If I understand your comment, I believe that is what Eric proposed at
-one point. But it seems other drivers/adapters could have a similar
-problem.
-
-Mark.
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@SteelEye.com, hch@lst.de, "Kolli, Neela" <Neela.Kolli@lsi.com>, "Yang, Bo" <Bo.Yang@lsi.com>
 
 
+MegaRAID (MR) SAS Adapter FW is exposing VDs (Logical Disks) with WCE
+enabled in Mode
+Sense command for drives that are configured as WriteBack by the user.
+When
+the VDs are exported as Write Back drives, OS is sending "Synchronize
+Cache" command to the drives frequently.  Per SCSI Spec, this command is
+an
+optional command and MR firmware is rejecting this command as
+unsupported.
+User is advised to enable "Write back" only when battery is available
+(in Adapter)
+The FW does flush cache periodically.
 
--- 
-Mark Haverkamp <markh@linux-foundation.org>
+Looks like OS do not like rejecting the command on a boot
+volume and so adding the following event message to the event log each
+time the
+call is failed.  These messages are flooded by OS and is causing
+annoyance to
+the user.
+Message from the log :
 
+Jan 12 17:58:06 linux kernel: FAILED
+Jan 12 17:58:07 linux kernel:   status = 1, message = 00, host = 0,
+driver
+= 08
+Jan 12 17:58:07 linux kernel:   <6>sd: Current: sense key: Illegal
+Request
+Jan 12 17:58:07 linux kernel:     Additional sense: Invalid command
+operation code
+
+1. Shouldn't the OS stop sending the sync cache cmd 
+if it sees it is "Failed" with "Invalid Command" in sense info ?   
+
+2. Is there a way by which LLD can stop the OS from sending the SYNC cmd
+down?
+
+Thanks,
+
+Sumant
