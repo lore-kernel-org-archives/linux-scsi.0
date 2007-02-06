@@ -1,43 +1,47 @@
 From: akpm@linux-foundation.org
-Subject: [patch 32/33] SCSI-BusLogic: local_irq_disable() is redundant after local_irq_save()
-Date: Mon, 05 Feb 2007 16:39:03 -0800
-Message-ID: <200702060040.l160e7tT005059@shell0.pdx.osdl.net>
+Subject: [patch 21/33] sym53c8xx_2 claims cpqarray device
+Date: Mon, 05 Feb 2007 16:38:54 -0800
+Message-ID: <200702060039.l160dvQ4005014@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:41811 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.24]:41794 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965341AbXBFAkM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 Feb 2007 19:40:12 -0500
+	id S965361AbXBFAkH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 5 Feb 2007 19:40:07 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, jkosina@suse.cz
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, coldwell@redhat.com, willy@debian.org
 
-From: Jiri Kosina <jkosina@suse.cz>
+From: Chip Coldwell <coldwell@redhat.com>
 
-drivers/scsi/BusLogic.c::BusLogic_Command() contains local_irq_disable() call
-after local_irq_save().  This looks redundant.
+Apropos this thread
 
-Signed-off-by: Jiri Kosina <jkosina@suse.cz>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
+http://marc.theaimsgroup.com/?l=linux-scsi&m=115591706804045&w=2
+
+which led to this patch
+
+http://www.kernel.org/git/?p=linux/kernel/git/jejb/scsi-rc-fixes-2.6.git;a=commit;h=b2b3c121076961333977f485f0d54c22121df920
+
+do we not also need the following patch, nine lines lower in the same file?
+
+Signed-off-by: Chip Coldwell <coldwell@redhat.com>
+Cc: Matthew Wilcox <willy@debian.org>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/BusLogic.c |    4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/scsi/sym53c8xx_2/sym_glue.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/BusLogic.c~scsi-buslogic-local_irq_disable-is-redundant-after-local_irq_save drivers/scsi/BusLogic.c
---- a/drivers/scsi/BusLogic.c~scsi-buslogic-local_irq_disable-is-redundant-after-local_irq_save
-+++ a/drivers/scsi/BusLogic.c
-@@ -362,10 +362,8 @@ static int BusLogic_Command(struct BusLo
- 	   interrupt could occur if the IRQ Channel was previously enabled by another
- 	   BusLogic Host Adapter or another driver sharing the same IRQ Channel.
- 	 */
--	if (!HostAdapter->IRQ_ChannelAcquired) {
-+	if (!HostAdapter->IRQ_ChannelAcquired)
- 		local_irq_save(ProcessorFlags);
--		local_irq_disable();
--	}
- 	/*
- 	   Wait for the Host Adapter Ready bit to be set and the Command/Parameter
- 	   Register Busy bit to be reset in the Status Register.
+diff -puN drivers/scsi/sym53c8xx_2/sym_glue.c~sym53c8xx_2-claims-cpqarray-device drivers/scsi/sym53c8xx_2/sym_glue.c
+--- a/drivers/scsi/sym53c8xx_2/sym_glue.c~sym53c8xx_2-claims-cpqarray-device
++++ a/drivers/scsi/sym53c8xx_2/sym_glue.c
+@@ -2094,7 +2094,7 @@ static struct pci_device_id sym2_id_tabl
+ 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_NCR_53C875,
+ 	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0UL },
+ 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_NCR_53C1510,
+-	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0UL }, /* new */
++	  PCI_ANY_ID, PCI_ANY_ID,  PCI_CLASS_STORAGE_SCSI<<8,  0xffff00, 0UL }, /* new */
+ 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_53C895A,
+ 	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0UL },
+ 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_53C875A,
 _
