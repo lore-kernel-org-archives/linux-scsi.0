@@ -1,75 +1,103 @@
 From: akpm@linux-foundation.org
-Subject: [patch 26/33] scsi: handle bad inquiry responses
-Date: Mon, 05 Feb 2007 16:38:58 -0800
-Message-ID: <200702060040.l160e1dL005030@shell0.pdx.osdl.net>
+Subject: [patch 24/33] DAC960: kmalloc->kzalloc/Casting cleanups
+Date: Mon, 05 Feb 2007 16:38:55 -0800
+Message-ID: <200702060039.l160dwFP005023@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:41833 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.24]:41778 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965371AbXBFAkc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 Feb 2007 19:40:32 -0500
+	id S965315AbXBFAkC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 5 Feb 2007 19:40:02 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, stern@rowland.harvard.edu, mroos@linux.ee
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, darwish.07@gmail.com
 
-From: Alan Stern <stern@rowland.harvard.edu>
+From: "Ahmed S. Darwish" <darwish.07@gmail.com>
 
->From Meelis's USB device: It contains the device's response to an INQUIRY
-command.
+A patch to switch kmalloc->kzalloc and to clean unneeded kammloc,
+pci_alloc_consistent casts
 
-> ffff8100795e84c0 1469131296 C Bi:006:02 0 36 = 00800001 00000000 47454e45 52494320 55534220 4449534b 20444556 49434520
-
-The fifth byte of the response is 0, meaning that all bytes past the fifth are
-invalid.  This is kind of an odd thing to do; it says the device hasn't really
-sent any vendor or product information at all.  That's why you've been seeing
-garbage.
-
-The Vendor string starts at byte position 8, the Product string at
-position 16, and the Revision string at position 32 (not captured by
-usbmon).  Translating the bytes from hex to ASCII gives:
-
-	Vendor:  GENERIC
-	Product: USB DISK DEVICE
-
-These certainly _seem_ valid, albeit not very specific.  Perhaps the device's
-USB firmware was never customized for any OEM and the default state is marked
-invalid.
-
-There's a comment about this in the source code, asking what should be done if
-the INQUIRY response is too short (as it is here).  Maybe the best approach
-would be always to assume the first 36 bytes are valid, even when the device
-says they aren't.  It ought to solve your problem, and it's no worse than what
-we're doing now.
-
-Cc: Meelis Roos <mroos@linux.ee>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
+Signed-off-by: Ahmed Darwish <darwish.07@gmail.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/scsi_scan.c |   13 +++++++++++++
- 1 file changed, 13 insertions(+)
+ drivers/block/DAC960.c |   27 +++++++++++++--------------
+ 1 file changed, 13 insertions(+), 14 deletions(-)
 
-diff -puN drivers/scsi/scsi_scan.c~scsi-handle-bad-inquiry-responses drivers/scsi/scsi_scan.c
---- a/drivers/scsi/scsi_scan.c~scsi-handle-bad-inquiry-responses
-+++ a/drivers/scsi/scsi_scan.c
-@@ -654,6 +654,19 @@ static int scsi_probe_lun(struct scsi_de
- 	 * short INQUIRY), an abort here prevents any further use of the
- 	 * device, including spin up.
- 	 *
-+	 * On the whole, the best approach seems to be to assume the first
-+	 * 36 bytes are valid no matter what the device says.  That's
-+	 * better than copying < 36 bytes to the inquiry-result buffer
-+	 * and displaying garbage for the Vendor, Product, or Revision
-+	 * strings.
-+	 */
-+	if (sdev->inquiry_len < 36) {
-+		printk(KERN_INFO "scsi scan: INQUIRY result too short (%d),"
-+				" using 36\n", sdev->inquiry_len);
-+		sdev->inquiry_len = 36;
-+	}
-+
-+	/*
- 	 * Related to the above issue:
- 	 *
- 	 * XXX Devices (disk or all?) should be sent a TEST UNIT READY,
+diff -puN drivers/block/DAC960.c~dac960-kmalloc-kzalloc-casting-cleanups drivers/block/DAC960.c
+--- a/drivers/block/DAC960.c~dac960-kmalloc-kzalloc-casting-cleanups
++++ a/drivers/block/DAC960.c
+@@ -1373,8 +1373,7 @@ static boolean DAC960_V2_EnableMemoryMai
+   Controller->BounceBufferLimit = DAC690_V2_PciDmaMask;
+ 
+   /* This is a temporary dma mapping, used only in the scope of this function */
+-  CommandMailbox =
+-	  (DAC960_V2_CommandMailbox_T *)pci_alloc_consistent( PCI_Device,
++  CommandMailbox = pci_alloc_consistent(PCI_Device,
+ 		sizeof(DAC960_V2_CommandMailbox_T), &CommandMailboxDMA);
+   if (CommandMailbox == NULL)
+ 	  return false;
+@@ -1879,8 +1878,8 @@ static boolean DAC960_V2_ReadControllerC
+       if (NewLogicalDeviceInfo->LogicalDeviceState !=
+ 	  DAC960_V2_LogicalDevice_Offline)
+ 	Controller->LogicalDriveInitiallyAccessible[LogicalDeviceNumber] = true;
+-      LogicalDeviceInfo = (DAC960_V2_LogicalDeviceInfo_T *)
+-	kmalloc(sizeof(DAC960_V2_LogicalDeviceInfo_T), GFP_ATOMIC);
++      LogicalDeviceInfo = kmalloc(sizeof(DAC960_V2_LogicalDeviceInfo_T),
++				   GFP_ATOMIC);
+       if (LogicalDeviceInfo == NULL)
+ 	return DAC960_Failure(Controller, "LOGICAL DEVICE ALLOCATION");
+       Controller->V2.LogicalDeviceInformation[LogicalDeviceNumber] =
+@@ -2113,8 +2112,8 @@ static boolean DAC960_V2_ReadDeviceConfi
+       if (!DAC960_V2_NewPhysicalDeviceInfo(Controller, Channel, TargetID, LogicalUnit))
+ 	  break;
+ 
+-      PhysicalDeviceInfo = (DAC960_V2_PhysicalDeviceInfo_T *)
+-		kmalloc(sizeof(DAC960_V2_PhysicalDeviceInfo_T), GFP_ATOMIC);
++      PhysicalDeviceInfo = kmalloc(sizeof(DAC960_V2_PhysicalDeviceInfo_T),
++				    GFP_ATOMIC);
+       if (PhysicalDeviceInfo == NULL)
+ 		return DAC960_Failure(Controller, "PHYSICAL DEVICE ALLOCATION");
+       Controller->V2.PhysicalDeviceInformation[PhysicalDeviceIndex] =
+@@ -2122,8 +2121,8 @@ static boolean DAC960_V2_ReadDeviceConfi
+       memcpy(PhysicalDeviceInfo, NewPhysicalDeviceInfo,
+ 		sizeof(DAC960_V2_PhysicalDeviceInfo_T));
+ 
+-      InquiryUnitSerialNumber = (DAC960_SCSI_Inquiry_UnitSerialNumber_T *)
+-	kmalloc(sizeof(DAC960_SCSI_Inquiry_UnitSerialNumber_T), GFP_ATOMIC);
++      InquiryUnitSerialNumber = kmalloc(
++	      sizeof(DAC960_SCSI_Inquiry_UnitSerialNumber_T), GFP_ATOMIC);
+       if (InquiryUnitSerialNumber == NULL) {
+ 	kfree(PhysicalDeviceInfo);
+ 	return DAC960_Failure(Controller, "SERIAL NUMBER ALLOCATION");
+@@ -4949,8 +4948,8 @@ static void DAC960_V2_ProcessCompletedCo
+ 	      PhysicalDevice.LogicalUnit = NewLogicalDeviceInfo->LogicalUnit;
+ 	      Controller->V2.LogicalDriveToVirtualDevice[LogicalDeviceNumber] =
+ 		PhysicalDevice;
+-	      LogicalDeviceInfo = (DAC960_V2_LogicalDeviceInfo_T *)
+-		kmalloc(sizeof(DAC960_V2_LogicalDeviceInfo_T), GFP_ATOMIC);
++	      LogicalDeviceInfo = kmalloc(sizeof(DAC960_V2_LogicalDeviceInfo_T),
++					  GFP_ATOMIC);
+ 	      Controller->V2.LogicalDeviceInformation[LogicalDeviceNumber] =
+ 		LogicalDeviceInfo;
+ 	      DAC960_Critical("Logical Drive %d (/dev/rd/c%dd%d) "
+@@ -5709,14 +5708,14 @@ static boolean DAC960_CheckStatusBuffer(
+       unsigned int NewStatusBufferLength = DAC960_InitialStatusBufferSize;
+       while (NewStatusBufferLength < ByteCount)
+ 	NewStatusBufferLength *= 2;
+-      Controller->CombinedStatusBuffer =
+-	(unsigned char *) kmalloc(NewStatusBufferLength, GFP_ATOMIC);
++      Controller->CombinedStatusBuffer = kmalloc(NewStatusBufferLength,
++						  GFP_ATOMIC);
+       if (Controller->CombinedStatusBuffer == NULL) return false;
+       Controller->CombinedStatusBufferLength = NewStatusBufferLength;
+       return true;
+     }
+-  NewStatusBuffer = (unsigned char *)
+-    kmalloc(2 * Controller->CombinedStatusBufferLength, GFP_ATOMIC);
++  NewStatusBuffer = kmalloc(2 * Controller->CombinedStatusBufferLength,
++			     GFP_ATOMIC);
+   if (NewStatusBuffer == NULL)
+     {
+       DAC960_Warning("Unable to expand Combined Status Buffer - Truncating\n",
 _
