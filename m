@@ -1,91 +1,36 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: Writing performance problem with SAS1068
-Date: Tue, 06 Feb 2007 14:27:02 -0500
-Message-ID: <45C8D686.7010103@torque.net>
-References: <45C84333.709@develer.com>
-Reply-To: dougg@torque.net
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [patch 25/33] Fix the reproducible oops in scsi
+Date: Tue, 6 Feb 2007 11:39:42 -0800
+Message-ID: <20070206113942.afbc019b.akpm@linux-foundation.org>
+References: <200702060040.l160e04u005027@shell0.pdx.osdl.net>
+	<1170775326.3634.14.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965369AbXBFT12@vger.kernel.org>
-In-Reply-To: <45C84333.709@develer.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bernardo Innocenti <bernie@develer.com>
-Cc: mpt_linux_developer@lsil.com, lkml <linux-kernel@vger.kernel.org>, Develer IT Infrastructure <it@lists.develer.com>, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.osdl.org ([65.172.181.24]:47895 "EHLO smtp.osdl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752295AbXBFTj6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Feb 2007 14:39:58 -0500
+In-Reply-To: <1170775326.3634.14.camel@mulgrave.il.steeleye.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi@vger.kernel.org, hirofumi@mail.parknet.co.jp, James.Smart@Emulex.Com
 
-Bernardo Innocenti wrote:
-> Hello,
-> 
-> I've stumbled onto a strange performance problem on a new server:
-> reading from disks is fast (70-80MB/s), but writing is extremely
-> slow (13-15MB/s).  I've measured it like this:
-> 
-> dd if=/dev/zero of=/dev/sdd bs=4096 count=65536 conv=fdatasync
-> 65536+0 records in
-> 65536+0 records out
-> 268435456 bytes (268 MB) copied, 17.7004 seconds, 15.2 MB/s
+On Tue, 06 Feb 2007 09:22:06 -0600
+James Bottomley <James.Bottomley@SteelEye.com> wrote:
 
-# dd if=/dev/zero of=/dev/sdj bs=4096 count=65536 conv=fdatasync
-65536+0 records in
-65536+0 records out
-268435456 bytes (268 MB) copied, 2.24953 seconds, 119 MB/s
+> On Mon, 2007-02-05 at 16:38 -0800, akpm@linux-foundation.org wrote:
+> > From: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+> > 
+> > I got the oops after some hotplug events. And the similar oops can
+> > reproduce by the following step.
+> 
+> James Smart already pointed out that this fix isn't valid ... it's a
+> bandaid that doesn't fix the underlying problem.
+> 
 
-# dd if=/dev/zero of=/dev/sdd bs=4096 count=65536 conv=fdatasync
-65536+0 records in
-65536+0 records out
-268435456 bytes (268 MB) copied, 2.3246 seconds, 115 MB/s
+That's why I included his comments in the changelog.
 
-Both /dev/sdj and /dev/sdd connect via an expander to the same
-SAS disk. /dev/sdj is via the LT aic94xx driver and a PCI-X HBA.
-/dev/sdd is via the mptsas driver and a SAS1068 (PCIe) based HBA.
-The kernel version is 2.6.20-rc5.
-
-Looks good to me.
-
-You may like to check that Write Cache Enable is on with:
-'sdparm --get=WCE /dev/sdd'.
-
-Doug Gilbert
-
-> *but*: if I rebuild the kernel and change CONFIG_FUSION_MAX_SGE
-> from 40 (Fedora's default) to 128 (maximum value), it suddenly
-> gets much faster: 31MB/s!
-> 
-> Looks very much like an interrupt problem to me.  Maybe
-> increasing the scatter gather mitigates the problem of
-> missing completion notifications.
-> 
-> Evidence:
-> 
-> Exhibit A: custom kernel config for 2.6.18-1.2257.fc5.bernie
-> http://www.codewiz.org/helium_logs/config
-> 
-> Exhibit B: dmesg output from said kernel
-> http://www.codewiz.org/helium_logs/dmesg
-> 
-> Exhibit C: misc proc files, and all that
-> http://www.codewiz.org/helium_logs/
-> 
-> Exhibit D: motherboard and chipset specification
-> http://www.supermicro.com/products/motherboard/Xeon3000/3010/PDSME+.cfm
-> 
-> 
-> Circumstantial evidence:
-> 
-> - Seems to affect just the LSI SAS1068 PCI-X controller.
->   The on-board AHCI controller writes very fast (>60MB/s)
-> 
-> - I've seen a very similar writing bottleneck with a
->   Promise TX4 SATA controller (not PCI-X) on a server with
->   a similar motherboard (Supermicro with Mukilteo 3000).
-> 
-> - Passing mpt_msi_enable=1 doesn't change anything
-> 
-> - FreeBSD 6.2 is even slower: writes at 7MB/s
-> 
-> - OpenSolaris is much, much slower... less than 1MB/s.
-> 
-> - Windows Vista (rc something) writes at 90MB/s.  Too
->   fast to believe, maybe dd from Cygwin is misbehaving.
-> 
+Is anyone going to fix it for real?  Do we know _how_ it should be fixed?
