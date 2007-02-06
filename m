@@ -1,57 +1,41 @@
 From: akpm@linux-foundation.org
-Subject: [patch 13/33] MPT fusion: handle PCI layer error on resume
-Date: Mon, 05 Feb 2007 16:38:45 -0800
-Message-ID: <200702060039.l160dmWk004985@shell0.pdx.osdl.net>
+Subject: [patch 08/33] remove extra newline from info message
+Date: Mon, 05 Feb 2007 16:38:40 -0800
+Message-ID: <200702060039.l160dhlU004970@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:41768 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.24]:41737 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965321AbXBFAkA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 Feb 2007 19:40:00 -0500
+	id S965312AbXBFAj4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 5 Feb 2007 19:39:56 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, jeff@garzik.org, Eric.Moore@lsil.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, eike-kernel@sf-tec.de
 
-From: Jeff Garzik <jeff@garzik.org>
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
 
-In the unlikely event of pci_enable_device() failure during resume, we do
-the minimalist solution and simply exit, rather than continuing to enable
-the hardware.
+remove extra newline from info message
 
-Signed-off-by: Jeff Garzik <jeff@garzik.org>
-Cc: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+This extra newline character introduces a completely empty line in dmesg as
+the calling function itself adds a newline.
+
+Signed-off-by: Rolf Eike Beer <eike-kernel@sf-tec.de>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/message/fusion/mptbase.c |   10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ drivers/scsi/aic7xxx/aic79xx_osm.c |    1 -
+ 1 file changed, 1 deletion(-)
 
-diff -puN drivers/message/fusion/mptbase.c~mpt-fusion-handle-pci-layer-error-on-resume drivers/message/fusion/mptbase.c
---- a/drivers/message/fusion/mptbase.c~mpt-fusion-handle-pci-layer-error-on-resume
-+++ a/drivers/message/fusion/mptbase.c
-@@ -1530,7 +1530,7 @@ mpt_resume(struct pci_dev *pdev)
- {
- 	MPT_ADAPTER *ioc = pci_get_drvdata(pdev);
- 	u32 device_state = pdev->current_state;
--	int recovery_state;
-+	int recovery_state, rc;
+diff -puN drivers/scsi/aic7xxx/aic79xx_osm.c~remove-extra-newline-from-info-message drivers/scsi/aic7xxx/aic79xx_osm.c
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.c~remove-extra-newline-from-info-message
++++ a/drivers/scsi/aic7xxx/aic79xx_osm.c
+@@ -418,7 +418,6 @@ ahd_linux_info(struct Scsi_Host *host)
+ 	strcat(bp, "        ");
+ 	ahd_controller_info(ahd, ahd_info);
+ 	strcat(bp, ahd_info);
+-	strcat(bp, "\n");
  
- 	printk(MYIOC_s_INFO_FMT
- 	"pci-resume: pdev=0x%p, slot=%s, Previous operating state [D%d]\n",
-@@ -1538,7 +1538,13 @@ mpt_resume(struct pci_dev *pdev)
- 
- 	pci_set_power_state(pdev, 0);
- 	pci_restore_state(pdev);
--	pci_enable_device(pdev);
-+
-+	rc = pci_enable_device(pdev);
-+	if (rc) {
-+		printk(MYIOC_s_INFO_FMT
-+			"pci-resume: device enable failed\n", ioc->name);
-+		return rc;
-+	}
- 
- 	/* enable interrupts */
- 	CHIPREG_WRITE32(&ioc->chip->IntMask, MPI_HIM_DIM);
+ 	return (bp);
+ }
 _
