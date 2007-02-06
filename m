@@ -1,12 +1,12 @@
 From: akpm@linux-foundation.org
-Subject: [patch 19/33] scsi: sic7xxx stray bracket fix
+Subject: [patch 20/33] scsi: 53c7xx brackets fix
 Date: Mon, 05 Feb 2007 16:38:53 -0800
-Message-ID: <200702060039.l160dubN005008@shell0.pdx.osdl.net>
+Message-ID: <200702060039.l160duDf005011@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:41772 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.24]:41775 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965333AbXBFAkA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 Feb 2007 19:40:00 -0500
+	id S965341AbXBFAkB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 5 Feb 2007 19:40:01 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
@@ -14,25 +14,32 @@ Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, m.kozlowski@tuxland.p
 
 From: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
 
-Fix broken-but-unused macro.
-
 Signed-off-by: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/aic7xxx/aic79xx_pci.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/53c7xx.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff -puN drivers/scsi/aic7xxx/aic79xx_pci.c~scsi-sic7xxx-stray-bracket-fix drivers/scsi/aic7xxx/aic79xx_pci.c
---- a/drivers/scsi/aic7xxx/aic79xx_pci.c~scsi-sic7xxx-stray-bracket-fix
-+++ a/drivers/scsi/aic7xxx/aic79xx_pci.c
-@@ -88,7 +88,7 @@ ahd_compose_id(u_int device, u_int vendo
+diff -puN drivers/scsi/53c7xx.c~scsi-53c7xx-brackets-fix drivers/scsi/53c7xx.c
+--- a/drivers/scsi/53c7xx.c~scsi-53c7xx-brackets-fix
++++ a/drivers/scsi/53c7xx.c
+@@ -4400,7 +4400,7 @@ abort_connected (struct Scsi_Host *host)
+  * account the current synchronous offset) 
+  */
  
- #define SUBID_9005_LEGACYCONN_FUNC(id) ((id) & 0x20)
+-    sstat = (NCR53c8x0_read8 (SSTAT2_REG);
++    sstat = NCR53c8x0_read8 (SSTAT2_REG);
+     offset = OFFSET (sstat & SSTAT2_FF_MASK) >> SSTAT2_FF_SHIFT;
+     phase = sstat & SSTAT2_PHASE_MASK;
  
--#define SUBID_9005_SEEPTYPE(id) ((id) & 0x0C0) >> 6)
-+#define SUBID_9005_SEEPTYPE(id) (((id) & 0x0C0) >> 6)
- #define		SUBID_9005_SEEPTYPE_NONE	0x0
- #define		SUBID_9005_SEEPTYPE_4K		0x1
- 
+@@ -5423,7 +5423,7 @@ insn_to_offset (Scsi_Cmnd *cmd, u32 *ins
+     	    	     --buffers, offset += segment->length, ++segment)
+ #if 0
+ 		    printk("scsi%d: comparing 0x%p to 0x%p\n", 
+-			cmd->device->host->host_no, saved, page_address(segment->page+segment->offset);
++			cmd->device->host->host_no, saved, page_address(segment->page+segment->offset));
+ #else
+ 		    ;
+ #endif
 _
