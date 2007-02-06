@@ -1,73 +1,43 @@
 From: akpm@linux-foundation.org
-Subject: [patch 03/33] scsi: clean up warnings in Advansys driver
-Date: Mon, 05 Feb 2007 16:38:28 -0800
-Message-ID: <200702060039.l160dVOY004939@shell0.pdx.osdl.net>
+Subject: [patch 33/33] SCSI: Fix obvious typo "spin_lock_irqrestore()" in gdth.c
+Date: Mon, 05 Feb 2007 16:39:04 -0800
+Message-ID: <200702060040.l160e7Xv005062@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:41897 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.24]:41814 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965389AbXBFAlx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 Feb 2007 19:41:53 -0500
+	id S965333AbXBFAkN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 5 Feb 2007 19:40:13 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, ken@krwtech.com, jeffreyfreeman@syncleus.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, rpjday@mindspring.com, achim_leubner@adaptec.com
 
-From: Ken Witherow <ken@krwtech.com>
+From: "Robert P. J. Day" <rpjday@mindspring.com>
 
-Fix typecast warnings and switch from check_region to request_region
+Fix misspelled "spin_lock_irqrestore" to read "spin_unlock_irqrestore"
+instead.
 
-(akpm: Ken and Jeffrey Phillips Freeman <jeffreyfreeman@syncleus.com> are
-possible advansys testers)
+Presumably, GDTH_RTC doesn't get used a lot.
 
-Signed-off-by: Ken Witherow <ken@krwtech.com>
+Signed-off-by: Robert P. J. Day <rpjday@mindspring.com>
+Cc: <achim_leubner@adaptec.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/advansys.c |    7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ drivers/scsi/gdth.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/advansys.c~scsi-clean-up-warnings-in-advansys-driver drivers/scsi/advansys.c
---- a/drivers/scsi/advansys.c~scsi-clean-up-warnings-in-advansys-driver
-+++ a/drivers/scsi/advansys.c
-@@ -4403,7 +4403,7 @@ advansys_detect(struct scsi_host_templat
-                         ASC_DBG1(1,
-                                 "advansys_detect: probing I/O port 0x%x...\n",
-                             iop);
--                        if (check_region(iop, ASC_IOADR_GAP) != 0) {
-+			if (!request_region(iop, ASC_IOADR_GAP, "advansys")){
-                             printk(
- "AdvanSys SCSI: specified I/O Port 0x%X is busy\n", iop);
-                             /* Don't try this I/O port twice. */
-@@ -4413,6 +4413,7 @@ advansys_detect(struct scsi_host_templat
-                             printk(
- "AdvanSys SCSI: specified I/O Port 0x%X has no adapter\n", iop);
-                             /* Don't try this I/O port twice. */
-+			    release_region(iop, ASC_IOADR_GAP);
-                             asc_ioport[ioport] = 0;
-                             goto ioport_try_again;
-                         } else {
-@@ -4431,6 +4432,7 @@ advansys_detect(struct scsi_host_templat
-                                   * 'ioport' past this board.
-                                   */
-                                  ioport++;
-+				 release_region(iop, ASC_IOADR_GAP);
-                                  goto ioport_try_again;
-                             }
-                         }
-@@ -9740,13 +9742,14 @@ AscSearchIOPortAddr11(
-     }
-     for (; i < ASC_IOADR_TABLE_MAX_IX; i++) {
-         iop_base = _asc_def_iop_base[i];
--        if (check_region(iop_base, ASC_IOADR_GAP) != 0) {
-+	if (!request_region(iop_base, ASC_IOADR_GAP, "advansys")){
-             ASC_DBG1(1,
-                "AscSearchIOPortAddr11: check_region() failed I/O port 0x%x\n",
-                      iop_base);
-             continue;
-         }
-         ASC_DBG1(1, "AscSearchIOPortAddr11: probing I/O port 0x%x\n", iop_base);
-+	release_region(iop_base, ASC_IOADR_GAP);
-         if (AscFindSignature(iop_base)) {
-             return (iop_base);
-         }
+diff -puN drivers/scsi/gdth.c~scsi-fix-obvious-typo-spin_lock_irqrestore-in-gdthc drivers/scsi/gdth.c
+--- a/drivers/scsi/gdth.c~scsi-fix-obvious-typo-spin_lock_irqrestore-in-gdthc
++++ a/drivers/scsi/gdth.c
+@@ -1956,7 +1956,7 @@ static int __init gdth_search_drives(int
+         for (j = 0; j < 12; ++j) 
+             rtc[j] = CMOS_READ(j);
+     } while (rtc[0] != CMOS_READ(0));
+-    spin_lock_irqrestore(&rtc_lock, flags);
++    spin_unlock_irqrestore(&rtc_lock, flags);
+     TRACE2(("gdth_search_drives(): RTC: %x/%x/%x\n",*(ulong32 *)&rtc[0],
+             *(ulong32 *)&rtc[4], *(ulong32 *)&rtc[8]));
+     /* 3. send to controller firmware */
 _
