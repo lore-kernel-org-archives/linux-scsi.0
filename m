@@ -1,137 +1,95 @@
 From: akpm@linux-foundation.org
-Subject: [patch 06/33] drivers/scsi/pcmcia/nsp_cs.h: removal of old scsi code
-Date: Mon, 05 Feb 2007 16:38:36 -0800
-Message-ID: <200702060039.l160ddgB004964@shell0.pdx.osdl.net>
+Subject: [patch 23/33] scsi: cover up bugs^W^W^WFix up compiler warnings in megaraid driver
+Date: Mon, 05 Feb 2007 16:38:55 -0800
+Message-ID: <200702060039.l160dwW1005020@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:41700 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.24]:41789 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965305AbXBFAjp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 Feb 2007 19:39:45 -0500
+	id S965333AbXBFAkG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 5 Feb 2007 19:40:06 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, michal.k.k.piotrowski@gmail.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, mbligh@google.com
 
-From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+From: Martin Bligh <mbligh@google.com>
 
-Signed-off-by: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Fix up compiler warnings in megaraid driver
+
+[akpm@osdl.org: build fix]
+Signed-off-by: Martin J. Bligh <mbligh@google.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/pcmcia/nsp_cs.h |   66 ---------------------------------
- 1 file changed, 66 deletions(-)
+ drivers/scsi/megaraid.c |   22 +++++++++++++---------
+ 1 file changed, 13 insertions(+), 9 deletions(-)
 
-diff -puN drivers/scsi/pcmcia/nsp_cs.h~drivers-scsi-pcmcia-nsp_csh-removal-of-old drivers/scsi/pcmcia/nsp_cs.h
---- a/drivers/scsi/pcmcia/nsp_cs.h~drivers-scsi-pcmcia-nsp_csh-removal-of-old
-+++ a/drivers/scsi/pcmcia/nsp_cs.h
-@@ -290,7 +290,6 @@ typedef struct _nsp_hw_data {
- #endif
- } nsp_hw_data;
+diff -puN drivers/scsi/megaraid.c~scsi-cover-up-bugs-fix-up-compiler-warnings-in-megaraid-driver drivers/scsi/megaraid.c
+--- a/drivers/scsi/megaraid.c~scsi-cover-up-bugs-fix-up-compiler-warnings-in-megaraid-driver
++++ a/drivers/scsi/megaraid.c
+@@ -73,10 +73,14 @@ static unsigned short int max_mbox_busy_
+ module_param(max_mbox_busy_wait, ushort, 0);
+ MODULE_PARM_DESC(max_mbox_busy_wait, "Maximum wait for mailbox in microseconds if busy (default=MBOX_BUSY_WAIT=10)");
  
--
- /****************************************************************************
-  *
-  */
-@@ -302,22 +301,13 @@ static int        nsp_cs_config (struct 
+-#define RDINDOOR(adapter)	readl((adapter)->mmio_base + 0x20)
+-#define RDOUTDOOR(adapter)	readl((adapter)->mmio_base + 0x2C)
+-#define WRINDOOR(adapter,value)	 writel(value, (adapter)->mmio_base + 0x20)
+-#define WROUTDOOR(adapter,value) writel(value, (adapter)->mmio_base + 0x2C)
++#define RDINDOOR(adapter)		readl((volatile void __iomem *) \
++							(adapter)->base + 0x20)
++#define RDOUTDOOR(adapter)		readl((volatile void __iomem *) \
++							(adapter)->base + 0x2C)
++#define WRINDOOR(adapter,value)		writel(value, (volatile void __iomem *)\
++							(adapter)->base + 0x20)
++#define WROUTDOOR(adapter,value)	writel(value, (volatile void __iomem *)\
++							(adapter)->base + 0x2C)
  
- /* Linux SCSI subsystem specific functions */
- static struct Scsi_Host *nsp_detect     (struct scsi_host_template *sht);
--#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0))
--static        int        nsp_detect_old (struct scsi_host_template *sht);
--static        int        nsp_release_old(struct Scsi_Host *shpnt);
--#endif
- static const  char      *nsp_info       (struct Scsi_Host *shpnt);
- static        int        nsp_proc_info  (
--#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73))
- 	                                 struct Scsi_Host *host,
--#endif
- 					 char   *buffer,
- 					 char  **start,
- 					 off_t   offset,
- 					 int     length,
--#if !(LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73))
--					 int     hostno,
--#endif
- 					 int     inout);
- static int nsp_queuecommand(struct scsi_cmnd *SCpnt,
- 			    void (* done)(struct scsi_cmnd *SCpnt));
-@@ -356,7 +346,6 @@ static struct Scsi_Host *nsp_detect(stru
- static int  __init nsp_cs_init(void);
- static void __exit nsp_cs_exit(void);
+ /*
+  * Global variables
+@@ -3571,7 +3575,7 @@ megadev_ioctl(struct inode *inode, struc
+ 			/*
+ 			 * The user passthru structure
+ 			 */
+-			upthru = (mega_passthru __user *)MBOX(uioc)->xferaddr;
++			upthru = (mega_passthru __user *)(unsigned long)MBOX(uioc)->xferaddr;
  
--
- /* Debug */
- #ifdef NSP_DEBUG
- static void show_command (struct scsi_cmnd *SCpnt);
-@@ -401,7 +390,6 @@ enum _burst_mode {
- 	BURST_MEM32 = 2,
- };
+ 			/*
+ 			 * Copy in the user passthru here.
+@@ -3623,7 +3627,7 @@ megadev_ioctl(struct inode *inode, struc
+ 				/*
+ 				 * Get the user data
+ 				 */
+-				if( copy_from_user(data, (char __user *)uxferaddr,
++				if( copy_from_user(data, (char __user *)(unsigned long) uxferaddr,
+ 							pthru->dataxferlen) ) {
+ 					rval = (-EFAULT);
+ 					goto freemem_and_return;
+@@ -3649,7 +3653,7 @@ megadev_ioctl(struct inode *inode, struc
+ 			 * Is data going up-stream
+ 			 */
+ 			if( pthru->dataxferlen && (uioc.flags & UIOC_RD) ) {
+-				if( copy_to_user((char __user *)uxferaddr, data,
++				if( copy_to_user((char __user *)(unsigned long) uxferaddr, data,
+ 							pthru->dataxferlen) ) {
+ 					rval = (-EFAULT);
+ 				}
+@@ -3702,7 +3706,7 @@ freemem_and_return:
+ 				/*
+ 				 * Get the user data
+ 				 */
+-				if( copy_from_user(data, (char __user *)uxferaddr,
++				if( copy_from_user(data, (char __user *)(unsigned long) uxferaddr,
+ 							uioc.xferlen) ) {
  
--
- /**************************************************************************
-  * SCSI messaage
-  */
-@@ -413,62 +401,8 @@ enum _burst_mode {
+ 					pci_free_consistent(pdev,
+@@ -3742,7 +3746,7 @@ freemem_and_return:
+ 			 * Is data going up-stream
+ 			 */
+ 			if( uioc.xferlen && (uioc.flags & UIOC_RD) ) {
+-				if( copy_to_user((char __user *)uxferaddr, data,
++				if( copy_to_user((char __user *)(unsigned long) uxferaddr, data,
+ 							uioc.xferlen) ) {
  
- #define MSG_EXT_SDTR         0x01
- 
--
--/**************************************************************************
-- * Compatibility functions
-- */
--
--/* for Kernel 2.4 */
--#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0))
--#  define scsi_register_host(template)   scsi_register_module(MODULE_SCSI_HA, template)
--#  define scsi_unregister_host(template) scsi_unregister_module(MODULE_SCSI_HA, template)
--#  define scsi_host_put(host)            scsi_unregister(host)
--
--typedef void irqreturn_t;
--#  define IRQ_NONE      /* */
--#  define IRQ_HANDLED   /* */
--#  define IRQ_RETVAL(x) /* */
--
--/* This is ad-hoc version of scsi_host_get_next() */
--static inline struct Scsi_Host *scsi_host_get_next(struct Scsi_Host *host)
--{
--	if (host == NULL) {
--		return scsi_hostlist;
--	} else {
--		return host->next;
--	}
--}
--
--/* This is ad-hoc version of scsi_host_hn_get() */
--static inline struct Scsi_Host *scsi_host_hn_get(unsigned short hostno)
--{
--	struct Scsi_Host *host;
--
--	for (host = scsi_host_get_next(NULL); host != NULL;
--	     host = scsi_host_get_next(host)) {
--		if (host->host_no == hostno) {
--			break;
--		}
--	}
--
--	return host;
--}
--
--static void cs_error(struct pcmcia_device *handle, int func, int ret)
--{
--	error_info_t err = { func, ret };
--	pcmcia_report_error(handle, &err);
--}
--
--/* scatter-gather table */
--#  define BUFFER_ADDR (SCpnt->SCp.buffer->address)
--#endif
--
--/* for Kernel 2.6 */
--#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0))
- /* scatter-gather table */
- #  define BUFFER_ADDR ((char *)((unsigned int)(SCpnt->SCp.buffer->page) + SCpnt->SCp.buffer->offset))
--#endif
- 
- #endif  /*__nsp_cs__*/
- /* end */
+ 					rval = (-EFAULT);
 _
