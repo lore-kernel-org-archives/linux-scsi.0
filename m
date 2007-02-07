@@ -1,83 +1,52 @@
-From: "Bagalkote, Sreenivas" <Sreenivas.Bagalkote@lsi.com>
-Subject: RE: chip 1000:0055 (LSI1068 PCI-X) Fusion-MPT/MegaRAID
-Date: Wed, 7 Feb 2007 10:34:05 -0700
-Message-ID: <9738BCBE884FDB42801FAD8A7769C265014A8E8B@NAMAIL1.ad.lsil.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 08/12] libsas: Unknown STP devices should be reported
+ to libata as unknown.
+Date: Wed, 07 Feb 2007 00:20:50 -0800
+Message-ID: <45C98BE2.5060608@gmail.com>
+References: <20070130091814.31530.23152.stgit@elm3a70.beaverton.ibm.com> <20070130091852.31530.20090.stgit@elm3a70.beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:53310 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965541AbXBGReN convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Feb 2007 12:34:13 -0500
-Content-class: urn:content-classes:message
+Received: from nz-out-0506.google.com ([64.233.162.230]:64965 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161408AbXBGRzt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Feb 2007 12:55:49 -0500
+Received: by nz-out-0506.google.com with SMTP id s1so246643nze
+        for <linux-scsi@vger.kernel.org>; Wed, 07 Feb 2007 09:55:49 -0800 (PST)
+In-Reply-To: <20070130091852.31530.20090.stgit@elm3a70.beaverton.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Frederic TEMPORELLI <frederic.temporelli@ext.bull.net>, "Kolli, Neela" <Neela.Kolli@lsi.com>"Kolli, Neela" <Neela.Kolli@lsi.com>, "Patro, Sumant" <Sumant.Patro@lsi.com>
-Cc: "Moore, Eric" <Eric.Moore@lsi.com>, linux-scsi@vger.kernel.org
+To: "Darrick J. Wong" <djwong@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org, alexisb@us.ibm.com
 
-Hello Fred,
-
+Darrick J. Wong wrote:
+> When libsas encounters a STP device whose protocol isn't recognized (i.e.
+> not ATA or ATAPI), we should set the ata_device's class to ATA_DEV_UNKNOWN
+> instead of ATA_DEV_ATA.
 > 
-> There's a LSI 1068 chip that can be found on NEC hardware (also
-> Intel/Supermicro/Hitachi, ...) and that can provide RAID 0 and 1 based
-> on a MegaRAID BIOS.
+> Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
+> ---
 > 
-
-Hmm, no. This is not MegaRAID BIOS.
-
+>  drivers/scsi/libsas/sas_ata.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
 > 
-> - LSI1068 'MegaRAID':
-> pciid 1000:0055
-> embedded MegaRAID BIOS, providing RAID 0 and 1
-> 
-> 
-> But in this last mode, there's no way to use this chip with megaraid
-> driver from kernel.org
-> (so no way to use RAID device created by MegaRAID BIOS)
-> 
+> diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+> index 20f3a5e..7ebda69 100644
+> --- a/drivers/scsi/libsas/sas_ata.c
+> +++ b/drivers/scsi/libsas/sas_ata.c
+> @@ -232,7 +232,7 @@ static void sas_ata_phy_reset(struct ata
+>  			SAS_DPRINTK("%s: Unknown SATA command set: %d.\n",
+>  				    __FUNCTION__,
+>  				    dev->sata_dev.command_set);
+> -			ap->device[0].class = ATA_DEV_ATA;
+> +			ap->device[0].class = ATA_DEV_UNKNOWN;
 
-The kernel.org megaraid driver controls our flagship HW RAID
-controllers.
-1000:0055 is not one of them.
+ATA_DEV_UNKNOWN currently indicates 'unclassified' state and leaving 
+device as unclassified after successful reset is considered failure, so 
+this is a bit confusing but you need to return ATA_DEV_NONE here. 
+Hmmm... maybe libata should use ATA_DEV_UNCLASSIFIED instead.
 
-> => There's a driver provided by several vendors (Intel, Supermicro,
-...)
-> for RHEL and SLES, and that can be found on the web.
-> This driver is named 'megaswr' (aka 'megasr', MegaRAID software RAID
-> driver):
-> ==========================================================
-> > [root@iotiger2 x86_64]# modinfo megaswr.ko
-> > filename:       megaswr.ko
-> > parm:           low_mem_g:Set to 1 to simulate low mem condition
-> > parm:           dbglvl_g:driver-wide debug flag
-> > license:        GPL
-> > description:    LSI Logic SofrRAID Driver
-> > author:         LSI Logic Corporation
-> > alias:          pci:v00000000d00000000sv00000000sd00000000bc*sc*i*
-> > alias:          pci:v00000000d00000000sv00000000sd00000000bc*sc*i*
-> > alias:          pci:v00000000d00000000sv00000000sd00000000bc*sc*i*
-> > ...
-> > alias:          pci:v00000000d00000000sv00000000sd00000000bc*sc*i*
-> > alias:          pci:v00000000d00000000sv00000000sd00000000bc*sc*i*
-> > depends:        scsi_mod
-> > vermagic:       2.6.9-22.ELsmp SMP gcc-3.4
-> ==========================================================
-> Do you have any information about this driver ?
-> Seems that it is provided under GPL license.
-> Who can provide the sources for this module ?
-> (only binary are provided)
-> 
+-- 
+tejun
 
-We have already been alerted (by OEMs among others) that the modinfo on
-megaswr driver needlessly shows "GPL" as the license. Ours is a binary
-only proprietary driver. I have since corrected the MODULE_LICENSE label
-to "LSI Proprietary" and updated the OEM versions. If this is not
-reflected in their respective web-sites already, it should soon be.
-
-You must have an old version of this driver. We have changed the name
-from "megaswr" to "megasr".
-
-Thanks,
-Sreenivas
