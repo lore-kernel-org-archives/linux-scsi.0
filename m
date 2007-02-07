@@ -1,57 +1,83 @@
-From: Chuck Ebbert <cebbert@redhat.com>
-Subject: SCSI logging sucks
-Date: Wed, 07 Feb 2007 12:06:30 -0500
-Message-ID: <45CA0716.5060803@redhat.com>
+From: "Bagalkote, Sreenivas" <Sreenivas.Bagalkote@lsi.com>
+Subject: RE: chip 1000:0055 (LSI1068 PCI-X) Fusion-MPT/MegaRAID
+Date: Wed, 7 Feb 2007 10:34:05 -0700
+Message-ID: <9738BCBE884FDB42801FAD8A7769C265014A8E8B@NAMAIL1.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:52721 "EHLO mx1.redhat.com"
+Received: from mail0.lsil.com ([147.145.40.20]:53310 "EHLO mail0.lsil.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161385AbXBGRFq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Feb 2007 12:05:46 -0500
+	id S965541AbXBGReN convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Feb 2007 12:34:13 -0500
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: Frederic TEMPORELLI <frederic.temporelli@ext.bull.net>, "Kolli, Neela" <Neela.Kolli@lsi.com>"Kolli, Neela" <Neela.Kolli@lsi.com>, "Patro, Sumant" <Sumant.Patro@lsi.com>
+Cc: "Moore, Eric" <Eric.Moore@lsi.com>, linux-scsi@vger.kernel.org
 
-SCSI logging isn't documented very well, and what little there is
-has a problem:
+Hello Fred,
 
-In Documentation/kernel-parameters.txt we have:
+> 
+> There's a LSI 1068 chip that can be found on NEC hardware (also
+> Intel/Supermicro/Hitachi, ...) and that can provide RAID 0 and 1 based
+> on a MegaRAID BIOS.
+> 
 
-        scsi_logging=   [SCSI]
+Hmm, no. This is not MegaRAID BIOS.
 
-but it's really "scsi_logging_level", as seen here in drivers/scsi/scsi.c:
+> 
+> - LSI1068 'MegaRAID':
+> pciid 1000:0055
+> embedded MegaRAID BIOS, providing RAID 0 and 1
+> 
+> 
+> But in this last mode, there's no way to use this chip with megaraid
+> driver from kernel.org
+> (so no way to use RAID device created by MegaRAID BIOS)
+> 
 
- module_param(scsi_logging_level, int, S_IRUGO|S_IWUSR);
- MODULE_PARM_DESC(scsi_logging_level, "a bit mask of logging levels");
+The kernel.org megaraid driver controls our flagship HW RAID
+controllers.
+1000:0055 is not one of them.
 
-Not exactly helpful. And the sysctl is called:
+> => There's a driver provided by several vendors (Intel, Supermicro,
+...)
+> for RHEL and SLES, and that can be found on the web.
+> This driver is named 'megaswr' (aka 'megasr', MegaRAID software RAID
+> driver):
+> ==========================================================
+> > [root@iotiger2 x86_64]# modinfo megaswr.ko
+> > filename:       megaswr.ko
+> > parm:           low_mem_g:Set to 1 to simulate low mem condition
+> > parm:           dbglvl_g:driver-wide debug flag
+> > license:        GPL
+> > description:    LSI Logic SofrRAID Driver
+> > author:         LSI Logic Corporation
+> > alias:          pci:v00000000d00000000sv00000000sd00000000bc*sc*i*
+> > alias:          pci:v00000000d00000000sv00000000sd00000000bc*sc*i*
+> > alias:          pci:v00000000d00000000sv00000000sd00000000bc*sc*i*
+> > ...
+> > alias:          pci:v00000000d00000000sv00000000sd00000000bc*sc*i*
+> > alias:          pci:v00000000d00000000sv00000000sd00000000bc*sc*i*
+> > depends:        scsi_mod
+> > vermagic:       2.6.9-22.ELsmp SMP gcc-3.4
+> ==========================================================
+> Do you have any information about this driver ?
+> Seems that it is provided under GPL license.
+> Who can provide the sources for this module ?
+> (only binary are provided)
+> 
 
-    /proc/sys/dev/scsi/logging_level
+We have already been alerted (by OEMs among others) that the modinfo on
+megaswr driver needlessly shows "GPL" as the license. Ours is a binary
+only proprietary driver. I have since corrected the MODULE_LICENSE label
+to "LSI Proprietary" and updated the OEM versions. If this is not
+reflected in their respective web-sites already, it should soon be.
 
-Using scsi_logging.h, I came up with this:
+You must have an old version of this driver. We have changed the name
+from "megaswr" to "megasr".
 
-                0000 0000 0000 0000 0000 0000 0000 0000
-       0x7                                          111  Error
-      0x38                                      11 1     Timeout
-     0x1c0                                  1 11         Scan
-     0xe00                               111             Midlevel queue
-    0x7000                           111                 Midlevel
-completions
-   0x38000                       11 1                    Lowlevel queue
-  0x1c0000                   1 11                        Lowlevel
-completions
-  0xe00000                111                            Highlevel queue
- 0x7000000            111                                Highlevel
-completions
-0x38000000        11 1                                   IOCTL
-
-but I'm not sure if it's right.
-
-And the actual implementation looks backwards, at least for highlevel
-events. You need to set the level to 800000 to see driver loads and
-that means wading through tons of extraneous crap.  The logging
-should show more verbosity at the higher numbers, not start
-out with the most verbose output at the low numbers.
-
+Thanks,
+Sreenivas
