@@ -1,119 +1,97 @@
-From: "Chris Knipe" <savage@savage.za.org>
-Subject: Emulex HBA Issues
-Date: Wed, 7 Feb 2007 15:27:44 +0200
-Message-ID: <000901c74abb$c0402ec0$0a01a8c0@cenergynetworks.com>
+From: Oliver Neukum <oneukum@suse.de>
+Subject: [PATCH]indistinguishable devices with broken and unbroken firmware
+Date: Wed, 7 Feb 2007 15:22:39 +0100
+Message-ID: <200702071522.39529.oneukum@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=original
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from www16b.your-server.co.za ([196.22.132.16]:2173 "EHLO
-	www16b.your-server.co.za" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161314AbXBGOAV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Feb 2007 09:00:21 -0500
-Received: from [41.243.49.220] (helo=superman)
-	by www16b.your-server.co.za with esmtpa (Exim 4.63)
-	(envelope-from <savage@savage.za.org>)
-	id 1HEmqr-0004Lg-18
-	for linux-scsi@vger.kernel.org; Wed, 07 Feb 2007 15:28:46 +0200
+Received: from mx2.suse.de ([195.135.220.15]:55385 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161329AbXBGOWc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 7 Feb 2007 09:22:32 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: usb-storage@lists.one-eyed-alien.net, linux-scsi@vger.kernel.org
 
 Hi,
 
-I have a RedHat 9 system running kernel 2.6.16... The system is attached to 
-3 x EMC FC4700 DOE's operating as simple JBODs....
+there's a USB mass storage device which exists in two version. One
+reports the correct size and the other does not. Apart from that they
+are identical and cannot be told apart. Here's a heuristic based on the
+empirical finding that drives have even sizes. I know it's ugly, but it fixes
+an ugly bug.
 
-Looking at /proc/scsi/scsi, I can clearly see all the devices are visable 
-(see below)
+	Regards
+		Oliver
 
-However, each time RedHat boots it assigns a different device to a different 
-hard drive... For example, one of my CLAR18 disks in Eclosure 3 Bay 3, ends 
-up at /dev/sde.  When I reboot, that same drive, will all of a sudden become 
-/dev/sdm.  Needless to say with the devices flying arround like this, it is 
-impossibly to create any array or use any of the devices...
+Signed-off-by: Oliver Neukum <oneukum@suse.de>
+----
 
-I have no way to know that any device will have the same name after a 
-reboot... Is there any way to fix this??
-
-Thanks,
-Chris.
-
-
-Attached devices:
-Host: scsi0 Channel: 00 Id: 00 Lun: 00
-  Vendor: SEAGATE  Model: ST318203 CLAR18  Rev: 3844
-  Type:   Direct-Access                    ANSI SCSI revision: 02
-Host: scsi0 Channel: 00 Id: 01 Lun: 00
-  Vendor: SEAGATE  Model: ST318203 CLAR18  Rev: 3844
-  Type:   Direct-Access                    ANSI SCSI revision: 02
-Host: scsi0 Channel: 00 Id: 02 Lun: 00
-  Vendor: SEAGATE  Model: ST318203 CLAR18  Rev: 3844
-  Type:   Direct-Access                    ANSI SCSI revision: 02
-Host: scsi0 Channel: 00 Id: 03 Lun: 00
-  Vendor: SEAGATE  Model: ST318203 CLAR18  Rev: 3844
-  Type:   Direct-Access                    ANSI SCSI revision: 02
-Host: scsi0 Channel: 00 Id: 04 Lun: 00
-  Vendor: SEAGATE  Model: ST318203 CLAR18  Rev: 3844
-  Type:   Direct-Access                    ANSI SCSI revision: 02
-Host: scsi0 Channel: 00 Id: 05 Lun: 00
-  Vendor: SEAGATE  Model: ST318203 CLAR18  Rev: 3844
-  Type:   Direct-Access                    ANSI SCSI revision: 02
-Host: scsi0 Channel: 00 Id: 06 Lun: 00
-  Vendor: SEAGATE  Model: ST318203 CLAR18  Rev: 3844
-  Type:   Direct-Access                    ANSI SCSI revision: 02
-Host: scsi0 Channel: 00 Id: 07 Lun: 00
-  Vendor: SEAGATE  Model: ST318203 CLAR18  Rev: 3844
-  Type:   Direct-Access                    ANSI SCSI revision: 02
-Host: scsi0 Channel: 00 Id: 08 Lun: 00
-  Vendor: SEAGATE  Model: ST173404 CLAR72  Rev: 3A90
-  Type:   Direct-Access                    ANSI SCSI revision: 03
-Host: scsi0 Channel: 00 Id: 09 Lun: 00
-  Vendor: SEAGATE  Model: ST173404 CLAR72  Rev: 3A90
-  Type:   Direct-Access                    ANSI SCSI revision: 03
-Host: scsi0 Channel: 00 Id: 10 Lun: 00
-  Vendor: SEAGATE  Model: ST336704 CLAR36  Rev: 3A84
-  Type:   Direct-Access                    ANSI SCSI revision: 03
-Host: scsi0 Channel: 00 Id: 11 Lun: 00
-  Vendor: SEAGATE  Model: ST173404 CLAR72  Rev: 3A90
-  Type:   Direct-Access                    ANSI SCSI revision: 03
-Host: scsi0 Channel: 00 Id: 12 Lun: 00
-  Vendor: SEAGATE  Model: ST336704 CLAR36  Rev: 3A90
-  Type:   Direct-Access                    ANSI SCSI revision: 03
-Host: scsi0 Channel: 00 Id: 13 Lun: 00
-  Vendor: SEAGATE  Model: ST318304 CLAR18  Rev: 3A90
-  Type:   Direct-Access                    ANSI SCSI revision: 03
-Host: scsi0 Channel: 00 Id: 14 Lun: 00
-  Vendor: SEAGATE  Model: ST336704 CLAR36  Rev: 3A90
-  Type:   Direct-Access                    ANSI SCSI revision: 03
-Host: scsi0 Channel: 00 Id: 15 Lun: 00
-  Vendor: SEAGATE  Model: ST336704 CLAR36  Rev: 3A84
-  Type:   Direct-Access                    ANSI SCSI revision: 03
-Host: scsi0 Channel: 00 Id: 16 Lun: 00
-  Vendor: SEAGATE  Model: ST336704 CLAR36  Rev: 3A90
-  Type:   Direct-Access                    ANSI SCSI revision: 03
-Host: scsi0 Channel: 00 Id: 17 Lun: 00
-  Vendor: SEAGATE  Model: ST173404 CLAR72  Rev: 3A90
-  Type:   Direct-Access                    ANSI SCSI revision: 03
-Host: scsi0 Channel: 00 Id: 18 Lun: 00
-  Vendor: SEAGATE  Model: ST173404 CLAR72  Rev: 3A90
-  Type:   Direct-Access                    ANSI SCSI revision: 03
-Host: scsi0 Channel: 00 Id: 19 Lun: 00
-  Vendor: SEAGATE  Model: ST173404 CLAR72  Rev: 3A90
-  Type:   Direct-Access                    ANSI SCSI revision: 03
-Host: scsi0 Channel: 00 Id: 20 Lun: 00
-  Vendor: SEAGATE  Model: ST173404 CLAR72  Rev: 3A90
-  Type:   Direct-Access                    ANSI SCSI revision: 03
-Host: scsi0 Channel: 00 Id: 21 Lun: 00
-  Vendor: SEAGATE  Model: ST336605 CLAR36  Rev: 4A20
-  Type:   Direct-Access                    ANSI SCSI revision: 03
-Host: scsi0 Channel: 00 Id: 22 Lun: 00
-  Vendor: SEAGATE  Model: ST336605 CLAR36  Rev: 4A20
-  Type:   Direct-Access                    ANSI SCSI revision: 03
-Host: scsi0 Channel: 00 Id: 23 Lun: 00
-  Vendor: SEAGATE  Model: ST118202 CLAR18  Rev: 3528
-  Type:   Direct-Access                    ANSI SCSI revision: 02 
-
+--- a/drivers/usb/storage/unusual_devs.h	2007-02-06 14:14:49.000000000 +0100
++++ b/drivers/usb/storage/unusual_devs.h	2007-02-07 15:14:01.000000000 +0100
+@@ -1430,7 +1430,7 @@
+ 		"DataStor",
+ 		"USB4500 FW1.04",
+ 		US_SC_DEVICE, US_PR_DEVICE, NULL,
+-		US_FL_FIX_CAPACITY),
++		US_FL_CAPACITY_HEURISTICS),
+ 
+ /* Control/Bulk transport for all SubClass values */
+ USUAL_DEV(US_SC_RBC, US_PR_CB, USB_US_TYPE_STOR),
+--- a/drivers/usb/storage/scsiglue.c	2007-02-06 14:13:49.000000000 +0100
++++ b/drivers/usb/storage/scsiglue.c	2007-02-07 15:14:01.000000000 +0100
+@@ -170,6 +170,12 @@
+ 		if (us->flags & US_FL_FIX_CAPACITY)
+ 			sdev->fix_capacity = 1;
+ 
++		/* A few disks have two indistinguishable version, one of
++		 * which reports the correct capacity and the other does not.
++		 * The sd driver has to guess which is the case. */
++		if (us->flags & US_FL_CAPACITY_HEURISTICS)
++			sdev->guess_capacity = 1;
++
+ 		/* Some devices report a SCSI revision level above 2 but are
+ 		 * unable to handle the REPORT LUNS command (for which
+ 		 * support is mandatory at level 3).  Since we already have
+--- a/drivers/scsi/sd.c	2007-02-06 14:14:48.000000000 +0100
++++ b/drivers/scsi/sd.c	2007-02-07 15:14:01.000000000 +0100
+@@ -1273,6 +1273,13 @@
+ 	if (sdp->fix_capacity)
+ 		--sdkp->capacity;
+ 
++	/* Some devices have version which report the correct sizes
++	 * and others which do not. We guess size according to a heuristic
++	 * and err on the side of lowering the capacity. */
++	if (sdp->guess_capacity)
++		if (sdkp->capacity & 0x01) /* odd sizes are odd */
++			--sdkp->capacity;
++
+ got_data:
+ 	if (sector_size == 0) {
+ 		sector_size = 512;
+--- a/include/linux/usb_usual.h	2007-02-06 14:14:07.000000000 +0100
++++ b/include/linux/usb_usual.h	2007-02-07 15:14:01.000000000 +0100
+@@ -46,7 +46,9 @@
+ 	US_FLAG(MAX_SECTORS_64,	0x00000400)			\
+ 		/* Sets max_sectors to 64    */			\
+ 	US_FLAG(IGNORE_DEVICE,	0x00000800)			\
+-		/* Don't claim device */
++		/* Don't claim device */			\
++	US_FLAG(CAPACITY_HEURISTICS,	0x00001000)		\
++		/* sometimes sizes is too big */
+ 
+ #define US_FLAG(name, value)	US_FL_##name = value ,
+ enum { US_DO_ALL_FLAGS };
+--- a/include/scsi/scsi_device.h	2007-02-06 14:14:57.000000000 +0100
++++ b/include/scsi/scsi_device.h	2007-02-07 15:14:01.000000000 +0100
+@@ -122,6 +122,7 @@
+ 	unsigned no_uld_attach:1; /* disable connecting to upper level drivers */
+ 	unsigned select_no_atn:1;
+ 	unsigned fix_capacity:1;	/* READ_CAPACITY is too high by 1 */
++	unsigned guess_capacity:1;	/* READ_CAPACITY might be too high by 1 */
+ 	unsigned retry_hwerror:1;	/* Retry HARDWARE_ERROR */
+ 
+ 	unsigned int device_blocked;	/* Device returned QUEUE_FULL. */
