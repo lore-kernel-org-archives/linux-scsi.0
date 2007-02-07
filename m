@@ -1,86 +1,119 @@
-From: Swen Schillig <swen.schillig@freenet.de>
-Subject: [PATCH] zfcp: Invalid locking order
-Date: Wed, 7 Feb 2007 13:17:57 +0100
-Message-ID: <200702071317.58026.swen.schillig@freenet.de>
+From: "Chris Knipe" <savage@savage.za.org>
+Subject: Emulex HBA Issues
+Date: Wed, 7 Feb 2007 15:27:44 +0200
+Message-ID: <000901c74abb$c0402ec0$0a01a8c0@cenergynetworks.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="us-ascii"
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=original
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout0.freenet.de ([194.97.50.131]:55794 "EHLO mout0.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161292AbXBGM47 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Feb 2007 07:56:59 -0500
-Content-Disposition: inline
+Received: from www16b.your-server.co.za ([196.22.132.16]:2173 "EHLO
+	www16b.your-server.co.za" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161314AbXBGOAV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Feb 2007 09:00:21 -0500
+Received: from [41.243.49.220] (helo=superman)
+	by www16b.your-server.co.za with esmtpa (Exim 4.63)
+	(envelope-from <savage@savage.za.org>)
+	id 1HEmqr-0004Lg-18
+	for linux-scsi@vger.kernel.org; Wed, 07 Feb 2007 15:28:46 +0200
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-From: Swen Schillig <swen@vnet.ibm.com>
+Hi,
 
-Invalid locking order. Kernel hangs after trying to take two locks
-which are dependend on each other. Introducing temporary variable
-to free requests. Free lock after requests are copied.
-    
-Signed-off-by: Swen Schillig <swen@vnet.ibm.com>
----
- drivers/s390/scsi/zfcp_ext.h |    2 +-
- drivers/s390/scsi/zfcp_fsf.c |   23 ++++++++++-------------
- 2 files changed, 11 insertions(+), 14 deletions(-)
+I have a RedHat 9 system running kernel 2.6.16... The system is attached to 
+3 x EMC FC4700 DOE's operating as simple JBODs....
 
-Index: linux-2.6/drivers/s390/scsi/zfcp_ext.h
-===================================================================
---- linux-2.6.orig/drivers/s390/scsi/zfcp_ext.h
-+++ linux-2.6/drivers/s390/scsi/zfcp_ext.h
-@@ -89,7 +89,7 @@ extern int  zfcp_fsf_control_file(struct
- 				  u32, u32, struct zfcp_sg_list *);
- extern void zfcp_fsf_start_timer(struct zfcp_fsf_req *, unsigned long);
- extern void zfcp_erp_start_timer(struct zfcp_fsf_req *);
--extern int  zfcp_fsf_req_dismiss_all(struct zfcp_adapter *);
-+extern void zfcp_fsf_req_dismiss_all(struct zfcp_adapter *);
- extern int  zfcp_fsf_status_read(struct zfcp_adapter *, int);
- extern int zfcp_fsf_req_create(struct zfcp_adapter *, u32, int, mempool_t *,
- 			       unsigned long *, struct zfcp_fsf_req **);
-Index: linux-2.6/drivers/s390/scsi/zfcp_fsf.c
-===================================================================
---- linux-2.6.orig/drivers/s390/scsi/zfcp_fsf.c
-+++ linux-2.6/drivers/s390/scsi/zfcp_fsf.c
-@@ -176,28 +176,25 @@ static void zfcp_fsf_req_dismiss(struct 
- /**
-  * zfcp_fsf_req_dismiss_all - dismiss all remaining fsf requests
-  */
--int zfcp_fsf_req_dismiss_all(struct zfcp_adapter *adapter)
-+void zfcp_fsf_req_dismiss_all(struct zfcp_adapter *adapter)
- {
- 	struct zfcp_fsf_req *request, *tmp;
- 	unsigned long flags;
-+	LIST_HEAD(remove_queue);
- 	unsigned int i, counter;
- 
- 	spin_lock_irqsave(&adapter->req_list_lock, flags);
- 	atomic_set(&adapter->reqs_active, 0);
--	for (i=0; i<REQUEST_LIST_SIZE; i++) {
--		if (list_empty(&adapter->req_list[i]))
--			continue;
--
--		counter = 0;
--		list_for_each_entry_safe(request, tmp,
--					 &adapter->req_list[i], list) {
--			zfcp_fsf_req_dismiss(adapter, request, counter);
--			counter++;
--		}
--	}
-+	for (i=0; i<REQUEST_LIST_SIZE; i++)
-+		list_splice_init(&adapter->req_list[i], &remove_queue);
-+
- 	spin_unlock_irqrestore(&adapter->req_list_lock, flags);
- 
--	return 0;
-+	counter = 0;
-+	list_for_each_entry_safe(request, tmp, &remove_queue, list) {
-+		zfcp_fsf_req_dismiss(adapter, request, counter);
-+		counter++;
-+	}
- }
- 
- /*
+Looking at /proc/scsi/scsi, I can clearly see all the devices are visable 
+(see below)
+
+However, each time RedHat boots it assigns a different device to a different 
+hard drive... For example, one of my CLAR18 disks in Eclosure 3 Bay 3, ends 
+up at /dev/sde.  When I reboot, that same drive, will all of a sudden become 
+/dev/sdm.  Needless to say with the devices flying arround like this, it is 
+impossibly to create any array or use any of the devices...
+
+I have no way to know that any device will have the same name after a 
+reboot... Is there any way to fix this??
+
+Thanks,
+Chris.
+
+
+Attached devices:
+Host: scsi0 Channel: 00 Id: 00 Lun: 00
+  Vendor: SEAGATE  Model: ST318203 CLAR18  Rev: 3844
+  Type:   Direct-Access                    ANSI SCSI revision: 02
+Host: scsi0 Channel: 00 Id: 01 Lun: 00
+  Vendor: SEAGATE  Model: ST318203 CLAR18  Rev: 3844
+  Type:   Direct-Access                    ANSI SCSI revision: 02
+Host: scsi0 Channel: 00 Id: 02 Lun: 00
+  Vendor: SEAGATE  Model: ST318203 CLAR18  Rev: 3844
+  Type:   Direct-Access                    ANSI SCSI revision: 02
+Host: scsi0 Channel: 00 Id: 03 Lun: 00
+  Vendor: SEAGATE  Model: ST318203 CLAR18  Rev: 3844
+  Type:   Direct-Access                    ANSI SCSI revision: 02
+Host: scsi0 Channel: 00 Id: 04 Lun: 00
+  Vendor: SEAGATE  Model: ST318203 CLAR18  Rev: 3844
+  Type:   Direct-Access                    ANSI SCSI revision: 02
+Host: scsi0 Channel: 00 Id: 05 Lun: 00
+  Vendor: SEAGATE  Model: ST318203 CLAR18  Rev: 3844
+  Type:   Direct-Access                    ANSI SCSI revision: 02
+Host: scsi0 Channel: 00 Id: 06 Lun: 00
+  Vendor: SEAGATE  Model: ST318203 CLAR18  Rev: 3844
+  Type:   Direct-Access                    ANSI SCSI revision: 02
+Host: scsi0 Channel: 00 Id: 07 Lun: 00
+  Vendor: SEAGATE  Model: ST318203 CLAR18  Rev: 3844
+  Type:   Direct-Access                    ANSI SCSI revision: 02
+Host: scsi0 Channel: 00 Id: 08 Lun: 00
+  Vendor: SEAGATE  Model: ST173404 CLAR72  Rev: 3A90
+  Type:   Direct-Access                    ANSI SCSI revision: 03
+Host: scsi0 Channel: 00 Id: 09 Lun: 00
+  Vendor: SEAGATE  Model: ST173404 CLAR72  Rev: 3A90
+  Type:   Direct-Access                    ANSI SCSI revision: 03
+Host: scsi0 Channel: 00 Id: 10 Lun: 00
+  Vendor: SEAGATE  Model: ST336704 CLAR36  Rev: 3A84
+  Type:   Direct-Access                    ANSI SCSI revision: 03
+Host: scsi0 Channel: 00 Id: 11 Lun: 00
+  Vendor: SEAGATE  Model: ST173404 CLAR72  Rev: 3A90
+  Type:   Direct-Access                    ANSI SCSI revision: 03
+Host: scsi0 Channel: 00 Id: 12 Lun: 00
+  Vendor: SEAGATE  Model: ST336704 CLAR36  Rev: 3A90
+  Type:   Direct-Access                    ANSI SCSI revision: 03
+Host: scsi0 Channel: 00 Id: 13 Lun: 00
+  Vendor: SEAGATE  Model: ST318304 CLAR18  Rev: 3A90
+  Type:   Direct-Access                    ANSI SCSI revision: 03
+Host: scsi0 Channel: 00 Id: 14 Lun: 00
+  Vendor: SEAGATE  Model: ST336704 CLAR36  Rev: 3A90
+  Type:   Direct-Access                    ANSI SCSI revision: 03
+Host: scsi0 Channel: 00 Id: 15 Lun: 00
+  Vendor: SEAGATE  Model: ST336704 CLAR36  Rev: 3A84
+  Type:   Direct-Access                    ANSI SCSI revision: 03
+Host: scsi0 Channel: 00 Id: 16 Lun: 00
+  Vendor: SEAGATE  Model: ST336704 CLAR36  Rev: 3A90
+  Type:   Direct-Access                    ANSI SCSI revision: 03
+Host: scsi0 Channel: 00 Id: 17 Lun: 00
+  Vendor: SEAGATE  Model: ST173404 CLAR72  Rev: 3A90
+  Type:   Direct-Access                    ANSI SCSI revision: 03
+Host: scsi0 Channel: 00 Id: 18 Lun: 00
+  Vendor: SEAGATE  Model: ST173404 CLAR72  Rev: 3A90
+  Type:   Direct-Access                    ANSI SCSI revision: 03
+Host: scsi0 Channel: 00 Id: 19 Lun: 00
+  Vendor: SEAGATE  Model: ST173404 CLAR72  Rev: 3A90
+  Type:   Direct-Access                    ANSI SCSI revision: 03
+Host: scsi0 Channel: 00 Id: 20 Lun: 00
+  Vendor: SEAGATE  Model: ST173404 CLAR72  Rev: 3A90
+  Type:   Direct-Access                    ANSI SCSI revision: 03
+Host: scsi0 Channel: 00 Id: 21 Lun: 00
+  Vendor: SEAGATE  Model: ST336605 CLAR36  Rev: 4A20
+  Type:   Direct-Access                    ANSI SCSI revision: 03
+Host: scsi0 Channel: 00 Id: 22 Lun: 00
+  Vendor: SEAGATE  Model: ST336605 CLAR36  Rev: 4A20
+  Type:   Direct-Access                    ANSI SCSI revision: 03
+Host: scsi0 Channel: 00 Id: 23 Lun: 00
+  Vendor: SEAGATE  Model: ST118202 CLAR18  Rev: 3528
+  Type:   Direct-Access                    ANSI SCSI revision: 02 
+
