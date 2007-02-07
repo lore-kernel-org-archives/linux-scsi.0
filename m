@@ -1,40 +1,43 @@
-From: Oliver Neukum <oneukum@suse.de>
-Subject: Re: [PATCH]indistinguishable devices with broken and unbroken firmware
-Date: Wed, 7 Feb 2007 16:16:55 +0100
-Message-ID: <200702071616.55419.oneukum@suse.de>
-References: <200702071522.39529.oneukum@suse.de> <20070207150555.GA7054@infradead.org>
+From: "Andreas Herrmann" <andreas.herrmann3@amd.com>
+Subject: Re: [PATCH] zfcp: Invalid locking order
+Date: Wed, 7 Feb 2007 17:06:43 +0100
+Message-ID: <20070207160643.GE30311@alberich.amd.com>
+References: <200702071317.58026.swen.schillig@freenet.de>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
+ charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:59323 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161356AbXBGPRA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Feb 2007 10:17:00 -0500
-In-Reply-To: <20070207150555.GA7054@infradead.org>
+Received: from outbound-fra.frontbridge.com ([62.209.45.174]:30079 "EHLO
+	outbound3-fra-R.bigfish.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1030287AbXBGQHA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Feb 2007 11:07:00 -0500
+In-Reply-To: <200702071317.58026.swen.schillig@freenet.de>
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: usb-storage@lists.one-eyed-alien.net, linux-scsi@vger.kernel.org
+To: Swen Schillig <swen.schillig@freenet.de>
+Cc: linux-scsi@vger.kernel.org
 
-Am Mittwoch, 7. Februar 2007 16:05 schrieb Christoph Hellwig:
-> On Wed, Feb 07, 2007 at 03:22:39PM +0100, Oliver Neukum wrote:
-> > Hi,
-> > 
-> > there's a USB mass storage device which exists in two version. One
-> > reports the correct size and the other does not. Apart from that they
-> > are identical and cannot be told apart. Here's a heuristic based on the
-> > empirical finding that drives have even sizes. I know it's ugly, but it fixes
-> > an ugly bug.
+On Wed, Feb 07, 2007 at 01:17:57PM +0100, Swen Schillig wrote:
+> From: Swen Schillig <swen@vnet.ibm.com>
 > 
-> Do we really need a second flag?  Alternatively fix_capacity could be
-> changed to mean fix size if odd.
+> Invalid locking order. Kernel hangs after trying to take two locks
+> which are dependend on each other. Introducing temporary variable
+> to free requests. Free lock after requests are copied.
+>     
 
-Until we learn about devices which really do have an odd number of sectors.
-And then we'll have a problem. I'd like to avoid heuristics when we know
-for sure.
+I am just curious. You didn't mention which locks are causing the dead
+lock.
 
-	Regards
-		Oliver
+I've glanced through the code and it seems that locking order
+of abort_lock and req_list_lock for adapters is inconsistent.
+Is that the bug you try to fix?
+
+
+Regards,
+
+Andreas
+
+
+
