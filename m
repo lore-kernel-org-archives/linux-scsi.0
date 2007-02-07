@@ -1,63 +1,37 @@
-From: "Wu, Gilbert" <Gilbert_Wu@adaptec.com>
-Subject: RE: [PATCH] scsi: Update Aic94xx SAS/SATA Linux open source devicedriver for new sequence firmware.
-Date: Wed, 7 Feb 2007 13:54:40 -0800
-Message-ID: <89FD792A883D4B47AD469FEA2E5D1F9B0F59E8@aime2k302.adaptec.com>
-References: <45C997C4.1010705@us.ibm.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH 4/5] scsi: megaraid_sas - preallocate memory for ioctl
+	processing
+Date: Wed, 07 Feb 2007 17:02:13 -0500
+Message-ID: <1170885734.3852.30.camel@mulgrave.il.steeleye.com>
+References: <1170800394.10482.41.camel@dumbo>
+	 <20070207133020.4c58e271.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([216.52.22.36]:41651 "EHLO
-	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161447AbXBGVyp convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Feb 2007 16:54:45 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <45C997C4.1010705@us.ibm.com>
+Received: from hancock.steeleye.com ([71.30.118.248]:58020 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1161443AbXBGWCW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Feb 2007 17:02:22 -0500
+In-Reply-To: <20070207133020.4c58e271.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Darrick J. Wong" <djwong@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, Alexis Bruemmer <alexisb@us.ibm.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Sumant Patro <sumantp@lsil.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, neela.kolli@lsi.com, bo.yang@lsi.com, sumant.patro@lsi.com
 
-Hi Darrick,
-
- We can duplicate the problem here. The aic94xx with V28 passed IO
-testing overnight if we apply IO directly to /dev/sd?.  But it fails
-very quickly when we create a partition and format it as ext3. The V17
-sequencer works fine with both cases. We are looking into it and find
-the root cause ASAP.
-
-Thanks!
-Gilbert
-
------Original Message-----
-From: Darrick J. Wong [mailto:djwong@us.ibm.com] 
-Sent: Wednesday, February 07, 2007 1:12 AM
-To: Wu, Gilbert
-Cc: James Bottomley; linux-scsi@vger.kernel.org; Alexis Bruemmer
-Subject: Re: [PATCH] scsi: Update Aic94xx SAS/SATA Linux open source
-devicedriver for new sequence firmware.
-
-Wu, Gilbert wrote:
-> Hi James,
+On Wed, 2007-02-07 at 13:30 -0800, Andrew Morton wrote:
+> I suspect all this horror is due to stupidity in the DMA API.
 > 
->   We are investigating this issue here. We will update the status when
-> we can duplicate the problem here and root cause.
+> pci_alloc_consistent() just goes and assumes GFP_ATOMIC, whereas
+> the caller (megasas_mgmt_fw_ioctl) would have been perfectly happy
+> to use GFP_KERNEL.
+> 
+> I bet this fixes it
 
-FWIW,
+It does, but the DMA API was expanded to cope with this exact case, so
+use dma_alloc_coherent() directly in the megaraid code instead.  The dev
+is just &pci_dev->dev.
 
-v17 looks good for both SAS/SATA load testing.  The 24-disk x260 seems
-to have crapped out after about 800 rounds of load/unload due to the
-phys reporting devices, then no devices about 10s later, and then having
-the module unloaded before the dead SAS commands finished returning.
-Not sure what that's about, though I might also have borked the x260 :(
+James
 
-Though who really is going to reboot the machine 800 times in rapid-fire
-succession???
 
-(I'm not trying to slam the v28 sequencer, I'm merely providing a
-baseline for comparison between the two.  It may very well be the case
-that all the bugs we used to observe with v17 were merely a result of us
-poking the sequencer the wrong way....)
-
---D
