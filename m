@@ -1,37 +1,65 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 4/5] scsi: megaraid_sas - preallocate memory for ioctl
-	processing
-Date: Wed, 07 Feb 2007 17:02:13 -0500
-Message-ID: <1170885734.3852.30.camel@mulgrave.il.steeleye.com>
-References: <1170800394.10482.41.camel@dumbo>
-	 <20070207133020.4c58e271.akpm@linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Mark Rustad <mrustad@gmail.com>
+Subject: Re: [PATCH] scsi: Update Aic94xx SAS/SATA Linux open source devicedriver for new sequence firmware.
+Date: Wed, 7 Feb 2007 16:57:19 -0600
+Message-ID: <E933AE1E-B184-4421-B9A4-A2B0851BBC7F@gmail.com>
+References: <89FD792A883D4B47AD469FEA2E5D1F9B0F59E7@aime2k302.adaptec.com> <45C997C4.1010705@us.ibm.com>
+Mime-Version: 1.0 (Apple Message framework v752.2)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:58020 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1161443AbXBGWCW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Feb 2007 17:02:22 -0500
-In-Reply-To: <20070207133020.4c58e271.akpm@linux-foundation.org>
+Received: from wx-out-0506.google.com ([66.249.82.239]:50072 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161471AbXBGW5V (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Feb 2007 17:57:21 -0500
+Received: by wx-out-0506.google.com with SMTP id h31so323312wxd
+        for <linux-scsi@vger.kernel.org>; Wed, 07 Feb 2007 14:57:20 -0800 (PST)
+In-Reply-To: <45C997C4.1010705@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Sumant Patro <sumantp@lsil.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, neela.kolli@lsi.com, bo.yang@lsi.com, sumant.patro@lsi.com
+To: "Darrick J. Wong" <djwong@us.ibm.com>
+Cc: "Wu, Gilbert" <Gilbert_Wu@adaptec.com>, James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, Alexis Bruemmer <alexisb@us.ibm.com>
 
-On Wed, 2007-02-07 at 13:30 -0800, Andrew Morton wrote:
-> I suspect all this horror is due to stupidity in the DMA API.
-> 
-> pci_alloc_consistent() just goes and assumes GFP_ATOMIC, whereas
-> the caller (megasas_mgmt_fw_ioctl) would have been perfectly happy
-> to use GFP_KERNEL.
-> 
-> I bet this fixes it
+On Feb 7, 2007, at 3:11 AM, Darrick J. Wong wrote:
 
-It does, but the DMA API was expanded to cope with this exact case, so
-use dma_alloc_coherent() directly in the megaraid code instead.  The dev
-is just &pci_dev->dev.
+> Wu, Gilbert wrote:
+>> Hi James,
+>>
+>>   We are investigating this issue here. We will update the status  
+>> when
+>> we can duplicate the problem here and root cause.
+>
+> FWIW,
+>
+> v17 looks good for both SAS/SATA load testing.  The 24-disk x260 seems
+> to have crapped out after about 800 rounds of load/unload due to the
+> phys reporting devices, then no devices about 10s later, and then  
+> having
+> the module unloaded before the dead SAS commands finished returning.
+> Not sure what that's about, though I might also have borked the  
+> x260 :(
+>
+> Though who really is going to reboot the machine 800 times in rapid- 
+> fire
+> succession???
+>
+> (I'm not trying to slam the v28 sequencer, I'm merely providing a
+> baseline for comparison between the two.  It may very well be the case
+> that all the bugs we used to observe with v17 were merely a result  
+> of us
+> poking the sequencer the wrong way....)
 
-James
+My understanding is that the new sequencer has moved some registers  
+and so each version of the sequencer would have to be run with a  
+driver coded for that particular version of the sequencer. If you are  
+trying to use the same driver with both versions of the sequencer,  
+bad things will happen unless you have a driver that can recognize  
+both versions and handle each appropriately. I don't think that the  
+aic94xx driver as it exists can do that.
+
+Please excuse me if you were already aware of this, but if you  
+weren't I wanted to try to short-circuit some of your head-banging.
+
+-- 
+Mark Rustad, MRustad@gmail.com
 
 
