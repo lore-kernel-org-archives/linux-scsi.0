@@ -1,47 +1,62 @@
-From: "Patro, Sumant" <Sumant.Patro@lsi.com>
-Subject: RE: [PATCH 1/5] scsi: megaraid_sas - stop cmd processing if hw_crit_error is set
-Date: Wed, 7 Feb 2007 19:59:36 -0700
-Message-ID: <0631C836DBF79F42B5A60C8C8D4E82298ED5D7@NAMAIL2.ad.lsil.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: Random scsi disk disappearing
+Date: Wed, 07 Feb 2007 23:26:13 -0500
+Message-ID: <45CAA665.1030102@torque.net>
+References: <20060818091139.GA6120@lion28.ibm.com> <20070207164148.961d4c70.randy.dunlap@oracle.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:36421 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933346AbXBHC7q convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Feb 2007 21:59:46 -0500
-Content-class: urn:content-classes:message
+Received: from pentafluge.infradead.org ([213.146.154.40]:37714 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030661AbXBHE0k (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Feb 2007 23:26:40 -0500
+In-Reply-To: <20070207164148.961d4c70.randy.dunlap@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Kolli, Neela" <Neela.Kolli@lsi.com>, "Yang, Bo" <Bo.Yang@lsi.com>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: Andreas Herrmann <aherrman@de.ibm.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Linux SCSI <linux-scsi@vger.kernel.org>, berthiaume_wayne@emc.com
 
-I will correct the formatting and will resubmit.
+Randy Dunlap wrote:
+> [lkml dropped]  [old thread]
+> 
+> On Fri, 18 Aug 2006 11:11:39 +0200 Andreas Herrmann wrote:
+> 
+>> On 18.08.2006 00:33 Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
+>>> Andreas Herrmann wrote:
+>>>> Anyone interested in a script to conveniently interpret or change the
+>>>> SCSI logging level? Such a script (scsi_logging_level) exists in the
+>>>> s390-tools package (version 1.5.3).
+>>> That would be very welcome.
+> 
+> Hi Doug,
+> 
+> Did you give any thought to adding this script (or a current version
+> of it, from
+> http://www-128.ibm.com/developerworks/linux/linux390/s390-tools-1.5.4.html)
+> to sg3-utils?  or would you give it some thought?
+> 
+> I think that's a better solution than adding to the kernel tree
+> (and better than getting it from developerworks :).
+> 
+> Thanks.
 
-Regards,
-Sumant 
+Randy,
+The recently released sg3_utils version 1.23 contains
+a "scripts" directory. The files in there are:
+  README
+  sas_disk_blink
+  scsi_logging_level
+  scsi_mandat
+  scsi_readcap
+  scsi_ready
+  scsi_satl
+  scsi_start
+  scsi_stop
+  scsi_temperature
 
------Original Message-----
-From: Andrew Morton [mailto:akpm@linux-foundation.org] 
-Sent: Wednesday, February 07, 2007 1:18 PM
-To: Patro, Sumant
-Cc: James.Bottomley@SteelEye.com; linux-scsi@vger.kernel.org;
-linux-kernel@vger.kernel.org; Kolli, Neela; Yang, Bo; Patro, Sumant
-Subject: Re: [PATCH 1/5] scsi: megaraid_sas - stop cmd processing if
-hw_crit_error is set
+Does one look familiar?
+If there is a later version, I can put it in sg3_utils-1.24 .
 
-On Tue, 06 Feb 2007 13:49:24 -0800
-Sumant Patro <sumantp@lsil.com> wrote:
-
-> +	/* Don't process if we have already declared adapter dead */
-> +	if(instance->hw_crit_error)
-
-Preferred kernel coding style is "if (".
-
-> [p1-crit_err.patch  text/x-patch (1.3KB)]
-
-argh.  Please don't send two copies of the patch in the email.  Because
-the result applies happily with `patch --dry-run' and then creates a
-great mess when you try to apply the patch for real.
-
+Doug Gilbert
