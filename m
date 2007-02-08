@@ -1,34 +1,51 @@
-From: Volker Sameske <SAMESKE@de.ibm.com>
-Subject: Re: [patch] Re: SCSI logging sucks
-Date: Thu, 8 Feb 2007 08:21:26 +0100
-Message-ID: <OF1C4B234E.A190DBFA-ONC125727C.0027B4A0-C125727C.002852B5@de.ibm.com>
-References: <yq17iut7b51.fsf@sermon.lab.mkp.net>
+From: "Zhang, Yanmin" <yanmin_zhang@linux.intel.com>
+Subject: [PATCH] ATA convert GSI to irq on ia64
+Date: Thu, 08 Feb 2007 15:40:22 +0800
+Message-ID: <1170920422.15989.354.camel@ymzhang>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate4.de.ibm.com ([195.212.29.153]:37851 "EHLO
-	mtagate4.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030668AbXBHHVc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Feb 2007 02:21:32 -0500
-In-Reply-To: <yq17iut7b51.fsf@sermon.lab.mkp.net>
+Received: from mga05.intel.com ([192.55.52.89]:48160 "EHLO
+	fmsmga101.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1422950AbXBHHkY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Feb 2007 02:40:24 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: martin.petersen@oracle.com, cebbert@redhat.com, james.bottomley@steeleye.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, randy.dunlap@oracle.com
+To: LKML <linux-kernel@vger.kernel.org>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
 
-> There's a very convenient script called scsi_logging_level included in
-> (of all things) the s390-tools package.
-> 
-> Maybe provide a pointer to it -- or even just include it.  It's not
-> very big...
-> 
-> 
-http://www-128.ibm.com/developerworks/linux/linux390/s390-tools-1.5.4.html
+If an ATA drive uses legacy mode, ata driver will choose 14 and 15 as the
+fixed irq number. On ia64 platform, such numbers are GSI and should be converted
+to irq vector.
 
-The scsi_logging_level script is described here in chapter 8:
-http://download.boulder.ibm.com/ibmdl/pub/software/dw/linux390/docu/l26cts01.pdf
+Below patch against kernel 2.6.20 fixes it.
 
-and here on page 312:
-http://download.boulder.ibm.com/ibmdl/pub/software/dw/linux390/docu/l26cdd02.pdf
+Signed-off-by: Zhang Yanmin <yanmin.zhang@intel.com>
 
-regards,
-Volker
+---
+
+diff -Nraup linux-2.6.20/include/asm-generic/libata-portmap.h linux-2.6.20_fix/include/asm-generic/libata-portmap.h
+--- linux-2.6.20/include/asm-generic/libata-portmap.h	2007-02-08 15:13:44.000000000 +0800
++++ linux-2.6.20_fix/include/asm-generic/libata-portmap.h	2007-02-08 15:20:13.000000000 +0800
+@@ -3,10 +3,20 @@
+ 
+ #define ATA_PRIMARY_CMD		0x1F0
+ #define ATA_PRIMARY_CTL		0x3F6
++#if defined(__ia64__)
++#define ATA_PRIMARY_IRQ(dev)	isa_irq_to_vector(14)
++#else
+ #define ATA_PRIMARY_IRQ(dev)	14
++#endif
++
+ 
+ #define ATA_SECONDARY_CMD	0x170
+ #define ATA_SECONDARY_CTL	0x376
++#if defined(__ia64__)
++#define ATA_SECONDARY_IRQ(dev)	isa_irq_to_vector(15)
++#else
+ #define ATA_SECONDARY_IRQ(dev)	15
++#endif
++
+ 
+ #endif
