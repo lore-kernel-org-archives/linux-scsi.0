@@ -1,37 +1,29 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [patch] Re: SCSI logging sucks
-Date: Wed, 07 Feb 2007 19:20:42 -0500
-Message-ID: <yq17iut7b51.fsf@sermon.lab.mkp.net>
-References: <45CA0716.5060803@redhat.com>
-	<20070207153530.70412bc3.randy.dunlap@oracle.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] aic79xx: use dma_get_required_mask()
+Date: Wed, 07 Feb 2007 19:27:59 -0500
+Message-ID: <1170894479.11400.4.camel@mulgrave.il.steeleye.com>
+References: <45C99230.5020309@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from agminet01.oracle.com ([141.146.126.228]:57068 "EHLO
-	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422828AbXBHAWK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Feb 2007 19:22:10 -0500
-In-Reply-To: <20070207153530.70412bc3.randy.dunlap@oracle.com> (Randy Dunlap's message of "Wed, 7 Feb 2007 15:35:30 -0800")
+Received: from hancock.steeleye.com ([71.30.118.248]:60026 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S933350AbXBHA2M (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Feb 2007 19:28:12 -0500
+In-Reply-To: <45C99230.5020309@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: Chuck Ebbert <cebbert@redhat.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, jejb <james.bottomley@steeleye.com>
+To: Hannes Reinecke <hare@suse.de>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Frederic TEMPORELLI <frederic.temporelli@ext.bull.net>
 
->>>>> "Randy" == Randy Dunlap <randy.dunlap@oracle.com> writes:
+On Wed, 2007-02-07 at 09:47 +0100, Hannes Reinecke wrote:
+> +	const uint64_t	 mask_39bit = 0x7FFFFFFFFFULL;
 
-Randy> There are a number of things that can be used for 'token' (you
-Randy> can find them in the source: <file:drivers/scsi/scsi.c>), and
-Randy> this allows you to select the types of information you want,
-Randy> and the level allows you to select the level of verbosity.  """
+Actually there's no need for this ... the mask_39bit references can just
+become DMA_39BIT_MASK constants.  I made this cosmetic change to the
+patch.
 
-There's a very convenient script called scsi_logging_level included in
-(of all things) the s390-tools package.
+James
 
-Maybe provide a pointer to it -- or even just include it.  It's not
-very big...
-
-http://www-128.ibm.com/developerworks/linux/linux390/s390-tools-1.5.4.html
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
 
