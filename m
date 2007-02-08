@@ -1,43 +1,76 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: program inquiry is using a deprecated scsi_ioctl , please
-	convert it to SG_IO
-Date: Thu, 08 Feb 2007 09:50:55 -0500
-Message-ID: <1170946255.3766.18.camel@mulgrave.il.steeleye.com>
-References: <8862659.post@talk.nabble.com>
+From: Michael Reed <mdr@sgi.com>
+Subject: Re: persistent scsi with udev
+Date: Thu, 08 Feb 2007 09:08:10 -0600
+Message-ID: <45CB3CDA.9040704@sgi.com>
+References: <eqf3li$9s7$1@sea.gmane.org> <45CB3141.2030707@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:41680 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1422758AbXBHOu5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Feb 2007 09:50:57 -0500
-In-Reply-To: <8862659.post@talk.nabble.com>
+Received: from omx2-ext.sgi.com ([192.48.171.19]:36120 "EHLO omx2.sgi.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1423068AbXBHPIU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Feb 2007 10:08:20 -0500
+In-Reply-To: <45CB3141.2030707@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Masthan <d.mastan@gmail.com>
-Cc: linux-scsi@vger.kernel.org
+To: Andreas Moroder <andreas.moroder@sb-brixen.it>
+Cc: James.Smart@Emulex.Com, linux-scsi@vger.kernel.org
 
-On Thu, 2007-02-08 at 02:14 -0800, Masthan wrote:
-> I am not getting why i am getting the following DIAG message
+While you didn't explicitly mention which distro you're using, some already
+have udev in their initrd.  If this applies in your case, you should be able
+to change the root= parameter passed to the kernel to specify your root device
+via a persistent name.  For example:
+
+	root=/dev/disk/by-path/pci-0000:01:03.0-scsi-0:0:1:0p1
+
+You can do the same in your /etc/fstab for the root device.
+
+You can ALSO change the order in which modules are loaded via /etc/modprobe.conf,
+or /etc/sysconfig/kernel, or something similar for your distro, so that the driver
+for your root device is always loaded first.
+
+I hope this helps.
+
+Mike
+
+
+James Smart wrote:
+> You can see if a white paper we put together, which includes information
+> on tapes, can help you. There's also a small section on "boot from SAN"
+> which talks about configuring udev in initrd for boot devices. Although
+> the content references distros, it should be applicable to the kernel
+> generically.
+> http://www.emulex.com/white/hba/wp_linux26udev.pdf
 > 
-> Program inquiry is using deprecated scsi ioctl, please convert it to SG_IO.
+> -- james s
 > 
-> The following snippet of linux source code clearly saying that, the above
-> message is a kind of cosmetic warning message.
 > 
-> Do you know how to use SG_IO to overcome this problem.
-> 
-> The following function sayign that only 6 scsi ioctls are deprecated, out of
-> 6 inquiry program is using  only 2 scsi ioctls(i.e.SCSI_IOCTL_SEND_COMMAND
-> and SCSI_IOCTL_TEST_UNIT_READY ) . What are their equivalents SG_IO ioctls ?
-
-Yes, see, e.g.
-
-http://www.linux.org/docs/ldp/howto/SCSI-Generic-HOWTO/sg_io.html
-
-although SG_IO can be sent to any SCSI device, not just sg.
-
-James
-
-
+> Andreas Moroder wrote:
+>> Hello,
+>>
+>> we have a big problem with scsi device mapping.
+>>
+>> We have a LSI Megaraid controller and a qlogic HBA with a attached SAN
+>>
+>> When we boot the machine without the SAN then  the first disk on the
+>> MEGARAID becomes \dev\sda
+>>
+>> When we boot with the SAN attached then the first disk in the san
+>> becomes \dev\sda and the system stop.
+>>
+>> Is there a step by step tot availabe on how to configure the udev
+>> files when two SCSI devices are installed in one machine ?
+>>
+>> Thanks
+>> Andreas
+>>
+>> -
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
