@@ -1,44 +1,77 @@
-From: Andreas Moroder <andreas.moroder@sb-brixen.it>
-Subject: persistent scsi with udev
-Date: Thu, 08 Feb 2007 13:05:41 +0100
-Message-ID: <eqf3li$9s7$1@sea.gmane.org>
+From: "Bagalkote, Sreenivas" <Sreenivas.Bagalkote@lsi.com>
+Subject: RE: chip 1000:0055 (LSI1068 PCI-X) Fusion-MPT/MegaRAID
+Date: Thu, 8 Feb 2007 06:55:09 -0700
+Message-ID: <9738BCBE884FDB42801FAD8A7769C265014A8FF6@NAMAIL1.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:43775 "EHLO ciao.gmane.org"
+Received: from mail0.lsil.com ([147.145.40.20]:48436 "EHLO mail0.lsil.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1422951AbXBHMJQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Feb 2007 07:09:16 -0500
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1HF82x-0000Qe-Uw
-	for linux-scsi@vger.kernel.org; Thu, 08 Feb 2007 13:06:40 +0100
-Received: from merlin2.provinz.bz.it ([62.101.0.30])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Thu, 08 Feb 2007 13:06:39 +0100
-Received: from andreas.moroder by merlin2.provinz.bz.it with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Thu, 08 Feb 2007 13:06:39 +0100
+	id S1751873AbXBHNze convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Feb 2007 08:55:34 -0500
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Frederic TEMPORELLI <frederic.temporelli@ext.bull.net>
+Cc: "Kolli, Neela" <Neela.Kolli@lsi.com>, "Patro, Sumant" <Sumant.Patro@lsi.com>, "Moore, Eric" <Eric.Moore@lsi.com>, linux-scsi@vger.kernel.org
 
-Hello,
+> 
+> Hello Sreenivas,
+> 
+> > We have already been alerted (by OEMs among others) that the modinfo
+on
+> > megaswr driver needlessly shows "GPL" as the license. Ours is a
+binary
+> > only proprietary driver. I have since corrected the MODULE_LICENSE
+label
+> > to "LSI Proprietary" and updated the OEM versions. If this is not
+> > reflected in their respective web-sites already, it should soon be.
+> >
+> > You must have an old version of this driver. We have changed the
+name
+> > from "megaswr" to "megasr".
+> >
+> > Thanks,
+> > Sreenivas
+> >
+> 
+> 
+> Really no way to get sources or more information about the driver for
+> LSI1068 chip with pciid 1000:0055 ?
+> This should help people who are using RAID on such chip and want to
+use
+> a recent kernel...
+> 
 
-we have a big problem with scsi device mapping.
+I haven't looked for it myself, but what you say sounds fair. You should
+be able to get the information from the vendor(s) that you downloaded
+the
+driver package from. Would you please point me to all or any links that 
+you are aware of?
 
-We have a LSI Megaraid controller and a qlogic HBA with a attached SAN
+> Here's the modinfo for a recent 'megasr', from a well known
+> hardware/processor manufacturer
+> ========================================================
+> [root@iotiger2 x86_64]# modinfo megasr.ko
+> filename:       megasr.ko
+> parm:           dbglvl_g:driver-wide debug flag
+> license:        GPL
+> description:    LSI Logic Software RAID5 Driver
+> author:         LSI Logic Corporation
+> ...
 
-When we boot the machine without the SAN then  the first disk on the 
-MEGARAID becomes \dev\sda
+Even this is an old driver. The string still says "GPL". I guess it
+takes
+time for drivers to pass vendors' long validation period.
 
-When we boot with the SAN attached then the first disk in the san 
-becomes \dev\sda and the system stop.
+> 
+> Hope that this mail will also help people who are looking for linux
+> hardware support about LSI 1068 1000:0055 chip.
+> 
 
-Is there a step by step tot availabe on how to configure the udev files 
-when two SCSI devices are installed in one machine ?
+I hope so too.
 
-Thanks
-Andreas
-
+Thanks,
+Sreenivas
