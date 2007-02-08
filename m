@@ -1,49 +1,49 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH] ATA convert GSI to irq on ia64
-Date: Thu, 8 Feb 2007 12:46:29 -0800
-Message-ID: <20070208124629.c9c2c09d.akpm@linux-foundation.org>
-References: <1170920422.15989.354.camel@ymzhang>
-	<20070208194204.GC2354@infradead.org>
-	<20070208122539.d9c24ad9.akpm@linux-foundation.org>
-	<20070208203453.GA10122@infradead.org>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: Re: [PATCH] scsi: Update Aic94xx SAS/SATA Linux open source devicedriver
+ for new sequence firmware.
+Date: Thu, 08 Feb 2007 15:32:02 -0800
+Message-ID: <45CBB2F2.5030504@us.ibm.com>
+References: <89FD792A883D4B47AD469FEA2E5D1F9B0F59E8@aime2k302.adaptec.com>
+Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20070208203453.GA10122@infradead.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Zhang, Yanmin" <yanmin_zhang@linux.intel.com>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e32.co.us.ibm.com ([32.97.110.150]:49602 "EHLO
+	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965596AbXBHXcG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Feb 2007 18:32:06 -0500
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e32.co.us.ibm.com (8.12.11.20060308/8.13.8) with ESMTP id l18NVhsG012852
+	for <linux-scsi@vger.kernel.org>; Thu, 8 Feb 2007 18:31:43 -0500
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by westrelay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.2) with ESMTP id l18NW552503488
+	for <linux-scsi@vger.kernel.org>; Thu, 8 Feb 2007 16:32:05 -0700
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l18NW4F2025019
+	for <linux-scsi@vger.kernel.org>; Thu, 8 Feb 2007 16:32:05 -0700
+In-Reply-To: <89FD792A883D4B47AD469FEA2E5D1F9B0F59E8@aime2k302.adaptec.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Wu, Gilbert" <Gilbert_Wu@adaptec.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, Alexis Bruemmer <alexisb@us.ibm.com>
 
-On Thu, 8 Feb 2007 20:34:53 +0000
-Christoph Hellwig <hch@infradead.org> wrote:
-
-> On Thu, Feb 08, 2007 at 12:25:39PM -0800, Andrew Morton wrote:
-> > On Thu, 8 Feb 2007 19:42:04 +0000
-> > Christoph Hellwig <hch@infradead.org> wrote:
-> > 
-> > > On Thu, Feb 08, 2007 at 03:40:22PM +0800, Zhang, Yanmin wrote:
-> > > > If an ATA drive uses legacy mode, ata driver will choose 14 and 15 as the
-> > > > fixed irq number. On ia64 platform, such numbers are GSI and should be converted
-> > > > to irq vector.
-> > > > 
-> > > > Below patch against kernel 2.6.20 fixes it.
-> > > 
-> > > These direct arch ifdefs in core aren't acceptable.
-> > 
-> > For 2.6.21 that's true.  But this is a suitable fix for 2.6.20.x, no?
+Wu, Gilbert wrote:
+> Hi Darrick,
 > 
-> Just putting in an #ifndef and allow to to set it up in asm/ata.h
-> is almost as trivial and a lot nice conceptually.
+>  We can duplicate the problem here. The aic94xx with V28 passed IO
+> testing overnight if we apply IO directly to /dev/sd?.  But it fails
+> very quickly when we create a partition and format it as ext3. The V17
+> sequencer works fine with both cases. We are looking into it and find
+> the root cause ASAP.
 
-Well if that's what the 2.6.21 solution looks like then OK.  Would want to
-see the patch though.
+This may be fairly self evident by now, but it looks like the sequencer
+for the link (LSEQ, I think?) is somehow locking up, which explains why
+the scsi_cmnds start timing out and after that all commands (stp, phy
+control, etc) time out as well.  The other drives continue operating
+normally, so I don't think the central sequencer isn't borked up.
 
->  Then again
-> what happened to the idea of putting fixes into mainline before
-> -stable?
+Then again, you guys at Adaptec have the sequencer source code works and
+I don't, so I can't do much more than make vague guesses. Oh well :(
 
-If the preferred mainline patch involves a lot of not-really-needed
-restructuring then an alternative short-but-obvious fix for -stable is
-sometimes more appropriate.
+--D
