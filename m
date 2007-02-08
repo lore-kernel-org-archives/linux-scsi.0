@@ -1,77 +1,147 @@
-From: Frederic TEMPORELLI <frederic.temporelli@ext.bull.net>
-Subject: Re: chip 1000:0055 (LSI1068 PCI-X) Fusion-MPT/MegaRAID
-Date: Thu, 08 Feb 2007 10:48:00 +0100
-Message-ID: <45CAF1D0.7000109@ext.bull.net>
-References: <9738BCBE884FDB42801FAD8A7769C265014A8E8B@NAMAIL1.ad.lsil.com>
+From: Masthan <d.mastan@gmail.com>
+Subject: program inquiry is using a deprecated scsi_ioctl , please convert
+ it to SG_IO
+Date: Thu, 8 Feb 2007 02:14:02 -0800 (PST)
+Message-ID: <8862659.post@talk.nabble.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ecfrec.frec.bull.fr ([129.183.4.8]:43855 "EHLO
-	ecfrec.frec.bull.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1423176AbXBHJsB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Feb 2007 04:48:01 -0500
-In-Reply-To: <9738BCBE884FDB42801FAD8A7769C265014A8E8B@NAMAIL1.ad.lsil.com>
+Received: from www.nabble.com ([72.21.53.35]:32895 "EHLO talk.nabble.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1423153AbXBHKOH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Feb 2007 05:14:07 -0500
+Received: from [72.21.53.38] (helo=jubjub.nabble.com)
+	by talk.nabble.com with esmtp (Exim 4.50)
+	id 1HF6Hy-0003Xw-4u
+	for linux-scsi@vger.kernel.org; Thu, 08 Feb 2007 02:14:02 -0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Bagalkote, Sreenivas" <Sreenivas.Bagalkote@lsi.com>
-Cc: "Kolli, Neela" <Neela.Kolli@lsi.com>, "Patro, Sumant" <Sumant.Patro@lsi.com>, "Moore, Eric" <Eric.Moore@lsi.com>, linux-scsi@vger.kernel.org
-
-Hello Sreenivas,
-
-> We have already been alerted (by OEMs among others) that the modinfo on
-> megaswr driver needlessly shows "GPL" as the license. Ours is a binary
-> only proprietary driver. I have since corrected the MODULE_LICENSE label
-> to "LSI Proprietary" and updated the OEM versions. If this is not
-> reflected in their respective web-sites already, it should soon be.
-> 
-> You must have an old version of this driver. We have changed the name
-> from "megaswr" to "megasr".
-> 
-> Thanks,
-> Sreenivas
-> 
+To: linux-scsi@vger.kernel.org
 
 
-Really no way to get sources or more information about the driver for
-LSI1068 chip with pciid 1000:0055 ?
-This should help people who are using RAID on such chip and want to use
-a recent kernel...
+Hi All,
 
-Here's the modinfo for a recent 'megasr', from a well known
-hardware/processor manufacturer
-========================================================
-[root@iotiger2 x86_64]# modinfo megasr.ko
-filename:       megasr.ko
-parm:           dbglvl_g:driver-wide debug flag
-license:        GPL
-description:    LSI Logic Software RAID5 Driver
-author:         LSI Logic Corporation
-...
-alias:          pci:v00001000d00000055sv0000144Dsd0000D001bc*sc*i*
-alias:          pci:v00001000d00000055sv000017AAsd00006B64bc*sc*i*
-alias:          pci:v00001000d00000055sv0000107Bsd00009570bc*sc*i*
-alias:          pci:v00001000d00000055sv0000107Bsd00009565bc*sc*i*
-alias:          pci:v00001000d00000055sv00001170sd00000023bc*sc*i*
-alias:          pci:v00001000d00000055sv00001033sd00008342bc*sc*i*
-alias:          pci:v00001000d00000055sv00001033sd00008338bc*sc*i*
-alias:          pci:v00001000d00000055sv00001033sd00008337bc*sc*i*
-alias:          pci:v00001000d00000055sv00001033sd00008336bc*sc*i*
-alias:          pci:v00001000d00000055sv00008086sd00003504bc*sc*i*
-alias:          pci:v00001000d00000055sv00008086sd00003501bc*sc*i*
-alias:          pci:v00001000d00000055sv00008086sd00003500bc*sc*i*
-alias:          pci:v00001000d00000055sv00008086sd0000346Dbc*sc*i*
-alias:          pci:v00001000d00000055sv00008086sd0000346Cbc*sc*i*
-alias:          pci:v00001000d00000055sv00001000sd00003005bc*sc*i*
-alias:          pci:v00001000d00000055sv00001000sd00001000bc*sc*i*
-...
-depends:        scsi_mod
-vermagic:       2.6.9-42.EL gcc-3.4
-========================================================
+I am not getting why i am getting the following DIAG message
 
-Hope that this mail will also help people who are looking for linux
-hardware support about LSI 1068 1000:0055 chip.
+Program inquiry is using deprecated scsi ioctl, please convert it to SG_IO.
 
-regards
---
-Frederic
+The following snippet of linux source code clearly saying that, the above
+message is a kind of cosmetic warning message.
+
+Do you know how to use SG_IO to overcome this problem.
+
+The following function sayign that only 6 scsi ioctls are deprecated, out of
+6 inquiry program is using  only 2 scsi ioctls(i.e.SCSI_IOCTL_SEND_COMMAND
+and SCSI_IOCTL_TEST_UNIT_READY ) . What are their equivalents SG_IO ioctls ?
+
+
+
+181  /* the scsi_ioctl() function differs from most ioctls in that it does
+182  * not take a major/minor number as the dev field.  Rather, it takes
+183  * a pointer to a scsi_devices[] element, a structure. 
+184  */
+185 int scsi_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
+186 {
+187         char scsi_cmd[MAX_COMMAND_SIZE];
+188 
+189         /* No idea how this happens.... */
+190         if (!sdev)
+191                 return -ENXIO;
+192 
+193         /*
+194          * If we are in the middle of error recovery, don't let anyone
+195          * else try and use this device.  Also, if error recovery fails,
+it
+196          * may try and take the device offline, in which case all
+further
+197          * access to the device is prohibited.
+198          */
+199         if (!scsi_block_when_processing_errors(sdev))
+200                 return -ENODEV;
+201 
+202         /* Check for deprecated ioctls ... all the ioctls which don't
+203          * follow the new unique numbering scheme are deprecated */
+204         switch (cmd) {
+205         case SCSI_IOCTL_SEND_COMMAND:
+206         case SCSI_IOCTL_TEST_UNIT_READY:
+207         case SCSI_IOCTL_BENCHMARK_COMMAND:
+208         case SCSI_IOCTL_SYNC:
+209         case SCSI_IOCTL_START_UNIT:
+210         case SCSI_IOCTL_STOP_UNIT:
+211                 printk(KERN_WARNING "program %s is using a deprecated
+SCSI "
+212                        "ioctl, please convert it to SG_IO\n",
+current->comm);
+213                 break;
+214         default:
+215                 break;
+216         }
+217 
+218         switch (cmd) {
+219         case SCSI_IOCTL_GET_IDLUN:
+220                 if (!access_ok(VERIFY_WRITE, arg, sizeof(struct
+scsi_idlun)))
+221                         return -EFAULT;
+222 
+223                 __put_user((sdev->id & 0xff)
+224                          + ((sdev->lun & 0xff) << 8)
+225                          + ((sdev->channel & 0xff) << 16)
+226                          + ((sdev->host->host_no & 0xff) << 24),
+227                          &((struct scsi_idlun __user *)arg)->dev_id);
+228                 __put_user(sdev->host->unique_id,
+229                          &((struct scsi_idlun __user
+*)arg)->host_unique_id);
+230                 return 0;
+231         case SCSI_IOCTL_GET_BUS_NUMBER:
+232                 return put_user(sdev->host->host_no, (int __user *)arg);
+233         case SCSI_IOCTL_PROBE_HOST:
+234                 return ioctl_probe(sdev->host, arg);
+235         case SCSI_IOCTL_SEND_COMMAND:
+236                 if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
+237                         return -EACCES;
+238                 return sg_scsi_ioctl(NULL, sdev->request_queue, NULL,
+arg);
+239         case SCSI_IOCTL_DOORLOCK:
+240                 return scsi_set_medium_removal(sdev,
+SCSI_REMOVAL_PREVENT);
+241         case SCSI_IOCTL_DOORUNLOCK:
+242                 return scsi_set_medium_removal(sdev,
+SCSI_REMOVAL_ALLOW);
+243         case SCSI_IOCTL_TEST_UNIT_READY:
+244                 return scsi_test_unit_ready(sdev, IOCTL_NORMAL_TIMEOUT,
+245                                             NORMAL_RETRIES);
+246         case SCSI_IOCTL_START_UNIT:
+247                 scsi_cmd[0] = START_STOP;
+248                 scsi_cmd[1] = 0;
+249                 scsi_cmd[2] = scsi_cmd[3] = scsi_cmd[5] = 0;
+250                 scsi_cmd[4] = 1;
+251                 return ioctl_internal_command(sdev, scsi_cmd,
+252                                      START_STOP_TIMEOUT,
+NORMAL_RETRIES);
+253         case SCSI_IOCTL_STOP_UNIT:
+254                 scsi_cmd[0] = START_STOP;
+255                 scsi_cmd[1] = 0;
+256                 scsi_cmd[2] = scsi_cmd[3] = scsi_cmd[5] = 0;
+257                 scsi_cmd[4] = 0;
+258                 return ioctl_internal_command(sdev, scsi_cmd,
+259                                      START_STOP_TIMEOUT,
+NORMAL_RETRIES);
+260         case SCSI_IOCTL_GET_PCI:
+261                 return scsi_ioctl_get_pci(sdev, arg);
+262         default:
+263                 if (sdev->host->hostt->ioctl)
+264                         return sdev->host->hostt->ioctl(sdev, cmd, arg);
+265         }
+266         return -EINVAL;
+267 }
+268 EXPORT_SYMBOL(scsi_ioctl);
+
+Your help is appreciated.
+
+Thanks & Regards
+Masthan
+-- 
+View this message in context: http://www.nabble.com/program-inquiry-is-using-a-deprecated-scsi_ioctl-%2C-please-convert-it-to-SG_IO-tf3192438.html#a8862659
+Sent from the linux-scsi mailing list archive at Nabble.com.
+
