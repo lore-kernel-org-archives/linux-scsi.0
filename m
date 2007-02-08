@@ -1,67 +1,77 @@
-From: "Luming Yu" <luming.yu@gmail.com>
-Subject: Re: [PATCH] ATA convert GSI to irq on ia64
-Date: Thu, 8 Feb 2007 17:17:40 +0800
-Message-ID: <3877989d0702080117j6ee666aahbb89ca0098ca38a5@mail.gmail.com>
-References: <1170920422.15989.354.camel@ymzhang>
-	 <3877989d0702080115o15feb447h73e3fa310bc09fb4@mail.gmail.com>
+From: Frederic TEMPORELLI <frederic.temporelli@ext.bull.net>
+Subject: Re: chip 1000:0055 (LSI1068 PCI-X) Fusion-MPT/MegaRAID
+Date: Thu, 08 Feb 2007 10:48:00 +0100
+Message-ID: <45CAF1D0.7000109@ext.bull.net>
+References: <9738BCBE884FDB42801FAD8A7769C265014A8E8B@NAMAIL1.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <3877989d0702080115o15feb447h73e3fa310bc09fb4@mail.gmail.com>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
-To: "Zhang, Yanmin" <yanmin_zhang@linux.intel.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ecfrec.frec.bull.fr ([129.183.4.8]:43855 "EHLO
+	ecfrec.frec.bull.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1423176AbXBHJsB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Feb 2007 04:48:01 -0500
+In-Reply-To: <9738BCBE884FDB42801FAD8A7769C265014A8E8B@NAMAIL1.ad.lsil.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Bagalkote, Sreenivas" <Sreenivas.Bagalkote@lsi.com>
+Cc: "Kolli, Neela" <Neela.Kolli@lsi.com>, "Patro, Sumant" <Sumant.Patro@lsi.com>, "Moore, Eric" <Eric.Moore@lsi.com>, linux-scsi@vger.kernel.org
 
-sorry, it should be
-#define ATA_PRIMARY_IRQ(dev)  ide_default_irq(0x1F0)
+Hello Sreenivas,
 
-On 2/8/07, Luming Yu <luming.yu@gmail.com> wrote:
-> if use ide_default_irq , then I guess the #if defined can be removed.
-> #define ATA_PRIMARY_IRQ(dev)   isa_irq_to_vector(0x1F0)
->
->
-> On 2/8/07, Zhang, Yanmin <yanmin_zhang@linux.intel.com> wrote:
-> > If an ATA drive uses legacy mode, ata driver will choose 14 and 15 as the
-> > fixed irq number. On ia64 platform, such numbers are GSI and should be converted
-> > to irq vector.
-> >
-> > Below patch against kernel 2.6.20 fixes it.
-> >
-> > Signed-off-by: Zhang Yanmin <yanmin.zhang@intel.com>
-> >
-> > ---
-> >
-> > diff -Nraup linux-2.6.20/include/asm-generic/libata-portmap.h linux-2.6.20_fix/include/asm-generic/libata-portmap.h
-> > --- linux-2.6.20/include/asm-generic/libata-portmap.h   2007-02-08 15:13:44.000000000 +0800
-> > +++ linux-2.6.20_fix/include/asm-generic/libata-portmap.h       2007-02-08 15:20:13.000000000 +0800
-> > @@ -3,10 +3,20 @@
-> >
-> >  #define ATA_PRIMARY_CMD                0x1F0
-> >  #define ATA_PRIMARY_CTL                0x3F6
-> > +#if defined(__ia64__)
-> > +#define ATA_PRIMARY_IRQ(dev)   isa_irq_to_vector(14)
-> > +#else
-> >  #define ATA_PRIMARY_IRQ(dev)   14
-> > +#endif
-> > +
-> >
-> >  #define ATA_SECONDARY_CMD      0x170
-> >  #define ATA_SECONDARY_CTL      0x376
-> > +#if defined(__ia64__)
-> > +#define ATA_SECONDARY_IRQ(dev) isa_irq_to_vector(15)
-> > +#else
-> >  #define ATA_SECONDARY_IRQ(dev) 15
-> > +#endif
-> > +
-> >
-> >  #endif
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > Please read the FAQ at  http://www.tux.org/lkml/
-> >
->
+> We have already been alerted (by OEMs among others) that the modinfo on
+> megaswr driver needlessly shows "GPL" as the license. Ours is a binary
+> only proprietary driver. I have since corrected the MODULE_LICENSE label
+> to "LSI Proprietary" and updated the OEM versions. If this is not
+> reflected in their respective web-sites already, it should soon be.
+> 
+> You must have an old version of this driver. We have changed the name
+> from "megaswr" to "megasr".
+> 
+> Thanks,
+> Sreenivas
+> 
+
+
+Really no way to get sources or more information about the driver for
+LSI1068 chip with pciid 1000:0055 ?
+This should help people who are using RAID on such chip and want to use
+a recent kernel...
+
+Here's the modinfo for a recent 'megasr', from a well known
+hardware/processor manufacturer
+========================================================
+[root@iotiger2 x86_64]# modinfo megasr.ko
+filename:       megasr.ko
+parm:           dbglvl_g:driver-wide debug flag
+license:        GPL
+description:    LSI Logic Software RAID5 Driver
+author:         LSI Logic Corporation
+...
+alias:          pci:v00001000d00000055sv0000144Dsd0000D001bc*sc*i*
+alias:          pci:v00001000d00000055sv000017AAsd00006B64bc*sc*i*
+alias:          pci:v00001000d00000055sv0000107Bsd00009570bc*sc*i*
+alias:          pci:v00001000d00000055sv0000107Bsd00009565bc*sc*i*
+alias:          pci:v00001000d00000055sv00001170sd00000023bc*sc*i*
+alias:          pci:v00001000d00000055sv00001033sd00008342bc*sc*i*
+alias:          pci:v00001000d00000055sv00001033sd00008338bc*sc*i*
+alias:          pci:v00001000d00000055sv00001033sd00008337bc*sc*i*
+alias:          pci:v00001000d00000055sv00001033sd00008336bc*sc*i*
+alias:          pci:v00001000d00000055sv00008086sd00003504bc*sc*i*
+alias:          pci:v00001000d00000055sv00008086sd00003501bc*sc*i*
+alias:          pci:v00001000d00000055sv00008086sd00003500bc*sc*i*
+alias:          pci:v00001000d00000055sv00008086sd0000346Dbc*sc*i*
+alias:          pci:v00001000d00000055sv00008086sd0000346Cbc*sc*i*
+alias:          pci:v00001000d00000055sv00001000sd00003005bc*sc*i*
+alias:          pci:v00001000d00000055sv00001000sd00001000bc*sc*i*
+...
+depends:        scsi_mod
+vermagic:       2.6.9-42.EL gcc-3.4
+========================================================
+
+Hope that this mail will also help people who are looking for linux
+hardware support about LSI 1068 1000:0055 chip.
+
+regards
+--
+Frederic
