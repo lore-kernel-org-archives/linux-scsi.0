@@ -1,142 +1,187 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] aic79xx: use dma_get_required_mask()
-Date: Fri, 09 Feb 2007 11:36:57 -0500
-Message-ID: <1171039017.3627.18.camel@mulgrave.il.steeleye.com>
-References: <45C99230.5020309@suse.de> <20070208194024.GB2354@infradead.org>
-	 <1171036539.3627.15.camel@mulgrave.il.steeleye.com>
-	 <20070209161011.GA8908@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:33793 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1946626AbXBIQhF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Feb 2007 11:37:05 -0500
-In-Reply-To: <20070209161011.GA8908@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Al Viro <viro@ftp.linux.org.uk>
+Subject: [PATCH] osst endianness annotations
+Date: Fri, 09 Feb 2007 16:39:45 +0000
+Message-ID: <E1HFYmn-0006qY-OE@ZenIV.linux.org.uk>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1946660AbXBIQno@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: torvalds@linux-foundation.org
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Hannes Reinecke <hare@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Frederic TEMPORELLI <frederic.temporelli@ext.bull.net>
 
-On Fri, 2007-02-09 at 16:10 +0000, Christoph Hellwig wrote:
-> On Fri, Feb 09, 2007 at 10:55:39AM -0500, James Bottomley wrote:
-> > On Thu, 2007-02-08 at 19:40 +0000, Christoph Hellwig wrote:
-> > > The logic here seems odd to me.  Shouldn't we first check
-> > > dma_get_required_mask and the do dma_set_mask?
-> > 
-> > Yes ... I picked up the mask problem, but not that.  And actually
-> > there's a missing zero check on one of the dma_set_mask()s.
-> > 
-> > Does this look like the right patch then?
-> 
-> This looks functionally correct to me, but there's some cosmetic issues
-> left:
 
-OK, try this one.
-
-By the way, when did I suddenly become your patch monkey?
-
-James
-
->From 095ec6c45d80171b31ee04da62618dcad31b8aef Mon Sep 17 00:00:00 2001
-From: Hannes Reinecke <hare@suse.de>
-Date: Wed, 7 Feb 2007 09:47:44 +0100
-Subject: [SCSI] aic79xx: use dma_get_required_mask()
-
-As originally noted by Frederic Temporelli, the aic79xx supports 64
-bit addressing, but the initialization code of the driver is wrong: it
-tests the available memory size instead of testing the maximum
-available memory address.
-
-This patch uses the correct dma_get_required_mask() macros to
-determine the correct addressing method.
-
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Cc: Xavier Bru <xavier.bru@bull.net>
-CC: Frederic Temporelli <frederic.temporelli@bull.net>
-
-cosmetic fixes
-Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
+Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
 ---
- drivers/scsi/aic7xxx/aic79xx_osm.c     |    9 ---------
- drivers/scsi/aic7xxx/aic79xx_osm.h     |    2 --
- drivers/scsi/aic7xxx/aic79xx_osm_pci.c |   20 +++++++++-----------
- 3 files changed, 9 insertions(+), 22 deletions(-)
+ drivers/scsi/osst.c |    8 +++---
+ drivers/scsi/osst.h |   68 +++++++++++++++++++++++++-------------------------
+ 2 files changed, 38 insertions(+), 38 deletions(-)
 
-Index: scsi-misc-2.6/drivers/scsi/aic7xxx/aic79xx_osm.c
-===================================================================
---- scsi-misc-2.6.orig/drivers/scsi/aic7xxx/aic79xx_osm.c	2007-02-09 09:12:55.000000000 -0500
-+++ scsi-misc-2.6/drivers/scsi/aic7xxx/aic79xx_osm.c	2007-02-09 09:17:36.000000000 -0500
-@@ -1126,15 +1126,6 @@ ahd_linux_register_host(struct ahd_softc
- 	return 0;
+diff --git a/drivers/scsi/osst.c b/drivers/scsi/osst.c
+index 7d23110..bd6bbf6 100644
+--- a/drivers/scsi/osst.c
++++ b/drivers/scsi/osst.c
+@@ -521,10 +521,10 @@ static void osst_init_aux(struct osst_tape * STp, int frame_type, int frame_seq_
+ 		break;
+ 	  default: ; /* probably FILL */
+ 	}
+-	aux->filemark_cnt = ntohl(STp->filemark_cnt);
+-	aux->phys_fm = ntohl(0xffffffff);
+-	aux->last_mark_ppos = ntohl(STp->last_mark_ppos);
+-	aux->last_mark_lbn  = ntohl(STp->last_mark_lbn);
++	aux->filemark_cnt = htonl(STp->filemark_cnt);
++	aux->phys_fm = htonl(0xffffffff);
++	aux->last_mark_ppos = htonl(STp->last_mark_ppos);
++	aux->last_mark_lbn  = htonl(STp->last_mark_lbn);
  }
  
--uint64_t
--ahd_linux_get_memsize(void)
--{
--	struct sysinfo si;
--
--	si_meminfo(&si);
--	return ((uint64_t)si.totalram << PAGE_SHIFT);
--}
--
  /*
-  * Place the SCSI bus into a known state by either resetting it,
-  * or forcing transfer negotiations on the next command to any
-Index: scsi-misc-2.6/drivers/scsi/aic7xxx/aic79xx_osm.h
-===================================================================
---- scsi-misc-2.6.orig/drivers/scsi/aic7xxx/aic79xx_osm.h	2007-02-09 09:12:55.000000000 -0500
-+++ scsi-misc-2.6/drivers/scsi/aic7xxx/aic79xx_osm.h	2007-02-09 09:17:36.000000000 -0500
-@@ -496,8 +496,6 @@ ahd_insb(struct ahd_softc * ahd, long po
- int		ahd_linux_register_host(struct ahd_softc *,
- 					struct scsi_host_template *);
+diff --git a/drivers/scsi/osst.h b/drivers/scsi/osst.h
+index 1e426f5..2cc7b5a 100644
+--- a/drivers/scsi/osst.h
++++ b/drivers/scsi/osst.h
+@@ -288,11 +288,11 @@ typedef struct {
+ #else
+ #error "Please fix <asm/byteorder.h>"
+ #endif
+-        u16             max_speed;              /* Maximum speed supported in KBps */
++        __be16          max_speed;              /* Maximum speed supported in KBps */
+         u8              reserved10, reserved11;
+-        u16             ctl;                    /* Continuous Transfer Limit in blocks */
+-        u16             speed;                  /* Current Speed, in KBps */
+-        u16             buffer_size;            /* Buffer Size, in 512 bytes */
++        __be16          ctl;                    /* Continuous Transfer Limit in blocks */
++        __be16          speed;                  /* Current Speed, in KBps */
++        __be16          buffer_size;            /* Buffer Size, in 512 bytes */
+         u8              reserved18, reserved19;
+ } osst_capabilities_page_t;
  
--uint64_t	ahd_linux_get_memsize(void);
--
- /*************************** Pretty Printing **********************************/
- struct info_str {
- 	char *buffer;
-Index: scsi-misc-2.6/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
-===================================================================
---- scsi-misc-2.6.orig/drivers/scsi/aic7xxx/aic79xx_osm_pci.c	2007-02-09 09:12:55.000000000 -0500
-+++ scsi-misc-2.6/drivers/scsi/aic7xxx/aic79xx_osm_pci.c	2007-02-09 11:21:41.000000000 -0500
-@@ -132,6 +132,7 @@ ahd_linux_pci_dev_probe(struct pci_dev *
- 	struct		 ahd_pci_identity *entry;
- 	char		*name;
- 	int		 error;
-+	struct device	*dev = &pdev->dev;
+@@ -352,8 +352,8 @@ typedef struct {
+ 	u8		reserved2;
+ 	u8		density;
+ 	u8		reserved3,reserved4;
+-	u16		segtrk;
+-	u16		trks;
++	__be16		segtrk;
++	__be16		trks;
+ 	u8		reserved5,reserved6,reserved7,reserved8,reserved9,reserved10;
+ } osst_tape_paramtr_page_t;
  
- 	pci = pdev;
- 	entry = ahd_find_pci_device(pci);
-@@ -161,20 +162,18 @@ ahd_linux_pci_dev_probe(struct pci_dev *
- 	pci_set_master(pdev);
+@@ -369,18 +369,18 @@ typedef struct {
+ typedef struct os_partition_s {
+         __u8    partition_num;
+         __u8    par_desc_ver;
+-        __u16   wrt_pass_cntr;
+-        __u32   first_frame_ppos;
+-        __u32   last_frame_ppos;
+-        __u32   eod_frame_ppos;
++        __be16  wrt_pass_cntr;
++        __be32  first_frame_ppos;
++        __be32  last_frame_ppos;
++        __be32  eod_frame_ppos;
+ } os_partition_t;
  
- 	if (sizeof(dma_addr_t) > 4) {
--		uint64_t   memsize;
--		const uint64_t mask_39bit = 0x7FFFFFFFFFULL;
-+		const u64 required_mask = dma_get_required_mask(dev);
+ /*
+  * DAT entry
+  */
+ typedef struct os_dat_entry_s {
+-        __u32   blk_sz;
+-        __u16   blk_cnt;
++        __be32  blk_sz;
++        __be16  blk_cnt;
+         __u8    flags;
+         __u8    reserved;
+ } os_dat_entry_t;
+@@ -412,23 +412,23 @@ typedef struct os_dat_s {
+  * AUX
+  */
+ typedef struct os_aux_s {
+-        __u32           format_id;              /* hardware compability AUX is based on */
++        __be32          format_id;              /* hardware compability AUX is based on */
+         char            application_sig[4];     /* driver used to write this media */
+-        __u32           hdwr;                   /* reserved */
+-        __u32           update_frame_cntr;      /* for configuration frame */
++        __be32          hdwr;                   /* reserved */
++        __be32          update_frame_cntr;      /* for configuration frame */
+         __u8            frame_type;
+         __u8            frame_type_reserved;
+         __u8            reserved_18_19[2];
+         os_partition_t  partition;
+         __u8            reserved_36_43[8];
+-        __u32           frame_seq_num;
+-        __u32           logical_blk_num_high;
+-        __u32           logical_blk_num;
++        __be32          frame_seq_num;
++        __be32          logical_blk_num_high;
++        __be32          logical_blk_num;
+         os_dat_t        dat;
+         __u8            reserved188_191[4];
+-        __u32           filemark_cnt;
+-        __u32           phys_fm;
+-        __u32           last_mark_ppos;
++        __be32          filemark_cnt;
++        __be32          phys_fm;
++        __be32          last_mark_ppos;
+         __u8            reserved204_223[20];
  
--		memsize = ahd_linux_get_memsize();
--
--		if (memsize >= 0x8000000000ULL
--	 	 && pci_set_dma_mask(pdev, DMA_64BIT_MASK) == 0) {
-+		if (required_mask > DMA_39BIT_MASK &&
-+		    dma_set_mask(dev, DMA_64BIT_MASK) == 0)
- 			ahd->flags |= AHD_64BIT_ADDRESSING;
--		} else if (memsize > 0x80000000
--			&& pci_set_dma_mask(pdev, mask_39bit) == 0) {
-+		else if (required_mask > DMA_32BIT_MASK &&
-+			 dma_set_mask(dev, DMA_39BIT_MASK) == 0)
- 			ahd->flags |= AHD_39BIT_ADDRESSING;
--		}
-+		else
-+			dma_set_mask(dev, DMA_32BIT_MASK);
- 	} else {
--		pci_set_dma_mask(pdev, DMA_32BIT_MASK);
-+		dma_set_mask(dev, DMA_32BIT_MASK);
- 	}
- 	ahd->dev_softc = pci;
- 	error = ahd_pci_config(ahd, entry);
-
-
+         /*
+@@ -436,8 +436,8 @@ typedef struct os_aux_s {
+          *
+          * Linux specific fields:
+          */
+-         __u32          next_mark_ppos;         /* when known, points to next marker */
+-	 __u32		last_mark_lbn;		/* storing log_blk_num of last mark is extends ADR spec */
++         __be32         next_mark_ppos;         /* when known, points to next marker */
++	 __be32		last_mark_lbn;		/* storing log_blk_num of last mark is extends ADR spec */
+          __u8           linux_specific[24];
+ 
+         __u8            reserved_256_511[256];
+@@ -450,19 +450,19 @@ typedef struct os_fm_tab_s {
+ 	__u8		reserved_1;
+ 	__u8		fm_tab_ent_sz;
+ 	__u8		reserved_3;
+-	__u16		fm_tab_ent_cnt;
++	__be16		fm_tab_ent_cnt;
+ 	__u8		reserved6_15[10];
+-	__u32		fm_tab_ent[OS_FM_TAB_MAX];
++	__be32		fm_tab_ent[OS_FM_TAB_MAX];
+ } os_fm_tab_t;
+ 
+ typedef struct os_ext_trk_ey_s {
+ 	__u8		et_part_num;
+ 	__u8		fmt;
+-	__u16		fm_tab_off;
++	__be16		fm_tab_off;
+ 	__u8		reserved4_7[4];
+-	__u32		last_hlb_hi;
+-	__u32		last_hlb;
+-	__u32		last_pp;
++	__be32		last_hlb_hi;
++	__be32		last_hlb;
++	__be32		last_pp;
+ 	__u8		reserved20_31[12];
+ } os_ext_trk_ey_t;
+ 
+@@ -479,17 +479,17 @@ typedef struct os_header_s {
+         char            ident_str[8];
+         __u8            major_rev;
+         __u8            minor_rev;
+-	__u16		ext_trk_tb_off;
++	__be16		ext_trk_tb_off;
+         __u8            reserved12_15[4];
+         __u8            pt_par_num;
+         __u8            pt_reserved1_3[3];
+         os_partition_t  partition[16];
+-	__u32		cfg_col_width;
+-	__u32		dat_col_width;
+-	__u32		qfa_col_width;
++	__be32		cfg_col_width;
++	__be32		dat_col_width;
++	__be32		qfa_col_width;
+ 	__u8		cartridge[16];
+ 	__u8		reserved304_511[208];
+-	__u32		old_filemark_list[16680/4];		/* in ADR 1.4 __u8 track_table[16680] */
++	__be32		old_filemark_list[16680/4];		/* in ADR 1.4 __u8 track_table[16680] */
+ 	os_ext_trk_tb_t	ext_track_tb;
+ 	__u8		reserved17272_17735[464];
+ 	os_fm_tab_t	dat_fm_tab;
+-- 
+1.5.0-rc2.GIT
