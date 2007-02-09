@@ -1,52 +1,39 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 0/2] convert sg to use block layer helpers
-Date: Fri, 9 Feb 2007 18:29:55 +0100
-Message-ID: <20070209172955.GB3873@kernel.dk>
-References: <1171010063.3713.26.camel@max> <45CCA6D2.10008@torque.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Robert Jennings <rcj@linux.vnet.ibm.com>
+Subject: [PATCH 0/2] ibmvscsi: dynamic request_limit and device restart
+Date: Fri, 09 Feb 2007 11:49:49 -0600
+Message-ID: <20070209174949.5080.69663.sendpatchset@toy>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([62.242.22.158]:27493 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1946582AbXBIR3c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 Feb 2007 12:29:32 -0500
-Content-Disposition: inline
-In-Reply-To: <45CCA6D2.10008@torque.net>
+Received: from e31.co.us.ibm.com ([32.97.110.149]:54374 "EHLO
+	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2992456AbXBIRt4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Feb 2007 12:49:56 -0500
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e31.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l19HnrGM017687
+	for <linux-scsi@vger.kernel.org>; Fri, 9 Feb 2007 12:49:53 -0500
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by westrelay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.2) with ESMTP id l19HnrnW381824
+	for <linux-scsi@vger.kernel.org>; Fri, 9 Feb 2007 10:49:53 -0700
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l19HnnDH018565
+	for <linux-scsi@vger.kernel.org>; Fri, 9 Feb 2007 10:49:50 -0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Robert Jennings <rcj@linux.vnet.ibm.com>
 
-On Fri, Feb 09 2007, Douglas Gilbert wrote:
-> Mike Christie wrote:
-> > sg duplicates a lot of block layer dio and copying code. The block layer
-> > is missing some things like mmap helpers and a way to support sg and
-> > st's reserve buffer. The next two patches move move functionality from
-> > sg to the block layer so later st and osst can use it, and then coverts
-> > sg to use the block layer helper.
-> > 
-> > The goal is to kill scsi_execute_async and friends and covert the ULDs
-> > to use the block layer functions directly. This is nice because
-> > scsi_execute_async sucks and it actually duplicates block layer code,
-> > and in the end the scsi layer does not have to do any bio processing
-> > (which irks Jens :)), and we have common code for all ULDs.
-> > 
-> > The patches were made over Jens's bsg branch in his block layer git tree
-> > on kernel.org. Sorry for the large patches. The sg conversion patch rips
-> > out alot of code duplicated in the block layer and the patch to add some
-> > missing functionality to the block layer has conversions to bsg, tgt,
-> > etc so git bisect works on it.
-> 
-> Mike,
-> Might I suggest ripping all the scatter gather list
-> handling out of the block layer and putting it in
-> a library (a bit like libata). That way when the
-> block layer paradigm doesn't apply, we don't lose
-> all the useful things that have been put in there.
+There are two fixes for the ibmvscsi client driver in this set.
 
-Don't think block layer, think block IO helpers. That's essentially what
-large parts of the block layer is.
+- Dynamic request_limit
+The request_limit for the driver was not properly reflecting the value on
+the server side and could cause can_queue to be set to improper values (-1).
+The patch corrects this so that request_limit mirrors the value
+on the server and sets can_queue appropriately.
 
--- 
-Jens Axboe
+- Device restart
+When a drive was removed from the server and then re-added the client
+would not be able to use that device.  The device would return a unit
+attention and then not ready.  By adding a slave_configure function we
+can set the "allow_restart" flag for all disk devices.  Now devices will
+resume functioning when they are re-added to the server.
 
+---
