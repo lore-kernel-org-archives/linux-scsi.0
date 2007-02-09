@@ -1,34 +1,35 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] ATA convert GSI to irq on ia64
-Date: Thu, 08 Feb 2007 20:19:45 -0500
-Message-ID: <45CBCC31.7070909@garzik.org>
-References: <1170920422.15989.354.camel@ymzhang>
+From: Greg KH <gregkh@suse.de>
+Subject: Re: [PATCH]indistinguishable devices with broken and unbroken firmware #2
+Date: Thu, 8 Feb 2007 17:20:53 -0800
+Message-ID: <20070209012053.GE2685@suse.de>
+References: <200702080904.48806.oneukum@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1170920422.15989.354.camel@ymzhang>
-Sender: linux-ide-owner@vger.kernel.org
-To: "Zhang, Yanmin" <yanmin_zhang@linux.intel.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:43483 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1945988AbXBIBWF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Feb 2007 20:22:05 -0500
+Content-Disposition: inline
+In-Reply-To: <200702080904.48806.oneukum@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Oliver Neukum <oneukum@suse.de>
+Cc: usb-storage@lists.one-eyed-alien.net, linux-scsi@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>
 
-Zhang, Yanmin wrote:
-> If an ATA drive uses legacy mode, ata driver will choose 14 and 15 as the
-> fixed irq number. On ia64 platform, such numbers are GSI and should be converted
-> to irq vector.
+On Thu, Feb 08, 2007 at 09:04:48AM +0100, Oliver Neukum wrote:
+> Hi,
 > 
-> Below patch against kernel 2.6.20 fixes it.
+> there's a USB mass storage device which exists in two version. One
+> reports the correct size and the other does not. Apart from that they
+> are identical and cannot be told apart. Here's a heuristic based on the
+> empirical finding that drives have even sizes.
 > 
-> Signed-off-by: Zhang Yanmin <yanmin.zhang@intel.com>
+> The requested changes have been made.
+> Greg, can this go through your tree?
 
-IA64 should create its own libata-portmap.h, rather than modifying the 
-one in asm-generic with arch-specific choices.
+If the usb-storage people ACK it, I'll be glad to add it to my trees.
 
-powerpc is a current example of this (and currently the only 
-non-asm-generic user) found in kernel 2.6.20.
+thanks,
 
-	Jeff
-
-
-
+greg k-h
