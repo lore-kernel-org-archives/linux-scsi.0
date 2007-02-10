@@ -1,85 +1,44 @@
-From: Olaf Hering <olaf@aepfle.de>
-Subject: [PATCH] cleanup variable usage in mesh interrupt handler
-Date: Sat, 10 Feb 2007 21:37:33 +0100
-Message-ID: <20070210203733.GA25611@aepfle.de>
-References: <20070210203512.GA25586@aepfle.de> <20070210203614.GA25602@aepfle.de>
+From: Richard Knutsson <ricknu-0@student.ltu.se>
+Subject: Re: [PATCH] drivers/scsi/aic7xxx_old: Convert to generic	boolean-values
+Date: Sat, 10 Feb 2007 21:43:00 +0100
+Message-ID: <45CE2E54.7060101@student.ltu.se>
+References: <20070210174628.3764.89569.sendpatchset@thinktank.campus.ltu.se> <1171132062.3373.31.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:55688 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751880AbXBJUgN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 10 Feb 2007 15:36:13 -0500
-Content-Disposition: inline
-In-Reply-To: <20070210203614.GA25602@aepfle.de>
+Received: from gepetto.dc.ltu.se ([130.240.42.40]:64227 "EHLO
+	gepetto.dc.ltu.se" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751877AbXBJUnF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 10 Feb 2007 15:43:05 -0500
+In-Reply-To: <1171132062.3373.31.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linuxppc-dev@ozlabs.org, Andrew Morton <akpm@osdl.org>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
+James Bottomley wrote:
+> On Sat, 2007-02-10 at 18:46 +0100, Richard Knutsson wrote:
+>   
+>> Convert:
+>> FALSE -> false
+>> TRUE  -> true
+>>     
+>
+> Actually, downcasing true and false in this driver is pretty much a
+> retrograde step.  The reason for their being uppercased is that they
+> represent constants (and uppercase is the traditional defined constant
+> specifier).
+>
+> When discussion about TRUE and FALSE came up a long time a go in the
+> context of the mid layer we agreed to strip the defined constants out of
+> that code and just go with 1 and 0 inline ... because the code was
+> pretty much being rewritten.  We also decided to encourage but not force
+> the driver writers simply to use 1 and 0 as well ... a lot of people are
+> deeply wedded to the TRUE and FALSE defines, it turned out.
+>   
+Btw, is this just for aic7xxx_old and not aic7xxx? Is it going to be 
+replaced? In that case, I will just leave it alone.
 
-convert void* to struct mesh_state*
-remove unused irq argument from mesh_interrupt()
+Richard Knutsson
 
-Signed-off-by: Olaf Hering <olaf@aepfle.de>
-
----
- drivers/scsi/mesh.c |   14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
-
-Index: linux-2.6/drivers/scsi/mesh.c
-===================================================================
---- linux-2.6.orig/drivers/scsi/mesh.c
-+++ linux-2.6/drivers/scsi/mesh.c
-@@ -185,7 +185,7 @@ struct mesh_state {
-  * Driver is too messy, we need a few prototypes...
-  */
- static void mesh_done(struct mesh_state *ms, int start_next);
--static void mesh_interrupt(int irq, void *dev_id);
-+static void mesh_interrupt(struct mesh_state *ms);
- static void cmd_complete(struct mesh_state *ms);
- static void set_dma_cmds(struct mesh_state *ms, struct scsi_cmnd *cmd);
- static void halt_dma(struct mesh_state *ms);
-@@ -466,7 +466,7 @@ static void mesh_start_cmd(struct mesh_s
- 				dlog(ms, "intr b4 arb, intr/exc/err/fc=%.8x",
- 				     MKWORD(mr->interrupt, mr->exception,
- 					    mr->error, mr->fifo_count));
--				mesh_interrupt(0, (void *)ms);
-+				mesh_interrupt(ms);
- 				if (ms->phase != arbitrating)
- 					return;
- 			}
-@@ -504,7 +504,7 @@ static void mesh_start_cmd(struct mesh_s
- 		dlog(ms, "intr after disresel, intr/exc/err/fc=%.8x",
- 		     MKWORD(mr->interrupt, mr->exception,
- 			    mr->error, mr->fifo_count));
--		mesh_interrupt(0, (void *)ms);
-+		mesh_interrupt(ms);
- 		if (ms->phase != arbitrating)
- 			return;
- 		dlog(ms, "after intr after disresel, intr/exc/err/fc=%.8x",
-@@ -1018,10 +1018,11 @@ static void handle_reset(struct mesh_sta
- static irqreturn_t do_mesh_interrupt(int irq, void *dev_id)
- {
- 	unsigned long flags;
--	struct Scsi_Host *dev = ((struct mesh_state *)dev_id)->host;
-+	struct mesh_state *ms = dev_id;
-+	struct Scsi_Host *dev = ms->host;
- 	
- 	spin_lock_irqsave(dev->host_lock, flags);
--	mesh_interrupt(irq, dev_id);
-+	mesh_interrupt(ms);
- 	spin_unlock_irqrestore(dev->host_lock, flags);
- 	return IRQ_HANDLED;
- }
-@@ -1661,9 +1662,8 @@ static int mesh_queue(struct scsi_cmnd *
-  * handler (do_mesh_interrupt) or by other functions in
-  * exceptional circumstances
-  */
--static void mesh_interrupt(int irq, void *dev_id)
-+static void mesh_interrupt(struct mesh_state *ms)
- {
--	struct mesh_state *ms = (struct mesh_state *) dev_id;
- 	volatile struct mesh_regs __iomem *mr = ms->mesh;
- 	int intr;
- 
