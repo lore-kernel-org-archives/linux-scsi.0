@@ -1,40 +1,54 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [Bugme-new] [Bug 7980] New: scsi_wait_scan module should be
- always available
-Date: Fri, 9 Feb 2007 17:28:34 -0800
-Message-ID: <20070209172834.8276d104.akpm@linux-foundation.org>
-References: <200702100114.l1A1EC7r023423@fire-2.osdl.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [Bug 7026] CD/DVD burning with USB writer doesn't work
+Date: Fri, 09 Feb 2007 20:02:42 -0600
+Message-ID: <1171072962.3627.81.camel@mulgrave.il.steeleye.com>
+References: <Pine.LNX.4.44L0.0702091251350.4548-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:59205 "EHLO smtp.osdl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752603AbXBJB2n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 Feb 2007 20:28:43 -0500
-In-Reply-To: <200702100114.l1A1EC7r023423@fire-2.osdl.org>
+Received: from hancock.steeleye.com ([71.30.118.248]:44670 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753108AbXBJFSe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 10 Feb 2007 00:18:34 -0500
+In-Reply-To: <Pine.LNX.4.44L0.0702091251350.4548-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>, holler@ahsoftware.de
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Joerg Schilling <Joerg.Schilling@fokus.fraunhofer.de>, dgilbert@interlog.com, dougg@torque.net, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu, schilling@fokus.fraunhofer.de, Jens Axboe <Jens.Axboe@oracle.com>
 
-On Fri, 9 Feb 2007 17:14:12 -0800
-bugme-daemon@bugzilla.kernel.org wrote:
+On Fri, 2007-02-09 at 12:57 -0500, Alan Stern wrote:
+> > it's 2 monts that we did discuss this problem.
+> > Has the solution integrated into the Linux kernel?
+> >=20
+> > J=C3=B6rg
+>=20
+> Not yet.  Despited repeated inquiries, I still haven't heard anything=
+ back=20
+> from James regarding the patch that he wrote.
+>=20
+> James, if you prefer I can send that patch to Andrew Morton.  Would t=
+hat=20
+> be easier for you?
 
-> http://bugzilla.kernel.org/show_bug.cgi?id=7980
-> 
->            Summary: scsi_wait_scan module should be always available
->     Kernel Version: 2.6.20
->             Status: NEW
->           Severity: normal
->              Owner: scsi_drivers-other@kernel-bugs.osdl.org
->          Submitter: holler@ahsoftware.de
-> 
-> 
-> The scsi_wait_scan module should be always available, even if scsi was build 
-> into the kernel (not as module). E.g. I'm having two scsi-controllers in one 
-> machine, one as module and one from which the machine is booting. Currently 
-> this does not work, because I'm getting failures for devices of the driver 
-> which is build as a module. And because scsi is not build as module, the 
-> scsi_wait_scan module is not available.
-> 
+Actually, the patch I wrote was a block patch, so it goes through Jens'
+tree.
+
+I know he had it a while ago ... but I'm afraid there's a bit of a
+fundamental breakdown in the usual open source process because the
+author (unfortunately me) should be tracking it, and I'm not really ...
+if it were my tree, I would probably have just slipped it in to prevent
+my forgetting about it, but it isn't.
+
+I added Jens to the cc list, so he can probably tell us what happened t=
+o
+it.
+
+James
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
