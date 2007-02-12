@@ -1,46 +1,71 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: SCSI, usb-storage, and autosuspend
-Date: Mon, 12 Feb 2007 16:02:11 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0702121548040.4416-100000@iolanthe.rowland.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: RE: [PATCH] scsi spi transport: SCSI domain validation after reset
+Date: Mon, 12 Feb 2007 15:45:25 -0600
+Message-ID: <1171316725.3690.16.camel@mulgrave.il.steeleye.com>
+References: <20070207235140.GA20920@lsil.com>
+	 <1171296886.23143.6.camel@markh3.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:51108 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S965403AbXBLVCO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Feb 2007 16:02:14 -0500
+Received: from hancock.steeleye.com ([71.30.118.248]:44142 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1030190AbXBLVpl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Feb 2007 16:45:41 -0500
+In-Reply-To: <1171296886.23143.6.camel@markh3.pdx.osdl.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>, USB Storage list <usb-storage@lists.one-eyed-alien.net>
-Cc: Oliver Neukum <oneukum@suse.de>
+To: Mark Haverkamp <markh@linux-foundation.org>
+Cc: Eric Moore <eric.moore@lsi.com>, linux-scsi@vger.kernel.org
 
-There has been a recent proposal to add autosuspend support to the
-usb-storage driver.  (I.e., after a certain user-definable period of
-inactivity, usb-storage would automatically suspend the USB link to the
-device.  Receipt of a request from the SCSI core would cause an
-automatic resume.)
+On Mon, 2007-02-12 at 08:14 -0800, Mark Haverkamp wrote:
+> This patch fixed my looping DV problem.
 
-This has been discussed on linux-scsi in the past, and reactions were
-mixed.  We are now at the point where the infrastructure is in place to
-actually implement the proposal.  The question is, should we?
+As far as I can tell, this is identical to Eric's patch, but is done
+using the existing dv_in_progress flag ... can you test it out and see
+if it actually works?
 
-For many USB mass-storage devices, the overhead of suspend and resume is 
-pretty small, just the time required to carry out the operations (a few 
-tens of milliseconds for resume, less than 10 ms for suspend).  On the 
-other hand, a SCSI device might interpret a USB suspend as a signal to 
-start its own power-saving measures.  It might even cause a drive to spin 
-down, although I don't think the common USB-IDE bridges work that way.
+Thanks,
 
-It can be argued that autosuspend requests should originate at lower
-points in the device tree and bubble up to the parent.  With a disk-type
-device, for instance, we might want to have sd decide when it's okay to
-suspend.  It would inform the SCSI core, which would then decide when the
-entire SCSI bus can be suspended.  The core would then inform the host
-adapter driver (usb-storage in this case), which would suspend the
-transport.
+James
+Index: linux-2.6/drivers/scsi/scsi_transport_spi.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/scsi_transport_spi.c	2007-02-11 14:16:51.000000000 -0600
++++ linux-2.6/drivers/scsi/scsi_transport_spi.c	2007-02-12 15:20:59.000000000 -0600
+@@ -787,6 +787,7 @@ spi_dv_device_internal(struct scsi_devic
+ 	struct scsi_target *starget = sdev->sdev_target;
+ 	struct Scsi_Host *shost = sdev->host;
+ 	int len = sdev->inquiry_len;
++
+ 	/* first set us up for narrow async */
+ 	DV_SET(offset, 0);
+ 	DV_SET(width, 0);
+@@ -917,8 +918,25 @@ spi_dv_device(struct scsi_device *sdev)
+ 	if (unlikely(scsi_device_get(sdev)))
+ 		return;
+ 
+-	if (unlikely(spi_dv_in_progress(starget)))
++	if (unlikely(spi_dv_in_progress(starget))) {
++		/*
++		 * If DV is already pending, just make sure the device
++		 * has all the parameters set (in case this is the
++		 * result of a reset during the in progress DV)
++		 */
++		DV_SET(dt, spi_dt(starget));
++		DV_SET(iu, spi_iu(starget));
++		DV_SET(width, spi_width(starget));
++		DV_SET(offset, spi_offset(starget));
++		DV_SET(period, spi_period(starget));
++		DV_SET(qas, spi_qas(starget));
++		DV_SET(rd_strm, spi_rd_strm(starget));
++		DV_SET(wr_flow, spi_wr_flow(starget));
++		DV_SET(rti, spi_rti(starget));
++		DV_SET(pcomp_en, spi_pcomp_en(starget));
++		scsi_device_put(sdev);
+ 		return;
++	}
+ 	spi_dv_in_progress(starget) = 1;
+ 
+ 	buffer = kzalloc(len, GFP_KERNEL);
 
-Has there been any discussion about doing things this way?  Does anybody 
-think that usb-storage should _not_ do autosuspend on its own initiative?
-
-Alan Stern
 
