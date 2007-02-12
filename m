@@ -1,41 +1,61 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [GIT PATCH] SCSI updates for 2.6.20
-Date: Mon, 12 Feb 2007 08:38:40 -0600
-Message-ID: <1171291120.3690.0.camel@mulgrave.il.steeleye.com>
-References: <1171166252.3373.58.camel@mulgrave.il.steeleye.com>
-	 <200702121129.34359.eike-kernel@sf-tec.de>
+From: peter fuerst <post@pfrst.de>
+Subject: [PATCH][SCSI] sgiwd93.c: interfacing to wd33c93
+Date: Mon, 12 Feb 2007 15:27:17 +0100 (CET)
+Message-ID: <Pine.LNX.4.58.0702121522570.433@Indigo2.Peter>
+Reply-To: post@pfrst.de
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:37632 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S964942AbXBLOir (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Feb 2007 09:38:47 -0500
-In-Reply-To: <200702121129.34359.eike-kernel@sf-tec.de>
+Received: from mail1.pearl-online.net ([62.159.194.147]:17817 "EHLO
+	mail1.pearl-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964951AbXBLOtw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Feb 2007 09:49:52 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Cc: linux-scsi@vger.kernel.org, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, linux-kernel <linux-kernel@vger.kernel.org>
-
-On Mon, 2007-02-12 at 11:29 +0100, Rolf Eike Beer wrote:
-> Am Sonntag, 11. Februar 2007 schrieb James Bottomley:
-> > This is the accumulated SCSI tree for 2.6.20.  It is available at
-> >
-> > master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git
-> 
-> You once again have not included this two patches Andrew sent you on 20070602:
-> 
-> [patch 08/33] remove extra newline from info message
-
-This one's waiting on Hannes to ack, since he's working in that driver
-
-> [patch 09/33] Fix scsi/scsi_transport.h compile error
-
-I did look at this one, but I can't find a configuration that will
-induce a compile error like the header says.  It's pending further
-investigation.
-
-James
+To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
+Cc: Ralf Baechle <ralf@linux-mips.org>, Kumba <kumba@gentoo.org>, Thiemo Seufer <ths@networkno.de>, Tim Yamin <plasmaroo@gentoo.org>
 
 
+
+1) sgiwd93 used to switch off asynchronous mode on the wd33c93, discarding
+   any "nosync"-requests from the commandline.
+   But we need to allow "nosync"-requests for selected devices, for example
+   the Pioneer DVD305S.
+   (For the curious: this device accepts the SDTR from wd33c93 and success-
+   fully sends inquiry data in sync mode, but after the data phase in the
+   inquiry command does an unexpected disconnect, seemingly sending no
+   "status" or "command complete". Forcing async transfers makes it work
+   together flawlessly with the wd33c93. Of course, preferable would be, to
+   implement wd33c93's "resume command" stuff, but that probably will not
+   come soon.)
+
+2) Maximize benefit from the preceding Fast SCSI patch for wd33c93 by passing
+   the higher input-clock frequency explicitely. To be applied after the
+   mentioned wd33c93 patch.
+
+
+with kind regards
+
+
+Signed-off-by: peter fuerst <post@pfrst.de>
+
+========================================================================
+--- dc7bdc97927ea1c519f0d8bd3133739600c841d4/drivers/scsi/sgiwd93.c	Sat Oct  7 00:00:00 2006
++++ new/drivers/scsi/sgiwd93.c	Sun Feb 11 22:10:06 2007
+@@ -250,3 +250,3 @@
+
+-	hdata->wh.no_sync = 0;
++	if (0xff == hdata->wh.no_sync) hdata->wh.no_sync = 0;
+
+========================================================================
+
+
+========================================================================
+--- dc7bdc97927ea1c519f0d8bd3133739600c841d4/drivers/scsi/sgiwd93.c	Sat Oct  7 00:00:00 2006
++++ stage2/drivers/scsi/sgiwd93.c	Sun Feb 11 22:10:06 2007
+@@ -248,3 +248,3 @@
+
+-	wd33c93_init(host, regs, dma_setup, dma_stop, WD33C93_FS_16_20);
++	wd33c93_init(host, regs, dma_setup, dma_stop, WD33C93_FS_MHZ(20));
+
+========================================================================
