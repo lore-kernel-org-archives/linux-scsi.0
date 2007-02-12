@@ -1,55 +1,98 @@
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Re: [GIT PATCH] SCSI updates for 2.6.20
-Date: Mon, 12 Feb 2007 11:29:28 +0100
-Message-ID: <200702121129.34359.eike-kernel@sf-tec.de>
-References: <1171166252.3373.58.camel@mulgrave.il.steeleye.com>
+From: Tomasz Chmielewski <mangoo@wpkg.org>
+Subject: does SCSI eat my PC's memory?
+Date: Mon, 12 Feb 2007 11:08:46 +0100
+Message-ID: <45D03CAE.8050205@wpkg.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart6168428.fcT4MqvegJ";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
+Content-Type: text/plain; charset=ISO-8859-2; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964840AbXBLK2x@vger.kernel.org>
-Received: from  ([::ffff:212.65.3.74] HELO donald.sf-tec.de) (auth=eike-kernel@sf-tec.de)
-	by mail.sf-mail.de (Qsmtpd 0.9) with (DHE-RSA-AES256-SHA encrypted) ESMTPSA
-	for <linux-scsi@vger.kernel.org>; Mon, 12 Feb 2007 11:28:48 +0100
-In-Reply-To: <1171166252.3373.58.camel@mulgrave.il.steeleye.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.syneticon.net ([213.239.212.131]:43415 "EHLO
+	mail2.syneticon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964849AbXBLKhV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Feb 2007 05:37:21 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by mail2.syneticon.net (Postfix) with ESMTP id 7769053CDB
+	for <linux-scsi@vger.kernel.org>; Mon, 12 Feb 2007 11:09:13 +0100 (CET)
+Received: from mail2.syneticon.net ([127.0.0.1])
+ by localhost (linux [127.0.0.1]) (amavisd-new, port 10024) with ESMTP
+ id 07649-04 for <linux-scsi@vger.kernel.org>;
+ Mon, 12 Feb 2007 11:08:50 +0100 (CET)
+Received: from postfix1.syneticon.net (postfix1.syneticon.net [192.168.112.6])
+	by mail2.syneticon.net (Postfix) with ESMTP
+	for <linux-scsi@vger.kernel.org>; Mon, 12 Feb 2007 11:08:50 +0100 (CET)
+Received: from localhost (filter1.syneticon.net [192.168.113.3])
+	by postfix1.syneticon.net (Postfix) with ESMTP id B77D393E1
+	for <linux-scsi@vger.kernel.org>; Mon, 12 Feb 2007 11:08:51 +0100 (CET)
+Received: from postfix1.syneticon.net ([192.168.113.4])
+	by localhost (192.168.113.3 [192.168.113.3]) (amavisd-new, port 10025)
+	with ESMTP id yFkD1RrJZ6xj for <linux-scsi@vger.kernel.org>;
+	Mon, 12 Feb 2007 11:08:49 +0100 (CET)
+Received: from [81.173.182.160] (xdsl-81-173-182-160.netcologne.de [81.173.182.160])
+	by postfix1.syneticon.net (Postfix) with ESMTP
+	for <linux-scsi@vger.kernel.org>; Mon, 12 Feb 2007 11:08:49 +0100 (CET)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
---nextPart6168428.fcT4MqvegJ
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Does SCSI eat my PC's memory? Probably not, but I can't find an 
+explanation of what uses so much RAM when I use SCSI disks.
 
-Am Sonntag, 11. Februar 2007 schrieb James Bottomley:
-> This is the accumulated SCSI tree for 2.6.20.  It is available at
->
-> master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git
+A little background first.
 
-You once again have not included this two patches Andrew sent you on 20070602:
+Overall, the system has 1 GB memory. When it boots and everything has
+started, about 60 MB of memory is used (excluding buffers).
 
-[patch 08/33] remove extra newline from info message
-[patch 09/33] Fix scsi/scsi_transport.h compile error
+One partition is on a iSCSI target (I access it using open-iscsi):
 
-Is this by mistake or intentional?
+/dev/sda              570G  402G  139G  75% /mnt/iscsi_backup
 
-Greetings,
+It contains lots of data, many files, hardlinked multiple times
+(in total, almost 100 000 000 files).
 
-Eike
 
---nextPart6168428.fcT4MqvegJ
-Content-Type: application/pgp-signature
+When I run "find /mnt/iscsi_backup" for some time, and run
+"free" to see memory usage, I can see almost 500 MB is used (excluding
+buffers/cache):
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.2 (GNU/Linux)
+# free
+               total       used       free     shared    buffers     cached
+Mem:       1048576    1029360      19216          0     530972      17628
+-/+ buffers/cache:     480760     567816
+Swap:      1048568         68    1048500
 
-iD8DBQBF0EGOXKSJPmm5/E4RAsAlAJ9yb3XOlBjnW0kzrZLIizALmhkGSwCfTY44
-Ia3MPYEcPZEZ8nLQBEleiLM=
-=rOAz
------END PGP SIGNATURE-----
 
---nextPart6168428.fcT4MqvegJ--
+Also, stopping all deamons and dropping cache doesn't help (sum of the
+memory used by all processes, displayed by "ps", is about 60 MB):
+
+# echo 1 > /proc/sys/vm/drop_caches
+# free
+               total       used       free     shared    buffers     cached
+Mem:       1048576     453932     594644          0        352       6408
+-/+ buffers/cache:     447172     601404
+Swap:      1048568         68    1048500
+
+
+A single "umount" command releases almost 400 MB of memory:
+
+# umount /mnt/iscsi_backup/
+# free
+               total       used       free     shared    buffers     cached
+Mem:       1048576      64188     984388          0        232       6528
+-/+ buffers/cache:      57428     991148
+Swap:      1048568         64    1048504
+
+
+
+What used almost 400 MB? SCSI buffers? I can't find any documentation on 
+that.
+
+I noticed that when I add RAM to the system, more "unexplained" RAM will 
+be used.
+When I remove some RAM (i.e. so that the system has 512 MB), 
+"unexplained" RAM usage will drop - as a rule of thumb, I observed that 
+about 50% of RAM is used by something I can't identify.
+
+
+-- 
+Tomasz Chmielewski
+http://wpkg.org
