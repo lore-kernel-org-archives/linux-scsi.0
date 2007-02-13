@@ -1,32 +1,68 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [Bug 7994] New: sleeping function called from invalid context
-	at mm/slab.c:3034
-Date: Tue, 13 Feb 2007 08:17:31 -0600
-Message-ID: <1171376251.3382.0.camel@mulgrave.il.steeleye.com>
-References: <200702130307.l1D378vc003798@fire-2.osdl.org>
-	 <20070212200620.7320b3be.akpm@linux-foundation.org>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] scsi tgt: fix the user/kernel ring buffer interface
+Date: Tue, 13 Feb 2007 23:21:52 +0900 (JST)
+Message-ID: <20070213062055H.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:57024 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750728AbXBMORv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Feb 2007 09:17:51 -0500
-In-Reply-To: <20070212200620.7320b3be.akpm@linux-foundation.org>
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:51525 "EHLO
+	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750800AbXBMOWB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Feb 2007 09:22:01 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-scsi@vger.kernel.org, adrakoa@es.gnu.org, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>, dougg@torque.net
+To: James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, 2007-02-12 at 20:06 -0800, Andrew Morton wrote:
-> This is fixed in mainline and I expect that the fix is also lined up
-> for
-> 2.6.20.1. (?)
+This patches fixes two bugs in the scsi target infrastructure's
+user/kernel interface.
 
-It's definitely in mainline.  I've cc'd Doug Gilbert, the scsi_debug
-maintainer to assess what should be done for 2.6.20.1
+- It wrongly assumes that the ring buffer size of the interface (64KB)
+is larger than or equal to the system page size. This patch sets the
+ring buffer size to PAGE_SIZE if the system page size is larger.
 
-James
+- It uses PAGE_SIZE in the header file exported to userspace. This
+patch removes it.
 
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ drivers/scsi/scsi_tgt_if.c |    8 ++++++++
+ include/scsi/scsi_tgt_if.h |    3 ---
+ 2 files changed, 8 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/scsi_tgt_if.c b/drivers/scsi/scsi_tgt_if.c
+index 37bbfbd..f5d4412 100644
+--- a/drivers/scsi/scsi_tgt_if.c
++++ b/drivers/scsi/scsi_tgt_if.c
+@@ -33,6 +33,14 @@ #include <asm/cacheflush.h>
+ 
+ #include "scsi_tgt_priv.h"
+ 
++#if TGT_RING_SIZE < PAGE_SIZE
++#  define TGT_RING_SIZE PAGE_SIZE
++#endif
++
++#define TGT_RING_PAGES (TGT_RING_SIZE >> PAGE_SHIFT)
++#define TGT_EVENT_PER_PAGE (PAGE_SIZE / sizeof(struct tgt_event))
++#define TGT_MAX_EVENTS (TGT_EVENT_PER_PAGE * TGT_RING_PAGES)
++
+ struct tgt_ring {
+ 	u32 tr_idx;
+ 	unsigned long tr_pages[TGT_RING_PAGES];
+diff --git a/include/scsi/scsi_tgt_if.h b/include/scsi/scsi_tgt_if.h
+index 46d5e70..07d6e77 100644
+--- a/include/scsi/scsi_tgt_if.h
++++ b/include/scsi/scsi_tgt_if.h
+@@ -83,8 +83,5 @@ struct tgt_event {
+ } __attribute__ ((aligned (sizeof(uint64_t))));
+ 
+ #define TGT_RING_SIZE (1UL << 16)
+-#define TGT_RING_PAGES (TGT_RING_SIZE >> PAGE_SHIFT)
+-#define TGT_EVENT_PER_PAGE (PAGE_SIZE / sizeof(struct tgt_event))
+-#define TGT_MAX_EVENTS (TGT_EVENT_PER_PAGE * TGT_RING_PAGES)
+ 
+ #endif
+-- 
+1.4.3.2
 
