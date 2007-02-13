@@ -1,29 +1,48 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Fw: [Bugme-new] [Bug 7999] New: MegaRAID Legacy doesn't work
-	with LSI MegaRAID i4 since release 2.00.4
-Date: Tue, 13 Feb 2007 11:59:17 -0600
-Message-ID: <1171389557.3382.34.camel@mulgrave.il.steeleye.com>
-References: <20070213092920.f0bafea0.akpm@linux-foundation.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] bind bsg to request_queue instead of gendisk
+Date: Tue, 13 Feb 2007 13:00:33 -0500
+Message-ID: <20070213180033.GB6798@havoc.gtf.org>
+References: <20070213095318G.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:59917 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751388AbXBMR7X (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Feb 2007 12:59:23 -0500
-In-Reply-To: <20070213092920.f0bafea0.akpm@linux-foundation.org>
+Received: from havoc.gtf.org ([69.61.125.42]:45498 "EHLO havoc.gtf.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751460AbXBMSUs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Feb 2007 13:20:48 -0500
+Content-Disposition: inline
+In-Reply-To: <20070213095318G.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-scsi@vger.kernel.org, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>, rico@ricospirit.net
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linux-scsi@vger.kernel.org, jens.axboe@oracle.com, James.Smart@Emulex.Com, hch@infradead.org
 
-On Tue, 2007-02-13 at 09:29 -0800, Andrew Morton wrote:
-> Subject: [Bugme-new] [Bug 7999] New: MegaRAID Legacy doesn't work with LSI MegaRAID i4 since release 2.00.4
+On Wed, Feb 14, 2007 at 02:53:31AM +0900, FUJITA Tomonori wrote:
+> It seems that it would be better to bind bsg devices to request_queue
+> instead of gendisk. This enables any objects to define own
+> request_handler and create own bsg device (under sysfs).
+> 
+> Possible enhancements:
+> 
+> - I removed gendisk but it would be better for objects having gendisk
+> to keep it for nice features like disk stats.
+> 
+> - Objects that wants to use bsg need to setup a request_queue. Maybe
+> wrapper functions to setup a request_queue for them would be useful.
+> 
+> This patch was tested only with disk drivers.
+> 
+> 
+> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> ---
+>  block/bsg.c            |   37 +++++++++++++++++--------------------
 
-This is by design ... the i4 is now supported by the new megaraid_mbox
-driver.  Please retry with that driver.
+What is this patch against?  scsi-misc?
 
-James
+I certainly like the bsg solution, but block/bsg.c does not exist in my
+vanilla linux-2.6.git tree :)
+
+	Jeff
+
 
 
