@@ -1,15 +1,15 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 2.6.20 2/2] iop13xx: imu scsi driver
-Date: Tue, 13 Feb 2007 09:47:15 -0700
-Message-ID: <20070213164715.10432.23916.stgit@dwillia2-linux.ch.intel.com>
+Subject: [PATCH 2.6.20 1/2] iop13xx: add base support for the imu
+Date: Tue, 13 Feb 2007 09:47:10 -0700
+Message-ID: <20070213164710.10432.83601.stgit@dwillia2-linux.ch.intel.com>
 References: <20070213164517.10432.76264.stgit@dwillia2-linux.ch.intel.com>
 Content-Type: text/plain; charset=utf-8; format=fixed
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:30928 "EHLO mga03.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:11934 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750830AbXBMQrk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Feb 2007 11:47:40 -0500
+	id S1750826AbXBMQrc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Feb 2007 11:47:32 -0500
 In-Reply-To: <20070213164517.10432.76264.stgit@dwillia2-linux.ch.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,59 +18,91 @@ Cc: greg.b.tucker@intel.com, linux-scsi@vger.kernel.org, linux-arm.kernel@lists.
 
 From: Greg Tucker <greg.b.tucker@intel.com>
 
-Enable Linux to access the other core as if it were a scsi target.
-
-Made changes suggested by James Bottomley such as dma_map direction not
-bidirectional, proper SCSI return conditons, reset handlers and cleanup.
+The interprocessor messaging unit supports mailbox style communication
+between the two Xscale cores on iop342.
+    
+Changelog:
+* cleaned up static functions and exports
 
 Signed-off-by: Greg Tucker <greg.b.tucker@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
 
- arch/arm/mach-iop13xx/imu/Kconfig |    7 
- drivers/scsi/Makefile             |    1 
- drivers/scsi/iop13xx-imu-scsi.c   |  607 +++++++++++++++++++++++++++++++++++++
- 3 files changed, 615 insertions(+), 0 deletions(-)
+ arch/arm/mach-iop13xx/Kconfig      |    2 
+ arch/arm/mach-iop13xx/Makefile     |    1 
+ arch/arm/mach-iop13xx/imu/Kconfig  |   19 ++
+ arch/arm/mach-iop13xx/imu/Makefile |    3 
+ arch/arm/mach-iop13xx/imu/common.c |  294 ++++++++++++++++++++++++
+ arch/arm/mach-iop13xx/imu/dev.c    |  438 ++++++++++++++++++++++++++++++++++++
+ arch/arm/mach-iop13xx/imu/imu.c    |   95 ++++++++
+ include/asm-arm/arch-iop13xx/imu.h |  366 ++++++++++++++++++++++++++++++
+ 8 files changed, 1218 insertions(+), 0 deletions(-)
 
-diff --git a/arch/arm/mach-iop13xx/imu/Kconfig b/arch/arm/mach-iop13xx/imu/Kconfig
-index ee49b37..96d9d3a 100644
---- a/arch/arm/mach-iop13xx/imu/Kconfig
-+++ b/arch/arm/mach-iop13xx/imu/Kconfig
-@@ -16,4 +16,11 @@ config IOP_IMU_DEV
- 	---help---
- 	This is a char driver that passes messages throught the IMU.
+diff --git a/arch/arm/mach-iop13xx/Kconfig b/arch/arm/mach-iop13xx/Kconfig
+index 40c2d68..27c1c2c 100644
+--- a/arch/arm/mach-iop13xx/Kconfig
++++ b/arch/arm/mach-iop13xx/Kconfig
+@@ -16,5 +16,7 @@ config MACH_IQ81340MC
+ 	  Say Y here if you want to support running on the Intel IQ81340MC
+ 	  evaluation kit.
  
-+config IOP_IMU_SCSI
-+	tristate "IOP IMU scsi driver"
-+	depends on IOP_IMU
-+	---help---
-+	This is a low-level SCSI driver that passes SCSI commands
-+	to core 2.
++source "arch/arm/mach-iop13xx/imu/Kconfig"
 +
  endmenu
-diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-index bd7c988..c1ccf57 100644
---- a/drivers/scsi/Makefile
-+++ b/drivers/scsi/Makefile
-@@ -132,6 +132,7 @@ obj-$(CONFIG_SCSI_IBMVSCSIS)	+= ibmvscsi/
- obj-$(CONFIG_SCSI_HPTIOP)	+= hptiop.o
- obj-$(CONFIG_SCSI_STEX)		+= stex.o
- 
-+obj-$(CONFIG_IOP_IMU_SCSI)	+= iop13xx-imu-scsi.o
- obj-$(CONFIG_ARM)		+= arm/
- 
- obj-$(CONFIG_CHR_DEV_ST)	+= st.o
-diff --git a/drivers/scsi/iop13xx-imu-scsi.c b/drivers/scsi/iop13xx-imu-scsi.c
+ endif
+diff --git a/arch/arm/mach-iop13xx/Makefile b/arch/arm/mach-iop13xx/Makefile
+index 4185e05..7937d73 100644
+--- a/arch/arm/mach-iop13xx/Makefile
++++ b/arch/arm/mach-iop13xx/Makefile
+@@ -9,3 +9,4 @@ obj-$(CONFIG_ARCH_IOP13XX) += pci.o
+ obj-$(CONFIG_ARCH_IOP13XX) += io.o
+ obj-$(CONFIG_MACH_IQ81340SC) += iq81340sc.o
+ obj-$(CONFIG_MACH_IQ81340MC) += iq81340mc.o
++obj-$(CONFIG_IOP_IMU) += imu/
+diff --git a/arch/arm/mach-iop13xx/imu/Kconfig b/arch/arm/mach-iop13xx/imu/Kconfig
 new file mode 100644
-index 0000000..2d64183
+index 0000000..ee49b37
 --- /dev/null
-+++ b/drivers/scsi/iop13xx-imu-scsi.c
-@@ -0,0 +1,607 @@
++++ b/arch/arm/mach-iop13xx/imu/Kconfig
+@@ -0,0 +1,19 @@
++#
++# IOP13xx IMU Support
++#
++
++menu "IOP13XX IMU Support"
++
++config IOP_IMU
++	tristate "IOP IMU support"
++	depends on EXPERIMENTAL
++	---help---
++	This includes support functions for the IMU.
++
++config IOP_IMU_DEV
++	tristate "IOP IMU char driver"
++	depends on IOP_IMU
++	---help---
++	This is a char driver that passes messages throught the IMU.
++
++endmenu
+diff --git a/arch/arm/mach-iop13xx/imu/Makefile b/arch/arm/mach-iop13xx/imu/Makefile
+new file mode 100644
+index 0000000..e149b07
+--- /dev/null
++++ b/arch/arm/mach-iop13xx/imu/Makefile
+@@ -0,0 +1,3 @@
++obj-$(CONFIG_IOP_IMU)      += imu_layer.o
++obj-$(CONFIG_IOP_IMU_DEV)  += dev.o
++imu_layer-objs	:= common.o imu.o
+diff --git a/arch/arm/mach-iop13xx/imu/common.c b/arch/arm/mach-iop13xx/imu/common.c
+new file mode 100644
+index 0000000..1f9628e
+--- /dev/null
++++ b/arch/arm/mach-iop13xx/imu/common.c
+@@ -0,0 +1,294 @@
 +/*
-+ * drivers/scsi/iop13xx-imu-scsi.c
++ * arch/arm/mach-iop13xx/imu/common.c
 + *
-+ * SCSI low-level driver that forwards messages through the IOP342 IMU hw to 
-+ * the other core.
++ * Interface functions for comunication using IMU hardware on the IOP1342
 + *
 + * Copyright (C) 2005, Intel Corporation.
 + *
@@ -91,585 +123,1190 @@ index 0000000..2d64183
 + *
 + */
 +
-+#include <scsi/scsi.h>
-+#include <scsi/scsi_cmnd.h>
-+#include <scsi/scsi_device.h>
-+#include <scsi/scsi_host.h>
-+#include <scsi/scsi_tcq.h>
-+#include <scsi/scsi_dbg.h>
++#include <linux/module.h>
++#include <linux/kernel.h>
 +#include <asm/arch/imu.h>
 +
-+#define MODULE_VERS    "1.1"
-+#define MODULE_NAME    "IMUscsi"
-+#define IMU_WW_NAME     (0xeeed)
-+#define IMU_MAX_CMD_LEN 32
-+#define Q_NUM           0
-+#define Q_PHYS_BASE     (0xffe00000 + (512*1024))
-+#define Q_MSG_SIZE      256
-+#define Q_MSG_ITEMS     16
-+
-+/* Derived params */
-+#define Q_SIZE          (Q_MSG_ITEMS*Q_MSG_SIZE)
-+#define SGL_PER_CMD  ((Q_MSG_SIZE-IMU_MAX_CMD_LEN - 24)/sizeof(struct imu_sge))
-+
-+/* #define IMU_DEBUG */
-+#ifdef IMU_DEBUG
-+# define imu_debug(fmt,arg...) printk(MODULE_NAME ": " fmt,##arg)
-+# define dbg_print_cmd(cmd)    scsi_print_command(cmd)
-+#else
-+# define imu_debug(fmt,arg...) do { } while (0)
-+# define dbg_print_cmd(cmd)    do { } while (0)
-+#endif
-+#define imu_warn(fmt,arg...) printk(KERN_WARNING MODULE_NAME ": " fmt,##arg)
-+
-+/* #define IMU_SCSI_PROFILING */
-+#ifdef IMU_SCSI_PROFILING
-+unsigned imu_queue_commands = 0;
-+unsigned imu_rx_callbacks = 0;
-+unsigned imu_failed_alloc = 0;
-+# define imu_scsi_prof(x) x
-+#else
-+# define imu_scsi_prof(x)
-+#endif
-+
-+struct imu_scsidata {
-+	struct Scsi_Host *host;
-+	u32 connection_handle;
-+};
-+
-+struct imu_scsidata *imu_scsi;
-+
-+struct imu_sgl {
-+	u32 len;
-+	u32 addr;
-+	u32 last_sge;
-+};
-+
-+struct imu_sge {
-+	u32 flen;
-+	u32 addr_l;
-+	u32 addr_h;
-+};
-+
-+enum fcodes {
-+	IMU_FCODE_ERROR = 0,
-+	IMU_FCODE_CMD,
-+	IMU_FCODE_XFER,
-+	IMU_FCODE_STATUS,
-+	IMU_FCODE_RESP,
-+	IMU_FCODE_MANAGE,
-+	IMU_FCODE_CONNECT_REQ,
-+	IMU_FCODE_CONNECT_RESP,
-+	IMU_FCODE_DISCONNECT_REQ,
-+	IMU_FCODE_DISCONNECT_RESP,
-+	IMU_FCODE_CACHE_ALLOC_REQ,
-+	IMU_FCODE_CACHE_ALLOC_RESP,
-+	IMU_FCODE_LOG_REQ,
-+	IMU_FCODE_LOG_RESP,
-+};
-+
-+struct imu_cmd {
-+	union {
-+		struct {
-+			unsigned short fcode;
-+			unsigned char flags;
-+			unsigned char reserved;
-+		};
-+		u32 head;
-+	};
-+	u64 array_context;
-+	u64 app_context;
-+	u32 connection_handle;
-+	union {
-+		union {
-+			struct {
-+				u64 lun;
-+				u32 ctl;
-+				u32 datalen;
-+				unsigned char cdb[16];
-+				union {
-+					struct imu_sgl sgl;
-+					struct imu_sge sge;
-+				};
-+			} cdb_cmd;
-+			unsigned char cmd[IMU_MAX_CMD_LEN];
-+		};		/* targ_cmd; */
-+
-+		struct {
-+			u32 scsi_status;
-+			u32 residual_count;
-+			u32 response_code;
-+			u16 reserved;
-+			u16 senselen;
-+			unsigned char sense_data[100];
-+		} resp_cmd;
-+
-+		struct {
-+			u64 lun;
-+			u32 management_func;
-+			u64 management_task;
-+		} management_cmd;
-+
-+		struct {
-+			u32 blocks;	/* cache alloc command */
-+			u32 address[32];
-+		} cache_cmd;
-+
-+		u32 status;	/* status command, connect/disconnect response */
-+
-+		u64 world_wide_name;	/* connect request command */
-+	};
-+};
-+
-+/* SGE command flags */
-+#define FLAG_LAST_ELEMENT           (1<<31)
-+
-+/* Target Command message flags */
-+#define FLAG_CMD_RECEIVER_MUST_XFER (1<<(22-16))
-+#define FLAG_CMD_SGL_NOT_IN_MSG     (1<<(20-16))
-+/* Data transfer command flags */
-+#define FLAG_DATA_LAST_XFER         (1<<(23-16))
-+#define FLAG_DATA_SGL_NOT_IN_MSG    (1<<(20-16))
-+/* Command response flags */
-+#define FLAG_RSP_RESIDUAL_UNDER     (1<<(22-16))
-+#define FLAG_RSP_RESIDUAL_OVER      (1<<(21-16))
-+#define FLAG_REP_CODE_VALID_DATA    (1<<(20-16))
-+#define FLAG_REP_SENSE_VALID        (1<<(19-16))
-+
-+/* response msssage codes */
-+enum imu_resp_codes {
-+	IMU_RESP_SUCCESS = 0,
-+	IMU_RESP_REJECT,
-+	IMU_RESP_FAILED,
-+	IMU_RESP_INVALID,
-+};
++imu_handler *imu_irq_table[NR_IMU_DOORBELLS + NR_IMU_QUEUE_IRQS];
++struct imu_queue_params imu_queue[NR_IMU_QUEUES];
 +
 +
-+int imu_proc_info(struct Scsi_Host *host, char *buffer, char **start,
-+		  off_t offset, int length, int in)
++/**
++ ****************************************************************************
++ * @iop_doorbell_reg_callback
++ * @brief
++ *   Register the callback function for a particular doorbell.
++ * @param  IN: int doorbell - doorbell number
++ * @param  IN: void * callback(void) - pointer to callback function
++ * @return NONE
++ *****************************************************************************/
++int iop_doorbell_reg_callback(int doorbell, void (*callback) (int))
 +{
-+	int ret;
-+	char *p = buffer;
-+
-+	if (in)
++	if ((doorbell >= 0) && (doorbell <= IMU_DB_RQ3NE)) {
++		imu_irq_table[doorbell] = (imu_handler *) callback;
 +		return 0;
-+
-+	p += sprintf(p, "iop13xx IMU SCSI driver ver " MODULE_VERS "\n");
-+
-+#ifdef IMU_SCSI_PROFILING
-+	p += sprintf(p,
-+		     "  queue-commands: %d\n"
-+		     "  rx-callbacks:   %d\n"
-+		     "  failed-q-alloc: %d\n",
-+		     imu_queue_commands, imu_rx_callbacks, imu_failed_alloc
-+		);
-+#endif
-+
-+	*start = buffer + offset;
-+	ret = p - buffer - offset;
-+	if (ret > length)
-+		ret = length;
-+
-+	return ret;
++	} else
++		return 1;
 +}
 +
 +
-+int imu_scsi_send_gen_msg(int fcode)
++/**
++ ****************************************************************************
++ * @iop_queue_init
++ * @brief
++ *   Initialize circular queue.
++ *
++ *   Sets up a circular queue with memory for the queue buffers and
++ *   callback function for received messages.  Caller must first
++ *   allocate memory of appropriate size and type for the queue.  The
++ *   queue is of fixed size (msg_size * num_items) bytes.
++ *
++ *   @todo List restrictions on the memory type (dma-able, etc.)
++ *
++ * @param  IN: int queueid - queue identifier
++ * @param  IN: void * phys_base - physical base pointer to pre-allocated memory
++ * @param  IN: void * virt_base - virtual base pointer to pre-allocated memory
++ * @param  IN: int msg_size - size of fixed messages in bytes
++ * @param  IN: int num_items - max number of items in the queue
++ * @param  IN: void * callback(int) - pointer to callback function
++ * @param  IN: void * error_callback(int) - pointer to error function
++ * @return 0: success
++ *****************************************************************************/
++int
++iop_queue_init(int queueid, void *phys_base, void *virt_base, int msg_size,
++	       int num_items, void (*rcd_callback) (int),
++	       void (*error_callback) (int))
 +{
-+	struct imu_cmd *msg;
++	struct imu_queue *queue_hw = (struct imu_queue *)
++	    (IMU_Q0_BASE + (queueid * sizeof(struct imu_queue)));
 +
-+	msg = iop_queue_allocate(Q_NUM);
-+	if (msg == NULL) {
-+		imu_warn("failed to allocate imu msg for disconnect\n");
-+		imu_scsi_prof(imu_failed_alloc++);
-+		return FAILED;
-+	}
++	if (queueid > 3 || num_items > ((1 << 16) - 1))
++		return 1;
 +
-+	msg->fcode             = fcode;
-+	msg->array_context     = 0;
-+	msg->app_context       = 0;
-+	msg->connection_handle = imu_scsi->connection_handle;
-+	if (iop_queue_postmsg(Q_NUM, msg))
-+		return FAILED;
++	/* init send queue pointers */
++	queue_hw->sqcr = (1 << 31)	/* reset send queue get/put pointers */
++	    |num_items;		/* set size */
++	queue_hw->rqcr = (1 << 31);	/* reset receive queue get/put pointers */
++	queue_hw->sqlbar = (int)phys_base;
++	queue_hw->squbar = 0;	/* assuming 32 bit address space */
 +
-+	return SUCCESS;
-+}
++	imu_queue[queueid].txbase = virt_base;
++	imu_queue[queueid].msg_size = msg_size;
++	imu_queue[queueid].items = num_items;
++	imu_queue[queueid].alloc = queue_hw->sqpg >> 16;	/* alloc=get */
 +
-+static int imu_queuecommand(struct scsi_cmnd *scp,
-+			    void (*done) (struct scsi_cmnd *))
-+{
-+	struct imu_cmd *msg;
-+	int i, use_sg;
-+	struct scatterlist *sglist;
-+	struct imu_sge *sge, *sge_i;
-+
-+	imu_debug("imu_queuecommand for id=%d\n", scp->device->id);
-+	imu_scsi_prof(imu_queue_commands++);
-+	dbg_print_cmd(scp);
-+
-+	if (scp->device->id != 0) {
-+		scp->result = (DID_BAD_TARGET << 16);
-+		done(scp);
-+		return 0;
-+	}
-+
-+	scp->scsi_done = done;
-+
-+	if (!imu_scsi->connection_handle) {
-+		scp->result = (DID_RESET << 16) | (SUGGEST_RETRY << 24);
-+		return SCSI_MLQUEUE_HOST_BUSY;
-+	}
-+
-+	msg = iop_queue_allocate(Q_NUM);
-+	if (msg == NULL) {
-+		imu_warn("failed to allocate imu msg\n");
-+		imu_scsi_prof(imu_failed_alloc++);
-+		return SCSI_MLQUEUE_HOST_BUSY;
-+	}
-+
-+	msg->fcode = IMU_FCODE_CMD;
-+	msg->flags = FLAG_CMD_RECEIVER_MUST_XFER;
-+	msg->array_context = 0;
-+	msg->app_context = (u32) scp;
-+	msg->connection_handle = imu_scsi->connection_handle;
-+	msg->cdb_cmd.lun = scp->device->lun << 8;
-+	msg->cdb_cmd.ctl = 0;
-+	msg->cdb_cmd.datalen = scp->request_bufflen;
-+	memcpy(msg->cdb_cmd.cdb, scp->cmnd, 16);
-+
-+
-+	if (scp->sc_data_direction == DMA_NONE)
-+		imu_debug("direction DMA_NONE\n");
-+
-+	else if (scp->use_sg == 0) {
-+		dma_addr_t buff = 0;
-+		if (NULL == scp->request_buffer)
-+			imu_warn("got cmd with NULL request_buffer\n");
-+		else
-+			buff = dma_map_single(NULL, scp->request_buffer,
-+					      scp->request_bufflen,
-+					      scp->sc_data_direction);
-+		if (buff == 0) {
-+			imu_warn("null return from dma_map_single\n");
-+			msg->flags = IMU_FCODE_STATUS;
-+			msg->status = 0;
-+			iop_queue_postmsg(Q_NUM, msg);
-+			return 1;
-+		}
-+		sge = &(msg->cdb_cmd.sge);
-+		sge->addr_l = buff;
-+		sge->addr_h = 0;
-+		sge->flen = scp->request_bufflen | FLAG_LAST_ELEMENT;
-+
-+		imu_debug("cmd msg with 1 sgl entry, addr=0x%x\n", buff);
-+	}
-+	else if (scp->use_sg > 0) {
-+		sglist = (struct scatterlist *)scp->request_buffer;
-+		if (NULL == sglist) {
-+			imu_warn("got null scp->buffer\n");
-+			use_sg = 0;
-+		} else
-+			use_sg = dma_map_sg(NULL, sglist, scp->use_sg, 
-+					    scp->sc_data_direction);
-+		if (use_sg == 0) {
-+			/* Send error status message */
-+			imu_warn("null return from dma_map_sg\n");
-+			msg->flags = IMU_FCODE_STATUS;
-+			msg->status = 0;
-+			iop_queue_postmsg(Q_NUM, msg);
-+			return 1;
-+		}
-+
-+		sge = sge_i = &(msg->cdb_cmd.sge);
-+
-+		for (i = 0; i < use_sg; i++, sglist++, sge_i++) {
-+			sge_i->addr_l = sg_dma_address(sglist);
-+			sge_i->addr_h = 0;
-+			sge_i->flen = sg_dma_len(sglist);
-+		}
-+		sge[use_sg - 1].flen |= FLAG_LAST_ELEMENT;
-+
-+		imu_debug("cmd msg with %d sgl entries, "
-+			  "last flen=0x%x last addr=0x%x\n", use_sg, 
-+			  sge[use_sg - 1].flen,
-+			  sge[use_sg - 1].addr_l);
-+
-+	}
-+
-+	if (iop_queue_postmsg(Q_NUM, msg))
-+		return SCSI_MLQUEUE_DEVICE_BUSY;
++	/* Register callback */
++	imu_irq_table[NR_IMU_DOORBELLS - 1 +
++		      (IMU_DB_RQ0NE - IMU_DB_QUEUE_IRQ_OFF) + (queueid * 2)] =
++	    (imu_handler *) rcd_callback;
++	/* Enable receive interrupt */
++	iop_doorbell_enable(IMU_DB_RQ0NE + (queueid * 2));
 +
 +	return 0;
 +}
 +
-+
-+static int imu_eh_host_reset(struct scsi_cmnd *cmd)
++/**
++ ****************************************************************************
++ * @iop_queue_allocate
++ * @brief
++ *   Return pointer to next free buffer queue.
++ * @param  IN: int queueid - queue identifier
++ * @return buffer pointer to fill with message
++ *****************************************************************************/
++void *iop_queue_allocate(int queueid)
 +{
-+	imu_warn("Received eh host reset\n");
++	void *ret = NULL;
++	int alloc, get, items_m1, next_alloc;
 +
-+	if (imu_scsi->connection_handle && 
-+	    imu_scsi_send_gen_msg(IMU_FCODE_ERROR))
-+		return SUCCESS;
++	struct imu_queue_params *queue = &imu_queue[queueid];
++	struct imu_queue *queue_hw = (struct imu_queue *)
++	    (IMU_Q0_BASE + (queueid * sizeof(struct imu_queue)));
 +
-+	return FAILED;
-+}
++	if (queueid > 3)
++		return NULL;
 +
++	alloc = queue->alloc;
++	get = queue_hw->sqpg >> 16;
++	items_m1 = queue->items - 1;
++	next_alloc = (alloc == items_m1) ? 0 : alloc + 1;
 +
-+static struct scsi_host_template imu_scsi_template = {
-+	.module = THIS_MODULE,
-+	.proc_info = imu_proc_info,
-+	.name = "iop13xx IMU SCSI",
-+	.queuecommand = imu_queuecommand,
-+	.eh_host_reset_handler = imu_eh_host_reset,
-+	.can_queue = Q_MSG_ITEMS - 2,
-+	.this_id = -1,
-+	.cmd_per_lun = 2,
-+	.sg_tablesize = SGL_PER_CMD,
-+	.use_clustering = ENABLE_CLUSTERING,
-+	.proc_name = "iop13xx-imu",
-+};
-+
-+void queue_rq_scsi_callback(int queueid)
-+{
-+	struct imu_cmd *msg;
-+	struct scsi_cmnd *scp;
-+
-+	imu_debug("queue_rq_scsi_callback on queue %d\n", queueid);
-+	imu_scsi_prof(imu_rx_callbacks++);
-+
-+	msg = iop_queue_getmsg(queueid);
-+	if (msg == NULL)
-+		return;
-+
-+	switch (msg->fcode) {
-+
-+	case IMU_FCODE_RESP:
-+
-+		scp = (struct scsi_cmnd *)((u32) msg->app_context);
-+		if (!scp) {
-+			imu_warn("got an invalid scp pointer\n");
-+			break;
-+		}
-+
-+		switch (msg->resp_cmd.response_code) {
-+
-+		case IMU_RESP_SUCCESS:
-+			scp->result = (DID_OK << 16);
-+			break;
-+		case IMU_RESP_REJECT:
-+		case IMU_RESP_FAILED:
-+			scp->result = (DID_ABORT << 16);
-+			break;
-+		case IMU_RESP_INVALID:
-+		default:
-+			scp->result = (DID_ERROR << 16);
-+			imu_warn("got a non success resp command:%d\n",
-+				 msg->resp_cmd.scsi_status);
-+			break;
-+		}
-+
-+		if (msg->flags & FLAG_REP_SENSE_VALID) {
-+			memcpy(scp->sense_buffer, msg->resp_cmd.sense_data,
-+			       msg->resp_cmd.senselen < SCSI_SENSE_BUFFERSIZE ?
-+			       msg->resp_cmd.senselen : SCSI_SENSE_BUFFERSIZE);
-+			imu_debug("sense data in command of len %d\n",
-+				  msg->resp_cmd.senselen);
-+#ifdef IMU_DEBUG
-+			scsi_print_sense("IMUscsi", scp);
-+#endif
-+		}
-+
-+		if (scp->scsi_done)
-+			scp->scsi_done(scp);
-+		else
-+			imu_warn("no scsi_done set in response cmd\n");
-+		break;
-+
-+	case IMU_FCODE_CONNECT_RESP:
-+		if (!msg->status)
-+			imu_scsi->connection_handle = msg->connection_handle;
-+		else
-+			imu_warn("rejected or failed connection request");
-+
-+		break;
-+
-+	case IMU_FCODE_DISCONNECT_RESP:
-+		imu_scsi->connection_handle = 0;
-+		break;
-+
-+	case IMU_FCODE_CMD:
-+	case IMU_FCODE_XFER:
-+	case IMU_FCODE_MANAGE:
-+	case IMU_FCODE_CONNECT_REQ:
-+	case IMU_FCODE_DISCONNECT_REQ:
-+	case IMU_FCODE_CACHE_ALLOC_REQ:
-+	case IMU_FCODE_CACHE_ALLOC_RESP:
-+	case IMU_FCODE_LOG_REQ:
-+	case IMU_FCODE_LOG_RESP:
-+	case IMU_FCODE_ERROR:
-+	default:
-+		imu_warn("got a bad or unhandled fcode response %d\n",
-+			 msg->fcode);
-+		break;
++	if (next_alloc != get) {	/* not full */
++		ret = (void *)(queue->txbase + (queue->msg_size * alloc));
++		queue->alloc = next_alloc;
 +	}
 +
-+	iop_queue_rxfree(queueid, msg);
-+	return;
-+
++	return ret;
 +}
 +
-+/* We need to access queue structure to look for overlap */
++/**
++ ****************************************************************************
++ * @iop_queue_postmsg
++ * @brief
++ *   Post (send) all buffers up to message identified by message pointer.
++ * @param  IN: int queueid - queue identifier
++ * @param  IN: void * msg_adr - pointer to last message to post
++ * @return NONE
++ *****************************************************************************/
++int iop_queue_postmsg(int queueid, void *msg_adr)
++{
++	int offset, items, items_m1, put, alloc, index;
++
++	struct imu_queue_params *queue = &imu_queue[queueid];
++	struct imu_queue *queue_hw = (struct imu_queue *)
++	    (IMU_Q0_BASE + (queueid * sizeof(struct imu_queue)));
++
++	offset = (int)(msg_adr - queue->txbase);
++
++	items = queue->items;
++	items_m1 = items - 1;
++
++	/* Check if it is in range for this queue */
++	if (offset < 0 || offset > (queue->msg_size * items))
++		return 1;
++
++	put = queue_hw->sqpg & 0xffff;
++	alloc = queue->alloc;
++	index = offset / queue->msg_size;
++
++	/* todo: Check if allocated? */
++	/* don't post something already posted */
++
++	if (alloc >= put) {
++		if (index < put || index >= alloc)
++			return 1;	/* already posted or not allocated */
++	} else {
++		if (index < put && index >= alloc)
++			return 1;	/* already posted or not allocated */
++	}
++
++	queue_hw->sqpg = (index == items_m1) ? 0 : index + 1;
++
++	return 0;
++}
++
++/**
++ ****************************************************************************
++ * @iop_queue_rx_not_empty
++ * @brief
++ *   Check rx queue for not empty status.
++ * @param  IN: int queueid - queue identifier
++ * @return
++ *    0: rx queue empty
++ *    other: rx queue not empty
++ *****************************************************************************/
++int iop_queue_rx_not_empty(int queueid)
++{
++	struct imu_queue *queue_hw = (struct imu_queue *)
++	    (IMU_Q0_BASE + (queueid * sizeof(struct imu_queue)));
++
++	int rqpg = queue_hw->rqpg;
++	int put = rqpg & 0xffff;
++	int get = rqpg >> 16;
++	return get - put;
++}
++
++/**
++ ****************************************************************************
++ * @iop_queue_tx_not_full
++ * @brief
++ *   Check tx queue for full status
++ * @param  IN: int queueid - queue identifier
++ * @return
++ *    0: tx queue full
++ *    other: rx queue not full
++ *****************************************************************************/
++int iop_queue_tx_not_full(int queueid)
++{
++	struct imu_queue_params *queue = &imu_queue[queueid];
++	struct imu_queue *queue_hw = (struct imu_queue *)
++	    (IMU_Q0_BASE + (queueid * sizeof(struct imu_queue)));
++
++	int get = queue_hw->sqpg >> 16;
++	int next_alloc = queue->alloc + 1;
++	next_alloc = (next_alloc == queue->items) ? 0 : next_alloc;
++
++	return next_alloc - get;
++}
++
++/**
++ ****************************************************************************
++ * @iop_queue_getmsg
++ * @brief
++ *   Get next available message.
++ *
++ *   Get a pointer to the next available message in the recieve queue.
++ *   Subsequent calls will return the same value until the message is freed.
++ *
++ * @param  IN: int queueid - queue identifier
++ * @return buffer pointer to next available message
++ *****************************************************************************/
++void *iop_queue_getmsg(int queueid)
++{
++
++	struct imu_queue_params *queue = &imu_queue[queueid];
++	struct imu_queue *queue_hw = (struct imu_queue *)
++	    (IMU_Q0_BASE + (queueid * sizeof(struct imu_queue)));
++
++	int rqpg = queue_hw->rqpg;
++	void *base = queue->rxbase;
++	int put = rqpg & 0xffff;
++	int get = rqpg >> 16;
++
++	if (!base || put == get)
++		return 0;
++
++	return base + (get * queue->msg_size);
++}
++
++/**
++ ****************************************************************************
++ * @iop_queue_rxfree
++ * @brief
++ *   Free a buffer in the receive queue that has already been processed.
++ *
++ *   Free the buffer that includes msg_addr.  Also frees all prior
++ *  messages in the queue.
++ *
++ * @param  IN: int queueid - queue identifier
++ * @param  IN: void * msg_addr - pointer to data within message to free
++ * @return buffer pointer to next available message
++ *****************************************************************************/
++int iop_queue_rxfree(int queueid, void *msg_adr)
++{
++	int rq_items, offset, index;
++
++	struct imu_queue_params *queue = &imu_queue[queueid];
++	struct imu_queue *queue_hw = (struct imu_queue *)
++	    (IMU_Q0_BASE + (queueid * sizeof(struct imu_queue)));
++
++	rq_items = queue_hw->rqcr & 0xffff;
++	offset = (int)(msg_adr - queue->rxbase);
++
++	/* Check if it is in range for this queue */
++	if (offset < 0 || offset > (queue->msg_size * rq_items)) {
++		return 1;
++	}
++
++	index = (offset / queue->msg_size) + 1;
++	index = (index == rq_items) ? 0 : index;
++	queue_hw->rqpg = index << 16;	/* update get pointer */
++
++	return 0;
++}
+diff --git a/arch/arm/mach-iop13xx/imu/dev.c b/arch/arm/mach-iop13xx/imu/dev.c
+new file mode 100644
+index 0000000..38b1d80
+--- /dev/null
++++ b/arch/arm/mach-iop13xx/imu/dev.c
+@@ -0,0 +1,438 @@
++/*
++ * arch/arm/mach-iop13xx/imu/iop1340-imu-dev.c
++ *
++ * Char driver for user-space access to IMU inter-core messaging.
++ *
++ * Copyright (C) 2005, Intel Corporation.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc., 59 Temple
++ * Place - Suite 330, Boston, MA 02111-1307 USA.
++ *
++ * Author: Greg Tucker <greg.b.tucker@intel.com>
++ *
++ */
++
++#include <linux/module.h>
++#include <linux/kernel.h>
++#include <linux/fs.h>
++#include <linux/init.h>
++#include <linux/device.h>
++#include <linux/poll.h>
++#include <linux/cdev.h>
++#include <linux/jiffies.h>
++#include <asm/uaccess.h>
++#include <asm/io.h>
++#include <asm/arch/imu.h>
++
++#define MODULE_VERS "1.0"
++#define MODULE_NAME "IMUdev"
++//#define IMU_MAJOR       245
++#define IMU_MAJOR         0
++#define IMU_MAX_MINORS    4
++#define IMU_FIRST_MINOR   1
++
++#define Q_MSG_SIZE   64
++#define Q_MSG_ITEMS  16
++#define Q_PHYS_BASE  (128*1024*1024)
++#define Q_SIZE       (Q_MSG_ITEMS*Q_MSG_SIZE)
++#define MSG_HEADER_SIZE   4
++
++#define IMU_WRITE_TIMEOUT 1000
++
++struct imu_dev {
++	struct cdev cdev;
++	wait_queue_head_t rq;
++	wait_queue_head_t wq;
++	size_t rq_leftover;
++	char *rq_leftover_ptr;
++	atomic_t read_available;
++	atomic_t write_available;
++};
++
++static struct imu_dev imu[IMU_MAX_MINORS];
++static int imu_major = IMU_MAJOR;
++
++void queue_rq_callback(int queueid)
++{
++	struct imu_dev *imui = &imu[queueid];
++
++	pr_debug("queue_rq_callback %d\n", queueid);
++	wake_up_interruptible(&imui->rq);
++	iop_doorbell_disable(IMU_DB_RQ0NE + (queueid * 2));
++}
++
++void queue_wq_callback(int queueid)
++{
++	struct imu_dev *imui = &imu[queueid];
++
++	pr_debug("wq callback on not full q=%d\n", queueid);
++	wake_up_interruptible(&imui->wq);
++	iop_doorbell_disable(IMU_DB_SQ0NF + (queueid * 2));
++}
++
 +extern struct imu_queue_params imu_queue[];
 +
-+void init_scsi_bh(struct work_struct *unused)
++/*
++ * init_callback only called on the first rx to map the base
++ */
++
++#define has_overlap(a,b,c,d) (((c<=a) && (d>a))||((c<b) && (d>=b))||((c>=a) && (d<=b)))
++
++void init_callback(int queueid)
 +{
-+	struct imu_queue_params *queue = &imu_queue[Q_NUM];
++	int i, qi_rxitems, err = 0;
++	struct imu_queue_params *qi;
++	struct imu_queue_params *queue = &imu_queue[queueid];
++	struct imu_queue *qi_hw;
 +	struct imu_queue *queue_hw = (struct imu_queue *)
-+	    (IMU_Q0_BASE + (Q_NUM * sizeof(struct imu_queue)));
++	    (IMU_Q0_BASE + (queueid * sizeof(struct imu_queue)));
 +
 +	int phy_rxbase = queue_hw->rqlbar;
 +	int rq_items = queue_hw->rqcr & 0xffff;
 +
-+	queue->rxbase = ioremap(phy_rxbase, rq_items * Q_MSG_SIZE);
-+	/* todo: see about changing to cacheable and invalidate before alloc */
++	// check if overlap
 +
-+	/* switch to regular callback and call */
++	for (i = 0; i < 4; i++) {
++		qi = &imu_queue[i];
++		qi_hw = (struct imu_queue *)
++		    (IMU_Q0_BASE + (i * sizeof(struct imu_queue)));
++		qi_rxitems = qi_hw->rqcr & 0xffff;
++
++		if (i != queueid &&	// check overlap with other registered rx
++		    qi->rxbase && qi->msg_size &&
++		    has_overlap(phy_rxbase,
++				phy_rxbase + (rq_items * qi->msg_size),
++				(int)qi->rxbase,
++				(int)qi->rxbase +
++				(qi_rxitems * qi->msg_size))) {
++			err = 1;
++		}
++
++		if (qi->txbase && qi->msg_size &&	// check overlap with tx queues
++		    has_overlap(phy_rxbase,
++				phy_rxbase + (rq_items * qi->msg_size),
++				(int)qi->txbase,
++				(int)qi->txbase + (qi->items * qi->msg_size))) {
++			err = 1;
++		}
++	}
++
++	if (err) {
++		printk(KERN_WARNING
++		       "overlap found in IMU rx queue request 0x%x\n",
++		       (int)phy_rxbase);
++	}
++
++	queue->rxbase = ioremap(phy_rxbase, rq_items * Q_MSG_SIZE);
++
++	// switch to regular callback and call
 +	iop_doorbell_reg_callback(NR_IMU_DOORBELLS - 1 +
 +				  (IMU_DB_RQ0NE - IMU_DB_QUEUE_IRQ_OFF) +
-+				  (Q_NUM * 2), queue_rq_scsi_callback);
++				  (queueid * 2), queue_rq_callback);
 +
-+	imu_debug("init_scsi_callback registerd "
-+		  "q=%d rxbase=0x%x rxphy=0x%x size=0x%x\n",
-+		  Q_NUM, (int)queue->rxbase, phy_rxbase, rq_items * Q_MSG_SIZE);
-+	queue_rq_scsi_callback(Q_NUM);
-+	iop_doorbell_enable(IMU_DB_RQ0NE + (Q_NUM * 2));
++	printk
++	    ("init_callback registerd q=%d rxbase=0x%x rxphy=0x%x size=0x%x\n",
++	     queueid, (int)queue->rxbase, phy_rxbase, rq_items * Q_MSG_SIZE);
++	queue_rq_callback(queueid);
 +}
 +
-+
-+static DECLARE_WORK(init_imu_scsi_tq, init_scsi_bh);
-+
-+void init_scsi_callback(int queueid)
-+{
-+	iop_doorbell_disable(IMU_DB_RQ0NE + (queueid * 2));
-+	schedule_work(&init_imu_scsi_tq);
-+}
-+
-+void error_scsi_callback(int queueid)
++void error_callback(int queueid)
 +{
 +}
 +
-+static int imu_attach(void)
++static int imu_open(struct inode *inode, struct file *file)
 +{
++	struct imu_dev *imui;
++	int queueid = iminor(file->f_dentry->d_inode);
++
++	imui = &imu[queueid];
++
++	switch (file->f_flags & O_ACCMODE) {
++	case O_RDWR:
++		if (!atomic_dec_and_test(&imui->read_available)) {
++			atomic_inc(&imui->read_available);
++			return -EBUSY;
++		}
++		if (!atomic_dec_and_test(&imui->write_available)) {
++			atomic_inc(&imui->write_available);
++			atomic_inc(&imui->read_available);
++			return -EBUSY;
++		}
++		break;
++	case O_WRONLY:
++		if (!atomic_dec_and_test(&imui->write_available)) {
++			atomic_inc(&imui->write_available);
++			return -EBUSY;
++		}
++		break;
++	case O_RDONLY:
++		if (!atomic_dec_and_test(&imui->read_available)) {
++			atomic_inc(&imui->read_available);
++			return -EBUSY;
++		}
++		break;
++
++	}
++	return 0;
++}
++
++static int imu_release(struct inode *inode, struct file *file)
++{
++	struct imu_dev *imui;
++	int queueid = iminor(file->f_dentry->d_inode);
++
++	imui = &imu[queueid];
++
++	switch (file->f_flags & O_ACCMODE) {
++	case O_RDWR:
++		atomic_inc(&imui->read_available);	// fall through
++	case O_WRONLY:
++		atomic_inc(&imui->write_available);
++		break;
++	case O_RDONLY:
++		atomic_inc(&imui->read_available);
++		break;
++	}
++	return 0;
++}
++
++static ssize_t
++imu_read(struct file *file, char __user * buf, size_t count, loff_t * f_pos)
++{
++	struct imu_dev *imui;
++	char *dat;
++	int queueid = iminor(file->f_dentry->d_inode);
++
++	imui = &imu[queueid];
++
++	pr_debug("imu_read count=%d ", count);
++
++	while (1) {
++		if (imui->rq_leftover) {
++			pr_debug("%d leftover ", imui->rq_leftover);
++			count = min(count, imui->rq_leftover);
++			if (copy_to_user(buf, imui->rq_leftover_ptr, count))
++				return -EFAULT;
++			imui->rq_leftover -= count;
++			pr_debug(" %d left \n", imui->rq_leftover);
++			if (imui->rq_leftover == 0)
++				iop_queue_rxfree(queueid,
++						 imui->rq_leftover_ptr);
++			imui->rq_leftover_ptr += count;
++			return count;
++		}
++
++		while (!iop_queue_rx_not_empty(queueid)) {
++			DECLARE_WAITQUEUE(wait, current);
++
++			if (file->f_flags & O_NONBLOCK)
++				return -EAGAIN;
++
++			pr_debug("imu_read: empty going to sleep\n");
++
++			add_wait_queue(&imui->rq, &wait);
++			set_current_state(TASK_INTERRUPTIBLE);
++			iop_doorbell_enable(IMU_DB_RQ0NE + (queueid * 2));
++			schedule_timeout(IMU_WRITE_TIMEOUT);
++
++			remove_wait_queue(&imui->rq, &wait);
++			if (signal_pending(current)) {
++				return -ERESTARTSYS;
++			}
++		}
++
++		// new message
++		dat = iop_queue_getmsg(queueid);
++
++		pr_debug("imu_read: got a new message at 0x%x\n", (int)dat);
++		if (NULL == dat)
++			return -EFAULT;
++
++#if MSG_HEADER_SIZE > 0
++		imui->rq_leftover = *((int *)dat);
++#else
++		imui->rq_leftover = 4;
++#endif
++		if (imui->rq_leftover > Q_MSG_SIZE)
++			imui->rq_leftover = 0;
++
++		imui->rq_leftover_ptr = dat + MSG_HEADER_SIZE;
++
++		pr_debug("imu_read: msg size=%d\n", imui->rq_leftover);
++		if (!imui->rq_leftover)
++			iop_queue_rxfree(queueid, imui->rq_leftover_ptr);
++	}
++
++}
++static ssize_t
++imu_write(struct file *file, const char __user * buf, size_t count,
++	  loff_t * f_pos)
++{
++	void *msg;
++	struct imu_dev *imui;
++	int queueid = iminor(file->f_dentry->d_inode);
++
++	imui = &imu[queueid];
++
++	count = min(count, (size_t) (Q_MSG_SIZE - MSG_HEADER_SIZE));
++
++	while (NULL == (msg = iop_queue_allocate(queueid))) {
++		DECLARE_WAITQUEUE(wait, current);
++
++		if (file->f_flags & O_NONBLOCK)
++			return -EAGAIN;
++
++		pr_debug("imu_write sleeping\n");
++
++		add_wait_queue(&imui->wq, &wait);
++		set_current_state(TASK_INTERRUPTIBLE);
++		iop_doorbell_enable(IMU_DB_SQ0NF + (queueid * 2));
++		schedule_timeout(IMU_WRITE_TIMEOUT);
++
++		remove_wait_queue(&imui->wq, &wait);
++		if (signal_pending(current)) {
++			return -ERESTARTSYS;
++		}
++
++	}
++
++	if (copy_from_user(msg + MSG_HEADER_SIZE, buf, count))
++		return -EFAULT;
++#if  MSG_HEADER_SIZE > 0
++	*((int *)msg) = count;
++#endif
++
++	iop_queue_postmsg(queueid, msg);
++
++	pr_debug("imu_write sent q=%d count=%d msg=0x%x\n", queueid, count,
++		 (int)msg);
++	return count;
++}
++
++static unsigned int imu_poll(struct file *file, poll_table * wait)
++{
++	struct imu_dev *imui;
++	unsigned int mask = 0;
++	int queueid = iminor(file->f_dentry->d_inode);
++
++	imui = &imu[queueid];
++	poll_wait(file, &imui->rq, wait);
++	poll_wait(file, &imui->wq, wait);
++
++	if (iop_queue_rx_not_empty(queueid))
++		mask |= POLLIN | POLLRDNORM;
++	if (iop_queue_tx_not_full(queueid))
++		mask |= POLLOUT | POLLWRNORM;
++
++	return mask;
++}
++
++static struct file_operations imu_fops = {
++	.owner = THIS_MODULE,
++	.read = imu_read,
++	.write = imu_write,
++	.poll = imu_poll,
++	.open = imu_open,
++	.release = imu_release,
++};
++
++static int __init imu_dev_init(void)
++{
++	dev_t dev;
++	// struct class_simple *imu_class;
++	int err, i;
 +	char *queue_base;
-+	int err;
 +
-+	imu_debug("imu_attach\n");
-+
-+	imu_queue[Q_NUM].rxbase = 0;
-+
-+	queue_base = ioremap(Q_PHYS_BASE + (Q_NUM * Q_SIZE), Q_SIZE);
-+	/* todo: see about changing to bufferable mem and dmb before post */
-+
-+	if (queue_base == NULL) {
-+		imu_warn("could not ioremap region\n");
-+		return -1;
++	if (imu_major) {
++		dev = MKDEV(imu_major, 0);
++		err = register_chrdev_region(dev, IMU_MAX_MINORS, "imu");
++	} else {
++		err = alloc_chrdev_region(&dev, IMU_FIRST_MINOR,
++					  IMU_MAX_MINORS, "imu");
++		imu_major = MAJOR(dev);
 +	}
-+
-+	err = iop_queue_init(Q_NUM,
-+			     (void *)Q_PHYS_BASE + (Q_NUM * Q_SIZE),
-+			     queue_base,
-+			     Q_MSG_SIZE,
-+			     Q_MSG_ITEMS,
-+			     init_scsi_callback, error_scsi_callback);
-+	if (err) {
-+		imu_warn("could not init queue\n");
-+		iounmap(queue_base);
-+		return -1;
++	if (err < 0) {
++		printk(KERN_WARNING "imu: can't get major %d\n", imu_major);
++		return err;
 +	}
++	//todo: update imu_class = class_simple_create(THIS_MODULE, "imu");
 +
-+	printk(KERN_INFO MODULE_NAME ": using queue %d base:0x%x phy:0x%x\n",
-+	       Q_NUM, (int)queue_base, Q_PHYS_BASE + (Q_NUM * Q_SIZE));
++	for (i = IMU_FIRST_MINOR; i < IMU_MAX_MINORS; i++) {
++		cdev_init(&imu[i].cdev, &imu_fops);
++		if (cdev_add(&imu[i].cdev, MKDEV(imu_major, i), 1)) {
++			printk(KERN_WARNING "Error cdev_add imu%i\n", i);
++			continue;
++		}
++
++		imu[i].rq_leftover = 0;
++		atomic_set(&imu[i].read_available, 1);
++		atomic_set(&imu[i].write_available, 1);
++		init_waitqueue_head(&imu[i].rq);
++		init_waitqueue_head(&imu[i].wq);
++		imu_queue[i].rxbase = 0;
++
++		queue_base = ioremap(Q_PHYS_BASE + (i * Q_SIZE), Q_SIZE);
++		// todo: see about changing to one of following
++		// non-shared device tex.cb = 0x010.00
++		// shared device     tex.cb = 0x001.01
++
++		err = iop_queue_init(i,
++				     (void *)Q_PHYS_BASE + (i * Q_SIZE),
++				     queue_base,
++				     Q_MSG_SIZE,
++				     Q_MSG_ITEMS,
++				     init_callback, error_callback);
++		if (err) {
++			printk(KERN_WARNING "could not init imu queue %d\n", i);
++			continue;
++		}
++		iop_doorbell_reg_callback(NR_IMU_DOORBELLS - 1 +
++					  (IMU_DB_SQ0NF -
++					   IMU_DB_QUEUE_IRQ_OFF) + (i * 2),
++					  queue_wq_callback);
++		printk(KERN_INFO
++		       "IMU Queue %d initialized major=%d minor=%d base=0x%x\n",
++		       i, imu_major, i, (int)queue_base);
++
++	}
 +
 +	return 0;
 +}
 +
-+static int imu_detach(void)
++static void __exit imu_dev_cleanup(void)
 +{
++	int i;
 +
-+	iop_doorbell_disable(IMU_DB_RQ0NE + (Q_NUM * 2));
-+	iop_doorbell_disable(IMU_DB_SQ0NF + (Q_NUM * 2));
-+	if (imu_queue[Q_NUM].txbase) {
-+		iounmap(imu_queue[Q_NUM].txbase);
-+		imu_queue[Q_NUM].txbase = 0;
-+	}
-+	if (imu_queue[Q_NUM].rxbase) {
-+		iounmap(imu_queue[Q_NUM].rxbase);
-+		imu_queue[Q_NUM].rxbase = 0;
++	for (i = IMU_FIRST_MINOR; i < IMU_MAX_MINORS; i++) {
++		cdev_del(&imu[i].cdev);
++		iop_doorbell_disable(IMU_DB_RQ0NE + (i * 2));
++		iop_doorbell_disable(IMU_DB_SQ0NF + (i * 2));
++		iounmap(imu_queue[i].txbase);
++		if (imu_queue[i].rxbase) {
++			iounmap(imu_queue[i].rxbase);
++			imu_queue[i].rxbase = 0;
++		}
 +	}
 +
-+	return 0;
++	//todo: update  class_simple_device_remove(MKDEV(imu_major, 0));
++	unregister_chrdev_region(MKDEV(imu_major, 0), IMU_MAX_MINORS);
++
++	printk(KERN_INFO "%s driver ver %s removed\n",
++	       MODULE_NAME, MODULE_VERS);
 +}
 +
-+static int __init imu_scsi_init(void)
-+{
-+	struct Scsi_Host *host;
-+	struct imu_scsidata *data;
-+	struct imu_cmd *msg;
-+	int ret;
-+
-+	if (imu_attach()) {
-+		imu_warn("imu queue alloc failed\n");
-+		return -1;
-+	}
-+
-+	host = scsi_host_alloc(&imu_scsi_template, sizeof(struct imu_scsidata));
-+	if (!host)
-+		return -ENOMEM;
-+
-+	data = (struct imu_scsidata *)host->hostdata;
-+	imu_scsi = data;
-+	data->host = host;
-+	data->connection_handle = 1;  /* should be 0; bug in current target has
-+					 bad response to connection request */
-+
-+	/* Send connection request msg */
-+	msg = iop_queue_allocate(Q_NUM);
-+	if (msg == NULL) {
-+		imu_warn("failed to allocate imu msg for connect\n");
-+		imu_scsi_prof(imu_failed_alloc++);
-+		return -1;
-+	}
-+	msg->fcode = IMU_FCODE_CONNECT_REQ;
-+	msg->array_context = 0;
-+	msg->app_context = 0;
-+	msg->connection_handle = 0;
-+	msg->world_wide_name = IMU_WW_NAME;
-+	iop_queue_postmsg(Q_NUM, msg);
-+
-+	imu_debug("scsi_add_host\n");
-+
-+	ret = scsi_add_host(host, NULL);
-+	if (!ret) {
-+		scsi_scan_host(host);
-+		imu_debug("scsi_scan_host complete\n");
-+	}
-+
-+	return ret;
-+}
-+
-+static void __exit imu_scsi_exit(void)
-+{
-+	struct Scsi_Host *host = imu_scsi->host;
-+
-+	scsi_remove_host(host);
-+	scsi_host_put(host);
-+	imu_scsi_send_gen_msg(IMU_FCODE_DISCONNECT_REQ);
-+	imu_detach();
-+	printk(KERN_INFO MODULE_NAME ": Detached\n");
-+}
-+
-+module_init(imu_scsi_init);
-+module_exit(imu_scsi_exit);
++module_init(imu_dev_init);
++module_exit(imu_dev_cleanup);
 +
 +MODULE_AUTHOR("Greg Tucker");
-+MODULE_DESCRIPTION("iop13xx IMU SCSI driver");
++MODULE_DESCRIPTION("IMU dev interface");
+diff --git a/arch/arm/mach-iop13xx/imu/imu.c b/arch/arm/mach-iop13xx/imu/imu.c
+new file mode 100644
+index 0000000..690fae8
+--- /dev/null
++++ b/arch/arm/mach-iop13xx/imu/imu.c
+@@ -0,0 +1,95 @@
++/*
++ * arch/arm/mach-iop13xx/imu/iop1340-imu.c
++ *
++ * Support for IMU communication for the Intel IOP1340 chipset
++ *
++ * Copyright (C) 2005, Intel Corporation.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc., 59 Temple
++ * Place - Suite 330, Boston, MA 02111-1307 USA.
++ *
++ * Author: Greg Tucker <greg.b.tucker@intel.com>
++ *
++ */
++
++#include <linux/module.h>
++#include <linux/kernel.h>
++#include <linux/interrupt.h>
++#include <asm/arch/imu.h>
++
++extern imu_handler *imu_irq_table[];
++extern struct imu_queue_params imu_queue[];
++
++static irqreturn_t imu_interrupt(int irq, void *dev_id)
++{
++	unsigned int doorbell, queue;
++	unsigned int dbcr = *(volatile int *)IMU_DBCR;
++
++	pr_debug("got imu interrupt. IMU_DBCR=0x%x\n", dbcr);
++
++	do {
++		doorbell = dbcr >> 28;
++		queue = (dbcr >> 24) & 0xf;
++
++		if (doorbell != 0xf && imu_irq_table[doorbell]) {
++			imu_irq_table[doorbell] (doorbell);
++			*(volatile int *)IMU_DBCR = 1 << doorbell;	// clear status
++		}
++
++		if (queue != 0xf
++		    && imu_irq_table[(NR_IMU_DOORBELLS - 1) + queue])
++			imu_irq_table[(NR_IMU_DOORBELLS - 1) +
++				      queue] (queue / 2);
++
++		dbcr = *(volatile int *)IMU_DBCR;
++
++	} while ((dbcr >> 24) != 0xff);
++
++	return IRQ_HANDLED;
++}
++
++static int __init iop_imu_init(void)
++{
++	int i, err;
++
++	for (i = 0; i < NR_IMU_DOORBELLS + NR_IMU_QUEUE_IRQS; i++)
++		imu_irq_table[i] = 0;
++
++	err = request_irq(IRQ_IOP13XX_IMU, imu_interrupt,
++			  IRQF_DISABLED, "imu interrupt", NULL);
++
++	printk(KERN_INFO "IOP 8134x IMU driver\n");
++	return err;
++}
++
++static void __exit iop_imu_exit(void)
++{
++	free_irq(IRQ_IOP13XX_IMU, NULL);
++	return;
++}
++
++EXPORT_SYMBOL(iop_doorbell_reg_callback);
++EXPORT_SYMBOL(iop_queue_init);
++EXPORT_SYMBOL(iop_queue_allocate);
++EXPORT_SYMBOL(iop_queue_postmsg);
++EXPORT_SYMBOL(iop_queue_getmsg);
++EXPORT_SYMBOL(iop_queue_rxfree);
++EXPORT_SYMBOL(iop_queue_rx_not_empty);
++EXPORT_SYMBOL(iop_queue_tx_not_full);
++EXPORT_SYMBOL(imu_queue);
++
++module_init(iop_imu_init);
++module_exit(iop_imu_exit);
++
++MODULE_AUTHOR("Greg Tucker");
++MODULE_DESCRIPTION("IMU interface");
+diff --git a/include/asm-arm/arch-iop13xx/imu.h b/include/asm-arm/arch-iop13xx/imu.h
+new file mode 100644
+index 0000000..5346bd9
+--- /dev/null
++++ b/include/asm-arm/arch-iop13xx/imu.h
+@@ -0,0 +1,366 @@
++/*
++ * include/asm-arm/arch-iop13xx/iop1340-imu.h
++ *
++ * IMU hardware support on IOP342
++ *
++ * Copyright (C) 2005, Intel Corporation.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc., 59 Temple
++ * Place - Suite 330, Boston, MA 02111-1307 USA.
++ *
++ * Author: Greg Tucker <greg.b.tucker@intel.com>
++ *
++ */
++
++#ifndef IOP34X_H
++#define IOP34X_H
++
++#include <asm/arch/iop13xx.h>
++
++typedef int imu_handler(int);
++
++
++int iop_queue_init(int queueid, void *phys_base, void *vert_base,
++		   int msg_size, int num_items,
++		   void (*rcd_callback) (int), void (*error_callback) (int));
++void *iop_queue_allocate(int queueid);
++int iop_queue_postmsg(int queueid, void *msg_adr);
++void *iop_queue_getmsg(int queueid);
++int iop_queue_rxfree(int queueid, void *msg_adr);
++int iop_queue_rx_not_empty(int queueid);
++int iop_queue_tx_not_full(int queueid);
++int iop_doorbell_reg_callback(int doorbell, void (*callback) (int));
++
++/* --------------------------------------------------------------------------
++ * IMU/IMM registers
++ */
++
++/* Reset cause status - RCSR */
++
++#define RCSR_READ()  \
++   ({unsigned _val_; asm volatile("mrc\tp6, 0, %0, c0, c1, 0" : "=r" (_val_));_val_;})
++#define RCSR_MU_RESET       (1<<21)
++#define RCSR_TMPI3_RESET    (1<<18)
++#define RCSR_TMPI2_RESET    (1<<15)
++#define RCSR_TMPI1_RESET    (1<<12)
++#define RCSR_TMPI0_RESET    (1<<9)
++#define RCSR_WATCHDOG_RESET (1<<5)
++#define RCSR_TARGETED_RESET (1<<4)
++#define RCSR_ID_RESET_MASK  (0xf)
++#define RCSR_SYSTEM_RESET_MASK (RCSR_MU_RESET | RCSR_TARGETED_RESET | RCSR_TMPI3_RESET | \
++				RCSR_TMPI2_RESET | RCSR_TMPI1_RESET | RCSR_TMPI0_RESET | \
++				RCSR_WATCHDOG_RESET | RCSR_TARGETED_RESET)
++
++/* #define is_sys_reset() ((RCSR_READ() & RCSR_SYSTEM_RESET_MASK) == 0)  currently  not working in simulator */
++#define is_sys_reset() 1
++
++/* Software Interrupt Generation Register - SINTGENR */
++
++#define SINTGENR_READ()  \
++   ({  unsigned _val_;asm volatile("mrc\tp6, 0, %0, c1, c1, 0" : "=r" (_val_));_val_;})
++#define SINTGENR_WRITE(val) \
++   ({ asm volatile("mcr\tp6, 0, %0, c1, c1, 0" : : "r" (val)); })
++
++/* Targeted Reset Register - TARRSTR */
++
++# define TARRSTR_WRITE(val) \
++   ({ asm volatile("mcr\tp6, 0, %0, c2, c1, 0" : : "r" (val)); })
++
++#ifdef linux
++# define IMU_BASE    IOP13XX_PMMR_VIRT_MEM_BASE
++#else
++# define IMU_BASE    0xffd80000
++#endif
++
++/* IMU doorbell registers */
++
++#define IMU_DBCR   (IMU_BASE+0xa00)
++#define IMU_DBER   (IMU_BASE+0xa04)
++#define IMU_DBAR   (IMU_BASE+0xa10)
++#define IMU_DBEOR  (IMU_BASE+0xa14)
++#define NR_IMU_DOORBELLS   14
++
++/* Conventions on doorbell use */
++
++#define IMU_RESET_DOORBELL  3
++
++/* IMU send queue */
++
++#define IMU_Q0_BASE (IMU_BASE+0xa20)
++#define IMU_Q1_BASE (IMU_BASE+0xa40)
++#define IMU_Q2_BASE (IMU_BASE+0xa60)
++#define IMU_Q3_BASE (IMU_BASE+0xa80)
++
++#define IMU_SQPG0    (IMU_Q0_BASE+0x0)
++#define IMU_SQCR0    (IMU_Q0_BASE+0x4)
++#define IMU_SQLBAR0  (IMU_Q0_BASE+0x8)
++#define IMU_SQUBAR0  (IMU_Q0_BASE+0xc)
++#define IMU_RQPG0    (IMU_Q0_BASE+0x10)
++#define IMU_RQCR0    (IMU_Q0_BASE+0x14)
++#define IMU_RQLBAR0  (IMU_Q0_BASE+0x18)
++#define IMU_RQUBAR0  (IMU_Q0_BASE+0x1c)
++
++#define IMU_SQPG1    (IMU_Q1_BASE+0x0)
++#define IMU_SQCR1    (IMU_Q1_BASE+0x4)
++#define IMU_SQLBAR1  (IMU_Q1_BASE+0x8)
++#define IMU_SQUBAR1  (IMU_Q1_BASE+0xc)
++#define IMU_RQPG1    (IMU_Q1_BASE+0x10)
++#define IMU_RQCR1    (IMU_Q1_BASE+0x14)
++#define IMU_RQLBAR1  (IMU_Q1_BASE+0x18)
++#define IMU_RQUBAR1  (IMU_Q1_BASE+0x1c)
++
++#define IMU_SQPG2    (IMU_Q2_BASE+0x0)
++#define IMU_SQCR2    (IMU_Q2_BASE+0x4)
++#define IMU_SQLBAR2  (IMU_Q2_BASE+0x8)
++#define IMU_SQUBAR2  (IMU_Q2_BASE+0xc)
++#define IMU_RQPG2    (IMU_Q2_BASE+0x10)
++#define IMU_RQCR2    (IMU_Q2_BASE+0x14)
++#define IMU_RQLBAR2  (IMU_Q2_BASE+0x18)
++#define IMU_RQUBAR2  (IMU_Q2_BASE+0x1c)
++
++#define IMU_SQPG3    (IMU_Q3_BASE+0x0)
++#define IMU_SQCR3    (IMU_Q3_BASE+0x4)
++#define IMU_SQLBAR3  (IMU_Q3_BASE+0x8)
++#define IMU_SQUBAR3  (IMU_Q3_BASE+0xc)
++#define IMU_RQPG3    (IMU_Q3_BASE+0x10)
++#define IMU_RQCR3    (IMU_Q3_BASE+0x14)
++#define IMU_RQLBAR3  (IMU_Q3_BASE+0x18)
++#define IMU_RQUBAR3  (IMU_Q3_BASE+0x1c)
++#define NR_IMU_QUEUES       3
++
++/* IMU queue interrupts */
++
++#define IMU_DB_SQ0NF 16
++#define IMU_DB_RQ0NE 17
++#define IMU_DB_SQ1NF 18
++#define IMU_DB_RQ1NE 19
++#define IMU_DB_SQ2NF 20
++#define IMU_DB_RQ2NE 21
++#define IMU_DB_SQ3NF 22
++#define IMU_DB_RQ3NE 23
++#define IMU_DB_QUEUE_IRQ_OFF 16
++#define NR_IMU_QUEUE_IRQS     8
++
++#ifndef __ASSEMBLER__
++struct imu_queue {
++	unsigned int sqpg;	/* Send queue put/get register */
++	unsigned int sqcr;	/* Send queue control register */
++	unsigned int sqlbar;	/* Send queue lower base address reg */
++	unsigned int squbar;	/* Send queue upper base address reg */
++	unsigned int rqpg;	/* Receive queue put/get register */
++	unsigned int rqcr;	/* Receive queue control register */
++	unsigned int rqlbar;	/* Receive queue lower base address reg */
++	unsigned int rqubar;	/* Receive queue upper base address reg */
++};
++
++struct imu_queue_params {
++	void *txbase;
++	void *rxbase;
++	int alloc;
++	int msg_size;
++	int items;
++};
++#endif
++
++/* Test and set semaphore registers */
++
++#define IMU_TSR_BASE (IMU_BASE+0xb00)
++#define IMU_TSR(x)   ((volatile char*)(IMU_TSR_BASE+x))
++
++/* Some conventions on the semaphores */
++
++#define HW_MUTEX_FLASH_READ_CORE0 0
++#define HW_MUTEX_FLASH_READ_CORE1 1
++
++/**
++ ****************************************************************************
++ * @iop_doorbell_ring
++ * @brief
++ *   Ring specified hw doorbell.
++ *
++ *   Will cause an interrupt on the other processor if enabled.
++ *
++ * @param IN: int doorbell - doorbell number
++ * @return NONE
++ *****************************************************************************/
++static inline void iop_doorbell_ring(int doorbell)
++{
++	*((volatile int *)IMU_DBAR) = (1 << doorbell);
++}
++
++/**
++ ****************************************************************************
++ * @iop_wait_on_doorbell
++ * @brief
++ *   Spin until doorbell asserted.
++ * @param  IN: int doorbell - doorbell number
++ * @return NONE
++ *****************************************************************************/
++static inline void iop_wait_on_doorbell(int doorbell)
++{
++	while (0 == (*((volatile int *)IMU_DBCR) & (1 << doorbell))) ;
++}
++
++/**
++ ******************************************************************************
++ * @iop_doorbell_clear_status
++ * @brief
++ *   Clear doorbell status bit so future doorbells can interrupt.
++ * @param  IN: int doorbell - doorbell number
++ * @return NONE
++ *****************************************************************************/
++static inline void iop_doorbell_clear_status(int doorbell)
++{
++	*((volatile int *)IMU_DBCR) = (1 << doorbell) & ((1 << 16) - 1);
++}
++
++/**
++ ******************************************************************************
++ * @iop_doorbell_check_status
++ * @brief
++ *   Check if doorbell is active.
++ * @param  IN: int doorbell - doorbell number
++ * @return
++ *   0: doorbell not active
++ *   other: doorbell active
++ *****************************************************************************/
++static inline int iop_doorbell_check_status(int doorbell)
++{
++	return *((volatile int *)IMU_DBCR) & (1 << doorbell);
++}
++
++/**
++ ******************************************************************************
++ * @iop_doorbell_enable
++ * @brief
++ *   Enable this doorbell to interrupt processor.
++ * @param  IN: int doorbell - doorbell number
++ * @return NONE
++ *****************************************************************************/
++static inline void iop_doorbell_enable(int doorbell)
++{
++	*((volatile int *)IMU_DBER) |= (1 << doorbell);
++}
++
++
++/**
++ ******************************************************************************
++ * @iop_doorbell_disable
++ * @brief
++ *   Disable particular doorbell.
++ * @param  IN: int doorbell - doorbell number
++ * @return NONE
++ *****************************************************************************/
++static inline void iop_doorbell_disable(int doorbell)
++{
++	*((volatile int *)IMU_DBER) &= ~(1 << doorbell);
++}
++
++/**
++ ******************************************************************************
++ * @iop_doorbell_mask
++ * @brief
++ *   Mask/Disable doorbells corresponding to mask.
++ * @param  IN: int mask - vector of doorbells to disable
++ * @return NONE
++ *****************************************************************************/
++static inline void iop_doorbell_mask(int mask)
++{
++	*((volatile int *)IMU_DBER) &= ~(mask);
++}
++
++/**
++ ******************************************************************************
++ * @iop_doorbell_unmask
++ * @brief
++ *   Unmask/Enable doorbells corresponding to mask.
++ * @param  IN: int mask - vector of doorbells to enable
++ * @return NONE
++ *****************************************************************************/
++static inline void iop_doorbell_unmask(int mask)
++{
++	*((volatile int *)IMU_DBER) &= mask;
++}
++
++/**
++ ******************************************************************************
++ * @iop_mutex_lock
++ * @brief
++ *   Block until mutex is granted.
++ *
++ *   Checks if current core has been granted access to the hw mutex.
++ *   Does not check if it's the current thread that has access or
++ *   another thread on the same processor.  Only binary mutex is
++ *   supported.
++ *
++ * @param  IN: mutex - mutex number
++ * @return NONE
++ *****************************************************************************/
++static inline void iop_mutex_lock(int mutex)
++{
++	int trymutex = *IMU_TSR(mutex);
++	int corenum = (1 << iop13xx_cpu_id());
++
++	while (trymutex != 0 && trymutex != corenum) {
++		trymutex = *IMU_TSR(mutex);
++	}
++}
++
++/**
++ ****************************************************************************
++ * @iop_mutex_trylock
++ * @brief
++ *   Non-blocking attempt to get mutex.
++ *
++ *   Checks if current core has been granted access to the hw mutex.
++ *   Does not check if it's the current thread that has access or
++ *   another thread on the same processor.  Only binary mutex is
++ *   supported.
++ *
++ * @param IN: int mutex - mutex number
++ * @return
++ *   0: success
++ *   1: other core has lock
++ *****************************************************************************/
++static inline int iop_mutex_trylock(int mutex)
++{
++	int trymutex = *IMU_TSR(mutex);
++	int coreid = iop13xx_cpu_id();
++
++	if (trymutex == 0 || (trymutex ^ (1 << coreid)) == 0)
++		return 0;
++	else
++		return 1;
++}
++
++/**
++ ****************************************************************************
++ * @iop_mutex_unlock
++ * @brief
++ *   Unlock/free the given mutex.
++ *
++ *   Does not first check if the mutex is locked.  Assumes that the
++ *   calling thread ownes the mutex.  Currently only binary mutex is
++ *   supported so does not keep a lock count.
++ *
++ * @param  IN: int mutex - mutex number
++ * @return NONE
++ *****************************************************************************/
++static inline void iop_mutex_unlock(int mutex)
++{
++	/* assert(iop_mutex_trylock(mutex)); */
++	*IMU_TSR(mutex) = 0x0;
++}
++
++
++#endif				/* IOP34X_H */
