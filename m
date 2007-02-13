@@ -1,68 +1,89 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] scsi tgt: fix the user/kernel ring buffer interface
-Date: Tue, 13 Feb 2007 23:21:52 +0900 (JST)
-Message-ID: <20070213062055H.fujita.tomonori@lab.ntt.co.jp>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [Bug 7994] New: sleeping function called from invalid context
+ at mm/slab.c:3034
+Date: Tue, 13 Feb 2007 06:56:35 -0800
+Message-ID: <45D1D1A3.50500@torque.net>
+References: <200702130307.l1D378vc003798@fire-2.osdl.org>	 <20070212200620.7320b3be.akpm@linux-foundation.org> <1171376251.3382.0.camel@mulgrave.il.steeleye.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------050103080506070408060302"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:51525 "EHLO
-	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750800AbXBMOWB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Feb 2007 09:22:01 -0500
+Received: from pentafluge.infradead.org ([213.146.154.40]:40752 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750705AbXBMO4m (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Feb 2007 09:56:42 -0500
+In-Reply-To: <1171376251.3382.0.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, adrakoa@es.gnu.org, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>
 
-This patches fixes two bugs in the scsi target infrastructure's
-user/kernel interface.
+This is a multi-part message in MIME format.
+--------------050103080506070408060302
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-- It wrongly assumes that the ring buffer size of the interface (64KB)
-is larger than or equal to the system page size. This patch sets the
-ring buffer size to PAGE_SIZE if the system page size is larger.
+James Bottomley wrote:
+> On Mon, 2007-02-12 at 20:06 -0800, Andrew Morton wrote:
+>> This is fixed in mainline and I expect that the fix is also lined up
+>> for
+>> 2.6.20.1. (?)
+> 
+> It's definitely in mainline.  I've cc'd Doug Gilbert, the scsi_debug
+> maintainer to assess what should be done for 2.6.20.1
 
-- It uses PAGE_SIZE in the header file exported to userspace. This
-patch removes it.
+James,
+I thought this had been addressed but I can't find a
+trail on my laptop. A minimal patch is attached.
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- drivers/scsi/scsi_tgt_if.c |    8 ++++++++
- include/scsi/scsi_tgt_if.h |    3 ---
- 2 files changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/scsi_tgt_if.c b/drivers/scsi/scsi_tgt_if.c
-index 37bbfbd..f5d4412 100644
---- a/drivers/scsi/scsi_tgt_if.c
-+++ b/drivers/scsi/scsi_tgt_if.c
-@@ -33,6 +33,14 @@ #include <asm/cacheflush.h>
+ChangeLog:
+   - Use GFP_ATOMIC for allocations that can be called
+     from the queuecommand() entry point
+
+Signed-off-by: Douglas Gilbert <dougg@torque.net>
+
+Doug Gilbert
+
+
+
+
+--------------050103080506070408060302
+Content-Type: text/x-patch;
+ name="sdebug2620atom.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="sdebug2620atom.diff"
+
+--- linux/drivers/scsi/scsi_debug.c	2006-11-30 07:00:01.000000000 -0800
++++ linux/drivers/scsi/scsi_debug.c2620atom	2007-02-13 06:43:28.000000000 -0800
+@@ -954,7 +954,7 @@
+ 	int alloc_len, n, ret;
  
- #include "scsi_tgt_priv.h"
+ 	alloc_len = (cmd[3] << 8) + cmd[4];
+-	arr = kzalloc(SDEBUG_MAX_INQ_ARR_SZ, GFP_KERNEL);
++	arr = kzalloc(SDEBUG_MAX_INQ_ARR_SZ, GFP_ATOMIC);
+ 	if (devip->wlun)
+ 		pq_pdt = 0x1e;	/* present, wlun */
+ 	else if (scsi_debug_no_lun_0 && (0 == devip->lun))
+@@ -1217,7 +1217,7 @@
+ 	alen = ((cmd[6] << 24) + (cmd[7] << 16) + (cmd[8] << 8)
+ 		+ cmd[9]);
  
-+#if TGT_RING_SIZE < PAGE_SIZE
-+#  define TGT_RING_SIZE PAGE_SIZE
-+#endif
-+
-+#define TGT_RING_PAGES (TGT_RING_SIZE >> PAGE_SHIFT)
-+#define TGT_EVENT_PER_PAGE (PAGE_SIZE / sizeof(struct tgt_event))
-+#define TGT_MAX_EVENTS (TGT_EVENT_PER_PAGE * TGT_RING_PAGES)
-+
- struct tgt_ring {
- 	u32 tr_idx;
- 	unsigned long tr_pages[TGT_RING_PAGES];
-diff --git a/include/scsi/scsi_tgt_if.h b/include/scsi/scsi_tgt_if.h
-index 46d5e70..07d6e77 100644
---- a/include/scsi/scsi_tgt_if.h
-+++ b/include/scsi/scsi_tgt_if.h
-@@ -83,8 +83,5 @@ struct tgt_event {
- } __attribute__ ((aligned (sizeof(uint64_t))));
- 
- #define TGT_RING_SIZE (1UL << 16)
--#define TGT_RING_PAGES (TGT_RING_SIZE >> PAGE_SHIFT)
--#define TGT_EVENT_PER_PAGE (PAGE_SIZE / sizeof(struct tgt_event))
--#define TGT_MAX_EVENTS (TGT_EVENT_PER_PAGE * TGT_RING_PAGES)
- 
- #endif
--- 
-1.4.3.2
+-	arr = kzalloc(SDEBUG_MAX_TGTPGS_ARR_SZ, GFP_KERNEL);
++	arr = kzalloc(SDEBUG_MAX_TGTPGS_ARR_SZ, GFP_ATOMIC);
+ 	/*
+ 	 * EVPD page 0x88 states we have two ports, one
+ 	 * real and a fake port with no device connected.
+@@ -2044,7 +2044,7 @@
+ 		}
+ 	}
+ 	if (NULL == open_devip) { /* try and make a new one */
+-		open_devip = kzalloc(sizeof(*open_devip),GFP_KERNEL);
++		open_devip = kzalloc(sizeof(*open_devip),GFP_ATOMIC);
+ 		if (NULL == open_devip) {
+ 			printk(KERN_ERR "%s: out of memory at line %d\n",
+ 				__FUNCTION__, __LINE__);
 
+--------------050103080506070408060302--
