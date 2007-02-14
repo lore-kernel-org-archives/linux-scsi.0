@@ -1,60 +1,50 @@
-From: Eric Belhomme <rico@ricospirit.net>
-Subject: Re: Fw: [Bugme-new] [Bug 7999] New: MegaRAID Legacy doesn't work
- with LSI MegaRAID i4 since release 2.00.4
-Date: Wed, 14 Feb 2007 10:54:30 +0100
-Message-ID: <45D2DC56.3030807@ricospirit.net>
-References: <20070213092920.f0bafea0.akpm@linux-foundation.org>	 <1171389557.3382.34.camel@mulgrave.il.steeleye.com>	 <45D22F1C.7060604@ricospirit.net> <1171406217.3382.48.camel@mulgrave.il.steeleye.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH] bind bsg to request_queue instead of gendisk
+Date: Wed, 14 Feb 2007 06:07:44 -0800
+Message-ID: <45D317B0.7020100@torque.net>
+References: <20070213095318G.fujita.tomonori@lab.ntt.co.jp> <20070213180033.GB6798@havoc.gtf.org>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from paris.icsb.fr ([195.6.191.124]:44844 "EHLO lyon.admin.icsb.fr"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751538AbXBNK2l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Feb 2007 05:28:41 -0500
-In-Reply-To: <1171406217.3382.48.camel@mulgrave.il.steeleye.com>
+Received: from pentafluge.infradead.org ([213.146.154.40]:58994 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932287AbXBNOIZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Feb 2007 09:08:25 -0500
+In-Reply-To: <20070213180033.GB6798@havoc.gtf.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, jens.axboe@oracle.com, James.Smart@Emulex.Com, hch@infradead.org
 
-James Bottomley a =E9crit :
+Jeff Garzik wrote:
+> On Wed, Feb 14, 2007 at 02:53:31AM +0900, FUJITA Tomonori wrote:
+>> It seems that it would be better to bind bsg devices to request_queue
+>> instead of gendisk. This enables any objects to define own
+>> request_handler and create own bsg device (under sysfs).
+>>
+>> Possible enhancements:
+>>
+>> - I removed gendisk but it would be better for objects having gendisk
+>> to keep it for nice features like disk stats.
+>>
+>> - Objects that wants to use bsg need to setup a request_queue. Maybe
+>> wrapper functions to setup a request_queue for them would be useful.
+>>
+>> This patch was tested only with disk drivers.
+>>
+>>
+>> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+>> ---
+>>  block/bsg.c            |   37 +++++++++++++++++--------------------
+> 
+> What is this patch against?  scsi-misc?
+> 
+> I certainly like the bsg solution, but block/bsg.c does not exist in my
+> vanilla linux-2.6.git tree :)
 
->> So if I understand well, the module actively used with the LSI card =
-is=20
->> megaraid, the legacy one ! but the mbox and mm are loaded and seems =
-to=20
->> be necessary for the legacy driver ?
->=20
-> Actually, it shouldn't be.  megaraid_mbox depends on megaraid_mm as y=
-our
-> lsmod shows, which is correct.  However, nothing's depending on legac=
-y
-> megaraid ... I'm not sure why it's showing as loaded and in use.
->=20
-but it is ! moreover I have a /proc/megaraid/hba1/ directory structure=20
-fully filled with my RAID card, drives, and RAID volumes informations,=20
-and I don't hav any entry in sysfs directory tree (witch is the right=20
-place for megaraid NG module)
+www.kernel.org/pub/scm/linux/kernel/git/axboe/linux-2.6-block.git
 
-I'd like to understand _why_ this module supposed to be independant fro=
-m=20
-the "new generation" megaraid module needs megaraid NG to be compiled t=
-o=20
-work correctly ?
+branch: bsg
 
-I looked over the sources but I didn't found any link between the legac=
-y=20
-driver and the newgen one... quite strange !
-
-Regards,
-
---=20
-Rico
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
