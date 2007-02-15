@@ -1,39 +1,91 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: dc395x
-Date: Thu, 15 Feb 2007 21:39:23 +0100 (CET)
-Message-ID: <Pine.LNX.4.60.0702152136380.10674@poirot.grange>
-References: <1501.164.73.178.123.1171541414.squirrel@164.73.178.123>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [PATCH] aic94xx: tie driver to the major number of the sequencer
+	firmware
+Date: Thu, 15 Feb 2007 15:25:35 -0600
+Message-ID: <1171574735.3412.36.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:40869 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1030687AbXBOUj0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Feb 2007 15:39:26 -0500
-In-Reply-To: <1501.164.73.178.123.1171541414.squirrel@164.73.178.123>
+Received: from hancock.steeleye.com ([71.30.118.248]:59578 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1161361AbXBOVZi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Feb 2007 16:25:38 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Aldo Barreto <aldo@fder1.fder.edu.uy>
-Cc: linux-scsi@vger.kernel.org, stenzer@fder.edu.uy
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: "Wu, Gilbert" <Gilbert_Wu@adaptec.com>, "Tan, Dennis" <Dennis_Tan@adaptec.com>
 
-On Thu, 15 Feb 2007, Aldo Barreto wrote:
+The sequencer firmware file has both a string (currently showing
+V17/10c6) and a number (currently set to 1.1).  It has become apparent
+that Adaptec may issue sequencer firmware in the future which could be
+incompatible with the current driver.  Therefore, the driver will be
+tied to the particular major number of the firmware (i.e. the current
+driver will load any 1.x firmware).  Additionally, the driver will print
+out both the ascii string and the major number, so with this pach the
+current firmware will print out
 
-> I'am trying to install Mandriva 2007 with kernel 2.6.17 in my system. It's
-> a Pentium IV  P4P 800 ASSUS system with 1 Gb of memory and a scsi board
-> Tekram dc395. System doesn't end startup and syslog sends me a messagge:
-> kernel: drivers/scsi/dc395x.c: Please, contact (your address).
-> This occurs booting from a ide disk, when I tried to install all in a scsi
-> disk
-> system gives me a message :QUEUE_FULL.
-> If it's possible I want to work only with scsi disk.
-> With Mandrake 10.0 system works fine.
-> Can you help me?
+aic94xx: Found sequencer firmware version 1.1 (V17/10c6)
 
-Please, try a newer kernel, preferrably 2.6.20. I think, by now Mandriva 
-should have something newer than 2.6.17? If it still fails, please, write 
-again.
+James
 
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
+diff --git a/drivers/scsi/aic94xx/aic94xx_seq.c b/drivers/scsi/aic94xx/aic94xx_seq.c
+index 2768fe4..6c63b66 100644
+--- a/drivers/scsi/aic94xx/aic94xx_seq.c
++++ b/drivers/scsi/aic94xx/aic94xx_seq.c
+@@ -44,7 +44,6 @@
+ #define PAUSE_TRIES 1000
+ 
+ static const struct firmware *sequencer_fw;
+-static const char *sequencer_version;
+ static u16 cseq_vecs[CSEQ_NUM_VECS], lseq_vecs[LSEQ_NUM_VECS], mode2_task,
+ 	cseq_idle_loop, lseq_idle_loop;
+ static u8 *cseq_code, *lseq_code;
+@@ -1274,7 +1273,6 @@ static int asd_request_firmware(struct asd_ha_struct *asd_ha)
+ 	header.csum = le32_to_cpu(hdr_ptr->csum);
+ 	header.major = le32_to_cpu(hdr_ptr->major);
+ 	header.minor = le32_to_cpu(hdr_ptr->minor);
+-	sequencer_version = hdr_ptr->version;
+ 	header.cseq_table_offset = le32_to_cpu(hdr_ptr->cseq_table_offset);
+ 	header.cseq_table_size = le32_to_cpu(hdr_ptr->cseq_table_size);
+ 	header.lseq_table_offset = le32_to_cpu(hdr_ptr->lseq_table_offset);
+@@ -1301,6 +1299,16 @@ static int asd_request_firmware(struct asd_ha_struct *asd_ha)
+ 		return -EINVAL;
+ 	}
+ 
++	asd_printk("Found sequencer Firmware version %d.%d (%s)\n",
++		   header.major, header.minor, hdr_ptr->version);
++
++	if (header.major != SAS_RAZOR_SEQUENCER_FW_MAJOR) {
++		asd_printk("Firmware Major Version Mismatch;"
++			   "driver requires version %d.X",
++			   SAS_RAZOR_SEQUENCER_FW_MAJOR);
++		return -EINVAL;
++	}
++
+ 	ptr_cseq_vecs = (u16 *)&sequencer_fw->data[header.cseq_table_offset];
+ 	ptr_lseq_vecs = (u16 *)&sequencer_fw->data[header.lseq_table_offset];
+ 	mode2_task = header.mode2_task;
+@@ -1333,7 +1341,6 @@ int asd_init_seqs(struct asd_ha_struct *asd_ha)
+ 		return err;
+ 	}
+ 
+-	asd_printk("using sequencer %s\n", sequencer_version);
+ 	err = asd_seq_download_seqs(asd_ha);
+ 	if (err) {
+ 		asd_printk("couldn't download sequencers for %s\n",
+diff --git a/drivers/scsi/aic94xx/aic94xx_seq.h b/drivers/scsi/aic94xx/aic94xx_seq.h
+index 9437ff0..2ea6a0d 100644
+--- a/drivers/scsi/aic94xx/aic94xx_seq.h
++++ b/drivers/scsi/aic94xx/aic94xx_seq.h
+@@ -31,6 +31,7 @@
+ #define LSEQ_NUM_VECS	11
+ 
+ #define SAS_RAZOR_SEQUENCER_FW_FILE "aic94xx-seq.fw"
++#define SAS_RAZOR_SEQUENCER_FW_MAJOR	1
+ 
+ /* Note:  All quantites in the sequencer file are little endian */
+ struct sequencer_file_header {
+
+
+
