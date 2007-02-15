@@ -1,63 +1,54 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: BUG in libata from ata_sas_port_alloc
-Date: Thu, 15 Feb 2007 15:36:45 -0600
-Message-ID: <1171575405.3412.45.camel@mulgrave.il.steeleye.com>
+From: Mario Giammarco <mgiammarco-ml@4warding.com>
+Subject: LSI Logic 40919o fibre channel: scsi works ip not
+Date: Thu, 15 Feb 2007 23:06:25 +0100
+Message-ID: <200702152306.25374.mgiammarco-ml@4warding.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp01.kpnqwest.it ([212.97.32.22]:3992 "EHLO
+	smtp01.kpnqwest.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161565AbXBOWeL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Feb 2007 17:34:11 -0500
+Received: from [10.0.0.17] (89-186-69-2.dcpool.ip.kpnqwest.it [89.186.69.2])
+	by smtp01.kpnqwest.it (Postfix) with ESMTP id 3D06231B60
+	for <linux-scsi@vger.kernel.org>; Thu, 15 Feb 2007 23:06:29 +0100 (CET)
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-This is the bug
+Hello,
 
-sas: DOING DISCOVERY on port 1, pid:2009
-INIT: slab error in verify_redzone_free(): cache `size-1024': memory
-outside object was overwritten
- [<c010400a>] show_trace_log_lvl+0x1a/0x30
- [<c0104642>] show_trace+0x12/0x20
- [<c01046f6>] dump_stack+0x16/0x20
- [<c0161866>] __slab_error+0x26/0x30
- [<c01619b1>] cache_free_debugcheck+0x141/0x1f0
- [<c016216d>] kfree+0x7d/0xf0
- [<f8966e7f>] ata_sas_port_alloc+0x5f/0x80 [libata]
- [<f893c5be>] sas_ata_init_host_and_port+0x5e/0xa0 [libsas]
- [<f893c2dd>] sas_target_alloc+0x4d/0x60 [libsas]
- [<f8995368>] scsi_alloc_target+0x208/0x320 [scsi_mod]
- [<f8995579>] __scsi_scan_target+0x59/0x6d0 [scsi_mod]
- [<f8996287>] scsi_scan_target+0xa7/0xc0 [scsi_mod]
- [<f8910c9f>] sas_rphy_add+0xdf/0x110 [scsi_transport_sas]
- [<f8936d19>] sas_discover_sata+0x79/0x480 [libsas]
- [<f8937581>] sas_discover_domain+0x3d1/0x490 [libsas]
- [<c012b327>] run_workqueue+0xe7/0x170
- [<c012bad7>] worker_thread+0x147/0x170
- [<c012e847>] kthread+0xb7/0xe0
- [<c0103c23>] kernel_thread_helper+0x7/0x14
- =======================
-f707398c: redzone 1:0xc023e580, redzone 2:0x6b6b6b6b.
+I have two lsi logic 40919o 2gbit connected to a 2gbit switch.
 
-Just struck.  This looks to be the problem:
+They see hard disks but when I try to use them as ip card I obtain a partial 
+failure: packets sometimes arrives sometimes no and on dmesg I see:
 
-	ent = ata_probe_ent_alloc(host->dev, port_info);
-[...]
-	kfree(ent);
-
-However, if you look in ata_probe_ent_alloc() you see
-
-	/* XXX - the following if can go away once all LLDs are managed */
-	if (!list_empty(&dev->devres_head))
-		probe_ent = devm_kzalloc(dev, sizeof(*probe_ent), GFP_KERNEL);
-	else
-		probe_ent = kzalloc(sizeof(*probe_ent), GFP_KERNEL);
+mptlan: ioc0/fc0: WARNING - IOC out of buckets! (priv->buckets_out =
+126)
+mptlan Mismatch between driver's buckets_out count and fw's
+BucketsRemaining count has crossed the threshold, issuing a LanReset
+to clear the fw's hashtable. You may want to check your
+/var/log/messages for "CRC error" event notifications.
+mptlan: ioc0/fc0: WARNING - IOC out of buckets! (priv->buckets_out =
+125)
+mptlan Mismatch between driver's buckets_out count and fw's
+BucketsRemaining count has crossed the threshold, issuing a LanReset
+to clear the fw's hashtable. You may want to check your
+/var/log/messages for "CRC error" event notifications.
+mptlan: ioc0/fc0: IOC says 1 buckets left. (priv->buckets_out = 126)
+mptlan Mismatch between driver's buckets_out count and fw's
+BucketsRemaining count has crossed the threshold, issuing a LanReset
+to clear the fw's hashtable. You may want to check your
+/var/log/messages for "CRC error" event notifications.
+mptlan: ioc0/fc0: WARNING - IOC out of buckets! (priv->buckets_out =
+126)
 
 
-The problem is that memory obtained by devm_kzalloc() cannot be returned
-by kfree() ... they come from different allocation lists.  The solution
-is probably to have a corresponding ata_probe_ent_free(), I just don't
-exactly see how to tell if the object came from the devm_kzalloc or not
-(unless it gets marked).
+Boards are upgraded to latest bios I have tried several kernels.
 
-James
+Please tell me if you need other details.
 
-
+Thanks in advance for any help.
