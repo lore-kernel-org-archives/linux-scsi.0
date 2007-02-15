@@ -1,54 +1,35 @@
-From: Mario Giammarco <mgiammarco-ml@4warding.com>
-Subject: LSI Logic 40919o fibre channel: scsi works ip not
-Date: Thu, 15 Feb 2007 23:06:25 +0100
-Message-ID: <200702152306.25374.mgiammarco-ml@4warding.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: sg version 4 tools
+Date: Thu, 15 Feb 2007 23:47:02 +0100
+Message-ID: <20070215224701.GA21772@kernel.dk>
+References: <20070214153508Z.fujita.tomonori@lab.ntt.co.jp> <45D48990.70607@torque.net> <20070215085845L.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp01.kpnqwest.it ([212.97.32.22]:3992 "EHLO
-	smtp01.kpnqwest.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161565AbXBOWeL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Feb 2007 17:34:11 -0500
-Received: from [10.0.0.17] (89-186-69-2.dcpool.ip.kpnqwest.it [89.186.69.2])
-	by smtp01.kpnqwest.it (Postfix) with ESMTP id 3D06231B60
-	for <linux-scsi@vger.kernel.org>; Thu, 15 Feb 2007 23:06:29 +0100 (CET)
+Received: from brick.kernel.dk ([62.242.22.158]:21475 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161613AbXBOWrJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Feb 2007 17:47:09 -0500
 Content-Disposition: inline
+In-Reply-To: <20070215085845L.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: dougg@torque.net, linux-scsi@vger.kernel.org
 
-Hello,
+On Fri, Feb 16 2007, FUJITA Tomonori wrote:
+> If you add sgv4 support to sg3_utils now, I'm happy to remove the git
+> tree. :)
 
-I have two lsi logic 40919o 2gbit connected to a 2gbit switch.
+I think keeping a private testing tools git repo for sg v4 makes a lot
+of sense. Some/most of these tools are just for playing around and
+making sure that things still work, it's not mean to be packaged for
+distros or anything like that.
 
-They see hard disks but when I try to use them as ip card I obtain a partial 
-failure: packets sometimes arrives sometimes no and on dmesg I see:
+sg v4 is still in early development, and things change. Integrating
+anything with the sg3 tools package at this point would be a big
+mistake.
 
-mptlan: ioc0/fc0: WARNING - IOC out of buckets! (priv->buckets_out =
-126)
-mptlan Mismatch between driver's buckets_out count and fw's
-BucketsRemaining count has crossed the threshold, issuing a LanReset
-to clear the fw's hashtable. You may want to check your
-/var/log/messages for "CRC error" event notifications.
-mptlan: ioc0/fc0: WARNING - IOC out of buckets! (priv->buckets_out =
-125)
-mptlan Mismatch between driver's buckets_out count and fw's
-BucketsRemaining count has crossed the threshold, issuing a LanReset
-to clear the fw's hashtable. You may want to check your
-/var/log/messages for "CRC error" event notifications.
-mptlan: ioc0/fc0: IOC says 1 buckets left. (priv->buckets_out = 126)
-mptlan Mismatch between driver's buckets_out count and fw's
-BucketsRemaining count has crossed the threshold, issuing a LanReset
-to clear the fw's hashtable. You may want to check your
-/var/log/messages for "CRC error" event notifications.
-mptlan: ioc0/fc0: WARNING - IOC out of buckets! (priv->buckets_out =
-126)
+-- 
+Jens Axboe
 
-
-Boards are upgraded to latest bios I have tried several kernels.
-
-Please tell me if you need other details.
-
-Thanks in advance for any help.
