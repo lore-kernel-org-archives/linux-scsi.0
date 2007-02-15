@@ -1,35 +1,41 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: sg version 4 tools
-Date: Thu, 15 Feb 2007 23:47:02 +0100
-Message-ID: <20070215224701.GA21772@kernel.dk>
-References: <20070214153508Z.fujita.tomonori@lab.ntt.co.jp> <45D48990.70607@torque.net> <20070215085845L.fujita.tomonori@lab.ntt.co.jp>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] ATA convert GSI to irq on ia64
+Date: Thu, 15 Feb 2007 18:09:24 -0500
+Message-ID: <45D4E824.1010903@garzik.org>
+References: <1170920422.15989.354.camel@ymzhang>	 <45CBCC31.7070909@garzik.org> <1170991791.15989.364.camel@ymzhang>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([62.242.22.158]:21475 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161613AbXBOWrJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Feb 2007 17:47:09 -0500
-Content-Disposition: inline
-In-Reply-To: <20070215085845L.fujita.tomonori@lab.ntt.co.jp>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1161676AbXBOXJb@vger.kernel.org>
+In-Reply-To: <1170991791.15989.364.camel@ymzhang>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Zhang, Yanmin" <yanmin_zhang@linux.intel.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: dougg@torque.net, linux-scsi@vger.kernel.org
 
-On Fri, Feb 16 2007, FUJITA Tomonori wrote:
-> If you add sgv4 support to sg3_utils now, I'm happy to remove the git
-> tree. :)
+Zhang, Yanmin wrote:
+> On Thu, 2007-02-08 at 20:19 -0500, Jeff Garzik wrote:
+>> Zhang, Yanmin wrote:
+>>> If an ATA drive uses legacy mode, ata driver will choose 14 and 15 as the
+>>> fixed irq number. On ia64 platform, such numbers are GSI and should be converted
+>>> to irq vector.
+>>>
+>>> Below patch against kernel 2.6.20 fixes it.
+>>>
+>>> Signed-off-by: Zhang Yanmin <yanmin.zhang@intel.com>
+>> IA64 should create its own libata-portmap.h, rather than modifying the 
+>> one in asm-generic with arch-specific choices.
+>>
+>> powerpc is a current example of this (and currently the only 
+>> non-asm-generic user) found in kernel 2.6.20.
+> Thank Jeff. I worked out a new patch.
+> 
+> If an ATA drive uses legacy mode, ata driver will choose 14 and 15 as the fixed
+> irq number. On ia64 platform, such numbers are GSI and should be converted to irq
+> vector.
+> 
+> Below patch against kernel 2.6.20 fixes it.
+>  
+> Signed-off-by: Zhang Yanmin <yanmin.zhang@intel.com>
 
-I think keeping a private testing tools git repo for sg v4 makes a lot
-of sense. Some/most of these tools are just for playing around and
-making sure that things still work, it's not mean to be packaged for
-distros or anything like that.
-
-sg v4 is still in early development, and things change. Integrating
-anything with the sg3 tools package at this point would be a big
-mistake.
-
--- 
-Jens Axboe
-
+applied
