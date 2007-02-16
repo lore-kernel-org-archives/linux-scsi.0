@@ -1,126 +1,95 @@
 From: akpm@linux-foundation.org
-Subject: [patch 23/30] Remove some unused SCSI-related kernel config variables.
-Date: Fri, 16 Feb 2007 01:46:42 -0800
-Message-ID: <200702160946.l1G9kg33026691@shell0.pdx.osdl.net>
+Subject: [patch 18/30] scsi: cover up bugs^W^W^WFix up compiler warnings in megaraid driver
+Date: Fri, 16 Feb 2007 01:46:35 -0800
+Message-ID: <200702160946.l1G9kZFB026669@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:36853 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.24]:36835 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1423505AbXBPJqr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Feb 2007 04:46:47 -0500
+	id S1423501AbXBPJqo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Feb 2007 04:46:44 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, rpjday@mindspring.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, mbligh@google.com
 
-From: "Robert P. J. Day" <rpjday@mindspring.com>
+From: Martin Bligh <mbligh@google.com>
 
-Remove the unused SCSI-related kernel config variables
+Fix up compiler warnings in megaraid driver
 
-	SCSI_NCR53C8XX_PROFILE_SUPPORT
-	SCSI_NCR53C8XX_PROFILE
-	53C700_IO_MAPPED
-	AIC79XX_ENABLE_RD_STRM
-	AIC7XXX_PROBE_EISA_VL
-
-Signed-off-by: Robert P. J. Day <rpjday@mindspring.com>
+[akpm@osdl.org: build fix]
+Signed-off-by: Martin J. Bligh <mbligh@google.com>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- Documentation/scsi/ncr53c8xx.txt     |    5 -----
- drivers/scsi/Kconfig                 |   16 ----------------
- drivers/scsi/aic7xxx/Kconfig.aic79xx |   12 ------------
- drivers/scsi/aic7xxx/Kconfig.aic7xxx |   10 ----------
- 4 files changed, 43 deletions(-)
+ drivers/scsi/megaraid.c |   22 +++++++++++++---------
+ 1 file changed, 13 insertions(+), 9 deletions(-)
 
-diff -puN Documentation/scsi/ncr53c8xx.txt~remove-some-unused-scsi-related-kernel-config-variables Documentation/scsi/ncr53c8xx.txt
---- a/Documentation/scsi/ncr53c8xx.txt~remove-some-unused-scsi-related-kernel-config-variables
-+++ a/Documentation/scsi/ncr53c8xx.txt
-@@ -562,11 +562,6 @@ if only one has a flaw for some SCSI fea
- support by the driver of this feature at linux start-up and enable
- this feature after boot-up only for devices that support it safely.
+diff -puN drivers/scsi/megaraid.c~scsi-cover-up-bugs-fix-up-compiler-warnings-in-megaraid-driver drivers/scsi/megaraid.c
+--- a/drivers/scsi/megaraid.c~scsi-cover-up-bugs-fix-up-compiler-warnings-in-megaraid-driver
++++ a/drivers/scsi/megaraid.c
+@@ -73,10 +73,14 @@ static unsigned short int max_mbox_busy_
+ module_param(max_mbox_busy_wait, ushort, 0);
+ MODULE_PARM_DESC(max_mbox_busy_wait, "Maximum wait for mailbox in microseconds if busy (default=MBOX_BUSY_WAIT=10)");
  
--CONFIG_SCSI_NCR53C8XX_PROFILE_SUPPORT  (default answer: n)
--    This option must be set for profiling information to be gathered 
--    and printed out through the proc file system. This features may 
--    impact performances.
--
- CONFIG_SCSI_NCR53C8XX_IOMAPPED       (default answer: n)
-     Answer "y" if you suspect your mother board to not allow memory mapped I/O.
-     May slow down performance a little.  This option is required by
-diff -puN drivers/scsi/Kconfig~remove-some-unused-scsi-related-kernel-config-variables drivers/scsi/Kconfig
---- a/drivers/scsi/Kconfig~remove-some-unused-scsi-related-kernel-config-variables
-+++ a/drivers/scsi/Kconfig
-@@ -1193,17 +1193,6 @@ config SCSI_NCR53C8XX_SYNC
- 	  There is no safe option other than using good cabling, right
- 	  terminations and SCSI conformant devices.
+-#define RDINDOOR(adapter)	readl((adapter)->mmio_base + 0x20)
+-#define RDOUTDOOR(adapter)	readl((adapter)->mmio_base + 0x2C)
+-#define WRINDOOR(adapter,value)	 writel(value, (adapter)->mmio_base + 0x20)
+-#define WROUTDOOR(adapter,value) writel(value, (adapter)->mmio_base + 0x2C)
++#define RDINDOOR(adapter)		readl((volatile void __iomem *) \
++							(adapter)->base + 0x20)
++#define RDOUTDOOR(adapter)		readl((volatile void __iomem *) \
++							(adapter)->base + 0x2C)
++#define WRINDOOR(adapter,value)		writel(value, (volatile void __iomem *)\
++							(adapter)->base + 0x20)
++#define WROUTDOOR(adapter,value)	writel(value, (volatile void __iomem *)\
++							(adapter)->base + 0x2C)
  
--config SCSI_NCR53C8XX_PROFILE
--	bool "enable profiling"
--	depends on SCSI_ZALON || SCSI_NCR_Q720
--	help
--	  This option allows you to enable profiling information gathering.
--	  These statistics are not very accurate due to the low frequency
--	  of the kernel clock (100 Hz on i386) and have performance impact
--	  on systems that use very fast devices.
--
--	  The normal answer therefore is N.
--
- config SCSI_NCR53C8XX_NO_DISCONNECT
- 	bool "not allow targets to disconnect"
- 	depends on (SCSI_ZALON || SCSI_NCR_Q720) && SCSI_NCR53C8XX_DEFAULT_TAGS=0
-@@ -1333,11 +1322,6 @@ config SCSI_SIM710
+ /*
+  * Global variables
+@@ -3571,7 +3575,7 @@ megadev_ioctl(struct inode *inode, struc
+ 			/*
+ 			 * The user passthru structure
+ 			 */
+-			upthru = (mega_passthru __user *)MBOX(uioc)->xferaddr;
++			upthru = (mega_passthru __user *)(unsigned long)MBOX(uioc)->xferaddr;
  
- 	  It currently supports Compaq EISA cards and NCR MCA cards
+ 			/*
+ 			 * Copy in the user passthru here.
+@@ -3623,7 +3627,7 @@ megadev_ioctl(struct inode *inode, struc
+ 				/*
+ 				 * Get the user data
+ 				 */
+-				if( copy_from_user(data, (char __user *)uxferaddr,
++				if( copy_from_user(data, (char __user *)(unsigned long) uxferaddr,
+ 							pthru->dataxferlen) ) {
+ 					rval = (-EFAULT);
+ 					goto freemem_and_return;
+@@ -3649,7 +3653,7 @@ megadev_ioctl(struct inode *inode, struc
+ 			 * Is data going up-stream
+ 			 */
+ 			if( pthru->dataxferlen && (uioc.flags & UIOC_RD) ) {
+-				if( copy_to_user((char __user *)uxferaddr, data,
++				if( copy_to_user((char __user *)(unsigned long) uxferaddr, data,
+ 							pthru->dataxferlen) ) {
+ 					rval = (-EFAULT);
+ 				}
+@@ -3702,7 +3706,7 @@ freemem_and_return:
+ 				/*
+ 				 * Get the user data
+ 				 */
+-				if( copy_from_user(data, (char __user *)uxferaddr,
++				if( copy_from_user(data, (char __user *)(unsigned long) uxferaddr,
+ 							uioc.xferlen) ) {
  
--config 53C700_IO_MAPPED
--	bool
--	depends on SCSI_SIM710
--	default y
--
- config SCSI_SYM53C416
- 	tristate "Symbios 53c416 SCSI support"
- 	depends on ISA && SCSI
-diff -puN drivers/scsi/aic7xxx/Kconfig.aic79xx~remove-some-unused-scsi-related-kernel-config-variables drivers/scsi/aic7xxx/Kconfig.aic79xx
---- a/drivers/scsi/aic7xxx/Kconfig.aic79xx~remove-some-unused-scsi-related-kernel-config-variables
-+++ a/drivers/scsi/aic7xxx/Kconfig.aic79xx
-@@ -57,18 +57,6 @@ config AIC79XX_BUILD_FIRMWARE
- 	or modify the assembler Makefile or the files it includes if your
- 	build environment is different than that of the author.
+ 					pci_free_consistent(pdev,
+@@ -3742,7 +3746,7 @@ freemem_and_return:
+ 			 * Is data going up-stream
+ 			 */
+ 			if( uioc.xferlen && (uioc.flags & UIOC_RD) ) {
+-				if( copy_to_user((char __user *)uxferaddr, data,
++				if( copy_to_user((char __user *)(unsigned long) uxferaddr, data,
+ 							uioc.xferlen) ) {
  
--config AIC79XX_ENABLE_RD_STRM
--	bool "Enable Read Streaming for All Targets"
--	depends on SCSI_AIC79XX
--	default n
--	help
--	Read Streaming is a U320 protocol option that should enhance
--	performance.  Early U320 drive firmware actually performs slower
--	with read streaming enabled so it is disabled by default.  Read
--	Streaming can be configured in much the same way as tagged queueing
--	using the "rd_strm" command line option.  See
--	drivers/scsi/aic7xxx/README.aic79xx for details.
--
- config AIC79XX_DEBUG_ENABLE
- 	bool "Compile in Debugging Code"
- 	depends on SCSI_AIC79XX
-diff -puN drivers/scsi/aic7xxx/Kconfig.aic7xxx~remove-some-unused-scsi-related-kernel-config-variables drivers/scsi/aic7xxx/Kconfig.aic7xxx
---- a/drivers/scsi/aic7xxx/Kconfig.aic7xxx~remove-some-unused-scsi-related-kernel-config-variables
-+++ a/drivers/scsi/aic7xxx/Kconfig.aic7xxx
-@@ -50,16 +50,6 @@ config AIC7XXX_RESET_DELAY_MS
- 
- 	Default: 5000 (5 seconds)
- 
--config AIC7XXX_PROBE_EISA_VL
--	bool "Probe for EISA and VL AIC7XXX Adapters"
--	depends on SCSI_AIC7XXX && EISA
--	help
--	Probe for EISA and VLB Aic7xxx controllers.  In many newer systems,
--	the invasive probes necessary to detect these controllers can cause
--	other devices to fail.  For this reason, the non-PCI probe code is
--	disabled by default.  The current value of this option can be "toggled"
--	via the no_probe kernel command line option.
--
- config AIC7XXX_BUILD_FIRMWARE
- 	bool "Build Adapter Firmware with Kernel Build"
- 	depends on SCSI_AIC7XXX && !PREVENT_FIRMWARE_BUILD
+ 					rval = (-EFAULT);
 _
