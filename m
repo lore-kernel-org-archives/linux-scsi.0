@@ -1,95 +1,80 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: [PATCH] drivers/scsi/aic7xxx_old: Convert to generic
-	boolean-values
-Date: Fri, 16 Feb 2007 16:43:04 -0500
-Message-ID: <1171662184.3161.245.camel@fc6.xsintricity.com>
-References: <20070210174628.3764.89569.sendpatchset@thinktank.campus.ltu.se>
-	 <1171132062.3373.31.camel@mulgrave.il.steeleye.com>
-	 <20070212122738.b5e9a8af.akpm@linux-foundation.org>
-	 <1171644132.3443.27.camel@mulgrave.il.steeleye.com>
-	 <20070216103422.51757e89.akpm@linux-foundation.org>
-	 <1171651347.3443.45.camel@mulgrave.il.steeleye.com>
-	 <20070216105026.7bd17a79.akpm@linux-foundation.org>
+From: post@pfrst.de
+Subject: Re: [PATCH][SCSI] sgiwd93.c: interfacing to wd33c93
+Date: Fri, 16 Feb 2007 23:39:42 +0100 (MET)
+Message-ID: <Pine.LNX.4.21.0702162316240.676-100000@SNaIlmail.Peter>
+References: <1171640162.3443.19.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-094ve+/cXXwKfbpzhaF5"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:54873 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750780AbXBPVpf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Feb 2007 16:45:35 -0500
-In-Reply-To: <20070216105026.7bd17a79.akpm@linux-foundation.org>
+Received: from mail1.pearl-online.net ([62.159.194.147]:20476 "EHLO
+	mail1.pearl-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751617AbXBPW40 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Feb 2007 17:56:26 -0500
+In-Reply-To: <1171640162.3443.19.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, ricknu-0@student.ltu.se, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>, Kumba <kumba@gentoo.org>, Thiemo Seufer <ths@networkno.de>, Tim Yamin <plasmaroo@gentoo.org>
 
 
---=-094ve+/cXXwKfbpzhaF5
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-On Fri, 2007-02-16 at 10:50 -0800, Andrew Morton wrote:
+Sorry for the annoyance, i split it, since these patches address different
+issues: the nosync patch just (re)allows an appropriate commandline
+setting (with or without the wd33c93 patches applied) to cope with some
+uncooperative devices, while the other one depends on the 2nd wd33c93 patch
+being applied already/simultaneously.
 
-> Me no understand.
->=20
-> If you take the specific example of
->=20
-> void
-> ahd_set_syncrate(struct ahd_softc *ahd, struct ahd_devinfo *devinfo,
-> 		 u_int period, u_int offset, u_int ppr_options,
-> 		 u_int type, int paused)
->=20
-> then if is crufty, inappropriate and wrong that `paused' is a scalar type=
-.
+kind regards
 
-Although you picked a code segment out of the modern aic7xxx, there is a
-matching similar one in aic7xxx_old.  Now, in all fairness, I was at one
-point playing with a much more preemptable model for that driver that
-allowed nested pauses, at which point the value of pause would have made
-sense to be scalar, but that was a *long* time ago.
+peter 
 
-> =20
-> It's just not true or sensible that the code is written so that `paused'
-> can take a value of seventy eight.  It _is_ a boolean.  It is a truth
-> value.  Declaring it as such in the source is all goodness.  Passing the
-> value `true' into calls to this function improve readability over passing
-> "1".
 
-Hence the reason for the original upper case TRUE/FALSE.  I have to
-admit, I don't really like the lower case true/false, it looks like a
-variable that can be assigned, thereby changing the implementation of
-the function call when in fact each calling location is hard coding a
-constant.  But, that's just me and my crufty old C that differentiates
-between hard coded things and variables via case.
+On Fri, 16 Feb 2007, James Bottomley wrote:
 
-> So I don't agree with (or understand) your objections.  But I can certain=
-ly
-> understand reluctance to merge a large-but-minor, do-nothing-much patch i=
-nto
-> a large and not-very-maintained driver.
-
-Hehehe...and here I was thinking of factoring that thing into files and
-actually bringing it into the current century.
-
---=20
-Doug Ledford <dledford@redhat.com>
-              GPG KeyID: CFBFF194
-              http://people.redhat.com/dledford
-
-Infiniband specific RPMs available at
-              http://people.redhat.com/dledford/Infiniband
-
---=-094ve+/cXXwKfbpzhaF5
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQBF1iVoTzP9PM7pjw8RAo6jAJ0Z+jzaqOoNJGmy4I7MsjJdB0naWgCfUd4p
-T82dgbkJ193VLeVBvP48upg=
-=98iZ
------END PGP SIGNATURE-----
-
---=-094ve+/cXXwKfbpzhaF5--
+> Date: Fri, 16 Feb 2007 09:36:02 -0600
+> From: James Bottomley <James.Bottomley@HansenPartnership.com>
+> To: post@pfrst.de
+> Cc: linux-scsi@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
+>      Kumba <kumba@gentoo.org>, Thiemo Seufer <ths@networkno.de>,
+>      Tim Yamin <plasmaroo@gentoo.org>
+> Subject: Re: [PATCH][SCSI] sgiwd93.c: interfacing to wd33c93
+> 
+> On Mon, 2007-02-12 at 15:27 +0100, peter fuerst wrote:
+> > ========================================================================
+> > --- dc7bdc97927ea1c519f0d8bd3133739600c841d4/drivers/scsi/sgiwd93.c	Sat Oct  7 00:00:00 2006
+> > +++ new/drivers/scsi/sgiwd93.c	Sun Feb 11 22:10:06 2007
+> > @@ -250,3 +250,3 @@
+> > 
+> > -	hdata->wh.no_sync = 0;
+> > +	if (0xff == hdata->wh.no_sync) hdata->wh.no_sync = 0;
+> > 
+> > ========================================================================
+> > 
+> > 
+> > ========================================================================
+> > --- dc7bdc97927ea1c519f0d8bd3133739600c841d4/drivers/scsi/sgiwd93.c	Sat Oct  7 00:00:00 2006
+> > +++ stage2/drivers/scsi/sgiwd93.c	Sun Feb 11 22:10:06 2007
+> > @@ -248,3 +248,3 @@
+> > 
+> > -	wd33c93_init(host, regs, dma_setup, dma_stop, WD33C93_FS_16_20);
+> > +	wd33c93_init(host, regs, dma_setup, dma_stop, WD33C93_FS_MHZ(20));
+> > 
+> > ========================================================================
+> 
+> You don't make it easy, do you ... these are two separate patches for
+> overlapping regions of the file ... neither quilt nor git likes this way
+> of doing things.  Plus the if should be
+> 
+> if (hdata->wh.no_sync == 0xff)
+> 	hdata->wh.no_sync = 0;
+> 
+> to match the style of the sgiwd93.c.
+> 
+> Since this is pretty simple, I fixed it up.
+> 
+> James
+> 
+> 
+> 
+> 
 
