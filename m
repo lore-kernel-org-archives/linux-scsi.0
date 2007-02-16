@@ -1,12 +1,12 @@
 From: akpm@linux-foundation.org
-Subject: [patch 25/30] drivers/scsi/aacraid/: cleanups
-Date: Fri, 16 Feb 2007 01:46:43 -0800
-Message-ID: <200702160946.l1G9kiKS026697@shell0.pdx.osdl.net>
+Subject: [patch 15/30] drivers/scsi/aic7xxx/: make functions static
+Date: Fri, 16 Feb 2007 01:46:33 -0800
+Message-ID: <200702160946.l1G9kXou026660@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:37232 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.24]:37217 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1423537AbXBPJt6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Feb 2007 04:49:58 -0500
+	id S1423532AbXBPJts (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Feb 2007 04:49:48 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
@@ -14,91 +14,81 @@ Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bunk@stusta.de
 
 From: Adrian Bunk <bunk@stusta.de>
 
-- proper prototypes for global code in aacraid.h
-- aac_rx_start_adapter() can now become static
-
 Signed-off-by: Adrian Bunk <bunk@stusta.de>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/aacraid/aacraid.h |    3 +++
- drivers/scsi/aacraid/linit.c   |    2 --
- drivers/scsi/aacraid/nark.c    |    3 ---
- drivers/scsi/aacraid/rkt.c     |    3 ---
- drivers/scsi/aacraid/rx.c      |    2 +-
- 5 files changed, 4 insertions(+), 9 deletions(-)
+ drivers/scsi/aic7xxx/aic79xx_osm.c  |    6 ++++--
+ drivers/scsi/aic7xxx/aic79xx_osm.h  |    2 --
+ drivers/scsi/aic7xxx/aic7xxx.h      |    5 -----
+ drivers/scsi/aic7xxx/aic7xxx_core.c |    2 +-
+ 4 files changed, 5 insertions(+), 10 deletions(-)
 
-diff -puN drivers/scsi/aacraid/aacraid.h~drivers-scsi-aacraid-cleanups drivers/scsi/aacraid/aacraid.h
---- a/drivers/scsi/aacraid/aacraid.h~drivers-scsi-aacraid-cleanups
-+++ a/drivers/scsi/aacraid/aacraid.h
-@@ -1840,8 +1840,11 @@ struct aac_driver_ident* aac_get_driver_
- int aac_get_adapter_info(struct aac_dev* dev);
- int aac_send_shutdown(struct aac_dev *dev);
- int aac_probe_container(struct aac_dev *dev, int cid);
-+int _aac_rx_init(struct aac_dev *dev);
-+int aac_rx_select_comm(struct aac_dev *dev, int comm);
- extern int numacb;
- extern int acbsize;
- extern char aac_driver_version[];
- extern int startup_timeout;
- extern int aif_timeout;
-+extern int expose_physicals;
-diff -puN drivers/scsi/aacraid/linit.c~drivers-scsi-aacraid-cleanups drivers/scsi/aacraid/linit.c
---- a/drivers/scsi/aacraid/linit.c~drivers-scsi-aacraid-cleanups
-+++ a/drivers/scsi/aacraid/linit.c
-@@ -82,8 +82,6 @@ static LIST_HEAD(aac_devices);
- static int aac_cfg_major = -1;
- char aac_driver_version[] = AAC_DRIVER_FULL_VERSION;
+diff -puN drivers/scsi/aic7xxx/aic79xx_osm.c~drivers-scsi-aic7xxx-make-functions-static drivers/scsi/aic7xxx/aic79xx_osm.c
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.c~drivers-scsi-aic7xxx-make-functions-static
++++ a/drivers/scsi/aic7xxx/aic79xx_osm.c
+@@ -363,6 +363,8 @@ static int ahd_linux_run_command(struct 
+ 				 struct scsi_cmnd *);
+ static void ahd_linux_setup_tag_info_global(char *p);
+ static int  aic79xx_setup(char *c);
++static void ahd_freeze_simq(struct ahd_softc *ahd);
++static void ahd_release_simq(struct ahd_softc *ahd);
  
--extern int expose_physicals;
+ static int ahd_linux_unit;
+ 
+@@ -2016,13 +2018,13 @@ ahd_linux_queue_cmd_complete(struct ahd_
+ 	cmd->scsi_done(cmd);
+ }
+ 
+-void
++static void
+ ahd_freeze_simq(struct ahd_softc *ahd)
+ {
+ 	scsi_block_requests(ahd->platform_data->host);
+ }
+ 
+-void
++static void
+ ahd_release_simq(struct ahd_softc *ahd)
+ {
+ 	scsi_unblock_requests(ahd->platform_data->host);
+diff -puN drivers/scsi/aic7xxx/aic79xx_osm.h~drivers-scsi-aic7xxx-make-functions-static drivers/scsi/aic7xxx/aic79xx_osm.h
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.h~drivers-scsi-aic7xxx-make-functions-static
++++ a/drivers/scsi/aic7xxx/aic79xx_osm.h
+@@ -837,8 +837,6 @@ int	ahd_platform_alloc(struct ahd_softc 
+ void	ahd_platform_free(struct ahd_softc *ahd);
+ void	ahd_platform_init(struct ahd_softc *ahd);
+ void	ahd_platform_freeze_devq(struct ahd_softc *ahd, struct scb *scb);
+-void	ahd_freeze_simq(struct ahd_softc *ahd);
+-void	ahd_release_simq(struct ahd_softc *ahd);
+ 
+ static __inline void
+ ahd_freeze_scb(struct scb *scb)
+diff -puN drivers/scsi/aic7xxx/aic7xxx.h~drivers-scsi-aic7xxx-make-functions-static drivers/scsi/aic7xxx/aic7xxx.h
+--- a/drivers/scsi/aic7xxx/aic7xxx.h~drivers-scsi-aic7xxx-make-functions-static
++++ a/drivers/scsi/aic7xxx/aic7xxx.h
+@@ -1278,11 +1278,6 @@ typedef enum {
+ 	AHC_QUEUE_TAGGED
+ } ahc_queue_alg;
+ 
+-void			ahc_set_tags(struct ahc_softc *ahc,
+-				     struct scsi_cmnd *cmd,
+-				     struct ahc_devinfo *devinfo,
+-				     ahc_queue_alg alg);
 -
+ /**************************** Target Mode *************************************/
+ #ifdef AHC_TARGET_MODE
+ void		ahc_send_lstate_events(struct ahc_softc *,
+diff -puN drivers/scsi/aic7xxx/aic7xxx_core.c~drivers-scsi-aic7xxx-make-functions-static drivers/scsi/aic7xxx/aic7xxx_core.c
+--- a/drivers/scsi/aic7xxx/aic7xxx_core.c~drivers-scsi-aic7xxx-make-functions-static
++++ a/drivers/scsi/aic7xxx/aic7xxx_core.c
+@@ -2073,7 +2073,7 @@ ahc_set_width(struct ahc_softc *ahc, str
  /*
-  * Because of the way Linux names scsi devices, the order in this table has
-  * become important.  Check for on-board Raid first, add-in cards second.
-diff -puN drivers/scsi/aacraid/nark.c~drivers-scsi-aacraid-cleanups drivers/scsi/aacraid/nark.c
---- a/drivers/scsi/aacraid/nark.c~drivers-scsi-aacraid-cleanups
-+++ a/drivers/scsi/aacraid/nark.c
-@@ -74,9 +74,6 @@ static int aac_nark_ioremap(struct aac_d
- 
- int aac_nark_init(struct aac_dev * dev)
- {
--	extern int _aac_rx_init(struct aac_dev *dev);
--	extern int aac_rx_select_comm(struct aac_dev *dev, int comm);
--
- 	/*
- 	 *	Fill in the function dispatch table.
- 	 */
-diff -puN drivers/scsi/aacraid/rkt.c~drivers-scsi-aacraid-cleanups drivers/scsi/aacraid/rkt.c
---- a/drivers/scsi/aacraid/rkt.c~drivers-scsi-aacraid-cleanups
-+++ a/drivers/scsi/aacraid/rkt.c
-@@ -45,7 +45,6 @@
- static int aac_rkt_select_comm(struct aac_dev *dev, int comm)
- {
- 	int retval;
--	extern int aac_rx_select_comm(struct aac_dev *dev, int comm);
- 	retval = aac_rx_select_comm(dev, comm);
- 	if (comm == AAC_COMM_MESSAGE) {
- 		/*
-@@ -97,8 +96,6 @@ static int aac_rkt_ioremap(struct aac_de
- 
- int aac_rkt_init(struct aac_dev *dev)
- {
--	extern int _aac_rx_init(struct aac_dev *dev);
--
- 	/*
- 	 *	Fill in the function dispatch table.
- 	 */
-diff -puN drivers/scsi/aacraid/rx.c~drivers-scsi-aacraid-cleanups drivers/scsi/aacraid/rx.c
---- a/drivers/scsi/aacraid/rx.c~drivers-scsi-aacraid-cleanups
-+++ a/drivers/scsi/aacraid/rx.c
-@@ -294,7 +294,7 @@ static void aac_rx_notify_adapter(struct
-  *	Start up processing on an i960 based AAC adapter
+  * Update the current state of tagged queuing for a given target.
   */
- 
--void aac_rx_start_adapter(struct aac_dev *dev)
-+static void aac_rx_start_adapter(struct aac_dev *dev)
+-void
++static void
+ ahc_set_tags(struct ahc_softc *ahc, struct scsi_cmnd *cmd,
+ 	     struct ahc_devinfo *devinfo, ahc_queue_alg alg)
  {
- 	struct aac_init *init;
- 
 _
