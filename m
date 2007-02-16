@@ -1,47 +1,39 @@
 From: akpm@linux-foundation.org
-Subject: [patch 16/30] sym53c8xx_2 claims cpqarray device
-Date: Fri, 16 Feb 2007 01:46:34 -0800
-Message-ID: <200702160946.l1G9kYG2026663@shell0.pdx.osdl.net>
+Subject: [patch 11/30] drivers/scsi/NCR5380.c: Replacing yield() with a better alternative
+Date: Fri, 16 Feb 2007 01:46:29 -0800
+Message-ID: <200702160946.l1G9kTXj026648@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:36864 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.24]:36867 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1423512AbXBPJqv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Feb 2007 04:46:51 -0500
+	id S1423513AbXBPJqw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Feb 2007 04:46:52 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, coldwell@redhat.com, willy@debian.org
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, amol@verismonetworks.com, alan@lxorguk.ukuu.org.uk
 
-From: Chip Coldwell <coldwell@redhat.com>
+From: Amol Lad <amol@verismonetworks.com>
 
-Apropos this thread
+Replaced yield() with cond_resched()
 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=115591706804045&w=2
-
-which led to this patch
-
-http://www.kernel.org/git/?p=linux/kernel/git/jejb/scsi-rc-fixes-2.6.git;a=commit;h=b2b3c121076961333977f485f0d54c22121df920
-
-do we not also need the following patch, nine lines lower in the same file?
-
-Signed-off-by: Chip Coldwell <coldwell@redhat.com>
-Cc: Matthew Wilcox <willy@debian.org>
+Signed-off-by: Amol Lad <amol@verismonetworks.com>
+Acked-by: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/sym53c8xx_2/sym_glue.c |    2 +-
+ drivers/scsi/NCR5380.c |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/sym53c8xx_2/sym_glue.c~sym53c8xx_2-claims-cpqarray-device drivers/scsi/sym53c8xx_2/sym_glue.c
---- a/drivers/scsi/sym53c8xx_2/sym_glue.c~sym53c8xx_2-claims-cpqarray-device
-+++ a/drivers/scsi/sym53c8xx_2/sym_glue.c
-@@ -2094,7 +2094,7 @@ static struct pci_device_id sym2_id_tabl
- 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_NCR_53C875,
- 	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0UL },
- 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_NCR_53C1510,
--	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0UL }, /* new */
-+	  PCI_ANY_ID, PCI_ANY_ID,  PCI_CLASS_STORAGE_SCSI<<8,  0xffff00, 0UL }, /* new */
- 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_53C895A,
- 	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0UL },
- 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_53C875A,
+diff -puN drivers/scsi/NCR5380.c~drivers-scsi-ncr5380c-replacing-yield-with-a drivers/scsi/NCR5380.c
+--- a/drivers/scsi/NCR5380.c~drivers-scsi-ncr5380c-replacing-yield-with-a
++++ a/drivers/scsi/NCR5380.c
+@@ -347,7 +347,7 @@ static int NCR5380_poll_politely(struct 
+ 		if((r & bit) == val)
+ 			return 0;
+ 		if(!in_interrupt())
+-			yield();
++			cond_resched();
+ 		else
+ 			cpu_relax();
+ 	}
 _
