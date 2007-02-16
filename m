@@ -1,11 +1,11 @@
 From: akpm@linux-foundation.org
-Subject: [patch 06/30] Fix scsi/scsi_transport.h compile error
-Date: Fri, 16 Feb 2007 01:46:25 -0800
-Message-ID: <200702160946.l1G9kPvl026633@shell0.pdx.osdl.net>
+Subject: [patch 05/30] remove extra newline from info message
+Date: Fri, 16 Feb 2007 01:46:24 -0800
+Message-ID: <200702160946.l1G9kOGQ026630@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:36788 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.24]:36789 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1423497AbXBPJqe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1423500AbXBPJqe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 16 Feb 2007 04:46:34 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -14,30 +14,28 @@ Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, eike-kernel@sf-tec.de
 
 From: Rolf Eike Beer <eike-kernel@sf-tec.de>
 
-scsi_transport.h defines the inline function scsi_transport_device_data() that
-dereferences a pointer of "struct scsi_device *".  Since the struct is not
-known by the header this might break compilation.
+remove extra newline from info message
 
-Include scsi/scsi_device.h to not rely on users doing the correct magic
-include order.
+This extra newline character introduces a completely empty line in dmesg as
+the calling function itself adds a newline.
 
 Signed-off-by: Rolf Eike Beer <eike-kernel@sf-tec.de>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- include/scsi/scsi_transport.h |    1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/aic7xxx/aic79xx_osm.c |    1 -
+ 1 file changed, 1 deletion(-)
 
-diff -puN include/scsi/scsi_transport.h~fix-scsi-scsi_transporth-compile-error include/scsi/scsi_transport.h
---- a/include/scsi/scsi_transport.h~fix-scsi-scsi_transporth-compile-error
-+++ a/include/scsi/scsi_transport.h
-@@ -22,6 +22,7 @@
+diff -puN drivers/scsi/aic7xxx/aic79xx_osm.c~remove-extra-newline-from-info-message drivers/scsi/aic7xxx/aic79xx_osm.c
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.c~remove-extra-newline-from-info-message
++++ a/drivers/scsi/aic7xxx/aic79xx_osm.c
+@@ -418,7 +418,6 @@ ahd_linux_info(struct Scsi_Host *host)
+ 	strcat(bp, "        ");
+ 	ahd_controller_info(ahd, ahd_info);
+ 	strcat(bp, ahd_info);
+-	strcat(bp, "\n");
  
- #include <linux/transport_class.h>
- #include <scsi/scsi_host.h>
-+#include <scsi/scsi_device.h>
- 
- struct scsi_transport_template {
- 	/* the attribute containers */
+ 	return (bp);
+ }
 _
