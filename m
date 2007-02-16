@@ -1,64 +1,95 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH] SCSI core: better initialization for sdev->scsi_level
-Date: Fri, 16 Feb 2007 14:42:54 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0702161439050.3490-100000@iolanthe.rowland.org>
+From: Doug Ledford <dledford@redhat.com>
+Subject: Re: [PATCH] drivers/scsi/aic7xxx_old: Convert to generic
+	boolean-values
+Date: Fri, 16 Feb 2007 16:43:04 -0500
+Message-ID: <1171662184.3161.245.camel@fc6.xsintricity.com>
+References: <20070210174628.3764.89569.sendpatchset@thinktank.campus.ltu.se>
+	 <1171132062.3373.31.camel@mulgrave.il.steeleye.com>
+	 <20070212122738.b5e9a8af.akpm@linux-foundation.org>
+	 <1171644132.3443.27.camel@mulgrave.il.steeleye.com>
+	 <20070216103422.51757e89.akpm@linux-foundation.org>
+	 <1171651347.3443.45.camel@mulgrave.il.steeleye.com>
+	 <20070216105026.7bd17a79.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-094ve+/cXXwKfbpzhaF5"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:43454 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1946076AbXBPTmz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Feb 2007 14:42:55 -0500
+Received: from mx1.redhat.com ([66.187.233.31]:54873 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750780AbXBPVpf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Feb 2007 16:45:35 -0500
+In-Reply-To: <20070216105026.7bd17a79.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Douglas Gilbert <dougg@torque.net>, SCSI development list <linux-scsi@vger.kernel.org>
-
-Both scsi_device and scsi_target include a scsi_level field, and the
-SCSI core makes a half-hearted effort to keep the values equal.
-Ultimately this effort may be doomed, since as far as I know there is
-no reason why all LUNs in a target must report the same "ANSI-approved
-version" number.  But for the most part it should work okay.
-
-This patch (as834) changes the SCSI core so that after the first LUN
-has been probed and the target's scsi_level is known, further LUNs
-default to the target's scsi_level and not to SCSI_2.
-
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-
----
-
-James, this is another resubmission.  Regarding the original submission,
-Doug commented that it didn't seem to make things any better than the
-current situation.  I pointed out that it did, even though it may not be a
-perfect solution.  He didn't reply, which I assume means he agrees.
-
-Alan Stern
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, ricknu-0@student.ltu.se, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
 
-Index: usb-2.6/drivers/scsi/scsi_scan.c
-===================================================================
---- usb-2.6.orig/drivers/scsi/scsi_scan.c
-+++ usb-2.6/drivers/scsi/scsi_scan.c
-@@ -382,6 +382,7 @@ static struct scsi_target *scsi_alloc_ta
- 	INIT_LIST_HEAD(&starget->siblings);
- 	INIT_LIST_HEAD(&starget->devices);
- 	starget->state = STARGET_RUNNING;
-+	starget->scsi_level = SCSI_2;
-  retry:
- 	spin_lock_irqsave(shost->host_lock, flags);
- 
-Index: usb-2.6/drivers/scsi/scsi_sysfs.c
-===================================================================
---- usb-2.6.orig/drivers/scsi/scsi_sysfs.c
-+++ usb-2.6/drivers/scsi/scsi_sysfs.c
-@@ -922,7 +922,7 @@ void scsi_sysfs_device_initialize(struct
- 	snprintf(sdev->sdev_classdev.class_id, BUS_ID_SIZE,
- 		 "%d:%d:%d:%d", sdev->host->host_no,
- 		 sdev->channel, sdev->id, sdev->lun);
--	sdev->scsi_level = SCSI_2;
-+	sdev->scsi_level = starget->scsi_level;
- 	transport_setup_device(&sdev->sdev_gendev);
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	list_add_tail(&sdev->same_target_siblings, &starget->devices);
+--=-094ve+/cXXwKfbpzhaF5
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Fri, 2007-02-16 at 10:50 -0800, Andrew Morton wrote:
+
+> Me no understand.
+>=20
+> If you take the specific example of
+>=20
+> void
+> ahd_set_syncrate(struct ahd_softc *ahd, struct ahd_devinfo *devinfo,
+> 		 u_int period, u_int offset, u_int ppr_options,
+> 		 u_int type, int paused)
+>=20
+> then if is crufty, inappropriate and wrong that `paused' is a scalar type=
+.
+
+Although you picked a code segment out of the modern aic7xxx, there is a
+matching similar one in aic7xxx_old.  Now, in all fairness, I was at one
+point playing with a much more preemptable model for that driver that
+allowed nested pauses, at which point the value of pause would have made
+sense to be scalar, but that was a *long* time ago.
+
+> =20
+> It's just not true or sensible that the code is written so that `paused'
+> can take a value of seventy eight.  It _is_ a boolean.  It is a truth
+> value.  Declaring it as such in the source is all goodness.  Passing the
+> value `true' into calls to this function improve readability over passing
+> "1".
+
+Hence the reason for the original upper case TRUE/FALSE.  I have to
+admit, I don't really like the lower case true/false, it looks like a
+variable that can be assigned, thereby changing the implementation of
+the function call when in fact each calling location is hard coding a
+constant.  But, that's just me and my crufty old C that differentiates
+between hard coded things and variables via case.
+
+> So I don't agree with (or understand) your objections.  But I can certain=
+ly
+> understand reluctance to merge a large-but-minor, do-nothing-much patch i=
+nto
+> a large and not-very-maintained driver.
+
+Hehehe...and here I was thinking of factoring that thing into files and
+actually bringing it into the current century.
+
+--=20
+Doug Ledford <dledford@redhat.com>
+              GPG KeyID: CFBFF194
+              http://people.redhat.com/dledford
+
+Infiniband specific RPMs available at
+              http://people.redhat.com/dledford/Infiniband
+
+--=-094ve+/cXXwKfbpzhaF5
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQBF1iVoTzP9PM7pjw8RAo6jAJ0Z+jzaqOoNJGmy4I7MsjJdB0naWgCfUd4p
+T82dgbkJ193VLeVBvP48upg=
+=98iZ
+-----END PGP SIGNATURE-----
+
+--=-094ve+/cXXwKfbpzhaF5--
 
