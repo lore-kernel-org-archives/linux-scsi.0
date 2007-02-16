@@ -1,42 +1,43 @@
 From: akpm@linux-foundation.org
-Subject: [patch 04/30] scsi: remove unnecessary check in drivers/scsi/sg.c
-Date: Fri, 16 Feb 2007 01:46:23 -0800
-Message-ID: <200702160946.l1G9kNZ5026627@shell0.pdx.osdl.net>
+Subject: [patch 06/30] Fix scsi/scsi_transport.h compile error
+Date: Fri, 16 Feb 2007 01:46:25 -0800
+Message-ID: <200702160946.l1G9kPvl026633@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:36791 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.24]:36788 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1423499AbXBPJqe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1423497AbXBPJqe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 16 Feb 2007 04:46:34 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, snakebyte@gmx.de, dougg@torque.net
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, eike-kernel@sf-tec.de
 
-From: Eric Sesterhenn <snakebyte@gmx.de>
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
 
-coverity spotted this (cid #758).  All callers dereference sfp, so we dont
-need this check.  In addition to this, we dereference it earlier in the
-function.
+scsi_transport.h defines the inline function scsi_transport_device_data() that
+dereferences a pointer of "struct scsi_device *".  Since the struct is not
+known by the header this might break compilation.
 
-Signed-off-by: Eric Sesterhenn <snakebyte@gmx.de>
-Cc: Douglas Gilbert <dougg@torque.net>
+Include scsi/scsi_device.h to not rely on users doing the correct magic
+include order.
+
+Signed-off-by: Rolf Eike Beer <eike-kernel@sf-tec.de>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/sg.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/scsi/scsi_transport.h |    1 +
+ 1 file changed, 1 insertion(+)
 
-diff -puN drivers/scsi/sg.c~remove-unnecessary-check-in-drivers-scsi-sgc drivers/scsi/sg.c
---- a/drivers/scsi/sg.c~remove-unnecessary-check-in-drivers-scsi-sgc
-+++ a/drivers/scsi/sg.c
-@@ -1837,7 +1837,7 @@ sg_build_indirect(Sg_scatter_hold * schp
- 	int blk_size = buff_size;
- 	struct page *p = NULL;
+diff -puN include/scsi/scsi_transport.h~fix-scsi-scsi_transporth-compile-error include/scsi/scsi_transport.h
+--- a/include/scsi/scsi_transport.h~fix-scsi-scsi_transporth-compile-error
++++ a/include/scsi/scsi_transport.h
+@@ -22,6 +22,7 @@
  
--	if ((blk_size < 0) || (!sfp))
-+	if (blk_size < 0)
- 		return -EFAULT;
- 	if (0 == blk_size)
- 		++blk_size;	/* don't know why */
+ #include <linux/transport_class.h>
+ #include <scsi/scsi_host.h>
++#include <scsi/scsi_device.h>
+ 
+ struct scsi_transport_template {
+ 	/* the attribute containers */
 _
