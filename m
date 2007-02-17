@@ -1,83 +1,97 @@
-From: "Patro, Sumant" <Sumant.Patro@lsi.com>
-Subject: RE: [PATCH 3/5] scsi: megaraid_sas - throttle io if FW is busy
-Date: Fri, 16 Feb 2007 17:50:11 -0700
-Message-ID: <0631C836DBF79F42B5A60C8C8D4E82299214CE@NAMAIL2.ad.lsil.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [Bug 7994] New: sleeping function called from invalid context
+ at mm/slab.c:3034
+Date: Fri, 16 Feb 2007 22:59:31 -0500
+Message-ID: <45D67DA3.2080904@torque.net>
+References: <200702130307.l1D378vc003798@fire-2.osdl.org>	 <20070212200620.7320b3be.akpm@linux-foundation.org> <1171376251.3382.0.camel@mulgrave.il.steeleye.com> <45D1D1A3.50500@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:61788 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1946348AbXBQAu2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Feb 2007 19:50:28 -0500
-Content-class: urn:content-classes:message
+Received: from pentafluge.infradead.org ([213.146.154.40]:50853 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946401AbXBQD7b (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Feb 2007 22:59:31 -0500
+In-Reply-To: <45D1D1A3.50500@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: akpm@osdl.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Kolli, Neela" <Neela.Kolli@lsi.com>, "Yang, Bo" <Bo.Yang@lsi.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-scsi@vger.kernel.org, adrakoa@es.gnu.org, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>
+
+Andrew,
+The patch that I sent, shown at the end of this post,
+is incomplete as it doesn't check the return value
+from kzalloc(..., GFP_ATOMIC).
+
+As I suspected this bug has been exposed before: Jens
+reported this problem in early January.
+
+A more complete patch, with some other changes, was
+posted 6 weeks ago:
+http://marc.theaimsgroup.com/?l=linux-scsi&m=116797354920256&w=2
+
+I'm not sure if this patch is "in the works" or
+not.
+
+Doug Gilbert
 
 
-Hello James,
-
-	It is difficult to know when the device will go into a state
-where it is not able to process cmds within timeout period consistently.
-Many factors may be contributing for the device to get into this state. 
-	Reducing can_queue may help but the difficult part is when does
-the can_queue value be restored to the original value. Because, the
-device may come back to normal functioning after some time. Also
-reducing it to a optimum value that will work for all possible cases is
-a challenge.
-
-	In a typical setup the throttle io code may not get executed. It
-is required only when it has not been able to complete cmds more than 2
-times within timeout period.
-
-Regards,
-
-Sumant
-
------Original Message-----
-From: James Bottomley [mailto:James.Bottomley@SteelEye.com] 
-Sent: Friday, February 16, 2007 9:51 AM
-To: Patro, Sumant
-Cc: akpm@osdl.org; linux-scsi@vger.kernel.org;
-linux-kernel@vger.kernel.org; Kolli, Neela; Yang, Bo
-Subject: RE: [PATCH 3/5] scsi: megaraid_sas - throttle io if FW is busy
-
-On Thu, 2007-02-15 at 19:53 -0700, Patro, Sumant wrote:
-> Hello James,
+Douglas Gilbert wrote:
+> James Bottomley wrote:
+>> On Mon, 2007-02-12 at 20:06 -0800, Andrew Morton wrote:
+>>> This is fixed in mainline and I expect that the fix is also lined up
+>>> for
+>>> 2.6.20.1. (?)
+>> It's definitely in mainline.  I've cc'd Doug Gilbert, the scsi_debug
+>> maintainer to assess what should be done for 2.6.20.1
 > 
-> 	I re-submitted the patch yesterday with the "space" issue fixed 
-> (adhering to coding guideline).
+> James,
+> I thought this had been addressed but I can't find a
+> trail on my laptop. A minimal patch is attached.
 > 
-> 	I will check for alternative to calculate the time driver have
-been 
-> sending host busy to OS. Will check with time_before() as you have 
-> suggested.
 > 
-> 	Throttling from megasas_generic_reset() handler did not help.
-> megaraid does not have feature to abort cmds. So, in the generic reset
-
-> routine, the driver just waits for cmd completion by FW. These 
-> timed-out cmds gets retried by mid-layer with "retries" incremented by
-1.
-> Eventually we see retries equals max_allowed followed by SCSI error 
-> with "DRIVER_TIMEOUT".
-
-That's rather what worries me.  When the error handler activates (which
-it will on the first timeout), it waits for all commands to complete or
-time out before running.  Your reset handler does nothing other than
-wait for the firmware to complete the commands (now uselessly), so we
-now wait for the entire firmware command queue to drain, then you tell
-the mid layer everything is OK, so it loads you up again with all the
-commands plus a few test unit readies for good measure, then you
-throttle.
-
-You really want to catch the device going into this condition and do
-something at that point ... prime candidate would be lowering the
-can_queue depth to get fewer commands transiting the firmware.
-
-James
-
+> ChangeLog:
+>    - Use GFP_ATOMIC for allocations that can be called
+>      from the queuecommand() entry point
+> 
+> Signed-off-by: Douglas Gilbert <dougg@torque.net>
+> 
+> Doug Gilbert
+> 
+> 
+> 
+> 
+> 
+> ------------------------------------------------------------------------
+> 
+> --- linux/drivers/scsi/scsi_debug.c	2006-11-30 07:00:01.000000000 -0800
+> +++ linux/drivers/scsi/scsi_debug.c2620atom	2007-02-13 06:43:28.000000000 -0800
+> @@ -954,7 +954,7 @@
+>  	int alloc_len, n, ret;
+>  
+>  	alloc_len = (cmd[3] << 8) + cmd[4];
+> -	arr = kzalloc(SDEBUG_MAX_INQ_ARR_SZ, GFP_KERNEL);
+> +	arr = kzalloc(SDEBUG_MAX_INQ_ARR_SZ, GFP_ATOMIC);
+>  	if (devip->wlun)
+>  		pq_pdt = 0x1e;	/* present, wlun */
+>  	else if (scsi_debug_no_lun_0 && (0 == devip->lun))
+> @@ -1217,7 +1217,7 @@
+>  	alen = ((cmd[6] << 24) + (cmd[7] << 16) + (cmd[8] << 8)
+>  		+ cmd[9]);
+>  
+> -	arr = kzalloc(SDEBUG_MAX_TGTPGS_ARR_SZ, GFP_KERNEL);
+> +	arr = kzalloc(SDEBUG_MAX_TGTPGS_ARR_SZ, GFP_ATOMIC);
+>  	/*
+>  	 * EVPD page 0x88 states we have two ports, one
+>  	 * real and a fake port with no device connected.
+> @@ -2044,7 +2044,7 @@
+>  		}
+>  	}
+>  	if (NULL == open_devip) { /* try and make a new one */
+> -		open_devip = kzalloc(sizeof(*open_devip),GFP_KERNEL);
+> +		open_devip = kzalloc(sizeof(*open_devip),GFP_ATOMIC);
+>  		if (NULL == open_devip) {
+>  			printk(KERN_ERR "%s: out of memory at line %d\n",
+>  				__FUNCTION__, __LINE__);
 
