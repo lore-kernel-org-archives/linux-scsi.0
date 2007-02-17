@@ -1,21 +1,25 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: [PATCH] libata: fix probe_ent alloc/free bugs
-Date: Sat, 17 Feb 2007 20:43:48 +0300
-Message-ID: <45D73ED4.80505@ru.mvista.com>
-References: <45D710E8.3090104@gmail.com> <1171725374.3379.15.camel@mulgrave.il.steeleye.com> <45D73A55.90008@gmail.com>
+Date: Sat, 17 Feb 2007 12:09:30 -0600
+Message-ID: <1171735771.3379.18.camel@mulgrave.il.steeleye.com>
+References: <45D710E8.3090104@gmail.com>
+	 <1171725374.3379.15.camel@mulgrave.il.steeleye.com>
+	 <45D73A55.90008@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hancock.steeleye.com ([71.30.118.248]:50586 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S2993008AbXBQSJk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 17 Feb 2007 13:09:40 -0500
 In-Reply-To: <45D73A55.90008@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Hello.
-
-Tejun Heo wrote:
+On Sun, 2007-02-18 at 02:24 +0900, Tejun Heo wrote:
 > ata_probe_ent_alloc() had a temporary hack such that devm_kzalloc()
 > was used for allocation if devres had been previously initialized on
 > the device; otherwise, plain kzalloc() was used.  This was to make the
@@ -25,29 +29,15 @@ Tejun Heo wrote:
 > 
 > Remove the now-unneeded hack and make ata_sas_port_alloc() use
 > devm_kfree().
-
-[...]
-
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 2cf8251..c34e0b4 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -5891,11 +5891,7 @@ ata_probe_ent_alloc(struct device *dev, const 
-> struct ata_port_info *port)
-> {
->     struct ata_probe_ent *probe_ent;
 > 
-> -    /* XXX - the following if can go away once all LLDs are managed */
-> -    if (!list_empty(&dev->devres_head))
-> -        probe_ent = devm_kzalloc(dev, sizeof(*probe_ent), GFP_KERNEL);
-> -    else
-> -        probe_ent = kzalloc(sizeof(*probe_ent), GFP_KERNEL);
-> +    probe_ent = devm_kzalloc(dev, sizeof(*probe_ent), GFP_KERNEL);
->     if (!probe_ent) {
->         printk(KERN_ERR DRV_NAME "(%s): out of memory\n",
->                kobject_name(&(dev->kobj)));
-[...]
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> Cc: James Bottomley <James.Bottomley@SteelEye.com>
+> ---
+> James, thanks for the diagnosis and please ack if this fixes the
+> problem.
 
-    The patch certainly looks mangled tab-wise. :-)
+Yes, it fixes all the problems.
 
-MBR, Sergei
+James
+
+
