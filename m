@@ -1,42 +1,41 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] SCSI: Make error printing more user friendly
-Date: Mon, 19 Feb 2007 10:43:09 -0500
-Message-ID: <yq1k5yeqhki.fsf@sermon.lab.mkp.net>
-References: <yq1hctvycyg.fsf@sermon.lab.mkp.net>
-	<1171638659.3443.8.camel@mulgrave.il.steeleye.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [RFC] How to implement linux_block commands in scsi midlayer
+Date: Mon, 19 Feb 2007 10:07:46 -0600
+Message-ID: <1171901266.3385.15.camel@mulgrave.il.steeleye.com>
+References: <87abzcxur6.fsf@denkblock.local>  <45D7D24B.4080802@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rgminet01.oracle.com ([148.87.113.118]:50839 "EHLO
-	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932368AbXBSPnr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Feb 2007 10:43:47 -0500
-In-Reply-To: <1171638659.3443.8.camel@mulgrave.il.steeleye.com> (James Bottomley's message of "Fri, 16 Feb 2007 09:10:59 -0600")
+Received: from hancock.steeleye.com ([71.30.118.248]:36037 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932375AbXBSQHv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Feb 2007 11:07:51 -0500
+In-Reply-To: <45D7D24B.4080802@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+To: dougg@torque.net
+Cc: linux-scsi@vger.kernel.org, Jens Axboe <Jens.Axboe@oracle.com>
 
->>>>> "James" == James Bottomley <James.Bottomley@SteelEye.com> writes:
+On Sat, 2007-02-17 at 23:12 -0500, Douglas Gilbert wrote:
+> IOW don't do it!
+> 
+> Better would be to flag the request for internal use.
 
-James> I think we should be going through dev_printk as the primary,
-James> particularly as doing this would make the output of sdev_printk
-James> different from scmd_printk.  How about
+This would be my opinion too.  We're trying to move away from
+encapsulated commands wherever we can (although we're definitely not
+there yet).
 
-Fine with me except we're now back to having inconsistent prefixes for
-the result printing and the matching sense data.
+The idea is that the block layer would be able to transport native
+commands to underlying devices.  However, we were also thinking of
+adding control packets that could be interpreted by the processing ULD
+(as park essentially is, since it's a state in the disk management
+model).  However, realistically, you don't ever send a command to park a
+disk ... this won't be beneficial during most times of operation ... you
+really want expose the power states and management so the OS can use
+them as part of its model ... Tejun already has the beginnings of a
+patch to do this.
 
-I'll try to sanitize the sense printing too and post a new patch.
+James
 
-
-James> The other nasty is that we can't actually deref rq_disk unless
-James> <linux/blkdev.h> is included.  You'll find megaraid_sas.c fails
-James> to compile becuase of this.  It can probably be fixed by
-James> including blkdev.h from scsi_device.h
-
-You must have had a reject on scsi_device.h.  My patch did include
-<linux/blkdev.h> to fix that very issue.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
 
