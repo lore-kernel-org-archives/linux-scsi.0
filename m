@@ -1,84 +1,155 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH] SG: cap reserved_size values at max_sectors
-Date: Tue, 20 Feb 2007 13:17:35 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0702201310340.8957-100000@iolanthe.rowland.org>
-References: <45DB330D.2070501@cs.wisc.edu>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: [PATCH] fusion kernel-doc warning fixes
+Date: Tue, 20 Feb 2007 11:17:03 -0800
+Message-ID: <20070220111703.c7f38683.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:58354 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1030347AbXBTSRh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Feb 2007 13:17:37 -0500
-In-Reply-To: <45DB330D.2070501@cs.wisc.edu>
+Received: from rgminet01.oracle.com ([148.87.113.118]:42458 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932973AbXBTTUn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Feb 2007 14:20:43 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Douglas Gilbert <dougg@torque.net>, James Bottomley <James.Bottomley@SteelEye.com>, Joerg Schilling <Joerg.Schilling@fokus.fraunhofer.de>, Jens Axboe <jens.axboe@oracle.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: scsi <linux-scsi@vger.kernel.org>
+Cc: jejb <james.bottomley@steeleye.com>, akpm <akpm@linux-foundation.org>, mpt_linux_developer@lsi.com
 
-On Tue, 20 Feb 2007, Mike Christie wrote:
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-> I think you actually want max_hw_sectors. Well, you might and you might
-> not :)
+Fix kernel-doc warnings in fusion driver code.
 
-I think we do not.  We don't care about the maximum transfer length the
-driver can theoretically support; we care about the maximum transfer
-length the system will allow.  For example, if max_sectors is 240 and
-max_hw_sectors is 512 then the system will reject a attempted transfer of
-300 sectors, even though the hardware is capable of carrying it out.
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+---
+ drivers/message/fusion/mptbase.c  |   22 +++++++---------------
+ drivers/message/fusion/mptscsih.c |   15 ++++++++++-----
+ drivers/message/fusion/mptspi.c   |   11 +++++------
+ 3 files changed, 22 insertions(+), 26 deletions(-)
 
-> I think a estimate of the max transfer length would be more like:
-> 
-> unsigned int max_segment_size, max_xfer,
-> int max_segments;
-> 
-> /*
->  * does not account for any weird arch segments boundary limits
->  * or vmerge limits
->  */
-> if (!(q->queue_flags & (1 << QUEUE_FLAG_CLUSTER)))
-> 	max_segment_size = PAGE_SIZE;
-> else
-> 	max_segment_size = q->max_segment_size;
-> 
-> max_segments = min(q->max_hw_segments, q->max_phys_segments);
-> 
-> max_xfer = min(q->max_hw_sectors * 512,
-> 		max_segments * max_segment_size);
-
-Isn't it possible that this multiplication might overflow?
-
-> 
-> return max_xfer;
-> 
-> 
-> The problem is that we assume we will get nice large segments. When
-> using sg it will try to allocate multiple pages and make large segments.
-> We could hit a bad case where we cannot allocate enough large segments,
-> so a worst case would result in a max_segment_size of PAGE_SIZE:
-> 
-> max_segments = min(q->max_hw_segments, q->max_phys_segments);
-> 
-> max_xfer = min(q->max_hw_sectors * 512,
-> 		max_segments * PAGE_SIZE);
-> 
-> return max_xfer;
-
-That is a very pessimistic estimate.  I don't see any reason for using it, 
-especially since sg sets aside a reserved buffer which guarantees that a 
-certain minimum amount of memory will always be available.
-
-> I think you have to take into account the scatterlist limits because
-> some drivers like lpfc have a small sht->sg_tablesize/q->max_hw_segments
-> (64), but have a large q->max_hw_sectors (0xFFFF) and uses the default
-> q->max_sectors (1024). So in the worst case we could end up with a max
-> transfer size of only 64 * PAGE_SIZE and this a lot smaller than
-> q->max_sectors.
-
-Would you care to rewrite the patch?
-
-Keep in mind particularly that the SG_GET_RESERVED_SIZE ioctl is supposed 
-to return the size of the reserved area, not the maximum transfer length.
-
-Alan Stern
-
+--- linux-2.6.20-git15.orig/drivers/message/fusion/mptbase.c
++++ linux-2.6.20-git15/drivers/message/fusion/mptbase.c
+@@ -4739,12 +4739,8 @@ mpt_readScsiDevicePageHeaders(MPT_ADAPTE
+ }
+ 
+ /**
+- * mpt_inactive_raid_list_free
+- *
+- * This clears this link list.
+- *
+- * @ioc - pointer to per adapter structure
+- *
++ * mpt_inactive_raid_list_free - This clears this link list.
++ * @ioc : pointer to per adapter structure
+  **/
+ static void
+ mpt_inactive_raid_list_free(MPT_ADAPTER *ioc)
+@@ -4764,15 +4760,11 @@ mpt_inactive_raid_list_free(MPT_ADAPTER 
+ }
+ 
+ /**
+- * mpt_inactive_raid_volumes
+- *
+- * This sets up link list of phy_disk_nums for devices belonging in an inactive volume
+- *
+- * @ioc - pointer to per adapter structure
+- * @channel - volume channel
+- * @id - volume target id
+- *
++ * mpt_inactive_raid_volumes - sets up link list of phy_disk_nums for devices belonging in an inactive volume
+  *
++ * @ioc : pointer to per adapter structure
++ * @channel : volume channel
++ * @id : volume target id
+  **/
+ static void
+ mpt_inactive_raid_volumes(MPT_ADAPTER *ioc, u8 channel, u8 id)
+@@ -6663,7 +6655,7 @@ union loginfo_type {
+ /**
+  *	mpt_iocstatus_info_config - IOCSTATUS information for config pages
+  *	@ioc: Pointer to MPT_ADAPTER structure
+- *	ioc_status: U32 IOCStatus word from IOC
++ *	@ioc_status: U32 IOCStatus word from IOC
+  *	@mf: Pointer to MPT request frame
+  *
+  *	Refer to lsi/mpi.h.
+--- linux-2.6.20-git15.orig/drivers/message/fusion/mptscsih.c
++++ linux-2.6.20-git15/drivers/message/fusion/mptscsih.c
+@@ -1537,21 +1537,23 @@ mptscsih_freeChainBuffers(MPT_ADAPTER *i
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+ /**
+  *	mptscsih_TMHandler - Generic handler for SCSI Task Management.
+- *	Fall through to mpt_HardResetHandler if: not operational, too many
+- *	failed TM requests or handshake failure.
+- *
+- *	@ioc: Pointer to MPT_ADAPTER structure
++ *	@hd: Pointer to MPT SCSI HOST structure
+  *	@type: Task Management type
++ *	@channel: channel number for task management
+  *	@id: Logical Target ID for reset (if appropriate)
+  *	@lun: Logical Unit for reset (if appropriate)
+  *	@ctx2abort: Context for the task to be aborted (if appropriate)
++ *	@timeout: timeout for task management control
++ *
++ *	Fall through to mpt_HardResetHandler if: not operational, too many
++ *	failed TM requests or handshake failure.
+  *
+  *	Remark: Currently invoked from a non-interrupt thread (_bh).
+  *
+  *	Remark: With old EH code, at most 1 SCSI TaskMgmt function per IOC
+  *	will be active.
+  *
+- *	Returns 0 for SUCCESS, or FAILED.
++ *	Returns 0 for SUCCESS, or %FAILED.
+  **/
+ int
+ mptscsih_TMHandler(MPT_SCSI_HOST *hd, u8 type, u8 channel, u8 id, int lun, int ctx2abort, ulong timeout)
+@@ -1650,9 +1652,11 @@ mptscsih_TMHandler(MPT_SCSI_HOST *hd, u8
+  *	mptscsih_IssueTaskMgmt - Generic send Task Management function.
+  *	@hd: Pointer to MPT_SCSI_HOST structure
+  *	@type: Task Management type
++ *	@channel: channel number for task management
+  *	@id: Logical Target ID for reset (if appropriate)
+  *	@lun: Logical Unit for reset (if appropriate)
+  *	@ctx2abort: Context for the task to be aborted (if appropriate)
++ *	@timeout: timeout for task management control
+  *
+  *	Remark: _HardResetHandler can be invoked from an interrupt thread (timer)
+  *	or a non-interrupt thread.  In the former, must not call schedule().
+@@ -2022,6 +2026,7 @@ mptscsih_tm_pending_wait(MPT_SCSI_HOST *
+ /**
+  *	mptscsih_tm_wait_for_completion - wait for completion of TM task
+  *	@hd: Pointer to MPT host structure.
++ *	@timeout: timeout value
+  *
+  *	Returns {SUCCESS,FAILED}.
+  */
+--- linux-2.6.20-git15.orig/drivers/message/fusion/mptspi.c
++++ linux-2.6.20-git15/drivers/message/fusion/mptspi.c
+@@ -96,14 +96,13 @@ static int	mptspiTaskCtx = -1;
+ static int	mptspiInternalCtx = -1; /* Used only for internal commands */
+ 
+ /**
+- * 	mptspi_setTargetNegoParms  - Update the target negotiation
+- *	parameters based on the the Inquiry data, adapter capabilities,
+- *	and NVRAM settings
+- *
++ * 	mptspi_setTargetNegoParms  - Update the target negotiation parameters
+  *	@hd: Pointer to a SCSI Host Structure
+- *	@vtarget: per target private data
++ *	@target: per target private data
+  *	@sdev: SCSI device
+  *
++ * 	Update the target negotiation parameters based on the the Inquiry
++ *	data, adapter capabilities, and NVRAM settings.
+  **/
+ static void
+ mptspi_setTargetNegoParms(MPT_SCSI_HOST *hd, VirtTarget *target,
+@@ -234,7 +233,7 @@ mptspi_setTargetNegoParms(MPT_SCSI_HOST 
+ /**
+  * 	mptspi_writeIOCPage4  - write IOC Page 4
+  *	@hd: Pointer to a SCSI Host Structure
+- *	@channel:
++ *	@channel: channel number
+  *	@id: write IOC Page4 for this ID & Bus
+  *
+  *	Return: -EAGAIN if unable to obtain a Message Frame
