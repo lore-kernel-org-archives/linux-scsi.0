@@ -1,52 +1,42 @@
-From: Christopher Allen Wing <wingc@engin.umich.edu>
-Subject: any experience with PCI Express parallel scsi controllers?
-Date: Tue, 20 Feb 2007 10:10:11 -0500 (EST)
-Message-ID: <Pine.LNX.4.63.0702200959540.12650@gx620.engin.umich.edu>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] libata: fix probe_ent alloc/free bugs
+Date: Tue, 20 Feb 2007 10:52:53 -0500
+Message-ID: <45DB1955.4020702@garzik.org>
+References: <45D710E8.3090104@gmail.com> <1171725374.3379.15.camel@mulgrave.il.steeleye.com> <45D73A55.90008@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srvr20.engin.umich.edu ([141.213.75.22]:55123 "EHLO
-	srvr20.engin.umich.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965052AbXBTPdX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Feb 2007 10:33:23 -0500
-Received: from gx620.engin.umich.edu (IDENT:U2FsdGVkX19Vkn4zLiHFzTw1v4YBZhuN/6V24A1YWP0@gx620.engin.umich.edu [141.213.40.58])
-	by srvr20.engin.umich.edu (8.13.6/8.13.6) with ESMTP id l1KFGUfY011704
-	for <linux-scsi@vger.kernel.org>; Tue, 20 Feb 2007 10:16:31 -0500 (EST)
-Received: from localhost (IDENT:U2FsdGVkX19N2vXlipYzgzvV3BL+BprHmeCudW6MlC8@localhost.localdomain [127.0.0.1])
-	by gx620.engin.umich.edu (8.13.6/8.13.6) with ESMTP id l1KFABZR026683
-	for <linux-scsi@vger.kernel.org>; Tue, 20 Feb 2007 10:10:11 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <45D73A55.90008@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Hello,
+Tejun Heo wrote:
+> ata_probe_ent_alloc() had a temporary hack such that devm_kzalloc()
+> was used for allocation if devres had been previously initialized on
+> the device; otherwise, plain kzalloc() was used.  This was to make the
+> code useable from both the old and devres-aware libata drivers during
+> transition.  This hack made ata_sas_port_alloc() unable to determine
+> how the probe_ent is allocated, causing double free in some cases.
+> 
+> Remove the now-unneeded hack and make ata_sas_port_alloc() use
+> devm_kfree().
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> Cc: James Bottomley <James.Bottomley@SteelEye.com>
+> ---
+> James, thanks for the diagnosis and please ack if this fixes the
+> problem.
+> 
+> Jeff, after James' ack, can you please verify this works with a libata
+> driver?  Just loading and unloading a libata LLD should be enough.
+> I'm visiting my hometown for lunar new year's day, so I can't do it
+> till Tuesday.
+> 
+> Thanks.
 
-I'm trying to connect some older SCSI devices to new servers which only 
-have PCI Express expansion slots.  Unfortunately it seems that there are 
-very few parallel SCSI HBA cards available for PCI Express systems.  Most 
-SCSI controller manufacturers are only selling PCI-X cards if you want 
-parallel SCSI.
+applied
 
 
-Has anyone else been in this situation?  One product that we found is a 
-board sold by HP (HP SC11Xe) based on a LSI Logic chipset.  This is a PCI 
-Express controller with a single U320 parallel SCSI channel.  It is 
-reasonably priced ($200); unfortunately, the documentation on HP's web 
-site states that it will only work with tape devices.  Is anyone familiar 
-with this card who might know if this claim (that the card only works with 
-tape drives) is true or false?
-
-Otherwise, Adaptec does not seem to sell any parallel SCSI cards for PCI 
-Express; there are a few expensive PCI Express RAID controllers out there 
-with parallel SCSI but I don't need a hardware RAID controller.  There is 
-also an ATTO Technology PCI Express card with parallel SCSI; it sells for 
-around $500.
-
-
-Any ideas or suggestions?
-
-
-Thanks a lot,
-
-Chris Wing
-wingc@engin.umich.edu
