@@ -1,116 +1,73 @@
-From: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
-Subject: [Patch 2/2] cciss: add reboot notifier support to driver
-Date: Wed, 21 Feb 2007 15:12:51 -0600
-Message-ID: <20070221211251.GB2672@beardog.cca.cpqcorp.net>
-Reply-To: mike.miller@hp.com
+From: Aravind Parchuri <aravind.parchuri@gmail.com>
+Subject: Re: Please help if u can.
+Date: Wed, 21 Feb 2007 14:56:22 -0800
+Message-ID: <45DCCE16.7010708@gmail.com>
+References: <45DB9D89.7030804@tlchosting.com> <45DBD6CF.7010309@torque.net> <45DBE495.6050706@us.ibm.com> <45DC9053.10908@tlchosting.com> <45DCB1BE.403@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palrel12.hp.com ([156.153.255.237]:54431 "EHLO palrel12.hp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1423151AbXBUVfc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Feb 2007 16:35:32 -0500
-Content-Disposition: inline
+Received: from nz-out-0506.google.com ([64.233.162.232]:63143 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750700AbXBUXBV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Feb 2007 18:01:21 -0500
+Received: by nz-out-0506.google.com with SMTP id s1so2361921nze
+        for <linux-scsi@vger.kernel.org>; Wed, 21 Feb 2007 15:01:21 -0800 (PST)
+In-Reply-To: <45DCB1BE.403@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jens.axboe@oracle.com, akpm@osdl.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, gregkh@novell.com
+To: "Darrick J. Wong" <djwong@us.ibm.com>
+Cc: John Scarpa <john@tlchosting.com>, dougg@torque.net, linux-scsi@vger.kernel.org, Alexis Bruemmer <alexisb@us.ibm.com>
 
-Patch 2/2
+djwong@us.ibm.com wrote:
+> John Scarpa wrote:
+>   
+>> First a very big thanks to all of u! I have been suffering a serious
+>> lack of sleep problem lately..  i should have noticed that by whom has
+>> been submitting the past 500 fixes and updates!
+>>
+>> Quick question, is the driver still consider experimental??
+>>     
+>
+> Very much so.  The SAS bits are fairly stable nowadays, but the rest is
+> still YMWV. :)
+>
+>   
+>> the guys i
+>> work with say it doesn't support sata drives and it's still experimental
+>>     
+>
+> SATA support is under development.  Patches exist in the git tree here:
+> http://www.kernel.org/git/?p=linux/kernel/git/jejb/aic94xx-sas-2.6.git;a=summary
+>
+>   
+>> so don't use it.  And i can't find anything on the state of this driver.
+>>
+>> PS.  I should have said i dropped that aic94xx-seq.fw in
+>> /lib,/lib/firmware,/lib64,/lib64/firmware  (still have yet to get this
+>> sucker to work)
+>>     
+>
+> Yes, you need a udev that's new enough to know how to handle the
+> firmware loading interface.  Typically, udev will load firmware from
+> /lib/firmware, though I suppose that depends on the distribution.  Not
+> sure if RH/Fedora support fw loading, newer Ubuntu-E and SuSE do...
+>
+> --D
+>   
+Fedora Core 6 does. I just had to drop the firmware into /lib/firmware 
+to get it loaded correctly. Unfortunately the drivers in the Fedora 
+kernels do not have the SATA support merged into them. I looked at the 
+aic94xx-sas-2.6.git tree, but it looks like things have been swapped 
+around between scsi and libata since 2.6.19.1 (the latest fc6 update 
+kernel). If anyone has versions of the SATA support patches that apply 
+on top of a Fedora kernel, could you please direct me to them?
 
-This patch adds reboot_notifier support to cciss. Changes in firmware make this patch
-essential. Without this patch there may be valid data left in the controller's battery
-backed write cache (BBWC) on shutdown. We found out the hard way that the kernel does
-not call our cleanup routines on shutdown or reboot. It seems that only rmmod calls
-the cleanup.
-Please consider this for inclusion.
+Aravind.
 
-Signed-off-by: Mike Miller <mike.miller@hp.com
-------------------------------------------------------------------------------------------
-diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
-index 916aab0..1995b8c 100644
---- a/drivers/block/cciss.c
-+++ b/drivers/block/cciss.c
-@@ -45,6 +45,7 @@ #include <linux/dma-mapping.h>
- #include <linux/blkdev.h>
- #include <linux/genhd.h>
- #include <linux/completion.h>
-+#include <linux/reboot.h>
- 
- #define CCISS_DRIVER_VERSION(maj,min,submin) ((maj<<16)|(min<<8)|(submin))
- #define DRIVER_NAME "HP CISS Driver (v 3.6.14)"
-@@ -132,6 +133,7 @@ #define MAX_CTLR	32
- #define MAX_CTLR_ORIG 	8
- 
- static ctlr_info_t *hba[MAX_CTLR];
-+static int notify_count=0;
- 
- static void do_cciss_request(request_queue_t *q);
- static irqreturn_t do_cciss_intr(int irq, void *dev_id);
-@@ -142,6 +144,8 @@ static int cciss_ioctl(struct inode *ino
- static int cciss_getgeo(struct block_device *bdev, struct hd_geometry *geo);
- 
- static int cciss_revalidate(struct gendisk *disk);
-+static int cciss_notify_reboot(struct notifier_block *this,
-+					unsigned long code, void *x);
- static int rebuild_lun_table(ctlr_info_t *h, struct gendisk *del_disk);
- static int deregister_disk(struct gendisk *disk, drive_info_struct *drv,
- 			   int clear_all);
-@@ -193,6 +197,36 @@ #endif
- 	.revalidate_disk = cciss_revalidate,
- };
- 
-+static struct notifier_block cciss_notifier = {
-+	.notifier_call  = cciss_notify_reboot,
-+};
-+
-+static int cciss_notify_reboot(struct notifier_block *this,
-+                            unsigned long code, void *x)
-+{
-+	int i, return_code;
-+	char flush_buf[4];
-+
-+	if ((code == SYS_DOWN) || (code == SYS_HALT) || 
-+					(code == SYS_POWER_OFF)) {
-+		printk(KERN_INFO "cciss: stopping all cciss devices.\n");
-+		/* double check that all controller entrys have been removed */
-+		for (i = 0; i < MAX_CTLR; i++) {
-+			if (hba[i] != NULL) {
-+				printk(KERN_WARNING "cciss: removing "
-+						"controller %d\n", i);
-+				/* flush data in battery backed cache to disks */
-+				memset(flush_buf, 0, 4);
-+				return_code = sendcmd(CCISS_CACHE_FLUSH, i, flush_buf, 4, 								0, 0, 0, NULL, TYPE_CMD);
-+				if(return_code != IO_OK) {
-+					printk(KERN_WARNING "Error Flushing cache on "
-+								" controller %d\n", i); 
-+				} 	
-+			}
-+		}
-+	}
-+	return NOTIFY_DONE;
-+}
- /*
-  * Enqueuing and dequeuing functions for cmdlists.
-  */
-@@ -3293,6 +3327,12 @@ #endif
- 	       ((hba[i]->nr_cmds + BITS_PER_LONG -
- 		 1) / BITS_PER_LONG) * sizeof(unsigned long));
- 
-+	if (notify_count == 0) {
-+		register_reboot_notifier(&cciss_notifier);
-+		notify_count=1;
-+	}
-+
-+
- #ifdef CCISS_DEBUG
- 	printk(KERN_DEBUG "Scanning for drives on controller cciss%d\n", i);
- #endif				/* CCISS_DEBUG */
-@@ -3500,6 +3540,7 @@ static void __exit cciss_cleanup(void)
- 	int i;
- 
- 	pci_unregister_driver(&cciss_pci_driver);
-+	unregister_reboot_notifier(&cciss_notifier);
- 	/* double check that all controller entrys have been removed */
- 	for (i = 0; i < MAX_CTLR; i++) {
- 		if (hba[i] != NULL) {
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>   
+
