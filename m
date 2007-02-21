@@ -1,68 +1,81 @@
-From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: Re: Please help if u can.
-Date: Tue, 20 Feb 2007 22:20:05 -0800
-Message-ID: <45DBE495.6050706@us.ibm.com>
-References: <45DB9D89.7030804@tlchosting.com> <45DBD6CF.7010309@torque.net>
-Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
+From: Heiko Carstens <heiko.carstens@de.ibm.com>
+Subject: zfcp: fix likely/unlikely usage
+Date: Wed, 21 Feb 2007 09:28:00 +0100
+Message-ID: <20070221082800.GB8184@osiris.boeblingen.de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e2.ny.us.ibm.com ([32.97.182.142]:56383 "EHLO e2.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751132AbXBUGUK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Feb 2007 01:20:10 -0500
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e2.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l1L6K8iE027440
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Feb 2007 01:20:08 -0500
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v8.2) with ESMTP id l1L6K8xE250588
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Feb 2007 01:20:08 -0500
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l1L6K7Fg020453
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Feb 2007 01:20:07 -0500
-In-Reply-To: <45DBD6CF.7010309@torque.net>
+Received: from mtagate1.uk.ibm.com ([195.212.29.134]:47584 "EHLO
+	mtagate1.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751165AbXBUI30 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Feb 2007 03:29:26 -0500
+Received: from d06nrmr1407.portsmouth.uk.ibm.com (d06nrmr1407.portsmouth.uk.ibm.com [9.149.38.185])
+	by mtagate1.uk.ibm.com (8.13.8/8.13.8) with ESMTP id l1L8TO3v063574
+	for <linux-scsi@vger.kernel.org>; Wed, 21 Feb 2007 08:29:24 GMT
+Received: from d06av03.portsmouth.uk.ibm.com (d06av03.portsmouth.uk.ibm.com [9.149.37.213])
+	by d06nrmr1407.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v8.2) with ESMTP id l1L8TOW71286360
+	for <linux-scsi@vger.kernel.org>; Wed, 21 Feb 2007 08:29:24 GMT
+Received: from d06av03.portsmouth.uk.ibm.com (loopback [127.0.0.1])
+	by d06av03.portsmouth.uk.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l1L8TOxf020645
+	for <linux-scsi@vger.kernel.org>; Wed, 21 Feb 2007 08:29:24 GMT
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: John Scarpa <john@tlchosting.com>
-Cc: dougg@torque.net, linux-scsi@vger.kernel.org, Alexis Bruemmer <alexisb@us.ibm.com>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Swen Schillig <swen@vnet.ibm.com>, linux-scsi@vger.kernel.org
 
-Douglas Gilbert wrote:
+From: Heiko Carstens <heiko.carstens@de.ibm.com>
 
-> It would be reasonable to assume that Luben is the maintainer
-> of this code although the MAINTAINERS file has no entry
-> for the aic94xx driver.
-> 
-> This code was effectively removed from Luben's control
-> about 18 months ago and has passed through several sets
-> of hands since then. None of the people concerned want
-> to identify themselves in the source or explain
-> what has been done in writing. Why?
+zfcp_fsf_protstatus_eval() takes always the 'wrong' branch.
 
-Laziness, in my case.  I suppose it would be useful to document the fact
-that I've made changes to libsas/aic94xx.  Though the "what has been
-done" part ... I was hoping the commit messages would suffice.
+Likely Profiling Results
+ ---------------------------------------------------------
+[+- ] Type | # True | # False | Function:Filename@Line
++unlikely  |   11042|        0  zfcp_fsf_protstatus_eval()
 
-> The existing copyright notices should remain but what
-> about the massive changes to that driver in 2006?
-> Where is the indication of whom John should contact?
->
-> Perhaps something like:
->  "For maintenance of this driver contact
->   linux-scsi@vger.kernel.org"
+Acked-by: Swen Schillig <swen@vnet.ibm.com>
+Signed-off-by: Heiko Carstens <heiko.carstens@de.ibm.com>
+---
 
-Alexis can answer this part.
+ drivers/s390/scsi/zfcp_fsf.c |   10 ++++++----
+ 1 files changed, 6 insertions(+), 4 deletions(-)
 
-> FYI John, Luben maintains his own version of the
-> aic94xx and that version holds the sequencer firmware
-> in a binary blob within the driver. Due to kernel policy,
-> that blob was moved to separate file by someone else. The
-> error that you are reporting suggests that the firmware
-> file for the aic94xx cannot be found. On my system
-> the file that you may be missing looks like this:
-> # ls -l /lib/firmware/aic94xx-seq.fw
-> -rw-rw-r-- 1 root root 22622 Aug 29 17:36 /lib/firmware/aic94xx-seq.fw
+Index: linux-2.6/drivers/s390/scsi/zfcp_fsf.c
+===================================================================
+--- linux-2.6.orig/drivers/s390/scsi/zfcp_fsf.c
++++ linux-2.6/drivers/s390/scsi/zfcp_fsf.c
+@@ -299,9 +299,10 @@ zfcp_fsf_protstatus_eval(struct zfcp_fsf
+ 	}
+ 
+ 	/* log additional information provided by FSF (if any) */
+-	if (unlikely(qtcb->header.log_length)) {
++	if (likely(qtcb->header.log_length)) {
+ 		/* do not trust them ;-) */
+-		if (qtcb->header.log_start > sizeof(struct fsf_qtcb)) {
++		if (unlikely(qtcb->header.log_start >
++			     sizeof(struct fsf_qtcb))) {
+ 			ZFCP_LOG_NORMAL
+ 			    ("bug: ULP (FSF logging) log data starts "
+ 			     "beyond end of packet header. Ignored. "
+@@ -310,8 +311,9 @@ zfcp_fsf_protstatus_eval(struct zfcp_fsf
+ 			     sizeof(struct fsf_qtcb));
+ 			goto forget_log;
+ 		}
+-		if ((size_t) (qtcb->header.log_start + qtcb->header.log_length)
+-		    > sizeof(struct fsf_qtcb)) {
++		if (unlikely((size_t) (qtcb->header.log_start +
++				       qtcb->header.log_length) >
++			     sizeof(struct fsf_qtcb))) {
+ 			ZFCP_LOG_NORMAL("bug: ULP (FSF logging) log data ends "
+ 					"beyond end of packet header. Ignored. "
+ 					"(start=%i, length=%i, size=%li)\n",
 
-http://kernel.org/pub/linux/kernel/people/jejb/aic94xx-seq.fw
+-- 
+Heiko Carstens
+Linux on System z Development
 
---D
+IBM Deutschland Entwicklung GmbH
+Vorsitzender des Aufsichtsrats: Johann Weihen
+Geschaeftsfuehrung : Herbert Kircher
+Sitz der Gesellschaft: Boeblingen
+Registergericht: Amtsgericht Stuttgart, HRB 243294
