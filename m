@@ -1,81 +1,53 @@
-From: Heiko Carstens <heiko.carstens@de.ibm.com>
-Subject: zfcp: fix likely/unlikely usage
-Date: Wed, 21 Feb 2007 09:28:00 +0100
-Message-ID: <20070221082800.GB8184@osiris.boeblingen.de.ibm.com>
+From: Srdjan Todorovic <todorovic.s@googlemail.com>
+Subject: initio.h header user confusion
+Date: Wed, 21 Feb 2007 16:12:06 +0000 (GMT)
+Message-ID: <Pine.LNX.4.63.0702211558220.5167@thor.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate1.uk.ibm.com ([195.212.29.134]:47584 "EHLO
-	mtagate1.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751165AbXBUI30 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Feb 2007 03:29:26 -0500
-Received: from d06nrmr1407.portsmouth.uk.ibm.com (d06nrmr1407.portsmouth.uk.ibm.com [9.149.38.185])
-	by mtagate1.uk.ibm.com (8.13.8/8.13.8) with ESMTP id l1L8TO3v063574
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Feb 2007 08:29:24 GMT
-Received: from d06av03.portsmouth.uk.ibm.com (d06av03.portsmouth.uk.ibm.com [9.149.37.213])
-	by d06nrmr1407.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v8.2) with ESMTP id l1L8TOW71286360
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Feb 2007 08:29:24 GMT
-Received: from d06av03.portsmouth.uk.ibm.com (loopback [127.0.0.1])
-	by d06av03.portsmouth.uk.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l1L8TOxf020645
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Feb 2007 08:29:24 GMT
-Content-Disposition: inline
+Received: from nf-out-0910.google.com ([64.233.182.191]:22404 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161297AbXBUQLM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Feb 2007 11:11:12 -0500
+Received: by nf-out-0910.google.com with SMTP id o25so245257nfa
+        for <linux-scsi@vger.kernel.org>; Wed, 21 Feb 2007 08:11:11 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Swen Schillig <swen@vnet.ibm.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-From: Heiko Carstens <heiko.carstens@de.ibm.com>
+Hi,
 
-zfcp_fsf_protstatus_eval() takes always the 'wrong' branch.
+I'm working on a set of patches for the initio scsi driver and I found
+some strangeness with its header file, initio.h. I noticed that
+sun3_scsi.c and sun3_scsi_vme.c include the header, and it uses defines
+such as SCSI_ABORT_SNOOZE (defined in initio.h).
 
-Likely Profiling Results
- ---------------------------------------------------------
-[+- ] Type | # True | # False | Function:Filename@Line
-+unlikely  |   11042|        0  zfcp_fsf_protstatus_eval()
+I did some grepping and am now confused. Grepping the entire kernel tree
+like so:
 
-Acked-by: Swen Schillig <swen@vnet.ibm.com>
-Signed-off-by: Heiko Carstens <heiko.carstens@de.ibm.com>
----
+  grep -r SCSI_ABORT_ ~/kernelcoding/linux-2.6-rc-latest/*
 
- drivers/s390/scsi/zfcp_fsf.c |   10 ++++++----
- 1 files changed, 6 insertions(+), 4 deletions(-)
+gives me a handful of scsi drivers that use these defines.
 
-Index: linux-2.6/drivers/s390/scsi/zfcp_fsf.c
-===================================================================
---- linux-2.6.orig/drivers/s390/scsi/zfcp_fsf.c
-+++ linux-2.6/drivers/s390/scsi/zfcp_fsf.c
-@@ -299,9 +299,10 @@ zfcp_fsf_protstatus_eval(struct zfcp_fsf
- 	}
- 
- 	/* log additional information provided by FSF (if any) */
--	if (unlikely(qtcb->header.log_length)) {
-+	if (likely(qtcb->header.log_length)) {
- 		/* do not trust them ;-) */
--		if (qtcb->header.log_start > sizeof(struct fsf_qtcb)) {
-+		if (unlikely(qtcb->header.log_start >
-+			     sizeof(struct fsf_qtcb))) {
- 			ZFCP_LOG_NORMAL
- 			    ("bug: ULP (FSF logging) log data starts "
- 			     "beyond end of packet header. Ignored. "
-@@ -310,8 +311,9 @@ zfcp_fsf_protstatus_eval(struct zfcp_fsf
- 			     sizeof(struct fsf_qtcb));
- 			goto forget_log;
- 		}
--		if ((size_t) (qtcb->header.log_start + qtcb->header.log_length)
--		    > sizeof(struct fsf_qtcb)) {
-+		if (unlikely((size_t) (qtcb->header.log_start +
-+				       qtcb->header.log_length) >
-+			     sizeof(struct fsf_qtcb))) {
- 			ZFCP_LOG_NORMAL("bug: ULP (FSF logging) log data ends "
- 					"beyond end of packet header. Ignored. "
- 					"(start=%i, length=%i, size=%li)\n",
+Grepping the kernel source for these defines like so:
 
--- 
-Heiko Carstens
-Linux on System z Development
+   grep -r SCSI_ABORT_ ~/kernelcoding/linux-2.6-rc-latest/* | grep define
 
-IBM Deutschland Entwicklung GmbH
-Vorsitzender des Aufsichtsrats: Johann Weihen
-Geschaeftsfuehrung : Herbert Kircher
-Sitz der Gesellschaft: Boeblingen
-Registergericht: Amtsgericht Stuttgart, HRB 243294
+only gives me drivers/scsi/initio.h, so they are only defined in
+initio.h
+
+Grepping the whole kernel source for drivers/headers that include
+initio.h like so:
+   grep -r "initio.h" ~/kernelcoding/linux-2.6-rc-latest/*
+
+only gives me 3 results - initio.c, sun3_scsi.c and sun3_scsi_vme.c.
+
+So how is it possible that other drivers such as aha1542.c use these defines?
+
+Can anyone please explain this as it's really confused me, and I want
+to make sure that my patches don't break other drivers when I post
+them here.
+
+Many thanks,
+
+Srdjan
