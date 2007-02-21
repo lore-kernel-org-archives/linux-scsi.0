@@ -1,139 +1,116 @@
 From: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
-Subject: [Patch 1/2] cciss: fix for 2TB support
-Date: Wed, 21 Feb 2007 15:10:39 -0600
-Message-ID: <20070221211039.GA2672@beardog.cca.cpqcorp.net>
+Subject: [Patch 2/2] cciss: add reboot notifier support to driver
+Date: Wed, 21 Feb 2007 15:12:51 -0600
+Message-ID: <20070221211251.GB2672@beardog.cca.cpqcorp.net>
 Reply-To: mike.miller@hp.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palrel10.hp.com ([156.153.255.245]:53581 "EHLO palrel10.hp.com"
+Received: from palrel12.hp.com ([156.153.255.237]:54431 "EHLO palrel12.hp.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1423142AbXBUVUq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Feb 2007 16:20:46 -0500
+	id S1423151AbXBUVfc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Feb 2007 16:35:32 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jens.axboe@oracle.com, akpm@osdl.org
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, gregkh@novell.com
 
-Patch 1/2
+Patch 2/2
 
-This patch changes the way we determine if a logical volume is larger than 2TB. The
-original test looked for a total_size of 0. Originally we added 1 to the total_size.
-That would make our read_capacity return size 0 for >2TB lv's. We assumed that we
-could not have a lv size of 0 so it seemed OK until we were in a clustered system. The
-backup node would see a size of 0 due to the reservation on the drive. That caused
-the driver to switch to 16-byte CDB's which are not supported on older controllers.
-After that everything was broken.
-It may seem petty but I don't see the value in trying to determine if the LBA is
-beyond the 2TB boundary. That's why when we switch we use 16-byte CDB's for all
-read/write operations.
+This patch adds reboot_notifier support to cciss. Changes in firmware make this patch
+essential. Without this patch there may be valid data left in the controller's battery
+backed write cache (BBWC) on shutdown. We found out the hard way that the kernel does
+not call our cleanup routines on shutdown or reboot. It seems that only rmmod calls
+the cleanup.
 Please consider this for inclusion.
 
-Signed-off-by: Mike Miller <mike.miller@hp.com>
+Signed-off-by: Mike Miller <mike.miller@hp.com
 ------------------------------------------------------------------------------------------
 diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
-index 05dfe35..916aab0 100644
+index 916aab0..1995b8c 100644
 --- a/drivers/block/cciss.c
 +++ b/drivers/block/cciss.c
-@@ -1291,13 +1291,19 @@ static void cciss_update_drive_info(int 
- 	if (inq_buff == NULL)
- 		goto mem_msg;
+@@ -45,6 +45,7 @@ #include <linux/dma-mapping.h>
+ #include <linux/blkdev.h>
+ #include <linux/genhd.h>
+ #include <linux/completion.h>
++#include <linux/reboot.h>
  
-+ 	/* testing to see if 16-byte CDBs are already being used */
-+ 	if (h->cciss_read == CCISS_READ_16) {
-+ 		cciss_read_capacity_16(h->ctlr, drv_index, 1,
-+ 			&total_size, &block_size);
-+ 		goto geo_inq;
-+ 	}
-+  
- 	cciss_read_capacity(ctlr, drv_index, 1,
- 			    &total_size, &block_size);
+ #define CCISS_DRIVER_VERSION(maj,min,submin) ((maj<<16)|(min<<8)|(submin))
+ #define DRIVER_NAME "HP CISS Driver (v 3.6.14)"
+@@ -132,6 +133,7 @@ #define MAX_CTLR	32
+ #define MAX_CTLR_ORIG 	8
  
--	/* total size = last LBA + 1 */
--	/* FFFFFFFF + 1 = 0, cannot have a logical volume of size 0 */
--	/* so we assume this volume this must be >2TB in size */
--	if (total_size == (__u32) 0) {
-+  	/* if read_capacity returns all F's this volume is >2TB in size */
-+  	/* so we switch to 16-byte CDB's for all read/write ops */
-+  	if (total_size == 0xFFFFFFFF) {
- 		cciss_read_capacity_16(ctlr, drv_index, 1,
- 		&total_size, &block_size);
- 		h->cciss_read = CCISS_READ_16;
-@@ -1306,6 +1312,7 @@ static void cciss_update_drive_info(int 
- 		h->cciss_read = CCISS_READ_10;
- 		h->cciss_write = CCISS_WRITE_10;
- 	}
-+geo_inq:
- 	cciss_geometry_inquiry(ctlr, drv_index, 1, total_size, block_size,
- 			       inq_buff, &h->drv[drv_index]);
+ static ctlr_info_t *hba[MAX_CTLR];
++static int notify_count=0;
  
-@@ -1917,13 +1924,14 @@ static void cciss_geometry_inquiry(int c
- 			drv->raid_level = inq_buff->data_byte[8];
- 		}
- 		drv->block_size = block_size;
--		drv->nr_blocks = total_size;
-+		drv->nr_blocks = total_size + 1;
- 		t = drv->heads * drv->sectors;
- 		if (t > 1) {
--			unsigned rem = sector_div(total_size, t);
-+			sector_t real_size = total_size + 1;
-+			unsigned long rem = sector_div(real_size, t);
- 			if (rem)
--				total_size++;
--			drv->cylinders = total_size;
-+				real_size++;
-+			drv->cylinders = real_size;
- 		}
- 	} else {		/* Get geometry failed */
- 		printk(KERN_WARNING "cciss: reading geometry failed\n");
-@@ -1953,16 +1961,16 @@ cciss_read_capacity(int ctlr, int logvol
- 				ctlr, buf, sizeof(ReadCapdata_struct),
- 					1, logvol, 0, NULL, TYPE_CMD);
- 	if (return_code == IO_OK) {
--		*total_size = be32_to_cpu(*(__u32 *) buf->total_size)+1;
-+		*total_size = be32_to_cpu(*(__u32 *) buf->total_size);
- 		*block_size = be32_to_cpu(*(__u32 *) buf->block_size);
- 	} else {		/* read capacity command failed */
- 		printk(KERN_WARNING "cciss: read capacity failed\n");
- 		*total_size = 0;
- 		*block_size = BLOCK_SIZE;
- 	}
--	if (*total_size != (__u32) 0)
-+	if (*total_size != 0)
- 		printk(KERN_INFO "      blocks= %llu block_size= %d\n",
--		(unsigned long long)*total_size, *block_size);
-+		(unsigned long long)*total_size+1, *block_size);
- 	kfree(buf);
- 	return;
- }
-@@ -1989,7 +1997,7 @@ cciss_read_capacity_16(int ctlr, int log
- 				1, logvol, 0, NULL, TYPE_CMD);
- 	}
- 	if (return_code == IO_OK) {
--		*total_size = be64_to_cpu(*(__u64 *) buf->total_size)+1;
-+		*total_size = be64_to_cpu(*(__u64 *) buf->total_size);
- 		*block_size = be32_to_cpu(*(__u32 *) buf->block_size);
- 	} else {		/* read capacity command failed */
- 		printk(KERN_WARNING "cciss: read capacity failed\n");
-@@ -1997,7 +2005,7 @@ cciss_read_capacity_16(int ctlr, int log
- 		*block_size = BLOCK_SIZE;
- 	}
- 	printk(KERN_INFO "      blocks= %llu block_size= %d\n",
--	       (unsigned long long)*total_size, *block_size);
-+	       (unsigned long long)*total_size+1, *block_size);
- 	kfree(buf);
- 	return;
- }
-@@ -3119,8 +3127,9 @@ #endif				/* CCISS_DEBUG */
- 		}
- 		cciss_read_capacity(cntl_num, i, 0, &total_size, &block_size);
+ static void do_cciss_request(request_queue_t *q);
+ static irqreturn_t do_cciss_intr(int irq, void *dev_id);
+@@ -142,6 +144,8 @@ static int cciss_ioctl(struct inode *ino
+ static int cciss_getgeo(struct block_device *bdev, struct hd_geometry *geo);
  
--		/* total_size = last LBA + 1 */
--		if(total_size == (__u32) 0) {
-+		/* If read_capacity returns all F's the logical is >2TB */
-+		/* so we switch to 16-byte CDBs for all read/write ops */
-+		if(total_size == 0xFFFFFFFF) {
- 			cciss_read_capacity_16(cntl_num, i, 0,
- 			&total_size, &block_size);
- 			hba[cntl_num]->cciss_read = CCISS_READ_16;
+ static int cciss_revalidate(struct gendisk *disk);
++static int cciss_notify_reboot(struct notifier_block *this,
++					unsigned long code, void *x);
+ static int rebuild_lun_table(ctlr_info_t *h, struct gendisk *del_disk);
+ static int deregister_disk(struct gendisk *disk, drive_info_struct *drv,
+ 			   int clear_all);
+@@ -193,6 +197,36 @@ #endif
+ 	.revalidate_disk = cciss_revalidate,
+ };
+ 
++static struct notifier_block cciss_notifier = {
++	.notifier_call  = cciss_notify_reboot,
++};
++
++static int cciss_notify_reboot(struct notifier_block *this,
++                            unsigned long code, void *x)
++{
++	int i, return_code;
++	char flush_buf[4];
++
++	if ((code == SYS_DOWN) || (code == SYS_HALT) || 
++					(code == SYS_POWER_OFF)) {
++		printk(KERN_INFO "cciss: stopping all cciss devices.\n");
++		/* double check that all controller entrys have been removed */
++		for (i = 0; i < MAX_CTLR; i++) {
++			if (hba[i] != NULL) {
++				printk(KERN_WARNING "cciss: removing "
++						"controller %d\n", i);
++				/* flush data in battery backed cache to disks */
++				memset(flush_buf, 0, 4);
++				return_code = sendcmd(CCISS_CACHE_FLUSH, i, flush_buf, 4, 								0, 0, 0, NULL, TYPE_CMD);
++				if(return_code != IO_OK) {
++					printk(KERN_WARNING "Error Flushing cache on "
++								" controller %d\n", i); 
++				} 	
++			}
++		}
++	}
++	return NOTIFY_DONE;
++}
+ /*
+  * Enqueuing and dequeuing functions for cmdlists.
+  */
+@@ -3293,6 +3327,12 @@ #endif
+ 	       ((hba[i]->nr_cmds + BITS_PER_LONG -
+ 		 1) / BITS_PER_LONG) * sizeof(unsigned long));
+ 
++	if (notify_count == 0) {
++		register_reboot_notifier(&cciss_notifier);
++		notify_count=1;
++	}
++
++
+ #ifdef CCISS_DEBUG
+ 	printk(KERN_DEBUG "Scanning for drives on controller cciss%d\n", i);
+ #endif				/* CCISS_DEBUG */
+@@ -3500,6 +3540,7 @@ static void __exit cciss_cleanup(void)
+ 	int i;
+ 
+ 	pci_unregister_driver(&cciss_pci_driver);
++	unregister_reboot_notifier(&cciss_notifier);
+ 	/* double check that all controller entrys have been removed */
+ 	for (i = 0; i < MAX_CTLR; i++) {
+ 		if (hba[i] != NULL) {
