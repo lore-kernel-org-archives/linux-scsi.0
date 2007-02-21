@@ -1,44 +1,49 @@
-From: John Scarpa <john@tlchosting.com>
-Subject: Please help if u can.
-Date: Tue, 20 Feb 2007 20:16:57 -0500
-Message-ID: <45DB9D89.7030804@tlchosting.com>
+From: Greg KH <greg@kroah.com>
+Subject: [patch 04/18] SCSI: add missing cdb clearing in scsi_execute()
+Date: Tue, 20 Feb 2007 17:50:00 -0800
+Message-ID: <20070221015000.GE3684@kroah.com>
+References: <20070221014413.282048309@mini.kroah.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.tlchosting.com ([209.170.84.20]:3950 "HELO
-	mail.tlchosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932348AbXBUBYB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Feb 2007 20:24:01 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964781AbXBUBv4@vger.kernel.org>
+Content-Disposition: inline; filename="scsi-add-missing-cdb-clearing-in-scsi_execute.patch"
+In-Reply-To: <20070221014927.GA3684@kroah.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, stable@kernel.org, jens.axboe@oracle.com, dougg@torque.net, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Justin Forbes <jmforbes@linuxtx.org>, Zwane Mwaikambo <zwane@arm.linux.org.uk>, Theodore Ts'o <tytso@mit.edu>, Randy Dunlap <rdunlap@xenotime.net>, Dave Jones <davej@redhat.com>, Chuck Wolber <chuckw@quantumlinux.com>, Chris Wedgwood <reviews@ml.cw.f00f.org>, Michael Krufky <mkrufky@linuxtv.org>, torvalds@linux-foundation.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, Tejun Heo <htejun@gmail.com>, Chris Wright <chrisw@sous-sol.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Dear Luben,
+-stable review patch.  If anyone has any objections, please let us know.
 
-I am trying to compile the aic94xx for my aic9410 directly into my 
-kernel (fc5_64bit-2.6.20)...  Is this possible or must it be loaded as a 
-module?  I am really not wanting to add modular support to my nice neat 
-monolithic kernel.. :-(  I've been searching for ever now and tried 
-everything i could to no avail..
+------------------
+From: Tejun Heo <htejun@gmail.com>
 
---->Log
-aic94xx: Adaptec aic94xx SAS/SATA driver version 1.0.2 loaded
-aic94xx: found Adaptec AIC-9410W SAS/SATA Host Adapter, device 0000:04:02.0
-scsi0 : aic94xx
-aic94xx: Failed to load sequencer firmware file aic94xx-seq.fw, error -2
-aic94xx: couldn't init seqs for 0000:04:02.0
-aic94xx: couldn't init the chip
+Clear-garbage-after-CDB patch missed scsi_execute() and it causes some
+ODDs (HL-DT-ST DVD-RAM GSA-H30N) choke during SCSI scan.  Note that
+this patch is only for -stable.  There is another more reliable fix
+for this problem proposed for devel tree.
 
---->Specs
-FC5_64bit 2.6.20
-Supermicro 6025B-3 Server Model
+http://thread.gmane.org/gmane.linux.ide/14605/focus=14605
 
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+Cc: Jens Axboe <jens.axboe@oracle.com>
+Cc: Douglas Gilbert <dougg@torque.net>
+Signed-off-by: Chris Wright <chrisw@sous-sol.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
 
+---
+ drivers/scsi/scsi_lib.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-Thank you for any help!  btw this is the first time i ever wrote a 
-maintainer for help... my pride is definitely hurting right now...
+--- linux-2.6.18.7.orig/drivers/scsi/scsi_lib.c
++++ linux-2.6.18.7/drivers/scsi/scsi_lib.c
+@@ -191,6 +191,7 @@ int scsi_execute(struct scsi_device *sde
+ 		goto out;
+ 
+ 	req->cmd_len = COMMAND_SIZE(cmd[0]);
++	memset(req->cmd, 0, BLK_MAX_CDB); /* ATAPI hates garbage after CDB */
+ 	memcpy(req->cmd, cmd, req->cmd_len);
+ 	req->sense = sense;
+ 	req->sense_len = 0;
 
-Best wishes,
-John Scarpa
-
+--
