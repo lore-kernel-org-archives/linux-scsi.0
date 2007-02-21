@@ -1,28 +1,38 @@
-From: Matthew Wilcox <matthew@wil.cx>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: initio.h header user confusion
-Date: Wed, 21 Feb 2007 09:52:15 -0700
-Message-ID: <20070221165215.GB26111@parisc-linux.org>
-References: <Pine.LNX.4.63.0702211558220.5167@thor.lan> <20070221162008.GA26111@parisc-linux.org> <Pine.LNX.4.63.0702211632160.5167@thor.lan>
+Date: Wed, 21 Feb 2007 10:57:02 -0600
+Message-ID: <1172077022.3335.24.camel@mulgrave.il.steeleye.com>
+References: <Pine.LNX.4.63.0702211558220.5167@thor.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:56151 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422679AbXBUQwQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Feb 2007 11:52:16 -0500
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.63.0702211632160.5167@thor.lan>
+Received: from hancock.steeleye.com ([71.30.118.248]:57623 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1422685AbXBUQ5G (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Feb 2007 11:57:06 -0500
+In-Reply-To: <Pine.LNX.4.63.0702211558220.5167@thor.lan>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Srdjan Todorovic <todorovic.s@googlemail.com>
 Cc: linux-scsi@vger.kernel.org
 
-On Wed, Feb 21, 2007 at 04:36:59PM +0000, Srdjan Todorovic wrote:
-> I'll recheck the other drivers then. It would seem the only users then
-> are initio and sun3*. What's the best thing to do about it?
-> Should I keep things as they are with SCSI_ABORT_* or should I
-> move them to include/scsi/ or something entirely different?
+On Wed, 2007-02-21 at 16:12 +0000, Srdjan Todorovic wrote:
+> I'm working on a set of patches for the initio scsi driver and I found
+> some strangeness with its header file, initio.h. I noticed that
+> sun3_scsi.c and sun3_scsi_vme.c include the header, and it uses defines
+> such as SCSI_ABORT_SNOOZE (defined in initio.h).
 
-These drivers ought to be moved away from using SCSI_ABORT_*.  If you
-don't have the expertise and hardware to do this, best to leave them
-alone.
+It's a remnant of the old 2.4 error handler and should be excised.
+
+In early 2.4 or perhaps even 2.2 the error handler ran in interrupt
+context, so there was no way of waiting for an abort to complete, hence
+this return value (it told the eh to wait a while for the abort).
+
+In 2.6 all eh routines run in the context of the host eh thread, so you
+can use standard msleep() etc. calls to wait for aborts to timeout or
+complete.
+
+James
+
+
