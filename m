@@ -1,63 +1,37 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [Patch 1/2] cciss: fix for 2TB support
-Date: Thu, 22 Feb 2007 15:41:24 -0600
-Message-ID: <1172180484.3378.34.camel@mulgrave.il.steeleye.com>
-References: <20070221211039.GA2672@beardog.cca.cpqcorp.net>
-	 <20070221191427.9b7cf4b0.akpm@linux-foundation.org>
-	 <20070222165123.GC2672@beardog.cca.cpqcorp.net>
-	 <20070222132434.d84d3248.akpm@linux-foundation.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 1/2] sas_ata: Rename ata_queued_cmd->lldd_task to driver_data
+Date: Thu, 22 Feb 2007 16:43:55 -0500
+Message-ID: <45DE0E9B.60106@garzik.org>
+References: <20070130091814.31530.23152.stgit@elm3a70.beaverton.ibm.com> <20070130091841.31530.81645.stgit@elm3a70.beaverton.ibm.com> <45C98421.7020907@gmail.com> <45DE0DA9.7000200@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751950AbXBVVml@vger.kernel.org>
-In-Reply-To: <20070222132434.d84d3248.akpm@linux-foundation.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>, mike.miller@hp.com, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, gregkh@novell.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:40793 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751939AbXBVVoB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Feb 2007 16:44:01 -0500
+In-Reply-To: <45DE0DA9.7000200@us.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Darrick J. Wong" <djwong@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org, Tejun Heo <htejun@gmail.com>, alexisb@us.ibm.com
 
-On Thu, 2007-02-22 at 13:24 -0800, Andrew Morton wrote:
-> > On Thu, 22 Feb 2007 10:51:23 -0600 "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net> wrote:
-> > On Wed, Feb 21, 2007 at 07:14:27PM -0800, Andrew Morton wrote:
-> > > On Wed, 21 Feb 2007 15:10:39 -0600 "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net> wrote:
-> > > 
-> > > > Patch 1/2
-> > > > +  	if (total_size == 0xFFFFFFFF) {
-> > > 
-> > > I seem to remember having already questioned this.  total_size is sector_t, which
-> > > can be either 32-bit or 64-bit.  Are you sure that comparison works as
-> > > intended in both cases?
-> > > 
-> > > 
-> > > > +		if(total_size == 0xFFFFFFFF) {
-> > > >  			cciss_read_capacity_16(cntl_num, i, 0,
-> > > >  			&total_size, &block_size);
-> > > >  			hba[cntl_num]->cciss_read = CCISS_READ_16;
-> > > 
-> > > Here too.
-> > It has worked in all of the configs I've tested. Should I change it from sector_t to a
-> > __64? I have not tested all possible configs.
-> > 
+Darrick J. Wong wrote:
+> Per Tejun's request, rename the lldd_task field and add comments about it.
 > 
-> I'd suggest using -1: that just works.
+> Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
+> ---
+> 
+>  drivers/scsi/libsas/sas_ata.c |    8 ++++----
+>  include/linux/libata.h        |    4 +++-
+>  2 files changed, 7 insertions(+), 5 deletions(-)
 
-Actually, no, that won't work.
+looks good to me
 
-This is a SCSI heuristic for determining when to use the 16 byte version
-of the read capacity command.  The 10 byte command can only return 32
-bits of information (this is in sectors, so it returns up to 2TB of
-bytes).
+though please CC linux-ide on all libata patches...
 
-The heuristic requirement is that if the size is exactly 0xffffffff then
-you should try the 16 byte command (which can return 64 bits of
-information).  If that fails then you assume the 0xfffffff is a real
-size otherwize, you assume it was truncated and take the real result
-from the 16 byte command.
+	Jeff
 
-You can see a far more elaborate version of this in operation in
-sd.c:sd_read_capacity().
 
-The only thing I'd suggest is to use 0xFFFFFFFFULL as the constant to
-prevent sign extension issues.
 
-James
