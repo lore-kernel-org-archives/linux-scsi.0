@@ -1,127 +1,55 @@
-From: "Seokmann Ju" <seokmann.ju@qlogic.com>
-Subject: RE: [PATCH] qla2xxx: fix RSCN handling on big-endian systems
-Date: Thu, 22 Feb 2007 06:04:03 -0800
-Message-ID: <A6970E9A290F3F4682E1EAD0EA14F32BAE5EFC@AVEXCH2.qlogic.org>
-References: <20070219181832.GA18043@us.ibm.com> <A6970E9A290F3F4682E1EAD0EA14F32BAE5E07@AVEXCH2.qlogic.org> <20070222025349.GA13701@us.ibm.com>
+From: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
+Subject: Re: [Patch 1/2] cciss: fix for 2TB support
+Date: Thu, 22 Feb 2007 10:51:23 -0600
+Message-ID: <20070222165123.GC2672@beardog.cca.cpqcorp.net>
+References: <20070221211039.GA2672@beardog.cca.cpqcorp.net> <20070221191427.9b7cf4b0.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch2.qlogic.com ([198.70.193.116]:46420 "EHLO
-	avexch2.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946012AbXBVOEG convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Feb 2007 09:04:06 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <20070222025349.GA13701@us.ibm.com>
+Received: from palrel10.hp.com ([156.153.255.245]:38822 "EHLO palrel10.hp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751708AbXBVQv0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Feb 2007 11:51:26 -0500
+Content-Disposition: inline
+In-Reply-To: <20070221191427.9b7cf4b0.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: malahal@us.ibm.com
-Cc: linux-scsi@vger.kernel.org, Linux Driver <Linux-Driver@qlogic.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: mike.miller@hp.com, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, gregkh@novell.com
 
-On Wednesday, February 21, 2007 6:54 PM, Malahal Naineni wrote:
-> I have JBOD in FL-port and if I unplug the cable or disable 
-> the switch port, the qla2xxx driver doesn't fail the I/O 
-> soon. The remote port status is 'online' all the time. The 
-> I/O's usually timeout after the usual scsi timeout.
-Yes, that is because qla2xxx doesn't want to trigger unnecessary error
-handling mechanism, which is expensive.
-As long as State Change recovered within SCSI timeout period, driver
-won't let mid-layer know about it.
-> Based on 
-> the existing structure, al_pa is at the lowest addressed 
-> byte, so the b24 field's interpretation as an integer is 
-> *incorrect* on big endinan systems. You should be able to print the
-> b24 as an integer and see what you get is incorrect on big 
-> endian systems.
-I agree on your assessment. However, the patch won't fix the problem as
-the problem itself is regardless byte ordering.
-A patch which includes your evaluation will be submitted.
-Thank you for findings.
+On Wed, Feb 21, 2007 at 07:14:27PM -0800, Andrew Morton wrote:
+> On Wed, 21 Feb 2007 15:10:39 -0600 "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net> wrote:
+> 
+> > Patch 1/2
+> > 
+> > This patch changes the way we determine if a logical volume is larger than 2TB. The
+> > original test looked for a total_size of 0. Originally we added 1 to the total_size.
+> > That would make our read_capacity return size 0 for >2TB lv's. We assumed that we
+> > could not have a lv size of 0 so it seemed OK until we were in a clustered system. The
+> > backup node would see a size of 0 due to the reservation on the drive. That caused
+> > the driver to switch to 16-byte CDB's which are not supported on older controllers.
+> > After that everything was broken.
+> > It may seem petty but I don't see the value in trying to determine if the LBA is
+> > beyond the 2TB boundary. That's why when we switch we use 16-byte CDB's for all
+> > read/write operations.
+> > Please consider this for inclusion.
+> > 
+> > ...
+> >
+> > +  	if (total_size == 0xFFFFFFFF) {
+> 
+> I seem to remember having already questioned this.  total_size is sector_t, which
+> can be either 32-bit or 64-bit.  Are you sure that comparison works as
+> intended in both cases?
+> 
+> 
+> > +		if(total_size == 0xFFFFFFFF) {
+> >  			cciss_read_capacity_16(cntl_num, i, 0,
+> >  			&total_size, &block_size);
+> >  			hba[cntl_num]->cciss_read = CCISS_READ_16;
+> 
+> Here too.
+It has worked in all of the configs I've tested. Should I change it from sector_t to a
+__64? I have not tested all possible configs.
 
-Seokmann
-
-> -----Original Message-----
-> From: malahal@us.ibm.com [mailto:malahal@us.ibm.com] 
-> Sent: Wednesday, February 21, 2007 6:54 PM
-> To: Seokmann Ju
-> Cc: linux-scsi@vger.kernel.org; Linux Driver
-> Subject: Re: [PATCH] qla2xxx: fix RSCN handling on big-endian systems
-> 
-> I have JBOD in FL-port and if I unplug the cable or disable 
-> the switch port, the qla2xxx driver doesn't fail the I/O 
-> soon. The remote port status is 'online' all the time. The 
-> I/O's usually timeout after the usual scsi timeout. Based on 
-> the existing structure, al_pa is at the lowest addressed 
-> byte, so the b24 field's interpretation as an integer is 
-> *incorrect* on big endinan systems. You should be able to print the
-> b24 as an integer and see what you get is incorrect on big 
-> endian systems.
-> 
-> Thanks, Malahal.
-> 
-> Seokmann Ju [seokmann.ju@qlogic.com] wrote:
-> > On Monday, February 19, 2007 10:19 AM, Malahal Naineni wrote:
-> > > qla2xxx driver fails to handle RSCN events affecting area 
-> or domain 
-> > > due to an endian issue on big endian systems.  This fixes the 
-> > > port_id_t structure on big endian systems.
-> > <NEED MORE INFORMATION>
-> > Can you provide more details on the fails you are getting?
-> > In my opinion, those fields in the structure should not get 
-> affected 
-> > by byte ordering.
-> > 
-> > Thank you,
-> > 
-> > Seokmann
-> > 
-> > > -----Original Message-----
-> > > From: malahal@us.ibm.com [mailto:malahal@us.ibm.com]
-> > > Sent: Monday, February 19, 2007 10:19 AM
-> > > To: linux-scsi@vger.kernel.org; Linux Driver
-> > > Subject: [PATCH] qla2xxx: fix RSCN handling on big-endian systems
-> > > 
-> > > qla2xxx driver fails to handle RSCN events affecting area 
-> or domain 
-> > > due to an endian issue on big endian systems.  This fixes the 
-> > > port_id_t structure on big endian systems.
-> > > 
-> > > Signed-off-by: Malahal Naineni <malahal@us.ibm.com>
-> > > 
-> > > diff -r c860739bb0f4 drivers/scsi/qla2xxx/qla_def.h
-> > > --- a/drivers/scsi/qla2xxx/qla_def.h	Fri Feb 16 
-> 14:19:34 2007 -0800
-> > > +++ b/drivers/scsi/qla2xxx/qla_def.h	Fri Feb 16 
-> 14:21:29 2007 -0800
-> > > @@ -1478,14 +1478,17 @@ typedef union {
-> > >  	uint32_t b24 : 24;
-> > >  
-> > >  	struct {
-> > > -		uint8_t d_id[3];
-> > > -		uint8_t rsvd_1;
-> > > -	} r;
-> > > -
-> > > -	struct {
-> > > +#ifdef __BIG_ENDIAN
-> > > +		uint8_t domain;
-> > > +		uint8_t area;
-> > > +		uint8_t al_pa;
-> > > +#elif __LITTLE_ENDIAN
-> > >  		uint8_t al_pa;
-> > >  		uint8_t area;
-> > >  		uint8_t domain;
-> > > +#else
-> > > +#error "__BIG_ENDIAN or __LITTLE_ENDIAN must be defined!"
-> > > +#endif
-> > >  		uint8_t rsvd_1;
-> > >  	} b;
-> > >  } port_id_t;
-> > > 
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe 
-> linux-scsi" 
-> > in the body of a message to majordomo@vger.kernel.org More 
-> majordomo 
-> > info at  http://vger.kernel.org/majordomo-info.html
-> 
+-- mikem
