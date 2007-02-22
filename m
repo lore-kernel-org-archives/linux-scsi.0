@@ -1,54 +1,63 @@
-From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: [PATCH 2/2]: sas_ata: Don't reset the phy in post_internal_command
-Date: Thu, 22 Feb 2007 13:39:58 -0800
-Message-ID: <45DE0DAE.5040402@us.ibm.com>
-References: <20070130091814.31530.23152.stgit@elm3a70.beaverton.ibm.com> <20070130091841.31530.81645.stgit@elm3a70.beaverton.ibm.com> <45C98421.7020907@gmail.com>
-Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [Patch 1/2] cciss: fix for 2TB support
+Date: Thu, 22 Feb 2007 15:41:24 -0600
+Message-ID: <1172180484.3378.34.camel@mulgrave.il.steeleye.com>
+References: <20070221211039.GA2672@beardog.cca.cpqcorp.net>
+	 <20070221191427.9b7cf4b0.akpm@linux-foundation.org>
+	 <20070222165123.GC2672@beardog.cca.cpqcorp.net>
+	 <20070222132434.d84d3248.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:49902 "EHLO
-	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751936AbXBVVkA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Feb 2007 16:40:00 -0500
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e33.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l1MLe0u4013247
-	for <linux-scsi@vger.kernel.org>; Thu, 22 Feb 2007 16:40:00 -0500
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.2) with ESMTP id l1MLdxEP491800
-	for <linux-scsi@vger.kernel.org>; Thu, 22 Feb 2007 14:39:59 -0700
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l1MLdxNI002586
-	for <linux-scsi@vger.kernel.org>; Thu, 22 Feb 2007 14:39:59 -0700
-In-Reply-To: <45C98421.7020907@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751950AbXBVVml@vger.kernel.org>
+In-Reply-To: <20070222132434.d84d3248.akpm@linux-foundation.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>, mike.miller@hp.com, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, gregkh@novell.com
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Tejun Heo <htejun@gmail.com>, alexisb@us.ibm.com
 
-We don't need to reset the SAS phy in sas_ata_post_internal; all
-that is necessary is to clear out the task from the SAS HA.
+On Thu, 2007-02-22 at 13:24 -0800, Andrew Morton wrote:
+> > On Thu, 22 Feb 2007 10:51:23 -0600 "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net> wrote:
+> > On Wed, Feb 21, 2007 at 07:14:27PM -0800, Andrew Morton wrote:
+> > > On Wed, 21 Feb 2007 15:10:39 -0600 "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net> wrote:
+> > > 
+> > > > Patch 1/2
+> > > > +  	if (total_size == 0xFFFFFFFF) {
+> > > 
+> > > I seem to remember having already questioned this.  total_size is sector_t, which
+> > > can be either 32-bit or 64-bit.  Are you sure that comparison works as
+> > > intended in both cases?
+> > > 
+> > > 
+> > > > +		if(total_size == 0xFFFFFFFF) {
+> > > >  			cciss_read_capacity_16(cntl_num, i, 0,
+> > > >  			&total_size, &block_size);
+> > > >  			hba[cntl_num]->cciss_read = CCISS_READ_16;
+> > > 
+> > > Here too.
+> > It has worked in all of the configs I've tested. Should I change it from sector_t to a
+> > __64? I have not tested all possible configs.
+> > 
+> 
+> I'd suggest using -1: that just works.
 
-Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
----
+Actually, no, that won't work.
 
- drivers/scsi/libsas/sas_ata.c |    5 -----
- 1 files changed, 0 insertions(+), 5 deletions(-)
+This is a SCSI heuristic for determining when to use the 16 byte version
+of the read capacity command.  The 10 byte command can only return 32
+bits of information (this is in sectors, so it returns up to 2TB of
+bytes).
 
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index c92f4b6..d91c5ba 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -281,11 +281,6 @@ static void sas_ata_post_internal(struct
- 
- 		qc->driver_data = NULL;
- 		if (task) {
--			/* Should this be a AT(API) device reset? */
--			spin_lock_irqsave(&task->task_state_lock, flags);
--			task->task_state_flags |= SAS_TASK_NEED_DEV_RESET;
--			spin_unlock_irqrestore(&task->task_state_lock, flags);
--
- 			task->uldd_task = NULL;
- 			__sas_task_abort(task);
- 		}
+The heuristic requirement is that if the size is exactly 0xffffffff then
+you should try the 16 byte command (which can return 64 bits of
+information).  If that fails then you assume the 0xfffffff is a real
+size otherwize, you assume it was truncated and take the real result
+from the 16 byte command.
+
+You can see a far more elaborate version of this in operation in
+sd.c:sd_read_capacity().
+
+The only thing I'd suggest is to use 0xFFFFFFFFULL as the constant to
+prevent sign extension issues.
+
+James
