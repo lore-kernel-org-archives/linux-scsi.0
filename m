@@ -1,44 +1,51 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [Patch 1/2] cciss: fix for 2TB support
-Date: Thu, 22 Feb 2007 13:24:34 -0800
-Message-ID: <20070222132434.d84d3248.akpm@linux-foundation.org>
-References: <20070221211039.GA2672@beardog.cca.cpqcorp.net>
-	<20070221191427.9b7cf4b0.akpm@linux-foundation.org>
-	<20070222165123.GC2672@beardog.cca.cpqcorp.net>
+From: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
+Subject: [Patch 2/2] cciss: add shutdown support (replaces reboot notifier)
+Date: Thu, 22 Feb 2007 15:38:45 -0600
+Message-ID: <20070222213845.GA14162@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:39593 "EHLO smtp.osdl.org"
+Received: from palrel12.hp.com ([156.153.255.237]:40304 "EHLO palrel12.hp.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751910AbXBVV2F (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Feb 2007 16:28:05 -0500
-In-Reply-To: <20070222165123.GC2672@beardog.cca.cpqcorp.net>
+	id S1751920AbXBVViq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Feb 2007 16:38:46 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
-Cc: mike.miller@hp.com, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, gregkh@novell.com
+To: akpm@osdl.org, jens.axboe@oracle.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, gregkh@novell.com, hch@infradead.org
 
-> On Thu, 22 Feb 2007 10:51:23 -0600 "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net> wrote:
-> On Wed, Feb 21, 2007 at 07:14:27PM -0800, Andrew Morton wrote:
-> > On Wed, 21 Feb 2007 15:10:39 -0600 "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net> wrote:
-> > 
-> > > Patch 1/2
-> > > +  	if (total_size == 0xFFFFFFFF) {
-> > 
-> > I seem to remember having already questioned this.  total_size is sector_t, which
-> > can be either 32-bit or 64-bit.  Are you sure that comparison works as
-> > intended in both cases?
-> > 
-> > 
-> > > +		if(total_size == 0xFFFFFFFF) {
-> > >  			cciss_read_capacity_16(cntl_num, i, 0,
-> > >  			&total_size, &block_size);
-> > >  			hba[cntl_num]->cciss_read = CCISS_READ_16;
-> > 
-> > Here too.
-> It has worked in all of the configs I've tested. Should I change it from sector_t to a
-> __64? I have not tested all possible configs.
-> 
+Patch 2/2
 
-I'd suggest using -1: that just works.
+This adds support for struct pci_driver shutdown and negates the previous NAK'ed
+reboot_notifier patch. It's much easier, wish I had know about this before. Thanks to
+Christoph for pointing this out.
+
+Signed-off-by: Mike Miller <mike.miller@hp.com>
+------------------------------------------------------------------------------------------
+diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+index 916aab0..1abf1f5 100644
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -3428,9 +3428,10 @@ static void __devexit cciss_remove_one(s
+ 	memset(flush_buf, 0, 4);
+ 	return_code = sendcmd(CCISS_CACHE_FLUSH, i, flush_buf, 4, 0, 0, 0, NULL,
+ 			      TYPE_CMD);
+-	if (return_code != IO_OK) {
+-		printk(KERN_WARNING "Error Flushing cache on controller %d\n",
+-		       i);
++	if (return_code = IO_OK) {
++		printk(KERN_WARNING "Completed cache flush on controller %d\n", i);
++	} else {
++		printk(KERN_WARNING "Error Flushing cache on controller %d\n", i);
+ 	}
+ 	free_irq(hba[i]->intr[2], hba[i]);
+ 
+@@ -3481,6 +3482,7 @@ static struct pci_driver cciss_pci_drive
+ 	.probe = cciss_init_one,
+ 	.remove = __devexit_p(cciss_remove_one),
+ 	.id_table = cciss_pci_device_id,	/* id_table */
++	.shutdown = cciss_remove_one,
+ };
+ 
+ /*
