@@ -1,51 +1,41 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH] bsg: return SAM device status code
-Date: Fri, 23 Feb 2007 11:43:22 -0500
-Message-ID: <45DF19AA.1000500@torque.net>
-References: <20070223151231.GA15228@osc.edu>
-Reply-To: dougg@torque.net
+From: Bernhard Walle <bwalle@suse.de>
+Subject: GFP_DMA in sd_revalidate_disk
+Date: Fri, 23 Feb 2007 17:51:14 +0100
+Message-ID: <20070223165114.GA29468@strauss.suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:50479 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933139AbXBWQn3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Feb 2007 11:43:29 -0500
-In-Reply-To: <20070223151231.GA15228@osc.edu>
+Received: from ns.suse.de ([195.135.220.2]:59359 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933147AbXBWQvQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 23 Feb 2007 11:51:16 -0500
+Received: from Relay2.suse.de (mail2.suse.de [195.135.221.8])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mx1.suse.de (Postfix) with ESMTP id 6019D12294
+	for <linux-scsi@vger.kernel.org>; Fri, 23 Feb 2007 17:51:15 +0100 (CET)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Pete Wyckoff <pw@osc.edu>
-Cc: Jens Axboe <jens.axboe@oracle.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Pete Wyckoff wrote:
-> Use the status codes from the standard, not the shifted-by-one codes
-> that are marked deprecated in scsi.h.  This makes bsg v4 status
-> report the same value as sg v3 status too.
+Hello,
 
-Pete,
-Good pick up. We certainly don't want to re-introduce
-the SCSI status byte shift from the old days.
+is GFP_DMA really needed in sd_revalidate_disk() in every circumstances?
+That's the code:
 
-Doug Gilbert
+    buffer = kmalloc(SD_BUF_SIZE, GFP_KERNEL | __GFP_DMA);
+    if (!buffer) {
+        printk(KERN_WARNING "(sd_revalidate_disk:) Memory allocation "
+               "failure.\n");
+        goto out;
+    }
+
+Or should could the check (sdp->host->unchecked_isa_dma ? __GFP_DMA : 0)
+applied here, too?
+
+Thanks!
 
 
-> Signed-off-by: Pete Wyckoff <pw@osc.edu>
-> ---
->  block/bsg.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/block/bsg.c b/block/bsg.c
-> index c85d961..e39a321 100644
-> --- a/block/bsg.c
-> +++ b/block/bsg.c
-> @@ -438,7 +438,7 @@ static int blk_complete_sgv4_hdr_rq(struct request *rq, struct sg_io_v4 *hdr,
->  	/*
->  	 * fill in all the output members
->  	 */
-> -	hdr->device_status = status_byte(rq->errors);
-> +	hdr->device_status = rq->errors & 0xff;
->  	hdr->transport_status = host_byte(rq->errors);
->  	hdr->driver_status = driver_byte(rq->errors);
->  	hdr->info = 0;
-
+Regards,
+Bernhard
