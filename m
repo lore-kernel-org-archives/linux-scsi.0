@@ -1,37 +1,44 @@
-From: Theodore Tso <tytso@mit.edu>
-Subject: Re: end to end error recovery musings
-Date: Fri, 23 Feb 2007 21:32:29 -0500
-Message-ID: <20070224023229.GB4380@thunk.org>
-References: <45DEF6EF.3020509@emc.com> <45DF80C9.5080606@zytor.com> <20070224003723.GS10715@schatzie.adilger.int>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [Patch 1/2] cciss: fix for 2TB support
+Date: Fri, 23 Feb 2007 22:35:22 -0800
+Message-ID: <20070223223522.f87dfc4b.akpm@linux-foundation.org>
+References: <20070221211039.GA2672@beardog.cca.cpqcorp.net>
+	<20070221191427.9b7cf4b0.akpm@linux-foundation.org>
+	<20070222165123.GC2672@beardog.cca.cpqcorp.net>
+	<20070222132434.d84d3248.akpm@linux-foundation.org>
+	<1172180484.3378.34.camel@mulgrave.il.steeleye.com>
+	<20070222220225.GC14162@beardog.cca.cpqcorp.net>
+	<1172182001.3378.38.camel@mulgrave.il.steeleye.com>
+	<20070223205229.GB10570@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20070224003723.GS10715@schatzie.adilger.int>
-Sender: linux-ide-owner@vger.kernel.org
-To: "H. Peter Anvin" <hpa@zytor.com>, Ric Wheeler <ric@emc.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@SteelEye.com>, Mark Lord <mlord@pobox.com>, Neil Brown <neilb@suse.de>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.osdl.org ([65.172.181.24]:51661 "EHLO smtp.osdl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933393AbXBXGjn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 24 Feb 2007 01:39:43 -0500
+In-Reply-To: <20070223205229.GB10570@beardog.cca.cpqcorp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
+Cc: James.Bottomley@SteelEye.com, mike.miller@hp.com, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, gregkh@novell.com
 
-On Fri, Feb 23, 2007 at 05:37:23PM -0700, Andreas Dilger wrote:
-> > Probably the only sane thing to do is to remember the bad sectors and 
-> > avoid attempting reading them; that would mean marking "automatic" 
-> > versus "explicitly requested" requests to determine whether or not to 
-> > filter them against a list of discovered bad blocks.
+> On Fri, 23 Feb 2007 14:52:29 -0600 "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net> wrote:
+> On Thu, Feb 22, 2007 at 04:06:41PM -0600, James Bottomley wrote:
+> > On Thu, 2007-02-22 at 16:02 -0600, Mike Miller (OS Dev) wrote:
+> > > Will this patch for my patch work for now?
+> > 
+> > Yes, I think that should be fine ... it's only a theoretical worry; at
+> > the moment sector_t is unsigned ... but just in case.
+> > 
+> > James
+> > 
+> > 
+> Andrew,
+> Are you waiting for a new patch from me? Or is my patch's patch sufficient?
 > 
-> And clearing this list when the sector is overwritten, as it will almost
-> certainly be relocated at the disk level.  For that matter, a huge win
-> would be to have the MD RAID layer rewrite only the bad sector (in hopes
-> of the disk relocating it) instead of failing the whiole disk.  Otherwise,
-> a few read errors on different disks in a RAID set can take the whole
-> system offline.  Apologies if this is already done in recent kernels...
 
-And having a way of making this list available to both the filesystem
-and to a userspace utility, so they can more easily deal with doing a
-forced rewrite of the bad sector, after determining which file is
-involved and perhaps doing something intelligent (up to and including
-automatically requesting a backup system to fetch a backup version of
-the file, and if it can be determined that the file shouldn't have
-been changed since the last backup, automatically fixing up the
-corrupted data block :-).
+It looked OK.  But I'm travelling at present, will get back into things
+late next week.
 
-						- Ted
