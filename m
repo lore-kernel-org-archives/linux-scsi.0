@@ -1,78 +1,79 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: qla2xxx BUG: workqueue leaked lock or atomic
-Date: Mon, 26 Feb 2007 10:26:17 -0800
-Message-ID: <20070226182617.GC9968@andrew-vasquezs-computer.local>
-References: <20070226133153.GC4095@skl-net.de>
+From: pcaldes <pcaldes@attglobal.net>
+Subject: Re: aacraid not detecting drives if compiled into kernel
+Date: Mon, 26 Feb 2007 12:51:53 -0600
+Message-ID: <45E32C49.7030108@attglobal.net>
+References: <AE4F746F2AECFC4DA4AADD66A1DFEF015BC88A@otce2k301.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:6301 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030378AbXBZS0Y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Feb 2007 13:26:24 -0500
-Content-Disposition: inline
-In-Reply-To: <20070226133153.GC4095@skl-net.de>
+Received: from alnrmhc16.comcast.net ([204.127.225.96]:53810 "EHLO
+	alnrmhc16.comcast.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932416AbXBZTA3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Feb 2007 14:00:29 -0500
+In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF015BC88A@otce2k301.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andre Noll <maan@systemlinux.org>
-Cc: Andrew Vasquez <linux-driver@qlogic.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, 26 Feb 2007, Andre Noll wrote:
+Thanx for your quick reply on Friday.
+I was able to get the aacraid driver statically linked into the kernel 
+to recognize the drive.
 
-> On linux-2.6.20.1, we're seeing hard lockups with 2 raid systems
-> connected to a qla2xxx card and used as a single volume via lvm.
-> The system seems to lock up only if data gets written to both raid
-> systems at the same time.
-> 
-> On a standard kernel nothing makes it to the log, the system just
-> freezes. So we tried a lockdep kernel which reports two BUGs during
-> boot, see below.
-> 
-> Could this be related to our problem?
+I found the 1.1-5-2420 drivers from the Adaptec site 
+(aacraid_drv_1.1.5-2420.rpm)
+Since there were no patches specifically for my kernel RHEL3  
+(kernel-2.4.21-47.E),
+I used the driver source located in aacraid_source.tgz which I used to 
+replace everything in the drivers/scsi/aacraid directory
+and recompiled the kernel.
 
-Before we proceed further, could you retrieve the latest firmware
-release for 24xx type HBAs:
+How stable is the 1.1.5-2420 driver under 2.4?
+Also, is 2420 the latest stable build?
 
-> [   64.151096] QLogic Fibre Channel HBA Driver
-> [   64.151405] ACPI: PCI Interrupt 0000:05:08.0[A] -> GSI 32 (level, low) -> IRQ 32
-> [   64.151821] qla2xxx 0000:05:08.0: Found an ISP2422, irq 32, iobase 0xffffc20000006000
-> [   64.152231] qla2xxx 0000:05:08.0: Configuring PCI space...
-> [   64.152498] qla2xxx 0000:05:08.0: Configure NVRAM parameters...
-> [   64.159088] qla2xxx 0000:05:08.0: Verifying loaded RISC code...
-> [   74.169623] qla2xxx 0000:05:08.0: Firmware image unavailable.
-> [   74.169737] qla2xxx 0000:05:08.0: Firmware images can be retrieved from: ftp://ftp.qlogic.com/outgoing/linux/firmware/.
-> [   74.169902] qla2xxx 0000:05:08.0: Attempting to load (potentially outdated) firmware from flash.
-> [   74.760935] qla2xxx 0000:05:08.0: Allocated (64 KB) for EFT...
-> [   74.761186] qla2xxx 0000:05:08.0: Allocated (1413 KB) for firmware dump...
-> [   74.776988] scsi0 : qla2xxx
-> [   74.961451] qla2xxx 0000:05:08.0: 
-> [   74.961452]  QLogic Fibre Channel HBA Driver: 8.01.07-k4
-> [   74.961453]   QLogic HP AE369-60001 - QLA2340
-> [   74.961454]   ISP2422: PCI-X Mode 1 (133 MHz) @ 0000:05:08.0 hdma+, host#=0, fw=4.00.70 [IP] 
 
-You are loading some stale firmware that's left over on the card --
-I'm not even sure what 4.00.70 is, as the latest release firmware is
-4.00.27.  You can retrieve the image here:
+Salyzyn, Mark wrote:
+> The driver in RHEL3 is old (1.1.5-2412ish, so not that old), use the
+> Adaptec supplied sources and we will investigate. You can find them in
+> our download section, just pick a 'modern' aac based card and browse for
+> the latest. I believe I fixed the last set of problems associate with
+> compiling the driver static in the kernel in 1.1.5-2415. The testing was
+> done under a 2.6 kernel though so we may have a new set of issues to
+> work through ...
+>
+> Sincerely -- Mark Salyzyn
+>
+>   
+>> -----Original Message-----
+>> From: linux-scsi-owner@vger.kernel.org 
+>> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of pcaldes
+>> Sent: Thursday, February 22, 2007 8:35 PM
+>> To: linux-scsi@vger.kernel.org
+>> Subject: aacraid not detecting drives if compiled into kernel
+>>
+>>
+>> I'm using the Redhat kernel-2.4.21-47.EL on an IBM x3550 server which 
+>> has a IBM ServeRAID 8k-l controller.
+>> I recompiled kernel to include the aacraid driver in the 
+>> kernel (not as 
+>> a module) for use with a bootcd.
+>> CONFIG_SCSI=y
+>> CONFIG_BLK_DEV_SD=y
+>> CONFIG_SCSI_AACRAID=y
+>>
+>> When the kernel loads, the aacraid driver initializes but it does not 
+>> find the drive.
+>> If I force the SCSI subsystem to rescan the host adapters, 
+>> the aacraid 
+>> driver finds the drive.
+>>     # echo "scsi scan-new-devices" > /dev/scsi/scsi
+>>
+>> However, if I compile the aacraid driver as a module, when I do a 
+>> 'modprobe aacraid' the driver loads and finds the drive.
+>>
+>> Any ideas on what is wrong and how to get around this?
+>> I really need to have the aacraid driver compiled into the kernel for 
+>> various reasons to avoid using an initrd.
+>>     
 
-	ftp://ftp.qlogic.com/outgoing/linux/firmware/ql2400_fw.bin
-
-Let's start there... before we move on to this:
-
-> [   75.778656] BUG: at kernel/lockdep.c:1860 trace_hardirqs_on()
-> [   75.778771] 
-> [   75.778772] Call Trace:
-> [   75.778967]  <IRQ>  [<ffffffff8024b877>] trace_hardirqs_on+0xd7/0x180
-> [   75.779154]  [<ffffffff8052bc1b>] _spin_unlock_irq+0x2b/0x40
-> [   75.779271]  [<ffffffff804605d7>] qla2x00_process_completed_request+0x137/0x1d0
-> [   75.779424]  [<ffffffff804606f2>] qla2x00_status_entry+0x82/0xa40
-> [   75.779541]  [<ffffffff8024b17f>] __lock_acquire+0xcdf/0xd90
-> [   75.779657]  [<ffffffff8052bcb2>] _spin_unlock_irqrestore+0x42/0x60
-> [   75.779775]  [<ffffffff8046228e>] qla24xx_intr_handler+0x4e/0x2b0
-> [   75.779892]  [<ffffffff804613e1>] qla24xx_process_response_queue+0xc1/0x1c0
-> [   75.780012]  [<ffffffff80462414>] qla24xx_intr_handler+0x1d4/0x2b0
-> [   75.780131]  [<ffffffff8025e950>] handle_IRQ_event+0x20/0x60
-
-Hmm....
-
-Regards,
-Andrew Vasquez
