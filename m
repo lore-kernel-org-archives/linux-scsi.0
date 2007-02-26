@@ -1,68 +1,43 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: Please help if u can.
-Date: Mon, 26 Feb 2007 14:13:35 -0800 (PST)
-Message-ID: <780394.89621.qm@web31813.mail.mud.yahoo.com>
-References: <45DBE495.6050706@us.ibm.com>
-Reply-To: ltuikov@yahoo.com
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: end to end error recovery musings
+Date: Mon, 26 Feb 2007 17:46:38 -0500
+Message-ID: <45E3634E.9000505@garzik.org>
+References: <45DEF6EF.3020509@emc.com> <45DF80C9.5080606@zytor.com> <20070224003723.GS10715@schatzie.adilger.int> <20070224023229.GB4380@thunk.org> <17890.28977.989203.938339@notabene.brown> <20070226132511.GB8154@thunk.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31813.mail.mud.yahoo.com ([68.142.207.76]:28667 "HELO
-	web31813.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1161284AbXBZWNn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Feb 2007 17:13:43 -0500
-In-Reply-To: <45DBE495.6050706@us.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <20070226132511.GB8154@thunk.org>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Theodore Tso <tytso@mit.edu>, Neil Brown <neilb@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Ric Wheeler <ric@emc.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@SteelEye.com>, Mark Lord <mlord@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Darrick J. Wong" <djwong@us.ibm.com>, John Scarpa <john@tlchosting.com>
-Cc: dougg@torque.net, linux-scsi@vger.kernel.org, Alexis Bruemmer <alexisb@us.ibm.com>
 
---- "Darrick J. Wong" <djwong@us.ibm.com> wrote:
-> Laziness, in my case.  I suppose it would be useful to document the fact
-> that I've made changes to libsas/aic94xx.  Though the "what has been
-> done" part ... I was hoping the commit messages would suffice.
+Theodore Tso wrote:
+> Can someone with knowledge of current disk drive behavior confirm that
+> for all drives that support bad block sparing, if an attempt to write
+> to a particular spot on disk results in an error due to bad media at
+> that spot, the disk drive will automatically rewrite the sector to a
+> sector in its spare pool, and automatically redirect that sector to
+> the new location.  I believe this should be always true, so presumably
+> with all modern disk drives a write error should mean something very
+> serious has happend.  
 
-Doing a rev list on drivers/scsi/aic94xx shows only 25 commits.
 
-But if you diff what was committed (2908d778ab3e244900c310974e1fc1c69066e450)
-with my code as posted to lkml and lsml -- huge differences.
+This is what will /probably/ happen.  The drive should indeed find a 
+spare sector and remap it, if the write attempt encounters a bad spot on 
+the media.
 
-That is, what was commited (2908d778ab3e244900c310974e1fc1c69066e450)
-is already changed code.  So the commits and justifications
-of those changes and differences are nowhere to be found.
+However, with a large enough write, large enough bad-spot-on-media, and 
+a firmware programmed to never take more than X seconds to complete 
+their enterprise customers' I/O, it might just fail.
 
-Note that the driver as posted by me to lkml and lsml back in Sept
-2005 was fully functional.  From functionality point of new, no
-changes were necessary.
 
-> > The existing copyright notices should remain but what
-> > about the massive changes to that driver in 2006?
-> > Where is the indication of whom John should contact?
-> >
-> > Perhaps something like:
-> >  "For maintenance of this driver contact
-> >   linux-scsi@vger.kernel.org"
-> 
-> Alexis can answer this part.
-> 
-> > FYI John, Luben maintains his own version of the
-> > aic94xx and that version holds the sequencer firmware
-> > in a binary blob within the driver. Due to kernel policy,
-> > that blob was moved to separate file by someone else. The
-> > error that you are reporting suggests that the firmware
-> > file for the aic94xx cannot be found. On my system
-> > the file that you may be missing looks like this:
-> > # ls -l /lib/firmware/aic94xx-seq.fw
-> > -rw-rw-r-- 1 root root 22622 Aug 29 17:36 /lib/firmware/aic94xx-seq.fw
-> 
-> http://kernel.org/pub/linux/kernel/people/jejb/aic94xx-seq.fw
-> 
-> --D
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+IMO, somewhere in the kernel, when we receive a read-op or write-op 
+media error, we should immediately try to plaster that area with small 
+writes.  Sure, if it's a read-op you lost data, but this method will 
+maximize the chance that you can refresh/reuse the logical sectors in 
+question.
+
+	Jeff
+
 
