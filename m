@@ -1,64 +1,36 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: Please help if u can.
-Date: Mon, 26 Feb 2007 15:20:52 -0800 (PST)
-Message-ID: <65760.78889.qm@web31811.mail.mud.yahoo.com>
-References: <45DB9D89.7030804@tlchosting.com>
-Reply-To: ltuikov@yahoo.com
+From: Alan <alan@lxorguk.ukuu.org.uk>
+Subject: Re: end to end error recovery musings
+Date: Tue, 27 Feb 2007 01:19:55 +0000
+Message-ID: <20070227011955.151ba1cd@lxorguk.ukuu.org.uk>
+References: <45DEF6EF.3020509@emc.com>
+	<45DF80C9.5080606@zytor.com>
+	<20070224003723.GS10715@schatzie.adilger.int>
+	<20070224023229.GB4380@thunk.org>
+	<17890.28977.989203.938339@notabene.brown>
+	<20070226132511.GB8154@thunk.org>
+	<45E3634E.9000505@garzik.org>
+	<45E364F2.8090502@emc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31811.mail.mud.yahoo.com ([68.142.207.74]:38749 "HELO
-	web31811.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1161399AbXBZXUx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Feb 2007 18:20:53 -0500
-In-Reply-To: <45DB9D89.7030804@tlchosting.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <45E364F2.8090502@emc.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: ric@emc.com
+Cc: Jeff Garzik <jeff@garzik.org>, Theodore Tso <tytso@mit.edu>, Neil Brown <neilb@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@SteelEye.com>, Mark Lord <mlord@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
 List-Id: linux-scsi@vger.kernel.org
-To: John Scarpa <john@tlchosting.com>, linux-scsi@vger.kernel.org
 
---- John Scarpa <john@tlchosting.com> wrote:
-> Dear Luben,
+> One interesting counter example is a smaller write than a full page - say 512 
+> bytes out of 4k.
 > 
-> I am trying to compile the aic94xx for my aic9410 directly into my 
-> kernel (fc5_64bit-2.6.20)...  Is this possible or must it be loaded as a 
-> module?  I am really not wanting to add modular support to my nice neat 
-> monolithic kernel.. :-(  I've been searching for ever now and tried 
-> everything i could to no avail..
+> If we need to do a read-modify-write and it just so happens that 1 of the 7 
+> sectors we need to read is flaky, will this "look" like a write failure?
 
-Dear John,
+The current core kernel code can't handle propogating sub-page sized
+errors up to the file system layers (there is nowhere in the page cache
+to store 'part of this page is missing'). This is a long standing (four
+year plus) problem with CD-RW support as well.
 
-The driver which you found in the kernel was forked off of my
-main development git tree, by bottomley, changed privately by him
-and then committed to the kernel.  It is loosely maintained by
-him and linux-scsi.
-
-The driver which I maintain keeps the FW code as u8[] in the
-source, implements the SAT standard, i.e. supports SATA devices,
-and "just works".  As I mentioned, it is being used by product
-vendors who build on top of the aic94xx chip and as far as I know,
-by at least one distro, for stability reasons.
-
-Depending on which version of the driver you use, you should
-forward questions to the appropriate party maintaining it.
-
-> Thank you for any help!  btw this is the first time i ever wrote a 
-> maintainer for help... my pride is definitely hurting right now...
-
-No worries, you just didn't know.
-
-Best wishes,
-    Luben
-
-
-> 
-> Best wishes,
-> John Scarpa
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
+For ATA we can at least retrieve the true media sector size now, which
+may be helpful at the physical layer but the page cache would need to
+grow some brains to do anything with it.
