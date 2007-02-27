@@ -1,57 +1,51 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: qla2xxx BUG: workqueue leaked lock or atomic
-Date: Tue, 27 Feb 2007 15:35:42 +0100
-Message-ID: <20070227143542.GB22572@skl-net.de>
-References: <20070226133153.GC4095@skl-net.de> <20070226182617.GC9968@andrew-vasquezs-computer.local> <20070227101100.GA22572@skl-net.de>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: end to end error recovery musings
+Date: Tue, 27 Feb 2007 11:50:29 -0500
+Message-ID: <yq14pp78rze.fsf@sermon.lab.mkp.net>
+References: <664A4EBB07F29743873A87CF62C26D705D6DDB@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="l76fUT7nc3MelDdI"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from systemlinux.org ([83.151.29.59]:55574 "EHLO m18s25.vlinux.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751778AbXB0Of6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Feb 2007 09:35:58 -0500
-Content-Disposition: inline
-In-Reply-To: <20070227101100.GA22572@skl-net.de>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>
-
-
---l76fUT7nc3MelDdI
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <664A4EBB07F29743873A87CF62C26D705D6DDB@NAMAIL4.ad.lsil.com> (Eric Moore's message of "Mon, 26 Feb 2007 18:10:57 -0700")
+Sender: linux-ide-owner@vger.kernel.org
+To: "Moore, Eric" <Eric.Moore@lsi.com>
+Cc: ric@emc.com, Alan <alan@lxorguk.ukuu.org.uk>, Theodore Tso <tytso@mit.edu>, Neil Brown <neilb@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@SteelEye.com>, Mark Lord <mlord@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
+List-Id: linux-scsi@vger.kernel.org
 
-On 11:11, Andre Noll wrote:
-> On 10:26, Andrew Vasquez wrote:
-> > You are loading some stale firmware that's left over on the card --
-> > I'm not even sure what 4.00.70 is, as the latest release firmware is
-> > 4.00.27.
->=20
-> That's the firmware which came with the card. Anyway, I just upgraded
-> the firmware, but the bug remains.
+>>>>> "Eric" == Moore, Eric <Eric.Moore@lsi.com> writes:
 
-the system crashed again btw., this time resulting in a kernel panic
-instead of just locking up silently. Here's a screenshot:
+Eric> Martin K. Petersen on Data Intergrity Feature, which is also
+Eric> called EEDP(End to End Data Protection), which he presented some
+Eric> ideas/suggestions of adding an API in linux for this.  
 
-	http://systemlinux.org/~maan/shots/qla2xxx-crash-huangho2.png
+T10 DIF is interesting for a few things: 
 
-Regards
-Andre
+ - Ensuring that the data integrity is preserved when writing a buffer
+   to disk
 
---l76fUT7nc3MelDdI
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+ - Ensuring that the write ends up on the right hardware sector
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
+These features make the most sense in terms of WRITE.  Disks already
+have plenty of CRC on the data so if a READ fails on a regular drive
+we already know about it.
 
-iD8DBQFF5EG+Wto1QDEAkw8RAiMZAJwIWizXYpnKdJjpsz8WJkQ+0m2hWACgm+5n
-i8gQLsLPPGSpNp/H0paJs5E=
-=476e
------END PGP SIGNATURE-----
+We can, however, leverage DIF with my proposal to expose the
+protection data to host memory.  This will allow us to verify the data
+integrity information before passing it to the filesystem or
+application.  We can say "this is really the information the disk
+sent. It hasn't been mangled along the way".
 
---l76fUT7nc3MelDdI--
+And by using the APP tag we can mark a sector as - say - metadata or
+data to ease putting the recovery puzzle back together.
+
+It would be great if the app tag was more than 16 bits.  Ted mentioned
+that ideally he'd like to store the inode number in the app tag.  But
+as it stands there isn't room.
+
+In any case this is all slightly orthogonal to Ric's original post
+about finding the right persistence heuristics in the error handling
+path...
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
+
