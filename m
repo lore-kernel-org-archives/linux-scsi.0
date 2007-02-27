@@ -1,124 +1,57 @@
-From: "Shirron, Stephen" <Stephen.Shirron@lsi.com>
-Subject: RE: LSI Logic 40919o fibre channel: scsi works ip not
-Date: Tue, 27 Feb 2007 06:02:43 -0700
-Message-ID: <F6F6225F9738D94FB5B5876E3707A91901170D5D@NAMAIL2.ad.lsil.com>
-References: <200702152306.25374.mgiammarco-ml@4warding.com> <F6F6225F9738D94FB5B5876E3707A9190112A445@NAMAIL2.ad.lsil.com> <45D83554.1080309@4warding.com>
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: qla2xxx BUG: workqueue leaked lock or atomic
+Date: Tue, 27 Feb 2007 15:35:42 +0100
+Message-ID: <20070227143542.GB22572@skl-net.de>
+References: <20070226133153.GC4095@skl-net.de> <20070226182617.GC9968@andrew-vasquezs-computer.local> <20070227101100.GA22572@skl-net.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="l76fUT7nc3MelDdI"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:34376 "EHLO mail0.lsil.com"
+Received: from systemlinux.org ([83.151.29.59]:55574 "EHLO m18s25.vlinux.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750718AbXB0NC4 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Feb 2007 08:02:56 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <45D83554.1080309@4warding.com>
+	id S1751778AbXB0Of6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Feb 2007 09:35:58 -0500
+Content-Disposition: inline
+In-Reply-To: <20070227101100.GA22572@skl-net.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mario Giammarco <mgiammarco-ml@4warding.com>, linux-scsi@vger.kernel.org
-Cc: "Hickerson, Roger" <Roger.Hickerson@lsi.com>, "Moore, Eric" <Eric.Moore@lsi.com>
-
-Mario,
-
-There appears to be a bug in the driver.
-
-Go to mpt_lan_post_receive_buckets(), in mptlan.c.  Find:
-
-		mf = mpt_get_msg_frame(LanCtx, mpt_dev);
-
-Later find:
-
-		pRecvReq = (LANReceivePostRequest_t *) mf;
-
-Below that, should be:
-
-		i = le16_to_cpu(mf->u.frame.hwhdr.msgctxu.fld.req_idx);
-		mpt_dev->RequestNB[i] = 0;
-
-The above two lines of code are present in some versions of mptctl.c
-(the 2.06.xx versions and 3.02.xx versions) but are missing from some
-others (3.03.xx, 3.04.xx, and 4.00.xx).
-
-If you can add those two lines of code, rebuild mptctl.ko, and retest,
-I believe that should take care of your reported problems.
-
-Let me know, please.
-
-stephen
-
------Original Message-----
-From: Mario Giammarco [mailto:mgiammarco-ml@4warding.com] 
-Sent: Sunday, February 18, 2007 6:16 AM
-To: Shirron, Stephen; linux-scsi@vger.kernel.org
-Cc: Hickerson, Roger
-Subject: Re: LSI Logic 40919o fibre channel: scsi works ip not
-
-Shirron, Stephen ha scritto:
-> Hi Mario,
-> 
-> Can you tell me what firmware version you have on your 40919
-> card(s)?  The easiest way is to "cat /proc/mpt/summary".
-
-This is summary:
-ioc0: LSIFC919, FwRev=02000f00h, Ports=1, 
-MaxQ=1023,LanAddr=00:06:2B:07:FA:10, IRQ=209
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>
 
 
-> 
-> How often do the errors occur?  dmesg provides no timestamps,
-> while /var/log/messages does.
-> 
-Sorry but in messagese there is not this error. I can say you that the 
-frequency of the error is proportional to data transferred. If I start a
+--l76fUT7nc3MelDdI
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-n ftp dmesg output goes crazy.
+On 11:11, Andre Noll wrote:
+> On 10:26, Andrew Vasquez wrote:
+> > You are loading some stale firmware that's left over on the card --
+> > I'm not even sure what 4.00.70 is, as the latest release firmware is
+> > 4.00.27.
+>=20
+> That's the firmware which came with the card. Anyway, I just upgraded
+> the firmware, but the bug remains.
 
-I have seen this in /var/log/messages (sorry no timestamps again):
+the system crashed again btw., this time resulting in a kernel panic
+instead of just locking up silently. Here's a screenshot:
 
+	http://systemlinux.org/~maan/shots/qla2xxx-crash-huangho2.png
 
-Fusion MPT LAN driver 3.04.01
-mptlan: ioc0: PortNum=0, ProtocolFlags=0Fh (ITLB)
-mptlan: ioc0: Fusion MPT LAN device registered as 'fc0'
-mptlan: ioc0/fc0: LanAddr = 00:06:2B:07:FA:10
-mptlan: ioc0/fc0: interface up & active
-mptbase: ioc0: LogInfo(0x22000002): SubCl={LAN}
-mptlan: ioc0/fc0: ERROR - Got a non-TURBO ReceivePostReply w/ 
-PacketLength zero!
-mptlan: MsgFlags = 80, IOCStatus = 8003
-mptbase: ioc0: LogInfo(0x22000002): SubCl={LAN}
-mptlan: ioc0/fc0: ERROR - Got a non-TURBO ReceivePostReply w/ 
-PacketLength zero!
-mptlan: MsgFlags = 80, IOCStatus = 8003
-mptbase: ioc0: LogInfo(0x22000002): SubCl={LAN}
-mptlan: ioc0/fc0: ERROR - Got a non-TURBO ReceivePostReply w/ 
-PacketLength zero!
-mptlan: MsgFlags = 80, IOCStatus = 8003
-mptbase: ioc0: LogInfo(0x22000002): SubCl={LAN}
-mptlan: ioc0/fc0: ERROR - Got a non-TURBO ReceivePostReply w/ 
-PacketLength zero!
-mptlan: MsgFlags = 80, IOCStatus = 8003
-mptbase: ioc0: LogInfo(0x22000002): SubCl={LAN}
-mptlan: ioc0/fc0: ERROR - Got a non-TURBO ReceivePostReply w/ 
-PacketLength zero!
-mptlan: MsgFlags = 80, IOCStatus = 8003
-mptbase: ioc0: LogInfo(0x22000002): SubCl={LAN}
-mptlan: ioc0/fc0: ERROR - Got a non-TURBO ReceivePostReply w/ 
-PacketLength zero!
-mptlan: MsgFlags = 80, IOCStatus = 8003
-mptbase: ioc0: LogInfo(0x22000002): SubCl={LAN}
-mptlan: ioc0/fc0: ERROR - Got a non-TURBO ReceivePostReply w/ 
-PacketLength zero!
-mptlan: MsgFlags = 80, IOCStatus = 8003
-mptbase: ioc0: LogInfo(0x22000002): SubCl={LAN}
-mptlan: ioc0/fc0: ERROR - Got a non-TURBO ReceivePostReply w/ 
-PacketLength zero!
-mptlan: MsgFlags = 80, IOCStatus = 8003
-mptbase: ioc0: LogInfo(0x22000002): SubCl={LAN}
-mptlan: ioc0/fc0: ERROR - Got a non-TURBO ReceivePostReply w/ 
-PacketLength zero!
-mptlan: MsgFlags = 80, IOCStatus = 8003
+Regards
+Andre
 
+--l76fUT7nc3MelDdI
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
 
+iD8DBQFF5EG+Wto1QDEAkw8RAiMZAJwIWizXYpnKdJjpsz8WJkQ+0m2hWACgm+5n
+i8gQLsLPPGSpNp/H0paJs5E=
+=476e
+-----END PGP SIGNATURE-----
 
+--l76fUT7nc3MelDdI--
