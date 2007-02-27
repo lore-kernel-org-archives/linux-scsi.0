@@ -1,64 +1,72 @@
-From: Ric Wheeler <ric@emc.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: end to end error recovery musings
-Date: Tue, 27 Feb 2007 13:51:39 -0500
-Message-ID: <45E47DBB.4050002@emc.com>
-References: <664A4EBB07F29743873A87CF62C26D705D6DDB@NAMAIL4.ad.lsil.com> <yq14pp78rze.fsf@sermon.lab.mkp.net>
-Reply-To: ric@emc.com
+Date: Tue, 27 Feb 2007 14:07:12 -0500
+Message-ID: <yq1r6sb7733.fsf@sermon.lab.mkp.net>
+References: <664A4EBB07F29743873A87CF62C26D705D6DDB@NAMAIL4.ad.lsil.com>
+	<yq14pp78rze.fsf@sermon.lab.mkp.net>
+	<20070227190236.58323a40@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <yq14pp78rze.fsf@sermon.lab.mkp.net>
-Sender: linux-ide-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "Moore, Eric" <Eric.Moore@lsi.com>, Alan <alan@lxorguk.ukuu.org.uk>, Theodore Tso <tytso@mit.edu>, Neil Brown <neilb@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@SteelEye.com>, Mark Lord <mlord@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from rgminet01.oracle.com ([148.87.113.118]:13371 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752030AbXB0TJG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Feb 2007 14:09:06 -0500
+In-Reply-To: <20070227190236.58323a40@lxorguk.ukuu.org.uk> (alan@lxorguk.ukuu.org.uk's message of "Tue, 27 Feb 2007 19:02:36 +0000")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan <alan@lxorguk.ukuu.org.uk>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "Moore, Eric" <Eric.Moore@lsi.com>, ric@emc.com, Theodore Tso <tytso@mit.edu>, Neil Brown <neilb@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@SteelEye.com>, Mark Lord <mlord@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
 
-Martin K. Petersen wrote:
->>>>>> "Eric" == Moore, Eric <Eric.Moore@lsi.com> writes:
-> 
-> Eric> Martin K. Petersen on Data Intergrity Feature, which is also
-> Eric> called EEDP(End to End Data Protection), which he presented some
-> Eric> ideas/suggestions of adding an API in linux for this.  
-> 
-> T10 DIF is interesting for a few things: 
-> 
->  - Ensuring that the data integrity is preserved when writing a buffer
->    to disk
-> 
->  - Ensuring that the write ends up on the right hardware sector
-> 
-> These features make the most sense in terms of WRITE.  Disks already
-> have plenty of CRC on the data so if a READ fails on a regular drive
-> we already know about it.
+>>>>> "Alan" == Alan  <alan@lxorguk.ukuu.org.uk> writes:
 
-There are paths through a read that could still benefit from the extra 
-data integrity.  The CRC gets validated on the physical sector, but we 
-don't have the same level of strict data checking once it is read into 
-the disk's write cache or being transferred out of cache on the way to 
-the transport...
+>> These features make the most sense in terms of WRITE.  Disks
+>> already have plenty of CRC on the data so if a READ fails on a
+>> regular drive we already know about it.
 
-> 
-> We can, however, leverage DIF with my proposal to expose the
-> protection data to host memory.  This will allow us to verify the data
-> integrity information before passing it to the filesystem or
-> application.  We can say "this is really the information the disk
-> sent. It hasn't been mangled along the way".
-> 
-> And by using the APP tag we can mark a sector as - say - metadata or
-> data to ease putting the recovery puzzle back together.
-> 
-> It would be great if the app tag was more than 16 bits.  Ted mentioned
-> that ideally he'd like to store the inode number in the app tag.  But
-> as it stands there isn't room.
-> 
-> In any case this is all slightly orthogonal to Ric's original post
-> about finding the right persistence heuristics in the error handling
-> path...
-> 
+Alan> Don't bet on it. 
 
-Still all a very relevant discussion - I agree that we could really use 
-more than just 16 bits...
+This is why I mentioned that I want to expose the protection data to
+the host.  As written, DIF only protects the path between initiator
+and target.
 
-ric
+See below...
 
+
+Alan> If you want to do this seriously you need an end to end (media
+Alan> to host ram) checksum. We do see bizarre and quite evil things
+Alan> happen to people occasionally because they rely on bus level
+Alan> protection - both faulty network cards and faulty disk or
+Alan> controller RAM can cause very bad things to happen in a critical
+Alan> environment and are very very hard to detect and test for.
+
+Not sure you're up-to-date on the T10 data integrity feature.
+Essentially it's an extension of the 520 byte sectors common in disk
+arrays.  For each 512 byte sector (or 4KB ditto) you get 8 bytes of
+protection data.  There's a 2 byte CRC (GUARD tag), a 2 byte
+user-defined tag (APP) and a 4-byte reference tag (REF).  Depending on
+how the drive is formatted, the REF tag usually needs to match the
+lower 32-bits of the target sector #.
+
+For each sector coming in the disk firmware verifies that the CRC and
+the reference tags are in accordance with the contents of the sector
+and the CDB start sector + offset.  If they don't match the drive will
+reject the request.
+
+If an HBA is capable of exposing the protection tuples to the host we
+can precalculate the checksum and the LBA when submitting a WRITE.  My
+current proposal involves passing them down in two separate buffers to
+minimize the risk of in-memory corruption (Besides, it would suck if
+you had to interleave data and protection data.  The scatterlists
+would become long and twisted).
+
+And that's when the READ case becomes interesting.  Because then the
+fs can verify that the checksum of the in-buffer matches of the GUARD
+tag.  In that case we'll know there's been no corruption in the
+middle.
+
+And of course this also opens up using the APP field to tag sector
+contents.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
