@@ -1,72 +1,64 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: qla2xxx BUG: workqueue leaked lock or atomic
-Date: Tue, 27 Feb 2007 10:51:34 -0800
-Message-ID: <20070227185134.GJ20397@andrew-vasquezs-computer.local>
-References: <20070226133153.GC4095@skl-net.de> <20070226182617.GC9968@andrew-vasquezs-computer.local> <20070227101100.GA22572@skl-net.de>
+From: Ric Wheeler <ric@emc.com>
+Subject: Re: end to end error recovery musings
+Date: Tue, 27 Feb 2007 13:51:39 -0500
+Message-ID: <45E47DBB.4050002@emc.com>
+References: <664A4EBB07F29743873A87CF62C26D705D6DDB@NAMAIL4.ad.lsil.com> <yq14pp78rze.fsf@sermon.lab.mkp.net>
+Reply-To: ric@emc.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:29304 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751479AbXB0Svl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Feb 2007 13:51:41 -0500
-Content-Disposition: inline
-In-Reply-To: <20070227101100.GA22572@skl-net.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <yq14pp78rze.fsf@sermon.lab.mkp.net>
+Sender: linux-ide-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "Moore, Eric" <Eric.Moore@lsi.com>, Alan <alan@lxorguk.ukuu.org.uk>, Theodore Tso <tytso@mit.edu>, Neil Brown <neilb@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@SteelEye.com>, Mark Lord <mlord@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Andre Noll <maan@systemlinux.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>
 
-On Tue, 27 Feb 2007, Andre Noll wrote:
-
-> On 10:26, Andrew Vasquez wrote:
-> > You are loading some stale firmware that's left over on the card --
-> > I'm not even sure what 4.00.70 is, as the latest release firmware is
-> > 4.00.27.
+Martin K. Petersen wrote:
+>>>>>> "Eric" == Moore, Eric <Eric.Moore@lsi.com> writes:
 > 
-> That's the firmware which came with the card. Anyway, I just upgraded
-> the firmware, but the bug remains. The backtrace differs a bit though
-> as now the tg3 network driver seems to be involved as well.
+> Eric> Martin K. Petersen on Data Intergrity Feature, which is also
+> Eric> called EEDP(End to End Data Protection), which he presented some
+> Eric> ideas/suggestions of adding an API in linux for this.  
 > 
-> Thanks for your help
-> Andre
-...
-> [   68.532665] BUG: at kernel/lockdep.c:1860 trace_hardirqs_on()
-> [   68.532784] 
-> [   68.532785] Call Trace:
-> [   68.532979]  <IRQ>  [<ffffffff8024b877>] trace_hardirqs_on+0xd7/0x180
-> [   68.533168]  [<ffffffff80511f5b>] _spin_unlock_irq+0x2b/0x40
-> [   68.533295]  [<ffffffff88032747>] :qla2xxx:qla2x00_process_completed_request+0x137/0x1d0
-> [   68.533457]  [<ffffffff88032862>] :qla2xxx:qla2x00_status_entry+0x82/0xa40
-> [   68.533577]  [<ffffffff8024b17f>] __lock_acquire+0xcdf/0xd90
-> [   68.533693]  [<ffffffff80511ff2>] _spin_unlock_irqrestore+0x42/0x60
-> [   68.533816]  [<ffffffff880343fe>] :qla2xxx:qla24xx_intr_handler+0x4e/0x2b0
-> [   68.533942]  [<ffffffff88033551>] :qla2xxx:qla24xx_process_response_queue+0xc1/0x1c0
-> [   68.534102]  [<ffffffff88034584>] :qla2xxx:qla24xx_intr_handler+0x1d4/0x2b0
+> T10 DIF is interesting for a few things: 
+> 
+>  - Ensuring that the data integrity is preserved when writing a buffer
+>    to disk
+> 
+>  - Ensuring that the write ends up on the right hardware sector
+> 
+> These features make the most sense in terms of WRITE.  Disks already
+> have plenty of CRC on the data so if a READ fails on a regular drive
+> we already know about it.
 
-Ok, since 2.6.20, there been a patch added to qla2xxx which drops the
-spin_unlock_irq() call while attempting to ramp-up the queue-depth:
+There are paths through a read that could still benefit from the extra 
+data integrity.  The CRC gets validated on the physical sector, but we 
+don't have the same level of strict data checking once it is read into 
+the disk's write cache or being transferred out of cache on the way to 
+the transport...
 
-	commit befede3dabd204e9c546cbfbe391b29286c57da2
-	Author: Seokmann Ju <seokmann.ju@qlogic.com>
-	Date:   Tue Jan 9 11:37:52 2007 -0800
+> 
+> We can, however, leverage DIF with my proposal to expose the
+> protection data to host memory.  This will allow us to verify the data
+> integrity information before passing it to the filesystem or
+> application.  We can say "this is really the information the disk
+> sent. It hasn't been mangled along the way".
+> 
+> And by using the APP tag we can mark a sector as - say - metadata or
+> data to ease putting the recovery puzzle back together.
+> 
+> It would be great if the app tag was more than 16 bits.  Ted mentioned
+> that ideally he'd like to store the inode number in the app tag.  But
+> as it stands there isn't room.
+> 
+> In any case this is all slightly orthogonal to Ric's original post
+> about finding the right persistence heuristics in the error handling
+> path...
+> 
 
-	    [SCSI] qla2xxx: correct locking while call starget_for_each_device()
+Still all a very relevant discussion - I agree that we could really use 
+more than just 16 bits...
 
-	    Removed spin_unlock_irq()/spin_lock_irq() pairs surrounding
-	    starget_for_each_device() calls.
-	    As Matthew W. pointed out, starget_for_each_device() can be called under
-	    a spinlock being held.
-	    The change has been tested and verified on qla2xxx.ko module.
-	    Thanks Matthew W. and Hisashi H. for help.
+ric
 
-	    Signed-off-by: Andrew Vasquez <Andrew.vasquez@qlogic.com>
-	    Signed-off-by: Seokmann Ju <Seokmann.ju@qlogic.com>
-	    Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
-
-	http://marc.theaimsgroup.com/?l=linux-scsi&m=116837234904583&w=2
-
-Could you try the latest 2.6.21-rc which contains the correction?
-
-Regards,
-Andrew Vasquez
