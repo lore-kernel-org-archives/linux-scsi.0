@@ -1,56 +1,59 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: end to end error recovery musings
-Date: Wed, 28 Feb 2007 08:46:42 -0500
-Message-ID: <45E587C2.5010209@torque.net>
-References: <664A4EBB07F29743873A87CF62C26D705D6DDB@NAMAIL4.ad.lsil.com>	<yq14pp78rze.fsf@sermon.lab.mkp.net>	<20070227190236.58323a40@lxorguk.ukuu.org.uk>	<yq1r6sb7733.fsf@sermon.lab.mkp.net>	<20070227233946.7ad33a50@lxorguk.ukuu.org.uk> <yq1mz2z6wov.fsf@sermon.lab.mkp.net>
-Reply-To: dougg@torque.net
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: qla2xxx BUG: workqueue leaked lock or atomic
+Date: Wed, 28 Feb 2007 16:18:29 +0100
+Message-ID: <20070228151829.GI22572@skl-net.de>
+References: <20070226133153.GC4095@skl-net.de> <20070226182617.GC9968@andrew-vasquezs-computer.local> <20070227101100.GA22572@skl-net.de> <20070227185134.GJ20397@andrew-vasquezs-computer.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <yq1mz2z6wov.fsf@sermon.lab.mkp.net>
-Sender: linux-raid-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Alan <alan@lxorguk.ukuu.org.uk>, "Moore, Eric" <Eric.Moore@lsi.com>, ric@emc.com, Theodore Tso <tytso@mit.edu>, Neil Brown <neilb@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@SteelEye.com>, Mark Lord <mlord@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="vJguvTgX93MxBIIe"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from systemlinux.org ([83.151.29.59]:44759 "EHLO m18s25.vlinux.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933085AbXB1PSm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 Feb 2007 10:18:42 -0500
+Content-Disposition: inline
+In-Reply-To: <20070227185134.GJ20397@andrew-vasquezs-computer.local>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
-Martin K. Petersen wrote:
->>>>>> "Alan" == Alan  <alan@lxorguk.ukuu.org.uk> writes:
-> 
->>> Not sure you're up-to-date on the T10 data integrity feature.
->>> Essentially it's an extension of the 520 byte sectors common in
->>> disk
-> 
-> [...]
-> 
-> Alan> but here's a minor bit of passing bad news - quite a few older
-> Alan> ATA controllers can't issue DMA transfers that are not a
-> Alan> multiple of 512 bytes without crapping themselves (eg
-> Alan> READ_LONG). Guess we may need to add
-> Alan> ap-> i_do_not_suck or similar 8)
-> 
-> I'm afraid it stops even before you get that far.  There doesn't seem
-> to be any interest in adopting the Data Integrity Feature (or anything
-> similar) in the ATA camp.  So for now it's a SCSI-only thing.
-> 
-> I encourage people to lean on their favorite disk manufacturer.  This
-> would be a great feature to have on SATA too...
-
-Martin,
-SCSI to ATA Translation (SAT) is now a standard
-(ANSI INCITS 431-2007) [and libata is somewhat
-short of compliance].
-
-Work on SAT-2 is now underway and one of the agenda
-items is "end to end data protection" and is in the
-hands of the t13 ATA8-ACS technical editor. So it
-looks like data integrity is on the radar in the SATA
-world.
-
-See http://www.t10.org/ftp/t10/document.06/06-497r4.pdf
-for more evidence of how SAS and SATA are converging
-at the command and feature set level.
-
-Doug Gilbert
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>
 
 
+--vJguvTgX93MxBIIe
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On 10:51, Andrew Vasquez wrote:
+> On Tue, 27 Feb 2007, Andre Noll wrote:
+> > [   68.532665] BUG: at kernel/lockdep.c:1860 trace_hardirqs_on()
+>=20
+> Ok, since 2.6.20, there been a patch added to qla2xxx which drops the
+> spin_unlock_irq() call while attempting to ramp-up the queue-depth:
+>=20
+> Could you try the latest 2.6.21-rc which contains the correction?
+
+With 2.6.21-rc2 I am unable to reproduce this BUG message. However,
+writing to both raid systems at the same time via lvm still locks up
+the system within minutes.
+
+As lockdep revealed another dm-related lock problem on this kernel,
+I guess I'll have to bother the lvm people on this.
+
+Thanks
+Andre
+
+--vJguvTgX93MxBIIe
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFF5Z1FWto1QDEAkw8RAoC4AJ0TWmP8BO8mC5YjwKbKqeslRTY1CwCfYOSM
+maZi/OoYRys9tZ75BEB3GHc=
+=GKfy
+-----END PGP SIGNATURE-----
+
+--vJguvTgX93MxBIIe--
