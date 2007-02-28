@@ -1,57 +1,56 @@
-From: Tobias Klauser <tklauser@distanz.ch>
-Subject: [KJ] [PATCH] aacraid: Use DMA_31BIT_MASK
-Date: Wed, 28 Feb 2007 10:31:45 +0100
-Message-ID: <20070228093145.GA15159@distanz.ch>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: end to end error recovery musings
+Date: Wed, 28 Feb 2007 08:46:42 -0500
+Message-ID: <45E587C2.5010209@torque.net>
+References: <664A4EBB07F29743873A87CF62C26D705D6DDB@NAMAIL4.ad.lsil.com>	<yq14pp78rze.fsf@sermon.lab.mkp.net>	<20070227190236.58323a40@lxorguk.ukuu.org.uk>	<yq1r6sb7733.fsf@sermon.lab.mkp.net>	<20070227233946.7ad33a50@lxorguk.ukuu.org.uk> <yq1mz2z6wov.fsf@sermon.lab.mkp.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <kernel-janitors-bounces@lists.osdl.org>
-Content-Disposition: inline
-List-Unsubscribe: <https://lists.osdl.org/mailman/listinfo/kernel-janitors>,
-	<mailto:kernel-janitors-request@lists.osdl.org?subject=unsubscribe>
-List-Archive: <http://lists.osdl.org/pipermail/kernel-janitors>
-List-Post: <mailto:kernel-janitors@lists.osdl.org>
-List-Help: <mailto:kernel-janitors-request@lists.osdl.org?subject=help>
-List-Subscribe: <https://lists.osdl.org/mailman/listinfo/kernel-janitors>,
-	<mailto:kernel-janitors-request@lists.osdl.org?subject=subscribe>
-Sender: kernel-janitors-bounces@lists.osdl.org
-Errors-To: kernel-janitors-bounces@lists.osdl.org
-To: kernel-janitors@lists.osdl.org
-Cc: linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <yq1mz2z6wov.fsf@sermon.lab.mkp.net>
+Sender: linux-raid-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Alan <alan@lxorguk.ukuu.org.uk>, "Moore, Eric" <Eric.Moore@lsi.com>, ric@emc.com, Theodore Tso <tytso@mit.edu>, Neil Brown <neilb@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@SteelEye.com>, Mark Lord <mlord@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Use constants from linux/dma-mapping.h for pci_set_dma_mask() and
-pci_set_consistent_dma_mask()
+Martin K. Petersen wrote:
+>>>>>> "Alan" == Alan  <alan@lxorguk.ukuu.org.uk> writes:
+> 
+>>> Not sure you're up-to-date on the T10 data integrity feature.
+>>> Essentially it's an extension of the 520 byte sectors common in
+>>> disk
+> 
+> [...]
+> 
+> Alan> but here's a minor bit of passing bad news - quite a few older
+> Alan> ATA controllers can't issue DMA transfers that are not a
+> Alan> multiple of 512 bytes without crapping themselves (eg
+> Alan> READ_LONG). Guess we may need to add
+> Alan> ap-> i_do_not_suck or similar 8)
+> 
+> I'm afraid it stops even before you get that far.  There doesn't seem
+> to be any interest in adopting the Data Integrity Feature (or anything
+> similar) in the ATA camp.  So for now it's a SCSI-only thing.
+> 
+> I encourage people to lean on their favorite disk manufacturer.  This
+> would be a great feature to have on SATA too...
 
-Signed-off-by: Tobias Klauser <tklauser@distanz.ch>
+Martin,
+SCSI to ATA Translation (SAT) is now a standard
+(ANSI INCITS 431-2007) [and libata is somewhat
+short of compliance].
 
----
- drivers/scsi/aacraid/commsup.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+Work on SAT-2 is now underway and one of the agenda
+items is "end to end data protection" and is in the
+hands of the t13 ATA8-ACS technical editor. So it
+looks like data integrity is on the radar in the SATA
+world.
 
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index 1b97f60..bb4fe48 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -34,6 +34,7 @@
- #include <linux/types.h>
- #include <linux/sched.h>
- #include <linux/pci.h>
-+#include <linux/dma-mapping.h>
- #include <linux/spinlock.h>
- #include <linux/slab.h>
- #include <linux/completion.h>
-@@ -1113,8 +1114,8 @@ static int _aac_reset_adapter(struct aac_dev *aac)
- 		  ((retval =3D pci_set_consistent_dma_mask(aac->pdev, DMA_32BIT_MASK))))
- 			goto out;
- 	} else {
--		if (((retval =3D pci_set_dma_mask(aac->pdev, 0x7FFFFFFFULL))) ||
--		  ((retval =3D pci_set_consistent_dma_mask(aac->pdev, 0x7FFFFFFFULL))))
-+		if (((retval =3D pci_set_dma_mask(aac->pdev, DMA_31BIT_MASK))) ||
-+		  ((retval =3D pci_set_consistent_dma_mask(aac->pdev, DMA_31BIT_MASK))))
- 			goto out;
- 	}
- 	if ((retval =3D (*(aac_get_driver_ident(index)->init))(aac)))
--- =
+See http://www.t10.org/ftp/t10/document.06/06-497r4.pdf
+for more evidence of how SAS and SATA are converging
+at the command and feature set level.
 
-1.5.0.2
+Doug Gilbert
+
+
