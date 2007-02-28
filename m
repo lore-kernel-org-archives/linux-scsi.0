@@ -1,41 +1,54 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: end to end error recovery musings
-Date: Tue, 27 Feb 2007 17:51:44 -0500
-Message-ID: <yq1mz2z6wov.fsf@sermon.lab.mkp.net>
-References: <664A4EBB07F29743873A87CF62C26D705D6DDB@NAMAIL4.ad.lsil.com>
-	<yq14pp78rze.fsf@sermon.lab.mkp.net>
-	<20070227190236.58323a40@lxorguk.ukuu.org.uk>
-	<yq1r6sb7733.fsf@sermon.lab.mkp.net>
-	<20070227233946.7ad33a50@lxorguk.ukuu.org.uk>
+Subject: [PATCH 0/4] SCSI: Printing cleanups
+Date: Tue, 27 Feb 2007 22:39:05 -0500
+Message-ID: <yq17iu36jdy.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20070227233946.7ad33a50@lxorguk.ukuu.org.uk> (alan@lxorguk.ukuu.org.uk's message of "Tue, 27 Feb 2007 23:39:46 +0000")
-Sender: linux-raid-owner@vger.kernel.org
-To: Alan <alan@lxorguk.ukuu.org.uk>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "Moore, Eric" <Eric.Moore@lsi.com>, ric@emc.com, Theodore Tso <tytso@mit.edu>, Neil Brown <neilb@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@SteelEye.com>, Mark Lord <mlord@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from rgminet01.oracle.com ([148.87.113.118]:43183 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751214AbXB1Dk4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Feb 2007 22:40:56 -0500
+Received: from rgmgw2.us.oracle.com (rgmgw2.us.oracle.com [138.1.186.111])
+	by rgminet01.oracle.com (Switch-3.2.4/Switch-3.1.6) with ESMTP id l1S3esKP032172
+	for <linux-scsi@vger.kernel.org>; Tue, 27 Feb 2007 20:40:55 -0700
+Received: from rcsmt251.oracle.com (rcsmt251.oracle.com [148.87.90.196])
+	by rgmgw2.us.oracle.com (Switch-3.2.4/Switch-3.1.7) with ESMTP id l1S3McM2018324
+	for <linux-scsi@vger.kernel.org>; Tue, 27 Feb 2007 20:40:54 -0700
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
->>>>> "Alan" == Alan  <alan@lxorguk.ukuu.org.uk> writes:
 
->> Not sure you're up-to-date on the T10 data integrity feature.
->> Essentially it's an extension of the 520 byte sectors common in
->> disk
+This patch series is the first batch of cleanups in an attempt to make
+the SCSI printing more consistent and suitable for human consumption.
 
-[...]
+Previously a typical error looked like this:
 
-Alan> but here's a minor bit of passing bad news - quite a few older
-Alan> ATA controllers can't issue DMA transfers that are not a
-Alan> multiple of 512 bytes without crapping themselves (eg
-Alan> READ_LONG). Guess we may need to add
-Alan> ap-> i_do_not_suck or similar 8)
+    sd 0:0:0:0: SCSI error: return code = 0x08000002
+    sda: Current: sense key: Aborted Command
+        Additional sense: Logical block reference tag check failed
 
-I'm afraid it stops even before you get that far.  There doesn't seem
-to be any interest in adopting the Data Integrity Feature (or anything
-similar) in the ATA camp.  So for now it's a SCSI-only thing.
+You had to have the magic return value decoder ring handy to figure
+out what had really happened.  And you had to do the mapping between
+sd 0:0:0:0 and sda yourself.
 
-I encourage people to lean on their favorite disk manufacturer.  This
-would be a great feature to have on SATA too...
+
+The following patches clean up various bits so that the same
+information can be presented in a more readable form:
+
+    sd 0:0:0:0: [sda] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE,SUGGEST_OK
+    sd 0:0:0:0: [sda] Sense Key : Aborted Command [current] 
+    sd 0:0:0:0: [sda] Add. Sense: Logical block reference tag check failed
+
+All printk's from sd.c now have the same prefix.  If logging is turned
+on, for instance, we also get:
+
+    sd 0:0:0:0: [sda] Send: 0x0fb89180 
+    sd 0:0:0:0: [sda] CDB: Read(16): 88 20 00 00 00 00 00 00 00 20 00 00 00 08 00 00
+    sd 0:0:0:0: [sda] Done: 0x0fb89180 SUCCESS
+
+The patches need to be applied in order.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
