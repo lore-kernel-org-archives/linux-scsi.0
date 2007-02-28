@@ -1,42 +1,26 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: end to end error recovery musings
-Date: Wed, 28 Feb 2007 11:30:22 -0600
-Message-ID: <1172683822.3374.13.camel@mulgrave.il.steeleye.com>
-References: <664A4EBB07F29743873A87CF62C26D705D6DDB@NAMAIL4.ad.lsil.com>
-	 <yq14pp78rze.fsf@sermon.lab.mkp.net>
-	 <20070227190236.58323a40@lxorguk.ukuu.org.uk>
-	 <yq1r6sb7733.fsf@sermon.lab.mkp.net>
-	 <20070227233946.7ad33a50@lxorguk.ukuu.org.uk>
-	 <yq1mz2z6wov.fsf@sermon.lab.mkp.net> <45E587C2.5010209@torque.net>
-	 <yq1zm6y42z0.fsf@sermon.lab.mkp.net>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] SCSI: Update ASC list
+Date: Wed, 28 Feb 2007 12:34:58 -0500
+Message-ID: <yq1ps7u424d.fsf@sermon.lab.mkp.net>
+References: <yq14pp65ht4.fsf@sermon.lab.mkp.net> <45E5BA5D.8010701@tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <yq1zm6y42z0.fsf@sermon.lab.mkp.net>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: "Martin K. Petersen" <mkp@mkp.net>
-Cc: dougg@torque.net, "Martin K. Petersen" <martin.petersen@oracle.com>, Alan <alan@lxorguk.ukuu.org.uk>, "Moore, Eric" <Eric.Moore@lsi.com>, ric@emc.com, Theodore Tso <tytso@mit.edu>, Neil Brown <neilb@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, Mark Lord <mlord@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from agminet01.oracle.com ([141.146.126.228]:13727 "EHLO
+	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752272AbXB1RgR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Feb 2007 12:36:17 -0500
+In-Reply-To: <45E5BA5D.8010701@tls.msk.ru> (Michael Tokarev's message of "Wed, 28 Feb 2007 20:22:37 +0300")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, 2007-02-28 at 12:16 -0500, Martin K. Petersen wrote:
-> It's cool that it's on the radar in terms of the protocol.  
-> 
-> That doesn't mean that drive manufacturers are going to implement it,
-> though.  The ones I've talked to were unwilling to sacrifice capacity
-> because that's the main competitive factor in the SATA/consumer space.
-> 
-> Maybe we'll see it in the nearline product ranges?  That would be a
-> good start...
+>>>>> "Michael" == Michael Tokarev <mjt@tls.msk.ru> writes:
 
-They wouldn't necessarily have to sacrifice capacity per-se.  The
-current problem is that unlike SCSI disks, you can't seem to reformat
-SATA ones to arbitrary sector sizes.  However, I could see the SATA
-manufacturers selling capacity at 512 (or the new 4096) sectors but
-allowing their OEMs to reformat them 520 (or 4160) and then implementing
-block guard on top of this.  The OEMs who did this would obviously lose
-1.6% of the capacity, but that would be their choice ...
+Michael> static CONST struct error_info additional[]... ?
 
-James
+Good spotting - updated patch coming...
 
-
+-- 
+Martin K. Petersen	Oracle Linux Engineering
