@@ -1,45 +1,35 @@
-From: "Daniel J. Priem" <daniel@flexserv.de>
-Subject: Re: [PATCH] SCSI: Update ASC list and make it const
-Date: Wed, 28 Feb 2007 18:45:27 +0100
-Message-ID: <87d53utbuw.fsf@samuel.flexserv.de>
-References: <yq1lkii420t.fsf@sermon.lab.mkp.net>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: end to end error recovery musings
+Date: Wed, 28 Feb 2007 11:52:41 -0600
+Message-ID: <1172685161.3374.18.camel@mulgrave.il.steeleye.com>
+References: <664A4EBB07F29743873A87CF62C26D705D6DDB@NAMAIL4.ad.lsil.com>
+	 <yq14pp78rze.fsf@sermon.lab.mkp.net>
+	 <20070227190236.58323a40@lxorguk.ukuu.org.uk>
+	 <yq1r6sb7733.fsf@sermon.lab.mkp.net>
+	 <20070227233946.7ad33a50@lxorguk.ukuu.org.uk>
+	 <yq1mz2z6wov.fsf@sermon.lab.mkp.net> <45E587C2.5010209@torque.net>
+	 <yq1zm6y42z0.fsf@sermon.lab.mkp.net>
+	 <1172683822.3374.13.camel@mulgrave.il.steeleye.com>
+	 <yq1hct641s0.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:46563 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750984AbXB1RuL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Feb 2007 12:50:11 -0500
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1HMSwE-0007yj-Q8
-	for linux-scsi@vger.kernel.org; Wed, 28 Feb 2007 18:50:02 +0100
-Received: from 213.217.69.53 ([213.217.69.53])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Feb 2007 18:50:02 +0100
-Received: from daniel by 213.217.69.53 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Feb 2007 18:50:02 +0100
+Received: from hancock.steeleye.com ([71.30.118.248]:45795 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751030AbXB1RyV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Feb 2007 12:54:21 -0500
+In-Reply-To: <yq1hct641s0.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: dougg@torque.net, Alan <alan@lxorguk.ukuu.org.uk>, "Moore, Eric" <Eric.Moore@lsi.com>, ric@emc.com, Theodore Tso <tytso@mit.edu>, Neil Brown <neilb@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, Mark Lord <mlord@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
 
-"Martin K. Petersen" <martin.petersen@oracle.com> writes:
-> + * The canonical list of T10 Additional Sense Codes is available at:
-> + * http://www.t10.org/lists/asc-num.txt+ */
+On Wed, 2007-02-28 at 12:42 -0500, Martin K. Petersen wrote:
+> 4104.  It's 8 bytes per hardware sector.  At least for T10...
 
-Please do a
+Er ... that won't look good to the 512 ATA compatibility remapping ...
 
-- * http://www.t10.org/lists/asc-num.txt+ */
-+ * http://www.t10.org/lists/asc-num.txt */
+James
 
-its a typo.
-Regards
-Daniel
-
--- 
- .''`.
- : :' :      Daniel J. Priem
- `. `'       http://flexserv.de
-   `-        
 
