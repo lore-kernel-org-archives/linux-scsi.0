@@ -1,38 +1,50 @@
-From: "Martin K. Petersen" <mkp@mkp.net>
-Subject: Re: end to end error recovery musings
-Date: Wed, 28 Feb 2007 12:16:35 -0500
-Message-ID: <yq1zm6y42z0.fsf@sermon.lab.mkp.net>
-References: <664A4EBB07F29743873A87CF62C26D705D6DDB@NAMAIL4.ad.lsil.com>
-	<yq14pp78rze.fsf@sermon.lab.mkp.net>
-	<20070227190236.58323a40@lxorguk.ukuu.org.uk>
-	<yq1r6sb7733.fsf@sermon.lab.mkp.net>
-	<20070227233946.7ad33a50@lxorguk.ukuu.org.uk>
-	<yq1mz2z6wov.fsf@sermon.lab.mkp.net> <45E587C2.5010209@torque.net>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: RE: end to end error recovery musings
+Date: Wed, 28 Feb 2007 12:27:23 -0500
+Message-ID: <yq1tzx642h0.fsf@sermon.lab.mkp.net>
+References: <664A4EBB07F29743873A87CF62C26D705D7112@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <45E587C2.5010209@torque.net> (Douglas Gilbert's message of "Wed, 28 Feb 2007 08:46:42 -0500")
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: dougg@torque.net
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Alan <alan@lxorguk.ukuu.org.uk>, "Moore, Eric" <Eric.Moore@lsi.com>, ric@emc.com, Theodore Tso <tytso@mit.edu>, Neil Brown <neilb@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@SteelEye.com>, Mark Lord <mlord@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from rgminet01.oracle.com ([148.87.113.118]:61136 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933161AbXB1R2D (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Feb 2007 12:28:03 -0500
+In-Reply-To: <664A4EBB07F29743873A87CF62C26D705D7112@NAMAIL4.ad.lsil.com> (Eric Moore's message of "Wed, 28 Feb 2007 08:19:17 -0700")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Moore, Eric" <Eric.Moore@lsi.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
->>>>> "Doug" == Douglas Gilbert <dougg@torque.net> writes:
+>>>>> "Eric" == Moore, Eric <Eric.Moore@lsi.com> writes:
 
-Doug> Work on SAT-2 is now underway and one of the agenda items is
-Doug> "end to end data protection" and is in the hands of the t13
-Doug> ATA8-ACS technical editor. So it looks like data integrity is on
-Doug> the radar in the SATA world.
+[Trimmed the worldwide broadcast CC: list down to linux-scsi]
 
-It's cool that it's on the radar in terms of the protocol.  
+Eric> I from the scsi lld perspective, all we need 32 byte cdbs, and a
+Eric> mechinism to pass the tags down from above.  
 
-That doesn't mean that drive manufacturers are going to implement it,
-though.  The ones I've talked to were unwilling to sacrifice capacity
-because that's the main competitive factor in the SATA/consumer space.
+Ok, so your board only supports Type 2 protection?
 
-Maybe we'll see it in the nearline product ranges?  That would be a
-good start...
+
+Eric> It appears our driver to firmware insterface is only providing
+Eric> the reference and application tags. 
+
+My current code allows the submitter to specify which tags are valid
+between the OS and the HBA.  Your inbound scsi_cmnd will have a 
+protection_tag_mask which tells you which fields are provided.
+
+Similarly, there's a mask in scsi_host which allows the HBA to
+identify which protection types it supports.  I hadn't envisioned that
+an HBA might only provide a subset.  I'll ponder a bit.
+
+
+Eric> I assume that for transfers greater than a sector, that the
+Eric> controller firmware updates the tags for all the other sectors
+Eric> within the boundary.  
+
+In other words you only support one app tag per request and not per
+sector?
 
 -- 
-Martin K. Petersen      http://mkp.net/
+Martin K. Petersen	Oracle Linux Engineering
 
