@@ -1,56 +1,38 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH] SCSI: Update ASC list
-Date: Wed, 28 Feb 2007 12:10:47 -0500
-Message-ID: <yq14pp65ht4.fsf@sermon.lab.mkp.net>
+From: "Martin K. Petersen" <mkp@mkp.net>
+Subject: Re: end to end error recovery musings
+Date: Wed, 28 Feb 2007 12:16:35 -0500
+Message-ID: <yq1zm6y42z0.fsf@sermon.lab.mkp.net>
+References: <664A4EBB07F29743873A87CF62C26D705D6DDB@NAMAIL4.ad.lsil.com>
+	<yq14pp78rze.fsf@sermon.lab.mkp.net>
+	<20070227190236.58323a40@lxorguk.ukuu.org.uk>
+	<yq1r6sb7733.fsf@sermon.lab.mkp.net>
+	<20070227233946.7ad33a50@lxorguk.ukuu.org.uk>
+	<yq1mz2z6wov.fsf@sermon.lab.mkp.net> <45E587C2.5010209@torque.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from agminet01.oracle.com ([141.146.126.228]:54517 "EHLO
-	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933196AbXB1RLg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Feb 2007 12:11:36 -0500
-Received: from rgmgw2.us.oracle.com (rgmgw2.us.oracle.com [138.1.186.111])
-	by agminet01.oracle.com (Switch-3.2.4/Switch-3.1.7) with ESMTP id l1SHBY2B030489
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Feb 2007 11:11:35 -0600
-Received: from rcsmt250.oracle.com (rcsmt250.oracle.com [148.87.90.195])
-	by rgmgw2.us.oracle.com (Switch-3.2.4/Switch-3.1.7) with ESMTP id l1SGHYJd016793
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Feb 2007 10:11:34 -0700
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <45E587C2.5010209@torque.net> (Douglas Gilbert's message of "Wed, 28 Feb 2007 08:46:42 -0500")
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: dougg@torque.net
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Alan <alan@lxorguk.ukuu.org.uk>, "Moore, Eric" <Eric.Moore@lsi.com>, ric@emc.com, Theodore Tso <tytso@mit.edu>, Neil Brown <neilb@suse.de>, "H. Peter Anvin" <hpa@zytor.com>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@SteelEye.com>, Mark Lord <mlord@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
+>>>>> "Doug" == Douglas Gilbert <dougg@torque.net> writes:
 
-Add missing additional sense code and provide pointer to upstream
-reference (from Doug Gilbert).
+Doug> Work on SAT-2 is now underway and one of the agenda items is
+Doug> "end to end data protection" and is in the hands of the t13
+Doug> ATA8-ACS technical editor. So it looks like data integrity is on
+Doug> the radar in the SATA world.
 
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+It's cool that it's on the radar in terms of the protocol.  
 
---- 
+That doesn't mean that drive manufacturers are going to implement it,
+though.  The ones I've talked to were unwilling to sacrifice capacity
+because that's the main competitive factor in the SATA/consumer space.
 
- constants.c |    5 +++++
- 1 files changed, 5 insertions(+)
+Maybe we'll see it in the nearline product ranges?  That would be a
+good start...
 
+-- 
+Martin K. Petersen      http://mkp.net/
 
-Index: scsi-misc-2.6/drivers/scsi/constants.c
-===================================================================
---- scsi-misc-2.6.orig/drivers/scsi/constants.c
-+++ scsi-misc-2.6/drivers/scsi/constants.c
-@@ -404,6 +404,10 @@ struct error_info {
- 	const char * text;
- };
- 
-+/*
-+ * The canonical list of T10 Additional Sense Codes is available at:
-+ * http://www.t10.org/lists/asc-num.txt
-+ */
- static struct error_info additional[] =
- {
- 	{0x0000, "No additional sense information"},
-@@ -708,6 +712,7 @@ static struct error_info additional[] =
- 
- 	{0x2F00, "Commands cleared by another initiator"},
- 	{0x2F01, "Commands cleared by power loss notification"},
-+	{0x2F02, "Commands cleared by device server"},
- 
- 	{0x3000, "Incompatible medium installed"},
- 	{0x3001, "Cannot read medium - unknown format"},
