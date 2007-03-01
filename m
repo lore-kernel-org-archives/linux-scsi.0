@@ -1,63 +1,25 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH 7/7] Print useful error message when iscsi crc23c allocation fails
-Date: Wed, 28 Feb 2007 17:32:21 -0600
-Message-ID: <1172705545601-git-send-email-michaelc@cs.wisc.edu>
-References: <1172705541949-git-send-email-michaelc@cs.wisc.edu> <11727055423762-git-send-email-michaelc@cs.wisc.edu> <11727055433394-git-send-email-michaelc@cs.wisc.edu> <1172705543740-git-send-email-michaelc@cs.wisc.edu> <1172705544330-git-send-email-michaelc@cs.wisc.edu> <11727055441132-git-send-email-michaelc@cs.wisc.edu> <11727055453295-git-send-email-michaelc@cs.wisc.edu>
-Reply-To: michaelc@cs.wisc.edu
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:56867 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752252AbXB1Xcj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Feb 2007 18:32:39 -0500
-In-Reply-To: <11727055453295-git-send-email-michaelc@cs.wisc.edu>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: end to end error recovery musings
+Date: Wed, 28 Feb 2007 17:28:28 -0800
+Message-ID: <45E62C3C.5090906@zytor.com>
+References: <664A4EBB07F29743873A87CF62C26D705D6DDB@NAMAIL4.ad.lsil.com>	 <yq14pp78rze.fsf@sermon.lab.mkp.net>	 <20070227190236.58323a40@lxorguk.ukuu.org.uk>	 <yq1r6sb7733.fsf@sermon.lab.mkp.net>	 <20070227233946.7ad33a50@lxorguk.ukuu.org.uk>	 <yq1mz2z6wov.fsf@sermon.lab.mkp.net> <45E587C2.5010209@torque.net>	 <yq1zm6y42z0.fsf@sermon.lab.mkp.net>	 <1172683822.3374.13.camel@mulgrave.il.steeleye.com>	 <yq1hct641s0.fsf@sermon.lab.mkp.net> <1172685161.3374.18.camel@mulgrave.il.steeleye.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1172685161.3374.18.camel@mulgrave.il.steeleye.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, dougg@torque.net, Alan <alan@lxorguk.ukuu.org.uk>, "Moore, Eric" <Eric.Moore@lsi.com>, ric@emc.com, Theodore Tso <tytso@mit.edu>, Neil Brown <neilb@suse.de>, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-raid@vger.kernel.org, Tejun Heo <htejun@gmail.com>, Mark Lord <mlord@pobox.com>, Jens Axboe <jens.axboe@oracle.com>, "Clark, Nathan" <Clark_Nathan@emc.com>, "Singh, Arvinder" <Singh_Arvinder@emc.com>, "De Smet, Jochen" <DeSmet_Jochen@emc.com>, "Farmer, Matt" <Farmer_Matt@emc.com>, linux-fsdevel@vger.kernel.org, "Mizar, Sunita" <Mizar_Sunita@emc.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+James Bottomley wrote:
+> On Wed, 2007-02-28 at 12:42 -0500, Martin K. Petersen wrote:
+>> 4104.  It's 8 bytes per hardware sector.  At least for T10...
+> 
+> Er ... that won't look good to the 512 ATA compatibility remapping ...
+> 
 
-People do not read the README and seem to like to
-unselect the crc32c module even though iscsi_tcp selects
-it for them. This patch spits a error that tells the user
-that they really do need the module. Hopefully, we will
-get less people asking about this now.
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
----
- drivers/scsi/iscsi_tcp.c |   14 ++++++++++++--
- 1 files changed, 12 insertions(+), 2 deletions(-)
+Well, in that case you'd only see 8x512 data bytes, no metadata...
 
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index 861cb9b..c9a3abf 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -1777,14 +1777,24 @@ iscsi_tcp_conn_create(struct iscsi_cls_s
- 	tcp_conn->tx_hash.tfm = crypto_alloc_hash("crc32c", 0,
- 						  CRYPTO_ALG_ASYNC);
- 	tcp_conn->tx_hash.flags = 0;
--	if (IS_ERR(tcp_conn->tx_hash.tfm))
-+	if (IS_ERR(tcp_conn->tx_hash.tfm)) {
-+		printk(KERN_ERR "Could not create connection due to crc32c "
-+		       "loading error %ld. Make sure the crc32c module is "
-+		       "built as a module or into the kernel\n",
-+			PTR_ERR(tcp_conn->tx_hash.tfm));
- 		goto free_tcp_conn;
-+	}
- 
- 	tcp_conn->rx_hash.tfm = crypto_alloc_hash("crc32c", 0,
- 						  CRYPTO_ALG_ASYNC);
- 	tcp_conn->rx_hash.flags = 0;
--	if (IS_ERR(tcp_conn->rx_hash.tfm))
-+	if (IS_ERR(tcp_conn->rx_hash.tfm)) {
-+		printk(KERN_ERR "Could not create connection due to crc32c "
-+		       "loading error %ld. Make sure the crc32c module is "
-+		       "built as a module or into the kernel\n",
-+			PTR_ERR(tcp_conn->rx_hash.tfm));
- 		goto free_tx_tfm;
-+	}
- 
- 	return cls_conn;
- 
--- 
-1.4.1.1
-
+	-hpa
