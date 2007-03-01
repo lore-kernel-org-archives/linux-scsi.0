@@ -1,245 +1,310 @@
-From: Pete Wyckoff <pw@osc.edu>
-Subject: [PATCH] bsg: iovec support
-Date: Thu, 1 Mar 2007 17:29:08 -0500
-Message-ID: <20070301222908.GC20922@osc.edu>
+From: Sumant Patro <sumant.patro@lsi.com>
+Subject: [PATCH] scsi: megaraid_sas - throttle io if cmds are in risk of
+	being timed-out
+Date: Thu, 01 Mar 2007 13:29:53 -0800
+Message-ID: <1172784593.19842.21.camel@dumbo>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from quasar.osc.edu ([192.148.249.15]:51263 "EHLO quasar.osc.edu"
+Received: from mail0.lsil.com ([147.145.40.20]:35070 "EHLO mail0.lsil.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161033AbXCAW3J (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Mar 2007 17:29:09 -0500
-Content-Disposition: inline
+	id S1422718AbXCBCng (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 1 Mar 2007 21:43:36 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org
+To: James.Bottomley@SteelEye.com, akpm@osdl.org, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, neela.kolli@lsi.com, bo.yang@lsi.com, sumant.patro@lsi.com
 
-Support vectored IO as in SGv3.  The iovec structure uses explicit
-sizes to avoid the need for compat conversion.
+Driver to throttle IO to reduce risk of OS timing out cmds.
 
-Signed-off-by: Pete Wyckoff <pw@osc.edu>
+Implemented a circular queue to keep track of pending OS cmds in FW. 
+This queue is periodically (every 10 sec) checked by a timer routine.
+If there is any cmd that is in risk of getting timed-out by the OS, 
+the host->can_queue is reduced to 16 and MEGASAS_FW_BUSY flag is set. 
+The host->can_queue will be restored to default value when the following 
+two conditions are met : 5 secs has elapsed and the # of outstanding cmds
+in FW is less than 17.
+Also increased the per cmd timeout to 120*HZ from 90*HZ.
+
+Signed-off-by: Sumant Patro <sumant.patro@lsi.com>
 ---
 
-My application definitely can take advantage of scatter/gather IO,
-which is supported in sgv3 but not in the bsg implementation of sgv4.
-I understand Tomo's concerns about code bloat and the need for
-32/64 compat translations, but this will make things much easier on
-users of bsg who read or write out of multiple buffers in a single
-SCSI operation.
+ drivers/scsi/megaraid/megaraid_sas.c |  118 ++++++++++++++++++++++++-
+ drivers/scsi/megaraid/megaraid_sas.h |   25 ++++-
+ 2 files changed, 136 insertions(+), 7 deletions(-)
 
-Clearly we want to avoid doing the compat work that sg.c has to do
-now, so I went with __u64 for the addresses in the structures that
-userspace sees.  But to interface with existing bio structures, that
-must be converted back to 32-bit pointers in sg_iovec (only on
-32-bit architectures).  In the long run, maybe we should have a
-bio_map_user_iov() that works on the constant-sized sg_io_v4_vec
-proposed here?
-
-		-- Pete
-
-
- block/bsg.c         |  132 ++++++++++++++++++++++++++++++++++++++++++---------
- include/linux/bsg.h |   16 ++++++
- 2 files changed, 125 insertions(+), 23 deletions(-)
-
-diff --git a/block/bsg.c b/block/bsg.c
-index c85d961..8e3d6c7 100644
---- a/block/bsg.c
-+++ b/block/bsg.c
-@@ -280,6 +280,95 @@ bsg_validate_sgv4_hdr(request_queue_t *q, struct sg_io_v4 *hdr, int *rw)
- }
+diff -uprN linux-orig/drivers/scsi/megaraid/megaraid_sas.c linux-new/drivers/scsi/megaraid/megaraid_sas.c
+--- linux-orig/drivers/scsi/megaraid/megaraid_sas.c	2007-03-01 06:04:40.000000000 -0800
++++ linux-new/drivers/scsi/megaraid/megaraid_sas.c	2007-03-01 10:26:35.000000000 -0800
+@@ -10,7 +10,7 @@
+  *	   2 of the License, or (at your option) any later version.
+  *
+  * FILE		: megaraid_sas.c
+- * Version	: v00.00.03.10-rc1
++ * Version	: v00.00.03.10-rc2
+  *
+  * Authors:
+  *	(email-id : megaraidlinux@lsi.com)
+@@ -112,6 +112,15 @@ megasas_return_cmd(struct megasas_instan
+ {
+ 	unsigned long flags;
  
- /*
-+ * Sits around blk_rq_map_user_iov so we can use an iovec type that
-+ * does not require compat manipulations.  For now we just clumsily
-+ * remap the entire iovec if the types do not match.  Later consider
-+ * changing the bio map function.
-+ */
-+static int bsg_map_user_iovec(request_queue_t *q, struct request *rq,
-+			      struct sg_io_v4_vec *vec, int numvec,
-+			      size_t tot_len, enum dma_data_direction dir)
-+{
-+	struct bio *bio;
-+	struct sg_iovec *iov;
-+	int write_to_vm = (dir == DMA_FROM_DEVICE ? 1 : 0);
-+	int must_copy_iovec = (sizeof(*iov) != sizeof(*vec));
++	if (cmd->watchdog_slot != 0xff) {
++		spin_lock_irqsave(&instance->watchdog_lock, flags);
++
++		instance->watchdog_arr[cmd->watchdog_slot]--;
++		cmd->watchdog_slot = 0xff;
++
++		spin_unlock_irqrestore(&instance->watchdog_lock, flags);
++	}
++
+ 	spin_lock_irqsave(&instance->cmd_pool_lock, flags);
+ 
+ 	cmd->scmd = NULL;
+@@ -841,6 +850,7 @@ megasas_queue_command(struct scsi_cmnd *
+ 	u32 frame_count;
+ 	struct megasas_cmd *cmd;
+ 	struct megasas_instance *instance;
++	unsigned long flags;
+ 
+ 	instance = (struct megasas_instance *)
+ 	    scmd->device->host->hostdata;
+@@ -888,6 +898,16 @@ megasas_queue_command(struct scsi_cmnd *
+ 	cmd->scmd = scmd;
+ 
+ 	/*
++	 * Update watchdog array before sending cmd to FW
++	 */
++	spin_lock_irqsave(&instance->watchdog_lock, flags);
++
++	cmd->watchdog_slot = instance->watchdog_head;
++	instance->watchdog_arr[cmd->watchdog_slot]++;
++
++	spin_unlock_irqrestore(&instance->watchdog_lock, flags);
 +
 +	/*
-+	 * For 64-bit everywhere, sg_io_v4_vec using __u64 is same as sg_iovec
-+	 * using void *.  For 64-bit kernel with 32-bit userspace, also no
-+	 * translation needed as userspace is forced to use __u64.  Only in the
-+	 * all 32-bit case will sg_iovec use 32-bit pointers and hence we
-+	 * must shrink our 64-bit pointers down into it.
-+	 */
-+	if (must_copy_iovec) {
-+		int i;
-+		iov = kmalloc(numvec * sizeof(*iov), GFP_KERNEL);
-+		for (i=0; i<numvec; i++) {
-+			iov[i].iov_base = (void __user *) vec[i].iov_base;
-+			iov[i].iov_len = vec[i].iov_len;
-+		}
-+	} else {
-+		iov = (struct sg_iovec *) vec;
-+	}
-+
-+	bio = bio_map_user_iov(q, NULL, iov, numvec, write_to_vm);
-+
-+	if (must_copy_iovec)
-+		kfree(iov);
-+
-+	if (IS_ERR(bio)) {
-+		dprintk("bio_map_user_iov err\n");
-+		return PTR_ERR(bio);
-+	}
-+
-+	if (bio->bi_size != tot_len) {
-+		dprintk("bio->bi_size %u != len %lu\n", bio->bi_size, tot_len);
-+		bio_endio(bio, bio->bi_size, 0);
-+		bio_unmap_user(bio);
-+		return -EINVAL;
-+	}
-+
-+	bio_get(bio);
-+	blk_rq_bio_prep_bidi(q, rq, bio, dir);
-+	rq->buffer = rq->data = NULL;
-+	return 0;
-+}
-+
-+/*
-+ * Map either the in or out bufs.
-+ */
-+static int bsg_map_data(struct request_queue *q, struct request *rq,
-+			__u64 uaddr, __u32 tot_len, __u32 numiov,
-+			enum dma_data_direction dir)
-+{
-+	int ret;
-+	void __user *ubuf = (void __user *) (unsigned long) uaddr;
-+
-+	if (numiov) {
-+		struct sg_io_v4_vec *vec;
-+		size_t len = numiov * sizeof(*vec);
-+
-+		vec = kmalloc(len, GFP_KERNEL);
-+		if (vec == NULL) {
-+			ret = -ENOMEM;
-+			goto out;
-+		}
-+		if (copy_from_user(vec, ubuf, len)) {
-+			ret = -EFAULT;
-+			kfree(vec);
-+			goto out;
-+		}
-+		ret = bsg_map_user_iovec(q, rq, vec, numiov, tot_len, dir);
-+		kfree(vec);
-+	} else
-+		ret = blk_rq_map_user(q, rq, ubuf, tot_len);
-+
-+out:
-+	return ret;
-+}
-+
-+/*
-  * map sg_io_v4 to a request.
-  */
- static struct request *
-@@ -288,12 +377,10 @@ bsg_map_hdr(struct bsg_device *bd, struct sg_io_v4 *hdr)
- 	request_queue_t *q = bd->queue;
- 	struct request *rq;
- 	int ret, rw = 0; /* shut up gcc */
--	unsigned int dxfer_len;
--	void *dxferp = NULL;
- 
--	dprintk("map hdr %llx/%u %llx/%u\n", (unsigned long long) hdr->dout_xferp,
--		hdr->dout_xfer_len, (unsigned long long) hdr->din_xferp,
--		hdr->din_xfer_len);
-+	dprintk("map hdr %llx/%u %llx/%u\n",
-+	        (unsigned long long) hdr->dout_xferp, hdr->dout_xfer_len,
-+		(unsigned long long) hdr->din_xferp, hdr->din_xfer_len);
- 
- 	ret = bsg_validate_sgv4_hdr(q, hdr, &rw);
- 	if (ret)
-@@ -305,29 +392,28 @@ bsg_map_hdr(struct bsg_device *bd, struct sg_io_v4 *hdr)
- 	rq = blk_get_request(q, rw, GFP_KERNEL);
- 	ret = blk_fill_sgv4_hdr_rq(q, rq, hdr, test_bit(BSG_F_WRITE_PERM,
- 						       &bd->flags));
--	if (ret) {
--		blk_put_request(rq);
--		return ERR_PTR(ret);
--	}
-+	if (ret)
-+		goto errout;
- 
- 	if (hdr->dout_xfer_len) {
--		dxfer_len = hdr->dout_xfer_len;
--		dxferp = (void*)(unsigned long)hdr->dout_xferp;
-+		ret = bsg_map_data(q, rq, hdr->dout_xferp, hdr->dout_xfer_len,
-+		                   hdr->dout_iovec_count, DMA_TO_DEVICE);
-+		if (ret)
-+			goto errout;
- 	} else if (hdr->din_xfer_len) {
--		dxfer_len = hdr->din_xfer_len;
--		dxferp = (void*)(unsigned long)hdr->din_xferp;
--	} else
--		dxfer_len = 0;
--
--	if (dxfer_len) {
--		ret = blk_rq_map_user(q, rq, dxferp, dxfer_len);
--		if (ret) {
--			dprintk("failed map at %d\n", ret);
--			blk_put_request(rq);
--			rq = ERR_PTR(ret);
--		}
-+		ret = bsg_map_data(q, rq, hdr->din_xferp, hdr->din_xfer_len,
-+		                   hdr->din_iovec_count, DMA_FROM_DEVICE);
-+		if (ret)
-+			goto errout;
- 	}
- 
-+	goto out;
-+
-+errout:
-+	blk_put_request(rq);
-+	rq = ERR_PTR(ret);
-+
-+out:
- 	return rq;
+ 	 * Issue the command to the FW
+ 	 */
+ 	atomic_inc(&instance->fw_outstanding);
+@@ -919,7 +939,7 @@ static int megasas_slave_configure(struc
+ 	 * The RAID firmware may require extended timeouts.
+ 	 */
+ 	if (sdev->channel >= MEGASAS_MAX_PD_CHANNELS)
+-		sdev->timeout = 90 * HZ;
++		sdev->timeout = 120 * HZ;
+ 	return 0;
  }
  
-diff --git a/include/linux/bsg.h b/include/linux/bsg.h
-index 2154a6d..3580921 100644
---- a/include/linux/bsg.h
-+++ b/include/linux/bsg.h
-@@ -16,6 +16,8 @@ struct sg_io_v4 {
- 	__u64 response;		/* [i], [*o] {SCSI: (auto)sense data} */
+@@ -981,8 +1001,8 @@ static int megasas_generic_reset(struct 
  
- 	/* "din_" for data in (from device); "dout_" for data out (to device) */
-+	__u32 dout_iovec_count; /* [i] =0 -> "flat" data transfer */
-+	__u32 din_iovec_count;  /* [i] */
- 	__u32 dout_xfer_len;	/* [i] bytes to be transferred to device */
- 	__u32 din_xfer_len;	/* [i] bytes to be transferred from device */
- 	__u64 dout_xferp;	/* [i], [*i] */
-@@ -40,6 +42,20 @@ struct sg_io_v4 {
- 	__u32 padding;
+ 	instance = (struct megasas_instance *)scmd->device->host->hostdata;
+ 
+-	scmd_printk(KERN_NOTICE, scmd, "megasas: RESET -%ld cmd=%x\n",
+-	       scmd->serial_number, scmd->cmnd[0]);
++	scmd_printk(KERN_NOTICE, scmd, "megasas: RESET -%ld cmd=%x, retries=%x\n",
++		 scmd->serial_number, scmd->cmnd[0], scmd->retries);
+ 
+ 	if (instance->hw_crit_error) {
+ 		printk(KERN_ERR "megasas: cannot recover from previous reset "
+@@ -1714,6 +1734,7 @@ static int megasas_alloc_cmds(struct meg
+ 		memset(cmd, 0, sizeof(struct megasas_cmd));
+ 		cmd->index = i;
+ 		cmd->instance = instance;
++		cmd->watchdog_slot = 0xff;
+ 
+ 		list_add_tail(&cmd->list, &instance->cmd_pool);
+ 	}
+@@ -1828,9 +1849,80 @@ static void megasas_complete_cmd_dpc(uns
+ 	}
+ 
+ 	*instance->consumer = producer;
++
++	/*
++	 * Check if we can restore can_queue
++	 */
++	if (instance->flag & MEGASAS_FW_BUSY
++		&& time_after(jiffies, instance->last_time + 5 * HZ)
++		&& atomic_read(&instance->fw_outstanding) < 17) {
++
++		instance->flag &= ~MEGASAS_FW_BUSY;
++		instance->host->can_queue = 
++				instance->max_fw_cmds - MEGASAS_INT_CMDS;
++	}
++}
++
++/**
++ * megasas_start_timer - Initializes a timer object
++ * @instance:		Adapter soft state
++ * @timer: 		timer object to be initialized
++ * @fn:			timer function
++ * @interval:		time interval between timer function call
++ *
++ */
++static inline void
++megasas_start_timer(struct megasas_instance *instance,
++			struct timer_list *timer,
++			void *fn, unsigned long interval)
++{
++	init_timer(timer);
++	timer->expires = jiffies + interval;
++	timer->data = (unsigned long)instance;
++	timer->function = fn;
++	add_timer(timer);
+ }
+ 
+ /**
++ * megasas_throttle_timer - Timer fn
++ * @instance_addr:	Address of adapter soft state
++ *
++ * Verifies and sets the FW busy flag if there is any pending cmd
++ * with the FW that is in risk of being timed-out by the OS
++ */
++static void
++megasas_throttle_timer(unsigned long instance_addr)
++{
++	unsigned long flags;
++	u32 pending;
++	struct megasas_instance *instance = (struct megasas_instance *)instance_addr;
++
++	spin_lock_irqsave(&instance->watchdog_lock, flags);
++
++	instance->watchdog_head++;
++	if (instance->watchdog_head == MEGASAS_MAX_WATCHDOG_SLOTS)
++		instance->watchdog_head = 0;
++
++	if (instance->watchdog_head == instance->watchdog_tail) {
++		pending = instance->watchdog_arr[instance->watchdog_tail];
++		if (pending) {
++			/* FW is busy, throttle IO */
++			instance->host->can_queue = 16;
++			instance->last_time = jiffies;
++			instance->flag |= MEGASAS_FW_BUSY;
++		}
++		instance->watchdog_tail++;
++		if (instance->watchdog_tail == MEGASAS_MAX_WATCHDOG_SLOTS)
++			instance->watchdog_tail = 0;
++	}
++	spin_unlock_irqrestore(&instance->watchdog_lock, flags);
++
++	/* Restart timer */
++	mod_timer(&instance->throttle_timer,
++			jiffies + MEGASAS_WATCHDOG_TIMER_INTERVAL);
++}
++ 
++/**
+  * megasas_init_mfi -	Initializes the FW
+  * @instance:		Adapter soft state
+  *
+@@ -1851,6 +1943,7 @@ static int megasas_init_mfi(struct megas
+ 	struct megasas_init_queue_info *initq_info;
+ 	dma_addr_t init_frame_h;
+ 	dma_addr_t initq_info_h;
++	int i;
+ 
+ 	/*
+ 	 * Map the message registers
+@@ -2006,6 +2099,19 @@ static int megasas_init_mfi(struct megas
+ 
+         tasklet_init(&instance->isr_tasklet, megasas_complete_cmd_dpc,
+                         (unsigned long)instance);
++
++	/* Initialize watchdog data structs */
++	for (i = 0; i < MEGASAS_MAX_WATCHDOG_SLOTS; i++)
++		instance->watchdog_arr[i] = 0;
++
++	instance->watchdog_head = 0;
++	instance->watchdog_tail = MEGASAS_MAX_WATCHDOG_SLOTS - 1;
++
++	/* Initialize the throttle IO timer */
++	megasas_start_timer(instance, &instance->throttle_timer,
++				megasas_throttle_timer,
++				MEGASAS_WATCHDOG_TIMER_INTERVAL);
++
+ 	return 0;
+ 
+       fail_fw_init:
+@@ -2385,6 +2491,7 @@ megasas_probe_one(struct pci_dev *pdev, 
+ 	init_waitqueue_head(&instance->abort_cmd_wait_q);
+ 
+ 	spin_lock_init(&instance->cmd_pool_lock);
++	spin_lock_init(&instance->watchdog_lock);
+ 
+ 	sema_init(&instance->aen_mutex, 1);
+ 	sema_init(&instance->ioctl_sem, MEGASAS_INT_CMDS);
+@@ -2398,6 +2505,8 @@ megasas_probe_one(struct pci_dev *pdev, 
+ 	instance->init_id = MEGASAS_DEFAULT_INIT_ID;
+ 
+ 	megasas_dbg_lvl = 0;
++	instance->flag = 0;
++	instance->last_time = 0;
+ 
+ 	/*
+ 	 * Initialize MFI Firmware
+@@ -2566,6 +2675,7 @@ static void megasas_detach_one(struct pc
+ 	megasas_flush_cache(instance);
+ 	megasas_shutdown_controller(instance);
+ 	tasklet_kill(&instance->isr_tasklet);
++	del_timer_sync(&instance->throttle_timer);
+ 
+ 	/*
+ 	 * Take the instance off the instance array. Note that we will not
+diff -uprN linux-orig/drivers/scsi/megaraid/megaraid_sas.h linux-new/drivers/scsi/megaraid/megaraid_sas.h
+--- linux-orig/drivers/scsi/megaraid/megaraid_sas.h	2007-03-01 06:04:40.000000000 -0800
++++ linux-new/drivers/scsi/megaraid/megaraid_sas.h	2007-03-01 10:40:16.000000000 -0800
+@@ -18,9 +18,9 @@
+ /*
+  * MegaRAID SAS Driver meta data
+  */
+-#define MEGASAS_VERSION				"00.00.03.10-rc1"
+-#define MEGASAS_RELDATE				"Feb 14, 2007"
+-#define MEGASAS_EXT_VERSION			"Wed Feb 14 10:14:25 PST 2007"
++#define MEGASAS_VERSION				"00.00.03.10-rc2"
++#define MEGASAS_RELDATE				"Mar 01, 2007"
++#define MEGASAS_EXT_VERSION			"Thu Mar 01 10:07:34 PST 2007"
+ 
+ /*
+  * Device IDs
+@@ -539,6 +539,10 @@ struct megasas_ctrl_info {
+ 
+ #define MEGASAS_DBG_LVL				1
+ 
++#define MEGASAS_WATCHDOG_TIMER_INTERVAL		10*HZ
++#define MEGASAS_MAX_WATCHDOG_SLOTS		8
++#define MEGASAS_FW_BUSY				1
++
+ /*
+  * When SCSI mid-layer calls driver's reset routine, driver waits for
+  * MEGASAS_RESET_WAIT_TIME seconds for all outstanding IO to complete. Note
+@@ -1104,6 +1108,18 @@ struct megasas_instance {
+ 
+ 	struct megasas_instance_template *instancet;
+ 	struct tasklet_struct isr_tasklet;
++
++	/* 
++	 * watchdog data structs used to throttle IO if required
++	 */
++	u8 flag;
++	u8 watchdog_head;
++	u8 watchdog_tail;
++	u8 resvd;
++	unsigned long last_time;
++	u32 watchdog_arr[MEGASAS_MAX_WATCHDOG_SLOTS];
++	spinlock_t watchdog_lock;
++	struct timer_list throttle_timer;
  };
  
-+/*
-+ * Vector of address/length pairs, used when dout_iovec_count (or din_)
-+ * is non-zero.  In that case, dout_xferp is a list of struct sg_io_v4_vec
-+ * and dout_iovec_count is the number of entries in that list.  dout_xfer_len
-+ * is the total length of the list.  Note the use of u64 instead of a
-+ * native pointer to avoid compat issues, and padding to avoid structure
-+ * alignment problems.
-+ */
-+struct sg_io_v4_vec {
-+	__u64 iov_base;
-+	__u32 iov_len;
-+	__u32 __pad1;
-+};
+ #define MEGASAS_IS_LOGICAL(scp)						\
+@@ -1129,6 +1145,9 @@ struct megasas_cmd {
+ 	struct scsi_cmnd *scmd;
+ 	struct megasas_instance *instance;
+ 	u32 frame_count;
 +
- #ifdef __KERNEL__
++	u8 watchdog_slot;
++	u8 resvd[3];
+ };
  
- #if defined(CONFIG_BLK_DEV_BSG)
--- 
-1.5.0.2
+ #define MAX_MGMT_ADAPTERS		1024
+
+
 
