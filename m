@@ -1,72 +1,88 @@
-From: "Dachepalli, Sudhir" <Sudhir.Dachepalli@lsi.com>
-Subject: RE: Possible bug in scsi_lib.c:scsi_req_map_sg()
-Date: Sun, 4 Mar 2007 12:06:36 -0700
-Message-ID: <A67893E24596534CB03DD02157A7FBF7018D16C7@NAMAIL2.ad.lsil.com>
-References: <1173032061.3372.67.camel@mulgrave.il.steeleye.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: convert sg to block layer helpers - v5
+Date: Sun, 04 Mar 2007 14:32:57 -0500
+Message-ID: <45EB1EE9.20908@torque.net>
+References: <1173033084706-git-send-email-michaelc@cs.wisc.edu>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:38654 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752411AbXCDTHF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 4 Mar 2007 14:07:05 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <1173032061.3372.67.camel@mulgrave.il.steeleye.com>
+Received: from pentafluge.infradead.org ([213.146.154.40]:48690 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752055AbXCDTd0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 4 Mar 2007 14:33:26 -0500
+In-Reply-To: <1173033084706-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Benny Halevy <bhalevy@panasas.com>, Jens Axboe <jens.axboe@oracle.com>, Boaz Harrosh <bharrosh@panasas.com>, linux-scsi@vger.kernel.org
+To: michaelc@cs.wisc.edu
+Cc: linux-scsi@vger.kernel.org, jens.axboe@oracle.com
 
-James,
-
-How about the following:
-
-1. Cmd= Scsi_get_command( on physical device )  
-2. Clone the scsi_cmnd fields of the virtual cmnd( command received by
-failover driver) to physical cmnd (the command allocated by
-scsi_get_command )
-3. blk_get_request()
-4. fill the request fields, req->special = Cmd ( point the special field
-to allocated scsi_cmnd )
-5. set the request flags to REQ_DONTPREP
-6. blk_execute_req_nowait()
-7. once the command comes back call the blk_put_request()
-
-
-Sudhir
-
------Original Message-----
-From: James Bottomley [mailto:James.Bottomley@SteelEye.com] 
-Sent: Sunday, March 04, 2007 12:14 PM
-To: Dachepalli, Sudhir
-Cc: Mike Christie; Benny Halevy; Jens Axboe; Boaz Harrosh;
-linux-scsi@vger.kernel.org
-Subject: RE: Possible bug in scsi_lib.c:scsi_req_map_sg()
-
-On Sun, 2007-03-04 at 11:00 -0700, Dachepalli, Sudhir wrote:
-> Do you think the following could work If I used blk layer functions 
-> instead of "scsi_execute_async":
+michaelc@cs.wisc.edu wrote:
+> There is no big changes between v4 and v5. I was able to fix
+> things in scsi tgt, so I could remove the weird arguements
+> the block helpers were taking for it. I also tried to break
+> up the patchset for easier viewing. The final patch also
+> takes care of the access_ok regression.
 > 
-> Blk_get_request()
-> Req->flags |= REQ_DONTPREP
+> These patches were made against linus's tree since Tomo needed
+> me to break part of it out for his scsi tgt bug fix patches.
+> 
+> 0001-rm-bio-hacks-in-scsi-tgt.txt - Drop scsi tgt's bio_map_user
+> usage and convert it to blk_rq_map_user. Tomo is also sending
+> this patch in his patchset since he needs it for his bug fixes.
+> 
+> 0002-rm-block-device-arg-from-bio-map-user.txt - The block_device
+> argument is never used in the bio map user functions, so this
+> patch drops it.
+> 
+> 0003-Support-large-sg-io-segments.txt - Modify the bio functions
+> to allocate multiple pages at once instead of a single page.
+> 
+> 0004-Add-reserve-buffer-for-sg-io.txt - Add reserve buffer support
+> to the block layer for sg and st indirect IO use.
+> 
+> 0005-Add-sg-io-mmap-helper.txt - Add some block layer helpers for
+> sg mmap support.
+> 
+> 0006-Convert-sg-to-block-layer-helpers.txt - Convert sg to block
+> layer helpers.
+> 
+> 0007-mv-user-buffer-copy-access_ok-test-to-block-helper.txt - 
+> Move user data buffer access_ok tests to block layer helpers.
+> 
+> The goal of this patchset is to remove scsi_execute_async and
+> reduce code duplication.
+> 
+> People want to discuss further merging sg and bsg/scsi_ioctl
+> functionality, but I did not handle and any of that in this
+> patchset since people still disagree on what should supported
+> with future interfaces.
+> 
+> My only TODO is maybe make the bio reserve buffer mempoolable
+> (make it work as mempool alloc and free functions). Since
+> sg only supported one reserve buffer per fd I have not worked
+> on it and it did not seem worth it if there are no users.
+***
 
-There's additional complexity here:  if the request isn't prepared, no
-command is allocated.  You can't use the one you have because it belongs
-to a different device (plus it would be freed by this request in the
-completion path).
+Mike,
+I see you are removing the scatter_elem_sz parameter.
+What decides the scatter gather element size? Can it
+be greater than PAGE_SIZE?
 
-> Blk_rq_map_kern()
-> Blk_execute_req_nowait()
 
-If the request is already mapped, you don't want to be mapping it again.
+*** Generalizing the idea of a mmap-ed reserve buffer to
+something the user had more control over could be very
+powerful.
+For example allowing two file descriptors (to different
+devices) in the same process to share the same mmap-ed
+area. This would allow a device to device copy to DMA into
+and out of the same memory, potentially with large per command
+transfers and with no per command scatter gather build and
+tear down. Basically a zero copy copy with minimal CPU
+overhead.
 
-> Blk_put_request()
+Doug Gilbert
 
-Without seeing the code it's hard to say definitively whether all this
-is correct.
-
-James
 
 
