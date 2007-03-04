@@ -1,15 +1,15 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 5/7] Add sg io mmap helper
-Date: Sun, 04 Mar 2007 12:31:22 -0600
-Message-ID: <11730330881574-git-send-email-michaelc@cs.wisc.edu>
-References: <1173033084706-git-send-email-michaelc@cs.wisc.edu> <11730330852430-git-send-email-michaelc@cs.wisc.edu> <11730330851234-git-send-email-michaelc@cs.wisc.edu> <11730330861995-git-send-email-michaelc@cs.wisc.edu> <11730330872229-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 2/7] rm block device arg from bio map user
+Date: Sun, 04 Mar 2007 12:31:19 -0600
+Message-ID: <11730330851234-git-send-email-michaelc@cs.wisc.edu>
+References: <1173033084706-git-send-email-michaelc@cs.wisc.edu> <11730330852430-git-send-email-michaelc@cs.wisc.edu>
 Reply-To: michaelc@cs.wisc.edu
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:36414 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([66.187.233.31]:36400 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752210AbXCDSbi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 4 Mar 2007 13:31:38 -0500
-In-Reply-To: <11730330872229-git-send-email-michaelc@cs.wisc.edu>
+	id S1752230AbXCDSbg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 4 Mar 2007 13:31:36 -0500
+In-Reply-To: <11730330852430-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, jens.axboe@oracle.com, dougg@torque.net
@@ -17,118 +17,127 @@ Cc: Mike Christie <michaelc@cs.wisc.edu>
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-sg.c supports mmap, so this patch just move the code
-to the block layer for others to share and converts it
-to the bio reserved buffer.
-
-The helpers are:
-- blk_rq_mmap - does some checks to makre sure the reserved buf is
-large enough.
-- blk_rq_vma_nopage - traverses the reserved buffer and does get_page()
-
-To setup and teardown the request and bio reserved buffer mappings for
-the sg mmap operation you call blk_rq_setup_buffer() and
-blk_rq_destroy_buffer().
+Everyone is passing in NULL, so let's just
+make it a little more simple and drop the
+block device argument from the bio mapping
+functions.
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- block/ll_rw_blk.c      |   68 ++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/blkdev.h |    4 +++
- 2 files changed, 72 insertions(+), 0 deletions(-)
+ block/ll_rw_blk.c   |    4 ++--
+ fs/bio.c            |   17 ++++++-----------
+ include/linux/bio.h |    5 ++---
+ 3 files changed, 10 insertions(+), 16 deletions(-)
 
 diff --git a/block/ll_rw_blk.c b/block/ll_rw_blk.c
-index 4d6c2bd..35b66ed 100644
+index 38c293b..7a108d5 100644
 --- a/block/ll_rw_blk.c
 +++ b/block/ll_rw_blk.c
-@@ -2431,6 +2431,74 @@ unmap_rq:
- EXPORT_SYMBOL(blk_rq_setup_buffer);
+@@ -2343,7 +2343,7 @@ static int __blk_rq_map_user(request_que
+ 	 */
+ 	uaddr = (unsigned long) ubuf;
+ 	if (!(uaddr & queue_dma_alignment(q)) && !(len & queue_dma_alignment(q)))
+-		bio = bio_map_user(q, NULL, uaddr, len, reading);
++		bio = bio_map_user(q, uaddr, len, reading);
+ 	else
+ 		bio = bio_copy_user(q, uaddr, len, reading);
+ 
+@@ -2479,7 +2479,7 @@ int blk_rq_map_user_iov(request_queue_t 
+ 	/* we don't allow misaligned data like bio_map_user() does.  If the
+ 	 * user is using sg, they're expected to know the alignment constraints
+ 	 * and respect them accordingly */
+-	bio = bio_map_user_iov(q, NULL, iov, iov_count, rq_data_dir(rq)== READ);
++	bio = bio_map_user_iov(q, iov, iov_count, rq_data_dir(rq)== READ);
+ 	if (IS_ERR(bio))
+ 		return PTR_ERR(bio);
+ 
+diff --git a/fs/bio.c b/fs/bio.c
+index 7618bcb..8ae7223 100644
+--- a/fs/bio.c
++++ b/fs/bio.c
+@@ -601,7 +601,6 @@ out_bmd:
+ }
+ 
+ static struct bio *__bio_map_user_iov(request_queue_t *q,
+-				      struct block_device *bdev,
+ 				      struct sg_iovec *iov, int iov_count,
+ 				      int write_to_vm)
+ {
+@@ -694,7 +693,6 @@ static struct bio *__bio_map_user_iov(re
+ 	if (!write_to_vm)
+ 		bio->bi_rw |= (1 << BIO_RW);
+ 
+-	bio->bi_bdev = bdev;
+ 	bio->bi_flags |= (1 << BIO_USER_MAPPED);
+ 	return bio;
+ 
+@@ -713,7 +711,6 @@ static struct bio *__bio_map_user_iov(re
+ /**
+  *	bio_map_user	-	map user address into bio
+  *	@q: the request_queue_t for the bio
+- *	@bdev: destination block device
+  *	@uaddr: start of user address
+  *	@len: length in bytes
+  *	@write_to_vm: bool indicating writing to pages or not
+@@ -721,21 +718,20 @@ static struct bio *__bio_map_user_iov(re
+  *	Map the user space address into a bio suitable for io to a block
+  *	device. Returns an error pointer in case of error.
+  */
+-struct bio *bio_map_user(request_queue_t *q, struct block_device *bdev,
+-			 unsigned long uaddr, unsigned int len, int write_to_vm)
++struct bio *bio_map_user(request_queue_t *q, unsigned long uaddr,
++			 unsigned int len, int write_to_vm)
+ {
+ 	struct sg_iovec iov;
+ 
+ 	iov.iov_base = (void __user *)uaddr;
+ 	iov.iov_len = len;
+ 
+-	return bio_map_user_iov(q, bdev, &iov, 1, write_to_vm);
++	return bio_map_user_iov(q, &iov, 1, write_to_vm);
+ }
  
  /**
-+ * blk_rq_mmap - alloc and setup buffers for REQ_BLOCK_PC mmap
-+ * @rbuf:	reserve buffer
-+ * @vma:	vm struct
-+ *
-+ * Description:
-+ *    A the caller must also call blk_rq_setup_buffer on the request and
-+ *    blk_rq_destroy_buffer() must be issued at the end of io.
-+ *    It's the callers responsibility to make sure this happens. The
-+ *    original bio must be passed back in to blk_rq_destroy_buffer() for
-+ *    proper unmapping.
-+ *
-+ *    The block layer mmap functions implement the old sg.c behavior
-+ *    where they can be only one sg mmap command outstanding.
-+ */
-+int blk_rq_mmap(struct bio_reserve_buf *rbuf, struct vm_area_struct *vma)
-+{
-+	unsigned long len;
-+
-+	if (vma->vm_pgoff)
-+		return -EINVAL; /* want no offset */
-+
-+	if (!rbuf)
-+		return -ENOMEM;
-+
-+	len = vma->vm_end - vma->vm_start;
-+	if (len > rbuf->buf_size)
-+		return -ENOMEM;
-+
-+	vma->vm_flags |= VM_RESERVED;
-+	return 0;
-+}
-+EXPORT_SYMBOL(blk_rq_mmap);
-+
-+struct page *blk_rq_vma_nopage(struct bio_reserve_buf *rbuf,
-+			       struct vm_area_struct *vma, unsigned long addr,
-+			       int *type)
-+{
-+	struct page *pg = NOPAGE_SIGBUS;
-+	unsigned long offset, bytes = 0, sg_offset;
-+	struct scatterlist *sg;
-+	int i;
-+
-+	if (!rbuf)
-+		return pg;
-+
-+	offset = addr - vma->vm_start;
-+	if (offset >= rbuf->buf_size)
-+		return pg;
-+
-+	for (i = 0; i < rbuf->sg_count; i++) {
-+		sg = &rbuf->sg[i];
-+
-+		bytes += sg->length;
-+		if (bytes > offset) {
-+			sg_offset = sg->length - (bytes - offset);
-+			pg = &sg->page[sg_offset >> PAGE_SHIFT];
-+			get_page(pg);
-+			break;
-+		}
-+	}
-+
-+	if (type)
-+		*type = VM_FAULT_MINOR;
-+	return pg;
-+}
-+EXPORT_SYMBOL(blk_rq_vma_nopage);
-+
-+/**
-  * blk_rq_map_user - map user data to a request.
-  * @q:		request queue where request should be inserted
-  * @rq:		request structure to fill
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 755f0b4..04c1b09 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -670,6 +670,10 @@ extern void blk_sync_queue(struct reques
- extern void __blk_stop_queue(request_queue_t *q);
- extern void blk_run_queue(request_queue_t *);
- extern void blk_start_queueing(request_queue_t *);
-+extern struct page *blk_rq_vma_nopage(struct bio_reserve_buf *,
-+				      struct vm_area_struct *, unsigned long,
-+				      int *);
-+extern int blk_rq_mmap(struct bio_reserve_buf *, struct vm_area_struct *);
- extern int blk_rq_init_transfer(request_queue_t *, struct request *, void __user *, unsigned long);
- extern int blk_rq_map_user(request_queue_t *, struct request *,
- 			   void __user *, unsigned long);
+  *	bio_map_user_iov - map user sg_iovec table into bio
+  *	@q: the request_queue_t for the bio
+- *	@bdev: destination block device
+  *	@iov:	the iovec.
+  *	@iov_count: number of elements in the iovec
+  *	@write_to_vm: bool indicating writing to pages or not
+@@ -743,13 +739,12 @@ struct bio *bio_map_user(request_queue_t
+  *	Map the user space address into a bio suitable for io to a block
+  *	device. Returns an error pointer in case of error.
+  */
+-struct bio *bio_map_user_iov(request_queue_t *q, struct block_device *bdev,
+-			     struct sg_iovec *iov, int iov_count,
+-			     int write_to_vm)
++struct bio *bio_map_user_iov(request_queue_t *q, struct sg_iovec *iov,
++			     int iov_count, int write_to_vm)
+ {
+ 	struct bio *bio;
+ 
+-	bio = __bio_map_user_iov(q, bdev, iov, iov_count, write_to_vm);
++	bio = __bio_map_user_iov(q, iov, iov_count, write_to_vm);
+ 
+ 	if (IS_ERR(bio))
+ 		return bio;
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index 08daf32..cfb6a7d 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -298,11 +298,10 @@ extern int bio_add_page(struct bio *, st
+ extern int bio_add_pc_page(struct request_queue *, struct bio *, struct page *,
+ 			   unsigned int, unsigned int);
+ extern int bio_get_nr_vecs(struct block_device *);
+-extern struct bio *bio_map_user(struct request_queue *, struct block_device *,
+-				unsigned long, unsigned int, int);
++extern struct bio *bio_map_user(struct request_queue *, unsigned long,
++				unsigned int, int);
+ struct sg_iovec;
+ extern struct bio *bio_map_user_iov(struct request_queue *,
+-				    struct block_device *,
+ 				    struct sg_iovec *, int, int);
+ extern void bio_unmap_user(struct bio *);
+ extern struct bio *bio_map_kern(struct request_queue *, void *, unsigned int,
 -- 
 1.4.1.1
 
