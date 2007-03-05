@@ -1,104 +1,95 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH 3/3] tgt: fix scsi command leak
-Date: Mon, 05 Mar 2007 10:36:15 -0500
-Message-ID: <45EC38EF.6000603@torque.net>
-References: <20070303001750H.fujita.tomonori@lab.ntt.co.jp>	<45E9A92B.5040507@torque.net> <20070305143222H.fujita.tomonori@lab.ntt.co.jp>
-Reply-To: dougg@torque.net
+From: "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
+Subject: Re: [Patch 2/2] cciss: add struct pci_driver shutdown support (replaces reboot notifier)
+Date: Mon, 5 Mar 2007 16:06:34 -0600
+Message-ID: <20070305220634.GA9002@beardog.cca.cpqcorp.net>
+References: <20070223204239.GA10570@beardog.cca.cpqcorp.net> <20070227122634.324fc8b1.akpm@linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:52954 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933524AbXCEPhI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Mar 2007 10:37:08 -0500
-In-Reply-To: <20070305143222H.fujita.tomonori@lab.ntt.co.jp>
+Received: from palrel13.hp.com ([156.153.255.238]:46659 "EHLO palrel13.hp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750830AbXCEWGi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 5 Mar 2007 17:06:38 -0500
+Content-Disposition: inline
+In-Reply-To: <20070227122634.324fc8b1.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, gregkh@novell.com
 
-FUJITA Tomonori wrote:
-> From: Douglas Gilbert <dougg@torque.net>
-> Subject: Re: [PATCH 3/3] tgt: fix scsi command leak
-> Date: Sat, 03 Mar 2007 11:58:19 -0500
+On Tue, Feb 27, 2007 at 12:26:34PM -0800, Andrew Morton wrote:
+> > On Fri, 23 Feb 2007 14:42:39 -0600 "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net> wrote:
+> > This patch supercedes yesterdays cciss-shutdown patch. The primary difference is
+> > removing __devexit from cciss_remove_one. Instead of create another function I'd
+> > rather use the code that was intended to perform the cleanup and cache flush. I've
+> > tested as a loadable module and statically linked without error.
+> > Please consider this for inclusion.
 > 
->> FUJITA Tomonori wrote:
->>> The failure to map user-space pages leads to scsi command leak. It can
->>> happens mostly because of user-space daemon bugs (or OOM). This patch
->>> makes tgt just notify a LLD of the failure with sense when
->>> blk_rq_map_user() fails.
->>>
->>> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
->>> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
->>> ---
->>>  drivers/scsi/scsi_tgt_lib.c |   23 ++++++++++++++++++++---
->>>  1 files changed, 20 insertions(+), 3 deletions(-)
->>>
->>> diff --git a/drivers/scsi/scsi_tgt_lib.c b/drivers/scsi/scsi_tgt_lib.c
->>> index dc8781a..c05dff9 100644
->>> --- a/drivers/scsi/scsi_tgt_lib.c
->>> +++ b/drivers/scsi/scsi_tgt_lib.c
->>> @@ -459,6 +459,16 @@ static struct request *tgt_cmd_hash_look
->>>  	return rq;
->>>  }
->>>  
->>> +static void scsi_tgt_build_sense(unsigned char *sense_buffer, unsigned char key,
->>> +				 unsigned char asc, unsigned char asq)
->>> +{
->>> +	sense_buffer[0] = 0x70;
->>> +	sense_buffer[2] = key;
->>> +	sense_buffer[7] = 0xa;
->>> +	sense_buffer[12] = asc;
->>> +	sense_buffer[13] = asq;
->>> +}
->>> +
->> Tomo,
->> Perhaps you could add a memset(sense_buffer, 0, 18) before
->> those assignments and state that this is "fixed" sense
->> buffer format.
+> Please don't document patches like this.
 > 
-> I think that it isn't necessary because when a target mode driver
-> allocates scsi_cmnd, scsi_host_get_command() does that.
+> The entirety of your changelog and the Subject: are relative to a patch
+> which will never hit the mainline git tree.  Put yourself in the position
+> of someone reading the git changelogs in a year's time.  They're going to
+> be left scratching their heads at the above, aren't they?
+> 
+> Always include a complete and standalone, not-referential-to-an-old-patch
+> changelog in each iteration of a patch.
+> 
+> Always choose a suitable Subject:
+> 
+> Yes, it's good to tell us things about how this patch differs from the
+> previous one.  That info can be placed after the ^--- which comes after
+> your signed-off-by:, or can be placed at the top of the email, as long as
+> the full permanent changelog is there too.
+> 
+> Bottom line: you are submitting code and its documentation into the
+> permanent kernel record, not just the mailing list.  Try to make it
+> appropriate, thanks.
 > 
 > 
->> What about an option for descriptor sense format? With SAT now
->> a standard, we now have one more reason to support
->> descriptor format when required. The ATA PASS-THROUGH SCSI
->> commands in SAT use descriptor sense format to return
->> ATA registers.
+> Please send a new Subject: and changlog for this patch.
 > 
-> tgt's kernel-space code doesn't know anything about SCSI devices that
-> initiators talks to. So it's difficult to send proper sense buffer.
-> Nomally, we don't have this problem because tgt user-space code builds
-> sense buffer.
-> 
-> The bug that we are trying to fix is that the scsi command leak due to
-> the user-space's bugs. So we can't rely on the user-space for this.
-> 
-> Not that, like open-iscsi, the user-space bugs are pretty critical for
-> tgt as the kernel-space bugs. We don't think target mode drivers can
-> continue to work. However, tgt should tell target mode drivers that
-> unrecoverable problems happen and we should cleanly unload the kernel
-> modules.
+Patch 2/2
 
-Tomo,
-If I understand correctly, there is a target SCSI command
-interpreter in a user space daemon (plus lu support) and the
-target transport end point in kernel space (roughly speaking).
-So if there is some problem in the kernel module, or
-the user space daemon goes away (or won't respond) then what
-you have is a transport error at the target end.
+This patch adds support for the struct pci_driver shutdown method to cciss. We require
+notification of an impending reboot or shutdown so that we can flush the battery
+backed write cache (BBWC) on the Smart Array controller.
+Please consider this for inclusion.
 
-The error should be lower level than SCSI commands (i.e.
-transport level). The kernel module doesn't know the state
-of target SCSI command interpreter (by design). For example
-the application client may have set the D_SENSE bit in the
-control mode page prior to the failure that your code is
-addressing. So the application client won't be expecting
-fixed sense data format thereafter.
-
-So what the code is doing is definitely better than nothing,
-but IMO it isn't quite right either.
-
-Doug Gilbert
+Signed-off-by: Mike Miller <mike.miller@hp.com>
+------------------------------------------------------------------------------------------
+diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+index 9d84ab3..b16f48c 100644
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -3404,7 +3404,7 @@ #endif
+ 	return -1;
+ }
+ 
+-static void __devexit cciss_remove_one(struct pci_dev *pdev)
++static void cciss_remove_one(struct pci_dev *pdev)
+ {
+ 	ctlr_info_t *tmp_ptr;
+ 	int i, j;
+@@ -3428,9 +3428,10 @@ static void __devexit cciss_remove_one(s
+ 	memset(flush_buf, 0, 4);
+ 	return_code = sendcmd(CCISS_CACHE_FLUSH, i, flush_buf, 4, 0, 0, 0, NULL,
+ 			      TYPE_CMD);
+-	if (return_code != IO_OK) {
+-		printk(KERN_WARNING "Error Flushing cache on controller %d\n",
+-		       i);
++	if (return_code == IO_OK) {
++		printk(KERN_INFO "Completed flushing cache on controller %d\n", i);
++	} else {
++		printk(KERN_WARNING "Error flushing cache on controller %d\n", i);
+ 	}
+ 	free_irq(hba[i]->intr[2], hba[i]);
+ 
+@@ -3481,6 +3482,7 @@ static struct pci_driver cciss_pci_drive
+ 	.probe = cciss_init_one,
+ 	.remove = __devexit_p(cciss_remove_one),
+ 	.id_table = cciss_pci_device_id,	/* id_table */
++	.shutdown = cciss_remove_one,
+ };
+ 
+ /*
