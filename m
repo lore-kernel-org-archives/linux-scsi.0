@@ -1,35 +1,90 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 7/7] mv user buffer copy access_ok test to block helper
-Date: Sun, 04 Mar 2007 16:56:46 -0600
-Message-ID: <45EB4EAE.6000909@cs.wisc.edu>
-References: <1173033084706-git-send-email-michaelc@cs.wisc.edu> <11730330852430-git-send-email-michaelc@cs.wisc.edu> <11730330851234-git-send-email-michaelc@cs.wisc.edu> <11730330861995-git-send-email-michaelc@cs.wisc.edu> <11730330872229-git-send-email-michaelc@cs.wisc.edu> <11730330881574-git-send-email-michaelc@cs.wisc.edu> <11730330893660-git-send-email-michaelc@cs.wisc.edu> <11730330902393-git-send-email-michaelc@cs.wisc.edu>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 3/3] tgt: fix scsi command leak
+Date: Mon, 05 Mar 2007 14:32:22 +0900
+Message-ID: <20070305143222H.fujita.tomonori@lab.ntt.co.jp>
+References: <20070303001750H.fujita.tomonori@lab.ntt.co.jp>
+	<45E9A92B.5040507@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:47233 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752515AbXCDW4z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 4 Mar 2007 17:56:55 -0500
-In-Reply-To: <11730330902393-git-send-email-michaelc@cs.wisc.edu>
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:52636 "EHLO
+	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752690AbXCEFbh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Mar 2007 00:31:37 -0500
+In-Reply-To: <45E9A92B.5040507@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: jens.axboe@oracle.com, dougg@torque.net
+To: dougg@torque.net
+Cc: fujita.tomonori@lab.ntt.co.jp, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
 
-michaelc@cs.wisc.edu wrote:
-> +				if (!access_ok(read ?
-> +					       VERIFY_WRITE : VERIFY_READ,
-> +					       p, iov_len))
-> +					return -EFAULT;
->  			}
->  
->  			copy_bytes = min(iov_len, bvec->bv_len - bvec_offset);
-> -			if (bio_data_dir(head) == READ)
-> +			if (read)
->  				ret = copy_to_user(p, addr, copy_bytes);
->  			else
->  				ret = copy_from_user(addr, p, copy_bytes);
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH 3/3] tgt: fix scsi command leak
+Date: Sat, 03 Mar 2007 11:58:19 -0500
 
-Tomo notified me that copy_from/to_user does the access_ok test so this
-patch is not needed.
+> FUJITA Tomonori wrote:
+> > The failure to map user-space pages leads to scsi command leak. It can
+> > happens mostly because of user-space daemon bugs (or OOM). This patch
+> > makes tgt just notify a LLD of the failure with sense when
+> > blk_rq_map_user() fails.
+> > 
+> > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> > Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+> > ---
+> >  drivers/scsi/scsi_tgt_lib.c |   23 ++++++++++++++++++++---
+> >  1 files changed, 20 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/drivers/scsi/scsi_tgt_lib.c b/drivers/scsi/scsi_tgt_lib.c
+> > index dc8781a..c05dff9 100644
+> > --- a/drivers/scsi/scsi_tgt_lib.c
+> > +++ b/drivers/scsi/scsi_tgt_lib.c
+> > @@ -459,6 +459,16 @@ static struct request *tgt_cmd_hash_look
+> >  	return rq;
+> >  }
+> >  
+> > +static void scsi_tgt_build_sense(unsigned char *sense_buffer, unsigned char key,
+> > +				 unsigned char asc, unsigned char asq)
+> > +{
+> > +	sense_buffer[0] = 0x70;
+> > +	sense_buffer[2] = key;
+> > +	sense_buffer[7] = 0xa;
+> > +	sense_buffer[12] = asc;
+> > +	sense_buffer[13] = asq;
+> > +}
+> > +
+> 
+> Tomo,
+> Perhaps you could add a memset(sense_buffer, 0, 18) before
+> those assignments and state that this is "fixed" sense
+> buffer format.
+
+I think that it isn't necessary because when a target mode driver
+allocates scsi_cmnd, scsi_host_get_command() does that.
+
+
+> What about an option for descriptor sense format? With SAT now
+> a standard, we now have one more reason to support
+> descriptor format when required. The ATA PASS-THROUGH SCSI
+> commands in SAT use descriptor sense format to return
+> ATA registers.
+
+tgt's kernel-space code doesn't know anything about SCSI devices that
+initiators talks to. So it's difficult to send proper sense buffer.
+Nomally, we don't have this problem because tgt user-space code builds
+sense buffer.
+
+The bug that we are trying to fix is that the scsi command leak due to
+the user-space's bugs. So we can't rely on the user-space for this.
+
+Not that, like open-iscsi, the user-space bugs are pretty critical for
+tgt as the kernel-space bugs. We don't think target mode drivers can
+continue to work. However, tgt should tell target mode drivers that
+unrecoverable problems happen and we should cleanly unload the kernel
+modules.
+
+
+> <aside>
+> While on the subject of sense data, I note that the
+> ATA folks (t13.org) are proposing an "ATA REQUEST
+> SENSE" command to leverage of existing SCSI
+> sense_key, asc, ascq tuples.
