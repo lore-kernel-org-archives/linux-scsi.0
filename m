@@ -1,28 +1,42 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Possible bug in scsi_lib.c:scsi_req_map_sg()
-Date: Mon, 5 Mar 2007 13:02:50 +0000
-Message-ID: <20070305130250.GB1312@infradead.org>
-References: <A67893E24596534CB03DD02157A7FBF701879048@NAMAIL2.ad.lsil.com> <45E894C5.90101@cs.wisc.edu> <45E89E4E.7080003@cs.wisc.edu>
+From: Andreas Moroder <andreas.moroder@sb-brixen.it>
+Subject: Raid not seen as raind in SLES 10 Installation
+Date: Mon, 05 Mar 2007 15:22:03 +0100
+Message-ID: <esh92a$5si$1@sea.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:52039 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933414AbXCENC5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Mar 2007 08:02:57 -0500
-Content-Disposition: inline
-In-Reply-To: <45E89E4E.7080003@cs.wisc.edu>
+Received: from main.gmane.org ([80.91.229.2]:54058 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933403AbXCEOWm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 5 Mar 2007 09:22:42 -0500
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1HOE53-0001y9-3o
+	for linux-scsi@vger.kernel.org; Mon, 05 Mar 2007 15:22:25 +0100
+Received: from merlin2.provinz.bz.it ([62.101.0.30])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Mon, 05 Mar 2007 15:22:25 +0100
+Received: from andreas.moroder by merlin2.provinz.bz.it with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Mon, 05 Mar 2007 15:22:25 +0100
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: "Dachepalli, Sudhir" <Sudhir.Dachepalli@lsi.com>, Benny Halevy <bhalevy@panasas.com>, Jens Axboe <jens.axboe@oracle.com>, Boaz Harrosh <bharrosh@panasas.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>
+To: linux-scsi@vger.kernel.org
 
-On Fri, Mar 02, 2007 at 03:59:42PM -0600, Mike Christie wrote:
-> If scsi_execute_async is going to be limited to what is in mainline
-> until I can kill it, then we may not want to merge Boaz's patch and just
-> have people convert the code to use blk_get_request, blk_rq_map_kern or
-> blk_rq_map_user and blk_execute_rq_nowait.
+Hello,
 
-scsi_execute_async should go away as soon as we're able to fix it's
-users and it should not grow additional users.  a struct scatterlist is the
-wrong representation for data going down the block layer.
+we have a Fujitsu-Siemens TX200 with a onboard AIC-7902W adapter and 4 
+disks. We have set them up as two pair of RAID-1 disks.
+
+The bios startup-screen shows us two pair of RAID1 disks.
+
+When we try to install SLES10 we see 4 disks !
+
+How can we tell Linux that there are only two RAID and why does the 
+kernel see the disks ? Should this not be hidden by the AIC hostadapter ?
+Is it the INT13 that makes this problems ?
+
+Thanks
+Andreas
+
