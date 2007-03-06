@@ -1,46 +1,39 @@
 From: akpm@linux-foundation.org
-Subject: [patch 08/29] MPT fusion: handle mpt_resume() failure while resuming
-Date: Tue, 06 Mar 2007 02:46:33 -0800
-Message-ID: <200703061046.l26AkXoY020009@shell0.pdx.osdl.net>
+Subject: [patch 09/29] drivers/scsi/NCR5380.c: Replacing yield() with a better alternative
+Date: Tue, 06 Mar 2007 02:46:34 -0800
+Message-ID: <200703061046.l26AkYGq020012@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:34932 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.24]:34942 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964786AbXCFKqp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Mar 2007 05:46:45 -0500
+	id S964789AbXCFKqt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Mar 2007 05:46:49 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, dmonakhov@openvz.org, Eric.Moore@lsil.com, jeff@garzik.org
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, amol@verismonetworks.com, alan@lxorguk.ukuu.org.uk
 
-From: Dmitriy Monakhov <dmonakhov@openvz.org>
+From: Amol Lad <amol@verismonetworks.com>
 
-Since mpt-fusion-handle-pci-layer-error-on-resume.patch function
-mpt_resume() can return error code.
+Replaced yield() with cond_resched()
 
-Signed-off-by: Monakhov Dmitriy <dmonakhov@openvz.org>
-Cc: Jeff Garzik <jeff@garzik.org>
-Cc: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
+Signed-off-by: Amol Lad <amol@verismonetworks.com>
+Acked-by: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/message/fusion/mptscsih.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/scsi/NCR5380.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/message/fusion/mptscsih.c~mpt-fusion-handle-mpt_resume-failure-while-resuming drivers/message/fusion/mptscsih.c
---- a/drivers/message/fusion/mptscsih.c~mpt-fusion-handle-mpt_resume-failure-while-resuming
-+++ a/drivers/message/fusion/mptscsih.c
-@@ -1191,8 +1191,11 @@ mptscsih_resume(struct pci_dev *pdev)
- 	MPT_ADAPTER 		*ioc = pci_get_drvdata(pdev);
- 	struct Scsi_Host 	*host = ioc->sh;
- 	MPT_SCSI_HOST		*hd;
-+	int ret;
- 
--	mpt_resume(pdev);
-+	ret = mpt_resume(pdev);
-+	if (ret)
-+		return  ret;
- 
- 	if(!host)
- 		return 0;
+diff -puN drivers/scsi/NCR5380.c~drivers-scsi-ncr5380c-replacing-yield-with-a drivers/scsi/NCR5380.c
+--- a/drivers/scsi/NCR5380.c~drivers-scsi-ncr5380c-replacing-yield-with-a
++++ a/drivers/scsi/NCR5380.c
+@@ -347,7 +347,7 @@ static int NCR5380_poll_politely(struct 
+ 		if((r & bit) == val)
+ 			return 0;
+ 		if(!in_interrupt())
+-			yield();
++			cond_resched();
+ 		else
+ 			cpu_relax();
+ 	}
 _
