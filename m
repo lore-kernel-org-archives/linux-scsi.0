@@ -1,47 +1,95 @@
 From: akpm@linux-foundation.org
-Subject: [patch 14/29] sym53c8xx_2 claims cpqarray device
-Date: Tue, 06 Mar 2007 02:46:38 -0800
-Message-ID: <200703061046.l26AkdG4020027@shell0.pdx.osdl.net>
+Subject: [patch 16/29] scsi: cover up bugs^W^W^WFix up compiler warnings in megaraid driver
+Date: Tue, 06 Mar 2007 02:46:40 -0800
+Message-ID: <200703061046.l26Akemc020033@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:34978 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.24]:34990 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964805AbXCFKrH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Mar 2007 05:47:07 -0500
+	id S964807AbXCFKrJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Mar 2007 05:47:09 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, coldwell@redhat.com, willy@debian.org
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, mbligh@google.com
 
-From: Chip Coldwell <coldwell@redhat.com>
+From: Martin Bligh <mbligh@google.com>
 
-Apropos this thread
+Fix up compiler warnings in megaraid driver
 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=115591706804045&w=2
-
-which led to this patch
-
-http://www.kernel.org/git/?p=linux/kernel/git/jejb/scsi-rc-fixes-2.6.git;a=commit;h=b2b3c121076961333977f485f0d54c22121df920
-
-do we not also need the following patch, nine lines lower in the same file?
-
-Signed-off-by: Chip Coldwell <coldwell@redhat.com>
-Cc: Matthew Wilcox <willy@debian.org>
+[akpm@osdl.org: build fix]
+Signed-off-by: Martin J. Bligh <mbligh@google.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/sym53c8xx_2/sym_glue.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/megaraid.c |   22 +++++++++++++---------
+ 1 file changed, 13 insertions(+), 9 deletions(-)
 
-diff -puN drivers/scsi/sym53c8xx_2/sym_glue.c~sym53c8xx_2-claims-cpqarray-device drivers/scsi/sym53c8xx_2/sym_glue.c
---- a/drivers/scsi/sym53c8xx_2/sym_glue.c~sym53c8xx_2-claims-cpqarray-device
-+++ a/drivers/scsi/sym53c8xx_2/sym_glue.c
-@@ -2094,7 +2094,7 @@ static struct pci_device_id sym2_id_tabl
- 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_NCR_53C875,
- 	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0UL },
- 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_NCR_53C1510,
--	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0UL }, /* new */
-+	  PCI_ANY_ID, PCI_ANY_ID,  PCI_CLASS_STORAGE_SCSI<<8,  0xffff00, 0UL }, /* new */
- 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_53C895A,
- 	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0UL },
- 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_53C875A,
+diff -puN drivers/scsi/megaraid.c~scsi-cover-up-bugs-fix-up-compiler-warnings-in-megaraid-driver drivers/scsi/megaraid.c
+--- a/drivers/scsi/megaraid.c~scsi-cover-up-bugs-fix-up-compiler-warnings-in-megaraid-driver
++++ a/drivers/scsi/megaraid.c
+@@ -73,10 +73,14 @@ static unsigned short int max_mbox_busy_
+ module_param(max_mbox_busy_wait, ushort, 0);
+ MODULE_PARM_DESC(max_mbox_busy_wait, "Maximum wait for mailbox in microseconds if busy (default=MBOX_BUSY_WAIT=10)");
+ 
+-#define RDINDOOR(adapter)	readl((adapter)->mmio_base + 0x20)
+-#define RDOUTDOOR(adapter)	readl((adapter)->mmio_base + 0x2C)
+-#define WRINDOOR(adapter,value)	 writel(value, (adapter)->mmio_base + 0x20)
+-#define WROUTDOOR(adapter,value) writel(value, (adapter)->mmio_base + 0x2C)
++#define RDINDOOR(adapter)		readl((volatile void __iomem *) \
++							(adapter)->base + 0x20)
++#define RDOUTDOOR(adapter)		readl((volatile void __iomem *) \
++							(adapter)->base + 0x2C)
++#define WRINDOOR(adapter,value)		writel(value, (volatile void __iomem *)\
++							(adapter)->base + 0x20)
++#define WROUTDOOR(adapter,value)	writel(value, (volatile void __iomem *)\
++							(adapter)->base + 0x2C)
+ 
+ /*
+  * Global variables
+@@ -3571,7 +3575,7 @@ megadev_ioctl(struct inode *inode, struc
+ 			/*
+ 			 * The user passthru structure
+ 			 */
+-			upthru = (mega_passthru __user *)MBOX(uioc)->xferaddr;
++			upthru = (mega_passthru __user *)(unsigned long)MBOX(uioc)->xferaddr;
+ 
+ 			/*
+ 			 * Copy in the user passthru here.
+@@ -3623,7 +3627,7 @@ megadev_ioctl(struct inode *inode, struc
+ 				/*
+ 				 * Get the user data
+ 				 */
+-				if( copy_from_user(data, (char __user *)uxferaddr,
++				if( copy_from_user(data, (char __user *)(unsigned long) uxferaddr,
+ 							pthru->dataxferlen) ) {
+ 					rval = (-EFAULT);
+ 					goto freemem_and_return;
+@@ -3649,7 +3653,7 @@ megadev_ioctl(struct inode *inode, struc
+ 			 * Is data going up-stream
+ 			 */
+ 			if( pthru->dataxferlen && (uioc.flags & UIOC_RD) ) {
+-				if( copy_to_user((char __user *)uxferaddr, data,
++				if( copy_to_user((char __user *)(unsigned long) uxferaddr, data,
+ 							pthru->dataxferlen) ) {
+ 					rval = (-EFAULT);
+ 				}
+@@ -3702,7 +3706,7 @@ freemem_and_return:
+ 				/*
+ 				 * Get the user data
+ 				 */
+-				if( copy_from_user(data, (char __user *)uxferaddr,
++				if( copy_from_user(data, (char __user *)(unsigned long) uxferaddr,
+ 							uioc.xferlen) ) {
+ 
+ 					pci_free_consistent(pdev,
+@@ -3742,7 +3746,7 @@ freemem_and_return:
+ 			 * Is data going up-stream
+ 			 */
+ 			if( uioc.xferlen && (uioc.flags & UIOC_RD) ) {
+-				if( copy_to_user((char __user *)uxferaddr, data,
++				if( copy_to_user((char __user *)(unsigned long) uxferaddr, data,
+ 							uioc.xferlen) ) {
+ 
+ 					rval = (-EFAULT);
 _
