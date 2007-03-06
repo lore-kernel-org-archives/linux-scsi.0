@@ -1,57 +1,46 @@
 From: akpm@linux-foundation.org
-Subject: [patch 07/29] MPT fusion: handle PCI layer error on resume
-Date: Tue, 06 Mar 2007 02:46:32 -0800
-Message-ID: <200703061046.l26AkWvA020006@shell0.pdx.osdl.net>
+Subject: [patch 08/29] MPT fusion: handle mpt_resume() failure while resuming
+Date: Tue, 06 Mar 2007 02:46:33 -0800
+Message-ID: <200703061046.l26AkXoY020009@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:34923 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.24]:34932 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964784AbXCFKql (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Mar 2007 05:46:41 -0500
+	id S964786AbXCFKqp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Mar 2007 05:46:45 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, jeff@garzik.org, Eric.Moore@lsil.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, dmonakhov@openvz.org, Eric.Moore@lsil.com, jeff@garzik.org
 
-From: Jeff Garzik <jeff@garzik.org>
+From: Dmitriy Monakhov <dmonakhov@openvz.org>
 
-In the unlikely event of pci_enable_device() failure during resume, we do
-the minimalist solution and simply exit, rather than continuing to enable
-the hardware.
+Since mpt-fusion-handle-pci-layer-error-on-resume.patch function
+mpt_resume() can return error code.
 
-Signed-off-by: Jeff Garzik <jeff@garzik.org>
+Signed-off-by: Monakhov Dmitriy <dmonakhov@openvz.org>
+Cc: Jeff Garzik <jeff@garzik.org>
 Cc: "Moore, Eric Dean" <Eric.Moore@lsil.com>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/message/fusion/mptbase.c |   10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ drivers/message/fusion/mptscsih.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff -puN drivers/message/fusion/mptbase.c~mpt-fusion-handle-pci-layer-error-on-resume drivers/message/fusion/mptbase.c
---- a/drivers/message/fusion/mptbase.c~mpt-fusion-handle-pci-layer-error-on-resume
-+++ a/drivers/message/fusion/mptbase.c
-@@ -1530,7 +1530,7 @@ mpt_resume(struct pci_dev *pdev)
- {
- 	MPT_ADAPTER *ioc = pci_get_drvdata(pdev);
- 	u32 device_state = pdev->current_state;
--	int recovery_state;
-+	int recovery_state, rc;
+diff -puN drivers/message/fusion/mptscsih.c~mpt-fusion-handle-mpt_resume-failure-while-resuming drivers/message/fusion/mptscsih.c
+--- a/drivers/message/fusion/mptscsih.c~mpt-fusion-handle-mpt_resume-failure-while-resuming
++++ a/drivers/message/fusion/mptscsih.c
+@@ -1191,8 +1191,11 @@ mptscsih_resume(struct pci_dev *pdev)
+ 	MPT_ADAPTER 		*ioc = pci_get_drvdata(pdev);
+ 	struct Scsi_Host 	*host = ioc->sh;
+ 	MPT_SCSI_HOST		*hd;
++	int ret;
  
- 	printk(MYIOC_s_INFO_FMT
- 	"pci-resume: pdev=0x%p, slot=%s, Previous operating state [D%d]\n",
-@@ -1538,7 +1538,13 @@ mpt_resume(struct pci_dev *pdev)
+-	mpt_resume(pdev);
++	ret = mpt_resume(pdev);
++	if (ret)
++		return  ret;
  
- 	pci_set_power_state(pdev, 0);
- 	pci_restore_state(pdev);
--	pci_enable_device(pdev);
-+
-+	rc = pci_enable_device(pdev);
-+	if (rc) {
-+		printk(MYIOC_s_INFO_FMT
-+			"pci-resume: device enable failed\n", ioc->name);
-+		return rc;
-+	}
- 
- 	/* enable interrupts */
- 	CHIPREG_WRITE32(&ioc->chip->IntMask, MPI_HIM_DIM);
+ 	if(!host)
+ 		return 0;
 _
