@@ -1,33 +1,49 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: SG_IO inquiry...
-Date: Tue, 06 Mar 2007 09:26:13 -0500
-Message-ID: <45ED7A05.8080708@torque.net>
-References: <868c9d9d0703052359o31394904m76cbc2d04287813f@mail.gmail.com>
-Reply-To: dougg@torque.net
+From: Olaf Hering <olh@suse.de>
+Subject: improve sg_luns output for iscsi
+Date: Tue, 6 Mar 2007 19:04:28 +0100
+Message-ID: <20070306180428.GA16826@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:42602 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965055AbXCFO05 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Mar 2007 09:26:57 -0500
-In-Reply-To: <868c9d9d0703052359o31394904m76cbc2d04287813f@mail.gmail.com>
+Received: from ns1.suse.de ([195.135.220.2]:40228 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965440AbXCFSEh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Mar 2007 13:04:37 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: MASTHAN DUDEKULA <d.mastan@gmail.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
-
-MASTHAN DUDEKULA wrote:
-> Hi All,
-> 
-> By using SG_IO ioctl How can we get device related info (like device
-> type--disk,tape,cdrom..etc) ?
-
-If you look at http://www.torque.net/sg/sg3_utils.html
-and fetch a tarball (e.g. sg3_utils-1.23.tgz) then have
-a look at the examples/sg_simple1.c file.
-
-Doug Gilbert
+To: Douglas Gilbert <dougg@torque.net>, linux-scsi@vger.kernel.org
 
 
+Upcoming IBM pSeries firmware can boot from iscsi. To configure the
+openfirmware boot-device string, we need to construct a correct
+devicepath. This path includes the lun. Its currently not 100% clear
+how exactly this lun value has to look like.
+
+sg_luns may be the tool to get the value. But its current output is not
+parseable by scripts. It even gives the same output for two different
+scsi devices:
+
+girgendwas:~ # lsscsi
+[0:0:0:0]    disk    DGC      RAID 5           0219  /dev/sda
+[0:0:0:1]    disk    DGC      RAID 5           0219  /dev/sdb
+[0:0:0:2]    disk    DGC      RAID 5           0219  /dev/sdc
+[0:0:0:3]    disk    DGC      RAID 5           0219  /dev/sdd
+girgendwas:~ # sg_luns -V
+sg_luns: version: 1.05 20060127
+girgendwas:~ # sg_luns /dev/sdd
+Lun list length = 32 which imples 4 lun entries
+Report luns [select_report=0]:
+    0000000000000000
+    0001000000000000
+    0002000000000000
+    0003000000000000
+girgendwas:~ # sg_luns /dev/sdc
+Lun list length = 32 which imples 4 lun entries
+Report luns [select_report=0]:
+    0000000000000000
+    0001000000000000
+    0002000000000000
+    0003000000000000
+
+Is it possible to print the lun only for the requested scsi device?
