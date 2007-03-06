@@ -1,221 +1,126 @@
 From: akpm@linux-foundation.org
-Subject: [patch 11/29] scsi: whitespace cleanup in the dpt driver
-Date: Tue, 06 Mar 2007 02:46:36 -0800
-Message-ID: <200703061046.l26Akax6020018@shell0.pdx.osdl.net>
+Subject: [patch 20/29] Remove some unused SCSI-related kernel config variables.
+Date: Tue, 06 Mar 2007 02:46:45 -0800
+Message-ID: <200703061046.l26AkjeX020048@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:34960 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.24]:34985 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964804AbXCFKqz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Mar 2007 05:46:55 -0500
+	id S964806AbXCFKrI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Mar 2007 05:47:08 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, henne@nachtwindheim.de
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, rpjday@mindspring.com
 
-From: Henne <henne@nachtwindheim.de>
+From: "Robert P. J. Day" <rpjday@mindspring.com>
 
-Remove some trailing whitespaces and some replace whitespaces with tabs.
+Remove the unused SCSI-related kernel config variables
 
-Signed-off-by: Henrik Kretzschmar <henne@nachtwindheim.de>
+	SCSI_NCR53C8XX_PROFILE_SUPPORT
+	SCSI_NCR53C8XX_PROFILE
+	53C700_IO_MAPPED
+	AIC79XX_ENABLE_RD_STRM
+	AIC7XXX_PROBE_EISA_VL
+
+Signed-off-by: Robert P. J. Day <rpjday@mindspring.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/dpt/dpti_i2o.h   |   48 ++++++++++++++++----------------
- drivers/scsi/dpt/dpti_ioctl.h |    2 -
- drivers/scsi/dpt/dptsig.h     |    4 +-
- 3 files changed, 27 insertions(+), 27 deletions(-)
+ Documentation/scsi/ncr53c8xx.txt     |    5 -----
+ drivers/scsi/Kconfig                 |   16 ----------------
+ drivers/scsi/aic7xxx/Kconfig.aic79xx |   12 ------------
+ drivers/scsi/aic7xxx/Kconfig.aic7xxx |   10 ----------
+ 4 files changed, 43 deletions(-)
 
-diff -puN drivers/scsi/dpt/dpti_i2o.h~scsi-whitespace-cleanup-in-the-dpt-driver drivers/scsi/dpt/dpti_i2o.h
---- a/drivers/scsi/dpt/dpti_i2o.h~scsi-whitespace-cleanup-in-the-dpt-driver
-+++ a/drivers/scsi/dpt/dpti_i2o.h
-@@ -31,7 +31,7 @@
-  *	Tunable parameters first
-  */
+diff -puN Documentation/scsi/ncr53c8xx.txt~remove-some-unused-scsi-related-kernel-config-variables Documentation/scsi/ncr53c8xx.txt
+--- a/Documentation/scsi/ncr53c8xx.txt~remove-some-unused-scsi-related-kernel-config-variables
++++ a/Documentation/scsi/ncr53c8xx.txt
+@@ -562,11 +562,6 @@ if only one has a flaw for some SCSI fea
+ support by the driver of this feature at linux start-up and enable
+ this feature after boot-up only for devices that support it safely.
  
--/* How many different OSM's are we allowing */ 
-+/* How many different OSM's are we allowing */
- #define MAX_I2O_MODULES		64
+-CONFIG_SCSI_NCR53C8XX_PROFILE_SUPPORT  (default answer: n)
+-    This option must be set for profiling information to be gathered 
+-    and printed out through the proc file system. This features may 
+-    impact performances.
+-
+ CONFIG_SCSI_NCR53C8XX_IOMAPPED       (default answer: n)
+     Answer "y" if you suspect your mother board to not allow memory mapped I/O.
+     May slow down performance a little.  This option is required by
+diff -puN drivers/scsi/Kconfig~remove-some-unused-scsi-related-kernel-config-variables drivers/scsi/Kconfig
+--- a/drivers/scsi/Kconfig~remove-some-unused-scsi-related-kernel-config-variables
++++ a/drivers/scsi/Kconfig
+@@ -1194,17 +1194,6 @@ config SCSI_NCR53C8XX_SYNC
+ 	  There is no safe option other than using good cabling, right
+ 	  terminations and SCSI conformant devices.
  
- #define I2O_EVT_CAPABILITY_OTHER		0x01
-@@ -63,7 +63,7 @@ struct i2o_message
- 	u16	size;
- 	u32	target_tid:12;
- 	u32	init_tid:12;
--	u32	function:8;	
-+	u32	function:8;
- 	u32	initiator_context;
- 	/* List follows */
- };
-@@ -77,7 +77,7 @@ struct i2o_device
+-config SCSI_NCR53C8XX_PROFILE
+-	bool "enable profiling"
+-	depends on SCSI_ZALON || SCSI_NCR_Q720
+-	help
+-	  This option allows you to enable profiling information gathering.
+-	  These statistics are not very accurate due to the low frequency
+-	  of the kernel clock (100 Hz on i386) and have performance impact
+-	  on systems that use very fast devices.
+-
+-	  The normal answer therefore is N.
+-
+ config SCSI_NCR53C8XX_NO_DISCONNECT
+ 	bool "not allow targets to disconnect"
+ 	depends on (SCSI_ZALON || SCSI_NCR_Q720) && SCSI_NCR53C8XX_DEFAULT_TAGS=0
+@@ -1334,11 +1323,6 @@ config SCSI_SIM710
  
- 	char dev_name[8];		/* linux /dev name if available */
- 	i2o_lct_entry lct_data;/* Device LCT information */
--	u32 flags;		
-+	u32 flags;
- 	struct proc_dir_entry* proc_entry;	/* /proc dir */
- 	struct adpt_device *owner;
- 	struct _adpt_hba *controller;	/* Controlling IOP */
-@@ -86,7 +86,7 @@ struct i2o_device
- /*
-  *	Each I2O controller has one of these objects
-  */
-- 
-+
- struct i2o_controller
- {
- 	char name[16];
-@@ -111,9 +111,9 @@ struct i2o_sys_tbl_entry
- 	u32	iop_id:12;
- 	u32	reserved2:20;
- 	u16	seg_num:12;
--	u16 	i2o_version:4;
--	u8 	iop_state;
--	u8 	msg_type;
-+	u16	i2o_version:4;
-+	u8	iop_state;
-+	u8	msg_type;
- 	u16	frame_size;
- 	u16	reserved3;
- 	u32	last_changed;
-@@ -124,14 +124,14 @@ struct i2o_sys_tbl_entry
+ 	  It currently supports Compaq EISA cards and NCR MCA cards
  
- struct i2o_sys_tbl
- {
--	u8 	num_entries;
--	u8 	version;
--	u16 	reserved1;
-+	u8	num_entries;
-+	u8	version;
-+	u16	reserved1;
- 	u32	change_ind;
- 	u32	reserved2;
- 	u32	reserved3;
- 	struct i2o_sys_tbl_entry iops[0];
--};	
-+};
+-config 53C700_IO_MAPPED
+-	bool
+-	depends on SCSI_SIM710
+-	default y
+-
+ config SCSI_SYM53C416
+ 	tristate "Symbios 53c416 SCSI support"
+ 	depends on ISA && SCSI
+diff -puN drivers/scsi/aic7xxx/Kconfig.aic79xx~remove-some-unused-scsi-related-kernel-config-variables drivers/scsi/aic7xxx/Kconfig.aic79xx
+--- a/drivers/scsi/aic7xxx/Kconfig.aic79xx~remove-some-unused-scsi-related-kernel-config-variables
++++ a/drivers/scsi/aic7xxx/Kconfig.aic79xx
+@@ -57,18 +57,6 @@ config AIC79XX_BUILD_FIRMWARE
+ 	or modify the assembler Makefile or the files it includes if your
+ 	build environment is different than that of the author.
  
- /*
-  *	I2O classes / subclasses
-@@ -146,7 +146,7 @@ struct i2o_sys_tbl
- /*  Class code names
-  *  (from v1.5 Table 6-1 Class Code Assignments.)
-  */
-- 
-+
- #define    I2O_CLASS_EXECUTIVE                         0x000
- #define    I2O_CLASS_DDM                               0x001
- #define    I2O_CLASS_RANDOM_BLOCK_STORAGE              0x010
-@@ -166,7 +166,7 @@ struct i2o_sys_tbl
+-config AIC79XX_ENABLE_RD_STRM
+-	bool "Enable Read Streaming for All Targets"
+-	depends on SCSI_AIC79XX
+-	default n
+-	help
+-	Read Streaming is a U320 protocol option that should enhance
+-	performance.  Early U320 drive firmware actually performs slower
+-	with read streaming enabled so it is disabled by default.  Read
+-	Streaming can be configured in much the same way as tagged queueing
+-	using the "rd_strm" command line option.  See
+-	drivers/scsi/aic7xxx/README.aic79xx for details.
+-
+ config AIC79XX_DEBUG_ENABLE
+ 	bool "Compile in Debugging Code"
+ 	depends on SCSI_AIC79XX
+diff -puN drivers/scsi/aic7xxx/Kconfig.aic7xxx~remove-some-unused-scsi-related-kernel-config-variables drivers/scsi/aic7xxx/Kconfig.aic7xxx
+--- a/drivers/scsi/aic7xxx/Kconfig.aic7xxx~remove-some-unused-scsi-related-kernel-config-variables
++++ a/drivers/scsi/aic7xxx/Kconfig.aic7xxx
+@@ -50,16 +50,6 @@ config AIC7XXX_RESET_DELAY_MS
  
- /*  Rest of 0x092 - 0x09f reserved for peer-to-peer classes
-  */
-- 
-+
- #define    I2O_CLASS_MATCH_ANYCLASS                    0xffffffff
+ 	Default: 5000 (5 seconds)
  
- /*  Subclasses
-@@ -175,7 +175,7 @@ struct i2o_sys_tbl
- #define    I2O_SUBCLASS_i960                           0x001
- #define    I2O_SUBCLASS_HDM                            0x020
- #define    I2O_SUBCLASS_ISM                            0x021
-- 
-+
- /* Operation functions */
- 
- #define I2O_PARAMS_FIELD_GET	0x0001
-@@ -219,7 +219,7 @@ struct i2o_sys_tbl
- /*
-  *	Messaging API values
-  */
-- 
-+
- #define	I2O_CMD_ADAPTER_ASSIGN		0xB3
- #define	I2O_CMD_ADAPTER_READ		0xB2
- #define	I2O_CMD_ADAPTER_RELEASE		0xB5
-@@ -284,16 +284,16 @@ struct i2o_sys_tbl
- #define I2O_PRIVATE_MSG			0xFF
- 
- /*
-- *	Init Outbound Q status 
-+ *	Init Outbound Q status
-  */
-- 
-+
- #define I2O_CMD_OUTBOUND_INIT_IN_PROGRESS	0x01
- #define I2O_CMD_OUTBOUND_INIT_REJECTED		0x02
- #define I2O_CMD_OUTBOUND_INIT_FAILED		0x03
- #define I2O_CMD_OUTBOUND_INIT_COMPLETE		0x04
- 
- /*
-- *	I2O Get Status State values 
-+ *	I2O Get Status State values
-  */
- 
- #define	ADAPTER_STATE_INITIALIZING		0x01
-@@ -303,7 +303,7 @@ struct i2o_sys_tbl
- #define	ADAPTER_STATE_OPERATIONAL		0x08
- #define	ADAPTER_STATE_FAILED			0x10
- #define	ADAPTER_STATE_FAULTED			0x11
--	
-+
- /* I2O API function return values */
- 
- #define I2O_RTN_NO_ERROR			0
-@@ -321,9 +321,9 @@ struct i2o_sys_tbl
- 
- /* Reply message status defines for all messages */
- 
--#define I2O_REPLY_STATUS_SUCCESS                    	0x00
--#define I2O_REPLY_STATUS_ABORT_DIRTY                	0x01
--#define I2O_REPLY_STATUS_ABORT_NO_DATA_TRANSFER     	0x02
-+#define I2O_REPLY_STATUS_SUCCESS			0x00
-+#define I2O_REPLY_STATUS_ABORT_DIRTY			0x01
-+#define I2O_REPLY_STATUS_ABORT_NO_DATA_TRANSFER		0x02
- #define	I2O_REPLY_STATUS_ABORT_PARTIAL_TRANSFER		0x03
- #define	I2O_REPLY_STATUS_ERROR_DIRTY			0x04
- #define	I2O_REPLY_STATUS_ERROR_NO_DATA_TRANSFER		0x05
-@@ -338,7 +338,7 @@ struct i2o_sys_tbl
- 
- #define I2O_PARAMS_STATUS_SUCCESS		0x00
- #define I2O_PARAMS_STATUS_BAD_KEY_ABORT		0x01
--#define I2O_PARAMS_STATUS_BAD_KEY_CONTINUE   	0x02
-+#define I2O_PARAMS_STATUS_BAD_KEY_CONTINUE	0x02
- #define I2O_PARAMS_STATUS_BUFFER_FULL		0x03
- #define I2O_PARAMS_STATUS_BUFFER_TOO_SMALL	0x04
- #define I2O_PARAMS_STATUS_FIELD_UNREADABLE	0x05
-@@ -390,7 +390,7 @@ struct i2o_sys_tbl
- #define	I2O_CLAIM_MANAGEMENT					0x02000000
- #define	I2O_CLAIM_AUTHORIZED					0x03000000
- #define	I2O_CLAIM_SECONDARY					0x04000000
-- 
-+
- /* Message header defines for VersionOffset */
- #define I2OVER15	0x0001
- #define I2OVER20	0x0002
-diff -puN drivers/scsi/dpt/dpti_ioctl.h~scsi-whitespace-cleanup-in-the-dpt-driver drivers/scsi/dpt/dpti_ioctl.h
---- a/drivers/scsi/dpt/dpti_ioctl.h~scsi-whitespace-cleanup-in-the-dpt-driver
-+++ a/drivers/scsi/dpt/dpti_ioctl.h
-@@ -99,7 +99,7 @@ typedef struct {
- 	uCHAR    eataVersion;      /* EATA Version                    */
- 	uLONG    cpLength;         /* EATA Command Packet Length      */
- 	uLONG    spLength;         /* EATA Status Packet Length       */
--	uCHAR    drqNum;           /* DRQ Index (0,5,6,7)             */ 
-+	uCHAR    drqNum;           /* DRQ Index (0,5,6,7)             */
- 	uCHAR    flag1;            /* EATA Flags 1 (Byte 9)           */
- 	uCHAR    flag2;            /* EATA Flags 2 (Byte 30)          */
- } CtrlInfo;
-diff -puN drivers/scsi/dpt/dptsig.h~scsi-whitespace-cleanup-in-the-dpt-driver drivers/scsi/dpt/dptsig.h
---- a/drivers/scsi/dpt/dptsig.h~scsi-whitespace-cleanup-in-the-dpt-driver
-+++ a/drivers/scsi/dpt/dptsig.h
-@@ -145,8 +145,8 @@ typedef unsigned long sigLONG;
- #define FT_LOGGER       12      /* Event Logger */
- #define FT_INSTALL      13      /* An Install Program */
- #define FT_LIBRARY      14      /* Storage Manager Real-Mode Calls */
--#define FT_RESOURCE 	15 	/* Storage Manager Resource File */
--#define FT_MODEM_DB  	16  	/* Storage Manager Modem Database */
-+#define FT_RESOURCE	15	/* Storage Manager Resource File */
-+#define FT_MODEM_DB	16	/* Storage Manager Modem Database */
- 
- /* Filetype flags - sigBYTE dsFiletypeFlags;    FLAG BITS */
- /* ------------------------------------------------------------------ */
+-config AIC7XXX_PROBE_EISA_VL
+-	bool "Probe for EISA and VL AIC7XXX Adapters"
+-	depends on SCSI_AIC7XXX && EISA
+-	help
+-	Probe for EISA and VLB Aic7xxx controllers.  In many newer systems,
+-	the invasive probes necessary to detect these controllers can cause
+-	other devices to fail.  For this reason, the non-PCI probe code is
+-	disabled by default.  The current value of this option can be "toggled"
+-	via the no_probe kernel command line option.
+-
+ config AIC7XXX_BUILD_FIRMWARE
+ 	bool "Build Adapter Firmware with Kernel Build"
+ 	depends on SCSI_AIC7XXX && !PREVENT_FIRMWARE_BUILD
 _
