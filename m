@@ -1,39 +1,95 @@
 From: akpm@linux-foundation.org
-Subject: [patch 06/29] drivers/scsi/dpt_i2o.c: remove dead code
-Date: Tue, 06 Mar 2007 02:46:31 -0800
-Message-ID: <200703061046.l26AkVDr020003@shell0.pdx.osdl.net>
+Subject: [patch 13/29] drivers/scsi/aic7xxx/: make functions static
+Date: Tue, 06 Mar 2007 02:46:38 -0800
+Message-ID: <200703061046.l26AkctN020024@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:35089 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.24]:35108 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964808AbXCFKtr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Mar 2007 05:49:47 -0500
+	id S964862AbXCFKuJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Mar 2007 05:50:09 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bunk@stusta.de
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bunk@stusta.de, hare@suse.de
 
 From: Adrian Bunk <bunk@stusta.de>
 
-The Coverity checker spotted this dead code introduced by
-commit a07f353701acae77e023f6270e8af353b37af7c4.
-
 Signed-off-by: Adrian Bunk <bunk@stusta.de>
+Acked-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/dpt_i2o.c |    2 --
- 1 file changed, 2 deletions(-)
+ drivers/scsi/aic7xxx/aic79xx_osm.c  |    6 ++++--
+ drivers/scsi/aic7xxx/aic79xx_osm.h  |    2 --
+ drivers/scsi/aic7xxx/aic7xxx.h      |    5 -----
+ drivers/scsi/aic7xxx/aic7xxx_core.c |    2 +-
+ 4 files changed, 5 insertions(+), 10 deletions(-)
 
-diff -puN drivers/scsi/dpt_i2o.c~drivers-scsi-dpt_i2oc-remove-dead-code drivers/scsi/dpt_i2o.c
---- a/drivers/scsi/dpt_i2o.c~drivers-scsi-dpt_i2oc-remove-dead-code
-+++ a/drivers/scsi/dpt_i2o.c
-@@ -195,8 +195,6 @@ static int adpt_detect(struct scsi_host_
- 			pci_dev_get(pDev);
- 		}
- 	}
--	if (pDev)
--		pci_dev_put(pDev);
+diff -puN drivers/scsi/aic7xxx/aic79xx_osm.c~drivers-scsi-aic7xxx-make-functions-static drivers/scsi/aic7xxx/aic79xx_osm.c
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.c~drivers-scsi-aic7xxx-make-functions-static
++++ a/drivers/scsi/aic7xxx/aic79xx_osm.c
+@@ -363,6 +363,8 @@ static int ahd_linux_run_command(struct 
+ 				 struct scsi_cmnd *);
+ static void ahd_linux_setup_tag_info_global(char *p);
+ static int  aic79xx_setup(char *c);
++static void ahd_freeze_simq(struct ahd_softc *ahd);
++static void ahd_release_simq(struct ahd_softc *ahd);
  
- 	/* In INIT state, Activate IOPs */
- 	for (pHba = hba_chain; pHba; pHba = pHba->next) {
+ static int ahd_linux_unit;
+ 
+@@ -2016,13 +2018,13 @@ ahd_linux_queue_cmd_complete(struct ahd_
+ 	cmd->scsi_done(cmd);
+ }
+ 
+-void
++static void
+ ahd_freeze_simq(struct ahd_softc *ahd)
+ {
+ 	scsi_block_requests(ahd->platform_data->host);
+ }
+ 
+-void
++static void
+ ahd_release_simq(struct ahd_softc *ahd)
+ {
+ 	scsi_unblock_requests(ahd->platform_data->host);
+diff -puN drivers/scsi/aic7xxx/aic79xx_osm.h~drivers-scsi-aic7xxx-make-functions-static drivers/scsi/aic7xxx/aic79xx_osm.h
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.h~drivers-scsi-aic7xxx-make-functions-static
++++ a/drivers/scsi/aic7xxx/aic79xx_osm.h
+@@ -837,8 +837,6 @@ int	ahd_platform_alloc(struct ahd_softc 
+ void	ahd_platform_free(struct ahd_softc *ahd);
+ void	ahd_platform_init(struct ahd_softc *ahd);
+ void	ahd_platform_freeze_devq(struct ahd_softc *ahd, struct scb *scb);
+-void	ahd_freeze_simq(struct ahd_softc *ahd);
+-void	ahd_release_simq(struct ahd_softc *ahd);
+ 
+ static __inline void
+ ahd_freeze_scb(struct scb *scb)
+diff -puN drivers/scsi/aic7xxx/aic7xxx.h~drivers-scsi-aic7xxx-make-functions-static drivers/scsi/aic7xxx/aic7xxx.h
+--- a/drivers/scsi/aic7xxx/aic7xxx.h~drivers-scsi-aic7xxx-make-functions-static
++++ a/drivers/scsi/aic7xxx/aic7xxx.h
+@@ -1278,11 +1278,6 @@ typedef enum {
+ 	AHC_QUEUE_TAGGED
+ } ahc_queue_alg;
+ 
+-void			ahc_set_tags(struct ahc_softc *ahc,
+-				     struct scsi_cmnd *cmd,
+-				     struct ahc_devinfo *devinfo,
+-				     ahc_queue_alg alg);
+-
+ /**************************** Target Mode *************************************/
+ #ifdef AHC_TARGET_MODE
+ void		ahc_send_lstate_events(struct ahc_softc *,
+diff -puN drivers/scsi/aic7xxx/aic7xxx_core.c~drivers-scsi-aic7xxx-make-functions-static drivers/scsi/aic7xxx/aic7xxx_core.c
+--- a/drivers/scsi/aic7xxx/aic7xxx_core.c~drivers-scsi-aic7xxx-make-functions-static
++++ a/drivers/scsi/aic7xxx/aic7xxx_core.c
+@@ -2073,7 +2073,7 @@ ahc_set_width(struct ahc_softc *ahc, str
+ /*
+  * Update the current state of tagged queuing for a given target.
+  */
+-void
++static void
+ ahc_set_tags(struct ahc_softc *ahc, struct scsi_cmnd *cmd,
+ 	     struct ahc_devinfo *devinfo, ahc_queue_alg alg)
+ {
 _
