@@ -1,48 +1,62 @@
 From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [stable] [patch 29/29] bug in gdth.c crashing machine
-Date: Wed, 7 Mar 2007 11:16:16 -0800
-Message-ID: <20070307111616.16e5e641.akpm@linux-foundation.org>
-References: <200703061046.l26AksTi020093@shell0.pdx.osdl.net>
-	<1173288505.3771.33.camel@mulgrave.il.steeleye.com>
-	<20070307174021.GA25066@kroah.com>
+Subject: Re: qla2xxx BUG: workqueue leaked lock or atomic
+Date: Wed, 7 Mar 2007 11:45:25 -0800
+Message-ID: <20070307114525.08265c33.akpm@linux-foundation.org>
+References: <20070226133153.GC4095@skl-net.de>
+	<20070226182617.GC9968@andrew-vasquezs-computer.local>
+	<20070227101100.GA22572@skl-net.de>
+	<20070227185134.GJ20397@andrew-vasquezs-computer.local>
+	<20070228151829.GI22572@skl-net.de>
+	<20070228153722.GJ22572@skl-net.de>
+	<20070306203952.471218df.akpm@linux-foundation.org>
+	<20070307170955.GA4252@skl-net.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:50916 "EHLO smtp.osdl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1422964AbXCGTRp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Mar 2007 14:17:45 -0500
-In-Reply-To: <20070307174021.GA25066@kroah.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ext4-owner@vger.kernel.org>
+In-Reply-To: <20070307170955.GA4252@skl-net.de>
+Sender: linux-ext4-owner@vger.kernel.org
+To: Andre Noll <maan@systemlinux.org>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <jens.axboe@oracle.com>, Alasdair G Kergon <agk@redhat.com>, Adrian Bunk <bunk@stusta.de>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, rdunlap@xenotime.net, Achim_Leubner@adaptec.com, joerg@dorchain.net, stable@kernel.org, linux-scsi@vger.kernel.org
 
-On Wed, 7 Mar 2007 09:40:21 -0800 Greg KH <greg@kroah.com> wrote:
+On Wed, 7 Mar 2007 18:09:55 +0100 Andre Noll <maan@systemlinux.org> wrote:
 
-> On Wed, Mar 07, 2007 at 11:28:25AM -0600, James Bottomley wrote:
-> > On Tue, 2007-03-06 at 02:46 -0800, akpm@linux-foundation.org wrote:
-> > > From: Joerg Dorchain <joerg@dorchain.net>
+> On 20:39, Andrew Morton wrote:
+> > On Wed, 28 Feb 2007 16:37:22 +0100 Andre Noll <maan@systemlinux.org> wrote:
+> > 
+> > > On 16:18, Andre Noll wrote:
 > > > 
-> > > Undocumented...
+> > > > With 2.6.21-rc2 I am unable to reproduce this BUG message. However,
+> > > > writing to both raid systems at the same time via lvm still locks up
+> > > > the system within minutes.
+> > > 
+> > > Screenshot of the resulting kernel panic:
+> > > 
+> > > 	http://systemlinux.org/~maan/shots/kernel-panic-21-rc2-huangho2.png
+> > > 
 > > 
-> > This is a bit of a problem, isn't it?
+> > It died in CFQ.  Please try a different IO scheduler.  Use something
+> > like
 > > 
-> > I have no report of any problem this fixes, and no input from the gdth
-> > maintainer about this.  The first I actually knew of this patch request
-> > is that it appeared in an akpm patch stream yesterday.
+> > 	echo deadline > /sys/block/sda/queue/scheduler
 > > 
-> > I really think we need more details before this gets applied to
-> > anything, let alone the stable tree.
+> > This could still be the old qla2xxx bug, or it could be a new qla2xxx bug,
+> > or it could be a block bug, or it could be an LVM bug.
 > 
-> Randy did forward it to the stable team a while ago too, but I didn't
-> know even what tree it applied to as the patch level was a bit off.  I
-> think he might have some more information about it?
+> OK. I'm running with deadline right now. But I guess this kernel
+> panic was caused by an LVM bug because lockdep reported problems with
+> LVM. Nobody responded to my bug report on the LVM mailing list (see
+> http://www.redhat.com/archives/linux-lvm/2007-February/msg00102.html).
 > 
+> Non-working snapshots and no help from the mailing list convinced me
+> to ditch the lvm setup [1] in favour of linear software raid. This
+> means I can't do lvm-related tests any more.
 
-Achim did reply:  http://lkml.org/lkml/2007/2/23/138
+Sigh.
 
-So we don't know what the patch does, but it should be merged into -stable
-(and mainline, heaven forfend)
+> BTW: Are ext3 filesystem sizes greater than 8T now officially
+> supported?
 
+I think so, but I don't know how much 16TB testing developers and
+distros are doing - perhaps the linux-ext4 denizens can tell us?
