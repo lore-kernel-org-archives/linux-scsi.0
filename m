@@ -1,76 +1,85 @@
-From: Aravind Parchuri <aravind.parchuri@gmail.com>
-Subject: WRITE BUFFER commands through SG_IO getting rounded up to sector
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: WRITE BUFFER commands through SG_IO getting rounded up to sector
  past 32k
-Date: Tue, 06 Mar 2007 16:01:52 -0800
-Message-ID: <45EE00F0.2010702@gmail.com>
+Date: Tue, 06 Mar 2007 18:39:02 -0600
+Message-ID: <45EE09A6.7030004@cs.wisc.edu>
+References: <45EE00F0.2010702@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------060401090207010109010408"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.233]:27627 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030743AbXCGABz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Mar 2007 19:01:55 -0500
-Received: by nz-out-0506.google.com with SMTP id s1so2309749nze
-        for <linux-scsi@vger.kernel.org>; Tue, 06 Mar 2007 16:01:55 -0800 (PST)
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:50876 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161028AbXCGAjK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Mar 2007 19:39:10 -0500
+In-Reply-To: <45EE00F0.2010702@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Aravind Parchuri <aravind.parchuri@gmail.com>
+Cc: linux-scsi@vger.kernel.org
 
-While trying to fire WRITE BUFFER commands to an iscsi target, we found 
-that if the command is larger than 32kB, it gets rounded up to the next 
-sector before it reaches the LLD (in this case, open-iscsi). If this is 
-expected behavior, please disregard the rest of the message. 
-Unfortunately, I haven't found any documentation that mandates 
-sector-multiple sizes for SG_IO ioctls, and besides,  the above behavior 
-seems to have been introduced recently (post 2.6.12). The above scenario 
-was produced in 2.6.19.2 (a Fedora update kernel, actually).
+This is a multi-part message in MIME format.
+--------------060401090207010109010408
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-Here is the relevant log section for a command with dxfer_len 32896 
-bytes, with SCSI_LOG_TIMEOUT=5 and DEBUG_SCSI enabled in open-iscsi:
+Aravind Parchuri wrote:
+> In fact, even with the newer kernel, all commands smaller than 32k make
+> it through with the right size, which leads me to think it's something
+> to do with the scatter-gather list. I'm not particularly familiar with
+> the scsi code, but inside scsi_execute_async, in scsi_map_req_sg, should
+> the request's data_len be set to the dxfer_len instead of summing up the
+> scatter-gather list lengths? I must mention again that I haven't really
+> gone through the code thoroughly.
+> 
 
-Mar  5 12:39:12 ITX003048865470 kernel: sg_ioctl: sg4, cmd=0x2285
-Mar  5 12:39:12 ITX003048865470 kernel: sg_common_write:  scsi 
-opcode=0x3b, cmd_size=10
-Mar  5 12:39:12 ITX003048865470 kernel: sg_start_req: dxfer_len=32896
-Mar  5 12:39:12 ITX003048865470 kernel: sg_build_indirect: 
-buff_size=32896, blk_size=33280
-Mar  5 12:39:12 ITX003048865470 kernel: sg_write_xfer: num_xfer=32896, 
-iovec_count=0, k_use_sg=2
-Mar  5 12:39:12 ITX003048865470 kernel: iscsi: cmd [itt 0x23 total 33280 
-imm_data 33280 unsol count 0, unsol offset 33280]
-Mar  5 12:39:12 ITX003048865470 kernel: iscsi: ctask enq [write cid 0 sc 
-e5ffcb00 cdb 0x3b itt 0x23 len 33280 cmdsn 36 win 257]
-Mar  5 12:39:12 ITX003048865470 kernel: iscsi: ctask deq [cid 0 xmstate 
-2 itt 0x23]
-Mar  5 12:39:12 ITX003048865470 kernel:  connection0:0: iscsi: detected 
-conn error (1011)
-Mar  5 12:39:12 ITX003048865470 kernel: iscsi: blocking session
-Mar  5 12:39:12 ITX003048865470 kernel: iscsi: failing in progress sc 
-e5ffcb00 itt 0x23
-Mar  5 12:39:12 ITX003048865470 kernel: sg_cmd_done: sg4, pack_id=0, 
-res=0x20000Mar  5 12:39:12 ITX003048865470 kernel: sg_finish_rem_req: 
-res_used=0
-Mar  5 12:39:12 ITX003048865470 kernel: sg_remove_scat: k_use_sg=2
+You are right. sg_build_indirect will do this
+blk_size = (blk_size + SG_SECTOR_MSK) & (~SG_SECTOR_MSK)
+so we should be using the bufflen passed into us. Attached is a patch
+made over scsi-misc. It should also apply to scsi rc fixes.
 
-The first print from open-iscsi is from inside its queuecommand, and it 
-shows that the scsi_cmnd->request_bufflen is 33280 ("total 33280"). When 
-I tried the same experiment with 2.6.12, the number matched the dxfer_len.
+--------------060401090207010109010408
+Content-Type: text/x-patch;
+ name="use-bufflen-for-data-len.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="use-bufflen-for-data-len.patch"
 
-In fact, even with the newer kernel, all commands smaller than 32k make 
-it through with the right size, which leads me to think it's something 
-to do with the scatter-gather list. I'm not particularly familiar with 
-the scsi code, but inside scsi_execute_async, in scsi_map_req_sg, should 
-the request's data_len be set to the dxfer_len instead of summing up the 
-scatter-gather list lengths? I must mention again that I haven't really 
-gone through the code thoroughly.
+sg's may have setup a the buffer with a different length than
+the transfer length so we should be using the bufflen passed
+in as the request's data len.
 
-Anyway, the above behavior leads to a problem with open-iscsi - it fills 
-in a pdu with the Data Segment Length equal to the sector-rounded 
-number, while the cdb contains the original dxfer_len. The target uses 
-the cdb's value to allocate buffers for the command, so it fails to 
-receive the whole packet. Any help would be appreciated. Thanks,
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 9f7482d..dfe3ccd 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -301,7 +301,7 @@ static int scsi_req_map_sg(struct reques
+ {
+ 	struct request_queue *q = rq->q;
+ 	int nr_pages = (bufflen + sgl[0].offset + PAGE_SIZE - 1) >> PAGE_SHIFT;
+-	unsigned int data_len = 0, len, bytes, off;
++	unsigned int len, bytes, off;
+ 	struct page *page;
+ 	struct bio *bio = NULL;
+ 	int i, err, nr_vecs = 0;
+@@ -310,7 +310,6 @@ static int scsi_req_map_sg(struct reques
+ 		page = sgl[i].page;
+ 		off = sgl[i].offset;
+ 		len = sgl[i].length;
+-		data_len += len;
+ 
+ 		while (len > 0) {
+ 			bytes = min_t(unsigned int, len, PAGE_SIZE - off);
+@@ -350,7 +349,7 @@ static int scsi_req_map_sg(struct reques
+ 	}
+ 
+ 	rq->buffer = rq->data = NULL;
+-	rq->data_len = data_len;
++	rq->data_len = bufflen;
+ 	return 0;
+ 
+ free_bios:
 
-Aravind.
-
+--------------060401090207010109010408--
