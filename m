@@ -1,85 +1,78 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: WRITE BUFFER commands through SG_IO getting rounded up to sector
- past 32k
-Date: Tue, 06 Mar 2007 18:39:02 -0600
-Message-ID: <45EE09A6.7030004@cs.wisc.edu>
-References: <45EE00F0.2010702@gmail.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 3/3] tgt: fix scsi command leak
+Date: Wed, 7 Mar 2007 11:10:08 +0900 (JST)
+Message-ID: <20070307104132B.fujita.tomonori@lab.ntt.co.jp>
+References: <45E9A92B.5040507@torque.net>
+	<20070305143222H.fujita.tomonori@lab.ntt.co.jp>
+	<45EC38EF.6000603@torque.net>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------060401090207010109010408"
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:50876 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161028AbXCGAjK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Mar 2007 19:39:10 -0500
-In-Reply-To: <45EE00F0.2010702@gmail.com>
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:37173 "EHLO
+	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161180AbXCGCL3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Mar 2007 21:11:29 -0500
+In-Reply-To: <45EC38EF.6000603@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Aravind Parchuri <aravind.parchuri@gmail.com>
-Cc: linux-scsi@vger.kernel.org
+To: dougg@torque.net
+Cc: fujita.tomonori@lab.ntt.co.jp, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------060401090207010109010408
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH 3/3] tgt: fix scsi command leak
+Date: Mon, 05 Mar 2007 10:36:15 -0500
 
-Aravind Parchuri wrote:
-> In fact, even with the newer kernel, all commands smaller than 32k make
-> it through with the right size, which leads me to think it's something
-> to do with the scatter-gather list. I'm not particularly familiar with
-> the scsi code, but inside scsi_execute_async, in scsi_map_req_sg, should
-> the request's data_len be set to the dxfer_len instead of summing up the
-> scatter-gather list lengths? I must mention again that I haven't really
-> gone through the code thoroughly.
+> >> What about an option for descriptor sense format? With SAT now
+> >> a standard, we now have one more reason to support
+> >> descriptor format when required. The ATA PASS-THROUGH SCSI
+> >> commands in SAT use descriptor sense format to return
+> >> ATA registers.
+> > 
+> > tgt's kernel-space code doesn't know anything about SCSI devices that
+> > initiators talks to. So it's difficult to send proper sense buffer.
+> > Nomally, we don't have this problem because tgt user-space code builds
+> > sense buffer.
+> > 
+> > The bug that we are trying to fix is that the scsi command leak due to
+> > the user-space's bugs. So we can't rely on the user-space for this.
+> > 
+> > Not that, like open-iscsi, the user-space bugs are pretty critical for
+> > tgt as the kernel-space bugs. We don't think target mode drivers can
+> > continue to work. However, tgt should tell target mode drivers that
+> > unrecoverable problems happen and we should cleanly unload the kernel
+> > modules.
 > 
+> Tomo,
+> If I understand correctly, there is a target SCSI command
+> interpreter in a user space daemon (plus lu support) and the
+> target transport end point in kernel space (roughly speaking).
+> So if there is some problem in the kernel module, or
+> the user space daemon goes away (or won't respond) then what
+> you have is a transport error at the target end.
 
-You are right. sg_build_indirect will do this
-blk_size = (blk_size + SG_SECTOR_MSK) & (~SG_SECTOR_MSK)
-so we should be using the bufflen passed into us. Attached is a patch
-made over scsi-misc. It should also apply to scsi rc fixes.
+Yeah.
 
---------------060401090207010109010408
-Content-Type: text/x-patch;
- name="use-bufflen-for-data-len.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="use-bufflen-for-data-len.patch"
 
-sg's may have setup a the buffer with a different length than
-the transfer length so we should be using the bufflen passed
-in as the request's data len.
+> The error should be lower level than SCSI commands (i.e.
+> transport level). The kernel module doesn't know the state
+> of target SCSI command interpreter (by design). For example
+> the application client may have set the D_SENSE bit in the
+> control mode page prior to the failure that your code is
+> addressing. So the application client won't be expecting
+> fixed sense data format thereafter.
+> 
+> So what the code is doing is definitely better than nothing,
+> but IMO it isn't quite right either.
 
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+It should work. The initiators probably sends tmf requests and finally
+gives up the device.
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 9f7482d..dfe3ccd 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -301,7 +301,7 @@ static int scsi_req_map_sg(struct reques
- {
- 	struct request_queue *q = rq->q;
- 	int nr_pages = (bufflen + sgl[0].offset + PAGE_SIZE - 1) >> PAGE_SHIFT;
--	unsigned int data_len = 0, len, bytes, off;
-+	unsigned int len, bytes, off;
- 	struct page *page;
- 	struct bio *bio = NULL;
- 	int i, err, nr_vecs = 0;
-@@ -310,7 +310,6 @@ static int scsi_req_map_sg(struct reques
- 		page = sgl[i].page;
- 		off = sgl[i].offset;
- 		len = sgl[i].length;
--		data_len += len;
- 
- 		while (len > 0) {
- 			bytes = min_t(unsigned int, len, PAGE_SIZE - off);
-@@ -350,7 +349,7 @@ static int scsi_req_map_sg(struct reques
- 	}
- 
- 	rq->buffer = rq->data = NULL;
--	rq->data_len = data_len;
-+	rq->data_len = bufflen;
- 	return 0;
- 
- free_bios:
+Could a lld do something better if tgt notifies the lld that tgt can't
+handle the command via host->transfer_response? Even though the
+initiator must give up the device in the end because the user-space
+deamon can't continue.
 
---------------060401090207010109010408--
+If so, one possible option is that tgt notifies a lld of tgt's
+original status via host->transfer_response though currently
+host->transfer_response uses only SAM_STAT_*.
