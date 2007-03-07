@@ -1,41 +1,35 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [stable] [patch 29/29] bug in gdth.c crashing machine
-Date: Wed, 7 Mar 2007 09:40:21 -0800
-Message-ID: <20070307174021.GA25066@kroah.com>
-References: <200703061046.l26AksTi020093@shell0.pdx.osdl.net> <1173288505.3771.33.camel@mulgrave.il.steeleye.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: qla2xxx BUG: workqueue leaked lock or atomic
+Date: Wed, 7 Mar 2007 19:46:42 +0100
+Message-ID: <20070307184641.GY20362@kernel.dk>
+References: <20070226133153.GC4095@skl-net.de> <20070226182617.GC9968@andrew-vasquezs-computer.local> <20070227101100.GA22572@skl-net.de> <20070227185134.GJ20397@andrew-vasquezs-computer.local> <20070228151829.GI22572@skl-net.de> <20070228153722.GJ22572@skl-net.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.suse.de ([195.135.220.2]:45847 "EHLO mx1.suse.de"
+Received: from brick.kernel.dk ([62.242.22.158]:12579 "EHLO kernel.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965589AbXCGRl6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Mar 2007 12:41:58 -0500
+	id S1422997AbXCGSr5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 7 Mar 2007 13:47:57 -0500
 Content-Disposition: inline
-In-Reply-To: <1173288505.3771.33.camel@mulgrave.il.steeleye.com>
+In-Reply-To: <20070228153722.GJ22572@skl-net.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, rdunlap@xenotime.net
-Cc: akpm@linux-foundation.org, Achim_Leubner@adaptec.com, joerg@dorchain.net, stable@kernel.org, linux-scsi@vger.kernel.org
+To: Andre Noll <maan@systemlinux.org>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>
 
-On Wed, Mar 07, 2007 at 11:28:25AM -0600, James Bottomley wrote:
-> On Tue, 2007-03-06 at 02:46 -0800, akpm@linux-foundation.org wrote:
-> > From: Joerg Dorchain <joerg@dorchain.net>
-> > 
-> > Undocumented...
+On Wed, Feb 28 2007, Andre Noll wrote:
+> On 16:18, Andre Noll wrote:
 > 
-> This is a bit of a problem, isn't it?
+> > With 2.6.21-rc2 I am unable to reproduce this BUG message. However,
+> > writing to both raid systems at the same time via lvm still locks up
+> > the system within minutes.
 > 
-> I have no report of any problem this fixes, and no input from the gdth
-> maintainer about this.  The first I actually knew of this patch request
-> is that it appeared in an akpm patch stream yesterday.
+> Screenshot of the resulting kernel panic:
 > 
-> I really think we need more details before this gets applied to
-> anything, let alone the stable tree.
+> 	http://systemlinux.org/~maan/shots/kernel-panic-21-rc2-huangho2.png
 
-Randy did forward it to the stable team a while ago too, but I didn't
-know even what tree it applied to as the patch level was a bit off.  I
-think he might have some more information about it?
+Do you have the full oops as well?
 
-thanks,
+-- 
+Jens Axboe
 
-greg k-h
