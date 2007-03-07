@@ -1,77 +1,47 @@
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: qla2xxx BUG: workqueue leaked lock or atomic
-Date: Wed, 7 Mar 2007 18:09:55 +0100
-Message-ID: <20070307170955.GA4252@skl-net.de>
-References: <20070226133153.GC4095@skl-net.de> <20070226182617.GC9968@andrew-vasquezs-computer.local> <20070227101100.GA22572@skl-net.de> <20070227185134.GJ20397@andrew-vasquezs-computer.local> <20070228151829.GI22572@skl-net.de> <20070228153722.GJ22572@skl-net.de> <20070306203952.471218df.akpm@linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="45Z9DzgjV8m4Oswq"
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965412AbXCGRKY@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20070306203952.471218df.akpm@linux-foundation.org>
+From: Greg KH <gregkh@suse.de>
+Subject: [patch 096/101] bug in gdth.c crashing machine
+Date: Wed, 07 Mar 2007 09:12:11 -0800
+Message-ID: <20070307171654.144647936@mini.kroah.org>
+References: <20070307171035.150802805@mini.kroah.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965608AbXCGRXK@vger.kernel.org>
+Content-Disposition: inline; filename=bug-in-gdth.c-crashing-machine.patch
 Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <jens.axboe@oracle.com>, Alasdair G Kergon <agk@redhat.com>, Adrian Bunk <bunk@stusta.de>
+To: linux-kernel@vger.kernel.org, stable@kernel.org, James.Bottomley@steeleye.com
+Cc: Justin Forbes <jmforbes@linuxtx.org>, Zwane Mwaikambo <zwane@arm.linux.org.uk>, Theodore Ts'o <tytso@mit.edu>, Randy Dunlap <rdunlap@xenotime.net>, Dave Jones <davej@redhat.com>, Chuck Wolber <chuckw@quantumlinux.com>, Chris Wedgwood <reviews@ml.cw.f00f.org>, Michael Krufky <mkrufky@linuxtv.org>, Chuck Ebbert <cebbert@redhat.com>, torvalds@linux-foundation.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, Achim_Leubner@adaptec.com, joerg@dorchain.net, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
---45Z9DzgjV8m4Oswq
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+From: Joerg Dorchain <joerg@dorchain.net>
 
-On 20:39, Andrew Morton wrote:
-> On Wed, 28 Feb 2007 16:37:22 +0100 Andre Noll <maan@systemlinux.org> wrot=
-e:
->=20
-> > On 16:18, Andre Noll wrote:
-> >=20
-> > > With 2.6.21-rc2 I am unable to reproduce this BUG message. However,
-> > > writing to both raid systems at the same time via lvm still locks up
-> > > the system within minutes.
-> >=20
-> > Screenshot of the resulting kernel panic:
-> >=20
-> > 	http://systemlinux.org/~maan/shots/kernel-panic-21-rc2-huangho2.png
-> >=20
->=20
-> It died in CFQ.  Please try a different IO scheduler.  Use something
-> like
->=20
-> 	echo deadline > /sys/block/sda/queue/scheduler
->=20
-> This could still be the old qla2xxx bug, or it could be a new qla2xxx bug,
-> or it could be a block bug, or it could be an LVM bug.
+Undocumented...
 
-OK. I'm running with deadline right now. But I guess this kernel
-panic was caused by an LVM bug because lockdep reported problems with
-LVM. Nobody responded to my bug report on the LVM mailing list (see
-http://www.redhat.com/archives/linux-lvm/2007-February/msg00102.html).
+Signed-off-by: Joerg Dorchain <joerg@dorchain.net>
+Acked-by: Achim Leubner <Achim_Leubner@adaptec.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
 
-Non-working snapshots and no help from the mailing list convinced me
-to ditch the lvm setup [1] in favour of linear software raid. This
-means I can't do lvm-related tests any more.
+---
+ drivers/scsi/gdth.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-BTW: Are ext3 filesystem sizes greater than 8T now officially
-supported?
+--- linux-2.6.20.1.orig/drivers/scsi/gdth.c
++++ linux-2.6.20.1/drivers/scsi/gdth.c
+@@ -3092,6 +3092,7 @@ static int gdth_fill_raw_cmd(int hanum,S
+             cmdp->u.raw64.direction  = 
+                 gdth_direction_tab[scp->cmnd[0]]==DOU ? GDTH_DATA_OUT:GDTH_DATA_IN;
+             memcpy(cmdp->u.raw64.cmd,scp->cmnd,16);
++            cmdp->u.raw64.sg_ranz    = 0;
+         } else {
+             cmdp->u.raw.reserved   = 0;
+             cmdp->u.raw.mdisc_time = 0;
+@@ -3108,6 +3109,7 @@ static int gdth_fill_raw_cmd(int hanum,S
+             cmdp->u.raw.direction  = 
+                 gdth_direction_tab[scp->cmnd[0]]==DOU ? GDTH_DATA_OUT:GDTH_DATA_IN;
+             memcpy(cmdp->u.raw.cmd,scp->cmnd,12);
++            cmdp->u.raw.sg_ranz    = 0;
+         }
+ 
+         if (scp->use_sg) {
 
-Thanks
-Andre
-
-[1] vg of two hardware raids, 10T together, a single lv and some snapshots
---=20
-
---45Z9DzgjV8m4Oswq
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFF7vHjWto1QDEAkw8RAkZdAKCRiDjS3z62bHLfHqhbCDbBgTgJYwCfSA9O
-Chbn1P57DdIY8mvJ781K5rg=
-=EJJc
------END PGP SIGNATURE-----
-
---45Z9DzgjV8m4Oswq--
+--
