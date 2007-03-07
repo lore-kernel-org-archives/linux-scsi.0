@@ -1,77 +1,71 @@
-From: Joerg Dorchain <joerg@dorchain.net>
-Subject: Re: [stable] [patch 29/29] bug in gdth.c crashing machine
-Date: Wed, 7 Mar 2007 21:05:54 +0100
-Message-ID: <20070307200554.GQ3250@Redstar.dorchain.net>
-References: <200703061046.l26AksTi020093@shell0.pdx.osdl.net> <1173288505.3771.33.camel@mulgrave.il.steeleye.com> <20070307174021.GA25066@kroah.com> <20070307111616.16e5e641.akpm@linux-foundation.org>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Fw: [Bugme-new] [Bug 8141] New: Adaptec 39320D and long boot
+Date: Wed, 7 Mar 2007 12:33:35 -0800
+Message-ID: <20070307123335.d7e97db3.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="JZZUlh2R5zuJqba0"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from RedStar.dorchain.net ([212.88.133.153]:46077 "EHLO
-	Redstar.dorchain.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965629AbXCGU2X (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Mar 2007 15:28:23 -0500
-Content-Disposition: inline
-In-Reply-To: <20070307111616.16e5e641.akpm@linux-foundation.org>
+Received: from smtp.osdl.org ([65.172.181.24]:55449 "EHLO smtp.osdl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965638AbXCGUdh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 7 Mar 2007 15:33:37 -0500
+Received: from shell0.pdx.osdl.net (fw.osdl.org [65.172.181.6])
+	by smtp.osdl.org (8.12.8/8.12.8) with ESMTP id l27KXZq8032012
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Wed, 7 Mar 2007 12:33:36 -0800
+Received: from akpm.corp.google.com (shell0.pdx.osdl.net [10.9.0.31])
+	by shell0.pdx.osdl.net (8.13.1/8.11.6) with SMTP id l27KXZ9p007907
+	for <linux-scsi@vger.kernel.org>; Wed, 7 Mar 2007 12:33:35 -0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Greg KH <greg@kroah.com>, James Bottomley <James.Bottomley@SteelEye.com>, rdunlap@xenotime.net, Achim_Leubner@adaptec.com, joerg@dorchain.net, stable@kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
 
---JZZUlh2R5zuJqba0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+41-second delay when mounting root fs.
 
-On Wed, Mar 07, 2007 at 11:16:16AM -0800, Andrew Morton wrote:
-> > On Wed, Mar 07, 2007 at 11:28:25AM -0600, James Bottomley wrote:
-> > > On Tue, 2007-03-06 at 02:46 -0800, akpm@linux-foundation.org wrote:
-> > > > From: Joerg Dorchain <joerg@dorchain.net>
-> > > >=20
-> > > > Undocumented...
-> > >=20
-> > > This is a bit of a problem, isn't it?
-> > >=20
-> > > I have no report of any problem this fixes, and no input from the gdth
-> > > maintainer about this.  The first I actually knew of this patch reque=
-st
-> > > is that it appeared in an akpm patch stream yesterday.
-> > >=20
-> > > I really think we need more details before this gets applied to
-> > > anything, let alone the stable tree.
-> >=20
-> > Randy did forward it to the stable team a while ago too, but I didn't
-> > know even what tree it applied to as the patch level was a bit off.  I
-> > think he might have some more information about it?
-> >=20
->=20
-> Achim did reply:  http://lkml.org/lkml/2007/2/23/138
+Begin forwarded message:
 
-The current gdth driver crashes the machine with a panic() when
-accessing certain tape drives, really not a good thing for stable.
+Date: Wed, 7 Mar 2007 06:15:45 -0800
+From: bugme-daemon@bugzilla.kernel.org
+To: bugme-new@lists.osdl.org
+Subject: [Bugme-new] [Bug 8141] New: Adaptec 39320D and long boot
 
-This patch fixes it, tested by me and acknowledged by Achim.
-See http://lkml.org/lkml/2006/10/13/60 and
-http://lkml.org/lkml/2006/10/12/35 for further reference.
 
-The patch is against Linus' 2.6.20
+http://bugzilla.kernel.org/show_bug.cgi?id=8141
 
-Bye,
+           Summary: Adaptec 39320D and long boot
+    Kernel Version: 2.6.20.1
+            Status: NEW
+          Severity: normal
+             Owner: io_scsi@kernel-bugs.osdl.org
+         Submitter: karaluh@tlen.pl
 
-Joerg
 
---JZZUlh2R5zuJqba0
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+Most recent kernel where this bug did *NOT* occur: none
+Distribution: kubuntu
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
+Hardware Environment: 
+02:0a.1 SCSI storage controller: Adaptec ASC-39320D (rev 03)
 
-iD8DBQFF7xsijY4+4PdzvOARAjr/AJ9XarMAfBCPmGM1iX7ZElBZe/OuGQCfZzfR
-oAkbPTxwMGeUpE3Zg/onrSo=
-=/n80
------END PGP SIGNATURE-----
+Software Environment:
+Gnu C                  4.1.2
+Gnu make               3.81
+binutils               2.17
+util-linux             2.12r
+module-init-tools      3.2.2
+Linux C Library        > libc.2.4
+Dynamic linker (ldd)   2.4
+Procps                 3.2.7
+udev                   093
 
---JZZUlh2R5zuJqba0--
+Problem Description:
+The system boots long with Adaptec 39320D pluged in. It happens in all distro 
+kernels i used and in 2.6.20.1 compiled by myself. Some more info here:
+https://launchpad.net/ubuntu/+bug/79542
+
+Steps to reproduce:
+Plug Adaptec 39320D and boot.
+
+------- You are receiving this mail because: -------
+You are on the CC list for the bug, or are watching someone who is.
