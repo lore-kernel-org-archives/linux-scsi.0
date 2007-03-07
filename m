@@ -1,71 +1,77 @@
-From: Mingming Cao <cmm@us.ibm.com>
-Subject: Re: qla2xxx BUG: workqueue leaked lock or atomic
-Date: Wed, 07 Mar 2007 12:05:11 -0800
-Message-ID: <1173297911.3769.3.camel@dyn9047017103.beaverton.ibm.com>
-References: <20070226133153.GC4095@skl-net.de>
-	 <20070226182617.GC9968@andrew-vasquezs-computer.local>
-	 <20070227101100.GA22572@skl-net.de>
-	 <20070227185134.GJ20397@andrew-vasquezs-computer.local>
-	 <20070228151829.GI22572@skl-net.de> <20070228153722.GJ22572@skl-net.de>
-	 <20070306203952.471218df.akpm@linux-foundation.org>
-	 <20070307170955.GA4252@skl-net.de>
-	 <20070307114525.08265c33.akpm@linux-foundation.org>
-Reply-To: cmm@us.ibm.com
+From: Joerg Dorchain <joerg@dorchain.net>
+Subject: Re: [stable] [patch 29/29] bug in gdth.c crashing machine
+Date: Wed, 7 Mar 2007 21:05:54 +0100
+Message-ID: <20070307200554.GQ3250@Redstar.dorchain.net>
+References: <200703061046.l26AksTi020093@shell0.pdx.osdl.net> <1173288505.3771.33.camel@mulgrave.il.steeleye.com> <20070307174021.GA25066@kroah.com> <20070307111616.16e5e641.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ext4-owner@vger.kernel.org>
-In-Reply-To: <20070307114525.08265c33.akpm@linux-foundation.org>
-Sender: linux-ext4-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Andre Noll <maan@systemlinux.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <jens.axboe@oracle.com>, Alasdair G Kergon <agk@redhat.com>, Adrian Bunk <bunk@stusta.de>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="JZZUlh2R5zuJqba0"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from RedStar.dorchain.net ([212.88.133.153]:46077 "EHLO
+	Redstar.dorchain.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965629AbXCGU2X (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Mar 2007 15:28:23 -0500
+Content-Disposition: inline
+In-Reply-To: <20070307111616.16e5e641.akpm@linux-foundation.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Greg KH <greg@kroah.com>, James Bottomley <James.Bottomley@SteelEye.com>, rdunlap@xenotime.net, Achim_Leubner@adaptec.com, joerg@dorchain.net, stable@kernel.org, linux-scsi@vger.kernel.org
 
-On Wed, 2007-03-07 at 11:45 -0800, Andrew Morton wrote:
-> On Wed, 7 Mar 2007 18:09:55 +0100 Andre Noll <maan@systemlinux.org> wrote:
-> 
-> > On 20:39, Andrew Morton wrote:
-> > > On Wed, 28 Feb 2007 16:37:22 +0100 Andre Noll <maan@systemlinux.org> wrote:
-> > > 
-> > > > On 16:18, Andre Noll wrote:
-> > > > 
-> > > > > With 2.6.21-rc2 I am unable to reproduce this BUG message. However,
-> > > > > writing to both raid systems at the same time via lvm still locks up
-> > > > > the system within minutes.
-> > > > 
-> > > > Screenshot of the resulting kernel panic:
-> > > > 
-> > > > 	http://systemlinux.org/~maan/shots/kernel-panic-21-rc2-huangho2.png
-> > > > 
-> > > 
-> > > It died in CFQ.  Please try a different IO scheduler.  Use something
-> > > like
-> > > 
-> > > 	echo deadline > /sys/block/sda/queue/scheduler
-> > > 
-> > > This could still be the old qla2xxx bug, or it could be a new qla2xxx bug,
-> > > or it could be a block bug, or it could be an LVM bug.
-> > 
-> > OK. I'm running with deadline right now. But I guess this kernel
-> > panic was caused by an LVM bug because lockdep reported problems with
-> > LVM. Nobody responded to my bug report on the LVM mailing list (see
-> > http://www.redhat.com/archives/linux-lvm/2007-February/msg00102.html).
-> > 
-> > Non-working snapshots and no help from the mailing list convinced me
-> > to ditch the lvm setup [1] in favour of linear software raid. This
-> > means I can't do lvm-related tests any more.
-> 
-> Sigh.
-> 
-> > BTW: Are ext3 filesystem sizes greater than 8T now officially
-> > supported?
-> 
-> I think so, but I don't know how much 16TB testing developers and
-> distros are doing - perhaps the linux-ext4 denizens can tell us?
-> -
 
-IBM has done some testing (dbench, fsstress, fsx, tiobench, iozone etc)
-on 10TB ext3, I think RedHat and BULL have done similar test on >8TB
-ext3 too.
+--JZZUlh2R5zuJqba0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Mingming
+On Wed, Mar 07, 2007 at 11:16:16AM -0800, Andrew Morton wrote:
+> > On Wed, Mar 07, 2007 at 11:28:25AM -0600, James Bottomley wrote:
+> > > On Tue, 2007-03-06 at 02:46 -0800, akpm@linux-foundation.org wrote:
+> > > > From: Joerg Dorchain <joerg@dorchain.net>
+> > > >=20
+> > > > Undocumented...
+> > >=20
+> > > This is a bit of a problem, isn't it?
+> > >=20
+> > > I have no report of any problem this fixes, and no input from the gdth
+> > > maintainer about this.  The first I actually knew of this patch reque=
+st
+> > > is that it appeared in an akpm patch stream yesterday.
+> > >=20
+> > > I really think we need more details before this gets applied to
+> > > anything, let alone the stable tree.
+> >=20
+> > Randy did forward it to the stable team a while ago too, but I didn't
+> > know even what tree it applied to as the patch level was a bit off.  I
+> > think he might have some more information about it?
+> >=20
+>=20
+> Achim did reply:  http://lkml.org/lkml/2007/2/23/138
+
+The current gdth driver crashes the machine with a panic() when
+accessing certain tape drives, really not a good thing for stable.
+
+This patch fixes it, tested by me and acknowledged by Achim.
+See http://lkml.org/lkml/2006/10/13/60 and
+http://lkml.org/lkml/2006/10/12/35 for further reference.
+
+The patch is against Linus' 2.6.20
+
+Bye,
+
+Joerg
+
+--JZZUlh2R5zuJqba0
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQFF7xsijY4+4PdzvOARAjr/AJ9XarMAfBCPmGM1iX7ZElBZe/OuGQCfZzfR
+oAkbPTxwMGeUpE3Zg/onrSo=
+=/n80
+-----END PGP SIGNATURE-----
+
+--JZZUlh2R5zuJqba0--
