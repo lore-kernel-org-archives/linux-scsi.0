@@ -1,137 +1,86 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH 1/3] pci: New PCI-E reset API
-Date: Thu, 08 Mar 2007 14:44:26 -0600
-Message-ID: <45F075AA.502@linux.vnet.ibm.com>
-References: <11718964333825-patch-mail.ibm.com>
-Reply-To: brking@linux.vnet.ibm.com
+From: Aravind Parchuri <aravind.parchuri@gmail.com>
+Subject: Re: WRITE BUFFER commands through SG_IO getting rounded up to sector
+ past 32k
+Date: Thu, 08 Mar 2007 13:59:19 -0800
+Message-ID: <45F08737.3060100@gmail.com>
+References: <45EE00F0.2010702@gmail.com> <45EE09A6.7030004@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.144]:49180 "EHLO e4.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933188AbXCHUob (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Mar 2007 15:44:31 -0500
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e4.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l28KiTKY006533
-	for <linux-scsi@vger.kernel.org>; Thu, 8 Mar 2007 15:44:29 -0500
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l28KiT7a230162
-	for <linux-scsi@vger.kernel.org>; Thu, 8 Mar 2007 15:44:29 -0500
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l28KiSHw014278
-	for <linux-scsi@vger.kernel.org>; Thu, 8 Mar 2007 15:44:28 -0500
-In-Reply-To: <11718964333825-patch-mail.ibm.com>
+Received: from wx-out-0506.google.com ([66.249.82.231]:61245 "EHLO
+	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030700AbXCHV7Y (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Mar 2007 16:59:24 -0500
+Received: by wx-out-0506.google.com with SMTP id h31so664134wxd
+        for <linux-scsi@vger.kernel.org>; Thu, 08 Mar 2007 13:59:23 -0800 (PST)
+In-Reply-To: <45EE09A6.7030004@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: greg@kroah.com
-Cc: linux-pci@atrey.karlin.mff.cuni.cz, paulus@samba.org, linuxppc-dev@ozlabs.org, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
+To: michaelc@cs.wisc.edu
+Cc: linux-scsi@vger.kernel.org
 
-Greg,
+The patch has some problem. While ioctls with dxfer_len < 32k still make 
+it through properly, the problematic ones now show up in open-iscsi's 
+queuecommand with request_bufflen = 0. I'm not sure what the problem is now.
 
-I saw you pulled this into your gregkh-2.6 tree. Does that mean
-it is queued for 2.6.22?
+Aravind.
 
-Thanks,
+ michaelc@cs.wisc.edu wrote:
+> Aravind Parchuri wrote:
+>   
+>> In fact, even with the newer kernel, all commands smaller than 32k make
+>> it through with the right size, which leads me to think it's something
+>> to do with the scatter-gather list. I'm not particularly familiar with
+>> the scsi code, but inside scsi_execute_async, in scsi_map_req_sg, should
+>> the request's data_len be set to the dxfer_len instead of summing up the
+>> scatter-gather list lengths? I must mention again that I haven't really
+>> gone through the code thoroughly.
+>>
+>>     
+>
+> You are right. sg_build_indirect will do this
+> blk_size = (blk_size + SG_SECTOR_MSK) & (~SG_SECTOR_MSK)
+> so we should be using the bufflen passed into us. Attached is a patch
+> made over scsi-misc. It should also apply to scsi rc fixes.
+>   
+> ------------------------------------------------------------------------
+>
+> sg's may have setup a the buffer with a different length than
+> the transfer length so we should be using the bufflen passed
+> in as the request's data len.
+>
+> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+>
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 9f7482d..dfe3ccd 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -301,7 +301,7 @@ static int scsi_req_map_sg(struct reques
+>  {
+>     struct request_queue *q = rq->q;
+>     int nr_pages = (bufflen + sgl[0].offset + PAGE_SIZE - 1) >> PAGE_SHIFT;
+> -   unsigned int data_len = 0, len, bytes, off;
+> +   unsigned int len, bytes, off;
+>     struct page *page;
+>     struct bio *bio = NULL;
+>     int i, err, nr_vecs = 0;
+> @@ -310,7 +310,6 @@ static int scsi_req_map_sg(struct reques
+>         page = sgl[i].page;
+>         off = sgl[i].offset;
+>         len = sgl[i].length;
+> -       data_len += len;
+>  
+>         while (len > 0) {
+>             bytes = min_t(unsigned int, len, PAGE_SIZE - off);
+> @@ -350,7 +349,7 @@ static int scsi_req_map_sg(struct reques
+>     }
+>  
+>     rq->buffer = rq->data = NULL;
+> -   rq->data_len = data_len;
+> +   rq->data_len = bufflen;
+>     return 0;
+>  
+>  free_bios:
+>   
 
-Brian
-
-Brian King wrote:
-> Adds a new API which can be used to issue various types
-> of PCI-E reset, including PCI-E warm reset and PCI-E hot reset.
-> This is needed for an ipr PCI-E adapter which does not properly
-> implement BIST. Running BIST on this adapter results in PCI-E
-> errors. The only reliable reset mechanism that exists on this
-> hardware is PCI Fundamental reset (warm reset). Since driving
-> this type of reset is architecture unique, this provides the
-> necessary hooks for architectures to add this support.
-> 
-> Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
-> ---
-> 
->  linux-2.6-bjking1/drivers/pci/pci.c   |   29 +++++++++++++++++++++++++++++
->  linux-2.6-bjking1/include/linux/pci.h |   14 ++++++++++++++
->  2 files changed, 43 insertions(+)
-> 
-> diff -puN drivers/pci/pci.c~pci_pci_reset_api drivers/pci/pci.c
-> --- linux-2.6/drivers/pci/pci.c~pci_pci_reset_api	2007-02-16 10:10:30.000000000 -0600
-> +++ linux-2.6-bjking1/drivers/pci/pci.c	2007-02-16 10:10:30.000000000 -0600
-> @@ -893,6 +893,34 @@ pci_disable_device(struct pci_dev *dev)
->  }
-> 
->  /**
-> + * pcibios_set_pcie_reset_state - set reset state for device dev
-> + * @dev: the PCI-E device reset
-> + * @state: Reset state to enter into
-> + *
-> + *
-> + * Sets the PCI-E reset state for the device. This is the default
-> + * implementation. Architecture implementations can override this.
-> + */
-> +int __attribute__ ((weak)) pcibios_set_pcie_reset_state(struct pci_dev *dev,
-> +							enum pcie_reset_state state)
-> +{
-> +	return -EINVAL;
-> +}
-> +
-> +/**
-> + * pci_set_pcie_reset_state - set reset state for device dev
-> + * @dev: the PCI-E device reset
-> + * @state: Reset state to enter into
-> + *
-> + *
-> + * Sets the PCI reset state for the device.
-> + */
-> +int pci_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state state)
-> +{
-> +	return pcibios_set_pcie_reset_state(dev, state);
-> +}
-> +
-> +/**
->   * pci_enable_wake - enable device to generate PME# when suspended
->   * @dev: - PCI device to operate on
->   * @state: - Current state of device.
-> @@ -1374,4 +1402,5 @@ EXPORT_SYMBOL(pci_set_power_state);
->  EXPORT_SYMBOL(pci_save_state);
->  EXPORT_SYMBOL(pci_restore_state);
->  EXPORT_SYMBOL(pci_enable_wake);
-> +EXPORT_SYMBOL_GPL(pci_set_pcie_reset_state);
-> 
-> diff -puN include/linux/pci.h~pci_pci_reset_api include/linux/pci.h
-> --- linux-2.6/include/linux/pci.h~pci_pci_reset_api	2007-02-16 10:10:30.000000000 -0600
-> +++ linux-2.6-bjking1/include/linux/pci.h	2007-02-16 10:10:30.000000000 -0600
-> @@ -96,6 +96,19 @@ enum pci_channel_state {
->  	pci_channel_io_perm_failure = (__force pci_channel_state_t) 3,
->  };
-> 
-> +typedef unsigned int __bitwise pcie_reset_state_t;
-> +
-> +enum pcie_reset_state {
-> +	/* Reset is NOT asserted (Use to deassert reset) */
-> +	pci_reset_normal = (__force pcie_reset_state_t) 1,
-> +
-> +	/* Use #PERST to reset PCI-E device */
-> +	pci_reset_pcie_warm_reset = (__force pcie_reset_state_t) 2,
-> +
-> +	/* Use PCI-E Hot Reset to reset device */
-> +	pci_reset_pcie_hot_reset = (__force pcie_reset_state_t) 3
-> +};
-> +
->  typedef unsigned short __bitwise pci_bus_flags_t;
->  enum pci_bus_flags {
->  	PCI_BUS_FLAGS_NO_MSI = (__force pci_bus_flags_t) 1,
-> @@ -539,6 +552,7 @@ static inline int pci_is_managed(struct 
-> 
->  void pci_disable_device(struct pci_dev *dev);
->  void pci_set_master(struct pci_dev *dev);
-> +int pci_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state state);
->  #define HAVE_PCI_SET_MWI
->  int __must_check pci_set_mwi(struct pci_dev *dev);
->  void pci_clear_mwi(struct pci_dev *dev);
-> _
-
-
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
