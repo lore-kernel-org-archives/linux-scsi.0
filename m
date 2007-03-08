@@ -1,46 +1,33 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: Transport ID in Persistent Reservation
-Date: Thu, 08 Mar 2007 08:34:50 -0500
-Message-ID: <45F010FA.4010001@torque.net>
-References: <6bd7946f0703080054u113ffd1aj1f4e2d90c8914a25@mail.gmail.com>
-Reply-To: dougg@torque.net
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] [scsi]: Add offline state checking while dispatch a
+	scsi cmd
+Date: Thu, 08 Mar 2007 08:02:39 -0800
+Message-ID: <1173369759.3683.1.camel@mulgrave.il.steeleye.com>
+References: <20070308092207.GA17141@joejin-pc.cn.oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:52275 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751818AbXCHNgM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Mar 2007 08:36:12 -0500
-In-Reply-To: <6bd7946f0703080054u113ffd1aj1f4e2d90c8914a25@mail.gmail.com>
+Received: from hancock.steeleye.com ([71.30.118.248]:46673 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752433AbXCHQDY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Mar 2007 11:03:24 -0500
+In-Reply-To: <20070308092207.GA17141@joejin-pc.cn.oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: renuka apte <renuka.apte@gmail.com>
-Cc: linux-scsi@vger.kernel.org
+To: Joe Jin <joe.jin@oracle.com>
+Cc: akpm@osdl.org, dgilbert@interlog.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, haobo.zhou@oracle.com
 
-renuka apte wrote:
-> The 'Specify Initiator Ports' support in persistent reservation allows
-> the application client to send a bunch of transport IDs which identify
-> initiator ports. I would like to know the suggested format for these
-> transport IDs.
+On Thu, 2007-03-08 at 17:22 +0800, Joe Jin wrote:
+> While a scsi device hw error occured, device's status maybe setting 
+> to SDEV_OFFLINE, So at scsi_dispatch_cmd function, we should checking
+> if device have offline, if yes, do nothing and just return error to
+> user directly.
 
-http://www.t10.org/ftp/t10/drafts/spc4/spc4r09.pdf
-section 7.5.4  "TransportID identifiers"
+What's the error you're trying to fix?  scsi_dispatch_cmd() is only
+called from scsi_request_fn() which already has an equivalent of this
+check in it just prior to calling dispatch.
 
-> I am assuming that it must have something to do with the WWN of the
-> initiator ports.
-
-and that is transport dependent.
-
-> I tried using sg_utils to issue a persistent reservation IN command
-> with "READ FULL STATUS" to a virtual SCSI disk which is returning the
-> response in the format specified in SPC-4. However the sg_utils seems
-> to be decoding the transport ID in some way that I cant find in the
-> standard.
-
-Have another look :-)
-
-Doug Gilbert
-
+James
 
 
