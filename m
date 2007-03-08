@@ -1,59 +1,63 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [patch 17/29] Fix the reproducible oops in scsi
-Date: Wed, 7 Mar 2007 23:39:52 -0800
-Message-ID: <20070307233952.8f4387de.akpm@linux-foundation.org>
-References: <200703061046.l26AkgOX020036@shell0.pdx.osdl.net>
-	<45ED7250.8080704@emulex.com>
-	<20070306134610.d1cf9e48.akpm@linux-foundation.org>
-	<1173219909.3379.50.camel@mulgrave.il.steeleye.com>
+From: Andre Noll <maan@systemlinux.org>
+Subject: Re: qla2xxx BUG: workqueue leaked lock or atomic
+Date: Thu, 8 Mar 2007 09:52:09 +0100
+Message-ID: <20070308085209.GB4252@skl-net.de>
+References: <20070226133153.GC4095@skl-net.de> <20070226182617.GC9968@andrew-vasquezs-computer.local> <20070227101100.GA22572@skl-net.de> <20070227185134.GJ20397@andrew-vasquezs-computer.local> <20070228151829.GI22572@skl-net.de> <20070228153722.GJ22572@skl-net.de> <20070307184641.GY20362@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="uZ3hkaAS1mZxFaxD"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:55576 "EHLO smtp.osdl.org"
+Received: from systemlinux.org ([83.151.29.59]:40121 "EHLO m18s25.vlinux.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932960AbXCHHkF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Mar 2007 02:40:05 -0500
-In-Reply-To: <1173219909.3379.50.camel@mulgrave.il.steeleye.com>
+	id S1030288AbXCHIw1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Mar 2007 03:52:27 -0500
+Content-Disposition: inline
+In-Reply-To: <20070307184641.GY20362@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: James.Smart@Emulex.Com, hirofumi@mail.parknet.co.jp, hare@suse.de, linux-scsi@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>
 
-> On Tue, 06 Mar 2007 16:25:09 -0600 James Bottomley <James.Bottomley@SteelEye.com> wrote:
-> On Tue, 2007-03-06 at 13:46 -0800, Andrew Morton wrote:
-> > On Tue, 06 Mar 2007 08:53:20 -0500
-> > James Smart <James.Smart@Emulex.Com> wrote:
-> > 
-> > > FYI - the *real* patch was posted to linux-scsi, and is under test at several
-> > > locations. Again - please disregard this temporary solution.
-> > 
-> > Under what subject?
-> 
-> This one.
-> 
-> James
-> 
-> 
-> 
-> From: Hannes Reinecke <hare@suse.de>
-> To: linux-scsi@vger.kernel.org
-> Cc: james.smart@emulex.com, james.bottomley@steeleye.com, hch@lst.de
-> Subject: [RFC] [PATCH] Resurrect sdev
-> Date: 	Tue, 13 Feb 2007 19:29:01 +0100
-> Sender: linux-scsi-owner@vger.kernel.org
-> User-Agent: Mutt/1.5.9i
-> 
-> Hi all,
-> 
-> as discussed in San Jose here is a patch to resurrect sdevs which are
-> in state SDEV_CANCEL / SDEV_DEL.
 
-I included this in rc3-mm1 and rc3-mm2.   We have a scsi crash:
+--uZ3hkaAS1mZxFaxD
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-	http://test.kernel.org/abat/75741/debug/console.log
+On 19:46, Jens Axboe wrote:
+> On Wed, Feb 28 2007, Andre Noll wrote:
+> > On 16:18, Andre Noll wrote:
+> >=20
+> > > With 2.6.21-rc2 I am unable to reproduce this BUG message. However,
+> > > writing to both raid systems at the same time via lvm still locks up
+> > > the system within minutes.
+> >=20
+> > Screenshot of the resulting kernel panic:
+> >=20
+> > 	http://systemlinux.org/~maan/shots/kernel-panic-21-rc2-huangho2.png
+>=20
+> Do you have the full oops as well?
 
-I have a couple of mpt patche sin there, but they're minor stuff.
+Unfortunately not, as there's no way to scroll up after a kernel panic
+(the screenshot was taken by using a KVM switch which just sends the
+video output over ethernet).
 
-I've queued a revert patch.  It'll take a while to get the results.  They
-will appear at http://test.kernel.org/functional/index.html
+Thanks
+Andre
+--=20
+The only person who always got his work done by Friday was Robinson Crusoe
+
+--uZ3hkaAS1mZxFaxD
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFF7865Wto1QDEAkw8RAqN2AKCQeInbdP1siKAqyT2j0IsBElIFhACdF8IX
+82fDYVmZ9K6Q9TgNax3gU1E=
+=YsFZ
+-----END PGP SIGNATURE-----
+
+--uZ3hkaAS1mZxFaxD--
