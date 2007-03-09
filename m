@@ -1,48 +1,55 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH 1/3] pci: New PCI-E reset API
-Date: Fri, 09 Mar 2007 08:53:15 -0600
-Message-ID: <45F174DB.20802@linux.vnet.ibm.com>
-References: <45F075AA.502@linux.vnet.ibm.com> <20070309003257.GA31603@kroah.com>
-Reply-To: brking@linux.vnet.ibm.com
+From: Greg KH <greg@kroah.com>
+Subject: Re: [stable] [patch 29/29] bug in gdth.c crashing machine
+Date: Fri, 9 Mar 2007 10:36:54 -0800
+Message-ID: <20070309183654.GB7977@kroah.com>
+References: <200703061046.l26AksTi020093@shell0.pdx.osdl.net> <1173288505.3771.33.camel@mulgrave.il.steeleye.com> <20070307174021.GA25066@kroah.com> <20070307111616.16e5e641.akpm@linux-foundation.org> <1173315014.3771.51.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:48765 "EHLO e1.ny.us.ibm.com"
+Received: from mx2.suse.de ([195.135.220.15]:39657 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1767329AbXCIOxU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 Mar 2007 09:53:20 -0500
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e1.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l29ErHUx021292
-	for <linux-scsi@vger.kernel.org>; Fri, 9 Mar 2007 09:53:17 -0500
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l29ErHF7114618
-	for <linux-scsi@vger.kernel.org>; Fri, 9 Mar 2007 09:53:17 -0500
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l29ErG51001592
-	for <linux-scsi@vger.kernel.org>; Fri, 9 Mar 2007 09:53:17 -0500
-In-Reply-To: <20070309003257.GA31603@kroah.com>
+	id S1767459AbXCISix (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 9 Mar 2007 13:38:53 -0500
+Content-Disposition: inline
+In-Reply-To: <1173315014.3771.51.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: James.Bottomley@steeleye.com, linuxppc-dev@ozlabs.org, linux-pci@atrey.karlin.mff.cuni.cz, paulus@samba.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, rdunlap@xenotime.net, Achim_Leubner@adaptec.com, joerg@dorchain.net, stable@kernel.org, linux-scsi@vger.kernel.org
 
-Greg KH wrote:
-> On Thu, Mar 08, 2007 at 02:44:26PM -0600, Brian King wrote:
->> Greg,
->>
->> I saw you pulled this into your gregkh-2.6 tree. Does that mean
->> it is queued for 2.6.22?
+On Wed, Mar 07, 2007 at 07:50:14PM -0500, James Bottomley wrote:
+> On Wed, 2007-03-07 at 11:16 -0800, Andrew Morton wrote:
+> > Achim did reply:  http://lkml.org/lkml/2007/2/23/138
 > 
-> Yes it is.  Is that a problem?
+> Ah ... OK; sorry, I'm parochial ... if it didn't appear on linux-scsi,
+> you can usually assume I haven't seen it.
+> 
+> > So we don't know what the patch does, but it should be merged into
+> > -stable
+> > (and mainline, heaven forfend)
+> 
+> Well ... I would, except what this patch does is to initialise the
+> command sg_ranz field (for both 64 bit and 32 bit commands).  If you
+> look in the code just below the patch application at the 
+> 
+> if (scp->use_sg) {
+> ...
+> } else if (scp->request_bufflen) {
+> ...
+> }
+> 
+> You'll find a line setting these parameters in each of the cases of the
+> if statement.  So the bug appears to be that there's a missing else
+> clause to this if, which would initialise the zero transfer commands.
+> Is that a correct analysis?
 
-No problem at all. 
+Well, as no one has really responded to this thread about what the patch
+really does, and it's not in even James's tree yet, I've dropped it from
+-stable.
 
-Thanks,
+If James does send it to Linus, I'll be glad to reconsider it at that
+time.
 
-Brian
+thanks,
 
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+greg k-h
