@@ -1,28 +1,30 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: WRITE BUFFER commands through SG_IO getting rounded up to sector
- past 32k
-Date: Thu, 08 Mar 2007 16:53:24 -0600
-Message-ID: <45F093E4.9060805@cs.wisc.edu>
-References: <45EE00F0.2010702@gmail.com> <45EE09A6.7030004@cs.wisc.edu> <45F08737.3060100@gmail.com>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [PATCH 1/3] pci: New PCI-E reset API
+Date: Thu, 8 Mar 2007 16:32:57 -0800
+Message-ID: <20070309003257.GA31603@kroah.com>
+References: <45F075AA.502@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:36635 "EHLO sabe.cs.wisc.edu"
+Received: from ns2.suse.de ([195.135.220.15]:46729 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030840AbXCHWxb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Mar 2007 17:53:31 -0500
-In-Reply-To: <45F08737.3060100@gmail.com>
+	id S1752536AbXCIAes (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Mar 2007 19:34:48 -0500
+Content-Disposition: inline
+In-Reply-To: <45F075AA.502@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Aravind Parchuri <aravind.parchuri@gmail.com>
-Cc: linux-scsi@vger.kernel.org
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: linux-pci@atrey.karlin.mff.cuni.cz, paulus@samba.org, linuxppc-dev@ozlabs.org, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
 
-Aravind Parchuri wrote:
-> The patch has some problem. While ioctls with dxfer_len < 32k still make
-> it through properly, the problematic ones now show up in open-iscsi's
-> queuecommand with request_bufflen = 0. I'm not sure what the problem is
-> now.
+On Thu, Mar 08, 2007 at 02:44:26PM -0600, Brian King wrote:
+> Greg,
 > 
+> I saw you pulled this into your gregkh-2.6 tree. Does that mean
+> it is queued for 2.6.22?
 
-Could you send the sg and iscsi log output with the patch?
+Yes it is.  Is that a problem?
+
+thanks,
+
+greg k-h
