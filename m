@@ -1,50 +1,27 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: [PATCH] make scsi_wait_scan always modular
-Date: Sun, 11 Mar 2007 23:12:16 +0100 (CET)
-Message-ID: <Pine.LNX.4.60.0703112305010.5942@poirot.grange>
-References: <1173640604.3420.21.camel@mulgrave.il.steeleye.com>
- <Pine.LNX.4.60.0703112141580.5942@poirot.grange>
- <1173647177.3420.24.camel@mulgrave.il.steeleye.com>
- <Pine.LNX.4.60.0703112210510.5942@poirot.grange>
- <1173648949.3420.29.camel@mulgrave.il.steeleye.com>
+From: Ric Wheeler <ric@emc.com>
+Subject: impact of 4k sector size on the IO & FS stack
+Date: Sun, 11 Mar 2007 18:51:53 -0400
+Message-ID: <45F48809.2060908@emc.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:47906 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S933559AbXCKWMN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 11 Mar 2007 18:12:13 -0400
-In-Reply-To: <1173648949.3420.29.camel@mulgrave.il.steeleye.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel@vger.kernel.org, Linux-ide <linux-ide@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Sun, 11 Mar 2007, James Bottomley wrote:
 
-> scsi_wait_scan is designed to be a module that is loaded *after* you've
-> loaded all HBA modules that doesn't return from module_init until the
-> scans previously launched by the HBA module insertions are complete. 
+During the recent IO/FS workshop, we spoke briefly about the coming 
+change to a 4k sector size for disks on linux. If I recall correctly, 
+the general feeling was that the impact was not significant since we 
+already do most file system IO in 4k page sizes and should be fine as 
+long as we partition drives correctly and avoid non-4k aligned partitions.
 
-sure
+Are there other concerns in the IO or FS stack that we should bring up 
+with vendors?  I have been asked to summarize the impact of 4k sectors 
+on linux  for a disk vendor gathering and want to make sure that I put 
+all of our linux specific items into that summary...
 
-> In
-> a monolithic kernel, this is done by the async scan infrastructure but
-> in a modular kernel, you have to have some signal that you've finished
-> loading the SCSI modules (which is what scsi_wait_scan is).
+ric
 
-So, if now (before this patch) you build a monolithic kernel, 
-scsi_wait_scan will be built in, scsi_complete_async_scans() will be 
-called at late_initcall time, but it will be redundant because 
 
-> In
-> a monolithic kernel, this is done by the async scan infrastructure
-
-so, it will just have no effect, right?
-
-If so, then, of course it only makes sense as a module.
-
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
