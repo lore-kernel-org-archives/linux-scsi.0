@@ -1,37 +1,59 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Fw: [Bugme-new] [Bug 8141] New: Adaptec 39320D and long boot
-Date: Sun, 11 Mar 2007 13:03:44 -0500
-Message-ID: <1173636225.3420.13.camel@mulgrave.il.steeleye.com>
-References: <20070307123335.d7e97db3.akpm@linux-foundation.org>
+Subject: [PATCH] make scsi_wait_scan always modular
+Date: Sun, 11 Mar 2007 14:16:43 -0500
+Message-ID: <1173640604.3420.21.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:54934 "EHLO
+Received: from hancock.steeleye.com ([71.30.118.248]:55696 "EHLO
 	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S933920AbXCKSDu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 11 Mar 2007 14:03:50 -0400
-In-Reply-To: <20070307123335.d7e97db3.akpm@linux-foundation.org>
+	with ESMTP id S964806AbXCKTQp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 11 Mar 2007 15:16:45 -0400
+Received: from [172.17.6.40] (midgard.sc.steeleye.com [172.17.6.40])
+	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id l2BJGix14187
+	for <linux-scsi@vger.kernel.org>; Sun, 11 Mar 2007 14:16:44 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, 2007-03-07 at 12:33 -0800, Andrew Morton wrote:
-> 41-second delay when mounting root fs.
-
-This sounds like a user configuration error.  The adaptec has a bus
-settle time in its initialisation path.  Originally it was 20s, hence
-for a D card (twin channel) it would take about 50s to come online
-(extra 5s to scan per channel).  There was a lot of argument about this,
-and the value was finally made configurable as
-
-CONFIG_AIC79XX_RESET_DELAY_MS
-
-I suspect you have this set to around 15000.  You can make the boot
-sequence shorter by reducing this value.  I believe Red Hat configures
-it down to the default 5000.
+Currently scsi_wait_scan is only built modular if SCSI is modular.
+However, it's perfectly possible for a built in SCSI still to have
+modular drivers and thus need scsi_wait_scan as a module.  Therefore,
+scsi_wait_scan should always be built as a module (unless the kernel
+doesn't support modules).
 
 James
+
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 4cd280e..f3bc0f4 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -241,6 +241,12 @@ config SCSI_SCAN_ASYNC
+ 	  You can override this choice by specifying "scsi_mod.scan=sync"
+ 	  or async on the kernel's command line.
+ 
++config SCSI_WAIT_SCAN
++	tristate
++	default m
++	depends on SCSI
++	depends on MODULES
++
+ menu "SCSI Transports"
+ 	depends on SCSI
+ 
+diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
+index 79ecf4e..41c7883 100644
+--- a/drivers/scsi/Makefile
++++ b/drivers/scsi/Makefile
+@@ -145,7 +145,7 @@ obj-$(CONFIG_CHR_DEV_SCH)	+= ch.o
+ # This goes last, so that "real" scsi devices probe earlier
+ obj-$(CONFIG_SCSI_DEBUG)	+= scsi_debug.o
+ 
+-obj-$(CONFIG_SCSI)		+= scsi_wait_scan.o
++obj-$(CONFIG_SCSI_WAIT_SCAN)	+= scsi_wait_scan.o
+ 
+ scsi_mod-y			+= scsi.o hosts.o scsi_ioctl.o constants.o \
+ 				   scsicam.o scsi_error.o scsi_lib.o \
 
 
