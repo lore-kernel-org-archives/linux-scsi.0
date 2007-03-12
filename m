@@ -1,56 +1,51 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: [PATCH] fc_transport: update potential link speeds
-Date: Mon, 12 Mar 2007 14:16:35 -0500
-Message-ID: <1173726995.4861.4.camel@localhost.localdomain>
-Reply-To: James.Smart@Emulex.Com
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: impact of 4k sector size on the IO & FS stack
+Date: Mon, 12 Mar 2007 15:16:07 -0400
+Message-ID: <45F5A6F7.9080108@torque.net>
+References: <OFCF49F323.33FDF27D-ON8825729C.0064FD4B-8825729C.0065C420@us.ibm.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:50938 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752266AbXCLTQT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Mar 2007 15:16:19 -0400
-Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
-	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id l2CJGIv0016769
-	for <linux-scsi@vger.kernel.org>; Mon, 12 Mar 2007 12:16:18 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <OFCF49F323.33FDF27D-ON8825729C.0064FD4B-8825729C.0065C420@us.ibm.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Bryan Henderson <hbryan@us.ibm.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Jan Engelhardt <jengelh@linux01.gwdg.de>, linux-fsdevel@vger.kernel.org, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Ric Wheeler <ric@emc.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-This patch updates the FC transport for all speeds identified in SM-HBA.
-Note: it does not sync the "bit" definitions, as that is actually insulated
-from user-space via the sysfs text string. (I could do it, but it does introduce
-a potential binary-incompatibility).
+Bryan Henderson wrote:
+>> DOS partitions start partitions on odd-numbered sectors
+> 
+> I don't get this.  If you mean partitions defined by the classic DOS 
+> partition table format, then AFAICS, such a partition can start in any 
+> sector.
 
--- james s
+Bryan,
+Typically the first partition on a DOS partitioned disk
+starts at the next available sector after the mbr
+which, for some bizarre reason, is 63 sectors long.
+Hence:
 
-Signed-off-by: James Smart <James.Smart@emulex.com>
+# fdisk -lu /dev/hda
+
+Disk /dev/hda: 80.0 GB, 80026361856 bytes
+255 heads, 63 sectors/track, 9729 cylinders, total 156301488 sectors
+Units = sectors of 1 * 512 = 512 bytes
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/hda1   *          63    18314099     9157018+   c  W95 FAT32 (LBA)
+/dev/hda2        18314100    19551104      618502+  82  Linux swap / Solaris
+/dev/hda4        19551105   156296384    68372640   83  Linux
 
 
-diff -upNr a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
---- a/drivers/scsi/scsi_transport_fc.c	2007-03-12 13:56:16.000000000 -0500
-+++ b/drivers/scsi/scsi_transport_fc.c	2007-03-12 14:11:20.000000000 -0500
-@@ -200,6 +200,8 @@ static const struct {
- 	{ FC_PORTSPEED_2GBIT,		"2 Gbit" },
- 	{ FC_PORTSPEED_4GBIT,		"4 Gbit" },
- 	{ FC_PORTSPEED_10GBIT,		"10 Gbit" },
-+	{ FC_PORTSPEED_8GBIT,		"8 Gbit" },
-+	{ FC_PORTSPEED_16GBIT,		"16 Gbit" },
- 	{ FC_PORTSPEED_NOT_NEGOTIATED,	"Not Negotiated" },
- };
- fc_bitfield_name_search(port_speed, fc_port_speed_names)
-diff -upNr a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
---- a/include/scsi/scsi_transport_fc.h	2007-03-12 13:56:23.000000000 -0500
-+++ b/include/scsi/scsi_transport_fc.h	2007-03-12 14:10:28.000000000 -0500
-@@ -108,6 +108,8 @@ enum fc_port_state {
- #define FC_PORTSPEED_2GBIT		2
- #define FC_PORTSPEED_4GBIT		4
- #define FC_PORTSPEED_10GBIT		8
-+#define FC_PORTSPEED_8GBIT		0x10
-+#define FC_PORTSPEED_16GBIT		0x20
- #define FC_PORTSPEED_NOT_NEGOTIATED	(1 << 15) /* Speed not established */
- 
- /*
+> 
+>> so presuming you have odd-aligned disks, life is good.
+> 
+> What is an odd-aligned disk?
 
+s/disk/partition/ ?
+Perhaps hda1 and hda4 above are examples.
+
+Doug Gilbert
 
