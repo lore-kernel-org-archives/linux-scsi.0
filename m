@@ -1,37 +1,37 @@
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: [PATCH 0/6] qla2xxx: fixes for 2.6.21 [8.01.07-k6].
-Date: Mon, 12 Mar 2007 10:40:19 -0700
-Message-ID: <20070312174019.GA1216@andrew-vasquezs-computer.local>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: [PATCH 2/6] qla2xxx: Add scan_[start|finish]() callbacks for ISP24xx HBAs.
+Date: Mon, 12 Mar 2007 10:41:27 -0700
+Message-ID: <1173721291295-git-send-email-andrew.vasquez@qlogic.com>
+References: <20070312174019.GA1216@andrew-vasquezs-computer.local>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:25227 "EHLO
+Received: from avexch1.qlogic.com ([198.70.193.115]:25532 "EHLO
 	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752053AbXCLRkV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Mar 2007 13:40:21 -0400
-Content-Disposition: inline
+	with ESMTP id S1751999AbXCLRld (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Mar 2007 13:41:33 -0400
+In-Reply-To: <20070312174019.GA1216@andrew-vasquezs-computer.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <james.bottomley@steeleye.com>
-Cc: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, Seokmann Ju <seokmann.ju@qlogic.com>
+To: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <james.bottomley@steeleye.com>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Seokmann Ju <seokmann.ju@qlogic.com>
 
-This patchset updates the qla2xxx driver to 8.01.07-k6.
+Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+---
+ drivers/scsi/qla2xxx/qla_os.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
- drivers/scsi/qla2xxx/qla_def.h     |   13 ++++++++-----
- drivers/scsi/qla2xxx/qla_os.c      |    4 +++-
- drivers/scsi/qla2xxx/qla_sup.c     |   11 +++++------
- drivers/scsi/qla2xxx/qla_version.h |    2 +-
- 4 files changed, 17 insertions(+), 13 deletions(-)
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 68f5d24..f67ef38 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -157,6 +157,8 @@ static struct scsi_host_template qla24xx_driver_template = {
+ 
+ 	.slave_alloc		= qla2xxx_slave_alloc,
+ 	.slave_destroy		= qla2xxx_slave_destroy,
++	.scan_finished		= qla2xxx_scan_finished,
++	.scan_start		= qla2xxx_scan_start,
+ 	.change_queue_depth	= qla2x00_change_queue_depth,
+ 	.change_queue_type	= qla2x00_change_queue_type,
+ 	.this_id		= -1,
+-- 
+1.5.0.3.382.g34572
 
-here's the commits:
-
-- fix RSCN handling on big-endian systems
-- Add scan_[start|finish]() callbacks for ISP24xx HBAs.
-- Add cond_resched() calls during HBA flash manipulation.
-- Drop acquisition of hardware_lock during flash manipulations.
-- Allow the extended-error-logging flag to be dynamic.
-- Update version number to 8.01.07-k6.
-
-Regards,
-Andrew Vasquez
-QLogic Corporation
