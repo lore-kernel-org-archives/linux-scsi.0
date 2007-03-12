@@ -1,41 +1,25 @@
-From: Ric Wheeler <ric@emc.com>
-Subject: Re: impact of 4k sector size on the IO & FS stack
-Date: Sun, 11 Mar 2007 22:45:24 -0400
-Message-ID: <45F4BEC4.5090402@emc.com>
-References: <45F48809.2060908@emc.com> <Pine.LNX.4.61.0703120013340.18623@yvahk01.tjqt.qr>
+From: Joe Jin <joe.jin@oracle.com>
+Subject: Re: [PATCH] [scsi]: Add offline state checking while dispatch a scsi cmd
+Date: Mon, 12 Mar 2007 10:52:22 +0800
+Message-ID: <20070312025222.GC32372@joejin-pc.cn.oracle.com>
+References: <20070308092207.GA17141@joejin-pc.cn.oracle.com> <1173369759.3683.1.camel@mulgrave.il.steeleye.com> <20070309014040.GA6632@joejin-pc.cn.oracle.com> <20070311015300.271c2323.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.61.0703120013340.18623@yvahk01.tjqt.qr>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jan Engelhardt <jengelh@linux01.gwdg.de>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel@vger.kernel.org, Linux-ide <linux-ide@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from rgminet01.oracle.com ([148.87.113.118]:12592 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964838AbXCLCyT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 11 Mar 2007 22:54:19 -0400
+Content-Disposition: inline
+In-Reply-To: <20070311015300.271c2323.akpm@linux-foundation.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Joe Jin <joe.jin@oracle.com>, James.Bottomley@SteelEye.com, dgilbert@interlog.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, haobo.zhou@oracle.com
 
+> The 2.6.9 base is very old in mainline terms.  Are you sure the bug hasn't
+> been fixed in mainline by other means?
 
-
-Jan Engelhardt wrote:
-> On Mar 11 2007 18:51, Ric Wheeler wrote:
->   
->> During the recent IO/FS workshop, we spoke briefly about the
->> coming change to a 4k sector size for disks on linux. If I
->> recall correctly, the general feeling was that the impact was
->> not significant since we already do most file system IO in 4k
->> page sizes and should be fine as long as we partition drives
->> correctly and avoid non-4k aligned partitions.
->>     
->
-> Sorry about jumping right in, but what about an 'old-style'
-> partition table that relies on 512 as a unit?
->
->   
-I think that the normal case would involve new drives which would need 
-to be partitioned in 4k aligned partitions. Shouldn't that work 
-regardless of the unit used in the partition table?
-
-
-ric
-
-
+I cannot confirm if it have fixed in latest kernel, the server is a
+production system, it's hard to debug it and try reproduce.
 
