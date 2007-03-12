@@ -1,25 +1,35 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: impact of 4k sector size on the IO & FS stack
-Date: Mon, 12 Mar 2007 15:45:07 +0000
-Message-ID: <20070312154507.69863c4c@lxorguk.ukuu.org.uk>
-References: <45F48809.2060908@emc.com>
-	<Pine.LNX.4.61.0703120013340.18623@yvahk01.tjqt.qr>
-	<45F56589.1020209@garzik.org>
+Date: Mon, 12 Mar 2007 10:45:16 -0400
+Message-ID: <45F5677C.40602@garzik.org>
+References: <45F48809.2060908@emc.com> <20070312081851.GA14831@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <45F56589.1020209@garzik.org>
+In-Reply-To: <20070312081851.GA14831@infradead.org>
 Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Jan Engelhardt <jengelh@linux01.gwdg.de>, Ric Wheeler <ric@emc.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel@vger.kernel.org, Linux-ide <linux-ide@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Ric Wheeler <ric@emc.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel@vger.kernel.org, Linux-ide <linux-ide@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-> For 1K/4K logical sector sizes, who knows.  EFI?  <grins and runs>
-> Certainly seems incompatible with the current popular DOS partition format.
+Christoph Hellwig wrote:
+> the occasional 2k sector SCSI MO device aswell.  It would be nice to
+> get samples of large sector size ATA devices into the hands of developers
+> to do real world testing of the whole stack.
 
-Its a bit messier than that. There are two interpretations of "DOS"
-partition formats found on 2K sector size magneto opticals. One is that
-everything is the same as before (as if sectors were 512 byte), the other
-is a different "everything is the same" which scales by the 2K sector
-size. The two are of course wonderfully incompatible
+"hands of developers" meaning you specifically?  :)
+
+I've had a 512b-logical/1K-physical ATA test drive for a few months now, 
+and another couple arrived today.
+
+Hopefully people can parse what I've been posting, since I cannot give 
+out raw numbers or data at this time.
+
+Of course, with RMW drives that leave the 512-b logical interface 
+untouched, I had expected that they would Just Work(tm) and that is 
+pretty much what happened.
+
+	Jeff
+
+
