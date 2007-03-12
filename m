@@ -1,31 +1,65 @@
-From: Bryan Henderson <hbryan@us.ibm.com>
-Subject: Re: impact of 4k sector size on the IO & FS stack
-Date: Mon, 12 Mar 2007 13:52:42 -0700
-Message-ID: <OF72A6C80A.A5EC4A9A-ON8825729C.007161FD-8825729C.0072AF6A@us.ibm.com>
-References: <45F59DF7.2070603@ru.mvista.com>
+From: Judith Lebzelter <judith@linux-foundation.org>
+Subject: [ PATCH ] mptsas: Fix oops during driver load time(rev 2)
+Date: Mon, 12 Mar 2007 15:14:31 -0700
+Message-ID: <20070312221431.GA7493@shell0.pdx.osdl.net>
+References: <20070310092643.GB22182@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <45F59DF7.2070603@ru.mvista.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Jan Engelhardt <jengelh@linux01.gwdg.de>, linux-fsdevel@vger.kernel.org, Linux-ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Ric Wheeler <ric@emc.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.osdl.org ([65.172.181.24]:45383 "EHLO smtp.osdl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932817AbXCLWOq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Mar 2007 18:14:46 -0400
+Content-Disposition: inline
+In-Reply-To: <20070310092643.GB22182@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org, Eric.Moore@lsi.com, James.Bottomley@SteelEye.com
 
->> I don't get this.  If you mean partitions defined by the classic DOS 
->> partition table format, then AFAICS, such a partition can start in any 
->> sector.
->
->    Only at "logical cylinder boundary" (except for the first partition).
+This fixes an oops during driver load time.   
 
-That's a requirement in ancient DOS systems that use CHS addressing 
-(physical CHS, no less), isn't it  (so you can properly convert a 
-within-partition address to a within-disk address)?
+mptsas_probe calls mpt_attach(over in mptbase.c).  Inside that 
+call, we read some manufacturing config pages to setup some 
+defaults.  While reading the config pages, the firmware doesn't 
+complete the reply in time, and we have a timeout. The timeout 
+results in hardreset handler being called.  The hardreset 
+handler calls all the fusion upper layer driver reset callback 
+handlers.  The mptsas_ioc_reset function is the callback handler 
+in mptsas.c.   In summary, mptsas_ioc_reset is getting called 
+before scsi_host_alloc is called, and the pointer ioc->sh is 
+NULL, as well as the hostdata.
 
-While I would guess most people still partition disks that way (Even 
-linux-util fdisk seems to do it by default), they don't have to.
+Signed-off-by:  Judith Lebzelter <judith@osdl.org
 
-Doesn't matter for this discussion, though.  As Doug demonstrated, even 
-when you do start at cylinder boundaries, half your partitions start on an 
-even sector, because typical cylinders have an odd number of sectors.
+---
+Sorry I was not more descriptive.  Here is the patch with Eric's 
+description as requested.
+
+Index: linux-2.6.21-rc3/drivers/message/fusion/mptsas.c
+===================================================================
+--- linux-2.6.21-rc3.orig/drivers/message/fusion/mptsas.c
++++ linux-2.6.21-rc3/drivers/message/fusion/mptsas.c
+@@ -815,7 +815,7 @@ mptsas_taskmgmt_complete(MPT_ADAPTER *io
+ static int
+ mptsas_ioc_reset(MPT_ADAPTER *ioc, int reset_phase)
+ {
+-	MPT_SCSI_HOST	*hd = (MPT_SCSI_HOST *)ioc->sh->hostdata;
++	MPT_SCSI_HOST	*hd;
+ 	struct mptsas_target_reset_event *target_reset_list, *n;
+ 	int rc;
+ 
+@@ -827,7 +827,10 @@ mptsas_ioc_reset(MPT_ADAPTER *ioc, int r
+ 	if (reset_phase != MPT_IOC_POST_RESET)
+ 		goto out;
+ 
+-	if (!hd || !hd->ioc)
++	if (!ioc->sh || !ioc->sh->hostdata)
++		goto out;
++	hd = (MPT_SCSI_HOST *)ioc->sh->hostdata;
++	if (!hd->ioc)
+ 		goto out;
+ 
+ 	if (list_empty(&hd->target_reset_list))
+
 
