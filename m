@@ -1,17 +1,16 @@
-From: Ric Wheeler <ric@emc.com>
+From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: impact of 4k sector size on the IO & FS stack
-Date: Mon, 12 Mar 2007 09:32:14 -0400
-Message-ID: <45F5565E.7010104@emc.com>
+Date: Mon, 12 Mar 2007 10:26:32 -0400
+Message-ID: <45F56318.9030505@garzik.org>
 References: <45F48809.2060908@emc.com>	<20070312000253.20eab1a3@lxorguk.ukuu.org.uk>	<45F4A268.3000405@garzik.org> <20070312122424.18ed86ce@lxorguk.ukuu.org.uk>
-Reply-To: ric@emc.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <20070312122424.18ed86ce@lxorguk.ukuu.org.uk>
-Sender: linux-fsdevel-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel@vger.kernel.org, Linux-ide <linux-ide@vger.kernel.org>
+Cc: Ric Wheeler <ric@emc.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel@vger.kernel.org, Linux-ide <linux-ide@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
 Alan Cox wrote:
@@ -29,16 +28,36 @@ Alan Cox wrote:
 > they do this, so that we don't lose the old data. My guess is they won't
 > as it'll be hard.
 
-I think that the firmware would have to do this in the drive's write 
-cache and would always write the modified data back to the same physical 
-sector (unless a media error forces a sector remap).
+Strict ATA command set answer:  you will have no idea what goes on under 
+the hood.  The current 512-b interface stays /exactly/ the same, save 
+for a word or two in IDENTIFY DEVICE telling you the "secret" physical 
+sector size.  If all your I/Os are aligned properly, then you need not 
+worry about RMW cycles, as they will not occur.
 
-If firmware modifies the 7 512 byte sectors that it read to do the 1 512 
-byte sector write, then we certainly would see what you describe happen.
+Intuition answer:  they will use their firmware-internal standard code 
+for scheduling reads and writes, and will only reallocate sectors as 
+needed by media failure or similar events.
 
-In general, it would seem to be a bad idea to do allocate a different 
-physical sector to underpin this king of read-modify-write since that 
-would kill contiguous layout of files, etc.
+The "M" part of the modify cycle happens in disk ram.  So from the 
+disk's point of view, a single 512-b write would require reading a 
+single 1K hard sector, updating the contents in cache RAM, and then 
+writing a single 1K hard sector.  The reading of the unknown half of the 
+sector can be scheduled well in advance, usually, since writeback 
+caching gives the drive plenty of time (relatively speaking) to optimize 
+things.
+
+Overall, it definitely adds a few more points of failure, but we can't 
+do much at all about those points of failure.
+
+In my own experiments on my own Fedora workstation, ~66% of IOs in Linux 
+start on an odd sector, and ~33% started on even-numbered sectors.  For 
+a 1K-sector drive with 'odd' alignment, the configuration Microsoft will 
+likely want, that means the majority of disk transactions will avoid a 
+RMW cycle, but a still-numerous minority will not.  I did not test 
+transfer length, to see how many transfers /ended/ on an odd sector, 
+thus determining how many RMW cycles the tail of an average I/O requires.
+
+
 
 >> A future configuration will change the logical ATA interface away from 
 >> 512-byte sectors to 1K or 4K.  Here, it is impossible to read a quantity 
@@ -47,9 +66,10 @@ would kill contiguous layout of files, etc.
 > That one I'm not worried about - other than "guess how Redmond decide to
 > make partition tables work" that one is mostly easy (be fun to see how
 > many controllers simply can't cope with the command formats)
-> 
 
-This will be interesting to find out. I will be sharing a panel with 
-some BIOS & MS people, so I will update all on what I hear,
+Indeed...
 
-ric
+	Jeff
+
+
+
