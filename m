@@ -1,39 +1,34 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: Fw: [Bugme-new] [Bug 8141] New: Adaptec 39320D and long boot
-Date: Sun, 11 Mar 2007 15:52:54 -0800
-Message-ID: <20070311155254.a76ad319.akpm@linux-foundation.org>
-References: <20070307123335.d7e97db3.akpm@linux-foundation.org>
-	<1173636225.3420.13.camel@mulgrave.il.steeleye.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: impact of 4k sector size on the IO & FS stack
+Date: Sun, 11 Mar 2007 20:44:24 -0400
+Message-ID: <45F4A268.3000405@garzik.org>
+References: <45F48809.2060908@emc.com> <20070312000253.20eab1a3@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:33528 "EHLO smtp.osdl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964813AbXCKXxJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 11 Mar 2007 19:53:09 -0400
-In-Reply-To: <1173636225.3420.13.camel@mulgrave.il.steeleye.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <20070312000253.20eab1a3@lxorguk.ukuu.org.uk>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Ric Wheeler <ric@emc.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel@vger.kernel.org, Linux-ide <linux-ide@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi@vger.kernel.org, karaluh@tlen.pl, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>
 
-> On Sun, 11 Mar 2007 13:03:44 -0500 James Bottomley <James.Bottomley@SteelEye.com> wrote:
-> On Wed, 2007-03-07 at 12:33 -0800, Andrew Morton wrote:
-> > 41-second delay when mounting root fs.
-> 
-> This sounds like a user configuration error.  The adaptec has a bus
-> settle time in its initialisation path.  Originally it was 20s, hence
-> for a D card (twin channel) it would take about 50s to come online
-> (extra 5s to scan per channel).  There was a lot of argument about this,
-> and the value was finally made configurable as
-> 
-> CONFIG_AIC79XX_RESET_DELAY_MS
-> 
-> I suspect you have this set to around 15000.  You can make the boot
-> sequence shorter by reducing this value.  I believe Red Hat configures
-> it down to the default 5000.
-> 
-> James
+Alan Cox wrote:
+> I would be interested to know what the disk vendors intend to use as
+> their strategy when (with ATA) they have a 512 byte write from an older
+> file system/setup into a 4K block. The case where errors magically appear
 
-(cc's added)
+Well, you have logical and physical sector size changes.
+
+First generation of 1K sector drives will continue to use the same 
+512-byte ATA sector size you are familiar with.  A single 512-byte write 
+will cause the drive to perform a read-modify-write cycle.  This 
+configuration is physical 1K sector, logical 512b sector.
+
+A future configuration will change the logical ATA interface away from 
+512-byte sectors to 1K or 4K.  Here, it is impossible to read a quantity 
+smaller than 1K or 4K, whatever the sector size is.
+
+	Jeff
+
+
