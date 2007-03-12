@@ -1,49 +1,37 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] Make SG_SET_FORCE_LOW_DMA behave as advertised
-Date: Mon, 12 Mar 2007 11:23:22 -0500
-Message-ID: <45F57E7A.1040009@cs.wisc.edu>
-References: <200703121418.31088.okir@lst.de>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: [PATCH 0/6] qla2xxx: fixes for 2.6.21 [8.01.07-k6].
+Date: Mon, 12 Mar 2007 10:40:19 -0700
+Message-ID: <20070312174019.GA1216@andrew-vasquezs-computer.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:54211 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030584AbXCLQXg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Mar 2007 12:23:36 -0400
-In-Reply-To: <200703121418.31088.okir@lst.de>
+Received: from avexch1.qlogic.com ([198.70.193.115]:25227 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752053AbXCLRkV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Mar 2007 13:40:21 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Olaf Kirch <okir@lst.de>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <james.bottomley@steeleye.com>
+Cc: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, Seokmann Ju <seokmann.ju@qlogic.com>
 
-Olaf Kirch wrote:
-> Make SG_SET_FORCE_LOW_DMA behave as advertised
-> 
-> I came across this by accident. I have serious doubts whether ISA DMA
-> is really relevant these days :-) but what the heck. Feel free to disregard
-> if this code is headed for the recycler anyway.
-> 
-> The SCSI-HOWTO says this about SG_SET_FORCE_LOW_DMA:
-> 
-> 	If the "reserved" buffer allocated on open() is not in use then
-> 	it will be de-allocated and re-allocated under the 16MB level
-> 	(and the latter operation could fail yielding ENOMEM).
-> 
-> I came across this by accident - the current code will never reallocate
-> the buffer during the ioctl, because it first sets sfp->low_dma to 1,
-> and then checks the very same variable for equality with 0.
-> 
-> The patch below changes the order of commands, and also moves
-> the buffer reallocation around so that it also happens when
-> the device has unchecked_isa_dma set.
+This patchset updates the qla2xxx driver to 8.01.07-k6.
 
-It might be needed. The removal was my fault. If you are just worried
-about using the right memory and the host had unchecked_isa_dma set, the
-buffer is now bounced for sg by the block layer helpers so sg does not
-need to worry about that.
+ drivers/scsi/qla2xxx/qla_def.h     |   13 ++++++++-----
+ drivers/scsi/qla2xxx/qla_os.c      |    4 +++-
+ drivers/scsi/qla2xxx/qla_sup.c     |   11 +++++------
+ drivers/scsi/qla2xxx/qla_version.h |    2 +-
+ 4 files changed, 17 insertions(+), 13 deletions(-)
 
-The problem with this is that the sg code would allocate large chunks of
-memory so it would try to make large segments, and if you were trying to
-do a really large IO then the isa_page_pool may not work like the old sg
-code.
+here's the commits:
+
+- fix RSCN handling on big-endian systems
+- Add scan_[start|finish]() callbacks for ISP24xx HBAs.
+- Add cond_resched() calls during HBA flash manipulation.
+- Drop acquisition of hardware_lock during flash manipulations.
+- Allow the extended-error-logging flag to be dynamic.
+- Update version number to 8.01.07-k6.
+
+Regards,
+Andrew Vasquez
+QLogic Corporation
