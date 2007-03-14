@@ -1,15 +1,15 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 3/4] iscsi class, libiscsi and qla4xxx: convert to new transport host byte values
-Date: Wed, 14 Mar 2007 14:52:47 -0500
-Message-ID: <11739019701684-git-send-email-michaelc@cs.wisc.edu>
-References: <11739019681346-git-send-email-michaelc@cs.wisc.edu> <11739019693216-git-send-email-michaelc@cs.wisc.edu> <11739019703157-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 4/4] fc class: use transport host byte values
+Date: Wed, 14 Mar 2007 14:52:48 -0500
+Message-ID: <11739019713208-git-send-email-michaelc@cs.wisc.edu>
+References: <11739019681346-git-send-email-michaelc@cs.wisc.edu> <11739019693216-git-send-email-michaelc@cs.wisc.edu> <11739019703157-git-send-email-michaelc@cs.wisc.edu> <11739019701684-git-send-email-michaelc@cs.wisc.edu>
 Reply-To: michaelc@cs.wisc.edu
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:56049 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([66.187.233.31]:56051 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030658AbXCNTxD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1030861AbXCNTxD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 14 Mar 2007 15:53:03 -0400
-In-Reply-To: <11739019703157-git-send-email-michaelc@cs.wisc.edu>
+In-Reply-To: <11739019701684-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
@@ -17,89 +17,86 @@ Cc: Mike Christie <michaelc@cs.wisc.edu>
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-This patch converts the iscsi drivers to the new host byte values
+This patch is just an example. It is not tested and it is probably
+better to not use the fast_io_fail_tmo variable and instead modify
+the state machine.
+
+This patch also does not convert any FC drivers to use the new codes.
+
+The patch does modify the port ready function to return the new
+host byte values and modifies the rport fast io fail tmo to
+do the same thing as iscsi (fail queued and running IO).
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/libiscsi.c             |   21 ++++++++++++---------
- drivers/scsi/qla4xxx/ql4_isr.c      |    2 +-
- drivers/scsi/scsi_transport_iscsi.c |    4 ++--
- 3 files changed, 15 insertions(+), 12 deletions(-)
+ drivers/scsi/scsi_transport_fc.c |    4 ++++
+ include/scsi/scsi_transport_fc.h |    8 ++++++--
+ 2 files changed, 10 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index f4e1a1b..455bbfd 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -779,20 +779,23 @@ int iscsi_queuecommand(struct scsi_cmnd 
- 		 * be entering our queuecommand while a block is starting
- 		 * up because the block code is not locked)
- 		 */
--		if (session->state == ISCSI_STATE_IN_RECOVERY) {
-+		switch (session->state) {
-+		case ISCSI_STATE_IN_RECOVERY:
- 			reason = FAILURE_SESSION_IN_RECOVERY;
--			goto reject;
--		}
--
--		if (session->state == ISCSI_STATE_RECOVERY_FAILED) {
-+			sc->result = DID_TRANSPORT_BLOCKED << 16;
-+			break;
-+		case ISCSI_STATE_RECOVERY_FAILED:
- 			reason = FAILURE_SESSION_RECOVERY_TIMEOUT;
--			sc->result = DID_IMM_RETRY << 16;
--		} else if (session->state == ISCSI_STATE_TERMINATE) {
-+			sc->result = DID_TRANSPORT_FAILFAST << 16;
-+			break;
-+		case ISCSI_STATE_TERMINATE:
- 			reason = FAILURE_SESSION_TERMINATE;
- 			sc->result = DID_NO_CONNECT << 16;
--		} else {
-+			break;
-+		default:
- 			reason = FAILURE_SESSION_FREED;
- 			sc->result = DID_NO_CONNECT << 16;
-+			break;
- 		}
- 		goto fault;
- 	}
-@@ -1782,7 +1785,7 @@ static void iscsi_start_session_recovery
- 	 */
- 	spin_lock_bh(&session->lock);
- 	fail_all_commands(conn,
--			STOP_CONN_RECOVER ? DID_BUS_BUSY : DID_ERROR);
-+			STOP_CONN_RECOVER ? DID_TRANSPORT_FAILFAST : DID_ERROR);
- 	flush_control_queues(session, conn);
- 	spin_unlock_bh(&session->lock);
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index 58afdb4..af1ff02 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -1970,6 +1970,7 @@ fc_remote_port_add(struct Scsi_Host *sho
+ 					sizeof(rport->port_name));
+ 				rport->port_id = ids->port_id;
  
-diff --git a/drivers/scsi/qla4xxx/ql4_isr.c b/drivers/scsi/qla4xxx/ql4_isr.c
-index 35b9e36..31a786a 100644
---- a/drivers/scsi/qla4xxx/ql4_isr.c
-+++ b/drivers/scsi/qla4xxx/ql4_isr.c
-@@ -267,7 +267,7 @@ static void qla4xxx_status_entry(struct 
- 		if (atomic_read(&ddb_entry->state) == DDB_STATE_ONLINE)
- 			qla4xxx_mark_device_missing(ha, ddb_entry);
++				rport->fast_io_fail_timeout = 0;
+ 				rport->port_state = FC_PORTSTATE_ONLINE;
+ 				rport->roles = ids->roles;
  
--		cmd->result = DID_BUS_BUSY << 16;
-+		cmd->result = DID_BLOCKED_TRANSPORT << 16;
- 		break;
+@@ -2059,6 +2060,7 @@ fc_remote_port_add(struct Scsi_Host *sho
+ 				sizeof(rport->port_name));
+ 			rport->port_id = ids->port_id;
+ 			rport->roles = ids->roles;
++			rport->fast_io_fail_timeout = 0;
+ 			rport->port_state = FC_PORTSTATE_ONLINE;
  
- 	case SCS_QUEUE_FULL:
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index 373167b..87e6ffe 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -233,10 +233,10 @@ int iscsi_session_chkready(struct iscsi_
- 		err = 0;
+ 			if (fci->f->dd_fcrport_size)
+@@ -2381,7 +2383,9 @@ fc_timeout_fail_rport_io(struct work_str
+ 	if (rport->port_state != FC_PORTSTATE_BLOCKED)
+ 		return;
+ 
++	rport->fast_io_fail_timeout = 1;
+ 	i->f->terminate_rport_io(rport);
++	scsi_target_unblock(&rport->dev);
+ }
+ 
+ /**
+diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
+index 798f7c7..b7f7e51 100644
+--- a/include/scsi/scsi_transport_fc.h
++++ b/include/scsi/scsi_transport_fc.h
+@@ -196,6 +196,7 @@ struct fc_rport {	/* aka fc_starget_attr
+ 	enum fc_port_state port_state;	/* Will only be ONLINE or UNKNOWN */
+ 	u32 scsi_target_id;
+ 	u32 fast_io_fail_tmo;
++	u8 fast_io_fail_timeout;
+ 
+ 	/* exported data */
+ 	void *dd_data;			/* Used for driver-specific storage */
+@@ -508,17 +509,20 @@ fc_remote_port_chkready(struct fc_rport 
+ {
+ 	int result;
+ 
++	if (rport->fastfail_timeout)
++		return DID_TRANSPORT_FAILFAST;
++
+ 	switch (rport->port_state) {
+ 	case FC_PORTSTATE_ONLINE:
+ 		if (rport->roles & FC_RPORT_ROLE_FCP_TARGET)
+ 			result = 0;
+ 		else if (rport->flags & FC_RPORT_DEVLOSS_PENDING)
+-			result = DID_IMM_RETRY << 16;
++			result = DID_TRANSPORT_BLOCKED << 16;
+ 		else
+ 			result = DID_NO_CONNECT << 16;
  		break;
- 	case ISCSI_SESSION_FAILED:
--		err = DID_IMM_RETRY << 16;
-+		err = DID_TRANSPORT_BLOCKED << 16;
- 		break;
- 	case ISCSI_SESSION_FREE:
--		err = DID_NO_CONNECT  << 16;
-+		err = DID_TRANSPORT_FAILFAST << 16;
+ 	case FC_PORTSTATE_BLOCKED:
+-		result = DID_IMM_RETRY << 16;
++		result = DID_TRANSPORT_BLOCKED << 16;
  		break;
  	default:
- 		err = DID_NO_CONNECT << 16;
+ 		result = DID_NO_CONNECT << 16;
 -- 
 1.4.1.1
 
