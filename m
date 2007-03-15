@@ -1,434 +1,271 @@
-From: Mark Haverkamp <markh@linux-foundation.org>
-Subject: Re: [PATCH 3/7] aacraid: Fix blocking issue with container probing
-	function (cast update)
-Date: Thu, 15 Mar 2007 12:55:07 -0700
-Message-ID: <1173988507.30374.33.camel@markh3.pdx.osdl.net>
-References: <1173979603.30374.23.camel@markh3.pdx.osdl.net>
-	 <1173986753.3379.18.camel@mulgrave.il.steeleye.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: <gregkh@suse.de>
+Subject: patch sysfs-and-driver-core-add-callback-helper-used-by-scsi-and-s390.patch added to gregkh-2.6 tree
+Date: Thu, 15 Mar 2007 15:47:38 -0700
+Message-ID: <1HRyjT-3wT-00@press.kroah.org>
+References: <Pine.LNX.4.44L0.0703151546190.2482-100000@iolanthe.rowland.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:38464 "EHLO smtp.osdl.org"
+Received: from mail.kroah.org ([69.55.234.183]:43587 "EHLO perch.kroah.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933564AbXCOTzL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Mar 2007 15:55:11 -0400
-In-Reply-To: <1173986753.3379.18.camel@mulgrave.il.steeleye.com>
+	id S1751607AbXCOWsl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Mar 2007 18:48:41 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0703151546190.2482-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>
-
-Received from Mark Salyzyn,
-
-The aac_probe_container call blocks. This is an issue because it is called on
-occasion in the context of the queuecommand handler. Once in a blue moon this
-has resulted in a kernel panic sleeping during interrupt; or problems with some
-embedded system versions of the kernel that depend on queuecommand to not
-block. This ugly patch rewrites the aac_probe_container call into a new routine
-_aac_probe_container that is an asynchronous state machine to complete the
-series of operations. The legacy blocking aac_probe_container call used in
-other areas of the driver (during initialization scanning for all targets and
-in the separate hot-add/remove [aacraid] thread) merely issues
-_aac_probe_container and then simple spins calling schedule() waiting for
-completion.
-
-Signed-off-by: Mark Haverkamp <markh@linux-foundation.org>
-
----
+To: stern@rowland.harvard.edu, cornelia.huck@de.ibm.com, dmitry.torokhov@gmail.com, gregkh@suse.de, greg@kroah.com, hugh@veritas.com, James.Bottomley@SteelEye.com, linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, maneesh@in.ibm.com, oneukum@suse.de, rpurdie@rpsys.net, torvalds@linux-foundation.org
 
 
---- scsi-misc-aac.orig/drivers/scsi/aacraid/aachba.c	2007-03-15 08:28:03.000000000 -0700
-+++ scsi-misc-aac/drivers/scsi/aacraid/aachba.c	2007-03-15 12:49:46.000000000 -0700
-@@ -258,13 +258,10 @@ int aac_get_containers(struct aac_dev *d
- 	u32 index; 
- 	int status = 0;
- 	struct fib * fibptr;
--	unsigned instance;
- 	struct aac_get_container_count *dinfo;
- 	struct aac_get_container_count_resp *dresp;
- 	int maximum_num_containers = MAXIMUM_NUM_CONTAINERS;
+This is a note to let you know that I've just added the patch titled
+
+     Subject: sysfs and driver core: add callback helper, used by SCSI and S390
+
+to my gregkh-2.6 tree.  Its filename is
+
+     sysfs-and-driver-core-add-callback-helper-used-by-scsi-and-s390.patch
+
+This tree can be found at 
+    http://www.kernel.org/pub/linux/kernel/people/gregkh/gregkh-2.6/patches/
+
+
+>From stern@rowland.harvard.edu  Thu Mar 15 15:35:00 2007
+Date: Thu, 15 Mar 2007 15:50:34 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Hugh Dickins <hugh@veritas.com>, <greg@kroah.com>,
+	Cornelia Huck <cornelia.huck@de.ibm.com>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Oliver Neukum <oneukum@suse.de>, Maneesh Soni <maneesh@in.ibm.com>,
+	<gregkh@suse.de>, Richard Purdie <rpurdie@rpsys.net>,
+	James Bottomley <James.Bottomley@SteelEye.com>,
+	SCSI development list <linux-scsi@vger.kernel.org>,
+	<linux-s390@vger.kernel.org>
+Subject: sysfs and driver core: add callback helper, used by SCSI and S390
+Message-ID: <Pine.LNX.4.44L0.0703151546190.2482-100000@iolanthe.rowland.org>
+
+This patch (as868) adds a helper routine for device drivers that need
+to set up a callback to perform some action in a different process's
+context.  This is intended for use by attribute methods that want to
+unregister themselves or their parent device.  Attribute method calls
+are mutually exclusive with unregistration, so such actions cannot be
+taken directly.
+
+Two attribute methods are converted to use the new helper routine: one
+for SCSI device deletion and one for System/390 ccwgroup devices.
+
+Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+
+--- 2.6.21-rc3-git9.orig/include/linux/sysfs.h
++++ 2.6.21-rc3-git9/include/linux/sysfs.h
+@@ -78,6 +78,9 @@ struct sysfs_ops {
  
--	instance = dev->scsi_host_ptr->unique_id;
--
- 	if (!(fibptr = aac_fib_alloc(dev)))
- 		return -ENOMEM;
+ #ifdef CONFIG_SYSFS
  
-@@ -284,88 +281,35 @@ int aac_get_containers(struct aac_dev *d
- 		maximum_num_containers = le32_to_cpu(dresp->ContainerSwitchEntries);
- 		aac_fib_complete(fibptr);
- 	}
-+	aac_fib_free(fibptr);
++extern int sysfs_schedule_callback(struct kobject *kobj,
++		void (*func)(void *), void *data);
++
+ extern int __must_check
+ sysfs_create_dir(struct kobject *, struct dentry *);
  
- 	if (maximum_num_containers < MAXIMUM_NUM_CONTAINERS)
- 		maximum_num_containers = MAXIMUM_NUM_CONTAINERS;
--	fsa_dev_ptr = kmalloc(
--	  sizeof(*fsa_dev_ptr) * maximum_num_containers, GFP_KERNEL);
--	if (!fsa_dev_ptr) {
--		aac_fib_free(fibptr);
-+	fsa_dev_ptr =  kmalloc(sizeof(*fsa_dev_ptr) * maximum_num_containers,
-+			GFP_KERNEL);
-+	if (!fsa_dev_ptr)
- 		return -ENOMEM;
--	}
- 	memset(fsa_dev_ptr, 0, sizeof(*fsa_dev_ptr) * maximum_num_containers);
+@@ -132,6 +135,12 @@ extern int __must_check sysfs_init(void)
  
- 	dev->fsa_dev = fsa_dev_ptr;
- 	dev->maximum_num_containers = maximum_num_containers;
+ #else /* CONFIG_SYSFS */
  
--	for (index = 0; index < dev->maximum_num_containers; index++) {
--		struct aac_query_mount *dinfo;
--		struct aac_mount *dresp;
--
-+	for (index = 0; index < dev->maximum_num_containers; ) {
- 		fsa_dev_ptr[index].devname[0] = '\0';
- 
--		aac_fib_init(fibptr);
--		dinfo = (struct aac_query_mount *) fib_data(fibptr);
--
--		dinfo->command = cpu_to_le32(VM_NameServe);
--		dinfo->count = cpu_to_le32(index);
--		dinfo->type = cpu_to_le32(FT_FILESYS);
-+		status = aac_probe_container(dev, index);
- 
--		status = aac_fib_send(ContainerCommand,
--				    fibptr,
--				    sizeof (struct aac_query_mount),
--				    FsaNormal,
--				    1, 1,
--				    NULL, NULL);
--		if (status < 0 ) {
-+		if (status < 0) {
- 			printk(KERN_WARNING "aac_get_containers: SendFIB failed.\n");
- 			break;
- 		}
--		dresp = (struct aac_mount *)fib_data(fibptr);
- 
--		if ((le32_to_cpu(dresp->status) == ST_OK) &&
--		    (le32_to_cpu(dresp->mnt[0].vol) == CT_NONE)) {
--			dinfo->command = cpu_to_le32(VM_NameServe64);
--			dinfo->count = cpu_to_le32(index);
--			dinfo->type = cpu_to_le32(FT_FILESYS);
--
--			if (aac_fib_send(ContainerCommand,
--				    fibptr,
--				    sizeof(struct aac_query_mount),
--				    FsaNormal,
--				    1, 1,
--				    NULL, NULL) < 0)
--				continue;
--		} else
--			dresp->mnt[0].capacityhigh = 0;
--
--		dprintk ((KERN_DEBUG
--		  "VM_NameServe cid=%d status=%d vol=%d state=%d cap=%llu\n",
--		  (int)index, (int)le32_to_cpu(dresp->status),
--		  (int)le32_to_cpu(dresp->mnt[0].vol),
--		  (int)le32_to_cpu(dresp->mnt[0].state),
--		  ((u64)le32_to_cpu(dresp->mnt[0].capacity)) +
--		    (((u64)le32_to_cpu(dresp->mnt[0].capacityhigh)) << 32)));
--		if ((le32_to_cpu(dresp->status) == ST_OK) &&
--		    (le32_to_cpu(dresp->mnt[0].vol) != CT_NONE) &&
--		    (le32_to_cpu(dresp->mnt[0].state) != FSCS_HIDDEN)) {
--			fsa_dev_ptr[index].valid = 1;
--			fsa_dev_ptr[index].type = le32_to_cpu(dresp->mnt[0].vol);
--			fsa_dev_ptr[index].size
--			  = ((u64)le32_to_cpu(dresp->mnt[0].capacity)) +
--			    (((u64)le32_to_cpu(dresp->mnt[0].capacityhigh)) << 32);
--			if (le32_to_cpu(dresp->mnt[0].state) & FSCS_READONLY)
--				    fsa_dev_ptr[index].ro = 1;
--		}
--		aac_fib_complete(fibptr);
- 		/*
- 		 *	If there are no more containers, then stop asking.
- 		 */
--		if ((index + 1) >= le32_to_cpu(dresp->count)){
-+		if (++index >= status)
- 			break;
--		}
- 	}
--	aac_fib_free(fibptr);
- 	return status;
- }
- 
-@@ -473,85 +417,185 @@ static int aac_get_container_name(struct
- 	return -1;
- }
- 
--/**
-- *	aac_probe_container		-	query a logical volume
-- *	@dev: device to query
-- *	@cid: container identifier
-- *
-- *	Queries the controller about the given volume. The volume information
-- *	is updated in the struct fsa_dev_info structure rather than returned.
-- */
-- 
--int aac_probe_container(struct aac_dev *dev, int cid)
-+static int aac_probe_container_callback2(struct scsi_cmnd * scsicmd)
++static inline int sysfs_schedule_callback(struct kobject *kobj,
++		void (*func)(void *), void *data)
++{
++	return -ENOSYS;
++}
++
+ static inline int sysfs_create_dir(struct kobject * k, struct dentry *shadow)
  {
--	struct fsa_dev_info *fsa_dev_ptr;
--	int status;
--	struct aac_query_mount *dinfo;
--	struct aac_mount *dresp;
--	struct fib * fibptr;
--	unsigned instance;
-+	struct fsa_dev_info *fsa_dev_ptr = ((struct aac_dev *)(scsicmd->device->host->hostdata))->fsa_dev;
+ 	return 0;
+Index: 2.6.21-rc3-git9/fs/sysfs/file.c
+===================================================================
+--- 2.6.21-rc3-git9.orig/fs/sysfs/file.c
++++ 2.6.21-rc3-git9/fs/sysfs/file.c
+@@ -629,6 +629,60 @@ void sysfs_remove_file_from_group(struct
+ }
+ EXPORT_SYMBOL_GPL(sysfs_remove_file_from_group);
  
--	fsa_dev_ptr = dev->fsa_dev;
--	if (!fsa_dev_ptr)
--		return -ENOMEM;
--	instance = dev->scsi_host_ptr->unique_id;
-+	if (fsa_dev_ptr[scmd_id(scsicmd)].valid)
-+		return aac_scsi_cmd(scsicmd);
- 
--	if (!(fibptr = aac_fib_alloc(dev)))
--		return -ENOMEM;
-+	scsicmd->result = DID_NO_CONNECT << 16;
-+	scsicmd->scsi_done(scsicmd);
-+	return 0;
-+}
++struct sysfs_schedule_callback_struct {
++	struct kobject 		*kobj;
++	void			(*func)(void *);
++	void			*data;
++	struct work_struct	work;
++};
 +
-+static int _aac_probe_container2(void * context, struct fib * fibptr)
++static void sysfs_schedule_callback_work(struct work_struct *work)
 +{
-+	struct scsi_cmnd * scsicmd = (struct scsi_cmnd *)context;
-+	struct fsa_dev_info *fsa_dev_ptr = ((struct aac_dev *)(scsicmd->device->host->hostdata))->fsa_dev;
-+	int (*callback)(struct scsi_cmnd *);
++	struct sysfs_schedule_callback_struct *ss = container_of(work,
++			struct sysfs_schedule_callback_struct, work);
 +
-+	scsicmd->SCp.Status = 0;
-+	if (fsa_dev_ptr) {
-+		struct aac_mount * dresp = (struct aac_mount *) fib_data(fibptr);
-+		fsa_dev_ptr += scmd_id(scsicmd);
-+
-+		if ((le32_to_cpu(dresp->status) == ST_OK) &&
-+		    (le32_to_cpu(dresp->mnt[0].vol) != CT_NONE) &&
-+		    (le32_to_cpu(dresp->mnt[0].state) != FSCS_HIDDEN)) {
-+			fsa_dev_ptr->valid = 1;
-+			fsa_dev_ptr->type = le32_to_cpu(dresp->mnt[0].vol);
-+			fsa_dev_ptr->size
-+			  = ((u64)le32_to_cpu(dresp->mnt[0].capacity)) +
-+			    (((u64)le32_to_cpu(dresp->mnt[0].capacityhigh)) << 32);
-+			fsa_dev_ptr->ro = ((le32_to_cpu(dresp->mnt[0].state) & FSCS_READONLY) != 0);
-+		}
-+		if ((fsa_dev_ptr->valid & 1) == 0)
-+			fsa_dev_ptr->valid = 0;
-+		scsicmd->SCp.Status = le32_to_cpu(dresp->count);
-+	}
-+	aac_fib_complete(fibptr);
-+	aac_fib_free(fibptr);
-+	callback = (int (*)(struct scsi_cmnd *))(scsicmd->SCp.ptr);
-+	scsicmd->SCp.ptr = NULL;
-+	return (*callback)(scsicmd);
++	(ss->func)(ss->data);
++	kobject_put(ss->kobj);
++	kfree(ss);
 +}
 +
-+static int _aac_probe_container1(void * context, struct fib * fibptr)
-+{
-+	struct scsi_cmnd * scsicmd;
-+	struct aac_mount * dresp;
-+	struct aac_query_mount *dinfo;
-+	int status;
-+
-+	dresp = (struct aac_mount *) fib_data(fibptr);
-+	dresp->mnt[0].capacityhigh = 0;
-+	if ((le32_to_cpu(dresp->status) != ST_OK) ||
-+	    ((le32_to_cpu(dresp->mnt[0].vol) != CT_NONE) &&
-+	     (le32_to_cpu(dresp->mnt[0].state) == FSCS_HIDDEN)))
-+		return _aac_probe_container2(context, fibptr);
-+	scsicmd = (struct scsi_cmnd *) context;
-+	scsicmd->SCp.phase = AAC_OWNER_MIDLEVEL;
- 
- 	aac_fib_init(fibptr);
- 
- 	dinfo = (struct aac_query_mount *)fib_data(fibptr);
- 
--	dinfo->command = cpu_to_le32(VM_NameServe);
--	dinfo->count = cpu_to_le32(cid);
-+	dinfo->command = cpu_to_le32(VM_NameServe64);
-+	dinfo->count = cpu_to_le32(scmd_id(scsicmd));
- 	dinfo->type = cpu_to_le32(FT_FILESYS);
- 
- 	status = aac_fib_send(ContainerCommand,
--			    fibptr,
--			    sizeof(struct aac_query_mount),
--			    FsaNormal,
--			    1, 1,
--			    NULL, NULL);
-+			  fibptr,
-+			  sizeof(struct aac_query_mount),
-+			  FsaNormal,
-+			  0, 1,
-+			  (fib_callback) _aac_probe_container2,
-+			  (void *) scsicmd);
-+	/*
-+	 *	Check that the command queued to the controller
-+	 */
-+	if (status == -EINPROGRESS) {
-+		scsicmd->SCp.phase = AAC_OWNER_FIRMWARE;
-+		return 0;
-+	}
- 	if (status < 0) {
--		printk(KERN_WARNING "aacraid: aac_probe_container query failed.\n");
--		goto error;
-+		/* Inherit results from VM_NameServe, if any */
-+		dresp->status = cpu_to_le32(ST_OK);
-+		return _aac_probe_container2(context, fibptr);
- 	}
-+	return 0;
-+}
- 
--	dresp = (struct aac_mount *) fib_data(fibptr);
-+static int _aac_probe_container(struct scsi_cmnd * scsicmd, int (*callback)(struct scsi_cmnd *))
-+{
-+	struct fib * fibptr;
-+	int status = -ENOMEM;
- 
--	if ((le32_to_cpu(dresp->status) == ST_OK) &&
--	    (le32_to_cpu(dresp->mnt[0].vol) == CT_NONE)) {
--		dinfo->command = cpu_to_le32(VM_NameServe64);
--		dinfo->count = cpu_to_le32(cid);
--		dinfo->type = cpu_to_le32(FT_FILESYS);
-+	if ((fibptr = aac_fib_alloc((struct aac_dev *)scsicmd->device->host->hostdata))) {
-+		struct aac_query_mount *dinfo;
- 
--		if (aac_fib_send(ContainerCommand,
--			    fibptr,
--			    sizeof(struct aac_query_mount),
--			    FsaNormal,
--			    1, 1,
--			    NULL, NULL) < 0)
--			goto error;
--	} else
--		dresp->mnt[0].capacityhigh = 0;
-+		aac_fib_init(fibptr);
-+
-+		dinfo = (struct aac_query_mount *)fib_data(fibptr);
-+
-+		dinfo->command = cpu_to_le32(VM_NameServe);
-+		dinfo->count = cpu_to_le32(scmd_id(scsicmd));
-+		dinfo->type = cpu_to_le32(FT_FILESYS);
-+		scsicmd->SCp.ptr = (char *)callback;
- 
--	if ((le32_to_cpu(dresp->status) == ST_OK) &&
--	    (le32_to_cpu(dresp->mnt[0].vol) != CT_NONE) &&
--	    (le32_to_cpu(dresp->mnt[0].state) != FSCS_HIDDEN)) {
--		fsa_dev_ptr[cid].valid = 1;
--		fsa_dev_ptr[cid].type = le32_to_cpu(dresp->mnt[0].vol);
--		fsa_dev_ptr[cid].size
--		  = ((u64)le32_to_cpu(dresp->mnt[0].capacity)) +
--		    (((u64)le32_to_cpu(dresp->mnt[0].capacityhigh)) << 32);
--		if (le32_to_cpu(dresp->mnt[0].state) & FSCS_READONLY)
--			fsa_dev_ptr[cid].ro = 1;
-+		status = aac_fib_send(ContainerCommand,
-+			  fibptr,
-+			  sizeof(struct aac_query_mount),
-+			  FsaNormal,
-+			  0, 1,
-+			  (fib_callback) _aac_probe_container1,
-+			  (void *) scsicmd);
-+		/*
-+		 *	Check that the command queued to the controller
-+		 */
-+		if (status == -EINPROGRESS) {
-+			scsicmd->SCp.phase = AAC_OWNER_FIRMWARE;
-+			return 0;
-+		}
-+		if (status < 0) {
-+			scsicmd->SCp.ptr = NULL;
-+			aac_fib_complete(fibptr);
-+			aac_fib_free(fibptr);
-+		}
- 	}
-+	if (status < 0) {
-+		struct fsa_dev_info *fsa_dev_ptr = ((struct aac_dev *)(scsicmd->device->host->hostdata))->fsa_dev;
-+		if (fsa_dev_ptr) {
-+			fsa_dev_ptr += scmd_id(scsicmd);
-+			if ((fsa_dev_ptr->valid & 1) == 0) {
-+				fsa_dev_ptr->valid = 0;
-+				return (*callback)(scsicmd);
-+			}
-+		}
-+	}
-+	return status;
-+}
- 
--error:
--	aac_fib_complete(fibptr);
--	aac_fib_free(fibptr);
 +/**
-+ *	aac_probe_container		-	query a logical volume
-+ *	@dev: device to query
-+ *	@cid: container identifier
++ * sysfs_schedule_callback - helper to schedule a callback for a kobject
++ * @kobj: object we're acting for.
++ * @func: callback function to invoke later.
++ * @data: argument to pass to @func.
 + *
-+ *	Queries the controller about the given volume. The volume information
-+ *	is updated in the struct fsa_dev_info structure rather than returned.
++ * sysfs attribute methods must not unregister themselves or their parent
++ * kobject (which would amount to the same thing).  Attempts to do so will
++ * deadlock, since unregistration is mutually exclusive with driver
++ * callbacks.
++ *
++ * Instead methods can call this routine, which will attempt to allocate
++ * and schedule a workqueue request to call back @func with @data as its
++ * argument in the workqueue's process context.  @kobj will be pinned
++ * until @func returns.
++ *
++ * Returns 0 if the request was submitted, -ENOMEM if storage could not
++ * be allocated.
 + */
-+static int aac_probe_container_callback1(struct scsi_cmnd * scsicmd)
++int sysfs_schedule_callback(struct kobject *kobj, void (*func)(void *),
++		void *data)
 +{
-+	scsicmd->device = NULL;
++	struct sysfs_schedule_callback_struct *ss;
++
++	ss = kmalloc(sizeof(*ss), GFP_KERNEL);
++	if (!ss)
++		return -ENOMEM;
++	kobject_get(kobj);
++	ss->kobj = kobj;
++	ss->func = func;
++	ss->data = data;
++	INIT_WORK(&ss->work, sysfs_schedule_callback_work);
++	schedule_work(&ss->work);
 +	return 0;
 +}
++EXPORT_SYMBOL_GPL(sysfs_schedule_callback);
 +
-+int aac_probe_container(struct aac_dev *dev, int cid)
-+{
-+	struct scsi_cmnd *scsicmd = kmalloc(sizeof(*scsicmd), GFP_KERNEL);
-+	struct scsi_device *scsidev = kmalloc(sizeof(*scsidev), GFP_KERNEL);
-+	int status;
  
-+	if (!scsicmd || !scsidev) {
-+		kfree(scsicmd);
-+		kfree(scsidev);
-+		return -ENOMEM;
-+	}
-+	scsicmd->list.next = NULL;
-+	scsicmd->scsi_done = (void (*)(struct scsi_cmnd*))_aac_probe_container1;
+ EXPORT_SYMBOL_GPL(sysfs_create_file);
+ EXPORT_SYMBOL_GPL(sysfs_remove_file);
+Index: 2.6.21-rc3-git9/include/linux/device.h
+===================================================================
+--- 2.6.21-rc3-git9.orig/include/linux/device.h
++++ 2.6.21-rc3-git9/include/linux/device.h
+@@ -353,6 +353,8 @@ extern int __must_check device_create_bi
+ 					       struct bin_attribute *attr);
+ extern void device_remove_bin_file(struct device *dev,
+ 				   struct bin_attribute *attr);
++extern int device_schedule_callback(struct device *dev,
++		void (*func)(struct device *));
+ 
+ /* device resource management */
+ typedef void (*dr_release_t)(struct device *dev, void *res);
+Index: 2.6.21-rc3-git9/drivers/base/core.c
+===================================================================
+--- 2.6.21-rc3-git9.orig/drivers/base/core.c
++++ 2.6.21-rc3-git9/drivers/base/core.c
+@@ -407,6 +407,35 @@ void device_remove_bin_file(struct devic
+ }
+ EXPORT_SYMBOL_GPL(device_remove_bin_file);
+ 
++/**
++ * device_schedule_callback - helper to schedule a callback for a device
++ * @dev: device.
++ * @func: callback function to invoke later.
++ *
++ * Attribute methods must not unregister themselves or their parent device
++ * (which would amount to the same thing).  Attempts to do so will deadlock,
++ * since unregistration is mutually exclusive with driver callbacks.
++ *
++ * Instead methods can call this routine, which will attempt to allocate
++ * and schedule a workqueue request to call back @func with @dev as its
++ * argument in the workqueue's process context.  @dev will be pinned until
++ * @func returns.
++ *
++ * Returns 0 if the request was submitted, -ENOMEM if storage could not
++ * be allocated.
++ *
++ * NOTE: This routine won't work if CONFIG_SYSFS isn't set!  It uses an
++ * underlying sysfs routine (since it is intended for use by attribute
++ * methods), and if sysfs isn't available you'll get nothing but -ENOSYS.
++ */
++int device_schedule_callback(struct device *dev,
++		void (*func)(struct device *))
++{
++	return sysfs_schedule_callback(&dev->kobj,
++			(void (*)(void *)) func, dev);
++}
++EXPORT_SYMBOL_GPL(device_schedule_callback);
 +
-+	scsicmd->device = scsidev;
-+	scsidev->sdev_state = 0;
-+	scsidev->id = cid;
-+	scsidev->host = dev->scsi_host_ptr;
+ static void klist_children_get(struct klist_node *n)
+ {
+ 	struct device *dev = container_of(n, struct device, knode_parent);
+Index: 2.6.21-rc3-git9/drivers/scsi/scsi_sysfs.c
+===================================================================
+--- 2.6.21-rc3-git9.orig/drivers/scsi/scsi_sysfs.c
++++ 2.6.21-rc3-git9/drivers/scsi/scsi_sysfs.c
+@@ -452,10 +452,22 @@ store_rescan_field (struct device *dev, 
+ }
+ static DEVICE_ATTR(rescan, S_IWUSR, NULL, store_rescan_field);
+ 
++static void sdev_store_delete_callback(struct device *dev)
++{
++	scsi_remove_device(to_scsi_device(dev));
++}
 +
-+	if (_aac_probe_container(scsicmd, aac_probe_container_callback1) == 0)
-+		while (scsicmd->device == scsidev)
-+			schedule();
-+	status = scsicmd->SCp.Status;
-+	kfree(scsicmd);
-+	kfree(scsidev);
- 	return status;
+ static ssize_t sdev_store_delete(struct device *dev, struct device_attribute *attr, const char *buf,
+ 				 size_t count)
+ {
+-	scsi_remove_device(to_scsi_device(dev));
++	int rc;
++
++	/* An attribute cannot be unregistered by one of its own methods,
++	 * so we have to use this roundabout approach.
++	 */
++	rc = device_schedule_callback(dev, sdev_store_delete_callback);
++	if (rc)
++		count = rc;
+ 	return count;
+ };
+ static DEVICE_ATTR(delete, S_IWUSR, NULL, sdev_store_delete);
+Index: 2.6.21-rc3-git9/drivers/s390/cio/ccwgroup.c
+===================================================================
+--- 2.6.21-rc3-git9.orig/drivers/s390/cio/ccwgroup.c
++++ 2.6.21-rc3-git9/drivers/s390/cio/ccwgroup.c
+@@ -71,19 +71,31 @@ __ccwgroup_remove_symlinks(struct ccwgro
+  * Provide an 'ungroup' attribute so the user can remove group devices no
+  * longer needed or accidentially created. Saves memory :)
+  */
++static void ccwgroup_ungroup_callback(struct device *dev)
++{
++	struct ccwgroup_device *gdev = to_ccwgroupdev(dev);
++
++	__ccwgroup_remove_symlinks(gdev);
++	device_unregister(dev);
++}
++
+ static ssize_t
+ ccwgroup_ungroup_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
+ {
+ 	struct ccwgroup_device *gdev;
++	int rc;
+ 
+ 	gdev = to_ccwgroupdev(dev);
+ 
+ 	if (gdev->state != CCWGROUP_OFFLINE)
+ 		return -EINVAL;
+ 
+-	__ccwgroup_remove_symlinks(gdev);
+-	device_unregister(dev);
+-
++	/* Note that we cannot unregister the device from one of its
++	 * attribute methods, so we have to use this roundabout approach.
++	 */
++	rc = device_schedule_callback(dev, ccwgroup_ungroup_callback);
++	if (rc)
++		count = rc;
+ 	return count;
  }
  
-@@ -1646,29 +1690,12 @@ int aac_scsi_cmd(struct scsi_cmnd * scsi
- 				case TEST_UNIT_READY:
- 					if (dev->in_reset)
- 						return -1;
--					spin_unlock_irq(host->host_lock);
--					aac_probe_container(dev, cid);
--					if ((fsa_dev_ptr[cid].valid & 1) == 0)
--						fsa_dev_ptr[cid].valid = 0;
--					spin_lock_irq(host->host_lock);
--					if (fsa_dev_ptr[cid].valid == 0) {
--						scsicmd->result = DID_NO_CONNECT << 16;
--						scsicmd->scsi_done(scsicmd);
--						return 0;
--					}
-+					return _aac_probe_container(scsicmd,
-+							aac_probe_container_callback2);
- 				default:
- 					break;
- 				}
- 			}
--			/*
--			 *	If the target container still doesn't exist, 
--			 *	return failure
--			 */
--			if (fsa_dev_ptr[cid].valid == 0) {
--				scsicmd->result = DID_BAD_TARGET << 16;
--				scsicmd->scsi_done(scsicmd);
--				return 0;
--			}
- 		} else {  /* check for physical non-dasd devices */
- 			if ((dev->nondasd_support == 1) || expose_physicals) {
- 				if (dev->in_reset)
 
--- 
-Mark Haverkamp <markh@linux-foundation.org>
+
+
+Patches currently in gregkh-2.6 which might be from stern@rowland.harvard.edu are
 
