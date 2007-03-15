@@ -1,49 +1,54 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 1/4] iscsi class, qla4xxx and libiscsi: export iscsi session
- state in sysfs
-Date: Thu, 15 Mar 2007 09:20:26 -0500
-Message-ID: <45F9562A.7030307@cs.wisc.edu>
-References: <11739019681346-git-send-email-michaelc@cs.wisc.edu> <11739019693216-git-send-email-michaelc@cs.wisc.edu> <45F9430A.9010309@emulex.com>
+Subject: Re: [PATCH 4/4] fc class: use transport host byte values
+Date: Thu, 15 Mar 2007 09:26:44 -0500
+Message-ID: <45F957A4.8080001@cs.wisc.edu>
+References: <11739019681346-git-send-email-michaelc@cs.wisc.edu> <11739019693216-git-send-email-michaelc@cs.wisc.edu> <11739019703157-git-send-email-michaelc@cs.wisc.edu> <45F865D2.9020201@cs.wisc.edu> <45F94D27.2090006@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:43428 "EHLO sabe.cs.wisc.edu"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:43466 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1422717AbXCOOUo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Mar 2007 10:20:44 -0400
-In-Reply-To: <45F9430A.9010309@emulex.com>
+	id S1422722AbXCOO0w (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Mar 2007 10:26:52 -0400
+In-Reply-To: <45F94D27.2090006@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Smart@Emulex.Com
 Cc: linux-scsi@vger.kernel.org
 
 James Smart wrote:
-> 
-> 
-> 
-> 
->> @@ -1768,7 +1781,8 @@ static void iscsi_start_session_recovery
->>       * flush queues.
->>       */
->>      spin_lock_bh(&session->lock);
->> -    fail_all_commands(conn);
->> +    fail_all_commands(conn,
->> +            STOP_CONN_RECOVER ? DID_BUS_BUSY : DID_ERROR);
->>      flush_control_queues(session, conn);
->>      spin_unlock_bh(&session->lock);
->>  
-> 
-> I'm assuming you do not support error recovery level 2, right ?
-> 
+> Background:
+>   The states, in the transport are:
+>      event               state
+>     --------------------------------
+>       n/a                running
+>     lose connectivity    blocked
+>     fastfail timeout     still blocked, but with fastfail indicator
 
-Yeah, we only do erl0 right now.
+My patch changed this one. When this times out, I unblock the queue.
 
->> +int iscsi_session_chkready(struct iscsi_cls_session *session)
-> ...
->> +EXPORT_SYMBOL_GPL(iscsi_session_chkready);
+>     dev_loss timeout     unblocked/removed
 > 
-> Any reason this isn't an inline ?
+> Question:
 > 
+> The chkready helper in the transport catches race conditions where the
+> block is being put in place, but queuecommand is running on another cpu,
+> thus returning DID_IMM_RETRY.
+> 
+> Your patch is updating chkready to look for the case when fastfail has
+> fired, and returning DID_TRANSPORT_FASTFAIL  ?  Why ?  The request
+> queue would be blocked so there should be no call to queuecommand that
+> would fall into this category - unless you are assuming that fastfail
+> timeout is so fast that it could fall into the same race condition as
+> blocked.
 
-No, will make it inline.
+In the patch, when the fast IO fail timer fires, I unblock the queues.
+
++       rport->fast_io_fail_timeout = 1;
+        i->f->terminate_rport_io(rport);
++       scsi_target_unblock(&rport->dev);
+
+At that time IO would be queued on drivers and would hit that test and
+be failed. New IO would also be failed upwards by that check.
+
