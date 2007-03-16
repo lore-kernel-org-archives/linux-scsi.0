@@ -1,46 +1,38 @@
-From: Horms <horms@verge.net.au>
-Subject: [PATCH 1/2] fusion - removed unnecessary code in mptscsih_resume()
-Date: Fri, 16 Mar 2007 16:05:22 +0900
-Message-ID: <20070316070521.GB1081@verge.net.au>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH 2/2] fusion - honour return value of
+	pci_enable_device() in mpt_resume()
+Date: Fri, 16 Mar 2007 09:27:26 -0500
+Message-ID: <1174055246.3519.5.camel@mulgrave.il.steeleye.com>
+References: <20070316070521.GB1081@verge.net.au>
+	 <20070316070550.GC1081@verge.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from koto.vergenet.net ([210.128.90.7]:45755 "EHLO koto.vergenet.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753052AbXCPH6m (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Mar 2007 03:58:42 -0400
-Content-Disposition: inline
+Received: from hancock.steeleye.com ([71.30.118.248]:55947 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S965114AbXCPO1k (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Mar 2007 10:27:40 -0400
+In-Reply-To: <20070316070550.GC1081@verge.net.au>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: mpt_linux_developer@lsi.com, linux-scsi@vger.kernel.org
-Cc: Eric Moore <Eric.Moore@lsi.com>
+To: Horms <horms@verge.net.au>
+Cc: mpt_linux_developer@lsi.com, linux-scsi@vger.kernel.org, Eric Moore <Eric.Moore@lsi.com>
 
-It seems that most of the code in mptscsih_resume() doesn't
-do anything. This patch removes that code.
+On Fri, 2007-03-16 at 16:05 +0900, Horms wrote:
+> +       err = pci_enable_device(pdev);
+> +       if (err < 0)
+> +               return err;
 
-Signed-off-by: Simon Horman <horms@verge.net.au>
+Traditionally, this should be 
 
-Index: linux-2.6/drivers/message/fusion/mptscsih.c
-===================================================================
---- linux-2.6.orig/drivers/message/fusion/mptscsih.c	2007-03-16 14:47:18.000000000 +0900
-+++ linux-2.6/drivers/message/fusion/mptscsih.c	2007-03-16 14:48:53.000000000 +0900
-@@ -1188,19 +1188,7 @@
- int
- mptscsih_resume(struct pci_dev *pdev)
- {
--	MPT_ADAPTER 		*ioc = pci_get_drvdata(pdev);
--	struct Scsi_Host 	*host = ioc->sh;
--	MPT_SCSI_HOST		*hd;
--
- 	mpt_resume(pdev);
--
--	if(!host)
--		return 0;
--
--	hd = (MPT_SCSI_HOST *)host->hostdata;
--	if(!hd)
--		return 0;
--
- 	return 0;
- }
- 
+if (err)
+	return err;
+
+The reason is that <0 is a signed comparison which can be slightly more
+expensive on some architectures and it's unnecessary if zero is the only
+successful return.
+
+James
+
+
