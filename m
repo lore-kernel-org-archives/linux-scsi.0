@@ -1,271 +1,76 @@
-From: <gregkh@suse.de>
-Subject: patch sysfs-and-driver-core-add-callback-helper-used-by-scsi-and-s390.patch added to gregkh-2.6 tree
-Date: Thu, 15 Mar 2007 15:47:38 -0700
-Message-ID: <1HRyjT-3wT-00@press.kroah.org>
-References: <Pine.LNX.4.44L0.0703151546190.2482-100000@iolanthe.rowland.org>
+From: Horms <horms@verge.net.au>
+Subject: [PATCH 2/2] fusion - honour return value of pci_enable_device() in mpt_resume()
+Date: Fri, 16 Mar 2007 16:05:51 +0900
+Message-ID: <20070316070550.GC1081@verge.net.au>
+References: <20070316070521.GB1081@verge.net.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kroah.org ([69.55.234.183]:43587 "EHLO perch.kroah.org"
+Received: from koto.vergenet.net ([210.128.90.7]:45754 "EHLO koto.vergenet.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751607AbXCOWsl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Mar 2007 18:48:41 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0703151546190.2482-100000@iolanthe.rowland.org>
+	id S1753057AbXCPH6m (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Mar 2007 03:58:42 -0400
+Content-Disposition: inline
+In-Reply-To: <20070316070521.GB1081@verge.net.au>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: stern@rowland.harvard.edu, cornelia.huck@de.ibm.com, dmitry.torokhov@gmail.com, gregkh@suse.de, greg@kroah.com, hugh@veritas.com, James.Bottomley@SteelEye.com, linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, maneesh@in.ibm.com, oneukum@suse.de, rpurdie@rpsys.net, torvalds@linux-foundation.org
+To: mpt_linux_developer@lsi.com, linux-scsi@vger.kernel.org
+Cc: Eric Moore <Eric.Moore@lsi.com>
 
+Honour the return value of pci_enable_device(), which
+seems to be a desirable thing to do:
 
-This is a note to let you know that I've just added the patch titled
+  2.6.20-rc4
+  gcc (GCC) 4.1.2 20061115 (prerelease) (Debian 4.1.1-21)
 
-     Subject: sysfs and driver core: add callback helper, used by SCSI and S390
+    CC [M]  drivers/message/fusion/mptbase.o
+    drivers/message/fusion/mptbase.c: In function `mpt_resume':
+    drivers/message/fusion/mptbase.c:1541: warning: ignoring return value
+    of `pci_enable_device', declared with attribute warn_unused_result
 
-to my gregkh-2.6 tree.  Its filename is
+It also in turn has mptscsih_resume() honour the return value of
+mpt_resume()
 
-     sysfs-and-driver-core-add-callback-helper-used-by-scsi-and-s390.patch
+I'm not sure about the handling of the other potential error cases
+in mpt_resume(), of which there appear to be many. But this does
+seem to be a good start.
 
-This tree can be found at 
-    http://www.kernel.org/pub/linux/kernel/people/gregkh/gregkh-2.6/patches/
+Signed-off-by: Simon Horman <horms@verge.net.au>
 
-
->From stern@rowland.harvard.edu  Thu Mar 15 15:35:00 2007
-Date: Thu, 15 Mar 2007 15:50:34 -0400 (EDT)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Hugh Dickins <hugh@veritas.com>, <greg@kroah.com>,
-	Cornelia Huck <cornelia.huck@de.ibm.com>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Oliver Neukum <oneukum@suse.de>, Maneesh Soni <maneesh@in.ibm.com>,
-	<gregkh@suse.de>, Richard Purdie <rpurdie@rpsys.net>,
-	James Bottomley <James.Bottomley@SteelEye.com>,
-	SCSI development list <linux-scsi@vger.kernel.org>,
-	<linux-s390@vger.kernel.org>
-Subject: sysfs and driver core: add callback helper, used by SCSI and S390
-Message-ID: <Pine.LNX.4.44L0.0703151546190.2482-100000@iolanthe.rowland.org>
-
-This patch (as868) adds a helper routine for device drivers that need
-to set up a callback to perform some action in a different process's
-context.  This is intended for use by attribute methods that want to
-unregister themselves or their parent device.  Attribute method calls
-are mutually exclusive with unregistration, so such actions cannot be
-taken directly.
-
-Two attribute methods are converted to use the new helper routine: one
-for SCSI device deletion and one for System/390 ccwgroup devices.
-
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-
---- 2.6.21-rc3-git9.orig/include/linux/sysfs.h
-+++ 2.6.21-rc3-git9/include/linux/sysfs.h
-@@ -78,6 +78,9 @@ struct sysfs_ops {
+Index: linux-2.6/drivers/message/fusion/mptbase.c
+===================================================================
+--- linux-2.6.orig/drivers/message/fusion/mptbase.c	2007-03-16 16:00:01.000000000 +0900
++++ linux-2.6/drivers/message/fusion/mptbase.c	2007-03-16 16:02:23.000000000 +0900
+@@ -1531,6 +1531,7 @@
+ 	MPT_ADAPTER *ioc = pci_get_drvdata(pdev);
+ 	u32 device_state = pdev->current_state;
+ 	int recovery_state;
++	int err;
  
- #ifdef CONFIG_SYSFS
+ 	printk(MYIOC_s_INFO_FMT
+ 	"pci-resume: pdev=0x%p, slot=%s, Previous operating state [D%d]\n",
+@@ -1538,7 +1539,9 @@
  
-+extern int sysfs_schedule_callback(struct kobject *kobj,
-+		void (*func)(void *), void *data);
-+
- extern int __must_check
- sysfs_create_dir(struct kobject *, struct dentry *);
+ 	pci_set_power_state(pdev, 0);
+ 	pci_restore_state(pdev);
+-	pci_enable_device(pdev);
++	err = pci_enable_device(pdev);
++	if (err < 0)
++		return err;
  
-@@ -132,6 +135,12 @@ extern int __must_check sysfs_init(void)
- 
- #else /* CONFIG_SYSFS */
- 
-+static inline int sysfs_schedule_callback(struct kobject *kobj,
-+		void (*func)(void *), void *data)
-+{
-+	return -ENOSYS;
-+}
-+
- static inline int sysfs_create_dir(struct kobject * k, struct dentry *shadow)
+ 	/* enable interrupts */
+ 	CHIPREG_WRITE32(&ioc->chip->IntMask, MPI_HIM_DIM);
+Index: linux-2.6/drivers/message/fusion/mptscsih.c
+===================================================================
+--- linux-2.6.orig/drivers/message/fusion/mptscsih.c	2007-03-16 16:00:01.000000000 +0900
++++ linux-2.6/drivers/message/fusion/mptscsih.c	2007-03-16 16:02:23.000000000 +0900
+@@ -1188,8 +1188,7 @@
+ int
+ mptscsih_resume(struct pci_dev *pdev)
  {
- 	return 0;
-Index: 2.6.21-rc3-git9/fs/sysfs/file.c
-===================================================================
---- 2.6.21-rc3-git9.orig/fs/sysfs/file.c
-+++ 2.6.21-rc3-git9/fs/sysfs/file.c
-@@ -629,6 +629,60 @@ void sysfs_remove_file_from_group(struct
- }
- EXPORT_SYMBOL_GPL(sysfs_remove_file_from_group);
- 
-+struct sysfs_schedule_callback_struct {
-+	struct kobject 		*kobj;
-+	void			(*func)(void *);
-+	void			*data;
-+	struct work_struct	work;
-+};
-+
-+static void sysfs_schedule_callback_work(struct work_struct *work)
-+{
-+	struct sysfs_schedule_callback_struct *ss = container_of(work,
-+			struct sysfs_schedule_callback_struct, work);
-+
-+	(ss->func)(ss->data);
-+	kobject_put(ss->kobj);
-+	kfree(ss);
-+}
-+
-+/**
-+ * sysfs_schedule_callback - helper to schedule a callback for a kobject
-+ * @kobj: object we're acting for.
-+ * @func: callback function to invoke later.
-+ * @data: argument to pass to @func.
-+ *
-+ * sysfs attribute methods must not unregister themselves or their parent
-+ * kobject (which would amount to the same thing).  Attempts to do so will
-+ * deadlock, since unregistration is mutually exclusive with driver
-+ * callbacks.
-+ *
-+ * Instead methods can call this routine, which will attempt to allocate
-+ * and schedule a workqueue request to call back @func with @data as its
-+ * argument in the workqueue's process context.  @kobj will be pinned
-+ * until @func returns.
-+ *
-+ * Returns 0 if the request was submitted, -ENOMEM if storage could not
-+ * be allocated.
-+ */
-+int sysfs_schedule_callback(struct kobject *kobj, void (*func)(void *),
-+		void *data)
-+{
-+	struct sysfs_schedule_callback_struct *ss;
-+
-+	ss = kmalloc(sizeof(*ss), GFP_KERNEL);
-+	if (!ss)
-+		return -ENOMEM;
-+	kobject_get(kobj);
-+	ss->kobj = kobj;
-+	ss->func = func;
-+	ss->data = data;
-+	INIT_WORK(&ss->work, sysfs_schedule_callback_work);
-+	schedule_work(&ss->work);
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(sysfs_schedule_callback);
-+
- 
- EXPORT_SYMBOL_GPL(sysfs_create_file);
- EXPORT_SYMBOL_GPL(sysfs_remove_file);
-Index: 2.6.21-rc3-git9/include/linux/device.h
-===================================================================
---- 2.6.21-rc3-git9.orig/include/linux/device.h
-+++ 2.6.21-rc3-git9/include/linux/device.h
-@@ -353,6 +353,8 @@ extern int __must_check device_create_bi
- 					       struct bin_attribute *attr);
- extern void device_remove_bin_file(struct device *dev,
- 				   struct bin_attribute *attr);
-+extern int device_schedule_callback(struct device *dev,
-+		void (*func)(struct device *));
- 
- /* device resource management */
- typedef void (*dr_release_t)(struct device *dev, void *res);
-Index: 2.6.21-rc3-git9/drivers/base/core.c
-===================================================================
---- 2.6.21-rc3-git9.orig/drivers/base/core.c
-+++ 2.6.21-rc3-git9/drivers/base/core.c
-@@ -407,6 +407,35 @@ void device_remove_bin_file(struct devic
- }
- EXPORT_SYMBOL_GPL(device_remove_bin_file);
- 
-+/**
-+ * device_schedule_callback - helper to schedule a callback for a device
-+ * @dev: device.
-+ * @func: callback function to invoke later.
-+ *
-+ * Attribute methods must not unregister themselves or their parent device
-+ * (which would amount to the same thing).  Attempts to do so will deadlock,
-+ * since unregistration is mutually exclusive with driver callbacks.
-+ *
-+ * Instead methods can call this routine, which will attempt to allocate
-+ * and schedule a workqueue request to call back @func with @dev as its
-+ * argument in the workqueue's process context.  @dev will be pinned until
-+ * @func returns.
-+ *
-+ * Returns 0 if the request was submitted, -ENOMEM if storage could not
-+ * be allocated.
-+ *
-+ * NOTE: This routine won't work if CONFIG_SYSFS isn't set!  It uses an
-+ * underlying sysfs routine (since it is intended for use by attribute
-+ * methods), and if sysfs isn't available you'll get nothing but -ENOSYS.
-+ */
-+int device_schedule_callback(struct device *dev,
-+		void (*func)(struct device *))
-+{
-+	return sysfs_schedule_callback(&dev->kobj,
-+			(void (*)(void *)) func, dev);
-+}
-+EXPORT_SYMBOL_GPL(device_schedule_callback);
-+
- static void klist_children_get(struct klist_node *n)
- {
- 	struct device *dev = container_of(n, struct device, knode_parent);
-Index: 2.6.21-rc3-git9/drivers/scsi/scsi_sysfs.c
-===================================================================
---- 2.6.21-rc3-git9.orig/drivers/scsi/scsi_sysfs.c
-+++ 2.6.21-rc3-git9/drivers/scsi/scsi_sysfs.c
-@@ -452,10 +452,22 @@ store_rescan_field (struct device *dev, 
- }
- static DEVICE_ATTR(rescan, S_IWUSR, NULL, store_rescan_field);
- 
-+static void sdev_store_delete_callback(struct device *dev)
-+{
-+	scsi_remove_device(to_scsi_device(dev));
-+}
-+
- static ssize_t sdev_store_delete(struct device *dev, struct device_attribute *attr, const char *buf,
- 				 size_t count)
- {
--	scsi_remove_device(to_scsi_device(dev));
-+	int rc;
-+
-+	/* An attribute cannot be unregistered by one of its own methods,
-+	 * so we have to use this roundabout approach.
-+	 */
-+	rc = device_schedule_callback(dev, sdev_store_delete_callback);
-+	if (rc)
-+		count = rc;
- 	return count;
- };
- static DEVICE_ATTR(delete, S_IWUSR, NULL, sdev_store_delete);
-Index: 2.6.21-rc3-git9/drivers/s390/cio/ccwgroup.c
-===================================================================
---- 2.6.21-rc3-git9.orig/drivers/s390/cio/ccwgroup.c
-+++ 2.6.21-rc3-git9/drivers/s390/cio/ccwgroup.c
-@@ -71,19 +71,31 @@ __ccwgroup_remove_symlinks(struct ccwgro
-  * Provide an 'ungroup' attribute so the user can remove group devices no
-  * longer needed or accidentially created. Saves memory :)
-  */
-+static void ccwgroup_ungroup_callback(struct device *dev)
-+{
-+	struct ccwgroup_device *gdev = to_ccwgroupdev(dev);
-+
-+	__ccwgroup_remove_symlinks(gdev);
-+	device_unregister(dev);
-+}
-+
- static ssize_t
- ccwgroup_ungroup_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
- {
- 	struct ccwgroup_device *gdev;
-+	int rc;
- 
- 	gdev = to_ccwgroupdev(dev);
- 
- 	if (gdev->state != CCWGROUP_OFFLINE)
- 		return -EINVAL;
- 
--	__ccwgroup_remove_symlinks(gdev);
--	device_unregister(dev);
--
-+	/* Note that we cannot unregister the device from one of its
-+	 * attribute methods, so we have to use this roundabout approach.
-+	 */
-+	rc = device_schedule_callback(dev, ccwgroup_ungroup_callback);
-+	if (rc)
-+		count = rc;
- 	return count;
+-	mpt_resume(pdev);
+-	return 0;
++	return mpt_resume(pdev);
  }
  
-
-
-
-Patches currently in gregkh-2.6 which might be from stern@rowland.harvard.edu are
-
+ #endif
