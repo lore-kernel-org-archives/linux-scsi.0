@@ -1,62 +1,40 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH 2/2] fusion - honour return value of pci_enable_device()
- in mpt_resume()
-Date: Fri, 16 Mar 2007 13:18:40 -0400
-Message-ID: <45FAD170.50003@torque.net>
-References: <20070316070521.GB1081@verge.net.au>	<20070316070550.GC1081@verge.net.au>	<1174055246.3519.5.camel@mulgrave.il.steeleye.com>	<20070316080647.3c6d3579.rdunlap@xenotime.net>	<1174061692.3519.6.camel@mulgrave.il.steeleye.com> <20070316082015.e7183c0e.rdunlap@xenotime.net>
-Reply-To: dougg@torque.net
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] scsi: megaraid_sas - throttle io if cmds are in risk
+	of being timed-out
+Date: Fri, 16 Mar 2007 17:22:55 -0500
+Message-ID: <1174083775.3519.54.camel@mulgrave.il.steeleye.com>
+References: <1172784593.19842.21.camel@dumbo>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:56427 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965745AbXCPRSz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Mar 2007 13:18:55 -0400
-In-Reply-To: <20070316082015.e7183c0e.rdunlap@xenotime.net>
+Received: from hancock.steeleye.com ([71.30.118.248]:60758 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S965990AbXCPWXh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Mar 2007 18:23:37 -0400
+In-Reply-To: <1172784593.19842.21.camel@dumbo>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <rdunlap@xenotime.net>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Horms <horms@verge.net.au>, mpt_linux_developer@lsi.com, linux-scsi@vger.kernel.org, Eric Moore <Eric.Moore@lsi.com>
+To: Sumant Patro <sumant.patro@lsi.com>
+Cc: akpm@osdl.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, neela.kolli@lsi.com, bo.yang@lsi.com
 
-Randy Dunlap wrote:
-> On Fri, 16 Mar 2007 11:14:51 -0500 James Bottomley wrote:
+On Thu, 2007-03-01 at 13:29 -0800, Sumant Patro wrote:
+> Driver to throttle IO to reduce risk of OS timing out cmds.
 > 
->> On Fri, 2007-03-16 at 08:06 -0700, Randy Dunlap wrote:
->>> On Fri, 16 Mar 2007 09:27:26 -0500 James Bottomley wrote:
->>>
->>>> On Fri, 2007-03-16 at 16:05 +0900, Horms wrote:
->>>>> +       err = pci_enable_device(pdev);
->>>>> +       if (err < 0)
->>>>> +               return err;
->>>> Traditionally, this should be 
->>>>
->>>> if (err)
->>>> 	return err;
->>>>
->>>> The reason is that <0 is a signed comparison which can be slightly more
->>>> expensive on some architectures and it's unnecessary if zero is the only
->>>> successful return.
->>> Tradition vs. Linus, eh?  Linus wrote (2007-Mar-06, on lkml,
->>> Message-ID: <Pine.LNX.4.64.0703060817060.5963@woody.linux-foundation.org>):
->> Sure ... we can all maintain our own traditions .. what was the subject
->> of this email?
-> 
-> The subject was coding style and return/error codes.
-> The Subject: line was: Re: [5/6] 2.6.21-rc2: known regressions
+> Implemented a circular queue to keep track of pending OS cmds in FW. 
+> This queue is periodically (every 10 sec) checked by a timer routine.
+> If there is any cmd that is in risk of getting timed-out by the OS, 
+> the host->can_queue is reduced to 16 and MEGASAS_FW_BUSY flag is set. 
+> The host->can_queue will be restored to default value when the following 
+> two conditions are met : 5 secs has elapsed and the # of outstanding cmds
+> in FW is less than 17.
+> Also increased the per cmd timeout to 120*HZ from 90*HZ.
 
-Randy,
-While on the subject of traditions, how about the
-C90 and C99 ones?
+OK, this is still not nice.  What you need to be doing is intercepting
+the timeout before it fires (and quiesces the machine).  Currently the
+eh_timed_out() callback is only exposed to transport classes, I'll put
+it back into the host template and then you can use it.
 
-C identifiers starting with "__" are reserved!
-Reference: ISO/IEC 9899:1999 (C99) section 7.1.3 "All
-identifiers that start with an underscore and either
-an upper case letter or another underscore are always
-reserved for any use". It was the same in C90.
+James
 
-Now we might start getting rid of __u32 and its
-friends first :-)
-
-Doug Gilbert
 
