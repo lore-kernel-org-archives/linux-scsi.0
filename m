@@ -1,60 +1,38 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: SCSI Generic version 4 interface, release 1.2
-Date: Sat, 17 Mar 2007 18:13:39 -0500
-Message-ID: <45FC7623.8080305@cs.wisc.edu>
-References: <45F82048.6020401@torque.net> <20070317211511.GA19316@osc.edu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Richard Knutsson <ricknu-0@student.ltu.se>
+Subject: [PATCH] drivers/scsi/eata_generic.h: Remove FALSE/TRUE defines
+Date: Sun, 18 Mar 2007 00:58:23 +0100 (MET)
+Message-ID: <20070317235535.16691.87890.sendpatchset@thinktank.campus.ltu.se>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:57067 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752275AbXCQXN6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 17 Mar 2007 19:13:58 -0400
-In-Reply-To: <20070317211511.GA19316@osc.edu>
+Received: from gepetto.dc.ltu.se ([130.240.42.40]:40889 "EHLO
+	gepetto.dc.ltu.se" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752387AbXCRACL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 17 Mar 2007 20:02:11 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Pete Wyckoff <pw@osc.edu>
-Cc: Douglas Gilbert <dougg@torque.net>, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp, jens.axboe@oracle.com
+To: mike@i-Connect.Net, ballabio_dario@emc.com
+Cc: linux-eata@i-Connect.Net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Richard Knutsson <ricknu-0@student.ltu.se>
 
-Pete Wyckoff wrote:
-> dougg@torque.net wrote on Wed, 14 Mar 2007 12:18 -0400:
->> After reviewing this post by Pete Wyckoff:
->> http://marc.theaimsgroup.com/?l=linux-scsi&m=117278879816029&w=2
->>
->> I decided to update my sg v4 interface document originally
->> posted 20061106 which I will now call release 1.1 :
->> http://lwn.net/Articles/208082/
->>
->> Pete was proposing to put back din_iovec_count and
->> dout_iovec_count that had been dropped out of bsg but
->> had been in release 1.1 . Hmm.
->>
->> Some other items have been picked up from the bsg
->> implementation plus the suggestion from LSF'07 to
->> add dout_resid.
->>
->> See the attachment, comments welcome.
-> 
-> Do you want to define the iovec format too?  As I commented in my
-> patch, v3 sg_iovec has pointers with 32/64-bit issues.  Would be
-> nice to see you declare v4 sg_iovec as pure u64.  (By the way, don't
-> use the patch:  casting from the new to the old can put junk in the
-> top half of the 64-bit sg_iovec.iov_len).
-> 
-> Another issue I wonder about is queue DMA alignment.  In bsg,
-> blk_rq_map_user will use a bounce buffer if the user-supplied start
-> and end addresses are not aligned.  sg will happily map user pages
-> at any offset without checking, although I haven't checked if Mike's
-> patches change this.  ll_rw_blk.c says regarding blk_rq_map_user:
-> 
+Signed-off-by: Richard Knutsson <ricknu-0@student.ltu.se>
+---
+Only included by drivers/scsi/eata_pio.c and it only uses FALSE/TRUE
+in comments.
 
-Currently and before any of my patches, sg checked the start
-        if (((unsigned long)hp->dxferp &
-                        queue_dma_alignment(sdev->request_queue)) != 0)
-It did not check the start and end like blk_rq_map_user.
 
-With my updated patches, blk_rq_map_user is just checking the start.
-There was a thread about not checking the end on linux-scsi. I will try
-to dig it up. A couple kernels ago the bio map helpers were modified to
-only check the start.
+diff --git a/drivers/scsi/eata_generic.h b/drivers/scsi/eata_generic.h
+index 635c148..5016af5 100644
+--- a/drivers/scsi/eata_generic.h
++++ b/drivers/scsi/eata_generic.h
+@@ -18,13 +18,6 @@
+  * Misc. definitions			     *
+  *********************************************/
+ 
+-#ifndef TRUE
+-#define TRUE 1
+-#endif
+-#ifndef FALSE
+-#define FALSE 0
+-#endif
+-
+ #define R_LIMIT 0x20000
+ 
+ #define MAXISA	   4
