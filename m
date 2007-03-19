@@ -1,26 +1,54 @@
-From: Olaf Hering <olh@suse.de>
-Subject: Re: improve sg_luns output for iscsi
-Date: Mon, 19 Mar 2007 10:06:23 +0100
-Message-ID: <20070319090623.GA25129@suse.de>
-References: <20070306180428.GA16826@suse.de> <45EDC0A5.804@torque.net>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: drivers/message/fusion/mptscsih.c: inconsequent NULL checking
+Date: Mon, 19 Mar 2007 10:22:18 +0100
+Message-ID: <20070319092218.GH752@stusta.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:33159 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752353AbXCSJG3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 19 Mar 2007 05:06:29 -0400
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:34817 "EHLO
+	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753002AbXCSJWP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Mar 2007 05:22:15 -0400
 Content-Disposition: inline
-In-Reply-To: <45EDC0A5.804@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: linux-scsi@vger.kernel.org
+To: Eric.Moore@lsi.com
+Cc: mpt_linux_developer@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Mar 06, Douglas Gilbert wrote:
+The Coverity checker spotted the following inconsequent NULL checking in 
+drivers/message/fusion/mptscsih.c:
 
-> In summary sg_luns is probably not what you want!
+<--  snip  -->
 
-Yes, it can be done in bash.
+...
+int
+mptscsih_qcmd(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_cmnd *))
+{
+...
+        if (vdev
+            && (vdev->vtarget->tflags & MPT_TARGET_FLAGS_Q_YES)
+            && (SCpnt->device->tagged_supported)) { 
+                scsictl = scsidir | MPI_SCSIIO_CONTROL_SIMPLEQ;
+        } else {
+                scsictl = scsidir | MPI_SCSIIO_CONTROL_UNTAGGED; 
+        }
+ 
+        /* Use the above information to set up the message frame
+         */
+        pScsiReq->TargetID = (u8) vdev->vtarget->id;
+...
 
-cd /sys/block/sde/device ; i=`pwd -P` ; printf '%x%012x\n' ${i##*:}
+<--  snip  -->
+
+vdev is first checked but later dereferenced unconditionally.
+
+cu
+Adrian
+
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
