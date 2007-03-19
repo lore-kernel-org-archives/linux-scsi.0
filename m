@@ -1,35 +1,29 @@
-From: Eric Moore <eric.moore@lsi.com>
-Subject: [PATCH 2/2] fusion :  VMWare guest OS remounted as read only fix
-Date: Mon, 19 Mar 2007 10:31:51 -0600
-Message-ID: <20070319163150.GA28077@lsil.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/2] fusion :  shost max_id not set in VMWare guest os
+Date: Mon, 19 Mar 2007 17:06:58 +0000
+Message-ID: <20070319170658.GA3611@infradead.org>
+References: <20070319163043.GA28055@lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:33616 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030361AbXCSQiq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 19 Mar 2007 12:38:46 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:46971 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965010AbXCSRHB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Mar 2007 13:07:01 -0400
 Content-Disposition: inline
+In-Reply-To: <20070319163043.GA28055@lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
+To: Eric Moore <eric.moore@lsi.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
 
-This address the issue of VMWare guest OS being remounted as read-only becuase the underlying device was held busy too long, , and at the same time address Engenio MPP driver concerns over infinite retries.  This patch removes the code that snoops the SAM STATUS on busy, which would be returning DID_BUS_BUSY, instead we return the status as is.   Retry hanlding seems to be properly handled in scsi_softirq_done, where a busy sam status would only occurr for the time specified by (cmd->allowed  +1) * cmd->timeout_per_command.
+On Mon, Mar 19, 2007 at 10:30:43AM -0600, Eric Moore wrote:
+> [PATCH 1/2] fusion :  shost max_id not set in VMWare guest os
+> 
+> In vmware guest os with emulated LSI 53c1030, the port facts config page is
+> not having MaxDevices initialized to 16 devices. Instead its set to zero.
+> Thereforewhen driver loads, no devices are scanned for from scsi_scan_host.
+> Prior to the3.04.04 driver, shost max_id was set to hard coded value MPT_MAX_SCSI_DEVICES. After that release, support for greater than 255 targets was added, and the driver was taking the target count from the port facts instead.  With this patch we will restore the hard coded values for SPI, but at the same time use the settingsneeded for SAS and Fibre Channel.
 
-Signed-off-by: Eric Moore <Eric.Moore@lsi.com>
+NACK, just get Vmware folks to fix their broken emulation.
 
-diff -uarpN b/drivers/message/fusion/mptscsih.c a/drivers/message/fusion/mptscsih.c
---- b/drivers/message/fusion/mptscsih.c	2007-03-15 18:20:01.000000000 -0600
-+++ a/drivers/message/fusion/mptscsih.c	2007-03-18 12:07:26.000000000 -0600
-@@ -819,10 +819,7 @@ mptscsih_io_done(MPT_ADAPTER *ioc, MPT_F
- 			sc->resid=0;
- 		case MPI_IOCSTATUS_SCSI_RECOVERED_ERROR:	/* 0x0040 */
- 		case MPI_IOCSTATUS_SUCCESS:			/* 0x0000 */
--			if (scsi_status == MPI_SCSI_STATUS_BUSY)
--				sc->result = (DID_BUS_BUSY << 16) | scsi_status;
--			else
--				sc->result = (DID_OK << 16) | scsi_status;
-+			sc->result = (DID_OK << 16) | scsi_status;
- 			if (scsi_state == 0) {
- 				;
- 			} else if (scsi_state & MPI_SCSI_STATE_AUTOSENSE_VALID) {
