@@ -1,35 +1,40 @@
-From: Oliver Neukum <oliver@neukum.org>
-Subject: Re: [PATCH 3/4] libata: reimplement suspend/resume support using sdev->manage_start_stop
-Date: Tue, 20 Mar 2007 17:15:06 +0100
-Message-ID: <200703201715.08114.oliver@neukum.org>
-References: <20070320150718.GF6152@htj.dyndns.org> <20070320152533.GH6152@htj.dyndns.org> <20070320163919.222ae79d@lxorguk.ukuu.org.uk>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH 2/3] sd: implement START/STOP management
+Date: Tue, 20 Mar 2007 11:58:19 -0500
+Message-ID: <1174409899.3522.16.camel@mulgrave.il.steeleye.com>
+References: <20070320150718.GF6152@htj.dyndns.org>
+	 <20070320151359.GG6152@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo-p07-fb.rzone.de ([81.169.146.191]:9603 "EHLO
-	mo-p07-fb.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751441AbXCTQqj convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Mar 2007 12:46:39 -0400
-In-Reply-To: <20070320163919.222ae79d@lxorguk.ukuu.org.uk>
-Content-Disposition: inline
+Received: from hancock.steeleye.com ([71.30.118.248]:47677 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S965323AbXCTQ6a (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Mar 2007 12:58:30 -0400
+In-Reply-To: <20070320151359.GG6152@htj.dyndns.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>, djwong@us.ibm.com, hmh@hmh.eng.br
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, djwong@us.ibm.com, hmh@hmh.eng.br
 
-Am Dienstag, 20. M=E4rz 2007 17:39 schrieb Alan Cox:
-> > * sdev->manage_start_stop is set to 1 in ata_scsi_slave_config().
-> > =A0 This fixes spindown on shutdown and suspend-to-disk.
->=20
-> Yay!!!!
+On Wed, 2007-03-21 at 00:13 +0900, Tejun Heo wrote:
+> Implement SBC START/STOP management.  sdev->mange_start_stop is added.
+> When it's set to one, sd STOPs the device on suspend and shutdown and
+> STARTs it on resume.  sdev->manage_start_stop defaults is in sdev
+> instead of scsi_disk cdev to allow ->slave_config() override the
+> default configuration but is exported under scsi_disk sysfs node as
+> sdev->allow_restart is.
+> 
+> When manage_start_stop is zero (the default value), this patch doesn't
+> introduce any behavior change.
 
-Which kernel version is this?
+I have this in scsi-misc-2.6.  There was a minor space before tab no-no
+which git complained about (and I fixed).  Unfortunately, there's a
+pretty major merge conflict with prior sd.c patches in scsi-misc-2.6.
+I've merged and fixed this but it's going to create a bit of a
+difficulty for applying the libata pieces.
 
-	Regards
-		Oliver
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+James
+
+
