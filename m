@@ -1,34 +1,35 @@
-From: Chuck Ebbert <cebbert@redhat.com>
-Subject: Re: Kernel 2.6.20 does not work anymore with SCSI or SATA on old
- Opteron / Xeon servers
-Date: Tue, 20 Mar 2007 12:01:22 -0400
-Message-ID: <46000552.7010606@redhat.com>
-References: <45FDA626.9000404@prie.be> <20070319232732.854d7120.akpm@linux-foundation.org> <45FFB867.3060500@prie.be> <200703201154.58234.olaf.kirch@oracle.com> <45FFE163.2050107@prie.be>
+From: Oliver Neukum <oliver@neukum.org>
+Subject: Re: [PATCH 3/4] libata: reimplement suspend/resume support using sdev->manage_start_stop
+Date: Tue, 20 Mar 2007 17:15:06 +0100
+Message-ID: <200703201715.08114.oliver@neukum.org>
+References: <20070320150718.GF6152@htj.dyndns.org> <20070320152533.GH6152@htj.dyndns.org> <20070320163919.222ae79d@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:54468 "EHLO mx2.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751694AbXCTQBw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Mar 2007 12:01:52 -0400
-In-Reply-To: <45FFE163.2050107@prie.be>
+Received: from mo-p07-fb.rzone.de ([81.169.146.191]:9603 "EHLO
+	mo-p07-fb.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751441AbXCTQqj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Mar 2007 12:46:39 -0400
+In-Reply-To: <20070320163919.222ae79d@lxorguk.ukuu.org.uk>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: stefan@prie.be
-Cc: Olaf Kirch <olaf.kirch@oracle.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, akpm@linux-foundation.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>, djwong@us.ibm.com, hmh@hmh.eng.br
 
-Stefan Priebe wrote:
-> Hello!
-> 
-> With the sysrq i've found the function with is the problem:
-> inode.c => nfs_getattr => nfs_sync_mapping_range
-> 
-> I've also found the attached patch - which is not included in any stable
-> release nor in 2.6.21.X but is public since 20.02.07
-> 
-> I think this is very important.
-> 
+Am Dienstag, 20. M=E4rz 2007 17:39 schrieb Alan Cox:
+> > * sdev->manage_start_stop is set to 1 in ata_scsi_slave_config().
+> > =A0 This fixes spindown on shutdown and suspend-to-disk.
+>=20
+> Yay!!!!
 
-It is queued for 2.6.20.4.
+Which kernel version is this?
 
+	Regards
+		Oliver
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
