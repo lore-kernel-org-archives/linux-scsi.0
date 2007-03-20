@@ -1,161 +1,261 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 1/3] add a request_queue argument to scsi_cmd_ioctl()
-Date: Tue, 20 Mar 2007 23:48:54 +0900 (JST)
-Message-ID: <20070320213111L.fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 2/3] bind bsg to request_queue instead of gendisk
+Date: Tue, 20 Mar 2007 23:48:55 +0900 (JST)
+Message-ID: <20070320213115Y.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:43678 "EHLO
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:43682 "EHLO
 	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933535AbXCTOtP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Mar 2007 10:49:15 -0400
+	with ESMTP id S933549AbXCTOtQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Mar 2007 10:49:16 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jens.axboe@oracle.com
 Cc: linux-scsi@vger.kernel.org
 
-bsg uses scsi_cmd_ioctl() for some SCSI/sg ioctl
-commands. scsi_cmd_ioctl() gets a request queue from a gendisk
-arguement. This prevents bsg being bound to SCSI devices that don't
-have a gendisk (like OSD). This adds a request_queue argument to
-scsi_cmd_ioctl(). The SCSI/sg ioctl commands doesn't use a gendisk so
-it's safe for any SCSI devices to use scsi_cmd_ioctl().
+This patch binds bsg devices to request_queue instead of gendisk. Any
+objects (like transport entities) can define own request_handler and
+create own bsg device.
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 ---
- block/bsg.c            |    2 +-
- block/scsi_ioctl.c     |   10 +++-------
- drivers/block/ub.c     |    2 +-
- drivers/cdrom/cdrom.c  |    3 ++-
- drivers/ide/ide.c      |    2 +-
- drivers/scsi/sd.c      |    2 +-
- drivers/scsi/st.c      |    3 ++-
- include/linux/blkdev.h |    3 ++-
- 8 files changed, 13 insertions(+), 14 deletions(-)
+ block/bsg.c            |   37 +++++++++++++++++--------------------
+ block/ll_rw_blk.c      |    4 ++--
+ include/linux/blkdev.h |    5 +++++
+ include/linux/bsg.h    |   10 +++++-----
+ include/linux/genhd.h  |    2 --
+ 5 files changed, 29 insertions(+), 29 deletions(-)
 
 diff --git a/block/bsg.c b/block/bsg.c
-index c85d961..0427ece 100644
+index 0427ece..4ea4bed 100644
 --- a/block/bsg.c
 +++ b/block/bsg.c
-@@ -900,7 +900,7 @@ bsg_ioctl(struct inode *inode, struct fi
+@@ -34,7 +34,6 @@ #include <scsi/sg.h>
+ static char bsg_version[] = "block layer sg (bsg) 0.4";
+ 
+ struct bsg_device {
+-	struct gendisk *disk;
+ 	request_queue_t *queue;
+ 	spinlock_t lock;
+ 	struct list_head busy_list;
+@@ -46,7 +45,7 @@ struct bsg_device {
+ 	int done_cmds;
+ 	wait_queue_head_t wq_done;
+ 	wait_queue_head_t wq_free;
+-	char name[BDEVNAME_SIZE];
++	char name[BUS_ID_SIZE];
+ 	int max_queue;
+ 	unsigned long flags;
+ };
+@@ -375,7 +374,7 @@ static void bsg_add_command(struct bsg_d
+ 	dprintk("%s: queueing rq %p, bc %p\n", bd->name, rq, bc);
+ 
+ 	rq->end_io_data = bc;
+-	blk_execute_rq_nowait(q, bd->disk, rq, 1, bsg_rq_end_io);
++	blk_execute_rq_nowait(q, NULL, rq, 1, bsg_rq_end_io);
+ }
+ 
+ static inline struct bsg_command *bsg_next_done_cmd(struct bsg_device *bd)
+@@ -741,7 +740,7 @@ out:
+ }
+ 
+ static struct bsg_device *bsg_add_device(struct inode *inode,
+-					 struct gendisk *disk,
++					 struct request_queue *rq,
+ 					 struct file *file)
+ {
+ 	struct bsg_device *bd = NULL;
+@@ -753,17 +752,16 @@ #endif
+ 	if (!bd)
+ 		return ERR_PTR(-ENOMEM);
+ 
+-	bd->disk = disk;
+-	bd->queue = disk->queue;
+-	kobject_get(&disk->queue->kobj);
++	bd->queue = rq;
++	kobject_get(&rq->kobj);
+ 	bsg_set_block(bd, file);
+ 
+ 	atomic_set(&bd->ref_count, 1);
+ 	bd->minor = iminor(inode);
+ 	mutex_lock(&bsg_mutex);
+-	hlist_add_head(&bd->dev_list,&bsg_device_list[bsg_list_idx(bd->minor)]);
++	hlist_add_head(&bd->dev_list, &bsg_device_list[bsg_list_idx(bd->minor)]);
+ 
+-	strncpy(bd->name, disk->disk_name, sizeof(bd->name) - 1);
++	strncpy(bd->name, rq->bsg_dev.class_dev->class_id, sizeof(bd->name) - 1);
+ 	dprintk("bound to <%s>, max queue %d\n",
+ 		format_dev_t(buf, inode->i_rdev), bd->max_queue);
+ 
+@@ -817,7 +815,7 @@ static struct bsg_device *bsg_get_device
+ 	if (!bcd)
+ 		return ERR_PTR(-ENODEV);
+ 
+-	return bsg_add_device(inode, bcd->disk, file);
++	return bsg_add_device(inode, bcd->queue, file);
+ }
+ 
+ static int bsg_open(struct inode *inode, struct file *file)
+@@ -900,7 +898,7 @@ bsg_ioctl(struct inode *inode, struct fi
  	case SG_EMULATED_HOST:
  	case SCSI_IOCTL_SEND_COMMAND: {
  		void __user *uarg = (void __user *) arg;
--		return scsi_cmd_ioctl(file, bd->disk, cmd, uarg);
-+		return scsi_cmd_ioctl(file, bd->queue, bd->disk, cmd, uarg);
+-		return scsi_cmd_ioctl(file, bd->queue, bd->disk, cmd, uarg);
++		return scsi_cmd_ioctl(file, bd->queue, NULL, cmd, uarg);
  	}
  	case SG_IO: {
  		struct request *rq;
-diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-index 18e935f..31bbbb4 100644
---- a/block/scsi_ioctl.c
-+++ b/block/scsi_ioctl.c
-@@ -546,16 +546,12 @@ static inline int blk_send_start_stop(re
- 	return __blk_send_generic(q, bd_disk, GPCMD_START_STOP_UNIT, data);
+@@ -915,7 +913,7 @@ bsg_ioctl(struct inode *inode, struct fi
+ 			return PTR_ERR(rq);
+ 
+ 		bio = rq->bio;
+-		blk_execute_rq(bd->queue, bd->disk, rq, 0);
++		blk_execute_rq(bd->queue, NULL, rq, 0);
+ 		blk_complete_sgv4_hdr_rq(rq, &hdr, bio);
+ 
+ 		if (copy_to_user(uarg, &hdr, sizeof(hdr)))
+@@ -945,24 +943,23 @@ static struct file_operations bsg_fops =
+ 	.owner		=	THIS_MODULE,
+ };
+ 
+-void bsg_unregister_disk(struct gendisk *disk)
++void bsg_unregister_queue(struct request_queue *q)
+ {
+-	struct bsg_class_device *bcd = &disk->bsg_dev;
++	struct bsg_class_device *bcd = &q->bsg_dev;
+ 
+ 	if (!bcd->class_dev)
+ 		return;
+ 
+ 	mutex_lock(&bsg_mutex);
+-	sysfs_remove_link(&bcd->disk->queue->kobj, "bsg");
++	sysfs_remove_link(&q->kobj, "bsg");
+ 	class_device_destroy(bsg_class, MKDEV(BSG_MAJOR, bcd->minor));
+ 	bcd->class_dev = NULL;
+ 	list_del_init(&bcd->list);
+ 	mutex_unlock(&bsg_mutex);
  }
  
--int scsi_cmd_ioctl(struct file *file, struct gendisk *bd_disk, unsigned int cmd, void __user *arg)
-+int scsi_cmd_ioctl(struct file *file, struct request_queue *q,
-+		   struct gendisk *bd_disk, unsigned int cmd, void __user *arg)
+-int bsg_register_disk(struct gendisk *disk)
++int bsg_register_queue(struct request_queue *q, char *name)
  {
--	request_queue_t *q;
- 	int err;
+-	request_queue_t *q = disk->queue;
+ 	struct bsg_class_device *bcd;
+ 	dev_t dev;
  
--	q = bd_disk->queue;
--	if (!q)
--		return -ENXIO;
--
--	if (blk_get_queue(q))
-+	if (!q || blk_get_queue(q))
- 		return -ENXIO;
+@@ -972,7 +969,7 @@ int bsg_register_disk(struct gendisk *di
+ 	if (!q->request_fn)
+ 		return 0;
  
- 	switch (cmd) {
-diff --git a/drivers/block/ub.c b/drivers/block/ub.c
-index 2098eff..20bdbbf 100644
---- a/drivers/block/ub.c
-+++ b/drivers/block/ub.c
-@@ -1713,7 +1713,7 @@ static int ub_bd_ioctl(struct inode *ino
- 	struct gendisk *disk = inode->i_bdev->bd_disk;
- 	void __user *usermem = (void __user *) arg;
+-	bcd = &disk->bsg_dev;
++	bcd = &q->bsg_dev;
+ 	memset(bcd, 0, sizeof(*bcd));
+ 	INIT_LIST_HEAD(&bcd->list);
  
--	return scsi_cmd_ioctl(filp, disk, cmd, usermem);
-+	return scsi_cmd_ioctl(filp, disk->queue, disk, cmd, usermem);
- }
- 
- /*
-diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
-index 3105ddd..ef51aac 100644
---- a/drivers/cdrom/cdrom.c
-+++ b/drivers/cdrom/cdrom.c
-@@ -2695,11 +2695,12 @@ int cdrom_ioctl(struct file * file, stru
- {
- 	void __user *argp = (void __user *)arg;
- 	int ret;
-+	struct gendisk *disk = ip->i_bdev->bd_disk;
- 
- 	/*
- 	 * Try the generic SCSI command ioctl's first.
- 	 */
--	ret = scsi_cmd_ioctl(file, ip->i_bdev->bd_disk, cmd, argp);
-+	ret = scsi_cmd_ioctl(file, disk->queue, disk, cmd, argp);
- 	if (ret != -ENOTTY)
+@@ -980,8 +977,8 @@ int bsg_register_disk(struct gendisk *di
+ 	dev = MKDEV(BSG_MAJOR, bsg_device_nr);
+ 	bcd->minor = bsg_device_nr;
+ 	bsg_device_nr++;
+-	bcd->disk = disk;
+-	bcd->class_dev = class_device_create(bsg_class, NULL, dev, bcd->dev, "%s", disk->disk_name);
++	bcd->queue = q;
++	bcd->class_dev = class_device_create(bsg_class, NULL, dev, bcd->dev, "%s", name);
+ 	if (!bcd->class_dev)
+ 		goto err;
+ 	list_add_tail(&bcd->list, &bsg_class_list);
+diff --git a/block/ll_rw_blk.c b/block/ll_rw_blk.c
+index a08e9ca..fccc3a1 100644
+--- a/block/ll_rw_blk.c
++++ b/block/ll_rw_blk.c
+@@ -4038,7 +4038,7 @@ int blk_register_queue(struct gendisk *d
  		return ret;
- 
-diff --git a/drivers/ide/ide.c b/drivers/ide/ide.c
-index e260259..d51212c 100644
---- a/drivers/ide/ide.c
-+++ b/drivers/ide/ide.c
-@@ -1277,7 +1277,7 @@ int generic_ide_ioctl(ide_drive_t *drive
- 	void __user *p = (void __user *)arg;
- 	int err;
- 
--	err = scsi_cmd_ioctl(file, bdev->bd_disk, cmd, p);
-+	err = scsi_cmd_ioctl(file, bdev->bd_disk->queue, bdev->bd_disk, cmd, p);
- 	if (err != -ENOTTY)
- 		return err;
- 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index b781a90..63d6eef 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -705,7 +705,7 @@ static int sd_ioctl(struct inode * inode
- 		case SCSI_IOCTL_GET_BUS_NUMBER:
- 			return scsi_ioctl(sdp, cmd, p);
- 		default:
--			error = scsi_cmd_ioctl(filp, disk, cmd, p);
-+			error = scsi_cmd_ioctl(filp, disk->queue, disk, cmd, p);
- 			if (error != -ENOTTY)
- 				return error;
  	}
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index 3d2e023..d92384f 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -3548,7 +3548,8 @@ static int st_ioctl(struct inode *inode,
- 			    !capable(CAP_SYS_RAWIO))
- 				i = -EPERM;
- 			else
--				i = scsi_cmd_ioctl(file, STp->disk, cmd_in, p);
-+				i = scsi_cmd_ioctl(file, STp->disk->queue,
-+						   STp->disk, cmd_in, p);
- 			if (i != -ENOTTY)
- 				return i;
- 			break;
+ 
+-	ret = bsg_register_disk(disk);
++	ret = bsg_register_queue(q, disk->disk_name);
+ 	if (ret) {
+ 		elv_unregister_queue(q);
+ 		kobject_unregister(&q->kobj);
+@@ -4053,7 +4053,7 @@ void blk_unregister_queue(struct gendisk
+ 	request_queue_t *q = disk->queue;
+ 
+ 	if (q && q->request_fn) {
+-		bsg_unregister_disk(disk);
++		bsg_unregister_queue(q);
+ 		elv_unregister_queue(q);
+ 
+ 		kobject_uevent(&q->kobj, KOBJ_REMOVE);
 diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index aa000d2..6370d44 100644
+index 6370d44..9f31c7e 100644
 --- a/include/linux/blkdev.h
 +++ b/include/linux/blkdev.h
-@@ -643,7 +643,8 @@ extern void blk_requeue_request(request_
- extern void blk_plug_device(request_queue_t *);
- extern int blk_remove_plug(request_queue_t *);
- extern void blk_recount_segments(request_queue_t *, struct bio *);
--extern int scsi_cmd_ioctl(struct file *, struct gendisk *, unsigned int, void __user *);
-+extern int scsi_cmd_ioctl(struct file *, struct request_queue *,
-+			  struct gendisk *, unsigned int, void __user *);
- extern int sg_scsi_ioctl(struct file *, struct request_queue *,
- 		struct gendisk *, struct scsi_ioctl_command __user *);
+@@ -14,6 +14,7 @@ #include <linux/mempool.h>
+ #include <linux/bio.h>
+ #include <linux/module.h>
+ #include <linux/stringify.h>
++#include <linux/bsg.h>
  
+ #include <asm/scatterlist.h>
+ 
+@@ -469,6 +470,10 @@ #endif
+ 	unsigned int		bi_size;
+ 
+ 	struct mutex		sysfs_lock;
++
++#if defined(CONFIG_BLK_DEV_BSG)
++	struct bsg_class_device bsg_dev;
++#endif
+ };
+ 
+ #define QUEUE_FLAG_CLUSTER	0	/* cluster several segments into 1 */
+diff --git a/include/linux/bsg.h b/include/linux/bsg.h
+index 2154a6d..0475a6d 100644
+--- a/include/linux/bsg.h
++++ b/include/linux/bsg.h
+@@ -47,16 +47,16 @@ struct bsg_class_device {
+ 	struct class_device *class_dev;
+ 	struct device *dev;
+ 	int minor;
+-	struct gendisk *disk;
+ 	struct list_head list;
++	struct request_queue *queue;
+ };
+ 
+-extern int bsg_register_disk(struct gendisk *);
+-extern void bsg_unregister_disk(struct gendisk *);
++extern int bsg_register_queue(struct request_queue *, char *);
++extern void bsg_unregister_queue(struct request_queue *);
+ #else
+ struct bsg_class_device { };
+-#define bsg_register_disk(disk)		(0)
+-#define bsg_unregister_disk(disk)	do { } while (0)
++#define bsg_register_queue(disk, name)		(0)
++#define bsg_unregister_queue(disk)	do { } while (0)
+ #endif
+ 
+ #endif /* __KERNEL__ */
+diff --git a/include/linux/genhd.h b/include/linux/genhd.h
+index 0dcfc3b..2c65da7 100644
+--- a/include/linux/genhd.h
++++ b/include/linux/genhd.h
+@@ -66,7 +66,6 @@ #include <linux/device.h>
+ #include <linux/smp.h>
+ #include <linux/string.h>
+ #include <linux/fs.h>
+-#include <linux/bsg.h>
+ 
+ struct partition {
+ 	unsigned char boot_ind;		/* 0x80 - active */
+@@ -139,7 +138,6 @@ #ifdef	CONFIG_SMP
+ #else
+ 	struct disk_stats dkstats;
+ #endif
+-	struct bsg_class_device bsg_dev;
+ };
+ 
+ /* Structure for sysfs attributes on block devices */
 -- 
 1.4.3.2
 
