@@ -1,92 +1,110 @@
-From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Subject: RE: MPT Fusion LSI22320 ,  Domain validation loops .
-Date: Tue, 20 Mar 2007 23:52:25 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0703202347010.27070@filesrv1.baby-dragons.com>
-References: <664A4EBB07F29743873A87CF62C26D70650FD9@NAMAIL4.ad.lsil.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH scsi-misc-2.6] SCSI: kill sht->suspend/resume
+Date: Wed, 21 Mar 2007 16:05:16 +0900
+Message-ID: <20070321070516.GJ6152@htj.dyndns.org>
+References: <20070320150718.GF6152@htj.dyndns.org> <20070320151359.GG6152@htj.dyndns.org> <20070320152533.GH6152@htj.dyndns.org> <20070320152919.GA28403@infradead.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932149AbXCUGwb@vger.kernel.org>
-In-Reply-To: <664A4EBB07F29743873A87CF62C26D70650FD9@NAMAIL4.ad.lsil.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Moore, Eric" <Eric.Moore@lsi.com>
-Cc: Linux Kernel Maillist <linux-kernel@vger.kernel.org>, Linux Scsi maillist <linux-scsi@vger.kernel.org>, James.Bottomley@SteelEye.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20070320152919.GA28403@infradead.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>, djwong@us.ibm.com, hmh@hmh.eng.br
 List-Id: linux-scsi@vger.kernel.org
 
- 	Hello Eric ,  Fyi ,  linux-2.6.21-rc4 + mpt-fusion(*) patches from 
-Andrew Morton's patch tree .  Still gives me the ever looping reset .  But I 
-have just found sometrhing of interest one of the Powersuplies in the cabiinet 
-'May be' failing .  I have to test that to be satisfied that is the case .
- 	I'll report back soon on the PS & please look into this .  There is no 
-reason for the driver to keep a system in loop over a failing drive set .
- 		Tia ,  JimL
+With libata converted to use sdev->manage_start_stop for suspend and
+resume, sht->suspend/resume() has no user left and low level
+suspend/ressume should be taken care of by low level driver's
+suspend/resume callbacks (e.g. PCI or PCMCIA driver callbacks).  This
+patch removes sht->suspend/resume() callbacks.
 
-(*)
-ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.21-rc4/2.6.21-rc4-mm1/broken-out/mpt-fusion-handle-pci-layer-error-on-resume.patch
-ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.21-rc4/2.6.21-rc4-mm1/broken-out/mpt-fusion-handle-mpt_resume-failure-while-resuming.patch
+This change is suggested by Christoph Hellwig.
 
-On Mon, 19 Mar 2007, Moore, Eric wrote:
-> On Saturday, March 17, 2007 2:33 PM,  James W. Laferriere wrote:
->>  	Hello All ,  I am have been having this problem since I
->> purchased the
->> controller and after changing out the disks I thought were
->> the problem .
->>  	I am still getting the continous :
->>
->> mptscsih: ioc1: attempting task abort! (sc=f7a64500)
->> scsi 3:0:4:0:
->>          command: Inquiry: 12 00 00 00 60 00
->> mptbase: Initiating ioc1 recovery
->> mptscsih: ioc1: task abort: SUCCESS (sc=f7a64500)
->>   target3:0:4: Domain Validation detected failure, dropping back
->>   target3:0:4: Domain Validation skipping write tests
->>   target3:0:4: Ending Domain Validation
->>   target3:0:4: asynchronous
->>   target3:0:5: Beginning Domain Validation
->> mptscsih: ioc0: attempting target reset! (sc=f7a64380)
->>
->>  	The acutual device id's change and the driver
->> continously resets the
->> busses & starts all over .
->>
->>  	The disks are in a HP DS-SL13R-BA 4354R 14drive ultra3
->> racKmount cabinet
->> w/ dualbus & dualps ,  Which seems to present a ID6 ,  That
->> does not show up in
->> any of the bus scans .
->>
->>  	Now I have previously had the same cabinet with 18gb
->> disks which had the
->> same problem with this controller .  BUT I also have a LSI
->> Logic / Symbios
->> Logic 53c1010 66MHz Ultra3 dual SCSI bus Adapter which works
->> flawlessly with the
->> 18gb disks in this very same cabinet .
->>  	The cables for connecting the adapter(s) to tha cabinet
->> are less than 24
->> inches in length .
->>
->>  	Would anyone please shed some light on what it is I am
->> doing wrong or
->> need to do or ....?  Too have this controller recognise these
->> disk drives in
->> this cabinet .
->
-> There is a seperate mailing list for scsi releated issues, e.g.
-> linux-scsi@.   I've posted a patch to address your issue several times,
-> however it seems its not been picked up by the scsi subsystem
-> maintainer.   The last time it was posted was here:
-> http://marc.info/?l=linux-scsi&m=117089244809072&w=2   An alternative is
-> you could obtain our latest drivers from the LSI download site, where
-> these drivers should have this patch
-> http://www.lsilogic.com/cm/DownloadSearch.do.
->
-> Eric
->
->
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>
+---
+This patch breaks the existing libata suspend/resume support and thus
+should not be applied before libata is updated.  So, please don't
+apply it yet.
 
--- 
-+-----------------------------------------------------------------+
-| James   W.   Laferriere | System   Techniques | Give me VMS     |
-| Network        Engineer | 663  Beaumont  Blvd |  Give me Linux  |
-| babydr@baby-dragons.com | Pacifica, CA. 94044 |   only  on  AXP |
-+-----------------------------------------------------------------+
+Thanks.
+
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 96db51c..ec64aff 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -280,30 +280,18 @@ static int scsi_bus_suspend(struct device * dev, pm_message_t state)
+ {
+ 	struct device_driver *drv = dev->driver;
+ 	struct scsi_device *sdev = to_scsi_device(dev);
+-	struct scsi_host_template *sht = sdev->host->hostt;
+ 	int err;
+ 
+ 	err = scsi_device_quiesce(sdev);
+ 	if (err)
+ 		return err;
+ 
+-	/* call HLD suspend first */
+ 	if (drv && drv->suspend) {
+ 		err = drv->suspend(dev, state);
+ 		if (err)
+ 			return err;
+ 	}
+ 
+-	/* then, call host suspend */
+-	if (sht->suspend) {
+-		err = sht->suspend(sdev, state);
+-		if (err) {
+-			if (drv && drv->resume)
+-				drv->resume(dev);
+-			return err;
+-		}
+-	}
+-
+ 	return 0;
+ }
+ 
+@@ -311,21 +299,14 @@ static int scsi_bus_resume(struct device * dev)
+ {
+ 	struct device_driver *drv = dev->driver;
+ 	struct scsi_device *sdev = to_scsi_device(dev);
+-	struct scsi_host_template *sht = sdev->host->hostt;
+-	int err = 0, err2 = 0;
+-
+-	/* call host resume first */
+-	if (sht->resume)
+-		err = sht->resume(sdev);
++	int err = 0;
+ 
+-	/* then, call HLD resume */
+ 	if (drv && drv->resume)
+-		err2 = drv->resume(dev);
++		err = drv->resume(dev);
+ 
+ 	scsi_device_resume(sdev);
+ 
+-	/* favor LLD failure */
+-	return err ? err : err2;;
++	return err;
+ }
+ 
+ struct bus_type scsi_bus_type = {
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 68f461b..4a2e490 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -339,12 +339,6 @@ struct scsi_host_template {
+ 	enum scsi_eh_timer_return (* eh_timed_out)(struct scsi_cmnd *);
+ 
+ 	/*
+-	 * suspend support
+-	 */
+-	int (*resume)(struct scsi_device *);
+-	int (*suspend)(struct scsi_device *, pm_message_t state);
+-
+-	/*
+ 	 * Name of proc directory
+ 	 */
+ 	char *proc_name;
+
