@@ -1,108 +1,154 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: [PATCH] aacraid: cleanup and version stamp driver
-Date: Wed, 21 Mar 2007 13:49:47 -0400
-Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF0172BE93@otce2k301.adaptec.com>
-References: <AE4F746F2AECFC4DA4AADD66A1DFEF01400B18@otce2k301.adaptec.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] improve bsg device allocation
+Date: Thu, 22 Mar 2007 03:11:06 +0900
+Message-ID: <20070322031106Q.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C76BE1.51493AEC"
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([216.52.22.36]:48857 "EHLO
-	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933281AbXCURtt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Mar 2007 13:49:49 -0400
-Received: from otce2k301.adaptec.com (otce2k301.adaptec.com [10.12.1.97])
-	by mail-gw3.adaptec.com (Spam Firewall) with ESMTP id A395C1AC6B2
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Mar 2007 10:49:48 -0700 (PDT)
-Content-class: urn:content-classes:message
-In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF01400B18@otce2k301.adaptec.com>
+Received: from tama55.ecl.ntt.co.jp ([129.60.39.103]:56379 "EHLO
+	tama55.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933222AbXCUSK4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Mar 2007 14:10:56 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: jens.axboe@oracle.com
+Cc: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
+This patch addresses on two issues on bsg device allocation.
 
-------_=_NextPart_001_01C76BE1.51493AEC
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+- the current maxium number of bsg devices is 256. It's too small if
+we allocate bsg devices to all SCSI devices, transport entities, etc.
+This increses the maxium number to 32768 (taken from the sg driver).
 
-There is some residual cleanup of the last series of patches and the
-need to bump the revision number to draw the line in the sand.
+- SCSI devices are dynamically added and removed. Currently, bsg can't
+handle it well since bsd_device->minor is simply increased.
 
-The cmd->SCp.phase is set in the aac_valid_context routine, then set
-again to the same value following it's return. The cmd->scsi_done is set
-twice in the aac_queuecommand routine. Free up the scsidev FILO in
-aac_probe_container as it is not needed further down the function in any
-case. Improve the efficiency of the abort handler kernel print
-parameters. Bump revision number of driver to approximate the equivalent
-in the Adaptec supplied version.
+This is dependent on the patchset that I posted yesterday:
 
-This attached patch is against current scsi-misc-2.6
+http://marc.info/?l=linux-scsi&m=117440208726755&w=2
 
-Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
-
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 ---
+ block/bsg.c |   49 +++++++++++++++++++++++++++++++++++++++++--------
+ 1 files changed, 41 insertions(+), 8 deletions(-)
 
-Sincerely -- Mark Salyzyn
+diff --git a/block/bsg.c b/block/bsg.c
+index cd0221c..4ef3cc5 100644
+--- a/block/bsg.c
++++ b/block/bsg.c
+@@ -58,6 +58,7 @@ enum {
+ };
+ 
+ #define BSG_DEFAULT_CMDS	64
++#define BSG_MAX_DEVS		32768
+ 
+ #undef BSG_DEBUG
+ 
+@@ -75,7 +76,7 @@ #define list_entry_bc(entry)	list_entry(
+ #define BSG_MAJOR	(240)
+ 
+ static DEFINE_MUTEX(bsg_mutex);
+-static int bsg_device_nr;
++static int bsg_device_nr, bsg_minor_idx;
+ 
+ #define BSG_LIST_SIZE	(8)
+ #define bsg_list_idx(minor)	((minor) & (BSG_LIST_SIZE - 1))
+@@ -957,14 +958,15 @@ void bsg_unregister_queue(struct request
+ 	class_device_destroy(bsg_class, MKDEV(BSG_MAJOR, bcd->minor));
+ 	bcd->class_dev = NULL;
+ 	list_del_init(&bcd->list);
++	bsg_device_nr--;
+ 	mutex_unlock(&bsg_mutex);
+ }
+ 
+ int bsg_register_queue(struct request_queue *q, char *name)
+ {
+-	struct bsg_class_device *bcd;
++	struct bsg_class_device *bcd, *__bcd;
+ 	dev_t dev;
+-	int ret;
++	int ret = -EMFILE;
+ 	struct class_device *class_dev = NULL;
+ 
+ 	/*
+@@ -978,10 +980,27 @@ int bsg_register_queue(struct request_qu
+ 	INIT_LIST_HEAD(&bcd->list);
+ 
+ 	mutex_lock(&bsg_mutex);
+-	dev = MKDEV(BSG_MAJOR, bsg_device_nr);
+-	bcd->minor = bsg_device_nr;
+-	bsg_device_nr++;
++	if (bsg_device_nr == BSG_MAX_DEVS) {
++		printk(KERN_ERR "bsg: too many bsg devices\n");
++		goto err;
++	}
++
++retry:
++	list_for_each_entry(__bcd, &bsg_class_list, list) {
++		if (__bcd->minor == bsg_minor_idx) {
++			bsg_minor_idx++;
++			if (bsg_minor_idx == BSG_MAX_DEVS)
++				bsg_minor_idx = 0;
++			goto retry;
++		}
++	}
++
++	bcd->minor = bsg_minor_idx++;
++	if (bsg_minor_idx == BSG_MAX_DEVS)
++		bsg_minor_idx = 0;
++
+ 	bcd->queue = q;
++	dev = MKDEV(BSG_MAJOR, bcd->minor);
+ 	class_dev = class_device_create(bsg_class, NULL, dev, bcd->dev, "%s", name);
+ 	if (IS_ERR(class_dev)) {
+ 		ret = PTR_ERR(class_dev);
+@@ -996,11 +1015,11 @@ int bsg_register_queue(struct request_qu
+ 	}
+ 
+ 	list_add_tail(&bcd->list, &bsg_class_list);
++	bsg_device_nr++;
+ 
+ 	mutex_unlock(&bsg_mutex);
+ 	return 0;
+ err:
+-	bsg_device_nr--;
+ 	if (class_dev)
+ 		class_device_destroy(bsg_class, MKDEV(BSG_MAJOR, bcd->minor));
+ 	mutex_unlock(&bsg_mutex);
+@@ -1030,6 +1049,11 @@ static struct class_interface bsg_intf =
+ 	.remove	= bsg_remove,
+ };
+ 
++static struct cdev bsg_cdev = {
++	.kobj   = {.name = "bsg", },
++	.owner  = THIS_MODULE,
++};
++
+ static int __init bsg_init(void)
+ {
+ 	int ret, i;
+@@ -1050,10 +1074,19 @@ static int __init bsg_init(void)
+ 		return PTR_ERR(bsg_class);
+ 	}
+ 
+-	ret = register_chrdev(BSG_MAJOR, "bsg", &bsg_fops);
++	ret = register_chrdev_region(MKDEV(BSG_MAJOR, 0), BSG_MAX_DEVS, "bsg");
++	if (ret) {
++		kmem_cache_destroy(bsg_cmd_cachep);
++		class_destroy(bsg_class);
++		return ret;
++	}
++
++	cdev_init(&bsg_cdev, &bsg_fops);
++	ret = cdev_add(&bsg_cdev, MKDEV(BSG_MAJOR, 0), BSG_MAX_DEVS);
+ 	if (ret) {
+ 		kmem_cache_destroy(bsg_cmd_cachep);
+ 		class_destroy(bsg_class);
++		unregister_chrdev_region(MKDEV(BSG_MAJOR, 0), BSG_MAX_DEVS);
+ 		return ret;
+ 	}
+ 
+-- 
+1.4.3.2
 
-------_=_NextPart_001_01C76BE1.51493AEC
-Content-Type: application/octet-stream;
-	name="aacraid_cleanup_and_version.patch"
-Content-Transfer-Encoding: base64
-Content-Description: aacraid_cleanup_and_version.patch
-Content-Disposition: attachment;
-	filename="aacraid_cleanup_and_version.patch"
-
-ZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNoYmEuYyBiL2RyaXZlcnMvc2NzaS9h
-YWNyYWlkL2FhY2hiYS5jCi0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY2hiYS5jCTIwMDct
-MDMtMjEgMTM6MjM6MTkuMzQ1MjYwNzAyIC0wNDAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlk
-L2FhY2hiYS5jCTIwMDctMDMtMjEgMTM6Mzc6MzIuOTk1NDA4MDEwIC0wNDAwCkBAIC0zNjUsNyAr
-MzY1LDYgQEAKIAlzdHJ1Y3Qgc2NzaV9jbW5kICogc2NzaWNtZDsKIAogCXNjc2ljbWQgPSAoc3Ry
-dWN0IHNjc2lfY21uZCAqKSBjb250ZXh0OwotCXNjc2ljbWQtPlNDcC5waGFzZSA9IEFBQ19PV05F
-Ul9NSURMRVZFTDsKIAogCWlmICghYWFjX3ZhbGlkX2NvbnRleHQoc2NzaWNtZCwgZmlicHRyKSkK
-IAkJcmV0dXJuOwpAQCAtNjI5LDkgKzYyOCw5IEBACiAJaWYgKF9hYWNfcHJvYmVfY29udGFpbmVy
-KHNjc2ljbWQsIGFhY19wcm9iZV9jb250YWluZXJfY2FsbGJhY2sxKSA9PSAwKQogCQl3aGlsZSAo
-c2NzaWNtZC0+ZGV2aWNlID09IHNjc2lkZXYpCiAJCQlzY2hlZHVsZSgpOworCWtmcmVlKHNjc2lk
-ZXYpOwogCXN0YXR1cyA9IHNjc2ljbWQtPlNDcC5TdGF0dXM7CiAJa2ZyZWUoc2NzaWNtZCk7Ci0J
-a2ZyZWUoc2NzaWRldik7CiAJcmV0dXJuIHN0YXR1czsKIH0KIApAQCAtMTMyMSw3ICsxMzIwLDYg
-QEAKIAl1MzIgY2lkOwogCiAJc2NzaWNtZCA9IChzdHJ1Y3Qgc2NzaV9jbW5kICopIGNvbnRleHQ7
-Ci0Jc2NzaWNtZC0+U0NwLnBoYXNlID0gQUFDX09XTkVSX01JRExFVkVMOwogCiAJaWYgKCFhYWNf
-dmFsaWRfY29udGV4dChzY3NpY21kLCBmaWJwdHIpKQogCQlyZXR1cm47CkBAIC0xNTcxLDcgKzE1
-NjksNiBAQAogCXN0cnVjdCBzY3NpX2NtbmQgKmNtZDsKIAogCWNtZCA9IGNvbnRleHQ7Ci0JY21k
-LT5TQ3AucGhhc2UgPSBBQUNfT1dORVJfTUlETEVWRUw7CiAKIAlpZiAoIWFhY192YWxpZF9jb250
-ZXh0KGNtZCwgZmlicHRyKSkKIAkJcmV0dXJuOwpAQCAtMjEyNyw3ICsyMTI0LDYgQEAKIAlzdHJ1
-Y3Qgc2NzaV9jbW5kICpzY3NpY21kOwogCiAJc2NzaWNtZCA9IChzdHJ1Y3Qgc2NzaV9jbW5kICop
-IGNvbnRleHQ7Ci0Jc2NzaWNtZC0+U0NwLnBoYXNlID0gQUFDX09XTkVSX01JRExFVkVMOwogCiAJ
-aWYgKCFhYWNfdmFsaWRfY29udGV4dChzY3NpY21kLCBmaWJwdHIpKQogCQlyZXR1cm47CmRpZmYg
-LXJ1IGEvZHJpdmVycy9zY3NpL2FhY3JhaWQvYWFjcmFpZC5oIGIvZHJpdmVycy9zY3NpL2FhY3Jh
-aWQvYWFjcmFpZC5oCi0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY3JhaWQuaAkyMDA3LTAz
-LTIxIDEzOjIzOjE5LjM0NjI2MDU3NiAtMDQwMAorKysgYi9kcml2ZXJzL3Njc2kvYWFjcmFpZC9h
-YWNyYWlkLmgJMjAwNy0wMy0yMSAxMzozODowNC4wOTQ0MjE5NzEgLTA0MDAKQEAgLTEyLDggKzEy
-LDggQEAKICAqLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLSovCiAKICNpZm5kZWYgQUFDX0RSSVZFUl9CVUlM
-RAotIyBkZWZpbmUgQUFDX0RSSVZFUl9CVUlMRCAyNDIzCi0jIGRlZmluZSBBQUNfRFJJVkVSX0JS
-QU5DSCAiLW1oMyIKKyMgZGVmaW5lIEFBQ19EUklWRVJfQlVJTEQgMjQzNworIyBkZWZpbmUgQUFD
-X0RSSVZFUl9CUkFOQ0ggIi1taDQiCiAjZW5kaWYKICNkZWZpbmUgTUFYSU1VTV9OVU1fQ09OVEFJ
-TkVSUwkzMgogCmRpZmYgLXJ1IGEvZHJpdmVycy9zY3NpL2FhY3JhaWQvbGluaXQuYyBiL2RyaXZl
-cnMvc2NzaS9hYWNyYWlkL2xpbml0LmMKLS0tIGEvZHJpdmVycy9zY3NpL2FhY3JhaWQvbGluaXQu
-YwkyMDA3LTAzLTIxIDEzOjIzOjE5LjM0NzI2MDQ1MCAtMDQwMAorKysgYi9kcml2ZXJzL3Njc2kv
-YWFjcmFpZC9saW5pdC5jCTIwMDctMDMtMjEgMTM6Mzg6MDQuMDk1NDIxODQyIC0wNDAwCkBAIC0y
-NjAsNyArMjYwLDYgQEAKIAkJICAgIChjbWQtPlNDcC5waGFzZSA9PSBBQUNfT1dORVJfRklSTVdB
-UkUpKQogCQkJcmV0dXJuIDA7IC8qIEFscmVhZHkgb3duZWQgYnkgQWRhcHRlciAqLwogCX0KLQlj
-bWQtPnNjc2lfZG9uZSA9IGRvbmU7CiAJY21kLT5TQ3AucGhhc2UgPSBBQUNfT1dORVJfTE9XTEVW
-RUw7CiAJcmV0dXJuIChhYWNfc2NzaV9jbWQoY21kKSA/IEZBSUxFRCA6IDApOwogfSAKQEAgLTQ2
-MSwxNSArNDYwLDE1IEBACiAKIHN0YXRpYyBpbnQgYWFjX2VoX2Fib3J0KHN0cnVjdCBzY3NpX2Nt
-bmQqIGNtZCkKIHsKLQlzdHJ1Y3QgU2NzaV9Ib3N0ICogaG9zdCA9IGNtZC0+ZGV2aWNlLT5ob3N0
-OworCXN0cnVjdCBzY3NpX2RldmljZSAqIGRldiA9IGNtZC0+ZGV2aWNlOworCXN0cnVjdCBTY3Np
-X0hvc3QgKiBob3N0ID0gZGV2LT5ob3N0OwogCXN0cnVjdCBhYWNfZGV2ICogYWFjID0gKHN0cnVj
-dCBhYWNfZGV2ICopaG9zdC0+aG9zdGRhdGE7CiAJaW50IGNvdW50OwogCWludCByZXQgPSBGQUlM
-RUQ7CiAKIAlwcmludGsoS0VSTl9FUlIgIiVzOiBIb3N0IGFkYXB0ZXIgYWJvcnQgcmVxdWVzdCAo
-JWQsJWQsJWQsJWQpXG4iLAogCQlBQUNfRFJJVkVSTkFNRSwKLQkJY21kLT5kZXZpY2UtPmhvc3Qt
-Pmhvc3Rfbm8sIHNkZXZfY2hhbm5lbChjbWQtPmRldmljZSksCi0JCXNkZXZfaWQoY21kLT5kZXZp
-Y2UpLCBjbWQtPmRldmljZS0+bHVuKTsKKwkJaG9zdC0+aG9zdF9ubywgc2Rldl9jaGFubmVsKGRl
-diksIHNkZXZfaWQoZGV2KSwgZGV2LT5sdW4pOwogCXN3aXRjaCAoY21kLT5jbW5kWzBdKSB7CiAJ
-Y2FzZSBTRVJWSUNFX0FDVElPTl9JTjoKIAkJaWYgKCEoYWFjLT5yYXdfaW9faW50ZXJmYWNlKSB8
-fAo=
-
-------_=_NextPart_001_01C76BE1.51493AEC--
