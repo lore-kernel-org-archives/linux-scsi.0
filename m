@@ -1,154 +1,69 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] improve bsg device allocation
-Date: Thu, 22 Mar 2007 03:11:06 +0900
-Message-ID: <20070322031106Q.fujita.tomonori@lab.ntt.co.jp>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH] aacraid: cleanup and version stamp driver
+Date: Wed, 21 Mar 2007 20:49:58 +0200
+Message-ID: <46017E56.4070605@panasas.com>
+References: <AE4F746F2AECFC4DA4AADD66A1DFEF0172BE93@otce2k301.adaptec.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama55.ecl.ntt.co.jp ([129.60.39.103]:56379 "EHLO
-	tama55.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933222AbXCUSK4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Mar 2007 14:10:56 -0400
+Received: from gw-e.panasas.com ([65.194.124.178]:57593 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S933673AbXCUTGk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Mar 2007 15:06:40 -0400
+In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF0172BE93@otce2k301.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jens.axboe@oracle.com
-Cc: linux-scsi@vger.kernel.org
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-This patch addresses on two issues on bsg device allocation.
+Salyzyn, Mark wrote:
+> There is some residual cleanup of the last series of patches and the
+> need to bump the revision number to draw the line in the sand.
+> 
+> The cmd->SCp.phase is set in the aac_valid_context routine, then set
+> again to the same value following it's return. The cmd->scsi_done is set
+> twice in the aac_queuecommand routine. Free up the scsidev FILO in
+> aac_probe_container as it is not needed further down the function in any
+> case. Improve the efficiency of the abort handler kernel print
+> parameters. Bump revision number of driver to approximate the equivalent
+> in the Adaptec supplied version.
+> 
+> This attached patch is against current scsi-misc-2.6
+> 
+> Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
+> 
+> ---
+> 
+> Sincerely -- Mark Salyzyn
 
-- the current maxium number of bsg devices is 256. It's too small if
-we allocate bsg devices to all SCSI devices, transport entities, etc.
-This increses the maxium number to 32768 (taken from the sg driver).
+looking in mail source
 
-- SCSI devices are dynamically added and removed. Currently, bsg can't
-handle it well since bsd_device->minor is simply increased.
+> This attached patch is against current scsi-misc-2.6
+> 
+> Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
+> 
+> ---
+> 
+> Sincerely -- Mark Salyzyn
+> 
+> ------_=_NextPart_001_01C76BE1.51493AEC
+> Content-Type: application/octet-stream;
+> 	name="aacraid_cleanup_and_version.patch"
+> Content-Transfer-Encoding: base64
+> Content-Description: aacraid_cleanup_and_version.patch
+> Content-Disposition: attachment;
+> 	filename="aacraid_cleanup_and_version.patch"
+> 
+> ZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNoYmEuYyBiL2RyaXZlcnMvc2NzaS9h
+> YWNyYWlkL2FhY2hiYS5jCi0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY2hiYS5jCTIwMDct
+> MDMtMjEgMTM6MjM6MTkuMzQ1MjYwNzAyIC0wNDAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlk
+> L2FhY2hiYS5jCTIwMDctMDMtMjEgMTM6Mzc6MzIuOTk1NDA4MDEwIC0wNDAwCkBAIC0zNjUsNyAr
+> MzY1LDYgQEAKIAlzdHJ1Y3Qgc2NzaV9jbW5kICogc2NzaWNtZDsKIAogCXNjc2ljbWQgPSAoc3Ry
 
-This is dependent on the patchset that I posted yesterday:
+why is the text attachment marked "Content-Type: application/octet-stream"
+and encoded? attachments are OK but why not plain text?
 
-http://marc.info/?l=linux-scsi&m=117440208726755&w=2
+Boaz
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- block/bsg.c |   49 +++++++++++++++++++++++++++++++++++++++++--------
- 1 files changed, 41 insertions(+), 8 deletions(-)
-
-diff --git a/block/bsg.c b/block/bsg.c
-index cd0221c..4ef3cc5 100644
---- a/block/bsg.c
-+++ b/block/bsg.c
-@@ -58,6 +58,7 @@ enum {
- };
- 
- #define BSG_DEFAULT_CMDS	64
-+#define BSG_MAX_DEVS		32768
- 
- #undef BSG_DEBUG
- 
-@@ -75,7 +76,7 @@ #define list_entry_bc(entry)	list_entry(
- #define BSG_MAJOR	(240)
- 
- static DEFINE_MUTEX(bsg_mutex);
--static int bsg_device_nr;
-+static int bsg_device_nr, bsg_minor_idx;
- 
- #define BSG_LIST_SIZE	(8)
- #define bsg_list_idx(minor)	((minor) & (BSG_LIST_SIZE - 1))
-@@ -957,14 +958,15 @@ void bsg_unregister_queue(struct request
- 	class_device_destroy(bsg_class, MKDEV(BSG_MAJOR, bcd->minor));
- 	bcd->class_dev = NULL;
- 	list_del_init(&bcd->list);
-+	bsg_device_nr--;
- 	mutex_unlock(&bsg_mutex);
- }
- 
- int bsg_register_queue(struct request_queue *q, char *name)
- {
--	struct bsg_class_device *bcd;
-+	struct bsg_class_device *bcd, *__bcd;
- 	dev_t dev;
--	int ret;
-+	int ret = -EMFILE;
- 	struct class_device *class_dev = NULL;
- 
- 	/*
-@@ -978,10 +980,27 @@ int bsg_register_queue(struct request_qu
- 	INIT_LIST_HEAD(&bcd->list);
- 
- 	mutex_lock(&bsg_mutex);
--	dev = MKDEV(BSG_MAJOR, bsg_device_nr);
--	bcd->minor = bsg_device_nr;
--	bsg_device_nr++;
-+	if (bsg_device_nr == BSG_MAX_DEVS) {
-+		printk(KERN_ERR "bsg: too many bsg devices\n");
-+		goto err;
-+	}
-+
-+retry:
-+	list_for_each_entry(__bcd, &bsg_class_list, list) {
-+		if (__bcd->minor == bsg_minor_idx) {
-+			bsg_minor_idx++;
-+			if (bsg_minor_idx == BSG_MAX_DEVS)
-+				bsg_minor_idx = 0;
-+			goto retry;
-+		}
-+	}
-+
-+	bcd->minor = bsg_minor_idx++;
-+	if (bsg_minor_idx == BSG_MAX_DEVS)
-+		bsg_minor_idx = 0;
-+
- 	bcd->queue = q;
-+	dev = MKDEV(BSG_MAJOR, bcd->minor);
- 	class_dev = class_device_create(bsg_class, NULL, dev, bcd->dev, "%s", name);
- 	if (IS_ERR(class_dev)) {
- 		ret = PTR_ERR(class_dev);
-@@ -996,11 +1015,11 @@ int bsg_register_queue(struct request_qu
- 	}
- 
- 	list_add_tail(&bcd->list, &bsg_class_list);
-+	bsg_device_nr++;
- 
- 	mutex_unlock(&bsg_mutex);
- 	return 0;
- err:
--	bsg_device_nr--;
- 	if (class_dev)
- 		class_device_destroy(bsg_class, MKDEV(BSG_MAJOR, bcd->minor));
- 	mutex_unlock(&bsg_mutex);
-@@ -1030,6 +1049,11 @@ static struct class_interface bsg_intf =
- 	.remove	= bsg_remove,
- };
- 
-+static struct cdev bsg_cdev = {
-+	.kobj   = {.name = "bsg", },
-+	.owner  = THIS_MODULE,
-+};
-+
- static int __init bsg_init(void)
- {
- 	int ret, i;
-@@ -1050,10 +1074,19 @@ static int __init bsg_init(void)
- 		return PTR_ERR(bsg_class);
- 	}
- 
--	ret = register_chrdev(BSG_MAJOR, "bsg", &bsg_fops);
-+	ret = register_chrdev_region(MKDEV(BSG_MAJOR, 0), BSG_MAX_DEVS, "bsg");
-+	if (ret) {
-+		kmem_cache_destroy(bsg_cmd_cachep);
-+		class_destroy(bsg_class);
-+		return ret;
-+	}
-+
-+	cdev_init(&bsg_cdev, &bsg_fops);
-+	ret = cdev_add(&bsg_cdev, MKDEV(BSG_MAJOR, 0), BSG_MAX_DEVS);
- 	if (ret) {
- 		kmem_cache_destroy(bsg_cmd_cachep);
- 		class_destroy(bsg_class);
-+		unregister_chrdev_region(MKDEV(BSG_MAJOR, 0), BSG_MAX_DEVS);
- 		return ret;
- 	}
- 
--- 
-1.4.3.2
 
