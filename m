@@ -1,36 +1,65 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH scsi-misc-2.6] SCSI: kill sht->suspend/resume
-Date: Wed, 21 Mar 2007 09:16:23 -0600
-Message-ID: <1174490184.3618.11.camel@mulgrave.il.steeleye.com>
-References: <20070320150718.GF6152@htj.dyndns.org>
-	 <20070320151359.GG6152@htj.dyndns.org>
-	 <20070320152533.GH6152@htj.dyndns.org>
-	 <20070320152919.GA28403@infradead.org>
-	 <20070321070516.GJ6152@htj.dyndns.org>
+From: Pete Wyckoff <pw@osc.edu>
+Subject: Re: [PATCH v2] bsg: iovec support with compat
+Date: Wed, 21 Mar 2007 11:34:51 -0400
+Message-ID: <20070321153451.GC7686@osc.edu>
+References: <45FE987D.5070908@torque.net> <20070319232113N.fujita.tomonori@lab.ntt.co.jp> <20070319180727.GB32043@osc.edu> <20070320032246M.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:56956 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932065AbXCUPSL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Mar 2007 11:18:11 -0400
-In-Reply-To: <20070321070516.GJ6152@htj.dyndns.org>
+Received: from quasar.osc.edu ([192.148.249.15]:35482 "EHLO quasar.osc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932403AbXCUPex (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Mar 2007 11:34:53 -0400
+Content-Disposition: inline
+In-Reply-To: <20070320032246M.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, djwong@us.ibm.com, hmh@hmh.eng.br
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: dougg@torque.net, jens.axboe@oracle.com, linux-scsi@vger.kernel.org
 
-On Wed, 2007-03-21 at 16:05 +0900, Tejun Heo wrote:
-> This patch breaks the existing libata suspend/resume support and thus
-> should not be applied before libata is updated.  So, please don't
-> apply it yet.
+fujita.tomonori@lab.ntt.co.jp wrote on Tue, 20 Mar 2007 03:22 +0900:
+> From: Pete Wyckoff <pw@osc.edu>
+> Subject: [PATCH v2] bsg: iovec support with compat
+> Date: Mon, 19 Mar 2007 14:07:27 -0400
+> 
+> > Adding a new bsg_write_compat would be bad.  There is lots of
+> > parsing and setup before we even get to the possibility of iovec
+> > data mapping.  Reusing just sg_build_ioctl from compat_ioctl.c is
+> > also suboptimal as this function is built around the idea of a
+> > contiguous sg_io_hdr + iovec in userspace.  The function is small
+> > enough that splitting it into a generic + ioctl-specific part would
+> > add too much abstraction to be worth it.
+> > 
+> > Here is the patch to use sg_iovec, with its userspace void * and
+> > size_t, and the CONFIG_COMPAT code to fixup 32-bit userspace.  I'm
+> > not fond of having __u64 for non-iovec buffer representations, and
+> > void * for iovec buffer representations, but it saves having to
+> > build an sg_iovec just to call into the existing blk_rq_map_user_iov.
+> > 
+> > Comments?
+> 
+> The compat code should not go to bsg.c.
 
-I don't have a git tree for this, but I'll  mark it in my email, just
-say the word.
+Agreed.  I dislike the entire approach of reusing sg_iovec in bsg,
+but thought I'd work it through to see what it is like.
 
-Thanks for doing this,
+The compat code cannot go in compat_ioctl.c or similar, as explained
+above.  And it seems wrong to leave it out and silently break on
+compat-requiring setups.
 
-James
+Using sg_iovec with bsg is bad from a user perspective too.
+sg_iovec pointers are (void *).  sg_io_v4 pointers are __u64.
+sg_iovec lengths are size_t (64-bit).  sg_io_v4 lengths are __u32.
 
+Please consider instead the original proposal of a new iovec
+type for bsg.  It is less complex than using existing sg_iovec.
+http://article.gmane.org/gmane.linux.scsi/30461
 
+There is exactly one user of blk_rq_map_user_iov() in the tree:
+sg_io() in scsi_ioctl.c.  I could convert that to sg_v4_iovec now
+too.  The helper function bio_map_user_iov() is only used by
+blk_rq_map_user_iov() and can also be fixed.  The only use we have
+for struct sg_iovec is this one sg_io() caller, and sg.c.  Let's
+migrate to sg_v4_iovec at the same time we switch from sgv3 to sgv4.
+
+		-- Pete
