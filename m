@@ -1,67 +1,73 @@
-From: Richard Lary <rlary@austin.ibm.com>
-Subject: [PATCH] qla2xxx: fix for byteswap in fc_host fabric_name
-Date: Thu, 22 Mar 2007 10:53:19 -0500
-Message-ID: <200703221553.l2MFrJEM012956@anacortes.austin.ibm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:45690 "EHLO e1.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933546AbXCVPzw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Mar 2007 11:55:52 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e1.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l2MFtoq5005458
-	for <linux-scsi@vger.kernel.org>; Thu, 22 Mar 2007 11:55:50 -0400
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l2MFtowa239342
-	for <linux-scsi@vger.kernel.org>; Thu, 22 Mar 2007 11:55:50 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l2MFtnKb003622
-	for <linux-scsi@vger.kernel.org>; Thu, 22 Mar 2007 11:55:50 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Mr. Berkley Shands" <bshands@exegy.com>
+Subject: 2.6.20, XFS, mptsas and LSI-8888ELP write lockup
+Date: Thu, 22 Mar 2007 11:00:54 -0500
+Message-ID: <4602A836.2010004@exegy.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <xfs-bounce@oss.sgi.com>
+Content-Disposition: inline
+Sender: xfs-bounce@oss.sgi.com
+Errors-to: xfs-bounce@oss.sgi.com
+To: linux-kernel@vger.kernel.org
+Cc: linux-xfs@oss.sgi.com, linux-scsi@vger.kernel.org, Dave Lloyd <dlloyd@exegy.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-driver@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Richard Lary <rlary@us.ibm.com>
+I have a uniwide 3346, 20GB 8-core Opteron (2.2GHz)
+With one LSI-8888ELP PCI-e SAS controller.
+Each of the two external mini-sas 4-lane connectors goes to
+an Xtore XJ-SAxx-316J-2 (16 drive 3U with dual SAS ports).
+Running both Centos 4.4 or RedHat-5 Server with kernel 2.6.20.
 
-This patch fixes byte swap issue in qla2xxx driver
-to fix corrupted fabric_name passed to
-/sys/class/fc_host/host*/fabric_name.
+The raids are all 4 drive raid0, 128KB stripes, using Seagate 7200.10
+320GB drives (all firmware AAJ or later) Sata-II drives.
+XFS filesystem, properly aligned, mkfs'ed etc.
 
-Signed-off-by: Richard Lary <rlary@us.ibm.com>
----
+If I write to all 4 VDs on one Xtore at a time, I get ~550MB/Sec
+combined write rate. If I try writing to 7 of the 8 VDs at one time,
+I get just under 800MB/Sec. Any 7 of 8 VDs.
+But If I try to write to ALL 8 at once, the system crawls to a stop,
+and I get Micro-Bytes per second.
 
-Example: Switch fabric name: 20:02:00:0d:ec:41:51:01
-# cat /sys/class/fc_host/host*/fabric_name
-0x2200d0041ec0151
+xfs_datad/<N> process runs every few seconds, then pdflush runs
+two or three at a time every few seconds. But iostat reports 0 writes.
+every 10 seconds or so (iostat 5) reports a burst of write activity,
+and then 10 seconds of nothing.
 
-# cat /sys/class/fc_host/host*/fabric_name
-0x2002000dec415101
+If I use  the Adaptec 4805 (two of them), I get about
+the same write rate, but it does not hang (AACRAID driver).
+same type of file systems, same external enclosures.
 
-Applies to: 2.6.21-rc4-git5
+I had a "echo 10 > /proc/sys/vm/dirty_ratio" fix in to correct slow
+writes (vs 2.6.18), but altering this value changed nothing. It still
+runs oh-so-slow.
 
-Index: b/drivers/scsi/qla2xxx/qla_mbx.c
-===================================================================
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -1280,14 +1280,14 @@ qla2x00_get_port_name(scsi_qla_host_t *h
- 	} else {
- 		if (name != NULL) {
- 			/* This function returns name in big endian. */
--			name[0] = LSB(mcp->mb[2]);
--			name[1] = MSB(mcp->mb[2]);
--			name[2] = LSB(mcp->mb[3]);
--			name[3] = MSB(mcp->mb[3]);
--			name[4] = LSB(mcp->mb[6]);
--			name[5] = MSB(mcp->mb[6]);
--			name[6] = LSB(mcp->mb[7]);
--			name[7] = MSB(mcp->mb[7]);
-+			name[0] = MSB(mcp->mb[2]);
-+			name[1] = LSB(mcp->mb[2]);
-+			name[2] = MSB(mcp->mb[3]);
-+			name[3] = LSB(mcp->mb[3]);
-+			name[4] = MSB(mcp->mb[6]);
-+			name[5] = LSB(mcp->mb[6]);
-+			name[6] = MSB(mcp->mb[7]);
-+			name[7] = LSB(mcp->mb[7]);
- 		}
+What to look at next? 2.6.21-rc4 ?
+
+berkley
+
+-- 
+
+//E. F. Berkley Shands, MSc//
+
+**Exegy Inc.**
+
+3668 S. Geyer Road, Suite 300
+
+St. Louis, MO  63127
+
+Direct:  (314) 450-5348
+
+Cell:  (314) 303-2546
+
+Office:  (314) 450-5353
+
+Fax:  (314) 450-5354
+
  
- 		DEBUG11(printk("qla2x00_get_port_name(%ld): done.\n",
+
+The Usual Disclaimer follows...
+This e-mail and any documents accompanying it may contain legally privileged and/or confidential information belonging to Exegy, Inc. Such information may be protected from disclosure by law. The information is intended for use by only the addressee. If you are not the intended recipient, you are hereby notified that any disclosure or use of the information is strictly prohibited. If you have received this e-mail in error, please immediately contact the sender by e-mail or phone regarding instructions for return or destruction and do not use or disclose the content to others.
+
+
+[[HTML alternate version deleted]]
