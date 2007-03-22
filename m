@@ -1,33 +1,67 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [PATCH 2/3] sd: implement START/STOP management
-Date: Thu, 22 Mar 2007 18:14:44 +0300
-Message-ID: <46029D64.6040206@vlnb.net>
-References: <20070320150718.GF6152@htj.dyndns.org> <20070320151359.GG6152@htj.dyndns.org> <460020DF.6090203@torque.net> <460099DD.2050706@gmail.com> <460258BD.9080606@vlnb.net> <20070322122940.GA29824@khazad-dum.debian.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20070322122940.GA29824@khazad-dum.debian.net>
-Sender: linux-ide-owner@vger.kernel.org
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Tejun Heo <htejun@gmail.com>, dougg@torque.net, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>, djwong@us.ibm.com
+From: Richard Lary <rlary@austin.ibm.com>
+Subject: [PATCH] qla2xxx: fix for byteswap in fc_host fabric_name
+Date: Thu, 22 Mar 2007 10:53:19 -0500
+Message-ID: <200703221553.l2MFrJEM012956@anacortes.austin.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e1.ny.us.ibm.com ([32.97.182.141]:45690 "EHLO e1.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933546AbXCVPzw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Mar 2007 11:55:52 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e1.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l2MFtoq5005458
+	for <linux-scsi@vger.kernel.org>; Thu, 22 Mar 2007 11:55:50 -0400
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l2MFtowa239342
+	for <linux-scsi@vger.kernel.org>; Thu, 22 Mar 2007 11:55:50 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l2MFtnKb003622
+	for <linux-scsi@vger.kernel.org>; Thu, 22 Mar 2007 11:55:50 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-driver@qlogic.com, linux-scsi@vger.kernel.org
 
-Henrique de Moraes Holschuh wrote:
-> On Thu, 22 Mar 2007, Vladislav Bolkhovitin wrote:
-> 
->>Seems, there is another way of doing a bank spin up / spin down: doing 
->>it in two passes. On the first pass START_STOP will be issued with 
->>IMMED=1 on all devices, then on the second pass START_STOP will be 
->>issued with IMMED=0. So the devices will spin up / spin down in the 
->>parallel, but synchronously, hence the needed result will be achieved 
-> 
-> 
-> And maybe trip the PSU's overcurrent defenses?  There is a reason to default
-> to sequential spin-up for disks... 
+From: Richard Lary <rlary@us.ibm.com>
 
-But on spin down there is no such problem
+This patch fixes byte swap issue in qla2xxx driver
+to fix corrupted fabric_name passed to
+/sys/class/fc_host/host*/fabric_name.
 
-> Of course, it can be user-selectable. But should it be the default?
-> 
+Signed-off-by: Richard Lary <rlary@us.ibm.com>
+---
 
+Example: Switch fabric name: 20:02:00:0d:ec:41:51:01
+# cat /sys/class/fc_host/host*/fabric_name
+0x2200d0041ec0151
+
+# cat /sys/class/fc_host/host*/fabric_name
+0x2002000dec415101
+
+Applies to: 2.6.21-rc4-git5
+
+Index: b/drivers/scsi/qla2xxx/qla_mbx.c
+===================================================================
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -1280,14 +1280,14 @@ qla2x00_get_port_name(scsi_qla_host_t *h
+ 	} else {
+ 		if (name != NULL) {
+ 			/* This function returns name in big endian. */
+-			name[0] = LSB(mcp->mb[2]);
+-			name[1] = MSB(mcp->mb[2]);
+-			name[2] = LSB(mcp->mb[3]);
+-			name[3] = MSB(mcp->mb[3]);
+-			name[4] = LSB(mcp->mb[6]);
+-			name[5] = MSB(mcp->mb[6]);
+-			name[6] = LSB(mcp->mb[7]);
+-			name[7] = MSB(mcp->mb[7]);
++			name[0] = MSB(mcp->mb[2]);
++			name[1] = LSB(mcp->mb[2]);
++			name[2] = MSB(mcp->mb[3]);
++			name[3] = LSB(mcp->mb[3]);
++			name[4] = MSB(mcp->mb[6]);
++			name[5] = LSB(mcp->mb[6]);
++			name[6] = MSB(mcp->mb[7]);
++			name[7] = LSB(mcp->mb[7]);
+ 		}
+ 
+ 		DEBUG11(printk("qla2x00_get_port_name(%ld): done.\n",
