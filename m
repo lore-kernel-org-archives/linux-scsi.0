@@ -1,39 +1,37 @@
-From: "Mr. Berkley Shands" <bshands@exegy.com>
-Subject: Quick fix for LSI8888ELP overruns in 2.6.20 and 2.6.21-rc4
-Date: Thu, 22 Mar 2007 14:08:35 -0500
-Message-ID: <4602D433.3070406@exegy.com>
+From: thomas schorpp <t.schorpp@gmx.de>
+Subject: Re: aic7xxx: aic7892(B): BUG: soft lockup detected on CPU#0!
+Date: Thu, 22 Mar 2007 22:02:13 +0100
+Message-ID: <4602EED5.5070503@gmx.de>
+References: <46029D72.3060403@gmx.de> <4602B576.6020602@gmx.de>
+Reply-To: t.schorpp@gmx.de
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
-	format=flowed
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 68-191-203-42.static.stls.mo.charter.com ([68.191.203.42]:10474
-	"EHLO service.eng.exegy.net" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S965059AbXCVTKJ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Mar 2007 15:10:09 -0400
-Content-Class: urn:content-classes:message
+Received: from mail.gmx.net ([213.165.64.20]:41056 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752414AbXCVVCP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Mar 2007 17:02:15 -0400
+In-Reply-To: <4602B576.6020602@gmx.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-xfs@oss.sgi.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: SCSI development list <linux-scsi@vger.kernel.org>
 
-My local kernel guru recognized this problem as a duplicate of the
-LSI8408E bus lockup problem. The controller gets flooded with work,
-and just climbs under a rock to hide. In the 8408E case, it
-froze the PCI-e bus :-)
+[    0.000000] Linux version 2.6.21-rc3amd64-gbb9ba31c-dirty (root@tom1) (gcc ve
+rsion 4.1.2 20061115 (prerelease) (Debian 4.1.1-21)) #3 PREEMPT Thu Mar 22 21:48
+:44 CET 2007
 
-#!/bin/csh
-#
-# set the max request queue down from 128. any more than 32
-# quickly slows down from 810MB/Sec to 11MB/Sec.
-#
-setenv X 32
-#
-foreach i ( /sys/block/sd{g,h,i,j,k,l,m,n}/queue/nr_requests)
-   echo $X > $i
-   end
+added some traces,
+ok it does not return from the first pci_map_registers():
 
-Lots of time was spent in the congestion queue, like 99% of the time.
+[   42.754305] Loading iSCSI transport class v2.0-724.
+[   42.759656] iscsi: registered transport (tcp)
+[   42.764016] ahc_linux_pci_init
+[   42.767207] ahc_linux_pci_dev_probe
+[   42.770744] ACPI: PCI Interrupt 0000:00:06.0[A] -> GSI 17 (level, low) -> IRQ
+ 17
+[   42.778160] ahc_pci_config
+[   42.780861] set_power_state
+[   42.783656] map_registers
 
-Berkley
-This e-mail and any documents accompanying it may contain legally privileged and/or confidential information belonging to Exegy, Inc. Such information may be protected from disclosure by law. The information is intended for use by only the addressee. If you are not the intended recipient, you are hereby notified that any disclosure or use of the information is strictly prohibited. If you have received this e-mail in error, please immediately contact the sender by e-mail or phone regarding instructions for return or destruction and do not use or disclose the content to others.
+tracing further and provide args dump if applicable
