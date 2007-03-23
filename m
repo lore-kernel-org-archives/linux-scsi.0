@@ -1,82 +1,66 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [PATCH] lpfc: add cfg_use_msi test before pci_msi_disable() calls
-Date: Fri, 23 Mar 2007 12:56:30 -0400
-Message-ID: <460406BE.30806@emulex.com>
-References: <200703231332.l2NDWFXq021381@anacortes.austin.ibm.com>
-Reply-To: James.Smart@Emulex.Com
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: aic7xxx: aic7892(B): BUG: soft lockup detected on CPU#0!
+Date: Fri, 23 Mar 2007 11:23:06 -0600
+Message-ID: <1174670587.30030.47.camel@mulgrave.il.steeleye.com>
+References: <46029D72.3060403@gmx.de> <4602B576.6020602@gmx.de>
+	 <4602EED5.5070503@gmx.de> <46030A9A.2060604@gmx.de>
+	 <46032CC8.6030307@gmx.de>
+	 <1174625139.30030.31.camel@mulgrave.il.steeleye.com>
+	 <4603827C.4080701@gmx.de>  <46040047.3000104@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:55906 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934290AbXCWRAb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Mar 2007 13:00:31 -0400
-In-Reply-To: <200703231332.l2NDWFXq021381@anacortes.austin.ibm.com>
+Received: from hancock.steeleye.com ([71.30.118.248]:49954 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752254AbXCWRXM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Mar 2007 13:23:12 -0400
+In-Reply-To: <46040047.3000104@gmx.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: rlary@austin.ibm.com
-Cc: linux-scsi@vger.kernel.org
+To: t.schorpp@gmx.de
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-Richard,
+On Fri, 2007-03-23 at 17:28 +0100, thomas schorpp wrote:
+> > i agree for this to be a 32bit dma busmaster chip,
+> > since pci_resource_flags and lspci say 64bit mem resource type
+> > 
+> > aic7xxx: pci_resource_start fffff000 *maddr 20000 mem64 4
+> > 
+> > we've a bug in the x86_64 linux pci config, BIOS is ok, the hardware 
+> > worked fine in a winxp_x64 test setup a few months ago.
+> > 
+> > will ask LKML.
+> > 
+> > y
+> > tom
+> 
+> sorry, wrong according to http://download.adaptec.com/pdfs/aic7892.pdf.
+> 
+> "66 MHz, 64-bit, PCI interface that
+> supports zero wait-state memory;
+> also operates on 33 MHz, 32-bit
+> PCI busses"
+> 
+> this chip is capable of 64bit addressing, as pci_resource_nnnn (checking this) on x86_64 platform 
+> and lspci on x86_64 *and* AMDK7 configured kernels reports, even on PCI/32, right?
+> or is it impossible to do multiplexed 64bit mem addressing on PCI/32?
 
-When we put this in, the kernel code that we inspected allowed for
-the call if msi was not enabled (check on dev->msi_enabled), and did
-nothing. Thus, we believed it was in the scope of the interface.
-kfree does the same kind of thing. Testing on 2.6.21-rc4 on a machine
-w/o MSI also results in no issues/messages.
+It can only do 37 bit addressing ... only the aic79xx can do the full 64
+bits, so I suspect it should never get a 64 bit BAR, since it wouldn't
+be able to decode the full 32 bits.  I can fix the mmio check not to
+hang, but the card won't actually work mmio until whatever's assigning
+the BAR above 32 bits is fixed (that could either be a kernel PCI bug or
+a BIOS bug).
 
-Also - cfg_use_msi doesn't actually mean that a successful pci_msi_enable
-had been performed. To accurately track it, we'll need a flag bit, which
-we thought we could avoid based on the interface. I'd prefer to leave it
-as is, unless we truly are mistaken about the interface or coding style.
-Is your platform replacing the pci functions ?
+> Why are the driver structure address members 32bits wide types if therere PCI/64 card 
+> models with this chips as listet in aic7xxx.txt kernel doc and stated in aic7892.pdf?
+> I'll adapt the respective driver structures and function args now to 64bit and see what happens...
+> 
+> can adaptec.inc pls comment? since the aha19160 card is still in production state, 
+> i assume they want to have a linux x86_64 dma capable driver. so far it is not, 
+> or can other users having this card pls confirm my pci system broken?
 
--- james s
+James
 
 
-Richard Lary wrote:
-> From: Richard Lary <rlary@us.ibm.com>
-> 
-> This patch adds test for phba->cfg_use_msi
-> before calls to pci_msi_disable() to prevent
-> calls to this function when pci_msi_enable()
-> has not been called.
-> 
-> Signed-off-by: Richard Lary <rlary@us.ibm.com>
-> ---
-> 
-> Calling pci_msi_disable() when pci_msi_enable()
-> has not been previously called results in
-> console error message when removing lpfc.
-> 
-> $ modprobe -r lpfc
-> error[-3]: getting the number of MSI interrupts for fibre-channel
-> 
-> Applies to: 2.6.21-rc4-git5
-> 
-> Index: b/drivers/scsi/lpfc/lpfc_init.c
-> ===================================================================
-> --- a/drivers/scsi/lpfc/lpfc_init.c
-> +++ b/drivers/scsi/lpfc/lpfc_init.c
-> @@ -1704,7 +1704,8 @@ out_free_irq:
->  	lpfc_stop_timer(phba);
->  	phba->work_hba_events = 0;
->  	free_irq(phba->pcidev->irq, phba);
-> -	pci_disable_msi(phba->pcidev);
-> +	if (phba->cfg_use_msi)
-> +		pci_disable_msi(phba->pcidev);
->  out_free_sysfs_attr:
->  	lpfc_free_sysfs_attr(phba);
->  out_remove_host:
-> @@ -1771,7 +1772,8 @@ lpfc_pci_remove_one(struct pci_dev *pdev
->  
->  	/* Release the irq reservation */
->  	free_irq(phba->pcidev->irq, phba);
-> -	pci_disable_msi(phba->pcidev);
-> +	if (phba->cfg_use_msi)
-> +		pci_disable_msi(phba->pcidev);
->  
->  	lpfc_cleanup(phba, 0);
->  	lpfc_stop_timer(phba);
-> 
