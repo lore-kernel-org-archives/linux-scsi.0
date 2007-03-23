@@ -1,43 +1,82 @@
-From: thomas schorpp <t.schorpp@gmx.de>
-Subject: [PATCH][DOC]aic7xxx: Correct wrong Kernel Documentation for Adaptec
- AHA19160(B) HBA
-Date: Fri, 23 Mar 2007 17:45:52 +0100
-Message-ID: <46040440.1020704@gmx.de>
-Reply-To: t.schorpp@gmx.de
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [PATCH] lpfc: add cfg_use_msi test before pci_msi_disable() calls
+Date: Fri, 23 Mar 2007 12:56:30 -0400
+Message-ID: <460406BE.30806@emulex.com>
+References: <200703231332.l2NDWFXq021381@anacortes.austin.ibm.com>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:56047 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752141AbXCWQpy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 23 Mar 2007 12:45:54 -0400
+Received: from emulex.emulex.com ([138.239.112.1]:55906 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934290AbXCWRAb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Mar 2007 13:00:31 -0400
+In-Reply-To: <200703231332.l2NDWFXq021381@anacortes.austin.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
+To: rlary@austin.ibm.com
+Cc: linux-scsi@vger.kernel.org
 
---- Documentation/scsi/aic7xxx.txt 2007-03-23 16:44:05.000000000 +0100
-+++ Documentation/scsi/aic7xxx.txt 2007-03-23 17:01:19.000000000 +0100
-@@ -28,7 +28,7 @@
-    aic7880  10    PCI/32    20MHz    16Bit      16
-    aic7890  20    PCI/32    40MHz    16Bit      16      3 4 5 6 7 8
-    aic7891  20    PCI/64    40MHz    16Bit      16      3 4 5 6 7 8
--   aic7892  20   PCI/64-66  80MHz    16Bit      16      3 4 5 6 7 8
-+   aic7892  20 PCI/32/64-66 80MHz    16Bit      16      3 4 5 6 7 8
-    aic7895  15    PCI/32    20MHz    16Bit      16    2 3 4 5
-    aic7895C 15    PCI/32    20MHz    16Bit      16    2 3 4 5     8
-    aic7896  20    PCI/32    40MHz    16Bit      16    2 3 4 5 6 7 8
-@@ -114,7 +114,7 @@
-    AHA-29160N     aic7892   PCI/32      LVD-HD68F       SE-HD50F
-                                          SE-50M
-    AHA-29160LP    aic7892   PCI/64-66
--   AHA-19160      aic7892   PCI/64-66
-+   AHA-19160      aic7892   PCI/32
-    AHA-29150LP    aic7892   PCI/64-66
-    AHA-29130LP    aic7892   PCI/64-66
-    AHA-3960D      aic7899   PCI/64-66  2 X LVD-HD68F  2 X LVD-VHD68F
+Richard,
 
-Correct documentation according to the aic7892 chip, adaptec aha19160 hba specs.
+When we put this in, the kernel code that we inspected allowed for
+the call if msi was not enabled (check on dev->msi_enabled), and did
+nothing. Thus, we believed it was in the scope of the interface.
+kfree does the same kind of thing. Testing on 2.6.21-rc4 on a machine
+w/o MSI also results in no issues/messages.
 
-Signed-off-by tom schorpp <t.schorpp@gmx.de>
+Also - cfg_use_msi doesn't actually mean that a successful pci_msi_enable
+had been performed. To accurately track it, we'll need a flag bit, which
+we thought we could avoid based on the interface. I'd prefer to leave it
+as is, unless we truly are mistaken about the interface or coding style.
+Is your platform replacing the pci functions ?
 
+-- james s
+
+
+Richard Lary wrote:
+> From: Richard Lary <rlary@us.ibm.com>
+> 
+> This patch adds test for phba->cfg_use_msi
+> before calls to pci_msi_disable() to prevent
+> calls to this function when pci_msi_enable()
+> has not been called.
+> 
+> Signed-off-by: Richard Lary <rlary@us.ibm.com>
+> ---
+> 
+> Calling pci_msi_disable() when pci_msi_enable()
+> has not been previously called results in
+> console error message when removing lpfc.
+> 
+> $ modprobe -r lpfc
+> error[-3]: getting the number of MSI interrupts for fibre-channel
+> 
+> Applies to: 2.6.21-rc4-git5
+> 
+> Index: b/drivers/scsi/lpfc/lpfc_init.c
+> ===================================================================
+> --- a/drivers/scsi/lpfc/lpfc_init.c
+> +++ b/drivers/scsi/lpfc/lpfc_init.c
+> @@ -1704,7 +1704,8 @@ out_free_irq:
+>  	lpfc_stop_timer(phba);
+>  	phba->work_hba_events = 0;
+>  	free_irq(phba->pcidev->irq, phba);
+> -	pci_disable_msi(phba->pcidev);
+> +	if (phba->cfg_use_msi)
+> +		pci_disable_msi(phba->pcidev);
+>  out_free_sysfs_attr:
+>  	lpfc_free_sysfs_attr(phba);
+>  out_remove_host:
+> @@ -1771,7 +1772,8 @@ lpfc_pci_remove_one(struct pci_dev *pdev
+>  
+>  	/* Release the irq reservation */
+>  	free_irq(phba->pcidev->irq, phba);
+> -	pci_disable_msi(phba->pcidev);
+> +	if (phba->cfg_use_msi)
+> +		pci_disable_msi(phba->pcidev);
+>  
+>  	lpfc_cleanup(phba, 0);
+>  	lpfc_stop_timer(phba);
+> 
