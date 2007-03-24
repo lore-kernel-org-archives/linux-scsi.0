@@ -1,90 +1,59 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [-mm patch] drivers/scsi/constants.c: make 2 functions static
-Date: Sat, 24 Mar 2007 12:11:05 -0400
-Message-ID: <46054D99.8070705@torque.net>
-References: <20070319205623.299d0378.akpm@linux-foundation.org> <20070324130647.GI752@stusta.de>
-Reply-To: dougg@torque.net
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: troubles with DAC960
+Date: Sat, 24 Mar 2007 09:35:54 -0700
+Message-ID: <20070324093554.89cee415.randy.dunlap@oracle.com>
+References: <4602C062.6050406@cation.de>
+	<460533DC.3010006@cation.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:51265 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753157AbXCXQLn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 24 Mar 2007 12:11:43 -0400
-In-Reply-To: <20070324130647.GI752@stusta.de>
+Received: from rgminet01.oracle.com ([148.87.113.118]:59337 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932134AbXCXQgx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 24 Mar 2007 12:36:53 -0400
+In-Reply-To: <460533DC.3010006@cation.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>, James.Bottomley@SteelEye.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Boris Andratzek <Boris.Andratzek@cation.de>
+Cc: linux-kernel@vger.kernel.org, scsi <linux-scsi@vger.kernel.org>
 
-Adrian Bunk wrote:
-> On Mon, Mar 19, 2007 at 08:56:23PM -0800, Andrew Morton wrote:
->> ...
->> Changes since 2.6.21-rc3-mm1:
->> ...
->>  git-scsi-misc.patch
->> ...
->>  git trees
->> ...
+On Sat, 24 Mar 2007 15:21:16 +0100 Boris Andratzek wrote:
+
+> Boris Andratzek wrote:
+> > Hello members of the kernel-list,
+> > 
+> > 
+> > I'm new to this and hope I don't misuse the list in any way.
+> > 
+> > Doing the update from debian sarge to etch on my server I ran into the
+> > bug documented here: bugzilla.kernel.org/show_bug.cgi?id=7177
+> > I already made some comments there. I tried to contact the maintainer of
+> > the DAC960 driver but as far as I found out, Leonard N. Zubkoff
+> > unfortunatly died in a helicopter crash.
+> > 
+> > Without being impious, I want to ask if anybody can give me an idea of
+> > how this thing will go on. Is there anybody new doing the maintaining?
+> > Is there hope for a fix? Where can I find more information? Can I do
+> > anything to help (testing, logging)?
+> > 
+> > regards,
+> > 
+> > Boris Andratzek
+> > 
 > 
+> Hello!?
 > 
-> This patch makes two needlessly global functions static.
+> I didn't catch no reaction at all, so I am not sure if I sent my
+> question the right way! Could anybody respond, please, even without an
+> idea of solving my problem!?
 > 
-> Signed-off-by: Adrian Bunk <bunk@stusta.de>
-> 
-> ---
-> 
->  drivers/scsi/constants.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> --- linux-2.6.21-rc4-mm1/drivers/scsi/constants.c.old	2007-03-23 23:26:39.000000000 +0100
-> +++ linux-2.6.21-rc4-mm1/drivers/scsi/constants.c	2007-03-23 23:26:55.000000000 +0100
-> @@ -1235,7 +1235,7 @@
->  }
->  EXPORT_SYMBOL(scsi_print_sense_hdr);
->  
-> -void
-> +static void
->  scsi_decode_sense_buffer(const unsigned char *sense_buffer, int sense_len,
->  		       struct scsi_sense_hdr *sshdr)
->  {
-> @@ -1258,7 +1258,7 @@
->  	}
->  }
->  
-> -void
-> +static void
->  scsi_decode_sense_extras(const unsigned char *sense_buffer, int sense_len,
->  			 struct scsi_sense_hdr *sshdr)
->  {
+> Thanks,
 
-Adrian,
-Who put those functions in?
+There is no current DAC960 maintainer.
 
-The names and arguments look very similar to these
-exported functions in scsi_error.c *** :
-  scsi_normalize_sense
-  scsi_sense_desc_find
-  scsi_get_sense_info_fld
+I'd try asking on the linux-scsi mailing list (cc-ed there).
 
-that I can see in 2.6.21-rc4
-
-The proposed scsi_decode_sense_buffer() looks broken because
-it can fail and should return an int reflecting that.
-How scsi_decode_sense_extras() works is intriguing, unless
-struct scsi_sense_hdr has been changed as well.
-
-
-*** Putting sense decode logic in scsi_error.c is wrong
-because:
-  - the ATA command set is proposing an ATA REQUEST SENSE
-    command to yield a sense buffer
-  - sense buffers don't necessarily indicate errors.
-
-So moving those functions out of scsi_error.c IMO is a
-good idea. Breaking them in the move isn't.
-
-Doug Gilbert
-
-
+---
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
