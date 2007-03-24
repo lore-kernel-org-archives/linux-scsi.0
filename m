@@ -1,160 +1,56 @@
-From: thomas schorpp <t.schorpp@gmx.de>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: aic7xxx: aic7892(B): BUG: soft lockup detected on CPU#0!
-Date: Sat, 24 Mar 2007 01:51:01 +0100
-Message-ID: <460475F5.1080805@gmx.de>
-References: <46029D72.3060403@gmx.de> <4602B576.6020602@gmx.de>	 <4602EED5.5070503@gmx.de> <46030A9A.2060604@gmx.de>	 <46032CC8.6030307@gmx.de>	 <1174625139.30030.31.camel@mulgrave.il.steeleye.com>	 <4603827C.4080701@gmx.de>  <46040047.3000104@gmx.de> <1174670587.30030.47.camel@mulgrave.il.steeleye.com> <46041B11.6000004@gmx.de> <46042383.7010704@gmx.de>
-Reply-To: t.schorpp@gmx.de
+Date: Fri, 23 Mar 2007 19:17:12 -0600
+Message-ID: <1174699032.13717.25.camel@mulgrave.il.steeleye.com>
+References: <46029D72.3060403@gmx.de> <4602B576.6020602@gmx.de>
+	 <4602EED5.5070503@gmx.de> <46030A9A.2060604@gmx.de>
+	 <46032CC8.6030307@gmx.de>
+	 <1174625139.30030.31.camel@mulgrave.il.steeleye.com>
+	 <4603827C.4080701@gmx.de>  <46040047.3000104@gmx.de>
+	 <1174670587.30030.47.camel@mulgrave.il.steeleye.com>
+	 <46041B11.6000004@gmx.de> <46042383.7010704@gmx.de>
+	 <460475F5.1080805@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:45174 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S2992648AbXCXAvD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 23 Mar 2007 20:51:03 -0400
-In-Reply-To: <46042383.7010704@gmx.de>
+Received: from hancock.steeleye.com ([71.30.118.248]:52841 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S934337AbXCXBRS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Mar 2007 21:17:18 -0400
+In-Reply-To: <460475F5.1080805@gmx.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
+To: t.schorpp@gmx.de
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-thomas schorpp wrote:
-> thomas schorpp wrote:
->> James Bottomley wrote:
->>> On Fri, 2007-03-23 at 17:28 +0100, thomas schorpp wrote:
->>>>> i agree for this to be a 32bit dma busmaster chip,
->>>>> since pci_resource_flags and lspci say 64bit mem resource type
->>>>>
->>>>> aic7xxx: pci_resource_start fffff000 *maddr 20000 mem64 4
->>>>>
->>
->> static int
->> ahc_linux_pci_reserve_mem_region(struct ahc_softc *ahc,
->>                                 u_long *bus_addr,
->>                                 uint8_t __iomem **maddr)
->> {
->> //      u_long  start;
->>        u_long  len;
->>        int     error;
->>        uint64_t start;
->> ...
->>        printk(KERN_WARNING "aic7xxx: pci_resource_start 0x%llx mem64 
->> 0x%lx\n", start, pci_resource_flags(ahc->dev_softc, 1) & 
->> PCI_BASE_ADDRESS_MEM_TYPE_64 ); //schorpp
->>        return (error);
->>
->> aic7xxx: pci_resource_start 0xffffff000 mem64 0x4
->> -----------------------------------------------^
->>
->> just to doublecheck the situation, posted lspci already.
->>
->> will check next, if
->>       len = pci_resource_len(ahc->dev_softc, 1);
->>        if (start != 0) {
->>                *bus_addr = start;
->> //              if (request_mem_region(start, 0x1000, "aic7xxx") == 0)
->>                if (request_mem_region(start, len, "aic7xxx") == 0)
->>
->> succeeds.
+On Sat, 2007-03-24 at 01:51 +0100, thomas schorpp wrote:
+> > no. so the pci layer reports wrong start:
 > 
-> no. so the pci layer reports wrong start:
-
-nonsense. it succeeds, confused function return with the error flag:
-
-//      u_long  start;
-//      u_long  start = 0xFFEFF000;
-        u_long  start = 0x30000000;
-        int     error;
-
-        struct resource* ret1;
-        error = 0;
-//      start = pci_resource_start(ahc->dev_softc, 1);
-        if (start != 0) {
-                *bus_addr = start;
-                if ((ret1 = request_mem_region(start, 0x1000, "aic7xxx")) == 0)
-                        error = ENOMEM;
-                        printk(KERN_WARNING "aic7xxx: req_mem_region start 0x%lx\n", \
-                                ret1->start); //schorpp
-                if (error == 0) {
-                        *maddr = ioremap_nocache(start, 256);
-                        if (*maddr == NULL) {
-                                error = ENOMEM;
-                                release_mem_region(start, 0x1000);
-                        }
-                }
-        } else
-                error = ENOMEM;
-
-tom1:~# dmesg |grep aic
-aic7xxx: DMA_32BIT_MASK
-aic7xxx: req_mem_region start 0x30000000
-aic7xxx: pci_resource_start 0x30000000 **maddr 0xff mem64 0x4
-aic7xxx: PCI Device 0:6:0 failed memory mapped test.  Using PIO.
-        aic7892: Ultra160 Wide Channel A, SCSI Id=7, 32/253 SCBs
-
-tried the mem start value from lspci on a running knoppix and winxp, 
-but the                 if (ahc_pci_test_register_access(ahc) != 0) {
-does not go.
-thought the pci resources were constant and i could hardcode for my system ;)
-
-remarkable is, with this mem start setting the kernel autofree(?) does not take action.
-
+> nonsense. it succeeds, confused function return with the error flag:
 > 
->>
->>>>> we've a bug in the x86_64 linux pci config, BIOS is ok, the 
->>>>> hardware worked fine in a winxp_x64 test setup a few months ago.
->>>>>
->>>>> will ask LKML.
->>>>>
->>>>> y
->>>>> tom
->>>> sorry, wrong according to http://download.adaptec.com/pdfs/aic7892.pdf.
->>>>
->>>> "66 MHz, 64-bit, PCI interface that
->>>> supports zero wait-state memory;
->>>> also operates on 33 MHz, 32-bit
->>>> PCI busses"
->>>>
->>>> this chip is capable of 64bit addressing, as pci_resource_nnnn 
->>>> (checking this) on x86_64 platform and lspci on x86_64 *and* AMDK7 
->>>> configured kernels reports, even on PCI/32, right?
->>>> or is it impossible to do multiplexed 64bit mem addressing on PCI/32?
->>>
->>> It can only do 37 bit addressing ... only the aic79xx can do the full 64
->>> bits, so I suspect it should never get a 64 bit BAR, since it wouldn't
->>> be able to decode the full 32 bits.  I can fix the mmio check not to
->>> hang, but the card won't actually work mmio until whatever's assigning
->>> the BAR above 32 bits is fixed (that could either be a kernel PCI bug or
->>> a BIOS bug).
->>>
->>
->> ok, i trust in that. adaptor bios and mainboard bios *are* out, 
->> winxp_x64 driver handled all.
->> so agree on kernel pci hal issue.
->> but what for         const uint64_t   mask_39bit = 0x7FFFFFFFFFULL;
->> then?
->>
->>>>
->>>> can adaptec.inc pls comment? since the aha19160 card is still in 
->>>> production state, i assume they want to have a linux x86_64 dma 
->>>> capable driver. so far it is not, or can other users having this 
->>>> card pls confirm my pci system broken?
->>>
->>> James
->>>
->>>
->>
->> y
->> tom
->>
->> -
->> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
+> //      u_long  start;
+> //      u_long  start = 0xFFEFF000;
+>         u_long  start = 0x30000000;
+>         int     error;
 > 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+>         struct resource* ret1;
+>         error = 0;
+> //      start = pci_resource_start(ahc->dev_softc, 1);
+>         if (start != 0) {
+>                 *bus_addr = start;
+>                 if ((ret1 = request_mem_region(start, 0x1000, "aic7xxx")) == 0)
+
+You can't do this.  The pci_resource_start is getting the address of
+something called a Bus Address Register (BAR) it says in physical
+address space where the card is responding ... you can't simply set that
+to a random value.
+
+The problem you seem to have is that your system is reporting a BAR
+beyond 32 bits (4GB) which the card physically can't use.  This could be
+because of a BIOS misconfiguration or because there's a bug in the PCI
+subsystem somewhere.
+
+James
+
 
