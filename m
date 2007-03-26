@@ -1,440 +1,187 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [RFC: 2.6 patch] drivers/scsi/ips.c: remove kernel 2.4 code
-Date: Mon, 26 Mar 2007 06:08:34 +0200
-Message-ID: <20070326040834.GX16477@stusta.de>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: [PATCH] aacraid: Add likely() and unlikely() Take 2
+Date: Mon, 26 Mar 2007 09:21:14 -0400
+Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF0172C40E@otce2k301.adaptec.com>
+References: <1174555468.1158.166.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: multipart/mixed;
+	boundary="----_=_NextPart_001_01C76FA9.A17FAE7F"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:34518 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S933566AbXCZEIb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Mar 2007 00:08:31 -0400
-Content-Disposition: inline
+Received: from mail-gw3.adaptec.com ([216.52.22.36]:56245 "EHLO
+	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751677AbXCZNVQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Mar 2007 09:21:16 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <1174555468.1158.166.camel@laptopd505.fenrus.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: ipslinux@adaptec.com, James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Arjan van de Ven <arjan@infradead.org>
 
-This patch removes some kernel 2.4 code.
+This is a multi-part message in MIME format.
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+------_=_NextPart_001_01C76FA9.A17FAE7F
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
+Thanks Arjan for the comments, much appreciated. I have removed the
+superfluous braces and limited the usage of the likely and unlikely to
+runtime code. Sorry for the delay, took a four day vacation ...
+
+Add some likely() and unlikely() compiler hints in some of the aacraid
+hardware interface layers. There should be no operational side effects
+resulting from this patch and the changes should be mostly benign on x86
+platforms.
+
+ObligatoryDisclaimer: Please accept my condolences regarding Outlook's
+handling of patches attachments.
+
+This attached patch is against current scsi-misc-2.6
+
+Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
 
 ---
 
- drivers/scsi/ips.c |  145 +++++----------------------------------------
- drivers/scsi/ips.h |   44 -------------
- 2 files changed, 20 insertions(+), 169 deletions(-)
+Sincerely -- Mark Salyzyn
 
---- linux-2.6.21-rc4-mm1/drivers/scsi/ips.h.old	2007-03-25 20:10:28.000000000 +0200
-+++ linux-2.6.21-rc4-mm1/drivers/scsi/ips.h	2007-03-25 20:22:28.000000000 +0200
-@@ -58,10 +58,6 @@
-    /*
-     * Some handy macros
-     */
--   #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,20) || defined CONFIG_HIGHIO
--      #define IPS_HIGHIO
--   #endif
--
-    #define IPS_HA(x)                   ((ips_ha_t *) x->hostdata)
-    #define IPS_COMMAND_ID(ha, scb)     (int) (scb - ha->scbs)
-    #define IPS_IS_TROMBONE(ha)         (((ha->device_id == IPS_DEVICEID_COPPERHEAD) && \
-@@ -84,38 +80,8 @@
-     #define IPS_SGLIST_SIZE(ha)       (IPS_USE_ENH_SGLIST(ha) ? \
-                                          sizeof(IPS_ENH_SG_LIST) : sizeof(IPS_STD_SG_LIST))
- 
--   #if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,4)
--      #define pci_set_dma_mask(dev,mask) ( mask > 0xffffffff ? 1:0 )
--      #define scsi_set_pci_device(sh,dev) (0)
--   #endif
--
--   #ifndef IRQ_NONE
--      typedef void irqreturn_t;
--      #define IRQ_NONE
--      #define IRQ_HANDLED
--      #define IRQ_RETVAL(x)
--   #endif
--   
--   #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
--      #define IPS_REGISTER_HOSTS(SHT)      scsi_register_module(MODULE_SCSI_HA,SHT)
--      #define IPS_UNREGISTER_HOSTS(SHT)    scsi_unregister_module(MODULE_SCSI_HA,SHT)
--      #define IPS_ADD_HOST(shost,device)
--      #define IPS_REMOVE_HOST(shost)
--      #define IPS_SCSI_SET_DEVICE(sh,ha)   scsi_set_pci_device(sh, (ha)->pcidev)
--      #define IPS_PRINTK(level, pcidev, format, arg...)                 \
--            printk(level "%s %s:" format , "ips" ,     \
--            (pcidev)->slot_name , ## arg)
--      #define scsi_host_alloc(sh,size)         scsi_register(sh,size)
--      #define scsi_host_put(sh)             scsi_unregister(sh)
--   #else
--      #define IPS_REGISTER_HOSTS(SHT)      (!ips_detect(SHT))
--      #define IPS_UNREGISTER_HOSTS(SHT)
--      #define IPS_ADD_HOST(shost,device)   do { scsi_add_host(shost,device); scsi_scan_host(shost); } while (0)
--      #define IPS_REMOVE_HOST(shost)       scsi_remove_host(shost)
--      #define IPS_SCSI_SET_DEVICE(sh,ha)   do { } while (0)
--      #define IPS_PRINTK(level, pcidev, format, arg...)                 \
-+  #define IPS_PRINTK(level, pcidev, format, arg...)                 \
-             dev_printk(level , &((pcidev)->dev) , format , ## arg)
--   #endif
- 
-    #define MDELAY(n)			\
- 	do {				\
-@@ -134,7 +100,7 @@
-    #define pci_dma_hi32(a)         ((a >> 16) >> 16)
-    #define pci_dma_lo32(a)         (a & 0xffffffff)
- 
--   #if (BITS_PER_LONG > 32) || (defined CONFIG_HIGHMEM64G && defined IPS_HIGHIO)
-+   #if (BITS_PER_LONG > 32) || defined(CONFIG_HIGHMEM64G)
-       #define IPS_ENABLE_DMA64        (1)
-    #else
-       #define IPS_ENABLE_DMA64        (0)
-@@ -451,16 +417,10 @@
-    /*
-     * Scsi_Host Template
-     */
--#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
--   static int ips_proc24_info(char *, char **, off_t, int, int, int);
--   static void ips_select_queue_depth(struct Scsi_Host *, struct scsi_device *);
--   static int ips_biosparam(Disk *disk, kdev_t dev, int geom[]);
--#else
-    static int ips_proc_info(struct Scsi_Host *, char *, char **, off_t, int, int);
-    static int ips_biosparam(struct scsi_device *sdev, struct block_device *bdev,
- 		sector_t capacity, int geom[]);
-    static int ips_slave_configure(struct scsi_device *SDptr);
--#endif
- 
- /*
-  * Raid Command Formats
---- linux-2.6.21-rc4-mm1/drivers/scsi/ips.c.old	2007-03-25 20:11:39.000000000 +0200
-+++ linux-2.6.21-rc4-mm1/drivers/scsi/ips.c	2007-03-25 20:20:35.000000000 +0200
-@@ -211,19 +211,6 @@
- #warning "This driver has only been tested on the x86/ia64/x86_64 platforms"
- #endif
- 
--#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,5,0)
--#include <linux/blk.h>
--#include "sd.h"
--#define IPS_LOCK_SAVE(lock,flags) spin_lock_irqsave(&io_request_lock,flags)
--#define IPS_UNLOCK_RESTORE(lock,flags) spin_unlock_irqrestore(&io_request_lock,flags)
--#ifndef __devexit_p
--#define __devexit_p(x) x
--#endif
--#else
--#define IPS_LOCK_SAVE(lock,flags) do{spin_lock(lock);(void)flags;}while(0)
--#define IPS_UNLOCK_RESTORE(lock,flags) do{spin_unlock(lock);(void)flags;}while(0)
--#endif
--
- #define IPS_DMA_DIR(scb) ((!scb->scsi_cmd || ips_is_passthru(scb->scsi_cmd) || \
-                          DMA_NONE == scb->scsi_cmd->sc_data_direction) ? \
-                          PCI_DMA_BIDIRECTIONAL : \
-@@ -381,24 +368,13 @@
- 	.eh_abort_handler	= ips_eh_abort,
- 	.eh_host_reset_handler	= ips_eh_reset,
- 	.proc_name		= "ips",
--#if LINUX_VERSION_CODE > KERNEL_VERSION(2,5,0)
- 	.proc_info		= ips_proc_info,
- 	.slave_configure	= ips_slave_configure,
--#else
--	.proc_info		= ips_proc24_info,
--	.select_queue_depths	= ips_select_queue_depth,
--#endif
- 	.bios_param		= ips_biosparam,
- 	.this_id		= -1,
- 	.sg_tablesize		= IPS_MAX_SG,
- 	.cmd_per_lun		= 3,
- 	.use_clustering		= ENABLE_CLUSTERING,
--#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
--	.use_new_eh_code	= 1,
--#endif
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,20)  &&  LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
--    .highmem_io          = 1,   
--#endif
- };
- 
- 
-@@ -731,7 +707,7 @@
- 	/* free IRQ */
- 	free_irq(ha->irq, ha);
- 
--	IPS_REMOVE_HOST(sh);
-+	scsi_remove_host(sh);
- 	scsi_host_put(sh);
- 
- 	ips_released_controllers++;
-@@ -813,7 +789,6 @@
- 	ips_ha_t *ha;
- 	ips_copp_wait_item_t *item;
- 	int ret;
--	unsigned long cpu_flags;
- 	struct Scsi_Host *host;
- 
- 	METHOD_TRACE("ips_eh_abort", 1);
-@@ -830,7 +805,7 @@
- 	if (!ha->active)
- 		return (FAILED);
- 
--	IPS_LOCK_SAVE(host->host_lock, cpu_flags);
-+	spin_lock(host->host_lock);
- 
- 	/* See if the command is on the copp queue */
- 	item = ha->copp_waitlist.head;
-@@ -851,7 +826,7 @@
- 		ret = (FAILED);
- 	}
- 
--	IPS_UNLOCK_RESTORE(host->host_lock, cpu_flags);
-+	spin_unlock(host->host_lock);
- 	return ret;
- }
- 
-@@ -1176,18 +1151,10 @@
- /*   Set bios geometry for the controller                                   */
- /*                                                                          */
- /****************************************************************************/
--static int
--#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
--ips_biosparam(Disk * disk, kdev_t dev, int geom[])
--{
--	ips_ha_t *ha = (ips_ha_t *) disk->device->host->hostdata;
--	unsigned long capacity = disk->capacity;
--#else
--ips_biosparam(struct scsi_device *sdev, struct block_device *bdev,
--	      sector_t capacity, int geom[])
-+static int ips_biosparam(struct scsi_device *sdev, struct block_device *bdev,
-+			 sector_t capacity, int geom[])
- {
- 	ips_ha_t *ha = (ips_ha_t *) sdev->host->hostdata;
--#endif
- 	int heads;
- 	int sectors;
- 	int cylinders;
-@@ -1225,70 +1192,6 @@
- 	return (0);
- }
- 
--#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
--
--/* ips_proc24_info is a wrapper around ips_proc_info *
-- * for compatibility with the 2.4 scsi parameters    */
--static int
--ips_proc24_info(char *buffer, char **start, off_t offset, int length,
--		              int hostno, int func)
--{
--	int i;
--
--	for (i = 0; i < ips_next_controller; i++) {
--		if (ips_sh[i] && ips_sh[i]->host_no == hostno) {
--			return ips_proc_info(ips_sh[i], buffer, start,
--					     offset, length, func);
--		}
--	}
--	return -EINVAL;	
--}
--
--/****************************************************************************/
--/*                                                                          */
--/* Routine Name: ips_select_queue_depth                                     */
--/*                                                                          */
--/* Routine Description:                                                     */
--/*                                                                          */
--/*   Select queue depths for the devices on the contoller                   */
--/*                                                                          */
--/****************************************************************************/
--static void
--ips_select_queue_depth(struct Scsi_Host *host, struct scsi_device * scsi_devs)
--{
--	struct scsi_device *device;
--	ips_ha_t *ha;
--	int count = 0;
--	int min;
--
--	ha = IPS_HA(host);
--	min = ha->max_cmds / 4;
--
--	for (device = scsi_devs; device; device = device->next) {
--		if (device->host == host) {
--			if ((device->channel == 0) && (device->type == 0))
--				count++;
--		}
--	}
--
--	for (device = scsi_devs; device; device = device->next) {
--		if (device->host == host) {
--			if ((device->channel == 0) && (device->type == 0)) {
--				device->queue_depth =
--				    (ha->max_cmds - 1) / count;
--				if (device->queue_depth < min)
--					device->queue_depth = min;
--			} else {
--				device->queue_depth = 2;
--			}
--
--			if (device->queue_depth < 2)
--				device->queue_depth = 2;
--		}
--	}
--}
--
--#else
- /****************************************************************************/
- /*                                                                          */
- /* Routine Name: ips_slave_configure                                        */
-@@ -1316,7 +1219,6 @@
- 	SDptr->skip_ms_page_3f = 1;
- 	return 0;
- }
--#endif
- 
- /****************************************************************************/
- /*                                                                          */
-@@ -1331,7 +1233,6 @@
- do_ipsintr(int irq, void *dev_id)
- {
- 	ips_ha_t *ha;
--	unsigned long cpu_flags;
- 	struct Scsi_Host *host;
- 	int irqstatus;
- 
-@@ -1347,16 +1248,16 @@
- 		return IRQ_HANDLED;
- 	}
- 
--	IPS_LOCK_SAVE(host->host_lock, cpu_flags);
-+	spin_lock(host->host_lock);
- 
- 	if (!ha->active) {
--		IPS_UNLOCK_RESTORE(host->host_lock, cpu_flags);
-+		spin_unlock(host->host_lock);
- 		return IRQ_HANDLED;
- 	}
- 
- 	irqstatus = (*ha->func.intr) (ha);
- 
--	IPS_UNLOCK_RESTORE(host->host_lock, cpu_flags);
-+	spin_unlock(host->host_lock);
- 
- 	/* start the next command */
- 	ips_next(ha, IPS_INTR_ON);
-@@ -2730,7 +2631,6 @@
- 	struct scsi_cmnd *q;
- 	ips_copp_wait_item_t *item;
- 	int ret;
--	unsigned long cpu_flags = 0;
- 	struct Scsi_Host *host;
- 	METHOD_TRACE("ips_next", 1);
- 
-@@ -2742,7 +2642,7 @@
- 	 * this command won't time out
- 	 */
- 	if (intr == IPS_INTR_ON)
--		IPS_LOCK_SAVE(host->host_lock, cpu_flags);
-+		spin_lock(host->host_lock);
- 
- 	if ((ha->subsys->param[3] & 0x300000)
- 	    && (ha->scb_activelist.count == 0)) {
-@@ -2769,14 +2669,14 @@
- 		item = ips_removeq_copp_head(&ha->copp_waitlist);
- 		ha->num_ioctl++;
- 		if (intr == IPS_INTR_ON)
--			IPS_UNLOCK_RESTORE(host->host_lock, cpu_flags);
-+			spin_unlock(host->host_lock);
- 		scb->scsi_cmd = item->scsi_cmd;
- 		kfree(item);
- 
- 		ret = ips_make_passthru(ha, scb->scsi_cmd, scb, intr);
- 
- 		if (intr == IPS_INTR_ON)
--			IPS_LOCK_SAVE(host->host_lock, cpu_flags);
-+			spin_lock(host->host_lock);
- 		switch (ret) {
- 		case IPS_FAILURE:
- 			if (scb->scsi_cmd) {
-@@ -2846,7 +2746,7 @@
- 		SC = ips_removeq_wait(&ha->scb_waitlist, q);
- 
- 		if (intr == IPS_INTR_ON)
--			IPS_UNLOCK_RESTORE(host->host_lock, cpu_flags);	/* Unlock HA after command is taken off queue */
-+			spin_unlock(host->host_lock);	/* Unlock HA after command is taken off queue */
- 
- 		SC->result = DID_OK;
- 		SC->host_scribble = NULL;
-@@ -2919,7 +2819,7 @@
- 			scb->dcdb.transfer_length = 0;
- 		}
- 		if (intr == IPS_INTR_ON)
--			IPS_LOCK_SAVE(host->host_lock, cpu_flags);
-+			spin_lock(host->host_lock);
- 
- 		ret = ips_send_cmd(ha, scb);
- 
-@@ -2958,7 +2858,7 @@
- 	}			/* end while */
- 
- 	if (intr == IPS_INTR_ON)
--		IPS_UNLOCK_RESTORE(host->host_lock, cpu_flags);
-+		spin_unlock(host->host_lock);
- }
- 
- /****************************************************************************/
-@@ -7004,7 +6904,6 @@
- 	kfree(oldha);
- 	ips_sh[index] = sh;
- 	ips_ha[index] = ha;
--	IPS_SCSI_SET_DEVICE(sh, ha);
- 
- 	/* Store away needed values for later use */
- 	sh->io_port = ha->io_addr;
-@@ -7016,17 +6915,16 @@
- 	sh->cmd_per_lun = sh->hostt->cmd_per_lun;
- 	sh->unchecked_isa_dma = sh->hostt->unchecked_isa_dma;
- 	sh->use_clustering = sh->hostt->use_clustering;
--
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,7)
- 	sh->max_sectors = 128;
--#endif
- 
- 	sh->max_id = ha->ntargets;
- 	sh->max_lun = ha->nlun;
- 	sh->max_channel = ha->nbus - 1;
- 	sh->can_queue = ha->max_cmds - 1;
- 
--	IPS_ADD_HOST(sh, NULL);
-+	scsi_add_host(sh, NULL);
-+	scsi_scan_host(sh);
-+
- 	return 0;
- }
- 
-@@ -7069,7 +6967,7 @@
- 		return -ENODEV;
- 	ips_driver_template.module = THIS_MODULE;
- 	ips_order_controllers();
--	if (IPS_REGISTER_HOSTS(&ips_driver_template)) {
-+	if (!ips_detect(&ips_driver_template)) {
- 		pci_unregister_driver(&ips_pci_driver);
- 		return -ENODEV;
- 	}
-@@ -7087,7 +6985,6 @@
- static void __exit
- ips_module_exit(void)
- {
--	IPS_UNREGISTER_HOSTS(&ips_driver_template);
- 	pci_unregister_driver(&ips_pci_driver);
- 	unregister_reboot_notifier(&ips_notifier);
- }
-@@ -7443,15 +7340,9 @@
- 	return SUCCESS;
- }
- 
--#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,9)
- MODULE_LICENSE("GPL");
--#endif
--
- MODULE_DESCRIPTION("IBM ServeRAID Adapter Driver " IPS_VER_STRING);
--
--#ifdef MODULE_VERSION
- MODULE_VERSION(IPS_VER_STRING);
--#endif
- 
- 
- /*
+> -----Original Message-----
+> From: Arjan van de Ven [mailto:arjan@infradead.org]=20
+> Sent: Thursday, March 22, 2007 5:24 AM
+> To: Salyzyn, Mark
+> Cc: linux-scsi
+> Subject: Re: [PATCH] aacraid: Add likely() and unlikely()
+>=20
+> On Wed, 2007-03-21 at 15:43 -0400, Salyzyn, Mark wrote:
+>=20
+> -               if((fibptr->flags & FIB_CONTEXT_FLAG_TIMED_OUT)){
+> +               if(unlikely(fibptr->flags &
+FIB_CONTEXT_FLAG_TIMED_OUT)){
+>                         return -ETIMEDOUT;
+>                 } else {
+>                         return 0;
+>=20
+> while you're at it, please remove the extra {}'s as well
+>=20
+> (I assume you're aware that likely/unlikely should only be used for
+99:1 or higher ratios, this one looks correct for sure)
+>=20
+> Also I suggest you don't add about half of these; they appear init
+time only code, at which point adding likely/unlikely is just code noise
+that clutters the driver...
 
+------_=_NextPart_001_01C76FA9.A17FAE7F
+Content-Type: application/octet-stream;
+	name="aacraid_likely_unlikely_2.patch"
+Content-Transfer-Encoding: base64
+Content-Description: aacraid_likely_unlikely_2.patch
+Content-Disposition: attachment;
+	filename="aacraid_likely_unlikely_2.patch"
+
+ZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9jb21tc3VwLmMgYi9kcml2ZXJzL3Njc2kv
+YWFjcmFpZC9jb21tc3VwLmMKLS0tIGEvZHJpdmVycy9zY3NpL2FhY3JhaWQvY29tbXN1cC5jCTIw
+MDctMDMtMjYgMDk6MDY6MzIuMDczODU3MTM0IC0wNDAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNy
+YWlkL2NvbW1zdXAuYwkyMDA3LTAzLTI2IDA5OjA5OjQzLjQ1MzYyMjgxNyAtMDQwMApAQCAtNTE5
+LDExICs1MTksOSBAQAogCQlzcGluX3VubG9ja19pcnFyZXN0b3JlKCZmaWJwdHItPmV2ZW50X2xv
+Y2ssIGZsYWdzKTsKIAkJQlVHX09OKGZpYnB0ci0+ZG9uZSA9PSAwKTsKIAkJCQotCQlpZigoZmli
+cHRyLT5mbGFncyAmIEZJQl9DT05URVhUX0ZMQUdfVElNRURfT1VUKSl7CisJCWlmKHVubGlrZWx5
+KGZpYnB0ci0+ZmxhZ3MgJiBGSUJfQ09OVEVYVF9GTEFHX1RJTUVEX09VVCkpCiAJCQlyZXR1cm4g
+LUVUSU1FRE9VVDsKLQkJfSBlbHNlIHsKLQkJCXJldHVybiAwOwotCQl9CisJCXJldHVybiAwOwog
+CX0KIAkvKgogCSAqCUlmIHRoZSB1c2VyIGRvZXMgbm90IHdhbnQgYSByZXNwb25zZSB0aGFuIHJl
+dHVybiBzdWNjZXNzIG90aGVyd2lzZQpkaWZmIC1ydSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL3J4
+LmMgYi9kcml2ZXJzL3Njc2kvYWFjcmFpZC9yeC5jCi0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlk
+L3J4LmMJMjAwNy0wMy0yNiAwOTowNjozMy44MDc2MzY1NjAgLTA0MDAKKysrIGIvZHJpdmVycy9z
+Y3NpL2FhY3JhaWQvcnguYwkyMDA3LTAzLTI2IDA5OjEzOjM0LjUyODQyNTg2NyAtMDQwMApAQCAt
+NSw3ICs1LDcgQEAKICAqIGJhc2VkIG9uIHRoZSBvbGQgYWFjcmFpZCBkcml2ZXIgdGhhdCBpcy4u
+CiAgKiBBZGFwdGVjIGFhY3JhaWQgZGV2aWNlIGRyaXZlciBmb3IgTGludXguCiAgKgotICogQ29w
+eXJpZ2h0IChjKSAyMDAwIEFkYXB0ZWMsIEluYy4gKGFhY3JhaWRAYWRhcHRlYy5jb20pCisgKiBD
+b3B5cmlnaHQgKGMpIDIwMDAtMjAwNyBBZGFwdGVjLCBJbmMuIChhYWNyYWlkQGFkYXB0ZWMuY29t
+KQogICoKICAqIFRoaXMgcHJvZ3JhbSBpcyBmcmVlIHNvZnR3YXJlOyB5b3UgY2FuIHJlZGlzdHJp
+YnV0ZSBpdCBhbmQvb3IgbW9kaWZ5CiAgKiBpdCB1bmRlciB0aGUgdGVybXMgb2YgdGhlIEdOVSBH
+ZW5lcmFsIFB1YmxpYyBMaWNlbnNlIGFzIHB1Ymxpc2hlZCBieQpAQCAtNTcsMjUgKzU3LDI1IEBA
+CiAJICoJYmVlbiBlbmFibGVkLgogCSAqCUNoZWNrIHRvIHNlZSBpZiB0aGlzIGlzIG91ciBpbnRl
+cnJ1cHQuICBJZiBpdCBpc24ndCBqdXN0IHJldHVybgogCSAqLwotCWlmIChpbnRzdGF0ICYgfihk
+ZXYtPk9JTVIpKSB7CisJaWYgKGxpa2VseShpbnRzdGF0ICYgfihkZXYtPk9JTVIpKSkgewogCQli
+ZWxsYml0cyA9IHJ4X3JlYWRsKGRldiwgT3V0Ym91bmREb29yYmVsbFJlZyk7Ci0JCWlmIChiZWxs
+Yml0cyAmIERvb3JCZWxsUHJpbnRmUmVhZHkpIHsKKwkJaWYgKHVubGlrZWx5KGJlbGxiaXRzICYg
+RG9vckJlbGxQcmludGZSZWFkeSkpIHsKIAkJCWFhY19wcmludGYoZGV2LCByZWFkbCAoJmRldi0+
+SW5kZXhSZWdzLT5NYWlsYm94WzVdKSk7CiAJCQlyeF93cml0ZWwoZGV2LCBNVW5pdC5PRFIsRG9v
+ckJlbGxQcmludGZSZWFkeSk7CiAJCQlyeF93cml0ZWwoZGV2LCBJbmJvdW5kRG9vcmJlbGxSZWcs
+RG9vckJlbGxQcmludGZEb25lKTsKIAkJfQotCQllbHNlIGlmIChiZWxsYml0cyAmIERvb3JCZWxs
+QWRhcHRlck5vcm1DbWRSZWFkeSkgeworCQllbHNlIGlmICh1bmxpa2VseShiZWxsYml0cyAmIERv
+b3JCZWxsQWRhcHRlck5vcm1DbWRSZWFkeSkpIHsKIAkJCXJ4X3dyaXRlbChkZXYsIE1Vbml0Lk9E
+UiwgRG9vckJlbGxBZGFwdGVyTm9ybUNtZFJlYWR5KTsKIAkJCWFhY19jb21tYW5kX25vcm1hbCgm
+ZGV2LT5xdWV1ZXMtPnF1ZXVlW0hvc3ROb3JtQ21kUXVldWVdKTsKIAkJfQotCQllbHNlIGlmIChi
+ZWxsYml0cyAmIERvb3JCZWxsQWRhcHRlck5vcm1SZXNwUmVhZHkpIHsKKwkJZWxzZSBpZiAobGlr
+ZWx5KGJlbGxiaXRzICYgRG9vckJlbGxBZGFwdGVyTm9ybVJlc3BSZWFkeSkpIHsKIAkJCXJ4X3dy
+aXRlbChkZXYsIE1Vbml0Lk9EUixEb29yQmVsbEFkYXB0ZXJOb3JtUmVzcFJlYWR5KTsKIAkJCWFh
+Y19yZXNwb25zZV9ub3JtYWwoJmRldi0+cXVldWVzLT5xdWV1ZVtIb3N0Tm9ybVJlc3BRdWV1ZV0p
+OwogCQl9Ci0JCWVsc2UgaWYgKGJlbGxiaXRzICYgRG9vckJlbGxBZGFwdGVyTm9ybUNtZE5vdEZ1
+bGwpIHsKKwkJZWxzZSBpZiAodW5saWtlbHkoYmVsbGJpdHMgJiBEb29yQmVsbEFkYXB0ZXJOb3Jt
+Q21kTm90RnVsbCkpIHsKIAkJCXJ4X3dyaXRlbChkZXYsIE1Vbml0Lk9EUiwgRG9vckJlbGxBZGFw
+dGVyTm9ybUNtZE5vdEZ1bGwpOwogCQl9Ci0JCWVsc2UgaWYgKGJlbGxiaXRzICYgRG9vckJlbGxB
+ZGFwdGVyTm9ybVJlc3BOb3RGdWxsKSB7CisJCWVsc2UgaWYgKHVubGlrZWx5KGJlbGxiaXRzICYg
+RG9vckJlbGxBZGFwdGVyTm9ybVJlc3BOb3RGdWxsKSkgewogCQkJcnhfd3JpdGVsKGRldiwgTVVu
+aXQuT0RSLCBEb29yQmVsbEFkYXB0ZXJOb3JtQ21kTm90RnVsbCk7CiAJCQlyeF93cml0ZWwoZGV2
+LCBNVW5pdC5PRFIsIERvb3JCZWxsQWRhcHRlck5vcm1SZXNwTm90RnVsbCk7CiAJCX0KQEAgLTg4
+LDExICs4OCwxMSBAQAogewogCXN0cnVjdCBhYWNfZGV2ICpkZXYgPSBkZXZfaWQ7CiAJdTMyIElu
+ZGV4ID0gcnhfcmVhZGwoZGV2LCBNVW5pdC5PdXRib3VuZFF1ZXVlKTsKLQlpZiAoSW5kZXggPT0g
+MHhGRkZGRkZGRkwpCisJaWYgKHVubGlrZWx5KEluZGV4ID09IDB4RkZGRkZGRkZMKSkKIAkJSW5k
+ZXggPSByeF9yZWFkbChkZXYsIE1Vbml0Lk91dGJvdW5kUXVldWUpOwotCWlmIChJbmRleCAhPSAw
+eEZGRkZGRkZGTCkgeworCWlmIChsaWtlbHkoSW5kZXggIT0gMHhGRkZGRkZGRkwpKSB7CiAJCWRv
+IHsKLQkJCWlmIChhYWNfaW50cl9ub3JtYWwoZGV2LCBJbmRleCkpIHsKKwkJCWlmICh1bmxpa2Vs
+eShhYWNfaW50cl9ub3JtYWwoZGV2LCBJbmRleCkpKSB7CiAJCQkJcnhfd3JpdGVsKGRldiwgTVVu
+aXQuT3V0Ym91bmRRdWV1ZSwgSW5kZXgpOwogCQkJCXJ4X3dyaXRlbChkZXYsIE1Vbml0Lk9EUiwg
+RG9vckJlbGxBZGFwdGVyTm9ybVJlc3BSZWFkeSk7CiAJCQl9CkBAIC0yMDQsNyArMjA0LDcgQEAK
+IAkJICovCiAJCW1zbGVlcCgxKTsKIAl9Ci0JaWYgKG9rICE9IDEpIHsKKwlpZiAodW5saWtlbHko
+b2sgIT0gMSkpIHsKIAkJLyoKIAkJICoJUmVzdG9yZSBpbnRlcnJ1cHQgbWFzayBldmVuIHRob3Vn
+aCB3ZSB0aW1lZCBvdXQKIAkJICovCkBAIC0zMTksMTIgKzMxOSwxMiBAQAogCS8qCiAJICoJQ2hl
+Y2sgdG8gc2VlIGlmIHRoZSBib2FyZCBmYWlsZWQgYW55IHNlbGYgdGVzdHMuCiAJICovCi0JaWYg
+KHN0YXR1cyAmIFNFTEZfVEVTVF9GQUlMRUQpCisJaWYgKHVubGlrZWx5KHN0YXR1cyAmIFNFTEZf
+VEVTVF9GQUlMRUQpKQogCQlyZXR1cm4gLTE7CiAJLyoKIAkgKglDaGVjayB0byBzZWUgaWYgdGhl
+IGJvYXJkIHBhbmljJ2QuCiAJICovCi0JaWYgKHN0YXR1cyAmIEtFUk5FTF9QQU5JQykgeworCWlm
+ICh1bmxpa2VseShzdGF0dXMgJiBLRVJORUxfUEFOSUMpKSB7CiAJCWNoYXIgKiBidWZmZXI7CiAJ
+CXN0cnVjdCBQT1NUU1RBVFVTIHsKIAkJCV9fbGUzMiBQb3N0X0NvbW1hbmQ7CkBAIC0zMzMsMTUg
+KzMzMywxNSBAQAogCQlkbWFfYWRkcl90IHBhZGRyLCBiYWRkcjsKIAkJaW50IHJldDsKIAotCQlp
+ZiAoKHN0YXR1cyAmIDB4RkYwMDAwMDBMKSA9PSAweEJDMDAwMDAwTCkKKwkJaWYgKGxpa2VseSgo
+c3RhdHVzICYgMHhGRjAwMDAwMEwpID09IDB4QkMwMDAwMDBMKSkKIAkJCXJldHVybiAoc3RhdHVz
+ID4+IDE2KSAmIDB4RkY7CiAJCWJ1ZmZlciA9IHBjaV9hbGxvY19jb25zaXN0ZW50KGRldi0+cGRl
+diwgNTEyLCAmYmFkZHIpOwogCQlyZXQgPSAtMjsKLQkJaWYgKGJ1ZmZlciA9PSBOVUxMKQorCQlp
+ZiAodW5saWtlbHkoYnVmZmVyID09IE5VTEwpKQogCQkJcmV0dXJuIHJldDsKIAkJcG9zdCA9IHBj
+aV9hbGxvY19jb25zaXN0ZW50KGRldi0+cGRldiwKIAkJICBzaXplb2Yoc3RydWN0IFBPU1RTVEFU
+VVMpLCAmcGFkZHIpOwotCQlpZiAocG9zdCA9PSBOVUxMKSB7CisJCWlmICh1bmxpa2VseShwb3N0
+ID09IE5VTEwpKSB7CiAJCQlwY2lfZnJlZV9jb25zaXN0ZW50KGRldi0+cGRldiwgNTEyLCBidWZm
+ZXIsIGJhZGRyKTsKIAkJCXJldHVybiByZXQ7CiAJCX0KQEAgLTM1Myw3ICszNTMsNyBAQAogCQkg
+IE5VTEwsIE5VTEwsIE5VTEwsIE5VTEwsIE5VTEwpOwogCQlwY2lfZnJlZV9jb25zaXN0ZW50KGRl
+di0+cGRldiwgc2l6ZW9mKHN0cnVjdCBQT1NUU1RBVFVTKSwKIAkJICBwb3N0LCBwYWRkcik7Ci0J
+CWlmICgoYnVmZmVyWzBdID09ICcwJykgJiYgKChidWZmZXJbMV0gPT0gJ3gnKSB8fCAoYnVmZmVy
+WzFdID09ICdYJykpKSB7CisJCWlmIChsaWtlbHkoKGJ1ZmZlclswXSA9PSAnMCcpICYmICgoYnVm
+ZmVyWzFdID09ICd4JykgfHwgKGJ1ZmZlclsxXSA9PSAnWCcpKSkpIHsKIAkJCXJldCA9IChidWZm
+ZXJbMl0gPD0gJzknKSA/IChidWZmZXJbMl0gLSAnMCcpIDogKGJ1ZmZlclsyXSAtICdBJyArIDEw
+KTsKIAkJCXJldCA8PD0gNDsKIAkJCXJldCArPSAoYnVmZmVyWzNdIDw9ICc5JykgPyAoYnVmZmVy
+WzNdIC0gJzAnKSA6IChidWZmZXJbM10gLSAnQScgKyAxMCk7CkBAIC0zNjQsNyArMzY0LDcgQEAK
+IAkvKgogCSAqCVdhaXQgZm9yIHRoZSBhZGFwdGVyIHRvIGJlIHVwIGFuZCBydW5uaW5nLgogCSAq
+LwotCWlmICghKHN0YXR1cyAmIEtFUk5FTF9VUF9BTkRfUlVOTklORykpCisJaWYgKHVubGlrZWx5
+KCEoc3RhdHVzICYgS0VSTkVMX1VQX0FORF9SVU5OSU5HKSkpCiAJCXJldHVybiAtMzsKIAkvKgog
+CSAqCUV2ZXJ5dGhpbmcgaXMgT0sKQEAgLTQxOSw5ICs0MTksOSBAQAogCXNwaW5fdW5sb2NrX2ly
+cXJlc3RvcmUocS0+bG9jaywgcWZsYWdzKTsKIAlmb3IoOzspIHsKIAkJSW5kZXggPSByeF9yZWFk
+bChkZXYsIE1Vbml0LkluYm91bmRRdWV1ZSk7Ci0JCWlmIChJbmRleCA9PSAweEZGRkZGRkZGTCkK
+KwkJaWYgKHVubGlrZWx5KEluZGV4ID09IDB4RkZGRkZGRkZMKSkKIAkJCUluZGV4ID0gcnhfcmVh
+ZGwoZGV2LCBNVW5pdC5JbmJvdW5kUXVldWUpOwotCQlpZiAoSW5kZXggIT0gMHhGRkZGRkZGRkwp
+CisJCWlmIChsaWtlbHkoSW5kZXggIT0gMHhGRkZGRkZGRkwpKQogCQkJYnJlYWs7CiAJCWlmICgt
+LWNvdW50ID09IDApIHsKIAkJCXNwaW5fbG9ja19pcnFzYXZlKHEtPmxvY2ssIHFmbGFncyk7CkBA
+IC01MjYsMTEgKzUyNiw4IEBACiB7CiAJdW5zaWduZWQgbG9uZyBzdGFydDsKIAl1bnNpZ25lZCBs
+b25nIHN0YXR1czsKLQlpbnQgaW5zdGFuY2U7Ci0JY29uc3QgY2hhciAqIG5hbWU7Ci0KLQlpbnN0
+YW5jZSA9IGRldi0+aWQ7Ci0JbmFtZSAgICAgPSBkZXYtPm5hbWU7CisJaW50IGluc3RhbmNlID0g
+ZGV2LT5pZDsKKwljb25zdCBjaGFyICogbmFtZSA9IGRldi0+bmFtZTsKIAogCWlmIChhYWNfYWRh
+cHRlcl9pb3JlbWFwKGRldiwgZGV2LT5iYXNlX3NpemUpKSB7CiAJCXByaW50ayhLRVJOX1dBUk5J
+TkcgIiVzOiB1bmFibGUgdG8gbWFwIGFkYXB0ZXIuXG4iLCBuYW1lKTsKQEAgLTU2OCw4ICs1NjUs
+NyBAQAogCSAqLwogCXdoaWxlICghKChzdGF0dXMgPSByeF9yZWFkbChkZXYsIE1Vbml0Lk9NUnhb
+MF0pKSAmIEtFUk5FTF9VUF9BTkRfUlVOTklORykpCiAJewotCQlpZih0aW1lX2FmdGVyKGppZmZp
+ZXMsIHN0YXJ0K3N0YXJ0dXBfdGltZW91dCpIWikpCi0JCXsKKwkJaWYodGltZV9hZnRlcihqaWZm
+aWVzLCBzdGFydCtzdGFydHVwX3RpbWVvdXQqSFopKSB7CiAJCQlwcmludGsoS0VSTl9FUlIgIiVz
+JWQ6IGFkYXB0ZXIga2VybmVsIGZhaWxlZCB0byBzdGFydCwgaW5pdCBzdGF0dXMgPSAlbHguXG4i
+LCAKIAkJCQkJZGV2LT5uYW1lLCBpbnN0YW5jZSwgc3RhdHVzKTsKIAkJCWdvdG8gZXJyb3JfaW91
+bm1hcDsK
+
+------_=_NextPart_001_01C76FA9.A17FAE7F--
