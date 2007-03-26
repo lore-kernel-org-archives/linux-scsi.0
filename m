@@ -1,166 +1,63 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: Re: [Bugme-new] [Bug 8266] New: Exabyte 1x10 autoloader breaks on upgrade
-Date: Tue, 27 Mar 2007 00:49:01 +0200
-Message-ID: <20070326224901.GK16477@stusta.de>
-References: <200703262150.l2QLopDA003694@fire-2.osdl.org> <20070326153346.7290081c.akpm@linux-foundation.org>
+From: Jeremy Linton <JLinton@greshamstorage.com>
+Subject: Re: Disabling block layer
+Date: Mon, 26 Mar 2007 17:33:25 -0500
+Message-ID: <46084A35.6020700@greshamstorage.com>
+References: <656559.33072.qm@web63001.mail.re1.yahoo.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="LwW0XdcUbUexiWVK"
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:35389 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S933762AbXCZWs6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Mar 2007 18:48:58 -0400
-Content-Disposition: inline
-In-Reply-To: <20070326153346.7290081c.akpm@linux-foundation.org>
+Received: from austin.greshamstorage.com ([216.143.252.250]:2131 "EHLO
+	austin.greshamstorage.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933763AbXCZWuR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Mar 2007 18:50:17 -0400
+in-reply-to: <656559.33072.qm@web63001.mail.re1.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-scsi@vger.kernel.org, stable@kernel.org, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>, freelsjd@ornl.gov, Jan Beulich <jbeulich@novell.com>, Alan Cox <alan@redhat.com>
+To: Mark Lobo <ntdeveloper2002@yahoo.com>
+Cc: linux-scsi@vger.kernel.org
 
-
---LwW0XdcUbUexiWVK
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-
-On Mon, Mar 26, 2007 at 03:33:46PM -0700, Andrew Morton wrote:
-> On Mon, 26 Mar 2007 14:50:51 -0700
-> bugme-daemon@bugzilla.kernel.org wrote:
+Mark Lobo wrote:
+> I had a question about disabling the block layer for SCSI devices. We
+> have an embedded device, and it runs 2.4.30. We need to be able to
+> support a lot of SCSI devices (in the thousands) for our device, and we
+> talk to the devices via SG. We are facing a memory allocation problem
+> after discovering a few thousand devices. For every device,  there
+> seems to be a lot of memory allocated in the block layer. This memory
+> includes cache memory (which IIRC is reclaimable by the kernel memory
+> subsystem when it needs it) and also pages that are used for the
+> alloc_pages pool.
 > 
-> > http://bugzilla.kernel.org/show_bug.cgi?id=8266
-> > 
-> >            Summary: Exabyte 1x10 autoloader breaks on upgrade
-> >     Kernel Version: 2.6.20.4
-> >             Status: NEW
-> >           Severity: high
-> >              Owner: scsi_drivers-other@kernel-bugs.osdl.org
-> >          Submitter: freelsjd@ornl.gov
-> > 
-> > 
-> > Most recent kernel where this bug did *NOT* occur: 2.6.20.3
-> > Distribution: debian/stable/sarge
-> > Hardware Environment: amd64
-> > Software Environment: amanda
-> > Problem Description:
-> > When upgrading from 2.6.20.3 to 2.6.20.4, the Exabyte 1x10 autoloader would be
-> > work anymore.  I am using the aic79xx old driver because the aic79xx new driver
-> > had already broken (see my previous bugs 5268 and 7616)
-> > 
-> > Steps to reproduce:
-> > upgrade from 2.6.20.3 to 2.6.20.4
-> 
-> We appear to have a regression in the stable kernel.
-> 
-> Probably, that regression is in 2.6.21-rc5 as well.
+> My questions were relating to disabling the block layer for the
+> devices. We always talk direct passthrough to the storage(except the
+> local hard disk),  and do not need the block layer at all.
 
-Please attach the dmesg's of both 2.6.20.3 and 2.6.20.4 in Bugzilla.
+	You may consider something we experimented with here (for
+performance 
+reasons).. We basically recompiled one of the scsi drivers to call our 
+own version of scsi_host_alloc() and then made calls to the 
+queuecommand() routine directly. You then allow the kernel probe 
+routines to only discover the first target with the local disk. I assume 
+you know ahead of time which scsi cards your using in your system. The 
+point is that you could just build a heavily modified scsi driver with 
+application specific hooks.
 
-Does reverting the attached patch fix it?
+	BTW we aren't currently doing this because in the end we got most of
 
-cu
-Adrian
+what we needed by writing a driver which replaces sg and bypasses most 
+of the kernel without being as invasive. In the long run we may still 
+use a modified LLDD since the interfaces we depend on are changing a 
+little to fast for our liking and we are not running any system devices 
+on the interface cards we need to directly access.
 
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
+	I'm not sure how you would go about tearing down enough of the
+system 
+that the device doesn't consume any resources, yet leave enough of it 
+around to be accessible. I will be interested to find out what you end 
+up doing.
 
 
---LwW0XdcUbUexiWVK
-Content-Type: text/x-diff; charset=utf-8
-Content-Disposition: attachment; filename="adjust-legacy-ide-resource-setting.patch"
 
->From stable-bounces@linux.kernel.org Tue Mar 13 11:05:30 2007
-From: Jan Beulich <jbeulich@novell.com>
-Date: Tue, 13 Mar 2007 14:04:11 -0400
-Subject: adjust legacy IDE resource setting (v2)
-To: linux-stable <stable@kernel.org>
-Message-ID: <45F6E79B.1010208@redhat.com>
 
-From: Jan Beulich <jbeulich@novell.com>
 
-adjust legacy IDE resource setting (v2)
 
-The change to force legacy mode IDE channels' resources to fixed non-zero
-values confuses (at least some versions of) X, because the values reported
-by the kernel and those readable from PCI config space aren't consistent
-anymore.  Therefore, this patch arranges for the respective BARs to also
-get updated if possible.
-
-Signed-off-by: Jan Beulich <jbeulich@novell.com>
-Acked-by: Alan Cox <alan@redhat.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Chuck Ebbert <cebbert@redhat.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-
----
- drivers/pci/probe.c |   45 ++++++++++++++++++++++++++++++++-------------
- 1 file changed, 32 insertions(+), 13 deletions(-)
-
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -639,7 +639,34 @@ static void pci_read_irq(struct pci_dev 
- 	dev->irq = irq;
- }
- 
--#define LEGACY_IO_RESOURCE	(IORESOURCE_IO | IORESOURCE_PCI_FIXED)
-+static void change_legacy_io_resource(struct pci_dev * dev, unsigned index,
-+                                      unsigned start, unsigned end)
-+{
-+	unsigned base = start & PCI_BASE_ADDRESS_IO_MASK;
-+	unsigned len = (end | ~PCI_BASE_ADDRESS_IO_MASK) - base + 1;
-+
-+	/*
-+	 * Some X versions get confused when the BARs reported through
-+	 * /sys or /proc differ from those seen in config space, thus
-+	 * try to update the config space values, too.
-+	 */
-+	if (!(pci_resource_flags(dev, index) & IORESOURCE_IO))
-+		printk(KERN_WARNING "%s: cannot adjust BAR%u (not I/O)\n",
-+		       pci_name(dev), index);
-+	else if (pci_resource_len(dev, index) != len)
-+		printk(KERN_WARNING "%s: cannot adjust BAR%u (size %04X)\n",
-+		       pci_name(dev), index, (unsigned)pci_resource_len(dev, index));
-+	else {
-+		printk(KERN_INFO "%s: trying to change BAR%u from %04X to %04X\n",
-+		       pci_name(dev), index,
-+		       (unsigned)pci_resource_start(dev, index), base);
-+		pci_write_config_dword(dev, PCI_BASE_ADDRESS_0 + index * 4, base);
-+	}
-+	pci_resource_start(dev, index) = start;
-+	pci_resource_end(dev, index)   = end;
-+	pci_resource_flags(dev, index) =
-+		IORESOURCE_IO | IORESOURCE_PCI_FIXED | PCI_BASE_ADDRESS_SPACE_IO;
-+}
- 
- /**
-  * pci_setup_device - fill in class and map information of a device
-@@ -692,20 +719,12 @@ static int pci_setup_device(struct pci_d
- 			u8 progif;
- 			pci_read_config_byte(dev, PCI_CLASS_PROG, &progif);
- 			if ((progif & 1) == 0) {
--				dev->resource[0].start = 0x1F0;
--				dev->resource[0].end = 0x1F7;
--				dev->resource[0].flags = LEGACY_IO_RESOURCE;
--				dev->resource[1].start = 0x3F6;
--				dev->resource[1].end = 0x3F6;
--				dev->resource[1].flags = LEGACY_IO_RESOURCE;
-+				change_legacy_io_resource(dev, 0, 0x1F0, 0x1F7);
-+				change_legacy_io_resource(dev, 1, 0x3F6, 0x3F6);
- 			}
- 			if ((progif & 4) == 0) {
--				dev->resource[2].start = 0x170;
--				dev->resource[2].end = 0x177;
--				dev->resource[2].flags = LEGACY_IO_RESOURCE;
--				dev->resource[3].start = 0x376;
--				dev->resource[3].end = 0x376;
--				dev->resource[3].flags = LEGACY_IO_RESOURCE;
-+				change_legacy_io_resource(dev, 2, 0x170, 0x177);
-+				change_legacy_io_resource(dev, 3, 0x376, 0x376);
- 			}
- 		}
- 		break;
-
---LwW0XdcUbUexiWVK--
