@@ -1,187 +1,42 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: [PATCH] aacraid: Add likely() and unlikely() Take 2
-Date: Mon, 26 Mar 2007 09:21:14 -0400
-Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF0172C40E@otce2k301.adaptec.com>
-References: <1174555468.1158.166.camel@laptopd505.fenrus.org>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: some PCMCIA SCSI drivers can be built *only* as modules
+Date: Mon, 26 Mar 2007 15:27:54 +0200
+Message-ID: <4607CA5A.4040906@s5r6.in-berlin.de>
+References: <Pine.LNX.4.64.0703250916090.22484@CPE00045a9c397f-CM001225dbafb6>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C76FA9.A17FAE7F"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([216.52.22.36]:56245 "EHLO
-	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751677AbXCZNVQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Mar 2007 09:21:16 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <1174555468.1158.166.camel@laptopd505.fenrus.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752316AbXCZN2F@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.64.0703250916090.22484@CPE00045a9c397f-CM001225dbafb6>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Robert P. J. Day" <rpjday@mindspring.com>, linux-scsi@vger.kernel.org
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Arjan van de Ven <arjan@infradead.org>
 
-This is a multi-part message in MIME format.
+Robert P. J. Day wrote at LKML:
+> drivers/scsi/pcmcia/Kconfig:
+> ...
+> config PCMCIA_AHA152X
+>         tristate "Adaptec AHA152X PCMCIA support"
+>         depends on m && !64BIT
+>         select SCSI_SPI_ATTRS
+>         help
+>           Say Y here if you intend to attach this type of PCMCIA SCSI host
+>           adapter to your computer.
+> 
+>           To compile this driver as a module, choose M here: the
+>           module will be called aha152x_cs.
+> ...
+> 
+>   it would seem to make no sense that the "depends on" clause for this
+> option includes "m", forcing this (and all other four entries in that
+> Kconfig file, by the way) to be built as modules, while the help text
+> for all five entries suggests you can select "y".
+> 
+>   as jack nicholson would say, something's gotta give.
 
-------_=_NextPart_001_01C76FA9.A17FAE7F
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-
-Thanks Arjan for the comments, much appreciated. I have removed the
-superfluous braces and limited the usage of the likely and unlikely to
-runtime code. Sorry for the delay, took a four day vacation ...
-
-Add some likely() and unlikely() compiler hints in some of the aacraid
-hardware interface layers. There should be no operational side effects
-resulting from this patch and the changes should be mostly benign on x86
-platforms.
-
-ObligatoryDisclaimer: Please accept my condolences regarding Outlook's
-handling of patches attachments.
-
-This attached patch is against current scsi-misc-2.6
-
-Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
-
----
-
-Sincerely -- Mark Salyzyn
-
-> -----Original Message-----
-> From: Arjan van de Ven [mailto:arjan@infradead.org]=20
-> Sent: Thursday, March 22, 2007 5:24 AM
-> To: Salyzyn, Mark
-> Cc: linux-scsi
-> Subject: Re: [PATCH] aacraid: Add likely() and unlikely()
->=20
-> On Wed, 2007-03-21 at 15:43 -0400, Salyzyn, Mark wrote:
->=20
-> -               if((fibptr->flags & FIB_CONTEXT_FLAG_TIMED_OUT)){
-> +               if(unlikely(fibptr->flags &
-FIB_CONTEXT_FLAG_TIMED_OUT)){
->                         return -ETIMEDOUT;
->                 } else {
->                         return 0;
->=20
-> while you're at it, please remove the extra {}'s as well
->=20
-> (I assume you're aware that likely/unlikely should only be used for
-99:1 or higher ratios, this one looks correct for sure)
->=20
-> Also I suggest you don't add about half of these; they appear init
-time only code, at which point adding likely/unlikely is just code noise
-that clutters the driver...
-
-------_=_NextPart_001_01C76FA9.A17FAE7F
-Content-Type: application/octet-stream;
-	name="aacraid_likely_unlikely_2.patch"
-Content-Transfer-Encoding: base64
-Content-Description: aacraid_likely_unlikely_2.patch
-Content-Disposition: attachment;
-	filename="aacraid_likely_unlikely_2.patch"
-
-ZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9jb21tc3VwLmMgYi9kcml2ZXJzL3Njc2kv
-YWFjcmFpZC9jb21tc3VwLmMKLS0tIGEvZHJpdmVycy9zY3NpL2FhY3JhaWQvY29tbXN1cC5jCTIw
-MDctMDMtMjYgMDk6MDY6MzIuMDczODU3MTM0IC0wNDAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNy
-YWlkL2NvbW1zdXAuYwkyMDA3LTAzLTI2IDA5OjA5OjQzLjQ1MzYyMjgxNyAtMDQwMApAQCAtNTE5
-LDExICs1MTksOSBAQAogCQlzcGluX3VubG9ja19pcnFyZXN0b3JlKCZmaWJwdHItPmV2ZW50X2xv
-Y2ssIGZsYWdzKTsKIAkJQlVHX09OKGZpYnB0ci0+ZG9uZSA9PSAwKTsKIAkJCQotCQlpZigoZmli
-cHRyLT5mbGFncyAmIEZJQl9DT05URVhUX0ZMQUdfVElNRURfT1VUKSl7CisJCWlmKHVubGlrZWx5
-KGZpYnB0ci0+ZmxhZ3MgJiBGSUJfQ09OVEVYVF9GTEFHX1RJTUVEX09VVCkpCiAJCQlyZXR1cm4g
-LUVUSU1FRE9VVDsKLQkJfSBlbHNlIHsKLQkJCXJldHVybiAwOwotCQl9CisJCXJldHVybiAwOwog
-CX0KIAkvKgogCSAqCUlmIHRoZSB1c2VyIGRvZXMgbm90IHdhbnQgYSByZXNwb25zZSB0aGFuIHJl
-dHVybiBzdWNjZXNzIG90aGVyd2lzZQpkaWZmIC1ydSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL3J4
-LmMgYi9kcml2ZXJzL3Njc2kvYWFjcmFpZC9yeC5jCi0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlk
-L3J4LmMJMjAwNy0wMy0yNiAwOTowNjozMy44MDc2MzY1NjAgLTA0MDAKKysrIGIvZHJpdmVycy9z
-Y3NpL2FhY3JhaWQvcnguYwkyMDA3LTAzLTI2IDA5OjEzOjM0LjUyODQyNTg2NyAtMDQwMApAQCAt
-NSw3ICs1LDcgQEAKICAqIGJhc2VkIG9uIHRoZSBvbGQgYWFjcmFpZCBkcml2ZXIgdGhhdCBpcy4u
-CiAgKiBBZGFwdGVjIGFhY3JhaWQgZGV2aWNlIGRyaXZlciBmb3IgTGludXguCiAgKgotICogQ29w
-eXJpZ2h0IChjKSAyMDAwIEFkYXB0ZWMsIEluYy4gKGFhY3JhaWRAYWRhcHRlYy5jb20pCisgKiBD
-b3B5cmlnaHQgKGMpIDIwMDAtMjAwNyBBZGFwdGVjLCBJbmMuIChhYWNyYWlkQGFkYXB0ZWMuY29t
-KQogICoKICAqIFRoaXMgcHJvZ3JhbSBpcyBmcmVlIHNvZnR3YXJlOyB5b3UgY2FuIHJlZGlzdHJp
-YnV0ZSBpdCBhbmQvb3IgbW9kaWZ5CiAgKiBpdCB1bmRlciB0aGUgdGVybXMgb2YgdGhlIEdOVSBH
-ZW5lcmFsIFB1YmxpYyBMaWNlbnNlIGFzIHB1Ymxpc2hlZCBieQpAQCAtNTcsMjUgKzU3LDI1IEBA
-CiAJICoJYmVlbiBlbmFibGVkLgogCSAqCUNoZWNrIHRvIHNlZSBpZiB0aGlzIGlzIG91ciBpbnRl
-cnJ1cHQuICBJZiBpdCBpc24ndCBqdXN0IHJldHVybgogCSAqLwotCWlmIChpbnRzdGF0ICYgfihk
-ZXYtPk9JTVIpKSB7CisJaWYgKGxpa2VseShpbnRzdGF0ICYgfihkZXYtPk9JTVIpKSkgewogCQli
-ZWxsYml0cyA9IHJ4X3JlYWRsKGRldiwgT3V0Ym91bmREb29yYmVsbFJlZyk7Ci0JCWlmIChiZWxs
-Yml0cyAmIERvb3JCZWxsUHJpbnRmUmVhZHkpIHsKKwkJaWYgKHVubGlrZWx5KGJlbGxiaXRzICYg
-RG9vckJlbGxQcmludGZSZWFkeSkpIHsKIAkJCWFhY19wcmludGYoZGV2LCByZWFkbCAoJmRldi0+
-SW5kZXhSZWdzLT5NYWlsYm94WzVdKSk7CiAJCQlyeF93cml0ZWwoZGV2LCBNVW5pdC5PRFIsRG9v
-ckJlbGxQcmludGZSZWFkeSk7CiAJCQlyeF93cml0ZWwoZGV2LCBJbmJvdW5kRG9vcmJlbGxSZWcs
-RG9vckJlbGxQcmludGZEb25lKTsKIAkJfQotCQllbHNlIGlmIChiZWxsYml0cyAmIERvb3JCZWxs
-QWRhcHRlck5vcm1DbWRSZWFkeSkgeworCQllbHNlIGlmICh1bmxpa2VseShiZWxsYml0cyAmIERv
-b3JCZWxsQWRhcHRlck5vcm1DbWRSZWFkeSkpIHsKIAkJCXJ4X3dyaXRlbChkZXYsIE1Vbml0Lk9E
-UiwgRG9vckJlbGxBZGFwdGVyTm9ybUNtZFJlYWR5KTsKIAkJCWFhY19jb21tYW5kX25vcm1hbCgm
-ZGV2LT5xdWV1ZXMtPnF1ZXVlW0hvc3ROb3JtQ21kUXVldWVdKTsKIAkJfQotCQllbHNlIGlmIChi
-ZWxsYml0cyAmIERvb3JCZWxsQWRhcHRlck5vcm1SZXNwUmVhZHkpIHsKKwkJZWxzZSBpZiAobGlr
-ZWx5KGJlbGxiaXRzICYgRG9vckJlbGxBZGFwdGVyTm9ybVJlc3BSZWFkeSkpIHsKIAkJCXJ4X3dy
-aXRlbChkZXYsIE1Vbml0Lk9EUixEb29yQmVsbEFkYXB0ZXJOb3JtUmVzcFJlYWR5KTsKIAkJCWFh
-Y19yZXNwb25zZV9ub3JtYWwoJmRldi0+cXVldWVzLT5xdWV1ZVtIb3N0Tm9ybVJlc3BRdWV1ZV0p
-OwogCQl9Ci0JCWVsc2UgaWYgKGJlbGxiaXRzICYgRG9vckJlbGxBZGFwdGVyTm9ybUNtZE5vdEZ1
-bGwpIHsKKwkJZWxzZSBpZiAodW5saWtlbHkoYmVsbGJpdHMgJiBEb29yQmVsbEFkYXB0ZXJOb3Jt
-Q21kTm90RnVsbCkpIHsKIAkJCXJ4X3dyaXRlbChkZXYsIE1Vbml0Lk9EUiwgRG9vckJlbGxBZGFw
-dGVyTm9ybUNtZE5vdEZ1bGwpOwogCQl9Ci0JCWVsc2UgaWYgKGJlbGxiaXRzICYgRG9vckJlbGxB
-ZGFwdGVyTm9ybVJlc3BOb3RGdWxsKSB7CisJCWVsc2UgaWYgKHVubGlrZWx5KGJlbGxiaXRzICYg
-RG9vckJlbGxBZGFwdGVyTm9ybVJlc3BOb3RGdWxsKSkgewogCQkJcnhfd3JpdGVsKGRldiwgTVVu
-aXQuT0RSLCBEb29yQmVsbEFkYXB0ZXJOb3JtQ21kTm90RnVsbCk7CiAJCQlyeF93cml0ZWwoZGV2
-LCBNVW5pdC5PRFIsIERvb3JCZWxsQWRhcHRlck5vcm1SZXNwTm90RnVsbCk7CiAJCX0KQEAgLTg4
-LDExICs4OCwxMSBAQAogewogCXN0cnVjdCBhYWNfZGV2ICpkZXYgPSBkZXZfaWQ7CiAJdTMyIElu
-ZGV4ID0gcnhfcmVhZGwoZGV2LCBNVW5pdC5PdXRib3VuZFF1ZXVlKTsKLQlpZiAoSW5kZXggPT0g
-MHhGRkZGRkZGRkwpCisJaWYgKHVubGlrZWx5KEluZGV4ID09IDB4RkZGRkZGRkZMKSkKIAkJSW5k
-ZXggPSByeF9yZWFkbChkZXYsIE1Vbml0Lk91dGJvdW5kUXVldWUpOwotCWlmIChJbmRleCAhPSAw
-eEZGRkZGRkZGTCkgeworCWlmIChsaWtlbHkoSW5kZXggIT0gMHhGRkZGRkZGRkwpKSB7CiAJCWRv
-IHsKLQkJCWlmIChhYWNfaW50cl9ub3JtYWwoZGV2LCBJbmRleCkpIHsKKwkJCWlmICh1bmxpa2Vs
-eShhYWNfaW50cl9ub3JtYWwoZGV2LCBJbmRleCkpKSB7CiAJCQkJcnhfd3JpdGVsKGRldiwgTVVu
-aXQuT3V0Ym91bmRRdWV1ZSwgSW5kZXgpOwogCQkJCXJ4X3dyaXRlbChkZXYsIE1Vbml0Lk9EUiwg
-RG9vckJlbGxBZGFwdGVyTm9ybVJlc3BSZWFkeSk7CiAJCQl9CkBAIC0yMDQsNyArMjA0LDcgQEAK
-IAkJICovCiAJCW1zbGVlcCgxKTsKIAl9Ci0JaWYgKG9rICE9IDEpIHsKKwlpZiAodW5saWtlbHko
-b2sgIT0gMSkpIHsKIAkJLyoKIAkJICoJUmVzdG9yZSBpbnRlcnJ1cHQgbWFzayBldmVuIHRob3Vn
-aCB3ZSB0aW1lZCBvdXQKIAkJICovCkBAIC0zMTksMTIgKzMxOSwxMiBAQAogCS8qCiAJICoJQ2hl
-Y2sgdG8gc2VlIGlmIHRoZSBib2FyZCBmYWlsZWQgYW55IHNlbGYgdGVzdHMuCiAJICovCi0JaWYg
-KHN0YXR1cyAmIFNFTEZfVEVTVF9GQUlMRUQpCisJaWYgKHVubGlrZWx5KHN0YXR1cyAmIFNFTEZf
-VEVTVF9GQUlMRUQpKQogCQlyZXR1cm4gLTE7CiAJLyoKIAkgKglDaGVjayB0byBzZWUgaWYgdGhl
-IGJvYXJkIHBhbmljJ2QuCiAJICovCi0JaWYgKHN0YXR1cyAmIEtFUk5FTF9QQU5JQykgeworCWlm
-ICh1bmxpa2VseShzdGF0dXMgJiBLRVJORUxfUEFOSUMpKSB7CiAJCWNoYXIgKiBidWZmZXI7CiAJ
-CXN0cnVjdCBQT1NUU1RBVFVTIHsKIAkJCV9fbGUzMiBQb3N0X0NvbW1hbmQ7CkBAIC0zMzMsMTUg
-KzMzMywxNSBAQAogCQlkbWFfYWRkcl90IHBhZGRyLCBiYWRkcjsKIAkJaW50IHJldDsKIAotCQlp
-ZiAoKHN0YXR1cyAmIDB4RkYwMDAwMDBMKSA9PSAweEJDMDAwMDAwTCkKKwkJaWYgKGxpa2VseSgo
-c3RhdHVzICYgMHhGRjAwMDAwMEwpID09IDB4QkMwMDAwMDBMKSkKIAkJCXJldHVybiAoc3RhdHVz
-ID4+IDE2KSAmIDB4RkY7CiAJCWJ1ZmZlciA9IHBjaV9hbGxvY19jb25zaXN0ZW50KGRldi0+cGRl
-diwgNTEyLCAmYmFkZHIpOwogCQlyZXQgPSAtMjsKLQkJaWYgKGJ1ZmZlciA9PSBOVUxMKQorCQlp
-ZiAodW5saWtlbHkoYnVmZmVyID09IE5VTEwpKQogCQkJcmV0dXJuIHJldDsKIAkJcG9zdCA9IHBj
-aV9hbGxvY19jb25zaXN0ZW50KGRldi0+cGRldiwKIAkJICBzaXplb2Yoc3RydWN0IFBPU1RTVEFU
-VVMpLCAmcGFkZHIpOwotCQlpZiAocG9zdCA9PSBOVUxMKSB7CisJCWlmICh1bmxpa2VseShwb3N0
-ID09IE5VTEwpKSB7CiAJCQlwY2lfZnJlZV9jb25zaXN0ZW50KGRldi0+cGRldiwgNTEyLCBidWZm
-ZXIsIGJhZGRyKTsKIAkJCXJldHVybiByZXQ7CiAJCX0KQEAgLTM1Myw3ICszNTMsNyBAQAogCQkg
-IE5VTEwsIE5VTEwsIE5VTEwsIE5VTEwsIE5VTEwpOwogCQlwY2lfZnJlZV9jb25zaXN0ZW50KGRl
-di0+cGRldiwgc2l6ZW9mKHN0cnVjdCBQT1NUU1RBVFVTKSwKIAkJICBwb3N0LCBwYWRkcik7Ci0J
-CWlmICgoYnVmZmVyWzBdID09ICcwJykgJiYgKChidWZmZXJbMV0gPT0gJ3gnKSB8fCAoYnVmZmVy
-WzFdID09ICdYJykpKSB7CisJCWlmIChsaWtlbHkoKGJ1ZmZlclswXSA9PSAnMCcpICYmICgoYnVm
-ZmVyWzFdID09ICd4JykgfHwgKGJ1ZmZlclsxXSA9PSAnWCcpKSkpIHsKIAkJCXJldCA9IChidWZm
-ZXJbMl0gPD0gJzknKSA/IChidWZmZXJbMl0gLSAnMCcpIDogKGJ1ZmZlclsyXSAtICdBJyArIDEw
-KTsKIAkJCXJldCA8PD0gNDsKIAkJCXJldCArPSAoYnVmZmVyWzNdIDw9ICc5JykgPyAoYnVmZmVy
-WzNdIC0gJzAnKSA6IChidWZmZXJbM10gLSAnQScgKyAxMCk7CkBAIC0zNjQsNyArMzY0LDcgQEAK
-IAkvKgogCSAqCVdhaXQgZm9yIHRoZSBhZGFwdGVyIHRvIGJlIHVwIGFuZCBydW5uaW5nLgogCSAq
-LwotCWlmICghKHN0YXR1cyAmIEtFUk5FTF9VUF9BTkRfUlVOTklORykpCisJaWYgKHVubGlrZWx5
-KCEoc3RhdHVzICYgS0VSTkVMX1VQX0FORF9SVU5OSU5HKSkpCiAJCXJldHVybiAtMzsKIAkvKgog
-CSAqCUV2ZXJ5dGhpbmcgaXMgT0sKQEAgLTQxOSw5ICs0MTksOSBAQAogCXNwaW5fdW5sb2NrX2ly
-cXJlc3RvcmUocS0+bG9jaywgcWZsYWdzKTsKIAlmb3IoOzspIHsKIAkJSW5kZXggPSByeF9yZWFk
-bChkZXYsIE1Vbml0LkluYm91bmRRdWV1ZSk7Ci0JCWlmIChJbmRleCA9PSAweEZGRkZGRkZGTCkK
-KwkJaWYgKHVubGlrZWx5KEluZGV4ID09IDB4RkZGRkZGRkZMKSkKIAkJCUluZGV4ID0gcnhfcmVh
-ZGwoZGV2LCBNVW5pdC5JbmJvdW5kUXVldWUpOwotCQlpZiAoSW5kZXggIT0gMHhGRkZGRkZGRkwp
-CisJCWlmIChsaWtlbHkoSW5kZXggIT0gMHhGRkZGRkZGRkwpKQogCQkJYnJlYWs7CiAJCWlmICgt
-LWNvdW50ID09IDApIHsKIAkJCXNwaW5fbG9ja19pcnFzYXZlKHEtPmxvY2ssIHFmbGFncyk7CkBA
-IC01MjYsMTEgKzUyNiw4IEBACiB7CiAJdW5zaWduZWQgbG9uZyBzdGFydDsKIAl1bnNpZ25lZCBs
-b25nIHN0YXR1czsKLQlpbnQgaW5zdGFuY2U7Ci0JY29uc3QgY2hhciAqIG5hbWU7Ci0KLQlpbnN0
-YW5jZSA9IGRldi0+aWQ7Ci0JbmFtZSAgICAgPSBkZXYtPm5hbWU7CisJaW50IGluc3RhbmNlID0g
-ZGV2LT5pZDsKKwljb25zdCBjaGFyICogbmFtZSA9IGRldi0+bmFtZTsKIAogCWlmIChhYWNfYWRh
-cHRlcl9pb3JlbWFwKGRldiwgZGV2LT5iYXNlX3NpemUpKSB7CiAJCXByaW50ayhLRVJOX1dBUk5J
-TkcgIiVzOiB1bmFibGUgdG8gbWFwIGFkYXB0ZXIuXG4iLCBuYW1lKTsKQEAgLTU2OCw4ICs1NjUs
-NyBAQAogCSAqLwogCXdoaWxlICghKChzdGF0dXMgPSByeF9yZWFkbChkZXYsIE1Vbml0Lk9NUnhb
-MF0pKSAmIEtFUk5FTF9VUF9BTkRfUlVOTklORykpCiAJewotCQlpZih0aW1lX2FmdGVyKGppZmZp
-ZXMsIHN0YXJ0K3N0YXJ0dXBfdGltZW91dCpIWikpCi0JCXsKKwkJaWYodGltZV9hZnRlcihqaWZm
-aWVzLCBzdGFydCtzdGFydHVwX3RpbWVvdXQqSFopKSB7CiAJCQlwcmludGsoS0VSTl9FUlIgIiVz
-JWQ6IGFkYXB0ZXIga2VybmVsIGZhaWxlZCB0byBzdGFydCwgaW5pdCBzdGF0dXMgPSAlbHguXG4i
-LCAKIAkJCQkJZGV2LT5uYW1lLCBpbnN0YW5jZSwgc3RhdHVzKTsKIAkJCWdvdG8gZXJyb3JfaW91
-bm1hcDsK
-
-------_=_NextPart_001_01C76FA9.A17FAE7F--
+LSML a.k.a. linux-scsi may know what's gotta give.
+-- 
+Stefan Richter
+-=====-=-=== --== ==-=-
+http://arcgraph.de/sr/
