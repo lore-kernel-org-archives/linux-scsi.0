@@ -1,184 +1,136 @@
 From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] drivers/scsi/pcmcia/nsp_cs.c: remove kernel 2.4 code
-Date: Mon, 26 Mar 2007 06:08:21 +0200
-Message-ID: <20070326040821.GV16477@stusta.de>
+Subject: [2.6 patch] drivers/scsi/nsp32.c: remove kernel 2.4 code
+Date: Mon, 26 Mar 2007 06:08:38 +0200
+Message-ID: <20070326040838.GY16477@stusta.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:34513 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S933544AbXCZEIR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Mar 2007 00:08:17 -0400
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933549AbXCZEIp@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: James.Bottomley@SteelEye.com
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-This patch removes kernel 2.4 code and some ancient CVS tags.
+This patch removes kernel 2.4 code.
 
 Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
 ---
 
- drivers/scsi/pcmcia/nsp_cs.c |  159 +----------------------------------
- drivers/scsi/pcmcia/nsp_cs.h |    8 -
- 2 files changed, 5 insertions(+), 162 deletions(-)
+ drivers/scsi/nsp32.c |  109 +++++--------------------------------------
+ 1 file changed, 13 insertions(+), 96 deletions(-)
 
---- linux-2.6.21-rc4-mm1/drivers/scsi/pcmcia/nsp_cs.h.old	2007-03-25 19:29:38.000000000 +0200
-+++ linux-2.6.21-rc4-mm1/drivers/scsi/pcmcia/nsp_cs.h	2007-03-25 19:33:31.000000000 +0200
-@@ -10,8 +10,6 @@
+--- linux-2.6.21-rc4-mm1/drivers/scsi/nsp32.c.old	2007-03-25 20:27:34.000000000 +0200
++++ linux-2.6.21-rc4-mm1/drivers/scsi/nsp32.c	2007-03-25 20:31:59.000000000 +0200
+@@ -49,10 +49,6 @@
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_ioctl.h>
  
- =========================================================*/
- 
--/* $Id: nsp_cs.h,v 1.19 2003/08/18 11:09:19 elca Exp $ */
+-#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0))
+-# include <linux/blk.h>
+-#endif
 -
- #ifndef  __nsp_cs__
- #define  __nsp_cs__
+ #include "nsp32.h"
  
-@@ -227,13 +225,7 @@
- typedef struct scsi_info_t {
- 	struct pcmcia_device	*p_dev;
- 	struct Scsi_Host      *host;
--#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,74))
- 	dev_node_t             node;
+ 
+@@ -199,17 +195,9 @@
+ static void __exit    exit_nsp32  (void);
+ 
+ /* struct struct scsi_host_template */
+-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73))
+ static int         nsp32_proc_info   (struct Scsi_Host *, char *, char **, off_t, int, int);
 -#else
--	int	               ndev;
--	dev_node_t             node[8];
--	struct bus_operations *bus;
+-static int         nsp32_proc_info   (char *, char **, off_t, int, int, int);
 -#endif
- 	int                    stop;
- } scsi_info_t;
  
---- linux-2.6.21-rc4-mm1/drivers/scsi/pcmcia/nsp_cs.c.old	2007-03-25 19:30:03.000000000 +0200
-+++ linux-2.6.21-rc4-mm1/drivers/scsi/pcmcia/nsp_cs.c	2007-03-25 19:40:56.000000000 +0200
-@@ -25,8 +25,6 @@
- 
- ***********************************************************************/
- 
--/* $Id: nsp_cs.c,v 1.23 2003/08/18 11:09:19 elca Exp $ */
--
- #include <linux/version.h>
- #include <linux/module.h>
- #include <linux/kernel.h>
-@@ -59,7 +57,7 @@
- #include "nsp_cs.h"
- 
- MODULE_AUTHOR("YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>");
--MODULE_DESCRIPTION("WorkBit NinjaSCSI-3 / NinjaSCSI-32Bi(16bit) PCMCIA SCSI host adapter module $Revision: 1.23 $");
-+MODULE_DESCRIPTION("WorkBit NinjaSCSI-3 / NinjaSCSI-32Bi(16bit) PCMCIA SCSI host adapter module");
- MODULE_SUPPORTED_DEVICE("sd,sr,sg,st");
- #ifdef MODULE_LICENSE
- MODULE_LICENSE("GPL");
-@@ -83,10 +81,6 @@
- 	.proc_name	         = "nsp_cs",
- 	.proc_info		 = nsp_proc_info,
- 	.name			 = "WorkBit NinjaSCSI-3/32Bi(16bit)",
--#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0))
--	.detect			 = nsp_detect_old,
--	.release		 = nsp_release_old,
+-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73))
+ static int         nsp32_detect      (struct pci_dev *pdev);
+-#else
+-static int         nsp32_detect      (struct scsi_host_template *);
 -#endif
- 	.info			 = nsp_info,
- 	.queuecommand		 = nsp_queuecommand,
- /*	.eh_abort_handler	 = nsp_eh_abort,*/
-@@ -97,9 +91,6 @@
- 	.sg_tablesize		 = SG_ALL,
- 	.cmd_per_lun		 = 1,
- 	.use_clustering		 = DISABLE_CLUSTERING,
+ static int         nsp32_queuecommand(struct scsi_cmnd *,
+ 		void (*done)(struct scsi_cmnd *));
+ static const char *nsp32_info        (struct Scsi_Host *);
+@@ -296,15 +284,7 @@
+ 	.eh_abort_handler       	= nsp32_eh_abort,
+ 	.eh_bus_reset_handler		= nsp32_eh_bus_reset,
+ 	.eh_host_reset_handler		= nsp32_eh_host_reset,
+-#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,5,74))
+-	.detect				= nsp32_detect,
+-	.release			= nsp32_release,
+-#endif
 -#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,5,2))
--	.use_new_eh_code	 = 1,
+-	.use_new_eh_code        	= 1,
+-#else
+ /*	.highmem_io			= 1, */
 -#endif
  };
  
- static nsp_hw_data nsp_data_base; /* attach <-> detect glue */
-@@ -1313,11 +1304,7 @@
- 	nsp_hw_data *data_b = &nsp_data_base, *data;
- 
- 	nsp_dbg(NSP_DEBUG_INIT, "this_id=%d", sht->this_id);
--#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73))
- 	host = scsi_host_alloc(&nsp_driver_template, sizeof(nsp_hw_data));
+ #include "nsp32_io.h"
+@@ -1210,13 +1190,9 @@
+ 	unsigned long flags;
+ 	int ret;
+ 	int handled = 0;
+-
+-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,0))
+ 	struct Scsi_Host *host = data->Host;
++
+ 	spin_lock_irqsave(host->host_lock, flags);
 -#else
--	host = scsi_register(sht, sizeof(nsp_hw_data));
+-	spin_lock_irqsave(&io_request_lock, flags);
 -#endif
- 	if (host == NULL) {
- 		nsp_dbg(NSP_DEBUG_INIT, "host failed");
- 		return NULL;
-@@ -1354,37 +1341,6 @@
- 	return host; /* detect done. */
- }
  
--#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0))
--static int nsp_detect_old(struct scsi_host_template *sht)
--{
--	if (nsp_detect(sht) == NULL) {
--		return 0;
--	} else {
--		//MOD_INC_USE_COUNT;
--		return 1;
--	}
--}
--
--
--static int nsp_release_old(struct Scsi_Host *shpnt)
--{
--	//nsp_hw_data *data = (nsp_hw_data *)shpnt->hostdata;
--
--	/* PCMCIA Card Service dose same things below. */
--	/* So we do nothing.                           */
--	//if (shpnt->irq) {
--	//	free_irq(shpnt->irq, data->ScsiInfo);
--	//}
--	//if (shpnt->io_port) {
--	//	release_region(shpnt->io_port, shpnt->n_io_port);
--	//}
--
--	//MOD_DEC_USE_COUNT;
--
--	return 0;
--}
+ 	/*
+ 	 * IRQ check, then enable IRQ mask
+@@ -1480,11 +1456,7 @@
+ 	nsp32_write2(base, IRQ_CONTROL, 0);
+ 
+  out2:
+-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,0))
+ 	spin_unlock_irqrestore(host->host_lock, flags);
+-#else
+-	spin_unlock_irqrestore(&io_request_lock, flags);
 -#endif
--
- /*----------------------------------------------------------------*/
- /* return info string						  */
- /*----------------------------------------------------------------*/
-@@ -1403,19 +1359,9 @@
- 			nsp_dbg(NSP_DEBUG_PROC, "buffer=0x%p pos=0x%p length=%d %d\n", buffer, pos, length,  length - (pos - buffer));\
+ 
+ 	nsp32_dbg(NSP32_DEBUG_INTR, "exit");
+ 
+@@ -1499,28 +1471,15 @@
+ 			nsp32_dbg(NSP32_DEBUG_PROC, "buffer=0x%p pos=0x%p length=%d %d\n", buffer, pos, length,  length - (pos - buffer));\
  		} \
  	} while(0)
--static int
--nsp_proc_info(
--#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73))
+-static int nsp32_proc_info(
+-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73)) 
 -	struct Scsi_Host *host,
 -#endif
--	char  *buffer,
--	char **start,
--	off_t  offset,
--	int    length,
--#if !(LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73))
--	int    hostno,
+-	char             *buffer,
+-	char            **start,
+-	off_t             offset,
+-	int               length,
+-#if !(LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73)) 
+-	int               hostno,
 -#endif
--	int    inout)
+-	int               inout)
 +
-+static int nsp_proc_info(struct Scsi_Host *host, char *buffer, char **start,
-+			 off_t offset, int length, int inout)
++static int nsp32_proc_info(struct Scsi_Host *host, char *buffer, char **start,
++			   off_t offset, int length, int inout)
  {
- 	int id;
- 	char *pos = buffer;
-@@ -1423,24 +1369,13 @@
- 	int speed;
- 	unsigned long flags;
- 	nsp_hw_data *data;
--#if !(LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73))
--	struct Scsi_Host *host;
+ 	char             *pos = buffer;
+ 	int               thislength;
+ 	unsigned long     flags;
+ 	nsp32_hw_data    *data;
+-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73)) 
+ 	int               hostno;
 -#else
- 	int hostno;
+-	struct Scsi_Host *host;
 -#endif
-+
- 	if (inout) {
+ 	unsigned int      base;
+ 	unsigned char     mode_reg;
+ 	int               id, speed;
+@@ -1531,15 +1490,7 @@
  		return -EINVAL;
  	}
  
--#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73))
+-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73)) 
  	hostno = host->host_no;
 -#else
 -	/* search this HBA host */
@@ -187,160 +139,157 @@ Signed-off-by: Adrian Bunk <bunk@stusta.de>
 -		return -ESRCH;
 -	}
 -#endif
- 	data = (nsp_hw_data *)host->hostdata;
+ 	data = (nsp32_hw_data *)host->hostdata;
+ 	base = host->io_port;
  
- 
-@@ -1676,10 +1611,6 @@
- 	cistpl_cftable_entry_t dflt = { 0 };
- 	struct Scsi_Host *host;
- 	nsp_hw_data      *data = &nsp_data_base;
--#if !(LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,74))
--	struct scsi_device	 *dev;
--	dev_node_t	**tail, *node;
--#endif
- 
- 	nsp_dbg(NSP_DEBUG_INIT, "in");
- 
-@@ -1812,17 +1743,7 @@
- 		goto cs_failed;
- 	}
- 
--#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,2))
- 	host = nsp_detect(&nsp_driver_template);
+@@ -2674,17 +2625,7 @@
+  *	0x900-0xbff: (map same 0x800-0x8ff I/O port image repeatedly)
+  *	0xc00-0xfff: CardBus status registers
+  */
+-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73))
+-#define DETECT_OK 0
+-#define DETECT_NG 1
+-#define PCIDEV    pdev
+ static int nsp32_detect(struct pci_dev *pdev)
 -#else
--	scsi_register_host(&nsp_driver_template);
--	for (host = scsi_host_get_next(NULL); host != NULL;
--	     host = scsi_host_get_next(host)) {
--		if (host->hostt == &nsp_driver_template) {
--			break;
--		}
--	}
+-#define DETECT_OK 1
+-#define DETECT_NG 0
+-#define PCIDEV    (data->Pci)
+-static int nsp32_detect(struct scsi_host_template *sht)
 -#endif
- 
- 	if (host == NULL) {
- 		nsp_dbg(NSP_DEBUG_INIT, "detect failed");
-@@ -1830,7 +1751,6 @@
- 	}
- 
- 
--#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,74))
- 	ret = scsi_add_host (host, NULL);
- 	if (ret)
- 		goto cs_failed;
-@@ -1841,52 +1761,6 @@
- 	link->dev_node  = &info->node;
- 	info->host = host;
- 
--#else
--	nsp_dbg(NSP_DEBUG_INIT, "GET_SCSI_INFO");
--	tail = &link->dev_node;
--	info->ndev = 0;
--
--	nsp_dbg(NSP_DEBUG_INIT, "host=0x%p", host);
--
--	for (dev = host->host_queue; dev != NULL; dev = dev->next) {
--		unsigned long id;
--		id = (dev->id & 0x0f) + ((dev->lun & 0x0f) << 4) +
--			((dev->channel & 0x0f) << 8) +
--			((dev->host->host_no & 0x0f) << 12);
--		node = &info->node[info->ndev];
--		node->minor = 0;
--		switch (dev->type) {
--		case TYPE_TAPE:
--			node->major = SCSI_TAPE_MAJOR;
--			snprintf(node->dev_name, sizeof(node->dev_name), "st#%04lx", id);
--			break;
--		case TYPE_DISK:
--		case TYPE_MOD:
--			node->major = SCSI_DISK0_MAJOR;
--			snprintf(node->dev_name, sizeof(node->dev_name), "sd#%04lx", id);
--			break;
--		case TYPE_ROM:
--		case TYPE_WORM:
--			node->major = SCSI_CDROM_MAJOR;
--			snprintf(node->dev_name, sizeof(node->dev_name), "sr#%04lx", id);
--			break;
--		default:
--			node->major = SCSI_GENERIC_MAJOR;
--			snprintf(node->dev_name, sizeof(node->dev_name), "sg#%04lx", id);
--			break;
--		}
--		*tail = node; tail = &node->next;
--		info->ndev++;
--		info->host = dev->host;
--	}
--
--	*tail = NULL;
--	if (info->ndev == 0) {
--		nsp_msg(KERN_INFO, "no SCSI devices found");
--	}
--	nsp_dbg(NSP_DEBUG_INIT, "host=0x%p", host);
--#endif
--
- 	/* Finally, report what we've done */
- 	printk(KERN_INFO "nsp_cs: index 0x%02x: ",
- 	       link->conf.ConfigIndex);
-@@ -1939,13 +1813,9 @@
- 	nsp_dbg(NSP_DEBUG_INIT, "link=0x%p", link);
- 
- 	/* Unlink the device chain */
--#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,2))
- 	if (info->host != NULL) {
- 		scsi_remove_host(info->host);
- 	}
--#else
--	scsi_unregister_host(&nsp_driver_template);
--#endif
- 	link->dev_node = NULL;
- 
- 	if (link->win) {
-@@ -1955,11 +1825,9 @@
- 	}
- 	pcmcia_disable_device(link);
- 
--#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,2))
- 	if (info->host != NULL) {
- 		scsi_host_put(info->host);
- 	}
--#endif
- } /* nsp_cs_release */
- 
- static int nsp_cs_suspend(struct pcmcia_device *link)
-@@ -2006,7 +1874,6 @@
- /*======================================================================*
-  *	module entry point
-  *====================================================================*/
--#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,68))
- static struct pcmcia_device_id nsp_cs_ids[] = {
- 	PCMCIA_DEVICE_PROD_ID123("IO DATA", "CBSC16       ", "1", 0x547e66dc, 0x0d63a3fd, 0x51de003a),
- 	PCMCIA_DEVICE_PROD_ID123("KME    ", "SCSI-CARD-001", "1", 0x534c02bc, 0x52008408, 0x51de003a),
-@@ -2030,28 +1897,12 @@
- 	.suspend	= nsp_cs_suspend,
- 	.resume		= nsp_cs_resume,
- };
--#endif
- 
- static int __init nsp_cs_init(void)
  {
--#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,68))
- 	nsp_msg(KERN_INFO, "loading...");
- 
- 	return pcmcia_register_driver(&nsp_driver);
+ 	struct Scsi_Host *host;	/* registered host structure */
+ 	struct resource  *res;
+@@ -2697,11 +2638,7 @@
+ 	/*
+ 	 * register this HBA as SCSI device
+ 	 */
+-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73))
+ 	host = scsi_host_alloc(&nsp32_template, sizeof(nsp32_hw_data));
 -#else
--	servinfo_t serv;
--
--	nsp_msg(KERN_INFO, "loading...");
--	pcmcia_get_card_services_info(&serv);
--	if (serv.Revision != CS_RELEASE_CODE) {
--		nsp_msg(KERN_DEBUG, "Card Services release does not match!");
--		return -EINVAL;
--	}
--	register_pcmcia_driver(&dev_info, &nsp_cs_attach, &nsp_cs_detach);
--
--	nsp_dbg(NSP_DEBUG_INIT, "out");
--	return 0;
+-	host = scsi_register(sht, sizeof(nsp32_hw_data));
+-#endif
+ 	if (host == NULL) {
+ 		nsp32_msg (KERN_ERR, "failed to scsi register");
+ 		goto err;
+@@ -2719,9 +2656,6 @@
+ 	host->unique_id = data->BaseAddress;
+ 	host->n_io_port	= data->NumAddress;
+ 	host->base      = (unsigned long)data->MmioAddress;
+-#if (LINUX_VERSION_CODE <= KERNEL_VERSION(2,5,63))
+-	scsi_set_pci_device(host, PCIDEV);
+-#endif
+ 
+ 	data->Host      = host;
+ 	spin_lock_init(&(data->Lock));
+@@ -2776,7 +2710,7 @@
+ 	/*
+ 	 * setup DMA 
+ 	 */
+-	if (pci_set_dma_mask(PCIDEV, DMA_32BIT_MASK) != 0) {
++	if (pci_set_dma_mask(pdev, DMA_32BIT_MASK) != 0) {
+ 		nsp32_msg (KERN_ERR, "failed to set PCI DMA mask");
+ 		goto scsi_unregister;
+ 	}
+@@ -2784,7 +2718,7 @@
+ 	/*
+ 	 * allocate autoparam DMA resource.
+ 	 */
+-	data->autoparam = pci_alloc_consistent(PCIDEV, sizeof(nsp32_autoparam), &(data->auto_paddr));
++	data->autoparam = pci_alloc_consistent(pdev, sizeof(nsp32_autoparam), &(data->auto_paddr));
+ 	if (data->autoparam == NULL) {
+ 		nsp32_msg(KERN_ERR, "failed to allocate DMA memory");
+ 		goto scsi_unregister;
+@@ -2793,7 +2727,7 @@
+ 	/*
+ 	 * allocate scatter-gather DMA resource.
+ 	 */
+-	data->sg_list = pci_alloc_consistent(PCIDEV, NSP32_SG_TABLE_SIZE,
++	data->sg_list = pci_alloc_consistent(pdev, NSP32_SG_TABLE_SIZE,
+ 					     &(data->sg_paddr));
+ 	if (data->sg_list == NULL) {
+ 		nsp32_msg(KERN_ERR, "failed to allocate DMA memory");
+@@ -2883,16 +2817,14 @@
+ 		goto free_irq;
+         }
+ 
+-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73))
+-	ret = scsi_add_host(host, &PCIDEV->dev);
++	ret = scsi_add_host(host, &pdev->dev);
+ 	if (ret) {
+ 		nsp32_msg(KERN_ERR, "failed to add scsi host");
+ 		goto free_region;
+ 	}
+ 	scsi_scan_host(host);
+-#endif
+-	pci_set_drvdata(PCIDEV, host);
+-	return DETECT_OK;
++	pci_set_drvdata(pdev, host);
++	return 0;
+ 
+  free_region:
+ 	release_region(host->io_port, host->n_io_port);
+@@ -2901,22 +2833,19 @@
+ 	free_irq(host->irq, data);
+ 
+  free_sg_list:
+-	pci_free_consistent(PCIDEV, NSP32_SG_TABLE_SIZE,
++	pci_free_consistent(pdev, NSP32_SG_TABLE_SIZE,
+ 			    data->sg_list, data->sg_paddr);
+ 
+  free_autoparam:
+-	pci_free_consistent(PCIDEV, sizeof(nsp32_autoparam),
++	pci_free_consistent(pdev, sizeof(nsp32_autoparam),
+ 			    data->autoparam, data->auto_paddr);
+ 	
+  scsi_unregister:
+ 	scsi_host_put(host);
+ 
+  err:
+-	return DETECT_NG;
++	return 1;
+ }
+-#undef DETECT_OK
+-#undef DETECT_NG
+-#undef PCIDEV
+ 
+ static int nsp32_release(struct Scsi_Host *host)
+ {
+@@ -3525,11 +3454,7 @@
+ 
+ 	pci_set_master(pdev);
+ 
+-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73))
+ 	ret = nsp32_detect(pdev);
+-#else
+-	ret = scsi_register_host(&nsp32_template);
+-#endif
+ 
+ 	nsp32_msg(KERN_INFO, "irq: %i mmio: %p+0x%lx slot: %s model: %s",
+ 		  pdev->irq,
+@@ -3544,25 +3469,17 @@
+ 
+ static void __devexit nsp32_remove(struct pci_dev *pdev)
+ {
+-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73))
+ 	struct Scsi_Host *host = pci_get_drvdata(pdev);
+-#endif
+ 
+ 	nsp32_dbg(NSP32_DEBUG_REGISTER, "enter");
+ 
+-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73))
+         scsi_remove_host(host);
+ 
+ 	nsp32_release(host);
+ 
+ 	scsi_host_put(host);
+-#else
+-	scsi_unregister_host(&nsp32_template);	
 -#endif
  }
  
- static void __exit nsp_cs_exit(void)
-
+-
+-
+ static struct pci_driver nsp32_driver = {
+ 	.name		= "nsp32",
+ 	.id_table	= nsp32_pci_table,
