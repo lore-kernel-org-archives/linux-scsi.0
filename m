@@ -1,96 +1,44 @@
-From: thomas schorpp <t.schorpp@gmx.de>
-Subject: Re: aic7xxx: aic7892(B): BUG: soft lockup detected on CPU#0!
-Date: Tue, 27 Mar 2007 08:52:06 +0200
-Message-ID: <4608BF16.3000100@gmx.de>
-References: <46029D72.3060403@gmx.de> <4602B576.6020602@gmx.de>	 <4602EED5.5070503@gmx.de> <46030A9A.2060604@gmx.de>	 <46032CC8.6030307@gmx.de>	 <1174625139.30030.31.camel@mulgrave.il.steeleye.com>	 <4603827C.4080701@gmx.de>  <46040047.3000104@gmx.de>	 <1174670587.30030.47.camel@mulgrave.il.steeleye.com>	 <46041B11.6000004@gmx.de> <46042383.7010704@gmx.de>	 <460475F5.1080805@gmx.de> <1174699032.13717.25.camel@mulgrave.il.steeleye.com> <46049EA2.1040207@gmx.de> <4604A397.6000402@gmx.de>
-Reply-To: t.schorpp@gmx.de
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: RE: [patch 19/28] drivers/scsi/aacraid/: cleanups
+Date: Tue, 27 Mar 2007 09:19:37 -0500
+Message-ID: <1175005178.3737.9.camel@mulgrave.il.steeleye.com>
+References: <AE4F746F2AECFC4DA4AADD66A1DFEF017A97B5@otce2k301.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:32857 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752780AbXC0GwI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Mar 2007 02:52:08 -0400
-In-Reply-To: <4604A397.6000402@gmx.de>
+Received: from hancock.steeleye.com ([71.30.118.248]:57859 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753868AbXC0OXF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Mar 2007 10:23:05 -0400
+In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF017A97B5@otce2k301.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: bunk@stusta.de, akpm@linux-foundation.org, linux-scsi <linux-scsi@vger.kernel.org>
 
-thomas schorpp wrote:
-> thomas schorpp wrote:
->> James Bottomley wrote:
->>> On Sat, 2007-03-24 at 01:51 +0100, thomas schorpp wrote:
->>>>> no. so the pci layer reports wrong start:
->>>> nonsense. it succeeds, confused function return with the error flag:
->>>>
->>>> //      u_long  start;
->>>> //      u_long  start = 0xFFEFF000;
->>>>         u_long  start = 0x30000000;
->>>>         int     error;
->>>>
->>>>         struct resource* ret1;
->>>>         error = 0;
->>>> //      start = pci_resource_start(ahc->dev_softc, 1);
->>>>         if (start != 0) {
->>>>                 *bus_addr = start;
->>>>                 if ((ret1 = request_mem_region(start, 0x1000, 
->>>> "aic7xxx")) == 0)
->>>
->>> You can't do this.  The pci_resource_start is getting the address of
->>> something called a Bus Address Register (BAR) it says in physical
->>> address space where the card is responding ... you can't simply set that
->>> to a random value.
->>>
->>> The problem you seem to have is that your system is reporting a BAR
->>> beyond 32 bits (4GB) which the card physically can't use.  This could be
->>> because of a BIOS misconfiguration or because there's a bug in the PCI
->>> subsystem somewhere.
->>>
->>> James
->>
->> understood. waiting for LKML answers... meanwhile i found harder 
->> reason for a possible bounds problem with the driver code on x86_64:
->>
->> if i do:
->>
->> static int
->> ahc_linux_pci_reserve_mem_region(struct ahc_softc *ahc,
->>                                 u_long *bus_addr,
->>                                 uint8_t __iomem **maddr)
->> {
->> //      u_long  start;
->>        uint32_t start;
->>
->> i get no free warning of "*nonexistant* resource" (it cant be 
->> nonexistant, cause it was definitely something mapped):
->>
->> tom1:/usr/src/linux# dmesg |grep -i free
->> Freeing unused kernel memory: 208k freed
->>
->> with u_long type start i get it:
->> Mar 24 03:41:47 localhost kernel: Trying to free nonexistent resource 
->> <00000000fffff000-00000000ffffffff>
->>
->> investigating further...
->> -
-> 
-> hmm well i dont get the free warning cause
->                        release_mem_region(ahc->platform_data->mem_busaddr,
->                                           0x1000);
-> isnt called, the hack fails
->        error = ahc_linux_pci_reserve_mem_region(ahc, &base, &maddr);
->        if (error == 0) {
-> 
-> ok, so no bounds issue in the driver.
-> 
+On Tue, 2007-03-27 at 09:00 -0400, Salyzyn, Mark wrote:
+> I believe this is the third time I've seen this patch and had applied it
+> to the Adaptec sources. James, please apply to your tree, I
+> wholeheartedly agree with this patch! The same goes to the 'dpt_i2o.c'
+> remove dead code patch ...
 
-LKML people are ignoring my report, i take this as agreement to a mb bios issue.
-will test the card with a latest debian kernel x86_64 netinstall cd on some other amd64 
-machine, but i need to find some in my reach here.
-i need more confirmation before working in the linux pci hal.
+Sure, I can add it.
 
-y
-tom
+Just to make sure everyone understands, there are two methods for
+getting things like this into maintained drivers
+
+     1. Just ack it and I'll add it with an "Acked-by:" tag.  This is
+        fine except when it produces merge conflicts with another update
+        (in which case I become unhappy).
+     2. Import it into your own patch tree (and add your own
+        "Signed-off-by:") and then transmit it as part of your regular
+        patches (I like this because it means I don't have to manage any
+        conflicts).
+
+James
+
+P.S. are you taking on maintenance of dpt_i2o?
+
 
 
