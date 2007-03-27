@@ -1,42 +1,43 @@
 From: akpm@linux-foundation.org
-Subject: [patch 04/28] scsi: remove unnecessary check in drivers/scsi/sg.c
-Date: Mon, 26 Mar 2007 21:59:23 -0800
-Message-ID: <200703270559.l2R5xNpj008627@shell0.pdx.osdl.net>
+Subject: [patch 18/28] SCSI: Fix obvious typo "spin_lock_irqrestore()" in gdth.c
+Date: Mon, 26 Mar 2007 21:59:34 -0800
+Message-ID: <200703270559.l2R5xY41008673@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:40833 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.24]:40880 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934036AbXC0F7c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Mar 2007 01:59:32 -0400
+	id S934069AbXC0F7l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Mar 2007 01:59:41 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, snakebyte@gmx.de, dougg@torque.net
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, rpjday@mindspring.com, achim_leubner@adaptec.com
 
-From: Eric Sesterhenn <snakebyte@gmx.de>
+From: "Robert P. J. Day" <rpjday@mindspring.com>
 
-coverity spotted this (cid #758).  All callers dereference sfp, so we dont
-need this check.  In addition to this, we dereference it earlier in the
-function.
+Fix misspelled "spin_lock_irqrestore" to read "spin_unlock_irqrestore"
+instead.
 
-Signed-off-by: Eric Sesterhenn <snakebyte@gmx.de>
-Cc: Douglas Gilbert <dougg@torque.net>
+Presumably, GDTH_RTC doesn't get used a lot.
+
+Signed-off-by: Robert P. J. Day <rpjday@mindspring.com>
+Cc: <achim_leubner@adaptec.com>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/sg.c |    2 +-
+ drivers/scsi/gdth.c |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/sg.c~remove-unnecessary-check-in-drivers-scsi-sgc drivers/scsi/sg.c
---- a/drivers/scsi/sg.c~remove-unnecessary-check-in-drivers-scsi-sgc
-+++ a/drivers/scsi/sg.c
-@@ -1837,7 +1837,7 @@ sg_build_indirect(Sg_scatter_hold * schp
- 	int blk_size = buff_size;
- 	struct page *p = NULL;
- 
--	if ((blk_size < 0) || (!sfp))
-+	if (blk_size < 0)
- 		return -EFAULT;
- 	if (0 == blk_size)
- 		++blk_size;	/* don't know why */
+diff -puN drivers/scsi/gdth.c~scsi-fix-obvious-typo-spin_lock_irqrestore-in-gdthc drivers/scsi/gdth.c
+--- a/drivers/scsi/gdth.c~scsi-fix-obvious-typo-spin_lock_irqrestore-in-gdthc
++++ a/drivers/scsi/gdth.c
+@@ -1955,7 +1955,7 @@ static int __init gdth_search_drives(int
+         for (j = 0; j < 12; ++j) 
+             rtc[j] = CMOS_READ(j);
+     } while (rtc[0] != CMOS_READ(0));
+-    spin_lock_irqrestore(&rtc_lock, flags);
++    spin_unlock_irqrestore(&rtc_lock, flags);
+     TRACE2(("gdth_search_drives(): RTC: %x/%x/%x\n",*(ulong32 *)&rtc[0],
+             *(ulong32 *)&rtc[4], *(ulong32 *)&rtc[8]));
+     /* 3. send to controller firmware */
 _
