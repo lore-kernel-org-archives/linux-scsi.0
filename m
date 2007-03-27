@@ -1,39 +1,88 @@
 From: akpm@linux-foundation.org
-Subject: [patch 07/28] drivers/scsi/NCR5380.c: Replacing yield() with a better alternative
-Date: Mon, 26 Mar 2007 21:59:26 -0800
-Message-ID: <200703270559.l2R5xQKP008636@shell0.pdx.osdl.net>
+Subject: [patch 01/28] drivers/scsi/: small cleanups
+Date: Mon, 26 Mar 2007 21:59:20 -0800
+Message-ID: <200703270559.l2R5xKWJ008618@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:40869 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.24]:41026 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934066AbXC0F7j (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Mar 2007 01:59:39 -0400
+	id S965030AbXC0GCg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Mar 2007 02:02:36 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, amol@verismonetworks.com, alan@lxorguk.ukuu.org.uk
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bunk@stusta.de
 
-From: Amol Lad <amol@verismonetworks.com>
+From: Adrian Bunk <bunk@stusta.de>
 
-Replaced yield() with cond_resched()
+This patch contains the following cleanups:
+- make needlessly global functions static
+- every file should #include the headers containing the prototypes for
+  it's global functions
 
-Signed-off-by: Amol Lad <amol@verismonetworks.com>
-Acked-by: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/NCR5380.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/scsi_sysctl.c       |    1 +
+ drivers/scsi/scsi_sysfs.c        |    3 ++-
+ drivers/scsi/scsi_transport_fc.c |    2 +-
+ drivers/scsi/sr.c                |    2 +-
+ 4 files changed, 5 insertions(+), 3 deletions(-)
 
-diff -puN drivers/scsi/NCR5380.c~drivers-scsi-ncr5380c-replacing-yield-with-a drivers/scsi/NCR5380.c
---- a/drivers/scsi/NCR5380.c~drivers-scsi-ncr5380c-replacing-yield-with-a
-+++ a/drivers/scsi/NCR5380.c
-@@ -347,7 +347,7 @@ static int NCR5380_poll_politely(struct 
- 		if((r & bit) == val)
- 			return 0;
- 		if(!in_interrupt())
--			yield();
-+			cond_resched();
- 		else
- 			cpu_relax();
- 	}
+diff -puN drivers/scsi/scsi_sysctl.c~drivers-scsi-small-cleanups drivers/scsi/scsi_sysctl.c
+--- a/drivers/scsi/scsi_sysctl.c~drivers-scsi-small-cleanups
++++ a/drivers/scsi/scsi_sysctl.c
+@@ -9,6 +9,7 @@
+ #include <linux/sysctl.h>
+ 
+ #include "scsi_logging.h"
++#include "scsi_priv.h"
+ 
+ 
+ static ctl_table scsi_table[] = {
+diff -puN drivers/scsi/scsi_sysfs.c~drivers-scsi-small-cleanups drivers/scsi/scsi_sysfs.c
+--- a/drivers/scsi/scsi_sysfs.c~drivers-scsi-small-cleanups
++++ a/drivers/scsi/scsi_sysfs.c
+@@ -16,6 +16,7 @@
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_tcq.h>
+ #include <scsi/scsi_transport.h>
++#include <scsi/scsi_driver.h>
+ 
+ #include "scsi_priv.h"
+ #include "scsi_logging.h"
+@@ -799,7 +800,7 @@ void scsi_remove_device(struct scsi_devi
+ }
+ EXPORT_SYMBOL(scsi_remove_device);
+ 
+-void __scsi_remove_target(struct scsi_target *starget)
++static void __scsi_remove_target(struct scsi_target *starget)
+ {
+ 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+ 	unsigned long flags;
+diff -puN drivers/scsi/scsi_transport_fc.c~drivers-scsi-small-cleanups drivers/scsi/scsi_transport_fc.c
+--- a/drivers/scsi/scsi_transport_fc.c~drivers-scsi-small-cleanups
++++ a/drivers/scsi/scsi_transport_fc.c
+@@ -1797,7 +1797,7 @@ fc_rport_final_delete(struct work_struct
+  * Notes:
+  *	This routine assumes no locks are held on entry.
+  **/
+-struct fc_rport *
++static struct fc_rport *
+ fc_rport_create(struct Scsi_Host *shost, int channel,
+ 	struct fc_rport_identifiers  *ids)
+ {
+diff -puN drivers/scsi/sr.c~drivers-scsi-small-cleanups drivers/scsi/sr.c
+--- a/drivers/scsi/sr.c~drivers-scsi-small-cleanups
++++ a/drivers/scsi/sr.c
+@@ -173,7 +173,7 @@ static void scsi_cd_put(struct scsi_cd *
+  * an inode for that to work, and we do not always have one.
+  */
+ 
+-int sr_media_change(struct cdrom_device_info *cdi, int slot)
++static int sr_media_change(struct cdrom_device_info *cdi, int slot)
+ {
+ 	struct scsi_cd *cd = cdi->handle;
+ 	int retval;
 _
