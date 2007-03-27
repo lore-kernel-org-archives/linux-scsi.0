@@ -1,57 +1,45 @@
-From: "Allexio Ju" <allexio.ju@gmail.com>
-Subject: RE: [PATCH] aacraid: Add likely() and unlikely()
-Date: Tue, 27 Mar 2007 09:17:44 -0700
-Message-ID: <a02278b00703270917w5dcaaf25y92e31dfd6e920b91@mail.gmail.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [GIT PATCH] SCSI bug fixes for 2.6.21-rc5
+Date: Tue, 27 Mar 2007 11:24:37 -0500
+Message-ID: <1175012677.3737.18.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.234]:49538 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932819AbXC0QRq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Mar 2007 12:17:46 -0400
-Received: by wr-out-0506.google.com with SMTP id 76so2014164wra
-        for <linux-scsi@vger.kernel.org>; Tue, 27 Mar 2007 09:17:45 -0700 (PDT)
-Content-Disposition: inline
+Received: from hancock.steeleye.com ([71.30.118.248]:58973 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S933012AbXC0QYw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Mar 2007 12:24:52 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: arjan@infradead.org
-Cc: mark_salyzyn@adaptec.com, linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Thu, 2007-03-22 at 2007 2:24 AM, Arjan van de Ven wrote:
-> (I assume you're aware that likely/unlikely should only be
-> used for 99:1 or higher ratios, this one looks correct for sure)
-Could you share details of reasons why those macros should be used in the way?
-I thought those macros simply tell compiler to layout code in such a
-way that minimizes unnecessary jumps.
+This is a fairly basic rollup of 3 basic double free or oops based bug
+fixes.
 
-Thank you,
+The patch is available from:
 
-Allexio
+master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
 
-> On Wed, 2007-03-21 at 15:43 -0400, Salyzyn, Mark wrote:
-> > Add some likely() and unlikely() compiler hints in some of
-> the aacraid
-> > hardware interface layers. There should be no operational
-> side effects
-> > resulting from this patch and the changes should be mostly
-> benign on
-> > x86 platforms.
-> >
-> > ObligatoryDisclaimer: Please accept my condolences
-> regarding Outlook's
-> > handling of patches attachments.
-> >
-> > This attached patch is against current scsi-misc-2.6
->
-> -               if((fibptr->flags & FIB_CONTEXT_FLAG_TIMED_OUT)){
-> +               if(unlikely(fibptr->flags &
-> + FIB_CONTEXT_FLAG_TIMED_OUT)){
->                         return -ETIMEDOUT;
->                 } else {
->                         return 0;
->
-> while you're at it, please remove the extra {}'s as well
->
-> (I assume you're aware that likely/unlikely should only be
-> used for 99:1 or higher ratios, this one looks correct for sure)
+The Short Changelog is
+
+Joerg Dorchain (1):
+      gdth: fix oops in gdth_copy_cmd()
+
+Judith Lebzelter (1):
+      mptsas: Fix oops for insmod during kexec
+
+Linas Vepstas (1):
+      lpfc: avoid double-free during PCI error failure
+
+and the diffstat:
+
+ message/fusion/mptsas.c |    7 +++++--
+ scsi/gdth.c             |    2 ++
+ scsi/lpfc/lpfc_init.c   |    5 ++---
+ 3 files changed, 9 insertions(+), 5 deletions(-)
+
+James
+
+
