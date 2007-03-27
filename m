@@ -1,72 +1,57 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: [PATCH] aacraid: Add SMC and SUN products to README
-Date: Tue, 27 Mar 2007 11:51:34 -0400
-Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF017A9859@otce2k301.adaptec.com>
-References: <AE4F746F2AECFC4DA4AADD66A1DFEF0172C40E@otce2k301.adaptec.com>
+From: "Allexio Ju" <allexio.ju@gmail.com>
+Subject: RE: [PATCH] aacraid: Add likely() and unlikely()
+Date: Tue, 27 Mar 2007 09:17:44 -0700
+Message-ID: <a02278b00703270917w5dcaaf25y92e31dfd6e920b91@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C77087.CC3EC057"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([216.52.22.36]:43457 "EHLO
-	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932203AbXC0Pvh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Mar 2007 11:51:37 -0400
-Received: from otce2k301.adaptec.com (otce2k301.adaptec.com [10.12.1.97])
-	by mail-gw3.adaptec.com (Spam Firewall) with ESMTP id 53D4E190F69
-	for <linux-scsi@vger.kernel.org>; Tue, 27 Mar 2007 08:51:36 -0700 (PDT)
-Content-class: urn:content-classes:message
-In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF0172C40E@otce2k301.adaptec.com>
+Received: from wr-out-0506.google.com ([64.233.184.234]:49538 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932819AbXC0QRq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Mar 2007 12:17:46 -0400
+Received: by wr-out-0506.google.com with SMTP id 76so2014164wra
+        for <linux-scsi@vger.kernel.org>; Tue, 27 Mar 2007 09:17:45 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: arjan@infradead.org
+Cc: mark_salyzyn@adaptec.com, linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
+On Thu, 2007-03-22 at 2007 2:24 AM, Arjan van de Ven wrote:
+> (I assume you're aware that likely/unlikely should only be
+> used for 99:1 or higher ratios, this one looks correct for sure)
+Could you share details of reasons why those macros should be used in the way?
+I thought those macros simply tell compiler to layout code in such a
+way that minimizes unnecessary jumps.
 
-------_=_NextPart_001_01C77087.CC3EC057
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Thank you,
 
-Add SMC and SUN products to aacraid documentation
+Allexio
 
-ObligatoryDisclaimer: Please accept my condolences regarding Outlook's
-handling of patches attachments.
-
-This attached patch is against current scsi-misc-2.6
-
-Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
-
----
-
-Sincerely -- Mark Salyzyn
-
-------_=_NextPart_001_01C77087.CC3EC057
-Content-Type: application/octet-stream;
-	name="aacraid_SUN_SMC_documentation.patch"
-Content-Transfer-Encoding: base64
-Content-Description: aacraid_SUN_SMC_documentation.patch
-Content-Disposition: attachment;
-	filename="aacraid_SUN_SMC_documentation.patch"
-
-ZGlmZiAtcnUgYS9Eb2N1bWVudGF0aW9uL3Njc2kvYWFjcmFpZC50eHQgYi9Eb2N1bWVudGF0aW9u
-L3Njc2kvYWFjcmFpZC50eHQKLS0tIGEvRG9jdW1lbnRhdGlvbi9zY3NpL2FhY3JhaWQudHh0CTIw
-MDctMDMtMjcgMTE6MzU6MjMuNTg3NjkyNTA4IC0wNDAwCisrKyBiL0RvY3VtZW50YXRpb24vc2Nz
-aS9hYWNyYWlkLnR4dAkyMDA3LTAzLTI3IDExOjQ2OjQ2Ljc5Mzc4MjY3NyAtMDQwMApAQCAtMzcs
-NyArMzcsMTEgQEAKIAk5MDA1OjAyODY6OTAwNTowMjlkCUFkYXB0ZWMJMjQyMFNBIChJbnRydWRl
-ciBIUCByZWxlYXNlKQogCTkwMDU6MDI4Njo5MDA1OjAyYWMJQWRhcHRlYwkxODAwIChUeXBob29u
-NDQpCiAJOTAwNTowMjg1OjkwMDU6MDJiNQlBZGFwdGVjCTU0NDUgKFZvb2RvbzQ0KQorCTkwMDU6
-MDI4NToxNWQ5OjAyYjUJU01DCUFPQy1VU0FTLVM0aQorCTkwMDU6MDI4NToxNWQ5OjAyYzkJU01D
-CUFPQy1VU0FTLVM0aUIKIAk5MDA1OjAyODU6OTAwNTowMmI2CUFkYXB0ZWMJNTgwNSAoVm9vZG9v
-ODApCisJOTAwNTowMjg1OjE1ZDk6MDJiNglTTUMJQU9DLVVTQVMtUzhpCisJOTAwNTowMjg1OjE1
-ZDk6MDJjYQlTTUMJQU9DLVVTQVMtUzhpQgogCTkwMDU6MDI4NTo5MDA1OjAyYjcJQWRhcHRlYwk1
-MDg1IChWb29kb28wOCkKIAk5MDA1OjAyODU6OTAwNTowMmJiCUFkYXB0ZWMJMzQwNSAoTWFyYXVk
-ZXI0MExQKQogCTkwMDU6MDI4NTo5MDA1OjAyYmMJQWRhcHRlYwkzODA1IChNYXJhdWRlcjgwTFAp
-CkBAIC05Myw2ICs5Nyw5IEBACiAJOTAwNTowMjg2OjkwMDU6MDJhZQkJKEF1cm9yYSBMaXRlIEFS
-SykKIAk5MDA1OjAyODU6OTAwNTowMmIwCQkoU3VucmlzZSBMYWtlIEFSSykKIAk5MDA1OjAyODU6
-OTAwNTowMmIxCUFkYXB0ZWMJKFZvb2RvbyA4IGludGVybmFsIDggZXh0ZXJuYWwpCisJOTAwNTow
-Mjg1OjEwOGU6N2FhYwlTVU4JU1RLIFJBSUQgUkVNIChWb29kb280NCBDb3lvdGUpCisJOTAwNTow
-Mjg1OjEwOGU6MDI4NglTVU4JU0ctWFBDSUVTQVMtUi1JTiAoQ291Z2FyKQorCTkwMDU6MDI4NTox
-MDhlOjAyODcJU1VOCVNHLVhQQ0lFU0FTLVItRVggKFByb21ldGhldXMpCiAKIFBlb3BsZQogLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLQo=
-
-------_=_NextPart_001_01C77087.CC3EC057--
+> On Wed, 2007-03-21 at 15:43 -0400, Salyzyn, Mark wrote:
+> > Add some likely() and unlikely() compiler hints in some of
+> the aacraid
+> > hardware interface layers. There should be no operational
+> side effects
+> > resulting from this patch and the changes should be mostly
+> benign on
+> > x86 platforms.
+> >
+> > ObligatoryDisclaimer: Please accept my condolences
+> regarding Outlook's
+> > handling of patches attachments.
+> >
+> > This attached patch is against current scsi-misc-2.6
+>
+> -               if((fibptr->flags & FIB_CONTEXT_FLAG_TIMED_OUT)){
+> +               if(unlikely(fibptr->flags &
+> + FIB_CONTEXT_FLAG_TIMED_OUT)){
+>                         return -ETIMEDOUT;
+>                 } else {
+>                         return 0;
+>
+> while you're at it, please remove the extra {}'s as well
+>
+> (I assume you're aware that likely/unlikely should only be
+> used for 99:1 or higher ratios, this one looks correct for sure)
