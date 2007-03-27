@@ -1,39 +1,84 @@
 From: akpm@linux-foundation.org
-Subject: [patch 08/28] drivers/scsi/megaraid.c: Replacing yield() with a better alternative
-Date: Mon, 26 Mar 2007 21:59:27 -0800
-Message-ID: <200703270559.l2R5xRj3008639@shell0.pdx.osdl.net>
+Subject: [patch 21/28] cleanup variable usage in mesh interrupt handler
+Date: Mon, 26 Mar 2007 21:59:37 -0800
+Message-ID: <200703270559.l2R5xbbi008682@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:40863 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.24]:40881 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934059AbXC0F7i (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Mar 2007 01:59:38 -0400
+	id S934071AbXC0F7l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Mar 2007 01:59:41 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, amol@verismonetworks.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, olaf@aepfle.de
 
-From: Amol Lad <amol@verismonetworks.com>
+From: Olaf Hering <olaf@aepfle.de>
 
-For this driver cond_resched() seems to be a better alternative
+_ convert void* to struct mesh_state*
 
-Signed-off-by: Amol Lad <amol@verismonetworks.com>
+- remove unused irq argument from mesh_interrupt()
+
+Signed-off-by: Olaf Hering <olaf@aepfle.de>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/megaraid.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/mesh.c |   14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff -puN drivers/scsi/megaraid.c~drivers-scsi-megaraidc-replacing-yield-with-a drivers/scsi/megaraid.c
---- a/drivers/scsi/megaraid.c~drivers-scsi-megaraidc-replacing-yield-with-a
-+++ a/drivers/scsi/megaraid.c
-@@ -1754,7 +1754,8 @@ __mega_busywait_mbox (adapter_t *adapter
- 	for (counter = 0; counter < 10000; counter++) {
- 		if (!mbox->m_in.busy)
- 			return 0;
--		udelay(100); yield();
-+		udelay(100);
-+		cond_resched();
- 	}
- 	return -1;		/* give up after 1 second */
+diff -puN drivers/scsi/mesh.c~cleanup-variable-usage-in-mesh-interrupt-handler drivers/scsi/mesh.c
+--- a/drivers/scsi/mesh.c~cleanup-variable-usage-in-mesh-interrupt-handler
++++ a/drivers/scsi/mesh.c
+@@ -185,7 +185,7 @@ struct mesh_state {
+  * Driver is too messy, we need a few prototypes...
+  */
+ static void mesh_done(struct mesh_state *ms, int start_next);
+-static void mesh_interrupt(int irq, void *dev_id);
++static void mesh_interrupt(struct mesh_state *ms);
+ static void cmd_complete(struct mesh_state *ms);
+ static void set_dma_cmds(struct mesh_state *ms, struct scsi_cmnd *cmd);
+ static void halt_dma(struct mesh_state *ms);
+@@ -466,7 +466,7 @@ static void mesh_start_cmd(struct mesh_s
+ 				dlog(ms, "intr b4 arb, intr/exc/err/fc=%.8x",
+ 				     MKWORD(mr->interrupt, mr->exception,
+ 					    mr->error, mr->fifo_count));
+-				mesh_interrupt(0, (void *)ms);
++				mesh_interrupt(ms);
+ 				if (ms->phase != arbitrating)
+ 					return;
+ 			}
+@@ -504,7 +504,7 @@ static void mesh_start_cmd(struct mesh_s
+ 		dlog(ms, "intr after disresel, intr/exc/err/fc=%.8x",
+ 		     MKWORD(mr->interrupt, mr->exception,
+ 			    mr->error, mr->fifo_count));
+-		mesh_interrupt(0, (void *)ms);
++		mesh_interrupt(ms);
+ 		if (ms->phase != arbitrating)
+ 			return;
+ 		dlog(ms, "after intr after disresel, intr/exc/err/fc=%.8x",
+@@ -1018,10 +1018,11 @@ static void handle_reset(struct mesh_sta
+ static irqreturn_t do_mesh_interrupt(int irq, void *dev_id)
+ {
+ 	unsigned long flags;
+-	struct Scsi_Host *dev = ((struct mesh_state *)dev_id)->host;
++	struct mesh_state *ms = dev_id;
++	struct Scsi_Host *dev = ms->host;
+ 	
+ 	spin_lock_irqsave(dev->host_lock, flags);
+-	mesh_interrupt(irq, dev_id);
++	mesh_interrupt(ms);
+ 	spin_unlock_irqrestore(dev->host_lock, flags);
+ 	return IRQ_HANDLED;
  }
+@@ -1661,9 +1662,8 @@ static int mesh_queue(struct scsi_cmnd *
+  * handler (do_mesh_interrupt) or by other functions in
+  * exceptional circumstances
+  */
+-static void mesh_interrupt(int irq, void *dev_id)
++static void mesh_interrupt(struct mesh_state *ms)
+ {
+-	struct mesh_state *ms = (struct mesh_state *) dev_id;
+ 	volatile struct mesh_regs __iomem *mr = ms->mesh;
+ 	int intr;
+ 
 _
