@@ -1,126 +1,148 @@
 From: akpm@linux-foundation.org
-Subject: [patch 17/28] Remove some unused SCSI-related kernel config variables.
-Date: Mon, 26 Mar 2007 21:59:33 -0800
-Message-ID: <200703270559.l2R5xX3R008670@shell0.pdx.osdl.net>
+Subject: [patch 24/28] SCSI newstyle hotplug/coldplug support
+Date: Mon, 26 Mar 2007 21:59:40 -0800
+Message-ID: <200703270559.l2R5xepO008694@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:40864 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.24]:40930 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934062AbXC0F7j (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Mar 2007 01:59:39 -0400
+	id S964806AbXC0GAA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Mar 2007 02:00:00 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, rpjday@mindspring.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, david-b@pacbell.net, dbrownell@users.sourceforge.net, mjt@tls.msk.ru
 
-From: "Robert P. J. Day" <rpjday@mindspring.com>
+From: David Brownell <david-b@pacbell.net>
 
-Remove the unused SCSI-related kernel config variables
+This teaches scsi devices how to support "new style" hotplug/coldplug:
+using a modalias sysfs attribute for coldplug, and MODALIAS environment
+variable for hotplug.
 
-	SCSI_NCR53C8XX_PROFILE_SUPPORT
-	SCSI_NCR53C8XX_PROFILE
-	53C700_IO_MAPPED
-	AIC79XX_ENABLE_RD_STRM
-	AIC7XXX_PROBE_EISA_VL
+It also updates the CH, SD, SR, and ST drivers with the aliases needed to
+drive them by that mechanism.  (Older OnStream devices use OSST not ST;
+left for someone else to sort out.  SG seems best loaded by KMOD.)
 
-Signed-off-by: Robert P. J. Day <rpjday@mindspring.com>
+Using this, I've seen pure new-style hotplugging drive the loading of all
+the relevant driver modules for usb storage devices: host controller,
+usb-storage, scsi core, sd_mod.  Previously, sd_mod never loaded.  (Except
+when using the obsolete old-style hotplug scripts ...  which are unusable
+on ~100 BogoMIPS embedded systems that only run busybox, but may have no
+options for lots of external storage other than USB.) Yep, this is a LOT
+faster too.
+
+Signed-off-by: David Brownell <dbrownell@users.sourceforge.net>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Michael Tokarev <mjt@tls.msk.ru>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- Documentation/scsi/ncr53c8xx.txt     |    5 -----
- drivers/scsi/Kconfig                 |   16 ----------------
- drivers/scsi/aic7xxx/Kconfig.aic79xx |   12 ------------
- drivers/scsi/aic7xxx/Kconfig.aic7xxx |   10 ----------
- 4 files changed, 43 deletions(-)
+ drivers/scsi/ch.c         |    1 +
+ drivers/scsi/scsi_sysfs.c |   23 +++++++++++++++++++++++
+ drivers/scsi/sd.c         |    4 ++++
+ drivers/scsi/sr.c         |    2 ++
+ drivers/scsi/st.c         |    1 +
+ 5 files changed, 31 insertions(+)
 
-diff -puN Documentation/scsi/ncr53c8xx.txt~remove-some-unused-scsi-related-kernel-config-variables Documentation/scsi/ncr53c8xx.txt
---- a/Documentation/scsi/ncr53c8xx.txt~remove-some-unused-scsi-related-kernel-config-variables
-+++ a/Documentation/scsi/ncr53c8xx.txt
-@@ -562,11 +562,6 @@ if only one has a flaw for some SCSI fea
- support by the driver of this feature at linux start-up and enable
- this feature after boot-up only for devices that support it safely.
+diff -puN drivers/scsi/ch.c~scsi-newstyle-hotplug-coldplug-support drivers/scsi/ch.c
+--- a/drivers/scsi/ch.c~scsi-newstyle-hotplug-coldplug-support
++++ a/drivers/scsi/ch.c
+@@ -38,6 +38,7 @@ MODULE_DESCRIPTION("device driver for sc
+ MODULE_AUTHOR("Gerd Knorr <kraxel@bytesex.org>");
+ MODULE_LICENSE("GPL");
+ MODULE_ALIAS_CHARDEV_MAJOR(SCSI_CHANGER_MAJOR);
++MODULE_ALIAS("scsi:type-08");		/* TYPE_MEDIUM_CHANGER */
  
--CONFIG_SCSI_NCR53C8XX_PROFILE_SUPPORT  (default answer: n)
--    This option must be set for profiling information to be gathered 
--    and printed out through the proc file system. This features may 
--    impact performances.
--
- CONFIG_SCSI_NCR53C8XX_IOMAPPED       (default answer: n)
-     Answer "y" if you suspect your mother board to not allow memory mapped I/O.
-     May slow down performance a little.  This option is required by
-diff -puN drivers/scsi/Kconfig~remove-some-unused-scsi-related-kernel-config-variables drivers/scsi/Kconfig
---- a/drivers/scsi/Kconfig~remove-some-unused-scsi-related-kernel-config-variables
-+++ a/drivers/scsi/Kconfig
-@@ -1200,17 +1200,6 @@ config SCSI_NCR53C8XX_SYNC
- 	  There is no safe option other than using good cabling, right
- 	  terminations and SCSI conformant devices.
+ static int init = 1;
+ module_param(init, int, 0444);
+diff -puN drivers/scsi/scsi_sysfs.c~scsi-newstyle-hotplug-coldplug-support drivers/scsi/scsi_sysfs.c
+--- a/drivers/scsi/scsi_sysfs.c~scsi-newstyle-hotplug-coldplug-support
++++ a/drivers/scsi/scsi_sysfs.c
+@@ -277,6 +277,18 @@ static int scsi_bus_match(struct device 
+ 	return (sdp->inq_periph_qual == SCSI_INQ_PQ_CON)? 1: 0;
+ }
  
--config SCSI_NCR53C8XX_PROFILE
--	bool "enable profiling"
--	depends on SCSI_ZALON || SCSI_NCR_Q720
--	help
--	  This option allows you to enable profiling information gathering.
--	  These statistics are not very accurate due to the low frequency
--	  of the kernel clock (100 Hz on i386) and have performance impact
--	  on systems that use very fast devices.
--
--	  The normal answer therefore is N.
--
- config SCSI_NCR53C8XX_NO_DISCONNECT
- 	bool "not allow targets to disconnect"
- 	depends on (SCSI_ZALON || SCSI_NCR_Q720) && SCSI_NCR53C8XX_DEFAULT_TAGS=0
-@@ -1340,11 +1329,6 @@ config SCSI_SIM710
++/* for hotplug support: modprobe $MODALIAS */
++static int scsi_uevent(struct device *dev, char **envp, int num_envp,
++		char *buffer, int buffer_size)
++{
++	struct scsi_device *sdp = to_scsi_device(dev);
++
++	envp[0] = buffer;
++	snprintf(buffer, buffer_size, "MODALIAS=scsi:type-%02x", (u8)sdp->type);
++	envp[1] = NULL;
++	return 0;
++}
++
+ static int scsi_bus_suspend(struct device * dev, pm_message_t state)
+ {
+ 	struct device_driver *drv = dev->driver;
+@@ -332,6 +344,7 @@ static int scsi_bus_resume(struct device
+ struct bus_type scsi_bus_type = {
+         .name		= "scsi",
+         .match		= scsi_bus_match,
++	.uevent		= scsi_uevent,
+ 	.suspend	= scsi_bus_suspend,
+ 	.resume		= scsi_bus_resume,
+ };
+@@ -571,6 +584,15 @@ show_sdev_iostat(iorequest_cnt);
+ show_sdev_iostat(iodone_cnt);
+ show_sdev_iostat(ioerr_cnt);
  
- 	  It currently supports Compaq EISA cards and NCR MCA cards
++/* for coldplug support: modprobe $(cat .../modalias) */
++static ssize_t
++show_modalias(struct device *dev, struct device_attribute *attr, char *buf)
++{
++	struct scsi_device *sdev = to_scsi_device(dev);
++
++	return snprintf(buf, 20, "scsi:type-%02x\n", (u8)sdev->type);
++}
++static DEVICE_ATTR(modalias, S_IRUGO, show_modalias, NULL);
  
--config 53C700_IO_MAPPED
--	bool
--	depends on SCSI_SIM710
--	default y
--
- config SCSI_SYM53C416
- 	tristate "Symbios 53c416 SCSI support"
- 	depends on ISA && SCSI
-diff -puN drivers/scsi/aic7xxx/Kconfig.aic79xx~remove-some-unused-scsi-related-kernel-config-variables drivers/scsi/aic7xxx/Kconfig.aic79xx
---- a/drivers/scsi/aic7xxx/Kconfig.aic79xx~remove-some-unused-scsi-related-kernel-config-variables
-+++ a/drivers/scsi/aic7xxx/Kconfig.aic79xx
-@@ -57,18 +57,6 @@ config AIC79XX_BUILD_FIRMWARE
- 	or modify the assembler Makefile or the files it includes if your
- 	build environment is different than that of the author.
+ /* Default template for device attributes.  May NOT be modified */
+ static struct device_attribute *scsi_sysfs_sdev_attrs[] = {
+@@ -590,6 +612,7 @@ static struct device_attribute *scsi_sys
+ 	&dev_attr_iorequest_cnt,
+ 	&dev_attr_iodone_cnt,
+ 	&dev_attr_ioerr_cnt,
++	&dev_attr_modalias,
+ 	NULL
+ };
  
--config AIC79XX_ENABLE_RD_STRM
--	bool "Enable Read Streaming for All Targets"
--	depends on SCSI_AIC79XX
--	default n
--	help
--	Read Streaming is a U320 protocol option that should enhance
--	performance.  Early U320 drive firmware actually performs slower
--	with read streaming enabled so it is disabled by default.  Read
--	Streaming can be configured in much the same way as tagged queueing
--	using the "rd_strm" command line option.  See
--	drivers/scsi/aic7xxx/README.aic79xx for details.
--
- config AIC79XX_DEBUG_ENABLE
- 	bool "Compile in Debugging Code"
- 	depends on SCSI_AIC79XX
-diff -puN drivers/scsi/aic7xxx/Kconfig.aic7xxx~remove-some-unused-scsi-related-kernel-config-variables drivers/scsi/aic7xxx/Kconfig.aic7xxx
---- a/drivers/scsi/aic7xxx/Kconfig.aic7xxx~remove-some-unused-scsi-related-kernel-config-variables
-+++ a/drivers/scsi/aic7xxx/Kconfig.aic7xxx
-@@ -50,16 +50,6 @@ config AIC7XXX_RESET_DELAY_MS
+diff -puN drivers/scsi/sd.c~scsi-newstyle-hotplug-coldplug-support drivers/scsi/sd.c
+--- a/drivers/scsi/sd.c~scsi-newstyle-hotplug-coldplug-support
++++ a/drivers/scsi/sd.c
+@@ -241,6 +241,10 @@ static struct scsi_driver sd_template = 
+ 	.issue_flush		= sd_issue_flush,
+ };
  
- 	Default: 5000 (5 seconds)
++MODULE_ALIAS("scsi:type-00");		/* TYPE_DISK */
++MODULE_ALIAS("scsi:type-07");		/* TYPE_MOD */
++MODULE_ALIAS("scsi:type-0e");		/* TYPE_RBC */
++
+ /*
+  * Device no to disk mapping:
+  * 
+diff -puN drivers/scsi/sr.c~scsi-newstyle-hotplug-coldplug-support drivers/scsi/sr.c
+--- a/drivers/scsi/sr.c~scsi-newstyle-hotplug-coldplug-support
++++ a/drivers/scsi/sr.c
+@@ -62,6 +62,8 @@
+ MODULE_DESCRIPTION("SCSI cdrom (sr) driver");
+ MODULE_LICENSE("GPL");
+ MODULE_ALIAS_BLOCKDEV_MAJOR(SCSI_CDROM_MAJOR);
++MODULE_ALIAS("scsi:type-04");		/* TYPE_WORM */
++MODULE_ALIAS("scsi:type-05");		/* TYPE_ROM */
  
--config AIC7XXX_PROBE_EISA_VL
--	bool "Probe for EISA and VL AIC7XXX Adapters"
--	depends on SCSI_AIC7XXX && EISA
--	help
--	Probe for EISA and VLB Aic7xxx controllers.  In many newer systems,
--	the invasive probes necessary to detect these controllers can cause
--	other devices to fail.  For this reason, the non-PCI probe code is
--	disabled by default.  The current value of this option can be "toggled"
--	via the no_probe kernel command line option.
--
- config AIC7XXX_BUILD_FIRMWARE
- 	bool "Build Adapter Firmware with Kernel Build"
- 	depends on SCSI_AIC7XXX && !PREVENT_FIRMWARE_BUILD
+ #define SR_DISKS	256
+ 
+diff -puN drivers/scsi/st.c~scsi-newstyle-hotplug-coldplug-support drivers/scsi/st.c
+--- a/drivers/scsi/st.c~scsi-newstyle-hotplug-coldplug-support
++++ a/drivers/scsi/st.c
+@@ -89,6 +89,7 @@ MODULE_AUTHOR("Kai Makisara");
+ MODULE_DESCRIPTION("SCSI tape (st) driver");
+ MODULE_LICENSE("GPL");
+ MODULE_ALIAS_CHARDEV_MAJOR(SCSI_TAPE_MAJOR);
++MODULE_ALIAS("scsi:type-01");		/* TYPE_TAPE */
+ 
+ /* Set 'perm' (4th argument) to 0 to disable module_param's definition
+  * of sysfs parameters (which module_param doesn't yet support).
 _
