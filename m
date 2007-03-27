@@ -1,89 +1,54 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: [PATCH] aacraid: resolve compiler warnings using ptrdiff_t
-Date: Tue, 27 Mar 2007 15:07:28 -0400
-Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF017A9910@otce2k301.adaptec.com>
-References: <AE4F746F2AECFC4DA4AADD66A1DFEF017A9859@otce2k301.adaptec.com>
+From: Bernhard Walle <bwalle@suse.de>
+Subject: [PATCH] [qla2xxx] Remove duplicate pci_disable_device() call
+Date: Wed, 28 Mar 2007 00:49:49 +0200
+Message-ID: <20070327224949.GB17095@strauss.suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C770A3.29D83F17"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([216.52.22.36]:51440 "EHLO
-	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934190AbXC0THa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Mar 2007 15:07:30 -0400
-Received: from otce2k301.adaptec.com (otce2k301.adaptec.com [10.12.1.97])
-	by mail-gw3.adaptec.com (Spam Firewall) with ESMTP id 61F0F1B64B3
-	for <linux-scsi@vger.kernel.org>; Tue, 27 Mar 2007 12:07:29 -0700 (PDT)
-Content-class: urn:content-classes:message
-In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF017A9859@otce2k301.adaptec.com>
+Received: from ns.suse.de ([195.135.220.2]:60192 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934267AbXC0Wtv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Mar 2007 18:49:51 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-This is a multi-part message in MIME format.
+[PATCH] [qla2xxx] Remove duplicate pci_disable_device() call
 
-------_=_NextPart_001_01C770A3.29D83F17
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+On the path qla2x00_probe_one() -> probe_failed -> qla2x00_free_device(),
+pci_disable_device() is executed twice, once in qla2x00_free_device()
+and once in qla2x00_probe_one().
 
-Unsigned long is not always the same size as a pointer, namely on 32 bit
-systems with 64 bit address space. Ptrdiff_t is the same size as a
-pointer in all configurations. By using ptrdiff_t we can mitigate the
-warning messages on these configurations. There should be no side
-effects of this patch.
+This patch removes the unnecessary call.
 
-ObligatoryDisclaimer: Please accept my condolences regarding Outlook's
-handling of patches attachments.
 
-This attached patch is against current scsi-misc-2.6
+Signed-off-by: Bernhard Walle <bwalle@suse.de>
 
-Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
+---
+ drivers/scsi/qla2xxx/qla_os.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-------_=_NextPart_001_01C770A3.29D83F17
-Content-Type: application/octet-stream;
-	name="aacraid_ptrdiff.patch"
-Content-Transfer-Encoding: base64
-Content-Description: aacraid_ptrdiff.patch
-Content-Disposition: attachment;
-	filename="aacraid_ptrdiff.patch"
+Index: linux-2.6.21-rc5/drivers/scsi/qla2xxx/qla_os.c
+===================================================================
+--- linux-2.6.21-rc5.orig/drivers/scsi/qla2xxx/qla_os.c
++++ linux-2.6.21-rc5/drivers/scsi/qla2xxx/qla_os.c
+@@ -1705,6 +1705,7 @@ qla2x00_remove_one(struct pci_dev *pdev)
+ 
+ 	scsi_host_put(ha->host);
+ 
++	pci_disable_device(pdev);
+ 	pci_set_drvdata(pdev, NULL);
+ }
+ 
+@@ -1747,8 +1748,6 @@ qla2x00_free_device(scsi_qla_host_t *ha)
+ 	if (ha->iobase)
+ 		iounmap(ha->iobase);
+ 	pci_release_regions(ha->pdev);
+-
+-	pci_disable_device(ha->pdev);
+ }
+ 
+ static inline void
 
-ZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9jb21tY3RybC5jIGIvZHJpdmVycy9zY3Np
-L2FhY3JhaWQvY29tbWN0cmwuYwotLS0gYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9jb21tY3RybC5j
-CTIwMDctMDMtMjcgMTQ6NTE6MTEuNjcwMTI0NzE5IC0wNDAwCisrKyBiL2RyaXZlcnMvc2NzaS9h
-YWNyYWlkL2NvbW1jdHJsLmMJMjAwNy0wMy0yNyAxNTowMDo1My4yODY4ODI3MTkgLTA0MDAKQEAg
-LTM5MSwxMCArMzkxLDggQEAKIAkJLyoKIAkJICoJRXh0cmFjdCB0aGUgZmliY3R4IGZyb20gdGhl
-IGlucHV0IHBhcmFtZXRlcnMKIAkJICovCi0JCWlmIChmaWJjdHgtPnVuaXF1ZSA9PSAodTMyKSh1
-bnNpZ25lZCBsb25nKWFyZykgeyAgIAotCQkJLyogV2UgZm91bmQgYSB3aW5uZXIgKi8KKwkJaWYg
-KGZpYmN0eC0+dW5pcXVlID09ICh1MzIpKHB0cmRpZmZfdClhcmcpIC8qIFdlIGZvdW5kIGEgd2lu
-bmVyICovCiAJCQlicmVhazsKLQkJfQogCQllbnRyeSA9IGVudHJ5LT5uZXh0OwogCQlmaWJjdHgg
-PSBOVUxMOwogCX0KT25seSBpbiBiOiBjb21tY3RybC5jLm9yaWcKZGlmZiAtcnUgYS9kcml2ZXJz
-L3Njc2kvYWFjcmFpZC9jb21taW5pdC5jIGIvZHJpdmVycy9zY3NpL2FhY3JhaWQvY29tbWluaXQu
-YwotLS0gYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9jb21taW5pdC5jCTIwMDctMDMtMjcgMTQ6NTE6
-MTEuNjcwMTI0NzE5IC0wNDAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2NvbW1pbml0LmMJ
-MjAwNy0wMy0yNyAxNDo1OTozNS4wMTk3NDA4NDQgLTA0MDAKQEAgLTUsNyArNSw3IEBACiAgKiBi
-YXNlZCBvbiB0aGUgb2xkIGFhY3JhaWQgZHJpdmVyIHRoYXQgaXMuLgogICogQWRhcHRlYyBhYWNy
-YWlkIGRldmljZSBkcml2ZXIgZm9yIExpbnV4LgogICoKLSAqIENvcHlyaWdodCAoYykgMjAwMCBB
-ZGFwdGVjLCBJbmMuIChhYWNyYWlkQGFkYXB0ZWMuY29tKQorICogQ29weXJpZ2h0IChjKSAyMDAw
-LTIwMDcgQWRhcHRlYywgSW5jLiAoYWFjcmFpZEBhZGFwdGVjLmNvbSkKICAqCiAgKiBUaGlzIHBy
-b2dyYW0gaXMgZnJlZSBzb2Z0d2FyZTsgeW91IGNhbiByZWRpc3RyaWJ1dGUgaXQgYW5kL29yIG1v
-ZGlmeQogICogaXQgdW5kZXIgdGhlIHRlcm1zIG9mIHRoZSBHTlUgR2VuZXJhbCBQdWJsaWMgTGlj
-ZW5zZSBhcyBwdWJsaXNoZWQgYnkKQEAgLTExMCw3ICsxMTAsNyBAQAogCS8qCiAJICoJQWxpZ24g
-dGhlIGJlZ2lubmluZyBvZiBIZWFkZXJzIHRvIGNvbW1hbGlnbgogCSAqLwotCWFsaWduID0gKGNv
-bW1hbGlnbiAtICgodW5zaWduZWQgbG9uZykoYmFzZSkgJiAoY29tbWFsaWduIC0gMSkpKTsKKwlh
-bGlnbiA9IChjb21tYWxpZ24gLSAoKHB0cmRpZmZfdCkoYmFzZSkgJiAoY29tbWFsaWduIC0gMSkp
-KTsKIAliYXNlID0gYmFzZSArIGFsaWduOwogCXBoeXMgPSBwaHlzICsgYWxpZ247CiAJLyoKZGlm
-ZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9kcGNzdXAuYyBiL2RyaXZlcnMvc2NzaS9hYWNy
-YWlkL2RwY3N1cC5jCi0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2RwY3N1cC5jCTIwMDctMDMt
-MjcgMTQ6NTE6MTEuNjcxMTI0NTkzIC0wNDAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2Rw
-Y3N1cC5jCTIwMDctMDMtMjcgMTQ6NTk6MzUuMDE5NzQwODQ0IC0wNDAwCkBAIC0yNTYsNyArMjU2
-LDggQEAKIAkJCXJldHVybiAxOwogCQl9CiAJCW1lbXNldChod19maWIsIDAsIHNpemVvZihzdHJ1
-Y3QgaHdfZmliKSk7Ci0JCW1lbWNweShod19maWIsIChzdHJ1Y3QgaHdfZmliICopKCgodW5zaWdu
-ZWQgbG9uZykoZGV2LT5yZWdzLnNhKSkgKyAoaW5kZXggJiB+MHgwMDAwMDAwMkwpKSwgc2l6ZW9m
-KHN0cnVjdCBod19maWIpKTsKKwkJbWVtY3B5KGh3X2ZpYiwgKHN0cnVjdCBod19maWIgKikoKChw
-dHJkaWZmX3QpKGRldi0+cmVncy5zYSkpICsKKwkJICAoaW5kZXggJiB+MHgwMDAwMDAwMkwpKSwg
-c2l6ZW9mKHN0cnVjdCBod19maWIpKTsKIAkJbWVtc2V0KGZpYiwgMCwgc2l6ZW9mKHN0cnVjdCBm
-aWIpKTsKIAkJSU5JVF9MSVNUX0hFQUQoJmZpYi0+ZmlibGluayk7CiAJCWZpYi0+dHlwZSA9IEZT
-QUZTX05UQ19GSUJfQ09OVEVYVDsK
-
-------_=_NextPart_001_01C770A3.29D83F17--
