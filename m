@@ -1,57 +1,71 @@
 From: akpm@linux-foundation.org
-Subject: [patch 05/28] pci_module_init() convertion in tmscsim.c
-Date: Mon, 26 Mar 2007 21:59:24 -0800
-Message-ID: <200703270559.l2R5xOsW008630@shell0.pdx.osdl.net>
+Subject: [patch 10/28] drivers/scsi/mca_53c9x.c : save_flags()/cli() removal
+Date: Mon, 26 Mar 2007 21:59:28 -0800
+Message-ID: <200703270559.l2R5xSkJ008646@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:40865 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.24]:40878 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934063AbXC0F7j (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Mar 2007 01:59:39 -0400
+	id S934068AbXC0F7l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Mar 2007 01:59:41 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, henne@nachtinwdheim.de, alan@redhat.com, henne@nachtwindheim.de
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, amol@verismonetworks.com, alan@lxorguk.ukuu.org.uk
 
-From: Henrik Kretzschmar <henne@nachtinwdheim.de>
+From: Amol Lad <amol@verismonetworks.com>
 
-pci_module_init() convertion in tmscsim.c
+Replaced save_flags()/cli() with spin_lock alternatives
 
-Signed-off-by: Henrik Kretzschmar <henne@nachtwindheim.de>
-Acked-by: Alan Cox <alan@redhat.com>
+[akpm@osdl.org: no longer BROKEN_ON_SMP]
+Signed-off-by: Amol Lad <amol@verismonetworks.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/tmscsim.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/scsi/mca_53c9x.c |   12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
 
-diff -puN drivers/scsi/tmscsim.c~pci_module_init-convertion-in-tmscsimc drivers/scsi/tmscsim.c
---- a/drivers/scsi/tmscsim.c~pci_module_init-convertion-in-tmscsimc
-+++ a/drivers/scsi/tmscsim.c
-@@ -177,6 +177,8 @@
-  *	2.1d  04/05/27	GL	Moved setting of scan_devices to	*
-  *				slave_alloc/_configure/_destroy, as	*
-  *				suggested by CH.			*
-+ *	2.1e  06/09/04	HENKR	change pci_module_init() to		*
-+ *				pci_register_driver()			*
-  ***********************************************************************/
+diff -puN drivers/scsi/mca_53c9x.c~drivers-scsi-mca_53c9xc-save_flags-cli-removal drivers/scsi/mca_53c9x.c
+--- a/drivers/scsi/mca_53c9x.c~drivers-scsi-mca_53c9xc-save_flags-cli-removal
++++ a/drivers/scsi/mca_53c9x.c
+@@ -341,9 +341,7 @@ static void dma_init_read(struct NCR_ESP
+ {
+ 	unsigned long flags;
  
- /* DEBUG options */
-@@ -244,7 +246,7 @@
+-
+-	save_flags(flags);
+-	cli();
++	spin_lock_irqsave(esp->ehost->host_lock, flags);
  
+ 	mca_disable_dma(esp->dma);
+ 	mca_set_dma_mode(esp->dma, MCA_DMA_MODE_XFER | MCA_DMA_MODE_16 |
+@@ -352,16 +350,14 @@ static void dma_init_read(struct NCR_ESP
+ 	mca_set_dma_count(esp->dma, length / 2); /* !!! */
+ 	mca_enable_dma(esp->dma);
  
- #define DC390_BANNER "Tekram DC390/AM53C974"
--#define DC390_VERSION "2.1d 2004-05-27"
-+#define DC390_VERSION "2.1e 2006-09-04"
- 
- #define PCI_DEVICE_ID_AMD53C974 	PCI_DEVICE_ID_AMD_SCSI
- 
-@@ -2680,7 +2682,7 @@ static int __init dc390_module_init(void
- 		printk (KERN_INFO "DC390: Using safe settings.\n");
- 	}
- 
--	return pci_module_init(&dc390_driver);
-+	return pci_register_driver(&dc390_driver);
+-	restore_flags(flags);
++	spin_unlock_irqrestore(esp->ehost->host_lock, flags);
  }
  
- static void __exit dc390_module_exit(void)
+ static void dma_init_write(struct NCR_ESP *esp, __u32 addr, int length)
+ {
+ 	unsigned long flags;
+ 
+-
+-	save_flags(flags);
+-	cli();
++	spin_lock_irqsave(esp->ehost->host_lock, flags);
+ 
+ 	mca_disable_dma(esp->dma);
+ 	mca_set_dma_mode(esp->dma, MCA_DMA_MODE_XFER | MCA_DMA_MODE_WRITE |
+@@ -370,7 +366,7 @@ static void dma_init_write(struct NCR_ES
+ 	mca_set_dma_count(esp->dma, length / 2); /* !!! */
+ 	mca_enable_dma(esp->dma);
+ 
+-	restore_flags(flags);
++	spin_unlock_irqrestore(esp->ehost->host_lock, flags);
+ }
+ 
+ static void dma_ints_off(struct NCR_ESP *esp)
 _
