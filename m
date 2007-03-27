@@ -1,67 +1,47 @@
 From: akpm@linux-foundation.org
-Subject: [patch 27/28] fdomain.c: get rid of unused stuff
-Date: Mon, 26 Mar 2007 21:59:47 -0800
-Message-ID: <200703270559.l2R5xlt7008715@shell0.pdx.osdl.net>
+Subject: [patch 12/28] sym53c8xx_2 claims cpqarray device
+Date: Mon, 26 Mar 2007 21:59:30 -0800
+Message-ID: <200703270559.l2R5xU3S008652@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:40927 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.24]:40915 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964888AbXC0F77 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Mar 2007 01:59:59 -0400
+	id S934080AbXC0F7v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Mar 2007 01:59:51 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, parag.warudkar@gmail.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, coldwell@redhat.com, willy@debian.org
 
-From: Parag Warudkar <parag.warudkar@gmail.com>
+From: Chip Coldwell <coldwell@redhat.com>
 
-fdomain.c uses the below stuff only if PCMCIA is not defined.  This causes
-unused variables to be defined when PCMCIA is not defined.  Wrap variables
-and functions around #ifndef PCMCIA appropriately to avoid this.
+Apropos this thread
 
-4 less compiler warnings.
+http://marc.theaimsgroup.com/?l=linux-scsi&m=115591706804045&w=2
 
-Signed-off-by: Parag Warudkar <parag.warudkar@gmail.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
+which led to this patch
+
+http://www.kernel.org/git/?p=linux/kernel/git/jejb/scsi-rc-fixes-2.6.git;a=commit;h=b2b3c121076961333977f485f0d54c22121df920
+
+do we not also need the following patch, nine lines lower in the same file?
+
+Signed-off-by: Chip Coldwell <coldwell@redhat.com>
+Cc: Matthew Wilcox <willy@debian.org>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/fdomain.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/scsi/sym53c8xx_2/sym_glue.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/fdomain.c~fdomainc-get-rid-of-unused-stuff drivers/scsi/fdomain.c
---- a/drivers/scsi/fdomain.c~fdomainc-get-rid-of-unused-stuff
-+++ a/drivers/scsi/fdomain.c
-@@ -410,6 +410,7 @@ static irqreturn_t       do_fdomain_16x0
- static char * fdomain = NULL;
- module_param(fdomain, charp, 0);
- 
-+#ifndef PCMCIA
- static unsigned long addresses[] = {
-    0xc8000,
-    0xca000,
-@@ -502,6 +503,7 @@ static struct signature {
- };
- 
- #define SIGNATURE_COUNT ARRAY_SIZE(signatures)
-+#endif /* ifndef PCMCIA */
- 
- static void print_banner( struct Scsi_Host *shpnt )
- {
-@@ -646,7 +648,7 @@ static int fdomain_test_loopback( void )
-    Sometimes it is possible to use the computer's BIOS setup screen to
-    configure a PCI system so that one of these IRQs will be used by the
-    Future Domain card. */
--
-+#ifndef PCMCIA
- static int fdomain_get_irq( int base )
- {
-    int options = inb(base + Configuration1);
-@@ -664,6 +666,7 @@ static int fdomain_get_irq( int base )
-    	return 0;
-    return ints[(options & 0x0e) >> 1];
- }
-+#endif
- 
- static int fdomain_isa_detect( int *irq, int *iobase )
- {
+diff -puN drivers/scsi/sym53c8xx_2/sym_glue.c~sym53c8xx_2-claims-cpqarray-device drivers/scsi/sym53c8xx_2/sym_glue.c
+--- a/drivers/scsi/sym53c8xx_2/sym_glue.c~sym53c8xx_2-claims-cpqarray-device
++++ a/drivers/scsi/sym53c8xx_2/sym_glue.c
+@@ -2094,7 +2094,7 @@ static struct pci_device_id sym2_id_tabl
+ 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_NCR_53C875,
+ 	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0UL },
+ 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_NCR_53C1510,
+-	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0UL }, /* new */
++	  PCI_ANY_ID, PCI_ANY_ID,  PCI_CLASS_STORAGE_SCSI<<8,  0xffff00, 0UL }, /* new */
+ 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_53C895A,
+ 	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0UL },
+ 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_53C875A,
 _
