@@ -1,47 +1,57 @@
 From: akpm@linux-foundation.org
-Subject: [patch 12/28] sym53c8xx_2 claims cpqarray device
-Date: Mon, 26 Mar 2007 21:59:30 -0800
-Message-ID: <200703270559.l2R5xU3S008652@shell0.pdx.osdl.net>
+Subject: [patch 05/28] pci_module_init() convertion in tmscsim.c
+Date: Mon, 26 Mar 2007 21:59:24 -0800
+Message-ID: <200703270559.l2R5xOsW008630@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:40915 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.24]:40865 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934080AbXC0F7v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Mar 2007 01:59:51 -0400
+	id S934063AbXC0F7j (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Mar 2007 01:59:39 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, coldwell@redhat.com, willy@debian.org
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, henne@nachtinwdheim.de, alan@redhat.com, henne@nachtwindheim.de
 
-From: Chip Coldwell <coldwell@redhat.com>
+From: Henrik Kretzschmar <henne@nachtinwdheim.de>
 
-Apropos this thread
+pci_module_init() convertion in tmscsim.c
 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=115591706804045&w=2
-
-which led to this patch
-
-http://www.kernel.org/git/?p=linux/kernel/git/jejb/scsi-rc-fixes-2.6.git;a=commit;h=b2b3c121076961333977f485f0d54c22121df920
-
-do we not also need the following patch, nine lines lower in the same file?
-
-Signed-off-by: Chip Coldwell <coldwell@redhat.com>
-Cc: Matthew Wilcox <willy@debian.org>
+Signed-off-by: Henrik Kretzschmar <henne@nachtwindheim.de>
+Acked-by: Alan Cox <alan@redhat.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/sym53c8xx_2/sym_glue.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/tmscsim.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff -puN drivers/scsi/sym53c8xx_2/sym_glue.c~sym53c8xx_2-claims-cpqarray-device drivers/scsi/sym53c8xx_2/sym_glue.c
---- a/drivers/scsi/sym53c8xx_2/sym_glue.c~sym53c8xx_2-claims-cpqarray-device
-+++ a/drivers/scsi/sym53c8xx_2/sym_glue.c
-@@ -2094,7 +2094,7 @@ static struct pci_device_id sym2_id_tabl
- 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_NCR_53C875,
- 	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0UL },
- 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_NCR_53C1510,
--	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0UL }, /* new */
-+	  PCI_ANY_ID, PCI_ANY_ID,  PCI_CLASS_STORAGE_SCSI<<8,  0xffff00, 0UL }, /* new */
- 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_53C895A,
- 	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0UL },
- 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_53C875A,
+diff -puN drivers/scsi/tmscsim.c~pci_module_init-convertion-in-tmscsimc drivers/scsi/tmscsim.c
+--- a/drivers/scsi/tmscsim.c~pci_module_init-convertion-in-tmscsimc
++++ a/drivers/scsi/tmscsim.c
+@@ -177,6 +177,8 @@
+  *	2.1d  04/05/27	GL	Moved setting of scan_devices to	*
+  *				slave_alloc/_configure/_destroy, as	*
+  *				suggested by CH.			*
++ *	2.1e  06/09/04	HENKR	change pci_module_init() to		*
++ *				pci_register_driver()			*
+  ***********************************************************************/
+ 
+ /* DEBUG options */
+@@ -244,7 +246,7 @@
+ 
+ 
+ #define DC390_BANNER "Tekram DC390/AM53C974"
+-#define DC390_VERSION "2.1d 2004-05-27"
++#define DC390_VERSION "2.1e 2006-09-04"
+ 
+ #define PCI_DEVICE_ID_AMD53C974 	PCI_DEVICE_ID_AMD_SCSI
+ 
+@@ -2680,7 +2682,7 @@ static int __init dc390_module_init(void
+ 		printk (KERN_INFO "DC390: Using safe settings.\n");
+ 	}
+ 
+-	return pci_module_init(&dc390_driver);
++	return pci_register_driver(&dc390_driver);
+ }
+ 
+ static void __exit dc390_module_exit(void)
 _
