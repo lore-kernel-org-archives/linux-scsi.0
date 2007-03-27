@@ -1,84 +1,97 @@
 From: akpm@linux-foundation.org
-Subject: [patch 21/28] cleanup variable usage in mesh interrupt handler
-Date: Mon, 26 Mar 2007 21:59:37 -0800
-Message-ID: <200703270559.l2R5xbbi008682@shell0.pdx.osdl.net>
+Subject: [patch 23/28] mpt-fusion: reprogram spi state after host reset
+Date: Mon, 26 Mar 2007 21:59:39 -0800
+Message-ID: <200703270559.l2R5xdlY008690@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:40881 "EHLO smtp.osdl.org"
+Received: from smtp.osdl.org ([65.172.181.24]:40890 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934071AbXC0F7l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Mar 2007 01:59:41 -0400
+	id S934072AbXC0F7n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Mar 2007 01:59:43 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, olaf@aepfle.de
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, eric.moore@lsi.com, Eric.Moore@lsi.com, markh@linux-foundation.org
 
-From: Olaf Hering <olaf@aepfle.de>
+From: Eric Moore <eric.moore@lsi.com>
 
-_ convert void* to struct mesh_state*
+After host reset, the device are programmed to default asyn narrow nego. 
+We need to reprogram the parameter back to previous values.  If the host
+reset is called as a result of spi_dv_device() commands timing out, its
+possible to get into an infinite loop of dv to host reset.  This will
+prevent that case, as we merely program old values.  If host reset is
+called outside context of domain validation, then we can call
+spi_dv_device.  Please apply.
 
-- remove unused irq argument from mesh_interrupt()
-
-Signed-off-by: Olaf Hering <olaf@aepfle.de>
+Signed-off-by: Eric Moore <Eric.Moore@lsi.com>
+Cc: Mark Haverkamp <markh@linux-foundation.org>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/mesh.c |   14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ drivers/message/fusion/mptbase.h |    1 +
+ drivers/message/fusion/mptspi.c  |   23 +++++++++++++++++++++--
+ 2 files changed, 22 insertions(+), 2 deletions(-)
 
-diff -puN drivers/scsi/mesh.c~cleanup-variable-usage-in-mesh-interrupt-handler drivers/scsi/mesh.c
---- a/drivers/scsi/mesh.c~cleanup-variable-usage-in-mesh-interrupt-handler
-+++ a/drivers/scsi/mesh.c
-@@ -185,7 +185,7 @@ struct mesh_state {
-  * Driver is too messy, we need a few prototypes...
-  */
- static void mesh_done(struct mesh_state *ms, int start_next);
--static void mesh_interrupt(int irq, void *dev_id);
-+static void mesh_interrupt(struct mesh_state *ms);
- static void cmd_complete(struct mesh_state *ms);
- static void set_dma_cmds(struct mesh_state *ms, struct scsi_cmnd *cmd);
- static void halt_dma(struct mesh_state *ms);
-@@ -466,7 +466,7 @@ static void mesh_start_cmd(struct mesh_s
- 				dlog(ms, "intr b4 arb, intr/exc/err/fc=%.8x",
- 				     MKWORD(mr->interrupt, mr->exception,
- 					    mr->error, mr->fifo_count));
--				mesh_interrupt(0, (void *)ms);
-+				mesh_interrupt(ms);
- 				if (ms->phase != arbitrating)
- 					return;
- 			}
-@@ -504,7 +504,7 @@ static void mesh_start_cmd(struct mesh_s
- 		dlog(ms, "intr after disresel, intr/exc/err/fc=%.8x",
- 		     MKWORD(mr->interrupt, mr->exception,
- 			    mr->error, mr->fifo_count));
--		mesh_interrupt(0, (void *)ms);
-+		mesh_interrupt(ms);
- 		if (ms->phase != arbitrating)
- 			return;
- 		dlog(ms, "after intr after disresel, intr/exc/err/fc=%.8x",
-@@ -1018,10 +1018,11 @@ static void handle_reset(struct mesh_sta
- static irqreturn_t do_mesh_interrupt(int irq, void *dev_id)
- {
- 	unsigned long flags;
--	struct Scsi_Host *dev = ((struct mesh_state *)dev_id)->host;
-+	struct mesh_state *ms = dev_id;
-+	struct Scsi_Host *dev = ms->host;
- 	
- 	spin_lock_irqsave(dev->host_lock, flags);
--	mesh_interrupt(irq, dev_id);
-+	mesh_interrupt(ms);
- 	spin_unlock_irqrestore(dev->host_lock, flags);
- 	return IRQ_HANDLED;
- }
-@@ -1661,9 +1662,8 @@ static int mesh_queue(struct scsi_cmnd *
-  * handler (do_mesh_interrupt) or by other functions in
-  * exceptional circumstances
-  */
--static void mesh_interrupt(int irq, void *dev_id)
-+static void mesh_interrupt(struct mesh_state *ms)
- {
--	struct mesh_state *ms = (struct mesh_state *) dev_id;
- 	volatile struct mesh_regs __iomem *mr = ms->mesh;
- 	int intr;
+diff -puN drivers/message/fusion/mptbase.h~scsi-spi-transport-scsi-domain-validation-after-reset drivers/message/fusion/mptbase.h
+--- a/drivers/message/fusion/mptbase.h~scsi-spi-transport-scsi-domain-validation-after-reset
++++ a/drivers/message/fusion/mptbase.h
+@@ -994,6 +994,7 @@ typedef struct _MPT_SCSI_HOST {
+ 	int			  scandv_wait_done;
+ 	long			  last_queue_full;
+ 	u16			  tm_iocstatus;
++	u16			  spi_pending;
+ 	struct list_head	  target_reset_list;
+ } MPT_SCSI_HOST;
  
+diff -puN drivers/message/fusion/mptspi.c~scsi-spi-transport-scsi-domain-validation-after-reset drivers/message/fusion/mptspi.c
+--- a/drivers/message/fusion/mptspi.c~scsi-spi-transport-scsi-domain-validation-after-reset
++++ a/drivers/message/fusion/mptspi.c
+@@ -676,7 +676,9 @@ static void mptspi_dv_device(struct _MPT
+ 		return;
+ 	}
+ 
++	hd->spi_pending |= (1 << sdev->id);
+ 	spi_dv_device(sdev);
++	hd->spi_pending &= ~(1 << sdev->id);
+ 
+ 	if (sdev->channel == 1 &&
+ 	    mptscsih_quiesce_raid(hd, 0, vtarget->channel, vtarget->id) < 0)
+@@ -1202,11 +1204,27 @@ mptspi_dv_renegotiate_work(struct work_s
+ 		container_of(work, struct work_queue_wrapper, work);
+ 	struct _MPT_SCSI_HOST *hd = wqw->hd;
+ 	struct scsi_device *sdev;
++	struct scsi_target *starget;
++	struct _CONFIG_PAGE_SCSI_DEVICE_1 pg1;
++	u32 nego;
+ 
+ 	kfree(wqw);
+ 
+-	shost_for_each_device(sdev, hd->ioc->sh)
+-		mptspi_dv_device(hd, sdev);
++	if (hd->spi_pending) {
++		shost_for_each_device(sdev, hd->ioc->sh) {
++			if  (hd->spi_pending & (1 << sdev->id))
++				continue;
++			starget = scsi_target(sdev);
++			nego = mptspi_getRP(starget);
++			pg1.RequestedParameters = cpu_to_le32(nego);
++			pg1.Reserved = 0;
++			pg1.Configuration = 0;
++			mptspi_write_spi_device_pg1(starget, &pg1);
++		}
++	} else {
++		shost_for_each_device(sdev, hd->ioc->sh)
++			mptspi_dv_device(hd, sdev);
++	}
+ }
+ 
+ static void
+@@ -1452,6 +1470,7 @@ mptspi_probe(struct pci_dev *pdev, const
+ 	init_waitqueue_head(&hd->scandv_waitq);
+ 	hd->scandv_wait_done = 0;
+ 	hd->last_queue_full = 0;
++	hd->spi_pending = 0;
+ 
+ 	/* Some versions of the firmware don't support page 0; without
+ 	 * that we can't get the parameters */
 _
