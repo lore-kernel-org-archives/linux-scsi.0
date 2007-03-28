@@ -1,36 +1,46 @@
-From: "Allexio Ju" <allexio.ju@gmail.com>
-Subject: Re: [PATCH] aacraid: Add likely() and unlikely()
-Date: Wed, 28 Mar 2007 08:53:40 -0700
-Message-ID: <a02278b00703280853o6984e502nd7ec1e6fe04561b8@mail.gmail.com>
-References: <a02278b00703270917w5dcaaf25y92e31dfd6e920b91@mail.gmail.com>
-	 <1175087859.6469.17.camel@laptopd505.fenrus.org>
+From: Robert Jennings <rcj@linux.vnet.ibm.com>
+Subject: [PATCH 0/2][resend] ibmvscsi: dynamic request_limit and device restart
+Date: Wed, 28 Mar 2007 12:38:28 -0500
+Message-ID: <20070328173828.GA22676@austin.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.240]:16000 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932500AbXC1Pxl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Mar 2007 11:53:41 -0400
-Received: by an-out-0708.google.com with SMTP id b33so3113467ana
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Mar 2007 08:53:40 -0700 (PDT)
-In-Reply-To: <1175087859.6469.17.camel@laptopd505.fenrus.org>
+Received: from e6.ny.us.ibm.com ([32.97.182.146]:49425 "EHLO e6.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965075AbXC1Rib (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 Mar 2007 13:38:31 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e6.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l2SHdGnR010141
+	for <linux-scsi@vger.kernel.org>; Wed, 28 Mar 2007 13:39:16 -0400
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l2SHcTdl263428
+	for <linux-scsi@vger.kernel.org>; Wed, 28 Mar 2007 13:38:29 -0400
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l2SHcToD023086
+	for <linux-scsi@vger.kernel.org>; Wed, 28 Mar 2007 13:38:29 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: mark_salyzyn@adaptec.com, linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>
 
-On 3/28/07, Arjan van de Ven <arjan@infradead.org> wrote:
-> On Tue, 2007-03-27 at 09:17 -0700, Allexio Ju wrote:
-> > I thought those macros simply tell compiler to layout code in such a
-> > way that minimizes unnecessary jumps.
-> it's more than that. it generally also tells the processor what the
-> branch will be, at which point most processors disable their own branch
-> prediction logic. Trying to hand-layout code is almost always a
-> mistake... don't do that. GCC also is quite good at recognizing certain
-> patterns to keep the code flow working. Trying to override that only
-> hurts...
-I see... thanks for clarification.
+James,
 
-allexio
+Resending these patches for inclusion in your tree.
+
+There are two fixes for the ibmvscsi client driver in this set.
+
+- Dynamic request_limit
+The request_limit for the driver was not properly reflecting the value on
+the server side and could cause can_queue to be set to improper values (-1).
+The patch corrects this so that request_limit mirrors the value
+on the server and sets can_queue appropriately.
+
+- Device restart
+When a drive was removed from the server and then re-added the client
+would not be able to use that device.  The device would return a unit
+attention and then not ready.  By adding a slave_configure function we
+can set the "allow_restart" flag for all disk devices.  Now devices will
+resume functioning when they are re-added to the server.
+
+---
