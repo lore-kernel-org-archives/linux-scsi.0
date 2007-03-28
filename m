@@ -1,54 +1,38 @@
-From: Bernhard Walle <bwalle@suse.de>
-Subject: [PATCH] [qla2xxx] Remove duplicate pci_disable_device() call
-Date: Wed, 28 Mar 2007 00:49:49 +0200
-Message-ID: <20070327224949.GB17095@strauss.suse.de>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH] improve bsg device allocation
+Date: Wed, 28 Mar 2007 13:30:30 +0200
+Message-ID: <20070328113030.GN3963@kernel.dk>
+References: <20070322031106Q.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:60192 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934267AbXC0Wtv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Mar 2007 18:49:51 -0400
+Received: from rgminet01.oracle.com ([148.87.113.118]:19643 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965393AbXC1LbF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Mar 2007 07:31:05 -0400
 Content-Disposition: inline
+In-Reply-To: <20070322031106Q.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linux-scsi@vger.kernel.org
 
-[PATCH] [qla2xxx] Remove duplicate pci_disable_device() call
+On Thu, Mar 22 2007, FUJITA Tomonori wrote:
+> This patch addresses on two issues on bsg device allocation.
+> 
+> - the current maxium number of bsg devices is 256. It's too small if
+> we allocate bsg devices to all SCSI devices, transport entities, etc.
+> This increses the maxium number to 32768 (taken from the sg driver).
+> 
+> - SCSI devices are dynamically added and removed. Currently, bsg can't
+> handle it well since bsd_device->minor is simply increased.
+> 
+> This is dependent on the patchset that I posted yesterday:
+> 
+> http://marc.info/?l=linux-scsi&m=117440208726755&w=2
 
-On the path qla2x00_probe_one() -> probe_failed -> qla2x00_free_device(),
-pci_disable_device() is executed twice, once in qla2x00_free_device()
-and once in qla2x00_probe_one().
+applied
 
-This patch removes the unnecessary call.
-
-
-Signed-off-by: Bernhard Walle <bwalle@suse.de>
-
----
- drivers/scsi/qla2xxx/qla_os.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-Index: linux-2.6.21-rc5/drivers/scsi/qla2xxx/qla_os.c
-===================================================================
---- linux-2.6.21-rc5.orig/drivers/scsi/qla2xxx/qla_os.c
-+++ linux-2.6.21-rc5/drivers/scsi/qla2xxx/qla_os.c
-@@ -1705,6 +1705,7 @@ qla2x00_remove_one(struct pci_dev *pdev)
- 
- 	scsi_host_put(ha->host);
- 
-+	pci_disable_device(pdev);
- 	pci_set_drvdata(pdev, NULL);
- }
- 
-@@ -1747,8 +1748,6 @@ qla2x00_free_device(scsi_qla_host_t *ha)
- 	if (ha->iobase)
- 		iounmap(ha->iobase);
- 	pci_release_regions(ha->pdev);
--
--	pci_disable_device(ha->pdev);
- }
- 
- static inline void
+-- 
+Jens Axboe
 
