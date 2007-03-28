@@ -1,96 +1,33 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: [PATCH] aacraid: remove unused or deprecated firmware constants
-Date: Wed, 28 Mar 2007 09:22:39 -0400
-Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF017A9A05@otce2k301.adaptec.com>
-References: <AE4F746F2AECFC4DA4AADD66A1DFEF017A9910@otce2k301.adaptec.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: [PATCH] [qla2xxx] Remove duplicate pci_disable_device() call
+Date: Wed, 28 Mar 2007 08:41:31 -0700
+Message-ID: <20070328154131.GA24606@andrew-vasquezs-computer.local>
+References: <20070327224949.GB17095@strauss.suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C7713C.28BA6417"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([216.52.22.36]:48915 "EHLO
-	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751244AbXC1NWm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Mar 2007 09:22:42 -0400
-Received: from otce2k301.adaptec.com (otce2k301.adaptec.com [10.12.1.97])
-	by mail-gw3.adaptec.com (Spam Firewall) with ESMTP id 46534171A43
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Mar 2007 06:22:41 -0700 (PDT)
-Content-class: urn:content-classes:message
-In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF017A9910@otce2k301.adaptec.com>
+Received: from avexch1.qlogic.com ([198.70.193.115]:38353 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932388AbXC1Plh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Mar 2007 11:41:37 -0400
+Content-Disposition: inline
+In-Reply-To: <20070327224949.GB17095@strauss.suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: Bernhard Walle <bwalle@suse.de>
 
-This is a multi-part message in MIME format.
+On Wed, 28 Mar 2007, Bernhard Walle wrote:
 
-------_=_NextPart_001_01C7713C.28BA6417
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+> [PATCH] [qla2xxx] Remove duplicate pci_disable_device() call
+> 
+> On the path qla2x00_probe_one() -> probe_failed -> qla2x00_free_device(),
+> pci_disable_device() is executed twice, once in qla2x00_free_device()
+> and once in qla2x00_probe_one().
+> 
+> This patch removes the unnecessary call.
+> 
+> 
+> Signed-off-by: Bernhard Walle <bwalle@suse.de>
 
-Just sweeping the floor clean in one spot. Some of these constants have
-never been used in the driver or in the firmware (and thus are
-meaningless). Triggered this patch because I discovered one of the
-unused constants was actually incorrect and figured it was better to
-clean them out than correct and update. There are no side effects at all
-regarding this patch, it is purely cosmetic.
-
-ObligatoryDisclaimer: Please accept my condolences regarding Outlook's
-handling of patches.
-
-This attached patch is against current scsi-misc-2.6
-
-Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
-
-------_=_NextPart_001_01C7713C.28BA6417
-Content-Type: application/octet-stream;
-	name="aacraid_unused_firmware_constants.patch"
-Content-Transfer-Encoding: base64
-Content-Description: aacraid_unused_firmware_constants.patch
-Content-Disposition: attachment;
-	filename="aacraid_unused_firmware_constants.patch"
-
-ZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNyYWlkLmggYi9kcml2ZXJzL3Njc2kv
-YWFjcmFpZC9hYWNyYWlkLmgKLS0tIGEvZHJpdmVycy9zY3NpL2FhY3JhaWQvYWFjcmFpZC5oCTIw
-MDctMDMtMjggMDg6Mjk6NDAuMDI4ODEzMTYxIC0wNDAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNy
-YWlkL2FhY3JhaWQuaAkyMDA3LTAzLTI4IDA5OjA5OjMxLjEzMTgwMDgyNSAtMDQwMApAQCAtNDgs
-NDkgKzQ4LDEzIEBACiAKIAogLyoKLSAqCURPTidUIENIQU5HRSBUSEUgT1JERVIsIHRoaXMgaXMg
-c2V0IGJ5IHRoZSBmaXJtd2FyZQorICoJRmlybXdhcmUgY29uc3RhbnRzCiAgKi8KICAKICNkZWZp
-bmUJCUNUX05PTkUJCQkwCi0jZGVmaW5lCQlDVF9WT0xVTUUJCTEKLSNkZWZpbmUJCUNUX01JUlJP
-UgkJMgotI2RlZmluZQkJQ1RfU1RSSVBFCQkzCi0jZGVmaW5lCQlDVF9SQUlENQkJNAotI2RlZmlu
-ZQkJQ1RfU1NSVwkJCTUKLSNkZWZpbmUJCUNUX1NTUk8JCQk2Ci0jZGVmaW5lCQlDVF9NT1JQSAkJ
-NwotI2RlZmluZQkJQ1RfUEFTU1RIUlUJCTgKLSNkZWZpbmUJCUNUX1JBSUQ0CQk5Ci0jZGVmaW5l
-CQlDVF9SQUlEMTAJCTEwCS8qIHN0cmlwZSBvZiBtaXJyb3IgKi8KLSNkZWZpbmUJCUNUX1JBSUQw
-MAkJMTEJLyogc3RyaXBlIG9mIHN0cmlwZSAqLwotI2RlZmluZQkJQ1RfVk9MVU1FX09GX01JUlJP
-UlMJMTIJLyogdm9sdW1lIG9mIG1pcnJvciAqLwotI2RlZmluZQkJQ1RfUFNFVURPX1JBSUQJCTEz
-CS8qIHJlYWxseSByYWlkNCAqLwotI2RlZmluZQkJQ1RfTEFTVF9WT0xVTUVfVFlQRQkxNAogI2Rl
-ZmluZSAJQ1RfT0sgICAgICAgIAkJMjE4Ci0KLS8qCi0gKglUeXBlcyBvZiBvYmplY3RzIGFkZHJl
-c3NhYmxlIGluIHNvbWUgZmFzaGlvbiBieSB0aGUgY2xpZW50LgotICoJVGhpcyBpcyBhIHN1cGVy
-c2V0IG9mIHRob3NlIG9iamVjdHMgaGFuZGxlZCBqdXN0IGJ5IHRoZSBmaWxlc3lzdGVtCi0gKglh
-bmQgaW5jbHVkZXMgInJhdyIgb2JqZWN0cyB0aGF0IGFuIGFkbWluaXN0cmF0b3Igd291bGQgdXNl
-IHRvCi0gKgljb25maWd1cmUgY29udGFpbmVycyBhbmQgZmlsZXN5c3RlbXMuCi0gKi8KLQotI2Rl
-ZmluZQkJRlRfUkVHCQkxCS8qIHJlZ3VsYXIgZmlsZSAqLwotI2RlZmluZQkJRlRfRElSCQkyCS8q
-IGRpcmVjdG9yeSAqLwotI2RlZmluZQkJRlRfQkxLCQkzCS8qICJibG9jayIgZGV2aWNlIC0gcmVz
-ZXJ2ZWQgKi8KLSNkZWZpbmUJCUZUX0NIUgkJNAkvKiAiY2hhcmFjdGVyIHNwZWNpYWwiIGRldmlj
-ZSAtIHJlc2VydmVkICovCi0jZGVmaW5lCQlGVF9MTksJCTUJLyogc3ltYm9saWMgbGluayAqLwot
-I2RlZmluZQkJRlRfU09DSwkJNgkvKiBzb2NrZXQgKi8KLSNkZWZpbmUJCUZUX0ZJRk8JCTcJLyog
-ZmlmbyAqLwogI2RlZmluZQkJRlRfRklMRVNZUwk4CS8qIEFEQVBURUMncyAiRlNBIih0bSkgZmls
-ZXN5c3RlbSAqLwogI2RlZmluZQkJRlRfRFJJVkUJOQkvKiBwaHlzaWNhbCBkaXNrIC0gYWRkcmVz
-c2FibGUgaW4gc2NzaSBieSBidXMvaWQvbHVuICovCi0jZGVmaW5lCQlGVF9TTElDRQkxMAkvKiB2
-aXJ0dWFsIGRpc2sgLSByYXcgdm9sdW1lIC0gc2xpY2UgKi8KLSNkZWZpbmUJCUZUX1BBUlRJVElP
-TgkxMQkvKiBGU0EgcGFydGl0aW9uIC0gY2FydmVkIG91dCBvZiBhIHNsaWNlIC0gYnVpbGRpbmcg
-YmxvY2sgZm9yIGNvbnRhaW5lcnMgKi8KLSNkZWZpbmUJCUZUX1ZPTFVNRQkxMgkvKiBDb250YWlu
-ZXIgLSBWb2x1bWUgU2V0ICovCi0jZGVmaW5lCQlGVF9TVFJJUEUJMTMJLyogQ29udGFpbmVyIC0g
-U3RyaXBlIFNldCAqLwotI2RlZmluZQkJRlRfTUlSUk9SCTE0CS8qIENvbnRhaW5lciAtIE1pcnJv
-ciBTZXQgKi8KLSNkZWZpbmUJCUZUX1JBSUQ1CTE1CS8qIENvbnRhaW5lciAtIFJhaWQgNSBTZXQg
-Ki8KLSNkZWZpbmUJCUZUX0RBVEFCQVNFCTE2CS8qIFN0b3JhZ2Ugb2JqZWN0IHdpdGggImZvcmVp
-Z24iIGNvbnRlbnQgbWFuYWdlciAqLwogCiAvKgogICoJSG9zdCBzaWRlIG1lbW9yeSBzY2F0dGVy
-IGdhdGhlciBsaXN0CkBAIC0xNTE5LDggKzE0ODMsNyBAQAogCXN0cnVjdCBjcmVhdGlvbl9pbmZv
-CWNyZWF0ZV9pbmZvOwkvKiBpZiBhcHBsaWNhYmxlICovCiAJX19sZTMyCQkJY2FwYWNpdHk7CiAJ
-X19sZTMyCQkJdm9sOyAgICAJLyogc3Vic3RyYXRlIHN0cnVjdHVyZSAqLwotCV9fbGUzMgkJCW9i
-ajsJICAgICAgICAvKiBGVF9GSUxFU1lTLCAKLQkJCQkJCSAgIEZUX0RBVEFCQVNFLCBldGMuICov
-CisJX19sZTMyCQkJb2JqOwkgICAgICAgIC8qIEZUX0ZJTEVTWVMsIGV0Yy4gKi8gCiAJX19sZTMy
-CQkJc3RhdGU7CQkvKiB1bnJlYWR5IGZvciBtb3VudGluZywgCiAJCQkJCQkgICByZWFkb25seSwg
-ZXRjLiAqLwogCXVuaW9uIGFhY19jb250ZW50aW5mbwlmaWxlaW5mbzsJLyogSW5mbyBzcGVjaWZp
-YyB0byBjb250ZW50IAo=
-
-------_=_NextPart_001_01C7713C.28BA6417--
+Acked-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
