@@ -1,51 +1,43 @@
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch] zfcp: fix initialization of FSF timer
-Date: Wed, 28 Mar 2007 14:20:40 +0200
-Message-ID: <20070328122039.GB28667@schmichrtp>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: Disabling block layer
+Date: Wed, 28 Mar 2007 13:24:20 +0200
+Message-ID: <20070328112420.GL3963@kernel.dk>
+References: <656559.33072.qm@web63001.mail.re1.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate1.de.ibm.com ([195.212.29.150]:63669 "EHLO
-	mtagate1.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751110AbXC1MUn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Mar 2007 08:20:43 -0400
-Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
-	by mtagate1.de.ibm.com (8.13.8/8.13.8) with ESMTP id l2SCKgMW080706
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Mar 2007 12:20:42 GMT
-Received: from d12av04.megacenter.de.ibm.com (d12av04.megacenter.de.ibm.com [9.149.165.229])
-	by d12nrmr1607.megacenter.de.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l2SCKf1Z1442014
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Mar 2007 14:20:41 +0200
-Received: from d12av04.megacenter.de.ibm.com (loopback [127.0.0.1])
-	by d12av04.megacenter.de.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l2SCKfgq028782
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Mar 2007 14:20:41 +0200
+Received: from rgminet01.oracle.com ([148.87.113.118]:54916 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751455AbXC1Mrd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Mar 2007 08:47:33 -0400
 Content-Disposition: inline
+In-Reply-To: <656559.33072.qm@web63001.mail.re1.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
-Cc: swen@vnet.ibm.com, heiko.carstens@de.ibm.com
+To: Mark Lobo <ntdeveloper2002@yahoo.com>
+Cc: linux-scsi@vger.kernel.org
 
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
+On Mon, Mar 26 2007, Mark Lobo wrote:
+> Hello!
+> 
+> I had a question about disabling the block layer for SCSI devices. We
+> have an embedded device, and it runs 2.4.30. We need to be able to
+> support a lot of SCSI devices (in the thousands) for our device, and we
+> talk to the devices via SG. We are facing a memory allocation problem
+> after discovering a few thousand devices. For every device,  there
+> seems to be a lot of memory allocated in the block layer. This memory
+> includes cache memory (which IIRC is reclaimable by the kernel memory
+> subsystem when it needs it) and also pages that are used for the
+> alloc_pages pool.
 
-Correctly initialize the timer for FSF requests with jiffies + timeout.
+A much easier approach would be to limit the memory used for each device
+in the block layer. Since SCSI uses the block layer as a transport for
+commands, you cannot disable the block layer in any easy manner.
 
-Cc: Swen Schillig <swen@vnet.ibm.com>
-Acked-by: Heiko Carstens <heiko.carstens@de.ibm.com>
-Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
----
+But your memory is likely being eated by the queue freelist. So edit
+drivers/block/ll_rw_blk.c and hardcode nr_requests to a low number (like
+2).
 
-Please consider this patch for 2.6.21.
+-- 
+Jens Axboe
 
- drivers/s390/scsi/zfcp_erp.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
---- linux/drivers/s390/scsi/zfcp_erp.c.orig	2007-03-07 09:53:22.000000000 +0100
-+++ linux/drivers/s390/scsi/zfcp_erp.c	2007-03-07 09:53:35.000000000 +0100
-@@ -186,7 +186,7 @@
- {
- 	fsf_req->timer.function = zfcp_fsf_request_timeout_handler;
- 	fsf_req->timer.data = (unsigned long) fsf_req->adapter;
--	fsf_req->timer.expires = timeout;
-+	fsf_req->timer.expires = jiffies + timeout;
- 	add_timer(&fsf_req->timer);
- }
- 
