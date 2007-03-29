@@ -1,22 +1,22 @@
 From: Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH 07/12] ipr: PCI unblock config access fix
-Date: Thu, 29 Mar 2007 12:43:23 -0500
-Message-ID: <200703291743.l2THhOHF013606@d01av02.pok.ibm.com>
+Subject: [PATCH 05/12] ipr: Log error for SAS dual path switch
+Date: Thu, 29 Mar 2007 12:43:09 -0500
+Message-ID: <200703291743.l2THh9Nt003153@d03av01.boulder.ibm.com>
 References: <11751901593854-patch-mail.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e6.ny.us.ibm.com ([32.97.182.146]:60279 "EHLO e6.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934302AbXC2Rn1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Mar 2007 13:43:27 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e6.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l2THiCEK007782
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Mar 2007 13:44:12 -0400
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l2THhPZV281918
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Mar 2007 13:43:25 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l2THhPeA013648
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Mar 2007 13:43:25 -0400
+Received: from e34.co.us.ibm.com ([32.97.110.152]:36102 "EHLO
+	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934309AbXC2RnU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Mar 2007 13:43:20 -0400
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e34.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l2THhJXt020129
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Mar 2007 13:43:19 -0400
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by westrelay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l2THhAuc024460
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Mar 2007 11:43:10 -0600
+Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l2THhANS003180
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Mar 2007 11:43:10 -0600
 In-Reply-To: <11751901593854-patch-mail.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -24,24 +24,43 @@ To: James.Bottomley@steeleye.com
 Cc: linux-scsi@vger.kernel.org, thlin@linux.vnet.ibm.com, brking@linux.vnet.ibm.com
 
 
-Fix to make sure user config accesses get re-enabled if the
-PCI config write to start BIST fails.
+For ipr SAS adapters that support dual pathing, this
+patch modifies ipr to log an error when a path fails.
 
 Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
 ---
 
- linux-2.6-bjking1/drivers/scsi/ipr.c |    1 +
- 1 files changed, 1 insertion(+)
+ linux-2.6-bjking1/drivers/scsi/ipr.c |    8 ++++++--
+ 1 files changed, 6 insertions(+), 2 deletions(-)
 
-diff -puN drivers/scsi/ipr.c~ipr_unblock_fix drivers/scsi/ipr.c
---- linux-2.6/drivers/scsi/ipr.c~ipr_unblock_fix	2007-03-29 09:15:40.000000000 -0500
-+++ linux-2.6-bjking1/drivers/scsi/ipr.c	2007-03-29 09:15:40.000000000 -0500
-@@ -6390,6 +6390,7 @@ static int ipr_reset_start_bist(struct i
- 	rc = pci_write_config_byte(ioa_cfg->pdev, PCI_BIST, PCI_BIST_START);
+diff -puN drivers/scsi/ipr.c~ipr_log_path_switch drivers/scsi/ipr.c
+--- linux-2.6/drivers/scsi/ipr.c~ipr_log_path_switch	2007-03-28 16:53:17.000000000 -0500
++++ linux-2.6-bjking1/drivers/scsi/ipr.c	2007-03-29 09:06:29.000000000 -0500
+@@ -4453,12 +4453,13 @@ static void ipr_dump_ioasa(struct ipr_io
+ {
+ 	int i;
+ 	u16 data_len;
+-	u32 ioasc;
++	u32 ioasc, fd_ioasc;
+ 	struct ipr_ioasa *ioasa = &ipr_cmd->ioasa;
+ 	__be32 *ioasa_data = (__be32 *)ioasa;
+ 	int error_index;
  
- 	if (rc != PCIBIOS_SUCCESSFUL) {
-+		pci_unblock_user_cfg_access(ipr_cmd->ioa_cfg->pdev);
- 		ipr_cmd->ioasa.ioasc = cpu_to_be32(IPR_IOASC_PCI_ACCESS_ERROR);
- 		rc = IPR_RC_JOB_CONTINUE;
- 	} else {
+ 	ioasc = be32_to_cpu(ioasa->ioasc) & IPR_IOASC_IOASC_MASK;
++	fd_ioasc = be32_to_cpu(ioasa->fd_ioasc) & IPR_IOASC_IOASC_MASK;
+ 
+ 	if (0 == ioasc)
+ 		return;
+@@ -4466,7 +4467,10 @@ static void ipr_dump_ioasa(struct ipr_io
+ 	if (ioa_cfg->log_level < IPR_DEFAULT_LOG_LEVEL)
+ 		return;
+ 
+-	error_index = ipr_get_error(ioasc);
++	if (ioasc == IPR_IOASC_BUS_WAS_RESET && fd_ioasc)
++		error_index = ipr_get_error(fd_ioasc);
++	else
++		error_index = ipr_get_error(ioasc);
+ 
+ 	if (ioa_cfg->log_level < IPR_MAX_LOG_LEVEL) {
+ 		/* Don't log an error if the IOA already logged one */
 _
