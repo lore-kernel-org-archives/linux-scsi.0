@@ -1,119 +1,97 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [Fastboot] Panics for AACRAID driver during 'insmod' for kexec test.
-Date: Thu, 29 Mar 2007 10:17:18 -0400
-Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF017A9C85@otce2k301.adaptec.com>
-References: <20070329031156.GA9582@in.ibm.com>
+From: Halim Issa <yallaone@gmail.com>
+Subject: Trouble with LSI Logic / Symbios Logic 53c1030 on Linux 2.6.20.4
+Date: Thu, 29 Mar 2007 16:23:37 +0200
+Message-ID: <200703291623.37560.yallaone@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([216.52.22.36]:56878 "EHLO
-	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753504AbXC2ORV convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Mar 2007 10:17:21 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <20070329031156.GA9582@in.ibm.com>
+Received: from nf-out-0910.google.com ([64.233.182.191]:22966 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753677AbXC2OXk convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Mar 2007 10:23:40 -0400
+Received: by nf-out-0910.google.com with SMTP id o25so211442nfa
+        for <linux-scsi@vger.kernel.org>; Thu, 29 Mar 2007 07:23:39 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: vgoyal@in.ibm.com, Judith Lebzelter <judith@linux-foundation.org>
-Cc: linux-scsi@vger.kernel.org, AACRAID <aacraid@adaptec.com>, fastboot@lists.osdl.org
+To: linux-scsi@vger.kernel.org
 
-I have been working on a patch to the driver to do just this, reset the
-adapter during init if necessary. We want to limit the adapter's reset
-as it takes time (an additional 45 seconds or longer) for the Firmware
-to cycle... I will bump the priority of the testing for this patch.
+Hello List,
 
-Sincerely -- Mark Salyzyn
+Running vanilla kernel 2.6.20.4 (unmodified from kernel.org) on an IBM =
+x335=20
+Server with LSI Logic 53c1030 and two SCSI disks in RAID-1, we have som=
+e=20
+serious performance issues that we suspect are present due to driver=20
+problems.
 
-> -----Original Message-----
-> From: Vivek Goyal [mailto:vgoyal@in.ibm.com] 
-> Sent: Wednesday, March 28, 2007 11:12 PM
-> To: Judith Lebzelter
-> Cc: linux-scsi@vger.kernel.org; AACRAID; fastboot@lists.osdl.org
-> Subject: Re: [Fastboot] Panics for AACRAID driver during 
-> 'insmod' for kexec test.
-> 
-> 
-> On Wed, Mar 28, 2007 at 02:54:32PM -0700, Judith Lebzelter wrote:
-> > Hello, 
-> > 
-> > I have been running a series of kexec tests using LKDTT on the 
-> > aacraid driver on this card (ASR-4805SAS (Marauder-E)) on x86_64
-> > using the latest top of scsi-misc git-tree(as of yesterday), and 
-> > I have found that it is not coming up consistantly when booted 
-> > through kexec.
-> > 
-> > I have included 4 different types of failures I found here because 
-> > I assume they might be related, and thought maybe there could 
-> > be an issue with the card's state on reboot (through kexec).
-> > 
-> > The most common problem is this oops/panic, which has happened 
-> > with various types of crash points (6 times out of 40):
-> > 
-> > Loading aacraid.Adaptec aacraid driver (1.1-5[2437]-mh4)^M
-> > ko module^M
-> > ACPI: PCI Interrupt 0000:03:0e.0[A] -> Link [LNKC] -> GSI 3 
-> (level, low) -> IRQ 3^M
-> > general protection fault: 0000 [1] ^M
-> > CPU 0 ^M
-> > Modules linked in: aacraid^M
-> > Pid: 0, comm: swapper Not tainted 2.6.21-rc3-kdump #1^M
-> > RIP: 0010:[<ffffffff88008a99>]  [<ffffffff88008a99>] 
-> :aacraid:aac_intr_normal+0x17a/0x1b1^M
-> > RSP: 0000:ffffffff81523ed8  EFLAGS: 00010006^M
-> > RAX: ffff810004102000 RBX: ffff8100014f01e0 RCX: 0000000000000086^M
-> > RDX: ffff810004041540 RSI: ffff8100014f01e0 RDI: cccccccccccccccc^M
-> > RBP: ffff810004702cd8 R08: 00000000a6037e6c R09: 00000016001562d7^M
-> > R10: 0000000000000023 R11: 0000000000000000 R12: 0000000000000011^M
-> > R13: ffff810004702cd8 R14: ffff810004001400 R15: 0000000000000000^M
-> > FS:  0000000000000000(0000) GS:ffffffff814d5000(0000) 
-> knlGS:0000000000000000^M
-> > CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b^M
-> > CR2: 00000000006ba5a0 CR3: 000000000474d000 CR4: 00000000000006e0^M
-> > Process swapper (pid: 0, threadinfo ffffffff814e4000, task 
-> ffffffff81470360)^M
-> > Stack:  0000000000000011 ffff810004702cd8 0000000000000100 
-> 0000000000000003^M
-> >  0000000000000001 ffffffff88009470 0000000000000000 
-> ffff810004041540^M
-> >  ffffffff814d5080 ffffffff810428f4 0000000000000000 
-> ffffffff814d5080^M
-> > Call Trace:^M
-> >  <IRQ>  [<ffffffff88009470>] 
-> :aacraid:aac_rx_intr_message+0x2c/0x60^M
-> >  [<ffffffff810428f4>] note_interrupt+0xd3/0x1db^M
-> >  [<ffffffff8104319b>] handle_level_irq+0x7e/0xab^M
-> >  [<ffffffff8100b0b1>] do_IRQ+0xd7/0x132^M
-> >  [<ffffffff810085a1>] mwait_idle+0x0/0x43^M
-> >  [<ffffffff81009651>] ret_from_intr+0x0/0xa^M
-> >  <EOI>  [<ffffffff810085e0>] mwait_idle+0x3f/0x43^M
-> >  [<ffffffff81008540>] cpu_idle+0x3d/0x5c^M
-> >  [<ffffffff814e78d2>] start_kernel+0x28f/0x29b^M
-> >  [<ffffffff814e7140>] _sinittext+0x140/0x144^M
-> > ^M
-> > ^M
-> > Code: ff 53 38 eb 20 9c 58 fa 83 7b 30 00 75 07 c7 43 30 01 00 00 ^M
-> > RIP  [<ffffffff88008a99>] :aacraid:aac_intr_normal+0x17a/0x1b1^M
-> > Kernel panic - not syncing: Aiee, killing interrupt handler!^M
-> >  
-> > 
-> 
-> I don't much about the aacraid code but looking little bit, 
-> it looks like
-> the typical case where driver in second kernel receives the pending
-> interrupt from the device and in the interrupt handler it 
-> accesses some
-> data structures which are not even initialized yet. This 
-> interrupt must
-> have been pending from crashed kernel's context.
-> 
-> Either we should reset the device before doing request_irq(), so that
-> interrupts are cleared or do some kind of ABORT, FLUSH messages or
-> whatever the card firmware supports to clear the pending 
-> interrupts and 
-> flush exisiting commands before doing request_irq().
-> 
-> Thanks
-> Vivek
-> 
+The performance is as follows:
+
+[189] root@spirou:/tmp#dd if=3D/dev/sda7 of=3D/dev/null bs=3D64k count=3D=
+100
+100+0 records in
+100+0 records out
+6553600 bytes (6.6 MB) copied, 1.50139 s, 4.4 MB/s
+[190] root@spirou:/tmp#dd if=3D/dev/sda7 of=3D/dev/null bs=3D64k count=3D=
+1000
+1000+0 records in
+1000+0 records out
+65536000 bytes (66 MB) copied, 18.0209 s, 3.6 MB/s
+[191] root@spirou:/tmp#dd if=3D/dev/sda7 of=3D/dev/null bs=3D64k count=3D=
+10000
+10000+0 records in
+10000+0 records out
+655360000 bytes (655 MB) copied, 179.74 s, 3.6 MB/s
+
+I've also tried copying between real files (ie non-/dev-files)
+
+[496] root@spirou:/root#dd if=3Dtestfile.out of=3Dtest.yalla bs=3D64k c=
+ount=3D1000
+1000+0 records in
+1000+0 records out
+65536000 bytes (66 MB) copied, 12.5143 s, 5.2 MB/s
+
+Needless to say, getting between three and five meg throughput on such =
+a
+system clearly means something is wrong, and the most likely culprit is=
+ the=20
+operator (myself), but so far I have found no indications anywhere on h=
+ow to=20
+proceed, and hence this email..
+
+The card according to lspci -v :
+
+01:01.0 SCSI storage controller: LSI Logic / Symbios Logic 53c1030 PCI-=
+X
+=46usion-
+MPT Dual Ultra320 SCSI (rev 07)
+=A0 =A0 Subsystem: IBM Unknown device 026d
+=A0 =A0 Flags: bus master, 66MHz, medium devsel, latency 72, IRQ 16
+=A0 =A0 I/O ports at 2300 [size=3D256]
+=A0 =A0 Memory at fbff0000 (64-bit, non-prefetchable) [size=3D64K]
+=A0 =A0 Memory at fbfe0000 (64-bit, non-prefetchable) [size=3D64K]
+=A0 =A0 [virtual] Expansion ROM at 88100000 [disabled] [size=3D1M]
+=A0 =A0 Capabilities: [50] Power Management version 2
+=A0 =A0 Capabilities: [58] Message Signalled Interrupts: Mask- 64bit+ Q=
+ueue=3D0/0
+Enable-
+=A0 =A0 Capabilities: [68] PCI-X non-bridge device
+
+The kernel config is at : http://pastebin.ca/411667
+the dmesg output is at : http://pastebin.ca/411670
+
+Is this a common problem on these controllers?
+Perhaps needless to say, I'm rather new to this and am trying to gain=20
+experience in this field as quickly as possible. Any hints to bugfixes,=
+=20
+patches or configuration hints would be most greatly appreciated!
+
+Thanks in advance for any insight - it will be warmly appreciated!
+
+ -h
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
