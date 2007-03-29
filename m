@@ -1,212 +1,143 @@
-From: Sumant Patro <sumant.patro@lsi.com>
-Subject: [PATCH] scsi: megaraid_sas - intercepts cmd timeout and throttle io
-Date: Wed, 28 Mar 2007 10:43:54 -0700
-Message-ID: <1175103834.4130.17.camel@dumbo>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [patch 2/3] libata: expose AN support to user space via sysfs
+Date: Wed, 28 Mar 2007 20:15:53 -0400
+Message-ID: <460B0539.9040103@pobox.com>
+References: <20070328230108.597741522@intel.com> <20070328164450.b89d5156.kristen.c.accardi@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:60691 "EHLO mail0.lsil.com"
+Received: from srv5.dvmed.net ([207.36.208.214]:49103 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933686AbXC1Wwv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Mar 2007 18:52:51 -0400
+	id S933920AbXC2AP4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 Mar 2007 20:15:56 -0400
+In-Reply-To: <20070328164450.b89d5156.kristen.c.accardi@intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com, akpm@osdl.org, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, neela.kolli@lsi.com, bo.yang@lsi.com, sumant.patro@lsi.com
+To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Cc: linux-kernel@vger.kernel.org, akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
 
+Kristen Carlson Accardi wrote:
+> Allow user space to determine if an ATAPI device supports
+> async notification (AN) of media changes.  This is done by
+> adding a new sysfs file "async_notification" to genhd.
+> If the file reads 1, then the device supports async 
+> notification.  If the file reads 0, it does not.  
+> 
+> A flag is set in the generic disk to indicate whether
+> or not AN is supported.  This flag is set by the SCSI
+> subsystem when it registers with add_disk.  The SCSI
+> system gets information from libata on whether the
+> device supports AN during dev_configure. 
+> 
+> Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+> 
+> Index: 2.6-mm/block/genhd.c
+> ===================================================================
+> --- 2.6-mm.orig/block/genhd.c
+> +++ 2.6-mm/block/genhd.c
+> @@ -372,6 +372,11 @@ static ssize_t disk_size_read(struct gen
+>  {
+>  	return sprintf(page, "%llu\n", (unsigned long long)get_capacity(disk));
+>  }
+> +static ssize_t disk_AN_read(struct gendisk * disk, char *page)
+> +{
+> +	return sprintf(page, "%d\n",
+> +		(disk->flags & GENHD_FL_ASYNC_NOTIFICATION ? 1 : 0));
+> +}
+>  
+>  static ssize_t disk_stats_read(struct gendisk * disk, char *page)
+>  {
+> @@ -419,6 +424,10 @@ static struct disk_attribute disk_attr_s
+>  	.attr = {.name = "stat", .mode = S_IRUGO },
+>  	.show	= disk_stats_read
+>  };
+> +static struct disk_attribute disk_attr_AN = {
+> +	.attr = {.name = "media_change_events", .mode = S_IRUGO },
+> +	.show	= disk_AN_read
+> +};
+>  
+>  #ifdef CONFIG_FAIL_MAKE_REQUEST
+>  
+> @@ -455,6 +464,7 @@ static struct attribute * default_attrs[
+>  	&disk_attr_removable.attr,
+>  	&disk_attr_size.attr,
+>  	&disk_attr_stat.attr,
+> +	&disk_attr_AN.attr,
+>  #ifdef CONFIG_FAIL_MAKE_REQUEST
+>  	&disk_attr_fail.attr,
+>  #endif
+> Index: 2.6-mm/include/linux/genhd.h
+> ===================================================================
+> --- 2.6-mm.orig/include/linux/genhd.h
+> +++ 2.6-mm/include/linux/genhd.h
+> @@ -94,6 +94,7 @@ struct hd_struct {
+>  
+>  #define GENHD_FL_REMOVABLE			1
+>  #define GENHD_FL_DRIVERFS			2
+> +#define GENHD_FL_ASYNC_NOTIFICATION		4
+>  #define GENHD_FL_CD				8
+>  #define GENHD_FL_UP				16
+>  #define GENHD_FL_SUPPRESS_PARTITION_INFO	32
+> Index: 2.6-mm/include/scsi/scsi_device.h
+> ===================================================================
+> --- 2.6-mm.orig/include/scsi/scsi_device.h
+> +++ 2.6-mm/include/scsi/scsi_device.h
+> @@ -126,7 +126,7 @@ struct scsi_device {
+>  	unsigned fix_capacity:1;	/* READ_CAPACITY is too high by 1 */
+>  	unsigned guess_capacity:1;	/* READ_CAPACITY might be too high by 1 */
+>  	unsigned retry_hwerror:1;	/* Retry HARDWARE_ERROR */
+> -
+> +	unsigned async_notification:1;	/* device supports async notification */
+>  	unsigned int device_blocked;	/* Device returned QUEUE_FULL. */
+>  
+>  	unsigned int max_device_blocked; /* what device_blocked counts down from  */
+> Index: 2.6-mm/drivers/ata/libata-scsi.c
+> ===================================================================
+> --- 2.6-mm.orig/drivers/ata/libata-scsi.c
+> +++ 2.6-mm/drivers/ata/libata-scsi.c
+> @@ -899,6 +899,9 @@ static void ata_scsi_dev_config(struct s
+>  		blk_queue_max_hw_segments(q, q->max_hw_segments - 1);
+>  	}
+>  
+> +	if (dev->flags & ATA_DFLAG_AN)
+> +		sdev->async_notification = 1;
+> +
+>  	if (dev->flags & ATA_DFLAG_NCQ) {
+>  		int depth;
+>  
+> Index: 2.6-mm/drivers/scsi/sr.c
+> ===================================================================
+> --- 2.6-mm.orig/drivers/scsi/sr.c
+> +++ 2.6-mm/drivers/scsi/sr.c
+> @@ -603,6 +603,8 @@ static int sr_probe(struct device *dev)
+>  
+>  	dev_set_drvdata(dev, cd);
+>  	disk->flags |= GENHD_FL_REMOVABLE;
+> +	if (sdev->async_notification)
+> +		disk->flags |= GENHD_FL_ASYNC_NOTIFICATION;
+>  	add_disk(disk);
 
-eh_timed_out call back (megasas_reset_timer) is used to throttle io to the adapter 
-when it is called the first time for a scmd.
-The MEGASAS_FW_BUSY flag is set and can_queue reduced to 16. The can_queue is restored 
-from completion routine in following two conditions : 5 seconds has elapsed and the # of
-outstanding cmds in FW is < 17.
+(added linux-scsi to CC)
 
-Signed-off-by: Sumant Patro <sumant.patro@lsi.com>
----
- drivers/scsi/megaraid/megaraid_sas.c |   65 +++++++++++++++++++++++--
- drivers/scsi/megaraid/megaraid_sas.h |   13 +++--
- 2 files changed, 70 insertions(+), 8 deletions(-)
+Comments:
 
-This patch requires the patch submitted by James with subject line : 
+1) From a procedural standpoint, you'll want to separate this patch into 
+three patches:  generic block layer stuff, SCSI stuff, and libata stuff.
 
-[PATCH] expose eh_timed_out to the host template
+2) I don't claim to be a sysfs expert, but this seems like a reasonable 
+approach for reporting async-notification capabilities
 
-diff -uprN linux-2.6.orig/drivers/scsi/megaraid/megaraid_sas.c linux-2.6.new/drivers/scsi/megaraid/megaraid_sas.c
---- linux-2.6.orig/drivers/scsi/megaraid/megaraid_sas.c	2007-03-28 08:41:49.000000000 -0700
-+++ linux-2.6.new/drivers/scsi/megaraid/megaraid_sas.c	2007-03-28 08:36:38.000000000 -0700
-@@ -10,7 +10,7 @@
-  *	   2 of the License, or (at your option) any later version.
-  *
-  * FILE		: megaraid_sas.c
-- * Version	: v00.00.03.10-rc1
-+ * Version	: v00.00.03.10-rc3
-  *
-  * Authors:
-  *	(email-id : megaraidlinux@lsi.com)
-@@ -886,6 +886,7 @@ megasas_queue_command(struct scsi_cmnd *
- 		goto out_return_cmd;
- 
- 	cmd->scmd = scmd;
-+	scmd->SCp.ptr = (char *)cmd;
- 
- 	/*
- 	 * Issue the command to the FW
-@@ -981,8 +982,8 @@ static int megasas_generic_reset(struct 
- 
- 	instance = (struct megasas_instance *)scmd->device->host->hostdata;
- 
--	scmd_printk(KERN_NOTICE, scmd, "megasas: RESET -%ld cmd=%x\n",
--	       scmd->serial_number, scmd->cmnd[0]);
-+	scmd_printk(KERN_NOTICE, scmd, "megasas: RESET -%ld cmd=%x retries=%x\n",
-+		 scmd->serial_number, scmd->cmnd[0], scmd->retries);
- 
- 	if (instance->hw_crit_error) {
- 		printk(KERN_ERR "megasas: cannot recover from previous reset "
-@@ -1000,6 +1001,40 @@ static int megasas_generic_reset(struct 
- }
- 
- /**
-+ * megasas_reset_timer - quiesce the adapter if required
-+ * @scmd:		scsi cmnd
-+ *
-+ * Sets the FW busy flag and reduces the host->can_queue if the
-+ * cmd has not been completed within the timeout period.
-+ */
-+static enum
-+scsi_eh_timer_return megasas_reset_timer(struct scsi_cmnd *scmd)
-+{
-+	struct megasas_cmd *cmd = (struct megasas_cmd *)scmd->SCp.ptr;
-+	struct megasas_instance *instance;
-+	unsigned long flags;
-+
-+	if (cmd) {
-+		if (time_after(jiffies, scmd->jiffies_at_alloc + 170 * HZ))
-+			return EH_NOT_HANDLED;
-+
-+		instance = cmd->instance;
-+		if (!(instance->flag & MEGASAS_FW_BUSY)) {
-+			/* FW is busy, throttle IO */
-+			spin_lock_irqsave(&instance->throttle_io_lock, flags);
-+
-+			instance->host->can_queue = 16;
-+			instance->last_time = jiffies;
-+			instance->flag |= MEGASAS_FW_BUSY;
-+
-+			spin_unlock_irqrestore(&instance->throttle_io_lock, flags);
-+		}
-+		return EH_RESET_TIMER;
-+	}
-+	return EH_HANDLED;
-+}
-+
-+/**
-  * megasas_reset_device -	Device reset handler entry point
-  */
- static int megasas_reset_device(struct scsi_cmnd *scmd)
-@@ -1112,6 +1147,7 @@ static struct scsi_host_template megasas
- 	.eh_device_reset_handler = megasas_reset_device,
- 	.eh_bus_reset_handler = megasas_reset_bus_host,
- 	.eh_host_reset_handler = megasas_reset_bus_host,
-+	.eh_timed_out = megasas_reset_timer,
- 	.bios_param = megasas_bios_param,
- 	.use_clustering = ENABLE_CLUSTERING,
- };
-@@ -1215,9 +1251,8 @@ megasas_complete_cmd(struct megasas_inst
- 	int exception = 0;
- 	struct megasas_header *hdr = &cmd->frame->hdr;
- 
--	if (cmd->scmd) {
-+	if (cmd->scmd)
- 		cmd->scmd->SCp.ptr = (char *)0;
--	}
- 
- 	switch (hdr->cmd) {
- 
-@@ -1806,6 +1841,7 @@ static void megasas_complete_cmd_dpc(uns
- 	u32 context;
- 	struct megasas_cmd *cmd;
- 	struct megasas_instance *instance = (struct megasas_instance *)instance_addr;
-+	unsigned long flags;
- 
- 	/* If we have already declared adapter dead, donot complete cmds */
- 	if (instance->hw_crit_error)
-@@ -1828,6 +1864,22 @@ static void megasas_complete_cmd_dpc(uns
- 	}
- 
- 	*instance->consumer = producer;
-+
-+	/*
-+	 * Check if we can restore can_queue
-+	 */
-+	if (instance->flag & MEGASAS_FW_BUSY
-+		&& time_after(jiffies, instance->last_time + 5 * HZ)
-+		&& atomic_read(&instance->fw_outstanding) < 17) {
-+
-+		spin_lock_irqsave(&instance->throttle_io_lock, flags);
-+
-+		instance->flag &= ~MEGASAS_FW_BUSY;
-+		instance->host->can_queue =
-+				instance->max_fw_cmds - MEGASAS_INT_CMDS;
-+
-+		spin_unlock_irqrestore(&instance->throttle_io_lock, flags);
-+	}
- }
- 
- /**
-@@ -2384,6 +2436,7 @@ megasas_probe_one(struct pci_dev *pdev, 
- 	init_waitqueue_head(&instance->int_cmd_wait_q);
- 	init_waitqueue_head(&instance->abort_cmd_wait_q);
- 
-+	spin_lock_init(&instance->throttle_io_lock);
- 	spin_lock_init(&instance->cmd_pool_lock);
- 
- 	sema_init(&instance->aen_mutex, 1);
-@@ -2398,6 +2451,8 @@ megasas_probe_one(struct pci_dev *pdev, 
- 	instance->init_id = MEGASAS_DEFAULT_INIT_ID;
- 
- 	megasas_dbg_lvl = 0;
-+	instance->flag = 0;
-+	instance->last_time = 0;
- 
- 	/*
- 	 * Initialize MFI Firmware
-diff -uprN linux-2.6.orig/drivers/scsi/megaraid/megaraid_sas.h linux-2.6.new/drivers/scsi/megaraid/megaraid_sas.h
---- linux-2.6.orig/drivers/scsi/megaraid/megaraid_sas.h	2007-03-28 08:41:49.000000000 -0700
-+++ linux-2.6.new/drivers/scsi/megaraid/megaraid_sas.h	2007-03-28 08:36:39.000000000 -0700
-@@ -18,9 +18,9 @@
- /*
-  * MegaRAID SAS Driver meta data
-  */
--#define MEGASAS_VERSION				"00.00.03.10-rc1"
--#define MEGASAS_RELDATE				"Feb 14, 2007"
--#define MEGASAS_EXT_VERSION			"Wed Feb 14 10:14:25 PST 2007"
-+#define MEGASAS_VERSION				"00.00.03.10-rc3"
-+#define MEGASAS_RELDATE				"Mar 28, 2007"
-+#define MEGASAS_EXT_VERSION			"Wed Mar 28 10:25:52 PST 2007"
- 
- /*
-  * Device IDs
-@@ -539,6 +539,8 @@ struct megasas_ctrl_info {
- 
- #define MEGASAS_DBG_LVL				1
- 
-+#define MEGASAS_FW_BUSY				1
-+
- /*
-  * When SCSI mid-layer calls driver's reset routine, driver waits for
-  * MEGASAS_RESET_WAIT_TIME seconds for all outstanding IO to complete. Note
-@@ -1104,6 +1106,11 @@ struct megasas_instance {
- 
- 	struct megasas_instance_template *instancet;
- 	struct tasklet_struct isr_tasklet;
-+
-+	u8 flag;
-+	u8 rsvd[3];
-+	unsigned long last_time;
-+	spinlock_t throttle_io_lock;
- };
- 
- #define MEGASAS_IS_LOGICAL(scp)						\
+3) I would make the contents of 'media_change_events' be a list of 
+flags, rather than a boolean.  Thus, when AN is present, 
+media_change_events would return "AN\n".  It would return "\n" (no 
+flags) when AN is absent.  This permits future expansion of this 
+capabilities reporting variable.
 
+4) Figure out some place to document 'media_change_events', in 
+Documentation/*
+
+5) I think the method of delivery probably needs discussing, and some 
+work.  Presumably the normal hotplug paths should be traversed for this 
+sort of thing.
 
