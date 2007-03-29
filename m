@@ -1,377 +1,159 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH 08/12] ipr: Improve async error logging level control
-Date: Thu, 29 Mar 2007 12:43:30 -0500
-Message-ID: <200703291743.l2THhVEp007619@d01av01.pok.ibm.com>
-References: <11751901593854-patch-mail.ibm.com>
+From: thomas schorpp <t.schorpp@gmx.de>
+Subject: Re: aic7xxx: aic7892(B): BUG: soft lockup detected on CPU#0!
+Date: Thu, 29 Mar 2007 22:13:32 +0200
+Message-ID: <460C1DEC.4020109@gmx.de>
+References: <46029D72.3060403@gmx.de> <4602B576.6020602@gmx.de>	 <4602EED5.5070503@gmx.de> <46030A9A.2060604@gmx.de>	 <46032CC8.6030307@gmx.de>	 <1174625139.30030.31.camel@mulgrave.il.steeleye.com>	 <4603827C.4080701@gmx.de>  <46040047.3000104@gmx.de>	 <1174670587.30030.47.camel@mulgrave.il.steeleye.com>	 <46041B11.6000004@gmx.de> <46042383.7010704@gmx.de>	 <460475F5.1080805@gmx.de> <1174699032.13717.25.camel@mulgrave.il.steeleye.com> <46049EA2.1040207@gmx.de> <4604A397.6000402@gmx.de> <4608BF16.3000100@gmx.de>
+Reply-To: t.schorpp@gmx.de
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e2.ny.us.ibm.com ([32.97.182.142]:54965 "EHLO e2.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030480AbXC2Rom (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Mar 2007 13:44:42 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e2.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l2THifgJ023559
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Mar 2007 13:44:41 -0400
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l2THhWwj309186
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Mar 2007 13:43:32 -0400
-Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
-	by d01av01.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l2THhVR5007654
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Mar 2007 13:43:32 -0400
-In-Reply-To: <11751901593854-patch-mail.ibm.com>
+Received: from mail.gmx.net ([213.165.64.20]:41206 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1030658AbXC2UNf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 Mar 2007 16:13:35 -0400
+In-Reply-To: <4608BF16.3000100@gmx.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, thlin@linux.vnet.ibm.com, brking@linux.vnet.ibm.com
+To: SCSI development list <linux-scsi@vger.kernel.org>
+Cc: 415864@bugs.debian.org
+
+thomas schorpp wrote:
+> thomas schorpp wrote:
+>> thomas schorpp wrote:
+>>> James Bottomley wrote:
+>>>> On Sat, 2007-03-24 at 01:51 +0100, thomas schorpp wrote:
+>>>>>> no. so the pci layer reports wrong start:
+>>>>> nonsense. it succeeds, confused function return with the error flag:
+>>>>>
+>>>>> //      u_long  start;
+>>>>> //      u_long  start = 0xFFEFF000;
+>>>>>         u_long  start = 0x30000000;
+>>>>>         int     error;
+>>>>>
+>>>>>         struct resource* ret1;
+>>>>>         error = 0;
+>>>>> //      start = pci_resource_start(ahc->dev_softc, 1);
+>>>>>         if (start != 0) {
+>>>>>                 *bus_addr = start;
+>>>>>                 if ((ret1 = request_mem_region(start, 0x1000, 
+>>>>> "aic7xxx")) == 0)
+>>>>
+>>>> You can't do this.  The pci_resource_start is getting the address of
+>>>> something called a Bus Address Register (BAR) it says in physical
+>>>> address space where the card is responding ... you can't simply set 
+>>>> that
+>>>> to a random value.
+>>>>
+>>>> The problem you seem to have is that your system is reporting a BAR
+>>>> beyond 32 bits (4GB) which the card physically can't use.  This 
+>>>> could be
+>>>> because of a BIOS misconfiguration or because there's a bug in the PCI
+>>>> subsystem somewhere.
+>>>>
+>>>> James
+>>>
+>>> understood. waiting for LKML answers... meanwhile i found harder 
+>>> reason for a possible bounds problem with the driver code on x86_64:
+>>>
+>>> if i do:
+>>>
+>>> static int
+>>> ahc_linux_pci_reserve_mem_region(struct ahc_softc *ahc,
+>>>                                 u_long *bus_addr,
+>>>                                 uint8_t __iomem **maddr)
+>>> {
+>>> //      u_long  start;
+>>>        uint32_t start;
+>>>
+>>> i get no free warning of "*nonexistant* resource" (it cant be 
+>>> nonexistant, cause it was definitely something mapped):
+>>>
+>>> tom1:/usr/src/linux# dmesg |grep -i free
+>>> Freeing unused kernel memory: 208k freed
+>>>
+>>> with u_long type start i get it:
+>>> Mar 24 03:41:47 localhost kernel: Trying to free nonexistent resource 
+>>> <00000000fffff000-00000000ffffffff>
+>>>
+>>> investigating further...
+>>> -
+>>
+>> hmm well i dont get the free warning cause
+>>                        
+>> release_mem_region(ahc->platform_data->mem_busaddr,
+>>                                           0x1000);
+>> isnt called, the hack fails
+>>        error = ahc_linux_pci_reserve_mem_region(ahc, &base, &maddr);
+>>        if (error == 0) {
+>>
+>> ok, so no bounds issue in the driver.
+>>
+> 
+> LKML people are ignoring my report, i take this as agreement to a mb 
+> bios issue.
+> will test the card with a latest debian kernel x86_64 netinstall cd on 
+> some other amd64 machine, but i need to find some in my reach here.
+> i need more confirmation before working in the linux pci hal.
+> 
+
+no other amd64 machines in reach.
+
+here's my "fix". seems to be a h/w bug of the adaptec 19160 hba card, 
+it is just faking 64bit BAR from the register read, doesn't care on i386 arch 
+due to incomplete error handling ;) , but on x86_64 arch. since here and on 
+LKML is no public interest in a real fix, I do no further investigation. 
+
+Users, *DON'T try this at home, it may break real 64bit BAR cards* (if there're any for PCI32)! 
+
+drivers/pci/probe.c
+static void pci_read_bases(struct pci_dev *dev, unsigned int howmany, int rom)
+{
+[...]
+
+                if ((l & (PCI_BASE_ADDRESS_SPACE | PCI_BASE_ADDRESS_MEM_TYPE_MASK))
+                    == (PCI_BASE_ADDRESS_SPACE_MEMORY | PCI_BASE_ADDRESS_MEM_TYPE_64)) {
+                        u32 szhi, lhi;
+                        pci_read_config_dword(dev, reg+4, &lhi);
+lhi = 0; //schorpp
+                        pci_write_config_dword(dev, reg+4, ~0);
+                        pci_read_config_dword(dev, reg+4, &szhi);
+                        pci_write_config_dword(dev, reg+4, lhi); 		//kill the wrong read 0x0F
+                        szhi = pci_size(lhi, szhi, 0xffffffff);
+                        next++;
+printk(KERN_ERR "PCI: 64-bit check REG for device %s l %lx%lx sz %lx%lx start %llx end %llx flags $
+        pci_name(dev), lhi, l, szhi, sz, res->start, res->end, res->flags);
+
+#if BITS_PER_LONG == 64 	//the cause, more checks for buggy h/w needed or platform dep. bug somewhere deeper
+                        res->start |= ((unsigned long) lhi) << 32;
+                        res->end = res->start + sz;
+printk(KERN_ERR "PCI: 64-bit BAR check 1 for device %s l %lx%lx sz %lx%lx start %llx end %llx flag$
+        pci_name(dev), lhi, l, szhi, sz, res->start, res->end, res->flags);
+[...]
+
+hba fine again:
+
+tom1:/usr/src/linux# lspci -vvv -s 00:06.0
+00:06.0 SCSI storage controller: Adaptec AIC-7892B U160/m (rev 02)
+        Subsystem: Adaptec 19160 Ultra160 SCSI Controller
+        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- Stepping- SERR+ FastB2B-
+        Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+        Latency: 32 (10000ns min, 6250ns max), Cache Line Size: 64 bytes
+        Interrupt: pin A routed to IRQ 17
+        BIST result: 00
+        Region 0: I/O ports at d800 [disabled] [size=256]
+        Region 1: Memory at 30000000 (64-bit, non-prefetchable) [size=4K]
+        Expansion ROM at fbee0000 [disabled] [size=128K]
+        Capabilities: [dc] Power Management version 2
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+
+tom1:/usr/src/linux# uname -a
+Linux tom1 2.6.20.4 #30 PREEMPT Thu Mar 29 21:07:10 CEST 2007 x86_64 GNU/Linux
+
+@debian-maintainers: Your decision if close 415864 or not. but if no one else complains why not.
+
+y
+tom
 
 
-Add the ability to control how much error data gets logged
-on a per error basis.
-
-Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
----
-
- linux-2.6-bjking1/drivers/scsi/ipr.c |  192 +++++++++++++++++------------------
- 1 files changed, 96 insertions(+), 96 deletions(-)
-
-diff -puN drivers/scsi/ipr.c~ipr_error_log_level drivers/scsi/ipr.c
---- linux-2.6/drivers/scsi/ipr.c~ipr_error_log_level	2007-03-23 15:24:22.000000000 -0500
-+++ linux-2.6-bjking1/drivers/scsi/ipr.c	2007-03-23 15:24:22.000000000 -0500
-@@ -164,7 +164,7 @@ MODULE_VERSION(IPR_DRIVER_VERSION);
- /*  A constant array of IOASCs/URCs/Error Messages */
- static const
- struct ipr_error_table_t ipr_error_table[] = {
--	{0x00000000, 1, 1,
-+	{0x00000000, 1, IPR_DEFAULT_LOG_LEVEL,
- 	"8155: An unknown error was received"},
- 	{0x00330000, 0, 0,
- 	"Soft underlength error"},
-@@ -172,37 +172,37 @@ struct ipr_error_table_t ipr_error_table
- 	"Command to be cancelled not found"},
- 	{0x00808000, 0, 0,
- 	"Qualified success"},
--	{0x01080000, 1, 1,
-+	{0x01080000, 1, IPR_DEFAULT_LOG_LEVEL,
- 	"FFFE: Soft device bus error recovered by the IOA"},
--	{0x01088100, 0, 1,
-+	{0x01088100, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"4101: Soft device bus fabric error"},
--	{0x01170600, 0, 1,
-+	{0x01170600, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"FFF9: Device sector reassign successful"},
--	{0x01170900, 0, 1,
-+	{0x01170900, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"FFF7: Media error recovered by device rewrite procedures"},
--	{0x01180200, 0, 1,
-+	{0x01180200, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"7001: IOA sector reassignment successful"},
--	{0x01180500, 0, 1,
-+	{0x01180500, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"FFF9: Soft media error. Sector reassignment recommended"},
--	{0x01180600, 0, 1,
-+	{0x01180600, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"FFF7: Media error recovered by IOA rewrite procedures"},
--	{0x01418000, 0, 1,
-+	{0x01418000, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"FF3D: Soft PCI bus error recovered by the IOA"},
--	{0x01440000, 1, 1,
-+	{0x01440000, 1, IPR_DEFAULT_LOG_LEVEL,
- 	"FFF6: Device hardware error recovered by the IOA"},
--	{0x01448100, 0, 1,
-+	{0x01448100, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"FFF6: Device hardware error recovered by the device"},
--	{0x01448200, 1, 1,
-+	{0x01448200, 1, IPR_DEFAULT_LOG_LEVEL,
- 	"FF3D: Soft IOA error recovered by the IOA"},
--	{0x01448300, 0, 1,
-+	{0x01448300, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"FFFA: Undefined device response recovered by the IOA"},
--	{0x014A0000, 1, 1,
-+	{0x014A0000, 1, IPR_DEFAULT_LOG_LEVEL,
- 	"FFF6: Device bus error, message or command phase"},
--	{0x014A8000, 0, 1,
-+	{0x014A8000, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"FFFE: Task Management Function failed"},
--	{0x015D0000, 0, 1,
-+	{0x015D0000, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"FFF6: Failure prediction threshold exceeded"},
--	{0x015D9200, 0, 1,
-+	{0x015D9200, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"8009: Impending cache battery pack failure"},
- 	{0x02040400, 0, 0,
- 	"34FF: Disk device format in progress"},
-@@ -212,85 +212,85 @@ struct ipr_error_table_t ipr_error_table
- 	"No ready, IOA shutdown"},
- 	{0x025A0000, 0, 0,
- 	"Not ready, IOA has been shutdown"},
--	{0x02670100, 0, 1,
-+	{0x02670100, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"3020: Storage subsystem configuration error"},
- 	{0x03110B00, 0, 0,
- 	"FFF5: Medium error, data unreadable, recommend reassign"},
- 	{0x03110C00, 0, 0,
- 	"7000: Medium error, data unreadable, do not reassign"},
--	{0x03310000, 0, 1,
-+	{0x03310000, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"FFF3: Disk media format bad"},
--	{0x04050000, 0, 1,
-+	{0x04050000, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"3002: Addressed device failed to respond to selection"},
--	{0x04080000, 1, 1,
-+	{0x04080000, 1, IPR_DEFAULT_LOG_LEVEL,
- 	"3100: Device bus error"},
--	{0x04080100, 0, 1,
-+	{0x04080100, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"3109: IOA timed out a device command"},
- 	{0x04088000, 0, 0,
- 	"3120: SCSI bus is not operational"},
--	{0x04088100, 0, 1,
-+	{0x04088100, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"4100: Hard device bus fabric error"},
--	{0x04118000, 0, 1,
-+	{0x04118000, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9000: IOA reserved area data check"},
--	{0x04118100, 0, 1,
-+	{0x04118100, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9001: IOA reserved area invalid data pattern"},
--	{0x04118200, 0, 1,
-+	{0x04118200, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9002: IOA reserved area LRC error"},
--	{0x04320000, 0, 1,
-+	{0x04320000, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"102E: Out of alternate sectors for disk storage"},
--	{0x04330000, 1, 1,
-+	{0x04330000, 1, IPR_DEFAULT_LOG_LEVEL,
- 	"FFF4: Data transfer underlength error"},
--	{0x04338000, 1, 1,
-+	{0x04338000, 1, IPR_DEFAULT_LOG_LEVEL,
- 	"FFF4: Data transfer overlength error"},
--	{0x043E0100, 0, 1,
-+	{0x043E0100, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"3400: Logical unit failure"},
--	{0x04408500, 0, 1,
-+	{0x04408500, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"FFF4: Device microcode is corrupt"},
--	{0x04418000, 1, 1,
-+	{0x04418000, 1, IPR_DEFAULT_LOG_LEVEL,
- 	"8150: PCI bus error"},
- 	{0x04430000, 1, 0,
- 	"Unsupported device bus message received"},
--	{0x04440000, 1, 1,
-+	{0x04440000, 1, IPR_DEFAULT_LOG_LEVEL,
- 	"FFF4: Disk device problem"},
--	{0x04448200, 1, 1,
-+	{0x04448200, 1, IPR_DEFAULT_LOG_LEVEL,
- 	"8150: Permanent IOA failure"},
--	{0x04448300, 0, 1,
-+	{0x04448300, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"3010: Disk device returned wrong response to IOA"},
--	{0x04448400, 0, 1,
-+	{0x04448400, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"8151: IOA microcode error"},
- 	{0x04448500, 0, 0,
- 	"Device bus status error"},
--	{0x04448600, 0, 1,
-+	{0x04448600, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"8157: IOA error requiring IOA reset to recover"},
- 	{0x04448700, 0, 0,
- 	"ATA device status error"},
- 	{0x04490000, 0, 0,
- 	"Message reject received from the device"},
--	{0x04449200, 0, 1,
-+	{0x04449200, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"8008: A permanent cache battery pack failure occurred"},
--	{0x0444A000, 0, 1,
-+	{0x0444A000, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9090: Disk unit has been modified after the last known status"},
--	{0x0444A200, 0, 1,
-+	{0x0444A200, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9081: IOA detected device error"},
--	{0x0444A300, 0, 1,
-+	{0x0444A300, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9082: IOA detected device error"},
--	{0x044A0000, 1, 1,
-+	{0x044A0000, 1, IPR_DEFAULT_LOG_LEVEL,
- 	"3110: Device bus error, message or command phase"},
--	{0x044A8000, 1, 1,
-+	{0x044A8000, 1, IPR_DEFAULT_LOG_LEVEL,
- 	"3110: SAS Command / Task Management Function failed"},
--	{0x04670400, 0, 1,
-+	{0x04670400, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9091: Incorrect hardware configuration change has been detected"},
--	{0x04678000, 0, 1,
-+	{0x04678000, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9073: Invalid multi-adapter configuration"},
--	{0x04678100, 0, 1,
-+	{0x04678100, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"4010: Incorrect connection between cascaded expanders"},
--	{0x04678200, 0, 1,
-+	{0x04678200, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"4020: Connections exceed IOA design limits"},
--	{0x04678300, 0, 1,
-+	{0x04678300, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"4030: Incorrect multipath connection"},
--	{0x04679000, 0, 1,
-+	{0x04679000, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"4110: Unsupported enclosure function"},
--	{0x046E0000, 0, 1,
-+	{0x046E0000, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"FFF4: Command to logical unit failed"},
- 	{0x05240000, 1, 0,
- 	"Illegal request, invalid request type or request packet"},
-@@ -310,101 +310,101 @@ struct ipr_error_table_t ipr_error_table
- 	"Illegal request, command sequence error"},
- 	{0x052C8000, 1, 0,
- 	"Illegal request, dual adapter support not enabled"},
--	{0x06040500, 0, 1,
-+	{0x06040500, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9031: Array protection temporarily suspended, protection resuming"},
--	{0x06040600, 0, 1,
-+	{0x06040600, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9040: Array protection temporarily suspended, protection resuming"},
--	{0x06288000, 0, 1,
-+	{0x06288000, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"3140: Device bus not ready to ready transition"},
--	{0x06290000, 0, 1,
-+	{0x06290000, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"FFFB: SCSI bus was reset"},
- 	{0x06290500, 0, 0,
- 	"FFFE: SCSI bus transition to single ended"},
- 	{0x06290600, 0, 0,
- 	"FFFE: SCSI bus transition to LVD"},
--	{0x06298000, 0, 1,
-+	{0x06298000, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"FFFB: SCSI bus was reset by another initiator"},
--	{0x063F0300, 0, 1,
-+	{0x063F0300, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"3029: A device replacement has occurred"},
--	{0x064C8000, 0, 1,
-+	{0x064C8000, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9051: IOA cache data exists for a missing or failed device"},
--	{0x064C8100, 0, 1,
-+	{0x064C8100, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9055: Auxiliary cache IOA contains cache data needed by the primary IOA"},
--	{0x06670100, 0, 1,
-+	{0x06670100, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9025: Disk unit is not supported at its physical location"},
--	{0x06670600, 0, 1,
-+	{0x06670600, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"3020: IOA detected a SCSI bus configuration error"},
--	{0x06678000, 0, 1,
-+	{0x06678000, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"3150: SCSI bus configuration error"},
--	{0x06678100, 0, 1,
-+	{0x06678100, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9074: Asymmetric advanced function disk configuration"},
--	{0x06678300, 0, 1,
-+	{0x06678300, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"4040: Incomplete multipath connection between IOA and enclosure"},
--	{0x06678400, 0, 1,
-+	{0x06678400, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"4041: Incomplete multipath connection between enclosure and device"},
--	{0x06678500, 0, 1,
-+	{0x06678500, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9075: Incomplete multipath connection between IOA and remote IOA"},
--	{0x06678600, 0, 1,
-+	{0x06678600, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9076: Configuration error, missing remote IOA"},
--	{0x06679100, 0, 1,
-+	{0x06679100, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"4050: Enclosure does not support a required multipath function"},
--	{0x06690200, 0, 1,
-+	{0x06690200, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9041: Array protection temporarily suspended"},
--	{0x06698200, 0, 1,
-+	{0x06698200, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9042: Corrupt array parity detected on specified device"},
--	{0x066B0200, 0, 1,
-+	{0x066B0200, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9030: Array no longer protected due to missing or failed disk unit"},
--	{0x066B8000, 0, 1,
-+	{0x066B8000, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9071: Link operational transition"},
--	{0x066B8100, 0, 1,
-+	{0x066B8100, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9072: Link not operational transition"},
--	{0x066B8200, 0, 1,
-+	{0x066B8200, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9032: Array exposed but still protected"},
--	{0x066B9100, 0, 1,
-+	{0x066B9100, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"4061: Multipath redundancy level got better"},
--	{0x066B9200, 0, 1,
-+	{0x066B9200, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"4060: Multipath redundancy level got worse"},
- 	{0x07270000, 0, 0,
- 	"Failure due to other device"},
--	{0x07278000, 0, 1,
-+	{0x07278000, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9008: IOA does not support functions expected by devices"},
--	{0x07278100, 0, 1,
-+	{0x07278100, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9010: Cache data associated with attached devices cannot be found"},
--	{0x07278200, 0, 1,
-+	{0x07278200, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9011: Cache data belongs to devices other than those attached"},
--	{0x07278400, 0, 1,
-+	{0x07278400, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9020: Array missing 2 or more devices with only 1 device present"},
--	{0x07278500, 0, 1,
-+	{0x07278500, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9021: Array missing 2 or more devices with 2 or more devices present"},
--	{0x07278600, 0, 1,
-+	{0x07278600, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9022: Exposed array is missing a required device"},
--	{0x07278700, 0, 1,
-+	{0x07278700, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9023: Array member(s) not at required physical locations"},
--	{0x07278800, 0, 1,
-+	{0x07278800, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9024: Array not functional due to present hardware configuration"},
--	{0x07278900, 0, 1,
-+	{0x07278900, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9026: Array not functional due to present hardware configuration"},
--	{0x07278A00, 0, 1,
-+	{0x07278A00, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9027: Array is missing a device and parity is out of sync"},
--	{0x07278B00, 0, 1,
-+	{0x07278B00, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9028: Maximum number of arrays already exist"},
--	{0x07278C00, 0, 1,
-+	{0x07278C00, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9050: Required cache data cannot be located for a disk unit"},
--	{0x07278D00, 0, 1,
-+	{0x07278D00, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9052: Cache data exists for a device that has been modified"},
--	{0x07278F00, 0, 1,
-+	{0x07278F00, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9054: IOA resources not available due to previous problems"},
--	{0x07279100, 0, 1,
-+	{0x07279100, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9092: Disk unit requires initialization before use"},
--	{0x07279200, 0, 1,
-+	{0x07279200, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9029: Incorrect hardware configuration change has been detected"},
--	{0x07279600, 0, 1,
-+	{0x07279600, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9060: One or more disk pairs are missing from an array"},
--	{0x07279700, 0, 1,
-+	{0x07279700, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9061: One or more disks are missing from an array"},
--	{0x07279800, 0, 1,
-+	{0x07279800, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9062: One or more disks are missing from an array"},
--	{0x07279900, 0, 1,
-+	{0x07279900, 0, IPR_DEFAULT_LOG_LEVEL,
- 	"9063: Maximum number of functional arrays has been exceeded"},
- 	{0x0B260000, 0, 0,
- 	"Aborted command, invalid descriptor"},
-@@ -1607,7 +1607,7 @@ static void ipr_handle_log_data(struct i
- 	/* Set indication we have logged an error */
- 	ioa_cfg->errors_logged++;
- 
--	if (ioa_cfg->log_level < IPR_DEFAULT_LOG_LEVEL)
-+	if (ioa_cfg->log_level < ipr_error_table[error_index].log_hcam)
- 		return;
- 	if (be32_to_cpu(hostrcb->hcam.length) > sizeof(hostrcb->hcam.u.raw))
- 		hostrcb->hcam.length = cpu_to_be32(sizeof(hostrcb->hcam.u.raw));
-_
