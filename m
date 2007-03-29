@@ -1,97 +1,82 @@
-From: Halim Issa <yallaone@gmail.com>
-Subject: Trouble with LSI Logic / Symbios Logic 53c1030 on Linux 2.6.20.4
-Date: Thu, 29 Mar 2007 16:23:37 +0200
-Message-ID: <200703291623.37560.yallaone@gmail.com>
+From: Robert Jennings <rcj@linux.vnet.ibm.com>
+Subject: Re: [PATCH 2/2] ibmvscsi: add slave_configure to allow device restart
+Date: Thu, 29 Mar 2007 11:28:36 -0500
+Message-ID: <20070329162836.GB16619@austin.ibm.com>
+References: <20070328173828.GA22676@austin.ibm.com> <20070328174704.GC22676@austin.ibm.com> <20070328105410.8c66a8d8.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.191]:22966 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753677AbXC2OXk convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Mar 2007 10:23:40 -0400
-Received: by nf-out-0910.google.com with SMTP id o25so211442nfa
-        for <linux-scsi@vger.kernel.org>; Thu, 29 Mar 2007 07:23:39 -0700 (PDT)
+Received: from e32.co.us.ibm.com ([32.97.110.150]:55397 "EHLO
+	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933068AbXC2Q2i (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Mar 2007 12:28:38 -0400
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e32.co.us.ibm.com (8.12.11.20060308/8.13.8) with ESMTP id l2TGQbTa006762
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Mar 2007 12:26:37 -0400
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by westrelay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l2TGScO0176138
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Mar 2007 10:28:38 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l2TGSb8L016808
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Mar 2007 10:28:37 -0600
 Content-Disposition: inline
+In-Reply-To: <20070328105410.8c66a8d8.randy.dunlap@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>
 
-Hello List,
+Fixed the kernel-doc comment for ibmvscsi_slave_configure.  Thanks to
+Randy Dunlap for catching that.
 
-Running vanilla kernel 2.6.20.4 (unmodified from kernel.org) on an IBM =
-x335=20
-Server with LSI Logic 53c1030 and two SCSI disks in RAID-1, we have som=
-e=20
-serious performance issues that we suspect are present due to driver=20
-problems.
+Adding a slave_configure function for the driver. Now the disks can be
+restarted by the scsi mid-layer when the are disconnected and reconnected.
 
-The performance is as follows:
+Signed-off-by: "Robert Jennings" <rcj@linux.vnet.ibm.com>
+Signed-off-by: "Santiago Leon" <santil@us.ibm.com>
 
-[189] root@spirou:/tmp#dd if=3D/dev/sda7 of=3D/dev/null bs=3D64k count=3D=
-100
-100+0 records in
-100+0 records out
-6553600 bytes (6.6 MB) copied, 1.50139 s, 4.4 MB/s
-[190] root@spirou:/tmp#dd if=3D/dev/sda7 of=3D/dev/null bs=3D64k count=3D=
-1000
-1000+0 records in
-1000+0 records out
-65536000 bytes (66 MB) copied, 18.0209 s, 3.6 MB/s
-[191] root@spirou:/tmp#dd if=3D/dev/sda7 of=3D/dev/null bs=3D64k count=3D=
-10000
-10000+0 records in
-10000+0 records out
-655360000 bytes (655 MB) copied, 179.74 s, 3.6 MB/s
+---
+ drivers/scsi/ibmvscsi/ibmvscsi.c |   23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
 
-I've also tried copying between real files (ie non-/dev-files)
-
-[496] root@spirou:/root#dd if=3Dtestfile.out of=3Dtest.yalla bs=3D64k c=
-ount=3D1000
-1000+0 records in
-1000+0 records out
-65536000 bytes (66 MB) copied, 12.5143 s, 5.2 MB/s
-
-Needless to say, getting between three and five meg throughput on such =
-a
-system clearly means something is wrong, and the most likely culprit is=
- the=20
-operator (myself), but so far I have found no indications anywhere on h=
-ow to=20
-proceed, and hence this email..
-
-The card according to lspci -v :
-
-01:01.0 SCSI storage controller: LSI Logic / Symbios Logic 53c1030 PCI-=
-X
-=46usion-
-MPT Dual Ultra320 SCSI (rev 07)
-=A0 =A0 Subsystem: IBM Unknown device 026d
-=A0 =A0 Flags: bus master, 66MHz, medium devsel, latency 72, IRQ 16
-=A0 =A0 I/O ports at 2300 [size=3D256]
-=A0 =A0 Memory at fbff0000 (64-bit, non-prefetchable) [size=3D64K]
-=A0 =A0 Memory at fbfe0000 (64-bit, non-prefetchable) [size=3D64K]
-=A0 =A0 [virtual] Expansion ROM at 88100000 [disabled] [size=3D1M]
-=A0 =A0 Capabilities: [50] Power Management version 2
-=A0 =A0 Capabilities: [58] Message Signalled Interrupts: Mask- 64bit+ Q=
-ueue=3D0/0
-Enable-
-=A0 =A0 Capabilities: [68] PCI-X non-bridge device
-
-The kernel config is at : http://pastebin.ca/411667
-the dmesg output is at : http://pastebin.ca/411670
-
-Is this a common problem on these controllers?
-Perhaps needless to say, I'm rather new to this and am trying to gain=20
-experience in this field as quickly as possible. Any hints to bugfixes,=
-=20
-patches or configuration hints would be most greatly appreciated!
-
-Thanks in advance for any insight - it will be warmly appreciated!
-
- -h
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Index: b/drivers/scsi/ibmvscsi/ibmvscsi.c
+===================================================================
+--- a/drivers/scsi/ibmvscsi/ibmvscsi.c
++++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
+@@ -1354,6 +1354,28 @@
+ 	return rc;
+ }
+ 
++/**
++ * ibmvscsi_slave_configure: Set the "allow_restart" flag for each disk.
++ *
++ * @sdev:	struct scsi_device device to configure
++ *
++ * Enable allow_restart for a device if it is a disk.  Adjust the
++ * queue_depth here also as is required by the documentation for
++ * struct scsi_host_template.
++ */
++static int ibmvscsi_slave_configure(struct scsi_device *sdev)
++{
++	struct Scsi_Host *shost = sdev->host;
++	unsigned long lock_flags = 0;
++
++	spin_lock_irqsave(shost->host_lock, lock_flags);
++	if (sdev->type == TYPE_DISK)
++		sdev->allow_restart = 1;
++	scsi_adjust_queue_depth(sdev, 0, shost->cmd_per_lun);
++	spin_unlock_irqrestore(shost->host_lock, lock_flags);
++	return 0;
++}
++
+ /* ------------------------------------------------------------
+  * sysfs attributes
+  */
+@@ -1499,6 +1521,7 @@
+ 	.queuecommand = ibmvscsi_queuecommand,
+ 	.eh_abort_handler = ibmvscsi_eh_abort_handler,
+ 	.eh_device_reset_handler = ibmvscsi_eh_device_reset_handler,
++	.slave_configure = ibmvscsi_slave_configure,
+ 	.cmd_per_lun = 16,
+ 	.can_queue = IBMVSCSI_MAX_REQUESTS_DEFAULT,
+ 	.this_id = -1,
